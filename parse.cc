@@ -8,12 +8,7 @@
 
 namespace ledger {
 
-//////////////////////////////////////////////////////////////////////
-//
-// Ledger parser
-//
-
-char * next_element(char * buf, bool variable = false)
+static char * next_element(char * buf, bool variable = false)
 {
   char * p;
 
@@ -34,7 +29,8 @@ char * next_element(char * buf, bool variable = false)
 
 static int linenum = 0;
 
-inline void finalize_entry(entry * curr) {
+static inline void finalize_entry(entry * curr)
+{
   if (curr) {
     if (! curr->validate()) {
       std::cerr << "Failed to balance the following transaction, "
@@ -45,6 +41,11 @@ inline void finalize_entry(entry * curr) {
     }
   }
 }
+
+//////////////////////////////////////////////////////////////////////
+//
+// Ledger parser
+//
 
 bool parse_ledger(std::istream& in)
 {
@@ -150,6 +151,7 @@ bool parse_ledger(std::istream& in)
       // If there is no amount given, it is intended as an implicit
       // amount; we must use the opposite of the value of the
       // preceding transaction.
+
       if (! cost_str || *cost_str == ';') {
 	if (cost_str) {
 	  while (*cost_str == ';' || std::isspace(*cost_str))

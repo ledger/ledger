@@ -7,6 +7,8 @@
 
 namespace ledger {
 
+#define MAX_PRECISION 10        // must be 2 or higher
+
 //////////////////////////////////////////////////////////////////////
 //
 // The `amount' structure.  Every transaction has an associated amount,
@@ -15,8 +17,6 @@ namespace ledger {
 // Each amount is a quantity of commodity at a certain price; the
 // default commodity is the US dollar, with a price of 1.00.
 //
-
-#define MAX_PRECISION 10        // must be 2 or higher
 
 class gmp_amount : public amount
 {
@@ -42,13 +42,16 @@ class gmp_amount : public amount
     mpz_clear(quantity);
   }
 
+  virtual commodity * comm() const {
+    return quantity_comm;
+  }
   virtual const std::string& comm_symbol() const {
     assert(quantity_comm);
     return quantity_comm->symbol;
   }
 
   virtual amount * copy() const;
-  virtual amount * value() const;
+  virtual amount * value(amount *) const;
 
   virtual operator bool() const;
 
@@ -184,13 +187,21 @@ amount * gmp_amount::copy() const
   return new_amt;
 }
 
-amount * gmp_amount::value() const
+amount * gmp_amount::value(amount * pr) const
 {
-  if (! priced) {
-    return copy();
-  } else {
+  if (pr) {
+    gmp_amount * p = dynamic_cast<gmp_amount *>(pr);
+    assert(p);
     gmp_amount * new_amt = new gmp_amount();
-    new_amt->priced = false;
+    multiply(new_amt->quantity, quantity, p->quantity);
+    new_amt->quantity_comm = p->quantity_comm;
+    return new_amt;
+  }
+  else if (! priced) {
+    return copy();
+  }
+  else {
+    gmp_amount * new_amt = new gmp_amount();
     multiply(new_amt->quantity, quantity, price);
     new_amt->quantity_comm = price_comm;
     return new_amt;
@@ -455,8 +466,7 @@ static commodity * parse_amount(mpz_t out, const char * num,
   commodity * comm = NULL;
 
   if (! saw_commodity) {
-    std::cerr << "Error: No commodity specified: " << value_str
-	      << std::endl;
+    std::cerr << "Error: No commodity specified: " << value_str << std::endl;
     std::exit(1);
   } else {
     commodities_iterator item = commodities.find(symbol.c_str());
@@ -492,7 +502,7 @@ amount& gmp_amount::operator=(const char * num)
     const char *error;
     int erroffset;
     static const std::string amount_re =
-      "(([^-0-9/.,]+)(\\s*))?([-0-9/.,]+)((\\s*)([^-0-9/.,@]+))?";
+      "(([^-0-9/., ]+)(\\s*))?([-0-9/.,]+)((\\s*)([^-0-9/., @]+))?";
     const std::string regexp =
       "^" + amount_re + "(\\s*@\\s*" + amount_re + ")?$";
     re = pcre_compile(regexp.c_str(), 0, &error, &erroffset, NULL);

@@ -18,9 +18,9 @@ static amount *    curr_value;
 static std::string curr_quant;
 static XML_Parser  current_parser;
 
-accounts_t accounts_by_id;
+static accounts_t accounts_by_id;
 
-enum {
+static enum {
   NO_ACTION,
   ACCOUNT_NAME,
   ACCOUNT_ID,
@@ -97,7 +97,8 @@ static void endElement(void *userData, const char *name)
 {
   if (std::strcmp(name, "gnc:account") == 0) {
     assert(curr_account);
-    accounts.insert(accounts_entry(curr_account->name, curr_account));
+    if (! curr_account->parent)
+      accounts.insert(accounts_entry(curr_account->name, curr_account));
     accounts_by_id.insert(accounts_entry(curr_account_id, curr_account));
     curr_account = NULL;
   }

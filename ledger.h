@@ -1,5 +1,5 @@
 #ifndef _LEDGER_H
-#define _LEDGER_H "$Revision: 1.4 $"
+#define _LEDGER_H "$Revision: 1.5 $"
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -122,9 +122,10 @@ class amount
  public:
   virtual ~amount() {}
 
+  virtual commodity * comm() const = 0;
   virtual const std::string& comm_symbol() const = 0;
   virtual amount * copy() const = 0;
-  virtual amount * value() const = 0;
+  virtual amount * value(amount * pr = NULL) const = 0;
 
   // Test if non-zero
 
