@@ -50,7 +50,7 @@ int main(int argc, char * argv[], char * envp[])
 
   TIMER_STOP(process_args);
 
-  const bool use_cache = config->files.empty();
+  bool use_cache = config->files.empty();
 
   // Process options from the environment
 
@@ -91,6 +91,7 @@ int main(int argc, char * argv[], char * envp[])
       if (entry_count == 0 || exceptions.size() > 0) {
 	journal.reset(new journal_t);
 	entry_count = 0;
+	cache_dirty = true;
       } else {
 	cache_dirty = false;
       }
@@ -100,7 +101,13 @@ int main(int argc, char * argv[], char * envp[])
       for (strings_list::iterator i = config->files.begin();
 	   i != config->files.end();
 	   i++)
-	entry_count += parse_journal_file(*i, journal.get());
+	if (*i == "-") {
+	  use_cache = false;
+	  entry_count += parse_textual_journal(std::cin, journal.get(),
+					       journal->master);
+	} else {
+	  entry_count += parse_journal_file(*i, journal.get());
+	}
 
     if (! config->price_db.empty())
       if (parse_journal_file(config->price_db, journal.get()))
@@ -451,8 +458,6 @@ int main(int argc, char * argv[], char * envp[])
     // Once the filters are chained, walk `journal's entries and start
     // feeding each transaction that matches `predicate' to the chain.
     walk_entries(journal->entries, *formatter.get());
-
-    formatter->flush();
 
 #ifdef DEBUG_ENABLED
     // The transaction display flags (dflags) are not recorded in the

@@ -27,14 +27,16 @@
 
 namespace ledger {
 
-#define TRANSACTION_NORMAL    0x00
-#define TRANSACTION_VIRTUAL   0x01
-#define TRANSACTION_BALANCE   0x02
-#define TRANSACTION_AUTO      0x04
+// These flags persist with the object
+#define TRANSACTION_NORMAL    0x0000
+#define TRANSACTION_VIRTUAL   0x0001
+#define TRANSACTION_BALANCE   0x0002
+#define TRANSACTION_AUTO      0x0004
 
-#define TRANSACTION_HANDLED   0x10
-#define TRANSACTION_DISPLAYED 0x20
-#define TRANSACTION_NO_TOTAL  0x40
+// These flags are only used during formatting, and are not saved
+#define TRANSACTION_HANDLED   0x0001
+#define TRANSACTION_DISPLAYED 0x0002
+#define TRANSACTION_NO_TOTAL  0x0004
 
 class entry_t;
 class account_t;
@@ -46,12 +48,12 @@ class transaction_t
   account_t *	 account;
   amount_t	 amount;
   amount_t	 cost;
-  unsigned int	 flags;
+  unsigned short flags;
   std::string	 note;
 
   mutable balance_pair_t total;
   mutable unsigned int   index;
-  mutable unsigned int	 dflags;
+  mutable unsigned short dflags;
 
   transaction_t(entry_t * _entry, account_t * _account)
     : entry(_entry), account(_account), flags(TRANSACTION_NORMAL),
@@ -110,12 +112,12 @@ typedef std::pair<const std::string, account_t *> accounts_pair;
 class account_t
 {
  public:
-  typedef unsigned short ident_t;
+  typedef unsigned long ident_t;
 
   account_t *	    parent;
   std::string	    name;
   std::string	    note;
-  unsigned char     depth;
+  unsigned short    depth;
   accounts_map	    accounts;
   transactions_list transactions;
 
@@ -174,10 +176,11 @@ typedef std::list<std::string> strings_list;
 class journal_t
 {
  public:
-  account_t *		 master;
-  entries_list		 entries;
-  mutable accounts_map	 accounts_cache;
-  std::list<std::string> sources;
+  account_t *  master;
+  entries_list entries;
+  strings_list sources;
+
+  mutable accounts_map accounts_cache;
 
   journal_t() {
     master = new account_t(NULL, "");

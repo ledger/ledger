@@ -171,13 +171,13 @@ inline std::istream& operator>>(std::istream& in, amount_t& amt) {
 std::ostream& operator<<(std::ostream& out, const amount_t& amt);
 
 
-#define COMMODITY_STYLE_DEFAULTS   0x00
-#define COMMODITY_STYLE_SUFFIXED   0x01
-#define COMMODITY_STYLE_SEPARATED  0x02
-#define COMMODITY_STYLE_EUROPEAN   0x04
-#define COMMODITY_STYLE_THOUSANDS  0x08
-#define COMMODITY_STYLE_CONSULTED  0x10
-#define COMMODITY_STYLE_NOMARKET   0x20
+#define COMMODITY_STYLE_DEFAULTS   0x0000
+#define COMMODITY_STYLE_SUFFIXED   0x0001
+#define COMMODITY_STYLE_SEPARATED  0x0002
+#define COMMODITY_STYLE_EUROPEAN   0x0004
+#define COMMODITY_STYLE_THOUSANDS  0x0008
+#define COMMODITY_STYLE_CONSULTED  0x0010
+#define COMMODITY_STYLE_NOMARKET   0x0020
 
 typedef std::map<const std::time_t, amount_t>  history_map;
 typedef std::pair<const std::time_t, amount_t> history_pair;
@@ -197,16 +197,16 @@ class commodity_t
 			    const std::time_t moment) = 0;
   };
 
-  typedef unsigned short ident_t;
+  typedef unsigned long ident_t;
 
-  std::string	symbol;
-  std::string	name;
-  std::string	note;
-  unsigned int	precision;
-  unsigned int	flags;
-  history_map	history;
-  amount_t	conversion;
-  ident_t	ident;
+  std::string	 symbol;
+  std::string	 name;
+  std::string	 note;
+  unsigned short precision;
+  unsigned short flags;
+  history_map	 history;
+  amount_t	 conversion;
+  ident_t	 ident;
 
   // If set, this global function pointer is called to determine
   // whether prices have been updated in the meanwhile.

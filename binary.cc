@@ -14,8 +14,6 @@
 
 namespace ledger {
 
-static char buf[4096];
-
        unsigned long binary_magic_number = 0xFFEED765;
 static unsigned long format_version      = 0x0002000a;
 
@@ -53,10 +51,22 @@ inline void read_binary_string(std::istream& in, std::string& str)
 
   unsigned char len;
   read_binary_number(in, len);
-  if (len) {
+  if (len == 0xff) {
+    unsigned short slen;
+    read_binary_number(in, slen);
+    char * buf = new char[slen + 1];
+    in.read(buf, slen);
+    buf[slen] = '\0';
+    str = buf;
+    delete[] buf;
+  }
+  else if (len) {
+    char buf[256];
     in.read(buf, len);
     buf[len] = '\0';
     str = buf;
+  } else {
+    str = "";
   }
 
   read_binary_guard(in, 0x3002);
@@ -64,20 +74,9 @@ inline void read_binary_string(std::istream& in, std::string& str)
 
 inline std::string read_binary_string(std::istream& in)
 {
-  read_binary_guard(in, 0x3001);
-
-  unsigned char len;
-  read_binary_number(in, len);
-  if (len) {
-    in.read(buf, len);
-    buf[len] = '\0';
-    read_binary_guard(in, 0x3002);
-    return buf;
-  }
-
-  read_binary_guard(in, 0x3002);
-
-  return "";
+  std::string temp;
+  read_binary_string(in, temp);
+  return temp;
 }
 
 void read_binary_amount(std::istream& in, amount_t& amt)
@@ -271,8 +270,15 @@ inline void write_binary_string(std::ostream& out, const std::string& str)
 {
   write_binary_guard(out, 0x3001);
 
-  unsigned char len = str.length();
-  write_binary_number(out, len);
+  unsigned long len = str.length();
+  if (len > 255) {
+    assert(len < 65536);
+    write_binary_number<unsigned char>(out, 0xff);
+    write_binary_number<unsigned short>(out, len);
+  } else {
+    write_binary_number<unsigned char>(out, len);
+  }
+
   if (len)
     out.write(str.c_str(), len);
 
