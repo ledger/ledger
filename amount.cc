@@ -48,6 +48,7 @@ static amount_t::bigint_t true_value;
 commodity_t::updater_t *  commodity_t::updater = NULL;
 commodities_map		  commodity_t::commodities;
 commodity_t *             commodity_t::null_commodity;
+commodity_t *             commodity_t::default_commodity = NULL;
 
 static struct _init_amounts {
   _init_amounts() {
@@ -56,8 +57,9 @@ static struct _init_amounts {
 
     mpz_set_ui(true_value.val, 1);
 
-    commodity_t::updater = NULL;
-    commodity_t::null_commodity = commodity_t::find_commodity("", true);
+    commodity_t::updater	   = NULL;
+    commodity_t::null_commodity    = commodity_t::find_commodity("", true);
+    commodity_t::default_commodity = NULL;
   }
 
   ~_init_amounts() {
