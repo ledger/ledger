@@ -296,6 +296,14 @@ entry_t * parse_entry(std::istream& in, account_t * master)
   return curr;
 }
 
+template <typename T>
+struct push_var {
+  T& var;
+  T prev;
+  push_var(T& _var) : var(_var), prev(var) {}
+  ~push_var() { var = prev; }
+};
+
 unsigned int parse_textual_journal(std::istream& in, journal_t * journal,
 				   account_t * master)
 {
@@ -496,9 +504,9 @@ unsigned int parse_textual_journal(std::istream& in, journal_t * journal,
 	linenum++;
 	break;
 
-      case ':': {                 // option setting
+      case '-': {                 // option setting
 	std::string opt;
-	in >> c;
+	in >> c >> c;
 	in >> opt;
 	in.getline(line, MAX_LINE);
 	linenum++;
@@ -533,19 +541,9 @@ unsigned int parse_textual_journal(std::istream& in, journal_t * journal,
 	  in.getline(line, MAX_LINE);
 	  linenum++;
 
-	  char * p = skip_ws(line);
-	  std::ifstream stream(p);
-
-	  journal->sources.push_back(p);
-
-	  unsigned int curr_linenum = linenum;
-	  std::string  curr_path    = path;
-
-	  count += parse_textual_journal(stream, journal,
-					 account_stack.front());
-
-	  linenum = curr_linenum;
-	  path    = curr_path;
+	  push_var<unsigned int> save_linenum(linenum);
+	  push_var<std::string> save_path(path);
+	  count += parse_journal_file(skip_ws(line), journal);
 	}
 	break;
 

@@ -110,20 +110,22 @@ typedef std::pair<const std::string, account_t *> accounts_pair;
 class account_t
 {
  public:
+  typedef unsigned short ident_t;
+
   account_t *	    parent;
   std::string	    name;
   std::string	    note;
-  unsigned int	    depth;
+  unsigned char     depth;
   accounts_map	    accounts;
   transactions_list transactions;
 
   mutable balance_pair_t value;
   mutable balance_pair_t total;
-  mutable unsigned long	 ident;
-  mutable unsigned long	 dflags;
+  mutable ident_t        ident;
+  mutable unsigned short dflags;
   mutable std::string	 _fullname;
 
-  static unsigned long next_ident;
+  static ident_t    next_ident;
 
   account_t(account_t *        _parent,
 	    const std::string& _name = "",
@@ -214,21 +216,21 @@ class journal_t
 			 strings_list::iterator end) const;
 };
 
-int parse_journal_file(char * p, journal_t * journal);
+int parse_journal_file(const std::string& path, journal_t * journal);
 
-unsigned int parse_textual_journal(std::istream& in, journal_t * ledger,
-				   account_t * master = NULL);
+unsigned int parse_textual_journal(std::istream& in,
+				   journal_t *	 ledger,
+				   account_t *	 master = NULL);
 
 extern unsigned long binary_magic_number;
 
-unsigned int read_binary_journal(std::istream&	    in,
-				 const std::string& leader,
-				 journal_t *        journal,
-				 account_t *        master = NULL);
+unsigned int read_binary_journal(std::istream&	in,
+				 journal_t *	journal,
+				 account_t *	master = NULL);
 
-void write_binary_journal(std::ostream&	     out,
-			  journal_t *	     journal,
-			  const std::string& leader);
+void write_binary_journal(std::ostream&	 out,
+			  journal_t *	 journal,
+			  strings_list * files = NULL);
 
 extern const std::string version;
 

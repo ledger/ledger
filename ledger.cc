@@ -177,30 +177,23 @@ entry_t * journal_t::derive_entry(strings_list::iterator i,
   return added;
 }
 
-int parse_journal_file(char * p, journal_t * journal)
+int parse_journal_file(const std::string& path, journal_t * journal)
 {
-  char * sep = std::strrchr(p, '=');
-  if (sep) *sep++ = '\0';
+  journal->sources.push_back(path);
 
-  std::ifstream stream(p);
+  if (access(path.c_str(), R_OK) == -1)
+    return 0;
 
-  account_t * master;
-  if (sep)
-    master = journal->find_account(sep);
-  else
-    master = journal->master;
-
-  journal->sources.push_back(p);
+  std::ifstream stream(path.c_str());
 
   unsigned long magic;
-  std::istream::pos_type start = stream.tellg();
   stream.read((char *)&magic, sizeof(magic));
-  stream.seekg(start);
+  stream.seekg(0);
 
   if (magic == binary_magic_number)
-    return read_binary_journal(stream, "", journal, master);
+    return read_binary_journal(stream, journal, journal->master);
   else
-    return parse_textual_journal(stream, journal, master);
+    return parse_textual_journal(stream, journal, journal->master);
 }
 
 } // namespace ledger

@@ -5,7 +5,7 @@
 
 namespace ledger {
 
-unsigned long account_t::next_ident;
+account_t::ident_t account_t::next_ident;
 
 account_t::~account_t()
 {

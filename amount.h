@@ -188,6 +188,8 @@ typedef std::pair<const std::string, commodity_t *> commodities_pair;
 class commodity_t
 {
  public:
+  typedef unsigned short ident_t;
+
   std::string	symbol;
   std::string	name;
   std::string	note;
@@ -195,7 +197,7 @@ class commodity_t
   unsigned int	flags;
   history_map	history;
   amount_t	conversion;
-  unsigned long	ident;
+  ident_t	ident;
 
   // If set, this global function pointer is called to determine
   // whether prices have been updated in the meanwhile.

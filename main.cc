@@ -11,23 +11,51 @@
 #include <unistd.h>
 #include <ctime>
 
-namespace ledger {
+namespace {
 
-static const std::string bal_fmt = "%20T  %2_%-n\n";
-static const std::string reg_fmt
+using namespace ledger;
+
+const std::string bal_fmt = "%20T  %2_%-n\n";
+const std::string reg_fmt
   = "%D %-.20P %-.22N %12.66t %12.80T\n\
 %/                                %-.22N %12.66t %12.80T\n";
-static const std::string plot_value_fmt = "%D %t\n";
-static const std::string plot_total_fmt = "%D %T\n";
-static const std::string print_fmt
+const std::string plot_value_fmt = "%D %t\n";
+const std::string plot_total_fmt = "%D %T\n";
+const std::string print_fmt
   = "\n%D %X%C%P\n    %-34N  %12o\n%/    %-34N  %12o\n";
-static const std::string equity_fmt
+const std::string equity_fmt
   = "\n%D %X%C%P\n%/    %-34N  %12t\n";
 
+std::auto_ptr<journal_t>    journal(new journal_t);
+std::list<std::string>      files;
+std::auto_ptr<value_expr_t> sort_order;
+std::auto_ptr<std::ostream> output_stream;
+std::auto_ptr<interval_t>   report_interval;
 
-static long	   pricing_leeway = 24 * 3600;
-static std::string price_db;
-static bool        cache_dirty    = false;
+#define OUT() (output_stream.get() ? *output_stream.get() : std::cout)
+
+std::string   init_file;
+std::string   cache_file;
+std::string   price_db;
+std::string   predicate;
+std::string   display_predicate;
+std::string   format_string;
+std::string   sort_string;
+std::string   value_expr     = "a";
+std::string   total_expr     = "T";
+std::time_t   interval_begin = 0;
+unsigned long pricing_leeway = 24 * 3600;
+
+bool cache_dirty        = true;
+bool show_subtotals	= true;
+bool show_expanded	= false;
+bool show_related	= false;
+bool show_all_related   = false;
+bool show_inverted	= false;
+bool show_empty		= false;
+bool days_of_the_week   = false;
+bool show_revalued      = false;
+bool show_revalued_only = false;
 
 void download_price_quote(commodity_t *	    commodity,
 			  const std::time_t age,
@@ -77,55 +105,6 @@ void download_price_quote(commodity_t *	    commodity,
   }
 }
 
-} // namespace ledger
-
-
-namespace {
-  using namespace ledger;
-
-  std::auto_ptr<journal_t>    journal(new journal_t);
-  std::list<std::string>      files;
-  std::auto_ptr<value_expr_t> sort_order;
-  std::auto_ptr<std::ostream> output_stream;
-  std::auto_ptr<interval_t>   report_interval;
-
-#define OUT() (output_stream.get() ? *output_stream.get() : std::cout)
-
-  std::string predicate;
-  std::string display_predicate;
-  std::string format_string;
-  std::string sort_string;
-  std::string value_expr = "a";
-  std::string total_expr = "T";
-  std::time_t interval_begin = 0;
-
-  bool show_subtotals	  = true;
-  bool show_expanded	  = false;
-  bool show_related	  = false;
-  bool show_all_related   = false;
-  bool show_inverted	  = false;
-  bool show_empty	  = false;
-  bool days_of_the_week   = false;
-  bool show_revalued      = false;
-  bool show_revalued_only = false;
-  bool use_cache          = false;
-}
-
-// jww (2004-08-13): fix this
-static std::string ledger_cache_file()
-{
-  std::string cache_file;
-
-  if (const char * p = std::getenv("LEDGER_CACHE")) {
-    cache_file = p;
-  }
-  else if (const char * p = std::getenv("HOME")) {
-    cache_file = p;
-    cache_file += "/.ledger";
-  }
-  return cache_file;
-}
-
 static void show_version(std::ostream& out)
 {
   out
@@ -139,42 +118,59 @@ static void show_version(std::ostream& out)
 static void show_help(std::ostream& out)
 {
   out
-    << "usage: ledger [options] COMMAND [options] [REGEXPS]\n\n"
-    << "Basic options:\n"
-    << "  -h        display this help text\n"
-    << "  -v        display version information\n"
-    << "  -f FILE   specify pathname of ledger data file\n\n"
-    << "Report filtering:\n"
-    << "  -a REGEX  specify an account regex for \"print\"\n"
-    << "  -b DATE   specify a beginning date\n"
-    << "  -e DATE   specify an ending date\n"
-    << "  -c        do not show future entries (same as -e TODAY)\n"
-    << "  -d DATE   specify a date mask ('-d mon', for all mondays)\n"
-    << "  -C        show only cleared transactions and balances\n"
-    << "  -U        show only uncleared transactions and balances\n"
-    << "  -R        do not consider virtual transactions: real only\n"
-    << "  -l EXPR   don't print entries for which EXPR yields 0\n\n"
-    << "Output customization:\n"
-    << "  -n        do not calculate parent account totals\n"
-    << "  -s        show sub-accounts in balance, and splits in register\n"
-    << "  -M        print register using monthly sub-totals\n"
-    << "  -E        show accounts that total to zero\n"
-    << "  -S EXPR   sort entry output based on EXPR\n\n"
-    << "Commodity reporting:\n"
-    << "  -T        report commodity totals, not their market value\n"
-    << "  -B        report cost basis of commodities\n"
-    << "  -V        report the market value of commodities\n"
-    << "  -P FILE   sets the price database, for reading/writing price info\n"
-    << "  -Q        download price information from the Internet\n"
-    << "            (works by running \"getquote SYMBOL\")\n"
-    << "  -L MINS   with -Q, fetch quotes only if data is older than MINS\n"
-    << "  -p STR    specifies a direct commodity conversion: COMM=AMOUNT\n\n"
-    << "Commands:\n"
-    << "  balance   show balance totals\n"
-    << "  register  display a register for ACCOUNT\n"
-    << "  print     print all ledger entries\n"
-    << "  entry     output a newly formed entry, based on arguments\n"
-    << "  equity    output equity entries for specified accounts\n";
+    << "usage: ledger [options] COMMAND [options] [REGEXPS]\n\n\
+Basic options:\n\
+  -h, --help            display this help text\n\
+  -v, --version         display version information\n\
+  -i, --init FILE       initialize ledger by loading FILE\n\
+  -f, --file FILE       specify pathname of ledger data file\n\
+  -o, --output FILE     write all output to FILE\n\
+  -p, --set-price CONV  specifies commodity conversion: COMM=AMOUNT\n\n\
+Report filtering:\n\
+  -b, --begin-date DATE specify a beginning date\n\
+  -e, --end-date DATE   specify an ending date\n\
+  -c, --current         do not show future entries (same as -e TODAY)\n\
+  -C, --cleared         show only cleared transactions and balances\n\
+  -U, --uncleared       show only uncleared transactions and balances\n\
+  -R, --real            do not consider virtual transactions: real only\n\n\
+Output customization:\n\
+  -F, --format STR      \n\
+  -y, --date-format STR \n\
+  -E, --empty           balance: also show accounts that total to zero\n\
+  -n, --collapse        balance: no parent account totals; register: collapse\n\
+  -s, --show-all        balance: show sub-accounts; register: show subtotals\n\
+  -S, --sort EXPR       sort report according to value EXPR\n\
+  -r, --related         \n\
+  -z, --interval EXPR   \n\
+  -w, --dow             print register using day of week sub-totals\n\
+  -W, --weekly                 \"   \"         weekly sub-totals\n\
+  -M, --monthly                \"   \"         monthly sub-totals\n\
+  -Y, --yearly                 \"   \"         yearly sub-totals\n\
+  -l, --limit EXPR      don't calculate entries for which EXPR yields 0\n\
+  -d, --display EXPR    don't print entries for which EXPR yields 0\n\
+  -t, --value EXPR      \n\
+  -T, --total EXPR      \n\
+  -j, --value-data      \n\
+  -J, --total-data      \n\n\
+Commodity reporting:\n\
+  -P, --price-db FILE   sets the price database\n\
+  -L, --price-exp MINS  with -Q, fetch quotes only if data is older than MINS\n\
+  -Q, --download        download price information from the Internet\n\
+			(works by running \"getquote SYMBOL\")\n\
+  -O, --quantity        \n\
+  -B, --basis           report cost basis of commodities\n\
+  -V, --market          report the market value of commodities\n\
+  -G, --gain            \n\
+  -A, --average         \n\
+  -D, --deviation       \n\
+  -X, --trend           \n\
+  -Z, --weighted-trend  \n\n\
+Commands:\n\
+  balance       show balance totals\n\
+  register      display a register for ACCOUNT\n\
+  print         print all ledger entries\n\
+  entry         output a newly formed entry, based on arguments\n\
+  equity        output equity entries for specified accounts\n";
 }
 
 
@@ -195,19 +191,22 @@ OPT_BEGIN(version, "v", false) {
 } OPT_END(version);
 
 OPT_BEGIN(init, "i:", true) {
-  std::ifstream stream(optarg);
-  parse_textual_journal(stream, journal.get(), journal->master);
+  init_file = optarg;
 } OPT_END(init);
 
 OPT_BEGIN(file, "f:", true) {
-  files.push_back(optarg);
-  use_cache = false;
+  char * buf = new char[std::strlen(optarg) + 1];
+  std::strcpy(buf, optarg);
+  for (char * p = std::strtok(buf, ":");
+       p;
+       p = std::strtok(NULL, ":"))
+    files.push_back(p);
+  delete[] buf;
 } OPT_END(file);
 
-#if 0
-OPT_BEGIN(cache, ":") {
+OPT_BEGIN(cache, ":", false) {
+  cache_file = optarg;
 } OPT_END(cache);
-#endif
 
 OPT_BEGIN(output, "o:", false) {
   if (std::string(optarg) != "-")
@@ -215,6 +214,7 @@ OPT_BEGIN(output, "o:", false) {
 } OPT_END(output);
 
 OPT_BEGIN(set_price, "p:", true) {
+  // jww (2004-08-14): fix this relative to the other file settings
   if (char * p = std::strchr(optarg, '=')) {
     *p = ' ';
     std::string conversion = "C ";
@@ -440,52 +440,30 @@ TIMER_DEF(process_env,	  "processing environment");
 TIMER_DEF(process_args,   "processing command-line arguments");
 TIMER_DEF(read_cache,	  "reading cache file");
 
+} // namespace
+
 int main(int argc, char * argv[], char * envp[])
 {
 #ifdef DEBUG_ENABLED
-  if (char * p = std::getenv("DEBUG_FILE")) {
+  // If debugging is enabled, and DEBUG_FILE is set, then all
+  // debugging output goes to that file.
+
+  if (const char * p = std::getenv("DEBUG_FILE")) {
     debug_stream      = new std::ofstream(p);
     free_debug_stream = true;
   }
 #endif
 
-  // A ledger data file must be specified
+  // Initialize default paths
 
-  TIMER_START(read_cache);
+  if (const char * p = std::getenv("HOME"))
+    init_file = cache_file = price_db = p;
 
-  // jww (2004-08-13): use LEDGER_FILE and LEDGER_CACHE
-  use_cache = std::getenv("LEDGER") != NULL;
+  init_file  += "/.ledgerrc";
+  cache_file += "/.ledger";
+  price_db   += "/.pricedb";
 
-  if (use_cache) {
-    // jww (2004-08-13): fix this
-    for (int i = 0; i < argc; i++)
-      if (std::strcmp(argv[i], "-f") == 0 ||
-	  std::strcmp(argv[i], "--file") == 0) {
-	use_cache = false;
-	break;
-      }
-
-    cache_dirty = true;
-
-    if (use_cache) {
-      std::string cache_file = ledger_cache_file();
-      if (! cache_file.empty() &&
-	  access(cache_file.c_str(), R_OK) != -1) {
-	std::ifstream stream(cache_file.c_str());
-	if (! read_binary_journal(stream, std::getenv("LEDGER"),
-				  journal.get())) {
-	  // Throw away what's been read, and create a new journal
-	  journal.reset(new journal_t);
-	} else {
-	  cache_dirty = false;
-	}
-      }
-    }
-  }
-
-  TIMER_STOP(read_cache);
-
-  // Parse the command-line options
+  // Parse command-line arguments
 
   TIMER_START(process_args);
 
@@ -501,62 +479,69 @@ int main(int argc, char * argv[], char * envp[])
 
   TIMER_STOP(process_args);
 
+  const bool use_cache = files.empty();
+
   // Process options from the environment
 
   TIMER_START(process_env);
 
   process_environment(envp, "LEDGER_");
 
-  if (char * p = std::getenv("PRICE_HIST"))
+  if (const char * p = std::getenv("LEDGER"))
+    process_option("file", p);
+  if (const char * p = std::getenv("PRICE_HIST"))
     process_option("price-db", p);
-  if (char * p = std::getenv("PRICE_EXP"))
+  if (const char * p = std::getenv("PRICE_EXP"))
     process_option("price-exp", p);
 
   TIMER_STOP(process_env);
 
-  // Read the ledger file, unless we already read it from the cache
+  // Parse ledger files
 
   TIMER_START(parse_files);
 
-  if (! use_cache || cache_dirty) {
-    int entry_count = 0;
+  int entry_count = 0;
 
-    try {
-      if (files.empty()) {
-	if (char * p = std::getenv("LEDGER"))
-	  for (p = std::strtok(p, ":"); p; p = std::strtok(NULL, ":"))
-	    entry_count += parse_journal_file(p, journal.get());
+  try {
+    if (! init_file.empty())
+      if (parse_journal_file(init_file, journal.get()))
+	throw error("Entries not allowed in initialization file");
+
+    if (use_cache && ! cache_file.empty()) {
+      journal->sources.clear();		// remove init_file
+      entry_count += parse_journal_file(cache_file, journal.get());
+      journal->sources.pop_front();	// remove cache_file
+
+      std::list<std::string> exceptions;
+      std::set_difference(journal->sources.begin(), journal->sources.end(),
+			  files.begin(), files.end(), exceptions.begin());
+
+      if (entry_count == 0 || exceptions.size() > 0) {
+	journal.reset(new journal_t);
+	entry_count = 0;
       } else {
-	for (std::list<std::string>::iterator i = files.begin();
-	     i != files.end(); i++) {
-	  char buf[4096];
-	  char * p = buf;
-	  std::strcpy(p, (*i).c_str());
-	  entry_count += parse_journal_file(p, journal.get());
-	}
-      }
-
-      // Read prices from their own ledger file, after all others have
-      // been read.
-
-      if (! price_db.empty()) {
-	const char * path = price_db.c_str();
-	std::ifstream db(path);
-	journal->sources.push_back(path);
-	entry_count += parse_textual_journal(db, journal.get(),
-					     journal->master);
+	cache_dirty = false;
       }
     }
-    catch (error& err) {
-      std::cerr << "Fatal: " << err.what() << std::endl;
-      return 1;
-    }
 
-    if (entry_count == 0) {
-      std::cerr << ("Please specify ledger file(s) using -f option "
-		    "or LEDGER environment variable.") << std::endl;
-      return 1;
-    }
+    if (entry_count == 0)
+      for (std::list<std::string>::iterator i = files.begin();
+	   i != files.end(); i++)
+	entry_count += parse_journal_file(*i, journal.get());
+
+    if (! price_db.empty())
+      if (parse_journal_file(price_db, journal.get()))
+	throw error("Entries not allowed in price history file");
+  }
+  catch (error& err) {
+    std::cerr << "Fatal: " << err.what() << std::endl;
+    return 1;
+  }
+
+  if (entry_count == 0) {
+    std::cerr << ("Please specify ledger file(s) using -f option "
+		  "or LEDGER environment variable.") << std::endl;
+    return 1;
   }
 
   TIMER_STOP(parse_files);
@@ -849,13 +834,9 @@ int main(int argc, char * argv[], char * envp[])
 
   TIMER_START(write_cache);
 
-  if (use_cache && cache_dirty) {
-    std::string cache_file = ledger_cache_file();
-    if (! cache_file.empty()) {
-      assert(std::getenv("LEDGER"));
-      std::ofstream stream(cache_file.c_str());
-      write_binary_journal(stream, journal.get(), std::getenv("LEDGER"));
-    }
+  if (use_cache && cache_dirty && ! cache_file.empty()) {
+    std::ofstream stream(cache_file.c_str());
+    write_binary_journal(stream, journal.get(), &journal->sources);
   }
 
   TIMER_STOP(write_cache);
