@@ -60,27 +60,9 @@ void entry_t::add_transaction(transaction_t * xact)
 
 bool entry_t::remove_transaction(transaction_t * xact)
 {
-  bool found = false;
-  transactions_list::iterator i;
-  for (i = transactions.begin(); i != transactions.end(); i++)
-    if (*i == xact) {
-      found = true;
-      break;
-    }
-  if (! found)
-    return false;
-
-  transactions.erase(i);
-
-  for (i = xact->account->transactions.begin();
-       i != xact->account->transactions.end();
-       i++)
-    if (*i == xact) {
-      xact->account->transactions.erase(i);
-      return true;
-    }
-
-  return false;
+  transactions.remove(xact);
+  xact->account->transactions.remove(xact);
+  return true;
 }
 
 bool entry_t::valid() const
