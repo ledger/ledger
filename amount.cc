@@ -1107,6 +1107,17 @@ bool amount_t::valid() const
 }
 
 
+void commodity_t::set_symbol(const std::string& sym)
+{
+  *(const_cast<std::string *>(&symbol)) = sym;
+  quote = false;
+  for (const char * p = symbol.c_str(); *p; p++)
+    if (std::isspace(*p) || std::isdigit(*p) || *p == '-' || *p == '.') {
+      quote = true;
+      return;
+    }
+}
+
 void commodity_t::add_price(const std::time_t date, const amount_t& price)
 {
   if (! history)

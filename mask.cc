@@ -1,5 +1,6 @@
 #include "mask.h"
 #include "debug.h"
+#include "util.h"
 
 #include <cstdlib>
 

@@ -12,6 +12,7 @@
 #include "value.h"
 #include "error.h"
 #include "debug.h"
+#include "util.h"
 
 namespace ledger {
 
@@ -81,11 +82,11 @@ typedef std::list<transaction_t *> transactions_list;
 class entry_base_t
 {
  public:
-  journal_t *            journal;
-  unsigned long          src_idx;
-  std::istream::pos_type beg_pos;
-  std::istream::pos_type end_pos;
-  transactions_list	 transactions;
+  journal_t *       journal;
+  unsigned long     src_idx;
+  istream_pos_type  beg_pos;
+  istream_pos_type  end_pos;
+  transactions_list transactions;
 
   entry_base_t() {
     DEBUG_PRINT("ledger.memory.ctors", "ctor entry_base_t");

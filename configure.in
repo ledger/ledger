@@ -14,24 +14,6 @@ AC_PROG_RANLIB
 #AC_PROG_LIBTOOL
 #AM_PROG_LIBTOOL
 
-# check for C++ compiler compatibility
-AC_CACHE_CHECK(
-  [if C++ compiler is compatible],
-  [cc_compat],
-  [AC_LANG_PUSH(C++)
-   AC_TRY_LINK(
-     [#include <cctype>
-      #include <iostream>],
-     [if (std::isspace(' ') || std::isdigit(' '))
-	std::cout << std::left << std::right << "Hello";],
-     [cc_compat=true],
-     [cc_compat=false])
-   AC_LANG_POP])
-
-if [test x$cc_compat = xfalse ]; then
-  AC_MSG_FAILURE("System's C++ compiler is not compatible (need to use gcc3?)")
-fi
-
 # check for gmp
 AC_CACHE_CHECK(
   [if libgmp is available],

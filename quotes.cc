@@ -65,7 +65,11 @@ void quotes_by_script::operator()(commodity_t&      commodity,
 
     if (price && ! price_db.empty()) {
       strftime(buf, 127, "%Y/%m/%d %H:%M:%S", localtime(&now));
+#if defined(__GNUG__) && __GNUG__ < 3
+      ofstream database(price_db.c_str(), ios::out | ios::app);
+#else
       ofstream database(price_db.c_str(), ios_base::out | ios_base::app);
+#endif
       database << "P " << buf << " " << commodity.symbol
 	       << " " << price << endl;
     }

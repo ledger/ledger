@@ -1,5 +1,6 @@
 #include "format.h"
 #include "error.h"
+#include "util.h"
 #ifdef USE_BOOST_PYTHON
 #include "py_eval.h"
 #endif

@@ -380,16 +380,7 @@ class commodity_t
     return this != &comm;
   }
 
-  void set_symbol(const std::string& sym) {
-    *(const_cast<std::string *>(&symbol)) = sym;
-    quote = false;
-    for (const char * p = symbol.c_str(); *p; p++)
-      if (std::isspace(*p) || std::isdigit(*p) || *p == '-' || *p == '.') {
-	quote = true;
-	return;
-      }
-
-  }
+  void set_symbol(const std::string& sym);
 
   void add_price(const std::time_t date, const amount_t& price);
   bool remove_price(const std::time_t date) {

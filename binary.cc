@@ -547,8 +547,8 @@ void write_binary_transaction(std::ostream& out, transaction_t * xact)
 void write_binary_entry_base(std::ostream& out, entry_base_t * entry)
 {
   write_binary_number<unsigned long>(out, entry->src_idx);
-  write_binary_number<std::istream::pos_type>(out, entry->beg_pos);
-  write_binary_number<std::istream::pos_type>(out, entry->end_pos);
+  write_binary_number<istream_pos_type>(out, entry->beg_pos);
+  write_binary_number<istream_pos_type>(out, entry->end_pos);
 
   write_binary_number<unsigned long>(out, entry->transactions.size());
   for (transactions_list::const_iterator i = entry->transactions.begin();
@@ -682,7 +682,7 @@ void write_binary_journal(std::ostream& out, journal_t * journal)
     write_binary_string(out, journal->price_db);
   }
 
-  std::ostream::pos_type data_val = out.tellp();
+  ostream_pos_type data_val = out.tellp();
   write_binary_number<unsigned long>(out, 0);
 
   // Write out the accounts
@@ -696,9 +696,10 @@ void write_binary_journal(std::ostream& out, journal_t * journal)
   write_binary_number<unsigned long>(out, journal->auto_entries.size());
   write_binary_number<unsigned long>(out, journal->period_entries.size());
 
-  std::ostream::pos_type xacts_val = out.tellp();
+  ostream_pos_type xacts_val = out.tellp();
+
   write_binary_number<unsigned long>(out, 0);
-  std::ostream::pos_type bigints_val = out.tellp();
+  ostream_pos_type bigints_val = out.tellp();
   write_binary_number<unsigned long>(out, 0);
   bigints_count = 0;
 

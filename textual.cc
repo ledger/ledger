@@ -1,3 +1,7 @@
+#if defined(__GNUG__) && __GNUG__ < 3
+#define _XOPEN_SOURCE
+#endif
+
 #include "journal.h"
 #include "textual.h"
 #include "datetime.h"
@@ -18,6 +22,11 @@
 #include <ctime>
 #include <cctype>
 #include <cstdio>
+#include <cstdlib>
+
+#if defined(__GNUG__) && __GNUG__ < 3
+extern "C" char *realpath(const char *, char resolved_path[]);
+#endif
 
 #define TIMELOG_SUPPORT 1
 
@@ -310,7 +319,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
   while (in.good() && ! in.eof()) {
     try {
-      std::istream::pos_type beg_pos = in.tellg();
+      istream_pos_type beg_pos = in.tellg();
 
       in.getline(line, MAX_LINE);
       if (in.eof())
@@ -609,11 +618,11 @@ void write_textual_journal(journal_t& journal, std::string path,
   char          buf2[PATH_MAX];
 
 #ifdef HAVE_REALPATH
-  realpath(path.c_str(), buf1);
+  ::realpath(path.c_str(), buf1);
   for (strings_list::iterator i = journal.sources.begin();
        i != journal.sources.end();
        i++) {
-    realpath((*i).c_str(), buf2);
+    ::realpath((*i).c_str(), buf2);
     if (std::strcmp(buf1, buf2) == 0) {
       found = *i;
       break;
@@ -640,8 +649,8 @@ void write_textual_journal(journal_t& journal, std::string path,
   auto_entries_list::iterator	  al = journal.auto_entries.begin();
   period_entries_list::iterator pl = journal.period_entries.begin();
 
-  std::istream::pos_type pos = 0;
-  std::istream::pos_type jump_to;
+  istream_pos_type pos = 0;
+  istream_pos_type jump_to;
 
   format_t hdr_fmt(config.write_hdr_format);
 

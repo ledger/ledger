@@ -1,4 +1,5 @@
 #include "balance.h"
+#include "util.h"
 
 #include <deque>
 #include <algorithm>
