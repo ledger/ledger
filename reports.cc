@@ -201,8 +201,7 @@ void print_register(const std::string& acct_name, std::ostream& out,
   for (entries_list_iterator i = main_ledger->entries.begin();
        i != main_ledger->entries.end();
        i++) {
-    if ((! have_beginning && ! have_ending && ! have_date_mask &&
-	 ! (cleared_only ? (*i)->cleared : ! (*i)->cleared)) ||
+    if ((cleared_only && ! (*i)->cleared) ||
 	! matches_date_range(*i) || ! (*i)->matches(regexps))
       continue;
 
