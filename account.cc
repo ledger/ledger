@@ -89,4 +89,27 @@ std::string account_t::fullname() const
   }
 }
 
+bool account_t::valid() const
+{
+  if (name.find('-') != std::string::npos)
+    return false;
+
+  if (depth > 16)
+    return false;
+
+  for (transactions_list::const_iterator i = transactions.begin();
+       i != transactions.end();
+       i++)
+    if ((*i)->account != this)
+      return false;
+
+  for (accounts_map::const_iterator i = accounts.begin();
+       i != accounts.end();
+       i++)
+    if (! (*i).second->valid())
+      return false;
+
+  return true;
+}
+
 } // namespace ledger

@@ -59,6 +59,8 @@ class transaction_t
     if (cost)
       delete cost;
   }
+
+  bool valid() const;
 };
 
 
@@ -93,6 +95,8 @@ class entry_t
     transactions.remove(xact);
     return true;
   }
+
+  bool valid() const;
 };
 
 
@@ -146,6 +150,8 @@ class account_t
   bool remove_transaction(transaction_t * xact);
 
   friend class journal_t;
+
+  bool valid() const;
 };
 
 inline std::ostream& operator<<(std::ostream& out, const account_t& acct) {
@@ -201,6 +207,8 @@ class journal_t
 
   entry_t * derive_entry(strings_list::iterator begin,
 			 strings_list::iterator end) const;
+
+  bool valid() const;
 };
 
 extern const std::string version;

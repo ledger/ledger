@@ -8,6 +8,65 @@ namespace ledger {
 
 const std::string version = "2.0b";
 
+bool transaction_t::valid() const
+{
+  if (! entry)
+    return false;
+
+  bool found = false;
+  for (transactions_list::const_iterator i = entry->transactions.begin();
+       i != entry->transactions.end();
+       i++)
+    if (*i == this) {
+      found = true;
+      break;
+    }
+  if (! found)
+    return false;
+
+  if (! account)
+    return false;
+
+  found = false;
+  for (transactions_list::const_iterator i = account->transactions.begin();
+       i != account->transactions.end();
+       i++)
+    if (*i == this) {
+      found = true;
+      break;
+    }
+  if (! found)
+    return false;
+
+  if (! amount.valid())
+    return false;
+
+  if (cost && ! cost->valid())
+    return false;
+
+  if (flags & ~0x000f)
+    return false;
+
+  return true;
+}
+
+bool entry_t::valid() const
+{
+  if (! date || date == -1)
+    return false;
+
+  if (state != UNCLEARED && state != CLEARED && state != PENDING)
+    return false;
+
+  for (transactions_list::const_iterator i = transactions.begin();
+       i != transactions.end();
+       i++)
+    if ((*i)->entry != this || ! (*i)->valid())
+      return false;
+
+  return true;
+}
+
 journal_t::~journal_t()
 {
   DEBUG_PRINT("ledger.memory.dtors", "dtor journal_t");
@@ -178,6 +237,20 @@ entry_t * journal_t::derive_entry(strings_list::iterator i,
   }
 
   return added.release();
+}
+
+bool journal_t::valid() const
+{
+  if (! master->valid())
+    return false;
+
+  for (entries_list::const_iterator i = entries.begin();
+       i != entries.end();
+       i++)
+    if (! (*i)->valid())
+      return false;
+
+  return true;
 }
 
 void initialize_amounts();

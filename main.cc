@@ -633,6 +633,8 @@ int main(int argc, char * argv[], char * envp[])
   TIMER_STOP(write_cache);
 
 #ifdef DO_CLEANUP
+  VALIDATE(journal->valid());
+
   shutdown();
 #endif
 
