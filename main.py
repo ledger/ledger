@@ -4,13 +4,13 @@ import time
 
 from ledger import *
 
-def foo (str):
+def hello (str):
     print "Hello:", str
-def bar (str):
+def goodbye (str):
     print "Goodbye:", str
 
-register_option ("hello", "h:", foo)
-register_option ("goodbye", "g:", bar)
+register_option ("hello", "h:", hello)
+register_option ("goodbye", "g:", goodbye)
 args = process_arguments (sys.argv[1:])
 process_environment (os.environ, "TEST_")
 
@@ -28,7 +28,10 @@ class FormatTransaction (TransactionHandler):
     def __call__ (self, xact):
 	print self.formatter.format(xact)
 
-handler = FormatTransaction("%D %-20P %N %('foo'100)")
+def foo(d, val):
+    return d.xact.amount + val
+
+handler = FormatTransaction("%D %-20P %N %('foo'{$100})")
 handler = FilterTransactions (handler, "/Checking/")
 
 expr = parse_value_expr ("a*2")

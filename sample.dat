@@ -4,7 +4,7 @@
 ; !python
 ; from ledger import *
 ; def foo(d, val):
-;     return val + d.xact.amount
+;     return d.xact.amount + val
 ; !end
 ; 
 ; --value-expr 'foo'{$100}

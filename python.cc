@@ -27,6 +27,8 @@ namespace ledger {
 
 python_support * python_interpretor = NULL;
 
+#ifndef PYTHON_MODULE
+
 static struct cleanup_python {
   ~cleanup_python() {
     if (python_interpretor) {
@@ -56,14 +58,18 @@ void init_module()
   export_datetime();
 }
 
+#endif // PYTHON_MODULE
+
 void init_python()
 {
   assert(! python_interpretor);
 
+#ifndef PYTHON_MODULE
   Py_Initialize();
-  python_interpretor = new python_support;
-
   detail::init_module("ledger", &init_module);
+#endif
+
+  python_interpretor = new python_support;
 }
 
 } // namespace ledger

@@ -56,7 +56,7 @@ noinst_LIBRARIES = libledger_bpy.a
 libledger_bpy_a_SOURCES = amount.cc balance.cc value.cc autoxact.cc \
 	binary.cc config.cc datetime.cc format.cc journal.cc option.cc \
 	parser.cc qif.cc quotes.cc textual.cc valexpr.cc walk.cc python.cc
-libledger_bpy_a_CXXFLAGS = -DUSE_BOOST_PYTHON=1
+libledger_bpy_a_CXXFLAGS = -DUSE_BOOST_PYTHON=1 -DPYTHON_MODULE=1
 if READ_GNUCASH
 libledger_bpy_a_SOURCES += gnucash.cc
 endif
