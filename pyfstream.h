@@ -35,8 +35,12 @@ class pyoutbuf : public std::streambuf {
 
   // write multiple characters
   virtual std::streamsize xsputn (const char* s, std::streamsize num) {
-    if (PyFile_WriteString(s, (PyObject *)fo) < 0)
-      return 0;
+    char * buf = new char[num + 1];
+    std::strncpy(buf, s, num);
+    buf[num] = '\0';
+    if (PyFile_WriteString(buf, (PyObject *)fo) < 0)
+      num = 0;
+    delete[] buf;
     return num;
   }
 };
