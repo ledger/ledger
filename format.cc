@@ -10,7 +10,8 @@
 
 namespace ledger {
 
-std::string truncated(const std::string& str, unsigned int width)
+std::string truncated(const std::string& str, unsigned int width,
+		      const int style)
 {
   const int len = str.length();
   if (len <= width)
@@ -19,28 +20,34 @@ std::string truncated(const std::string& str, unsigned int width)
   assert(width < 254);
 
   char buf[256];
-#if 1
-  // This method truncates at the end.
-  std::strncpy(buf, str.c_str(), width - 2);
-  buf[width - 2] = '.';
-  buf[width - 1] = '.';
-#else
-#if 0
-  // This method truncates at the beginning.
-  std::strncpy(buf, str.c_str() + (len - width), width);
-  buf[0] = '.';
-  buf[1] = '.';
-#else
-  // This method truncates in the middle.
-  std::strncpy(buf, str.c_str(), width / 2);
-  std::strncpy(buf + width / 2,
-	       str.c_str() + (len - (width / 2 + width % 2)),
-	       width / 2 + width % 2);
-  buf[width / 2 - 1] = '.';
-  buf[width / 2] = '.';
-#endif
-#endif
+
+  switch (style) {
+  case 0:
+    // This method truncates at the beginning.
+    std::strncpy(buf, str.c_str() + (len - width), width);
+    buf[0] = '.';
+    buf[1] = '.';
+    break;
+
+  case 1:
+    // This method truncates in the middle.
+    std::strncpy(buf, str.c_str(), width / 2);
+    std::strncpy(buf + width / 2,
+		 str.c_str() + (len - (width / 2 + width % 2)),
+		 width / 2 + width % 2);
+    buf[width / 2 - 1] = '.';
+    buf[width / 2] = '.';
+    break;
+
+  case 2:
+    // This method truncates at the end (the default).
+    std::strncpy(buf, str.c_str(), width - 2);
+    buf[width - 2] = '.';
+    buf[width - 1] = '.';
+    break;
+  }
   buf[width] = '\0';
+
   return buf;
 }
 
@@ -935,6 +942,63 @@ std::string py_format(format_t& format, const T& item)
 
 void export_format()
 {
+  typedef
+    pystream_handler_wrap<format_transactions, transaction_t, std::string>
+    format_transactions_wrap;
+
+  class_< format_transactions_wrap, bases<item_handler<transaction_t> > >
+    ("FormatTransactions",
+     init<PyObject *, std::string>()[with_custodian_and_ward<1, 2>()])
+    .def("flush", &format_transactions_wrap::flush)
+    .def("__call__", &format_transactions_wrap::operator())
+    ;
+
+  typedef
+    pystream_handler_wrap<format_entries, transaction_t, std::string>
+    format_entries_wrap;
+
+  class_< format_entries_wrap, bases<item_handler<transaction_t> > >
+    ("FormatEntries",
+     init<PyObject *, std::string>()[with_custodian_and_ward<1, 2>()])
+    .def("flush", &format_entries_wrap::flush)
+    .def("__call__", &format_entries_wrap::operator())
+    ;
+
+  typedef
+    pystream_handler_wrap<format_xml_entries, transaction_t, bool>
+    format_xml_entries_wrap;
+
+  class_< format_xml_entries_wrap, bases<item_handler<transaction_t> > >
+    ("FormatXmlEntries",
+     init<PyObject *, bool>()[with_custodian_and_ward<1, 2>()])
+    .def("flush", &format_xml_entries_wrap::flush)
+    .def("__call__", &format_xml_entries_wrap::operator())
+    ;
+
+  typedef
+    pystream_handler_wrap<format_account, account_t, std::string, std::string>
+    format_account_wrap;
+
+  class_< format_account_wrap, bases<item_handler<transaction_t> > >
+    ("FormatAccount",
+     init<PyObject *, std::string, std::string>()
+     [with_custodian_and_ward<1, 2>()])
+    .def("flush", &format_account_wrap::flush)
+    .def("__call__", &format_account_wrap::operator())
+    ;
+
+  typedef
+    pystream_handler_wrap<format_equity, account_t, std::string, std::string>
+    format_equity_wrap;
+
+  class_< format_equity_wrap, bases<item_handler<transaction_t> > >
+    ("FormatEquity",
+     init<PyObject *, std::string, std::string>()
+     [with_custodian_and_ward<1, 2>()])
+    .def("flush", &format_equity_wrap::flush)
+    .def("__call__", &format_equity_wrap::operator())
+    ;
+
   class_< format_t > ("Format")
     .def(init<std::string>())
     .def("reset", &format_t::reset)
