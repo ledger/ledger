@@ -69,11 +69,11 @@ void handle_transaction(transaction_t * xact,
   for (transactions_list::iterator i = xact->entry->transactions.begin();
        i != xact->entry->transactions.end();
        i++)
-    if (! ((*i)->flags & (TRANSACTION_AUTO | TRANSACTION_HANDLED)) &&
+    if (! ((*i)->flags & TRANSACTION_AUTO) &&
+	! ((*i)->dflags & TRANSACTION_HANDLED) &&
 	(*i == xact ?
-	 (flags & MATCHING_TRANSACTIONS) :
-	 (flags & OTHER_TRANSACTIONS))) {
-      (*i)->flags |= TRANSACTION_HANDLED;
+	 (flags & MATCHING_TRANSACTIONS) : (flags & OTHER_TRANSACTIONS))) {
+      (*i)->dflags |= TRANSACTION_HANDLED;
       functor(*i);
     }
 }
@@ -110,7 +110,7 @@ class clear_flags
 {
  public:
   void operator()(transaction_t * xact) const {
-    xact->flags &= ~TRANSACTION_TRANSIENT;
+    xact->dflags = 0;
   }
 };
 

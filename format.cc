@@ -21,7 +21,7 @@ std::string partial_account_name(const account_t *  account)
   for (const account_t * acct = account;
        acct && acct->parent;
        acct = acct->parent) {
-    if (acct->flags & ACCOUNT_DISPLAYED)
+    if (acct->dflags & ACCOUNT_DISPLAYED)
       break;
 
     if (name.empty())
@@ -289,7 +289,7 @@ void format_t::format_elements(std::ostream&    out,
       for (const account_t * acct = details.account;
 	   acct;
 	   acct = acct->parent)
-	if (acct->flags & ACCOUNT_DISPLAYED) {
+	if (acct->dflags & ACCOUNT_DISPLAYED) {
 	  if (elem->min_width > 0 || elem->max_width > 0)
 	    out.width(elem->min_width > elem->max_width ?
 		      elem->min_width : elem->max_width);
@@ -359,7 +359,7 @@ void format_transaction::operator()(transaction_t * xact) const
   xact->index = last_xact ? last_xact->index + 1 : 0;
 
   if (disp_pred_functor(xact)) {
-    xact->flags |= TRANSACTION_DISPLAYED;
+    xact->dflags |= TRANSACTION_DISPLAYED;
 
     // This makes the assumption that transactions from a single entry
     // are always grouped together.
@@ -432,7 +432,7 @@ void format_account::operator()(account_t *	   account,
 
     if (output && (max_depth == 0 || account->depth <= max_depth)) {
       format.format_elements(output_stream, details_t(account));
-      account->flags |= ACCOUNT_DISPLAYED;
+      account->dflags |= ACCOUNT_DISPLAYED;
     }
   }
 }

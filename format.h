@@ -247,7 +247,7 @@ class format_equity
     if ((report_top || account->parent != NULL) &&
 	disp_pred_functor(account)) {
       next_lines_format.format_elements(output_stream, details_t(account));
-      account->flags |= ACCOUNT_DISPLAYED;
+      account->dflags |= ACCOUNT_DISPLAYED;
       total += account->value.quantity;
     }
   }

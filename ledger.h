@@ -25,10 +25,9 @@ namespace ledger {
 #define TRANSACTION_VIRTUAL   0x01
 #define TRANSACTION_BALANCE   0x02
 #define TRANSACTION_AUTO      0x04
-#define TRANSACTION_HANDLED   0x08
-#define TRANSACTION_DISPLAYED 0x10
 
-#define TRANSACTION_TRANSIENT (TRANSACTION_HANDLED | TRANSACTION_DISPLAYED)
+#define TRANSACTION_HANDLED   0x10
+#define TRANSACTION_DISPLAYED 0x20
 
 class entry_t;
 class account_t;
@@ -44,10 +43,11 @@ class transaction_t
   std::string	 note;
   balance_pair_t total;
   unsigned int   index;
+  unsigned int	 dflags;
 
   transaction_t(entry_t * _entry, account_t * _account)
     : entry(_entry), account(_account), flags(TRANSACTION_NORMAL),
-      index(0) {}
+      index(0), dflags(0) {}
 
   transaction_t(entry_t *	   _entry,
 		account_t *	   _account,
@@ -56,7 +56,7 @@ class transaction_t
 		unsigned int	   _flags = TRANSACTION_NORMAL,
 		const std::string& _note  = "")
     : entry(_entry), account(_account), amount(_amount),
-      cost(_cost), flags(_flags), note(_note), index(0) {}
+      cost(_cost), flags(_flags), note(_note), index(0), dflags(0) {}
 };
 
 
@@ -111,7 +111,7 @@ class account_t
   balance_pair_t    value;
   balance_pair_t    total;
   unsigned long	    ident;
-  unsigned long	    flags;
+  unsigned long	    dflags;
 
   mutable std::string  _fullname;
   static unsigned long next_ident;
@@ -120,7 +120,7 @@ class account_t
 	    const std::string& _name = "",
 	    const std::string& _note = "")
     : parent(_parent), name(_name), note(_note),
-      depth(parent ? parent->depth + 1 : 0), flags(0) {}
+      depth(parent ? parent->depth + 1 : 0), dflags(0) {}
 
   ~account_t();
 

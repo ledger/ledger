@@ -574,7 +574,9 @@ int main(int argc, char * argv[])
       display_predicate_string = "T";
     else if (command == "E")
       display_predicate_string = "a";
-  } else {
+  }
+
+  if (! display_predicate_string.empty()) {
 #ifdef DEBUG
     if (debug)
       std::cerr << "disp-pred = " << display_predicate_string << std::endl;
@@ -712,8 +714,10 @@ int main(int argc, char * argv[])
     if (const char * p = std::getenv("LEDGER_CACHE")) {
       std::ofstream outstr(p);
       assert(std::getenv("LEDGER"));
+#if 0
       clear_transaction_display_flags(journal->entries.begin(),
 				      journal->entries.end());
+#endif
       write_binary_journal(outstr, journal.get(), std::getenv("LEDGER"));
     }
 
