@@ -100,11 +100,10 @@
 	(if (time-less-p moment date)
 	    (throw 'found t)))))))
 
-(defun ledger-add-entry (entry)
+(defun ledger-add-entry (entry-text)
   (interactive
-   (list (read-string "Entry: " (format-time-string "%Y/%m/%d "))))
-  (let* ((args (mapcar 'shell-quote-argument (split-string entry)))
-	 (date (car args))
+   (list (read-string "Entry: " (format-time-string "%Y/%m/"))))
+  (let* ((date (car (split-string entry-text)))
 	 (insert-year t) exit-code)
     (if (string-match "\\([0-9]+\\)/\\([0-9]+\\)/\\([0-9]+\\)" date)
 	(setq date (encode-time 0 0 0 (string-to-int (match-string 3 date))
@@ -117,7 +116,7 @@
     (save-excursion
       (insert
        (with-temp-buffer
-	 (setq exit-code (apply 'ledger-run-ledger "entry" args))
+	 (setq exit-code (ledger-run-ledger "entry" entry-text))
 	 (if (= 0 exit-code)
 	     (progn
 	       (goto-char (point-min))
@@ -125,8 +124,8 @@
 	       (if insert-year
 		   (buffer-string)
 		 (buffer-substring 5 (point-max))))
-	   (concat (if insert-year entry
-		     (substring entry 5)) "\n"))) "\n"))))
+	   (concat (if insert-year entry-text
+		     (substring entry-text 5)) "\n"))) "\n"))))
 
 (defun ledger-expand-entry ()
   (interactive)
@@ -303,8 +302,11 @@
 
 (defun ledger-run-ledger (&rest args)
   "run ledger with supplied arguments"
-  (apply 'call-process ledger-binary-path nil t nil
-	 (append (list "-f" ledger-data-file) args)))
+  (let ((command (mapconcat 'identity
+			    (append (list ledger-binary-path
+					  "-f" ledger-data-file) args) " ")))
+    (insert (shell-command-to-string command)))
+  0)
 
 (provide 'ledger)
 

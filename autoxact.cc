@@ -2,10 +2,10 @@
 
 namespace ledger {
 
-void automated_transaction_t::extend_entry(entry_t * entry)
+void automated_transaction_t::extend_entry(entry_t& entry)
 {
-  transactions_deque initial_xacts(entry->transactions.begin(),
-				   entry->transactions.end());
+  transactions_deque initial_xacts(entry.transactions.begin(),
+				   entry.transactions.end());
 
   for (transactions_deque::iterator i = initial_xacts.begin();
        i != initial_xacts.end();
@@ -23,13 +23,13 @@ void automated_transaction_t::extend_entry(entry_t * entry)
 	transaction_t * xact
 	  = new transaction_t((*t)->account, amt,
 			      (*t)->flags | TRANSACTION_AUTO);
-	entry->add_transaction(xact);
+	entry.add_transaction(xact);
       }
 }
 
 automated_transactions_t * current_auto_xacts = NULL;
 
-bool handle_auto_xacts(entry_t * entry)
+bool handle_auto_xacts(entry_t& entry)
 {
   if (current_auto_xacts &&
       ! current_auto_xacts->automated_transactions.empty())
@@ -39,3 +39,17 @@ bool handle_auto_xacts(entry_t * entry)
 }
 
 } // namespace ledger
+
+#ifdef USE_BOOST_PYTHON
+
+#include <boost/python.hpp>
+#include <Python.h>
+
+using namespace boost::python;
+using namespace ledger;
+
+void export_autoxact() {
+  def("handle_auto_xacts", handle_auto_xacts);
+}
+
+#endif // USE_BOOST_PYTHON

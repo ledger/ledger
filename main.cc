@@ -164,6 +164,8 @@ int parse_and_report(int argc, char * argv[], char * envp[])
 {
   std::auto_ptr<journal_t> journal(new journal_t);
 
+  add_hook(journal->entry_finalize_hooks, handle_auto_xacts);
+
   // Parse command-line arguments, and those set in the environment
 
   TIMER_START(process_opts);
@@ -224,7 +226,6 @@ int parse_and_report(int argc, char * argv[], char * envp[])
 #endif
   std::auto_ptr<qif_parser_t>     qif_parser(new qif_parser_t);
   std::auto_ptr<textual_parser_t> text_parser(new textual_parser_t);
-  text_parser->add_finalize_hook(handle_auto_xacts);
 
   register_parser(bin_parser.get());
 #ifdef READ_GNUCASH

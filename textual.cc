@@ -145,93 +145,6 @@ void parse_automated_transactions(std::istream& in,
       add_automated_transaction(new automated_transaction_t(line + 1, xacts));
 }
 
-bool finalize_entry(entry_t * entry)
-{
-  // Scan through and compute the total balance for the entry.  This
-  // is used for auto-calculating the value of entries with no cost,
-  // and the per-unit price of unpriced commodities.
-
-  value_t balance;
-
-  bool no_amounts = true;
-  for (transactions_list::const_iterator x = entry->transactions.begin();
-       x != entry->transactions.end();
-       x++)
-    if (! ((*x)->flags & TRANSACTION_VIRTUAL) ||
-	((*x)->flags & TRANSACTION_BALANCE)) {
-      amount_t * p = (*x)->cost ? (*x)->cost : &(*x)->amount;
-      if (*p) {
-	if (no_amounts) {
-	  balance = *p;
-	  no_amounts = false;
-	} else {
-	  balance += *p;
-	}
-      }
-    }
-
-  // If it's a null entry, then let the user have their fun
-  if (no_amounts)
-    return true;
-
-  // If one transaction of a two-line transaction is of a different
-  // commodity than the others, and it has no per-unit price,
-  // determine its price by dividing the unit count into the value of
-  // the balance.  This is done for the last eligible commodity.
-
-  if (balance.type == value_t::BALANCE &&
-      ((balance_t *) balance.data)->amounts.size() == 2)
-    for (transactions_list::const_iterator x = entry->transactions.begin();
-	 x != entry->transactions.end();
-	 x++) {
-      if ((*x)->cost || ((*x)->flags & TRANSACTION_VIRTUAL))
-	continue;
-
-      for (amounts_map::const_iterator i
-	     = ((balance_t *) balance.data)->amounts.begin();
-	   i != ((balance_t *) balance.data)->amounts.end();
-	   i++)
-	if ((*i).second.commodity() != (*x)->amount.commodity()) {
-	  assert((*x)->amount);
-	  balance -= (*x)->amount;
-	  assert(! (*x)->cost);
-	  (*x)->cost = new amount_t(- (*i).second);
-	  balance += *(*x)->cost;
-	  break;
-	}
-
-      break;
-    }
-
-  // Walk through each of the transactions, fixing up any that we
-  // can, and performing any on-the-fly calculations.
-
-  bool empty_allowed = true;
-
-  for (transactions_list::const_iterator x = entry->transactions.begin();
-       x != entry->transactions.end();
-       x++) {
-    if ((*x)->amount || ((*x)->flags & TRANSACTION_VIRTUAL))
-      continue;
-
-    if (! empty_allowed || ! balance || balance.type != value_t::AMOUNT)
-      return false;
-
-    empty_allowed = false;
-
-    // If one transaction gives no value at all -- and all the
-    // rest are of the same commodity -- then its value is the
-    // inverse of the computed value of the others.
-
-    (*x)->amount = *((amount_t *) balance.data);
-    (*x)->amount.negate();
-
-    balance = 0U;
-  }
-
-  return ! balance;
-}
-
 namespace {
   TIMER_DEF(entry_finish,  "finalizing entry");
   TIMER_DEF(entry_xacts,   "parsing transactions");
@@ -293,17 +206,6 @@ entry_t * parse_entry(std::istream& in, account_t * master,
       curr->add_transaction(xact);
 
   TIMER_STOP(entry_xacts);
-
-  // If there were no transactions, throw away the entry
-
-  TIMER_START(entry_finish);
-
-  if (curr->transactions.empty() ||
-      ! parser.run_finalize_hooks(curr.get())) {
-    return NULL;		// ~auto_ptr will delete curr
-  }
-
-  TIMER_STOP(entry_finish);
 
   return curr.release();
 }
@@ -423,10 +325,10 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	      = new transaction_t(last_account, amt, TRANSACTION_VIRTUAL);
 	    curr->add_transaction(xact);
 
-	    if (! run_finalize_hooks(curr.get()) ||
-		! journal->add_entry(curr.release()))
+	    if (! journal->add_entry(curr.release()))
 	      throw parse_error(path, linenum,
 				"Failed to record 'out' timelog entry");
+
 	    count++;
 	  } else {
 	    throw parse_error(path, linenum, "Cannot parse timelog entry date");

@@ -120,6 +120,93 @@ bool entry_t::remove_transaction(transaction_t * xact)
   return true;
 }
 
+bool finalize_entry(entry_t& entry)
+{
+  // Scan through and compute the total balance for the entry.  This
+  // is used for auto-calculating the value of entries with no cost,
+  // and the per-unit price of unpriced commodities.
+
+  value_t balance;
+
+  bool no_amounts = true;
+  for (transactions_list::const_iterator x = entry.transactions.begin();
+       x != entry.transactions.end();
+       x++)
+    if (! ((*x)->flags & TRANSACTION_VIRTUAL) ||
+	((*x)->flags & TRANSACTION_BALANCE)) {
+      amount_t * p = (*x)->cost ? (*x)->cost : &(*x)->amount;
+      if (*p) {
+	if (no_amounts) {
+	  balance = *p;
+	  no_amounts = false;
+	} else {
+	  balance += *p;
+	}
+      }
+    }
+
+  // If it's a null entry, then let the user have their fun
+  if (no_amounts)
+    return true;
+
+  // If one transaction of a two-line transaction is of a different
+  // commodity than the others, and it has no per-unit price,
+  // determine its price by dividing the unit count into the value of
+  // the balance.  This is done for the last eligible commodity.
+
+  if (balance.type == value_t::BALANCE &&
+      ((balance_t *) balance.data)->amounts.size() == 2)
+    for (transactions_list::const_iterator x = entry.transactions.begin();
+	 x != entry.transactions.end();
+	 x++) {
+      if ((*x)->cost || ((*x)->flags & TRANSACTION_VIRTUAL))
+	continue;
+
+      for (amounts_map::const_iterator i
+	     = ((balance_t *) balance.data)->amounts.begin();
+	   i != ((balance_t *) balance.data)->amounts.end();
+	   i++)
+	if ((*i).second.commodity() != (*x)->amount.commodity()) {
+	  assert((*x)->amount);
+	  balance -= (*x)->amount;
+	  assert(! (*x)->cost);
+	  (*x)->cost = new amount_t(- (*i).second);
+	  balance += *(*x)->cost;
+	  break;
+	}
+
+      break;
+    }
+
+  // Walk through each of the transactions, fixing up any that we
+  // can, and performing any on-the-fly calculations.
+
+  bool empty_allowed = true;
+
+  for (transactions_list::const_iterator x = entry.transactions.begin();
+       x != entry.transactions.end();
+       x++) {
+    if ((*x)->amount || ((*x)->flags & TRANSACTION_VIRTUAL))
+      continue;
+
+    if (! empty_allowed || ! balance || balance.type != value_t::AMOUNT)
+      return false;
+
+    empty_allowed = false;
+
+    // If one transaction gives no value at all -- and all the
+    // rest are of the same commodity -- then its value is the
+    // inverse of the computed value of the others.
+
+    (*x)->amount = *((amount_t *) balance.data);
+    (*x)->amount.negate();
+
+    balance = 0U;
+  }
+
+  return ! balance;
+}
+
 bool entry_t::valid() const
 {
   if (! date || date == -1)
@@ -296,6 +383,11 @@ journal_t::~journal_t()
 
 bool journal_t::add_entry(entry_t * entry)
 {
+  if (! run_hooks(entry_finalize_hooks, *entry)) {
+    delete entry;
+    return false;
+  }
+
   entries.push_back(entry);
 
   for (transactions_list::const_iterator i = entry->transactions.begin();
@@ -439,6 +531,9 @@ entry_t * journal_t::derive_entry(strings_list::iterator i,
   }
 
  done:
+  if (! run_hooks(entry_finalize_hooks, *added))
+    return NULL;
+
   return added.release();
 }
 
@@ -590,6 +685,27 @@ account_t * py_find_account_2(journal_t& journal, const std::string& name,
   return journal.find_account(name, auto_create);
 }
 
+#if 0
+
+void py_add_entry_finalize_hook(journal_t& journal, object x)
+{
+  add_hook(journal.entry_finalize_hooks,
+	   extract<journal_t::entry_finalize_hook_t>(x));
+}
+
+void py_remove_entry_finalize_hook(journal_t& journal, object x)
+{
+  remove_hook(journal.entry_finalize_hooks,
+	      extract<journal_t::entry_finalize_hook_t>(x));
+}
+
+void py_run_entry_finalize_hooks(journal_t& journal, entry_t& entry)
+{
+  run_hooks(journal.entry_finalize_hooks, entry);
+}
+
+#endif
+
 #define EXC_TRANSLATOR(type)				\
   void exc_translate_ ## type(const type& err) {	\
     PyErr_SetString(PyExc_RuntimeError, err.what());	\
@@ -677,6 +793,11 @@ void export_journal()
 
     .def("add_entry", &journal_t::add_entry)
     .def("remove_entry", &journal_t::remove_entry)
+#if 0
+    .def("add_entry_finalize_hook", py_add_entry_finalize_hook)
+    .def("remove_entry_finalize_hook", py_remove_entry_finalize_hook)
+    .def("run_entry_finalize_hooks", py_run_entry_finalize_hooks)
+#endif
     .def("derive_entry", &journal_t::derive_entry,
 	 return_value_policy<manage_new_object>())
 

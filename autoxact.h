@@ -34,7 +34,7 @@ public:
       delete *i;
   }
 
-  void extend_entry(entry_t * entry);
+  void extend_entry(entry_t& entry);
 };
 
 
@@ -63,7 +63,7 @@ public:
       delete *i;
   }
 
-  void extend_entry(entry_t * entry) {
+  void extend_entry(entry_t& entry) {
     for (automated_transactions_deque::iterator i
 	   = automated_transactions.begin();
 	 i != automated_transactions.end();
@@ -90,7 +90,7 @@ public:
 
 extern automated_transactions_t * current_auto_xacts;
 
-bool handle_auto_xacts(entry_t * entry);
+bool handle_auto_xacts(entry_t& entry);
 
 } // namespace ledger
 

@@ -116,6 +116,8 @@ class entry_t
   bool valid() const;
 };
 
+bool finalize_entry(entry_t& entry);
+
 
 typedef std::map<const std::string, account_t *> accounts_map;
 typedef std::pair<const std::string, account_t *> accounts_pair;
@@ -181,6 +183,30 @@ class account_t
 std::ostream& operator<<(std::ostream& out, const account_t& account);
 
 
+template <typename T>
+void add_hook(std::list<T>& list, T func, const bool prepend = false) {
+  if (prepend)
+    list.push_front(func);
+  else
+    list.push_back(func);
+}
+
+template <typename T>
+void remove_hook(std::list<T>& list, T func) {
+  list.remove(func);
+}
+
+template <typename T, typename Data>
+bool run_hooks(std::list<T>& list, Data& entry) {
+  for (typename std::list<T>::const_iterator i = list.begin();
+       i != list.end();
+       i++)
+    if (! (*i)(entry))
+      return false;
+  return true;
+}
+
+
 typedef std::list<entry_t *>   entries_list;
 typedef std::list<std::string> strings_list;
 
@@ -195,9 +221,14 @@ class journal_t
 
   mutable accounts_map accounts_cache;
 
+  typedef bool (*entry_finalize_hook_t)(entry_t& entry);
+
+  std::list<entry_finalize_hook_t> entry_finalize_hooks;
+
   journal_t() {
     master = new account_t(NULL, "");
     item_pool = item_pool_end = NULL;
+    add_hook(entry_finalize_hooks, finalize_entry);
   }
   ~journal_t();
 
