@@ -2,6 +2,8 @@
 #include "error.h"
 #include "datetime.h"
 
+#include <vector>
+
 #include <pcre.h>
 
 namespace ledger {
@@ -21,6 +23,8 @@ mask_t::mask_t(const std::string& pat) : exclude(false)
       p++;
   }
   pattern = p;
+
+  DEBUG_PRINT("valexpr.mask.parse", "pattern = '" << pattern << "'");
 
   const char *error;
   int erroffset;
@@ -337,6 +341,16 @@ void node_t::compute(balance_t& result, const details_t& details) const
   }
 }
 
+inline char peek_next_nonws(std::istream& in)
+{
+  char c = in.peek();
+  while (! in.eof() && std::isspace(c) && c != '\n') {
+    in.get(c);
+    c = in.peek();
+  }
+  return c;
+}
+
 node_t * parse_term(std::istream& in);
 
 inline node_t * parse_term(const char * p) {
@@ -348,7 +362,7 @@ node_t * parse_term(std::istream& in)
 {
   node_t * node = NULL;
 
-  char c = in.peek();
+  char c = peek_next_nonws(in);
   if (std::isdigit(c) || c == '.' || c == '{') {
     std::string ident;
 
@@ -425,14 +439,14 @@ node_t * parse_term(std::istream& in)
 
   case 'P':
     node = new node_t(node_t::F_VALUE);
-    if (in.peek() == '(') {
+    if (peek_next_nonws(in) == '(') {
       in.get(c);
       node->left = parse_expr(in);
-      if (in.peek() == ',') {
+      if (peek_next_nonws(in) == ',') {
 	in.get(c);
 	node->right = parse_expr(in);
       }
-      if (in.peek() == ')')
+      if (peek_next_nonws(in) == ')')
 	in.get(c);
       else
 	throw expr_error("Missing ')'");
@@ -446,7 +460,7 @@ node_t * parse_term(std::istream& in)
     std::string ident;
     bool        payee_mask = false;
 
-    c = in.peek();
+    c = peek_next_nonws(in);
     if (c == '/') {
       payee_mask = true;
       in.get(c);
@@ -474,7 +488,7 @@ node_t * parse_term(std::istream& in)
 
   case '(':
     node = parse_expr(in);
-    if (in.peek() == ')')
+    if (peek_next_nonws(in) == ')')
       in.get(c);
     else
       throw expr_error("Missing ')'");
@@ -515,7 +529,7 @@ node_t * parse_mul_expr(std::istream& in)
   node = parse_term(in);
 
   if (node && ! in.eof()) {
-    char c = in.peek();
+    char c = peek_next_nonws(in);
     while (c == '*' || c == '/') {
       in.get(c);
       switch (c) {
@@ -535,7 +549,7 @@ node_t * parse_mul_expr(std::istream& in)
 	break;
       }
       }
-      c = in.peek();
+      c = peek_next_nonws(in);
     }
   }
 
@@ -549,7 +563,7 @@ node_t * parse_add_expr(std::istream& in)
   node = parse_mul_expr(in);
 
   if (node && ! in.eof()) {
-    char c = in.peek();
+    char c = peek_next_nonws(in);
     while (c == '+' || c == '-') {
       in.get(c);
       switch (c) {
@@ -569,7 +583,7 @@ node_t * parse_add_expr(std::istream& in)
 	break;
       }
       }
-      c = in.peek();
+      c = peek_next_nonws(in);
     }
   }
 
@@ -580,7 +594,7 @@ node_t * parse_logic_expr(std::istream& in)
 {
   node_t * node = NULL;
 
-  if (in.peek() == '!') {
+  if (peek_next_nonws(in) == '!') {
     char c;
     in.get(c);
     node = new node_t(node_t::O_NOT);
@@ -591,7 +605,7 @@ node_t * parse_logic_expr(std::istream& in)
   node = parse_add_expr(in);
 
   if (node && ! in.eof()) {
-    char c = in.peek();
+    char c = peek_next_nonws(in);
     if (c == '=' || c == '<' || c == '>') {
       in.get(c);
       switch (c) {
@@ -606,7 +620,7 @@ node_t * parse_logic_expr(std::istream& in)
       case '<': {
 	node_t * prev = node;
 	node = new node_t(node_t::O_LT);
-	if (in.peek() == '=') {
+	if (peek_next_nonws(in) == '=') {
 	  in.get(c);
 	  node->type = node_t::O_LTE;
 	}
@@ -618,7 +632,7 @@ node_t * parse_logic_expr(std::istream& in)
       case '>': {
 	node_t * prev = node;
 	node = new node_t(node_t::O_GT);
-	if (in.peek() == '=') {
+	if (peek_next_nonws(in) == '=') {
 	  in.get(c);
 	  node->type = node_t::O_GTE;
 	}
@@ -647,7 +661,7 @@ node_t * parse_expr(std::istream& in)
   node = parse_logic_expr(in);
 
   if (node && ! in.eof()) {
-    char c = in.peek();
+    char c = peek_next_nonws(in);
     while (c == '&' || c == '|' || c == '?') {
       in.get(c);
       switch (c) {
@@ -674,7 +688,7 @@ node_t * parse_expr(std::istream& in)
 	node_t * choices = new node_t(node_t::O_COL);
 	node->right = choices;
 	choices->left = parse_logic_expr(in);
-	c = in.peek();
+	c = peek_next_nonws(in);
 	if (c != ':') {
 	  std::ostringstream err;
 	  err << "Unexpected character '" << c << "'";
@@ -692,21 +706,57 @@ node_t * parse_expr(std::istream& in)
 	  throw expr_error(err.str());
 	}
       }
-      c = in.peek();
+      c = peek_next_nonws(in);
     }
   }
 
   return node;
 }
 
-} // namespace ledger
+std::string regexps_to_predicate(std::list<std::string>::const_iterator begin,
+				 std::list<std::string>::const_iterator end,
+				 const bool account_regexp)
+{
+  std::vector<std::string> regexps(2);
+  std::string pred;
 
+  // Treat the remaining command-line arguments as regular
+  // expressions, used for refining report results.
 
-#ifdef TEST
+  for (std::list<std::string>::const_iterator i = begin;
+       i != end;
+       i++)
+    if ((*i)[0] == '-') {
+      if (! regexps[1].empty())
+	regexps[1] += "|";
+      regexps[1] += (*i).substr(1);
+    } else {
+      if (! regexps[0].empty())
+	regexps[0] += "|";
+      regexps[0] += *i;
+    }
 
-namespace ledger {
+  for (std::vector<std::string>::const_iterator i = regexps.begin();
+       i != regexps.end();
+       i++)
+    if (! (*i).empty()) {
+      if (! pred.empty())
+	pred += "&";
+      if (i != regexps.begin())
+	pred += "!";
+      if (! account_regexp)
+	pred += "/";
+      pred += "/(?:";
+      pred += *i;
+      pred += ")/";
+    }
 
-static void dump_tree(std::ostream& out, node_t * node)
+  return pred;
+}
+
+#ifdef DEBUG_ENABLED
+
+void dump_tree(std::ostream& out, const node_t * node)
 {
   switch (node->type) {
   case node_t::CONSTANT_A:
@@ -834,7 +884,11 @@ static void dump_tree(std::ostream& out, node_t * node)
   }
 }
 
+#endif // DEBUG_ENABLED
+
 } // namespace ledger
+
+#ifdef TEST
 
 int main(int argc, char *argv[])
 {

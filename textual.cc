@@ -131,36 +131,23 @@ void parse_automated_transactions(std::istream& in, account_t * account,
 				  automated_transactions_t& auto_xacts)
 {
   static char line[MAX_LINE + 1];
+  in.getline(line, MAX_LINE);
+  linenum++;
 
-  masks_list masks;
+  transactions_deque xacts;
 
-  while (! in.eof() && in.peek() == '=') {
-    in.getline(line, MAX_LINE);
-    linenum++;
-
-    char * p = line + 1;
-    p = skip_ws(p);
-
-    masks.push_back(mask_t(p));
-  }
-
-  transactions_list xacts;
-
-  while (! in.eof() && (in.peek() == ' ' || in.peek() == '\t')) {
+  while (! in.eof() && (in.peek() == ' ' || in.peek() == '\t'))
     if (transaction_t * xact = parse_transaction(in, account, NULL)) {
       if (! xact->amount)
 	throw parse_error(path, linenum,
-			  "All automated transactions must have a value");
+			  "All automated transactions must have values");
       else
 	xacts.push_back(xact);
     }
-  }
 
-  if (! masks.empty() && ! xacts.empty()) {
-    automated_transaction_t * auto_xact
-      = new automated_transaction_t(masks, xacts);
-    auto_xacts.add_automated_transaction(auto_xact);
-  }
+  if (! xacts.empty())
+    auto_xacts.
+      add_automated_transaction(new automated_transaction_t(line + 1, xacts));
 }
 
 bool finalize_entry(entry_t * entry)

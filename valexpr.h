@@ -134,13 +134,36 @@ inline node_t * find_node(node_t * node, node_t::kind_t type) {
   return result;
 }
 
+#ifdef DEBUG_ENABLED
+void dump_tree(std::ostream& out, const node_t * node);
+#endif
+
 template <typename T>
 class item_predicate
 {
   const node_t * predicate;
 
  public:
-  item_predicate(const node_t * _predicate) : predicate(_predicate) {}
+  item_predicate(const std::string& _predicate)
+    : predicate(_predicate.empty() ? NULL : parse_expr(_predicate)) {
+#ifdef DEBUG_ENABLED
+    DEBUG_CLASS("valexpr.predicate.parse");
+
+    DEBUG_PRINT_("parsing: '" << _predicate << "'");
+    if (DEBUG_() && ledger::debug_stream) {
+      *ledger::debug_stream << "dump: ";
+      dump_tree(*ledger::debug_stream, predicate);
+      *ledger::debug_stream << std::endl;
+    }
+#endif
+  }
+  item_predicate(const node_t * _predicate)
+    : predicate(_predicate) {}
+
+  ~item_predicate() {
+    if (predicate)
+      delete predicate;
+  }
 
   bool operator()(const T * item) const {
     if (predicate) {
@@ -152,6 +175,10 @@ class item_predicate
     }
   }
 };
+
+std::string regexps_to_predicate(std::list<std::string>::const_iterator begin,
+				 std::list<std::string>::const_iterator end,
+				 const bool account_regexp = true);
 
 } // namespace report
 

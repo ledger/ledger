@@ -102,34 +102,6 @@ void download_price_quote(commodity_t *	    commodity,
 } // namespace ledger
 
 
-static void assemble_regexp_predicate(std::string& predicate_string,
-				      const std::list<std::string>& strings,
-				      const bool exclude = false,
-				      const bool payee   = false)
-{
-  if (strings.size() == 0)
-    return;
-
-  if (! predicate_string.empty())
-    predicate_string += "&";
-  if (exclude)
-    predicate_string += "!";
-  if (payee)
-    predicate_string += "/";
-  predicate_string += "/(";
-  bool first = true;
-  for (std::list<std::string>::const_iterator i = strings.begin();
-       i != strings.end();
-       i++) {
-    if (first)
-      first = false;
-    else
-      predicate_string += "|";
-    predicate_string += *i;
-  }
-  predicate_string += ")/";
-}
-
 static void show_version(std::ostream& out)
 {
   out
@@ -186,13 +158,11 @@ int main(int argc, char * argv[])
   using namespace ledger;
 
   std::auto_ptr<journal_t> journal(new journal_t);
-  std::list<std::string>  files;
-  std::auto_ptr<node_t>   predicate;
-  std::auto_ptr<node_t>   display_predicate;
-  std::auto_ptr<node_t>   sort_order;
+  std::list<std::string>   files;
+  std::auto_ptr<node_t>    sort_order;
 
-  std::string predicate_string;
-  std::string display_predicate_string;
+  std::string predicate;
+  std::string display_predicate;
   std::string format_string;
   std::string sort_string;
   std::string value_expr = "a";
@@ -207,8 +177,11 @@ int main(int argc, char * argv[])
   bool show_commodities_revalued      = false;
   bool show_commodities_revalued_only = false;
 
-#ifdef DEBUG
-  bool debug = false;
+#ifdef DEBUG_ENABLED
+  if (char * p = std::getenv("DEBUG_FILE")) {
+    debug_stream = new std::ofstream(p);
+    free_debug_stream = true;
+  }
 #endif
 
   // Initialize some variables based on environment variable settings
@@ -251,18 +224,12 @@ int main(int argc, char * argv[])
   int c, index;
   while (-1 !=
 	 (c = getopt(argc, argv,
-		     "+ABb:Ccd:DEe:F:f:Ghi:L:l:MnoOP:p:QRS:st:T:UVvWXZz"))) {
+		     "+ABb:Ccd:DEe:F:f:Ghi:L:l:MnoOP:p:QRS:st:T:UVvWXZ"))) {
     switch (char(c)) {
     // Basic options
     case 'h':
       show_help(std::cout);
       break;
-
-#ifdef DEBUG
-    case 'z':
-      debug = 1;
-      break;
-#endif
 
     case 'v':
       show_version(std::cout);
@@ -278,48 +245,48 @@ int main(int argc, char * argv[])
       break;
 
     case 'b':
-      if (! predicate_string.empty())
-	predicate_string += "&";
-      predicate_string += "(d>=[";
-      predicate_string += optarg;
-      predicate_string += "])";
+      if (! predicate.empty())
+	predicate += "&";
+      predicate += "(d>=[";
+      predicate += optarg;
+      predicate += "])";
       break;
 
     case 'e':
-      if (! predicate_string.empty())
-	predicate_string += "&";
-      predicate_string += "(d<[";
-      predicate_string += optarg;
-      predicate_string += "])";
+      if (! predicate.empty())
+	predicate += "&";
+      predicate += "(d<[";
+      predicate += optarg;
+      predicate += "])";
       break;
 
     case 'c': {
-      if (! predicate_string.empty())
-	predicate_string += "&";
-      predicate_string += "(d<";
+      if (! predicate.empty())
+	predicate += "&";
+      predicate += "(d<";
       std::ostringstream now;
       now << std::time(NULL);
-      predicate_string += now.str();
-      predicate_string += ")";
+      predicate += now.str();
+      predicate += ")";
       break;
     }
 
     case 'C':
-      if (! predicate_string.empty())
-	predicate_string += "&";
-      predicate_string += "X";
+      if (! predicate.empty())
+	predicate += "&";
+      predicate += "X";
       break;
 
     case 'U':
-      if (! predicate_string.empty())
-	predicate_string += "&";
-      predicate_string += "!X";
+      if (! predicate.empty())
+	predicate += "&";
+      predicate += "!X";
       break;
 
     case 'R':
-      if (! predicate_string.empty())
-	predicate_string += "&";
-      predicate_string += "R";
+      if (! predicate.empty())
+	predicate += "&";
+      predicate += "R";
       break;
 
     // Customizing output
@@ -348,19 +315,19 @@ int main(int argc, char * argv[])
       break;
 
     case 'l':
-      if (! predicate_string.empty())
-	predicate_string += "&";
-      predicate_string += "(";
-      predicate_string += optarg;
-      predicate_string += ")";
+      if (! predicate.empty())
+	predicate += "&";
+      predicate += "(";
+      predicate += optarg;
+      predicate += ")";
       break;
 
     case 'd':
-      if (! display_predicate_string.empty())
-	display_predicate_string += "&";
-      display_predicate_string += "(";
-      display_predicate_string += optarg;
-      display_predicate_string += ")";
+      if (! display_predicate.empty())
+	display_predicate += "&";
+      display_predicate += "(";
+      display_predicate += optarg;
+      display_predicate += ")";
       break;
 
     // Commodity reporting
@@ -518,79 +485,54 @@ int main(int argc, char * argv[])
   if (command == "e") {
     new_entry.reset(journal->derive_entry(argc - index, &argv[index]));
   } else {
-    std::list<std::string> account_include_regexps;
-    std::list<std::string> account_exclude_regexps;
-    std::list<std::string> payee_include_regexps;
-    std::list<std::string> payee_exclude_regexps;
-
     // Treat the remaining command-line arguments as regular
     // expressions, used for refining report results.
 
-    for (; index < argc; index++) {
+    int start = index;
+    for (; index < argc; index++)
       if (std::strcmp(argv[index], "--") == 0) {
 	index++;
 	break;
       }
 
-      if (! show_expanded && command == "b")
-	show_expanded = true;
-
-      if (argv[index][0] == '-')
-	account_exclude_regexps.push_back(argv[index] + 1);
-      else
-	account_include_regexps.push_back(argv[index]);
+    if (start < index) {
+      std::list<std::string> regexps(&argv[start], &argv[index]);
+      std::string pred = regexps_to_predicate(regexps.begin(), regexps.end());
+      if (! pred.empty()) {
+	if (! predicate.empty())
+	  predicate += "&";
+	predicate += pred;
+      }
     }
 
-    for (; index < argc; index++) {
-      if (! show_expanded && command == "b")
-	show_expanded = true;
-
-      if (argv[index][0] == '-')
-	payee_exclude_regexps.push_back(argv[index] + 1);
-      else
-	payee_include_regexps.push_back(argv[index]);
+    if (index < argc) {
+      std::list<std::string> regexps(&argv[index], &argv[argc]);
+      std::string pred = regexps_to_predicate(regexps.begin(), regexps.end(),
+					      false);
+      if (! pred.empty()) {
+	if (! predicate.empty())
+	  predicate += "&";
+	predicate += pred;
+      }
     }
-
-    assemble_regexp_predicate(predicate_string, account_include_regexps);
-    assemble_regexp_predicate(predicate_string, account_exclude_regexps, true);
-    assemble_regexp_predicate(predicate_string, payee_include_regexps,
-			      false, true);
-    assemble_regexp_predicate(predicate_string, payee_exclude_regexps,
-			      true, true);
   }
 
   // Compile the predicates
 
-  if (! predicate_string.empty()) {
-#ifdef DEBUG
-    if (debug)
-      std::cerr << "predicate = " << predicate_string << std::endl;
-#endif
-    predicate.reset(parse_expr(predicate_string));
-  }
-
-  if (display_predicate_string.empty()) {
+  if (display_predicate.empty()) {
     if (command == "b") {
       if (! show_empty)
-	display_predicate_string = "T";
+	display_predicate = "T";
 
       if (! show_expanded) {
-	if (! display_predicate_string.empty())
-	  display_predicate_string += "&";
-	display_predicate_string += "!n";
+	if (! display_predicate.empty())
+	  display_predicate += "&";
+	display_predicate += "!n";
       }
     }
     else if (command == "E") {
-      display_predicate_string = "a";
+      display_predicate = "a";
     }
-  }
-
-  if (! display_predicate_string.empty()) {
-#ifdef DEBUG
-    if (debug)
-      std::cerr << "disp-pred = " << display_predicate_string << std::endl;
-#endif
-    display_predicate.reset(parse_expr(display_predicate_string));
   }
 
   // Compile the sorting string
@@ -647,8 +589,8 @@ int main(int argc, char * argv[])
 
   if (command == "b") {
     format_t format(first_line_format);
-    format_account formatter(std::cout, format, display_predicate.get());
-    walk_accounts(journal->master, formatter, predicate.get(),
+    format_account formatter(std::cout, format, display_predicate);
+    walk_accounts(journal->master, formatter, predicate,
 		  xact_display_flags, show_subtotals, sort_order.get());
 
     if (format_account::disp_subaccounts_p(journal->master)) {
@@ -660,9 +602,8 @@ int main(int argc, char * argv[])
   else if (command == "E") {
     format_t format(first_line_format);
     format_t nformat(next_lines_format);
-    format_equity formatter(std::cout, format, nformat,
-			    display_predicate.get());
-    walk_accounts(journal->master, formatter, predicate.get(),
+    format_equity formatter(std::cout, format, nformat, display_predicate);
+    walk_accounts(journal->master, formatter, predicate,
 		  xact_display_flags, true, sort_order.get());
   }
   else if (command == "e") {
@@ -678,8 +619,7 @@ int main(int argc, char * argv[])
   else {
     format_t format(first_line_format);
     format_t nformat(next_lines_format);
-    format_transaction formatter(std::cout, format, nformat,
-				 display_predicate.get(),
+    format_transaction formatter(std::cout, format, nformat, display_predicate,
 #ifdef COLLAPSED_REGISTER
 				 ! show_subtotals,
 #endif
@@ -689,15 +629,15 @@ int main(int argc, char * argv[])
 	changed_value_filter<format_transaction>
 	  filtered_formatter(formatter);
 	walk_entries(journal->entries.begin(), journal->entries.end(),
-		     filtered_formatter, predicate.get(), xact_display_flags);
+		     filtered_formatter, predicate, xact_display_flags);
       } else {
 	walk_entries(journal->entries.begin(), journal->entries.end(),
-		     formatter, predicate.get(), xact_display_flags);
+		     formatter, predicate, xact_display_flags);
       }
     } else {
       transactions_deque transactions_pool;
       walk_entries(journal->entries.begin(), journal->entries.end(),
-		   collect_transactions(transactions_pool), predicate.get(),
+		   collect_transactions(transactions_pool), predicate,
 		   xact_display_flags);
       std::stable_sort(transactions_pool.begin(), transactions_pool.end(),
 		       compare_items<transaction_t>(sort_order.get()));

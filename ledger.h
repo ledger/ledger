@@ -19,6 +19,12 @@
 #include "amount.h"
 #include "balance.h"
 
+#ifdef RELEASE_LEVEL
+#if RELEASE_LEVEL >= 2
+#include "debug.h"
+#endif
+#endif
+
 namespace ledger {
 
 #define TRANSACTION_NORMAL    0x00

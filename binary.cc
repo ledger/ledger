@@ -29,7 +29,7 @@ void read_binary_amount(std::istream& in, amount_t& amt)
 {
   unsigned long id;
 
-#ifdef DEBUG
+#ifdef DEBUG_ENABLED
   {
     unsigned short guard;
     in.read((char *)&guard, sizeof(guard));
@@ -45,7 +45,7 @@ void read_binary_amount(std::istream& in, amount_t& amt)
 
   amt.read_quantity(in);
 
-#ifdef DEBUG
+#ifdef DEBUG_ENABLED
   {
     unsigned short guard;
     in.read((char *)&guard, sizeof(guard));
@@ -60,7 +60,7 @@ transaction_t * read_binary_transaction(std::istream& in, entry_t * entry)
 
   unsigned long id;
 
-#ifdef DEBUG
+#ifdef DEBUG_ENABLED
   {
     unsigned short guard;
     in.read((char *)&guard, sizeof(guard));
@@ -85,7 +85,7 @@ transaction_t * read_binary_transaction(std::istream& in, entry_t * entry)
     xact->note = buf;
   }
 
-#ifdef DEBUG
+#ifdef DEBUG_ENABLED
   {
     unsigned short guard;
     in.read((char *)&guard, sizeof(guard));
@@ -100,7 +100,7 @@ entry_t * read_binary_entry(std::istream& in, journal_t * journal)
 {
   entry_t * entry = new entry_t;
 
-#ifdef DEBUG
+#ifdef DEBUG_ENABLED
   {
     unsigned short guard;
     in.read((char *)&guard, sizeof(guard));
@@ -134,7 +134,7 @@ entry_t * read_binary_entry(std::istream& in, journal_t * journal)
     entry->transactions.push_back(xact);
   }
 
-#ifdef DEBUG
+#ifdef DEBUG_ENABLED
   {
     unsigned short guard;
     in.read((char *)&guard, sizeof(guard));
@@ -152,7 +152,7 @@ commodity_t * read_binary_commodity(std::istream& in)
   commodity_t * commodity = new commodity_t;
   commodities.push_back(commodity);
 
-#ifdef DEBUG
+#ifdef DEBUG_ENABLED
   {
     unsigned short guard;
     in.read((char *)&guard, sizeof(guard));
@@ -202,7 +202,7 @@ commodity_t * read_binary_commodity(std::istream& in)
 
   read_binary_amount(in, commodity->conversion);
 
-#ifdef DEBUG
+#ifdef DEBUG_ENABLED
   {
     unsigned short guard;
     in.read((char *)&guard, sizeof(guard));
@@ -220,7 +220,7 @@ account_t * read_binary_account(std::istream& in, account_t * master = NULL)
   account_t * acct = new account_t(NULL);
   accounts.push_back(acct);
 
-#ifdef DEBUG
+#ifdef DEBUG_ENABLED
   {
     unsigned short guard;
     in.read((char *)&guard, sizeof(guard));
@@ -272,7 +272,7 @@ account_t * read_binary_account(std::istream& in, account_t * master = NULL)
     acct->add_account(child);
   }
 
-#ifdef DEBUG
+#ifdef DEBUG_ENABLED
   {
     unsigned short guard;
     in.read((char *)&guard, sizeof(guard));
@@ -296,7 +296,7 @@ unsigned int read_binary_journal(std::istream&	   in,
   if (magic != binary_magic_number)
     return 0;
 
-#ifdef DEBUG
+#ifdef DEBUG_ENABLED
   {
     unsigned short guard;
     in.read((char *)&guard, sizeof(guard));
@@ -356,7 +356,7 @@ unsigned int read_binary_journal(std::istream&	   in,
     journal->entries.push_back(entry);
   }
 
-#ifdef DEBUG
+#ifdef DEBUG_ENABLED
   {
     unsigned short guard;
     in.read((char *)&guard, sizeof(guard));
@@ -373,7 +373,7 @@ unsigned int read_binary_journal(std::istream&	   in,
 
 void write_binary_amount(std::ostream& out, const amount_t& amt)
 {
-#ifdef DEBUG
+#ifdef DEBUG_ENABLED
   {
     unsigned short guard = 0x1001;
     out.write((char *)&guard, sizeof(guard));
@@ -389,7 +389,7 @@ void write_binary_amount(std::ostream& out, const amount_t& amt)
 
   amt.write_quantity(out);
 
-#ifdef DEBUG
+#ifdef DEBUG_ENABLED
   {
     unsigned short guard = 0x1002;
     out.write((char *)&guard, sizeof(guard));
@@ -399,7 +399,7 @@ void write_binary_amount(std::ostream& out, const amount_t& amt)
 
 void write_binary_transaction(std::ostream& out, transaction_t * xact)
 {
-#ifdef DEBUG
+#ifdef DEBUG_ENABLED
   {
     unsigned short guard = 0x1003;
     out.write((char *)&guard, sizeof(guard));
@@ -416,7 +416,7 @@ void write_binary_transaction(std::ostream& out, transaction_t * xact)
   if (len)
     out.write(xact->note.c_str(), len);
 
-#ifdef DEBUG
+#ifdef DEBUG_ENABLED
   {
     unsigned short guard = 0x1004;
     out.write((char *)&guard, sizeof(guard));
@@ -426,7 +426,7 @@ void write_binary_transaction(std::ostream& out, transaction_t * xact)
 
 void write_binary_entry(std::ostream& out, entry_t * entry)
 {
-#ifdef DEBUG
+#ifdef DEBUG_ENABLED
   {
     unsigned short guard = 0x1005;
     out.write((char *)&guard, sizeof(guard));
@@ -454,7 +454,7 @@ void write_binary_entry(std::ostream& out, entry_t * entry)
        i++)
     write_binary_transaction(out, *i);
 
-#ifdef DEBUG
+#ifdef DEBUG_ENABLED
   {
     unsigned short guard = 0x1006;
     out.write((char *)&guard, sizeof(guard));
@@ -464,7 +464,7 @@ void write_binary_entry(std::ostream& out, entry_t * entry)
 
 void write_binary_commodity(std::ostream& out, commodity_t * commodity)
 {
-#ifdef DEBUG
+#ifdef DEBUG_ENABLED
   {
     unsigned short guard = 0x1007;
     out.write((char *)&guard, sizeof(guard));
@@ -504,7 +504,7 @@ void write_binary_commodity(std::ostream& out, commodity_t * commodity)
 
   write_binary_amount(out, commodity->conversion);
 
-#ifdef DEBUG
+#ifdef DEBUG_ENABLED
   {
     unsigned short guard = 0x1008;
     out.write((char *)&guard, sizeof(guard));
@@ -514,7 +514,7 @@ void write_binary_commodity(std::ostream& out, commodity_t * commodity)
 
 void write_binary_account(std::ostream& out, account_t * account)
 {
-#ifdef DEBUG
+#ifdef DEBUG_ENABLED
   {
     unsigned short guard = 0x1009;
     out.write((char *)&guard, sizeof(guard));
@@ -552,7 +552,7 @@ void write_binary_account(std::ostream& out, account_t * account)
        i++)
     write_binary_account(out, (*i).second);
 
-#ifdef DEBUG
+#ifdef DEBUG_ENABLED
   {
     unsigned short guard = 0x1010;
     out.write((char *)&guard, sizeof(guard));
@@ -565,7 +565,7 @@ void write_binary_journal(std::ostream& out, journal_t * journal,
 {
   out.write((char *)&binary_magic_number, sizeof(binary_magic_number));
 
-#ifdef DEBUG
+#ifdef DEBUG_ENABLED
   {
     unsigned short guard = 0x1011;
     out.write((char *)&guard, sizeof(guard));
@@ -613,7 +613,7 @@ void write_binary_journal(std::ostream& out, journal_t * journal,
        i++)
     write_binary_entry(out, *i);
 
-#ifdef DEBUG
+#ifdef DEBUG_ENABLED
   {
     unsigned short guard = 0x1012;
     out.write((char *)&guard, sizeof(guard));

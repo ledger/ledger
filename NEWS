@@ -54,7 +54,7 @@
     -W  Report the trend, with older values affecting the trend less
     -X  Report expected amount for the next transaction
 
-- Amount expressions are now supported, where the totals reported can
+- Value expressions are now supported, where the totals reported can
   be changed using -t and -T and an expression string composed of:
 
      a    amount
@@ -141,6 +141,16 @@
 
     %?10d %?-.20p %-.22a %12.66t %12.80T
     %20T %-a
+
+- Automated transactions now use a single value expression as a
+  predicate.  This means the new syntax is:
+
+    = VALUE-EXPR
+      TRANSACTIONS...
+
+  Only one VALUE-EXPR is supported, compared to the multiple account
+  regexps supported before.  By using a VALUE-EXPR as a predicate,
+  matching may now be much more comprehensive and selective.
 
 * 1.7 (never released)
 

@@ -4,6 +4,7 @@ CODE   = account.cc  \
 	 balance.cc  \
 	 binary.cc   \
 	 datetime.cc \
+	 debug.cc    \
 	 error.cc    \
 	 format.cc   \
 	 ledger.cc   \
@@ -17,9 +18,9 @@ OBJS   = $(patsubst %.cc,%.o,$(CODE))
 CXX    = g++
 
 CFLAGS = -Wall -ansi -pedantic
-#DFLAGS = -O3 -fomit-frame-pointer
-DFLAGS = -g -DDEBUG=1
-#DFLAGS = -g -DDEBUG=1 -pg
+#DFLAGS = -O3 -fomit-frame-pointer -DRELEASE_LEVEL=0
+DFLAGS = -g -DRELEASE_LEVEL=4
+#DFLAGS = -g -DRELEASE_LEVEL=2 -pg
 
 INCS   = -I/sw/include \
 	 -I/usr/include/gcc/darwin/3.3/c++ \

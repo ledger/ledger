@@ -8,15 +8,17 @@
 
 namespace ledger {
 
+typedef std::deque<transaction_t *> transactions_deque;
+
 class automated_transaction_t
 {
 public:
-  masks_list        masks;
-  transactions_list transactions;
+  item_predicate<transaction_t> predicate;
+  transactions_deque		transactions;
 
-  automated_transaction_t(masks_list& _masks,
-			  transactions_list& _transactions) {
-    masks.insert(masks.begin(), _masks.begin(), _masks.end());
+  automated_transaction_t(const std::string&  _predicate,
+			  transactions_deque& _transactions)
+    : predicate(_predicate) {
     transactions.insert(transactions.begin(),
 			_transactions.begin(), _transactions.end());
     // Take over ownership of the pointers
@@ -24,7 +26,7 @@ public:
   }
 
   ~automated_transaction_t() {
-    for (transactions_list::iterator i = transactions.begin();
+    for (transactions_deque::iterator i = transactions.begin();
 	 i != transactions.end();
 	 i++)
       delete *i;

@@ -352,7 +352,7 @@ inline balance_t abs(const balance_t& bal) {
   return temp;
 }
 
-#ifdef DEBUG
+#ifdef DEBUG_ENABLED
 inline std::ostream& operator<<(std::ostream& out, const balance_t& bal) {
   bal.write(out, 12);
   return out;

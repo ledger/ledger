@@ -6,15 +6,6 @@
 #include <exception>
 #include <string>
 
-#ifdef DEBUG
-#include <cassert>
-#else
-#ifdef assert
-#undef assert
-#endif
-#define assert(x)
-#endif
-
 namespace ledger {
 
 class error : public std::exception

@@ -104,14 +104,14 @@ class format_transaction
   mutable transaction_t * last_xact;
 
  public:
-  format_transaction(std::ostream&   _output_stream,
-		     const format_t& _first_line_format,
-		     const format_t& _next_lines_format,
-		     const node_t *  display_predicate = NULL,
+  format_transaction(std::ostream&	_output_stream,
+		     const format_t&	_first_line_format,
+		     const format_t&	_next_lines_format,
+		     const std::string& display_predicate = NULL,
 #ifdef COLLAPSED_REGISTER
-		     const bool      _collapsed = false,
+		     const bool	_collapsed	  = false,
 #endif
-		     const bool      _inverted  = false)
+		     const bool         _inverted	  = false)
     : output_stream(_output_stream),
       first_line_format(_first_line_format),
       next_lines_format(_next_lines_format),
@@ -198,9 +198,9 @@ class format_account
   item_predicate<account_t> disp_pred_functor;
 
  public:
-  format_account(std::ostream&   _output_stream,
-		 const format_t& _format,
-		 const node_t *  display_predicate = NULL)
+  format_account(std::ostream&      _output_stream,
+		 const format_t&    _format,
+		 const std::string& display_predicate = NULL)
     : output_stream(_output_stream), format(_format),
       disp_pred_functor(display_predicate) {}
 
@@ -237,10 +237,10 @@ class format_equity
   mutable balance_t total;
 
  public:
-  format_equity(std::ostream&   _output_stream,
-		const format_t& _first_line_format,
-		const format_t& _next_lines_format,
-		const node_t *  display_predicate = NULL)
+  format_equity(std::ostream&      _output_stream,
+		const format_t&    _first_line_format,
+		const format_t&    _next_lines_format,
+		const std::string& display_predicate = NULL)
     : output_stream(_output_stream),
       first_line_format(_first_line_format),
       next_lines_format(_next_lines_format),

@@ -11,7 +11,7 @@ class sum_in_account
 };
 
 void calc__accounts(account_t * account,
-		    item_predicate<transaction_t>& pred_functor,
+		    const item_predicate<transaction_t>& pred_functor,
 		    unsigned int flags)
 {
   sum_in_account functor;

@@ -4,11 +4,14 @@ namespace ledger {
 
 void automated_transaction_t::extend_entry(entry_t * entry)
 {
-  for (transactions_list::iterator i = entry->transactions.begin();
-       i != entry->transactions.end();
+  transactions_deque initial_xacts(entry->transactions.begin(),
+				   entry->transactions.end());
+
+  for (transactions_deque::iterator i = initial_xacts.begin();
+       i != initial_xacts.end();
        i++)
-    if (matches(masks, *((*i)->account))) {
-      for (transactions_list::iterator t = transactions.begin();
+    if (predicate(*i))
+      for (transactions_deque::iterator t = transactions.begin();
 	   t != transactions.end();
 	   t++) {
 	amount_t amt;
@@ -22,7 +25,6 @@ void automated_transaction_t::extend_entry(entry_t * entry)
 			      (*t)->flags | TRANSACTION_AUTO);
 	entry->add_transaction(xact);
       }
-    }
 }
 
 } // namespace ledger

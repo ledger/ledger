@@ -82,9 +82,9 @@ void handle_transaction(transaction_t * xact,
 template <typename Function>
 void walk_entries(entries_list::iterator begin,
 		  entries_list::iterator end,
-		  const Function& functor,
-		  const node_t *  predicate,
-		  unsigned int	  flags)
+		  const Function&	 functor,
+		  const std::string&	 predicate,
+		  unsigned int		 flags)
 {
   item_predicate<transaction_t> pred_functor(predicate);
 
@@ -200,7 +200,7 @@ void for_each_account(account_t * account, const Function& functor)
 }
 
 void calc__accounts(account_t * account,
-		    item_predicate<transaction_t>& pred_functor,
+		    const item_predicate<transaction_t>& pred_functor,
 		    unsigned int flags);
 
 inline void sum__accounts(account_t * account)
@@ -215,12 +215,12 @@ inline void sum__accounts(account_t * account)
 }
 
 template <typename Function>
-void walk_accounts(account_t *	   account,
-		   const Function& functor,
-		   const node_t *  predicate,
-		   unsigned int	   flags,
-		   const bool	   calc_subtotals,
-		   const node_t *  sort_order = NULL)
+void walk_accounts(account_t *	      account,
+		   const Function&    functor,
+		   const std::string& predicate,
+		   unsigned int	      flags,
+		   const bool	      calc_subtotals,
+		   const node_t *     sort_order = NULL)
 {
   item_predicate<transaction_t> pred_functor(predicate);
 
