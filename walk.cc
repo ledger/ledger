@@ -279,42 +279,46 @@ void interval_transactions::operator()(transaction_t& xact)
        std::difftime(xact.entry->date, interval.end) >= 0))
     return;
 
-  std::time_t quant = interval.increment(interval.begin);
-  if (std::difftime(xact.entry->date, quant) > 0) {
-    if (last_xact) {
-      start  = interval.begin;
-      finish = quant;
-      flush();
+  if (interval) {
+    std::time_t quant = interval.increment(interval.begin);
+    if (std::difftime(xact.entry->date, quant) > 0) {
+      if (last_xact) {
+	start  = interval.begin;
+	finish = quant;
+	flush();
+      }
+
+      if (! interval.seconds) {
+	struct std::tm * desc = std::localtime(&xact.entry->date);
+	if (interval.years)
+	  desc->tm_mon = 0;
+	desc->tm_mday = 1;
+	desc->tm_hour = 0;
+	desc->tm_min  = 0;
+	desc->tm_sec  = 0;
+	quant = std::mktime(desc);
+      }
+
+      std::time_t temp;
+#if DEBUG_LEVEL >= RELEASE
+      int cutoff = 10000;
+#endif
+      while (std::difftime(xact.entry->date,
+			   temp = interval.increment(quant)) > 0) {
+	if (quant == temp)
+	  break;
+	quant = temp;
+#if DEBUG_LEVEL >= RELEASE
+	assert(--cutoff > 0);
+#endif
+      }
+      interval.begin = quant;
     }
 
-    if (! interval.seconds) {
-      struct std::tm * desc = std::localtime(&xact.entry->date);
-      if (interval.years)
-	desc->tm_mon = 0;
-      desc->tm_mday = 1;
-      desc->tm_hour = 0;
-      desc->tm_min  = 0;
-      desc->tm_sec  = 0;
-      quant = std::mktime(desc);
-    }
-
-    std::time_t temp;
-#if DEBUG_LEVEL >= RELEASE
-    int cutoff = 10000;
-#endif
-    while (std::difftime(xact.entry->date,
-			 temp = interval.increment(quant)) > 0) {
-      if (quant == temp)
-	break;
-      quant = temp;
-#if DEBUG_LEVEL >= RELEASE
-      assert(--cutoff > 0);
-#endif
-    }
-    interval.begin = quant;
+    subtotal_transactions::operator()(xact);
+  } else {
+    (*handler)(xact);
   }
-
-  subtotal_transactions::operator()(xact);
 
   last_xact = &xact;
 }
