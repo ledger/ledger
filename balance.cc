@@ -92,6 +92,38 @@ void balance_t::write(std::ostream& out,
 using namespace boost::python;
 using namespace ledger;
 
+unsigned int balance_len(balance_t& bal)
+{
+  return bal.amounts.size();
+}
+
+amount_t balance_getitem(balance_t& bal, int i)
+{
+  std::size_t len = bal.amounts.size();
+
+  if (abs(i) >= len) {
+    PyErr_SetString(PyExc_IndexError, "Index out of range");
+    throw_error_already_set();
+  }
+
+  int x = i < 0 ? len + i : i;
+  amounts_map::iterator elem = bal.amounts.begin();
+  while (--x >= 0)
+    elem++;
+
+  return (*elem).second;
+}
+
+unsigned int balance_pair_len(balance_pair_t& bal_pair)
+{
+  return balance_len(bal_pair.quantity);
+}
+
+amount_t balance_pair_getitem(balance_pair_t& bal_pair, int i)
+{
+  return balance_getitem(bal_pair.quantity, i);
+}
+
 void export_balance()
 {
   class_< balance_t > ("Balance")
@@ -134,9 +166,10 @@ void export_balance()
     .def(! self)
 
     .def(abs(self))
-#if 0
-    .def(str(self))
-#endif
+    .def(self_ns::str(self))
+
+    .def("__len__", balance_len)
+    .def("__getitem__", balance_getitem)
 
     .def("negate", &balance_t::negate)
     .def("amount", &balance_t::amount)
@@ -200,9 +233,10 @@ void export_balance()
     .def(! self)
 
     .def(abs(self))
-#if 0
-    .def(str(self))
-#endif
+    .def(self_ns::str(self))
+
+    .def("__len__", balance_pair_len)
+    .def("__getitem__", balance_pair_getitem)
 
     .def("negate", &balance_pair_t::negate)
     .def("amount", &balance_pair_t::amount)

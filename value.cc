@@ -550,6 +550,62 @@ value_t value_t::cost() const
 using namespace boost::python;
 using namespace ledger;
 
+unsigned int balance_len(balance_t& bal);
+amount_t     balance_getitem(balance_t& bal, int i);
+unsigned int balance_pair_len(balance_pair_t& bal_pair);
+amount_t     balance_pair_getitem(balance_pair_t& bal_pair, int i);
+
+unsigned int value_len(value_t& value)
+{
+  switch (value.type) {
+  case value_t::BOOLEAN:
+  case value_t::INTEGER:
+  case value_t::AMOUNT:
+    return 1;
+
+  case value_t::BALANCE:
+    return balance_len(*((balance_t *) value.data));
+
+  case value_t::BALANCE_PAIR:
+    return balance_pair_len(*((balance_pair_t *) value.data));
+
+  default:
+    assert(0);
+    break;
+  }
+  assert(0);
+  return 0;
+}
+
+amount_t value_getitem(value_t& value, int i)
+{
+  std::size_t len = value_len(value);
+
+  if (abs(i) >= len) {
+    PyErr_SetString(PyExc_IndexError, "Index out of range");
+    throw_error_already_set();
+  }
+
+  switch (value.type) {
+  case value_t::BOOLEAN:
+  case value_t::INTEGER:
+  case value_t::AMOUNT:
+    return value;
+
+  case value_t::BALANCE:
+    return balance_getitem(*((balance_t *) value.data), i);
+
+  case value_t::BALANCE_PAIR:
+    return balance_pair_getitem(*((balance_pair_t *) value.data), i);
+
+  default:
+    assert(0);
+    break;
+  }
+  assert(0);
+  return 0;
+}
+
 void export_value()
 {
   class_< value_t > ("Value")
@@ -626,6 +682,9 @@ void export_value()
 
     .def(abs(self))
     .def(self_ns::str(self))
+
+    .def("__len__", value_len)
+    .def("__getitem__", value_getitem)
 
     .def("cast", &value_t::cast)
     .def("negate", &value_t::negate)

@@ -16,3 +16,10 @@ z = Value ("$1000.45")
 
 z += Value(x)
 print z
+
+bal = Balance (x)
+bal += Amount ("100.8 DM")
+
+print "balance:", bal
+for amt in bal:
+    print "  amount:", amt
