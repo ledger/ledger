@@ -78,6 +78,9 @@ bool parse_ledger(std::istream& in)
     if (in.eof()) {
       break;
     }
+    else if (line[0] == '\n') {
+      continue;
+    }
     else if (std::isdigit(line[0])) {
       static char buf[256];
       int ovector[60];

@@ -1,11 +1,21 @@
-CODE =  amount.cc ledger.cc parse.cc gnucash.cc balance.cc main.cc
+define GNUCASH
+true
+endef
+
+CODE =  amount.cc ledger.cc parse.cc balance.cc main.cc
+ifdef GNUCASH
+CODE := $(CODE) gnucash.cc
+endif
 
 OBJS = $(patsubst %.cc,%.o,$(CODE))
 
 CFLAGS = -Wall -ansi -pedantic
 DFLAGS = -g
 INCS   = -I/usr/include/xmltok
-LIBS   = -lgmpxx -lgmp -lpcre -lxmlparse
+LIBS   = -lgmpxx -lgmp -lpcre
+ifdef GNUCASH
+LIBS  := $(LIBS) -lxmlparse
+endif
 
 all: make.deps ledger
 

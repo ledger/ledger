@@ -45,10 +45,11 @@ void entry::print(std::ostream& out) const
     out << std::right << (*i)->cost->as_str(true);
 
     if (! (*i)->note.empty())
-      out << " ; " << (*i)->note;
+      out << "  ; " << (*i)->note;
 
     out << std::endl;
   }
+  out << std::endl;
 }
 
 bool entry::validate() const

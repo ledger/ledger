@@ -268,7 +268,11 @@ static std::string amount_to_str(const commodity * comm, const mpz_t val,
   if (negative)
     s << "-";
 
-  if (comm->thousands) {
+  if (mpz_sgn(quotient) == 0)
+    s << '0';
+  else if (! comm->thousands)
+    s << quotient;
+  else {
     // jww (2003-09-29): use a smarter starting value
 
     bool printed = false;
@@ -298,8 +302,6 @@ static std::string amount_to_str(const commodity * comm, const mpz_t val,
 	printed = true;
       }
     }
-  } else {
-    s << quotient;
   }
 
   if (comm->european)
@@ -320,7 +322,8 @@ static std::string amount_to_str(const commodity * comm, const mpz_t val,
 
     width = MAX_PRECISION - width;
 
-    while (p >= buf && *p == '0')
+    while (p >= buf && *p == '0' &&
+	   (p - buf) >= (comm->precision - width))
       p--;
     *(p + 1) = '\0';
 
