@@ -27,11 +27,18 @@ class compute_error : public error
   virtual ~compute_error() throw() {}
 };
 
-class expr_error : public error
+class value_expr_error : public error
 {
  public:
-  expr_error(const std::string& reason) throw() : error(reason) {}
-  virtual ~expr_error() throw() {}
+  value_expr_error(const std::string& reason) throw() : error(reason) {}
+  virtual ~value_expr_error() throw() {}
+};
+
+class interval_expr_error : public error
+{
+ public:
+  interval_expr_error(const std::string& reason) throw() : error(reason) {}
+  virtual ~interval_expr_error() throw() {}
 };
 
 class format_error : public error

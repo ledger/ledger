@@ -3,6 +3,21 @@
 
 namespace ledger {
 
+void sort_transactions::flush()
+{
+  std::stable_sort(transactions.begin(), transactions.end(),
+		   compare_items<transaction_t>(sort_order));
+
+  for (transactions_deque::iterator i = transactions.begin();
+       i != transactions.end();
+       i++)
+    (*handler)(*i);
+
+  transactions.clear();
+
+  handler->flush();
+}
+
 void calc_transactions::operator()(transaction_t * xact)
 {
   if (last_xact)
@@ -92,8 +107,12 @@ void changed_value_transactions::operator()(transaction_t * xact)
     }
   }
 
-  if (xact)
+  if (xact) {
+    if (changed_values_only)
+      xact->dflags |= TRANSACTION_DISPLAYED;
+
     (*handler)(xact);
+  }
 
   last_xact = xact;
 }
@@ -103,8 +122,14 @@ void subtotal_transactions::flush()
   entry_t * entry = new entry_t;
 
   char buf[256];
-  // jww (2004-08-10): allow for a format string here
-  std::strftime(buf, 255, "- %Y/%m/%d", std::gmtime(&finish));
+  std::string fmt = "- ";
+  fmt += format_t::date_format;
+
+  // Make sure the end date is inclusive
+  if (start != finish)
+    finish -= 86400;
+
+  std::strftime(buf, 255, fmt.c_str(), std::gmtime(&finish));
   entry->payee = buf;
 
   entry_temps.push_back(entry);
@@ -151,6 +176,39 @@ void subtotal_transactions::operator()(transaction_t * xact)
     balances.insert(balances_pair(xact->account, *xact));
   else
     (*i).second += *xact;
+}
+
+void interval_transactions::operator()(transaction_t * xact)
+{
+  std::time_t quant = interval.increment(begin);
+  if (std::difftime(xact->entry->date, quant) > 0) {
+    if (last_xact) {
+      start  = begin;
+      finish = quant;
+      flush();
+    }
+
+    if (! interval.seconds) {
+      struct std::tm * desc = std::gmtime(&xact->entry->date);
+      if (interval.years)
+	desc->tm_mon = 0;
+      desc->tm_mday = 1;
+      desc->tm_hour = 0;
+      desc->tm_min  = 0;
+      desc->tm_sec  = 0;
+      quant = std::mktime(desc);
+    }
+
+    std::time_t temp;
+    while (std::difftime(xact->entry->date,
+			 temp = interval.increment(quant)) > 0)
+      quant = temp;
+    begin = quant;
+  }
+
+  subtotal_transactions::operator()(xact);
+
+  last_xact = xact;
 }
 
 } // namespace ledger

@@ -12,39 +12,13 @@
 namespace ledger {
 
 static const std::string bal_fmt = "%20T  %2_%-n\n";
-
 static const std::string reg_fmt
-  = "%10d %-.20p %-.22N %12.66t %12.80T\n\
+  = "%D %-.20P %-.22N %12.66t %12.80T\n\
 %/                                %-.22N %12.66t %12.80T\n";
-
 static const std::string print_fmt
-  = "\n%10d %X%C%p\n    %-34N  %12o\n%/    %-34N  %12o\n";
-
+  = "\n%D %X%C%P\n    %-34N  %12o\n%/    %-34N  %12o\n";
 static const std::string equity_fmt
-  = "\n%10d %X%C%p\n%/    %-34N  %12t\n";
-
-
-void set_price_conversion(const std::string& setting)
-{
-  char buf[128];
-  std::strcpy(buf, setting.c_str());
-
-  assert(setting.length() < 128);
-
-  char * c = buf;
-  char * p = std::strchr(buf, '=');
-  if (! p) {
-    std::cerr << "Warning: Invalid price setting: " << setting << std::endl;
-  } else {
-    *p++ = '\0';
-
-    amount_t price;
-    price.parse(p);
-
-    commodity_t * commodity = commodity_t::find_commodity(c, true);
-    commodity->set_conversion(price);
-  }
-}
+  = "\n%D %X%C%P\n%/    %-34N  %12t\n";
 
 
 static long	   pricing_leeway = 24 * 3600;
@@ -102,6 +76,20 @@ void download_price_quote(commodity_t *	    commodity,
 } // namespace ledger
 
 
+static std::string ledger_cache_file()
+{
+  std::string cache_file;
+
+  if (const char * p = std::getenv("LEDGER_CACHE")) {
+    cache_file = p;
+  }
+  else if (const char * p = std::getenv("HOME")) {
+    cache_file = p;
+    cache_file += "/.ledger";
+  }
+  return cache_file;
+}
+
 static void show_version(std::ostream& out)
 {
   out
@@ -157,9 +145,13 @@ int main(int argc, char * argv[])
 {
   using namespace ledger;
 
-  std::auto_ptr<journal_t> journal(new journal_t);
-  std::list<std::string>   files;
-  std::auto_ptr<value_expr_t>    sort_order;
+  std::auto_ptr<journal_t>    journal(new journal_t);
+  std::list<std::string>      files;
+  std::auto_ptr<value_expr_t> sort_order;
+  std::auto_ptr<std::ostream> output_stream;
+  std::auto_ptr<interval_t>   report_interval;
+
+#define OUT() (output_stream.get() ? *output_stream.get() : std::cout)
 
   std::string predicate;
   std::string display_predicate;
@@ -167,6 +159,7 @@ int main(int argc, char * argv[])
   std::string sort_string;
   std::string value_expr = "a";
   std::string total_expr = "T";
+  std::time_t interval_begin = 0;
 
   bool show_subtotals = true;
   bool show_expanded  = false;
@@ -205,18 +198,20 @@ int main(int argc, char * argv[])
 
     cache_dirty = true;
 
-    if (use_cache)
-      if (const char * p = std::getenv("LEDGER_CACHE"))
-	if (access(p, R_OK) != -1) {
-	  std::ifstream instr(p);
-	  if (! read_binary_journal(instr, std::getenv("LEDGER"),
-				   journal.get())) {
-	    // Throw away what's been read, and create a new journal
-	    journal.reset(new journal_t);
-	  } else {
-	    cache_dirty = false;
-	  }
+    if (use_cache) {
+      std::string cache_file = ledger_cache_file();
+      if (! cache_file.empty() &&
+	  access(cache_file.c_str(), R_OK) != -1) {
+	std::ifstream stream(cache_file.c_str());
+	if (! read_binary_journal(stream, std::getenv("LEDGER"),
+				  journal.get())) {
+	  // Throw away what's been read, and create a new journal
+	  journal.reset(new journal_t);
+	} else {
+	  cache_dirty = false;
 	}
+      }
+    }
   }
 
   // Parse the command-line options
@@ -224,7 +219,7 @@ int main(int argc, char * argv[])
   int c, index;
   while (-1 !=
 	 (c = getopt(argc, argv,
-		     "+ABb:Ccd:DEe:F:f:Ghi:L:l:MnoOP:p:QRS:st:T:UVvWXZ"))) {
+	     "+ABb:Ccd:DEe:F:f:Ghi:L:l:MnOo:P:p:QRrS:sT:t:UVvWXYy:Zz:"))) {
     switch (char(c)) {
     // Basic options
     case 'h':
@@ -240,8 +235,19 @@ int main(int argc, char * argv[])
       use_cache = false;
       break;
 
+    case 'o':
+      if (std::string(optarg) != "-")
+	output_stream.reset(new std::ofstream(optarg));
+      break;
+
     case 'p':
-      set_price_conversion(optarg);
+      if (char * p = std::strchr(optarg, '=')) {
+	*p = ' ';
+	std::string conversion = "C ";
+	conversion += p;
+	std::istringstream stream(conversion);
+	parse_textual_journal(stream, journal.get(), journal->master);
+      }
       break;
 
     case 'b':
@@ -294,6 +300,10 @@ int main(int argc, char * argv[])
       format_string = optarg;
       break;
 
+    case 'y':
+      format_t::date_format = optarg;
+      break;
+
     case 'E':
       show_empty = true;
       break;
@@ -310,8 +320,37 @@ int main(int argc, char * argv[])
       sort_string = optarg;
       break;
 
-    case 'o':
+    case 'r':
       show_related = true;
+      break;
+
+    case 'z': {
+      std::string str(optarg);
+      std::istringstream stream(str);
+      report_interval.reset(interval_t::parse(stream));
+
+      if (! stream.eof()) {
+	std::string word;
+	stream >> word;
+	if (word == "from") {
+	  stream >> word;
+	  if (! parse_date(word.c_str(), &interval_begin))
+	    throw interval_expr_error("Could not parse 'from' date");
+	}
+      }
+      break;
+    }
+
+    case 'W':
+      report_interval.reset(new interval_t(604800, 0, 0));
+      break;
+
+    case 'M':
+      report_interval.reset(new interval_t(0, 1, 0));
+      break;
+
+    case 'Y':
+      report_interval.reset(new interval_t(0, 0, 1));
       break;
 
     case 'l':
@@ -386,22 +425,15 @@ int main(int argc, char * argv[])
       total_expr = "DMT";
       break;
 
-    case 'Z':
+    case 'X':
       value_expr = "a";
       total_expr = "MDMT";
       break;
 
-#if 0
-    case 'W':
+    case 'Z':
       value_expr = "a";
-      total_expr = "MD(MT*(d-b/e-b))";
+      total_expr = "MD(MT/(1+(((t-d)/(30*86400))<0?0:((t-d)/(30*86400)))))";
       break;
-
-    case 'X':
-      value_expr = "a";
-      total_expr = "a+MD(MT*(d-b/e-b))";
-      break;
-#endif
 
     default:
       assert(0);
@@ -444,7 +476,7 @@ int main(int argc, char * argv[])
 	std::ifstream db(path);
 	journal->sources.push_back(path);
 	entry_count += parse_textual_journal(db, journal.get(),
-						    journal->master);
+					     journal->master);
       }
     }
     catch (error& err) {
@@ -597,7 +629,7 @@ int main(int argc, char * argv[])
     formatter.reset(new filter_transactions(formatter.release(), predicate));
     walk_entries(journal->entries, *formatter.get());
 
-    format_account acct_formatter(std::cout, format, display_predicate);
+    format_account acct_formatter(OUT(), format, display_predicate);
     if (show_subtotals)
       sum_accounts(journal->master);
     walk_accounts(journal->master, acct_formatter, sort_order.get());
@@ -605,7 +637,7 @@ int main(int argc, char * argv[])
     if (format_account::disp_subaccounts_p(journal->master)) {
       std::string end_format = "--------------------\n";
       format.reset(end_format + f);
-      format.format_elements(std::cout, details_t(journal->master));
+      format.format_elements(OUT(), details_t(journal->master));
     }
   }
   else if (command == "E") {
@@ -614,12 +646,12 @@ int main(int argc, char * argv[])
     formatter.reset(new filter_transactions(formatter.release(), predicate));
     walk_entries(journal->entries, *formatter.get());
 
-    format_equity acct_formatter(std::cout, format, nformat, display_predicate);
+    format_equity acct_formatter(OUT(), format, nformat, display_predicate);
     sum_accounts(journal->master);
     walk_accounts(journal->master, acct_formatter, sort_order.get());
   }
   else if (command == "e") {
-    format_transactions formatter(std::cout, format, nformat);
+    format_transactions formatter(OUT(), format, nformat);
     walk_transactions(new_entry->transactions, formatter);
   }
   else {
@@ -631,7 +663,7 @@ int main(int argc, char * argv[])
 
     // format_transactions write each transaction received to the
     // output stream.
-    formatter.reset(new format_transactions(std::cout, format, nformat));
+    formatter.reset(new format_transactions(OUT(), format, nformat));
 
     // sort_transactions will sort all the transactions it sees, based
     // on the `sort_order' value expression.
@@ -653,8 +685,8 @@ int main(int argc, char * argv[])
     // list to account for changes in market value of commodities,
     // which otherwise would affect the running total unpredictably.
     if (show_revalued)
-      formatter.reset(new changed_value_transactions(formatter.release() /*,
-						   show_revalued_only*/));
+      formatter.reset(new changed_value_transactions(formatter.release(),
+						     show_revalued_only));
 
     // collapse_transactions causes entries with multiple transactions
     // to appear as entries with a subtotaled transaction for each
@@ -671,9 +703,10 @@ int main(int argc, char * argv[])
     // everything.
     if (show_expanded)
       formatter.reset(new subtotal_transactions(formatter.release()));
-    else if (0)
-      formatter.reset(new interval_transactions(formatter.release(), 0,
-						interval_t(9676800, 0, 0)));
+    else if (report_interval.get())
+      formatter.reset(new interval_transactions(formatter.release(),
+						*report_interval.get(),
+						interval_begin));
 
     // related_transactions will pass along all transactions related
     // to the transaction received.  If `show_all_related' is true,
@@ -703,12 +736,14 @@ int main(int argc, char * argv[])
 
   // Save the cache, if need be
 
-  if (use_cache && cache_dirty)
-    if (const char * p = std::getenv("LEDGER_CACHE")) {
-      std::ofstream outstr(p);
+  if (use_cache && cache_dirty) {
+    std::string cache_file = ledger_cache_file();
+    if (! cache_file.empty()) {
       assert(std::getenv("LEDGER"));
-      write_binary_journal(outstr, journal.get(), std::getenv("LEDGER"));
+      std::ofstream stream(cache_file.c_str());
+      write_binary_journal(stream, journal.get(), std::getenv("LEDGER"));
     }
+  }
 
   return 0;
 }

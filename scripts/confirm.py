@@ -13,7 +13,7 @@ running_total = 0.0
 index = 1
 last_line = ""
 
-for line in os.popen("./ledger %s reg %s" % (sys.argv[1], sys.argv[2])):
+for line in os.popen("../ledger %s reg %s" % (sys.argv[1], sys.argv[2])):
     value = clean(line[55:67])
     total = clean(line[68:80])
 
@@ -29,7 +29,7 @@ for line in os.popen("./ledger %s reg %s" % (sys.argv[1], sys.argv[2])):
 
 balance_total = 0.0
 
-for line in os.popen("./ledger %s bal %s" % (sys.argv[1], sys.argv[2])):
+for line in os.popen("../ledger %s bal %s" % (sys.argv[1], sys.argv[2])):
     balance_total = clean(line[:20])
 
 if abs(balance_total - running_total) > 0.001:

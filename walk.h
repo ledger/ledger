@@ -87,19 +87,7 @@ class sort_transactions : public item_handler<transaction_t>
     delete handler;
   }
 
-  virtual void flush() {
-    std::stable_sort(transactions.begin(), transactions.end(),
-		     compare_items<transaction_t>(sort_order));
-
-    for (transactions_deque::iterator i = transactions.begin();
-	 i != transactions.end();
-	 i++)
-      (*handler)(*i);
-
-    transactions.clear();
-
-    handler->flush();
-  }
+  virtual void flush();
 
   virtual void operator()(transaction_t * xact) {
     transactions.push_back(xact);
@@ -207,6 +195,7 @@ class changed_value_transactions : public item_handler<transaction_t>
   // This filter requires that calc_transactions be used at some point
   // later in the chain.
 
+  bool		  changed_values_only;
   transaction_t * last_xact;
 
   item_handler<transaction_t> * handler;
@@ -215,8 +204,10 @@ class changed_value_transactions : public item_handler<transaction_t>
   transactions_deque xact_temps;
 
  public:
-  changed_value_transactions(item_handler<transaction_t> * _handler)
-    : last_xact(NULL), handler(_handler) {}
+  changed_value_transactions(item_handler<transaction_t> * _handler,
+			     bool _changed_values_only)
+    : changed_values_only(_changed_values_only), last_xact(NULL),
+      handler(_handler) {}
 
   virtual ~changed_value_transactions() {
     flush();
@@ -288,7 +279,8 @@ class interval_transactions : public subtotal_transactions
 
  public:
   interval_transactions(item_handler<transaction_t> * _handler,
-			std::time_t _begin, const interval_t& _interval)
+			const interval_t&	      _interval,
+			const std::time_t             _begin = 0)
     : subtotal_transactions(_handler),
       begin(_begin), interval(_interval), last_xact(NULL) {}
 
@@ -297,25 +289,7 @@ class interval_transactions : public subtotal_transactions
     finish = interval.increment(begin);
   }
 
-  virtual void operator()(transaction_t * xact) {
-    if (std::difftime(xact->entry->date, interval.increment(begin)) > 0) {
-      if (last_xact) {
-	start  = begin;
-	finish = interval.increment(begin);
-	flush();
-      }
-
-      begin = interval.increment(begin);
-      std::time_t temp;
-      while (std::difftime(xact->entry->date,
-			   temp = interval.increment(begin)) > 0)
-	begin = temp;
-    }
-
-    subtotal_transactions::operator()(xact);
-
-    last_xact = xact;
-  }
+  virtual void operator()(transaction_t * xact);
 };
 
 class related_transactions : public item_handler<transaction_t>

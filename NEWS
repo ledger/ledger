@@ -3,30 +3,39 @@
 
 * 2.0
 
-- The code base has been rewritten for clarity and consistency.  As a
-  result, the code is much simpler and more robust (and in most cases
-  faster).
+- The code base has been rewritten for clarity and consistency.  The
+  code is now simpler, more robust, and a fair bit faster.
 
-- Register reports now show the account being credited/debited.  Use
-  new -o option to see "other accounts" -- or the account the
-  credit/debit came from.  (This was the old behavior in 1.x, but can
-  lead to confusing reports when viewing accounts with subaccounts.)
-  The -o option also works for balance reports, where it will show all
-  the account totals related to your query.
+- The most significant feature addition in this version is the use of
+  "value expressions".  These are now used in many places to indicate
+  what to display, the sorting order, and even the output format.
 
-- Regexps specified after the command are applied to account names
-  only.  To search on a payee name, use "--" to separate the two kinds
-  of regexps.  For example, to find payee's named John within all
-  Expenses accounts:
+  A value expression is a simple string that uses one letter codes to
+  indicate transaction, entry and account details.  Logic and math
+  operators are supported, as well as a few useful functions.  See the
+  README.
+
+- If the environment variable LEDGER is used, a binary cache of that
+  current ledger will be kept, to speed up later queries of the same
+  data.  The default location is in ~/.ledger, but this can be changed
+  with the environment variable LEDGER_CACHE.  This only happens if no
+  "-f" flag was seen (i.e., if the LEDGER environment variable is
+  used).
+
+- New "-y DATEFMT" options will change the date format used throughout
+  ledger.  The default is "%Y/%m/%d".
+
+- Regexps specified after the command name now apply to account names
+  only.  To search on a payee, use "--" to separate the two kinds of
+  regexps.  For example, to find a payee named "John" within all
+  Expenses accounts, use:
 
     ledger register expenses -- john
 
-- The use of "+" and "-" in ledger files (to specify permanent
-  regexps) has been removed.
+  FYI: The above command is identical (and internally converted) to:
 
-- The -G switch no longer generates gnuplot-safe data.  It now reports
-  totals in terms of net gain/loss.
-
+    ledger -l "/expenses/|//john/" register
+  
 - To include entries from a file into a specific account, use:
 
     @ ACCOUNT
@@ -36,10 +45,12 @@
   All entries specified within the "@ ACCOUNT/@@" range will be added
   under that account.
 
-- If the environment variable LEDGER_CACHE is set to a filename, a a
-  binary dump of the current ledger will be written then, to speed up
-  later queries of the same data.  This only happens if no "-f" flag
-  was seen (i.e., if the LEDGER environment variable is used).
+- Register reports now show the account being changed.  Use the -r
+  option to see "other accounts" -- or the account the credit/debit
+  came from.  (This was the old behavior in 1.x, but can lead to
+  confusing reports when viewing accounts with subaccounts.)  The -r
+  option also works for balance reports, where it will show all the
+  account totals related to your query.
 
 - There are several new default reporting styles, which work both in
   the balance and register reports:
@@ -53,6 +64,32 @@
     -Z  Report the trend (average rate of change)
     -W  Report the trend, with older values affecting the trend less
     -X  Report expected amount for the next transaction
+
+- Automated transactions now use a single value expression as a
+  predicate.  This means the new syntax is:
+
+    = VALUE-EXPR
+      TRANSACTIONS...
+
+  Only one VALUE-EXPR is supported, compared to the multiple account
+  regexps supported before.  By using a VALUE-EXPR as a predicate,
+  matching may now be much more comprehensive and selective.
+
+- The use of "+" and "-" in ledger files (to specify permanent
+  regexps) has been removed.
+
+- The -G switch no longer generates gnuplot-safe data.  It now reports
+  totals in terms of net gain/loss.
+
+- The -l flag now takes an expression string as a "predicate".
+  Therefore, to equal the old behavior of "-l $100", you would use:
+
+    -l AT<{$100}
+
+- The -S flag now takes an expression string, which yields the value
+  that will be sorted on.
+
+----------------------------------------------------------------------
 
 - Value expressions are now supported, where the totals reported can
   be changed using -t and -T and an expression string composed of:
@@ -101,14 +138,6 @@
     -W  ==  -t a -T MD(MA*(d-b/e-b))
     -X  ==  -t a -T a+MD(MA*(d-b/e-b))
 
-- The -l flag now takes an expression string as a "predicate".
-  Therefore, to equal the old behavior of "-l $100", you would use:
-
-    -l AT<{$100}
-
-- The -S flag now takes an expression string, which yields the value
-  that will be sorted on.
-
 - User-specified format strings are supported with a -F option.  The
   strings are very much like printf format strings, with the following
   syntax for each substitution:
@@ -142,17 +171,7 @@
     %?10d %?-.20p %-.22a %12.66t %12.80T
     %20T %-a
 
-- Automated transactions now use a single value expression as a
-  predicate.  This means the new syntax is:
-
-    = VALUE-EXPR
-      TRANSACTIONS...
-
-  Only one VALUE-EXPR is supported, compared to the multiple account
-  regexps supported before.  By using a VALUE-EXPR as a predicate,
-  matching may now be much more comprehensive and selective.
-
-* 1.7 (never released)
+* 1.7
 
 - Pricing histories are now supported, so that ledger remembers
   historical pricing of all commodities, and can give register reports

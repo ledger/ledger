@@ -125,6 +125,10 @@ void value_expr_t::compute(balance_t& result, const details_t& details) const
       result = (unsigned int) std::time(NULL);
     break;
 
+  case TODAY:
+    result = (unsigned int) std::time(NULL);
+    break;
+
   case CLEARED:
     if (details.entry) {
       result = details.entry->state == entry_t::CLEARED;
@@ -188,6 +192,15 @@ void value_expr_t::compute(balance_t& result, const details_t& details) const
     result = abs(result);
     break;
 
+  case F_STRIP: {
+    assert(left);
+    left->compute(result, details);
+    amount_t amt = result.amount();
+    amt.commodity = commodity_t::null_commodity;
+    result = amt;
+    break;
+  }
+
   case F_PAYEE_MASK:
     assert(mask);
     if (details.entry)
@@ -212,6 +225,10 @@ void value_expr_t::compute(balance_t& result, const details_t& details) const
 	  moment = details.entry->date;
 	else
 	  moment = std::time(NULL);
+	break;
+
+      case TODAY:
+	moment = std::time(NULL);
 	break;
 
       default:
@@ -341,7 +358,7 @@ value_expr_t * parse_value_term(std::istream& in)
       if (c == '}')
 	in.get(c);
       else
-	throw expr_error("Missing '}'");
+	throw value_expr_error("Missing '}'");
     } else {
       while (! in.eof() && std::isdigit(c) || c == '.') {
 	in.get(c);
@@ -363,6 +380,7 @@ value_expr_t * parse_value_term(std::istream& in)
   case 'a': node = new value_expr_t(value_expr_t::AMOUNT); break;
   case 'c': node = new value_expr_t(value_expr_t::COST); break;
   case 'd': node = new value_expr_t(value_expr_t::DATE); break;
+  case 't': node = new value_expr_t(value_expr_t::TODAY); break;
   case 'X': node = new value_expr_t(value_expr_t::CLEARED); break;
   case 'R': node = new value_expr_t(value_expr_t::REAL); break;
   case 'n': node = new value_expr_t(value_expr_t::INDEX); break;
@@ -386,6 +404,11 @@ value_expr_t * parse_value_term(std::istream& in)
 
   case 'A':
     node = new value_expr_t(value_expr_t::F_ABS);
+    node->left = parse_value_term(in);
+    break;
+
+  case 'S':
+    node = new value_expr_t(value_expr_t::F_STRIP);
     node->left = parse_value_term(in);
     break;
 
@@ -413,7 +436,7 @@ value_expr_t * parse_value_term(std::istream& in)
       if (peek_next_nonws(in) == ')')
 	in.get(c);
       else
-	throw expr_error("Missing ')'");
+	throw value_expr_error("Missing ')'");
     } else {
       node->left = parse_value_term(in);
     }
@@ -445,7 +468,7 @@ value_expr_t * parse_value_term(std::istream& in)
 			value_expr_t::F_PAYEE_MASK : value_expr_t::F_ACCOUNT_MASK);
       node->mask = new mask_t(ident);
     } else {
-      throw expr_error("Missing closing '/'");
+      throw value_expr_error("Missing closing '/'");
     }
     break;
   }
@@ -455,7 +478,7 @@ value_expr_t * parse_value_term(std::istream& in)
     if (peek_next_nonws(in) == ')')
       in.get(c);
     else
-      throw expr_error("Missing ')'");
+      throw value_expr_error("Missing ')'");
     break;
 
   case '[': {
@@ -471,9 +494,9 @@ value_expr_t * parse_value_term(std::istream& in)
       in.get(c);
       node = new value_expr_t(value_expr_t::CONSTANT_T);
       if (! parse_date(ident.c_str(), &node->constant_t))
-	throw expr_error("Failed to parse date");
+	throw value_expr_error("Failed to parse date");
     } else {
-      throw expr_error("Missing ']'");
+      throw value_expr_error("Missing ']'");
     }
     break;
   }
@@ -609,7 +632,7 @@ value_expr_t * parse_logic_expr(std::istream& in)
 	if (! in.eof()) {
 	  std::ostringstream err;
 	  err << "Unexpected character '" << c << "'";
-	  throw expr_error(err.str());
+	  throw value_expr_error(err.str());
 	}
       }
     }
@@ -656,7 +679,7 @@ value_expr_t * parse_value_expr(std::istream& in)
 	if (c != ':') {
 	  std::ostringstream err;
 	  err << "Unexpected character '" << c << "'";
-	  throw expr_error(err.str());
+	  throw value_expr_error(err.str());
 	}
 	in.get(c);
 	choices->right = parse_logic_expr(in);
@@ -667,7 +690,7 @@ value_expr_t * parse_value_expr(std::istream& in)
 	if (! in.eof()) {
 	  std::ostringstream err;
 	  err << "Unexpected character '" << c << "'";
-	  throw expr_error(err.str());
+	  throw value_expr_error(err.str());
 	}
       }
       c = peek_next_nonws(in);
@@ -730,12 +753,13 @@ void dump_value_expr(std::ostream& out, const value_expr_t * node)
     out << "DATE/TIME[" << node->constant_t << "]";
     break;
 
-  case value_expr_t::AMOUNT:	     out << "AMOUNT"; break;
-  case value_expr_t::COST:	     out << "COST"; break;
-  case value_expr_t::DATE:	     out << "DATE"; break;
-  case value_expr_t::CLEARED:	     out << "CLEARED"; break;
-  case value_expr_t::REAL:	     out << "REAL"; break;
-  case value_expr_t::INDEX:	     out << "INDEX"; break;
+  case value_expr_t::AMOUNT:	   out << "AMOUNT"; break;
+  case value_expr_t::COST:	   out << "COST"; break;
+  case value_expr_t::DATE:	   out << "DATE"; break;
+  case value_expr_t::TODAY:	   out << "TODAY"; break;
+  case value_expr_t::CLEARED:	   out << "CLEARED"; break;
+  case value_expr_t::REAL:	   out << "REAL"; break;
+  case value_expr_t::INDEX:	   out << "INDEX"; break;
   case value_expr_t::BALANCE:      out << "BALANCE"; break;
   case value_expr_t::COST_BALANCE: out << "COST_BALANCE"; break;
   case value_expr_t::TOTAL:        out << "TOTAL"; break;
@@ -755,6 +779,12 @@ void dump_value_expr(std::ostream& out, const value_expr_t * node)
 
   case value_expr_t::F_ABS:
     out << "ABS(";
+    dump_value_expr(out, node->left);
+    out << ")";
+    break;
+
+  case value_expr_t::F_STRIP:
+    out << "STRIP(";
     dump_value_expr(out, node->left);
     out << ")";
     break;

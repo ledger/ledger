@@ -31,8 +31,77 @@ static const char *	formats[] = {
 
 std::time_t interval_t::increment(const std::time_t moment)
 {
-  // jww (2004-08-11): NYI
-  return moment + seconds;
+  std::time_t then = moment;
+
+  if (years || months) {
+    struct std::tm * desc = std::gmtime(&then);
+    if (years)
+      desc->tm_year += years;
+    if (months) {
+      desc->tm_mon += months;
+
+      if (desc->tm_mon > 11) {
+	desc->tm_year++;
+	desc->tm_mon -= 12;
+      }
+    }
+    then = std::mktime(desc);
+  }
+
+  return then + seconds;
+}
+
+interval_t * interval_t::parse(std::istream& in)
+{
+  unsigned long years   = 0;
+  unsigned long months  = 0;
+  unsigned long seconds = 0;
+
+  std::string word;
+  in >> word;
+  if (word == "every") {
+    in >> word;
+    if (std::isdigit(word[0])) {
+      int quantity = std::atol(word.c_str());
+      in >> word;
+      if (word == "days")
+	seconds = 86400 * quantity;
+      else if (word == "weeks")
+	seconds = 7 * 86400 * quantity;
+      else if (word == "months")
+	months = quantity;
+      else if (word == "quarters")
+	months = 3 * quantity;
+      else if (word == "years")
+	years = quantity;
+    }
+    else if (word == "day")
+      seconds = 86400;
+    else if (word == "week")
+      seconds = 7 * 86400;
+    else if (word == "monthly")
+      months = 1;
+    else if (word == "quarter")
+      months = 3;
+    else if (word == "year")
+      years = 1;
+  }
+  else if (word == "daily")
+    seconds = 86400;
+  else if (word == "weekly")
+    seconds = 7 * 86400;
+  else if (word == "biweekly")
+    seconds = 14 * 86400;
+  else if (word == "monthly")
+    months = 1;
+  else if (word == "bimonthly")
+    months = 2;
+  else if (word == "quarterly")
+    months = 3;
+  else if (word == "yearly")
+    years = 1;
+
+  return new interval_t(seconds, months, years);
 }
 
 bool parse_date_mask(const char * date_str, struct std::tm * result)

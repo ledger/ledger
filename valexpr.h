@@ -48,6 +48,7 @@ struct value_expr_t
     AMOUNT,
     COST,
     DATE,
+    TODAY,
     CLEARED,
     REAL,
     INDEX,			// for accounts, this is the DEPTH
@@ -63,6 +64,7 @@ struct value_expr_t
     F_VALUE,
     F_NEG,
     F_ABS,
+    F_STRIP,
     F_PAYEE_MASK,
     F_ACCOUNT_MASK,
 

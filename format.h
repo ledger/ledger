@@ -52,6 +52,8 @@ struct format_t
 {
   element_t * elements;
 
+  static std::string date_format;
+
   static std::auto_ptr<value_expr_t> value_expr;
   static std::auto_ptr<value_expr_t> total_expr;
 
@@ -107,14 +109,15 @@ class format_transactions : public item_handler<transaction_t>
   }
 
   virtual void operator()(transaction_t * xact) {
-    if (last_entry != xact->entry) {
-      first_line_format.format_elements(output_stream, details_t(xact));
-      last_entry = xact->entry;
-    } else {
-      next_lines_format.format_elements(output_stream, details_t(xact));
+    if (! (xact->dflags & TRANSACTION_DISPLAYED)) {
+      if (last_entry != xact->entry) {
+	first_line_format.format_elements(output_stream, details_t(xact));
+	last_entry = xact->entry;
+      } else {
+	next_lines_format.format_elements(output_stream, details_t(xact));
+      }
+      xact->dflags |= TRANSACTION_DISPLAYED;
     }
-
-    xact->dflags |= TRANSACTION_DISPLAYED;
   }
 };
 

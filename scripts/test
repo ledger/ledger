@@ -2,9 +2,9 @@
 
 for test in \
     "-O nrl:checking" \
-    "-B 401" 	      \
-    "-V 401" 	      \
-    "-G 401" 	      \
+    "-B 401"	      \
+    "-V 401"	      \
+    "-G 401"	      \
     "-B retire"       \
     "-V retire"       \
     "-G retire"

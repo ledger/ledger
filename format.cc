@@ -33,6 +33,8 @@ std::string partial_account_name(const account_t *  account)
   return name;
 }
 
+std::string format_t::date_format = "%Y/%m/%d";
+
 std::auto_ptr<value_expr_t> format_t::value_expr;
 std::auto_ptr<value_expr_t> format_t::total_expr;
 
@@ -114,15 +116,14 @@ element_t * format_t::parse_elements(const std::string& fmt)
 	current->chars = num;
 	break;
 
-      case 'd':
+      case 'D':
 	current->type  = element_t::DATE_STRING;
-	// jww (2004-08-10): allow this to be changed
-	current->chars = "%Y/%m/%d";
+	current->chars = format_t::date_format;
 	break;
 
       case 'X': current->type = element_t::CLEARED; break;
       case 'C': current->type = element_t::CODE; break;
-      case 'p': current->type = element_t::PAYEE; break;
+      case 'P': current->type = element_t::PAYEE; break;
       case 'n': current->type = element_t::ACCOUNT_NAME; break;
       case 'N': current->type = element_t::ACCOUNT_FULLNAME; break;
       case 'o': current->type = element_t::OPT_AMOUNT; break;
