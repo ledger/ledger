@@ -56,8 +56,8 @@ say where the money came from, in addition to where it's going to.
 The entry might look like this:
 
 <example>
-9/29  BAL  Pacific Bell               $200.00    $200.00
-           Equity:Opening Balances   $-200.00
+9/29  BAL  Pacific Bell              $-200.00   $-200.00
+           Equity:Opening Balances    $200.00
 9/29  BAL  Checking                   $100.00    $100.00
            Equity:Opening Balances   $-100.00
 9/29  100  Pacific Bell                $23.00    $223.00
@@ -97,6 +97,36 @@ will display an error and indicate which transaction is wrong.[1]
 In summary, there are two aspects of Ledger use: Updating the ledger
 data file, and using the Ledger tool to view the summarized result of
 your entries.
+
+And just for the sake of example -- as a starting point for those who
+want to dive in head-first -- here are the ledger entries from above,
+formatting as the ledger program wishes to see them:
+
+<example>
+; Set the year for subsequent entries to 2004
+Y 2004
+
+9/29 Pacific Bell
+     Payable:Pacific Bell            $-200.00
+     Equity:Opening Balances
+
+9/29 Checking
+     Accounts:Checking                $100.00
+     Equity:Opening Balances
+
+9/29 Pacific Bell
+     Payable:Pacific Bell              $23.00
+     Accounts:Checking
+</example>
+
+The account balances and registers in this file, if saved as
+=ledger.dat=, could be reported using:
+
+<example>
+$ ledger -f ledger.dat balance
+$ ledger -f ledger.dat register checking
+$ ledger -f ledger.dat register bell
+</example>
 
 * Building the program
 
@@ -438,6 +468,66 @@ target account:
 
 This way, you can still track large cash expenses, while ignoring all
 of the smaller ones.
+
+** Archiving previous years
+
+After a while, your ledger can get to be pretty large.  While this
+will not slow down the ledger program much -- it's designed to process
+ledger files very quickly -- things can start to feel "messy"; and
+it's a universal complaint that when finances feel messy, people avoid
+them.
+
+Thus, archiving the data from previous years into their own files can
+offer a sense of completion, and freedom from the past.  But how to
+best accomplish this with the ledger program?  There are two commands
+that make it very simple: "print", and "equity".
+
+Let's take an example file, with data ranging from year 2000 until
+2004.  We want to archive years 2000 and 2001 to their own file,
+leaving just 2003 and 2004 in the current file.  So, use "print" to
+output all the earlier entries to a file called =ledger-old.dat=.
+(Keeping in mind that the ending date is not inclusive, which is why
+2002 is mentioned in the following command):
+
+<example>
+$ ledger -f ledger.dat -b 2000/1/1 -e 2002/1/1 print > ledger-old.dat
+</example>
+
+To delete older data from the current ledger file, use "print" again,
+this time specifying year 2002 as the starting date:
+
+<example>
+$ ledger -f ledger.dat -b 2002/1/1 print > x
+$ mv x ledger.dat
+</example>
+
+However, now the current file contains *only* transactions from 2002
+onward, which will not yield accurate present-day balances, because
+the net income from previous years is no longer being tallied.  To
+compensate for this, we must append an equity report for the old
+ledger at the beginning of the new one:
+
+<example>
+$ ledger -f ledger-old.dat equity > equity.dat
+$ cat equity.dat ledger.dat > x
+$ mv x ledger.dat
+$ rm equity.dat
+</example>
+
+Now the balances reported from =ledger.dat= are identical to what they
+were before the data was split.
+
+How often should you split your ledger?  You never need to, if you
+don't want to.  Even eighty years of data will not slow down ledger
+much -- and that's just using present day hardware!  Or, you can keep
+the previous and current year in one file, and each year before that
+in its own file.  It's really up to you, and how you want to organize
+your finances.  For those who also keep an accurate paper trail, it
+might be useful to archive the older years to their own files, then
+burn those files to a CD to keep with the paper records -- along with
+any electronic statements received during the year.  In the arena of
+organization, just keep in mind this maxim: Do whatever keeps you
+doing it.
 
 ** Virtual transactions
 
