@@ -9,9 +9,9 @@ Ledger is an accounting tool with the moxie to exist.  It provides no
 bells or whistles, and returns the user to the days before user
 interfaces were even a twinkling in their father's CRT.
 
-What it does do is to offer a double-entry accounting ledger with all
-the flexibility and muscle of its modern day cousins, without any of
-the fat.  Think of it as the Bran Muffin of accounting tools.
+What it does offer is a double-entry accounting ledger with all the
+flexibility and muscle of its modern day cousins, without any of the
+fat.  Think of it as the Bran Muffin of accounting tools.
 
 To use it, you need to start keeping a ledger.  This is the basis of
 all accounting, and if you haven't started yet, now is the time to
@@ -40,7 +40,7 @@ of all your accounts, not just checking.  In such a ledger, you record
 not only who gets paid -- in the case of a debit -- but where the
 money came from.  In a checkbook ledger, its assumed that all the
 money comes from your checking account.  But in a general ledger, you
-write transaction two-lines: The source account and target account.
+write transaction two-lines: the source account and target account.
 *There must always be a debit from at least one account for every
 credit made to another account*.  This is what is meant by
 "double-entry" accounting: the ledger must always balance to zero,
@@ -94,7 +94,7 @@ track of the balances for you.  Your only job is to enter the
 credit/debit transactions.  If a transaction does not balance, Ledger
 will display an error and indicate which transaction is wrong.[1]
 
-In summary, there are two aspects of Ledger use: Updating the ledger
+In summary, there are two aspects of Ledger use: updating the ledger
 data file, and using the Ledger tool to view the summarized result of
 your entries.
 
@@ -158,12 +158,12 @@ you.
 
 The Ledger program aims at making ledger entry as simple as possible.
 Since it is a command-line tool, it does not provide a user interface
-for keeping a ledger.  If you like, you may use Gnucash to maintain
-your ledger, in which case the Ledger program will read Gnucash's data
-files directly.  In that case, read the Gnucash manual now, and skip
+for keeping a ledger.  If you like, you may use GnuCash to maintain
+your ledger, in which case the Ledger program will read GnuCash's data
+files directly.  In that case, read the GnuCash manual now, and skip
 to the next chapter.
 
-If you are not using Gnucash, but a text editor to maintain your
+If you are not using GnuCash, but a text editor to maintain your
 ledger, read on.  Ledger has been designed to make data entry as
 simple as possible, by keeping the ledger format easy, and also by
 automagically determining as much information as possible based on the
@@ -254,7 +254,7 @@ leave.  This is the beginning of economy, after which the explanation
 gets terribly difficult.
 
 Based on that explanation, here's another way to look at your balance
-report: Every negative figure means that that account or person or
+report: every negative figure means that that account or person or
 place has less money now than when you started your ledger; and every
 positive figure means that that account or person or place has more
 money now that when you started your ledger.  Make sense?
@@ -612,7 +612,7 @@ P 2004/06/21 02:18:02 AAPL $32.91
 By default, ledger will not consider commodity prices when generating
 its various reports.  It will always report balances in terms of the
 commodity total, rather than the current value of those commodities.
-To enable pricing reports, three options are possible:
+To enable pricing reports, several options are possible:
 
 **-P FILE** ::
   With this option, or if the environment variable =PRICE_HIST= is
@@ -730,7 +730,7 @@ of your assets is greater than the absolute value of your starting
 equity, it means you are making money.
 
 Clear as mud?  Keep thinking about it.  Until you figure it out, put
-"-- -Equity" at the end of your balance command, to remove the
+"=-- -Equity=" at the end of your balance command, to remove the
 confusing figure from the totals.
 
 ** Dealing with cash
