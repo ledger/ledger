@@ -135,7 +135,9 @@ class format_xml_entries : public format_entries
     : format_entries(output_stream, ""), show_totals(_show_totals) {
     output_stream << "<?xml version=\"1.0\"?>\n<ledger>\n";
   }
-  virtual ~format_xml_entries() {
+
+  virtual void flush() {
+    format_entries::flush();
     output_stream << "</ledger>" << std::endl;
   }
 
