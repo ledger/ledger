@@ -213,10 +213,13 @@ int parse_and_report(int argc, char * argv[], char * envp[])
 
   if (config.init_file.empty())
     config.init_file  = home + "/.ledgerrc";
-  if (config.cache_file.empty())
-    config.cache_file = home + "/.ledger-cache";
   if (config.price_db.empty())
     config.price_db   = home + "/.pricedb";
+
+  if (config.cache_file.empty())
+    config.cache_file = home + "/.ledger-cache";
+  else if (config.cache_file == "<none>")
+    config.cache_file = "";
 
   if (config.data_file == config.cache_file)
     config.use_cache = false;
