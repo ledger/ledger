@@ -403,7 +403,7 @@ def vmax(d, val):\n\
 
   if (config.use_cache && config.cache_dirty && ! config.cache_file.empty()) {
     std::ofstream stream(config.cache_file.c_str());
-    write_binary_journal(stream, journal.get(), &journal->sources);
+    write_binary_journal(stream, journal.get());
   }
 
   return 0;
