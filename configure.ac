@@ -27,13 +27,22 @@ AC_CHECK_LIB([xmlparse], [XML_ParserCreate],
 
 # Check for options
 AC_ARG_ENABLE(debug,
-  [  --enable-debug    Turn on debugging],
+  [  --enable-debug       Turn on debugging],
   [case "${enableval}" in
     yes) debug=true ;;
     no)  debug=false ;;
     *) AC_MSG_ERROR(bad value ${enableval} for --enable-debug) ;;
   esac],[debug=false])
 AM_CONDITIONAL(DEBUG, test x$debug = xtrue)
+
+AC_ARG_ENABLE(standalone,
+  [  --enable-standalone  Build standalone on OS/X (see README)],
+  [case "${enableval}" in
+    yes) standalone=true ;;
+    no)  standalone=false ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-standalone) ;;
+  esac],[standalone=false])
+AM_CONDITIONAL(STANDALONE, test x$standalone = xtrue)
 
 # Checks for header files.
 AC_STDC_HEADERS

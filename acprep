@@ -1,6 +1,8 @@
 #!/bin/sh
 
 aclocal
+autoheader
+touch AUTHORS ChangeLog
 
 if [ "$1" = "--dist" ]; then
     automake -acfi
@@ -8,16 +10,18 @@ else
     automake -acf
 fi
 
-autoheader
 autoconf
 
+INCDIRS="-I/sw/include -I/usr/include/httpd/xml"
 if [ "$1" = "--debug" ]; then
-    ./configure CPPFLAGS="-I/sw/include -I/usr/include/httpd/xml" \
-		LDFLAGS=-L/sw/lib CXXFLAGS="-g" --enable-debug
+    ./configure CPPFLAGS="$INCDIRS" LDFLAGS=-L/sw/lib \
+	CXXFLAGS="-g" --enable-debug
 elif [ "$1" = "--opt" ]; then
-    ./configure CPPFLAGS="-I/sw/include -I/usr/include/httpd/xml" \
-		LDFLAGS=-L/sw/lib CXXFLAGS="-fomit-frame-pointer -fastf -mcpu=7450"
+    ./configure CPPFLAGS="$INCDIRS" LDFLAGS=-L/sw/lib \
+	CXXFLAGS="-fomit-frame-pointer -fastf -mcpu=7450" --enable-standalone
 elif [ "$1" = "--perf" ]; then
-    ./configure CPPFLAGS="-I/sw/include -I/usr/include/httpd/xml" \
-		LDFLAGS=-L/sw/lib CXXFLAGS="-g -pg"
+    ./configure CPPFLAGS="$INCDIRS" LDFLAGS=-L/sw/lib \
+	CXXFLAGS="-g -pg"
 fi
+
+rm AUTHORS ChangeLog
