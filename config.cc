@@ -1,4 +1,5 @@
 #include "config.h"
+#include "acconf.h"
 #include "option.h"
 #include "quotes.h"
 #include "walk.h"
@@ -342,7 +343,7 @@ void parse_ledger_data(journal_t * journal, parser_t * cache_parser,
   }
 
   if (entry_count == 0)
-    throw error("Please specify ledger file using -f,"
+    throw error("Please specify ledger file using -f"
 		" or LEDGER_FILE environment variable.");
 
   VALIDATE(journal->valid());
@@ -351,12 +352,20 @@ void parse_ledger_data(journal_t * journal, parser_t * cache_parser,
 static void show_version(std::ostream& out)
 {
   out << "Ledger " << ledger::version << ", the command-line accounting tool";
-#ifdef USE_BOOST_PYTHON
-  out << " (Python support enabled)";
-#endif
-  out << "\n\nCopyright (c) 2003-2004, John Wiegley.  All rights reserved.\n\n\
+  out << "\n\nCopyright (c) 2003-2005, John Wiegley.  All rights reserved.\n\n\
 This program is made available under the terms of the BSD Public License.\n\
 See LICENSE file included with the distribution for details and disclaimer.\n";
+  out << "\n(modules: gmp, pcre";
+#ifdef USE_BOOST_PYTHON
+  out << ", python";
+#endif
+#ifdef HAVE_XMLPARSE
+  out << ", xml";
+#endif
+#ifdef HAVE_LIBOFX
+  out << ", ofx";
+#endif
+  out << ")\n";
 }
 
 void option_full_help(std::ostream& out)
