@@ -491,7 +491,7 @@ void format_transactions::operator()(transaction_t& xact)
     } else {
       next_lines_format.format(output_stream, details_t(xact));
     }
-    transaction_xdata_(xact).dflags |= TRANSACTION_DISPLAYED;
+    transaction_xdata(xact).dflags |= TRANSACTION_DISPLAYED;
   }
 }
 
