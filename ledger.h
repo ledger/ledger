@@ -1,5 +1,5 @@
 #ifndef _LEDGER_H
-#define _LEDGER_H "$Revision: 1.34 $"
+#define _LEDGER_H
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -7,15 +7,16 @@
 //
 //   A command-line tool for general double-entry accounting.
 //
-// Copyright (c) 2003 John Wiegley <johnw@newartisans.com>
+// Copyright (c) 2003,2004 John Wiegley <johnw@newartisans.com>
 //
 
-#include <iostream>
-#include <string>
-#include <vector>
-#include <list>
 #include <map>
+#include <list>
+#include <string>
 #include <ctime>
+#include <cctype>
+#include <iostream>
+#include <sstream>
 
 #ifdef DEBUG
 #include <cassert>
@@ -26,333 +27,405 @@
 #define assert(x)
 #endif
 
-#include <pcre.h>               // Perl regular expression library
-
 namespace ledger {
 
-class amount;
-class commodity
+extern const std::string version;
+
+class commodity_t;
+class amount_t;
+class transaction_t;
+class entry_t;
+class account_t;
+class ledger_t;
+
+class amount_t
 {
-  commodity(const commodity&);
+  typedef void * base_type;
 
-  typedef std::map<const std::time_t, amount *>  price_map;
-  typedef std::pair<const std::time_t, amount *> price_map_pair;
-
- public:
-  std::string name;
-  std::string symbol;
-
-  mutable bool sought;
-
-  bool prefix;
-  bool separate;
-  bool thousands;
-  bool european;
-  int  precision;
-
- protected:
-  mutable price_map history;	// the price history
-  mutable amount *  conversion;	// fixed conversion (ignore history)
+  void _init();
+  void _copy(const amount_t& amt);
+  void _clear();
 
  public:
-  explicit commodity() : sought(false), prefix(false), separate(true),
-    thousands(false), european(false), conversion(NULL) {}
+  base_type	quantity;	// amount, to MAX_PRECISION
+  commodity_t *	commodity;
 
-  explicit commodity(const std::string& sym, bool pre = false,
-		     bool sep = true, bool thou = true,
-		     bool euro = false, int prec = 2);
-  ~commodity();
+  static commodity_t * null_commodity;
 
-  void     set_price(amount * price, std::time_t * when = NULL);
-  amount * price(std::time_t * when = NULL,
-		 bool use_history = false, bool download = false) const;
-};
-
-typedef std::map<const std::string, commodity *>  commodities_map;
-typedef commodities_map::iterator                 commodities_map_iterator;
-typedef std::pair<const std::string, commodity *> commodities_map_pair;
-
-
-class amount
-{
- public:
-  virtual ~amount() {}
-
-  virtual commodity * commdty() const = 0;
-  virtual void set_commdty(commodity *) = 0;
-
-  virtual amount * copy() const = 0;
-  virtual amount * value(const amount * pr = NULL) const = 0;
-  virtual void set_value(const amount * pr) = 0;
-  virtual amount * street(std::time_t * when = NULL,
-			  bool use_history = false,
-			  bool download = false) const = 0;
-
-  virtual bool has_price() const = 0;
-  virtual amount * per_item_price() const = 0;
-
-  // Comparison
-
-  virtual bool is_zero() const = 0;
-  virtual bool is_negative() const = 0;
-  virtual int  compare(const amount * other) const = 0;
-
-  // Assignment
-
-  virtual void credit(const amount * other) = 0;
-  virtual void negate() = 0;
-
-  // String conversion routines
-
-  virtual void parse(const std::string& num) = 0;
-  virtual const std::string as_str(bool full_prec = false) const = 0;
-};
-
-extern amount * create_amount(const std::string& value,
-			      const amount * cost = NULL);
-
-class mask
-{
- public:
-  bool        exclude;
-  std::string pattern;
-  pcre *      regexp;
-
-  explicit mask(const std::string& pattern);
-
-  mask(const mask&);
-
-  ~mask() {
-    pcre_free(regexp);
+  bool valid() const {
+    if (quantity)
+      return commodity != NULL;
+    else
+      return commodity == NULL;
   }
 
-  bool match(const std::string& str) const;
-};
+  // constructors
+  amount_t(commodity_t * _commodity = NULL)
+    : quantity(NULL), commodity(_commodity) {}
 
-typedef std::list<mask>                 regexps_list;
-typedef std::list<mask>::iterator       regexps_list_iterator;
-typedef std::list<mask>::const_iterator regexps_list_const_iterator;
-
-class account;
-class transaction
-{
-  transaction(const transaction&);
-
- public:
-  account * acct;
-  amount *  cost;
-
-  std::string note;
-
-  bool is_virtual;
-  bool must_balance;
-  bool specified;
-
-  explicit transaction(account * _acct = NULL, amount * _cost = NULL)
-    : acct(_acct), cost(_cost),
-      is_virtual(false), must_balance(true), specified(false) {}
-
-  ~transaction() {
-    if (cost)
-      delete cost;
+  amount_t(const amount_t& amt) : quantity(NULL) {
+    if (amt.quantity)
+      _copy(amt);
+    else
+      commodity = amt.commodity;
   }
-
-  const std::string acct_as_str() const;
-
-  void print(std::ostream& out, bool display_quantity = true,
-	     bool display_price = true) const;
-};
-
-
-class book;
-class entry
-{
-  entry(const entry&);
-
- public:
-  book * ledger;
-  
-  std::time_t date;
-  std::string code;
-  std::string desc;
-
-  bool cleared;
-
-  std::list<transaction *> xacts;
-
-  explicit entry(book * l) : ledger(l), cleared(false) {}
-
-  // If we're running as a command-line tool, it's cheaper to just
-  // throw away the heap on exit, than spend time freeing things up
-  // like a good citizen.
-
-  ~entry() {
-    for (std::list<transaction *>::iterator i = xacts.begin();
-	 i != xacts.end();
-	 i++) {
-      delete *i;
+  amount_t(const std::string& value) {
+    _init();
+    std::istringstream str(value);
+    str >> *this;
+  }
+  amount_t(const int value) : quantity(NULL), commodity(NULL) {
+    if (value != 0) {
+      std::string str;
+      std::ostringstream strstr(str);
+      strstr << value;
+      parse(strstr.str());
+    }
+  }
+  amount_t(const unsigned int value) : quantity(NULL), commodity(NULL) {
+    if (value != 0) {
+      std::string str;
+      std::ostringstream strstr(str);
+      strstr << value;
+      parse(strstr.str());
+    }
+  }
+  amount_t(const double value) : quantity(NULL), commodity(NULL) {
+    if (value != 0.0) {
+      std::string str;
+      std::ostringstream strstr(str);
+      strstr << value;
+      parse(strstr.str());
     }
   }
 
-  bool matches(const regexps_list& regexps) const;
-  bool validate(bool show_unaccounted = false) const;
-  bool finalize(bool do_compute = false);
-
-  void print(std::ostream& out, bool shortcut = true) const;
-};
-
-struct cmp_entry_date {
-  bool operator()(const entry * left, const entry * right) {
-    return std::difftime(left->date, right->date) < 0;
+  // destructor
+  ~amount_t() {
+    if (quantity)
+      _clear();
   }
-};
 
-typedef std::vector<entry *>           entries_list;
-typedef entries_list::iterator         entries_list_iterator;
-typedef entries_list::reverse_iterator entries_list_reverse_iterator;
-typedef entries_list::const_iterator   entries_list_const_iterator;
+  // assignment operator
+  amount_t& operator=(const amount_t& amt);
+  amount_t& operator=(const std::string& value);
+  amount_t& operator=(const int value);
+  amount_t& operator=(const unsigned int value);
+  amount_t& operator=(const double value);
 
+  // general methods
+  amount_t round(int precision = -1) const;
 
-class totals
-{
-  totals(const totals&);
+  // in-place arithmetic
+  amount_t& operator*=(const amount_t& amt);
+  amount_t& operator/=(const amount_t& amt);
+  amount_t& operator%=(const amount_t& amt);
+  amount_t& operator+=(const amount_t& amt);
+  amount_t& operator-=(const amount_t& amt);
 
- public:
-  typedef std::map<commodity *, amount *>  map;
-  typedef map::iterator                    iterator;
-  typedef map::const_iterator              const_iterator;
-  typedef std::pair<commodity *, amount *> pair;
-
-  map amounts;
-
-  totals() {}
-  ~totals();
-
-  void     credit(const amount * val);
-  void     credit(const totals& other);
-
-  void     negate();
-
-  bool     is_zero() const;
-  bool     is_negative() const;
-
-  void     print(std::ostream& out, int width) const;
-
-  totals * value() const;
-  totals * street(std::time_t * when = NULL,
-		    bool use_history = false,
-		    bool download = false) const;
-};
-
-
-typedef std::map<const std::string, account *>  accounts_map;
-typedef accounts_map::iterator                  accounts_map_iterator;
-typedef std::pair<const std::string, account *> accounts_map_pair;
-
-class account
-{
-  account(const account&);
-
- public:
-  account *    parent;
-
-  std::string  name;
-#ifdef READ_GNUCASH
-  commodity *  comm;           // default commodity for this account
-#endif
-  totals       balance;        // optional, parse-time computed balance
-  int          checked;        // 'balance' uses this for speed's sake
-  accounts_map children;
-
-  mutable std::string full_name;
-
-  explicit account() : parent(NULL), checked(0) {}
-
-  explicit account(const std::string& _name,
-		   struct account * _parent = NULL)
-    : parent(_parent), name(_name), checked(0) {}
-
-  ~account();
-
-  const std::string as_str(const account * stop = NULL) const;
-};
-
-
-class book
-{
-  book(const book&);
-
- public:
-  typedef std::map<regexps_list *,
-		   std::list<transaction *> *> virtual_map;
-
-  typedef std::pair<regexps_list *,
-		    std::list<transaction *> *> virtual_map_pair;
-
-  typedef virtual_map::const_iterator virtual_map_iterator;
-
-  commodities_map commodities;
-  accounts_map    accounts;
-  accounts_map    accounts_cache; // maps full names to accounts
-  virtual_map     virtual_mapping;
-  entries_list    entries;
-  int             current_year;
-
-  book() {}
-  ~book();
-
-  template<typename Compare>
-  void sort(Compare comp) {
-    std::sort(entries.begin(), entries.end(), comp);
+  // simple arithmetic
+  amount_t operator*(const amount_t& amt) const {
+    amount_t temp = *this;
+    temp *= amt;
+    return temp;
   }
-  void print(std::ostream& out, regexps_list& regexps,
-	     bool shortcut) const;
+  amount_t operator/(const amount_t& amt) const {
+    amount_t temp = *this;
+    temp /= amt;
+    return temp;
+  }
+  amount_t operator%(const amount_t& amt) const {
+    amount_t temp = *this;
+    temp %= amt;
+    return temp;
+  }
+  amount_t operator+(const amount_t& amt) const {
+    amount_t temp = *this;
+    temp += amt;
+    return temp;
+  }
+  amount_t operator-(const amount_t& amt) const {
+    amount_t temp = *this;
+    temp -= amt;
+    return temp;
+  }
 
-  account * re_find_account(const std::string& regex);
-  account * find_account(const std::string& name, bool create = true);
+  // unary negation
+  amount_t& negate();
+  amount_t negated() const {
+    amount_t temp = *this;
+    temp.negate();
+    return temp;
+  }
+  amount_t operator-() const {
+    return negated();
+  }
+
+  // test for non-zero (use ! for zero)
+  operator bool() const;
+
+  // comparisons to zero
+  bool operator<(const int num) const;
+  bool operator<=(const int num) const;
+  bool operator>(const int num) const;
+  bool operator>=(const int num) const;
+
+  // comparisons between amounts
+  bool operator<(const amount_t& amt) const;
+  bool operator<=(const amount_t& amt) const;
+  bool operator>(const amount_t& amt) const;
+  bool operator>=(const amount_t& amt) const;
+  bool operator==(const amount_t& amt) const;
+  bool operator!=(const amount_t& amt) const {
+    if (commodity != amt.commodity)
+      return true;
+    return ! (*this == amt);
+  }
+
+  amount_t value(const std::time_t moment) const;
+
+  operator std::string() const;
+
+  void parse(std::istream& in, ledger_t * ledger = NULL);
+  void parse(const std::string& str, ledger_t * ledger = NULL) {
+    std::istringstream stream(str);
+    parse(stream, ledger);
+  }
+
+  void write_quantity(std::ostream& out) const;
+  void read_quantity(std::istream& in);
+
+  friend std::istream& operator>>(std::istream& in, amount_t& amt);
 };
 
-extern book * main_ledger;
+void parse_quantity(std::istream& in, std::string& value);
+void parse_commodity(std::istream& in, std::string& symbol);
 
-inline commodity::commodity(const std::string& sym, bool pre, bool sep,
-			    bool thou, bool euro, int prec)
-  : symbol(sym), sought(false), prefix(pre), separate(sep),
-    thousands(thou), european(euro), precision(prec), conversion(NULL) {
-#ifdef DEBUG
-  std::pair<commodities_map_iterator, bool> result =
-#endif
-    main_ledger->commodities.insert(commodities_map_pair(sym, this));
-#ifdef DEBUG
-  assert(result.second);
-#endif
+inline amount_t abs(const amount_t& amt) {
+  return amt < 0 ? amt.negated() : amt;
 }
 
-// Parsing routines
+inline std::istream& operator>>(std::istream& in, amount_t& amt) {
+  amt.parse(in);
+  return in;
+}
 
-extern int parse_ledger(book * ledger, std::istream& in,
-			regexps_list& regexps,
-			bool compute_balances = false,
-			const char * acct_prefix = NULL);
-#ifdef READ_GNUCASH
-extern book * parse_gnucash(std::istream& in, bool compute_balances = false);
-#endif
+std::ostream& operator<<(std::ostream& out, const amount_t& amt);
 
-extern int parse_ledger_file(book * ledger, const std::string& file,
-			     regexps_list& regexps,
-			     bool compute_balances = false,
-			     const char * acct_prefix = NULL);
 
-extern bool parse_date_mask(const char * date_str,
-			    struct std::tm * result);
-extern bool parse_date(const char * date_str, std::time_t * result,
-		       const int year = -1);
+#define COMMODITY_STYLE_DEFAULTS   0x00
+#define COMMODITY_STYLE_SUFFIXED   0x01
+#define COMMODITY_STYLE_SEPARATED  0x02
+#define COMMODITY_STYLE_EUROPEAN   0x04
+#define COMMODITY_STYLE_THOUSANDS  0x08
+#define COMMODITY_STYLE_CONSULTED  0x10
+#define COMMODITY_STYLE_NOMARKET   0x20
 
-extern void record_regexp(const std::string& pattern, regexps_list& regexps);
-extern void read_regexps(const std::string& path, regexps_list& regexps);
-extern bool matches(const regexps_list& regexps, const std::string& str,
-		    bool * by_exclusion = NULL);
+typedef std::map<const std::time_t, amount_t>  history_map;
+typedef std::pair<const std::time_t, amount_t> history_pair;
 
-extern void parse_price_setting(const std::string& setting);
+class commodity_t
+{
+ public:
+  std::string	symbol;
+  std::string	name;
+  std::string	note;
+  unsigned int	precision;
+  unsigned int	flags;
+  history_map	history;
+  amount_t	conversion;
+  unsigned long	ident;
+
+  static void (*updater)(commodity_t *	   commodity,
+			 const std::time_t date,
+			 const amount_t&   price,
+			 const std::time_t moment);
+
+  commodity_t(const std::string& _symbol    = "",
+	      unsigned int	 _precision = 2,
+	      unsigned int       _flags	    = COMMODITY_STYLE_DEFAULTS)
+    : symbol(_symbol), precision(_precision), flags(_flags) {}
+
+  void add_price(const std::time_t date, const amount_t& price) {
+    history.insert(history_pair(date, price));
+  }
+  bool remove_price(const std::time_t date) {
+    history_map::size_type n = history.erase(date);
+    return n > 0;
+  }
+
+  void set_conversion(const amount_t& price) {
+    conversion = price;
+  }
+
+  amount_t value(const std::time_t moment = std::time(NULL));
+};
+
+
+#define TRANSACTION_NORMAL   0x0
+#define TRANSACTION_VIRTUAL  0x1
+#define TRANSACTION_BALANCE  0x2
+
+class transaction_t
+{
+ public:
+  entry_t *	entry;
+  account_t *	account;
+  amount_t	amount;
+  amount_t	cost;
+  unsigned int	flags;
+  std::string	note;
+
+  transaction_t(entry_t * _entry, account_t * _account)
+    : entry(_entry), account(_account), flags(TRANSACTION_NORMAL) {}
+
+  transaction_t(entry_t *	   _entry,
+		account_t *	   _account,
+		const amount_t&    _amount,
+		const amount_t&    _cost,
+		unsigned int	   _flags = TRANSACTION_NORMAL,
+		const std::string& _note  = "")
+    : entry(_entry), account(_account), amount(_amount),
+    cost(_cost), flags(_flags), note(_note) {}
+};
+
+
+typedef std::list<transaction_t *> transactions_list;
+
+class entry_t
+{
+ public:
+  enum entry_state_t {
+    UNCLEARED, CLEARED, PENDING
+  };
+
+  std::time_t	     date;
+  enum entry_state_t state;
+  std::string	     code;
+  std::string	     payee;
+  transactions_list  transactions;
+
+  ~entry_t() {
+    for (transactions_list::iterator i = transactions.begin();
+	 i != transactions.end();
+	 i++)
+      delete *i;
+  }
+
+  void add_transaction(transaction_t * xact) {
+    transactions.push_back(xact);
+  }
+  bool remove_transaction(transaction_t * xact) {
+    transactions.remove(xact);
+    return true;
+  }
+};
+
+
+typedef std::map<const std::string, account_t *> accounts_map;
+typedef std::pair<const std::string, account_t *> accounts_pair;
+
+inline std::ostream& operator<<(std::ostream& out, const account_t& acct);
+
+class account_t
+{
+ public:
+  const account_t *	parent;
+  std::string		name;
+  std::string		note;
+  accounts_map		accounts;
+  mutable accounts_map  accounts_cache;
+  transactions_list	transactions;
+  unsigned long	        ident;
+  static unsigned long  next_ident;
+
+  account_t(const account_t * _parent, const std::string& _name = "",
+	    const std::string& _note = "")
+    : parent(_parent), name(_name), note(_note) {}
+
+  ~account_t();
+
+  std::string fullname() const;
+
+  void add_account(account_t * acct) {
+    acct->ident = next_ident++;
+    accounts.insert(accounts_pair(acct->name, acct));
+  }
+  bool remove_account(account_t * acct) {
+    accounts_map::size_type n = accounts.erase(acct->name);
+    return n > 0;
+  }
+
+  account_t * find_account(const std::string& name, bool auto_create = true);
+
+  operator std::string() const {
+    return fullname();
+  }
+
+  // These functions should only be called from ledger_t::add_entry
+  // and ledger_t::remove_entry; or from the various parsers.
+  void add_transaction(transaction_t * xact) {
+    transactions.push_back(xact);
+  }
+  bool remove_transaction(transaction_t * xact);
+
+  friend class ledger_t;
+};
+
+inline std::ostream& operator<<(std::ostream& out, const account_t& acct) {
+  out << acct.fullname();
+  return out;
+}
+
+
+typedef std::map<const std::string, commodity_t *>  commodities_map;
+typedef std::pair<const std::string, commodity_t *> commodities_pair;
+
+typedef std::list<entry_t *> entries_list;
+
+class ledger_t
+{
+ public:
+  account_t *		 master;
+  commodities_map	 commodities;
+  entries_list		 entries;
+  std::list<std::string> sources;
+
+  ledger_t() {
+    master = new account_t(NULL, "");
+    master->ident = 0;
+    account_t::next_ident = 1;
+  }
+
+  ~ledger_t();
+
+  void add_account(account_t * acct) {
+    master->add_account(acct);
+  }
+  bool remove_account(account_t * acct) {
+    return master->remove_account(acct);
+  }
+
+  account_t * find_account(const std::string& name, bool auto_create = true) {
+    return master->find_account(name, auto_create);
+  }
+
+  void add_commodity(commodity_t * commodity, const std::string symbol = "") {
+    commodities.insert(commodities_pair(symbol.empty() ?
+					commodity->symbol : symbol, commodity));
+  }
+  bool remove_commodity(commodity_t * commodity) {
+    commodities_map::size_type n = commodities.erase(commodity->symbol);
+    return n > 0;
+  }
+
+  commodity_t * find_commodity(const std::string& symbol,
+			       bool auto_create = false);
+
+  bool add_entry(entry_t * entry);
+  bool remove_entry(entry_t * entry);
+};
+
+int parse_ledger_file(char * p, ledger_t * book);
 
 } // namespace ledger
 

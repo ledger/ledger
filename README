@@ -57,11 +57,11 @@ The entry might look like this:
 
 <example>
 9/29  BAL  Pacific Bell              $-200.00   $-200.00
-           Equity:Opening Balances    $200.00
+	   Equity:Opening Balances    $200.00
 9/29  BAL  Checking                   $100.00    $100.00
-           Equity:Opening Balances   $-100.00
+	   Equity:Opening Balances   $-100.00
 9/29  100  Pacific Bell                $23.00    $223.00
-           Checking                   $-23.00     $77.00
+	   Checking                   $-23.00     $77.00
 </example>
 
 The first line shows a credit (or payment) to Pacific Bell for $23.00.
@@ -264,6 +264,236 @@ spending *from* them (debit) in order pay someone else (credit).  They
 are called credit cards because you are able to instantly credit that
 other person, by simply waving a card.
 
+** Assets and Liabilities
+
+Assets are money that you have, and Liabilities are money that you
+owe.  "Liabilities" is just a more inclusive name for Debts.
+
+An Asset is typically increased by transferring money from an Income
+account, such as when you get paid.  Here is a typical entry:
+
+<example>
+2004/09/29  My Employer
+    Assets:Checking               $500.00
+    Income:Salary
+</example>
+
+Money, here, is coming from an Income account belonging to "My
+Employer", and is being transferred to an account that belongs to you.
+The money is now yours, which makes it an asset.
+
+Liability accounts track money you owe to others.  They come into play
+whenever you borrow money to buy something, or if you owe someone
+money.  The usual way a liability is changed is by expending money,
+thus transferring it to an Expenses account.  For example:
+
+<example>
+2004/09/30  Restaurant
+    Expenses:Dining                $25.00
+    Liabilities:MasterCard
+</example>
+
+Your account balance will now show $25 spent on Dining, and a
+corresponding $25 owed on your MasterCard.  The MasterCard liability
+will show up as negative, since it offsets the value of your assets.
+*The combined total of your Assets and Liabilities is your net worth*.
+To see your current net worth, use this command:
+
+<example>
+$ ledger balance ^assets ^liabilities
+</example>
+
+Relatedly, your Income accounts will show up negative, because they
+transfer money *from* an account in order to credit your assets.  Your
+Expenses accounts will show up positive, because that is where the
+money went.  The combined total your Income and Expenses is your cash
+flow.  A negative cash flow means that you are spending more money
+than you make.  To see your current cash flow, use this command:
+
+<example>
+$ ledger balance ^income ^expenses
+</example>
+
+Often, it is only important to view your income and expenses when
+asking questions like, "Where did my money go?  Am I spending too much
+on X?  Am I making enough to cover my expenses?"  But most of the
+time, you will usually want to ask other questions like, "Is there
+enough money in my checking account to cover my next credit card
+bill?"  For these reasons, I recommend creating a script that removes
+Income, Expenses, and Equity by default from your basic balance
+report.  The provided script "bal" does this for you, as well as
+making it easier to run the balance command:
+
+<example>
+$ bal
+</example>
+
+To use this script, it must be copied from the **scripts** directory in
+the ledger distribution, to a directory along your =PATH=.  Also, you
+must set the environment variable =LEDGER= to point to your main
+ledger file.
+
+Another common question to ask of your expenses is: How much do I
+spend each month on X?  Ledger provides a simple way of displaying
+monthly totals for any account.  Here is an example that summarizes
+monthly automobile expenses:
+
+<example>
+$ ledger -M register expenses:auto
+</example>
+
+This assumes, of course, that you use accounts like Expenses:Auto:Gas
+and Expenses:Auto:Repair.
+
+*** Tracking reimbursable expenses
+
+Sometimes you will want to spend money on behalf of someone else,
+which will eventually get repaid.  Since the money is still "yours",
+it is really an asset.  And since the expenditure was for someone
+else, you don't want it contaminating your Expenses reports.  You will
+need to keep an account for tracking reimbursements.
+
+This is fairly easy to do in ledger.  When spending the money, spend
+it *to* your Assets:Reimbursements, using a different account for each
+person or business that you spend money for.  For example:
+
+<example>
+2004/09/29  Circuit City
+    Assets:Reimbursements:Company XYZ     $100.00
+    Liabilities:MasterCard
+</example>
+
+This shows that you spent $100.00 on your MasterCard at Circuit City,
+but that the expense was made on behalf of Company XYZ.  Later, when
+Company XYZ pays you back, you will transfer the money from your
+reimbursement account to a regular asset account:
+
+<example>
+2004/09/29  Company XYZ
+    Assets:Checking                       $100.00
+    Assets:Reimbursements:Company XYZ
+</example>
+
+This deposits the money owed from Company XYZ into your checking
+account, presumably because they paid you back with a check.
+
+But what to do if you run your own business, and you want to keep
+track of expenses made on your own behalf, while still tracking
+everything in a single ledger file?  This is more complex, because you
+need to track two separate things: 1) The fact that the money should
+be reimbursed to you, and 2) What the expense account was, so that you
+can later determine where your company is spending its money.
+
+This kind of transaction is best handled with mirrored transactions in
+two different files, one for your personal accounts, and one for your
+company accounts.  But keeping them in one file involves the same
+kinds of transactions, so those are what is shown here.  First, the
+personal entry, which shows the need for reimbursement:
+
+<example>
+2004/09/29  Circuit City
+    Assets:Reimbursements:Company XYZ     $100.00
+    Liabilities:MasterCard
+</example>
+
+This is the same as above, except that you own Company XYZ, and are
+keeping track of its expenses in the same ledger file.  This entry
+should be immediately followed by an equivalent entry, which shows the
+kind of expense, and also notes the fact that $100.00 is now payable
+to you:
+
+<example>
+2004/09/29  Circuit City
+    Company XYZ:Expenses:Computer:Software      $100.00
+    Company XYZ:Accounts Payable:Your Name
+</example>
+
+This second entry shows that Company XYZ has just spent $100.00 on
+software, and that this $100.00 came from Your Name, which must be
+paid back.
+
+These two entries can also be merged, to make things a little clearer.
+Note that all amounts must be specified now:
+
+<example>
+2004/09/29  Circuit City
+    Assets:Reimbursements:Company XYZ         $100.00
+    Liabilities:MasterCard                   $-100.00
+    Company XYZ:Expenses:Computer:Software    $100.00
+    Company XYZ:Accounts Payable:Your Name   $-100.00
+</example>
+
+To "pay back" the reimbursement, just reverse the order of everything,
+except this time drawing the money from a company asset, paying it to
+accounts payable, and then drawing it again from the reimbursement
+account, and paying it to your personal asset account.  It's easier
+shown than said:
+
+<example>
+2004/10/15  Company XYZ
+    Assets:Checking                           $100.00
+    Assets:Reimbursements:Company XYZ        $-100.00
+    Company XYZ:Accounts Payable:Your Name    $100.00
+    Company XYZ:Assets:Checking              $-100.00
+</example>
+
+And now the reimbursements account is paid off, accounts payable is
+paid off, and the $100.00 has been effectively transferred from the
+company's checking account to your personal checking account.  The
+money simply "waited" -- in both Assets:Reimbursements:Company XYZ,
+and Company XYZ:Accounts Payable:Your Name -- until such time as it
+could be paid off.
+
+The value of tracking expenses from both sides like that is that you
+do not contaminate your personal expense report with expenses made on
+behalf of others, while at the same time making it possible to
+generate accurate reports of your company's expenditures.  It is more
+verbose than just paying for things with your personal assets, but it
+gives you a very accurate information trail.
+
+The advantage to keep these doubled entries together is that they
+always stay in sync.  The advantage to keeping them apart is that it
+clarifies the transfer's point of view.  To keep the transactions in
+separate files, just separate the two entries that were joined above.
+For example, for both the expense and the pay-back shown above, the
+following four entries would be created.  Two in your personal ledger
+file:
+
+<example>
+2004/09/29  Circuit City
+    Assets:Reimbursements:Company XYZ     $100.00
+    Liabilities:MasterCard               $-100.00
+
+2004/10/15  Company XYZ
+    Assets:Checking                       $100.00
+    Assets:Reimbursements:Company XYZ    $-100.00
+</example>
+
+And two in your company ledger file:
+
+<example>
+@ Company XYZ
+
+2004/09/29  Circuit City
+    Expenses:Computer:Software            $100.00
+    Accounts Payable:Your Name           $-100.00
+
+2004/10/15  Company XYZ
+    Accounts Payable:Your Name            $100.00
+    Assets:Checking                      $-100.00
+
+@@
+</example>
+
+(Note: The @ above command means that all accounts mentioned in the
+file are children of the specified account.  In this case it means
+that all activity in file relates to Company XYZ).
+
+After creating these entries, you will always know that $100.00 was
+spent using your MasterCard on behalf of Company XYZ, and that Company
+XYZ spent the money on computer software and paid it back about two
+weeks later.
+
 ** Commodities and Currencies
 
 Ledger makes no assumptions about the commodities you use; it only
@@ -277,11 +507,10 @@ specifiers:
 
 <example>
 $20.00         ; currency: twenty US dollars
-USD 20         ; currency: the same
 40 AAPL        ; commodity: 40 shares of Apple stock
-MD 60          ; currency: 60 Deutsch Mark
+60 DM          ; currency: 60 Deutsch Mark
 £50            ; currency: 50 British pounds
-50e            ; currency: 50 Euros (use symbol)
+50e            ; currency: 50 Euros (use appropriate symbol)
 </example>
 
 Ledger will examine the first use of any commodity to determine how
@@ -391,8 +620,8 @@ To enable pricing reports, three options are possible:
   in this file.  Also, this file will be read after all other ledger
   files are read, so that full history information is available for
   reports.
-  
-**-T** ::
+
+**-O** ::
   Report commodity totals only, not their market value or basis cost.
 
 **-V** ::
@@ -403,7 +632,7 @@ To enable pricing reports, three options are possible:
   at time of purchase.  Thus, totals in the register and balance
   report reflect the total amount spent.
 
-**-A** ::
+**-G** ::
   Report commodities in terms of their net gain, which is: the market
   value minus the cost basis.  A balance report using this option
   shows very quickly the performance of investments.
@@ -427,7 +656,7 @@ To enable pricing reports, three options are possible:
   use: -p "$=0.00280112 AU" (or whatever the current exchange rate
   is).
 
-Note that the =-B=, =-T=, =-V=, and =-A= are mutually exclusive.
+Note that the =-B=, =-O=, =-V=, and =-G= are mutually exclusive.
 
 ** Accounts and Inventories
 
@@ -653,7 +882,7 @@ automated transaction at the top of your ledger file:
 ; contents of the ledger.
 
 = ^Income:
-= ^Expenses:Rent$                               
+= ^Expenses:Rent$
 = ^Expenses:Furnishings
 = ^Expenses:Business
 = ^Expenses:Taxes
@@ -1155,12 +1384,38 @@ launches =vi= to let you confirm that the entry looks appropriate.
 **-M** ::
   When used with the "register" command, causes only monthly subtotals
   to appear.  This can be useful for looking at spending patterns.
-  TODO: Accept an argument which specifies the period to use.
+  TODO: Accept an argument specifying the period to use.
 
-**-G** ::
-  Modifies the output generated by -M to be friendly to programs like
-  Gnuplot.  It strips away the commodity label, and outputs only two
-  columns: the date and the amount.
+**-A** ::
+  Report totals in terms of the arithmetic mean (sum of all items
+  divided by the count).  This does not work when multiple commodities
+  are used in the same account, in which case this option is ignored.
+  This option works both for balance reports, and for register reports
+  (where it displays the running total average).  Be aware that in the
+  balance report, parent account totals reflect the arithmetic mean of
+  all the transactions -- not the mean average of the subaccount
+  totals.
+
+**-T** ::
+  Report totals in terms of the average deviation from the average
+  value (i.e., the trend).  The final total will indicate the amount
+  over or above the average value which it is expected you will next
+  spend/earn.  When spending is regular, the trend will very slowly
+  move to zero.
+
+**-X** ::
+  Report totals in terms of the expected value of the next
+  transaction.  This is determined by adding the average deviation to
+  the average value.
+
+**-W** ::
+  Report totals in terms of a time-weighted trend.  Whereas =-T=
+  reports the exact value trend irrespective of when the transactions
+  occurred, =-W= takes into account the time between entries.  If a
+  transaction occurs shortly after another, it will not affect the
+  running trend as much as if it occurs very much later.  This style
+  of reports always adds a null transaction for the current date, so
+  that a current lack of spending is taken into account.
 
 *** Commodity reporting options
 
@@ -1170,8 +1425,8 @@ launches =vi= to let you confirm that the entry looks appropriate.
   in this file.  Also, this file will be read after all other ledger
   files are read, so that full history information is available for
   reports.
-  
-**-T** ::
+
+**-O** ::
   Report commodity totals only, not their market value or basis cost.
 
 **-V** ::
@@ -1182,7 +1437,7 @@ launches =vi= to let you confirm that the entry looks appropriate.
   at time of purchase.  Thus, totals in the register and balance
   report reflect the total amount spent.
 
-**-A** ::
+**-G** ::
   Report commodities in terms of their net gain, which is: the market
   value minus the cost basis.  A balance report using this option
   shows very quickly the performance of investments.

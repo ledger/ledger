@@ -1,13 +1,157 @@
-1.7
 
-  Pricing histories are now supported, so that ledger remembers
-  historical prices of all commodities (if this information is
-  provided), and can give register reports based on past and present
-  market values, as well as original cost basis.
+			     Ledger NEWS
 
-1.6
+* 2.0
 
-  Can now parse timeclock files.  These are simple timelogs that track
+- The code base has been rewritten for clarity and consistency.  As a
+  result, the code is much simpler and more robust (and in most cases
+  faster).
+
+- Register reports now show the account being credited/debited.  Use
+  new -o option to see "other accounts" -- or the account the
+  credit/debit came from.  (This was the old behavior in 1.x, but can
+  lead to confusing reports when viewing accounts with subaccounts.)
+  The -o option also works for balance reports, where it will show all
+  the account totals related to your query.
+
+- Regexps specified after the command are applied to account names
+  only.  To search on a payee name, use "--" to separate the two kinds
+  of regexps.  For example, to find payee's named John within all
+  Expenses accounts:
+
+    ledger register expenses -- john
+
+- The use of "+" and "-" in ledger files (to specify permanent
+  regexps) has been removed.
+
+- The -G switch no longer generates gnuplot-safe data.  It now reports
+  totals in terms of net gain/loss.
+
+- To include entries from a file into a specific account, use:
+
+    @ ACCOUNT
+    !include FILE
+    @@
+
+  All entries specified within the "@ ACCOUNT/@@" range will be added
+  under that account.
+
+- If the environment variable LEDGER_CACHE is set to a filename, a a
+  binary dump of the current ledger will be written then, to speed up
+  later queries of the same data.  This only happens if no "-f" flag
+  was seen (i.e., if the LEDGER environment variable is used).
+
+- There are several new default reporting styles, which work both in
+  the balance and register reports:
+
+    -O  Show base values (this is the default, and old behavior)
+    -B  Show the basis cost of commodities
+    -V  Show the last known market value of commodities
+    -G  Report net gain/loss (shows commodity changes only)
+    -A  Report average value (arithmetic mean)
+    -D  Report deviation from the average value
+    -Z  Report the trend (average rate of change)
+    -W  Report the trend, with older values affecting the trend less
+    -X  Report expected amount for the next transaction
+
+- Amount expressions are now supported, where the totals reported can
+  be changed using -t and -T and an expression string composed of:
+
+     a    amount
+     B    current balance
+     T    amount total (B + a)
+     c    cost
+     C    cost total
+     v    market value(amount, date)
+     V    total market value(amount total, date)
+     g    net gain (v - c)
+     G    total net gain (V - C)
+     d    date (in seconds past the epoch)
+     i    index (within the report)
+     o    item age = date - report begin date
+     w    item newness = report end date - date
+     
+     b    report begin date
+     e    report end date
+     
+  P(x,y)  market price of x at time y (i.e., V = p(A,d))
+     Mx   total arthmetic of x (x/n)
+     Bx   deviation = a - x
+     Ax   absolute (positive) value of x
+    {x}   parse x as a ledger amount
+    /s/   1 if full account name matches s
+
+  in precedence order:
+    -?[0-9]*.[0-9]+ numerical constants
+    binary operators: * /
+    binary operators: + -
+    comparison operators: = < <= > >=
+    logical operators: ! & |
+    (x) parenthetical grouping
+
+  The standard reports are therefore implemented as:
+
+    -O  ==  -t a -T A
+    -B  ==  -t c -T C
+    -V  ==  -t c -T V
+    -G  ==  -t g -T G
+    -A  ==  -t a -T MA
+    -D  ==  -t a -T DMA
+    -T  ==  -t a -T MDMA
+    -W  ==  -t a -T MD(MA*(d-b/e-b))
+    -X  ==  -t a -T a+MD(MA*(d-b/e-b))
+
+- The -l flag now takes an expression string as a "predicate".
+  Therefore, to equal the old behavior of "-l $100", you would use:
+
+    -l AT<{$100}
+
+- The -S flag now takes an expression string, which yields the value
+  that will be sorted on.
+
+- User-specified format strings are supported with a -F option.  The
+  strings are very much like printf format strings, with the following
+  syntax for each substitution:
+
+    %?-m.MX
+
+  Each part of the above except for X is optional, and means:
+
+    ?  field is blank if reporting on a "subsequent line" (within
+       the register report, when viewing splits)
+    -  left justify field (default is right)
+    m  minimum width of the field
+    .  indicates that a maximum width is being specified
+    M  maximum width of the field; values are truncated to fit
+
+  And where X may be any one of:
+
+    %              self-insert
+    d              same as %[%Y/%m/%d]
+    [datefmt]      pass 'datefmt' to strftime for the entry
+    p              the payee
+    a              the custom account name (report dependent)
+    n              the real account name (balance report only)
+    N              full account name (balance report only)
+    t              whatever the specified value expression is
+    T              whatever the specified total expression is
+    (expr)         insert an arbitrary style expression
+
+  The default format for the register and balance reports are:
+
+    %?10d %?-.20p %-.22a %12.66t %12.80T
+    %20T %-a
+
+* 1.7 (never released)
+
+- Pricing histories are now supported, so that ledger remembers
+  historical pricing of all commodities, and can give register reports
+  based on past and present market values, as well as the original
+  cost basis.  See README for more details on the new option switches.
+
+* 1.6
+
+- Can now parse timeclock files.  These are simple timelogs that track
   in/out events, which can be maintained using my timeclock tool.  By
   allowing ledger to parse these, it means that reporting can be done
   on them in the same way as a ledger file (the commodities is "h",
@@ -16,4 +160,4 @@
   hours into a dollar value via a receivable account, is now trivial.
   See the docs for more on how to do this.
 
-  Began keeping NEWS file. :)
+- Began keeping NEWS file. :)

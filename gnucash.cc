@@ -9,16 +9,25 @@ extern "C" {
 
 namespace ledger {
 
-static account *    curr_account;
-static std::string  curr_account_id;
-static entry *      curr_entry;
-static commodity *  entry_comm;
-static commodity *  curr_comm;
-static amount *     curr_value;
-static std::string  curr_quant;
-static XML_Parser   current_parser;
-static accounts_map accounts_by_id;
-static bool	    do_compute;
+typedef std::map<const std::string, account_t *> accounts_map;
+typedef std::pair<const std::string, account_t *> accounts_pair;
+
+typedef std::map<account_t *, commodity_t *> account_comm_map;
+typedef std::pair<account_t *, commodity_t *> account_comm_pair;
+
+static ledger_t *	curr_ledger;
+static account_t *	curr_account;
+static commodity_t *	curr_account_comm;
+static std::string	curr_account_id;
+static entry_t *	curr_entry;
+static commodity_t *	entry_comm;
+static commodity_t *	curr_comm;
+static amount_t		curr_value;
+static amount_t		curr_quant;
+static XML_Parser	current_parser;
+static accounts_map	accounts_by_id;
+static account_comm_map	account_comms;
+static unsigned int	count;
 
 static enum {
   NO_ACTION,
@@ -44,7 +53,7 @@ static void startElement(void *userData, const char *name, const char **atts)
 {
   if (std::strcmp(name, "gnc:account") == 0) {
     assert(! curr_account);
-    curr_account = new account;
+    curr_account = new account_t(curr_account);
   }
   else if (std::strcmp(name, "act:name") == 0)
     action = ACCOUNT_NAME;
@@ -54,7 +63,7 @@ static void startElement(void *userData, const char *name, const char **atts)
     action = ACCOUNT_PARENT;
   else if (std::strcmp(name, "gnc:commodity") == 0) {
     assert(! curr_comm);
-    curr_comm = new commodity;
+    curr_comm = new commodity_t("");
   }
   else if (std::strcmp(name, "cmdty:id") == 0)
     action = COMM_SYM;
@@ -64,7 +73,7 @@ static void startElement(void *userData, const char *name, const char **atts)
     action = COMM_PREC;
   else if (std::strcmp(name, "gnc:transaction") == 0) {
     assert(! curr_entry);
-    curr_entry = new entry(main_ledger);
+    curr_entry = new entry_t;
   }
   else if (std::strcmp(name, "trn:num") == 0)
     action = ENTRY_NUM;
@@ -76,7 +85,8 @@ static void startElement(void *userData, const char *name, const char **atts)
     action = ENTRY_DESC;
   else if (std::strcmp(name, "trn:split") == 0) {
     assert(curr_entry);
-    curr_entry->xacts.push_back(new transaction());
+    curr_entry->add_transaction(new transaction_t(curr_entry, curr_account,
+						  amount_t()));
   }
   else if (std::strcmp(name, "split:reconciled-state") == 0)
     action = XACT_STATE;
@@ -92,30 +102,45 @@ static void startElement(void *userData, const char *name, const char **atts)
     action = XACT_NOTE;
 }
 
-
 static void endElement(void *userData, const char *name)
 {
   if (std::strcmp(name, "gnc:account") == 0) {
     assert(curr_account);
     if (! curr_account->parent)
-      main_ledger->accounts.insert(accounts_map_pair(curr_account->name,
-						    curr_account));
-    accounts_by_id.insert(accounts_map_pair(curr_account_id, curr_account));
+      curr_ledger->add_account(curr_account);
+    accounts_by_id.insert(accounts_pair(curr_account_id, curr_account));
     curr_account = NULL;
   }
   else if (std::strcmp(name, "gnc:commodity") == 0) {
     assert(curr_comm);
-    main_ledger->commodities.insert(commodities_map_pair(curr_comm->symbol,
-							curr_comm));
+    curr_ledger->add_commodity(curr_comm);
     curr_comm = NULL;
   }
   else if (std::strcmp(name, "gnc:transaction") == 0) {
     assert(curr_entry);
-    assert(curr_entry->validate());
-    main_ledger->entries.push_back(curr_entry);
+    if (! curr_ledger->add_entry(curr_entry))
+      assert(0);
     curr_entry = NULL;
   }
   action = NO_ACTION;
+}
+
+
+static amount_t convert_number(const std::string& number)
+{
+  const char * num = number.c_str();
+
+  if (char * p = std::strchr(num, '/')) {
+    std::string numer_str(num, p - num);
+    std::string denom_str(p + 1);
+
+    amount_t amt(numer_str);
+    amount_t den(denom_str);
+
+    return amt / den;
+  } else {
+    return amount_t(number);
+  }
 }
 
 static void dataHandler(void *userData, const char *s, int len)
@@ -130,11 +155,10 @@ static void dataHandler(void *userData, const char *s, int len)
     break;
 
   case ACCOUNT_PARENT: {
-    accounts_map_iterator i = accounts_by_id.find(std::string(s, len));
+    accounts_map::iterator i = accounts_by_id.find(std::string(s, len));
     assert(i != accounts_by_id.end());
     curr_account->parent = (*i).second;
-    (*i).second->children.insert(accounts_map_pair(curr_account->name,
-						   curr_account));
+    (*i).second->add_account(curr_account);
     break;
   }
 
@@ -142,9 +166,9 @@ static void dataHandler(void *userData, const char *s, int len)
     if (curr_comm)
       curr_comm->symbol = std::string(s, len);
     else if (curr_account)
-      curr_account->comm = main_ledger->commodities[std::string(s, len)];
+      curr_account_comm = curr_ledger->find_commodity(std::string(s, len));
     else if (curr_entry)
-      entry_comm = main_ledger->commodities[std::string(s, len)];
+      entry_comm = curr_ledger->find_commodity(std::string(s, len));
     break;
 
   case COMM_NAME:
@@ -167,57 +191,58 @@ static void dataHandler(void *userData, const char *s, int len)
   }
 
   case ENTRY_DESC:
-    curr_entry->desc = std::string(s, len);
+    curr_entry->payee = std::string(s, len);
     break;
 
   case XACT_STATE:
-    curr_entry->cleared = (*s == 'y' || *s == 'c');
+    if (*s == 'y')
+      curr_entry->state = entry_t::PENDING;
+    else
+      curr_entry->state = entry_t::CLEARED;
     break;
 
-  case XACT_VALUE: {
+  case XACT_VALUE:
     assert(entry_comm);
-    std::string value = std::string(s, len) + " " + entry_comm->symbol;
-    curr_value = create_amount(value.c_str());
+    curr_value = convert_number(std::string(s, len) + " " +
+				entry_comm->symbol);
     break;
-  }
 
   case XACT_QUANTITY:
-    curr_quant = std::string(s, len);
+    curr_quant = convert_number(std::string(s, len));
     break;
 
   case XACT_ACCOUNT: {
-    accounts_map_iterator i = accounts_by_id.find(std::string(s, len));
+    accounts_map::iterator i = accounts_by_id.find(std::string(s, len));
     if (i == accounts_by_id.end()) {
       std::cerr << "Could not find account " << std::string(s, len)
 		<< std::endl;
       std::exit(1);
     }
 
-    transaction * xact = curr_entry->xacts.back();
-    xact->acct = (*i).second;
+    transaction_t * xact = curr_entry->transactions.back();
+    xact->account = (*i).second;
 
-    std::string value = curr_quant + " " + xact->acct->comm->symbol;
-
-    if (curr_value->commdty() == xact->acct->comm) {
-      // assert: value must be equal to curr_value.
-      delete curr_value;
-      curr_value = NULL;
+    account_comm_map::iterator ac = account_comms.find(xact->account);
+    if (ac == account_comms.end()) {
+      std::cerr << "Could not find account " << *(xact->account)
+		<< std::endl;
+      std::exit(1);
     }
+    commodity_t * default_commodity = (*ac).second;
 
-    xact->cost = create_amount(value.c_str(), curr_value);
+    curr_quant.commodity = default_commodity;
+    amount_t value = curr_quant.round(default_commodity->precision);
 
-    if (curr_value) {
-      delete curr_value;
-      curr_value = NULL;
-    }
+    if (curr_value.commodity == default_commodity)
+      curr_value = value;
 
-    if (do_compute)
-      xact->acct->balance.credit(xact->cost);
+    xact->amount = value;
+    xact->cost   = curr_value;
     break;
   }
 
   case XACT_NOTE:
-    curr_entry->xacts.back()->note = std::string(s, len);
+    curr_entry->transactions.back()->note = std::string(s, len);
     break;
 
   case NO_ACTION:
@@ -231,25 +256,23 @@ static void dataHandler(void *userData, const char *s, int len)
   }
 }
 
-book * parse_gnucash(std::istream& in, bool compute_balances)
+int parse_gnucash(std::istream& in, ledger_t * ledger, account_t * master)
 {
   char buf[BUFSIZ];
 
-  book * ledger = new book;
-
-  main_ledger  = ledger;
-  do_compute   = compute_balances;
+  count        = 0;
   action       = NO_ACTION;
+  curr_ledger  = ledger;
   curr_account = NULL;
   curr_entry   = NULL;
-  curr_value   = NULL;
   curr_comm    = NULL;
   entry_comm   = NULL;
 
   // GnuCash uses the USD commodity without defining it, which really
-  // means to use $.
-  commodity * usd = new commodity("$", true, false, true, false, 2);
-  main_ledger->commodities.insert(commodities_map_pair("USD", usd));
+  // means $.
+  commodity_t * usd = new commodity_t("$", 2, COMMODITY_STYLE_THOUSANDS);
+  ledger->add_commodity(usd);
+  ledger->add_commodity(usd, "USD");
 
   XML_Parser parser = XML_ParserCreate(NULL);
   current_parser = parser;
@@ -271,11 +294,8 @@ book * parse_gnucash(std::istream& in, bool compute_balances)
 
   accounts_by_id.clear();
   curr_account_id.clear();
-  curr_quant.clear();
 
-  main_ledger->commodities.erase("USD");
-
-  return ledger;
+  return count;
 }
 
 } // namespace ledger
