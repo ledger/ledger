@@ -2939,10 +2939,12 @@ P 2004/06/21 02:18:02 AAPL $32.91
 P 2004/06/21 02:18:02 AU $400.00
 @end smallexample
 
-Specify the price history to use with the @option{-P} option:
+Specify the price history to use with the @option{--price-db} option,
+with the @option{-V} option to report in terms of current market
+value:
 
 @example
-ledger -P prices.db balance brokerage
+ledger --price-db prices.db -V balance brokerage
 @end example
 
 The balance for your brokerage account will be reported in US dollars,

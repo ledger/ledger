@@ -296,6 +296,7 @@ void parse_ledger_data(journal_t * journal, parser_t * cache_parser,
     parse_conversion("1.0m", "60s");
     parse_conversion("1.0h", "60m");
 
+#if 0
     commodity = commodity_t::find_commodity("b", true);
     commodity->flags |= COMMODITY_STYLE_NOMARKET;
 
@@ -303,6 +304,7 @@ void parse_ledger_data(journal_t * journal, parser_t * cache_parser,
     parse_conversion("1.00 Mb", "1024 Kb");
     parse_conversion("1.00 Gb", "1024 Mb");
     parse_conversion("1.00 Tb", "1024 Gb");
+#endif
 
     journal->price_db = config.price_db;
     if (! journal->price_db.empty() &&
