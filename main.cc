@@ -491,7 +491,7 @@ int main(int argc, char * argv[])
   // Process the remaining command-line arguments
 
   std::auto_ptr<entry_t> new_entry;
-  if (command == "entry") {
+  if (command == "e") {
     new_entry.reset(journal->derive_entry(argc - index, &argv[index]));
   } else {
     // Treat the remaining command-line arguments as regular
@@ -636,8 +636,18 @@ int main(int argc, char * argv[])
   else
     f = print_fmt.c_str();
 
+  std::string first_line_format;
+  std::string next_lines_format;
+
+  if (const char * p = std::strstr(f, "%/")) {
+    first_line_format = std::string(f, 0, p - f);
+    next_lines_format = std::string(p + 2);
+  } else {
+    first_line_format = next_lines_format = f;
+  }
+
   if (command == "b") {
-    format_t format(f);
+    format_t format(first_line_format);
     format_account formatter(std::cout, format, display_predicate.get());
     walk_accounts(journal->master, formatter, predicate.get(),
 		  xact_display_flags, show_subtotals, show_expanded ? 0 : 1,
@@ -652,38 +662,26 @@ int main(int argc, char * argv[])
     }
   }
   else if (command == "E") {
-    std::string first_line_format;
-    std::string next_lines_format;
-
-    if (const char * p = std::strstr(f, "%/")) {
-      first_line_format = std::string(f, 0, p - f);
-      next_lines_format = std::string(p + 2);
-    } else {
-      first_line_format = next_lines_format = f;
-    }
-
     format_t format(first_line_format);
     format_t nformat(next_lines_format);
-
     format_equity formatter(std::cout, format, nformat,
 			    display_predicate.get());
     walk_accounts(journal->master, formatter, predicate.get(),
 		  xact_display_flags, true, 0, sort_order.get());
   }
-  else {
-    std::string first_line_format;
-    std::string next_lines_format;
-
-    if (const char * p = std::strstr(f, "%/")) {
-      first_line_format = std::string(f, 0, p - f);
-      next_lines_format = std::string(p + 2);
-    } else {
-      first_line_format = next_lines_format = f;
-    }
-
+  else if (command == "e") {
     format_t format(first_line_format);
     format_t nformat(next_lines_format);
+    format_transaction formatter(std::cout, format, nformat);
 
+    for (transactions_list::iterator i = new_entry->transactions.begin();
+	 i != new_entry->transactions.end();
+	 i++)
+      handle_transaction(*i, formatter, xact_display_flags);
+  }
+  else {
+    format_t format(first_line_format);
+    format_t nformat(next_lines_format);
     format_transaction formatter(std::cout, format, nformat,
 				 display_predicate.get(),
 #ifdef COLLAPSED_REGISTER

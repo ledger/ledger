@@ -144,6 +144,14 @@ amount_t& amount_t::operator=(const std::string& value)
   return *this;
 }
 
+amount_t& amount_t::operator=(const char * value)
+{
+  std::string valstr(value);
+  std::istringstream str(valstr);
+  parse(str);
+  return *this;
+}
+
 // assignment operator
 amount_t& amount_t::operator=(const amount_t& amt)
 {

@@ -45,6 +45,12 @@ class amount_t
     std::istringstream str(value);
     str >> *this;
   }
+  amount_t(const char * value) {
+    _init();
+    std::string valstr(value);
+    std::istringstream str(valstr);
+    str >> *this;
+  }
   amount_t(const bool value);
   amount_t(const int value);
   amount_t(const unsigned int value);
@@ -59,6 +65,7 @@ class amount_t
   // assignment operator
   amount_t& operator=(const amount_t& amt);
   amount_t& operator=(const std::string& value);
+  amount_t& operator=(const char * value);
   amount_t& operator=(const bool value);
   amount_t& operator=(const int value);
   amount_t& operator=(const unsigned int value);

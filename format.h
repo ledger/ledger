@@ -105,7 +105,7 @@ class format_transaction
   format_transaction(std::ostream&   _output_stream,
 		     const format_t& _first_line_format,
 		     const format_t& _next_lines_format,
-		     const node_t *  display_predicate,
+		     const node_t *  display_predicate = NULL,
 #ifdef COLLAPSED_REGISTER
 		     const bool      _collapsed = false,
 #endif
