@@ -11,7 +11,7 @@
 namespace ledger {
 
 static unsigned long  binary_magic_number = 0xFFEED765;
-static unsigned long  format_version      = 0x00020029;
+static unsigned long  format_version      = 0x00020031;
 
 static account_t **   accounts;
 static account_t **   accounts_next;
@@ -359,6 +359,12 @@ unsigned int read_binary_journal(std::istream&	    in,
 
       journal->sources.push_back(path);
     }
+
+    // Make sure that the cache uses the same price database,
+    // otherwise it means that LEDGER_PRICE_DB has been changed, and
+    // we should ignore this cache file.
+    if (read_binary_string(in) != journal->price_db)
+      return 0;
   }
 
   // Read all of the data in at once, so that we're just dealing with
@@ -634,8 +640,7 @@ void write_binary_account(std::ostream& out, account_t * account)
     write_binary_account(out, (*i).second);
 }
 
-void write_binary_journal(std::ostream& out, journal_t * journal,
-			  strings_list * files)
+void write_binary_journal(std::ostream& out, journal_t * journal)
 {
   account_index   =
   commodity_index = 0;
@@ -646,18 +651,22 @@ void write_binary_journal(std::ostream& out, journal_t * journal,
   // Write out the files that participated in this journal, so that
   // they can be checked for changes on reading.
 
-  if (! files) {
+  if (journal->sources.size() == 0) {
     write_binary_number<unsigned short>(out, 0);
   } else {
-    write_binary_number<unsigned short>(out, files->size());
-    for (strings_list::const_iterator i = files->begin();
-	 i != files->end();
+    write_binary_number<unsigned short>(out, journal->sources.size());
+    for (strings_list::const_iterator i = journal->sources.begin();
+	 i != journal->sources.end();
 	 i++) {
       write_binary_string(out, *i);
       struct stat info;
       stat((*i).c_str(), &info);
       write_binary_number(out, std::time_t(info.st_mtime));
     }
+
+    // Write out the price database that relates to this data file, so
+    // that if it ever changes the cache can be invalidated.
+    write_binary_string(out, journal->price_db);
   }
 
   std::ostream::pos_type data_val = out.tellp();
@@ -757,7 +766,7 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(binary_parse_overloads,
 void py_write_binary_journal(const std::string& path, journal_t * journal)
 {
   std::ofstream out(path.c_str());
-  write_binary_journal(out, journal, &journal->sources);
+  write_binary_journal(out, journal);
 }
 
 void export_binary() {
