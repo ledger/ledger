@@ -59,13 +59,13 @@ unsigned int show_balances(std::ostream&   out,
   return headlines;
 }
 
-void balance_report(std::ostream&	 out,
-		    item_t *		 top,
-		    const node_t *       predicate,
-		    const node_t *       sort_order,
-		    const format_t&	 format,
-		    const bool           show_expanded,
-		    const bool           show_subtotals)
+void balance_report(std::ostream&   out,
+		    item_t *	    top,
+		    const node_t *  predicate,
+		    const node_t *  sort_order,
+		    const format_t& format,
+		    const bool      show_expanded,
+		    const bool      show_subtotals)
 {
   if (sort_order)
     top->sort(sort_order);

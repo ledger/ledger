@@ -129,6 +129,7 @@ item_t * walk_entries(entries_list::const_iterator begin,
 	subitem->payee   = item->payee;
 	subitem->account = (*j)->account;
 	subitem->value   = *(*j);
+	item->value += subitem->value;
 	item->subitems.push_back(subitem);
       }
 
@@ -163,19 +164,20 @@ item_t * walk_entries(entries_list::const_iterator begin,
 struct cmp_items {
   const node_t * sort_order;
 
-  cmp_items(const node_t * _sort_order) : sort_order(_sort_order) {}
+  cmp_items(const node_t * _sort_order) : sort_order(_sort_order) {
+    assert(sort_order);
+  }
 
   bool operator()(const item_t * left, const item_t * right) const {
     assert(left);
     assert(right);
-    assert(sort_order);
     return sort_order->compute(left) < sort_order->compute(right);
   }
 };
 
 void item_t::sort(const node_t * sort_order)
 {
-  std::sort(subitems.begin(), subitems.end(), cmp_items(sort_order));
+  std::stable_sort(subitems.begin(), subitems.end(), cmp_items(sort_order));
 }
 
 } // namespace ledger
