@@ -33,9 +33,7 @@ using namespace ledger;
 namespace {
   TIMER_DEF(write_cache,    "writing cache file");
   TIMER_DEF(report_gen,	    "generation of final report");
-  TIMER_DEF(parse_files,    "parsing ledger files");
   TIMER_DEF(process_opts,   "processing args and environment");
-  TIMER_DEF(read_cache,	    "reading cache file");
 }
 
 #if !defined(DEBUG_LEVEL) || DEBUG_LEVEL <= RELEASE
@@ -72,73 +70,6 @@ namespace std {
 
 #endif
 
-void parse_ledger_data(journal_t * journal,
-		       parser_t *  text_parser,
-		       parser_t *  cache_parser)
-{
-  TIMER_START(parse_files);
-
-  int entry_count = 0;
-
-  if (! config.init_file.empty()) {
-    if (parse_journal_file(config.init_file, journal))
-      throw error("Entries not allowed in initialization file");
-    journal->sources.pop_front(); // remove init file
-  }
-
-  if (config.use_cache && ! config.cache_file.empty() &&
-      ! config.data_file.empty()) {
-    config.cache_dirty = true;
-    if (access(config.cache_file.c_str(), R_OK) != -1) {
-      std::ifstream stream(config.cache_file.c_str());
-      if (cache_parser->test(stream)) {
-	entry_count += cache_parser->parse(stream, journal, NULL,
-					   &config.data_file);
-	if (entry_count > 0)
-	  config.cache_dirty = false;
-      }
-    }
-  }
-
-  if (entry_count == 0 && ! config.data_file.empty()) {
-    account_t * account = NULL;
-    if (! config.account.empty())
-      account = journal->find_account(config.account);
-
-    if (config.data_file == "-") {
-      config.use_cache = false;
-      entry_count += parse_journal(std::cin, journal, account);
-    } else {
-      entry_count += parse_journal_file(config.data_file, journal, account);
-    }
-
-    if (! config.price_db.empty())
-      if (parse_journal_file(config.price_db, journal))
-	throw error("Entries not allowed in price history file");
-  }
-
-  for (strings_list::iterator i = config.price_settings.begin();
-       i != config.price_settings.end();
-       i++) {
-    std::string conversion = "C ";
-    conversion += *i;
-    int i = conversion.find('=');
-    if (i != -1) {
-      conversion[i] = ' ';
-      std::istringstream stream(conversion);
-      text_parser->parse(stream, journal, journal->master);
-    }
-  }
-
-  if (entry_count == 0)
-    throw error("Please specify ledger file using -f,"
-		" or LEDGER_FILE environment variable.");
-
-  VALIDATE(journal->valid());
-
-  TIMER_STOP(parse_files);
-}
-
 item_handler<transaction_t> *
 chain_formatters(const std::string& command,
 		 item_handler<transaction_t> * base_formatter,
@@ -146,13 +77,11 @@ chain_formatters(const std::string& command,
 {
   item_handler<transaction_t> * formatter = NULL;
 
+  ptrs.push_back(formatter = base_formatter);
+
   // format_transactions write each transaction received to the
   // output stream.
-  if (command == "b" || command == "E") {
-    ptrs.push_back(formatter = base_formatter);
-  } else {
-    ptrs.push_back(formatter = base_formatter);
-
+  if (! (command == "b" || command == "E")) {
     // filter_transactions will only pass through transactions
     // matching the `display_predicate'.
     if (! config.display_predicate.empty())
@@ -260,24 +189,6 @@ int parse_and_report(int argc, char * argv[], char * envp[])
 
   TIMER_STOP(process_opts);
 
-  // Parse initialization files, ledger data, price database, etc.
-
-  std::auto_ptr<binary_parser_t>  bin_parser(new binary_parser_t);
-#ifdef READ_GNUCASH
-  std::auto_ptr<gnucash_parser_t> gnucash_parser(new gnucash_parser_t);
-#endif
-  std::auto_ptr<qif_parser_t>     qif_parser(new qif_parser_t);
-  std::auto_ptr<textual_parser_t> text_parser(new textual_parser_t);
-
-  register_parser(bin_parser.get());
-#ifdef READ_GNUCASH
-  register_parser(gnucash_parser.get());
-#endif
-  register_parser(qif_parser.get());
-  register_parser(text_parser.get());
-
-  parse_ledger_data(journal.get(), text_parser.get(), bin_parser.get());
-
   // Read the command word, canonicalize it to its one letter form,
   // then configure the system based on the kind of report to be
   // generated
@@ -296,6 +207,26 @@ int parse_and_report(int argc, char * argv[], char * envp[])
     command = "E";
   else
     throw error(std::string("Unrecognized command '") + command + "'");
+
+  // Parse initialization files, ledger data, price database, etc.
+
+  std::auto_ptr<binary_parser_t>  bin_parser(new binary_parser_t);
+#ifdef READ_GNUCASH
+  std::auto_ptr<gnucash_parser_t> gnucash_parser(new gnucash_parser_t);
+#endif
+  std::auto_ptr<qif_parser_t>     qif_parser(new qif_parser_t);
+  std::auto_ptr<textual_parser_t> text_parser(new textual_parser_t);
+
+  register_parser(bin_parser.get());
+#ifdef READ_GNUCASH
+  register_parser(gnucash_parser.get());
+#endif
+  register_parser(qif_parser.get());
+  register_parser(text_parser.get());
+
+  parse_ledger_data(journal.get(), text_parser.get(), bin_parser.get());
+
+  // Process the command word and its following arguments
 
   config.process_options(command, arg, args.end());
 

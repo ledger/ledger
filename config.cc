@@ -284,6 +284,69 @@ void config_t::process_options(const std::string&     command,
   nformat.reset(next_lines_format);
 }
 
+void parse_ledger_data(journal_t * journal,
+		       parser_t *  text_parser,
+		       parser_t *  cache_parser)
+{
+  int entry_count = 0;
+
+  if (! config.init_file.empty()) {
+    if (parse_journal_file(config.init_file, journal))
+      throw error("Entries not allowed in initialization file");
+    journal->sources.pop_front(); // remove init file
+  }
+
+  if (cache_parser && config.use_cache &&
+      ! config.cache_file.empty() && ! config.data_file.empty()) {
+    config.cache_dirty = true;
+    if (access(config.cache_file.c_str(), R_OK) != -1) {
+      std::ifstream stream(config.cache_file.c_str());
+      if (cache_parser->test(stream)) {
+	entry_count += cache_parser->parse(stream, journal, NULL,
+					   &config.data_file);
+	if (entry_count > 0)
+	  config.cache_dirty = false;
+      }
+    }
+  }
+
+  if (entry_count == 0 && ! config.data_file.empty()) {
+    account_t * account = NULL;
+    if (! config.account.empty())
+      account = journal->find_account(config.account);
+
+    if (config.data_file == "-") {
+      config.use_cache = false;
+      entry_count += parse_journal(std::cin, journal, account);
+    } else {
+      entry_count += parse_journal_file(config.data_file, journal, account);
+    }
+
+    if (! config.price_db.empty())
+      if (parse_journal_file(config.price_db, journal))
+	throw error("Entries not allowed in price history file");
+  }
+
+  for (strings_list::iterator i = config.price_settings.begin();
+       i != config.price_settings.end();
+       i++) {
+    std::string conversion = "C ";
+    conversion += *i;
+    int i = conversion.find('=');
+    if (i != -1) {
+      conversion[i] = ' ';
+      std::istringstream stream(conversion);
+      text_parser->parse(stream, journal, journal->master);
+    }
+  }
+
+  if (entry_count == 0)
+    throw error("Please specify ledger file using -f,"
+		" or LEDGER_FILE environment variable.");
+
+  VALIDATE(journal->valid());
+}
+
 static void show_version(std::ostream& out)
 {
   out
@@ -644,6 +707,14 @@ void py_add_config_option_handlers()
   add_other_option_handlers(config_options);
 }
 
+BOOST_PYTHON_FUNCTION_OVERLOADS(parse_ledger_data_overloads,
+				parse_ledger_data, 2, 3)
+
+void py_option_help()
+{
+  option_help(std::cout);
+}
+
 void export_config()
 {
   class_< config_t > ("Config")
@@ -691,6 +762,8 @@ void export_config()
 
   scope().attr("config") = ptr(&config);
 
+  def("option_help", py_option_help);
+  def("parse_ledger_data", parse_ledger_data, parse_ledger_data_overloads());
   def("add_config_option_handlers", py_add_config_option_handlers);
 }
 

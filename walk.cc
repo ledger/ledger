@@ -347,98 +347,97 @@ void py_walk_transactions(entry_t& entry, item_handler<transaction_t>& handler)
 
 void export_walk()
 {
-  class_< item_handler<transaction_t>,
-	  item_handler_wrap<transaction_t> > ("TransactionHandler")
-    .def(init<item_handler<transaction_t> *>())
+  typedef item_handler<transaction_t> xact_handler_t;
 
-    .def("flush", &item_handler<transaction_t>::flush,
+  class_< xact_handler_t, item_handler_wrap<transaction_t> >
+    ("TransactionHandler")
+    .def(init<xact_handler_t *>())
+
+    .def("flush", &xact_handler_t::flush,
 	 &item_handler_wrap<transaction_t>::default_flush)
-    .def("__call__", &item_handler<transaction_t>::operator(),
+    .def("__call__", &xact_handler_t::operator(),
 	 &item_handler_wrap<transaction_t>::default_call)
     ;
 
-  class_< ignore_transactions > ("IgnoreTransactions")
-    .def("flush", &item_handler<transaction_t>::flush)
+  class_< ignore_transactions, bases<xact_handler_t> >
+    ("IgnoreTransactions")
+    .def("flush", &xact_handler_t::flush)
     .def("__call__", &ignore_transactions::operator());
     ;
 
-  class_< clear_transaction_data > ("ClearTransactionData")
-    .def("flush", &item_handler<transaction_t>::flush)
+  class_< clear_transaction_data, bases<xact_handler_t> >
+    ("ClearTransactionData")
+    .def("flush", &xact_handler_t::flush)
     .def("__call__", &clear_transaction_data::operator());
     ;
 
-  class_< set_account_value >
-    ("SetAccountValue", init<item_handler<transaction_t> *>()
+  class_< set_account_value, bases<xact_handler_t> >
+    ("SetAccountValue", init<xact_handler_t *>()
      [with_custodian_and_ward<1, 2>()])
-    .def("flush", &item_handler<transaction_t>::flush)
+    .def("flush", &xact_handler_t::flush)
     .def("__call__", &set_account_value::operator());
     ;
 
-#if 0
-  class_< sort_transactions >
-    ("SortTransactions", init<item_handler<transaction_t> *>()
+  class_< sort_transactions, bases<xact_handler_t> >
+    ("SortTransactions", init<xact_handler_t *, const value_expr_t *>()
      [with_custodian_and_ward<1, 2>()])
     .def("flush", &sort_transactions::flush)
     .def("__call__", &sort_transactions::operator());
     ;
-#endif
 
-  class_< filter_transactions >
-    ("FilterTransactions", init<item_handler<transaction_t> *, std::string>()
+  class_< filter_transactions, bases<xact_handler_t> >
+    ("FilterTransactions", init<xact_handler_t *, std::string>()
      [with_custodian_and_ward<1, 2>()])
-    .def("flush", &item_handler<transaction_t>::flush)
+    .def("flush", &xact_handler_t::flush)
     .def("__call__", &filter_transactions::operator());
     ;
 
-  class_< calc_transactions >
-    ("CalcTransactions", init<item_handler<transaction_t> *, optional<bool> >()
+  class_< calc_transactions, bases<xact_handler_t> >
+    ("CalcTransactions", init<xact_handler_t *, optional<bool> >()
      [with_custodian_and_ward<1, 2>()])
-    .def("flush", &item_handler<transaction_t>::flush)
+    .def("flush", &xact_handler_t::flush)
     .def("__call__", &calc_transactions::operator());
     ;
 
-  class_< collapse_transactions >
-    ("CollapseTransactions", init<item_handler<transaction_t> *>()
+  class_< collapse_transactions, bases<xact_handler_t> >
+    ("CollapseTransactions", init<xact_handler_t *>()
      [with_custodian_and_ward<1, 2>()])
     .def("flush", &collapse_transactions::flush)
     .def("__call__", &collapse_transactions::operator());
     ;
 
-  class_< changed_value_transactions >
-    ("ChangeValueTransactions", init<item_handler<transaction_t> *, bool>()
+  class_< changed_value_transactions, bases<xact_handler_t> >
+    ("ChangeValueTransactions", init<xact_handler_t *, bool>()
      [with_custodian_and_ward<1, 2>()])
     .def("flush", &changed_value_transactions::flush)
     .def("__call__", &changed_value_transactions::operator());
     ;
 
-  class_< subtotal_transactions >
-    ("SubtotalTransactions", init<item_handler<transaction_t> *>()
+  class_< subtotal_transactions, bases<xact_handler_t> >
+    ("SubtotalTransactions", init<xact_handler_t *>()
      [with_custodian_and_ward<1, 2>()])
     .def("flush", subtotal_transactions_flush)
     .def("__call__", &subtotal_transactions::operator());
     ;
 
-#if 0
-  class_< interval_transactions >
-    ("IntervalTransactions", init<item_handler<transaction_t> *>()
+  class_< interval_transactions, bases<xact_handler_t> >
+    ("IntervalTransactions", init<xact_handler_t *, interval_t>()
      [with_custodian_and_ward<1, 2>()])
-    .def("flush", &item_handler<transaction_t>::flush)
+    .def("flush", &xact_handler_t::flush)
     .def("__call__", &interval_transactions::operator());
     ;
-#endif
 
-  class_< dow_transactions >
-    ("DowTransactions", init<item_handler<transaction_t> *>()
+  class_< dow_transactions, bases<xact_handler_t> >
+    ("DowTransactions", init<xact_handler_t *>()
      [with_custodian_and_ward<1, 2>()])
     .def("flush", &dow_transactions::flush)
     .def("__call__", &dow_transactions::operator());
     ;
 
-  class_< related_transactions >
-    ("RelatedTransactions",
-     init<item_handler<transaction_t> *, optional<bool> >()
+  class_< related_transactions, bases<xact_handler_t> >
+    ("RelatedTransactions", init<xact_handler_t *, optional<bool> >()
      [with_custodian_and_ward<1, 2>()])
-    .def("flush", &item_handler<transaction_t>::flush)
+    .def("flush", &xact_handler_t::flush)
     .def("__call__", &related_transactions::operator());
     ;
 

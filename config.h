@@ -6,6 +6,7 @@
 #include "valexpr.h"
 #include "datetime.h"
 #include "format.h"
+#include "parser.h"
 
 #include <iostream>
 #include <memory>
@@ -83,6 +84,11 @@ extern config_t		   config;
 extern std::list<option_t> config_options;
 
 void option_help(std::ostream& out);
+
+// Parse what ledger data can be determined from the config settings
+void parse_ledger_data(journal_t * journal,
+		       parser_t *  text_parser,
+		       parser_t *  cache_parser = NULL);
 
 struct declared_option_handler : public option_handler {
   declared_option_handler(const std::string& label,
