@@ -72,9 +72,30 @@ void entry::print(std::ostream& out, bool shortcut) const
 
   out << std::endl;
 
-  if (shortcut && (xacts.size() != 2 ||
-		   (xacts.front()->cost->commdty() !=
-		    xacts.back()->cost->commdty())))
+  // jww (2003-10-11): Unspecified virtual transactions should not
+  // factor into the size computation.
+
+  commodity * comm = NULL;
+  int         size = 0;
+  
+  for (std::list<transaction *>::const_iterator x = xacts.begin();
+       x != xacts.end();
+       x++) {
+    if ((*x)->is_virtual && ! (*x)->specified)
+      continue;
+
+    if (! comm) {
+      comm = (*x)->cost->commdty();
+    }
+    else if (comm != (*x)->cost->commdty()) {
+      shortcut = false;
+      break;
+    }
+
+    size++;
+  }
+
+  if (shortcut && size != 2)
     shortcut = false;
 
   for (std::list<transaction *>::const_iterator x = xacts.begin();
@@ -88,7 +109,7 @@ void entry::print(std::ostream& out, bool shortcut) const
     // jww (2003-10-03): If we are shortcutting, don't print the
     // "per-unit price" of a commodity, if it is not necessary.
 
-    (*x)->print(out, shortcut && x == xacts.begin());
+    (*x)->print(out, ! shortcut || x == xacts.begin());
   }
 
   out << std::endl;
