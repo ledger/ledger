@@ -187,8 +187,8 @@ void value_expr_t::compute(value_t& result, const details_t& details,
   case INDEX:
     if (details.xact)
       result = details.xact->index + 1;
-    else
-      result = 0U;
+    else if (details.account)
+      result = details.account->count;
     break;
 
   case DEPTH:
@@ -424,8 +424,6 @@ value_expr_t * parse_value_term(std::istream& in)
   case 'V': node.reset(parse_value_term("P(O,d)")); break;
   case 'g': node.reset(parse_value_expr("v-c")); break;
   case 'G': node.reset(parse_value_expr("V-C")); break;
-  case 'o': node.reset(parse_value_expr("d-b")); break;
-  case 'w': node.reset(parse_value_expr("e-d")); break;
 
   // Functions
   case '-':

@@ -3,6 +3,9 @@
 #include "textual.h"
 #include "binary.h"
 #include "qif.h"
+#ifdef READ_GNUCASH
+#include "gnucash.h"
+#endif
 #include "valexpr.h"
 #include "format.h"
 #include "walk.h"
@@ -188,6 +191,9 @@ int main(int argc, char * argv[], char * envp[])
   std::auto_ptr<textual_parser_t> text_parser(new textual_parser_t);
 
   parser_t::parsers.push_back(bin_parser.get());
+#ifdef READ_GNUCASH
+  parser_t::parsers.push_back(gnucash_parser.get());
+#endif
   parser_t::parsers.push_back(qif_parser.get());
   parser_t::parsers.push_back(text_parser.get());
 

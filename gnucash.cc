@@ -255,7 +255,19 @@ static void dataHandler(void *userData, const char *s, int len)
   }
 }
 
-int parse_gnucash(std::istream& in, journal_t * journal, account_t * master)
+bool gnucash_parser_t::test(std::istream& in) const
+{
+  char buf[23];
+  in.get(buf, 22);
+  in.seekg(0);
+
+  return std::strncmp(buf, "<?xml version=\"1.0\"?>", 21) == 0;
+}
+
+unsigned int gnucash_parser_t::parse(std::istream&	 in,
+				     journal_t *	 journal,
+				     account_t *	 master,
+				     const std::string * original_file)
 {
   char buf[BUFSIZ];
 
