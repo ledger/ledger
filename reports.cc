@@ -231,11 +231,11 @@ void print_register(const std::string& acct_name, std::ostream& out,
 #endif
       out << " ";
 
-      out.width(24);
+      out.width(25);
       if ((*i)->desc.empty())
 	out << " ";
       else
-	out << std::left << truncated((*i)->desc, 24);
+	out << std::left << truncated((*i)->desc, 25);
       out << " ";
 
       // Always display the street value, if prices have been
