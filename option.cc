@@ -151,7 +151,7 @@ void process_environment(std::list<option_t>& options,
   int	       tag_len = tag.length();
 
   for (char ** p = envp; *p; p++)
-    if (std::strncmp(*p, tag_p, tag_len) == 0) {
+    if (! tag_p || std::strncmp(*p, tag_p, tag_len) == 0) {
       char   buf[128];
       char * r = buf;
       char * q;
