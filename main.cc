@@ -31,6 +31,40 @@ namespace {
   TIMER_DEF(read_cache,	    "reading cache file");
 }
 
+#ifdef NO_CLEANUP
+
+#define auto_ptr bogus_auto_ptr
+
+// This version of auto_ptr does not delete on deconstruction.
+namespace std {
+  template <typename T>
+  struct bogus_auto_ptr {
+    T * ptr;
+    bogus_auto_ptr() : ptr(NULL) {}
+    explicit bogus_auto_ptr(T * _ptr) : ptr(_ptr) {}
+    T& operator*() const throw() {
+      return *ptr;
+    }
+    T * operator->() const throw() {
+      return ptr;
+    }
+    T * get() const throw() { return ptr; }
+    T * release() throw() {
+      T * tmp = ptr;
+      ptr = 0;
+      return tmp;
+    }
+    void reset(T * p = 0) throw() {
+      if (p != ptr) {
+	delete ptr;
+	ptr = p;
+      }
+    }
+  };
+}
+
+#endif // NO_CLEANUP
+
 int main(int argc, char * argv[], char * envp[])
 {
   std::auto_ptr<journal_t> journal(new journal_t);
@@ -242,7 +276,11 @@ int main(int argc, char * argv[], char * envp[])
   // Setup the meaning of %t and %T, used in format strings
 
   try {
+#ifdef NO_CLEANUP
+    format_t::value_expr = parse_value_expr(config->value_expr);
+#else
     format_t::value_expr.reset(parse_value_expr(config->value_expr));
+#endif
   }
   catch (const value_expr_error& err) {
     std::cerr << "Error in amount (-t) specifier: " << err.what()
@@ -251,7 +289,11 @@ int main(int argc, char * argv[], char * envp[])
   }
 
   try {
+#ifdef NO_CLEANUP
+    format_t::total_expr = parse_value_expr(config->total_expr);
+#else
     format_t::total_expr.reset(parse_value_expr(config->total_expr));
+#endif
   }
   catch (const value_expr_error& err) {
     std::cerr << "Error in total (-T) specifier: " << err.what()
@@ -321,7 +363,7 @@ int main(int argc, char * argv[], char * envp[])
   if (! config->output_file.empty())
     output_stream.reset(new std::ofstream(config->output_file.c_str()));
 
-#define OUT() (output_stream.get() ? *output_stream.get() : std::cout)
+#define OUT() (output_stream.get() ? *output_stream : std::cout)
 
   if (! config->interval_text.empty()) {
     std::istringstream stream(config->interval_text);
@@ -356,12 +398,14 @@ int main(int argc, char * argv[], char * envp[])
 					       show_all_related));
     formatter.reset(new filter_transactions(formatter.release(),
 					    config->predicate));
-    walk_entries(journal->entries, *formatter.get());
+    walk_entries(journal->entries, *formatter);
+    formatter->flush();
 
     format_account acct_formatter(OUT(), format, config->display_predicate);
     if (config->show_subtotals)
       sum_accounts(journal->master);
     walk_accounts(journal->master, acct_formatter, sort_order.get());
+    acct_formatter.flush();
 
     if (format_account::disp_subaccounts_p(journal->master)) {
       std::string end_format = "--------------------\n";
@@ -374,16 +418,19 @@ int main(int argc, char * argv[], char * envp[])
     formatter.reset(new add_to_account_value);
     formatter.reset(new filter_transactions(formatter.release(),
 					    config->predicate));
-    walk_entries(journal->entries, *formatter.get());
+    walk_entries(journal->entries, *formatter);
+    formatter->flush();
 
     format_equity acct_formatter(OUT(), format, nformat,
 				 config->display_predicate);
     sum_accounts(journal->master);
     walk_accounts(journal->master, acct_formatter, sort_order.get());
+    acct_formatter.flush();
   }
   else if (command == "e") {
     format_transactions formatter(OUT(), format, nformat);
     walk_transactions(new_entry->transactions, formatter);
+    formatter.flush();
   }
   else {
     std::auto_ptr<item_handler<transaction_t> > formatter;
@@ -441,7 +488,7 @@ int main(int argc, char * argv[], char * envp[])
       formatter.reset(new subtotal_transactions(formatter.release()));
     else if (report_interval.get())
       formatter.reset(new interval_transactions(formatter.release(),
-						*report_interval.get(),
+						*report_interval,
 						interval_begin));
     else if (config->days_of_the_week)
       formatter.reset(new dow_transactions(formatter.release()));
@@ -462,7 +509,8 @@ int main(int argc, char * argv[], char * envp[])
 
     // Once the filters are chained, walk `journal's entries and start
     // feeding each transaction that matches `predicate' to the chain.
-    walk_entries(journal->entries, *formatter.get());
+    walk_entries(journal->entries, *formatter);
+    formatter->flush();
 
 #ifdef DEBUG_ENABLED
     // The transaction display flags (dflags) are not recorded in the
@@ -470,6 +518,7 @@ int main(int argc, char * argv[], char * envp[])
     // are to be displayed a second time.
     clear_display_flags cleanup;
     walk_entries(journal->entries, cleanup);
+    cleanup.flush();
 #endif
   }
 

@@ -21,9 +21,9 @@ OBJS   = $(patsubst %.cc,%.o,$(CODE))
 CXX    = g++
 
 CFLAGS = -Wall -ansi -pedantic
-#DFLAGS = -O3 -fomit-frame-pointer -DRELEASE_LEVEL=0
-DFLAGS = -g -DRELEASE_LEVEL=4
-#DFLAGS = -g -DRELEASE_LEVEL=2 -pg
+#DFLAGS = -O3 -fomit-frame-pointer -DRELEASE_LEVEL=0 -DNO_CLEANUP
+DFLAGS = -g -DRELEASE_LEVEL=4 -DNO_CLEANUP
+#DFLAGS = -g -DRELEASE_LEVEL=2 -pg -DNO_CLEANUP
 
 INCS   = -I/sw/include \
 	 -I/usr/include/gcc/darwin/3.3/c++ \

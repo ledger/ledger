@@ -13,19 +13,19 @@ namespace ledger {
 static mpz_t full_divisor;
 static mpz_t true_value;
 
-static class init_amounts
-{
- public:
+static struct init_amounts {
   init_amounts() {
     mpz_init(full_divisor);
     mpz_init(true_value);
     mpz_ui_pow_ui(full_divisor, 10, MAX_PRECISION);
     mpz_mul_ui(true_value, full_divisor, 1);
   }
+#ifndef NO_CLEANUP
   ~init_amounts() {
     mpz_clear(full_divisor);
     mpz_clear(true_value);
   }
+#endif
 } initializer;
 
 static void mpz_round(mpz_t out, mpz_t value, int precision)
@@ -781,6 +781,7 @@ commodities_map		 commodity_t::commodities;
 commodity_t *            commodity_t::null_commodity =
 			     commodity_t::find_commodity("", true);
 
+#ifndef NO_CLEANUP
 static struct cleanup_commodities
 {
   ~cleanup_commodities() {
@@ -794,6 +795,7 @@ static struct cleanup_commodities
       delete (*i).second;
   }
 } _cleanup;
+#endif
 
 commodity_t * commodity_t::find_commodity(const std::string& symbol,
 					  bool auto_create)

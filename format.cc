@@ -35,8 +35,13 @@ std::string partial_account_name(const account_t *  account)
 
 std::string format_t::date_format = "%Y/%m/%d";
 
+#ifdef NO_CLEANUP
+value_expr_t * format_t::value_expr = NULL;
+value_expr_t * format_t::total_expr = NULL;
+#else
 std::auto_ptr<value_expr_t> format_t::value_expr;
 std::auto_ptr<value_expr_t> format_t::total_expr;
+#endif
 
 element_t * format_t::parse_elements(const std::string& fmt)
 {

@@ -20,7 +20,6 @@ struct item_handler {
   item_handler(item_handler * _handler) : handler(_handler) {}
   virtual ~item_handler() {}
   virtual void close() {
-    flush();
     if (handler) {
       delete handler;
       handler = NULL;

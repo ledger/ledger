@@ -886,8 +886,7 @@ void dump_value_expr(std::ostream& out, const value_expr_t * node)
 
 int main(int argc, char *argv[])
 {
-  std::auto_ptr<ledger::value_expr_t> expr(ledger::parse_value_expr(argv[1]));
-  ledger::dump_value_expr(std::cout, expr.get());
+  ledger::dump_value_expr(std::cout, ledger::parse_value_expr(argv[1]));
   std::cout << std::endl;
 }
 

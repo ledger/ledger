@@ -366,7 +366,7 @@ unsigned int parse_textual_journal(std::istream& in, journal_t * journal,
 	char * n = next_element(p, true);
 	last_desc = n ? n : "";
 
-	static struct std::tm when;
+	struct std::tm when;
 	if (strptime(date.c_str(), "%Y/%m/%d %H:%M:%S", &when)) {
 	  time_in      = std::mktime(&when);
 	  last_account = account_stack.front()->find_account(p);
@@ -392,7 +392,7 @@ unsigned int parse_textual_journal(std::istream& in, journal_t * journal,
 	  date += " ";
 	  date += time;
 
-	  static struct std::tm when;
+	  struct std::tm when;
 	  if (strptime(date.c_str(), "%Y/%m/%d %H:%M:%S", &when)) {
 	    entry_t * curr = new entry_t;
 	    curr->date  = std::mktime(&when);

@@ -54,8 +54,13 @@ struct format_t
 
   static std::string date_format;
 
+#ifdef NO_CLEANUP
+  static value_expr_t * value_expr;
+  static value_expr_t * total_expr;
+#else
   static std::auto_ptr<value_expr_t> value_expr;
   static std::auto_ptr<value_expr_t> total_expr;
+#endif
 
   format_t(const std::string& _format) : elements(NULL) {
     reset(_format);
@@ -75,12 +80,20 @@ struct format_t
   void format_elements(std::ostream& out, const details_t& details) const;
 
   static void compute_value(balance_t& result, const details_t& details) {
+#ifdef NO_CLEANUP
+    if (value_expr)
+#else
     if (value_expr.get())
+#endif
       value_expr->compute(result, details);
   }
 
   static void compute_total(balance_t& result, const details_t& details) {
+#ifdef NO_CLEANUP
+    if (total_expr)
+#else
     if (total_expr.get())
+#endif
       total_expr->compute(result, details);
   }
 };
