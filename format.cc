@@ -21,7 +21,8 @@ std::string partial_account_name(const account_t&  account)
   for (const account_t * acct = &account;
        acct && acct->parent;
        acct = acct->parent) {
-    if (acct->data && ACCT_DATA(acct)->dflags & ACCOUNT_DISPLAYED)
+    if (account_has_xdata(*acct) &&
+	account_xdata(*acct).dflags & ACCOUNT_DISPLAYED)
       break;
 
     if (name.empty())
@@ -356,7 +357,8 @@ void format_t::format(std::ostream& out, const details_t& details) const
       for (const account_t * acct = details.account;
 	   acct;
 	   acct = acct->parent)
-	if (acct->data && ACCT_DATA(acct)->dflags & ACCOUNT_DISPLAYED) {
+	if (account_has_xdata(*acct) &&
+	    account_xdata(*acct).dflags & ACCOUNT_DISPLAYED) {
 	  if (elem->min_width > 0 || elem->max_width > 0)
 	    out.width(elem->min_width > elem->max_width ?
 		      elem->min_width : elem->max_width);
@@ -412,7 +414,8 @@ bool format_account::display_account(const account_t& account,
 				     const item_predicate<account_t>& disp_pred)
 {
   // Never display an account that has already been displayed.
-  if (account.data && ACCT_DATA_(account)->dflags & ACCOUNT_DISPLAYED)
+  if (account_has_xdata(account) &&
+      account_xdata(account).dflags & ACCOUNT_DISPLAYED)
     return false;
 
   // At this point, one of two possibilities exists: the account is a

@@ -51,6 +51,60 @@ bool transaction_t::valid() const
   return true;
 }
 
+balance_pair_t& add_transaction_to(const transaction_t& xact,
+				   balance_pair_t&	bal_pair)
+{
+  if (xact.cost && ! bal_pair.cost)
+    bal_pair.cost = new balance_t(bal_pair.quantity);
+
+  bal_pair.quantity += xact.amount;
+
+  if (bal_pair.cost)
+    *bal_pair.cost += xact.cost ? *xact.cost : xact.amount;
+
+  return bal_pair;
+}
+
+value_t& add_transaction_to(const transaction_t& xact, value_t& value)
+{
+  switch (value.type) {
+  case value_t::BOOLEAN:
+  case value_t::INTEGER:
+    value.cast(value_t::AMOUNT);
+
+  case value_t::AMOUNT:
+    if (xact.cost) {
+      value.cast(value_t::BALANCE_PAIR);
+      return add_transaction_to(xact, value);
+    }
+    else if (((amount_t *) value.data)->commodity() !=
+	     xact.amount.commodity()) {
+      value.cast(value_t::BALANCE);
+      return add_transaction_to(xact, value);
+    }
+    *((amount_t *) value.data) += xact.amount;
+    break;
+
+  case value_t::BALANCE:
+    if (xact.cost) {
+      value.cast(value_t::BALANCE_PAIR);
+      return add_transaction_to(xact, value);
+    }
+    *((balance_t *) value.data) += xact.amount;
+    break;
+
+  case value_t::BALANCE_PAIR:
+    add_transaction_to(xact, *((balance_pair_t *) value.data));
+    break;
+
+  default:
+    assert(0);
+    break;
+  }
+
+  return value;
+}
+
 void entry_t::add_transaction(transaction_t * xact)
 {
   xact->entry = this;
@@ -394,9 +448,6 @@ bool journal_t::valid() const
 using namespace boost::python;
 using namespace ledger;
 
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(journal_find_account_overloads,
-				       find_account, 1, 2)
-
 entry_t& transaction_entry(const transaction_t& xact)
 {
   return *xact.entry;
@@ -504,8 +555,26 @@ account_t& accounts_getitem(account_t& account, int i)
   return *(*elem).second;
 }
 
+account_t * py_find_account_1(journal_t& journal, const std::string& name)
+{
+  return journal.find_account(name);
+}
+
+account_t * py_find_account_2(journal_t& journal, const std::string& name,
+			      const bool auto_create)
+{
+  return journal.find_account(name, auto_create);
+}
+
+
 void export_journal()
 {
+  scope().attr("TRANSACTION_NORMAL")	   = TRANSACTION_NORMAL;
+  scope().attr("TRANSACTION_VIRTUAL")	   = TRANSACTION_VIRTUAL;
+  scope().attr("TRANSACTION_BALANCE")	   = TRANSACTION_BALANCE;
+  scope().attr("TRANSACTION_AUTO")	   = TRANSACTION_AUTO;
+  scope().attr("TRANSACTION_BULK_ALLOC")   = TRANSACTION_BULK_ALLOC;
+
   class_< transaction_t > ("Transaction")
     .def(init<account_t *, amount_t, optional<unsigned int, std::string> >())
 
@@ -520,22 +589,6 @@ void export_journal()
     .def_readwrite("data", &transaction_t::data)
 
     .def("valid", &transaction_t::valid)
-    ;
-
-  class_< entry_t > ("Entry")
-    .def_readwrite("date", &entry_t::date)
-    .def_readwrite("state", &entry_t::state)
-    .def_readwrite("code", &entry_t::code)
-    .def_readwrite("payee", &entry_t::payee)
-
-    .def("__len__", transactions_len)
-    .def("__getitem__", transactions_getitem,
-	 return_value_policy<reference_existing_object>())
-
-    .def("add_transaction", &entry_t::add_transaction)
-    .def("remove_transaction", &entry_t::remove_transaction)
-
-    .def("valid", &entry_t::valid)
     ;
 
   class_< account_t >
@@ -565,16 +618,12 @@ void export_journal()
     .def_readonly("sources", &journal_t::sources)
 
     .def("__len__", entries_len)
-    .def("__getitem__", entries_getitem,
-	 return_value_policy<reference_existing_object>())
+    .def("__getitem__", entries_getitem, return_internal_reference<1>())
 
     .def("add_account", &journal_t::add_account)
     .def("remove_account", &journal_t::remove_account)
-#if 0
-    .def("find_account", &journal_t::find_account,
-	 journal_find_account_overloads(args("name", "auto_create"))
-	 [return_value_policy<reference_existing_object>()])
-#endif
+    .def("find_account", py_find_account_1, return_internal_reference<1>())
+    .def("find_account", py_find_account_2, return_internal_reference<1>())
 
     .def("add_entry", &journal_t::add_entry)
     .def("remove_entry", &journal_t::remove_entry)
@@ -582,6 +631,28 @@ void export_journal()
 	 return_value_policy<manage_new_object>())
 
     .def("valid", &journal_t::valid)
+    ;
+
+  scope in_entry = class_< entry_t > ("Entry")
+    .def_readwrite("date", &entry_t::date)
+    .def_readwrite("state", &entry_t::state)
+    .def_readwrite("code", &entry_t::code)
+    .def_readwrite("payee", &entry_t::payee)
+
+    .def("__len__", transactions_len)
+    .def("__getitem__", transactions_getitem,
+	 return_internal_reference<1>())
+
+    .def("add_transaction", &entry_t::add_transaction)
+    .def("remove_transaction", &entry_t::remove_transaction)
+
+    .def("valid", &entry_t::valid)
+    ;
+
+  enum_< entry_t::state_t > ("State")
+    .value("UNCLEARED", entry_t::UNCLEARED)
+    .value("CLEARED",   entry_t::CLEARED)
+    .value("PENDING",   entry_t::PENDING)
     ;
 }
 

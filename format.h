@@ -108,17 +108,15 @@ class format_transactions : public item_handler<transaction_t>
   }
 
   virtual void operator()(transaction_t& xact) {
-    if (! xact.data ||
-	! (XACT_DATA_(xact)->dflags & TRANSACTION_DISPLAYED)) {
+    if (! transaction_has_xdata(xact) ||
+	! (transaction_xdata(xact).dflags & TRANSACTION_DISPLAYED)) {
       if (last_entry != xact.entry) {
 	first_line_format.format(output_stream, details_t(xact));
 	last_entry = xact.entry;
       } else {
 	next_lines_format.format(output_stream, details_t(xact));
       }
-      if (! xact.data)
-	xact.data = new transaction_data_t;
-      XACT_DATA_(xact)->dflags |= TRANSACTION_DISPLAYED;
+      transaction_xdata(xact).dflags |= TRANSACTION_DISPLAYED;
     }
   }
 };
@@ -155,14 +153,10 @@ class format_account : public item_handler<account_t>
   virtual void operator()(account_t& account) {
     if (display_account(account, disp_pred)) {
       if (! account.parent) {
-	if (! account.data)
-	  account.data = new account_data_t;
-	ACCT_DATA_(account)->dflags |= ACCOUNT_TO_DISPLAY;
+	account_xdata(account).dflags |= ACCOUNT_TO_DISPLAY;
       } else {
 	format.format(output_stream, details_t(account));
-	if (! account.data)
-	  account.data = new account_data_t;
-	ACCT_DATA_(account)->dflags |= ACCOUNT_DISPLAYED;
+	account_xdata(account).dflags |= ACCOUNT_DISPLAYED;
       }
     }
   }
@@ -194,11 +188,11 @@ class format_equity : public item_handler<account_t>
   }
 
   virtual void flush() {
+    account_xdata_t xdata;
+    xdata.value = total;
+    xdata.value.negate();
     account_t summary(NULL, "Equity:Opening Balances");
-    std::auto_ptr<account_data_t> acct_data(new account_data_t);
-    summary.data = acct_data.get();
-    ((account_data_t *) summary.data)->value = total;
-    ((account_data_t *) summary.data)->value.negate();
+    summary.data = &xdata;
     next_lines_format.format(output_stream, details_t(summary));
     output_stream.flush();
   }
@@ -206,11 +200,9 @@ class format_equity : public item_handler<account_t>
   virtual void operator()(account_t& account) {
     if (format_account::display_account(account, disp_pred)) {
       next_lines_format.format(output_stream, details_t(account));
-      if (! account.data)
-	account.data = new account_data_t;
-      else
-	total += ACCT_DATA_(account)->value;
-      ACCT_DATA_(account)->dflags |= ACCOUNT_DISPLAYED;
+      if (account_has_xdata(account))
+	total += account_xdata(account).value;
+      account_xdata(account).dflags |= ACCOUNT_DISPLAYED;
     }
   }
 };

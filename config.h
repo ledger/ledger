@@ -34,7 +34,7 @@ struct config_t
   std::string   account;
   std::string   predicate;
   std::string   display_predicate;
-  std::string   interval_text;
+  std::string   report_interval;
   std::string   format_string;
   std::string   date_format;
   std::string   sort_string;
@@ -56,20 +56,12 @@ struct config_t
 
   bool          use_cache;
   bool          cache_dirty;
-  interval_t    report_interval;
   format_t      format;
   format_t      nformat;
-
-  value_expr_t * sort_order;
 
   config_t();
   config_t(const config_t&) {
     assert(0);
-  }
-
-  ~config_t() {
-    if (sort_order)
-      delete sort_order;
   }
 
   void process_options(const std::string&     command,

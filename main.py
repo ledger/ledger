@@ -106,7 +106,7 @@ class FormatTransaction (TransactionHandler):
 	self.output.flush ()
 
     def __call__ (self, xact):
-	if self.nformatter and xact.entry is self.last_entry:
+	if self.nformatter is not None and xact.entry is self.last_entry:
 	    self.output.write(self.nformatter.format(xact))
 	else:
 	    self.output.write(self.formatter.format(xact))
@@ -123,8 +123,8 @@ if not (command == "b" or command == "E"):
 
     handler = CalcTransactions(handler, config.show_inverted)
 
-    if config.sort_order:
-	handler = SortTransactions(handler, config.sort_order)
+    if config.sort_string:
+	handler = SortTransactions(handler, config.sort_string)
 
     if config.show_revalued:
 	handler = ChangedValueTransactions(handler, config.show_revalued_only)
@@ -145,12 +145,14 @@ if config.show_related:
 if config.predicate:
     handler = FilterTransactions(handler, config.predicate)
 
-if 1:
+if 0:
     walk_entries (journal, handler)
 else:
     # These for loops are equivalent to `walk_entries', but far slower
     for entry in journal:
+	#print "1:", entry
 	for xact in entry:
+	    #print "2:", xact.entry
 	    handler (xact)
 
 handler.flush ()
@@ -159,7 +161,7 @@ handler.flush ()
 #    format_account acct_formatter(out, config.format,
 #				  config.display_predicate);
 #    sum_accounts(*journal->master);
-#    walk_accounts(*journal->master, acct_formatter, config.sort_order);
+#    walk_accounts(*journal->master, acct_formatter, config.sort_string);
 #    acct_formatter.flush();
 #
 #    if (journal->master->data) {
@@ -174,7 +176,7 @@ handler.flush ()
 #    format_equity acct_formatter(out, config.format, config.nformat,
 #				 config.display_predicate);
 #    sum_accounts(*journal->master);
-#    walk_accounts(*journal->master, acct_formatter, config.sort_order);
+#    walk_accounts(*journal->master, acct_formatter, config.sort_string);
 #    acct_formatter.flush();
 #  }
 

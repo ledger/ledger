@@ -65,75 +65,24 @@ class transaction_t
   bool valid() const;
 };
 
-inline
 balance_pair_t& add_transaction_to(const transaction_t& xact,
-				   balance_pair_t&	bal_pair)
-{
-  if (xact.cost && ! bal_pair.cost)
-    bal_pair.cost = new balance_t(bal_pair.quantity);
-
-  bal_pair.quantity += xact.amount;
-
-  if (bal_pair.cost)
-    *bal_pair.cost += xact.cost ? *xact.cost : xact.amount;
-
-  return bal_pair;
-}
-
-inline
-value_t& add_transaction_to(const transaction_t& xact, value_t& value)
-{
-  switch (value.type) {
-  case value_t::BOOLEAN:
-  case value_t::INTEGER:
-    value.cast(value_t::AMOUNT);
-
-  case value_t::AMOUNT:
-    if (xact.cost) {
-      value.cast(value_t::BALANCE_PAIR);
-      return add_transaction_to(xact, value);
-    }
-    else if (((amount_t *) value.data)->commodity() !=
-	     xact.amount.commodity()) {
-      value.cast(value_t::BALANCE);
-      return add_transaction_to(xact, value);
-    }
-    *((amount_t *) value.data) += xact.amount;
-    break;
-
-  case value_t::BALANCE:
-    if (xact.cost) {
-      value.cast(value_t::BALANCE_PAIR);
-      return add_transaction_to(xact, value);
-    }
-    *((balance_t *) value.data) += xact.amount;
-    break;
-
-  case value_t::BALANCE_PAIR:
-    add_transaction_to(xact, *((balance_pair_t *) value.data));
-    break;
-
-  default:
-    assert(0);
-    break;
-  }
-
-  return value;
-}
+				   balance_pair_t&	bal_pair);
+value_t& add_transaction_to(const transaction_t& xact, value_t& value);
 
 typedef std::list<transaction_t *> transactions_list;
 
 class entry_t
 {
  public:
-  enum entry_state_t {
+  enum state_t {
     UNCLEARED, CLEARED, PENDING
   };
 
-  std::time_t	    date;
-  entry_state_t     state;
-  std::string	    code;
-  std::string	    payee;
+  std::time_t date;
+  state_t     state;
+  std::string code;
+  std::string payee;
+
   transactions_list transactions;
 
   entry_t() : date(-1), state(UNCLEARED) {}

@@ -84,8 +84,8 @@ void value_expr_t::compute(value_t& result, const details_t& details) const
   case AMOUNT:
     if (details.xact)
       result = details.xact->amount;
-    else if (details.account && ACCT_DATA(details.account))
-      result = ACCT_DATA(details.account)->value;
+    else if (details.account && account_has_xdata(*details.account))
+      result = account_xdata(*details.account).value;
     break;
 
   case COST:
@@ -95,22 +95,22 @@ void value_expr_t::compute(value_t& result, const details_t& details) const
       else
 	result = details.xact->amount;
     }
-    else if (details.account && ACCT_DATA(details.account)) {
-      result = ACCT_DATA(details.account)->value.cost();
+    else if (details.account && account_has_xdata(*details.account)) {
+      result = account_xdata(*details.account).value.cost();
     }
     break;
 
   case TOTAL:
-    if (details.xact && XACT_DATA(details.xact))
-      result = XACT_DATA(details.xact)->total;
-    else if (details.account && ACCT_DATA(details.account))
-      result = ACCT_DATA(details.account)->total;
+    if (details.xact && transaction_has_xdata(*details.xact))
+      result = transaction_xdata(*details.xact).total;
+    else if (details.account && account_has_xdata(*details.account))
+      result = account_xdata(*details.account).total;
     break;
   case COST_TOTAL:
-    if (details.xact && XACT_DATA(details.xact))
-      result = XACT_DATA(details.xact)->total.cost();
-    else if (details.account && ACCT_DATA(details.account))
-      result = ACCT_DATA(details.account)->total.cost();
+    if (details.xact && transaction_has_xdata(*details.xact))
+      result = transaction_xdata(*details.xact).total.cost();
+    else if (details.account && account_has_xdata(*details.account))
+      result = account_xdata(*details.account).total.cost();
     break;
 
   case VALUE_EXPR:
@@ -166,17 +166,17 @@ void value_expr_t::compute(value_t& result, const details_t& details) const
     break;
 
   case INDEX:
-    if (details.xact && XACT_DATA(details.xact))
-      result = XACT_DATA(details.xact)->index + 1;
-    else if (details.account && ACCT_DATA(details.account))
-      result = ACCT_DATA(details.account)->subcount;
+    if (details.xact && transaction_has_xdata(*details.xact))
+      result = transaction_xdata(*details.xact).index + 1;
+    else if (details.account && account_has_xdata(*details.account))
+      result = account_xdata(*details.account).subcount;
     break;
 
   case COUNT:
-    if (details.xact && XACT_DATA(details.xact))
-      result = XACT_DATA(details.xact)->index + 1;
-    else if (details.account && ACCT_DATA(details.account))
-      result = ACCT_DATA(details.account)->count;
+    if (details.xact && transaction_has_xdata(*details.xact))
+      result = transaction_xdata(*details.xact).index + 1;
+    else if (details.account && account_has_xdata(*details.account))
+      result = account_xdata(*details.account).count;
     break;
 
   case DEPTH:
@@ -187,17 +187,16 @@ void value_expr_t::compute(value_t& result, const details_t& details) const
     break;
 
   case F_ARITH_MEAN:
-    if (details.xact && XACT_DATA(details.xact)) {
+    if (details.xact && transaction_has_xdata(*details.xact)) {
       assert(left);
       left->compute(result, details);
-      result /= amount_t(XACT_DATA(details.xact)->index + 1);
+      result /= amount_t(transaction_xdata(*details.xact).index + 1);
     }
-    else if (details.account &&
-	     ACCT_DATA(details.account) &&
-	     ACCT_DATA(details.account)->count) {
+    else if (details.account && account_has_xdata(*details.account) &&
+	     account_xdata(*details.account).count) {
       assert(left);
       left->compute(result, details);
-      result /= amount_t(ACCT_DATA(details.account)->count);
+      result /= amount_t(account_xdata(*details.account).count);
     }
     break;
 

@@ -3,6 +3,9 @@
 
 namespace ledger {
 
+std::list<transaction_xdata_t> transactions_xdata;
+std::list<account_xdata_t>     accounts_xdata;
+
 void sort_transactions::flush()
 {
   std::stable_sort(transactions.begin(), transactions.end(),
@@ -20,14 +23,11 @@ void sort_transactions::flush()
 
 void calc_transactions::operator()(transaction_t& xact)
 {
-  if (! xact.data)
-    xact.data = new transaction_data_t;
-
-  if (last_xact && last_xact->data) {
-    XACT_DATA_(xact)->total += XACT_DATA(last_xact)->total;
-    XACT_DATA_(xact)->index = XACT_DATA(last_xact)->index + 1;
+  if (last_xact && transaction_has_xdata(*last_xact)) {
+    transaction_xdata(xact).total += transaction_xdata(*last_xact).total;
+    transaction_xdata(xact).index  = transaction_xdata(*last_xact).index + 1;
   } else {
-    XACT_DATA_(xact)->index = 0;
+    transaction_xdata(xact).index = 0;
   }
 
   if (inverted) {
@@ -36,8 +36,8 @@ void calc_transactions::operator()(transaction_t& xact)
       xact.cost->negate();
   }
 
-  if (! (XACT_DATA_(xact)->dflags & TRANSACTION_NO_TOTAL))
-    add_transaction_to(xact, XACT_DATA_(xact)->total);
+  if (! (transaction_xdata(xact).dflags & TRANSACTION_NO_TOTAL))
+    add_transaction_to(xact, transaction_xdata(xact).total);
 
   (*handler)(xact);
 
@@ -51,9 +51,11 @@ void calc_transactions::operator()(transaction_t& xact)
 }
 
 
-static void handle_value(const value_t& value, account_t * account,
-			 entry_t * entry, unsigned int flags,
-			 transactions_list& temps,
+static void handle_value(const value_t&		       value,
+			 account_t *		       account,
+			 entry_t *		       entry,
+			 unsigned int		       flags,
+			 std::list<transaction_t>&     temps,
 			 item_handler<transaction_t> * handler)
 {
   balance_t * bal = NULL;
@@ -62,32 +64,29 @@ static void handle_value(const value_t& value, account_t * account,
   case value_t::BOOLEAN:
   case value_t::INTEGER:
   case value_t::AMOUNT: {
-    transaction_t * xact = new transaction_t(account);
-    temps.push_back(xact);
+    temps.push_back(transaction_t(account));
+    transaction_t& xact = temps.back();
 
-    xact->entry = entry;
+    xact.entry = entry;
     switch (value.type) {
     case value_t::BOOLEAN:
-      xact->amount  = *((bool *) value.data);
+      xact.amount  = *((bool *) value.data);
       break;
     case value_t::INTEGER:
-      xact->amount  = *((unsigned int *) value.data);
+      xact.amount  = *((unsigned int *) value.data);
       break;
     case value_t::AMOUNT:
-      xact->amount  = *((amount_t *) value.data);
+      xact.amount  = *((amount_t *) value.data);
       break;
     default:
       assert(0);
       break;
     }
 
-    if (flags) {
-      if (! xact->data)
-	xact->data = new transaction_data_t;
-      XACT_DATA(xact)->dflags |= flags;
-    }
+    if (flags)
+      transaction_xdata(xact).dflags |= flags;
 
-    (*handler)(*xact);
+    (*handler)(xact);
     break;
   }
 
@@ -102,19 +101,16 @@ static void handle_value(const value_t& value, account_t * account,
     for (amounts_map::const_iterator i = bal->amounts.begin();
 	 i != bal->amounts.end();
 	 i++) {
-      transaction_t * xact = new transaction_t(account);
-      temps.push_back(xact);
+      temps.push_back(transaction_t(account));
+      transaction_t& xact = temps.back();
 
-      xact->entry   = entry;
-      xact->amount  = (*i).second;
+      xact.entry  = entry;
+      xact.amount = (*i).second;
 
-      if (flags) {
-	if (! xact->data)
-	  xact->data = new transaction_data_t;
-	XACT_DATA(xact)->dflags |= flags;
-      }
+      if (flags)
+	transaction_xdata(xact).dflags |= flags;
 
-      (*handler)(*xact);
+      (*handler)(xact);
     }
     break;
 
@@ -131,12 +127,12 @@ void collapse_transactions::report_cumulative_subtotal()
   } else {
     assert(count > 1);
 
-    if (! totals_account->data)
-      totals_account->data = new account_data_t;
-    ACCT_DATA(totals_account)->total = subtotal;
+    account_xdata_t xdata;
+    xdata.total = subtotal;
     value_t result;
-    format_t::compute_total(result, details_t(*totals_account));
-    handle_value(result, totals_account, last_entry, 0, xact_temps, handler);
+    totals_account.data = &xdata;
+    format_t::compute_total(result, details_t(totals_account));
+    handle_value(result, &totals_account, last_entry, 0, xact_temps, handler);
   }
 
   subtotal = 0;
@@ -157,13 +153,13 @@ void changed_value_transactions::output_diff(const std::time_t current)
 
   cur_bal -= prev_bal;
   if (cur_bal) {
-    entry_t * entry = new entry_t;
-    entry_temps.push_back(entry);
+    entry_temps.push_back(entry_t());
+    entry_t& entry = entry_temps.back();
 
-    entry->payee = "Commodities revalued";
-    entry->date  = current;
+    entry.payee = "Commodities revalued";
+    entry.date  = current;
 
-    handle_value(cur_bal, NULL, entry, TRANSACTION_NO_TOTAL, xact_temps,
+    handle_value(cur_bal, NULL, &entry, TRANSACTION_NO_TOTAL, xact_temps,
 		 handler);
   }
 }
@@ -173,11 +169,8 @@ void changed_value_transactions::operator()(transaction_t& xact)
   if (last_xact)
     output_diff(xact.entry->date);
 
-  if (changed_values_only) {
-    if (! xact.data)
-      xact.data = new transaction_data_t;
-    XACT_DATA_(xact)->dflags |= TRANSACTION_DISPLAYED;
-  }
+  if (changed_values_only)
+    transaction_xdata(xact).dflags |= TRANSACTION_DISPLAYED;
 
   (*handler)(xact);
 
@@ -201,31 +194,28 @@ void subtotal_transactions::flush(const char * spec_fmt)
     std::strftime(buf, 255, spec_fmt, std::localtime(&finish));
   }
 
-  entry_t * entry = new entry_t;
-  entry_temps.push_back(entry);
+  entry_temps.push_back(entry_t());
+  entry_t& entry = entry_temps.back();
 
-  entry->payee = buf;
+  entry.payee = buf;
 
   value_t result;
 
   for (balances_map::iterator i = balances.begin();
        i != balances.end();
        i++) {
-    entry->date = finish;
+    entry.date = finish;
     {
+      transaction_xdata_t xact_data;
+      xact_data.total = (*i).second;
       transaction_t temp((*i).first);
-      temp.entry = entry;
-      {
-	std::auto_ptr<transaction_data_t> xact_data(new transaction_data_t);
-	temp.data = xact_data.get();
-	((transaction_data_t *) temp.data)->total = (*i).second;
-	format_t::compute_total(result, details_t(temp));
-      }
-      temp.data = NULL;
+      temp.entry = &entry;
+      temp.data = &xact_data;
+      format_t::compute_total(result, details_t(temp));
     }
-    entry->date = start;
+    entry.date = start;
 
-    handle_value(result, (*i).first, entry, 0, xact_temps, handler);
+    handle_value(result, (*i).first, &entry, 0, xact_temps, handler);
   }
 
   balances.clear();
@@ -256,6 +246,12 @@ void subtotal_transactions::operator()(transaction_t& xact)
 
 void interval_transactions::operator()(transaction_t& xact)
 {
+  if ((interval.begin &&
+       std::difftime(xact.entry->date, interval.begin) < 0) ||
+      (interval.end &&
+       std::difftime(xact.entry->date, interval.end) >= 0))
+    return;
+
   std::time_t quant = interval.increment(interval.begin);
   if (std::difftime(xact.entry->date, quant) > 0) {
     if (last_xact) {
@@ -349,6 +345,19 @@ void export_walk()
 {
   typedef item_handler<transaction_t> xact_handler_t;
 
+  scope().attr("TRANSACTION_HANDLED")	= TRANSACTION_HANDLED;
+  scope().attr("TRANSACTION_DISPLAYED") = TRANSACTION_DISPLAYED;
+  scope().attr("TRANSACTION_NO_TOTAL")	= TRANSACTION_NO_TOTAL;
+
+  class_< transaction_xdata_t > ("TransactionXData")
+    .def_readwrite("total", &transaction_xdata_t::total)
+    .def_readwrite("index", &transaction_xdata_t::index)
+    .def_readwrite("dflags", &transaction_xdata_t::dflags)
+    ;
+
+  def("transaction_has_xdata", transaction_has_xdata);
+  def("transaction_xdata", transaction_xdata, return_internal_reference<1>());
+
   class_< xact_handler_t, item_handler_wrap<transaction_t> >
     ("TransactionHandler")
     .def(init<xact_handler_t *>())
@@ -365,12 +374,6 @@ void export_walk()
     .def("__call__", &ignore_transactions::operator());
     ;
 
-  class_< clear_transaction_data, bases<xact_handler_t> >
-    ("ClearTransactionData")
-    .def("flush", &xact_handler_t::flush)
-    .def("__call__", &clear_transaction_data::operator());
-    ;
-
   class_< set_account_value, bases<xact_handler_t> >
     ("SetAccountValue", init<xact_handler_t *>()
      [with_custodian_and_ward<1, 2>()])
@@ -381,6 +384,8 @@ void export_walk()
   class_< sort_transactions, bases<xact_handler_t> >
     ("SortTransactions", init<xact_handler_t *, const value_expr_t *>()
      [with_custodian_and_ward<1, 2>()])
+    .def(init<xact_handler_t *, const std::string&>()
+	 [with_custodian_and_ward<1, 2>()])
     .def("flush", &sort_transactions::flush)
     .def("__call__", &sort_transactions::operator());
     ;
@@ -388,6 +393,8 @@ void export_walk()
   class_< filter_transactions, bases<xact_handler_t> >
     ("FilterTransactions", init<xact_handler_t *, std::string>()
      [with_custodian_and_ward<1, 2>()])
+    .def(init<xact_handler_t *, const std::string&>()
+	 [with_custodian_and_ward<1, 2>()])
     .def("flush", &xact_handler_t::flush)
     .def("__call__", &filter_transactions::operator());
     ;
@@ -423,6 +430,8 @@ void export_walk()
   class_< interval_transactions, bases<xact_handler_t> >
     ("IntervalTransactions", init<xact_handler_t *, interval_t>()
      [with_custodian_and_ward<1, 2>()])
+    .def(init<xact_handler_t *, const std::string&>()
+	 [with_custodian_and_ward<1, 2>()])
     .def("flush", &xact_handler_t::flush)
     .def("__call__", &interval_transactions::operator());
     ;

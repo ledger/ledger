@@ -65,6 +65,42 @@ class compare_items {
 // Transaction handlers
 //
 
+#define TRANSACTION_HANDLED   0x0001
+#define TRANSACTION_DISPLAYED 0x0002
+#define TRANSACTION_NO_TOTAL  0x0004
+
+struct transaction_xdata_t
+{
+  value_t	 total;
+  unsigned int   index;
+  unsigned short dflags;
+
+  transaction_xdata_t() : index(0), dflags(0) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor transaction_xdata_t");
+  }
+#ifdef DEBUG_ENABLED
+  ~transaction_xdata_t() {
+    DEBUG_PRINT("ledger.memory.dtors", "dtor transaction_xdata_t");
+  }
+#endif
+};
+
+inline bool transaction_has_xdata(const transaction_t& xact) {
+  return xact.data != NULL;
+}
+
+extern std::list<transaction_xdata_t> transactions_xdata;
+
+inline transaction_xdata_t& transaction_xdata(const transaction_t& xact) {
+  if (! xact.data) {
+    transactions_xdata.push_back(transaction_xdata_t());
+    xact.data = &transactions_xdata.back();
+  }
+  return *((transaction_xdata_t *) xact.data);
+}
+
+//////////////////////////////////////////////////////////////////////
+
 typedef std::deque<transaction_t *> transactions_deque;
 typedef std::deque<entry_t *>       entries_deque;
 
@@ -73,6 +109,7 @@ inline void walk_transactions(transactions_list::iterator begin,
 			      item_handler<transaction_t>& handler) {
   for (transactions_list::iterator i = begin; i != end; i++)
     handler(**i);
+  transactions_xdata.clear();
 }
 
 inline void walk_transactions(transactions_list& list,
@@ -85,6 +122,7 @@ inline void walk_transactions(transactions_deque::iterator begin,
 			      item_handler<transaction_t>& handler) {
   for (transactions_deque::iterator i = begin; i != end; i++)
     handler(**i);
+  transactions_xdata.clear();
 }
 
 inline void walk_transactions(transactions_deque& deque,
@@ -106,70 +144,10 @@ inline void walk_entries(entries_list& list,
 
 //////////////////////////////////////////////////////////////////////
 
-#define TRANSACTION_HANDLED   0x0001
-#define TRANSACTION_DISPLAYED 0x0002
-#define TRANSACTION_NO_TOTAL  0x0004
-
-struct transaction_data_t
-{
-  value_t	 total;
-  unsigned int   index;
-  unsigned short dflags;
-
-  transaction_data_t() : index(0), dflags(0) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor transaction_data_t");
-  }
-#ifdef DEBUG_ENABLED
-  ~transaction_data_t() {
-    DEBUG_PRINT("ledger.memory.dtors", "dtor transaction_data_t");
-  }
-#endif
-};
-
-#define XACT_DATA(xact) ((transaction_data_t *) ((xact)->data))
-#define XACT_DATA_(xact) ((transaction_data_t *) ((xact).data))
-
-#define ACCOUNT_DISPLAYED  0x1
-#define ACCOUNT_TO_DISPLAY 0x2
-
-struct account_data_t
-{
-  value_t	 value;
-  value_t	 total;
-  unsigned int   count;	// transactions counted toward total
-  unsigned int   subcount;
-  unsigned short dflags;
-
-  account_data_t() : count(0), subcount(0), dflags(0) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor account_data_t");
-  }
-#ifdef DEBUG_ENABLED
-  ~account_data_t() {
-    DEBUG_PRINT("ledger.memory.dtors", "dtor account_data_t");
-  }
-#endif
-};
-
-#define ACCT_DATA(acct) ((account_data_t *) ((acct)->data))
-#define ACCT_DATA_(acct) ((account_data_t *) ((acct).data))
-
-//////////////////////////////////////////////////////////////////////
-
 class ignore_transactions : public item_handler<transaction_t>
 {
  public:
   virtual void operator()(transaction_t& xact) {}
-};
-
-class clear_transaction_data : public item_handler<transaction_t>
-{
- public:
-  virtual void operator()(transaction_t& xact) {
-    if (xact.data) {
-      delete (transaction_data_t *) xact.data;
-      xact.data = NULL;
-    }
-  }
 };
 
 class set_account_value : public item_handler<transaction_t>
@@ -178,28 +156,31 @@ class set_account_value : public item_handler<transaction_t>
   set_account_value(item_handler<transaction_t> * handler = NULL)
     : item_handler<transaction_t>(handler) {}
 
-  virtual void operator()(transaction_t& xact) {
-    if (! ACCT_DATA(xact.account))
-      xact.account->data = new account_data_t;
-
-    add_transaction_to(xact, ACCT_DATA(xact.account)->value);
-    ACCT_DATA(xact.account)->subcount++;
-
-    if (handler)
-      (*handler)(xact);
-  }
+  virtual void operator()(transaction_t& xact);
 };
 
 class sort_transactions : public item_handler<transaction_t>
 {
   transactions_deque   transactions;
   const value_expr_t * sort_order;
+  bool                 allocated;
 
  public:
   sort_transactions(item_handler<transaction_t> * handler,
 		    const value_expr_t * _sort_order)
     : item_handler<transaction_t>(handler),
-      sort_order(_sort_order) {}
+      sort_order(_sort_order), allocated(false) {}
+
+  sort_transactions(item_handler<transaction_t> * handler,
+		    const std::string& _sort_order)
+    : item_handler<transaction_t>(handler),
+      sort_order(parse_value_expr(_sort_order)), allocated(true) {}
+
+  virtual ~sort_transactions() {
+    assert(sort_order);
+    if (allocated)
+      delete sort_order;
+  }
 
   virtual void flush();
   virtual void operator()(transaction_t& xact) {
@@ -209,15 +190,28 @@ class sort_transactions : public item_handler<transaction_t>
 
 class filter_transactions : public item_handler<transaction_t>
 {
-  item_predicate<transaction_t> pred;
+  const item_predicate<transaction_t> * pred;
+  bool allocated;
 
  public:
   filter_transactions(item_handler<transaction_t> * handler,
+		      const item_predicate<transaction_t> * predicate)
+    : item_handler<transaction_t>(handler),
+      pred(predicate), allocated(false) {}
+
+  filter_transactions(item_handler<transaction_t> * handler,
 		      const std::string& predicate)
-    : item_handler<transaction_t>(handler), pred(predicate) {}
+    : item_handler<transaction_t>(handler),
+      pred(new item_predicate<transaction_t>(predicate)),
+      allocated(true) {}
+
+  virtual ~filter_transactions() {
+    if (allocated)
+      delete pred;
+  }
 
   virtual void operator()(transaction_t& xact) {
-    if (pred(xact))
+    if ((*pred)(xact))
       (*handler)(xact);
   }
 };
@@ -238,36 +232,18 @@ class calc_transactions : public item_handler<transaction_t>
 
 class collapse_transactions : public item_handler<transaction_t>
 {
-  balance_pair_t     subtotal;
-  unsigned int       count;
-  entry_t *          last_entry;
-  transaction_t *    last_xact;
-  account_t *        totals_account;
-  transactions_list xact_temps;
+  balance_pair_t    subtotal;
+  unsigned int      count;
+  entry_t *         last_entry;
+  transaction_t *   last_xact;
+  account_t         totals_account;
+
+  std::list<transaction_t> xact_temps;
 
  public:
   collapse_transactions(item_handler<transaction_t> * handler)
     : item_handler<transaction_t>(handler), count(0),
-      last_entry(NULL), last_xact(NULL) {
-    totals_account = new account_t(NULL, "<Total>");
-  }
-
-  virtual ~collapse_transactions() {
-    if (totals_account->data) {
-      delete (account_data_t *) totals_account->data;
-      totals_account->data = NULL;
-    }
-    delete totals_account;
-    for (transactions_list::iterator i = xact_temps.begin();
-	 i != xact_temps.end();
-	 i++) {
-      if ((*i)->data) {
-	delete (transaction_data_t *) (*i)->data;
-	(*i)->data = NULL;
-      }
-      delete *i;
-    }
-  }
+      last_entry(NULL), last_xact(NULL), totals_account(NULL, "<Total>") {}
 
   virtual void flush() {
     if (subtotal)
@@ -297,33 +273,16 @@ class changed_value_transactions : public item_handler<transaction_t>
   // This filter requires that calc_transactions be used at some point
   // later in the chain.
 
-  bool		    changed_values_only;
-  transaction_t *   last_xact;
-  entries_list      entry_temps;
-  transactions_list xact_temps;
+  bool			   changed_values_only;
+  transaction_t *	   last_xact;
+  std::list<entry_t>       entry_temps;
+  std::list<transaction_t> xact_temps;
 
  public:
   changed_value_transactions(item_handler<transaction_t> * handler,
 			     bool _changed_values_only)
     : item_handler<transaction_t>(handler),
       changed_values_only(_changed_values_only), last_xact(NULL) {}
-
-  virtual ~changed_value_transactions() {
-    for (entries_list::iterator i = entry_temps.begin();
-	 i != entry_temps.end();
-	 i++)
-      delete *i;
-
-    for (transactions_list::iterator i = xact_temps.begin();
-	 i != xact_temps.end();
-	 i++) {
-      if ((*i)->data) {
-	delete (transaction_data_t *) (*i)->data;
-	(*i)->data = NULL;
-      }
-      delete *i;
-    }
-  }
 
   virtual void flush() {
     output_diff(std::time(NULL));
@@ -342,32 +301,15 @@ class subtotal_transactions : public item_handler<transaction_t>
   typedef std::pair<account_t *, balance_pair_t> balances_pair;
 
  protected:
-  std::time_t	    start;
-  std::time_t	    finish;
-  balances_map	    balances;
-  entries_list      entry_temps;
-  transactions_list xact_temps;
+  std::time_t		   start;
+  std::time_t		   finish;
+  balances_map		   balances;
+  std::list<entry_t>       entry_temps;
+  std::list<transaction_t> xact_temps;
 
  public:
   subtotal_transactions(item_handler<transaction_t> * handler)
     : item_handler<transaction_t>(handler) {}
-
-  virtual ~subtotal_transactions() {
-    for (entries_list::iterator i = entry_temps.begin();
-	 i != entry_temps.end();
-	 i++)
-      delete *i;
-
-    for (transactions_list::iterator i = xact_temps.begin();
-	 i != xact_temps.end();
-	 i++) {
-      if ((*i)->data) {
-	delete (transaction_data_t *) (*i)->data;
-	(*i)->data = NULL;
-      }
-      delete *i;
-    }
-  }
 
   void flush(const char * spec_fmt);
 
@@ -385,6 +327,11 @@ class interval_transactions : public subtotal_transactions
  public:
   interval_transactions(item_handler<transaction_t> * handler,
 			const interval_t& _interval)
+    : subtotal_transactions(handler), interval(_interval),
+      last_xact(NULL) {}
+
+  interval_transactions(item_handler<transaction_t> * handler,
+			const std::string& _interval)
     : subtotal_transactions(handler), interval(_interval),
       last_xact(NULL) {}
 
@@ -425,13 +372,11 @@ class related_transactions : public item_handler<transaction_t>
     for (transactions_list::iterator i = xact.entry->transactions.begin();
 	 i != xact.entry->transactions.end();
 	 i++)
-      if ((! (*i)->data ||
-	   ! (XACT_DATA(*i)->dflags & TRANSACTION_HANDLED)) &&
+      if ((! transaction_has_xdata(**i) ||
+	   ! (transaction_xdata(**i).dflags & TRANSACTION_HANDLED)) &&
 	  (*i == &xact ? also_matching :
 	   ! ((*i)->flags & TRANSACTION_AUTO))) {
-	if (! (*i)->data)
-	  (*i)->data = new transaction_data_t;
-	XACT_DATA(*i)->dflags |= TRANSACTION_HANDLED;
+	transaction_xdata(**i).dflags |= TRANSACTION_HANDLED;
 	(*handler)(**i);
       }
   }
@@ -443,31 +388,62 @@ class related_transactions : public item_handler<transaction_t>
 // Account walking functions
 //
 
-class clear_account_data : public item_handler<account_t>
+#define ACCOUNT_DISPLAYED  0x1
+#define ACCOUNT_TO_DISPLAY 0x2
+
+struct account_xdata_t
 {
- public:
-  virtual void operator()(account_t * account) {
-    if (account->data) {
-      delete (account_data_t *) account->data;
-      account->data = NULL;
-    }
+  value_t	 value;
+  value_t	 total;
+  unsigned int   count;	// transactions counted toward total
+  unsigned int   subcount;
+  unsigned short dflags;
+
+  account_xdata_t() : count(0), subcount(0), dflags(0) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor account_xdata_t");
   }
+#ifdef DEBUG_ENABLED
+  ~account_xdata_t() {
+    DEBUG_PRINT("ledger.memory.dtors", "dtor account_xdata_t");
+  }
+#endif
 };
 
-inline void sum_accounts(account_t& account) {
-  if (! account.data)
-    account.data = new account_data_t;
+inline bool account_has_xdata(const account_t& account) {
+  return account.data != NULL;
+}
 
+extern std::list<account_xdata_t> accounts_xdata;
+
+inline account_xdata_t& account_xdata(const account_t& account) {
+  if (! account.data) {
+    accounts_xdata.push_back(account_xdata_t());
+    account.data = &accounts_xdata.back();
+  }
+  return *((account_xdata_t *) account.data);
+}
+
+inline void set_account_value::operator()(transaction_t& xact) {
+  add_transaction_to(xact, account_xdata(*xact.account).value);
+  account_xdata(*xact.account).subcount++;
+
+  if (handler)
+    (*handler)(xact);
+}
+
+//////////////////////////////////////////////////////////////////////
+
+inline void sum_accounts(account_t& account) {
   for (accounts_map::iterator i = account.accounts.begin();
        i != account.accounts.end();
        i++) {
     sum_accounts(*(*i).second);
-    ACCT_DATA_(account)->total += ACCT_DATA((*i).second)->total;
-    ACCT_DATA_(account)->count += (ACCT_DATA((*i).second)->count +
-				  ACCT_DATA((*i).second)->subcount);
+    account_xdata(account).total += account_xdata(*(*i).second).total;
+    account_xdata(account).count += (account_xdata(*(*i).second).count +
+				     account_xdata(*(*i).second).subcount);
   }
-  ACCT_DATA_(account)->total += ACCT_DATA_(account)->value;
-  ACCT_DATA_(account)->count += ACCT_DATA_(account)->subcount;
+  account_xdata(account).total += account_xdata(account).value;
+  account_xdata(account).count += account_xdata(account).subcount;
 }
 
 typedef std::deque<account_t *> accounts_deque;
@@ -502,6 +478,14 @@ inline void walk_accounts(account_t&		   account,
 	 i++)
       walk_accounts(*(*i).second, handler);
   }
+  accounts_xdata.clear();
+}
+
+inline void walk_accounts(account_t&		   account,
+			  item_handler<account_t>& handler,
+			  const std::string&       sort_string) {
+  std::auto_ptr<value_expr_t> sort_order(parse_value_expr(sort_string));
+  walk_accounts(account, handler, sort_order.get());
 }
 
 } // namespace ledger

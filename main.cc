@@ -97,9 +97,9 @@ chain_formatters(const std::string& command,
 
     // sort_transactions will sort all the transactions it sees, based
     // on the `sort_order' value expression.
-    if (config.sort_order)
+    if (! config.sort_string.empty())
       ptrs.push_back(formatter =
-		     new sort_transactions(formatter, config.sort_order));
+		     new sort_transactions(formatter, config.sort_string));
 
     // changed_value_transactions adds virtual transactions to the
     // list to account for changes in market value of commodities,
@@ -128,7 +128,7 @@ chain_formatters(const std::string& command,
     // of the week.
     if (config.show_subtotal)
       ptrs.push_back(formatter = new subtotal_transactions(formatter));
-    else if (config.report_interval)
+    else if (! config.report_interval.empty())
       ptrs.push_back(formatter =
 		     new interval_transactions(formatter,
 					       config.report_interval));
@@ -271,13 +271,13 @@ int parse_and_report(int argc, char * argv[], char * envp[])
     format_account acct_formatter(*out, config.format,
 				  config.display_predicate);
     sum_accounts(*journal->master);
-    walk_accounts(*journal->master, acct_formatter, config.sort_order);
+    walk_accounts(*journal->master, acct_formatter, config.sort_string);
     acct_formatter.flush();
 
-    if (journal->master->data) {
-      ACCT_DATA(journal->master)->value = ACCT_DATA(journal->master)->total;
-
-      if (ACCT_DATA(journal->master)->dflags & ACCOUNT_TO_DISPLAY) {
+    if (account_has_xdata(*journal->master)) {
+      account_xdata_t& xdata = account_xdata(*journal->master);
+      xdata.value = xdata.total;
+      if (xdata.dflags & ACCOUNT_TO_DISPLAY) {
 	*out << "--------------------\n";
 	config.format.format(*out, details_t(*journal->master));
       }
@@ -287,7 +287,7 @@ int parse_and_report(int argc, char * argv[], char * envp[])
     format_equity acct_formatter(*out, config.format, config.nformat,
 				 config.display_predicate);
     sum_accounts(*journal->master);
-    walk_accounts(*journal->master, acct_formatter, config.sort_order);
+    walk_accounts(*journal->master, acct_formatter, config.sort_string);
     acct_formatter.flush();
   }
 
@@ -300,14 +300,6 @@ int parse_and_report(int argc, char * argv[], char * envp[])
        i != formatter_ptrs.end();
        i++)
     delete *i;
-
-  // Cleanup the data handlers that might be present on some objects.
-
-  clear_transaction_data xact_cleanup;
-  walk_entries(journal->entries, xact_cleanup);
-
-  clear_account_data acct_cleanup;
-  walk_accounts(*journal->master, acct_cleanup);
 #endif
 
   TIMER_STOP(report_gen);

@@ -44,7 +44,6 @@ config_t::config_t()
 
   use_cache	     = false;
   cache_dirty        = false;
-  sort_order         = NULL;
 }
 
 static void
@@ -168,25 +167,6 @@ void config_t::process_options(const std::string&     command,
     }
   }
 
-  // Parse the sort_string
-
-  if (! sort_order && ! sort_string.empty()) {
-    try {
-      std::istringstream stream(sort_string);
-      sort_order = parse_value_expr(stream);
-      if (stream.peek() != -1) {
-	throw value_expr_error(std::string("Unexpected character '") +
-			       char(stream.peek()) + "'");
-      }
-      else if (! sort_order) {
-	throw error("Failed to parse sort criteria!");
-      }
-    }
-    catch (const value_expr_error& err) {
-      throw error(std::string("In sort criteria: ") + err.what());
-    }
-  }
-
   // Setup the values of %t and %T, used in format strings
 
   try {
@@ -217,35 +197,6 @@ void config_t::process_options(const std::string&     command,
     commodity_t::updater = new quotes_by_script(price_db,
 						pricing_leeway,
 						cache_dirty);
-
-  // Parse the interval specifier, if provided
-
-  if (! report_interval && ! interval_text.empty()) {
-    try {
-      std::istringstream stream(interval_text);
-
-      report_interval.parse(stream);
-
-      if (report_interval.begin) {
-	if (! predicate.empty())
-	  predicate += "&";
-	char buf[32];
-	std::sprintf(buf, "d>=%lu", report_interval.begin);
-	predicate += buf;
-      }
-
-      if (report_interval.end) {
-	if (! predicate.empty())
-	  predicate += "&";
-	char buf[32];
-	std::sprintf(buf, "d<%lu", report_interval.end);
-	predicate += buf;
-      }
-    }
-    catch (const interval_expr_error& err) {
-      throw error(std::string("In interval (-z) specifier: ") + err.what());
-    }
-  }
 
   if (format_t::date_format.empty() && ! date_format.empty())
     format_t::date_format = date_format;
@@ -557,11 +508,11 @@ OPT_BEGIN(related, "r") {
 } OPT_END(related);
 
 OPT_BEGIN(interval, "p:") {
-  config.interval_text = optarg;
+  config.report_interval = optarg;
 } OPT_END(interval);
 
 OPT_BEGIN(weekly, "W") {
-  config.interval_text = "weekly";
+  config.report_interval = "weekly";
 } OPT_END(weekly);
 
 OPT_BEGIN(dow, "") {
@@ -569,11 +520,11 @@ OPT_BEGIN(dow, "") {
 } OPT_END(dow);
 
 OPT_BEGIN(monthly, "M") {
-  config.interval_text = "monthly";
+  config.report_interval = "monthly";
 } OPT_END(monthly);
 
 OPT_BEGIN(yearly, "Y") {
-  config.interval_text = "yearly";
+  config.report_interval = "yearly";
 } OPT_END(yearly);
 
 OPT_BEGIN(limit, "l:") {
@@ -721,7 +672,7 @@ void export_config()
     .def_readwrite("account", &config_t::account)
     .def_readwrite("predicate", &config_t::predicate)
     .def_readwrite("display_predicate", &config_t::display_predicate)
-    .def_readwrite("interval_text", &config_t::interval_text)
+    .def_readwrite("report_interval", &config_t::report_interval)
     .def_readwrite("format_string", &config_t::format_string)
     .def_readwrite("date_format", &config_t::date_format)
     .def_readwrite("sort_string", &config_t::sort_string)
@@ -741,12 +692,8 @@ void export_config()
 
     .def_readwrite("use_cache", &config_t::use_cache)
     .def_readwrite("cache_dirty", &config_t::cache_dirty)
-    .def_readwrite("report_interval", &config_t::report_interval)
     .def_readwrite("format", &config_t::format)
     .def_readwrite("nformat", &config_t::nformat)
-    .add_property("sort_order",
-		  make_getter(&config_t::sort_order,
-			      return_value_policy<reference_existing_object>()))
 
     .def("process_options", py_process_options)
     ;
