@@ -210,22 +210,35 @@ void collapse_transactions::operator()(transaction_t& xact)
 
 void related_transactions::flush()
 {
-  if (transactions.size() > 0)
+  if (transactions.size() > 0) {
     for (transactions_list::iterator i = transactions.begin();
 	 i != transactions.end();
-	 i++)
-      for (transactions_list::iterator j = (*i)->entry->transactions.begin();
-	   j != (*i)->entry->transactions.end();
-	   j++) {
-	transaction_xdata_t& xdata = transaction_xdata(**j);
+	 i++) {
+      if ((*i)->entry) {
+	for (transactions_list::iterator j = (*i)->entry->transactions.begin();
+	     j != (*i)->entry->transactions.end();
+	     j++) {
+	  transaction_xdata_t& xdata = transaction_xdata(**j);
+	  if (! (xdata.dflags & TRANSACTION_HANDLED) &&
+	      (! (xdata.dflags & TRANSACTION_RECEIVED) ?
+	       ! ((*j)->flags & (TRANSACTION_AUTO | TRANSACTION_VIRTUAL)) :
+	       also_matching)) {
+	    xdata.dflags |= TRANSACTION_HANDLED;
+	    item_handler<transaction_t>::operator()(**j);
+	  }
+	}
+      } else {
+	transaction_xdata_t& xdata = transaction_xdata(**i);
 	if (! (xdata.dflags & TRANSACTION_HANDLED) &&
 	    (! (xdata.dflags & TRANSACTION_RECEIVED) ?
-	     ! ((*j)->flags & (TRANSACTION_AUTO | TRANSACTION_VIRTUAL)) :
+	     ! ((*i)->flags & (TRANSACTION_AUTO | TRANSACTION_VIRTUAL)) :
 	     also_matching)) {
 	  xdata.dflags |= TRANSACTION_HANDLED;
-	  item_handler<transaction_t>::operator()(**j);
+	  item_handler<transaction_t>::operator()(**i);
 	}
       }
+    }
+  }
 
   item_handler<transaction_t>::flush();
 }
