@@ -236,16 +236,16 @@ bool value_t::operator OP(const value_t& value)				\
 	      *((unsigned int *) value.data));				\
 									\
     case AMOUNT:							\
-      return (*((unsigned int *) data) OP				\
-	      ((unsigned int) *((amount_t *) value.data)));		\
+      return (amount_t(*((unsigned int *) data)) OP			\
+	      *((amount_t *) value.data));				\
 									\
     case BALANCE:							\
-      return (*((unsigned int *) data) OP				\
-	      ((unsigned int) *((balance_t *) value.data)));		\
+      return (balance_t(*((unsigned int *) data)) OP			\
+	      *((balance_t *) value.data));				\
 									\
     case BALANCE_PAIR:							\
-      return (*((unsigned int *) data) OP				\
-	      ((unsigned int) *((balance_pair_t *) value.data)));	\
+      return (balance_pair_t(*((unsigned int *) data)) OP		\
+	      *((balance_pair_t *) value.data));			\
 									\
     default:								\
       assert(0);							\

@@ -463,8 +463,7 @@ class balance_pair_t
   balance_pair_t(const amount_t& _quantity)
     : quantity(_quantity), cost(NULL) {}
   template <typename T>
-  balance_pair_t(T value)
-    : quantity(value), cost(NULL) {}
+  balance_pair_t(T value) : quantity(value), cost(NULL) {}
 
   // destructor
   ~balance_pair_t() {
