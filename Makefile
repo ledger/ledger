@@ -2,9 +2,9 @@ CODE   = amount.cc ledger.cc parse.cc reports.cc
 OBJS   = $(patsubst %.cc,%.o,$(CODE))
 #CXX    = cc
 CXX    = g++
-CFLAGS = -Wall -ansi -pedantic
-#DFLAGS = -O3 -fomit-frame-pointer
-DFLAGS = -g -DDEBUG=1
+CFLAGS = #-Wall -ansi -pedantic
+DFLAGS = -O3 -fomit-frame-pointer
+#DFLAGS = -g -DDEBUG=1
 INCS   = -I/sw/include -I/usr/include/gcc/darwin/3.3/c++ -I/usr/include/gcc/darwin/3.3/c++/ppc-darwin
 LIBS   = -L/sw/lib -lgmpxx -lgmp -lpcre
 
@@ -27,14 +27,18 @@ ledger: $(OBJS)
 ledger.info: ledger.texi
 	makeinfo $<
 
+ledger.pdf: ledger.texi
+	texi2pdf $<
+
 %.o: %.cc
 	$(CXX) $(CFLAGS) $(INCS) $(DFLAGS) -c -o $@ $<
 
 clean:
-	rm -f ledger *.o *.elc *~ .\#*
+	rm -f ledger *.o *.elc *~ .\#* .gdb_history README.texi
+	rm -f *.aux *.cp *.fn *.ky *.log *.pg *.toc *.tp *.vr
 
 distclean fullclean: clean
-	rm -f ledger.info README.html README.pdf *.elc make.deps
+	rm -f ledger.info README.html *.pdf *.elc make.deps TAGS
 
 rebuild: clean deps all
 
