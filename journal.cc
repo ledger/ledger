@@ -360,7 +360,6 @@ journal_t::~journal_t()
 {
   DEBUG_PRINT("ledger.memory.dtors", "dtor journal_t");
 
-  delete default_finalizer;
   delete master;
 
   // Don't bother unhooking each entry's transactions from the
@@ -591,8 +590,7 @@ std::list<py_entry_finalizer_t> py_finalizers;
 void py_add_entry_finalizer(journal_t& journal, object x)
 {
   py_finalizers.push_back(py_entry_finalizer_t(x));
-  add_hook<entry_finalizer_t *>(journal.entry_finalize_hooks,
-				&py_finalizers.back());
+  journal.add_entry_finalizer(&py_finalizers.back());
 }
 
 void py_remove_entry_finalizer(journal_t& journal, object x)
@@ -601,7 +599,8 @@ void py_remove_entry_finalizer(journal_t& journal, object x)
        i != py_finalizers.end();
        i++)
     if ((*i).pyobj == x) {
-      remove_hook<entry_finalizer_t *>(journal.entry_finalize_hooks, &(*i));
+      journal.remove_entry_finalizer(&(*i));
+      py_finalizers.erase(i);
       return;
     }
 }

@@ -431,8 +431,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
       case '=':                   // automated transactions
 	if (! added_autoxact_hook) {
-	  add_hook<entry_finalizer_t *>(journal->entry_finalize_hooks,
-					&autoxact_finalizer);
+	  journal->add_entry_finalizer(&autoxact_finalizer);
 	  added_autoxact_hook = true;
 	}
 	parse_automated_transactions(in, account_stack.front(),
@@ -495,8 +494,8 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
  done:
   if (added_autoxact_hook)
-    remove_hook<entry_finalizer_t *>(journal->entry_finalize_hooks,
-				     &autoxact_finalizer);
+    journal->remove_entry_finalizer(&autoxact_finalizer);
+
   if (time_commodity) {
     time_commodity->precision = 2;
     time_commodity->flags |= COMMODITY_STYLE_NOMARKET;

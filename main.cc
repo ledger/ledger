@@ -1,22 +1,5 @@
-#include "journal.h"
-#include "parser.h"
-#include "textual.h"
-#include "binary.h"
-#include "qif.h"
+#include <ledger.h>
 #include "acconf.h"
-#ifdef READ_GNUCASH
-#include "gnucash.h"
-#endif
-#include "valexpr.h"
-#include "format.h"
-#include "walk.h"
-#include "quotes.h"
-#include "derive.h"
-#include "option.h"
-#include "config.h"
-#include "debug.h"
-#include "timing.h"
-#include "error.h"
 
 using namespace ledger;
 
@@ -30,12 +13,6 @@ using namespace ledger;
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
-
-namespace {
-  TIMER_DEF(write_cache,    "writing cache file");
-  TIMER_DEF(report_gen,	    "generation of final report");
-  TIMER_DEF(process_opts,   "processing args and environment");
-}
 
 #if !defined(DEBUG_LEVEL) || DEBUG_LEVEL <= RELEASE
 
@@ -166,8 +143,6 @@ int parse_and_report(int argc, char * argv[], char * envp[])
 
   // Parse command-line arguments, and those set in the environment
 
-  TIMER_START(process_opts);
-
   std::list<std::string> args;
   process_arguments(config_options, argc - 1, argv + 1, false, args);
 
@@ -194,8 +169,6 @@ int parse_and_report(int argc, char * argv[], char * envp[])
 
   if (config.data_file == config.cache_file)
     config.use_cache = false;
-
-  TIMER_STOP(process_opts);
 
   // Read the command word, canonicalize it to its one letter form,
   // then configure the system based on the kind of report to be
@@ -246,8 +219,6 @@ int parse_and_report(int argc, char * argv[], char * envp[])
   }
 
   // Configure the output stream
-
-  TIMER_START(report_gen);
 
   std::ostream * out = &std::cout;
   if (! config.output_file.empty()) {
@@ -330,11 +301,7 @@ int parse_and_report(int argc, char * argv[], char * envp[])
     delete *i;
 #endif
 
-  TIMER_STOP(report_gen);
-
   // Write out the binary cache, if need be
-
-  TIMER_START(write_cache);
 
   if (config.use_cache && config.cache_dirty &&
       ! config.cache_file.empty()) {
@@ -346,8 +313,6 @@ int parse_and_report(int argc, char * argv[], char * envp[])
       write_binary_journal(stream, journal.get(), &journal->sources);
     }
   }
-
-  TIMER_STOP(write_cache);
 
   return 0;
 }

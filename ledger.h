@@ -21,7 +21,8 @@
 #include <quotes.h>
 #include <valexpr.h>
 #include <walk.h>
-
+#include <derive.h>
+#include <error.h>
 #include <option.h>
 #include <config.h>
 
@@ -29,13 +30,7 @@
 #include <textual.h>
 #include <autoxact.h>
 #include <binary.h>
-#ifdef READ_GNUCASH
 #include <gnucash.h>
-#endif
 #include <qif.h>
-
-#include <error.h>
-#include <timing.h>
-#include <util.h>
 
 #endif // _LEDGER_H

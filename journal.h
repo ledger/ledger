@@ -227,14 +227,13 @@ class journal_t
 
   mutable accounts_map accounts_cache;
 
+  func_finalizer_t default_finalizer;
   std::list<entry_finalizer_t *> entry_finalize_hooks;
-  entry_finalizer_t * default_finalizer;
 
-  journal_t() {
+  journal_t() : default_finalizer(finalize_entry) {
     master = new account_t(NULL, "");
     item_pool = item_pool_end = NULL;
-    default_finalizer = new func_finalizer_t(finalize_entry);
-    add_hook(entry_finalize_hooks, default_finalizer);
+    add_entry_finalizer(&default_finalizer);
   }
   ~journal_t();
 
@@ -265,6 +264,13 @@ class journal_t
 
   bool add_entry(entry_t * entry);
   bool remove_entry(entry_t * entry);
+
+  void add_entry_finalizer(entry_finalizer_t * finalizer) {
+    add_hook<entry_finalizer_t *>(entry_finalize_hooks, finalizer);
+  }
+  void remove_entry_finalizer(entry_finalizer_t * finalizer) {
+    remove_hook<entry_finalizer_t *>(entry_finalize_hooks, finalizer);
+  }
 
   bool valid() const;
 };
