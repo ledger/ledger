@@ -17,6 +17,9 @@ struct element_t
   enum kind_t {
     STRING,
     VALUE_EXPR,
+    SOURCE,
+    BEG_POS,
+    END_POS,
     DATE_STRING,
     CLEARED,
     CODE,

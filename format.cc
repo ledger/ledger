@@ -180,6 +180,9 @@ element_t * format_t::parse_elements(const std::string& fmt)
       current->chars = format_t::date_format;
       break;
 
+    case 'S': current->type = element_t::SOURCE; break;
+    case 'B': current->type = element_t::BEG_POS; break;
+    case 'E': current->type = element_t::END_POS; break;
     case 'X': current->type = element_t::CLEARED; break;
     case 'C': current->type = element_t::CODE; break;
     case 'P': current->type = element_t::PAYEE; break;
@@ -296,7 +299,8 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 
 	  if (! has_flag)
 	    unit_cost.commodity().flags &= ~COMMODITY_STYLE_VARIABLE;
-	} else {
+	}
+	else if (details.entry) {
 	  unsigned int    xacts_count = 0;
 	  transaction_t * first = NULL;
 	  transaction_t * last  = NULL;
@@ -322,6 +326,29 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 	else
 	  out << disp;
       }
+      break;
+
+    case element_t::SOURCE:
+      if (details.entry) {
+	int idx = details.entry->src_idx;
+	for (strings_list::iterator i = details.entry->journal->sources.begin();
+	     i != details.entry->journal->sources.end();
+	     i++)
+	  if (! idx--) {
+	    out << *i;
+	    break;
+	  }
+      }
+      break;
+
+    case element_t::BEG_POS:
+      if (details.entry)
+	out << (unsigned long)details.entry->beg_pos;
+      break;
+
+    case element_t::END_POS:
+      if (details.entry)
+	out << (unsigned long)details.entry->end_pos;
       break;
 
     case element_t::DATE_STRING:
