@@ -477,7 +477,8 @@ unsigned int parse_textual_journal(std::istream& in, journal_t * journal,
 	in >> opt;
 	in.getline(line, MAX_LINE);
 	linenum++;
-	process_option(opt, line + 1);
+	char * p = skip_ws(line);
+	process_option(opt, *p == '\n' ? NULL : p);
 	break;
       }
 

@@ -2,6 +2,7 @@
 #define _OPTION_H
 
 #include <map>
+#include <list>
 #include <vector>
 #include <string>
 
@@ -34,8 +35,9 @@ struct option_handler {
 };
 
 bool process_option(const std::string& opt, const char * arg = NULL);
-void process_arguments(std::vector<char *>& args, int argc, char ** argv);
-void process_environment(char ** envp);
+void process_arguments(int argc, char ** argv, const bool anywhere,
+		       std::list<std::string>& args);
+void process_environment(char ** envp, const std::string& tag);
 
 #define DEF_OPT_HANDLERS()				\
   std::vector<option_t> option_handler::options;	\

@@ -165,7 +165,8 @@ inline std::ostream& operator<<(std::ostream& out, const account_t& acct) {
 }
 
 
-typedef std::list<entry_t *> entries_list;
+typedef std::list<entry_t *>   entries_list;
+typedef std::list<std::string> strings_list;
 
 class journal_t
 {
@@ -208,7 +209,8 @@ class journal_t
   bool add_entry(entry_t * entry);
   bool remove_entry(entry_t * entry);
 
-  entry_t * derive_entry(int argc, char **argv) const;
+  entry_t * derive_entry(strings_list::iterator begin,
+			 strings_list::iterator end) const;
 };
 
 int parse_journal_file(char * p, journal_t * journal);

@@ -31,18 +31,6 @@ option_handler::option_handler(const std::string& label,
   options.push_back(opt);
 }
 
-bool process_option(const std::string& opt, const char * arg)
-{
-  option_handler_map::iterator handler = option_handler::handlers.find(opt);
-  if (handler != option_handler::handlers.end() &&
-      (! (*handler).second->handled || (*handler).second->multiple)) {
-    (*handler).second->handle_option(arg);
-    (*handler).second->handled = true;
-    return true;
-  }
-  return false;
-}
-
 static inline void process_option(const option_t& opt,
 				  const char * arg = NULL) {
   if (! opt.handler->handled || opt.handler->multiple) {
@@ -51,18 +39,41 @@ static inline void process_option(const option_t& opt,
   }
 }
 
-void process_arguments(std::vector<char *>& args, int argc, char ** argv)
+bool process_option(const std::string& opt, const char * arg)
+{
+  option_handler_map::iterator handler = option_handler::handlers.find(opt);
+  if (handler != option_handler::handlers.end()) {
+    if (! (*handler).second->handled || (*handler).second->multiple) {
+      (*handler).second->handle_option(arg);
+      (*handler).second->handled = true;
+    }
+    return true;
+  }
+  return false;
+}
+
+void process_arguments(int argc, char ** argv, const bool anywhere,
+		       std::list<std::string>& args)
 {
   int index = 1;
   for (char ** i = argv + 1; index < argc; i++, index++) {
     if ((*i)[0] != '-') {
-      args.push_back(*i);
-      continue;
+      if (anywhere) {
+	args.push_back(*i);
+	continue;
+      } else {
+	for (; index < argc; i++, index++)
+	  args.push_back(*i);
+	break;
+      }
     }
 
     // --long-option
-  again:
+   again:
     if ((*i)[1] == '-') {
+      if ((*i)[2] == '\0')
+	break;
+
       for (std::vector<option_t>::iterator j
 	     = option_handler::options.begin();
 	   j != option_handler::options.end();
@@ -114,10 +125,10 @@ void process_arguments(std::vector<char *>& args, int argc, char ** argv)
   }
 }
 
-void process_environment(char ** envp)
+void process_environment(char ** envp, const std::string& tag)
 {
   for (char ** p = envp; *p; p++)
-    if (std::strncmp(*p, "LEDGER_", 7) == 0) {
+    if (std::strncmp(*p, tag.c_str(), 7) == 0) {
       std::string opt;
       char * q;
       for (q = *p + 7; *q && *q != '='; q++)

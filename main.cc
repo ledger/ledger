@@ -109,6 +109,7 @@ namespace {
   bool use_cache          = false;
 }
 
+// jww (2004-08-13): fix this
 static std::string ledger_cache_file()
 {
   std::string cache_file;
@@ -175,11 +176,11 @@ static void show_help(std::ostream& out)
 }
 
 
-DEF_OPT_HANDLERS();
-
 //////////////////////////////////////////////////////////////////////
 //
 // Basic options
+
+DEF_OPT_HANDLERS();
 
 OPT_BEGIN(help, "h", false) {
   show_help(std::cout);
@@ -191,10 +192,10 @@ OPT_BEGIN(version, "v", false) {
   std::exit(0);
 } OPT_END(version);
 
-OPT_BEGIN(init_file, "i:", true) {
+OPT_BEGIN(init, "i:", true) {
   std::ifstream stream(optarg);
   parse_textual_journal(stream, journal.get(), journal->master);
-} OPT_END(init_file);
+} OPT_END(init);
 
 OPT_BEGIN(file, "f:", true) {
   files.push_back(optarg);
@@ -428,22 +429,14 @@ int main(int argc, char * argv[], char * envp[])
 {
 #ifdef DEBUG_ENABLED
   if (char * p = std::getenv("DEBUG_FILE")) {
-    debug_stream = new std::ofstream(p);
+    debug_stream      = new std::ofstream(p);
     free_debug_stream = true;
   }
 #endif
 
-  // Initialize some variables based on environment variable settings
-
-  // jww (2004-08-13): fix these
-  if (char * p = std::getenv("PRICE_HIST"))
-    price_db = p;
-
-  if (char * p = std::getenv("PRICE_EXP"))
-    pricing_leeway = std::atol(p) * 60;
-
   // A ledger data file must be specified
 
+  // jww (2004-08-13): use LEDGER_FILE
   use_cache = std::getenv("LEDGER") != NULL;
 
   if (use_cache) {
@@ -475,19 +468,23 @@ int main(int argc, char * argv[], char * envp[])
 
   // Parse the command-line options
 
-  std::vector<char *> args;
-  process_arguments(args, argc, argv);
+  std::list<std::string> args;
+  process_arguments(argc, argv, false, args);
 
   if (args.empty()) {
     show_help(std::cerr);
     return 1;
   }
-  argc = args.size();
-  int index = 0;
+  std::list<std::string>::iterator arg = args.begin();
 
   // Process options from the environment
 
-  process_environment(envp);
+  process_environment(envp, "LEDGER_");
+
+  if (char * p = std::getenv("PRICE_HIST"))
+    process_option("price-db", p);
+  if (char * p = std::getenv("PRICE_EXP"))
+    process_option("price-exp", p);
 
   // Read the ledger file, unless we already read it from the cache
 
@@ -534,7 +531,7 @@ int main(int argc, char * argv[], char * envp[])
 
   // Read the command word, and then check and simplify it
 
-  std::string command = args[index++];
+  std::string command = *arg++;
 
   if (command == "balance" || command == "bal" || command == "b")
     command = "b";
@@ -556,32 +553,25 @@ int main(int argc, char * argv[], char * envp[])
 
   std::auto_ptr<entry_t> new_entry;
   if (command == "e") {
-    new_entry.reset(journal->derive_entry(argc - index, &args[index]));
+    new_entry.reset(journal->derive_entry(arg, args.end()));
   } else {
     // Treat the remaining command-line arguments as regular
     // expressions, used for refining report results.
 
-    int start = index;
-    for (; index < argc; index++)
-      if (std::strcmp(args[index], "--") == 0) {
-	index++;
+    std::list<std::string>::iterator i = args.begin();
+    for (; i != args.end(); i++)
+      if (*i == "--")
 	break;
-      }
 
-    if (start < index) {
-      std::list<std::string> regexps(&args[start], &args[index]);
-      std::string pred = regexps_to_predicate(regexps.begin(), regexps.end());
-      if (! pred.empty()) {
-	if (! predicate.empty())
-	  predicate += "&";
-	predicate += pred;
-      }
+    std::string pred = regexps_to_predicate(arg, i);
+    if (! pred.empty()) {
+      if (! predicate.empty())
+	predicate += "&";
+      predicate += pred;
     }
 
-    if (index < argc) {
-      std::list<std::string> regexps(&args[index], &args[argc]);
-      std::string pred = regexps_to_predicate(regexps.begin(), regexps.end(),
-					      false);
+    if (i != args.end()) {
+      std::string pred = regexps_to_predicate(i, args.end(), false);
       if (! pred.empty()) {
 	if (! predicate.empty())
 	  predicate += "&";
@@ -608,7 +598,7 @@ int main(int argc, char * argv[], char * envp[])
     }
   }
 
-  // Compile the sort criteria
+  // Compile the sorting criteria
 
   if (! sort_string.empty()) {
     try {

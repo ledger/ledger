@@ -52,43 +52,41 @@ bool journal_t::remove_entry(entry_t * entry)
   return true;
 }
 
-entry_t * journal_t::derive_entry(int argc, char **argv) const
+entry_t * journal_t::derive_entry(strings_list::iterator i,
+				  strings_list::iterator end) const
 {
-  entry_t *  added    = new entry_t;
-  entry_t *  matching = NULL;
-  int	     index    = 0;
+  entry_t * added    = new entry_t;
+  entry_t * matching = NULL;
 
-  assert(index < argc);
-
-  if (! parse_date(argv[index++], &added->date)) {
-    std::cerr << "Error: Bad entry date: " << argv[index - 1]
-	      << std::endl;
+  if (! parse_date((*i).c_str(), &added->date)) {
+    std::cerr << "Error: Bad entry date: " << *i << std::endl;
     return false;
   }
+  ++i;
 
-  if (index == argc) {
+  if (i == end) {
     std::cerr << "Error: Too few arguments to 'entry'." << std::endl;
     return false;
   }
 
-  mask_t regexp(argv[index++]);
+  mask_t regexp(*i++);
 
-  for (entries_list::const_reverse_iterator i = entries.rbegin();
-       i != entries.rend();
-       i++)
-    if (regexp.match((*i)->payee)) {
-      matching = *i;
+  for (entries_list::const_reverse_iterator j = entries.rbegin();
+       j != entries.rend();
+       j++)
+    if (regexp.match((*j)->payee)) {
+      matching = *j;
       break;
     }
 
   added->payee = matching ? matching->payee : regexp.pattern;
 
-  if (index == argc) {
+  if (i == end) {
     std::cerr << "Error: Too few arguments to 'entry'." << std::endl;
     return false;
   }
 
-  if (argv[index][0] == '-' || std::isdigit(argv[index][0])) {
+  if ((*i)[0] == '-' || std::isdigit((*i)[0])) {
     if (! matching) {
       std::cerr << "Error: Missing account name for non-matching entry."
 		<< std::endl;
@@ -98,7 +96,7 @@ entry_t * journal_t::derive_entry(int argc, char **argv) const
     transaction_t * m_xact, * xact, * first;
     m_xact = matching->transactions.front();
 
-    amount_t amt(argv[index++]);
+    amount_t amt(*i++);
     first = xact = new transaction_t(added, m_xact->account, amt, amt);
 
     if (xact->amount.commodity->symbol.empty()) {
@@ -113,12 +111,12 @@ entry_t * journal_t::derive_entry(int argc, char **argv) const
 			     - first->amount, - first->amount);
     added->add_transaction(xact);
 
-    if ((index + 1) < argc && std::string(argv[index]) == "-from")
-      if (account_t * acct = find_account(argv[++index]))
+    if (std::string(*i++) == "-from" && i != end)
+      if (account_t * acct = find_account(*i))
 	added->transactions.back()->account = acct;
   } else {
-    while (index < argc && std::string(argv[index]) != "-from") {
-      mask_t acct_regex(argv[index++]);
+    while (std::string(*i) != "-from") {
+      mask_t acct_regex(*i++);
 
       account_t *   acct  = NULL;
       commodity_t * cmdty = NULL;
@@ -145,12 +143,12 @@ entry_t * journal_t::derive_entry(int argc, char **argv) const
 	return false;
       }
 
-      if (index == argc) {
+      if (i == end) {
 	std::cerr << "Error: Too few arguments to 'entry'." << std::endl;
 	return false;
       }
 
-      amount_t amt(argv[index]++);
+      amount_t amt(*i++);
       transaction_t * xact = new transaction_t(added, acct, amt, amt);
 
       if (! xact->amount.commodity)
@@ -159,8 +157,8 @@ entry_t * journal_t::derive_entry(int argc, char **argv) const
       added->add_transaction(xact);
     }
 
-    if ((index + 1) < argc && std::string(argv[index]) == "-from") {
-      if (account_t * acct = find_account(argv[++index])) {
+    if (std::string(*i++) == "-from" && i != end) {
+      if (account_t * acct = find_account(*i++)) {
 	transaction_t * xact = new transaction_t(NULL, acct);
 	added->add_transaction(xact);
       }
