@@ -292,7 +292,7 @@ void parse_automated_transactions(std::istream& in, book * ledger)
 //
 
 book * parse_ledger(std::istream& in, regexps_map& regexps,
-		     bool compute_balances)
+		    bool compute_balances)
 {
   static char line[MAX_LINE + 1];
   char c;
@@ -334,7 +334,9 @@ book * parse_ledger(std::istream& in, regexps_map& regexps,
       break;
 
     case '=':                   // automated transactions
+      do_compute = false;
       parse_automated_transactions(in, ledger);
+      do_compute = compute_balances;
       break;
 
     default:

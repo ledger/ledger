@@ -227,8 +227,10 @@ amount * gmp_amount::street(bool get_quotes) const
 {
   amount * amt = copy();
 
-  int  max = 10;
+  if (! amt->commdty())
+    return amt;
 
+  int  max = 10;
   while (--max >= 0) {
     if (! amt->commdty()->price && ! amt->commdty()->sought) {
       if (get_quotes)

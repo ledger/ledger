@@ -126,8 +126,7 @@ void report_balances(std::ostream& out, regexps_map& regexps)
 	  }
 	  else {
 	    bool by_exclusion = false;
-	    bool match = matches(regexps, acct->as_str(),
-				 &by_exclusion);
+	    bool match = matches(regexps, acct->as_str(), &by_exclusion);
 	    if (! match) {
 	      acct->checked = 2;
 	    }
@@ -237,7 +236,7 @@ void print_register(const std::string& acct_name, std::ostream& out,
       // gnucash does.
 
       transaction * xact;
-      if ((*i)->xacts.size() == 2) {
+      if (! full_names && (*i)->xacts.size() == 2) {
 	if (*x == (*i)->xacts.front())
 	  xact = (*i)->xacts.back();
 	else
@@ -302,7 +301,6 @@ static void equity_entry(account * acct, regexps_map& regexps,
     opening.cleared = true;
     opening.desc    = "Opening Balance";
 
-    transaction * xact;
     for (totals::const_iterator i = acct->balance.amounts.begin();
 	 i != acct->balance.amounts.end();
 	 i++) {
@@ -310,7 +308,7 @@ static void equity_entry(account * acct, regexps_map& regexps,
       if ((*i).second->is_zero())
 	continue;
 
-      xact = new transaction();
+      transaction * xact = new transaction();
       xact->acct = const_cast<account *>(acct);
       xact->cost = (*i).second->street(get_quotes);
       opening.xacts.push_back(xact);
@@ -551,7 +549,7 @@ int main(int argc, char * argv[])
       have_beginning = true;
       if (! parse_date(optarg, &begin_date)) {
 	std::cerr << "Error: Bad begin date: " << optarg << std::endl;
-	std::exit(1);
+	return 1;
       }
       break;
 
@@ -559,7 +557,7 @@ int main(int argc, char * argv[])
       have_ending = true;
       if (! parse_date(optarg, &end_date)) {
 	std::cerr << "Error: Bad end date: " << optarg << std::endl;
-	std::exit(1);
+	return 1;
       }
       break;
 
@@ -572,7 +570,7 @@ int main(int argc, char * argv[])
       have_date_mask = true;
       if (! parse_date_mask(optarg, &date_mask)) {
 	std::cerr << "Error: Bad date mask: " << optarg << std::endl;
-	std::exit(1);
+	return 1;
       }
       break;
 
@@ -618,7 +616,7 @@ int main(int argc, char * argv[])
 
   if (optind == argc) {
     show_help(std::cout);
-    std::exit(1);
+    return 1;
   }
 
   index = optind;
@@ -632,9 +630,8 @@ int main(int argc, char * argv[])
 
     if (! file || ! *file) {
       std::cerr << ("Please specify ledger file using -f option "
-		    "or LEDGER environment variable.")
-		<< std::endl;
-      std::exit(1);
+		    "or LEDGER environment variable.") << std::endl;
+      return 1;
     }
   }
 
@@ -644,10 +641,10 @@ int main(int argc, char * argv[])
 
   int name_index = index;
   if (command == "register" || command == "reg") {
-    if (optind == argc) {
+    if (name_index == argc) {
       std::cerr << ("Error: Must specify an account name "
 		    "after the 'register' command.") << std::endl;
-      std::exit(1);
+      return 1;
     }
     index++;
   }
@@ -675,7 +672,7 @@ int main(int argc, char * argv[])
   delete file;
 
   if (! main_ledger)
-    std::exit(1);
+    return 1;
 
   // Record any prices specified by the user
 
@@ -713,6 +710,11 @@ int main(int argc, char * argv[])
   }
   else if (command == "entry") {
     add_new_entry(index, argc, argv);
+  }
+  else {
+    std::cerr << "Error: Unrecognized command '" << command << "'."
+	      << std::endl;
+    return 1;
   }
 
 #ifdef DEBUG
