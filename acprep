@@ -16,7 +16,7 @@ if [ "$1" = "--debug" ]; then
 		LDFLAGS=-L/sw/lib CXXFLAGS="-g" --enable-debug
 elif [ "$1" = "--opt" ]; then
     ./configure CPPFLAGS="-I/sw/include -I/usr/include/httpd/xml" \
-		LDFLAGS=-L/sw/lib CXXFLAGS="-O3 -fomit-frame-pointer"
+		LDFLAGS=-L/sw/lib CXXFLAGS="-fomit-frame-pointer -fastf -mcpu=7450"
 elif [ "$1" = "--perf" ]; then
     ./configure CPPFLAGS="-I/sw/include -I/usr/include/httpd/xml" \
 		LDFLAGS=-L/sw/lib CXXFLAGS="-g -pg"
