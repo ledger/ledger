@@ -190,7 +190,8 @@ static void display_total(std::ostream& out, totals& balance,
 
       out << " " << acct->as_str() << std::endl;
     } else {
-      for (int i = 0; i < level + 1; i++)
+      out << " ";
+      for (int i = 0; i < level; i++)
 	out << "  ";
 
       assert(acct->parent);
