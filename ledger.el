@@ -127,7 +127,10 @@ Return the difference in the format of a time value."
   (interactive
    (list
     (read-string "Entry: " (concat ledger-year "/" ledger-month "/"))))
-  (let* ((date (car (split-string entry-text)))
+  (let* ((args (with-temp-buffer
+		 (insert entry-text)
+		 (eshell-parse-arguments (point-min) (point-max))))
+	 (date (car args))
 	 (insert-year t)
 	 (ledger-buf (current-buffer))
 	 exit-code)
@@ -145,13 +148,12 @@ Return the difference in the format of a time value."
 	 (setq exit-code
 	       (apply #'ledger-run-ledger
 		      ledger-buf "entry"
-		      (split-string
-		       (with-temp-buffer
-			 (insert entry-text)
-			 (goto-char (point-min))
-			 (while (re-search-forward "\\([&$]\\)" nil t)
-			   (replace-match "\\\\\\1"))
-			 (buffer-string)))))
+		      (mapcar
+		       (function
+			(lambda (x)
+			  (replace-regexp-in-string "\\([&$]\\)" "\\\\\\1"
+						    (eval x))))
+		       args)))
 	 (if (= 0 exit-code)
 	     (if insert-year
 		 (buffer-substring 2 (point-max))
