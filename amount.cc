@@ -34,12 +34,16 @@ class amount_t::bigint_t {
   bigint_t() : prec(0), ref(1), index(0) {
     mpz_init(val);
 #ifdef DEBUG_ENABLED
+    DEBUG_PRINT("ledger.amount.bigint-show",
+		"ctor " << this << " " << bigint_ctors);
     bigint_ctors++;
 #endif
   }
   bigint_t(mpz_t _val) : prec(0), ref(1), index(0) {
     mpz_init_set(val, _val);
 #ifdef DEBUG_ENABLED
+    DEBUG_PRINT("ledger.amount.bigint-show",
+		"ctor " << this << " " << bigint_ctors);
     bigint_ctors++;
 #endif
   }
@@ -47,15 +51,19 @@ class amount_t::bigint_t {
     : prec(other.prec), ref(1), index(0) {
     mpz_init_set(val, other.val);
 #ifdef DEBUG_ENABLED
+    DEBUG_PRINT("ledger.amount.bigint-show",
+		"ctor " << this << " " << bigint_ctors);
     bigint_ctors++;
 #endif
   }
   ~bigint_t() {
     assert(ref == 0);
-    mpz_clear(val);
 #ifdef DEBUG_ENABLED
+    DEBUG_PRINT("ledger.amount.bigint-show",
+		"dtor " << this << " " << bigint_dtors);
     bigint_dtors++;
 #endif
+    mpz_clear(val);
   }
 };
 
@@ -131,6 +139,10 @@ static void mpz_round(mpz_t out, mpz_t value, int value_prec, int round_prec)
     }
   }
 
+  // chop off the rounded bits
+  mpz_ui_pow_ui(divisor, 10, value_prec - round_prec);
+  mpz_tdiv_q(out, out, divisor);
+
   mpz_clear(quotient);
   mpz_clear(remainder);
 }
@@ -185,6 +197,8 @@ amount_t::amount_t(const double value)
 
 void amount_t::_release()
 {
+  DEBUG_PRINT("ledger.amount.bigint-show",
+	      "bigint " << quantity << " --ref " << (quantity->ref - 1));
   if (--quantity->ref == 0)
     delete quantity;
 }
@@ -217,6 +231,8 @@ void amount_t::_copy(const amount_t& amt)
 
     quantity = amt.quantity;
     quantity->ref++;
+    DEBUG_PRINT("ledger.amount.bigint-show",
+		"bigint " << quantity << " ++ref " << quantity->ref);
   }
   commodity = amt.commodity;
 }
@@ -322,58 +338,64 @@ void amount_t::_resize(unsigned int prec)
 
 amount_t& amount_t::operator+=(const amount_t& amt)
 {
-  if (amt.quantity) {
-    if (! quantity) {
-      quantity  = new bigint_t(*amt.quantity);
-      commodity = amt.commodity;
-    } else {
-      _dup();
+  if (! amt.quantity)
+    return *this;
 
-      if (commodity != amt.commodity)
-	throw amount_error("Adding amounts with different commodities");
-
-      if (quantity->prec == amt.quantity->prec) {
-	mpz_add(MPZ(quantity), MPZ(quantity), MPZ(amt.quantity));
-      }
-      else if (quantity->prec < amt.quantity->prec) {
-	_resize(amt.quantity->prec);
-	mpz_add(MPZ(quantity), MPZ(quantity), MPZ(amt.quantity));
-      } else {
-	amount_t temp = amt;
-	temp._resize(quantity->prec);
-	mpz_add(MPZ(quantity), MPZ(quantity), MPZ(temp.quantity));
-      }
-    }
+  if (! quantity) {
+    quantity  = new bigint_t(*amt.quantity);
+    commodity = amt.commodity;
+    return *this;
   }
+
+  _dup();
+
+  if (commodity != amt.commodity)
+    throw amount_error("Adding amounts with different commodities");
+
+  if (quantity->prec == amt.quantity->prec) {
+    mpz_add(MPZ(quantity), MPZ(quantity), MPZ(amt.quantity));
+  }
+  else if (quantity->prec < amt.quantity->prec) {
+    _resize(amt.quantity->prec);
+    mpz_add(MPZ(quantity), MPZ(quantity), MPZ(amt.quantity));
+  } else {
+    amount_t temp = amt;
+    temp._resize(quantity->prec);
+    mpz_add(MPZ(quantity), MPZ(quantity), MPZ(temp.quantity));
+  }
+
   return *this;
 }
 
 amount_t& amount_t::operator-=(const amount_t& amt)
 {
-  if (amt.quantity) {
-    if (! quantity) {
-      quantity  = new bigint_t(*amt.quantity);
-      mpz_neg(MPZ(quantity), MPZ(quantity));
-      commodity = amt.commodity;
-    } else {
-      _dup();
+  if (! amt.quantity)
+    return *this;
 
-      if (commodity != amt.commodity)
-	throw amount_error("Subtracting amounts with different commodities");
-
-      if (quantity->prec == amt.quantity->prec) {
-	mpz_sub(MPZ(quantity), MPZ(quantity), MPZ(amt.quantity));
-      }
-      else if (quantity->prec < amt.quantity->prec) {
-	_resize(amt.quantity->prec);
-	mpz_sub(MPZ(quantity), MPZ(quantity), MPZ(amt.quantity));
-      } else {
-	amount_t temp = amt;
-	temp._resize(quantity->prec);
-	mpz_sub(MPZ(quantity), MPZ(quantity), MPZ(temp.quantity));
-      }
-    }
+  if (! quantity) {
+    quantity  = new bigint_t(*amt.quantity);
+    mpz_neg(MPZ(quantity), MPZ(quantity));
+    commodity = amt.commodity;
+    return *this;
   }
+
+  _dup();
+
+  if (commodity != amt.commodity)
+    throw amount_error("Subtracting amounts with different commodities");
+
+  if (quantity->prec == amt.quantity->prec) {
+    mpz_sub(MPZ(quantity), MPZ(quantity), MPZ(amt.quantity));
+  }
+  else if (quantity->prec < amt.quantity->prec) {
+    _resize(amt.quantity->prec);
+    mpz_sub(MPZ(quantity), MPZ(quantity), MPZ(amt.quantity));
+  } else {
+    amount_t temp = amt;
+    temp._resize(quantity->prec);
+    mpz_sub(MPZ(quantity), MPZ(quantity), MPZ(temp.quantity));
+  }
+
   return *this;
 }
 
@@ -598,11 +620,7 @@ amount_t amount_t::round(unsigned int prec) const
     amount_t temp = *this;
     temp._dup();
     mpz_round(MPZ(temp.quantity), MPZ(temp.quantity), quantity->prec, prec);
-#if 0
-    mpz_ui_pow_ui(divisor, 10, quantity->prec - prec);
-    mpz_tdiv_q(MPZ(temp.quantity), MPZ(temp.quantity), divisor);
     quantity->prec = prec;
-#endif
     return temp;
   }
 }
@@ -626,10 +644,8 @@ std::ostream& operator<<(std::ostream& out, const amount_t& amt)
   // outputting it.  NOTE: `rquotient' is used here as a temp variable!
 
   if (amt.commodity->precision < amt.quantity->prec) {
-    mpz_round(rquotient, MPZ(amt.quantity),
-	      amt.quantity->prec, amt.commodity->precision);
-    mpz_ui_pow_ui(divisor, 10, amt.quantity->prec - amt.commodity->precision);
-    mpz_tdiv_q(rquotient, rquotient, divisor);
+    mpz_round(rquotient, MPZ(amt.quantity), amt.quantity->prec,
+	      amt.commodity->precision);
     mpz_ui_pow_ui(divisor, 10, amt.commodity->precision);
     mpz_tdiv_qr(quotient, remainder, rquotient, divisor);
   }
@@ -928,6 +944,8 @@ void amount_t::read_quantity(std::istream& in)
     assert(index <= bigints.size());
     quantity = bigints[index - 1];
     quantity->ref++;
+    DEBUG_PRINT("ledger.amount.bigint-show",
+		"bigint " << quantity << " ++ref " << quantity->ref);
   }
 }
 

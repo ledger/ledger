@@ -17,8 +17,6 @@ namespace ledger {
 
 class value_t
 {
-  bool constructed;
-
   value_t(const value_t& copy);
 
  public:
@@ -32,23 +30,24 @@ class value_t
     ANY
   } type;
 
-  value_t() : constructed(false) {
-    *this = 0U;
+  value_t() {
+    *((unsigned int *) data) = 0;
+    type = INTEGER;
   }
 
-  value_t(const bool value) : constructed(false) {
+  value_t(const bool value) {
     *((bool *) data) = value;
     type = BOOLEAN;
   }
-  value_t(const unsigned int value) : constructed(false) {
+  value_t(const unsigned int value) {
     *((unsigned int *) data) = value;
     type = INTEGER;
   }
-  value_t(const amount_t& value) : constructed(true) {
+  value_t(const amount_t& value) {
     new((amount_t *)data) amount_t(value);
     type = AMOUNT;
   }
-  value_t(const balance_t& value) : constructed(true) {
+  value_t(const balance_t& value) {
     new((balance_t *)data) balance_t(value);
     type = BALANCE;
   }
@@ -58,18 +57,15 @@ class value_t
   }
 
   void destroy() {
-    if (constructed) {
-      switch (type) {
-      case AMOUNT:
-	((amount_t *)data)->~amount_t();
-	break;
-      case BALANCE:
-	((balance_t *)data)->~balance_t();
-	break;
-      default:
-	break;
-      }
-      constructed = false;
+    switch (type) {
+    case AMOUNT:
+      ((amount_t *)data)->~amount_t();
+      break;
+    case BALANCE:
+      ((balance_t *)data)->~balance_t();
+      break;
+    default:
+      break;
     }
   }
 
@@ -845,11 +841,9 @@ class value_t
 	break;
       case AMOUNT:
 	new((amount_t *)data) amount_t(*((bool *) data));
-	constructed = true;
 	break;
       case BALANCE:
 	new((balance_t *)data) balance_t(*((bool *) data));
-	constructed = true;
 	break;
 
       default:
@@ -867,11 +861,9 @@ class value_t
 	break;
       case AMOUNT:
 	new((amount_t *)data) amount_t(*((unsigned int *) data));
-	constructed = true;
 	break;
       case BALANCE:
 	new((balance_t *)data) balance_t(*((unsigned int *) data));
-	constructed = true;
 	break;
 
       default:
@@ -900,7 +892,6 @@ class value_t
 	amount_t temp = *((amount_t *) data);
 	destroy();
 	new((balance_t *)data) balance_t(temp);
-	constructed = true;
 	break;
       }
 
@@ -928,7 +919,6 @@ class value_t
 	amount_t temp = ((balance_t *) data)->amount();
 	destroy();
 	new((amount_t *)data) amount_t(temp);
-	constructed = true;
 	break;
       }
       case BALANCE:
