@@ -84,7 +84,7 @@ ledger.so: python.cc libledger.la
 
 install-exec-hook:
 	CFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS) -L. -L.libs" \
-	    python setup.py install --install-base=$(DESTDIR) --root
+	    python setup.py install --prefix=$(prefix)
 
 endif
 
