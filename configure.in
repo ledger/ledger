@@ -51,6 +51,7 @@ AC_CACHE_CHECK(
 
 if [test x$libgmp_avail = xtrue ]; then
   AM_CONDITIONAL(HAVE_GMP, true)
+  LIBS="-lgmp $LIBS"
 else
   AC_MSG_FAILURE("Could not find gmp library (set CPPFLAGS and LDFLAGS?)")
 fi
@@ -72,6 +73,7 @@ AC_CACHE_CHECK(
 
 if [test x$libpcre_avail = xtrue ]; then
   AM_CONDITIONAL(HAVE_PCRE, true)
+  LIBS="-lpcre $LIBS"
 else
   AC_MSG_FAILURE("Could not find pcre library (set CPPFLAGS and LDFLAGS?)")
 fi
