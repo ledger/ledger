@@ -127,14 +127,18 @@ chain_formatters(const std::string& command,
     // dow_transactions is like interval_transactions, except that it
     // reports all the transactions that fall on each subsequent day
     // of the week.
-    if (config.show_subtotal)
+    if (config.show_subtotal) {
       ptrs.push_back(formatter = new subtotal_transactions(formatter));
-    else if (! config.report_interval.empty())
+    }
+    else if (! config.report_interval.empty()) {
       ptrs.push_back(formatter =
 		     new interval_transactions(formatter,
 					       config.report_interval));
-    else if (config.days_of_the_week)
+      ptrs.push_back(formatter = new sort_transactions(formatter, "d"));
+    }
+    else if (config.days_of_the_week) {
       ptrs.push_back(formatter = new dow_transactions(formatter));
+    }
   }
 
   // related_transactions will pass along all transactions related
