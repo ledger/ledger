@@ -668,9 +668,10 @@ void write_textual_journal(journal_t& journal, std::string path,
       for (transactions_list::iterator x = base->transactions.begin();
 	   x != base->transactions.end();
 	   x++)
-	transaction_xdata(**x).dflags |= TRANSACTION_TO_DISPLAY;
-
-      walk_transactions(base->transactions, formatter);
+	if (! ((*x)->flags & TRANSACTION_AUTO)) {
+	  transaction_xdata(**x).dflags |= TRANSACTION_TO_DISPLAY;
+	  formatter(**x);
+	}
       formatter.flush();
 
       while (pos < base->end_pos) {
