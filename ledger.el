@@ -4,7 +4,7 @@
 
 ;; Emacs Lisp Archive Entry
 ;; Filename: ledger.el
-;; Version: 1.1
+;; Version: 1.2
 ;; Date: Thu 02-Apr-2004
 ;; Keywords: data
 ;; Author: John Wiegley (johnw AT gnu DOT org)
@@ -38,12 +38,14 @@
 ;;   C-c C-a  add a new entry, based on previous entries
 ;;   C-c C-y  set default year for entry mode
 ;;   C-c C-m  set default month for entry mode
-;;   C-c C-r  reconcile the entries related to an account
+;;   C-c C-r  reconcile uncleared entries related to an account
 ;;
 ;; In the reconcile buffer, use SPACE to toggle the cleared status of
-;; a transaction.
+;; a transaction, C-x C-s to save changes (to the ledger file as
+;; well), or C-c C-r to attempt an auto-reconcilation based on the
+;; statement's ending date and balance.
 
-(defvar ledger-version "1.1"
+(defvar ledger-version "1.2"
   "The version of ledger.el currently loaded")
 
 (defgroup ledger nil
@@ -55,14 +57,7 @@
   :type 'file
   :group 'ledger)
 
-(defcustom ledger-data-file (or (getenv "LEDGER_FILE")
-				(getenv "LEDGER"))
-  "Path to the ledger data file."
-  :type 'file
-  :group 'ledger)
-
 (defvar bold 'bold)
-
 (defvar ledger-font-lock-keywords
   '(("^[0-9./]+\\s-+\\(?:([^)]+)\\s-+\\)?\\([^*].+\\)" 1 bold)
     ("^\\s-+.+?\\(  \\|\t\\|\\s-+$\\)" . font-lock-keyword-face))
@@ -70,14 +65,12 @@
 
 (defsubst ledger-current-year ()
   (format-time-string "%Y"))
-
 (defsubst ledger-current-month ()
   (format-time-string "%m"))
 
 (defvar ledger-year (ledger-current-year)
   "Start a ledger session with the current year, but make it
 customizable to ease retro-entry.")
-
 (defvar ledger-month (ledger-current-month)
   "Start a ledger session with the current month, but make it
 customizable to ease retro-entry.")
@@ -135,7 +128,9 @@ Return the difference in the format of a time value."
    (list
     (read-string "Entry: " (concat ledger-year "/" ledger-month "/"))))
   (let* ((date (car (split-string entry-text)))
-	 (insert-year t) exit-code)
+	 (insert-year t)
+	 (ledger-buf (current-buffer))
+	 exit-code)
     (if (string-match "\\([0-9]+\\)/\\([0-9]+\\)/\\([0-9]+\\)" date)
 	(setq date (encode-time 0 0 0 (string-to-int (match-string 3 date))
 				(string-to-int (match-string 2 date))
@@ -149,7 +144,7 @@ Return the difference in the format of a time value."
        (with-temp-buffer
 	 (setq exit-code
 	       (ledger-run-ledger
-		"entry"
+		ledger-buf "entry"
 		(with-temp-buffer
 		  (insert entry-text)
 		  (goto-char (point-min))
@@ -162,14 +157,6 @@ Return the difference in the format of a time value."
 	       (buffer-substring 7 (point-max)))
 	   (concat (if insert-year entry-text
 		     (substring entry-text 6)) "\n"))) "\n"))))
-
-(defun ledger-expand-entry ()
-  (interactive)
-  (ledger-add-entry (prog1
-			(buffer-substring (line-beginning-position)
-					  (line-end-position))
-		      (delete-region (line-beginning-position)
-				     (1+ (line-end-position))))))
 
 (defun ledger-toggle-current ()
   (interactive)
@@ -184,11 +171,6 @@ Return the difference in the format of a time value."
 	  (insert " * ")
 	  (setq clear t))))
     clear))
-
-(defun ledger-print-result (command)
-  (interactive "sLedger command: ")
-  (shell-command (format "%s -f %s %s" ledger-binary-path
-			 buffer-file-name command)))
 
 (defvar ledger-mode-abbrev-table)
 
@@ -205,43 +187,128 @@ Return the difference in the format of a time value."
     (define-key map [(control ?c) (control ?y)] 'ledger-set-year)
     (define-key map [(control ?c) (control ?m)] 'ledger-set-month)
     (define-key map [(control ?c) (control ?c)] 'ledger-toggle-current)
-    (define-key map [(control ?c) (control ?p)] 'ledger-print-result)
     (define-key map [(control ?c) (control ?r)] 'ledger-reconcile)))
 
-(defun ledger-parse-entries (account &optional all-p)
-  (let (total entries)
-    (ledger-iterate-entries
-     (function
-      (lambda (start date mark desc)
-	(when (or all-p (not mark))
-	  (forward-line)
-	  (setq total 0.0)
-	  (while (looking-at
-		  (concat "\\s-+\\([A-Za-z_].+?\\)\\(\\s-*$\\|  \\s-*"
-			  "\\([^0-9]+\\)\\s-*\\([0-9,.]+\\)\\)?"
-			  "\\(\\s-+;.+\\)?$"))
-	    (let ((acct (match-string 1))
-		  (amt (match-string 4)))
-	      (when amt
-		(while (string-match "," amt)
-		  (setq amt (replace-match "" nil nil amt)))
-		(setq amt (string-to-number amt)
-		      total (+ total amt)))
-	      (if (string= account acct)
-		  (setq entries
-			(cons (list (copy-marker start)
-				    mark date desc (or amt total))
-			      entries)
-			all-p t)))
-	    (forward-line))))))
-    entries))
+;; Reconcile mode
 
-(defvar ledger-reconcile-text "Reconcile")
+(defvar ledger-buf nil)
+(defvar ledger-acct nil)
+
+(defun ledger-display-balance ()
+  (let ((buffer ledger-buf)
+	(account ledger-acct))
+    (with-temp-buffer
+      (let ((exit-code (ledger-run-ledger buffer "-C" "balance" account)))
+	(if (/= 0 exit-code)
+	    (message "Error determining cleared balance")
+	  (goto-char (point-min))
+	  (delete-horizontal-space)
+	  (skip-syntax-forward "^ ")
+	  (message "Cleared balance = %s"
+		   (buffer-substring-no-properties (point-min) (point))))))))
+
+(defun ledger-reconcile-toggle ()
+  (interactive)
+  (let ((where (get-text-property (point) 'where))
+	(account ledger-acct)
+	(inhibit-read-only t)
+	cleared)
+    (with-current-buffer ledger-buf
+      (goto-char where)
+      (setq cleared (ledger-toggle-current)))
+    (if cleared
+	(add-text-properties (line-beginning-position)
+			     (line-end-position)
+			     (list 'face 'bold))
+      (remove-text-properties (line-beginning-position)
+			      (line-end-position)
+			      (list 'face)))
+    (forward-line)))
+
+(defun ledger-auto-reconcile (balance date)
+  (interactive "sReconcile to balance: \nsStatement date: ")
+  (let ((buffer ledger-buf)
+	(account ledger-acct) cleared)
+    ;; attempt to auto-reconcile in the background
+    (with-temp-buffer
+      (let ((exit-code
+	     (ledger-run-ledger
+	      buffer "--format" "\"%B\\n\"" "--reconcile"
+	      (with-temp-buffer
+		(insert balance)
+		(goto-char (point-min))
+		(while (re-search-forward "\\([&$]\\)" nil t)
+		  (replace-match "\\\\\\1"))
+		(buffer-string))
+	      "--reconcile-date" date "register" account)))
+	(when (= 0 exit-code)
+	  (goto-char (point-min))
+	  (unless (looking-at "[0-9]")
+	    (error (buffer-string)))
+	  (while (not (eobp))
+	    (setq cleared
+		  (cons (1+ (read (current-buffer))) cleared))
+	    (forward-line)))))
+    (goto-char (point-min))
+    (with-current-buffer ledger-buf
+      (setq cleared (mapcar 'copy-marker (nreverse cleared))))
+    (let ((inhibit-redisplay t))
+      (dolist (pos cleared)
+	(while (and (not (eobp))
+		    (/= pos (get-text-property (point) 'where)))
+	  (forward-line))
+	(unless (eobp)
+	  (ledger-reconcile-toggle))))
+    (goto-char (point-min))))
+
+(defun ledger-reconcile-save ()
+  (interactive)
+  (with-current-buffer ledger-buf
+    (write-region (point-min) (point-max) (buffer-file-name) nil 1)
+    (set-buffer-modified-p nil))
+  (set-buffer-modified-p nil)
+  (ledger-display-balance))
+
+(defun ledger-reconcile (account)
+  (interactive "sAccount to reconcile: ")
+  (let* ((buf (current-buffer))
+	 (items
+	  (with-temp-buffer
+	    (let ((exit-code
+		   (ledger-run-ledger buf "--reconcilable" "emacs" account)))
+	      (when (= 0 exit-code)
+		(goto-char (point-min))
+		(unless (looking-at "(")
+		  (error (buffer-string)))
+		(read (current-buffer)))))))
+    (with-current-buffer
+	(pop-to-buffer (generate-new-buffer "*Reconcile*"))
+      (ledger-reconcile-mode)
+      (set (make-local-variable 'ledger-buf) buf)
+      (set (make-local-variable 'ledger-acct) account)
+      (dolist (item items)
+	(dolist (xact (nthcdr 5 item))
+	  (let ((beg (point)))
+	    (insert (format "%s %-30s %-25s %15s\n"
+			    (format-time-string "%m/%d" (nth 2 item))
+			    (nth 4 item) (nth 0 xact) (nth 1 xact)))
+	    (if (nth 1 item)
+		(set-text-properties beg (1- (point))
+				     (list 'face 'bold
+					   'where (nth 0 item)))
+	      (set-text-properties beg (1- (point))
+				   (list 'where (nth 0 item)))))))
+      (goto-char (point-min))
+      (set-buffer-modified-p nil)
+      (toggle-read-only t))))
+
 (defvar ledger-reconcile-mode-abbrev-table)
 
-(define-derived-mode ledger-reconcile-mode text-mode 'ledger-reconcile-text
+(define-derived-mode ledger-reconcile-mode text-mode "Reconcile"
   "A mode for reconciling ledger entries."
   (let ((map (make-sparse-keymap)))
+    (define-key map [(control ?c) (control ?r)] 'ledger-auto-reconcile)
+    (define-key map [(control ?x) (control ?s)] 'ledger-reconcile-save)
     (define-key map [? ] 'ledger-reconcile-toggle)
     (define-key map [?q]
       (function
@@ -250,103 +317,7 @@ Return the difference in the format of a time value."
 	 (kill-buffer (current-buffer)))))
     (use-local-map map)))
 
-(add-to-list 'minor-mode-alist
-	     '(ledger-reconcile-mode ledger-reconcile-text))
-
-(defvar ledger-buf nil)
-(defvar ledger-acct nil)
-
-(defun ledger-update-balance-display ()
-  (let ((account ledger-acct))
-    (with-temp-buffer
-      (let ((exit-code (ledger-run-ledger "-C" "balance"
-					  (concat "\"" account "\""))))
-	(if (/= 0 exit-code)
-	    (setq ledger-reconcile-text "Reconcile [ERR]")
-	  (goto-char (point-min))
-	  (delete-horizontal-space)
-	  (skip-syntax-forward "^ ")
-	  (setq ledger-reconcile-text
-		(concat "Reconcile ["
-			(buffer-substring-no-properties (point-min) (point))
-			"]"))))))
-  (force-mode-line-update))
-
-(defun ledger-reconcile-toggle (&optional no-update)
-  (interactive)
-  (let ((where (get-text-property (point) 'where))
-	(account ledger-acct)
-	cleared)
-    (with-current-buffer ledger-buf
-      (goto-char where)
-      (setq cleared (ledger-toggle-current))
-      (save-buffer))
-    (if cleared
-	(add-text-properties (line-beginning-position)
-			     (line-end-position)
-			     (list 'face 'bold))
-      (remove-text-properties (line-beginning-position)
-			      (line-end-position)
-			      (list 'face)))
-    (forward-line)
-    (unless no-update
-      (ledger-update-balance-display))))
-
-(defun ledger-reconcile (account &optional arg)
-  (interactive "sAccount to reconcile: \nP")
-  (let* ((items (save-excursion
-		  (goto-char (point-min))
-		  (ledger-parse-entries account)))
-	 (buf (current-buffer)))
-    (with-current-buffer
-	(pop-to-buffer (generate-new-buffer "*Reconcile*"))
-      (ledger-reconcile-mode)
-      (set (make-local-variable 'ledger-buf) buf)
-      (set (make-local-variable 'ledger-acct) account)
-      (ledger-update-balance-display)
-      (dolist (item items)
-	(let ((beg (point)))
-	  (insert (format "%s %-30s %8.2f\n"
-			  (format-time-string "%Y/%m/%d" (nth 2 item))
-			  (nth 3 item) (nth 4 item)))
-	  (if (nth 1 item)
-	      (set-text-properties beg (1- (point))
-				   (list 'face 'bold
-					 'where (nth 0 item)))
-	    (set-text-properties beg (1- (point))
-				 (list 'where (nth 0 item)))))
-	(goto-char (point-min)))
-      (when arg
-	(let (cleared)
-	  ;; attempt to auto-reconcile in the background
-	  (with-temp-buffer
-	    (let ((exit-code
-		   (ledger-run-ledger
-		    "--format" "\"%B\\n\"" "reconcile"
-		    (concat "\"" account "\"")
-		    (with-temp-buffer
-		      (insert (read-string "Reconcile account to: "))
-		      (goto-char (point-min))
-		      (while (re-search-forward "\\([&$]\\)" nil t)
-			(replace-match "\\\\\\1"))
-		      (buffer-string)))))
-	      (when (= 0 exit-code)
-		(goto-char (point-min))
-		(while (not (eobp))
-		  (setq cleared
-			(cons (1+ (read (current-buffer))) cleared))
-		  (forward-line)))))
-	  (goto-char (point-min))
-	  (with-current-buffer buf
-	    (setq cleared (mapcar 'copy-marker (nreverse cleared))))
-	  (dolist (pos cleared)
-	    (while (and (not (eobp))
-			(/= pos (get-text-property (point) 'where)))
-	      (forward-line))
-	    (unless (eobp)
-	      (ledger-reconcile-toggle t)))
-	  (goto-char (point-min))
-	  (ledger-update-balance-display))))))
+;; A sample function for $ users
 
 (defun ledger-align-dollars (&optional column)
   (interactive "p")
@@ -372,14 +343,16 @@ Return the difference in the format of a time value."
 	  (insert "  ")))
       (forward-line))))
 
-(defun ledger-run-ledger (&rest args)
+;; General helper functions
+
+(defun ledger-run-ledger (buffer &rest args)
   "run ledger with supplied arguments"
-  (let ((command
-	 (mapconcat 'identity
-		    (append (list ledger-binary-path
-				  "-f" ledger-data-file) args) " ")))
-    (insert (shell-command-to-string command)))
-  0)
+  (let ((buf (current-buffer)))
+    (with-current-buffer buffer
+      (apply #'call-process-region
+	     (append (list (point-min) (point-max)
+			   ledger-binary-path nil buf nil "-f" "-")
+		     args)))))
 
 (defun ledger-set-year (newyear)
   "Set ledger's idea of the current year to the prefix argument."
