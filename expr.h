@@ -65,7 +65,7 @@ struct node_t
   mask_t *    mask;
 
   node_t(const kind_t _type)
-    : type(_type), left(NULL), right(NULL) {}
+    : type(_type), left(NULL), right(NULL), mask(NULL) {}
 
   ~node_t() {
     if (mask)  delete mask;
