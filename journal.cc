@@ -631,12 +631,7 @@ void export_journal()
     .def_readonly("sources", &journal_t::sources)
 
     .def("__len__", entries_len)
-#if 0
     .def("__getitem__", entries_getitem, return_internal_reference<1>())
-#else
-    .def("__getitem__", entries_getitem,
-	 return_value_policy<reference_existing_object>())
-#endif
     .def("add_account", &journal_t::add_account)
     .def("remove_account", &journal_t::remove_account)
     .def("find_account", py_find_account_1, return_internal_reference<1>())

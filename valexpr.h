@@ -120,15 +120,18 @@ struct value_expr_t
   void compute(value_t& result, const details_t& details) const;
 };
 
-value_expr_t * parse_value_expr(std::istream& in);
+value_expr_t * parse_value_expr(std::istream& in,
+				const bool partial = false);
 
-inline value_expr_t * parse_value_expr(const char * p) {
+inline value_expr_t * parse_value_expr(const char * p,
+				       const bool partial = false) {
   std::istringstream stream(p);
-  return parse_value_expr(stream);
+  return parse_value_expr(stream, partial);
 }
 
-inline value_expr_t * parse_value_expr(const std::string& str) {
-  return parse_value_expr(str.c_str());
+inline value_expr_t * parse_value_expr(const std::string& str,
+				       const bool partial = false) {
+  return parse_value_expr(str.c_str(), partial);
 }
 
 #ifdef DEBUG_ENABLED

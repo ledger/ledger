@@ -171,23 +171,17 @@ void config_t::process_options(const std::string&     command,
   try {
     if (! format_t::amount_expr)
       format_t::amount_expr = parse_value_expr(amount_expr);
-    if (! format_t::amount_expr)
-      throw value_expr_error(std::string("Failed to parse '") +
-			     amount_expr + "'");
   }
   catch (const value_expr_error& err) {
-    throw error(std::string("In value expression to -t: ") + err.what());
+    throw error(std::string("In amount expression (-t): ") + err.what());
   }
 
   try {
     if (! format_t::total_expr)
       format_t::total_expr = parse_value_expr(total_expr);
-    if (! format_t::total_expr)
-      throw value_expr_error(std::string("Failed to parse '") +
-			     total_expr + "'");
   }
   catch (const value_expr_error& err) {
-    throw error(std::string("In value expression to -T: ") + err.what());
+    throw error(std::string("In total expression (-T): ") + err.what());
   }
 
   // If downloading is to be supported, configure the updater
@@ -197,7 +191,7 @@ void config_t::process_options(const std::string&     command,
 						pricing_leeway,
 						cache_dirty);
 
-  if (format_t::date_format.empty() && ! date_format.empty())
+  if (! date_format.empty())
     format_t::date_format = date_format;
 }
 

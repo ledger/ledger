@@ -361,6 +361,8 @@ void walk_accounts(account_t&		    account,
 {
   if (! sort_string.empty()) {
     std::auto_ptr<value_expr_t> sort_order(parse_value_expr(sort_string));
+    if (! sort_order.get())
+      throw error(std::string("Sort string failed to parse: " + sort_string));
     walk_accounts(account, handler, sort_order.get());
   } else {
     walk_accounts(account, handler);

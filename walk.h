@@ -182,8 +182,15 @@ class sort_transactions : public item_handler<transaction_t>
 
   sort_transactions(item_handler<transaction_t> * handler,
 		    const std::string& _sort_order)
-    : item_handler<transaction_t>(handler),
-      sort_order(parse_value_expr(_sort_order)), allocated(true) {}
+    : item_handler<transaction_t>(handler), allocated(true) {
+    try {
+      sort_order = parse_value_expr(_sort_order);
+    }
+    catch (value_expr_error& err) {
+      throw value_expr_error(std::string("In sort string '") + _sort_order +
+			     "': " + err.what());
+    }
+  }
 
   virtual ~sort_transactions() {
     assert(sort_order);

@@ -474,10 +474,10 @@ value_expr_t * parse_value_term(std::istream& in)
     node.reset(new value_expr_t(value_expr_t::F_VALUE));
     if (peek_next_nonws(in) == '(') {
       in.get(c);
-      node->left = parse_value_expr(in);
+      node->left = parse_value_expr(in, true);
       if (peek_next_nonws(in) == ',') {
 	in.get(c);
-	node->right = parse_value_expr(in);
+	node->right = parse_value_expr(in, true);
       }
       if (peek_next_nonws(in) == ')')
 	in.get(c);
@@ -527,12 +527,12 @@ value_expr_t * parse_value_term(std::istream& in)
     in.get(c);
     node.reset(new value_expr_t(value_expr_t::F_INTERP_FUNC));
     node->constant_s = buf;
-    node->right = parse_value_expr(in);
+    node->right = parse_value_expr(in, true);
     break;
   }
 
   case '(':
-    node.reset(parse_value_expr(in));
+    node.reset(parse_value_expr(in, true));
     if (peek_next_nonws(in) == ')')
       in.get(c);
     else
@@ -687,7 +687,7 @@ value_expr_t * parse_logic_expr(std::istream& in)
   return node.release();
 }
 
-value_expr_t * parse_value_expr(std::istream& in)
+value_expr_t * parse_value_expr(std::istream& in, const bool partial)
 {
   std::auto_ptr<value_expr_t> node(parse_logic_expr(in));
 
@@ -735,6 +735,20 @@ value_expr_t * parse_value_expr(std::istream& in)
 	break;
       }
       c = peek_next_nonws(in);
+    }
+  }
+
+  if (! partial) {
+    char c;
+    in.get(c);
+    if (! node.get()) {
+      if (in.eof())
+	throw value_expr_error(std::string("Failed to parse value expression"));
+      else
+	throw value_expr_error(std::string("Unexpected character '") + c + "'");
+    } else if (! in.eof()) {
+      throw value_expr_error(std::string("Unexpected character '") +
+			     c + "'");
     }
   }
 
@@ -915,9 +929,14 @@ value_t py_compute(value_expr_t& value_expr, const T& item)
   return result;
 }
 
-value_expr_t * py_parse_value_expr(const std::string& str)
+value_expr_t * py_parse_value_expr_1(const std::string& str)
 {
   return parse_value_expr(str);
+}
+
+value_expr_t * py_parse_value_expr_2(const std::string& str, const bool partial)
+{
+  return parse_value_expr(str, partial);
 }
 
 void export_valexpr()
@@ -943,7 +962,9 @@ void export_valexpr()
     .def("compute", py_compute<transaction_t>)
     ;
 
-  def("parse_value_expr", py_parse_value_expr,
+  def("parse_value_expr", py_parse_value_expr_1,
+      return_value_policy<manage_new_object>());
+  def("parse_value_expr", py_parse_value_expr_2,
       return_value_policy<manage_new_object>());
 
   class_< item_predicate<transaction_t> >

@@ -14,7 +14,7 @@ std::string truncated(const std::string& str, unsigned int width)
   return buf;
 }
 
-std::string partial_account_name(const account_t&  account)
+std::string partial_account_name(const account_t& account)
 {
   std::string name;
 
@@ -135,8 +135,14 @@ element_t * format_t::parse_elements(const std::string& fmt)
       if (*p != ')')
 	throw format_error("Missing ')'");
 
-      current->type     = element_t::VALUE_EXPR;
-      current->val_expr = parse_value_expr(std::string(b, p));
+      current->type = element_t::VALUE_EXPR;
+      try {
+	current->val_expr = parse_value_expr(std::string(b, p));
+      }
+      catch (value_expr_error& err) {
+	throw value_expr_error(std::string("In format expression '") +
+			       std::string(b, p) + "': " + err.what());
+      }
       break;
     }
 
@@ -210,11 +216,12 @@ void format_t::format(std::ostream& out, const details_t& details) const
       case element_t::AMOUNT: expr = amount_expr; break;
       case element_t::TOTAL:  expr = total_expr; break;
       case element_t::VALUE_EXPR: expr = elem->val_expr; break;
-
       default:
 	assert(0);
 	break;
       }
+      if (! expr)
+	break;
       value_t value;
       expr->compute(value, details);
       switch (value.type) {
