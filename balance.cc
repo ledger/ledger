@@ -43,7 +43,7 @@ void report_balances(std::ostream& out, std::vector<entry *>& ledger,
   std::cout.width(10);
   std::cout << std::right << "Cleared" << std::endl;
 
-  for (std::map<const std::string, account *>::iterator i = accounts.begin();
+  for (accounts_iterator i = accounts.begin();
        i != accounts.end();
        i++) {
     if (! show_empty && ! (*i).second->future)
@@ -108,13 +108,12 @@ void report_balances(std::ostream& out, std::vector<entry *>& ledger,
 #if 0
   if (regexps.empty()) {
 #endif
-    // jww (2003-09-29): Let `totals' be streamed
-    future_balance.print(std::cout);
-    std::cout << "  ";
-    current_balance.print(std::cout);
-    std::cout << "  ";
-    cleared_balance.print(std::cout);
-    std::cout << std::endl;
+    std::cout.width(10);
+    std::cout << std::right << future_balance << "  ";
+    std::cout.width(10);
+    std::cout << std::right << current_balance << "  ";
+    std::cout.width(10);
+    std::cout << std::right << cleared_balance << std::endl;
 #if 0
   }
 #endif

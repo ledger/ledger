@@ -89,7 +89,7 @@ totals::operator bool() const
 void totals::print(std::ostream& out) const
 {
  for (const_iterator_t i = amounts.begin(); i != amounts.end(); i++)
-   std::cout << (*i).first << " = " << *((*i).second) << std::endl;
+   std::cout << (*i).first << " = " << *((*i).second);
 }
 
 amount * totals::value(const std::string& commodity)

@@ -1,5 +1,5 @@
 #ifndef _LEDGER_H
-#define _LEDGER_H "$Revision: 1.1 $"
+#define _LEDGER_H "$Revision: 1.2 $"
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -209,6 +209,13 @@ class totals
     return amounts[comm];
   }
 };
+
+template<class Traits>
+std::basic_ostream<char, Traits> &
+operator<<(std::basic_ostream<char, Traits>& out, const totals& t) {
+  t.print(out);
+  return out;
+}
 
 struct account
 {
