@@ -3,6 +3,7 @@
 
 #include "amount.h"
 #include "balance.h"
+#include "debug.h"
 
 namespace ledger {
 

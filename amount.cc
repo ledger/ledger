@@ -2,6 +2,7 @@
 #include "binary.h"
 #include "error.h"
 #include "util.h"
+#include "debug.h"
 
 #include <deque>
 

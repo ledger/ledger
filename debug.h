@@ -104,6 +104,8 @@ bool _debug_active(const char * const cls);
 #define DEBUG_() 0
 #define DEBUG_PRINT(cls, x)
 #define DEBUG_PRINT_(x)
+#define DEBUG_PRINT_TIME(cls, x)
+#define DEBUG_PRINT_TIME_(x)
 
 #define VALIDATE(x)
 

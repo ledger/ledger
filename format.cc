@@ -184,7 +184,7 @@ void format_t::format_elements(std::ostream&    out,
     case element_t::VALUE:
     case element_t::TOTAL:
     case element_t::VALUE_EXPR: {
-      value_expr_t * expr;
+      value_expr_t * expr = NULL;
       switch (elem->type) {
 #ifdef NO_CLEANUP
       case element_t::VALUE: expr = value_expr; break;

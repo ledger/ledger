@@ -1,5 +1,6 @@
 #include "quotes.h"
 #include "datetime.h"
+#include "debug.h"
 
 #include <fstream>
 
