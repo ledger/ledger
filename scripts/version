@@ -1,5 +1,0 @@
-#!/bin/sh
-
-cat ledger.cc | \
-    grep "^const std::string version" | \
-    sed 's/const std::string version = "\([0-9.A-Za-z]*\)";/\1/'
