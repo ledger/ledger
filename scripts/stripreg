@@ -1,0 +1,16 @@
+#!/usr/bin/python
+
+import sys
+import re
+
+print_total = 0
+
+def clean(num):
+    return float(re.sub("(\s+|\$|,)","",num))
+
+for line in sys.stdin:
+    print line[:10],
+    if print_total:
+	print clean(line[68:80])
+    else:
+	print clean(line[55:67])
