@@ -130,7 +130,8 @@
 	indent-tabs-mode nil)
   (let ((map (current-local-map)))
     (define-key map [(control ?c) (control ?a)] 'ledger-add-entry)
-    (define-key map [(control ?c) (control ?c)] 'ledger-toggle-current)))
+    (define-key map [(control ?c) (control ?c)] 'ledger-toggle-current)
+    (define-key map [(control ?c) (control ?r)] 'ledger-reconcile)))
 
 (defun ledger-parse-entries (account &optional all-p after-date)
   (let (total entries)

@@ -1,57 +1,70 @@
-\input texinfo    @c -*-texinfo-*-
-@comment $Id: ledger.texi,v 1.11 2003/10/10 19:12:31 johnw Exp $
-@comment %**start of header
+\input texinfo  @c -*-texinfo-*-
 
 @setfilename ledger.info
+@settitle Ledger: Command-Line Accounting
 
-@settitle Ledger Accouting Tool
-@syncodeindex pg cp
-@comment %**end of header
+@documentencoding iso-8859-1
 
-@dircategory Ledger Accouting Tool
-@direntry
-* ledger:    (ledger)The Ledger Accouting Tool.
-@end direntry
+@iftex
+@finalout
+@end iftex
 
 @titlepage
-@title Ledger Accouting Tool
-@author John Wiegley <@email{johnw@@newartisans.com}>
-@page
-@vskip 0pt plus 1filll
-@c @insertcopying
+@title Ledger: Command-Line Accounting
+@author John Wiegley
 @end titlepage
 
-@contents
+@node Top, Building, (dir), (dir)
+@top Overview
+@c Page published by Emacs Muse begins here
 
-@ifnottex
-@node Top, Introduction, (dir), (dir)
-@top Ledger Accouting Tool
 
-@c @insertcopying
-@end ifnottex
 
 @menu
-* Introduction::                
-* Keeping a ledger::            
+* Building::			
+* Introduction::		
+* Keeping a ledger::		
+* Using the Ledger Tool::	
+* An easy way to add new entries::  
+* Using Emacs to Keep Your Ledger::  
 * Using GnuCash to Keep Your Ledger::  
 @end menu
 
-@node Introduction, Keeping a ledger, Top, Top
+@node Building, Introduction, Top, Top
+@chapter Building
+
+Welcome to ledger, a command-line accounting program that uses a
+text-based ledger file, yet provides full double-entry accounting, use
+of commodities, unlimited accounts, etc.
+
+Ledger is written in ANSI C++, and should compile on any platform.  It
+only depends on the GNU multiprecision integer library (gmp, or
+libgmp), and the Perl regular expression library (pcre, or libpcre).
+Also, this project was developed using GNU make and gcc 3.3.
+
+To build and install, once you have these libraries on your system,
+enter these commands:
+
+@example
+make
+cp ledger /usr/local/bin
+@end example
+
+@node Introduction, Keeping a ledger, Building, Top
 @chapter Introduction
 
-@code{ledger} is an accouting tool that has the chutzpah to exist.  It
-provides not one bell or whistle for the money, and returns the user
-to the days before user interfaces were even a twinkle in their
-father's CRT.
+Ledger is an accounting tool with the moxie to exist.  It provides not
+one bell or whistle for the money, and returns the user to the days
+before user interfaces were even a twinkle in their father's CRT.
 
-What it does do is provide a double-entry accouting ledger with all of
-the flexibility and muscle of its modern day cousins---without any of
-the fat.  Think of it as the bran muffin of accouting tools.
+What it does do is provide a double-entry accounting ledger with all
+of the flexibility and muscle of its modern day cousins---without any
+of the fat.  Think of it as the bran muffin of accounting tools.
 
 To begin with, you need to start keeping a ledger.  This is the basis
-of all accouting, and if you don't know how to do it, now is the time
+of all accounting, and if you don't know how to do it, now is the time
 to learn.  The little booklet that comes with your checkbook is a
-ledger, so we'll describe double-entry accouting in terms of that.
+ledger, so we'll describe double-entry accounting in terms of that.
 
 A checkbook ledger records debits (subtractions, or withdrawals) and
 credits (additions, or deposits) with reference to a single account:
@@ -68,7 +81,7 @@ into virtual savings account without having to physically move the
 money around; etc.  As you keep your checkbook ledger, you are
 recording a lot of information about your life and your habits, and
 sometimes that information can tell you things you aren't even aware
-of.  That is the aim of all good accouting tools.
+of.  That is the aim of all good accounting tools.
 
 The next step up from a checkbook ledger is a ledger that covers all
 of your accounts, not just your checking account.  In this ledger, you
@@ -77,13 +90,13 @@ where the money is coming from.  In the checkbook ledger, its assumed
 that all of the money is coming from your checking account.  But in a
 general ledger, you have to write two-lines: The source and target.
 There must always be a debit from some account for any credit made to
-anyone else.  This is what is meant by ``double-entry'' accouting.
+anyone else.  This is what is meant by ``double-entry'' accounting.
 
 For example, let's say you have a checking account and a brokerage
 account, and that you can write checks from both of them.  Rather than
 keeping two checkbooks, you decide to use one ledger for both.  Once
 you get the hang of this, you'll be ready to use one ledger for all of
-your accouting needs, which gets you to the point of this
+your accounting needs, which gets you to the point of this
 introduction.
 
 So in your general ledger, you need to pay Pacific Bell Telephone for
@@ -92,7 +105,7 @@ you would write out a line that credits your account with Pacific Bell
 by $23 as follows:
 
 @example
-9/29  100  Pacific Bell                        $23.00     $77.00
+9/29  100  Pacific Bell                $23.00     $77.00
 @end example
 
 Very simple: You've written check #100 for $23 to Pacific Bell, which
@@ -102,17 +115,17 @@ But in a general ledger, you need to say where the money is coming
 from.  A general ledger entry would look like this:
 
 @example
-9/29  100  Pacific Bell                        $23.00    $223.00
-	   Checking                           $-23.00     $77.00
+9/29  100  Pacific Bell                $23.00    $223.00
+           Checking                   $-23.00     $77.00
 @end example
 
 What does all of this mean?  The first line shows a credit (or
 payment) to Pacific Bell to the tune of $23.00.  Then, because there
 is no one ``balance'' in a general ledger, we've written in the total
-balance of your payments to the account ``Pacific Bell''.  This was
-done by looking at the last entry for ``Pacific Bell'' in the general
-ledger, adding $23.00 to that amount, and writing in the total in the
-balance column.
+balance of your payments to the account ``Pacific Bell''.  This was done
+by looking at the last entry for ``Pacific Bell'' in the general ledger,
+adding $23.00 to that amount, and writing in the total in the balance
+column.
 
 Secondly, the money is coming from your ``Checking'' account, which
 means a debit (or withdrawal) of $23.00, which will leave the ending
@@ -122,8 +135,8 @@ The transaction itself must balance to $0: $23 goes to Pacific Bell,
 $23 comes from Checking: there is nothing left over to be accounted
 for.  The money has in fact moved from one account to another.  This
 is basis of double-entry accounting: That money never pops out of
-existence, it is always described as a transaction between
-accounts---as a flow from one place to another.
+existence, it is always described as a transaction between accounts---
+as a flow from one place to another.
 
 Keeping a general ledger is the same as keeping two separate ledgers:
 One for Pacific Bell and one for Checking.  In that case, each time
@@ -133,19 +146,18 @@ since you don't have to go looking back for the last time an account
 was referenced, but it also means having a lot of ledger books if you
 deal with multiple accounts.
 
-Enter the beauty of a computerized accouting tool.  The purpose of
-@code{ledger} is to make general ledger accouting simple by keeping
-track of the balances for you.  Your only job is to enter credit/debit
-pairs and make sure they balance.  If a transaction does not balance,
-@code{ledger} will display an error and ignore the
-transaction.@footnote{In some special cases, it will automatically
-balance the entry for you.}
+Enter the beauty of a computerized accounting tool.  The purpose of
+Ledger is to make general ledger accounting simple by keeping track of
+the balances for you.  Your only job is to enter credit/debit pairs
+and make sure they balance.  If a transaction does not balance, Ledger
+will display an error and ignore the transaction.@footnote{In some special cases, it will automatically balance the entry
+for you.}
 
-Your usage of @code{ledger} will have two parts: Keeping the ledger,
-and using the @code{ledger} tool to provide you with information
-summaries derived from your ledger's entries.
+Your usage of Ledger will have two parts: Keeping the ledger, and
+using the Ledger tool to provide you with information summaries
+derived from your ledger's entries.
 
-@node Keeping a ledger, Using GnuCash to Keep Your Ledger, Introduction, Top
+@node Keeping a ledger, Using the Ledger Tool, Introduction, Top
 @chapter Keeping a ledger
 
 The most important part of accounting is keeping a good ledger.  If
@@ -154,29 +166,28 @@ mathematically tricks you need to better understand your spending
 patterns.  Without a good ledger, no tool, however smart, can help
 you.
 
-The @code{ledger} program aims at making ledger entry as simple as
-possible.  Since it is a command-line tool, it does not provide a user
-interface for keeping a ledger.  If you like, you may use
-@code{gnucash} to maintain your ledger, in which case the
-@code{ledger} program will read @code{gnucash}'s data files directly.
-In that case, read the @code{gnucash} manual now, and skip to the next
-chapter.
+The Ledger program aims at making ledger entry as simple as possible.
+Since it is a command-line tool, it does not provide a user interface
+for keeping a ledger.  If you like, you may use Gnucash to maintain
+your ledger, in which case the Ledger program will read Gnucash's data
+files directly.  In that case, read the Gnucash manual now, and skip
+to the next chapter.
 
-If you are not using @code{gnucash}, but a text editor to maintain
-your ledger, read on.  @code{ledger} has been designed to make data
-entry as simple as possible, by keeping the ledger format easy, and
-also by automagically determining as much information as possible
-based on the nature of your entries.
+If you are not using Gnucash, but a text editor to maintain your
+ledger, read on.  Ledger has been designed to make data entry as
+simple as possible, by keeping the ledger format easy, and also by
+automagically determining as much information as possible based on the
+nature of your entries.
 
-For example, you do not need to tell @code{ledger} about the accounts
-you use.  Any time @code{ledger} sees a debit or a credit to an
-account it knows nothing about, it will create it.  If you use a
-commodity that is new to @code{ledger}, it will create that commodity,
-and determine its display characteristics (placement of the symbol
-before or after the amount, display precision, etc) based on how you
-used the commodity in the transaction.
+For example, you do not need to tell Ledger about the accounts you
+use.  Any time Ledger sees a debit or a credit to an account it knows
+nothing about, it will create it.  If you use a commodity that is new
+to Ledger, it will create that commodity, and determine its display
+characteristics (placement of the symbol before or after the amount,
+display precision, etc) based on how you used the commodity in the
+transaction.
 
-Here is the Pacific Bell example from above, given as a @code{ledger}
+Here is the Pacific Bell example from above, given as a Ledger
 transaction:
 
 @example
@@ -187,9 +198,9 @@ transaction:
 
 As you can see, it is very similar to what would be written on paper,
 minus the computed balance totals, and adding in account names that
-work better with @code{ledger}'s scheme of things.  In fact, since
-@code{ledger} is smart about many things, you don't need to specify
-the balanced amount, if it is the same as the first line:
+work better with Ledger's scheme of things.  In fact, since Ledger is
+smart about many things, you don't need to specify the balanced
+amount, if it is the same as the first line:
 
 @example
 9/29  (100)  Pacific Bell
@@ -197,15 +208,14 @@ the balanced amount, if it is the same as the first line:
     Assets:Checking
 @end example
 
-For this entry, @code{ledger} will figure out that $-23.00 must come
-from ``Assets:Checking'' in order to balance the entry.
+For this entry, Ledger will figure out that $-23.00 must come from
+``Assets:Checking'' in order to balance the entry.
 
 @menu
-* Credits and Debits::          
-* Commodities and Currencies::  
-* Accounts and Inventories::    
-* Understanding Equity::        
-* Automated transactions::      
+* Credits and Debits::		
+* Commodities and Currencies::	
+* Accounts and Inventories::	
+* Understanding Equity::	
 @end menu
 
 @node Credits and Debits, Commodities and Currencies, Keeping a ledger, Keeping a ledger
@@ -220,17 +230,17 @@ of view, it debits your checking account every time you use it.
 
 The credit card is strangely named, because you have to look at it
 from the merchant's point of view: Every time you use it, it credit's
-@emph{his} account right away.  This was a giant leap from the days of
-cash and checks, when the only other way to supply immediate credit
-was by a wire transfer.  But a credit card does not credit you
-anything at all.  In fact, from your point of view, it should be
-called a liability card, since it increases your liability to the
-issuing bank every time you use it.
+@emph{his} account right away.  This was a giant leap from the days of cash
+and checks, when the only other way to supply immediate credit was by
+a wire transfer.  But a credit card does not credit you anything at
+all.  In fact, from your point of view, it should be called a
+liability card, since it increases your liability to the issuing bank
+every time you use it.
 
-In @code{ledger}, credits and debits are given as they are, which
-means that sometimes you will see a minus sign where you don't expect
-one.  For example, when you get paid, in order to credit your bank
-account, you need to debit an income account:
+In Ledger, credits and debits are given as they are, which means that
+sometimes you will see a minus sign where you don't expect one.  For
+example, when you get paid, in order to credit your bank account, you
+need to debit an income account:
 
 @example
 9/29  My Employer
@@ -245,15 +255,15 @@ negative figure.  Isn't that the opposite of how it should look?
 
 It may take getting used to, but to properly use a general ledger you
 will need to think in terms of correct debits and credits.  Rather
-than @code{ledger} ``fixing'' the minus signs, let's understand why
-they are there.
+than Ledger ``fixing'' the minus signs, let's understand why they are
+there.
 
 When you earn money, the money has to come from somewhere.  Let's call
-that somewhere ``society''.  In order for society to give you an
-income, you must take money away from society (debit) in order to put
-it into your bank (credit).  When you then spend that money, it leaves
-your bank account (debit) and goes back to society (credit).  This is
-why Income will appear negative---it reflects the money you have drawn
+that somewhere ``society''.  In order for society to give you an income,
+you must take money away from society (debit) in order to put it into
+your bank (credit).  When you then spend that money, it leaves your
+bank account (debit) and goes back to society (credit).  This is why
+Income will appear negative---it reflects the money you have drawn
 from society---and why Expenses will be positive---it is the amount
 you've given back.  These credits and debits will always cancel each
 other out in the end, because you don't have the ability to create new
@@ -267,41 +277,41 @@ place has less money now than when you started your ledger; and every
 positive figure means that that account or person or place has more
 money now that when you started your ledger.  Make sense?
 
-Alos, credit cards will have a negative value, because you are
-spending @emph{from} them (debit) in order pay someone else (credit).
-They are called credit cards because you are able to instantly credit
-that other person, by simply waving a card.
+Also, credit cards will have a negative value, because you are
+spending @emph{from} them (debit) in order pay someone else (credit).  They
+are called credit cards because you are able to instantly credit that
+other person, by simply waving a card.
 
 @node Commodities and Currencies, Accounts and Inventories, Credits and Debits, Keeping a ledger
 @section Commodities and Currencies
 
-@code{ledger} makes no assumptions about the commodities you use; it
-only requires that you specify a commodity.  The commodity may be any
+Ledger makes no assumptions about the commodities you use; it only
+requires that you specify a commodity.  The commodity may be any
 non-numeric string that does not contain a period, comma, forward
-slash or at sign (@@).  It may appear before or after the amount,
-although it is assumed that symbols appearing before the amount refer
-to currencies, while non-joined symbols apearing after the amount
-refer to commodities.  Here are some valid currency and commodity
+slash or at-sign.  It may appear before or after the amount, although
+it is assumed that symbols appearing before the amount refer to
+currencies, while non-joined symbols appearing after the amount refer
+to commodities.  Here are some valid currency and commodity
 specifiers:
 
 @example
 $20.00         ; currency: twenty US dollars
 USD 20         ; currency: the same
-40 AAPL        ; commodity: 40 shares of Apple Computer stock
-DM 60          ; currency: 60 Deutsch Mark
+40 AAPL        ; commodity: 40 shares of Apple stock
+MD 60          ; currency: 60 Deutsch Mark
 £50            ; currency: 50 British pounds
-50e            ; currency: 50 Euros (use appropriate symbol)
+50e            ; currency: 50 Euros (use symbol)
 @end example
 
-@code{ledger} will examine the first use of any commodity to determine
-how that commodity should be printed on reports.  It pays attention to
+Ledger will examine the first use of any commodity to determine how
+that commodity should be printed on reports.  It pays attention to
 whether the name of commodity was separated from the amount, whether
 it came before or after, the precision used in specifying the amount,
 whether thousand marks were used, etc.  This is done so that printing
 the commodity looks the same as the way you use it.
 
 An account may contain multiple commodities, in which case it will
-have separate totals for each.  For example, if your brokage account
+have separate totals for each.  For example, if your brokerage account
 contains both cash, gold, and several stock quantities, the balance
 might look like:
 
@@ -333,7 +343,7 @@ FEQTX=$32
 Specify the prices file using the @samp{-p} option:
 
 @example
-/home/johnw $ ledger -f ledger.dat -p prices.db balance brokerage
+/home/johnw $ ledger -p prices.db balance brokerage
 @end example
 
 Now the balance for your brokerage account will be given in US
@@ -350,7 +360,7 @@ wanted to know many ounces of gold that would buy.  If gold is
 currently $357 per ounce, then each dollar is worth 1/357 AU:
 
 @example
-/home/johnw $ ledger -f ledger.dat -p "\$=0.00280112 AU" balance checking
+/home/johnw $ ledger -p "$=0.00280112 AU" balance checking
 @end example
 
 @example
@@ -367,7 +377,7 @@ Here is a sample prices database that uses chaining:
 AAPL=$15
 $=0.00280112 AU
 AU=300 Euro
-Euro=DM 0.75
+Euro=MD 0.75
 @end example
 
 This is a roundabout way of reporting AAPL shares in their Deutsch
@@ -376,12 +386,12 @@ Mark equivalent.
 @node Accounts and Inventories, Understanding Equity, Commodities and Currencies, Keeping a ledger
 @section Accounts and Inventories
 
-Since @code{ledger}'s accounts and commodity system is so flexible,
-you can have accounts that don't really exist, and use commodities
-that no one else recognizes.  For example, let's say you are buying
-and selling various items in EverQuest, and want to keep track of them
-using a ledger.  Just add items of whatever quantity you wish into
-your EverQuest account:
+Since Ledger's accounts and commodity system is so flexible, you can
+have accounts that don't really exist, and use commodities that no one
+else recognizes.  For example, let's say you are buying and selling
+various items in EverQuest, and want to keep track of them using a
+ledger.  Just add items of whatever quantity you wish into your
+EverQuest account:
 
 @example
 9/29  Get some stuff at the Inn
@@ -391,31 +401,31 @@ your EverQuest account:
 @end example
 
 Now your EverQuest:Inventory has 3 apples and 5 steaks in it.  The
-amounts are negative, because you are taking @emph{from} Black's
-Tavern in order to credit your Inventory account.  Note that you don't
-have to use ``Places:Black's Tavern'' as the source account.  You
-could use ``EverQuest:System'' to represent the fact that you acquired
-them online.  The only purpose for choosing one kind of source account
-over another is for generate more informative reports later on.  The
-more you know, the better analysis you can perform.
+amounts are negative, because you are taking @emph{from} Black's Tavern in
+order to credit your Inventory account.  Note that you don't have to
+use ``Places:Black's Tavern'' as the source account.  You could use
+``EverQuest:System'' to represent the fact that you acquired them
+online.  The only purpose for choosing one kind of source account over
+another is for generate more informative reports later on.  The more
+you know, the better analysis you can perform.
 
 If you later sell some of these items to another player, the entry
 would look like:
 
 @example
-10/2  Sturm Brightblade
+10/2  Strum Brightblade
     EverQuest:Inventory                     -2 Steaks
     EverQuest:Inventory                     15 Gold
 @end example
 
 Now you've turned 2 steaks into 15 gold, courtesy of your customer,
-Sturm Brightblade.
+Strum Brightblade.
 
-@node Understanding Equity, Automated transactions, Accounts and Inventories, Keeping a ledger
+@node Understanding Equity,  , Accounts and Inventories, Keeping a ledger
 @section Understanding Equity
 
-The most confusing entry in any ledger will be your equity
-account---because starting balances can't come out of nowhere.
+The most confusing entry in any ledger will be your equity account---
+because starting balances can't come out of nowhere.
 
 When you first start your ledger, you will likely already have money
 in some of your accounts.  Let's say there's $100 in your checking
@@ -450,25 +460,26 @@ Clear as mud?  Keep thinking about it.  Until you figure it out, put
 ``-- -Equity'' at the end of your balance command, to remove the
 confusing figure from the totals.
 
-@chapter Using the @code{ledger} Tool
+@node Using the Ledger Tool, An easy way to add new entries, Keeping a ledger, Top
+@chapter Using the Ledger Tool
 
 Now that you have an orderly and well-organized general ledger, it's
 time to start generating some orderly and well-organized reports.
-This is where the @code{ledger} tool comes in.  With it, you can
-balance your checkbook, see where your money is going, tell whether
-you've made a profit this year, and even compute the present day value
-of your retirement accounts.  And all with the simplest of interfaces:
-the command-line.
+This is where the Ledger tool comes in.  With it, you can balance your
+checkbook, see where your money is going, tell whether you've made a
+profit this year, and even compute the present day value of your
+retirement accounts.  And all with the simplest of interfaces: the
+command-line.
 
-The most often used command will be the @code{balance} command:
+The most often used command will be the ``balance'' command:
 
 @example
-/home/johnw $ export LEDGER=/home/johnw/doc/finance/ledger.dat
+/home/johnw $ export LEDGER=/home/johnw/doc/ledger.dat
 /home/johnw $ ledger balance
 @end example
 
-Here I've set my @code{LEDGER} environment variable to point to where
-my ledger file is hiding.  Thereafter, I needn't specify it again.
+Here I've set my Ledger environment variable to point to where my
+ledger file is hiding.  Thereafter, I needn't specify it again.
 
 The balance command prints out the summarized balances of all my
 top-level accounts, excluding sub-accounts.  In order to see the
@@ -503,23 +514,30 @@ food spending:
 @end example
 
 If you want to show all accounts but for one account, remember to use
-@samp{--} to separate the exclusion pattern from the options list:
+``--'' to separate the exclusion pattern from the options list:
 
 @example
 /home/johnw $ ledger balance -- -equity
 @end example
 
+@menu
+* Virtual transactions::	
+* Automated transactions::	
+@end menu
+
+@node Virtual transactions, Automated transactions, Using the Ledger Tool, Using the Ledger Tool
 @section Virtual transactions
 
-A virtual transaction is when you, in your mind, see money as moving to
-a certain place, when in reality that money has not moved at all.  There
-are several scenarios in which this type of tracking comes in handy, and
-each of them will be discussed in detail.
+A virtual transaction is when you, in your mind, see money as moving
+to a certain place, when in reality that money has not moved at all.
+There are several scenarios in which this type of tracking comes in
+handy, and each of them will be discussed in detail.
 
 To enter a virtual transaction, surround the account name in
-parentheses.  This form of usage does not need to balance.  However, if
-you want to ensure the virtual transaction balances with other virtual
-transactions in the same entry, use square brackets.  For example:
+parentheses.  This form of usage does not need to balance.  However,
+if you want to ensure the virtual transaction balances with other
+virtual transactions in the same entry, use square brackets.  For
+example:
 
 @example
 10/2  Paycheck
@@ -539,31 +557,31 @@ increased---even though no money has moved around yet.
     [Assets:Checking]                      $-200.00
 @end example
 
-In this example, $200 has been deducted from checking toward savings for
-a trip.  It will appear as though the money has been moved from the
-account into ``Savings:Trip'', although no money has actually moved
+In this example, $200 has been deducted from checking toward savings
+for a trip.  It will appear as though the money has been moved from
+the account into ``Savings:Trip'', although no money has actually moved
 anywhere.
 
 When balances are displayed, virtual transactions will be factored in.
 To view balances without any virtual balances factored in, using the
-@samp{-R} flag, for ``Reality''.
+``-R'' flag, for ``Reality''.
 
 @menu
 * Saving for a Special Occasion::  
-* Keeping a Budget::            
-* Tracking Allocated Funds::    
+* Keeping a Budget::		
+* Tracking Allocated Funds::	
 @end menu
 
-@node Saving for a Special Occasion, Keeping a Budget, Understanding Equity, Understanding Equity
+@node Saving for a Special Occasion, Keeping a Budget, Virtual transactions, Virtual transactions
 @subsection Saving for a Special Occasion
 
-@node Keeping a Budget, Tracking Allocated Funds, Saving for a Special Occasion, Understanding Equity
+@node Keeping a Budget, Tracking Allocated Funds, Saving for a Special Occasion, Virtual transactions
 @subsection Keeping a Budget
 
-@node Tracking Allocated Funds,  , Keeping a Budget, Understanding Equity
+@node Tracking Allocated Funds,  , Keeping a Budget, Virtual transactions
 @subsection Tracking Allocated Funds
 
-@node Automated transactions,  , Understanding Equity, Keeping a ledger
+@node Automated transactions,  , Virtual transactions, Using the Ledger Tool
 @section Automated transactions
 
 @menu
@@ -578,10 +596,10 @@ exact details of this matter are rather complex, so if you have any
 interest, I encourage you to do research on the Web.
 
 For any fellow Bahá'ís out there who want to track Huqúqu'lláh, the
-@code{ledger} tool makes this extraordinarily easy.  Just too easy, in
-fact.  Here's all you have to do: If an expense is exempt from
-Huqúqu'lláh---a ``necessary'' expense---put an exclamation mark befroe
-the account name:
+Ledger tool makes this extraordinarily easy.  Just too easy, in fact.
+Here's all you have to do: If an expense is exempt from Huqúqu'lláh---
+a ``necessary'' expense---put an exclamation mark before the account
+name:
 
 @example
 2002.12.31  Rent
@@ -590,9 +608,8 @@ the account name:
 @end example
 
 Even easier than that, simply put a list of regular expressions that
-match the categories you consider exempt in a file called
-@file{.huquq}, and the special marking will be done for you.  Here is
-the file I use:
+match the categories you consider exempt in a file called @samp{.huquq},
+and the special marking will be done for you.  Here is the file I use:
 
 @example
 ^Income:
@@ -614,23 +631,108 @@ That's it.  To see how much Huqúq is currently owed based on your
 ledger data, type:
 
 @example
-/home/johnw $ ledger -f ledger.dat balance ^huquq
+/home/johnw $ ledger balance ^huquq
 @end example
 
-@node Using GnuCash to Keep Your Ledger,  , Keeping a ledger, Top
+@node An easy way to add new entries, Using Emacs to Keep Your Ledger, Using the Ledger Tool, Top
+@chapter An easy way to add new entries
+
+The three most laborious tasks of keeping a ledger are: adding new
+entries, reconciling accounts, and generating reports.  To address the
+first of these, there is a sub-command to ledger called ``entry''.  It
+works on the principle that 80% of all transactions are variants of
+earlier transactions.  Here's how it works:
+
+Let's say you have an old transaction of the following form:
+
+@example
+2004/03/15 * Viva Italiano
+    Expenses:Food                       $12.45
+    Expenses:Tips                        $2.55
+    Liabilities:MasterCard             $-15.00
+@end example
+
+Now it's 2004/4/9, and you've just eating at Viva Italiano again.  The
+exact amounts are different, but the overall form is the same.  With
+the ``entry'' command you can type:
+
+@example
+ledger entry 2004/4/9 viva food 11.00 tips 2.50
+@end example
+
+This will produce the following output:
+
+@example
+2004/04/09 Viva Italiano
+    Expenses:Food                       $11.00
+    Expenses:Tips                        $2.50
+    Liabilities:MasterCard             $-13.50
+@end example
+
+This works by finding a transaction that matches the regexp ``viva'',
+and then assuming that any accounts or amounts you specify will be the
+same as that earlier transaction.  If Ledger does not succeed in
+generating a new entry for you, it will print an error and set the
+exit code to 1.
+
+There is a shell script in the distribution called ``entry'', which
+simplifies the task of adding a new entry to your ledger, and then
+launches @samp{vi} to let you confirm that the entry looks appropriate.
+
+@node Using Emacs to Keep Your Ledger, Using GnuCash to Keep Your Ledger, An easy way to add new entries, Top
+@chapter Using Emacs to Keep Your Ledger
+
+In the Ledger tarball is an Emacs module, @samp{ledger.el}.  This module
+makes the process of keeping a text ledger much easier for Emacs
+users.  I recommend putting this at the top of your ledger file:
+
+@example
+; -*-ledger-*-
+@end example
+
+And this in your @samp{.emacs} file, after copying @samp{ledger.el} to your
+site-lisp directory:
+
+@example
+(load "ledger")
+@end example
+
+Now when you edit your ledger file, it will be in @samp{ledger-mode}.
+@samp{ledger-mode} adds the following commands:
+
+@table @strong
+@item C-c C-a
+For quickly adding new entries based on the form of older ones
+(see previous section).
+
+@item C-c C-c
+Toggles the ``cleared'' flag of the transaction under point.
+
+@item C-c C-r
+Reconciles an account by displaying the transactions in another
+buffer, where simply hitting the spacebar will toggle the cleared
+flag of the transaction in the ledger.  It also displays the current
+cleared balance for the account in the modeline.
+
+@end table
+
+@node Using GnuCash to Keep Your Ledger,  , Using Emacs to Keep Your Ledger, Top
 @chapter Using GnuCash to Keep Your Ledger
 
-The @code{ledger} tool is fast and simple, but it gives you no special
+The Ledger tool is fast and simple, but it gives you no special
 method of actually editing the ledger.  It assumes you know how to use
 a text editor, and like doing so.  Perhaps an Emacs mode will appear
-someday soon to make editing @code{ledger}'s data files much easier.
+someday soon to make editing Ledger's data files much easier.
 
 Until then, you are free to use GnuCash to maintain your ledger, and
-the @code{ledger} program for querying and reporting on the contents
+the Ledger program for querying and reporting on the contents
 of that ledger.  It takes a little longer to parse the XML data format
 that GnuCash uses, but the end result is identical.
 
 Then again, why would anyone use a Gnome-centric, 35 megabyte behemoth
-to edit their data, and a 65 kilobyte executable to query it@dots{}
+to edit their data, and a 65 kilobyte binary to query it...
 
+
+@c Page published by Emacs Muse ends here
+@contents
 @bye

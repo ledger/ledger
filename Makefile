@@ -3,8 +3,8 @@ OBJS   = $(patsubst %.cc,%.o,$(CODE))
 CFLAGS = #-Wall -ansi -pedantic
 DFLAGS = -O3 -fomit-frame-pointer
 #DFLAGS = -g -DDEBUG=1
-INCS   = -I/usr/local/include
-LIBS   = -L/usr/local/lib -lgmpxx -lgmp -lpcre
+INCS   = -I/sw/include
+LIBS   = -L/sw/lib -lgmpxx -lgmp -lpcre
 
 ifdef GNUCASH
 CODE   := $(CODE)   gnucash.cc
@@ -25,7 +25,7 @@ ledger.info: ledger.texi
 	g++ $(CFLAGS) $(INCS) $(DFLAGS) -c -o $@ $<
 
 clean:
-	rm -f ledger ledger.info *.o *~ .\#*
+	rm -f ledger ledger.info *.o *~ .\#* *.elc
 
 rebuild: clean deps all
 
