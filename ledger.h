@@ -16,14 +16,16 @@
 #include <ctime>
 #include <iostream>
 
-#include "amount.h"
-#include "balance.h"
-
 #ifdef RELEASE_LEVEL
 #if RELEASE_LEVEL >= 2
 #include "debug.h"
+#elif RELEASE_LEVEL == 0
+#define NO_CLEANUP 1
 #endif
 #endif
+
+#include "amount.h"
+#include "balance.h"
 
 namespace ledger {
 

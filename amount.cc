@@ -1,4 +1,4 @@
-#include "ledger.h"
+#include "amount.h"
 
 #include "gmp.h"
 

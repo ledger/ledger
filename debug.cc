@@ -102,4 +102,4 @@ static struct init_streams {
 
 } // namespace ledger
 
-#endif DEBUG_ENABLED
+#endif // DEBUG_ENABLED

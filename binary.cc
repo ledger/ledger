@@ -1,5 +1,4 @@
 #include "ledger.h"
-#include "debug.h"
 
 #include <vector>
 #include <fstream>
