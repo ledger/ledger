@@ -450,7 +450,7 @@ int amount_t::sign() const
 bool amount_t::operator OP(const amount_t& amt) const		\
 {								\
   if (! quantity)						\
-    return ! (amt OP 0);					\
+    return amt OP 0;						\
   if (! amt.quantity)						\
     return *this OP 0;						\
 								\
