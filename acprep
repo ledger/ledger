@@ -1,5 +1,6 @@
 #!/bin/sh
 
+libtoolize -f
 aclocal
 autoheader
 touch AUTHORS ChangeLog
@@ -15,10 +16,10 @@ autoconf
 INCDIRS="-I/sw/include -I/usr/include/httpd/xml"
 if [ "$1" = "--debug" ]; then
     ./configure CPPFLAGS="$INCDIRS" LDFLAGS=-L/sw/lib \
-	CXXFLAGS="-g" --enable-debug
+	CXXFLAGS="-g" --enable-debug --disable-shared
 elif [ "$1" = "--opt" ]; then
     ./configure CPPFLAGS="$INCDIRS" LDFLAGS=-L/sw/lib \
-	CXXFLAGS="-fomit-frame-pointer -fastf -mcpu=7450" --enable-standalone
+	CXXFLAGS="-fomit-frame-pointer -fastf -mcpu=7450 -fPIC" --enable-standalone
 elif [ "$1" = "--perf" ]; then
     ./configure CPPFLAGS="$INCDIRS" LDFLAGS=-L/sw/lib \
 	CXXFLAGS="-g -pg"
