@@ -1,10 +1,8 @@
 #include "ledger.h"
-#include "report.h"
 #include "textual.h"
 #include "binary.h"
 
 #include <fstream>
-#include <deque>
 
 namespace ledger {
 

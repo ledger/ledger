@@ -24,24 +24,18 @@ std::string maximal_account_name(const item_t * item,
   return name;
 }
 
-std::string format_string(const item_t * item, const format_t& format,
-			  const item_t * displayed_parent)
+std::string format_t::report_line(const item_t * item,
+				  const item_t * displayed_parent) const
 {
   std::string result;
 
-  for (const char * p = format.format_string.c_str(); *p; p++) {
+  for (const char * p = format_string.c_str(); *p; p++) {
     if (*p == '%') {
       bool leftalign	= false;
-      bool ignore	= false;
       int  width	= 0;
       int  strict_width = 0;
 
       ++p;
-      if (*p == '?') {
-	ignore = false; //subsequent_line;
-	++p;
-      }
-
       if (*p == '-') {
 	leftalign = true;
 	++p;
@@ -75,12 +69,6 @@ std::string format_string(const item_t * item, const format_t& format,
       if (width > 0)
 	out.width(width);
 
-      if (ignore) {
-	out << " ";
-	result += out.str();
-	continue;
-      }
-
       switch (*p) {
       case '%':
 	out << "%";
@@ -94,8 +82,9 @@ std::string format_string(const item_t * item, const format_t& format,
 	assert(*p == ')');
 
 	node_t *  style = parse_expr(num, NULL);
-	balance_t value = style->compute(format.begin(), format.end(), item);
+	balance_t value = style->compute(item);
 	value.write(out, width, strict_width > 0 ? strict_width : width);
+	delete style;
 	break;
       }
 
@@ -122,7 +111,7 @@ std::string format_string(const item_t * item, const format_t& format,
 	  std::strftime(buf, 31, "%Y/%m/%d", std::gmtime(&item->date));
 	  out << (strict_width == 0 ? buf : truncated(buf, strict_width));
 	} else {
-	out << " ";
+	  out << " ";
 	}
 	break;
       }
@@ -151,15 +140,15 @@ std::string format_string(const item_t * item, const format_t& format,
 	break;
 
       case 't':
-	if (format.value_style) {
-	  balance_t value = format.compute_value(item);
+	if (value_style) {
+	  balance_t value = compute_value(item);
 	  value.write(out, width, strict_width > 0 ? strict_width : width);
 	}
 	break;
 
       case 'T':
-	if (format.total_style) {
-	  balance_t value = format.compute_total(item);
+	if (total_style) {
+	  balance_t value = compute_total(item);
 	  value.write(out, width, strict_width > 0 ? strict_width : width);
 	}
 	break;

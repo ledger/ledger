@@ -81,7 +81,7 @@ bool matches(const masks_list& regexps, const std::string& str,
 	     bool * by_exclusion = NULL);
 
 
-struct item_t;
+struct node_t;
 
 enum periodicity_t {
   PERIOD_NONE,
@@ -137,10 +137,7 @@ class constraints_t
     sort_order     = NULL;
   }
 
-  ~constraints_t() {
-    if (predicate)  delete predicate;
-    if (sort_order) delete sort_order;
-  }
+  ~constraints_t();
 
   std::time_t begin() const {
     return have_beginning ? begin_date : 0;

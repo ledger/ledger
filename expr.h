@@ -1,9 +1,9 @@
-#ifndef _REPORT_H
-#define _REPORT_H
+#ifndef _EXPR_H
+#define _EXPR_H
 
 #include "ledger.h"
-#include "constraint.h"
 #include "balance.h"
+#include "constraint.h"
 
 namespace ledger {
 
@@ -76,11 +76,6 @@ struct node_t
   balance_t compute(const item_t * item,
 		    const std::time_t begin = -1,
 		    const std::time_t end   = -1) const;
-
-  balance_t compute(const item_t * item,
-		    const constraint_t& constraints) const {
-    return compute(item, constraints.begin(), constraints.end());
-  }
 };
 
 node_t * parse_expr(std::istream& in, ledger_t * ledger);

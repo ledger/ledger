@@ -1,8 +1,15 @@
 #include "constraint.h"
+#include "expr.h"
 
 #include <pcre.h>
 
 namespace ledger {
+
+constraints_t::~constraints_t()
+{
+  if (predicate)  delete predicate;
+  if (sort_order) delete sort_order;
+}
 
 mask_t::mask_t(const std::string& pat) : exclude(false)
 {
@@ -183,14 +190,13 @@ bool constraints_t::operator ()(const entry_t * entry) const
 
 bool constraints_t::operator ()(const item_t * item) const
 {
-  if (predicate && ! predicate->compute(begin(), end(), item))
+  if (predicate && ! predicate->compute(item, begin(), end()))
     return false;
 
   if (! matches_date_range(item->date))
     return false;
 
-  if (! payee_masks.empty() &&
-      ! (matches(payee_masks, item->payee)))
+  if (! payee_masks.empty() && ! matches(payee_masks, item->payee))
     return false;
 
 #if 0

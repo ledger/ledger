@@ -1,10 +1,11 @@
 #include "expr.h"
+#include "textual.h"
 
 namespace ledger {
 
-balance_t node_t::compute(const std::time_t begin,
-			  const std::time_t end,
-			  const item_t *    item) const
+balance_t node_t::compute(const item_t *    item,
+			  const std::time_t begin,
+			  const std::time_t end) const
 {
   balance_t temp;
 
@@ -56,18 +57,18 @@ balance_t node_t::compute(const std::time_t begin,
 
   case F_ARITH_MEAN:
     assert(left);
-    temp = left->compute(begin, end, item);
+    temp = left->compute(item, begin, end);
     temp /= amount_t(item->index + 1);
     break;
 
   case F_NEG:
     assert(left);
-    temp = left->compute(begin, end, item).negated();
+    temp = left->compute(item, begin, end).negated();
     break;
 
   case F_ABS:
     assert(left);
-    temp = abs(left->compute(begin, end, item));
+    temp = abs(left->compute(item, begin, end));
     break;
 
   case F_REGEXP:
@@ -78,7 +79,7 @@ balance_t node_t::compute(const std::time_t begin,
 
   case F_VALUE: {
     assert(left);
-    temp = left->compute(begin, end, item);
+    temp = left->compute(item, begin, end);
 
     std::time_t moment = -1;
     if (right) {
@@ -94,15 +95,15 @@ balance_t node_t::compute(const std::time_t begin,
   }
 
   case O_NOT:
-    temp = left->compute(begin, end, item) ? 0 : 1;
+    temp = left->compute(item, begin, end) ? 0 : 1;
     break;
 
   case O_QUES:
-    temp = left->compute(begin, end, item);
+    temp = left->compute(item, begin, end);
     if (temp)
-      temp = right->left->compute(begin, end, item);
+      temp = right->left->compute(item, begin, end);
     else
-      temp = right->right->compute(begin, end, item);
+      temp = right->right->compute(item, begin, end);
     break;
 
   case O_AND:
@@ -118,8 +119,8 @@ balance_t node_t::compute(const std::time_t begin,
   case O_DIV: {
     assert(left);
     assert(right);
-    balance_t left_bal  = left->compute(begin, end, item);
-    balance_t right_bal = right->compute(begin, end, item);
+    balance_t left_bal  = left->compute(item, begin, end);
+    balance_t right_bal = right->compute(item, begin, end);
     switch (type) {
     case O_AND: temp = (left_bal && right_bal) ? 1 : 0; break;
     case O_OR:  temp = (left_bal || right_bal) ? 1 : 0; break;

@@ -1,4 +1,6 @@
 #include "item.h"
+#include "constraint.h"
+#include "expr.h"
 
 namespace ledger {
 
@@ -11,7 +13,7 @@ item_t * walk_accounts(const account_t *    account,
 {
   item_t * item = new item_t;
   item->account = account;
-  item->date    = end_date(constraints);
+  item->date    = constraints.end();
 
   for (constrained_transactions_list_const_iterator
 	 i(account->transactions.begin(),
@@ -85,8 +87,7 @@ item_t * walk_items(const item_t *       top,
 
 item_t * walk_entries(entries_list::const_iterator begin,
 		      entries_list::const_iterator end,
-		      const constraints_t&	   constraints,
-		      const format_t&		   format)
+		      const constraints_t&	   constraints)
 {
 #if 0
   int          last_mon = -1;
@@ -113,7 +114,7 @@ item_t * walk_entries(entries_list::const_iterator begin,
 	item->payee = (*i)->payee;
       }
 
-      if (! format.show_inverted) {
+      if (! constraints.show_inverted) {
 	item_t * subitem = new item_t;
 	subitem->parent  = item;
 	subitem->date    = item->date;
@@ -122,7 +123,7 @@ item_t * walk_entries(entries_list::const_iterator begin,
 	item->subitems.push_back(subitem);
       }
 
-      if (format.show_related)
+      if (constraints.show_related)
 	for (transactions_list::iterator k = (*i)->transactions.begin();
 	     k != (*i)->transactions.end();
 	     k++)
@@ -132,7 +133,7 @@ item_t * walk_entries(entries_list::const_iterator begin,
 	    subitem->date    = item->date;
 	    subitem->account = (*k)->account;
 	    subitem->value   = *(*k);
-	    if (format.show_inverted)
+	    if (constraints.show_inverted)
 	      subitem->value.negate();
 	    item->subitems.push_back(subitem);
 	  }

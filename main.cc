@@ -1,9 +1,11 @@
 #include "ledger.h"
-#include "constraint.h"
+#include "balance.h"
 #include "textual.h"
 #include "binary.h"
-#include "balance.h"
-#include "report.h"
+#include "constraint.h"
+#include "item.h"
+#include "expr.h"
+#include "format.h"
 
 #include <fstream>
 #include <cstring>
@@ -20,23 +22,20 @@ namespace ledger {
 
 static const std::string bal_fmt = "%20T%2_%-n\n";
 
-void show_balances(std::ostream&	   out,
-		   report::items_deque&    items,
-		   const constraints_t&    constraints,
-		   const report::format_t& format,
-		   const report::item_t *  displayed_parent)
+void show_balances(std::ostream&	out,
+		   items_deque&		items,
+		   const constraints_t& constraints,
+		   const format_t&	format,
+		   const item_t *	displayed_parent)
 {
-  if (format.sort_order)
-    std::sort(items.begin(), items.end(), report::cmp_items(format));
-
-  for (report::items_deque::const_iterator i = items.begin();
+  for (items_deque::const_iterator i = items.begin();
        i != items.end();
        i++) {
-    const report::item_t * parent = displayed_parent;
+    const item_t * parent = displayed_parent;
 
     bool by_exclusion = false;
     std::string name  = maximal_account_name(*i, parent);
-    const bool  match = (format.show_expanded ||
+    const bool  match = (constraints.show_expanded ||
 			 (! constraints.account_masks.empty() &&
 			  matches(constraints.account_masks, name,
 				  &by_exclusion) &&
@@ -45,27 +44,33 @@ void show_balances(std::ostream&	   out,
 			 (constraints.account_masks.empty() &&
 			  displayed_parent->parent == NULL));
 
-    if (match && reportable(format, *i, true) &&
+    if (match && constraints(*i) &&
 	((*i)->subitems.size() != 1 ||
 	 (*i)->total != (*i)->subitems[0]->total)) {
-      out << format_string(*i, format, parent);
+      out << format.report_line(*i, parent);
       parent = *i;
     }
+
+    if (constraints.sort_order)
+      (*i)->sort(constraints.sort_order);
 
     show_balances(out, (*i)->subitems, constraints, format, parent);
   }
 }
 
 void balance_report(std::ostream&	    out,
-		    report::item_t *	    top,
+		    item_t *	    top,
 		    const constraints_t&    constraints,
-		    const report::format_t& format)
+		    const format_t& format)
 {
+  if (constraints.sort_order)
+    top->sort(constraints.sort_order);
+
   show_balances(out, top->subitems, constraints, format, top);
 
-  if (format.show_subtotals && top->subitems.size() > 1 && top->total)
+  if (constraints.show_subtotals && top->subitems.size() > 1 && top->total)
     std::cout << "--------------------\n"
-	      << report::format_string(top, format);
+	      << format.report_line(top);
 }
 
 
@@ -75,7 +80,7 @@ void balance_report(std::ostream&	    out,
 //
 
 static const std::string reg_fmt
-  = "%?10d %?-.20p %/%-.22N %12.66t %12.80T\n";
+  = "%10d %-.20p %/%-.22N %12.66t %12.80T\n";
 
 static bool show_commodities_revalued      = false;
 static bool show_commodities_revalued_only = false;
@@ -84,7 +89,8 @@ static void report_value_change(std::ostream&         out,
 				const std::time_t     date,
 				const balance_pair_t& balance,
 				const balance_pair_t& prev_balance,
-				report::format_t&     format,
+				const constraints_t&  constraints,
+				const format_t&	      format,
 				const std::string&    first_line_format,
 				const std::string&    next_lines_format)
 {
@@ -95,7 +101,7 @@ static void report_value_change(std::ostream&         out,
     return;
   }
 
-  report::item_t temp;
+  item_t temp;
   temp.date  = prev_date;
   temp.total = prev_balance;
   balance_t prev_bal = format.compute_total(&temp);
@@ -109,26 +115,33 @@ static void report_value_change(std::ostream&         out,
     temp.total = balance;
     temp.payee = "Commodities revalued";
 
-    if (reportable(format, &temp)) {
-      format.format_string = first_line_format;
-      out << format_string(&temp, format, NULL);
+    if (constraints(&temp)) {
+      format_t copy = format;
 
-      format.format_string = next_lines_format;
-      out << format_string(&temp, format, NULL);
+      copy.format_string = first_line_format;
+      out << copy.report_line(&temp);
+
+      copy.format_string = next_lines_format;
+      out << copy.report_line(&temp);
+
+      // Prevent double-deletion
+      copy.value_style = NULL;
+      copy.total_style = NULL;
     }
   }
 
   prev_date = date;
 }
 
-void register_report(std::ostream& out, report::item_t * top,
-		     const report::format_t& format)
+void register_report(std::ostream&	  out,
+		     item_t *		  top,
+		     const constraints_t& constraints,
+		     const format_t&	  format)
 {
-  if (format.sort_order)
-    std::sort(top->subitems.begin(), top->subitems.end(),
-	      report::cmp_items(format));
+  if (constraints.sort_order)
+    top->sort(constraints.sort_order);
 
-  report::format_t copy = format;
+  format_t copy = format;
 
   std::string first_line_format;
   std::string next_lines_format;
@@ -146,53 +159,55 @@ void register_report(std::ostream& out, report::item_t * top,
   balance_pair_t last_reported;
   account_t      splits(NULL, "<Total>");
 
-  for (report::items_deque::const_iterator i = top->subitems.begin();
+  for (items_deque::const_iterator i = top->subitems.begin();
        i != top->subitems.end();
        i++) {
     copy.format_string = first_line_format;
 
-    std::string  header     = format_string(*i, copy, top);
+    std::string  header     = copy.report_line(*i, top);
     unsigned int header_len = header.length();
 
     copy.format_string = next_lines_format;
 
     bool first = true;
 
-    if ((*i)->subitems.size() > 1 && ! format.show_expanded) {
-      report::item_t summary;
+    if ((*i)->subitems.size() > 1 && ! constraints.show_expanded) {
+      item_t summary;
       summary.date    = (*i)->date;
       summary.parent  = *i;
       summary.account = &splits;
 
-      for (report::items_deque::const_iterator j = (*i)->subitems.begin();
+      for (items_deque::const_iterator j = (*i)->subitems.begin();
 	   j != (*i)->subitems.end();
 	   j++)
 	summary.value += (*j)->value;
       summary.total = balance + summary.value;
 
-      bool show = reportable(format, &summary);
+      bool show = constraints(&summary);
       if (show && show_commodities_revalued)
-	report_value_change(out, summary.date, balance, last_reported, copy,
-			    first_line_format, next_lines_format);
+	report_value_change(out, summary.date, balance, last_reported,
+			    constraints, copy, first_line_format,
+			    next_lines_format);
 
       balance += summary.value;
 
       if (show) {
 	if (! show_commodities_revalued_only)
-	  out << header << format_string(&summary, copy, *i);
+	  out << header << copy.report_line(&summary, *i);
 	if (show_commodities_revalued)
 	  last_reported = balance;
       }
     } else {
-      for (report::items_deque::const_iterator j = (*i)->subitems.begin();
+      for (items_deque::const_iterator j = (*i)->subitems.begin();
 	   j != (*i)->subitems.end();
 	   j++) {
 	(*j)->total = balance + (*j)->value;
 
-	bool show = reportable(format, *j);
+	bool show = constraints(*j);
 	if (show && first && show_commodities_revalued) {
-	  report_value_change(out, (*i)->date, balance, last_reported, copy,
-			      first_line_format, next_lines_format);
+	  report_value_change(out, (*i)->date, balance, last_reported,
+			      constraints, copy, first_line_format,
+			      next_lines_format);
 	  if (show_commodities_revalued_only)
 	    first = false;
 	}
@@ -208,7 +223,7 @@ void register_report(std::ostream& out, report::item_t * top,
 	      out.width(header_len);
 	      out << " ";
 	    }
-	    out << format_string(*j, copy, *i);
+	    out << copy.report_line(*j, *i);
 	  }
 	  if (show_commodities_revalued)
 	    last_reported = balance;
@@ -218,12 +233,11 @@ void register_report(std::ostream& out, report::item_t * top,
   }
 
   if (show_commodities_revalued)
-    report_value_change(out, copy.end(), balance, last_reported, copy,
-			first_line_format, next_lines_format);
+    report_value_change(out, constraints.end(), balance, last_reported,
+			constraints, copy, first_line_format,
+			next_lines_format);
 
   // To stop these from getting deleted when copy goes out of scope
-  copy.predicate   = NULL;
-  copy.sort_order  = NULL;
   copy.value_style = NULL;
   copy.total_style = NULL;
 }
@@ -493,7 +507,7 @@ int main(int argc, char * argv[])
   std::list<std::string>   files;
   ledger::ledger_t *	   book = NULL;
   ledger::constraints_t    constraints;
-  ledger::report::format_t format;
+  ledger::format_t format;
 
   std::string sort_order;
   std::string value_style = "a";
@@ -623,19 +637,19 @@ int main(int argc, char * argv[])
       break;
 
     case 'M':
-      format.period = ledger::report::PERIOD_MONTHLY;
+      constraints.period = ledger::PERIOD_MONTHLY;
       break;
 
     case 'E':
-      format.show_empty = true;
+      constraints.show_empty = true;
       break;
 
     case 'n':
-      format.show_subtotals = false;
+      constraints.show_subtotals = false;
       break;
 
     case 's':
-      format.show_expanded = true;
+      constraints.show_expanded = true;
       break;
 
     case 'S':
@@ -643,11 +657,11 @@ int main(int argc, char * argv[])
       break;
 
     case 'o':
-      format.show_related = true;
+      constraints.show_related = true;
       break;
 
     case 'l':
-      format.predicate = ledger::report::parse_expr(optarg, book);
+      constraints.predicate = ledger::parse_expr(optarg, book);
       break;
 
     // Commodity reporting
@@ -791,20 +805,18 @@ int main(int argc, char * argv[])
   // Copy the constraints to the format object, and compile the value
   // and total style strings
 
-  format.constraints = constraints;
   if (! sort_order.empty())
-    format.sort_order = ledger::report::parse_expr(sort_order, book);
-  format.value_style = ledger::report::parse_expr(value_style, book);
-  format.total_style = ledger::report::parse_expr(total_style, book);
+    constraints.sort_order = ledger::parse_expr(sort_order, book);
+  format.value_style = ledger::parse_expr(value_style, book);
+  format.total_style = ledger::parse_expr(total_style, book);
 
   // Now handle the command that was identified above.
 
   if (command == "print") {
 #if 0
-    ledger::report::item_t * top
-      = ledger::report::walk_entries(book->entries.begin(),
-				     book->entries.end(),
-				     constraints, format);
+    ledger::item_t * top
+      = ledger::walk_entries(book->entries.begin(), book->entries.end(),
+			     constraints, format);
     ledger::entry_report(std::cout, top, format);
 #ifdef DEBUG
     delete top;
@@ -813,9 +825,9 @@ int main(int argc, char * argv[])
   }
   else if (command == "equity") {
 #if 0
-    ledger::report::item_t * top
-      = ledger::report::walk_accounts(book->master, constraints,
-				      format.show_subtotals);
+    ledger::item_t * top
+      = ledger::walk_accounts(book->master, constraints,
+			      constraints.show_subtotals);
 
     ledger::entry_report(std::cout, top, constraints, format);
 
@@ -824,15 +836,15 @@ int main(int argc, char * argv[])
 #endif
 #endif
   }
-  else if (format.period == ledger::report::PERIOD_NONE &&
-	   ! format.sort_order && ! format.show_related &&
+  else if (constraints.period == ledger::PERIOD_NONE &&
+	   ! constraints.sort_order && ! constraints.show_related &&
 	   (command == "balance"  || command == "bal")) {
     if (format.format_string.empty())
       format.format_string = ledger::bal_fmt;
 
-    if (ledger::report::item_t * top
-	  = ledger::report::walk_accounts(book->master, constraints,
-					  format.show_subtotals)) {
+    if (ledger::item_t * top
+	  = ledger::walk_accounts(book->master, constraints,
+				  constraints.show_subtotals)) {
       ledger::balance_report(std::cout, top, constraints, format);
 #ifdef DEBUG
       delete top;
@@ -843,13 +855,12 @@ int main(int argc, char * argv[])
     if (format.format_string.empty())
       format.format_string = ledger::bal_fmt;
 
-    if (ledger::report::item_t * list
-	  = ledger::report::walk_entries(book->entries.begin(),
-					 book->entries.end(),
-					 constraints, format))
-      if (ledger::report::item_t * top
-	    = ledger::report::walk_items(list, book->master, constraints,
-					 format.show_subtotals)) {
+    if (ledger::item_t * list
+	  = ledger::walk_entries(book->entries.begin(),
+				 book->entries.end(), constraints))
+      if (ledger::item_t * top
+	    = ledger::walk_items(list, book->master, constraints,
+				 constraints.show_subtotals)) {
 	ledger::balance_report(std::cout, top, constraints, format);
 #ifdef DEBUG
 	delete top;
@@ -861,14 +872,13 @@ int main(int argc, char * argv[])
     if (format.format_string.empty())
       format.format_string = ledger::reg_fmt;
 
-    if (format.show_related)
-      format.show_inverted = true;
+    if (constraints.show_related)
+      constraints.show_inverted = true;
 
-    if (ledger::report::item_t * top
-	  = ledger::report::walk_entries(book->entries.begin(),
-					 book->entries.end(),
-					 constraints, format)) {
-      ledger::register_report(std::cout, top, format);
+    if (ledger::item_t * top
+	  = ledger::walk_entries(book->entries.begin(),
+				 book->entries.end(), constraints)) {
+      ledger::register_report(std::cout, top, constraints, format);
 #ifdef DEBUG
       delete top;
 #endif

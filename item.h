@@ -1,5 +1,5 @@
-#ifndef _REPORT_H
-#define _REPORT_H
+#ifndef _ITEM_H
+#define _ITEM_H
 
 #include "ledger.h"
 #include "balance.h"
@@ -49,8 +49,7 @@ item_t * walk_items(const item_t *	 top,
 
 item_t * walk_entries(entries_list::const_iterator begin,
 		      entries_list::const_iterator end,
-		      const constraints_t&	   constraints,
-		      const format_t&		   format);
+		      const constraints_t& constraints);
 
 } // namespace report
 
