@@ -112,6 +112,8 @@ elif command == "equity":
     command = "E"
 elif command == "prices":
     command = "P"
+elif command == "pricesdb":
+    command = "D";
 else:
     print "Unrecognized command:", command
     sys.exit (1)
@@ -190,6 +192,8 @@ elif command == "P":
 	return max_val
 
     format = config.prices_format
+elif command == "D":
+    format = config.pricesdb_format
 else:
     format = config.print_format
 
@@ -437,7 +441,7 @@ if config.comm_as_payee:
 
 if command == "e":
     walk_transactions (new_entry, handler)
-elif command == "P":
+elif command == "P" or command == "D":
     walk_commodities (handler)
 else:
     walk_entries (journal, handler)
@@ -445,7 +449,8 @@ else:
 # Flush the handlers, causing them to output whatever data is still
 # pending.
 
-handler.flush ()
+if command != "P" and command != "D":
+    handler.flush ()
 
 # For the balance and equity reports, the account totals now need to
 # be displayed.  This is different from outputting transactions, in

@@ -388,7 +388,7 @@ def vmax(d, val):\n\
   else
     walk_entries(journal->entries, *formatter);
 
-  if (command != "P")
+  if (command != "P" && command != "D")
     formatter->flush();
 
   // If we are generating a reconcile report, determine the final set
