@@ -1278,7 +1278,7 @@ simplifies the task of adding a new entry to your ledger, and then
 launches @samp{vi} to let you confirm that the entry looks appropriate.
 
 @node Options, Format strings, Commands, Running Ledger
-@section Options
+@section Command-line options
 
 @subsection Basic options
 
@@ -1287,13 +1287,13 @@ what they are used for.  This can be a handy way to remember which
 options do what.  This help screen is also printed if ledger is run
 without a command.
 
-@sp
+@sp 1
 
-@samp{--version} (@samp{-v}) prints the current version of ledger and exits.
-This is useful for sending bug reports (to @email{johnw@@newartisans.com}), to
-let the author know which version of ledger you are using.
+@samp{--version} (@samp{-v}) prints the current version of ledger and
+exits.  This is useful for sending bug reports, to let the author know
+which version of ledger you are using.
 
-@sp
+@sp 1
 
 @samp{--init FILE} (@samp{-i FILE}) causes FILE to be read by ledger before any
 other ledger file.  This file may not contain any transactions, but it
@@ -1307,14 +1307,14 @@ the same syntax as the command-line.  Here's an example init file:
 Option settings on the command-line or in the environment always take
 precedence over settings in the init file.
 
-@sp
+@sp 1
 
 @samp{--file FILE} (@samp{-f FILE}) reads FILE as a ledger file.  This command
 may be used multiple times.  FILE may also be a list of file names
 separated by colons.  Typically, the environment variable
 @samp{LEDGER_FILE} is set, rather than using this command-line option.
 
-@sp
+@sp 1
 
 @samp{--cache FILE} identifies FILE as the default binary cache file.  That
 is, if the ledger files to be read are specified using the environment
@@ -1324,7 +1324,7 @@ time of subsequent queries.  This filename can also be given using the
 environment variable @samp{LEDGER_CACHE}, or by putting the option into
 your init file.
 
-@sp
+@sp 1
 
 @samp{--output FILE} (@samp{-o FILE}) redirects output from any command to
 @samp{FILE}.  By default, all output goes to standard output.
@@ -1703,7 +1703,7 @@ must use the options.
 * Commodity reporting options::
 @end menu
 
-@node Filtering options, Output formatting options, Basic options, Using command options
+@node Filtering options, Output formatting options, Using command options, Using command options
 @subsection Filtering options
 
 @table @strong
