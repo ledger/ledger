@@ -72,6 +72,7 @@ struct value_expr_t
     F_PAYEE_MASK,
     F_ACCOUNT_MASK,
     F_SHORT_ACCOUNT_MASK,
+    F_INTERP_FUNC,
 
     // Binary operators
     O_ADD,
@@ -100,7 +101,8 @@ struct value_expr_t
     std::time_t	 constant_t;
     unsigned int constant_i;
   };
-  amount_t	 constant_a;
+  std::string    constant_s;
+  amount_t       constant_a;
   mask_t *	 mask;
 
   value_expr_t(const kind_t _kind)

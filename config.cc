@@ -328,8 +328,8 @@ Output customization:\n\
   -Y, --yearly          show yearly sub-totals\n\
   -l, --limit EXPR      calculate only transactions matching EXPR\n\
   -d, --display EXPR    display only transactions matching EXPR\n\
-  -t, --value EXPR      set the value expression for all report types\n\
-  -T, --total EXPR      set the total expression for all report types\n\
+  -t, --value-expr EXPR set the value expression for all report types\n\
+  -T, --total-expr EXPR set the total expression for all report types\n\
   -j, --value-data      print only raw value data (useful when scripting)\n\
   -J, --total-data      print only raw total data\n\n\
 Commodity reporting:\n\
@@ -531,13 +531,13 @@ OPT_BEGIN(display, "d:") {
   config.display_predicate += ")";
 } OPT_END(display);
 
-OPT_BEGIN(value, "t:") {
+OPT_BEGIN(value_expr, "t:") {
   config.value_expr = optarg;
-} OPT_END(value);
+} OPT_END(value_expr);
 
-OPT_BEGIN(total, "T:") {
+OPT_BEGIN(total_expr, "T:") {
   config.total_expr = optarg;
-} OPT_END(total);
+} OPT_END(total_expr);
 
 OPT_BEGIN(value_data, "j") {
   config.value_expr    = "S" + config.value_expr;

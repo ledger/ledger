@@ -7,6 +7,9 @@
 #include "option.h"
 #include "timing.h"
 #include "util.h"
+#ifdef USE_BOOST_PYTHON
+#include "python.h"
+#endif
 
 #include <fstream>
 #include <sstream>
@@ -534,9 +537,11 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	break;
       }
 
-      case '!':                   // directive
-	in >> line;
-	if (std::string(line) == "!include") {
+      case '!': {                 // directive
+	std::string word;
+	in.get(c);
+	in >> word;
+	if (word == "include") {
 	  in.getline(line, MAX_LINE);
 	  linenum++;
 
@@ -545,7 +550,14 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	  count += parse_journal_file(skip_ws(line), journal,
 				      account_stack.front());
 	}
+#ifdef USE_BOOST_PYTHON
+	else if (word == "python") {
+	  in.getline(line, MAX_LINE);
+	  python_eval(in);
+	}
+#endif
 	break;
+      }
 
       default: {
 	unsigned int first_line = linenum;

@@ -28,7 +28,7 @@ class FormatTransaction (TransactionHandler):
     def __call__ (self, xact):
 	print self.formatter.format(xact)
 
-handler = FormatTransaction("%D %-20P %N")
+handler = FormatTransaction("%D %-20P %N %('foo'100)")
 handler = FilterTransactions (handler, "/Checking/")
 
 expr = parse_value_expr ("a*2")

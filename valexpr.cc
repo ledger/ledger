@@ -5,6 +5,9 @@
 #include "datetime.h"
 #include "debug.h"
 #include "util.h"
+#ifdef USE_BOOST_PYTHON
+#include "python.h"
+#endif
 
 #include <pcre.h>
 
@@ -277,6 +280,27 @@ void value_expr_t::compute(value_t& result, const details_t& details) const
     break;
   }
 
+  case F_INTERP_FUNC: {
+#ifdef USE_BOOST_PYTHON
+    if (! python_interpretor)
+      init_python();
+
+    try {
+      object func = python_interpretor->main_namespace[constant_s];
+      if (right) {
+	right->compute(result, details);
+	result = call<value_t>(func.ptr(), details, result);
+      } else {
+	result = call<value_t>(func.ptr(), details);
+      }
+    }
+    catch(const boost::python::error_already_set&) {
+      PyErr_Print();
+    }
+#endif
+    break;
+  }
+
   case O_NOT:
     left->compute(result, details);
     result.negate();
@@ -489,10 +513,22 @@ value_expr_t * parse_value_term(std::istream& in)
 
     in.get(c);
     node.reset(new value_expr_t(short_account_mask ?
-			    value_expr_t::F_SHORT_ACCOUNT_MASK :
-			    (payee_mask ? value_expr_t::F_PAYEE_MASK :
-			     value_expr_t::F_ACCOUNT_MASK)));
+				value_expr_t::F_SHORT_ACCOUNT_MASK :
+				(payee_mask ? value_expr_t::F_PAYEE_MASK :
+				 value_expr_t::F_ACCOUNT_MASK)));
     node->mask = new mask_t(buf);
+    break;
+  }
+
+  case '\'': {
+    READ_INTO(in, buf, 255, c, c != '\'');
+    if (c != '\'')
+      throw value_expr_error("Missing closing '\''");
+
+    in.get(c);
+    node.reset(new value_expr_t(value_expr_t::F_INTERP_FUNC));
+    node->constant_s = buf;
+    node->right = parse_value_expr(in);
     break;
   }
 
@@ -781,6 +817,10 @@ void dump_value_expr(std::ostream& out, const value_expr_t * node)
     out << ")";
     break;
 
+  case value_expr_t::F_INTERP_FUNC:
+    out << "F_INTERP(" << node->constant_s << ")";
+    break;
+
   case value_expr_t::O_NOT:
     out << "!";
     dump_value_expr(out, node->left);
@@ -874,6 +914,20 @@ value_expr_t * py_parse_value_expr(const std::string& str) {
 
 void export_valexpr()
 {
+  class_< details_t > ("Details", init<const entry_t&>())
+    .def(init<const transaction_t&>())
+    .def(init<const account_t&>())
+    .add_property("entry",
+		  make_getter(&details_t::entry,
+			      return_value_policy<reference_existing_object>()))
+    .add_property("xact",
+		  make_getter(&details_t::xact,
+			      return_value_policy<reference_existing_object>()))
+    .add_property("account",
+		  make_getter(&details_t::account,
+			      return_value_policy<reference_existing_object>()))
+    ;
+
   class_< value_expr_t > ("ValueExpr", init<value_expr_t::kind_t>())
     .def("compute", py_compute<account_t>)
     .def("compute", py_compute<entry_t>)
