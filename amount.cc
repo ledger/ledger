@@ -887,6 +887,17 @@ void amount_t::parse(std::istream& in, unsigned short flags)
 
   _init();
 
+  // Create the commodity if has not already been seen, and update the
+  // precision if something greater was used for the quantity.
+
+  bool newly_created = (commodity_t::commodities.find(symbol) ==
+			commodity_t::commodities.end());
+
+  commodity_ = commodity_t::find_commodity(symbol, true);
+
+  // Determine the precision of the amount, based on the usage of
+  // comma or period.
+
   std::string::size_type last_comma  = quant.rfind(',');
   std::string::size_type last_period = quant.rfind('.');
 
@@ -899,22 +910,23 @@ void amount_t::parse(std::istream& in, unsigned short flags)
       quantity->prec = quant.length() - last_period - 1;
     }
   }
-  else if (last_comma != std::string::npos) {
-    comm_flags |= COMMODITY_STYLE_EUROPEAN;
+  else if (last_comma != std::string::npos &&
+	   (! commodity_t::default_commodity ||
+	    commodity_t::default_commodity->flags & COMMODITY_STYLE_EUROPEAN)) {
+      comm_flags |= COMMODITY_STYLE_EUROPEAN;
     quantity->prec = quant.length() - last_comma - 1;
   }
-  else if (last_period != std::string::npos) {
+  else if (last_period != std::string::npos &&
+	   ! (commodity_->flags & COMMODITY_STYLE_EUROPEAN)) {
     quantity->prec = quant.length() - last_period - 1;
   }
   else {
     quantity->prec = 0;
   }
 
-  // Create the commodity if has not already been seen, and update the
-  // precision if something greater was used for the quantity.
+  // Set the commodity's flags and precision accordingly
 
-  commodity_ = commodity_t::find_commodity(symbol, true);
-  if (! (flags & AMOUNT_PARSE_NO_MIGRATE)) {
+  if (newly_created || ! (flags & AMOUNT_PARSE_NO_MIGRATE)) {
     commodity_->flags |= comm_flags;
     if (quantity->prec > commodity_->precision)
       commodity_->precision = quantity->prec;
@@ -1143,6 +1155,13 @@ commodity_t * commodity_t::find_commodity(const std::string& symbol,
   if (auto_create) {
     commodity_t * commodity = new commodity_t(symbol);
     add_commodity(commodity);
+
+    // Start out the new commodity with the default commodity's flags
+    // and precision, if one has been defined.
+    if (default_commodity) {
+      commodity->flags	   = default_commodity->flags;
+      commodity->precision = default_commodity->precision;
+    }
     return commodity;
   }
 
