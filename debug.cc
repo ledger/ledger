@@ -103,14 +103,12 @@ static struct init_streams {
       free_debug_stream = true;
     }
   }
-#ifndef NO_CLEANUP
   ~init_streams() {
     if (free_debug_stream && debug_stream) {
       delete debug_stream;
       debug_stream = NULL;
     }
   }
-#endif
 } _debug_init;
 
 } // namespace ledger

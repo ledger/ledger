@@ -6,7 +6,6 @@ CODE   = account.cc  \
 	 config.cc   \
 	 datetime.cc \
 	 debug.cc    \
-	 error.cc    \
 	 format.cc   \
 	 ledger.cc   \
 	 option.cc   \

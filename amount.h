@@ -17,22 +17,20 @@ class amount_t
   void _copy(const amount_t& amt);
   void _release();
   void _dup();
-  void _resize(int prec);
+  void _resize(unsigned int prec);
 
   void _clear() {
     if (quantity)
       _release();
     quantity  = NULL;
     commodity = NULL;
-    precision = 0;
   }
 
  public:
   class bigint_t;
 
-  bigint_t *	 quantity;	// amount, to MAX_PRECISION
-  unsigned short precision;
-  commodity_t *	 commodity;
+  bigint_t *	quantity;
+  commodity_t *	commodity;
 
   bool valid() const {
     if (quantity)
@@ -43,15 +41,13 @@ class amount_t
 
   // constructors
   amount_t(commodity_t * _commodity = NULL)
-    : quantity(NULL), precision(0), commodity(_commodity) {}
+    : quantity(NULL), commodity(_commodity) {}
 
   amount_t(const amount_t& amt) : quantity(NULL) {
-    if (amt.quantity) {
+    if (amt.quantity)
       _copy(amt);
-    } else {
-      precision = 0;
+    else
       commodity = NULL;
-    }
   }
   amount_t(const std::string& value) : quantity(NULL) {
     parse(value);
@@ -80,7 +76,7 @@ class amount_t
   amount_t& operator=(const double value);
 
   // general methods
-  amount_t round(int prec = -1) const;
+  amount_t round(unsigned int prec) const;
 
   // in-place arithmetic
   amount_t& operator*=(const amount_t& amt);

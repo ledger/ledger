@@ -5,17 +5,17 @@
 
 namespace ledger {
 
-std::time_t now	     = std::time(NULL);
-int         now_year = std::localtime(&now)->tm_year;
+std::time_t         now	      = std::time(NULL);
+int                 now_year  = std::localtime(&now)->tm_year;
 
-static std::time_t	base      = -1;
-static int		base_year = -1;
+static std::time_t  base      = -1;
+static int	    base_year = -1;
 
-static const int	month_days[12] = {
+static const int    month_days[12] = {
   31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
 };
 
-static const char *	formats[] = {
+static const char * formats[] = {
   "%Y/%m/%d",
   "%m/%d",
   "%Y.%m.%d",

@@ -58,7 +58,11 @@ class parse_error : public error {
     : error(reason), line(_line), file(_file) {}
   virtual ~parse_error() throw() {}
 
-  virtual const char* what() const throw();
+  virtual const char* what() const throw() {
+    std::ostringstream msg;
+    msg << file << ", line " << line << ": " << error::what();
+    return msg.str().c_str();
+  }
 };
 
 } // namespace ledger

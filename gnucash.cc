@@ -9,10 +9,10 @@ extern "C" {
 
 namespace ledger {
 
-typedef std::map<const std::string, account_t *> accounts_map;
+typedef std::map<const std::string, account_t *>  accounts_map;
 typedef std::pair<const std::string, account_t *> accounts_pair;
 
-typedef std::map<account_t *, commodity_t *> account_comm_map;
+typedef std::map<account_t *, commodity_t *>  account_comm_map;
 typedef std::pair<account_t *, commodity_t *> account_comm_pair;
 
 static journal_t *	curr_journal;
