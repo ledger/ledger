@@ -582,24 +582,20 @@ OPT_BEGIN(gain, "G") {
 } OPT_END(gain);
 
 OPT_BEGIN(average, "A") {
-  config.amount_expr = "a";
-  config.total_expr = "MO";
+  config.total_expr = std::string("M") + config.total_expr;
 } OPT_END(average);
 
 OPT_BEGIN(deviation, "D") {
-  config.amount_expr = "a";
-  config.total_expr = "DMO";
+  config.total_expr = std::string("DM") + config.total_expr;
 } OPT_END(deviation);
 
 OPT_BEGIN(trend, "X") {
-  config.amount_expr = "a";
-  config.total_expr = "MDMO";
+  config.total_expr = std::string("MDM") + config.total_expr;
 } OPT_END(trend);
 
 OPT_BEGIN(weighted_trend, "Z") {
-  config.amount_expr = "a";
-  config.total_expr
-    = "MD(MO/(1+(((m-d)/(30*86400))<0?0:((m-d)/(30*86400)))))";
+  config.total_expr = (std::string("MD(M(") + config.total_expr +
+		       ")/(1+(((m-d)/(30*86400))<0?0:((m-d)/(30*86400)))))");
 } OPT_END(weighted_trend);
 
 } // namespace ledger

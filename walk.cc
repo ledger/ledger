@@ -73,13 +73,13 @@ static void handle_value(const value_t&		       value,
     xact.entry = entry;
     switch (value.type) {
     case value_t::BOOLEAN:
-      xact.amount  = *((bool *) value.data);
+      xact.amount = *((bool *) value.data);
       break;
     case value_t::INTEGER:
-      xact.amount  = *((unsigned int *) value.data);
+      xact.amount = *((unsigned int *) value.data);
       break;
     case value_t::AMOUNT:
-      xact.amount  = *((amount_t *) value.data);
+      xact.amount = *((amount_t *) value.data);
       break;
     default:
       assert(0);
@@ -123,6 +123,15 @@ static void handle_value(const value_t&		       value,
   }
 }
 
+void determine_amount(value_t& result, balance_pair_t& bal_pair)
+{
+  account_xdata_t xdata;
+  xdata.value = bal_pair;
+  account_t temp_account;
+  temp_account.data = &xdata;
+  format_t::compute_amount(result, details_t(temp_account));
+}
+
 void collapse_transactions::report_cumulative_subtotal()
 {
   if (count == 1) {
@@ -130,11 +139,8 @@ void collapse_transactions::report_cumulative_subtotal()
   } else {
     assert(count > 1);
 
-    account_xdata_t xdata;
-    xdata.total = subtotal;
     value_t result;
-    totals_account.data = &xdata;
-    format_t::compute_total(result, details_t(totals_account));
+    determine_amount(result, subtotal);
     handle_value(result, &totals_account, last_entry, 0, xact_temps, handler);
   }
 
@@ -210,14 +216,8 @@ void subtotal_transactions::flush(const char * spec_fmt)
        i != balances.end();
        i++) {
     entry.date = finish;
-    {
-      transaction_xdata_t xact_data;
-      xact_data.total = (*i).second;
-      transaction_t temp((*i).first);
-      temp.entry = &entry;
-      temp.data = &xact_data;
-      format_t::compute_total(result, details_t(temp));
-    }
+    value_t result;
+    determine_amount(result, (*i).second);
     entry.date = start;
 
     handle_value(result, (*i).first, &entry, 0, xact_temps, handler);
