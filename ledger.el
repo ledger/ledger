@@ -255,7 +255,9 @@ Return the difference in the format of a time value."
 		  (replace-match "\\\\\\1"))
 		(buffer-string))
 	      "--reconcile-date" date "register" account)))
-	(when (= 0 exit-code)
+	(if (/= 0 exit-code)
+	    (error "Failed to reconcile account '%s' to balance '%s'"
+		   account balance)
 	  (goto-char (point-min))
 	  (unless (looking-at "[0-9]")
 	    (error (buffer-string)))
