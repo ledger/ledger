@@ -62,8 +62,8 @@ bool _debug_active(const char * const cls);
 #define DEBUG_PRINT_(x) DEBUG_PRINT(_debug_cls, x)
 
 #define DEBUG_PRINT_TIME(cls, x) {				\
-  char buf[256];						\
-  std::strftime(buf, 255, "%Y/%m/%d", std::localtime(&x));	\
+  char buf[16];							\
+  std::strftime(buf, 15, "%Y/%m/%d", std::localtime(&x));	\
   DEBUG_PRINT(cls, #x << " is " << buf);			\
 }
 

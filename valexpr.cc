@@ -430,10 +430,9 @@ inline value_expr_t * parse_value_term(const char * p) {
 
 value_expr_t * parse_value_term(std::istream& in)
 {
-  static char buf[256];
-
   std::auto_ptr<value_expr_t> node;
 
+  char buf[256];
   char c = peek_next_nonws(in);
   if (std::isdigit(c)) {
     READ_INTO(in, buf, 255, c, std::isdigit(c));

@@ -15,14 +15,15 @@ void add_option_handler(std::list<option_t>& options,
 
   option_t opt;
 
-  static char buf[128];
+  char   buf[128];
   char * p = buf;
-  for (const char * q = label.c_str(); *q; q++)
+  for (const char * q = label.c_str();
+       *q && p - buf < 128;
+       q++)
     if (*q == '_')
       *p++ = '-';
     else
       *p++ = *q;
-  assert(p < buf + 127);
   *p = '\0';
   opt.long_opt = buf;
 
@@ -147,15 +148,16 @@ void process_environment(std::list<option_t>& options,
 
   for (char ** p = envp; *p; p++)
     if (std::strncmp(*p, tag_p, tag_len) == 0) {
-      char * q;
-      static char buf[128];
+      char   buf[128];
       char * r = buf;
-      for (q = *p + tag_len; *q && *q != '='; q++)
+      char * q;
+      for (q = *p + tag_len;
+	   *q && *q != '=' && r - buf < 128;
+	   q++)
 	if (*q == '_')
 	  *r++ += '-';
 	else
 	  *r++ += std::tolower(*q);
-      assert(r < buf + 127);
       *r = '\0';
 
       if (*q == '=')

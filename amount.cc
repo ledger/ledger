@@ -671,27 +671,26 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
 
 void parse_quantity(std::istream& in, std::string& value)
 {
-  static char buf[256];
+  char buf[256];
   char c = peek_next_nonws(in);
-  READ_INTO(in, buf, 256, c,
+  READ_INTO(in, buf, 255, c,
 	    std::isdigit(c) || c == '-' || c == '.' || c == ',');
   value = buf;
 }
 
 void parse_commodity(std::istream& in, std::string& symbol)
 {
-  static char buf[256];
-
+  char buf[256];
   char c = peek_next_nonws(in);
   if (c == '"') {
     in.get(c);
-    READ_INTO(in, buf, 256, c, c != '"');
+    READ_INTO(in, buf, 255, c, c != '"');
     if (c == '"')
       in.get(c);
     else
       throw amount_error("Quoted commodity symbol lacks closing quote");
   } else {
-    READ_INTO(in, buf, 256, c, ! std::isspace(c) && ! std::isdigit(c) &&
+    READ_INTO(in, buf, 255, c, ! std::isspace(c) && ! std::isdigit(c) &&
 	      c != '-' && c != '.');
   }
   symbol = buf;

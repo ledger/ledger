@@ -56,7 +56,7 @@ element_t * format_t::parse_elements(const std::string& fmt)
 
   element_t * current = NULL;
 
-  static char buf[1024];
+  char   buf[1024];
   char * q = buf;
 
   for (const char * p = fmt.c_str(); *p; p++) {

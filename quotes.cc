@@ -59,7 +59,6 @@ void quotes_by_script::operator()(commodity_t&      commodity,
     cache_dirty = true;
 
     if (price && ! price_db.empty()) {
-      char buf[128];
       strftime(buf, 127, "%Y/%m/%d %H:%M:%S", localtime(&now));
       ofstream database(price_db.c_str(), ios_base::out | ios_base::app);
       database << "P " << buf << " " << commodity.symbol
