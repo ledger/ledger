@@ -14,7 +14,7 @@ class error : public std::exception
   virtual ~error() throw() {}
 
   virtual const char* what() const throw() {
-    return reason;
+    return reason.c_str();
   }
 };
 
