@@ -173,11 +173,7 @@ AC_STRUCT_TM
 # Checks for library functions.
 #AC_FUNC_ERROR_AT_LINE
 AC_HEADER_STDC
-#AC_FUNC_MALLOC
-#AC_FUNC_MKTIME
-#AC_FUNC_STAT
-#AC_FUNC_STRFTIME
-AC_CHECK_FUNCS([memset strchr strstr access mktime stat strftime strptime])
+AC_CHECK_FUNCS([access mktime realpath stat strftime strptime])
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
