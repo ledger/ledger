@@ -671,7 +671,7 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
     std::free(p);
   }
   else {
-    std::list<std::string> strs;
+    strings_list strs;
     char buf[4];
 
     for (int powers = 0; true; powers += 3) {
@@ -690,7 +690,7 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
 
     bool printed = false;
 
-    for (std::list<std::string>::reverse_iterator i = strs.rbegin();
+    for (strings_list::reverse_iterator i = strs.rbegin();
 	 i != strs.rend();
 	 i++) {
       if (printed) {
@@ -901,6 +901,38 @@ void amount_t::write_quantity(std::ostream& out) const
     byte = 2;
     out.write(&byte, sizeof(byte));
     out.write((char *)&quantity->index, sizeof(quantity->index));
+  }
+}
+
+void amount_t::read_quantity(char *& data)
+{
+  char byte = *data++;;
+
+  if (byte == 0) {
+    quantity = NULL;
+  }
+  else if (byte == 1) {
+    quantity = new(bigints_next++) bigint_t;
+    quantity->flags |= BIGINT_BULK_ALLOC;
+
+    unsigned short len = *((unsigned short *) data);
+    data += sizeof(unsigned short);
+    mpz_import(MPZ(quantity), len / sizeof(short), 1, sizeof(short),
+	       0, 0, data);
+    data += len;
+
+    char negative = *data++;
+    if (negative)
+      mpz_neg(MPZ(quantity), MPZ(quantity));
+
+    quantity->prec = *((unsigned short *) data);
+    data += sizeof(unsigned short);
+  } else {
+    unsigned int index = *((unsigned int *) data);
+    data += sizeof(unsigned int);
+
+    quantity = bigints + (index - 1);
+    quantity->ref++;
   }
 }
 

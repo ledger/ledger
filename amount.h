@@ -165,6 +165,7 @@ class amount_t
   void parse(const std::string& str);
 
   void write_quantity(std::ostream& out) const;
+  void read_quantity(char *& data);
   void read_quantity(std::istream& in);
 
   bool valid() const;

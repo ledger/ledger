@@ -154,7 +154,7 @@ int parse_and_report(int argc, char * argv[], char * envp[])
 
   TIMER_START(process_args);
 
-  strings_list args;
+  std::list<std::string> args;
   process_arguments(argc, argv, false, args);
 
   if (args.empty()) {
@@ -327,7 +327,7 @@ int parse_and_report(int argc, char * argv[], char * envp[])
     // Treat the remaining command-line arguments as regular
     // expressions, used for refining report results.
 
-    strings_list::iterator i = args.begin();
+    std::list<std::string>::iterator i = args.begin();
     for (; i != args.end(); i++)
       if (*i == "--")
 	break;
