@@ -192,8 +192,7 @@ std::ostream& operator<<(std::ostream& out, const amount_t& amt);
 #define COMMODITY_STYLE_SEPARATED  0x0002
 #define COMMODITY_STYLE_EUROPEAN   0x0004
 #define COMMODITY_STYLE_THOUSANDS  0x0008
-#define COMMODITY_STYLE_CONSULTED  0x0010
-#define COMMODITY_STYLE_NOMARKET   0x0020
+#define COMMODITY_STYLE_NOMARKET   0x0010
 
 typedef std::map<const std::time_t, amount_t>  history_map;
 typedef std::pair<const std::time_t, amount_t> history_pair;
@@ -210,6 +209,7 @@ class commodity_t
     virtual void operator()(commodity_t *     commodity,
 			    const std::time_t moment,
 			    const std::time_t date,
+			    const std::time_t last,
 			    amount_t&         price) = 0;
   };
 
@@ -222,6 +222,7 @@ class commodity_t
   unsigned short precision;
   unsigned short flags;
   history_map	 history;
+  std::time_t	 last_lookup;
   amount_t	 conversion;
   ident_t	 ident;
 
@@ -254,7 +255,8 @@ class commodity_t
   commodity_t(const std::string& _symbol    = "",
 	      unsigned int	 _precision = 0,
 	      unsigned int       _flags	    = COMMODITY_STYLE_DEFAULTS)
-    : symbol(_symbol), quote(false), precision(_precision), flags(_flags) {
+    : symbol(_symbol), quote(false), precision(_precision),
+      flags(_flags), last_lookup(0) {
     check_symbol();
   }
 

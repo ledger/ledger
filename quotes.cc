@@ -8,47 +8,54 @@ namespace ledger {
 void quotes_by_script::operator()(commodity_t *     commodity,
 				  const std::time_t moment,
 				  const std::time_t date,
+				  const std::time_t last,
 				  amount_t&	    price)
 {
-  if (commodity->flags & COMMODITY_STYLE_CONSULTED ||
-      std::difftime(moment, now) < pricing_leeway ||
+  DEBUG_CLASS("ledger.quotes.download");
+
+  DEBUG_PRINT_("commodity: " << commodity->symbol);
+  DEBUG_PRINT_TIME_(now);
+  DEBUG_PRINT_TIME_(moment);
+  DEBUG_PRINT_TIME_(date);
+  DEBUG_PRINT_TIME_(last);
+  DEBUG_PRINT_TIME_(commodity->last_lookup);
+  DEBUG_PRINT_("pricing_leeway is " << pricing_leeway);
+
+  if (std::difftime(now, commodity->last_lookup) < pricing_leeway ||
+      std::difftime(now, last) < pricing_leeway ||
       (price && std::difftime(moment, date) <= pricing_leeway))
     return;
 
   using namespace std;
 
-  DEBUG_PRINT("ledger.quotes.download",
-	      "downloading quote for symbol " << commodity->symbol);
-  DEBUG_PRINT("ledger.quotes.download",
-	      "pricing_leeway is " << pricing_leeway);
-  DEBUG_PRINT_TIME("ledger.quotes.download", now);
-  DEBUG_PRINT_TIME("ledger.quotes.download", moment);
-  DEBUG_PRINT_TIME("ledger.quotes.download", date);
+  DEBUG_PRINT_("downloading quote for symbol " << commodity->symbol);
 
   // Only consult the Internet once for any commodity
-  commodity->flags |= COMMODITY_STYLE_CONSULTED;
+  commodity->last_lookup = now;
   cache_dirty = true;
 
   char buf[256];
   buf[0] = '\0';
 
+  bool success = true;
+
   if (FILE * fp = popen((string("getquote ") +
 			 commodity->symbol).c_str(), "r")) {
-    if (feof(fp) || ! fgets(buf, 255, fp)) {
-      fclose(fp);
-      return;
-    }
+    if (feof(fp) || ! fgets(buf, 255, fp))
+      success = false;
     fclose(fp);
   }
 
-  if (buf[0]) {
+  if (success && buf[0]) {
     char * p = strchr(buf, '\n');
     if (p) *p = '\0';
+
+    DEBUG_PRINT_("downloaded quote: " << buf);
 
     price.parse(buf);
     commodity->add_price(now, price);
 
-    if (! price_db.empty()) {
+    if (price && ! price_db.empty()) {
       char buf[128];
       strftime(buf, 127, "%Y/%m/%d %H:%M:%S", localtime(&now));
       ofstream database(price_db.c_str(), ios_base::out | ios_base::app);

@@ -980,7 +980,8 @@ amount_t commodity_t::value(const std::time_t moment)
     }
 
   if (updater)
-    (*updater)(this, moment, age, price);
+    (*updater)(this, moment, age,
+	       history.size() > 0 ? (*history.rbegin()).first : 0, price);
 
   return price;
 }

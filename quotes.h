@@ -21,6 +21,7 @@ class quotes_by_script : public commodity_t::updater_t
   virtual void operator()(commodity_t *     commodity,
 			  const std::time_t moment,
 			  const std::time_t date,
+			  const std::time_t last,
 			  amount_t&	    price);
 };
 

@@ -462,8 +462,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	parse_commodity(in, symbol);
 
 	commodity_t * commodity = commodity_t::find_commodity(symbol, true);
-	commodity->flags |= (COMMODITY_STYLE_CONSULTED |
-			     COMMODITY_STYLE_NOMARKET);
+	commodity->flags |= COMMODITY_STYLE_NOMARKET;
 	break;
       }
 
@@ -569,8 +568,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
  done:
   if (time_commodity) {
     time_commodity->precision = 2;
-    time_commodity->flags |= (COMMODITY_STYLE_CONSULTED |
-			      COMMODITY_STYLE_NOMARKET);
+    time_commodity->flags |= COMMODITY_STYLE_NOMARKET;
   }
 
   if (errors > 0) {

@@ -9,7 +9,7 @@
 namespace ledger {
 
 const unsigned long	   binary_magic_number = 0xFFEED765;
-static const unsigned long format_version      = 0x0002000c;
+static const unsigned long format_version      = 0x0002000e;
 
 bool binary_parser_t::test(std::istream& in) const
 {
@@ -151,6 +151,7 @@ commodity_t * read_binary_commodity(std::istream& in)
     read_binary_amount(in, amt);
     commodity->history.insert(history_pair(when, amt));
   }
+  read_binary_number(in, commodity->last_lookup);
 
   read_binary_amount(in, commodity->conversion);
 
@@ -351,6 +352,7 @@ void write_binary_commodity(std::ostream& out, commodity_t * commodity)
     write_binary_number(out, (*i).first);
     write_binary_amount(out, (*i).second);
   }
+  write_binary_number(out, commodity->last_lookup);
 
   write_binary_amount(out, commodity->conversion);
 }
