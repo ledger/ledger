@@ -67,6 +67,9 @@ class compare_items {
 // Transaction handlers
 //
 
+typedef std::deque<transaction_t *> transactions_deque;
+typedef std::deque<entry_t *>       entries_deque;
+
 inline void walk_transactions(transactions_list::iterator begin,
 			      transactions_list::iterator end,
 			      item_handler<transaction_t>& handler) {
@@ -74,7 +77,19 @@ inline void walk_transactions(transactions_list::iterator begin,
     handler(**i);
 }
 
-inline void walk_transactions(transactions_list& deque,
+inline void walk_transactions(transactions_list& list,
+			      item_handler<transaction_t>& handler) {
+  walk_transactions(list.begin(), list.end(), handler);
+}
+
+inline void walk_transactions(transactions_deque::iterator begin,
+			      transactions_deque::iterator end,
+			      item_handler<transaction_t>& handler) {
+  for (transactions_deque::iterator i = begin; i != end; i++)
+    handler(**i);
+}
+
+inline void walk_transactions(transactions_deque& deque,
 			      item_handler<transaction_t>& handler) {
   walk_transactions(deque.begin(), deque.end(), handler);
 }
@@ -179,8 +194,8 @@ class set_account_value : public item_handler<transaction_t>
 
 class sort_transactions : public item_handler<transaction_t>
 {
-  std::deque<transaction_t *> transactions;
-  const value_expr_t *	      sort_order;
+  transactions_deque   transactions;
+  const value_expr_t * sort_order;
 
  public:
   sort_transactions(item_handler<transaction_t> * handler,
@@ -387,7 +402,7 @@ class interval_transactions : public subtotal_transactions
 
 class dow_transactions : public subtotal_transactions
 {
-  std::deque<transaction_t *> days_of_the_week[7];
+  transactions_list days_of_the_week[7];
 
  public:
   dow_transactions(item_handler<transaction_t> * handler)
@@ -459,11 +474,11 @@ inline void sum_accounts(account_t& account) {
   ACCT_DATA_(account)->count += ACCT_DATA_(account)->subcount;
 }
 
-typedef std::deque<account_t *> accounts_list;
+typedef std::deque<account_t *> accounts_deque;
 
 inline void sort_accounts(account_t&	       account,
 			  const value_expr_t * sort_order,
-			  accounts_list&       accounts) {
+			  accounts_deque&      accounts) {
   for (accounts_map::iterator i = account.accounts.begin();
        i != account.accounts.end();
        i++)
@@ -479,9 +494,9 @@ inline void walk_accounts(account_t&		   account,
   handler(account);
 
   if (sort_order) {
-    accounts_list accounts;
+    accounts_deque accounts;
     sort_accounts(account, sort_order, accounts);
-    for (accounts_list::const_iterator i = accounts.begin();
+    for (accounts_deque::const_iterator i = accounts.begin();
 	 i != accounts.end();
 	 i++)
       walk_accounts(**i, handler, sort_order);

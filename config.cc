@@ -47,8 +47,8 @@ config_t::config_t()
 
 static void
 regexps_to_predicate(config_t& config,
-		     std::deque<std::string>::const_iterator begin,
-		     std::deque<std::string>::const_iterator end,
+		     std::list<std::string>::const_iterator begin,
+		     std::list<std::string>::const_iterator end,
 		     const bool account_regexp		= false,
 		     const bool add_account_short_masks = false)
 {
@@ -57,7 +57,7 @@ regexps_to_predicate(config_t& config,
   // Treat the remaining command-line arguments as regular
   // expressions, used for refining report results.
 
-  for (std::deque<std::string>::const_iterator i = begin;
+  for (std::list<std::string>::const_iterator i = begin;
        i != end;
        i++)
     if ((*i)[0] == '-') {
@@ -137,7 +137,7 @@ void config_t::process_options(const std::string&     command,
     // Treat the remaining command-line arguments as regular
     // expressions, used for refining report results.
 
-    std::deque<std::string>::iterator i = arg;
+    std::list<std::string>::iterator i = arg;
     for (; i != args_end; i++)
       if (*i == "--")
 	break;

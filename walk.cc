@@ -8,7 +8,7 @@ void sort_transactions::flush()
   std::stable_sort(transactions.begin(), transactions.end(),
 		   compare_items<transaction_t>(sort_order));
 
-  for (std::deque<transaction_t *>::iterator i = transactions.begin();
+  for (transactions_deque::iterator i = transactions.begin();
        i != transactions.end();
        i++)
     (*handler)(**i);
@@ -290,7 +290,7 @@ void interval_transactions::operator()(transaction_t& xact)
 void dow_transactions::flush()
 {
   for (int i = 0; i < 7; i++) {
-    for (std::deque<transaction_t *>::iterator d = days_of_the_week[i].begin();
+    for (transactions_list::iterator d = days_of_the_week[i].begin();
 	 d != days_of_the_week[i].end();
 	 d++)
       subtotal_transactions::operator()(**d);

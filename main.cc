@@ -230,7 +230,7 @@ int parse_and_report(int argc, char * argv[], char * envp[])
 
   TIMER_START(process_opts);
 
-  std::deque<std::string> args;
+  std::list<std::string> args;
   process_arguments(argc - 1, argv + 1, false, args);
 
   if (args.empty()) {

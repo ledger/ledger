@@ -6,7 +6,7 @@
 
 #include "util.h"
 
-static std::deque<option_t> options;
+static std::list<option_t> options;
 
 void register_option(const std::string& label,
 		     const std::string& opt_chars,
@@ -50,7 +50,7 @@ static inline void process_option(const option_t& opt,
 
 bool process_option(const std::string& opt, const char * arg)
 {
-  for (std::deque<option_t>::iterator i = options.begin();
+  for (std::list<option_t>::iterator i = options.begin();
        i != options.end();
        i++)
     if ((*i).long_opt == opt) {
@@ -66,7 +66,7 @@ bool process_option(const std::string& opt, const char * arg)
 }
 
 void process_arguments(int argc, char ** argv, const bool anywhere,
-		       std::deque<std::string>& args)
+		       std::list<std::string>& args)
 {
   int index = 0;
   for (char ** i = argv; index < argc; i++, index++) {
@@ -87,7 +87,7 @@ void process_arguments(int argc, char ** argv, const bool anywhere,
       if ((*i)[2] == '\0')
 	break;
 
-      for (std::deque<option_t>::iterator j = options.begin();
+      for (std::list<option_t>::iterator j = options.begin();
 	   j != options.end();
 	   j++)
 	if ((*j).wants_arg) {
@@ -111,7 +111,7 @@ void process_arguments(int argc, char ** argv, const bool anywhere,
       std::cerr << "Error: illegal option " << *i << std::endl;
       std::exit(1);
     } else {
-      for (std::deque<option_t>::iterator j = options.begin();
+      for (std::list<option_t>::iterator j = options.begin();
 	   j != options.end();
 	   j++)
 	if ((*i)[1] == (*j).short_opt) {
@@ -180,7 +180,7 @@ struct func_option_wrapper : public option_handler
   }
 };
 
-static std::deque<func_option_wrapper> wrappers;
+static std::list<func_option_wrapper> wrappers;
 
 void py_register_option(const std::string& long_opt,
 			const std::string& short_opt, object func)
@@ -200,11 +200,11 @@ list py_process_arguments(list args, bool anywhere = false)
   for (int i = 0; i < l; i++)
     strs.push_back(extract<char *>(args[i]));
 
-  std::deque<std::string> newargs;
+  std::list<std::string> newargs;
   process_arguments(strs.size(), &strs.front(), anywhere, newargs);
 
   list py_newargs;
-  for (std::deque<std::string>::iterator i = newargs.begin();
+  for (std::list<std::string>::iterator i = newargs.begin();
        i != newargs.end();
        i++)
     py_newargs.append(*i);

@@ -11,7 +11,7 @@
 //
 
 #include <map>
-#include <deque>
+#include <list>
 #include <string>
 #include <ctime>
 #include <iostream>
@@ -121,7 +121,7 @@ value_t& add_transaction_to(const transaction_t& xact, value_t& value)
   return value;
 }
 
-typedef std::deque<transaction_t *> transactions_list;
+typedef std::list<transaction_t *> transactions_list;
 
 class entry_t
 {
@@ -214,8 +214,8 @@ inline std::ostream& operator<<(std::ostream& out, const account_t& acct) {
 }
 
 
-typedef std::deque<entry_t *>   entries_list;
-typedef std::deque<std::string> strings_list;
+typedef std::list<entry_t *>   entries_list;
+typedef std::list<std::string> strings_list;
 
 class journal_t
 {
