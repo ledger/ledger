@@ -4,7 +4,7 @@ OBJS   = $(patsubst %.cc,%.o,$(CODE))
 CXX    = g++
 CFLAGS = #-Wall -ansi -pedantic
 DFLAGS = -O3 -fomit-frame-pointer
-#DFLAGS = -g -DDEBUG=1
+DFLAGS = #-g -DDEBUG=1
 INCS   = -I/sw/include -I/usr/include/gcc/darwin/3.3/c++ -I/usr/include/gcc/darwin/3.3/c++/ppc-darwin
 LIBS   = -L/sw/lib -lgmpxx -lgmp -lpcre
 

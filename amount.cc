@@ -199,34 +199,10 @@ amount * gmp_amount::value(const amount * pr) const
   }
 }
 
-static bool get_commodity_price(commodity * comm)
-{
-  using namespace std;
-
-  char buf[256];
-  buf[0] = '\0';
-
-  if (FILE * fp = popen((std::string("getquote ") +
-			 comm->symbol).c_str(), "r")) {
-    if (feof(fp) || ! fgets(buf , 255, fp)) {
-      fclose(fp);
-      return false;
-    }
-    fclose(fp);
-  }
-
-  if (buf[0]) {
-    char * p = strchr(buf, '\n');
-    if (p) *p = '\0';
-
-    comm->price = create_amount(buf);
-    return true;
-  }
-  return false;
-}
-
 amount * gmp_amount::street(bool get_quotes) const
 {
+  static std::time_t now = std::time(NULL);
+
   amount * amt = copy();
 
   if (! amt->commdty())
@@ -234,16 +210,12 @@ amount * gmp_amount::street(bool get_quotes) const
 
   int  max = 10;
   while (--max >= 0) {
-    if (! amt->commdty()->price && ! amt->commdty()->sought) {
-      if (get_quotes)
-	get_commodity_price(amt->commdty());
-      amt->commdty()->sought = true;
-      if (! amt->commdty()->price)
-	break;
-    }
+    amount * price = amt->commdty()->price(&now, get_quotes);
+    if (! price)
+      break;
 
     amount * old = amt;
-    amt = amt->value(amt->commdty()->price);
+    amt = amt->value(price);
 
     if (amt->commdty() == old->commdty()) {
       delete old;
@@ -574,8 +546,8 @@ static commodity * parse_amount(mpz_t out, const char * num,
     commodities_map_iterator item =
       main_ledger->commodities.find(symbol.c_str());
     if (item == main_ledger->commodities.end())
-      comm = new commodity(symbol, prefix, separate,
-			   thousands, european, precision);
+      comm = new commodity(symbol, prefix, separate, thousands,
+			   european, precision);
     else
       comm = (*item).second;
   }

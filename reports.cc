@@ -1,6 +1,6 @@
 #include "ledger.h"
 
-#define LEDGER_VERSION "1.6"
+#define LEDGER_VERSION "1.7"
 
 #include <cstring>
 #include <unistd.h>
@@ -11,7 +11,6 @@ static bool cleared_only   = false;
 static bool uncleared_only = false;
 static bool cost_basis     = false;
 static bool show_virtual   = true;
-static bool get_quotes     = false;
 static bool show_children  = false;
 static bool show_sorted    = false;
 static bool show_empty     = false;
@@ -19,6 +18,10 @@ static bool show_subtotals = true;
 static bool full_names     = false;
 static bool print_monthly  = false;
 static bool gnuplot_safe   = false;
+
+static bool get_quotes = false;
+       long pricing_leeway = 24 * 3600;
+       std::string price_db;
 
 static amount * lower_limit = NULL;
 
@@ -789,11 +792,13 @@ int main(int argc, char * argv[])
 
   std::vector<std::string> files;
 
+  main_ledger = new book;
+
   // Parse the command-line options
 
   int c;
   while (-1 != (c = getopt(argc, argv,
-			   "+b:e:d:cCUhBRV:f:i:p:PvsSEnFMGl:N:"))) {
+			   "+b:e:d:cCUhBRV:f:i:p:PL:Q:vsSEnFMGl:N:"))) {
     switch (char(c)) {
     case 'b':
       have_beginning = true;
@@ -849,17 +854,25 @@ int main(int argc, char * argv[])
       break;
 
     // -p "COMMODITY=PRICE"
-    // -p path-to-price-database
     case 'p':
-      prices = optarg;
+      parse_price_setting(optarg);
       break;
 
     case 'P':
       get_quotes = true;
       break;
 
+    case 'L':
+      pricing_leeway = std::atol(optarg) * 60;
+      break;
+
+    case 'Q':
+      get_quotes = true;
+      price_db = optarg;
+      break;
+
     case 'l':
-      limit = optarg;
+      lower_limit = create_amount(optarg);
       break;
 
     case 'v':
@@ -904,12 +917,22 @@ int main(int argc, char * argv[])
     for (; index < argc; index++)
       regexps.push_back(mask(argv[index]));
 
+  // If a price history file is specified with the environment
+  // variable PRICE_HIST, add it to the list of ledger files to read.
+
+  if (price_db.empty())
+    if (char * p = std::getenv("PRICE_HIST")) {
+      get_quotes = true;
+      price_db = p;
+    }
+
+  if (char * p = std::getenv("PRICE_EXP"))
+    pricing_leeway = std::atol(p) * 60;
+
   // A ledger data file must be specified
 
   int entry_count = 0;
   
-  main_ledger = new book;
-
   if (files.empty()) {
     if (char * p = std::getenv("LEDGER")) {
       for (p = std::strtok(p, ":"); p; p = std::strtok(NULL, ":")) {
@@ -932,25 +955,15 @@ int main(int argc, char * argv[])
     }
   }
 
+  if (! price_db.empty())
+    entry_count += parse_ledger_file(main_ledger, price_db,
+				     regexps, command == "equity");
+
   if (entry_count == 0) {
     std::cerr << ("Please specify ledger file(s) using -f option "
 		  "or LEDGER environment variable.") << std::endl;
     return 1;
   }
-
-  // Record any prices specified by the user
-
-  if (! prices.empty()) {
-    if (access(prices.c_str(), R_OK) != -1)
-      read_prices(prices);
-    else
-      parse_price_setting(prices);
-  }
-
-  // Parse the lower limit, if specified
-
-  if (! limit.empty())
-      lower_limit = create_amount(limit);
 
   // Process the command
 

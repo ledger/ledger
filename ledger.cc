@@ -11,8 +11,82 @@ extern int linenum;
 
 commodity::~commodity()
 {
-  if (price)
-    delete price;
+  if (conversion)
+    delete conversion;
+
+  for (price_map::iterator i = history.begin();
+       i != history.end();
+       i++)
+    delete (*i).second;
+}
+
+void commodity::set_price(amount * price, std::time_t * when)
+{
+  assert(price);
+  if (when)
+    history.insert(price_map_pair(*when, price));
+  else
+    conversion = price;
+}
+
+amount * commodity::price(std::time_t * when, bool download) const
+{
+  if (conversion)
+    return conversion;
+
+  std::time_t age;
+  amount *    price = NULL;
+  
+  for (price_map::reverse_iterator i = history.rbegin();
+       i != history.rend();
+       i++) {
+    if (*when >= (*i).first) {
+      age   = (*i).first;
+      price = (*i).second;
+      break;
+    }
+  }
+
+  extern long pricing_leeway;
+
+  if (download && ! sought &&
+      (! price || (*when - age) > pricing_leeway)) {
+    using namespace std;
+
+    // Only consult the Internet once for any commodity
+    sought = true;
+
+    char buf[256];
+    buf[0] = '\0';
+
+    std::cout << "Consulting the Internet: " << symbol << std::endl;
+    if (FILE * fp = popen((string("getquote ") + symbol).c_str(), "r")) {
+      if (feof(fp) || ! fgets(buf, 255, fp)) {
+	fclose(fp);
+	return price;
+      }
+      fclose(fp);
+    }
+
+    if (buf[0]) {
+      char * p = strchr(buf, '\n');
+      if (p) *p = '\0';
+
+      price = create_amount(buf);
+      const_cast<commodity *>(this)->set_price(price, when);
+
+      extern string price_db;
+      if (! price_db.empty()) {
+	char buf[128];
+	strftime(buf, 127, "%Y/%m/%d", localtime(when));
+	ofstream database(price_db.c_str(), ios_base::out | ios_base::app);
+	database << "P " << buf << " " << symbol << " "
+		 << price->as_str() << endl;
+      }
+    }
+  }
+
+  return price;
 }
 
 const std::string transaction::acct_as_str() const

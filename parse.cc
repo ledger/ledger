@@ -91,6 +91,20 @@ bool parse_date(const char * date_str, std::time_t * result, const int year)
   return true;
 }
 
+void record_price(const std::string& symbol, amount * price,
+		  std::time_t * date = NULL)
+{
+  commodity * comm = NULL;
+  commodities_map_iterator item = main_ledger->commodities.find(symbol);
+  if (item == main_ledger->commodities.end())
+    comm = new commodity(symbol);
+  else
+    comm = (*item).second;
+
+  assert(comm);
+  comm->set_price(price, date);
+}
+
 void parse_price_setting(const std::string& setting)
 {
   char buf[128];
@@ -104,16 +118,7 @@ void parse_price_setting(const std::string& setting)
     std::cerr << "Warning: Invalid price setting: " << setting << std::endl;
   } else {
     *p++ = '\0';
-
-    commodity * comm = NULL;
-    commodities_map_iterator item = main_ledger->commodities.find(c);
-    if (item == main_ledger->commodities.end())
-      comm = new commodity(c);
-    else
-      comm = (*item).second;
-
-    assert(comm);
-    comm->price = create_amount(p);
+    record_price(c, create_amount(p));
   }
 }
 
@@ -412,6 +417,56 @@ int parse_ledger(book * ledger, std::istream& in,
       break;
 #endif // TIMELOG_SUPPORT
 
+    case 'P': {			// a pricing entry
+      in >> c;
+
+      time_t      date;
+      std::string symbol;
+
+      in >> line;		// the date
+      if (! parse_date(line, &date, ledger->current_year)) {
+	std::cerr << "Error, line " << linenum
+		  << ": Failed to parse date: " << line << std::endl;
+	break;
+      }
+      in >> symbol;		// the commodity
+      in >> line;		// the price
+
+      // Add this pricing entry to the history for the given
+      // commodity.
+      record_price(symbol, create_amount(line), &date);
+      break;
+    }
+
+    case 'N': {			// don't download prices
+      in >> c;
+      in >> line;		// the symbol
+
+      commodity * comm = NULL;
+      commodities_map_iterator item = main_ledger->commodities.find(line);
+      if (item == main_ledger->commodities.end())
+	comm = new commodity(line);
+      else
+	comm = (*item).second;
+
+      assert(comm);
+      if (comm)
+	comm->sought = true;
+      break;
+    }
+
+    case 'C': {			// a flat conversion
+      in >> c;
+
+      std::string symbol;
+      in >> symbol;		// the commodity
+      in >> line;		// the price
+
+      // Add this pricing entry to the given commodity
+      record_price(symbol, create_amount(line));
+      break;
+    }
+
     case 'Y':                   // set the current year
       in >> c;
       in >> ledger->current_year;
@@ -511,18 +566,6 @@ void read_regexps(const std::string& path, regexps_list& regexps)
     file.getline(buf, 79);
     if (*buf && ! std::isspace(*buf))
       regexps.push_back(mask(buf));
-  }
-}
-
-void read_prices(const std::string& path)
-{
-  std::ifstream file(path.c_str());
-
-  while (! file.eof()) {
-    char buf[80];
-    file.getline(buf, 79);
-    if (*buf && ! std::isspace(*buf))
-      parse_price_setting(buf);
   }
 }
 

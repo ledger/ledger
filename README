@@ -819,6 +819,109 @@ If you want to show all accounts but for one account, remember to use
 ledger balance -- -equity
 </example>
 
+** File format
+
+The ledger file format is quite simple, but supports many options.
+These are summarized here.
+
+The initial character of each line determines what that line means,
+and how it should be parsed.  The possibilities are:
+
+NUMBER ::
+  A line starting with a number denotes a regular ledger entry.  It
+  may be followed by any number of lines that beginning whitespace, to
+  denote account transactions.  The format of an entry is:
+<example>
+DATE [*] [(CODE)] DESC
+  ACCOUNT  AMOUNT
+  ACCOUNT  AMOUNT
+  ...
+</example>
+
++ ::
+  If a line begins with plus, it denotes an inclusion regexp that
+  will always be considered, as if it had been specified by the user
+  at the end of their command-line.
+
+- ::
+  If a line begins with minus, it denotes an exclusion regexp that
+  will always be considered, as if it had been specified by the user
+  at the end of their command-line.
+
+<literal>=</literal> ::
+  If a line begins with equals, it denotes an automated transaction.
+  The next item on the line must be a regular expression.  Any number
+  of such lines may appear, with no intervening whitespace.
+  Following this block of lines can be a list of account transactions
+  preceded by whitespace.  The format is:
+<example>
+= REGEXP
+= REGEXP
+= REGEXP
+...
+  ACCOUNT AMOUNT
+  ACCOUNT AMOUNT
+  ...
+</example>
+
+!WORD ::
+  A line beginning with an exclamation mark denotes a command
+  directive.  It must be immediately followed by a word specifying
+  which directories.  At the moment, only =!include= is supported, for
+  including the content of other ledger files into the current one.
+
+whitespace ::
+  A line beginning with whitespace, which is not part of a regular or
+  automated transaction, is ignored.
+
+; ::
+  If a line begins with semicolon it is ignored.  This is the
+  preferred method of entering comments.
+
+Y NUM ::
+  If a line begins with a capital Y, it denotes the year to be used
+  for all subsequent entries that specify a date, whatever their type.
+  This sets the "default year", which ordinarily is the current year
+  at the time the program is run.  Useful at the beginning of a file
+  to specify the file's year.
+
+P DATE SYMBOL PRICE ::
+  Capital P specifies a historical price for a commodity.  Any such
+  number of entries are allowed.  These are usually found in a pricing
+  history file (see the =-Q= option).
+
+C SYMBOL PRICE ::
+  Capital C specifies a conversion price for a commodity.  This has
+  no reference to time, and always takes precedence over any
+  historical price (even very current prices).
+
+N SYMBOL ::
+  Capital N indicates that no implicit price conversions should be
+  obtained for the given symbol.  This means that no quotes will ever
+  be downloaded for that symbol.  Useful for a home currency, such as
+  the dollar ($).  Be aware that these pricing options will set the
+  default reporting characteristics for a commodity.  Thus it is
+  recommended that pricing options occur only after all regular ledger
+  entries have been parsed.
+
+i DATE TIME ACCOUNT  [DESC] ::
+  Lowercase (and capital) i indicate an time-in event.  This will
+  start accumulating hours in the account specified.  Usually these
+  entries are created in a timelog file by the timeclock program,
+  which is distributed with ledger.  There must be two spaces between
+  the account name, and the optional description, if one is used.
+
+o DATE TIME ACCOUNT  [DESC] ::
+  Lowercase (and capital) o indicate an time-out event.  This will
+  accumulate hours in the account specified.  Usually these entries
+  are created in a timelog file by the timeclock program, which is
+  distributed with ledger.  There must be two spaces between the
+  account name, and the optional description, if one is used.
+
+b, h ::
+  Entries beginning with lowercase b and h are ignored.  These are
+  special entries used by timeclock, but ignored by ledger.
+
 ** Command summary
 
 *** balance
@@ -982,6 +1085,13 @@ launches =vi= to let you confirm that the entry looks appropriate.
   Read in the list of patterns to include/exclude from FILE.
   Ordinarily, these are specified as arguments after the command.
 
+-L MINS ::
+  Specifies the number of minutes old that pricing data can be, before
+  the =-Q= and =-P= options will download a new quote from the
+  Internet.  =-P= only downloads the information, while =-Q= maintains
+  the information in a history file.  The default value for this
+  option is one day, or 1440 minutes.
+
 -M ::
   When used with the "register" command, causes only monthly subtotals
   to appear.  This can be useful for looking at spending patterns.
@@ -1004,11 +1114,12 @@ launches =vi= to let you confirm that the entry looks appropriate.
 
 -p ARG ::
   If a string, such as "COMM=$1.20", the commodity COMM will be
-  reported only in terms of its translated dollar value.  This can be
-  used to perform arbitrary value substitutions.  For example, to
-  report the value of your dollars in terms of the ounces of gold they
-  would buy, use: -p "$=0.00280112 AU" (or whatever the current
-  exchange rate is).
+  reported only in terms of the conversion factor, which supersedes
+  all other pricing histories for that commodity.  This can be used to
+  perform arbitrary value substitutions.  For example, to report the
+  value of your dollars in terms of the ounces of gold they would buy,
+  use: -p "$=0.00280112 AU" (or whatever the current exchange rate
+  is).
 
 -P ::
   Download current prices for all commodities by calling the script
@@ -1018,6 +1129,19 @@ launches =vi= to let you confirm that the entry looks appropriate.
   single amount, such as would appear in a ledger file.  If the
   commodity has no price, nothing should be output and the exit code
   should be set to a non-zero value.
+
+-Q FILE ::
+  This option, like =-P=, downloads commodities prices from the
+  Internet as needed, by calling the script "getquote" (see above).
+  However, this option takes a string argument: the file to write the
+  downloaded pricing data to.  On future runs, this pricing data is
+  consulted to see if it's fresh enough, to avoid downloading it from
+  the Internet again.  The freshness period is given by the =-L=
+  option, specifying the maximum allowable age in minutes.  The
+  default is one day.  So, to report the current value of your
+  investments up to the day, add =-Q ~/.pricedb= to your ledger
+  command-line.  Also, it is recommended that the =-Q= option always
+  appear after all uses of =-f=.
 
 -R ::
   Ignore all virtual transactions, and report only the real balance
@@ -1035,6 +1159,21 @@ launches =vi= to let you confirm that the entry looks appropriate.
 
 -v ::
   Display the version of ledger being used.
+
+** Environment variables
+
+LEDGER ::
+  A colon-separated list of files to be parsed whenever ledger is run.
+  Easier than typing =-f= all the time.
+
+PRICE_HIST ::
+  The ledger file used to hold pricing data.  =~/.pricedb= would be a
+  good choice.
+
+PRICE_EXP ::
+  The number of minutes before pricing data becomes out-of-date.  The
+  default is one day.  Use =-L= to temporarily decrease or increase
+  the value.
 
 Footnotes:
 [1]  In some special cases, it will automatically balance the entry

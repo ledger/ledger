@@ -35,28 +35,36 @@ class commodity
 {
   commodity(const commodity&);
 
+  typedef std::map<const std::time_t, amount *>  price_map;
+  typedef std::pair<const std::time_t, amount *> price_map_pair;
+
  public:
   std::string name;
   std::string symbol;
 
-  mutable amount * price;       // the current price
   mutable bool sought;
 
   bool prefix;
   bool separate;
   bool thousands;
   bool european;
+  int  precision;
 
-  int precision;
+ protected:
+  mutable price_map history;	// the price history
+  mutable amount *  conversion;	// fixed conversion (ignore history)
 
-  explicit commodity() : price(NULL), sought(false),
-    prefix(false), separate(true), thousands(false), european(false) {}
+ public:
+  explicit commodity() : sought(false), prefix(false), separate(true),
+    thousands(false), european(false), conversion(NULL) {}
 
   explicit commodity(const std::string& sym, bool pre = false,
 		     bool sep = true, bool thou = true,
 		     bool euro = false, int prec = 2);
-
   ~commodity();
+
+  void     set_price(amount * price, std::time_t * when = NULL);
+  amount * price(std::time_t * when = NULL, bool download = false) const;
 };
 
 typedef std::map<const std::string, commodity *>  commodities_map;
@@ -299,8 +307,8 @@ extern book * main_ledger;
 
 inline commodity::commodity(const std::string& sym, bool pre, bool sep,
 			    bool thou, bool euro, int prec)
-  : symbol(sym), price(NULL), sought(false), prefix(pre), separate(sep),
-    thousands(thou), european(euro), precision(prec) {
+  : symbol(sym), sought(false), prefix(pre), separate(sep),
+    thousands(thou), european(euro), precision(prec), conversion(NULL) {
 #ifdef DEBUG
   std::pair<commodities_map_iterator, bool> result =
 #endif
