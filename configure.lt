@@ -2,8 +2,8 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(ledger, 2.02, johnw@newartisans.com)
-AM_INIT_AUTOMAKE(ledger, 2.02)
+AC_INIT(ledger, 2.03, johnw@newartisans.com)
+AM_INIT_AUTOMAKE(ledger, 2.03)
 AC_CONFIG_SRCDIR([main.cc])
 AC_CONFIG_HEADER([acconf.h])
 
