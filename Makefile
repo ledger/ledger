@@ -2,11 +2,11 @@ CODE   = amount.cc ledger.cc parse.cc reports.cc
 OBJS   = $(patsubst %.cc,%.o,$(CODE))
 #CXX    = cc
 CXX    = g++
-CFLAGS = #-Wall -ansi -pedantic
+CFLAGS = -Wall -ansi -pedantic
 DFLAGS = -O3 -fomit-frame-pointer
 #DFLAGS = -g -DDEBUG=1
-INCS   = -I/usr/local/include
-LIBS   = -L/usr/local/lib -lgmpxx -lgmp -lpcre
+INCS   = -I/sw/include
+LIBS   = -L/sw/lib -lgmpxx -lgmp -lpcre
 
 ifdef GNUCASH
 CODE   := $(CODE)   gnucash.cc
