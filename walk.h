@@ -91,8 +91,9 @@ struct transaction_xdata_t
   unsigned int   index;
   unsigned short dflags;
   std::time_t    date;
+  void *         ptr;
 
-  transaction_xdata_t() : index(0), dflags(0), date(0) {}
+  transaction_xdata_t() : index(0), dflags(0), date(0), ptr(0) {}
 };
 
 inline bool transaction_has_xdata(const transaction_t& xact) {
