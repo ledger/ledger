@@ -1,6 +1,8 @@
 #ifndef _UTIL_H
 #define _UTIL_H
 
+#include <iostream>
+
 #if defined(__GNUG__) && __GNUG__ < 3
 namespace std {
   inline ostream & right (ostream & i) {
