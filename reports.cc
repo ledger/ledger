@@ -954,7 +954,7 @@ static void show_help(std::ostream& out)
     << "  -T        report commodity totals, not their market value" << std::endl
     << "  -V        report the market value of commodities" << std::endl
     << "  -B        report cost basis of commodities" << std::endl
-    << "  -Q        download new price inforamtion (when needed) from the Internet" << std::endl
+    << "  -Q        download new price information (when needed) from the Internet" << std::endl
     << "            (works by running \"getquote SYMBOL\")" << std::endl
     << "  -L MINS   with -Q, fetch quotes only if data is older than MINS" << std::endl
     << "  -p STR    specifies a direct commodity conversion: COMM=AMOUNT" << std::endl
