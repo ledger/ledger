@@ -87,10 +87,11 @@ else:
 text_parser = TextualParser ()
 bin_parser  = BinaryParser ()
 qif_parser  = QifParser ()
+gnucash_parser = None
 try:
-    gnucush_parser = GnucashParser ()
+    gnucash_parser = GnucashParser ()
 except:
-    gnucush_parser = None
+    pass
 
 register_parser (text_parser)
 register_parser (bin_parser)

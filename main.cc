@@ -305,13 +305,8 @@ int parse_and_report(int argc, char * argv[], char * envp[])
 
   if (config.use_cache && config.cache_dirty &&
       ! config.cache_file.empty()) {
-    if (access(config.cache_file.c_str(), W_OK) == -1) {
-      std::cerr << "Warning: Cannot update cache file '"
-		<< config.cache_file << "'" << std::endl;
-    } else {
-      std::ofstream stream(config.cache_file.c_str());
-      write_binary_journal(stream, journal.get(), &journal->sources);
-    }
+    std::ofstream stream(config.cache_file.c_str());
+    write_binary_journal(stream, journal.get(), &journal->sources);
   }
 
   return 0;

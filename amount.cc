@@ -84,33 +84,6 @@ _init_amounts::~_init_amounts()
   true_value.ref--;
 }
 
-void clean_commodity_history(char * item_pool, char * item_pool_end)
-{
-  for (commodities_map::iterator i = commodity_t::commodities.begin();
-       i != commodity_t::commodities.end();
-       i++)
-    for (history_map::iterator j = (*i).second->history.begin();
-	 j != (*i).second->history.end();
-	 j++) {
-      amount_t::bigint_t * quantity = (*j).second.quantity;
-      if (quantity &&
-	  (char *)quantity >= item_pool &&
-	  (char *)quantity < item_pool_end) {
-	assert(quantity->flags & BIGINT_BULK_ALLOC);
-
-	// Since the journal in which this price was bulk alloc'd (on
-	// reading from a binary file) is going away, we must make a
-	// new copy of the value, because other journals might still
-	// be using it.
-
-	amount_t::bigint_t * q = new amount_t::bigint_t(*quantity);
-	if (--quantity->ref == 0)
-	  quantity->~bigint_t();
-	(*j).second.quantity = q;
-      }
-    }
-}
-
 static void mpz_round(mpz_t out, mpz_t value, int value_prec, int round_prec)
 {
   // Round `value', with an encoding precision of `value_prec', to a
@@ -238,8 +211,14 @@ void amount_t::_copy(const amount_t& amt)
     if (quantity)
       _release();
 
-    quantity = amt.quantity;
-    quantity->ref++;
+    // Never maintain a pointer into a bulk allocation pool; such
+    // pointers are not guaranteed to remain.
+    if (amt.quantity->flags & BIGINT_BULK_ALLOC) {
+      quantity = new bigint_t(*amt.quantity);
+    } else {
+      quantity = amt.quantity;
+      quantity->ref++;
+    }
   }
   commodity_ = amt.commodity_;
 }
