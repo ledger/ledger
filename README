@@ -296,7 +296,7 @@ Relatedly, your Income accounts will show up negative, because they
 transfer money *from* an account in order to increase your assets.  Your
 Expenses accounts will show up positive, because that is where the
 money went.  The combined total your Income and Expenses is your cash
-flow.  A negative cash flow means that you are spending more money
+flow.  A negative cash flow means that you are spending more cash
 than you make.  To see your current cash flow, use this command:
 
 <example>
@@ -722,16 +722,16 @@ Clear as mud?  Keep thinking about it.  Until you figure it out, put
 "=-- -Equity=" at the end of your balance command, to remove the
 confusing figure from the totals.
 
-** Dealing with cash
+** Dealing with Petty Cash
 
 Something that stops many people from keeping a ledger at all is the
-insanity of tracking cash expenses.  They rarely generate a receipt,
-and there are often a lot of small transactions, rather than a few
-large ones, as with checks.
+insanity of tracking small cash expenses.  They rarely generate a
+receipt, and there are often a lot of small transactions, rather than
+a few large ones, as with checks.
 
-The answer is: don't bother.  Move your spending to a debit card, but
-in general ignore cash.  Once you withdraw it from the ATM, mark it as
-already spent to an "Expenses:Cash" category:
+One solution is: don't bother.  Move your spending to a debit card,
+but in general ignore cash.  Once you withdraw it from the ATM, mark
+it as already spent to an "Expenses:Cash" category:
 
 <example>
 2004/03/15 ATM
@@ -942,6 +942,9 @@ The format of the data files used by Ledger is more akin to a general
 journal than a ledger.  In an accounting ledger, transactions are
 grouped by account.  In a general journal, transactions are commonly
 listed in chronological order.
+
+Often "cash" is used to refer to a liquid savings account at a bank,
+rather than the physical notes and coins you may withdraw.
 
 In general, an "addition" in Ledger is an accounting debit, and a
 "subtraction" in Ledger is an accounting credit.  The following table
