@@ -130,50 +130,55 @@ static void assemble_regexp_predicate(std::string& predicate_string,
   predicate_string += ")/";
 }
 
+static void show_version(std::ostream& out)
+{
+  out
+    << "Ledger " << ledger::version << ", the command-line accounting tool\n\n"
+    << "Copyright (c) 2003-2004, New Artisans LLC. All rights reserved.\n\n"
+    << "This program is made available under the terms of the BSD Public\n"
+    << "License.  See the LICENSE file included with the distribution for\n"
+    << "details and disclaimer.\n";
+}
+
 static void show_help(std::ostream& out)
 {
-  std::cerr
-    << "usage: ledger [options] COMMAND [options] [REGEXPS]" << std::endl
-    << std::endl
-    << "Basic options:" << std::endl
-    << "  -h        display this help text" << std::endl
-    << "  -v        display version information" << std::endl
-    << "  -f FILE   specify pathname of ledger data file" << std::endl
-    << std::endl
-    << "Report filtering:" << std::endl
-    << "  -a REGEX  specify an account regex for \"print\"" << std::endl
-    << "  -b DATE   specify a beginning date" << std::endl
-    << "  -e DATE   specify an ending date" << std::endl
-    << "  -c        do not show future entries (same as -e TODAY)" << std::endl
-    << "  -d DATE   specify a date mask ('-d mon', for all mondays)" << std::endl
-    << "  -C        show only cleared transactions and balances" << std::endl
-    << "  -U        show only uncleared transactions and balances" << std::endl
-    << "  -R        do not consider virtual transactions: real only" << std::endl
-    << "  -l EXPR   don't print entries for which EXPR yields 0" << std::endl
-    << std::endl
-    << "Customizing output:" << std::endl
-    << "  -n        do not calculate parent account totals" << std::endl
-    << "  -s        show sub-accounts in balance, and splits in register" << std::endl
-    << "  -M        print register using monthly sub-totals" << std::endl
-    << "  -E        show accounts that total to zero" << std::endl
-    << "  -S EXPR   sort entry output based on EXPR" << std::endl
-    << std::endl
-    << "Commodity prices:" << std::endl
-    << "  -T        report commodity totals, not their market value" << std::endl
-    << "  -B        report cost basis of commodities" << std::endl
-    << "  -V        report the market value of commodities" << std::endl
-    << "  -P FILE   sets the price database, for reading/writing price info" << std::endl
-    << "  -Q        download new price information (when needed) from the Internet" << std::endl
-    << "            (works by running \"getquote SYMBOL\")" << std::endl
-    << "  -L MINS   with -Q, fetch quotes only if data is older than MINS" << std::endl
-    << "  -p STR    specifies a direct commodity conversion: COMM=AMOUNT" << std::endl
-    << std::endl
-    << "commands:" << std::endl
-    << "  balance   show balance totals" << std::endl
-    << "  register  display a register for ACCOUNT" << std::endl
-    << "  print     print all ledger entries" << std::endl
-    << "  entry     output a newly formed entry, based on arguments" << std::endl
-    << "  equity    output equity entries for specified accounts" << std::endl;
+  out
+    << "usage: ledger [options] COMMAND [options] [REGEXPS]\n\n"
+    << "Basic options:\n"
+    << "  -h        display this help text\n"
+    << "  -v        display version information\n"
+    << "  -f FILE   specify pathname of ledger data file\n\n"
+    << "Report filtering:\n"
+    << "  -a REGEX  specify an account regex for \"print\"\n"
+    << "  -b DATE   specify a beginning date\n"
+    << "  -e DATE   specify an ending date\n"
+    << "  -c        do not show future entries (same as -e TODAY)\n"
+    << "  -d DATE   specify a date mask ('-d mon', for all mondays)\n"
+    << "  -C        show only cleared transactions and balances\n"
+    << "  -U        show only uncleared transactions and balances\n"
+    << "  -R        do not consider virtual transactions: real only\n"
+    << "  -l EXPR   don't print entries for which EXPR yields 0\n\n"
+    << "Customizing output:\n"
+    << "  -n        do not calculate parent account totals\n"
+    << "  -s        show sub-accounts in balance, and splits in register\n"
+    << "  -M        print register using monthly sub-totals\n"
+    << "  -E        show accounts that total to zero\n"
+    << "  -S EXPR   sort entry output based on EXPR\n\n"
+    << "Commodity prices:\n"
+    << "  -T        report commodity totals, not their market value\n"
+    << "  -B        report cost basis of commodities\n"
+    << "  -V        report the market value of commodities\n"
+    << "  -P FILE   sets the price database, for reading/writing price info\n"
+    << "  -Q        download price information from the Internet\n"
+    << "            (works by running \"getquote SYMBOL\")\n"
+    << "  -L MINS   with -Q, fetch quotes only if data is older than MINS\n"
+    << "  -p STR    specifies a direct commodity conversion: COMM=AMOUNT\n\n"
+    << "Commands:\n"
+    << "  balance   show balance totals\n"
+    << "  register  display a register for ACCOUNT\n"
+    << "  print     print all ledger entries\n"
+    << "  entry     output a newly formed entry, based on arguments\n"
+    << "  equity    output equity entries for specified accounts\n";
 }
 
 int main(int argc, char * argv[])
@@ -260,16 +265,7 @@ int main(int argc, char * argv[])
 #endif
 
     case 'v':
-      std::cout
-	<< "Ledger " << version
-	<< ", the command-line accounting tool" << std::endl
-	<< "  Copyright (c) 2003-2004, New Artisans LLC. All rights reserved."
-	<< std::endl << std::endl
-	<< "This program is made available under the terms of the BSD Public"
-	<< std::endl
-	<< "License.  See the LICENSE file included with the distribution for"
-	<< std::endl
-	<< "details and disclaimer." << std::endl;
+      show_version(std::cout);
       return 0;
 
     case 'f':
@@ -447,7 +443,7 @@ int main(int argc, char * argv[])
   }
 
   if (optind == argc) {
-    show_help(std::cout);
+    show_help(std::cerr);
     return 1;
   }
 
