@@ -148,14 +148,21 @@ bool finalize_entry(entry_t * entry)
 
   value_t balance;
 
+  bool first = true;
   for (transactions_list::const_iterator x = entry->transactions.begin();
        x != entry->transactions.end();
        x++)
     if (! ((*x)->flags & TRANSACTION_VIRTUAL) ||
 	((*x)->flags & TRANSACTION_BALANCE)) {
       amount_t * p = (*x)->cost ? (*x)->cost : &(*x)->amount;
-      if (*p)
-	balance += *p;
+      if (*p) {
+	if (first) {
+	  balance = *p;
+	  first = false;
+	} else {
+	  balance += *p;
+	}
+      }
     }
 
   // If one transaction of a two-line transaction is of a different
