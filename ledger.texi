@@ -2343,6 +2343,14 @@ defaults to @file{~/.pricedb}.  The syntax for this command is:
 N SYMBOL
 @end example
 
+@item D SYMBOL
+The @command{entry} command will use the given commodity as the
+default when none other can be determined.  The syntax for this
+command is:
+@example
+D SYMBOL
+@end example
+
 @item i, o, b, h
 These four relate to timeclock support, which permits ledger to read
 timelog files.  See the timeclock's documentation for more info on the
