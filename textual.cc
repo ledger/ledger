@@ -69,26 +69,37 @@ transaction_t * parse_transaction_text(char * line, account_t * account,
 
   char * p = skip_ws(line);
   if (char * cost_str = next_element(p, true)) {
+    cost_str = skip_ws(cost_str);
+    bool has_amount = *cost_str;
+
     if (char * note_str = std::strchr(cost_str, ';')) {
+      if (cost_str == note_str)
+	has_amount = false;
       *note_str++ = '\0';
       xact->note = skip_ws(note_str);
     }
 
-    char * price_str = std::strchr(cost_str, '@');
-    bool   per_unit  = true;
-    if (price_str) {
-      *price_str++ = '\0';
-      if (*price_str == '@') {
-	per_unit = false;
-	price_str++;
-      }
-      xact->cost = new amount_t;
-      xact->cost->parse(price_str);
-    }
+    if (has_amount) {
+      bool   per_unit  = true;
+      char * price_str = std::strchr(cost_str, '@');
+      if (price_str) {
+	if (price_str == cost_str)
+	  throw parse_error(path, linenum, "Cost specified without amount");
 
-    xact->amount.parse(cost_str);
-    if (price_str && per_unit)
-      *xact->cost *= xact->amount;
+	*price_str++ = '\0';
+	if (*price_str == '@') {
+	  per_unit = false;
+	  price_str++;
+	}
+	xact->cost = new amount_t;
+	xact->cost->parse(price_str);
+      }
+
+      xact->amount.parse(cost_str);
+
+      if (price_str && per_unit)
+	*xact->cost *= xact->amount;
+    }
   }
 
   if (*p == '[' || *p == '(') {
@@ -252,7 +263,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	if (peek_next_nonws(in) != '\n') {
 	  in.getline(line, MAX_LINE);
 	  linenum++;
-	  throw parse_error(path, linenum, "Line begins with whitespace");
+	  throw parse_error(path, linenum - 1, "Line begins with whitespace");
 	}
 	// fall through...
 
@@ -488,6 +499,16 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
     }
     catch (const parse_error& err) {
       std::cerr << "Error: " << err.what() << std::endl;
+      errors++;
+    }
+    catch (const amount_error& err) {
+      std::cerr << "Error: " << path << ", line " << (linenum - 1) << ": "
+		<< err.what() << std::endl;;
+      errors++;
+    }
+    catch (const error& err) {
+      std::cerr << "Error: " << path << ", line " << (linenum - 1) << ": "
+		<< err.what() << std::endl;;
       errors++;
     }
   }

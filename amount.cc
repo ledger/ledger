@@ -698,8 +698,6 @@ void amount_t::parse(std::istream& in)
   std::string  quant;
   unsigned int flags = COMMODITY_STYLE_DEFAULTS;;
 
-  _init();
-
   char c = peek_next_nonws(in);
   if (std::isdigit(c) || c == '.' || c == '-') {
     parse_quantity(in, quant);
@@ -721,6 +719,11 @@ void amount_t::parse(std::istream& in)
 
     parse_quantity(in, quant);
   }
+
+  if (quant.empty())
+    throw amount_error("No quantity specified for amount");
+
+  _init();
 
   std::string::size_type last_comma  = quant.rfind(',');
   std::string::size_type last_period = quant.rfind('.');
@@ -745,7 +748,9 @@ void amount_t::parse(std::istream& in)
     quantity->prec = 0;
   }
 
-  // Create the commodity if has not already been seen.
+  // Create the commodity if has not already been seen, and update the
+  // precision if something greater was used for the quantity.
+
   commodity_ = commodity_t::find_commodity(symbol, true);
   commodity_->flags |= flags;
   if (quantity->prec > commodity_->precision)
@@ -879,16 +884,15 @@ void amount_t::write_quantity(std::ostream& out) const
     mpz_export(buf, &size, 1, sizeof(short), 0, 0, MPZ(quantity));
     unsigned short len = size * sizeof(short);
     out.write((char *)&len, sizeof(len));
-
     if (len) {
       assert(len < 4096);
       out.write(buf, len);
-
-      byte = mpz_sgn(MPZ(quantity)) < 0 ? 1 : 0;
-      out.write(&byte, sizeof(byte));
-
-      out.write((char *)&quantity->prec, sizeof(quantity->prec));
     }
+
+    byte = mpz_sgn(MPZ(quantity)) < 0 ? 1 : 0;
+    out.write(&byte, sizeof(byte));
+
+    out.write((char *)&quantity->prec, sizeof(quantity->prec));
   } else {
     assert(quantity->ref > 1);
 

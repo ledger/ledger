@@ -137,6 +137,36 @@ chain_formatters(const std::string& command,
   return formatter;
 }
 
+void walk_commodities(commodities_map& commodities,
+		      item_handler<transaction_t>& handler)
+{
+  std::list<transaction_t> xact_temps;
+  std::list<entry_t>       entry_temps;
+  std::list<account_t>     acct_temps;
+
+  for (commodities_map::iterator i = commodities.begin();
+       i != commodities.end();
+       i++) {
+    if ((*i).second->flags & COMMODITY_STYLE_NOMARKET)
+      continue;
+
+    entry_temps.push_back(entry_t());
+    acct_temps.push_back(account_t(NULL, (*i).second->symbol));
+
+    for (history_map::iterator j = (*i).second->history.begin();
+	 j != (*i).second->history.end();
+	 j++) {
+      entry_temps.back().date = (*j).first;
+
+      xact_temps.push_back(transaction_t(&acct_temps.back()));
+      xact_temps.back().entry  = &entry_temps.back();
+      xact_temps.back().amount = (*j).second;
+
+      handler(xact_temps.back());
+    }
+  }
+}
+
 int parse_and_report(int argc, char * argv[], char * envp[])
 {
   std::auto_ptr<journal_t> journal(new journal_t);
@@ -186,6 +216,8 @@ int parse_and_report(int argc, char * argv[], char * envp[])
     command = "e";
   else if (command == "equity")
     command = "E";
+  else if (command == "prices")
+    command = "P";
   else
     throw error(std::string("Unrecognized command '") + command + "'");
 
@@ -240,6 +272,8 @@ int parse_and_report(int argc, char * argv[], char * envp[])
     format = &config.register_format;
   else if (command == "E")
     format = &config.equity_format;
+  else if (command == "P")
+    format = &config.prices_format;
   else
     format = &config.print_format;
 
@@ -259,6 +293,8 @@ int parse_and_report(int argc, char * argv[], char * envp[])
 
   if (command == "e")
     walk_transactions(new_entry->transactions, *formatter);
+  else if (command == "P")
+    walk_commodities(commodity_t::commodities, *formatter);
   else
     walk_entries(journal->entries, *formatter);
 

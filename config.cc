@@ -29,6 +29,7 @@ config_t::config_t()
   plot_total_format  = "%D %T\n";
   print_format       = "\n%D %X%C%P\n    %-34N  %12o\n%/    %-34N  %12o\n";
   equity_format      = "\n%D %X%C%P\n%/    %-34N  %12t\n";
+  prices_format      = "%D %-10N %12t %12T\n";
 
   show_collapsed     = false;
   show_subtotal      = false;

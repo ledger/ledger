@@ -14,13 +14,6 @@
 
 namespace ledger {
 
-extern std::string bal_fmt;
-extern std::string reg_fmt;
-extern std::string plot_value_fmt;
-extern std::string plot_total_fmt;
-extern std::string print_fmt;
-extern std::string equity_fmt;
-
 struct config_t
 {
   // These options can all be set used text fields.
@@ -42,6 +35,7 @@ struct config_t
   std::string   plot_total_format;
   std::string   print_format;
   std::string   equity_format;
+  std::string   prices_format;
   std::string   date_format;
   std::string   sort_string;
   std::string   amount_expr;
