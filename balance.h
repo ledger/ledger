@@ -6,6 +6,7 @@
 #include <iostream>
 
 #include "amount.h"
+#include "error.h"
 
 namespace ledger {
 
@@ -40,25 +41,25 @@ class balance_t
   balance_t(const amount_t& amt) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor balance_t");
     if (amt)
-      amounts.insert(amounts_pair(amt.commodity, amt));
+      amounts.insert(amounts_pair(&amt.commodity(), amt));
   }
   balance_t(const int value) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor balance_t");
     amount_t amt(value);
     if (amt)
-      amounts.insert(amounts_pair(amt.commodity, amt));
+      amounts.insert(amounts_pair(&amt.commodity(), amt));
   }
   balance_t(const unsigned int value) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor balance_t");
     amount_t amt(value);
     if (amt)
-      amounts.insert(amounts_pair(amt.commodity, amt));
+      amounts.insert(amounts_pair(&amt.commodity(), amt));
   }
   balance_t(const double value) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor balance_t");
     amount_t amt(value);
     if (amt)
-      amounts.insert(amounts_pair(amt.commodity, amt));
+      amounts.insert(amounts_pair(&amt.commodity(), amt));
   }
 
   // destructor
@@ -109,11 +110,11 @@ class balance_t
     return *this;
   }
   balance_t& operator+=(const amount_t& amt) {
-    amounts_map::iterator i = amounts.find(amt.commodity);
+    amounts_map::iterator i = amounts.find(&amt.commodity());
     if (i != amounts.end())
       (*i).second += amt;
     else if (amt)
-      amounts.insert(amounts_pair(amt.commodity, amt));
+      amounts.insert(amounts_pair(&amt.commodity(), amt));
     return *this;
   }
   balance_t& operator-=(const balance_t& bal) {
@@ -124,11 +125,11 @@ class balance_t
     return *this;
   }
   balance_t& operator-=(const amount_t& amt) {
-    amounts_map::iterator i = amounts.find(amt.commodity);
+    amounts_map::iterator i = amounts.find(&amt.commodity());
     if (i != amounts.end())
       (*i).second -= amt;
     else if (amt)
-      amounts.insert(amounts_pair(amt.commodity, amt));
+      amounts.insert(amounts_pair(&amt.commodity(), amt));
     return *this;
   }
 
@@ -165,13 +166,13 @@ class balance_t
   balance_t& operator*=(const amount_t& amt) {
     // Multiplying by the null commodity causes all amounts to be
     // increased by the same factor.
-    if (amt.commodity->symbol.empty()) {
+    if (amt.commodity().symbol.empty()) {
       for (amounts_map::iterator i = amounts.begin();
 	   i != amounts.end();
 	   i++)
 	(*i).second *= amt;
     } else {
-      amounts_map::iterator i = amounts.find(amt.commodity);
+      amounts_map::iterator i = amounts.find(&amt.commodity());
       if (i != amounts.end())
 	(*i).second *= amt;
     }
@@ -188,13 +189,13 @@ class balance_t
   balance_t& operator/=(const amount_t& amt) {
     // Dividing by the null commodity causes all amounts to be
     // increased by the same factor.
-    if (amt.commodity->symbol.empty()) {
+    if (amt.commodity().symbol.empty()) {
       for (amounts_map::iterator i = amounts.begin();
 	   i != amounts.end();
 	   i++)
 	(*i).second /= amt;
     } else {
-      amounts_map::iterator i = amounts.find(amt.commodity);
+      amounts_map::iterator i = amounts.find(&amt.commodity());
       if (i != amounts.end())
 	(*i).second /= amt;
     }
@@ -228,13 +229,13 @@ class balance_t
     for (amounts_map::const_iterator i = bal.amounts.begin();
 	 i != bal.amounts.end();
 	 i++)
-      if (! (amount((*i).first) < (*i).second))
+      if (! (amount(*(*i).first) < (*i).second))
 	return false;
 
     for (amounts_map::const_iterator i = amounts.begin();
 	 i != amounts.end();
 	 i++)
-      if (! ((*i).second < bal.amount((*i).first)))
+      if (! ((*i).second < bal.amount(*(*i).first)))
 	return false;
 
     if (bal.amounts.size() == 0 && amounts.size() == 0)
@@ -246,41 +247,43 @@ class balance_t
     for (amounts_map::const_iterator i = bal.amounts.begin();
 	 i != bal.amounts.end();
 	 i++)
-      if (! (amount((*i).first) <= (*i).second))
+      if (! (amount(*(*i).first) <= (*i).second))
 	return false;
 
     for (amounts_map::const_iterator i = amounts.begin();
 	 i != amounts.end();
 	 i++)
-      if (! ((*i).second <= bal.amount((*i).first)))
+      if (! ((*i).second <= bal.amount(*(*i).first)))
 	return false;
 
     return true;
   }
   bool operator<(const amount_t& amt) const {
-    return amount(amt.commodity) < amt;
+    return amount(amt.commodity()) < amt;
   }
   bool operator<=(const amount_t& amt) const {
-    return amount(amt.commodity) <= amt;
+    return amount(amt.commodity()) <= amt;
   }
+#if 0
   bool operator<(const unsigned int val) const {
     return amount() < val;
   }
   bool operator<=(const unsigned int val) const {
     return amount() <= val;
   }
+#endif
 
   bool operator>(const balance_t& bal) const {
     for (amounts_map::const_iterator i = bal.amounts.begin();
 	 i != bal.amounts.end();
 	 i++)
-      if (! (amount((*i).first) > (*i).second))
+      if (! (amount(*(*i).first) > (*i).second))
 	return false;
 
     for (amounts_map::const_iterator i = amounts.begin();
 	 i != amounts.end();
 	 i++)
-      if (! ((*i).second > bal.amount((*i).first)))
+      if (! ((*i).second > bal.amount(*(*i).first)))
 	return false;
 
     if (bal.amounts.size() == 0 && amounts.size() == 0)
@@ -292,29 +295,31 @@ class balance_t
     for (amounts_map::const_iterator i = bal.amounts.begin();
 	 i != bal.amounts.end();
 	 i++)
-      if (! (amount((*i).first) >= (*i).second))
+      if (! (amount(*(*i).first) >= (*i).second))
 	return false;
 
     for (amounts_map::const_iterator i = amounts.begin();
 	 i != amounts.end();
 	 i++)
-      if (! ((*i).second >= bal.amount((*i).first)))
+      if (! ((*i).second >= bal.amount(*(*i).first)))
 	return false;
 
     return true;
   }
   bool operator>(const amount_t& amt) const {
-    return amount(amt.commodity) > amt;
+    return amount(amt.commodity()) > amt;
   }
   bool operator>=(const amount_t& amt) const {
-    return amount(amt.commodity) >= amt;
+    return amount(amt.commodity()) >= amt;
   }
+#if 0
   bool operator>(const unsigned int val) const {
     return amount() > val;
   }
   bool operator>=(const unsigned int val) const {
     return amount() >= val;
   }
+#endif
 
   bool operator==(const balance_t& bal) const {
     amounts_map::const_iterator i, j;
@@ -327,21 +332,23 @@ class balance_t
     }
     return i == amounts.end() && j == bal.amounts.end();
   }
-  bool operator==(const amount_t& amt) const {
-    return amounts.size() == 1 && (*amounts.begin()).second == amt;
-  }
-  bool operator==(const unsigned int val) const {
-    return amount() == val;
-  }
   bool operator!=(const balance_t& bal) const {
     return ! (*this == bal);
+  }
+  bool operator==(const amount_t& amt) const {
+    return amounts.size() == 1 && (*amounts.begin()).second == amt;
   }
   bool operator!=(const amount_t& amt) const {
     return ! (*this == amt);
   }
+#if 0
+  bool operator==(const unsigned int val) const {
+    return amount() == val;
+  }
   bool operator!=(const unsigned int val) const {
     return ! (*this == val);
   }
+#endif
 
   // unary negation
   balance_t& negate() {
@@ -362,7 +369,10 @@ class balance_t
 
   // conversion operators
   operator amount_t() const {
-    return amount();
+    if (amounts.size() == 1)
+      return (*amounts.begin()).second;
+    else
+      throw error("Cannot convert a balance with multiple commodities to an amount");
   }
   operator bool() const {
     for (amounts_map::const_iterator i = amounts.begin();
@@ -373,7 +383,7 @@ class balance_t
     return false;
   }
 
-  amount_t  amount(const commodity_t * commodity = NULL) const;
+  amount_t  amount(const commodity_t& commodity) const;
   balance_t value(const std::time_t moment) const;
 
   void      write(std::ostream& out,
@@ -754,8 +764,10 @@ class balance_pair_t
     return quantity;
   }
   operator amount_t() const {
-    assert(0);
-    return quantity.amount();
+    if (quantity.amounts.size() == 1)
+      return (*quantity.amounts.begin()).second;
+    else
+      throw error("Cannot convert a balance pair with multiple commodities to an amount");
   }
 
   void abs() {

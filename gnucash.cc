@@ -235,10 +235,10 @@ static void dataHandler(void *userData, const char *s, int len)
     }
     commodity_t * default_commodity = (*ac).second;
 
-    curr_quant.commodity = default_commodity;
+    curr_quant.set_commodity(*default_commodity);
     amount_t value = curr_quant.round(default_commodity->precision);
 
-    if (curr_value.commodity == default_commodity)
+    if (curr_value.commodity() == *default_commodity)
       curr_value = value;
 
     xact->amount = value;

@@ -165,9 +165,9 @@ inline void read_binary_amount(char *& data, amount_t& amt)
   commodity_t::ident_t ident;
   read_binary_number(data, ident);
   if (ident == 0xffffffff)
-    amt.commodity = NULL;
+    amt.commodity_ = NULL;
   else
-    amt.commodity = commodities[ident - 1];
+    amt.commodity_ = commodities[ident - 1];
 
   amt.read_quantity(data);
 }
@@ -431,8 +431,8 @@ inline void write_binary_string(std::ostream& out, const std::string& str)
 
 void write_binary_amount(std::ostream& out, const amount_t& amt)
 {
-  if (amt.commodity)
-    write_binary_number(out, amt.commodity->ident);
+  if (amt.commodity_)
+    write_binary_number(out, amt.commodity().ident);
   else
     write_binary_number<commodity_t::ident_t>(out, 0xffffffff);
 

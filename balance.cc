@@ -5,7 +5,7 @@
 
 namespace ledger {
 
-amount_t balance_t::amount(const commodity_t * commodity) const
+amount_t balance_t::amount(const commodity_t& commodity) const
 {
   if (! commodity) {
     if (amounts.size() == 1) {
@@ -14,7 +14,7 @@ amount_t balance_t::amount(const commodity_t * commodity) const
     }
   }
   else if (amounts.size() > 0) {
-    amounts_map::const_iterator i = amounts.find(commodity);
+    amounts_map::const_iterator i = amounts.find(&commodity);
     if (i != amounts.end())
       return (*i).second;
   }
@@ -35,7 +35,7 @@ balance_t balance_t::value(const std::time_t moment) const
 
 struct compare_amount_commodities {
   bool operator()(const amount_t * left, const amount_t * right) const {
-    return left->commodity->symbol < right->commodity->symbol;
+    return left->commodity().symbol < right->commodity().symbol;
   }
 };
 
@@ -135,13 +135,6 @@ void export_balance()
     .def(init<int>())
     .def(init<unsigned int>())
     .def(init<double>())
-
-    .def(self <  other<unsigned int>())
-    .def(self <= other<unsigned int>())
-    .def(self >  other<unsigned int>())
-    .def(self >= other<unsigned int>())
-    .def(self == other<unsigned int>())
-    .def(self != other<unsigned int>())
 
     .def(self += self)
     .def(self += other<amount_t>())

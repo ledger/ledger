@@ -100,11 +100,6 @@ transaction_t * parse_transaction_text(char * line, account_t * account,
 
   xact->account = account->find_account(p);
 
-  if (! xact->amount.commodity)
-    xact->amount.commodity = commodity_t::null_commodity;
-  if (xact->cost && ! xact->cost->commodity)
-    xact->cost->commodity = commodity_t::null_commodity;
-
   return xact.release();
 }
 
@@ -180,7 +175,7 @@ bool finalize_entry(entry_t * entry)
 	     = ((balance_t *) balance.data)->amounts.begin();
 	   i != ((balance_t *) balance.data)->amounts.end();
 	   i++)
-	if ((*i).second.commodity != (*x)->amount.commodity) {
+	if ((*i).second.commodity() != (*x)->amount.commodity()) {
 	  assert((*x)->amount);
 	  balance -= (*x)->amount;
 	  assert(! (*x)->cost);
@@ -401,7 +396,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	    std::sprintf(buf, "%fh", diff);
 	    amount_t amt;
 	    amt.parse(buf);
-	    time_commodity = amt.commodity;
+	    time_commodity = &amt.commodity();
 
 	    transaction_t * xact
 	      = new transaction_t(last_account, amt, TRANSACTION_VIRTUAL);

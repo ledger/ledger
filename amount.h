@@ -15,6 +15,10 @@ class commodity_t;
 
 class amount_t
 {
+ public:
+  class bigint_t;
+
+ protected:
   void _init();
   void _copy(const amount_t& amt);
   void _release();
@@ -23,23 +27,21 @@ class amount_t
 
   void _clear() {
     if (quantity) {
-      assert(commodity);
+      assert(commodity_);
       _release();
-      quantity  = NULL;
-      commodity = NULL;
+      quantity   = NULL;
+      commodity_ = NULL;
     } else {
-      assert(! commodity);
+      assert(! commodity_);
     }
   }
 
- public:
-  class bigint_t;
-
   bigint_t *	quantity;
-  commodity_t *	commodity;
+  commodity_t *	commodity_;
 
+ public:
   // constructors
-  amount_t() : quantity(NULL), commodity(NULL) {
+  amount_t() : quantity(NULL), commodity_(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor amount_t");
   }
   amount_t(const amount_t& amt) : quantity(NULL) {
@@ -47,7 +49,7 @@ class amount_t
     if (amt.quantity)
       _copy(amt);
     else
-      commodity = NULL;
+      commodity_ = NULL;
   }
   amount_t(const std::string& value) : quantity(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor amount_t");
@@ -67,6 +69,11 @@ class amount_t
     DEBUG_PRINT("ledger.memory.dtors", "dtor amount_t");
     if (quantity)
       _release();
+  }
+
+  commodity_t& commodity() const;
+  void set_commodity(commodity_t& comm) {
+    commodity_ = &comm;
   }
 
   // assignment operator
@@ -149,7 +156,7 @@ class amount_t
   bool operator>=(const amount_t& amt) const;
   bool operator==(const amount_t& amt) const;
   bool operator!=(const amount_t& amt) const {
-    if (commodity != amt.commodity)
+    if (commodity_ != amt.commodity_)
       return true;
     return ! (*this == amt);
   }
@@ -164,13 +171,27 @@ class amount_t
   void parse(std::istream& in);
   void parse(const std::string& str);
 
-  void write_quantity(std::ostream& out) const;
   void read_quantity(char *& data);
-  void read_quantity(std::istream& in);
+  void write_quantity(std::ostream& out) const;
 
   bool valid() const;
 
+  // Classes that are friends, and help to implement this class
+
+  friend std::ostream& operator<<(std::ostream& out, const amount_t& amt);
   friend std::istream& operator>>(std::istream& in, amount_t& amt);
+
+  friend unsigned int sizeof_bigint_t();
+
+  friend void read_binary_amount(char *& data, amount_t& amt);
+  friend void write_binary_amount(std::ostream& out, const amount_t& amt);
+
+  // This function is special, and exists only to support a custom
+  // optimization in binary.cc (which offers a significant enough gain
+  // to be worth the trouble).
+
+  friend void clean_commodity_history(char * item_pool,
+				      char * item_pool_end);
 };
 
 unsigned int sizeof_bigint_t();
@@ -209,7 +230,7 @@ class commodity_t
   class updater_t {
    public:
     virtual ~updater_t() {}
-    virtual void operator()(commodity_t *     commodity,
+    virtual void operator()(commodity_t&      commodity,
 			    const std::time_t moment,
 			    const std::time_t date,
 			    const std::time_t last,
@@ -273,6 +294,16 @@ class commodity_t
   }
 #endif
 
+  operator bool() const {
+    return this != null_commodity;
+  }
+  bool operator==(const commodity_t& comm) const {
+    return this == &comm;
+  }
+  bool operator!=(const commodity_t& comm) const {
+    return this != &comm;
+  }
+
   void check_symbol() {
     for (const char * p = symbol.c_str(); *p; p++)
       if (std::isspace(*p) || std::isdigit(*p) || *p == '-' || *p == '.') {
@@ -309,6 +340,13 @@ class commodity_t
     return true;
   }
 };
+
+inline commodity_t& amount_t::commodity() const {
+  if (! commodity_)
+    return *commodity_t::null_commodity;
+  else
+    return *commodity_;
+ }
 
 } // namespace ledger
 

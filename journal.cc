@@ -246,12 +246,9 @@ bool journal_t::add_entry(entry_t * entry)
        i != entry->transactions.end();
        i++) {
     (*i)->account->add_transaction(*i);
-
-    if ((*i)->cost) {
-      assert((*i)->cost->commodity);
-      (*i)->amount.commodity->add_price(entry->date,
-					*(*i)->cost / (*i)->amount);
-    }
+    if ((*i)->cost)
+      (*i)->amount.commodity().add_price(entry->date,
+					 *(*i)->cost / (*i)->amount);
   }
 
   return true;
@@ -330,8 +327,8 @@ entry_t * journal_t::derive_entry(strings_list::iterator i,
     first = xact = new transaction_t(m_xact->account, amt);
     added->add_transaction(xact);
 
-    if (xact->amount.commodity->symbol.empty())
-      xact->amount.commodity = m_xact->amount.commodity;
+    if (xact->amount.commodity().symbol.empty())
+      xact->amount.set_commodity(m_xact->amount.commodity());
 
     m_xact = matching->transactions.back();
 
@@ -355,7 +352,7 @@ entry_t * journal_t::derive_entry(strings_list::iterator i,
 	     x++) {
 	  if (acct_regex.match((*x)->account->fullname())) {
 	    acct  = (*x)->account;
-	    cmdty = (*x)->amount.commodity;
+	    cmdty = &(*x)->amount.commodity();
 	    break;
 	  }
 	}
@@ -379,8 +376,8 @@ entry_t * journal_t::derive_entry(strings_list::iterator i,
       transaction_t * xact = new transaction_t(acct, amt);
       added->add_transaction(xact);
 
-      if (! xact->amount.commodity)
-	xact->amount.commodity = cmdty;
+      if (! xact->amount.commodity())
+	xact->amount.set_commodity(*cmdty);
     }
 
     if (i != end && std::string(*i++) == "-from" && i != end) {

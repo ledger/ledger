@@ -1,4 +1,3 @@
-#include "ledger.h"
 #include "amount.h"
 #include "binary.h"
 #include "error.h"
@@ -84,8 +83,8 @@ void clean_commodity_history(char * item_pool, char * item_pool_end)
 
 	// Since the journal in which this price was bulk alloc'd (on
 	// reading from a binary file) is going away, we must make a
-	// new copy of the value, which other journals might still be
-	// using.
+	// new copy of the value, because other journals might still
+	// be using it.
 
 	amount_t::bigint_t * q = new amount_t::bigint_t(*quantity);
 	if (--quantity->ref == 0)
@@ -168,11 +167,10 @@ amount_t::amount_t(const bool value)
   if (value) {
     quantity  = &true_value;
     quantity->ref++;
-    commodity = commodity_t::null_commodity;
   } else {
     quantity  = NULL;
-    commodity = NULL;
   }
+  commodity_ = NULL;
 }
 
 amount_t::amount_t(const int value)
@@ -182,11 +180,10 @@ amount_t::amount_t(const int value)
   if (value != 0) {
     quantity = new bigint_t;
     mpz_set_si(MPZ(quantity), value);
-    commodity = commodity_t::null_commodity;
   } else {
     quantity  = NULL;
-    commodity = NULL;
   }
+  commodity_ = NULL;
 }
 
 amount_t::amount_t(const unsigned int value)
@@ -196,11 +193,10 @@ amount_t::amount_t(const unsigned int value)
   if (value != 0) {
     quantity = new bigint_t;
     mpz_set_ui(MPZ(quantity), value);
-    commodity = commodity_t::null_commodity;
   } else {
     quantity  = NULL;
-    commodity = NULL;
   }
+  commodity_ = NULL;
 }
 
 amount_t::amount_t(const double value)
@@ -211,11 +207,10 @@ amount_t::amount_t(const double value)
     quantity = new bigint_t;
     mpz_set_d(MPZ(quantity), value);
     // jww (2004-08-20): How do I calculate this?
-    commodity = commodity_t::null_commodity;
   } else {
     quantity  = NULL;
-    commodity = NULL;
   }
+  commodity_ = NULL;
 }
 
 void amount_t::_release()
@@ -257,7 +252,7 @@ void amount_t::_copy(const amount_t& amt)
     quantity = amt.quantity;
     quantity->ref++;
   }
-  commodity = amt.commodity;
+  commodity_ = amt.commodity_;
 }
 
 amount_t& amount_t::operator=(const std::string& value)
@@ -293,7 +288,7 @@ amount_t& amount_t::operator=(const bool value)
     if (quantity)
       _clear();
   } else {
-    commodity = commodity_t::null_commodity;
+    commodity_ = NULL;
     if (quantity)
       _release();
     quantity = &true_value;
@@ -308,7 +303,7 @@ amount_t& amount_t::operator=(const int value)
     if (quantity)
       _clear();
   } else {
-    commodity = commodity_t::null_commodity;
+    commodity_ = NULL;
     _init();
     mpz_set_si(MPZ(quantity), value);
   }
@@ -321,7 +316,7 @@ amount_t& amount_t::operator=(const unsigned int value)
     if (quantity)
       _clear();
   } else {
-    commodity = commodity_t::null_commodity;
+    commodity_ = NULL;
     _init();
     mpz_set_ui(MPZ(quantity), value);
   }
@@ -334,7 +329,7 @@ amount_t& amount_t::operator=(const double value)
     if (quantity)
       _clear();
   } else {
-    commodity = commodity_t::null_commodity;
+    commodity_ = NULL;
     _init();
     // jww (2004-08-20): How do I calculate precision?
     mpz_set_d(MPZ(quantity), value);
@@ -376,7 +371,7 @@ amount_t& amount_t::operator+=(const amount_t& amt)
 
   _dup();
 
-  if (commodity != amt.commodity)
+  if (commodity_ != amt.commodity_)
     throw amount_error("Adding amounts with different commodities");
 
   if (quantity->prec == amt.quantity->prec) {
@@ -401,14 +396,14 @@ amount_t& amount_t::operator-=(const amount_t& amt)
 
   if (! quantity) {
     quantity  = new bigint_t(*amt.quantity);
-    commodity = amt.commodity;
+    commodity_ = amt.commodity_;
     mpz_neg(MPZ(quantity), MPZ(quantity));
     return *this;
   }
 
   _dup();
 
-  if (commodity != amt.commodity)
+  if (commodity_ != amt.commodity_)
     throw amount_error("Subtracting amounts with different commodities");
 
   if (quantity->prec == amt.quantity->prec) {
@@ -436,10 +431,10 @@ amount_t& amount_t::operator*=(const amount_t& amt)
   mpz_mul(MPZ(quantity), MPZ(quantity), MPZ(amt.quantity));
   quantity->prec += amt.quantity->prec;
 
-  if (quantity->prec > commodity->precision + 6U) {
-    mpz_round(MPZ(quantity), MPZ(quantity),
-	      quantity->prec, commodity->precision + 6U);
-    quantity->prec = commodity->precision + 6U;
+  unsigned int comm_prec = commodity().precision;
+  if (quantity->prec > comm_prec + 6U) {
+    mpz_round(MPZ(quantity), MPZ(quantity), quantity->prec, comm_prec + 6U);
+    quantity->prec = comm_prec + 6U;
   }
 
   return *this;
@@ -461,10 +456,10 @@ amount_t& amount_t::operator/=(const amount_t& amt)
   mpz_tdiv_q(MPZ(quantity), MPZ(quantity), MPZ(amt.quantity));
   quantity->prec += 6;
 
-  if (quantity->prec > commodity->precision + 6U) {
-    mpz_round(MPZ(quantity), MPZ(quantity),
-	      quantity->prec, commodity->precision + 6U);
-    quantity->prec = commodity->precision + 6U;
+  unsigned int comm_prec = commodity().precision;
+  if (quantity->prec > comm_prec + 6U) {
+    mpz_round(MPZ(quantity), MPZ(quantity), quantity->prec, comm_prec + 6U);
+    quantity->prec = comm_prec + 6U;
   }
 
   return *this;
@@ -536,9 +531,8 @@ bool amount_t::operator OP(const amount_t& amt) const		\
   if (! amt.quantity)						\
     return *this < 0;						\
 								\
-  if (commodity != amt.commodity &&				\
-      commodity != commodity_t::null_commodity &&		\
-      amt.commodity != commodity_t::null_commodity)		\
+  if (commodity() && amt.commodity() &&				\
+      commodity() != amt.commodity())                           \
     return false;						\
 								\
   if (quantity->prec == amt.quantity->prec) {			\
@@ -567,12 +561,12 @@ amount_t::operator bool() const
   if (! quantity)
     return false;
 
-  if (quantity->prec <= commodity->precision) {
+  if (quantity->prec <= commodity().precision) {
     return mpz_sgn(MPZ(quantity)) != 0;
   } else {
-    assert(commodity);
+    assert(commodity_);
     mpz_set(temp, MPZ(quantity));
-    mpz_ui_pow_ui(divisor, 10, quantity->prec - commodity->precision);
+    mpz_ui_pow_ui(divisor, 10, quantity->prec - commodity().precision);
     mpz_tdiv_q(temp, temp, divisor);
     bool zero = mpz_sgn(temp) == 0;
     return ! zero;
@@ -581,9 +575,9 @@ amount_t::operator bool() const
 
 amount_t amount_t::value(const std::time_t moment) const
 {
-  if (quantity && ! (commodity->flags & COMMODITY_STYLE_NOMARKET))
-    if (amount_t amt = commodity->value(moment))
-      return (amt * *this).round(commodity->precision);
+  if (quantity && ! (commodity().flags & COMMODITY_STYLE_NOMARKET))
+    if (amount_t amt = commodity().value(moment))
+      return (amt * *this).round(commodity().precision);
 
   return *this;
 }
@@ -622,16 +616,18 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
   // Ensure the value is rounded to the commodity's precision before
   // outputting it.  NOTE: `rquotient' is used here as a temp variable!
 
-  if (amt.commodity->precision < amt.quantity->prec) {
+  commodity_t& commodity(amt.commodity());
+
+  if (commodity.precision < amt.quantity->prec) {
     mpz_round(rquotient, MPZ(amt.quantity), amt.quantity->prec,
-	      amt.commodity->precision);
-    mpz_ui_pow_ui(divisor, 10, amt.commodity->precision);
+	      commodity.precision);
+    mpz_ui_pow_ui(divisor, 10, commodity.precision);
     mpz_tdiv_qr(quotient, remainder, rquotient, divisor);
   }
-  else if (amt.commodity->precision > amt.quantity->prec) {
-    mpz_ui_pow_ui(divisor, 10, amt.commodity->precision - amt.quantity->prec);
+  else if (commodity.precision > amt.quantity->prec) {
+    mpz_ui_pow_ui(divisor, 10, commodity.precision - amt.quantity->prec);
     mpz_mul(rquotient, MPZ(amt.quantity), divisor);
-    mpz_ui_pow_ui(divisor, 10, amt.commodity->precision);
+    mpz_ui_pow_ui(divisor, 10, commodity.precision);
     mpz_tdiv_qr(quotient, remainder, rquotient, divisor);
   }
   else if (amt.quantity->prec) {
@@ -651,12 +647,12 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
   }
   mpz_set(rquotient, remainder);
 
-  if (! (amt.commodity->flags & COMMODITY_STYLE_SUFFIXED)) {
-    if (amt.commodity->quote)
-      out << "\"" << amt.commodity->symbol << "\"";
+  if (! (commodity.flags & COMMODITY_STYLE_SUFFIXED)) {
+    if (commodity.quote)
+      out << "\"" << commodity.symbol << "\"";
     else
-      out << amt.commodity->symbol;
-    if (amt.commodity->flags & COMMODITY_STYLE_SEPARATED)
+      out << commodity.symbol;
+    if (commodity.flags & COMMODITY_STYLE_SEPARATED)
       out << " ";
   }
 
@@ -666,7 +662,7 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
   if (mpz_sgn(quotient) == 0) {
     out << '0';
   }
-  else if (! (amt.commodity->flags & COMMODITY_STYLE_THOUSANDS)) {
+  else if (! (commodity.flags & COMMODITY_STYLE_THOUSANDS)) {
     char * p = mpz_get_str(NULL, 10, quotient);
     out << p;
     std::free(p);
@@ -695,7 +691,7 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
 	 i != strs.rend();
 	 i++) {
       if (printed) {
-	out << (amt.commodity->flags & COMMODITY_STYLE_EUROPEAN ? '.' : ',');
+	out << (commodity.flags & COMMODITY_STYLE_EUROPEAN ? '.' : ',');
 	out.width(3);
 	out.fill('0');
       }
@@ -705,10 +701,10 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
     }
   }
 
-  if (amt.commodity->precision) {
-    out << ((amt.commodity->flags & COMMODITY_STYLE_EUROPEAN) ? ',' : '.');
+  if (commodity.precision) {
+    out << ((commodity.flags & COMMODITY_STYLE_EUROPEAN) ? ',' : '.');
 
-    out.width(amt.commodity->precision);
+    out.width(commodity.precision);
     out.fill('0');
 
     char * p = mpz_get_str(NULL, 10, rquotient);
@@ -716,13 +712,13 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
     std::free(p);
   }
 
-  if (amt.commodity->flags & COMMODITY_STYLE_SUFFIXED) {
-    if (amt.commodity->flags & COMMODITY_STYLE_SEPARATED)
+  if (commodity.flags & COMMODITY_STYLE_SUFFIXED) {
+    if (commodity.flags & COMMODITY_STYLE_SEPARATED)
       out << " ";
-    if (amt.commodity->quote)
-      out << "\"" << amt.commodity->symbol << "\"";
+    if (commodity.quote)
+      out << "\"" << commodity.symbol << "\"";
     else
-      out << amt.commodity->symbol;
+      out << commodity.symbol;
   }
 
   mpz_clear(quotient);
@@ -825,10 +821,10 @@ void amount_t::parse(std::istream& in)
   }
 
   // Create the commodity if has not already been seen.
-  commodity = commodity_t::find_commodity(symbol, true);
-  commodity->flags |= flags;
-  if (quantity->prec > commodity->precision)
-    commodity->precision = quantity->prec;
+  commodity_ = commodity_t::find_commodity(symbol, true);
+  commodity_->flags |= flags;
+  if (quantity->prec > commodity_->precision)
+    commodity_->precision = quantity->prec;
 
   // Now we have the final number.  Remove commas and periods, if
   // necessary.
@@ -937,48 +933,16 @@ void amount_t::read_quantity(char *& data)
   }
 }
 
-void amount_t::read_quantity(std::istream& in)
-{
-  char byte;
-  in.read(&byte, sizeof(byte));
-
-  if (byte == 0) {
-    quantity = NULL;
-  }
-  else if (byte == 1) {
-    quantity = new(bigints_next++) bigint_t;
-    quantity->flags |= BIGINT_BULK_ALLOC;
-
-    unsigned short len;
-    in.read((char *)&len, sizeof(len));
-    in.read(buf, len);
-    mpz_import(MPZ(quantity), len / sizeof(short), 1, sizeof(short),
-	       0, 0, buf);
-
-    char negative;
-    in.read(&negative, sizeof(negative));
-    if (negative)
-      mpz_neg(MPZ(quantity), MPZ(quantity));
-
-    in.read((char *)&quantity->prec, sizeof(quantity->prec));
-  } else {
-    unsigned int index;
-    in.read((char *)&index, sizeof(index));
-    quantity = bigints + (index - 1);
-    quantity->ref++;
-  }
-}
-
 bool amount_t::valid() const
 {
   if (quantity) {
-    if (! commodity)
+    if (! commodity_)
       return false;
 
     if (quantity->ref == 0)
       return false;
   }
-  else if (commodity) {
+  else if (commodity_) {
     return false;
   }
 
@@ -1029,9 +993,8 @@ amount_t commodity_t::value(const std::time_t moment)
     }
 
   if (updater)
-    (*updater)(this, moment, age,
-	       history.size() > 0 ? (*history.rbegin()).first : 0, price);
-
+    (*updater)(*this, moment, age, (history.size() > 0 ?
+				    (*history.rbegin()).first : 0), price);
   return price;
 }
 
@@ -1053,7 +1016,7 @@ struct commodity_updater_wrap : public commodity_t::updater_t
   PyObject * self;
   commodity_updater_wrap(PyObject * self_) : self(self_) {}
 
-  virtual void operator()(commodity_t *     commodity,
+  virtual void operator()(commodity_t&      commodity,
 			  const std::time_t moment,
 			  const std::time_t date,
 			  const std::time_t last,
@@ -1073,7 +1036,9 @@ void export_amount()
     .def(init<unsigned int>())
     .def(init<double>())
 
-    .def_readonly("commodity", &amount_t::commodity)
+    .def("commodity", &amount_t::commodity,
+	 return_value_policy<reference_existing_object>())
+    .def("set_commodity", &amount_t::set_commodity)
 
     .def(self += self)
     .def(self +  self)
@@ -1127,8 +1092,6 @@ void export_amount()
     .def_readwrite("conversion", &commodity_t::conversion)
     .def_readwrite("ident", &commodity_t::ident)
     .def_readwrite("updater", &commodity_t::updater)
-    .def_readwrite("commodities", &commodity_t::commodities)
-    .def_readwrite("null_commodity", &commodity_t::null_commodity)
 
     .def("add_commodity", &commodity_t::add_commodity)
     .def("remove_commodity", &commodity_t::remove_commodity)

@@ -218,11 +218,9 @@ void value_expr_t::compute(value_t& result, const details_t& details) const
       // jww (2004-08-17): do something smarter here?
       result.cast(value_t::AMOUNT);
     }
-    if (result.type == value_t::AMOUNT) {
-      amount_t amt = result;
-      amt.commodity = commodity_t::null_commodity;
-      result = amt;
-    }
+    // jww (2004-08-29): maybe this should be strip_commodity?
+    if (result.type == value_t::AMOUNT)
+      ((amount_t *) result.data)->set_commodity(*commodity_t::null_commodity);
     break;
   }
 

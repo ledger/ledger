@@ -1,5 +1,6 @@
 #include "value.h"
 #include "ledger.h"
+#include "error.h"
 
 namespace ledger {
 
@@ -97,9 +98,8 @@ value_t& value_t::operator OP(const value_t& value)			\
       cast(AMOUNT);							\
 									\
     case AMOUNT:							\
-      if (((amount_t *) data)->commodity &&				\
-	  ((amount_t *) data)->commodity !=				\
-	  ((amount_t *) value.data)->commodity) {			\
+      if (((amount_t *) data)->commodity() !=				\
+	  ((amount_t *) value.data)->commodity()) {			\
 	cast(BALANCE);							\
 	return *this OP value;						\
       }									\
@@ -183,8 +183,7 @@ value_t& value_t::operator +=(const transaction_t& xact)
       cast(BALANCE_PAIR);
       return *this += xact;
     }
-    else if (((amount_t *) data)->commodity &&
-	     ((amount_t *) data)->commodity != xact.amount.commodity) {
+    else if (((amount_t *) data)->commodity() != xact.amount.commodity()) {
       cast(BALANCE);
       return *this += xact;
     }
@@ -273,10 +272,10 @@ bool value_t::operator OP(const value_t& value)				\
       return *((amount_t *) data) OP *((amount_t *) value.data);	\
 									\
     case BALANCE:							\
-      return ((balance_t *) data)->amount(((amount_t *) value.data)->commodity) OP *((amount_t *) value.data); \
+      return ((balance_t *) data)->amount(((amount_t *) value.data)->commodity()) OP *((amount_t *) value.data); \
 									\
     case BALANCE_PAIR:							\
-      return ((balance_pair_t *) data)->quantity.amount(((amount_t *) value.data)->commodity) OP *((amount_t *) value.data); \
+      return ((balance_pair_t *) data)->quantity.amount(((amount_t *) value.data)->commodity()) OP *((amount_t *) value.data); \
 									\
     default:								\
       assert(0);							\
@@ -435,16 +434,17 @@ void value_t::cast(type_t cast_type)
       *((bool *)data) = temp;
       break;
     }
-    case INTEGER: {
-      unsigned int temp = ((balance_t *) data)->amount();
-      destroy();
-      *((unsigned int *)data) = temp;
-      break;
-    }
+    case INTEGER:
+      throw error("Cannot convert a balance to an integer");
     case AMOUNT: {
-      amount_t temp = ((balance_t *) data)->amount();
-      destroy();
-      new((amount_t *)data) amount_t(temp);
+      balance_t * temp = (balance_t *) data;
+      if (temp->amounts.size() == 1) {
+	amount_t amt = (*temp->amounts.begin()).second;
+	destroy();
+	new((amount_t *)data) amount_t(amt);
+      } else {
+	throw error("Cannot convert a balance with multiple commodities to an amount");
+      }
       break;
     }
     case BALANCE:
@@ -470,16 +470,18 @@ void value_t::cast(type_t cast_type)
       *((bool *)data) = temp;
       break;
     }
-    case INTEGER: {
-      unsigned int temp = ((balance_pair_t *) data)->quantity.amount();
-      destroy();
-      *((unsigned int *)data) = temp;
-      break;
-    }
+    case INTEGER:
+      throw error("Cannot convert a balance pair to an integer");
+
     case AMOUNT: {
-      amount_t temp = ((balance_pair_t *) data)->quantity.amount();
-      destroy();
-      new((amount_t *)data) amount_t(temp);
+      balance_t * temp = &((balance_pair_t *) data)->quantity;
+      if (temp->amounts.size() == 1) {
+	amount_t amt = (*temp->amounts.begin()).second;
+	destroy();
+	new((amount_t *)data) amount_t(amt);
+      } else {
+	throw error("Cannot convert a balance pair with multiple commodities to an amount");
+      }
       break;
     }
     case BALANCE: {

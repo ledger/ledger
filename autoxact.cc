@@ -15,7 +15,7 @@ void automated_transaction_t::extend_entry(entry_t * entry)
 	   t != transactions.end();
 	   t++) {
 	amount_t amt;
-	if ((*t)->amount.commodity->symbol.empty())
+	if ((*t)->amount.commodity().symbol.empty())
 	  amt = (*i)->amount * (*t)->amount;
 	else
 	  amt = (*t)->amount;

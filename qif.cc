@@ -96,7 +96,7 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
       xact->amount.parse(line);
       if (! def_commodity)
 	def_commodity = commodity_t::find_commodity("$", true);
-	xact->amount.commodity = def_commodity;
+      xact->amount.set_commodity(*def_commodity);
       if (c == '$')
 	xact->amount.negate();
       break;
