@@ -539,6 +539,8 @@ def vmax(d, val):\n\
 
 int main(int argc, char * argv[], char * envp[])
 {
+  std::ios::sync_with_stdio(false);
+
   try {
     return parse_and_report(argc, argv, envp);
   }
