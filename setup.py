@@ -10,6 +10,10 @@ if os.environ.has_key ("HAVE_XMLPARSE") and\
    os.environ["HAVE_XMLPARSE"] == "true":
     libs.extend (["xmlparse", "xmltok"])
 
+if os.environ.has_key ("HAVE_LIBOFX") and\
+   os.environ["HAVE_LIBOFX"] == "true":
+    libs.extend (["ofx"])
+
 setup(name         = "Ledger",
       version      = "2.0b",
       description  = "Ledger Accounting Tool",
