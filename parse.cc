@@ -16,25 +16,20 @@ static inline char * skip_ws(char * ptr)
 
 static inline char * next_element(char * buf, bool variable = false)
 {
-  char * p;
+  for (char * p = buf; *p; p++) {
+    if (! (*p == ' ' || *p == '\t'))
+      continue;
 
-  if (variable) {
-    // Convert any tabs to spaces, for simplicity's sake
-    for (p = buf; *p; p++)
-      if (*p == '\t')
-	*p = ' ';
-
-    p = std::strstr(buf, "  ");
-  } else {
-    p = std::strchr(buf, ' ');
+    if (! variable) {
+      *p = '\0';
+      return skip_ws(p + 1);
+    }
+    else if (*(p + 1) == ' ' || *(p + 1) == '\t') {
+      *p = '\0';
+      return skip_ws(p + 2);
+    }
   }
-
-  if (! p)
-    return NULL;
-
-  *p++ = '\0';
-
-  return skip_ws(p);
+  return NULL;
 }
 
 static const char *formats[] = {
