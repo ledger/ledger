@@ -360,6 +360,7 @@ journal_t::~journal_t()
 {
   DEBUG_PRINT("ledger.memory.dtors", "dtor journal_t");
 
+  delete default_finalizer;
   delete master;
 
   // Don't bother unhooking each entry's transactions from the
@@ -574,26 +575,41 @@ account_t * py_find_account_2(journal_t& journal, const std::string& name,
   return journal.find_account(name, auto_create);
 }
 
-#if 0
+struct py_entry_finalizer_t : public entry_finalizer_t {
+  object pyobj;
+  py_entry_finalizer_t() {}
+  py_entry_finalizer_t(object obj) : pyobj(obj) {}
+  py_entry_finalizer_t(const py_entry_finalizer_t& other)
+    : pyobj(other.pyobj) {}
+  virtual bool operator()(entry_t& entry) {
+    return call<bool>(pyobj.ptr(), entry);
+  }
+};
 
-void py_add_entry_finalize_hook(journal_t& journal, object x)
+std::list<py_entry_finalizer_t> py_finalizers;
+
+void py_add_entry_finalizer(journal_t& journal, object x)
 {
-  add_hook(journal.entry_finalize_hooks,
-	   extract<journal_t::entry_finalize_hook_t>(x));
+  py_finalizers.push_back(py_entry_finalizer_t(x));
+  add_hook<entry_finalizer_t *>(journal.entry_finalize_hooks,
+				&py_finalizers.back());
 }
 
-void py_remove_entry_finalize_hook(journal_t& journal, object x)
+void py_remove_entry_finalizer(journal_t& journal, object x)
 {
-  remove_hook(journal.entry_finalize_hooks,
-	      extract<journal_t::entry_finalize_hook_t>(x));
+  for (std::list<py_entry_finalizer_t>::iterator i = py_finalizers.begin();
+       i != py_finalizers.end();
+       i++)
+    if ((*i).pyobj == x) {
+      remove_hook<entry_finalizer_t *>(journal.entry_finalize_hooks, &(*i));
+      return;
+    }
 }
 
-void py_run_entry_finalize_hooks(journal_t& journal, entry_t& entry)
+void py_run_entry_finalizers(journal_t& journal, entry_t& entry)
 {
   run_hooks(journal.entry_finalize_hooks, entry);
 }
-
-#endif
 
 #define EXC_TRANSLATOR(type)				\
   void exc_translate_ ## type(const type& err) {	\
@@ -682,11 +698,9 @@ void export_journal()
 
     .def("add_entry", &journal_t::add_entry)
     .def("remove_entry", &journal_t::remove_entry)
-#if 0
-    .def("add_entry_finalize_hook", py_add_entry_finalize_hook)
-    .def("remove_entry_finalize_hook", py_remove_entry_finalize_hook)
-    .def("run_entry_finalize_hooks", py_run_entry_finalize_hooks)
-#endif
+    .def("add_entry_finalizer", py_add_entry_finalizer)
+    .def("remove_entry_finalizer", py_remove_entry_finalizer)
+    .def("run_entry_finalizers", py_run_entry_finalizers)
 
     .def("valid", &journal_t::valid)
     ;

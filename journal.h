@@ -174,25 +174,40 @@ class account_t
 std::ostream& operator<<(std::ostream& out, const account_t& account);
 
 
+struct entry_finalizer_t {
+  virtual ~entry_finalizer_t() {}
+  virtual bool operator()(entry_t& entry) = 0;
+};
+
+struct func_finalizer_t : public entry_finalizer_t {
+  typedef bool (*func_t)(entry_t& entry);
+  func_t func;
+  func_finalizer_t(func_t _func) : func(_func) {}
+  func_finalizer_t(const func_finalizer_t& other) : func(other.func) {}
+  virtual bool operator()(entry_t& entry) {
+    return func(entry);
+  }
+};
+
 template <typename T>
-void add_hook(std::list<T>& list, T func, const bool prepend = false) {
+void add_hook(std::list<T>& list, T obj, const bool prepend = false) {
   if (prepend)
-    list.push_front(func);
+    list.push_front(obj);
   else
-    list.push_back(func);
+    list.push_back(obj);
 }
 
 template <typename T>
-void remove_hook(std::list<T>& list, T func) {
-  list.remove(func);
+void remove_hook(std::list<T>& list, T obj) {
+  list.remove(obj);
 }
 
 template <typename T, typename Data>
-bool run_hooks(std::list<T>& list, Data& entry) {
+bool run_hooks(std::list<T>& list, Data& item) {
   for (typename std::list<T>::const_iterator i = list.begin();
        i != list.end();
        i++)
-    if (! (*i)(entry))
+    if (! (*(*i))(item))
       return false;
   return true;
 }
@@ -212,14 +227,14 @@ class journal_t
 
   mutable accounts_map accounts_cache;
 
-  typedef bool (*entry_finalize_hook_t)(entry_t& entry);
-
-  std::list<entry_finalize_hook_t> entry_finalize_hooks;
+  std::list<entry_finalizer_t *> entry_finalize_hooks;
+  entry_finalizer_t * default_finalizer;
 
   journal_t() {
     master = new account_t(NULL, "");
     item_pool = item_pool_end = NULL;
-    add_hook(entry_finalize_hooks, finalize_entry);
+    default_finalizer = new func_finalizer_t(finalize_entry);
+    add_hook(entry_finalize_hooks, default_finalizer);
   }
   ~journal_t();
 

@@ -230,10 +230,8 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
   unsigned int  errors = 0;
   commodity_t *	time_commodity = NULL;
 
-  std::deque<account_t *>  account_stack;
-  automated_transactions_t auto_xacts;
-
-  current_auto_xacts = &auto_xacts;
+  std::deque<account_t *> account_stack;
+  autoxact_finalizer_t    autoxact_finalizer;
 
   if (! master)
     master = journal->master;
@@ -433,10 +431,12 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
       case '=':                   // automated transactions
 	if (! added_autoxact_hook) {
-	  add_hook(journal->entry_finalize_hooks, handle_auto_xacts);
+	  add_hook<entry_finalizer_t *>(journal->entry_finalize_hooks,
+					&autoxact_finalizer);
 	  added_autoxact_hook = true;
 	}
-	parse_automated_transactions(in, account_stack.front(), auto_xacts);
+	parse_automated_transactions(in, account_stack.front(),
+				     autoxact_finalizer.auto_xacts);
 	break;
 
       case '!': {                 // directive
@@ -449,8 +449,6 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
 	  push_var<unsigned int> save_linenum(linenum);
 	  push_var<std::string>  save_path(path);
-	  push_var<automated_transactions_t *>
-	    save_current_auto_xacts(current_auto_xacts);
 
 	  count += parse_journal_file(skip_ws(line), journal,
 				      account_stack.front());
@@ -496,6 +494,9 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
   }
 
  done:
+  if (added_autoxact_hook)
+    remove_hook<entry_finalizer_t *>(journal->entry_finalize_hooks,
+				     &autoxact_finalizer);
   if (time_commodity) {
     time_commodity->precision = 2;
     time_commodity->flags |= COMMODITY_STYLE_NOMARKET;

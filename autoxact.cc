@@ -27,29 +27,4 @@ void automated_transaction_t::extend_entry(entry_t& entry)
       }
 }
 
-automated_transactions_t * current_auto_xacts = NULL;
-
-bool handle_auto_xacts(entry_t& entry)
-{
-  if (current_auto_xacts &&
-      ! current_auto_xacts->automated_transactions.empty())
-    current_auto_xacts->extend_entry(entry);
-
-  return true;
-}
-
 } // namespace ledger
-
-#ifdef USE_BOOST_PYTHON
-
-#include <boost/python.hpp>
-#include <Python.h>
-
-using namespace boost::python;
-using namespace ledger;
-
-void export_autoxact() {
-  def("handle_auto_xacts", handle_auto_xacts);
-}
-
-#endif // USE_BOOST_PYTHON

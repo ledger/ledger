@@ -88,9 +88,14 @@ public:
   }
 };
 
-extern automated_transactions_t * current_auto_xacts;
-
-bool handle_auto_xacts(entry_t& entry);
+struct autoxact_finalizer_t : public entry_finalizer_t {
+  automated_transactions_t auto_xacts;
+  virtual bool operator()(entry_t& entry) {
+    if (! auto_xacts.automated_transactions.empty())
+      auto_xacts.extend_entry(entry);
+    return true;
+  }
+};
 
 } // namespace ledger
 
