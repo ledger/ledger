@@ -407,8 +407,8 @@ value_expr_t * parse_value_term(std::istream& in)
   case 'T': node = new value_expr_t(value_expr_t::TOTAL_EXPR); break;
 
   // Compound terms
-  case 'v': node = parse_value_expr("P(t,d)"); break;
-  case 'V': node = parse_value_term("P(T,d)"); break;
+  case 'v': node = parse_value_expr("P(a,d)"); break;
+  case 'V': node = parse_value_term("P(O,d)"); break;
   case 'g': node = parse_value_expr("v-c"); break;
   case 'G': node = parse_value_expr("V-C"); break;
   case 'o': node = parse_value_expr("d-b"); break;
