@@ -9,7 +9,7 @@
 namespace ledger {
 
 const unsigned long	   binary_magic_number = 0xFFEED765;
-static const unsigned long format_version      = 0x0002000e;
+static const unsigned long format_version      = 0x00020010;
 
 bool binary_parser_t::test(std::istream& in) const
 {
@@ -102,7 +102,10 @@ transaction_t * read_binary_transaction(std::istream& in, entry_t * entry)
   xact->account->add_transaction(xact);
 
   read_binary_amount(in, xact->amount);
-  read_binary_amount(in, xact->cost);
+  if (read_binary_number<char>(in) == 1) {
+    xact->cost = new amount_t;
+    read_binary_amount(in, *xact->cost);
+  }
   read_binary_number(in, xact->flags);
   read_binary_string(in, xact->note);
 
@@ -314,7 +317,12 @@ void write_binary_transaction(std::ostream& out, transaction_t * xact)
 {
   write_binary_number(out, xact->account->ident);
   write_binary_amount(out, xact->amount);
-  write_binary_amount(out, xact->cost);
+  if (xact->cost) {
+    write_binary_number<char>(out, 1);
+    write_binary_amount(out, *xact->cost);
+  } else {
+    write_binary_number<char>(out, 0);
+  }
   write_binary_number(out, xact->flags);
   write_binary_string(out, xact->note);
 }

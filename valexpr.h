@@ -57,6 +57,7 @@ struct value_expr_t
     DEPTH,
 
     // Item totals
+    COUNT,
     TOTAL,
     COST_TOTAL,
 

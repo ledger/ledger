@@ -29,7 +29,8 @@ void calc_transactions::operator()(transaction_t * xact)
 
   if (inverted) {
     xact->amount.negate();
-    xact->cost.negate();
+    if (xact->cost)
+      xact->cost->negate();
   }
 
   if (! (xact->dflags & TRANSACTION_NO_TOTAL))
@@ -39,7 +40,8 @@ void calc_transactions::operator()(transaction_t * xact)
 
   if (inverted) {
     xact->amount.negate();
-    xact->cost.negate();
+    if (xact->cost)
+      xact->cost->negate();
   }
 
   last_xact = xact;
@@ -64,7 +66,6 @@ void collapse_transactions::report_cumulative_subtotal()
 
       total_xact->entry  = last_entry;
       total_xact->amount = (*i).second;
-      total_xact->cost   = (*i).second;
 
       (*handler)(total_xact);
     }
@@ -161,7 +162,6 @@ void subtotal_transactions::flush(const char * spec_fmt)
 
       xact->entry  = entry;
       xact->amount = (*j).second;
-      xact->cost   = (*j).second;
 
       (*handler)(xact);
     }

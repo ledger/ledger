@@ -85,19 +85,35 @@ void balance_t::write(std::ostream& out,
 }
 
 balance_pair_t::balance_pair_t(const transaction_t& xact)
-  : quantity(xact.amount), cost(xact.cost) {}
+  : quantity(xact.amount), cost(NULL)
+{
+  if (xact.cost)
+    cost = new balance_t(*xact.cost);
+}
 
 balance_pair_t& balance_pair_t::operator+=(const transaction_t& xact)
 {
+  if (xact.cost && ! cost)
+    cost = new balance_t(quantity);
+
   quantity += xact.amount;
-  cost     += xact.cost;
+
+  if (cost)
+    *cost += xact.cost ? *xact.cost : xact.amount;
+
   return *this;
 }
 
 balance_pair_t& balance_pair_t::operator-=(const transaction_t& xact)
 {
+  if (xact.cost && ! cost)
+    cost = new balance_t(quantity);
+
   quantity -= xact.amount;
-  cost     -= xact.cost;
+
+  if (cost)
+    *cost -= xact.cost ? *xact.cost : xact.amount;
+
   return *this;
 }
 

@@ -73,15 +73,13 @@ transaction_t * parse_transaction_text(char * line, account_t * account,
     char * price_str = std::strchr(cost_str, '@');
     if (price_str) {
       *price_str++ = '\0';
-      xact->cost.parse(price_str);
+      xact->cost = new amount_t;
+      xact->cost->parse(price_str);
     }
 
     xact->amount.parse(cost_str);
-
     if (price_str)
-      xact->cost *= xact->amount;
-    else
-      xact->cost = xact->amount;
+      *xact->cost *= xact->amount;
   }
 
   if (*p == '[' || *p == '(') {
@@ -99,8 +97,8 @@ transaction_t * parse_transaction_text(char * line, account_t * account,
 
   if (! xact->amount.commodity)
     xact->amount.commodity = commodity_t::null_commodity;
-  if (! xact->cost.commodity)
-    xact->cost.commodity = commodity_t::null_commodity;
+  if (xact->cost && ! xact->cost->commodity)
+    xact->cost->commodity = commodity_t::null_commodity;
 
   return xact.release();
 }
@@ -156,8 +154,8 @@ bool finalize_entry(entry_t * entry)
     if (! ((*x)->flags & TRANSACTION_VIRTUAL) ||
 	((*x)->flags & TRANSACTION_BALANCE)) {
       DEBUG_PRINT("ledger.textual.finalize",
-		  "item cost is " << (*x)->cost);
-      balance += (*x)->cost;
+		  "item cost is " << ((*x)->cost ? *(*x)->cost : (*x)->amount));
+      balance += (*x)->cost ? *(*x)->cost : (*x)->amount;
     }
 
   // If one transaction of a two-line transaction is of a different
@@ -169,7 +167,7 @@ bool finalize_entry(entry_t * entry)
     for (transactions_list::const_iterator x = entry->transactions.begin();
 	 x != entry->transactions.end();
 	 x++) {
-      if ((*x)->cost != (*x)->amount || ((*x)->flags & TRANSACTION_VIRTUAL))
+      if ((*x)->cost || ((*x)->flags & TRANSACTION_VIRTUAL))
 	continue;
 
       for (amounts_map::const_iterator i = balance.amounts.begin();
@@ -177,9 +175,10 @@ bool finalize_entry(entry_t * entry)
 	   i++)
 	if ((*i).second.commodity != (*x)->amount.commodity) {
 	  assert((*x)->amount);
-	  balance -= (*x)->cost;
-	  (*x)->cost = - (*i).second;
-	  balance += (*x)->cost;
+	  balance -= (*x)->amount;
+	  assert(! (*x)->cost);
+	  (*x)->cost = new amount_t(- (*i).second);
+	  balance += *(*x)->cost;
 	  break;
 	}
 
@@ -208,7 +207,7 @@ bool finalize_entry(entry_t * entry)
     // inverse of the computed value of the others.
 
     amounts_map::const_iterator i = balance.amounts.begin();
-    (*x)->amount = (*x)->cost = - balance.amount((*i).first);
+    (*x)->amount = - balance.amount((*i).first);
 
     balance = 0;
   }
@@ -401,7 +400,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	    time_commodity = amt.commodity;
 
 	    transaction_t * xact
-	      = new transaction_t(last_account, amt, amt, TRANSACTION_VIRTUAL);
+	      = new transaction_t(last_account, amt, TRANSACTION_VIRTUAL);
 	    curr->add_transaction(xact);
 
 	    if (! finalize_entry(curr.get()) ||

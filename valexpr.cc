@@ -83,10 +83,18 @@ void value_expr_t::compute(value_t& result, const details_t& details,
     break;
 
   case COST:
-    if (details.xact)
-      result = details.xact->cost;
-    else if (details.account)
-      result = details.account->value.cost;
+    if (details.xact) {
+      if (details.xact->cost)
+	result = *details.xact->cost;
+      else
+	result = details.xact->amount;
+    }
+    else if (details.account) {
+      if (details.account->value.cost)
+	result = *details.account->value.cost;
+      else
+	result = details.account->value.quantity;
+    }
     break;
 
   case TOTAL:
@@ -96,10 +104,18 @@ void value_expr_t::compute(value_t& result, const details_t& details,
       result = details.account->total.quantity;
     break;
   case COST_TOTAL:
-    if (details.xact)
-      result = details.xact->total.cost;
-    else if (details.account)
-      result = details.account->total.cost;
+    if (details.xact) {
+      if (details.xact->total.cost)
+	result = *details.xact->total.cost;
+      else
+	result = details.xact->total.quantity;
+    }
+    else if (details.account) {
+      if (details.account->total.cost)
+	result = *details.account->total.cost;
+      else
+	result = details.account->total.quantity;
+    }
     break;
 
   case VALUE_EXPR:
@@ -163,6 +179,13 @@ void value_expr_t::compute(value_t& result, const details_t& details,
     break;
 
   case INDEX:
+    if (details.xact)
+      result = details.xact->index + 1;
+    else if (details.account)
+      result = details.account->subcount;
+    break;
+
+  case COUNT:
     if (details.xact)
       result = details.xact->index + 1;
     else if (details.account)
@@ -377,7 +400,7 @@ value_expr_t * parse_value_term(std::istream& in)
   in.get(c);
   switch (c) {
   // Basic terms
-  case 'N':
+  case 'm':
     node.reset(new value_expr_t(value_expr_t::CONSTANT_T));
     node->constant_t = now;
     break;
@@ -388,6 +411,7 @@ value_expr_t * parse_value_term(std::istream& in)
   case 'X': node.reset(new value_expr_t(value_expr_t::CLEARED)); break;
   case 'R': node.reset(new value_expr_t(value_expr_t::REAL)); break;
   case 'n': node.reset(new value_expr_t(value_expr_t::INDEX)); break;
+  case 'N': node.reset(new value_expr_t(value_expr_t::COUNT)); break;
   case 'l': node.reset(new value_expr_t(value_expr_t::DEPTH)); break;
   case 'O': node.reset(new value_expr_t(value_expr_t::TOTAL)); break;
   case 'C': node.reset(new value_expr_t(value_expr_t::COST_TOTAL)); break;
@@ -715,6 +739,7 @@ void dump_value_expr(std::ostream& out, const value_expr_t * node)
   case value_expr_t::CLEARED:	   out << "CLEARED"; break;
   case value_expr_t::REAL:	   out << "REAL"; break;
   case value_expr_t::INDEX:	   out << "INDEX"; break;
+  case value_expr_t::COUNT:	   out << "COUNT"; break;
   case value_expr_t::DEPTH:	   out << "DEPTH"; break;
   case value_expr_t::TOTAL:        out << "TOTAL"; break;
   case value_expr_t::COST_TOTAL:   out << "COST_TOTAL"; break;

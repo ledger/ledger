@@ -49,7 +49,7 @@ class transaction_t
   entry_t *	 entry;
   account_t *	 account;
   amount_t	 amount;
-  amount_t	 cost;
+  amount_t *	 cost;
   unsigned short flags;
   std::string	 note;
 
@@ -58,16 +58,20 @@ class transaction_t
   mutable unsigned short dflags;
 
   transaction_t(account_t * _account)
-    : entry(NULL), account(_account), flags(TRANSACTION_NORMAL),
-      index(0), dflags(0) {}
+    : entry(NULL), account(_account), cost(NULL),
+      flags(TRANSACTION_NORMAL), index(0), dflags(0) {}
 
   transaction_t(account_t *	   _account,
 		const amount_t&    _amount,
-		const amount_t&    _cost,
 		unsigned int	   _flags = TRANSACTION_NORMAL,
 		const std::string& _note  = "")
     : entry(NULL), account(_account), amount(_amount),
-      cost(_cost), flags(_flags), note(_note), index(0), dflags(0) {}
+      cost(NULL), flags(_flags), note(_note), index(0), dflags(0) {}
+
+  ~transaction_t() {
+    if (cost)
+      delete cost;
+  }
 };
 
 
@@ -127,18 +131,19 @@ class account_t
   mutable balance_pair_t value;
   mutable balance_pair_t total;
   mutable unsigned int   count;	// transactions counted toward total
+  mutable unsigned int   subcount;
   mutable ident_t        ident;
   mutable unsigned short dflags;
   mutable std::string	 _fullname;
 
-  static ident_t    next_ident;
+  static ident_t next_ident;
 
   account_t(account_t *        _parent,
 	    const std::string& _name = "",
 	    const std::string& _note = "")
     : parent(_parent), name(_name), note(_note),
       depth(parent ? parent->depth + 1 : 0),
-      count(0), dflags(0) {}
+      count(0), subcount(0), dflags(0) {}
 
   ~account_t();
 

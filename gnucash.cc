@@ -240,7 +240,8 @@ static void dataHandler(void *userData, const char *s, int len)
       curr_value = value;
 
     xact->amount = value;
-    xact->cost   = curr_value;
+    if (value != curr_value)
+      xact->cost = new amount_t(curr_value);
     break;
   }
 

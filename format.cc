@@ -289,8 +289,8 @@ void format_t::format_elements(std::ostream&    out,
 	std::string disp;
 	bool        use_disp = false;
 
-	if (details.xact->amount != details.xact->cost) {
-	  amount_t unit_cost = details.xact->cost / details.xact->amount;
+	if (details.xact->cost) {
+	  amount_t unit_cost = *details.xact->cost / details.xact->amount;
 	  std::ostringstream stream;
 	  stream << details.xact->amount << " @ " << unit_cost;
 	  disp = stream.str();

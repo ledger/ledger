@@ -387,93 +387,146 @@ class balance_pair_t
 {
  public:
   balance_t quantity;
-  balance_t cost;
+  balance_t * cost;
 
   bool valid() const {
-    return quantity.valid() && cost.valid();
+    return quantity.valid() && (! cost || cost->valid());
   }
 
   // constructors
-  balance_pair_t() {}
+  balance_pair_t() : cost(NULL) {}
   balance_pair_t(const balance_pair_t& bal_pair)
-    : quantity(bal_pair.quantity), cost(bal_pair.cost) {}
+    : quantity(bal_pair.quantity), cost(NULL) {
+    if (bal_pair.cost)
+      cost = new balance_t(*bal_pair.cost);
+  }
+#if 0
   balance_pair_t(const balance_t& _quantity, const balance_t& _cost)
     : quantity(_quantity), cost(_cost) {}
+#endif
   balance_pair_t(const balance_t& _quantity)
-    : quantity(_quantity), cost(_quantity) {}
+    : quantity(_quantity), cost(NULL) {}
+#if 0
   balance_pair_t(const amount_t& _quantity, const amount_t& _cost)
     : quantity(_quantity), cost(_cost) {}
+#endif
   balance_pair_t(const amount_t& _quantity)
-    : quantity(_quantity), cost(_quantity) {}
+    : quantity(_quantity), cost(NULL) {}
   balance_pair_t(const int value)
-    : quantity(value), cost(value) {}
+    : quantity(value), cost(NULL) {}
   balance_pair_t(const unsigned int value)
-    : quantity(value), cost(value) {}
+    : quantity(value), cost(NULL) {}
   balance_pair_t(const double value)
-    : quantity(value), cost(value) {}
+    : quantity(value), cost(NULL) {}
   balance_pair_t(const transaction_t& xact);
 
   // destructor
-  ~balance_pair_t() {}
+  ~balance_pair_t() {
+    if (cost)
+      delete cost;
+  }
 
   // assignment operator
   balance_pair_t& operator=(const balance_pair_t& bal_pair) {
+    if (cost) {
+      delete cost;
+      cost = NULL;
+    }
+
     quantity = bal_pair.quantity;
-    cost     = bal_pair.cost;
+    if (bal_pair.cost)
+      cost = new balance_t(*bal_pair.cost);
+
     return *this;
   }
   balance_pair_t& operator=(const balance_t& bal) {
-    quantity = cost = bal;
+    if (cost) {
+      delete cost;
+      cost = NULL;
+    }
+    quantity = bal;
     return *this;
   }
   balance_pair_t& operator=(const amount_t& amt) {
-    quantity = cost = amt;
+    if (cost) {
+      delete cost;
+      cost = NULL;
+    }
+    quantity = amt;
     return *this;
   }
   balance_pair_t& operator=(const int value) {
-    quantity = cost = amount_t(value);
+    if (cost) {
+      delete cost;
+      cost = NULL;
+    }
+    quantity = value;
     return *this;
   }
   balance_pair_t& operator=(const unsigned int value) {
-    quantity = cost = amount_t(value);
+    if (cost) {
+      delete cost;
+      cost = NULL;
+    }
+    quantity = value;
     return *this;
   }
   balance_pair_t& operator=(const double value) {
-    quantity = cost = amount_t(value);
+    if (cost) {
+      delete cost;
+      cost = NULL;
+    }
+    quantity = value;
     return *this;
   }
 
   // in-place arithmetic
   balance_pair_t& operator+=(const balance_pair_t& bal_pair) {
+    if (bal_pair.cost && ! cost)
+      cost = new balance_t(quantity);
+
     quantity += bal_pair.quantity;
-    cost     += bal_pair.cost;
+
+    if (cost)
+      *cost += bal_pair.cost ? *bal_pair.cost : bal_pair.quantity;
+
     return *this;
   }
   balance_pair_t& operator+=(const balance_t& bal) {
     quantity += bal;
-    cost     += bal;
+    if (cost)
+      *cost += bal;
     return *this;
   }
   balance_pair_t& operator+=(const amount_t& amt) {
     quantity += amt;
-    cost     += amt;
+    if (cost)
+      *cost += amt;
     return *this;
   }
   balance_pair_t& operator+=(const transaction_t& xact);
 
   balance_pair_t& operator-=(const balance_pair_t& bal_pair) {
+    if (bal_pair.cost && ! cost)
+      cost = new balance_t(quantity);
+
     quantity -= bal_pair.quantity;
-    cost     -= bal_pair.cost;
+
+    if (cost)
+      *cost -= bal_pair.cost ? *bal_pair.cost : bal_pair.quantity;
+
     return *this;
   }
   balance_pair_t& operator-=(const balance_t& bal) {
     quantity -= bal;
-    cost     -= bal;
+    if (cost)
+      *cost -= bal;
     return *this;
   }
   balance_pair_t& operator-=(const amount_t& amt) {
     quantity -= amt;
-    cost     -= amt;
+    if (cost)
+      *cost -= amt;
     return *this;
   }
   balance_pair_t& operator-=(const transaction_t& xact);
@@ -513,34 +566,50 @@ class balance_pair_t
 
   // multiplication and division
   balance_pair_t& operator*=(const balance_pair_t& bal_pair) {
+    if (bal_pair.cost && ! cost)
+      cost = new balance_t(quantity);
+
     quantity *= bal_pair.quantity;
-    cost     *= bal_pair.quantity;
+
+    if (cost)
+      *cost *= bal_pair.cost ? *bal_pair.cost : bal_pair.quantity;
+
     return *this;
   }
   balance_pair_t& operator*=(const balance_t& bal) {
     quantity *= bal;
-    cost     *= bal;
+    if (cost)
+      *cost *= bal;
     return *this;
   }
   balance_pair_t& operator*=(const amount_t& amt) {
     quantity *= amt;
-    cost     *= amt;
+    if (cost)
+      *cost *= amt;
     return *this;
   }
 
   balance_pair_t& operator/=(const balance_pair_t& bal_pair) {
+    if (bal_pair.cost && ! cost)
+      cost = new balance_t(quantity);
+
     quantity /= bal_pair.quantity;
-    cost     /= bal_pair.quantity;
+
+    if (cost)
+      *cost /= bal_pair.cost ? *bal_pair.cost : bal_pair.quantity;
+
     return *this;
   }
   balance_pair_t& operator/=(const balance_t& bal) {
     quantity /= bal;
-    cost     /= bal;
+    if (cost)
+      *cost /= bal;
     return *this;
   }
   balance_pair_t& operator/=(const amount_t& amt) {
     quantity /= amt;
-    cost     /= amt;
+    if (cost)
+      *cost /= amt;
     return *this;
   }
 
@@ -637,7 +706,8 @@ class balance_pair_t
   // unary negation
   balance_pair_t& negate() {
     quantity.negate();
-    cost.negate();
+    if (cost)
+      cost->negate();
     return *this;
   }
   balance_pair_t negated() const {
@@ -658,7 +728,10 @@ class balance_pair_t
 inline balance_pair_t abs(const balance_pair_t& bal_pair) {
   balance_pair_t temp;
   temp.quantity = abs(bal_pair.quantity);
-  temp.cost     = abs(bal_pair.cost);
+  if (bal_pair.cost) {
+    temp.cost = new balance_t;
+    *temp.cost = abs(*bal_pair.cost);
+  }
   return temp;
 }
 

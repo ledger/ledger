@@ -180,7 +180,7 @@ OPT_BEGIN(end_date, "e:") {
 OPT_BEGIN(current, "c") {
   if (! config->predicate.empty())
     config->predicate += "&";
-  config->predicate += "d<=N";
+  config->predicate += "d<=m";
 } OPT_END(current);
 
 OPT_BEGIN(cleared, "C") {
@@ -346,7 +346,7 @@ OPT_BEGIN(trend, "X") {
 OPT_BEGIN(weighted_trend, "Z") {
   config->value_expr = "a";
   config->total_expr
-    = "MD(MO/(1+(((N-d)/(30*86400))<0?0:((N-d)/(30*86400)))))";
+    = "MD(MO/(1+(((m-d)/(30*86400))<0?0:((m-d)/(30*86400)))))";
 } OPT_END(weighted_trend);
 
 } // namespace ledger

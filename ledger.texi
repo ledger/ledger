@@ -490,8 +490,8 @@ register report, @samp{-T} changes the totals column; in a balance
 report, this is the value given for each account.  If @samp{-T} was
 not specified, the current report style's value expression is used.
 
-@item N
-This is always the present date.
+@item m
+This is always the present moment/date.
 @end table
 
 @subsubsection Transaction/account details
@@ -522,7 +522,7 @@ it's depth is one.
 
 @item n
 The index of a transaction, or the count of transactions affecting an
-account (including children).
+account.
 
 @item X
 1, if a transaction's entry has been cleared, 0 otherwise.
@@ -537,6 +537,10 @@ account (including children).
 @item O
 The total of all transactions seen so far, or the total of an account
 and all its children.
+
+@item N
+The total count of transactions affecting an account and all its
+children.
 
 @item C
 The total cost of all transactions seen so far; the total cost of an

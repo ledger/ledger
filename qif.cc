@@ -99,7 +99,6 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
 	xact->amount.commodity = def_commodity;
       if (c == '$')
 	xact->amount.negate();
-      xact->cost = xact->amount;
       break;
 
     case 'C':
@@ -164,7 +163,7 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
 	  misc = journal->find_account("Miscellaneous");
 	transaction_t * nxact = new transaction_t(misc);
 	entry->add_transaction(nxact);
-	nxact->amount = nxact->cost = - xact->amount;
+	nxact->amount.negate();
       }
 
       if (journal->add_entry(entry.release()))

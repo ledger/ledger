@@ -890,8 +890,8 @@ void amount_t::write_quantity(std::ostream& out) const
     out.write(&byte, sizeof(byte));
 
     std::size_t size;
-    mpz_export(buf, &size, 1, sizeof(int), 0, 0, MPZ(quantity));
-    unsigned short len = size * sizeof(int);
+    mpz_export(buf, &size, 1, sizeof(short), 0, 0, MPZ(quantity));
+    unsigned short len = size * sizeof(short);
     out.write((char *)&len, sizeof(len));
 
     if (len) {
@@ -930,7 +930,7 @@ void amount_t::read_quantity(std::istream& in)
     unsigned short len;
     in.read((char *)&len, sizeof(len));
     in.read(buf, len);
-    mpz_import(MPZ(quantity), len / sizeof(int), 1, sizeof(int), 0, 0, buf);
+    mpz_import(MPZ(quantity), len / sizeof(short), 1, sizeof(short), 0, 0, buf);
 
     char negative;
     in.read(&negative, sizeof(negative));

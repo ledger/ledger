@@ -121,7 +121,7 @@ class set_account_value : public item_handler<transaction_t>
 
   virtual void operator()(transaction_t * xact) {
     xact->account->value += *xact;
-    xact->account->count++;
+    xact->account->subcount++;
 
     if (handler)
       (*handler)(xact);
@@ -364,9 +364,10 @@ inline void sum_accounts(account_t * account) {
        i++) {
     sum_accounts((*i).second);
     account->total += (*i).second->total;
-    account->count += (*i).second->count;
+    account->count += (*i).second->count + (*i).second->subcount;
   }
   account->total += account->value;
+  account->count += account->subcount;
 }
 
 typedef std::deque<account_t *> accounts_deque;
