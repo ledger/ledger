@@ -1,4 +1,5 @@
 #include "datetime.h"
+#include "error.h"
 
 #include <ctime>
 
@@ -51,56 +52,109 @@ std::time_t interval_t::increment(const std::time_t moment)
   return then + seconds;
 }
 
-interval_t * interval_t::parse(std::istream& in)
+static void parse_inclusion_specifier(const std::string& word,
+				      std::time_t *	 begin,
+				      std::time_t *	 end)
+{
+  struct std::tm when;
+
+  if (! parse_date_mask(word.c_str(), &when))
+    throw interval_expr_error("Could not parse 'in' date mask");
+
+  when.tm_hour = 0;
+  when.tm_min  = 0;
+  when.tm_sec  = 0;
+
+  bool saw_year = true;
+  bool saw_mon  = true;
+
+  if (when.tm_year == -1) {
+    when.tm_year = now_tm->tm_year;
+    saw_year = false;
+  }
+  if (when.tm_mon == -1) {
+    when.tm_mon = 0;
+    saw_mon = false;
+  }
+  if (when.tm_mday == -1)
+    when.tm_mday = 1;
+
+  *begin = std::mktime(&when);
+  *end   = interval_t(0, saw_mon ? 1 : 0, saw_year ? 1 : 0).increment(*begin);
+}
+
+interval_t * interval_t::parse(std::istream& in,
+			       std::time_t * begin,
+			       std::time_t * end)
 {
   unsigned long years   = 0;
   unsigned long months  = 0;
   unsigned long seconds = 0;
 
   std::string word;
-  in >> word;
-  if (word == "every") {
+  while (! in.eof()) {
     in >> word;
-    if (std::isdigit(word[0])) {
-      int quantity = std::atol(word.c_str());
+    if (word == "every") {
       in >> word;
-      if (word == "days")
-	seconds = 86400 * quantity;
-      else if (word == "weeks")
-	seconds = 7 * 86400 * quantity;
-      else if (word == "months")
-	months = quantity;
-      else if (word == "quarters")
-	months = 3 * quantity;
-      else if (word == "years")
-	years = quantity;
+      if (std::isdigit(word[0])) {
+	int quantity = std::atol(word.c_str());
+	in >> word;
+	if (word == "days")
+	  seconds = 86400 * quantity;
+	else if (word == "weeks")
+	  seconds = 7 * 86400 * quantity;
+	else if (word == "months")
+	  months = quantity;
+	else if (word == "quarters")
+	  months = 3 * quantity;
+	else if (word == "years")
+	  years = quantity;
+      }
+      else if (word == "day")
+	seconds = 86400;
+      else if (word == "week")
+	seconds = 7 * 86400;
+      else if (word == "monthly")
+	months = 1;
+      else if (word == "quarter")
+	months = 3;
+      else if (word == "year")
+	years = 1;
     }
-    else if (word == "day")
+    else if (word == "daily")
       seconds = 86400;
-    else if (word == "week")
+    else if (word == "weekly")
       seconds = 7 * 86400;
+    else if (word == "biweekly")
+      seconds = 14 * 86400;
     else if (word == "monthly")
       months = 1;
-    else if (word == "quarter")
+    else if (word == "bimonthly")
+      months = 2;
+    else if (word == "quarterly")
       months = 3;
-    else if (word == "year")
+    else if (word == "yearly")
       years = 1;
+    else if (word == "in") {
+      in >> word;
+      parse_inclusion_specifier(word, begin, end);
+    }
+    else if (word == "from") {
+      in >> word;
+      if (! parse_date(word.c_str(), begin))
+	throw interval_expr_error("Could not parse 'from' date");
+      if (! in.eof())
+	in >> word;
+    }
+    else if (word == "to") {
+      in >> word;
+      if (! parse_date(word.c_str(), end))
+	throw interval_expr_error("Could not parse 'to' date");
+    }
+    else {
+      parse_inclusion_specifier(word, begin, end);
+    }
   }
-  else if (word == "daily")
-    seconds = 86400;
-  else if (word == "weekly")
-    seconds = 7 * 86400;
-  else if (word == "biweekly")
-    seconds = 14 * 86400;
-  else if (word == "monthly")
-    months = 1;
-  else if (word == "bimonthly")
-    months = 2;
-  else if (word == "quarterly")
-    months = 3;
-  else if (word == "yearly")
-    years = 1;
-
   return new interval_t(seconds, months, years);
 }
 

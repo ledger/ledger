@@ -295,12 +295,6 @@ int main(int argc, char * argv[], char * envp[])
     }
   }
 
-#ifdef DEBUG_ENABLED
-  DEBUG_PRINT("ledger.main.predicates", "predicate: " << config->predicate);
-  DEBUG_PRINT("ledger.main.predicates",
-	      "disp-pred: " << config->display_predicate);
-#endif
-
   // Compile the sorting criteria
 
   std::auto_ptr<value_expr_t> sort_order;
@@ -418,25 +412,46 @@ int main(int argc, char * argv[], char * envp[])
 #define OUT() (output_stream.get() ? *output_stream : std::cout)
 
   if (! config->interval_text.empty()) {
-    std::istringstream stream(config->interval_text);
-    report_interval.reset(interval_t::parse(stream));
-    if (! stream.eof()) {
-      std::string word;
-      stream >> word;
-      if (word == "from") {
-	stream >> word;
-	if (! parse_date(word.c_str(), &interval_begin)) {
-	  std::cerr << "Error in report interval: "
-		    << "Could not parse 'from' date"
-		    << std::endl;
-	  return 1;
-	}
+    try {
+      std::istringstream stream(config->interval_text);
+      std::time_t begin = -1, end = -1;
+      report_interval.reset(interval_t::parse(stream, &begin, &end));
+      if (report_interval->seconds == 0 &&
+	  report_interval->months  == 0 &&
+	  report_interval->years   == 0)
+	report_interval.release();
+
+      if (begin != -1) {
+	if (! config->predicate.empty())
+	  config->predicate += "&";
+	char buf[32];
+	std::sprintf(buf, "d>=%lu", begin);
+	config->predicate += buf;
       }
+
+      if (end != -1) {
+	if (! config->predicate.empty())
+	  config->predicate += "&";
+	char buf[32];
+	std::sprintf(buf, "d<%lu", end);
+	config->predicate += buf;
+      }
+    }
+    catch (const interval_expr_error& err) {
+      std::cerr << "Error in interval (-z) specifier: " << err.what()
+		<< std::endl;
+      return 1;
     }
   }
 
   if (! config->date_format.empty())
     format_t::date_format = config->date_format;
+
+#ifdef DEBUG_ENABLED
+  DEBUG_PRINT("ledger.main.predicates", "predicate: " << config->predicate);
+  DEBUG_PRINT("ledger.main.predicates",
+	      "disp-pred: " << config->display_predicate);
+#endif
 
   // Walk the entries based on the report type and the options
 

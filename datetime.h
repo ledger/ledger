@@ -19,7 +19,8 @@ struct interval_t
 
   std::time_t increment(const std::time_t);
 
-  static interval_t * parse(std::istream& in);
+  static interval_t * parse(std::istream& in, std::time_t * begin,
+			    std::time_t * end);
 };
 
 extern std::time_t	now;

@@ -160,23 +160,23 @@ OPT_BEGIN(set_price, "p:") {
 OPT_BEGIN(begin_date, "b:") {
   if (! config->predicate.empty())
     config->predicate += "&";
-  config->predicate += "(d>=[";
+  config->predicate += "d>=[";
   config->predicate += optarg;
-  config->predicate += "])";
+  config->predicate += "]";
 } OPT_END(begin_date);
 
 OPT_BEGIN(end_date, "e:") {
   if (! config->predicate.empty())
     config->predicate += "&";
-  config->predicate += "(d<[";
+  config->predicate += "d<[";
   config->predicate += optarg;
-  config->predicate += "])";
+  config->predicate += "]";
 } OPT_END(end_date);
 
 OPT_BEGIN(current, "c") {
   if (! config->predicate.empty())
     config->predicate += "&";
-  config->predicate += "(d<=N)";
+  config->predicate += "d<=N";
 } OPT_END(current);
 
 OPT_BEGIN(cleared, "C") {
