@@ -18,8 +18,7 @@ class binary_parser_t : public parser_t
 };
 
 void write_binary_journal(std::ostream&	 out,
-			  journal_t *	 journal,
-			  strings_list * files = NULL);
+			  journal_t *	 journal);
 
 } // namespace ledger
 
