@@ -374,8 +374,15 @@ def vmax(d, val):\n\
     walk_transactions(new_entry->transactions, *formatter);
   else if (command == "P" || command == "D")
     walk_commodities(commodity_t::commodities, *formatter);
-  else if (command == "R")
-    reconcile_account(*journal, *journal->master, value_t(long(0)));
+  else if (command == "R") {
+    account_t * account = journal->find_account_re(*arg);
+    if (! account)
+      throw error(std::string("Could not find account matching '") +
+		  *arg + "'");
+    reconcile_results_t results = reconcile_account(*journal, *account,
+						    value_t(*++arg));
+    walk_transactions(results.pending_xacts, *formatter);
+  }
   else if (command == "w")
     write_textual_journal(*journal, *arg, *formatter, *out);
   else

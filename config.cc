@@ -168,7 +168,7 @@ void config_t::process_options(const std::string&     command,
 
   // Process remaining command-line arguments
 
-  if (command != "e" && command != "w") {
+  if (command != "e" && command != "w" && command != "R") {
     // Treat the remaining command-line arguments as regular
     // expressions, used for refining report results.
 

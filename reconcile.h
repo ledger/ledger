@@ -9,6 +9,7 @@ namespace ledger {
 struct reconcile_results_t
 {
   value_t previous_balance;
+  value_t pending_balance;
   value_t remaining_balance;
 
   transactions_list pending_xacts;
