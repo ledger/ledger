@@ -9,11 +9,6 @@
   order, output format, etc.  Logic and math operators are supported,
   as well as a few functions.  See manual.
 
-- If Boost.Python is installed, then ledger can support full Python
-  integration.  It can can be used as a module (ledger.so), as well as
-  supporting Python function calls directly from value expressions.
-  See manual.
-
 - If the environment variable LEDGER (or LEDGER_FILE) is used, a
   binary cache of that ledger is now kept in ~/.ledger (or
   LEDGER_CACHE), to speed up later queries of the same data.  This
@@ -34,7 +29,7 @@
   monthly subtotals.  --dow shows cumulative totals for each day of
   the week.
 
-  "-z INTERVAL" allows for more flexible interval reporting.  The
+  "-p INTERVAL" allows for more flexible interval reporting.  The
   sublanguage used will likely mature over time, but for now it
   supports expression like:
 
@@ -96,10 +91,22 @@
   regexps) has been removed.
 
 - -l now takes a value expression as the "calculation predicate".
-  To mimic the old behavior of "-l \$100", use: -d "AT<{\$100}"
+  To mimic the old behavior of "-l \$100", use: -d "T&AT>{\$100}"
 
 - The -S flag now takes a value expression as the sorting criteria.
   To sort on the amount, use -S T (balance) or -S t (register).
+
+- If Boost.Python is installed, ledger can support full, two-way
+  Python integration.  This feature is enabled by passing
+  --enable-python to the "configure" script before building.  Ledger
+  can then be used as a module (ledger.so), as well as supporting
+  Python function calls directly from value expressions.  See main.py
+  for an example of driving Ledger from Python.  It implements nearly
+  all the functionality of the C++ driver, main.cc.
+
+  Note that this feature has yet to mature, and so is not being
+  supported in this release.  It is mostly functional, however, and
+  those with a desire to tinker are welcome to play with it.
 
 * 1.7
 
