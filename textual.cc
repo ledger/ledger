@@ -220,9 +220,17 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
 
   TIMER_START(entry_details);
 
-  if (next && *next == '*') {
-    curr->state = entry_t::CLEARED;
-    next = skip_ws(++next);
+  if (next) {
+    switch (*next) {
+    case '*':
+      curr->state = entry_t::CLEARED;
+      next = skip_ws(++next);
+      break;
+    case '!':
+      curr->state = entry_t::PENDING;
+      next = skip_ws(++next);
+      break;
+    }
   }
 
   // Parse the optional code: (TEXT)
