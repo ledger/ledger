@@ -59,10 +59,6 @@ New features:
   the number of uncleared transactions to consider), this could have a
   substantial impact.
 
-  "--reconcilable" displays all uncleared transactions, and any
-  cleared transactions that occur after the first uncleared.
-  ledger.el uses this.
-
 - In ledger.el's *Reconcile* mode (C-c C-r from a ledger-mode file):
   . 'a' will add a missing transaction
   . 'd' will delete the current transaction
