@@ -1,4 +1,4 @@
-;;; ledger.el --- Helper code for use with the "ledger" command-line tool
+;;; ledger.el --- Helper code for using my "ledger" command-line tool
 
 ;; Copyright (C) 2004 John Wiegley (johnw AT gnu DOT org)
 
@@ -32,14 +32,7 @@
 
 ;;; Commentary:
 
-;; To use this module: Load this file, open a ledger data file, and
-;; type M-x ledger-mode.  Once this is done, you can type:
-;;
-;;   C-c C-a  add a new entry, based on previous entries
-;;   C-c C-r  reconcile the entries related to an account
-;;
-;; In the reconcile buffer, use SPACE to toggle the cleared status of
-;; a transaction.
+;; This code is only meaningful if you are using "ledger".
 
 (defvar ledger-version "1.1"
   "The version of ledger.el currently loaded")
@@ -50,11 +43,6 @@
 
 (defcustom ledger-binary-path (executable-find "ledger")
   "Path to the ledger executable."
-  :type 'file
-  :group 'ledger)
-
-(defcustom ledger-data-file (getenv "LEDGER")
-  "Path to the ledger data file."
   :type 'file
   :group 'ledger)
 
@@ -100,10 +88,11 @@
 	(if (time-less-p moment date)
 	    (throw 'found t)))))))
 
-(defun ledger-add-entry (entry-text)
+(defun ledger-add-entry (entry)
   (interactive
-   (list (read-string "Entry: " (format-time-string "%Y/%m/"))))
-  (let* ((date (car (split-string entry-text)))
+   (list (read-string "Entry: " (format-time-string "%Y/%m/%d "))))
+  (let* ((args (mapcar 'shell-quote-argument (split-string entry)))
+	 (date (car args))
 	 (insert-year t) exit-code)
     (if (string-match "\\([0-9]+\\)/\\([0-9]+\\)/\\([0-9]+\\)" date)
 	(setq date (encode-time 0 0 0 (string-to-int (match-string 3 date))
@@ -116,16 +105,15 @@
     (save-excursion
       (insert
        (with-temp-buffer
-	 (setq exit-code (ledger-run-ledger "entry" entry-text))
+	 (setq exit-code
+	       (apply 'call-process ledger-binary-path nil t nil
+		      (cons "entry" args)))
 	 (if (= 0 exit-code)
-	     (progn
-	       (goto-char (point-min))
-	       (delete-char 1)
-	       (if insert-year
-		   (buffer-string)
-		 (buffer-substring 5 (point-max))))
-	   (concat (if insert-year entry-text
-		     (substring entry-text 5)) "\n"))) "\n"))))
+	     (if insert-year
+		 (buffer-string)
+	       (buffer-substring 5 (point-max)))
+	   (concat (if insert-year entry
+		     (substring entry 5)) "\n\n")))))))
 
 (defun ledger-expand-entry ()
   (interactive)
@@ -218,7 +206,9 @@
 (defun ledger-update-balance-display ()
   (let ((account ledger-acct))
     (with-temp-buffer
-      (let ((exit-code (ledger-run-ledger "-C" "balance" account)))
+      (let ((exit-code
+	     (apply 'call-process ledger-binary-path nil t nil
+		    (list "-C" "balance" account))))
 	(if (/= 0 exit-code)
 	    (setq ledger-reconcile-text "Reconcile [ERR]")
 	  (goto-char (point-min))
@@ -228,7 +218,7 @@
 		(concat "Reconcile ["
 			(buffer-substring-no-properties (point-min) (point))
 			"]"))))))
-  (force-mode-line-update))
+  (redraw-modeline))
 
 (defun ledger-reconcile-toggle ()
   (interactive)
@@ -299,14 +289,6 @@
 	  (delete-horizontal-space)
 	  (insert "  ")))
       (forward-line))))
-
-(defun ledger-run-ledger (&rest args)
-  "run ledger with supplied arguments"
-  (let ((command (mapconcat 'identity
-			    (append (list ledger-binary-path
-					  "-f" ledger-data-file) args) " ")))
-    (insert (shell-command-to-string command)))
-  0)
 
 (provide 'ledger)
 

@@ -1,0 +1,50 @@
+CODE   = amount.cc ledger.cc parse.cc reports.cc
+OBJS   = $(patsubst %.cc,%.o,$(CODE))
+#CXX    = cc
+CXX    = g++
+CFLAGS = #-Wall -ansi -pedantic
+DFLAGS = -O3 -fomit-frame-pointer
+#DFLAGS = -g -DDEBUG=1
+INCS   = -I/usr/local/include
+LIBS   = -L/usr/local/lib -lgmpxx -lgmp -lpcre
+
+ifdef GNUCASH
+CODE   := $(CODE)   gnucash.cc
+CFLAGS := $(CFLAGS) -DREAD_GNUCASH=1
+INCS   := $(INCS)   -I/usr/include/xmltok
+LIBS   := $(LIBS)   -lxmlparse
+endif
+
+all: make.deps ledger ledger.info
+
+install: all
+	strip ledger
+	cp ledger $(HOME)/bin
+
+ledger: $(OBJS)
+	$(CXX) $(CFLAGS) $(INCS) $(DFLAGS) -o $@ $(OBJS) $(LIBS)
+
+ledger.info: ledger.texi
+	makeinfo $<
+
+ledger.pdf: ledger.texi
+	texi2pdf $<
+
+%.o: %.cc
+	$(CXX) $(CFLAGS) $(INCS) $(DFLAGS) -c -o $@ $<
+
+clean:
+	rm -f ledger *.o *.elc *~ .\#* .gdb_history README.texi
+	rm -f *.aux *.cp *.fn *.ky *.log *.pg *.toc *.tp *.vr
+
+distclean fullclean: clean
+	rm -f ledger.info README.html *.pdf *.elc make.deps TAGS
+
+rebuild: clean deps all
+
+deps: make.deps
+
+make.deps: Makefile
+	cc -M $(INCS) $(CODE) > $@
+
+include make.deps

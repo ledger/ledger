@@ -1,23 +1,27 @@
 #!/bin/sh
 
-switch="-c"
-limit="-d /^Liabilities/?T<0:(T&AT>{\$100.00})"
+switch=""
+current="-c"
+limit="-l \$50"
+negonly="-N ^Liabilities"
 
-if [ "$1" = "-C" -o "$1" = "-U" ]; then
+if [ "$1" = "-C" -o "$1" = "-U" -o "$1" = "-P" ]; then
   switch="$1"
   shift
 elif [ "$1" = "-b" -o "$1" = "-e" ]; then
-  switch="$1 $2"
+  current="$1 $2"
   shift 2
 fi
 
 accts="$@"
 if [ -z "$accts" ]; then
   accts="-Equity -Income -Expenses"
-  accts="$accts -^Retirement"
-  accts="$accts -Deposits"
+  if [ ! "$switch" = "-P" ]; then
+    accts="$accts -Savings -Retirement"
+  fi
 else
   limit=""
+  negonly=""
 fi
 
-ledger $switch $limit -s -S "-AT" -V -Q balance $accts
+ledger $current $limit $negonly -s $switch balance $accts

@@ -16,24 +16,26 @@
 
 @node Top, Introduction, (dir), (dir)
 @top Overview
+@c Page published by Emacs Muse begins here
+
+
 
 @menu
-* Introduction::                
-* Running Ledger::              
-* Keeping a ledger::            
-* Extending with Python::       
+* Introduction::		
+* Keeping a ledger::		
+* Running Ledger::		
 @end menu
 
-@node Introduction, Running Ledger, Top, Top
+@node Introduction, Keeping a ledger, Top, Top
 @chapter Introduction
 
 Ledger is an accounting tool with the moxie to exist.  It provides no
 bells or whistles, and returns the user to the days before user
 interfaces were even a twinkling in their father's CRT.
 
-What it does offer is a double-entry accounting ledger with all the
-flexibility and muscle of its modern day cousins, without any of the
-fat.  Think of it as the Bran Muffin of accounting tools.
+What it does do is to offer a double-entry accounting ledger with all
+the flexibility and muscle of its modern day cousins, without any of
+the fat.  Think of it as the Bran Muffin of accounting tools.
 
 To use it, you need to start keeping a ledger.  This is the basis of
 all accounting, and if you haven't started yet, now is the time to
@@ -59,10 +61,10 @@ accounting tools.
 
 The next step up from a checkbook ledger, is a ledger that keeps track
 of all your accounts, not just checking.  In such a ledger, you record
-not only who gets paid---in the case of a debit---but where the money
-came from.  In a checkbook ledger, its assumed that all the money
-comes from your checking account.  But in a general ledger, you write
-transaction two-lines: the source account and target account.
+not only who gets paid---in the case of a debit---but where the
+money came from.  In a checkbook ledger, its assumed that all the
+money comes from your checking account.  But in a general ledger, you
+write transaction two-lines: The source account and target account.
 @emph{There must always be a debit from at least one account for every
 credit made to another account}.  This is what is meant by
 ``double-entry'' accounting: the ledger must always balance to zero,
@@ -86,15 +88,14 @@ The entry might look like this:
            Checking                   $-23.00     $77.00
 @end example
 
-The first line shows a payment to Pacific Bell for $23.00.  Because
-there is no ``balance'' in a general ledger---it's always zero---we
-write in the total balance of all payments to ``Pacific Bell'', which
-now is $223.00 (previously the balance was $200.00).  This is done by
-looking at the last entry for ``Pacific Bell'' in the ledger, adding
-$23.00 to that amount, and writing the total in the balance column.
-And the money came from ``Checking''---a withdrawal of $23.00---which
-leaves the ending balance in ``Checking'' at $77.00.  This is a very
-manual procedure; but that's where computers come in...
+The first line shows a credit (or payment) to Pacific Bell for $23.00.
+Because there is no ``balance'' in a general ledger---it's always zero---we write in the total balance of all payments to ``Pacific Bell'',
+which now is $223.00 (previously the balance was $200.00).  This is
+done by looking at the last entry for ``Pacific Bell'' in the ledger,
+adding $23.00 to that amount, and writing the total in the balance
+column.  And the money came from ``Checking''---a debit (or withdrawal)
+of $23.00---which leaves the ending balance in ``Checking'' at $77.00.
+This is a very manual procedure; but that's where computers come in...
 
 The transaction must balance to $0: $23 went to Pacific Bell, $23 came
 from Checking.  There is nothing left over to be accounted for, since
@@ -104,20 +105,20 @@ existence; it is always a transaction from one account to another.
 
 Keeping a general ledger is the same as keeping two separate ledgers:
 One for Pacific Bell and one for Checking.  In that case, each time a
-payment is written into one, you write a corresponding withdrawal into
-the other.  This makes it easier to write in a ``running balance'',
-since you don't have to look back at the last time the account was
+credit is written into one, you write a corresponding debit into the
+other.  This makes it easier to write in a ``running balance'', since
+you don't have to look back at the last time the account was
 referenced---but it also means having a lot of ledger books, if you
 deal with multiple accounts.
 
 Enter the beauty of computerized accounting.  The purpose of the
 Ledger program is to make general ledger accounting simple, by keeping
 track of the balances for you.  Your only job is to enter the
-transactions.  If a transaction does not balance, Ledger will display
-an error and indicate which transaction is wrong.@footnote{In some
-special cases, it will automatically balance the entry for you.}
+credit/debit transactions.  If a transaction does not balance, Ledger
+will display an error and indicate which transaction is wrong.@footnote{In some special cases, it will automatically balance the entry
+for you.}
 
-In summary, there are two aspects of Ledger use: updating the ledger
+In summary, there are two aspects of Ledger use: Updating the ledger
 data file, and using the Ledger tool to view the summarized result of
 your entries.
 
@@ -126,21 +127,24 @@ want to dive in head-first---here are the ledger entries from above,
 formatting as the ledger program wishes to see them:
 
 @example
-2004/09/29 Pacific Bell
+; Set the year for subsequent entries to 2004
+Y 2004
+
+9/29 Pacific Bell
      Payable:Pacific Bell            $-200.00
      Equity:Opening Balances
 
-2004/09/29 Checking
+9/29 Checking
      Accounts:Checking                $100.00
      Equity:Opening Balances
 
-2004/09/29 Pacific Bell
+9/29 Pacific Bell
      Payable:Pacific Bell              $23.00
      Accounts:Checking
 @end example
 
 The account balances and registers in this file, if saved as
-@file{ledger.dat}, could be reported using:
+@samp{ledger.dat}, could be reported using:
 
 @example
 $ ledger -f ledger.dat balance
@@ -149,1053 +153,31 @@ $ ledger -f ledger.dat register bell
 @end example
 
 @menu
-* Building the program::        
+* Building the program::	
 @end menu
 
 @node Building the program,  , Introduction, Introduction
 @section Building the program
 
 Ledger is written in ANSI C++, and should compile on any platform.  It
-depends on the GNU multiprecision integer library (libgmp), and the
-Perl regular expression library (libpcre).  It was developed using GNU
-make and gcc 3.3, on a PowerBook running OS/X.
+depends only on the GNU multiprecision integer library (libgmp), and
+the Perl regular expression library (libpcre).  It was developed using
+GNU make and gcc 3.3.
 
 To build and install once you have these libraries on your system,
 enter these commands:
 
 @example
-./configure && make install
+make
+cp ledger /usr/local/bin
 @end example
 
-@node Running Ledger, Keeping a ledger, Introduction, Top
-@chapter Running Ledger
-
-Ledger has a very simple command-line interface, named---enticing
-enough---@command{ledger}.  It supports a few reporting commands, and
-a large number of options for refining the output from those commands.
-The basic syntax of any ledger command is:
-
-@example
-ledger [OPTIONS...] COMMAND [ARGS...]
-@end example
-
-Command options must always precede the command word.  After the
-command word there may appear any number of arguments.  For most
-commands, these arguments are regular expressions that cause the
-output to relate only to transactions matching those regular
-expressions.  For the @command{entry} command, the arguments have a
-special meaning, described below.
-
-The regular expressions arguments always match the account name that a
-transaction refers to.  To match on the payee of the entry instead,
-precede the regular expression with @samp{--}.  For example, the
-following balance command reports account totals for rent, food and
-movies, but only those whose payee matches Freddie:
-
-@example
-ledger bal rent food movies -- freddie
-@end example
-
-There are many, many command options available with the
-@command{ledger} command, and it will take a while to master them.
-However, none of them are required to use the basic reporting
-commands.
-
-@menu
-* Commands::                    
-* Options::                     
-* Format strings::              
-* Value expressions::           
-* Interval expressions::        
-* Plotting register data::      
-* Typical queries::             
-* File format::                 
-@end menu
-
-@node Commands, Options, Running Ledger, Running Ledger
-@section Commands
-
-@subsection balance
-
-The @command{balance} command reports the current balance of all
-accounts.  It accepts a list of optional regexps, which confine the
-balance report to the matching accounts.  If an account contains
-multiple types of commodities, each commodity's total is reported
-separately.
-
-@subsection register
-
-The @command{register} command displays all the transactions occurring
-in a single account, line by line.  The account regexp must be
-specified as the only argument to this command.  If any regexps occur
-after the required account name, the register will contain only those
-transactions that match.  Very useful for hunting down a particular
-transaction.
-
-The output from @command{register} is very close to what a typical
-checkbook, or single-account ledger, would look like.  It also shows a
-running balance.  The final running balance of any register should
-always be the same as the current balance of that account.
-
-If you have gnuplot installed, you may plot the amount or running
-total of any register by using the script @file{report}, which is
-included in the Ledger distribution.  The only requirement is that you
-add either @option{-j} or @option{-J} to your register command, in
-order to plot either the amount or total column, respectively.
-
-@subsection print
-
-The @command{print} command prints out ledger entries just as they
-appear in the original ledger.  They will be properly formatted, and
-output in the most economic form possible.  The ``print'' command also
-takes a list of optional regexps, which will cause only those
-transactions which match in some way to be printed.
-
-The @command{print} command can be a handy way to clean up a ledger
-file whose formatting has gotten out of hand.
-
-@subsection equity
-
-The @command{equity} command prints out accounts balances as if they
-were entries.  This makes it easy to establish the starting balances
-for an account, such as when @ref{Archiving previous years}.
-
-@subsection prices
-
-The @command{prices} command displays the price history for matching
-commodities.  The @option{-A} flag is useful with this report, to
-display the running average price, or @option{-X} to show the price
-trend.
-
-@subsection entry
-
-The @command{entry} commands simplifies the creation of new entries.
-It works on the principle that 80% of all transactions are variants of
-earlier transactions.  Here's how it works:
-
-Let's say you have an old transaction of the following form:
-
-@example
-2004/03/15 * Viva Italiano
-    Expenses:Food                       $12.45
-    Expenses:Tips                        $2.55
-    Liabilities:MasterCard             $-15.00
-@end example
-
-Now it's 2004/4/9, and you've just eating at Viva Italiano again.  The
-exact amounts are different, but the overall form is the same.  With
-the ``entry'' command you can type:
-
-@example
-ledger entry 2004/4/9 viva food 11.00 tips 2.50
-@end example
-
-This will produce the following output:
-
-@example
-2004/04/09 Viva Italiano
-    Expenses:Food                       $11.00
-    Expenses:Tips                        $2.50
-    Liabilities:MasterCard             $-13.50
-@end example
-
-This works by finding a transaction that matches the regexp ``viva'',
-and then assuming that any accounts or amounts you specify will be the
-same as that earlier transaction.  If Ledger does not succeed in
-generating a new entry for you, it will print an error and set the
-exit code to 1.
-
-There is a shell script in the distribution called ``entry'', which
-simplifies the task of adding a new entry to your ledger, and then
-launches @command{vi} to let you confirm that the entry looks
-appropriate.
-
-Here are a few more examples of the entry command, assuming the above
-journal entry:
-
-@example
-# Pay $11.00 to first transaction account (food)
-ledger entry 4/9 viva 11.00
-
-# Pay $11.00 to food from checking
-ledger entry 4/9 viva 11.00 checking
-
-# Pay $11.00 to food, $8.00 to tips
-ledger entry 4/9 viva food 11.00 tips 8
-
-# Same as the last, but draw from cash
-ledger entry 4/9 viva food 11.00 tips 8 cash
-
-# Same as the last, but force the commodity
-ledger entry 4/9 viva food $11.00 tips $8 cash
-
-# Pay DM 11.00 to dining, no matter what the entry said
-ledger entry 4/9 viva dining "DM 11.00"
-@end example
-
-@node Options, Format strings, Commands, Running Ledger
-@section Options
-
-With all of the reports, command-line options are useful for modifying
-the output generated.  You will often find yourselves adding option
-flags to the command-line to modify those commands.
-
-Command-line options always occur before the command word.  This is
-done to distinguish them from exclusive matching expressions, which
-also begin with a desh.  The basic form for most commands is:
-
-@example
-ledger [OPTIONS] COMMAND [REGEXPS...] [-- [REGEXPS...]]
-@end example
-
-The @var{OPTIONS} and @var{REGEXPS} expressions are optional.  You
-could use just ``ledger balance'' without any options, which would
-print the summarized total for all accounts.  But for more specific
-reporting, or to change the appearance of the output, options are
-needed.
-
-@menu
-* Basic options::               
-* Report filtering::            
-* Output customization::        
-* Commodity reporting::         
-* Environment variables::       
-@end menu
-
-@node Basic options, Report filtering, Options, Options
-@subsection Basic options
-
-These are the most basic command options.  Most likely, the user will
-want to set them using @ref{Environment variables}, instead of using
-actual command-line options:
-
-@option{--help} (@option{-h}) prints a summary of all the options, and
-what they are used for.  This can be a handy way to remember which
-options do what.  This help screen is also printed if ledger is run
-without a command.
-
-@option{--version} (@option{-v}) prints the current version of ledger
-and exits.  This is useful for sending bug reports, to let the author
-know which version of ledger you are using.
-
-@option{--init FILE} (@option{-i FILE}) causes FILE to be read by
-ledger before any other ledger file.  This file may not contain any
-transactions, but it may contain option settings.  To specify options
-in the init file, use the same syntax as the command-line.  Here's an
-example init file:
-
-@example
---price-db ~/finance/.pricedb
-@end example
-
-Option settings on the command-line or in the environment always take
-precedence over settings in the init file.
-
-@option{--file FILE} (@option{-f FILE}) reads FILE as a ledger file.
-This command may be used multiple times.  FILE may also be a list of
-file names separated by colons.  Typically, the environment variable
-@var{LEDGER_FILE} is set, rather than using this command-line option.
-
-@option{--cache FILE} identifies FILE as the default binary cache
-file.  That is, if the ledger files to be read are specified using the
-environment variable @var{LEDGER_FILE}, then whenever a command is
-finished a binary copy will be written to the specified cache, to
-speed up the loading time of subsequent queries.  This filename can
-also be given using the environment variable @var{LEDGER_CACHE}, or by
-putting the option into your init file.
-
-@option{--output FILE} (@option{-o FILE}) redirects output from any
-command to @var{FILE}.  By default, all output goes to standard
-output.
-
-@option{--set-price CONV} (@option{-z CONV}) specifies a forced
-commodity conversion.  If a setting like @samp{COMM=$1.20} is used,
-the commodity @var{COMM} is reported in terms of the conversion
-factor.  This can be useful for performing arbitrary value
-substitutions.  For example, to report dollars in terms of the ounces
-of gold they would buy, use: @samp{-z "$=0.00280112 AU"} (or whatever
-the current exchange rate is).
-
-@option{--account NAME} (@option{-a NAME}) specifies the default
-account which QIF file transactions are assumed to relate to.
-
-@node Report filtering, Output customization, Basic options, Options
-@subsection Report filtering
-
-These options change which transactions affect the outcome of a
-report, in ways other than just using regular expressions:
-
-@option{--begin-date DATE} (@option{-b DATE}) constrains the report to
-entries on or after @var{DATE}.  Only entries after that date will be
-calculated, which means that the running total in the balance report
-will always start at zero with the first matching entry.  (Note: This
-is different from using @option{--display} to constrain what is
-displayed).
-
-@option{--end-date DATE} (@option{-e DATE}) contrains the report so
-that entries on or after @var{DATE} are not considered.  This ending
-date is not inclusive, therefore always use a date that is later than
-the last entry you want to see.
-
-@option{--current}(@option{-c}) displays only entries occurring on or
-before the current date.
-
-@option{--cleared} (@option{-C}) displays only transactions whose entry
-has been marked ``cleared'' (by placing an asterix to the right of the
-date).
-
-@option{--uncleared} (@option{-U}) displays only transactions whose
-entry has not been marked ``cleared'' (i.e., if there is no asterix to
-the right of the date).
-
-@option{--real} (@option{-R}) displays only real transactions, not
-virtual.  (A virtual transaction is indicated by surrounding the
-account name with parentheses or brackets; see the section on using
-virtual transactions for more information).
-
-@option{--related} (@option{-r}) displays transactions that are
-related to whichever transactions would otherwise have matched the
-filtering criteria.  In the register report, this shows where money
-went to, or the account it came from.  In the balance report, it shows
-all the accounts affected by entries having a related transaction.
-For example, if a file had this entry:
-
-@example
-2004/03/20 Safeway
-    Expenses:Food                       $65.00
-    Expenses:Cash                       $20.00
-    Assets:Checking
-@end example
-
-And if the register command was:
-
-@example
-ledger -r register food
-@end example
-
-This would be the output, to show the transactions related to the
-transaction that matched.
-
-@example
-2004/03/20 Safeway  Expenses:Cash    $-20.00  $-20.00
-                    Assets:Checking   $85.00   $65.00
-@end example
-
-@node Output customization, Commodity reporting, Report filtering, Options
-@subsection Output customization
-
-These options affect only the output, but not which transactions are
-used to create it:
-
-@option{--date-format STR} (@option{-y STR}) changes the basic date
-format used by reports.  The default uses a date like 2004/08/01,
-which represents the default date format of @samp{%Y/%m/%d}.  To
-change the way dates are printed in general, the easiest way is to
-@option{--date-format FORMAT} to the initialize file @file{~/.ledgerc}
-(or the file referred to by @var{LEDGER_INIT}).
-
-@option{--format STR} (@option{-F STR}) sets the reporting format for
-whatever report ledger is about to make.  @xref{Format strings}.
-
-You can also set the default format for a given report type, usually
-in the initialization file @file{~/.ledgerrc}, by using one of the
-following options:
-
-@table @code
-@item --balance-format STR
-Sets the default format for the @command{balance} report.
-
-@item --equity-format STR
-Sets the default format for the @command{equity} report.
-
-@item --register-format STR
-Sets the default format for the @command{register} report.
-
-@item --print-format STR
-Sets the default format for the @command{print} report.
-
-@item --prices-format STR
-Sets the default format for the @command{prices} report.
-
-@item --plot-value-format STR
-Sets the default format for the @command{register} report, when
-@option{-j} is being used.
-
-@item --plot-total-format STR
-Sets the default format for the @command{register} report, when
-@option{-J} is being used.
-@end table
-
-@option{--empty} (@option{-E}) includes even empty accounts in the
-@command{balance} report.
-
-@option{--collapse} (@option{-n}) causes entries in a
-@command{register} report with multiple transactions to be collapsed
-into a single, subtotaled entry.
-
-@option{--subtotal} (@option{-s}) causes all entries in a
-@command{register} report to be collapsed into a single, subtotaled
-entry.
-
-@option{--sort EXPR} (@option{-S EXPR}) sorts a report by comparing
-the values determined using the value expression @var{EXPR}.  For
-example, using @option{-S -AT} in the balance report will sort account
-balances from greatest to least, using the absolute value of the
-total.  For more on how to use value expressions, see @ref{Value
-expressions}.
-
-@option{--interval STR} (@option{-p STR}) sets the reporting interval
-to @var{STR}.  This will subtotal all matching entries within each
-interval separately, making it easy to see weekly, monthly, quarterly,
-etc., transaction totals.  An interval string can even specify the
-beginning and end of the report range, using simple terms like ``last
-june'' or ``next month''.  For more using interval expressions, see
-@ref{Interval expressions}.
-
-@option{--dow} reports transactions totals for each day of the week.
-This is an easy way to see if weekend spending is more than on
-weekdays.
-
-@option{--weekly} (@option{-W}) reports transaction totals by the
-week.  The week begins on whichever day a transaction is first found,
-so to start each week on a Sunday, specifying a beginning date for the
-report that falls on a Sunday.  @option{--monthly} (@option{-M})
-reports transaction totals by month; @option{--yearly} (@option{-Y})
-reports transaction totals by year.  For more complex interval, using
-the @option{--interval} option described above.
-
-@option{--limit EXPR} (@option{-l EXPR}) limits which transactions
-take part in the calculations of a report.
-
-@option{--display EXPR} (@option{-d EXPR}) limits which transactions
-or accounts or actually displayed in a report.  They might still be
-calculated, and be part of the running total of a register report, for
-example, but they will not be displayed.  This is useful for seeing
-last month's checking transactions, against a running balance which
-includes all transaction values:
-
-@example
-ledger -d "d>=[last month]" reg checking
-@end example
-
-The output from this command is very different from the following,
-whose running total includes only transactions from the last month
-onward:
-
-@example
-ledger -p "last month" reg checking
-@end example
-
-Which is more useful depends on what you're looking to know: the total
-amount for the reporting range (@option{-p}), or simply a display
-restricted to the reporting range (using @option{-d}).
-
-@option{--value EXPR} (@option{-t EXPR}) changes the value expression
-used to calculate the ``value'' column in the @command{register}
-report, and the totals in the @command{equity} report.  @xref{Value
-expressions}.
-
-@option{--total EXPR} (@option{-T EXPR}) sets the value expression
-used by the ``total'' column in the @command{register} report, and
-also the @command{balance} report.
-
-@option{--value-data} (@option{-j}) changes the @command{register}
-report so that it output nothing but the date and the value column,
-and the latter without commodities.  This is only meaningful if the
-report uses a single commodity.  This data can then be fed to other
-programs, which could plot the date, analyze it, etc.
-
-@option{--total-data} (@option{-J}) changes the @command{register}
-report so that it output nothing but the date and totals column,
-without commodities.
-
-@node Commodity reporting, Environment variables, Output customization, Options
-@subsection Commodity reporting
-
-These options affect how commodity values are displayed:
-
-@option{--price-db FILE} (@option{-P FILE}) sets the file that is used
-for recording downloaded commodity prices.  It is always read on
-startup, to determine historical prices.  Other settings can be placed
-in this file manually, to prevent downloading quotes for a specific,
-for example.  This is done by adding a line like the following:
-
-@example
-; Don't download quotes for the dollar, or timelog values
-N $
-N h
-@end example
-
-@option{--download} (@option{-Q}) causes quotes to be automagically
-downloaded, as needed, by running a script named @command{getquote}
-and expecting that script to return a value understood by ledger.  A
-sample implementation of a @command{getquote} script, implemented in
-Perl, is provided in the distribution.  Downloaded quote price are
-then appended to the price database, usually specified using the
-environment variable @var{LEDGER_PRICE_DB}.
-
-@option{--price-exp MINS} (@option{-L MINS}) sets the expected
-freshness of price quotes, in minutes.  That is, if the last known
-quote for any commodity is older than this value---and if
-@option{--download} is being used---then the Internet will be
-consulted again for a newer price.  Otherwise, the old price is still
-considered to be fresh enough.
-
-There are several different ways that ledger can report the totals it
-displays.  The most flexible way to adjust them is by using value
-expressions, and the @option{-t} and @option{-T} options.  However,
-there are also several ``default'' reports, which will satisfy most
-users basic reporting needs:
-
-@table @code
-@item --quantity
-(@option{-O}) reports commodity totals (this is the default)
-
-@item --basis
-(@option{-B}) reports the cost basis for all transactions.
-
-@item --market
-(@option{-V}) reports the last known market value for all commodities.
-
-@item --gain
-(@option{-G}) reports the net gain/loss for all commodity with a price
-history.
-
-@item --average
-(@option{-A}) reports the average transaction value.
-
-@item --deviation
-(@option{-D}) reports each transaction's deviation from the average.
-This is only meaningful in the @command{register} report.
-
-@item --trend
-(@option{-X}) reports the basic trend of all transaction values.  This
-can indicate whether spending is on the increase, or decrease, based
-on the way the trend values change in the totals column of the
-@command{register} report.
-
-@item --weighted-trend
-(@option{-Z}) reports the trend, like @option{--trend}, but factors in
-the passage of time.  Older transactions do not swing the trend
-numbers as much as recent and future transactions.  Thus, recent heavy
-spending will indicate a higher trend, than if time were not
-considered.
-@end table
-
-@node Environment variables,  , Commodity reporting, Options
-@subsection Environment variables
-
-Every option to ledger may be set using an environment variable.  If
-an option has a long name such @option{--this-option}, setting the
-environment variable @var{LEDGER_THIS_OPTION} will have the same
-affect as specifying that option on the command-line.  Options on the
-command-line always take precedence over environment variable
-settings, however.
-
-Note that you may also permanently specify option values by placing
-option settings in the file @file{~/.ledgerrc}, for example:
-
-@example
---cache /tmp/.mycache
-@end example
-
-@node Format strings, Value expressions, Options, Running Ledger
-@section Format strings
-
-Format strings can be used to change the output format of reports.
-They are specified by passing a formatting string to the
-@option{--format} (@option{-F}) option.  Within that string,
-constructs are allowed which make it possible to display the various
-parts of an account or transaction in custom ways.
-
-Within a format strings, a subtitution is specified using a percent
-character (@samp{%}).  The basic format of all substitutions is:
-
-@example
-%[-][MIN WIDTH][.MAX WIDTH]EXPR
-@end example
-
-If the optional minus sign (@samp{-}) follows the percent character,
-whatever is subtituted will be left justified.  The default is right
-justified.  If a mininum width is given next, the substituted text
-will be at least that wide, perhaps wider.  If a period and a maximum
-width is given, the substituted text will never be wider than this,
-and will be truncated to fit.  Here are some examples:
-
-@example
-%-P     An entry's payee, left justified
-%20P    The same, right justified, at least 20 chars wide
-%.20P   The same, no more than 20 chars wide
-%-.20P  Left justified, maximum twenty chars wide
-@end example
-
-The expression following the format constraints can be a single
-letter, or an expression enclosed in parentheses or brackets.  The
-allowable expressions are:
-
-@table @code
-@item %
-Inserts a percent sign.
-
-@item t
-Inserts the results of the value expression specified by @option{-t}.
-If @option{-t} was not specified, the current report style's value
-expression is used.
-
-@item T
-Inserts the results of the value expression specified by @option{-T}.
-If @option{-T} was not specified, the current report style's value
-expression is used.
-
-@item |
-Inserts a single space.  This is useful if a width is specified, for
-inserting a certain number of spaces.
-
-@item _
-Inserts a space for each level of an account's depth.  That is, if an
-account has two parents, this construct will insert two spaces.  If a
-minimum width is specified, that much space is inserted for each level
-of depth.  Thus @samp{%5_}, for an account with four parents, will
-insert twenty spaces.
-
-@item (EXPR)
-Inserts the amount resulting from the value expression given in
-parentheses.  To insert five times the total value of an account, for
-example, one could say @samp{%12(5*O)}.  Note: It's important to put
-the five first in that expression, so that the commodity doesn't get
-stripped from the total.
-
-@item [DATEFMT]
-Inserts the result of formatting a transaction's date with a date
-format string, exactly like those supported by @code{strftime}.  For
-example: @samp{%[%Y/%m/%d %H:%M:%S]}.
-
-@item D
-By default, this is the same as @samp{%[%Y/%m%/d]}.  The date format
-used can be changed at any time with the @option{-y} flag, however.
-Using @samp{%D} gives the user more control over the way dates are
-output.
-
-@item X
-If a transaction has been cleared, this inserts @samp{*} followed by a
-space; otherwise nothing is inserted.
-
-@item C
-Inserts the checking number for an entry, in parentheses, followed by
-a space; if none was specified, nothing is inserted.
-
-@item P
-Inserts the payee related to a transaction.
-
-@item n
-Inserts the optimal short name for an account.  This is normally used
-in balance reports.  It prints a parent account's name if that name
-has not been printed yet, oherwise it just prints the account's name.
-
-@item N
-Inserts the full name of an account.
-
-@item o
-Inserts the ``optimized'' form of a transaction's amount.  This is
-used by the print report.  In some cases, this inserts nothing; in
-others, it inserts the tranaction amount and its cost.  It's use is
-not recommend unless you are modifying the print report.
-
-@item /
-The @samp{%/} construct is special.  It separates a format string
-between what should be printed for the first transaction in an entry,
-and what should be printed for all subsequent transactions.  If not
-used, the same format string is applied to all transactions.
-@end table
-
-Here are default format strings for the balance and print reports,
-just to give an example:
-
-@example
-%20T  %2_%-n\n
-\n%D %X%C%P\n    %-34N  %12o\n%/    %-34N  %12o\n
-@end example
-
-@node Value expressions, Interval expressions, Format strings, Running Ledger
-@section Value expressions
-
-A value expression is a language used by ledger wherever a value is
-involved.  Some examples are:
-
-@enumerate
-@item Values displayed in reports
-@item Predicates, or which transactions get calculated/displayed
-@item Sorting criteria, or how transactions are sorted
-@item Matching criteria used by automated transactions
-@end enumerate
-
-Value expressions support most simple math and logic operators, in
-addition to a set of one letter functions and variables.  A function's
-argument is whatever follows it.  The following is a display predicate
-that I use with the @command{balance} command:
-
-@example
-ledger -d /^Liabilities/?T<0:AT>100 balance
-@end example
-
-The effect is that account totals are displayed only if: 1) A
-Liabitilies account has a total less than zero; or 2) the absolute
-value of the account's total exceeds 100 units of whatever commodity
-contains.  If it contains multiple commodities, only one of them must
-exceed 100 units.
-
-Display predicates are also very handy with register reports, to
-constrain which entries are printed.  For example, the following
-command shows only entries from the beginning of the current month,
-while still calculating the running balance based on all entries:
-
-@example
-ledger -d "d>[$(date +%Y/%m/01)]" register checking
-@end example
-
-This advantage to this command's complexity is that it prints the
-running total in terms of all entries in the register.  The following,
-simpler command is similar, but totals only the transactions
-displayed:
-
-@example
-ledger -b "this month" register checking
-@end example
-
-@subsection Variables
-
-Below are the one letter variables available in any value expression.
-For the register and print commands, these variables relate to
-individual transactions, and sometimes the account affected by a
-transaction.  For the balance command, these variables relate to
-accounts -- often with a subtle difference in meaning.  The use of
-each variable for both is specified.
-
-@table @code
-@item t
-This maps to whatever the user specified with @option{-t}.  In a
-register report, @option{-t} changes the value column; in a balance
-report, it has no meaning by default.  If @option{-t} was not
-specified, the current report style's value expression is used.
-
-@item T
-This maps to whatever the user specified with @option{-T}.  In a
-register report, @option{-T} changes the totals column; in a balance
-report, this is the value given for each account.  If @option{-T} was
-not specified, the current report style's value expression is used.
-
-@item m
-This is always the present moment/date.
-@end table
-
-@subsubsection Transaction/account details
-
-@table @code
-@item d
-A transaction's date, as the number of seconds past the epoch.  This
-is always ``today'' for an account.
-
-@item a
-The transaction's amount; the balance of an account, without
-considering children.
-
-@item c
-The cost of a transaction; the cost of an account, without its
-children.
-
-@item v
-The market value of a transaction, or an account without its children.
-
-@item g
-The net gain (market value minus cost basis), for a transaction or an
-account without its children.  It is the same as @samp{v-c}.
-
-@item l
-The depth (``level'') of an account.  If an account has one parent,
-it's depth is one.
-
-@item n
-The index of a transaction, or the count of transactions affecting an
-account.
-
-@item X
-1, if a transaction's entry has been cleared, 0 otherwise.
-
-@item R
-1, if a transaction is not virtual, 0 otherwise.
-@end table
-
-@subsubsection Calculated totals
-
-@table @code
-@item O
-The total of all transactions seen so far, or the total of an account
-and all its children.
-
-@item N
-The total count of transactions affecting an account and all its
-children.
-
-@item C
-The total cost of all transactions seen so far; the total cost of an
-account and all its children.
-
-@item V
-The market value of all transactions seen so far, or of an account and
-all its children.
-
-@item G
-The total net gain (market value minus cost basis), for a series of
-transactions, or an account and its children.  It is the same as
-@samp{V-C}.
-@end table
-
-@subsection Functions
-
-The available one letter functions are:
-
-@table @code
-@item -
-Negates the argument.
-
-@item A
-The absolute value of the argument.
-
-@item S
-Strips the commodity from the argument.
-
-@item M
-The median of the argument; @samp{Mx} is the same as @samp{x/n}.
-
-@item P
-The present market value of the argument.  The syntax @samp{P(x,d)} is
-supported, which yields the market value at time @samp{d}.
-@end table
-
-@subsection Operators
-
-The binary and ternary operators, in order of precedence, are:
-
-@enumerate
-@item @samp{* /}
-@item @samp{+ -}
-@item @samp{! < > =}
-@item @samp{& | ?:}
-@end enumerate
-
-@subsection Complex expressions
-
-More complicated expressions are possible using:
-
-@table @code
-@item NUM
-A plain integer represents a commodity-less amount.
-
-@item @{AMOUNT@}
-An amount in braces can be any kind of amount supported by ledger,
-with or without a commodity.  Use this for decimal values.
-
-@item /REGEXP/
-A regular expression that matches against an account's full name.  If
-a transaction, this will match against the account affected by the
-transaction.
-
-@item //REGEXP/
-A regular expression that matches against an entry's payee name.
-
-@item ///REGEXP/
-A regular expression that matches against an account's base name.  If
-a transaction, this will match against the account affected by the
-transaction.
-
-@item (EXPR)
-A sub-expression is nested in parenthesis.  This can be useful passing
-more complicated arguments to functions, or for overriding the natural
-precedence order of operators.
-
-@item [DATE]
-Useful specifying a date in plain terms.  For example, you could say
-@samp{[2004/06/01]}.
-@end table
-
-@node Interval expressions, Plotting register data, Value expressions, Running Ledger
-@section Interval expressions
-
-@node Plotting register data, Typical queries, Interval expressions, Running Ledger
-@section Plotting register data
-
-@node Typical queries, File format, Plotting register data, Running Ledger
-@section Typical queries
-
-Once you have an orderly and well-organized general ledger, the next
-step is to generate orderly and well-organized reports.  This is where
-the Ledger command-line tool comes in.  With it, you can balance your
-checkbook, see where your money is going, tell whether you've made a
-profit this year, and compute the present value of your retirement
-accounts.  And all with the simplest of interfaces, the command-line.
-
-The most often used command will be the ``balance'' command:
-
-@example
-export LEDGER=/home/johnw/doc/ledger.dat
-ledger balance
-@end example
-
-Here I've set my Ledger environment variable to point to where my
-ledger file is hiding.  Thereafter, I needn't specify it again.
-
-The balance command prints out the summarized balances of all my
-top-level accounts, excluding sub-accounts.  In order to see the
-balances for a specific account, just specify a regular expression
-after the balance command:
-
-@example
-ledger balance expenses:food
-@end example
-
-This will show all the money that's been spent on food, since the
-beginning of the ledger.  For food spending just this month
-(September), use:
-
-@example
-ledger -p sep balance expenses:food
-@end example
-
-Or maybe I want to see all of my assets, in which case the -s (show
-sub-accounts) option comes in handy:
-
-@example
-ledger -s balance
-@end example
-
-To exclude a particular account, use a regular expression with a
-leading minus sign.  The following will show all expenses, but without
-food spending:
-
-@example
-ledger balance expenses -food
-@end example
-
-A query like the following will show the largest expense categories
-since a given date:
-
-@example
-ledger -b 2003/10 -s -S -AT -d "T>1000" bal ^expenses -internet
-@end example
-
-From left to right the options used mean: Show entries since October,
-2003; showa all sub-accounts; sort in verse order by the absolute
-value of the total; display only accounts with a total value greater
-than 1000 units (of whichever commodities the account contains); and
-report the balance for all expenses, except for those matching
-``internet''.
-
-@node File format,  , Typical queries, Running Ledger
-@section File format
-
-The ledger file format is quite simple, but also very flexible.  It
-supports many options, though typically the user can ignore most of
-them.  They are summarized below.
-
-The initial character of each line determines what the line means, and
-how it should be interpreted.  Allowable initial characters are:
-
-@table @code
-@item NUMBER
-A line beginning with a number denotes an entry.  It may be followed
-by any number of lines, each beginning with whitespace, to denote the
-entry's account transactions.  The format of the first line is:
-
-@example
-DATE [*] [(CODE)] DESC
-@end example
-
-If @samp{*} appears after the date, it indicates that entry is
-``cleared'', meaning it has been seen a bank statement, or otherwise
-verified.  If a @samp{CODE} appears in parentheses, it can be used to
-indicate a check number, or the type of the transaction.  Following
-these is the payee, or a description of the transaction.
-
-@item =
-An automated transaction.  A value expression must appear after the
-equal sign.
-
-After this initial line there should be a set of one or more
-transactions, just as if it were normal entry.  If the amounts of the
-transactions have no commodity, they will be applied as modifiers to
-whichever real transaction is matched by the value expression.
-
-@item !
-A line beginning with an exclamation mark denotes a command directive.
-It must be immediately followed by the command word.  The supported
-commands are:
-
-@table @strong
-@item include
-Include the stated ledger file.
-
-@item account
-The account name is given is taken to be the parent of all
-transactions that follow, until @samp{!end} is seen.
-
-@item end
-Ends an account block.
-
-@item python
-If Python support is available, all of the lines following
-@samp{!python} will be passed to the Python interpretor.  Any
-functions defined will be available to later Python blocks, and can be
-called from a value expression.  The Python code block must be ended
-with @samp{!end}.
-@end table
-
-@item ;
-A line beginning with a colon indicates a comment, and is ignored.
-
-@item (whitespace)
-A line beginning with whitespace, which is not part of a regular or
-automated transaction, is also ignored.
-
-@item Y
-If a line begins with a capital Y, it denotes the year used for all
-subsequent entries that give a date without a year.  The year should
-appear immediately after the Y, for example: @samp{Y2004}.  This is
-useful at the beginning of a file, to specify the year for that file.
-If all entries specify a year, however, this command has no effect.
-
-@item P
-Specifies a historical price for a commodity.  These are usually found
-in a pricing history file (see the @option{-Q} option).  The syntax
-is:
-@example
-P DATE SYMBOL PRICE
-@end example
-
-@item C
-Specifies a conversion price for a commodity.  This has no reference
-to time, and takes precedence over all historical prices (even the
-current prices).  Syntax is:
-@example
-C SYMBOL PRICE
-@end example
-
-@item N SYMBOL
-Indicates that pricing information is to be ignored for a given
-symbol, nor will quotes ever be downloaded for that symbol.  Useful
-with a home currency, such as the dollar ($).  It is recommended that
-these pricing options be set in the price database file, which
-defaults to @file{~/.pricedb}.  The syntax for this command is:
-@example
-N SYMBOL
-@end example
-
-@item i, o, b, h
-These four options relate to timeclock support, which permits ledger
-to read timelog files.  See the timeclock's documentation for more
-info on the syntax of its timelog files.
-@end table
-
-@node Keeping a ledger, Extending with Python, Running Ledger, Top
+Note that when building GNUmp, make sure to pass the @samp{--enable-cxx}
+flag to configure, otherwise it will not build @strong{libgmpxx.a}.  And in
+case it is not already on your system, @strong{xmlparse.h} is part of the
+libxmltok package, and not expat.
+
+@node Keeping a ledger, Running Ledger, Introduction, Top
 @chapter Keeping a ledger
 
 The most important part of accounting is keeping a good ledger.  If
@@ -1206,19 +188,19 @@ you.
 
 The Ledger program aims at making ledger entry as simple as possible.
 Since it is a command-line tool, it does not provide a user interface
-for keeping a ledger.  If you like, you may use GnuCash to maintain
-your ledger, in which case the Ledger program will read GnuCash's data
-files directly.  In that case, read the GnuCash manual now, and skip
+for keeping a ledger.  If you like, you may use Gnucash to maintain
+your ledger, in which case the Ledger program will read Gnucash's data
+files directly.  In that case, read the Gnucash manual now, and skip
 to the next chapter.
 
-If you are not using GnuCash, but a text editor to maintain your
+If you are not using Gnucash, but a text editor to maintain your
 ledger, read on.  Ledger has been designed to make data entry as
 simple as possible, by keeping the ledger format easy, and also by
 automagically determining as much information as possible based on the
 nature of your entries.
 
 For example, you do not need to tell Ledger about the accounts you
-use.  Any time Ledger sees a transaction involving an account it knows
+use.  Any time Ledger sees a debit or a credit to an account it knows
 nothing about, it will create it.  If you use a commodity that is new
 to Ledger, it will create that commodity, and determine its display
 characteristics (placement of the symbol before or after the amount,
@@ -1250,39 +232,42 @@ For this entry, Ledger will figure out that $-23.00 must come from
 ``Assets:Checking'' in order to balance the entry.
 
 @menu
-* Stating where money goes::    
-* Assets and Liabilities::      
-* Commodities and Currencies::  
-* Accounts and Inventories::    
-* Understanding Equity::        
-* Dealing with Petty Cash::     
-* Archiving previous years::    
-* Virtual transactions::        
-* Automated transactions::      
-* Differences with accounting conventions::  
+* Credits and Debits::		
+* Commodities and Currencies::	
+* Accounts and Inventories::	
+* Understanding Equity::	
+* Dealing with cash::		
+* Archiving previous years::	
+* Virtual transactions::	
+* Automated transactions::	
 * Using Emacs to Keep Your Ledger::  
 * Using GnuCash to Keep Your Ledger::  
 * Using timeclock to record billable time::  
 @end menu
 
-@node Stating where money goes, Assets and Liabilities, Keeping a ledger, Keeping a ledger
-@section Stating where money goes
+@node Credits and Debits, Commodities and Currencies, Keeping a ledger, Keeping a ledger
+@section Credits and Debits
 
-Accountants will talk of `credits' and `debits', but their meaning is
-often different from the layman's definitions.  To avoid this semantic
-overloading, we will refer to subtractions and additions.
-@xref{Differences with accounting conventions}, for more on how to
-reconcile the two systems.
+Credit and debit are simple enough terms in themselves, but the usages
+of the modern world have made them very hard to puzzle out.
 
-Recall that every transaction will involve two or more accounts.
-Money is transferred from one group of accounts to another group.  To
-record the transaction, @emph{subtract} an amount from the source
-accounts, and @emph{add} the same amount to the target accounts.
+Basically, a credit means you add something to an account, and a debit
+means you take away.  A debit card is correctly name: From your point
+of view, it debits your checking account every time you use it.
 
-In order to write the Ledger entry correctly, you must determine where
-the money comes from, and where it goes to.  For example, when you are
-paid, in order to add to your bank account, you must subtract from an
-income account:
+The credit card is strangely named, because you have to look at it
+from the merchant's point of view: Every time you use it, it credit's
+@emph{his} account right away.  This was a giant leap from the days of cash
+and checks, when the only other way to supply immediate credit was by
+a wire transfer.  But a credit card does not credit you anything at
+all.  In fact, from your point of view, it should be called a
+liability card, since it increases your liability to the issuing bank
+every time you use it.
+
+In Ledger, credits and debits are given as they are, which means that
+sometimes you will see a minus sign where you don't expect one.  For
+example, when you get paid, in order to credit your bank account, you
+need to debit an income account:
 
 @example
 9/29  My Employer
@@ -1296,265 +281,35 @@ surprised to see Expenses as a positive figure, and Income as a
 negative figure.  Isn't that the opposite of how it should look?
 
 It may take getting used to, but to properly use a general ledger you
-will need to think in terms of money flows.  Rather than Ledger
-``fixing'' the minus signs, let's understand why they are there.
+will need to think in terms of correct debits and credits.  Rather
+than Ledger ``fixing'' the minus signs, let's understand why they are
+there.
 
 When you earn money, the money has to come from somewhere.  Let's call
-that somewhere ``society''.  In order for society to give you an
-income, you must take money away (withdraw) from society in order to
-put it into (make a payment to) your bank.  When you then spend that
-money, it leaves your bank account (a withdrawal) and goes back to
-society (a payment).  This is why Income will appear negative---it
-reflects the money you have drawn from society---and why Expenses will
-be positive---it is the amount you've given back.  These additions and
-subtractions will always cancel each other out in the end, because you
-don't have the ability to create new money: it must always come from
-somewhere, and in the end must always leave.  This is the beginning of
-economy, after which the explanation gets terribly difficult.
+that somewhere ``society''.  In order for society to give you an income,
+you must take money away from society (debit) in order to put it into
+your bank (credit).  When you then spend that money, it leaves your
+bank account (debit) and goes back to society (credit).  This is why
+Income will appear negative---it reflects the money you have drawn
+from society---and why Expenses will be positive---it is the amount
+you've given back.  These credits and debits will always cancel each
+other out in the end, because you don't have the ability to create new
+money: It must always come from somewhere, and in the end must always
+leave.  This is the beginning of economy, after which the explanation
+gets terribly difficult.
 
 Based on that explanation, here's another way to look at your balance
-report: every negative figure means that that account or person or
+report: Every negative figure means that that account or person or
 place has less money now than when you started your ledger; and every
 positive figure means that that account or person or place has more
 money now that when you started your ledger.  Make sense?
 
-@node Assets and Liabilities, Commodities and Currencies, Stating where money goes, Keeping a ledger
-@section Assets and Liabilities
+Also, credit cards will have a negative value, because you are
+spending @emph{from} them (debit) in order pay someone else (credit).  They
+are called credit cards because you are able to instantly credit that
+other person, by simply waving a card.
 
-Assets are money that you have, and Liabilities are money that you
-owe.  ``Liabilities'' is just a more inclusive name for Debts.
-
-An Asset is typically increased by transferring money from an Income
-account, such as when you get paid.  Here is a typical entry:
-
-@example
-2004/09/29  My Employer
-    Assets:Checking               $500.00
-    Income:Salary
-@end example
-
-Money, here, is coming from an Income account belonging to ``My
-Employer'', and is being transferred to an account that belongs to you.
-The money is now yours, which makes it an asset.
-
-Liability accounts track money you owe to others.  They come into play
-whenever you borrow money to buy something, or if you owe someone
-money.  The usual way a liability is changed is by expending money,
-thus transferring it to an Expenses account.  For example:
-
-@example
-2004/09/30  Restaurant
-    Expenses:Dining                $25.00
-    Liabilities:MasterCard
-@end example
-
-Your account balance will now show $25 spent on Dining, and a
-corresponding $25 owed on your MasterCard.  The MasterCard liability
-will show up as negative, since it offsets the value of your assets.
-@emph{The combined total of your Assets and Liabilities is your net
-worth}.  To see your current net worth, use this command:
-
-@example
-$ ledger balance ^assets ^liabilities
-@end example
-
-Relatedly, your Income accounts will show up negative, because they
-transfer money @emph{from} an account in order to increase your
-assets.  Your Expenses accounts will show up positive, because that is
-where the money went.  The combined total your Income and Expenses is
-your cash flow.  A negative cash flow means that you are spending more
-cash than you make.  To see your current cash flow, use this command:
-
-@example
-$ ledger balance ^income ^expenses
-@end example
-
-Often, it is only important to view your income and expenses when
-asking questions like, ``Where did my money go?  Am I spending too
-much on X?  Am I making enough to cover my expenses?''  But most of
-the time, you will usually want to ask other questions like, ``Is
-there enough money in my checking account to cover my next credit card
-bill?''  For these reasons, I recommend creating a script that removes
-Income, Expenses, and Equity by default from your basic balance
-report.  The provided script ``bal'' does this for you, as well as
-making it easier to run the balance command:
-
-@example
-$ bal
-@end example
-
-To use this script, it must be copied from the @file{scripts}
-directory in the ledger distribution, to a directory along your
-@var{PATH}.  Also, you must set the environment variable @var{LEDGER}
-to point to your main ledger file.
-
-Another common question to ask of your expenses is: How much do I
-spend each month on X?  Ledger provides a simple way of displaying
-monthly totals for any account.  Here is an example that summarizes
-monthly automobile expenses:
-
-@example
-$ ledger -M register expenses:auto
-@end example
-
-This assumes, of course, that you use account names like
-@samp{Expenses:Auto:Gas} and @samp{Expenses:Auto:Repair}.
-
-@menu
-* Tracking reimbursable expenses::  
-@end menu
-
-@node Tracking reimbursable expenses,  , Assets and Liabilities, Assets and Liabilities
-@subsection Tracking reimbursable expenses
-
-Sometimes you will want to spend money on behalf of someone else,
-which will eventually get repaid.  Since the money is still ``yours'',
-it is really an asset.  And since the expenditure was for someone
-else, you don't want it contaminating your Expenses reports.  You will
-need to keep an account for tracking reimbursements.
-
-This is fairly easy to do in ledger.  When spending the money, spend
-it @emph{to} your Assets:Reimbursements, using a different account for
-each person or business that you spend money for.  For example:
-
-@example
-2004/09/29  Circuit City
-    Assets:Reimbursements:Company XYZ     $100.00
-    Liabilities:MasterCard
-@end example
-
-This shows that you spent $100.00 on your MasterCard at Circuit City,
-but that the expense was made on behalf of Company XYZ.  Later, when
-Company XYZ pays you back, you will transfer the money from your
-reimbursement account to a regular asset account:
-
-@example
-2004/09/29  Company XYZ
-    Assets:Checking                       $100.00
-    Assets:Reimbursements:Company XYZ
-@end example
-
-This deposits the money owed from Company XYZ into your checking
-account, presumably because they paid you back with a check.
-
-But what to do if you run your own business, and you want to keep
-track of expenses made on your own behalf, while still tracking
-everything in a single ledger file?  This is more complex, because you
-need to track two separate things: 1) The fact that the money should
-be reimbursed to you, and 2) What the expense account was, so that you
-can later determine where your company is spending its money.
-
-This kind of transaction is best handled with mirrored transactions in
-two different files, one for your personal accounts, and one for your
-company accounts.  But keeping them in one file involves the same
-kinds of transactions, so those are what is shown here.  First, the
-personal entry, which shows the need for reimbursement:
-
-@example
-2004/09/29  Circuit City
-    Assets:Reimbursements:Company XYZ     $100.00
-    Liabilities:MasterCard
-@end example
-
-This is the same as above, except that you own Company XYZ, and are
-keeping track of its expenses in the same ledger file.  This entry
-should be immediately followed by an equivalent entry, which shows the
-kind of expense, and also notes the fact that $100.00 is now payable
-to you:
-
-@example
-2004/09/29  Circuit City
-    Company XYZ:Expenses:Computer:Software      $100.00
-    Company XYZ:Accounts Payable:Your Name
-@end example
-
-This second entry shows that Company XYZ has just spent $100.00 on
-software, and that this $100.00 came from Your Name, which must be
-paid back.
-
-These two entries can also be merged, to make things a little clearer.
-Note that all amounts must be specified now:
-
-@example
-2004/09/29  Circuit City
-    Assets:Reimbursements:Company XYZ         $100.00
-    Liabilities:MasterCard                   $-100.00
-    Company XYZ:Expenses:Computer:Software    $100.00
-    Company XYZ:Accounts Payable:Your Name   $-100.00
-@end example
-
-To ``pay back'' the reimbursement, just reverse the order of
-everything, except this time drawing the money from a company asset,
-paying it to accounts payable, and then drawing it again from the
-reimbursement account, and paying it to your personal asset account.
-It's easier shown than said:
-
-@example
-2004/10/15  Company XYZ
-    Assets:Checking                           $100.00
-    Assets:Reimbursements:Company XYZ        $-100.00
-    Company XYZ:Accounts Payable:Your Name    $100.00
-    Company XYZ:Assets:Checking              $-100.00
-@end example
-
-And now the reimbursements account is paid off, accounts payable is
-paid off, and $100.00 has been effectively transferred from the
-company's checking account to your personal checking account.  The
-money simply ``waited''---in both @samp{Assets:Reimbursements:Company
-XYZ}, and @samp{Company XYZ:Accounts Payable:Your Name}---until such
-time as it could be paid off.
-
-The value of tracking expenses from both sides like that is that you
-do not contaminate your personal expense report with expenses made on
-behalf of others, while at the same time making it possible to
-generate accurate reports of your company's expenditures.  It is more
-verbose than just paying for things with your personal assets, but it
-gives you a very accurate information trail.
-
-The advantage to keep these doubled entries together is that they
-always stay in sync.  The advantage to keeping them apart is that it
-clarifies the transfer's point of view.  To keep the transactions in
-separate files, just separate the two entries that were joined above.
-For example, for both the expense and the pay-back shown above, the
-following four entries would be created.  Two in your personal ledger
-file:
-
-@example
-2004/09/29  Circuit City
-    Assets:Reimbursements:Company XYZ     $100.00
-    Liabilities:MasterCard               $-100.00
-
-2004/10/15  Company XYZ
-    Assets:Checking                       $100.00
-    Assets:Reimbursements:Company XYZ    $-100.00
-@end example
-
-And two in your company ledger file:
-
-@example
-!account Company XYZ
-
-2004/09/29  Circuit City
-    Expenses:Computer:Software            $100.00
-    Accounts Payable:Your Name           $-100.00
-
-2004/10/15  Company XYZ
-    Accounts Payable:Your Name            $100.00
-    Assets:Checking                      $-100.00
-
-!end
-@end example
-
-(Note: The @ above command means that all accounts mentioned in the
-file are children of the specified account.  In this case it means
-that all activity in file relates to Company XYZ).
-
-After creating these entries, you will always know that $100.00 was
-spent using your MasterCard on behalf of Company XYZ, and that Company
-XYZ spent the money on computer software and paid it back about two
-weeks later.
-
-@node Commodities and Currencies, Accounts and Inventories, Assets and Liabilities, Keeping a ledger
+@node Commodities and Currencies, Accounts and Inventories, Credits and Debits, Keeping a ledger
 @section Commodities and Currencies
 
 Ledger makes no assumptions about the commodities you use; it only
@@ -1568,10 +323,11 @@ specifiers:
 
 @example
 $20.00         ; currency: twenty US dollars
+USD 20         ; currency: the same
 40 AAPL        ; commodity: 40 shares of Apple stock
-60 DM          ; currency: 60 Deutsch Mark
+MD 60          ; currency: 60 Deutsch Mark
 £50            ; currency: 50 British pounds
-50e            ; currency: 50 Euros (use appropriate symbol)
+50e            ; currency: 50 Euros (use symbol)
 @end example
 
 Ledger will examine the first use of any commodity to determine how
@@ -1611,7 +367,7 @@ BORL=$19
 FEQTX=$32
 @end example
 
-Specify the prices file using the @option{-p} option:
+Specify the prices file using the @samp{-p} option:
 
 @example
 ledger -p prices.db balance brokerage
@@ -1655,7 +411,7 @@ This is a roundabout way of reporting AAPL shares in their Deutsch
 Mark equivalent.
 
 @menu
-* Commodity price histories::   
+* Commodity price histories::	
 @end menu
 
 @node Commodity price histories,  , Commodities and Currencies, Commodities and Currencies
@@ -1678,16 +434,17 @@ P 2004/06/21 02:18:02 AAPL $32.91
 By default, ledger will not consider commodity prices when generating
 its various reports.  It will always report balances in terms of the
 commodity total, rather than the current value of those commodities.
-To enable pricing reports, several options are possible:
+To enable pricing reports, three options are possible:
 
-@table @code
+@table @strong
 @item @strong{-P FILE}
-With this option, or if the environment variable @var{PRICE_HIST} is
-set, pricing information obtained from the Internet will be kept in
-this file.  Also, this file will be read after all other ledger files
-are read, so that full history information is available for reports.
+With this option, or if the environment variable @samp{PRICE_HIST} is
+set, pricing information obtained from the Internet will be kept
+in this file.  Also, this file will be read after all other ledger
+files are read, so that full history information is available for
+reports.
 
-@item @strong{-O}
+@item @strong{-T}
 Report commodity totals only, not their market value or basis cost.
 
 @item @strong{-V}
@@ -1698,19 +455,18 @@ Report commodities in terms of their ``basis cost'', or what they cost
 at time of purchase.  Thus, totals in the register and balance
 report reflect the total amount spent.
 
-@item @strong{-G}
+@item @strong{-A}
 Report commodities in terms of their net gain, which is: the market
 value minus the cost basis.  A balance report using this option
 shows very quickly the performance of investments.
 
 @item @strong{-Q}
-When needed (see the @option{-L} option) pricing quotes are obtained by
-calling the script @command{getquote} (a sample Perl script is
-provided, but the interface is kept simple so replacements may be
-made).
+When needed (see the @samp{-L} option) pricing quotes are obtained by
+calling the script @samp{getquote} (a sample Perl script is provided, but
+the interface is kept simple so replacements may be made).
 
 @item @strong{-L MINS}
-When using the @option{-Q} flag, new quotes are obtained only if current
+When using the @samp{-Q} flag, new quotes are obtained only if current
 pricing data is older than MINS minutes.  The default is one day,
 or 1440 minutes.
 
@@ -1725,7 +481,7 @@ is).
 
 @end table
 
-Note that the @option{-B}, @option{-O}, @option{-V}, and @option{-G} are mutually exclusive.
+Note that the @samp{-B}, @samp{-T}, @samp{-V}, and @samp{-A} are mutually exclusive.
 
 @node Accounts and Inventories, Understanding Equity, Commodities and Currencies, Keeping a ledger
 @section Accounts and Inventories
@@ -1746,7 +502,7 @@ EverQuest account:
 
 Now your EverQuest:Inventory has 3 apples and 5 steaks in it.  The
 amounts are negative, because you are taking @emph{from} Black's Tavern in
-order to add to your Inventory account.  Note that you don't have to
+order to credit your Inventory account.  Note that you don't have to
 use ``Places:Black's Tavern'' as the source account.  You could use
 ``EverQuest:System'' to represent the fact that you acquired them
 online.  The only purpose for choosing one kind of source account over
@@ -1765,7 +521,7 @@ would look like:
 Now you've turned 2 steaks into 15 gold, courtesy of your customer,
 Strum Brightblade.
 
-@node Understanding Equity, Dealing with Petty Cash, Accounts and Inventories, Keeping a ledger
+@node Understanding Equity, Dealing with cash, Accounts and Inventories, Keeping a ledger
 @section Understanding Equity
 
 The most confusing entry in any ledger will be your equity account---
@@ -1801,20 +557,20 @@ of your assets is greater than the absolute value of your starting
 equity, it means you are making money.
 
 Clear as mud?  Keep thinking about it.  Until you figure it out, put
-``@samp{-- -Equity}'' at the end of your balance command, to remove the
+``-- -Equity'' at the end of your balance command, to remove the
 confusing figure from the totals.
 
-@node Dealing with Petty Cash, Archiving previous years, Understanding Equity, Keeping a ledger
-@section Dealing with Petty Cash
+@node Dealing with cash, Archiving previous years, Understanding Equity, Keeping a ledger
+@section Dealing with cash
 
 Something that stops many people from keeping a ledger at all is the
-insanity of tracking small cash expenses.  They rarely generate a
-receipt, and there are often a lot of small transactions, rather than
-a few large ones, as with checks.
+insanity of tracking cash expenses.  They rarely generate a receipt,
+and there are often a lot of small transactions, rather than a few
+large ones, as with checks.
 
-One solution is: don't bother.  Move your spending to a debit card,
-but in general ignore cash.  Once you withdraw it from the ATM, mark
-it as already spent to an ``Expenses:Cash'' category:
+The answer is: don't bother.  Move your spending to a debit card, but
+in general ignore cash.  Once you withdraw it from the ATM, mark it as
+already spent to an ``Expenses:Cash'' category:
 
 @example
 2004/03/15 ATM
@@ -1835,7 +591,7 @@ target account:
 This way, you can still track large cash expenses, while ignoring all
 of the smaller ones.
 
-@node Archiving previous years, Virtual transactions, Dealing with Petty Cash, Keeping a ledger
+@node Archiving previous years, Virtual transactions, Dealing with cash, Keeping a ledger
 @section Archiving previous years
 
 After a while, your ledger can get to be pretty large.  While this
@@ -1852,7 +608,7 @@ that make it very simple: ``print'', and ``equity''.
 Let's take an example file, with data ranging from year 2000 until
 2004.  We want to archive years 2000 and 2001 to their own file,
 leaving just 2003 and 2004 in the current file.  So, use ``print'' to
-output all the earlier entries to a file called @file{ledger-old.dat}.
+output all the earlier entries to a file called @samp{ledger-old.dat}.
 (Keeping in mind that the ending date is not inclusive, which is why
 2002 is mentioned in the following command):
 
@@ -1882,8 +638,8 @@ $ mv x ledger.dat
 $ rm equity.dat
 @end example
 
-Now the balances reported from @file{ledger.dat} are identical to what
-they were before the data was split.
+Now the balances reported from @samp{ledger.dat} are identical to what they
+were before the data was split.
 
 How often should you split your ledger?  You never need to, if you
 don't want to.  Even eighty years of data will not slow down ledger
@@ -1941,17 +697,16 @@ To view balances without any virtual balances factored in, using the
 Write about: Saving for a Special Occasion; Keeping a Budget; Tracking
 Allocated Funds.
 
-@node Automated transactions, Differences with accounting conventions, Virtual transactions, Keeping a ledger
+@node Automated transactions, Using Emacs to Keep Your Ledger, Virtual transactions, Keeping a ledger
 @section Automated transactions
 
-As a Bahá'í, I need to compute Huqúqu'lláh as I acquire assets.  It is
-similar to tithing for Jews and Christians, and to Zakát for Muslims.
-The exact details of computing Huqúqu'lláh are a bit complex, but if
-you have further interest, please consult the Web.
+As a Bahá'í, I need to compute Huqúqu'lláh whenever I acquire assets.
+The exact details of this are a bit complex, so if you have further
+interest, please consult the Web.
 
-Ledger makes this otherwise difficult calculation quite easy.  Just
-set up the following automated transaction at the top of your ledger
-file:
+For any fellow Bahá'ís out there who want to track Huqúqu'lláh, the
+Ledger tool makes this extremely easy.  Just set up the following
+automated transaction at the top of your ledger file:
 
 @example
 ; These entries will compute Huqúqu'lláh based on the
@@ -1969,13 +724,12 @@ file:
 This automated transaction works by looking at each transaction
 appearing afterward in the ledger file.  If any match the account
 regexps, occurring after the equal signs above, 19% of the value of
-that transaction is applied to the ``Liabilities:Huqúqu'lláh''
-account.  So if $1000 is earned through Income:Salary, which is seen
-as a debit from Income, a debit of $190 is applied to
-``Liabilities:Huqúqu'lláh''; if $1000 is spent on Rent---seen as a
-credit to the Expense account---a credit of $190 is applied to
-Huqúqu'lláh.  The ultimate balance of Huqúqu'lláh reflects how much
-must be paid to that account in order to balance it to zero.
+that transaction is applied to the ``Liabilities:Huqúqu'lláh'' account.
+So if $1000 is earned through Income:Salary, which is seen as a debit
+from Income, a debit of $190 is applied to ``Liabilities:Huqúqu'lláh'';
+if $1000 is spent on Rent---seen as a credit to the Expense account---a credit of $190 is applied to Huqúqu'lláh.  The ultimate balance
+of Huqúqu'lláh reflects how much must be paid to that account in order
+to balance it to zero.
 
 When you're ready to pay, just write a check directly to the account
 ``Liabilities:Huqúqu'lláh'':
@@ -1994,69 +748,10 @@ ledger balance Liabilities:Huqúq
 @end example
 
 
-@node Differences with accounting conventions, Using Emacs to Keep Your Ledger, Automated transactions, Keeping a ledger
-@section Differences with accounting conventions
-If you are an accountant, or you are familiar with accounting
-terminology, then you might be tearing your hair out after reading the
-above.  Please don't!
-
-Ledger is intended to make people comfortable with their finances; to
-help them better control the flow of their money.  Contemporary
-accounting practices, on the other hand, often seem counter-intuitive
-and confusing to the layman.  To make Ledger more accessible, it
-avoids the use of standard accounting conventions and terminology.
-However, Ledger is flexible enough that you may interpret what is
-happening however you wish.
-
-Most probably, the following section will confuse you, and you should
-skip it if you've managed to understand everything so far.  However,
-if you intend to communicate your accounting practices to a
-professional accountant, the following explanations may be useful.
-
-@table @strong
-@item The entity
-The individual or organisation under consideration: the someone or
-something on whose behalf you are accounting.  Probably you.
-
-@item Assets
-Future economic benefits controlled by the entity as a result of a
-past transaction or event.
-
-@item Liabilities
-Future sacrifices of economic benefits that the entity is obliged to
-make as a result of a past transaction or event.
-
-@end table
-
-The format of the data files used by Ledger is more akin to a general
-journal than a ledger.  In an accounting ledger, transactions are
-grouped by account.  In a general journal, transactions are commonly
-listed in chronological order.
-
-Often ``cash'' is used to refer to a liquid savings account at a bank,
-rather than the physical notes and coins you may withdraw.
-
-In general, an ``addition'' in Ledger is an accounting debit, and a
-``subtraction'' in Ledger is an accounting credit.  The following table
-shows the ``normal'' balances for the different types of accounts.
-Accountants avoid using negative balances where possible, instead
-prefering a positive amount in ``credit'' balance.
-
-@multitable @columnfractions 0.2 0.2 0.2 0.2 0.2
-@item System @tab Asset @tab Liability @tab Income @tab Expense
-@item @strong{Accounting} @tab debit @tab credit @tab credit @tab debit
-@item @strong{Ledger} @tab positive @tab negative @tab negative @tab positive
-@end multitable
-
-That's correct: accountants call an addition to their cash a debit!
-However, from the bank's perspective it is a credit: the accountant's
-cash is a liability for the bank.  Consequently, payments to the
-account will show up as credits on his bank statement.
-
-@node Using Emacs to Keep Your Ledger, Using GnuCash to Keep Your Ledger, Differences with accounting conventions, Keeping a ledger
+@node Using Emacs to Keep Your Ledger, Using GnuCash to Keep Your Ledger, Automated transactions, Keeping a ledger
 @section Using Emacs to Keep Your Ledger
 
-In the Ledger tarball is an Emacs module, @file{ledger.el}.  This module
+In the Ledger tarball is an Emacs module, @samp{ledger.el}.  This module
 makes the process of keeping a text ledger much easier for Emacs
 users.  I recommend putting this at the top of your ledger file:
 
@@ -2064,15 +759,15 @@ users.  I recommend putting this at the top of your ledger file:
 ; -*-ledger-*-
 @end example
 
-And this in your @file{.emacs} file, after copying @file{ledger.el} to your
+And this in your @samp{.emacs} file, after copying @samp{ledger.el} to your
 site-lisp directory:
 
 @example
 (load "ledger")
 @end example
 
-Now when you edit your ledger file, it will be in @command{ledger-mode}.
-@command{ledger-mode} adds the following commands:
+Now when you edit your ledger file, it will be in @samp{ledger-mode}.
+@samp{ledger-mode} adds the following commands:
 
 @table @strong
 @item C-c C-a
@@ -2196,31 +891,458 @@ ledger, with the attached prefix ``Billable'':
     Receivable:ClientOne
 @end example
 
-@node Extending with Python,  , Keeping a ledger, Top
-@chapter Extending with Python
+@node Running Ledger,  , Keeping a ledger, Top
+@chapter Running Ledger
 
-Ledger fully supports Python as an extension language.  It may be used
-in a few different forms, which fall into three basic categories:
+Now that you have an orderly and well-organized general ledger, it's
+time to start generating some orderly and well-organized reports.
+This is where the Ledger tool comes in.  With it, you can balance your
+checkbook, see where your money is going, tell whether you've made a
+profit this year, and even compute the present day value of your
+retirement accounts.  And all with the simplest of interfaces: the
+command-line.
 
-@enumerate
-@item
-Defining Python functions to use in value expressions
-@item
-Using the ledger library as a Python module
-@item
-Setting up custom initialization using Python
-@end enumerate
+The most often used command will be the ``balance'' command:
 
-Note that this feature, while functional, is still under development.
-It will not be documented until it has been fully proven, probably in
-the next version of ledger.  For now, if you wish to make this of this
-functionality and are willing to debug problems that come up, pass the
-option @samp{--enable-python} to configure, and contact the author via
-email.
+@example
+export LEDGER=/home/johnw/doc/ledger.dat
+ledger balance
+@end example
 
-A quick example of how to use Python can be found by generating the
-@command{prices} report using @file{pysample.dat}.  See that file
-itself for more details.
+Here I've set my Ledger environment variable to point to where my
+ledger file is hiding.  Thereafter, I needn't specify it again.
 
+The balance command prints out the summarized balances of all my
+top-level accounts, excluding sub-accounts.  In order to see the
+balances for a specific account, just specify a regular expression
+after the balance command:
+
+@example
+ledger balance expenses:food
+@end example
+
+This will show all the money that's been spent on food, since the
+beginning of the ledger.  For food spending just this month
+(September), use:
+
+@example
+ledger -d sep balance expenses:food
+@end example
+
+Or maybe I want to see all of my assets, in which case the -s (show
+sub-accounts) option comes in handy:
+
+@example
+ledger balance -s
+@end example
+
+To exclude a particular account, use a regular expression with a
+leading minus sign.  The following will show all expenses, but without
+food spending:
+
+@example
+ledger balance expenses -food
+@end example
+
+If you want to show all accounts but for one account, remember to use
+``--'' to separate the exclusion pattern from the options list:
+
+@example
+ledger balance -- -equity
+@end example
+
+@menu
+* File format::			
+* Command summary::		
+* Option summary::		
+* Environment variables::	
+@end menu
+
+@node File format, Command summary, Running Ledger, Running Ledger
+@section File format
+
+The ledger file format is quite simple, but supports many options.
+These are summarized here.
+
+The initial character of each line determines what that line means,
+and how it should be parsed.  The possibilities are:
+
+@table @strong
+@item NUMBER
+A line starting with a number denotes a regular ledger entry.  It
+may be followed by any number of lines that beginning whitespace, to
+denote account transactions.  The format of the header line is:
+@example
+DATE [*] [(CODE)] DESC
+@end example
+
+@item +
+If a line begins with plus, it denotes an inclusion regexp that
+will always be considered, as if it had been specified by the user
+at the end of their command-line.
+
+@item @strong{-}
+If a line begins with minus, it denotes an exclusion regexp that
+will always be considered, as if it had been specified by the user
+at the end of their command-line.
+
+@item @strong{=}
+If a line begins with equals, it denotes an automated transaction.
+The next item on the line must be a regular expression.  Any number
+of such lines may appear, with no intervening whitespace.
+Following this block of lines can be a list of account transactions
+preceded by whitespace.
+
+@item !WORD
+A line beginning with an exclamation mark denotes a command
+directive.  It must be immediately followed by a word specifying
+which directories.  At the moment, only @samp{!include} is supported, for
+including the content of other ledger files into the current one.
+
+@item whitespace
+A line beginning with whitespace, which is not part of a regular or
+automated transaction, is ignored.
+
+@item ;
+If a line begins with semicolon it is ignored.  This is the
+preferred method of entering comments.
+
+@item Y NUM
+If a line begins with a capital Y, it denotes the year to be used
+for all subsequent entries that specify a date, whatever their type.
+This sets the ``default year'', which ordinarily is the current year
+at the time the program is run.  Useful at the beginning of a file
+to specify the file's year.
+
+@item P DATE SYMBOL PRICE
+Capital P specifies a historical price for a commodity.  Any such
+number of entries are allowed.  These are usually found in a pricing
+history file (see the @samp{-Q} option).
+
+@item C SYMBOL PRICE
+Capital C specifies a conversion price for a commodity.  This has
+no reference to time, and always takes precedence over any
+historical price (even very current prices).
+
+@item N SYMBOL
+Capital N indicates that no implicit price conversions should be
+obtained for the given symbol.  This means that no quotes will ever
+be downloaded for that symbol.  Useful for a home currency, such as
+the dollar ($).  Be aware that these pricing options will set the
+default reporting characteristics for a commodity.  Thus it is
+recommended that pricing options occur only after all regular ledger
+entries have been parsed.
+
+@item i DATE TIME ACCOUNT  [DESC]
+Lowercase (and capital) i indicate an time-in event.  This will
+start accumulating hours in the account specified.  Usually these
+entries are created in a timelog file by the timeclock program,
+which is distributed with ledger.  There must be two spaces between
+the account name, and the optional description, if one is used.
+
+@item o DATE TIME ACCOUNT  [DESC]
+Lowercase (and capital) o indicate an time-out event.  This will
+accumulate hours in the account specified.  Usually these entries
+are created in a timelog file by the timeclock program, which is
+distributed with ledger.  There must be two spaces between the
+account name, and the optional description, if one is used.
+
+@item b, h
+Entries beginning with lowercase b and h are ignored.  These are
+special entries used by timeclock, but ignored by ledger.
+
+@end table
+
+@node Command summary, Option summary, File format, Running Ledger
+@section Command summary
+
+@menu
+* balance::			
+* register::			
+* print::			
+* equity::			
+* price::			
+* entry::			
+@end menu
+
+@node balance, register, Command summary, Command summary
+@subsection balance
+
+The ``balance'' command reports the current balance of any account.
+This command accepts a list of optional regexps, which will confine
+the balance report to only matching accounts.  By default, the
+balances for all accounts will be printed.  If an account contains
+multiple types of commodities, each commodity's total is separately
+reported.
+
+@node register, print, balance, Command summary
+@subsection register
+
+The ``register'' command displays all the transactions occurring in a
+single account, line by line.  The account regexp must be specified as
+the only argument to this command.  If any regexps occur after the
+required account name, the register will contain only those
+transactions that match.  Very useful for hunting down a particular
+transaction.
+
+The output from ``register'' is very close to what a typical checkbook,
+or single account ledger, would look like.  It also shows a running
+balance.  The final running balance of any register should always be
+the same as the current balance of that account.
+
+@node print, equity, register, Command summary
+@subsection print
+
+The ``print'' command prints out ledger entries just as they appear in
+the original ledger.  They will be properly formatted, and output in
+the most economic form possible.  The ``print'' command also takes a
+list of optional regexps, which will cause only those transactions
+which match in some way to be printed.
+
+The ``print'' command is a handy way to clean up a ledger file whose
+formatting has gotten out of hand.
+
+@node equity, price, print, Command summary
+@subsection equity
+
+Equity transactions are used to establish the starting value of an
+account.  You might think of equity as the ``ether'' from which initial
+balances appear.
+
+@node price, entry, equity, Command summary
+@subsection price
+
+This commands displays the last known current price for a given
+commodity, using the specified end date for the cutoff (default is the
+present moment).  It takes a list of regexps, which can match the
+commodities used in the ledger file.  This command is helpful to
+quickly seeing the last current price for a specific commodity, or all
+commodities referenced by a ledger.
+
+@node entry,  , price, Command summary
+@subsection entry
+
+The three most laborious tasks of keeping a ledger are: adding new
+entries, reconciling accounts, and generating reports.  To address the
+first of these, there is a sub-command to ledger called ``entry''.  It
+works on the principle that 80% of all transactions are variants of
+earlier transactions.  Here's how it works:
+
+Let's say you have an old transaction of the following form:
+
+@example
+2004/03/15 * Viva Italiano
+    Expenses:Food                       $12.45
+    Expenses:Tips                        $2.55
+    Liabilities:MasterCard             $-15.00
+@end example
+
+Now it's 2004/4/9, and you've just eating at Viva Italiano again.  The
+exact amounts are different, but the overall form is the same.  With
+the ``entry'' command you can type:
+
+@example
+ledger entry 2004/4/9 viva food 11.00 tips 2.50
+@end example
+
+This will produce the following output:
+
+@example
+2004/04/09 Viva Italiano
+    Expenses:Food                       $11.00
+    Expenses:Tips                        $2.50
+    Liabilities:MasterCard             $-13.50
+@end example
+
+This works by finding a transaction that matches the regexp ``viva'',
+and then assuming that any accounts or amounts you specify will be the
+same as that earlier transaction.  If Ledger does not succeed in
+generating a new entry for you, it will print an error and set the
+exit code to 1.
+
+There is a shell script in the distribution called ``entry'', which
+simplifies the task of adding a new entry to your ledger, and then
+launches @samp{vi} to let you confirm that the entry looks appropriate.
+
+@node Option summary, Environment variables, Command summary, Running Ledger
+@section Option summary
+
+@menu
+* Basic options::		
+* Filtering options::		
+* Output formatting options::	
+* Commodity reporting options::	 
+@end menu
+
+@node Basic options, Filtering options, Option summary, Option summary
+@subsection Basic options
+
+@table @strong
+@item @strong{-v}
+Display the version of ledger being used.
+
+@item @strong{-h}
+Print out quick help on the various options and commands.
+
+@item @strong{-f FILE[=ACCOUNT]}
+Read ledger entries from FILE.  This takes precedence over the
+environment variable LEDGER.  If ``=ACCOUNT'' is
+appended to the filename, then all of the entries are seen as if the
+transactions accounts were prefixed by ``ACCOUNT:''.  There may be
+multiple occurrences of the @samp{-f} option.
+
+@item @strong{-i FILE}
+Read in the list of patterns to include/exclude from FILE.
+Ordinarily, these are specified as arguments after the command.
+
+@end table
+
+@node Filtering options, Output formatting options, Basic options, Option summary
+@subsection Filtering options
+
+@table @strong
+@item @strong{-b DATE}
+Only consider entries occuring on or after the given date.
+
+@item @strong{-e DATE}
+Only consider entries occuring before the given date.  The date is
+not inclusive, so any entries occurring on that date will not be
+used.
+
+@item @strong{-c}
+Only consider entries occurring on or before the current date.
+
+@item @strong{-d DATE}
+Only consider entries fitting the given date mask.  DATE in this
+case may be the name of a month, or a year, or a year and month,
+such as ``2004/05''.  It's a shorthand for having to specify -b and -e
+together.
+
+@item @strong{-C}
+Only consider entries whose cleared flag has been set.  The default
+is to consider both.
+
+@item @strong{-U}
+Show only uncleared transactions.  The default is to consider both.
+
+@item @strong{-l AMT}
+Limit balance reports to those which are greater than AMT.
+
+@item @strong{-N REGEXP}
+If an account matches REGEXP, only display it in the balance report
+if its total is negative.  Useful to avoid seeing credit in accounts
+where one cannot spend that credit, and it will soon become negative
+anyway (such as credit cards).
+
+@item @strong{-R}
+Ignore all virtual transactions, and report only the real balance
+for each account.
+
+@end table
+
+@node Output formatting options, Commodity reporting options, Filtering options, Option summary
+@subsection Output formatting options
+
+@table @strong
+@item @strong{-n}
+Do not show subtotals in the balance report, or split transactions
+in the register report.
+
+@item @strong{-s}
+If an account has children, show them in the balance report.
+
+@item @strong{-S}
+Sort the ledger after reading it.  This may affect ``register'' and
+``print'' output.
+
+@item @strong{-E}
+Also show empty accounts in the balance totals report.
+
+@item @strong{-F}
+Print full account names in all cases, such as ``Assets:Checking''
+instead of just ``Checking''.  Only used current by the ``balance''
+command.
+
+@item @strong{-M}
+When used with the ``register'' command, causes only monthly subtotals
+to appear.  This can be useful for looking at spending patterns.
+TODO: Accept an argument which specifies the period to use.
+
+@item @strong{-G}
+Modifies the output generated by -M to be friendly to programs like
+Gnuplot.  It strips away the commodity label, and outputs only two
+columns: the date and the amount.
+
+@end table
+
+@node Commodity reporting options,  , Output formatting options, Option summary
+@subsection Commodity reporting options
+
+@table @strong
+@item @strong{-P FILE}
+With this option, or if the environment variable @samp{PRICE_HIST} is
+set, pricing information obtained from the Internet will be kept
+in this file.  Also, this file will be read after all other ledger
+files are read, so that full history information is available for
+reports.
+
+@item @strong{-T}
+Report commodity totals only, not their market value or basis cost.
+
+@item @strong{-V}
+Report commodity values in terms of their last known market price.
+
+@item @strong{-B}
+Report commodities in terms of their ``basis cost'', or what they cost
+at time of purchase.  Thus, totals in the register and balance
+report reflect the total amount spent.
+
+@item @strong{-A}
+Report commodities in terms of their net gain, which is: the market
+value minus the cost basis.  A balance report using this option
+shows very quickly the performance of investments.
+
+@item @strong{-Q}
+When needed (see the @samp{-L} option) pricing quotes are obtained by
+calling the script @samp{getquote} (a sample Perl script is provided, but
+the interface is kept simple so replacements may be made).
+
+@item @strong{-L MINS}
+When using the @samp{-Q} flag, new quotes are obtained only if current
+pricing data is older than MINS minutes.  The default is one day,
+or 1440 minutes.
+
+@item @strong{-p ARG}
+If a string, such as ``COMM=$1.20'', the commodity COMM will be
+reported only in terms of the conversion factor, which supersedes
+all other pricing histories for that commodity.  This can be used to
+perform arbitrary value substitutions.  For example, to report the
+value of your dollars in terms of the ounces of gold they would buy,
+use: -p ``$=0.00280112 AU'' (or whatever the current exchange rate
+is).
+
+@end table
+
+@node Environment variables,  , Option summary, Running Ledger
+@section Environment variables
+
+@table @strong
+@item @samp{LEDGER}
+A colon-separated list of files to be parsed whenever ledger is run.
+Easier than typing @samp{-f} all the time.
+
+@item @samp{PRICE_HIST}
+The ledger file used to hold pricing data.  @samp{~/.pricedb} would be a
+good choice.
+
+@item @samp{PRICE_EXP}
+The number of minutes before pricing data becomes out-of-date.  The
+default is one day.  Use @samp{-L} to temporarily decrease or increase
+the value.
+
+@end table
+
+
+@c Page published by Emacs Muse ends here
 @contents
 @bye

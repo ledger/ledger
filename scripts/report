@@ -1,15 +1,17 @@
 #!/bin/sh
 
+dir=$HOME/doc/finance
+
 cd /tmp
-ledger "$@" > report
+
+ledger -M -G register "$@" > $1
 
 gnuplot <<EOF
 set terminal png
 set output "report.png"
 set xdata time
 set timefmt "%Y/%m/%d"
-plot "report" using 1:2 with linespoints
+plot "$1" using 1:2 with linespoints
 EOF
 
-rm -f report
 open report.png

@@ -1,126 +1,13 @@
-			     Ledger NEWS
+1.7
 
-* 2.0
+  Pricing histories are now supported, so that ledger remembers
+  historical prices of all commodities (if this information is
+  provided), and can give register reports based on past and present
+  market values, as well as original cost basis.
 
-- The code was completely rewritten.
+1.6
 
-- The most significant feature added are "value expressions".  They
-  are used in several places to indicate what to display, sorting
-  order, output format, etc.  Logic and math operators are supported,
-  as well as a few functions.  See manual.
-
-- If the environment variable LEDGER (or LEDGER_FILE) is used, a
-  binary cache of that ledger is now kept in ~/.ledger (or
-  LEDGER_CACHE), to speed up later queries of the same data.  This
-  happens only when "-f" or "--file" is not used.
-
-- New options:
-
-  "-o FILE" outputs data to FILE.  If "-", output goes to stdout.
-
-  -j and -J options replace the previous -G (gnuplot) option.  -j
-  reports the values column in a way gnuplot can consume, and -J, the
-  totals column.  An example is in scripts/report.
-
-  "-y DATEFMT" changes the date format used for register reports.  The
-  default is "%Y/%m/%d".
-
-  -Y and -W print yearly and weekly subtotals, just as -M prints
-  monthly subtotals.  --dow shows cumulative totals for each day of
-  the week.
-
-  "-p INTERVAL" allows for more flexible interval reporting.  The
-  sublanguage used will likely mature over time, but for now it
-  supports expression like:
-
-    monthly
-    every week
-    every 3 quarters
-    weekly from 12/20
-    monthly in 2003
-
-  -O shows base values (this is the default, and old, behavior)
-  -B shows basis cost of commodities
-  -V shows the market value of commodities
-  -G reports net gain/loss
-  -A reports average value (arithmetic mean)
-  -D reports deviation from the average
-  -X reports the trend (average rate of change)
-  -Z reports the trend, with older values affecting the trend less
-
-- Regexps given directly after the command name now apply to account
-  names only.  To search on a payee, use "--" to separate the two
-  kinds of regexps.  For example, to find a payee named "John" within
-  all Expenses accounts, use:
-
-    ledger register expenses -- john
-
-  Note: The above command is identical (and internally converted) to:
-
-    ledger -l "/expenses/|//john/" register
-  
-- To include entries from a file into a specific account, use:
-
-    !account ACCOUNT
-    !include FILE
-    !end
-
-  Entries specified within an !account block will affect only that
-  account.
-
-- Register reports now show only the account affected by default.  Use
-  "-r" to see "related accounts" -- the account the transfer came from
-  or went to.  (This was the old behavior in 1.x, but leads to
-  confusing reports when viewing reports within subaccounts.)  The
-  "-r" option also works with balance reports, where it shows all
-  amounts related to your query.
-
-- Automated transactions now use value expressions as their predicate.
-  The new syntax is:
-
-    = VALUE-EXPR
-      TRANSACTIONS...
-
-  Only one VALUE-EXPR is supported, compared to the multiple account
-  regexps supported before.  However, since value expression allow for
-  logic chaining, there is no loss in functionality.  Also, by using a
-  VALUE-EXPR as a predicate, matching may be much more comprehensive
-  and selective.
-
-- The use of "+" and "-" in ledger files (to specify permanent
-  regexps) has been removed.
-
-- The "-from" argument is no longer needed with the "entry" command.
-  It can simply be removed, with no other changes.
-
-- -l now takes a value expression as the "calculation predicate".
-  To mimic the old behavior of "-l \$100", use: -d "T&AT>{\$100}"
-
-- The -S flag now takes a value expression as the sorting criteria.
-  To sort on the amount, use -S T (balance) or -S t (register).
-
-- If Boost.Python is installed, ledger supports full, two-way Python
-  integration.  This feature is enabled by passing --enable-python to
-  the "configure" script before building.  Ledger can then be used as
-  a module (ledger.so), as well as supporting Python function calls
-  directly from value expressions.  See main.py for an example of
-  driving Ledger from Python.  It implements nearly all the
-  functionality of the C++ driver, main.cc.
-
-  Note that this feature has yet to mature, and so is not being
-  supported in this release.  It is mostly functional, however, and
-  those with a desire to tinker are welcome to play with it.
-
-* 1.7
-
-- Pricing histories are now supported, so that ledger remembers
-  historical pricing of all commodities, and can give register reports
-  based on past and present market values, as well as the original
-  cost basis.  See README for more details on the new option switches.
-
-* 1.6
-
-- Can now parse timeclock files.  These are simple timelogs that track
+  Can now parse timeclock files.  These are simple timelogs that track
   in/out events, which can be maintained using my timeclock tool.  By
   allowing ledger to parse these, it means that reporting can be done
   on them in the same way as a ledger file (the commodities is "h",
@@ -129,4 +16,4 @@
   hours into a dollar value via a receivable account, is now trivial.
   See the docs for more on how to do this.
 
-- Began keeping NEWS file. :)
+  Began keeping NEWS file. :)

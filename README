@@ -1,42 +1,1226 @@
-Welcome to Ledger, a command-line accounting program.
+#comment -*-muse-*-
+#title Ledger: Command-Line Accounting
 
-Quick start
-===========
+<contents>
 
-To build Ledger, you will first need these two libraries installed:
+* Introduction
 
-    gmp        GNU multi-precision library
-    pcre       Perl regular expression library
+Ledger is an accounting tool with the moxie to exist.  It provides no
+bells or whistles, and returns the user to the days before user
+interfaces were even a twinkling in their father's CRT.
 
-If you wish to read Gnucash data files, you will also need two XML
-libraries, which may or may not be available in a single package (it
-depends on your distribution):
+What it does do is to offer a double-entry accounting ledger with all
+the flexibility and muscle of its modern day cousins, without any of
+the fat.  Think of it as the Bran Muffin of accounting tools.
 
-    xmlparse
-    xmltok
+To use it, you need to start keeping a ledger.  This is the basis of
+all accounting, and if you haven't started yet, now is the time to
+learn.  The little booklet that comes with your checkbook is a ledger,
+so we'll describe double-entry accounting in terms of that.
 
-Once you have determined where the headers and libraries for the above
-packages are installed, run the script "configure", passing those
-paths.  If you installed everything under /usr/local, you can probably
-just type "./configure".  Otherwise, do this:
+A checkbook ledger records debits (subtractions, or withdrawals) and
+credits (additions, or deposits) with reference to a single account:
+the checking account.  Where the money comes from, and where it goes
+to, are described in the payee field, where you write the person or
+company's name.  The ultimate aim of keeping a checkbook ledger is to
+know how much money is available to spend.  That's really the aim of
+all ledgers.
 
-    ./configure CPPFLAGS=-I<INCLUDE-PATH>  LDFLAGS=-L<LIBRARY-PATH>
+What computers add is the ability to walk through these transactions,
+and tell you things about your spending habits; to let you devise
+budgets and get control over your spending; to squirrel away money
+into virtual savings account without having to physically move money
+around; etc.  As you keep your ledger, you are recording information
+about your life and habits, and sometimes that information can start
+telling you things you aren't aware of.  Such is the aim of all good
+accounting tools.
 
-If you need to specify multiple include or library paths, then do
-this:
+The next step up from a checkbook ledger, is a ledger that keeps track
+of all your accounts, not just checking.  In such a ledger, you record
+not only who gets paid -- in the case of a debit -- but where the
+money came from.  In a checkbook ledger, its assumed that all the
+money comes from your checking account.  But in a general ledger, you
+write transaction two-lines: The source account and target account.
+*There must always be a debit from at least one account for every
+credit made to another account*.  This is what is meant by
+"double-entry" accounting: the ledger must always balance to zero,
+with an equal number of debits and credits.
 
-    ./configure CPPFLAGS="-I<PATH1> -I<PATH2>"  LDFLAGS="-L<PATH1> -L<PATH2>"
+For example, let's say you have a checking account and a brokerage
+account, and you can write checks from both of them.  Rather than keep
+two checkbooks, you decide to use one ledger for both.  In this
+general ledger you need to record a payment to Pacific Bell for your
+monthly phone bill.  The cost is $23.00, let's say, and you want to
+pay it from your checking account.  In the general ledger you need to
+say where the money came from, in addition to where it's going to.
+The entry might look like this:
 
-Once configure is done running, just type:
+<example>
+9/29  BAL  Pacific Bell              $-200.00   $-200.00
+           Equity:Opening Balances    $200.00
+9/29  BAL  Checking                   $100.00    $100.00
+           Equity:Opening Balances   $-100.00
+9/29  100  Pacific Bell                $23.00    $223.00
+           Checking                   $-23.00     $77.00
+</example>
 
-    make install
+The first line shows a credit (or payment) to Pacific Bell for $23.00.
+Because there is no "balance" in a general ledger -- it's always zero
+-- we write in the total balance of all payments to "Pacific Bell",
+which now is $223.00 (previously the balance was $200.00).  This is
+done by looking at the last entry for "Pacific Bell" in the ledger,
+adding $23.00 to that amount, and writing the total in the balance
+column.  And the money came from "Checking" -- a debit (or withdrawal)
+of $23.00 -- which leaves the ending balance in "Checking" at $77.00.
+This is a very manual procedure; but that's where computers come in...
 
-Building Ledger as a Python Module
-==================================
+The transaction must balance to $0: $23 went to Pacific Bell, $23 came
+from Checking.  There is nothing left over to be accounted for, since
+the money has simply moved from one account to another.  This is the
+basis of double-entry accounting: that money never pops in or out of
+existence; it is always a transaction from one account to another.
 
-If you have Python 2.2 or higher installed, and Boost.Python, then
-Ledger will also be built as a Python module.  This means you can
-interact with your Ledger data from Python, making it easier to write
-very custom reporting code.  See the developer documentation for
-information on Ledger's interfaces, and for some example reports
-written in Python.
+Keeping a general ledger is the same as keeping two separate ledgers:
+One for Pacific Bell and one for Checking.  In that case, each time a
+credit is written into one, you write a corresponding debit into the
+other.  This makes it easier to write in a "running balance", since
+you don't have to look back at the last time the account was
+referenced -- but it also means having a lot of ledger books, if you
+deal with multiple accounts.
+
+Enter the beauty of computerized accounting.  The purpose of the
+Ledger program is to make general ledger accounting simple, by keeping
+track of the balances for you.  Your only job is to enter the
+credit/debit transactions.  If a transaction does not balance, Ledger
+will display an error and indicate which transaction is wrong.[1]
+
+In summary, there are two aspects of Ledger use: Updating the ledger
+data file, and using the Ledger tool to view the summarized result of
+your entries.
+
+And just for the sake of example -- as a starting point for those who
+want to dive in head-first -- here are the ledger entries from above,
+formatting as the ledger program wishes to see them:
+
+<example>
+; Set the year for subsequent entries to 2004
+Y 2004
+
+9/29 Pacific Bell
+     Payable:Pacific Bell            $-200.00
+     Equity:Opening Balances
+
+9/29 Checking
+     Accounts:Checking                $100.00
+     Equity:Opening Balances
+
+9/29 Pacific Bell
+     Payable:Pacific Bell              $23.00
+     Accounts:Checking
+</example>
+
+The account balances and registers in this file, if saved as
+=ledger.dat=, could be reported using:
+
+<example>
+$ ledger -f ledger.dat balance
+$ ledger -f ledger.dat register checking
+$ ledger -f ledger.dat register bell
+</example>
+
+** Building the program
+
+Ledger is written in ANSI C++, and should compile on any platform.  It
+depends only on the GNU multiprecision integer library (libgmp), and
+the Perl regular expression library (libpcre).  It was developed using
+GNU make and gcc 3.3.
+
+To build and install once you have these libraries on your system,
+enter these commands:
+
+<example>
+make
+cp ledger /usr/local/bin
+</example>
+
+Note that when building GNUmp, make sure to pass the =--enable-cxx=
+flag to configure, otherwise it will not build **libgmpxx.a**.  And in
+case it is not already on your system, **xmlparse.h** is part of the
+libxmltok package, and not expat.
+
+* Keeping a ledger
+
+The most important part of accounting is keeping a good ledger.  If
+you have a good ledger, tools can be written to work whatever
+mathematically tricks you need to better understand your spending
+patterns.  Without a good ledger, no tool, however smart, can help
+you.
+
+The Ledger program aims at making ledger entry as simple as possible.
+Since it is a command-line tool, it does not provide a user interface
+for keeping a ledger.  If you like, you may use Gnucash to maintain
+your ledger, in which case the Ledger program will read Gnucash's data
+files directly.  In that case, read the Gnucash manual now, and skip
+to the next chapter.
+
+If you are not using Gnucash, but a text editor to maintain your
+ledger, read on.  Ledger has been designed to make data entry as
+simple as possible, by keeping the ledger format easy, and also by
+automagically determining as much information as possible based on the
+nature of your entries.
+
+For example, you do not need to tell Ledger about the accounts you
+use.  Any time Ledger sees a debit or a credit to an account it knows
+nothing about, it will create it.  If you use a commodity that is new
+to Ledger, it will create that commodity, and determine its display
+characteristics (placement of the symbol before or after the amount,
+display precision, etc) based on how you used the commodity in the
+transaction.
+
+Here is the Pacific Bell example from above, given as a Ledger
+transaction:
+
+<example>
+9/29  (100)  Pacific Bell
+    Expenses:Utilities:Telephone               $23.00
+    Assets:Checking                           $-23.00
+</example>
+
+As you can see, it is very similar to what would be written on paper,
+minus the computed balance totals, and adding in account names that
+work better with Ledger's scheme of things.  In fact, since Ledger is
+smart about many things, you don't need to specify the balanced
+amount, if it is the same as the first line:
+
+<example>
+9/29  (100)  Pacific Bell
+    Expenses:Utilities:Telephone               $23.00
+    Assets:Checking
+</example>
+
+For this entry, Ledger will figure out that $-23.00 must come from
+"Assets:Checking" in order to balance the entry.
+
+** Credits and Debits
+
+Credit and debit are simple enough terms in themselves, but the usages
+of the modern world have made them very hard to puzzle out.
+
+Basically, a credit means you add something to an account, and a debit
+means you take away.  A debit card is correctly name: From your point
+of view, it debits your checking account every time you use it.
+
+The credit card is strangely named, because you have to look at it
+from the merchant's point of view: Every time you use it, it credit's
+*his* account right away.  This was a giant leap from the days of cash
+and checks, when the only other way to supply immediate credit was by
+a wire transfer.  But a credit card does not credit you anything at
+all.  In fact, from your point of view, it should be called a
+liability card, since it increases your liability to the issuing bank
+every time you use it.
+
+In Ledger, credits and debits are given as they are, which means that
+sometimes you will see a minus sign where you don't expect one.  For
+example, when you get paid, in order to credit your bank account, you
+need to debit an income account:
+
+<example>
+9/29  My Employer
+    Assets:Checking                           $500.00
+    Income:Salary                            $-500.00
+</example>
+
+But wait, you say, why is the Income a negative figure?  And when you
+look at the balance totals for your ledger, you will certainly be
+surprised to see Expenses as a positive figure, and Income as a
+negative figure.  Isn't that the opposite of how it should look?
+
+It may take getting used to, but to properly use a general ledger you
+will need to think in terms of correct debits and credits.  Rather
+than Ledger "fixing" the minus signs, let's understand why they are
+there.
+
+When you earn money, the money has to come from somewhere.  Let's call
+that somewhere "society".  In order for society to give you an income,
+you must take money away from society (debit) in order to put it into
+your bank (credit).  When you then spend that money, it leaves your
+bank account (debit) and goes back to society (credit).  This is why
+Income will appear negative -- it reflects the money you have drawn
+from society -- and why Expenses will be positive -- it is the amount
+you've given back.  These credits and debits will always cancel each
+other out in the end, because you don't have the ability to create new
+money: It must always come from somewhere, and in the end must always
+leave.  This is the beginning of economy, after which the explanation
+gets terribly difficult.
+
+Based on that explanation, here's another way to look at your balance
+report: Every negative figure means that that account or person or
+place has less money now than when you started your ledger; and every
+positive figure means that that account or person or place has more
+money now that when you started your ledger.  Make sense?
+
+Also, credit cards will have a negative value, because you are
+spending *from* them (debit) in order pay someone else (credit).  They
+are called credit cards because you are able to instantly credit that
+other person, by simply waving a card.
+
+** Commodities and Currencies
+
+Ledger makes no assumptions about the commodities you use; it only
+requires that you specify a commodity.  The commodity may be any
+non-numeric string that does not contain a period, comma, forward
+slash or at-sign.  It may appear before or after the amount, although
+it is assumed that symbols appearing before the amount refer to
+currencies, while non-joined symbols appearing after the amount refer
+to commodities.  Here are some valid currency and commodity
+specifiers:
+
+<example>
+$20.00         ; currency: twenty US dollars
+USD 20         ; currency: the same
+40 AAPL        ; commodity: 40 shares of Apple stock
+MD 60          ; currency: 60 Deutsch Mark
+£50            ; currency: 50 British pounds
+50e            ; currency: 50 Euros (use symbol)
+</example>
+
+Ledger will examine the first use of any commodity to determine how
+that commodity should be printed on reports.  It pays attention to
+whether the name of commodity was separated from the amount, whether
+it came before or after, the precision used in specifying the amount,
+whether thousand marks were used, etc.  This is done so that printing
+the commodity looks the same as the way you use it.
+
+An account may contain multiple commodities, in which case it will
+have separate totals for each.  For example, if your brokerage account
+contains both cash, gold, and several stock quantities, the balance
+might look like:
+
+<example>
+  $200.00
+100.00 AU
+  AAPL 40
+ BORL 100
+ FEQTX 50  Assets:Brokerage
+</example>
+
+This balance report shows how much of each commodity is in your
+brokerage account.
+
+Sometimes, you will want to know the current street value of your
+balance, and not the commodity totals.  For this to happen, you must
+specify what the current price is for each commodity.  The price can
+be in any commodity, in which case the balance will be computed in
+terms of that commodity.  The usual way to specify prices is with a
+file of price settings, which might look like this:
+
+<example>
+AU=$357.00
+AAPL=$37
+BORL=$19
+FEQTX=$32
+</example>
+
+Specify the prices file using the =-p= option:
+
+<example>
+ledger -p prices.db balance brokerage
+</example>
+
+Now the balance for your brokerage account will be given in US
+dollars, since the prices database has specified conversion factors
+from each commodity into dollars:
+
+<example>
+$40880.00  Assets:Brokerage
+</example>
+
+You can convert from any commodity to any other commodity.  Let's say
+you had $5000 in your checking account, and for whatever reason you
+wanted to know many ounces of gold that would buy.  If gold is
+currently $357 per ounce, then each dollar is worth 1/357 AU:
+
+<example>
+ledger -p "$=0.00280112 AU" balance checking
+</example>
+
+<example>
+14.01 AU  Assets:Checking
+</example>
+
+$5000 would buy 14 ounces of gold, which becomes the new display
+commodity since a conversion factor was provided.
+
+Commodities conversions can also be chained, up to a depth of 10.
+Here is a sample prices database that uses chaining:
+
+<example>
+AAPL=$15
+$=0.00280112 AU
+AU=300 Euro
+Euro=MD 0.75
+</example>
+
+This is a roundabout way of reporting AAPL shares in their Deutsch
+Mark equivalent.
+
+*** Commodity price histories
+
+Whenever a commodity is purchased using a different commodity (such as
+a share of common stock using dollars), it establishes a price for
+that commodity on that day.  It is also possible, by recording price
+details in a ledger file, to specify other prices for commodities at
+any given time.  Such price entries might look like those below:
+
+<example>
+P 2004/06/21 02:17:58 TWCUX $27.76
+P 2004/06/21 02:17:59 AGTHX $25.41
+P 2004/06/21 02:18:00 OPTFX $39.31
+P 2004/06/21 02:18:01 FEQTX $22.49
+P 2004/06/21 02:18:02 AAPL $32.91
+</example>
+
+By default, ledger will not consider commodity prices when generating
+its various reports.  It will always report balances in terms of the
+commodity total, rather than the current value of those commodities.
+To enable pricing reports, three options are possible:
+
+**-P FILE** ::
+  With this option, or if the environment variable =PRICE_HIST= is
+  set, pricing information obtained from the Internet will be kept
+  in this file.  Also, this file will be read after all other ledger
+  files are read, so that full history information is available for
+  reports.
+  
+**-T** ::
+  Report commodity totals only, not their market value or basis cost.
+
+**-V** ::
+  Report commodity values in terms of their last known market price.
+
+**-B** ::
+  Report commodities in terms of their "basis cost", or what they cost
+  at time of purchase.  Thus, totals in the register and balance
+  report reflect the total amount spent.
+
+**-A** ::
+  Report commodities in terms of their net gain, which is: the market
+  value minus the cost basis.  A balance report using this option
+  shows very quickly the performance of investments.
+
+**-Q** ::
+  When needed (see the =-L= option) pricing quotes are obtained by
+  calling the script =getquote= (a sample Perl script is provided, but
+  the interface is kept simple so replacements may be made).
+
+**-L MINS** ::
+  When using the =-Q= flag, new quotes are obtained only if current
+  pricing data is older than MINS minutes.  The default is one day,
+  or 1440 minutes.
+
+**-p ARG** ::
+  If a string, such as "COMM=$1.20", the commodity COMM will be
+  reported only in terms of the conversion factor, which supersedes
+  all other pricing histories for that commodity.  This can be used to
+  perform arbitrary value substitutions.  For example, to report the
+  value of your dollars in terms of the ounces of gold they would buy,
+  use: -p "$=0.00280112 AU" (or whatever the current exchange rate
+  is).
+
+Note that the =-B=, =-T=, =-V=, and =-A= are mutually exclusive.
+
+** Accounts and Inventories
+
+Since Ledger's accounts and commodity system is so flexible, you can
+have accounts that don't really exist, and use commodities that no one
+else recognizes.  For example, let's say you are buying and selling
+various items in EverQuest, and want to keep track of them using a
+ledger.  Just add items of whatever quantity you wish into your
+EverQuest account:
+
+<example>
+9/29  Get some stuff at the Inn
+    Places:Black's Tavern                   -3 Apples
+    Places:Black's Tavern                   -5 Steaks
+    EverQuest:Inventory
+</example>
+
+Now your EverQuest:Inventory has 3 apples and 5 steaks in it.  The
+amounts are negative, because you are taking *from* Black's Tavern in
+order to credit your Inventory account.  Note that you don't have to
+use "Places:Black's Tavern" as the source account.  You could use
+"EverQuest:System" to represent the fact that you acquired them
+online.  The only purpose for choosing one kind of source account over
+another is for generate more informative reports later on.  The more
+you know, the better analysis you can perform.
+
+If you later sell some of these items to another player, the entry
+would look like:
+
+<example>
+10/2  Strum Brightblade
+    EverQuest:Inventory                     -2 Steaks
+    EverQuest:Inventory                     15 Gold
+</example>
+
+Now you've turned 2 steaks into 15 gold, courtesy of your customer,
+Strum Brightblade.
+
+** Understanding Equity
+
+The most confusing entry in any ledger will be your equity account --
+because starting balances can't come out of nowhere.
+
+When you first start your ledger, you will likely already have money
+in some of your accounts.  Let's say there's $100 in your checking
+account; then add an entry to your ledger to reflect this amount.
+Where will money come from?  The answer: your equity.
+
+<example>
+10/2  Opening Balance
+    Assets:Checking                         $100.00
+    Equity:Opening Balances
+</example>
+
+But what is equity?  You may have heard of equity when people talked
+about house mortgages, as "the part of the house that you own".
+Basically, equity is like the value of something.  If you own a car
+worth $5000, then you have $5000 in equity in that car.  In order to
+turn that car (a commodity) into a cash flow, or a credit to your bank
+account, you will have to debit the equity by selling it.
+
+When you start a ledger, you are probably already worth something.
+Your net worth is your current equity.  By transferring the money in
+the ledger from your equity to your bank accounts, you are crediting
+the ledger account based on your prior equity value.  That is why,
+when you look at the balance report, you will see a large negative
+number for Equity that never changes: Because that is what you were
+worth (what you debited from yourself in order to start the ledger)
+before the money started moving around.  If the total positive value
+of your assets is greater than the absolute value of your starting
+equity, it means you are making money.
+
+Clear as mud?  Keep thinking about it.  Until you figure it out, put
+"-- -Equity" at the end of your balance command, to remove the
+confusing figure from the totals.
+
+** Dealing with cash
+
+Something that stops many people from keeping a ledger at all is the
+insanity of tracking cash expenses.  They rarely generate a receipt,
+and there are often a lot of small transactions, rather than a few
+large ones, as with checks.
+
+The answer is: don't bother.  Move your spending to a debit card, but
+in general ignore cash.  Once you withdraw it from the ATM, mark it as
+already spent to an "Expenses:Cash" category:
+
+<example>
+2004/03/15 ATM
+    Expenses:Cash                      $100.00
+    Assets:Checking
+</example>
+
+If at some point you make a large cash expense that you want to track,
+just "move" the amount of the expense from "Expenses:Cash" into the
+target account:
+
+<example>
+2004/03/20 Somebody
+    Expenses:Food                       $65.00
+    Expenses:Cash
+</example>
+
+This way, you can still track large cash expenses, while ignoring all
+of the smaller ones.
+
+** Archiving previous years
+
+After a while, your ledger can get to be pretty large.  While this
+will not slow down the ledger program much -- it's designed to process
+ledger files very quickly -- things can start to feel "messy"; and
+it's a universal complaint that when finances feel messy, people avoid
+them.
+
+Thus, archiving the data from previous years into their own files can
+offer a sense of completion, and freedom from the past.  But how to
+best accomplish this with the ledger program?  There are two commands
+that make it very simple: "print", and "equity".
+
+Let's take an example file, with data ranging from year 2000 until
+2004.  We want to archive years 2000 and 2001 to their own file,
+leaving just 2003 and 2004 in the current file.  So, use "print" to
+output all the earlier entries to a file called =ledger-old.dat=.
+(Keeping in mind that the ending date is not inclusive, which is why
+2002 is mentioned in the following command):
+
+<example>
+$ ledger -f ledger.dat -b 2000/1/1 -e 2002/1/1 print \
+    > ledger-old.dat
+</example>
+
+To delete older data from the current ledger file, use "print" again,
+this time specifying year 2002 as the starting date:
+
+<example>
+$ ledger -f ledger.dat -b 2002/1/1 print > x
+$ mv x ledger.dat
+</example>
+
+However, now the current file contains *only* transactions from 2002
+onward, which will not yield accurate present-day balances, because
+the net income from previous years is no longer being tallied.  To
+compensate for this, we must append an equity report for the old
+ledger at the beginning of the new one:
+
+<example>
+$ ledger -f ledger-old.dat equity > equity.dat
+$ cat equity.dat ledger.dat > x
+$ mv x ledger.dat
+$ rm equity.dat
+</example>
+
+Now the balances reported from =ledger.dat= are identical to what they
+were before the data was split.
+
+How often should you split your ledger?  You never need to, if you
+don't want to.  Even eighty years of data will not slow down ledger
+much -- and that's just using present day hardware!  Or, you can keep
+the previous and current year in one file, and each year before that
+in its own file.  It's really up to you, and how you want to organize
+your finances.  For those who also keep an accurate paper trail, it
+might be useful to archive the older years to their own files, then
+burn those files to a CD to keep with the paper records -- along with
+any electronic statements received during the year.  In the arena of
+organization, just keep in mind this maxim: Do whatever keeps you
+doing it.
+
+** Virtual transactions
+
+A virtual transaction is when you, in your mind, see money as moving
+to a certain place, when in reality that money has not moved at all.
+There are several scenarios in which this type of tracking comes in
+handy, and each of them will be discussed in detail.
+
+To enter a virtual transaction, surround the account name in
+parentheses.  This form of usage does not need to balance.  However,
+if you want to ensure the virtual transaction balances with other
+virtual transactions in the same entry, use square brackets.  For
+example:
+
+<example>
+10/2  Paycheck
+    Assets:Checking                        $1000.00
+    Income:Salary                         $-1000.00
+    (Debt:Alimony)                          $200.00
+</example>
+
+In this example, after receiving a paycheck an alimony debt is
+increased -- even though no money has moved around yet.
+
+<example>
+10/2  Paycheck
+    Assets:Checking                        $1000.00
+    Income:Salary                         $-1000.00
+    [Savings:Trip]                          $200.00
+    [Assets:Checking]                      $-200.00
+</example>
+
+In this example, $200 has been deducted from checking toward savings
+for a trip.  It will appear as though the money has been moved from
+the account into "Savings:Trip", although no money has actually moved
+anywhere.
+
+When balances are displayed, virtual transactions will be factored in.
+To view balances without any virtual balances factored in, using the
+"-R" flag, for "Reality".
+
+Write about: Saving for a Special Occasion; Keeping a Budget; Tracking
+Allocated Funds.
+
+** Automated transactions
+
+As a Bahá'í, I need to compute Huqúqu'lláh whenever I acquire assets.
+The exact details of this are a bit complex, so if you have further
+interest, please consult the Web.
+
+For any fellow Bahá'ís out there who want to track Huqúqu'lláh, the
+Ledger tool makes this extremely easy.  Just set up the following
+automated transaction at the top of your ledger file:
+
+<example>
+; These entries will compute Huqúqu'lláh based on the
+; contents of the ledger.
+
+= ^Income:
+= ^Expenses:Rent$                               
+= ^Expenses:Furnishings
+= ^Expenses:Business
+= ^Expenses:Taxes
+= ^Expenses:Insurance
+  (Liabilities:Huqúqu'lláh)               0.19
+</example>
+
+This automated transaction works by looking at each transaction
+appearing afterward in the ledger file.  If any match the account
+regexps, occurring after the equal signs above, 19% of the value of
+that transaction is applied to the "Liabilities:Huqúqu'lláh" account.
+So if $1000 is earned through Income:Salary, which is seen as a debit
+from Income, a debit of $190 is applied to "Liabilities:Huqúqu'lláh";
+if $1000 is spent on Rent -- seen as a credit to the Expense account
+-- a credit of $190 is applied to Huqúqu'lláh.  The ultimate balance
+of Huqúqu'lláh reflects how much must be paid to that account in order
+to balance it to zero.
+
+When you're ready to pay, just write a check directly to the account
+"Liabilities:Huqúqu'lláh":
+
+<example>
+2003/01/01 (101) Baha'i Huqúqu'lláh Trust
+    Liabilities:Huqúqu'lláh          $1,000.00
+    Assets:Checking
+</example>
+
+That's it.  To see how much Huqúq is currently owed based on your
+ledger entries, use:
+
+<example>
+ledger balance Liabilities:Huqúq
+</example>
+
+
+** Using Emacs to Keep Your Ledger
+
+In the Ledger tarball is an Emacs module, =ledger.el=.  This module
+makes the process of keeping a text ledger much easier for Emacs
+users.  I recommend putting this at the top of your ledger file:
+
+<example>
+; -*-ledger-*-
+</example>
+
+And this in your =.emacs= file, after copying =ledger.el= to your
+site-lisp directory:
+
+<example>
+(load "ledger")
+</example>
+
+Now when you edit your ledger file, it will be in =ledger-mode=.
+=ledger-mode= adds the following commands:
+
+C-c C-a ::
+  For quickly adding new entries based on the form of older ones
+  (see previous section).
+
+C-c C-c ::
+  Toggles the "cleared" flag of the transaction under point.
+
+C-c C-r ::
+  Reconciles an account by displaying the transactions in another
+  buffer, where simply hitting the spacebar will toggle the cleared
+  flag of the transaction in the ledger.  It also displays the current
+  cleared balance for the account in the modeline.
+
+** Using GnuCash to Keep Your Ledger
+
+The Ledger tool is fast and simple, but it offers no custom method for
+actually editing the ledger.  It assumes you know how to use a text
+editor, and like doing so.  Perhaps an Emacs mode will appear someday
+soon to make editing Ledger's data files much easier.
+
+Until then, you are free to use GnuCash to maintain your ledger, and
+the Ledger program for querying and reporting on the contents
+of that ledger.  It takes a little longer to parse the XML data format
+that GnuCash uses, but the end result is identical.
+
+Then again, why would anyone use a Gnome-centric, 35 megabyte behemoth
+to edit their data, and a 65 kilobyte binary to query it...
+
+** Using timeclock to record billable time
+
+The timeclock tool makes it easy to track time events, like clocking
+into and out of a particular job.  These events accumulate in a
+timelog file.
+
+Each in/out event may have an optional description.  If the "in"
+description is a ledger account name, these in/out pairs may be viewed
+as virtual transactions, adding time commodities (hours) to that
+account.
+
+For example, the command-line version of the timeclock tool (which is
+written in Python) could be used to begin a timelog file like:
+
+<example>
+$ export TIMELOG=$HOME/.timelog
+$ ti ClientOne  category
+$ sleep 10
+$ to waited for ten seconds
+</example>
+
+The **.timelog** file now contains:
+
+<example>
+i 2004/10/06 15:21:00 ClientOne  category
+o 2004/10/06 15:21:10 waited for ten seconds
+</example>
+
+Ledger can parse this directly, as if it had seen the following ledger
+entry:
+
+<example>
+2004/10/06 category
+    (ClientOne)      0.00277h
+</example>
+
+In other words, the timelog event pair is seen as adding 0.00277h (ten
+seconds) worth of time to the ClientOne account.  This would be
+considered billable time, which later could be invoiced and credited
+to accounts receivable:
+
+<example>
+2004/11/01 (INV#1) ClientOne, Inc.
+    Receivable:ClientOne       $0.10
+    ClientOne              -0.00277h @ $35.00
+</example>
+
+The above transaction converts the clocked time into an invoice for
+the time spent, at an hourly rate of $35.  Once the invoice is paid,
+the money is deposited from the receivable account into a checking
+account:
+
+<example>
+2004/12/01 ClientOne, Inc.
+    Assets:Checking            $0.10
+    Receivable:ClientOne
+</example>
+
+And now the time spent has been turned into hard cash in the checking
+account.
+
+The advantage to using timeclock and invoicing to bill time is that
+you will always know, by looking at the balance report, exactly how
+much unbilled and unpaid time you've spent working for any particular
+client.
+
+I like to =!include= my timelog at the top of my company's accounting
+ledger, with the attached prefix "Billable":
+
+<example>
+; -*-ledger-*-
+
+; This is the ledger file for my company.  But first, include the
+; timelog data, entering all of the time events within the umbrella
+; account "Billable".
+
+!include /home/johnw/.timelog Billable
+
+; Here follows this fiscal year's transactions for the company.
+
+2004/11/01 (INV#1) ClientOne, Inc.
+    Receivable:ClientOne           $0.10
+    Billable:ClientOne         -0.00277h @ $35.00
+
+2004/12/01 ClientOne, Inc.
+    Assets:Checking                $0.10
+    Receivable:ClientOne
+</example>
+
+* Running Ledger
+
+Now that you have an orderly and well-organized general ledger, it's
+time to start generating some orderly and well-organized reports.
+This is where the Ledger tool comes in.  With it, you can balance your
+checkbook, see where your money is going, tell whether you've made a
+profit this year, and even compute the present day value of your
+retirement accounts.  And all with the simplest of interfaces: the
+command-line.
+
+The most often used command will be the "balance" command:
+
+<example>
+export LEDGER=/home/johnw/doc/ledger.dat
+ledger balance
+</example>
+
+Here I've set my Ledger environment variable to point to where my
+ledger file is hiding.  Thereafter, I needn't specify it again.
+
+The balance command prints out the summarized balances of all my
+top-level accounts, excluding sub-accounts.  In order to see the
+balances for a specific account, just specify a regular expression
+after the balance command:
+
+<example>
+ledger balance expenses:food
+</example>
+
+This will show all the money that's been spent on food, since the
+beginning of the ledger.  For food spending just this month
+(September), use:
+
+<example>
+ledger -d sep balance expenses:food
+</example>
+
+Or maybe I want to see all of my assets, in which case the -s (show
+sub-accounts) option comes in handy:
+
+<example>
+ledger balance -s
+</example>
+
+To exclude a particular account, use a regular expression with a
+leading minus sign.  The following will show all expenses, but without
+food spending:
+
+<example>
+ledger balance expenses -food
+</example>
+
+If you want to show all accounts but for one account, remember to use
+"--" to separate the exclusion pattern from the options list:
+
+<example>
+ledger balance -- -equity
+</example>
+
+** File format
+
+The ledger file format is quite simple, but supports many options.
+These are summarized here.
+
+The initial character of each line determines what that line means,
+and how it should be parsed.  The possibilities are:
+
+NUMBER ::
+  A line starting with a number denotes a regular ledger entry.  It
+  may be followed by any number of lines that beginning whitespace, to
+  denote account transactions.  The format of the header line is:
+<example>
+DATE [*] [(CODE)] DESC
+</example>
+
++ ::
+  If a line begins with plus, it denotes an inclusion regexp that
+  will always be considered, as if it had been specified by the user
+  at the end of their command-line.
+
+**-** ::
+  If a line begins with minus, it denotes an exclusion regexp that
+  will always be considered, as if it had been specified by the user
+  at the end of their command-line.
+
+**<verbatim>=</verbatim>** ::
+  If a line begins with equals, it denotes an automated transaction.
+  The next item on the line must be a regular expression.  Any number
+  of such lines may appear, with no intervening whitespace.
+  Following this block of lines can be a list of account transactions
+  preceded by whitespace.
+
+!WORD ::
+  A line beginning with an exclamation mark denotes a command
+  directive.  It must be immediately followed by a word specifying
+  which directories.  At the moment, only =!include= is supported, for
+  including the content of other ledger files into the current one.
+
+whitespace ::
+  A line beginning with whitespace, which is not part of a regular or
+  automated transaction, is ignored.
+
+; ::
+  If a line begins with semicolon it is ignored.  This is the
+  preferred method of entering comments.
+
+Y NUM ::
+  If a line begins with a capital Y, it denotes the year to be used
+  for all subsequent entries that specify a date, whatever their type.
+  This sets the "default year", which ordinarily is the current year
+  at the time the program is run.  Useful at the beginning of a file
+  to specify the file's year.
+
+P DATE SYMBOL PRICE ::
+  Capital P specifies a historical price for a commodity.  Any such
+  number of entries are allowed.  These are usually found in a pricing
+  history file (see the =-Q= option).
+
+C SYMBOL PRICE ::
+  Capital C specifies a conversion price for a commodity.  This has
+  no reference to time, and always takes precedence over any
+  historical price (even very current prices).
+
+N SYMBOL ::
+  Capital N indicates that no implicit price conversions should be
+  obtained for the given symbol.  This means that no quotes will ever
+  be downloaded for that symbol.  Useful for a home currency, such as
+  the dollar ($).  Be aware that these pricing options will set the
+  default reporting characteristics for a commodity.  Thus it is
+  recommended that pricing options occur only after all regular ledger
+  entries have been parsed.
+
+i DATE TIME ACCOUNT  [DESC] ::
+  Lowercase (and capital) i indicate an time-in event.  This will
+  start accumulating hours in the account specified.  Usually these
+  entries are created in a timelog file by the timeclock program,
+  which is distributed with ledger.  There must be two spaces between
+  the account name, and the optional description, if one is used.
+
+o DATE TIME ACCOUNT  [DESC] ::
+  Lowercase (and capital) o indicate an time-out event.  This will
+  accumulate hours in the account specified.  Usually these entries
+  are created in a timelog file by the timeclock program, which is
+  distributed with ledger.  There must be two spaces between the
+  account name, and the optional description, if one is used.
+
+b, h ::
+  Entries beginning with lowercase b and h are ignored.  These are
+  special entries used by timeclock, but ignored by ledger.
+
+** Command summary
+
+*** balance
+
+The "balance" command reports the current balance of any account.
+This command accepts a list of optional regexps, which will confine
+the balance report to only matching accounts.  By default, the
+balances for all accounts will be printed.  If an account contains
+multiple types of commodities, each commodity's total is separately
+reported.
+
+*** register
+
+The "register" command displays all the transactions occurring in a
+single account, line by line.  The account regexp must be specified as
+the only argument to this command.  If any regexps occur after the
+required account name, the register will contain only those
+transactions that match.  Very useful for hunting down a particular
+transaction.
+
+The output from "register" is very close to what a typical checkbook,
+or single account ledger, would look like.  It also shows a running
+balance.  The final running balance of any register should always be
+the same as the current balance of that account.
+
+*** print
+
+The "print" command prints out ledger entries just as they appear in
+the original ledger.  They will be properly formatted, and output in
+the most economic form possible.  The "print" command also takes a
+list of optional regexps, which will cause only those transactions
+which match in some way to be printed.
+
+The "print" command is a handy way to clean up a ledger file whose
+formatting has gotten out of hand.
+
+*** equity
+
+Equity transactions are used to establish the starting value of an
+account.  You might think of equity as the "ether" from which initial
+balances appear.
+
+*** price
+
+This commands displays the last known current price for a given
+commodity, using the specified end date for the cutoff (default is the
+present moment).  It takes a list of regexps, which can match the
+commodities used in the ledger file.  This command is helpful to
+quickly seeing the last current price for a specific commodity, or all
+commodities referenced by a ledger.
+
+*** entry
+
+The three most laborious tasks of keeping a ledger are: adding new
+entries, reconciling accounts, and generating reports.  To address the
+first of these, there is a sub-command to ledger called "entry".  It
+works on the principle that 80% of all transactions are variants of
+earlier transactions.  Here's how it works:
+
+Let's say you have an old transaction of the following form:
+
+<example>
+2004/03/15 * Viva Italiano
+    Expenses:Food                       $12.45
+    Expenses:Tips                        $2.55
+    Liabilities:MasterCard             $-15.00
+</example>
+
+Now it's 2004/4/9, and you've just eating at Viva Italiano again.  The
+exact amounts are different, but the overall form is the same.  With
+the "entry" command you can type:
+
+<example>
+ledger entry 2004/4/9 viva food 11.00 tips 2.50
+</example>
+
+This will produce the following output:
+
+<example>
+2004/04/09 Viva Italiano
+    Expenses:Food                       $11.00
+    Expenses:Tips                        $2.50
+    Liabilities:MasterCard             $-13.50
+</example>
+
+This works by finding a transaction that matches the regexp "viva",
+and then assuming that any accounts or amounts you specify will be the
+same as that earlier transaction.  If Ledger does not succeed in
+generating a new entry for you, it will print an error and set the
+exit code to 1.
+
+There is a shell script in the distribution called "entry", which
+simplifies the task of adding a new entry to your ledger, and then
+launches =vi= to let you confirm that the entry looks appropriate.
+
+** Option summary
+
+*** Basic options
+
+**-v** ::
+  Display the version of ledger being used.
+
+**-h** ::
+  Print out quick help on the various options and commands.
+
+**-f FILE[<verbatim>=</verbatim>ACCOUNT]** ::
+  Read ledger entries from FILE.  This takes precedence over the
+  environment variable LEDGER.  If "<verbatim>=</verbatim>ACCOUNT" is
+  appended to the filename, then all of the entries are seen as if the
+  transactions accounts were prefixed by "ACCOUNT:".  There may be
+  multiple occurrences of the =-f= option.
+
+**-i FILE** ::
+  Read in the list of patterns to include/exclude from FILE.
+  Ordinarily, these are specified as arguments after the command.
+
+*** Filtering options
+
+**-b DATE** ::
+  Only consider entries occuring on or after the given date.
+
+**-e DATE** ::
+  Only consider entries occuring before the given date.  The date is
+  not inclusive, so any entries occurring on that date will not be
+  used.
+
+**-c** ::
+  Only consider entries occurring on or before the current date.
+
+**-d DATE** ::
+  Only consider entries fitting the given date mask.  DATE in this
+  case may be the name of a month, or a year, or a year and month,
+  such as "2004/05".  It's a shorthand for having to specify -b and -e
+  together.
+
+**-C** ::
+  Only consider entries whose cleared flag has been set.  The default
+  is to consider both.
+
+**-U** ::
+  Show only uncleared transactions.  The default is to consider both.
+
+**-l AMT** ::
+  Limit balance reports to those which are greater than AMT.
+
+**-N REGEXP** ::
+  If an account matches REGEXP, only display it in the balance report
+  if its total is negative.  Useful to avoid seeing credit in accounts
+  where one cannot spend that credit, and it will soon become negative
+  anyway (such as credit cards).
+
+**-R** ::
+  Ignore all virtual transactions, and report only the real balance
+  for each account.
+
+*** Output formatting options
+
+**-n** ::
+  Do not show subtotals in the balance report, or split transactions
+  in the register report.
+
+**-s** ::
+  If an account has children, show them in the balance report.
+
+**-S** ::
+  Sort the ledger after reading it.  This may affect "register" and
+  "print" output.
+
+**-E** ::
+  Also show empty accounts in the balance totals report.
+
+**-F** ::
+  Print full account names in all cases, such as "Assets:Checking"
+  instead of just "Checking".  Only used current by the "balance"
+  command.
+
+**-M** ::
+  When used with the "register" command, causes only monthly subtotals
+  to appear.  This can be useful for looking at spending patterns.
+  TODO: Accept an argument which specifies the period to use.
+
+**-G** ::
+  Modifies the output generated by -M to be friendly to programs like
+  Gnuplot.  It strips away the commodity label, and outputs only two
+  columns: the date and the amount.
+
+*** Commodity reporting options
+
+**-P FILE** ::
+  With this option, or if the environment variable =PRICE_HIST= is
+  set, pricing information obtained from the Internet will be kept
+  in this file.  Also, this file will be read after all other ledger
+  files are read, so that full history information is available for
+  reports.
+  
+**-T** ::
+  Report commodity totals only, not their market value or basis cost.
+
+**-V** ::
+  Report commodity values in terms of their last known market price.
+
+**-B** ::
+  Report commodities in terms of their "basis cost", or what they cost
+  at time of purchase.  Thus, totals in the register and balance
+  report reflect the total amount spent.
+
+**-A** ::
+  Report commodities in terms of their net gain, which is: the market
+  value minus the cost basis.  A balance report using this option
+  shows very quickly the performance of investments.
+
+**-Q** ::
+  When needed (see the =-L= option) pricing quotes are obtained by
+  calling the script =getquote= (a sample Perl script is provided, but
+  the interface is kept simple so replacements may be made).
+
+**-L MINS** ::
+  When using the =-Q= flag, new quotes are obtained only if current
+  pricing data is older than MINS minutes.  The default is one day,
+  or 1440 minutes.
+
+**-p ARG** ::
+  If a string, such as "COMM=$1.20", the commodity COMM will be
+  reported only in terms of the conversion factor, which supersedes
+  all other pricing histories for that commodity.  This can be used to
+  perform arbitrary value substitutions.  For example, to report the
+  value of your dollars in terms of the ounces of gold they would buy,
+  use: -p "$=0.00280112 AU" (or whatever the current exchange rate
+  is).
+
+** Environment variables
+
+=LEDGER= ::
+  A colon-separated list of files to be parsed whenever ledger is run.
+  Easier than typing =-f= all the time.
+
+=PRICE_HIST= ::
+  The ledger file used to hold pricing data.  =~/.pricedb= would be a
+  good choice.
+
+=PRICE_EXP= ::
+  The number of minutes before pricing data becomes out-of-date.  The
+  default is one day.  Use =-L= to temporarily decrease or increase
+  the value.
+
+Footnotes:
+[1]  In some special cases, it will automatically balance the entry
+     for you.

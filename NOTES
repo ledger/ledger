@@ -1,0 +1,22 @@
+book
+  account
+  commodity *
+
+account
+  account *
+
+entry
+  transaction *
+
+transaction
+  account
+  amount
+  amount (price per item)
+
+amount
+  commodity *
+
+commodity
+  history *
+
+history
