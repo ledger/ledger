@@ -39,20 +39,22 @@ struct item_handler {
 };
 
 template <typename T>
-struct compare_items {
+class compare_items {
+  value_t left_result;
+  value_t right_result;
+
   const value_expr_t * sort_order;
 
+ public:
   compare_items(const value_expr_t * _sort_order)
     : sort_order(_sort_order) {
     assert(sort_order);
   }
 
-  bool operator()(const T * left, const T * right) const {
+  bool operator()(const T * left, const T * right) {
     assert(left);
     assert(right);
-    value_t left_result;
     sort_order->compute(left_result, details_t(left));
-    value_t right_result;
     sort_order->compute(right_result, details_t(right));
     return left_result < right_result;
   }

@@ -28,8 +28,7 @@ class value_t
     INTEGER,
     AMOUNT,
     BALANCE,
-    BALANCE_PAIR,
-    ANY
+    BALANCE_PAIR
   } type;
 
   value_t() {

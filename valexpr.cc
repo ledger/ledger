@@ -66,8 +66,7 @@ bool mask_t::match(const std::string& str) const
 }
 
 
-void value_expr_t::compute(value_t& result, const details_t& details,
-			   value_t::type_t type) const
+void value_expr_t::compute(value_t& result, const details_t& details) const
 {
   switch (kind) {
   case CONSTANT_I:
@@ -249,7 +248,7 @@ void value_expr_t::compute(value_t& result, const details_t& details,
 
   case F_VALUE: {
     assert(left);
-    left->compute(result, details, value_t::BALANCE);
+    left->compute(result, details);
 
     std::time_t moment = now;
     if (right) {
@@ -258,21 +257,33 @@ void value_expr_t::compute(value_t& result, const details_t& details,
 	if (details.entry)
 	  moment = details.entry->date;
 	break;
-
       case CONSTANT_T:
 	moment = right->constant_t;
 	break;
-
       default:
 	throw compute_error("Invalid date passed to P(value,date)");
       }
     }
-    result = (*((balance_t *)result.data)).value(moment);
+
+    switch (result.type) {
+    case value_t::BOOLEAN:
+    case value_t::INTEGER:
+      break;
+    case value_t::AMOUNT:
+      result = ((amount_t *)result.data)->value(moment);
+      break;
+    case value_t::BALANCE:
+      result = ((balance_t *)result.data)->value(moment);
+      break;
+    case value_t::BALANCE_PAIR:
+      result = ((balance_pair_t *)result.data)->quantity.value(moment);
+      break;
+    }
     break;
   }
 
   case O_NOT:
-    left->compute(result, details, value_t::BOOLEAN);
+    left->compute(result, details);
     result.negate();
     break;
 
@@ -280,7 +291,7 @@ void value_expr_t::compute(value_t& result, const details_t& details,
     assert(left);
     assert(right);
     assert(right->kind == O_COL);
-    left->compute(result, details, value_t::BOOLEAN);
+    left->compute(result, details);
     if (result)
       right->left->compute(result, details);
     else
@@ -290,17 +301,17 @@ void value_expr_t::compute(value_t& result, const details_t& details,
   case O_AND:
     assert(left);
     assert(right);
-    left->compute(result, details, value_t::BOOLEAN);
+    left->compute(result, details);
     if (result)
-      right->compute(result, details, value_t::BOOLEAN);
+      right->compute(result, details);
     break;
 
   case O_OR:
     assert(left);
     assert(right);
-    left->compute(result, details, value_t::BOOLEAN);
+    left->compute(result, details);
     if (! result)
-      right->compute(result, details, value_t::BOOLEAN);
+      right->compute(result, details);
     break;
 
   case O_EQ:
@@ -348,9 +359,6 @@ void value_expr_t::compute(value_t& result, const details_t& details,
     assert(0);
     break;
   }
-
-  if (type < value_t::ANY && type != result.type)
-    result.cast(type);
 }
 
 value_expr_t * parse_value_term(std::istream& in);

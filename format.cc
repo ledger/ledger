@@ -375,6 +375,7 @@ bool format_account::disp_subaccounts_p(const account_t * account,
   bool         matches  = disp_pred(account);
   value_t      acct_total;
   bool         computed = false;
+  value_t      result;
 
   to_show = NULL;
 
@@ -384,9 +385,7 @@ bool format_account::disp_subaccounts_p(const account_t * account,
     if (! disp_pred((*i).second))
       continue;
 
-    value_t result;
     format_t::compute_total(result, details_t((*i).second));
-
     if (! computed) {
       format_t::compute_total(acct_total, details_t(account));
       computed = true;

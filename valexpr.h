@@ -126,8 +126,7 @@ struct value_expr_t
     if (right) delete right;
   }
 
-  void compute(value_t& result, const details_t& details,
-	       value_t::type_t type = value_t::ANY) const;
+  void compute(value_t& result, const details_t& details) const;
 };
 
 value_expr_t * parse_value_expr(std::istream& in);

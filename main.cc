@@ -19,6 +19,7 @@ using namespace ledger;
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <memory>
 #include <algorithm>
 #include <iterator>
@@ -76,7 +77,8 @@ namespace std {
 static void
 regexps_to_predicate(std::list<std::string>::const_iterator begin,
 		     std::list<std::string>::const_iterator end,
-		     config_t * config, const bool account_regexp = false,
+		     config_t * config,
+		     const bool account_regexp		= false,
 		     const bool add_account_short_masks = false)
 {
   std::vector<std::string> regexps(2);

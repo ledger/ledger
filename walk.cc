@@ -205,11 +205,11 @@ void subtotal_transactions::flush(const char * spec_fmt)
 
   entry->payee = buf;
 
+  value_t result;
+
   for (balances_map::iterator i = balances.begin();
        i != balances.end();
        i++) {
-    value_t result;
-
     entry->date = finish;
     {
       transaction_t temp((*i).first);
