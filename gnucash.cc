@@ -317,7 +317,8 @@ unsigned int gnucash_parser_t::parse(std::istream&	 in,
   usd = new commodity_t("$", 2, COMMODITY_STYLE_THOUSANDS);
   commodity_t::add_commodity(usd, "USD");
 
-  XML_Parser parser = XML_ParserCreate(NULL);
+  unsigned int offset = 2;
+  XML_Parser   parser = XML_ParserCreate(NULL);
   current_parser = parser;
 
   XML_SetElementHandler(parser, startElement, endElement);
@@ -325,8 +326,9 @@ unsigned int gnucash_parser_t::parse(std::istream&	 in,
 
   while (! in.eof()) {
     in.getline(buf, BUFSIZ - 1);
+    std::strcat(buf, "\n");
     if (! XML_Parse(parser, buf, std::strlen(buf), in.eof())) {
-      unsigned long line = XML_GetCurrentLineNumber(parser);
+      unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
       const char *  msg  = XML_ErrorString(XML_GetErrorCode(parser));
       XML_ParserFree(parser);
       throw parse_error(original_file ? *original_file : "<gnucash>", line,
@@ -334,7 +336,7 @@ unsigned int gnucash_parser_t::parse(std::istream&	 in,
     }
 
     if (! have_error.empty()) {
-      unsigned long line = XML_GetCurrentLineNumber(parser);
+      unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
       parse_error err(original_file ? *original_file : "<gnucash>", line,
 		      have_error);
       std::cerr << "Error: " << err.what() << std::endl;
