@@ -3,6 +3,8 @@
 #include "textual.h"
 #include "util.h"
 
+#include <algorithm>
+
 namespace ledger {
 
 std::list<transaction_xdata_t> transactions_xdata;

@@ -1,6 +1,7 @@
 #include "balance.h"
 
 #include <deque>
+#include <algorithm>
 
 namespace ledger {
 
