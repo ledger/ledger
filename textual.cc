@@ -129,6 +129,7 @@ transaction_t * parse_transaction(char * line, account_t * account)
 	  price_str++;
 	}
       }
+
       parse_amount(skip_ws(cost_str), xact->amount, AMOUNT_PARSE_NO_REDUCE,
 		   *xact);
       if (price_str) {
@@ -402,10 +403,12 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	break;
 #endif // TIMELOG_SUPPORT
 
-      case 'D':			// a default commodity for "entry"
-	commodity_t::default_commodity =
-	  commodity_t::find_commodity(skip_ws(line + 1), true);
+      case 'D':	{		// a default commodity for "entry"
+	amount_t amt;
+	amt.parse(skip_ws(line + 1));
+	commodity_t::default_commodity = &amt.commodity();
 	break;
+      }
 
       case 'C':			// a set of conversions
 	if (char * p = std::strchr(line + 1, '=')) {
