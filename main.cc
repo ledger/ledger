@@ -524,7 +524,7 @@ int main(int argc, char * argv[])
       if (! show_empty)
 	display_predicate = "T";
 
-      if (! show_expanded) {
+      if (! show_expanded && predicate.empty()) {
 	if (! display_predicate.empty())
 	  display_predicate += "&";
 	display_predicate += "!n";
@@ -602,8 +602,13 @@ int main(int argc, char * argv[])
 
     format_account acct_formatter(std::cout, format, display_predicate);
 
-    walk_accounts(journal->master, acct_formatter, show_subtotals,
-		  sort_order.get());
+    if (show_subtotals)
+      sum_accounts(journal->master);
+
+    if (sort_order.get())
+      walk_accounts(journal->master, acct_formatter, sort_order.get());
+    else
+      walk_accounts(journal->master, acct_formatter);
 
     if (format_account::disp_subaccounts_p(journal->master)) {
       std::string end_format = "--------------------\n";
@@ -617,7 +622,12 @@ int main(int argc, char * argv[])
 
     format_equity acct_formatter(std::cout, format, nformat,
 				 display_predicate);
-    walk_accounts(journal->master, acct_formatter, true, sort_order.get());
+    sum_accounts(journal->master);
+
+    if (sort_order.get())
+      walk_accounts(journal->master, acct_formatter, sort_order.get());
+    else
+      walk_accounts(journal->master, acct_formatter);
   }
   else if (command == "e") {
     format_transactions formatter(std::cout, format, nformat);

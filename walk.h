@@ -472,10 +472,21 @@ class balance_accounts : public item_handler<account_t>
 
 #endif
 
-inline void sort_accounts(account_t *	  account,
-			  accounts_deque& accounts,
-			  const value_expr_t *  sort_order)
-{
+//////////////////////////////////////////////////////////////////////
+
+inline void sum_accounts(account_t * account) {
+  for (accounts_map::iterator i = account->accounts.begin();
+       i != account->accounts.end();
+       i++) {
+    sum_accounts((*i).second);
+    account->total += (*i).second->total;
+  }
+  account->total += account->value;
+}
+
+inline void sort_accounts(account_t *	       account,
+			  accounts_deque&      accounts,
+			  const value_expr_t * sort_order) {
   for (accounts_map::iterator i = account->accounts.begin();
        i != account->accounts.end();
        i++)
@@ -485,55 +496,27 @@ inline void sort_accounts(account_t *	  account,
 		   compare_items<account_t>(sort_order));
 }
 
-inline void walk__accounts_sorted(account_t * account,
-				  item_handler<account_t>& handler,
-				  const value_expr_t * sort_order)
-{
+inline void walk_accounts(account_t *		   account,
+			  item_handler<account_t>& handler,
+			  const value_expr_t *     sort_order) {
   handler(account);
 
   accounts_deque accounts;
   sort_accounts(account, accounts, sort_order);
-
   for (accounts_deque::const_iterator i = accounts.begin();
        i != accounts.end();
        i++)
-    walk__accounts_sorted(*i, handler, sort_order);
+    walk_accounts(*i, handler, sort_order);
 }
 
-inline void sum__accounts(account_t * account)
-{
-  for (accounts_map::iterator i = account->accounts.begin();
-       i != account->accounts.end();
-       i++) {
-    sum__accounts((*i).second);
-    account->total += (*i).second->total;
-  }
-  account->total += account->value;
-}
-
-inline void walk__accounts(account_t * account,
-			   item_handler<account_t>& handler)
-{
+inline void walk_accounts(account_t * account,
+			  item_handler<account_t>& handler) {
   handler(account);
 
   for (accounts_map::const_iterator i = account->accounts.begin();
        i != account->accounts.end();
        i++)
-    walk__accounts((*i).second, handler);
-}
-
-inline void walk_accounts(account_t *		       account,
-			  item_handler<account_t>&     handler,
-			  const bool		       calc_subtotals,
-			  const value_expr_t *         sort_order = NULL)
-{
-  if (calc_subtotals)
-    sum__accounts(account);
-
-  if (sort_order)
-    walk__accounts_sorted(account, handler, sort_order);
-  else
-    walk__accounts(account, handler);
+    walk_accounts((*i).second, handler);
 }
 
 } // namespace ledger
