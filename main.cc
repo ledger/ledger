@@ -253,13 +253,8 @@ int parse_and_report(int argc, char * argv[], char * envp[])
   // Configure the output stream
 
   std::ostream * out = &std::cout;
-  if (! config.output_file.empty()) {
-    if (access(config.output_file.c_str(), W_OK) == -1)
-      throw error(std::string("Cannot write output to file '" +
-			      config.output_file + "'"));
-    else
-      out = new std::ofstream(config.output_file.c_str());
-  }
+  if (! config.output_file.empty())
+    out = new std::ofstream(config.output_file.c_str());
 
   // Compile the format strings
 
