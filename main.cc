@@ -75,6 +75,8 @@ chain_xact_handlers(const std::string&		  command,
   // format_transactions write each transaction received to the
   // output stream.
   if (! (command == "b" || command == "E")) {
+    // truncate_entries cuts off a certain number of _entries_ from
+    // being displayed.  It does not affect calculation.
     if (config.head_entries || config.tail_entries)
       ptrs.push_back(formatter =
 		     new truncate_entries(formatter,
@@ -92,6 +94,26 @@ chain_xact_handlers(const std::string&		  command,
     // appears will determine, for example, whether filtered
     // transactions are included or excluded from the running total.
     ptrs.push_back(formatter = new calc_transactions(formatter));
+
+    // reconcile_transactions will pass through only those
+    // transactions which can be reconciled to a given balance
+    // (calculated against the transactions which it receives).
+    if (! config.reconcile_balance.empty()) {
+      bool    reconcilable = false;
+      value_t target_balance;
+      if (config.reconcile_balance == "<all>")
+	reconcilable = true;
+      else
+	target_balance = value_t(config.reconcile_balance);
+
+      time_t  cutoff = now;
+      if (! config.reconcile_date.empty())
+	parse_date(config.reconcile_date.c_str(), &cutoff);
+
+      ptrs.push_back(formatter =
+		     new reconcile_transactions(formatter, target_balance,
+						cutoff, reconcilable));
+    }
 
     // sort_transactions will sort all the transactions it sees, based
     // on the `sort_order' value expression.
@@ -414,32 +436,24 @@ def vmax(d, val):\n\
   // Walk the entries based on the report type and the options
 
   item_handler<transaction_t> *		   formatter;
-  item_handler<transaction_t> *		   base_formatter;
   std::list<item_handler<transaction_t> *> formatter_ptrs;
 
   if (command == "b" || command == "E")
-    base_formatter = new set_account_value;
+    formatter = new set_account_value;
   else if (command == "p" || command == "e")
-    base_formatter = new format_entries(*out, *format);
+    formatter = new format_entries(*out, *format);
   else if (command == "x")
-    base_formatter = new format_emacs_transactions(*out);
+    formatter = new format_emacs_transactions(*out);
   else if (command == "X")
-    base_formatter = new format_xml_entries(*out, config.show_totals);
+    formatter = new format_xml_entries(*out, config.show_totals);
   else
-    base_formatter = new format_transactions(*out, *format);
-
-  transactions_list xacts_to_reconcile;
-  if (! config.reconcile_balance.empty())
-    formatter = new push_to_transactions_list(xacts_to_reconcile);
-  else
-    formatter = base_formatter;
+    formatter = new format_transactions(*out, *format);
 
   if (command == "w") {
     write_textual_journal(*journal, *arg, *formatter, *out);
   } else {
     formatter = chain_xact_handlers(command, formatter, journal.get(),
 				    journal->master, formatter_ptrs);
-
     if (command == "e")
       walk_transactions(new_entry->transactions, *formatter);
     else if (command == "P" || command == "D")
@@ -449,32 +463,6 @@ def vmax(d, val):\n\
 
     if (command != "P" && command != "D")
       formatter->flush();
-  }
-
-  // If we are generating a reconcile report, determine the final set
-  // of transactions.
-
-  if (! config.reconcile_balance.empty()) {
-    bool    reconcilable = false;
-    value_t target_balance;
-    if (config.reconcile_balance == "<all>")
-      reconcilable = true;
-    else
-      target_balance = value_t(config.reconcile_balance);
-
-    time_t  cutoff = now;
-    if (! config.reconcile_date.empty())
-      parse_date(config.reconcile_date.c_str(), &cutoff);
-
-    reconcile_transactions(xacts_to_reconcile, target_balance, cutoff,
-			   reconcilable);
-
-    // Since all the work of the other formatters was completed by
-    // now, simply output the list, ignoring any other special
-    // details.
-    calc_transactions final_formatter(base_formatter);
-    walk_transactions(xacts_to_reconcile, final_formatter);
-    final_formatter.flush();
   }
 
   // For the balance and equity reports, output the sum totals.
