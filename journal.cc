@@ -405,7 +405,6 @@ bool journal_t::valid() const
 #ifdef USE_BOOST_PYTHON
 
 #include <boost/python.hpp>
-#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 using namespace boost::python;
 using namespace ledger;
@@ -427,7 +426,12 @@ transaction_t& transactions_getitem(entry_t& entry, int i)
     throw_error_already_set();
   }
 
-  return *(entry.transactions[i < 0 ? len + i : i]);
+  int x = i < 0 ? len + i : i;
+  transactions_list::iterator elem = entry.transactions.begin();
+  while (--x >= 0)
+    elem++;
+
+  return **elem;
 }
 
 unsigned int entries_len(journal_t& journal)
@@ -444,7 +448,12 @@ entry_t& entries_getitem(journal_t& journal, int i)
     throw_error_already_set();
   }
 
-  return *(journal.entries[i < 0 ? len + i : i]);
+  int x = i < 0 ? len + i : i;
+  entries_list::iterator elem = journal.entries.begin();
+  while (--x >= 0)
+    elem++;
+
+  return **elem;
 }
 
 unsigned int accounts_len(account_t& account)
@@ -485,10 +494,6 @@ void export_journal()
     .def("valid", &transaction_t::valid)
     ;
 
-  class_< transactions_list > ("TransactionsList")
-    .def(vector_indexing_suite< transactions_list >())
-    ;
-
   class_< entry_t > ("Entry")
     .def_readwrite("date", &entry_t::date)
     .def_readwrite("state", &entry_t::state)
@@ -526,14 +531,6 @@ void export_journal()
     .def("remove_transaction", &account_t::remove_transaction)
 
     .def("valid", &account_t::valid)
-    ;
-
-  class_< entries_list > ("EntriesList")
-    .def(vector_indexing_suite< entries_list >())
-    ;
-
-  class_< strings_list > ("StringsList")
-    .def(vector_indexing_suite< strings_list >())
     ;
 
   class_< journal_t > ("Journal")
