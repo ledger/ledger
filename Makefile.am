@@ -78,12 +78,20 @@ if HAVE_BOOST_PYTHON
 
 noinst_PROGRAMS = ledger.so
 
+if READ_GNUCASH
+READ_GNUCASH_VALUE = true
+else
+READ_GNUCASH_VALUE = false
+endif
+
 ledger.so: python.cc libledger.la
 	CFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS) -L. -L.libs" \
+	READ_GNUCASH="$(READ_GNUCASH_VALUE)" \
 	    python setup.py build --build-lib=.
 
 install-exec-hook:
 	CFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS) -L. -L.libs" \
+	READ_GNUCASH="$(READ_GNUCASH_VALUE)" \
 	    python setup.py install --prefix=$(prefix)
 
 endif

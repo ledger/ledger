@@ -2,7 +2,13 @@
 
 from distutils.core import setup, Extension
 
-libs = ["ledger", "boost_python", "gmp", "pcre", "xmlparse", "xmltok"]
+import os
+
+libs = ["ledger", "boost_python", "gmp", "pcre"]
+
+if os.environ.has_key ("READ_GNUCASH") and\
+   os.environ["READ_GNUCASH"] == "true":
+    libs.extend (["xmlparse", "xmltok"])
 
 setup(name         = "Ledger",
       version      = "2.0b",
