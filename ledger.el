@@ -272,7 +272,7 @@ Return the difference in the format of a time value."
 			"]"))))))
   (force-mode-line-update))
 
-(defun ledger-reconcile-toggle ()
+(defun ledger-reconcile-toggle (&optional no-update)
   (interactive)
   (let ((where (get-text-property (point) 'where))
 	(account ledger-acct)
@@ -289,10 +289,11 @@ Return the difference in the format of a time value."
 			      (line-end-position)
 			      (list 'face)))
     (forward-line)
-    (ledger-update-balance-display)))
+    (unless no-update
+      (ledger-update-balance-display))))
 
-(defun ledger-reconcile (account)
-  (interactive "sAccount to reconcile: ")
+(defun ledger-reconcile (account &optional arg)
+  (interactive "sAccount to reconcile: \nP")
   (let* ((items (save-excursion
 		  (goto-char (point-min))
 		  (ledger-parse-entries account)))
@@ -314,7 +315,38 @@ Return the difference in the format of a time value."
 					 'where (nth 0 item)))
 	    (set-text-properties beg (1- (point))
 				 (list 'where (nth 0 item)))))
-	(goto-char (point-min))))))
+	(goto-char (point-min)))
+      (when arg
+	(let (cleared)
+	  ;; attempt to auto-reconcile in the background
+	  (with-temp-buffer
+	    (let ((exit-code
+		   (ledger-run-ledger
+		    "--format" "\"%B\\n\"" "reconcile"
+		    (concat "\"" account "\"")
+		    (with-temp-buffer
+		      (insert (read-string "Reconcile account to: "))
+		      (goto-char (point-min))
+		      (while (re-search-forward "\\([&$]\\)" nil t)
+			(replace-match "\\\\\\1"))
+		      (buffer-string)))))
+	      (when (= 0 exit-code)
+		(goto-char (point-min))
+		(while (not (eobp))
+		  (setq cleared
+			(cons (1+ (read (current-buffer))) cleared))
+		  (forward-line)))))
+	  (goto-char (point-min))
+	  (with-current-buffer buf
+	    (setq cleared (mapcar 'copy-marker (nreverse cleared))))
+	  (dolist (pos cleared)
+	    (while (and (not (eobp))
+			(/= pos (get-text-property (point) 'where)))
+	      (forward-line))
+	    (unless (eobp)
+	      (ledger-reconcile-toggle t)))
+	  (goto-char (point-min))
+	  (ledger-update-balance-display))))))
 
 (defun ledger-align-dollars (&optional column)
   (interactive "p")
