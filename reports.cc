@@ -78,9 +78,9 @@ void report_balances(std::ostream& out, regexps_map& regexps)
   for (entries_list_iterator i = main_ledger->entries.begin();
        i != main_ledger->entries.end();
        i++) {
-    if ((have_beginning && difftime((*i)->date, begin_date) < 0) ||
-	(have_ending && difftime((*i)->date, end_date) >= 0) ||
-	(show_cleared && ! (*i)->cleared))
+    if ((show_cleared && ! (*i)->cleared) ||
+	(have_beginning && difftime((*i)->date, begin_date) < 0) ||
+	(have_ending && difftime((*i)->date, end_date) >= 0))
       continue;
 
     for (std::list<transaction *>::iterator x = (*i)->xacts.begin();
@@ -183,8 +183,11 @@ void print_register(const std::string& acct_name, std::ostream& out,
     for (std::list<transaction *>::iterator x = (*i)->xacts.begin();
 	 x != (*i)->xacts.end();
 	 x++) {
-      if (! acct_regex.match((*x)->acct->as_str()) ||
-	  ! show_cleared && (*i)->cleared)
+      if ((! have_beginning && ! have_ending &&
+	   ! show_cleared && (*i)->cleared) ||
+	  (have_beginning && difftime((*i)->date, begin_date) < 0) ||
+	  (have_ending && difftime((*i)->date, end_date) >= 0) ||
+	  (! acct_regex.match((*x)->acct->as_str())))
 	continue;
 
       char buf[32];
@@ -234,7 +237,7 @@ void print_register(const std::string& acct_name, std::ostream& out,
       std::string xact_str = xact->acct_as_str();
 
       if (xact == *x && ! show_subtotals)
-	xact_str = "(Splits...)";
+	xact_str = "<Splits...>";
 
       out.width(22);
       out << std::left << truncated(xact_str, 22) << " ";
