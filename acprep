@@ -29,7 +29,7 @@ elif [ "$1" = "--flat-opt" ]; then
 elif [ "$1" = "--safe-opt" ]; then
     ./configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
 	CXXFLAGS="-fomit-frame-pointer -fastf -mcpu=7450 -DDEBUG_LEVEL=1" \
-	--disable-shared
+	--enable-python --disable-shared
 elif [ "$1" = "--perf" ]; then
     ./configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" CXXFLAGS="-g -pg"
 fi

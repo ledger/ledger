@@ -155,9 +155,9 @@ void process_environment(std::list<option_t>& options,
 	   *q && *q != '=' && r - buf < 128;
 	   q++)
 	if (*q == '_')
-	  *r++ += '-';
+	  *r++ = '-';
 	else
-	  *r++ += std::tolower(*q);
+	  *r++ = std::tolower(*q);
       *r = '\0';
 
       if (*q == '=')
