@@ -5,16 +5,16 @@
 namespace ledger {
 
 extern bool        show_cleared;
+extern bool        show_virtual;
+extern bool        show_children;
+extern bool        show_empty;
+extern bool        show_subtotals;
+extern bool        full_names;
 
 extern std::time_t begin_date;
 extern bool        have_beginning;
 extern std::time_t end_date;
 extern bool        have_ending;
-
-static bool        show_children;
-static bool        show_empty;
-static bool        no_subtotals;
-static bool        full_names;
 
 static void display_total(std::ostream& out, totals& balance,
 			  account * acct, bool top_level)
@@ -26,7 +26,7 @@ static void display_total(std::ostream& out, totals& balance,
     displayed = true;
 
     acct->balance.print(out, 20);
-    if (! no_subtotals && top_level)
+    if (show_subtotals && top_level)
       balance.credit(acct->balance);
 
     if (acct->parent && ! full_names && ! top_level) {
@@ -40,7 +40,7 @@ static void display_total(std::ostream& out, totals& balance,
 
   // Display balances for all child accounts
 
-  for (accounts_iterator i = acct->children.begin();
+  for (accounts_map_iterator i = acct->children.begin();
        i != acct->children.end();
        i++)
     display_total(out, balance, (*i).second, ! displayed);
@@ -51,37 +51,13 @@ static void display_total(std::ostream& out, totals& balance,
 // Balance reporting code
 //
 
-void report_balances(int argc, char ** argv, regexps_t& regexps,
-		     std::ostream& out)
+void report_balances(std::ostream& out, regexps_map& regexps)
 {
-  show_children = false;
-  show_empty    = false;
-  no_subtotals  = false;
-  full_names    = false;
-
-  optind = 1;
-
-  int c;
-  while (-1 != (c = getopt(argc, argv, "sSnF"))) {
-    switch (char(c)) {
-    case 's': show_children = true; break;
-    case 'S': show_empty    = true; break;
-    case 'n': no_subtotals  = true; break;
-    case 'F': full_names    = true; break;
-    }
-  }
-
-  // Compile the list of specified regular expressions, which can be
-  // specified on the command line, or using an include/exclude file
-
-  for (; optind < argc; optind++)
-    record_regexp(argv[optind], regexps);
-
   // Walk through all of the ledger entries, computing the account
   // totals
 
-  for (entries_iterator i = main_ledger.entries.begin();
-       i != main_ledger.entries.end();
+  for (entries_list_iterator i = main_ledger->entries.begin();
+       i != main_ledger->entries.end();
        i++) {
     if ((have_beginning && difftime((*i)->date, begin_date) < 0) ||
 	(have_ending && difftime((*i)->date, end_date) >= 0) ||
@@ -91,9 +67,12 @@ void report_balances(int argc, char ** argv, regexps_t& regexps,
     for (std::list<transaction *>::iterator x = (*i)->xacts.begin();
 	 x != (*i)->xacts.end();
 	 x++) {
+      if (! show_virtual && (*x)->is_virtual)
+	continue;
+
       for (account * acct = (*x)->acct;
 	   acct;
-	   acct = no_subtotals ? NULL : acct->parent) {
+	   acct = show_subtotals ? acct->parent : NULL) {
 	if (acct->checked == 0) {
 	  if (regexps.empty()) {
 	    if (! (show_children || ! acct->parent))
@@ -131,14 +110,14 @@ void report_balances(int argc, char ** argv, regexps_t& regexps,
 
   totals balance;
 
-  for (accounts_iterator i = main_ledger.accounts.begin();
-       i != main_ledger.accounts.end();
+  for (accounts_map_iterator i = main_ledger->accounts.begin();
+       i != main_ledger->accounts.end();
        i++)
     display_total(out, balance, (*i).second, true);
 
   // Print the total of all the balances shown
 
-  if (! no_subtotals && ! balance.is_zero()) {
+  if (show_subtotals && ! balance.is_zero()) {
     out << "--------------------" << std::endl;
     balance.print(out, 20);
     out << std::endl;

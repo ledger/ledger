@@ -4,10 +4,8 @@
 
 namespace ledger {
 
-bool  use_warnings = false;
-state main_ledger;
-
-std::list<mask> regexps;
+bool    use_warnings = false;
+state * main_ledger;
 
 const std::string transaction::acct_as_str() const
 {
@@ -85,7 +83,7 @@ void entry::print(std::ostream& out, bool shortcut) const
     // jww (2003-10-03): If we are shortcutting, don't print the
     // "per-unit price" of a commodity, if it is not necessary.
 
-    (*x)->print(out, shortcut && x != xacts.begin());
+    (*x)->print(out, shortcut && x == xacts.begin());
   }
 
   out << std::endl;
@@ -98,8 +96,7 @@ bool entry::validate(bool show_unaccounted) const
   for (std::list<transaction *>::const_iterator x = xacts.begin();
        x != xacts.end();
        x++)
-    if ((*x)->cost && (*x)->must_balance &&
-	(! (*x)->is_virtual || main_ledger.compute_virtual))
+    if ((*x)->cost && (*x)->must_balance)
       balance.credit((*x)->cost->value());
 
   if (show_unaccounted && ! balance.is_zero()) {
@@ -132,15 +129,11 @@ bool entry::matches(const std::list<mask>& regexps) const
   }
 }
 
-#ifdef DO_CLEANUP
-
 totals::~totals()
 {
   for (iterator i = amounts.begin(); i != amounts.end(); i++)
     delete (*i).second;
 }
-
-#endif // DO_CLEANUP
 
 void totals::credit(const totals& other)
 {
@@ -179,36 +172,14 @@ void totals::print(std::ostream& out, int width) const
 // Print out the entire ledger that was read in, sorted by date.
 // This can be used to "wash" ugly ledger files.
 
-void print_ledger(int argc, char ** argv, regexps_t& regexps,
-		  std::ostream& out)
+void state::print(std::ostream& out, regexps_map& regexps,
+		  bool shortcut) const
 {
-  bool use_shortcuts = true;
-
-  optind = 1;
-
-  int c;
-  while (-1 != (c = getopt(argc, argv, "n"))) {
-    switch (char(c)) {
-    case 'n': use_shortcuts = false; break;
-    }
-  }
-
-  // Compile the list of specified regular expressions, which can be
-  // specified on the command line, or using an include/exclude file
-
-  for (; optind < argc; optind++)
-    record_regexp(argv[optind], regexps);
-
-  // Sort the list of entries by date, then print them in order.
-
-  std::sort(main_ledger.entries.begin(), main_ledger.entries.end(),
-	    cmp_entry_date());
-
-  for (entries_iterator i = main_ledger.entries.begin();
-       i != main_ledger.entries.end();
+  for (entries_list_const_iterator i = entries.begin();
+       i != entries.end();
        i++)
     if ((*i)->matches(regexps))
-      (*i)->print(out, use_shortcuts);
+      (*i)->print(out, shortcut);
 }
 
 mask::mask(const std::string& pat) : exclude(false)
@@ -236,12 +207,7 @@ mask::mask(const std::string& pat) : exclude(false)
 	      << std::endl;
 }
 
-void record_regexp(const std::string& pattern, regexps_t& regexps)
-{
-  regexps.push_back(mask(pattern));
-}
-
-void read_regexps(const std::string& path, regexps_t& regexps)
+void read_regexps(const std::string& path, regexps_map& regexps)
 {
   if (access(path.c_str(), R_OK) != -1) {
     std::ifstream file(path.c_str());
@@ -250,12 +216,12 @@ void read_regexps(const std::string& path, regexps_t& regexps)
       char buf[80];
       file.getline(buf, 79);
       if (*buf && ! std::isspace(*buf))
-	record_regexp(buf, regexps);
+	regexps.push_back(mask(buf));
     }
   }
 }
 
-bool matches(const regexps_t& regexps, const std::string& str,
+bool matches(const regexps_map& regexps, const std::string& str,
 	     bool * by_exclusion)
 {
   assert(! regexps.empty());
@@ -285,27 +251,23 @@ bool matches(const regexps_t& regexps, const std::string& str,
   return match;
 }
 
-#ifdef DO_CLEANUP
-
 state::~state()
 {
-  for (commodities_iterator i = commodities.begin();
+  for (commodities_map_iterator i = commodities.begin();
        i != commodities.end();
        i++)
     delete (*i).second;
 
-  for (accounts_iterator i = accounts.begin();
+  for (accounts_map_iterator i = accounts.begin();
        i != accounts.end();
        i++)
     delete (*i).second;
 
-  for (entries_iterator i = entries.begin();
+  for (entries_list_iterator i = entries.begin();
        i != entries.end();
        i++)
     delete *i;
 }
-
-#endif // DO_CLEANUP
 
 void state::record_price(const std::string& setting)
 {
@@ -326,7 +288,7 @@ void state::record_price(const std::string& setting)
 
 account * state::find_account(const std::string& name, bool create)
 {
-  accounts_iterator i = accounts_cache.find(name);
+  accounts_map_iterator i = accounts_cache.find(name);
   if (i != accounts_cache.end())
     return (*i).second;
 
@@ -338,26 +300,26 @@ account * state::find_account(const std::string& name, bool create)
        tok;
        tok = std::strtok(NULL, ":")) {
     if (! current) {
-      accounts_iterator i = accounts.find(tok);
+      accounts_map_iterator i = accounts.find(tok);
       if (i == accounts.end()) {
 	if (! create) {
 	  delete[] buf;
 	  return NULL;
 	}
 	current = new account(tok);
-	accounts.insert(accounts_entry(tok, current));
+	accounts.insert(accounts_map_pair(tok, current));
       } else {
 	current = (*i).second;
       }
     } else {
-      accounts_iterator i = current->children.find(tok);
+      accounts_map_iterator i = current->children.find(tok);
       if (i == current->children.end()) {
 	if (! create) {
 	  delete[] buf;
 	  return NULL;
 	}
 	current = new account(tok, current);
-	current->parent->children.insert(accounts_entry(tok, current));
+	current->parent->children.insert(accounts_map_pair(tok, current));
       } else {
 	current = (*i).second;
       }
@@ -367,7 +329,7 @@ account * state::find_account(const std::string& name, bool create)
   delete[] buf;
 
   if (current)
-    accounts_cache.insert(accounts_entry(name, current));
+    accounts_cache.insert(accounts_map_pair(name, current));
 
   return current;
 }

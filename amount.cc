@@ -208,8 +208,8 @@ amount * gmp_amount::street() const
 
   for (int cycles = 0; cycles < 10; cycles++) {
     totals::iterator pi =
-      main_ledger.prices.amounts.find(amt->comm_symbol());
-    if (pi == main_ledger.prices.amounts.end()) {
+      main_ledger->prices.amounts.find(amt->comm_symbol());
+    if (pi == main_ledger->prices.amounts.end()) {
       using namespace std;
 
       if (! get_quotes)
@@ -231,7 +231,7 @@ amount * gmp_amount::street() const
 	char * p = strchr(buf, '\n');
 	if (p) *p = '\0';
 
-	main_ledger.record_price((amt->comm_symbol() + "=" + buf).c_str());
+	main_ledger->record_price((amt->comm_symbol() + "=" + buf).c_str());
 	continue;
       }
       break;
@@ -347,10 +347,9 @@ static std::string amount_to_str(const commodity * comm, const mpz_t val,
   else if (! comm->thousands)
     s << quotient;
   else {
-    // jww (2003-09-29): use a smarter starting value
-
     bool printed = false;
 
+    // jww (2003-09-29): use a smarter starting value for `powers'
     for (int powers = 27; powers >= 0; powers -= 3) {
       mpz_ui_pow_ui(divisor, 10, powers);
       mpz_tdiv_q(temp, quotient, divisor);
@@ -554,8 +553,9 @@ static commodity * parse_amount(mpz_t out, const char * num,
   commodity * comm = NULL;
 
   if (saw_commodity) {
-    commodities_iterator item = main_ledger.commodities.find(symbol.c_str());
-    if (item == main_ledger.commodities.end()) {
+    commodities_map_iterator item =
+      main_ledger->commodities.find(symbol.c_str());
+    if (item == main_ledger->commodities.end()) {
       comm = new commodity(symbol, prefix, separate,
 			   thousands, european, precision);
     } else {

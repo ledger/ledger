@@ -28,39 +28,23 @@ static std::string truncated(const std::string& str, int width)
 // Register printing code
 //
 
-void print_register(int argc, char ** argv, regexps_t& regexps,
-		    std::ostream& out)
+void print_register(const std::string& acct_name, std::ostream& out,
+		    regexps_map& regexps)
 {
-  optind = 1;
-
-  // Find out which account this register is to be printed for
-
-  if (optind == argc) {
-    std::cerr << ("Error: Must specify an account name "
-		  "after the 'register' command.") << std::endl;
-    return;
-  }
-
-  account * acct = main_ledger.find_account(argv[optind++], false);
+  account * acct = main_ledger->find_account(acct_name, false);
   if (! acct) {
-    std::cerr << "Error: Unknown account name: " << argv[optind - 1]
+    std::cerr << "Error: Unknown account name: " << acct_name
 	      << std::endl;
     return;
   }
-
-  // Compile the list of specified regular expressions, which can be
-  // specified on the command line, or using an include/exclude file
-
-  for (; optind < argc; optind++)
-    record_regexp(argv[optind], regexps);
 
   // Walk through all of the ledger entries, printing their register
   // formatted equivalent
 
   totals balance;
 
-  for (entries_iterator i = main_ledger.entries.begin();
-       i != main_ledger.entries.end();
+  for (entries_list_iterator i = main_ledger->entries.begin();
+       i != main_ledger->entries.end();
        i++) {
     if (! (*i)->matches(regexps))
       continue;

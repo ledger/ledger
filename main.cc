@@ -1,27 +1,31 @@
 #include "ledger.h"
 
+#define LEDGER_VERSION "1.1"
+
 #include <fstream>
 
 namespace ledger {
-  extern bool parse_ledger(std::istream& in, bool compute_balances);
-  extern void parse_virtual_mappings(const std::string& path);
-  extern bool parse_date(const std::string& date_str, std::time_t * result,
-			 const int year = -1);
+  extern state * parse_ledger(std::istream& in, regexps_map& regexps,
+			      bool compute_balances);
 #ifdef READ_GNUCASH
-  extern bool parse_gnucash(std::istream& in, bool compute_balances);
+  extern state * parse_gnucash(std::istream& in, bool compute_balances);
 #endif
 
-  extern void report_balances(int argc, char ** argv, regexps_t& regexps,
-			      std::ostream& out);
-  extern void print_register(int argc, char ** argv, regexps_t& regexps,
-			     std::ostream& out);
-  extern void print_ledger(int argc, char ** argv, regexps_t& regexps,
-			   std::ostream& out);
-  extern void equity_ledger(int argc, char ** argv, regexps_t& regexps,
-			    std::ostream& out);
+  extern bool parse_date(const char * date_str, std::time_t * result,
+			 const int year = -1);
+
+  extern void report_balances(std::ostream& out, regexps_map& regexps);
+  extern void print_register(const std::string& acct_name, std::ostream& out,
+			     regexps_map& regexps);
+  extern void equity_ledger(std::ostream& out, regexps_map& regexps);
 
   bool        show_cleared;
+  bool        show_virtual;
   bool        get_quotes;
+  bool        show_children;
+  bool        show_empty;
+  bool        show_subtotals;
+  bool        full_names;
 
   std::time_t begin_date;
   bool        have_beginning;
@@ -76,20 +80,22 @@ static void show_help(std::ostream& out)
 int main(int argc, char * argv[])
 {
   std::istream * file = NULL;
-  regexps_t      regexps;
 
-  have_beginning = false;
-  have_ending    = false;
-  show_cleared   = false;
+  regexps_map regexps;
 
-  const char * p = std::getenv("MAPPINGS");
-  if (p)
-    main_ledger.mapping_file = p;
+  have_beginning  = false;
+  have_ending     = false;
+  show_cleared    = false;
+  show_virtual    = true;
+  show_children   = false;
+  show_empty      = false;
+  show_subtotals  = true;
+  full_names      = false;
 
   // Parse the command-line options
 
   int c;
-  while (-1 != (c = getopt(argc, argv, "+b:e:d:cChRV:wf:i:p:Pv"))) {
+  while (-1 != (c = getopt(argc, argv, "+b:e:d:cChRV:wf:i:p:PvsSnF"))) {
     switch (char(c)) {
     case 'b':
     case 'e': {
@@ -164,12 +170,16 @@ int main(int argc, char * argv[])
       have_ending = true;
       break;
 
-    case 'C': show_cleared = true; break;
     case 'h': show_help(std::cout); break;
-    case 'R': main_ledger.compute_virtual = false; break;
-    case 'V': main_ledger.mapping_file = optarg; break;
-    case 'w': use_warnings = true; break;
-    case 'f': file = new std::ifstream(optarg); break;
+    case 'f': file           = new std::ifstream(optarg); break;
+
+    case 'C': show_cleared   = true;  break;
+    case 'R': show_virtual   = false; break;
+    case 'w': use_warnings   = true;  break;
+    case 's': show_children  = true;  break;
+    case 'S': show_empty     = true;  break;
+    case 'n': show_subtotals = false; break;
+    case 'F': full_names     = true;  break;
 
     // -i path-to-file-of-regexps
     case 'i':
@@ -186,10 +196,10 @@ int main(int argc, char * argv[])
 	  char buf[80];
 	  pricedb.getline(buf, 79);
 	  if (*buf && ! std::isspace(*buf))
-	    main_ledger.record_price(buf);
+	    main_ledger->record_price(buf);
 	}
       } else {
-	main_ledger.record_price(optarg);
+	main_ledger->record_price(optarg);
       }
       break;
 
@@ -199,7 +209,7 @@ int main(int argc, char * argv[])
 
     case 'v':
       std::cout
-	<< "Ledger Accouting Tool 1.0" << std::endl
+	<< "Ledger Accouting Tool " LEDGER_VERSION << std::endl
 	<< "    Copyright (c) 2003 John Wiegley <johnw@newartisans.com>"
 	<< std::endl << std::endl
 	<< "This program is made available under the terms of the BSD"
@@ -242,7 +252,8 @@ int main(int argc, char * argv[])
       file = new std::ifstream(p);
 
     if (! file || ! *file) {
-      std::cerr << "Please specify ledger file using -f option or LEDGER environment variable."
+      std::cerr << ("Please specify ledger file using -f option "
+		    "or LEDGER environment variable.")
 		<< std::endl;
       return 1;
     }
@@ -250,13 +261,17 @@ int main(int argc, char * argv[])
 
   // Read the command word
 
-  const std::string command = argv[optind];
+  const std::string command = argv[optind++];
 
-  // Parse any virtual mappings being used
-
-  if (main_ledger.compute_virtual &&
-      access(main_ledger.mapping_file.c_str(), R_OK) >= 0)
-    parse_virtual_mappings(main_ledger.mapping_file);
+  int optind_begin = optind;
+  if (command == "register") {
+    if (optind == argc) {
+      std::cerr << ("Error: Must specify an account name "
+		    "after the 'register' command.") << std::endl;
+      return 1;
+    }
+    optind++;
+  }
 
   // Parse the ledger
 
@@ -266,23 +281,42 @@ int main(int argc, char * argv[])
   file->seekg(0);
 
   if (std::strncmp(buf, "<?xml version=\"1.0\"?>", 21) == 0)
-    parse_gnucash(*file, command == "equity");
+    main_ledger = parse_gnucash(*file, command == "equity");
   else
 #endif
-    parse_ledger(*file, command == "equity");
+    main_ledger = parse_ledger(*file, regexps, command == "equity");
 
   delete file;
 
+  if (! main_ledger)
+    std::exit(1);
+
+  // Compile the list of specified regular expressions, which can be
+  // specified after the command, or using the '-i FILE' option
+
+  for (; optind < argc; optind++)
+    regexps.push_back(mask(argv[optind]));
+
   // Process the command
 
-  if (command == "balance")
-    report_balances(argc - optind, &argv[optind], regexps, std::cout);
-  else if (command == "register")
-    print_register(argc - optind, &argv[optind], regexps, std::cout);
-  else if (command == "print")
-    print_ledger(argc - optind, &argv[optind], regexps, std::cout);
-  else if (command == "equity")
-    equity_ledger(argc - optind, &argv[optind], regexps, std::cout);
+  if (command == "balance") {
+    report_balances(std::cout, regexps);
+  }
+  else if (command == "register") {
+    print_register(argv[optind_begin], std::cout, regexps);
+  }
+  else if (command == "print") {
+    main_ledger->sort(cmp_entry_date());
+    main_ledger->print(std::cout, regexps, true);
+  }
+  else if (command == "equity") {
+    equity_ledger(std::cout, regexps);
+  }
+
+#if 0
+  // Deleting the main ledger just isn't necessary at this point.
+  delete main_ledger;
+#endif
 }
 
 // main.cc ends here.

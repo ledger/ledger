@@ -9,16 +9,15 @@ extern "C" {
 
 namespace ledger {
 
-static account *   curr_account;
-static std::string curr_account_id;
-static entry *     curr_entry;
-static commodity * entry_comm;
-static commodity * curr_comm;
-static amount *    curr_value;
-static std::string curr_quant;
-static XML_Parser  current_parser;
-static bool        do_compute;
-static accounts_t  accounts_by_id;
+static account *    curr_account;
+static std::string  curr_account_id;
+static entry *      curr_entry;
+static commodity *  entry_comm;
+static commodity *  curr_comm;
+static amount *     curr_value;
+static std::string  curr_quant;
+static XML_Parser   current_parser;
+static accounts_map accounts_by_id;
 
 static enum {
   NO_ACTION,
@@ -98,21 +97,21 @@ static void endElement(void *userData, const char *name)
   if (std::strcmp(name, "gnc:account") == 0) {
     assert(curr_account);
     if (! curr_account->parent)
-      main_ledger.accounts.insert(accounts_entry(curr_account->name,
-						 curr_account));
-    accounts_by_id.insert(accounts_entry(curr_account_id, curr_account));
+      main_ledger->accounts.insert(accounts_map_pair(curr_account->name,
+						    curr_account));
+    accounts_by_id.insert(accounts_map_pair(curr_account_id, curr_account));
     curr_account = NULL;
   }
   else if (std::strcmp(name, "gnc:commodity") == 0) {
     assert(curr_comm);
-    main_ledger.commodities.insert(commodities_entry(curr_comm->symbol,
-						     curr_comm));
+    main_ledger->commodities.insert(commodities_map_pair(curr_comm->symbol,
+							curr_comm));
     curr_comm = NULL;
   }
   else if (std::strcmp(name, "gnc:transaction") == 0) {
     assert(curr_entry);
     assert(curr_entry->validate());
-    main_ledger.entries.push_back(curr_entry);
+    main_ledger->entries.push_back(curr_entry);
     curr_entry = NULL;
   }
   action = NO_ACTION;
@@ -130,11 +129,11 @@ static void dataHandler(void *userData, const char *s, int len)
     break;
 
   case ACCOUNT_PARENT: {
-    accounts_iterator i = accounts_by_id.find(std::string(s, len));
+    accounts_map_iterator i = accounts_by_id.find(std::string(s, len));
     assert(i != accounts_by_id.end());
     curr_account->parent = (*i).second;
-    (*i).second->children.insert(accounts_entry(curr_account->name,
-						curr_account));
+    (*i).second->children.insert(accounts_map_pair(curr_account->name,
+						   curr_account));
     break;
   }
 
@@ -142,9 +141,9 @@ static void dataHandler(void *userData, const char *s, int len)
     if (curr_comm)
       curr_comm->symbol = std::string(s, len);
     else if (curr_account)
-      curr_account->comm = main_ledger.commodities[std::string(s, len)];
+      curr_account->comm = main_ledger->commodities[std::string(s, len)];
     else if (curr_entry)
-      entry_comm = main_ledger.commodities[std::string(s, len)];
+      entry_comm = main_ledger->commodities[std::string(s, len)];
     break;
 
   case COMM_NAME:
@@ -186,7 +185,7 @@ static void dataHandler(void *userData, const char *s, int len)
     break;
 
   case XACT_ACCOUNT: {
-    accounts_iterator i = accounts_by_id.find(std::string(s, len));
+    accounts_map_iterator i = accounts_by_id.find(std::string(s, len));
     if (i == accounts_by_id.end()) {
       std::cerr << "Could not find account " << std::string(s, len)
 		<< std::endl;
@@ -208,7 +207,7 @@ static void dataHandler(void *userData, const char *s, int len)
     if (curr_value)
       delete curr_value;
 
-    if (do_compute)
+    if (main_ledger->compute_balances)
       xact->acct->balance.credit(xact->cost);
     break;
   }
@@ -228,12 +227,16 @@ static void dataHandler(void *userData, const char *s, int len)
   }
 }
 
-bool parse_gnucash(std::istream& in, bool compute_balances)
+state * parse_gnucash(std::istream& in, bool compute_balances)
 {
   char buf[BUFSIZ];
 
+  state * ledger = new state;
+
+  main_ledger = ledger;
+  ledger->compute_balances = compute_balances;
+
   action       = NO_ACTION;
-  do_compute   = compute_balances;
   curr_account = NULL;
   curr_entry   = NULL;
   curr_value   = NULL;
@@ -243,7 +246,7 @@ bool parse_gnucash(std::istream& in, bool compute_balances)
   // GnuCash uses the USD commodity without defining it, which really
   // means to use $.
   commodity * usd = new commodity("$", true, false, true, false, 2);
-  main_ledger.commodities.insert(commodities_entry("USD", usd));
+  main_ledger->commodities.insert(commodities_map_pair("USD", usd));
 
   XML_Parser parser = XML_ParserCreate(NULL);
   current_parser = parser;
@@ -258,7 +261,7 @@ bool parse_gnucash(std::istream& in, bool compute_balances)
       std::cerr << XML_ErrorString(XML_GetErrorCode(parser))
 		<< " at line " << XML_GetCurrentLineNumber(parser)
 		<< std::endl;
-      return false;
+      return NULL;
     }
   }
   XML_ParserFree(parser);
@@ -267,7 +270,7 @@ bool parse_gnucash(std::istream& in, bool compute_balances)
   curr_account_id.clear();
   curr_quant.clear();
 
-  return true;
+  return ledger;
 }
 
 } // namespace ledger

@@ -2,7 +2,7 @@
 
 namespace ledger {
 
-static void equity_entry(account * acct, regexps_t& regexps,
+static void equity_entry(account * acct, regexps_map& regexps,
 			 std::ostream& out)
 {
   if (! acct->balance.is_zero() &&
@@ -27,7 +27,7 @@ static void equity_entry(account * acct, regexps_t& regexps,
       opening.xacts.push_back(xact);
 
       xact = new transaction();
-      xact->acct = main_ledger.find_account("Equity:Opening Balances");
+      xact->acct = main_ledger->find_account("Equity:Opening Balances");
       xact->cost = (*i).second->street();
       xact->cost->negate();
       opening.xacts.push_back(xact);
@@ -38,7 +38,7 @@ static void equity_entry(account * acct, regexps_t& regexps,
 
   // Display balances for all child accounts
 
-  for (accounts_iterator i = acct->children.begin();
+  for (accounts_map_iterator i = acct->children.begin();
        i != acct->children.end();
        i++)
     equity_entry((*i).second, regexps, out);
@@ -51,23 +51,14 @@ static void equity_entry(account * acct, regexps_t& regexps,
 // balances.
 //
 
-void equity_ledger(int argc, char ** argv, regexps_t& regexps,
-		   std::ostream& out)
+void equity_ledger(std::ostream& out, regexps_map& regexps)
 {
-  optind = 1;
-
-  // Compile the list of specified regular expressions, which can be
-  // specified on the command line, or using an include/exclude file
-
-  for (; optind < argc; optind++)
-    record_regexp(argv[optind], regexps);
-
   // The account have their current totals already generated as a
   // result of parsing.  We just have to output those values.
   // totals
 
-  for (accounts_iterator i = main_ledger.accounts.begin();
-       i != main_ledger.accounts.end();
+  for (accounts_map_iterator i = main_ledger->accounts.begin();
+       i != main_ledger->accounts.end();
        i++)
     equity_entry((*i).second, regexps, out);
 }
