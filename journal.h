@@ -74,12 +74,18 @@ class transaction_t
   bool valid() const;
 };
 
+class journal_t;
+
 typedef std::list<transaction_t *> transactions_list;
 
 class entry_base_t
 {
  public:
-  transactions_list transactions;
+  journal_t *            journal;
+  unsigned long          src_idx;
+  std::istream::pos_type beg_pos;
+  std::istream::pos_type end_pos;
+  transactions_list	 transactions;
 
   entry_base_t() {
     DEBUG_PRINT("ledger.memory.ctors", "ctor entry_base_t");
@@ -216,14 +222,15 @@ class account_t
  public:
   typedef unsigned long ident_t;
 
-  account_t *	      parent;
-  std::string	      name;
-  std::string	      note;
-  unsigned short      depth;
-  accounts_map	      accounts;
+  journal_t *    journal;
+  account_t *	 parent;
+  std::string	 name;
+  std::string	 note;
+  unsigned short depth;
+  accounts_map	 accounts;
 
-  mutable void *      data;
-  mutable ident_t     ident;
+  mutable void *  data;
+  mutable ident_t ident;
   mutable std::string _fullname;
 
   account_t(account_t *        _parent = NULL,
@@ -247,9 +254,11 @@ class account_t
 
   void add_account(account_t * acct) {
     accounts.insert(accounts_pair(acct->name, acct));
+    acct->journal = journal;
   }
   bool remove_account(account_t * acct) {
     accounts_map::size_type n = accounts.erase(acct->name);
+    acct->journal = NULL;
     return n > 0;
   }
 
@@ -325,6 +334,7 @@ class journal_t
   journal_t() {
     DEBUG_PRINT("ledger.memory.ctors", "ctor journal_t");
     master = new account_t(NULL, "");
+    master->journal = this;
     item_pool = item_pool_end = NULL;
   }
   ~journal_t();
@@ -338,9 +348,11 @@ class journal_t
 
   void add_account(account_t * acct) {
     master->add_account(acct);
+    acct->journal = this;
   }
   bool remove_account(account_t * acct) {
     return master->remove_account(acct);
+    acct->journal = NULL;
   }
 
   account_t * find_account(const std::string& name, bool auto_create = true) {
@@ -350,6 +362,7 @@ class journal_t
 
     account_t * account = master->find_account(name, auto_create);
     accounts_cache.insert(accounts_pair(name, account));
+    account->journal = this;
     return account;
   }
   account_t * find_account_re(const std::string& regexp);

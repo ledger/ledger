@@ -165,7 +165,7 @@ void entry_t::add_transaction(transaction_t * xact)
 
 bool entry_t::valid() const
 {
-  if (! date)
+  if (! date || ! journal)
     return false;
 
   if (state != UNCLEARED && state != CLEARED && state != PENDING)
@@ -276,6 +276,7 @@ account_t * account_t::find_account(const std::string& name,
       return NULL;
 
     account = new account_t(this, first);
+    account->journal = journal;
 
     std::pair<accounts_map::iterator, bool> result
       = accounts.insert(accounts_pair(first, account));
@@ -338,7 +339,7 @@ std::ostream& operator<<(std::ostream& out, const account_t& account)
 
 bool account_t::valid() const
 {
-  if (depth > 256)
+  if (depth > 256 || ! journal)
     return false;
 
   for (accounts_map::const_iterator i = accounts.begin();
@@ -398,6 +399,7 @@ bool journal_t::add_entry(entry_t * entry)
     return false;
 
   entries.push_back(entry);
+  entry->journal = this;
 
   for (transactions_list::const_iterator i = entry->transactions.begin();
        i != entry->transactions.end();
@@ -422,6 +424,7 @@ bool journal_t::remove_entry(entry_t * entry)
     return false;
 
   entries.erase(i);
+  entry->journal = NULL;
 
   return true;
 }
@@ -686,6 +689,7 @@ void export_journal()
     .def(self == self)
     .def(self != self)
 
+    .def_readonly("journal", &account_t::journal)
     .add_property("parent",
 		  make_getter(&account_t::parent,
 			      return_internal_reference<1>()))
@@ -738,6 +742,11 @@ void export_journal()
     .def("__len__", transactions_len)
     .def("__getitem__", transactions_getitem,
 	 return_internal_reference<1>())
+
+    .def_readonly("journal", &entry_base_t::journal)
+    .def_readonly("src_idx", &entry_base_t::src_idx)
+    .def_readonly("beg_pos", &entry_base_t::beg_pos)
+    .def_readonly("end_pos", &entry_base_t::end_pos)
 
     .def("add_transaction", py_add_transaction)
     .def("remove_transaction", &entry_base_t::remove_transaction)

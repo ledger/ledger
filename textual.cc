@@ -7,6 +7,7 @@
 #include "config.h"
 #include "timing.h"
 #include "util.h"
+#include "acconf.h"
 #ifdef USE_BOOST_PYTHON
 #include "py_eval.h"
 #endif
@@ -308,6 +309,8 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
   while (in.good() && ! in.eof()) {
     try {
+      std::istream::pos_type beg_pos = in.tellg();
+
       in.getline(line, MAX_LINE);
       if (in.eof())
 	break;
@@ -477,11 +480,15 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
 	auto_entry_t * ae = new auto_entry_t(skip_ws(line + 1));
 	if (parse_transactions(in, account_stack.front(), *ae, "automated")) {
-	  if (ae->finalize())
+	  if (ae->finalize()) {
 	    journal->auto_entries.push_back(ae);
-	  else
+	    ae->src_idx = journal->sources.size() - 1;
+	    ae->beg_pos = beg_pos;
+	    ae->end_pos = in.tellg();
+	  } else {
 	    throw parse_error(path, linenum,
 			      "Automated entry failed to balance");
+	  }
 	}
 	break;
       }
@@ -496,6 +503,9 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	  if (pe->finalize()) {
 	    extend_entry_base(journal, *pe);
 	    journal->period_entries.push_back(pe);
+	    pe->src_idx = journal->sources.size() - 1;
+	    pe->beg_pos = beg_pos;
+	    pe->end_pos = in.tellg();
 	  } else {
 	    throw parse_error(path, linenum, "Period entry failed to balance");
 	  }
@@ -543,9 +553,13 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
       default: {
 	unsigned int first_line = linenum;
+
 	if (entry_t * entry = parse_entry(in, line, account_stack.front(),
 					  *this)) {
 	  if (journal->add_entry(entry)) {
+	    entry->src_idx = journal->sources.size() - 1;
+	    entry->beg_pos = beg_pos;
+	    entry->end_pos = in.tellg();
 	    count++;
 	  } else {
 	    delete entry;
@@ -582,6 +596,93 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
     throw error(std::string("Errors parsing file '") + path + "'");
 
   return count;
+}
+
+void write_textual_journal(journal_t& journal, std::string path,
+			   item_handler<transaction_t>& formatter,
+			   std::ostream& out)
+{
+  unsigned long index = 0;
+  std::string   found;
+  char          buf1[PATH_MAX];
+  char          buf2[PATH_MAX];
+
+#ifdef HAVE_REALPATH
+  realpath(path.c_str(), buf1);
+  for (strings_list::iterator i = journal.sources.begin();
+       i != journal.sources.end();
+       i++) {
+    realpath((*i).c_str(), buf2);
+    if (std::strcmp(buf1, buf2) == 0) {
+      found = *i;
+      break;
+    }
+    index++;
+  }
+#else
+  for (strings_list::iterator i = journal.sources.begin();
+       i != journal.sources.end();
+       i++) {
+    if (path == *i) {
+      found = *i;
+      break;
+    }
+    index++;
+  }
+#endif
+
+  if (found.empty())
+    throw error(std::string("Journal does not refer to file '") +
+		found + "'");
+
+  entries_list::iterator	  el = journal.entries.begin();
+  auto_entries_list::iterator	  al = journal.auto_entries.begin();
+  period_entries_list::iterator pl = journal.period_entries.begin();
+
+  std::istream::pos_type pos = 0;
+  std::istream::pos_type jump_to;
+
+  format_t hdr_fmt(config.write_hdr_format);
+
+  std::ifstream in(found.c_str());
+  while (! in.eof()) {
+    entry_base_t * base = NULL;
+    if (el != journal.entries.end() &&
+	pos == (*el)->beg_pos) {
+      hdr_fmt.format(out, details_t(**el));
+      base = *el++;
+    }
+    else if (al != journal.auto_entries.end() &&
+	     pos == (*al)->beg_pos) {
+      out << "= " << (*al)->predicate_string << '\n';
+      base = *al++;
+    }
+    else if (pl != journal.period_entries.end() &&
+	     pos == (*pl)->beg_pos) {
+      out << "~ " << (*pl)->period_string << '\n';
+      base = *pl++;
+    }
+
+    char c;
+    if (base) {
+      for (transactions_list::iterator x = base->transactions.begin();
+	   x != base->transactions.end();
+	   x++)
+	transaction_xdata(**x).dflags |= TRANSACTION_TO_DISPLAY;
+
+      walk_transactions(base->transactions, formatter);
+      formatter.flush();
+
+      while (pos < base->end_pos) {
+	in.get(c);
+	pos = in.tellg(); // pos++;
+      }
+    } else {
+      in.get(c);
+      pos = in.tellg(); // pos++;
+      out.put(c);
+    }
+  }
 }
 
 } // namespace ledger
