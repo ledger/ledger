@@ -29,6 +29,12 @@ static const char *	formats[] = {
   NULL
 };
 
+std::time_t interval_t::increment(const std::time_t moment)
+{
+  // jww (2004-08-11): NYI
+  return moment + seconds;
+}
+
 bool parse_date_mask(const char * date_str, struct std::tm * result)
 {
   for (const char ** f = formats; *f; f++) {

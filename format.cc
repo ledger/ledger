@@ -116,6 +116,7 @@ element_t * format_t::parse_elements(const std::string& fmt)
 
       case 'd':
 	current->type  = element_t::DATE_STRING;
+	// jww (2004-08-10): allow this to be changed
 	current->chars = "%Y/%m/%d";
 	break;
 

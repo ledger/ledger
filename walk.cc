@@ -92,7 +92,7 @@ void changed_value_transactions::operator()(transaction_t * xact)
 void subtotal_transactions::flush()
 {
   entry_t * entry = new entry_t;
-  entry->date  = start;
+  entry->date = start;
 
   char buf[256];
   // jww (2004-08-10): allow for a format string here

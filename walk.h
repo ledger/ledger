@@ -4,6 +4,7 @@
 #include "ledger.h"
 #include "balance.h"
 #include "valexpr.h"
+#include "datetime.h"
 
 #include <iostream>
 #include <deque>
@@ -50,25 +51,42 @@ struct ignore_transaction : public item_handler<transaction_t>
   virtual void operator()(transaction_t * xact) {}
 };
 
-class collect_transactions : public item_handler<transaction_t>
+class sort_transactions : public item_handler<transaction_t>
 {
-  transactions_deque& transactions;
+  transactions_deque transactions;
+  const node_t *     sort_order;
+
+  item_handler<transaction_t> * handler;
 
  public:
-  collect_transactions(transactions_deque& _transactions)
-    : transactions(_transactions) {}
+  sort_transactions(item_handler<transaction_t> * _handler,
+		    const node_t * _sort_order)
+    : sort_order(_sort_order), handler(_handler) {}
+
+  virtual ~sort_transactions() {
+    flush();
+    handler->flush();
+    delete handler;
+  }
+
+  virtual void flush() {
+    std::stable_sort(transactions.begin(), transactions.end(),
+		     compare_items<transaction_t>(sort_order));
+
+    for (transactions_deque::iterator i = transactions.begin();
+	 i != transactions.end();
+	 i++)
+      (*handler)(*i);
+
+    transactions.clear();
+
+    handler->flush();
+  }
 
   virtual void operator()(transaction_t * xact) {
     transactions.push_back(xact);
   }
 };
-
-inline void sort_transactions(transactions_deque& transactions,
-			      const node_t *	  sort_order)
-{
-  std::stable_sort(transactions.begin(), transactions.end(),
-		   compare_items<transaction_t>(sort_order));
-}
 
 class filter_transactions : public item_handler<transaction_t>
 {
@@ -205,6 +223,7 @@ typedef std::pair<account_t *, balance_pair_t> balances_pair;
 
 class subtotal_transactions : public item_handler<transaction_t>
 {
+ protected:
   std::time_t  start;
   std::time_t  finish;
   balances_map balances;
@@ -238,39 +257,39 @@ class subtotal_transactions : public item_handler<transaction_t>
   virtual void operator()(transaction_t * xact);
 };
 
-class interval_transactions : public item_handler<transaction_t>
+class interval_transactions : public subtotal_transactions
 {
-  std::time_t     start;
-  unsigned long   months;
-  unsigned long   seconds;
+  std::time_t     begin;
+  interval_t      interval;
   transaction_t * last_xact;
-
-  item_handler<transaction_t> * handler;
 
  public:
   interval_transactions(item_handler<transaction_t> * _handler,
-			std::time_t _start, unsigned long _months,
-			unsigned long _seconds)
-    : start(_start), months(_months), seconds(_seconds),
-      last_xact(NULL), handler(_handler) {}
+			std::time_t _begin, const interval_t& _interval)
+    : subtotal_transactions(_handler),
+      begin(_begin), interval(_interval), last_xact(NULL) {}
 
   virtual ~interval_transactions() {
-    flush();
+    start  = begin;
+    finish = interval.increment(begin);
   }
 
-  virtual void flush() {
-    handler->flush();
-  }
   virtual void operator()(transaction_t * xact) {
-    if (std::difftime(xact->entry->date, start + seconds) > 0) {
-      if (last_xact)
-	handler->flush();
-      start += seconds;
-      while (std::difftime(xact->entry->date, start + seconds) > 0)
-	start += seconds;
+    if (std::difftime(xact->entry->date, interval.increment(begin)) > 0) {
+      if (last_xact) {
+	start  = begin;
+	finish = interval.increment(begin);
+	flush();
+      }
+
+      begin = interval.increment(begin);
+      std::time_t temp;
+      while (std::difftime(xact->entry->date,
+			   temp = interval.increment(begin)) > 0)
+	begin = temp;
     }
 
-    (*handler)(xact);
+    subtotal_transactions::operator()(xact);
 
     last_xact = xact;
   }

@@ -174,8 +174,8 @@ int main(int argc, char * argv[])
   bool show_inverted  = false;
   bool show_empty     = false;
 
-  bool show_commodities_revalued      = false;
-  bool show_commodities_revalued_only = false;
+  bool show_revalued      = false;
+  bool show_revalued_only = false;
 
 #ifdef DEBUG_ENABLED
   if (char * p = std::getenv("DEBUG_FILE")) {
@@ -362,15 +362,15 @@ int main(int argc, char * argv[])
       break;
 
     case 'V':
-      show_commodities_revalued = true;
+      show_revalued = true;
 
       value_expr = "v";
       total_expr = "V";
       break;
 
     case 'G':
-      show_commodities_revalued      =
-      show_commodities_revalued_only = true;
+      show_revalued      =
+      show_revalued_only = true;
 
       value_expr = "c";
       total_expr = "G";
@@ -615,37 +615,62 @@ int main(int argc, char * argv[])
       handle_transaction(*i, formatter, xact_display_flags);
   }
   else {
-    std::auto_ptr<item_handler<transaction_t> >
-      formatter(new format_transactions(std::cout, format, nformat));
+    std::auto_ptr<item_handler<transaction_t> > formatter;
 
+    // Stack up all the formatter needed to fulfills the user's
+    // requests.  Some of these are order dependent, in terms of
+    // whether calc_transactions occurs before or after them.
+
+    // format_transactions write each transaction received to the
+    // output stream.
+    formatter.reset(new format_transactions(std::cout, format, nformat));
+
+    // sort_transactions will sort all the transactions it sees, based
+    // on the `sort_order' value expression.
+    if (sort_order.get())
+      formatter.reset(new sort_transactions(formatter.release(),
+					    sort_order.get()));
+
+    // filter_transactions will only pass through transactions
+    // matching the `display_predicate'.
     formatter.reset(new filter_transactions(formatter.release(),
 					    display_predicate));
-    formatter.reset(new calc_transactions(formatter.release(),
-					  show_inverted));
+
+    // calc_transactions computes the running total.  When this
+    // appears will determine, for example, whether filtered
+    // transactions are included or excluded from the running total.
+    formatter.reset(new calc_transactions(formatter.release(), show_inverted));
+
+    // changed_value_transactions adds virtual transactions to the
+    // list to account for changes in market value of commodities,
+    // which otherwise would affect the running total unpredictably.
+    if (show_revalued)
+      formatter.reset(new changed_value_transactions(formatter.release() /*,
+						   show_revalued_only*/));
+
+    // collapse_transactions causes entries with multiple transactions
+    // to appear as entries with a subtotaled transaction for each
+    // commodity used.
     if (! show_subtotals)
       formatter.reset(new collapse_transactions(formatter.release()));
+
+    // subtotal_transactions combines all the transactions it receives
+    // into one subtotal entry, which has one transaction for each
+    // commodity in each account.
+    //
+    // interval_transactions is like subtotal_transactions, but it
+    // subtotals according to time intervals rather than totalling
+    // everything.
     if (show_expanded)
       formatter.reset(new subtotal_transactions(formatter.release()));
-#if 0
-    formatter.reset(new interval_transactions(formatter.release(),
-					      0, 0, 9676800));
-#endif
-    if (show_commodities_revalued)
-      formatter.reset(new changed_value_transactions(formatter.release()));
+    else if (0)
+      formatter.reset(new interval_transactions(formatter.release(), 0,
+						interval_t(9676800, 0, 0)));
 
-    if (! sort_order.get()) {
-      walk_entries(journal->entries.begin(), journal->entries.end(),
-		   *formatter.get(), predicate, xact_display_flags);
-    } else {
-      transactions_deque transactions_pool;
-      collect_transactions handler(transactions_pool);
-      walk_entries(journal->entries.begin(), journal->entries.end(),
-		   handler, predicate, xact_display_flags);
-      std::stable_sort(transactions_pool.begin(), transactions_pool.end(),
-		       compare_items<transaction_t>(sort_order.get()));
-      walk_transactions(transactions_pool.begin(), transactions_pool.end(),
-			*formatter.get());
-    }
+    // Once the filters are chained, walk `journal's entries and start
+    // feeding each transaction that matches `predicate' to the chain.
+    walk_entries(journal->entries.begin(), journal->entries.end(),
+		 *formatter.get(), predicate, xact_display_flags);
   }
 
   // Save the cache, if need be
