@@ -188,6 +188,9 @@ int parse_and_report(int argc, char * argv[], char * envp[])
     process_option(config_options, "price-exp", p);
 #endif
 
+  if (config.data_file == config.cache_file)
+    config.use_cache = false;
+
   TIMER_STOP(process_opts);
 
   // Read the command word, canonicalize it to its one letter form,
