@@ -1,13 +1,13 @@
 #ifndef _LEDGER_H
-#define _LEDGER_H "$Revision: 1.22 $"
+#define _LEDGER_H "$Revision: 1.23 $"
 
 //////////////////////////////////////////////////////////////////////
 //
-// ledger: Double-entry ledger accounting
+// Ledger Accounting Tool
 //
-//   by John Wiegley <johnw@newartisans.com>
+//   A command-line tool for general double-entry accounting.
 //
-// Copyright (c) 2003 New Artisans, Inc.  All Rights Reserved.
+// Copyright (c) 2003 John Wiegley <johnw@newartisans.com>
 //
 
 #include <iostream>
