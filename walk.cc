@@ -15,7 +15,7 @@ void sort_transactions::flush()
 
   transactions.clear();
 
-  handler->flush();
+  item_handler<transaction_t>::flush();
 }
 
 void calc_transactions::operator()(transaction_t * xact)
@@ -166,6 +166,8 @@ void subtotal_transactions::flush(const char * spec_fmt)
   }
 
   balances.clear();
+
+  item_handler<transaction_t>::flush();
 }
 
 void subtotal_transactions::operator()(transaction_t * xact)

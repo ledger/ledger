@@ -3,12 +3,14 @@ CODE   = account.cc  \
 	 autoxact.cc \
 	 balance.cc  \
 	 binary.cc   \
+	 config.cc   \
 	 datetime.cc \
 	 debug.cc    \
 	 error.cc    \
 	 format.cc   \
 	 ledger.cc   \
 	 option.cc   \
+	 quotes.cc   \
 	 textual.cc  \
 	 valexpr.cc  \
 	 walk.cc

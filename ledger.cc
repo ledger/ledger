@@ -177,7 +177,9 @@ entry_t * journal_t::derive_entry(strings_list::iterator i,
   return added;
 }
 
-int parse_journal_file(const std::string& path, journal_t * journal)
+int parse_journal_file(const std::string& path,
+		       journal_t *	  journal,
+		       account_t *	  master)
 {
   journal->sources.push_back(path);
 
@@ -191,9 +193,11 @@ int parse_journal_file(const std::string& path, journal_t * journal)
   stream.seekg(0);
 
   if (magic == binary_magic_number)
-    return read_binary_journal(stream, journal, journal->master);
+    return read_binary_journal(stream, journal,
+			       master ? master : journal->master);
   else
-    return parse_textual_journal(stream, journal, journal->master);
+    return parse_textual_journal(stream, journal,
+				 master ? master : journal->master);
 }
 
 } // namespace ledger

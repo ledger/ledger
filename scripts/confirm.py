@@ -15,7 +15,7 @@ last_line = ""
 
 for line in os.popen("../ledger %s reg %s" % (sys.argv[1], sys.argv[2])):
     value = clean(line[55:67])
-    total = clean(line[68:80])
+    total = clean(line[68:])
 
     running_total += value
     if abs(running_total - total) > 0.001:

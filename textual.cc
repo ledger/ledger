@@ -223,10 +223,12 @@ bool finalize_entry(entry_t * entry)
   return ! balance;
 }
 
-TIMER_DEF(entry_finish,  "finalizing entry");
-TIMER_DEF(entry_xacts,   "parsing transactions");
-TIMER_DEF(entry_details, "parsing entry details");
-TIMER_DEF(entry_date,    "parsing entry date");
+namespace {
+  TIMER_DEF(entry_finish,  "finalizing entry");
+  TIMER_DEF(entry_xacts,   "parsing transactions");
+  TIMER_DEF(entry_details, "parsing entry details");
+  TIMER_DEF(entry_date,    "parsing entry date");
+}
 
 entry_t * parse_entry(std::istream& in, account_t * master)
 {
@@ -543,7 +545,8 @@ unsigned int parse_textual_journal(std::istream& in, journal_t * journal,
 
 	  push_var<unsigned int> save_linenum(linenum);
 	  push_var<std::string> save_path(path);
-	  count += parse_journal_file(skip_ws(line), journal);
+	  count += parse_journal_file(skip_ws(line), journal,
+				      account_stack.front());
 	}
 	break;
 

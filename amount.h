@@ -188,6 +188,15 @@ typedef std::pair<const std::string, commodity_t *> commodities_pair;
 class commodity_t
 {
  public:
+  class updater_t {
+   public:
+    virtual ~updater_t() {}
+    virtual void operator()(commodity_t *     commodity,
+			    const std::time_t date,
+			    const amount_t&   price,
+			    const std::time_t moment) = 0;
+  };
+
   typedef unsigned short ident_t;
 
   std::string	symbol;
@@ -202,10 +211,7 @@ class commodity_t
   // If set, this global function pointer is called to determine
   // whether prices have been updated in the meanwhile.
 
-  static void (*updater)(commodity_t *	   commodity,
-			 const std::time_t date,
-			 const amount_t&   price,
-			 const std::time_t moment);
+  static updater_t * updater;
 
   // This map remembers all commodities that have been
   // defined thus far.

@@ -776,27 +776,24 @@ void amount_t::read_quantity(std::istream& in)
   }
 }
 
-void (*commodity_t::updater)(commodity_t *     commodity,
-			     const std::time_t date,
-			     const amount_t&   price,
-			     const std::time_t moment) = NULL;
+commodity_t::updater_t * commodity_t::updater = NULL;
+commodities_map		 commodity_t::commodities;
+commodity_t *            commodity_t::null_commodity =
+			     commodity_t::find_commodity("", true);
 
-commodities_map commodity_t::commodities;
-commodity_t *   commodity_t::null_commodity =
-		     commodity_t::find_commodity("", true);
-
-struct cleanup_commodities
+static struct cleanup_commodities
 {
   ~cleanup_commodities() {
+    if (commodity_t::updater)
+      delete commodity_t::updater;
+
     for (commodities_map::iterator i
 	   = commodity_t::commodities.begin();
 	 i != commodity_t::commodities.end();
 	 i++)
       delete (*i).second;
   }
-};
-
-static cleanup_commodities cleanup;
+} _cleanup;
 
 commodity_t * commodity_t::find_commodity(const std::string& symbol,
 					  bool auto_create)
@@ -820,7 +817,7 @@ amount_t commodity_t::value(const std::time_t moment)
   amount_t    price;
 
   if (updater)
-    updater(this, age, price, moment);
+    (*updater)(this, age, price, moment);
 
   for (history_map::reverse_iterator i = history.rbegin();
        i != history.rend();

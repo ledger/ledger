@@ -216,7 +216,9 @@ class journal_t
 			 strings_list::iterator end) const;
 };
 
-int parse_journal_file(const std::string& path, journal_t * journal);
+int parse_journal_file(const std::string& path,
+		       journal_t *	  journal,
+		       account_t *	  master = NULL);
 
 unsigned int parse_textual_journal(std::istream& in,
 				   journal_t *	 ledger,

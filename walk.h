@@ -22,12 +22,14 @@ struct item_handler {
   virtual void close() {
     flush();
     if (handler) {
-      handler->flush();
       delete handler;
       handler = NULL;
     }
   }
-  virtual void flush() {}
+  virtual void flush() {
+    if (handler)
+      handler->flush();
+  }
   virtual void operator()(T * item) = 0;
 };
 
@@ -188,9 +190,7 @@ class collapse_transactions : public item_handler<transaction_t>
 
   virtual ~collapse_transactions() {
     close();
-
     delete totals_account;
-
     for (transactions_deque::iterator i = xact_temps.begin();
 	 i != xact_temps.end();
 	 i++)
@@ -200,6 +200,7 @@ class collapse_transactions : public item_handler<transaction_t>
   virtual void flush() {
     if (subtotal)
       report_cumulative_subtotal();
+    item_handler<transaction_t>::flush();
   }
 
   void report_cumulative_subtotal();
@@ -251,6 +252,7 @@ class changed_value_transactions : public item_handler<transaction_t>
 
   virtual void flush() {
     (*this)(NULL);
+    item_handler<transaction_t>::flush();
   }
 
   virtual void operator()(transaction_t * xact);
@@ -286,7 +288,11 @@ class subtotal_transactions : public item_handler<transaction_t>
       delete *i;
   }
 
-  virtual void flush(const char * spec_fmt = NULL);
+  void flush(const char * spec_fmt);
+
+  virtual void flush() {
+    flush(NULL);
+  }
   virtual void operator()(transaction_t * xact);
 };
 
@@ -320,7 +326,6 @@ class dow_transactions : public subtotal_transactions
     : subtotal_transactions(handler) {}
 
   virtual void flush();
-
   virtual void operator()(transaction_t * xact) {
     struct std::tm * desc = std::gmtime(&xact->entry->date);
     days_of_the_week[desc->tm_wday].push_back(xact);
