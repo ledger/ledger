@@ -54,7 +54,7 @@ transaction_t * parse_transaction_text(char * line, account_t * account,
 {
   // The account will be determined later...
 
-  transaction_t * xact = new transaction_t(entry, NULL);
+  std::auto_ptr<transaction_t> xact(new transaction_t(entry, NULL));
 
   // The call to `next_element' will skip past the account name,
   // and return a pointer to the beginning of the amount.  Once
@@ -100,7 +100,7 @@ transaction_t * parse_transaction_text(char * line, account_t * account,
   if (! xact->cost.commodity)
     xact->cost.commodity = commodity_t::null_commodity;
 
-  return xact;
+  return xact.release();
 }
 
 transaction_t * parse_transaction(std::istream& in, account_t * account,
@@ -220,7 +220,7 @@ namespace {
 
 entry_t * parse_entry(std::istream& in, account_t * master)
 {
-  entry_t * curr = new entry_t;
+  std::auto_ptr<entry_t> curr(new entry_t);
 
   static char line[MAX_LINE + 1];
   in.getline(line, MAX_LINE);
@@ -267,7 +267,7 @@ entry_t * parse_entry(std::istream& in, account_t * master)
   TIMER_START(entry_xacts);
 
   while (! in.eof() && (in.peek() == ' ' || in.peek() == '\t'))
-    if (transaction_t * xact = parse_transaction(in, master, curr))
+    if (transaction_t * xact = parse_transaction(in, master, curr.get()))
       curr->add_transaction(xact);
 
   TIMER_STOP(entry_xacts);
@@ -276,14 +276,12 @@ entry_t * parse_entry(std::istream& in, account_t * master)
 
   TIMER_START(entry_finish);
 
-  if (curr->transactions.empty() || ! finalize_entry(curr)) {
-    delete curr;
-    return NULL;
-  }
+  if (curr->transactions.empty() || ! finalize_entry(curr.get()))
+    return NULL;		// ~auto_ptr will delete curr
 
   TIMER_STOP(entry_finish);
 
-  return curr;
+  return curr.release();
 }
 
 template <typename T>
@@ -380,7 +378,7 @@ unsigned int parse_textual_journal(std::istream& in, journal_t * journal,
 
 	  struct std::tm when;
 	  if (strptime(date.c_str(), "%Y/%m/%d %H:%M:%S", &when)) {
-	    entry_t * curr = new entry_t;
+	    std::auto_ptr<entry_t> curr(new entry_t);
 	    curr->date  = std::mktime(&when);
 	    curr->state = entry_t::CLEARED;
 	    curr->code  = "";
@@ -394,11 +392,12 @@ unsigned int parse_textual_journal(std::istream& in, journal_t * journal,
 	    time_commodity = amt.commodity;
 
 	    transaction_t * xact
-	      = new transaction_t(curr, last_account, amt, amt,
+	      = new transaction_t(curr.get(), last_account, amt, amt,
 				  TRANSACTION_VIRTUAL);
 	    curr->add_transaction(xact);
 
-	    if (! finalize_entry(curr) || ! journal->add_entry(curr))
+	    if (! finalize_entry(curr.get()) ||
+		! journal->add_entry(curr.release()))
 	      assert(0);
 
 	    count++;

@@ -13,13 +13,18 @@ struct interval_t
   int months;
   int seconds;
 
-  interval_t(int _seconds, int _months = 0, int _years = 0)
+  interval_t(int _seconds = 0, int _months = 0, int _years = 0)
     : years(_years), months(_months), seconds(_seconds) {}
+
+  operator bool() const {
+    return seconds > 0 || months > 0 || years > 0;
+  }
 
   std::time_t increment(const std::time_t);
 
-  static interval_t * parse(std::istream& in, std::time_t * begin,
-			    std::time_t * end);
+  static interval_t parse(std::istream& in,
+			  std::time_t * begin,
+			  std::time_t * end);
 };
 
 extern std::time_t now;

@@ -55,7 +55,8 @@ bool journal_t::remove_entry(entry_t * entry)
 entry_t * journal_t::derive_entry(strings_list::iterator i,
 				  strings_list::iterator end) const
 {
-  entry_t * added    = new entry_t;
+  std::auto_ptr<entry_t> added(new entry_t);
+
   entry_t * matching = NULL;
 
   if (! parse_date((*i).c_str(), &added->date)) {
@@ -97,17 +98,17 @@ entry_t * journal_t::derive_entry(strings_list::iterator i,
     m_xact = matching->transactions.front();
 
     amount_t amt(*i++);
-    first = xact = new transaction_t(added, m_xact->account, amt, amt);
+    first = xact = new transaction_t(added.get(), m_xact->account, amt, amt);
+    added->add_transaction(xact);
 
     if (xact->amount.commodity->symbol.empty()) {
       xact->amount.commodity = m_xact->amount.commodity;
       xact->cost.commodity   = m_xact->amount.commodity;
     }
-    added->add_transaction(xact);
 
     m_xact = matching->transactions.back();
 
-    xact = new transaction_t(added, m_xact->account,
+    xact = new transaction_t(added.get(), m_xact->account,
 			     - first->amount, - first->amount);
     added->add_transaction(xact);
 
@@ -149,12 +150,11 @@ entry_t * journal_t::derive_entry(strings_list::iterator i,
       }
 
       amount_t amt(*i++);
-      transaction_t * xact = new transaction_t(added, acct, amt, amt);
+      transaction_t * xact = new transaction_t(added.get(), acct, amt, amt);
+      added->add_transaction(xact);
 
       if (! xact->amount.commodity)
 	xact->amount.commodity = cmdty;
-
-      added->add_transaction(xact);
     }
 
     if (i != end && std::string(*i++) == "-from" && i != end) {
@@ -169,12 +169,13 @@ entry_t * journal_t::derive_entry(strings_list::iterator i,
 	std::exit(1);
       }
       transaction_t * xact
-	= new transaction_t(added, matching->transactions.back()->account);
+	= new transaction_t(added.get(),
+			    matching->transactions.back()->account);
       added->add_transaction(xact);
     }
   }
 
-  return added;
+  return added.release();
 }
 
 int parse_journal_file(const std::string& path,

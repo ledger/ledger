@@ -90,11 +90,10 @@ void changed_value_transactions::operator()(transaction_t * xact)
 
     if (balance_t diff = cur_bal - prev_bal) {
       entry_t * entry = new entry_t;
+      entry_temps.push_back(entry);
 
       entry->payee = "Commodities revalued";
       entry->date  = current;
-
-      entry_temps.push_back(entry);
 
       for (amounts_map::const_iterator i = diff.amounts.begin();
 	   i != diff.amounts.end();
@@ -138,9 +137,9 @@ void subtotal_transactions::flush(const char * spec_fmt)
   }
 
   entry_t * entry = new entry_t;
-  entry->payee = buf;
-
   entry_temps.push_back(entry);
+
+  entry->payee = buf;
 
   for (balances_map::iterator i = balances.begin();
        i != balances.end();

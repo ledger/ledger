@@ -45,7 +45,8 @@ std::auto_ptr<value_expr_t> format_t::total_expr;
 
 element_t * format_t::parse_elements(const std::string& fmt)
 {
-  element_t * result  = NULL;
+  std::auto_ptr<element_t> result;
+
   element_t * current = NULL;
 
   static char buf[1024];
@@ -57,8 +58,9 @@ element_t * format_t::parse_elements(const std::string& fmt)
       continue;
     }
 
-    if (! result) {
-      current = result = new element_t;
+    if (! result.get()) {
+      result.reset(new element_t);
+      current = result.get();
     } else {
       current->next = new element_t;
       current = current->next;
@@ -148,8 +150,9 @@ element_t * format_t::parse_elements(const std::string& fmt)
   }
 
   if (q != buf) {
-    if (! result) {
-      current = result = new element_t;
+    if (! result.get()) {
+      result.reset(new element_t);
+      current = result.get();
     } else {
       current->next = new element_t;
       current = current->next;
@@ -158,7 +161,7 @@ element_t * format_t::parse_elements(const std::string& fmt)
     current->chars = std::string(buf, q);
   }
 
-  return result;
+  return result.release();
 }
 
 void format_t::format_elements(std::ostream&    out,

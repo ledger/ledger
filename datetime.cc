@@ -90,9 +90,9 @@ static void parse_inclusion_specifier(const std::string& word,
   *end   = interval_t(0, saw_mon ? 1 : 0, saw_year ? 1 : 0).increment(*begin);
 }
 
-interval_t * interval_t::parse(std::istream& in,
-			       std::time_t * begin,
-			       std::time_t * end)
+interval_t interval_t::parse(std::istream& in,
+			     std::time_t * begin,
+			     std::time_t * end)
 {
   unsigned long years   = 0;
   unsigned long months  = 0;
@@ -203,7 +203,8 @@ interval_t * interval_t::parse(std::istream& in,
       parse_inclusion_specifier(word, begin, end);
     }
   }
-  return new interval_t(seconds, months, years);
+
+  return interval_t(seconds, months, years);
 }
 
 bool parse_date_mask(const char * date_str, struct std::tm * result)

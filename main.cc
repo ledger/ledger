@@ -374,8 +374,9 @@ int main(int argc, char * argv[], char * envp[])
   // Setup local and global variables, depending on config settings.
 
   std::auto_ptr<std::ostream> output_stream;
-  std::auto_ptr<interval_t>   report_interval;
-  std::time_t		      interval_begin;
+
+  interval_t  report_interval;
+  std::time_t interval_begin = 0;
 
   if (config->download_quotes)
     commodity_t::updater = new quotes_by_script(config->price_db,
@@ -391,13 +392,12 @@ int main(int argc, char * argv[], char * envp[])
     try {
       std::istringstream stream(config->interval_text);
       std::time_t begin = -1, end = -1;
-      report_interval.reset(interval_t::parse(stream, &begin, &end));
-      if (report_interval->seconds == 0 &&
-	  report_interval->months  == 0 &&
-	  report_interval->years   == 0)
-	report_interval.release();
+
+      report_interval = interval_t::parse(stream, &begin, &end);
 
       if (begin != -1) {
+	interval_begin = begin;
+
 	if (! config->predicate.empty())
 	  config->predicate += "&";
 	char buf[32];
@@ -481,12 +481,6 @@ int main(int argc, char * argv[], char * envp[])
   } else {
     formatter.reset(new format_transactions(OUT(), format, nformat));
 
-    // sort_transactions will sort all the transactions it sees, based
-    // on the `sort_order' value expression.
-    if (sort_order.get())
-      formatter.reset(new sort_transactions(formatter.release(),
-					    sort_order.get()));
-
     // filter_transactions will only pass through transactions
     // matching the `display_predicate'.
     formatter.reset(new filter_transactions(formatter.release(),
@@ -497,6 +491,12 @@ int main(int argc, char * argv[], char * envp[])
     // transactions are included or excluded from the running total.
     formatter.reset(new calc_transactions(formatter.release(),
 					  config->show_inverted));
+
+    // sort_transactions will sort all the transactions it sees, based
+    // on the `sort_order' value expression.
+    if (sort_order.get())
+      formatter.reset(new sort_transactions(formatter.release(),
+					    sort_order.get()));
 
     // changed_value_transactions adds virtual transactions to the
     // list to account for changes in market value of commodities,
@@ -524,9 +524,9 @@ int main(int argc, char * argv[], char * envp[])
     // of the week.
     if (config->show_subtotal)
       formatter.reset(new subtotal_transactions(formatter.release()));
-    else if (report_interval.get())
+    else if (report_interval)
       formatter.reset(new interval_transactions(formatter.release(),
-						*report_interval,
+						report_interval,
 						interval_begin));
     else if (config->days_of_the_week)
       formatter.reset(new dow_transactions(formatter.release()));
