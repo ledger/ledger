@@ -45,3 +45,12 @@ install-exec-hook:
 	    python setup.py install --prefix=$(DESTDIR)
 
 endif
+
+all-clean: maintainer-clean
+	rm -fr	*~ .*~ .\#* *.html *.info *.pdf *.a *.so *.o *.lo *.la \
+		*.elc *.aux *.cp *.fn *.ky *.log *.pg *.toc *.tp *.vr \
+		.gdb_history gmon.out h out TAGS ledger valexpr .deps \
+		.libs build AUTHORS ChangeLog COPYING INSTALL Makefile \
+		acconf.h acconf.h.in aclocal.m4 autom4te config.guess \
+		config.sub configure depcomp install-sh libtool ltconfig \
+		ltmain.sh missing stamp texinfo.tex Makefile.in
