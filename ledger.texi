@@ -717,7 +717,7 @@ the following options:
 @item -C, --cleared
 Consider only cleared transactions.
 @item -U, --uncleared
-Consider only uncleared transactions.
+Consider only uncleared and pending transactions.
 @item -R, --real
 Consider only real (non-virtual) transactions.
 @item -L, --actual
@@ -727,8 +727,10 @@ Consider only actual (non-automated) transactions.
 Cleared transactions are indicated by an asterix placed just before
 the payee name in a transaction.  The meaning of this flag is up to
 the user, but typically it means that an entry has been seen on a
-financial statement.  Uncleared transactions are things like uncashed
-checks, credit charges that haven't appeared on a statement yet, etc.
+financial statement.  Pending transactions use an exclamation mark in
+the same position, but are mainly used only by reconciling software.
+Uncleared transactions are for things like uncashed checks, credit
+charges that haven't appeared on a statement yet, etc.
 
 Real transactions are all non-virtual transactions, where the account
 name is not surrounded by parentheses or square brackets.  Virtual
@@ -1110,6 +1112,23 @@ acolumns, instead of 80.  You are more likely then to see full payee
 and account names, as well as properly formatted totals when
 long-named commodities are used.
 
+If you want only the first or last N entries to be printed---which can
+be very useful for viewing the last 10 entries in your checking
+account, while also showing the cumulative balance from all
+entries---use the @option{--head} and/or @option{--tail} options.  The
+two options may be used simultaneously, for example:
+
+@example
+ledger --tail 20 reg checking
+@end example
+
+If the output from your command is very long, Ledger can output the
+data to a pager utility, such as @command{more} or @command{less}:
+
+@example
+ledger --pager /usr/bin/less reg checking
+@end example
+
 @subsubsection Averages and percentages
 
 @c  -A, --average          report average transaction amount
@@ -1375,14 +1394,29 @@ order to plot either the amount or total column, respectively.
 
 @subsection print
 
-The @command{print} command prints out ledger entries just as they
-appear in the original ledger.  They will be properly formatted, and
-output in the most economic form possible.  The ``print'' command also
-takes a list of optional regexps, which will cause only those
+The @command{print} command prints out ledger entries in a textual
+format that can be parsed by Ledger.  They will be properly formatted,
+and output in the most economic form possible.  The ``print'' command
+also takes a list of optional regexps, which will cause only those
 transactions which match in some way to be printed.
 
 The @command{print} command can be a handy way to clean up a ledger
 file whose formatting has gotten out of hand.
+
+@subsection output
+
+The @command{output} command is very similar to the @command{print}
+command, except that it attempts to replicate the specified ledger
+file exactly.  The format of the command is:
+
+@example
+ledger -f FILENAME output FILENAME
+@end example
+
+Where @file{FILENAME} is the name of the ledger file to output.  The
+reason for specifying this command is that only entries contained
+within that file will be output, and not an included entries (as can
+happen with the @command{print} command).
 
 @subsection xml
 
@@ -1391,6 +1425,17 @@ The @command{xml} command outputs results similar to what
 This data can then be read in and processed.  Use the
 @option{--totals} option to include the running total with each
 transaction.
+
+@subsection emacs
+
+The @command{emacs} command outputs results in a form that can be read
+directly by Emacs Lisp.  The format of the sexp is:
+
+@example
+((BEG-POS CLEARED DATE CODE PAYEE
+  (ACCOUNT AMOUNT)...)  ; list of transactions
+ ...)                   ; list of entries
+@end example
 
 @subsection equity
 
@@ -1404,6 +1449,10 @@ The @command{prices} command displays the price history for matching
 commodities.  The @option{-A} flag is useful with this report, to
 display the running average price, or @option{-D} to show each price's
 deviation from that average.
+
+There is also a @command{pricesdb} command which outputs the same
+information as @command{prices}, but does in a format that can be
+parsed by Ledger.
 
 @subsection entry
 
@@ -1685,6 +1734,19 @@ expressions}.
 @option{--wide} (@option{-w}) causes the default @command{register}
 report to assume 132 columns instead of 80.
 
+@option{--head} causes only the first N entries to be printed.  This
+is different from using the command-line utility @command{head}, which
+would limit to the first N transactions.  @option{--tail} outputs only
+the last N entries.  Both options may be used simultaneously.  If a
+negative amount is given, it will invert the meaning of the flag
+(instead of the first five entries being printed, for example, it
+would print all but the first five).
+
+@option{--pager} tells Ledger to pass its output to the given pager
+program---very useful when the output is especially long.  This
+behavior can be made the default by setting the @env{LEDGER_PAGER}
+environment variable.
+
 @option{--average} (@option{-A}) reports the average transaction
 value.
 
@@ -1897,6 +1959,15 @@ stripped from the total.
 Inserts the result of formatting a transaction's date with a date
 format string, exactly like those supported by @code{strftime}.  For
 example: @samp{%[%Y/%m/%d %H:%M:%S]}.
+
+@item S
+Insert the pathname of the file from which the entry's data was read.
+
+@item B
+Inserts the beginning character position of that entry within the file.
+
+@item E
+Inserts the ending character position of that entry within the file.
 
 @item D
 By default, this is the same as @samp{%[%Y/%m%/d]}.  The date format
@@ -2134,17 +2205,28 @@ An amount in braces can be any kind of amount supported by ledger,
 with or without a commodity.  Use this for decimal values.
 
 @item /REGEXP/
+@item W/REGEXP/
 A regular expression that matches against an account's full name.  If
 a transaction, this will match against the account affected by the
 transaction.
 
 @item //REGEXP/
+@item p/REGEXP/
 A regular expression that matches against an entry's payee name.
 
 @item ///REGEXP/
+@item w/REGEXP/
 A regular expression that matches against an account's base name.  If
 a transaction, this will match against the account affected by the
 transaction.
+
+@item c/REGEXP/
+A regular expression that matches against the entry code (the text
+that occurs between parentheses before the payee name).
+
+@item e/REGEXP/
+A regular expression that matches against a transaction's note, or
+comment field.
 
 @item (EXPR)
 A sub-expression is nested in parenthesis.  This can be useful passing
@@ -2268,14 +2350,17 @@ by any number of lines, each beginning with whitespace, to denote the
 entry's account transactions.  The format of the first line is:
 
 @example
-DATE [*] [(CODE)] DESC
+DATE [*|!] [(CODE)] DESC
 @end example
 
 If @samp{*} appears after the date, it indicates that entry is
 ``cleared'', meaning it has been seen a bank statement, or otherwise
-verified.  If a @samp{CODE} appears in parentheses, it may be used to
-indicate a check number, or the type of the transaction.  Following
-these is the payee, or a description of the transaction.
+verified.  If @samp{!} appears after the date, it indicates that the
+entry is ``pending''; i.e., tentatively cleared from the user's point
+of view, but not yet cleared with your financial institution.  If a
+@samp{CODE} appears in parentheses, it may be used to indicate a check
+number, or the type of the transaction.  Following these is the payee,
+or a description of the transaction.
 
 @item =
 An automated entry.  A value expression must appear after the equal
@@ -2344,12 +2429,24 @@ defaults to @file{~/.pricedb}.  The syntax for this command is:
 N SYMBOL
 @end example
 
-@item D SYMBOL
-The @command{entry} command will use the given commodity as the
-default when none other can be determined.  The syntax for this
-command is:
+@item D AMOUNT
+Specifies the default commodity to use, by specifying an amount in the
+expected format.  The @command{entry} command will use this commodity
+as the default when none other can be determined.  This command may be
+used multiple times, to set the default flags for different
+commodities; whichever is seen last is used as the default commodity.
+For example, to set US dollars as the default commodity, while also
+setting the thousands flag and decimal flag for that commodity, use:
 @example
-D SYMBOL
+D $1,000.00
+@end example
+
+@item C AMOUNT1 = AMOUNT2
+Specifies a commodity conversion, where the first amount is given to
+be equivalent to the second amount.  The first amount should use the
+decimal precision desired during reporting:
+@example
+C 1.00 Kb = 1024 bytes
 @end example
 
 @item i, o, b, h
@@ -3461,12 +3558,79 @@ previous section).
 @item C-c C-c
 Toggles the ``cleared'' flag of the transaction under point.
 
+@item C-c C-d
+Delete the entry under point.
+
 @item C-c C-r
 Reconciles an account by displaying the transactions in another
-buffer, where simply hitting the spacebar will toggle the cleared flag
-of the transaction in the ledger.  It also displays the current
-cleared balance for the account in the modeline.
+buffer, where simply hitting the spacebar will toggle the pending flag
+of the transaction in the ledger.  Once all the appropriate
+transactions have been marked, press C-c C-c in the reconcile buffer
+to ``commit'' the reconciliation, which will mark all of the entries
+as cleared, and display the new cleared balance in the minibuffer.
+
+@item C-c C-m
+Set the default month for new entries added with C-c C-a.  This is
+handy if you have a large number of transactions to enter from a
+previous month.
+
+@item C-c C-y
+Set the default year for new entries added with C-c C-a.  This is
+handy if you have a large number of transactions to enter from a
+previous year.
 @end table
+
+Once you enter the reconcile buffer, there are several key commands
+available:
+
+@table @strong
+@item RET
+Visit the ledger file entry corresponding to the reconcile entry.
+
+@item C-c C-c
+Commit the reconcialation.  This marks all of the marked transactions
+as ``cleared'', saves the ledger file, and then displays the new
+cleared balance.
+
+@item C-l
+Refresh the reconcile buffer by re-reading transactions from the
+ledger data file.
+
+@item SPC
+Toggle the transaction under point as cleared.
+
+@item a
+Add a new entry to the ledger data file, and refresh the reconcile
+buffer to include its transactions (if the entry is added to the same
+account as the one being reconciled).
+
+@item d
+Delete the entry related to the transaction under point.  Note: This
+may result in multiple transactions being deleted.
+
+@item n
+Move to the next line.
+
+@item p
+Move to the previous line.
+
+@item C-c C-r
+@item r
+Attempt to auto-reconcile the transactions to the entered balance.  If
+it can do so, it will mark all those transactions as pending that
+would yield the specified balance.
+
+@item C-x C-s
+@item s
+Save the ledger data file, and show the current cleared balance for
+the account being reconciled.
+
+@item q
+Quit the reconcile buffer.
+@end table
+
+There is also an @command{emacs} command which can be used to output
+reports in a format directly @code{read}-able from Emacs Lisp.
 
 @node Using GnuCash to Keep Your Ledger, Using timeclock to record billable time, Using Emacs to Keep Your Ledger, Keeping a ledger
 @section Using GnuCash to Keep Your Ledger

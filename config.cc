@@ -402,6 +402,9 @@ Output customization:\n\
       --dow              show a days-of-the-week report\n\
   -S, --sort EXPR        sort report according to the value expression EXPR\n\
   -w, --wide             for the default register report, use 132 columns\n\
+      --head COUNT       show only the first COUNT entries (negative inverts)\n\
+      --tail COUNT       show only the last COUNT entries (negative inverts)\n\
+      --pager PAGER      send all output through the given PAGER program\n\
   -A, --average          report average transaction amount\n\
   -D, --deviation        report deviation from the average\n\
   -%, --percentage       report balance totals as a percentile of the parent\n\
@@ -505,6 +508,9 @@ void option_disp_help(std::ostream& out)
       --dow              show a days-of-the-week report\n\
   -S, --sort EXPR        sort report according to the value expression EXPR\n\
   -w, --wide             for the default register report, use 132 columns\n\
+      --head COUNT       show only the first COUNT entries (negative inverts)\n\
+      --tail COUNT       show only the last COUNT entries (negative inverts)\n\
+      --pager PAGER      send all output through the given PAGER program\n\
   -A, --average          report average transaction amount\n\
   -D, --deviation        report deviation from the average\n\
   -%, --percentage       report balance totals as a percentile of the parent\n\
