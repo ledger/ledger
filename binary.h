@@ -3,6 +3,8 @@
 
 #include "parser.h"
 
+#include <deque>
+
 namespace ledger {
 
 class binary_parser_t : public parser_t
@@ -15,6 +17,8 @@ class binary_parser_t : public parser_t
 			     account_t *	 master        = NULL,
 			     const std::string * original_file = NULL);
 };
+
+extern std::deque<amount_t::bigint_t *> bigints;
 
 void write_binary_journal(std::ostream&	 out,
 			  journal_t *	 journal,

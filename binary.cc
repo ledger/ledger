@@ -1,13 +1,7 @@
 #include "ledger.h"
 #include "binary.h"
 
-#include <vector>
-#include <fstream>
-#include <sstream>
-#include <cstring>
 #include <ctime>
-#include <cctype>
-
 #include <sys/stat.h>
 
 #define TIMELOG_SUPPORT 1
@@ -26,11 +20,11 @@ bool binary_parser_t::test(std::istream& in) const
   return magic == binary_magic_number;
 }
 
-static std::vector<account_t *>   accounts;
-static account_t::ident_t	  ident;
-static std::vector<commodity_t *> commodities;
-static commodity_t::ident_t	  c_ident;
-
+static std::deque<account_t *>   accounts;
+static account_t::ident_t	 ident;
+static std::deque<commodity_t *> commodities;
+static commodity_t::ident_t	 c_ident;
+std::deque<amount_t::bigint_t *> bigints;
 
 #if RELEASE_LEVEL >= ALPHA
 #define read_binary_guard(in, id) {		\
@@ -258,6 +252,7 @@ unsigned int read_binary_journal(std::istream&	    in,
 
   accounts.clear();
   commodities.clear();
+  bigints.clear();
 
   return count;
 }

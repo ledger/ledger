@@ -1,18 +1,64 @@
 #include "ledger.h"
+#include "binary.h"
 #include "error.h"
 #include "util.h"
 
-#include "gmp.h"
+#include <deque>
 
-#define MPZ(x) ((MP_INT *)(x))
+#include "gmp.h"
 
 namespace ledger {
 
+#ifdef DEBUG_ENABLED
+static int ctors = 0;
+static int dtors = 0;
+#endif
+
+struct amount_t::bigint_t {
+  mpz_t        val;
+  unsigned int ref;
+  unsigned int index;
+
+  bigint_t() : ref(1), index(0) {
+    mpz_init(val);
+#ifdef DEBUG_ENABLED
+    ctors++;
+#endif
+  }
+  bigint_t(mpz_t _val) : ref(1), index(0) {
+    mpz_init_set(val, _val);
+#ifdef DEBUG_ENABLED
+    ctors++;
+#endif
+  }
+  ~bigint_t() {
+    assert(ref == 0);
+    mpz_clear(val);
+#ifdef DEBUG_ENABLED
+    dtors++;
+#endif
+  }
+};
+
+#ifdef DEBUG_ENABLED
+static struct ctor_dtor_info {
+  ~ctor_dtor_info() {
+    DEBUG_CLASS("ledger.amount.bigint");
+    DEBUG_PRINT_("bigint_t ctor count = " << ctors);
+    DEBUG_PRINT_("bigint_t dtor count = " << dtors);
+  }
+} __info;
+#endif
+
+#define MPZ(x) ((x)->val)
+
+static mpz_t temp;
 static mpz_t divisor;
 static mpz_t true_value;
 
 static struct init_amounts {
   init_amounts() {
+    mpz_init(temp);
     mpz_init(divisor);
     mpz_init(true_value);
     mpz_set_ui(true_value, 1);
@@ -21,6 +67,7 @@ static struct init_amounts {
   ~init_amounts() {
     mpz_clear(true_value);
     mpz_clear(divisor);
+    mpz_clear(temp);
   }
 #endif
 } initializer;
@@ -80,73 +127,91 @@ static void mpz_round(mpz_t out, mpz_t value, int value_prec, int round_prec)
 }
 
 amount_t::amount_t(const bool value)
-  : quantity(NULL), commodity(NULL)
 {
   if (value) {
-    commodity = commodity_t::null_commodity;
+    quantity  = new bigint_t(true_value);
     precision = 0;
-    quantity = new MP_INT;
-    mpz_init_set(MPZ(quantity), true_value);
+    commodity = commodity_t::null_commodity;
+  } else {
+    quantity  = NULL;
+    precision = 0;
+    commodity = NULL;
   }
 }
 
 amount_t::amount_t(const int value)
-  : quantity(NULL), commodity(NULL)
 {
   if (value != 0) {
     _init();
-    commodity = commodity_t::null_commodity;
-    precision = 0;
     mpz_set_si(MPZ(quantity), value);
+    precision = 0;
+    commodity = commodity_t::null_commodity;
+  } else {
+    quantity  = NULL;
+    precision = 0;
+    commodity = NULL;
   }
 }
 
 amount_t::amount_t(const unsigned int value)
-  : quantity(NULL), commodity(NULL)
 {
   if (value != 0) {
     _init();
-    commodity = commodity_t::null_commodity;
-    precision = 0;
     mpz_set_ui(MPZ(quantity), value);
+    precision = 0;
+    commodity = commodity_t::null_commodity;
+  } else {
+    quantity  = NULL;
+    precision = 0;
+    commodity = NULL;
   }
 }
 
 amount_t::amount_t(const double value)
-  : quantity(NULL), commodity(NULL)
 {
   if (value != 0.0) {
     _init();
-    commodity = commodity_t::null_commodity;
-    // jww (2004-08-20): How do I calculate?
-    precision = 0;
     mpz_set_d(MPZ(quantity), value);
+    // jww (2004-08-20): How do I calculate this?
+    precision = 0;
+    commodity = commodity_t::null_commodity;
+  } else {
+    quantity  = NULL;
+    precision = 0;
+    commodity = NULL;
   }
 }
 
-void amount_t::_clear()
+void amount_t::_release()
 {
-  mpz_clear(MPZ(quantity));
-  delete (MP_INT *) quantity;
+  if (--quantity->ref == 0)
+    delete quantity;
 }
 
 void amount_t::_init()
 {
-  quantity = new MP_INT;
-  mpz_init(MPZ(quantity));
+  quantity = new bigint_t;
+}
+
+void amount_t::_dup()
+{
+  if (quantity->ref > 1) {
+    bigint_t * q = new bigint_t(MPZ(quantity));
+    _release();
+    quantity = q;
+  }
 }
 
 void amount_t::_copy(const amount_t& amt)
 {
-  if (quantity) {
-    mpz_set(MPZ(quantity), MPZ(amt.quantity));
-  } else {
-    quantity = new MP_INT;
-    mpz_init_set(MPZ(quantity), MPZ(amt.quantity));
-  }
+  if (quantity)
+    _release();
+
+  quantity = amt.quantity;
+  quantity->ref++;
+
   commodity = amt.commodity;
   precision = amt.precision;
-  assert(commodity);
 }
 
 amount_t& amount_t::operator=(const std::string& value)
@@ -167,29 +232,30 @@ amount_t& amount_t::operator=(const char * value)
 // assignment operator
 amount_t& amount_t::operator=(const amount_t& amt)
 {
-  if (amt.quantity) {
+  if (amt.quantity)
     _copy(amt);
-  } else {
-    commodity = amt.commodity;
-    precision = amt.precision;
-  }
+  else if (quantity)
+    _clear();
+
   return *this;
 }
 
 amount_t& amount_t::operator=(const bool value)
 {
   if (! value) {
-    if (quantity) {
+    if (quantity)
       _clear();
-      quantity  = NULL;
-      commodity = NULL;
-      precision = 0;
-    }
   } else {
     commodity = commodity_t::null_commodity;
     precision = 0;
-    quantity = new MP_INT;
-    mpz_init_set(MPZ(quantity), true_value);
+    if (! quantity) {
+      _init();
+    }
+    else if (quantity->ref > 1) {
+      _release();
+      _init();
+    }
+    mpz_set(MPZ(quantity), true_value);
   }
   return *this;
 }
@@ -197,15 +263,18 @@ amount_t& amount_t::operator=(const bool value)
 amount_t& amount_t::operator=(const int value)
 {
   if (value == 0) {
-    if (quantity) {
+    if (quantity)
       _clear();
-      quantity  = NULL;
-      commodity = NULL;
-      precision = 0;
-    }
   } else {
     commodity = commodity_t::null_commodity;
     precision = 0;
+    if (! quantity) {
+      _init();
+    }
+    else if (quantity->ref > 1) {
+      _release();
+      _init();
+    }
     mpz_set_si(MPZ(quantity), value);
   }
   return *this;
@@ -214,15 +283,18 @@ amount_t& amount_t::operator=(const int value)
 amount_t& amount_t::operator=(const unsigned int value)
 {
   if (value == 0) {
-    if (quantity) {
+    if (quantity)
       _clear();
-      quantity  = NULL;
-      commodity = NULL;
-      precision = 0;
-    }
   } else {
     commodity = commodity_t::null_commodity;
     precision = 0;
+    if (! quantity) {
+      _init();
+    }
+    else if (quantity->ref > 1) {
+      _release();
+      _init();
+    }
     mpz_set_ui(MPZ(quantity), value);
   }
   return *this;
@@ -231,16 +303,19 @@ amount_t& amount_t::operator=(const unsigned int value)
 amount_t& amount_t::operator=(const double value)
 {
   if (value == 0.0) {
-    if (quantity) {
+    if (quantity)
       _clear();
-      quantity  = NULL;
-      commodity = NULL;
-      precision = 0;
-    }
   } else {
     commodity = commodity_t::null_commodity;
     // jww (2004-08-20): How do I calculate?
     precision = 0;
+    if (! quantity) {
+      _init();
+    }
+    else if (quantity->ref > 1) {
+      _release();
+      _init();
+    }
     mpz_set_d(MPZ(quantity), value);
   }
   return *this;
@@ -251,6 +326,8 @@ void amount_t::_resize(int prec)
 {
   if (prec == precision)
     return;
+
+  _dup();
 
   if (prec < precision) {
     mpz_ui_pow_ui(divisor, 10, precision - prec);
@@ -272,6 +349,8 @@ amount_t& amount_t::operator OP(const amount_t& amt)			\
       _init();								\
       commodity = amt.commodity;					\
       precision = amt.precision;					\
+    } else {								\
+      _dup();								\
     }									\
 									\
     if (commodity != amt.commodity)					\
@@ -298,8 +377,10 @@ DEF_OPERATOR(-=, mpz_sub)
 // unary negation
 amount_t& amount_t::negate()
 {
-  if (quantity)
+  if (quantity) {
+    _dup();
     mpz_ui_sub(MPZ(quantity), 0, MPZ(quantity));
+  }
   return *this;
 }
 
@@ -454,12 +535,10 @@ amount_t::operator bool() const
       return mpz_sgn(MPZ(quantity)) != 0;
     } else {
       assert(commodity);
-      mpz_t temp;
-      mpz_init_set(temp, MPZ(quantity));
+      mpz_set(temp, MPZ(quantity));
       mpz_ui_pow_ui(divisor, 10, precision - commodity->precision);
       mpz_tdiv_q(temp, temp, divisor);
       bool zero = mpz_sgn(temp) == 0;
-      mpz_clear(temp);
       return ! zero;
     }
   } else {
@@ -481,6 +560,8 @@ amount_t& amount_t::operator*=(const amount_t& amt)
   if (! amt.quantity || ! quantity)
     return *this;
 
+  _dup();
+
   mpz_mul(MPZ(quantity), MPZ(quantity), MPZ(amt.quantity));
   precision += amt.precision;
 
@@ -494,6 +575,8 @@ amount_t& amount_t::operator/=(const amount_t& amt)
 
   if (! amt.quantity)
     throw amount_error("Divide by zero");
+
+  _dup();
 
   // Increase the value's precision, to capture fractional parts after
   // the divide.
@@ -514,6 +597,7 @@ amount_t amount_t::round(int prec) const
     return *this;
   } else {
     amount_t temp = *this;
+    temp._dup();
     mpz_round(MPZ(temp.quantity), MPZ(temp.quantity),
 	      precision, prec == -1 ? commodity->precision : prec);
     return temp;
@@ -591,9 +675,6 @@ std::ostream& operator<<(std::ostream& out, const amount_t& amt)
     std::list<std::string> strs;
     char buf[4];
 
-    mpz_t temp;
-    mpz_init(temp);
-
     for (int powers = 0; true; powers += 3) {
       if (powers > 0) {
 	mpz_ui_pow_ui(divisor, 10, powers);
@@ -622,8 +703,6 @@ std::ostream& operator<<(std::ostream& out, const amount_t& amt)
 
       printed = true;
     }
-
-    mpz_clear(temp);
   }
 
   if (amt.commodity->precision) {
@@ -696,8 +775,9 @@ void amount_t::parse(std::istream& in)
   std::string  quant;
   unsigned int flags = COMMODITY_STYLE_DEFAULTS;;
 
-  if (! quantity)
-    _init();
+  if (quantity)
+    _release();
+  _init();
 
   char c = peek_next_nonws(in);
   if (std::isdigit(c) || c == '.' || c == '-') {
@@ -771,64 +851,80 @@ void amount_t::parse(std::istream& in)
   delete[] buf;
 }
 
-// If necessary, amounts may be recorded in a binary file textually.
-// This offers little advantage, and requires binary<->decimal
-// conversion each time the file is saved or loaded.
-//
-//#define WRITE_AMOUNTS_TEXTUALLY
-
 static char buf[4096];
+static int  index = 0;
 
 void amount_t::write_quantity(std::ostream& out) const
 {
-  unsigned short len;
-  if (quantity) {
-#ifdef WRITE_AMOUNTS_TEXTUALLY
-    mpz_get_str(buf, 10, MPZ(quantity));
-    len = std::strlen(buf);
-#else
+  char byte;
+
+  if (! quantity) {
+    byte = 0;
+    out.write(&byte, sizeof(byte));
+    return;
+  }
+
+  if (quantity->index == 0) {
+    quantity->index = ++index;
+
+    byte = 1;
+    out.write(&byte, sizeof(byte));
+
     std::size_t size;
     mpz_export(buf, &size, 1, sizeof(int), 0, 0, MPZ(quantity));
-    len = size * sizeof(int);
-#endif
+    unsigned short len = size * sizeof(int);
     out.write((char *)&len, sizeof(len));
+
     if (len) {
       out.write(buf, len);
-#ifndef WRITE_AMOUNTS_TEXTUALLY
-      char negative = mpz_sgn(MPZ(quantity)) < 0 ? 1 : 0;
-      out.write(&negative, sizeof(negative));
-#endif
+
+      byte = mpz_sgn(MPZ(quantity)) < 0 ? 1 : 0;
+      out.write(&byte, sizeof(byte));
+
       out.write((char *)&precision, sizeof(precision));
     }
   } else {
-    len = 0;
-    out.write((char *)&len, sizeof(len));
+    assert(quantity->ref > 1);
+
+    // Since this value has already been written, we simply write
+    // out a reference to which one it was.
+    byte = 2;
+    out.write(&byte, sizeof(byte));
+    out.write((char *)&quantity->index, sizeof(quantity->index));
   }
 }
 
 void amount_t::read_quantity(std::istream& in)
 {
-  unsigned short len;
-  in.read((char *)&len, sizeof(len));
-  if (len) {
+  assert(! quantity);
+
+  char byte;
+  in.read(&byte, sizeof(byte));
+
+  if (byte == 0)
+    return;
+
+  if (byte == 1) {
+    _init();
+    bigints.push_back(quantity);
+
+    unsigned short len;
+    in.read((char *)&len, sizeof(len));
     in.read(buf, len);
-    if (! quantity)
-      _init();
-#ifdef WRITE_AMOUNTS_TEXTUALLY
-    buf[len] = '\0';
-    mpz_set_str(MPZ(quantity), buf, 10);
-#else
+    mpz_import(MPZ(quantity), len / sizeof(int), 1, sizeof(int), 0, 0, buf);
+
     char negative;
     in.read(&negative, sizeof(negative));
-    mpz_import(MPZ(quantity), len / sizeof(int), 1, sizeof(int), 0, 0, buf);
     if (negative)
       mpz_neg(MPZ(quantity), MPZ(quantity));
-#endif
+
     in.read((char *)&precision, sizeof(precision));
   } else {
-    if (quantity)
-      _clear();
-    quantity = NULL;
+    unsigned int index;
+    in.read((char *)&index, sizeof(index));
+    assert(index <= bigints.size());
+    quantity = bigints[index - 1];
+    quantity->ref++;
   }
 }
 

@@ -13,15 +13,24 @@ class commodity_t;
 
 class amount_t
 {
-  typedef void * base_type;
-
   void _init();
   void _copy(const amount_t& amt);
-  void _clear();
+  void _release();
+  void _dup();
   void _resize(int prec);
 
+  void _clear() {
+    if (quantity)
+      _release();
+    quantity  = NULL;
+    commodity = NULL;
+    precision = 0;
+  }
+
  public:
-  base_type	 quantity;	// amount, to MAX_PRECISION
+  struct bigint_t;
+
+  bigint_t *	 quantity;	// amount, to MAX_PRECISION
   unsigned short precision;
   commodity_t *	 commodity;
 
@@ -40,14 +49,14 @@ class amount_t
     if (amt.quantity) {
       _copy(amt);
     } else {
-      commodity = amt.commodity;
-      precision = amt.precision;
+      precision = 0;
+      commodity = NULL;
     }
   }
-  amount_t(const std::string& value) {
+  amount_t(const std::string& value) : quantity(NULL) {
     parse(value);
   }
-  amount_t(const char * value) {
+  amount_t(const char * value) : quantity(NULL) {
     parse(value);
   }
   amount_t(const bool value);
@@ -58,7 +67,7 @@ class amount_t
   // destructor
   ~amount_t() {
     if (quantity)
-      _clear();
+      _release();
   }
 
   // assignment operator

@@ -81,6 +81,19 @@ namespace ledger {
 std::ostream * debug_stream	 = &std::cerr;
 bool	       free_debug_stream = false;
 
+bool _debug_active(const char * const cls) {
+  if (char * debug = std::getenv("DEBUG_CLASS")) {
+    static const char * error;
+    static int	  erroffset;
+    static int	  ovec[30];
+    static pcre * class_regexp = pcre_compile(debug, PCRE_CASELESS,
+					      &error, &erroffset, NULL);
+    return pcre_exec(class_regexp, NULL, cls, std::strlen(cls),
+		     0, 0, ovec, 30) >= 0;
+  }
+  return false;
+}
+
 static struct init_streams {
   init_streams() {
     // If debugging is enabled and DEBUG_FILE is set, all debugging
