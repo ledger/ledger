@@ -1,0 +1,36 @@
+!python
+# These functions maintain the minimum and maximum of the values
+# passed to them.  This is used to maintain the current min/max in the
+# prices report.
+
+min_val = 0
+def vmin(d, val):
+    global min_val
+    if not min_val or val < min_val:
+        min_val = val
+	return val
+    return min_val
+
+max_val = 0
+def vmax(d, val):
+    global max_val
+    if not max_val or val > max_val:
+        max_val = val
+	return val
+    return max_val
+!end
+
+; Change the 'prices' report format to show min/max values
+--prices-format %[%Y/%m/%d %H:%M:%S %Z]   %-8N %10t %10('vmin'a) %10('vmax'a) %12T\n
+
+2004/05/01 Checking balance
+  Assets:Checking               $500.00
+  Equity:Opening Balances
+
+2004/05/29 Book Store
+  Expenses:Books                 $20.00
+  Assets:Checking
+
+2004/05/29 Restaurant
+  Expenses:Food                  $50.00
+  Liabilities:MasterCard

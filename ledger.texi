@@ -250,9 +250,16 @@ whose formatting has gotten out of hand.
 
 @subsection equity
 
-The @command{equity} commands print out accounts balance as if they were
-transactions.  This makes it easy to establish the starting balances
-for an account, when @ref{Archiving previous years}.
+The @command{equity} command prints out accounts balances as if they
+were entries.  This makes it easy to establish the starting balances
+for an account, such as when @ref{Archiving previous years}.
+
+@subsection prices
+
+The @command{prices} command displays the price history for matching
+commodities.  The @option{-A} flag is useful with this report, to
+display the running average price, or @option{-X} to show the price
+trend.
 
 @subsection entry
 
@@ -498,6 +505,9 @@ Sets the default format for the @command{register} report.
 
 @item --print-format STR
 Sets the default format for the @command{print} report.
+
+@item --prices-format STR
+Sets the default format for the @command{prices} report.
 
 @item --plot-value-format STR
 Sets the default format for the @command{register} report, when @option{-j}
@@ -2193,20 +2203,9 @@ functionality and are willing to debug problems that come up, pass the
 option @samp{--enable-python} to configure, and contact the author via
 email.
 
-Below is a quick example of text that could be pasted into a ledger
-file to generate a customized amount column in the register report.
-It does nothing more than add $100 to each transaction's amount, but
-it demonstrates the potential for more complex extensions:
-
-@example
-!python
-import ledger
-def foo(d, val):
-    return d.xact.amount + val
-!end
-
---amount-expr 'foo'@{$100@}
-@end example
+A quick example of how to use Python can be found by generating the
+@command{prices} report using @file{pysample.dat}.  See that file
+itself for more details.
 
 @contents
 @bye
