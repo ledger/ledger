@@ -49,6 +49,10 @@ class gmp_amount : public amount
     return quantity_comm;
   }
 
+  virtual void set_commdty(commodity * comm) {
+    quantity_comm = comm;
+  }
+
   virtual amount * copy() const;
   virtual amount * value(amount *) const;
   virtual amount * street(bool get_quotes) const;

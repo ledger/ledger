@@ -1,5 +1,5 @@
 #ifndef _LEDGER_H
-#define _LEDGER_H "$Revision: 1.25 $"
+#define _LEDGER_H "$Revision: 1.26 $"
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -66,6 +66,8 @@ class amount
   virtual ~amount() {}
 
   virtual commodity * commdty() const = 0;
+  virtual void set_commdty(commodity *) = 0;
+
   virtual amount * copy() const = 0;
   virtual amount * value(amount * pr = NULL) const = 0;
   virtual amount * street(bool get_quotes) const = 0;
@@ -179,6 +181,7 @@ class entry
 
   bool matches(const regexps_map& regexps) const;
   bool validate(bool show_unaccounted = false) const;
+  bool finalize(bool do_compute = false);
 
   void print(std::ostream& out, bool shortcut = true) const;
 };
@@ -189,9 +192,10 @@ struct cmp_entry_date {
   }
 };
 
-typedef std::vector<entry *>         entries_list;
-typedef entries_list::iterator       entries_list_iterator;
-typedef entries_list::const_iterator entries_list_const_iterator;
+typedef std::vector<entry *>           entries_list;
+typedef entries_list::iterator         entries_list_iterator;
+typedef entries_list::reverse_iterator entries_list_reverse_iterator;
+typedef entries_list::const_iterator   entries_list_const_iterator;
 
 
 class totals
@@ -280,6 +284,7 @@ class book
   }
   void print(std::ostream& out, regexps_map& regexps, bool shortcut) const;
 
+  account * re_find_account(const std::string& regex);
   account * find_account(const std::string& name, bool create = true);
 };
 

@@ -136,6 +136,184 @@ bool entry::validate(bool show_unaccounted) const
   return balance.is_zero();     // must balance to 0.0
 }
 
+bool entry::finalize(bool do_compute)
+{
+  // Scan through and compute the total balance for the entry.  This
+  // is used for auto-calculating the value of entries with no cost,
+  // and the per-unit price of unpriced commodities.
+
+  totals balance;
+
+  for (std::list<transaction *>::iterator x = xacts.begin();
+       x != xacts.end();
+       x++)
+    if ((*x)->cost && ! (*x)->is_virtual) {
+      amount * value = (*x)->cost->value();
+      balance.credit(value);
+      delete value;
+    }
+
+  // If one transaction is of a different commodity than the others,
+  // and it has no per-unit price, determine its price by dividing
+  // the unit count into the value of the balance.
+  //
+  // NOTE: We don't do this for prefix-style or joined-symbol
+  // commodities.  Also, do it for the last eligible commodity first,
+  // if it meets the criteria.
+
+  if (! balance.amounts.empty() && balance.amounts.size() == 2) {
+    for (std::list<transaction *>::iterator x = xacts.begin();
+	 x != xacts.end();
+	 x++) {
+      if ((*x)->is_virtual)
+	continue;
+
+      if (! (*x)->cost->has_price() &&
+	  ! (*x)->cost->commdty()->prefix &&
+	  (*x)->cost->commdty()->separate) {
+	for (totals::iterator i = balance.amounts.begin();
+	     i != balance.amounts.end();
+	     i++) {
+	  if ((*i).second->commdty() != (*x)->cost->commdty()) {
+	    (*x)->cost->set_value((*i).second);
+	    break;
+	  }
+	}
+	break;
+      }
+    }
+  }
+
+  // Walk through each of the transactions, fixing up any that we
+  // can, and performing any on-the-fly calculations.
+
+  bool empty_allowed = true;
+
+  for (std::list<transaction *>::iterator x = xacts.begin();
+       x != xacts.end();
+       x++) {
+    if ((*x)->is_virtual || (*x)->cost)
+      continue;
+
+    if (! empty_allowed || balance.amounts.empty() ||
+	balance.amounts.size() != 1) {
+      std::cerr << "Error, line " //<< linenum
+		<< ": Transaction entry is lacking an amount."
+		<< std::endl;
+      return false;
+    }
+    empty_allowed = false;
+
+    // If one transaction gives no value at all -- and all the
+    // rest are of the same commodity -- then its value is the
+    // inverse of the computed value of the others.
+
+    totals::iterator i = balance.amounts.begin();
+    (*x)->cost = (*i).second->value();
+    (*x)->cost->negate();
+
+    if (do_compute)
+      (*x)->acct->balance.credit((*x)->cost);
+  }
+
+  // If virtual accounts are being supported, walk through the
+  // transactions and create new virtual transactions for all that
+  // apply.
+
+  for (book::virtual_map_iterator m = main_ledger->virtual_mapping.begin();
+       m != main_ledger->virtual_mapping.end();
+       m++) {
+    std::list<transaction *> xacts;
+
+    for (std::list<transaction *>::iterator x = xacts.begin();
+	 x != xacts.end();
+	 x++) {
+      if ((*x)->is_virtual ||
+	  ! ledger::matches(*((*m).first), (*x)->acct->as_str()))
+	continue;
+
+      for (std::list<transaction *>::iterator i = (*m).second->begin();
+	   i != (*m).second->end();
+	   i++) {
+	transaction * t;
+
+	if ((*i)->cost->commdty()) {
+	  t = new transaction((*i)->acct, (*i)->cost);
+	} else {
+	  amount * temp = (*x)->cost->value();
+	  t = new transaction((*i)->acct, temp->value((*i)->cost));
+	  delete temp;
+	}
+
+	t->is_virtual   = (*i)->is_virtual;
+	t->must_balance = (*i)->must_balance;
+
+	// If there is already a virtual transaction for the
+	// account under consideration, and it's `must_balance'
+	// flag matches, then simply add this amount to that
+	// transaction.
+
+	bool added = false;
+
+	for (std::list<transaction *>::iterator y = xacts.begin();
+	     y != xacts.end();
+	     y++) {
+	  if ((*y)->is_virtual && (*y)->acct == t->acct &&
+	      (*y)->must_balance == t->must_balance) {
+	    (*y)->cost->credit(t->cost);
+	    delete t;
+	    added = true;
+	    break;
+	  }
+	}
+
+	if (! added)
+	  for (std::list<transaction *>::iterator y = xacts.begin();
+	       y != xacts.end();
+	       y++) {
+	    if ((*y)->is_virtual && (*y)->acct == t->acct &&
+		(*y)->must_balance == t->must_balance) {
+	      (*y)->cost->credit(t->cost);
+	      delete t;
+	      added = true;
+	      break;
+	    }
+	  }
+
+	if (! added)
+	  xacts.push_back(t);
+      }
+    }
+
+    // Add to the current entry any virtual transactions which were
+    // created.  We have to do this afterward, otherwise the
+    // iteration above is screwed up if we try adding new
+    // transactions during the traversal.
+
+    for (std::list<transaction *>::iterator x = xacts.begin();
+	 x != xacts.end();
+	 x++) {
+      xacts.push_back(*x);
+
+      if (do_compute)
+	(*x)->acct->balance.credit((*x)->cost);
+    }
+  }
+
+  // Compute the balances again, just to make sure it all comes out
+  // right (i.e., zero for every commodity).
+
+  if (! validate()) {
+    std::cerr << "Error, line " //<< (linenum - 1)
+	      << ": Failed to balance the following transaction:"
+	      << std::endl;
+    validate(true);
+    return false;
+  }
+
+  return true;
+}
+
 bool entry::matches(const regexps_map& regexps) const
 {
   if (regexps.empty() || (ledger::matches(regexps, code) ||
@@ -383,6 +561,22 @@ book::~book()
        i != entries.end();
        i++)
     delete *i;
+}
+
+account * book::re_find_account(const std::string& regex)
+{
+  mask acct_regex(regex);
+
+  for (entries_list_reverse_iterator i = entries.rbegin();
+       i != entries.rend();
+       i++)
+    for (std::list<transaction *>::iterator x = (*i)->xacts.begin();
+         x != (*i)->xacts.end();
+         x++)
+      if (acct_regex.match((*x)->acct->as_str()))
+        return (*x)->acct;
+
+  return NULL;
 }
 
 account * book::find_account(const std::string& name, bool create)
