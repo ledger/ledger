@@ -7,7 +7,8 @@
 
 namespace ledger {
 
-std::string truncated(const std::string& str, unsigned int width);
+std::string truncated(const std::string& str, unsigned int width,
+		      const int style = 2);
 
 std::string partial_account_name(const account_t&   account,
 				 const unsigned int start_depth);
@@ -197,5 +198,41 @@ class format_equity : public item_handler<account_t>
 };
 
 } // namespace ledger
+
+#ifdef USE_BOOST_PYTHON
+
+#include "pyfstream.h"
+
+template <typename T, typename U, typename V = int, typename W = int>
+struct pystream_handler_wrap : public ledger::item_handler<U>
+{
+  PyFileObject * file;
+  pyofstream *	 output;
+
+  T handler;
+
+  pystream_handler_wrap(PyObject * file_)
+    : file((PyFileObject *)file_), output(new pyofstream(file)),
+      handler(*output) {}
+  pystream_handler_wrap(PyObject * file_, const V& arg)
+    : file((PyFileObject *)file_), output(new pyofstream(file)),
+      handler(*output, arg) {}
+  pystream_handler_wrap(PyObject * file_, const V& arg1, const W& arg2)
+    : file((PyFileObject *)file_), output(new pyofstream(file)),
+      handler(*output, arg1, arg2) {}
+
+  virtual ~pystream_handler_wrap() {
+    delete output;
+  }
+
+  virtual void flush() {
+    handler.flush();
+  }
+  virtual void operator()(U& item) {
+    handler.operator()(item);
+  }
+};
+
+#endif // USE_BOOST_PYTHON
 
 #endif // _REPORT_H
