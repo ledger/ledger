@@ -190,7 +190,10 @@ int parse_and_report(int argc, char * argv[], char * envp[])
   }
   strings_list::iterator arg = args.begin();
 
-  config.use_cache = config.data_file.empty() && config.price_db.empty();
+  if (config.cache_file == "<none>")
+    config.use_cache = false;
+  else
+    config.use_cache = config.data_file.empty() && config.price_db.empty();
   DEBUG_PRINT("ledger.config.cache", "1. use_cache = " << config.use_cache);
 
   process_environment(config_options, envp, "LEDGER_");
@@ -218,8 +221,6 @@ int parse_and_report(int argc, char * argv[], char * envp[])
 
   if (config.cache_file.empty())
     config.cache_file = home + "/.ledger-cache";
-  else if (config.cache_file == "<none>")
-    config.cache_file = "";
 
   if (config.data_file == config.cache_file)
     config.use_cache = false;
@@ -400,8 +401,7 @@ def vmax(d, val):\n\
 
   // Write out the binary cache, if need be
 
-  if (config.use_cache && config.cache_dirty &&
-      ! config.cache_file.empty()) {
+  if (config.use_cache && config.cache_dirty && ! config.cache_file.empty()) {
     std::ofstream stream(config.cache_file.c_str());
     write_binary_journal(stream, journal.get(), &journal->sources);
   }
