@@ -14,6 +14,7 @@ libledger_a_SOURCES = \
 	parser.cc      \
 	qif.cc	       \
 	quotes.cc      \
+	reconcile.cc   \
 	textual.cc     \
 	valexpr.cc     \
 	value.cc       \
@@ -52,6 +53,7 @@ pkginclude_HEADERS = \
 	pyledger.h   \
 	qif.h	     \
 	quotes.h     \
+	reconcile.h  \
 	textual.h    \
 	timing.h     \
 	util.h	     \
