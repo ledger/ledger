@@ -504,19 +504,17 @@ entry_t * parse_entry(std::istream& in, ledger_t * ledger,
 // Textual ledger parser
 //
 
-unsigned int parse_textual_ledger(std::istream& in, ledger_t *& ledger,
+unsigned int parse_textual_ledger(std::istream& in, ledger_t * ledger,
 				  account_t * master)
 {
   static char   line[MAX_LINE + 1];
   char		c;
-  int		count = 0;
+  unsigned int  count = 0;
+  unsigned int  errors = 0;
   commodity_t *	time_commodity = NULL;
 
   std::list<account_t *>   account_stack;
   automated_transactions_t auto_xacts;
-
-  if (! ledger)
-    ledger = new ledger_t;
 
   if (! master)
     master = ledger->master;
@@ -761,7 +759,8 @@ unsigned int parse_textual_ledger(std::istream& in, ledger_t *& ledger,
       }
     }
     catch (const parse_error& err) {
-      std::cerr << err.what() << std::endl;
+      std::cerr << "Error: " << err.what() << std::endl;
+      errors++;
     }
   }
 
@@ -770,6 +769,12 @@ unsigned int parse_textual_ledger(std::istream& in, ledger_t *& ledger,
     time_commodity->precision = 2;
     time_commodity->flags |= (COMMODITY_STYLE_CONSULTED |
 			      COMMODITY_STYLE_NOMARKET);
+  }
+
+  if (errors > 0) {
+    std::ostringstream msg;
+    msg << "Errors parsing file '" << path << "'";
+    throw error(msg.str());
   }
 
   return count;

@@ -1,5 +1,6 @@
 #include "ledger.h"
 #include "balance.h"
+#include "error.h"
 #include "textual.h"
 #include "binary.h"
 #include "constraint.h"
@@ -505,7 +506,7 @@ static void show_help(std::ostream& out)
 int main(int argc, char * argv[])
 {
   std::list<std::string> files;
-  ledger::ledger_t *	 book = NULL;
+  ledger::ledger_t *	 book = new ledger::ledger_t;
   ledger::constraints_t  constraints;
   ledger::format_t       format;
 
@@ -532,21 +533,22 @@ int main(int argc, char * argv[])
 	break;
       }
 
+    ledger::cache_dirty = true;
+
     if (use_cache)
       if (const char * p = std::getenv("LEDGER_CACHE"))
 	if (access(p, R_OK) != -1) {
 	  std::ifstream instr(p);
 	  if (! ledger::read_binary_ledger(instr, std::getenv("LEDGER"),
 					   book)) {
+	    // We need to throw away what we've read, and create a new
+	    // ledger
 	    delete book;
-	    book = NULL;
+	    book = new ledger::ledger_t;
+	  } else {
+	    ledger::cache_dirty = false;
 	  }
 	}
-  }
-
-  if (! book) {
-    book = new ledger::ledger_t;
-    ledger::cache_dirty = true;
   }
 
   ledger::current_ledger = book;
@@ -749,28 +751,34 @@ int main(int argc, char * argv[])
   if (! use_cache || ledger::cache_dirty) {
     int entry_count = 0;
 
-    if (files.empty()) {
-      if (char * p = std::getenv("LEDGER"))
-	for (p = std::strtok(p, ":"); p; p = std::strtok(NULL, ":"))
+    try {
+      if (files.empty()) {
+	if (char * p = std::getenv("LEDGER"))
+	  for (p = std::strtok(p, ":"); p; p = std::strtok(NULL, ":"))
+	    entry_count += parse_ledger_file(p, book);
+      } else {
+	for (std::list<std::string>::iterator i = files.begin();
+	     i != files.end(); i++) {
+	  char buf[4096];
+	  char * p = buf;
+	  std::strcpy(p, (*i).c_str());
 	  entry_count += parse_ledger_file(p, book);
-    } else {
-      for (std::list<std::string>::iterator i = files.begin();
-	   i != files.end(); i++) {
-	char buf[4096];
-	char * p = buf;
-	std::strcpy(p, (*i).c_str());
-	entry_count += parse_ledger_file(p, book);
+	}
+      }
+
+      // Read prices from their own ledger file, after all others have
+      // been read.
+
+      if (! ledger::price_db.empty()) {
+	const char * path = ledger::price_db.c_str();
+	std::ifstream db(path);
+	book->sources.push_back(path);
+	entry_count += ledger::parse_textual_ledger(db, book, book->master);
       }
     }
-
-    // Read prices from their own ledger file, after all others have
-    // been read.
-
-    if (! ledger::price_db.empty()) {
-      const char * path = ledger::price_db.c_str();
-      std::ifstream db(path);
-      book->sources.push_back(path);
-      entry_count += ledger::parse_textual_ledger(db, book, book->master);
+    catch (ledger::error& err) {
+      std::cerr << "Fatal: " << err.what() << std::endl;
+      return 1;
     }
 
     if (entry_count == 0) {

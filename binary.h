@@ -7,10 +7,10 @@ namespace ledger {
 
 extern unsigned long magic_number;
 
-extern unsigned int read_binary_ledger(std::istream&	   in,
-				       const std::string&  leader,
-				       ledger_t *&         book,
-				       account_t *         master = NULL);
+extern unsigned int read_binary_ledger(std::istream&	  in,
+				       const std::string& leader,
+				       ledger_t *         book,
+				       account_t *        master = NULL);
 
 extern void	  write_binary_ledger(std::ostream&	 out,
 				      ledger_t *	 ledger,

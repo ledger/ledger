@@ -30,7 +30,7 @@ class parse_error : public error
 
   virtual const char* what() const throw() {
     static std::ostringstream msg;
-    msg << "Error: " << file << ", line " << line << ": " << error::what();
+    msg << file << ", line " << line << ": " << error::what();
     return msg.str().c_str();
   }
 };

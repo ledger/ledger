@@ -282,8 +282,10 @@ account_t * read_binary_account(std::istream& in, account_t * master = NULL)
   return acct;
 }
 
-unsigned int read_binary_ledger(std::istream& in, const std::string& leader,
-				ledger_t *& ledger, account_t * master)
+unsigned int read_binary_ledger(std::istream&	   in,
+				const std::string& leader,
+				ledger_t *	   ledger,
+				account_t *	   master)
 {
   ident = 0;
   c_ident = 0;
@@ -291,7 +293,7 @@ unsigned int read_binary_ledger(std::istream& in, const std::string& leader,
   unsigned long magic;
   in.read((char *)&magic, sizeof(magic));
   if (magic != magic_number)
-    return NULL;
+    return 0;
 
 #ifdef DEBUG
   {
@@ -304,19 +306,16 @@ unsigned int read_binary_ledger(std::istream& in, const std::string& leader,
   unsigned long this_ver;
   in.read((char *)&this_ver, sizeof(this_ver));
   if (this_ver != format_version)
-    return NULL;
+    return 0;
 
   unsigned short len;
   in.read((char *)&len, sizeof(len));
   if (! len)
-    return NULL;
+    return 0;
   in.read(buf, len);
 
   if (leader != buf)
-    return NULL;
-
-  if (! ledger)
-    ledger = new ledger_t;
+    return 0;
 
   in.read((char *)&len, sizeof(len));
 
@@ -333,7 +332,7 @@ unsigned int read_binary_ledger(std::istream& in, const std::string& leader,
     in.read((char *)&old_mtime, sizeof(old_mtime));
     stat(buf, &info);
     if (info.st_mtime > old_mtime)
-      return NULL;
+      return 0;
   }
 
   ledger->master = read_binary_account(in, master);
