@@ -323,9 +323,13 @@ Return the difference in the format of a time value."
 	  (if (nth 1 item)
 	      (set-text-properties beg (1- (point))
 				   (list 'face 'bold
-					 'where (nth 0 item)))
+					 'where
+					 (with-current-buffer buf
+					   (copy-marker (nth 0 item)))))
 	    (set-text-properties beg (1- (point))
-				 (list 'where (nth 0 item)))))))
+				 (list 'where
+				       (with-current-buffer buf
+					 (copy-marker (nth 0 item)))))))))
     (goto-char (point-min))
     (set-buffer-modified-p nil)
     (toggle-read-only t)))
