@@ -335,6 +335,7 @@ class commodity_t
 
   static commodities_map commodities;
   static commodity_t *   null_commodity;
+  static commodity_t *   default_commodity;
 
   static bool add_commodity(commodity_t * commodity,
 			    const std::string symbol = "") {
