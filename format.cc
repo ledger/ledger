@@ -130,8 +130,14 @@ element_t * format_t::parse_elements(const std::string& fmt)
     case '(': {
       ++p;
       const char * b = p;
-      while (*p && *p != ')')
+      int depth = 1;
+      while (*p) {
+	if (*p == ')' && --depth == 0)
+	  break;
+	else if (*p == '(')
+	  ++depth;
 	p++;
+      }
       if (*p != ')')
 	throw format_error("Missing ')'");
 
@@ -149,8 +155,14 @@ element_t * format_t::parse_elements(const std::string& fmt)
     case '[': {
       ++p;
       const char * b = p;
-      while (*p && *p != ']')
+      int depth = 1;
+      while (*p) {
+	if (*p == ']' && --depth == 0)
+	  break;
+	else if (*p == '[')
+	  ++depth;
 	p++;
+      }
       if (*p != ']')
 	throw format_error("Missing ']'");
 

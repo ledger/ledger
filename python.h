@@ -1,6 +1,8 @@
 #ifndef _PYTHON_H
 #define _PYTHON_H
 
+#include "error.h"
+
 #include <boost/python.hpp>
 
 using namespace boost::python;
@@ -47,6 +49,7 @@ inline void python_eval(std::istream& in)
   }
   catch(const boost::python::error_already_set&) {
     PyErr_Print();
+    throw error("Evaluating Python code");
   }
 }
 

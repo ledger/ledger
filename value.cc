@@ -770,6 +770,7 @@ void export_value()
     .def(self != int())
 
     .def(! self)
+    .def(int_(self))
 
     .def(abs(self))
     .def(self_ns::str(self))

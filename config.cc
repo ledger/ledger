@@ -25,11 +25,11 @@ config_t::config_t()
   balance_format     = "%20T  %2_%-n\n";
   register_format    = ("%D %-.20P %-.22N %12.66t %12.80T\n%/"
 			"%32|%-.22N %12.66t %12.80T\n");
-  plot_value_format  = "%D %t\n";
+  plot_amount_format = "%D %t\n";
   plot_total_format  = "%D %T\n";
   print_format       = "\n%D %X%C%P\n    %-34N  %12o\n%/    %-34N  %12o\n";
   equity_format      = "\n%D %X%C%P\n%/    %-34N  %12t\n";
-  prices_format      = "%D %-10N %12t %12T\n";
+  prices_format      = "%[%Y/%m/%d %H:%M:%S %Z]   %-10N %12t %12T\n";
 
   show_collapsed     = false;
   show_subtotal      = false;
@@ -276,62 +276,64 @@ void option_help(std::ostream& out)
   out
     << "usage: ledger [options] COMMAND [ACCT REGEX]... [-- [PAYEE REGEX]...]\n\n\
 Basic options:\n\
-  -h, --help            display this help text\n\
-  -v, --version         show version information\n\
-  -i, --init FILE       initialize ledger by loading FILE (def: ~/.ledgerrc)\n\
-      --cache FILE      use FILE as a binary cache when --file is not used\n\
-  -f, --file FILE       read ledger data from FILE\n\
-  -o, --output FILE     write output to FILE\n\
-  -z, --set-price CONV  specify a commodity conversion: \"COMM=AMOUNT\"\n\
-  -a, --account NAME    specify the default account (useful with QIF files)\n\n\
+  -h, --help             display this help text\n\
+  -v, --version          show version information\n\
+  -i, --init FILE        initialize ledger by loading FILE (def: ~/.ledgerrc)\n\
+      --cache FILE       use FILE as a binary cache when --file is not used\n\
+  -f, --file FILE        read ledger data from FILE\n\
+  -o, --output FILE      write output to FILE\n\
+  -z, --set-price CONV   specify a commodity conversion: \"COMM=AMOUNT\"\n\
+  -a, --account NAME     use NAME as default account (useful with QIF files)\n\n\
 Report filtering:\n\
-  -b, --begin-date DATE set report begin date\n\
-  -e, --end-date DATE   set report end date\n\
-  -c, --current         show only current and past entries (not future)\n\
-  -C, --cleared         consider only cleared transactions\n\
-  -U, --uncleared       consider only uncleared transactions\n\
-  -R, --real            consider only non-virtual transactions\n\
-  -r, --related         calculate report using related transactions\n\n\
+  -b, --begin-date DATE  set report begin date\n\
+  -e, --end-date DATE    set report end date\n\
+  -c, --current          show only current and past entries (not future)\n\
+  -C, --cleared          consider only cleared transactions\n\
+  -U, --uncleared        consider only uncleared transactions\n\
+  -R, --real             consider only non-virtual transactions\n\
+  -r, --related          calculate report using related transactions\n\n\
 Output customization:\n\
-  -F, --format STR      use STR as the format; for each report type, use:\n\
-			  --balance-format   --equity-format\n\
-			  --register-format  --plot-value-format\n\
-			  --print-format     --plot-total-format\n\
-  -y, --date-format STR use STR as the date format (def: %Y/%m/%d)\n\
-  -E, --empty           balance: show accounts with zero balance\n\
-  -n, --collapse        register: collapse entries with multiple transactions\n\
-  -s, --subtotal        balance: show sub-accounts; register: show subtotals\n\
-  -S, --sort EXPR       sort report according to the value expression EXPR\n\
-  -p, --interval STR    report by interval (period), based on STR\n\
-      --dow             show a days-of-the-week report\n\
-  -W, --weekly          show weekly sub-totals\n\
-  -M, --monthly         show monthly sub-totals\n\
-  -Y, --yearly          show yearly sub-totals\n\
-  -l, --limit EXPR      calculate only transactions matching EXPR\n\
-  -d, --display EXPR    display only transactions matching EXPR\n\
-  -t, --value-expr EXPR set the value expression for all report types\n\
-  -T, --total-expr EXPR set the total expression for all report types\n\
-  -j, --value-data      print only raw value data (useful when scripting)\n\
-  -J, --total-data      print only raw total data\n\n\
+  -F, --format STR       use STR as the format; for each report type, use:\n\
+			   --balance-format   --equity-format\n\
+			   --register-format  --plot-amount-format\n\
+			   --print-format     --plot-total-format\n\
+			   --prices-format\n\
+  -y, --date-format STR  use STR as the date format (def: %Y/%m/%d)\n\
+  -E, --empty            balance: show accounts with zero balance\n\
+  -n, --collapse         register: collapse entries with multiple transactions\n\
+  -s, --subtotal         balance: show sub-accounts; register: show subtotals\n\
+  -S, --sort EXPR        sort report according to the value expression EXPR\n\
+  -p, --interval STR     report by interval (period), based on STR\n\
+      --dow              show a days-of-the-week report\n\
+  -W, --weekly           show weekly sub-totals\n\
+  -M, --monthly          show monthly sub-totals\n\
+  -Y, --yearly           show yearly sub-totals\n\
+  -l, --limit EXPR       calculate only transactions matching EXPR\n\
+  -d, --display EXPR     display only transactions matching EXPR\n\
+  -t, --amount-expr EXPR set the amount expression for all report types\n\
+  -T, --total-expr EXPR  set the total expression for all report types\n\
+  -j, --amount-data      print only raw amount data (useful for scripting)\n\
+  -J, --total-data       print only raw total data\n\n\
 Commodity reporting:\n\
-  -P, --price-db FILE   sets the price database to FILE (def: ~/.pricedb)\n\
-  -L, --price-exp MINS  download quotes only if newer than MINS (def: 1440)\n\
-  -Q, --download        download price information when needed\n\
-  -O, --quantity        report commodity totals (this is the default)\n\
-  -B, --basis           report commodity cost basis\n\
-  -V, --market          report commodity market value\n\
-  -G, --gain            report commodity gain/loss\n\
-  -A, --average         report average transaction amount\n\
-  -D, --deviation       report deviation from the average\n\
-  -X, --trend           report average deviation from the average\n\
-  -Z, --weighted-trend  same as trend, but older values are less significant\n\
-			(-D, -X and -Z make little sense in balance reports)\n\
+  -P, --price-db FILE    sets the price database to FILE (def: ~/.pricedb)\n\
+  -L, --price-exp MINS   download quotes only if newer than MINS (def: 1440)\n\
+  -Q, --download         download price information when needed\n\
+  -O, --quantity         report commodity totals (this is the default)\n\
+  -B, --basis            report commodity cost basis\n\
+  -V, --market           report commodity market value\n\
+  -G, --gain             report commodity gain/loss\n\
+  -A, --average          report average transaction amount\n\
+  -D, --deviation        report deviation from the average\n\
+  -X, --trend            report average deviation from the average\n\
+  -Z, --weighted-trend   same as trend, but older values are less significant\n\
+			 (-D, -X and -Z make little sense in balance reports)\n\
 Commands:\n\
-  balance [REGEXP]...   show balance totals for matching accounts\n\
-  register [REGEXP]...  show register of matching transactions\n\
-  print [REGEXP]...     print all matching entries\n\
-  equity [REGEXP]...    output equity entries for matching accounts\n\
-  entry DATE PAYEE AMT  output a derived entry, based on the arguments\n";
+  balance [REGEXP]...    show balance totals for matching accounts\n\
+  register [REGEXP]...   show register of matching transactions\n\
+  print [REGEXP]...      print all matching entries\n\
+  equity [REGEXP]...     output equity entries for matching accounts\n\
+  prices [REGEXP]...     display price history for matching commodities\n\
+  entry DATE PAYEE AMT   output a derived entry, based on the arguments\n";
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -444,9 +446,9 @@ OPT_BEGIN(register_format, ":") {
   config.register_format = optarg;
 } OPT_END(register_format);
 
-OPT_BEGIN(plot_value_format, ":") {
-  config.plot_value_format = optarg;
-} OPT_END(plot_value_format);
+OPT_BEGIN(plot_amount_format, ":") {
+  config.plot_amount_format = optarg;
+} OPT_END(plot_amount_format);
 
 OPT_BEGIN(plot_total_format, ":") {
   config.plot_total_format = optarg;
@@ -459,6 +461,10 @@ OPT_BEGIN(print_format, ":") {
 OPT_BEGIN(equity_format, ":") {
   config.equity_format = optarg;
 } OPT_END(equity_format);
+
+OPT_BEGIN(prices_format, ":") {
+  config.prices_format = optarg;
+} OPT_END(prices_format);
 
 OPT_BEGIN(empty, "E") {
   config.show_empty = true;
@@ -524,10 +530,10 @@ OPT_BEGIN(total_expr, "T:") {
   config.total_expr = optarg;
 } OPT_END(total_expr);
 
-OPT_BEGIN(value_data, "j") {
+OPT_BEGIN(amount_data, "j") {
   config.amount_expr   = "S" + config.amount_expr;
-  config.format_string = config.plot_value_format;
-} OPT_END(value_data);
+  config.format_string = config.plot_amount_format;
+} OPT_END(amount_data);
 
 OPT_BEGIN(total_data, "J") {
   config.total_expr    = "S" + config.total_expr;
@@ -649,10 +655,11 @@ void export_config()
     .def_readwrite("format_string", &config_t::format_string)
     .def_readwrite("balance_format", &config_t::balance_format)
     .def_readwrite("register_format", &config_t::register_format)
-    .def_readwrite("plot_value_format", &config_t::plot_value_format)
+    .def_readwrite("plot_amount_format", &config_t::plot_amount_format)
     .def_readwrite("plot_total_format", &config_t::plot_total_format)
     .def_readwrite("print_format", &config_t::print_format)
     .def_readwrite("equity_format", &config_t::equity_format)
+    .def_readwrite("prices_format", &config_t::prices_format)
     .def_readwrite("date_format", &config_t::date_format)
     .def_readwrite("sort_string", &config_t::sort_string)
     .def_readwrite("amount_expr", &config_t::amount_expr)

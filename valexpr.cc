@@ -303,7 +303,8 @@ void value_expr_t::compute(value_t& result, const details_t& details) const
 	  }
 	  else if (PyObject * err = PyErr_Occurred()) {
 	    PyErr_Print();
-	    result = 0;
+	    throw value_expr_error(std::string("While calling Python function '") +
+				   constant_s + "'");
 	  }
 	  else {
 	    result = 0;
@@ -319,7 +320,8 @@ void value_expr_t::compute(value_t& result, const details_t& details) const
     }
     catch(const boost::python::error_already_set&) {
       PyErr_Print();
-      result = 0;
+      throw value_expr_error(std::string("While calling Python function '") +
+			     constant_s + "'");
     }
 #endif
     break;
@@ -572,13 +574,13 @@ value_expr_t * parse_value_term(std::istream& in)
 	node->right = new value_expr_t(value_expr_t::O_ARG);
 	value_expr_t * cur = node->right;
 	cur->left = parse_value_expr(in, true);
-	while (peek_next_nonws(in) == ',') {
-	  in.get(c);
+	in.get(c);
+	while (! in.eof() && c == ',') {
 	  cur->right = new value_expr_t(value_expr_t::O_ARG);
 	  cur = cur->right;
 	  cur->left = parse_value_expr(in, true);
+	  in.get(c);
 	}
-	in.get(c);
 	if (c != ')')
 	  unexpected(c, ')');
       } else {

@@ -31,7 +31,7 @@ struct config_t
   std::string   format_string;
   std::string   balance_format;
   std::string   register_format;
-  std::string   plot_value_format;
+  std::string   plot_amount_format;
   std::string   plot_total_format;
   std::string   print_format;
   std::string   equity_format;

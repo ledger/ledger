@@ -1,10 +1,3 @@
-!python
-def foo(d, val, x):
-    return d.xact.amount + val
-!end
-
---amount-expr 'foo'({$100}, 20)
-
 2004/05/01 Checking balance
   Assets:Checking               $500.00
   Equity:Opening Balances
