@@ -1,9 +1,6 @@
 define GNUCASH
 true
 endef
-define HUQUQ
-true
-endef
 
 CODE =  amount.cc   \
 	ledger.cc   \
@@ -15,14 +12,10 @@ CODE =  amount.cc   \
 
 OBJS = $(patsubst %.cc,%.o,$(CODE))
 
-CFLAGS = -Wall -ansi -pedantic
-DFLAGS = -g -O2 # -O3 -fomit-frame-pointer -mcpu=pentium
+CFLAGS = -Wall -ansi -pedantic -DDEBUG=1
+DFLAGS = -g # -O2 # -O3 -fomit-frame-pointer -mcpu=pentium
 INCS   =
 LIBS   = -lgmpxx -lgmp -lpcre
-
-ifdef HUQUQ
-CFLAGS := $(CFLAGS) -DHUQUQULLAH=1
-endif
 
 ifdef GNUCASH
 CODE   := $(CODE) gnucash.cc

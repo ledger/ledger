@@ -425,12 +425,17 @@ const std::string gmp_amount::as_str(bool full_prec) const
 {
   std::ostringstream s;
 
-  assert(quantity_comm);
-  s << amount_to_str(quantity_comm, quantity, full_prec);
+  if (quantity_comm)
+    s << amount_to_str(quantity_comm, quantity, full_prec);
+  else
+    s << quantity;
 
   if (priced) {
-    assert(price_comm);
-    s << " @ " << amount_to_str(price_comm, price, full_prec);
+    s << " @ ";
+    if (price_comm)
+      s << amount_to_str(price_comm, price, full_prec);
+    else
+      s << price;
   }
   return s.str();
 }

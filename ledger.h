@@ -1,5 +1,5 @@
 #ifndef _LEDGER_H
-#define _LEDGER_H "$Revision: 1.17 $"
+#define _LEDGER_H "$Revision: 1.18 $"
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -105,16 +105,14 @@ struct transaction
   amount *  cost;
 
   std::string note;
-#ifdef HUQUQULLAH
-  bool exempt_or_necessary;
-#endif
+
+  bool is_virtual;
+  bool must_balance;
+  bool specified;
 
   transaction(account * _acct = NULL, amount * _cost = NULL)
-    : acct(_acct), cost(_cost) {
-#ifdef HUQUQULLAH
-    exempt_or_necessary = false;
-#endif
-  }
+    : acct(_acct), cost(_cost),
+      is_virtual(false), must_balance(true), specified(false) {}
 
 #ifdef DO_CLEANUP
   ~transaction() {
@@ -122,6 +120,11 @@ struct transaction
       delete cost;
   }
 #endif
+
+  const std::string acct_as_str() const;
+
+  void print(std::ostream& out, bool display_quantity = true,
+	     bool display_price = true) const;
 };
 
 
@@ -152,8 +155,9 @@ struct entry
 #endif
 
   bool matches(const std::list<mask>& regexps) const;
-  void print(std::ostream& out, bool shortcut = true) const;
   bool validate(bool show_unaccounted = false) const;
+
+  void print(std::ostream& out, bool shortcut = true) const;
 };
 
 struct cmp_entry_date {
@@ -211,27 +215,15 @@ struct account
   commodity * comm;             // default commodity for this account
 #endif
   totals      balance;          // optional, parse-time computed balance
+  int         checked;        // 'balance' uses this for speed's sake
+  accounts_t  children;
 
   mutable std::string full_name;
 
-  int  checked;                 // 'balance' uses this for speed's sake
-#ifdef HUQUQULLAH
-  bool exempt_or_necessary;
-#endif
+  account() : parent(NULL), checked(0) {}
 
-  accounts_t children;
-
-  account() : parent(NULL), checked(0) {
-#ifdef HUQUQULLAH
-    exempt_or_necessary = false;
-#endif
-  }
   account(const std::string& _name, struct account * _parent = NULL)
-    : parent(_parent), name(_name), checked(0) {
-#ifdef HUQUQULLAH
-    exempt_or_necessary = false;
-#endif
-  }
+    : parent(_parent), name(_name), checked(0) {}
 
   const std::string as_str() const {
     if (! parent)
@@ -252,22 +244,26 @@ struct state
   entries_t       entries;
   totals          prices;
 
-#ifdef HUQUQULLAH
-  bool            compute_huquq;
-  std::list<mask> huquq_categories;
-  amount *        huquq;
-  commodity *     huquq_commodity;
-  account *       huquq_account;
-  account *       huquq_expenses_account;
+  typedef std::map<std::list<mask> *,
+		   std::list<transaction *> *> virtual_map;
 
-  state() : compute_huquq(false) {}
-#endif
+  typedef std::pair<std::list<mask> *,
+		    std::list<transaction *> *> virtual_map_pair;
+
+  typedef virtual_map::const_iterator virtual_map_iterator;
+
+  std::string mapping_file;
+  virtual_map virtual_mapping;
+  bool        compute_virtual;
+
+  state() : mapping_file(".mapping"), compute_virtual(true) {}
 
 #ifdef DO_CLEANUP
   ~state();
 #endif
 
   void record_price(const std::string& setting);
+
   account * find_account(const std::string& name, bool create = true);
 };
 

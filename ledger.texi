@@ -1,5 +1,5 @@
 \input texinfo    @c -*-texinfo-*-
-@comment $Id: ledger.texi,v 1.8 2003/10/02 05:04:38 johnw Exp $
+@comment $Id: ledger.texi,v 1.9 2003/10/04 01:54:31 johnw Exp $
 @comment %**start of header
 
 @setfilename ledger.info
@@ -524,7 +524,21 @@ Then again, why would anyone use a Gnome-centric, 35 megabyte behemoth
 to edit their data, and a 65 kilobyte executable to query it@dots{}
 
 @node Computing Huqúqu'lláh,  , Keeping a ledger, Top
-@chapter Computing Huqúqu'lláh
+@chapter Using Virtual Accounts
+
+One special feature of the @code{ledger} is the management of virtual
+accounts.  A virtual account is when you, in your mind, see money as
+moving to certain places, when in reality that money has not moved at
+all.  There are several scenarios where this type of thinking comes in
+very handy, and each of them will be discussed in detail.
+
+@section Saving for a Special Occasion
+
+@section Keeping a Budget
+
+@section Tracking Allocated Funds
+
+@section Computing Bahá'í Huqúqu'lláh
 
 As a Bahá'í, I need to compute Huqúqu'lláh on some of my assets.  The
 exact details of this matter are rather complex, so if you have any

@@ -4,11 +4,55 @@
 
 namespace ledger {
 
-bool use_warnings = false;
-
+bool  use_warnings = false;
 state main_ledger;
 
 std::list<mask> regexps;
+
+const std::string transaction::acct_as_str() const
+{
+  char * begin = NULL;
+  char * end = NULL;
+
+  if (is_virtual) {
+    if (must_balance) {
+      begin = "[";
+      end   = "]";
+    } else {
+      begin = "(";
+      end   = ")";
+    }
+  }
+
+  if (begin)
+    return std::string(begin) + acct->as_str() + end;
+  else
+    return acct->as_str();
+}
+
+void transaction::print(std::ostream& out, bool display_quantity,
+			bool display_price) const
+{
+  out.width(30);
+  out << std::left << acct_as_str();
+
+  if (cost && display_quantity) {
+    out << "  ";
+    out.width(10);
+
+    std::string value = cost->as_str(true);
+    if (! display_price) {
+      int index = value.find('@');
+      value = std::string(value, index - 1);
+    }
+    out << std::right << value;
+  }
+
+  if (! note.empty())
+    out << "  ; " << note;
+
+  out << std::endl;
+}
 
 void entry::print(std::ostream& out, bool shortcut) const
 {
@@ -33,28 +77,17 @@ void entry::print(std::ostream& out, bool shortcut) const
   for (std::list<transaction *>::const_iterator x = xacts.begin();
        x != xacts.end();
        x++) {
-#ifdef HUQUQULLAH
-    if ((*x)->exempt_or_necessary ||
-	(! shortcut && (*x)->acct->exempt_or_necessary))
-      out << "   !";
-    else
-#endif
-      out << "    ";
+    if ((*x)->is_virtual && ! (*x)->specified)
+      continue;
 
-    out.width(30);
-    out << std::left << (*x)->acct->as_str();
+    out << "    ";
 
-    if ((*x)->cost && (! shortcut || x == xacts.begin())) {
-      out << "  ";
-      out.width(10);
-      out << std::right << (*x)->cost->as_str(true);
-    }
+    // jww (2003-10-03): If we are shortcutting, don't print the
+    // "per-unit price" of a commodity, if it is not necessary.
 
-    if (! (*x)->note.empty())
-      out << "  ; " << (*x)->note;
-
-    out << std::endl;
+    (*x)->print(out, shortcut && x != xacts.begin());
   }
+
   out << std::endl;
 }
 
@@ -65,7 +98,8 @@ bool entry::validate(bool show_unaccounted) const
   for (std::list<transaction *>::const_iterator x = xacts.begin();
        x != xacts.end();
        x++)
-    if ((*x)->cost)
+    if ((*x)->cost && (*x)->must_balance &&
+	(! (*x)->is_virtual || main_ledger.compute_virtual))
       balance.credit((*x)->cost->value());
 
   if (show_unaccounted && ! balance.is_zero()) {
@@ -332,14 +366,9 @@ account * state::find_account(const std::string& name, bool create)
 
   delete[] buf;
 
-  if (current) {
+  if (current)
     accounts_cache.insert(accounts_entry(name, current));
 
-#ifdef HUQUQULLAH
-    if (matches(main_ledger.huquq_categories, name))
-      current->exempt_or_necessary = true;
-#endif
-  }
   return current;
 }
 

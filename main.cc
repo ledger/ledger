@@ -4,6 +4,9 @@
 
 namespace ledger {
   extern bool parse_ledger(std::istream& in, bool compute_balances);
+  extern void parse_virtual_mappings(const std::string& path);
+  extern bool parse_date(const std::string& date_str, std::time_t * result,
+			 const int year = -1);
 #ifdef READ_GNUCASH
   extern bool parse_gnucash(std::istream& in, bool compute_balances);
 #endif
@@ -42,9 +45,8 @@ static void show_help(std::ostream& out)
     << "  -c        do not show future entries (same as -e TODAY)" << std::endl
     << "  -f FILE   specify pathname of ledger data file" << std::endl
     << "  -h        display this help text" << std::endl
-#ifdef HUQUQULLAH
-    << "  -H        do not auto-compute Huququ'llah" << std::endl
-#endif
+    << "  -R        do not factor any virtual transactions" << std::endl
+    << "  -V FILE   use virtual mappings listed in FILE" << std::endl
     << "  -i FILE   read the list of inclusion regexps from FILE" << std::endl
     << "  -p FILE   read the list of prices from FILE" << std::endl
     << "  -P        download price quotes from the Internet" << std::endl
@@ -66,52 +68,6 @@ static void show_help(std::ostream& out)
     << "  -S        show empty accounts in balance totals" << std::endl;
 }
 
-static const char *formats[] = {
-  "%Y/%m/%d",
-  "%m/%d",
-  "%Y.%m.%d",
-  "%m.%d",
-  "%a",
-  "%A",
-  "%b",
-  "%B",
-  "%Y",
-  NULL
-};
-
-static bool parse_date(const std::string& date_str, std::time_t * result)
-{
-  struct std::tm when;
-
-  std::time_t now = std::time(NULL);
-  struct std::tm * now_tm = std::localtime(&now);
-
-  for (const char ** f = formats; *f; f++) {
-    memset(&when, INT_MAX, sizeof(struct std::tm));
-    if (strptime(date_str.c_str(), *f, &when)) {
-      when.tm_hour = 0;
-      when.tm_min  = 0;
-      when.tm_sec  = 0;
-
-      if (when.tm_year == -1)
-	when.tm_year = now_tm->tm_year;
-
-      if (std::strcmp(*f, "%Y") == 0) {
-	when.tm_mon  = 0;
-	when.tm_mday = 1;
-      } else {
-	if (when.tm_mon == -1)
-	  when.tm_mon = now_tm->tm_mon;
-	if (when.tm_mday == -1)
-	  when.tm_mday = now_tm->tm_mday;
-      }
-      *result = std::mktime(&when);
-      return true;
-    }
-  }
-  return false;
-}
-
 //////////////////////////////////////////////////////////////////////
 //
 // Command-line parser and top-level logic.
@@ -120,20 +76,20 @@ static bool parse_date(const std::string& date_str, std::time_t * result)
 int main(int argc, char * argv[])
 {
   std::istream * file = NULL;
+  regexps_t      regexps;
 
-  regexps_t regexps;
-
-#ifdef HUQUQULLAH
-  bool compute_huquq = true;
-#endif
   have_beginning = false;
   have_ending    = false;
   show_cleared   = false;
 
+  const char * p = std::getenv("MAPPINGS");
+  if (p)
+    main_ledger.mapping_file = p;
+
   // Parse the command-line options
 
   int c;
-  while (-1 != (c = getopt(argc, argv, "+b:e:d:cChHwf:i:p:Pv"))) {
+  while (-1 != (c = getopt(argc, argv, "+b:e:d:cChRV:wf:i:p:Pv"))) {
     switch (char(c)) {
     case 'b':
     case 'e': {
@@ -153,6 +109,7 @@ int main(int argc, char * argv[])
       break;
     }
 
+#if 0
     case 'd': {
       if (! parse_date(optarg, &begin_date)) {
 	std::cerr << "Error: Bad date string: " << optarg << std::endl;
@@ -200,6 +157,7 @@ int main(int argc, char * argv[])
       }
       break;
     }
+#endif
 
     case 'c':
       end_date = std::time(NULL);
@@ -208,9 +166,8 @@ int main(int argc, char * argv[])
 
     case 'C': show_cleared = true; break;
     case 'h': show_help(std::cout); break;
-#ifdef HUQUQULLAH
-    case 'H': compute_huquq = false; break;
-#endif
+    case 'R': main_ledger.compute_virtual = false; break;
+    case 'V': main_ledger.mapping_file = optarg; break;
     case 'w': use_warnings = true; break;
     case 'f': file = new std::ifstream(optarg); break;
 
@@ -285,7 +242,7 @@ int main(int argc, char * argv[])
       file = new std::ifstream(p);
 
     if (! file || ! *file) {
-      std::cerr << "Please specify the ledger file using the -f option."
+      std::cerr << "Please specify ledger file using -f option or LEDGER environment variable."
 		<< std::endl;
       return 1;
     }
@@ -294,6 +251,12 @@ int main(int argc, char * argv[])
   // Read the command word
 
   const std::string command = argv[optind];
+
+  // Parse any virtual mappings being used
+
+  if (main_ledger.compute_virtual &&
+      access(main_ledger.mapping_file.c_str(), R_OK) >= 0)
+    parse_virtual_mappings(main_ledger.mapping_file);
 
   // Parse the ledger
 
@@ -306,30 +269,9 @@ int main(int argc, char * argv[])
     parse_gnucash(*file, command == "equity");
   else
 #endif
-  {
-#ifdef HUQUQULLAH
-    if (command == "register" && argv[optind + 1] &&
-	std::string(argv[optind + 1]) != "Huququ'llah" &&
-	std::string(argv[optind + 1]) != "Expenses:Huququ'llah")
-      compute_huquq = false;
-
-    if (compute_huquq) {
-      main_ledger.compute_huquq = true;
-
-      read_regexps(".huquq", main_ledger.huquq_categories);
-
-      main_ledger.huquq_account = main_ledger.find_account("Huququ'llah");
-      main_ledger.huquq_expenses_account =
-	main_ledger.find_account("Expenses:Huququ'llah");
-    }
-#endif
-
     parse_ledger(*file, command == "equity");
-  }
 
-#ifdef DO_CLEANUP
   delete file;
-#endif
 
   // Process the command
 

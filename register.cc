@@ -117,7 +117,7 @@ void print_register(int argc, char ** argv, regexps_t& regexps,
       }
 
       out.width(22);
-      out << std::left << truncated(xact->acct->as_str(), 22) << " ";
+      out << std::left << truncated(xact->acct_as_str(), 22) << " ";
 
       out.width(12);
       out << std::right << street->as_str(true);
@@ -139,7 +139,7 @@ void print_register(int argc, char ** argv, regexps_t& regexps,
 	out << "                                      ";
 
 	out.width(22);
-	out << std::left << truncated((*y)->acct->as_str(), 22) << " ";
+	out << std::left << truncated((*y)->acct_as_str(), 22) << " ";
 
 	out.width(12);
 	street = (*y)->cost->street();
