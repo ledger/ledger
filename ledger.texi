@@ -2200,7 +2200,7 @@ it demonstrates the potential for more complex extensions:
 
 @example
 !python
-from ledger import *
+import ledger
 def foo(d, val):
     return d.xact.amount + val
 !end

@@ -287,15 +287,39 @@ void value_expr_t::compute(value_t& result, const details_t& details) const
     try {
       object func = python_interpretor->main_namespace[constant_s];
       if (right) {
-	assert(right->kind == O_ARG);
-	right->left->compute(result, details);
-	result = call<value_t>(func.ptr(), details, result);
+	if (right->right) {
+	  list args;
+	  args.append(details);
+	  for (value_expr_t * arg = right; arg; arg = arg->right) {
+	    assert(arg->kind == O_ARG);
+	    arg->left->compute(result, details);
+	    args.append(result);
+	  }
+
+	  PyObject * val = PyObject_CallObject(func.ptr(), tuple(args).ptr());
+	  if (val) {
+	    result = extract<value_t>(val)();
+	    Py_DECREF(val);
+	  }
+	  else if (PyObject * err = PyErr_Occurred()) {
+	    PyErr_Print();
+	    result = 0;
+	  }
+	  else {
+	    result = 0;
+	  }
+	} else {
+	  assert(right->kind == O_ARG);
+	  right->left->compute(result, details);
+	  result = call<value_t>(func.ptr(), details, result);
+	}
       } else {
 	result = call<value_t>(func.ptr(), details);
       }
     }
     catch(const boost::python::error_already_set&) {
       PyErr_Print();
+      result = 0;
     }
 #endif
     break;
@@ -542,22 +566,26 @@ value_expr_t * parse_value_term(std::istream& in)
     in.get(c);
     node.reset(new value_expr_t(value_expr_t::F_INTERP_FUNC));
     node->constant_s = buf;
-    if (peek_next_nonws(in) == '(') {
-      in.get(c);
-      node->right = new value_expr_t(value_expr_t::O_ARG);
-      value_expr_t * cur = node->right;
-      cur->left = parse_value_expr(in, true);
-      while (peek_next_nonws(in) == ',') {
-	in.get(c);
-	cur->right = new value_expr_t(value_expr_t::O_ARG);
-	cur = cur->right;
+    in.get(c);
+    if (! in.eof()) {
+      if (c == '(') {
+	node->right = new value_expr_t(value_expr_t::O_ARG);
+	value_expr_t * cur = node->right;
 	cur->left = parse_value_expr(in, true);
+	while (peek_next_nonws(in) == ',') {
+	  in.get(c);
+	  cur->right = new value_expr_t(value_expr_t::O_ARG);
+	  cur = cur->right;
+	  cur->left = parse_value_expr(in, true);
+	}
+	in.get(c);
+	if (c != ')')
+	  unexpected(c, ')');
+      } else {
+	in.unget();
+	node->right = new value_expr_t(value_expr_t::O_ARG);
+	node->right->left = parse_value_term(in);
       }
-      in.get(c);
-      if (c != ')')
-	unexpected(c, ')');
-    } else {
-      node->left = parse_value_term(in);
     }
     break;
   }
