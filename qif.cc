@@ -1,4 +1,5 @@
 #include "ledger.h"
+#include "qif.h"
 #include "datetime.h"
 #include "error.h"
 #include "util.h"
@@ -22,14 +23,29 @@ static inline char * get_line(std::istream& in) {
   return line;
 }
 
-unsigned int parse_qif_file(std::istream& in, journal_t * journal,
-			    account_t * master, commodity_t * def_commodity)
+bool qif_parser_t::test(std::istream& in) const
+{
+  char magic[sizeof(unsigned int) + 1];
+  in.read(magic, sizeof(unsigned int));
+  magic[sizeof(unsigned int)] = '\0';
+  in.seekg(0);
+
+  return (std::strcmp(magic, "!Typ") == 0 ||
+	  std::strcmp(magic, "\n!Ty") == 0 ||
+	  std::strcmp(magic, "\r\n!T") == 0);
+}
+
+unsigned int qif_parser_t::parse(std::istream&	     in,
+				 journal_t *	     journal,
+				 account_t *	     master,
+				 const std::string * original_file)
 {
   std::auto_ptr<entry_t>  entry;
   std::auto_ptr<amount_t> amount;
   transaction_t *	  xact;
-  account_t *             misc = journal->find_account("Miscellaneous");
   unsigned int            count;
+  account_t *             misc = NULL;
+  commodity_t *           def_commodity = NULL;
 
   entry.reset(new entry_t);
   xact = new transaction_t(master);
@@ -78,7 +94,8 @@ unsigned int parse_qif_file(std::istream& in, journal_t * journal,
     case '$':
       in >> line;
       xact->amount.parse(line);
-      if (def_commodity)
+      if (! def_commodity)
+	def_commodity = commodity_t::find_commodity("$", true);
 	xact->amount.commodity = def_commodity;
       if (c == '$')
 	xact->amount.negate();
@@ -143,6 +160,8 @@ unsigned int parse_qif_file(std::istream& in, journal_t * journal,
 
     case '^':
       if (xact->account == master) {
+	if (! misc)
+	  misc = master->find_account("Miscellaneous");
 	transaction_t * nxact = new transaction_t(misc);
 	entry->add_transaction(nxact);
 	nxact->amount = nxact->cost = - xact->amount;

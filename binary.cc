@@ -1,4 +1,5 @@
 #include "ledger.h"
+#include "binary.h"
 
 #include <vector>
 #include <fstream>
@@ -15,6 +16,15 @@ namespace ledger {
 
 const unsigned long	   binary_magic_number = 0xFFEED765;
 static const unsigned long format_version      = 0x0002000b;
+
+bool binary_parser_t::test(std::istream& in) const
+{
+  unsigned long magic;
+  in.read((char *)&magic, sizeof(magic));
+  in.seekg(0);
+
+  return magic == binary_magic_number;
+}
 
 static std::vector<account_t *>   accounts;
 static account_t::ident_t	  ident;
@@ -118,7 +128,7 @@ entry_t * read_binary_entry(std::istream& in, journal_t * journal)
        i < count;
        i++) {
     transaction_t * xact = read_binary_transaction(in, entry);
-    entry->transactions.push_back(xact);
+    entry->add_transaction(xact);
   }
 
   return entry;
@@ -252,6 +262,14 @@ unsigned int read_binary_journal(std::istream&	    in,
   return count;
 }
 
+unsigned int binary_parser_t::parse(std::istream&	in,
+				    journal_t *		journal,
+				    account_t *		master,
+				    const std::string * original_file)
+{
+  return read_binary_journal(in, original_file ? *original_file : "",
+			     journal, master);
+}
 
 #if RELEASE_LEVEL >= ALPHA
 #define write_binary_guard(in, id) {		\

@@ -174,34 +174,4 @@ entry_t * journal_t::derive_entry(strings_list::iterator i,
   return added.release();
 }
 
-int parse_journal_file(const std::string&  path,
-		       journal_t *	   journal,
-		       account_t *	   master,
-		       const std::string * original_file)
-{
-  journal->sources.push_back(path);
-
-  if (access(path.c_str(), R_OK) == -1)
-    return 0;
-
-  std::ifstream stream(path.c_str());
-
-  char magic[sizeof(unsigned int) + 1];
-  stream.read(magic, sizeof(unsigned int));
-  magic[sizeof(unsigned int)] = '\0';
-  stream.seekg(0);
-
-  if (*((unsigned int *) magic) == binary_magic_number)
-    return read_binary_journal(stream, original_file ? *original_file : "",
-			       journal, master ? master : journal->master);
-  else if (std::strcmp(magic, "!Typ") == 0 ||
-	   std::strcmp(magic, "\n!Ty") == 0 ||
-	   std::strcmp(magic, "\r\n!T") == 0)
-    return parse_qif_file(stream, journal, master ? master : journal->master,
-			  commodity_t::find_commodity("$", true));
-  else
-    return parse_textual_journal(stream, journal,
-				 master ? master : journal->master);
-}
-
 } // namespace ledger

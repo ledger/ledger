@@ -223,30 +223,6 @@ class journal_t
 			 strings_list::iterator end) const;
 };
 
-int parse_journal_file(const std::string&  path,
-		       journal_t *	   journal,
-		       account_t *	   master	 = NULL,
-		       const std::string * original_file = NULL);
-
-unsigned int parse_textual_journal(std::istream& in,
-				   journal_t *	 ledger,
-				   account_t *	 master = NULL);
-
-extern const unsigned long binary_magic_number;
-
-unsigned int read_binary_journal(std::istream&	    in,
-				 const std::string& file,
-				 journal_t *	    journal,
-				 account_t *	    master = NULL);
-
-void write_binary_journal(std::ostream&	 out,
-			  journal_t *	 journal,
-			  strings_list * files = NULL);
-
-unsigned int parse_qif_file(std::istream& in, journal_t * journal,
-			    account_t * master,
-			    commodity_t * def_commodity = NULL);
-
 extern const std::string version;
 
 } // namespace ledger

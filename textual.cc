@@ -1,3 +1,5 @@
+#include "ledger.h"
+#include "textual.h"
 #include "datetime.h"
 #include "autoxact.h"
 #include "valexpr.h"
@@ -292,8 +294,10 @@ struct push_var {
   ~push_var() { var = prev; }
 };
 
-unsigned int parse_textual_journal(std::istream& in, journal_t * journal,
-				   account_t * master)
+unsigned int textual_parser_t::parse(std::istream&	 in,
+				     journal_t *	 journal,
+				     account_t *	 master,
+				     const std::string * original_file)
 {
   static char   line[MAX_LINE + 1];
   char		c;
@@ -529,8 +533,8 @@ unsigned int parse_textual_journal(std::istream& in, journal_t * journal,
 
 	  push_var<unsigned int> save_linenum(linenum);
 	  push_var<std::string> save_path(path);
-	  count += parse_journal_file(skip_ws(line), journal,
-				      account_stack.front());
+	  count += parser_t::parse(skip_ws(line), journal,
+				   account_stack.front());
 	}
 	break;
 

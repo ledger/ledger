@@ -15,31 +15,28 @@
   operators are supported, as well as a few useful functions.  See the
   README.
 
-- If the environment variable LEDGER is used, a binary cache of that
-  current ledger will be kept, to speed up later queries of the same
-  data.  The default location is in ~/.ledger, but this can be changed
-  with the environment variable LEDGER_CACHE.  This only happens if no
-  "-f" flag was seen (i.e., if the LEDGER environment variable is
-  used).
+- If the environment variable LEDGER (or LEDGER_FILE) is used, a
+  binary cache of that ledger will be kept in ~/.ledger (or
+  LEDGER_CACHE), to speed up later queries of the same data.  This
+  happens only when "-f" or "--file" is not used.
 
-- New "-o FILE" option will output data to the given FILE.  If FILE is
-  "-", the output is the same as the default (stdout).
+- New options:
 
-- New -j and -J options replace the old -G (gnuplot) option.  -j
-  reports the values column in a way gnuplot can consume, and -J
-  reports the totals column.  An example can be found in
-  scripts/report.
+  "-o FILE" outputs data to the given FILE.  If "-", the output is the
+  same as the default (stdout).
 
-- New "-y DATEFMT" options will change the date format used throughout
-  ledger.  The default is "%Y/%m/%d".
+  -j and -J options replace previous -G (gnuplot) option.  -j reports
+  the values column in a way gnuplot can consume, and -J reports the
+  totals column.  An example can be found in scripts/report.
 
-- New -Y and -W options prints yearly and weekly subtotals, just as
-  the -M option printed monthly subtotals in the previous version.
+  "-y DATEFMT" changes the date format used in register reports.  The
+  default is "%Y/%m/%d".
 
-- New -w report will show cumulative totals for each of the days of
-  the week.
+  -Y and -W print yearly and weekly subtotals, just as the -M option
+  printed monthly subtotals in the previous version.
+  -w shows cumulative totals for each of the days of the week.
 
-- New "-z INTERVAL" allows for more flexible interval reporting.  The
+  "-z INTERVAL" allows more flexible interval reporting.  The
   sublanguage used will probably mature over time, but for now it
   supports expression like:
 
@@ -48,9 +45,14 @@
     every 3 quarters
     weekly from 12/20
 
-  Note that when using the "from" date, this does not constrain the
-  report.  It is only used for aligning report dates, for example if
-  you wish weekly reporting to start on Sundays.
+  -O shows base values (this is the default, and old behavior)
+  -B shows basis cost of commodities
+  -V show market value of commodities
+  -G reports net gain/loss (shows commodity changes only)
+  -A reports average value (arithmetic mean)
+  -D reports deviation from the average value
+  -X reports the trend (average rate of change)
+  -Z reports the trend, with older values affecting the trend less
 
 - Regexps specified after the command name now apply to account names
   only.  To search on a payee, use "--" to separate the two kinds of
@@ -79,19 +81,6 @@
   option also works for balance reports, where it will show all the
   account totals related to your query.
 
-- There are several new default reporting styles, which work both in
-  the balance and register reports:
-
-    -O  Show base values (this is the default, and old behavior)
-    -B  Show the basis cost of commodities
-    -V  Show the last known market value of commodities
-    -G  Report net gain/loss (shows commodity changes only)
-    -A  Report average value (arithmetic mean)
-    -D  Report deviation from the average value
-    -Z  Report the trend (average rate of change)
-    -W  Report the trend, with older values affecting the trend less
-    -X  Report expected amount for the next transaction
-
 - Automated transactions now use a single value expression as a
   predicate.  This means the new syntax is:
 
@@ -105,15 +94,10 @@
 - The use of "+" and "-" in ledger files (to specify permanent
   regexps) has been removed.
 
-- The -G switch no longer generates gnuplot-safe data.  It now reports
-  totals in terms of net gain/loss.
+- -l now takes a value expression as the "calculation predicate".
+  To mimic the old behavior of "-l \$100", use: -d "AT<{\$100}"
 
-- The -l flag now takes an expression string as a "predicate".
-  Therefore, to equal the old behavior of "-l $100", you would use:
-
-    -l AT<{$100}
-
-- The -S flag now takes an expression string, which yields the value
+- The -S flag takes a value expression string, which yields the value
   that will be sorted on.
 
 ----------------------------------------------------------------------

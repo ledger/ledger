@@ -1,5 +1,8 @@
 #include "ledger.h"
-#include "error.h"
+#include "parser.h"
+#include "textual.h"
+#include "binary.h"
+#include "qif.h"
 #include "valexpr.h"
 #include "format.h"
 #include "walk.h"
@@ -7,6 +10,7 @@
 #include "option.h"
 #include "config.h"
 #include "timing.h"
+#include "error.h"
 
 using namespace ledger;
 
@@ -178,16 +182,25 @@ int main(int argc, char * argv[], char * envp[])
 
   TIMER_START(parse_files);
 
+  // Setup the parsers
+  std::auto_ptr<binary_parser_t>  bin_parser(new binary_parser_t);
+  std::auto_ptr<qif_parser_t>     qif_parser(new qif_parser_t);
+  std::auto_ptr<textual_parser_t> text_parser(new textual_parser_t);
+
+  parser_t::parsers.push_back(bin_parser.get());
+  parser_t::parsers.push_back(qif_parser.get());
+  parser_t::parsers.push_back(text_parser.get());
+
   int entry_count = 0;
 
   try {
     if (! config->init_file.empty())
-      if (parse_journal_file(config->init_file, journal.get()))
+      if (parser_t::parse(config->init_file, journal.get()))
 	throw error("Entries not allowed in initialization file");
 
     if (use_cache && ! config->cache_file.empty() &&
 	! config->data_file.empty()) {
-      entry_count += parse_journal_file(config->cache_file, journal.get(),
+      entry_count += parser_t::parse(config->cache_file, journal.get(),
 					NULL, &config->data_file);
       journal->sources.pop_front(); // remove cache_file
 
@@ -206,14 +219,14 @@ int main(int argc, char * argv[], char * envp[])
 
       if (config->data_file == "-") {
 	use_cache = false;
-	entry_count += parse_textual_journal(std::cin, journal.get(), account);
+	entry_count += text_parser->parse(std::cin, journal.get(), account);
       } else {
-	entry_count += parse_journal_file(config->data_file, journal.get(),
+	entry_count += parser_t::parse(config->data_file, journal.get(),
 					  account);
       }
 
       if (! config->price_db.empty())
-	if (parse_journal_file(config->price_db, journal.get()))
+	if (parser_t::parse(config->price_db, journal.get()))
 	  throw error("Entries not allowed in price history file");
     }
 
@@ -226,7 +239,7 @@ int main(int argc, char * argv[], char * envp[])
       if (i != -1) {
 	conversion[i] = ' ';
 	std::istringstream stream(conversion);
-	parse_textual_journal(stream, journal.get(), journal->master);
+	text_parser->parse(stream, journal.get(), journal->master);
       }
     }
   }
