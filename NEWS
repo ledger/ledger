@@ -96,13 +96,13 @@
 - The -S flag now takes a value expression as the sorting criteria.
   To sort on the amount, use -S T (balance) or -S t (register).
 
-- If Boost.Python is installed, ledger can support full, two-way
-  Python integration.  This feature is enabled by passing
-  --enable-python to the "configure" script before building.  Ledger
-  can then be used as a module (ledger.so), as well as supporting
-  Python function calls directly from value expressions.  See main.py
-  for an example of driving Ledger from Python.  It implements nearly
-  all the functionality of the C++ driver, main.cc.
+- If Boost.Python is installed, ledger supports full, two-way Python
+  integration.  This feature is enabled by passing --enable-python to
+  the "configure" script before building.  Ledger can then be used as
+  a module (ledger.so), as well as supporting Python function calls
+  directly from value expressions.  See main.py for an example of
+  driving Ledger from Python.  It implements nearly all the
+  functionality of the C++ driver, main.cc.
 
   Note that this feature has yet to mature, and so is not being
   supported in this release.  It is mostly functional, however, and
