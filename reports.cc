@@ -18,9 +18,10 @@ static bool full_names     = false;
 static bool print_monthly  = false;
 static bool gnuplot_safe   = false;
 
-static bool cost_basis  = false;
-static bool use_history = false;
-static bool get_quotes  = false;
+static bool cost_basis     = false;
+static bool use_history    = false;
+static bool net_gain       = false;
+static bool get_quotes     = false;
        long pricing_leeway = 24 * 3600;
        std::string price_db;
 
@@ -87,6 +88,23 @@ static amount * resolve_amount(amount *      amt,
   }
   else if (cost_basis) {
     value = amt->value();
+  }
+  else if (net_gain) {
+    value = amt->street(when ? when : (have_ending ? &end_date : NULL),
+			use_history, get_quotes);
+    amount * basis = amt->value();
+    if (value->commdty() == basis->commdty()) {
+      basis->negate();
+      value->credit(basis);
+    } else {
+      // If the commodities do not match, ignore this amount by
+      // returning a zeroed value.
+      delete basis;
+      basis = value->copy();
+      basis->negate();
+      value->credit(basis);
+      delete basis;
+    }
   }
   else {
     value = amt->street(when ? when : (have_ending ? &end_date : NULL),
@@ -992,7 +1010,7 @@ int main(int argc, char * argv[])
 
   int c;
   while (-1 != (c = getopt(argc, argv,
-			   "+Bb:Ccd:Ee:Ff:Ghi:L:l:MN:nP:p:QRSsTUVv"))) {
+			   "+ABb:Ccd:Ee:Ff:Ghi:L:l:MN:nP:p:QRSsTUVv"))) {
     switch (char(c)) {
     case 'b':
       have_beginning = true;
@@ -1059,13 +1077,20 @@ int main(int argc, char * argv[])
       get_quotes = true;
       break;
 
-    case 'B':
-      cost_basis = true;
-      // fall through...
     case 'V':
       use_history = true;
       break;
       
+    case 'B':
+      cost_basis = true;
+      use_history = true;
+      break;
+
+    case 'A':
+      net_gain = true;
+      use_history = true;
+      break;
+
     case 'T':
       cost_basis  = false;
       use_history = false;
@@ -1147,7 +1172,7 @@ int main(int argc, char * argv[])
     }
   }
 
-  if (use_history && ! price_db.empty())
+  if (use_history && ! cost_basis && ! price_db.empty())
     entry_count += parse_ledger_file(main_ledger, price_db, regexps,
 				     command == "equity");
 

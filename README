@@ -403,7 +403,12 @@ To enable pricing reports, three options are possible:
   at time of purchase.  Thus, totals in the register and balance
   report reflect the total amount spent.
 
-**-Q FILE** ::
+**-A** ::
+  Report commodities in terms of their net gain, which is: the market
+  value minus the cost basis.  A balance report using this option
+  shows very quickly the performance of investments.
+
+**-Q** ::
   When needed (see the =-L= option) pricing quotes are obtained by
   calling the script =getquote= (a sample Perl script is provided, but
   the interface is kept simple so replacements may be made).
@@ -413,8 +418,16 @@ To enable pricing reports, three options are possible:
   pricing data is older than MINS minutes.  The default is one day,
   or 1440 minutes.
 
-Note that the =-B=, =-T=, =-V=, and =-P= and =-Q= flags are all
-mutually exclusive.  Whichever option appears last is used.
+**-p ARG** ::
+  If a string, such as "COMM=$1.20", the commodity COMM will be
+  reported only in terms of the conversion factor, which supersedes
+  all other pricing histories for that commodity.  This can be used to
+  perform arbitrary value substitutions.  For example, to report the
+  value of your dollars in terms of the ounces of gold they would buy,
+  use: -p "$=0.00280112 AU" (or whatever the current exchange rate
+  is).
+
+Note that the =-B=, =-T=, =-V=, and =-A= are mutually exclusive.
 
 ** Accounts and Inventories
 
@@ -1169,7 +1182,12 @@ launches =vi= to let you confirm that the entry looks appropriate.
   at time of purchase.  Thus, totals in the register and balance
   report reflect the total amount spent.
 
-**-Q FILE** ::
+**-A** ::
+  Report commodities in terms of their net gain, which is: the market
+  value minus the cost basis.  A balance report using this option
+  shows very quickly the performance of investments.
+
+**-Q** ::
   When needed (see the =-L= option) pricing quotes are obtained by
   calling the script =getquote= (a sample Perl script is provided, but
   the interface is kept simple so replacements may be made).
