@@ -604,11 +604,7 @@ int main(int argc, char * argv[])
 
     if (show_subtotals)
       sum_accounts(journal->master);
-
-    if (sort_order.get())
-      walk_accounts(journal->master, acct_formatter, sort_order.get());
-    else
-      walk_accounts(journal->master, acct_formatter);
+    walk_accounts(journal->master, acct_formatter, sort_order.get());
 
     if (format_account::disp_subaccounts_p(journal->master)) {
       std::string end_format = "--------------------\n";
@@ -623,11 +619,7 @@ int main(int argc, char * argv[])
     format_equity acct_formatter(std::cout, format, nformat,
 				 display_predicate);
     sum_accounts(journal->master);
-
-    if (sort_order.get())
-      walk_accounts(journal->master, acct_formatter, sort_order.get());
-    else
-      walk_accounts(journal->master, acct_formatter);
+    walk_accounts(journal->master, acct_formatter, sort_order.get());
   }
   else if (command == "e") {
     format_transactions formatter(std::cout, format, nformat);
@@ -703,6 +695,11 @@ int main(int argc, char * argv[])
     // feeding each transaction that matches `predicate' to the chain.
     walk_entries(journal->entries.begin(), journal->entries.end(),
 		 *formatter.get());
+
+#ifdef DEBUG_ENABLED
+    clear_display_flags cleanup;
+    walk_entries(journal->entries.begin(), journal->entries.end(), cleanup);
+#endif
   }
 
   // Save the cache, if need be

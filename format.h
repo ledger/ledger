@@ -159,7 +159,6 @@ class format_account : public item_handler<account_t>
   }
 };
 
-
 class format_equity : public item_handler<account_t>
 {
   std::ostream&   output_stream;

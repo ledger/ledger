@@ -14,6 +14,7 @@ namespace ledger {
 template <typename T>
 struct item_handler {
   virtual ~item_handler() {}
+  virtual item_handler * copy() { return NULL; }
   virtual void flush() {}
   virtual void operator()(T * item) = 0;
 };
@@ -46,15 +47,25 @@ struct compare_items {
 typedef std::deque<transaction_t *> transactions_deque;
 typedef std::deque<entry_t *>       entries_deque;
 
-struct ignore_transactions : public item_handler<transaction_t>
+class ignore_transactions : public item_handler<transaction_t>
 {
+ public:
   virtual void operator()(transaction_t * xact) {}
 };
 
-struct clear_display_flags : public item_handler<transaction_t>
+class clear_display_flags : public item_handler<transaction_t>
 {
+ public:
   virtual void operator()(transaction_t * xact) {
     xact->dflags = 0;
+  }
+};
+
+class add_to_account_value : public item_handler<transaction_t>
+{
+ public:
+  virtual void operator()(transaction_t * xact) {
+    xact->account->value += *xact;
   }
 };
 
@@ -191,10 +202,11 @@ class collapse_transactions : public item_handler<transaction_t>
   }
 };
 
-// This filter requires that calc_transactions be used.
-
 class changed_value_transactions : public item_handler<transaction_t>
 {
+  // This filter requires that calc_transactions be used at some point
+  // later in the chain.
+
   transaction_t * last_xact;
 
   item_handler<transaction_t> * handler;
@@ -229,11 +241,11 @@ class changed_value_transactions : public item_handler<transaction_t>
   virtual void operator()(transaction_t * xact);
 };
 
-typedef std::map<account_t *, balance_pair_t>  balances_map;
-typedef std::pair<account_t *, balance_pair_t> balances_pair;
-
 class subtotal_transactions : public item_handler<transaction_t>
 {
+  typedef std::map<account_t *, balance_pair_t>  balances_map;
+  typedef std::pair<account_t *, balance_pair_t> balances_pair;
+
  protected:
   std::time_t  start;
   std::time_t  finish;
@@ -364,7 +376,6 @@ inline void walk_transactions(transactions_deque& deque,
 inline void walk_entries(entries_list::iterator       begin,
 			 entries_list::iterator       end,
 			 item_handler<transaction_t>& handler) {
-  // jww (2004-08-11): do transaction dflags need to be cleared first?
   for (entries_list::iterator i = begin; i != end; i++)
     walk_transactions((*i)->transactions, handler);
 }
@@ -377,102 +388,8 @@ inline void walk_entries(entries_list& list,
 
 //////////////////////////////////////////////////////////////////////
 //
-// Account handlers
+// Account walking functions
 //
-
-typedef std::deque<account_t *> accounts_deque;
-
-struct add_to_account_value : public item_handler<transaction_t>
-{
-  virtual void operator()(transaction_t * xact) {
-    xact->account->value += *xact;
-  }
-};
-
-#if 0
-
-class format_accounts : public item_handler<account_t>
-{
-};
-
-class filter_accounts : public item_handler<account_t>
-{
-  item_handler<account_t> * handler;
-
- public:
-  filter_accounts(item_handler<account_t> * _handler)
-    : handler(_handler) {}
-
-  virtual ~filter_accounts() {
-    handler->flush();
-    delete handler;
-  }
-
-  virtual void flush() {}
-
-  virtual void operator()(account_t * account) {
-  }
-};
-
-class sort_accounts : public item_handler<account_t>
-{
-  value_expr_t * sort_order;
-
-  item_handler<account_t> * handler;
-
- public:
-  sort_accounts(item_handler<account_t> * _handler,
-		value_expr_t * _sort_order)
-    : sort_order(_sort_order), handler(_handler) {}
-
-  virtual ~sort_accounts() {
-    handler->flush();
-    delete handler;
-  }
-
-  virtual void flush() {}
-
-  virtual void operator()(account_t * account) {
-    accounts_deque accounts;
-
-    for (accounts_map::iterator i = account->accounts.begin();
-	 i != account->accounts.end();
-	 i++)
-      accounts.push_back((*i).second);
-
-    std::stable_sort(accounts.begin(), accounts.end(),
-		     compare_items<account_t>(sort_order));
-  }
-};
-
-class balance_accounts : public item_handler<account_t>
-{
-  item_handler<account_t> * handler;
-
- public:
-  balance_accounts(item_handler<account_t> * _handler)
-    : handler(_handler) {}
-
-  virtual ~balance_accounts() {
-    handler->flush();
-    delete handler;
-  }
-
-  virtual void flush() {
-    if (format_account::disp_subaccounts_p(top)) {
-      std::string end_format = "--------------------\n";
-      format.reset(end_format + f);
-      format.format_elements(std::cout, details_t(top));
-    }
-  }
-
-  virtual void operator()(account_t * account) {
-  }
-};
-
-#endif
-
-//////////////////////////////////////////////////////////////////////
 
 inline void sum_accounts(account_t * account) {
   for (accounts_map::iterator i = account->accounts.begin();
@@ -484,9 +401,11 @@ inline void sum_accounts(account_t * account) {
   account->total += account->value;
 }
 
+typedef std::deque<account_t *> accounts_deque;
+
 inline void sort_accounts(account_t *	       account,
-			  accounts_deque&      accounts,
-			  const value_expr_t * sort_order) {
+			  const value_expr_t * sort_order,
+			  accounts_deque&      accounts) {
   for (accounts_map::iterator i = account->accounts.begin();
        i != account->accounts.end();
        i++)
@@ -498,25 +417,22 @@ inline void sort_accounts(account_t *	       account,
 
 inline void walk_accounts(account_t *		   account,
 			  item_handler<account_t>& handler,
-			  const value_expr_t *     sort_order) {
+			  const value_expr_t *     sort_order = NULL) {
   handler(account);
 
-  accounts_deque accounts;
-  sort_accounts(account, accounts, sort_order);
-  for (accounts_deque::const_iterator i = accounts.begin();
-       i != accounts.end();
-       i++)
-    walk_accounts(*i, handler, sort_order);
-}
-
-inline void walk_accounts(account_t * account,
-			  item_handler<account_t>& handler) {
-  handler(account);
-
-  for (accounts_map::const_iterator i = account->accounts.begin();
-       i != account->accounts.end();
-       i++)
-    walk_accounts((*i).second, handler);
+  if (sort_order) {
+    accounts_deque accounts;
+    sort_accounts(account, sort_order, accounts);
+    for (accounts_deque::const_iterator i = accounts.begin();
+	 i != accounts.end();
+	 i++)
+      walk_accounts(*i, handler, sort_order);
+  } else {
+    for (accounts_map::const_iterator i = account->accounts.begin();
+	 i != account->accounts.end();
+	 i++)
+      walk_accounts((*i).second, handler);
+  }
 }
 
 } // namespace ledger
