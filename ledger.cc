@@ -302,7 +302,7 @@ account * state::find_account(const char * name, bool create)
 	current = (*i).second;
       }
     } else {
-      account::iterator i = current->children.find(tok);
+      accounts_iterator i = current->children.find(tok);
       if (i == current->children.end()) {
 	if (! create)
 	  return NULL;

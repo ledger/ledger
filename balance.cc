@@ -42,12 +42,12 @@ static bool account_matches(const account * acct,
 }
 
 static void display_total(std::ostream& out, totals& balance,
-			  const account * acct, bool top_level,
+			  account * acct, bool top_level,
 			  const std::list<mask>& regexps)
 {
   bool displayed = false;
 
-  if (acct->display && (show_empty || acct->balance)) {
+  if (acct->checked == 1 && (show_empty || acct->balance)) {
     displayed = true;
 
     out << acct->balance;
@@ -65,7 +65,7 @@ static void display_total(std::ostream& out, totals& balance,
 
   // Display balances for all child accounts
 
-  for (account::const_iterator i = acct->children.begin();
+  for (accounts_iterator i = acct->children.begin();
        i != acct->children.end();
        i++)
     display_total(out, balance, (*i).second, ! displayed, regexps);
@@ -134,7 +134,7 @@ void report_balances(int argc, char **argv, std::ostream& out)
 	else if (acct->checked == 3)
 	  continue;
 
-	acct->display = true;
+	acct->checked = 1;
 	acct->balance.credit((*x)->cost->street());
       }
     }

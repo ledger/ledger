@@ -139,8 +139,8 @@ static void dataHandler(void *userData, const char *s, int len)
     accounts_iterator i = accounts_by_id.find(std::string(s, len));
     assert(i != accounts_by_id.end());
     curr_account->parent = (*i).second;
-    (*i).second->children.insert(account::pair(curr_account->name,
-					       curr_account));
+    (*i).second->children.insert(accounts_entry(curr_account->name,
+						curr_account));
     break;
   }
 
@@ -239,12 +239,18 @@ bool parse_gnucash(std::istream& in, bool compute_balances)
 {
   char buf[BUFSIZ];
 
+  action       = NO_ACTION;
+  do_compute   = compute_balances;
   curr_account = NULL;
   curr_entry   = NULL;
+  curr_value   = NULL;
   curr_comm    = NULL;
-  do_compute   = compute_balances;
+  entry_comm   = NULL;
 
-  action = NO_ACTION;
+  // GnuCash uses the USD commodity without defining it, which really
+  // means to use $.
+  commodity * usd = new commodity("$", true, false, true, false, 2);
+  main_ledger.commodities.insert(commodities_entry("USD", usd));
 
   XML_Parser parser = XML_ParserCreate(NULL);
   current_parser = parser;

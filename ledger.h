@@ -1,5 +1,5 @@
 #ifndef _LEDGER_H
-#define _LEDGER_H "$Revision: 1.14 $"
+#define _LEDGER_H "$Revision: 1.15 $"
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -275,29 +275,27 @@ operator<<(std::basic_ostream<char, Traits>& out, const totals& t) {
 }
 
 
+typedef std::map<const std::string, account *> accounts_t;
+typedef accounts_t::iterator accounts_iterator;
+typedef std::pair<const std::string, account *> accounts_entry;
+
 struct account
 {
-  struct account * parent;
+  account * parent;
 
   std::string name;
   commodity * comm;             // default commodity for this account
   totals      balance;
 
-  bool display;
   int  checked;
 #ifdef HUQUQULLAH
   bool exempt_or_necessary;
 #endif
 
-  typedef std::map<const std::string, struct account *> map;
-  typedef map::iterator iterator;
-  typedef map::const_iterator const_iterator;
-  typedef std::pair<const std::string, struct account *> pair;
-
-  map children;
+  accounts_t children;
 
   account(const std::string& _name, struct account * _parent = NULL)
-    : parent(_parent), name(_name), display(false), checked(0) {
+    : parent(_parent), name(_name), checked(0) {
 #ifdef HUQUQULLAH
     exempt_or_necessary = false;
 #endif
@@ -316,11 +314,6 @@ std::basic_ostream<char, Traits> &
 operator<<(std::basic_ostream<char, Traits>& out, const account& a) {
   return (out << a.as_str());
 }
-
-
-typedef std::map<const std::string, account *> accounts_t;
-typedef accounts_t::iterator accounts_iterator;
-typedef std::pair<const std::string, account *> accounts_entry;
 
 
 struct state

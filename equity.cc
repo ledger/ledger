@@ -2,7 +2,7 @@
 
 namespace ledger {
 
-static void equity_entry(std::ostream& out, const account * acct,
+static void equity_entry(std::ostream& out, account * acct,
 			 const std::list<mask>& regexps)
 {
   if (acct->balance &&
@@ -37,7 +37,7 @@ static void equity_entry(std::ostream& out, const account * acct,
 
   // Display balances for all child accounts
 
-  for (account::const_iterator i = acct->children.begin();
+  for (accounts_iterator i = acct->children.begin();
        i != acct->children.end();
        i++)
     equity_entry(out, (*i).second, regexps);
