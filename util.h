@@ -16,23 +16,22 @@ inline char peek_next_nonws(std::istream& in) {
   return c;
 }
 
-#define READ_INTO(str, targ, size, var, cond) {	\
-  char * _p = targ;				\
-  var = str.peek();				\
-  while (! str.eof() && (cond)) {		\
-    str.get(var);				\
-    if (str.eof())				\
-      break;					\
-    if (var == '\\') {				\
-      str.get(var);				\
-      if (in.eof())				\
-	break;					\
-    }						\
-    *_p++ = var;				\
-    var = str.peek();				\
-  }						\
-  assert(_p < targ + ((size) - 1));		\
-  *_p = '\0';					\
+#define READ_INTO(str, targ, size, var, cond) {		\
+  char * _p = targ;					\
+  var = str.peek();					\
+  while (! str.eof() && (cond) && _p - targ < size) {	\
+    str.get(var);					\
+    if (str.eof())					\
+      break;						\
+    if (var == '\\') {					\
+      str.get(var);					\
+      if (in.eof())					\
+	break;						\
+    }							\
+    *_p++ = var;					\
+    var = str.peek();					\
+  }							\
+  *_p = '\0';						\
 }
 
 #endif // _UTIL_H
