@@ -44,12 +44,13 @@ void transaction::print(std::ostream& out, bool display_quantity,
 
   if (cost && display_quantity) {
     out << "  ";
-    out.width(10);
+    out.width(12);
 
     std::string value = cost->as_str(true);
     if (! display_price) {
       int index = value.find('@');
-      value = std::string(value, index - 1);
+      if (index != -1)
+	value = std::string(value, 0, index - 1);
     }
     out << std::right << value;
   }
@@ -71,29 +72,23 @@ void entry::print(std::ostream& out, bool shortcut) const
   if (! code.empty())
     out << '(' << code << ") ";
   if (! desc.empty())
-    out << " " << desc;
+    out << desc;
 
   out << std::endl;
 
-  // jww (2003-10-11): Unspecified virtual transactions should not
-  // factor into the size computation.
-
-  commodity * comm = NULL;
-  int         size = 0;
+  commodity * 	comm = NULL;
+  int 		size = 0;
   
   for (std::list<transaction *>::const_iterator x = xacts.begin();
        x != xacts.end();
        x++) {
-    if ((*x)->is_virtual && ! (*x)->specified)
+    if ((*x)->is_virtual && ! (*x)->must_balance)
       continue;
 
-    if (! comm) {
+    if (! comm)
       comm = (*x)->cost->commdty();
-    }
-    else if (comm != (*x)->cost->commdty()) {
+    else if (comm != (*x)->cost->commdty())
       shortcut = false;
-      break;
-    }
 
     size++;
   }
@@ -109,10 +104,9 @@ void entry::print(std::ostream& out, bool shortcut) const
 
     out << "    ";
 
-    // jww (2003-10-03): If we are shortcutting, don't print the
-    // "per-unit price" of a commodity, if it is not necessary.
-
-    (*x)->print(out, ! shortcut || x == xacts.begin());
+    (*x)->print(out, (! shortcut || x == xacts.begin() ||
+		      ((*x)->is_virtual && ! (*x)->must_balance)),
+		size != 2);
   }
 
   out << std::endl;

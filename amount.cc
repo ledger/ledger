@@ -470,8 +470,8 @@ static void parse_number(mpz_t out, const std::string& number,
   else {
     static char buf[256];
 
-    // The number is specified as the user desires, with the
-    // commodity telling us how to parse it.
+    // The number is specified as the user desires, with the commodity
+    // telling us how to parse it.
 
     std::memset(buf, '0', 255);
     std::strncpy(buf, num, std::strlen(num));
