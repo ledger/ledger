@@ -115,9 +115,10 @@ class format_entries : public format_transactions
   void format_last_entry();
 
   virtual void flush() {
-    format_last_entry();
-    last_entry = NULL;
-
+    if (last_entry) {
+      format_last_entry();
+      last_entry = NULL;
+    }
     format_transactions::flush();
   }
   virtual void operator()(transaction_t& xact);

@@ -489,9 +489,11 @@ amount_t::operator bool() const
   if (quantity->prec <= commodity().precision) {
     return mpz_sgn(MPZ(quantity)) != 0;
   } else {
-    assert(commodity_);
     mpz_set(temp, MPZ(quantity));
-    mpz_ui_pow_ui(divisor, 10, quantity->prec - commodity().precision);
+    if (commodity_)
+      mpz_ui_pow_ui(divisor, 10, quantity->prec - commodity_->precision);
+    else
+      mpz_ui_pow_ui(divisor, 10, quantity->prec);
     mpz_tdiv_q(temp, temp, divisor);
     bool zero = mpz_sgn(temp) == 0;
     return ! zero;

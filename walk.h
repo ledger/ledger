@@ -306,8 +306,10 @@ class changed_value_transactions : public item_handler<transaction_t>
       changed_values_only(_changed_values_only), last_xact(NULL) {}
 
   virtual void flush() {
-    output_diff(std::time(NULL));
-    last_xact = NULL;
+    if (last_xact) {
+      output_diff(std::time(NULL));
+      last_xact = NULL;
+    }
     item_handler<transaction_t>::flush();
   }
 
