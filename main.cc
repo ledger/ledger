@@ -195,13 +195,13 @@ int main(int argc, char * argv[], char * envp[])
 
   try {
     if (! config->init_file.empty())
-      if (parser_t::parse(config->init_file, journal.get()))
+      if (parser_t::parse_file(config->init_file, journal.get()))
 	throw error("Entries not allowed in initialization file");
 
     if (use_cache && ! config->cache_file.empty() &&
 	! config->data_file.empty()) {
-      entry_count += parser_t::parse(config->cache_file, journal.get(),
-					NULL, &config->data_file);
+      entry_count += parser_t::parse_file(config->cache_file, journal.get(),
+					  NULL, &config->data_file);
       journal->sources.pop_front(); // remove cache_file
 
       if (entry_count == 0) {
@@ -221,12 +221,12 @@ int main(int argc, char * argv[], char * envp[])
 	use_cache = false;
 	entry_count += text_parser->parse(std::cin, journal.get(), account);
       } else {
-	entry_count += parser_t::parse(config->data_file, journal.get(),
-					  account);
+	entry_count += parser_t::parse_file(config->data_file, journal.get(),
+					    account);
       }
 
       if (! config->price_db.empty())
-	if (parser_t::parse(config->price_db, journal.get()))
+	if (parser_t::parse_file(config->price_db, journal.get()))
 	  throw error("Entries not allowed in price history file");
     }
 

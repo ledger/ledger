@@ -533,8 +533,8 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
 	  push_var<unsigned int> save_linenum(linenum);
 	  push_var<std::string> save_path(path);
-	  count += parser_t::parse(skip_ws(line), journal,
-				   account_stack.front());
+	  count += parser_t::parse_file(skip_ws(line), journal,
+					account_stack.front());
 	}
 	break;
 
