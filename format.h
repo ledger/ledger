@@ -87,36 +87,72 @@ class format_transaction
   std::ostream&   output_stream;
   const format_t& first_line_format;
   const format_t& next_lines_format;
+  const bool      collapsed;
   const bool      inverted;
-  unsigned int	  index;
-  entry_t *	  last_entry;
+
+  item_predicate<transaction_t> disp_pred_functor;
+
+  typedef bool (*intercept_t)(transaction_t * xact);
+
+  intercept_t intercept;
+
+  mutable balance_pair_t  subtotal;
+  mutable unsigned int    count;
+  mutable entry_t *	  last_entry;
+  mutable transaction_t * last_xact;
 
  public:
   format_transaction(std::ostream&   _output_stream,
 		     const format_t& _first_line_format,
 		     const format_t& _next_lines_format,
-		     const bool      _inverted)
+		     const node_t *  display_predicate,
+		     const bool      _collapsed = false,
+		     const bool      _inverted  = false,
+		     intercept_t     _intercept = NULL)
     : output_stream(_output_stream),
       first_line_format(_first_line_format),
       next_lines_format(_next_lines_format),
-      inverted(_inverted), index(0), last_entry(NULL) {}
+      collapsed(_collapsed), inverted(_inverted),
+      disp_pred_functor(display_predicate),
+      intercept(_intercept), count(0),
+      last_entry(NULL), last_xact(NULL) {}
 
-  void operator()(transaction_t * xact);
+  void start() const {}
+  void finish() const {
+    if (subtotal)
+      report_cumulative_subtotal();
+  }
+
+  void report_cumulative_subtotal() const;
+  void operator()(transaction_t * xact) const;
 };
+
+// An intercept that can be used to report changes in commodity value
+bool report_changed_values(transaction_t * xact);
+
 
 class format_account
 {
-  std::ostream&     output_stream;
-  const format_t&   format;
-  const account_t * last_account;
+  std::ostream&   output_stream;
+  const format_t& format;
+
+  item_predicate<account_t> disp_pred_functor;
+
+  mutable const account_t * last_account;
 
  public:
-  format_account(std::ostream& _output_stream, const format_t& _format)
-    : output_stream(_output_stream), format(_format) {}
+  format_account(std::ostream&   _output_stream,
+		 const format_t& _format,
+		 const node_t *  display_predicate = NULL)
+    : output_stream(_output_stream), format(_format),
+      disp_pred_functor(display_predicate), last_account(NULL) {}
+
+  void start() const {}
+  void finish() const {}
 
   void operator()(const account_t *  account,
 		  const unsigned int max_depth  = 1,
-		  const bool         report_top = false);
+		  const bool         report_top = false) const;
 };
 
 } // namespace ledger

@@ -293,30 +293,130 @@ void format_t::format_elements(std::ostream&    out,
   }
 }
 
-void format_transaction::operator()(transaction_t * xact)
+void format_transaction::report_cumulative_subtotal() const
 {
-  if (inverted) {
-    xact->total.quantity += - xact->amount;
-    xact->total.cost     += - xact->cost;
-  } else {
-    xact->total += *xact;
+  if (count == 1) {
+    if (! intercept || ! intercept(last_xact))
+      first_line_format.format_elements(output_stream, details_t(last_xact));
+    return;
   }
-  xact->index = index++;
+
+  assert(count > 1);
+
+  account_t     splits(NULL, "<Total>");
+  transaction_t splits_total(NULL, &splits);
+  splits_total.total = subtotal;
+
+  balance_t value;
+  format_t::compute_total(value, details_t(&splits_total));
+
+  splits_total.entry = last_entry;
+  splits_total.total = last_xact->total;
+
+  bool first = true;
+  for (amounts_map::const_iterator i = value.amounts.begin();
+       i != value.amounts.end();
+       i++) {
+    splits_total.amount = (*i).second;
+    splits_total.cost   = (*i).second;
+    splits_total.total += (*i).second;
+    if (first) {
+      if (! intercept || ! intercept(&splits_total))
+	first_line_format.format_elements(output_stream,
+					  details_t(&splits_total));
+      first = false;
+    } else {
+      next_lines_format.format_elements(output_stream,
+					details_t(&splits_total));
+    }
+  }
+}
+
+void format_transaction::operator()(transaction_t * xact) const
+{
+  if (last_xact)
+    xact->total = last_xact->total;
+
+  if (inverted) {
+    xact->amount.negate();
+    xact->cost.negate();
+  }
+
+  xact->total += *xact;
+  xact->index = last_xact ? last_xact->index + 1 : 0;
+
+  if (! disp_pred_functor(xact))
+    return;
+
+  xact->flags |= TRANSACTION_DISPLAYED;
 
   // This makes the assumption that transactions from a single entry
-  // will always be grouped together.
+  // are always grouped together.
 
-  if (last_entry != xact->entry)
-    first_line_format.format_elements(output_stream, details_t(xact));
-  else
-    next_lines_format.format_elements(output_stream, details_t(xact));
+  if (collapsed) {
+    // If we've reached a new entry, report on the subtotal
+    // accumulated thus far.
+
+    if (last_entry && last_entry != xact->entry) {
+      report_cumulative_subtotal();
+      subtotal = 0;
+      count    = 0;
+    }
+
+    subtotal += *xact;
+    count++;
+  } else {
+    if (last_entry != xact->entry) {
+      if (! intercept || ! intercept(xact))
+	first_line_format.format_elements(output_stream, details_t(xact));
+    } else {
+      next_lines_format.format_elements(output_stream, details_t(xact));
+    }
+  }
+
+  if (inverted) {
+    xact->amount.negate();
+    xact->cost.negate();
+  }
 
   last_entry = xact->entry;
+  last_xact  = xact;
 }
+
+#if 0
+
+bool report_changed_values(transaction_t * xact)
+{
+  static transaction_t * last_xact = NULL;
+
+  if (last_xact) {
+    balance_t prev_bal, cur_bal;
+    format_t::compute_total(prev_bal, details_t(last_xact));
+    format_t::compute_total(cur_bal,  details_t(xact));
+
+    if (balance_t diff = cur_bal - prev_bal) {
+      entry_t       modified_entry;
+      transaction_t new_xact(&modified_entry, NULL);
+
+      modified_entry.date = xact ? xact->entry->date : std::time(NULL);
+      modified_entry.payee = "Commodities revalued";
+
+      new_xact.amount = diff.amount();
+      format_t::compute_value(diff, details_t(xact));
+      new_xact.total  = cur_bal - diff;
+
+      functor(&new_xact);
+    }
+  }
+
+  last_xact = xact;
+}
+
+#endif
 
 void format_account::operator()(const account_t *  account,
 				const unsigned int max_depth,
-				const bool         report_top)
+				const bool         report_top) const
 {
   // Don't output the account if only one child will be displayed
   // which shows the exact same amount.  jww (2004-08-03): How do

@@ -31,9 +31,6 @@ static const std::string reg_fmt
 static const std::string print_fmt
   = "\n%10d %X%C%p\n    %-34N  %12o\n%/    %-34N  %12o\n";
 
-static bool show_commodities_revalued      = false;
-static bool show_commodities_revalued_only = false;
-
 #if 0
 
 static void report_value_change(std::ostream&         out,
@@ -44,33 +41,6 @@ static void report_value_change(std::ostream&         out,
 				const format_t&       first_line_format,
 				const format_t&       next_lines_format)
 {
-  static std::time_t prev_date = -1;
-  if (prev_date == -1) {
-    prev_date = date;
-    return;
-  }
-
-  item_t temp;
-  temp.date  = prev_date;
-  temp.total = prev_balance;
-  balance_t prev_bal = format_t::compute_total(&temp);
-
-  temp.date  = date;
-  temp.total = balance;
-  balance_t cur_bal = format_t::compute_total(&temp);
-
-  if (balance_t diff = cur_bal - prev_bal) {
-    temp.value = diff;
-    temp.total = balance;
-    temp.payee = "Commodities revalued";
-
-    if (value_predicate(predicate)(&temp)) {
-      first_line_format.format_elements(out, &temp);
-      next_lines_format.format_elements(out, &temp);
-    }
-  }
-
-  prev_date = date;
 }
 
 void register_report(std::ostream&   out,
@@ -306,6 +276,9 @@ int main(int argc, char * argv[])
   bool show_related   = false;
   bool show_inverted  = false;
   bool show_empty     = false;
+
+  bool show_commodities_revalued      = false;
+  bool show_commodities_revalued_only = false;
 
 #ifdef DEBUG
   bool debug = false;
@@ -763,16 +736,19 @@ int main(int argc, char * argv[])
 
   if (command == "b") {
     format_t format(f);
-    walk_accounts(journal->master, format_account(std::cout, format),
-		  predicate.get(), xact_display_flags, show_subtotals,
-		  show_expanded ? 0 : 1, display_predicate.get(),
+    format_account formatter(std::cout, format, display_predicate.get());
+    formatter.start();
+    walk_accounts(journal->master, formatter, predicate.get(),
+		  xact_display_flags, show_subtotals, show_expanded ? 0 : 1,
 		  sort_order.get());
+    formatter.finish();
 
     if (! display_predicate.get() ||
 	item_predicate<account_t>(display_predicate.get())(journal->master)) {
       std::string end_format = "--------------------\n";
       format.reset(end_format + f);
-      format_account(std::cout, format)(journal->master, true);
+      format_account(std::cout, format)(journal->master, true,
+					display_predicate.get());
     }
   } else {
     std::string first_line_format;
@@ -787,22 +763,26 @@ int main(int argc, char * argv[])
 
     format_t format(first_line_format);
     format_t nformat(next_lines_format);
-    format_transaction formatter(std::cout, format, nformat, show_inverted);
+
+    format_transaction formatter(std::cout, format, nformat,
+				 display_predicate.get(),
+				 ! show_subtotals, show_inverted);
+    formatter.start();
 
     if (! sort_order.get()) {
       walk_entries(journal->entries.begin(), journal->entries.end(),
-		   formatter, predicate.get(), xact_display_flags,
-		   display_predicate.get());
+		   formatter, predicate.get(), xact_display_flags);
     } else {
       transactions_deque transactions_pool;
       walk_entries(journal->entries.begin(), journal->entries.end(),
 		   collect_transactions(transactions_pool), predicate.get(),
-		   xact_display_flags, display_predicate.get());
+		   xact_display_flags);
       std::stable_sort(transactions_pool.begin(), transactions_pool.end(),
 		       compare_items<transaction_t>(sort_order.get()));
       walk_transactions(transactions_pool.begin(), transactions_pool.end(),
 			formatter);
     }
+    formatter.finish();
   }
 
   // Save the cache, if need be

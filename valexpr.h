@@ -136,6 +136,25 @@ inline node_t * find_node(node_t * node, node_t::kind_t type) {
   return result;
 }
 
+template <typename T>
+class item_predicate
+{
+  const node_t * predicate;
+
+ public:
+  item_predicate(const node_t * _predicate) : predicate(_predicate) {}
+
+  bool operator()(const T * item) const {
+    if (predicate) {
+      balance_t result;
+      predicate->compute(result, details_t(item));
+      return result;
+    } else {
+      return true;
+    }
+  }
+};
+
 } // namespace report
 
 #endif // _REPORT_H

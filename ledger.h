@@ -28,6 +28,8 @@ namespace ledger {
 #define TRANSACTION_HANDLED   0x08
 #define TRANSACTION_DISPLAYED 0x10
 
+#define TRANSACTION_TRANSIENT (TRANSACTION_HANDLED | TRANSACTION_DISPLAYED)
+
 class entry_t;
 class account_t;
 
@@ -44,7 +46,8 @@ class transaction_t
   unsigned int   index;
 
   transaction_t(entry_t * _entry, account_t * _account)
-    : entry(_entry), account(_account), flags(TRANSACTION_NORMAL) {}
+    : entry(_entry), account(_account), flags(TRANSACTION_NORMAL),
+      index(0) {}
 
   transaction_t(entry_t *	   _entry,
 		account_t *	   _account,
@@ -53,7 +56,7 @@ class transaction_t
 		unsigned int	   _flags = TRANSACTION_NORMAL,
 		const std::string& _note  = "")
     : entry(_entry), account(_account), amount(_amount),
-    cost(_cost), flags(_flags), note(_note) {}
+      cost(_cost), flags(_flags), note(_note), index(0) {}
 };
 
 

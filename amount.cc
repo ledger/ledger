@@ -220,7 +220,7 @@ amount_t& amount_t::operator=(const double value)
 amount_t& amount_t::operator+=(const amount_t& amt)
 {
   if (amt.quantity) {
-    assert(commodity == amt.commodity);
+    assert(! commodity || commodity == amt.commodity);
     INIT();
     mpz_add(MPZ(quantity), MPZ(quantity), MPZ(amt.quantity));
   }
