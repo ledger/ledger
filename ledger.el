@@ -74,21 +74,24 @@
 
 (defun ledger-add-entry (entry)
   (interactive
-   (list (read-string "Entry: " (format-time-string "%m/%d "))))
-  (let ((args (mapcar 'shell-quote-argument (split-string entry)))
-	date entry)
-    (with-temp-buffer
-      (shell-command
-       (concat "ledger entry "
-	       (mapconcat 'identity args " ")) t)
-      (setq date (buffer-substring (point) (+ (point) 10)))
-      (setq entry (buffer-substring (+ (point) 5) (point-max))))
+   (list (read-string "Entry: " (format-time-string "%Y/%m/%d "))))
+  (let* ((args (mapcar 'shell-quote-argument (split-string entry)))
+	 (date (car args))
+	 exit-code)
     (if (string-match "\\([0-9]+\\)/\\([0-9]+\\)/\\([0-9]+\\)" date)
 	(setq date (encode-time 0 0 0 (string-to-int (match-string 3 date))
 				(string-to-int (match-string 2 date))
 				(string-to-int (match-string 1 date)))))
     (ledger-find-slot date)
-    (insert entry)))
+    (save-excursion
+      (insert
+       (with-temp-buffer
+	 (setq exit-code
+	       (apply 'call-process "/home/johnw/bin/ledger" nil t nil
+		      (cons "entry" args)))
+	 (if (= 0 exit-code)
+	     (buffer-substring (+ (point-min) 5) (point-max))
+	   (concat (substring entry 5) "\n\n")))))))
 
 (defun ledger-expand-entry ()
   (interactive)

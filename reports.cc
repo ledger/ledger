@@ -460,7 +460,7 @@ void add_new_entry(int index, int argc, char **argv)
       }
 
       if (index == argc) {
-        std::cerr << "Error: Too few arguments to 'add'." << std::endl;
+        std::cerr << "Error: Too few arguments to 'entry'." << std::endl;
         std::exit(1);
       }
 
@@ -733,6 +733,8 @@ int main(int argc, char * argv[])
 
   delete main_ledger;
 #endif
+
+  return 0;
 }
 
 // reports.cc ends here.
