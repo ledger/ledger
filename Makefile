@@ -14,6 +14,7 @@ CODE   = account.cc  \
 	 quotes.cc   \
 	 textual.cc  \
 	 valexpr.cc  \
+	 value.cc    \
 	 walk.cc
 
 OBJS   = $(patsubst %.cc,%.o,$(CODE))
