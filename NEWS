@@ -1,67 +1,62 @@
-
 			     Ledger NEWS
 
 * 2.0
 
 - The code base was rewritten for clarity and consistency.  It is now
-  simpler, more robust, and faster.
+  simpler internally, more robust, and much faster.
 
-- The most significant feature addition in this version is the use of
-  "value expressions".  These are now used in many places to indicate
-  what to display, the sorting order, and even the output format.
-
-  A value expression is a simple string that uses one letter codes to
-  indicate transaction, entry and account details.  Logic and math
-  operators are supported, as well as a few useful functions.  See the
-  README.
+- The most significant feature added are "value expressions".  They
+  are used in several places to indicate what to display, sorting
+  order, output format, etc.  Logic and math operators are supported,
+  as well as a few functions.  See the documentation for more info.
 
 - If the environment variable LEDGER (or LEDGER_FILE) is used, a
-  binary cache of that ledger will be kept in ~/.ledger (or
+  binary cache of that ledger is now kept in ~/.ledger (or
   LEDGER_CACHE), to speed up later queries of the same data.  This
   happens only when "-f" or "--file" is not used.
 
 - New options:
 
-  "-o FILE" outputs data to the given FILE.  If "-", the output is the
-  same as the default (stdout).
+  "-o FILE" outputs data to FILE.  If "-", output goes to stdout.
 
-  -j and -J options replace previous -G (gnuplot) option.  -j reports
-  the values column in a way gnuplot can consume, and -J reports the
-  totals column.  An example can be found in scripts/report.
+  -j and -J options replace the previous -G (gnuplot) option.  -j
+  reports the values column in a way gnuplot can consume, and -J, the
+  totals column.  An example is in scripts/report.
 
-  "-y DATEFMT" changes the date format used in register reports.  The
+  "-y DATEFMT" changes the date format used for register reports.  The
   default is "%Y/%m/%d".
 
-  -Y and -W print yearly and weekly subtotals, just as the -M option
-  printed monthly subtotals in the previous version.
-  -w shows cumulative totals for each of the days of the week.
+  -Y and -W print yearly and weekly subtotals, just as -M prints
+  monthly subtotals.  --dow shows cumulative totals for each day of
+  the week.
 
-  "-z INTERVAL" allows more flexible interval reporting.  The
-  sublanguage used will probably mature over time, but for now it
+  "-z INTERVAL" allows for more flexible interval reporting.  The
+  sublanguage used will likely mature over time, but for now it
   supports expression like:
 
     monthly
     every week
     every 3 quarters
     weekly from 12/20
+    monthly in 2003
 
-  -O shows base values (this is the default, and old behavior)
+  -O shows base values (this is the default, and old, behavior)
   -B shows basis cost of commodities
-  -V show market value of commodities
-  -G reports net gain/loss (shows commodity changes only)
+  -V shows the market value of commodities
+  -G reports net gain/loss
   -A reports average value (arithmetic mean)
-  -D reports deviation from the average value
+  -D reports deviation from the average
   -X reports the trend (average rate of change)
   -Z reports the trend, with older values affecting the trend less
 
-- Regexps specified after the command name now apply to account names
-  only.  To search on a payee, use "--" to separate the two kinds of
-  regexps.  For example, to find a payee named "John" within all
-  Expenses accounts, use:
+- Regexps given directly after the command name now apply to account
+  names only.  To search on a payee, use "--" to separate the two
+  kinds of regexps.  For example, to find a payee named "John" within
+  all Expenses accounts, use:
 
     ledger register expenses -- john
 
-  FYI: The above command is identical (and internally converted) to:
+  Note: The above command is identical (and internally converted) to:
 
     ledger -l "/expenses/|//john/" register
   
@@ -71,25 +66,27 @@
     !include FILE
     @@
 
-  All entries specified within the "@ ACCOUNT/@@" range will be added
-  under that account.
+  Entries specified within "@ ACCOUNT/@@" will affect only that
+  account.
 
-- Register reports now show the account being changed.  Use the -r
-  option to see "other accounts" -- or the account the credit/debit
-  came from.  (This was the old behavior in 1.x, but can lead to
-  confusing reports when viewing accounts with subaccounts.)  The -r
-  option also works for balance reports, where it will show all the
-  account totals related to your query.
+- Register reports now show only the account affected by default.  Use
+  "-r" to see "related accounts" -- the account the transfer came from
+  or went to.  (This was the old behavior in 1.x, but leads to
+  confusing reports when viewing reports within subaccounts.)  The
+  "-r" option also works with balance reports, where it shows all
+  amounts related to your query.
 
-- Automated transactions now use a single value expression as a
-  predicate.  This means the new syntax is:
+- Automated transactions now use value expressions as their predicate.
+  The new syntax is:
 
     = VALUE-EXPR
       TRANSACTIONS...
 
   Only one VALUE-EXPR is supported, compared to the multiple account
-  regexps supported before.  By using a VALUE-EXPR as a predicate,
-  matching may now be much more comprehensive and selective.
+  regexps supported before.  However, since value expression allow for
+  logic chaining, there is no loss in functionality.  Also, by using a
+  VALUE-EXPR as a predicate, matching may be much more comprehensive
+  and selective.
 
 - The use of "+" and "-" in ledger files (to specify permanent
   regexps) has been removed.
@@ -97,90 +94,8 @@
 - -l now takes a value expression as the "calculation predicate".
   To mimic the old behavior of "-l \$100", use: -d "AT<{\$100}"
 
-- The -S flag takes a value expression string, which yields the value
-  that will be sorted on.
-
-----------------------------------------------------------------------
-
-- Value expressions are now supported, where the totals reported can
-  be changed using -t and -T and an expression string composed of:
-
-     a    amount
-     B    current balance
-     T    amount total (B + a)
-     c    cost
-     C    cost total
-     v    market value(amount, date)
-     V    total market value(amount total, date)
-     g    net gain (v - c)
-     G    total net gain (V - C)
-     d    date (in seconds past the epoch)
-     i    index (within the report)
-     o    item age = date - report begin date
-     w    item newness = report end date - date
-
-     b    report begin date
-     e    report end date
-     
-  P(x,y)  market price of x at time y (i.e., V = p(A,d))
-     Mx   total arthmetic of x (x/n)
-     Bx   deviation = a - x
-     Ax   absolute (positive) value of x
-    {x}   parse x as a ledger amount
-    /s/   1 if full account name matches s
-
-  in precedence order:
-    -?[0-9]*.[0-9]+ numerical constants
-    binary operators: * /
-    binary operators: + -
-    comparison operators: = < <= > >=
-    logical operators: ! & |
-    (x) parenthetical grouping
-
-  The standard reports are therefore implemented as:
-
-    -O  ==  -t a -T A
-    -B  ==  -t c -T C
-    -V  ==  -t c -T V
-    -G  ==  -t g -T G
-    -A  ==  -t a -T MA
-    -D  ==  -t a -T DMA
-    -T  ==  -t a -T MDMA
-    -W  ==  -t a -T MD(MA*(d-b/e-b))
-    -X  ==  -t a -T a+MD(MA*(d-b/e-b))
-
-- User-specified format strings are supported with a -F option.  The
-  strings are very much like printf format strings, with the following
-  syntax for each substitution:
-
-    %?-m.MX
-
-  Each part of the above except for X is optional, and means:
-
-    ?  field is blank if reporting on a "subsequent line" (within
-       the register report, when viewing splits)
-    -  left justify field (default is right)
-    m  minimum width of the field
-    .  indicates that a maximum width is being specified
-    M  maximum width of the field; values are truncated to fit
-
-  And where X may be any one of:
-
-    %              self-insert
-    d              same as %[%Y/%m/%d]
-    [datefmt]      pass 'datefmt' to strftime for the entry
-    p              the payee
-    a              the custom account name (report dependent)
-    n              the real account name (balance report only)
-    N              full account name (balance report only)
-    t              whatever the specified value expression is
-    T              whatever the specified total expression is
-    (expr)         insert an arbitrary style expression
-
-  The default format for the register and balance reports are:
-
-    %?10d %?-.20p %-.22a %12.66t %12.80T
-    %20T %-a
+- The -S flag now takes a value expression as the sorting criteria.
+  To sort on the amount, use -S T (balance) or -S t (register).
 
 * 1.7
 
