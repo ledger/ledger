@@ -57,7 +57,7 @@ static struct init_amounts {
     mpz_clear(temp);
   }
 #endif
-} initializer;
+} _init;
 
 static void mpz_round(mpz_t out, mpz_t value, int value_prec, int round_prec)
 {
@@ -931,10 +931,9 @@ commodity_t *            commodity_t::null_commodity =
 			     commodity_t::find_commodity("", true);
 
 #ifdef DO_CLEANUP
-
-static struct cleanup_commodities
+static struct cleanup_t
 {
-  ~cleanup_commodities() {
+  ~cleanup_t() {
     if (commodity_t::updater)
       delete commodity_t::updater;
 
@@ -945,8 +944,7 @@ static struct cleanup_commodities
       delete (*i).second;
   }
 } _cleanup;
-
-#endif // DO_CLEANUP
+#endif
 
 commodity_t * commodity_t::find_commodity(const std::string& symbol,
 					  bool auto_create)

@@ -33,14 +33,19 @@ std::string partial_account_name(const account_t *  account)
   return name;
 }
 
-std::string format_t::date_format = "%Y/%m/%d";
+std::string    format_t::date_format = "%Y/%m/%d";
+value_expr_t * format_t::value_expr  = NULL;
+value_expr_t * format_t::total_expr  = NULL;
 
 #ifdef DO_CLEANUP
-std::auto_ptr<value_expr_t> format_t::value_expr;
-std::auto_ptr<value_expr_t> format_t::total_expr;
-#else
-value_expr_t * format_t::value_expr = NULL;
-value_expr_t * format_t::total_expr = NULL;
+static struct cleanup_t {
+  ~cleanup_t() {
+    if (format_t::value_expr)
+      delete format_t::value_expr;
+    if (format_t::total_expr)
+      delete format_t::total_expr;
+  }
+} _cleanup;
 #endif
 
 element_t * format_t::parse_elements(const std::string& fmt)
@@ -200,13 +205,8 @@ void format_t::format_elements(std::ostream&    out,
     case element_t::VALUE_EXPR: {
       value_expr_t * expr = NULL;
       switch (elem->type) {
-#ifdef DO_CLEANUP
-      case element_t::VALUE: expr = value_expr.get(); break;
-      case element_t::TOTAL: expr = total_expr.get(); break;
-#else
       case element_t::VALUE: expr = value_expr; break;
       case element_t::TOTAL: expr = total_expr; break;
-#endif
       case element_t::VALUE_EXPR: expr = elem->val_expr; break;
 
       default:

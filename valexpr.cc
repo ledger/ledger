@@ -114,19 +114,11 @@ void value_expr_t::compute(value_t& result, const details_t& details,
     break;
 
   case VALUE_EXPR:
-#ifdef DO_CLEANUP
-    assert(format_t::value_expr.get());
-#else
     assert(format_t::value_expr);
-#endif
     format_t::value_expr->compute(result, details);
     break;
   case TOTAL_EXPR:
-#ifdef DO_CLEANUP
-    assert(format_t::total_expr.get());
-#else
     assert(format_t::total_expr);
-#endif
     format_t::total_expr->compute(result, details);
     break;
 

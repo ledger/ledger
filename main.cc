@@ -369,11 +369,7 @@ int main(int argc, char * argv[], char * envp[])
   // Setup the values of %t and %T, used in format strings
 
   try {
-#ifdef DO_CLEANUP
-    format_t::value_expr.reset(parse_value_expr(config->value_expr));
-#else
     format_t::value_expr = parse_value_expr(config->value_expr);
-#endif
   }
   catch (const value_expr_error& err) {
     std::cerr << "Error in amount (-t) specifier: " << err.what()
@@ -382,11 +378,7 @@ int main(int argc, char * argv[], char * envp[])
   }
 
   try {
-#ifdef DO_CLEANUP
-    format_t::total_expr.reset(parse_value_expr(config->total_expr));
-#else
     format_t::total_expr = parse_value_expr(config->total_expr);
-#endif
   }
   catch (const value_expr_error& err) {
     std::cerr << "Error in total (-T) specifier: " << err.what()
@@ -608,11 +600,11 @@ int main(int argc, char * argv[], char * envp[])
   }
 
 #ifdef DO_CLEANUP
-  // The transaction display flags (dflags) are not recorded in the
-  // binary cache, and only need to be cleared if the transactions
-  // are to be displayed a second time.
+  // Cleanup the data handlers that might be present on some objects.
+
   clear_transaction_data xact_cleanup;
   walk_entries(journal->entries, xact_cleanup);
+
   clear_account_data acct_cleanup;
   walk_accounts(journal->master, acct_cleanup);
 #endif
