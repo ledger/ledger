@@ -287,7 +287,8 @@ void value_expr_t::compute(value_t& result, const details_t& details) const
     try {
       object func = python_interpretor->main_namespace[constant_s];
       if (right) {
-	right->compute(result, details);
+	assert(right->kind == O_ARG);
+	right->left->compute(result, details);
 	result = call<value_t>(func.ptr(), details, result);
       } else {
 	result = call<value_t>(func.ptr(), details);
@@ -541,7 +542,23 @@ value_expr_t * parse_value_term(std::istream& in)
     in.get(c);
     node.reset(new value_expr_t(value_expr_t::F_INTERP_FUNC));
     node->constant_s = buf;
-    node->right = parse_value_expr(in, true);
+    if (peek_next_nonws(in) == '(') {
+      in.get(c);
+      node->right = new value_expr_t(value_expr_t::O_ARG);
+      value_expr_t * cur = node->right;
+      cur->left = parse_value_expr(in, true);
+      while (peek_next_nonws(in) == ',') {
+	in.get(c);
+	cur->right = new value_expr_t(value_expr_t::O_ARG);
+	cur = cur->right;
+	cur->left = parse_value_expr(in, true);
+      }
+      in.get(c);
+      if (c != ')')
+	unexpected(c, ')');
+    } else {
+      node->left = parse_value_term(in);
+    }
     break;
   }
 
@@ -772,13 +789,13 @@ void dump_value_expr(std::ostream& out, const value_expr_t * node)
 {
   switch (node->kind) {
   case value_expr_t::CONSTANT_I:
-    out << "UINT[" << node->constant_i << "]";
+    out << "UINT[" << node->constant_i << ']';
     break;
   case value_expr_t::CONSTANT_T:
-    out << "DATE/TIME[" << node->constant_t << "]";
+    out << "DATE/TIME[" << node->constant_t << ']';
     break;
   case value_expr_t::CONSTANT_A:
-    out << "CONST[" << node->constant_a << "]";
+    out << "CONST[" << node->constant_a << ']';
     break;
 
   case value_expr_t::AMOUNT:	   out << "AMOUNT"; break;
@@ -795,40 +812,40 @@ void dump_value_expr(std::ostream& out, const value_expr_t * node)
   case value_expr_t::F_ARITH_MEAN:
     out << "MEAN(";
     dump_value_expr(out, node->left);
-    out << ")";
+    out << ')';
     break;
 
   case value_expr_t::F_NEG:
     out << "ABS(";
     dump_value_expr(out, node->left);
-    out << ")";
+    out << ')';
     break;
 
   case value_expr_t::F_ABS:
     out << "ABS(";
     dump_value_expr(out, node->left);
-    out << ")";
+    out << ')';
     break;
 
   case value_expr_t::F_STRIP:
     out << "STRIP(";
     dump_value_expr(out, node->left);
-    out << ")";
+    out << ')';
     break;
 
   case value_expr_t::F_PAYEE_MASK:
     assert(node->mask);
-    out << "P_MASK(" << node->mask->pattern << ")";
+    out << "P_MASK(" << node->mask->pattern << ')';
     break;
 
   case value_expr_t::F_ACCOUNT_MASK:
     assert(node->mask);
-    out << "A_MASK(" << node->mask->pattern << ")";
+    out << "A_MASK(" << node->mask->pattern << ')';
     break;
 
   case value_expr_t::F_SHORT_ACCOUNT_MASK:
     assert(node->mask);
-    out << "A_SMASK(" << node->mask->pattern << ")";
+    out << "A_SMASK(" << node->mask->pattern << ')';
     break;
 
   case value_expr_t::F_VALUE:
@@ -838,29 +855,39 @@ void dump_value_expr(std::ostream& out, const value_expr_t * node)
       out << ", ";
       dump_value_expr(out, node->right);
     }
-    out << ")";
+    out << ')';
     break;
 
   case value_expr_t::F_INTERP_FUNC:
-    out << "F_INTERP(" << node->constant_s << ")";
+    out << "F_INTERP[" << node->constant_s << "](";
+    dump_value_expr(out, node->right);
+    out << ')';
     break;
 
   case value_expr_t::O_NOT:
-    out << "!";
+    out << '!';
     dump_value_expr(out, node->left);
+    break;
+
+  case value_expr_t::O_ARG:
+    dump_value_expr(out, node->left);
+    if (node->right) {
+      out << ',';
+      dump_value_expr(out, node->right);
+    }
     break;
 
   case value_expr_t::O_QUES:
     dump_value_expr(out, node->left);
-    out << "?";
+    out << '?';
     dump_value_expr(out, node->right->left);
-    out << ":";
+    out << ':';
     dump_value_expr(out, node->right->right);
     break;
 
   case value_expr_t::O_AND:
   case value_expr_t::O_OR:
-    out << "(";
+    out << '(';
     dump_value_expr(out, node->left);
     switch (node->kind) {
     case value_expr_t::O_AND: out << " & "; break;
@@ -868,7 +895,7 @@ void dump_value_expr(std::ostream& out, const value_expr_t * node)
     default: assert(0); break;
     }
     dump_value_expr(out, node->right);
-    out << ")";
+    out << ')';
     break;
 
   case value_expr_t::O_EQ:
@@ -876,35 +903,35 @@ void dump_value_expr(std::ostream& out, const value_expr_t * node)
   case value_expr_t::O_LTE:
   case value_expr_t::O_GT:
   case value_expr_t::O_GTE:
-    out << "(";
+    out << '(';
     dump_value_expr(out, node->left);
     switch (node->kind) {
-    case value_expr_t::O_EQ:  out << "="; break;
-    case value_expr_t::O_LT:  out << "<"; break;
+    case value_expr_t::O_EQ:  out << '='; break;
+    case value_expr_t::O_LT:  out << '<'; break;
     case value_expr_t::O_LTE: out << "<="; break;
-    case value_expr_t::O_GT:  out << ">"; break;
+    case value_expr_t::O_GT:  out << '>'; break;
     case value_expr_t::O_GTE: out << ">="; break;
     default: assert(0); break;
     }
     dump_value_expr(out, node->right);
-    out << ")";
+    out << ')';
     break;
 
   case value_expr_t::O_ADD:
   case value_expr_t::O_SUB:
   case value_expr_t::O_MUL:
   case value_expr_t::O_DIV:
-    out << "(";
+    out << '(';
     dump_value_expr(out, node->left);
     switch (node->kind) {
-    case value_expr_t::O_ADD: out << "+"; break;
-    case value_expr_t::O_SUB: out << "-"; break;
-    case value_expr_t::O_MUL: out << "*"; break;
-    case value_expr_t::O_DIV: out << "/"; break;
+    case value_expr_t::O_ADD: out << '+'; break;
+    case value_expr_t::O_SUB: out << '-'; break;
+    case value_expr_t::O_MUL: out << '*'; break;
+    case value_expr_t::O_DIV: out << '/'; break;
     default: assert(0); break;
     }
     dump_value_expr(out, node->right);
-    out << ")";
+    out << ')';
     break;
 
   case value_expr_t::LAST:
