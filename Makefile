@@ -30,7 +30,7 @@ DFLAGS = -g -DDEBUG_LEVEL=4 -DDO_CLEANUP
 INCS   = -I/sw/include \
 	 -I/usr/include/gcc/darwin/3.3/c++ \
 	 -I/usr/include/gcc/darwin/3.3/c++/ppc-darwin
-LIBS   = -L/sw/lib -lgmpxx -lgmp -lpcre
+LIBS   = -L/sw/lib -lgmp -lpcre
 
 ifdef GNUCASH
 CODE   := $(CODE)   gnucash.cc
