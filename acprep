@@ -3,7 +3,7 @@
 glibtoolize --automake -f -c
 aclocal
 autoheader
-touch AUTHORS COPYING
+touch AUTHORS ChangeLog COPYING
 
 if [ "$1" = "--dist" ]; then
     automake -acfi
