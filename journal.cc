@@ -139,8 +139,12 @@ account_t * account_t::find_account(const std::string& name,
   if (i == accounts.end()) {
     if (! auto_create)
       return NULL;
+
     account = new account_t(this, first);
-    accounts.insert(accounts_pair(first, account));
+
+    std::pair<accounts_map::iterator, bool> result
+      = accounts.insert(accounts_pair(first, account));
+    assert(result.second);
   } else {
     account = (*i).second;
   }

@@ -1048,7 +1048,7 @@ using namespace ledger;
 void (amount_t::*parse_1)(std::istream& in)       = &amount_t::parse;
 void (amount_t::*parse_2)(const std::string& str) = &amount_t::parse;
 
-struct commodity_updater_wrap : commodity_t::updater_t
+struct commodity_updater_wrap : public commodity_t::updater_t
 {
   PyObject * self;
   commodity_updater_wrap(PyObject * self_) : self(self_) {}

@@ -22,6 +22,7 @@ void export_qif();
 #ifdef READ_GNUCASH
 void export_gnucash();
 #endif
+void export_option();
 
 BOOST_PYTHON_MODULE(ledger) {
   export_amount();
@@ -35,5 +36,6 @@ BOOST_PYTHON_MODULE(ledger) {
 #ifdef READ_GNUCASH
   export_gnucash();
 #endif
+  export_option();
   ledger::initialize();
 }

@@ -57,6 +57,7 @@ struct format_t
   static value_expr_t * value_expr;
   static value_expr_t * total_expr;
 
+  format_t() : elements(NULL) {}
   format_t(const std::string& _format) : elements(NULL) {
     reset(_format);
   }

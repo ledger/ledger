@@ -1,6 +1,6 @@
 #!/bin/sh
 
-libtoolize -f
+libtoolize --automake -fc
 aclocal
 autoheader
 touch AUTHORS ChangeLog

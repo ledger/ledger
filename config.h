@@ -2,6 +2,10 @@
 #define _CONFIG_H
 
 #include "ledger.h"
+#include "option.h"
+#include "valexpr.h"
+#include "datetime.h"
+#include "format.h"
 
 #include <iostream>
 #include <memory>
@@ -17,6 +21,8 @@ extern std::string equity_fmt;
 
 struct config_t
 {
+  // These options can all be set used text fields.
+
   strings_list  price_settings;
   std::string   init_file;
   std::string   data_file;
@@ -36,6 +42,7 @@ struct config_t
   bool		show_collapsed;
   bool		show_subtotal;
   bool		show_related;
+  bool		show_all_related;
   bool		show_inverted;
   bool		show_empty;
   bool		days_of_the_week;
@@ -43,12 +50,43 @@ struct config_t
   bool		show_revalued_only;
   bool		download_quotes;
 
+  // These settings require processing of the above.
+
+  bool          use_cache;
+  bool          cache_dirty;
+  interval_t    report_interval;
+  std::time_t   interval_begin;
+  format_t      format;
+  format_t      nformat;
+
+  std::auto_ptr<value_expr_t> sort_order;
+  std::auto_ptr<std::ostream> output_stream;
+
   config_t();
+
+  void process_options(const std::string&     command,
+		       strings_list::iterator arg,
+		       strings_list::iterator args_end);
 };
 
-extern config_t * config;
+extern config_t config;
 
 void option_help(std::ostream& out);
+
+struct declared_option_handler : public option_handler {
+  declared_option_handler(const std::string& label,
+			  const std::string& opt_chars) {
+    register_option(label, opt_chars, *this);
+  }
+};
+
+#define OPT_BEGIN(tag, chars)						\
+  static struct opt_ ## tag ## _handler					\
+      : public declared_option_handler {				\
+    opt_ ## tag ## _handler() : declared_option_handler(#tag, chars) {}	\
+    virtual void operator()(const char * optarg)
+
+#define OPT_END(tag) } opt_ ## tag ## _handler_obj
 
 } // namespace ledger
 
