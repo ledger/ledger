@@ -20,6 +20,9 @@ static const std::string reg_fmt
 static const std::string print_fmt
   = "\n%10d %X%C%p\n    %-34N  %12o\n%/    %-34N  %12o\n";
 
+static const std::string equity_fmt
+  = "\n%10d %X%C%p\n%/    %-34N  %12t\n";
+
 
 void set_price_conversion(const std::string& setting)
 {
@@ -575,8 +578,12 @@ int main(int argc, char * argv[])
     predicate.reset(parse_expr(predicate_string));
   }
 
-  if (display_predicate_string.empty() && command == "b" && ! show_empty)
-    display_predicate_string = "T";
+  if (! show_empty && display_predicate_string.empty()) {
+    if (command == "b")
+      display_predicate_string = "T";
+    else if (command == "E")
+      display_predicate_string = "a";
+  }
 
   if (! display_predicate_string.empty()) {
 #ifdef DEBUG
@@ -601,8 +608,11 @@ int main(int argc, char * argv[])
 
   unsigned int xact_display_flags = MATCHING_TRANSACTIONS;
 
-  if (command == "p" || command == "e" || command == "E") {
+  if (command == "p" || command == "e") {
     xact_display_flags |= OTHER_TRANSACTIONS;
+    show_expanded = true;
+  }
+  else if (command == "E") {
     show_expanded = true;
   }
   else if (show_related) {
@@ -621,6 +631,8 @@ int main(int argc, char * argv[])
     f = bal_fmt.c_str();
   else if (command == "r")
     f = reg_fmt.c_str();
+  else if (command == "E")
+    f = equity_fmt.c_str();
   else
     f = print_fmt.c_str();
 
@@ -638,7 +650,27 @@ int main(int argc, char * argv[])
       format_account(std::cout, format)(journal->master, true,
 					display_predicate.get());
     }
-  } else {
+  }
+  else if (command == "E") {
+    std::string first_line_format;
+    std::string next_lines_format;
+
+    if (const char * p = std::strstr(f, "%/")) {
+      first_line_format = std::string(f, 0, p - f);
+      next_lines_format = std::string(p + 2);
+    } else {
+      first_line_format = next_lines_format = f;
+    }
+
+    format_t format(first_line_format);
+    format_t nformat(next_lines_format);
+
+    format_equity formatter(std::cout, format, nformat,
+			    display_predicate.get());
+    walk_accounts(journal->master, formatter, predicate.get(),
+		  xact_display_flags, true, 0, sort_order.get());
+  }
+  else {
     std::string first_line_format;
     std::string next_lines_format;
 
@@ -675,8 +707,15 @@ int main(int argc, char * argv[])
 		   xact_display_flags);
       std::stable_sort(transactions_pool.begin(), transactions_pool.end(),
 		       compare_items<transaction_t>(sort_order.get()));
-      walk_transactions(transactions_pool.begin(), transactions_pool.end(),
-			formatter);
+      if (show_commodities_revalued) {
+	changed_value_filter<format_transaction>
+	  filtered_formatter(formatter);
+	walk_transactions(transactions_pool.begin(), transactions_pool.end(),
+			  filtered_formatter);
+      } else {
+	walk_transactions(transactions_pool.begin(), transactions_pool.end(),
+			  formatter);
+      }
     }
   }
 

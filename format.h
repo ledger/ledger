@@ -207,6 +207,50 @@ class format_account
 		  const bool         report_top = false) const;
 };
 
+
+class format_equity
+{
+  std::ostream&   output_stream;
+  const format_t& first_line_format;
+  const format_t& next_lines_format;
+
+  item_predicate<account_t> disp_pred_functor;
+
+  mutable balance_t total;
+
+ public:
+  format_equity(std::ostream&   _output_stream,
+		const format_t& _first_line_format,
+		const format_t& _next_lines_format,
+		const node_t *  display_predicate = NULL)
+    : output_stream(_output_stream),
+      first_line_format(_first_line_format),
+      next_lines_format(_next_lines_format),
+      disp_pred_functor(display_predicate) {
+    entry_t header_entry;
+    header_entry.payee = "Opening Balances";
+    header_entry.date  = std::time(NULL);
+    first_line_format.format_elements(output_stream, details_t(&header_entry));
+  }
+
+  ~format_equity() {
+    account_t summary(NULL, "Equity:Opening Balances");
+    summary.value = - total;
+    next_lines_format.format_elements(output_stream, details_t(&summary));
+  }
+
+  void operator()(account_t *	     account,
+		  const unsigned int max_depth  = 1,
+		  const bool         report_top = false) const {
+    if ((report_top || account->parent != NULL) &&
+	disp_pred_functor(account)) {
+      next_lines_format.format_elements(output_stream, details_t(account));
+      account->flags |= ACCOUNT_DISPLAYED;
+      total += account->value.quantity;
+    }
+  }
+};
+
 } // namespace ledger
 
 #endif // _REPORT_H
