@@ -312,6 +312,7 @@ class journal_t
   account_t *  master;
   entries_list entries;
   strings_list sources;
+  std::string  price_db;
   char *       item_pool;
   char *       item_pool_end;
 
