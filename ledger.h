@@ -50,8 +50,6 @@ class amount_t
   base_type	quantity;	// amount, to MAX_PRECISION
   commodity_t *	commodity;
 
-  static commodity_t * null_commodity;
-
   bool valid() const {
     if (quantity)
       return commodity != NULL;
@@ -185,10 +183,10 @@ class amount_t
 
   operator std::string() const;
 
-  void parse(std::istream& in, ledger_t * ledger = NULL);
-  void parse(const std::string& str, ledger_t * ledger = NULL) {
+  void parse(std::istream& in);
+  void parse(const std::string& str) {
     std::istringstream stream(str);
-    parse(stream, ledger);
+    parse(stream);
   }
 
   void write_quantity(std::ostream& out) const;
@@ -223,6 +221,9 @@ std::ostream& operator<<(std::ostream& out, const amount_t& amt);
 typedef std::map<const std::time_t, amount_t>  history_map;
 typedef std::pair<const std::time_t, amount_t> history_pair;
 
+typedef std::map<const std::string, commodity_t *>  commodities_map;
+typedef std::pair<const std::string, commodity_t *> commodities_pair;
+
 class commodity_t
 {
  public:
@@ -235,10 +236,33 @@ class commodity_t
   amount_t	conversion;
   unsigned long	ident;
 
+  // If set, this global function pointer is called to determine
+  // whether prices have been updated in the meanwhile.
+
   static void (*updater)(commodity_t *	   commodity,
 			 const std::time_t date,
 			 const amount_t&   price,
 			 const std::time_t moment);
+
+  // This map remembers all commodities that have been
+  // defined thus far.
+
+  static commodities_map commodities;
+
+  static void add_commodity(commodity_t * commodity,
+			    const std::string symbol = "") {
+    commodities.insert(commodities_pair((symbol.empty() ?
+					 commodity->symbol : symbol),
+					commodity));
+  }
+  static bool remove_commodity(commodity_t * commodity) {
+    commodities_map::size_type n = commodities.erase(commodity->symbol);
+    return n > 0;
+  }
+  static commodity_t * find_commodity(const std::string& symbol,
+				      bool auto_create = false);
+
+  // Now the per-object constructor and methods
 
   commodity_t(const std::string& _symbol    = "",
 	      unsigned int	 _precision = 2,
@@ -377,17 +401,14 @@ inline std::ostream& operator<<(std::ostream& out, const account_t& acct) {
 }
 
 
-typedef std::map<const std::string, commodity_t *>  commodities_map;
-typedef std::pair<const std::string, commodity_t *> commodities_pair;
-
 typedef std::list<entry_t *> entries_list;
 
 class ledger_t
 {
  public:
-  account_t *		 master;
-  commodities_map	 commodities;
-  entries_list		 entries;
+  account_t *  master;
+  entries_list entries;
+
   std::list<std::string> sources;
 
   ledger_t() {
@@ -409,23 +430,11 @@ class ledger_t
     return master->find_account(name, auto_create);
   }
 
-  void add_commodity(commodity_t * commodity, const std::string symbol = "") {
-    commodities.insert(commodities_pair(symbol.empty() ?
-					commodity->symbol : symbol, commodity));
-  }
-  bool remove_commodity(commodity_t * commodity) {
-    commodities_map::size_type n = commodities.erase(commodity->symbol);
-    return n > 0;
-  }
-
-  commodity_t * find_commodity(const std::string& symbol,
-			       bool auto_create = false);
-
   bool add_entry(entry_t * entry);
   bool remove_entry(entry_t * entry);
 };
 
-int parse_ledger_file(char * p, ledger_t * book);
+int parse_ledger_file(char * p, ledger_t * journal);
 
 } // namespace ledger
 

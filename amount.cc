@@ -10,8 +10,6 @@
 
 namespace ledger {
 
-commodity_t * amount_t::null_commodity = NULL;
-
 static void mpz_round(mpz_t value, int precision)
 {
   mpz_t divisor;
@@ -544,7 +542,7 @@ void parse_commodity(std::istream& in, std::string& symbol)
   }
 }
 
-void amount_t::parse(std::istream& in, ledger_t * ledger)
+void amount_t::parse(std::istream& in)
 {
   // The possible syntax for an amount is:
   //
@@ -607,25 +605,10 @@ void amount_t::parse(std::istream& in, ledger_t * ledger)
   assert(precision <= MAX_PRECISION);
 
   // Create the commodity if has not already been seen.
-  if (ledger) {
-    commodity = ledger->find_commodity(symbol, true);
-    commodity->flags |= flags;
-    if (precision > commodity->precision)
-      commodity->precision = precision;
-  }
-  else if (symbol.empty()) {
-    if (! null_commodity) {
-      commodity = null_commodity = new commodity_t(symbol, precision, flags);
-    } else {
-      commodity = null_commodity;
-      commodity->flags |= flags;
-      if (precision > commodity->precision)
-	commodity->precision = precision;
-    }
-  }
-  else {
-    commodity = new commodity_t(symbol, precision, flags);
-  }
+  commodity = commodity_t::find_commodity(symbol, true);
+  commodity->flags |= flags;
+  if (precision > commodity->precision)
+    commodity->precision = precision;
 
   // The number is specified as the user desires, with the commodity
   // flags telling how to parse it.
@@ -695,6 +678,24 @@ void (*commodity_t::updater)(commodity_t *     commodity,
 			     const std::time_t date,
 			     const amount_t&   price,
 			     const std::time_t moment) = NULL;
+
+commodities_map commodity_t::commodities;
+
+commodity_t * commodity_t::find_commodity(const std::string& symbol,
+					  bool auto_create)
+{
+  commodities_map::const_iterator i = commodities.find(symbol);
+  if (i != commodities.end())
+    return (*i).second;
+
+  if (auto_create) {
+    commodity_t * commodity = new commodity_t(symbol);
+    add_commodity(commodity);
+    return commodity;
+  }
+
+  return NULL;
+}
 
 amount_t commodity_t::value(const std::time_t moment)
 {

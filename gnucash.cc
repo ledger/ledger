@@ -113,7 +113,7 @@ static void endElement(void *userData, const char *name)
   }
   else if (std::strcmp(name, "gnc:commodity") == 0) {
     assert(curr_comm);
-    curr_ledger->add_commodity(curr_comm);
+    commodity_t::add_commodity(curr_comm);
     curr_comm = NULL;
   }
   else if (std::strcmp(name, "gnc:transaction") == 0) {
@@ -166,9 +166,9 @@ static void dataHandler(void *userData, const char *s, int len)
     if (curr_comm)
       curr_comm->symbol = std::string(s, len);
     else if (curr_account)
-      curr_account_comm = curr_ledger->find_commodity(std::string(s, len));
+      curr_account_comm = commodity_t::find_commodity(std::string(s, len));
     else if (curr_entry)
-      entry_comm = curr_ledger->find_commodity(std::string(s, len));
+      entry_comm = commodity_t::find_commodity(std::string(s, len));
     break;
 
   case COMM_NAME:
@@ -271,8 +271,8 @@ int parse_gnucash(std::istream& in, ledger_t * ledger, account_t * master)
   // GnuCash uses the USD commodity without defining it, which really
   // means $.
   commodity_t * usd = new commodity_t("$", 2, COMMODITY_STYLE_THOUSANDS);
-  ledger->add_commodity(usd);
-  ledger->add_commodity(usd, "USD");
+  commodity_t::add_commodity(usd);
+  commodity_t::add_commodity(usd, "USD");
 
   XML_Parser parser = XML_ParserCreate(NULL);
   current_parser = parser;

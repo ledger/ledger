@@ -1,4 +1,5 @@
 #include "format.h"
+#include "error.h"
 
 namespace ledger {
 
@@ -24,20 +25,36 @@ std::string maximal_account_name(const item_t * item,
   return name;
 }
 
-std::string format_t::report_line(const item_t * item,
-				  const item_t * displayed_parent) const
-{
-  std::string result;
+node_t * format_t::value_expr = NULL;
+node_t * format_t::total_expr = NULL;
 
-  for (const char * p = format_string.c_str(); *p; p++) {
+element_t * format_t::parse_elements(const std::string& fmt)
+{
+  element_t * result  = NULL;
+  element_t * current = NULL;
+  std::string str;
+
+  for (const char * p = fmt.c_str(); *p; p++) {
     if (*p == '%') {
-      bool leftalign	= false;
-      int  width	= 0;
-      int  strict_width = 0;
+      if (! result) {
+	current = result = new element_t;
+      } else {
+	current->next = new element_t;
+	current = current->next;
+      }
+
+      if (! str.empty()) {
+	current->type  = element_t::STRING;
+	current->chars = str;
+	str = "";
+
+	current->next  = new element_t;
+	current = current->next;
+      }
 
       ++p;
       if (*p == '-') {
-	leftalign = true;
+	current->align_left = true;
 	++p;
       }
 
@@ -45,7 +62,7 @@ std::string format_t::report_line(const item_t * item,
       while (*p && std::isdigit(*p))
 	num += *p++;
       if (! num.empty())
-	width = std::atol(num.c_str());
+	current->min_width = std::atol(num.c_str());
 
       if (*p == '.') {
 	++p;
@@ -53,132 +70,172 @@ std::string format_t::report_line(const item_t * item,
 	while (*p && std::isdigit(*p))
 	  num += *p++;
 	if (! num.empty()) {
-	  strict_width = std::atol(num.c_str());
-	  if (width == 0)
-	    width = strict_width;
+	  current->max_width = std::atol(num.c_str());
+	  if (current->min_width == 0)
+	    current->min_width = current->max_width;
 	}
       }
 
-      std::ostringstream out;
-
-      if (leftalign)
-	out << std::left;
-      else
-	out << std::right;
-
-      if (width > 0)
-	out.width(width);
-
       switch (*p) {
       case '%':
-	out << "%";
+	current->type  = element_t::STRING;
+	current->chars = "%";
 	break;
 
-      case '(': {
+      case '(':
 	++p;
 	num = "";
 	while (*p && *p != ')')
 	  num += *p++;
-	assert(*p == ')');
+	if (*p != ')')
+	  throw format_error("Missing ')'");
 
-	node_t *  style = parse_expr(num, NULL);
-	balance_t value = style->compute(item);
-	value.write(out, width, strict_width > 0 ? strict_width : width);
-	delete style;
+	current->type     = element_t::VALUE_EXPR;
+	current->val_expr = parse_expr(num);
 	break;
-      }
 
-      case '[': {
+      case '[':
 	++p;
 	num = "";
 	while (*p && *p != ']')
 	  num += *p++;
-	assert(*p == ']');
+	if (*p != ']')
+	  throw format_error("Missing ']'");
 
-	if (item->date != -1) {
-	  char buf[256];
-	  std::strftime(buf, 255, num.c_str(), std::gmtime(&item->date));
-	  out << (strict_width == 0 ? buf : truncated(buf, strict_width));
-	} else {
-	  out << " ";
-	}
+	current->type  = element_t::DATE_STRING;
+	current->chars = num;
 	break;
+
+      case 'd':
+	current->type  = element_t::DATE_STRING;
+	current->chars = "%Y/%m/%d";
+	break;
+
+      case 'p': current->type = element_t::PAYEE; break;
+      case 'n': current->type = element_t::ACCOUNT_NAME; break;
+      case 'N': current->type = element_t::ACCOUNT_FULLNAME; break;
+      case 't': current->type = element_t::VALUE; break;
+      case 'T': current->type = element_t::TOTAL; break;
+      case '_': current->type = element_t::SPACER; break;
       }
-
-      case 'd': {
-	if (item->date != -1) {
-	  char buf[32];
-	  std::strftime(buf, 31, "%Y/%m/%d", std::gmtime(&item->date));
-	  out << (strict_width == 0 ? buf : truncated(buf, strict_width));
-	} else {
-	  out << " ";
-	}
-	break;
-      }
-
-      case 'p':
-	out << (strict_width == 0 ?
-		item->payee : truncated(item->payee, strict_width));
-	break;
-
-      case 'n':
-	if (item->account) {
-	  std::string name = maximal_account_name(item, displayed_parent);
-	  out << (strict_width == 0 ? name : truncated(name, strict_width));
-	} else {
-	  out << " ";
-	}
-	break;
-
-      case 'N':
-	if (item->account)
-	  out << (strict_width == 0 ?
-		  item->account->fullname() :
-		  truncated(item->account->fullname(), strict_width));
-	else
-	  out << " ";
-	break;
-
-      case 't':
-	if (value_style) {
-	  balance_t value = compute_value(item);
-	  value.write(out, width, strict_width > 0 ? strict_width : width);
-	}
-	break;
-
-      case 'T':
-	if (total_style) {
-	  balance_t value = compute_total(item);
-	  value.write(out, width, strict_width > 0 ? strict_width : width);
-	}
-	break;
-
-      case '_': {
-	int depth = 0;
-	for (const item_t * i = item; i->parent; i = i->parent)
-	  depth++;
-
-	for (const item_t * i = item->parent;
-	     i && i->account && i != displayed_parent;
-	     i = i->parent)
-	  depth--;
-
-	while (--depth >= 0) {
-	  if (width > 0 || strict_width > 0)
-	    out.width(width > strict_width ? width : strict_width);
-	  out << " ";
-	}
-	break;
-      }
-      }
-
-      result += out.str();
     } else {
-      result += *p;
+      str += *p;
     }
   }
 
+  if (! str.empty()) {
+    if (! result) {
+      current = result = new element_t;
+    } else {
+      current->next = new element_t;
+      current = current->next;
+    }
+    current->type  = element_t::STRING;
+    current->chars = str;
+  }
+
   return result;
+}
+
+void format_t::format_elements(std::ostream& out, const item_t * item,
+			       const item_t * displayed_parent) const
+{
+  std::string result;
+
+  for (const element_t * elem = elements;
+       elem;
+       elem = elem->next) {
+    if (elem->align_left)
+      out << std::left;
+    else
+      out << std::right;
+
+    if (elem->min_width > 0)
+      out.width(elem->min_width);
+
+    switch (elem->type) {
+    case element_t::STRING:
+      out << elem->chars;;
+      break;
+
+    case element_t::VALUE_EXPR: {
+      balance_t value = elem->val_expr->compute(item);
+      value.write(out, elem->min_width,
+		  elem->max_width > 0 ? elem->max_width : elem->min_width);
+      break;
+    }
+
+    case element_t::DATE_STRING:
+      if (item->date != -1) {
+	char buf[256];
+	std::strftime(buf, 255, elem->chars.c_str(), std::gmtime(&item->date));
+	out << (elem->max_width == 0 ? buf : truncated(buf, elem->max_width));
+      } else {
+	out << " ";
+      }
+      break;
+
+    case element_t::PAYEE:
+      out << (elem->max_width == 0 ?
+	      item->payee : truncated(item->payee, elem->max_width));
+      break;
+
+    case element_t::ACCOUNT_NAME:
+      if (item->account) {
+	std::string name = maximal_account_name(item, displayed_parent);
+	out << (elem->max_width == 0 ? name : truncated(name, elem->max_width));
+      } else {
+	out << " ";
+      }
+      break;
+
+    case element_t::ACCOUNT_FULLNAME:
+      if (item->account)
+	out << (elem->max_width == 0 ?
+		item->account->fullname() :
+		truncated(item->account->fullname(), elem->max_width));
+      else
+	out << " ";
+      break;
+
+    case element_t::VALUE: {
+      balance_t value = compute_value(item);
+      value.write(out, elem->min_width,
+		  elem->max_width > 0 ? elem->max_width : elem->min_width);
+      break;
+    }
+
+    case element_t::TOTAL: {
+      balance_t value = compute_total(item);
+      value.write(out, elem->min_width,
+		  elem->max_width > 0 ? elem->max_width : elem->min_width);
+      break;
+    }
+
+    case element_t::SPACER: {
+      int depth = 0;
+      for (const item_t * i = item; i->parent; i = i->parent)
+	depth++;
+
+      for (const item_t * i = item->parent;
+	   i && i->account && i != displayed_parent;
+	   i = i->parent)
+	depth--;
+
+      while (--depth >= 0) {
+	if (elem->min_width > 0 || elem->max_width > 0)
+	  out.width(elem->min_width > elem->max_width ?
+		    elem->min_width : elem->max_width);
+	out << " ";
+      }
+      break;
+    }
+
+    default:
+      assert(0);
+      break;
+    }
+  }
 }
 
 } // namespace ledger

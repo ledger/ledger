@@ -7,55 +7,55 @@
 
 namespace ledger {
 
-enum kind_t {
-  // Constants
-  CONSTANT_A,
-  CONSTANT_T,
-
-  // Item details
-  AMOUNT,
-  COST,
-  DATE,
-  INDEX,
-
-  // Item totals
-  BALANCE,
-  COST_BALANCE,
-  TOTAL,
-  COST_TOTAL,
-
-  // Constraint details
-  BEGIN_DATE,
-  END_DATE,
-
-  // Functions
-  F_ARITH_MEAN,
-  F_VALUE,
-  F_NEG,
-  F_ABS,
-  F_REGEXP,
-
-  // Binary operators
-  O_ADD,
-  O_SUB,
-  O_MUL,
-  O_DIV,
-  O_EQ,
-  O_LT,
-  O_LTE,
-  O_GT,
-  O_GTE,
-  O_NOT,
-  O_AND,
-  O_OR,
-  O_QUES,
-  O_COL,
-
-  LAST
-};
-
 struct node_t
 {
+  enum kind_t {
+    // Constants
+    CONSTANT_A,
+    CONSTANT_T,
+
+    // Item details
+    AMOUNT,
+    COST,
+    DATE,
+    INDEX,
+
+    // Item totals
+    BALANCE,
+    COST_BALANCE,
+    TOTAL,
+    COST_TOTAL,
+
+    // Constraint details
+    BEGIN_DATE,
+    END_DATE,
+
+    // Functions
+    F_ARITH_MEAN,
+    F_VALUE,
+    F_NEG,
+    F_ABS,
+    F_REGEXP,
+
+    // Binary operators
+    O_ADD,
+    O_SUB,
+    O_MUL,
+    O_DIV,
+    O_EQ,
+    O_LT,
+    O_LTE,
+    O_GT,
+    O_GTE,
+    O_NOT,
+    O_AND,
+    O_OR,
+    O_QUES,
+    O_COL,
+
+    LAST
+  };
+
   kind_t   type;
   node_t * left;
   node_t * right;
@@ -78,18 +78,18 @@ struct node_t
 		    const std::time_t end   = -1) const;
 };
 
-node_t * parse_expr(std::istream& in, ledger_t * ledger);
+node_t * parse_expr(std::istream& in);
 
-inline node_t * parse_expr(const char * p, ledger_t * ledger) {
+inline node_t * parse_expr(const char * p) {
   std::istringstream stream(p);
-  return parse_expr(stream, ledger);
+  return parse_expr(stream);
 }
 
-inline node_t * parse_expr(const std::string& str, ledger_t * ledger) {
-  return parse_expr(str.c_str(), ledger);
+inline node_t * parse_expr(const std::string& str) {
+  return parse_expr(str.c_str());
 }
 
-inline node_t * find_node(node_t * node, kind_t type) {
+inline node_t * find_node(node_t * node, node_t::kind_t type) {
   node_t * result = NULL;
   if (node->type == type)
     result = node;

@@ -149,14 +149,14 @@ balance_t node_t::compute(const item_t *    item,
   return temp;
 }
 
-node_t * parse_term(std::istream& in, ledger_t * ledger);
+node_t * parse_term(std::istream& in);
 
-inline node_t * parse_term(const char * p, ledger_t * ledger) {
+inline node_t * parse_term(const char * p) {
   std::istringstream stream(p);
-  return parse_term(stream, ledger);
+  return parse_term(stream);
 }
 
-node_t * parse_term(std::istream& in, ledger_t * ledger)
+node_t * parse_term(std::istream& in)
 {
   node_t * node = NULL;
 
@@ -185,8 +185,8 @@ node_t * parse_term(std::istream& in, ledger_t * ledger)
     }
 
     if (! ident.empty()) {
-      node = new node_t(CONSTANT_A);
-      node->constant_a.parse(ident, ledger);
+      node = new node_t(node_t::CONSTANT_A);
+      node->constant_a.parse(ident);
     }
     return node;
   }
@@ -194,62 +194,62 @@ node_t * parse_term(std::istream& in, ledger_t * ledger)
   in.get(c);
   switch (c) {
   // Basic terms
-  case 'a': node = new node_t(AMOUNT); break;
-  case 'c': node = new node_t(COST); break;
-  case 'd': node = new node_t(DATE); break;
-  case 'b': node = new node_t(BEGIN_DATE); break;
-  case 'e': node = new node_t(END_DATE); break;
-  case 'i': node = new node_t(INDEX); break;
-  case 'B': node = new node_t(BALANCE); break;
-  case 'T': node = new node_t(TOTAL); break;
-  case 'C': node = new node_t(COST_TOTAL); break;
+  case 'a': node = new node_t(node_t::AMOUNT); break;
+  case 'c': node = new node_t(node_t::COST); break;
+  case 'd': node = new node_t(node_t::DATE); break;
+  case 'b': node = new node_t(node_t::BEGIN_DATE); break;
+  case 'e': node = new node_t(node_t::END_DATE); break;
+  case 'i': node = new node_t(node_t::INDEX); break;
+  case 'B': node = new node_t(node_t::BALANCE); break;
+  case 'T': node = new node_t(node_t::TOTAL); break;
+  case 'C': node = new node_t(node_t::COST_TOTAL); break;
 
   // Compound terms
-  case 'v': node = parse_expr("P(a,d)", ledger); break;
-  case 'V': node = parse_term("P(T,d)", ledger); break;
-  case 'g': node = parse_expr("v-c", ledger); break;
-  case 'G': node = parse_expr("V-C", ledger); break;
-  case 'o': node = parse_expr("d-b", ledger); break;
-  case 'w': node = parse_expr("e-d", ledger); break;
+  case 'v': node = parse_expr("P(a,d)"); break;
+  case 'V': node = parse_term("P(T,d)"); break;
+  case 'g': node = parse_expr("v-c"); break;
+  case 'G': node = parse_expr("V-C"); break;
+  case 'o': node = parse_expr("d-b"); break;
+  case 'w': node = parse_expr("e-d"); break;
 
   // Functions
   case '-':
-    node = new node_t(F_NEG);
-    node->left = parse_term(in, ledger);
+    node = new node_t(node_t::F_NEG);
+    node->left = parse_term(in);
     break;
 
-  case 'A':			// absolute value ("positive")
-    node = new node_t(F_ABS);
-    node->left = parse_term(in, ledger);
+  case 'A':
+    node = new node_t(node_t::F_ABS);
+    node->left = parse_term(in);
     break;
 
   case 'M':
-    node = new node_t(F_ARITH_MEAN);
-    node->left = parse_term(in, ledger);
+    node = new node_t(node_t::F_ARITH_MEAN);
+    node->left = parse_term(in);
     break;
 
   case 'D': {
-    node = new node_t(O_SUB);
-    node->left  = parse_term("a", ledger);
-    node->right = parse_term(in, ledger);
+    node = new node_t(node_t::O_SUB);
+    node->left  = parse_term("a");
+    node->right = parse_term(in);
     break;
   }
 
   case 'P':
-    node = new node_t(F_VALUE);
+    node = new node_t(node_t::F_VALUE);
     if (in.peek() == '(') {
       in.get(c);
-      node->left = parse_expr(in, ledger);
+      node->left = parse_expr(in);
       if (in.peek() == ',') {
 	in.get(c);
-	node->right = parse_expr(in, ledger);
+	node->right = parse_expr(in);
       }
       if (in.peek() == ')')
 	in.get(c);
       else
 	throw expr_error("Missing ')'");
     } else {
-      node->left = parse_term(in, ledger);
+      node->left = parse_term(in);
     }
     break;
 
@@ -267,7 +267,7 @@ node_t * parse_term(std::istream& in, ledger_t * ledger)
     }
     if (c == '/') {
       in.get(c);
-      node = new node_t(F_REGEXP);
+      node = new node_t(node_t::F_REGEXP);
       node->mask = new mask_t(ident);
     } else {
       throw expr_error("Missing closing '/'");
@@ -276,7 +276,7 @@ node_t * parse_term(std::istream& in, ledger_t * ledger)
   }
 
   case '(':
-    node = parse_expr(in, ledger);
+    node = parse_expr(in);
     if (in.peek() == ')')
       in.get(c);
     else
@@ -294,7 +294,7 @@ node_t * parse_term(std::istream& in, ledger_t * ledger)
     }
     if (c == ']') {
       in.get(c);
-      node = new node_t(CONSTANT_T);
+      node = new node_t(node_t::CONSTANT_T);
       if (! parse_date(ident.c_str(), &node->constant_t))
 	throw expr_error("Failed to parse date");
     } else {
@@ -311,11 +311,11 @@ node_t * parse_term(std::istream& in, ledger_t * ledger)
   return node;
 }
 
-node_t * parse_mul_expr(std::istream& in, ledger_t * ledger)
+node_t * parse_mul_expr(std::istream& in)
 {
   node_t * node = NULL;
 
-  node = parse_term(in, ledger);
+  node = parse_term(in);
 
   if (node && ! in.eof()) {
     char c = in.peek();
@@ -324,17 +324,17 @@ node_t * parse_mul_expr(std::istream& in, ledger_t * ledger)
       switch (c) {
       case '*': {
 	node_t * prev = node;
-	node = new node_t(O_MUL);
+	node = new node_t(node_t::O_MUL);
 	node->left  = prev;
-	node->right = parse_term(in, ledger);
+	node->right = parse_term(in);
 	break;
       }
 
       case '/': {
 	node_t * prev = node;
-	node = new node_t(O_DIV);
+	node = new node_t(node_t::O_DIV);
 	node->left  = prev;
-	node->right = parse_term(in, ledger);
+	node->right = parse_term(in);
 	break;
       }
       }
@@ -345,11 +345,11 @@ node_t * parse_mul_expr(std::istream& in, ledger_t * ledger)
   return node;
 }
 
-node_t * parse_add_expr(std::istream& in, ledger_t * ledger)
+node_t * parse_add_expr(std::istream& in)
 {
   node_t * node = NULL;
 
-  node = parse_mul_expr(in, ledger);
+  node = parse_mul_expr(in);
 
   if (node && ! in.eof()) {
     char c = in.peek();
@@ -358,17 +358,17 @@ node_t * parse_add_expr(std::istream& in, ledger_t * ledger)
       switch (c) {
       case '+': {
 	node_t * prev = node;
-	node = new node_t(O_ADD);
+	node = new node_t(node_t::O_ADD);
 	node->left  = prev;
-	node->right = parse_mul_expr(in, ledger);
+	node->right = parse_mul_expr(in);
 	break;
       }
 
       case '-': {
 	node_t * prev = node;
-	node = new node_t(O_SUB);
+	node = new node_t(node_t::O_SUB);
 	node->left  = prev;
-	node->right = parse_mul_expr(in, ledger);
+	node->right = parse_mul_expr(in);
 	break;
       }
       }
@@ -379,19 +379,19 @@ node_t * parse_add_expr(std::istream& in, ledger_t * ledger)
   return node;
 }
 
-node_t * parse_logic_expr(std::istream& in, ledger_t * ledger)
+node_t * parse_logic_expr(std::istream& in)
 {
   node_t * node = NULL;
 
   if (in.peek() == '!') {
     char c;
     in.get(c);
-    node = new node_t(O_NOT);
-    node->left = parse_logic_expr(in, ledger);
+    node = new node_t(node_t::O_NOT);
+    node->left = parse_logic_expr(in);
     return node;
   }
 
-  node = parse_add_expr(in, ledger);
+  node = parse_add_expr(in);
 
   if (node && ! in.eof()) {
     char c = in.peek();
@@ -400,33 +400,33 @@ node_t * parse_logic_expr(std::istream& in, ledger_t * ledger)
       switch (c) {
       case '=': {
 	node_t * prev = node;
-	node = new node_t(O_EQ);
+	node = new node_t(node_t::O_EQ);
 	node->left  = prev;
-	node->right = parse_add_expr(in, ledger);
+	node->right = parse_add_expr(in);
 	break;
       }
 
       case '<': {
 	node_t * prev = node;
-	node = new node_t(O_LT);
+	node = new node_t(node_t::O_LT);
 	if (in.peek() == '=') {
 	  in.get(c);
-	  node->type = O_LTE;
+	  node->type = node_t::O_LTE;
 	}
 	node->left  = prev;
-	node->right = parse_add_expr(in, ledger);
+	node->right = parse_add_expr(in);
 	break;
       }
 
       case '>': {
 	node_t * prev = node;
-	node = new node_t(O_GT);
+	node = new node_t(node_t::O_GT);
 	if (in.peek() == '=') {
 	  in.get(c);
-	  node->type = O_GTE;
+	  node->type = node_t::O_GTE;
 	}
 	node->left  = prev;
-	node->right = parse_add_expr(in, ledger);
+	node->right = parse_add_expr(in);
 	break;
       }
 
@@ -443,11 +443,11 @@ node_t * parse_logic_expr(std::istream& in, ledger_t * ledger)
   return node;
 }
 
-node_t * parse_expr(std::istream& in, ledger_t * ledger)
+node_t * parse_expr(std::istream& in)
 {
   node_t * node = NULL;
 
-  node = parse_logic_expr(in, ledger);
+  node = parse_logic_expr(in);
 
   if (node && ! in.eof()) {
     char c = in.peek();
@@ -456,27 +456,27 @@ node_t * parse_expr(std::istream& in, ledger_t * ledger)
       switch (c) {
       case '&': {
 	node_t * prev = node;
-	node = new node_t(O_AND);
+	node = new node_t(node_t::O_AND);
 	node->left  = prev;
-	node->right = parse_logic_expr(in, ledger);
+	node->right = parse_logic_expr(in);
 	break;
       }
 
       case '|': {
 	node_t * prev = node;
-	node = new node_t(O_OR);
+	node = new node_t(node_t::O_OR);
 	node->left  = prev;
-	node->right = parse_logic_expr(in, ledger);
+	node->right = parse_logic_expr(in);
 	break;
       }
 
       case '?': {
 	node_t * prev = node;
-	node = new node_t(O_QUES);
+	node = new node_t(node_t::O_QUES);
 	node->left  = prev;
-	node_t * choices = new node_t(O_COL);
+	node_t * choices = new node_t(node_t::O_COL);
 	node->right = choices;
-	choices->left = parse_logic_expr(in, ledger);
+	choices->left = parse_logic_expr(in);
 	c = in.peek();
 	if (c != ':') {
 	  std::ostringstream err;
@@ -484,7 +484,7 @@ node_t * parse_expr(std::istream& in, ledger_t * ledger)
 	  throw expr_error(err.str());
 	}
 	in.get(c);
-	choices->right = parse_logic_expr(in, ledger);
+	choices->right = parse_logic_expr(in);
 	break;
       }
 
@@ -512,43 +512,43 @@ namespace ledger {
 static void dump_tree(std::ostream& out, node_t * node)
 {
   switch (node->type) {
-  case CONSTANT_A:   out << "CONST[" << node->constant_a << "]"; break;
-  case CONSTANT_T:   out << "DATE/TIME[" << node->constant_t << "]"; break;
-  case AMOUNT:	     out << "AMOUNT"; break;
-  case COST:	     out << "COST"; break;
-  case DATE:	     out << "DATE"; break;
-  case INDEX:	     out << "INDEX"; break;
-  case BALANCE:      out << "BALANCE"; break;
-  case COST_BALANCE: out << "COST_BALANCE"; break;
-  case TOTAL:        out << "TOTAL"; break;
-  case COST_TOTAL:   out << "COST_TOTAL"; break;
-  case BEGIN_DATE:   out << "BEGIN"; break;
-  case END_DATE:     out << "END"; break;
+  case node_t::CONSTANT_A:   out << "CONST[" << node->constant_a << "]"; break;
+  case node_t::CONSTANT_T:   out << "DATE/TIME[" << node->constant_t << "]"; break;
+  case node_t::AMOUNT:	     out << "AMOUNT"; break;
+  case node_t::COST:	     out << "COST"; break;
+  case node_t::DATE:	     out << "DATE"; break;
+  case node_t::INDEX:	     out << "INDEX"; break;
+  case node_t::BALANCE:      out << "BALANCE"; break;
+  case node_t::COST_BALANCE: out << "COST_BALANCE"; break;
+  case node_t::TOTAL:        out << "TOTAL"; break;
+  case node_t::COST_TOTAL:   out << "COST_TOTAL"; break;
+  case node_t::BEGIN_DATE:   out << "BEGIN"; break;
+  case node_t::END_DATE:     out << "END"; break;
 
-  case F_ARITH_MEAN:
+  case node_t::F_ARITH_MEAN:
     out << "MEAN(";
     dump_tree(out, node->left);
     out << ")";
     break;
 
-  case F_NEG:
+  case node_t::F_NEG:
     out << "ABS(";
     dump_tree(out, node->left);
     out << ")";
     break;
 
-  case F_ABS:
+  case node_t::F_ABS:
     out << "ABS(";
     dump_tree(out, node->left);
     out << ")";
     break;
 
-  case F_REGEXP:
+  case node_t::F_REGEXP:
     assert(node->mask);
     out << "RE(" << node->mask->pattern << ")";
     break;
 
-  case F_VALUE:
+  case node_t::F_VALUE:
     out << "VALUE(";
     dump_tree(out, node->left);
     if (node->right) {
@@ -558,12 +558,12 @@ static void dump_tree(std::ostream& out, node_t * node)
     out << ")";
     break;
 
-  case O_NOT:
+  case node_t::O_NOT:
     out << "!";
     dump_tree(out, node->left);
     break;
 
-  case O_QUES:
+  case node_t::O_QUES:
     dump_tree(out, node->left);
     out << "?";
     dump_tree(out, node->right->left);
@@ -571,38 +571,38 @@ static void dump_tree(std::ostream& out, node_t * node)
     dump_tree(out, node->right->right);
     break;
 
-  case O_AND:
-  case O_OR:
-  case O_EQ:
-  case O_LT:
-  case O_LTE:
-  case O_GT:
-  case O_GTE:
-  case O_ADD:
-  case O_SUB:
-  case O_MUL:
-  case O_DIV:
+  case node_t::O_AND:
+  case node_t::O_OR:
+  case node_t::O_EQ:
+  case node_t::O_LT:
+  case node_t::O_LTE:
+  case node_t::O_GT:
+  case node_t::O_GTE:
+  case node_t::O_ADD:
+  case node_t::O_SUB:
+  case node_t::O_MUL:
+  case node_t::O_DIV:
     out << "(";
     dump_tree(out, node->left);
     switch (node->type) {
-    case O_AND: out << " & "; break;
-    case O_OR:  out << " | "; break;
-    case O_EQ:  out << "="; break;
-    case O_LT:  out << "<"; break;
-    case O_LTE: out << "<="; break;
-    case O_GT:  out << ">"; break;
-    case O_GTE: out << ">="; break;
-    case O_ADD: out << "+"; break;
-    case O_SUB: out << "-"; break;
-    case O_MUL: out << "*"; break;
-    case O_DIV: out << "/"; break;
+    case node_t::O_AND: out << " & "; break;
+    case node_t::O_OR:  out << " | "; break;
+    case node_t::O_EQ:  out << "="; break;
+    case node_t::O_LT:  out << "<"; break;
+    case node_t::O_LTE: out << "<="; break;
+    case node_t::O_GT:  out << ">"; break;
+    case node_t::O_GTE: out << ">="; break;
+    case node_t::O_ADD: out << "+"; break;
+    case node_t::O_SUB: out << "-"; break;
+    case node_t::O_MUL: out << "*"; break;
+    case node_t::O_DIV: out << "/"; break;
     default: assert(0); break;
     }
     dump_tree(out, node->right);
     out << ")";
     break;
 
-  case LAST:
+  case node_t::LAST:
   default:
     assert(0);
     break;

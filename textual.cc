@@ -186,8 +186,8 @@ inline char peek_next_nonws(std::istream& in)
   return c;
 }
 
-transaction_t * parse_transaction_text(char * line, ledger_t * ledger,
-				       account_t * account, entry_t * entry)
+transaction_t * parse_transaction_text(char * line, account_t * account,
+				       entry_t * entry)
 {
   // The account will be determined later...
 
@@ -208,10 +208,10 @@ transaction_t * parse_transaction_text(char * line, ledger_t * ledger,
     char * price_str = std::strchr(cost_str, '@');
     if (price_str) {
       *price_str++ = '\0';
-      xact->cost.parse(price_str, ledger);
+      xact->cost.parse(price_str);
     }
 
-    xact->amount.parse(cost_str, ledger);
+    xact->amount.parse(cost_str);
 
     if (price_str)
       xact->cost *= xact->amount;
@@ -233,21 +233,21 @@ transaction_t * parse_transaction_text(char * line, ledger_t * ledger,
   xact->account = account->find_account(p);
 
   if (! xact->amount.commodity)
-    xact->amount.commodity = ledger->find_commodity("", true);
+    xact->amount.commodity = commodity_t::find_commodity("", true);
   if (! xact->cost.commodity)
-    xact->cost.commodity = ledger->find_commodity("", true);
+    xact->cost.commodity = commodity_t::find_commodity("", true);
 
   return xact;
 }
 
-transaction_t * parse_transaction(std::istream& in, ledger_t * ledger,
-				  account_t * account, entry_t * entry)
+transaction_t * parse_transaction(std::istream& in, account_t * account,
+				  entry_t * entry)
 {
   static char line[MAX_LINE + 1];
   in.getline(line, MAX_LINE);
   linenum++;
 
-  return parse_transaction_text(line, ledger, account, entry);
+  return parse_transaction_text(line, account, entry);
 }
 
 class automated_transaction_t
@@ -338,8 +338,7 @@ public:
   }
 };
 
-void parse_automated_transactions(std::istream& in, ledger_t * ledger,
-				  account_t * account,
+void parse_automated_transactions(std::istream& in, account_t * account,
 				  automated_transactions_t& auto_xacts)
 {
   static char line[MAX_LINE + 1];
@@ -359,7 +358,7 @@ void parse_automated_transactions(std::istream& in, ledger_t * ledger,
   transactions_list xacts;
 
   while (! in.eof() && (in.peek() == ' ' || in.peek() == '\t')) {
-    if (transaction_t * xact = parse_transaction(in, ledger, account, NULL)) {
+    if (transaction_t * xact = parse_transaction(in, account, NULL)) {
       if (! xact->amount)
 	throw parse_error(path, linenum,
 			  "All automated transactions must have a value");
@@ -446,8 +445,7 @@ bool finalize_entry(entry_t * entry)
   return ! balance;
 }
 
-entry_t * parse_entry(std::istream& in, ledger_t * ledger,
-		      account_t * master)
+entry_t * parse_entry(std::istream& in, account_t * master)
 {
   entry_t * curr = new entry_t;
 
@@ -486,7 +484,7 @@ entry_t * parse_entry(std::istream& in, ledger_t * ledger,
   // Parse all of the transactions associated with this entry
 
   while (! in.eof() && (in.peek() == ' ' || in.peek() == '\t'))
-    if (transaction_t * xact = parse_transaction(in, ledger, master, curr))
+    if (transaction_t * xact = parse_transaction(in, master, curr))
       curr->add_transaction(xact);
 
   // If there were no transactions, throw away the entry
@@ -504,7 +502,7 @@ entry_t * parse_entry(std::istream& in, ledger_t * ledger,
 // Textual ledger parser
 //
 
-unsigned int parse_textual_ledger(std::istream& in, ledger_t * ledger,
+unsigned int parse_textual_ledger(std::istream& in, ledger_t * journal,
 				  account_t * master)
 {
   static char   line[MAX_LINE + 1];
@@ -517,11 +515,11 @@ unsigned int parse_textual_ledger(std::istream& in, ledger_t * ledger,
   automated_transactions_t auto_xacts;
 
   if (! master)
-    master = ledger->master;
+    master = journal->master;
 
   account_stack.push_front(master);
 
-  path	  = ledger->sources.back();
+  path	  = journal->sources.back();
   linenum = 1;
 
   while (! in.eof()) {
@@ -602,14 +600,14 @@ unsigned int parse_textual_ledger(std::istream& in, ledger_t * ledger,
 	    char   buf[32];
 	    std::sprintf(buf, "%fh", diff);
 	    amount_t amt;
-	    amt.parse(buf, ledger);
+	    amt.parse(buf);
 	    time_commodity = amt.commodity;
 
 	    transaction_t * xact = new transaction_t(curr, last_account, amt, amt,
 						     TRANSACTION_VIRTUAL);
 	    curr->add_transaction(xact);
 
-	    if (! finalize_entry(curr) || ! ledger->add_entry(curr))
+	    if (! finalize_entry(curr) || ! journal->add_entry(curr))
 	      assert(0);
 
 	    count++;
@@ -650,9 +648,9 @@ unsigned int parse_textual_ledger(std::istream& in, ledger_t * ledger,
 
 	parse_commodity(in, symbol);
 	in >> line;		// the price
-	price.parse(line, ledger);
+	price.parse(line);
 
-	commodity_t * commodity = ledger->find_commodity(symbol, true);
+	commodity_t * commodity = commodity_t::find_commodity(symbol, true);
 	commodity->add_price(date, price);
 	break;
       }
@@ -663,7 +661,7 @@ unsigned int parse_textual_ledger(std::istream& in, ledger_t * ledger,
 	in >> c;
 	parse_commodity(in, symbol);
 
-	commodity_t * commodity = ledger->find_commodity(line, true);
+	commodity_t * commodity = commodity_t::find_commodity(line, true);
 	commodity->flags |= (COMMODITY_STYLE_CONSULTED |
 			     COMMODITY_STYLE_NOMARKET);
 	break;
@@ -677,9 +675,9 @@ unsigned int parse_textual_ledger(std::istream& in, ledger_t * ledger,
 
 	parse_commodity(in, symbol);
 	in >> line;		// the price
-	price.parse(line, ledger);
+	price.parse(line);
 
-	commodity_t * commodity = ledger->find_commodity(symbol, true);
+	commodity_t * commodity = commodity_t::find_commodity(symbol, true);
 	commodity->set_conversion(price);
 	break;
       }
@@ -700,8 +698,7 @@ unsigned int parse_textual_ledger(std::istream& in, ledger_t * ledger,
 	break;
 
       case '=':                   // automated transactions
-	parse_automated_transactions(in, ledger, account_stack.front(),
-				     auto_xacts);
+	parse_automated_transactions(in, account_stack.front(), auto_xacts);
 	break;
 
       case '@': {                 // account specific
@@ -729,12 +726,12 @@ unsigned int parse_textual_ledger(std::istream& in, ledger_t * ledger,
 	  char * p = skip_ws(line);
 	  std::ifstream stream(p);
 
-	  ledger->sources.push_back(p);
+	  journal->sources.push_back(p);
 
 	  unsigned int curr_linenum = linenum;
 	  std::string  curr_path    = path;
 
-	  count += parse_textual_ledger(stream, ledger, account_stack.front());
+	  count += parse_textual_ledger(stream, journal, account_stack.front());
 
 	  linenum = curr_linenum;
 	  path    = curr_path;
@@ -743,11 +740,11 @@ unsigned int parse_textual_ledger(std::istream& in, ledger_t * ledger,
 
       default: {
 	unsigned int first_line = linenum;
-	if (entry_t * entry = parse_entry(in, ledger, account_stack.front())) {
+	if (entry_t * entry = parse_entry(in, account_stack.front())) {
 	  if (! auto_xacts.automated_transactions.empty())
 	    auto_xacts.extend_entry(entry);
 
-	  if (ledger->add_entry(entry))
+	  if (journal->add_entry(entry))
 	    count++;
 	  else
 	    throw parse_error(path, first_line, "Entry does not balance");
@@ -876,11 +873,11 @@ void print_textual_entry(std::ostream& out, entry_t * entry, bool shortcut)
   out << std::endl;
 }
 
-void print_textual_ledger(std::ostream& out, ledger_t * ledger,
+void print_textual_ledger(std::ostream& out, ledger_t * journal,
 			  bool shortcut)
 {
-  for (entries_list::const_iterator i = ledger->entries.begin();
-       i != ledger->entries.end();
+  for (entries_list::const_iterator i = journal->entries.begin();
+       i != journal->entries.end();
        i++)
     print_textual_entry(out, *i, shortcut);
 }
@@ -891,12 +888,12 @@ void print_textual_ledger(std::ostream& out, ledger_t * ledger,
 
 int main(int argc, char *argv[])
 {
-  book.sources.push_back(argv[1]);
+  journal.sources.push_back(argv[1]);
   std::ifstream stream(argv[1]);
-  ledger::ledger_t book;
-  int count = parse_textual_ledger(stream, &book, book.master);
+  ledger::ledger_t journal;
+  int count = parse_textual_ledger(stream, &journal, journal.master);
   std::cout << "Read " << count << " entries." << std::endl;
-  print_textual_ledger(std::cout, &book, true);
+  print_textual_ledger(std::cout, &journal, true);
 }
 
 #endif // PARSE_TEST

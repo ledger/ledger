@@ -48,7 +48,7 @@ void show_balances(std::ostream&	out,
     if (match && constraints(*i) &&
 	((*i)->subitems.size() != 1 ||
 	 (*i)->total != (*i)->subitems[0]->total)) {
-      out << format.report_line(*i, parent);
+      format.format_elements(out, *i, parent);
       parent = *i;
     }
 
@@ -69,9 +69,10 @@ void balance_report(std::ostream&	    out,
 
   show_balances(out, top->subitems, constraints, format, top);
 
-  if (constraints.show_subtotals && top->subitems.size() > 1 && top->total)
-    std::cout << "--------------------\n"
-	      << format.report_line(top);
+  if (constraints.show_subtotals && top->subitems.size() > 1 && top->total) {
+    std::cout << "--------------------\n";
+    format.format_elements(std::cout, top);
+  }
 }
 
 
@@ -81,7 +82,7 @@ void balance_report(std::ostream&	    out,
 //
 
 static const std::string reg_fmt
-  = "%10d %-.20p %/%-.22N %12.66t %12.80T\n";
+  = "%10d %-.20p %-.22N %12.66t %12.80T\n%/%22_ %-.22N %12.66t %12.80T\n";
 
 static bool show_commodities_revalued      = false;
 static bool show_commodities_revalued_only = false;
@@ -91,12 +92,10 @@ static void report_value_change(std::ostream&         out,
 				const balance_pair_t& balance,
 				const balance_pair_t& prev_balance,
 				const constraints_t&  constraints,
-				const format_t&	      format,
-				const std::string&    first_line_format,
-				const std::string&    next_lines_format)
+				const format_t&       first_line_format,
+				const format_t&       next_lines_format)
 {
-  static std::time_t	prev_date    = -1;
-
+  static std::time_t prev_date = -1;
   if (prev_date == -1) {
     prev_date = date;
     return;
@@ -105,11 +104,11 @@ static void report_value_change(std::ostream&         out,
   item_t temp;
   temp.date  = prev_date;
   temp.total = prev_balance;
-  balance_t prev_bal = format.compute_total(&temp);
+  balance_t prev_bal = format_t::compute_total(&temp);
 
   temp.date  = date;
   temp.total = balance;
-  balance_t cur_bal = format.compute_total(&temp);
+  balance_t cur_bal = format_t::compute_total(&temp);
 
   if (balance_t diff = cur_bal - prev_bal) {
     temp.value = diff;
@@ -117,17 +116,8 @@ static void report_value_change(std::ostream&         out,
     temp.payee = "Commodities revalued";
 
     if (constraints(&temp)) {
-      format_t copy = format;
-
-      copy.format_string = first_line_format;
-      out << copy.report_line(&temp);
-
-      copy.format_string = next_lines_format;
-      out << copy.report_line(&temp);
-
-      // Prevent double-deletion
-      copy.value_style = NULL;
-      copy.total_style = NULL;
+      first_line_format.format_elements(out, &temp);
+      next_lines_format.format_elements(out, &temp);
     }
   }
 
@@ -137,24 +127,11 @@ static void report_value_change(std::ostream&         out,
 void register_report(std::ostream&	  out,
 		     item_t *		  top,
 		     const constraints_t& constraints,
-		     const format_t&	  format)
+		     const format_t&	  first_line_format,
+		     const format_t&	  next_lines_format)
 {
   if (constraints.sort_order)
     top->sort(constraints.sort_order);
-
-  format_t copy = format;
-
-  std::string first_line_format;
-  std::string next_lines_format;
-
-  const char * f = format.format_string.c_str();
-  if (const char * p = std::strstr(f, "%/")) {
-    first_line_format = std::string(f, 0, p - f);
-    next_lines_format = std::string(p + 2);
-  } else {
-    first_line_format = format.format_string;
-    next_lines_format = format.format_string;
-  }
 
   balance_pair_t balance;
   balance_pair_t last_reported;
@@ -163,13 +140,6 @@ void register_report(std::ostream&	  out,
   for (items_deque::const_iterator i = top->subitems.begin();
        i != top->subitems.end();
        i++) {
-    copy.format_string = first_line_format;
-
-    std::string  header     = copy.report_line(*i, top);
-    unsigned int header_len = header.length();
-
-    copy.format_string = next_lines_format;
-
     bool first = true;
 
     if ((*i)->subitems.size() > 1 && ! constraints.show_expanded) {
@@ -187,14 +157,14 @@ void register_report(std::ostream&	  out,
       bool show = constraints(&summary);
       if (show && show_commodities_revalued)
 	report_value_change(out, summary.date, balance, last_reported,
-			    constraints, copy, first_line_format,
-			    next_lines_format);
+			    constraints, first_line_format, next_lines_format);
 
       balance += summary.value;
 
       if (show) {
 	if (! show_commodities_revalued_only)
-	  out << header << copy.report_line(&summary, *i);
+	  first_line_format.format_elements(out, *i, top);
+
 	if (show_commodities_revalued)
 	  last_reported = balance;
       }
@@ -207,7 +177,7 @@ void register_report(std::ostream&	  out,
 	bool show = constraints(*j);
 	if (show && first && show_commodities_revalued) {
 	  report_value_change(out, (*i)->date, balance, last_reported,
-			      constraints, copy, first_line_format,
+			      constraints, first_line_format,
 			      next_lines_format);
 	  if (show_commodities_revalued_only)
 	    first = false;
@@ -219,13 +189,12 @@ void register_report(std::ostream&	  out,
 	  if (! show_commodities_revalued_only) {
 	    if (first) {
 	      first = false;
-	      out << header;
+	      first_line_format.format_elements(out, *j, *i);
 	    } else {
-	      out.width(header_len);
-	      out << " ";
+	      next_lines_format.format_elements(out, *j, *i);
 	    }
-	    out << copy.report_line(*j, *i);
 	  }
+
 	  if (show_commodities_revalued)
 	    last_reported = balance;
 	}
@@ -235,12 +204,7 @@ void register_report(std::ostream&	  out,
 
   if (show_commodities_revalued)
     report_value_change(out, constraints.end(), balance, last_reported,
-			constraints, copy, first_line_format,
-			next_lines_format);
-
-  // To stop these from getting deleted when copy goes out of scope
-  copy.value_style = NULL;
-  copy.total_style = NULL;
+			constraints, first_line_format, next_lines_format);
 }
 
 
@@ -377,7 +341,7 @@ bool add_new_entry(int index, int argc, char **argv, ledger_t * ledger)
 }
 
 
-void set_price_conversion(const std::string& setting, ledger_t * ledger)
+void set_price_conversion(const std::string& setting)
 {
   char buf[128];
   std::strcpy(buf, setting.c_str());
@@ -392,9 +356,9 @@ void set_price_conversion(const std::string& setting, ledger_t * ledger)
     *p++ = '\0';
 
     amount_t price;
-    price.parse(p, ledger);
+    price.parse(p);
 
-    commodity_t * commodity = ledger->find_commodity(c, true);
+    commodity_t * commodity = commodity_t::find_commodity(c, true);
     commodity->set_conversion(price);
   }
 }
@@ -402,7 +366,6 @@ void set_price_conversion(const std::string& setting, ledger_t * ledger)
 
 static long	   pricing_leeway = 24 * 3600;
 static std::string price_db;
-static ledger_t *  current_ledger = NULL;
 static bool        cache_dirty    = false;
 
 void download_price_quote(commodity_t *	    commodity,
@@ -438,7 +401,7 @@ void download_price_quote(commodity_t *	    commodity,
       if (p) *p = '\0';
 
       amount_t current;
-      current.parse(buf, current_ledger);
+      current.parse(buf);
 
       commodity->add_price(now, current);
 
@@ -506,13 +469,12 @@ static void show_help(std::ostream& out)
 int main(int argc, char * argv[])
 {
   std::list<std::string> files;
-  ledger::ledger_t *	 book = new ledger::ledger_t;
+  ledger::ledger_t *	 journal = new ledger::ledger_t;
   ledger::constraints_t  constraints;
-  ledger::format_t       format;
-
-  std::string sort_order;
-  std::string value_style = "a";
-  std::string total_style = "T";
+  std::string		 format_string;
+  std::string		 sort_order;
+  std::string		 value_expr = "a";
+  std::string		 total_expr = "T";
 
   // Initialize some variables based on environment variable settings
 
@@ -540,18 +502,16 @@ int main(int argc, char * argv[])
 	if (access(p, R_OK) != -1) {
 	  std::ifstream instr(p);
 	  if (! ledger::read_binary_ledger(instr, std::getenv("LEDGER"),
-					   book)) {
+					   journal)) {
 	    // We need to throw away what we've read, and create a new
 	    // ledger
-	    delete book;
-	    book = new ledger::ledger_t;
+	    delete journal;
+	    journal = new ledger::ledger_t;
 	  } else {
 	    ledger::cache_dirty = false;
 	  }
 	}
   }
-
-  ledger::current_ledger = book;
 
   // Parse the command-line options
 
@@ -584,7 +544,7 @@ int main(int argc, char * argv[])
       break;
 
     case 'p':
-      ledger::set_price_conversion(optarg, book);
+      ledger::set_price_conversion(optarg);
       break;
 
     // Constraint options
@@ -593,7 +553,6 @@ int main(int argc, char * argv[])
       break;
 
     case 'b':
-      constraints.have_beginning = true;
       if (! ledger::parse_date(optarg, &constraints.begin_date)) {
 	std::cerr << "Error: Bad begin date: " << optarg << std::endl;
 	return 1;
@@ -601,7 +560,6 @@ int main(int argc, char * argv[])
       break;
 
     case 'e':
-      constraints.have_ending = true;
       if (! ledger::parse_date(optarg, &constraints.end_date)) {
 	std::cerr << "Error: Bad end date: " << optarg << std::endl;
 	return 1;
@@ -609,8 +567,7 @@ int main(int argc, char * argv[])
       break;
 
     case 'c':
-      constraints.end_date    = std::time(NULL);
-      constraints.have_ending = true;
+      constraints.end_date = std::time(NULL);
       break;
 
     case 'd':
@@ -635,7 +592,7 @@ int main(int argc, char * argv[])
 
     // Customizing output
     case 'F':
-      format.format_string = optarg;
+      format_string = optarg;
       break;
 
     case 'M':
@@ -663,7 +620,7 @@ int main(int argc, char * argv[])
       break;
 
     case 'l':
-      constraints.predicate = ledger::parse_expr(optarg, book);
+      constraints.predicate = ledger::parse_expr(optarg);
       break;
 
     // Commodity reporting
@@ -680,61 +637,61 @@ int main(int argc, char * argv[])
       break;
 
     case 't':
-      value_style = optarg;
+      value_expr = optarg;
       break;
 
     case 'T':
-      total_style = optarg;
+      total_expr = optarg;
       break;
 
     case 'O':
-      value_style = "a";
-      total_style = "T";
+      value_expr = "a";
+      total_expr = "T";
       break;
 
     case 'B':
-      value_style = "c";
-      total_style = "C";
+      value_expr = "c";
+      total_expr = "C";
       break;
 
     case 'V':
       ledger::show_commodities_revalued = true;
 
-      value_style = "v";
-      total_style = "V";
+      value_expr = "v";
+      total_expr = "V";
       break;
 
     case 'G':
       ledger::show_commodities_revalued      =
       ledger::show_commodities_revalued_only = true;
 
-      value_style = "c";
-      total_style = "G";
+      value_expr = "c";
+      total_expr = "G";
       break;
 
     case 'A':
-      value_style = "a";
-      total_style = "MT";
+      value_expr = "a";
+      total_expr = "MT";
       break;
 
     case 'D':
-      value_style = "a";
-      total_style = "DMT";
+      value_expr = "a";
+      total_expr = "DMT";
       break;
 
     case 'Z':
-      value_style = "a";
-      total_style = "MDMT";
+      value_expr = "a";
+      total_expr = "MDMT";
       break;
 
     case 'W':
-      value_style = "a";
-      total_style = "MD(MT*(d-b/e-b))";
+      value_expr = "a";
+      total_expr = "MD(MT*(d-b/e-b))";
       break;
 
     case 'X':
-      value_style = "a";
-      total_style = "a+MD(MT*(d-b/e-b))";
+      value_expr = "a";
+      total_expr = "a+MD(MT*(d-b/e-b))";
       break;
     }
   }
@@ -755,14 +712,14 @@ int main(int argc, char * argv[])
       if (files.empty()) {
 	if (char * p = std::getenv("LEDGER"))
 	  for (p = std::strtok(p, ":"); p; p = std::strtok(NULL, ":"))
-	    entry_count += parse_ledger_file(p, book);
+	    entry_count += parse_ledger_file(p, journal);
       } else {
 	for (std::list<std::string>::iterator i = files.begin();
 	     i != files.end(); i++) {
 	  char buf[4096];
 	  char * p = buf;
 	  std::strcpy(p, (*i).c_str());
-	  entry_count += parse_ledger_file(p, book);
+	  entry_count += parse_ledger_file(p, journal);
 	}
       }
 
@@ -772,8 +729,8 @@ int main(int argc, char * argv[])
       if (! ledger::price_db.empty()) {
 	const char * path = ledger::price_db.c_str();
 	std::ifstream db(path);
-	book->sources.push_back(path);
-	entry_count += ledger::parse_textual_ledger(db, book, book->master);
+	journal->sources.push_back(path);
+	entry_count += ledger::parse_textual_ledger(db, journal, journal->master);
       }
     }
     catch (ledger::error& err) {
@@ -794,7 +751,7 @@ int main(int argc, char * argv[])
   const std::string command = argv[index++];
 
   if (command == "entry")
-    return add_new_entry(index, argc, argv, book) ? 0 : 1;
+    return add_new_entry(index, argc, argv, journal) ? 0 : 1;
 
   // Interpret the remaining arguments as regular expressions, used
   // for refining report results.
@@ -814,77 +771,100 @@ int main(int argc, char * argv[])
   // and total style strings
 
   if (! sort_order.empty())
-    constraints.sort_order = ledger::parse_expr(sort_order, book);
-  format.value_style = ledger::parse_expr(value_style, book);
-  format.total_style = ledger::parse_expr(total_style, book);
+    constraints.sort_order = ledger::parse_expr(sort_order);
+
+  // Setup the meaning of %t and %T encountered in format strings
+
+  ledger::format_t::value_expr = ledger::parse_expr(value_expr);
+  ledger::format_t::total_expr = ledger::parse_expr(total_expr);
 
   // Now handle the command that was identified above.
 
   if (command == "print") {
 #if 0
-    ledger::item_t * top
-      = ledger::walk_entries(book->entries.begin(), book->entries.end(),
-			     constraints, format);
-    ledger::entry_report(std::cout, top, format);
+    if (ledger::item_t * top
+	  = ledger::walk_entries(journal->entries.begin(),
+				 journal->entries.end(),
+				 constraints)) {
+      ledger::format_t * format = new ledger::format_t(format_string);
+      ledger::entry_report(std::cout, top, *format);
 #ifdef DEBUG
-    delete top;
+      delete top;
+      delete format;
 #endif
+    }
 #endif
   }
   else if (command == "equity") {
 #if 0
-    ledger::item_t * top
-      = ledger::walk_accounts(book->master, constraints);
-
-    ledger::entry_report(std::cout, top, constraints, format);
-
+    if (ledger::item_t * top
+	  = ledger::walk_accounts(journal->master, constraints)) {
+      ledger::format_t * format = new ledger::format_t(format_string);
+      ledger::entry_report(std::cout, top, constraints, *format);
 #ifdef DEBUG
-    delete top;
+      delete top;
+      delete format;
 #endif
+    }
 #endif
   }
   else if (constraints.period == ledger::PERIOD_NONE &&
 	   ! constraints.sort_order && ! constraints.show_related &&
 	   (command == "balance"  || command == "bal")) {
-    if (format.format_string.empty())
-      format.format_string = ledger::bal_fmt;
-
     if (ledger::item_t * top
-	  = ledger::walk_accounts(book->master, constraints)) {
-      ledger::balance_report(std::cout, top, constraints, format);
+	  = ledger::walk_accounts(journal->master, constraints)) {
+      ledger::format_t * format
+	= new ledger::format_t(format_string.empty() ?
+			       ledger::bal_fmt : format_string);
+      ledger::balance_report(std::cout, top, constraints, *format);
 #ifdef DEBUG
+      delete format;
       delete top;
 #endif
     }
   }
   else if (command == "balance"  || command == "bal") {
-    if (format.format_string.empty())
-      format.format_string = ledger::bal_fmt;
-
     if (ledger::item_t * list
-	  = ledger::walk_entries(book->entries.begin(),
-				 book->entries.end(), constraints))
+	  = ledger::walk_entries(journal->entries.begin(),
+				 journal->entries.end(), constraints))
       if (ledger::item_t * top
-	    = ledger::walk_items(list, book->master, constraints)) {
-	ledger::balance_report(std::cout, top, constraints, format);
+	    = ledger::walk_items(list, journal->master, constraints)) {
+	ledger::format_t * format
+	  = new ledger::format_t(format_string.empty() ?
+				 ledger::bal_fmt : format_string);
+	ledger::balance_report(std::cout, top, constraints, *format);
 #ifdef DEBUG
+	delete format;
 	delete top;
 	delete list;
 #endif
       }
   }
   else if (command == "register"  || command == "reg") {
-    if (format.format_string.empty())
-      format.format_string = ledger::reg_fmt;
-
     if (constraints.show_related)
       constraints.show_inverted = true;
 
     if (ledger::item_t * top
-	  = ledger::walk_entries(book->entries.begin(),
-				 book->entries.end(), constraints)) {
-      ledger::register_report(std::cout, top, constraints, format);
+	  = ledger::walk_entries(journal->entries.begin(),
+				 journal->entries.end(), constraints)) {
+      std::string first_line_format;
+      std::string next_lines_format;
+
+      const char * f = (format_string.empty() ?
+			ledger::reg_fmt.c_str() : format_string.c_str());
+      if (const char * p = std::strstr(f, "%/")) {
+	first_line_format = std::string(f, 0, p - f);
+	next_lines_format = std::string(p + 2);
+      } else {
+	first_line_format = format_string;
+	next_lines_format = format_string;
+      }
+
+      ledger::format_t * format  = new ledger::format_t(first_line_format);
+      ledger::format_t * nformat = new ledger::format_t(next_lines_format);
+      ledger::register_report(std::cout, top, constraints, *format, *nformat);
 #ifdef DEBUG
+      delete format;
       delete top;
 #endif
     }
@@ -901,11 +881,24 @@ int main(int argc, char * argv[])
     if (const char * p = std::getenv("LEDGER_CACHE")) {
       std::ofstream outstr(p);
       assert(std::getenv("LEDGER"));
-      ledger::write_binary_ledger(outstr, book, std::getenv("LEDGER"));
+      ledger::write_binary_ledger(outstr, journal, std::getenv("LEDGER"));
     }
 
 #ifdef DEBUG
-  delete book;
+  delete journal;
+
+  if (ledger::format_t::value_expr)
+    delete ledger::format_t::value_expr;
+  if (ledger::format_t::total_expr)
+    delete ledger::format_t::total_expr;
+
+  // jww (2004-07-30): This should be moved into some kind of
+  // "ledger::shutdown" function.
+  for (ledger::commodities_map::iterator i
+	 = ledger::commodity_t::commodities.begin();
+       i != ledger::commodity_t::commodities.end();
+       i++)
+    delete (*i).second;
 #endif
 
   return 0;

@@ -12,7 +12,7 @@ item_t * walk_accounts(const account_t *    account,
 {
   item_t * item = new item_t;
   item->account = account;
-  item->date    = constraints.end();
+  item->date    = constraints.end() - 1;
 
   for (constrained_transactions_list_const_iterator
 	 i(account->transactions.begin(),
@@ -112,6 +112,7 @@ item_t * walk_entries(entries_list::const_iterator begin,
 	item_t * subitem = new item_t;
 	subitem->parent  = item;
 	subitem->date    = item->date;
+	subitem->payee   = item->payee;
 	subitem->account = (*j)->account;
 	subitem->value   = *(*j);
 	item->subitems.push_back(subitem);
@@ -125,6 +126,7 @@ item_t * walk_entries(entries_list::const_iterator begin,
 	    item_t * subitem = new item_t;
 	    subitem->parent  = item;
 	    subitem->date    = item->date;
+	    subitem->payee   = item->payee;
 	    subitem->account = (*k)->account;
 	    subitem->value   = *(*k);
 	    if (constraints.show_inverted)

@@ -32,6 +32,13 @@ class expr_error : public error
   virtual ~expr_error() throw() {}
 };
 
+class format_error : public error
+{
+ public:
+  format_error(const std::string& reason) throw() : error(reason) {}
+  virtual ~format_error() throw() {}
+};
+
 class parse_error : public error
 {
   unsigned int line;

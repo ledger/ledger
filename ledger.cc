@@ -12,11 +12,6 @@ ledger_t::~ledger_t()
 {
   delete master;
 
-  for (commodities_map::iterator i = commodities.begin();
-       i != commodities.end();
-       i++)
-    delete (*i).second;
-
   // Don't bother unhooking each entry's transactions from the
   // accounts they refer to, because all accounts are about to
   // be deleted.
@@ -24,22 +19,6 @@ ledger_t::~ledger_t()
        i != entries.end();
        i++)
     delete *i;
-}
-
-commodity_t * ledger_t::find_commodity(const std::string& symbol,
-				       bool auto_create)
-{
-  commodities_map::const_iterator i = commodities.find(symbol);
-  if (i != commodities.end())
-    return (*i).second;
-
-  if (auto_create) {
-    commodity_t * commodity = new commodity_t(symbol);
-    add_commodity(commodity);
-    return commodity;
-  }
-
-  return NULL;
 }
 
 bool ledger_t::add_entry(entry_t * entry)
@@ -73,7 +52,7 @@ bool ledger_t::remove_entry(entry_t * entry)
   return true;
 }
 
-int parse_ledger_file(char * p, ledger_t * book)
+int parse_ledger_file(char * p, ledger_t * journal)
 {
   char * sep = std::strrchr(p, '=');
   if (sep) *sep++ = '\0';
@@ -82,11 +61,11 @@ int parse_ledger_file(char * p, ledger_t * book)
 
   account_t * master;
   if (sep)
-    master = book->find_account(sep);
+    master = journal->find_account(sep);
   else
-    master = book->master;
+    master = journal->master;
 
-  book->sources.push_back(p);
+  journal->sources.push_back(p);
 
   unsigned long magic;
   std::istream::pos_type start = stream.tellg();
@@ -94,9 +73,9 @@ int parse_ledger_file(char * p, ledger_t * book)
   stream.seekg(start);
 
   if (magic == magic_number)
-    return read_binary_ledger(stream, "", book, master);
+    return read_binary_ledger(stream, "", journal, master);
   else
-    return parse_textual_ledger(stream, book, master);
+    return parse_textual_ledger(stream, journal, master);
 }
 
 } // namespace ledger

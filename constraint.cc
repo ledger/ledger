@@ -93,10 +93,10 @@ bool matches(const masks_list& regexps, const std::string& str,
 
 bool constraints_t::matches_date_range(const std::time_t date) const
 {
-  if (have_beginning && difftime(date, begin_date) < 0)
+  if (begin_date != -1 && difftime(date, begin_date) < 0)
     return false;
 
-  if (have_ending && difftime(date, end_date) >= 0)
+  if (end_date != -1 && difftime(date, end_date) >= 0)
     return false;
 
   if (have_date_mask) {

@@ -343,8 +343,8 @@ unsigned int read_binary_ledger(std::istream&	   in,
   for (int i = count; --i >= 0; ) {
     commodity_t * commodity = read_binary_commodity(in);
     std::pair<commodities_map::iterator, bool> result
-      = ledger->commodities.insert(commodities_pair(commodity->symbol,
-						    commodity));
+      = commodity_t::commodities.insert(commodities_pair(commodity->symbol,
+							 commodity));
     assert(result.second || master);
   }
 
@@ -593,11 +593,11 @@ void write_binary_ledger(std::ostream& out, ledger_t * ledger,
 
   write_binary_account(out, ledger->master);
 
-  unsigned long count = ledger->commodities.size();
+  unsigned long count = commodity_t::commodities.size();
   out.write((char *)&count, sizeof(count));
 
-  for (commodities_map::const_iterator i = ledger->commodities.begin();
-       i != ledger->commodities.end();
+  for (commodities_map::const_iterator i = commodity_t::commodities.begin();
+       i != commodity_t::commodities.end();
        i++)
     write_binary_commodity(out, (*i).second);
 

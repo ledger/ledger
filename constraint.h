@@ -104,9 +104,7 @@ class constraints_t
   bool show_empty;
 
   std::time_t	 begin_date;
-  bool		 have_beginning;
   std::time_t	 end_date;
-  bool		 have_ending;
   struct std::tm date_mask;
   bool		 have_date_mask;
 
@@ -128,8 +126,8 @@ class constraints_t
     show_subtotals = true;
     show_empty     = false;
 
-    have_beginning = false;
-    have_ending    = false;
+    begin_date     = -1;
+    end_date       = -1;
     have_date_mask = false;
 
     period         = PERIOD_NONE;
@@ -140,11 +138,11 @@ class constraints_t
   ~constraints_t();
 
   std::time_t begin() const {
-    return have_beginning ? begin_date : 0;
+    return begin_date == -1 ? 0 : begin_date;
   }
 
   std::time_t end() const {
-    return have_ending ? end_date : std::time(NULL);
+    return end_date == -1 ? std::time(NULL) : end_date;
   }
 
   bool matches_date_range(const std::time_t date) const;
