@@ -157,8 +157,7 @@ inline void read_binary_entry(std::istream& in, entry_t * entry,
        i < count;
        i++) {
     read_binary_transaction(in, xact_pool, string_pool);
-    xact_pool->entry = entry;
-    entry->transactions.push_back(xact_pool++);
+    entry->add_transaction(xact_pool++);
   }
 }
 
