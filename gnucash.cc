@@ -18,6 +18,8 @@ static amount *    curr_value;
 static std::string curr_quant;
 static XML_Parser  current_parser;
 
+accounts_t accounts_by_id;
+
 enum {
   NO_ACTION,
   ACCOUNT_NAME,
@@ -96,7 +98,7 @@ static void endElement(void *userData, const char *name)
   if (std::strcmp(name, "gnc:account") == 0) {
     assert(curr_account);
     accounts.insert(accounts_entry(curr_account->name, curr_account));
-    accounts.insert(accounts_entry(curr_account_id, curr_account));
+    accounts_by_id.insert(accounts_entry(curr_account_id, curr_account));
     curr_account = NULL;
   }
   else if (std::strcmp(name, "gnc:commodity") == 0) {
@@ -131,8 +133,8 @@ static void dataHandler(void *userData, const char *s, int len)
     break;
 
   case ACCOUNT_PARENT: {
-    accounts_iterator i = accounts.find(std::string(s, len));
-    assert(i != accounts.end());
+    accounts_iterator i = accounts_by_id.find(std::string(s, len));
+    assert(i != accounts_by_id.end());
     curr_account->parent = (*i).second;
     (*i).second->children.insert(account::pair(curr_account->name,
 					       curr_account));
@@ -187,8 +189,8 @@ static void dataHandler(void *userData, const char *s, int len)
     break;
 
   case XACT_ACCOUNT: {
-    accounts_iterator i = accounts.find(std::string(s, len));
-    if (i == accounts.end()) {
+    accounts_iterator i = accounts_by_id.find(std::string(s, len));
+    if (i == accounts_by_id.end()) {
       std::cerr << "Could not find account " << std::string(s, len)
 		<< " at line " << XML_GetCurrentLineNumber(current_parser)
 		<< std::endl;
@@ -245,6 +247,10 @@ bool parse_gnucash(std::istream& in)
     }
   }
   XML_ParserFree(parser);
+
+  accounts_by_id.clear();
+  curr_account_id.clear();
+  curr_quant.clear();
 
   return true;
 }

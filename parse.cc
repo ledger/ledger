@@ -135,13 +135,49 @@ bool parse_ledger(std::istream& in)
     else if (std::isspace(line[0])) {
       transaction * xact = new transaction();
 
-      xact->cost = create_amount(next_element(line, true));
+      char * p = line;
+      while (std::isspace(*p))
+	p++;
 
-      // jww (2003-09-28): Reverse parse the account name to find the
-      // correct account.  This means that each account needs to know
-      // its children.
+      // The call to `next_element' will skip past the account name,
+      // and return a pointer to the beginning of the amount.  Once
+      // we know where the amount is, we can strip off any
+      // transaction note, and parse it.
+
+      char * cost_str = next_element(p, true);
+      char * note_str;
+
+      // If there is no amount given, it is intended as an implicit
+      // amount; we must use the opposite of the value of the
+      // preceding transaction.
+      if (! cost_str || *cost_str == ';') {
+	if (cost_str) {
+	  while (*cost_str == ';' || std::isspace(*cost_str))
+	    cost_str++;
+	  xact->note = cost_str;
+	}
+	xact->cost = curr->xacts.back()->cost->copy();
+	xact->cost->negate();
+      }
+      else {
+	note_str = std::strchr(cost_str, ';');
+	if (note_str) {
+	  *note_str++ = '\0';
+	  while (std::isspace(*note_str))
+	    note_str++;
+	  xact->note = note_str;
+	}
+
+	for (char * t = cost_str + (std::strlen(cost_str) - 1);
+	     std::isspace(*t);
+	     t--)
+	  *t = '\0';
+
+	xact->cost = create_amount(cost_str);
+      }
+
       account * current = NULL;
-      for (char * tok = std::strtok(line, ":");
+      for (char * tok = std::strtok(p, ":");
 	   tok;
 	   tok = std::strtok(NULL, ":")) {
 	if (! current) {

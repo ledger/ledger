@@ -3,9 +3,10 @@
 namespace ledger {
 
 commodities_t commodities;
-commodity *   commodity_usd;
 accounts_t    accounts;
 ledger_t      ledger;
+
+bool use_warnings = false;
 
 void entry::print(std::ostream& out) const
 {
@@ -41,7 +42,7 @@ void entry::print(std::ostream& out) const
     out << std::left << acct_name << "  ";
 
     out.width(10);
-    out << std::right << *((*i)->cost);
+    out << std::right << (*i)->cost->as_str(true);
 
     if (! (*i)->note.empty())
       out << " ; " << (*i)->note;
@@ -61,8 +62,9 @@ bool entry::validate() const
   }
 
   if (balance) {
-    std::cout << "Totals are:" << std::endl;
-    balance.print(std::cout);
+    std::cerr << "Totals are:" << std::endl;
+    balance.print(std::cerr);
+    std::cerr << std::endl;
   }
   return ! balance;             // must balance to 0.0
 }
@@ -86,8 +88,17 @@ totals::operator bool() const
 
 void totals::print(std::ostream& out) const
 {
- for (const_iterator_t i = amounts.begin(); i != amounts.end(); i++)
-   std::cout << (*i).first << " = " << *((*i).second);
+  bool first = true;
+  for (const_iterator_t i = amounts.begin(); i != amounts.end(); i++)
+    if (*((*i).second)) {
+      if (first)
+	first = false;
+      else
+	out << std::endl;
+
+      out.width(20);
+      out << std::right << *((*i).second);
+    }
 }
 
 amount * totals::value(const std::string& commodity)

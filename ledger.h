@@ -1,5 +1,5 @@
 #ifndef _LEDGER_H
-#define _LEDGER_H "$Revision: 1.3 $"
+#define _LEDGER_H "$Revision: 1.4 $"
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -90,11 +90,15 @@ struct commodity
 
   bool prefix;
   bool separate;
+  bool thousands;
+  bool european;
 
   int precision;
 
-  commodity() : prefix(false), separate(true) {}
-  commodity(const std::string& sym, bool pre, bool sep, int prec);
+  commodity() : prefix(false), separate(true),
+       thousands(false), european(false) {}
+  commodity(const std::string& sym, bool pre, bool sep,
+	    bool thou, bool euro, int prec);
 };
 
 typedef std::map<const std::string, commodity *> commodities_t;
@@ -102,11 +106,11 @@ typedef commodities_t::iterator commodities_iterator;
 typedef std::pair<const std::string, commodity *> commodities_entry;
 
 extern commodities_t commodities;
-extern commodity *   commodity_usd;
 
-inline commodity::commodity(const std::string& sym,
-			    bool pre, bool sep, int prec)
-  : symbol(sym), prefix(pre), separate(sep), precision(prec) {
+inline commodity::commodity(const std::string& sym, bool pre, bool sep,
+			    bool thou, bool euro, int prec)
+  : symbol(sym), prefix(pre), separate(sep),
+    thousands(thou), european(euro), precision(prec) {
   std::pair<commodities_iterator, bool> result =
     commodities.insert(commodities_entry(sym, this));
   assert(result.second);
@@ -129,12 +133,14 @@ class amount
   // Assignment
 
   virtual void credit(const amount * other) = 0;
+  virtual void negate() = 0;
   virtual void operator+=(const amount& other) = 0;
 
   // String conversion routines
 
   virtual void parse(const char * num) = 0;
   virtual amount& operator=(const char * num) = 0;
+  virtual std::string as_str(bool full_prec = false) const = 0;
   virtual operator std::string() const = 0;
 };
 
@@ -271,6 +277,8 @@ typedef accounts_t::iterator accounts_iterator;
 typedef std::pair<const std::string, account *> accounts_entry;
 
 extern accounts_t accounts;
+
+extern bool use_warnings;
 
 } // namespace ledger
 

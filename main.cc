@@ -13,7 +13,7 @@ namespace ledger {
   extern bool parse_ledger(std::istream& in);
   extern bool parse_gnucash(std::istream& in);
 
-  extern void report_balances(int argc, char *argv[], std::ostream& out);
+  extern void report_balances(int argc, char **argv, std::ostream& out);
   extern void print_ledger(int argc, char *argv[], std::ostream& out);
 }
 
@@ -35,15 +35,16 @@ int main(int argc, char *argv[])
 {
   // Global defaults
 
-  commodity_usd = new commodity("$", true, false, 2);
-  commodities.insert(commodities_entry("USD", commodity_usd));
+  commodity * usd = new commodity("$", true, false, true, false, 2);
+  commodities.insert(commodities_entry("USD", usd));
 
   // Parse the command-line options
 
   int c;
-  while (-1 != (c = getopt(argc, argv, "+h"))) {
+  while (-1 != (c = getopt(argc, argv, "+hw"))) {
     switch (char(c)) {
     case 'h': show_help(std::cout); break;
+    case 'w': use_warnings = true; break;
     }
   }
 
