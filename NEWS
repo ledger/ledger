@@ -1,5 +1,70 @@
 			     Ledger NEWS
 
+* 2.2
+
+New features:
+
+- Ledger now compiles under gcc 2.95.
+
+- Fixed several edge-case core engine bugs.
+
+- The configure setup has been changed to always use a combination of
+  both compile and link testing for every feature, in order to
+  identify environment problems right away.
+
+- Fixed several bugs with Ledger's own XML data format.
+
+- Erros in XML or Gnucash data now report the correct line number for
+  the error, instead of always showing line 1.
+
+- The binary cache now remembers which price history database was
+  used, so that if LEDGER_PRICE_DB is silently changed, the cache will
+  be thrown away and rebuilt.
+
+- OFX data importing is now supported, using libofx
+  (http://libofx.sourceforge.net).  configure will check if the
+  library is available.  You may need to add CPPFLAGS or LDFLAGS to
+  the command-line for the appropriate headers and library to be
+  found.
+
+- All journal entries now remember where they were read from.  New
+  format codes to access this information are: %S for the source path,
+  %B for the beginning character position, and %E for the ending
+  character position.
+
+- Added "pricesdb" command, which is identical to "prices", except
+  that it uses the same format as Ledger's usual price history
+  database.
+
+- Added "output FILE" command, which reproduces the input journal FILE
+  exactly, though all of the entry composing it are regenerated.
+  Meant for future GUI usage.  This command relies on
+  --write-hdr-format and --write-xact-format, instead of
+  --print-format.
+
+- Added "--reconcile BALANCE" option, which attempts to reconcile the
+  transactions that would have been displayed to the given BALANCE,
+  outputting those that would need to be "cleared" to match it.  Using
+  by the auto-reconciling feature of ledger.el (see below).
+
+  "--reconcile-date DATE" will ignore any uncleared transactions after
+  DATE in the reconciling algorithm.  Since it is O(n^2) (where 'n' is
+  the number of uncleared transactions to consider), this could have a
+  substantial impact.
+
+  "--reconcilable" displays all uncleared transactions, and any
+  cleared transactions that occur after the first uncleared.
+  ledger.el uses this.
+
+- In ledger.el's *Reconcile* mode (C-c C-r from a ledger-mode file):
+  . 'a' will add a missing transaction
+  . 'd' will delete the current transaction
+  . 'r' will attempt to auto-reconcile (same as C-u C-c C-r)
+  . 's' or C-x C-s will save the ledger data file and show the
+    currently cleared balance
+  This feature now works on all version of Emacs.
+  Also, the reconciler no longer needs to ask "how far back" to go.
+
 * 2.1
 
 Very few new features:
