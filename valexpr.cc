@@ -162,7 +162,7 @@ void node_t::compute(balance_t& result, const details_t& details) const
 
   case REAL:
     if (details.xact)
-      result = bool(details.xact->flags & TRANSACTION_VIRTUAL);
+      result = ! (details.xact->flags & TRANSACTION_VIRTUAL);
     break;
 
   case INDEX:
