@@ -40,6 +40,7 @@ struct config_t
   std::string   write_xact_format;
   std::string   equity_format;
   std::string   prices_format;
+  std::string   pricesdb_format;
   std::string   date_format;
   std::string   sort_string;
   std::string   amount_expr;

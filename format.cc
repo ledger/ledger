@@ -329,7 +329,7 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
       break;
 
     case element_t::SOURCE:
-      if (details.entry) {
+      if (details.entry && details.entry->journal) {
 	int idx = details.entry->src_idx;
 	for (strings_list::iterator i = details.entry->journal->sources.begin();
 	     i != details.entry->journal->sources.end();

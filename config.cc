@@ -44,6 +44,7 @@ config_t::config_t()
   prices_format      = ("%[%Y/%m/%d %H:%M:%S %Z]   %-8A "
 			"%10t %10(@vmin(t)) %10(@vmax(t)) %12T\n");
 #endif
+  pricesdb_format    = "P %[%Y/%m/%d %H:%M:%S] %A %t\n";
 
   show_collapsed     = false;
   show_subtotal      = false;
@@ -981,6 +982,7 @@ void export_config()
     .def_readwrite("write_xact_format", &config_t::write_xact_format)
     .def_readwrite("equity_format", &config_t::equity_format)
     .def_readwrite("prices_format", &config_t::prices_format)
+    .def_readwrite("pricesdb_format", &config_t::pricesdb_format)
     .def_readwrite("date_format", &config_t::date_format)
     .def_readwrite("sort_string", &config_t::sort_string)
     .def_readwrite("amount_expr", &config_t::amount_expr)

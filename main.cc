@@ -248,6 +248,8 @@ int parse_and_report(int argc, char * argv[], char * envp[])
     command = "E";
   else if (command == "prices")
     command = "P";
+  else if (command == "pricesdb")
+    command = "D";
   else if (command == "reconcile")
     command = "R";
   else
@@ -317,6 +319,8 @@ int parse_and_report(int argc, char * argv[], char * envp[])
     format = &config.equity_format;
   else if (command == "P")
     format = &config.prices_format;
+  else if (command == "D")
+    format = &config.pricesdb_format;
   else if (command == "w")
     format = &config.write_xact_format;
   else
@@ -368,7 +372,7 @@ def vmax(d, val):\n\
 
   if (command == "e")
     walk_transactions(new_entry->transactions, *formatter);
-  else if (command == "P")
+  else if (command == "P" || command == "D")
     walk_commodities(commodity_t::commodities, *formatter);
   else if (command == "R")
     reconcile_account(*journal, *journal->master, value_t(long(0)));
