@@ -76,36 +76,7 @@ rebuild: clean deps all
 
 deps: make.deps
 
-make.deps: Makefile
+make.deps: Makefile.old
 	cc -M $(INCS) $(CODE) main.cc > $@
 
 include make.deps
-
-# These next rules are for my own use.
-
-install:
-	make clean
-	make DFLAGS="-O3 -fomit-frame-pointer -DDEBUG_LEVEL=0"
-	cp ledger $(HOME)/bin
-	strip $(HOME)/bin/ledger
-
-VERSION = $(shell scripts/version)
-
-dist:
-	rm -fr /tmp/ledger-$(VERSION)
-	rsync -av --exclude=".*" --exclude="TAGS" --exclude="version" \
-	  --exclude="_darcs/" --exclude="ledger.dat" --exclude="CVS/" \
-	  --exclude="1.7/" --exclude="*.out" --exclude="*~" \
-	  $(shell pwd)/ /tmp/ledger-$(VERSION)
-	(cd /tmp/ledger-$(VERSION) && \
-	 make fullclean && make docs && \
-	 make clean && rm make.deps && \
-	 cat Makefile | sed 's/\/sw\//\/usr\/local\//g' > t && \
-	 mv t Makefile && \
-	 cat Makefile | sed 's/ -I\/usr\/include\/gcc.*//' > t && \
-	 mv t Makefile && \
-	 perl -ne 'print if 1 .. /^include make.deps/;' Makefile > t && \
-	 mv t Makefile && \
-	 cd /tmp && \
-	 tar cvzf $(HOME)/Sites/ledger/ledger-$(VERSION).tar.gz \
-		  ledger-$(VERSION))
