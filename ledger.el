@@ -241,7 +241,7 @@ Return the difference in the format of a time value."
     (forward-line)))
 
 (defun ledger-auto-reconcile (balance date)
-  (interactive "sReconcile to balance: \nsStatement date: ")
+  (interactive "sReconcile to balance (negative for a liability): \nsStatement date: ")
   (let ((buffer ledger-buf)
 	(account ledger-acct) cleared)
     ;; attempt to auto-reconcile in the background
