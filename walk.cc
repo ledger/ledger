@@ -117,19 +117,24 @@ void changed_value_transactions::operator()(transaction_t * xact)
   last_xact = xact;
 }
 
-void subtotal_transactions::flush()
+void subtotal_transactions::flush(const char * spec_fmt)
 {
-  entry_t * entry = new entry_t;
-
   char buf[256];
-  std::string fmt = "- ";
-  fmt += format_t::date_format;
 
-  // Make sure the end date is inclusive
-  if (start != finish)
-    finish -= 86400;
+  if (! spec_fmt) {
+    std::string fmt = "- ";
+    fmt += format_t::date_format;
 
-  std::strftime(buf, 255, fmt.c_str(), std::gmtime(&finish));
+    // Make sure the end date is inclusive
+    if (start != finish)
+      finish -= 86400;
+
+    std::strftime(buf, 255, fmt.c_str(), std::gmtime(&finish));
+  } else {
+    std::strftime(buf, 255, spec_fmt, std::gmtime(&finish));
+  }
+
+  entry_t * entry = new entry_t;
   entry->payee = buf;
 
   entry_temps.push_back(entry);
@@ -209,6 +214,18 @@ void interval_transactions::operator()(transaction_t * xact)
   subtotal_transactions::operator()(xact);
 
   last_xact = xact;
+}
+
+void dow_transactions::flush()
+{
+  for (int i = 0; i < 7; i++) {
+    for (transactions_deque::iterator d = days_of_the_week[i].begin();
+	 d != days_of_the_week[i].end();
+	 d++)
+      subtotal_transactions::operator()(*d);
+    subtotal_transactions::flush("%As");
+    days_of_the_week[i].clear();
+  }
 }
 
 } // namespace ledger

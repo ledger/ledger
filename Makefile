@@ -85,12 +85,12 @@ include make.deps
 # These next rules are for my own use.
 
 README.html: README
-	(cd $(HOME)/src/muse && \
+	(cd $(HOME)/Projects/muse && \
 	 ./publish --html $(shell pwd)/README && \
 	 mv README.html $(shell pwd))
 
 ledger.texi: README
-	(cd $(HOME)/src/muse && \
+	(cd $(HOME)/Projects/muse && \
 	 ./publish --texi $(shell pwd)/README && \
 	 cat README.texi | sed 's/README\.info/ledger.info/g' \
 	   > $(shell pwd)/ledger.texi && \
@@ -101,7 +101,8 @@ VERSION = $(shell scripts/version)
 dist:
 	rm -fr /tmp/ledger-$(VERSION)
 	rsync -av --exclude=".*" --exclude="TAGS" --exclude="version" \
-	  --exclude="_darcs/" --exclude="ledger.dat" \
+	  --exclude="_darcs/" --exclude="ledger.dat" --exclude="CVS/" \
+	  --exclude="1.7/" --exclude="gmon.out" --exclude="prof.out" \
 	  $(shell pwd)/ /tmp/ledger-$(VERSION)
 	(cd /tmp/ledger-$(VERSION) && \
 	 make fullclean && \

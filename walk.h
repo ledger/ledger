@@ -47,6 +47,44 @@ struct compare_items {
 typedef std::deque<transaction_t *> transactions_deque;
 typedef std::deque<entry_t *>       entries_deque;
 
+inline void walk_transactions(transactions_list::iterator begin,
+			      transactions_list::iterator end,
+			      item_handler<transaction_t>& handler) {
+  for (transactions_list::iterator i = begin; i != end; i++)
+    handler(*i);
+}
+
+inline void walk_transactions(transactions_list& list,
+			      item_handler<transaction_t>& handler) {
+  walk_transactions(list.begin(), list.end(), handler);
+}
+
+inline void walk_transactions(transactions_deque::iterator begin,
+			      transactions_deque::iterator end,
+			      item_handler<transaction_t>& handler) {
+  for (transactions_deque::iterator i = begin; i != end; i++)
+    handler(*i);
+}
+
+inline void walk_transactions(transactions_deque& deque,
+			      item_handler<transaction_t>& handler) {
+  walk_transactions(deque.begin(), deque.end(), handler);
+}
+
+inline void walk_entries(entries_list::iterator       begin,
+			 entries_list::iterator       end,
+			 item_handler<transaction_t>& handler) {
+  for (entries_list::iterator i = begin; i != end; i++)
+    walk_transactions((*i)->transactions, handler);
+}
+
+inline void walk_entries(entries_list& list,
+			 item_handler<transaction_t>& handler) {
+  walk_entries(list.begin(), list.end(), handler);
+}
+
+//////////////////////////////////////////////////////////////////////
+
 class ignore_transactions : public item_handler<transaction_t>
 {
  public:
@@ -267,7 +305,7 @@ class subtotal_transactions : public item_handler<transaction_t>
       delete *i;
   }
 
-  virtual void flush();
+  virtual void flush(const char * spec_fmt = NULL);
   virtual void operator()(transaction_t * xact);
 };
 
@@ -290,6 +328,26 @@ class interval_transactions : public subtotal_transactions
   }
 
   virtual void operator()(transaction_t * xact);
+};
+
+class dow_transactions : public subtotal_transactions
+{
+  transactions_deque days_of_the_week[7];
+
+ public:
+  dow_transactions(item_handler<transaction_t> * handler)
+    : subtotal_transactions(handler) {}
+
+  virtual ~dow_transactions() {
+    flush();
+  }
+
+  virtual void flush();
+
+  virtual void operator()(transaction_t * xact) {
+    struct std::tm * desc = std::gmtime(&xact->entry->date);
+    days_of_the_week[desc->tm_wday].push_back(xact);
+  }
 };
 
 class related_transactions : public item_handler<transaction_t>
@@ -320,44 +378,6 @@ class related_transactions : public item_handler<transaction_t>
       }
   }
 };
-
-//////////////////////////////////////////////////////////////////////
-
-inline void walk_transactions(transactions_list::iterator begin,
-			      transactions_list::iterator end,
-			      item_handler<transaction_t>& handler) {
-  for (transactions_list::iterator i = begin; i != end; i++)
-    handler(*i);
-}
-
-inline void walk_transactions(transactions_list& list,
-			      item_handler<transaction_t>& handler) {
-  walk_transactions(list.begin(), list.end(), handler);
-}
-
-inline void walk_transactions(transactions_deque::iterator begin,
-			      transactions_deque::iterator end,
-			      item_handler<transaction_t>& handler) {
-  for (transactions_deque::iterator i = begin; i != end; i++)
-    handler(*i);
-}
-
-inline void walk_transactions(transactions_deque& deque,
-			      item_handler<transaction_t>& handler) {
-  walk_transactions(deque.begin(), deque.end(), handler);
-}
-
-inline void walk_entries(entries_list::iterator       begin,
-			 entries_list::iterator       end,
-			 item_handler<transaction_t>& handler) {
-  for (entries_list::iterator i = begin; i != end; i++)
-    walk_transactions((*i)->transactions, handler);
-}
-
-inline void walk_entries(entries_list& list,
-			 item_handler<transaction_t>& handler) {
-  walk_entries(list.begin(), list.end(), handler);
-}
 
 
 //////////////////////////////////////////////////////////////////////

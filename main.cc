@@ -163,12 +163,12 @@ int main(int argc, char * argv[])
   std::string total_expr = "T";
   std::time_t interval_begin = 0;
 
-  bool show_subtotals = true;
-  bool show_expanded  = false;
-  bool show_related   = false;
-  bool show_inverted  = false;
-  bool show_empty     = false;
-
+  bool show_subtotals	  = true;
+  bool show_expanded	  = false;
+  bool show_related	  = false;
+  bool show_inverted	  = false;
+  bool show_empty	  = false;
+  bool days_of_the_week   = false;
   bool show_revalued      = false;
   bool show_revalued_only = false;
 
@@ -221,7 +221,7 @@ int main(int argc, char * argv[])
   int c, index;
   while (-1 !=
 	 (c = getopt(argc, argv,
-	     "+ABb:Ccd:DEe:F:f:Ghi:JjL:l:MnOo:P:p:QRrS:sT:t:UVvWXYy:Zz:"))) {
+	     "+ABb:Ccd:DEe:F:f:Ghi:JjL:l:MnOo:P:p:QRrS:sT:t:UVvWwXYy:Zz:"))) {
     switch (char(c)) {
     // Basic options
     case 'h':
@@ -345,6 +345,10 @@ int main(int argc, char * argv[])
 
     case 'W':
       report_interval.reset(new interval_t(604800, 0, 0));
+      break;
+
+    case 'w':
+      days_of_the_week = true;
       break;
 
     case 'M':
@@ -745,12 +749,18 @@ int main(int argc, char * argv[])
     // interval_transactions is like subtotal_transactions, but it
     // subtotals according to time intervals rather than totalling
     // everything.
+    //
+    // dow_transactions is like interval_transactions, except that it
+    // reports all the transactions that fall on each subsequent day
+    // of the week.
     if (show_expanded)
       formatter.reset(new subtotal_transactions(formatter.release()));
     else if (report_interval.get())
       formatter.reset(new interval_transactions(formatter.release(),
 						*report_interval.get(),
 						interval_begin));
+    else if (days_of_the_week)
+      formatter.reset(new dow_transactions(formatter.release()));
 
     // related_transactions will pass along all transactions related
     // to the transaction received.  If `show_all_related' is true,
