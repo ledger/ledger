@@ -46,6 +46,18 @@ class value_t
     *((unsigned int *) data) = value;
     type = INTEGER;
   }
+  value_t(const double value) {
+    new((amount_t *) data) amount_t(value);
+    type = AMOUNT;
+  }
+  value_t(const std::string& value) {
+    new((amount_t *) data) amount_t(value);
+    type = AMOUNT;
+  }
+  value_t(const char * value) {
+    new((amount_t *) data) amount_t(value);
+    type = AMOUNT;
+  }
   value_t(const amount_t& value) {
     new((amount_t *)data) amount_t(value);
     type = AMOUNT;
@@ -79,6 +91,15 @@ class value_t
       type = INTEGER;
     }
     return *this;
+  }
+  value_t& operator=(const double value) {
+    return *this = amount_t(value);
+  }
+  value_t& operator=(const std::string& value) {
+    return *this = amount_t(value);
+  }
+  value_t& operator=(const char * value) {
+    return *this = amount_t(value);
   }
   value_t& operator=(const amount_t& value) {
     if ((amount_t *) data != &value) {

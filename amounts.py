@@ -8,8 +8,11 @@ print x
 y = Amount ("$1000.45")
 print x + y
 
-z = Value ("$1000.45")
-print y + z
+y = Amount ("$1000.45")
+print x * y
 
-z += x
+z = Value ("$1000.45")
+#print z + Value(y)
+
+z += Value(x)
 print z

@@ -557,6 +557,8 @@ void export_value()
     .def(init<balance_pair_t>())
     .def(init<balance_t>())
     .def(init<amount_t>())
+    .def(init<std::string>())
+    .def(init<double>())
     .def(init<unsigned int>())
     .def(init<bool>())
 
