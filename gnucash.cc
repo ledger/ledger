@@ -290,7 +290,7 @@ bool gnucash_parser_t::test(std::istream& in) const
   in.getline(buf, 127);
   in.seekg(0, std::ios::beg);
 
-  return std::strncmp(buf, "<?xml version=\"1.0\"?>", 21) == 0;
+  return std::strncmp(buf, "<?xml", 5) == 0;
 }
 
 unsigned int gnucash_parser_t::parse(std::istream&	 in,
