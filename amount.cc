@@ -646,8 +646,7 @@ void amount_t::parse(std::istream& in)
   unsigned int	flags	  = COMMODITY_STYLE_DEFAULTS;;
   unsigned int	precision = MAX_PRECISION;
 
-  if (! quantity)
-    _init();
+  INIT();
 
   char c = peek_next_nonws(in);
   if (std::isdigit(c) || c == '.' || c == '-') {
@@ -732,14 +731,26 @@ void amount_t::parse(std::istream& in)
   delete[] buf;
 }
 
+// If necessary, amounts may be recorded in a binary file textually.
+// This offers little advantage, and requires binary<->decimal
+// conversion each time the file is saved or loaded.
+//
+//#define WRITE_AMOUNTS_TEXTUALLY
+
 static char buf[4096];
 
 void amount_t::write_quantity(std::ostream& out) const
 {
   unsigned short len;
   if (quantity) {
+#ifdef WRITE_AMOUNTS_TEXTUALLY
     mpz_get_str(buf, 10, MPZ(quantity));
     len = std::strlen(buf);
+#else
+    std::size_t size;
+    mpz_export(buf, &size, 1, sizeof(int), 0, 0, MPZ(quantity));
+    len = size * sizeof(int);
+#endif
     assert(len);
     out.write((char *)&len, sizeof(len));
     out.write(buf, len);
@@ -755,10 +766,13 @@ void amount_t::read_quantity(std::istream& in)
   in.read((char *)&len, sizeof(len));
   if (len) {
     in.read(buf, len);
+    INIT();
+#ifdef WRITE_AMOUNTS_TEXTUALLY
     buf[len] = '\0';
-    if (! quantity)
-      _init();
     mpz_set_str(MPZ(quantity), buf, 10);
+#else
+    mpz_import(MPZ(quantity), len / sizeof(int), 1, sizeof(int), 0, 0, buf);
+#endif
   } else {
     if (quantity)
       _clear();
