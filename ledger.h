@@ -22,6 +22,7 @@
 #include <valexpr.h>
 #include <walk.h>
 #include <derive.h>
+#include <reconcile.h>
 #include <error.h>
 #include <option.h>
 #include <config.h>
