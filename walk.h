@@ -11,37 +11,18 @@
 
 namespace ledger {
 
+template <typename T>
 class item_predicate
 {
-  const node_t *   predicate;
+  const node_t * predicate;
 
  public:
   item_predicate(const node_t * _predicate) : predicate(_predicate) {}
 
-  bool operator()(const entry_t * entry) const {
+  bool operator()(const T * item) const {
     if (predicate) {
       balance_t result;
-      predicate->compute(result, details_t(entry));
-      return result;
-    } else {
-      return true;
-    }
-  }
-
-  bool operator()(const transaction_t * xact) const {
-    if (predicate) {
-      balance_t result;
-      predicate->compute(result, details_t(xact));
-      return result;
-    } else {
-      return true;
-    }
-  }
-
-  bool operator()(const account_t * account) const {
-    if (predicate) {
-      balance_t result;
-      predicate->compute(result, details_t(account));
+      predicate->compute(result, details_t(item));
       return result;
     } else {
       return true;
@@ -66,19 +47,21 @@ class format_transaction
   std::ostream&   output_stream;
   const format_t& first_line_format;
   const format_t& next_lines_format;
+  const bool      inverted;
   unsigned int	  index;
   entry_t *	  last_entry;
 
  public:
   format_transaction(std::ostream&   _output_stream,
 		     const format_t& _first_line_format,
-		     const format_t& _next_lines_format)
+		     const format_t& _next_lines_format,
+		     const bool      _inverted)
     : output_stream(_output_stream),
       first_line_format(_first_line_format),
       next_lines_format(_next_lines_format),
-      index(0), last_entry(NULL) {}
+      inverted(_inverted), index(0), last_entry(NULL) {}
 
-  void operator()(transaction_t * xact, const bool inverted);
+  void operator()(transaction_t * xact);
 };
 
 template <typename T>
@@ -111,7 +94,7 @@ class collect_transactions
   collect_transactions(transactions_deque& _transactions)
     : transactions(_transactions) {}
 
-  void operator()(transaction_t * xact, const bool inverted) {
+  void operator()(transaction_t * xact) {
     transactions.push_back(xact);
   }
 };
@@ -126,26 +109,27 @@ inline void sort_transactions(transactions_deque& transactions,
 class ignore_transaction
 {
  public:
-  void operator()(transaction_t * xact, const bool inverted) const {}
+  void operator()(transaction_t * xact) const {}
 };
 
+#define MATCHING_TRANSACTIONS 0x01
+#define OTHER_TRANSACTIONS    0x02
+
 template <typename Function>
-void handle_transaction(transaction_t *  xact,
-			Function         functor,
-			item_predicate&  pred_functor,
-			const bool	 related,
-			const bool	 inverted)
+void handle_transaction(transaction_t * xact, Function functor,
+			item_predicate<transaction_t>& pred_functor,
+			unsigned int flags)
 {
-  // If inverted is true, it implies related.
-  if (! inverted && ! (xact->flags & TRANSACTION_HANDLED)) {
+  if ((flags & MATCHING_TRANSACTIONS) &&
+      ! (xact->flags & TRANSACTION_HANDLED)) {
     xact->flags |= TRANSACTION_HANDLED;
     if (pred_functor(xact)) {
       xact->flags |= TRANSACTION_DISPLAYED;
-      functor(xact, inverted);
+      functor(xact);
     }
   }
 
-  if (related)
+  if (flags & OTHER_TRANSACTIONS)
     for (transactions_list::iterator i = xact->entry->transactions.begin();
 	 i != xact->entry->transactions.end();
 	 i++) {
@@ -156,7 +140,7 @@ void handle_transaction(transaction_t *  xact,
       (*i)->flags |= TRANSACTION_HANDLED;
       if (pred_functor(xact)) {
 	xact->flags |= TRANSACTION_DISPLAYED;
-	functor(*i, inverted);
+	functor(*i);
       }
     }
 }
@@ -164,47 +148,36 @@ void handle_transaction(transaction_t *  xact,
 template <typename Function>
 void walk_entries(entries_list::iterator begin,
 		  entries_list::iterator end,
-		  Function		 functor,
-		  const node_t *	 predicate,
-		  const bool		 related,
-		  const bool		 inverted,
-		  const node_t *         display_predicate = NULL)
+		  Function	 functor,
+		  const node_t * predicate,
+		  unsigned int	 flags,
+		  const node_t * display_predicate = NULL)
 {
-  item_predicate pred_functor(predicate);
-  item_predicate disp_pred_functor(display_predicate);
+  item_predicate<transaction_t> pred_functor(predicate);
+  item_predicate<transaction_t> disp_pred_functor(display_predicate);
 
   for (entries_list::iterator i = begin; i != end; i++)
     for (transactions_list::iterator j = (*i)->transactions.begin();
 	 j != (*i)->transactions.end();
 	 j++)
       if (pred_functor(*j))
-	handle_transaction(*j, functor, disp_pred_functor, related, inverted);
+	handle_transaction(*j, functor, disp_pred_functor, flags);
 }
 
 template <typename Function>
 void walk_transactions(transactions_list::iterator begin,
-		       transactions_list::iterator end,
-		       Function	      functor,
-		       const node_t * predicate,
-		       const bool     related,
-		       const bool     inverted,
-		       const node_t * display_predicate = NULL)
+		       transactions_list::iterator end, Function functor)
 {
   for (transactions_list::iterator i = begin; i != end; i++)
-    functor(*i, inverted);
+    functor(*i);
 }
 
 template <typename Function>
 void walk_transactions(transactions_deque::iterator begin,
-		       transactions_deque::iterator end,
-		       Function	      functor,
-		       const node_t * predicate,
-		       const bool     related,
-		       const bool     inverted,
-		       const node_t * display_predicate = NULL)
+		       transactions_deque::iterator end, Function functor)
 {
   for (transactions_deque::iterator i = begin; i != end; i++)
-    functor(*i, inverted);
+    functor(*i);
 }
 
 class format_account
@@ -236,26 +209,24 @@ inline void sort_accounts(account_t *	  account,
 }
 
 template <typename Function>
-void walk__accounts(const account_t * account,
-		    Function	      functor,
-		    const node_t *    display_predicate)
+void walk__accounts(const account_t * account, Function functor,
+		    item_predicate<account_t>& disp_pred_functor)
 {
-  if (! display_predicate || item_predicate(display_predicate)(account))
+  if (disp_pred_functor(account))
     functor(account);
 
   for (accounts_map::const_iterator i = account->accounts.begin();
        i != account->accounts.end();
        i++)
-    walk__accounts((*i).second, functor, display_predicate);
+    walk__accounts((*i).second, functor, disp_pred_functor);
 }
 
 template <typename Function>
-void walk__accounts_sorted(const account_t * account,
-			   Function	     functor,
-			   const node_t *    sort_order,
-			   const node_t *    display_predicate)
+void walk__accounts_sorted(const account_t * account, Function functor,
+			   const node_t * sort_order,
+			   item_predicate<account_t>& disp_pred_functor)
 {
-  if (! display_predicate || item_predicate(display_predicate)(account))
+  if (disp_pred_functor(account))
     functor(account);
 
   accounts_deque accounts;
@@ -271,32 +242,56 @@ void walk__accounts_sorted(const account_t * account,
   for (accounts_deque::const_iterator i = accounts.begin();
        i != accounts.end();
        i++)
-    walk__accounts_sorted(*i, functor, sort_order, display_predicate);
+    walk__accounts_sorted(*i, functor, sort_order, disp_pred_functor);
 }
 
-void calc__accounts(account_t *    account,
-		    const node_t * predicate,
-		    const bool	   related,
-		    const bool	   inverted,
-		    const bool     calc_subtotals);
+template <typename Function>
+void for_each_account(account_t * account, Function functor)
+{
+  functor(account);
+
+  for (accounts_map::iterator i = account->accounts.begin();
+       i != account->accounts.end();
+       i++)
+    walk__accounts((*i).second, functor);
+}
+
+void calc__accounts(account_t * account,
+		    item_predicate<transaction_t>& pred_functor,
+		    unsigned int flags);
+
+inline void sum__accounts(account_t * account)
+{
+  for (accounts_map::iterator i = account->accounts.begin();
+       i != account->accounts.end();
+       i++) {
+    sum__accounts((*i).second);
+    account->total += (*i).second->total;
+  }
+  account->total += account->value;
+}
 
 template <typename Function>
 void walk_accounts(account_t *	  account,
 		   Function	  functor,
 		   const node_t * predicate,
-		   const bool	  related,
-		   const bool	  inverted,
+		   unsigned int	  flags,
 		   const bool	  calc_subtotals,
 		   const node_t * display_predicate = NULL,
 		   const node_t * sort_order        = NULL)
 {
-  calc__accounts(account, predicate, related, inverted, calc_subtotals);
+  item_predicate<transaction_t> pred_functor(predicate);
+  item_predicate<account_t>     disp_pred_functor(display_predicate);
+
+  calc__accounts(account, pred_functor, flags);
+  if (calc_subtotals)
+    sum__accounts(account);
 
   if (sort_order)
     walk__accounts_sorted<Function>(account, functor, sort_order,
-				    display_predicate);
+				    disp_pred_functor);
   else
-    walk__accounts<Function>(account, functor, display_predicate);
+    walk__accounts<Function>(account, functor, disp_pred_functor);
 }
 
 } // namespace ledger

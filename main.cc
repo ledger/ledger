@@ -19,68 +19,6 @@ namespace ledger {
 
 static const std::string bal_fmt = "%20T  %2_%-n\n";
 
-#if 0
-
-unsigned int show_balances(std::ostream&   out,
-			   items_deque&	   items,
-			   const node_t *  predicate,
-			   const node_t *  sort_order,
-			   const format_t& format,
-			   const bool      show_expanded,
-			   const item_t *  displayed_parent)
-{
-  unsigned int    headlines = 0;
-  value_predicate pred_obj(predicate);
-
-  for (items_deque::const_iterator i = items.begin();
-       i != items.end();
-       i++) {
-    const item_t * parent = displayed_parent;
-
-    if (pred_obj(*i) &&
-	((*i)->subitems.size() != 1 ||
-	 (*i)->total != (*i)->subitems[0]->total)) {
-      format.format_elements(out, *i, parent);
-      parent = *i;
-
-      if (! displayed_parent->parent)
-	headlines++;
-    }
-
-    if (sort_order)
-      (*i)->sort(sort_order);
-
-    if (show_expanded)
-      headlines += show_balances(out, (*i)->subitems, predicate,
-				 sort_order, format, true, parent);
-  }
-
-  return headlines;
-}
-
-void balance_report(std::ostream&   out,
-		    item_t *	    top,
-		    const node_t *  predicate,
-		    const node_t *  sort_order,
-		    const format_t& format,
-		    const bool      show_expanded,
-		    const bool      show_subtotals)
-{
-  if (sort_order)
-    top->sort(sort_order);
-
-  unsigned int headlines = show_balances(out, top->subitems, predicate,
-					 sort_order, format, show_expanded,
-					 top);
-
-  if (show_subtotals && headlines > 1 && top->total) {
-    std::cout << "--------------------\n";
-    format.format_elements(std::cout, top);
-  }
-}
-
-#endif
-
 //////////////////////////////////////////////////////////////////////
 //
 // The command-line register and print report
@@ -797,15 +735,20 @@ int main(int argc, char * argv[])
 
   // Now handle the command that was identified above.
 
+  unsigned int xact_display_flags = MATCHING_TRANSACTIONS;
+
   if (command == "p" || command == "e") {
-    show_related  = true;
     show_expanded = true;
   }
   else if (command == "E") {
     show_expanded = true;
   }
   else if (show_related && command == "r") {
+    xact_display_flags = OTHER_TRANSACTIONS;
     show_inverted = true;
+  }
+  else if (show_related) {
+    xact_display_flags |= OTHER_TRANSACTIONS;
   }
 
   const char * f;
@@ -821,14 +764,13 @@ int main(int argc, char * argv[])
   if (command == "b") {
     format_t format(f);
     walk_accounts(journal->master, format_account(std::cout, format),
-		  predicate.get(), show_related, show_inverted,
-		  show_subtotals, display_predicate.get(), sort_order.get());
+		  predicate.get(), xact_display_flags, show_subtotals,
+		  display_predicate.get(), sort_order.get());
 
     if (! display_predicate.get() ||
-	item_predicate(display_predicate.get())(journal->master)) {
+	item_predicate<account_t>(display_predicate.get())(journal->master)) {
       std::string end_format = "--------------------\n";
-      end_format += f;
-      format.elements = format_t::parse_elements(end_format);
+      format.reset(end_format + f);
       format_account(std::cout, format)(journal->master, true);
     }
   } else {
@@ -844,22 +786,21 @@ int main(int argc, char * argv[])
 
     format_t format(first_line_format);
     format_t nformat(next_lines_format);
-    format_transaction formatter(std::cout, format, nformat);
+    format_transaction formatter(std::cout, format, nformat, show_inverted);
 
     if (! sort_order.get()) {
       walk_entries(journal->entries.begin(), journal->entries.end(),
-		   formatter, predicate.get(), show_related, show_inverted,
+		   formatter, predicate.get(), xact_display_flags,
 		   display_predicate.get());
     } else {
       transactions_deque transactions_pool;
       walk_entries(journal->entries.begin(), journal->entries.end(),
 		   collect_transactions(transactions_pool), predicate.get(),
-		   show_related, show_inverted, display_predicate.get());
+		   xact_display_flags, display_predicate.get());
       std::stable_sort(transactions_pool.begin(), transactions_pool.end(),
 		       compare_items<transaction_t>(sort_order.get()));
       walk_transactions(transactions_pool.begin(), transactions_pool.end(),
-			formatter, NULL, show_related, show_inverted,
-			display_predicate.get());
+			formatter);
     }
   }
 
