@@ -167,22 +167,7 @@ static std::string truncated(const std::string& str, int width)
 void print_register(const std::string& acct_name, std::ostream& out,
 		    regexps_map& regexps)
 {
-  account * acct = NULL;
   mask acct_regex(acct_name);
-
-  for (accounts_map_iterator i = main_ledger->accounts.begin();
-       i != main_ledger->accounts.end();
-       i++)
-    if (acct_regex.match((*i).second->as_str())) {
-      acct = (*i).second;
-      break;
-    }
-
-  if (! acct) {
-    std::cerr << "Error: Unknown account name: " << acct_name
-	      << std::endl;
-    return;
-  }
 
   // Walk through all of the ledger entries, printing their register
   // formatted equivalent
@@ -198,7 +183,8 @@ void print_register(const std::string& acct_name, std::ostream& out,
     for (std::list<transaction *>::iterator x = (*i)->xacts.begin();
 	 x != (*i)->xacts.end();
 	 x++) {
-      if ((*x)->acct != acct || ! show_cleared && (*i)->cleared)
+      if (! acct_regex.match((*x)->acct->as_str()) ||
+	  ! show_cleared && (*i)->cleared)
 	continue;
 
       char buf[32];
