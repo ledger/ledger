@@ -358,34 +358,33 @@ void format_transaction::operator()(transaction_t * xact) const
   xact->total += *xact;
   xact->index = last_xact ? last_xact->index + 1 : 0;
 
-  if (! disp_pred_functor(xact))
-    return;
+  if (disp_pred_functor(xact)) {
+    xact->flags |= TRANSACTION_DISPLAYED;
 
-  xact->flags |= TRANSACTION_DISPLAYED;
-
-  // This makes the assumption that transactions from a single entry
-  // are always grouped together.
+    // This makes the assumption that transactions from a single entry
+    // are always grouped together.
 
 #ifdef COLLAPSED_REGISTER
-  if (collapsed) {
-    // If we've reached a new entry, report on the subtotal
-    // accumulated thus far.
+    if (collapsed) {
+      // If we've reached a new entry, report on the subtotal
+      // accumulated thus far.
 
-    if (last_entry && last_entry != xact->entry) {
-      report_cumulative_subtotal();
-      subtotal = 0;
-      count    = 0;
-    }
+      if (last_entry && last_entry != xact->entry) {
+	report_cumulative_subtotal();
+	subtotal = 0;
+	count    = 0;
+      }
 
-    subtotal += *xact;
-    count++;
-  } else
+      subtotal += *xact;
+      count++;
+    } else
 #endif
-  {
-    if (last_entry != xact->entry) {
-      first_line_format.format_elements(output_stream, details_t(xact));
-    } else {
-      next_lines_format.format_elements(output_stream, details_t(xact));
+    {
+      if (last_entry != xact->entry) {
+	first_line_format.format_elements(output_stream, details_t(xact));
+      } else {
+	next_lines_format.format_elements(output_stream, details_t(xact));
+      }
     }
   }
 

@@ -82,6 +82,8 @@ struct format_t
   }
 };
 
+#define COLLAPSED_REGISTER 1	// support collapsed registers
+
 class format_transaction
 {
   std::ostream&   output_stream;

@@ -578,18 +578,15 @@ int main(int argc, char * argv[])
     predicate.reset(parse_expr(predicate_string));
   }
 
-  if (! show_empty && display_predicate_string.empty()) {
-    if (command == "b")
+  if (display_predicate_string.empty()) {
+    if (command == "b" && ! show_empty)
       display_predicate_string = "T";
     else if (command == "E")
       display_predicate_string = "a";
-  }
-
-  if (! display_predicate_string.empty()) {
+  } else {
 #ifdef DEBUG
     if (debug)
-      std::cerr << "display predicate = " << display_predicate_string
-		<< std::endl;
+      std::cerr << "display-p = " << display_predicate_string << std::endl;
 #endif
     display_predicate.reset(parse_expr(display_predicate_string));
   }
@@ -599,7 +596,7 @@ int main(int argc, char * argv[])
   if (! sort_string.empty())
     sort_order.reset(parse_expr(sort_string));
 
-  // Setup the meaning of %t and %T encountered in format strings
+  // Setup the meaning of %t and %T, used in format strings
 
   format_t::value_expr.reset(parse_expr(value_expr));
   format_t::total_expr.reset(parse_expr(total_expr));
@@ -705,6 +702,7 @@ int main(int argc, char * argv[])
 		   xact_display_flags);
       std::stable_sort(transactions_pool.begin(), transactions_pool.end(),
 		       compare_items<transaction_t>(sort_order.get()));
+
       if (show_commodities_revalued) {
 	changed_value_filter<format_transaction>
 	  filtered_formatter(formatter);
