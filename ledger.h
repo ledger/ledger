@@ -34,12 +34,14 @@ class account_t;
 class transaction_t
 {
  public:
-  entry_t *    entry;
-  account_t *  account;
-  amount_t     amount;
-  amount_t     cost;
-  unsigned int flags;
-  std::string  note;
+  entry_t *	 entry;
+  account_t *	 account;
+  amount_t	 amount;
+  amount_t	 cost;
+  unsigned int	 flags;
+  std::string	 note;
+  balance_pair_t total;
+  unsigned int   index;
 
   transaction_t(entry_t * _entry, account_t * _account)
     : entry(_entry), account(_account), flags(TRANSACTION_NORMAL) {}

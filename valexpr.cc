@@ -116,34 +116,36 @@ void node_t::compute(balance_t& result, const details_t& details) const
     break;
 
   case BALANCE:
-    if (details.balance) {
-      result = details.balance->quantity;
-      if (details.xact)
-	result -= details.xact->amount;
-      else if (details.account)
-	result -= details.account->value.quantity;
+    if (details.xact) {
+      result = details.xact->total.quantity;
+      result -= details.xact->amount;
+    }
+    else if (details.account) {
+      result = details.account->total.quantity;
+      result -= details.account->value.quantity;
     }
     break;
 
   case COST_BALANCE:
-    if (details.balance) {
-      result = details.balance->cost;
-      if (details.xact)
-	result -= details.xact->cost;
-      else if (details.account)
-	result -= details.account->value.cost;
+    if (details.xact) {
+      result = details.xact->total.cost;
+      result -= details.xact->cost;
+    }
+    else if (details.account) {
+      result = details.account->total.cost;
+      result -= details.account->value.cost;
     }
     break;
 
   case TOTAL:
-    if (details.balance)
-      result = details.balance->quantity;
+    if (details.xact)
+      result = details.xact->total.quantity;
     else if (details.account)
       result = details.account->total.quantity;
     break;
   case COST_TOTAL:
-    if (details.balance)
-      result = details.balance->cost;
+    if (details.xact)
+      result = details.xact->total.cost;
     else if (details.account)
       result = details.account->total.cost;
     break;
@@ -164,15 +166,15 @@ void node_t::compute(balance_t& result, const details_t& details) const
     break;
 
   case INDEX:
-    if (details.index)
-      result = *details.index + 1;
+    if (details.xact)
+      result = details.xact->index + 1;
     break;
 
   case F_ARITH_MEAN:
-    if (details.index) {
+    if (details.xact) {
       assert(left);
       left->compute(result, details);
-      result /= amount_t(*details.index + 1);
+      result /= amount_t(details.xact->index + 1);
     }
     break;
 

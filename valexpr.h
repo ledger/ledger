@@ -33,26 +33,17 @@ struct details_t
   const entry_t *	 entry;
   const transaction_t *  xact;
   const account_t *      account;
-  const balance_pair_t * balance;
-  const unsigned int *   index;
   const unsigned int     depth;
 
-  details_t(const entry_t *	   _entry,
-	    const balance_pair_t * _balance = NULL,
-	    const unsigned int *   _index   = NULL)
-    : entry(_entry), xact(NULL), account(NULL),
-      balance(_balance), index(_index), depth(0) {}
+  details_t(const entry_t * _entry)
+    : entry(_entry), xact(NULL), account(NULL), depth(0) {}
 
-  details_t(const transaction_t *  _xact,
-	    const balance_pair_t * _balance = NULL,
-	    const unsigned int *   _index   = NULL)
-    : entry(_xact->entry), xact(_xact), account(_xact->account),
-      balance(_balance), index(_index), depth(0) {}
+  details_t(const transaction_t * _xact)
+    : entry(_xact->entry), xact(_xact), account(_xact->account), depth(0) {}
 
   details_t(const account_t *  _account,
 	    const unsigned int _depth = 0)
-    : entry(NULL), xact(NULL), account(_account),
-      balance(NULL), index(NULL), depth(_depth) {}
+    : entry(NULL), xact(NULL), account(_account), depth(_depth) {}
 };
 
 struct node_t

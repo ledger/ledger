@@ -822,7 +822,7 @@ int main(int argc, char * argv[])
     format_t format(f);
     walk_accounts(journal->master, format_account(std::cout, format),
 		  predicate.get(), show_related, show_inverted,
-		  show_subtotals, display_predicate.get());
+		  show_subtotals, display_predicate.get(), sort_order.get());
 
     if (! display_predicate.get() ||
 	item_predicate(display_predicate.get())(journal->master)) {
@@ -856,7 +856,7 @@ int main(int argc, char * argv[])
 		   collect_transactions(transactions_pool), predicate.get(),
 		   show_related, show_inverted, display_predicate.get());
       std::stable_sort(transactions_pool.begin(), transactions_pool.end(),
-		       compare_transactions(sort_order.get()));
+		       compare_items<transaction_t>(sort_order.get()));
       walk_transactions(transactions_pool.begin(), transactions_pool.end(),
 			formatter, NULL, show_related, show_inverted,
 			display_predicate.get());
