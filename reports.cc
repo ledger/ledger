@@ -217,20 +217,6 @@ void print_register(const std::string& acct_name, std::ostream& out,
       std::strftime(buf, 31, "%m.%d ", std::localtime(&(*i)->date));
       out << buf;
 
-#if 0
-      if ((*i)->cleared)
-	out << "* ";
-      else
-	out << "  ";
-
-      out.width(4);
-      if ((*i)->code.empty())
-	out << " ";
-      else
-	out << std::left << (*i)->code;
-#endif
-      out << " ";
-
       out.width(25);
       if ((*i)->desc.empty())
 	out << " ";
