@@ -32,20 +32,20 @@ struct config_t
   std::string   value_expr;
   std::string   total_expr;
   unsigned long pricing_leeway;
-  bool	      	show_subtotals;
-  bool	      	show_expanded;
-  bool	      	show_related;
-  bool	      	show_inverted;
-  bool	      	show_empty;
-  bool	      	days_of_the_week;
-  bool	      	show_revalued;
-  bool	      	show_revalued_only;
-  bool	      	download_quotes;
+  bool		show_subtotals;
+  bool		show_expanded;
+  bool		show_related;
+  bool		show_inverted;
+  bool		show_empty;
+  bool		days_of_the_week;
+  bool		show_revalued;
+  bool		show_revalued_only;
+  bool		download_quotes;
 
   config_t();
 };
 
-extern std::auto_ptr<config_t> config;
+extern config_t * config;
 
 void option_help(std::ostream& out);
 

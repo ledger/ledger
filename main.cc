@@ -35,6 +35,11 @@ int main(int argc, char * argv[], char * envp[])
 {
   std::auto_ptr<journal_t> journal(new journal_t);
 
+  // Initialize the global configuration object for this run
+
+  std::auto_ptr<config_t> global_config(new config_t);
+  config = global_config.get();
+
   // Parse command-line arguments
 
   TIMER_START(process_args);

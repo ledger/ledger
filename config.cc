@@ -3,7 +3,7 @@
 
 namespace ledger {
 
-std::auto_ptr<config_t> config(new config_t);
+config_t * config = NULL;
 
 const std::string bal_fmt	 = "%20T  %2_%-n\n";
 const std::string reg_fmt
