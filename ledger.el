@@ -37,16 +37,66 @@
 (defvar ledger-version "1.1"
   "The version of ledger.el currently loaded")
 
+(defun ledger-iterate-entries (callback)
+  (goto-char (point-min))
+  (let* ((now (current-time))
+	 (current-year (nth 5 (decode-time now))))
+    (while (not (eobp))
+      (when (looking-at
+	     (concat "\\(Y\\s-+\\([0-9]+\\)\\|"
+		     "\\([0-9]\\{4\\}+\\)?[./]?"
+		     "\\([0-9]+\\)[./]\\([0-9]+\\)\\s-+"
+		     "\\(\\*\\s-+\\)?\\(.+\\)\\)"))
+	(let ((found (match-string 2)))
+	  (if found
+	      (setq current-year (string-to-number found))
+	    (let ((start (match-beginning 0))
+		  (year (match-string 3))
+		  (month (string-to-number (match-string 4)))
+		  (day (string-to-number (match-string 5)))
+		  (mark (match-string 6))
+		  (desc (match-string 7)))
+	      (if (and year (> (length year) 0))
+		  (setq year (string-to-number year)))
+	      (funcall callback start
+		       (encode-time 0 0 0 day month
+				    (or year current-year))
+		       mark desc)))))
+      (forward-line))))
+
+(defun ledger-find-slot (moment)
+  (catch 'found
+    (ledger-iterate-entries
+     (function
+      (lambda (start date mark desc)
+	(if (time-less-p moment date)
+	    (throw 'found t)))))))
+
 (defun ledger-add-entry (entry)
   (interactive
-   (list (read-string "Entry: "
-		      (format-time-string "%m.%d " (current-time)))))
-  (let ((args (mapcar 'shell-quote-argument (split-string entry))))
-    (shell-command
-     (concat "ledger entry "
-	     (mapconcat 'identity args " ")) t)
-    (delete-char 5)
-    (exchange-point-and-mark)))
+   (list (read-string "Entry: " (format-time-string "%m/%d "))))
+  (let ((args (mapcar 'shell-quote-argument (split-string entry)))
+	date entry)
+    (with-temp-buffer
+      (shell-command
+       (concat "ledger entry "
+	       (mapconcat 'identity args " ")) t)
+      (setq date (buffer-substring (point) (+ (point) 10)))
+      (setq entry (buffer-substring (+ (point) 5) (point-max))))
+    (if (string-match "\\([0-9]+\\)/\\([0-9]+\\)/\\([0-9]+\\)" date)
+	(setq date (encode-time 0 0 0 (string-to-int (match-string 3 date))
+				(string-to-int (match-string 2 date))
+				(string-to-int (match-string 1 date)))))
+    (ledger-find-slot date)
+    (insert entry)))
+
+(defun ledger-expand-entry ()
+  (interactive)
+  (ledger-add-entry (prog1
+			(buffer-substring (line-beginning-position)
+					  (line-end-position))
+		      (delete-region (line-beginning-position)
+				     (1+ (line-end-position))))))
 
 (defun ledger-toggle-current ()
   (interactive)
@@ -64,57 +114,37 @@
 
 (define-derived-mode ledger-mode text-mode "Ledger"
   "A mode for editing ledger data files."
-  (setq comment-start ";" comment-end nil)
+  (setq comment-start ";" comment-end nil
+	indent-tabs-mode nil)
   (let ((map (current-local-map)))
-    (define-key map [(control ?c) (control ?n)] 'ledger-add-entry)
-    (define-key map [(control ?c) (control ?c)]
-  'ledger-toggle-current)))
+    (define-key map [(control ?c) (control ?a)] 'ledger-add-entry)
+    (define-key map [(control ?c) (control ?c)] 'ledger-toggle-current)))
 
-(defun ledger-parse-entries (account)
-  (let* ((now (current-time))
-	 (current-year (nth 5 (decode-time now)))
-	 (then now)
-	 entries)
-    ;; `then' is 45 days ago
-    (setq then (time-subtract then (seconds-to-time (* 45 24 60 60))))
-    (while (not (eobp))
-      (when (looking-at
-	     (concat "\\(Y\\s-+\\([0-9]+\\)\\|"
-		     "\\([0-9]\\{4\\}+\\)?[./]?"
-		     "\\([0-9]+\\)[./]\\([0-9]+\\)\\s-+"
-		     "\\(\\*\\s-+\\)?\\(.+\\)\\)"))
-	(let ((found (match-string 2))
-	      total when)
-	  (if found
-	      (setq current-year (string-to-number found))
-	    (let ((start (match-beginning 0))
-		  (year (match-string 3))
-		  (month (string-to-number (match-string 4)))
-		  (day (string-to-number (match-string 5)))
-		  (mark (match-string 6))
-		  (desc (match-string 7)))
-	      (if (and year (> (length year) 0))
-		  (setq year (string-to-number year)))
-	      (setq when (encode-time 0 0 0 day month
-				      (or year current-year)))
-	      (when (or (not mark) (time-less-p then when))
-		(forward-line)
-		(setq total 0.0)
-		(while (looking-at
-			(concat "\\s-+\\([A-Za-z_].+?\\)\\(\\s-*$\\|  \\s-*"
-				"\\([^0-9]+\\)\\s-*\\([0-9.]+\\)\\)"))
-		  (let ((acct (match-string 1))
-			(amt (match-string 4)))
-		    (if amt
-			(setq amt (string-to-number amt)
-			      total (+ total amt)))
-		    (if (string= account acct)
-			(setq entries
-			      (cons (list (copy-marker start)
-					  mark when desc (or amt total))
-				    entries))))
-		  (forward-line)))))))
-      (forward-line))
+(defun ledger-parse-entries (account &optional all-p)
+  ;; `then' is 45 days ago
+  (let ((then (time-subtract (current-time)
+			     (seconds-to-time (* 45 24 60 60))))
+	total entries)
+    (ledger-iterate-entries
+     (function
+      (lambda (start date mark desc)
+	(when (or all-p (not mark) (time-less-p then date))
+	  (forward-line)
+	  (setq total 0.0)
+	  (while (looking-at
+		  (concat "\\s-+\\([A-Za-z_].+?\\)\\(\\s-*$\\|  \\s-*"
+			  "\\([^0-9]+\\)\\s-*\\([0-9.]+\\)\\)"))
+	    (let ((acct (match-string 1))
+		  (amt (match-string 4)))
+	      (if amt
+		  (setq amt (string-to-number amt)
+			total (+ total amt)))
+	      (if (string= account acct)
+		  (setq entries
+			(cons (list (copy-marker start)
+				    mark date desc (or amt total))
+			      entries))))
+	    (forward-line))))))
     (nreverse entries)))
 
 (define-derived-mode ledger-reconcile-mode text-mode "Reconcile"

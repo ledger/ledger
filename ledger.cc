@@ -63,7 +63,7 @@ void transaction::print(std::ostream& out, bool display_quantity,
 void entry::print(std::ostream& out, bool shortcut) const
 {
   char buf[32];
-  std::strftime(buf, 31, "%Y.%m.%d ", std::localtime(&date));
+  std::strftime(buf, 31, "%Y/%m/%d ", std::localtime(&date));
   out << buf;
 
   if (cleared)

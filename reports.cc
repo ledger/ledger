@@ -369,7 +369,7 @@ void add_new_entry(int index, int argc, char **argv)
   assert(index < argc);
 
   if (! parse_date(argv[index++], &added.date)) {
-    std::cerr << "Error: Bad add date: " << argv[index - 1]
+    std::cerr << "Error: Bad entry date: " << argv[index - 1]
               << std::endl;
     std::exit(1);
   }
@@ -377,7 +377,7 @@ void add_new_entry(int index, int argc, char **argv)
   added.cleared = show_cleared;
 
   if (index == argc) {
-    std::cerr << "Error: Too few arguments to 'add'." << std::endl;
+    std::cerr << "Error: Too few arguments to 'entry'." << std::endl;
     std::exit(1);
   }
 
@@ -396,7 +396,7 @@ void add_new_entry(int index, int argc, char **argv)
   added.desc = matching ? matching->desc : regexps.front().pattern;
 
   if (index == argc) {
-    std::cerr << "Error: Too few arguments to 'add'." << std::endl;
+    std::cerr << "Error: Too few arguments to 'entry'." << std::endl;
     std::exit(1);
   }
 
@@ -437,11 +437,13 @@ void add_new_entry(int index, int argc, char **argv)
       mask acct_regex(argv[index++]);
 
       account * acct = NULL;
+      commodity * cmdty = NULL;
       for (std::list<transaction *>::iterator x = matching->xacts.begin();
            x != matching->xacts.end();
            x++) {
         if (acct_regex.match((*x)->acct->as_str())) {
           acct = (*x)->acct;
+	  cmdty = (*x)->cost->commdty();
           break;
         }
       }
@@ -458,16 +460,18 @@ void add_new_entry(int index, int argc, char **argv)
       }
 
       if (index == argc) {
-        std::cerr << "Error: Too few arguments to 'add'." << std::endl;
+        std::cerr << "Error: Too few arguments to 'entry'." << std::endl;
         std::exit(1);
       }
 
       xact->cost = create_amount(argv[index++]);
+      if (! xact->cost->commdty())
+	xact->cost->set_commdty(cmdty);
 
       added.xacts.push_back(xact);
     }
 
-    if ((index + 1) < argc && std::string(argv[index]) == "-from")
+    if ((index + 1) < argc && std::string(argv[index]) == "-from") {
       if (account * acct = main_ledger->re_find_account(argv[++index])) {
         transaction * xact = new transaction();
         xact->acct = acct;
@@ -475,15 +479,21 @@ void add_new_entry(int index, int argc, char **argv)
 
         added.xacts.push_back(xact);
       }
+    } else {
+        transaction * xact = new transaction();
+        xact->acct = matching->xacts.back()->acct;
+        xact->cost = NULL;
+        added.xacts.push_back(xact);
+    }
   }
 
   if (added.finalize())
     added.print(std::cout);
 }
 
-// Print out the entire ledger that was read in, sorted by date.
-// This can be used to "wash" ugly ledger files.  It's written here,
-// instead of ledger.cc, in order to access the static globals above.
+// Print out the entire ledger that was read in.  This can be used to
+// "wash" ugly ledger files.  It's written here, instead of ledger.cc,
+// in order to access the static globals above.
 
 void book::print(std::ostream& out, regexps_map& regexps,
 		  bool shortcut) const
@@ -491,9 +501,7 @@ void book::print(std::ostream& out, regexps_map& regexps,
   for (entries_list_const_iterator i = entries.begin();
        i != entries.end();
        i++) {
-    if ((! show_cleared && (*i)->cleared) ||
-	! matches_date_range(*i) ||
-	! (*i)->matches(regexps))
+    if (! matches_date_range(*i) || ! (*i)->matches(regexps))
       continue;
 
     (*i)->print(out, shortcut);
