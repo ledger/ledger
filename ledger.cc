@@ -194,6 +194,7 @@ void initialize()
 
 void shutdown()
 {
+  shutdown_amounts();
   shutdown_formats();
 }
 

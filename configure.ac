@@ -21,7 +21,7 @@ AC_CHECK_LIB([xmlparse], [XML_ParserCreate],
   [AC_DEFINE([READ_GNUCASH], [1], [Support reading gnucash files])
    AM_CONDITIONAL(READ_GNUCASH, true)
    AC_SUBST(LIBS, "-lxmlparse -lxmltok $LIBS")],
-  [AC_MSG_NOTICE([Could not find xmlparse library; gnucash support disabled])
+  [AC_MSG_NOTICE([Could not find xmlparse library: Gnucash support disabled])
    AM_CONDITIONAL(READ_GNUCASH, false)],
   [-lxmltok])
 

@@ -141,9 +141,7 @@ regexps_to_predicate(std::list<std::string>::const_iterator begin,
 
 int main(int argc, char * argv[], char * envp[])
 {
-#ifdef DO_CLEANUP
   initialize();
-#endif
 
   std::auto_ptr<journal_t> journal(new journal_t);
 
