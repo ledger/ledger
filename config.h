@@ -47,6 +47,8 @@ struct config_t
   std::string   total_expr;
   std::string   total_expr_template;
   std::string   forecast_limit;
+  std::string   reconcile_balance;
+  std::string   reconcile_date;
   unsigned long budget_flags;
   unsigned long pricing_leeway;
   bool		show_collapsed;

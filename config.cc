@@ -168,7 +168,7 @@ void config_t::process_options(const std::string&     command,
 
   // Process remaining command-line arguments
 
-  if (command != "e" && command != "w" && command != "R") {
+  if (command != "e" && command != "w") {
     // Treat the remaining command-line arguments as regular
     // expressions, used for refining report results.
 
@@ -814,6 +814,18 @@ OPT_BEGIN(unbudgeted, "") {
 OPT_BEGIN(forecast, ":") {
   config.forecast_limit = optarg;
 } OPT_END(forecast);
+
+OPT_BEGIN(reconcile, ":") {
+  config.reconcile_balance = optarg;
+} OPT_END(reconcile);
+
+OPT_BEGIN(reconcilable, "") {
+  config.reconcile_balance = "<all>";
+} OPT_END(reconcilable);
+
+OPT_BEGIN(reconcile_date, ":") {
+  config.reconcile_date = optarg;
+} OPT_END(reconcile_date);
 
 OPT_BEGIN(limit, "l:") {
   if (! config.predicate.empty())
