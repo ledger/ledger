@@ -86,23 +86,12 @@ void report_balances(int argc, char **argv, std::ostream& out)
   optind = 1;
 
   int c;
-  while (-1 != (c = getopt(argc, argv, "sSnFG:"))) {
+  while (-1 != (c = getopt(argc, argv, "sSnF"))) {
     switch (char(c)) {
     case 's': show_children = true; break;
     case 'S': show_empty    = true; break;
     case 'n': no_subtotals  = true; break;
     case 'F': full_names    = true; break;
-
-#ifdef HUQUQULLAH
-    case 'G': {
-      double gold = std::atof(optarg);
-      gold = 1 / gold;
-      char buf[256];
-      std::sprintf(buf, DEFAULT_COMMODITY "=%f troy", gold);
-      main_ledger.record_price(buf);
-      break;
-    }
-#endif
     }
   }
 

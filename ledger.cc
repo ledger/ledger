@@ -27,14 +27,20 @@ void entry::print(std::ostream& out, bool shortcut) const
 
   if (shortcut &&
       (xacts.size() != 2 ||
-       xacts.front()->cost->comm() != xacts.back()->cost->comm())) {
+       xacts.front()->cost->comm() != xacts.back()->cost->comm()))
     shortcut = false;
-  }
 
   for (std::list<transaction *>::const_iterator x = xacts.begin();
        x != xacts.end();
        x++) {
-    out << "    ";
+#ifdef HUQUQULLAH
+    if ((*x)->acct->exempt_or_necessary &&
+	(! shortcut || ! ledger::matches(main_ledger.huquq_categories,
+					 (*x)->acct->as_str())))
+      out << "   !";
+    else
+#endif
+      out << "    ";
 
     out.width(30);
     out << std::left << (*x)->acct->as_str();
@@ -132,19 +138,6 @@ void totals::print(std::ostream& out, int width) const
       out.width(width);
       out << std::right << *((*i).second);
     }
-}
-
-amount * totals::value(const std::string& commodity) const
-{
-  // Render all of the amounts into the given commodity.  This
-  // requires known prices for each commodity.
-
-  amount * total = create_amount((commodity + " 0.00").c_str());
-
-  for (const_iterator i = amounts.begin(); i != amounts.end(); i++)
-    *total += *((*i).second);
-
-  return total;
 }
 
 // Print out the entire ledger that was read in, sorted by date.

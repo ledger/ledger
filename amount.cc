@@ -59,13 +59,10 @@ class gmp_amount : public amount
 
   virtual operator bool() const;
 
-  virtual void credit(const amount * other) {
-    *this += *other;
-  }
   virtual void negate() {
     mpz_ui_sub(quantity, 0, quantity);
   }
-  virtual void operator+=(const amount& other);
+  virtual void credit(const amount * other);
 
   virtual void parse(const char * num) {
     *this = num;
@@ -211,30 +208,32 @@ amount * gmp_amount::street() const
   extern bool get_quotes;
 
   for (int cycles = 0; cycles < 10; cycles++) {
-    totals::iterator pi = main_ledger.prices.amounts.find(amt->comm_symbol());
+    totals::iterator pi =
+      main_ledger.prices.amounts.find(amt->comm_symbol());
     if (pi == main_ledger.prices.amounts.end()) {
-      if (get_quotes && amt->comm_symbol() != DEFAULT_COMMODITY) {
-	using namespace std;
+      using namespace std;
 
-	char buf[256];
-	buf[0] = '\0';
+      if (! get_quotes)
+	break;
 
-	if (FILE * fp = popen((std::string("getquote ") +
-			       amt->comm_symbol()).c_str(), "r")) {
-	  if (feof(fp) || ! fgets(buf , 255, fp)) {
-	    fclose(fp);
-	    break;
-	  }
+      char buf[256];
+      buf[0] = '\0';
+
+      if (FILE * fp = popen((std::string("getquote ") +
+			     amt->comm_symbol()).c_str(), "r")) {
+	if (feof(fp) || ! fgets(buf , 255, fp)) {
 	  fclose(fp);
+	  break;
 	}
+	fclose(fp);
+      }
 
-	if (buf[0]) {
-	  char * p = strchr(buf, '\n');
-	  if (p) *p = '\0';
+      if (buf[0]) {
+	char * p = strchr(buf, '\n');
+	if (p) *p = '\0';
 
-	  main_ledger.record_price((amt->comm_symbol() + "=" + buf).c_str());
-	  continue;
-	}
+	main_ledger.record_price((amt->comm_symbol() + "=" + buf).c_str());
+	continue;
       }
       break;
     } else {
@@ -598,11 +597,11 @@ amount& gmp_amount::operator=(const char * num)
   return *this;
 }
 
-void gmp_amount::operator+=(const amount& _other)
+void gmp_amount::credit(const amount * value)
 {
-  const gmp_amount& other = dynamic_cast<const gmp_amount&>(_other);
-  assert(quantity_comm == other.quantity_comm);
-  mpz_add(quantity, quantity, other.quantity);
+  const gmp_amount * val = dynamic_cast<const gmp_amount *>(value);
+  assert(quantity_comm == val->quantity_comm);
+  mpz_add(quantity, quantity, val->quantity);
 }
 
 } // namespace ledger

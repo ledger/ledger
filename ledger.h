@@ -1,5 +1,5 @@
 #ifndef _LEDGER_H
-#define _LEDGER_H "$Revision: 1.13 $"
+#define _LEDGER_H "$Revision: 1.14 $"
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -104,8 +104,8 @@ struct commodity
 
   commodity() : prefix(false), separate(true),
        thousands(false), european(false) {}
-  commodity(const std::string& sym, bool pre, bool sep,
-	    bool thou, bool euro, int prec);
+  commodity(const std::string& sym, bool pre = false, bool sep = true,
+	    bool thou = true, bool euro = false, int prec = 2);
 };
 
 typedef std::map<const std::string, commodity *> commodities_t;
@@ -135,7 +135,6 @@ class amount
 
   virtual void credit(const amount * other) = 0;
   virtual void negate() = 0;
-  virtual void operator+=(const amount& other) = 0;
 
   // String conversion routines
 
@@ -263,7 +262,6 @@ struct totals
   void print(std::ostream& out, int width) const;
 
   // Returns an allocated entity
-  amount * value(const std::string& comm) const;
   amount * sum(const std::string& comm) {
     return amounts[comm];
   }

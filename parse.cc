@@ -36,48 +36,118 @@ static void finalize_entry(entry * curr, bool compute_balances)
 {
   assert(curr);
 
-  // Certain shorcuts are allowed in the case of exactly two
-  // transactions.
+  // If there were no transactions, it's definitely an error!
 
-  if (! curr->xacts.empty() && curr->xacts.size() == 2) {
-    transaction * first  = curr->xacts.front();
-    transaction * second = curr->xacts.back();
+  if (curr->xacts.empty()) {
+    std::cerr << "Error, line " << (linenum - 1)
+	      << ": Entry has no transactions!" << std::endl;
+    return;
+  }
 
-    // If one transaction gives no value at all, then its value is
-    // the inverse of the computed value of the other.
+  // Scan through and compute the total balance for the entry.
 
-    if (! first->cost && second->cost) {
-      first->cost = second->cost->value();
-      first->cost->negate();
+  totals balance;
 
-      if (compute_balances)
-	first->acct->balance.credit(first->cost);
-    }
-    else if (! second->cost && first->cost) {
-      second->cost = first->cost->value();
-      second->cost->negate();
+  for (std::list<transaction *>::iterator x = curr->xacts.begin();
+       x != curr->xacts.end();
+       x++)
+    if ((*x)->cost)
+      balance.credit((*x)->cost->value());
 
-      if (compute_balances)
-	second->acct->balance.credit(second->cost);
-    }
-    else if (first->cost && second->cost) {
-      // If one transaction is of a different commodity than the
-      // other, and it has no per-unit price, and its not of the
-      // default commodity, then determine its price by dividing the
-      // unit count into the total, to balance the transaction.
+  // If one transaction is of a different commodity than the others,
+  // and it has no per-unit price, determine its price by dividing
+  // the unit count into the value of the balance.
+  //
+  // NOTE: We don't do this for prefix-style or joined-symbol
+  // commodities.  Also, do it for the last eligible commodity first,
+  // if it meets the criteria.
 
-      if (first->cost->comm() != second->cost->comm()) {
-	if (! second->cost->has_price() &&
-	    second->cost->comm_symbol() != DEFAULT_COMMODITY) {
-	  second->cost->set_value(first->cost);
+  if (! balance.amounts.empty() && balance.amounts.size() == 2) {
+    for (std::list<transaction *>::iterator x = curr->xacts.begin();
+	 x != curr->xacts.end();
+	 x++) {
+      if (! (*x)->cost->has_price() &&
+	  ! (*x)->cost->comm()->prefix &&
+	  (*x)->cost->comm()->separate) {
+	for (totals::iterator i = balance.amounts.begin();
+	     i != balance.amounts.end();
+	     i++) {
+	  if ((*i).second->comm() != (*x)->cost->comm()) {
+	    (*x)->cost->set_value((*i).second);
+	    break;
+	  }
 	}
-	else if (! first->cost->has_price() &&
-		 first->cost->comm_symbol() != DEFAULT_COMMODITY) {
-	  first->cost->set_value(second->cost);
-	}
+	break;
       }
     }
   }
+
+  // Walk through each of the transactions, fixing up any that we
+  // can, and performing any on-the-fly calculations.
+
+  bool empty_allowed = true;
+
+  for (std::list<transaction *>::iterator x = curr->xacts.begin();
+       x != curr->xacts.end();
+       x++) {
+    if (! (*x)->cost) {
+      if (empty_allowed && ! balance.amounts.empty() &&
+	  balance.amounts.size() == 1) {
+	empty_allowed = false;
+
+	// If one transaction gives no value at all -- and all the
+	// rest are of the same commodity -- then its value is the
+	// inverse of the computed value of the others.
+
+	totals::iterator i = balance.amounts.begin();
+	(*x)->cost = (*i).second->value();
+	(*x)->cost->negate();
+
+	if (compute_balances)
+	  (*x)->acct->balance.credit((*x)->cost);
+      } else {
+	std::cerr << "Error, line " << (linenum - 1)
+		  << ": Transaction entry is lacking an amount."
+		  << std::endl;
+	return;
+      }
+    }
+
+#ifdef HUQUQULLAH
+    if (! main_ledger.compute_huquq || ! (*x)->exempt_or_necessary)
+      continue;
+
+    // Reflect 19% of the exempt or necessary transaction in the
+    // Huququ'llah account.
+
+    amount * divisor = create_amount("0.19");
+    amount * temp    = (*x)->cost->value();
+
+    transaction * t = new transaction(main_ledger.huquq_account,
+				      temp->value(divisor));
+    curr->xacts.push_back(t);
+
+    if (compute_balances)
+      t->acct->balance.credit(t->cost);
+
+    // Balance the above transaction by recording the inverse in
+    // Expenses:Huququ'llah.
+
+    t = new transaction(main_ledger.huquq_expenses_account,
+			temp->value(divisor));
+    t->cost->negate();
+    curr->xacts.push_back(t);
+
+    if (compute_balances)
+      t->acct->balance.credit(t->cost);
+
+    delete temp;
+    delete divisor;
+#endif
+  }
+
+  // Compute the balances again, just to make sure it all comes out
+  // right (i.e., to zero for every commodity).
 
   if (! curr->validate()) {
     std::cerr << "Error, line " << (linenum - 1)
@@ -88,43 +158,7 @@ static void finalize_entry(entry * curr, bool compute_balances)
     return;
   }
 
-#ifdef HUQUQULLAH
-  if (main_ledger.compute_huquq) {
-    for (std::list<transaction *>::iterator x = curr->xacts.begin();
-	 x != curr->xacts.end();
-	 x++) {
-      if (! (*x)->exempt_or_necessary || ! (*x)->cost)
-	continue;
-
-      // Reflect the exempt or necessary transaction in the
-      // Huququ'llah account, using the H commodity, which is 19% of
-      // whichever DEFAULT_COMMODITY ledger was compiled with.
-
-      amount * temp = (*x)->cost->value();
-
-      transaction * t
-	= new transaction(main_ledger.huquq_account,
-			  temp->value(main_ledger.huquq));
-      curr->xacts.push_back(t);
-
-      if (compute_balances)
-	t->acct->balance.credit(t->cost);
-
-      // Balance the above transaction by recording the inverse in
-      // Expenses:Huququ'llah.
-
-      t = new transaction(main_ledger.huquq_expenses_account,
-			  temp->value(main_ledger.huquq));
-      t->cost->negate();
-      curr->xacts.push_back(t);
-
-      if (compute_balances)
-	t->acct->balance.credit(t->cost);
-
-      delete temp;
-    }
-  }
-#endif
+  // If it's OK, add it to the general ledger's list of entries.
 
   main_ledger.entries.push_back(curr);
 }

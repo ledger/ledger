@@ -17,7 +17,7 @@ OBJS = $(patsubst %.cc,%.o,$(CODE))
 
 CFLAGS = -Wall -ansi -pedantic
 #DFLAGS = -O3 -fomit-frame-pointer
-DFLAGS = -g # -O2 # -pg
+DFLAGS = -g -O2 # -pg
 INCS   = -I/usr/include/xmltok
 LIBS   = -lgmpxx -lgmp -lpcre
 

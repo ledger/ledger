@@ -112,11 +112,6 @@ static bool parse_date(const char * date_str, std::time_t * result)
 
 int main(int argc, char *argv[])
 {
-  // Global defaults
-
-  commodity * usd = new commodity("$", true, false, true, false, 2);
-  main_ledger.commodities.insert(commodities_entry("USD", usd));
-
   // Parse the command-line options
 
   std::istream * file = NULL;
@@ -129,7 +124,7 @@ int main(int argc, char *argv[])
   show_cleared   = false;
 
   int c;
-  while (-1 != (c = getopt(argc, argv, "+b:e:d:cChHwf:i:p:P"))) {
+  while (-1 != (c = getopt(argc, argv, "+b:e:d:D:cChHwf:i:p:P"))) {
     switch (char(c)) {
     case 'b':
     case 'e': {
@@ -288,23 +283,8 @@ int main(int argc, char *argv[])
 
   if (compute_huquq) {
     main_ledger.compute_huquq = true;
-    main_ledger.huquq_commodity = new commodity("H", true, true,
-						true, false, 2);
-
-    // The allocation causes it to be inserted into the
-    // main_ledger.commodities mapping.
-    new commodity("mithqal", false, true, true, false, 1);
 
     read_regexps(".huquq", main_ledger.huquq_categories);
-
-    main_ledger.record_price("H=" DEFAULT_COMMODITY "0.19");
-
-    bool save_use_warnings = use_warnings;
-    use_warnings = false;
-    main_ledger.record_price("troy=8.5410148523 mithqal");
-    use_warnings = save_use_warnings;
-
-    main_ledger.huquq = create_amount("H 1.00");
 
     main_ledger.huquq_account = main_ledger.find_account("Huququ'llah");
     main_ledger.huquq_expenses_account =
