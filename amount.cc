@@ -222,15 +222,44 @@ amount * gmp_amount::street() const
   amount * cost = NULL;
   const amount * amt = this;
 
+  extern bool get_quotes;
+
   for (int cycles = 0; cycles < 10; cycles++) {
     totals::iterator pi = main_ledger.prices.amounts.find(amt->comm_symbol());
     if (pi == main_ledger.prices.amounts.end()) {
+      if (get_quotes && amt->comm_symbol() != DEFAULT_COMMODITY) {
+	using namespace std;
+
+	char buf[256];
+	buf[0] = '\0';
+
+	if (FILE * fp = popen((std::string("getquote ") +
+			       amt->comm_symbol()).c_str(), "r")) {
+	  if (feof(fp) || ! fgets(buf , 255, fp)) {
+	    fclose(fp);
+	    break;
+	  }
+	  fclose(fp);
+	}
+
+	if (buf[0]) {
+	  char * p = strchr(buf, '\n');
+	  if (p) *p = '\0';
+
+	  main_ledger.record_price((amt->comm_symbol() + "=" + buf).c_str());
+	  continue;
+	}
+      }
       break;
     } else {
       amount * temp = cost;
       amt = cost = amt->value((*pi).second);
+
+      bool same = temp && temp->comm() == cost->comm();
       if (temp)
 	delete temp;
+      if (same)
+	break;
     }
   }
   return cost ? cost : copy();

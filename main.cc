@@ -11,7 +11,8 @@ namespace ledger {
   extern void print_ledger(int argc, char *argv[], std::ostream& out);
   extern void equity_ledger(int argc, char **argv, std::ostream& out);
 
-  bool show_cleared;
+  bool        show_cleared;
+  bool        get_quotes;
 
   std::time_t begin_date;
   bool        have_beginning;
@@ -57,7 +58,7 @@ int main(int argc, char *argv[])
   show_cleared   = false;
 
   int c;
-  while (-1 != (c = getopt(argc, argv, "+b:e:cChHwf:i:p:"))) {
+  while (-1 != (c = getopt(argc, argv, "+b:e:cChHwf:i:p:P"))) {
     switch (char(c)) {
     case 'b': {
       struct tm * when = getdate(optarg);
@@ -116,6 +117,10 @@ int main(int argc, char *argv[])
 	main_ledger.record_price(optarg);
       }
       break;
+
+    case 'P':
+      get_quotes = true;
+      break;
     }
   }
 
@@ -135,6 +140,9 @@ int main(int argc, char *argv[])
 #endif
       << "  -i FILE  read the list of inclusion regexps from FILE" << std::endl
       << "  -p FILE  read the list of prices from FILE" << std::endl
+      << "  -P       download price quotes from the Internet" << std::endl
+      << "           (this works by running the command \"getquote SYMBOL\")"
+      << std::endl
       << "  -w       print out warnings where applicable" << std::endl
       << std::endl
       << "commands:" << std::endl

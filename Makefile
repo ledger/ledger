@@ -10,7 +10,7 @@ endif
 
 OBJS = $(patsubst %.cc,%.o,$(CODE))
 
-CFLAGS = -Wall -ansi -pedantic -DHUQUQULLAH=1
+CFLAGS = -Wall -ansi -pedantic -DDEFAULT_COMMODITY="\"\$$\"" -DHUQUQULLAH=1
 #DFLAGS = -O3 -fomit-frame-pointer
 DFLAGS = -g # -pg
 INCS   = -I/usr/include/xmltok

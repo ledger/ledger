@@ -1,5 +1,5 @@
 #ifndef _LEDGER_H
-#define _LEDGER_H "$Revision: 1.9 $"
+#define _LEDGER_H "$Revision: 1.10 $"
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -289,8 +289,6 @@ typedef std::pair<const std::string, account *> accounts_entry;
 
 
 #ifdef HUQUQULLAH
-#define DEFAULT_COMMODITY "$"
-
 extern bool compute_huquq;
 extern std::list<mask> huquq_categories;
 #endif
