@@ -67,6 +67,14 @@ chain_xact_handlers(const std::string&		  command,
   // format_transactions write each transaction received to the
   // output stream.
   if (! (command == "b" || command == "E")) {
+    if (config.head_entries || config.tail_entries)
+      ptrs.push_back(formatter =
+		     new truncate_entries(formatter,
+					  config.head_entries ?
+					  config.head_entries :
+					  config.tail_entries,
+					  config.tail_entries));
+
     // filter_transactions will only pass through transactions
     // matching the `display_predicate'.
     if (! config.display_predicate.empty())
