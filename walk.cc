@@ -281,7 +281,7 @@ void interval_transactions::operator()(transaction_t& xact)
 
   if (interval) {
     std::time_t quant = interval.increment(interval.begin);
-    if (std::difftime(xact.entry->date, quant) > 0) {
+    if (std::difftime(xact.entry->date, quant) >= 0) {
       if (last_xact) {
 	start  = interval.begin;
 	finish = quant;
