@@ -713,6 +713,7 @@ void export_journal()
     .add_property("master",
 		  make_getter(&journal_t::master,
 			      return_internal_reference<1>()))
+    .def_readwrite("price_db", &journal_t::price_db)
     .def_readonly("sources", &journal_t::sources)
 
     .def("__len__", entries_len)
