@@ -55,7 +55,8 @@
   :type 'file
   :group 'ledger)
 
-(defcustom ledger-data-file (getenv "LEDGER")
+(defcustom ledger-data-file (or (getenv "LEDGER_FILE")
+				(getenv "LEDGER"))
   "Path to the ledger data file."
   :type 'file
   :group 'ledger)
@@ -258,7 +259,8 @@ Return the difference in the format of a time value."
 (defun ledger-update-balance-display ()
   (let ((account ledger-acct))
     (with-temp-buffer
-      (let ((exit-code (ledger-run-ledger "-C" "balance" account)))
+      (let ((exit-code (ledger-run-ledger "-C" "balance"
+					  (concat "\"" account "\""))))
 	(if (/= 0 exit-code)
 	    (setq ledger-reconcile-text "Reconcile [ERR]")
 	  (goto-char (point-min))
