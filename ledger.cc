@@ -220,10 +220,10 @@ bool entry::finalize(bool do_compute)
   // transactions and create new virtual transactions for all that
   // apply.
 
-  for (book::virtual_map_iterator m = main_ledger->virtual_mapping.begin();
-       m != main_ledger->virtual_mapping.end();
+  for (book::virtual_map_iterator m = ledger->virtual_mapping.begin();
+       m != ledger->virtual_mapping.end();
        m++) {
-    std::list<transaction *> xacts;
+    std::list<transaction *> new_xacts;
 
     for (std::list<transaction *>::iterator x = xacts.begin();
 	 x != xacts.end();
@@ -248,40 +248,7 @@ bool entry::finalize(bool do_compute)
 	t->is_virtual   = (*i)->is_virtual;
 	t->must_balance = (*i)->must_balance;
 
-	// If there is already a virtual transaction for the
-	// account under consideration, and it's `must_balance'
-	// flag matches, then simply add this amount to that
-	// transaction.
-
-	bool added = false;
-
-	for (std::list<transaction *>::iterator y = xacts.begin();
-	     y != xacts.end();
-	     y++) {
-	  if ((*y)->is_virtual && (*y)->acct == t->acct &&
-	      (*y)->must_balance == t->must_balance) {
-	    (*y)->cost->credit(t->cost);
-	    delete t;
-	    added = true;
-	    break;
-	  }
-	}
-
-	if (! added)
-	  for (std::list<transaction *>::iterator y = xacts.begin();
-	       y != xacts.end();
-	       y++) {
-	    if ((*y)->is_virtual && (*y)->acct == t->acct &&
-		(*y)->must_balance == t->must_balance) {
-	      (*y)->cost->credit(t->cost);
-	      delete t;
-	      added = true;
-	      break;
-	    }
-	  }
-
-	if (! added)
-	  xacts.push_back(t);
+        new_xacts.push_back(t);
       }
     }
 
@@ -290,8 +257,8 @@ bool entry::finalize(bool do_compute)
     // iteration above is screwed up if we try adding new
     // transactions during the traversal.
 
-    for (std::list<transaction *>::iterator x = xacts.begin();
-	 x != xacts.end();
+    for (std::list<transaction *>::iterator x = new_xacts.begin();
+	 x != new_xacts.end();
 	 x++) {
       xacts.push_back(*x);
 

@@ -308,7 +308,7 @@ static void equity_entry(account * acct, regexps_map& regexps,
 {
   if (! acct->balance.is_zero() &&
       (regexps.empty() || matches(regexps, acct->as_str()))) {
-    entry opening;
+    entry opening(main_ledger);
 
     opening.date    = std::time(NULL);
     opening.cleared = true;
@@ -355,6 +355,128 @@ void equity_ledger(std::ostream& out, regexps_map& regexps)
        i != main_ledger->accounts.end();
        i++)
     equity_entry((*i).second, regexps, out);
+}
+
+// Add a new entry, using hueristic logic to simplify the entry
+// requirements
+
+void add_new_entry(int index, int argc, char **argv)
+{
+  regexps_map regexps;
+  entry       added(main_ledger);
+  entry *     matching = NULL;
+
+  if (! parse_date(argv[index++], &added.date)) {
+    std::cerr << "Error: Bad add date: " << argv[index - 1]
+              << std::endl;
+    std::exit(1);
+  }
+
+  added.cleared = show_cleared;
+
+  if (index == argc) {
+    std::cerr << "Error: Too few arguments to 'add'." << std::endl;
+    std::exit(1);
+  }
+
+  regexps.clear();
+  regexps.push_back(mask(argv[index++]));
+
+  for (entries_list_reverse_iterator i = main_ledger->entries.rbegin();
+       i != main_ledger->entries.rend();
+       i++) {
+    if ((*i)->matches(regexps)) {
+      matching = *i;
+      break;
+    }
+  }
+
+  added.desc = matching ? matching->desc : regexps.front().pattern;
+
+  if (index == argc) {
+    std::cerr << "Error: Too few arguments to 'add'." << std::endl;
+    std::exit(1);
+  }
+
+  if (argv[index][0] == '-' || std::isdigit(argv[index][0])) {
+    if (! matching) {
+      std::cerr << "Error: Missing account name for non-matching entry."
+                << std::endl;
+      std::exit(1);
+    }
+
+    transaction * m_xact,  * xact, * first;
+
+    m_xact = matching->xacts.front();
+      
+    first = xact = new transaction();
+    xact->acct = m_xact->acct;
+    xact->cost = create_amount(argv[index++]);
+    xact->cost->set_commdty(m_xact->cost->commdty());
+
+    added.xacts.push_back(xact);
+
+    m_xact = matching->xacts.back();
+      
+    xact = new transaction();
+    xact->acct = m_xact->acct;
+    xact->cost = first->cost->copy();
+    xact->cost->negate();
+
+    added.xacts.push_back(xact);
+
+    if ((index + 1) < argc && std::string(argv[index]) == "-from")
+      if (account * acct = main_ledger->re_find_account(argv[++index]))
+        added.xacts.back()->acct = acct;
+  } else {
+    while (index < argc && std::string(argv[index]) != "-from") {
+      transaction * xact = new transaction();
+
+      mask acct_regex(argv[index++]);
+
+      account * acct = NULL;
+      for (std::list<transaction *>::iterator x = matching->xacts.begin();
+           x != matching->xacts.end();
+           x++) {
+        if (acct_regex.match((*x)->acct->as_str())) {
+          acct = (*x)->acct;
+          break;
+        }
+      }
+
+      if (acct)
+        xact->acct = acct;
+      else
+        xact->acct = main_ledger->re_find_account(acct_regex.pattern);
+
+      if (! xact->acct) {
+        std::cerr << "Error: Could not find account name '"
+                  << acct_regex.pattern << "'." << std::endl;
+        std::exit(1);
+      }
+
+      if (index == argc) {
+        std::cerr << "Error: Too few arguments to 'add'." << std::endl;
+        std::exit(1);
+      }
+
+      xact->cost = create_amount(argv[index++]);
+
+      added.xacts.push_back(xact);
+    }
+
+    if ((index + 1) < argc && std::string(argv[index]) == "-from")
+      if (account * acct = main_ledger->re_find_account(argv[++index])) {
+        transaction * xact = new transaction();
+        xact->acct = acct;
+        xact->cost = NULL;
+
+        added.xacts.push_back(xact);
+      }
+  }
+
+  if (added.finalize())
+    added.print(std::cout);
 }
 
 // Print out the entire ledger that was read in, sorted by date.
@@ -431,7 +553,7 @@ int main(int argc, char * argv[])
       have_beginning = true;
       if (! parse_date(optarg, &begin_date)) {
 	std::cerr << "Error: Bad begin date: " << optarg << std::endl;
-	return 1;
+	std::exit(1);
       }
       break;
 
@@ -439,7 +561,7 @@ int main(int argc, char * argv[])
       have_ending = true;
       if (! parse_date(optarg, &end_date)) {
 	std::cerr << "Error: Bad end date: " << optarg << std::endl;
-	return 1;
+	std::exit(1);
       }
       break;
 
@@ -452,7 +574,7 @@ int main(int argc, char * argv[])
       have_date_mask = true;
       if (! parse_date_mask(optarg, &date_mask)) {
 	std::cerr << "Error: Bad date mask: " << optarg << std::endl;
-	return 1;
+	std::exit(1);
       }
       break;
 
@@ -498,7 +620,7 @@ int main(int argc, char * argv[])
 
   if (optind == argc) {
     show_help(std::cout);
-    return 1;
+    std::exit(1);
   }
 
   index = optind;
@@ -514,7 +636,7 @@ int main(int argc, char * argv[])
       std::cerr << ("Please specify ledger file using -f option "
 		    "or LEDGER environment variable.")
 		<< std::endl;
-      return 1;
+      std::exit(1);
     }
   }
 
@@ -527,7 +649,7 @@ int main(int argc, char * argv[])
     if (optind == argc) {
       std::cerr << ("Error: Must specify an account name "
 		    "after the 'register' command.") << std::endl;
-      return 1;
+      std::exit(1);
     }
     index++;
   }
@@ -592,118 +714,7 @@ int main(int argc, char * argv[])
     equity_ledger(std::cout, regexps);
   }
   else if (command == "add") {
-    entry added, * matching = NULL;
-
-    if (! parse_date(argv[index++], &added.date)) {
-      std::cerr << "Error: Bad add date: " << argv[index - 1]
-                << std::endl;
-      return 1;
-    }
-
-    added.cleared = show_cleared;
-
-    if (index == argc) {
-      std::cerr << "Error: Too few arguments to 'add'." << std::endl;
-      return 1;
-    }
-
-    regexps.clear();
-    regexps.push_back(mask(argv[index++]));
-
-    for (entries_list_reverse_iterator i = main_ledger->entries.rbegin();
-         i != main_ledger->entries.rend();
-         i++) {
-      if ((*i)->matches(regexps)) {
-        matching = *i;
-        break;
-      }
-    }
-
-    added.desc = matching ? matching->desc : regexps.front().pattern;
-
-    if (index == argc) {
-      std::cerr << "Error: Too few arguments to 'add'." << std::endl;
-      return 1;
-    }
-
-    if (argv[index][0] == '-' || std::isdigit(argv[index][0])) {
-      if (! matching) {
-        std::cerr << "Error: Missing account name for non-matching entry."
-                  << std::endl;
-        return 1;
-      }
-
-      transaction * m_xact,  * xact, * first;
-
-      m_xact = matching->xacts.front();
-      
-      first = xact = new transaction();
-      xact->acct = m_xact->acct;
-      xact->cost = create_amount(argv[index++]);
-      xact->cost->set_commdty(m_xact->cost->commdty());
-
-      added.xacts.push_back(xact);
-
-      m_xact = matching->xacts.back();
-      
-      xact = new transaction();
-      xact->acct = m_xact->acct;
-      xact->cost = first->cost->copy();
-      xact->cost->negate();
-
-      added.xacts.push_back(xact);
-
-      if ((index + 1) < argc && std::string(argv[index]) == "-from")
-        if (account * acct = main_ledger->re_find_account(argv[++index]))
-          added.xacts.back()->acct = acct;
-    } else {
-      while (index < argc && std::string(argv[index]) != "-from") {
-        transaction * xact = new transaction();
-
-        mask acct_regex(argv[index++]);
-
-        account * acct = NULL;
-        for (std::list<transaction *>::iterator x = matching->xacts.begin();
-             x != matching->xacts.end();
-             x++) {
-          if (acct_regex.match((*x)->acct->as_str())) {
-            acct = (*x)->acct;
-            break;
-          }
-        }
-
-        if (acct)
-          xact->acct = acct;
-        else
-          xact->acct = main_ledger->re_find_account(acct_regex.pattern);
-
-        if (! xact->acct) {
-          std::cerr << "Error: Could not find account name '"
-                    << acct_regex.pattern << "'." << std::endl;
-          return 1;
-        }
-
-        if (index == argc) {
-          std::cerr << "Error: Too few arguments to 'add'." << std::endl;
-          return 1;
-        }
-
-        xact->cost = create_amount(argv[index++]);
-        added.xacts.push_back(xact);
-      }
-
-      if ((index + 1) < argc && std::string(argv[index]) == "-from")
-        if (account * acct = main_ledger->re_find_account(argv[++index])) {
-          transaction * xact = new transaction();
-          xact->acct = acct;
-          xact->cost = NULL;
-
-          added.xacts.push_back(xact);
-        }
-    }
-
-    if (added.finalize())
-      added.print(std::cout);
+    add_new_entry(index, argc, argv);
   }
 
 #ifdef DEBUG

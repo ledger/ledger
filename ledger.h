@@ -1,5 +1,5 @@
 #ifndef _LEDGER_H
-#define _LEDGER_H "$Revision: 1.26 $"
+#define _LEDGER_H "$Revision: 1.27 $"
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -152,11 +152,14 @@ class transaction
 };
 
 
+class book;
 class entry
 {
   entry(const entry&);
 
  public:
+  book * ledger;
+  
   std::time_t date;
   std::string code;
   std::string desc;
@@ -165,7 +168,7 @@ class entry
 
   std::list<transaction *> xacts;
 
-  explicit entry() : cleared(false) {}
+  explicit entry(book * l) : ledger(l), cleared(false) {}
 
   // If we're running as a command-line tool, it's cheaper to just
   // throw away the heap on exit, than spend time freeing things up

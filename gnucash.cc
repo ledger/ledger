@@ -64,7 +64,7 @@ static void startElement(void *userData, const char *name, const char **atts)
     action = COMM_PREC;
   else if (std::strcmp(name, "gnc:transaction") == 0) {
     assert(! curr_entry);
-    curr_entry = new entry;
+    curr_entry = new entry(main_ledger);
   }
   else if (std::strcmp(name, "trn:num") == 0)
     action = ENTRY_NUM;

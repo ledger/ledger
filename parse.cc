@@ -188,7 +188,7 @@ transaction * parse_transaction(std::istream& in, book * ledger)
 
 entry * parse_entry(std::istream& in, book * ledger)
 {
-  entry * curr = new entry;
+  entry * curr = new entry(ledger);
 
   static char line[MAX_LINE + 1];
   in.getline(line, MAX_LINE);
