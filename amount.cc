@@ -1,5 +1,7 @@
 #include "amount.h"
 
+#include <list>
+
 #include "gmp.h"
 
 #define MAX_PRECISION 10
@@ -503,7 +505,7 @@ std::ostream& operator<<(std::ostream& out, const amount_t& amt)
     out << quotient;
   }
   else {
-    strings_list strs;
+    std::list<std::string> strs;
     char buf[4];
 
     mpz_t temp;
@@ -525,7 +527,7 @@ std::ostream& operator<<(std::ostream& out, const amount_t& amt)
 
     bool printed = false;
 
-    for (strings_list::reverse_iterator i = strs.rbegin();
+    for (std::list<std::string>::reverse_iterator i = strs.rbegin();
 	 i != strs.rend();
 	 i++) {
       if (printed) {
