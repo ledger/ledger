@@ -6,8 +6,6 @@
 
 namespace ledger {
 
-config_t config;
-
 std::string bal_fmt	 = "%20T  %2_%-n\n";
 std::string reg_fmt
   = "%D %-.20P %-.22N %12.66t %12.80T\n%/%32|%-.22N %12.66t %12.80T\n";
@@ -17,6 +15,9 @@ std::string print_fmt
   = "\n%D %X%C%P\n    %-34N  %12o\n%/    %-34N  %12o\n";
 std::string equity_fmt
   = "\n%D %X%C%P\n%/    %-34N  %12t\n";
+
+config_t	    config;
+std::list<option_t> config_options;
 
 config_t::config_t()
 {
@@ -40,8 +41,11 @@ config_t::config_t()
   show_revalued      = false;
   show_revalued_only = false;
   download_quotes    = false;
+
   use_cache	     = false;
   cache_dirty        = false;
+  sort_order         = NULL;
+  output_stream      = NULL;
 }
 
 static void
@@ -167,15 +171,15 @@ void config_t::process_options(const std::string&     command,
 
   // Parse the sort_string
 
-  if (! sort_order.get() && ! sort_string.empty()) {
+  if (! sort_order && ! sort_string.empty()) {
     try {
       std::istringstream stream(sort_string);
-      sort_order.reset(parse_value_expr(stream));
+      sort_order = parse_value_expr(stream);
       if (stream.peek() != -1) {
 	throw value_expr_error(std::string("Unexpected character '") +
 			       char(stream.peek()) + "'");
       }
-      else if (! sort_order.get()) {
+      else if (! sort_order) {
 	throw error("Failed to parse sort criteria!");
       }
     }
@@ -217,8 +221,8 @@ void config_t::process_options(const std::string&     command,
 
   // Configure the output stream
 
-  if (! output_stream.get() && ! output_file.empty())
-    output_stream.reset(new std::ofstream(output_file.c_str()));
+  if (! output_stream && ! output_file.empty())
+    output_stream = new std::ofstream(output_file.c_str());
 
   // Parse the interval specifier, if provided
 
@@ -612,3 +616,82 @@ OPT_BEGIN(weighted_trend, "Z") {
 } OPT_END(weighted_trend);
 
 } // namespace ledger
+
+#ifdef USE_BOOST_PYTHON
+
+#include <boost/python.hpp>
+#include <boost/python/detail/api_placeholder.hpp>
+
+using namespace boost::python;
+using namespace ledger;
+
+void py_process_options(config_t& config, const std::string& command,
+			list args)
+{
+  strings_list strs;
+
+  int l = len(args);
+  for (int i = 0; i < l; i++)
+    strs.push_back(std::string(extract<char *>(args[i])));
+
+  config.process_options(command, strs.begin(), strs.end());
+}
+
+void add_other_option_handlers(const std::list<option_t>& other);
+
+void py_add_config_option_handlers()
+{
+  add_other_option_handlers(config_options);
+}
+
+void export_config()
+{
+  class_< config_t > ("Config")
+    .def_readwrite("price_settings", &config_t::price_settings)
+    .def_readwrite("init_file", &config_t::init_file)
+    .def_readwrite("data_file", &config_t::data_file)
+    .def_readwrite("cache_file", &config_t::cache_file)
+    .def_readwrite("price_db", &config_t::price_db)
+    .def_readwrite("output_file", &config_t::output_file)
+    .def_readwrite("account", &config_t::account)
+    .def_readwrite("predicate", &config_t::predicate)
+    .def_readwrite("display_predicate", &config_t::display_predicate)
+    .def_readwrite("interval_text", &config_t::interval_text)
+    .def_readwrite("format_string", &config_t::format_string)
+    .def_readwrite("date_format", &config_t::date_format)
+    .def_readwrite("sort_string", &config_t::sort_string)
+    .def_readwrite("value_expr", &config_t::value_expr)
+    .def_readwrite("total_expr", &config_t::total_expr)
+    .def_readwrite("pricing_leeway", &config_t::pricing_leeway)
+    .def_readwrite("show_collapsed", &config_t::show_collapsed)
+    .def_readwrite("show_subtotal", &config_t::show_subtotal)
+    .def_readwrite("show_related", &config_t::show_related)
+    .def_readwrite("show_all_related", &config_t::show_all_related)
+    .def_readwrite("show_inverted", &config_t::show_inverted)
+    .def_readwrite("show_empty", &config_t::show_empty)
+    .def_readwrite("days_of_the_week", &config_t::days_of_the_week)
+    .def_readwrite("show_revalued", &config_t::show_revalued)
+    .def_readwrite("show_revalued_only", &config_t::show_revalued_only)
+    .def_readwrite("download_quotes", &config_t::download_quotes)
+
+    .def_readwrite("use_cache", &config_t::use_cache)
+    .def_readwrite("cache_dirty", &config_t::cache_dirty)
+    .def_readwrite("report_interval", &config_t::report_interval)
+    .def_readwrite("format", &config_t::format)
+    .def_readwrite("nformat", &config_t::nformat)
+    .add_property("sort_order",
+		  make_getter(&config_t::sort_order,
+			      return_value_policy<reference_existing_object>()))
+    .add_property("output_stream",
+		  make_getter(&config_t::output_stream,
+			      return_value_policy<reference_existing_object>()))
+
+    .def("process_options", py_process_options)
+    ;
+
+  scope().attr("config") = ptr(&config);
+
+  def("add_config_option_handlers", py_add_config_option_handlers);
+}
+
+#endif // USE_BOOST_PYTHON

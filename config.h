@@ -9,6 +9,7 @@
 
 #include <iostream>
 #include <memory>
+#include <list>
 
 namespace ledger {
 
@@ -58,24 +59,35 @@ struct config_t
   format_t      format;
   format_t      nformat;
 
-  std::auto_ptr<value_expr_t> sort_order;
-  std::auto_ptr<std::ostream> output_stream;
+  value_expr_t * sort_order;
+  std::ostream * output_stream;
 
   config_t();
+  config_t(const config_t&) {
+    assert(0);
+  }
+
+  ~config_t() {
+    if (sort_order)
+      delete sort_order;
+    if (output_stream)
+      delete output_stream;
+  }
 
   void process_options(const std::string&     command,
 		       strings_list::iterator arg,
 		       strings_list::iterator args_end);
 };
 
-extern config_t config;
+extern config_t		   config;
+extern std::list<option_t> config_options;
 
 void option_help(std::ostream& out);
 
 struct declared_option_handler : public option_handler {
   declared_option_handler(const std::string& label,
 			  const std::string& opt_chars) {
-    register_option(label, opt_chars, *this);
+    add_option_handler(config_options, label, opt_chars, *this);
   }
 };
 

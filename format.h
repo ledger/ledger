@@ -51,6 +51,7 @@ struct element_t
 
 struct format_t
 {
+  std::string format_string;
   element_t * elements;
 
   static std::string	date_format;
@@ -69,6 +70,7 @@ struct format_t
     if (elements)
       delete elements;
     elements = parse_elements(_format);
+    format_string = _format;
   }
 
   static element_t * parse_elements(const std::string& fmt);

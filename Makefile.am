@@ -24,7 +24,7 @@ if DEBUG
 ledger_CXXFLAGS = -DDEBUG_LEVEL=4
 endif
 ledger_SOURCES = main.cc
-ledger_LDADD = $(LIBOBJS) libledger.la -lboost_python -L/sw/lib/python2.3/config -lpython2.3
+ledger_LDADD = $(LIBOBJS) libledger.la -lboost_python -lpython$(PYTHON_VERSION)
 
 nobase_include_HEADERS = \
 	amount.h	 \

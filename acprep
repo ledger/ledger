@@ -15,7 +15,7 @@ autoconf
 
 INCDIRS="-I/sw/include -I/usr/include/httpd/xml -I/sw/include/python2.3"
 INCDIRS="$INCDIRS -Wno-long-double"
-LIBDIRS="-L/sw/lib"
+LIBDIRS="-L/sw/lib -L/sw/lib/python2.3/config"
 
 if [ "$1" = "--debug" ]; then
     ./configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \

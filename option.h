@@ -19,11 +19,14 @@ struct option_t {
   option_t() : short_opt(0), wants_arg(false), handler(NULL) {}
 };
 
-void register_option(const std::string& label,
-		     const std::string& opt_chars, option_handler& option);
-bool process_option(const std::string& opt, const char * arg = NULL);
-void process_arguments(int argc, char ** argv, const bool anywhere,
+void add_option_handler(std::list<option_t>& options, const std::string& label,
+			const std::string& opt_chars, option_handler& option);
+bool process_option(std::list<option_t>& options,
+		    const std::string& opt, const char * arg = NULL);
+void process_arguments(std::list<option_t>& options,
+		       int argc, char ** argv, const bool anywhere,
 		       std::list<std::string>& args);
-void process_environment(char ** envp, const std::string& tag);
+void process_environment(std::list<option_t>& options,
+			 char ** envp, const std::string& tag);
 
 #endif // _OPTION_H

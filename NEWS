@@ -2,13 +2,17 @@
 
 * 2.0
 
-- The code base was rewritten for clarity and consistency.  It is now
-  simpler internally, more robust, and much faster.
+- The code was completely rewritten.
 
 - The most significant feature added are "value expressions".  They
   are used in several places to indicate what to display, sorting
   order, output format, etc.  Logic and math operators are supported,
-  as well as a few functions.  See the documentation for more info.
+  as well as a few functions.  See manual.
+
+- If Boost.Python is installed, then ledger can support full Python
+  integration.  It can can be used as a module (ledger.so), as well as
+  supporting Python function calls directly from value expressions.
+  See manual.
 
 - If the environment variable LEDGER (or LEDGER_FILE) is used, a
   binary cache of that ledger is now kept in ~/.ledger (or

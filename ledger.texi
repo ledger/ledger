@@ -24,6 +24,7 @@
 * Introduction::
 * Running Ledger::
 * Keeping a ledger::
+* Extending with Python::
 @end menu
 
 @node Introduction, Running Ledger, Top, Top
@@ -1100,7 +1101,7 @@ special entries used by timeclock, but ignored by ledger.
 
 @end table
 
-@node Keeping a ledger,  , Running Ledger, Top
+@node Keeping a ledger, Extending with Python, Running Ledger, Top
 @chapter Keeping a ledger
 
 The most important part of accounting is keeping a good ledger.  If
@@ -2098,6 +2099,21 @@ ledger, with the attached prefix ``Billable'':
     Assets:Checking                $0.10
     Receivable:ClientOne
 @end example
+
+@node Extending with Python,  , Keeping a ledger, Top
+@chapter Extending with Python
+
+Ledger fully supports Python as an extension language.  It may be used
+in a few different forms, which fall into three basic categories:
+
+@enumerate
+@item
+Defining Python functions to use in value expressions
+@item
+Using the ledger library as a Python module
+@item
+Setting up custom initialization using Python
+@end enumerate
 
 @c Page published by Emacs Muse ends here
 @contents

@@ -168,9 +168,9 @@ chain_formatters(const std::string& command,
 
     // sort_transactions will sort all the transactions it sees, based
     // on the `sort_order' value expression.
-    if (config.sort_order.get())
+    if (config.sort_order)
       ptrs.push_back(formatter =
-		     new sort_transactions(formatter, config.sort_order.get()));
+		     new sort_transactions(formatter, config.sort_order));
 
     // changed_value_transactions adds virtual transactions to the
     // list to account for changes in market value of commodities,
@@ -235,7 +235,7 @@ int parse_and_report(int argc, char * argv[], char * envp[])
   TIMER_START(process_opts);
 
   std::list<std::string> args;
-  process_arguments(argc - 1, argv + 1, false, args);
+  process_arguments(config_options, argc - 1, argv + 1, false, args);
 
   if (args.empty()) {
     option_help(std::cerr);
@@ -245,17 +245,17 @@ int parse_and_report(int argc, char * argv[], char * envp[])
 
   config.use_cache = config.data_file.empty();
 
-  process_environment(envp, "LEDGER_");
+  process_environment(config_options, envp, "LEDGER_");
 
 #if 1
   // These are here for backwards compatability, but are deprecated.
 
   if (const char * p = std::getenv("LEDGER"))
-    process_option("file", p);
+    process_option(config_options, "file", p);
   if (const char * p = std::getenv("PRICE_HIST"))
-    process_option("price-db", p);
+    process_option(config_options, "price-db", p);
   if (const char * p = std::getenv("PRICE_EXP"))
-    process_option("price-exp", p);
+    process_option(config_options, "price-exp", p);
 #endif
 
   TIMER_STOP(process_opts);
@@ -317,7 +317,7 @@ int parse_and_report(int argc, char * argv[], char * envp[])
     formatter = new set_account_value;
     formatter = chain_formatters(command, formatter, formatter_ptrs);
   } else {
-    std::ostream& out(config.output_stream.get() ?
+    std::ostream& out(config.output_stream ?
 		      *config.output_stream : std::cout);
     formatter = new format_transactions(out, config.format, config.nformat);
     formatter = chain_formatters(command, formatter, formatter_ptrs);
@@ -332,14 +332,14 @@ int parse_and_report(int argc, char * argv[], char * envp[])
 
   // For the balance and equity reports, output the sum totals.
 
-  std::ostream& out(config.output_stream.get() ?
+  std::ostream& out(config.output_stream ?
 		    *config.output_stream : std::cout);
 
   if (command == "b") {
     format_account acct_formatter(out, config.format,
 				  config.display_predicate);
     sum_accounts(*journal->master);
-    walk_accounts(*journal->master, acct_formatter, config.sort_order.get());
+    walk_accounts(*journal->master, acct_formatter, config.sort_order);
     acct_formatter.flush();
 
     if (journal->master->data) {
@@ -355,7 +355,7 @@ int parse_and_report(int argc, char * argv[], char * envp[])
     format_equity acct_formatter(out, config.format, config.nformat,
 				 config.display_predicate);
     sum_accounts(*journal->master);
-    walk_accounts(*journal->master, acct_formatter, config.sort_order.get());
+    walk_accounts(*journal->master, acct_formatter, config.sort_order);
     acct_formatter.flush();
   }
 

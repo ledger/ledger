@@ -6,11 +6,10 @@
 
 #include "util.h"
 
-static std::list<option_t> options;
-
-void register_option(const std::string& label,
-		     const std::string& opt_chars,
-		     option_handler&	option)
+void add_option_handler(std::list<option_t>& options,
+		     const std::string&   label,
+		     const std::string&   opt_chars,
+		     option_handler&	  option)
 {
   DEBUG_PRINT("ledger.memory.ctors", "ctor option_handler");
 
@@ -40,15 +39,18 @@ void register_option(const std::string& label,
   options.push_back(opt);
 }
 
-static inline void process_option(const option_t& opt,
-				  const char * arg = NULL) {
-  if (! opt.handler->handled) {
-    (*opt.handler)(arg);
-    opt.handler->handled = true;
+namespace {
+  inline void process_option(const option_t& opt,
+			     const char * arg = NULL) {
+    if (! opt.handler->handled) {
+      (*opt.handler)(arg);
+      opt.handler->handled = true;
+    }
   }
 }
 
-bool process_option(const std::string& opt, const char * arg)
+bool process_option(std::list<option_t>& options,
+		    const std::string& opt, const char * arg)
 {
   for (std::list<option_t>::iterator i = options.begin();
        i != options.end();
@@ -65,7 +67,8 @@ bool process_option(const std::string& opt, const char * arg)
   return false;
 }
 
-void process_arguments(int argc, char ** argv, const bool anywhere,
+void process_arguments(std::list<option_t>& options,
+		       int argc, char ** argv, const bool anywhere,
 		       std::list<std::string>& args)
 {
   int index = 0;
@@ -138,7 +141,8 @@ void process_arguments(int argc, char ** argv, const bool anywhere,
   }
 }
 
-void process_environment(char ** envp, const std::string& tag)
+void process_environment(std::list<option_t>& options,
+			 char ** envp, const std::string& tag)
 {
   const char * tag_p   = tag.c_str();
   int	       tag_len = tag.length();
@@ -157,7 +161,7 @@ void process_environment(char ** envp, const std::string& tag)
       *r = '\0';
 
       if (*q == '=')
-	process_option(buf, q + 1);
+	process_option(options, buf, q + 1);
     }
 }
 
@@ -165,7 +169,6 @@ void process_environment(char ** envp, const std::string& tag)
 
 #include <boost/python.hpp>
 #include <boost/python/detail/api_placeholder.hpp>
-#include <Python.h>
 #include <vector>
 
 using namespace boost::python;
@@ -180,17 +183,27 @@ struct func_option_wrapper : public option_handler
   }
 };
 
-static std::list<func_option_wrapper> wrappers;
+namespace {
+  std::list<func_option_wrapper> wrappers;
+  std::list<option_t>            options;
+}
 
-void py_register_option(const std::string& long_opt,
+void py_add_option_handler(const std::string& long_opt,
 			const std::string& short_opt, object func)
 {
   wrappers.push_back(func_option_wrapper(func));
-  register_option(long_opt, short_opt, wrappers.back());
+  add_option_handler(options, long_opt, short_opt, wrappers.back());
 }
 
-bool (*process_option_1)(const std::string& opt, const char * arg)
-  = process_option;
+void add_other_option_handlers(const std::list<option_t>& other)
+{
+  options.insert(options.begin(), other.begin(), other.end());
+}
+
+bool py_process_option(const std::string& opt, const char * arg)
+{
+  return process_option(options, opt, arg);
+}
 
 list py_process_arguments(list args, bool anywhere = false)
 {
@@ -201,7 +214,7 @@ list py_process_arguments(list args, bool anywhere = false)
     strs.push_back(extract<char *>(args[i]));
 
   std::list<std::string> newargs;
-  process_arguments(strs.size(), &strs.front(), anywhere, newargs);
+  process_arguments(options, strs.size(), &strs.front(), anywhere, newargs);
 
   list py_newargs;
   for (std::list<std::string>::iterator i = newargs.begin();
@@ -210,6 +223,9 @@ list py_process_arguments(list args, bool anywhere = false)
     py_newargs.append(*i);
   return py_newargs;
 }
+
+BOOST_PYTHON_FUNCTION_OVERLOADS(py_proc_args_overloads,
+				py_process_arguments, 1, 2)
 
 void py_process_environment(object env, const std::string& tag)
 {
@@ -227,16 +243,13 @@ void py_process_environment(object env, const std::string& tag)
     strs.push_back(const_cast<char *>(storage.back().c_str()));
   }
 
-  process_environment(&strs.front(), tag);
+  process_environment(options, &strs.front(), tag);
 }
-
-BOOST_PYTHON_FUNCTION_OVERLOADS(py_proc_args_overloads,
-				py_process_arguments, 1, 2)
 
 void export_option()
 {
-  def("register_option",     py_register_option);
-  def("process_option",      process_option_1);
+  def("add_option_handler",  py_add_option_handler);
+  def("process_option",      py_process_option);
   def("process_arguments",   py_process_arguments, py_proc_args_overloads());
   def("process_environment", py_process_environment);
 }

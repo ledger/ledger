@@ -5,6 +5,7 @@
 #include "valexpr.h"
 #include "error.h"
 #include "option.h"
+#include "config.h"
 #include "timing.h"
 #include "util.h"
 #ifdef USE_BOOST_PYTHON
@@ -513,7 +514,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	in.getline(line, MAX_LINE);
 	linenum++;
 	char * p = skip_ws(line);
-	process_option(opt, *p == '\n' ? NULL : p);
+	process_option(config_options, opt, *p == '\n' ? NULL : p);
 	break;
       }
 

@@ -9,16 +9,18 @@ def hello (str):
 def goodbye (str):
     print "Goodbye:", str
 
-register_option ("hello", "h:", hello)
-register_option ("goodbye", "g:", goodbye)
-args = process_arguments (sys.argv[1:])
-process_environment (os.environ, "TEST_")
+add_config_option_handlers ()
+add_option_handler ("hello", ":", hello)
+add_option_handler ("goodbye", ":", goodbye)
 
-parser = TextualParser ()
-register_parser (parser)
+args = process_arguments (sys.argv[1:])
+process_environment (os.environ, "LEDGER_")
+
+text_parser = TextualParser ()
+register_parser (text_parser)
 
 journal = Journal ()
-parse_journal_file (args[0], journal)
+print parse_journal_file (args[0], journal), "entries"
 
 class FormatTransaction (TransactionHandler):
     def __init__ (self, fmt):
