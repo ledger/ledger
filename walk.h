@@ -191,24 +191,31 @@ class collapse_transactions : public item_handler<transaction_t>
 
 class changed_value_transactions : public item_handler<transaction_t>
 {
-  entry_t         modified_entry;
-  transaction_t   modified_xact;
   transaction_t * last_xact;
 
   item_handler<transaction_t> * handler;
 
+  entries_deque      entry_temps;
+  transactions_deque xact_temps;
+
  public:
   changed_value_transactions(item_handler<transaction_t> * _handler)
-    : modified_xact(&modified_entry, NULL), last_xact(NULL),
-      handler(_handler) {
-    assert(handler);
-    modified_entry.payee = "Commodities revalued";
-  }
+    : last_xact(NULL), handler(_handler) {}
 
   virtual ~changed_value_transactions() {
     flush();
     handler->flush();
     delete handler;
+
+    for (entries_deque::iterator i = entry_temps.begin();
+	 i != entry_temps.end();
+	 i++)
+      delete *i;
+
+    for (transactions_deque::iterator i = xact_temps.begin();
+	 i != xact_temps.end();
+	 i++)
+      delete *i;
   }
 
   virtual void flush() {

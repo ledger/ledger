@@ -71,15 +71,26 @@ void changed_value_transactions::operator()(transaction_t * xact)
     last_xact->entry->date = prev_date;
 
     if (balance_t diff = cur_bal - prev_bal) {
-      modified_entry.date  = current;
+      entry_t * entry = new entry_t;
 
-      // jww (2004-08-07): What if there are multiple commodities?
-      assert(diff.amounts.size() == 1);
-      modified_xact.amount = diff.amount();
-      modified_xact.total  = diff;
-      modified_xact.total.negate();
+      entry->payee = "Commodities revalued";
+      entry->date  = current;
 
-      (*handler)(&modified_xact);
+      entry_temps.push_back(entry);
+
+      for (amounts_map::const_iterator i = diff.amounts.begin();
+	   i != diff.amounts.end();
+	   i++) {
+	transaction_t * temp_xact = new transaction_t(entry, NULL);
+
+	temp_xact->amount = (*i).second;
+	temp_xact->total  = (*i).second;
+	temp_xact->total.negate();
+
+	xact_temps.push_back(temp_xact);
+
+	(*handler)(temp_xact);
+      }
     }
   }
 
@@ -92,7 +103,6 @@ void changed_value_transactions::operator()(transaction_t * xact)
 void subtotal_transactions::flush()
 {
   entry_t * entry = new entry_t;
-  entry->date = start;
 
   char buf[256];
   // jww (2004-08-10): allow for a format string here
@@ -104,22 +114,22 @@ void subtotal_transactions::flush()
   for (balances_map::iterator i = balances.begin();
        i != balances.end();
        i++) {
+    entry->date = finish;
     transaction_t * xact = new transaction_t(entry, (*i).first);
     xact->total = (*i).second;
     balance_t result;
     format_t::compute_total(result, details_t(xact));
     xact->total = 0;
+    entry->date = start;
+
+    xact_temps.push_back(xact);
 
     for (amounts_map::const_iterator j = result.amounts.begin();
 	 j != result.amounts.end();
 	 j++) {
-      xact->amount = (*j).second;
-      xact->cost   = (*j).second;
-
+      xact->amount = xact->cost = (*j).second;
       (*handler)(xact);
     }
-
-    xact_temps.push_back(xact);
   }
 
   balances.clear();
