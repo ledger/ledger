@@ -1,4 +1,5 @@
 #include "valexpr.h"
+#include "format.h"
 #include "error.h"
 #include "datetime.h"
 #include "debug.h"
@@ -119,15 +120,32 @@ void value_expr_t::compute(balance_t& result, const details_t& details) const
       result = details.account->total.cost;
     break;
 
+  case VALUE_EXPR:
+#ifdef NO_CLEANUP
+    assert(format_t::value_expr);
+#else
+    assert(format_t::value_expr.get());
+#endif
+    format_t::value_expr->compute(result, details);
+    break;
+  case TOTAL_EXPR:
+#ifdef NO_CLEANUP
+    assert(format_t::total_expr);
+#else
+    assert(format_t::total_expr.get());
+#endif
+    format_t::total_expr->compute(result, details);
+    break;
+
   case DATE:
     if (details.entry)
       result = (unsigned int) details.entry->date;
     else
-      result = (unsigned int) std::time(NULL);
+      result = (unsigned int) now;
     break;
 
   case TODAY:
-    result = (unsigned int) std::time(NULL);
+    result = (unsigned int) now;
     break;
 
   case CLEARED:
@@ -169,6 +187,11 @@ void value_expr_t::compute(balance_t& result, const details_t& details) const
   case INDEX:
     if (details.xact)
       result = details.xact->index + 1;
+    break;
+
+  case DEPTH:
+    if (details.xact)
+      result = details.xact->account->depth - 1;
     else if (details.account)
       result = details.account->depth - 1;
     break;
@@ -178,6 +201,11 @@ void value_expr_t::compute(balance_t& result, const details_t& details) const
       assert(left);
       left->compute(result, details);
       result /= amount_t(details.xact->index + 1);
+    }
+    else if (details.account && details.account->count) {
+      assert(left);
+      left->compute(result, details);
+      result /= amount_t(details.account->count);
     }
     break;
 
@@ -214,6 +242,12 @@ void value_expr_t::compute(balance_t& result, const details_t& details) const
       result = mask->match(details.account->fullname());
     break;
 
+  case F_SHORT_ACCOUNT_MASK:
+    assert(mask);
+    if (details.account)
+      result = mask->match(details.account->name);
+    break;
+
   case F_VALUE: {
     assert(left);
     left->compute(result, details);
@@ -225,18 +259,18 @@ void value_expr_t::compute(balance_t& result, const details_t& details) const
 	if (details.entry)
 	  moment = details.entry->date;
 	else
-	  moment = std::time(NULL);
+	  moment = now;
 	break;
 
       case TODAY:
-	moment = std::time(NULL);
+	moment = now;
 	break;
 
       default:
 	throw compute_error("Invalid date passed to P(value,date)");
       }
     } else {
-      moment = std::time(NULL);
+      moment = now;
     }
     result = result.value(moment);
     break;
@@ -359,16 +393,21 @@ value_expr_t * parse_value_term(std::istream& in)
   case 'a': node = new value_expr_t(value_expr_t::AMOUNT); break;
   case 'c': node = new value_expr_t(value_expr_t::COST); break;
   case 'd': node = new value_expr_t(value_expr_t::DATE); break;
-  case 't': node = new value_expr_t(value_expr_t::TODAY); break;
+  case 'N': node = new value_expr_t(value_expr_t::TODAY); break;
   case 'X': node = new value_expr_t(value_expr_t::CLEARED); break;
   case 'R': node = new value_expr_t(value_expr_t::REAL); break;
   case 'n': node = new value_expr_t(value_expr_t::INDEX); break;
+  case 'l': node = new value_expr_t(value_expr_t::DEPTH); break;
   case 'B': node = new value_expr_t(value_expr_t::BALANCE); break;
-  case 'T': node = new value_expr_t(value_expr_t::TOTAL); break;
+  case 'O': node = new value_expr_t(value_expr_t::TOTAL); break;
   case 'C': node = new value_expr_t(value_expr_t::COST_TOTAL); break;
 
+  // Relating to format_t
+  case 't': node = new value_expr_t(value_expr_t::VALUE_EXPR); break;
+  case 'T': node = new value_expr_t(value_expr_t::TOTAL_EXPR); break;
+
   // Compound terms
-  case 'v': node = parse_value_expr("P(a,d)"); break;
+  case 'v': node = parse_value_expr("P(t,d)"); break;
   case 'V': node = parse_value_term("P(T,d)"); break;
   case 'g': node = parse_value_expr("v-c"); break;
   case 'G': node = parse_value_expr("V-C"); break;
@@ -423,13 +462,20 @@ value_expr_t * parse_value_term(std::istream& in)
 
   // Other
   case '/': {
-    bool        payee_mask = false;
+    bool payee_mask	    = false;
+    bool short_account_mask = false;
 
     c = peek_next_nonws(in);
     if (c == '/') {
-      payee_mask = true;
       in.get(c);
       c = in.peek();
+      if (c == '/') {
+	in.get(c);
+	c = in.peek();
+	short_account_mask = true;
+      } else {
+	payee_mask = true;
+      }
     }
 
     static char buf[4096];
@@ -438,8 +484,10 @@ value_expr_t * parse_value_term(std::istream& in)
       throw value_expr_error("Missing closing '/'");
 
     in.get(c);
-    node = new value_expr_t(payee_mask ? value_expr_t::F_PAYEE_MASK :
-			    value_expr_t::F_ACCOUNT_MASK);
+    node = new value_expr_t(short_account_mask ?
+			    value_expr_t::F_SHORT_ACCOUNT_MASK :
+			    (payee_mask ? value_expr_t::F_PAYEE_MASK :
+			     value_expr_t::F_ACCOUNT_MASK));
     node->mask = new mask_t(buf);
     break;
   }
@@ -664,47 +712,6 @@ value_expr_t * parse_value_expr(std::istream& in)
   return node;
 }
 
-std::string regexps_to_predicate(std::list<std::string>::const_iterator begin,
-				 std::list<std::string>::const_iterator end,
-				 const bool account_regexp)
-{
-  std::vector<std::string> regexps(2);
-  std::string pred;
-
-  // Treat the remaining command-line arguments as regular
-  // expressions, used for refining report results.
-
-  for (std::list<std::string>::const_iterator i = begin;
-       i != end;
-       i++)
-    if ((*i)[0] == '-') {
-      if (! regexps[1].empty())
-	regexps[1] += "|";
-      regexps[1] += (*i).substr(1);
-    } else {
-      if (! regexps[0].empty())
-	regexps[0] += "|";
-      regexps[0] += *i;
-    }
-
-  for (std::vector<std::string>::const_iterator i = regexps.begin();
-       i != regexps.end();
-       i++)
-    if (! (*i).empty()) {
-      if (! pred.empty())
-	pred += "&";
-      if (i != regexps.begin())
-	pred += "!";
-      if (! account_regexp)
-	pred += "/";
-      pred += "/(?:";
-      pred += *i;
-      pred += ")/";
-    }
-
-  return pred;
-}
-
 #ifdef DEBUG_ENABLED
 
 void dump_value_expr(std::ostream& out, const value_expr_t * node)
@@ -724,6 +731,7 @@ void dump_value_expr(std::ostream& out, const value_expr_t * node)
   case value_expr_t::CLEARED:	   out << "CLEARED"; break;
   case value_expr_t::REAL:	   out << "REAL"; break;
   case value_expr_t::INDEX:	   out << "INDEX"; break;
+  case value_expr_t::DEPTH:	   out << "DEPTH"; break;
   case value_expr_t::BALANCE:      out << "BALANCE"; break;
   case value_expr_t::COST_BALANCE: out << "COST_BALANCE"; break;
   case value_expr_t::TOTAL:        out << "TOTAL"; break;
@@ -761,6 +769,11 @@ void dump_value_expr(std::ostream& out, const value_expr_t * node)
   case value_expr_t::F_ACCOUNT_MASK:
     assert(node->mask);
     out << "A_MASK(" << node->mask->pattern << ")";
+    break;
+
+  case value_expr_t::F_SHORT_ACCOUNT_MASK:
+    assert(node->mask);
+    out << "A_SMASK(" << node->mask->pattern << ")";
     break;
 
   case value_expr_t::F_VALUE:

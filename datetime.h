@@ -3,6 +3,8 @@
 
 #include "ledger.h"
 
+#include <ctime>
+
 namespace ledger {
 
 struct interval_t
@@ -20,6 +22,7 @@ struct interval_t
   static interval_t * parse(std::istream& in);
 };
 
+extern std::time_t	now;
 extern struct std::tm * now_tm;
 
 bool parse_date_mask(const char * date_str, struct std::tm * result);

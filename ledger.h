@@ -125,6 +125,7 @@ class account_t
 
   mutable balance_pair_t value;
   mutable balance_pair_t total;
+  mutable unsigned int   count;	// transactions counted toward total
   mutable ident_t        ident;
   mutable unsigned short dflags;
   mutable std::string	 _fullname;
@@ -135,7 +136,8 @@ class account_t
 	    const std::string& _name = "",
 	    const std::string& _note = "")
     : parent(_parent), name(_name), note(_note),
-      depth(parent ? parent->depth + 1 : 0), dflags(0) {}
+      depth(parent ? parent->depth + 1 : 0),
+      count(0), dflags(0) {}
 
   ~account_t();
 

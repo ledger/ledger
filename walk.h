@@ -117,6 +117,7 @@ class add_to_account_value : public item_handler<transaction_t>
  public:
   virtual void operator()(transaction_t * xact) {
     xact->account->value += *xact;
+    xact->account->count++;
   }
 };
 
@@ -368,6 +369,7 @@ inline void sum_accounts(account_t * account) {
        i++) {
     sum_accounts((*i).second);
     account->total += (*i).second->total;
+    account->count += (*i).second->count;
   }
   account->total += account->value;
 }

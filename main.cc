@@ -66,6 +66,66 @@ namespace std {
 
 #endif // NO_CLEANUP
 
+static void
+regexps_to_predicate(std::list<std::string>::const_iterator begin,
+		     std::list<std::string>::const_iterator end,
+		     config_t * config, const bool account_regexp = false,
+		     const bool add_account_short_masks = false)
+{
+  std::vector<std::string> regexps(2);
+
+  // Treat the remaining command-line arguments as regular
+  // expressions, used for refining report results.
+
+  for (std::list<std::string>::const_iterator i = begin;
+       i != end;
+       i++)
+    if ((*i)[0] == '-') {
+      if (! regexps[1].empty())
+	regexps[1] += "|";
+      regexps[1] += (*i).substr(1);
+    }
+    else if ((*i)[0] == '+') {
+      if (! regexps[0].empty())
+	regexps[0] += "|";
+      regexps[0] += (*i).substr(1);
+    }
+    else {
+      if (! regexps[0].empty())
+	regexps[0] += "|";
+      regexps[0] += *i;
+    }
+
+  for (std::vector<std::string>::const_iterator i = regexps.begin();
+       i != regexps.end();
+       i++)
+    if (! (*i).empty()) {
+      if (! config->predicate.empty())
+	config->predicate += "&";
+
+      if (i != regexps.begin()) {
+	config->predicate += "!";
+      }
+      else if (add_account_short_masks &&
+	       (*i).find(':') == std::string::npos) {
+	if (! config->display_predicate.empty())
+	  config->display_predicate += "&";
+	else if (! config->show_empty)
+	  config->display_predicate += "T&";
+
+	config->display_predicate += "///(?:";
+	config->display_predicate += *i;
+	config->display_predicate += ")/";
+      }
+
+      if (! account_regexp)
+	config->predicate += "/";
+      config->predicate += "/(?:";
+      config->predicate += *i;
+      config->predicate += ")/";
+    }
+}
+
 int main(int argc, char * argv[], char * envp[])
 {
   std::auto_ptr<journal_t> journal(new journal_t);
@@ -123,25 +183,16 @@ int main(int argc, char * argv[], char * envp[])
 	throw error("Entries not allowed in initialization file");
 
     if (use_cache && ! config->cache_file.empty()) {
-      journal->sources.clear();		// remove init_file
       entry_count += parse_journal_file(config->cache_file, journal.get());
-      journal->sources.pop_front();	// remove cache_file
-
-      strings_list exceptions;
-      std::set_difference(journal->sources.begin(), journal->sources.end(),
-			  config->files.begin(), config->files.end(),
-			  std::back_insert_iterator<strings_list>(exceptions));
-
-      if (entry_count == 0 || exceptions.size() > 0) {
+      if (entry_count == 0) {
 	journal.reset(new journal_t);
-	entry_count = 0;
 	cache_dirty = true;
       } else {
 	cache_dirty = false;
       }
     }
 
-    if (entry_count == 0)
+    if (entry_count == 0) {
       for (strings_list::iterator i = config->files.begin();
 	   i != config->files.end();
 	   i++)
@@ -153,9 +204,10 @@ int main(int argc, char * argv[], char * envp[])
 	  entry_count += parse_journal_file(*i, journal.get());
 	}
 
-    if (! config->price_db.empty())
-      if (parse_journal_file(config->price_db, journal.get()))
-	throw error("Entries not allowed in price history file");
+      if (! config->price_db.empty())
+	if (parse_journal_file(config->price_db, journal.get()))
+	  throw error("Entries not allowed in price history file");
+    }
 
     for (strings_list::iterator i = config->price_settings.begin();
 	 i != config->price_settings.end();
@@ -219,21 +271,11 @@ int main(int argc, char * argv[], char * envp[])
       if (*i == "--")
 	break;
 
-    const std::string pred = regexps_to_predicate(arg, i);
-    if (! pred.empty()) {
-      if (! config->predicate.empty())
-	config->predicate += "&";
-      config->predicate += pred;
-    }
-
-    if (i != args.end()) {
-      const std::string pred = regexps_to_predicate(i, args.end(), false);
-      if (! pred.empty()) {
-	if (! config->predicate.empty())
-	  config->predicate += "&";
-	config->predicate += pred;
-      }
-    }
+    regexps_to_predicate(arg, i, config, true,
+			 command == "b" && ! config->show_expanded &&
+			 config->display_predicate.empty());
+    if (i != args.end())
+      regexps_to_predicate(i, args.end(), config);
   }
 
   // Compile the predicates
@@ -242,17 +284,22 @@ int main(int argc, char * argv[], char * envp[])
     if (command == "b") {
       if (! config->show_empty)
 	config->display_predicate = "T";
-
-      if (! config->show_expanded && config->predicate.empty()) {
+      if (! config->show_expanded) {
 	if (! config->display_predicate.empty())
 	  config->display_predicate += "&";
-	config->display_predicate += "!n";
+	config->display_predicate += "!l";
       }
     }
     else if (command == "E") {
-      config->display_predicate = "a";
+      config->display_predicate = "t";
     }
   }
+
+#ifdef DEBUG_ENABLED
+  DEBUG_PRINT("ledger.main.predicates", "predicate: " << config->predicate);
+  DEBUG_PRINT("ledger.main.predicates",
+	      "disp-pred: " << config->display_predicate);
+#endif
 
   // Compile the sorting criteria
 

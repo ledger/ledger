@@ -52,13 +52,18 @@ struct value_expr_t
     TODAY,
     CLEARED,
     REAL,
-    INDEX,			// for accounts, this is the DEPTH
+    INDEX,
+    DEPTH,
 
     // Item totals
     BALANCE,
     COST_BALANCE,
     TOTAL,
     COST_TOTAL,
+
+    // Relating to format_t
+    VALUE_EXPR,
+    TOTAL_EXPR,
 
     // Functions
     F_ARITH_MEAN,
@@ -68,6 +73,7 @@ struct value_expr_t
     F_STRIP,
     F_PAYEE_MASK,
     F_ACCOUNT_MASK,
+    F_SHORT_ACCOUNT_MASK,
 
     // Binary operators
     O_ADD,
@@ -173,10 +179,6 @@ class item_predicate
     }
   }
 };
-
-std::string regexps_to_predicate(std::list<std::string>::const_iterator begin,
-				 std::list<std::string>::const_iterator end,
-				 const bool account_regexp = true);
 
 } // namespace report
 

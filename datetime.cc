@@ -4,8 +4,8 @@
 
 namespace ledger {
 
-static std::time_t	now	  = std::time(NULL);
-       struct std::tm * now_tm	  = std::localtime(&now);
+std::time_t	 now	= std::time(NULL);
+struct std::tm * now_tm	= std::localtime(&now);
 
 static std::time_t	base      = -1;
 static int		base_year = -1;

@@ -26,7 +26,7 @@ config_t::config_t()
   price_db   += "/.pricedb";
 
   value_expr	     = "a";
-  total_expr	     = "T";
+  total_expr	     = "O";
   pricing_leeway     = 24 * 3600;
   show_subtotals     = true;
   show_expanded      = false;
@@ -301,7 +301,7 @@ OPT_BEGIN(download, "Q") {
 
 OPT_BEGIN(quantity, "O") {
   config->value_expr = "a";
-  config->total_expr = "T";
+  config->total_expr = "O";
 } OPT_END(quantity);
 
 OPT_BEGIN(basis, "B") {
@@ -326,23 +326,23 @@ OPT_BEGIN(gain, "G") {
 
 OPT_BEGIN(average, "A") {
   config->value_expr = "a";
-  config->total_expr = "MT";
+  config->total_expr = "MO";
 } OPT_END(average);
 
 OPT_BEGIN(deviation, "D") {
   config->value_expr = "a";
-  config->total_expr = "DMT";
+  config->total_expr = "DMO";
 } OPT_END(deviation);
 
 OPT_BEGIN(trend, "X") {
   config->value_expr = "a";
-  config->total_expr = "MDMT";
+  config->total_expr = "MDMO";
 } OPT_END(trend);
 
 OPT_BEGIN(weighted_trend, "Z") {
   config->value_expr = "a";
   config->total_expr
-    = "MD(MT/(1+(((t-d)/(30*86400))<0?0:((t-d)/(30*86400)))))";
+    = "MD(MO/(1+(((t-d)/(30*86400))<0?0:((t-d)/(30*86400)))))";
 } OPT_END(weighted_trend);
 
 } // namespace ledger
