@@ -1,6 +1,9 @@
+#!/usr/bin/env python
+
 import sys
 import os
 import time
+import re
 
 from ledger import *
 
@@ -59,23 +62,42 @@ if command == "e":
 
 class FormatTransaction (TransactionHandler):
     last_entry = None
+    output     = None
 
     def __init__ (self, fmt = None):
 	if fmt is None:
 	    self.formatter  = config.format
 	    self.nformatter = config.nformat
 	else:
-	    self.formatter  = Format (fmt)
+	    try:
+		i = string.index (fmt, '%/')
+		self.formatter  = Format (fmt[: i])
+		self.nformatter = Format (fmt[i + 2 :])
+	    except ValueError:
+		self.formatter  = Format (fmt)
+		self.nformatter = None
 
 	self.last_entry = None
 
+	if config.output_file:
+	    self.output = open(config.output_file, "w")
+	else:
+	    self.output = sys.stdout
+
 	TransactionHandler.__init__ (self)
 
+    def __del__ (self):
+	if config.output_file:
+	    self.output.close ()
+
+    def flush (self):
+	self.output.flush ()
+
     def __call__ (self, xact):
-	if xact.entry is self.last_entry:
-	    print self.nformatter.format(xact),
+	if self.nformatter and xact.entry is self.last_entry:
+	    self.output.write(self.nformatter.format(xact))
 	else:
-	    print self.formatter.format(xact),
+	    self.output.write(self.formatter.format(xact))
 	    self.last_entry = xact.entry
 
 handler = FormatTransaction()
@@ -108,10 +130,15 @@ if config.show_related:
 if config.predicate:
     handler = FilterTransactions(handler, config.predicate)
 
-for entry in journal:
-    for xact in entry:
-	handler (xact)
+if 1:
+    walk_entries (journal, handler)
+else:
+    # These for loops are equivalent to `walk_entries', but far slower
+    for entry in journal:
+	for xact in entry:
+	    handler (xact)
 
 handler.flush ()
 
-# jww (2004-09-14): still need to write out the cache
+if config.use_cache and config.cache_dirty and config.cache_file:
+    write_binary_journal(config.cache_file, journal);

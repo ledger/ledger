@@ -753,9 +753,6 @@ void export_config()
     .add_property("sort_order",
 		  make_getter(&config_t::sort_order,
 			      return_value_policy<reference_existing_object>()))
-    .add_property("output_stream",
-		  make_getter(&config_t::output_stream,
-			      return_value_policy<reference_existing_object>()))
 
     .def("process_options", py_process_options)
     ;
