@@ -145,7 +145,7 @@ Y 2004
 @end example
 
 The account balances and registers in this file, if saved as
-@samp{ledger.dat}, could be reported using:
+@file{ledger.dat}, could be reported using:
 
 @example
 $ ledger -f ledger.dat balance
@@ -196,18 +196,17 @@ Note that when building GNUmp, make sure to pass the
 @node Commands, Options, Running Ledger, Running Ledger
 @section Commands
 
-@subsection balance
+The @command{balance} command reports the current balance of all
+accounts.  It accepts a list of optional regexps, which confine the
+balance report to the matching accounts.  If an account contains
+multiple types of commodities, each commodity's total is reported
+separately.
 
-The ``balance'' command reports the current balance of all accounts.
-It accepts a list of optional regexps, which confine the balance
-report to the matching accounts.  If an account contains multiple
-types of commodities, each commodity's total is reported separately.
+@sp 1
 
-@subsection register
-
-The ``register'' command displays all the transactions occurring in a
-single account, line by line.  The account regexp must be specified as
-the only argument to this command.  If any regexps occur after the
+The @command{register} command displays all the transactions occurring in
+a single account, line by line.  The account regexp must be specified
+as the only argument to this command.  If any regexps occur after the
 required account name, the register will contain only those
 transactions that match.  Very useful for hunting down a particular
 transaction.
@@ -217,28 +216,26 @@ or single account ledger, would look like.  It also shows a running
 balance.  The final running balance of any register should always be
 the same as the current balance of that account.
 
-@subsection print
+@sp 1
 
-The ``print'' command prints out ledger entries just as they appear in
+The @command{print} command prints out ledger entries just as they appear in
 the original ledger.  They will be properly formatted, and output in
 the most economic form possible.  The ``print'' command also takes a
 list of optional regexps, which will cause only those transactions
 which match in some way to be printed.
 
-The ``print'' command is a handy way to clean up a ledger file whose
-formatting has gotten out of hand.
+The @command{print} command can be a handy way to clean up a ledger file
+whose formatting has gotten out of hand.
 
-@subsection equity
+@sp 1
 
-Equity transactions are used to establish the starting value of an
-account.  You might think of equity as the ``ether'' from which initial
-balances appear.
+The @command{equity} commands print out accounts balance as if they were
+transactions.  This makes it easy to establish the starting balances
+for an account, when @ref{Archiving previous years}.
 
-@subsection entry
+@sp 1
 
-The three most laborious tasks of keeping a ledger are: adding new
-entries, reconciling accounts, and generating reports.  To address the
-first of these, there is a sub-command to ledger called ``entry''.  It
+The @command{entry} commands simplifies the creation of new entries.  It
 works on the principle that 80% of all transactions are variants of
 earlier transactions.  Here's how it works:
 
@@ -276,7 +273,7 @@ exit code to 1.
 
 There is a shell script in the distribution called ``entry'', which
 simplifies the task of adding a new entry to your ledger, and then
-launches @samp{vi} to let you confirm that the entry looks appropriate.
+launches @command{vi} to let you confirm that the entry looks appropriate.
 
 @node Options, Format strings, Commands, Running Ledger
 @section Options
@@ -313,27 +310,27 @@ precedence over settings in the init file.
 @samp{--file FILE} (@samp{-f FILE}) reads FILE as a ledger file.  This command
 may be used multiple times.  FILE may also be a list of file names
 separated by colons.  Typically, the environment variable
-@samp{LEDGER_FILE} is set, rather than using this command-line option.
+@var{LEDGER_FILE} is set, rather than using this command-line option.
 
 @sp 1
 
 @samp{--cache FILE} identifies FILE as the default binary cache file.  That
 is, if the ledger files to be read are specified using the environment
-variable @samp{LEDGER_FILE}, then whenever a command is finished a binary
+variable @var{LEDGER_FILE}, then whenever a command is finished a binary
 copy will be written to the specified cache, to speed up the loading
 time of subsequent queries.  This filename can also be given using the
-environment variable @samp{LEDGER_CACHE}, or by putting the option into
+environment variable @var{LEDGER_CACHE}, or by putting the option into
 your init file.
 
 @sp 1
 
 @samp{--output FILE} (@samp{-o FILE}) redirects output from any command to
-@samp{FILE}.  By default, all output goes to standard output.
+@var{FILE}.  By default, all output goes to standard output.
 
 @subsection Report filtering
 
 @samp{--begin-date DATE} (@samp{-b DATE}) constrains the report to
-entries on or after @samp{DATE}.  Only entries after that date will be
+entries on or after @var{DATE}.  Only entries after that date will be
 calculated, which means that the running total in the balance report
 will always start at zero with the first matching entry.  (Note: This
 is different from using @samp{--display} to constrain what is
@@ -342,7 +339,7 @@ displayed).
 @sp 1
 
 @samp{--end-date DATE} (@samp{-e DATE}) contrains the report so that
-entries on or after @samp{DATE} are not considered.  This ending date
+entries on or after @var{DATE} are not considered.  This ending date
 is not inclusive, therefore always use a date that is later than the
 last entry you want to see.
 
@@ -402,46 +399,88 @@ transaction that matched.
 
 @subsection Output customization
 
-@samp{--date-format STR} (@samp{-y STR})
+@samp{--date-format STR} (@samp{-y STR}) changes the basic date format
+used by reports.  The default uses a date like 2004/08/01, which
+represents the default date format of @samp{%Y/%m/%d}.  To change the
+way dates are printed in general, the easiest way is to
+@samp{--date-format FORMAT} to the initialize file @file{~/.ledgerc}
+(or the file referred to by @var{LEDGER_INIT}).
 
 @sp 1
 
-@samp{--format STR} (@samp{-F STR})
+@samp{--format STR} (@samp{-F STR}) sets the reporting format for
+whatever report ledger is about to make.  @xref{Format strings}.
 
-@samp{--balance-format STR}
-@samp{--equity-format STR}
-@samp{--register-format STR}
-@samp{--plot-value-format STR}
-@samp{--print-format STR}
-@samp{--plot-total-format STR}
+You can also set the default format for a given report type, usually
+in the initialization file @file{~/.ledgerrc}, by using one of the
+following options:
+
+@table @samp
+@item --balance-format STR
+Sets the default format for the @command{balance} report.
+
+@item --equity-format STR
+Sets the default format for the @command{equity} report.
+
+@item --register-format STR
+Sets the default format for the @command{register} report.
+
+@item --print-format STR
+Sets the default format for the @command{print} report.
+
+@item --plot-value-format STR
+Sets the default format for the @command{register} report, when @samp{-j}
+is being used.
+
+@item --plot-total-format STR
+Sets the default format for the @command{register} report, when @samp{-J}
+is being used.
+@end table
 
 @sp 1
 
-@samp{--empty} (@samp{-E})
+@samp{--empty} (@samp{-E}) includes even empty accounts in the
+@command{balance} report.
 
 @sp 1
 
-@samp{--collapse} (@samp{-n})
+@samp{--collapse} (@samp{-n}) causes entries in a @command{register}
+report with multiple transactions to be collapsed into a single,
+subtotaled entry.
 
-@samp{--subtotal} (@samp{-s})
-
-@sp 1
-
-@samp{--sort EXPR} (@samp{-S EXPR})
-
-@sp 1
-
-@samp{--interval STR} (@samp{-z STR})
+@samp{--subtotal} (@samp{-s}) causes all entries in a
+@command{register} report to be collapsed into a single, subtotaled
+entry.
 
 @sp 1
 
-@samp{--dow}
+@samp{--sort EXPR} (@samp{-S EXPR}) sorts a report by comparing the
+values determined using the value expression @var{EXPR}.  For example,
+using @samp{-S -AT} in the balance report will sort account balances
+from greatest to least, using the absolute value of the total.  For
+more on how to use value expressions, see @ref{Value expressions}.
 
-@samp{--weekly} (@samp{-W})
+@sp 1
 
-@samp{--monthly} (@samp{-M})
+@samp{--interval STR} (@samp{-z STR}) sets the reporting interval to
+@var{STR}.  This will subtotal all matching entries within each
+interval separately, making it easy to see weekly, monthly, quarterly,
+etc., transaction totals.  An interval string can even specify the
+beginning and end of the report range, using simple terms like ``last
+june'' or ``next month''.  For more using interval expressions, see
+@ref{Interval expressions}.
 
-@samp{--yearly} (@samp{-Y})
+@samp{--dow} reports transactions totals for each day of the week.
+This is an easy way to see if weekend spending is more than on
+weekdays.
+
+@samp{--weekly} (@samp{-W}) reports transaction totals by the week.
+The week begins on whichever day a transaction is first found, so to
+start each week on a Sunday, specifying a beginning date for the
+report that falls on a Sunday.  @samp{--monthly} (@samp{-M}) reports
+transaction totals by month; @samp{--yearly} (@samp{-Y}) reports
+transaction totals by year.  For more complex interval, using the
+@samp{--interval} option described above.
 
 @sp 1
 
@@ -452,47 +491,117 @@ part in the calculations of a report.
 accounts or actually displayed in a report.  They might still be
 calculated, and be part of the running total of a register report, for
 example, but they will not be displayed.  This is useful for seeing
-last month's checking transactions, against a running balance that
-includes all past transactions:
+last month's checking transactions, against a running balance which
+includes all transaction values:
 
 @example
-ledger -d "d>=[2004/8]" reg checking
+ledger -d "d>=[last month]" reg checking
+@end example
+
+The output from this command is very different from the following,
+whose running total includes only transactions from the last month
+onward:
+
+@example
+ledger -z "last month" reg checking
+@end example
+
+Which is more useful depends on what you're looking to know: the total
+amount for the reporting range (@samp{-z}), or simply a display
+restricted to the reporting range (using @samp{-d}).
+
+@sp 1
+
+@samp{--value EXPR} (@samp{-t EXPR}) changes the value expression used
+to calculate the ``value'' column in the @command{register} report,
+and the totals in the @command{equity} report.  @xref{Value
+expressions}.
+
+@samp{--total EXPR} (@samp{-T EXPR}) sets the value expression used by
+the ``total'' column in the @command{register} report, and also the
+@command{balance} report.
+
+@sp 1
+
+@samp{--value-data} (@samp{-j}) changes the @command{register} report
+so that it output nothing but the date and the value column, and the
+latter without commodities.  This is only meaningful if the report
+uses a single commodity.  This data can then be fed to other programs,
+which could plot the date, analyze it, etc.
+
+@samp{--total-data} (@samp{-J}) changes the @command{register} report
+so that it output nothing but the date and totals column, without
+commodities.
+
+@subsection Commodity reporting
+
+@samp{--price-db FILE} (@samp{-P FILE}) sets the file that is used for
+recording downloaded commodity prices.  It is always read on startup,
+to determine historical prices.  Other settings can be placed in this
+file manually, to prevent downloading quotes for a specific, for
+example.  This is done by adding a line like the following:
+
+@example
+; Don't download quotes for the dollar, or timelog values
+N $
+N h
 @end example
 
 @sp 1
 
-@samp{--value EXPR} (@samp{-t EXPR})
-
-@samp{--total EXPR} (@samp{-T EXPR})
-
-@sp 1
-
-@samp{--value-data} (@samp{-j})
-
-@samp{--total-data} (@samp{-J})
-
-@subsection Commodity reporting
-
-@samp{--price-db FILE} (@samp{-P FILE})
+@samp{--download} (@samp{-Q}) causes quotes to be automagically
+downloaded, as needed, by running a script named @command{getquote}
+and expecting that script to return a value understood by ledger.  A
+sample implementation of a @command{getquote} script, implemented in
+Perl, is provided in the distribution.  Downloaded quote price are
+then appended to the price database, usually specified using the
+environment variable @var{LEDGER_PRICE_DB}.
 
 @sp 1
 
-@samp{--download} (@samp{-Q})
+@samp{--price-exp MINS} (@samp{-L MINS}) sets the expected freshness
+of price quotes, in minutes.  That is, if the last known quote for any
+commodity is older than this value---and if @samp{--download} is being
+used---then the Internet will be consulted again for a newer price.
+Otherwise, the old price is still considered to be fresh enough.
 
 @sp 1
 
-@samp{--price-exp MINS} (@samp{-L MINS})
+There are several different ways that ledger can report the totals it displays.  The most flexible way to adjust them is by using value expressions, and the @samp{-t} and @samp{-T} options.  However, there are also several ``default'' reports, which will satisfy most users basic reporting needs:
 
-@sp 1
+@table @samp
+@item --quantity
+(@samp{-O}) reports commodity totals (this is the default)
 
-@samp{--quantity} (@samp{-O})
-@samp{--basis} (@samp{-B})
-@samp{--market} (@samp{-V})
-@samp{--gain} (@samp{-G})
-@samp{--average} (@samp{-A})
-@samp{--deviation} (@samp{-D})
-@samp{--trend} (@samp{-X})
-@samp{--weighted-trend} (@samp{-Z})
+@item --basis
+(@samp{-B}) reports the cost basis for all transactions.
+
+@item --market
+(@samp{-V}) reports the last known market value for all commodities.
+
+@item --gain
+(@samp{-G}) reports the net gain/loss for all commodity with a price
+history.
+
+@item --average
+(@samp{-A}) reports the average transaction value.
+
+@item --deviation
+(@samp{-D}) reports each transaction's deviation from the average.
+This is only meaningful in the @command{register} report.
+
+@item --trend
+(@samp{-X}) reports the basic trend of all transaction values.  This
+can indicate whether spending is on the increase, or decrease, based
+on the way the trend values change in the totals column of the
+@command{register} report.
+
+@item --weighted-trend
+(@samp{-Z}) reports the trend, like @samp{--trend}, but factors in the
+passage of time.  Older transactions do not swing the trend numbers as
+much as recent and future transactions.  Thus, recent heavy spending
+will indicate a higher trend, than if time were not considered.
+@end table
 
 @subsection Environment variables
 
@@ -1097,7 +1206,7 @@ that a current lack of spending is taken into account.
 
 @table @strong
 @item @strong{-P FILE}
-With this option, or if the environment variable @samp{PRICE_HIST} is
+With this option, or if the environment variable @var{PRICE_HIST} is
 set, pricing information obtained from the Internet will be kept
 in this file.  Also, this file will be read after all other ledger
 files are read, so that full history information is available for
@@ -1121,8 +1230,9 @@ shows very quickly the performance of investments.
 
 @item @strong{-Q}
 When needed (see the @samp{-L} option) pricing quotes are obtained by
-calling the script @samp{getquote} (a sample Perl script is provided, but
-the interface is kept simple so replacements may be made).
+calling the script @command{getquote} (a sample Perl script is
+provided, but the interface is kept simple so replacements may be
+made).
 
 @item @strong{-L MINS}
 When using the @samp{-Q} flag, new quotes are obtained only if current
@@ -1330,8 +1440,8 @@ $ bal
 
 To use this script, it must be copied from the @strong{scripts}
 directory in the ledger distribution, to a directory along your
-@samp{PATH}.  Also, you must set the environment variable
-@samp{LEDGER} to point to your main ledger file.
+@var{PATH}.  Also, you must set the environment variable @var{LEDGER}
+to point to your main ledger file.
 
 Another common question to ask of your expenses is: How much do I
 spend each month on X?  Ledger provides a simple way of displaying
@@ -1651,8 +1761,9 @@ shows very quickly the performance of investments.
 
 @item @strong{-Q}
 When needed (see the @samp{-L} option) pricing quotes are obtained by
-calling the script @samp{getquote} (a sample Perl script is provided, but
-the interface is kept simple so replacements may be made).
+calling the script @command{getquote} (a sample Perl script is
+provided, but the interface is kept simple so replacements may be
+made).
 
 @item @strong{-L MINS}
 When using the @samp{-Q} flag, new quotes are obtained only if current
@@ -1797,7 +1908,7 @@ that make it very simple: ``print'', and ``equity''.
 Let's take an example file, with data ranging from year 2000 until
 2004.  We want to archive years 2000 and 2001 to their own file,
 leaving just 2003 and 2004 in the current file.  So, use ``print'' to
-output all the earlier entries to a file called @samp{ledger-old.dat}.
+output all the earlier entries to a file called @file{ledger-old.dat}.
 (Keeping in mind that the ending date is not inclusive, which is why
 2002 is mentioned in the following command):
 
@@ -1827,7 +1938,7 @@ $ mv x ledger.dat
 $ rm equity.dat
 @end example
 
-Now the balances reported from @samp{ledger.dat} are identical to what
+Now the balances reported from @file{ledger.dat} are identical to what
 they were before the data was split.
 
 How often should you split your ledger?  You never need to, if you
@@ -1999,7 +2110,7 @@ account will show up as credits on his bank statement.
 @node Using Emacs to Keep Your Ledger, Using GnuCash to Keep Your Ledger, Differences to Accounting Conventions, Keeping a ledger
 @section Using Emacs to Keep Your Ledger
 
-In the Ledger tarball is an Emacs module, @samp{ledger.el}.  This module
+In the Ledger tarball is an Emacs module, @file{ledger.el}.  This module
 makes the process of keeping a text ledger much easier for Emacs
 users.  I recommend putting this at the top of your ledger file:
 
@@ -2007,15 +2118,15 @@ users.  I recommend putting this at the top of your ledger file:
 ; -*-ledger-*-
 @end example
 
-And this in your @samp{.emacs} file, after copying @samp{ledger.el} to your
+And this in your @file{.emacs} file, after copying @file{ledger.el} to your
 site-lisp directory:
 
 @example
 (load "ledger")
 @end example
 
-Now when you edit your ledger file, it will be in @samp{ledger-mode}.
-@samp{ledger-mode} adds the following commands:
+Now when you edit your ledger file, it will be in @command{ledger-mode}.
+@command{ledger-mode} adds the following commands:
 
 @table @strong
 @item C-c C-a
