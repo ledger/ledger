@@ -36,6 +36,8 @@
 ;; type M-x ledger-mode.  Once this is done, you can type:
 ;;
 ;;   C-c C-a  add a new entry, based on previous entries
+;;   C-c C-y  set default year for entry mode
+;;   C-c C-m  set default month for entry mode
 ;;   C-c C-r  reconcile the entries related to an account
 ;;
 ;; In the reconcile buffer, use SPACE to toggle the cleared status of
@@ -64,6 +66,20 @@
   '(("^[0-9./]+\\s-+\\(?:([^)]+)\\s-+\\)?\\([^*].+\\)" 1 bold)
     ("^\\s-+.+?\\(  \\|\t\\|\\s-+$\\)" . font-lock-keyword-face))
   "Default expressions to highlight in Ledger mode.")
+
+(defsubst ledger-current-year ()
+  (format-time-string "%Y"))
+
+(defsubst ledger-current-month ()
+  (format-time-string "%m"))
+
+(defvar ledger-year (ledger-current-year)
+  "Start a ledger session with the current year, but make it
+customizable to ease retro-entry.")
+
+(defvar ledger-month (ledger-current-month)
+  "Start a ledger session with the current month, but make it
+customizable to ease retro-entry.")
 
 (defun ledger-iterate-entries (callback)
   (goto-char (point-min))
@@ -115,7 +131,8 @@ Return the difference in the format of a time value."
 
 (defun ledger-add-entry (entry-text)
   (interactive
-   (list (read-string "Entry: " (format-time-string "%Y/%m/"))))
+   (list
+    (read-string "Entry: " (concat ledger-year "/" ledger-month "/"))))
   (let* ((date (car (split-string entry-text)))
 	 (insert-year t) exit-code)
     (if (string-match "\\([0-9]+\\)/\\([0-9]+\\)/\\([0-9]+\\)" date)
@@ -184,6 +201,8 @@ Return the difference in the format of a time value."
 	   '(ledger-font-lock-keywords nil t)))
   (let ((map (current-local-map)))
     (define-key map [(control ?c) (control ?a)] 'ledger-add-entry)
+    (define-key map [(control ?c) (control ?y)] 'ledger-set-year)
+    (define-key map [(control ?c) (control ?m)] 'ledger-set-month)
     (define-key map [(control ?c) (control ?c)] 'ledger-toggle-current)
     (define-key map [(control ?c) (control ?p)] 'ledger-print-result)
     (define-key map [(control ?c) (control ?r)] 'ledger-reconcile)))
@@ -329,6 +348,20 @@ Return the difference in the format of a time value."
 				  "-f" ledger-data-file) args) " ")))
     (insert (shell-command-to-string command)))
   0)
+
+(defun ledger-set-year (newyear)
+  "Set ledger's idea of the current year to the prefix argument."
+  (interactive "p")
+  (if (= newyear 1)
+      (setq ledger-year (read-string "Year: " (ledger-current-year)))
+    (setq ledger-year (number-to-string newyear))))
+
+(defun ledger-set-month (newmonth)
+  "Set ledger's idea of the current month to the prefix argument."
+  (interactive "p")
+  (if (= newmonth 1)
+      (setq ledger-month (read-string "Month: " (ledger-current-month)))
+    (setq ledger-month (format "%02d" newmonth))))
 
 (provide 'ledger)
 
