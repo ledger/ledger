@@ -323,9 +323,13 @@ bool matches(const regexps_map& regexps, const std::string& str,
 //	  << (match ? "match" : "not match") << std::endl;
   }
 
-  if (match && ! definite && by_exclusion) {
-//    out << "  Note: Matched by exclusion rule" << std::endl;
-    *by_exclusion = true;
+  if (by_exclusion) {
+    if (match && ! definite && by_exclusion) {
+//      out << "  Note: Matched by exclusion rule" << std::endl;
+      *by_exclusion = true;
+    } else {
+      *by_exclusion = false;
+    }
   }
 
 //  out << "  Final result: " << (match ? "match" : "not match")

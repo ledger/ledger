@@ -100,7 +100,7 @@ void report_balances(std::ostream& out, regexps_map& regexps)
 	      acct->checked = 1;
 	  }
 	  else {
-	    bool by_exclusion;
+	    bool by_exclusion = false;
 	    bool match = matches(regexps, acct->as_str(),
 				 &by_exclusion);
 	    if (! match) {
