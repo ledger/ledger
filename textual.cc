@@ -572,8 +572,9 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	    entry->end_pos = in.tellg();
 	    count++;
 	  } else {
+	    print_entry(std::cerr, *entry);
 	    delete entry;
-	    throw parse_error(path, first_line, "Entry does not balance");
+	    throw parse_error(path, first_line, "Entry above does not balance");
 	  }
 	} else {
 	  throw parse_error(path, first_line, "Failed to parse entry");
