@@ -2,6 +2,7 @@
 #define _EXPR_H
 
 #include "ledger.h"
+#include "error.h"
 
 namespace ledger {
 
@@ -128,19 +129,29 @@ class item_predicate
   const value_expr_t * predicate;
 
  public:
-  item_predicate(const std::string& _predicate)
-    : predicate(_predicate.empty() ?
-		NULL : parse_value_expr(_predicate)) {
-#ifdef DEBUG_ENABLED
-    DEBUG_CLASS("valexpr.predicate.parse");
+  item_predicate(const std::string& _predicate) {
+    predicate = NULL;
+    if (! _predicate.empty()) {
+      try {
+	DEBUG_CLASS("valexpr.predicate.parse");
 
-    DEBUG_PRINT_("parsing: '" << _predicate << "'");
-    if (DEBUG_() && ledger::debug_stream) {
-      *ledger::debug_stream << "dump: ";
-      dump_value_expr(*ledger::debug_stream, predicate);
-      *ledger::debug_stream << std::endl;
-    }
+	DEBUG_PRINT_("parsing: '" << _predicate << "'");
+	predicate = parse_value_expr(_predicate);
+
+#ifdef DEBUG_ENABLED
+	if (DEBUG_() && ledger::debug_stream) {
+	  *ledger::debug_stream << "dump: ";
+	  dump_value_expr(*ledger::debug_stream, predicate);
+	  *ledger::debug_stream << std::endl;
+	}
 #endif
+      }
+      catch (const value_expr_error& err) {
+	std::cerr << "Error in predicate '" << _predicate << "': "
+		  << err.what() << std::endl;
+	std::exit(1);
+      }
+    }
   }
   item_predicate(const value_expr_t * _predicate)
     : predicate(_predicate) {}

@@ -581,13 +581,45 @@ int main(int argc, char * argv[])
 
   // Compile the sorting string
 
-  if (! sort_string.empty())
-    sort_order.reset(parse_value_expr(sort_string));
+  if (! sort_string.empty()) {
+    try {
+      std::istringstream stream(sort_string);
+      sort_order.reset(parse_value_expr(stream));
+      if (! stream.eof()) {
+	std::ostringstream err;
+	err << "Unexpected character '" << char(stream.peek()) << "'";
+	throw value_expr_error(err.str());
+      }
+      else if (! sort_order.get()) {
+	std::cerr << "Failed to parse sort criteria!" << std::endl;
+	return 1;
+      }
+    }
+    catch (const value_expr_error& err) {
+      std::cerr << "Error in sort criteria: " << err.what() << std::endl;
+      return 1;
+    }
+  }
 
   // Setup the meaning of %t and %T, used in format strings
 
-  format_t::value_expr.reset(parse_value_expr(value_expr));
-  format_t::total_expr.reset(parse_value_expr(total_expr));
+  try {
+    format_t::value_expr.reset(parse_value_expr(value_expr));
+  }
+  catch (const value_expr_error& err) {
+    std::cerr << "Error in amount (-t) specifier: " << err.what()
+	      << std::endl;
+    return 1;
+  }
+
+  try {
+    format_t::total_expr.reset(parse_value_expr(total_expr));
+  }
+  catch (const value_expr_error& err) {
+    std::cerr << "Error in total (-T) specifier: " << err.what()
+	      << std::endl;
+    return 1;
+  }
 
   // Now handle the command that was identified above.
 
