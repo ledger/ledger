@@ -44,7 +44,7 @@ entry_t * derive_new_entry(journal_t& journal,
     first = xact = new transaction_t(m_xact->account, amount_t(*i++));
     added->add_transaction(xact);
 
-    if (xact->amount.commodity().symbol.empty())
+    if (! xact->amount.commodity())
       xact->amount.set_commodity(m_xact->amount.commodity());
 
     m_xact = matching->transactions.back();
@@ -91,8 +91,12 @@ entry_t * derive_new_entry(journal_t& journal,
       }
 
       transaction_t * xact = new transaction_t(acct, amount_t(*i++));
-      if (cmdty && ! xact->amount.commodity())
-	xact->amount.set_commodity(*cmdty);
+      if (! xact->amount.commodity()) {
+	if (cmdty)
+	  xact->amount.set_commodity(*cmdty);
+	else if (commodity_t::default_commodity)
+	  xact->amount.set_commodity(*commodity_t::default_commodity);
+      }
 
       added->add_transaction(xact);
     }
