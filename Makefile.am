@@ -19,6 +19,7 @@ libledger_a_SOURCES = \
 	value.cc       \
 	walk.cc
 if HAVE_XMLPARSE
+libledger_a_CXXFLAGS += -DHAVE_XMLPARSE=1
 libledger_a_SOURCES += gnucash.cc xml.cc
 endif
 if HAVE_BOOST_PYTHON
