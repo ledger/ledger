@@ -389,6 +389,11 @@ inline balance_t abs(const balance_t& bal) {
   return temp;
 }
 
+inline std::ostream& operator<<(std::ostream& out, const balance_t& bal) {
+  bal.write(out, 12);
+}
+
+
 class balance_pair_t
 {
  public:
@@ -752,6 +757,11 @@ inline balance_pair_t abs(const balance_pair_t& bal_pair) {
   balance_pair_t temp;
   temp.abs();
   return temp;
+}
+
+inline std::ostream& operator<<(std::ostream& out,
+				const balance_pair_t& bal_pair) {
+  bal_pair.quantity.write(out, 12);
 }
 
 } // namespace ledger

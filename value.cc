@@ -563,24 +563,71 @@ void export_value()
     .def(init<bool>())
 
     .def(self += self)
+    .def(self += other<balance_pair_t>())
+    .def(self += other<balance_t>())
+    .def(self += other<amount_t>())
+    .def(self += int())
+
     .def(self -= self)
+    .def(self -= other<balance_pair_t>())
+    .def(self -= other<balance_t>())
+    .def(self -= other<amount_t>())
+    .def(self -= int())
+
     .def(self *= self)
+    .def(self *= other<balance_pair_t>())
+    .def(self *= other<balance_t>())
+    .def(self *= other<amount_t>())
+    .def(self *= int())
+
     .def(self /= self)
+    .def(self /= other<balance_pair_t>())
+    .def(self /= other<balance_t>())
+    .def(self /= other<amount_t>())
+    .def(self /= int())
 
     .def(self <  self)
+    .def(self < other<balance_pair_t>())
+    .def(self < other<balance_t>())
+    .def(self < other<amount_t>())
+    .def(self < int())
+
     .def(self <= self)
+    .def(self <= other<balance_pair_t>())
+    .def(self <= other<balance_t>())
+    .def(self <= other<amount_t>())
+    .def(self <= int())
+
     .def(self >  self)
+    .def(self > other<balance_pair_t>())
+    .def(self > other<balance_t>())
+    .def(self > other<amount_t>())
+    .def(self > int())
+
     .def(self >= self)
+    .def(self >= other<balance_pair_t>())
+    .def(self >= other<balance_t>())
+    .def(self >= other<amount_t>())
+    .def(self >= int())
+
     .def(self == self)
+    .def(self == other<balance_pair_t>())
+    .def(self == other<balance_t>())
+    .def(self == other<amount_t>())
+    .def(self == int())
+
     .def(self != self)
+    .def(self != other<balance_pair_t>())
+    .def(self != other<balance_t>())
+    .def(self != other<amount_t>())
+    .def(self != int())
+
     .def(! self)
 
-#if 0
     .def(abs(self))
-    .def(str(self))
+    .def(self_ns::str(self))
 
     .def("cast", &value_t::cast)
-#endif
     .def("negate", &value_t::negate)
     .def("cost", &value_t::cost)
     ;
