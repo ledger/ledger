@@ -85,15 +85,17 @@ void truncate_entries::flush()
     }
 
     bool print = false;
-    if (tailwise) {
-      if (count > 0 && l - i <= count)
-	print = true;
-      else if (count < 0 && l - i > - count)
-	print = true;
-    } else {
+    if (head_count) {
       if (count > 0 && i < count)
 	print = true;
       else if (count < 0 && i >= - count)
+	print = true;
+    }
+
+    if (! print && tail_count) {
+      if (count > 0 && l - i <= count)
+	print = true;
+      else if (count < 0 && l - i > - count)
 	print = true;
     }
 

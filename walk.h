@@ -147,16 +147,16 @@ class ignore_transactions : public item_handler<transaction_t>
 
 class truncate_entries : public item_handler<transaction_t>
 {
-  int  count;
-  bool tailwise;
+  int head_count;
+  int tail_count;
 
   transactions_list xacts;
 
  public:
   truncate_entries(item_handler<transaction_t> * handler,
-		   int _count, bool _tailwise = false)
+		   int _head_count, int _tail_count)
     : item_handler<transaction_t>(handler),
-      count(_count), tailwise(_tailwise) {}
+      head_count(_head_count), tail_count(_tail_count) {}
 
   virtual void flush();
   virtual void operator()(transaction_t& xact) {

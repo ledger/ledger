@@ -78,9 +78,7 @@ chain_xact_handlers(const std::string&		  command,
     if (config.head_entries || config.tail_entries)
       ptrs.push_back(formatter =
 		     new truncate_entries(formatter,
-					  config.head_entries ?
-					  config.head_entries :
-					  config.tail_entries,
+					  config.head_entries,
 					  config.tail_entries));
 
     // filter_transactions will only pass through transactions
