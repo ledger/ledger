@@ -8,21 +8,36 @@
 # License.  See the LICENSE file included with the distribution for
 # details and disclaimer.
 #
-# This script provides a Python front-end to the ledger library, which
-# replicates the functionality of the C++ front-end found in main.cc.
-# It is provided as an alternative to main.cc, or as a starting point
-# for creating custom front-ends based on the Ledger module.  See the
-# documentation for API references, and how to use that module.
+# This script provides a Python front-end to the ledger library, and
+# replicates the functionality of the C++ front-end, main.cc.  It is
+# provided as an example, and as a starting point for creating custom
+# front-ends based on the Ledger module.  See the documentation for an
+# API reference, and how to use this module.
 
-import sys
 import os
+import sys
 import string
 
 from ledger import *
 
+# Create the main journal object, into which all entries will be
+# recorded.  Once done, the 'journal' may be iterated to yield those
+# entries, in the same order as which they appeared in the journal
+# file.
+
 journal = Journal ()
 
+# This call registers all of the default command-line options that
+# Ledger supports into the option handling mechanism.  Skip this call
+# if you wish to do all of your own processing -- in which case simply
+# modify the 'config' object however you like.
+
 add_config_option_handlers ()
+
+# Process the command-line arguments, test whether caching should be
+# enabled, and then process any option settings from the execution
+# environment.  Some historical environment variable names are also
+# supported.
 
 args = process_arguments (sys.argv[1:])
 config.use_cache = not config.data_file
@@ -35,9 +50,16 @@ if os.environ.has_key ("PRICE_HIST"):
 if os.environ.has_key ("PRICE_EXP"):
     process_option ("price-exp", os.environ["PRICE_EXP"])
 
+# If no argument remain, then no command word was given.  Report the
+# default help text and exit.
+
 if len (args) == 0:
     option_help ()
     sys.exit (0)
+
+# The command word is in the first argument.  Canonicalize it to a
+# unique, simple form that the remaining code can use to find out
+# which command was specified.
 
 command = args.pop (0);
 
@@ -55,17 +77,44 @@ else:
     print "Unrecognized command:", command
     sys.exit (1)
 
+# Create all the parser objects to be used.  They are all registered,
+# so that Ledger will try each one in turn whenever it is presented
+# with a data file.  They are attempted in reverse order to their
+# registry.  Note that Gnucash parsing is only available if the Ledger
+# module was built with such support (which requires the xmlparse C
+# library).
+
 text_parser = TextualParser ()
 bin_parser  = BinaryParser ()
 qif_parser  = QifParser ()
+try:
+    gnucush_parser = GnucashParser ()
+except:
+    gnucush_parser = None
 
 register_parser (text_parser)
 register_parser (bin_parser)
+if gnucash_parser:
+    register_parser (gnucash_parser)
 register_parser (qif_parser)
+
+# Parse all entries from the user specified locations (found in
+# 'config') into the journal object we created.  The two parsers given
+# as explicit arguments indicate: the parser to be used for standard
+# input, and the parser to be used for cache files.
 
 parse_ledger_data (journal, text_parser, bin_parser)
 
+# Now that everything has been correctly parsed (parse_ledger_data
+# would have thrown an exception if not), we can take time to further
+# process the configuration options.  This changes the configuration a
+# bit based on previous option settings, the command word, and the
+# remaining arguments.
+
 config.process_options(command, args);
+
+# If the command is "e", use the method journal.derive_entry to create
+# a brand new entry based on the arguments given.
 
 new_entry = None
 if command == "e":
@@ -73,7 +122,7 @@ if command == "e":
     if new_entry is None:
 	sys.exit (1)
 
-# Compile the format string
+# Determine the format string to used, based on the command.
 
 if config.format_string:
     format = config.format_string
@@ -85,6 +134,11 @@ elif command == "E":
     format = config.equity_format
 else:
     format = config.print_format
+
+# The following two classes are responsible for outputing transactions
+# and accounts to the user.  There are corresponding C++ versions to
+# these, but they rely on I/O streams, which Boost.Python does not
+# provide a conversion layer for.
 
 class FormatTransaction (TransactionHandler):
     last_entry = None
@@ -155,10 +209,20 @@ class FormatAccount (AccountHandler):
 		self.output.write(self.formatter.format(account))
 		account_xdata (account).dflags |= ACCOUNT_DISPLAYED
 
+# Set the final transaction handler: for balances and equity reports,
+# it will simply add the value of the transaction to the account's
+# xdata, which is used a bit later to report those totals.  For all
+# other reports, the transaction data is sent to the configured output
+# location (default is sys.stdout).
+
 if command == "b" or command == "E":
     handler = SetAccountValue()
 else:
     handler = FormatTransaction(format)
+
+# Chain transaction filters on top of the base handler.  Most of these
+# filters customize the output for reporting.  None of this is done
+# for balance or equity reports, which don't need it.
 
 if not (command == "b" or command == "E"):
     if config.display_predicate:
@@ -179,8 +243,11 @@ if not (command == "b" or command == "E"):
 	handler = SubtotalTransactions(handler)
     elif config.report_interval:
 	handler = IntervalTransactions(handler, config.report_interval)
+	handler = SortTransactions(handler, "d")
     elif config.days_of_the_week:
 	handler = DowTransactions(handler)
+
+# The next two transaction filters are used by all reports.
 
 if config.show_related:
     handler = RelatedTransactions(handler, config.show_all_related)
@@ -188,15 +255,27 @@ if config.show_related:
 if config.predicate:
     handler = FilterTransactions(handler, config.predicate)
 
-if 0:
+# Walk the journal's entries, and pass each entry's transaction to the
+# handler chain established above.  And although a journal's entries
+# can be walked using Python, it is significantly faster to do this
+# simple walk in C++, using `walk_entries'.
+
+if 1:
     walk_entries (journal, handler)
 else:
-    # These for loops are equivalent to `walk_entries', but far slower
     for entry in journal:
 	for xact in entry:
 	    handler (xact)
 
+# Flush the handlers, causing them to output whatever data is still
+# pending.
+
 handler.flush ()
+
+# For the balance and equity reports, the account totals now need to
+# be displayed.  This is different from outputting transactions, in
+# that we are now outputting account totals to display a summary of
+# the transactions that were just walked.
 
 if command == "b":
     acct_formatter = FormatAccount (format, config.display_predicate)
@@ -217,5 +296,9 @@ if command == "b":
 #    walk_accounts(*journal->master, acct_formatter, config.sort_string);
 #    acct_formatter.flush();
 
+# If the cache is being used, and is dirty, update it now.
+
 if config.use_cache and config.cache_dirty and config.cache_file:
     write_binary_journal(config.cache_file, journal);
+
+# We're done!
