@@ -173,7 +173,8 @@ amount * gmp_amount::value(amount * pr) const
     else
       new_amt->quantity_comm = quantity_comm;
 
-    if (new_amt->quantity_comm->precision < MAX_PRECISION)
+    if (new_amt->quantity_comm &&
+	new_amt->quantity_comm->precision < MAX_PRECISION)
       round(new_amt->quantity, new_amt->quantity,
 	    new_amt->quantity_comm->precision);
 
@@ -288,8 +289,7 @@ bool gmp_amount::is_zero() const
 {
   mpz_t copy;
   mpz_init_set(copy, quantity);
-  assert(quantity_comm);
-  if (quantity_comm->precision < MAX_PRECISION)
+  if (quantity_comm && quantity_comm->precision < MAX_PRECISION)
     round(copy, copy, quantity_comm->precision);
   bool zero = mpz_sgn(copy) == 0;
   mpz_clear(copy);
