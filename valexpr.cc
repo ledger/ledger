@@ -233,10 +233,26 @@ void value_expr_t::compute(value_t& result, const details_t& details) const
     break;
   }
 
+  case F_CODE_MASK:
+    assert(mask);
+    if (details.entry)
+      result = mask->match(details.entry->code);
+    else
+      result = false;
+    break;
+
   case F_PAYEE_MASK:
     assert(mask);
     if (details.entry)
       result = mask->match(details.entry->payee);
+    else
+      result = false;
+    break;
+
+  case F_NOTE_MASK:
+    assert(mask);
+    if (details.xact)
+      result = mask->match(details.xact->note);
     else
       result = false;
     break;
@@ -495,32 +511,54 @@ value_expr_t * parse_value_term(std::istream& in)
     break;
 
   // Other
+  case 'c':
+  case 'p':
+  case 'w':
+  case 'W':
+  case 'e':
   case '/': {
-    bool payee_mask	    = false;
-    bool short_account_mask = false;
+    bool code_mask	    = c == 'c';
+    bool payee_mask	    = c == 'p';
+    bool note_mask	    = c == 'e';
+    bool short_account_mask = c == 'w';
 
-    c = peek_next_nonws(in);
     if (c == '/') {
-      in.get(c);
-      c = in.peek();
+      c = peek_next_nonws(in);
       if (c == '/') {
 	in.get(c);
 	c = in.peek();
-	short_account_mask = true;
-      } else {
-	payee_mask = true;
+	if (c == '/') {
+	  in.get(c);
+	  c = in.peek();
+	  short_account_mask = true;
+	} else {
+	  payee_mask = true;
+	}
       }
+    } else {
+      in.get(c);
     }
 
+    // Read in the regexp
     READ_INTO(in, buf, 255, c, c != '/');
     if (c != '/')
       unexpected(c, '/');
 
+    value_expr_t::kind_t kind;
+
+    if (short_account_mask)
+      kind = value_expr_t::F_SHORT_ACCOUNT_MASK;
+    else if (code_mask)
+      kind = value_expr_t::F_CODE_MASK;
+    else if (payee_mask)
+      kind = value_expr_t::F_PAYEE_MASK;
+    else if (note_mask)
+      kind = value_expr_t::F_NOTE_MASK;
+    else
+      kind = value_expr_t::F_ACCOUNT_MASK;
+
     in.get(c);
-    node.reset(new value_expr_t(short_account_mask ?
-				value_expr_t::F_SHORT_ACCOUNT_MASK :
-				(payee_mask ? value_expr_t::F_PAYEE_MASK :
-				 value_expr_t::F_ACCOUNT_MASK)));
+    node.reset(new value_expr_t(kind));
     node->mask = new mask_t(buf);
     break;
   }
@@ -825,19 +863,29 @@ void dump_value_expr(std::ostream& out, const value_expr_t * node)
     out << ')';
     break;
 
+  case value_expr_t::F_CODE_MASK:
+    assert(node->mask);
+    out << "M_CODE(" << node->mask->pattern << ')';
+    break;
+
   case value_expr_t::F_PAYEE_MASK:
     assert(node->mask);
-    out << "P_MASK(" << node->mask->pattern << ')';
+    out << "M_PAYEE(" << node->mask->pattern << ')';
+    break;
+
+  case value_expr_t::F_NOTE_MASK:
+    assert(node->mask);
+    out << "M_NOTE(" << node->mask->pattern << ')';
     break;
 
   case value_expr_t::F_ACCOUNT_MASK:
     assert(node->mask);
-    out << "A_MASK(" << node->mask->pattern << ')';
+    out << "M_ACCT(" << node->mask->pattern << ')';
     break;
 
   case value_expr_t::F_SHORT_ACCOUNT_MASK:
     assert(node->mask);
-    out << "A_SMASK(" << node->mask->pattern << ')';
+    out << "M_SACCT(" << node->mask->pattern << ')';
     break;
 
   case value_expr_t::F_VALUE:
