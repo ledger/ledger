@@ -408,7 +408,7 @@ amount_t& amount_t::operator*=(const amount_t& amt)
 
 amount_t& amount_t::operator/=(const amount_t& amt)
 {
-  if (! amt.quantity)
+  if (! amt.quantity || ! amt)
     throw amount_error("Divide by zero");
   else if (! quantity)
     return *this;
