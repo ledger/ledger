@@ -1,5 +1,6 @@
 #include "quotes.h"
 #include "datetime.h"
+#include "error.h"
 #include "debug.h"
 
 #include <fstream>
@@ -32,10 +33,6 @@ void quotes_by_script::operator()(commodity_t&      commodity,
 
   DEBUG_PRINT_("downloading quote for symbol " << commodity.symbol);
 
-  // Only consult the Internet once for any commodity
-  commodity.last_lookup = now;
-  cache_dirty = true;
-
   char buf[256];
   buf[0] = '\0';
 
@@ -45,7 +42,8 @@ void quotes_by_script::operator()(commodity_t&      commodity,
 			 commodity.symbol).c_str(), "r")) {
     if (feof(fp) || ! fgets(buf, 255, fp))
       success = false;
-    fclose(fp);
+    if (pclose(fp) != 0)
+      success = false;
   }
 
   if (success && buf[0]) {
@@ -57,6 +55,9 @@ void quotes_by_script::operator()(commodity_t&      commodity,
     price.parse(buf);
     commodity.add_price(now, price);
 
+    commodity.last_lookup = now;
+    cache_dirty = true;
+
     if (price && ! price_db.empty()) {
       char buf[128];
       strftime(buf, 127, "%Y/%m/%d %H:%M:%S", localtime(&now));
@@ -64,6 +65,10 @@ void quotes_by_script::operator()(commodity_t&      commodity,
       database << "P " << buf << " " << commodity.symbol
 	       << " " << price << endl;
     }
+  } else {
+    throw error(std::string("Failed to download price for '") +
+		commodity.symbol + "' (command: \"getquote " +
+		commodity.symbol + "\")");
   }
 }
 

@@ -111,8 +111,7 @@ void process_arguments(std::list<option_t>& options,
 	  goto next;
 	}
 
-      std::cerr << "Error: illegal option " << *i << std::endl;
-      std::exit(1);
+      throw option_error(std::string("illegal option ") + *i);
     } else {
       for (std::list<option_t>::iterator j = options.begin();
 	   j != options.end();
@@ -132,8 +131,7 @@ void process_arguments(std::list<option_t>& options,
 	  }
 	}
 
-      std::cerr << "Error: illegal option -- " << (*i)[1] << std::endl;
-      std::exit(1);
+      throw option_error(std::string("illegal option -- ") + (*i)[1]);
     }
 
    next:

@@ -8,6 +8,7 @@ using namespace ledger;
 #include <sstream>
 #include <memory>
 #include <algorithm>
+#include <exception>
 #include <iterator>
 #include <string>
 #include <cstdlib>
@@ -349,7 +350,7 @@ int main(int argc, char * argv[], char * envp[])
   try {
     return parse_and_report(argc, argv, envp);
   }
-  catch (error& err) {
+  catch (const std::exception& err) {
     std::cerr << "Error: " << err.what() << std::endl;
     return 1;
   }

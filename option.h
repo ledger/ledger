@@ -3,6 +3,7 @@
 
 #include <list>
 #include <string>
+#include <exception>
 
 struct option_handler {
   bool handled;
@@ -17,6 +18,17 @@ struct option_t {
   option_handler * handler;
 
   option_t() : short_opt(0), wants_arg(false), handler(NULL) {}
+};
+
+class option_error : public std::exception {
+  std::string reason;
+ public:
+  option_error(const std::string& _reason) throw() : reason(_reason) {}
+  virtual ~option_error() throw() {}
+
+  virtual const char* what() const throw() {
+    return reason.c_str();
+  }
 };
 
 void add_option_handler(std::list<option_t>& options, const std::string& label,
