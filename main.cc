@@ -3,7 +3,6 @@
 #include "error.h"
 #include "textual.h"
 #include "binary.h"
-#include "constraint.h"
 #include "item.h"
 #include "expr.h"
 #include "format.h"
@@ -23,21 +22,23 @@ namespace ledger {
 
 static const std::string bal_fmt = "%20T%2_%-n\n";
 
-unsigned int show_balances(std::ostream&	out,
-			   items_deque&		items,
-			   const constraints_t& constraints,
-			   const node_t *       sort_order,
-			   const format_t&	format,
-			   const item_t *	displayed_parent)
+unsigned int show_balances(std::ostream&   out,
+			   items_deque&	   items,
+			   const node_t *  predicate,
+			   const node_t *  sort_order,
+			   const format_t& format,
+			   const bool      show_expanded,
+			   const item_t *  displayed_parent)
 {
-  unsigned int headlines = 0;
+  unsigned int    headlines = 0;
+  value_predicate pred_obj(predicate);
 
   for (items_deque::const_iterator i = items.begin();
        i != items.end();
        i++) {
     const item_t * parent = displayed_parent;
 
-    if (constraints(*i) &&
+    if (pred_obj(*i) &&
 	((*i)->subitems.size() != 1 ||
 	 (*i)->total != (*i)->subitems[0]->total)) {
       format.format_elements(out, *i, parent);
@@ -50,9 +51,9 @@ unsigned int show_balances(std::ostream&	out,
     if (sort_order)
       (*i)->sort(sort_order);
 
-    if (constraints.show_expanded)
-      headlines += show_balances(out, (*i)->subitems, constraints,
-				 sort_order, format, parent);
+    if (show_expanded)
+      headlines += show_balances(out, (*i)->subitems, predicate,
+				 sort_order, format, true, parent);
   }
 
   return headlines;
@@ -60,17 +61,20 @@ unsigned int show_balances(std::ostream&	out,
 
 void balance_report(std::ostream&	 out,
 		    item_t *		 top,
-		    const constraints_t& constraints,
+		    const node_t *       predicate,
 		    const node_t *       sort_order,
-		    const format_t&	 format)
+		    const format_t&	 format,
+		    const bool           show_expanded,
+		    const bool           show_subtotals)
 {
   if (sort_order)
     top->sort(sort_order);
 
-  unsigned int headlines = show_balances(out, top->subitems, constraints,
-					 sort_order, format, top);
+  unsigned int headlines = show_balances(out, top->subitems, predicate,
+					 sort_order, format, show_expanded,
+					 top);
 
-  if (constraints.show_subtotals && headlines > 1 && top->total) {
+  if (show_subtotals && headlines > 1 && top->total) {
     std::cout << "--------------------\n";
     format.format_elements(std::cout, top);
   }
@@ -92,7 +96,7 @@ static void report_value_change(std::ostream&         out,
 				const std::time_t     date,
 				const balance_pair_t& balance,
 				const balance_pair_t& prev_balance,
-				const constraints_t&  constraints,
+				const node_t *        predicate,
 				const format_t&       first_line_format,
 				const format_t&       next_lines_format)
 {
@@ -116,7 +120,7 @@ static void report_value_change(std::ostream&         out,
     temp.total = balance;
     temp.payee = "Commodities revalued";
 
-    if (constraints(&temp)) {
+    if (value_predicate(predicate)(&temp)) {
       first_line_format.format_elements(out, &temp);
       next_lines_format.format_elements(out, &temp);
     }
@@ -125,26 +129,28 @@ static void report_value_change(std::ostream&         out,
   prev_date = date;
 }
 
-void register_report(std::ostream&	  out,
-		     item_t *		  top,
-		     const constraints_t& constraints,
-		     const node_t *       sort_order,
-		     const format_t&	  first_line_format,
-		     const format_t&	  next_lines_format)
+void register_report(std::ostream&   out,
+		     item_t *	     top,
+		     const node_t *  predicate,
+		     const node_t *  sort_order,
+		     const format_t& first_line_format,
+		     const format_t& next_lines_format,
+		     const bool      show_expanded)
 {
   if (sort_order)
     top->sort(sort_order);
 
-  balance_pair_t balance;
-  balance_pair_t last_reported;
-  account_t      splits(NULL, "<Total>");
+  balance_pair_t  balance;
+  balance_pair_t  last_reported;
+  account_t       splits(NULL, "<Total>");
+  value_predicate pred_obj(predicate);
 
   for (items_deque::const_iterator i = top->subitems.begin();
        i != top->subitems.end();
        i++) {
     bool first = true;
 
-    if ((*i)->subitems.size() > 1 && ! constraints.show_expanded) {
+    if ((*i)->subitems.size() > 1 && ! show_expanded) {
       item_t summary;
       summary.date    = (*i)->date;
       summary.parent  = *i;
@@ -156,10 +162,10 @@ void register_report(std::ostream&	  out,
 	summary.value += (*j)->value;
       summary.total = balance + summary.value;
 
-      bool show = constraints(&summary);
+      bool show = pred_obj(&summary);
       if (show && show_commodities_revalued)
 	report_value_change(out, summary.date, balance, last_reported,
-			    constraints, first_line_format, next_lines_format);
+			    predicate, first_line_format, next_lines_format);
 
       balance += summary.value;
 
@@ -176,11 +182,10 @@ void register_report(std::ostream&	  out,
 	   j++) {
 	(*j)->total = balance + (*j)->value;
 
-	bool show = constraints(*j);
+	bool show = pred_obj(*j);
 	if (show && first && show_commodities_revalued) {
 	  report_value_change(out, (*i)->date, balance, last_reported,
-			      constraints, first_line_format,
-			      next_lines_format);
+			      predicate, first_line_format, next_lines_format);
 	  if (show_commodities_revalued_only)
 	    first = false;
 	}
@@ -205,7 +210,7 @@ void register_report(std::ostream&	  out,
   }
 
   if (show_commodities_revalued)
-    report_value_change(out, -1, balance, last_reported, constraints,
+    report_value_change(out, -1, balance, last_reported, predicate,
 			first_line_format, next_lines_format);
 }
 
@@ -471,14 +476,20 @@ static void show_help(std::ostream& out)
 int main(int argc, char * argv[])
 {
   std::list<std::string> files;
-  ledger::ledger_t *	 journal = new ledger::ledger_t;
-  ledger::constraints_t  constraints;
-  std::string            predicate;
-  std::string		 format_string;
-  std::string		 sort_str;
-  ledger::node_t *	 sort_order = NULL;
-  std::string		 value_expr = "a";
-  std::string		 total_expr = "T";
+
+  std::string        predicate_string;
+  ledger::node_t *   predicate = NULL;
+  std::string	     format_string;
+  std::string	     sort_string;
+  ledger::node_t *   sort_order = NULL;
+  std::string	     value_expr = "a";
+  std::string	     total_expr = "T";
+  ledger::ledger_t * journal	= new ledger::ledger_t;
+
+  bool show_subtotals = true;
+  bool show_expanded  = false;
+  bool show_related   = false;
+  bool show_inverted  = false;
 
 #ifdef DEBUG
   bool debug = false;
@@ -562,48 +573,48 @@ int main(int argc, char * argv[])
       break;
 
     case 'b':
-      if (! predicate.empty())
-	predicate += "&";
-      predicate += "(d>=[";
-      predicate += optarg;
-      predicate += "])";
+      if (! predicate_string.empty())
+	predicate_string += "&";
+      predicate_string += "(d>=[";
+      predicate_string += optarg;
+      predicate_string += "])";
       break;
 
     case 'e':
-      if (! predicate.empty())
-	predicate += "&";
-      predicate += "(d<[";
-      predicate += optarg;
-      predicate += "])";
+      if (! predicate_string.empty())
+	predicate_string += "&";
+      predicate_string += "(d<[";
+      predicate_string += optarg;
+      predicate_string += "])";
       break;
 
     case 'c': {
-      if (! predicate.empty())
-	predicate += "&";
-      predicate += "(d<";
+      if (! predicate_string.empty())
+	predicate_string += "&";
+      predicate_string += "(d<";
       std::ostringstream now;
       now << std::time(NULL);
-      predicate += now.str();
-      predicate += ")";
+      predicate_string += now.str();
+      predicate_string += ")";
       break;
     }
 
     case 'C':
-      if (! predicate.empty())
-	predicate += "&";
-      predicate += "X";
+      if (! predicate_string.empty())
+	predicate_string += "&";
+      predicate_string += "X";
       break;
 
     case 'U':
-      if (! predicate.empty())
-	predicate += "&";
-      predicate += "!X";
+      if (! predicate_string.empty())
+	predicate_string += "&";
+      predicate_string += "!X";
       break;
 
     case 'R':
-      if (! predicate.empty())
-	predicate += "&";
-      predicate += "R";
+      if (! predicate_string.empty())
+	predicate_string += "&";
+      predicate_string += "R";
       break;
 
     // Customizing output
@@ -611,32 +622,34 @@ int main(int argc, char * argv[])
       format_string = optarg;
       break;
 
+#if 0
     case 'E':
-      constraints.show_empty = true;
+      show_empty = true;
       break;
+#endif
 
     case 'n':
-      constraints.show_subtotals = false;
+      show_subtotals = false;
       break;
 
     case 's':
-      constraints.show_expanded = true;
+      show_expanded = true;
       break;
 
     case 'S':
-      sort_str = optarg;
+      sort_string = optarg;
       break;
 
     case 'o':
-      constraints.show_related = true;
+      show_related = true;
       break;
 
     case 'l':
-      if (! predicate.empty())
-	predicate += "&";
-      predicate += "(";
-      predicate += optarg;
-      predicate += ")";
+      if (! predicate_string.empty())
+	predicate_string += "&";
+      predicate_string += "(";
+      predicate_string += optarg;
+      predicate_string += ")";
       break;
 
     // Commodity reporting
@@ -700,6 +713,7 @@ int main(int argc, char * argv[])
       total_expr = "MDMT";
       break;
 
+#if 0
     case 'W':
       value_expr = "a";
       total_expr = "MD(MT*(d-b/e-b))";
@@ -708,6 +722,11 @@ int main(int argc, char * argv[])
     case 'X':
       value_expr = "a";
       total_expr = "a+MD(MT*(d-b/e-b))";
+      break;
+#endif
+
+    default:
+      assert(0);
       break;
     }
   }
@@ -778,50 +797,51 @@ int main(int argc, char * argv[])
       break;
     }
 
-    constraints.show_expanded = true;
+    show_expanded = true;
 
-    if (! predicate.empty())
-      predicate += "&";
+    if (! predicate_string.empty())
+      predicate_string += "&";
 
     if (argv[index][0] == '-') {
-      predicate += "(!/";
-      predicate += argv[index] + 1;
+      predicate_string += "(!/";
+      predicate_string += argv[index] + 1;
     } else {
-      predicate += "(/";
-      predicate += argv[index];
+      predicate_string += "(/";
+      predicate_string += argv[index];
     }
-    predicate += "/)";
+    predicate_string += "/)";
   }
 
   for (; index < argc; index++) {
-    constraints.show_expanded = true;
+    show_expanded = true;
 
-    if (! predicate.empty())
-      predicate += "&";
+    if (! predicate_string.empty())
+      predicate_string += "&";
 
     if (argv[index][0] == '-') {
-      predicate += "(!//";
-      predicate += argv[index] + 1;
+      predicate_string += "(!//";
+      predicate_string += argv[index] + 1;
     } else {
-      predicate += "(//";
-      predicate += argv[index];
+      predicate_string += "(//";
+      predicate_string += argv[index];
     }
-    predicate += "/)";
+    predicate_string += "/)";
   }
 
-  // Copy the constraints to the format object, and compile the value
-  // and total style strings
+  // Compile the predicate
 
-  if (! predicate.empty()) {
+  if (! predicate_string.empty()) {
 #ifdef DEBUG
     if (debug)
-      std::cerr << "predicate = " << predicate << std::endl;
+      std::cerr << "predicate = " << predicate_string << std::endl;
 #endif
-    constraints.predicate = ledger::parse_expr(predicate);
+    predicate = ledger::parse_expr(predicate_string);
   }
 
-  if (! sort_str.empty())
-    sort_order = ledger::parse_expr(sort_str);
+  // Compile the sorting string
+
+  if (! sort_string.empty())
+    sort_order = ledger::parse_expr(sort_string);
 
   // Setup the meaning of %t and %T encountered in format strings
 
@@ -834,7 +854,8 @@ int main(int argc, char * argv[])
 #if 0
     if (ledger::item_t * top
 	  = ledger::walk_entries(journal->entries.begin(),
-				 journal->entries.end(), constraints)) {
+				 journal->entries.end(), predicate,
+				 show_related, show_inverted)) {
       ledger::format_t * format = new ledger::format_t(format_string);
       ledger::entry_report(std::cout, top, *format);
 #ifdef DEBUG
@@ -847,9 +868,9 @@ int main(int argc, char * argv[])
   else if (command == "equity") {
 #if 0
     if (ledger::item_t * top
-	  = ledger::walk_accounts(journal->master, constraints)) {
+	= ledger::walk_accounts(journal->master, predicate, show_subtotals)) {
       ledger::format_t * format = new ledger::format_t(format_string);
-      ledger::entry_report(std::cout, top, constraints, *format);
+      ledger::entry_report(std::cout, top, predicate, *format);
 #ifdef DEBUG
       delete top;
       delete format;
@@ -857,14 +878,15 @@ int main(int argc, char * argv[])
     }
 #endif
   }
-  else if (! sort_order && ! constraints.show_related &&
+  else if (! sort_order && ! show_related &&
 	   (command == "balance"  || command == "bal")) {
     if (ledger::item_t * top
-	  = ledger::walk_accounts(journal->master, constraints)) {
+	= ledger::walk_accounts(journal->master, predicate, show_subtotals)) {
       ledger::format_t * format
 	= new ledger::format_t(format_string.empty() ?
 			       ledger::bal_fmt : format_string);
-      ledger::balance_report(std::cout, top, constraints, sort_order, *format);
+      ledger::balance_report(std::cout, top, predicate, sort_order, *format,
+			     show_expanded, show_subtotals);
 #ifdef DEBUG
       delete format;
       delete top;
@@ -874,14 +896,16 @@ int main(int argc, char * argv[])
   else if (command == "balance"  || command == "bal") {
     if (ledger::item_t * list
 	  = ledger::walk_entries(journal->entries.begin(),
-				 journal->entries.end(), constraints))
+				 journal->entries.end(), predicate,
+				 show_related, show_inverted))
       if (ledger::item_t * top
-	    = ledger::walk_items(list, journal->master, constraints)) {
+	    = ledger::walk_items(list, journal->master, predicate,
+				 show_subtotals)) {
 	ledger::format_t * format
 	  = new ledger::format_t(format_string.empty() ?
 				 ledger::bal_fmt : format_string);
-	ledger::balance_report(std::cout, top, constraints, sort_order,
-			       *format);
+	ledger::balance_report(std::cout, top, predicate, sort_order, *format,
+			       show_expanded, show_subtotals);
 #ifdef DEBUG
 	delete format;
 	delete top;
@@ -890,12 +914,13 @@ int main(int argc, char * argv[])
       }
   }
   else if (command == "register"  || command == "reg") {
-    if (constraints.show_related)
-      constraints.show_inverted = true;
+    if (show_related)
+      show_inverted = true;
 
     if (ledger::item_t * top
 	  = ledger::walk_entries(journal->entries.begin(),
-				 journal->entries.end(), constraints)) {
+				 journal->entries.end(), predicate,
+				 show_related, show_inverted)) {
       std::string first_line_format;
       std::string next_lines_format;
 
@@ -911,9 +936,11 @@ int main(int argc, char * argv[])
 
       ledger::format_t * format  = new ledger::format_t(first_line_format);
       ledger::format_t * nformat = new ledger::format_t(next_lines_format);
-      ledger::register_report(std::cout, top, constraints, sort_order,
-			      *format, *nformat);
+
+      ledger::register_report(std::cout, top, predicate, sort_order,
+			      *format, *nformat, show_expanded);
 #ifdef DEBUG
+      delete nformat;
       delete format;
       delete top;
 #endif
@@ -937,6 +964,8 @@ int main(int argc, char * argv[])
 #ifdef DEBUG
   delete journal;
 
+  if (predicate)
+    delete predicate;
   if (sort_order)
     delete sort_order;
 

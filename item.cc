@@ -1,5 +1,4 @@
 #include "item.h"
-#include "constraint.h"
 #include "expr.h"
 
 namespace ledger {
@@ -7,73 +6,84 @@ namespace ledger {
 // jww (2004-07-21): If format.show_empty is set, then include all
 // subaccounts, empty, balanced or no
 
-item_t * walk_accounts(const account_t *    account,
-		       const constraints_t& constraints)
+item_t * walk_accounts(const account_t * account,
+		       const node_t *    predicate,
+		       const bool        show_subtotals)
 {
   item_t * item = new item_t;
   item->account = account;
 
-  for (constrained_transactions_list_const_iterator
-	 i(account->transactions.begin(),
-	   account->transactions.end(), constraints);
+  std::time_t latest = 0;
+  for (transactions_list::const_iterator i
+	 = std::find_if(account->transactions.begin(),
+			account->transactions.end(),
+			value_predicate(predicate));
        i != account->transactions.end();
-       i++) {
-    item->value += *(*i);
+       i = std::find_if(++i, account->transactions.end(),
+			value_predicate(predicate))) {
+    if (std::difftime(latest, (*i)->entry->date) < 0)
+      latest = (*i)->entry->date;
 
-    if (constraints.show_subtotals)
+    item->value += *(*i);
+    if (show_subtotals)
       item->total += *(*i);
   }
+  item->date = latest;
 
   for (accounts_map::const_iterator i = account->accounts.begin();
        i != account->accounts.end();
        i++) {
-    item_t * subitem = walk_accounts((*i).second, constraints);
+    item_t * subitem = walk_accounts((*i).second, predicate, show_subtotals);
     subitem->parent = item;
 
-    if (constraints.show_subtotals)
-      item->total += subitem->total;
+    if (std::difftime(item->date, subitem->date) < 0)
+      item->date = subitem->date;
 
-    if (constraints.show_subtotals ? subitem->total : subitem->value)
+    if (show_subtotals)
+      item->total += subitem->total;
+    if (show_subtotals ? subitem->total : subitem->value)
       item->subitems.push_back(subitem);
   }
 
   return item;
 }
 
-static inline void sum_items(const item_t *	  top,
-			     const constraints_t& constraints,
-			     item_t *		  item)
+static inline void sum_items(const item_t * top,
+			     const bool     show_subtotals,
+			     item_t *	    item)
 {
   if (top->account == item->account) {
     item->value += top->value;
-    if (constraints.show_subtotals)
+    if (show_subtotals)
       item->total += top->value;
   }
 
   for (items_deque::const_iterator i = top->subitems.begin();
        i != top->subitems.end();
        i++)
-    sum_items(*i, constraints, item);
+    sum_items(*i, show_subtotals, item);
 }
 
-item_t * walk_items(const item_t * top, const account_t * account,
-		    const constraints_t& constraints)
+item_t * walk_items(const item_t *    top,
+		    const account_t * account,
+		    const node_t *    predicate,
+		    const bool	      show_subtotals)
 {
   item_t * item = new item_t;
   item->account = account;
 
-  sum_items(top, constraints, item);
+  sum_items(top, show_subtotals, item);
 
   for (accounts_map::const_iterator i = account->accounts.begin();
        i != account->accounts.end();
        i++) {
-    item_t * subitem = walk_items(top, (*i).second, constraints);
+    item_t * subitem = walk_items(top, (*i).second, predicate, show_subtotals);
     subitem->parent = item;
 
-    if (constraints.show_subtotals)
+    if (show_subtotals)
       item->total += subitem->total;
 
-    if (constraints.show_subtotals ? subitem->total : subitem->value)
+    if (show_subtotals ? subitem->total : subitem->value)
       item->subitems.push_back(subitem);
   }
 
@@ -82,21 +92,26 @@ item_t * walk_items(const item_t * top, const account_t * account,
 
 item_t * walk_entries(entries_list::const_iterator begin,
 		      entries_list::const_iterator end,
-		      const constraints_t&	   constraints)
+		      const node_t * predicate,
+		      const bool     show_related,
+		      const bool     show_inverted)
 {
-  unsigned int count  = 0;
-  item_t *     result = NULL;
+  unsigned int	  count  = 0;
+  item_t *	  result = NULL;
+  value_predicate pred_obj(predicate);
 
-  for (constrained_entries_list_const_iterator i(begin, end, constraints);
+  for (entries_list::const_iterator i = std::find_if(begin, end, pred_obj);
        i != end;
-       i++) {
+       i = std::find_if(++i, end, pred_obj)) {
     item_t * item = NULL;
 
-    for (constrained_transactions_list_const_iterator
-	   j((*i)->transactions.begin(), (*i)->transactions.end(),
-	     constraints);
+    for (transactions_list::const_iterator j
+	   = std::find_if((*i)->transactions.begin(),
+			  (*i)->transactions.end(), pred_obj);
 	 j != (*i)->transactions.end();
-	 j++) {
+	 j = std::find_if(++j,
+		transactions_list::const_iterator((*i)->transactions.end()),
+		pred_obj)) {
       assert(*i == (*j)->entry);
 
       if (! item) {
@@ -107,7 +122,7 @@ item_t * walk_entries(entries_list::const_iterator begin,
       }
 
       // If show_inverted is true, it implies show_related.
-      if (! constraints.show_inverted) {
+      if (! show_inverted) {
 	item_t * subitem = new item_t;
 	subitem->parent  = item;
 	subitem->date    = item->date;
@@ -117,7 +132,7 @@ item_t * walk_entries(entries_list::const_iterator begin,
 	item->subitems.push_back(subitem);
       }
 
-      if (constraints.show_related)
+      if (show_related)
 	for (transactions_list::iterator k = (*i)->transactions.begin();
 	     k != (*i)->transactions.end();
 	     k++)
@@ -128,7 +143,7 @@ item_t * walk_entries(entries_list::const_iterator begin,
 	    subitem->payee   = item->payee;
 	    subitem->account = (*k)->account;
 	    subitem->value   = *(*k);
-	    if (constraints.show_inverted)
+	    if (show_inverted)
 	      subitem->value.negate();
 	    item->subitems.push_back(subitem);
 	  }

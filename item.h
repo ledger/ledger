@@ -36,17 +36,22 @@ struct item_t
   void sort(const node_t * sort_order);
 };
 
-class constraints_t;
+struct node_t;
 
 item_t * walk_accounts(const account_t * account,
-		       const constraints_t& constraints);
+		       const node_t *	 predicate,
+		       const bool        show_subtotals);
 
-item_t * walk_items(const item_t * top, const account_t * account,
-		    const constraints_t& constraints);
+item_t * walk_items(const item_t *    top,
+		    const account_t * account,
+		    const node_t *    predicate,
+		    const bool	      show_subtotals);
 
 item_t * walk_entries(entries_list::const_iterator begin,
 		      entries_list::const_iterator end,
-		      const constraints_t& constraints);
+		      const node_t * predicate,
+		      const bool     show_related,
+		      const bool     show_inverted);
 
 } // namespace report
 

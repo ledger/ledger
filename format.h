@@ -3,7 +3,6 @@
 
 #include "ledger.h"
 #include "balance.h"
-#include "constraint.h"
 #include "expr.h"
 
 namespace ledger {

@@ -122,6 +122,56 @@ inline node_t * find_node(node_t * node, node_t::kind_t type) {
 
 void dump_tree(std::ostream& out, node_t * node);
 
+class value_predicate
+{
+ public:
+  const node_t * predicate;
+
+  explicit value_predicate(const node_t * _predicate)
+    : predicate(_predicate) {}
+
+  bool operator ()(const transaction_t * xact) const {
+    if (! predicate) {
+      return true;
+    } else {
+      item_t temp;
+      temp.date    = xact->entry->date;
+      temp.payee   = xact->entry->payee;
+      temp.account = xact->account;
+      return predicate->compute(&temp);
+    }
+  }
+
+  bool operator ()(const entry_t * entry) const {
+    if (! predicate) {
+      return true;
+    } else {
+      item_t temp;
+      temp.date  = entry->date;
+      temp.payee = entry->payee;
+
+      // Although there may be conflicting account masks for the whole
+      // set of transactions -- for example, /rent/&!/expenses/, which
+      // might match one by not another transactions -- we let the
+      // entry through if at least one of the transactions meets the
+      // criterion
+
+      for (transactions_list::const_iterator i = entry->transactions.begin();
+	   i != entry->transactions.end();
+	   i++) {
+	temp.account = (*i)->account;
+	if (predicate->compute(&temp))
+	  return true;
+      }
+      return false;
+    }
+  }
+
+  bool operator ()(const item_t * item) const {
+    return ! predicate || predicate->compute(item);
+  }
+};
+
 } // namespace report
 
 #endif // _REPORT_H

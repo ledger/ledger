@@ -1,6 +1,6 @@
 #include "textual.h"
-#include "constraint.h"
 #include "error.h"
+#include "expr.h"
 
 #include <vector>
 #include <fstream>
