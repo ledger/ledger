@@ -1,5 +1,5 @@
 #ifndef _LEDGER_H
-#define _LEDGER_H "$Revision: 1.27 $"
+#define _LEDGER_H "$Revision: 1.28 $"
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -20,6 +20,9 @@
 #ifdef DEBUG
 #include <cassert>
 #else
+#ifdef assert
+#undef assert
+#endif
 #define assert(x)
 #endif
 
@@ -297,9 +300,13 @@ inline commodity::commodity(const std::string& sym, bool pre, bool sep,
 			    bool thou, bool euro, int prec)
   : symbol(sym), price(NULL), prefix(pre), separate(sep),
     thousands(thou), european(euro), precision(prec) {
+#ifdef DEBUG
   std::pair<commodities_map_iterator, bool> result =
+#endif
     main_ledger->commodities.insert(commodities_map_pair(sym, this));
+#ifdef DEBUG
   assert(result.second);
+#endif
 }
 
 // Parsing routines

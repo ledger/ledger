@@ -3,8 +3,8 @@ OBJS   = $(patsubst %.cc,%.o,$(CODE))
 CFLAGS = -Wall -ansi -pedantic
 DFLAGS = -O3 -fomit-frame-pointer
 #DFLAGS = -g -DDEBUG=1
-INCS   =
-LIBS   = -lgmpxx -lgmp -lpcre
+INCS   = -I/sw/include
+LIBS   = -L/sw/lib -lgmpxx -lgmp -lpcre
 
 ifdef GNUCASH
 CODE   := $(CODE)   gnucash.cc

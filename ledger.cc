@@ -6,6 +6,8 @@ namespace ledger {
 
 book * main_ledger;
 
+extern int linenum;
+
 commodity::~commodity()
 {
   if (price)
@@ -197,7 +199,7 @@ bool entry::finalize(bool do_compute)
 
     if (! empty_allowed || balance.amounts.empty() ||
 	balance.amounts.size() != 1) {
-      std::cerr << "Error, line " //<< linenum
+      std::cerr << "Error, line " << linenum
 		<< ": Transaction entry is lacking an amount."
 		<< std::endl;
       return false;
@@ -271,7 +273,7 @@ bool entry::finalize(bool do_compute)
   // right (i.e., zero for every commodity).
 
   if (! validate()) {
-    std::cerr << "Error, line " //<< (linenum - 1)
+    std::cerr << "Error, line " << (linenum - 1)
 	      << ": Failed to balance the following transaction:"
 	      << std::endl;
     validate(true);

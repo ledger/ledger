@@ -117,7 +117,8 @@ void parse_price_setting(const std::string& setting)
 
 #define MAX_LINE 1024
 
-static int  linenum;
+int  linenum;
+
 static bool do_compute;
 
 transaction * parse_transaction(std::istream& in, book * ledger)

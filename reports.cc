@@ -491,7 +491,7 @@ void book::print(std::ostream& out, regexps_map& regexps,
   for (entries_list_const_iterator i = entries.begin();
        i != entries.end();
        i++) {
-    if ((show_cleared && ! (*i)->cleared) ||
+    if ((! show_cleared && (*i)->cleared) ||
 	! matches_date_range(*i) ||
 	! (*i)->matches(regexps))
       continue;
