@@ -46,8 +46,9 @@ class value_t
     *((unsigned int *) data) = value;
     type = INTEGER;
   }
-  value_t(const amount_t& value) : type(INTEGER) {
-    *this = value;
+  value_t(const amount_t& value) {
+    new((amount_t *)data) amount_t(value);
+    type = AMOUNT;
   }
   value_t(const balance_t& value) : type(INTEGER) {
     *this = value;
