@@ -147,106 +147,6 @@ balance_t node_t::compute(const item_t *    item,
   return temp;
 }
 
-void dump_tree(std::ostream& out, node_t * node)
-{
-  switch (node->type) {
-  case CONSTANT_A:   out << "CONST[" << node->constant_a << "]"; break;
-  case CONSTANT_T:   out << "DATE/TIME[" << node->constant_t << "]"; break;
-  case AMOUNT:	     out << "AMOUNT"; break;
-  case COST:	     out << "COST"; break;
-  case DATE:	     out << "DATE"; break;
-  case INDEX:	     out << "INDEX"; break;
-  case BALANCE:      out << "BALANCE"; break;
-  case COST_BALANCE: out << "COST_BALANCE"; break;
-  case TOTAL:        out << "TOTAL"; break;
-  case COST_TOTAL:   out << "COST_TOTAL"; break;
-  case BEGIN_DATE:   out << "BEGIN"; break;
-  case END_DATE:     out << "END"; break;
-
-  case F_ARITH_MEAN:
-    out << "MEAN(";
-    dump_tree(out, node->left);
-    out << ")";
-    break;
-
-  case F_NEG:
-    out << "ABS(";
-    dump_tree(out, node->left);
-    out << ")";
-    break;
-
-  case F_ABS:
-    out << "ABS(";
-    dump_tree(out, node->left);
-    out << ")";
-    break;
-
-  case F_REGEXP:
-    assert(node->mask);
-    out << "RE(" << node->mask->pattern << ")";
-    break;
-
-  case F_VALUE:
-    out << "VALUE(";
-    dump_tree(out, node->left);
-    if (node->right) {
-      out << ", ";
-      dump_tree(out, node->right);
-    }
-    out << ")";
-    break;
-
-  case O_NOT:
-    out << "!";
-    dump_tree(out, node->left);
-    break;
-
-  case O_QUES:
-    dump_tree(out, node->left);
-    out << "?";
-    dump_tree(out, node->right->left);
-    out << ":";
-    dump_tree(out, node->right->right);
-    break;
-
-  case O_AND:
-  case O_OR:
-  case O_EQ:
-  case O_LT:
-  case O_LTE:
-  case O_GT:
-  case O_GTE:
-  case O_ADD:
-  case O_SUB:
-  case O_MUL:
-  case O_DIV:
-    out << "(";
-    dump_tree(out, node->left);
-    switch (node->type) {
-    case O_AND: out << " & "; break;
-    case O_OR:  out << " | "; break;
-    case O_EQ:  out << "="; break;
-    case O_LT:  out << "<"; break;
-    case O_LTE: out << "<="; break;
-    case O_GT:  out << ">"; break;
-    case O_GTE: out << ">="; break;
-    case O_ADD: out << "+"; break;
-    case O_SUB: out << "-"; break;
-    case O_MUL: out << "*"; break;
-    case O_DIV: out << "/"; break;
-    default: assert(0); break;
-    }
-    dump_tree(out, node->right);
-    out << ")";
-    break;
-
-  case LAST:
-  default:
-    assert(0);
-    break;
-  }
-}
-
 node_t * parse_term(std::istream& in, ledger_t * ledger);
 
 inline node_t * parse_term(const char * p, ledger_t * ledger) {
@@ -592,7 +492,112 @@ node_t * parse_expr(std::istream& in, ledger_t * ledger)
 
 } // namespace ledger
 
+
 #ifdef TEST
+
+namespace ledger {
+
+static void dump_tree(std::ostream& out, node_t * node)
+{
+  switch (node->type) {
+  case CONSTANT_A:   out << "CONST[" << node->constant_a << "]"; break;
+  case CONSTANT_T:   out << "DATE/TIME[" << node->constant_t << "]"; break;
+  case AMOUNT:	     out << "AMOUNT"; break;
+  case COST:	     out << "COST"; break;
+  case DATE:	     out << "DATE"; break;
+  case INDEX:	     out << "INDEX"; break;
+  case BALANCE:      out << "BALANCE"; break;
+  case COST_BALANCE: out << "COST_BALANCE"; break;
+  case TOTAL:        out << "TOTAL"; break;
+  case COST_TOTAL:   out << "COST_TOTAL"; break;
+  case BEGIN_DATE:   out << "BEGIN"; break;
+  case END_DATE:     out << "END"; break;
+
+  case F_ARITH_MEAN:
+    out << "MEAN(";
+    dump_tree(out, node->left);
+    out << ")";
+    break;
+
+  case F_NEG:
+    out << "ABS(";
+    dump_tree(out, node->left);
+    out << ")";
+    break;
+
+  case F_ABS:
+    out << "ABS(";
+    dump_tree(out, node->left);
+    out << ")";
+    break;
+
+  case F_REGEXP:
+    assert(node->mask);
+    out << "RE(" << node->mask->pattern << ")";
+    break;
+
+  case F_VALUE:
+    out << "VALUE(";
+    dump_tree(out, node->left);
+    if (node->right) {
+      out << ", ";
+      dump_tree(out, node->right);
+    }
+    out << ")";
+    break;
+
+  case O_NOT:
+    out << "!";
+    dump_tree(out, node->left);
+    break;
+
+  case O_QUES:
+    dump_tree(out, node->left);
+    out << "?";
+    dump_tree(out, node->right->left);
+    out << ":";
+    dump_tree(out, node->right->right);
+    break;
+
+  case O_AND:
+  case O_OR:
+  case O_EQ:
+  case O_LT:
+  case O_LTE:
+  case O_GT:
+  case O_GTE:
+  case O_ADD:
+  case O_SUB:
+  case O_MUL:
+  case O_DIV:
+    out << "(";
+    dump_tree(out, node->left);
+    switch (node->type) {
+    case O_AND: out << " & "; break;
+    case O_OR:  out << " | "; break;
+    case O_EQ:  out << "="; break;
+    case O_LT:  out << "<"; break;
+    case O_LTE: out << "<="; break;
+    case O_GT:  out << ">"; break;
+    case O_GTE: out << ">="; break;
+    case O_ADD: out << "+"; break;
+    case O_SUB: out << "-"; break;
+    case O_MUL: out << "*"; break;
+    case O_DIV: out << "/"; break;
+    default: assert(0); break;
+    }
+    dump_tree(out, node->right);
+    out << ")";
+    break;
+
+  case LAST:
+  default:
+    assert(0);
+    break;
+  }
+}
+
+} // namespace ledger
 
 int main(int argc, char *argv[])
 {
@@ -600,4 +605,4 @@ int main(int argc, char *argv[])
   std::cout << std::endl;
 }
 
-#endif
+#endif // TEST
