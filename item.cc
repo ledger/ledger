@@ -5,7 +5,7 @@
 namespace ledger {
 
 // jww (2004-07-21): If format.show_empty is set, then include all
-// subaccounts, empty balanced or no
+// subaccounts, empty, balanced or no
 
 item_t * walk_accounts(const account_t *    account,
 		       const constraints_t& constraints)
@@ -20,6 +20,7 @@ item_t * walk_accounts(const account_t *    account,
        i != account->transactions.end();
        i++) {
     item->value += *(*i);
+
     if (constraints.show_subtotals)
       item->total += *(*i);
   }
@@ -84,16 +85,13 @@ item_t * walk_entries(entries_list::const_iterator begin,
 		      entries_list::const_iterator end,
 		      const constraints_t&	   constraints)
 {
-#if 0
-  int          last_mon = -1;
-#endif
   unsigned int count  = 0;
   item_t *     result = NULL;
 
   for (constrained_entries_list_const_iterator i(begin, end, constraints);
        i != end;
        i++) {
-    item_t * item  = NULL;
+    item_t * item = NULL;
 
     for (constrained_transactions_list_const_iterator
 	   j((*i)->transactions.begin(), (*i)->transactions.end(),
@@ -109,6 +107,7 @@ item_t * walk_entries(entries_list::const_iterator begin,
 	item->payee = (*i)->payee;
       }
 
+      // If show_inverted is true, it implies show_related.
       if (! constraints.show_inverted) {
 	item_t * subitem = new item_t;
 	subitem->parent  = item;
@@ -132,37 +131,6 @@ item_t * walk_entries(entries_list::const_iterator begin,
 	      subitem->value.negate();
 	    item->subitems.push_back(subitem);
 	  }
-
-#if 0
-      // If we are collecting monthly totals, then add them if the
-      // month of this entry is different from the month of previous
-      // entries.
-
-      if (format.period == PERIOD_MONTHLY) {
-	int entry_mon = std::gmtime(&(*i)->date)->tm_mon;
-
-	if (last_mon != -1 && entry_mon != last_mon &&
-	    line_balances.size() > 0) {
-	  if (last_date == 0)
-	    last_date = (*i)->date;
-
-	  if (reg) {
-	    char buf[32];
-	    std::strftime(buf, 31, "%B", std::gmtime(&last_date));
-
-	    reg->lines.push_back(register_line_t(last_date, buf));
-	    reg->lines.back().compute_items(line_balances, total, count);
-	  } else {
-	    count++;
-	  }
-
-	  line_balances.clear();
-	}
-
-	last_mon  = entry_mon;
-	last_date = (*i)->date;
-      }
-#endif
     }
 
     if (item) {
@@ -174,29 +142,6 @@ item_t * walk_entries(entries_list::const_iterator begin,
   }
 
   return result;
-
-#if 0
-  // Wrap up any left over balance list information.
-
-  if (line_balances.size() > 0) {
-    assert(format.period == PERIOD_MONTHLY);
-    assert(last_date != 0);
-
-    if (reg) {
-      char buf[32];
-      std::strftime(buf, 31, "%B", std::gmtime(&last_date));
-
-      reg->lines.push_back(register_line_t(last_date, buf));
-      reg->lines.back().compute_items(line_balances, total, count);
-    } else {
-      count++;
-    }
-
-    //line_balances.clear();
-  }
-
-  return count;
-#endif
 }
 
 struct cmp_items {
