@@ -51,7 +51,7 @@ AC_HEADER_STDC
 #AC_FUNC_MKTIME
 #AC_FUNC_STAT
 #AC_FUNC_STRFTIME
-AC_CHECK_FUNCS([memset strchr strstr])
+AC_CHECK_FUNCS([memset strchr strstr access mktime stat strftime])
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

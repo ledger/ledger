@@ -6,8 +6,6 @@
 #include "debug.h"
 #include "util.h"
 
-#include <vector>
-
 #include <pcre.h>
 
 namespace ledger {

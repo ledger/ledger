@@ -9,13 +9,17 @@
 namespace ledger {
 
 const unsigned long	   binary_magic_number = 0xFFEED765;
-static const unsigned long format_version      = 0x00020014;
+static const unsigned long format_version      = 0x00020015;
 
-static std::deque<account_t *>   accounts;
-static unsigned int              account_index;
-static std::deque<commodity_t *> commodities;
-static unsigned int              commodity_index;
-std::deque<amount_t::bigint_t *> bigints;
+static account_t **   accounts;
+static account_t **   accounts_next;
+static unsigned int   account_index;
+
+static commodity_t ** commodities;
+static commodity_t ** commodities_next;
+static unsigned int   commodity_index;
+
+std::deque<amount_t::bigint_t *>  bigints;
 
 #if DEBUG_LEVEL >= ALPHA
 #define read_binary_guard(in, id) {		\
@@ -158,10 +162,9 @@ inline void read_binary_entry(std::istream& in, entry_t * entry,
 inline commodity_t * read_binary_commodity(std::istream& in)
 {
   commodity_t * commodity = new commodity_t;
-  commodities.push_back(commodity);
+  *commodities_next++ = commodity;
 
   commodity->ident = read_binary_number<commodity_t::ident_t>(in);
-  assert(commodity->ident == commodities.size());
 
   read_binary_string(in, commodity->symbol);
   read_binary_string(in, commodity->name);
@@ -189,10 +192,9 @@ inline
 account_t * read_binary_account(std::istream& in, account_t * master = NULL)
 {
   account_t * acct = new account_t(NULL);
-  accounts.push_back(acct);
+  *accounts_next++ = acct;
 
   acct->ident = read_binary_number<account_t::ident_t>(in);
-  assert(acct->ident == accounts.size());
 
   account_t::ident_t id;
   read_binary_number(in, id);	// parent id
@@ -254,12 +256,13 @@ unsigned int read_binary_journal(std::istream&	    in,
     }
   }
 
+  account_t::ident_t a_count = read_binary_number<account_t::ident_t>(in);
+  accounts = accounts_next = new (account_t *)[a_count];
   journal->master = read_binary_account(in, master);
 
-  for (account_t::ident_t i = 0,
-	 count = read_binary_number<account_t::ident_t>(in);
-       i < count;
-       i++) {
+  commodity_t::ident_t c_count = read_binary_number<commodity_t::ident_t>(in);
+  commodities = commodities_next = new (commodity_t *)[c_count];
+  for (commodity_t::ident_t i = 0; i < c_count; i++) {
     commodity_t * commodity = read_binary_commodity(in);
     std::pair<commodities_map::iterator, bool> result
       = commodity_t::commodities.insert(commodities_pair(commodity->symbol,
@@ -299,11 +302,11 @@ unsigned int read_binary_journal(std::istream&	    in,
   journal->item_pool	 = item_pool;
   journal->item_pool_end = item_pool + pool_size;
 
-  accounts.clear();
-  commodities.clear();
-  bigints.clear();
-
+  delete[] accounts;
+  delete[] commodities;
   delete[] string_pool;
+
+  bigints.clear();
 
   return count;
 }
@@ -418,6 +421,18 @@ void write_binary_commodity(std::ostream& out, commodity_t * commodity)
   write_binary_amount(out, commodity->conversion);
 }
 
+static inline account_t::ident_t count_accounts(account_t * account)
+{
+  account_t::ident_t count = 1;
+
+  for (accounts_map::iterator i = account->accounts.begin();
+       i != account->accounts.end();
+       i++)
+    count += count_accounts((*i).second);
+
+  return count;
+}
+
 void write_binary_account(std::ostream& out, account_t * account)
 {
   account->ident = ++account_index;
@@ -459,6 +474,7 @@ void write_binary_journal(std::ostream& out, journal_t * journal,
     }
   }
 
+  write_binary_number<account_t::ident_t>(out, count_accounts(journal->master));
   write_binary_account(out, journal->master);
 
   write_binary_number<commodity_t::ident_t>(out, commodity_t::commodities.size() - 1);

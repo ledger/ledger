@@ -21,6 +21,7 @@ using namespace ledger;
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <list>
 #include <memory>
 #include <algorithm>
 #include <iterator>
@@ -82,7 +83,7 @@ regexps_to_predicate(std::list<std::string>::const_iterator begin,
 		     const bool account_regexp		= false,
 		     const bool add_account_short_masks = false)
 {
-  std::vector<std::string> regexps(2);
+  std::string regexps[2];
 
   // Treat the remaining command-line arguments as regular
   // expressions, used for refining report results.
@@ -106,37 +107,37 @@ regexps_to_predicate(std::list<std::string>::const_iterator begin,
       regexps[0] += *i;
     }
 
-  for (std::vector<std::string>::const_iterator i = regexps.begin();
-       i != regexps.end();
-       i++)
-    if (! (*i).empty()) {
-      if (! config->predicate.empty())
-	config->predicate += "&";
+  for (int i = 0; i < 2; i++) {
+    if (regexps[i].empty())
+      continue;
 
-      if (i != regexps.begin()) {
-	config->predicate += "!";
-      }
-      else if (add_account_short_masks) {
-	if ((*i).find(':') != std::string::npos) {
-	  config->show_subtotal = true;
-	} else {
-	  if (! config->display_predicate.empty())
-	    config->display_predicate += "&";
-	  else if (! config->show_empty)
-	    config->display_predicate += "T&";
+    if (! config->predicate.empty())
+      config->predicate += "&";
 
-	  config->display_predicate += "///(?:";
-	  config->display_predicate += *i;
-	  config->display_predicate += ")/";
-	}
-      }
-
-      if (! account_regexp)
-	config->predicate += "/";
-      config->predicate += "/(?:";
-      config->predicate += *i;
-      config->predicate += ")/";
+    if (i == 1) {
+      config->predicate += "!";
     }
+    else if (add_account_short_masks) {
+      if (regexps[i].find(':') != std::string::npos) {
+	config->show_subtotal = true;
+      } else {
+	if (! config->display_predicate.empty())
+	  config->display_predicate += "&";
+	else if (! config->show_empty)
+	  config->display_predicate += "T&";
+
+	config->display_predicate += "///(?:";
+	config->display_predicate += regexps[i];
+	config->display_predicate += ")/";
+      }
+    }
+
+    if (! account_regexp)
+      config->predicate += "/";
+    config->predicate += "/(?:";
+    config->predicate += regexps[i];
+    config->predicate += ")/";
+  }
 }
 
 int main(int argc, char * argv[], char * envp[])
@@ -208,21 +209,23 @@ int main(int argc, char * argv[], char * envp[])
   int entry_count = 0;
 
   try {
-    if (! config->init_file.empty())
+    if (! config->init_file.empty()) {
       if (parser_t::parse_file(config->init_file, journal.get()))
 	throw error("Entries not allowed in initialization file");
+      journal->sources.pop_front(); // remove init file
+    }
 
     if (use_cache && ! config->cache_file.empty() &&
 	! config->data_file.empty()) {
-      entry_count += parser_t::parse_file(config->cache_file, journal.get(),
-					  NULL, &config->data_file);
-      journal->sources.pop_front(); // remove cache_file
-
-      if (entry_count == 0) {
-	journal.reset(new journal_t);
-	cache_dirty = true;
-      } else {
-	cache_dirty = false;
+      cache_dirty = true;
+      if (access(config->cache_file.c_str(), R_OK) != -1) {
+	std::ifstream stream(config->cache_file.c_str());
+	if (bin_parser->test(stream)) {
+	  entry_count += bin_parser->parse(stream, journal.get(), NULL,
+					   &config->data_file);
+	  if (entry_count > 0)
+	    cache_dirty = false;
+	}
       }
     }
 

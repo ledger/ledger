@@ -83,8 +83,7 @@ void process_arguments(int argc, char ** argv, const bool anywhere,
       if ((*i)[2] == '\0')
 	break;
 
-      for (std::vector<option_t>::iterator j
-	     = option_handler::options.begin();
+      for (std::list<option_t>::iterator j = option_handler::options.begin();
 	   j != option_handler::options.end();
 	   j++)
 	if ((*j).wants_arg) {
@@ -108,8 +107,7 @@ void process_arguments(int argc, char ** argv, const bool anywhere,
       std::cerr << "Error: illegal option " << *i << std::endl;
       std::exit(1);
     } else {
-      for (std::vector<option_t>::iterator j
-	     = option_handler::options.begin();
+      for (std::list<option_t>::iterator j = option_handler::options.begin();
 	   j != option_handler::options.end();
 	   j++)
 	if ((*i)[1] == (*j).short_opt) {
