@@ -138,8 +138,10 @@ void collapse_transactions::report_cumulative_subtotal()
     handle_value(result, &totals_account, last_entry, 0, xact_temps, handler);
   }
 
-  subtotal = 0;
-  count    = 0;
+  last_entry = NULL;
+  last_xact  = NULL;
+  subtotal   = 0;
+  count      = 0;
 }
 
 void changed_value_transactions::output_diff(const std::time_t current)

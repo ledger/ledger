@@ -273,7 +273,7 @@ class collapse_transactions : public item_handler<transaction_t>
     // If we've reached a new entry, report on the subtotal
     // accumulated thus far.
 
-    if (last_entry && last_entry != xact.entry)
+    if (last_entry && last_entry != xact.entry && count > 0)
       report_cumulative_subtotal();
 
     add_transaction_to(xact, subtotal);
