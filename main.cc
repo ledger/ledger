@@ -305,9 +305,9 @@ int parse_and_report(int argc, char * argv[], char * envp[])
 
     if (account_has_xdata(*journal->master)) {
       account_xdata_t& xdata = account_xdata(*journal->master);
-      xdata.value = xdata.total;
       if (xdata.dflags & ACCOUNT_TO_DISPLAY) {
 	*out << "--------------------\n";
+	xdata.value = xdata.total;
 	acct_formatter.format.format(*out, details_t(*journal->master));
       }
     }

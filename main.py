@@ -215,7 +215,7 @@ class FormatEntries (FormatTransactions):
 
 	self.last_entry = xact.entry;
 
-class FormatAccount (AccountHandler):
+class FormatAccounts (AccountHandler):
     output = None
 
     def __init__ (self, fmt, pred):
@@ -232,6 +232,14 @@ class FormatAccount (AccountHandler):
     def __del__ (self):
 	if config.output_file:
 	    self.output.close ()
+
+    def final (self, account):
+	if account_has_xdata(account):
+	    xdata = account_xdata(account)
+	    if xdata.dflags & ACCOUNT_TO_DISPLAY:
+		print "--------------------"
+		xdata.value = xdata.total
+		self.output.write(self.formatter.format(account))
 
     def flush (self):
 	self.output.flush ()
@@ -369,13 +377,8 @@ if command == "b":
     acct_formatter = FormatAccounts (format, config.display_predicate)
     sum_accounts (journal.master)
     walk_accounts (journal.master, acct_formatter, config.sort_string)
+    acct_formatter.final (journal.master)
     acct_formatter.flush ()
-    #if account_has_xdata(journal.master):
-    #  account_xdata(journal.master).value = account_xdata(journal.master).total;
-    #
-    #  if account_xdata(journal.master).dflags & ACCOUNT_TO_DISPLAY:
-    #      print "--------------------"
-    #      config.format.format(out, details_t(*journal->master));
 
 elif command == "E":
     acct_formatter = FormatEquity (format, config.display_predicate)
