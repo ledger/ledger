@@ -123,4 +123,5 @@ all-clean: maintainer-clean
 		.gdb_history gmon.out h out TAGS ledger valexpr .deps \
 		build AUTHORS COPYING INSTALL Makefile aclocal.m4 autom4te \
 		acconf.h acconf.h.in  config.guess config.sub configure \
-		depcomp install-sh missing stamp texinfo.tex Makefile.in
+		depcomp install-sh missing stamp texinfo.tex Makefile.in \
+		results.out
