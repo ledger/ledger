@@ -1,111 +1,96 @@
 #include "reconcile.h"
+#include "walk.h"
 
 namespace ledger {
 
-unsigned long called = 0;
-bool search_for_balance(const value_t& balance,
-			const value_t& amount,
-			transactions_list::iterator beg,
-			transactions_list::iterator end)
+#define xact_next(x)     ((transaction_t *)(x)->data)
+#define xact_next_ptr(x) ((transaction_t **)&(x)->data)
+
+bool search_for_balance(amount_t& amount,
+			transaction_t ** prev, transaction_t * next)
 {
-  called++;
-  if (balance == amount)
-    return true;
+  for (; next; next = xact_next(next)) {
+    transaction_t * temp = *prev;
+    *prev = next;
 
-  for (transactions_list::iterator i = beg; i != end; ) {
-    transactions_list::iterator x = i;
-    (*x)->data = (void *)true;
-    if (search_for_balance(balance, amount + (*x)->amount, ++i, end))
+    amount -= next->amount;
+    if (! amount ||
+	search_for_balance(amount, xact_next_ptr(next), xact_next(next)))
       return true;
-    (*x)->data = NULL;
-  }
+    amount += next->amount;
 
+    *prev = temp;
+  }
   return false;
 }
 
-reconcile_results_t reconcile_account(journal_t&     journal,
-				      account_t&     account,
-				      const value_t& balance)
+static void push_chain_to_list(transaction_t * first,
+			       transactions_list& xact_list)
 {
-  // This routine attempts to reconcile an account against a given
-  // `balance' by marking transactions as "cleared" until the cleared
-  // balance matches the expected `balance'.
-  //
-  // The real difficulty is that sometimes there are transactions in
-  // the journal which never make it to the statement (they might be
-  // drawing from the wrong account), or there could be transactions
-  // which haven't been added yet.  In both of these cases the best
-  // one can do is guess, and if that fails, to throw up their hands
-  // in despair.
-  //
-  // As such, this algorithm is very likely to fail.  The hope is that
-  // sometimes it won't fail, and then it can save the user a fair bit
-  // of time.
-  //
-  // If the algorithm succeeds in auto-reconciling the account, then
-  // all the relevant data is return in the form of a
-  // `reconcile_results_t' structure (see reconcile.h).
+  while (first) {
+    transaction_t * curr = first;
+    xact_list.push_back(curr);
+    first = xact_next(first);
+    curr->data = 0;
+  }
+}
 
-  // Compute the current balances for the given account.
+void reconcile_transactions(transactions_list& xact_list,
+			    value_t&	       balance,
+			    const time_t       cutoff,
+			    const bool         all_pending)
+{
   value_t cleared_balance;
   value_t pending_balance;
 
-  reconcile_results_t results;
-  transactions_list   pending_xacts;
+  transaction_t *  first    = NULL;
+  transaction_t ** last_ptr = &first;
 
-  for (entries_list::iterator e = journal.entries.begin();
-       e != journal.entries.end();
-       e++)
-    for (transactions_list::iterator x = (*e)->transactions.begin();
-	 x != (*e)->transactions.end();
-	 x++)
-      if ((*x)->account == &account) {
-	switch ((*e)->state) {
-	case entry_t::CLEARED:
-	  cleared_balance += (*x)->amount;
+  clear_transactions_xdata();
+
+  bool found_pending = false;
+  for (transactions_list::iterator x = xact_list.begin();
+       x != xact_list.end();
+       x++)
+    if (! cutoff || std::difftime((*x)->entry->date, cutoff) < 0)
+      switch ((*x)->entry->state) {
+      case entry_t::CLEARED:
+	cleared_balance += (*x)->amount;
+	if (! found_pending)
 	  break;
-	case entry_t::UNCLEARED:
-	case entry_t::PENDING:
-	  pending_balance += (*x)->amount;
-	  pending_xacts.push_back(*x);
-	  break;
-	}
+	// fall through...
+      case entry_t::UNCLEARED:
+      case entry_t::PENDING:
+	pending_balance += (*x)->amount;
+	if (all_pending)
+	  found_pending = true;
+	*last_ptr = *x;
+	last_ptr = (transaction_t **) &(*x)->data;
+	break;
       }
 
-  results.previous_balance = cleared_balance;
+  if (all_pending) {
+    xact_list.clear();
+    push_chain_to_list(first, xact_list);
+    return;
+  }
+
+  balance -= cleared_balance;
+  if (balance.type >= value_t::BALANCE)
+    throw error("Cannot reconcile accounts with multiple commodities");
+  balance.cast(value_t::AMOUNT);
 
   // If the amount to reconcile is the same as the pending balance,
   // then assume an exact match and return the results right away.
-  value_t to_reconcile = balance - cleared_balance;
-  if (to_reconcile == pending_balance) {
-    results.remaining_balance = 0L;
-    results.pending_balance   = pending_balance;
-    results.pending_xacts     = pending_xacts;
-    return results;
+  amount_t to_reconcile = *((amount_t *) balance.data);
+  pending_balance.cast(value_t::AMOUNT);
+  if (to_reconcile == *((amount_t *) pending_balance.data) ||
+      search_for_balance(to_reconcile, &first, first)) {
+    xact_list.clear();
+    push_chain_to_list(first, xact_list);
+  } else {
+    throw error("Could not reconcile account!");
   }
-
-  if (search_for_balance(to_reconcile, value_t(),
-			 pending_xacts.begin(), pending_xacts.end())) {
-    results.remaining_balance = pending_balance - to_reconcile;
-    results.pending_balance   = to_reconcile;
-
-    for (transactions_list::iterator i = pending_xacts.begin();
-	 i != pending_xacts.end();
-	 i++)
-      if ((*i)->data) {
-	(*i)->data = NULL;
-	results.pending_xacts.push_back(*i);
-      }
-    return results;
-  }
-
-  // At this point we have an uncleared amount X, and a known desired
-  // amount of Y.  X != Y because not all of the transactions in
-  // `pending_xacts' are desired, or some are missing, or both.  In
-  // the case that none are missing, we now attempt a permutative
-  // search to discover which should be removed to yield the amount Y.
-
-  throw error("Could not reconcile account!");
 }
 
 } // namespace ledger
