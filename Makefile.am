@@ -1,8 +1,8 @@
 lib_LTLIBRARIES = libledger.la
 libledger_la_CXXFLAGS =
-libledger_la_SOURCES = amount.cc balance.cc value.cc autoxact.cc \
-	binary.cc config.cc datetime.cc format.cc journal.cc option.cc \
-	parser.cc qif.cc quotes.cc textual.cc valexpr.cc walk.cc
+libledger_la_SOURCES = amount.cc autoxact.cc balance.cc binary.cc \
+	config.cc datetime.cc derive.cc format.cc journal.cc option.cc \
+	parser.cc qif.cc quotes.cc textual.cc valexpr.cc value.cc walk.cc
 if READ_GNUCASH
 libledger_la_SOURCES += gnucash.cc
 endif

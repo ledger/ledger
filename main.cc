@@ -11,6 +11,7 @@
 #include "format.h"
 #include "walk.h"
 #include "quotes.h"
+#include "derive.h"
 #include "option.h"
 #include "config.h"
 #include "debug.h"
@@ -239,7 +240,7 @@ int parse_and_report(int argc, char * argv[], char * envp[])
 
   std::auto_ptr<entry_t> new_entry;
   if (command == "e") {
-    new_entry.reset(journal->derive_entry(arg, args.end()));
+    new_entry.reset(derive_new_entry(*journal, arg, args.end()));
     if (! new_entry.get())
       return 1;
   }

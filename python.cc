@@ -29,6 +29,7 @@ void export_format();
 void export_valexpr();
 void export_datetime();
 void export_autoxact();
+void export_derive();
 
 void initialize_ledger_for_python()
 {
@@ -50,6 +51,7 @@ void initialize_ledger_for_python()
   export_valexpr();
   export_datetime();
   export_autoxact();
+  export_derive();
 
   module_initialized = true;
 }

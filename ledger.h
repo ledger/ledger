@@ -29,6 +29,9 @@
 #include <textual.h>
 #include <autoxact.h>
 #include <binary.h>
+#ifdef READ_GNUCASH
+#include <gnucash.h>
+#endif
 #include <qif.h>
 
 #include <error.h>

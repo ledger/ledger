@@ -118,7 +118,7 @@ config.process_options(command, args);
 
 new_entry = None
 if command == "e":
-    new_entry = journal.derive_entry (args)
+    new_entry = derive_new_entry (journal, args)
     if new_entry is None:
 	sys.exit (1)
 

@@ -251,9 +251,6 @@ class journal_t
   bool add_entry(entry_t * entry);
   bool remove_entry(entry_t * entry);
 
-  entry_t * derive_entry(strings_list::iterator begin,
-			 strings_list::iterator end);
-
   bool valid() const;
 };
 

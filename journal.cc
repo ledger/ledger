@@ -426,117 +426,6 @@ bool journal_t::remove_entry(entry_t * entry)
   return true;
 }
 
-entry_t * journal_t::derive_entry(strings_list::iterator i,
-				  strings_list::iterator end)
-{
-  std::auto_ptr<entry_t> added(new entry_t);
-
-  entry_t * matching = NULL;
-
-  if (! parse_date((*i).c_str(), &added->date))
-    throw error("Bad date passed to 'entry'");
-
-  if (++i == end)
-    throw error("Too few arguments to 'entry'");
-
-  mask_t regexp(*i++);
-
-  for (entries_list::reverse_iterator j = entries.rbegin();
-       j != entries.rend();
-       j++)
-    if (regexp.match((*j)->payee)) {
-      matching = *j;
-      break;
-    }
-
-  added->payee = matching ? matching->payee : regexp.pattern;
-
-  if (i == end)
-    throw error("Too few arguments to 'entry'");
-
-  if ((*i)[0] == '-' || std::isdigit((*i)[0])) {
-    if (! matching)
-      throw error("Could not determine the account to draw from");
-
-    transaction_t * m_xact, * xact, * first;
-    m_xact = matching->transactions.front();
-
-    first = xact = new transaction_t(m_xact->account, amount_t(*i++));
-    added->add_transaction(xact);
-
-    if (xact->amount.commodity().symbol.empty())
-      xact->amount.set_commodity(m_xact->amount.commodity());
-
-    m_xact = matching->transactions.back();
-
-    xact = new transaction_t(m_xact->account, - first->amount);
-    added->add_transaction(xact);
-
-    if (i != end) {
-      account_t * acct = find_account_re(*i);
-      if (! acct)
-	acct = find_account(*i);
-      if (acct)
-	added->transactions.back()->account = acct;
-    }
-  } else {
-    while (i != end) {
-      std::string&  re_pat(*i++);
-      account_t *   acct  = NULL;
-      commodity_t * cmdty = NULL;
-
-      if (matching) {
-	mask_t acct_regex(re_pat);
-
-	for (transactions_list::const_iterator x
-	       = matching->transactions.begin();
-	     x != matching->transactions.end();
-	     x++) {
-	  if (acct_regex.match((*x)->account->fullname())) {
-	    acct  = (*x)->account;
-	    cmdty = &(*x)->amount.commodity();
-	    break;
-	  }
-	}
-      }
-
-      if (! acct) {
-	acct = find_account_re(re_pat);
-	if (acct && acct->transactions.size() > 0)
-	  cmdty = &acct->transactions.back()->amount.commodity();
-      }
-
-      if (! acct)
-	acct = find_account(re_pat);
-
-      if (i == end) {
-	added->add_transaction(new transaction_t(acct));
-	goto done;
-      }
-
-      transaction_t * xact = new transaction_t(acct, amount_t(*i++));
-      if (! xact->amount.commodity())
-	xact->amount.set_commodity(*cmdty);
-
-      added->add_transaction(xact);
-    }
-
-    if (! matching) {
-      throw error("Could not determine the account to draw from");
-    } else {
-      transaction_t * xact
-	= new transaction_t(matching->transactions.back()->account);
-      added->add_transaction(xact);
-    }
-  }
-
- done:
-  if (! run_hooks(entry_finalize_hooks, *added))
-    return NULL;
-
-  return added.release();
-}
-
 bool journal_t::valid() const
 {
   if (! master->valid())
@@ -798,8 +687,6 @@ void export_journal()
     .def("remove_entry_finalize_hook", py_remove_entry_finalize_hook)
     .def("run_entry_finalize_hooks", py_run_entry_finalize_hooks)
 #endif
-    .def("derive_entry", &journal_t::derive_entry,
-	 return_value_policy<manage_new_object>())
 
     .def("valid", &journal_t::valid)
     ;
