@@ -1,8 +1,23 @@
 lib_LTLIBRARIES = libledger.la
 libledger_la_CXXFLAGS =
-libledger_la_SOURCES = amount.cc autoxact.cc balance.cc binary.cc \
-	config.cc datetime.cc derive.cc format.cc journal.cc option.cc \
-	parser.cc qif.cc quotes.cc textual.cc valexpr.cc value.cc walk.cc
+libledger_la_SOURCES = \
+	amount.cc      \
+	autoxact.cc    \
+	balance.cc     \
+	binary.cc      \
+	config.cc      \
+	datetime.cc    \
+	derive.cc      \
+	format.cc      \
+	journal.cc     \
+	option.cc      \
+	parser.cc      \
+	qif.cc	       \
+	quotes.cc      \
+	textual.cc     \
+	valexpr.cc     \
+	value.cc       \
+	walk.cc
 if READ_GNUCASH
 libledger_la_SOURCES += gnucash.cc
 endif
@@ -16,6 +31,33 @@ libledger_la_CXXFLAGS += -DDEBUG_LEVEL=4
 libledger_la_SOURCES  += debug.cc
 endif
 libledger_la_LDFLAGS = -version-info 2:0
+
+pkginclude_HEADERS = \
+	acconf.h     \
+	amount.h     \
+	autoxact.h   \
+	balance.h    \
+	binary.h     \
+	config.h     \
+	datetime.h   \
+	debug.h      \
+	derive.h     \
+	error.h      \
+	format.h     \
+	gnucash.h    \
+	journal.h    \
+	ledger.h     \
+	option.h     \
+	parser.h     \
+	python.h     \
+	qif.h	     \
+	quotes.h     \
+	textual.h    \
+	timing.h     \
+	util.h	     \
+	valexpr.h    \
+	value.h      \
+	walk.h
 
 ######################################################################
 
@@ -34,7 +76,7 @@ info_TEXINFOS = ledger.texi
 
 if HAVE_BOOST_PYTHON
 
-bin_PROGRAMS += ledger.so
+noinst_PROGRAMS = ledger.so
 
 ledger.so: python.cc libledger.la
 	CFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS) -L. -L.libs" \
@@ -42,7 +84,7 @@ ledger.so: python.cc libledger.la
 
 install-exec-hook:
 	CFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS) -L. -L.libs" \
-	    python setup.py install --prefix=$(DESTDIR)
+	    python setup.py install --install-base=$(DESTDIR) --root
 
 endif
 
