@@ -275,9 +275,18 @@ void interval_transactions::operator()(transaction_t& xact)
     }
 
     std::time_t temp;
+#if DEBUG_LEVEL >= RELEASE
+    int cutoff = 10000;
+#endif
     while (std::difftime(xact.entry->date,
-			 temp = interval.increment(quant)) > 0)
+			 temp = interval.increment(quant)) > 0) {
+      if (quant == temp)
+	break;
       quant = temp;
+#if DEBUG_LEVEL >= RELEASE
+      assert(--cutoff > 0);
+#endif
+    }
     interval.begin = quant;
   }
 

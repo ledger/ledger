@@ -47,8 +47,17 @@ std::time_t interval_t::first(const std::time_t moment)
     }
 
     std::time_t temp;
-    while (std::difftime(moment, temp = increment(quant)) > 0)
+#if DEBUG_LEVEL >= RELEASE
+    int cutoff = 10000;
+#endif
+    while (std::difftime(moment, temp = increment(quant)) > 0) {
+      if (quant == temp)
+	break;
       quant = temp;
+#if DEBUG_LEVEL >= RELEASE
+      assert(--cutoff > 0);
+#endif
+    }
   }
 
   return quant;
@@ -90,7 +99,8 @@ static void parse_inclusion_specifier(const std::string& word,
   struct std::tm when;
 
   if (! parse_date_mask(word.c_str(), &when))
-    throw interval_expr_error("Could not parse 'in' date mask");
+    throw interval_expr_error(std::string("Could not parse date mask: ") +
+			      word);
 
   when.tm_hour = 0;
   when.tm_min  = 0;
