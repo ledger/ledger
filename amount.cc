@@ -1141,21 +1141,19 @@ amount_t commodity_t::value(const std::time_t moment)
   std::time_t age = 0;
   amount_t    price;
 
-  if (! history)
-    return price;
-
-  for (history_map::reverse_iterator i = history->prices.rbegin();
-       i != history->prices.rend();
-       i++)
-    if (moment == 0 || std::difftime(moment, (*i).first) >= 0) {
-      age   = (*i).first;
-      price = (*i).second;
-      break;
-    }
+  if (history)
+    for (history_map::reverse_iterator i = history->prices.rbegin();
+	 i != history->prices.rend();
+	 i++)
+      if (moment == 0 || std::difftime(moment, (*i).first) >= 0) {
+	age   = (*i).first;
+	price = (*i).second;
+	break;
+      }
 
   if (updater)
     (*updater)(*this, moment, age,
-	       (history->prices.size() > 0 ?
+	       (history && history->prices.size() > 0 ?
 		(*history->prices.rbegin()).first : 0), price);
 
   return price;

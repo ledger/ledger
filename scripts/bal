@@ -18,4 +18,4 @@ else
   limit=""
 fi
 
-ledger -VQ $switch $limit -s -S "-AT" balance $accts
+ledger -VQ $switch $limit -s -S "-UT" balance $accts

@@ -46,6 +46,8 @@ void quotes_by_script::operator()(commodity_t&      commodity,
       success = false;
     if (pclose(fp) != 0)
       success = false;
+  } else {
+    success = false;
   }
 
   if (success && buf[0]) {
