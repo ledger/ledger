@@ -37,6 +37,8 @@ static inline char * next_element(char * buf, bool variable = false)
 }
 
 static const char *formats[] = {
+  "%Y-%m-%d",
+  "%m-%d",
   "%Y/%m/%d",
   "%m/%d",
   "%Y.%m.%d",
