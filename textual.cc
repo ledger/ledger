@@ -3,6 +3,7 @@
 #include "valexpr.h"
 #include "error.h"
 #include "option.h"
+#include "timing.h"
 
 #include <fstream>
 #include <sstream>
@@ -222,6 +223,11 @@ bool finalize_entry(entry_t * entry)
   return ! balance;
 }
 
+TIMER_DEF(entry_finish,  "finalizing entry");
+TIMER_DEF(entry_xacts,   "parsing transactions");
+TIMER_DEF(entry_details, "parsing entry details");
+TIMER_DEF(entry_date,    "parsing entry date");
+
 entry_t * parse_entry(std::istream& in, account_t * master)
 {
   entry_t * curr = new entry_t;
@@ -232,12 +238,18 @@ entry_t * parse_entry(std::istream& in, account_t * master)
 
   // Parse the date
 
+  TIMER_START(entry_date);
+
   char * next = next_element(line);
 
   if (! quick_parse_date(line, &curr->date))
     throw parse_error(path, linenum, "Failed to parse date");
 
+  TIMER_STOP(entry_date);
+
   // Parse the optional cleared flag: *
+
+  TIMER_START(entry_details);
 
   if (*next == '*') {
     curr->state = entry_t::CLEARED;
@@ -258,18 +270,28 @@ entry_t * parse_entry(std::istream& in, account_t * master)
 
   curr->payee = next;
 
+  TIMER_STOP(entry_details);
+
   // Parse all of the transactions associated with this entry
+
+  TIMER_START(entry_xacts);
 
   while (! in.eof() && (in.peek() == ' ' || in.peek() == '\t'))
     if (transaction_t * xact = parse_transaction(in, master, curr))
       curr->add_transaction(xact);
 
+  TIMER_STOP(entry_xacts);
+
   // If there were no transactions, throw away the entry
+
+  TIMER_START(entry_finish);
 
   if (curr->transactions.empty() || ! finalize_entry(curr)) {
     delete curr;
     return NULL;
   }
+
+  TIMER_STOP(entry_finish);
 
   return curr;
 }

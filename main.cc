@@ -427,6 +427,14 @@ OPT_BEGIN(weighted_trend, "Z", false) {
 } OPT_END(weighted_trend);
 
 
+TIMER_DEF(write_cache,	  "writing cache file");
+TIMER_DEF(report_gen,	  "generation of final report");
+TIMER_DEF(handle_options, "configuring based on options");
+TIMER_DEF(parse_files,	  "parsing ledger files");
+TIMER_DEF(process_env,	  "processing environment");
+TIMER_DEF(process_args,   "processing command-line arguments");
+TIMER_DEF(read_cache,	  "reading cache file");
+
 int main(int argc, char * argv[], char * envp[])
 {
 #ifdef DEBUG_ENABLED
@@ -438,7 +446,7 @@ int main(int argc, char * argv[], char * envp[])
 
   // A ledger data file must be specified
 
-  TIMER_START(read_cache, "reading cache file");
+  TIMER_START(read_cache);
 
   // jww (2004-08-13): use LEDGER_FILE
   use_cache = std::getenv("LEDGER") != NULL;
@@ -474,7 +482,7 @@ int main(int argc, char * argv[], char * envp[])
 
   // Parse the command-line options
 
-  TIMER_START(process_args, "processing command-line arguments");
+  TIMER_START(process_args);
 
   std::list<std::string> args;
 
@@ -490,7 +498,7 @@ int main(int argc, char * argv[], char * envp[])
 
   // Process options from the environment
 
-  TIMER_START(process_env, "processing environment");
+  TIMER_START(process_env);
 
   process_environment(envp, "LEDGER_");
 
@@ -503,7 +511,7 @@ int main(int argc, char * argv[], char * envp[])
 
   // Read the ledger file, unless we already read it from the cache
 
-  TIMER_START(parse_files, "parsing ledger files");
+  TIMER_START(parse_files);
 
   if (! use_cache || cache_dirty) {
     int entry_count = 0;
@@ -552,7 +560,7 @@ int main(int argc, char * argv[], char * envp[])
 
   std::string command = *arg++;
 
-  TIMER_START(handle_options, "configuring based on options");
+  TIMER_START(handle_options);
 
   if (command == "balance" || command == "bal" || command == "b")
     command = "b";
@@ -708,7 +716,7 @@ int main(int argc, char * argv[], char * envp[])
 
   // Walk the entries based on the report type and the options
 
-  TIMER_START(report_gen, "generation of final report");
+  TIMER_START(report_gen);
 
   if (command == "b") {
     std::auto_ptr<item_handler<transaction_t> > formatter;
@@ -834,7 +842,7 @@ int main(int argc, char * argv[], char * envp[])
 
   // Save the cache, if need be
 
-  TIMER_START(write_cache, "writing cache file");
+  TIMER_START(write_cache);
 
   if (use_cache && cache_dirty) {
     std::string cache_file = ledger_cache_file();
