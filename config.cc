@@ -3,6 +3,7 @@
 #include "quotes.h"
 
 #include <fstream>
+#include <stdlib.h>
 
 namespace ledger {
 
@@ -206,14 +207,16 @@ void parse_ledger_data(journal_t * journal,
 {
   int entry_count = 0;
 
-  if (! config.init_file.empty()) {
+  if (! config.init_file.empty() &&
+      access(config.init_file.c_str(), R_OK) != -1) {
     if (parse_journal_file(config.init_file, journal))
       throw error("Entries not allowed in initialization file");
     journal->sources.pop_front(); // remove init file
   }
 
   if (cache_parser && config.use_cache &&
-      ! config.cache_file.empty() && ! config.data_file.empty()) {
+      ! config.cache_file.empty() &&
+      ! config.data_file.empty()) {
     config.cache_dirty = true;
     if (access(config.cache_file.c_str(), R_OK) != -1) {
       std::ifstream stream(config.cache_file.c_str());
@@ -355,7 +358,11 @@ OPT_BEGIN(init, "i:") {
 } OPT_END(init);
 
 OPT_BEGIN(file, "f:") {
-  config.data_file = optarg;
+  if (access(optarg, R_OK) != -1)
+    config.data_file = optarg;
+  else
+    throw error(std::string("The ledger file '") + optarg +
+		"' does not exist or is not readable");
 } OPT_END(file);
 
 OPT_BEGIN(cache, ":") {

@@ -247,8 +247,13 @@ int parse_and_report(int argc, char * argv[], char * envp[])
   TIMER_START(report_gen);
 
   std::ostream * out = &std::cout;
-  if (! config.output_file.empty())
-    out = new std::ofstream(config.output_file.c_str());
+  if (! config.output_file.empty()) {
+    if (access(config.output_file.c_str(), W_OK) == -1)
+      throw error(std::string("Cannot write output to file '" +
+			      config.output_file + "'"));
+    else
+      out = new std::ofstream(config.output_file.c_str());
+  }
 
   // Compile the format strings
 
@@ -328,9 +333,15 @@ int parse_and_report(int argc, char * argv[], char * envp[])
 
   TIMER_START(write_cache);
 
-  if (config.use_cache && config.cache_dirty && ! config.cache_file.empty()) {
-    std::ofstream stream(config.cache_file.c_str());
-    write_binary_journal(stream, journal.get(), &journal->sources);
+  if (config.use_cache && config.cache_dirty &&
+      ! config.cache_file.empty()) {
+    if (access(config.cache_file.c_str(), W_OK) == -1) {
+      std::cerr << "Warning: Cannot update cache file '"
+		<< config.cache_file << "'" << std::endl;
+    } else {
+      std::ofstream stream(config.cache_file.c_str());
+      write_binary_journal(stream, journal.get(), &journal->sources);
+    }
   }
 
   TIMER_STOP(write_cache);
