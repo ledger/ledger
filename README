@@ -622,6 +622,144 @@ ledger entries, use:
 ledger balance Liabilities:Huqúq
 </example>
 
+
+** Using Emacs to Keep Your Ledger
+
+In the Ledger tarball is an Emacs module, =ledger.el=.  This module
+makes the process of keeping a text ledger much easier for Emacs
+users.  I recommend putting this at the top of your ledger file:
+
+<example>
+; -*-ledger-*-
+</example>
+
+And this in your =.emacs= file, after copying =ledger.el= to your
+site-lisp directory:
+
+<example>
+(load "ledger")
+</example>
+
+Now when you edit your ledger file, it will be in =ledger-mode=.
+=ledger-mode= adds the following commands:
+
+C-c C-a ::
+  For quickly adding new entries based on the form of older ones
+  (see previous section).
+
+C-c C-c ::
+  Toggles the "cleared" flag of the transaction under point.
+
+C-c C-r ::
+  Reconciles an account by displaying the transactions in another
+  buffer, where simply hitting the spacebar will toggle the cleared
+  flag of the transaction in the ledger.  It also displays the current
+  cleared balance for the account in the modeline.
+
+** Using GnuCash to Keep Your Ledger
+
+The Ledger tool is fast and simple, but it offers no custom method for
+actually editing the ledger.  It assumes you know how to use a text
+editor, and like doing so.  Perhaps an Emacs mode will appear someday
+soon to make editing Ledger's data files much easier.
+
+Until then, you are free to use GnuCash to maintain your ledger, and
+the Ledger program for querying and reporting on the contents
+of that ledger.  It takes a little longer to parse the XML data format
+that GnuCash uses, but the end result is identical.
+
+Then again, why would anyone use a Gnome-centric, 35 megabyte behemoth
+to edit their data, and a 65 kilobyte binary to query it...
+
+** Using timeclock to record billable time
+
+The timeclock tool makes it easy to track time events, like clocking
+into and out of a particular job.  These events accumulate in a
+timelog file.
+
+Each in/out event may have an optional description.  If the "in"
+description is a ledger account name, these in/out pairs may be viewed
+as virtual transactions, adding time commodities (hours) to that
+account.
+
+For example, the command-line version of the timeclock tool (which is
+written in Python) could be used to begin a timelog file like:
+
+<example>
+$ export TIMELOG=$HOME/.timelog
+$ ti ClientOne  category
+$ sleep 10
+$ to waited for ten seconds
+</example>
+
+The **.timelog** file now contains:
+
+<example>
+i 2004/10/06 15:21:00 ClientOne  category
+o 2004/10/06 15:21:10 waited for ten seconds
+</example>
+
+Ledger can parse this directly, as if it had seen the following ledger
+entry:
+
+<example>
+2004/10/06 category
+    (ClientOne)      0.00277h
+</example>
+
+In other words, the timelog event pair is seen as adding 0.00277h (ten
+seconds) worth of time to the ClientOne account.  This would be
+considered billable time, which later could be invoiced and credited
+to accounts receivable:
+
+<example>
+2004/11/01 (INV#1) ClientOne, Inc.
+    Receivable:ClientOne       $0.10
+    ClientOne              -0.00277h @ $35.00
+</example>
+
+The above transaction converts the clocked time into an invoice for
+the time spent, at an hourly rate of $35.  Once the invoice is paid,
+the money is deposited from the receivable account into a checking
+account:
+
+<example>
+2004/12/01 ClientOne, Inc.
+    Assets:Checking            $0.10
+    Receivable:ClientOne
+</example>
+
+And now the time spent has been turned into hard cash in the checking
+account.
+
+The advantage to using timeclock and invoicing to bill time is that
+you will always know, by looking at the balance report, exactly how
+much unbilled and unpaid time you've spent working for any particular
+client.
+
+I like to =!include= my timelog at the top of my company's accounting
+ledger, with the attached prefix "Billable":
+
+<example>
+; -*-ledger-*-
+
+; This is the ledger file for my company.  But first, include the
+; timelog data, entering all of the time events within the umbrella
+; account "Billable".
+
+!include /home/johnw/.timelog Billable
+
+; Here follows this fiscal year's transactions for the company.
+
+2004/11/01 (INV#1) ClientOne, Inc.
+    Receivable:ClientOne           $0.10
+    Billable:ClientOne         -0.00277h @ $35.00
+
+2004/12/01 ClientOne, Inc.
+    Assets:Checking                $0.10
+    Receivable:ClientOne
+</example>
+
 * Running Ledger
 
 Now that you have an orderly and well-organized general ledger, it's
@@ -897,143 +1035,6 @@ launches =vi= to let you confirm that the entry looks appropriate.
 
 -v ::
   Display the version of ledger being used.
-
-* Using Emacs to Keep Your Ledger
-
-In the Ledger tarball is an Emacs module, =ledger.el=.  This module
-makes the process of keeping a text ledger much easier for Emacs
-users.  I recommend putting this at the top of your ledger file:
-
-<example>
-; -*-ledger-*-
-</example>
-
-And this in your =.emacs= file, after copying =ledger.el= to your
-site-lisp directory:
-
-<example>
-(load "ledger")
-</example>
-
-Now when you edit your ledger file, it will be in =ledger-mode=.
-=ledger-mode= adds the following commands:
-
-C-c C-a ::
-  For quickly adding new entries based on the form of older ones
-  (see previous section).
-
-C-c C-c ::
-  Toggles the "cleared" flag of the transaction under point.
-
-C-c C-r ::
-  Reconciles an account by displaying the transactions in another
-  buffer, where simply hitting the spacebar will toggle the cleared
-  flag of the transaction in the ledger.  It also displays the current
-  cleared balance for the account in the modeline.
-
-* Using GnuCash to Keep Your Ledger
-
-The Ledger tool is fast and simple, but it offers no custom method for
-actually editing the ledger.  It assumes you know how to use a text
-editor, and like doing so.  Perhaps an Emacs mode will appear someday
-soon to make editing Ledger's data files much easier.
-
-Until then, you are free to use GnuCash to maintain your ledger, and
-the Ledger program for querying and reporting on the contents
-of that ledger.  It takes a little longer to parse the XML data format
-that GnuCash uses, but the end result is identical.
-
-Then again, why would anyone use a Gnome-centric, 35 megabyte behemoth
-to edit their data, and a 65 kilobyte binary to query it...
-
-* Using timeclock to record billable time
-
-The timeclock tool makes it easy to track time events, like clocking
-into and out of a particular job.  These events accumulate in a
-timelog file.
-
-Each in/out event may have an optional description.  If the "in"
-description is a ledger account name, these in/out pairs may be viewed
-as virtual transactions, adding time commodities (hours) to that
-account.
-
-For example, the command-line version of the timeclock tool (which is
-written in Python) could be used to begin a timelog file like:
-
-<example>
-$ export TIMELOG=$HOME/.timelog
-$ ti ClientOne  category
-$ sleep 10
-$ to waited for ten seconds
-</example>
-
-The **.timelog** file now contains:
-
-<example>
-i 2004/10/06 15:21:00 ClientOne  category
-o 2004/10/06 15:21:10 waited for ten seconds
-</example>
-
-Ledger can parse this directly, as if it had seen the following ledger
-entry:
-
-<example>
-2004/10/06 category
-    (ClientOne)      0.00277h
-</example>
-
-In other words, the timelog event pair is seen as adding 0.00277h (ten
-seconds) worth of time to the ClientOne account.  This would be
-considered billable time, which later could be invoiced and credited
-to accounts receivable:
-
-<example>
-2004/11/01 (INV#1) ClientOne, Inc.
-    Receivable:ClientOne       $0.10
-    ClientOne              -0.00277h @ $35.00
-</example>
-
-The above transaction converts the clocked time into an invoice for
-the time spent, at an hourly rate of $35.  Once the invoice is paid,
-the money is deposited from the receivable account into a checking
-account:
-
-<example>
-2004/12/01 ClientOne, Inc.
-    Assets:Checking            $0.10
-    Receivable:ClientOne
-</example>
-
-And now the time spent has been turned into hard cash in the checking
-account.
-
-The advantage to using timeclock and invoicing to bill time is that
-you will always know, by looking at the balance report, exactly how
-much unbilled and unpaid time you've spent working for any particular
-client.
-
-I like to =!include= my timelog at the top of my company's accounting
-ledger, with the attached prefix "Billable":
-
-<example>
-; -*-ledger-*-
-
-; This is the ledger file for my company.  But first, include the
-; timelog data, entering all of the time events within the umbrella
-; account "Billable".
-
-!include /home/johnw/.timelog Billable
-
-; Here follows this fiscal year's transactions for the company.
-
-2004/11/01 (INV#1) ClientOne, Inc.
-    Receivable:ClientOne           $0.10
-    Billable:ClientOne         -0.00277h @ $35.00
-
-2004/12/01 ClientOne, Inc.
-    Assets:Checking                $0.10
-    Receivable:ClientOne
-</example>
 
 Footnotes:
 [1]  In some special cases, it will automatically balance the entry
