@@ -385,38 +385,33 @@ its various reports.  It will always report balances in terms of the
 commodity total, rather than the current value of those commodities.
 To enable pricing reports, three options are possible:
 
-**-B** ::
-  Report commodities in terms of their "basis cost", or what they cost
-  at the time of purchase.  Totals in the register and balance report
-  reflect the total amount spent.
-
-**-L MINS** ::
-  When using the =-P= or =-Q= flags, the Internet is consulted only
-  if current pricing data is older than MINS minutes.
-
-**-P** ::
-  Report commodities in terms of their market price.  The Internet is
-  consulted for current prices, by calling an external script named
-  =getquote= (a sample Perl script is provided, but the interface is
-  kept simple so replacements may be made).  Register reports always
-  give the total market value for the date of the entry -- which means
-  they may vary greatly from the sum of the values of the individual
-  entries.
+**-P FILE** ::
+  With this option, or if the environment variable =PRICE_HIST= is
+  set, pricing information obtained from the Internet will be kept
+  in this file.  Also, this file will be read after all other ledger
+  files are read, so that full history information is available for
+  reports.
   
-**-Q FILE** ::
-  Works like the =-P= flag, except it reads and saves downloaded price
-  information in =FILE=, accumulating a history of prices for each
-  commodity.  This is the same as using =-P= with the environment
-  variable =PRICE_HIST= set to =FILE=.
-
 **-T** ::
-  Report only commodity totals, not the market value or basis cost.
+  Report commodity totals only, not their market value or basis cost.
 
 **-V** ::
-  Report the market value for commodities, but without consulting the
-  Internet for current prices.  This uses only the pricing data saved
-  in the ledger file, or in the history file referenced by the
-  environment variable =PRICE_HIST=.
+  Report commodity values in terms of their last known market price.
+
+**-B** ::
+  Report commodities in terms of their "basis cost", or what they cost
+  at time of purchase.  Thus, totals in the register and balance
+  report reflect the total amount spent.
+
+**-Q FILE** ::
+  When needed (see the =-L= option) pricing quotes are obtained by
+  calling the script =getquote= (a sample Perl script is provided, but
+  the interface is kept simple so replacements may be made).
+
+**-L MINS** ::
+  When using the =-Q= flag, new quotes are obtained only if current
+  pricing data is older than MINS minutes.  The default is one day,
+  or 1440 minutes.
 
 Note that the =-B=, =-T=, =-V=, and =-P= and =-Q= flags are all
 mutually exclusive.  Whichever option appears last is used.
@@ -1065,19 +1060,34 @@ launches =vi= to let you confirm that the entry looks appropriate.
 
 ** Option summary
 
-**-B** ::
-  When printing accounts containing commodities, display the base
-  price for the commodity, rather than the quantity of that commodity
-  (the default) or its current price (if =-P= or =-Q= is used).  This
-  option causes only the price at time(s) of purchase to be
-  considered, not the current or historical price afterwards.
+*** Basic options
+
+**-v** ::
+  Display the version of ledger being used.
+
+**-h** ::
+  Print out quick help on the various options and commands.
+
+**-f FILE[<verbatim>=</verbatim>ACCOUNT]** ::
+  Read ledger entries from FILE.  This takes precedence over the
+  environment variable LEDGER.  If "<verbatim>=</verbatim>ACCOUNT" is
+  appended to the filename, then all of the entries are seen as if the
+  transactions accounts were prefixed by "ACCOUNT:".  There may be
+  multiple occurrences of the =-f= option.
+
+**-i FILE** ::
+  Read in the list of patterns to include/exclude from FILE.
+  Ordinarily, these are specified as arguments after the command.
+
+*** Filtering options
 
 **-b DATE** ::
   Only consider entries occuring on or after the given date.
 
-**-C** ::
-  Only consider entries whose cleared flag has been set.  The default
-  is to consider both.
+**-e DATE** ::
+  Only consider entries occuring before the given date.  The date is
+  not inclusive, so any entries occurring on that date will not be
+  used.
 
 **-c** ::
   Only consider entries occurring on or before the current date.
@@ -1088,52 +1098,15 @@ launches =vi= to let you confirm that the entry looks appropriate.
   such as "2004/05".  It's a shorthand for having to specify -b and -e
   together.
 
-**-E** ::
-  Also show empty accounts in the balance totals report.
+**-C** ::
+  Only consider entries whose cleared flag has been set.  The default
+  is to consider both.
 
-**-e DATE** ::
-  Only consider entries occuring before the given date.  The date is
-  not inclusive, so any entries occurring on that date will not be
-  used.
-
-**-F** ::
-  Print full account names in all cases, such as "Assets:Checking"
-  instead of just "Checking".  Only used current by the "balance"
-  command.
-
-**-f FILE[<verbatim>=</verbatim>ACCOUNT]** ::
-  Read ledger entries from FILE.  This takes precedence over the
-  environment variable LEDGER.  If "<verbatim>=</verbatim>ACCOUNT" is
-  appended to the filename, then all of the entries are seen as if the
-  transactions accounts were prefixed by "ACCOUNT:".  There may be
-  multiple occurrences of the =-f= option.
-
-**-G** ::
-  Modifies the output generated by -M to be friendly to programs like
-  Gnuplot.  It strips away the commodity label, and outputs only two
-  columns: the date and the amount.
-
-**-h** ::
-  Print out quick help on the various options and commands.
-
-**-i FILE** ::
-  Read in the list of patterns to include/exclude from FILE.
-  Ordinarily, these are specified as arguments after the command.
-
-**-L MINS** ::
-  Specifies the number of minutes old that pricing data can be, before
-  the =-Q= and =-P= options will download a new quote from the
-  Internet.  =-P= only downloads the information, while =-Q= maintains
-  the information in a history file.  The default value for this
-  option is one day, or 1440 minutes.
+**-U** ::
+  Show only uncleared transactions.  The default is to consider both.
 
 **-l AMT** ::
   Limit balance reports to those which are greater than AMT.
-
-**-M** ::
-  When used with the "register" command, causes only monthly subtotals
-  to appear.  This can be useful for looking at spending patterns.
-  TODO: Accept an argument which specifies the period to use.
 
 **-N REGEXP** ::
   If an account matches REGEXP, only display it in the balance report
@@ -1141,18 +1114,70 @@ launches =vi= to let you confirm that the entry looks appropriate.
   where one cannot spend that credit, and it will soon become negative
   anyway (such as credit cards).
 
+**-R** ::
+  Ignore all virtual transactions, and report only the real balance
+  for each account.
+
+*** Output formatting options
+
 **-n** ::
   Do not show subtotals in the balance report, or split transactions
   in the register report.
 
-**-P** ::
-  Download current prices for all commodities by calling the script
-  "getquote".  There is a "getquote" script included with ledger,
-  although any similar program could be used.  It must take a single
-  argument, the name of the commodity, and must report the value as a
-  single amount, such as would appear in a ledger file.  If the
-  commodity has no price, nothing should be output and the exit code
-  should be set to a non-zero value.
+**-s** ::
+  If an account has children, show them in the balance report.
+
+**-S** ::
+  Sort the ledger after reading it.  This may affect "register" and
+  "print" output.
+
+**-E** ::
+  Also show empty accounts in the balance totals report.
+
+**-F** ::
+  Print full account names in all cases, such as "Assets:Checking"
+  instead of just "Checking".  Only used current by the "balance"
+  command.
+
+**-M** ::
+  When used with the "register" command, causes only monthly subtotals
+  to appear.  This can be useful for looking at spending patterns.
+  TODO: Accept an argument which specifies the period to use.
+
+**-G** ::
+  Modifies the output generated by -M to be friendly to programs like
+  Gnuplot.  It strips away the commodity label, and outputs only two
+  columns: the date and the amount.
+
+*** Commodity reporting options
+
+**-P FILE** ::
+  With this option, or if the environment variable =PRICE_HIST= is
+  set, pricing information obtained from the Internet will be kept
+  in this file.  Also, this file will be read after all other ledger
+  files are read, so that full history information is available for
+  reports.
+  
+**-T** ::
+  Report commodity totals only, not their market value or basis cost.
+
+**-V** ::
+  Report commodity values in terms of their last known market price.
+
+**-B** ::
+  Report commodities in terms of their "basis cost", or what they cost
+  at time of purchase.  Thus, totals in the register and balance
+  report reflect the total amount spent.
+
+**-Q FILE** ::
+  When needed (see the =-L= option) pricing quotes are obtained by
+  calling the script =getquote= (a sample Perl script is provided, but
+  the interface is kept simple so replacements may be made).
+
+**-L MINS** ::
+  When using the =-Q= flag, new quotes are obtained only if current
+  pricing data is older than MINS minutes.  The default is one day,
+  or 1440 minutes.
 
 **-p ARG** ::
   If a string, such as "COMM=$1.20", the commodity COMM will be
@@ -1162,47 +1187,6 @@ launches =vi= to let you confirm that the entry looks appropriate.
   value of your dollars in terms of the ounces of gold they would buy,
   use: -p "$=0.00280112 AU" (or whatever the current exchange rate
   is).
-
-**-Q FILE** ::
-  This option, like =-P=, downloads commodities prices from the
-  Internet as needed, by calling the script "getquote" (see above).
-  However, this option takes a string argument: the file to write the
-  downloaded pricing data to.  On future runs, this pricing data is
-  consulted to see if it's fresh enough, to avoid downloading it from
-  the Internet again.  The freshness period is given by the =-L=
-  option, specifying the maximum allowable age in minutes.  The
-  default is one day.  So, to report the current value of your
-  investments up to the day, add =-Q ~/.pricedb= to your ledger
-  command-line.  Also, it is recommended that the =-Q= option always
-  appear after all uses of =-f=.
-
-**-R** ::
-  Ignore all virtual transactions, and report only the real balance
-  for each account.
-
-**-S** ::
-  Sort the ledger after reading it.  This may affect "register" and
-  "print" output.
-
-**-s** ::
-  If an account has children, show them in the balance report.
-
-**-T** ::
-  Show only commodities totals, do not convert to the basis cost or
-  the current market value.  This disables the effect of =-B=, =-P=
-  and =-Q=.
-
-**-U** ::
-  Show only uncleared transactions.  The default is to consider both.
-
-**-V** ::
-  Report the market value for commodities, but without consulting the
-  Internet for current prices.  This uses only the pricing data saved
-  in the ledger file, or in the history file referenced by the
-  environment variable =PRICE_HIST=.
-
-**-v** ::
-  Display the version of ledger being used.
 
 ** Environment variables
 

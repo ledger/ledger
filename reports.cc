@@ -820,42 +820,49 @@ static void show_help(std::ostream& out)
   std::cerr
     << "usage: ledger [options] COMMAND [options] [REGEXPS]" << std::endl
     << std::endl
-    << "ledger options:" << std::endl
-    << "  -B        report commodities in terms of their basis cost" << std::endl
+    << "Basic options:" << std::endl
+    << "  -h        display this help text" << std::endl
+    << "  -v        display version information" << std::endl
+    << "  -f FILE   specify pathname of ledger data file" << std::endl
+    << "  -i FILE   read list of inclusion regexps from FILE" << std::endl
+    << std::endl
+    << "Report filtering:" << std::endl
     << "  -b DATE   specify a beginning date" << std::endl
-    << "  -C        show only cleared transactions and balances" << std::endl
+    << "  -e DATE   specify an ending date" << std::endl
     << "  -c        do not show future entries (same as -e TODAY)" << std::endl
     << "  -d DATE   specify a date mask ('-d mon', for all mondays)" << std::endl
-    << "  -E        also show accounts with zero totals" << std::endl
-    << "  -e DATE   specify an ending date" << std::endl
-    << "  -F        print each account's full name" << std::endl
-    << "  -f FILE   specify pathname of ledger data file" << std::endl
-    << "  -G        use with -M to produce gnuplot-friendly output" << std::endl
-    << "  -h        display this help text" << std::endl
-    << "  -i FILE   read the list of inclusion regexps from FILE" << std::endl
-    << "  -L MINS   fetch price quotes if info older than MINS" << std::endl
-    << "  -l AMT    don't print balance totals whose abs value is <AMT" << std::endl
-    << "  -M        print register using monthly sub-totals" << std::endl
-    << "  -N REGEX  accounts matching REGEXP only display if negative" << std::endl
-    << "  -n        do not calculate parent account totals" << std::endl
-    << "  -P        download price quotes from the Internet" << std::endl
-    << "            (works by running the command \"getquote SYMBOL\")" << std::endl
-    << "  -p ARG    set a direct price conversion: COMM=PRICE" << std::endl
-    << "  -Q FILE   keep price histories in FILE (implies -P)" << std::endl
-    << "  -R        do not factor in virtual transactions" << std::endl
-    << "  -S        sort the output of \"print\" by date" << std::endl
-    << "  -s        show sub-accounts in balance totals" << std::endl
-    << "  -T        report only commodities totals, not their value" << std::endl
+    << "  -C        show only cleared transactions and balances" << std::endl
     << "  -U        show only uncleared transactions and balances" << std::endl
-    << "  -V        report commodity values, but don't download quotes" << std::endl
-    << "  -v        display version information" << std::endl << std::endl
+    << "  -l AMT    don't print balance totals whose abs value is <AMT" << std::endl
+    << "  -N REGEX  accounts matching REGEXP only display if negative" << std::endl
+    << "  -R        do not consider virtual transactions: real only" << std::endl
+    << std::endl
+    << "Customizing output:" << std::endl
+    << "  -n        do not calculate parent account totals" << std::endl
+    << "  -s        show sub-accounts in balance totals" << std::endl
+    << "  -S        sort the output of \"print\" by date" << std::endl
+    << "  -E        show accounts that total to zero" << std::endl
+    << "  -F        print each account's full name" << std::endl
+    << "  -M        print register using monthly sub-totals" << std::endl
+    << "  -G        use with -M to produce gnuplot-friendly output" << std::endl
+    << std::endl
+    << "Commodity prices:" << std::endl
+    << "  -P FILE   sets the price database, for reading/writing price info" << std::endl
+    << "  -T        report commodity totals, not their market value" << std::endl
+    << "  -V        report the market value of commodities" << std::endl
+    << "  -B        report cost basis of commodities" << std::endl
+    << "  -Q        download new price inforamtion (when needed) from the Internet" << std::endl
+    << "            (works by running \"getquote SYMBOL\")" << std::endl
+    << "  -L MINS   with -Q, fetch quotes only if data is older than MINS" << std::endl
+    << "  -p STR    specifies a direct commodity conversion: COMM=AMOUNT" << std::endl
+    << std::endl
     << "commands:" << std::endl
     << "  balance   show balance totals" << std::endl
     << "  register  display a register for ACCOUNT" << std::endl
     << "  print     print all ledger entries" << std::endl
     << "  equity    generate equity ledger for all entries" << std::endl
-    << "  entry     output a newly formed entry, based on arguments"
-    << std::endl;
+    << "  entry     output a newly formed entry, based on arguments" << std::endl
+    << "  price     show the last known price for matching commodities" << std::endl;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -946,39 +953,23 @@ int main(int argc, char * argv[])
       break;
 
     case 'P':
-      cost_basis  = false;
-      use_history = true;
-      get_quotes  = true;
-      read_prices = true;
-      break;
-
-    case 'Q':
-      cost_basis  = false;
-      use_history = true;
-      get_quotes  = true;
-      read_prices = true;
       price_db    = optarg;
       break;
 
-    case 'V':
-      cost_basis  = false;
-      use_history = true;
-      get_quotes  = false;
-      read_prices = true;
+    case 'Q':
+      get_quotes  = true;
       break;
 
     case 'B':
       cost_basis  = true;
+      // fall through...
+    case 'V':
       use_history = true;
-      get_quotes  = false;
-      read_prices = false;
       break;
       
     case 'T':
       cost_basis  = false;
       use_history = false;
-      get_quotes  = false;
-      read_prices = false;
       break;
 
     case 'L':
