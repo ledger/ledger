@@ -16,6 +16,9 @@ add_option_handler ("goodbye", ":", goodbye)
 args = process_arguments (sys.argv[1:])
 process_environment (os.environ, "LEDGER_")
 
+if len (args) > 0:
+    config.process_options (args[0], args[1:])
+
 text_parser = TextualParser ()
 register_parser (text_parser)
 
@@ -30,13 +33,13 @@ class FormatTransaction (TransactionHandler):
     def __call__ (self, xact):
 	print self.formatter.format(xact)
 
-def foo(d, val):
-    return d.xact.amount + val
+expr = parse_value_expr ("a*2")
+
+def foo(x, val):
+    return x.xact.amount + expr.compute (x) + val
 
 handler = FormatTransaction("%D %-20P %N %('foo'{$100})")
 handler = FilterTransactions (handler, "/Checking/")
-
-expr = parse_value_expr ("a*2")
 
 for entry in journal:
     for xact in entry:

@@ -438,8 +438,16 @@ bool format_account::display_account(const account_t& account,
 using namespace boost::python;
 using namespace ledger;
 
+std::string py_format_1(format_t& format, const details_t& item)
+{
+  std::ostringstream out;
+  format.format(out, item);
+  return out.str();
+}
+
 template <typename T>
-std::string py_format(format_t& format, T& item) {
+std::string py_format(format_t& format, const T& item)
+{
   std::ostringstream out;
   format.format(out, details_t(item));
   return out.str();
@@ -450,6 +458,7 @@ void export_format()
   class_< format_t > ("Format")
     .def(init<std::string>())
     .def("reset", &format_t::reset)
+    .def("format", py_format_1)
     .def("format", py_format<account_t>)
     .def("format", py_format<entry_t>)
     .def("format", py_format<transaction_t>)
