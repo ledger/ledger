@@ -6,7 +6,17 @@ void format_emacs_transactions::write_entry(entry_t& entry)
 {
   out << (((unsigned long)entry.beg_pos) + 1) << " ";
 
-  out << (entry.state == entry_t::CLEARED ? "t" : "nil") << " ";
+  switch (entry.state) {
+  case entry_t::CLEARED:
+    out << "t ";
+    break;
+  case entry_t::PENDING:
+    out << "pending ";
+    break;
+  case entry_t::UNCLEARED:
+    out << "nil ";
+    break;
+  }
 
   out << "(" << (entry.date / 65536) << " "
       << (entry.date % 65536) << " 0) ";
