@@ -2,7 +2,6 @@
 #define _EXPR_H
 
 #include "ledger.h"
-#include "value.h"
 #include "error.h"
 
 namespace ledger {
