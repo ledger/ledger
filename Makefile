@@ -1,7 +1,3 @@
-define GNUCASH
-true
-endef
-
 CODE =  amount.cc   \
 	ledger.cc   \
 	parse.cc    \
@@ -12,8 +8,9 @@ CODE =  amount.cc   \
 
 OBJS = $(patsubst %.cc,%.o,$(CODE))
 
-CFLAGS = -Wall -ansi -pedantic -DDEBUG=1
-DFLAGS = -g # -O2 # -O3 -fomit-frame-pointer -mcpu=pentium
+CFLAGS = -Wall -ansi -pedantic # -DDEBUG=1
+DFLAGS = -O3 -fomit-frame-pointer -mcpu=pentium
+#DFLAGS = -g
 INCS   =
 LIBS   = -lgmpxx -lgmp -lpcre
 
