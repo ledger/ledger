@@ -133,14 +133,14 @@ void totals::print(std::ostream& out, int width) const
     }
 }
 
-amount * totals::value(const std::string& commodity)
+amount * totals::value(const std::string& commodity) const
 {
   // Render all of the amounts into the given commodity.  This
   // requires known prices for each commodity.
 
   amount * total = create_amount((commodity + " 0.00").c_str());
 
-  for (iterator i = amounts.begin(); i != amounts.end(); i++)
+  for (const_iterator i = amounts.begin(); i != amounts.end(); i++)
     *total += *((*i).second);
 
   return total;

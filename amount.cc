@@ -51,6 +51,7 @@ class gmp_amount : public amount
 
   virtual amount * copy() const;
   virtual amount * value(amount *) const;
+  virtual amount * street() const;
 
   virtual operator bool() const;
 
@@ -214,6 +215,25 @@ amount * gmp_amount::value(amount * pr) const
     new_amt->quantity_comm = price_comm;
     return new_amt;
   }
+}
+
+amount * gmp_amount::street() const
+{
+  amount * cost = NULL;
+  const amount * amt = this;
+
+  for (int cycles = 0; cycles < 10; cycles++) {
+    totals::iterator pi = main_ledger.prices.amounts.find(amt->comm_symbol());
+    if (pi == main_ledger.prices.amounts.end()) {
+      break;
+    } else {
+      amount * temp = cost;
+      amt = cost = amt->value((*pi).second);
+      if (temp)
+	delete temp;
+    }
+  }
+  return cost ? cost : copy();
 }
 
 gmp_amount::operator bool() const

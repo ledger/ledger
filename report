@@ -16,4 +16,5 @@ case "$command" in
 	health supplies -insurance -vacation ;;
     huquq)    $line "$@" balance ^huquq ;;
     gold)     $line "$@" balance -G $1 ^huquq ;;
+    equity)   $line "$@" equity -- -^Income -^Expenses -^Equity ;;
 esac

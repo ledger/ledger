@@ -151,26 +151,7 @@ void report_balances(int argc, char **argv, std::ostream& out)
 	if (! do_credit)
 	  continue;
 
-	amount * cost = (*x)->cost;
-
-	bool allocated = false;
-	for (int cycles = 0; cost && cycles < 10; cycles++) {
-	  std::map<const std::string, amount *>::iterator pi
-	    = main_ledger.prices.amounts.find(cost->comm_symbol());
-
-	  if (pi == main_ledger.prices.amounts.end()) {
-	    balance->credit(cost);
-	    if (allocated)
-	      delete cost;
-	    break;
-	  } else {
-	    amount * temp = cost;
-	    cost = temp->value((*pi).second);
-	    if (allocated)
-	      delete temp;
-	    allocated = true;
-	  }
-	}
+	balance->credit((*x)->cost->street());
       }
     }
   }

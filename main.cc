@@ -9,6 +9,7 @@ namespace ledger {
   extern void report_balances(int argc, char **argv, std::ostream& out);
   extern void print_register(int argc, char **argv, std::ostream& out);
   extern void print_ledger(int argc, char *argv[], std::ostream& out);
+  extern void equity_ledger(int argc, char **argv, std::ostream& out);
 
   bool show_cleared;
 
@@ -39,6 +40,11 @@ void show_help(std::ostream& out)
 
 int main(int argc, char *argv[])
 {
+  // Global defaults
+
+  commodity * usd = new commodity("$", true, false, true, false, 2);
+  main_ledger.commodities.insert(commodities_entry("USD", usd));
+
   // Parse the command-line options
 
   std::istream * file = NULL;
@@ -114,18 +120,34 @@ int main(int argc, char *argv[])
   }
 
   if (optind == argc) {
-    std::cerr << "usage: ledger [options] COMMAND [options] [ARGS]" << std::endl
-	      << std::endl
-	      << "ledger options:" << std::endl
-	      << "  -f FILE  specify pathname of ledger data file" << std::endl
-	      << std::endl
-	      << "commands:" << std::endl
-	      << "  balance  show balance totals" << std::endl
-	      << "  print    print all ledger entries" << std::endl
-	      << std::endl
-	      << "`balance' command options:" << std::endl
-	      << "  -s       show sub-accounts in balance totals" << std::endl
-	      << "  -S       show empty accounts in balance totals" << std::endl;
+    std::cerr
+      << "usage: ledger [options] COMMAND [options] [REGEXPS]" << std::endl
+      << std::endl
+      << "ledger options:" << std::endl
+      << "  -C       also show cleared transactions" << std::endl
+      << "  -b DATE  specify a beginning date" << std::endl
+      << "  -c       do not show future entries (same as -e TODAY)" << std::endl
+      << "  -e DATE  specify an ending date" << std::endl
+      << "  -f FILE  specify pathname of ledger data file" << std::endl
+      << "  -h       display this help text" << std::endl
+#ifdef HUQUQULLAH
+      << "  -H       do not auto-compute Huququ'llah" << std::endl
+#endif
+      << "  -i FILE  read the list of inclusion regexps from FILE" << std::endl
+      << "  -p FILE  read the list of prices from FILE" << std::endl
+      << "  -w       print out warnings where applicable" << std::endl
+      << std::endl
+      << "commands:" << std::endl
+      << "  balance   show balance totals" << std::endl
+      << "  register  display a register for ACCOUNT" << std::endl
+      << "  print     print all ledger entries" << std::endl
+      << "  equity    generate equity ledger for all entries" << std::endl
+      << std::endl
+      << "`balance' options:" << std::endl
+      << "  -F        print each account's full name" << std::endl
+      << "  -n        do not generate totals for parent accounts" << std::endl
+      << "  -s        show sub-accounts in balance totals" << std::endl
+      << "  -S        show empty accounts in balance totals" << std::endl;
     return 1;
   }
 
@@ -136,11 +158,6 @@ int main(int argc, char *argv[])
 	      << std::endl;
     return 1;
   }
-
-  // Global defaults
-
-  commodity * usd = new commodity("$", true, false, true, false, 2);
-  main_ledger.commodities.insert(commodities_entry("USD", usd));
 
   // Read the command word
 
@@ -182,6 +199,8 @@ int main(int argc, char *argv[])
     print_register(argc - optind, &argv[optind], std::cout);
   else if (command == "print")
     print_ledger(argc - optind, &argv[optind], std::cout);
+  else if (command == "equity")
+    equity_ledger(argc - optind, &argv[optind], std::cout);
 }
 
 // main.cc ends here.

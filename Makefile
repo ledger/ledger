@@ -2,7 +2,8 @@ define GNUCASH
 true
 endef
 
-CODE =  amount.cc ledger.cc parse.cc balance.cc register.cc main.cc
+CODE =  amount.cc ledger.cc parse.cc \
+	balance.cc register.cc equity.cc main.cc
 ifdef GNUCASH
 CODE := $(CODE) gnucash.cc
 endif

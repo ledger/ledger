@@ -185,14 +185,14 @@ bool parse_ledger(std::istream& in)
       }
 
 #ifdef HUQUQULLAH
-      bool exempt = false;
+      bool exempt_or_necessary = false;
       if (compute_huquq) {
 	if (*p == '!') {
-	  exempt = true;
+	  exempt_or_necessary = true;
 	  p++;
 	}
 	else if (matches(huquq_categories, p)) {
-	  exempt = true;
+	  exempt_or_necessary = true;
 	}
       }
 #endif
@@ -203,23 +203,30 @@ bool parse_ledger(std::istream& in)
       curr->xacts.push_back(xact);
 
 #ifdef HUQUQULLAH
-      if (exempt) {
+      if (exempt_or_necessary) {
 	static amount * huquq = create_amount("H 1.00");
 	amount * temp;
 
+	// Reflect the exempt or necessary transaction in the
+	// Huququ'llah account, using the H commodity, which is 19%
+	// of whichever DEFAULT_COMMODITY ledger was compiled with.
 	transaction * t = new transaction();
 	t->acct = main_ledger.find_account("Huququ'llah");
 	temp = xact->cost->value();
 	t->cost = temp->value(huquq);
 	delete temp;
+	t->acct->balance.credit(t->cost);
 	curr->xacts.push_back(t);
 
+	// Balance the above transaction by recording the inverse in
+	// Expenses:Huququ'llah.
 	t = new transaction();
 	t->acct = main_ledger.find_account("Expenses:Huququ'llah");
 	temp = xact->cost->value();
 	t->cost = temp->value(huquq);
 	delete temp;
 	t->cost->negate();
+	t->acct->balance.credit(t->cost);
 	curr->xacts.push_back(t);
       }
 #endif

@@ -1,5 +1,5 @@
 #ifndef _LEDGER_H
-#define _LEDGER_H "$Revision: 1.8 $"
+#define _LEDGER_H "$Revision: 1.9 $"
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -117,6 +117,7 @@ class amount
   virtual const std::string& comm_symbol() const = 0;
   virtual amount * copy() const = 0;
   virtual amount * value(amount * pr = NULL) const = 0;
+  virtual amount * street() const = 0;
 
   // Test if non-zero
 
@@ -235,7 +236,7 @@ struct totals
   void print(std::ostream& out, int width) const;
 
   // Returns an allocated entity
-  amount * value(const std::string& comm);
+  amount * value(const std::string& comm) const;
   amount * sum(const std::string& comm) {
     return amounts[comm];
   }

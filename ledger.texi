@@ -1,5 +1,5 @@
 \input texinfo    @c -*-texinfo-*-
-@comment $Id: ledger.texi,v 1.3 2003/09/30 23:17:18 johnw Exp $
+@comment $Id: ledger.texi,v 1.4 2003/10/01 04:42:13 johnw Exp $
 @comment %**start of header
 
 @setfilename ledger.info
@@ -274,7 +274,7 @@ currently $357 per ounce, then each dollar is worth 1/357 AU:
 $5000 would buy 14 ounces of gold, which becomes the new display
 commodity since a conversion factor was provided.
 
-Commodities conversions can also be chained, up to a depth of 15.
+Commodities conversions can also be chained, up to a depth of 10.
 Here is a sample prices database that uses chaining:
 
 @example
