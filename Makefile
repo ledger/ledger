@@ -5,10 +5,6 @@ define HUQUQ
 true
 endef
 
-#
-# Example build: make GNUCASH=1 COMMODITY=EUR
-#
-
 CODE =  amount.cc   \
 	ledger.cc   \
 	parse.cc    \
@@ -19,16 +15,9 @@ CODE =  amount.cc   \
 
 OBJS = $(patsubst %.cc,%.o,$(CODE))
 
-ifndef COMMODITY
-COMMODITY = \$$
-endif
-
 CFLAGS = -Wall -ansi -pedantic
-CFLAGS := $(CFLAGS) -DDEFAULT_COMMODITY="\"$(COMMODITY)\""
-
 #DFLAGS = -O3 -fomit-frame-pointer
 DFLAGS = -g # -O2 # -pg
-
 INCS   = -I/usr/include/xmltok
 LIBS   = -lgmpxx -lgmp -lpcre
 
