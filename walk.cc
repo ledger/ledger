@@ -212,7 +212,7 @@ void changed_value_transactions::operator()(transaction_t& xact)
   last_xact = &xact;
 }
 
-void subtotal_transactions::flush(const char * spec_fmt)
+void subtotal_transactions::report_subtotal(const char * spec_fmt)
 {
   char buf[256];
 
@@ -248,8 +248,6 @@ void subtotal_transactions::flush(const char * spec_fmt)
   }
 
   balances.clear();
-
-  item_handler<transaction_t>::flush();
 }
 
 void subtotal_transactions::operator()(transaction_t& xact)
@@ -287,7 +285,7 @@ void interval_transactions::operator()(transaction_t& xact)
       if (last_xact) {
 	start  = interval.begin;
 	finish = quant;
-	flush();
+	report_subtotal();
       }
 
       if (! interval.seconds) {
@@ -332,9 +330,11 @@ void dow_transactions::flush()
 	 d != days_of_the_week[i].end();
 	 d++)
       subtotal_transactions::operator()(**d);
-    subtotal_transactions::flush("%As");
+    subtotal_transactions::report_subtotal("%As");
     days_of_the_week[i].clear();
   }
+
+  subtotal_transactions::flush();
 }
 
 void clear_transactions_xdata()

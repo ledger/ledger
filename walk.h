@@ -332,10 +332,12 @@ class subtotal_transactions : public item_handler<transaction_t>
   subtotal_transactions(item_handler<transaction_t> * handler)
     : item_handler<transaction_t>(handler) {}
 
-  void flush(const char * spec_fmt);
+  void report_subtotal(const char * spec_fmt = NULL);
 
   virtual void flush() {
-    flush(NULL);
+    if (balances.size() > 0)
+      report_subtotal();
+    item_handler<transaction_t>::flush();
   }
   virtual void operator()(transaction_t& xact);
 };
