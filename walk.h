@@ -69,7 +69,8 @@ void handle_transaction(transaction_t * xact,
   for (transactions_list::iterator i = xact->entry->transactions.begin();
        i != xact->entry->transactions.end();
        i++)
-    if (! ((*i)->flags & TRANSACTION_AUTO) &&
+    if ((! (flags & OTHER_TRANSACTIONS) ||
+	 ! ((*i)->flags & TRANSACTION_AUTO)) &&
 	! ((*i)->dflags & TRANSACTION_HANDLED) &&
 	(*i == xact ?
 	 (flags & MATCHING_TRANSACTIONS) : (flags & OTHER_TRANSACTIONS))) {

@@ -191,12 +191,16 @@ void format_t::format_elements(std::ostream&    out,
 	out << "";
       break;
 
-    case element_t::CODE:
-      if (details.entry && ! details.entry->code.empty())
-	out << "(" << details.entry->code << ") ";
-      else
-	out << "";
+    case element_t::CODE: {
+      std::string temp;
+      if (details.entry && ! details.entry->code.empty()) {
+	temp += "(";
+	temp += details.entry->code;
+	temp += ") ";
+      }
+      out << temp;
       break;
+    }
 
     case element_t::PAYEE:
       if (details.entry)
@@ -211,15 +215,19 @@ void format_t::format_elements(std::ostream&    out,
 	std::string name = (elem->type == element_t::ACCOUNT_FULLNAME ?
 			    details.account->fullname() :
 			    partial_account_name(details.account));
-	if (elem->max_width > 0)
-	  name = truncated(name, elem->max_width);
 
 	if (details.xact && details.xact->flags & TRANSACTION_VIRTUAL) {
+	  if (elem->max_width > 2)
+	    name = truncated(name, elem->max_width - 2);
+
 	  if (details.xact->flags & TRANSACTION_BALANCE)
 	    name = "[" + name + "]";
 	  else
 	    name = "(" + name + ")";
 	}
+	else if (elem->max_width > 0)
+	  name = truncated(name, elem->max_width);
+
 	out << name;
       } else {
 	out << " ";
