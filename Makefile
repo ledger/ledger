@@ -98,7 +98,7 @@ dist:
 	  --exclude="1.7/" --exclude="*.out" --exclude="*~" \
 	  $(shell pwd)/ /tmp/ledger-$(VERSION)
 	(cd /tmp/ledger-$(VERSION) && \
-	 make fullclean && make docs &&
+	 make fullclean && make docs && \
 	 make clean && rm make.deps && \
 	 cat Makefile | sed 's/\/sw\//\/usr\/local\//g' > t && \
 	 mv t Makefile && \
