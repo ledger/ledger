@@ -33,5 +33,6 @@
 #include <xml.h>
 #include <gnucash.h>
 #include <qif.h>
+#include <ofx.h>
 
 #endif // _LEDGER_H

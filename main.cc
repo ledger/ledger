@@ -256,17 +256,27 @@ int parse_and_report(int argc, char * argv[], char * envp[])
   // Parse initialization files, ledger data, price database, etc.
 
   std::auto_ptr<binary_parser_t>  bin_parser(new binary_parser_t);
+#ifdef READ_GNUCASH
+  std::auto_ptr<gnucash_parser_t> gnucash_parser(new gnucash_parser_t);
+#endif
 #ifdef HAVE_XMLPARSE
   std::auto_ptr<xml_parser_t>     xml_parser(new xml_parser_t);
-  std::auto_ptr<gnucash_parser_t> gnucash_parser(new gnucash_parser_t);
+#endif
+#ifdef HAVE_LIBOFX
+  std::auto_ptr<ofx_parser_t>     ofx_parser(new ofx_parser_t);
 #endif
   std::auto_ptr<qif_parser_t>     qif_parser(new qif_parser_t);
   std::auto_ptr<textual_parser_t> text_parser(new textual_parser_t);
 
   register_parser(bin_parser.get());
+#ifdef READ_GNUCASH
+  register_parser(gnucash_parser.get());
+#endif
 #ifdef HAVE_XMLPARSE
   register_parser(xml_parser.get());
-  register_parser(gnucash_parser.get());
+#endif
+#ifdef HAVE_LIBOFX
+  register_parser(ofx_parser.get());
 #endif
   register_parser(qif_parser.get());
   register_parser(text_parser.get());

@@ -145,7 +145,7 @@ amount_t::amount_t(const long value)
     quantity = new bigint_t;
     mpz_set_si(MPZ(quantity), value);
   } else {
-    quantity  = NULL;
+    quantity = NULL;
   }
   commodity_ = NULL;
 }
@@ -156,7 +156,7 @@ amount_t::amount_t(const unsigned long value)
     quantity = new bigint_t;
     mpz_set_ui(MPZ(quantity), value);
   } else {
-    quantity  = NULL;
+    quantity = NULL;
   }
   commodity_ = NULL;
 }
@@ -167,7 +167,7 @@ amount_t::amount_t(const double value)
     quantity = new bigint_t;
     mpz_set_d(MPZ(quantity), value);
   } else {
-    quantity  = NULL;
+    quantity = NULL;
   }
   commodity_ = NULL;
 }

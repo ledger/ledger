@@ -12,6 +12,7 @@ fi
 autoconf
 
 INCDIRS="-I/sw/include -I/usr/include/httpd/xml -I/sw/include/python2.3"
+INCDIRS="$INCDIRS -I/sw/include/libofx"
 INCDIRS="$INCDIRS -Wno-long-double"
 LIBDIRS="-L/sw/lib -L/sw/lib/python2.3/config"
 

@@ -111,6 +111,35 @@ else
   AM_CONDITIONAL(HAVE_XMLPARSE, false)
 fi
 
+# check for libofx
+AC_ARG_ENABLE(ofx,
+  [  --enable-ofx            Turn on support for OFX/OCF parsing],
+  [case "${enableval}" in
+    yes) ofx=true ;;
+    no)  ofx=false ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-ofx) ;;
+  esac],[ofx=true])
+AM_CONDITIONAL(USE_OFX, test x$ofx = xtrue)
+
+if [test x$ofx = xtrue ]; then
+  AC_CACHE_CHECK(
+    [if libofx is available],
+    [libofx_avail],
+    [libofx_save_libs=$LIBS
+     LIBS="-lofx $LIBS"
+     AC_LANG_PUSH(C++)
+     AC_TRY_LINK(
+       [#include <libofx.h>],
+       [  LibofxContextPtr libofx_context = libofx_get_new_context();],
+       [libofx_avail=true],
+       [libofx_avail=false])
+     AC_LANG_POP
+     LIBS=$libofx_save_libs])
+  AM_CONDITIONAL(HAVE_LIBOFX, test x$libofx_avail = xtrue)
+else
+  AM_CONDITIONAL(HAVE_LIBOFX, false)
+fi
+
 # check for Python
 AC_ARG_ENABLE(python,
   [  --enable-python         Turn on Python support],

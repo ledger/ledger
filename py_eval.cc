@@ -19,9 +19,14 @@ void export_parser();
 void export_textual();
 void export_binary();
 void export_qif();
-#ifdef HAVE_XMLPARSE
+#ifdef READ_GNUCASH
 void export_gnucash();
+#endif
+#ifdef HAVE_XMLPARSE
 void export_xml();
+#endif
+#ifdef HAVE_LIBOFX
+void export_ofx();
 #endif
 void export_option();
 void export_config();
@@ -43,6 +48,12 @@ void initialize_ledger_for_python()
   export_qif();
 #ifdef READ_GNUCASH
   export_gnucash();
+#endif
+#ifdef HAVE_XMLPARSE
+  export_xml();
+#endif
+#ifdef HAVE_LIBOFX
+  export_ofx();
 #endif
   export_option();
   export_config();

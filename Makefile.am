@@ -23,6 +23,10 @@ if HAVE_XMLPARSE
 libledger_a_CXXFLAGS += -DHAVE_XMLPARSE=1
 libledger_a_SOURCES += gnucash.cc xml.cc
 endif
+if HAVE_LIBOFX
+libledger_a_CXXFLAGS += -DHAVE_LIBOFX=1
+libledger_a_SOURCES += ofx.cc
+endif
 if HAVE_BOOST_PYTHON
 libledger_a_CXXFLAGS += -DUSE_BOOST_PYTHON=1
 libledger_a_SOURCES  += py_eval.cc
@@ -76,6 +80,10 @@ endif
 if HAVE_XMLPARSE
 ledger_CXXFLAGS += -DHAVE_XMLPARSE=1
 ledger_LDADD += -lxmlparse -lxmltok
+endif
+if HAVE_LIBOFX
+ledger_CXXFLAGS += -DHAVE_LIBOFX=1
+ledger_LDADD += -lofx
 endif
 if DEBUG
 ledger_CXXFLAGS += -DDEBUG_LEVEL=4
