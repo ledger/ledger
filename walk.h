@@ -38,27 +38,36 @@ struct item_handler {
 
 template <typename T>
 class compare_items {
-  value_t left_result;
-  value_t right_result;
-
   const value_expr_t * sort_order;
-
  public:
   compare_items(const value_expr_t * _sort_order)
     : sort_order(_sort_order) {
     assert(sort_order);
   }
-
-  bool operator()(const T * left, const T * right) {
-    assert(left);
-    assert(right);
-
-    sort_order->compute(left_result, details_t(*left));
-    sort_order->compute(right_result, details_t(*right));
-
-    return left_result < right_result;
-  }
+  bool operator()(const T * left, const T * right);
 };
+
+template <typename T>
+bool compare_items<T>::operator()(const T * left, const T * right)
+{
+  assert(left);
+  assert(right);
+
+  value_t left_result;
+  value_t right_result;
+  sort_order->compute(left_result, details_t(*left));
+  sort_order->compute(right_result, details_t(*right));
+
+  return left_result < right_result;
+}
+
+template <>
+bool compare_items<transaction_t>::operator()(const transaction_t * left,
+					      const transaction_t * right);
+
+template <>
+bool compare_items<account_t>::operator()(const account_t * left,
+					  const account_t * right);
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -69,10 +78,12 @@ class compare_items {
 #define TRANSACTION_TO_DISPLAY 0x0002
 #define TRANSACTION_DISPLAYED  0x0004
 #define TRANSACTION_NO_TOTAL   0x0008
+#define TRANSACTION_SORT_CALC  0x0010
 
 struct transaction_xdata_t
 {
   value_t	 total;
+  value_t	 sort_value;
   unsigned int   index;
   unsigned short dflags;
 
@@ -400,11 +411,13 @@ class related_transactions : public item_handler<transaction_t>
 
 #define ACCOUNT_TO_DISPLAY 0x1
 #define ACCOUNT_DISPLAYED  0x2
+#define ACCOUNT_SORT_CALC  0x4
 
 struct account_xdata_t
 {
   value_t	 value;
   value_t	 total;
+  value_t	 sort_value;
   unsigned int   count;	// transactions counted toward total
   unsigned int   subcount;
   unsigned short dflags;

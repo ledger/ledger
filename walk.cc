@@ -9,6 +9,28 @@ std::list<void **>	       transactions_xdata_ptrs;
 std::list<account_xdata_t>     accounts_xdata;
 std::list<void **>	       accounts_xdata_ptrs;
 
+template <>
+bool compare_items<transaction_t>::operator()(const transaction_t * left,
+					      const transaction_t * right)
+{
+  assert(left);
+  assert(right);
+
+  transaction_xdata_t& lxdata(transaction_xdata(*left));
+  if (! (lxdata.dflags & TRANSACTION_SORT_CALC)) {
+    sort_order->compute(lxdata.sort_value, details_t(*left));
+    lxdata.dflags |= TRANSACTION_SORT_CALC;
+  }
+
+  transaction_xdata_t& rxdata(transaction_xdata(*right));
+  if (! (rxdata.dflags & TRANSACTION_SORT_CALC)) {
+    sort_order->compute(rxdata.sort_value, details_t(*right));
+    rxdata.dflags |= TRANSACTION_SORT_CALC;
+  }
+
+  return lxdata.sort_value < rxdata.sort_value;
+}
+
 void sort_transactions::flush()
 {
   std::stable_sort(transactions.begin(), transactions.end(),
@@ -123,7 +145,7 @@ static void handle_value(const value_t&		       value,
   }
 }
 
-void determine_amount(value_t& result, balance_pair_t& bal_pair)
+static inline void determine_amount(value_t& result, balance_pair_t& bal_pair)
 {
   account_xdata_t xdata;
   xdata.value = bal_pair;
@@ -317,6 +339,28 @@ void clear_transactions_xdata()
        i != transactions_xdata_ptrs.end();
        i++)
     **i = NULL;
+}
+
+template <>
+bool compare_items<account_t>::operator()(const account_t * left,
+					  const account_t * right)
+{
+  assert(left);
+  assert(right);
+
+  account_xdata_t& lxdata(account_xdata(*left));
+  if (! (lxdata.dflags & ACCOUNT_SORT_CALC)) {
+    sort_order->compute(lxdata.sort_value, details_t(*left));
+    lxdata.dflags |= ACCOUNT_SORT_CALC;
+  }
+
+  account_xdata_t& rxdata(account_xdata(*right));
+  if (! (rxdata.dflags & ACCOUNT_SORT_CALC)) {
+    sort_order->compute(rxdata.sort_value, details_t(*right));
+    rxdata.dflags |= ACCOUNT_SORT_CALC;
+  }
+
+  return lxdata.sort_value < rxdata.sort_value;
 }
 
 void sum_accounts(account_t& account)

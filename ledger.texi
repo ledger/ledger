@@ -1050,14 +1050,14 @@ beginning of the ledger.  For food spending just this month
 (September), use:
 
 @example
-ledger -d sep balance expenses:food
+ledger -p sep balance expenses:food
 @end example
 
 Or maybe I want to see all of my assets, in which case the -s (show
 sub-accounts) option comes in handy:
 
 @example
-ledger balance -s
+ledger -s balance
 @end example
 
 To exclude a particular account, use a regular expression with a
@@ -1068,12 +1068,19 @@ food spending:
 ledger balance expenses -food
 @end example
 
-If you want to show all accounts but for one account, remember to use
-``--'' to separate the exclusion pattern from the options list:
+A query like the following will show the largest expense categories
+since a given date:
 
 @example
-ledger balance -- -equity
+ledger -b 2003/10 -s -S -AT -d "T>1000" bal ^expenses -internet
 @end example
+
+From left to right the options used mean: Show entries since October,
+2003; showa all sub-accounts; sort in verse order by the absolute
+value of the total; display only accounts with a total value greater
+than 1000 units (of whichever commodities the account contains); and
+report the balance for all expenses, except for those matching
+``internet''.
 
 @node File format,  , Typical queries, Running Ledger
 @section File format
