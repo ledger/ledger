@@ -178,7 +178,7 @@ if [test x$python = xtrue ]; then
       [if boost_python is available],
       [boost_python_cpplib_avail],
       [boost_python_save_libs=$LIBS
-       LIBS="-lboost_python $LIBS"
+       LIBS="-lboost_python -lpython$PYTHON_VERSION $LIBS"
        AC_LANG_PUSH(C++)
        AC_TRY_LINK(
 	 [#include <boost/python.hpp>
