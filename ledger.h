@@ -174,7 +174,7 @@ class journal_t
 
   journal_t() {
     master = new account_t(NULL, "");
-    item_pool = NULL;
+    item_pool = item_pool_end = NULL;
   }
   ~journal_t();
 

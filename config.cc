@@ -119,12 +119,12 @@ DEF_OPT_HANDLERS();
 
 OPT_BEGIN(help, "h") {
   option_help(std::cout);
-  std::exit(0);
+  throw 0;
 } OPT_END(help);
 
 OPT_BEGIN(version, "v") {
   show_version(std::cout);
-  std::exit(0);
+  throw 0;
 } OPT_END(version);
 
 OPT_BEGIN(init, "i:") {

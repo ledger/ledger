@@ -36,7 +36,9 @@ class amount_t::bigint_t {
   }
   ~bigint_t() {
     DEBUG_PRINT("ledger.memory.dtors", "dtor amount_t::bigint_t");
+#if DEBUG_LEVEL >= BETA
     assert(ref == 0);
+#endif
     mpz_clear(val);
   }
 };
@@ -1099,9 +1101,7 @@ void export_amount()
     .def(! self)
 
     .def(abs(self))
-#if 0
-    .def(str(self))
-#endif
+    .def(self_ns::str(self))
 
     .def("negate", &amount_t::negate)
     .def("parse", parse_1)

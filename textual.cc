@@ -158,8 +158,6 @@ bool finalize_entry(entry_t * entry)
        x++)
     if (! ((*x)->flags & TRANSACTION_VIRTUAL) ||
 	((*x)->flags & TRANSACTION_BALANCE)) {
-      DEBUG_PRINT("ledger.textual.finalize",
-		  "item cost is " << ((*x)->cost ? *(*x)->cost : (*x)->amount));
       amount_t * p = (*x)->cost ? (*x)->cost : &(*x)->amount;
       if (*p)
 	balance += *p;
@@ -219,10 +217,6 @@ bool finalize_entry(entry_t * entry)
 
     balance = 0U;
   }
-
-#if 0
-  DEBUG_PRINT("ledger.textual.finalize", "balance is " << balance);
-#endif
 
   return ! balance;
 }

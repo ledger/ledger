@@ -270,8 +270,9 @@ bool journal_t::remove_entry(entry_t * entry)
   for (transactions_list::const_iterator i
 	 = entry->transactions.begin();
        i != entry->transactions.end();
-       i++)
+       i++) {
     (*i)->account->remove_transaction(*i);
+  }
 
   return true;
 }
@@ -447,13 +448,61 @@ using namespace ledger;
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(journal_find_account_overloads,
 				       find_account, 1, 2)
 
-#if 0
-template <typename T>
-struct ptr_to_ref
+unsigned int transactions_len(entry_t& entry)
 {
-  ptr_to_ref(T *) {}
-};
-#endif
+  return entry.transactions.size();
+}
+
+transaction_t& transactions_getitem(entry_t& entry, int i)
+{
+  std::size_t len = entry.transactions.size();
+
+  if (abs(i) >= len) {
+    PyErr_SetString(PyExc_IndexError, "Index out of range");
+    throw_error_already_set();
+  }
+
+  return *(entry.transactions[i < 0 ? len + i : i]);
+}
+
+unsigned int entries_len(journal_t& journal)
+{
+  return journal.entries.size();
+}
+
+entry_t& entries_getitem(journal_t& journal, int i)
+{
+  std::size_t len = journal.entries.size();
+
+  if (abs(i) >= len) {
+    PyErr_SetString(PyExc_IndexError, "Index out of range");
+    throw_error_already_set();
+  }
+
+  return *(journal.entries[i < 0 ? len + i : i]);
+}
+
+unsigned int accounts_len(account_t& account)
+{
+  return account.accounts.size();
+}
+
+account_t& accounts_getitem(account_t& account, int index)
+{
+  std::size_t len = account.accounts.size();
+
+  if (abs(index) >= len) {
+    PyErr_SetString(PyExc_IndexError, "Index out of range");
+    throw_error_already_set();
+  }
+
+  int x = 0;
+  for (accounts_map::iterator i = account.accounts.begin();
+       i != account.accounts.end();
+       i++)
+    if (x++ == index)
+      return *((*i).second);
+}
 
 void export_journal()
 {
@@ -480,7 +529,10 @@ void export_journal()
     .def_readwrite("state", &entry_t::state)
     .def_readwrite("code", &entry_t::code)
     .def_readwrite("payee", &entry_t::payee)
-    .def_readonly("transactions", &entry_t::transactions)
+
+    .def("__len__", transactions_len)
+    .def("__getitem__", transactions_getitem,
+	 return_value_policy<reference_existing_object>())
 
     .def("add_transaction", &entry_t::add_transaction)
     .def("remove_transaction", &entry_t::remove_transaction)
@@ -498,9 +550,7 @@ void export_journal()
     .def_readwrite("data", &account_t::data)
     .def_readonly("ident", &account_t::ident)
 
-#if 0
-    .def(str(self))
-#endif
+    .def(self_ns::str(self))
 
     .def("fullname", &account_t::fullname)
     .def("add_account", &account_t::add_account)
@@ -522,9 +572,11 @@ void export_journal()
     ;
 
   class_< journal_t > ("Journal")
-    .def_readwrite("master", &journal_t::master)
-    .def_readonly("entries", &journal_t::entries)
-    .def_readwrite("sources", &journal_t::sources)
+    .def_readonly("sources", &journal_t::sources)
+
+    .def("__len__", entries_len)
+    .def("__getitem__", entries_getitem,
+	 return_value_policy<reference_existing_object>())
 
     .def("add_account", &journal_t::add_account)
     .def("remove_account", &journal_t::remove_account)
@@ -537,7 +589,7 @@ void export_journal()
     .def("add_entry", &journal_t::add_entry)
     .def("remove_entry", &journal_t::remove_entry)
     .def("derive_entry", &journal_t::derive_entry,
-	 return_value_policy<reference_existing_object>())
+	 return_value_policy<manage_new_object>())
 
     .def("valid", &journal_t::valid)
     ;

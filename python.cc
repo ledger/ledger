@@ -2,6 +2,15 @@
 
 using namespace boost::python;
 
+#include "ledger.h"
+#include "acconf.h"
+
+static struct cleanup_ledger_t {
+  ~cleanup_ledger_t() {
+    ledger::shutdown();
+  }
+} _cleanup_ledger;
+
 void export_amount();
 void export_balance();
 void export_value();
@@ -26,4 +35,5 @@ BOOST_PYTHON_MODULE(ledger) {
 #ifdef READ_GNUCASH
   export_gnucash();
 #endif
+  ledger::initialize();
 }

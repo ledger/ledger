@@ -177,8 +177,8 @@ class set_account_value : public item_handler<transaction_t>
 
 class sort_transactions : public item_handler<transaction_t>
 {
-  transactions_list   transactions;
-  const value_expr_t * sort_order;
+  std::deque<transaction_t *> transactions;
+  const value_expr_t *	      sort_order;
 
  public:
   sort_transactions(item_handler<transaction_t> * handler,
@@ -282,8 +282,8 @@ class changed_value_transactions : public item_handler<transaction_t>
   // This filter requires that calc_transactions be used at some point
   // later in the chain.
 
-  bool		     changed_values_only;
-  transaction_t *    last_xact;
+  bool		    changed_values_only;
+  transaction_t *   last_xact;
   entries_list      entry_temps;
   transactions_list xact_temps;
 
@@ -324,9 +324,9 @@ class subtotal_transactions : public item_handler<transaction_t>
   typedef std::pair<account_t *, balance_pair_t> balances_pair;
 
  protected:
-  std::time_t	     start;
-  std::time_t	     finish;
-  balances_map	     balances;
+  std::time_t	    start;
+  std::time_t	    finish;
+  balances_map	    balances;
   entries_list      entry_temps;
   transactions_list xact_temps;
 
@@ -382,7 +382,7 @@ class interval_transactions : public subtotal_transactions
 
 class dow_transactions : public subtotal_transactions
 {
-  transactions_list days_of_the_week[7];
+  std::deque<transaction_t *> days_of_the_week[7];
 
  public:
   dow_transactions(item_handler<transaction_t> * handler)

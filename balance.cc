@@ -58,8 +58,7 @@ void balance_t::write(std::ostream& out,
     if ((*i).second)
       sorted.push_back(&(*i).second);
 
-  std::stable_sort(sorted.begin(), sorted.end(),
-		   compare_amount_commodities());
+  std::stable_sort(sorted.begin(), sorted.end(), compare_amount_commodities());
 
   for (amounts_deque::const_iterator i = sorted.begin();
        i != sorted.end();

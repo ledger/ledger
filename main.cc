@@ -22,7 +22,6 @@ using namespace ledger;
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <list>
 #include <memory>
 #include <algorithm>
 #include <iterator>
@@ -643,14 +642,23 @@ int parse_and_report(int argc, char * argv[], char * envp[])
 
 int main(int argc, char * argv[], char * envp[])
 {
+  int status = 0;
+
   initialize();
 
-  int status = parse_and_report(argc, argv, envp);
+  try {
+    status = parse_and_report(argc, argv, envp);
+  }
+  catch (int& val) {
+#if DEBUG_LEVEL >= BETA
+    shutdown();
+#endif
+    return val;
+  }
 
 #if DEBUG_LEVEL >= BETA
   shutdown();
 #endif
-
   return status;
 }
 

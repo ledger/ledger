@@ -26,6 +26,28 @@ AC_CHECK_LIB([xmlparse], [XML_ParserCreate],
    AM_CONDITIONAL(READ_GNUCASH, false)],
   [-lxmltok])
 
+AM_PATH_PYTHON(2.2,, :)
+AM_CONDITIONAL(HAVE_PYTHON, [test "$PYTHON" != :])
+AC_CACHE_CHECK(
+  [if boost_python is available],
+  [boost_python_cpplib_avail],
+  [boost_python_save_libs=$LIBS
+   LIBS="-lboost_python $LIBS"
+   AC_LANG_PUSH(C++)
+   AC_TRY_COMPILE(
+     [#include <boost/python.hpp>
+      using namespace boost::python;
+      class foo {};
+      BOOST_PYTHON_MODULE(samp) {
+	class_< foo > ("foo") ;
+      }],
+     [return 0],
+     [boost_python_cpplib_avail=true],
+     [boost_python_cpplib_avail=false])
+   AC_LANG_POP
+   LIBS=$boost_python_save_libs])
+AM_CONDITIONAL(HAVE_BOOST_PYTHON, test x$boost_python_cpplib_avail = xtrue)
+
 # Check for options
 AC_ARG_ENABLE(debug,
   [  --enable-debug    Turn on debugging],
