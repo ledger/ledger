@@ -892,9 +892,6 @@ amount_t commodity_t::value(const std::time_t moment)
   std::time_t age = 0;
   amount_t    price;
 
-  if (updater)
-    (*updater)(this, age, price, moment);
-
   for (history_map::reverse_iterator i = history.rbegin();
        i != history.rend();
        i++)
@@ -903,6 +900,9 @@ amount_t commodity_t::value(const std::time_t moment)
       price = (*i).second;
       break;
     }
+
+  if (updater)
+    (*updater)(this, moment, age, price);
 
   return price;
 }

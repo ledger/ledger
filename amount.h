@@ -201,9 +201,9 @@ class commodity_t
    public:
     virtual ~updater_t() {}
     virtual void operator()(commodity_t *     commodity,
+			    const std::time_t moment,
 			    const std::time_t date,
-			    const amount_t&   price,
-			    const std::time_t moment) = 0;
+			    amount_t&         price) = 0;
   };
 
   typedef unsigned long ident_t;
