@@ -161,7 +161,7 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
     case '^':
       if (xact->account == master) {
 	if (! misc)
-	  misc = master->find_account("Miscellaneous");
+	  misc = journal->find_account("Miscellaneous");
 	transaction_t * nxact = new transaction_t(misc);
 	entry->add_transaction(nxact);
 	nxact->amount = nxact->cost = - xact->amount;
