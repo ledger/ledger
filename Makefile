@@ -103,7 +103,7 @@ dist:
 	rm -fr /tmp/ledger-$(VERSION)
 	rsync -av --exclude=".*" --exclude="TAGS" --exclude="version" \
 	  --exclude="_darcs/" --exclude="ledger.dat" --exclude="CVS/" \
-	  --exclude="1.7/" --exclude="gmon.out" --exclude="prof.out" \
+	  --exclude="1.7/" --exclude="*.out" --exclude="*~" \
 	  $(shell pwd)/ /tmp/ledger-$(VERSION)
 	(cd /tmp/ledger-$(VERSION) && \
 	 make fullclean && \
