@@ -654,8 +654,11 @@ void format_xml_entries::format_last_entry()
 	xml_write_value(output_stream, value_t((*i)->amount), 10);
       output_stream << "        </tr:amount>\n";
 
-      if ((*i)->cost)
-	output_stream << "        <tr:cost>" << *(*i)->cost << "</tr:cost>\n";
+      if ((*i)->cost) {
+	output_stream << "        <tr:cost>\n";
+	xml_write_value(output_stream, value_t(*(*i)->cost), 10);
+	output_stream << "        </tr:cost>\n";
+      }
 
       if (! (*i)->note.empty())
 	output_stream << "        <tr:note>" << xml_string((*i)->note)
