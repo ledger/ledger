@@ -75,10 +75,19 @@ void reconcile_transactions(transactions_list& xact_list,
     return;
   }
 
+  if (cleared_balance.type >= value_t::BALANCE)
+    throw error("Cannot reconcile accounts with multiple commodities");
+
+  cleared_balance.cast(value_t::AMOUNT);
+  balance.cast(value_t::AMOUNT);
+
+  commodity_t& cb_comm = ((amount_t *) cleared_balance.data)->commodity();
+  commodity_t& b_comm  = ((amount_t *) balance.data)->commodity();
+
   balance -= cleared_balance;
   if (balance.type >= value_t::BALANCE)
-    throw error("Cannot reconcile accounts with multiple commodities");
-  balance.cast(value_t::AMOUNT);
+    throw error(std::string("Reconcile balance is not of the same commodity ('") +
+		b_comm.symbol + "' != '" + cb_comm.symbol + "')");
 
   // If the amount to reconcile is the same as the pending balance,
   // then assume an exact match and return the results right away.
