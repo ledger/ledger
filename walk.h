@@ -145,6 +145,25 @@ class ignore_transactions : public item_handler<transaction_t>
   virtual void operator()(transaction_t& xact) {}
 };
 
+class truncate_entries : public item_handler<transaction_t>
+{
+  int  count;
+  bool tailwise;
+
+  transactions_list xacts;
+
+ public:
+  truncate_entries(item_handler<transaction_t> * handler,
+		   int _count, bool _tailwise = false)
+    : item_handler<transaction_t>(handler),
+      count(_count), tailwise(_tailwise) {}
+
+  virtual void flush();
+  virtual void operator()(transaction_t& xact) {
+    xacts.push_back(&xact);
+  }
+};
+
 class set_account_value : public item_handler<transaction_t>
 {
  public:
@@ -159,9 +178,8 @@ class push_to_transactions_list : public item_handler<transaction_t>
  public:
   transactions_list& xact_list;
 
-  push_to_transactions_list(transactions_list& _xact_list,
-			    item_handler<transaction_t> * handler = NULL)
-    : item_handler<transaction_t>(handler), xact_list(_xact_list) {}
+  push_to_transactions_list(transactions_list& _xact_list)
+    : xact_list(_xact_list) {}
 
   virtual void operator()(transaction_t& xact) {
     xact_list.push_back(&xact);

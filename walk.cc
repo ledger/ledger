@@ -56,6 +56,53 @@ void add_transaction_to(const transaction_t& xact, value_t& value)
     value = xact.amount;
 }
 
+void truncate_entries::flush()
+{
+  if (! xacts.size())
+    return;
+
+  entry_t * last_entry = (*xacts.begin())->entry;
+
+  int l = 0;
+  for (transactions_list::iterator x = xacts.begin();
+       x != xacts.end();
+       x++)
+    if (last_entry != (*x)->entry) {
+      l++;
+      last_entry = (*x)->entry;
+    }
+  l++;
+
+  last_entry = (*xacts.begin())->entry;
+
+  int i = 0;
+  for (transactions_list::iterator x = xacts.begin();
+       x != xacts.end();
+       x++) {
+    if (last_entry != (*x)->entry) {
+      last_entry = (*x)->entry;
+      i++;
+    }
+
+    bool print = false;
+    if (tailwise) {
+      if (count > 0 && l - i <= count)
+	print = true;
+      else if (count < 0 && l - i > - count)
+	print = true;
+    } else {
+      if (count > 0 && i < count)
+	print = true;
+      else if (count < 0 && i >= - count)
+	print = true;
+    }
+
+    if (print)
+      item_handler<transaction_t>::operator()(**x);
+  }
+  item_handler<transaction_t>::flush();
+}
+
 void set_account_value::operator()(transaction_t& xact)
 {
   add_transaction_to(xact, account_xdata(*xact.account).value);
