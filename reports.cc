@@ -237,7 +237,7 @@ void print_register(const std::string& acct_name, std::ostream& out,
 	xact_str = "(Splits...)";
 
       out.width(22);
-      out << std::left << truncated(xact_str(), 22) << " ";
+      out << std::left << truncated(xact_str, 22) << " ";
 
       out.width(12);
       out << std::right << street->as_str(true);

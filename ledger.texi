@@ -1,5 +1,5 @@
 \input texinfo    @c -*-texinfo-*-
-@comment $Id: ledger.texi,v 1.10 2003/10/10 19:07:26 johnw Exp $
+@comment $Id: ledger.texi,v 1.11 2003/10/10 19:12:31 johnw Exp $
 @comment %**start of header
 
 @setfilename ledger.info
@@ -31,9 +31,9 @@
 @end ifnottex
 
 @menu
-* Introduction::
-* Keeping a ledger::
-* Computing Huqúqu'lláh::
+* Introduction::                
+* Keeping a ledger::            
+* Using GnuCash to Keep Your Ledger::  
 @end menu
 
 @node Introduction, Keeping a ledger, Top, Top
@@ -145,7 +145,7 @@ Your usage of @code{ledger} will have two parts: Keeping the ledger,
 and using the @code{ledger} tool to provide you with information
 summaries derived from your ledger's entries.
 
-@node Keeping a ledger, Computing Huqúqu'lláh, Introduction, Top
+@node Keeping a ledger, Using GnuCash to Keep Your Ledger, Introduction, Top
 @chapter Keeping a ledger
 
 The most important part of accounting is keeping a good ledger.  If
@@ -201,10 +201,11 @@ For this entry, @code{ledger} will figure out that $-23.00 must come
 from ``Assets:Checking'' in order to balance the entry.
 
 @menu
-* Credits and Debits::
-* Commodities and Currencies::
-* Accounts and Inventories::
-* Understanding Equity::
+* Credits and Debits::          
+* Commodities and Currencies::  
+* Accounts and Inventories::    
+* Understanding Equity::        
+* Automated transactions::      
 @end menu
 
 @node Credits and Debits, Commodities and Currencies, Keeping a ledger, Keeping a ledger
@@ -410,7 +411,7 @@ would look like:
 Now you've turned 2 steaks into 15 gold, courtesy of your customer,
 Sturm Brightblade.
 
-@node Understanding Equity,  , Accounts and Inventories, Keeping a ledger
+@node Understanding Equity, Automated transactions, Accounts and Inventories, Keeping a ledger
 @section Understanding Equity
 
 The most confusing entry in any ledger will be your equity
@@ -547,14 +548,29 @@ When balances are displayed, virtual transactions will be factored in.
 To view balances without any virtual balances factored in, using the
 @samp{-R} flag, for ``Reality''.
 
+@menu
+* Saving for a Special Occasion::  
+* Keeping a Budget::            
+* Tracking Allocated Funds::    
+@end menu
+
+@node Saving for a Special Occasion, Keeping a Budget, Understanding Equity, Understanding Equity
 @subsection Saving for a Special Occasion
 
+@node Keeping a Budget, Tracking Allocated Funds, Saving for a Special Occasion, Understanding Equity
 @subsection Keeping a Budget
 
+@node Tracking Allocated Funds,  , Keeping a Budget, Understanding Equity
 @subsection Tracking Allocated Funds
 
+@node Automated transactions,  , Understanding Equity, Keeping a ledger
 @section Automated transactions
 
+@menu
+* Computing Bahá'í Huqúqu'lláh::  
+@end menu
+
+@node Computing Bahá'í Huqúqu'lláh,  , Automated transactions, Automated transactions
 @subsection Computing Bahá'í Huqúqu'lláh
 
 As a Bahá'í, I need to compute Huqúqu'lláh on some of my assets.  The
@@ -601,6 +617,7 @@ ledger data, type:
 /home/johnw $ ledger -f ledger.dat balance ^huquq
 @end example
 
+@node Using GnuCash to Keep Your Ledger,  , Keeping a ledger, Top
 @chapter Using GnuCash to Keep Your Ledger
 
 The @code{ledger} tool is fast and simple, but it gives you no special
