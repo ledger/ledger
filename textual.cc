@@ -146,7 +146,7 @@ bool finalize_entry(entry_t * entry)
   // is used for auto-calculating the value of entries with no cost,
   // and the per-unit price of unpriced commodities.
 
-  balance_t balance;
+  value_t balance;
 
   for (transactions_list::const_iterator x = entry->transactions.begin();
        x != entry->transactions.end();
@@ -155,7 +155,9 @@ bool finalize_entry(entry_t * entry)
 	((*x)->flags & TRANSACTION_BALANCE)) {
       DEBUG_PRINT("ledger.textual.finalize",
 		  "item cost is " << ((*x)->cost ? *(*x)->cost : (*x)->amount));
-      balance += (*x)->cost ? *(*x)->cost : (*x)->amount;
+      amount_t * p = (*x)->cost ? (*x)->cost : &(*x)->amount;
+      if (*p)
+	balance += *p;
     }
 
   // If one transaction of a two-line transaction is of a different
@@ -163,15 +165,17 @@ bool finalize_entry(entry_t * entry)
   // determine its price by dividing the unit count into the value of
   // the balance.  This is done for the last eligible commodity.
 
-  if (balance.amounts.size() == 2)
+  if (balance.type == value_t::BALANCE &&
+      ((balance_t *) balance.data)->amounts.size() == 2)
     for (transactions_list::const_iterator x = entry->transactions.begin();
 	 x != entry->transactions.end();
 	 x++) {
       if ((*x)->cost || ((*x)->flags & TRANSACTION_VIRTUAL))
 	continue;
 
-      for (amounts_map::const_iterator i = balance.amounts.begin();
-	   i != balance.amounts.end();
+      for (amounts_map::const_iterator i
+	     = ((balance_t *) balance.data)->amounts.begin();
+	   i != ((balance_t *) balance.data)->amounts.end();
 	   i++)
 	if ((*i).second.commodity != (*x)->amount.commodity) {
 	  assert((*x)->amount);
@@ -196,8 +200,7 @@ bool finalize_entry(entry_t * entry)
     if ((*x)->amount || ((*x)->flags & TRANSACTION_VIRTUAL))
       continue;
 
-    if (! empty_allowed || balance.amounts.empty() ||
-	balance.amounts.size() != 1)
+    if (! empty_allowed || ! balance || balance.type != value_t::AMOUNT)
       return false;
 
     empty_allowed = false;
@@ -206,13 +209,15 @@ bool finalize_entry(entry_t * entry)
     // rest are of the same commodity -- then its value is the
     // inverse of the computed value of the others.
 
-    amounts_map::const_iterator i = balance.amounts.begin();
-    (*x)->amount = - balance.amount((*i).first);
+    (*x)->amount = *((amount_t *) balance.data);
+    (*x)->amount.negate();
 
-    balance = 0;
+    balance = 0U;
   }
 
+#if 0
   DEBUG_PRINT("ledger.textual.finalize", "balance is " << balance);
+#endif
 
   return ! balance;
 }

@@ -55,9 +55,10 @@ void collapse_transactions::report_cumulative_subtotal()
     assert(count > 1);
 
     totals_account->total = subtotal;
-    balance_t result;
+    value_t result;
     format_t::compute_total(result, details_t(totals_account));
 
+#if 0
     for (amounts_map::const_iterator i = result.amounts.begin();
 	 i != result.amounts.end();
 	 i++) {
@@ -69,6 +70,7 @@ void collapse_transactions::report_cumulative_subtotal()
 
       (*handler)(total_xact);
     }
+#endif
   }
 
   subtotal = 0;
@@ -78,8 +80,8 @@ void collapse_transactions::report_cumulative_subtotal()
 void changed_value_transactions::operator()(transaction_t * xact)
 {
   if (last_xact) {
-    balance_t	prev_bal;
-    balance_t	cur_bal;
+    value_t	prev_bal;
+    value_t	cur_bal;
     std::time_t current   = xact ? xact->entry->date : std::time(NULL);
     std::time_t prev_date = last_xact->entry->date;
 
@@ -89,13 +91,15 @@ void changed_value_transactions::operator()(transaction_t * xact)
     format_t::compute_total(cur_bal,  details_t(last_xact));
     last_xact->entry->date = prev_date;
 
-    if (balance_t diff = cur_bal - prev_bal) {
+    cur_bal -= prev_bal;
+    if (cur_bal) {
       entry_t * entry = new entry_t;
       entry_temps.push_back(entry);
 
       entry->payee = "Commodities revalued";
       entry->date  = current;
 
+#if 0
       for (amounts_map::const_iterator i = diff.amounts.begin();
 	   i != diff.amounts.end();
 	   i++) {
@@ -108,6 +112,7 @@ void changed_value_transactions::operator()(transaction_t * xact)
 
 	(*handler)(temp_xact);
       }
+#endif
     }
   }
 
@@ -150,10 +155,11 @@ void subtotal_transactions::flush(const char * spec_fmt)
     transaction_t temp((*i).first);
     temp.entry = entry;
     temp.total = (*i).second;
-    balance_t result;
+    value_t result;
     format_t::compute_total(result, details_t(&temp));
     entry->date = start;
 
+#if 0
     for (amounts_map::const_iterator j = result.amounts.begin();
 	 j != result.amounts.end();
 	 j++) {
@@ -165,6 +171,7 @@ void subtotal_transactions::flush(const char * spec_fmt)
 
       (*handler)(xact);
     }
+#endif
   }
 
   balances.clear();

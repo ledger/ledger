@@ -1,3 +1,4 @@
+#include "balance.h"
 #include "ledger.h"
 
 #include <deque>
@@ -87,6 +88,7 @@ void balance_t::write(std::ostream& out,
 balance_pair_t::balance_pair_t(const transaction_t& xact)
   : quantity(xact.amount), cost(NULL)
 {
+  DEBUG_PRINT("ledger.memory.ctors", "ctor balance_pair_t");
   if (xact.cost)
     cost = new balance_t(*xact.cost);
 }

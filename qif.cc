@@ -43,7 +43,7 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
   std::auto_ptr<entry_t>  entry;
   std::auto_ptr<amount_t> amount;
   transaction_t *	  xact;
-  unsigned int            count;
+  unsigned int            count = 0;
   account_t *             misc = NULL;
   commodity_t *           def_commodity = NULL;
 

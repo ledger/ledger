@@ -14,7 +14,14 @@ struct interval_t
   int seconds;
 
   interval_t(int _seconds = 0, int _months = 0, int _years = 0)
-    : years(_years), months(_months), seconds(_seconds) {}
+    : years(_years), months(_months), seconds(_seconds) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor interval_t");
+  }
+#ifdef DEBUG_ENABLED
+  ~interval_t() {
+    DEBUG_PRINT("ledger.memory.dtors", "dtor interval_t");
+  }
+#endif
 
   operator bool() const {
     return seconds > 0 || months > 0 || years > 0;

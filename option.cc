@@ -9,6 +9,8 @@ option_handler::option_handler(const std::string& label,
 			       const std::string& opt_chars)
   : handled(false)
 {
+  DEBUG_PRINT("ledger.memory.ctors", "ctor option_handler");
+
   option_t opt;
 
   static char buf[128];

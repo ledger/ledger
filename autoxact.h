@@ -19,6 +19,7 @@ public:
   automated_transaction_t(const std::string&  _predicate,
 			  transactions_deque& _transactions)
     : predicate(_predicate) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor automated_transaction_t");
     transactions.insert(transactions.begin(),
 			_transactions.begin(), _transactions.end());
     // Take over ownership of the pointers
@@ -26,6 +27,7 @@ public:
   }
 
   ~automated_transaction_t() {
+    DEBUG_PRINT("ledger.memory.dtors", "dtor automated_transaction_t");
     for (transactions_deque::iterator i = transactions.begin();
 	 i != transactions.end();
 	 i++)
@@ -43,7 +45,13 @@ class automated_transactions_t
 public:
   automated_transactions_deque automated_transactions;
 
+#ifdef DEBUG_ENABLED
+  automated_transactions_t() {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor automated_transactions_t");
+  }
+#endif
   ~automated_transactions_t() {
+    DEBUG_PRINT("ledger.memory.dtors", "dtor automated_transactions_t");
     for (automated_transactions_deque::iterator i
 	   = automated_transactions.begin();
 	 i != automated_transactions.end();

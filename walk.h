@@ -16,10 +16,15 @@ struct item_handler {
   item_handler * handler;
 
  public:
-  item_handler() : handler(NULL) {}
-  item_handler(item_handler * _handler) : handler(_handler) {}
+  item_handler() : handler(NULL) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor item_handler<T>");
+  }
+  item_handler(item_handler * _handler) : handler(_handler) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor item_handler<T>");
+  }
 
   virtual ~item_handler() {
+    DEBUG_PRINT("ledger.memory.dtors", "dtor item_handler<T>");
     if (handler)
       delete handler;
   }

@@ -16,49 +16,66 @@ namespace ledger {
 // fact that logic chains only need boolean values to continue, no
 // memory allocations need to take place at all.
 
+class transaction_t;
+
 class value_t
 {
-  value_t(const value_t& copy);
-
  public:
-  char data[sizeof(balance_t)];
+  char data[sizeof(balance_pair_t)];
 
   enum type_t {
     BOOLEAN,
     INTEGER,
     AMOUNT,
     BALANCE,
+    BALANCE_PAIR,
     ANY
   } type;
 
   value_t() {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor value_t");
     *((unsigned int *) data) = 0;
     type = INTEGER;
   }
 
+  value_t(const value_t& value) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor value_t");
+    *this = value;
+  }
   value_t(const bool value) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor value_t");
     *((bool *) data) = value;
     type = BOOLEAN;
   }
   value_t(const unsigned int value) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor value_t");
     *((unsigned int *) data) = value;
     type = INTEGER;
   }
   value_t(const amount_t& value) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor value_t");
     new((amount_t *)data) amount_t(value);
     type = AMOUNT;
   }
   value_t(const balance_t& value) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor value_t");
     new((balance_t *)data) balance_t(value);
     type = BALANCE;
   }
+  value_t(const balance_pair_t& value) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor value_t");
+    new((balance_pair_t *)data) balance_pair_t(value);
+    type = BALANCE_PAIR;
+  }
 
   ~value_t() {
+    DEBUG_PRINT("ledger.memory.dtors", "dtor value_t");
     destroy();
   }
 
   void destroy();
 
+  value_t& operator=(const value_t& value);
   value_t& operator=(const bool value) {
     destroy();
     *((bool *) data) = value;
@@ -83,11 +100,19 @@ class value_t
     type = BALANCE;
     return *this;
   }
+  value_t& operator=(const balance_pair_t& value) {
+    destroy();
+    new((balance_pair_t *)data) balance_pair_t(value);
+    type = BALANCE_PAIR;
+    return *this;
+  }
 
   value_t& operator+=(const value_t& value);
   value_t& operator-=(const value_t& value);
   value_t& operator*=(const value_t& value);
   value_t& operator/=(const value_t& value);
+
+  value_t& operator+=(const transaction_t& xact);
 
   bool operator==(const value_t& value);
   bool operator!=(const value_t& value) {
@@ -105,6 +130,8 @@ class value_t
   void cast(type_t cast_type);
   void negate();
   void abs();
+
+  value_t cost() const;
 };
 
 template <typename T>
@@ -119,6 +146,8 @@ value_t::operator T() const
     return *((amount_t *) data);
   case BALANCE:
     return *((balance_t *) data);
+  case BALANCE_PAIR:
+    return *((balance_pair_t *) data);
 
   default:
     assert(0);

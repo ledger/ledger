@@ -9,7 +9,7 @@
 namespace ledger {
 
 const unsigned long	   binary_magic_number = 0xFFEED765;
-static const unsigned long format_version      = 0x00020010;
+static const unsigned long format_version      = 0x00020011;
 
 bool binary_parser_t::test(std::istream& in) const
 {
@@ -21,9 +21,9 @@ bool binary_parser_t::test(std::istream& in) const
 }
 
 static std::deque<account_t *>   accounts;
-static account_t::ident_t	 ident;
+static unsigned int              account_index;
 static std::deque<commodity_t *> commodities;
-static commodity_t::ident_t	 c_ident;
+static unsigned int              commodity_index;
 std::deque<amount_t::bigint_t *> bigints;
 
 #if DEBUG_LEVEL >= ALPHA
@@ -84,12 +84,12 @@ inline std::string read_binary_string(std::istream& in)
 
 void read_binary_amount(std::istream& in, amount_t& amt)
 {
-  commodity_t::ident_t id;
-  read_binary_number(in, id);
-  if (id == 0xffffffff)
+  commodity_t::ident_t ident;
+  read_binary_number(in, ident);
+  if (ident == 0xffffffff)
     amt.commodity = NULL;
   else
-    amt.commodity = commodities[id];
+    amt.commodity = commodities[ident - 1];
 
   amt.read_quantity(in);
 }
@@ -98,7 +98,7 @@ transaction_t * read_binary_transaction(std::istream& in, entry_t * entry)
 {
   transaction_t * xact = new transaction_t(NULL);
 
-  xact->account = accounts[read_binary_number<account_t::ident_t>(in)];
+  xact->account = accounts[read_binary_number<account_t::ident_t>(in) - 1];
   xact->account->add_transaction(xact);
 
   read_binary_amount(in, xact->amount);
@@ -137,7 +137,7 @@ commodity_t * read_binary_commodity(std::istream& in)
   commodities.push_back(commodity);
 
   commodity->ident = read_binary_number<commodity_t::ident_t>(in);
-  assert(commodity->ident == commodities.size() - 1);
+  assert(commodity->ident == commodities.size());
 
   read_binary_string(in, commodity->symbol);
   read_binary_string(in, commodity->name);
@@ -154,8 +154,8 @@ commodity_t * read_binary_commodity(std::istream& in)
     read_binary_amount(in, amt);
     commodity->history.insert(history_pair(when, amt));
   }
-  read_binary_number(in, commodity->last_lookup);
 
+  read_binary_number(in, commodity->last_lookup);
   read_binary_amount(in, commodity->conversion);
 
   return commodity;
@@ -167,14 +167,14 @@ account_t * read_binary_account(std::istream& in, account_t * master = NULL)
   accounts.push_back(acct);
 
   acct->ident = read_binary_number<account_t::ident_t>(in);
-  assert(acct->ident == accounts.size() - 1);
+  assert(acct->ident == accounts.size());
 
   account_t::ident_t id;
   read_binary_number(in, id);	// parent id
   if (id == 0xffffffff)
     acct->parent = NULL;
   else
-    acct->parent = accounts[id];
+    acct->parent = accounts[id - 1];
 
   read_binary_string(in, acct->name);
   read_binary_string(in, acct->note);
@@ -206,8 +206,8 @@ unsigned int read_binary_journal(std::istream&	    in,
 				 journal_t *	    journal,
 				 account_t *	    master)
 {
-  ident   = 0;
-  c_ident = 0;
+  account_index   =
+  commodity_index = 0;
 
   if (read_binary_number<unsigned long>(in) != binary_magic_number ||
       read_binary_number<unsigned long>(in) != format_version)
@@ -343,10 +343,9 @@ void write_binary_entry(std::ostream& out, entry_t * entry)
 
 void write_binary_commodity(std::ostream& out, commodity_t * commodity)
 {
-  write_binary_number(out, c_ident);
-  commodity->ident = c_ident;
-  ++c_ident;
+  commodity->ident = ++commodity_index;
 
+  write_binary_number(out, commodity->ident);
   write_binary_string(out, commodity->symbol);
   write_binary_string(out, commodity->name);
   write_binary_string(out, commodity->note);
@@ -360,17 +359,16 @@ void write_binary_commodity(std::ostream& out, commodity_t * commodity)
     write_binary_number(out, (*i).first);
     write_binary_amount(out, (*i).second);
   }
-  write_binary_number(out, commodity->last_lookup);
 
+  write_binary_number(out, commodity->last_lookup);
   write_binary_amount(out, commodity->conversion);
 }
 
 void write_binary_account(std::ostream& out, account_t * account)
 {
-  write_binary_number(out, ident);
-  account->ident = ident;
-  ++ident;
+  account->ident = ++account_index;
 
+  write_binary_number(out, account->ident);
   if (account->parent)
     write_binary_number(out, account->parent->ident);
   else

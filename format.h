@@ -79,7 +79,7 @@ struct format_t
 
   void format_elements(std::ostream& out, const details_t& details) const;
 
-  static void compute_value(balance_t& result, const details_t& details) {
+  static void compute_value(value_t& result, const details_t& details) {
 #ifdef NO_CLEANUP
     if (value_expr)
 #else
@@ -88,7 +88,7 @@ struct format_t
       value_expr->compute(result, details);
   }
 
-  static void compute_total(balance_t& result, const details_t& details) {
+  static void compute_total(value_t& result, const details_t& details) {
 #ifdef NO_CLEANUP
     if (total_expr)
 #else
@@ -179,7 +179,7 @@ class format_equity : public item_handler<account_t>
 
   item_predicate<account_t> disp_pred;
 
-  mutable balance_t total;
+  mutable value_t total;
 
  public:
   format_equity(std::ostream&      _output_stream,
@@ -198,7 +198,8 @@ class format_equity : public item_handler<account_t>
 
   virtual void flush() {
     account_t summary(NULL, "Equity:Opening Balances");
-    summary.value = - total;
+    summary.value = total;
+    summary.value.negate();
     next_lines_format.format_elements(output_stream, details_t(&summary));
     output_stream.flush();
   }
@@ -207,7 +208,7 @@ class format_equity : public item_handler<account_t>
     if (format_account::display_account(account, disp_pred)) {
       next_lines_format.format_elements(output_stream, details_t(account));
       account->dflags |= ACCOUNT_DISPLAYED;
-      total += account->value.quantity;
+      total += account->value;
     }
   }
 };

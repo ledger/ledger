@@ -216,6 +216,11 @@ void format_t::format_elements(std::ostream&    out,
 					  (elem->max_width > 0 ?
 					   elem->max_width : elem->min_width));
 	break;
+      case value_t::BALANCE_PAIR:
+	((balance_pair_t *) value.data)->quantity.write(out, elem->min_width,
+							(elem->max_width > 0 ?
+							 elem->max_width : elem->min_width));
+	break;
       default:
 	assert(0);
 	break;
@@ -353,9 +358,9 @@ bool format_account::disp_subaccounts_p(const account_t * account,
 {
   bool	       display  = false;
   unsigned int counted  = 0;
-  bool         computed = false;
   bool         matches  = disp_pred(account);
-  balance_t    acct_total;
+  value_t      acct_total;
+  bool         computed = false;
 
   to_show = NULL;
 
@@ -365,7 +370,7 @@ bool format_account::disp_subaccounts_p(const account_t * account,
     if (! disp_pred((*i).second))
       continue;
 
-    balance_t result;
+    value_t result;
     format_t::compute_total(result, details_t((*i).second));
 
     if (! computed) {

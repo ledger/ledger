@@ -16,12 +16,12 @@ class mask_t
 
   explicit mask_t(const std::string& pattern);
   mask_t(const mask_t&);
-
   ~mask_t();
 
   bool match(const std::string& str) const;
 };
 
+//////////////////////////////////////////////////////////////////////
 
 struct details_t
 {
@@ -30,13 +30,22 @@ struct details_t
   const account_t *     account;
 
   details_t(const entry_t * _entry)
-    : entry(_entry), xact(NULL), account(NULL) {}
-
+    : entry(_entry), xact(NULL), account(NULL) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor details_t");
+  }
   details_t(const transaction_t * _xact)
-    : entry(_xact->entry), xact(_xact), account(_xact->account) {}
-
+    : entry(_xact->entry), xact(_xact), account(_xact->account) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor details_t");
+  }
   details_t(const account_t * _account)
-    : entry(NULL), xact(NULL), account(_account) {}
+    : entry(NULL), xact(NULL), account(_account) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor details_t");
+  }
+#ifdef DEBUG_ENABLED
+  ~details_t() {
+    DEBUG_PRINT("ledger.memory.dtors", "dtor details_t");
+  }
+#endif
 };
 
 struct value_expr_t
@@ -106,9 +115,12 @@ struct value_expr_t
   mask_t *	 mask;
 
   value_expr_t(const kind_t _kind)
-    : kind(_kind), left(NULL), right(NULL), mask(NULL) {}
+    : kind(_kind), left(NULL), right(NULL), mask(NULL) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor value_expr_t");
+  }
 
   ~value_expr_t() {
+    DEBUG_PRINT("ledger.memory.dtors", "dtor value_expr_t");
     if (mask)  delete mask;
     if (left)  delete left;
     if (right) delete right;
@@ -116,12 +128,6 @@ struct value_expr_t
 
   void compute(value_t& result, const details_t& details,
 	       value_t::type_t type = value_t::ANY) const;
-
-  void compute(balance_t& result, const details_t& details) const {
-    value_t value;
-    compute(value, details, value_t::BALANCE);
-    result = value.operator balance_t();
-  }
 };
 
 value_expr_t * parse_value_expr(std::istream& in);
@@ -139,6 +145,8 @@ inline value_expr_t * parse_value_expr(const std::string& str) {
 void dump_value_expr(std::ostream& out, const value_expr_t * node);
 #endif
 
+//////////////////////////////////////////////////////////////////////
+
 template <typename T>
 class item_predicate
 {
@@ -146,6 +154,7 @@ class item_predicate
 
  public:
   item_predicate(const std::string& _predicate) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor item_predicate<T>");
     predicate = NULL;
     if (! _predicate.empty()) {
       try {
@@ -172,9 +181,12 @@ class item_predicate
     }
   }
   item_predicate(const value_expr_t * _predicate)
-    : predicate(_predicate) {}
+    : predicate(_predicate) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor item_predicate<T>");
+  }
 
   ~item_predicate() {
+    DEBUG_PRINT("ledger.memory.dtors", "dtor item_predicate<T>");
     if (predicate)
       delete predicate;
   }

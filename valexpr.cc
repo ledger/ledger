@@ -13,6 +13,8 @@ namespace ledger {
 
 mask_t::mask_t(const std::string& pat) : exclude(false)
 {
+  DEBUG_PRINT("ledger.memory.ctors", "ctor mask_t");
+
   const char * p = pat.c_str();
   if (*p == '-') {
     exclude = true;
@@ -40,11 +42,18 @@ mask_t::mask_t(const std::string& pat) : exclude(false)
 
 mask_t::mask_t(const mask_t& m) : exclude(m.exclude), pattern(m.pattern)
 {
+  DEBUG_PRINT("ledger.memory.ctors", "ctor mask_t");
+
   const char *error;
   int erroffset;
   regexp = pcre_compile(pattern.c_str(), PCRE_CASELESS,
 			&error, &erroffset, NULL);
   assert(regexp);
+}
+
+mask_t::~mask_t() {
+  DEBUG_PRINT("ledger.memory.dtors", "dtor mask_t");
+  pcre_free((pcre *)regexp);
 }
 
 bool mask_t::match(const std::string& str) const
@@ -53,10 +62,6 @@ bool mask_t::match(const std::string& str) const
   int result = pcre_exec((pcre *)regexp, NULL,
 			 str.c_str(), str.length(), 0, 0, ovec, 30);
   return result >= 0 && ! exclude;
-}
-
-mask_t::~mask_t() {
-  pcre_free((pcre *)regexp);
 }
 
 
@@ -79,7 +84,7 @@ void value_expr_t::compute(value_t& result, const details_t& details,
     if (details.xact)
       result = details.xact->amount;
     else if (details.account)
-      result = details.account->value.quantity;
+      result = details.account->value;
     break;
 
   case COST:
@@ -90,32 +95,21 @@ void value_expr_t::compute(value_t& result, const details_t& details,
 	result = details.xact->amount;
     }
     else if (details.account) {
-      if (details.account->value.cost)
-	result = *details.account->value.cost;
-      else
-	result = details.account->value.quantity;
+      result = details.account->value.cost();
     }
     break;
 
   case TOTAL:
     if (details.xact)
-      result = details.xact->total.quantity;
+      result = details.xact->total;
     else if (details.account)
-      result = details.account->total.quantity;
+      result = details.account->total;
     break;
   case COST_TOTAL:
-    if (details.xact) {
-      if (details.xact->total.cost)
-	result = *details.xact->total.cost;
-      else
-	result = details.xact->total.quantity;
-    }
-    else if (details.account) {
-      if (details.account->total.cost)
-	result = *details.account->total.cost;
-      else
-	result = details.account->total.quantity;
-    }
+    if (details.xact)
+      result = details.xact->total.cost();
+    else if (details.account)
+      result = details.account->total.cost();
     break;
 
   case VALUE_EXPR:
@@ -227,7 +221,8 @@ void value_expr_t::compute(value_t& result, const details_t& details,
   case F_STRIP: {
     assert(left);
     left->compute(result, details);
-    if (result.type == value_t::BALANCE) {
+    if (result.type == value_t::BALANCE ||
+	result.type == value_t::BALANCE_PAIR) {
       // jww (2004-08-17): do something smarter here?
       result.cast(value_t::AMOUNT);
     }

@@ -25,7 +25,7 @@
 #endif
 
 #include "amount.h"
-#include "balance.h"
+#include "value.h"
 
 namespace ledger {
 
@@ -53,7 +53,7 @@ class transaction_t
   unsigned short flags;
   std::string	 note;
 
-  mutable balance_pair_t total;
+  mutable value_t	 total;
   mutable unsigned int   index;
   mutable unsigned short dflags;
 
@@ -69,6 +69,7 @@ class transaction_t
       cost(NULL), flags(_flags), note(_note), index(0), dflags(0) {}
 
   ~transaction_t() {
+    DEBUG_PRINT("ledger.memory.dtors", "dtor transaction_t");
     if (cost)
       delete cost;
   }
@@ -90,9 +91,12 @@ class entry_t
   std::string	    payee;
   transactions_list transactions;
 
-  entry_t() : date(-1), state(UNCLEARED) {}
+  entry_t() : date(-1), state(UNCLEARED) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor entry_t");
+  }
 
   ~entry_t() {
+    DEBUG_PRINT("ledger.memory.dtors", "dtor entry_t");
     for (transactions_list::iterator i = transactions.begin();
 	 i != transactions.end();
 	 i++)
@@ -128,8 +132,8 @@ class account_t
   accounts_map	    accounts;
   transactions_list transactions;
 
-  mutable balance_pair_t value;
-  mutable balance_pair_t total;
+  mutable value_t	 value;
+  mutable value_t	 total;
   mutable unsigned int   count;	// transactions counted toward total
   mutable unsigned int   subcount;
   mutable ident_t        ident;
@@ -143,14 +147,15 @@ class account_t
 	    const std::string& _note = "")
     : parent(_parent), name(_name), note(_note),
       depth(parent ? parent->depth + 1 : 0),
-      count(0), subcount(0), dflags(0) {}
+      subcount(0), ident(0), dflags(0) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor account_t");
+  }
 
   ~account_t();
 
   std::string fullname() const;
 
   void add_account(account_t * acct) {
-    acct->ident = next_ident++;
     accounts.insert(accounts_pair(acct->name, acct));
   }
   bool remove_account(account_t * acct) {
@@ -193,9 +198,8 @@ class journal_t
   mutable accounts_map accounts_cache;
 
   journal_t() {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor journal_t");
     master = new account_t(NULL, "");
-    master->ident = 0;
-    account_t::next_ident = 1;
   }
 
   ~journal_t();

@@ -5,10 +5,9 @@
 
 namespace ledger {
 
-account_t::ident_t account_t::next_ident;
-
 account_t::~account_t()
 {
+  DEBUG_PRINT("ledger.memory.ctors", "dtor account_t");
   for (accounts_map::iterator i = accounts.begin();
        i != accounts.end();
        i++)

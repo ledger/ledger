@@ -10,6 +10,8 @@ const std::string version = "2.0b";
 
 journal_t::~journal_t()
 {
+  DEBUG_PRINT("ledger.memory.dtors", "dtor journal_t");
+
   delete master;
 
   // Don't bother unhooking each entry's transactions from the

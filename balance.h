@@ -27,28 +27,39 @@ class balance_t
   }
 
   // constructors
-  balance_t() {}
+  balance_t() {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor balance_t");
+  }
   balance_t(const balance_t& bal) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor balance_t");
     for (amounts_map::const_iterator i = bal.amounts.begin();
 	 i != bal.amounts.end();
 	 i++)
       *this += (*i).second;
   }
   balance_t(const amount_t& amt) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor balance_t");
     *this += amt;
   }
   balance_t(const int value) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor balance_t");
     *this += amount_t(value);
   }
   balance_t(const unsigned int value) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor balance_t");
     *this += amount_t(value);
   }
   balance_t(const double value) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor balance_t");
     *this += amount_t(value);
   }
 
   // destructor
-  ~balance_t() {}
+#ifdef DEBUG_ENABLED
+  ~balance_t() {
+    DEBUG_PRINT("ledger.memory.dtors", "dtor balance_t");
+  }
+#endif
 
   // assignment operator
   balance_t& operator=(const balance_t& bal) {
@@ -394,34 +405,40 @@ class balance_pair_t
   }
 
   // constructors
-  balance_pair_t() : cost(NULL) {}
+  balance_pair_t() : cost(NULL) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor balance_pair_t");
+  }
   balance_pair_t(const balance_pair_t& bal_pair)
     : quantity(bal_pair.quantity), cost(NULL) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor balance_pair_t");
     if (bal_pair.cost)
       cost = new balance_t(*bal_pair.cost);
   }
-#if 0
-  balance_pair_t(const balance_t& _quantity, const balance_t& _cost)
-    : quantity(_quantity), cost(_cost) {}
-#endif
   balance_pair_t(const balance_t& _quantity)
-    : quantity(_quantity), cost(NULL) {}
-#if 0
-  balance_pair_t(const amount_t& _quantity, const amount_t& _cost)
-    : quantity(_quantity), cost(_cost) {}
-#endif
+    : quantity(_quantity), cost(NULL) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor balance_pair_t");
+  }
   balance_pair_t(const amount_t& _quantity)
-    : quantity(_quantity), cost(NULL) {}
+    : quantity(_quantity), cost(NULL) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor balance_pair_t");
+  }
   balance_pair_t(const int value)
-    : quantity(value), cost(NULL) {}
+    : quantity(value), cost(NULL) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor balance_pair_t");
+  }
   balance_pair_t(const unsigned int value)
-    : quantity(value), cost(NULL) {}
+    : quantity(value), cost(NULL) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor balance_pair_t");
+  }
   balance_pair_t(const double value)
-    : quantity(value), cost(NULL) {}
+    : quantity(value), cost(NULL) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor balance_pair_t");
+  }
   balance_pair_t(const transaction_t& xact);
 
   // destructor
   ~balance_pair_t() {
+    DEBUG_PRINT("ledger.memory.dtors", "dtor balance_pair_t");
     if (cost)
       delete cost;
   }
@@ -723,15 +740,24 @@ class balance_pair_t
   operator bool() const {
     return quantity;
   }
+  operator balance_t() const {
+    return quantity;
+  }
+  operator amount_t() const {
+    assert(0);
+    return quantity.amount();
+  }
+
+  void abs() {
+    quantity.abs();
+    if (cost)
+      cost->abs();
+  }
 };
 
 inline balance_pair_t abs(const balance_pair_t& bal_pair) {
   balance_pair_t temp;
-  temp.quantity = abs(bal_pair.quantity);
-  if (bal_pair.cost) {
-    temp.cost = new balance_t;
-    *temp.cost = abs(*bal_pair.cost);
-  }
+  temp.abs();
   return temp;
 }
 

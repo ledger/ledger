@@ -7,6 +7,8 @@
 #include <iostream>
 #include <sstream>
 
+#include "debug.h"
+
 namespace ledger {
 
 class commodity_t;
@@ -41,18 +43,23 @@ class amount_t
 
   // constructors
   amount_t(commodity_t * _commodity = NULL)
-    : quantity(NULL), commodity(_commodity) {}
+    : quantity(NULL), commodity(_commodity) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor amount_t");
+  }
 
   amount_t(const amount_t& amt) : quantity(NULL) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor amount_t");
     if (amt.quantity)
       _copy(amt);
     else
       commodity = NULL;
   }
   amount_t(const std::string& value) : quantity(NULL) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor amount_t");
     parse(value);
   }
   amount_t(const char * value) : quantity(NULL) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor amount_t");
     parse(value);
   }
   amount_t(const bool value);
@@ -62,6 +69,7 @@ class amount_t
 
   // destructor
   ~amount_t() {
+    DEBUG_PRINT("ledger.memory.dtors", "dtor amount_t");
     if (quantity)
       _release();
   }
@@ -253,8 +261,14 @@ class commodity_t
 	      unsigned int       _flags	    = COMMODITY_STYLE_DEFAULTS)
     : symbol(_symbol), quote(false), precision(_precision),
       flags(_flags), last_lookup(0) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor commodity_t");
     check_symbol();
   }
+#ifdef DEBUG_ENABLED
+  ~commodity_t() {
+    DEBUG_PRINT("ledger.memory.dtors", "dtor commodity_t");
+  }
+#endif
 
   void check_symbol() {
     for (const char * p = symbol.c_str(); *p; p++)

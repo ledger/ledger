@@ -10,21 +10,6 @@
 
 namespace ledger {
 
-#ifdef DEBUG_ENABLED
-int bigint_ctors = 0;
-int bigint_dtors = 0;
-#endif
-
-#ifdef DEBUG_ENABLED
-static struct ctor_dtor_info {
-  ~ctor_dtor_info() {
-    DEBUG_CLASS("ledger.amount.bigint");
-    DEBUG_PRINT_("bigint_t ctor count = " << bigint_ctors);
-    DEBUG_PRINT_("bigint_t dtor count = " << bigint_dtors);
-  }
-} __info;
-#endif
-
 class amount_t::bigint_t {
  public:
   mpz_t        val;
@@ -33,37 +18,21 @@ class amount_t::bigint_t {
   unsigned int index;
 
   bigint_t() : prec(0), ref(1), index(0) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor amount_t::bigint_t");
     mpz_init(val);
-#ifdef DEBUG_ENABLED
-    DEBUG_PRINT("ledger.amount.bigint-show",
-		"ctor " << this << " " << bigint_ctors);
-    bigint_ctors++;
-#endif
   }
   bigint_t(mpz_t _val) : prec(0), ref(1), index(0) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor amount_t::bigint_t");
     mpz_init_set(val, _val);
-#ifdef DEBUG_ENABLED
-    DEBUG_PRINT("ledger.amount.bigint-show",
-		"ctor " << this << " " << bigint_ctors);
-    bigint_ctors++;
-#endif
   }
   bigint_t(const bigint_t& other)
     : prec(other.prec), ref(1), index(0) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor amount_t::bigint_t");
     mpz_init_set(val, other.val);
-#ifdef DEBUG_ENABLED
-    DEBUG_PRINT("ledger.amount.bigint-show",
-		"ctor " << this << " " << bigint_ctors);
-    bigint_ctors++;
-#endif
   }
   ~bigint_t() {
+    DEBUG_PRINT("ledger.memory.dtors", "dtor amount_t::bigint_t");
     assert(ref == 0);
-#ifdef DEBUG_ENABLED
-    DEBUG_PRINT("ledger.amount.bigint-show",
-		"dtor " << this << " " << bigint_dtors);
-    bigint_dtors++;
-#endif
     mpz_clear(val);
   }
 };
@@ -150,6 +119,7 @@ static void mpz_round(mpz_t out, mpz_t value, int value_prec, int round_prec)
 
 amount_t::amount_t(const bool value)
 {
+  DEBUG_PRINT("ledger.memory.ctors", "ctor amount_t");
   if (value) {
     quantity  = new bigint_t(true_value);
     commodity = commodity_t::null_commodity;
@@ -161,6 +131,7 @@ amount_t::amount_t(const bool value)
 
 amount_t::amount_t(const int value)
 {
+  DEBUG_PRINT("ledger.memory.ctors", "ctor amount_t");
   if (value != 0) {
     quantity = new bigint_t;
     mpz_set_si(MPZ(quantity), value);
@@ -173,6 +144,7 @@ amount_t::amount_t(const int value)
 
 amount_t::amount_t(const unsigned int value)
 {
+  DEBUG_PRINT("ledger.memory.ctors", "ctor amount_t");
   if (value != 0) {
     quantity = new bigint_t;
     mpz_set_ui(MPZ(quantity), value);
@@ -185,6 +157,7 @@ amount_t::amount_t(const unsigned int value)
 
 amount_t::amount_t(const double value)
 {
+  DEBUG_PRINT("ledger.memory.ctors", "ctor amount_t");
   if (value != 0.0) {
     quantity = new bigint_t;
     mpz_set_d(MPZ(quantity), value);
