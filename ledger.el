@@ -45,6 +45,9 @@
 ;; well), or C-c C-r to attempt an auto-reconcilation based on the
 ;; statement's ending date and balance.
 
+(require 'esh-util)
+(require 'esh-arg)
+
 (defvar ledger-version "1.2"
   "The version of ledger.el currently loaded")
 
