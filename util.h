@@ -17,7 +17,7 @@ typedef unsigned long ostream_pos_type;
 #else
 typedef std::istream::pos_type istream_pos_type;
 typedef std::ostream::pos_type ostream_pos_type;
-#endif // g++ version 2
+#endif
 
 inline char * skip_ws(char * ptr) {
   while (*ptr == ' ' || *ptr == '\t' || *ptr == '\n')
