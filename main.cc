@@ -357,7 +357,7 @@ int parse_and_report(int argc, char * argv[], char * envp[])
 
       // Duplicate pipe's reading end into stdin
       status = dup2(pfd[0], STDIN_FILENO);
-      if (status==-1)
+      if (status == -1)
 	perror("dup2");
 
       // Close unuseful file descriptors: the pipe's writing and
