@@ -1,4 +1,5 @@
 #include "quotes.h"
+#include "datetime.h"
 
 #include <fstream>
 
@@ -9,8 +10,6 @@ void quotes_by_script::operator()(commodity_t *     commodity,
 				  const amount_t&   price,
 				  const std::time_t moment)
 {
-  std::time_t now = std::time(NULL); // the time of the query
-
   if (! (commodity->flags & COMMODITY_STYLE_CONSULTED) &&
       std::difftime(now, moment) < pricing_leeway &&
       (! price || std::difftime(moment, date) > pricing_leeway)) {
