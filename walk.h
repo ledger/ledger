@@ -154,6 +154,20 @@ class set_account_value : public item_handler<transaction_t>
   virtual void operator()(transaction_t& xact);
 };
 
+class push_to_transactions_list : public item_handler<transaction_t>
+{
+ public:
+  transactions_list& xact_list;
+
+  push_to_transactions_list(transactions_list& _xact_list,
+			    item_handler<transaction_t> * handler = NULL)
+    : item_handler<transaction_t>(handler), xact_list(_xact_list) {}
+
+  virtual void operator()(transaction_t& xact) {
+    xact_list.push_back(&xact);
+  }
+};
+
 class sort_transactions : public item_handler<transaction_t>
 {
   typedef std::deque<transaction_t *> transactions_deque;
