@@ -10,3 +10,8 @@ fi
 
 autoheader
 autoconf
+
+if [ "$1" = "--gen" ]; then
+    ./configure CPPFLAGS="-I/sw/include -I/usr/include/httpd/xml" \
+		LDFLAGS=-L/sw/lib CXXFLAGS="-g" --enable-debug
+fi
