@@ -94,7 +94,7 @@ unsigned int parse_qif_file(std::istream& in, journal_t * journal,
 
     case 'N':
       if (std::isdigit(in.peek())) {
-	in >> c >> line;
+	in >> line;
 	entry->code = line;
       }
       break;
