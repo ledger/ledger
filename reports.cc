@@ -366,6 +366,8 @@ void add_new_entry(int index, int argc, char **argv)
   entry       added(main_ledger);
   entry *     matching = NULL;
 
+  assert(index < argc);
+
   if (! parse_date(argv[index++], &added.date)) {
     std::cerr << "Error: Bad add date: " << argv[index - 1]
               << std::endl;
@@ -405,7 +407,7 @@ void add_new_entry(int index, int argc, char **argv)
       std::exit(1);
     }
 
-    transaction * m_xact,  * xact, * first;
+    transaction * m_xact, * xact, * first;
 
     m_xact = matching->xacts.front();
       
@@ -645,7 +647,7 @@ int main(int argc, char * argv[])
   const std::string command = argv[index++];
 
   int name_index = index;
-  if (command == "register") {
+  if (command == "register" || command == "reg") {
     if (optind == argc) {
       std::cerr << ("Error: Must specify an account name "
 		    "after the 'register' command.") << std::endl;
@@ -657,7 +659,7 @@ int main(int argc, char * argv[])
   // Compile the list of specified regular expressions, which can be
   // specified after the command, or using the '-i FILE' option
 
-  if (command != "add")
+  if (command != "entry")
     for (; index < argc; index++)
       regexps.push_back(mask(argv[index]));
 
@@ -697,10 +699,10 @@ int main(int argc, char * argv[])
 
   // Process the command
 
-  if (command == "balance") {
+  if (command == "balance" || command == "bal") {
     report_balances(std::cout, regexps);
   }
-  else if (command == "register") {
+  else if (command == "register" || command == "reg") {
     if (show_sorted)
       main_ledger->sort(cmp_entry_date());
     print_register(argv[name_index], std::cout, regexps);
@@ -713,7 +715,7 @@ int main(int argc, char * argv[])
   else if (command == "equity") {
     equity_ledger(std::cout, regexps);
   }
-  else if (command == "add") {
+  else if (command == "entry") {
     add_new_entry(index, argc, argv);
   }
 
