@@ -991,6 +991,15 @@ above to:
 ledger -e 2004/1/1 equity -^Income -^Expenses > /tmp/balances
 </example>
 
+*** price
+
+This commands displays the last known current price for a given
+commodity, using the specified end date for the cutoff (default is the
+present moment).  It takes a list of regexps, which can match the
+commodities used in the ledger file.  This command is helpful to
+quickly seeing the last current price for a specific commodity, or all
+commodities referenced by a ledger.
+
 *** entry
 
 The three most laborious tasks of keeping a ledger are: adding new
@@ -1156,6 +1165,11 @@ launches =vi= to let you confirm that the entry looks appropriate.
   Sort the ledger after reading it.  This may affect "register" and
   "print" output.
 
+-T ::
+  Show only commodities totals, do not convert to the basis cost or
+  the current market value.  This disables the effect of =-B=, =-P=
+  and =-Q=.
+
 -U ::
   Show only uncleared transactions.  The default is to consider both.
 
@@ -1168,11 +1182,11 @@ LEDGER ::
   A colon-separated list of files to be parsed whenever ledger is run.
   Easier than typing =-f= all the time.
 
-PRICE_HIST ::
+<verbatim>PRICE_HIST</verbatim> ::
   The ledger file used to hold pricing data.  =~/.pricedb= would be a
   good choice.
 
-PRICE_EXP ::
+<verbatim>PRICE_EXP</verbatim> ::
   The number of minutes before pricing data becomes out-of-date.  The
   default is one day.  Use =-L= to temporarily decrease or increase
   the value.

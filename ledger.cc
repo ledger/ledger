@@ -29,9 +29,10 @@ void commodity::set_price(amount * price, std::time_t * when)
     conversion = price;
 }
 
-amount * commodity::price(std::time_t * when, bool download) const
+amount * commodity::price(std::time_t * when,
+			  bool use_history, bool download) const
 {
-  if (conversion || ! when)
+  if (conversion || ! when || ! use_history)
     return conversion;
 
   std::time_t age;
@@ -60,17 +61,6 @@ amount * commodity::price(std::time_t * when, bool download) const
 
     char buf[256];
     buf[0] = '\0';
-
-    cout << "Consulting the Internet for " << symbol << endl;
-    strftime(buf, 127, "%Y/%m/%d %H:%M:%S", localtime(when));
-    cout << "  when: " << buf << endl;
-    if (price) {
-      strftime(buf, 127, "%Y/%m/%d %H:%M:%S", localtime(&age));
-      cout << "  age: " << buf << endl;
-      cout << "  diff (when, age): " << difftime(*when, age) << endl;
-    } else {
-      cout << "  diff (now, when): " << difftime(now, *when) << endl;
-    }
 
     if (FILE * fp = popen((string("getquote ") + symbol).c_str(), "r")) {
       if (feof(fp) || ! fgets(buf, 255, fp)) {

@@ -274,7 +274,9 @@ void report_balances(std::ostream& out, regexps_list& regexps)
 	}
 
 	if (acct->checked == 1) {
-	  amount * street = (*x)->cost->street(&end_date, get_quotes);
+	  amount * street = (*x)->cost->street(have_ending ? &end_date : NULL,
+					       cost_basis || get_quotes,
+					       get_quotes);
 	  if (cost_basis &&
 	      street->commdty() == (*x)->cost->commdty() &&
 	      (*x)->cost->has_price()) {
@@ -362,7 +364,8 @@ void print_register_transaction(std::ostream& out, entry *ent,
   // Always display the street value, if prices have been
   // specified
 
-  amount * street = xact->cost->street(&ent->date, get_quotes);
+  amount * street = xact->cost->street(&ent->date, cost_basis || get_quotes,
+				       get_quotes);
   balance.credit(street);
 
   // If there are two transactions, use the one which does not
@@ -411,7 +414,8 @@ void print_register_transaction(std::ostream& out, entry *ent,
     out << std::left << truncated((*y)->acct_as_str(), 22) << " ";
 
     out.width(12);
-    street = (*y)->cost->street(&ent->date, get_quotes);
+    street = (*y)->cost->street(&ent->date, cost_basis || get_quotes,
+				get_quotes);
     out << std::right << street->as_str(true) << std::endl;
     delete street;
   }
@@ -492,7 +496,9 @@ void print_register(std::ostream& out, const std::string& acct_name,
       if (period == PERIOD_NONE) {
 	print_register_transaction(out, *i, *x, balance);
       } else {
-	amount * street = (*x)->cost->street(&(*i)->date, get_quotes);
+	amount * street = (*x)->cost->street(&(*i)->date,
+					     cost_basis || get_quotes,
+					     get_quotes);
 	balance.credit(street);
 
 	if (period_sum) {
@@ -544,12 +550,16 @@ static void equity_entry(account * acct, regexps_list& regexps,
 
       transaction * xact = new transaction();
       xact->acct = const_cast<account *>(acct);
-      xact->cost = (*i).second->street(&end_date, get_quotes);
+      xact->cost = (*i).second->street(have_ending ? &end_date : NULL,
+				       cost_basis || get_quotes,
+				       get_quotes);
       opening.xacts.push_back(xact);
 
       xact = new transaction();
       xact->acct = main_ledger->find_account("Equity:Opening Balances");
-      xact->cost = (*i).second->street(&end_date, get_quotes);
+      xact->cost = (*i).second->street(have_ending ? &end_date : NULL,
+				       cost_basis || get_quotes,
+				       get_quotes);
       xact->cost->negate();
       opening.xacts.push_back(xact);
     }
@@ -577,8 +587,39 @@ void equity_ledger(std::ostream& out, regexps_list& regexps)
     equity_entry((*i).second, regexps, out);
 }
 
+//////////////////////////////////////////////////////////////////////
+//
+// Report on the price of any commodities matching REGEXPS.  This can
+// be used to see what something was worth at a specific time.
+//
+
+void price_report(std::ostream& out, regexps_list& regexps)
+{
+  if (! have_ending) {
+    end_date = std::time(NULL);
+    have_ending = true;
+  }
+  
+  for (commodities_map_iterator i = main_ledger->commodities.begin();
+       i != main_ledger->commodities.end();
+       i++)
+    if (regexps.empty() || matches(regexps, (*i).first)) {
+      amount * price = (*i).second->price(have_ending ? &end_date : NULL,
+					  cost_basis || get_quotes,
+					  get_quotes);
+      if (price && ! price->is_zero()) {
+	out.width(20);
+	out << std::right << price->as_str() << " " << (*i).first
+	    << std::endl;
+      }
+    }
+}
+
+//////////////////////////////////////////////////////////////////////
+//
 // Add a new entry, using hueristic logic to simplify the entry
 // requirements
+//
 
 void add_new_entry(int index, int argc, char **argv)
 {
@@ -789,6 +830,7 @@ int main(int argc, char * argv[])
   std::string   prices;
   std::string   limit;
   regexps_list  regexps;
+  bool          no_history = false;
 
   std::vector<std::string> files;
 
@@ -798,7 +840,7 @@ int main(int argc, char * argv[])
 
   int c;
   while (-1 != (c = getopt(argc, argv,
-			   "+b:e:d:cCUhBRV:f:i:p:PL:Q:vsSEnFMGl:N:"))) {
+			   "+b:e:d:cCUhBRV:f:i:p:PL:Q:TvsSEnFMGl:N:"))) {
     switch (char(c)) {
     case 'b':
       have_beginning = true;
@@ -872,8 +914,10 @@ int main(int argc, char * argv[])
 
     case 'B':
       cost_basis = true;
+      // fall through...
+    case 'T':
+      no_history = true;
       get_quotes = false;
-      price_db   = "";
       break;
 
     case 'l':
@@ -925,7 +969,7 @@ int main(int argc, char * argv[])
   // If a price history file is specified with the environment
   // variable PRICE_HIST, add it to the list of ledger files to read.
 
-  if (! cost_basis) {
+  if (! no_history) {
     if (price_db.empty())
       if (char * p = std::getenv("PRICE_HIST")) {
 	get_quotes = true;
@@ -962,7 +1006,7 @@ int main(int argc, char * argv[])
     }
   }
 
-  if (! price_db.empty())
+  if (! no_history && ! price_db.empty())
     entry_count += parse_ledger_file(main_ledger, price_db,
 				     regexps, command == "equity");
 
@@ -990,6 +1034,9 @@ int main(int argc, char * argv[])
   }
   else if (command == "equity") {
     equity_ledger(std::cout, regexps);
+  }
+  else if (command == "price" || command == "prices") {
+    price_report(std::cout, regexps);
   }
   else if (command == "entry") {
     add_new_entry(index, argc, argv);

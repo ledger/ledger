@@ -58,7 +58,8 @@ class gmp_amount : public amount
   virtual amount * value(const amount *) const;
   virtual void set_value(const amount * val);
   virtual amount * street(std::time_t * when = NULL,
-			  bool get_quotes = false) const;
+			  bool use_history = false,
+			  bool download = false) const;
 
   virtual bool has_price() const {
     return priced;
@@ -215,7 +216,8 @@ amount * gmp_amount::value(const amount * pr) const
   }
 }
 
-amount * gmp_amount::street(std::time_t * when, bool get_quotes) const
+amount * gmp_amount::street(std::time_t * when,
+			    bool use_history, bool download) const
 {
   static std::time_t now = std::time(NULL);
   if (! when)
@@ -228,7 +230,7 @@ amount * gmp_amount::street(std::time_t * when, bool get_quotes) const
 
   int  max = 10;
   while (--max >= 0) {
-    amount * price = amt->commdty()->price(when, get_quotes);
+    amount * price = amt->commdty()->price(when, use_history, download);
     if (! price)
       break;
 

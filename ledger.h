@@ -64,7 +64,8 @@ class commodity
   ~commodity();
 
   void     set_price(amount * price, std::time_t * when = NULL);
-  amount * price(std::time_t * when = NULL, bool download = false) const;
+  amount * price(std::time_t * when = NULL,
+		 bool use_history = false, bool download = false) const;
 };
 
 typedef std::map<const std::string, commodity *>  commodities_map;
@@ -84,7 +85,8 @@ class amount
   virtual amount * value(const amount * pr = NULL) const = 0;
   virtual void set_value(const amount * pr) = 0;
   virtual amount * street(std::time_t * when = NULL,
-			  bool get_quotes = false) const = 0;
+			  bool use_history = false,
+			  bool download = false) const = 0;
 
   virtual bool has_price() const = 0;
   virtual amount * per_item_price() const = 0;
