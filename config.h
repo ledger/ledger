@@ -36,6 +36,8 @@ struct config_t
   std::string   plot_amount_format;
   std::string   plot_total_format;
   std::string   print_format;
+  std::string   write_hdr_format;
+  std::string   write_xact_format;
   std::string   equity_format;
   std::string   prices_format;
   std::string   date_format;

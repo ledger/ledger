@@ -35,6 +35,8 @@ config_t::config_t()
   plot_amount_format = "%D %(St)\n";
   plot_total_format  = "%D %(ST)\n";
   print_format       = "\n%D %X%C%P\n    %-34A  %12o%n\n%/    %-34A  %12o%n\n";
+  write_hdr_format   = "%D %X%C%P\n";
+  write_xact_format  = "    %-34A  %12o%n\n";
   equity_format      = "\n%D %X%C%P\n%/    %-34A  %12t\n";
 #ifndef USE_BOOST_PYTHON
   prices_format      = "%[%Y/%m/%d %H:%M:%S %Z]   %-10A %12t %12T\n";
@@ -147,7 +149,7 @@ void config_t::process_options(const std::string&     command,
 {
   // Configure some other options depending on report type
 
-  if (command == "p" || command == "e") {
+  if (command == "p" || command == "e" || command == "w") {
     show_related     =
     show_all_related = true;
   }
@@ -165,7 +167,7 @@ void config_t::process_options(const std::string&     command,
 
   // Process remaining command-line arguments
 
-  if (command != "e") {
+  if (command != "e" && command != "w") {
     // Treat the remaining command-line arguments as regular
     // expressions, used for refining report results.
 
@@ -691,6 +693,14 @@ OPT_BEGIN(print_format, ":") {
   config.print_format = optarg;
 } OPT_END(print_format);
 
+OPT_BEGIN(write_hdr_format, ":") {
+  config.write_hdr_format = optarg;
+} OPT_END(write_hdr_format);
+
+OPT_BEGIN(write_xact_format, ":") {
+  config.write_xact_format = optarg;
+} OPT_END(write_xact_format);
+
 OPT_BEGIN(equity_format, ":") {
   config.equity_format = optarg;
 } OPT_END(equity_format);
@@ -967,6 +977,8 @@ void export_config()
     .def_readwrite("plot_amount_format", &config_t::plot_amount_format)
     .def_readwrite("plot_total_format", &config_t::plot_total_format)
     .def_readwrite("print_format", &config_t::print_format)
+    .def_readwrite("write_hdr_format", &config_t::write_hdr_format)
+    .def_readwrite("write_xact_format", &config_t::write_xact_format)
     .def_readwrite("equity_format", &config_t::equity_format)
     .def_readwrite("prices_format", &config_t::prices_format)
     .def_readwrite("date_format", &config_t::date_format)
