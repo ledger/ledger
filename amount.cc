@@ -10,11 +10,24 @@
 namespace ledger {
 
 #ifdef DEBUG_ENABLED
-static int ctors = 0;
-static int dtors = 0;
+int bigint_ctors = 0;
+int bigint_dtors = 0;
 #endif
 
-struct amount_t::bigint_t {
+#ifdef DEBUG_ENABLED
+static struct ctor_dtor_info {
+  ~ctor_dtor_info() {
+    DEBUG_CLASS("ledger.amount.bigint");
+    DEBUG_PRINT_("bigint_t ctor count = " << bigint_ctors);
+    DEBUG_PRINT_("bigint_t dtor count = " << bigint_dtors);
+  }
+} __info;
+#endif
+
+class amount_t::bigint_t {
+  bigint_t(const bigint_t&);
+
+ public:
   mpz_t        val;
   unsigned int ref;
   unsigned int index;
@@ -22,33 +35,23 @@ struct amount_t::bigint_t {
   bigint_t() : ref(1), index(0) {
     mpz_init(val);
 #ifdef DEBUG_ENABLED
-    ctors++;
+    bigint_ctors++;
 #endif
   }
   bigint_t(mpz_t _val) : ref(1), index(0) {
     mpz_init_set(val, _val);
 #ifdef DEBUG_ENABLED
-    ctors++;
+    bigint_ctors++;
 #endif
   }
   ~bigint_t() {
     assert(ref == 0);
     mpz_clear(val);
 #ifdef DEBUG_ENABLED
-    dtors++;
+    bigint_dtors++;
 #endif
   }
 };
-
-#ifdef DEBUG_ENABLED
-static struct ctor_dtor_info {
-  ~ctor_dtor_info() {
-    DEBUG_CLASS("ledger.amount.bigint");
-    DEBUG_PRINT_("bigint_t ctor count = " << ctors);
-    DEBUG_PRINT_("bigint_t dtor count = " << dtors);
-  }
-} __info;
-#endif
 
 #define MPZ(x) ((x)->val)
 

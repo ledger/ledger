@@ -28,7 +28,7 @@ class amount_t
   }
 
  public:
-  struct bigint_t;
+  class bigint_t;
 
   bigint_t *	 quantity;	// amount, to MAX_PRECISION
   unsigned short precision;
