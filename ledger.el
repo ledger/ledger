@@ -146,14 +146,8 @@ Return the difference in the format of a time value."
       (insert
        (with-temp-buffer
 	 (setq exit-code
-	       (apply #'ledger-run-ledger
-		      ledger-buf "entry"
-		      (mapcar
-		       (function
-			(lambda (x)
-			  (replace-regexp-in-string "\\([&$]\\)" "\\\\\\1"
-						    (eval x))))
-		       args)))
+	       (apply #'ledger-run-ledger ledger-buf "entry"
+		      (mapcar 'eval args)))
 	 (if (= 0 exit-code)
 	     (if insert-year
 		 (buffer-substring 2 (point-max))
