@@ -269,10 +269,14 @@ void parse_ledger_data(journal_t * journal, parser_t * cache_parser,
     if (access(config.cache_file.c_str(), R_OK) != -1) {
       std::ifstream stream(config.cache_file.c_str());
       if (cache_parser->test(stream)) {
+	std::string price_db_orig = journal->price_db;
+	journal->price_db = config.price_db;
 	entry_count += cache_parser->parse(stream, journal, NULL,
 					   &config.data_file);
 	if (entry_count > 0)
 	  config.cache_dirty = false;
+	else
+	  journal->price_db = price_db_orig;
       }
     }
   }
@@ -300,13 +304,14 @@ void parse_ledger_data(journal_t * journal, parser_t * cache_parser,
     parse_conversion("1.00 Gb", "1024 Mb");
     parse_conversion("1.00 Tb", "1024 Gb");
 
-    std::string price_db;
-    if (! config.price_db.empty() &&
-	access(config.price_db.c_str(), R_OK) != -1) {
-      if (parse_journal_file(config.price_db, journal))
+    journal->price_db = config.price_db;
+    if (! journal->price_db.empty() &&
+	access(journal->price_db.c_str(), R_OK) != -1) {
+      if (parse_journal_file(journal->price_db, journal)) {
 	throw error("Entries not allowed in price history file");
-      else {
-	price_db = config.price_db;
+      } else {
+	DEBUG_PRINT("ledger.config.cache",
+		    "read price database " << journal->price_db);
 	journal->sources.pop_back();
       }
     }
@@ -323,8 +328,8 @@ void parse_ledger_data(journal_t * journal, parser_t * cache_parser,
     }
     else if (access(config.data_file.c_str(), R_OK) != -1) {
       entry_count += parse_journal_file(config.data_file, journal, account);
-      if (! price_db.empty())
-	journal->sources.push_back(price_db);
+      if (! journal->price_db.empty())
+	journal->sources.push_back(journal->price_db);
     }
   }
 
