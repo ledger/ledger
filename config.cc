@@ -357,6 +357,7 @@ Basic options:\n\
   -o, --output FILE      write output to FILE\n\
   -i, --init-file FILE   initialize ledger using FILE (default: ~/.ledgerrc)\n\
       --cache FILE       use FILE as a binary cache when --file is not used\n\
+      --no-cache         don't use a cache, even if it would be appropriate\n\
   -a, --account NAME     use NAME for the default account (useful with QIF)\n\n\
 Report filtering:\n\
   -c, --current          show only current and past entries (not future)\n\
@@ -443,6 +444,7 @@ Use -H to see all the help text on one page, or:\n\
   -o, --output FILE      write output to FILE\n\
   -i, --init-file FILE   initialize ledger using FILE (default: ~/.ledgerrc)\n\
       --cache FILE       use FILE as a binary cache when --file is not used\n\
+      --no-cache         don't use a cache, even if it would be appropriate\n\
   -a, --account NAME     use NAME for the default account (useful with QIF)\n\n\
 Commands:\n\
   balance  [REGEXP]...   show balance totals for matching accounts\n\
@@ -582,6 +584,10 @@ OPT_BEGIN(file, "f:") {
 OPT_BEGIN(cache, ":") {
   config.cache_file = optarg;
 } OPT_END(cache);
+
+OPT_BEGIN(no_cache, "") {
+  config.cache_file = "";
+} OPT_END(no_cache);
 
 OPT_BEGIN(output, "o:") {
   if (std::string(optarg) != "-")
