@@ -11,6 +11,8 @@ typedef std::list<parser_t *> parsers_list;
 class parser_t
 {
  public:
+  virtual ~parser_t() {}
+
   virtual bool test(std::istream& in) const = 0;
 
   virtual unsigned int parse(std::istream&	 in,
