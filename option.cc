@@ -62,7 +62,7 @@ bool process_option(const std::string& opt, const char * arg)
 }
 
 void process_arguments(int argc, char ** argv, const bool anywhere,
-		       std::list<std::string>& args)
+		       std::deque<std::string>& args)
 {
   int index = 1;
   for (char ** i = argv + 1; index < argc; i++, index++) {
@@ -83,7 +83,7 @@ void process_arguments(int argc, char ** argv, const bool anywhere,
       if ((*i)[2] == '\0')
 	break;
 
-      for (std::list<option_t>::iterator j = option_handler::options.begin();
+      for (std::deque<option_t>::iterator j = option_handler::options.begin();
 	   j != option_handler::options.end();
 	   j++)
 	if ((*j).wants_arg) {
@@ -107,7 +107,7 @@ void process_arguments(int argc, char ** argv, const bool anywhere,
       std::cerr << "Error: illegal option " << *i << std::endl;
       std::exit(1);
     } else {
-      for (std::list<option_t>::iterator j = option_handler::options.begin();
+      for (std::deque<option_t>::iterator j = option_handler::options.begin();
 	   j != option_handler::options.end();
 	   j++)
 	if ((*i)[1] == (*j).short_opt) {

@@ -1,7 +1,7 @@
 lib_LTLIBRARIES = libledger.la
-libledger_la_SOURCES = account.cc amount.cc autoxact.cc balance.cc binary.cc \
-	config.cc datetime.cc format.cc ledger.cc option.cc parser.cc qif.cc \
-	quotes.cc textual.cc valexpr.cc value.cc walk.cc
+libledger_la_SOURCES = amount.cc autoxact.cc balance.cc binary.cc config.cc \
+	datetime.cc format.cc journal.cc option.cc parser.cc qif.cc quotes.cc \
+	textual.cc valexpr.cc value.cc walk.cc
 if DEBUG
 libledger_la_CXXFLAGS = -DDEBUG_LEVEL=4
 libledger_la_SOURCES += debug.cc

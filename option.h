@@ -2,7 +2,7 @@
 #define _OPTION_H
 
 #include <map>
-#include <list>
+#include <deque>
 #include <string>
 
 struct option_handler;
@@ -22,7 +22,7 @@ typedef std::pair<const std::string, option_handler *> option_handler_pair;
 struct option_handler {
   bool handled;
 
-  static std::list<option_t> options;
+  static std::deque<option_t> options;
   static option_handler_map  handlers;
 
   option_handler(const std::string& label,
@@ -33,11 +33,11 @@ struct option_handler {
 
 bool process_option(const std::string& opt, const char * arg = NULL);
 void process_arguments(int argc, char ** argv, const bool anywhere,
-		       std::list<std::string>& args);
+		       std::deque<std::string>& args);
 void process_environment(char ** envp, const std::string& tag);
 
 #define DEF_OPT_HANDLERS()			\
-  std::list<option_t> option_handler::options;	\
+  std::deque<option_t> option_handler::options;	\
   option_handler_map  option_handler::handlers
 
 #define OPT_BEGIN(tag, chars)						\

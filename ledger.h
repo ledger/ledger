@@ -11,7 +11,7 @@
 //
 
 #include <map>
-#include <list>
+#include <deque>
 #include <string>
 #include <ctime>
 #include <iostream>
@@ -42,7 +42,7 @@ class transaction_t
   std::string	 note;
   mutable void * data;
 
-  transaction_t(account_t * _account)
+  transaction_t(account_t * _account = NULL)
     : entry(NULL), account(_account), cost(NULL),
       flags(TRANSACTION_NORMAL), data(NULL) {
   }
@@ -65,7 +65,7 @@ class transaction_t
 };
 
 
-typedef std::list<transaction_t *> transactions_list;
+typedef std::deque<transaction_t *> transactions_list;
 
 class entry_t
 {
@@ -91,14 +91,8 @@ class entry_t
 	(*i)->~transaction_t();
   }
 
-  void add_transaction(transaction_t * xact) {
-    xact->entry = this;
-    transactions.push_back(xact);
-  }
-  bool remove_transaction(transaction_t * xact) {
-    transactions.remove(xact);
-    return true;
-  }
+  void add_transaction(transaction_t * xact);
+  bool remove_transaction(transaction_t * xact);
 
   bool valid() const;
 };
@@ -122,9 +116,9 @@ class account_t
   mutable ident_t     ident;
   mutable std::string _fullname;
 
-  account_t(account_t *        _parent,
-	    const std::string& _name = "",
-	    const std::string& _note = "")
+  account_t(account_t *        _parent = NULL,
+	    const std::string& _name   = "",
+	    const std::string& _note   = "")
     : parent(_parent), name(_name), note(_note),
       depth(parent ? parent->depth + 1 : 0), data(NULL), ident(0) {}
 
@@ -164,8 +158,8 @@ inline std::ostream& operator<<(std::ostream& out, const account_t& acct) {
 }
 
 
-typedef std::list<entry_t *>   entries_list;
-typedef std::list<std::string> strings_list;
+typedef std::deque<entry_t *>   entries_list;
+typedef std::deque<std::string> strings_list;
 
 class journal_t
 {

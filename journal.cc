@@ -51,6 +51,38 @@ bool transaction_t::valid() const
   return true;
 }
 
+void entry_t::add_transaction(transaction_t * xact)
+{
+  xact->entry = this;
+  transactions.push_back(xact);
+  xact->account->add_transaction(xact);
+}
+
+bool entry_t::remove_transaction(transaction_t * xact)
+{
+  bool found = false;
+  transactions_list::iterator i;
+  for (i = transactions.begin(); i != transactions.end(); i++)
+    if (*i == xact) {
+      found = true;
+      break;
+    }
+  if (! found)
+    return false;
+
+  transactions.erase(i);
+
+  for (i = xact->account->transactions.begin();
+       i != xact->account->transactions.end();
+       i++)
+    if (*i == xact) {
+      xact->account->transactions.erase(i);
+      return true;
+    }
+
+  return false;
+}
+
 bool entry_t::valid() const
 {
   if (! date || date == -1)
@@ -63,6 +95,113 @@ bool entry_t::valid() const
        i != transactions.end();
        i++)
     if ((*i)->entry != this || ! (*i)->valid())
+      return false;
+
+  return true;
+}
+
+account_t::~account_t()
+{
+  DEBUG_PRINT("ledger.memory.ctors", "dtor account_t");
+  //assert(! data);
+
+  for (accounts_map::iterator i = accounts.begin();
+       i != accounts.end();
+       i++)
+    delete (*i).second;
+}
+
+account_t * account_t::find_account(const std::string& name,
+				    const bool	       auto_create)
+{
+  accounts_map::const_iterator i = accounts.find(name);
+  if (i != accounts.end())
+    return (*i).second;
+
+  static char buf[256];
+
+  std::string::size_type sep = name.find(':');
+  const char * first, * rest;
+  if (sep == std::string::npos) {
+    first = name.c_str();
+    rest  = NULL;
+  } else {
+    std::strncpy(buf, name.c_str(), sep);
+    buf[sep] = '\0';
+
+    first = buf;
+    rest  = name.c_str() + sep + 1;
+  }
+
+  account_t * account;
+
+  i = accounts.find(first);
+  if (i == accounts.end()) {
+    if (! auto_create)
+      return NULL;
+    account = new account_t(this, first);
+    accounts.insert(accounts_pair(first, account));
+  } else {
+    account = (*i).second;
+  }
+
+  if (rest)
+    account = account->find_account(rest, auto_create);
+
+  return account;
+}
+
+bool account_t::remove_transaction(transaction_t * xact)
+{
+  for (transactions_list::iterator i = transactions.begin();
+       i != transactions.end();
+       i++)
+    if (*i == xact) {
+      transactions.erase(i);
+      return true;
+    }
+
+  return false;
+}
+
+std::string account_t::fullname() const
+{
+  if (! _fullname.empty()) {
+    return _fullname;
+  } else {
+    const account_t *	first	 = this;
+    std::string		fullname = name;
+
+    while (first->parent) {
+      first = first->parent;
+      if (! first->name.empty())
+	fullname = first->name + ":" + fullname;
+    }
+
+    _fullname = fullname;
+
+    return fullname;
+  }
+}
+
+bool account_t::valid() const
+{
+  if (name.find('-') != std::string::npos)
+    return false;
+
+  if (depth > 16)
+    return false;
+
+  for (transactions_list::const_iterator i = transactions.begin();
+       i != transactions.end();
+       i++)
+    if ((*i)->account != this)
+      return false;
+
+  for (accounts_map::const_iterator i = accounts.begin();
+       i != accounts.end();
+       i++)
+    if (! (*i).second->valid())
       return false;
 
   return true;
@@ -116,7 +255,17 @@ bool journal_t::add_entry(entry_t * entry)
 
 bool journal_t::remove_entry(entry_t * entry)
 {
-  entries.remove(entry);
+  bool found = false;
+  entries_list::iterator i;
+  for (i = entries.begin(); i != entries.end(); i++)
+    if (*i == entry) {
+      found = true;
+      break;
+    }
+  if (! found)
+    return false;
+
+  entries.erase(i);
 
   for (transactions_list::const_iterator i
 	 = entry->transactions.begin();
@@ -286,3 +435,112 @@ void shutdown()
 }
 
 } // namespace ledger
+
+#ifdef USE_BOOST_PYTHON
+
+#include <boost/python.hpp>
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+
+using namespace boost::python;
+using namespace ledger;
+
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(journal_find_account_overloads,
+				       find_account, 1, 2)
+
+#if 0
+template <typename T>
+struct ptr_to_ref
+{
+  ptr_to_ref(T *) {}
+};
+#endif
+
+void export_journal()
+{
+  class_< transaction_t > ("Transaction")
+    .def(init<account_t *, amount_t, optional<unsigned int, std::string> >())
+
+    .def_readwrite("entry", &transaction_t::entry)
+    .def_readwrite("account", &transaction_t::account)
+    .def_readwrite("amount", &transaction_t::amount)
+    .def_readwrite("cost", &transaction_t::cost)
+    .def_readwrite("flags", &transaction_t::flags)
+    .def_readwrite("note", &transaction_t::note)
+    .def_readwrite("data", &transaction_t::data)
+
+    .def("valid", &transaction_t::valid)
+    ;
+
+  class_< transactions_list > ("TransactionsList")
+    .def(vector_indexing_suite< transactions_list >())
+    ;
+
+  class_< entry_t > ("Entry")
+    .def_readwrite("date", &entry_t::date)
+    .def_readwrite("state", &entry_t::state)
+    .def_readwrite("code", &entry_t::code)
+    .def_readwrite("payee", &entry_t::payee)
+    .def_readonly("transactions", &entry_t::transactions)
+
+    .def("add_transaction", &entry_t::add_transaction)
+    .def("remove_transaction", &entry_t::remove_transaction)
+
+    .def("valid", &entry_t::valid)
+    ;
+
+  class_< account_t >
+    ("Account", init<optional<account_t *, std::string, std::string> >())
+    .def_readwrite("parent", &account_t::parent)
+    .def_readwrite("name", &account_t::name)
+    .def_readwrite("note", &account_t::note)
+    .def_readonly("depth", &account_t::depth)
+    .def_readonly("transactions", &account_t::transactions)
+    .def_readwrite("data", &account_t::data)
+    .def_readonly("ident", &account_t::ident)
+
+#if 0
+    .def(str(self))
+#endif
+
+    .def("fullname", &account_t::fullname)
+    .def("add_account", &account_t::add_account)
+    .def("remove_account", &account_t::remove_account)
+    .def("find_account", &account_t::find_account,
+	 return_value_policy<reference_existing_object>())
+    .def("add_transaction", &account_t::add_transaction)
+    .def("remove_transaction", &account_t::remove_transaction)
+
+    .def("valid", &account_t::valid)
+    ;
+
+  class_< entries_list > ("EntriesList")
+    .def(vector_indexing_suite< entries_list >())
+    ;
+
+  class_< strings_list > ("StringsList")
+    .def(vector_indexing_suite< strings_list >())
+    ;
+
+  class_< journal_t > ("Journal")
+    .def_readwrite("master", &journal_t::master)
+    .def_readonly("entries", &journal_t::entries)
+    .def_readwrite("sources", &journal_t::sources)
+
+    .def("add_account", &journal_t::add_account)
+    .def("remove_account", &journal_t::remove_account)
+#if 0
+    .def("find_account", &journal_t::find_account,
+	 journal_find_account_overloads(args("name", "auto_create"))
+	 [return_value_policy<reference_existing_object>()])
+#endif
+
+    .def("add_entry", &journal_t::add_entry)
+    .def("remove_entry", &journal_t::remove_entry)
+    .def("derive_entry", &journal_t::derive_entry,
+	 return_value_policy<reference_existing_object>())
+
+    .def("valid", &journal_t::valid)
+    ;
+}
+
+#endif // USE_BOOST_PYTHON

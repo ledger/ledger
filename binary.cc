@@ -175,7 +175,6 @@ inline void read_binary_amount(char *& data, amount_t& amt)
 inline void read_binary_transaction(char *& data, transaction_t * xact)
 {
   xact->account = accounts[read_binary_number<account_t::ident_t>(data) - 1];
-  xact->account->add_transaction(xact);
 
   read_binary_amount(data, xact->amount);
 
@@ -601,3 +600,22 @@ void write_binary_journal(std::ostream& out, journal_t * journal,
 }
 
 } // namespace ledger
+
+#ifdef USE_BOOST_PYTHON
+
+#include <boost/python.hpp>
+
+using namespace boost::python;
+using namespace ledger;
+
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(binary_parse_overloads,
+				       binary_parser_t::parse, 2, 4)
+
+void export_binary() {
+  class_< binary_parser_t, bases<parser_t> > ("BinaryParser")
+    .def("test", &binary_parser_t::test)
+    .def("parse", &binary_parser_t::parse, binary_parse_overloads())
+    ;
+}
+
+#endif // USE_BOOST_PYTHON

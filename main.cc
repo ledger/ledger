@@ -78,8 +78,8 @@ namespace std {
 #endif
 
 static void
-regexps_to_predicate(std::list<std::string>::const_iterator begin,
-		     std::list<std::string>::const_iterator end,
+regexps_to_predicate(std::deque<std::string>::const_iterator begin,
+		     std::deque<std::string>::const_iterator end,
 		     config_t * config,
 		     const bool account_regexp		= false,
 		     const bool add_account_short_masks = false)
@@ -89,7 +89,7 @@ regexps_to_predicate(std::list<std::string>::const_iterator begin,
   // Treat the remaining command-line arguments as regular
   // expressions, used for refining report results.
 
-  for (std::list<std::string>::const_iterator i = begin;
+  for (std::deque<std::string>::const_iterator i = begin;
        i != end;
        i++)
     if ((*i)[0] == '-') {
@@ -154,7 +154,7 @@ int parse_and_report(int argc, char * argv[], char * envp[])
 
   TIMER_START(process_args);
 
-  std::list<std::string> args;
+  std::deque<std::string> args;
   process_arguments(argc, argv, false, args);
 
   if (args.empty()) {
@@ -198,18 +198,18 @@ int parse_and_report(int argc, char * argv[], char * envp[])
   std::auto_ptr<qif_parser_t>     qif_parser(new qif_parser_t);
   std::auto_ptr<textual_parser_t> text_parser(new textual_parser_t);
 
-  parser_t::parsers.push_back(bin_parser.get());
+  register_parser(bin_parser.get());
 #ifdef READ_GNUCASH
-  parser_t::parsers.push_back(gnucash_parser.get());
+  register_parser(gnucash_parser.get());
 #endif
-  parser_t::parsers.push_back(qif_parser.get());
-  parser_t::parsers.push_back(text_parser.get());
+  register_parser(qif_parser.get());
+  register_parser(text_parser.get());
 
   int entry_count = 0;
 
   try {
     if (! config->init_file.empty()) {
-      if (parser_t::parse_file(config->init_file, journal.get()))
+      if (parse_journal_file(config->init_file, journal.get()))
 	throw error("Entries not allowed in initialization file");
       journal->sources.pop_front(); // remove init file
     }
@@ -237,12 +237,12 @@ int parse_and_report(int argc, char * argv[], char * envp[])
 	use_cache = false;
 	entry_count += text_parser->parse(std::cin, journal.get(), account);
       } else {
-	entry_count += parser_t::parse_file(config->data_file, journal.get(),
-					    account);
+	entry_count += parse_journal_file(config->data_file, journal.get(),
+					  account);
       }
 
       if (! config->price_db.empty())
-	if (parser_t::parse_file(config->price_db, journal.get()))
+	if (parse_journal_file(config->price_db, journal.get()))
 	  throw error("Entries not allowed in price history file");
     }
 
@@ -327,7 +327,7 @@ int parse_and_report(int argc, char * argv[], char * envp[])
     // Treat the remaining command-line arguments as regular
     // expressions, used for refining report results.
 
-    std::list<std::string>::iterator i = args.begin();
+    std::deque<std::string>::iterator i = args.begin();
     for (; i != args.end(); i++)
       if (*i == "--")
 	break;

@@ -67,9 +67,6 @@ class compare_items {
 // Transaction handlers
 //
 
-typedef std::deque<transaction_t *> transactions_deque;
-typedef std::deque<entry_t *>       entries_deque;
-
 inline void walk_transactions(transactions_list::iterator begin,
 			      transactions_list::iterator end,
 			      item_handler<transaction_t>& handler) {
@@ -77,19 +74,7 @@ inline void walk_transactions(transactions_list::iterator begin,
     handler(*i);
 }
 
-inline void walk_transactions(transactions_list& list,
-			      item_handler<transaction_t>& handler) {
-  walk_transactions(list.begin(), list.end(), handler);
-}
-
-inline void walk_transactions(transactions_deque::iterator begin,
-			      transactions_deque::iterator end,
-			      item_handler<transaction_t>& handler) {
-  for (transactions_deque::iterator i = begin; i != end; i++)
-    handler(*i);
-}
-
-inline void walk_transactions(transactions_deque& deque,
+inline void walk_transactions(transactions_list& deque,
 			      item_handler<transaction_t>& handler) {
   walk_transactions(deque.begin(), deque.end(), handler);
 }
@@ -192,7 +177,7 @@ class set_account_value : public item_handler<transaction_t>
 
 class sort_transactions : public item_handler<transaction_t>
 {
-  transactions_deque   transactions;
+  transactions_list   transactions;
   const value_expr_t * sort_order;
 
  public:
@@ -243,7 +228,7 @@ class collapse_transactions : public item_handler<transaction_t>
   entry_t *          last_entry;
   transaction_t *    last_xact;
   account_t *        totals_account;
-  transactions_deque xact_temps;
+  transactions_list xact_temps;
 
  public:
   collapse_transactions(item_handler<transaction_t> * handler)
@@ -258,7 +243,7 @@ class collapse_transactions : public item_handler<transaction_t>
       totals_account->data = NULL;
     }
     delete totals_account;
-    for (transactions_deque::iterator i = xact_temps.begin();
+    for (transactions_list::iterator i = xact_temps.begin();
 	 i != xact_temps.end();
 	 i++) {
       if ((*i)->data) {
@@ -299,8 +284,8 @@ class changed_value_transactions : public item_handler<transaction_t>
 
   bool		     changed_values_only;
   transaction_t *    last_xact;
-  entries_deque      entry_temps;
-  transactions_deque xact_temps;
+  entries_list      entry_temps;
+  transactions_list xact_temps;
 
  public:
   changed_value_transactions(item_handler<transaction_t> * handler,
@@ -309,12 +294,12 @@ class changed_value_transactions : public item_handler<transaction_t>
       changed_values_only(_changed_values_only), last_xact(NULL) {}
 
   virtual ~changed_value_transactions() {
-    for (entries_deque::iterator i = entry_temps.begin();
+    for (entries_list::iterator i = entry_temps.begin();
 	 i != entry_temps.end();
 	 i++)
       delete *i;
 
-    for (transactions_deque::iterator i = xact_temps.begin();
+    for (transactions_list::iterator i = xact_temps.begin();
 	 i != xact_temps.end();
 	 i++) {
       if ((*i)->data) {
@@ -342,20 +327,20 @@ class subtotal_transactions : public item_handler<transaction_t>
   std::time_t	     start;
   std::time_t	     finish;
   balances_map	     balances;
-  entries_deque      entry_temps;
-  transactions_deque xact_temps;
+  entries_list      entry_temps;
+  transactions_list xact_temps;
 
  public:
   subtotal_transactions(item_handler<transaction_t> * handler)
     : item_handler<transaction_t>(handler) {}
 
   virtual ~subtotal_transactions() {
-    for (entries_deque::iterator i = entry_temps.begin();
+    for (entries_list::iterator i = entry_temps.begin();
 	 i != entry_temps.end();
 	 i++)
       delete *i;
 
-    for (transactions_deque::iterator i = xact_temps.begin();
+    for (transactions_list::iterator i = xact_temps.begin();
 	 i != xact_temps.end();
 	 i++) {
       if ((*i)->data) {
@@ -397,7 +382,7 @@ class interval_transactions : public subtotal_transactions
 
 class dow_transactions : public subtotal_transactions
 {
-  transactions_deque days_of_the_week[7];
+  transactions_list days_of_the_week[7];
 
  public:
   dow_transactions(item_handler<transaction_t> * handler)
@@ -469,11 +454,11 @@ inline void sum_accounts(account_t * account) {
   ACCT_DATA(account)->count += ACCT_DATA(account)->subcount;
 }
 
-typedef std::deque<account_t *> accounts_deque;
+typedef std::deque<account_t *> accounts_list;
 
 inline void sort_accounts(account_t *	       account,
 			  const value_expr_t * sort_order,
-			  accounts_deque&      accounts) {
+			  accounts_list&      accounts) {
   for (accounts_map::iterator i = account->accounts.begin();
        i != account->accounts.end();
        i++)
@@ -489,9 +474,9 @@ inline void walk_accounts(account_t *		   account,
   handler(account);
 
   if (sort_order) {
-    accounts_deque accounts;
+    accounts_list accounts;
     sort_accounts(account, sort_order, accounts);
-    for (accounts_deque::const_iterator i = accounts.begin();
+    for (accounts_list::const_iterator i = accounts.begin();
 	 i != accounts.end();
 	 i++)
       walk_accounts(*i, handler, sort_order);

@@ -1,12 +1,13 @@
 #ifndef _PARSER_H
 #define _PARSER_H
 
-#include "ledger.h"
+#include <iostream>
+#include <string>
 
 namespace ledger {
 
-class parser_t;
-typedef std::list<parser_t *> parsers_list;
+class account_t;
+class journal_t;
 
 class parser_t
 {
@@ -19,14 +20,20 @@ class parser_t
 			     journal_t *	 journal,
 			     account_t *	 master        = NULL,
 			     const std::string * original_file = NULL) = 0;
-
-  static parsers_list parsers;
-
-  static unsigned int parse_file(const std::string&  path,
-				 journal_t *	     journal,
-				 account_t *	     master	   = NULL,
-				 const std::string * original_file = NULL);
 };
+
+bool register_parser(parser_t * parser);
+bool unregister_parser(parser_t * parser);
+
+unsigned int parse_journal(std::istream&       in,
+			   journal_t *	       journal,
+			   account_t *	       master        = NULL,
+			   const std::string * original_file = NULL);
+
+unsigned int parse_journal_file(const std::string&  path,
+				journal_t *	    journal,
+				account_t *	    master        = NULL,
+				const std::string * original_file = NULL);
 
 } // namespace ledger
 

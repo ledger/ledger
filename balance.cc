@@ -120,3 +120,75 @@ balance_pair_t& balance_pair_t::operator-=(const transaction_t& xact)
 }
 
 } // namespace ledger
+
+#ifdef USE_BOOST_PYTHON
+
+#include <boost/python.hpp>
+
+using namespace boost::python;
+using namespace ledger;
+
+void export_balance()
+{
+  class_< balance_t > ("Balance")
+    .def(init<balance_t>())
+    .def(init<amount_t>())
+    .def(init<int>())
+    .def(init<unsigned int>())
+    .def(init<double>())
+
+    .def(self <  other<unsigned int>())
+    .def(self <= other<unsigned int>())
+    .def(self >  other<unsigned int>())
+    .def(self >= other<unsigned int>())
+    .def(self == other<unsigned int>())
+    .def(self != other<unsigned int>())
+
+    .def(self += self)
+    .def(self += other<amount_t>())
+    .def(self +  self)
+    .def(self +  other<amount_t>())
+    .def(self -= self)
+    .def(self -= other<amount_t>())
+    .def(self -  self)
+    .def(self -  other<amount_t>())
+    .def(self *= self)
+    .def(self *= other<amount_t>())
+    .def(self *  self)
+    .def(self *  other<amount_t>())
+    .def(self /= self)
+    .def(self /= other<amount_t>())
+    .def(self /  self)
+    .def(self /  other<amount_t>())
+    .def(- self)
+
+    .def(self <  self)
+    .def(self <  other<amount_t>())
+    .def(self <= self)
+    .def(self <= other<amount_t>())
+    .def(self >  self)
+    .def(self >  other<amount_t>())
+    .def(self >= self)
+    .def(self >= other<amount_t>())
+    .def(self == self)
+    .def(self == other<amount_t>())
+    .def(self != self)
+    .def(self != other<amount_t>())
+    .def(! self)
+
+    .def(abs(self))
+    //.def(str(self))
+
+    .def("negate", &balance_t::negate,
+	 return_value_policy<reference_existing_object>())
+    .def("amount", &balance_t::amount)
+    .def("value",  &balance_t::value)
+    .def("write",  &balance_t::write)
+    .def("valid", &balance_t::valid)
+    ;
+
+  class_< balance_pair_t > ("BalancePair")
+    ;
+}
+
+#endif // USE_BOOST_PYTHON

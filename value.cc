@@ -579,3 +579,18 @@ value_t value_t::cost() const
 }
 
 } // namespace ledger
+
+#ifdef USE_BOOST_PYTHON
+
+#include <boost/python.hpp>
+
+using namespace boost::python;
+using namespace ledger;
+
+void export_value()
+{
+  class_< value_t > ("Value")
+    ;
+}
+
+#endif // USE_BOOST_PYTHON

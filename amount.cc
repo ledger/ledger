@@ -469,13 +469,12 @@ amount_t& amount_t::operator/=(const amount_t& amt)
 }
 
 // unary negation
-amount_t& amount_t::negate()
+void amount_t::negate()
 {
   if (quantity) {
     _dup();
     mpz_neg(MPZ(quantity), MPZ(quantity));
   }
-  return *this;
 }
 
 // integer comparisons
@@ -1035,3 +1034,115 @@ amount_t commodity_t::value(const std::time_t moment)
 }
 
 } // namespace ledger
+
+#ifdef USE_BOOST_PYTHON
+
+#include <boost/python.hpp>
+#include <Python.h>
+
+using namespace boost::python;
+using namespace ledger;
+
+void (amount_t::*parse_1)(std::istream& in)       = &amount_t::parse;
+void (amount_t::*parse_2)(const std::string& str) = &amount_t::parse;
+
+struct commodity_updater_wrap : commodity_t::updater_t
+{
+  PyObject * self;
+  commodity_updater_wrap(PyObject * self_) : self(self_) {}
+
+  virtual void operator()(commodity_t *     commodity,
+			  const std::time_t moment,
+			  const std::time_t date,
+			  const std::time_t last,
+			  amount_t&         price) {
+    call_method<void>(self, "__call__", commodity, moment, date, last, price);
+  }
+};
+
+void export_amount()
+{
+  class_< amount_t > ("Amount")
+    .def(init<amount_t>())
+    .def(init<std::string>())
+    .def(init<char *>())
+    .def(init<bool>())
+    .def(init<int>())
+    .def(init<unsigned int>())
+    .def(init<double>())
+
+    .def_readonly("commodity", &amount_t::commodity)
+
+    .def(self += self)
+    .def(self +  self)
+    .def(self -= self)
+    .def(self -  self)
+    .def(self *= self)
+    .def(self *  self)
+    .def(self /= self)
+    .def(self /  self)
+
+    .def(self <  int())
+    .def(self <= int())
+    .def(self >  int())
+    .def(self >= int())
+    .def(self == int())
+    .def(self != int())
+
+    .def(self <  self)
+    .def(self <= self)
+    .def(self >  self)
+    .def(self >= self)
+    .def(self == self)
+    .def(self != self)
+    .def(- self)
+    .def(! self)
+
+    .def(abs(self))
+#if 0
+    .def(str(self))
+#endif
+
+    .def("negate", &amount_t::negate)
+    .def("parse", parse_1)
+    .def("parse", parse_2)
+    .def("valid", &amount_t::valid)
+    ;
+
+  class_< commodity_t::updater_t, commodity_updater_wrap, boost::noncopyable >
+    ("Updater")
+    ;
+
+  class_< commodity_t > ("Commodity")
+    .def(init<std::string, optional<unsigned int, unsigned int> >())
+
+    // make this a function which called check_symbol after being set
+    .def_readwrite("symbol", &commodity_t::symbol)
+    .def_readwrite("quote", &commodity_t::quote)
+    .def_readwrite("name", &commodity_t::name)
+    .def_readwrite("note", &commodity_t::name)
+    .def_readwrite("precision", &commodity_t::precision)
+    .def_readwrite("flags", &commodity_t::flags)
+    .def_readwrite("last_lookup", &commodity_t::last_lookup)
+    .def_readwrite("conversion", &commodity_t::conversion)
+    .def_readwrite("ident", &commodity_t::ident)
+    .def_readwrite("updater", &commodity_t::updater)
+    .def_readwrite("commodities", &commodity_t::commodities)
+    .def_readwrite("null_commodity", &commodity_t::null_commodity)
+
+    .def("add_commodity", &commodity_t::add_commodity)
+    .def("remove_commodity", &commodity_t::remove_commodity)
+    .def("find_commodity", &commodity_t::find_commodity,
+	 return_value_policy<reference_existing_object>())
+
+    .def("check_symbol", &commodity_t::check_symbol)
+    .def("add_price", &commodity_t::add_price)
+    .def("remove_price", &commodity_t::remove_price)
+    .def("set_conversion", &commodity_t::set_conversion)
+    .def("value", &commodity_t::value)
+
+    .def("valid", &commodity_t::valid)
+    ;
+}
+
+#endif // USE_BOOST_PYTHON

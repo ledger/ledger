@@ -319,7 +319,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
   unsigned int  errors = 0;
   commodity_t *	time_commodity = NULL;
 
-  std::list<account_t *>   account_stack;
+  std::deque<account_t *>  account_stack;
   automated_transactions_t auto_xacts;
 
   if (! master)
@@ -546,8 +546,8 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
 	  push_var<unsigned int> save_linenum(linenum);
 	  push_var<std::string> save_path(path);
-	  count += parser_t::parse_file(skip_ws(line), journal,
-					account_stack.front());
+	  count += parse_journal_file(skip_ws(line), journal,
+				      account_stack.front());
 	}
 	break;
 
@@ -590,3 +590,22 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 }
 
 } // namespace ledger
+
+#ifdef USE_BOOST_PYTHON
+
+#include <boost/python.hpp>
+
+using namespace boost::python;
+using namespace ledger;
+
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(textual_parse_overloads,
+				       textual_parser_t::parse, 2, 4)
+
+void export_textual() {
+  class_< textual_parser_t, bases<parser_t> > ("TextualParser")
+    .def("test", &textual_parser_t::test)
+    .def("parse", &textual_parser_t::parse, textual_parse_overloads())
+    ;
+}
+
+#endif // USE_BOOST_PYTHON

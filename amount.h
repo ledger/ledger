@@ -88,16 +88,6 @@ class amount_t
   amount_t& operator/=(const amount_t& amt);
 
   // simple arithmetic
-  amount_t operator*(const amount_t& amt) const {
-    amount_t temp = *this;
-    temp *= amt;
-    return temp;
-  }
-  amount_t operator/(const amount_t& amt) const {
-    amount_t temp = *this;
-    temp /= amt;
-    return temp;
-  }
   amount_t operator+(const amount_t& amt) const {
     amount_t temp = *this;
     temp += amt;
@@ -108,9 +98,19 @@ class amount_t
     temp -= amt;
     return temp;
   }
+  amount_t operator*(const amount_t& amt) const {
+    amount_t temp = *this;
+    temp *= amt;
+    return temp;
+  }
+  amount_t operator/(const amount_t& amt) const {
+    amount_t temp = *this;
+    temp /= amt;
+    return temp;
+  }
 
   // unary negation
-  amount_t& negate();
+  void negate();
   amount_t negated() const {
     amount_t temp = *this;
     temp.negate();
@@ -182,12 +182,12 @@ inline amount_t abs(const amount_t& amt) {
   return amt < 0 ? amt.negated() : amt;
 }
 
+std::ostream& operator<<(std::ostream& out, const amount_t& amt);
+
 inline std::istream& operator>>(std::istream& in, amount_t& amt) {
   amt.parse(in);
   return in;
 }
-
-std::ostream& operator<<(std::ostream& out, const amount_t& amt);
 
 
 #define COMMODITY_STYLE_DEFAULTS   0x0000
