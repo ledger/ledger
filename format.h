@@ -161,7 +161,8 @@ class format_account : public item_handler<account_t>
   }
 
   static bool display_account(const account_t * account,
-			      const item_predicate<account_t>& disp_pred);
+			      const item_predicate<account_t>& disp_pred,
+			      const bool even_top = false);
 
   virtual void flush() {
     output_stream.flush();

@@ -347,24 +347,30 @@ bool format_account::disp_subaccounts_p(const account_t * account,
 					    disp_pred,
 					const account_t *& to_show)
 {
-  bool	       display = false;
-  unsigned int counted = 0;
+  bool	       display  = false;
+  unsigned int counted  = 0;
+  bool         computed = false;
+  bool         matches  = disp_pred(account);
+  balance_t    acct_total;
 
   to_show = NULL;
 
   for (accounts_map::const_iterator i = account->accounts.begin();
        i != account->accounts.end();
        i++) {
-    // jww (2004-08-03): How to compute the right figure?  It should
-    // be a value expression specified by the user which says, "If
-    // this expression is equivalent between a parent account and a
-    // lone displayed child, don't display the parent."
-
-    if (! (*i).second->total || ! disp_pred((*i).second))
+    if (! disp_pred((*i).second))
       continue;
 
-    if ((*i).second->total != account->total || counted > 0) {
-      display = true;
+    balance_t result;
+    format_t::compute_total(result, details_t((*i).second));
+
+    if (! computed) {
+      format_t::compute_total(acct_total, details_t(account));
+      computed = true;
+    }
+
+    if ((result != acct_total) || counted > 0) {
+      display = matches;
       break;
     }
     to_show = (*i).second;
@@ -375,11 +381,12 @@ bool format_account::disp_subaccounts_p(const account_t * account,
 }
 
 bool format_account::display_account(const account_t * account,
-				     const item_predicate<account_t>& disp_pred)
+				     const item_predicate<account_t>& disp_pred,
+				     const bool even_top)
 {
   // Never display the master account, or an account that has already
   // been displayed.
-  if (! account->parent || account->dflags & ACCOUNT_DISPLAYED)
+  if (! (account->parent || even_top) || account->dflags & ACCOUNT_DISPLAYED)
     return false;
 
   // At this point, one of two possibilities exists: the account is a

@@ -28,8 +28,8 @@ config_t::config_t()
   value_expr	     = "a";
   total_expr	     = "O";
   pricing_leeway     = 24 * 3600;
-  show_subtotals     = true;
-  show_expanded      = false;
+  show_collapsed     = false;
+  show_subtotal      = false;
   show_related       = false;
   show_inverted      = false;
   show_empty	     = false;
@@ -52,59 +52,62 @@ static void show_version(std::ostream& out)
 void option_help(std::ostream& out)
 {
   out
-    << "usage: ledger [options] COMMAND [options] [REGEXPS]\n\n\
+    << "usage: ledger [options] COMMAND [ACCT REGEX]... [-- [PAYEE REGEX]...]\n\n\
 Basic options:\n\
   -h, --help            display this help text\n\
-  -v, --version         display version information\n\
-  -i, --init FILE       initialize ledger by loading FILE\n\
-  -f, --file FILE       specify pathname of ledger data file\n\
-  -o, --output FILE     write all output to FILE\n\
-  -p, --set-price CONV  specifies commodity conversion: COMM=AMOUNT\n\n\
+  -v, --version         show version information\n\
+  -i, --init FILE       initialize ledger by loading FILE (def: ~/.ledgerrc)\n\
+  -f, --file FILE       read ledger data from FILE\n\
+  -o, --output FILE     write output to FILE\n\
+  -p, --set-price CONV  specify a commodity conversion: \"COMM=AMOUNT\"\n\n\
 Report filtering:\n\
-  -b, --begin-date DATE specify a beginning date\n\
-  -e, --end-date DATE   specify an ending date\n\
-  -c, --current         do not show future entries (same as -e TODAY)\n\
-  -C, --cleared         show only cleared transactions and balances\n\
-  -U, --uncleared       show only uncleared transactions and balances\n\
-  -R, --real            do not consider virtual transactions: real only\n\n\
+  -b, --begin-date DATE set report begin date\n\
+  -e, --end-date DATE   set report end date\n\
+  -c, --current         show only current and past entries (not future)\n\
+  -C, --cleared         consider only cleared transactions\n\
+  -U, --uncleared       consider only uncleared transactions\n\
+  -R, --real            consider only non-virtual transactions\n\n\
+  -r, --related         calculate report using related transactions\n\
 Output customization:\n\
-  -F, --format STR      \n\
-  -y, --date-format STR \n\
-  -E, --empty           balance: also show accounts that total to zero\n\
-  -n, --collapse        balance: no parent account totals; register: collapse\n\
-  -s, --show-all        balance: show sub-accounts; register: show subtotals\n\
-  -S, --sort EXPR       sort report according to value EXPR\n\
-  -r, --related         \n\
-  -z, --interval EXPR   \n\
-  -w, --dow             print register using day of week sub-totals\n\
-  -W, --weekly                 \"   \"         weekly sub-totals\n\
-  -M, --monthly                \"   \"         monthly sub-totals\n\
-  -Y, --yearly                 \"   \"         yearly sub-totals\n\
-  -l, --limit EXPR      don't calculate entries for which EXPR yields 0\n\
-  -d, --display EXPR    don't print entries for which EXPR yields 0\n\
-  -t, --value EXPR      \n\
-  -T, --total EXPR      \n\
-  -j, --value-data      \n\
-  -J, --total-data      \n\n\
+  -F, --format STR      use STR as the report format\n\
+  -y, --date-format STR use STR as the date format (def: %Y/%m/%d)\n\
+  -E, --empty           balance: show accounts with zero balance\n\
+  -n, --collapse        register: collapse entries with multiple transactions\n\
+  -s, --subtotal        balance: show sub-accounts; register: show subtotals\n\
+  -S, --sort EXPR       sort report according to the value expression EXPR\n\
+  -z, --interval STR    report by interval, based on interval expression STR\n\
+  -w, --dow             show a days-of-the-week report\n\
+  -W, --weekly          show weekly sub-totals\n\
+  -M, --monthly         show monthly sub-totals\n\
+  -Y, --yearly          show yearly sub-totals\n\
+  -l, --limit EXPR      calculate only transactions matching EXPR\n\
+  -d, --display EXPR    display only transactions matching EXPR\n\
+  -t, --value EXPR      set the value expression for all report types\n\
+  -T, --total EXPR      set the total expression for all report types\n\
+  -j, --value-data      print only raw value data (useful when scripting)\n\
+  -J, --total-data      print only raw total data\n\n\
 Commodity reporting:\n\
-  -P, --price-db FILE   sets the price database\n\
-  -L, --price-exp MINS  with -Q, fetch quotes only if data is older than MINS\n\
-  -Q, --download        download price information from the Internet\n\
-			(works by running \"getquote SYMBOL\")\n\
-  -O, --quantity        \n\
-  -B, --basis           report cost basis of commodities\n\
-  -V, --market          report the market value of commodities\n\
-  -G, --gain            \n\
-  -A, --average         \n\
-  -D, --deviation       \n\
-  -X, --trend           \n\
-  -Z, --weighted-trend  \n\n\
+  -P, --price-db FILE   sets the price database to FILE (def: ~/.pricedb)\n\
+  -L, --price-exp MINS  download quotes only if newer than MINS (def: 1440)\n\
+  -Q, --download        download price information when needed\n\
+  -O, --quantity        report commodity totals (this is the default)\n\
+  -B, --basis           report commodity cost basis\n\
+  -V, --market          report commodity market value\n\
+  -G, --gain            report commodity gain/loss\n\
+  -A, --average         report average transaction amount\n\
+  -D, --deviation       report deviation from the average\n\
+  -X, --trend           report average deviation from the average\n\
+  -Z, --weighted-trend  same as trend, but older values less significant\n\n\
 Commands:\n\
-  balance       show balance totals\n\
-  register      display a register for ACCOUNT\n\
-  print         print all ledger entries\n\
-  entry         output a newly formed entry, based on arguments\n\
-  equity        output equity entries for specified accounts\n";
+  balance [REGEXP]...   show balance totals for matching accounts\n\
+  register [REGEXP]...  show register of matching transactions\n\
+  print [REGEXP]...     print all matching entries\n\
+  equity [REGEXP]...    output equity entries for matching accounts\n\
+  entry DATE PAYEE AMT  output a derived entry, based on the arguments\n\n\
+For commands that accepts a list of regular expressions, these match against\n\
+the account.  If the separator \"--\" is specified, regexps after it are\n\
+matched against the payee name.  For even more sophisticated entry matching,\n\
+use --limit; to affect display only (not calculation), use --display.\n";
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -214,12 +217,12 @@ OPT_BEGIN(empty, "E") {
 } OPT_END(empty);
 
 OPT_BEGIN(collapse, "n") {
-  config->show_subtotals = false;
+  config->show_collapsed = true;
 } OPT_END(collapse);
 
-OPT_BEGIN(show_all, "s") {
-  config->show_expanded = true;
-} OPT_END(show_all);
+OPT_BEGIN(subtotal, "s") {
+  config->show_subtotal = true;
+} OPT_END(subtotal);
 
 OPT_BEGIN(sort, "S:") {
   config->sort_string = optarg;

@@ -159,7 +159,7 @@ int main(int argc, char * argv[], char * envp[])
   process_environment(envp, "LEDGER_");
 
 #if 1
-  // These are here until 3.x, for backwards compatability.
+  // These are here for backwards compatability, but are deprecated.
 
   if (const char * p = std::getenv("LEDGER"))
     process_option("file", p);
@@ -272,7 +272,7 @@ int main(int argc, char * argv[], char * envp[])
 	break;
 
     regexps_to_predicate(arg, i, config, true,
-			 command == "b" && ! config->show_expanded &&
+			 command == "b" && ! config->show_subtotal &&
 			 config->display_predicate.empty());
     if (i != args.end())
       regexps_to_predicate(i, args.end(), config);
@@ -284,7 +284,7 @@ int main(int argc, char * argv[], char * envp[])
     if (command == "b") {
       if (! config->show_empty)
 	config->display_predicate = "T";
-      if (! config->show_expanded) {
+      if (! config->show_subtotal) {
 	if (! config->display_predicate.empty())
 	  config->display_predicate += "&";
 	config->display_predicate += "!l";
@@ -352,11 +352,12 @@ int main(int argc, char * argv[], char * envp[])
   bool show_all_related = false;
 
   if (command == "p" || command == "e") {
-    config->show_related = show_all_related = true;
-    config->show_expanded = true;
+    config->show_related  =
+    show_all_related	  =
+    config->show_subtotal = true;
   }
   else if (command == "E") {
-    config->show_expanded = true;
+    config->show_subtotal = true;
   }
   else if (config->show_related) {
     if (command == "r")
@@ -469,12 +470,14 @@ int main(int argc, char * argv[], char * envp[])
     formatter->flush();
 
     format_account acct_formatter(OUT(), format, config->display_predicate);
-    if (config->show_subtotals)
-      sum_accounts(journal->master);
+    sum_accounts(journal->master);
     walk_accounts(journal->master, acct_formatter, sort_order.get());
     acct_formatter.flush();
 
-    if (format_account::disp_subaccounts_p(journal->master)) {
+    journal->master->value = journal->master->total;
+    if (format_account::display_account(journal->master,
+					item_predicate<account_t>("T"),
+					true)) {
       std::string end_format = "--------------------\n";
       format.reset(end_format + f);
       format.format_elements(OUT(), details_t(journal->master));
@@ -537,7 +540,7 @@ int main(int argc, char * argv[], char * envp[])
     // collapse_transactions causes entries with multiple transactions
     // to appear as entries with a subtotaled transaction for each
     // commodity used.
-    if (! config->show_subtotals)
+    if (config->show_collapsed)
       formatter.reset(new collapse_transactions(formatter.release()));
 
     // subtotal_transactions combines all the transactions it receives
@@ -551,7 +554,7 @@ int main(int argc, char * argv[], char * envp[])
     // dow_transactions is like interval_transactions, except that it
     // reports all the transactions that fall on each subsequent day
     // of the week.
-    if (config->show_expanded)
+    if (config->show_subtotal)
       formatter.reset(new subtotal_transactions(formatter.release()));
     else if (report_interval.get())
       formatter.reset(new interval_transactions(formatter.release(),

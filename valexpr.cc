@@ -227,7 +227,7 @@ void value_expr_t::compute(value_t& result, const details_t& details,
     assert(left);
     left->compute(result, details);
     if (result.type == value_t::BALANCE) {
-      // jww (2004-08-17): do something smarter here
+      // jww (2004-08-17): do something smarter here?
       result.cast(value_t::AMOUNT);
     }
     if (result.type == value_t::AMOUNT) {

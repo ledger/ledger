@@ -32,8 +32,8 @@ struct config_t
   std::string   value_expr;
   std::string   total_expr;
   unsigned long pricing_leeway;
-  bool		show_subtotals;
-  bool		show_expanded;
+  bool		show_collapsed;
+  bool		show_subtotal;
   bool		show_related;
   bool		show_inverted;
   bool		show_empty;
