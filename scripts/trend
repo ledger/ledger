@@ -1,0 +1,30 @@
+#!/bin/sh
+
+# This script requires Python support.
+#
+# To use, just run "trend" with the accounts to compute the trend for:
+#
+#   trend dining
+#
+# The trend values are not terribly meaningful, but this gives an
+# example of how Python can be used to create more complex reports.
+
+ledger --import-stdin -T "@rdev()" reg "$@" <<EOF
+import ledger
+
+mean = ledger.parse_value_expr ("AT")
+last_mean = None
+last_dev = None
+
+def rdev (details):
+    global last_mean, last_dev
+    mval = mean.compute (details)
+    if last_mean is None:
+	dev = ledger.Value ()
+    else:
+	dev = mval - last_mean
+	dev = (last_dev + dev) / 2
+    last_mean = mval
+    last_dev = dev
+    return dev
+EOF

@@ -1,13 +1,174 @@
-1.7
+			     Ledger NEWS
 
-  Pricing histories are now supported, so that ledger remembers
-  historical prices of all commodities (if this information is
-  provided), and can give register reports based on past and present
-  market values, as well as original cost basis.
+* 2.0
 
-1.6
+This version represents a full rewrite, while preserving much of the
+original data format and command-line syntax.  There are too many new
+options to describe in full, but a quick list: value expressions,
+complex date masks, binary caching of ledger data, many new reporting
+options, a simple way to specify payee regexps, calculation and
+display predicates, and two-way Python integration.  Ledger also uses
+autoconf now, and builds as a library plus the command-line driver.
 
-  Can now parse timeclock files.  These are simple timelogs that track
+** Differences from 1.7
+
+- changes in option syntax:
+
+  -d now specifies the display predicate.  To give a date mask similar
+  to 1.7, use the -p (period) option.
+  
+  -P now generates the "by payee" report.  To specify a price database
+  to use, use --price-db.
+  
+  -G now generates a net gain report.  To print totals in a format
+  consumable by gnuplot, use -J.
+  
+  -l now specifies the calculation predicate.  To emulate the old
+  usage of "-l \$100", use: -d "AT>100".
+  
+  -N is gone.  Instead of "-N REGEX", use: -d "/REGEX/?T>0:T".
+  
+  -F now specifies the report format string.  The old meaning of -F
+  now has little use.
+  
+  -S now takes a value expression as the sorting criterion.  To get
+  the old meaning of "-S", use "-S d".
+  
+  -n now means "collapse entries in the register report".  The get the
+  old meaning of -n in the balance report, use "-T a".
+  
+  -p now specifies the reporting period.  You can convert commodities
+  in a report using value expressions.  For example, to display hours
+  at $10 per hour:
+    -T "O>={0.01h}?{\$10.00}*O:O"
+  Or, to reduce totals, so that every $417 becomes 1.0 AU:
+    -T "O>={\$0.01}?{1.0 AU}*(O/{\$417}):O"
+
+- The use of "+" and "-" in ledger files to specify permanent regexps
+  has been removed.
+
+- The "-from" argument is no longer used by the "entry" command.
+  Simply remove it.
+
+** Features new to 2.0
+
+- The most significant feature to be added is "value expressions".
+  They are used in many places to indicate what to display, sorting
+  order, how to calculate totals, etc.  Logic and math operators are
+  supported, as well as simple functions.  See the manual.
+
+- If the environment variable LEDGER_FILE (or LEDGER) is used, a
+  binary cache of that ledger is kept in ~/.ledger-cache (or the file
+  given by LEDGER_CACHE).  This greatly speeds up subsequent queries.
+  Happens only if "-f" or "--file" is not used.
+
+- New 'xml' report outputs an XML version of what "register" would
+  have displayed.  This can be used to manipulate reported data in a
+  more scriptable way.
+
+  Ledger can also read as input the output from the "xml" report.  If
+  the "xml" report did not contain balanced entries, they will be
+  balanced by the "<Unknown>" account.  For example:
+    ledger reg rent
+  displays the same results as:
+    ledger xml rent | ledger -f - reg rent
+
+- Regexps given directly after the command name now apply only to
+  account names.  To match on a payee, use "--" to separate the two
+  kinds of regexps.  For example, to find a payee named "John" within
+  all Expenses accounts, use:
+    ledger register expenses -- john
+
+  Note: This command is identical (and internally converted) to:
+    ledger -l "/expenses/|//john/" register
+  
+- To include entries from another file into a specific account, use:
+    !account ACCOUNT
+    !include FILE
+    !end
+
+- Register reports now show only matching account transactions.  Use
+  "-r" to see "related accounts" -- the account the transfer came from
+  or went to (This was the old behavior in 1.x, but led to confusion).
+  "-r" also works with balance reports, where it will total all the
+  transactions related to your query.
+
+- Automated transactions now use value expressions for the predicate.
+  The new syntax is:
+    = VALUE-EXPR
+      TRANSACTIONS...
+
+  Only one VALUE-EXPR is supported (compared to multiple account
+  regexps before).  However, since value expression allow for logic
+  chaining, there is no loss of functionality.  Matching can also be
+  much more comprehensive.
+
+- If Boost.Python is installed (libboost_python.a), ledger can support
+  two-way Python integration.  This feature is enabled by passing
+  --enable-python to the "configure" script before building.  Ledger
+  can then be used as a module (ledger.so), as well as supporting
+  Python function calls directly from value expressions.  See main.py
+  for an example of driving Ledger from Python.  It implements nearly
+  all the functionality of the C++ driver, main.cc.
+
+  (This feature has yet to mature, and so is being offered as a beta
+  feature in this release.  It is mostly functional, and those curious
+  are welcome to play with it.)
+
+- New reporting options:
+
+  "-o FILE" outputs data to FILE.  If "-", output goes to stdout (the
+  default).
+
+  -O shows base commodity values (this is the old behavior)
+  -B shows basis cost of commodities
+  -V shows market value of commodities
+  -g reports gain/loss performance of each register item
+  -G reports net gain/loss over time
+  -A reports average transaction value (arithmetic mean)
+  -D reports each transaction's deviation from the average
+
+  -w uses 132 columns for the register report, rather than 80.  Set
+   the environment variable LEDGER_WIDE for this to be the default.
+
+  "-p INTERVAL" allows for more flexible period reporting, such as:
+
+    monthly
+    every week
+    every 3 quarters
+    weekly from 12/20
+    monthly in 2003
+    weekly from last month until dec
+
+  "-y DATEFMT" changes the date format used in all reports.  The
+  default is "%Y/%m/%d".
+
+  -Y and -W print yearly and weekly subtotals, just as -M prints
+  monthly subtotals.
+
+  --dow shows cumulative totals for each day of the week.
+
+  -P reports transactions grouped by payee
+
+  -x reports the payee as the commodity; useful in some cases
+
+  -j and -J replace the previous -G (gnuplot) option.  -j reports the
+  amounts column in a way gnuplot can consume, and -J the totals
+  column.  An example is in "scripts/report".
+
+  "--period-sort EXPR" sorts transactions within a reporting period.
+  The regular -S option sorts all reported transactions.
+
+* 1.7
+
+- Pricing histories are now supported, so that ledger remembers
+  historical pricing of all commodities, and can give register reports
+  based on past and present market values as well as the original cost
+  basis.  See the manual for more details on the new option switches.
+
+* 1.6
+
+- Can now parse timeclock files.  These are simple timelogs that track
   in/out events, which can be maintained using my timeclock tool.  By
   allowing ledger to parse these, it means that reporting can be done
   on them in the same way as a ledger file (the commodities is "h",
@@ -16,4 +177,4 @@
   hours into a dollar value via a receivable account, is now trivial.
   See the docs for more on how to do this.
 
-  Began keeping NEWS file. :)
+- Began keeping a NEWS file. :)

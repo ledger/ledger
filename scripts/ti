@@ -1,0 +1,5 @@
+#!/bin/sh
+
+proj="$1"
+shift
+timeclock in "$proj" "$@"

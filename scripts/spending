@@ -1,8 +1,0 @@
-#!/bin/sh
-ledger "$@" balance    \
-    Expenses:Food      \
-    Expenses:Movies    \
-    Expenses:Auto:Gas  \
-    Expenses:Tips      \
-    Expenses:Health    \
-    Expenses:Supplies

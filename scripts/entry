@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if [ -z "$LEDGER" -o ! -r $LEDGER ]; then
+if [ -z "$LEDGER" -o ! -r "$LEDGER" ]; then
    echo Please set your LEDGER environment variable.
 fi
 
