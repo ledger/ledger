@@ -44,9 +44,9 @@ struct compare_items {
   bool operator()(const T * left, const T * right) const {
     assert(left);
     assert(right);
-    balance_t left_result;
+    value_t left_result;
     sort_order->compute(left_result, details_t(left));
-    balance_t right_result;
+    value_t right_result;
     sort_order->compute(right_result, details_t(right));
     return left_result < right_result;
   }

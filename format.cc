@@ -177,11 +177,45 @@ void format_t::format_elements(std::ostream&    out,
       out << elem->chars;
       break;
 
+    case element_t::VALUE:
+    case element_t::TOTAL:
     case element_t::VALUE_EXPR: {
-      balance_t value;
-      elem->val_expr->compute(value, details);
-      value.write(out, elem->min_width, (elem->max_width > 0 ?
-					 elem->max_width : elem->min_width));
+      value_expr_t * expr;
+      switch (elem->type) {
+#ifdef NO_CLEANUP
+      case element_t::VALUE: expr = value_expr; break;
+      case element_t::TOTAL: expr = total_expr; break;
+#else
+      case element_t::VALUE: expr = value_expr.get(); break;
+      case element_t::TOTAL: expr = total_expr.get(); break;
+#endif
+      case element_t::VALUE_EXPR: expr = elem->val_expr; break;
+
+      default:
+	assert(0);
+	break;
+      }
+      value_t value;
+      expr->compute(value, details);
+      switch (value.type) {
+      case value_t::BOOLEAN:
+	out << (*((bool *) value.data) ? "1" : "0");
+	break;
+      case value_t::INTEGER:
+	out << *((unsigned int *) value.data);
+	break;
+      case value_t::AMOUNT:
+	out << std::string(*((amount_t *) value.data));
+	break;
+      case value_t::BALANCE:
+	((balance_t *) value.data)->write(out, elem->min_width,
+					  (elem->max_width > 0 ?
+					   elem->max_width : elem->min_width));
+	break;
+      default:
+	assert(0);
+	break;
+      }
       break;
     }
 
@@ -288,22 +322,6 @@ void format_t::format_elements(std::ostream&    out,
 	  out << "  ; " << details.xact->note;
       }
       break;
-
-    case element_t::VALUE: {
-      balance_t value;
-      compute_value(value, details);
-      value.write(out, elem->min_width, (elem->max_width > 0 ?
-					 elem->max_width : elem->min_width));
-      break;
-    }
-
-    case element_t::TOTAL: {
-      balance_t value;
-      compute_total(value, details);
-      value.write(out, elem->min_width, (elem->max_width > 0 ?
-					 elem->max_width : elem->min_width));
-      break;
-    }
 
     case element_t::SPACER:
       for (const account_t * acct = details.account;
