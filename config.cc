@@ -25,8 +25,8 @@ config_t::config_t()
   balance_format     = "%20T  %2_%-n\n";
   register_format    = ("%D %-.20P %-.22N %12.66t %12.80T\n%/"
 			"%32|%-.22N %12.66t %12.80T\n");
-  plot_amount_format = "%D %t\n";
-  plot_total_format  = "%D %T\n";
+  plot_amount_format = "%D %(St)\n";
+  plot_total_format  = "%D %(ST)\n";
   print_format       = "\n%D %X%C%P\n    %-34N  %12o\n%/    %-34N  %12o\n";
   equity_format      = "\n%D %X%C%P\n%/    %-34N  %12t\n";
   prices_format      = "%[%Y/%m/%d %H:%M:%S %Z]   %-10N %12t %12T\n";
@@ -531,12 +531,10 @@ OPT_BEGIN(total_expr, "T:") {
 } OPT_END(total_expr);
 
 OPT_BEGIN(amount_data, "j") {
-  config.amount_expr   = "S" + config.amount_expr;
   config.format_string = config.plot_amount_format;
 } OPT_END(amount_data);
 
 OPT_BEGIN(total_data, "J") {
-  config.total_expr    = "S" + config.total_expr;
   config.format_string = config.plot_total_format;
 } OPT_END(total_data);
 
@@ -582,15 +580,15 @@ OPT_BEGIN(gain, "G") {
 } OPT_END(gain);
 
 OPT_BEGIN(average, "A") {
-  config.total_expr = std::string("M") + config.total_expr;
+  config.total_expr = std::string("M(") + config.total_expr + ")";
 } OPT_END(average);
 
 OPT_BEGIN(deviation, "D") {
-  config.total_expr = std::string("t-M") + config.total_expr;
+  config.total_expr = std::string("t-M(") + config.total_expr + ")";
 } OPT_END(deviation);
 
 OPT_BEGIN(trend, "X") {
-  config.total_expr = std::string("M(t-M") + config.total_expr + ")";
+  config.total_expr = std::string("M(t-M(") + config.total_expr + "))";
 } OPT_END(trend);
 
 OPT_BEGIN(weighted_trend, "Z") {
