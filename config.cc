@@ -525,7 +525,7 @@ OPT_BEGIN(total_expr, "T:") {
 } OPT_END(total_expr);
 
 OPT_BEGIN(value_data, "j") {
-  config.amount_expr    = "S" + config.amount_expr;
+  config.amount_expr   = "S" + config.amount_expr;
   config.format_string = config.plot_value_format;
 } OPT_END(value_data);
 

@@ -541,27 +541,37 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
   // Ensure the value is rounded to the commodity's precision before
   // outputting it.  NOTE: `rquotient' is used here as a temp variable!
 
-  commodity_t& commodity(amt.commodity());
+  commodity_t&   commodity(amt.commodity());
+  unsigned short precision;
 
-  if (commodity.precision < amt.quantity->prec) {
+  if (commodity == *commodity_t::null_commodity) {
+    mpz_ui_pow_ui(divisor, 10, amt.quantity->prec);
+    mpz_tdiv_qr(quotient, remainder, MPZ(amt.quantity), divisor);
+    precision = amt.quantity->prec;
+  }
+  else if (commodity.precision < amt.quantity->prec) {
     mpz_round(rquotient, MPZ(amt.quantity), amt.quantity->prec,
 	      commodity.precision);
     mpz_ui_pow_ui(divisor, 10, commodity.precision);
     mpz_tdiv_qr(quotient, remainder, rquotient, divisor);
+    precision = commodity.precision;
   }
   else if (commodity.precision > amt.quantity->prec) {
     mpz_ui_pow_ui(divisor, 10, commodity.precision - amt.quantity->prec);
     mpz_mul(rquotient, MPZ(amt.quantity), divisor);
     mpz_ui_pow_ui(divisor, 10, commodity.precision);
     mpz_tdiv_qr(quotient, remainder, rquotient, divisor);
+    precision = commodity.precision;
   }
   else if (amt.quantity->prec) {
     mpz_ui_pow_ui(divisor, 10, amt.quantity->prec);
     mpz_tdiv_qr(quotient, remainder, MPZ(amt.quantity), divisor);
+    precision = amt.quantity->prec;
   }
   else {
     mpz_set(quotient, MPZ(amt.quantity));
     mpz_set_ui(remainder, 0);
+    precision = 0;
   }
 
   if (mpz_sgn(quotient) < 0 || mpz_sgn(remainder) < 0) {
@@ -626,10 +636,10 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
     }
   }
 
-  if (commodity.precision) {
+  if (precision) {
     out << ((commodity.flags & COMMODITY_STYLE_EUROPEAN) ? ',' : '.');
 
-    out.width(commodity.precision);
+    out.width(precision);
     out.fill('0');
 
     char * p = mpz_get_str(NULL, 10, rquotient);
