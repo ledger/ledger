@@ -26,4 +26,24 @@ endif
 ledger_SOURCES = main.cc
 ledger_LDADD = $(LIBOBJS) libledger.la
 
+nobase_include_HEADERS = \
+	amount.h	 \
+	autoxact.h	 \
+	balance.h	 \
+	binary.h	 \
+	config.h	 \
+	datetime.h	 \
+	debug.h		 \
+	error.h		 \
+	format.h	 \
+	gnucash.h	 \
+	ledger.h	 \
+	option.h	 \
+	parser.h	 \
+	qif.h		 \
+	quotes.h	 \
+	textual.h	 \
+	valexpr.h	 \
+	value.h		 \
+	walk.h
 info_TEXINFOS = ledger.texi
