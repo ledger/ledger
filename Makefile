@@ -31,10 +31,13 @@ INCS   := $(INCS) -I/usr/include/xmltok
 LIBS   := $(LIBS) -lxmlparse
 endif
 
-all: make.deps ledger
+all: make.deps ledger ledger.info
 
 ledger: $(OBJS)
 	g++ $(CFLAGS) $(INCS) $(DFLAGS) -o $@ $(OBJS) $(LIBS)
+
+ledger.info: ledger.texi
+	makeinfo $<
 
 %.o: %.cc
 	g++ $(CFLAGS) $(INCS) $(DFLAGS) -c -o $@ $<
