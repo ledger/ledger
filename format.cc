@@ -223,7 +223,7 @@ void format_t::format_elements(std::ostream&    out,
       if (details.entry && details.entry->date != -1) {
 	char buf[256];
 	std::strftime(buf, 255, elem->chars.c_str(),
-		      std::gmtime(&details.entry->date));
+		      std::localtime(&details.entry->date));
 	out << (elem->max_width == 0 ? buf : truncated(buf, elem->max_width));
       } else {
 	out << " ";

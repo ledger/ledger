@@ -132,9 +132,9 @@ void subtotal_transactions::flush(const char * spec_fmt)
     if (start != finish)
       finish -= 86400;
 
-    std::strftime(buf, 255, fmt.c_str(), std::gmtime(&finish));
+    std::strftime(buf, 255, fmt.c_str(), std::localtime(&finish));
   } else {
-    std::strftime(buf, 255, spec_fmt, std::gmtime(&finish));
+    std::strftime(buf, 255, spec_fmt, std::localtime(&finish));
   }
 
   entry_t * entry = new entry_t;
@@ -199,7 +199,7 @@ void interval_transactions::operator()(transaction_t * xact)
     }
 
     if (! interval.seconds) {
-      struct std::tm * desc = std::gmtime(&xact->entry->date);
+      struct std::tm * desc = std::localtime(&xact->entry->date);
       if (interval.years)
 	desc->tm_mon = 0;
       desc->tm_mday = 1;

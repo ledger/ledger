@@ -92,10 +92,10 @@ inline bool _debug_active(const char * const cls) {
   }
 #define DEBUG_PRINT_(x) DEBUG_PRINT(_debug_cls, x)
 
-#define DEBUG_PRINT_TIME(cls, x) {			\
-  char buf[256];					\
-  std::strftime(buf, 255, "%Y/%m/%d", std::gmtime(&x));	\
-  DEBUG_PRINT(cls, #x << " is " << buf);		\
+#define DEBUG_PRINT_TIME(cls, x) {				\
+  char buf[256];						\
+  std::strftime(buf, 255, "%Y/%m/%d", std::localtime(&x));	\
+  DEBUG_PRINT(cls, #x << " is " << buf);			\
 }
 
 #define DEBUG_PRINT_TIME_(x) DEBUG_PRINT_TIME(_debug_cls, x)

@@ -476,8 +476,8 @@ unsigned int parse_textual_journal(std::istream& in, journal_t * journal,
 
       case 'Y':                   // set the current year
 	in >> c;
-	in >> now_tm->tm_year;
-	now_tm->tm_year -= 1900;
+	in >> now_year;
+	now_year -= 1900;
 	break;
 
 #ifdef TIMELOG_SUPPORT

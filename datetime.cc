@@ -5,8 +5,8 @@
 
 namespace ledger {
 
-std::time_t	 now	= std::time(NULL);
-struct std::tm * now_tm	= std::localtime(&now);
+std::time_t now	     = std::time(NULL);
+int         now_year = std::localtime(&now)->tm_year;
 
 static std::time_t	base      = -1;
 static int		base_year = -1;
@@ -35,9 +35,11 @@ std::time_t interval_t::increment(const std::time_t moment)
   std::time_t then = moment;
 
   if (years || months) {
-    struct std::tm * desc = std::gmtime(&then);
+    struct std::tm * desc = std::localtime(&then);
+
     if (years)
       desc->tm_year += years;
+
     if (months) {
       desc->tm_mon += months;
 
@@ -45,7 +47,12 @@ std::time_t interval_t::increment(const std::time_t moment)
 	desc->tm_year++;
 	desc->tm_mon -= 12;
       }
+      else if (desc->tm_mon < 0) {
+	desc->tm_year--;
+	desc->tm_mon += 12;
+      }
     }
+
     then = std::mktime(desc);
   }
 
@@ -69,7 +76,7 @@ static void parse_inclusion_specifier(const std::string& word,
   bool saw_mon  = true;
 
   if (when.tm_year == -1) {
-    when.tm_year = now_tm->tm_year;
+    when.tm_year = now_year;
     saw_year = false;
   }
   if (when.tm_mon == -1) {
@@ -135,6 +142,47 @@ interval_t * interval_t::parse(std::istream& in,
       months = 3;
     else if (word == "yearly")
       years = 1;
+    else if (word == "this" || word == "last" || word == "next") {
+      std::string type	   = word;
+      bool	  mon_spec = false;
+      char	  buf[32];
+
+      if (! in.eof())
+	in >> word;
+      else
+	word = "month";
+
+      if (word == "month") {
+	std::strftime(buf, 31, "%B", std::localtime(&now));
+	word = buf;
+	mon_spec = true;
+      }
+      else if (word == "year") {
+	std::strftime(buf, 31, "%Y", std::localtime(&now));
+	word = buf;
+      }
+
+      parse_inclusion_specifier(word, begin, end);
+
+      if (type == "last") {
+	if (mon_spec) {
+	  *begin = interval_t(0, -1, 0).increment(*begin);
+	  *end   = interval_t(0, -1, 0).increment(*end);
+	} else {
+	  *begin = interval_t(0, 0, -1).increment(*begin);
+	  *end   = interval_t(0, 0, -1).increment(*end);
+	}
+      }
+      else if (type == "next") {
+	if (mon_spec) {
+	  *begin = interval_t(0, 1, 0).increment(*begin);
+	  *end   = interval_t(0, 1, 0).increment(*end);
+	} else {
+	  *begin = interval_t(0, 0, 1).increment(*begin);
+	  *end   = interval_t(0, 0, 1).increment(*end);
+	}
+      }
+    }
     else if (word == "in") {
       in >> word;
       parse_inclusion_specifier(word, begin, end);
@@ -180,7 +228,7 @@ bool parse_date(const char * date_str, std::time_t * result, const int year)
   when.tm_sec  = 0;
 
   if (when.tm_year == -1)
-    when.tm_year = ((year == -1) ? now_tm->tm_year : (year - 1900));
+    when.tm_year = ((year == -1) ? now_year : (year - 1900));
 
   if (when.tm_mon == -1)
     when.tm_mon = 0;
@@ -225,8 +273,8 @@ bool quick_parse_date(char * date_str, std::time_t * result)
     struct std::tm when;
     std::memset(&when, 0, sizeof(when));
 
-    base_year    = year == -1 ? now_tm->tm_year + 1900 : year;
-    when.tm_year = year == -1 ? now_tm->tm_year : year - 1900;
+    base_year    = year == -1 ? now_year + 1900 : year;
+    when.tm_year = year == -1 ? now_year : year - 1900;
     when.tm_mday = 1;
 
     base = std::mktime(&when);

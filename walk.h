@@ -327,7 +327,7 @@ class dow_transactions : public subtotal_transactions
 
   virtual void flush();
   virtual void operator()(transaction_t * xact) {
-    struct std::tm * desc = std::gmtime(&xact->entry->date);
+    struct std::tm * desc = std::localtime(&xact->entry->date);
     days_of_the_week[desc->tm_wday].push_back(xact);
   }
 };

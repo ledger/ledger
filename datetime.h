@@ -9,12 +9,11 @@ namespace ledger {
 
 struct interval_t
 {
-  unsigned long years;
-  unsigned long months;
-  unsigned long seconds;
+  int years;
+  int months;
+  int seconds;
 
-  interval_t(unsigned long _seconds, unsigned long _months = 0,
-	     unsigned long _years = 0)
+  interval_t(int _seconds, int _months = 0, int _years = 0)
     : years(_years), months(_months), seconds(_seconds) {}
 
   std::time_t increment(const std::time_t);
@@ -23,8 +22,8 @@ struct interval_t
 			    std::time_t * end);
 };
 
-extern std::time_t	now;
-extern struct std::tm * now_tm;
+extern std::time_t now;
+extern int	   now_year;
 
 bool parse_date_mask(const char * date_str, struct std::tm * result);
 

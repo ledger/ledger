@@ -365,35 +365,6 @@ int main(int argc, char * argv[], char * envp[])
       show_all_related = true;
   }
 
-  // Compile the format strings
-
-  const char * f;
-  if (! config->format_string.empty())
-    f = config->format_string.c_str();
-  else if (command == "b")
-    f = bal_fmt.c_str();
-  else if (command == "r")
-    f = reg_fmt.c_str();
-  else if (command == "E")
-    f = equity_fmt.c_str();
-  else
-    f = print_fmt.c_str();
-
-  std::string first_line_format;
-  std::string next_lines_format;
-
-  if (const char * p = std::strstr(f, "%/")) {
-    first_line_format = std::string(f, 0, p - f);
-    next_lines_format = std::string(p + 2);
-  } else {
-    first_line_format = next_lines_format = f;
-  }
-
-  format_t format(first_line_format);
-  format_t nformat(next_lines_format);
-
-  TIMER_STOP(handle_options);
-
   // Setup a few local and global variables, depending on the config
   // settings.
 
@@ -452,6 +423,35 @@ int main(int argc, char * argv[], char * envp[])
   DEBUG_PRINT("ledger.main.predicates",
 	      "disp-pred: " << config->display_predicate);
 #endif
+
+  // Compile the format strings
+
+  const char * f;
+  if (! config->format_string.empty())
+    f = config->format_string.c_str();
+  else if (command == "b")
+    f = bal_fmt.c_str();
+  else if (command == "r")
+    f = reg_fmt.c_str();
+  else if (command == "E")
+    f = equity_fmt.c_str();
+  else
+    f = print_fmt.c_str();
+
+  std::string first_line_format;
+  std::string next_lines_format;
+
+  if (const char * p = std::strstr(f, "%/")) {
+    first_line_format = std::string(f, 0, p - f);
+    next_lines_format = std::string(p + 2);
+  } else {
+    first_line_format = next_lines_format = f;
+  }
+
+  format_t format(first_line_format);
+  format_t nformat(next_lines_format);
+
+  TIMER_STOP(handle_options);
 
   // Walk the entries based on the report type and the options
 
