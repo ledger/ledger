@@ -452,9 +452,13 @@ def vmax(d, val):\n\
     formatter = new format_entries(*out, *format);
   else if (command == "x")
     formatter = new format_emacs_transactions(*out);
-  else if (command == "X")
+  else if (command == "X") {
+#ifdef HAVE_XMLPARSE
     formatter = new format_xml_entries(*out, config.show_totals);
-  else
+#else
+    throw error("XML support was not compiled into this copy of Ledger");
+#endif
+  } else
     formatter = new format_transactions(*out, *format);
 
   if (command == "w") {
