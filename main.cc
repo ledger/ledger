@@ -238,6 +238,8 @@ int parse_and_report(int argc, char * argv[], char * envp[])
     command = "r";
   else if (command == "print" || command == "p")
     command = "p";
+  else if (command == "output")
+    command = "w";
   else if (command == "xml")
     command = "X";
   else if (command == "entry")
@@ -246,6 +248,8 @@ int parse_and_report(int argc, char * argv[], char * envp[])
     command = "E";
   else if (command == "prices")
     command = "P";
+  else if (command == "reconcile")
+    command = "R";
   else
     throw error(std::string("Unrecognized command '") + command + "'");
 
@@ -297,12 +301,14 @@ int parse_and_report(int argc, char * argv[], char * envp[])
     format = &config.format_string;
   else if (command == "b")
     format = &config.balance_format;
-  else if (command == "r")
+  else if (command == "r" || command == "R")
     format = &config.register_format;
   else if (command == "E")
     format = &config.equity_format;
   else if (command == "P")
     format = &config.prices_format;
+  else if (command == "w")
+    format = &config.write_xact_format;
   else
     format = &config.print_format;
 
@@ -354,6 +360,10 @@ def vmax(d, val):\n\
     walk_transactions(new_entry->transactions, *formatter);
   else if (command == "P")
     walk_commodities(commodity_t::commodities, *formatter);
+  else if (command == "R")
+    reconcile_account(*journal, *journal->master, value_t(long(0)));
+  else if (command == "w")
+    write_textual_journal(*journal, *arg, *formatter, *out);
   else
     walk_entries(journal->entries, *formatter);
 
