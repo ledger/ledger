@@ -207,13 +207,12 @@ Return the difference in the format of a time value."
     (define-key map [(control ?c) (control ?p)] 'ledger-print-result)
     (define-key map [(control ?c) (control ?r)] 'ledger-reconcile)))
 
-(defun ledger-parse-entries (account &optional all-p after-date)
+(defun ledger-parse-entries (account &optional all-p)
   (let (total entries)
     (ledger-iterate-entries
      (function
       (lambda (start date mark desc)
-	(when (and (or all-p (not mark))
-		   (ledger-time-less-p after-date date))
+	(when (or all-p (not mark))
 	  (forward-line)
 	  (setq total 0.0)
 	  (while (looking-at
@@ -231,7 +230,8 @@ Return the difference in the format of a time value."
 		  (setq entries
 			(cons (list (copy-marker start)
 				    mark date desc (or amt total))
-			      entries))))
+			      entries)
+			all-p t)))
 	    (forward-line))))))
     entries))
 
@@ -289,13 +289,11 @@ Return the difference in the format of a time value."
     (forward-line)
     (ledger-update-balance-display)))
 
-(defun ledger-reconcile (account &optional days)
-  (interactive "sAccount to reconcile: \nnBack how far (default 30 days): ")
-  (let* ((then (ledger-time-subtract
-		(current-time) (seconds-to-time (* (or days 30) 24 60 60))))
-	 (items (save-excursion
+(defun ledger-reconcile (account)
+  (interactive "sAccount to reconcile: ")
+  (let* ((items (save-excursion
 		  (goto-char (point-min))
-		  (ledger-parse-entries account t then)))
+		  (ledger-parse-entries account)))
 	 (buf (current-buffer)))
     (with-current-buffer
 	(pop-to-buffer (generate-new-buffer "*Reconcile*"))
