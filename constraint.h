@@ -2,6 +2,7 @@
 #define _CONSTRAINT_H
 
 #include "ledger.h"
+#include "expr.h"
 #include "item.h"
 
 template <typename ForwardIterator, typename ValueType, typename Constraint>
@@ -60,96 +61,71 @@ class constrained_iterator
 
 namespace ledger {
 
-class mask_t
-{
- public:
-  bool        exclude;
-  std::string pattern;
-  void *      regexp;
-
-  explicit mask_t(const std::string& pattern);
-  mask_t(const mask_t&);
-
-  ~mask_t();
-
-  bool match(const std::string& str) const;
-};
-
-typedef std::list<mask_t> masks_list;
-
-bool matches(const masks_list& regexps, const std::string& str,
-	     bool * by_exclusion = NULL);
-
-
-struct node_t;
-
-enum periodicity_t {
-  PERIOD_NONE,
-  PERIOD_MONTHLY,
-  PERIOD_WEEKLY_SUN,
-  PERIOD_WEEKLY_MON
-};
-
 class constraints_t
 {
  public:
-  bool real_only;
-  bool cleared_only;
-  bool uncleared_only;
-
   bool show_expanded;
   bool show_related;
   bool show_inverted;
   bool show_subtotals;
   bool show_empty;
 
-  std::time_t	 begin_date;
-  std::time_t	 end_date;
-  struct std::tm date_mask;
-  bool		 have_date_mask;
-
-  masks_list	 payee_masks;
-  masks_list	 account_masks;
-
-  periodicity_t  period;
-  node_t *	 predicate;
-  node_t *	 sort_order;
+  node_t * predicate;
 
   explicit constraints_t() {
-    real_only      = false;
-    cleared_only   = false;
-    uncleared_only = false;
-
     show_expanded  = false;
     show_related   = false;
     show_inverted  = false;
     show_subtotals = true;
     show_empty     = false;
 
-    begin_date     = -1;
-    end_date       = -1;
-    have_date_mask = false;
-
-    period         = PERIOD_NONE;
     predicate      = NULL;
-    sort_order     = NULL;
   }
 
-  ~constraints_t();
-
-  std::time_t begin() const {
-    return begin_date == -1 ? 0 : begin_date;
+  ~constraints_t() {
+    if (predicate)  delete predicate;
   }
 
-  std::time_t end() const {
-    return end_date == -1 ? std::time(NULL) : end_date;
+  bool operator ()(const transaction_t * xact) const {
+    if (! predicate) {
+      return true;
+    } else {
+      item_t temp;
+      temp.date    = xact->entry->date;
+      temp.payee   = xact->entry->payee;
+      temp.account = xact->account;
+      return predicate->compute(&temp);
+    }
   }
 
-  bool matches_date_range(const std::time_t date) const;
+  bool operator ()(const entry_t * entry) const {
+    if (! predicate) {
+      return true;
+    } else {
+      item_t temp;
+      temp.date  = entry->date;
+      temp.payee = entry->payee;
 
-  bool operator ()(const transaction_t * xact) const;
-  bool operator ()(const entry_t * entry) const;
-  bool operator ()(const item_t * item) const;
+      // Although there may be conflicting account masks for the whole
+      // set of transactions -- for example, /rent/&!/expenses/, which
+      // might match one by not another transactions -- we let the
+      // entry through if at least one of the transactions meets the
+      // criterion
+
+      for (transactions_list::const_iterator i = entry->transactions.begin();
+	   i != entry->transactions.end();
+	   i++) {
+	temp.account = (*i)->account;
+	if (predicate->compute(&temp))
+	  return true;
+      }
+      return false;
+    }
+  }
+
+  bool operator ()(const item_t * item) const {
+    return ! predicate || predicate->compute(item);
+  }
 };
 
 typedef constrained_iterator<transactions_list::const_iterator, transaction_t *,

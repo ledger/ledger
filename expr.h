@@ -3,9 +3,32 @@
 
 #include "ledger.h"
 #include "balance.h"
-#include "constraint.h"
+#include "item.h"
 
 namespace ledger {
+
+class mask_t
+{
+ public:
+  bool        exclude;
+  std::string pattern;
+  void *      regexp;
+
+  explicit mask_t(const std::string& pattern);
+  mask_t(const mask_t&);
+
+  ~mask_t();
+
+  bool match(const std::string& str) const;
+};
+
+#if 1
+typedef std::list<mask_t> masks_list;
+
+bool matches(const masks_list& regexps, const std::string& str,
+	     bool * by_exclusion = NULL);
+#endif
+
 
 struct node_t
 {
@@ -18,6 +41,8 @@ struct node_t
     AMOUNT,
     COST,
     DATE,
+    CLEARED,
+    REAL,
     INDEX,
 
     // Item totals
@@ -26,16 +51,13 @@ struct node_t
     TOTAL,
     COST_TOTAL,
 
-    // Constraint details
-    BEGIN_DATE,
-    END_DATE,
-
     // Functions
     F_ARITH_MEAN,
     F_VALUE,
     F_NEG,
     F_ABS,
-    F_REGEXP,
+    F_PAYEE_MASK,
+    F_ACCOUNT_MASK,
 
     // Binary operators
     O_ADD,
@@ -73,9 +95,7 @@ struct node_t
     if (right) delete right;
   }
 
-  balance_t compute(const item_t * item,
-		    const std::time_t begin = -1,
-		    const std::time_t end   = -1) const;
+  balance_t compute(const item_t * item) const;
 };
 
 node_t * parse_expr(std::istream& in);

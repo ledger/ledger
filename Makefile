@@ -1,6 +1,5 @@
 CODE   = amount.cc balance.cc account.cc ledger.cc \
-	 constraint.cc item.cc expr.cc format.cc \
-	 textual.cc binary.cc
+	 item.cc expr.cc format.cc textual.cc binary.cc
 OBJS   = $(patsubst %.cc,%.o,$(CODE))
 #CXX    = cc
 CXX    = g++

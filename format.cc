@@ -14,8 +14,7 @@ std::string truncated(const std::string& str, unsigned int width)
   return buf;
 }
 
-std::string maximal_account_name(const item_t * item,
-				 const item_t * parent)
+std::string maximal_account_name(const item_t * item, const item_t * parent)
 {
   std::string name = item->account->name;
   for (const item_t * i = item->parent;

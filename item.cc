@@ -12,7 +12,6 @@ item_t * walk_accounts(const account_t *    account,
 {
   item_t * item = new item_t;
   item->account = account;
-  item->date    = constraints.end() - 1;
 
   for (constrained_transactions_list_const_iterator
 	 i(account->transactions.begin(),

@@ -2,11 +2,95 @@
 #include "error.h"
 #include "textual.h"
 
+#include <pcre.h>
+
 namespace ledger {
 
-balance_t node_t::compute(const item_t *    item,
-			  const std::time_t begin,
-			  const std::time_t end) const
+mask_t::mask_t(const std::string& pat) : exclude(false)
+{
+  const char * p = pat.c_str();
+  if (*p == '-') {
+    exclude = true;
+    p++;
+    while (std::isspace(*p))
+      p++;
+  }
+  else if (*p == '+') {
+    p++;
+    while (std::isspace(*p))
+      p++;
+  }
+  pattern = p;
+
+  const char *error;
+  int erroffset;
+  regexp = pcre_compile(pattern.c_str(), PCRE_CASELESS,
+			&error, &erroffset, NULL);
+  if (! regexp)
+    std::cerr << "Warning: Failed to compile regexp: " << pattern
+	      << std::endl;
+}
+
+mask_t::mask_t(const mask_t& m) : exclude(m.exclude), pattern(m.pattern)
+{
+  const char *error;
+  int erroffset;
+  regexp = pcre_compile(pattern.c_str(), PCRE_CASELESS,
+			&error, &erroffset, NULL);
+  assert(regexp);
+}
+
+bool mask_t::match(const std::string& str) const
+{
+  static int ovec[30];
+  int result = pcre_exec((pcre *)regexp, NULL,
+			 str.c_str(), str.length(), 0, 0, ovec, 30);
+  return result >= 0 && ! exclude;
+}
+
+mask_t::~mask_t() {
+  pcre_free((pcre *)regexp);
+}
+
+#if 1
+
+bool matches(const masks_list& regexps, const std::string& str,
+	     bool * by_exclusion)
+{
+  if (regexps.empty())
+    return false;
+
+  bool match    = false;
+  bool definite = false;
+
+  for (masks_list::const_iterator r = regexps.begin();
+       r != regexps.end();
+       r++) {
+    static int ovec[30];
+    int result = pcre_exec((pcre *)(*r).regexp, NULL,
+			   str.c_str(), str.length(), 0, 0, ovec, 30);
+    if (result >= 0) {
+      match     = ! (*r).exclude;
+      definite  = true;
+    }
+    else if ((*r).exclude) {
+      if (! match)
+	match = ! definite;
+    }
+    else {
+      definite = true;
+    }
+  }
+
+  if (by_exclusion)
+    *by_exclusion = match && ! definite && by_exclusion;
+
+  return match;
+}
+
+#endif
+
+balance_t node_t::compute(const item_t * item) const
 {
   balance_t temp;
 
@@ -44,35 +128,44 @@ balance_t node_t::compute(const item_t *    item,
     temp = amount_t((unsigned int) item->date);
     break;
 
+  case CLEARED:
+#if 0
+    temp = amount_t(item->state == CLEARED ? 1 : 0);
+#endif
+    break;
+
+  case REAL:
+#if 0
+    temp = amount_t(item->flags & TRANSACTION_VIRTUAL ? 0 : 1);
+#endif
+    break;
+
   case INDEX:
     temp = amount_t(item->index + 1);
     break;
 
-  case BEGIN_DATE:
-    temp = amount_t((unsigned int) begin);
-    break;
-
-  case END_DATE:
-    temp = amount_t((unsigned int) end);
-    break;
-
   case F_ARITH_MEAN:
     assert(left);
-    temp = left->compute(item, begin, end);
+    temp = left->compute(item);
     temp /= amount_t(item->index + 1);
     break;
 
   case F_NEG:
     assert(left);
-    temp = left->compute(item, begin, end).negated();
+    temp = left->compute(item).negated();
     break;
 
   case F_ABS:
     assert(left);
-    temp = abs(left->compute(item, begin, end));
+    temp = abs(left->compute(item));
     break;
 
-  case F_REGEXP:
+  case F_PAYEE_MASK:
+    assert(mask);
+    temp = mask->match(item->payee);
+    break;
+
+  case F_ACCOUNT_MASK:
     assert(mask);
     temp = (item->account &&
 	    mask->match(item->account->fullname())) ? 1 : 0;
@@ -80,14 +173,12 @@ balance_t node_t::compute(const item_t *    item,
 
   case F_VALUE: {
     assert(left);
-    temp = left->compute(item, begin, end);
+    temp = left->compute(item);
 
     std::time_t moment = -1;
     if (right) {
       switch (right->type) {
-      case DATE:       moment = item->date; break;
-      case BEGIN_DATE: moment = begin; break;
-      case END_DATE:   moment = end; break;
+      case DATE: moment = item->date; break;
       default:
 	throw compute_error("Invalid date passed to P(v,d)");
       }
@@ -97,15 +188,15 @@ balance_t node_t::compute(const item_t *    item,
   }
 
   case O_NOT:
-    temp = left->compute(item, begin, end) ? 0 : 1;
+    temp = left->compute(item) ? 0 : 1;
     break;
 
   case O_QUES:
-    temp = left->compute(item, begin, end);
+    temp = left->compute(item);
     if (temp)
-      temp = right->left->compute(item, begin, end);
+      temp = right->left->compute(item);
     else
-      temp = right->right->compute(item, begin, end);
+      temp = right->right->compute(item);
     break;
 
   case O_AND:
@@ -121,8 +212,8 @@ balance_t node_t::compute(const item_t *    item,
   case O_DIV: {
     assert(left);
     assert(right);
-    balance_t left_bal  = left->compute(item, begin, end);
-    balance_t right_bal = right->compute(item, begin, end);
+    balance_t left_bal  = left->compute(item);
+    balance_t right_bal = right->compute(item);
     switch (type) {
     case O_AND: temp = (left_bal && right_bal) ? 1 : 0; break;
     case O_OR:  temp = (left_bal || right_bal) ? 1 : 0; break;
@@ -197,8 +288,8 @@ node_t * parse_term(std::istream& in)
   case 'a': node = new node_t(node_t::AMOUNT); break;
   case 'c': node = new node_t(node_t::COST); break;
   case 'd': node = new node_t(node_t::DATE); break;
-  case 'b': node = new node_t(node_t::BEGIN_DATE); break;
-  case 'e': node = new node_t(node_t::END_DATE); break;
+  case 'X': node = new node_t(node_t::CLEARED); break;
+  case 'R': node = new node_t(node_t::REAL); break;
   case 'i': node = new node_t(node_t::INDEX); break;
   case 'B': node = new node_t(node_t::BALANCE); break;
   case 'T': node = new node_t(node_t::TOTAL); break;
@@ -256,8 +347,15 @@ node_t * parse_term(std::istream& in)
   // Other
   case '/': {
     std::string ident;
+    bool        payee_mask = false;
 
     c = in.peek();
+    if (c == '/') {
+      payee_mask = true;
+      in.get(c);
+      c = in.peek();
+    }
+
     while (! in.eof() && c != '/') {
       in.get(c);
       if (c == '\\')
@@ -265,9 +363,11 @@ node_t * parse_term(std::istream& in)
       ident += c;
       c = in.peek();
     }
+
     if (c == '/') {
       in.get(c);
-      node = new node_t(node_t::F_REGEXP);
+      node = new node_t(payee_mask ?
+			node_t::F_PAYEE_MASK : node_t::F_ACCOUNT_MASK);
       node->mask = new mask_t(ident);
     } else {
       throw expr_error("Missing closing '/'");
@@ -517,13 +617,13 @@ static void dump_tree(std::ostream& out, node_t * node)
   case node_t::AMOUNT:	     out << "AMOUNT"; break;
   case node_t::COST:	     out << "COST"; break;
   case node_t::DATE:	     out << "DATE"; break;
+  case node_t::CLEARED:	     out << "CLEARED"; break;
+  case node_t::REAL:	     out << "REAL"; break;
   case node_t::INDEX:	     out << "INDEX"; break;
   case node_t::BALANCE:      out << "BALANCE"; break;
   case node_t::COST_BALANCE: out << "COST_BALANCE"; break;
   case node_t::TOTAL:        out << "TOTAL"; break;
   case node_t::COST_TOTAL:   out << "COST_TOTAL"; break;
-  case node_t::BEGIN_DATE:   out << "BEGIN"; break;
-  case node_t::END_DATE:     out << "END"; break;
 
   case node_t::F_ARITH_MEAN:
     out << "MEAN(";
@@ -543,9 +643,14 @@ static void dump_tree(std::ostream& out, node_t * node)
     out << ")";
     break;
 
-  case node_t::F_REGEXP:
+  case node_t::F_PAYEE_MASK:
     assert(node->mask);
-    out << "RE(" << node->mask->pattern << ")";
+    out << "P_MASK(" << node->mask->pattern << ")";
+    break;
+
+  case node_t::F_ACCOUNT_MASK:
+    assert(node->mask);
+    out << "A_MASK(" << node->mask->pattern << ")";
     break;
 
   case node_t::F_VALUE:

@@ -63,37 +63,12 @@ struct format_t
   void format_elements(std::ostream& out, const item_t * item,
 		       const item_t * displayed_parent = NULL) const;
 
-#if 1
   static balance_t compute_value(const item_t * item) {
-    if (value_expr)
-      return value_expr->compute(item);
-    else
-      return balance_t();
+    return value_expr ? value_expr->compute(item) : balance_t();
   }
-
   static balance_t compute_total(const item_t * item) {
-    if (total_expr)
-      return total_expr->compute(item);
-    else
-      return balance_t();
+    return total_expr ? total_expr->compute(item) : balance_t();
   }
-#else
-  static balance_t compute_value(const item_t * item,
-				 const constraints_t& constraints) {
-    if (value_expr)
-      return value_expr->compute(item, constraints.begin(), constraints.end());
-    else
-      return balance_t();
-  }
-
-  static balance_t compute_total(const item_t * item,
-				 const constraints_t& constraints) {
-    if (total_expr)
-      return total_expr->compute(item, constraints.begin(), constraints.end());
-    else
-      return balance_t();
-  }
-#endif
 };
 
 } // namespace ledger

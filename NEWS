@@ -70,7 +70,7 @@
      i    index (within the report)
      o    item age = date - report begin date
      w    item newness = report end date - date
-     
+
      b    report begin date
      e    report end date
      
