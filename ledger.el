@@ -297,8 +297,7 @@ Return the difference in the format of a time value."
 (defun ledger-reconcile-save ()
   (interactive)
   (with-current-buffer ledger-buf
-    (write-region (point-min) (point-max) (buffer-file-name) nil 1)
-    (set-buffer-modified-p nil))
+    (save-buffer))
   (set-buffer-modified-p nil)
   (ledger-display-balance))
 
