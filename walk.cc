@@ -86,22 +86,24 @@ void truncate_entries::flush()
 
     bool print = false;
     if (head_count) {
-      if (count > 0 && i < count)
+      if (head_count > 0 && i < head_count)
 	print = true;
-      else if (count < 0 && i >= - count)
+      else if (head_count < 0 && i >= - head_count)
 	print = true;
     }
 
     if (! print && tail_count) {
-      if (count > 0 && l - i <= count)
+      if (tail_count > 0 && l - i <= tail_count)
 	print = true;
-      else if (count < 0 && l - i > - count)
+      else if (tail_count < 0 && l - i > - tail_count)
 	print = true;
     }
 
     if (print)
       item_handler<transaction_t>::operator()(**x);
   }
+  xacts.clear();
+
   item_handler<transaction_t>::flush();
 }
 
@@ -989,6 +991,13 @@ void export_walk()
     ("IgnoreTransactions")
     .def("flush", &xact_handler_t::flush)
     .def("__call__", &ignore_transactions::operator());
+    ;
+
+  class_< truncate_entries, bases<xact_handler_t> >
+    ("TruncateEntries", init<xact_handler_t *, int, int>()
+     [with_custodian_and_ward<1, 2>()])
+    .def("flush", &truncate_entries::flush)
+    .def("__call__", &truncate_entries::operator());
     ;
 
   class_< set_account_value, bases<xact_handler_t> > ("SetAccountValue")
