@@ -228,6 +228,9 @@ void related_transactions::flush()
 	  }
 	}
       } else {
+	// This code should only be reachable from the "output"
+	// command, since that is the only command which attempts to
+	// output auto or period entries.
 	transaction_xdata_t& xdata = transaction_xdata(**i);
 	if (! (xdata.dflags & TRANSACTION_HANDLED) &&
 	    ! ((*i)->flags & TRANSACTION_AUTO)) {
