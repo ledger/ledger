@@ -1,5 +1,7 @@
 #include "ledger.h"
 
+#include <deque>
+
 namespace ledger {
 
 amount_t balance_t::amount(const commodity_t * commodity) const
@@ -30,6 +32,12 @@ balance_t balance_t::value(const std::time_t moment) const
   return temp;
 }
 
+struct compare_amount_commodities {
+  bool operator()(const amount_t * left, const amount_t * right) const {
+    return left->commodity->symbol < right->commodity->symbol;
+  }
+};
+
 void balance_t::write(std::ostream& out,
 		      const int     first_width,
 		      const int     latter_width) const
@@ -40,24 +48,33 @@ void balance_t::write(std::ostream& out,
   if (lwidth == -1)
     lwidth = first_width;
 
+  typedef std::deque<const amount_t *> amounts_deque;
+
+  amounts_deque sorted;
   for (amounts_map::const_iterator i = amounts.begin();
        i != amounts.end();
+       i++)
+    if ((*i).second)
+      sorted.push_back(&(*i).second);
+
+  std::stable_sort(sorted.begin(), sorted.end(),
+		   compare_amount_commodities());
+
+  for (amounts_deque::const_iterator i = sorted.begin();
+       i != sorted.end();
        i++) {
-    if ((*i).second) {
-      int width;
-
-      if (! first) {
-	out << std::endl;
-	width = lwidth;
-      } else {
-	first = false;
-	width = first_width;
-      }
-
-      out.width(width);
-      out.fill(' ');
-      out << std::right << std::string((*i).second);
+    int width;
+    if (! first) {
+      out << std::endl;
+      width = lwidth;
+    } else {
+      first = false;
+      width = first_width;
     }
+
+    out.width(width);
+    out.fill(' ');
+    out << std::right << std::string(**i);
   }
 
   if (first) {
