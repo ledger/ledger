@@ -1,8 +1,8 @@
 CODE   = amount.cc ledger.cc parse.cc reports.cc
 OBJS   = $(patsubst %.cc,%.o,$(CODE))
 CFLAGS = -Wall -ansi -pedantic
-DFLAGS = -O3 -fomit-frame-pointer -mcpu=pentium
-#DFLAGS = -g -DDEBUG=1
+#DFLAGS = -O3 -fomit-frame-pointer -mcpu=pentium
+DFLAGS = -g -DDEBUG=1
 INCS   =
 LIBS   = -lgmpxx -lgmp -lpcre
 

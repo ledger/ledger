@@ -212,19 +212,6 @@ const std::string account::as_str() const
   return full_name;
 }
 
-// Print out the entire ledger that was read in, sorted by date.
-// This can be used to "wash" ugly ledger files.
-
-void book::print(std::ostream& out, regexps_map& regexps,
-		  bool shortcut) const
-{
-  for (entries_list_const_iterator i = entries.begin();
-       i != entries.end();
-       i++)
-    if ((*i)->matches(regexps))
-      (*i)->print(out, shortcut);
-}
-
 mask::mask(const std::string& pat) : exclude(false)
 {
   const char * p = pat.c_str();

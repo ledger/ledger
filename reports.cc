@@ -1,37 +1,64 @@
 #include "ledger.h"
 
-#define LEDGER_VERSION "1.1"
+#define LEDGER_VERSION "1.2"
 
 #include <fstream>
 #include <unistd.h>
 
 namespace ledger {
 
-extern book * parse_ledger(std::istream& in, regexps_map& regexps,
-			   bool compute_balances);
-#ifdef READ_GNUCASH
-extern book * parse_gnucash(std::istream& in, bool compute_balances);
-#endif
-
-extern bool parse_date(const char * date_str, std::time_t * result,
-		       const int year = -1);
-extern void parse_price_setting(const std::string& setting);
-
-
-static bool        show_cleared;
-static bool        show_virtual;
-static bool        get_quotes;
-static bool        show_children;
-static bool        show_sorted;
-static bool        show_empty;
-static bool        show_subtotals;
-static bool        full_names;
+static bool show_cleared   = false;
+static bool show_virtual   = true;
+static bool get_quotes     = false;
+static bool show_children  = false;
+static bool show_sorted    = false;
+static bool show_empty     = false;
+static bool show_subtotals = true;
+static bool full_names     = false;
 
 static std::time_t begin_date;
-static bool        have_beginning;
-static std::time_t end_date;
-static bool        have_ending;
+static bool have_beginning = false;
 
+static std::time_t end_date;
+static bool have_ending = false;
+
+static struct std::tm date_mask;
+static bool have_date_mask = false;
+
+static bool matches_date_range(entry * ent)
+{
+  if (have_beginning && difftime(ent->date, begin_date) < 0)
+    return false;
+
+  if (have_ending && difftime(ent->date, end_date) >= 0)
+    return false;
+
+  if (have_date_mask) {
+    struct std::tm * then = std::localtime(&ent->date);
+
+    if (date_mask.tm_mon != -1 &&
+	date_mask.tm_mon != then->tm_mon)
+      return false;
+
+    if (date_mask.tm_mday != -1 &&
+	date_mask.tm_mday != then->tm_mday)
+      return false;
+
+#if 0
+    // jww (2003-10-10): This causes only certain days of the week to
+    // print, even when it was not included in the mask.
+    if (date_mask.tm_wday != -1 &&
+	date_mask.tm_wday != then->tm_wday)
+      return false;
+#endif
+
+    if (date_mask.tm_year != -1 &&
+	date_mask.tm_year != then->tm_year)
+      return false;
+  }
+
+  return true;
+}
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -78,9 +105,7 @@ void report_balances(std::ostream& out, regexps_map& regexps)
   for (entries_list_iterator i = main_ledger->entries.begin();
        i != main_ledger->entries.end();
        i++) {
-    if ((show_cleared && ! (*i)->cleared) ||
-	(have_beginning && difftime((*i)->date, begin_date) < 0) ||
-	(have_ending && difftime((*i)->date, end_date) >= 0))
+    if ((show_cleared && ! (*i)->cleared) || ! matches_date_range(*i))
       continue;
 
     for (std::list<transaction *>::iterator x = (*i)->xacts.begin();
@@ -177,17 +202,15 @@ void print_register(const std::string& acct_name, std::ostream& out,
   for (entries_list_iterator i = main_ledger->entries.begin();
        i != main_ledger->entries.end();
        i++) {
-    if (! (*i)->matches(regexps))
+    if ((! have_beginning && ! have_ending && ! have_date_mask &&
+	 ! show_cleared && (*i)->cleared) ||
+	! matches_date_range(*i) || ! (*i)->matches(regexps))
       continue;
 
     for (std::list<transaction *>::iterator x = (*i)->xacts.begin();
 	 x != (*i)->xacts.end();
 	 x++) {
-      if ((! have_beginning && ! have_ending &&
-	   ! show_cleared && (*i)->cleared) ||
-	  (have_beginning && difftime((*i)->date, begin_date) < 0) ||
-	  (have_ending && difftime((*i)->date, end_date) >= 0) ||
-	  (! acct_regex.match((*x)->acct->as_str())))
+      if (! acct_regex.match((*x)->acct->as_str()))
 	continue;
 
       char buf[32];
@@ -334,6 +357,25 @@ void equity_ledger(std::ostream& out, regexps_map& regexps)
     equity_entry((*i).second, regexps, out);
 }
 
+// Print out the entire ledger that was read in, sorted by date.
+// This can be used to "wash" ugly ledger files.  It's written here,
+// instead of ledger.cc, in order to access the static globals above.
+
+void book::print(std::ostream& out, regexps_map& regexps,
+		  bool shortcut) const
+{
+  for (entries_list_const_iterator i = entries.begin();
+       i != entries.end();
+       i++) {
+    if ((show_cleared && ! (*i)->cleared) ||
+	! matches_date_range(*i) ||
+	! (*i)->matches(regexps))
+      continue;
+
+    (*i)->print(out, shortcut);
+  }
+}
+
 } // namespace ledger
 
 using namespace ledger;
@@ -344,35 +386,28 @@ static void show_help(std::ostream& out)
     << "usage: ledger [options] COMMAND [options] [REGEXPS]" << std::endl
     << std::endl
     << "ledger options:" << std::endl
-    << "  -C        also show cleared transactions" << std::endl
-    << "  -d DATE   specify an implicit date range (e.g., -d april)"
-    << std::endl
     << "  -b DATE   specify a beginning date" << std::endl
     << "  -e DATE   specify an ending date" << std::endl
     << "  -c        do not show future entries (same as -e TODAY)" << std::endl
+    << "  -C        also show cleared transactions" << std::endl
+    << "  -d DATE   specify a date mask ('-d mon', for all mondays)" << std::endl
     << "  -f FILE   specify pathname of ledger data file" << std::endl
+    << "  -F        print each account's full name" << std::endl
     << "  -h        display this help text" << std::endl
-    << "  -R        do not factor any virtual transactions" << std::endl
-    << "  -V FILE   use virtual mappings listed in FILE" << std::endl
     << "  -i FILE   read the list of inclusion regexps from FILE" << std::endl
-    << "  -p FILE   read the list of prices from FILE" << std::endl
+    << "  -n        do not generate totals for parent accounts" << std::endl
+    << "  -p ARG    set a price, or read prices from a file" << std::endl
     << "  -P        download price quotes from the Internet" << std::endl
-    << "            (works by running the command \"getquote SYMBOL\")"
-    << std::endl
-    << "  -v        display version information" << std::endl
-    << "  -w        print out warnings where applicable" << std::endl
-    << std::endl
+    << "            (works by running the command \"getquote SYMBOL\")" << std::endl
+    << "  -R        do not factor in virtual transactions" << std::endl
+    << "  -s        show sub-accounts in balance totals" << std::endl
+    << "  -S        show empty accounts in balance totals" << std::endl
+    << "  -v        display version information" << std::endl << std::endl
     << "commands:" << std::endl
     << "  balance   show balance totals" << std::endl
     << "  register  display a register for ACCOUNT" << std::endl
     << "  print     print all ledger entries" << std::endl
-    << "  equity    generate equity ledger for all entries" << std::endl
-    << std::endl
-    << "`balance' options:" << std::endl
-    << "  -F        print each account's full name" << std::endl
-    << "  -n        do not generate totals for parent accounts" << std::endl
-    << "  -s        show sub-accounts in balance totals" << std::endl
-    << "  -S        show empty accounts in balance totals" << std::endl;
+    << "  equity    generate equity ledger for all entries" << std::endl;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -387,92 +422,38 @@ int main(int argc, char * argv[])
   regexps_map    regexps;
   int            index;
 
-  have_beginning = false;
-  have_ending    = false;
-  show_cleared   = false;
-  show_virtual   = true;
-  show_children  = false;
-  show_sorted    = false;
-  show_empty     = false;
-  show_subtotals = true;
-  full_names     = false;
-
   // Parse the command-line options
 
   int c;
   while (-1 != (c = getopt(argc, argv, "+b:e:d:cChRV:f:i:p:PvsSEnF"))) {
     switch (char(c)) {
     case 'b':
-    case 'e': {
-      std::time_t when;
-      if (! parse_date(optarg, &when)) {
-	std::cerr << "Error: Bad date string: " << optarg << std::endl;
-	return 1;
-      }
-
-      if (c == 'b') {
-	begin_date     = when;
-	have_beginning = true;
-      } else {
-	end_date       = when;
-	have_ending    = true;
-      }
-      break;
-    }
-
-#if 0
-    case 'd': {
-      if (! parse_date(optarg, &begin_date)) {
-	std::cerr << "Error: Bad date string: " << optarg << std::endl;
-	return 1;
-      }
       have_beginning = true;
-
-      struct std::tm when, then;
-      std::memset(&then, 0, sizeof(struct std::tm));
-
-      std::time_t now = std::time(NULL);
-      struct std::tm * now_tm = std::localtime(&now);
-
-      for (const char ** f = formats; *f; f++) {
-	memset(&when, INT_MAX, sizeof(struct std::tm));
-	if (strptime(optarg, *f, &when)) {
-	  then.tm_hour = 0;
-	  then.tm_min  = 0;
-	  then.tm_sec  = 0;
-
-	  if (when.tm_year != -1)
-	    then.tm_year = when.tm_year + 1;
-	  else
-	    then.tm_year = now_tm->tm_year;
-
-	  if (std::strcmp(*f, "%Y") == 0) {
-	    then.tm_mon  = 0;
-	    then.tm_mday = 1;
-	  } else {
-	    if (when.tm_mon != -1)
-	      then.tm_mon  = when.tm_mon + 1;
-	    else
-	      then.tm_mon = now_tm->tm_mon;
-
-	    if (when.tm_mday != -1)
-	      then.tm_mday = when.tm_mday + 1;
-	    else
-	      then.tm_mday = now_tm->tm_mday;
-	  }
-
-	  end_date = std::mktime(&then);
-	  have_ending = true;
-	  break;
-	}
+      if (! parse_date(optarg, &begin_date)) {
+	std::cerr << "Error: Bad begin date: " << optarg << std::endl;
+	return 1;
       }
       break;
-    }
-#endif
+
+    case 'e':
+      have_ending = true;
+      if (! parse_date(optarg, &end_date)) {
+	std::cerr << "Error: Bad end date: " << optarg << std::endl;
+	return 1;
+      }
+      break;
 
     case 'c':
       end_date = std::time(NULL);
       have_ending = true;
+      break;
+
+    case 'd':
+      have_date_mask = true;
+      if (! parse_date_mask(optarg, &date_mask)) {
+	std::cerr << "Error: Bad date mask: " << optarg << std::endl;
+	return 1;
+      }
       break;
 
     case 'h': show_help(std::cout); break;
@@ -521,26 +502,6 @@ int main(int argc, char * argv[])
   }
 
   index = optind;
-
-#if 0
-  if (have_beginning || have_ending) {
-    std::cout << "Reporting";
-
-    if (have_beginning) {
-      char buf[32];
-      std::strftime(buf, 31, "%Y.%m.%d", std::localtime(&begin_date));
-      std::cout << " from " << buf;
-    }
-
-    if (have_ending) {
-      char buf[32];
-      std::strftime(buf, 31, "%Y.%m.%d", std::localtime(&end_date));
-      std::cout << " until " << buf;
-    }
-
-    std::cout << std::endl;
-  }
-#endif
 
   // A ledger data file must be specified
 

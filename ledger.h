@@ -1,5 +1,5 @@
 #ifndef _LEDGER_H
-#define _LEDGER_H "$Revision: 1.24 $"
+#define _LEDGER_H "$Revision: 1.25 $"
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -293,6 +293,20 @@ inline commodity::commodity(const std::string& sym, bool pre, bool sep,
     main_ledger->commodities.insert(commodities_map_pair(sym, this));
   assert(result.second);
 }
+
+// Parsing routines
+
+extern book * parse_ledger(std::istream& in, regexps_map& regexps,
+			   bool compute_balances);
+#ifdef READ_GNUCASH
+extern book * parse_gnucash(std::istream& in, bool compute_balances);
+#endif
+
+extern bool parse_date_mask(const char * date_str,
+			    struct std::tm * result);
+extern bool parse_date(const char * date_str, std::time_t * result,
+		       const int year = -1);
+extern void parse_price_setting(const std::string& setting);
 
 } // namespace ledger
 

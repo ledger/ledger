@@ -49,38 +49,42 @@ static const char *formats[] = {
   NULL
 };
 
-bool parse_date(const char * date_str, std::time_t * result,
-		const int year = -1)
+bool parse_date_mask(const char * date_str, struct std::tm * result)
+{
+  for (const char ** f = formats; *f; f++) {
+    memset(result, INT_MAX, sizeof(struct std::tm));
+    if (strptime(date_str, *f, result))
+      return true;
+  }
+  return false;
+}
+
+bool parse_date(const char * date_str, std::time_t * result, const int year)
 {
   struct std::tm when;
 
-  std::time_t      now    = std::time(NULL);
-  struct std::tm * now_tm = std::localtime(&now);
+  if (! parse_date_mask(date_str, &when))
+    return false;
 
-  for (const char ** f = formats; *f; f++) {
-    memset(&when, INT_MAX, sizeof(struct std::tm));
-    if (strptime(date_str, *f, &when)) {
-      when.tm_hour = 0;
-      when.tm_min  = 0;
-      when.tm_sec  = 0;
+  static std::time_t now = std::time(NULL);
+  static struct std::tm * now_tm = std::localtime(&now);
 
-      if (when.tm_year == -1)
-	when.tm_year = year == -1 ? now_tm->tm_year : year - 1900;
+  when.tm_hour = 0;
+  when.tm_min  = 0;
+  when.tm_sec  = 0;
 
-      if (std::strcmp(*f, "%Y") == 0) {
-	when.tm_mon  = 0;
-	when.tm_mday = 1;
-      } else {
-	if (when.tm_mon == -1)
-	  when.tm_mon = now_tm->tm_mon;
-	if (when.tm_mday == -1)
-	  when.tm_mday = now_tm->tm_mday;
-      }
-      *result = std::mktime(&when);
-      return true;
-    }
-  }
-  return false;
+  if (when.tm_year == -1)
+    when.tm_year = ((year == -1) ? now_tm->tm_year : (year - 1900));
+
+  if (when.tm_mon == -1)
+    when.tm_mon = now_tm->tm_mon;
+
+  if (when.tm_mday == -1)
+    when.tm_mday = now_tm->tm_mday;
+
+  *result = std::mktime(&when);
+
+  return true;
 }
 
 void parse_price_setting(const std::string& setting)
