@@ -83,133 +83,45 @@ struct format_t
   }
 };
 
-template <typename T>
-struct item_formatter : public item_handler<T> {
-  virtual ~item_formatter() {}
-  virtual void flush() const = 0;
-};
-
-#define COLLAPSED_REGISTER 1	// support collapsed registers
-
-class format_transaction : public item_formatter<transaction_t>
+class format_transactions : public item_handler<transaction_t>
 {
   std::ostream&   output_stream;
   const format_t& first_line_format;
   const format_t& next_lines_format;
-#ifdef COLLAPSED_REGISTER
-  const bool      collapsed;
-#endif
-  const bool      inverted;
-
-  item_predicate<transaction_t> disp_pred;
-
-#ifdef COLLAPSED_REGISTER
-  mutable balance_pair_t  subtotal;
-  mutable unsigned int    count;
-#endif
-  mutable entry_t *	  last_entry;
-  mutable transaction_t * last_xact;
+  entry_t *       last_entry;
 
  public:
-  format_transaction(std::ostream&	_output_stream,
-		     const format_t&	_first_line_format,
-		     const format_t&	_next_lines_format,
-		     const std::string& display_predicate = NULL,
-#ifdef COLLAPSED_REGISTER
-		     const bool	_collapsed	  = false,
-#endif
-		     const bool         _inverted	  = false)
+  format_transactions(std::ostream&   _output_stream,
+		      const format_t& _first_line_format,
+		      const format_t& _next_lines_format)
     : output_stream(_output_stream),
       first_line_format(_first_line_format),
-      next_lines_format(_next_lines_format),
-#ifdef COLLAPSED_REGISTER
-      collapsed(_collapsed),
-#endif
-      inverted(_inverted), disp_pred(display_predicate),
-#ifdef COLLAPSED_REGISTER
-      count(0),
-#endif
-      last_entry(NULL), last_xact(NULL) {}
+      next_lines_format(_next_lines_format), last_entry(NULL) {}
 
-#ifdef COLLAPSED_REGISTER
-  virtual ~format_transaction() {
+  virtual ~format_transactions() {
     flush();
   }
 
-  virtual void flush() const {
-    if (subtotal)
-      report_cumulative_subtotal();
+  virtual void flush() {
     output_stream.flush();
   }
 
-  void report_cumulative_subtotal() const;
-#endif
+  virtual void operator()(transaction_t * xact) {
+    xact->dflags |= TRANSACTION_DISPLAYED;
 
-  virtual void operator()(transaction_t * xact) const;
-};
+    // This makes the assumption that transactions from a single entry
+    // are always grouped together.
 
+    if (last_entry != xact->entry)
+      first_line_format.format_elements(output_stream, details_t(xact));
+    else
+      next_lines_format.format_elements(output_stream, details_t(xact));
 
-class changed_value_filter : public item_formatter<transaction_t>
-{
-  item_formatter<transaction_t> * handler;
-
-  mutable entry_t         modified_entry;
-  mutable transaction_t   modified_xact;
-  mutable transaction_t * last_xact;
-
- public:
-  changed_value_filter(item_formatter<transaction_t> * _handler)
-    : handler(_handler), modified_xact(&modified_entry, NULL),
-      last_xact(NULL) {
-    assert(handler);
-    modified_entry.payee = "Commodities revalued";
-  }
-
-  virtual ~changed_value_filter() {
-    flush();
-    handler->flush();
-    assert(handler);
-    delete handler;
-  }
-
-  virtual void flush() const {
-    (*this)(NULL);
-  }
-
-  virtual void operator()(transaction_t * xact) const {
-    if (last_xact) {
-      balance_t prev_bal, cur_bal;
-
-      format_t::compute_total(prev_bal, details_t(last_xact));
-
-      std::time_t current    = xact ? xact->entry->date : std::time(NULL);
-      std::time_t prev_date  = last_xact->entry->date;
-      last_xact->entry->date = current;
-      format_t::compute_total(cur_bal,  details_t(last_xact));
-      last_xact->entry->date = prev_date;
-
-      if (balance_t diff = cur_bal - prev_bal) {
-	modified_entry.date  = current;
-
-	// jww (2004-08-07): What if there are multiple commodities?
-	assert(diff.amounts.size() == 1);
-	modified_xact.amount = diff.amount();
-	modified_xact.total  = diff;
-	modified_xact.total.negate();
-
-	(*handler)(&modified_xact);
-      }
-    }
-
-    if (xact)
-      (*handler)(xact);
-
-    last_xact = xact;
+    last_entry = xact->entry;
   }
 };
 
-
-class format_account : public item_formatter<account_t>
+class format_account : public item_handler<account_t>
 {
   std::ostream&   output_stream;
   const format_t& format;
@@ -222,10 +134,9 @@ class format_account : public item_formatter<account_t>
 		 const std::string& display_predicate = NULL)
     : output_stream(_output_stream), format(_format),
       disp_pred(display_predicate) {}
-  virtual ~format_account() {}
 
-  virtual void flush() const {
-    output_stream.flush();
+  virtual ~format_account() {
+    flush();
   }
 
   static bool disp_subaccounts_p(const account_t * account,
@@ -239,7 +150,11 @@ class format_account : public item_formatter<account_t>
   static bool display_account(const account_t * account,
 			      const item_predicate<account_t>& disp_pred);
 
-  virtual void operator()(account_t * account) const {
+  virtual void flush() {
+    output_stream.flush();
+  }
+
+  virtual void operator()(account_t * account) {
     if (display_account(account, disp_pred)) {
       format.format_elements(output_stream, details_t(account));
       account->dflags |= ACCOUNT_DISPLAYED;
@@ -248,7 +163,7 @@ class format_account : public item_formatter<account_t>
 };
 
 
-class format_equity : public item_formatter<account_t>
+class format_equity : public item_handler<account_t>
 {
   std::ostream&   output_stream;
   const format_t& first_line_format;
@@ -277,14 +192,14 @@ class format_equity : public item_formatter<account_t>
     flush();
   }
 
-  virtual void flush() const {
+  virtual void flush() {
     account_t summary(NULL, "Equity:Opening Balances");
     summary.value = - total;
     next_lines_format.format_elements(output_stream, details_t(&summary));
     output_stream.flush();
   }
 
-  virtual void operator()(account_t * account) const {
+  virtual void operator()(account_t * account) {
     if (format_account::display_account(account, disp_pred)) {
       next_lines_format.format_elements(output_stream, details_t(account));
       account->dflags |= ACCOUNT_DISPLAYED;

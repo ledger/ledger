@@ -607,7 +607,7 @@ int main(int argc, char * argv[])
 		  xact_display_flags, true, sort_order.get());
   }
   else if (command == "e") {
-    format_transaction formatter(std::cout, format, nformat);
+    format_transactions formatter(std::cout, format, nformat);
 
     for (transactions_list::iterator i = new_entry->transactions.begin();
 	 i != new_entry->transactions.end();
@@ -615,24 +615,32 @@ int main(int argc, char * argv[])
       handle_transaction(*i, formatter, xact_display_flags);
   }
   else {
-    std::auto_ptr<item_formatter<transaction_t> >
-      formatter(new format_transaction(std::cout, format, nformat,
-				       display_predicate,
-#ifdef COLLAPSED_REGISTER
-				       ! show_subtotals,
+    std::auto_ptr<item_handler<transaction_t> >
+      formatter(new format_transactions(std::cout, format, nformat));
+
+    formatter.reset(new filter_transactions(formatter.release(),
+					    display_predicate));
+    formatter.reset(new calc_transactions(formatter.release(),
+					  show_inverted));
+    if (! show_subtotals)
+      formatter.reset(new collapse_transactions(formatter.release()));
+    if (show_expanded)
+      formatter.reset(new subtotal_transactions(formatter.release()));
+#if 0
+    formatter.reset(new interval_transactions(formatter.release(),
+					      0, 0, 9676800));
 #endif
-				       show_inverted));
     if (show_commodities_revalued)
-      formatter.reset(new changed_value_filter(formatter.release()));
+      formatter.reset(new changed_value_transactions(formatter.release()));
 
     if (! sort_order.get()) {
       walk_entries(journal->entries.begin(), journal->entries.end(),
 		   *formatter.get(), predicate, xact_display_flags);
     } else {
       transactions_deque transactions_pool;
+      collect_transactions handler(transactions_pool);
       walk_entries(journal->entries.begin(), journal->entries.end(),
-		   collect_transactions(transactions_pool), predicate,
-		   xact_display_flags);
+		   handler, predicate, xact_display_flags);
       std::stable_sort(transactions_pool.begin(), transactions_pool.end(),
 		       compare_items<transaction_t>(sort_order.get()));
       walk_transactions(transactions_pool.begin(), transactions_pool.end(),

@@ -1,9 +1,151 @@
 #include "walk.h"
+#include "format.h"
 
 namespace ledger {
 
-struct sum_in_account : public item_handler<transaction_t> {
-  virtual void operator()(transaction_t * xact) const {
+void calc_transactions::operator()(transaction_t * xact)
+{
+  if (last_xact)
+    xact->total += last_xact->total;
+
+  if (inverted) {
+    xact->amount.negate();
+    xact->cost.negate();
+  }
+
+  xact->total += *xact;
+  xact->index = last_xact ? last_xact->index + 1 : 0;
+
+  (*handler)(xact);
+
+  if (inverted) {
+    xact->amount.negate();
+    xact->cost.negate();
+  }
+
+  last_xact  = xact;
+}
+
+void collapse_transactions::report_cumulative_subtotal()
+{
+  if (count == 1) {
+    (*handler)(last_xact);
+    return;
+  }
+
+  assert(count > 1);
+
+  transaction_t * total_xact = new transaction_t(NULL, totals_account);
+
+  balance_t value;
+  total_xact->total = subtotal;
+  format_t::compute_total(value, details_t(total_xact));
+  total_xact->total = 0;
+
+  total_xact->entry = last_entry;
+
+  for (amounts_map::const_iterator i = value.amounts.begin();
+       i != value.amounts.end();
+       i++) {
+    total_xact->amount = (*i).second;
+    total_xact->cost   = (*i).second;
+
+    (*handler)(total_xact);
+  }
+
+  xact_temps.push_back(total_xact);
+}
+
+void changed_value_transactions::operator()(transaction_t * xact)
+{
+  if (last_xact) {
+    balance_t	prev_bal;
+    balance_t	cur_bal;
+    std::time_t current   = xact ? xact->entry->date : std::time(NULL);
+    std::time_t prev_date = last_xact->entry->date;
+
+    format_t::compute_total(prev_bal, details_t(last_xact));
+
+    last_xact->entry->date = current;
+    format_t::compute_total(cur_bal,  details_t(last_xact));
+    last_xact->entry->date = prev_date;
+
+    if (balance_t diff = cur_bal - prev_bal) {
+      modified_entry.date  = current;
+
+      // jww (2004-08-07): What if there are multiple commodities?
+      assert(diff.amounts.size() == 1);
+      modified_xact.amount = diff.amount();
+      modified_xact.total  = diff;
+      modified_xact.total.negate();
+
+      (*handler)(&modified_xact);
+    }
+  }
+
+  if (xact)
+    (*handler)(xact);
+
+  last_xact = xact;
+}
+
+void subtotal_transactions::flush()
+{
+  entry_t * entry = new entry_t;
+  entry->date  = start;
+
+  char buf[256];
+  // jww (2004-08-10): allow for a format string here
+  std::strftime(buf, 255, "- %Y/%m/%d", std::gmtime(&finish));
+  entry->payee = buf;
+
+  entry_temps.push_back(entry);
+
+  for (balances_map::iterator i = balances.begin();
+       i != balances.end();
+       i++) {
+    transaction_t * xact = new transaction_t(entry, (*i).first);
+    xact->total = (*i).second;
+    balance_t result;
+    format_t::compute_total(result, details_t(xact));
+    xact->total = 0;
+
+    for (amounts_map::const_iterator j = result.amounts.begin();
+	 j != result.amounts.end();
+	 j++) {
+      xact->amount = (*j).second;
+      xact->cost   = (*j).second;
+
+      (*handler)(xact);
+    }
+
+    xact_temps.push_back(xact);
+  }
+
+  balances.clear();
+}
+
+void subtotal_transactions::operator()(transaction_t * xact)
+{
+  if (balances.size() == 0) {
+    start = finish = xact->entry->date;
+  } else {
+    if (std::difftime(xact->entry->date, start) < 0)
+      start = xact->entry->date;
+    if (std::difftime(xact->entry->date, finish) > 0)
+      finish = xact->entry->date;
+  }
+
+  balances_map::iterator i = balances.find(xact->account);
+  if (i == balances.end())
+    balances.insert(balances_pair(xact->account, *xact));
+  else
+    (*i).second += *xact;
+}
+
+struct sum_in_account : public item_handler<transaction_t>
+{
+  virtual void operator()(transaction_t * xact) {
     xact->account->value += *xact;
   }
 };
