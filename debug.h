@@ -11,7 +11,7 @@
 #define DEBUG_LEVEL RELEASE
 #endif
 
-#if DEBUG_LEVEL >= BETA
+#if DEBUG_LEVEL >= RELEASE
 #include <cassert>
 #endif
 

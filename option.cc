@@ -1,9 +1,10 @@
 #include "option.h"
 #include "debug.h"
-#include "util.h"
 
 #include <iostream>
 #include <cstdarg>
+
+#include "util.h"
 
 option_handler::option_handler(const std::string& label,
 			       const std::string& opt_chars)
