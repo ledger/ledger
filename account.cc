@@ -8,6 +8,8 @@ namespace ledger {
 account_t::~account_t()
 {
   DEBUG_PRINT("ledger.memory.ctors", "dtor account_t");
+  //assert(! data);
+
   for (accounts_map::iterator i = accounts.begin();
        i != accounts.end();
        i++)

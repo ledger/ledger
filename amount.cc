@@ -50,7 +50,7 @@ static struct init_amounts {
     mpz_init(true_value);
     mpz_set_ui(true_value, 1);
   }
-#ifndef NO_CLEANUP
+#ifdef DO_CLEANUP
   ~init_amounts() {
     mpz_clear(true_value);
     mpz_clear(divisor);
@@ -593,8 +593,9 @@ amount_t amount_t::round(unsigned int prec) const
   } else {
     amount_t temp = *this;
     temp._dup();
-    mpz_round(MPZ(temp.quantity), MPZ(temp.quantity), quantity->prec, prec);
-    quantity->prec = prec;
+    mpz_round(MPZ(temp.quantity), MPZ(temp.quantity),
+	      temp.quantity->prec, prec);
+    temp.quantity->prec = prec;
     return temp;
   }
 }
@@ -929,7 +930,8 @@ commodities_map		 commodity_t::commodities;
 commodity_t *            commodity_t::null_commodity =
 			     commodity_t::find_commodity("", true);
 
-#ifndef NO_CLEANUP
+#ifdef DO_CLEANUP
+
 static struct cleanup_commodities
 {
   ~cleanup_commodities() {
@@ -943,7 +945,8 @@ static struct cleanup_commodities
       delete (*i).second;
   }
 } _cleanup;
-#endif
+
+#endif // DO_CLEANUP
 
 commodity_t * commodity_t::find_commodity(const std::string& symbol,
 					  bool auto_create)

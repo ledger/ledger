@@ -24,7 +24,7 @@ CXX    = g++
 
 CFLAGS = -Wall -ansi -pedantic
 #DFLAGS = -O3 -fomit-frame-pointer -DDEBUG_LEVEL=0
-DFLAGS = -g -DDEBUG_LEVEL=4
+DFLAGS = -g -DDEBUG_LEVEL=4 -DDO_CLEANUP
 #DFLAGS = -g -DDEBUG_LEVEL=2 -pg
 
 INCS   = -I/sw/include \

@@ -42,6 +42,10 @@ typedef std::deque<automated_transaction_t *> automated_transactions_deque;
 
 class automated_transactions_t
 {
+#ifdef DEBUG_ENABLED
+  automated_transactions_t(const automated_transactions_t&);
+#endif
+
 public:
   automated_transactions_deque automated_transactions;
 

@@ -16,16 +16,8 @@
 #include <ctime>
 #include <iostream>
 
-#ifdef DEBUG_LEVEL
-#if DEBUG_LEVEL >= 2
 #include "debug.h"
-#elif DEBUG_LEVEL == 0
-#define NO_CLEANUP 1
-#endif
-#endif
-
 #include "amount.h"
-#include "value.h"
 
 namespace ledger {
 
@@ -34,11 +26,6 @@ namespace ledger {
 #define TRANSACTION_VIRTUAL   0x0001
 #define TRANSACTION_BALANCE   0x0002
 #define TRANSACTION_AUTO      0x0004
-
-// These flags are only used during formatting, and are not saved
-#define TRANSACTION_HANDLED   0x0001
-#define TRANSACTION_DISPLAYED 0x0002
-#define TRANSACTION_NO_TOTAL  0x0004
 
 class entry_t;
 class account_t;
@@ -52,24 +39,23 @@ class transaction_t
   amount_t *	 cost;
   unsigned short flags;
   std::string	 note;
-
-  mutable value_t	 total;
-  mutable unsigned int   index;
-  mutable unsigned short dflags;
+  mutable void * data;
 
   transaction_t(account_t * _account)
     : entry(NULL), account(_account), cost(NULL),
-      flags(TRANSACTION_NORMAL), index(0), dflags(0) {}
+      flags(TRANSACTION_NORMAL), data(NULL) {
+  }
 
   transaction_t(account_t *	   _account,
 		const amount_t&    _amount,
 		unsigned int	   _flags = TRANSACTION_NORMAL,
 		const std::string& _note  = "")
     : entry(NULL), account(_account), amount(_amount),
-      cost(NULL), flags(_flags), note(_note), index(0), dflags(0) {}
+      cost(NULL), flags(_flags), note(_note), data(NULL) {
+  }
 
   ~transaction_t() {
-    DEBUG_PRINT("ledger.memory.dtors", "dtor transaction_t");
+    //assert(! data);
     if (cost)
       delete cost;
   }
@@ -91,12 +77,8 @@ class entry_t
   std::string	    payee;
   transactions_list transactions;
 
-  entry_t() : date(-1), state(UNCLEARED) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor entry_t");
-  }
-
+  entry_t() : date(-1), state(UNCLEARED) {}
   ~entry_t() {
-    DEBUG_PRINT("ledger.memory.dtors", "dtor entry_t");
     for (transactions_list::iterator i = transactions.begin();
 	 i != transactions.end();
 	 i++)
@@ -114,9 +96,6 @@ class entry_t
 };
 
 
-#define ACCOUNT_DISPLAYED  0x1
-#define ACCOUNT_TO_DISPLAY 0x2
-
 typedef std::map<const std::string, account_t *> accounts_map;
 typedef std::pair<const std::string, account_t *> accounts_pair;
 
@@ -125,31 +104,21 @@ class account_t
  public:
   typedef unsigned long ident_t;
 
-  account_t *	    parent;
-  std::string	    name;
-  std::string	    note;
-  unsigned short    depth;
-  accounts_map	    accounts;
-  transactions_list transactions;
-
-  mutable value_t	 value;
-  mutable value_t	 total;
-  mutable unsigned int   count;	// transactions counted toward total
-  mutable unsigned int   subcount;
-  mutable ident_t        ident;
-  mutable unsigned short dflags;
-  mutable std::string	 _fullname;
-
-  static ident_t next_ident;
+  account_t *	      parent;
+  std::string	      name;
+  std::string	      note;
+  unsigned short      depth;
+  accounts_map	      accounts;
+  transactions_list   transactions;
+  mutable void *      data;
+  mutable ident_t     ident;
+  mutable std::string _fullname;
 
   account_t(account_t *        _parent,
 	    const std::string& _name = "",
 	    const std::string& _note = "")
     : parent(_parent), name(_name), note(_note),
-      depth(parent ? parent->depth + 1 : 0),
-      subcount(0), ident(0), dflags(0) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor account_t");
-  }
+      depth(parent ? parent->depth + 1 : 0), data(NULL), ident(0) {}
 
   ~account_t();
 
@@ -198,10 +167,8 @@ class journal_t
   mutable accounts_map accounts_cache;
 
   journal_t() {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor journal_t");
     master = new account_t(NULL, "");
   }
-
   ~journal_t();
 
   void add_account(account_t * acct) {

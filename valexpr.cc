@@ -1,4 +1,5 @@
 #include "valexpr.h"
+#include "walk.h"
 #include "format.h"
 #include "error.h"
 #include "datetime.h"
@@ -83,8 +84,8 @@ void value_expr_t::compute(value_t& result, const details_t& details,
   case AMOUNT:
     if (details.xact)
       result = details.xact->amount;
-    else if (details.account)
-      result = details.account->value;
+    else if (details.account && ACCT_DATA(details.account))
+      result = ACCT_DATA(details.account)->value;
     break;
 
   case COST:
@@ -94,37 +95,37 @@ void value_expr_t::compute(value_t& result, const details_t& details,
       else
 	result = details.xact->amount;
     }
-    else if (details.account) {
-      result = details.account->value.cost();
+    else if (details.account && ACCT_DATA(details.account)) {
+      result = ACCT_DATA(details.account)->value.cost();
     }
     break;
 
   case TOTAL:
-    if (details.xact)
-      result = details.xact->total;
-    else if (details.account)
-      result = details.account->total;
+    if (details.xact && XACT_DATA(details.xact))
+      result = XACT_DATA(details.xact)->total;
+    else if (details.account && ACCT_DATA(details.account))
+      result = ACCT_DATA(details.account)->total;
     break;
   case COST_TOTAL:
-    if (details.xact)
-      result = details.xact->total.cost();
-    else if (details.account)
-      result = details.account->total.cost();
+    if (details.xact && XACT_DATA(details.xact))
+      result = XACT_DATA(details.xact)->total.cost();
+    else if (details.account && ACCT_DATA(details.account))
+      result = ACCT_DATA(details.account)->total.cost();
     break;
 
   case VALUE_EXPR:
-#ifdef NO_CLEANUP
-    assert(format_t::value_expr);
-#else
+#ifdef DO_CLEANUP
     assert(format_t::value_expr.get());
+#else
+    assert(format_t::value_expr);
 #endif
     format_t::value_expr->compute(result, details);
     break;
   case TOTAL_EXPR:
-#ifdef NO_CLEANUP
-    assert(format_t::total_expr);
-#else
+#ifdef DO_CLEANUP
     assert(format_t::total_expr.get());
+#else
+    assert(format_t::total_expr);
 #endif
     format_t::total_expr->compute(result, details);
     break;
@@ -173,17 +174,17 @@ void value_expr_t::compute(value_t& result, const details_t& details,
     break;
 
   case INDEX:
-    if (details.xact)
-      result = details.xact->index + 1;
-    else if (details.account)
-      result = details.account->subcount;
+    if (details.xact && XACT_DATA(details.xact))
+      result = XACT_DATA(details.xact)->index + 1;
+    else if (details.account && ACCT_DATA(details.account))
+      result = ACCT_DATA(details.account)->subcount;
     break;
 
   case COUNT:
-    if (details.xact)
-      result = details.xact->index + 1;
-    else if (details.account)
-      result = details.account->count;
+    if (details.xact && XACT_DATA(details.xact))
+      result = XACT_DATA(details.xact)->index + 1;
+    else if (details.account && ACCT_DATA(details.account))
+      result = ACCT_DATA(details.account)->count;
     break;
 
   case DEPTH:
@@ -194,15 +195,17 @@ void value_expr_t::compute(value_t& result, const details_t& details,
     break;
 
   case F_ARITH_MEAN:
-    if (details.xact) {
+    if (details.xact && XACT_DATA(details.xact)) {
       assert(left);
       left->compute(result, details);
-      result /= amount_t(details.xact->index + 1);
+      result /= amount_t(XACT_DATA(details.xact)->index + 1);
     }
-    else if (details.account && details.account->count) {
+    else if (details.account &&
+	     ACCT_DATA(details.account) &&
+	     ACCT_DATA(details.account)->count) {
       assert(left);
       left->compute(result, details);
-      result /= amount_t(details.account->count);
+      result /= amount_t(ACCT_DATA(details.account)->count);
     }
     break;
 

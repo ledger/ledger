@@ -39,7 +39,7 @@ namespace {
   TIMER_DEF(read_cache,	    "reading cache file");
 }
 
-#ifdef NO_CLEANUP
+#ifndef DO_CLEANUP
 
 #define auto_ptr bogus_auto_ptr
 
@@ -71,7 +71,7 @@ namespace std {
   };
 }
 
-#endif // NO_CLEANUP
+#endif // !DO_CLEANUP
 
 static void
 regexps_to_predicate(std::list<std::string>::const_iterator begin,
@@ -369,10 +369,10 @@ int main(int argc, char * argv[], char * envp[])
   // Setup the values of %t and %T, used in format strings
 
   try {
-#ifdef NO_CLEANUP
-    format_t::value_expr = parse_value_expr(config->value_expr);
-#else
+#ifdef DO_CLEANUP
     format_t::value_expr.reset(parse_value_expr(config->value_expr));
+#else
+    format_t::value_expr = parse_value_expr(config->value_expr);
 #endif
   }
   catch (const value_expr_error& err) {
@@ -382,10 +382,10 @@ int main(int argc, char * argv[], char * envp[])
   }
 
   try {
-#ifdef NO_CLEANUP
-    format_t::total_expr = parse_value_expr(config->total_expr);
-#else
+#ifdef DO_CLEANUP
     format_t::total_expr.reset(parse_value_expr(config->total_expr));
+#else
+    format_t::total_expr = parse_value_expr(config->total_expr);
 #endif
   }
   catch (const value_expr_error& err) {
@@ -589,12 +589,14 @@ int main(int argc, char * argv[], char * envp[])
     walk_accounts(journal->master, acct_formatter, sort_order.get());
     acct_formatter.flush();
 
-    journal->master->value = journal->master->total;
+    if (journal->master->data) {
+      ACCT_DATA(journal->master)->value = ACCT_DATA(journal->master)->total;
 
-    if (journal->master->dflags & ACCOUNT_TO_DISPLAY) {
-      std::string end_format = "--------------------\n";
-      format.reset(end_format + f);
-      format.format_elements(OUT(), details_t(journal->master));
+      if (ACCT_DATA(journal->master)->dflags & ACCOUNT_TO_DISPLAY) {
+	std::string end_format = "--------------------\n";
+	format.reset(end_format + f);
+	format.format_elements(OUT(), details_t(journal->master));
+      }
     }
   }
   else if (command == "E") {
@@ -605,13 +607,14 @@ int main(int argc, char * argv[], char * envp[])
     acct_formatter.flush();
   }
 
-#ifndef NO_CLEANUP
+#ifdef DO_CLEANUP
   // The transaction display flags (dflags) are not recorded in the
   // binary cache, and only need to be cleared if the transactions
   // are to be displayed a second time.
-  clear_display_flags cleanup;
-  walk_entries(journal->entries, cleanup);
-  cleanup.flush();
+  clear_transaction_data xact_cleanup;
+  walk_entries(journal->entries, xact_cleanup);
+  clear_account_data acct_cleanup;
+  walk_accounts(journal->master, acct_cleanup);
 #endif
 
   TIMER_STOP(report_gen);

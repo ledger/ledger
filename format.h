@@ -54,12 +54,12 @@ struct format_t
 
   static std::string date_format;
 
-#ifdef NO_CLEANUP
-  static value_expr_t * value_expr;
-  static value_expr_t * total_expr;
-#else
+#ifdef DO_CLEANUP
   static std::auto_ptr<value_expr_t> value_expr;
   static std::auto_ptr<value_expr_t> total_expr;
+#else
+  static value_expr_t * value_expr;
+  static value_expr_t * total_expr;
 #endif
 
   format_t(const std::string& _format) : elements(NULL) {
@@ -80,19 +80,19 @@ struct format_t
   void format_elements(std::ostream& out, const details_t& details) const;
 
   static void compute_value(value_t& result, const details_t& details) {
-#ifdef NO_CLEANUP
-    if (value_expr)
-#else
+#ifdef DO_CLEANUP
     if (value_expr.get())
+#else
+    if (value_expr)
 #endif
       value_expr->compute(result, details);
   }
 
   static void compute_total(value_t& result, const details_t& details) {
-#ifdef NO_CLEANUP
-    if (total_expr)
-#else
+#ifdef DO_CLEANUP
     if (total_expr.get())
+#else
+    if (total_expr)
 #endif
       total_expr->compute(result, details);
   }
@@ -118,14 +118,17 @@ class format_transactions : public item_handler<transaction_t>
   }
 
   virtual void operator()(transaction_t * xact) {
-    if (! (xact->dflags & TRANSACTION_DISPLAYED)) {
+    if (! xact->data ||
+	! (XACT_DATA(xact)->dflags & TRANSACTION_DISPLAYED)) {
       if (last_entry != xact->entry) {
 	first_line_format.format_elements(output_stream, details_t(xact));
 	last_entry = xact->entry;
       } else {
 	next_lines_format.format_elements(output_stream, details_t(xact));
       }
-      xact->dflags |= TRANSACTION_DISPLAYED;
+      if (! xact->data)
+	xact->data = new transaction_data_t;
+      XACT_DATA(xact)->dflags |= TRANSACTION_DISPLAYED;
     }
   }
 };
@@ -162,10 +165,14 @@ class format_account : public item_handler<account_t>
   virtual void operator()(account_t * account) {
     if (display_account(account, disp_pred)) {
       if (! account->parent) {
-	account->dflags |= ACCOUNT_TO_DISPLAY;
+	if (! account->data)
+	  account->data = new account_data_t;
+	ACCT_DATA(account)->dflags |= ACCOUNT_TO_DISPLAY;
       } else {
 	format.format_elements(output_stream, details_t(account));
-	account->dflags |= ACCOUNT_DISPLAYED;
+	if (! account->data)
+	  account->data = new account_data_t;
+	ACCT_DATA(account)->dflags |= ACCOUNT_DISPLAYED;
       }
     }
   }
@@ -198,8 +205,10 @@ class format_equity : public item_handler<account_t>
 
   virtual void flush() {
     account_t summary(NULL, "Equity:Opening Balances");
-    summary.value = total;
-    summary.value.negate();
+    std::auto_ptr<account_data_t> acct_data(new account_data_t);
+    summary.data = acct_data.get();
+    ((account_data_t *) summary.data)->value = total;
+    ((account_data_t *) summary.data)->value.negate();
     next_lines_format.format_elements(output_stream, details_t(&summary));
     output_stream.flush();
   }
@@ -207,8 +216,11 @@ class format_equity : public item_handler<account_t>
   virtual void operator()(account_t * account) {
     if (format_account::display_account(account, disp_pred)) {
       next_lines_format.format_elements(output_stream, details_t(account));
-      account->dflags |= ACCOUNT_DISPLAYED;
-      total += account->value;
+      if (! account->data)
+	account->data = new account_data_t;
+      else
+	total += ACCT_DATA(account)->value;
+      ACCT_DATA(account)->dflags |= ACCOUNT_DISPLAYED;
     }
   }
 };

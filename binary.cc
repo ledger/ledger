@@ -9,7 +9,7 @@
 namespace ledger {
 
 const unsigned long	   binary_magic_number = 0xFFEED765;
-static const unsigned long format_version      = 0x00020011;
+static const unsigned long format_version      = 0x00020012;
 
 bool binary_parser_t::test(std::istream& in) const
 {

@@ -21,7 +21,7 @@ std::string partial_account_name(const account_t *  account)
   for (const account_t * acct = account;
        acct && acct->parent;
        acct = acct->parent) {
-    if (acct->dflags & ACCOUNT_DISPLAYED)
+    if (acct->data && ACCT_DATA(acct)->dflags & ACCOUNT_DISPLAYED)
       break;
 
     if (name.empty())
@@ -35,12 +35,12 @@ std::string partial_account_name(const account_t *  account)
 
 std::string format_t::date_format = "%Y/%m/%d";
 
-#ifdef NO_CLEANUP
-value_expr_t * format_t::value_expr = NULL;
-value_expr_t * format_t::total_expr = NULL;
-#else
+#ifdef DO_CLEANUP
 std::auto_ptr<value_expr_t> format_t::value_expr;
 std::auto_ptr<value_expr_t> format_t::total_expr;
+#else
+value_expr_t * format_t::value_expr = NULL;
+value_expr_t * format_t::total_expr = NULL;
 #endif
 
 element_t * format_t::parse_elements(const std::string& fmt)
@@ -186,12 +186,12 @@ void format_t::format_elements(std::ostream&    out,
     case element_t::VALUE_EXPR: {
       value_expr_t * expr = NULL;
       switch (elem->type) {
-#ifdef NO_CLEANUP
-      case element_t::VALUE: expr = value_expr; break;
-      case element_t::TOTAL: expr = total_expr; break;
-#else
+#ifdef DO_CLEANUP
       case element_t::VALUE: expr = value_expr.get(); break;
       case element_t::TOTAL: expr = total_expr.get(); break;
+#else
+      case element_t::VALUE: expr = value_expr; break;
+      case element_t::TOTAL: expr = total_expr; break;
 #endif
       case element_t::VALUE_EXPR: expr = elem->val_expr; break;
 
@@ -336,7 +336,7 @@ void format_t::format_elements(std::ostream&    out,
       for (const account_t * acct = details.account;
 	   acct;
 	   acct = acct->parent)
-	if (acct->dflags & ACCOUNT_DISPLAYED) {
+	if (acct->data && ACCT_DATA(acct)->dflags & ACCOUNT_DISPLAYED) {
 	  if (elem->min_width > 0 || elem->max_width > 0)
 	    out.width(elem->min_width > elem->max_width ?
 		      elem->min_width : elem->max_width);
@@ -393,7 +393,7 @@ bool format_account::display_account(const account_t * account,
 				     const item_predicate<account_t>& disp_pred)
 {
   // Never display an account that has already been displayed.
-  if (account->dflags & ACCOUNT_DISPLAYED)
+  if (account->data && ACCT_DATA(account)->dflags & ACCOUNT_DISPLAYED)
     return false;
 
   // At this point, one of two possibilities exists: the account is a

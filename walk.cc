@@ -20,11 +20,14 @@ void sort_transactions::flush()
 
 void calc_transactions::operator()(transaction_t * xact)
 {
-  if (last_xact) {
-    xact->total += last_xact->total;
-    xact->index = last_xact->index + 1;
+  if (! xact->data)
+    xact->data = new transaction_data_t;
+
+  if (last_xact && last_xact->data) {
+    XACT_DATA(xact)->total += XACT_DATA(last_xact)->total;
+    XACT_DATA(xact)->index = XACT_DATA(last_xact)->index + 1;
   } else {
-    xact->index = 0;
+    XACT_DATA(xact)->index = 0;
   }
 
   if (inverted) {
@@ -33,8 +36,8 @@ void calc_transactions::operator()(transaction_t * xact)
       xact->cost->negate();
   }
 
-  if (! (xact->dflags & TRANSACTION_NO_TOTAL))
-    xact->total += *xact;
+  if (! (XACT_DATA(xact)->dflags & TRANSACTION_NO_TOTAL))
+    XACT_DATA(xact)->total += *xact;
 
   (*handler)(xact);
 
@@ -47,6 +50,80 @@ void calc_transactions::operator()(transaction_t * xact)
   last_xact = xact;
 }
 
+
+static void handle_value(const value_t& value, account_t * account,
+			 entry_t * entry, unsigned int flags,
+			 transactions_deque& temps,
+			 item_handler<transaction_t> * handler)
+{
+  balance_t * bal = NULL;
+
+  switch (value.type) {
+  case value_t::BOOLEAN:
+  case value_t::INTEGER:
+  case value_t::AMOUNT: {
+    transaction_t * xact = new transaction_t(account);
+    temps.push_back(xact);
+
+    xact->entry   = entry;
+    switch (value.type) {
+    case value_t::BOOLEAN:
+      xact->amount  = *((bool *) value.data);
+      break;
+    case value_t::INTEGER:
+      xact->amount  = *((unsigned int *) value.data);
+      break;
+    case value_t::AMOUNT:
+      xact->amount  = *((amount_t *) value.data);
+      break;
+    default:
+      assert(0);
+      break;
+    }
+
+    if (flags) {
+      if (! xact->data)
+	xact->data = new transaction_data_t;
+      XACT_DATA(xact)->dflags |= flags;
+    }
+
+    (*handler)(xact);
+    break;
+  }
+
+  case value_t::BALANCE_PAIR:
+    bal = &((balance_pair_t *) value.data)->quantity;
+    // fall through...
+
+  case value_t::BALANCE:
+    if (! bal)
+      bal = (balance_t *) value.data;
+
+    for (amounts_map::const_iterator i = bal->amounts.begin();
+	 i != bal->amounts.end();
+	 i++) {
+      transaction_t * xact = new transaction_t(account);
+      temps.push_back(xact);
+
+      xact->entry   = entry;
+      xact->amount  = (*i).second;
+
+      if (flags) {
+	if (! xact->data)
+	  xact->data = new transaction_data_t;
+	XACT_DATA(xact)->dflags |= flags;
+      }
+
+      (*handler)(xact);
+    }
+    break;
+
+  default:
+    assert(0);
+    break;
+  }
+}
+
 void collapse_transactions::report_cumulative_subtotal()
 {
   if (count == 1) {
@@ -54,23 +131,12 @@ void collapse_transactions::report_cumulative_subtotal()
   } else {
     assert(count > 1);
 
-    totals_account->total = subtotal;
+    if (! totals_account->data)
+      totals_account->data = new account_data_t;
+    ACCT_DATA(totals_account)->total = subtotal;
     value_t result;
     format_t::compute_total(result, details_t(totals_account));
-
-#if 0
-    for (amounts_map::const_iterator i = result.amounts.begin();
-	 i != result.amounts.end();
-	 i++) {
-      transaction_t * total_xact = new transaction_t(totals_account);
-      xact_temps.push_back(total_xact);
-
-      total_xact->entry  = last_entry;
-      total_xact->amount = (*i).second;
-
-      (*handler)(total_xact);
-    }
-#endif
+    handle_value(result, totals_account, last_entry, 0, xact_temps, handler);
   }
 
   subtotal = 0;
@@ -99,26 +165,17 @@ void changed_value_transactions::operator()(transaction_t * xact)
       entry->payee = "Commodities revalued";
       entry->date  = current;
 
-#if 0
-      for (amounts_map::const_iterator i = diff.amounts.begin();
-	   i != diff.amounts.end();
-	   i++) {
-	transaction_t * temp_xact = new transaction_t(NULL);
-	xact_temps.push_back(temp_xact);
-
-	temp_xact->entry   = entry;
-	temp_xact->amount  = (*i).second;
-	temp_xact->dflags |= TRANSACTION_NO_TOTAL;
-
-	(*handler)(temp_xact);
-      }
-#endif
+      handle_value(cur_bal, NULL, entry, TRANSACTION_NO_TOTAL, xact_temps,
+		   handler);
     }
   }
 
   if (xact) {
-    if (changed_values_only)
-      xact->dflags |= TRANSACTION_DISPLAYED;
+    if (changed_values_only) {
+      if (! xact->data)
+	xact->data = new transaction_data_t;
+      XACT_DATA(xact)->dflags |= TRANSACTION_DISPLAYED;
+    }
 
     (*handler)(xact);
   }
@@ -151,27 +208,23 @@ void subtotal_transactions::flush(const char * spec_fmt)
   for (balances_map::iterator i = balances.begin();
        i != balances.end();
        i++) {
-    entry->date = finish;
-    transaction_t temp((*i).first);
-    temp.entry = entry;
-    temp.total = (*i).second;
     value_t result;
-    format_t::compute_total(result, details_t(&temp));
+
+    entry->date = finish;
+    {
+      transaction_t temp((*i).first);
+      temp.entry = entry;
+      {
+	std::auto_ptr<transaction_data_t> xact_data(new transaction_data_t);
+	temp.data = xact_data.get();
+	((transaction_data_t *) temp.data)->total = (*i).second;
+	format_t::compute_total(result, details_t(&temp));
+      }
+      temp.data = NULL;
+    }
     entry->date = start;
 
-#if 0
-    for (amounts_map::const_iterator j = result.amounts.begin();
-	 j != result.amounts.end();
-	 j++) {
-      transaction_t * xact = new transaction_t((*i).first);
-      xact_temps.push_back(xact);
-
-      xact->entry  = entry;
-      xact->amount = (*j).second;
-
-      (*handler)(xact);
-    }
-#endif
+    handle_value(result, (*i).first, entry, 0, xact_temps, handler);
   }
 
   balances.clear();
