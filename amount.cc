@@ -1,6 +1,7 @@
 #include "ledger.h"
 
 #include <sstream>
+#include <cstdio>
 #include <gmp.h>                // GNU multi-precision library
 
 namespace ledger {
