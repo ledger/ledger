@@ -16,6 +16,7 @@
 
 import sys
 import os
+import string
 
 from ledger import *
 
@@ -72,22 +73,31 @@ if command == "e":
     if new_entry is None:
 	sys.exit (1)
 
+# Compile the format string
+
+if config.format_string:
+    format = config.format_string
+elif command == "b":
+    format = config.balance_format
+elif command == "r":
+    format = config.register_format
+elif command == "E":
+    format = config.equity_format
+else:
+    format = config.print_format
+
 class FormatTransaction (TransactionHandler):
     last_entry = None
     output     = None
 
-    def __init__ (self, fmt = None):
-	if fmt is None:
-	    self.formatter  = config.format
-	    self.nformatter = config.nformat
-	else:
-	    try:
-		i = string.index (fmt, '%/')
-		self.formatter  = Format (fmt[: i])
-		self.nformatter = Format (fmt[i + 2 :])
-	    except ValueError:
-		self.formatter  = Format (fmt)
-		self.nformatter = None
+    def __init__ (self, fmt):
+	try:
+	    i = string.index (fmt, '%/')
+	    self.formatter  = Format (fmt[: i])
+	    self.nformatter = Format (fmt[i + 2 :])
+	except ValueError:
+	    self.formatter  = Format (fmt)
+	    self.nformatter = None
 
 	self.last_entry = None
 
@@ -107,7 +117,7 @@ class FormatTransaction (TransactionHandler):
 
     def __call__ (self, xact):
 	if self.nformatter is not None and self.last_entry is not None and \
-	   xact.entry.payee == self.last_entry.payee:
+	   xact.entry == self.last_entry:
 	    self.output.write(self.nformatter.format(xact))
 	else:
 	    self.output.write(self.formatter.format(xact))
@@ -116,7 +126,7 @@ class FormatTransaction (TransactionHandler):
 if command == "b" or command == "E":
     handler = SetAccountValue()
 else:
-    handler = FormatTransaction()
+    handler = FormatTransaction(format)
 
 if not (command == "b" or command == "E"):
     if config.display_predicate:

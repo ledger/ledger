@@ -90,11 +90,13 @@ inline bool transaction_has_xdata(const transaction_t& xact) {
 }
 
 extern std::list<transaction_xdata_t> transactions_xdata;
+extern std::list<void **>	      transactions_xdata_ptrs;
 
 inline transaction_xdata_t& transaction_xdata(const transaction_t& xact) {
   if (! xact.data) {
     transactions_xdata.push_back(transaction_xdata_t());
     xact.data = &transactions_xdata.back();
+    transactions_xdata_ptrs.push_back(&xact.data);
   }
   return *((transaction_xdata_t *) xact.data);
 }
@@ -109,7 +111,6 @@ inline void walk_transactions(transactions_list::iterator begin,
 			      item_handler<transaction_t>& handler) {
   for (transactions_list::iterator i = begin; i != end; i++)
     handler(**i);
-  transactions_xdata.clear();
 }
 
 inline void walk_transactions(transactions_list& list,
@@ -122,7 +123,6 @@ inline void walk_transactions(transactions_deque::iterator begin,
 			      item_handler<transaction_t>& handler) {
   for (transactions_deque::iterator i = begin; i != end; i++)
     handler(**i);
-  transactions_xdata.clear();
 }
 
 inline void walk_transactions(transactions_deque& deque,
@@ -140,6 +140,15 @@ inline void walk_entries(entries_list::iterator       begin,
 inline void walk_entries(entries_list& list,
 			 item_handler<transaction_t>& handler) {
   walk_entries(list.begin(), list.end(), handler);
+}
+
+inline void clear_transactions_xdata() {
+  transactions_xdata.clear();
+
+  for (std::list<void **>::iterator i = transactions_xdata_ptrs.begin();
+       i != transactions_xdata_ptrs.end();
+       i++)
+    **i = NULL;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -414,11 +423,13 @@ inline bool account_has_xdata(const account_t& account) {
 }
 
 extern std::list<account_xdata_t> accounts_xdata;
+extern std::list<void **>	  accounts_xdata_ptrs;
 
 inline account_xdata_t& account_xdata(const account_t& account) {
   if (! account.data) {
     accounts_xdata.push_back(account_xdata_t());
     account.data = &accounts_xdata.back();
+    accounts_xdata_ptrs.push_back(&account.data);
   }
   return *((account_xdata_t *) account.data);
 }
@@ -476,16 +487,28 @@ inline void walk_accounts(account_t&		   account,
     for (accounts_map::const_iterator i = account.accounts.begin();
 	 i != account.accounts.end();
 	 i++)
-      walk_accounts(*(*i).second, handler);
+      walk_accounts(*(*i).second, handler, NULL);
   }
-  accounts_xdata.clear();
 }
 
 inline void walk_accounts(account_t&		   account,
 			  item_handler<account_t>& handler,
 			  const std::string&       sort_string) {
-  std::auto_ptr<value_expr_t> sort_order(parse_value_expr(sort_string));
-  walk_accounts(account, handler, sort_order.get());
+  if (! sort_string.empty()) {
+    std::auto_ptr<value_expr_t> sort_order(parse_value_expr(sort_string));
+    walk_accounts(account, handler, sort_order.get());
+  } else {
+    walk_accounts(account, handler);
+  }
+}
+
+inline void clear_accounts_xdata() {
+  accounts_xdata.clear();
+
+  for (std::list<void **>::iterator i = accounts_xdata_ptrs.begin();
+       i != accounts_xdata_ptrs.end();
+       i++)
+    **i = NULL;
 }
 
 } // namespace ledger

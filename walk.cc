@@ -4,7 +4,10 @@
 namespace ledger {
 
 std::list<transaction_xdata_t> transactions_xdata;
+std::list<void **>	       transactions_xdata_ptrs;
+
 std::list<account_xdata_t>     accounts_xdata;
+std::list<void **>	       accounts_xdata_ptrs;
 
 void sort_transactions::flush()
 {

@@ -152,7 +152,7 @@ bool finalize_entry(entry_t * entry)
 
   value_t balance;
 
-  bool first = true;
+  bool no_amounts = true;
   for (transactions_list::const_iterator x = entry->transactions.begin();
        x != entry->transactions.end();
        x++)
@@ -160,14 +160,18 @@ bool finalize_entry(entry_t * entry)
 	((*x)->flags & TRANSACTION_BALANCE)) {
       amount_t * p = (*x)->cost ? (*x)->cost : &(*x)->amount;
       if (*p) {
-	if (first) {
+	if (no_amounts) {
 	  balance = *p;
-	  first = false;
+	  no_amounts = false;
 	} else {
 	  balance += *p;
 	}
       }
     }
+
+  // If it's a null entry, then let the user have their fun
+  if (no_amounts)
+    return true;
 
   // If one transaction of a two-line transaction is of a different
   // commodity than the others, and it has no per-unit price,

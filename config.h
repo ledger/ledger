@@ -36,6 +36,12 @@ struct config_t
   std::string   display_predicate;
   std::string   report_interval;
   std::string   format_string;
+  std::string   balance_format;
+  std::string   register_format;
+  std::string   plot_value_format;
+  std::string   plot_total_format;
+  std::string   print_format;
+  std::string   equity_format;
   std::string   date_format;
   std::string   sort_string;
   std::string   value_expr;
@@ -51,13 +57,8 @@ struct config_t
   bool		show_revalued;
   bool		show_revalued_only;
   bool		download_quotes;
-
-  // These settings require processing of the above.
-
   bool          use_cache;
   bool          cache_dirty;
-  format_t      format;
-  format_t      nformat;
 
   config_t();
   config_t(const config_t&) {

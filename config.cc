@@ -6,16 +6,6 @@
 
 namespace ledger {
 
-std::string bal_fmt	 = "%20T  %2_%-n\n";
-std::string reg_fmt
-  = "%D %-.20P %-.22N %12.66t %12.80T\n%/%32|%-.22N %12.66t %12.80T\n";
-std::string plot_value_fmt = "%D %t\n";
-std::string plot_total_fmt = "%D %T\n";
-std::string print_fmt
-  = "\n%D %X%C%P\n    %-34N  %12o\n%/    %-34N  %12o\n";
-std::string equity_fmt
-  = "\n%D %X%C%P\n%/    %-34N  %12t\n";
-
 config_t	    config;
 std::list<option_t> config_options;
 
@@ -31,6 +21,14 @@ config_t::config_t()
   value_expr	     = "a";
   total_expr	     = "O";
   pricing_leeway     = 24 * 3600;
+  balance_format     = "%20T  %2_%-n\n";
+  register_format    = ("%D %-.20P %-.22N %12.66t %12.80T\n%/"
+			"%32|%-.22N %12.66t %12.80T\n");
+  plot_value_format  = "%D %t\n";
+  plot_total_format  = "%D %T\n";
+  print_format       = "\n%D %X%C%P\n    %-34N  %12o\n%/    %-34N  %12o\n";
+  equity_format      = "\n%D %X%C%P\n%/    %-34N  %12t\n";
+
   show_collapsed     = false;
   show_subtotal      = false;
   show_related       = false;
@@ -200,33 +198,6 @@ void config_t::process_options(const std::string&     command,
 
   if (format_t::date_format.empty() && ! date_format.empty())
     format_t::date_format = date_format;
-
-  // Compile the format strings
-
-  const char * f;
-  if (! format_string.empty())
-    f = format_string.c_str();
-  else if (command == "b")
-    f = bal_fmt.c_str();
-  else if (command == "r")
-    f = reg_fmt.c_str();
-  else if (command == "E")
-    f = equity_fmt.c_str();
-  else
-    f = print_fmt.c_str();
-
-  std::string first_line_format;
-  std::string next_lines_format;
-
-  if (const char * p = std::strstr(f, "%/")) {
-    first_line_format = std::string(f, 0, p - f);
-    next_lines_format = std::string(p + 2);
-  } else {
-    first_line_format = next_lines_format = f;
-  }
-
-  format.reset(first_line_format);
-  nformat.reset(next_lines_format);
 }
 
 void parse_ledger_data(journal_t * journal,
@@ -464,27 +435,27 @@ OPT_BEGIN(date_format, "y:") {
 } OPT_END(date_format);
 
 OPT_BEGIN(balance_format, ":") {
-  bal_fmt = optarg;
+  config.balance_format = optarg;
 } OPT_END(balance_format);
 
 OPT_BEGIN(register_format, ":") {
-  reg_fmt = optarg;
+  config.register_format = optarg;
 } OPT_END(register_format);
 
 OPT_BEGIN(plot_value_format, ":") {
-  plot_value_fmt = optarg;
+  config.plot_value_format = optarg;
 } OPT_END(plot_value_format);
 
 OPT_BEGIN(plot_total_format, ":") {
-  plot_total_fmt = optarg;
+  config.plot_total_format = optarg;
 } OPT_END(plot_total_format);
 
 OPT_BEGIN(print_format, ":") {
-  print_fmt = optarg;
+  config.print_format = optarg;
 } OPT_END(print_format);
 
 OPT_BEGIN(equity_format, ":") {
-  equity_fmt = optarg;
+  config.equity_format = optarg;
 } OPT_END(equity_format);
 
 OPT_BEGIN(empty, "E") {
@@ -553,12 +524,12 @@ OPT_BEGIN(total_expr, "T:") {
 
 OPT_BEGIN(value_data, "j") {
   config.value_expr    = "S" + config.value_expr;
-  config.format_string = plot_value_fmt;
+  config.format_string = config.plot_value_format;
 } OPT_END(value_data);
 
 OPT_BEGIN(total_data, "J") {
   config.total_expr    = "S" + config.total_expr;
-  config.format_string = plot_total_fmt;
+  config.format_string = config.plot_total_format;
 } OPT_END(total_data);
 
 //////////////////////////////////////////////////////////////////////
@@ -674,6 +645,12 @@ void export_config()
     .def_readwrite("display_predicate", &config_t::display_predicate)
     .def_readwrite("report_interval", &config_t::report_interval)
     .def_readwrite("format_string", &config_t::format_string)
+    .def_readwrite("balance_format", &config_t::balance_format)
+    .def_readwrite("register_format", &config_t::register_format)
+    .def_readwrite("plot_value_format", &config_t::plot_value_format)
+    .def_readwrite("plot_total_format", &config_t::plot_total_format)
+    .def_readwrite("print_format", &config_t::print_format)
+    .def_readwrite("equity_format", &config_t::equity_format)
     .def_readwrite("date_format", &config_t::date_format)
     .def_readwrite("sort_string", &config_t::sort_string)
     .def_readwrite("value_expr", &config_t::value_expr)
@@ -689,11 +666,8 @@ void export_config()
     .def_readwrite("show_revalued", &config_t::show_revalued)
     .def_readwrite("show_revalued_only", &config_t::show_revalued_only)
     .def_readwrite("download_quotes", &config_t::download_quotes)
-
     .def_readwrite("use_cache", &config_t::use_cache)
     .def_readwrite("cache_dirty", &config_t::cache_dirty)
-    .def_readwrite("format", &config_t::format)
-    .def_readwrite("nformat", &config_t::nformat)
 
     .def("process_options", py_process_options)
     ;

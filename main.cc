@@ -245,6 +245,20 @@ int parse_and_report(int argc, char * argv[], char * envp[])
   if (! config.output_file.empty())
     out = new std::ofstream(config.output_file.c_str());
 
+  // Compile the format strings
+
+  const std::string * format;
+  if (! config.format_string.empty())
+    format = &config.format_string;
+  else if (command == "b")
+    format = &config.balance_format;
+  else if (command == "r")
+    format = &config.register_format;
+  else if (command == "E")
+    format = &config.equity_format;
+  else
+    format = &config.print_format;
+
   // Walk the entries based on the report type and the options
 
   item_handler<transaction_t> * formatter;
@@ -254,7 +268,7 @@ int parse_and_report(int argc, char * argv[], char * envp[])
     formatter = new set_account_value;
     formatter = chain_formatters(command, formatter, formatter_ptrs);
   } else {
-    formatter = new format_transactions(*out, config.format, config.nformat);
+    formatter = new format_transactions(*out, *format);
     formatter = chain_formatters(command, formatter, formatter_ptrs);
   }
 
@@ -268,8 +282,7 @@ int parse_and_report(int argc, char * argv[], char * envp[])
   // For the balance and equity reports, output the sum totals.
 
   if (command == "b") {
-    format_account acct_formatter(*out, config.format,
-				  config.display_predicate);
+    format_account acct_formatter(*out, *format, config.display_predicate);
     sum_accounts(*journal->master);
     walk_accounts(*journal->master, acct_formatter, config.sort_string);
     acct_formatter.flush();
@@ -279,19 +292,21 @@ int parse_and_report(int argc, char * argv[], char * envp[])
       xdata.value = xdata.total;
       if (xdata.dflags & ACCOUNT_TO_DISPLAY) {
 	*out << "--------------------\n";
-	config.format.format(*out, details_t(*journal->master));
+	acct_formatter.format.format(*out, details_t(*journal->master));
       }
     }
   }
   else if (command == "E") {
-    format_equity acct_formatter(*out, config.format, config.nformat,
-				 config.display_predicate);
+    format_equity acct_formatter(*out, *format, config.display_predicate);
     sum_accounts(*journal->master);
     walk_accounts(*journal->master, acct_formatter, config.sort_string);
     acct_formatter.flush();
   }
 
 #if DEBUG_LEVEL >= BETA
+  clear_transactions_xdata();
+  clear_accounts_xdata();
+
   if (! config.output_file.empty())
     delete out;
 

@@ -90,18 +90,24 @@ struct format_t
 
 class format_transactions : public item_handler<transaction_t>
 {
-  std::ostream&   output_stream;
-  const format_t& first_line_format;
-  const format_t& next_lines_format;
-  entry_t *       last_entry;
+  std::ostream& output_stream;
+  format_t	first_line_format;
+  format_t	next_lines_format;
+  entry_t *     last_entry;
 
  public:
-  format_transactions(std::ostream&   _output_stream,
-		      const format_t& _first_line_format,
-		      const format_t& _next_lines_format)
-    : output_stream(_output_stream),
-      first_line_format(_first_line_format),
-      next_lines_format(_next_lines_format), last_entry(NULL) {}
+  format_transactions(std::ostream&      _output_stream,
+		      const std::string& format)
+    : output_stream(_output_stream), last_entry(NULL) {
+    const char * f = format.c_str();
+    if (const char * p = std::strstr(f, "%/")) {
+      first_line_format.reset(std::string(f, 0, p - f));
+      next_lines_format.reset(std::string(p + 2));
+    } else {
+      first_line_format.reset(format);
+      next_lines_format.reset(format);
+    }
+  }
 
   virtual void flush() {
     output_stream.flush();
@@ -123,14 +129,15 @@ class format_transactions : public item_handler<transaction_t>
 
 class format_account : public item_handler<account_t>
 {
-  std::ostream&   output_stream;
-  const format_t& format;
+  std::ostream& output_stream;
 
   item_predicate<account_t> disp_pred;
 
  public:
+  format_t format;
+
   format_account(std::ostream&      _output_stream,
-		 const format_t&    _format,
+		 const std::string& _format,
 		 const std::string& display_predicate = NULL)
     : output_stream(_output_stream), format(_format),
       disp_pred(display_predicate) {}
