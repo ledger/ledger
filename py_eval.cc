@@ -33,6 +33,7 @@ void export_format();
 void export_valexpr();
 void export_datetime();
 void export_derive();
+void export_reconcile();
 void export_emacs();
 
 void initialize_ledger_for_python()
@@ -59,6 +60,7 @@ void initialize_ledger_for_python()
   export_valexpr();
   export_datetime();
   export_derive();
+  export_reconcile();
   export_emacs();
 
   module_initialized = true;
