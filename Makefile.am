@@ -104,15 +104,22 @@ HAVE_XMLPARSE_VALUE = true
 else
 HAVE_XMLPARSE_VALUE = false
 endif
+if HAVE_LIBOFX
+HAVE_LIBOFX_VALUE = true
+else
+HAVE_LIBOFX_VALUE = false
+endif
 
 ledger.so: py_eval.cc libledger.a
 	CFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS) -L." \
 	HAVE_XMLPARSE="$(HAVE_XMLPARSE_VALUE)" \
+	HAVE_LIBOFX="$(HAVE_LIBOFX_VALUE)" \
 	    python setup.py build --build-lib=.
 
 install-exec-hook:
 	CFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS) -L." \
 	HAVE_XMLPARSE="$(HAVE_XMLPARSE_VALUE)" \
+	HAVE_LIBOFX="$(HAVE_LIBOFX_VALUE)" \
 	    python setup.py install --prefix=$(prefix)
 
 endif
