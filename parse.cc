@@ -5,6 +5,8 @@
 #include <ctime>
 #include <cctype>
 
+#define TIMELOG_SUPPORT 1
+
 namespace ledger {
 
 static inline char * skip_ws(char * ptr)
@@ -104,13 +106,11 @@ void parse_price_setting(const std::string& setting)
     *p++ = '\0';
 
     commodity * comm = NULL;
-
     commodities_map_iterator item = main_ledger->commodities.find(c);
-    if (item == main_ledger->commodities.end()) {
+    if (item == main_ledger->commodities.end())
       comm = new commodity(c);
-    } else {
+    else
       comm = (*item).second;
-    }
 
     assert(comm);
     comm->price = create_amount(p);
@@ -119,26 +119,20 @@ void parse_price_setting(const std::string& setting)
 
 #define MAX_LINE 1024
 
-int  linenum;
+       int         linenum;
+static bool        do_compute;
+static std::string account_prefix;
 
-static bool do_compute;
-
-transaction * parse_transaction(std::istream& in, book * ledger)
+transaction * parse_transaction_text(char * line, book * ledger)
 {
   transaction * xact = new transaction();
-
-  static char line[MAX_LINE + 1];
-  in.getline(line, MAX_LINE);
-  linenum++;
-
-  char * p = line;
-  p = skip_ws(p);
 
   // The call to `next_element' will skip past the account name,
   // and return a pointer to the beginning of the amount.  Once
   // we know where the amount is, we can strip off any
   // transaction note, and parse it.
 
+  char * p = skip_ws(line);
   char * cost_str = next_element(p, true);
   char * note_str;
 
@@ -181,12 +175,22 @@ transaction * parse_transaction(std::istream& in, book * ledger)
     *e = '\0';
   }
 
-  xact->acct = ledger->find_account(p);
+  std::string name = account_prefix + p;
+  xact->acct = ledger->find_account(name.c_str());
 
   if (do_compute && xact->cost)
     xact->acct->balance.credit(xact->cost);
 
   return xact;
+}
+
+transaction * parse_transaction(std::istream& in, book * ledger)
+{
+  static char line[MAX_LINE + 1];
+  in.getline(line, MAX_LINE);
+  linenum++;
+
+  return parse_transaction_text(line, ledger);
 }
 
 entry * parse_entry(std::istream& in, book * ledger)
@@ -247,7 +251,7 @@ void parse_automated_transactions(std::istream& in, book * ledger)
 {
   static char line[MAX_LINE + 1];
 
-  regexps_map * masks = NULL;
+  regexps_list * masks = NULL;
 
   while (! in.eof() && in.peek() == '=') {
     in.getline(line, MAX_LINE);
@@ -257,7 +261,7 @@ void parse_automated_transactions(std::istream& in, book * ledger)
     p = skip_ws(p);
 
     if (! masks)
-      masks = new regexps_map;
+      masks = new regexps_list;
     masks->push_back(mask(p));
   }
 
@@ -291,22 +295,32 @@ void parse_automated_transactions(std::istream& in, book * ledger)
 // Ledger parser
 //
 
-book * parse_ledger(std::istream& in, regexps_map& regexps,
-		    bool compute_balances)
+#ifdef TIMELOG_SUPPORT
+static std::time_t  time_in;
+static account *    last_account;
+static std::string  last_desc;
+#endif
+
+int parse_ledger(book * ledger, std::istream& in,
+		 regexps_list& regexps, bool compute_balances,
+		 const char * acct_prefix)
 {
-  static char line[MAX_LINE + 1];
-  char c;
+  static char   line[MAX_LINE + 1];
+  char 		c;
+  int 		count = 0;
+  std::string   old_account_prefix = account_prefix;
 
-  book * ledger = new book;
-
-  main_ledger = ledger;
-  do_compute  = compute_balances;
-  linenum     = 0;
+  linenum    = 1;
+  do_compute = compute_balances;
+  if (acct_prefix) {
+    account_prefix += acct_prefix;
+    account_prefix += ":";
+  }
 
   while (! in.eof()) {
     switch (in.peek()) {
     case -1:                    // end of file
-      return ledger;
+      goto done;
 
     case '\n':
       linenum++;
@@ -314,11 +328,99 @@ book * parse_ledger(std::istream& in, regexps_map& regexps,
       in.get(c);
       break;
 
+#ifdef TIMELOG_SUPPORT
+    case 'i':
+    case 'I': {
+      std::string date, time;
+      
+      in >> c;
+      in >> date;
+      in >> time;
+      date += " ";
+      date += time;
+
+      in.getline(line, MAX_LINE);
+      linenum++;
+
+      char * p = skip_ws(line);
+      char * n = next_element(p, true);
+      last_desc = n ? n : "";
+
+      static struct std::tm when;
+      if (strptime(date.c_str(), "%Y/%m/%d %H:%M:%S", &when)) {
+	time_in      = std::mktime(&when);
+	last_account = ledger->find_account(p);
+      } else {
+	std::cerr << "Error, line " << (linenum - 1)
+		  << ": Cannot parse timelog entry date."
+		  << std::endl;
+	last_account = NULL;
+      }
+      break;
+    }
+      
+    case 'o':
+    case 'O':
+      if (last_account) {
+	std::string date, time;
+      
+	in >> c;
+	in >> date;
+	in >> time;
+	date += " ";
+	date += time;
+
+	static struct std::tm when;
+	if (strptime(date.c_str(), "%Y/%m/%d %H:%M:%S", &when)) {
+	  entry * curr = new entry(ledger);
+
+	  curr->date = std::mktime(&when);
+
+	  double diff = (curr->date - time_in) / 60.0 / 60.0;
+	  char   buf[128];
+	  std::sprintf(buf, "%fh", diff);
+
+	  curr->cleared = true;
+	  curr->code    = "";
+	  curr->desc    = last_desc;
+
+	  std::string xact_line = "(";
+	  xact_line += last_account->as_str();
+	  xact_line += ")  ";
+	  xact_line += buf;
+
+	  std::strcpy(buf, xact_line.c_str());
+
+	  if (transaction * xact = parse_transaction_text(buf, ledger)) {
+	    curr->xacts.push_back(xact);
+
+	    // Make sure numbers are reported only to 1 decimal place.
+	    commodity * cmdty = xact->cost->commdty();
+	    cmdty->precision = 1;
+	  }
+
+	  ledger->entries.push_back(curr);
+	  count++;
+	} else {
+	  std::cerr << "Error, line " << (linenum - 1)
+		    << ": Cannot parse timelog entry date."
+		    << std::endl;
+	}
+
+	last_account = NULL;
+      }
+      break;
+#endif // TIMELOG_SUPPORT
+
     case 'Y':                   // set the current year
       in >> c;
       in >> ledger->current_year;
       break;
 
+#ifdef TIMELOG_SUPPORT
+    case 'h':
+    case 'b':
+#endif
     case ';':                   // a comment line
       in.getline(line, MAX_LINE);
       linenum++;
@@ -339,13 +441,89 @@ book * parse_ledger(std::istream& in, regexps_map& regexps,
       do_compute = compute_balances;
       break;
 
+    case '!':                   // directive
+      in >> line;
+      if (std::string(line) == "!include") {
+	std::string path;
+	bool        has_prefix = false;
+
+	in >> path;
+
+	if (in.peek() == ' ') {
+	  has_prefix = true;
+	  in.getline(line, MAX_LINE);
+	}
+
+	int curr_linenum = linenum;
+	count += parse_ledger_file(ledger, path, regexps, compute_balances,
+				   has_prefix ? skip_ws(line) : NULL);
+	linenum = curr_linenum;
+      }
+      break;
+
     default:
-      if (entry * ent = parse_entry(in, ledger))
+      if (entry * ent = parse_entry(in, ledger)) {
 	ledger->entries.push_back(ent);
+	count++;
+      }
       break;
     }
   }
-  return ledger;
+
+ done:
+  account_prefix = old_account_prefix;
+  
+  return count;
+}
+
+int parse_ledger_file(book * ledger, const std::string& file,
+		      regexps_list& regexps, bool compute_balances,
+		      const char * acct_prefix)
+{
+  std::ifstream stream(file.c_str());
+
+  // Parse the ledger
+
+#ifdef READ_GNUCASH
+  char buf[32];
+  stream.get(buf, 31);
+  stream.seekg(0);
+
+  if (std::strncmp(buf, "<?xml version=\"1.0\"?>", 21) == 0)
+    return parse_gnucash(ledger, stream, compute_balances);
+  else
+#endif
+    return parse_ledger(ledger, stream, regexps, compute_balances,
+			acct_prefix);
+}
+
+//////////////////////////////////////////////////////////////////////
+//
+// Read other kinds of data from files
+//
+
+void read_regexps(const std::string& path, regexps_list& regexps)
+{
+  std::ifstream file(path.c_str());
+
+  while (! file.eof()) {
+    char buf[80];
+    file.getline(buf, 79);
+    if (*buf && ! std::isspace(*buf))
+      regexps.push_back(mask(buf));
+  }
+}
+
+void read_prices(const std::string& path)
+{
+  std::ifstream file(path.c_str());
+
+  while (! file.eof()) {
+    char buf[80];
+    file.getline(buf, 79);
+    if (*buf && ! std::isspace(*buf))
+      parse_price_setting(buf);
+  }
 }
 
 } // namespace ledger

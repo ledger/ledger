@@ -1,5 +1,5 @@
 #ifndef _LEDGER_H
-#define _LEDGER_H "$Revision: 1.29 $"
+#define _LEDGER_H "$Revision: 1.34 $"
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -73,15 +73,17 @@ class amount
   virtual void set_commdty(commodity *) = 0;
 
   virtual amount * copy() const = 0;
-  virtual amount * value(amount * pr = NULL) const = 0;
+  virtual amount * value(const amount * pr = NULL) const = 0;
   virtual amount * street(bool get_quotes) const = 0;
 
   virtual bool has_price() const = 0;
   virtual void set_value(const amount * pr) = 0;
 
-  // Test if the quantity is zero
+  // Comparison
 
   virtual bool is_zero() const = 0;
+  virtual bool is_negative() const = 0;
+  virtual int  compare(const amount * other) const = 0;
 
   // Assignment
 
@@ -115,15 +117,9 @@ class mask
   bool match(const std::string& str) const;
 };
 
-typedef std::list<mask>                 regexps_map;
-typedef std::list<mask>::iterator       regexps_map_iterator;
-typedef std::list<mask>::const_iterator regexps_map_const_iterator;
-
-void record_regexp(const std::string& pattern, regexps_map& regexps);
-void read_regexps(const std::string& path, regexps_map& regexps);
-bool matches(const regexps_map& regexps, const std::string& str,
-	     bool * by_exclusion = NULL);
-
+typedef std::list<mask>                 regexps_list;
+typedef std::list<mask>::iterator       regexps_list_iterator;
+typedef std::list<mask>::const_iterator regexps_list_const_iterator;
 
 class account;
 class transaction
@@ -186,7 +182,7 @@ class entry
     }
   }
 
-  bool matches(const regexps_map& regexps) const;
+  bool matches(const regexps_list& regexps) const;
   bool validate(bool show_unaccounted = false) const;
   bool finalize(bool do_compute = false);
 
@@ -223,7 +219,10 @@ class totals
   void credit(const amount * val);
   void credit(const totals& other);
 
+  void negate();
+
   bool is_zero() const;
+  bool is_negative() const;
 
   void print(std::ostream& out, int width) const;
 };
@@ -238,15 +237,15 @@ class account
   account(const account&);
 
  public:
-  account * parent;
+  account *    parent;
 
-  std::string name;
+  std::string  name;
 #ifdef READ_GNUCASH
-  commodity * comm;             // default commodity for this account
+  commodity *  comm;           // default commodity for this account
 #endif
-  totals      balance;          // optional, parse-time computed balance
-  int         checked;        // 'balance' uses this for speed's sake
-  accounts_map  children;
+  totals       balance;        // optional, parse-time computed balance
+  int          checked;        // 'balance' uses this for speed's sake
+  accounts_map children;
 
   mutable std::string full_name;
 
@@ -258,7 +257,7 @@ class account
 
   ~account();
 
-  const std::string as_str() const;
+  const std::string as_str(const account * stop = NULL) const;
 };
 
 
@@ -267,10 +266,10 @@ class book
   book(const book&);
 
  public:
-  typedef std::map<regexps_map *,
+  typedef std::map<regexps_list *,
 		   std::list<transaction *> *> virtual_map;
 
-  typedef std::pair<regexps_map *,
+  typedef std::pair<regexps_list *,
 		    std::list<transaction *> *> virtual_map_pair;
 
   typedef virtual_map::const_iterator virtual_map_iterator;
@@ -289,7 +288,8 @@ class book
   void sort(Compare comp) {
     std::sort(entries.begin(), entries.end(), comp);
   }
-  void print(std::ostream& out, regexps_map& regexps, bool shortcut) const;
+  void print(std::ostream& out, regexps_list& regexps,
+	     bool shortcut) const;
 
   account * re_find_account(const std::string& regex);
   account * find_account(const std::string& name, bool create = true);
@@ -312,16 +312,30 @@ inline commodity::commodity(const std::string& sym, bool pre, bool sep,
 
 // Parsing routines
 
-extern book * parse_ledger(std::istream& in, regexps_map& regexps,
-			   bool compute_balances);
+extern int parse_ledger(book * ledger, std::istream& in,
+			regexps_list& regexps,
+			bool compute_balances = false,
+			const char * acct_prefix = NULL);
 #ifdef READ_GNUCASH
-extern book * parse_gnucash(std::istream& in, bool compute_balances);
+extern book * parse_gnucash(std::istream& in, bool compute_balances = false);
 #endif
+
+extern int parse_ledger_file(book * ledger, const std::string& file,
+			     regexps_list& regexps,
+			     bool compute_balances = false,
+			     const char * acct_prefix = NULL);
 
 extern bool parse_date_mask(const char * date_str,
 			    struct std::tm * result);
 extern bool parse_date(const char * date_str, std::time_t * result,
 		       const int year = -1);
+
+extern void record_regexp(const std::string& pattern, regexps_list& regexps);
+extern void read_regexps(const std::string& path, regexps_list& regexps);
+extern bool matches(const regexps_list& regexps, const std::string& str,
+		    bool * by_exclusion = NULL);
+
+extern void read_prices(const std::string& path);
 extern void parse_price_setting(const std::string& setting);
 
 } // namespace ledger

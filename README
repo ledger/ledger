@@ -1,19 +1,111 @@
+#comment -*-muse-*-
 #title Ledger: Command-Line Accounting
 
 <contents>
 
-* Building
+* Introduction
 
-Welcome to ledger, a command-line accounting program that uses a
-text-based ledger file, yet provides full double-entry accounting, use
-of commodities, unlimited accounts, etc.
+Ledger is an accounting tool with the moxie to exist.  It provides no
+bells or whistles, and returns the user to the days before user
+interfaces were even a twinkling in their father's CRT.
+
+What it does do is to offer a double-entry accounting ledger with all
+the flexibility and muscle of its modern day cousins, without any of
+the fat.  Think of it as the Great Bran Muffin of accounting tools.
+
+To use it, you need to start keeping a ledger.  This is the basis of
+all accounting, and if you haven't started yet, now is the time to
+learn.  The little booklet that comes with your checkbook is a ledger,
+so we'll describe double-entry accounting in terms of that.
+
+A checkbook ledger records debits (subtractions, or withdrawals) and
+credits (additions, or deposits) with reference to a single account:
+the checking account.  Where the money comes from, and where it goes
+to, are described in the payee field, where you write the person or
+company's name.  The ultimate aim of keeping a checkbook ledger is to
+know how much money is available to spend.  That's really the aim of
+all ledgers.
+
+What computers add is the ability to walk through these transactions,
+and tell you things about your spending habits; to let you devise
+budgets and get control over your spending; to squirrel away money
+into virtual savings account without having to physically move money
+around; etc.  As you keep your ledger, you are recording information
+about your life and habits, and sometimes that information can start
+telling you things you aren't aware of.  Such is the aim of all good
+accounting tools.
+
+The next step up from a checkbook ledger, is a ledger that keeps track
+of all your accounts, not just checking.  In such a ledger, you record
+not only who gets paid -- in the case of a debit -- but where the
+money came from.  In a checkbook ledger, its assumed that all the
+money comes from your checking account.  But in a general ledger, you
+write transaction two-lines: The source account and target account.
+*There must always be a debit from at least one account for every
+credit made to another account*.  This is what is meant by
+"double-entry" accounting: the ledger must always balance to zero,
+with an equal number of debits and credits.
+
+For example, let's say you have a checking account and a brokerage
+account, and you can write checks from both of them.  Rather than keep
+two checkbooks, you decide to use one ledger for both.  In this
+general ledger you need to record a payment to Pacific Bell for your
+monthly phone bill.  The cost is $23.00, let's say, and you want to
+pay it from your checking account.  In the general ledger you need to
+say where the money came from, in addition to where it's going to.
+The entry might look like this:
+
+<example>
+9/29  BAL  Pacific Bell               $200.00    $200.00
+           Equity:Opening Balances   $-200.00
+9/29  BAL  Checking                   $100.00    $100.00
+           Equity:Opening Balances   $-100.00
+9/29  100  Pacific Bell                $23.00    $223.00
+           Checking                   $-23.00     $77.00
+</example>
+
+The first line shows a credit (or payment) to Pacific Bell for $23.00.
+Because there is no "balance" in a general ledger -- it's always zero
+-- we write in the total balance of all payments to "Pacific Bell",
+which now is $223.00 (previously the balance was $200.00).  This is
+done by looking at the last entry for "Pacific Bell" in the ledger,
+adding $23.00 to that amount, and writing the total in the balance
+column.  And the money came from "Checking" -- a debit (or withdrawal)
+of $23.00 -- which leaves the ending balance in "Checking" at $77.00.
+This is a very manual procedure; but that's where computers come in...
+
+The transaction must balance to $0: $23 went to Pacific Bell, $23 came
+from Checking.  There is nothing left over to be accounted for, since
+the money has simply moved from one account to another.  This is the
+basis of double-entry accounting: that money never pops in or out of
+existence; it is always a transaction from one account to another.
+
+Keeping a general ledger is the same as keeping two separate ledgers:
+One for Pacific Bell and one for Checking.  In that case, each time a
+credit is written into one, you write a corresponding debit into the
+other.  This makes it easier to write in a "running balance", since
+you don't have to look back at the last time the account was
+referenced -- but it also means having a lot of ledger books, if you
+deal with multiple accounts.
+
+Enter the beauty of computerized accounting.  The purpose of the
+Ledger program is to make general ledger accounting simple, by keeping
+track of the balances for you.  Your only job is to enter the
+credit/debit transactions.  If a transaction does not balance, Ledger
+will display an error and indicate which transaction is wrong.[1]
+
+In summary, there are two aspects of Ledger use: Updating the ledger
+data file, and using the Ledger tool to view the summarized result of
+your entries.
+
+* Building the program
 
 Ledger is written in ANSI C++, and should compile on any platform.  It
-only depends on the GNU multiprecision integer library (gmp, or
-libgmp), and the Perl regular expression library (pcre, or libpcre).
-Also, this project was developed using GNU make and gcc 3.3.
+depends only on the GNU multiprecision integer library (libgmp), and
+the Perl regular expression library (libpcre).  It was developed using
+GNU make and gcc 3.3.
 
-To build and install, once you have these libraries on your system,
+To build and install once you have these libraries on your system,
 enter these commands:
 
 <example>
@@ -21,110 +113,10 @@ make
 cp ledger /usr/local/bin
 </example>
 
-* Introduction
-
-Ledger is an accounting tool with the moxie to exist.  It provides not
-one bell or whistle for the money, and returns the user to the days
-before user interfaces were even a twinkle in their father's CRT.
-
-What it does do is provide a double-entry accounting ledger with all
-of the flexibility and muscle of its modern day cousins -- without any
-of the fat.  Think of it as the bran muffin of accounting tools.
-
-To begin with, you need to start keeping a ledger.  This is the basis
-of all accounting, and if you don't know how to do it, now is the time
-to learn.  The little booklet that comes with your checkbook is a
-ledger, so we'll describe double-entry accounting in terms of that.
-
-A checkbook ledger records debits (subtractions, or withdrawals) and
-credits (additions, or deposits) with reference to a single account:
-your checking account.  Where the money comes from, and where it goes
-to, are simply described in the memo field where you write the person
-or the company's name.  The ultimate aim of keeping a checkbook ledger
-is so you know how much money is available to spend at all times.
-That is really the aim of all ledgers.
-
-What computers add is the ability to walk through all of those
-transactions and tell you things about your spending habits; let you
-devise budgets to get control over your spending; squirrel away money
-into virtual savings account without having to physically move the
-money around; etc.  As you keep your checkbook ledger, you are
-recording a lot of information about your life and your habits, and
-sometimes that information can tell you things you aren't even aware
-of.  That is the aim of all good accounting tools.
-
-The next step up from a checkbook ledger is a ledger that covers all
-of your accounts, not just your checking account.  In this ledger, you
-write not only who the money goes to -- in the case of a debit -- but
-where the money is coming from.  In the checkbook ledger, its assumed
-that all of the money is coming from your checking account.  But in a
-general ledger, you have to write two-lines: The source and target.
-There must always be a debit from some account for any credit made to
-anyone else.  This is what is meant by "double-entry" accounting.
-
-For example, let's say you have a checking account and a brokerage
-account, and that you can write checks from both of them.  Rather than
-keeping two checkbooks, you decide to use one ledger for both.  Once
-you get the hang of this, you'll be ready to use one ledger for all of
-your accounting needs, which gets you to the point of this
-introduction.
-
-So in your general ledger, you need to pay Pacific Bell Telephone for
-your monthly phone bill.  The cost is $23.00.  In a checkbook ledger,
-you would write out a line that credits your account with Pacific Bell
-by $23 as follows:
-
-<example>
-9/29  100  Pacific Bell                $23.00     $77.00
-</example>
-
-Very simple: You've written check #100 for $23 to Pacific Bell, which
-leaves your balance in checking at $77.
-
-But in a general ledger, you need to say where the money is coming
-from.  A general ledger entry would look like this:
-
-<example>
-9/29  100  Pacific Bell                $23.00    $223.00
-           Checking                   $-23.00     $77.00
-</example>
-
-What does all of this mean?  The first line shows a credit (or
-payment) to Pacific Bell to the tune of $23.00.  Then, because there
-is no one "balance" in a general ledger, we've written in the total
-balance of your payments to the account "Pacific Bell".  This was done
-by looking at the last entry for "Pacific Bell" in the general ledger,
-adding $23.00 to that amount, and writing in the total in the balance
-column.
-
-Secondly, the money is coming from your "Checking" account, which
-means a debit (or withdrawal) of $23.00, which will leave the ending
-balance in your "Checking" account at $77.00.
-
-The transaction itself must balance to $0: $23 goes to Pacific Bell,
-$23 comes from Checking: there is nothing left over to be accounted
-for.  The money has in fact moved from one account to another.  This
-is basis of double-entry accounting: That money never pops out of
-existence, it is always described as a transaction between accounts --
-as a flow from one place to another.
-
-Keeping a general ledger is the same as keeping two separate ledgers:
-One for Pacific Bell and one for Checking.  In that case, each time
-you write a credit into one, you write a corresponding debit into the
-other.  This makes it much easier to write in the running balance,
-since you don't have to go looking back for the last time an account
-was referenced, but it also means having a lot of ledger books if you
-deal with multiple accounts.
-
-Enter the beauty of a computerized accounting tool.  The purpose of
-Ledger is to make general ledger accounting simple by keeping track of
-the balances for you.  Your only job is to enter credit/debit pairs
-and make sure they balance.  If a transaction does not balance, Ledger
-will display an error and ignore the transaction.[1]
-
-Your usage of Ledger will have two parts: Keeping the ledger, and
-using the Ledger tool to provide you with information summaries
-derived from your ledger's entries.
+Note that when building GNUmp, make sure to pass the =--enable-cxx=
+flag to configure, otherwise it will not build **libgmpxx.a**.  And in
+case it is not already on your system, **xmlparse.h** is part of the
+libxmltok package, and not expat.
 
 * Keeping a ledger
 
@@ -302,7 +294,7 @@ FEQTX=$32
 Specify the prices file using the =-p= option:
 
 <example>
-/home/johnw $ ledger -p prices.db balance brokerage
+ledger -p prices.db balance brokerage
 </example>
 
 Now the balance for your brokerage account will be given in US
@@ -319,7 +311,7 @@ wanted to know many ounces of gold that would buy.  If gold is
 currently $357 per ounce, then each dollar is worth 1/357 AU:
 
 <example>
-/home/johnw $ ledger -p "$=0.00280112 AU" balance checking
+ledger -p "$=0.00280112 AU" balance checking
 </example>
 
 <example>
@@ -392,7 +384,7 @@ Where will money come from?  The answer: your equity.
 <example>
 10/2  Opening Balance
     Assets:Checking                         $100.00
-    Equity:Opening Balances                $-100.00
+    Equity:Opening Balances
 </example>
 
 But what is equity?  You may have heard of equity when people talked
@@ -417,64 +409,35 @@ Clear as mud?  Keep thinking about it.  Until you figure it out, put
 "-- -Equity" at the end of your balance command, to remove the
 confusing figure from the totals.
 
-* Using the Ledger Tool
+** Dealing with cash
 
-Now that you have an orderly and well-organized general ledger, it's
-time to start generating some orderly and well-organized reports.
-This is where the Ledger tool comes in.  With it, you can balance your
-checkbook, see where your money is going, tell whether you've made a
-profit this year, and even compute the present day value of your
-retirement accounts.  And all with the simplest of interfaces: the
-command-line.
+Something that stops many people from keeping a ledger at all is the
+insanity of tracking cash expenses.  They rarely generate a receipt,
+and there are often a lot of small transactions, rather than a few
+large ones, as with checks.
 
-The most often used command will be the "balance" command:
-
-<example>
-/home/johnw $ export LEDGER=/home/johnw/doc/ledger.dat
-/home/johnw $ ledger balance
-</example>
-
-Here I've set my Ledger environment variable to point to where my
-ledger file is hiding.  Thereafter, I needn't specify it again.
-
-The balance command prints out the summarized balances of all my
-top-level accounts, excluding sub-accounts.  In order to see the
-balances for a specific account, just specify a regular expression
-after the balance command:
+The answer is: don't bother.  Move your spending to a debit card, but
+in general ignore cash.  Once you withdraw it from the ATM, mark it as
+already spent to an "Expenses:Cash" category:
 
 <example>
-/home/johnw $ ledger balance expenses:food
+2004/03/15 ATM
+    Expenses:Cash                      $100.00
+    Assets:Checking
 </example>
 
-This will show all the money that's been spent on food, since the
-beginning of the ledger.  For food spending just this month
-(September), use:
+If at some point you make a large cash expense that you want to track,
+just "move" the amount of the expense from "Expenses:Cash" into the
+target account:
 
 <example>
-/home/johnw $ ledger -d sep balance expenses:food
+2004/03/20 Somebody
+    Expenses:Food                       $65.00
+    Expenses:Cash
 </example>
 
-Or maybe I want to see all of my assets, in which case the -s (show
-sub-accounts) option comes in handy:
-
-<example>
-/home/johnw $ ledger balance -s
-</example>
-
-To exclude a particular account, use a regular expression with a
-leading minus sign.  The following will show all expenses, but without
-food spending:
-
-<example>
-/home/johnw $ ledger balance expenses -food
-</example>
-
-If you want to show all accounts but for one account, remember to use
-"--" to separate the exclusion pattern from the options list:
-
-<example>
-/home/johnw $ ledger balance -- -equity
-</example>
+This way, you can still track large cash expenses, while ignoring all
+of the smaller ones.
 
 ** Virtual transactions
 
@@ -516,60 +479,188 @@ When balances are displayed, virtual transactions will be factored in.
 To view balances without any virtual balances factored in, using the
 "-R" flag, for "Reality".
 
-*** Saving for a Special Occasion
-
-*** Keeping a Budget
-
-*** Tracking Allocated Funds
+Write about: Saving for a Special Occasion; Keeping a Budget; Tracking
+Allocated Funds.
 
 ** Automated transactions
 
-*** Computing Bahá'í Huqúqu'lláh
-
-As a Bahá'í, I need to compute Huqúqu'lláh on some of my assets.  The
-exact details of this matter are rather complex, so if you have any
-interest, I encourage you to do research on the Web.
+As a Bahá'í, I need to compute Huqúqu'lláh whenever I acquire assets.
+The exact details of this are a bit complex, so if you have further
+interest, please consult the Web.
 
 For any fellow Bahá'ís out there who want to track Huqúqu'lláh, the
-Ledger tool makes this extraordinarily easy.  Just too easy, in fact.
-Here's all you have to do: If an expense is exempt from Huqúqu'lláh --
-a "necessary" expense -- put an exclamation mark before the account
-name:
+Ledger tool makes this extremely easy.  Just set up the following
+automated transaction at the top of your ledger file:
 
 <example>
-2002.12.31  Rent
-   !Expenses:Rent                      $450.00
-    Assets:Checking                   $-450.00
+; These entries will compute Huqúqu'lláh based on the
+; contents of the ledger.
+
+= ^Income:
+= ^Expenses:Rent$                               
+= ^Expenses:Furnishings
+= ^Expenses:Business
+= ^Expenses:Taxes
+= ^Expenses:Insurance
+  (Liabilities:Huqúqu'lláh)               0.19
 </example>
 
-Even easier than that, simply put a list of regular expressions that
-match the categories you consider exempt in a file called =.huquq=,
-and the special marking will be done for you.  Here is the file I use:
+This automated transaction works by looking at each transaction
+appearing afterward in the ledger file.  If any match the account
+regexps, occurring after the equal signs above, 19% of the value of
+that transaction is applied to the "Liabilities:Huqúqu'lláh" account.
+So if $1000 is earned through Income:Salary, which is seen as a debit
+from Income, a debit of $190 is applied to "Liabilities:Huqúqu'lláh";
+if $1000 is spent on Rent -- seen as a credit to the Expense account
+-- a credit of $190 is applied to Huqúqu'lláh.  The ultimate balance
+of Huqúqu'lláh reflects how much must be paid to that account in order
+to balance it to zero.
+
+When you're ready to pay, just write a check directly to the account
+"Liabilities:Huqúqu'lláh":
 
 <example>
-^Income:
-^Retirement:
-^Expenses:Rent
-^Expenses:Taxes
-</example>
-
-When you're ready to pay Huqúqu'lláh, just write the check to the
-account "Huququ'llah" (no accents, one apostrophe):
-
-<example>
-2003.01.20 * (101)  Baha'i Huququ'llah Trust
-    Huququ'llah                      $1,000.00
-    Assets:Checking                 $-1,000.00
+2003/01/01 (101) Baha'i Huqúqu'lláh Trust
+    Liabilities:Huqúqu'lláh          $1,000.00
+    Assets:Checking
 </example>
 
 That's it.  To see how much Huqúq is currently owed based on your
-ledger data, type:
+ledger entries, use:
 
 <example>
-/home/johnw $ ledger balance ^huquq
+ledger balance Liabilities:Huqúq
 </example>
 
-* An easy way to add new entries
+* Running Ledger
+
+Now that you have an orderly and well-organized general ledger, it's
+time to start generating some orderly and well-organized reports.
+This is where the Ledger tool comes in.  With it, you can balance your
+checkbook, see where your money is going, tell whether you've made a
+profit this year, and even compute the present day value of your
+retirement accounts.  And all with the simplest of interfaces: the
+command-line.
+
+The most often used command will be the "balance" command:
+
+<example>
+export LEDGER=/home/johnw/doc/ledger.dat
+ledger balance
+</example>
+
+Here I've set my Ledger environment variable to point to where my
+ledger file is hiding.  Thereafter, I needn't specify it again.
+
+The balance command prints out the summarized balances of all my
+top-level accounts, excluding sub-accounts.  In order to see the
+balances for a specific account, just specify a regular expression
+after the balance command:
+
+<example>
+ledger balance expenses:food
+</example>
+
+This will show all the money that's been spent on food, since the
+beginning of the ledger.  For food spending just this month
+(September), use:
+
+<example>
+ledger -d sep balance expenses:food
+</example>
+
+Or maybe I want to see all of my assets, in which case the -s (show
+sub-accounts) option comes in handy:
+
+<example>
+ledger balance -s
+</example>
+
+To exclude a particular account, use a regular expression with a
+leading minus sign.  The following will show all expenses, but without
+food spending:
+
+<example>
+ledger balance expenses -food
+</example>
+
+If you want to show all accounts but for one account, remember to use
+"--" to separate the exclusion pattern from the options list:
+
+<example>
+ledger balance -- -equity
+</example>
+
+** Command summary
+
+*** balance
+
+The "balance" command reports the current balance of any account.
+This command accepts a list of optional regexps, which will confine
+the balance report to only matching accounts.  By default, the
+balances for all accounts will be printed.  If an account contains
+multiple types of commodities, each commodity's total is separately
+reported.
+
+*** register
+
+The "register" command displays all the transactions occurring in a
+single account, line by line.  The account regexp must be specified as
+the only argument to this command.  If any regexps occur after the
+required account name, the register will contain only those
+transactions that match.  Very useful for hunting down a particular
+transaction.
+
+The output from "register" is very close to what a typical checkbook,
+or single account ledger, would look like.  It also shows a running
+balance.  The final running balance of any register should always be
+the same as the current balance of that account.
+
+*** print
+
+The "print" command prints out ledger entries just as they appear in
+the original ledger.  They will be properly formatted, and output in
+the most economic form possible.  The "print" command also takes a
+list of optional regexps, which will cause only those transactions
+which match in some way to be printed.
+
+The "print" command is a handy way to clean up a ledger file whose
+formatting has gotten out of hand.
+
+*** equity
+
+Equity transactions are used to establish the starting value of an
+account.  You might think of equity as the "ether" from which initial
+balances appear.
+
+The "equity" command makes it easy to archiving past years, and then
+remove them without changing any current balances.  For example, if
+it's now 2004 and we want to archive all of 2003's transactions to
+another file, write:
+
+<example>
+export LEDGER=ledger.dat
+ledger -e 2004/1/1 print  > ledger-2003.dat
+ledger -e 2004/1/1 equity > /tmp/balances
+ledger -b 2004/1/1 print  > /tmp/current
+cat /tmp/balances /tmp/current > ledger.dat
+rm /tmp/balances /tmp/current
+</example>
+
+After these commands, **ledger-2003.dat** will contain all the
+transactions up to year 2004, with **ledger.dat** containing only those
+since 2004.  However, the balances reported from **ledger.dat** will still
+be the same.
+
+Sometimes you will not want to carry forward certain balances, such as
+those for Expense and Income.  To do this, change the second command
+above to:
+
+<example>
+ledger -e 2004/1/1 equity -^Income -^Expenses > /tmp/balances
+</example>
+
+*** entry
 
 The three most laborious tasks of keeping a ledger are: adding new
 entries, reconciling accounts, and generating reports.  To address the
@@ -613,6 +704,110 @@ There is a shell script in the distribution called "entry", which
 simplifies the task of adding a new entry to your ledger, and then
 launches =vi= to let you confirm that the entry looks appropriate.
 
+** Option summary
+
+-B ::
+  When printing accounts containing commodities, display the base
+  price for the commodity, rather than the quantity of that commodity
+  (the default) or its current price (if -P is used).
+
+-b DATE ::
+  Only consider entries occuring on or after the given date.
+
+-e DATE ::
+  Only consider entries occuring before the given date.  The date is
+  not inclusive, so any entries occurring on that date will not be
+  used.
+
+-c ::
+  Only consider entries occurring on or before the current date.
+
+-C ::
+  Only consider entries whose cleared flag has been set.  The default
+  is to consider both.
+
+-d DATE ::
+  Only consider entries fitting the given date mask.  DATE in this
+  case may be the name of a month, or a year, or a year and month,
+  such as "2004/05".  It's a shorthand for having to specify -b and -e
+  together.
+
+-E ::
+  Also show empty accounts in the balance totals report.
+
+-f FILE[=ACCOUNT] ::
+  Read ledger entries from FILE.  This takes precedence over the
+  environment variable LEDGER.  If "=ACCOUNT" is appended to the
+  filename, then all of the entries are seen as if the transactions
+  accounts were prefixed by "ACCOUNT:".  There may be multiple
+  occurrences of the -f option.
+
+-F ::
+  Print full account names in all cases, such as "Assets:Checking"
+  instead of just "Checking".  Only used current by the "balance"
+  command.
+
+-h ::
+  Print out quick help on the various options and commands.
+
+-i FILE ::
+  Read in the list of patterns to include/exclude from FILE.
+  Ordinarily, these are specified as arguments after the command.
+
+-M ::
+  When used with the "register" command, causes only monthly subtotals
+  to appear.  This can be useful for looking at spending patterns.
+  TODO: Accept an argument which specifies the period to use.
+
+-G ::
+  Modifies the output generated by -M to be friendly to programs like
+  Gnuplot.  It strips away the commodity label, and outputs only two
+  columns: the date and the amount.
+
+-n ::
+  Do not show subtotals in the balance report, or split transactions
+  in the register report.
+
+-N REGEXP ::
+  If an account matches REGEXP, only display it in the balance report
+  if its total is negative.  Useful to avoid seeing credit in accounts
+  where one cannot spend that credit, and it will soon become negative
+  anyway (such as credit cards).
+
+-p ARG ::
+  If a string, such as "COMM=$1.20", the commodity COMM will be
+  reported only in terms of its translated dollar value.  This can be
+  used to perform arbitrary value substitutions.  For example, to
+  report the value of your dollars in terms of the ounces of gold they
+  would buy, use: -p "$=0.00280112 AU" (or whatever the current
+  exchange rate is).
+
+-P ::
+  Download current prices for all commodities by calling the script
+  "getquote".  There is a "getquote" script included with ledger,
+  although any similar program could be used.  It must take a single
+  argument, the name of the commodity, and must report the value as a
+  single amount, such as would appear in a ledger file.  If the
+  commodity has no price, nothing should be output and the exit code
+  should be set to a non-zero value.
+
+-R ::
+  Ignore all virtual transactions, and report only the real balance
+  for each account.
+
+-s ::
+  If an account has children, show them in the balance report.
+
+-S ::
+  Sort the ledger after reading it.  This may affect "register" and
+  "print" output.
+
+-U ::
+  Show only uncleared transactions.  The default is to consider both.
+
+-v ::
+  Display the version of ledger being used.
+
 * Using Emacs to Keep Your Ledger
 
 In the Ledger tarball is an Emacs module, =ledger.el=.  This module
@@ -648,10 +843,10 @@ C-c C-r ::
 
 * Using GnuCash to Keep Your Ledger
 
-The Ledger tool is fast and simple, but it gives you no special
-method of actually editing the ledger.  It assumes you know how to use
-a text editor, and like doing so.  Perhaps an Emacs mode will appear
-someday soon to make editing Ledger's data files much easier.
+The Ledger tool is fast and simple, but it offers no custom method for
+actually editing the ledger.  It assumes you know how to use a text
+editor, and like doing so.  Perhaps an Emacs mode will appear someday
+soon to make editing Ledger's data files much easier.
 
 Until then, you are free to use GnuCash to maintain your ledger, and
 the Ledger program for querying and reporting on the contents
@@ -660,6 +855,95 @@ that GnuCash uses, but the end result is identical.
 
 Then again, why would anyone use a Gnome-centric, 35 megabyte behemoth
 to edit their data, and a 65 kilobyte binary to query it...
+
+* Using timeclock to record billable time
+
+The timeclock tool makes it easy to track time events, like clocking
+into and out of a particular job.  These events accumulate in a
+timelog file.
+
+Each in/out event may have an optional description.  If the "in"
+description is a ledger account name, these in/out pairs may be viewed
+as virtual transactions, adding time commodities (hours) to that
+account.
+
+For example, the command-line version of the timeclock tool (which is
+written in Python) could be used to begin a timelog file like:
+
+<example>
+$ export TIMELOG=$HOME/.timelog
+$ ti ClientOne  category
+$ sleep 10
+$ to waited for ten seconds
+</example>
+
+The **.timelog** file now contains:
+
+<example>
+i 2004/10/06 15:21:00 ClientOne  category
+o 2004/10/06 15:21:10 waited for ten seconds
+</example>
+
+Ledger can parse this directly, as if it had seen the following ledger
+entry:
+
+<example>
+2004/10/06 category
+    (ClientOne)      0.00277h
+</example>
+
+In other words, the timelog event pair is seen as adding 0.00277h (ten
+seconds) worth of time to the ClientOne account.  This would be
+considered billable time, which later could be invoiced and credited
+to accounts receivable:
+
+<example>
+2004/11/01 (INV#1) ClientOne, Inc.
+    Receivable:ClientOne       $0.10
+    ClientOne              -0.00277h @ $35.00
+</example>
+
+The above transaction converts the clocked time into an invoice for
+the time spent, at an hourly rate of $35.  Once the invoice is paid,
+the money is deposited from the receivable account into a checking
+account:
+
+<example>
+2004/12/01 ClientOne, Inc.
+    Assets:Checking            $0.10
+    Receivable:ClientOne
+</example>
+
+And now the time spent has been turned into hard cash in the checking
+account.
+
+The advantage to using timeclock and invoicing to bill time is that
+you will always know, by looking at the balance report, exactly how
+much unbilled and unpaid time you've spent working for any particular
+client.
+
+I like to =!include= my timelog at the top of my company's accounting
+ledger, with the attached prefix "Billable":
+
+<example>
+; -*-ledger-*-
+
+; This is the ledger file for my company.  But first, include the
+; timelog data, entering all of the time events within the umbrella
+; account "Billable".
+
+!include /home/johnw/.timelog Billable
+
+; Here follows this fiscal year's transactions for the company.
+
+2004/11/01 (INV#1) ClientOne, Inc.
+    Receivable:ClientOne           $0.10
+    Billable:ClientOne         -0.00277h @ $35.00
+
+2004/12/01 ClientOne, Inc.
+    Assets:Checking                $0.10
+    Receivable:ClientOne
+</example>
 
 Footnotes:
 [1]  In some special cases, it will automatically balance the entry

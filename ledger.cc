@@ -213,9 +213,9 @@ bool entry::finalize(bool do_compute)
       (*x)->acct->balance.credit((*x)->cost);
   }
 
-  // If virtual accounts are being supported, walk through the
-  // transactions and create new virtual transactions for all that
-  // apply.
+  // If automated transactions are being used, walk through the
+  // current transaction lines and create new transactions for all
+  // that match.
 
   for (book::virtual_map_iterator m = ledger->virtual_mapping.begin();
        m != ledger->virtual_mapping.end();
@@ -278,7 +278,7 @@ bool entry::finalize(bool do_compute)
   return true;
 }
 
-bool entry::matches(const regexps_map& regexps) const
+bool entry::matches(const regexps_list& regexps) const
 {
   if (regexps.empty() || (ledger::matches(regexps, code) ||
 			  ledger::matches(regexps, desc))) {
@@ -290,7 +290,7 @@ bool entry::matches(const regexps_map& regexps) const
     for (std::list<transaction *>::const_iterator x = xacts.begin();
 	 x != xacts.end();
 	 x++) {
-      if (ledger::matches(regexps, (*x)->acct->name) ||
+      if (ledger::matches(regexps, (*x)->acct->as_str()) ||
 	  ledger::matches(regexps, (*x)->note)) {
 	match = true;
 	break;
@@ -331,12 +331,31 @@ void totals::credit(const totals& other)
     credit((*i).second);
 }
 
+void totals::negate()
+{
+  for (const_iterator i = amounts.begin(); i != amounts.end(); i++)
+    (*i).second->negate();
+}
+
 bool totals::is_zero() const
 {
   for (const_iterator i = amounts.begin(); i != amounts.end(); i++)
     if (! (*i).second->is_zero())
       return false;
   return true;
+}
+
+bool totals::is_negative() const
+{
+  bool all_negative = true;
+  bool some_negative = false;
+  for (const_iterator i = amounts.begin(); i != amounts.end(); i++) {
+    if ((*i).second->is_negative())
+      some_negative = true;
+    else if (! (*i).second->is_zero())
+      all_negative = false;
+  }
+  return some_negative && all_negative;
 }
 
 void totals::print(std::ostream& out, int width) const
@@ -365,10 +384,12 @@ account::~account()
     delete (*i).second;
 }
 
-const std::string account::as_str() const
+const std::string account::as_str(const account * stop) const
 {
-  if (! parent)
+  if (! parent || this == stop)
     return name;
+  else if (stop)
+    return parent->as_str(stop) + ":" + name;
   else if (full_name.empty())
     full_name = parent->as_str() + ":" + name;
 
@@ -409,20 +430,6 @@ mask::mask(const mask& m) : exclude(m.exclude), pattern(m.pattern)
   assert(regexp);
 }
 
-void read_regexps(const std::string& path, regexps_map& regexps)
-{
-  if (access(path.c_str(), R_OK) != -1) {
-    std::ifstream file(path.c_str());
-
-    while (! file.eof()) {
-      char buf[80];
-      file.getline(buf, 79);
-      if (*buf && ! std::isspace(*buf))
-	regexps.push_back(mask(buf));
-    }
-  }
-}
-
 bool mask::match(const std::string& str) const
 {
   static int ovec[30];
@@ -431,67 +438,36 @@ bool mask::match(const std::string& str) const
   return result >= 0 && ! exclude;
 }
 
-bool matches(const regexps_map& regexps, const std::string& str,
+bool matches(const regexps_list& regexps, const std::string& str,
 	     bool * by_exclusion)
 {
-  assert(! regexps.empty());
+  if (regexps.empty())
+    return false;
 
   bool match    = false;
   bool definite = false;
 
-//  std::ofstream out("regex.out", std::ios_base::app);
-//  out << "Matching against: " << str << std::endl;
-
-  for (regexps_map_const_iterator r = regexps.begin();
+  for (regexps_list_const_iterator r = regexps.begin();
        r != regexps.end();
        r++) {
-//    out << "  Trying: " << (*r).pattern << std::endl;
-
     static int ovec[30];
     int result = pcre_exec((*r).regexp, NULL, str.c_str(), str.length(),
 			   0, 0, ovec, 30);
     if (result >= 0) {
-//      out << "    Definite ";
-
-      match = ! (*r).exclude;
-//      if (match)
-//	out << "match";
-//      else
-//	out << "unmatch";
-
+      match     = ! (*r).exclude;
+      definite  = true;
+    }
+    else if ((*r).exclude) {
+      if (! match)
+	match = ! definite;
+    }
+    else {
       definite = true;
-    } else {
-      assert(result == -1);
-
-//      out << "    failure code = " << result << std::endl;
-
-      if ((*r).exclude) {
-	if (! match) {
-	  match = ! definite;
-//	  if (match)
-//	    out << "    indefinite match by exclusion" << std::endl;
-	}
-      } else {
-	definite = true;
-      }
-    }
-
-//    out << "  Current status: "
-//	  << (definite ? "definite " : "")
-//	  << (match ? "match" : "not match") << std::endl;
-  }
-
-  if (by_exclusion) {
-    if (match && ! definite && by_exclusion) {
-//      out << "  Note: Matched by exclusion rule" << std::endl;
-      *by_exclusion = true;
-    } else {
-      *by_exclusion = false;
     }
   }
 
-//  out << "  Final result: " << (match ? "match" : "not match")
-//	<< std::endl;
+  if (by_exclusion)
+    *by_exclusion = match && ! definite && by_exclusion;
 
   return match;
 }

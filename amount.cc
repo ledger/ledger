@@ -55,7 +55,7 @@ class gmp_amount : public amount
   }
 
   virtual amount * copy() const;
-  virtual amount * value(amount *) const;
+  virtual amount * value(const amount *) const;
   virtual amount * street(bool get_quotes) const;
   virtual bool has_price() const {
     return priced;
@@ -63,6 +63,8 @@ class gmp_amount : public amount
   virtual void set_value(const amount * val);
 
   virtual bool is_zero() const;
+  virtual bool is_negative() const;
+  virtual int  compare(const amount * other) const;
 
   virtual void negate() {
     mpz_ui_sub(quantity, 0, quantity);
@@ -156,10 +158,10 @@ amount * gmp_amount::copy() const
   return new_amt;
 }
 
-amount * gmp_amount::value(amount * pr) const
+amount * gmp_amount::value(const amount * pr) const
 {
   if (pr) {
-    gmp_amount * p = dynamic_cast<gmp_amount *>(pr);
+    const gmp_amount * p = dynamic_cast<const gmp_amount *>(pr);
     assert(p);
 
     gmp_amount * new_amt = new gmp_amount();
@@ -298,6 +300,27 @@ bool gmp_amount::is_zero() const
   return zero;
 }
 
+bool gmp_amount::is_negative() const
+{
+  return mpz_sgn(quantity) < 0;
+}
+
+int gmp_amount::compare(const amount * other) const
+{
+  amount * revalued = copy();
+  amount * copied   = other->copy();
+  revalued->negate();
+  copied->credit(revalued);
+  delete revalued;
+  int result = 1;
+  if (copied->is_zero())
+    result = 0;
+  else if (copied->is_negative())
+    result = -1;
+  delete copied;
+  return result;
+}
+
 static std::string amount_to_str(const commodity * comm, const mpz_t val,
 				 bool full_precision)
 {
@@ -315,6 +338,9 @@ static std::string amount_to_str(const commodity * comm, const mpz_t val,
   mpz_init(rquotient);
   mpz_init(remainder);
   mpz_init(divisor);
+
+  if (comm == NULL)
+    full_precision = true;
 
   if (! full_precision && comm->precision < MAX_PRECISION)
     round(temp, temp, comm->precision);
@@ -337,7 +363,7 @@ static std::string amount_to_str(const commodity * comm, const mpz_t val,
 
   std::ostringstream s;
 
-  if (comm->prefix) {
+  if (comm && comm->prefix) {
     s << comm->symbol;
     if (comm->separate)
       s << " ";
@@ -348,7 +374,7 @@ static std::string amount_to_str(const commodity * comm, const mpz_t val,
 
   if (mpz_sgn(quotient) == 0)
     s << '0';
-  else if (! comm->thousands)
+  else if (! comm || ! comm->thousands)
     s << quotient;
   else {
     bool printed = false;
@@ -371,22 +397,15 @@ static std::string amount_to_str(const commodity * comm, const mpz_t val,
       s << temp;
 
       if (powers > 0) {
-	if (comm->european)
-	  s << ".";
-	else
-	  s << ",";
-
+	s << (comm && comm->european ? '.' : ',');
 	printed = true;
       }
     }
   }
 
-  if (comm->european)
-    s << ',';
-  else
-    s << '.';
+  s << (comm && comm->european ? ',' : '.');
 
-  if (! full_precision || mpz_sgn(rquotient) == 0) {
+  if (comm && (! full_precision || mpz_sgn(rquotient) == 0)) {
     s.width(comm->precision);
     s.fill('0');
     s << rquotient;
@@ -399,17 +418,19 @@ static std::string amount_to_str(const commodity * comm, const mpz_t val,
 
     width = MAX_PRECISION - width;
 
-    while (p >= buf && *p == '0' &&
-	   (p - buf) >= (comm->precision - width))
-      p--;
-    *(p + 1) = '\0';
+    if (comm) {
+      while (p >= buf && *p == '0' &&
+	     (p - buf) >= (comm->precision - width))
+	p--;
+      *(p + 1) = '\0';
+    }
 
     s.width(width + std::strlen(buf));
     s.fill('0');
     s << buf;
   }
 
-  if (! comm->prefix) {
+  if (comm && ! comm->prefix) {
     if (comm->separate)
       s << " ";
     s << comm->symbol;
@@ -428,17 +449,11 @@ const std::string gmp_amount::as_str(bool full_prec) const
 {
   std::ostringstream s;
 
-  if (quantity_comm)
-    s << amount_to_str(quantity_comm, quantity, full_prec);
-  else
-    s << quantity;
+  s << amount_to_str(quantity_comm, quantity, full_prec);
 
   if (priced) {
     s << " @ ";
-    if (price_comm)
-      s << amount_to_str(price_comm, price, full_prec);
-    else
-      s << price;
+    s << amount_to_str(price_comm, price, full_prec);
   }
   return s.str();
 }

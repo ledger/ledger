@@ -1,0 +1,12 @@
+1.6
+
+  Can now parse timeclock files.  These are simple timelogs that track
+  in/out events, which can be maintained using my timeclock tool.  By
+  allowing ledger to parse these, it means that reporting can be done
+  on them in the same way as a ledger file (the commodities is "h",
+  for hours); and it means that doing things like tracking billable
+  hours for clients, and invoicing those clients to transfer those
+  hours into a dollar value via a receivable account, is now trivial.
+  See the docs for more on how to do this.
+
+  Began keeping NEWS file. :)
