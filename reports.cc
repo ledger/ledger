@@ -214,7 +214,7 @@ void print_register(const std::string& acct_name, std::ostream& out,
 	continue;
 
       char buf[32];
-      std::strftime(buf, 31, "%m.%d ", std::localtime(&(*i)->date));
+      std::strftime(buf, 31, "%m/%d ", std::localtime(&(*i)->date));
       out << buf;
 
       out.width(25);
