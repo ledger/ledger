@@ -246,7 +246,7 @@ Return the difference in the format of a time value."
     (with-temp-buffer
       (let ((exit-code
 	     (ledger-run-ledger
-	      buffer "--format" "\"%B\\n\"" "--reconcile"
+	      buffer "--format" "%B\\n" "--reconcile"
 	      (with-temp-buffer
 		(insert balance)
 		(goto-char (point-min))
