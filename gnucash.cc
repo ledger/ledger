@@ -17,8 +17,8 @@ static commodity * curr_comm;
 static amount *    curr_value;
 static std::string curr_quant;
 static XML_Parser  current_parser;
-
-static accounts_t accounts_by_id;
+static bool        do_compute;
+static accounts_t  accounts_by_id;
 
 static enum {
   NO_ACTION,
@@ -205,7 +205,9 @@ static void dataHandler(void *userData, const char *s, int len)
 
     std::string value = curr_quant + " " + (*i).second->comm->symbol;
     xact->cost = create_amount(value.c_str(), curr_value);
-    xact->acct->balance.credit(xact->cost);
+
+    if (do_compute)
+      xact->acct->balance.credit(xact->cost);
     break;
   }
 
@@ -224,13 +226,14 @@ static void dataHandler(void *userData, const char *s, int len)
   }
 }
 
-bool parse_gnucash(std::istream& in)
+bool parse_gnucash(std::istream& in, bool compute_balances)
 {
   char buf[BUFSIZ];
 
   curr_account = NULL;
   curr_entry   = NULL;
   curr_comm    = NULL;
+  do_compute   = compute_balances;
 
   action = NO_ACTION;
 

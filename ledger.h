@@ -1,5 +1,5 @@
 #ifndef _LEDGER_H
-#define _LEDGER_H "$Revision: 1.11 $"
+#define _LEDGER_H "$Revision: 1.12 $"
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -172,10 +172,12 @@ struct transaction
 
   transaction() : acct(NULL), cost(NULL) {}
 
+#ifdef DO_CLEANUP
   ~transaction() {
     if (cost)
       delete cost;
   }
+#endif
 };
 
 struct entry
@@ -189,6 +191,12 @@ struct entry
   std::list<transaction *> xacts;
 
   entry() : cleared(false) {}
+
+#ifdef DO_CLEANUP
+  // If we're running as a command-line tool, it's cheaper to just
+  // throw away the heap on exit, than spend time freeing things up
+  // like a good citizen.
+
   ~entry() {
     for (std::list<transaction *>::iterator i = xacts.begin();
 	 i != xacts.end();
@@ -196,6 +204,7 @@ struct entry
       delete *i;
     }
   }
+#endif
 
   bool matches(const std::list<mask>& regexps) const;
   void print(std::ostream& out) const;
@@ -221,7 +230,9 @@ struct totals
 
   map amounts;
 
+#ifdef DO_CLEANUP
   ~totals();
+#endif
 
   void credit(const amount * val) {
     std::pair<iterator, bool> result =
@@ -257,6 +268,7 @@ struct account
   std::string name;
   commodity * comm;             // default commodity for this account
   totals      balance;
+  bool        display;
 
   typedef std::map<const std::string, struct account *> map;
   typedef map::iterator iterator;
@@ -266,7 +278,7 @@ struct account
   map children;
 
   account(const std::string& _name, struct account * _parent = NULL)
-    : parent(_parent), name(_name) {}
+    : parent(_parent), name(_name), display(false) {}
 
   const std::string as_str() const {
     if (! parent)
@@ -297,10 +309,13 @@ struct state
 {
   commodities_t commodities;
   accounts_t    accounts;
+  accounts_t    accounts_cache; // maps full names to accounts
   entries_t     entries;
   totals        prices;
 
+#ifdef DO_CLEANUP
   ~state();
+#endif
 
   void record_price(const char * setting);
   account * find_account(const char * name, bool create = true);

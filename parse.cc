@@ -50,38 +50,33 @@ static inline void finalize_entry(entry * curr)
 // Ledger parser
 //
 
-bool parse_ledger(std::istream& in)
+bool parse_ledger(std::istream& in, bool compute_balances)
 {
-  static std::time_t now = std::time(NULL);
-  static struct std::tm * now_tm = std::localtime(&now);
-  static int current_year = now_tm->tm_year + 1900;
+  std::time_t      now          = std::time(NULL);
+  struct std::tm * now_tm       = std::localtime(&now);
+  int              current_year = now_tm->tm_year + 1900;
 
-  static char line[1024];
+  char line[1024];
 
-  static struct std::tm moment;
+  struct std::tm moment;
   memset(&moment, 0, sizeof(struct std::tm));
 
   entry * curr = NULL;
 
   // Compile the regular expression used for parsing amounts
-  static pcre * entry_re = NULL;
-  if (! entry_re) {
-    const char *error;
-    int erroffset;
-    static const std::string regexp =
-      "^(([0-9]{4})[./])?([0-9]+)[./]([0-9]+)\\s+(\\*\\s+)?"
-      "(\\(([^)]+)\\)\\s+)?(.+)";
-    entry_re = pcre_compile(regexp.c_str(), 0, &error, &erroffset, NULL);
-  }
+  const char *error;
+  int erroffset;
+  static const std::string regexp =
+    "^(([0-9]{4})[./])?([0-9]+)[./]([0-9]+)\\s+(\\*\\s+)?"
+    "(\\(([^)]+)\\)\\s+)?(.+)";
+  pcre * entry_re = pcre_compile(regexp.c_str(), 0,
+				 &error, &erroffset, NULL);
 
   while (! in.eof()) {
     in.getline(line, 1023);
     linenum++;
 
-    if (in.eof()) {
-      break;
-    }
-    else if (line[0] == '\n') {
+    if (line[0] == '\n') {
       continue;
     }
     else if (std::isdigit(line[0])) {
@@ -96,34 +91,36 @@ bool parse_ledger(std::istream& in)
 	continue;
       }
 
+      // If we haven't finished with the last entry yet, do so now
+
       if (curr)
 	finalize_entry(curr);
+
       curr = new entry;
 
       // Parse the date
 
-      int mday, mon, year = current_year;
-
+      int year = current_year;
       if (ovector[1 * 2] >= 0) {
 	pcre_copy_substring(line, ovector, matched, 2, buf, 255);
 	year = std::atoi(buf);
       }
 
-      if (ovector[3 * 2] >= 0) {
-	pcre_copy_substring(line, ovector, matched, 3, buf, 255);
-	mon = std::atoi(buf);
-      }
+      assert(ovector[3 * 2] >= 0);
+      pcre_copy_substring(line, ovector, matched, 3, buf, 255);
+      int mon = std::atoi(buf);
 
-      if (ovector[4 * 2] >= 0) {
-	pcre_copy_substring(line, ovector, matched, 4, buf, 255);
-	mday = std::atoi(buf);
-      }
+      assert(ovector[4 * 2] >= 0);
+      pcre_copy_substring(line, ovector, matched, 4, buf, 255);
+      int mday = std::atoi(buf);
 
       moment.tm_mday = mday;
       moment.tm_mon  = mon - 1;
       moment.tm_year = year - 1900;
 
       curr->date = std::mktime(&moment);
+
+      // Parse the remaining entry details
 
       if (ovector[5 * 2] >= 0)
 	curr->cleared = true;
@@ -164,6 +161,7 @@ bool parse_ledger(std::istream& in)
 	    cost_str++;
 	  xact->note = cost_str;
 	}
+
 	xact->cost = curr->xacts.front()->cost->copy();
 	xact->cost->negate();
       }
@@ -198,7 +196,8 @@ bool parse_ledger(std::istream& in)
 #endif
 
       xact->acct = main_ledger.find_account(p);
-      xact->acct->balance.credit(xact->cost);
+      if (compute_balances)
+	xact->acct->balance.credit(xact->cost);
 
       curr->xacts.push_back(xact);
 
@@ -215,8 +214,10 @@ bool parse_ledger(std::istream& in)
 	temp = xact->cost->value();
 	t->cost = temp->value(huquq);
 	delete temp;
-	t->acct->balance.credit(t->cost);
 	curr->xacts.push_back(t);
+
+	if (compute_balances)
+	  t->acct->balance.credit(t->cost);
 
 	// Balance the above transaction by recording the inverse in
 	// Expenses:Huququ'llah.
@@ -226,8 +227,10 @@ bool parse_ledger(std::istream& in)
 	t->cost = temp->value(huquq);
 	delete temp;
 	t->cost->negate();
-	t->acct->balance.credit(t->cost);
 	curr->xacts.push_back(t);
+
+	if (compute_balances)
+	  t->acct->balance.credit(t->cost);
       }
 #endif
     }

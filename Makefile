@@ -1,22 +1,27 @@
-define GNUCASH
-true
-endef
-
-CODE =  amount.cc ledger.cc parse.cc \
-	balance.cc register.cc equity.cc main.cc
-ifdef GNUCASH
-CODE := $(CODE) gnucash.cc
-endif
+CODE =  amount.cc   \
+	ledger.cc   \
+	parse.cc    \
+	balance.cc  \
+	register.cc \
+	equity.cc   \
+	main.cc
 
 OBJS = $(patsubst %.cc,%.o,$(CODE))
 
-CFLAGS = -Wall -ansi -pedantic -DDEFAULT_COMMODITY="\"\$$\"" -DHUQUQULLAH=1
-#DFLAGS = -O3 -fomit-frame-pointer
-DFLAGS = -g # -pg
+CFLAGS = -Wall -ansi -pedantic -DDEFAULT_COMMODITY="\"\$$\""
+CFLAGS := $(CFLAGS) -DHUQUQULLAH=1
+
+DFLAGS = -O3 -fomit-frame-pointer
+#DFLAGS = -g -O2 # -pg
+
 INCS   = -I/usr/include/xmltok
+
 LIBS   = -lgmpxx -lgmp -lpcre
+
 ifdef GNUCASH
-LIBS  := $(LIBS) -lxmlparse
+CODE   := $(CODE) gnucash.cc
+CFLAGS := $(CFLAGS) -DREAD_GNUCASH=1
+LIBS   := $(LIBS) -lxmlparse
 endif
 
 all: make.deps ledger
@@ -28,7 +33,7 @@ ledger: $(OBJS)
 	g++ $(CFLAGS) $(INCS) $(DFLAGS) -c -o $@ $<
 
 clean:
-	rm -f libledger.so ledger *.o
+	rm -f ledger *.o
 
 rebuild: clean deps all
 

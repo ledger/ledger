@@ -96,11 +96,15 @@ bool entry::matches(const std::list<mask>& regexps) const
   }
 }
 
+#ifdef DO_CLEANUP
+
 totals::~totals()
 {
   for (iterator i = amounts.begin(); i != amounts.end(); i++)
     delete (*i).second;
 }
+
+#endif // DO_CLEANUP
 
 void totals::credit(const totals& other)
 {
@@ -236,9 +240,10 @@ bool matches(const std::list<mask>& regexps, const std::string& str,
   return match;
 }
 
+#ifdef DO_CLEANUP
+
 state::~state()
 {
-#if 0
   for (commodities_iterator i = commodities.begin();
        i != commodities.end();
        i++)
@@ -253,8 +258,9 @@ state::~state()
        i != entries.end();
        i++)
     delete *i;
-#endif
 }
+
+#endif // DO_CLEANUP
 
 void state::record_price(const char * setting)
 {
@@ -275,6 +281,10 @@ void state::record_price(const char * setting)
 
 account * state::find_account(const char * name, bool create)
 {
+  accounts_iterator i = accounts_cache.find(name);
+  if (i != accounts_cache.end())
+    return (*i).second;
+
   char * buf = new char[std::strlen(name) + 1];
   std::strcpy(buf, name);
 
@@ -306,6 +316,9 @@ account * state::find_account(const char * name, bool create)
   }
 
   delete[] buf;
+
+  if (current)
+    accounts_cache.insert(accounts_entry(name, current));
 
   return current;
 }

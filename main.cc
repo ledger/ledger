@@ -3,8 +3,10 @@
 #include <fstream>
 
 namespace ledger {
-  extern bool parse_ledger(std::istream& in);
-  extern bool parse_gnucash(std::istream& in);
+  extern bool parse_ledger(std::istream& in, bool compute_balances);
+#ifdef READ_GNUCASH
+  extern bool parse_gnucash(std::istream& in, bool compute_balances);
+#endif
 
   extern void report_balances(int argc, char **argv, std::ostream& out);
   extern void print_register(int argc, char **argv, std::ostream& out);
@@ -188,16 +190,20 @@ int main(int argc, char *argv[])
 
   // Parse the ledger
 
+#ifdef READ_GNUCASH
   char buf[32];
   file->get(buf, 31);
   file->seekg(0);
 
   if (std::strncmp(buf, "<?xml version=\"1.0\"?>", 21) == 0)
-    parse_gnucash(*file);
+    parse_gnucash(*file, command == "equity");
   else
-    parse_ledger(*file);
+#endif
+    parse_ledger(*file, command == "equity");
 
+#ifdef DO_CLEANUP
   delete file;
+#endif
 
   // Process the command
 

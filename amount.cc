@@ -474,9 +474,12 @@ static commodity * parse_amount(mpz_t out, const char * num,
   static char buf[256];
 
   bool saw_commodity = false;
+  bool prefix        = false;
+  bool separate      = true;
+  bool thousands     = true;
+  bool european      = false;
 
   std::string symbol;
-  bool prefix, separate, thousands, european;
   int precision, result;
 
   if (ovector[base * 2] >= 0) {
