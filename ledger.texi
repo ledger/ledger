@@ -967,9 +967,6 @@ Strips the commodity from the argument.
 @item M
 The median of the argument; @samp{Mx} is the same as @samp{x/n}.
 
-@item D
-The deviation of the argument; @samp{Dx} is the same as @samp{x-x/n}.
-
 @item P
 The present market value of the argument.  The syntax @samp{P(x,d)} is
 supported, which yields the market value at time @samp{d}.

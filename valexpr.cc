@@ -505,13 +505,6 @@ value_expr_t * parse_value_term(std::istream& in)
     node->left = parse_value_term(in);
     break;
 
-  case 'D': {
-    node.reset(new value_expr_t(value_expr_t::O_SUB));
-    node->left  = parse_value_term("a");
-    node->right = parse_value_term(in);
-    break;
-  }
-
   case 'P':
     node.reset(new value_expr_t(value_expr_t::F_VALUE));
     if (peek_next_nonws(in) == '(') {

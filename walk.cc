@@ -38,8 +38,10 @@ void sort_transactions::flush()
 
   for (transactions_deque::iterator i = transactions.begin();
        i != transactions.end();
-       i++)
+       i++) {
+    transaction_xdata(**i).dflags &= ~TRANSACTION_SORT_CALC;
     (*handler)(**i);
+  }
 
   transactions.clear();
 
@@ -405,8 +407,10 @@ void walk_accounts(account_t&		    account,
     sort_accounts(account, sort_order, accounts);
     for (accounts_deque::const_iterator i = accounts.begin();
 	 i != accounts.end();
-	 i++)
+	 i++) {
+      account_xdata(**i).dflags &= ~ACCOUNT_SORT_CALC;
       walk_accounts(**i, handler, sort_order);
+    }
   } else {
     for (accounts_map::const_iterator i = account.accounts.begin();
 	 i != account.accounts.end();
