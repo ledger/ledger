@@ -578,6 +578,9 @@ void export_journal()
   class_< transaction_t > ("Transaction")
     .def(init<account_t *, amount_t, optional<unsigned int, std::string> >())
 
+    .def(self == self)
+    .def(self != self)
+
     .add_property("entry",
 		  make_getter(&transaction_t::entry,
 			      return_value_policy<reference_existing_object>()))
@@ -593,6 +596,9 @@ void export_journal()
 
   class_< account_t >
     ("Account", init<optional<account_t *, std::string, std::string> >())
+    .def(self == self)
+    .def(self != self)
+
     .def_readwrite("parent", &account_t::parent)
     .def_readwrite("name", &account_t::name)
     .def_readwrite("note", &account_t::note)
@@ -615,11 +621,18 @@ void export_journal()
     ;
 
   class_< journal_t > ("Journal")
+    .def(self == self)
+    .def(self != self)
+
     .def_readonly("sources", &journal_t::sources)
 
     .def("__len__", entries_len)
+#if 0
     .def("__getitem__", entries_getitem, return_internal_reference<1>())
-
+#else
+    .def("__getitem__", entries_getitem,
+	 return_value_policy<reference_existing_object>())
+#endif
     .def("add_account", &journal_t::add_account)
     .def("remove_account", &journal_t::remove_account)
     .def("find_account", py_find_account_1, return_internal_reference<1>())
@@ -634,6 +647,9 @@ void export_journal()
     ;
 
   scope in_entry = class_< entry_t > ("Entry")
+    .def(self == self)
+    .def(self != self)
+
     .def_readwrite("date", &entry_t::date)
     .def_readwrite("state", &entry_t::state)
     .def_readwrite("code", &entry_t::code)

@@ -106,7 +106,8 @@ class FormatTransaction (TransactionHandler):
 	self.output.flush ()
 
     def __call__ (self, xact):
-	if self.nformatter is not None and xact.entry is self.last_entry:
+	if self.nformatter is not None and self.last_entry is not None and \
+	   xact.entry.payee == self.last_entry.payee:
 	    self.output.write(self.nformatter.format(xact))
 	else:
 	    self.output.write(self.formatter.format(xact))
@@ -150,9 +151,7 @@ if 0:
 else:
     # These for loops are equivalent to `walk_entries', but far slower
     for entry in journal:
-	#print "1:", entry
 	for xact in entry:
-	    #print "2:", xact.entry
 	    handler (xact)
 
 handler.flush ()

@@ -62,6 +62,13 @@ class transaction_t
       delete cost;
   }
 
+  bool operator==(const transaction_t& xact) {
+    return this == &xact;
+  }
+  bool operator!=(const transaction_t& xact) {
+    return ! (*this == xact);
+  }
+
   bool valid() const;
 };
 
@@ -96,6 +103,13 @@ class entry_t
 	(*i)->~transaction_t();
   }
 
+  bool operator==(const entry_t& entry) {
+    return this == &entry;
+  }
+  bool operator!=(const entry_t& entry) {
+    return ! (*this == entry);
+  }
+
   void add_transaction(transaction_t * xact);
   bool remove_transaction(transaction_t * xact);
 
@@ -128,6 +142,13 @@ class account_t
       depth(parent ? parent->depth + 1 : 0), data(NULL), ident(0) {}
 
   ~account_t();
+
+  bool operator==(const account_t& account) {
+    return this == &account;
+  }
+  bool operator!=(const account_t& account) {
+    return ! (*this == account);
+  }
 
   std::string fullname() const;
 
@@ -182,6 +203,13 @@ class journal_t
     item_pool = item_pool_end = NULL;
   }
   ~journal_t();
+
+  bool operator==(const journal_t& journal) {
+    return this == &journal;
+  }
+  bool operator!=(const journal_t& journal) {
+    return ! (*this == journal);
+  }
 
   void add_account(account_t * acct) {
     master->add_account(acct);
