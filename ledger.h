@@ -1,5 +1,5 @@
 #ifndef _LEDGER_H
-#define _LEDGER_H "$Revision: 1.10 $"
+#define _LEDGER_H "$Revision: 1.11 $"
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -159,7 +159,7 @@ extern std::list<mask> regexps;
 extern void record_regexp(char * pattern, std::list<mask>& regexps);
 extern void read_regexps(const char * path, std::list<mask>& regexps);
 extern bool matches(const std::list<mask>& regexps,
-		    const std::string& str);
+		    const std::string& str, bool * exclude = NULL);
 
 
 struct account;

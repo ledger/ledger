@@ -16,48 +16,55 @@ static bool show_empty;
 static bool no_subtotals;
 static bool full_names;
 
+static bool account_matches(const account * acct,
+			    const std::list<mask>& regexps,
+			    bool * true_match)
+{
+  bool match = true;
+
+  if (show_children) {
+    match = false;
+    for (const account * a = acct; a; a = a->parent) {
+      bool exclude = false;
+      if (matches(regexps, a->name, &exclude)) {
+	match = true;
+	*true_match = a == acct;
+	break;
+      }
+      if (exclude)
+	break;
+    }
+  } else {
+    match = matches(regexps, acct->as_str());
+    *true_match = matches(regexps, acct->name);
+  }
+  return match;
+}
+
 static void display_total(std::ostream& out, totals& total_balance,
-			  const account * acct,
+			  const account * acct, bool top_level,
 			  const std::map<account *, totals *>& balances,
 			  const std::list<mask>& regexps)
 {
+  bool displayed = false;
+
   std::map<account *, totals *>::const_iterator b =
     balances.find(const_cast<account *>(acct));
   if (b != balances.end()) {
     totals * balance = (*b).second;
-
     if (balance && (show_empty || *balance)) {
-      bool match = true;
-      bool true_match = false;
-      if (! regexps.empty()) {
-	if (show_children) {
-	  match = false;
-	  for (const account * a = acct; a; a = a->parent) {
-	    if (matches(regexps, a->name)) {
-	      match      = true;
-	      true_match = a == acct;
-	      break;
-	    }
-	  }
-	} else {
-	  match      = matches(regexps, acct->as_str());
-	  true_match = matches(regexps, acct->name);
-	}
-      }
+      displayed = true;
 
-      if (match) {
-	out << *balance;
+      out << *balance;
+      if (top_level)
+	total_balance.credit(*balance);
 
-	if (! acct->parent || true_match)
-	  total_balance.credit(*balance);
-
-	if (acct->parent && ! no_subtotals && ! full_names) {
-	  for (const account * a = acct; a; a = a->parent)
-	    out << "  ";
-	  out << acct->name << std::endl;
-	} else {
-	  out << "  " << *acct << std::endl;
-	}
+      if (acct->parent && ! no_subtotals && ! full_names) {
+	for (const account * a = acct; a; a = a->parent)
+	  out << "  ";
+	out << acct->name << std::endl;
+      } else {
+	out << "  " << *acct << std::endl;
       }
     }
   }
@@ -67,7 +74,8 @@ static void display_total(std::ostream& out, totals& total_balance,
   for (account::const_iterator i = acct->children.begin();
        i != acct->children.end();
        i++)
-    display_total(out, total_balance, (*i).second, balances, regexps);
+    display_total(out, total_balance, (*i).second, ! displayed,
+		  balances, regexps);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -125,8 +133,11 @@ void report_balances(int argc, char **argv, std::ostream& out)
       account * acct = (*x)->acct;
 
       for (; acct; acct = no_subtotals ? NULL : acct->parent) {
-	if (! show_children && acct->parent &&
-	    (regexps.empty() || ! matches(regexps, acct->name)))
+	bool true_match = false;
+	if (! (regexps.empty() ||
+	       account_matches(acct, regexps, &true_match)))
+	  break;
+	else if (! (true_match || show_children || ! acct->parent))
 	  continue;
 
 	totals * balance = NULL;
@@ -140,14 +151,12 @@ void report_balances(int argc, char **argv, std::ostream& out)
 	}
 
 	bool do_credit = true;
-
 	if (have_beginning && difftime((*i)->date, begin_date) < 0)
 	  do_credit = false;
 	else if (have_ending && difftime((*i)->date, end_date) > 0)
 	  do_credit = false;
 	else if (show_cleared && ! (*i)->cleared)
 	  do_credit = false;
-
 	if (! do_credit)
 	  continue;
 
@@ -164,7 +173,7 @@ void report_balances(int argc, char **argv, std::ostream& out)
   for (accounts_iterator i = main_ledger.accounts.begin();
        i != main_ledger.accounts.end();
        i++)
-    display_total(out, total_balance, (*i).second, balances, regexps);
+    display_total(out, total_balance, (*i).second, true, balances, regexps);
 
   // Print the total of all the balances shown
 

@@ -212,7 +212,8 @@ void read_regexps(const char * path, std::list<mask>& regexps)
   }
 }
 
-bool matches(const std::list<mask>& regexps, const std::string& str)
+bool matches(const std::list<mask>& regexps, const std::string& str,
+	     bool * exclude)
 {
   // If the first pattern is an exclude, we assume all patterns match
   // if they don't match the exclude.  If the first pattern is an
@@ -225,8 +226,11 @@ bool matches(const std::list<mask>& regexps, const std::string& str)
        r++) {
     int ovec[3];
     if (pcre_exec((*r).regexp, NULL, str.c_str(), str.length(),
-		  0, 0, ovec, 3) >= 0)
+		  0, 0, ovec, 3) >= 0) {
+      if (exclude)
+	*exclude = (*r).exclude;
       match = ! (*r).exclude;
+    }
   }
 
   return match;
