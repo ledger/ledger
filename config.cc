@@ -187,8 +187,7 @@ void config_t::process_options(const std::string&     command,
   // If downloading is to be supported, configure the updater
 
   if (! commodity_t::updater && download_quotes)
-    commodity_t::updater = new quotes_by_script(price_db,
-						pricing_leeway,
+    commodity_t::updater = new quotes_by_script(price_db, pricing_leeway,
 						cache_dirty);
 
   if (! date_format.empty())
@@ -235,7 +234,8 @@ void parse_ledger_data(journal_t * journal,
       entry_count += parse_journal_file(config.data_file, journal, account);
     }
 
-    if (! config.price_db.empty())
+    if (! config.price_db.empty() &&
+	access(config.price_db.c_str(), R_OK) != -1)
       if (parse_journal_file(config.price_db, journal))
 	throw error("Entries not allowed in price history file");
   }

@@ -379,6 +379,21 @@ void value_expr_t::compute(value_t& result, const details_t& details) const
   }
 }
 
+static inline void unexpected(char c, char wanted = '\0') {
+  if (c == -1) {
+    if (wanted)
+      throw value_expr_error(std::string("Missing '") + wanted + "'");
+    else
+      throw value_expr_error("Unexpected end");
+  } else {
+    if (wanted)
+      throw value_expr_error(std::string("Invalid char '") + c +
+			     "' (wanted '" + wanted + "')");
+    else
+      throw value_expr_error(std::string("Invalid char '") + c + "'");
+  }
+}
+
 value_expr_t * parse_value_term(std::istream& in);
 
 inline value_expr_t * parse_value_term(const char * p) {
@@ -406,7 +421,7 @@ value_expr_t * parse_value_term(std::istream& in)
     if (c == '}')
       in.get(c);
     else
-      throw value_expr_error("Missing '}'");
+      unexpected(c, '}');
 
     node.reset(new value_expr_t(value_expr_t::CONSTANT_A));
     node->constant_a.parse(buf);
@@ -479,10 +494,9 @@ value_expr_t * parse_value_term(std::istream& in)
 	in.get(c);
 	node->right = parse_value_expr(in, true);
       }
-      if (peek_next_nonws(in) == ')')
-	in.get(c);
-      else
-	throw value_expr_error("Missing ')'");
+      in.get(c);
+      if (c != ')')
+	unexpected(c, ')');
     } else {
       node->left = parse_value_term(in);
     }
@@ -508,7 +522,7 @@ value_expr_t * parse_value_term(std::istream& in)
 
     READ_INTO(in, buf, 255, c, c != '/');
     if (c != '/')
-      throw value_expr_error("Missing closing '/'");
+      unexpected(c, '/');
 
     in.get(c);
     node.reset(new value_expr_t(short_account_mask ?
@@ -522,7 +536,7 @@ value_expr_t * parse_value_term(std::istream& in)
   case '\'': {
     READ_INTO(in, buf, 255, c, c != '\'');
     if (c != '\'')
-      throw value_expr_error("Missing closing '\''");
+      unexpected(c, '\'');
 
     in.get(c);
     node.reset(new value_expr_t(value_expr_t::F_INTERP_FUNC));
@@ -533,16 +547,15 @@ value_expr_t * parse_value_term(std::istream& in)
 
   case '(':
     node.reset(parse_value_expr(in, true));
-    if (peek_next_nonws(in) == ')')
-      in.get(c);
-    else
-      throw value_expr_error("Missing ')'");
+    in.get(c);
+    if (c != ')')
+      unexpected(c, ')');
     break;
 
   case '[': {
     READ_INTO(in, buf, 255, c, c != ']');
     if (c != ']')
-      throw value_expr_error("Missing ']'");
+      unexpected(c, ']');
     in.get(c);
 
     node.reset(new value_expr_t(value_expr_t::CONSTANT_T));
@@ -677,8 +690,7 @@ value_expr_t * parse_logic_expr(std::istream& in)
 
       default:
 	if (! in.eof())
-	  throw value_expr_error(std::string("Unexpected character '") +
-				 c + "'");
+	  unexpected(c);
 	break;
       }
     }
@@ -721,8 +733,7 @@ value_expr_t * parse_value_expr(std::istream& in, const bool partial)
 	choices->left = parse_logic_expr(in);
 	c = peek_next_nonws(in);
 	if (c != ':')
-	  throw value_expr_error(std::string("Unexpected character '") +
-				 c + "'");
+	  unexpected(c, ':');
 	in.get(c);
 	choices->right = parse_logic_expr(in);
 	break;
@@ -730,26 +741,26 @@ value_expr_t * parse_value_expr(std::istream& in, const bool partial)
 
       default:
 	if (! in.eof())
-	  throw value_expr_error(std::string("Unexpected character '") +
-				 c + "'");
+	  unexpected(c);
 	break;
       }
       c = peek_next_nonws(in);
     }
   }
 
-  if (! partial) {
-    char c;
+  char c;
+  if (! node.get()) {
     in.get(c);
-    if (! node.get()) {
-      if (in.eof())
-	throw value_expr_error(std::string("Failed to parse value expression"));
-      else
-	throw value_expr_error(std::string("Unexpected character '") + c + "'");
-    } else if (! in.eof()) {
-      throw value_expr_error(std::string("Unexpected character '") +
-			     c + "'");
-    }
+    if (in.eof())
+      throw value_expr_error(std::string("Failed to parse value expression"));
+    else
+      unexpected(c);
+  } else if (! partial) {
+    in.get(c);
+    if (! in.eof())
+      unexpected(c);
+    else
+      in.unget();
   }
 
   return node.release();

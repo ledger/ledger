@@ -131,7 +131,7 @@ inline value_expr_t * parse_value_expr(const char * p,
 
 inline value_expr_t * parse_value_expr(const std::string& str,
 				       const bool partial = false) {
-  return parse_value_expr(str.c_str(), partial);
+  return parse_value_expr(str.c_str());
 }
 
 #ifdef DEBUG_ENABLED
@@ -146,30 +146,15 @@ class item_predicate
   const value_expr_t * predicate;
 
  public:
-  item_predicate(const std::string& _predicate) {
+  item_predicate(const std::string& _predicate) : predicate(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor item_predicate<T>");
-    predicate = NULL;
     if (! _predicate.empty()) {
       try {
-#ifdef DEBUG_ENABLED
-	DEBUG_CLASS("valexpr.predicate.parse");
-
-	DEBUG_PRINT_("parsing: '" << _predicate << "'");
-#endif
 	predicate = parse_value_expr(_predicate);
-
-#ifdef DEBUG_ENABLED
-	if (DEBUG_() && _debug_stream) {
-	  *_debug_stream << "dump: ";
-	  dump_value_expr(*_debug_stream, predicate);
-	  *_debug_stream << std::endl;
-	}
-#endif
       }
-      catch (const value_expr_error& err) {
-	std::cerr << "Error in predicate '" << _predicate << "': "
-		  << err.what() << std::endl;
-	std::exit(1);
+      catch (value_expr_error& err) {
+	throw value_expr_error(std::string("In predicate '") +
+			       _predicate + "': " + err.what());
       }
     }
   }

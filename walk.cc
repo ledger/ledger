@@ -360,9 +360,14 @@ void walk_accounts(account_t&		    account,
 		   const std::string&       sort_string)
 {
   if (! sort_string.empty()) {
-    std::auto_ptr<value_expr_t> sort_order(parse_value_expr(sort_string));
-    if (! sort_order.get())
-      throw error(std::string("Sort string failed to parse: " + sort_string));
+    std::auto_ptr<value_expr_t> sort_order;
+    try {
+      sort_order.reset(parse_value_expr(sort_string));
+    }
+    catch (value_expr_error& err) {
+      throw error(std::string("In sort string '" + sort_string + "': " +
+			      err.what()));
+    }
     walk_accounts(account, handler, sort_order.get());
   } else {
     walk_accounts(account, handler);

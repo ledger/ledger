@@ -3,6 +3,7 @@
 #include "debug.h"
 
 #include <fstream>
+#include <stdlib.h>
 
 namespace ledger {
 
@@ -56,7 +57,7 @@ void quotes_by_script::operator()(commodity_t&      commodity,
     price.parse(buf);
     commodity.add_price(now, price);
 
-    if (price && ! price_db.empty()) {
+    if (price && ! price_db.empty() && access(price_db.c_str(), W_OK) != -1) {
       char buf[128];
       strftime(buf, 127, "%Y/%m/%d %H:%M:%S", localtime(&now));
       ofstream database(price_db.c_str(), ios_base::out | ios_base::app);
