@@ -417,11 +417,13 @@ unsigned int parse_textual_journal(std::istream& in, journal_t * journal,
 	date = std::time_t(((unsigned long) date) +
 			   hour * 3600 + min * 60 + sec);
 
-	amount_t price;
-
 	parse_commodity(in, symbol);
-	in >> line;		// the price
-	price.parse(line);
+
+	in.getline(line, MAX_LINE);
+	linenum++;
+
+	amount_t price;
+	price.parse(skip_ws(line));
 
 	commodity_t * commodity = commodity_t::find_commodity(symbol, true);
 	commodity->add_price(date, price);
@@ -434,7 +436,7 @@ unsigned int parse_textual_journal(std::istream& in, journal_t * journal,
 	in >> c;
 	parse_commodity(in, symbol);
 
-	commodity_t * commodity = commodity_t::find_commodity(line, true);
+	commodity_t * commodity = commodity_t::find_commodity(symbol, true);
 	commodity->flags |= (COMMODITY_STYLE_CONSULTED |
 			     COMMODITY_STYLE_NOMARKET);
 	break;
@@ -447,9 +449,10 @@ unsigned int parse_textual_journal(std::istream& in, journal_t * journal,
 	amount_t    price;
 
 	parse_commodity(in, symbol);
+
 	in.getline(line, MAX_LINE);
 	linenum++;
-	price.parse(line);
+	price.parse(skip_ws(line));
 
 	commodity_t * commodity = commodity_t::find_commodity(symbol, true);
 	commodity->set_conversion(price);

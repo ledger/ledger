@@ -4,6 +4,7 @@
 #include "format.h"
 #include "walk.h"
 #include "option.h"
+#include "timing.h"
 
 #include <fstream>
 #include <cstring>
@@ -101,6 +102,7 @@ namespace {
   bool show_subtotals	  = true;
   bool show_expanded	  = false;
   bool show_related	  = false;
+  bool show_all_related   = false;
   bool show_inverted	  = false;
   bool show_empty	  = false;
   bool days_of_the_week   = false;
@@ -436,6 +438,8 @@ int main(int argc, char * argv[], char * envp[])
 
   // A ledger data file must be specified
 
+  TIMER_START(read_cache, "reading cache file");
+
   // jww (2004-08-13): use LEDGER_FILE
   use_cache = std::getenv("LEDGER") != NULL;
 
@@ -466,9 +470,14 @@ int main(int argc, char * argv[], char * envp[])
     }
   }
 
+  TIMER_STOP(read_cache);
+
   // Parse the command-line options
 
+  TIMER_START(process_args, "processing command-line arguments");
+
   std::list<std::string> args;
+
   process_arguments(argc, argv, false, args);
 
   if (args.empty()) {
@@ -477,7 +486,11 @@ int main(int argc, char * argv[], char * envp[])
   }
   std::list<std::string>::iterator arg = args.begin();
 
+  TIMER_STOP(process_args);
+
   // Process options from the environment
+
+  TIMER_START(process_env, "processing environment");
 
   process_environment(envp, "LEDGER_");
 
@@ -486,7 +499,11 @@ int main(int argc, char * argv[], char * envp[])
   if (char * p = std::getenv("PRICE_EXP"))
     process_option("price-exp", p);
 
+  TIMER_STOP(process_env);
+
   // Read the ledger file, unless we already read it from the cache
+
+  TIMER_START(parse_files, "parsing ledger files");
 
   if (! use_cache || cache_dirty) {
     int entry_count = 0;
@@ -529,9 +546,13 @@ int main(int argc, char * argv[], char * envp[])
     }
   }
 
+  TIMER_STOP(parse_files);
+
   // Read the command word, and then check and simplify it
 
   std::string command = *arg++;
+
+  TIMER_START(handle_options, "configuring based on options");
 
   if (command == "balance" || command == "bal" || command == "b")
     command = "b";
@@ -604,7 +625,7 @@ int main(int argc, char * argv[], char * envp[])
     try {
       std::istringstream stream(sort_string);
       sort_order.reset(parse_value_expr(stream));
-      if (! stream.eof()) {
+      if (stream.peek() != -1) {
 	std::ostringstream err;
 	err << "Unexpected character '" << char(stream.peek()) << "'";
 	throw value_expr_error(err.str());
@@ -641,8 +662,6 @@ int main(int argc, char * argv[], char * envp[])
   }
 
   // Configure some option depending on the report type
-
-  bool show_all_related = false;
 
   if (command == "p" || command == "e") {
     show_related = show_all_related = true;
@@ -685,7 +704,11 @@ int main(int argc, char * argv[], char * envp[])
   format_t format(first_line_format);
   format_t nformat(next_lines_format);
 
+  TIMER_STOP(handle_options);
+
   // Walk the entries based on the report type and the options
+
+  TIMER_START(report_gen, "generation of final report");
 
   if (command == "b") {
     std::auto_ptr<item_handler<transaction_t> > formatter;
@@ -807,7 +830,11 @@ int main(int argc, char * argv[], char * envp[])
 #endif
   }
 
+  TIMER_STOP(report_gen);
+
   // Save the cache, if need be
+
+  TIMER_START(write_cache, "writing cache file");
 
   if (use_cache && cache_dirty) {
     std::string cache_file = ledger_cache_file();
@@ -817,6 +844,8 @@ int main(int argc, char * argv[], char * envp[])
       write_binary_journal(stream, journal.get(), std::getenv("LEDGER"));
     }
   }
+
+  TIMER_STOP(write_cache);
 
   return 0;
 }

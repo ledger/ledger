@@ -59,6 +59,9 @@ namespace ledger {
 
 #if RELEASE_LEVEL >= ALPHA
 
+#include <pcre.h>
+#include <cstring>
+
 #define DEBUG_ENABLED
 
 extern std::ostream * warning_stream;
@@ -66,8 +69,16 @@ extern std::ostream * debug_stream;
 extern bool           free_debug_stream;
 
 inline bool _debug_active(const char * const cls) {
-  char * debug = std::getenv("DEBUG_CLASS");
-  return debug && std::strcmp(debug, cls) == 0;
+  if (char * debug = std::getenv("DEBUG_CLASS")) {
+    static const char * error;
+    static int	  erroffset;
+    static int	  ovec[30];
+    static pcre * class_regexp = pcre_compile(debug, PCRE_CASELESS,
+					      &error, &erroffset, NULL);
+    return pcre_exec(class_regexp, NULL, cls, std::strlen(cls),
+		     0, 0, ovec, 30) >= 0;
+  }
+  return false;
 }
 
 #define DEBUG_CLASS(cls) static const char * const _debug_cls = (cls)
