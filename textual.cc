@@ -294,7 +294,8 @@ void automated_transaction_t::extend_entry(entry_t * entry)
 	  amt = (*t)->amount;
 
 	transaction_t * xact
-	  = new transaction_t(entry, (*t)->account, amt, amt, (*t)->flags);
+	  = new transaction_t(entry, (*t)->account, amt, amt,
+			      (*t)->flags | TRANSACTION_AUTO);
 	entry->add_transaction(xact);
       }
     }
@@ -603,8 +604,9 @@ unsigned int parse_textual_ledger(std::istream& in, ledger_t * journal,
 	    amt.parse(buf);
 	    time_commodity = amt.commodity;
 
-	    transaction_t * xact = new transaction_t(curr, last_account, amt, amt,
-						     TRANSACTION_VIRTUAL);
+	    transaction_t * xact
+	      = new transaction_t(curr, last_account, amt, amt,
+				  TRANSACTION_VIRTUAL);
 	    curr->add_transaction(xact);
 
 	    if (! finalize_entry(curr) || ! journal->add_entry(curr))
@@ -777,123 +779,4 @@ unsigned int parse_textual_ledger(std::istream& in, ledger_t * journal,
   return count;
 }
 
-//////////////////////////////////////////////////////////////////////
-//
-// Textual ledger printing code
-//
-
-void print_transaction(std::ostream& out, transaction_t * xact,
-		       bool display_amount, bool display_cost)
-{
-  std::ostringstream s;
-  s << *(xact->account);
-  std::string acct_name = s.str();
-
-  if (xact->flags & TRANSACTION_VIRTUAL) {
-    if (xact->flags & TRANSACTION_BALANCE)
-      acct_name = std::string("[") + acct_name + "]";
-    else
-      acct_name = std::string("(") + acct_name + ")";
-  }
-
-  out.width(30);
-  out.fill(' ');
-  out << std::left << acct_name;
-
-  if (xact->amount && display_amount) {
-    out << "  ";
-    out.width(12);
-    out.fill(' ');
-    std::ostringstream s;
-    s << xact->amount;
-    out << std::right << s.str();
-  }
-
-  if (xact->amount && display_cost &&
-      xact->amount != xact->cost) {
-    out << " @ ";
-    out << xact->cost / xact->amount;
-  }
-
-  if (! xact->note.empty())
-    out << "  ; " << xact->note;
-
-  out << std::endl;
-}
-
-void print_textual_entry(std::ostream& out, entry_t * entry, bool shortcut)
-{
-  char buf[32];
-  std::strftime(buf, 31, "%Y/%m/%d ", std::gmtime(&entry->date));
-  out << buf;
-
-  if (entry->state == entry_t::CLEARED)
-    out << "* ";
-  if (! entry->code.empty())
-    out << '(' << entry->code << ") ";
-  if (! entry->payee.empty())
-    out << entry->payee;
-
-  out << std::endl;
-
-  const commodity_t * comm = NULL;
-  int size = 0;
-
-  for (transactions_list::const_iterator x
-	 = entry->transactions.begin();
-       x != entry->transactions.end();
-       x++) {
-    if ((*x)->flags & TRANSACTION_VIRTUAL &&
-	! ((*x)->flags & TRANSACTION_BALANCE))
-      continue;
-
-    if (! comm)
-      comm = (*x)->amount.commodity;
-    else if (comm != (*x)->amount.commodity)
-      shortcut = false;
-
-    size++;
-  }
-
-  if (shortcut && size != 2)
-    shortcut = false;
-
-  for (transactions_list::const_iterator x
-	 = entry->transactions.begin();
-       x != entry->transactions.end();
-       x++) {
-    out << "    ";
-    print_transaction(out, *x,
-		      (! shortcut || x == entry->transactions.begin() ||
-		       ((*x)->flags & TRANSACTION_VIRTUAL &&
-			! ((*x)->flags & TRANSACTION_BALANCE))),
-		      size != 2);
-  }
-
-  out << std::endl;
-}
-
-void print_textual_ledger(std::ostream& out, ledger_t * journal,
-			  bool shortcut)
-{
-  for (entries_list::const_iterator i = journal->entries.begin();
-       i != journal->entries.end();
-       i++)
-    print_textual_entry(out, *i, shortcut);
-}
-
 } // namespace ledger
-
-#ifdef PARSE_TEST
-
-int main(int argc, char *argv[])
-{
-  journal.sources.push_back(argv[1]);
-  std::ifstream stream(argv[1]);
-  ledger::ledger_t journal;
-  int count = parse_textual_ledger(stream, &journal, journal.master);
-  std::cout << "Read " << count << " entries." << std::endl;
-  print_textual_ledger(std::cout, &journal, true);
-}
-
-#endif // PARSE_TEST

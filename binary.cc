@@ -15,7 +15,7 @@
 namespace ledger {
 
        unsigned long		  magic_number   = 0xFFEED765;
-static unsigned long		  format_version = 0x00020008;
+static unsigned long		  format_version = 0x00020009;
 
 static char			  buf[4096];
 

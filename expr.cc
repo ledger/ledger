@@ -129,15 +129,11 @@ balance_t node_t::compute(const item_t * item) const
     break;
 
   case CLEARED:
-#if 0
-    temp = amount_t(item->state == CLEARED ? 1 : 0);
-#endif
+    temp = amount_t(item->state == entry_t::CLEARED ? 1 : 0);
     break;
 
   case REAL:
-#if 0
     temp = amount_t(item->flags & TRANSACTION_VIRTUAL ? 0 : 1);
-#endif
     break;
 
   case INDEX:
@@ -162,7 +158,7 @@ balance_t node_t::compute(const item_t * item) const
 
   case F_PAYEE_MASK:
     assert(mask);
-    temp = mask->match(item->payee);
+    temp = (mask->match(item->payee) || mask->match(item->note)) ? 1 : 0;
     break;
 
   case F_ACCOUNT_MASK:

@@ -136,7 +136,10 @@ class value_predicate
     } else {
       item_t temp;
       temp.date    = xact->entry->date;
+      temp.state   = xact->entry->state;
+      temp.code    = xact->entry->code;
       temp.payee   = xact->entry->payee;
+      temp.flags   = xact->flags;
       temp.account = xact->account;
       return predicate->compute(&temp);
     }
@@ -149,6 +152,8 @@ class value_predicate
       item_t temp;
       temp.date  = entry->date;
       temp.payee = entry->payee;
+      temp.state = entry->state;
+      temp.code  = entry->code;
 
       // Although there may be conflicting account masks for the whole
       // set of transactions -- for example, /rent/&!/expenses/, which
@@ -159,6 +164,7 @@ class value_predicate
       for (transactions_list::const_iterator i = entry->transactions.begin();
 	   i != entry->transactions.end();
 	   i++) {
+	temp.flags   = (*i)->flags;
 	temp.account = (*i)->account;
 	if (predicate->compute(&temp))
 	  return true;

@@ -83,11 +83,15 @@ void balance_report(std::ostream&   out,
 
 //////////////////////////////////////////////////////////////////////
 //
-// The command-line register report
+// The command-line register and print report
 //
 
 static const std::string reg_fmt
-  = "%10d %-.20p %-.22N %12.66t %12.80T\n%/%22_ %-.22N %12.66t %12.80T\n";
+  = "%10d %-.20p %-.22N %12.66t %12.80T\n\
+%/                                %-.22N %12.66t %12.80T\n";
+
+static const std::string print_fmt
+  = "\n%10d %X%C%p\n    %-34N  %12o\n%/    %-34N  %12o\n";
 
 static bool show_commodities_revalued      = false;
 static bool show_commodities_revalued_only = false;
@@ -151,11 +155,11 @@ void register_report(std::ostream&   out,
     bool first = true;
 
     if ((*i)->subitems.size() > 1 && ! show_expanded) {
-      item_t summary;
-      summary.date    = (*i)->date;
+      item_t summary(*i);
       summary.parent  = *i;
       summary.account = &splits;
 
+      summary.value   = 0;
       for (items_deque::const_iterator j = (*i)->subitems.begin();
 	   j != (*i)->subitems.end();
 	   j++)
@@ -171,7 +175,7 @@ void register_report(std::ostream&   out,
 
       if (show) {
 	if (! show_commodities_revalued_only)
-	  first_line_format.format_elements(out, *i, top);
+	  first_line_format.format_elements(out, &summary, top);
 
 	if (show_commodities_revalued)
 	  last_reported = balance;
@@ -212,139 +216,6 @@ void register_report(std::ostream&   out,
   if (show_commodities_revalued)
     report_value_change(out, -1, balance, last_reported, predicate,
 			first_line_format, next_lines_format);
-}
-
-
-bool add_new_entry(int index, int argc, char **argv, ledger_t * ledger)
-{
-  masks_list	regexps;
-  entry_t       added;
-  entry_t *     matching = NULL;
-
-  added.state = entry_t::UNCLEARED;
-
-  assert(index < argc);
-
-  if (! parse_date(argv[index++], &added.date)) {
-    std::cerr << "Error: Bad entry date: " << argv[index - 1]
-	      << std::endl;
-    return false;
-  }
-
-  if (index == argc) {
-    std::cerr << "Error: Too few arguments to 'entry'." << std::endl;
-    return false;
-  }
-
-  regexps.push_back(mask_t(argv[index++]));
-
-  for (entries_list::reverse_iterator i = ledger->entries.rbegin();
-       i != ledger->entries.rend();
-       i++)
-    if (matches(regexps, (*i)->payee)) {
-      matching = *i;
-      break;
-    }
-
-  added.payee = matching ? matching->payee : regexps.front().pattern;
-
-  if (index == argc) {
-    std::cerr << "Error: Too few arguments to 'entry'." << std::endl;
-    return false;
-  }
-
-  if (argv[index][0] == '-' || std::isdigit(argv[index][0])) {
-    if (! matching) {
-      std::cerr << "Error: Missing account name for non-matching entry."
-		<< std::endl;
-      return false;
-    }
-
-    transaction_t * m_xact, * xact, * first;
-    m_xact = matching->transactions.front();
-
-    amount_t amt(argv[index++]);
-    first = xact = new transaction_t(&added, m_xact->account, amt, amt);
-
-    if (xact->amount.commodity->symbol.empty()) {
-      xact->amount.commodity = m_xact->amount.commodity;
-      xact->cost.commodity   = m_xact->amount.commodity;
-    }
-    added.add_transaction(xact);
-
-    m_xact = matching->transactions.back();
-
-    xact = new transaction_t(&added, m_xact->account,
-			     - first->amount, - first->amount);
-    added.add_transaction(xact);
-
-    if ((index + 1) < argc && std::string(argv[index]) == "-from")
-      if (account_t * acct = ledger->find_account(argv[++index]))
-	added.transactions.back()->account = acct;
-  } else {
-    while (index < argc && std::string(argv[index]) != "-from") {
-      mask_t acct_regex(argv[index++]);
-
-      account_t *   acct  = NULL;
-      commodity_t * cmdty = NULL;
-
-      if (matching) {
-	for (transactions_list::iterator x
-	       = matching->transactions.begin();
-	     x != matching->transactions.end();
-	     x++) {
-	  if (acct_regex.match((*x)->account->fullname())) {
-	    acct  = (*x)->account;
-	    cmdty = (*x)->amount.commodity;
-	    break;
-	  }
-	}
-      }
-
-      if (! acct)
-	acct = ledger->find_account(acct_regex.pattern);
-
-      if (! acct) {
-	std::cerr << "Error: Could not find account name '"
-		  << acct_regex.pattern << "'." << std::endl;
-	return false;
-      }
-
-      if (index == argc) {
-	std::cerr << "Error: Too few arguments to 'entry'." << std::endl;
-	return false;
-      }
-
-      amount_t amt(argv[index]++);
-      transaction_t * xact = new transaction_t(&added, acct, amt, amt);
-
-      if (! xact->amount.commodity)
-	xact->amount.commodity = cmdty;
-
-      added.add_transaction(xact);
-    }
-
-    if ((index + 1) < argc && std::string(argv[index]) == "-from") {
-      if (account_t * acct = ledger->find_account(argv[++index])) {
-	transaction_t * xact = new transaction_t(NULL, acct);
-	added.add_transaction(xact);
-      }
-    } else {
-      if (! matching) {
-	std::cerr << "Error: Could not figure out the account to draw from."
-		  << std::endl;
-	std::exit(1);
-      }
-      transaction_t * xact
-	= new transaction_t(&added, matching->transactions.back()->account);
-      added.add_transaction(xact);
-    }
-  }
-
-  //  if (added.finalize())
-  print_textual_entry(std::cout, &added);
-
-  return true;
 }
 
 
@@ -468,23 +339,24 @@ static void show_help(std::ostream& out)
     << "  balance   show balance totals" << std::endl
     << "  register  display a register for ACCOUNT" << std::endl
     << "  print     print all ledger entries" << std::endl
-    << "  equity    generate equity ledger for all entries" << std::endl
     << "  entry     output a newly formed entry, based on arguments" << std::endl
-    << "  price     show the last known price for matching commodities" << std::endl;
+    << "  equity    output equity entries for specified accounts" << std::endl;
 }
 
 int main(int argc, char * argv[])
 {
-  std::list<std::string> files;
+  std::auto_ptr<ledger::ledger_t> journal(new ledger::ledger_t);
+  std::list<std::string>	  files;
+  std::auto_ptr<ledger::node_t>   predicate;
+  std::auto_ptr<ledger::node_t>   display_predicate;
+  std::auto_ptr<ledger::node_t>   sort_order;
 
-  std::string        predicate_string;
-  ledger::node_t *   predicate = NULL;
-  std::string	     format_string;
-  std::string	     sort_string;
-  ledger::node_t *   sort_order = NULL;
-  std::string	     value_expr = "a";
-  std::string	     total_expr = "T";
-  ledger::ledger_t * journal	= new ledger::ledger_t;
+  std::string predicate_string;
+  std::string display_predicate_string;
+  std::string format_string;
+  std::string sort_string;
+  std::string value_expr = "a";
+  std::string total_expr = "T";
 
   bool show_subtotals = true;
   bool show_expanded  = false;
@@ -521,11 +393,9 @@ int main(int argc, char * argv[])
 	if (access(p, R_OK) != -1) {
 	  std::ifstream instr(p);
 	  if (! ledger::read_binary_ledger(instr, std::getenv("LEDGER"),
-					   journal)) {
-	    // We need to throw away what we've read, and create a new
-	    // ledger
-	    delete journal;
-	    journal = new ledger::ledger_t;
+					   journal.get())) {
+	    // Throw away what's been read, and create a new journal
+	    journal.reset(new ledger::ledger_t);
 	  } else {
 	    ledger::cache_dirty = false;
 	  }
@@ -652,6 +522,14 @@ int main(int argc, char * argv[])
       predicate_string += ")";
       break;
 
+    case 'd':
+      if (! display_predicate_string.empty())
+	display_predicate_string += "&";
+      display_predicate_string += "(";
+      display_predicate_string += optarg;
+      display_predicate_string += ")";
+      break;
+
     // Commodity reporting
     case 'P':
       ledger::price_db = optarg;
@@ -747,14 +625,14 @@ int main(int argc, char * argv[])
       if (files.empty()) {
 	if (char * p = std::getenv("LEDGER"))
 	  for (p = std::strtok(p, ":"); p; p = std::strtok(NULL, ":"))
-	    entry_count += parse_ledger_file(p, journal);
+	    entry_count += parse_ledger_file(p, journal.get());
       } else {
 	for (std::list<std::string>::iterator i = files.begin();
 	     i != files.end(); i++) {
 	  char buf[4096];
 	  char * p = buf;
 	  std::strcpy(p, (*i).c_str());
-	  entry_count += parse_ledger_file(p, journal);
+	  entry_count += parse_ledger_file(p, journal.get());
 	}
       }
 
@@ -765,7 +643,8 @@ int main(int argc, char * argv[])
 	const char * path = ledger::price_db.c_str();
 	std::ifstream db(path);
 	journal->sources.push_back(path);
-	entry_count += ledger::parse_textual_ledger(db, journal, journal->master);
+	entry_count += ledger::parse_textual_ledger(db, journal.get(),
+						    journal->master);
       }
     }
     catch (ledger::error& err) {
@@ -780,52 +659,98 @@ int main(int argc, char * argv[])
     }
   }
 
-  // Read the command word, and handle the "entry" command specially,
-  // without any other processing.
+  // Read the command word, and then check and simplify it
 
-  const std::string command = argv[index++];
+  std::string command = argv[index++];
 
-  if (command == "entry")
-    return add_new_entry(index, argc, argv, journal) ? 0 : 1;
-
-  // Interpret the remaining arguments as regular expressions, used
-  // for refining report results.
-
-  for (; index < argc; index++) {
-    if (std::strcmp(argv[index], "--") == 0) {
-      index++;
-      break;
-    }
-
-    show_expanded = true;
-
-    if (! predicate_string.empty())
-      predicate_string += "&";
-
-    if (argv[index][0] == '-') {
-      predicate_string += "(!/";
-      predicate_string += argv[index] + 1;
-    } else {
-      predicate_string += "(/";
-      predicate_string += argv[index];
-    }
-    predicate_string += "/)";
+  if (command == "balance" || command == "bal" || command == "b")
+    command = "b";
+  else if (command == "register" || command == "reg" || command == "r")
+    command = "r";
+  else if (command == "print" || command == "p")
+    command = "p";
+  else if (command == "entry")
+    command = "e";
+  else if (command == "equity")
+    command = "E";
+  else {
+    std::cerr << "Error: Unrecognized command '" << command << "'."
+	      << std::endl;
+    return 1;
   }
 
-  for (; index < argc; index++) {
-    show_expanded = true;
+  // Process the remaining command-line arguments
 
-    if (! predicate_string.empty())
-      predicate_string += "&";
+  std::auto_ptr<ledger::entry_t> new_entry;
+  if (command == "entry") {
+    new_entry.reset(journal->derive_entry(argc - index, &argv[index]));
+  } else {
+    // Treat the remaining command-line arguments as regular
+    // expressions, used for refining report results.
 
-    if (argv[index][0] == '-') {
-      predicate_string += "(!//";
-      predicate_string += argv[index] + 1;
-    } else {
-      predicate_string += "(//";
-      predicate_string += argv[index];
+    bool have_regexps = index < argc;
+    bool first	      = true;
+
+    for (; index < argc; index++) {
+      if (std::strcmp(argv[index], "--") == 0) {
+	index++;
+	if (! first && index < argc)
+	  predicate_string += ")";
+	break;
+      }
+
+      if (! show_expanded && command == "b")
+	show_expanded = true;
+
+      if (first) {
+	if (! predicate_string.empty())
+	  predicate_string += "&(";
+	else
+	  predicate_string += "(";
+	first = false;
+      } else {
+	predicate_string += "|";
+      }
+
+      if (argv[index][0] == '-') {
+	predicate_string += "!/";
+	predicate_string += argv[index] + 1;
+      } else {
+	predicate_string += "/";
+	predicate_string += argv[index];
+      }
+      predicate_string += "/";
     }
-    predicate_string += "/)";
+
+    if (index < argc) {
+      if (! predicate_string.empty())
+	predicate_string += "&(";
+      else
+	predicate_string += "(";
+    }
+
+    first = true;
+    for (; index < argc; index++) {
+      if (! show_expanded && command == "b")
+	show_expanded = true;
+
+      if (first)
+	first = false;
+      else
+	predicate_string += "|";
+
+      if (argv[index][0] == '-') {
+	predicate_string += "!//";
+	predicate_string += argv[index] + 1;
+      } else {
+	predicate_string += "//";
+	predicate_string += argv[index];
+      }
+      predicate_string += "/";
+    }
+
+    if (have_regexps)
+      predicate_string += ")";
   }
 
   // Compile the predicate
@@ -835,121 +760,109 @@ int main(int argc, char * argv[])
     if (debug)
       std::cerr << "predicate = " << predicate_string << std::endl;
 #endif
-    predicate = ledger::parse_expr(predicate_string);
+    predicate.reset(ledger::parse_expr(predicate_string));
+  }
+
+  if (! display_predicate_string.empty()) {
+#ifdef DEBUG
+    if (debug)
+      std::cerr << "display predicate = " << display_predicate_string
+		<< std::endl;
+#endif
+    display_predicate.reset(ledger::parse_expr(display_predicate_string));
   }
 
   // Compile the sorting string
 
   if (! sort_string.empty())
-    sort_order = ledger::parse_expr(sort_string);
+    sort_order.reset(ledger::parse_expr(sort_string));
 
   // Setup the meaning of %t and %T encountered in format strings
 
-  ledger::format_t::value_expr = ledger::parse_expr(value_expr);
-  ledger::format_t::total_expr = ledger::parse_expr(total_expr);
+  ledger::format_t::value_expr.reset(ledger::parse_expr(value_expr));
+  ledger::format_t::total_expr.reset(ledger::parse_expr(total_expr));
 
   // Now handle the command that was identified above.
 
-  if (command == "print") {
-#if 0
-    if (ledger::item_t * top
-	  = ledger::walk_entries(journal->entries.begin(),
-				 journal->entries.end(), predicate,
-				 show_related, show_inverted)) {
-      ledger::format_t * format = new ledger::format_t(format_string);
-      ledger::entry_report(std::cout, top, *format);
-#ifdef DEBUG
-      delete top;
-      delete format;
-#endif
-    }
-#endif
+  if (command == "p" || command == "e") {
+    show_related  = true;
+    show_expanded = true;
   }
-  else if (command == "equity") {
-#if 0
-    if (ledger::item_t * top
-	= ledger::walk_accounts(journal->master, predicate, show_subtotals)) {
-      ledger::format_t * format = new ledger::format_t(format_string);
-      ledger::entry_report(std::cout, top, predicate, *format);
-#ifdef DEBUG
-      delete top;
-      delete format;
-#endif
-    }
-#endif
+  else if (command == "E") {
+    show_expanded = true;
   }
-  else if (! sort_order && ! show_related &&
-	   (command == "balance"  || command == "bal")) {
-    if (ledger::item_t * top
-	= ledger::walk_accounts(journal->master, predicate, show_subtotals)) {
-      ledger::format_t * format
-	= new ledger::format_t(format_string.empty() ?
-			       ledger::bal_fmt : format_string);
-      ledger::balance_report(std::cout, top, predicate, sort_order, *format,
-			     show_expanded, show_subtotals);
-#ifdef DEBUG
-      delete format;
-      delete top;
-#endif
-    }
+  else if (show_related && command == "r") {
+    show_inverted = true;
   }
-  else if (command == "balance"  || command == "bal") {
-    if (ledger::item_t * list
-	  = ledger::walk_entries(journal->entries.begin(),
-				 journal->entries.end(), predicate,
-				 show_related, show_inverted))
-      if (ledger::item_t * top
-	    = ledger::walk_items(list, journal->master, predicate,
-				 show_subtotals)) {
-	ledger::format_t * format
-	  = new ledger::format_t(format_string.empty() ?
-				 ledger::bal_fmt : format_string);
-	ledger::balance_report(std::cout, top, predicate, sort_order, *format,
-			       show_expanded, show_subtotals);
-#ifdef DEBUG
-	delete format;
-	delete top;
-	delete list;
-#endif
-      }
-  }
-  else if (command == "register"  || command == "reg") {
-    if (show_related)
-      show_inverted = true;
 
-    if (ledger::item_t * top
-	  = ledger::walk_entries(journal->entries.begin(),
-				 journal->entries.end(), predicate,
-				 show_related, show_inverted)) {
+  std::auto_ptr<ledger::item_t> top;
+  std::auto_ptr<ledger::item_t> list;
+
+  if (command == "e") {
+    top.reset(new ledger::item_t);
+    ledger::item_t * item = new ledger::item_t(new_entry.get());
+    for (ledger::transactions_list::const_iterator i
+	   = new_entry->transactions.begin();
+	 i != new_entry->transactions.end();
+	 i++)
+      item->add_item(new ledger::item_t(*i));
+    top->add_item(item);
+  }
+  else if ((! show_related || ! predicate.get()) &&
+	   (command == "b" || command == "E")) {
+    top.reset(ledger::walk_accounts(NULL, journal->master, predicate.get(),
+				    command != "E" && show_subtotals,
+				    command == "E"));
+  }
+  else {
+    top.reset(ledger::walk_entries(journal->entries.begin(),
+				   journal->entries.end(), predicate.get(),
+				   show_related, show_inverted));
+    if (top.get() && command == "b" || command == "E") {
+      list.reset(top.release());
+      top.reset(ledger::walk_accounts(list.get(), journal->master,
+				      predicate.get(),
+				      command != "E" && show_subtotals,
+				      command == "E"));
+    }
+  }
+
+  if (top.get()) {
+    const char * f;
+    if (! format_string.empty())
+      f = format_string.c_str();
+    else if (command == "b")
+      f = ledger::bal_fmt.c_str();
+    else if (command == "r")
+      f = ledger::reg_fmt.c_str();
+    else
+      f = ledger::print_fmt.c_str();
+
+    if (command == "b") {
+      std::auto_ptr<ledger::format_t> format(new ledger::format_t(f));
+      ledger::balance_report(std::cout, top.get(), display_predicate.get(),
+			     sort_order.get(), *format, show_expanded,
+			     show_subtotals);
+    } else {
       std::string first_line_format;
       std::string next_lines_format;
 
-      const char * f = (format_string.empty() ?
-			ledger::reg_fmt.c_str() : format_string.c_str());
       if (const char * p = std::strstr(f, "%/")) {
 	first_line_format = std::string(f, 0, p - f);
 	next_lines_format = std::string(p + 2);
       } else {
-	first_line_format = format_string;
-	next_lines_format = format_string;
+	first_line_format = next_lines_format = f;
       }
 
-      ledger::format_t * format  = new ledger::format_t(first_line_format);
-      ledger::format_t * nformat = new ledger::format_t(next_lines_format);
+      std::auto_ptr<ledger::format_t>
+	format(new ledger::format_t(first_line_format));
+      std::auto_ptr<ledger::format_t>
+	nformat(new ledger::format_t(next_lines_format));
 
-      ledger::register_report(std::cout, top, predicate, sort_order,
-			      *format, *nformat, show_expanded);
-#ifdef DEBUG
-      delete nformat;
-      delete format;
-      delete top;
-#endif
+      ledger::register_report(std::cout, top.get(), display_predicate.get(),
+			      sort_order.get(), *format, *nformat,
+			      show_expanded);
     }
-  }
-  else {
-    std::cerr << "Error: Unrecognized command '" << command << "'."
-	      << std::endl;
-    return 1;
   }
 
   // Save the cache, if need be
@@ -958,30 +871,9 @@ int main(int argc, char * argv[])
     if (const char * p = std::getenv("LEDGER_CACHE")) {
       std::ofstream outstr(p);
       assert(std::getenv("LEDGER"));
-      ledger::write_binary_ledger(outstr, journal, std::getenv("LEDGER"));
+      ledger::write_binary_ledger(outstr, journal.get(),
+				  std::getenv("LEDGER"));
     }
-
-#ifdef DEBUG
-  delete journal;
-
-  if (predicate)
-    delete predicate;
-  if (sort_order)
-    delete sort_order;
-
-  if (ledger::format_t::value_expr)
-    delete ledger::format_t::value_expr;
-  if (ledger::format_t::total_expr)
-    delete ledger::format_t::total_expr;
-
-  // jww (2004-07-30): This should be moved into some kind of
-  // "ledger::shutdown" function.
-  for (ledger::commodities_map::iterator i
-	 = ledger::commodity_t::commodities.begin();
-       i != ledger::commodity_t::commodities.end();
-       i++)
-    delete (*i).second;
-#endif
 
   return 0;
 }

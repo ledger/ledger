@@ -24,8 +24,8 @@ std::string maximal_account_name(const item_t * item, const item_t * parent)
   return name;
 }
 
-node_t * format_t::value_expr = NULL;
-node_t * format_t::total_expr = NULL;
+std::auto_ptr<node_t> format_t::value_expr;
+std::auto_ptr<node_t> format_t::total_expr;
 
 element_t * format_t::parse_elements(const std::string& fmt)
 {
@@ -110,9 +110,12 @@ element_t * format_t::parse_elements(const std::string& fmt)
 	current->chars = "%Y/%m/%d";
 	break;
 
+      case 'X': current->type = element_t::CLEARED; break;
+      case 'C': current->type = element_t::CODE; break;
       case 'p': current->type = element_t::PAYEE; break;
       case 'n': current->type = element_t::ACCOUNT_NAME; break;
       case 'N': current->type = element_t::ACCOUNT_FULLNAME; break;
+      case 'o': current->type = element_t::OPT_AMOUNT; break;
       case 't': current->type = element_t::VALUE; break;
       case 'T': current->type = element_t::TOTAL; break;
       case '_': current->type = element_t::SPACER; break;
@@ -174,28 +177,89 @@ void format_t::format_elements(std::ostream& out, const item_t * item,
       }
       break;
 
+    case element_t::CLEARED:
+      if (item->state == entry_t::CLEARED)
+	out << "* ";
+      else
+	out << "";
+      break;
+
+    case element_t::CODE:
+      if (! item->code.empty())
+	out << "(" << item->code << ") ";
+      else
+	out << "";
+      break;
+
     case element_t::PAYEE:
       out << (elem->max_width == 0 ?
 	      item->payee : truncated(item->payee, elem->max_width));
       break;
 
     case element_t::ACCOUNT_NAME:
+    case element_t::ACCOUNT_FULLNAME:
       if (item->account) {
-	std::string name = maximal_account_name(item, displayed_parent);
-	out << (elem->max_width == 0 ? name : truncated(name, elem->max_width));
+	std::string name = (elem->type == element_t::ACCOUNT_FULLNAME ?
+			    item->account->fullname() :
+			    maximal_account_name(item, displayed_parent));
+	if (elem->max_width > 0)
+	  name = truncated(name, elem->max_width);
+
+	if (item->flags & TRANSACTION_VIRTUAL) {
+	  if (item->flags & TRANSACTION_BALANCE)
+	    name = "[" + name + "]";
+	  else
+	    name = "(" + name + ")";
+	}
+	out << name;
       } else {
 	out << " ";
       }
       break;
 
-    case element_t::ACCOUNT_FULLNAME:
-      if (item->account)
-	out << (elem->max_width == 0 ?
-		item->account->fullname() :
-		truncated(item->account->fullname(), elem->max_width));
+    case element_t::OPT_AMOUNT: {
+      std::string disp;
+      bool        use_disp = false;
+
+      if (std::find(displayed_parent->subitems.begin(),
+		    displayed_parent->subitems.end(), item) !=
+	  displayed_parent->subitems.end()) {
+	if (displayed_parent->subitems.size() == 2 &&
+	    item == displayed_parent->subitems.back() &&
+	    (displayed_parent->subitems.front()->value.quantity ==
+	     displayed_parent->subitems.front()->value.cost) &&
+	    (displayed_parent->subitems.front()->value ==
+	     - displayed_parent->subitems.back()->value)) {
+	  use_disp = true;
+	}
+	else if (displayed_parent->subitems.size() != 2 &&
+		 item->value.quantity != item->value.cost &&
+		 item->value.quantity.amounts.size() == 1 &&
+		 item->value.cost.amounts.size() == 1 &&
+		 ((*item->value.quantity.amounts.begin()).first !=
+		  (*item->value.cost.amounts.begin()).first)) {
+	  amount_t unit_cost
+	    = ((*item->value.cost.amounts.begin()).second /
+	       (*item->value.quantity.amounts.begin()).second);
+	  std::ostringstream stream;
+	  stream << item->value.quantity << " @ " << unit_cost;
+	  disp = stream.str();
+	  use_disp = true;
+	}
+      }
+
+      if (use_disp)
+	out << disp;
       else
-	out << " ";
+	item->value.quantity.write(out, elem->min_width,
+				   elem->max_width > 0 ?
+				   elem->max_width : elem->min_width);
+
+      // jww (2004-07-31): this should be handled differently
+      if (! item->note.empty())
+	out << "  ; " << item->note;
       break;
+    }
 
     case element_t::VALUE: {
       balance_t value = compute_value(item);

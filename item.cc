@@ -3,51 +3,6 @@
 
 namespace ledger {
 
-// jww (2004-07-21): If format.show_empty is set, then include all
-// subaccounts, empty, balanced or no
-
-item_t * walk_accounts(const account_t * account,
-		       const node_t *    predicate,
-		       const bool        show_subtotals)
-{
-  item_t * item = new item_t;
-  item->account = account;
-
-  std::time_t latest = 0;
-  for (transactions_list::const_iterator i
-	 = std::find_if(account->transactions.begin(),
-			account->transactions.end(),
-			value_predicate(predicate));
-       i != account->transactions.end();
-       i = std::find_if(++i, account->transactions.end(),
-			value_predicate(predicate))) {
-    if (std::difftime(latest, (*i)->entry->date) < 0)
-      latest = (*i)->entry->date;
-
-    item->value += *(*i);
-    if (show_subtotals)
-      item->total += *(*i);
-  }
-  item->date = latest;
-
-  for (accounts_map::const_iterator i = account->accounts.begin();
-       i != account->accounts.end();
-       i++) {
-    item_t * subitem = walk_accounts((*i).second, predicate, show_subtotals);
-    subitem->parent = item;
-
-    if (std::difftime(item->date, subitem->date) < 0)
-      item->date = subitem->date;
-
-    if (show_subtotals)
-      item->total += subitem->total;
-    if (show_subtotals ? subitem->total : subitem->value)
-      item->subitems.push_back(subitem);
-  }
-
-  return item;
-}
-
 static inline void sum_items(const item_t * top,
 			     const bool     show_subtotals,
 			     item_t *	    item)
@@ -64,27 +19,88 @@ static inline void sum_items(const item_t * top,
     sum_items(*i, show_subtotals, item);
 }
 
-item_t * walk_items(const item_t *    top,
-		    const account_t * account,
-		    const node_t *    predicate,
-		    const bool	      show_subtotals)
+item_t * walk_accounts(const item_t * top,
+		       account_t *    account,
+		       const node_t * predicate,
+		       const bool     show_subtotals,
+		       const bool     show_flattened)
 {
   item_t * item = new item_t;
   item->account = account;
 
-  sum_items(top, show_subtotals, item);
+  if (top) {
+    sum_items(top, show_subtotals, item);
+  } else {
+    std::time_t latest = 0;
+    for (transactions_list::iterator i
+	   = std::find_if(account->transactions.begin(),
+			  account->transactions.end(),
+			  value_predicate(predicate));
+	 i != account->transactions.end();
+	 i = std::find_if(++i, account->transactions.end(),
+			  value_predicate(predicate))) {
+      if (std::difftime(latest, (*i)->entry->date) < 0)
+	latest = (*i)->entry->date;
 
-  for (accounts_map::const_iterator i = account->accounts.begin();
+      item->value += *(*i);
+      if (show_subtotals)
+	item->total += *(*i);
+    }
+    item->date = latest;
+  }
+
+  for (accounts_map::iterator i = account->accounts.begin();
        i != account->accounts.end();
        i++) {
-    item_t * subitem = walk_items(top, (*i).second, predicate, show_subtotals);
+    std::auto_ptr<item_t>
+      subitem(walk_accounts(top, (*i).second, predicate, show_subtotals,
+			    show_flattened));
     subitem->parent = item;
+
+    if (std::difftime(item->date, subitem->date) < 0)
+      item->date = subitem->date;
+
+    if (show_flattened) {
+      item_t *	     ptr = item;
+      balance_pair_t total;
+
+      for (items_deque::const_iterator i = subitem->subitems.begin();
+	   i != subitem->subitems.end();
+	   i++)
+	if (show_subtotals ? (*i)->total : (*i)->value) {
+	  if (! account->parent) {
+	    if (! total) {
+	      item_t * temp = new item_t;
+	      temp->date  = top ? top->date : item->date;
+	      temp->payee = "Opening balance";
+	      item->subitems.push_back(temp);
+	      ptr = temp;
+	    }
+	    total += show_subtotals ? (*i)->total : (*i)->value;
+	  }
+
+	  ptr->subitems.push_back(new item_t(*i));
+	  ptr->subitems.back()->date  = ptr->date;
+	  ptr->subitems.back()->payee = ptr->payee;
+	}
+
+      if (total) {
+	item_t * temp = new item_t;
+	temp->date    = ptr->date;
+	temp->payee   = ptr->payee;
+	temp->account = account->find_account("Equity:Opening Balances");
+	temp->value   = total;
+	temp->value.negate();
+	ptr->subitems.push_back(temp);
+      }
+    }
 
     if (show_subtotals)
       item->total += subitem->total;
 
-    if (show_subtotals ? subitem->total : subitem->value)
-      item->subitems.push_back(subitem);
+    if ((! show_flattened || account->parent) &&
+	show_subtotals ? subitem->total : subitem->value)
+      item->subitems.push_back(subitem.release());
   }
 
   return item;
@@ -103,6 +119,7 @@ item_t * walk_entries(entries_list::const_iterator begin,
   for (entries_list::const_iterator i = std::find_if(begin, end, pred_obj);
        i != end;
        i = std::find_if(++i, end, pred_obj)) {
+    transactions_list reckoned;
     item_t * item = NULL;
 
     for (transactions_list::const_iterator j
@@ -115,39 +132,32 @@ item_t * walk_entries(entries_list::const_iterator begin,
       assert(*i == (*j)->entry);
 
       if (! item) {
-	item = new item_t;
+	item = new item_t(*i);
 	item->index = count++;
-	item->date  = (*i)->date;
-	item->payee = (*i)->payee;
       }
 
       // If show_inverted is true, it implies show_related.
-      if (! show_inverted) {
-	item_t * subitem = new item_t;
-	subitem->parent  = item;
-	subitem->date    = item->date;
-	subitem->payee   = item->payee;
-	subitem->account = (*j)->account;
-	subitem->value   = *(*j);
-	item->value += subitem->value;
-	item->subitems.push_back(subitem);
+      if (! show_inverted &&
+	  std::find(reckoned.begin(),
+		    reckoned.end(), *j) == reckoned.end()) {
+	item->add_item(new item_t(*j));
+	reckoned.push_back(*j);
       }
 
       if (show_related)
 	for (transactions_list::iterator k = (*i)->transactions.begin();
 	     k != (*i)->transactions.end();
-	     k++)
-	  if (*k != *j && ! ((*k)->flags & TRANSACTION_VIRTUAL)) {
-	    item_t * subitem = new item_t;
-	    subitem->parent  = item;
-	    subitem->date    = item->date;
-	    subitem->payee   = item->payee;
-	    subitem->account = (*k)->account;
-	    subitem->value   = *(*k);
-	    if (show_inverted)
-	      subitem->value.negate();
-	    item->subitems.push_back(subitem);
-	  }
+	     k++) {
+	  if (*k == *j || ((*k)->flags & TRANSACTION_AUTO) ||
+	      std::find(reckoned.begin(),
+			reckoned.end(), *k) != reckoned.end())
+	    continue;
+
+	  item->add_item(new item_t(*k));
+	  if (show_inverted)
+	    item->subitems.back()->value.negate();
+	  reckoned.push_back(*k);
+	}
     }
 
     if (item) {
@@ -155,6 +165,9 @@ item_t * walk_entries(entries_list::const_iterator begin,
 	result = new item_t;
       item->parent = result;
       result->subitems.push_back(item);
+
+      if (std::difftime(result->date, item->date) < 0)
+	result->date = item->date;
     }
   }
 

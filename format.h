@@ -16,9 +16,12 @@ struct element_t
     STRING,
     VALUE_EXPR,
     DATE_STRING,
+    CLEARED,
+    CODE,
     PAYEE,
     ACCOUNT_NAME,
     ACCOUNT_FULLNAME,
+    OPT_AMOUNT,
     VALUE,
     TOTAL,
     SPACER
@@ -47,8 +50,8 @@ struct format_t
 {
   element_t * elements;
 
-  static node_t * value_expr;
-  static node_t * total_expr;
+  static std::auto_ptr<node_t> value_expr;
+  static std::auto_ptr<node_t> total_expr;
 
   format_t(const std::string& _format) {
     elements = parse_elements(_format);
@@ -63,10 +66,10 @@ struct format_t
 		       const item_t * displayed_parent = NULL) const;
 
   static balance_t compute_value(const item_t * item) {
-    return value_expr ? value_expr->compute(item) : balance_t();
+    return value_expr.get() ? value_expr->compute(item) : balance_t();
   }
   static balance_t compute_total(const item_t * item) {
-    return total_expr ? total_expr->compute(item) : balance_t();
+    return total_expr.get() ? total_expr->compute(item) : balance_t();
   }
 };
 

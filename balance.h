@@ -274,6 +274,27 @@ class balance_t
     return amount(amt.commodity) >= amt;
   }
 
+  bool operator==(const balance_t& bal) const {
+    amounts_map::const_iterator i, j;
+    for (i = amounts.begin(), j = bal.amounts.begin();
+	 i != amounts.end() && j != bal.amounts.end();
+	 i++, j++) {
+      if (! ((*i).first  == (*j).first &&
+	     (*i).second == (*j).second))
+	return false;
+    }
+    return i == amounts.end() && j == bal.amounts.end();
+  }
+  bool operator==(const amount_t& amt) const {
+    return amounts.size() == 1 && (*amounts.begin()).second == amt;
+  }
+  bool operator!=(const balance_t& bal) const {
+    return ! (*this == bal);
+  }
+  bool operator!=(const amount_t& amt) const {
+    return ! (*this == amt);
+  }
+
   // unary negation
   balance_t& negate() {
     for (amounts_map::iterator i = amounts.begin();
@@ -559,6 +580,25 @@ class balance_pair_t
   }
   bool operator>=(const amount_t& amt) const {
     return quantity >= amt;
+  }
+
+  bool operator==(const balance_pair_t& bal_pair) const {
+    return quantity == bal_pair.quantity;
+  }
+  bool operator==(const balance_t& bal) const {
+    return quantity == bal;
+  }
+  bool operator==(const amount_t& amt) const {
+    return quantity == amt;
+  }
+  bool operator!=(const balance_pair_t& bal_pair) const {
+    return ! (*this == bal_pair);
+  }
+  bool operator!=(const balance_t& bal) const {
+    return ! (*this == bal);
+  }
+  bool operator!=(const amount_t& amt) const {
+    return ! (*this == amt);
   }
 
   // unary negation

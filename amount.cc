@@ -10,7 +10,7 @@
 
 namespace ledger {
 
-static void mpz_round(mpz_t value, int precision)
+static void mpz_round(mpz_t out, mpz_t value, int precision)
 {
   mpz_t divisor;
 
@@ -33,17 +33,17 @@ static void mpz_round(mpz_t value, int precision)
       mpz_ui_pow_ui(divisor, 10, MAX_PRECISION - precision);
       mpz_add(remainder, divisor, remainder);
       mpz_ui_sub(remainder, 0, remainder);
-      mpz_add(value, value, remainder);
+      mpz_add(out, value, remainder);
     } else {
-      mpz_sub(value, value, remainder);
+      mpz_sub(out, value, remainder);
     }
   } else {
     if (mpz_cmp(remainder, divisor) >= 0) {
       mpz_ui_pow_ui(divisor, 10, MAX_PRECISION - precision);
       mpz_sub(remainder, divisor, remainder);
-      mpz_add(value, value, remainder);
+      mpz_add(out, value, remainder);
     } else {
-      mpz_sub(value, value, remainder);
+      mpz_sub(out, value, remainder);
     }
   }
 
@@ -357,7 +357,7 @@ amount_t amount_t::round(int precision) const
     return *this;
   } else {
     amount_t temp = *this;
-    mpz_round(MPZ(temp.quantity),
+    mpz_round(MPZ(temp.quantity), MPZ(temp.quantity),
 	      precision == -1 ? commodity->precision : precision);
     return temp;
   }
@@ -380,8 +380,14 @@ std::ostream& operator<<(std::ostream& out, const amount_t& amt)
 
   bool negative = false;
 
+  // Ensure the value is rounded to the commodity's precision before
+  // outputting it.  NOTE: `rquotient' is used here as a temp variable!
+
+  if (amt.commodity->precision != MAX_PRECISION)
+    mpz_round(rquotient, MPZ(amt.quantity), amt.commodity->precision);
+
   mpz_ui_pow_ui(divisor, 10, MAX_PRECISION);
-  mpz_tdiv_qr(quotient, remainder, MPZ(amt.quantity), divisor);
+  mpz_tdiv_qr(quotient, remainder, rquotient, divisor);
 
   if (mpz_sgn(quotient) < 0 || mpz_sgn(remainder) < 0)
     negative = true;
@@ -392,10 +398,6 @@ std::ostream& operator<<(std::ostream& out, const amount_t& amt)
   if (amt.commodity->precision == MAX_PRECISION) {
     mpz_set(rquotient, remainder);
   } else {
-    // Ensure the value is rounded to the commodity's precision before
-    // outputting it
-    mpz_round(MPZ(amt.quantity), amt.commodity->precision);
-
     assert(MAX_PRECISION - amt.commodity->precision > 0);
     mpz_ui_pow_ui(divisor, 10, MAX_PRECISION - amt.commodity->precision);
     mpz_tdiv_qr(rquotient, remainder, remainder, divisor);
@@ -680,6 +682,19 @@ void (*commodity_t::updater)(commodity_t *     commodity,
 			     const std::time_t moment) = NULL;
 
 commodities_map commodity_t::commodities;
+
+struct cleanup_commodities
+{
+  ~cleanup_commodities() {
+    for (commodities_map::iterator i
+	   = commodity_t::commodities.begin();
+	 i != commodity_t::commodities.end();
+	 i++)
+      delete (*i).second;
+  }
+};
+
+static cleanup_commodities cleanup;
 
 commodity_t * commodity_t::find_commodity(const std::string& symbol,
 					  bool auto_create)

@@ -13,12 +13,6 @@ extern bool parse_date_mask(const char * date_str, struct std::tm * result);
 extern bool parse_date(const char * date_str, std::time_t * result,
 		       const int year = -1);
 
-extern void print_textual_ledger(std::ostream& out, ledger_t * ledger,
-				 bool shortcut = true);
-
-extern void print_textual_entry(std::ostream& out, entry_t * entry,
-				bool shortcut = true);
-
 } // namespace ledger
 
 #endif // _TEXTUAL_H

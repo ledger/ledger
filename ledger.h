@@ -288,6 +288,7 @@ class commodity_t
 #define TRANSACTION_NORMAL   0x0
 #define TRANSACTION_VIRTUAL  0x1
 #define TRANSACTION_BALANCE  0x2
+#define TRANSACTION_AUTO     0x4
 
 class transaction_t
 {
@@ -322,11 +323,13 @@ class entry_t
     UNCLEARED, CLEARED, PENDING
   };
 
-  std::time_t	     date;
-  enum entry_state_t state;
-  std::string	     code;
-  std::string	     payee;
-  transactions_list  transactions;
+  std::time_t	    date;
+  entry_state_t     state;
+  std::string	    code;
+  std::string	    payee;
+  transactions_list transactions;
+
+  entry_t() : date(-1), state(UNCLEARED) {}
 
   ~entry_t() {
     for (transactions_list::iterator i = transactions.begin();
@@ -429,9 +432,14 @@ class ledger_t
   account_t * find_account(const std::string& name, bool auto_create = true) {
     return master->find_account(name, auto_create);
   }
+  account_t * find_account(const std::string& name) const {
+    return master->find_account(name, false);
+  }
 
   bool add_entry(entry_t * entry);
   bool remove_entry(entry_t * entry);
+
+  entry_t * derive_entry(int argc, char **argv) const;
 };
 
 int parse_ledger_file(char * p, ledger_t * journal);
