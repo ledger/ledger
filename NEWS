@@ -65,6 +65,22 @@ New features:
   This feature now works on all version of Emacs.
   Also, the reconciler no longer needs to ask "how far back" to go.
 
+- There are a new set of value expression regexp commands:
+
+    c//  entry code
+    p//  payee
+    w//  short account name
+    W//  full account name
+    e//  transaction note
+
+  These make it possible to display transactions whose comment field
+  matching a particular text string:
+
+    ledger -l e/{tax}/ reg
+
+  Will print out all transactions with the comment "{tax}", which the
+  user might use to identify those relating to his tax report.
+
 * 2.1
 
 Very few new features:
