@@ -1,12 +1,13 @@
 #include "ledger.h"
 #include "valexpr.h"
 #include "datetime.h"
+#include "acconf.h"
 
 #include <fstream>
 
 namespace ledger {
 
-const std::string version = "2.0b";
+const std::string version = PACKAGE_VERSION;
 
 bool transaction_t::valid() const
 {

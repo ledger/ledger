@@ -11,7 +11,10 @@ fi
 autoheader
 autoconf
 
-if [ "$1" = "--gen" ]; then
+if [ "$1" = "--debug" ]; then
     ./configure CPPFLAGS="-I/sw/include -I/usr/include/httpd/xml" \
 		LDFLAGS=-L/sw/lib CXXFLAGS="-g" --enable-debug
+elif [ "$1" = "--opt" ]; then
+    ./configure CPPFLAGS="-I/sw/include -I/usr/include/httpd/xml" \
+		LDFLAGS=-L/sw/lib CXXFLAGS="-O3 -fomit-frame-pointer"
 fi
