@@ -51,6 +51,8 @@ struct config_t
   std::string   reconcile_date;
   unsigned long budget_flags;
   unsigned long pricing_leeway;
+  int           head_entries;
+  int           tail_entries;
   bool		show_collapsed;
   bool		show_subtotal;
   bool		show_totals;

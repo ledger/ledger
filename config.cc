@@ -46,6 +46,9 @@ config_t::config_t()
 #endif
   pricesdb_format    = "P %[%Y/%m/%d %H:%M:%S] %A %t\n";
 
+  head_entries = 0;
+  tail_entries = 0;
+
   show_collapsed     = false;
   show_subtotal      = false;
   show_totals        = false;
@@ -713,6 +716,14 @@ OPT_BEGIN(prices_format, ":") {
 OPT_BEGIN(wide, "w") {
   config.register_format = config.wide_register_format;
 } OPT_END(wide);
+
+OPT_BEGIN(head, ":") {
+  config.head_entries = std::atoi(optarg);
+} OPT_END(head);
+
+OPT_BEGIN(tail, ":") {
+  config.tail_entries = std::atoi(optarg);
+} OPT_END(tail);
 
 OPT_BEGIN(empty, "E") {
   config.show_empty = true;
