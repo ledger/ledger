@@ -126,24 +126,6 @@ class format_entries : public format_transactions
   virtual void operator()(transaction_t& xact);
 };
 
-class format_xml_entries : public format_entries
-{
-  bool show_totals;
- public:
-  format_xml_entries(std::ostream& output_stream,
-		     const bool _show_totals = false)
-    : format_entries(output_stream, ""), show_totals(_show_totals) {
-    output_stream << "<?xml version=\"1.0\"?>\n<ledger>\n";
-  }
-
-  virtual void flush() {
-    format_entries::flush();
-    output_stream << "</ledger>" << std::endl;
-  }
-
-  virtual void format_last_entry();
-};
-
 void print_entry(std::ostream& out, const entry_t& entry);
 
 bool disp_subaccounts_p(const account_t& account,
