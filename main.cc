@@ -434,20 +434,22 @@ def vmax(d, val):\n\
   else
     formatter = base_formatter;
 
-  formatter = chain_xact_handlers(command, formatter, journal.get(),
-				  journal->master, formatter_ptrs);
-
-  if (command == "e")
-    walk_transactions(new_entry->transactions, *formatter);
-  else if (command == "P" || command == "D")
-    walk_commodities(commodity_t::commodities, *formatter);
-  else if (command == "w")
+  if (command == "w") {
     write_textual_journal(*journal, *arg, *formatter, *out);
-  else
-    walk_entries(journal->entries, *formatter);
+  } else {
+    formatter = chain_xact_handlers(command, formatter, journal.get(),
+				    journal->master, formatter_ptrs);
 
-  if (command != "P" && command != "D")
-    formatter->flush();
+    if (command == "e")
+      walk_transactions(new_entry->transactions, *formatter);
+    else if (command == "P" || command == "D")
+      walk_commodities(commodity_t::commodities, *formatter);
+    else
+      walk_entries(journal->entries, *formatter);
+
+    if (command != "P" && command != "D")
+      formatter->flush();
+  }
 
   // If we are generating a reconcile report, determine the final set
   // of transactions.
