@@ -324,24 +324,22 @@ void format_t::format(std::ostream& out, const details_t& details) const
 	  disp = stream.str();
 	  use_disp = true;
 	} else {
-	  unsigned int xacts_real_count = 0;
+	  unsigned int    xacts_count = 0;
 	  transaction_t * first = NULL;
 	  transaction_t * last  = NULL;
 
 	  for (transactions_list::const_iterator i
 		 = details.entry->transactions.begin();
 	       i != details.entry->transactions.end();
-	       i++)
-	    if (! ((*i)->flags & TRANSACTION_AUTO)) {
-	      xacts_real_count++;
+	       i++) {
+	    xacts_count++;
 
-	      if (! first)
-		first = *i;
-	      last = *i;
-	    }
+	    if (! first)
+	      first = *i;
+	    last = *i;
+	  }
 
-	  use_disp = (xacts_real_count == 2 &&
-		      details.xact == last &&
+	  use_disp = (xacts_count == 2 && details.xact == last &&
 		      first->amount == - last->amount);
 	}
 
@@ -558,7 +556,6 @@ void export_format()
 #if 0
   def("partial_account_name", partial_account_name);
 #endif
-
   def("display_account", display_account);
 }
 

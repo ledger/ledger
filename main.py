@@ -262,11 +262,18 @@ if config.predicate:
 # simple walk in C++, using `walk_entries'.
 
 if 1:
-    walk_entries (journal, handler)
+    if command == "e":
+	walk_transactions (new_entry, handler)
+    else:
+	walk_entries (journal, handler)
 else:
-    for entry in journal:
-	for xact in entry:
+    if command == "e":
+	for xact in new_entry:
 	    handler (xact)
+    else:
+	for entry in journal:
+	    for xact in entry:
+		handler (xact)
 
 # Flush the handlers, causing them to output whatever data is still
 # pending.
