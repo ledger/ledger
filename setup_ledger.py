@@ -11,5 +11,6 @@ setup(name         = "Ledger",
       ext_modules  = [
     Extension("ledger", ["pyledger.cc"],
 	      define_macros = [('PYTHON_MODULE', None)],
-	      libraries     = ["amounts_bpy", "ledger_bpy", "boost_python",
+	      libraries     = ["amounts_bpy", "gmp",
+			       "ledger_bpy", "boost_python",
 			       "pcre", "xmlparse", "xmltok"])])
