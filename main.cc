@@ -765,7 +765,8 @@ int main(int argc, char * argv[])
     format_t format(f);
     walk_accounts(journal->master, format_account(std::cout, format),
 		  predicate.get(), xact_display_flags, show_subtotals,
-		  display_predicate.get(), sort_order.get());
+		  show_expanded ? 0 : 1, display_predicate.get(),
+		  sort_order.get());
 
     if (! display_predicate.get() ||
 	item_predicate<account_t>(display_predicate.get())(journal->master)) {

@@ -3,7 +3,6 @@
 
 #include "ledger.h"
 #include "balance.h"
-#include "format.h"
 #include "valexpr.h"
 
 #include <iostream>
@@ -28,40 +27,6 @@ class item_predicate
       return true;
     }
   }
-};
-
-inline void add_to_balance_pair(balance_pair_t& balance,
-				transaction_t * xact,
-				const bool      inverted = false)
-{
-  if (inverted) {
-    balance.quantity += - xact->amount;
-    balance.cost     += - xact->cost;
-  } else {
-    balance += *xact;
-  }
-}
-
-class format_transaction
-{
-  std::ostream&   output_stream;
-  const format_t& first_line_format;
-  const format_t& next_lines_format;
-  const bool      inverted;
-  unsigned int	  index;
-  entry_t *	  last_entry;
-
- public:
-  format_transaction(std::ostream&   _output_stream,
-		     const format_t& _first_line_format,
-		     const format_t& _next_lines_format,
-		     const bool      _inverted)
-    : output_stream(_output_stream),
-      first_line_format(_first_line_format),
-      next_lines_format(_next_lines_format),
-      inverted(_inverted), index(0), last_entry(NULL) {}
-
-  void operator()(transaction_t * xact);
 };
 
 template <typename T>
@@ -205,19 +170,6 @@ void walk_transactions(transactions_deque::iterator begin,
     functor(*i);
 }
 
-class format_account
-{
-  std::ostream&     output_stream;
-  const format_t&   format;
-  const account_t * last_account;
-
- public:
-  format_account(std::ostream& _output_stream, const format_t& _format)
-    : output_stream(_output_stream), format(_format) {}
-
-  void operator()(const account_t * account, bool report_top = false);
-};
-
 typedef std::deque<account_t *> accounts_deque;
 
 inline void sort_accounts(account_t *	  account,
@@ -234,25 +186,29 @@ inline void sort_accounts(account_t *	  account,
 }
 
 template <typename Function>
-void walk__accounts(const account_t * account, Function functor,
+void walk__accounts(const account_t *  account,
+		    Function	       functor,
+		    const unsigned int max_depth,
 		    item_predicate<account_t>& disp_pred_functor)
 {
   if (disp_pred_functor(account))
-    functor(account);
+    functor(account, max_depth);
 
   for (accounts_map::const_iterator i = account->accounts.begin();
        i != account->accounts.end();
        i++)
-    walk__accounts((*i).second, functor, disp_pred_functor);
+    walk__accounts((*i).second, functor, max_depth, disp_pred_functor);
 }
 
 template <typename Function>
-void walk__accounts_sorted(const account_t * account, Function functor,
-			   const node_t * sort_order,
+void walk__accounts_sorted(const account_t *  account,
+			   Function	      functor,
+			   const unsigned int max_depth,
+			   const node_t *     sort_order,
 			   item_predicate<account_t>& disp_pred_functor)
 {
   if (disp_pred_functor(account))
-    functor(account);
+    functor(account, max_depth);
 
   accounts_deque accounts;
 
@@ -267,7 +223,8 @@ void walk__accounts_sorted(const account_t * account, Function functor,
   for (accounts_deque::const_iterator i = accounts.begin();
        i != accounts.end();
        i++)
-    walk__accounts_sorted(*i, functor, sort_order, disp_pred_functor);
+    walk__accounts_sorted(*i, functor, max_depth, sort_order,
+			  disp_pred_functor);
 }
 
 template <typename Function>
@@ -297,13 +254,14 @@ inline void sum__accounts(account_t * account)
 }
 
 template <typename Function>
-void walk_accounts(account_t *	  account,
-		   Function	  functor,
-		   const node_t * predicate,
-		   unsigned int	  flags,
-		   const bool	  calc_subtotals,
-		   const node_t * display_predicate = NULL,
-		   const node_t * sort_order        = NULL)
+void walk_accounts(account_t *	      account,
+		   Function	      functor,
+		   const node_t *     predicate,
+		   unsigned int	      flags,
+		   const bool	      calc_subtotals,
+		   const unsigned int max_depth,
+		   const node_t *     display_predicate = NULL,
+		   const node_t *     sort_order	= NULL)
 {
   item_predicate<transaction_t> pred_functor(predicate);
   item_predicate<account_t>     disp_pred_functor(display_predicate);
@@ -313,10 +271,10 @@ void walk_accounts(account_t *	  account,
     sum__accounts(account);
 
   if (sort_order)
-    walk__accounts_sorted<Function>(account, functor, sort_order,
+    walk__accounts_sorted<Function>(account, functor, max_depth, sort_order,
 				    disp_pred_functor);
   else
-    walk__accounts<Function>(account, functor, disp_pred_functor);
+    walk__accounts<Function>(account, functor, max_depth, disp_pred_functor);
 }
 
 } // namespace ledger

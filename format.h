@@ -82,6 +82,43 @@ struct format_t
   }
 };
 
+class format_transaction
+{
+  std::ostream&   output_stream;
+  const format_t& first_line_format;
+  const format_t& next_lines_format;
+  const bool      inverted;
+  unsigned int	  index;
+  entry_t *	  last_entry;
+
+ public:
+  format_transaction(std::ostream&   _output_stream,
+		     const format_t& _first_line_format,
+		     const format_t& _next_lines_format,
+		     const bool      _inverted)
+    : output_stream(_output_stream),
+      first_line_format(_first_line_format),
+      next_lines_format(_next_lines_format),
+      inverted(_inverted), index(0), last_entry(NULL) {}
+
+  void operator()(transaction_t * xact);
+};
+
+class format_account
+{
+  std::ostream&     output_stream;
+  const format_t&   format;
+  const account_t * last_account;
+
+ public:
+  format_account(std::ostream& _output_stream, const format_t& _format)
+    : output_stream(_output_stream), format(_format) {}
+
+  void operator()(const account_t *  account,
+		  const unsigned int max_depth  = 1,
+		  const bool         report_top = false);
+};
+
 } // namespace ledger
 
 #endif // _REPORT_H

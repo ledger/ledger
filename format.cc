@@ -293,4 +293,71 @@ void format_t::format_elements(std::ostream&    out,
   }
 }
 
+void format_transaction::operator()(transaction_t * xact)
+{
+  if (inverted) {
+    xact->total.quantity += - xact->amount;
+    xact->total.cost     += - xact->cost;
+  } else {
+    xact->total += *xact;
+  }
+  xact->index = index++;
+
+  // This makes the assumption that transactions from a single entry
+  // will always be grouped together.
+
+  if (last_entry != xact->entry)
+    first_line_format.format_elements(output_stream, details_t(xact));
+  else
+    next_lines_format.format_elements(output_stream, details_t(xact));
+
+  last_entry = xact->entry;
+}
+
+void format_account::operator()(const account_t *  account,
+				const unsigned int max_depth,
+				const bool         report_top)
+{
+  // Don't output the account if only one child will be displayed
+  // which shows the exact same amount.  jww (2004-08-03): How do
+  // compute the right figure?  It should a value expression specified
+  // by the user, to say, "If this expression is equivalent between a
+  // parent account and a lone displayed child, then don't display the
+  // parent."
+
+  if (bool output = report_top || account->parent != NULL) {
+    int  counted = 0;
+    bool display = false;
+
+    for (accounts_map::const_iterator i = account->accounts.begin();
+	 i != account->accounts.end();
+	 i++) {
+      if (! (*i).second->total)
+	continue;
+
+      if ((*i).second->total != account->total || counted > 0) {
+	display = true;
+	break;
+      }
+      counted++;
+    }
+
+    if (counted == 1 && ! display)
+      output = false;
+
+    if (output) {
+      unsigned int depth = account->depth;
+      if (max_depth == 0 || depth <= max_depth) {
+	for (const account_t * acct = account;
+	     depth > 0 && acct && acct != last_account;
+	     acct = acct->parent)
+	  depth--;
+
+	format.format_elements(output_stream, details_t(account, depth));
+	last_account = account;
+      }
+    }
+  }
+}
+
 } // namespace ledger
