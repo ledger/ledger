@@ -15,9 +15,17 @@ using namespace ledger;
 #include <exception>
 #include <iterator>
 #include <string>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+
+#ifdef HAVE_UNIX_PIPES
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include "fdstream.hpp"
+#endif
 
 #if !defined(DEBUG_LEVEL) || DEBUG_LEVEL <= RELEASE
 
@@ -306,9 +314,57 @@ int parse_and_report(int argc, char * argv[], char * envp[])
 
   // Configure the output stream
 
+#ifdef HAVE_UNIX_PIPES
+  int status, pfd[2];		// Pipe file descriptors
+#endif
   std::ostream * out = &std::cout;
-  if (! config.output_file.empty())
+
+  if (! config.output_file.empty()) {
     out = new std::ofstream(config.output_file.c_str());
+  }
+#ifdef HAVE_UNIX_PIPES
+  else if (! config.pager.empty()) {
+    status = pipe(pfd);
+    if (status == -1)
+      throw error("Failed to create pipe");
+
+    status = fork();
+    if (status < 0) {
+      throw error("Failed to fork child process");
+    }
+    else if (status == 0) {	// child
+      const char *arg0;
+
+      // Duplicate pipe's reading end into stdin
+      status = dup2(pfd[0], STDIN_FILENO);
+      if (status==-1)
+	perror("dup2");
+
+      // Close unuseful file descriptors: the pipe's writing and
+      // reading ends (the latter is not needed anymore, after the
+      // duplication).
+      close(pfd[1]);
+      close(pfd[0]);
+
+      // Find command name: its the substring starting right of the
+      // rightmost '/' character in the pager pathname.  See manpage
+      // for strrchr.
+      arg0 = std::strrchr(config.pager.c_str(), '/');
+      if (arg0 != NULL)
+	arg0++;
+      else
+	arg0 = config.pager.c_str(); // No slashes in pager.
+
+      execlp(config.pager.c_str(), arg0, (char *)0);
+      perror("execl");
+      exit(1);
+    }
+    else {			// parent
+      close(pfd[0]);
+      out = new boost::fdostream(pfd[1]);
+    }
+  }
+#endif
 
   // Compile the format strings
 
@@ -446,7 +502,6 @@ def vmax(d, val):\n\
   }
 
 #if DEBUG_LEVEL >= BETA
-
   clear_all_xdata();
 
   if (! config.output_file.empty())
@@ -458,8 +513,7 @@ def vmax(d, val):\n\
        i++)
     delete *i;
   formatter_ptrs.clear();
-
-#endif // DEBUG_LEVEL >= BETA
+#endif
 
   // Write out the binary cache, if need be
 
@@ -467,6 +521,18 @@ def vmax(d, val):\n\
     std::ofstream stream(config.cache_file.c_str());
     write_binary_journal(stream, journal.get());
   }
+
+#ifdef HAVE_UNIX_PIPES
+  if (! config.pager.empty()) {
+    delete out;
+    close(pfd[1]);
+
+    // Wait for child to finish
+    wait(&status);
+    if (status & 0xffff != 0)
+      throw error("Something went wrong in the pager");
+  }
+#endif
 
   return 0;
 }

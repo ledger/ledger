@@ -725,6 +725,10 @@ OPT_BEGIN(tail, ":") {
   config.tail_entries = std::atoi(optarg);
 } OPT_END(tail);
 
+OPT_BEGIN(pager, ":") {
+  config.pager = optarg;
+} OPT_END(pager);
+
 OPT_BEGIN(empty, "E") {
   config.show_empty = true;
 } OPT_END(empty);

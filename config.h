@@ -49,6 +49,7 @@ struct config_t
   std::string   forecast_limit;
   std::string   reconcile_balance;
   std::string   reconcile_date;
+  std::string   pager;
   unsigned long budget_flags;
   unsigned long pricing_leeway;
   int           head_entries;
