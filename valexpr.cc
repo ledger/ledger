@@ -269,6 +269,7 @@ void node_t::compute(balance_t& result, const details_t& details) const
     assert(right);
     left->compute(result, details);
     balance_t temp = result;
+    result = 0;
     right->compute(result, details);
     switch (type) {
     case O_EQ:  result = temp == result; break;
@@ -289,6 +290,7 @@ void node_t::compute(balance_t& result, const details_t& details) const
     assert(right);
     right->compute(result, details);
     balance_t temp = result;
+    result = 0;
     left->compute(result, details);
     switch (type) {
     case O_ADD: result += temp; break;

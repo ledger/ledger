@@ -217,6 +217,9 @@ class balance_t
       if (! ((*i).second < bal.amount((*i).first)))
 	return false;
 
+    if (bal.amounts.size() == 0 && amounts.size() == 0)
+      return false;
+
     return true;
   }
   bool operator<=(const balance_t& bal) const {
@@ -253,6 +256,9 @@ class balance_t
 	 i++)
       if (! ((*i).second > bal.amount((*i).first)))
 	return false;
+
+    if (bal.amounts.size() == 0 && amounts.size() == 0)
+      return false;
 
     return true;
   }
