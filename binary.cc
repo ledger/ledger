@@ -128,7 +128,6 @@ inline void read_binary_transaction(std::istream& in, transaction_t * xact,
   xact->account = accounts[read_binary_number<account_t::ident_t>(in) - 1];
   xact->account->add_transaction(xact);
 
-  new ((amount_t *) &xact->amount) amount_t;
   read_binary_amount(in, xact->amount);
 
   if (read_binary_number<char>(in) == 1) {

@@ -906,15 +906,13 @@ void amount_t::write_quantity(std::ostream& out) const
 
 void amount_t::read_quantity(std::istream& in)
 {
-  assert(! quantity);
-
   char byte;
   in.read(&byte, sizeof(byte));
 
-  if (byte == 0)
-    return;
-
-  if (byte == 1) {
+  if (byte == 0) {
+    quantity = NULL;
+  }
+  else if (byte == 1) {
     quantity = new(bigints_next++) bigint_t;
     quantity->flags |= BIGINT_BULK_ALLOC;
 
