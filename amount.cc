@@ -984,7 +984,8 @@ void parse_conversion(const std::string& larger_str,
 
   if (larger.commodity()) {
     larger.commodity().smaller = new amount_t(smaller);
-    larger.commodity().flags   = smaller.commodity().flags;
+    larger.commodity().flags   = (smaller.commodity().flags |
+				  COMMODITY_STYLE_NOMARKET);
   }
   if (smaller.commodity())
     smaller.commodity().larger = new amount_t(larger);
