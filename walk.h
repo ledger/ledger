@@ -20,9 +20,9 @@ struct item_handler {
 
 template <typename T>
 struct compare_items {
-  const node_t * sort_order;
+  const value_expr_t * sort_order;
 
-  compare_items(const node_t * _sort_order)
+  compare_items(const value_expr_t * _sort_order)
     : sort_order(_sort_order) {
     assert(sort_order);
   }
@@ -40,27 +40,34 @@ struct compare_items {
 
 //////////////////////////////////////////////////////////////////////
 //
-// Several default handlers
+// Transaction handlers
 //
 
 typedef std::deque<transaction_t *> transactions_deque;
 typedef std::deque<entry_t *>       entries_deque;
 
-struct ignore_transaction : public item_handler<transaction_t>
+struct ignore_transactions : public item_handler<transaction_t>
 {
   virtual void operator()(transaction_t * xact) {}
+};
+
+struct clear_display_flags : public item_handler<transaction_t>
+{
+  virtual void operator()(transaction_t * xact) {
+    xact->dflags = 0;
+  }
 };
 
 class sort_transactions : public item_handler<transaction_t>
 {
   transactions_deque transactions;
-  const node_t *     sort_order;
+  const value_expr_t *     sort_order;
 
   item_handler<transaction_t> * handler;
 
  public:
   sort_transactions(item_handler<transaction_t> * _handler,
-		    const node_t * _sort_order)
+		    const value_expr_t * _sort_order)
     : sort_order(_sort_order), handler(_handler) {}
 
   virtual ~sort_transactions() {
@@ -173,11 +180,8 @@ class collapse_transactions : public item_handler<transaction_t>
     // If we've reached a new entry, report on the subtotal
     // accumulated thus far.
 
-    if (last_entry && last_entry != xact->entry) {
+    if (last_entry && last_entry != xact->entry)
       report_cumulative_subtotal();
-      subtotal = 0;
-      count    = 0;
-    }
 
     subtotal += *xact;
     count++;
@@ -302,90 +306,175 @@ class interval_transactions : public subtotal_transactions
   }
 };
 
-//////////////////////////////////////////////////////////////////////
-
-#define MATCHING_TRANSACTIONS 0x01
-#define OTHER_TRANSACTIONS    0x02
-
-inline void handle_transaction(transaction_t * xact,
-			       item_handler<transaction_t>& handler,
-			       unsigned int flags)
+class related_transactions : public item_handler<transaction_t>
 {
-  for (transactions_list::iterator i = xact->entry->transactions.begin();
-       i != xact->entry->transactions.end();
-       i++)
-    if ((! (flags & OTHER_TRANSACTIONS) ||
-	 ! ((*i)->flags & TRANSACTION_AUTO)) &&
-	! ((*i)->dflags & TRANSACTION_HANDLED) &&
-	(*i == xact ?
-	 (flags & MATCHING_TRANSACTIONS) : (flags & OTHER_TRANSACTIONS))) {
-      (*i)->dflags |= TRANSACTION_HANDLED;
-      handler(*i);
-    }
-}
+  bool also_matching;
 
-inline void walk_entries(entries_list::iterator begin,
-			 entries_list::iterator end,
-			 item_handler<transaction_t>& handler,
-			 const std::string&	predicate,
-			 unsigned int		flags)
-{
-  item_predicate<transaction_t> pred(predicate);
+  item_handler<transaction_t> * handler;
 
-  for (entries_list::iterator i = begin; i != end; i++)
-    for (transactions_list::iterator j = (*i)->transactions.begin();
-	 j != (*i)->transactions.end();
-	 j++)
-      if (pred(*j))
-	handle_transaction(*j, handler, flags);
-}
+ public:
+  related_transactions(item_handler<transaction_t> * _handler,
+		       bool _also_matching = false)
+    : also_matching(_also_matching), handler(_handler) {}
 
-inline void walk_entries(entries_list::iterator begin,
-			 entries_list::iterator end,
-			 item_handler<transaction_t>& handler)
-{
-  for (entries_list::iterator i = begin; i != end; i++)
-    for (transactions_list::iterator j = (*i)->transactions.begin();
-	 j != (*i)->transactions.end();
-	 j++)
-      handler(*j);
-}
+  virtual ~related_transactions() {
+    handler->flush();
+    delete handler;
+  }
 
-struct clear_flags : public item_handler<transaction_t>
-{
   virtual void operator()(transaction_t * xact) {
-    xact->dflags = 0;
+    for (transactions_list::iterator i = xact->entry->transactions.begin();
+	 i != xact->entry->transactions.end();
+	 i++)
+      if (! ((*i)->dflags & TRANSACTION_HANDLED) &&
+	  (*i == xact ? also_matching :
+	   ! ((*i)->flags & TRANSACTION_AUTO))) {
+	(*i)->dflags |= TRANSACTION_HANDLED;
+	(*handler)(*i);
+      }
   }
 };
 
-inline void clear_transaction_display_flags(entries_list::iterator begin,
-					    entries_list::iterator end)
-{
-  clear_flags handler;
-  walk_entries(begin, end, handler);
-}
+//////////////////////////////////////////////////////////////////////
 
 inline void walk_transactions(transactions_list::iterator begin,
 			      transactions_list::iterator end,
-			      item_handler<transaction_t>& handler)
-{
+			      item_handler<transaction_t>& handler) {
   for (transactions_list::iterator i = begin; i != end; i++)
     handler(*i);
 }
 
+inline void walk_transactions(transactions_list& list,
+			      item_handler<transaction_t>& handler) {
+  walk_transactions(list.begin(), list.end(), handler);
+}
+
 inline void walk_transactions(transactions_deque::iterator begin,
 			      transactions_deque::iterator end,
-			      item_handler<transaction_t>& handler)
-{
+			      item_handler<transaction_t>& handler) {
   for (transactions_deque::iterator i = begin; i != end; i++)
     handler(*i);
 }
 
+inline void walk_transactions(transactions_deque& deque,
+			      item_handler<transaction_t>& handler) {
+  walk_transactions(deque.begin(), deque.end(), handler);
+}
+
+inline void walk_entries(entries_list::iterator       begin,
+			 entries_list::iterator       end,
+			 item_handler<transaction_t>& handler) {
+  // jww (2004-08-11): do transaction dflags need to be cleared first?
+  for (entries_list::iterator i = begin; i != end; i++)
+    walk_transactions((*i)->transactions, handler);
+}
+
+inline void walk_entries(entries_list& list,
+			 item_handler<transaction_t>& handler) {
+  walk_entries(list.begin(), list.end(), handler);
+}
+
+
+//////////////////////////////////////////////////////////////////////
+//
+// Account handlers
+//
+
 typedef std::deque<account_t *> accounts_deque;
+
+struct add_to_account_value : public item_handler<transaction_t>
+{
+  virtual void operator()(transaction_t * xact) {
+    xact->account->value += *xact;
+  }
+};
+
+#if 0
+
+class format_accounts : public item_handler<account_t>
+{
+};
+
+class filter_accounts : public item_handler<account_t>
+{
+  item_handler<account_t> * handler;
+
+ public:
+  filter_accounts(item_handler<account_t> * _handler)
+    : handler(_handler) {}
+
+  virtual ~filter_accounts() {
+    handler->flush();
+    delete handler;
+  }
+
+  virtual void flush() {}
+
+  virtual void operator()(account_t * account) {
+  }
+};
+
+class sort_accounts : public item_handler<account_t>
+{
+  value_expr_t * sort_order;
+
+  item_handler<account_t> * handler;
+
+ public:
+  sort_accounts(item_handler<account_t> * _handler,
+		value_expr_t * _sort_order)
+    : sort_order(_sort_order), handler(_handler) {}
+
+  virtual ~sort_accounts() {
+    handler->flush();
+    delete handler;
+  }
+
+  virtual void flush() {}
+
+  virtual void operator()(account_t * account) {
+    accounts_deque accounts;
+
+    for (accounts_map::iterator i = account->accounts.begin();
+	 i != account->accounts.end();
+	 i++)
+      accounts.push_back((*i).second);
+
+    std::stable_sort(accounts.begin(), accounts.end(),
+		     compare_items<account_t>(sort_order));
+  }
+};
+
+class balance_accounts : public item_handler<account_t>
+{
+  item_handler<account_t> * handler;
+
+ public:
+  balance_accounts(item_handler<account_t> * _handler)
+    : handler(_handler) {}
+
+  virtual ~balance_accounts() {
+    handler->flush();
+    delete handler;
+  }
+
+  virtual void flush() {
+    if (format_account::disp_subaccounts_p(top)) {
+      std::string end_format = "--------------------\n";
+      format.reset(end_format + f);
+      format.format_elements(std::cout, details_t(top));
+    }
+  }
+
+  virtual void operator()(account_t * account) {
+  }
+};
+
+#endif
 
 inline void sort_accounts(account_t *	  account,
 			  accounts_deque& accounts,
-			  const node_t *  sort_order)
+			  const value_expr_t *  sort_order)
 {
   for (accounts_map::iterator i = account->accounts.begin();
        i != account->accounts.end();
@@ -394,6 +483,32 @@ inline void sort_accounts(account_t *	  account,
 
   std::stable_sort(accounts.begin(), accounts.end(),
 		   compare_items<account_t>(sort_order));
+}
+
+inline void walk__accounts_sorted(account_t * account,
+				  item_handler<account_t>& handler,
+				  const value_expr_t * sort_order)
+{
+  handler(account);
+
+  accounts_deque accounts;
+  sort_accounts(account, accounts, sort_order);
+
+  for (accounts_deque::const_iterator i = accounts.begin();
+       i != accounts.end();
+       i++)
+    walk__accounts_sorted(*i, handler, sort_order);
+}
+
+inline void sum__accounts(account_t * account)
+{
+  for (accounts_map::iterator i = account->accounts.begin();
+       i != account->accounts.end();
+       i++) {
+    sum__accounts((*i).second);
+    account->total += (*i).second->total;
+  }
+  account->total += account->value;
 }
 
 inline void walk__accounts(account_t * account,
@@ -407,64 +522,11 @@ inline void walk__accounts(account_t * account,
     walk__accounts((*i).second, handler);
 }
 
-inline void walk__accounts_sorted(account_t * account,
-				  item_handler<account_t>& handler,
-				  const node_t * sort_order)
+inline void walk_accounts(account_t *		       account,
+			  item_handler<account_t>&     handler,
+			  const bool		       calc_subtotals,
+			  const value_expr_t *         sort_order = NULL)
 {
-  handler(account);
-
-  accounts_deque accounts;
-
-  for (accounts_map::const_iterator i = account->accounts.begin();
-       i != account->accounts.end();
-       i++)
-    accounts.push_back((*i).second);
-
-  std::stable_sort(accounts.begin(), accounts.end(),
-		   compare_items<account_t>(sort_order));
-
-  for (accounts_deque::const_iterator i = accounts.begin();
-       i != accounts.end();
-       i++)
-    walk__accounts_sorted(*i, handler, sort_order);
-}
-
-inline void for_each_account(account_t * account,
-			     item_handler<account_t>& handler)
-{
-  handler(account);
-
-  for (accounts_map::iterator i = account->accounts.begin();
-       i != account->accounts.end();
-       i++)
-    walk__accounts((*i).second, handler);
-}
-
-void calc__accounts(account_t * account,
-		    const item_predicate<transaction_t>& pred,
-		    unsigned int flags);
-
-inline void sum__accounts(account_t * account)
-{
-  for (accounts_map::iterator i = account->accounts.begin();
-       i != account->accounts.end();
-       i++) {
-    sum__accounts((*i).second);
-    account->total += (*i).second->total;
-  }
-  account->total += account->value;
-}
-
-inline void walk_accounts(account_t *	     account,
-			  item_handler<account_t>& handler,
-			  const std::string& predicate,
-			  unsigned int	     flags,
-			  const bool	     calc_subtotals,
-			  const node_t *     sort_order = NULL)
-{
-  item_predicate<transaction_t> pred(predicate);
-
-  calc__accounts(account, pred, flags);
   if (calc_subtotals)
     sum__accounts(account);
 

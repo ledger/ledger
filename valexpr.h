@@ -20,13 +20,6 @@ class mask_t
   bool match(const std::string& str) const;
 };
 
-#if 1
-typedef std::list<mask_t> masks_list;
-
-bool matches(const masks_list& regexps, const std::string& str,
-	     bool * by_exclusion = NULL);
-#endif
-
 
 struct details_t
 {
@@ -44,7 +37,7 @@ struct details_t
     : entry(NULL), xact(NULL), account(_account) {}
 };
 
-struct node_t
+struct value_expr_t
 {
   enum kind_t {
     // Constants
@@ -92,18 +85,18 @@ struct node_t
     LAST
   };
 
-  kind_t   type;
-  node_t * left;
-  node_t * right;
+  kind_t      type;
+  value_expr_t * left;
+  value_expr_t * right;
 
   amount_t    constant_a;
   std::time_t constant_t;
   mask_t *    mask;
 
-  node_t(const kind_t _type)
+  value_expr_t(const kind_t _type)
     : type(_type), left(NULL), right(NULL), mask(NULL) {}
 
-  ~node_t() {
+  ~value_expr_t() {
     if (mask)  delete mask;
     if (left)  delete left;
     if (right) delete right;
@@ -112,52 +105,42 @@ struct node_t
   void compute(balance_t& result, const details_t& details) const;
 };
 
-node_t * parse_expr(std::istream& in);
+value_expr_t * parse_value_expr(std::istream& in);
 
-inline node_t * parse_expr(const char * p) {
+inline value_expr_t * parse_value_expr(const char * p) {
   std::istringstream stream(p);
-  return parse_expr(stream);
+  return parse_value_expr(stream);
 }
 
-inline node_t * parse_expr(const std::string& str) {
-  return parse_expr(str.c_str());
-}
-
-inline node_t * find_node(node_t * node, node_t::kind_t type) {
-  node_t * result = NULL;
-  if (node->type == type)
-    result = node;
-  if (! result && node->left)
-    result = find_node(node->left, type);
-  if (! result && node->right)
-    result = find_node(node->right, type);
-  return result;
+inline value_expr_t * parse_value_expr(const std::string& str) {
+  return parse_value_expr(str.c_str());
 }
 
 #ifdef DEBUG_ENABLED
-void dump_tree(std::ostream& out, const node_t * node);
+void dump_value_expr(std::ostream& out, const value_expr_t * node);
 #endif
 
 template <typename T>
 class item_predicate
 {
-  const node_t * predicate;
+  const value_expr_t * predicate;
 
  public:
   item_predicate(const std::string& _predicate)
-    : predicate(_predicate.empty() ? NULL : parse_expr(_predicate)) {
+    : predicate(_predicate.empty() ?
+		NULL : parse_value_expr(_predicate)) {
 #ifdef DEBUG_ENABLED
     DEBUG_CLASS("valexpr.predicate.parse");
 
     DEBUG_PRINT_("parsing: '" << _predicate << "'");
     if (DEBUG_() && ledger::debug_stream) {
       *ledger::debug_stream << "dump: ";
-      dump_tree(*ledger::debug_stream, predicate);
+      dump_value_expr(*ledger::debug_stream, predicate);
       *ledger::debug_stream << std::endl;
     }
 #endif
   }
-  item_predicate(const node_t * _predicate)
+  item_predicate(const value_expr_t * _predicate)
     : predicate(_predicate) {}
 
   ~item_predicate() {

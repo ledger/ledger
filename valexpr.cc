@@ -56,45 +56,8 @@ mask_t::~mask_t() {
   pcre_free((pcre *)regexp);
 }
 
-#if 1
 
-bool matches(const masks_list& regexps, const std::string& str,
-	     bool * by_exclusion)
-{
-  if (regexps.empty())
-    return false;
-
-  bool match    = false;
-  bool definite = false;
-
-  for (masks_list::const_iterator r = regexps.begin();
-       r != regexps.end();
-       r++) {
-    static int ovec[30];
-    int result = pcre_exec((pcre *)(*r).regexp, NULL,
-			   str.c_str(), str.length(), 0, 0, ovec, 30);
-    if (result >= 0) {
-      match     = ! (*r).exclude;
-      definite  = true;
-    }
-    else if ((*r).exclude) {
-      if (! match)
-	match = ! definite;
-    }
-    else {
-      definite = true;
-    }
-  }
-
-  if (by_exclusion)
-    *by_exclusion = match && ! definite && by_exclusion;
-
-  return match;
-}
-
-#endif
-
-void node_t::compute(balance_t& result, const details_t& details) const
+void value_expr_t::compute(balance_t& result, const details_t& details) const
 {
   switch (type) {
   case CONSTANT_A:
@@ -351,16 +314,16 @@ inline char peek_next_nonws(std::istream& in)
   return c;
 }
 
-node_t * parse_term(std::istream& in);
+value_expr_t * parse_value_term(std::istream& in);
 
-inline node_t * parse_term(const char * p) {
+inline value_expr_t * parse_value_term(const char * p) {
   std::istringstream stream(p);
-  return parse_term(stream);
+  return parse_value_term(stream);
 }
 
-node_t * parse_term(std::istream& in)
+value_expr_t * parse_value_term(std::istream& in)
 {
-  node_t * node = NULL;
+  value_expr_t * node = NULL;
 
   char c = peek_next_nonws(in);
   if (std::isdigit(c) || c == '.' || c == '{') {
@@ -387,7 +350,7 @@ node_t * parse_term(std::istream& in)
     }
 
     if (! ident.empty()) {
-      node = new node_t(node_t::CONSTANT_A);
+      node = new value_expr_t(value_expr_t::CONSTANT_A);
       node->constant_a.parse(ident);
     }
     return node;
@@ -396,62 +359,62 @@ node_t * parse_term(std::istream& in)
   in.get(c);
   switch (c) {
   // Basic terms
-  case 'a': node = new node_t(node_t::AMOUNT); break;
-  case 'c': node = new node_t(node_t::COST); break;
-  case 'd': node = new node_t(node_t::DATE); break;
-  case 'X': node = new node_t(node_t::CLEARED); break;
-  case 'R': node = new node_t(node_t::REAL); break;
-  case 'n': node = new node_t(node_t::INDEX); break;
-  case 'B': node = new node_t(node_t::BALANCE); break;
-  case 'T': node = new node_t(node_t::TOTAL); break;
-  case 'C': node = new node_t(node_t::COST_TOTAL); break;
+  case 'a': node = new value_expr_t(value_expr_t::AMOUNT); break;
+  case 'c': node = new value_expr_t(value_expr_t::COST); break;
+  case 'd': node = new value_expr_t(value_expr_t::DATE); break;
+  case 'X': node = new value_expr_t(value_expr_t::CLEARED); break;
+  case 'R': node = new value_expr_t(value_expr_t::REAL); break;
+  case 'n': node = new value_expr_t(value_expr_t::INDEX); break;
+  case 'B': node = new value_expr_t(value_expr_t::BALANCE); break;
+  case 'T': node = new value_expr_t(value_expr_t::TOTAL); break;
+  case 'C': node = new value_expr_t(value_expr_t::COST_TOTAL); break;
 
   // Compound terms
-  case 'v': node = parse_expr("P(a,d)"); break;
-  case 'V': node = parse_term("P(T,d)"); break;
-  case 'g': node = parse_expr("v-c"); break;
-  case 'G': node = parse_expr("V-C"); break;
-  case 'o': node = parse_expr("d-b"); break;
-  case 'w': node = parse_expr("e-d"); break;
+  case 'v': node = parse_value_expr("P(a,d)"); break;
+  case 'V': node = parse_value_term("P(T,d)"); break;
+  case 'g': node = parse_value_expr("v-c"); break;
+  case 'G': node = parse_value_expr("V-C"); break;
+  case 'o': node = parse_value_expr("d-b"); break;
+  case 'w': node = parse_value_expr("e-d"); break;
 
   // Functions
   case '-':
-    node = new node_t(node_t::F_NEG);
-    node->left = parse_term(in);
+    node = new value_expr_t(value_expr_t::F_NEG);
+    node->left = parse_value_term(in);
     break;
 
   case 'A':
-    node = new node_t(node_t::F_ABS);
-    node->left = parse_term(in);
+    node = new value_expr_t(value_expr_t::F_ABS);
+    node->left = parse_value_term(in);
     break;
 
   case 'M':
-    node = new node_t(node_t::F_ARITH_MEAN);
-    node->left = parse_term(in);
+    node = new value_expr_t(value_expr_t::F_ARITH_MEAN);
+    node->left = parse_value_term(in);
     break;
 
   case 'D': {
-    node = new node_t(node_t::O_SUB);
-    node->left  = parse_term("a");
-    node->right = parse_term(in);
+    node = new value_expr_t(value_expr_t::O_SUB);
+    node->left  = parse_value_term("a");
+    node->right = parse_value_term(in);
     break;
   }
 
   case 'P':
-    node = new node_t(node_t::F_VALUE);
+    node = new value_expr_t(value_expr_t::F_VALUE);
     if (peek_next_nonws(in) == '(') {
       in.get(c);
-      node->left = parse_expr(in);
+      node->left = parse_value_expr(in);
       if (peek_next_nonws(in) == ',') {
 	in.get(c);
-	node->right = parse_expr(in);
+	node->right = parse_value_expr(in);
       }
       if (peek_next_nonws(in) == ')')
 	in.get(c);
       else
 	throw expr_error("Missing ')'");
     } else {
-      node->left = parse_term(in);
+      node->left = parse_value_term(in);
     }
     break;
 
@@ -477,8 +440,8 @@ node_t * parse_term(std::istream& in)
 
     if (c == '/') {
       in.get(c);
-      node = new node_t(payee_mask ?
-			node_t::F_PAYEE_MASK : node_t::F_ACCOUNT_MASK);
+      node = new value_expr_t(payee_mask ?
+			value_expr_t::F_PAYEE_MASK : value_expr_t::F_ACCOUNT_MASK);
       node->mask = new mask_t(ident);
     } else {
       throw expr_error("Missing closing '/'");
@@ -487,7 +450,7 @@ node_t * parse_term(std::istream& in)
   }
 
   case '(':
-    node = parse_expr(in);
+    node = parse_value_expr(in);
     if (peek_next_nonws(in) == ')')
       in.get(c);
     else
@@ -505,7 +468,7 @@ node_t * parse_term(std::istream& in)
     }
     if (c == ']') {
       in.get(c);
-      node = new node_t(node_t::CONSTANT_T);
+      node = new value_expr_t(value_expr_t::CONSTANT_T);
       if (! parse_date(ident.c_str(), &node->constant_t))
 	throw expr_error("Failed to parse date");
     } else {
@@ -522,11 +485,11 @@ node_t * parse_term(std::istream& in)
   return node;
 }
 
-node_t * parse_mul_expr(std::istream& in)
+value_expr_t * parse_mul_expr(std::istream& in)
 {
-  node_t * node = NULL;
+  value_expr_t * node = NULL;
 
-  node = parse_term(in);
+  node = parse_value_term(in);
 
   if (node && ! in.eof()) {
     char c = peek_next_nonws(in);
@@ -534,18 +497,18 @@ node_t * parse_mul_expr(std::istream& in)
       in.get(c);
       switch (c) {
       case '*': {
-	node_t * prev = node;
-	node = new node_t(node_t::O_MUL);
+	value_expr_t * prev = node;
+	node = new value_expr_t(value_expr_t::O_MUL);
 	node->left  = prev;
-	node->right = parse_term(in);
+	node->right = parse_value_term(in);
 	break;
       }
 
       case '/': {
-	node_t * prev = node;
-	node = new node_t(node_t::O_DIV);
+	value_expr_t * prev = node;
+	node = new value_expr_t(value_expr_t::O_DIV);
 	node->left  = prev;
-	node->right = parse_term(in);
+	node->right = parse_value_term(in);
 	break;
       }
       }
@@ -556,9 +519,9 @@ node_t * parse_mul_expr(std::istream& in)
   return node;
 }
 
-node_t * parse_add_expr(std::istream& in)
+value_expr_t * parse_add_expr(std::istream& in)
 {
-  node_t * node = NULL;
+  value_expr_t * node = NULL;
 
   node = parse_mul_expr(in);
 
@@ -568,16 +531,16 @@ node_t * parse_add_expr(std::istream& in)
       in.get(c);
       switch (c) {
       case '+': {
-	node_t * prev = node;
-	node = new node_t(node_t::O_ADD);
+	value_expr_t * prev = node;
+	node = new value_expr_t(value_expr_t::O_ADD);
 	node->left  = prev;
 	node->right = parse_mul_expr(in);
 	break;
       }
 
       case '-': {
-	node_t * prev = node;
-	node = new node_t(node_t::O_SUB);
+	value_expr_t * prev = node;
+	node = new value_expr_t(value_expr_t::O_SUB);
 	node->left  = prev;
 	node->right = parse_mul_expr(in);
 	break;
@@ -590,14 +553,14 @@ node_t * parse_add_expr(std::istream& in)
   return node;
 }
 
-node_t * parse_logic_expr(std::istream& in)
+value_expr_t * parse_logic_expr(std::istream& in)
 {
-  node_t * node = NULL;
+  value_expr_t * node = NULL;
 
   if (peek_next_nonws(in) == '!') {
     char c;
     in.get(c);
-    node = new node_t(node_t::O_NOT);
+    node = new value_expr_t(value_expr_t::O_NOT);
     node->left = parse_logic_expr(in);
     return node;
   }
@@ -610,19 +573,19 @@ node_t * parse_logic_expr(std::istream& in)
       in.get(c);
       switch (c) {
       case '=': {
-	node_t * prev = node;
-	node = new node_t(node_t::O_EQ);
+	value_expr_t * prev = node;
+	node = new value_expr_t(value_expr_t::O_EQ);
 	node->left  = prev;
 	node->right = parse_add_expr(in);
 	break;
       }
 
       case '<': {
-	node_t * prev = node;
-	node = new node_t(node_t::O_LT);
+	value_expr_t * prev = node;
+	node = new value_expr_t(value_expr_t::O_LT);
 	if (peek_next_nonws(in) == '=') {
 	  in.get(c);
-	  node->type = node_t::O_LTE;
+	  node->type = value_expr_t::O_LTE;
 	}
 	node->left  = prev;
 	node->right = parse_add_expr(in);
@@ -630,11 +593,11 @@ node_t * parse_logic_expr(std::istream& in)
       }
 
       case '>': {
-	node_t * prev = node;
-	node = new node_t(node_t::O_GT);
+	value_expr_t * prev = node;
+	node = new value_expr_t(value_expr_t::O_GT);
 	if (peek_next_nonws(in) == '=') {
 	  in.get(c);
-	  node->type = node_t::O_GTE;
+	  node->type = value_expr_t::O_GTE;
 	}
 	node->left  = prev;
 	node->right = parse_add_expr(in);
@@ -654,9 +617,9 @@ node_t * parse_logic_expr(std::istream& in)
   return node;
 }
 
-node_t * parse_expr(std::istream& in)
+value_expr_t * parse_value_expr(std::istream& in)
 {
-  node_t * node = NULL;
+  value_expr_t * node = NULL;
 
   node = parse_logic_expr(in);
 
@@ -666,26 +629,26 @@ node_t * parse_expr(std::istream& in)
       in.get(c);
       switch (c) {
       case '&': {
-	node_t * prev = node;
-	node = new node_t(node_t::O_AND);
+	value_expr_t * prev = node;
+	node = new value_expr_t(value_expr_t::O_AND);
 	node->left  = prev;
 	node->right = parse_logic_expr(in);
 	break;
       }
 
       case '|': {
-	node_t * prev = node;
-	node = new node_t(node_t::O_OR);
+	value_expr_t * prev = node;
+	node = new value_expr_t(value_expr_t::O_OR);
 	node->left  = prev;
 	node->right = parse_logic_expr(in);
 	break;
       }
 
       case '?': {
-	node_t * prev = node;
-	node = new node_t(node_t::O_QUES);
+	value_expr_t * prev = node;
+	node = new value_expr_t(value_expr_t::O_QUES);
 	node->left  = prev;
-	node_t * choices = new node_t(node_t::O_COL);
+	value_expr_t * choices = new value_expr_t(value_expr_t::O_COL);
 	node->right = choices;
 	choices->left = parse_logic_expr(in);
 	c = peek_next_nonws(in);
@@ -756,128 +719,128 @@ std::string regexps_to_predicate(std::list<std::string>::const_iterator begin,
 
 #ifdef DEBUG_ENABLED
 
-void dump_tree(std::ostream& out, const node_t * node)
+void dump_value_expr(std::ostream& out, const value_expr_t * node)
 {
   switch (node->type) {
-  case node_t::CONSTANT_A:
+  case value_expr_t::CONSTANT_A:
     out << "CONST[" << node->constant_a << "]";
     break;
-  case node_t::CONSTANT_T:
+  case value_expr_t::CONSTANT_T:
     out << "DATE/TIME[" << node->constant_t << "]";
     break;
 
-  case node_t::AMOUNT:	     out << "AMOUNT"; break;
-  case node_t::COST:	     out << "COST"; break;
-  case node_t::DATE:	     out << "DATE"; break;
-  case node_t::CLEARED:	     out << "CLEARED"; break;
-  case node_t::REAL:	     out << "REAL"; break;
-  case node_t::INDEX:	     out << "INDEX"; break;
-  case node_t::BALANCE:      out << "BALANCE"; break;
-  case node_t::COST_BALANCE: out << "COST_BALANCE"; break;
-  case node_t::TOTAL:        out << "TOTAL"; break;
-  case node_t::COST_TOTAL:   out << "COST_TOTAL"; break;
+  case value_expr_t::AMOUNT:	     out << "AMOUNT"; break;
+  case value_expr_t::COST:	     out << "COST"; break;
+  case value_expr_t::DATE:	     out << "DATE"; break;
+  case value_expr_t::CLEARED:	     out << "CLEARED"; break;
+  case value_expr_t::REAL:	     out << "REAL"; break;
+  case value_expr_t::INDEX:	     out << "INDEX"; break;
+  case value_expr_t::BALANCE:      out << "BALANCE"; break;
+  case value_expr_t::COST_BALANCE: out << "COST_BALANCE"; break;
+  case value_expr_t::TOTAL:        out << "TOTAL"; break;
+  case value_expr_t::COST_TOTAL:   out << "COST_TOTAL"; break;
 
-  case node_t::F_ARITH_MEAN:
+  case value_expr_t::F_ARITH_MEAN:
     out << "MEAN(";
-    dump_tree(out, node->left);
+    dump_value_expr(out, node->left);
     out << ")";
     break;
 
-  case node_t::F_NEG:
+  case value_expr_t::F_NEG:
     out << "ABS(";
-    dump_tree(out, node->left);
+    dump_value_expr(out, node->left);
     out << ")";
     break;
 
-  case node_t::F_ABS:
+  case value_expr_t::F_ABS:
     out << "ABS(";
-    dump_tree(out, node->left);
+    dump_value_expr(out, node->left);
     out << ")";
     break;
 
-  case node_t::F_PAYEE_MASK:
+  case value_expr_t::F_PAYEE_MASK:
     assert(node->mask);
     out << "P_MASK(" << node->mask->pattern << ")";
     break;
 
-  case node_t::F_ACCOUNT_MASK:
+  case value_expr_t::F_ACCOUNT_MASK:
     assert(node->mask);
     out << "A_MASK(" << node->mask->pattern << ")";
     break;
 
-  case node_t::F_VALUE:
+  case value_expr_t::F_VALUE:
     out << "VALUE(";
-    dump_tree(out, node->left);
+    dump_value_expr(out, node->left);
     if (node->right) {
       out << ", ";
-      dump_tree(out, node->right);
+      dump_value_expr(out, node->right);
     }
     out << ")";
     break;
 
-  case node_t::O_NOT:
+  case value_expr_t::O_NOT:
     out << "!";
-    dump_tree(out, node->left);
+    dump_value_expr(out, node->left);
     break;
 
-  case node_t::O_QUES:
-    dump_tree(out, node->left);
+  case value_expr_t::O_QUES:
+    dump_value_expr(out, node->left);
     out << "?";
-    dump_tree(out, node->right->left);
+    dump_value_expr(out, node->right->left);
     out << ":";
-    dump_tree(out, node->right->right);
+    dump_value_expr(out, node->right->right);
     break;
 
-  case node_t::O_AND:
-  case node_t::O_OR:
+  case value_expr_t::O_AND:
+  case value_expr_t::O_OR:
     out << "(";
-    dump_tree(out, node->left);
+    dump_value_expr(out, node->left);
     switch (node->type) {
-    case node_t::O_AND: out << " & "; break;
-    case node_t::O_OR:  out << " | "; break;
+    case value_expr_t::O_AND: out << " & "; break;
+    case value_expr_t::O_OR:  out << " | "; break;
     default: assert(0); break;
     }
-    dump_tree(out, node->right);
+    dump_value_expr(out, node->right);
     out << ")";
     break;
 
-  case node_t::O_EQ:
-  case node_t::O_LT:
-  case node_t::O_LTE:
-  case node_t::O_GT:
-  case node_t::O_GTE:
+  case value_expr_t::O_EQ:
+  case value_expr_t::O_LT:
+  case value_expr_t::O_LTE:
+  case value_expr_t::O_GT:
+  case value_expr_t::O_GTE:
     out << "(";
-    dump_tree(out, node->left);
+    dump_value_expr(out, node->left);
     switch (node->type) {
-    case node_t::O_EQ:  out << "="; break;
-    case node_t::O_LT:  out << "<"; break;
-    case node_t::O_LTE: out << "<="; break;
-    case node_t::O_GT:  out << ">"; break;
-    case node_t::O_GTE: out << ">="; break;
+    case value_expr_t::O_EQ:  out << "="; break;
+    case value_expr_t::O_LT:  out << "<"; break;
+    case value_expr_t::O_LTE: out << "<="; break;
+    case value_expr_t::O_GT:  out << ">"; break;
+    case value_expr_t::O_GTE: out << ">="; break;
     default: assert(0); break;
     }
-    dump_tree(out, node->right);
+    dump_value_expr(out, node->right);
     out << ")";
     break;
 
-  case node_t::O_ADD:
-  case node_t::O_SUB:
-  case node_t::O_MUL:
-  case node_t::O_DIV:
+  case value_expr_t::O_ADD:
+  case value_expr_t::O_SUB:
+  case value_expr_t::O_MUL:
+  case value_expr_t::O_DIV:
     out << "(";
-    dump_tree(out, node->left);
+    dump_value_expr(out, node->left);
     switch (node->type) {
-    case node_t::O_ADD: out << "+"; break;
-    case node_t::O_SUB: out << "-"; break;
-    case node_t::O_MUL: out << "*"; break;
-    case node_t::O_DIV: out << "/"; break;
+    case value_expr_t::O_ADD: out << "+"; break;
+    case value_expr_t::O_SUB: out << "-"; break;
+    case value_expr_t::O_MUL: out << "*"; break;
+    case value_expr_t::O_DIV: out << "/"; break;
     default: assert(0); break;
     }
-    dump_tree(out, node->right);
+    dump_value_expr(out, node->right);
     out << ")";
     break;
 
-  case node_t::LAST:
+  case value_expr_t::LAST:
   default:
     assert(0);
     break;
@@ -892,7 +855,7 @@ void dump_tree(std::ostream& out, const node_t * node)
 
 int main(int argc, char *argv[])
 {
-  ledger::dump_tree(std::cout, ledger::parse_expr(argv[1]));
+  ledger::dump_value_exp(std::cout, ledger::parse_value_expr(argv[1]));
   std::cout << std::endl;
 }
 

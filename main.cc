@@ -159,7 +159,7 @@ int main(int argc, char * argv[])
 
   std::auto_ptr<journal_t> journal(new journal_t);
   std::list<std::string>   files;
-  std::auto_ptr<node_t>    sort_order;
+  std::auto_ptr<value_expr_t>    sort_order;
 
   std::string predicate;
   std::string display_predicate;
@@ -538,31 +538,29 @@ int main(int argc, char * argv[])
   // Compile the sorting string
 
   if (! sort_string.empty())
-    sort_order.reset(parse_expr(sort_string));
+    sort_order.reset(parse_value_expr(sort_string));
 
   // Setup the meaning of %t and %T, used in format strings
 
-  format_t::value_expr.reset(parse_expr(value_expr));
-  format_t::total_expr.reset(parse_expr(total_expr));
+  format_t::value_expr.reset(parse_value_expr(value_expr));
+  format_t::total_expr.reset(parse_value_expr(total_expr));
 
   // Now handle the command that was identified above.
 
-  unsigned int xact_display_flags = MATCHING_TRANSACTIONS;
+  bool show_all_related = false;
 
   if (command == "p" || command == "e") {
-    xact_display_flags |= OTHER_TRANSACTIONS;
+    show_related = show_all_related = true;
     show_expanded = true;
   }
   else if (command == "E") {
     show_expanded = true;
   }
   else if (show_related) {
-    if (command == "r") {
-      xact_display_flags = OTHER_TRANSACTIONS;
+    if (command == "r")
       show_inverted = true;
-    } else {
-      xact_display_flags |= OTHER_TRANSACTIONS;
-    }
+    else
+      show_all_related = true;
   }
 
   const char * f;
@@ -591,9 +589,21 @@ int main(int argc, char * argv[])
   format_t nformat(next_lines_format);
 
   if (command == "b") {
-    format_account formatter(std::cout, format, display_predicate);
-    walk_accounts(journal->master, formatter, predicate,
-		  xact_display_flags, show_subtotals, sort_order.get());
+    std::auto_ptr<item_handler<transaction_t> > formatter;
+
+    formatter.reset(new add_to_account_value);
+    if (show_related)
+      formatter.reset(new related_transactions(formatter.release(),
+					       show_all_related));
+    formatter.reset(new filter_transactions(formatter.release(),
+					    predicate));
+
+    walk_entries(journal->entries, *formatter.get());
+
+    format_account acct_formatter(std::cout, format, display_predicate);
+
+    walk_accounts(journal->master, acct_formatter, show_subtotals,
+		  sort_order.get());
 
     if (format_account::disp_subaccounts_p(journal->master)) {
       std::string end_format = "--------------------\n";
@@ -602,17 +612,16 @@ int main(int argc, char * argv[])
     }
   }
   else if (command == "E") {
-    format_equity formatter(std::cout, format, nformat, display_predicate);
-    walk_accounts(journal->master, formatter, predicate,
-		  xact_display_flags, true, sort_order.get());
+    add_to_account_value formatter;
+    walk_entries(journal->entries, formatter);
+
+    format_equity acct_formatter(std::cout, format, nformat,
+				 display_predicate);
+    walk_accounts(journal->master, acct_formatter, true, sort_order.get());
   }
   else if (command == "e") {
     format_transactions formatter(std::cout, format, nformat);
-
-    for (transactions_list::iterator i = new_entry->transactions.begin();
-	 i != new_entry->transactions.end();
-	 i++)
-      handle_transaction(*i, formatter, xact_display_flags);
+    walk_transactions(new_entry->transactions, formatter);
   }
   else {
     std::auto_ptr<item_handler<transaction_t> > formatter;
@@ -667,10 +676,23 @@ int main(int argc, char * argv[])
       formatter.reset(new interval_transactions(formatter.release(), 0,
 						interval_t(9676800, 0, 0)));
 
+    // related_transactions will pass along all transactions related
+    // to the transaction received.  If `show_all_related' is true,
+    // then all the entry's transactions are passed; meaning that if
+    // one transaction of an entry is to be printed, all the
+    // transaction for that entry will be printed.
+    if (show_related)
+      formatter.reset(new related_transactions(formatter.release(),
+					       show_all_related));
+
+    // This filter_transactions will only pass through transactions
+    // matching the `predicate'.
+    formatter.reset(new filter_transactions(formatter.release(), predicate));
+
     // Once the filters are chained, walk `journal's entries and start
     // feeding each transaction that matches `predicate' to the chain.
     walk_entries(journal->entries.begin(), journal->entries.end(),
-		 *formatter.get(), predicate, xact_display_flags);
+		 *formatter.get());
   }
 
   // Save the cache, if need be
@@ -679,10 +701,6 @@ int main(int argc, char * argv[])
     if (const char * p = std::getenv("LEDGER_CACHE")) {
       std::ofstream outstr(p);
       assert(std::getenv("LEDGER"));
-#if 0
-      clear_transaction_display_flags(journal->entries.begin(),
-				      journal->entries.end());
-#endif
       write_binary_journal(outstr, journal.get(), std::getenv("LEDGER"));
     }
 

@@ -30,30 +30,29 @@ void collapse_transactions::report_cumulative_subtotal()
 {
   if (count == 1) {
     (*handler)(last_xact);
-    return;
+  } else {
+    assert(count > 1);
+
+    totals_account->total = subtotal;
+    balance_t result;
+    format_t::compute_total(result, details_t(totals_account));
+
+    for (amounts_map::const_iterator i = result.amounts.begin();
+	 i != result.amounts.end();
+	 i++) {
+      transaction_t * total_xact = new transaction_t(last_entry,
+						     totals_account);
+      xact_temps.push_back(total_xact);
+
+      total_xact->amount = (*i).second;
+      total_xact->cost   = (*i).second;
+
+      (*handler)(total_xact);
+    }
   }
 
-  assert(count > 1);
-
-  transaction_t * total_xact = new transaction_t(NULL, totals_account);
-
-  balance_t value;
-  total_xact->total = subtotal;
-  format_t::compute_total(value, details_t(total_xact));
-  total_xact->total = 0;
-
-  total_xact->entry = last_entry;
-
-  for (amounts_map::const_iterator i = value.amounts.begin();
-       i != value.amounts.end();
-       i++) {
-    total_xact->amount = (*i).second;
-    total_xact->cost   = (*i).second;
-
-    (*handler)(total_xact);
-  }
-
-  xact_temps.push_back(total_xact);
+  subtotal = 0;
+  count    = 0;
 }
 
 void changed_value_transactions::operator()(transaction_t * xact)
@@ -82,12 +81,11 @@ void changed_value_transactions::operator()(transaction_t * xact)
 	   i != diff.amounts.end();
 	   i++) {
 	transaction_t * temp_xact = new transaction_t(entry, NULL);
+	xact_temps.push_back(temp_xact);
 
 	temp_xact->amount = (*i).second;
 	temp_xact->total  = (*i).second;
 	temp_xact->total.negate();
-
-	xact_temps.push_back(temp_xact);
 
 	(*handler)(temp_xact);
       }
@@ -115,19 +113,21 @@ void subtotal_transactions::flush()
        i != balances.end();
        i++) {
     entry->date = finish;
-    transaction_t * xact = new transaction_t(entry, (*i).first);
-    xact->total = (*i).second;
+    transaction_t temp(entry, (*i).first);
+    temp.total = (*i).second;
     balance_t result;
-    format_t::compute_total(result, details_t(xact));
-    xact->total = 0;
+    format_t::compute_total(result, details_t(&temp));
     entry->date = start;
-
-    xact_temps.push_back(xact);
 
     for (amounts_map::const_iterator j = result.amounts.begin();
 	 j != result.amounts.end();
 	 j++) {
-      xact->amount = xact->cost = (*j).second;
+      transaction_t * xact = new transaction_t(entry, (*i).first);
+      xact_temps.push_back(xact);
+
+      xact->amount = (*j).second;
+      xact->cost   = (*j).second;
+
       (*handler)(xact);
     }
   }
@@ -151,31 +151,6 @@ void subtotal_transactions::operator()(transaction_t * xact)
     balances.insert(balances_pair(xact->account, *xact));
   else
     (*i).second += *xact;
-}
-
-struct sum_in_account : public item_handler<transaction_t>
-{
-  virtual void operator()(transaction_t * xact) {
-    xact->account->value += *xact;
-  }
-};
-
-void calc__accounts(account_t * account,
-		    const item_predicate<transaction_t>& pred,
-		    unsigned int flags)
-{
-  sum_in_account handler;
-
-  for (transactions_list::iterator i = account->transactions.begin();
-       i != account->transactions.end();
-       i++)
-    if (pred(*i))
-      handle_transaction(*i, handler, flags);
-
-  for (accounts_map::iterator i = account->accounts.begin();
-       i != account->accounts.end();
-       i++)
-    calc__accounts((*i).second, pred, flags);
 }
 
 } // namespace ledger

@@ -29,13 +29,13 @@ struct element_t
     SPACER
   };
 
-  bool         align_left;
-  unsigned int min_width;
-  unsigned int max_width;
+  bool		 align_left;
+  unsigned int	 min_width;
+  unsigned int	 max_width;
 
-  kind_t       type;
-  std::string  chars;
-  node_t *     val_expr;
+  kind_t	 type;
+  std::string	 chars;
+  value_expr_t * val_expr;
 
   struct element_t * next;
 
@@ -52,8 +52,8 @@ struct format_t
 {
   element_t * elements;
 
-  static std::auto_ptr<node_t> value_expr;
-  static std::auto_ptr<node_t> total_expr;
+  static std::auto_ptr<value_expr_t> value_expr;
+  static std::auto_ptr<value_expr_t> total_expr;
 
   format_t(const std::string& _format) : elements(NULL) {
     reset(_format);
@@ -107,17 +107,14 @@ class format_transactions : public item_handler<transaction_t>
   }
 
   virtual void operator()(transaction_t * xact) {
-    xact->dflags |= TRANSACTION_DISPLAYED;
-
-    // This makes the assumption that transactions from a single entry
-    // are always grouped together.
-
-    if (last_entry != xact->entry)
+    if (last_entry != xact->entry) {
       first_line_format.format_elements(output_stream, details_t(xact));
-    else
+      last_entry = xact->entry;
+    } else {
       next_lines_format.format_elements(output_stream, details_t(xact));
+    }
 
-    last_entry = xact->entry;
+    xact->dflags |= TRANSACTION_DISPLAYED;
   }
 };
 

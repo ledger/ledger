@@ -33,8 +33,8 @@ std::string partial_account_name(const account_t *  account)
   return name;
 }
 
-std::auto_ptr<node_t> format_t::value_expr;
-std::auto_ptr<node_t> format_t::total_expr;
+std::auto_ptr<value_expr_t> format_t::value_expr;
+std::auto_ptr<value_expr_t> format_t::total_expr;
 
 element_t * format_t::parse_elements(const std::string& fmt)
 {
@@ -99,7 +99,7 @@ element_t * format_t::parse_elements(const std::string& fmt)
 	  throw format_error("Missing ')'");
 
 	current->type     = element_t::VALUE_EXPR;
-	current->val_expr = parse_expr(num);
+	current->val_expr = parse_value_expr(num);
 	break;
 
       case '[':
