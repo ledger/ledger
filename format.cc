@@ -210,9 +210,11 @@ element_t * format_t::parse_elements(const std::string& fmt)
   return result.release();
 }
 
-void format_t::format(std::ostream& out, const details_t& details) const
+void format_t::format(std::ostream& out_str, const details_t& details) const
 {
   for (const element_t * elem = elements; elem; elem = elem->next) {
+    std::ostringstream out;
+
     if (elem->align_left)
       out << std::left;
     else
@@ -430,6 +432,11 @@ void format_t::format(std::ostream& out, const details_t& details) const
       assert(0);
       break;
     }
+
+    std::string temp = out.str();
+    if (elem->max_width > 0 && elem->max_width < temp.length())
+      temp.erase(elem->max_width);
+    out_str << temp;
   }
 }
 
