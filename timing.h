@@ -44,7 +44,8 @@ class timing_t
 #define TIMER_START(sym) sym.start(__FILE__, __LINE__)
 #define TIMER_STOP(sym) sym.stop()
 #else
-#define TIMER_START(sym, cat)
+#define TIMER_DEF(sym, cat)
+#define TIMER_START(sym)
 #define TIMER_STOP(sym)
 #endif
 
