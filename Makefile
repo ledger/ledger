@@ -8,6 +8,7 @@ CODE   = account.cc  \
 	 error.cc    \
 	 format.cc   \
 	 ledger.cc   \
+	 option.cc   \
 	 textual.cc  \
 	 valexpr.cc  \
 	 walk.cc

@@ -36,6 +36,9 @@
 - New -Y and -W options prints yearly and weekly subtotals, just as
   the -M option printed monthly subtotals in the previous version.
 
+- New -w report will show cumulative totals for each of the days of
+  the week.
+
 - New "-z INTERVAL" allows for more flexible interval reporting.  The
   sublanguage used will probably mature over time, but for now it
   supports expression like:

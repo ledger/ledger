@@ -3,6 +3,7 @@
 #include "valexpr.h"
 #include "format.h"
 #include "walk.h"
+#include "option.h"
 
 #include <fstream>
 #include <cstring>
@@ -78,6 +79,36 @@ void download_price_quote(commodity_t *	    commodity,
 } // namespace ledger
 
 
+namespace {
+  using namespace ledger;
+
+  std::auto_ptr<journal_t>    journal(new journal_t);
+  std::list<std::string>      files;
+  std::auto_ptr<value_expr_t> sort_order;
+  std::auto_ptr<std::ostream> output_stream;
+  std::auto_ptr<interval_t>   report_interval;
+
+#define OUT() (output_stream.get() ? *output_stream.get() : std::cout)
+
+  std::string predicate;
+  std::string display_predicate;
+  std::string format_string;
+  std::string sort_string;
+  std::string value_expr = "a";
+  std::string total_expr = "T";
+  std::time_t interval_begin = 0;
+
+  bool show_subtotals	  = true;
+  bool show_expanded	  = false;
+  bool show_related	  = false;
+  bool show_inverted	  = false;
+  bool show_empty	  = false;
+  bool days_of_the_week   = false;
+  bool show_revalued      = false;
+  bool show_revalued_only = false;
+  bool use_cache          = false;
+}
+
 static std::string ledger_cache_file()
 {
   std::string cache_file;
@@ -120,13 +151,13 @@ static void show_help(std::ostream& out)
     << "  -U        show only uncleared transactions and balances\n"
     << "  -R        do not consider virtual transactions: real only\n"
     << "  -l EXPR   don't print entries for which EXPR yields 0\n\n"
-    << "Customizing output:\n"
+    << "Output customization:\n"
     << "  -n        do not calculate parent account totals\n"
     << "  -s        show sub-accounts in balance, and splits in register\n"
     << "  -M        print register using monthly sub-totals\n"
     << "  -E        show accounts that total to zero\n"
     << "  -S EXPR   sort entry output based on EXPR\n\n"
-    << "Commodity prices:\n"
+    << "Commodity reporting:\n"
     << "  -T        report commodity totals, not their market value\n"
     << "  -B        report cost basis of commodities\n"
     << "  -V        report the market value of commodities\n"
@@ -143,35 +174,258 @@ static void show_help(std::ostream& out)
     << "  equity    output equity entries for specified accounts\n";
 }
 
-int main(int argc, char * argv[])
+
+DEF_OPT_HANDLERS();
+
+//////////////////////////////////////////////////////////////////////
+//
+// Basic options
+
+OPT_BEGIN(help, "h", false) {
+  show_help(std::cout);
+  std::exit(0);
+} OPT_END(help);
+
+OPT_BEGIN(version, "v", false) {
+  show_version(std::cout);
+  std::exit(0);
+} OPT_END(version);
+
+OPT_BEGIN(init_file, "i:", true) {
+  std::ifstream stream(optarg);
+  parse_textual_journal(stream, journal.get(), journal->master);
+} OPT_END(init_file);
+
+OPT_BEGIN(file, "f:", true) {
+  files.push_back(optarg);
+  use_cache = false;
+} OPT_END(file);
+
+OPT_BEGIN(output, "o:", false) {
+  if (std::string(optarg) != "-")
+    output_stream.reset(new std::ofstream(optarg));
+} OPT_END(output);
+
+OPT_BEGIN(set_price, "p:", true) {
+  if (char * p = std::strchr(optarg, '=')) {
+    *p = ' ';
+    std::string conversion = "C ";
+    conversion += p;
+    std::istringstream stream(conversion);
+    parse_textual_journal(stream, journal.get(), journal->master);
+  } else {
+    std::cerr << "Error: Invalid price setting: " << optarg
+	      << std::endl;
+    std::exit(1);
+  }
+} OPT_END(set_price);
+
+//////////////////////////////////////////////////////////////////////
+//
+// Report filtering
+
+OPT_BEGIN(begin_date, "b:", false) {
+  if (! predicate.empty())
+    predicate += "&";
+  predicate += "(d>=[";
+  predicate += optarg;
+  predicate += "])";
+} OPT_END(begin_date);
+
+OPT_BEGIN(end_date, "e:", false) {
+  if (! predicate.empty())
+    predicate += "&";
+  predicate += "(d<[";
+  predicate += optarg;
+  predicate += "])";
+} OPT_END(end_date);
+
+OPT_BEGIN(current, "c", false) {
+  if (! predicate.empty())
+    predicate += "&";
+  predicate += "(d<t)";
+} OPT_END(current);
+
+OPT_BEGIN(cleared, "C", false) {
+  if (! predicate.empty())
+    predicate += "&";
+  predicate += "X";
+} OPT_END(cleared);
+
+OPT_BEGIN(uncleared, "U", false) {
+  if (! predicate.empty())
+    predicate += "&";
+  predicate += "!X";
+} OPT_END(uncleared);
+
+OPT_BEGIN(real, "R", false) {
+  if (! predicate.empty())
+    predicate += "&";
+  predicate += "R";
+} OPT_END(real);
+
+//////////////////////////////////////////////////////////////////////
+//
+// Output customization
+
+OPT_BEGIN(format, "F:", false) {
+  format_string = optarg;
+} OPT_END(format);
+
+OPT_BEGIN(date_format, "y:", false) {
+  format_t::date_format = optarg;
+} OPT_END(date_format);
+
+OPT_BEGIN(empty, "E", false) {
+  show_empty = true;
+} OPT_END(empty);
+
+OPT_BEGIN(collapse, "n", false) {
+  show_subtotals = false;
+} OPT_END(collapse);
+
+OPT_BEGIN(show_all, "s", false) {
+  show_expanded = true;
+} OPT_END(show_all);
+
+OPT_BEGIN(sort, "S:", false) {
+  sort_string = optarg;
+} OPT_END(sort);
+
+OPT_BEGIN(related, "r", false) {
+  show_related = true;
+} OPT_END(related);
+
+OPT_BEGIN(interval, "z:", false) {
+  std::string str(optarg);
+  std::istringstream stream(str);
+  report_interval.reset(interval_t::parse(stream));
+
+  if (! stream.eof()) {
+    std::string word;
+    stream >> word;
+    if (word == "from") {
+      stream >> word;
+      if (! parse_date(word.c_str(), &interval_begin))
+	throw interval_expr_error("Could not parse 'from' date");
+    }
+  }
+} OPT_END(interval);
+
+OPT_BEGIN(weekly, "W", false) {
+  report_interval.reset(new interval_t(604800, 0, 0));
+} OPT_END(weekly);
+
+OPT_BEGIN(dow, "w", false) {
+  days_of_the_week = true;
+} OPT_END(dow);
+
+OPT_BEGIN(monthly, "M", false) {
+  report_interval.reset(new interval_t(0, 1, 0));
+} OPT_END(monthly);
+
+OPT_BEGIN(yearly, "Y", false) {
+  report_interval.reset(new interval_t(0, 0, 1));
+} OPT_END(yearly);
+
+OPT_BEGIN(limit, "l:", false) {
+  if (! predicate.empty())
+    predicate += "&";
+  predicate += "(";
+  predicate += optarg;
+  predicate += ")";
+} OPT_END(limit);
+
+OPT_BEGIN(display, "d:", false) {
+  if (! display_predicate.empty())
+    display_predicate += "&";
+  display_predicate += "(";
+  display_predicate += optarg;
+  display_predicate += ")";
+} OPT_END(display);
+
+OPT_BEGIN(value, "t:", false) {
+  value_expr = optarg;
+} OPT_END(value);
+
+OPT_BEGIN(total, "T:", false) {
+  total_expr = optarg;
+} OPT_END(total);
+
+OPT_BEGIN(value_data, "j", false) {
+  value_expr    = "S" + value_expr;
+  format_string = plot_value_fmt;
+} OPT_END(value_data);
+
+OPT_BEGIN(total_data, "J", false) {
+  total_expr    = "S" + total_expr;
+  format_string = plot_total_fmt;
+} OPT_END(total_data);
+
+//////////////////////////////////////////////////////////////////////
+//
+// Commodity reporting
+
+OPT_BEGIN(price_db, "P:", false) {
+  price_db = optarg;
+} OPT_END(price_db);
+
+OPT_BEGIN(price_exp, "L:", false) {
+  pricing_leeway = std::atol(optarg) * 60;
+} OPT_END(price_exp);
+
+OPT_BEGIN(download, "Q", false) {
+  commodity_t::updater = download_price_quote;
+} OPT_END(download);
+
+OPT_BEGIN(quantity, "O", false) {
+  value_expr = "a";
+  total_expr = "T";
+} OPT_END(quantity);
+
+OPT_BEGIN(basis, "B", false) {
+  value_expr = "c";
+  total_expr = "C";
+} OPT_END(basis);
+
+OPT_BEGIN(market, "V", false) {
+  show_revalued = true;
+
+  value_expr = "v";
+  total_expr = "V";
+} OPT_END(market);
+
+OPT_BEGIN(gain, "G", false) {
+  show_revalued      =
+  show_revalued_only = true;
+
+  value_expr = "c";
+  total_expr = "G";
+} OPT_END(gain);
+
+OPT_BEGIN(average, "A", false) {
+  value_expr = "a";
+  total_expr = "MT";
+} OPT_END(average);
+
+OPT_BEGIN(deviation, "D", false) {
+  value_expr = "a";
+  total_expr = "DMT";
+} OPT_END(deviation);
+
+OPT_BEGIN(trend, "X", false) {
+  value_expr = "a";
+  total_expr = "MDMT";
+} OPT_END(trend);
+
+OPT_BEGIN(weighted_trend, "Z", false) {
+  value_expr = "a";
+  total_expr = "MD(MT/(1+(((t-d)/(30*86400))<0?0:((t-d)/(30*86400)))))";
+} OPT_END(weighted_trend);
+
+
+int main(int argc, char * argv[], char * envp[])
 {
-  using namespace ledger;
-
-  std::auto_ptr<journal_t>    journal(new journal_t);
-  std::list<std::string>      files;
-  std::auto_ptr<value_expr_t> sort_order;
-  std::auto_ptr<std::ostream> output_stream;
-  std::auto_ptr<interval_t>   report_interval;
-
-#define OUT() (output_stream.get() ? *output_stream.get() : std::cout)
-
-  std::string predicate;
-  std::string display_predicate;
-  std::string format_string;
-  std::string sort_string;
-  std::string value_expr = "a";
-  std::string total_expr = "T";
-  std::time_t interval_begin = 0;
-
-  bool show_subtotals	  = true;
-  bool show_expanded	  = false;
-  bool show_related	  = false;
-  bool show_inverted	  = false;
-  bool show_empty	  = false;
-  bool days_of_the_week   = false;
-  bool show_revalued      = false;
-  bool show_revalued_only = false;
-
 #ifdef DEBUG_ENABLED
   if (char * p = std::getenv("DEBUG_FILE")) {
     debug_stream = new std::ofstream(p);
@@ -181,6 +435,7 @@ int main(int argc, char * argv[])
 
   // Initialize some variables based on environment variable settings
 
+  // jww (2004-08-13): fix these
   if (char * p = std::getenv("PRICE_HIST"))
     price_db = p;
 
@@ -189,11 +444,13 @@ int main(int argc, char * argv[])
 
   // A ledger data file must be specified
 
-  bool use_cache = std::getenv("LEDGER") != NULL;
+  use_cache = std::getenv("LEDGER") != NULL;
 
   if (use_cache) {
+    // jww (2004-08-13): fix this
     for (int i = 0; i < argc; i++)
-      if (std::strcmp(argv[i], "-f") == 0) {
+      if (std::strcmp(argv[i], "-f") == 0 ||
+	  std::strcmp(argv[i], "--file") == 0) {
 	use_cache = false;
 	break;
       }
@@ -218,251 +475,19 @@ int main(int argc, char * argv[])
 
   // Parse the command-line options
 
-  int c, index;
-  while (-1 !=
-	 (c = getopt(argc, argv,
-	     "+ABb:Ccd:DEe:F:f:Ghi:JjL:l:MnOo:P:p:QRrS:sT:t:UVvWwXYy:Zz:"))) {
-    switch (char(c)) {
-    // Basic options
-    case 'h':
-      show_help(std::cout);
-      break;
+  std::vector<char *> args;
+  process_arguments(args, argc, argv);
 
-    case 'v':
-      show_version(std::cout);
-      return 0;
-
-    case 'f':
-      files.push_back(optarg);
-      use_cache = false;
-      break;
-
-    case 'o':
-      if (std::string(optarg) != "-")
-	output_stream.reset(new std::ofstream(optarg));
-      break;
-
-    case 'p':
-      if (char * p = std::strchr(optarg, '=')) {
-	*p = ' ';
-	std::string conversion = "C ";
-	conversion += p;
-	std::istringstream stream(conversion);
-	parse_textual_journal(stream, journal.get(), journal->master);
-      }
-      break;
-
-    case 'b':
-      if (! predicate.empty())
-	predicate += "&";
-      predicate += "(d>=[";
-      predicate += optarg;
-      predicate += "])";
-      break;
-
-    case 'e':
-      if (! predicate.empty())
-	predicate += "&";
-      predicate += "(d<[";
-      predicate += optarg;
-      predicate += "])";
-      break;
-
-    case 'c': {
-      if (! predicate.empty())
-	predicate += "&";
-      predicate += "(d<";
-      std::ostringstream now;
-      now << std::time(NULL);
-      predicate += now.str();
-      predicate += ")";
-      break;
-    }
-
-    case 'C':
-      if (! predicate.empty())
-	predicate += "&";
-      predicate += "X";
-      break;
-
-    case 'U':
-      if (! predicate.empty())
-	predicate += "&";
-      predicate += "!X";
-      break;
-
-    case 'R':
-      if (! predicate.empty())
-	predicate += "&";
-      predicate += "R";
-      break;
-
-    // Customizing output
-    case 'F':
-      format_string = optarg;
-      break;
-
-    case 'y':
-      format_t::date_format = optarg;
-      break;
-
-    case 'E':
-      show_empty = true;
-      break;
-
-    case 'n':
-      show_subtotals = false;
-      break;
-
-    case 's':
-      show_expanded = true;
-      break;
-
-    case 'S':
-      sort_string = optarg;
-      break;
-
-    case 'r':
-      show_related = true;
-      break;
-
-    case 'z': {
-      std::string str(optarg);
-      std::istringstream stream(str);
-      report_interval.reset(interval_t::parse(stream));
-
-      if (! stream.eof()) {
-	std::string word;
-	stream >> word;
-	if (word == "from") {
-	  stream >> word;
-	  if (! parse_date(word.c_str(), &interval_begin))
-	    throw interval_expr_error("Could not parse 'from' date");
-	}
-      }
-      break;
-    }
-
-    case 'W':
-      report_interval.reset(new interval_t(604800, 0, 0));
-      break;
-
-    case 'w':
-      days_of_the_week = true;
-      break;
-
-    case 'M':
-      report_interval.reset(new interval_t(0, 1, 0));
-      break;
-
-    case 'Y':
-      report_interval.reset(new interval_t(0, 0, 1));
-      break;
-
-    case 'l':
-      if (! predicate.empty())
-	predicate += "&";
-      predicate += "(";
-      predicate += optarg;
-      predicate += ")";
-      break;
-
-    case 'd':
-      if (! display_predicate.empty())
-	display_predicate += "&";
-      display_predicate += "(";
-      display_predicate += optarg;
-      display_predicate += ")";
-      break;
-
-    // Commodity reporting
-    case 'P':
-      price_db = optarg;
-      break;
-
-    case 'L':
-      pricing_leeway = std::atol(optarg) * 60;
-      break;
-
-    case 'Q':
-      commodity_t::updater = download_price_quote;
-      break;
-
-    case 't':
-      value_expr = optarg;
-      break;
-
-    case 'T':
-      total_expr = optarg;
-      break;
-
-    case 'O':
-      value_expr = "a";
-      total_expr = "T";
-      break;
-
-    case 'B':
-      value_expr = "c";
-      total_expr = "C";
-      break;
-
-    case 'V':
-      show_revalued = true;
-
-      value_expr = "v";
-      total_expr = "V";
-      break;
-
-    case 'G':
-      show_revalued      =
-      show_revalued_only = true;
-
-      value_expr = "c";
-      total_expr = "G";
-      break;
-
-    case 'A':
-      value_expr = "a";
-      total_expr = "MT";
-      break;
-
-    case 'D':
-      value_expr = "a";
-      total_expr = "DMT";
-      break;
-
-    case 'X':
-      value_expr = "a";
-      total_expr = "MDMT";
-      break;
-
-    case 'Z':
-      value_expr = "a";
-      total_expr = "MD(MT/(1+(((t-d)/(30*86400))<0?0:((t-d)/(30*86400)))))";
-      break;
-
-    case 'j':
-      value_expr    = "S" + value_expr;
-      format_string = plot_value_fmt;
-      break;
-
-    case 'J':
-      total_expr    = "S" + total_expr;
-      format_string = plot_total_fmt;
-      break;
-
-    default:
-      assert(0);
-      break;
-    }
-  }
-
-  if (optind == argc) {
+  if (args.empty()) {
     show_help(std::cerr);
     return 1;
   }
+  argc = args.size();
+  int index = 0;
 
-  index = optind;
+  // Process options from the environment
+
+  process_environment(envp);
 
   // Read the ledger file, unless we already read it from the cache
 
@@ -509,7 +534,7 @@ int main(int argc, char * argv[])
 
   // Read the command word, and then check and simplify it
 
-  std::string command = argv[index++];
+  std::string command = args[index++];
 
   if (command == "balance" || command == "bal" || command == "b")
     command = "b";
@@ -531,20 +556,20 @@ int main(int argc, char * argv[])
 
   std::auto_ptr<entry_t> new_entry;
   if (command == "e") {
-    new_entry.reset(journal->derive_entry(argc - index, &argv[index]));
+    new_entry.reset(journal->derive_entry(argc - index, &args[index]));
   } else {
     // Treat the remaining command-line arguments as regular
     // expressions, used for refining report results.
 
     int start = index;
     for (; index < argc; index++)
-      if (std::strcmp(argv[index], "--") == 0) {
+      if (std::strcmp(args[index], "--") == 0) {
 	index++;
 	break;
       }
 
     if (start < index) {
-      std::list<std::string> regexps(&argv[start], &argv[index]);
+      std::list<std::string> regexps(&args[start], &args[index]);
       std::string pred = regexps_to_predicate(regexps.begin(), regexps.end());
       if (! pred.empty()) {
 	if (! predicate.empty())
@@ -554,7 +579,7 @@ int main(int argc, char * argv[])
     }
 
     if (index < argc) {
-      std::list<std::string> regexps(&argv[index], &argv[argc]);
+      std::list<std::string> regexps(&args[index], &args[argc]);
       std::string pred = regexps_to_predicate(regexps.begin(), regexps.end(),
 					      false);
       if (! pred.empty()) {
@@ -583,7 +608,7 @@ int main(int argc, char * argv[])
     }
   }
 
-  // Compile the sorting string
+  // Compile the sort criteria
 
   if (! sort_string.empty()) {
     try {
@@ -625,7 +650,7 @@ int main(int argc, char * argv[])
     return 1;
   }
 
-  // Now handle the command that was identified above.
+  // Configure some option depending on the report type
 
   bool show_all_related = false;
 
@@ -642,6 +667,8 @@ int main(int argc, char * argv[])
     else
       show_all_related = true;
   }
+
+  // Compile the format strings
 
   const char * f;
   if (! format_string.empty())
@@ -667,6 +694,8 @@ int main(int argc, char * argv[])
 
   format_t format(first_line_format);
   format_t nformat(next_lines_format);
+
+  // Walk the entries based on the report type and the options
 
   if (command == "b") {
     std::auto_ptr<item_handler<transaction_t> > formatter;

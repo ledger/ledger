@@ -2,6 +2,7 @@
 #include "autoxact.h"
 #include "valexpr.h"
 #include "error.h"
+#include "option.h"
 
 #include <fstream>
 #include <sstream>
@@ -469,6 +470,16 @@ unsigned int parse_textual_journal(std::istream& in, journal_t * journal,
 	in.getline(line, MAX_LINE);
 	linenum++;
 	break;
+
+      case ':': {                 // option setting
+	std::string opt;
+	in >> c;
+	in >> opt;
+	in.getline(line, MAX_LINE);
+	linenum++;
+	process_option(opt, line + 1);
+	break;
+      }
 
       case '=':                   // automated transactions
 	parse_automated_transactions(in, account_stack.front(), auto_xacts);
