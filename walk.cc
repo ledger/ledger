@@ -102,13 +102,8 @@ void changed_value_transactions::operator()(transaction_t * xact)
 	transaction_t * temp_xact = new transaction_t(entry, NULL);
 	xact_temps.push_back(temp_xact);
 
-	temp_xact->amount = (*i).second;
-	if (changed_values_only) {
-	  temp_xact->dflags |= TRANSACTION_NO_TOTAL;
-	} else {
-	  temp_xact->total  = (*i).second;
-	  temp_xact->total.negate();
-	}
+	temp_xact->amount  = (*i).second;
+	temp_xact->dflags |= TRANSACTION_NO_TOTAL;
 
 	(*handler)(temp_xact);
       }
