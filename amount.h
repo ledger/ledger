@@ -162,8 +162,6 @@ class amount_t
       negate();
   }
 
-  operator std::string() const;
-
   void parse(std::istream& in);
   void parse(const std::string& str) {
     std::istringstream stream(str);

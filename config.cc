@@ -60,7 +60,7 @@ Basic options:\n\
       --cache FILE      use FILE as a binary cache when --file is not used\n\
   -f, --file FILE       read ledger data from FILE\n\
   -o, --output FILE     write output to FILE\n\
-  -p, --set-price CONV  specify a commodity conversion: \"COMM=AMOUNT\"\n\
+  -z, --set-price CONV  specify a commodity conversion: \"COMM=AMOUNT\"\n\
   -a, --account NAME    specify the default account (useful with QIF files)\n\n\
 Report filtering:\n\
   -b, --begin-date DATE set report begin date\n\
@@ -80,7 +80,7 @@ Output customization:\n\
   -n, --collapse        register: collapse entries with multiple transactions\n\
   -s, --subtotal        balance: show sub-accounts; register: show subtotals\n\
   -S, --sort EXPR       sort report according to the value expression EXPR\n\
-  -z, --interval STR    report by interval, based on interval expression STR\n\
+  -p, --interval STR    report by interval (period), based on STR\n\
       --dow             show a days-of-the-week report\n\
   -W, --weekly          show weekly sub-totals\n\
   -M, --monthly         show monthly sub-totals\n\
@@ -149,7 +149,7 @@ OPT_BEGIN(output, "o:") {
     config->output_file = optarg;
 } OPT_END(output);
 
-OPT_BEGIN(set_price, "p:") {
+OPT_BEGIN(set_price, "z:") {
   if (std::strchr(optarg, '='))
     config->price_settings.push_back(optarg);
   else
@@ -260,7 +260,7 @@ OPT_BEGIN(related, "r") {
   config->show_related = true;
 } OPT_END(related);
 
-OPT_BEGIN(interval, "z:") {
+OPT_BEGIN(interval, "p:") {
   config->interval_text = optarg;
 } OPT_END(interval);
 

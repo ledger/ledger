@@ -75,7 +75,7 @@ void balance_t::write(std::ostream& out,
 
     out.width(width);
     out.fill(' ');
-    out << std::right << std::string(**i);
+    out << std::right << **i;
   }
 
   if (first) {

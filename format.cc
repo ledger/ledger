@@ -223,7 +223,7 @@ void format_t::format_elements(std::ostream&    out,
 	out << *((unsigned int *) value.data);
 	break;
       case value_t::AMOUNT:
-	out << std::string(*((amount_t *) value.data));
+	out << *((amount_t *) value.data);
 	break;
       case value_t::BALANCE:
 	((balance_t *) value.data)->write(out, elem->min_width,
@@ -337,8 +337,9 @@ void format_t::format_elements(std::ostream&    out,
 	}
 
 	if (! use_disp)
-	  disp = std::string(details.xact->amount);
-	out << disp;
+	  out << details.xact->amount;
+	else
+	  out << disp;
 
 	// jww (2004-07-31): this should be handled differently
 	if (! details.xact->note.empty())

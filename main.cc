@@ -500,8 +500,9 @@ int main(int argc, char * argv[], char * envp[])
 
     // filter_transactions will only pass through transactions
     // matching the `display_predicate'.
-    formatter.reset(new filter_transactions(formatter.release(),
-					    config->display_predicate));
+    if (! config->display_predicate.empty())
+      formatter.reset(new filter_transactions(formatter.release(),
+					      config->display_predicate));
 
     // calc_transactions computes the running total.  When this
     // appears will determine, for example, whether filtered
@@ -560,8 +561,9 @@ int main(int argc, char * argv[], char * envp[])
 
   // This filter_transactions will only pass through transactions
   // matching the `predicate'.
-  formatter.reset(new filter_transactions(formatter.release(),
-					  config->predicate));
+  if (! config->predicate.empty())
+    formatter.reset(new filter_transactions(formatter.release(),
+					    config->predicate));
 
   // Once the filters are chained, walk `journal's entries and start
   // feeding each transaction that matches `predicate' to the chain.

@@ -13,8 +13,8 @@ AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 
 # Checks for libraries.
-AC_CHECK_LIB([gmp], [__gmpz_add])
-AC_CHECK_LIB([pcre], [pcre_compile])
+AC_CHECK_LIB([gmp], [__gmpz_add],, [AC_MSG_FAILURE("Could not find libgmp!")])
+AC_CHECK_LIB([pcre], [pcre_compile],, [AC_MSG_FAILURE("Could not find libpcre!")])
 AC_CHECK_LIB([xmlparse], [XML_ParserCreate])
 
 # Checks for header files.

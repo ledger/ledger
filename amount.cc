@@ -585,14 +585,16 @@ amount_t amount_t::round(unsigned int prec) const
   }
 }
 
-std::ostream& operator<<(std::ostream& out, const amount_t& amt)
+std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
 {
+  if (! amt.quantity)
+    return _out;
+
+  std::ostringstream out;
+
   mpz_t quotient;
   mpz_t rquotient;
   mpz_t remainder;
-
-  if (! amt.quantity)
-    return out;
 
   mpz_init(quotient);
   mpz_init(rquotient);
@@ -710,14 +712,9 @@ std::ostream& operator<<(std::ostream& out, const amount_t& amt)
   mpz_clear(rquotient);
   mpz_clear(remainder);
 
-  return out;
-}
+  _out << out.str();
 
-amount_t::operator std::string() const
-{
-  std::ostringstream s;
-  s << *this;
-  return s.str();
+  return _out;
 }
 
 void parse_quantity(std::istream& in, std::string& value)

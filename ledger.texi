@@ -336,9 +336,8 @@ your init file.
 entries on or after @samp{DATE}.  Only entries after that date will be
 calculated, which means that the running total in the balance report
 will always start at zero with the first matching entry.  (Note: This
-is different from using @samp{--display} to constrain the entries
-displayed, in which case the running total includes the undisplayed
-entries).
+is different from using @samp{--display} to constrain what is
+displayed).
 
 @sp 1
 
@@ -446,9 +445,19 @@ transaction that matched.
 
 @sp 1
 
-@samp{--limit EXPR} (@samp{-l EXPR})
+@samp{--limit EXPR} (@samp{-l EXPR}) limits which transactions take
+part in the calculations of a report.
 
-@samp{--display EXPR} (@samp{-d EXPR})
+@samp{--display EXPR} (@samp{-d EXPR}) limits which transactions or
+accounts or actually displayed in a report.  They might still be
+calculated, and be part of the running total of a register report, for
+example, but they will not be displayed.  This is useful for seeing
+last month's checking transactions, against a running balance that
+includes all past transactions:
+
+@example
+ledger -d "d>=[2004/8]" reg checking
+@end example
 
 @sp 1
 
