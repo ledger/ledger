@@ -134,15 +134,15 @@ static void dataHandler(void *userData, const char *s, int len)
 
 bool xml_parser_t::test(std::istream& in) const
 {
-  char buf[256];
+  char buf[80];
 
-  in.getline(buf, 255);
+  in.getline(buf, 79);
   if (std::strncmp(buf, "<?xml", 5) != 0) {
     in.seekg(0, std::ios::beg);
     return false;
   }
 
-  in.getline(buf, 255);
+  in.getline(buf, 79);
   if (! std::strstr(buf, "<ledger")) {
     in.seekg(0, std::ios::beg);
     return false;

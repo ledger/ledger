@@ -174,9 +174,9 @@ int ofx_proc_status_cb(struct OfxStatusData data, void * status_data)
 
 bool ofx_parser_t::test(std::istream& in) const
 {
-  char buf[256];
+  char buf[80];
 
-  in.getline(buf, 255);
+  in.getline(buf, 79);
   if (std::strncmp(buf, "OFXHEADER", 9) == 0) {
     in.seekg(0, std::ios::beg);
     return true;
@@ -186,7 +186,7 @@ bool ofx_parser_t::test(std::istream& in) const
     return false;
   }
 
-  in.getline(buf, 255);
+  in.getline(buf, 79);
   if (std::strncmp(buf, "<?OFX", 5) != 0 &&
       std::strncmp(buf, "<?ofx", 5) != 0) {
     in.seekg(0, std::ios::beg);

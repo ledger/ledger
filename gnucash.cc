@@ -286,8 +286,8 @@ static void dataHandler(void *userData, const char *s, int len)
 
 bool gnucash_parser_t::test(std::istream& in) const
 {
-  char buf[128];
-  in.getline(buf, 127);
+  char buf[5];
+  in.read(buf, 5);
   in.seekg(0, std::ios::beg);
 
   return std::strncmp(buf, "<?xml", 5) == 0;
