@@ -3,6 +3,11 @@
 
 #include <iostream>
 
+#if defined __FreeBSD__ && __FreeBSD__ <=4
+// FreeBSD has a broken isspace macro, so dont use it
+#undef isspace(c)
+#endif
+
 #if defined(__GNUG__) && __GNUG__ < 3
 namespace std {
   inline ostream & right (ostream & i) {
