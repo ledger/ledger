@@ -18,8 +18,8 @@ namespace ledger {
 
 #define MAX_LINE 1024
 
-std::string  path;
-unsigned int linenum;
+static std::string  path;
+static unsigned int linenum;
 
 #ifdef TIMELOG_SUPPORT
 static std::time_t time_in;
@@ -54,7 +54,7 @@ transaction_t * parse_transaction_text(char * line, account_t * account,
 {
   // The account will be determined later...
 
-  std::auto_ptr<transaction_t> xact(new transaction_t(entry, NULL));
+  std::auto_ptr<transaction_t> xact(new transaction_t(NULL));
 
   // The call to `next_element' will skip past the account name,
   // and return a pointer to the beginning of the amount.  Once
@@ -392,8 +392,7 @@ unsigned int parse_textual_journal(std::istream& in, journal_t * journal,
 	    time_commodity = amt.commodity;
 
 	    transaction_t * xact
-	      = new transaction_t(curr.get(), last_account, amt, amt,
-				  TRANSACTION_VIRTUAL);
+	      = new transaction_t(last_account, amt, amt, TRANSACTION_VIRTUAL);
 	    curr->add_transaction(xact);
 
 	    if (! finalize_entry(curr.get()) ||

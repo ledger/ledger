@@ -17,12 +17,13 @@ extern const std::string equity_fmt;
 
 struct config_t
 {
-  strings_list  files;
   strings_list  price_settings;
   std::string   init_file;
+  std::string   data_file;
   std::string   cache_file;
   std::string   price_db;
   std::string   output_file;
+  std::string   account;
   std::string   predicate;
   std::string   display_predicate;
   std::string   interval_text;

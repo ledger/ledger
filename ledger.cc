@@ -98,7 +98,7 @@ entry_t * journal_t::derive_entry(strings_list::iterator i,
     m_xact = matching->transactions.front();
 
     amount_t amt(*i++);
-    first = xact = new transaction_t(added.get(), m_xact->account, amt, amt);
+    first = xact = new transaction_t(m_xact->account, amt, amt);
     added->add_transaction(xact);
 
     if (xact->amount.commodity->symbol.empty()) {
@@ -108,8 +108,7 @@ entry_t * journal_t::derive_entry(strings_list::iterator i,
 
     m_xact = matching->transactions.back();
 
-    xact = new transaction_t(added.get(), m_xact->account,
-			     - first->amount, - first->amount);
+    xact = new transaction_t(m_xact->account, - first->amount, - first->amount);
     added->add_transaction(xact);
 
     if (i != end && std::string(*i++) == "-from" && i != end)
@@ -150,7 +149,7 @@ entry_t * journal_t::derive_entry(strings_list::iterator i,
       }
 
       amount_t amt(*i++);
-      transaction_t * xact = new transaction_t(added.get(), acct, amt, amt);
+      transaction_t * xact = new transaction_t(acct, amt, amt);
       added->add_transaction(xact);
 
       if (! xact->amount.commodity)
@@ -158,10 +157,8 @@ entry_t * journal_t::derive_entry(strings_list::iterator i,
     }
 
     if (i != end && std::string(*i++) == "-from" && i != end) {
-      if (account_t * acct = find_account(*i++)) {
-	transaction_t * xact = new transaction_t(NULL, acct);
-	added->add_transaction(xact);
-      }
+      if (account_t * acct = find_account(*i++))
+	added->add_transaction(new transaction_t(acct));
     } else {
       if (! matching) {
 	std::cerr << "Error: Could not figure out the account to draw from."
@@ -169,8 +166,7 @@ entry_t * journal_t::derive_entry(strings_list::iterator i,
 	std::exit(1);
       }
       transaction_t * xact
-	= new transaction_t(added.get(),
-			    matching->transactions.back()->account);
+	= new transaction_t(matching->transactions.back()->account);
       added->add_transaction(xact);
     }
   }
@@ -178,9 +174,10 @@ entry_t * journal_t::derive_entry(strings_list::iterator i,
   return added.release();
 }
 
-int parse_journal_file(const std::string& path,
-		       journal_t *	  journal,
-		       account_t *	  master)
+int parse_journal_file(const std::string&  path,
+		       journal_t *	   journal,
+		       account_t *	   master,
+		       const std::string * original_file)
 {
   journal->sources.push_back(path);
 
@@ -189,13 +186,19 @@ int parse_journal_file(const std::string& path,
 
   std::ifstream stream(path.c_str());
 
-  unsigned long magic;
-  stream.read((char *)&magic, sizeof(magic));
+  char magic[sizeof(unsigned int) + 1];
+  stream.read(magic, sizeof(unsigned int));
+  magic[sizeof(unsigned int)] = '\0';
   stream.seekg(0);
 
-  if (magic == binary_magic_number)
-    return read_binary_journal(stream, journal,
-			       master ? master : journal->master);
+  if (*((unsigned int *) magic) == binary_magic_number)
+    return read_binary_journal(stream, original_file ? *original_file : "",
+			       journal, master ? master : journal->master);
+  else if (std::strcmp(magic, "!Typ") == 0 ||
+	   std::strcmp(magic, "\n!Ty") == 0 ||
+	   std::strcmp(magic, "\r\n!T") == 0)
+    return parse_qif_file(stream, journal, master ? master : journal->master,
+			  commodity_t::find_commodity("$", true));
   else
     return parse_textual_journal(stream, journal,
 				 master ? master : journal->master);

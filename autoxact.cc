@@ -21,7 +21,7 @@ void automated_transaction_t::extend_entry(entry_t * entry)
 	  amt = (*t)->amount;
 
 	transaction_t * xact
-	  = new transaction_t(entry, (*t)->account, amt, amt,
+	  = new transaction_t((*t)->account, amt, amt,
 			      (*t)->flags | TRANSACTION_AUTO);
 	entry->add_transaction(xact);
       }

@@ -92,7 +92,7 @@ void read_binary_amount(std::istream& in, amount_t& amt)
 
 transaction_t * read_binary_transaction(std::istream& in, entry_t * entry)
 {
-  transaction_t * xact = new transaction_t(entry, NULL);
+  transaction_t * xact = new transaction_t(NULL);
 
   xact->account = accounts[read_binary_number<account_t::ident_t>(in)];
   xact->account->add_transaction(xact);
@@ -193,9 +193,10 @@ account_t * read_binary_account(std::istream& in, account_t * master = NULL)
   return acct;
 }
 
-unsigned int read_binary_journal(std::istream& in,
-				 journal_t *   journal,
-				 account_t *   master)
+unsigned int read_binary_journal(std::istream&	    in,
+				 const std::string& file,
+				 journal_t *	    journal,
+				 account_t *	    master)
 {
   ident   = 0;
   c_ident = 0;
@@ -204,18 +205,24 @@ unsigned int read_binary_journal(std::istream& in,
       read_binary_number<unsigned long>(in) != format_version)
     return 0;
 
-  for (unsigned short i = 0,
-	 count = read_binary_number<unsigned short>(in);
-       i < count;
-       i++) {
-    std::string path = read_binary_string(in);
-    std::time_t old_mtime;
-    read_binary_number(in, old_mtime);
-    struct stat info;
-    stat(path.c_str(), &info);
-    if (std::difftime(info.st_mtime, old_mtime) > 0)
-      return 0;
-    journal->sources.push_back(path);
+  if (! file.empty()) {
+    for (unsigned short i = 0,
+	   count = read_binary_number<unsigned short>(in);
+	 i < count;
+	 i++) {
+      std::string path = read_binary_string(in);
+      if (i == 0 && path != file)
+	return 0;
+
+      std::time_t old_mtime;
+      read_binary_number(in, old_mtime);
+      struct stat info;
+      stat(path.c_str(), &info);
+      if (std::difftime(info.st_mtime, old_mtime) > 0)
+	return 0;
+
+      journal->sources.push_back(path);
+    }
   }
 
   journal->master = read_binary_account(in, master);

@@ -153,7 +153,7 @@ int main(int argc, char * argv[], char * envp[])
 
   TIMER_STOP(process_args);
 
-  bool use_cache = config->files.empty();
+  bool use_cache = config->data_file.empty();
 
   // Process options from the environment
 
@@ -185,8 +185,12 @@ int main(int argc, char * argv[], char * envp[])
       if (parse_journal_file(config->init_file, journal.get()))
 	throw error("Entries not allowed in initialization file");
 
-    if (use_cache && ! config->cache_file.empty()) {
-      entry_count += parse_journal_file(config->cache_file, journal.get());
+    if (use_cache && ! config->cache_file.empty() &&
+	! config->data_file.empty()) {
+      entry_count += parse_journal_file(config->cache_file, journal.get(),
+					NULL, &config->data_file);
+      journal->sources.pop_front(); // remove cache_file
+
       if (entry_count == 0) {
 	journal.reset(new journal_t);
 	cache_dirty = true;
@@ -195,17 +199,18 @@ int main(int argc, char * argv[], char * envp[])
       }
     }
 
-    if (entry_count == 0) {
-      for (strings_list::iterator i = config->files.begin();
-	   i != config->files.end();
-	   i++)
-	if (*i == "-") {
-	  use_cache = false;
-	  entry_count += parse_textual_journal(std::cin, journal.get(),
-					       journal->master);
-	} else {
-	  entry_count += parse_journal_file(*i, journal.get());
-	}
+    if (entry_count == 0 && ! config->data_file.empty()) {
+      account_t * account = NULL;
+      if (! config->account.empty())
+	account = journal->find_account(config->account);
+
+      if (config->data_file == "-") {
+	use_cache = false;
+	entry_count += parse_textual_journal(std::cin, journal.get(), account);
+      } else {
+	entry_count += parse_journal_file(config->data_file, journal.get(),
+					  account);
+      }
 
       if (! config->price_db.empty())
 	if (parse_journal_file(config->price_db, journal.get()))
@@ -265,9 +270,8 @@ int main(int argc, char * argv[], char * envp[])
   bool show_all_related = false;
 
   if (command == "p" || command == "e") {
-    config->show_related  =
-    show_all_related	  =
-    config->show_subtotal = true;
+    config->show_related =
+    show_all_related	 = true;
   }
   else if (command == "E") {
     config->show_subtotal = true;

@@ -10,6 +10,7 @@ CODE   = account.cc  \
 	 format.cc   \
 	 ledger.cc   \
 	 option.cc   \
+	 qif.cc      \
 	 quotes.cc   \
 	 textual.cc  \
 	 valexpr.cc  \

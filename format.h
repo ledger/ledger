@@ -127,6 +127,7 @@ class format_transactions : public item_handler<transaction_t>
       }
       xact->dflags |= TRANSACTION_DISPLAYED;
     }
+    flush();
   }
 };
 

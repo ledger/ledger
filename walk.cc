@@ -59,10 +59,10 @@ void collapse_transactions::report_cumulative_subtotal()
     for (amounts_map::const_iterator i = result.amounts.begin();
 	 i != result.amounts.end();
 	 i++) {
-      transaction_t * total_xact
-	= new transaction_t(last_entry, totals_account);
+      transaction_t * total_xact = new transaction_t(totals_account);
       xact_temps.push_back(total_xact);
 
+      total_xact->entry  = last_entry;
       total_xact->amount = (*i).second;
       total_xact->cost   = (*i).second;
 
@@ -98,9 +98,10 @@ void changed_value_transactions::operator()(transaction_t * xact)
       for (amounts_map::const_iterator i = diff.amounts.begin();
 	   i != diff.amounts.end();
 	   i++) {
-	transaction_t * temp_xact = new transaction_t(entry, NULL);
+	transaction_t * temp_xact = new transaction_t(NULL);
 	xact_temps.push_back(temp_xact);
 
+	temp_xact->entry   = entry;
 	temp_xact->amount  = (*i).second;
 	temp_xact->dflags |= TRANSACTION_NO_TOTAL;
 
@@ -145,7 +146,8 @@ void subtotal_transactions::flush(const char * spec_fmt)
        i != balances.end();
        i++) {
     entry->date = finish;
-    transaction_t temp(entry, (*i).first);
+    transaction_t temp((*i).first);
+    temp.entry = entry;
     temp.total = (*i).second;
     balance_t result;
     format_t::compute_total(result, details_t(&temp));
@@ -154,9 +156,10 @@ void subtotal_transactions::flush(const char * spec_fmt)
     for (amounts_map::const_iterator j = result.amounts.begin();
 	 j != result.amounts.end();
 	 j++) {
-      transaction_t * xact = new transaction_t(entry, (*i).first);
+      transaction_t * xact = new transaction_t((*i).first);
       xact_temps.push_back(xact);
 
+      xact->entry  = entry;
       xact->amount = (*j).second;
       xact->cost   = (*j).second;
 

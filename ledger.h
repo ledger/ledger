@@ -57,17 +57,16 @@ class transaction_t
   mutable unsigned int   index;
   mutable unsigned short dflags;
 
-  transaction_t(entry_t * _entry, account_t * _account)
-    : entry(_entry), account(_account), flags(TRANSACTION_NORMAL),
+  transaction_t(account_t * _account)
+    : entry(NULL), account(_account), flags(TRANSACTION_NORMAL),
       index(0), dflags(0) {}
 
-  transaction_t(entry_t *	   _entry,
-		account_t *	   _account,
+  transaction_t(account_t *	   _account,
 		const amount_t&    _amount,
 		const amount_t&    _cost,
 		unsigned int	   _flags = TRANSACTION_NORMAL,
 		const std::string& _note  = "")
-    : entry(_entry), account(_account), amount(_amount),
+    : entry(NULL), account(_account), amount(_amount),
       cost(_cost), flags(_flags), note(_note), index(0), dflags(0) {}
 };
 
@@ -97,6 +96,7 @@ class entry_t
   }
 
   void add_transaction(transaction_t * xact) {
+    xact->entry = this;
     transactions.push_back(xact);
   }
   bool remove_transaction(transaction_t * xact) {
@@ -223,9 +223,10 @@ class journal_t
 			 strings_list::iterator end) const;
 };
 
-int parse_journal_file(const std::string& path,
-		       journal_t *	  journal,
-		       account_t *	  master = NULL);
+int parse_journal_file(const std::string&  path,
+		       journal_t *	   journal,
+		       account_t *	   master	 = NULL,
+		       const std::string * original_file = NULL);
 
 unsigned int parse_textual_journal(std::istream& in,
 				   journal_t *	 ledger,
@@ -233,13 +234,18 @@ unsigned int parse_textual_journal(std::istream& in,
 
 extern const unsigned long binary_magic_number;
 
-unsigned int read_binary_journal(std::istream&	in,
-				 journal_t *	journal,
-				 account_t *	master = NULL);
+unsigned int read_binary_journal(std::istream&	    in,
+				 const std::string& file,
+				 journal_t *	    journal,
+				 account_t *	    master = NULL);
 
 void write_binary_journal(std::ostream&	 out,
 			  journal_t *	 journal,
 			  strings_list * files = NULL);
+
+unsigned int parse_qif_file(std::istream& in, journal_t * journal,
+			    account_t * master,
+			    commodity_t * def_commodity = NULL);
 
 extern const std::string version;
 

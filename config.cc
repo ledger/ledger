@@ -59,7 +59,8 @@ Basic options:\n\
   -i, --init FILE       initialize ledger by loading FILE (def: ~/.ledgerrc)\n\
   -f, --file FILE       read ledger data from FILE\n\
   -o, --output FILE     write output to FILE\n\
-  -p, --set-price CONV  specify a commodity conversion: \"COMM=AMOUNT\"\n\n\
+  -p, --set-price CONV  specify a commodity conversion: \"COMM=AMOUNT\"\n\
+  -a, --account NAME    specify the default account (useful with QIF files)\n\n\
 Report filtering:\n\
   -b, --begin-date DATE set report begin date\n\
   -e, --end-date DATE   set report end date\n\
@@ -132,13 +133,7 @@ OPT_BEGIN(init, "i:") {
 } OPT_END(init);
 
 OPT_BEGIN(file, "f:") {
-  char * buf = new char[std::strlen(optarg) + 1];
-  std::strcpy(buf, optarg);
-  for (char * p = std::strtok(buf, ":");
-       p;
-       p = std::strtok(NULL, ":"))
-    config->files.push_back(p);
-  delete[] buf;
+  config->data_file = optarg;
 } OPT_END(file);
 
 OPT_BEGIN(cache, ":") {
@@ -156,6 +151,10 @@ OPT_BEGIN(set_price, "p:") {
   else
     std::cerr << "Error: Invalid price setting: " << optarg << std::endl;
 } OPT_END(set_price);
+
+OPT_BEGIN(account, "a:") {
+  config->account = optarg;
+} OPT_END(account);
 
 //////////////////////////////////////////////////////////////////////
 //
