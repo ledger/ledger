@@ -328,13 +328,14 @@ if not (command == "b" or command == "E"):
     if config.show_collapsed:
 	handler = CollapseTransactions(handler);
 
-    if config.show_subtotal:
+    if config.days_of_the_week:
+	handler = DowTransactions(handler)
+    elif config.show_subtotal:
 	handler = SubtotalTransactions(handler)
-    elif config.report_interval:
+
+    if config.report_interval:
 	handler = IntervalTransactions(handler, config.report_interval)
 	handler = SortTransactions(handler, "d")
-    elif config.days_of_the_week:
-	handler = DowTransactions(handler)
 
 # The next two transaction filters are used by all reports.
 
