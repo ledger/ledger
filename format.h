@@ -9,7 +9,7 @@ namespace ledger {
 
 std::string truncated(const std::string& str, unsigned int width);
 
-std::string partial_account_name(const account_t *  account,
+std::string partial_account_name(const account_t&   account,
 				 const unsigned int start_depth);
 
 struct element_t

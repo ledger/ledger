@@ -20,15 +20,18 @@ register_parser (parser)
 journal = Journal ()
 parse_journal_file (args[0], journal)
 
-class OutputTransaction (TransactionHandler):
-    def __init__ (self):
-	self.formatter = Format ("%D %-20P %N")
+class FormatTransaction (TransactionHandler):
+    def __init__ (self, fmt):
+	self.formatter = Format (fmt)
 	TransactionHandler.__init__ (self)
+
     def __call__ (self, xact):
 	print self.formatter.format(xact)
 
-handler = OutputTransaction()
+handler = FormatTransaction("%D %-20P %N")
 handler = FilterTransactions (handler, "/Checking/")
+
+expr = parse_value_expr ("a*2")
 
 for entry in journal:
     for xact in entry:

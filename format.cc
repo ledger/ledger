@@ -14,11 +14,11 @@ std::string truncated(const std::string& str, unsigned int width)
   return buf;
 }
 
-std::string partial_account_name(const account_t *  account)
+std::string partial_account_name(const account_t&  account)
 {
   std::string name;
 
-  for (const account_t * acct = account;
+  for (const account_t * acct = &account;
        acct && acct->parent;
        acct = acct->parent) {
     if (acct->data && ACCT_DATA(acct)->dflags & ACCOUNT_DISPLAYED)
@@ -284,7 +284,7 @@ void format_t::format(std::ostream& out, const details_t& details) const
       if (details.account) {
 	std::string name = (elem->type == element_t::ACCOUNT_FULLNAME ?
 			    details.account->fullname() :
-			    partial_account_name(details.account));
+			    partial_account_name(*details.account));
 
 	if (details.xact && details.xact->flags & TRANSACTION_VIRTUAL) {
 	  if (elem->max_width > 2)
@@ -454,6 +454,11 @@ void export_format()
     .def("format", py_format<entry_t>)
     .def("format", py_format<transaction_t>)
     ;
+
+  def("truncated", truncated);
+#if 0
+  def("partial_account_name", partial_account_name);
+#endif
 }
 
 #endif // USE_BOOST_PYTHON

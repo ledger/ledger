@@ -854,6 +854,38 @@ void dump_value_expr(std::ostream& out, const value_expr_t * node)
 
 } // namespace ledger
 
+#ifdef USE_BOOST_PYTHON
+
+#include <boost/python.hpp>
+
+using namespace boost::python;
+using namespace ledger;
+
+template <typename T>
+value_t py_compute(value_expr_t& value_expr, const T& item) {
+  value_t result;
+  value_expr.compute(result, details_t(item));
+  return result;
+}
+
+value_expr_t * py_parse_value_expr(const std::string& str) {
+  return parse_value_expr(str);
+}
+
+void export_valexpr()
+{
+  class_< value_expr_t > ("ValueExpr", init<value_expr_t::kind_t>())
+    .def("compute", py_compute<account_t>)
+    .def("compute", py_compute<entry_t>)
+    .def("compute", py_compute<transaction_t>)
+    ;
+
+  def("parse_value_expr", py_parse_value_expr,
+      return_value_policy<manage_new_object>());
+}
+
+#endif // USE_BOOST_PYTHON
+
 #ifdef TEST
 
 int main(int argc, char *argv[])
