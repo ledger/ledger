@@ -18,6 +18,7 @@ static amount *     curr_value;
 static std::string  curr_quant;
 static XML_Parser   current_parser;
 static accounts_map accounts_by_id;
+static bool	    do_compute;
 
 static enum {
   NO_ACTION,
@@ -197,7 +198,7 @@ static void dataHandler(void *userData, const char *s, int len)
 
     std::string value = curr_quant + " " + xact->acct->comm->symbol;
 
-    if (curr_value->comm() == xact->acct->comm) {
+    if (curr_value->commdty() == xact->acct->comm) {
       // assert: value must be equal to curr_value.
       delete curr_value;
       curr_value = NULL;
@@ -207,7 +208,7 @@ static void dataHandler(void *userData, const char *s, int len)
     if (curr_value)
       delete curr_value;
 
-    if (main_ledger->compute_balances)
+    if (do_compute)
       xact->acct->balance.credit(xact->cost);
     break;
   }
@@ -227,15 +228,14 @@ static void dataHandler(void *userData, const char *s, int len)
   }
 }
 
-state * parse_gnucash(std::istream& in, bool compute_balances)
+book * parse_gnucash(std::istream& in, bool compute_balances)
 {
   char buf[BUFSIZ];
 
-  state * ledger = new state;
+  book * ledger = new book;
 
-  main_ledger = ledger;
-  ledger->compute_balances = compute_balances;
-
+  main_ledger  = ledger;
+  do_compute   = compute_balances;
   action       = NO_ACTION;
   curr_account = NULL;
   curr_entry   = NULL;

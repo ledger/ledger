@@ -4,12 +4,13 @@
 
 namespace ledger {
 
-extern bool show_cleared;
+extern bool        show_cleared;
+extern bool        get_quotes;
 
 extern std::time_t begin_date;
-extern bool have_beginning;
+extern bool        have_beginning;
 extern std::time_t end_date;
-extern bool have_ending;
+extern bool        have_ending;
 
 static std::string truncated(const std::string& str, int width)
 {
@@ -83,7 +84,7 @@ void print_register(const std::string& acct_name, std::ostream& out,
       // Always display the street value, if prices have been
       // specified
 
-      amount * street = (*x)->cost->street();
+      amount * street = (*x)->cost->street(get_quotes);
       balance.credit(street);
 
       // If there are two transactions, use the one which does not
@@ -126,7 +127,7 @@ void print_register(const std::string& acct_name, std::ostream& out,
 	out << std::left << truncated((*y)->acct_as_str(), 22) << " ";
 
 	out.width(12);
-	street = (*y)->cost->street();
+	street = (*y)->cost->street(get_quotes);
 	out << std::right << street->as_str(true) << std::endl;
 	delete street;
       }

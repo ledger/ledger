@@ -5,7 +5,7 @@
 namespace ledger {
 
 bool    use_warnings = false;
-state * main_ledger;
+book * main_ledger;
 
 const std::string transaction::acct_as_str() const
 {
@@ -67,9 +67,9 @@ void entry::print(std::ostream& out, bool shortcut) const
 
   out << std::endl;
 
-  if (shortcut &&
-      (xacts.size() != 2 ||
-       xacts.front()->cost->comm() != xacts.back()->cost->comm()))
+  if (shortcut && (xacts.size() != 2 ||
+		   (xacts.front()->cost->commdty() !=
+		    xacts.back()->cost->commdty())))
     shortcut = false;
 
   for (std::list<transaction *>::const_iterator x = xacts.begin();
@@ -172,7 +172,7 @@ void totals::print(std::ostream& out, int width) const
 // Print out the entire ledger that was read in, sorted by date.
 // This can be used to "wash" ugly ledger files.
 
-void state::print(std::ostream& out, regexps_map& regexps,
+void book::print(std::ostream& out, regexps_map& regexps,
 		  bool shortcut) const
 {
   for (entries_list_const_iterator i = entries.begin();
@@ -251,7 +251,7 @@ bool matches(const regexps_map& regexps, const std::string& str,
   return match;
 }
 
-state::~state()
+book::~book()
 {
   for (commodities_map_iterator i = commodities.begin();
        i != commodities.end();
@@ -269,24 +269,7 @@ state::~state()
     delete *i;
 }
 
-void state::record_price(const std::string& setting)
-{
-  char buf[128];
-  std::strcpy(buf, setting.c_str());
-
-  assert(setting.length() < 128);
-
-  char * c = buf;
-  char * p = std::strchr(buf, '=');
-  if (! p) {
-    std::cerr << "Warning: Invalid price setting: " << setting << std::endl;
-  } else {
-    *p++ = '\0';
-    prices.amounts.insert(totals::pair(c, create_amount(p)));
-  }
-}
-
-account * state::find_account(const std::string& name, bool create)
+account * book::find_account(const std::string& name, bool create)
 {
   accounts_map_iterator i = accounts_cache.find(name);
   if (i != accounts_cache.end())

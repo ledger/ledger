@@ -1,5 +1,5 @@
 #ifndef _LEDGER_H
-#define _LEDGER_H "$Revision: 1.19 $"
+#define _LEDGER_H "$Revision: 1.20 $"
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -26,19 +26,22 @@
 
 namespace ledger {
 
+struct amount;
 struct commodity
 {
   std::string name;
   std::string symbol;
 
-  bool prefix;
-  bool separate;
-  bool thousands;
-  bool european;
+  mutable amount * price;       // the current price
 
-  int precision;
+  bool        prefix;
+  bool        separate;
+  bool        thousands;
+  bool        european;
 
-  commodity() : prefix(false), separate(true),
+  int         precision;
+
+  commodity() : price(NULL), prefix(false), separate(true),
        thousands(false), european(false) {}
   commodity(const std::string& sym, bool pre = false, bool sep = true,
 	    bool thou = true, bool euro = false, int prec = 2);
@@ -54,11 +57,10 @@ class amount
  public:
   virtual ~amount() {}
 
-  virtual commodity * comm() const = 0;
-  virtual const std::string& comm_symbol() const = 0;
+  virtual commodity * commdty() const = 0;
   virtual amount * copy() const = 0;
   virtual amount * value(amount * pr = NULL) const = 0;
-  virtual amount * street() const = 0;
+  virtual amount * street(bool get_quotes) const = 0;
 
   virtual bool has_price() const = 0;
   virtual void set_value(const amount * pr) = 0;
@@ -88,6 +90,10 @@ struct mask
   pcre *      regexp;
 
   mask(const std::string& pattern);
+
+  ~mask() {
+    pcre_free(regexp);
+  }
 };
 
 typedef std::list<mask> regexps_map;
@@ -169,10 +175,10 @@ typedef entries_list::const_iterator entries_list_const_iterator;
 
 struct totals
 {
-  typedef std::map<const std::string, amount *>  map;
-  typedef map::iterator                          iterator;
-  typedef map::const_iterator                    const_iterator;
-  typedef std::pair<const std::string, amount *> pair;
+  typedef std::map<commodity *, amount *>  map;
+  typedef map::iterator                    iterator;
+  typedef map::const_iterator              const_iterator;
+  typedef std::pair<commodity *, amount *> pair;
 
   map amounts;
 
@@ -180,9 +186,9 @@ struct totals
 
   void credit(const amount * val) {
     std::pair<iterator, bool> result =
-      amounts.insert(pair(val->comm_symbol(), val->copy()));
+      amounts.insert(pair(val->commdty(), val->copy()));
     if (! result.second)
-      amounts[val->comm_symbol()]->credit(val);
+      amounts[val->commdty()]->credit(val);
   }
   void credit(const totals& other);
 
@@ -191,7 +197,7 @@ struct totals
   void print(std::ostream& out, int width) const;
 
   // Returns an allocated entity
-  amount * sum(const std::string& comm) {
+  amount * sum(commodity * comm) {
     return amounts[comm];
   }
 };
@@ -231,13 +237,12 @@ struct account
 };
 
 
-struct state
+struct book
 {
   commodities_map commodities;
   accounts_map    accounts;
   accounts_map    accounts_cache; // maps full names to accounts
   entries_list    entries;
-  totals          prices;
   int             current_year;
 
   typedef std::map<std::list<mask> *,
@@ -248,12 +253,9 @@ struct state
 
   typedef virtual_map::const_iterator virtual_map_iterator;
 
-  bool        compute_balances;
   virtual_map virtual_mapping;
 
-  ~state();
-
-  void record_price(const std::string& setting);
+  ~book();
 
   template<typename Compare>
   void sort(Compare comp) {
@@ -264,12 +266,12 @@ struct state
   account * find_account(const std::string& name, bool create = true);
 };
 
-extern state * main_ledger;
+extern book * main_ledger;
 extern bool    use_warnings;
 
 inline commodity::commodity(const std::string& sym, bool pre, bool sep,
 			    bool thou, bool euro, int prec)
-  : symbol(sym), prefix(pre), separate(sep),
+  : symbol(sym), price(NULL), prefix(pre), separate(sep),
     thousands(thou), european(euro), precision(prec) {
   std::pair<commodities_map_iterator, bool> result =
     main_ledger->commodities.insert(commodities_map_pair(sym, this));

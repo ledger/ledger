@@ -84,11 +84,40 @@ bool parse_date(const char * date_str, std::time_t * result,
   return false;
 }
 
+void parse_price_setting(const std::string& setting)
+{
+  char buf[128];
+  std::strcpy(buf, setting.c_str());
+
+  assert(setting.length() < 128);
+
+  char * c = buf;
+  char * p = std::strchr(buf, '=');
+  if (! p) {
+    std::cerr << "Warning: Invalid price setting: " << setting << std::endl;
+  } else {
+    *p++ = '\0';
+
+    commodity * comm = NULL;
+
+    commodities_map_iterator item = main_ledger->commodities.find(c);
+    if (item == main_ledger->commodities.end()) {
+      comm = new commodity(c);
+    } else {
+      comm = (*item).second;
+    }
+
+    assert(comm);
+    comm->price = create_amount(p);
+  }
+}
+
 #define MAX_LINE 1024
 
-static int linenum;
+static int  linenum;
+static bool do_compute;
 
-transaction * parse_transaction(std::istream& in, state * ledger)
+transaction * parse_transaction(std::istream& in, book * ledger)
 {
   transaction * xact = new transaction();
 
@@ -148,13 +177,13 @@ transaction * parse_transaction(std::istream& in, state * ledger)
 
   xact->acct = ledger->find_account(p);
 
-  if (ledger->compute_balances && xact->cost)
+  if (do_compute && xact->cost)
     xact->acct->balance.credit(xact->cost);
 
   return xact;
 }
 
-entry * parse_entry(std::istream& in, state * ledger)
+entry * parse_entry(std::istream& in, book * ledger)
 {
   entry * curr = new entry;
 
@@ -233,12 +262,12 @@ entry * parse_entry(std::istream& in, state * ledger)
 	continue;
 
       if (! (*x)->cost->has_price() &&
-	  ! (*x)->cost->comm()->prefix &&
-	  (*x)->cost->comm()->separate) {
+	  ! (*x)->cost->commdty()->prefix &&
+	  (*x)->cost->commdty()->separate) {
 	for (totals::iterator i = balance.amounts.begin();
 	     i != balance.amounts.end();
 	     i++) {
-	  if ((*i).second->comm() != (*x)->cost->comm()) {
+	  if ((*i).second->commdty() != (*x)->cost->commdty()) {
 	    (*x)->cost->set_value((*i).second);
 	    break;
 	  }
@@ -276,7 +305,7 @@ entry * parse_entry(std::istream& in, state * ledger)
     (*x)->cost = (*i).second->value();
     (*x)->cost->negate();
 
-    if (ledger->compute_balances)
+    if (do_compute)
       (*x)->acct->balance.credit((*x)->cost);
   }
 
@@ -284,7 +313,7 @@ entry * parse_entry(std::istream& in, state * ledger)
   // transactions and create new virtual transactions for all that
   // apply.
 
-  for (state::virtual_map_iterator m = ledger->virtual_mapping.begin();
+  for (book::virtual_map_iterator m = ledger->virtual_mapping.begin();
        m != ledger->virtual_mapping.end();
        m++) {
     std::list<transaction *> xacts;
@@ -301,7 +330,7 @@ entry * parse_entry(std::istream& in, state * ledger)
 	   i++) {
 	transaction * t;
 
-	if ((*i)->cost->comm()) {
+	if ((*i)->cost->commdty()) {
 	  t = new transaction((*i)->acct, (*i)->cost);
 	} else {
 	  amount * temp = (*x)->cost->value();
@@ -359,7 +388,7 @@ entry * parse_entry(std::istream& in, state * ledger)
 	 x++) {
       curr->xacts.push_back(*x);
 
-      if (ledger->compute_balances)
+      if (do_compute)
 	(*x)->acct->balance.credit((*x)->cost);
     }
   }
@@ -379,7 +408,7 @@ entry * parse_entry(std::istream& in, state * ledger)
   return curr;
 }
 
-void parse_automated_transactions(std::istream& in, state * ledger)
+void parse_automated_transactions(std::istream& in, book * ledger)
 {
   static char line[MAX_LINE + 1];
 
@@ -415,7 +444,7 @@ void parse_automated_transactions(std::istream& in, state * ledger)
   }
 
   if (masks && xacts)
-    ledger->virtual_mapping.insert(state::virtual_map_pair(masks, xacts));
+    ledger->virtual_mapping.insert(book::virtual_map_pair(masks, xacts));
   else if (masks)
     delete masks;
   else if (xacts)
@@ -427,18 +456,18 @@ void parse_automated_transactions(std::istream& in, state * ledger)
 // Ledger parser
 //
 
-state * parse_ledger(std::istream& in, regexps_map& regexps,
+book * parse_ledger(std::istream& in, regexps_map& regexps,
 		     bool compute_balances)
 {
   static char line[MAX_LINE + 1];
   char c;
 
-  state * ledger = new state;
+  book * ledger = new book;
+
   main_ledger = ledger;
+  do_compute  = compute_balances;
+  linenum     = 0;
 
-  ledger->compute_balances = compute_balances;
-
-  linenum = 0;
   while (! in.eof()) {
     switch (in.peek()) {
     case -1:                    // end of file

@@ -2,6 +2,8 @@
 
 namespace ledger {
 
+extern bool get_quotes;
+
 static void equity_entry(account * acct, regexps_map& regexps,
 			 std::ostream& out)
 {
@@ -23,12 +25,12 @@ static void equity_entry(account * acct, regexps_map& regexps,
 
       xact = new transaction();
       xact->acct = const_cast<account *>(acct);
-      xact->cost = (*i).second->street();
+      xact->cost = (*i).second->street(get_quotes);
       opening.xacts.push_back(xact);
 
       xact = new transaction();
       xact->acct = main_ledger->find_account("Equity:Opening Balances");
-      xact->cost = (*i).second->street();
+      xact->cost = (*i).second->street(get_quotes);
       xact->cost->negate();
       opening.xacts.push_back(xact);
     }

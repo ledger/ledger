@@ -45,17 +45,13 @@ class gmp_amount : public amount
     mpz_clear(quantity);
   }
 
-  virtual commodity * comm() const {
+  virtual commodity * commdty() const {
     return quantity_comm;
-  }
-  virtual const std::string& comm_symbol() const {
-    assert(quantity_comm);
-    return quantity_comm->symbol;
   }
 
   virtual amount * copy() const;
   virtual amount * value(amount *) const;
-  virtual amount * street() const;
+  virtual amount * street(bool get_quotes) const;
   virtual bool has_price() const {
     return priced;
   }
@@ -199,54 +195,54 @@ amount * gmp_amount::value(amount * pr) const
   }
 }
 
-amount * gmp_amount::street() const
+static bool get_commodity_price(commodity * comm)
 {
-  amount * cost = NULL;
-  const amount * amt = this;
+  using namespace std;
 
-  extern bool get_quotes;
+  char buf[256];
+  buf[0] = '\0';
 
-  for (int cycles = 0; cycles < 10; cycles++) {
-    totals::iterator pi =
-      main_ledger->prices.amounts.find(amt->comm_symbol());
-    if (pi == main_ledger->prices.amounts.end()) {
-      using namespace std;
+  if (FILE * fp = popen((std::string("getquote ") +
+			 comm->symbol).c_str(), "r")) {
+    if (feof(fp) || ! fgets(buf , 255, fp)) {
+      fclose(fp);
+      return false;
+    }
+    fclose(fp);
+  }
 
-      if (! get_quotes)
-	break;
+  if (buf[0]) {
+    char * p = strchr(buf, '\n');
+    if (p) *p = '\0';
 
-      char buf[256];
-      buf[0] = '\0';
+    comm->price = create_amount(buf);
+    return true;
+  }
+  return false;
+}
 
-      if (FILE * fp = popen((std::string("getquote ") +
-			     amt->comm_symbol()).c_str(), "r")) {
-	if (feof(fp) || ! fgets(buf , 255, fp)) {
-	  fclose(fp);
-	  break;
-	}
-	fclose(fp);
-      }
+amount * gmp_amount::street(bool get_quotes) const
+{
+  amount * amt = copy();
 
-      if (buf[0]) {
-	char * p = strchr(buf, '\n');
-	if (p) *p = '\0';
+  int  max = 10;
 
-	main_ledger->record_price((amt->comm_symbol() + "=" + buf).c_str());
-	continue;
-      }
-      break;
-    } else {
-      amount * temp = cost;
-      amt = cost = amt->value((*pi).second);
-
-      bool same = temp && temp->comm() == cost->comm();
-      if (temp)
-	delete temp;
-      if (same)
+  while (--max >= 0) {
+    if (! amt->commdty()->price) {
+      if (get_quotes)
+	get_commodity_price(amt->commdty());
+      if (! amt->commdty()->price)
 	break;
     }
+
+    amount * old = amt;
+    amt = amt->value(amt->commdty()->price);
+    delete old;
+
+    if (amt->commdty() == old->commdty())
+      break;
   }
-  return cost ? cost : copy();
+  return amt;
 }
 
 void gmp_amount::set_value(const amount * val)
@@ -551,7 +547,6 @@ static commodity * parse_amount(mpz_t out, const char * num,
   }
 
   commodity * comm = NULL;
-
   if (saw_commodity) {
     commodities_map_iterator item =
       main_ledger->commodities.find(symbol.c_str());

@@ -10,6 +10,7 @@ extern bool        show_children;
 extern bool        show_empty;
 extern bool        show_subtotals;
 extern bool        full_names;
+extern bool        get_quotes;
 
 extern std::time_t begin_date;
 extern bool        have_beginning;
@@ -100,7 +101,7 @@ void report_balances(std::ostream& out, regexps_map& regexps)
 	}
 
 	if (acct->checked == 1)
-	  acct->balance.credit((*x)->cost->street());
+	  acct->balance.credit((*x)->cost->street(get_quotes));
       }
     }
   }

@@ -5,14 +5,15 @@
 #include <fstream>
 
 namespace ledger {
-  extern state * parse_ledger(std::istream& in, regexps_map& regexps,
+  extern book * parse_ledger(std::istream& in, regexps_map& regexps,
 			      bool compute_balances);
 #ifdef READ_GNUCASH
-  extern state * parse_gnucash(std::istream& in, bool compute_balances);
+  extern book * parse_gnucash(std::istream& in, bool compute_balances);
 #endif
 
   extern bool parse_date(const char * date_str, std::time_t * result,
 			 const int year = -1);
+  extern void parse_price_setting(const std::string& setting);
 
   extern void report_balances(std::ostream& out, regexps_map& regexps);
   extern void print_register(const std::string& acct_name, std::ostream& out,
@@ -80,6 +81,7 @@ static void show_help(std::ostream& out)
 int main(int argc, char * argv[])
 {
   std::istream * file = NULL;
+  std::string    prices;
 
   regexps_map regexps;
 
@@ -189,18 +191,7 @@ int main(int argc, char * argv[])
     // -p "COMMODITY=PRICE"
     // -p path-to-price-database
     case 'p':
-      if (access(optarg, R_OK) != -1) {
-	std::ifstream pricedb(optarg);
-
-	while (! pricedb.eof()) {
-	  char buf[80];
-	  pricedb.getline(buf, 79);
-	  if (*buf && ! std::isspace(*buf))
-	    main_ledger->record_price(buf);
-	}
-      } else {
-	main_ledger->record_price(optarg);
-      }
+      prices = optarg;
       break;
 
     case 'P':
@@ -297,6 +288,22 @@ int main(int argc, char * argv[])
   for (; optind < argc; optind++)
     regexps.push_back(mask(argv[optind]));
 
+  // Record any prices specified by the user
+
+  if (! prices.empty()) {
+    if (access(prices.c_str(), R_OK) != -1) {
+      std::ifstream pricedb(prices.c_str());
+      while (! pricedb.eof()) {
+	char buf[80];
+	pricedb.getline(buf, 79);
+	if (*buf && ! std::isspace(*buf))
+	  parse_price_setting(buf);
+      }
+    } else {
+      parse_price_setting(prices);
+    }
+  }
+
   // Process the command
 
   if (command == "balance") {
@@ -313,8 +320,10 @@ int main(int argc, char * argv[])
     equity_ledger(std::cout, regexps);
   }
 
-#if 0
-  // Deleting the main ledger just isn't necessary at this point.
+#ifdef DEBUG
+  // Ordinarily, deleting the main ledger just isn't necessary at
+  // this point.
+
   delete main_ledger;
 #endif
 }
