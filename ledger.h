@@ -100,11 +100,11 @@ class account_t
   account_t *	    parent;
   std::string	    name;
   std::string	    note;
+  unsigned long	    depth;
   accounts_map	    accounts;
   transactions_list transactions;
   balance_pair_t    value;
   balance_pair_t    total;
-  unsigned long	    depth;
   unsigned long	    ident;
 
   mutable std::string  _fullname;

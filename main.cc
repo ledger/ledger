@@ -810,6 +810,8 @@ int main(int argc, char * argv[])
     if (const char * p = std::getenv("LEDGER_CACHE")) {
       std::ofstream outstr(p);
       assert(std::getenv("LEDGER"));
+      clear_transaction_display_flags(journal->entries.begin(),
+				      journal->entries.end());
       write_binary_journal(outstr, journal.get(), std::getenv("LEDGER"));
     }
 

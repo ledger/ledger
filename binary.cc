@@ -253,6 +253,8 @@ account_t * read_binary_account(std::istream& in, account_t * master = NULL)
     acct->note = buf;
   }
 
+  in.read((char *)&acct->depth, sizeof(acct->depth));
+
   in.read((char *)&len, sizeof(len));
 
   // If all of the subaccounts will be added to a different master
@@ -540,6 +542,8 @@ void write_binary_account(std::ostream& out, account_t * account)
   if (len)
     out.write(account->note.c_str(), len);
 
+  out.write((char *)&account->depth, sizeof(account->depth));
+
   len = account->accounts.size();
   out.write((char *)&len, sizeof(len));
 
@@ -592,13 +596,14 @@ void write_binary_journal(std::ostream& out, journal_t * journal,
 
   write_binary_account(out, journal->master);
 
-  unsigned long count = commodity_t::commodities.size();
+  unsigned long count = commodity_t::commodities.size() - 1;
   out.write((char *)&count, sizeof(count));
 
   for (commodities_map::const_iterator i = commodity_t::commodities.begin();
        i != commodity_t::commodities.end();
        i++)
-    write_binary_commodity(out, (*i).second);
+    if (! (*i).first.empty())
+      write_binary_commodity(out, (*i).second);
 
   count = journal->entries.size();
   out.write((char *)&count, sizeof(count));

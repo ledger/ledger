@@ -165,6 +165,31 @@ void walk_entries(entries_list::iterator begin,
 }
 
 template <typename Function>
+void walk_entries(entries_list::iterator begin,
+		  entries_list::iterator end, Function functor)
+{
+  for (entries_list::iterator i = begin; i != end; i++)
+    for (transactions_list::iterator j = (*i)->transactions.begin();
+	 j != (*i)->transactions.end();
+	 j++)
+      functor(*j);
+}
+
+class clear_flags
+{
+ public:
+  void operator()(transaction_t * xact) const {
+    xact->flags &= ~(TRANSACTION_HANDLED | TRANSACTION_DISPLAYED);
+  }
+};
+
+inline void clear_transaction_display_flags(entries_list::iterator begin,
+					    entries_list::iterator end)
+{
+  walk_entries<clear_flags>(begin, end, clear_flags());
+}
+
+template <typename Function>
 void walk_transactions(transactions_list::iterator begin,
 		       transactions_list::iterator end, Function functor)
 {
