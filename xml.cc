@@ -66,7 +66,7 @@ static void endElement(void *userData, const char *name)
 	count++;
       } else {
 	delete curr_entry;
-	have_error = "Entry does not balance";
+	have_error = "Entry cannot be balanced";
       }
     }
     curr_entry = NULL;
@@ -88,6 +88,12 @@ static void endElement(void *userData, const char *name)
   }
   else if (std::strcmp(name, "tr:account") == 0) {
     curr_entry->transactions.back()->account = curr_journal->find_account(data);
+  }
+  else if (std::strcmp(name, "tr:virtual") == 0) {
+    curr_entry->transactions.back()->flags |= TRANSACTION_VIRTUAL;
+  }
+  else if (std::strcmp(name, "tr:generated") == 0) {
+    curr_entry->transactions.back()->flags |= TRANSACTION_AUTO;
   }
   else if (std::strcmp(name, "commodity") == 0) {
     assert(! curr_comm);
@@ -159,7 +165,8 @@ unsigned int xml_parser_t::parse(std::istream&	 in,
   curr_comm    = NULL;
   ignore       = false;
 
-  XML_Parser parser = XML_ParserCreate(NULL);
+  unsigned int offset = 2;
+  XML_Parser   parser = XML_ParserCreate(NULL);
   current_parser = parser;
 
   XML_SetElementHandler(parser, startElement, endElement);
@@ -167,26 +174,28 @@ unsigned int xml_parser_t::parse(std::istream&	 in,
 
   while (! in.eof()) {
     in.getline(buf, BUFSIZ - 1);
+    std::strcat(buf, "\n");
     bool result;
     try {
       result = XML_Parse(parser, buf, std::strlen(buf), in.eof());
     }
     catch (const std::exception& err) {
-      unsigned long line = XML_GetCurrentLineNumber(parser);
+      unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
       XML_ParserFree(parser);
       throw parse_error(original_file ? *original_file : "<xml>", line,
 			err.what());
     }
 
     if (! have_error.empty()) {
-      unsigned long line = XML_GetCurrentLineNumber(parser);
+      unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
       parse_error err(original_file ? *original_file : "<xml>", line,
 		      have_error);
       std::cerr << "Error: " << err.what() << std::endl;
+      have_error = "";
     }
 
     if (! result) {
-      unsigned long line = XML_GetCurrentLineNumber(parser);
+      unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
       const char *  err  = XML_ErrorString(XML_GetErrorCode(parser));
       XML_ParserFree(parser);
       throw parse_error(original_file ? *original_file : "<xml>", line, err);
