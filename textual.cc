@@ -165,7 +165,7 @@ bool finalize_entry(entry_t * entry)
   // determine its price by dividing the unit count into the value of
   // the balance.  This is done for the last eligible commodity.
 
-  if (! balance.amounts.empty() && balance.amounts.size() == 2)
+  if (balance.amounts.size() == 2)
     for (transactions_list::const_iterator x = entry->transactions.begin();
 	 x != entry->transactions.end();
 	 x++) {
