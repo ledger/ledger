@@ -4,7 +4,6 @@
 
 namespace ledger {
 
-bool   use_warnings = false;
 book * main_ledger;
 
 commodity::~commodity()
@@ -249,6 +248,15 @@ mask::mask(const std::string& pat) : exclude(false)
   if (! regexp)
     std::cerr << "Warning: Failed to compile regexp: " << pattern
 	      << std::endl;
+}
+
+mask::mask(const mask& m) : exclude(m.exclude), pattern(m.pattern)
+{
+  const char *error;
+  int erroffset;
+  regexp = pcre_compile(pattern.c_str(), PCRE_CASELESS,
+			&error, &erroffset, NULL);
+  assert(regexp);
 }
 
 void read_regexps(const std::string& path, regexps_map& regexps)

@@ -1,5 +1,5 @@
 #ifndef _LEDGER_H
-#define _LEDGER_H "$Revision: 1.23 $"
+#define _LEDGER_H "$Revision: 1.24 $"
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -93,9 +93,6 @@ extern amount * create_amount(const std::string& value,
 
 class mask
 {
-  // jww (2003-10-08): need to correct this
-  //mask(const mask&);
-
  public:
   bool        exclude;
   std::string pattern;
@@ -103,11 +100,11 @@ class mask
 
   explicit mask(const std::string& pattern);
 
-#if 0
+  mask(const mask&);
+
   ~mask() {
     pcre_free(regexp);
   }
-#endif
 
   bool match(const std::string& str) const;
 };
@@ -287,7 +284,6 @@ class book
 };
 
 extern book * main_ledger;
-extern bool   use_warnings;
 
 inline commodity::commodity(const std::string& sym, bool pre, bool sep,
 			    bool thou, bool euro, int prec)

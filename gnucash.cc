@@ -273,6 +273,8 @@ book * parse_gnucash(std::istream& in, bool compute_balances)
   curr_account_id.clear();
   curr_quant.clear();
 
+  main_ledger->commodities.erase("USD");
+
   return ledger;
 }
 

@@ -393,7 +393,7 @@ int main(int argc, char * argv[])
   // Parse the command-line options
 
   int c;
-  while (-1 != (c = getopt(argc, argv, "+b:e:d:cChRV:wf:i:p:PvsSEnF"))) {
+  while (-1 != (c = getopt(argc, argv, "+b:e:d:cChRV:f:i:p:PvsSEnF"))) {
     switch (char(c)) {
     case 'b':
     case 'e': {
@@ -473,7 +473,6 @@ int main(int argc, char * argv[])
 
     case 'C': show_cleared   = true;  break;
     case 'R': show_virtual   = false; break;
-    case 'w': use_warnings   = true;  break;
     case 's': show_children  = true;  break;
     case 'S': show_sorted    = true;  break;
     case 'E': show_empty     = true;  break;
@@ -516,7 +515,8 @@ int main(int argc, char * argv[])
 
   index = optind;
 
-  if (use_warnings && (have_beginning || have_ending)) {
+#if 0
+  if (have_beginning || have_ending) {
     std::cout << "Reporting";
 
     if (have_beginning) {
@@ -533,6 +533,7 @@ int main(int argc, char * argv[])
 
     std::cout << std::endl;
   }
+#endif
 
   // A ledger data file must be specified
 

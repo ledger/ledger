@@ -547,16 +547,11 @@ static commodity * parse_amount(mpz_t out, const char * num,
   if (saw_commodity) {
     commodities_map_iterator item =
       main_ledger->commodities.find(symbol.c_str());
-    if (item == main_ledger->commodities.end()) {
+    if (item == main_ledger->commodities.end())
       comm = new commodity(symbol, prefix, separate,
 			   thousands, european, precision);
-    } else {
+    else
       comm = (*item).second;
-
-      if (use_warnings && precision > comm->precision)
-	std::cerr << "Warning: Use of higher precision than expected: "
-		  << value_str << std::endl;
-    }
   }
 
   parse_number(out, value_str.c_str(), comm);
