@@ -166,7 +166,7 @@ Return the difference in the format of a time value."
 	(delete-blank-lines)
 	(delete-region beg (point))))))
 
-(defun ledger-toggle-current ()
+(defun ledger-toggle-current (&optional style)
   (interactive)
   (let (clear)
     (save-excursion
@@ -174,9 +174,14 @@ Return the difference in the format of a time value."
 		(re-search-backward "^[0-9]" nil t))
 	(skip-chars-forward "0-9./")
 	(delete-horizontal-space)
-	(if (equal ?\* (char-after))
-	    (delete-char 1)
-	  (insert " * ")
+	(if (member (char-after) '(?\* ?\!))
+	    (progn
+	      (delete-char 1)
+	      (if (and style (eq style 'cleared))
+		  (insert " *")))
+	  (if (and style (eq style 'pending))
+	      (insert " ! ")
+	    (insert " * "))
 	  (setq clear t))))
     clear))
 
@@ -225,7 +230,7 @@ Return the difference in the format of a time value."
 	cleared)
     (with-current-buffer ledger-buf
       (goto-char where)
-      (setq cleared (ledger-toggle-current)))
+      (setq cleared (ledger-toggle-current 'pending)))
     (if cleared
 	(add-text-properties (line-beginning-position)
 			     (line-end-position)
@@ -273,14 +278,28 @@ Return the difference in the format of a time value."
 	  (ledger-reconcile-toggle))))
     (goto-char (point-min))))
 
+(defun ledger-reconcile-refresh ()
+  (interactive)
+  (let ((inhibit-read-only t)
+	(line (count-lines (point-min) (point))))
+    (erase-buffer)
+    (ledger-do-reconcile)
+    (set-buffer-modified-p t)
+    (goto-char (point-min))
+    (forward-line line)))
+
+(defun ledger-reconcile-refresh-after-save ()
+  (let ((buf (get-buffer "*Reconcile*")))
+    (if buf
+	(with-current-buffer buf
+	  (ledger-reconcile-refresh)
+	  (set-buffer-modified-p nil)))))
+
 (defun ledger-reconcile-add ()
   (interactive)
   (with-current-buffer ledger-buf
     (call-interactively #'ledger-add-entry))
-  (let ((inhibit-read-only t))
-    (erase-buffer)
-    (ledger-do-reconcile)
-    (set-buffer-modified-p t)))
+  (ledger-reconcile-refresh))
 
 (defun ledger-reconcile-delete ()
   (interactive)
@@ -293,6 +312,12 @@ Return the difference in the format of a time value."
       (delete-region (point) (1+ (line-end-position)))
       (set-buffer-modified-p t))))
 
+(defun ledger-reconcile-visit ()
+  (interactive)
+  (let ((where (get-text-property (point) 'where)))
+    (switch-to-buffer-other-window ledger-buf)
+    (goto-char where)))
+
 (defun ledger-reconcile-save ()
   (interactive)
   (with-current-buffer ledger-buf
@@ -300,13 +325,27 @@ Return the difference in the format of a time value."
   (set-buffer-modified-p nil)
   (ledger-display-balance))
 
+(defun ledger-reconcile-finish ()
+  (interactive)
+  (save-excursion
+    (goto-char (point-min))
+    (while (not (eobp))
+      (let ((where (get-text-property (point) 'where))
+	    (face  (get-text-property (point) 'face)))
+	(if (eq face 'bold)
+	    (with-current-buffer ledger-buf
+	      (goto-char where)
+	      (ledger-toggle-current 'cleared))))
+      (forward-line 1)))
+  (ledger-reconcile-save))
+
 (defun ledger-do-reconcile ()
   (let* ((buf ledger-buf)
 	 (account ledger-acct)
 	 (items
 	  (with-temp-buffer
 	    (let ((exit-code
-		   (ledger-run-ledger buf "--reconcilable" "emacs" account)))
+		   (ledger-run-ledger buf "--uncleared" "emacs" account)))
 	      (when (= 0 exit-code)
 		(goto-char (point-min))
 		(unless (looking-at "(")
@@ -334,9 +373,13 @@ Return the difference in the format of a time value."
 
 (defun ledger-reconcile (account &optional arg)
   (interactive "sAccount to reconcile: \nP")
-  (let ((buf (current-buffer)))
+  (let ((buf (current-buffer))
+	(rbuf (get-buffer "*Reconcile*")))
+    (if rbuf
+	(kill-buffer rbuf))
+    (add-hook 'after-save-hook 'ledger-reconcile-refresh-after-save)
     (with-current-buffer
-	(pop-to-buffer (generate-new-buffer "*Reconcile*"))
+	(pop-to-buffer (get-buffer-create "*Reconcile*"))
       (ledger-reconcile-mode)
       (set (make-local-variable 'ledger-buf) buf)
       (set (make-local-variable 'ledger-acct) account)
@@ -350,8 +393,12 @@ Return the difference in the format of a time value."
 (define-derived-mode ledger-reconcile-mode text-mode "Reconcile"
   "A mode for reconciling ledger entries."
   (let ((map (make-sparse-keymap)))
+    (define-key map [(control ?m)] 'ledger-reconcile-visit)
+    (define-key map [return] 'ledger-reconcile-visit)
+    (define-key map [(control ?c) (control ?c)] 'ledger-reconcile-finish)
     (define-key map [(control ?c) (control ?r)] 'ledger-auto-reconcile)
     (define-key map [(control ?x) (control ?s)] 'ledger-reconcile-save)
+    (define-key map [(control ?l)] 'ledger-reconcile-refresh)
     (define-key map [? ] 'ledger-reconcile-toggle)
     (define-key map [?a] 'ledger-reconcile-add)
     (define-key map [?d] 'ledger-reconcile-delete)
