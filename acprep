@@ -11,9 +11,9 @@ else
 fi
 autoconf
 
-INCDIRS="-I/sw/include -I/usr/include/httpd/xml -I/sw/include/python2.3"
+INCDIRS="-I/sw/include -I/usr/include/httpd/xml -I/sw/include/python2.4"
 INCDIRS="$INCDIRS -Wno-long-double"
-LIBDIRS="-L/sw/lib -L/sw/lib/python2.3/config"
+LIBDIRS="-L/sw/lib -L/sw/lib/python2.4/config"
 
 if [ "$1" = "--debug" ]; then
     ./configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" CXXFLAGS="-g" \
