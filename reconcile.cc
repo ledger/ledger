@@ -43,27 +43,20 @@ void reconcile_transactions::flush()
   bool found_pending = false;
   for (transactions_list::iterator x = xacts.begin();
        x != xacts.end();
-       x++)
-    if (! cutoff || std::difftime((*x)->entry->date, cutoff) < 0)
+       x++) {
+    if (! cutoff || std::difftime((*x)->entry->date, cutoff) < 0) {
       switch ((*x)->entry->state) {
       case entry_t::CLEARED:
 	cleared_balance += (*x)->amount;
-	if (! found_pending)
-	  break;
-	// fall through...
+	break;
       case entry_t::UNCLEARED:
       case entry_t::PENDING:
 	pending_balance += (*x)->amount;
-	if (all_pending)
-	  found_pending = true;
 	*last_ptr = *x;
 	last_ptr = xact_next_ptr(*x);
 	break;
       }
-
-  if (all_pending) {
-    push_to_handler(first);
-    return;
+    }
   }
 
   if (cleared_balance.type >= value_t::BALANCE)

@@ -99,20 +99,13 @@ chain_xact_handlers(const std::string&		  command,
     // transactions which can be reconciled to a given balance
     // (calculated against the transactions which it receives).
     if (! config.reconcile_balance.empty()) {
-      bool    reconcilable = false;
-      value_t target_balance;
-      if (config.reconcile_balance == "<all>")
-	reconcilable = true;
-      else
-	target_balance = value_t(config.reconcile_balance);
-
+      value_t target_balance(config.reconcile_balance);
       time_t  cutoff = now;
       if (! config.reconcile_date.empty())
 	parse_date(config.reconcile_date.c_str(), &cutoff);
-
       ptrs.push_back(formatter =
 		     new reconcile_transactions(formatter, target_balance,
-						cutoff, reconcilable));
+						cutoff));
     }
 
     // sort_transactions will sort all the transactions it sees, based

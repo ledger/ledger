@@ -10,16 +10,14 @@ class reconcile_transactions : public item_handler<transaction_t>
 {
   value_t balance;
   time_t  cutoff;
-  bool	  all_pending;
 
   transactions_list xacts;
 
  public:
   reconcile_transactions(item_handler<transaction_t> * handler,
-			 const value_t& _balance, const time_t _cutoff,
-			 const bool _all_pending)
+			 const value_t& _balance, const time_t _cutoff)
     : item_handler<transaction_t>(handler),
-      balance(_balance), cutoff(_cutoff), all_pending(_all_pending) {}
+      balance(_balance), cutoff(_cutoff) {}
 
   void push_to_handler(transaction_t * first);
 

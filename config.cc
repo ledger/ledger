@@ -834,10 +834,6 @@ OPT_BEGIN(reconcile, ":") {
   config.reconcile_balance = optarg;
 } OPT_END(reconcile);
 
-OPT_BEGIN(reconcilable, "") {
-  config.reconcile_balance = "<all>";
-} OPT_END(reconcilable);
-
 OPT_BEGIN(reconcile_date, ":") {
   config.reconcile_date = optarg;
 } OPT_END(reconcile_date);
