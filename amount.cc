@@ -532,14 +532,6 @@ static commodity * parse_amount(mpz_t out, const char * num,
   result = pcre_copy_substring(num, ovector, matched, base + 3, buf, 255);
   assert(result >= 0);
 
-  // Determine the precision used
-  if (char * p = std::strchr(buf, '.'))
-    precision = std::strlen(++p);
-  else if (char * p = std::strchr(buf, '/'))
-    precision = std::strlen(++p) - 1;
-  else
-    precision = 0;
-
   // Where "thousands" markers used?  Is it a european number?
   if (char * p = std::strrchr(buf, ',')) {
     if (std::strchr(p, '.'))
@@ -547,6 +539,14 @@ static commodity * parse_amount(mpz_t out, const char * num,
     else
       european = true;
   }
+
+  // Determine the precision used
+  if (char * p = std::strchr(buf, european ? ',' : '.'))
+    precision = std::strlen(++p);
+  else if (char * p = std::strchr(buf, '/'))
+    precision = std::strlen(++p) - 1;
+  else
+    precision = 0;
 
   // Parse the actual quantity
   std::string value_str = buf;
