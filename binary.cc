@@ -11,7 +11,7 @@
 namespace ledger {
 
 static unsigned long  binary_magic_number = 0xFFEED765;
-static unsigned long  format_version      = 0x00020031;
+static unsigned long  format_version      = 0x00020032;
 
 static account_t **   accounts;
 static account_t **   accounts_next;
@@ -198,6 +198,10 @@ inline void read_binary_transaction(char *& data, transaction_t * xact)
 inline void read_binary_entry_base(char *& data, entry_base_t * entry,
 				   transaction_t *& xact_pool)
 {
+  read_binary_number(data, entry->src_idx);
+  read_binary_number(data, entry->beg_pos);
+  read_binary_number(data, entry->end_pos);
+
   for (unsigned long i = 0, count = read_binary_number<unsigned long>(data);
        i < count;
        i++) {
@@ -210,28 +214,28 @@ inline void read_binary_entry_base(char *& data, entry_base_t * entry,
 inline void read_binary_entry(char *& data, entry_t * entry,
 			      transaction_t *& xact_pool)
 {
+  read_binary_entry_base(data, entry, xact_pool);
   read_binary_number(data, entry->date);
   read_binary_number(data, entry->state);
   read_binary_string(data, &entry->code);
   read_binary_string(data, &entry->payee);
-  read_binary_entry_base(data, entry, xact_pool);
 }
 
 inline void read_binary_auto_entry(char *& data, auto_entry_t * entry,
 				   transaction_t *& xact_pool)
 {
+  read_binary_entry_base(data, entry, xact_pool);
   read_binary_string(data, &entry->predicate_string);
   entry->predicate = new item_predicate<transaction_t>(entry->predicate_string);
-  read_binary_entry_base(data, entry, xact_pool);
 }
 
 inline void read_binary_period_entry(char *& data, period_entry_t * entry,
 				     transaction_t *& xact_pool)
 {
+  read_binary_entry_base(data, entry, xact_pool);
   read_binary_string(data, &entry->period_string);
   std::istringstream stream(entry->period_string);
   entry->period.parse(stream);
-  read_binary_entry_base(data, entry, xact_pool);
 }
 
 inline commodity_t * read_binary_commodity(char *& data)
@@ -291,12 +295,14 @@ inline void read_binary_commodity_extra(char *& data,
 }
 
 inline
-account_t * read_binary_account(char *& data, account_t * master = NULL)
+account_t * read_binary_account(char *& data, journal_t * journal,
+				account_t * master = NULL)
 {
   account_t * acct = new account_t(NULL);
   *accounts_next++ = acct;
 
-  acct->ident = read_binary_number<account_t::ident_t>(data);
+  acct->ident   = read_binary_number<account_t::ident_t>(data);
+  acct->journal = journal;
 
   account_t::ident_t id;
   read_binary_number(data, id);	// parent id
@@ -322,7 +328,7 @@ account_t * read_binary_account(char *& data, account_t * master = NULL)
 	 count = read_binary_number<account_t::ident_t>(data);
        i < count;
        i++) {
-    account_t * child = read_binary_account(data);
+    account_t * child = read_binary_account(data, journal);
     child->parent = acct;
     acct->add_account(child);
   }
@@ -380,7 +386,7 @@ unsigned int read_binary_journal(std::istream&	    in,
 
   account_t::ident_t a_count = read_binary_number<account_t::ident_t>(data);
   accounts = accounts_next = new account_t *[a_count];
-  journal->master = read_binary_account(data, master);
+  journal->master = read_binary_account(data, journal, master);
 
   // Allocate the memory needed for the entries and transactions in
   // one large block, which is then chopped up and custom constructed
@@ -432,18 +438,21 @@ unsigned int read_binary_journal(std::istream&	    in,
   for (unsigned long i = 0; i < count; i++) {
     new(entry_pool) entry_t;
     read_binary_entry(data, entry_pool, xact_pool);
+    entry_pool->journal = journal;
     journal->entries.push_back(entry_pool++);
   }
 
   for (unsigned long i = 0; i < auto_count; i++) {
     auto_entry_t * auto_entry = new auto_entry_t;
     read_binary_auto_entry(data, auto_entry, xact_pool);
+    auto_entry->journal = journal;
     journal->auto_entries.push_back(auto_entry);
   }
 
   for (unsigned long i = 0; i < period_count; i++) {
     period_entry_t * period_entry = new period_entry_t;
     read_binary_period_entry(data, period_entry, xact_pool);
+    period_entry->journal = journal;
     journal->period_entries.push_back(period_entry);
   }
 
@@ -537,6 +546,10 @@ void write_binary_transaction(std::ostream& out, transaction_t * xact)
 
 void write_binary_entry_base(std::ostream& out, entry_base_t * entry)
 {
+  write_binary_number<unsigned long>(out, entry->src_idx);
+  write_binary_number<std::istream::pos_type>(out, entry->beg_pos);
+  write_binary_number<std::istream::pos_type>(out, entry->end_pos);
+
   write_binary_number<unsigned long>(out, entry->transactions.size());
   for (transactions_list::const_iterator i = entry->transactions.begin();
        i != entry->transactions.end();
@@ -546,23 +559,23 @@ void write_binary_entry_base(std::ostream& out, entry_base_t * entry)
 
 void write_binary_entry(std::ostream& out, entry_t * entry)
 {
+  write_binary_entry_base(out, entry);
   write_binary_number(out, entry->date);
   write_binary_number(out, entry->state);
   write_binary_string(out, entry->code);
   write_binary_string(out, entry->payee);
-  write_binary_entry_base(out, entry);
 }
 
 void write_binary_auto_entry(std::ostream& out, auto_entry_t * entry)
 {
-  write_binary_string(out, entry->predicate_string);
   write_binary_entry_base(out, entry);
+  write_binary_string(out, entry->predicate_string);
 }
 
 void write_binary_period_entry(std::ostream& out, period_entry_t * entry)
 {
-  write_binary_string(out, entry->period_string);
   write_binary_entry_base(out, entry);
+  write_binary_string(out, entry->period_string);
 }
 
 void write_binary_commodity(std::ostream& out, commodity_t * commodity)
