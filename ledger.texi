@@ -2716,8 +2716,9 @@ Relatedly, your Income accounts show up negative, because they
 transfer money @emph{from} an account in order to increase your
 assets.  Your Expenses show up positive because that is where the
 money went to.  The combined total of Income and Expenses is your cash
-flow.  A negative cash flow means you are spending more than you make.
-To see your current cash flow, use this command:
+flow.  A positive cash flow means you are spending more than you make,
+since income is always a negative figure.  To see your current cash
+flow, use this command:
 
 @example
 ledger balance ^income ^expenses
