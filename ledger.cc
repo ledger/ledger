@@ -40,13 +40,12 @@ amount * commodity::price(std::time_t * when,
   
   for (price_map::reverse_iterator i = history.rbegin();
        i != history.rend();
-       i++) {
+       i++)
     if (std::difftime(*when, (*i).first) >= 0) {
       age   = (*i).first;
       price = (*i).second;
       break;
     }
-  }
 
   extern long pricing_leeway;
   time_t now = time(NULL);	// the time of the query

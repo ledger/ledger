@@ -20,7 +20,6 @@ static bool gnuplot_safe   = false;
 
 static bool cost_basis  = false;
 static bool use_history = false;
-static bool read_prices = false;
 static bool get_quotes  = false;
        long pricing_leeway = 24 * 3600;
        std::string price_db;
@@ -392,18 +391,94 @@ enum periodicity_t {
   PERIOD_WEEKLY_MON
 };
 
-void print_register_transaction(std::ostream& out, entry *ent,
-				transaction *xact, totals& balance)
+static totals * compute_street_balance(totals& balance, std::time_t * date)
 {
+  totals * prev_street_balance = new totals;
+
+  for (totals::const_iterator i = balance.amounts.begin();
+       i != balance.amounts.end();
+       i++)
+    if (! (*i).second->is_zero()) {
+      amount * street = (*i).second->street(date, use_history, get_quotes);
+      prev_street_balance->credit(street);
+      delete street;
+    }
+
+  return prev_street_balance;
+}
+
+static totals *    prev_balance = NULL;
+static std::time_t prev_date;
+
+void print_register_transaction(std::ostream& out, entry * ent,
+				transaction * xact, totals& balance);
+
+static void report_change_in_asset_value(std::ostream& out, std::time_t date,
+					 account * acct, totals& balance)
+{
+  totals * prev_street_balance =
+    compute_street_balance(*prev_balance, &prev_date);
+  totals * curr_street_balance =
+    compute_street_balance(*prev_balance, &date);
+
+  delete prev_balance;
+  prev_balance = NULL;
+
+  prev_street_balance->negate();
+  curr_street_balance->credit(*prev_street_balance);
+
+  if (! curr_street_balance->is_zero()) {
+    for (totals::const_iterator i = curr_street_balance->amounts.begin();
+	 i != curr_street_balance->amounts.end();
+	 i++) {
+      if ((*i).second->is_zero())
+	continue;
+
+      entry change(main_ledger);
+
+      change.date    = date;
+      change.cleared = true;
+      change.desc    = "Assets revalued";
+
+      transaction * trans = new transaction();
+      trans->acct = const_cast<account *>(acct);
+      trans->cost = (*i).second->copy();
+      change.xacts.push_back(trans);
+
+      transaction * trans2 = new transaction();
+      trans2->acct = main_ledger->find_account("Equity:Asset Gain");
+      trans2->cost = (*i).second->copy();
+      trans2->cost->negate();
+      change.xacts.push_back(trans2);
+
+      balance.credit(trans2->cost);
+
+      print_register_transaction(out, &change, trans, balance);
+
+      delete prev_balance;
+      prev_balance = NULL;
+    }
+  }
+
+  delete prev_street_balance;
+  delete curr_street_balance;
+}
+
+void print_register_transaction(std::ostream& out, entry * ent,
+				transaction * xact, totals& balance)
+{
+  if (prev_balance)
+    report_change_in_asset_value(out, ent->date, xact->acct, balance);
+
   char buf[32];
-  std::strftime(buf, 31, "%m/%d ", std::localtime(&ent->date));
+  std::strftime(buf, 31, "%Y/%m/%d ", std::localtime(&ent->date));
   out << buf;
 
-  out.width(25);
+  out.width(20);
   if (ent->desc.empty())
     out << " ";
   else
-    out << std::left << truncated(ent->desc, 25);
+    out << std::left << truncated(ent->desc, 20);
   out << " ";
 
   // Always display the street value, if prices have been
@@ -442,6 +517,11 @@ void print_register_transaction(std::ostream& out, entry *ent,
 
   out << std::endl;
 
+  assert(! prev_balance);
+  prev_balance = new totals;
+  prev_balance->credit(balance);
+  prev_date = ent->date;
+
   if (! show_children || xp != xact)
     return;
 
@@ -466,6 +546,14 @@ void print_register_transaction(std::ostream& out, entry *ent,
 void print_register_period(std::ostream& out, std::time_t date,
 			   account * acct, amount& sum, totals& balance)
 {
+  if (! gnuplot_safe && prev_balance) {
+    sum.negate();
+    balance.credit(&sum);
+    report_change_in_asset_value(out, date, acct, balance);
+    sum.negate();
+    balance.credit(&sum);
+  }
+
   char buf[32];
   std::strftime(buf, 31, "%Y/%m/%d ", std::localtime(&date));
   out << buf;
@@ -489,8 +577,14 @@ void print_register_period(std::ostream& out, std::time_t date,
   out.width(12);
   out << std::right << sum.as_str();
 
-  if (! gnuplot_safe)
+  if (! gnuplot_safe) {
     print_resolved_balance(out, &date, balance, true);
+
+    assert(! prev_balance);
+    prev_balance = new totals;
+    prev_balance->credit(balance);
+    prev_date = date;
+  }
 
   out << std::endl;
 }
@@ -547,18 +641,23 @@ void print_register(std::ostream& out, const std::string& acct_name,
 	  period_sum = street;
 	}
 
-	last_acct = (*x)->acct;
-	last_date = (*i)->date;
 	last_mon  = entry_mon;
       }
+
+      last_date = (*i)->date;
+      last_acct = (*x)->acct;
     }
   }
 
   if (period_sum) {
     if (last_acct)
-      print_register_period(out, last_date, last_acct,
-			    *period_sum, balance);
+      print_register_period(out, last_date, last_acct, *period_sum, balance);
     delete period_sum;
+  }
+
+  if (! gnuplot_safe && prev_balance) {
+    report_change_in_asset_value(out, have_ending ? end_date : std::time(NULL),
+				 last_acct, balance);
   }
 }
 
@@ -953,7 +1052,7 @@ int main(int argc, char * argv[])
       break;
 
     case 'P':
-      price_db    = optarg;
+      price_db = optarg;
       break;
 
     case 'Q':
@@ -1048,7 +1147,7 @@ int main(int argc, char * argv[])
     }
   }
 
-  if (read_prices && ! price_db.empty())
+  if (use_history && ! price_db.empty())
     entry_count += parse_ledger_file(main_ledger, price_db, regexps,
 				     command == "equity");
 

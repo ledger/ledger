@@ -2,9 +2,9 @@ CODE   = amount.cc ledger.cc parse.cc reports.cc
 OBJS   = $(patsubst %.cc,%.o,$(CODE))
 #CXX    = cc
 CXX    = g++
-CFLAGS = #-Wall -ansi -pedantic
-DFLAGS = -O3 -fomit-frame-pointer
-#DFLAGS = -g -DDEBUG=1
+CFLAGS = -Wall -ansi -pedantic
+#DFLAGS = -O3 -fomit-frame-pointer
+DFLAGS = -g -DDEBUG=1
 INCS   = -I/sw/include -I/usr/include/gcc/darwin/3.3/c++ -I/usr/include/gcc/darwin/3.3/c++/ppc-darwin
 LIBS   = -L/sw/lib -lgmpxx -lgmp -lpcre
 
