@@ -89,28 +89,6 @@ void value_expr_t::compute(value_t& result, const details_t& details,
       result = details.account->value.cost;
     break;
 
-  case BALANCE:
-    if (details.xact) {
-      result = details.xact->total.quantity;
-      result -= details.xact->amount;
-    }
-    else if (details.account) {
-      result = details.account->total.quantity;
-      result -= details.account->value.quantity;
-    }
-    break;
-
-  case COST_BALANCE:
-    if (details.xact) {
-      result = details.xact->total.cost;
-      result -= details.xact->cost;
-    }
-    else if (details.account) {
-      result = details.account->total.cost;
-      result -= details.account->value.cost;
-    }
-    break;
-
   case TOTAL:
     if (details.xact)
       result = details.xact->total.quantity;
@@ -411,7 +389,6 @@ value_expr_t * parse_value_term(std::istream& in)
   case 'R': node.reset(new value_expr_t(value_expr_t::REAL)); break;
   case 'n': node.reset(new value_expr_t(value_expr_t::INDEX)); break;
   case 'l': node.reset(new value_expr_t(value_expr_t::DEPTH)); break;
-  case 'B': node.reset(new value_expr_t(value_expr_t::BALANCE)); break;
   case 'O': node.reset(new value_expr_t(value_expr_t::TOTAL)); break;
   case 'C': node.reset(new value_expr_t(value_expr_t::COST_TOTAL)); break;
 
@@ -739,8 +716,6 @@ void dump_value_expr(std::ostream& out, const value_expr_t * node)
   case value_expr_t::REAL:	   out << "REAL"; break;
   case value_expr_t::INDEX:	   out << "INDEX"; break;
   case value_expr_t::DEPTH:	   out << "DEPTH"; break;
-  case value_expr_t::BALANCE:      out << "BALANCE"; break;
-  case value_expr_t::COST_BALANCE: out << "COST_BALANCE"; break;
   case value_expr_t::TOTAL:        out << "TOTAL"; break;
   case value_expr_t::COST_TOTAL:   out << "COST_TOTAL"; break;
 

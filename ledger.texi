@@ -1189,15 +1189,145 @@ ledger, with the attached prefix ``Billable'':
 * Plotting register data::
 * Typical queries::
 * File format::
-* Command summary::
 * Using command options::
 @end menu
 
 @node Commands, Options, Running Ledger, Running Ledger
 @section Commands
 
+@subsection balance
+
+The ``balance'' command reports the current balance of all accounts.
+It accepts a list of optional regexps, which confine the balance
+report to the matching accounts.  If an account contains multiple
+types of commodities, each commodity's total is reported separately.
+
+@subsection register
+
+The ``register'' command displays all the transactions occurring in a
+single account, line by line.  The account regexp must be specified as
+the only argument to this command.  If any regexps occur after the
+required account name, the register will contain only those
+transactions that match.  Very useful for hunting down a particular
+transaction.
+
+The output from ``register'' is very close to what a typical checkbook,
+or single account ledger, would look like.  It also shows a running
+balance.  The final running balance of any register should always be
+the same as the current balance of that account.
+
+@subsection print
+
+The ``print'' command prints out ledger entries just as they appear in
+the original ledger.  They will be properly formatted, and output in
+the most economic form possible.  The ``print'' command also takes a
+list of optional regexps, which will cause only those transactions
+which match in some way to be printed.
+
+The ``print'' command is a handy way to clean up a ledger file whose
+formatting has gotten out of hand.
+
+@subsection equity
+
+Equity transactions are used to establish the starting value of an
+account.  You might think of equity as the ``ether'' from which initial
+balances appear.
+
+@subsection entry
+
+The three most laborious tasks of keeping a ledger are: adding new
+entries, reconciling accounts, and generating reports.  To address the
+first of these, there is a sub-command to ledger called ``entry''.  It
+works on the principle that 80% of all transactions are variants of
+earlier transactions.  Here's how it works:
+
+Let's say you have an old transaction of the following form:
+
+@example
+2004/03/15 * Viva Italiano
+    Expenses:Food                       $12.45
+    Expenses:Tips                        $2.55
+    Liabilities:MasterCard             $-15.00
+@end example
+
+Now it's 2004/4/9, and you've just eating at Viva Italiano again.  The
+exact amounts are different, but the overall form is the same.  With
+the ``entry'' command you can type:
+
+@example
+ledger entry 2004/4/9 viva food 11.00 tips 2.50
+@end example
+
+This will produce the following output:
+
+@example
+2004/04/09 Viva Italiano
+    Expenses:Food                       $11.00
+    Expenses:Tips                        $2.50
+    Liabilities:MasterCard             $-13.50
+@end example
+
+This works by finding a transaction that matches the regexp ``viva'',
+and then assuming that any accounts or amounts you specify will be the
+same as that earlier transaction.  If Ledger does not succeed in
+generating a new entry for you, it will print an error and set the
+exit code to 1.
+
+There is a shell script in the distribution called ``entry'', which
+simplifies the task of adding a new entry to your ledger, and then
+launches @samp{vi} to let you confirm that the entry looks appropriate.
+
 @node Options, Format strings, Commands, Running Ledger
 @section Options
+
+@subsection Basic options
+
+@samp{--help} (@samp{-h}) prints a summary of all the options, and
+what they are used for.  This can be a handy way to remember which
+options do what.  This help screen is also printed if ledger is run
+without a command.
+
+@sp
+
+@samp{--version} (@samp{-v}) prints the current version of ledger and exits.
+This is useful for sending bug reports (to @email{johnw@@newartisans.com}), to
+let the author know which version of ledger you are using.
+
+@sp
+
+@samp{--init FILE} (@samp{-i FILE}) causes FILE to be read by ledger before any
+other ledger file.  This file may not contain any transactions, but it
+may contain option settings.  To specify options in the init file, use
+the same syntax as the command-line.  Here's an example init file:
+
+@example
+--price-db ~/finance/.pricedb
+@end example
+
+Option settings on the command-line or in the environment always take
+precedence over settings in the init file.
+
+@sp
+
+@samp{--file FILE} (@samp{-f FILE}) reads FILE as a ledger file.  This command
+may be used multiple times.  FILE may also be a list of file names
+separated by colons.  Typically, the environment variable
+@samp{LEDGER_FILE} is set, rather than using this command-line option.
+
+@sp
+
+@samp{--cache FILE} identifies FILE as the default binary cache file.  That
+is, if the ledger files to be read are specified using the environment
+variable @samp{LEDGER_FILE}, then whenever a command is finished a binary
+copy will be written to the specified cache, to speed up the loading
+time of subsequent queries.  This filename can also be given using the
+environment variable @samp{LEDGER_CACHE}, or by putting the option into
+your init file.
+
+@sp
+
+@samp{--output FILE} (@samp{-o FILE}) redirects output from any command to
+@samp{FILE}.  By default, all output goes to standard output.
 
 @subsection Environment variables
 
@@ -1216,61 +1346,58 @@ environment variable settings.
 A value expression is a language used by ledger wherever a value is
 involved.  Some examples are:
 
-@itemize
+@enumerate
 @item Values displayed in reports
 @item Predicates, or which transactions get calculated/displayed
 @item Sorting criteria, or how transactions are sorted
-@end itemize
+@item Matching criteria used by automated transactions
+@end enumerate
 
 Value expressions support most simple math and logic operators, in
 addition to a set of one letter functions and variables.  A function's
-argument is whatever follows it.  Here are some value expression
-examples:
-
-@example
-t = the transaction's value
-
-MT = the average total
-
-t*3+T = three times the amount plus the total
-
-At>@{$100@}?t:T = if the absolute value of the amount
-  is in dollars, and greater than $100, use the amount,
-  otherwise use the total.
-
-d<N&t+T = if the date is less than today, use the
-  amount plus the total, otherwise zero.
-@end example
+argument is whatever follows it.
 
 @subsection Variables
 
-Below are the one letter variables available in any value expression:
+Below are the one letter variables available in any value expression.
+For the register and print commands, these variables relate to
+individual transactions, and sometimes the account affected by a
+transaction.  For the balance command, these variables relate to
+accounts -- often with a subtle difference in meaning.  The use of
+each variable for both is specified.
 
 @table @asis
+@item t
+This maps to whatever the user specified with @samp{-t}.  In a
+register report, @samp{-t} changes the value column; in a balance
+report, it has no meaning by default.
+
+@item T
+This maps to whatever the user specified with @samp{-T}.  In a
+register report, @samp{-T} changes the totals column; in a balance
+report, this is the value given for each account.
+
+@item N
+This is always the present date.
+@end table
+
+@subsubsection Transaction/account details
+
+@table @asis
+@item d
+A transaction's date, as the number of seconds past the epoch.  This
+is always ``today'' for an account.
+
 @item a
 The transaction's amount; the balance of an account, without
 considering children.
-
-@item B
-The balance before the current transaction, which is the same as
-@samp{O-a}; the subtotal of an account's children.
-
-@item C
-The total cost of all transactions seen so far; the total cost of an
-account and all its children.
 
 @item c
 The cost of a transaction; the cost of an account, without its
 children.
 
-@item d
-A transaction's date, as the number of seconds past the epoch.  This
-is zero for an account.
-
-@item G
-The total net gain (market value minus cost basis), for a series of
-transactions, or an account and its children.  It is the same as
-@samp{V-C}.
+@item v
+The market value of a transaction, or an account without its children.
 
 @item g
 The net gain (market value minus cost basis), for a transaction or an
@@ -1280,35 +1407,36 @@ account without its children.  It is the same as @samp{v-c}.
 The depth (``level'') of an account.  If an account has one parent,
 it's depth is one.
 
-@item N
-The present date.
-
 @item n
 The index of a transaction, or the count of transactions affecting an
 account (including children).
 
+@item X
+1, if a transaction's entry has been cleared, 0 otherwise.
+
+@item R
+1, if a transaction is not virtual, 0 otherwise.
+@end table
+
+@subsubsection Calculated totals
+
+@table @asis
 @item O
 The total of all transactions seen so far, or the total of an account
 and all its children.
 
-@item R
-The value one, if a transaction is not virtual.
-
-@item T
-This maps to whatever the user specified using @samp{-T}.
-
-@item t
-This maps to whatever the user specified using @samp{-t}.
+@item C
+The total cost of all transactions seen so far; the total cost of an
+account and all its children.
 
 @item V
 The market value of all transactions seen so far, or of an account and
 all its children.
 
-@item v
-The market value of a transaction, or an account without its children.
-
-@item X
-The value one, if a transaction's entry has been cleared.
+@item G
+The total net gain (market value minus cost basis), for a series of
+transactions, or an account and its children.  It is the same as
+@samp{V-C}.
 @end table
 
 @subsection Functions
@@ -1447,7 +1575,7 @@ If you want to show all accounts but for one account, remember to use
 ledger balance -- -equity
 @end example
 
-@node File format, Command summary, Typical queries, Running Ledger
+@node File format, Using command options, Typical queries, Running Ledger
 @section File format
 
 The ledger file format is quite simple, but supports many options.
@@ -1546,118 +1674,7 @@ special entries used by timeclock, but ignored by ledger.
 
 @end table
 
-@node Command summary, Using command options, File format, Running Ledger
-@section Command summary
-
-@menu
-* balance::
-* register::
-* print::
-* equity::
-* price::
-* entry::
-@end menu
-
-@node balance, register, Command summary, Command summary
-@subsection balance
-
-The ``balance'' command reports the current balance of any account.
-This command accepts a list of optional regexps, which will confine
-the balance report to only matching accounts.  By default, the
-balances for all accounts will be printed.  If an account contains
-multiple types of commodities, each commodity's total is separately
-reported.
-
-@node register, print, balance, Command summary
-@subsection register
-
-The ``register'' command displays all the transactions occurring in a
-single account, line by line.  The account regexp must be specified as
-the only argument to this command.  If any regexps occur after the
-required account name, the register will contain only those
-transactions that match.  Very useful for hunting down a particular
-transaction.
-
-The output from ``register'' is very close to what a typical checkbook,
-or single account ledger, would look like.  It also shows a running
-balance.  The final running balance of any register should always be
-the same as the current balance of that account.
-
-@node print, equity, register, Command summary
-@subsection print
-
-The ``print'' command prints out ledger entries just as they appear in
-the original ledger.  They will be properly formatted, and output in
-the most economic form possible.  The ``print'' command also takes a
-list of optional regexps, which will cause only those transactions
-which match in some way to be printed.
-
-The ``print'' command is a handy way to clean up a ledger file whose
-formatting has gotten out of hand.
-
-@node equity, price, print, Command summary
-@subsection equity
-
-Equity transactions are used to establish the starting value of an
-account.  You might think of equity as the ``ether'' from which initial
-balances appear.
-
-@node price, entry, equity, Command summary
-@subsection price
-
-This commands displays the last known current price for a given
-commodity, using the specified end date for the cutoff (default is the
-present moment).  It takes a list of regexps, which can match the
-commodities used in the ledger file.  This command is helpful to
-quickly seeing the last current price for a specific commodity, or all
-commodities referenced by a ledger.
-
-@node entry,  , price, Command summary
-@subsection entry
-
-The three most laborious tasks of keeping a ledger are: adding new
-entries, reconciling accounts, and generating reports.  To address the
-first of these, there is a sub-command to ledger called ``entry''.  It
-works on the principle that 80% of all transactions are variants of
-earlier transactions.  Here's how it works:
-
-Let's say you have an old transaction of the following form:
-
-@example
-2004/03/15 * Viva Italiano
-    Expenses:Food                       $12.45
-    Expenses:Tips                        $2.55
-    Liabilities:MasterCard             $-15.00
-@end example
-
-Now it's 2004/4/9, and you've just eating at Viva Italiano again.  The
-exact amounts are different, but the overall form is the same.  With
-the ``entry'' command you can type:
-
-@example
-ledger entry 2004/4/9 viva food 11.00 tips 2.50
-@end example
-
-This will produce the following output:
-
-@example
-2004/04/09 Viva Italiano
-    Expenses:Food                       $11.00
-    Expenses:Tips                        $2.50
-    Liabilities:MasterCard             $-13.50
-@end example
-
-This works by finding a transaction that matches the regexp ``viva'',
-and then assuming that any accounts or amounts you specify will be the
-same as that earlier transaction.  If Ledger does not succeed in
-generating a new entry for you, it will print an error and set the
-exit code to 1.
-
-There is a shell script in the distribution called ``entry'', which
-simplifies the task of adding a new entry to your ledger, and then
-launches @samp{vi} to let you confirm that the entry looks appropriate.
-
-@node Using command options,  , Command summary, Running Ledger
+@node Using command options,  , File format, Running Ledger
 @section Using command options
 
 With all of the commands, various command-line options are allowed
@@ -1681,51 +1698,10 @@ more specific reporting, or to change the way the output looks, you
 must use the options.
 
 @menu
-* Basic options::
 * Filtering options::
 * Output formatting options::
 * Commodity reporting options::
 @end menu
-
-@node Basic options, Filtering options, Using command options, Using command options
-@subsection Basic options
-
-The @samp{--help} (@samp{-h}) option causes ledger to print a summary of all the
-options, and what they are used for.  This can be a handy way to
-remember which options do what.  This help screen is also printed if
-ledger is run without a command.
-
-@samp{--version} (@samp{-v}) prints the current version of ledger and exits.
-This is useful for sending bug reports (to @email{johnw@@newartisans.com}), to
-let the author know which version of ledger you are using.
-
-@samp{--init FILE} (@samp{-i FILE}) causes FILE to be read by ledger before any
-other ledger file.  This file may not contain any transactions, but it
-may contain option settings.  To specify options in the init file, use
-the same syntax as the command-line.  Here's an example init file:
-
-@example
---price-db ~/finance/.pricedb
-@end example
-
-Option settings on the command-line or in the environment always take
-precedence over settings in the init file.
-
-@samp{--file FILE} (@samp{-f FILE}) reads FILE as a ledger file.  This command
-may be used multiple times.  FILE may also be a list of file names
-separated by colons.  Typically, the environment variable
-@samp{LEDGER_FILE} is set, rather than using this command-line option.
-
-@samp{--cache FILE} identifies FILE as the default binary cache file.  That
-is, if the ledger files to be read are specified using the environment
-variable @samp{LEDGER_FILE}, then whenever a command is finished a binary
-copy will be written to the specified cache, to speed up the loading
-time of subsequent queries.  This filename can also be given using the
-environment variable @samp{LEDGER_CACHE}, or by putting the option into
-your init file.
-
-@samp{--output FILE} (@samp{-o FILE}) redirects output from any command to
-@samp{FILE}.  By default, all output goes to standard output.
 
 @node Filtering options, Output formatting options, Basic options, Using command options
 @subsection Filtering options

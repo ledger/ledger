@@ -57,6 +57,7 @@ Basic options:\n\
   -h, --help            display this help text\n\
   -v, --version         show version information\n\
   -i, --init FILE       initialize ledger by loading FILE (def: ~/.ledgerrc)\n\
+      --cache FILE      use FILE as a binary cache when --file is not used\n\
   -f, --file FILE       read ledger data from FILE\n\
   -o, --output FILE     write output to FILE\n\
   -p, --set-price CONV  specify a commodity conversion: \"COMM=AMOUNT\"\n\
@@ -77,7 +78,7 @@ Output customization:\n\
   -s, --subtotal        balance: show sub-accounts; register: show subtotals\n\
   -S, --sort EXPR       sort report according to the value expression EXPR\n\
   -z, --interval STR    report by interval, based on interval expression STR\n\
-  -w, --dow             show a days-of-the-week report\n\
+      --dow             show a days-of-the-week report\n\
   -W, --weekly          show weekly sub-totals\n\
   -M, --monthly         show monthly sub-totals\n\
   -Y, --yearly          show yearly sub-totals\n\
@@ -240,7 +241,7 @@ OPT_BEGIN(weekly, "W") {
   config->interval_text = "weekly";
 } OPT_END(weekly);
 
-OPT_BEGIN(dow, "w") {
+OPT_BEGIN(dow, "") {
   config->days_of_the_week = true;
 } OPT_END(dow);
 

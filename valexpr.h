@@ -57,8 +57,6 @@ struct value_expr_t
     DEPTH,
 
     // Item totals
-    BALANCE,
-    COST_BALANCE,
     TOTAL,
     COST_TOTAL,
 
