@@ -174,9 +174,9 @@ cp ledger /usr/local/bin
 @end example
 
 Note that when building GNUmp, make sure to pass the
-@samp{--enable-cxx} flag to configure, otherwise it will not build
-@strong{libgmpxx.a}.  And in case it is not already on your system,
-@strong{xmlparse.h} is part of the libxmltok package, and not expat.
+@option{--enable-cxx} flag to configure, otherwise it will not build
+@file{libgmpxx.a}.  And in case it is not already on your system,
+@file{xmlparse.h} is part of the libxmltok package, and not expat.
 
 @node Running Ledger, Keeping a ledger, Introduction, Top
 @chapter Running Ledger
@@ -190,7 +190,6 @@ Note that when building GNUmp, make sure to pass the
 * Plotting register data::
 * Typical queries::
 * File format::
-* Using command options::
 @end menu
 
 @node Commands, Options, Running Ledger, Running Ledger
@@ -278,22 +277,40 @@ launches @command{vi} to let you confirm that the entry looks appropriate.
 @node Options, Format strings, Commands, Running Ledger
 @section Options
 
+With all of the reports, command-line options are useful for modifying
+the output generated.  You will often find yourselves adding option
+flags to the command-line to modify those commands.
+
+Command-line options always occur before the command word.  This is
+done to distinguish them from exclusive matching expressions, which
+also begin with a desh.  The basic form for most commands is:
+
+@example
+ledger [OPTIONS] COMMAND [REGEXPS...] [-- [REGEXPS...]]
+@end example
+
+The @var{OPTIONS} and @var{REGEXPS} expressions are optional.  You
+could use just ``ledger balance'' without any options, which would
+print the summarized total for all accounts.  But for more specific
+reporting, or to change the appearance of the output, options are
+needed.
+
 @subsection Basic options
 
-@samp{--help} (@samp{-h}) prints a summary of all the options, and
+@option{--help} (@option{-h}) prints a summary of all the options, and
 what they are used for.  This can be a handy way to remember which
 options do what.  This help screen is also printed if ledger is run
 without a command.
 
 @sp 1
 
-@samp{--version} (@samp{-v}) prints the current version of ledger and
+@option{--version} (@option{-v}) prints the current version of ledger and
 exits.  This is useful for sending bug reports, to let the author know
 which version of ledger you are using.
 
 @sp 1
 
-@samp{--init FILE} (@samp{-i FILE}) causes FILE to be read by ledger before any
+@option{--init FILE} (@option{-i FILE}) causes FILE to be read by ledger before any
 other ledger file.  This file may not contain any transactions, but it
 may contain option settings.  To specify options in the init file, use
 the same syntax as the command-line.  Here's an example init file:
@@ -307,14 +324,14 @@ precedence over settings in the init file.
 
 @sp 1
 
-@samp{--file FILE} (@samp{-f FILE}) reads FILE as a ledger file.  This command
+@option{--file FILE} (@option{-f FILE}) reads FILE as a ledger file.  This command
 may be used multiple times.  FILE may also be a list of file names
 separated by colons.  Typically, the environment variable
 @var{LEDGER_FILE} is set, rather than using this command-line option.
 
 @sp 1
 
-@samp{--cache FILE} identifies FILE as the default binary cache file.  That
+@option{--cache FILE} identifies FILE as the default binary cache file.  That
 is, if the ledger files to be read are specified using the environment
 variable @var{LEDGER_FILE}, then whenever a command is finished a binary
 copy will be written to the specified cache, to speed up the loading
@@ -324,52 +341,67 @@ your init file.
 
 @sp 1
 
-@samp{--output FILE} (@samp{-o FILE}) redirects output from any command to
+@option{--output FILE} (@option{-o FILE}) redirects output from any command to
 @var{FILE}.  By default, all output goes to standard output.
+
+@sp 1
+
+@option{--set-price CONV} (@option{-z CONV}) specifies a forced
+commodity conversion.  If a setting like @samp{COMM=$1.20} is used,
+the commodity @var{COMM} is reported in terms of the conversion
+factor.  This can be useful for performing arbitrary value
+substitutions.  For example, to report dollars in terms of the ounces
+of gold they would buy, use: @samp{-z "$=0.00280112 AU"} (or whatever
+the current exchange rate is).
+
+@sp 1
+
+@option{--account NAME} (@option{-a NAME}) specifies the default
+account which QIF file transactions are assumed to relate to.
 
 @subsection Report filtering
 
-@samp{--begin-date DATE} (@samp{-b DATE}) constrains the report to
+@option{--begin-date DATE} (@option{-b DATE}) constrains the report to
 entries on or after @var{DATE}.  Only entries after that date will be
 calculated, which means that the running total in the balance report
 will always start at zero with the first matching entry.  (Note: This
-is different from using @samp{--display} to constrain what is
+is different from using @option{--display} to constrain what is
 displayed).
 
 @sp 1
 
-@samp{--end-date DATE} (@samp{-e DATE}) contrains the report so that
+@option{--end-date DATE} (@option{-e DATE}) contrains the report so that
 entries on or after @var{DATE} are not considered.  This ending date
 is not inclusive, therefore always use a date that is later than the
 last entry you want to see.
 
 @sp 1
 
-@samp{--current}(@samp{-c}) displays only entries occurring on or
+@option{--current}(@option{-c}) displays only entries occurring on or
 before the current date.
 
 @sp 1
 
-@samp{--cleared} (@samp{-C}) displays only transactions whose entry
+@option{--cleared} (@option{-C}) displays only transactions whose entry
 has been marked ``cleared'' (by placing an asterix to the right of the
 date).
 
 @sp 1
 
-@samp{--uncleared} (@samp{-U}) displays only transactions whose entry
+@option{--uncleared} (@option{-U}) displays only transactions whose entry
 has not been marked ``cleared'' (i.e., if there is no asterix to the
 right of the date).
 
 @sp 1
 
-@samp{--real} (@samp{-R}) displays only real transactions, not
+@option{--real} (@option{-R}) displays only real transactions, not
 virtual.  (A virtual transaction is indicated by surrounding the
 account name with parentheses or brackets; see the section on using
 virtual transactions for more information).
 
 @sp 1
 
-@samp{--related} (@samp{-r}) displays transactions that are related to
+@option{--related} (@option{-r}) displays transactions that are related to
 whichever transactions would otherwise have matched the filtering
 criteria.  In the register report, this shows where money went to, or
 the account it came from.  In the balance report, it shows all the
@@ -399,23 +431,23 @@ transaction that matched.
 
 @subsection Output customization
 
-@samp{--date-format STR} (@samp{-y STR}) changes the basic date format
+@option{--date-format STR} (@option{-y STR}) changes the basic date format
 used by reports.  The default uses a date like 2004/08/01, which
 represents the default date format of @samp{%Y/%m/%d}.  To change the
 way dates are printed in general, the easiest way is to
-@samp{--date-format FORMAT} to the initialize file @file{~/.ledgerc}
+@option{--date-format FORMAT} to the initialize file @file{~/.ledgerc}
 (or the file referred to by @var{LEDGER_INIT}).
 
 @sp 1
 
-@samp{--format STR} (@samp{-F STR}) sets the reporting format for
+@option{--format STR} (@option{-F STR}) sets the reporting format for
 whatever report ledger is about to make.  @xref{Format strings}.
 
 You can also set the default format for a given report type, usually
 in the initialization file @file{~/.ledgerrc}, by using one of the
 following options:
 
-@table @samp
+@table @code
 @item --balance-format STR
 Sets the default format for the @command{balance} report.
 
@@ -429,40 +461,40 @@ Sets the default format for the @command{register} report.
 Sets the default format for the @command{print} report.
 
 @item --plot-value-format STR
-Sets the default format for the @command{register} report, when @samp{-j}
+Sets the default format for the @command{register} report, when @option{-j}
 is being used.
 
 @item --plot-total-format STR
-Sets the default format for the @command{register} report, when @samp{-J}
+Sets the default format for the @command{register} report, when @option{-J}
 is being used.
 @end table
 
 @sp 1
 
-@samp{--empty} (@samp{-E}) includes even empty accounts in the
+@option{--empty} (@option{-E}) includes even empty accounts in the
 @command{balance} report.
 
 @sp 1
 
-@samp{--collapse} (@samp{-n}) causes entries in a @command{register}
+@option{--collapse} (@option{-n}) causes entries in a @command{register}
 report with multiple transactions to be collapsed into a single,
 subtotaled entry.
 
-@samp{--subtotal} (@samp{-s}) causes all entries in a
+@option{--subtotal} (@option{-s}) causes all entries in a
 @command{register} report to be collapsed into a single, subtotaled
 entry.
 
 @sp 1
 
-@samp{--sort EXPR} (@samp{-S EXPR}) sorts a report by comparing the
+@option{--sort EXPR} (@option{-S EXPR}) sorts a report by comparing the
 values determined using the value expression @var{EXPR}.  For example,
-using @samp{-S -AT} in the balance report will sort account balances
+using @option{-S -AT} in the balance report will sort account balances
 from greatest to least, using the absolute value of the total.  For
 more on how to use value expressions, see @ref{Value expressions}.
 
 @sp 1
 
-@samp{--interval STR} (@samp{-z STR}) sets the reporting interval to
+@option{--interval STR} (@option{-p STR}) sets the reporting interval to
 @var{STR}.  This will subtotal all matching entries within each
 interval separately, making it easy to see weekly, monthly, quarterly,
 etc., transaction totals.  An interval string can even specify the
@@ -470,24 +502,24 @@ beginning and end of the report range, using simple terms like ``last
 june'' or ``next month''.  For more using interval expressions, see
 @ref{Interval expressions}.
 
-@samp{--dow} reports transactions totals for each day of the week.
+@option{--dow} reports transactions totals for each day of the week.
 This is an easy way to see if weekend spending is more than on
 weekdays.
 
-@samp{--weekly} (@samp{-W}) reports transaction totals by the week.
+@option{--weekly} (@option{-W}) reports transaction totals by the week.
 The week begins on whichever day a transaction is first found, so to
 start each week on a Sunday, specifying a beginning date for the
-report that falls on a Sunday.  @samp{--monthly} (@samp{-M}) reports
-transaction totals by month; @samp{--yearly} (@samp{-Y}) reports
+report that falls on a Sunday.  @option{--monthly} (@option{-M}) reports
+transaction totals by month; @option{--yearly} (@option{-Y}) reports
 transaction totals by year.  For more complex interval, using the
-@samp{--interval} option described above.
+@option{--interval} option described above.
 
 @sp 1
 
-@samp{--limit EXPR} (@samp{-l EXPR}) limits which transactions take
+@option{--limit EXPR} (@option{-l EXPR}) limits which transactions take
 part in the calculations of a report.
 
-@samp{--display EXPR} (@samp{-d EXPR}) limits which transactions or
+@option{--display EXPR} (@option{-d EXPR}) limits which transactions or
 accounts or actually displayed in a report.  They might still be
 calculated, and be part of the running total of a register report, for
 example, but they will not be displayed.  This is useful for seeing
@@ -503,39 +535,39 @@ whose running total includes only transactions from the last month
 onward:
 
 @example
-ledger -z "last month" reg checking
+ledger -p "last month" reg checking
 @end example
 
 Which is more useful depends on what you're looking to know: the total
-amount for the reporting range (@samp{-z}), or simply a display
-restricted to the reporting range (using @samp{-d}).
+amount for the reporting range (@option{-p}), or simply a display
+restricted to the reporting range (using @option{-d}).
 
 @sp 1
 
-@samp{--value EXPR} (@samp{-t EXPR}) changes the value expression used
+@option{--value EXPR} (@option{-t EXPR}) changes the value expression used
 to calculate the ``value'' column in the @command{register} report,
 and the totals in the @command{equity} report.  @xref{Value
 expressions}.
 
-@samp{--total EXPR} (@samp{-T EXPR}) sets the value expression used by
+@option{--total EXPR} (@option{-T EXPR}) sets the value expression used by
 the ``total'' column in the @command{register} report, and also the
 @command{balance} report.
 
 @sp 1
 
-@samp{--value-data} (@samp{-j}) changes the @command{register} report
+@option{--value-data} (@option{-j}) changes the @command{register} report
 so that it output nothing but the date and the value column, and the
 latter without commodities.  This is only meaningful if the report
 uses a single commodity.  This data can then be fed to other programs,
 which could plot the date, analyze it, etc.
 
-@samp{--total-data} (@samp{-J}) changes the @command{register} report
+@option{--total-data} (@option{-J}) changes the @command{register} report
 so that it output nothing but the date and totals column, without
 commodities.
 
 @subsection Commodity reporting
 
-@samp{--price-db FILE} (@samp{-P FILE}) sets the file that is used for
+@option{--price-db FILE} (@option{-P FILE}) sets the file that is used for
 recording downloaded commodity prices.  It is always read on startup,
 to determine historical prices.  Other settings can be placed in this
 file manually, to prevent downloading quotes for a specific, for
@@ -549,7 +581,7 @@ N h
 
 @sp 1
 
-@samp{--download} (@samp{-Q}) causes quotes to be automagically
+@option{--download} (@option{-Q}) causes quotes to be automagically
 downloaded, as needed, by running a script named @command{getquote}
 and expecting that script to return a value understood by ledger.  A
 sample implementation of a @command{getquote} script, implemented in
@@ -559,45 +591,45 @@ environment variable @var{LEDGER_PRICE_DB}.
 
 @sp 1
 
-@samp{--price-exp MINS} (@samp{-L MINS}) sets the expected freshness
+@option{--price-exp MINS} (@option{-L MINS}) sets the expected freshness
 of price quotes, in minutes.  That is, if the last known quote for any
-commodity is older than this value---and if @samp{--download} is being
+commodity is older than this value---and if @option{--download} is being
 used---then the Internet will be consulted again for a newer price.
 Otherwise, the old price is still considered to be fresh enough.
 
 @sp 1
 
-There are several different ways that ledger can report the totals it displays.  The most flexible way to adjust them is by using value expressions, and the @samp{-t} and @samp{-T} options.  However, there are also several ``default'' reports, which will satisfy most users basic reporting needs:
+There are several different ways that ledger can report the totals it displays.  The most flexible way to adjust them is by using value expressions, and the @option{-t} and @option{-T} options.  However, there are also several ``default'' reports, which will satisfy most users basic reporting needs:
 
-@table @samp
+@table @code
 @item --quantity
-(@samp{-O}) reports commodity totals (this is the default)
+(@option{-O}) reports commodity totals (this is the default)
 
 @item --basis
-(@samp{-B}) reports the cost basis for all transactions.
+(@option{-B}) reports the cost basis for all transactions.
 
 @item --market
-(@samp{-V}) reports the last known market value for all commodities.
+(@option{-V}) reports the last known market value for all commodities.
 
 @item --gain
-(@samp{-G}) reports the net gain/loss for all commodity with a price
+(@option{-G}) reports the net gain/loss for all commodity with a price
 history.
 
 @item --average
-(@samp{-A}) reports the average transaction value.
+(@option{-A}) reports the average transaction value.
 
 @item --deviation
-(@samp{-D}) reports each transaction's deviation from the average.
+(@option{-D}) reports each transaction's deviation from the average.
 This is only meaningful in the @command{register} report.
 
 @item --trend
-(@samp{-X}) reports the basic trend of all transaction values.  This
+(@option{-X}) reports the basic trend of all transaction values.  This
 can indicate whether spending is on the increase, or decrease, based
 on the way the trend values change in the totals column of the
 @command{register} report.
 
 @item --weighted-trend
-(@samp{-Z}) reports the trend, like @samp{--trend}, but factors in the
+(@option{-Z}) reports the trend, like @option{--trend}, but factors in the
 passage of time.  Older transactions do not swing the trend numbers as
 much as recent and future transactions.  Thus, recent heavy spending
 will indicate a higher trend, than if time were not considered.
@@ -606,8 +638,8 @@ will indicate a higher trend, than if time were not considered.
 @subsection Environment variables
 
 Every option to ledger may be set using an environment variable.  If
-the option has a long option named @samp{--this-option}, then setting
-the environment variable @samp{LEDGER_THIS_OPTION} will have the same
+the option has a long option named @option{--this-option}, then setting
+the environment variable @var{LEDGER_THIS_OPTION} will have the same
 affect.  Options on the command-line always take precedence over
 environment variable settings.
 
@@ -616,7 +648,7 @@ environment variable settings.
 
 Format strings can be used to change the output format of reports.
 They are specified by passing a formatting string to the
-@samp{--format} (@samp{-F}) option.  Within that string, constructs
+@option{--format} (@option{-F}) option.  Within that string, constructs
 are allowed which make it possible to display the various parts of an
 account or transaction in custom ways.
 
@@ -645,18 +677,18 @@ The expression following the format constraints can be a single
 letter, or an expression enclosed in parentheses or brackets.  The
 allowable expressions are:
 
-@table @asis
+@table @code
 @item %
 Inserts a percent sign.
 
 @item t
-Inserts the results of the value expression specified by @samp{-t}.
-If @samp{-t} was not specified, the current report style's value
+Inserts the results of the value expression specified by @option{-t}.
+If @option{-t} was not specified, the current report style's value
 expression is used.
 
 @item T
-Inserts the results of the value expression specified by @samp{-T}.
-If @samp{-T} was not specified, the current report style's value
+Inserts the results of the value expression specified by @option{-T}.
+If @option{-T} was not specified, the current report style's value
 expression is used.
 
 @item |
@@ -684,7 +716,7 @@ example: @samp{%[%Y/%m/%d %H:%M:%S]}.
 
 @item D
 By default, this is the same as @samp{%[%Y/%m%/d]}.  The date format
-used can be changed at any time with the @samp{-y} flag, however.
+used can be changed at any time with the @option{-y} flag, however.
 Using @samp{%D} gives the user more control over the way dates are
 output.
 
@@ -754,17 +786,17 @@ transaction.  For the balance command, these variables relate to
 accounts -- often with a subtle difference in meaning.  The use of
 each variable for both is specified.
 
-@table @asis
+@table @code
 @item t
-This maps to whatever the user specified with @samp{-t}.  In a
-register report, @samp{-t} changes the value column; in a balance
-report, it has no meaning by default.  If @samp{-t} was not specified,
+This maps to whatever the user specified with @option{-t}.  In a
+register report, @option{-t} changes the value column; in a balance
+report, it has no meaning by default.  If @option{-t} was not specified,
 the current report style's value expression is used.
 
 @item T
-This maps to whatever the user specified with @samp{-T}.  In a
-register report, @samp{-T} changes the totals column; in a balance
-report, this is the value given for each account.  If @samp{-T} was
+This maps to whatever the user specified with @option{-T}.  In a
+register report, @option{-T} changes the totals column; in a balance
+report, this is the value given for each account.  If @option{-T} was
 not specified, the current report style's value expression is used.
 
 @item m
@@ -773,7 +805,7 @@ This is always the present moment/date.
 
 @subsubsection Transaction/account details
 
-@table @asis
+@table @code
 @item d
 A transaction's date, as the number of seconds past the epoch.  This
 is always ``today'' for an account.
@@ -810,7 +842,7 @@ account.
 
 @subsubsection Calculated totals
 
-@table @asis
+@table @code
 @item O
 The total of all transactions seen so far, or the total of an account
 and all its children.
@@ -837,7 +869,7 @@ transactions, or an account and its children.  It is the same as
 
 The available one letter functions are:
 
-@table @asis
+@table @code
 @item -
 Negates the argument.
 
@@ -873,7 +905,7 @@ The binary and ternary operators, in order of precedence, are:
 
 More complicated expressions are possible using:
 
-@table @asis
+@table @code
 @item NUM
 A plain integer represents a commodity-less amount.
 
@@ -969,7 +1001,7 @@ If you want to show all accounts but for one account, remember to use
 ledger balance -- -equity
 @end example
 
-@node File format, Using command options, Typical queries, Running Ledger
+@node File format,  , Typical queries, Running Ledger
 @section File format
 
 The ledger file format is quite simple, but supports many options.
@@ -978,7 +1010,7 @@ These are summarized here.
 The initial character of each line determines what that line means,
 and how it should be parsed.  The possibilities are:
 
-@table @strong
+@table @code
 @item NUMBER
 A line starting with a number denotes a regular ledger entry.  It
 may be followed by any number of lines that beginning whitespace, to
@@ -992,12 +1024,12 @@ If a line begins with plus, it denotes an inclusion regexp that
 will always be considered, as if it had been specified by the user
 at the end of their command-line.
 
-@item @strong{-}
+@item -
 If a line begins with minus, it denotes an exclusion regexp that
 will always be considered, as if it had been specified by the user
 at the end of their command-line.
 
-@item @strong{=}
+@item =
 If a line begins with equals, it denotes an automated transaction.
 The next item on the line must be a regular expression.  Any number
 of such lines may appear, with no intervening whitespace.
@@ -1021,7 +1053,7 @@ If a line begins with semicolon it is ignored.  This is the
 preferred method of entering comments.
 @end quotation
 
-@table @strong
+@table @code
 @item Y NUM
 If a line begins with a capital Y, it denotes the year to be used
 for all subsequent entries that specify a date, whatever their type.
@@ -1032,7 +1064,7 @@ to specify the file's year.
 @item P DATE SYMBOL PRICE
 Capital P specifies a historical price for a commodity.  Any such
 number of entries are allowed.  These are usually found in a pricing
-history file (see the @samp{-Q} option).
+history file (see the @option{-Q} option).
 
 @item C SYMBOL PRICE
 Capital C specifies a conversion price for a commodity.  This has
@@ -1065,188 +1097,6 @@ account name, and the optional description, if one is used.
 @item b, h
 Entries beginning with lowercase b and h are ignored.  These are
 special entries used by timeclock, but ignored by ledger.
-
-@end table
-
-@node Using command options,  , File format, Running Ledger
-@section Using command options
-
-With all of the commands, various command-line options are allowed
-that will modify the behavior of the command in some way.  And while
-the basic commands themselves are useful, you will often find
-yourselves adding option flags to the command-line to modify those
-commands.
-
-The command-line options always occur before the command word.  This
-is done to distinguish them from the matching expressions that always
-occur after the command word.  The basic form of any command is:
-
-@example
-ledger [OPTIONS] COMMAND [MATCH]
-@end example
-
-Both the OPTIONS and MATCH expressions are optional.  You could, for
-example, just use ``ledger balance'' without any modification.  This
-would print the summarized total of all account types.  But to get
-more specific reporting, or to change the way the output looks, you
-must use the options.
-
-@menu
-* Filtering options::
-* Output formatting options::
-* Commodity reporting options::
-@end menu
-
-@node Filtering options, Output formatting options, Using command options, Using command options
-@subsection Filtering options
-
-@table @strong
-@item @strong{-b DATE}
-Only consider entries occuring on or after the given date.
-
-@item @strong{-e DATE}
-Only consider entries occuring before the given date.  The date is
-not inclusive, so any entries occurring on that date will not be
-used.
-
-@item @strong{-c}
-Only consider entries occurring on or before the current date.
-
-@item @strong{-d DATE}
-Only consider entries fitting the given date mask.  DATE in this
-case may be the name of a month, or a year, or a year and month,
-such as ``2004/05''.  It's a shorthand for having to specify -b and -e
-together.
-
-@item @strong{-C}
-Only consider entries whose cleared flag has been set.  The default
-is to consider both.
-
-@item @strong{-U}
-Show only uncleared transactions.  The default is to consider both.
-
-@item @strong{-l AMT}
-Limit balance reports to those which are greater than AMT.
-
-@item @strong{-N REGEXP}
-If an account matches REGEXP, only display it in the balance report
-if its total is negative.  Useful to avoid seeing credit in accounts
-where one cannot spend that credit, and it will soon become negative
-anyway (such as credit cards).
-
-@item @strong{-R}
-Ignore all virtual transactions, and report only the real balance
-for each account.
-
-@end table
-
-@node Output formatting options, Commodity reporting options, Filtering options, Using command options
-@subsection Output formatting options
-
-@table @strong
-@item @strong{-n}
-Do not show subtotals in the balance report, or split transactions
-in the register report.
-
-@item @strong{-s}
-If an account has children, show them in the balance report.
-
-@item @strong{-S}
-Sort the ledger after reading it.  This may affect ``register'' and
-``print'' output.
-
-@item @strong{-E}
-Also show empty accounts in the balance totals report.
-
-@item @strong{-F}
-Print full account names in all cases, such as ``Assets:Checking''
-instead of just ``Checking''.  Only used current by the ``balance''
-command.
-
-@item @strong{-M}
-When used with the ``register'' command, causes only monthly subtotals
-to appear.  This can be useful for looking at spending patterns.
-TODO: Accept an argument specifying the period to use.
-
-@item @strong{-A}
-Report totals in terms of the arithmetic mean (sum of all items
-divided by the count).  This does not work when multiple commodities
-are used in the same account, in which case this option is ignored.
-This option works both for balance reports, and for register reports
-(where it displays the running total average).  Be aware that in the
-balance report, parent account totals reflect the arithmetic mean of
-all the transactions---not the mean average of the subaccount
-totals.
-
-@item @strong{-T}
-Report totals in terms of the average deviation from the average
-value (i.e., the trend).  The final total will indicate the amount
-over or above the average value which it is expected you will next
-spend/earn.  When spending is regular, the trend will very slowly
-move to zero.
-
-@item @strong{-X}
-Report totals in terms of the expected value of the next
-transaction.  This is determined by adding the average deviation to
-the average value.
-
-@item @strong{-W}
-Report totals in terms of a time-weighted trend.  Whereas @samp{-T}
-reports the exact value trend irrespective of when the transactions
-occurred, @samp{-W} takes into account the time between entries.  If a
-transaction occurs shortly after another, it will not affect the
-running trend as much as if it occurs very much later.  This style
-of reports always adds a null transaction for the current date, so
-that a current lack of spending is taken into account.
-
-@end table
-
-@node Commodity reporting options,  , Output formatting options, Using command options
-@subsection Commodity reporting options
-
-@table @strong
-@item @strong{-P FILE}
-With this option, or if the environment variable @var{PRICE_HIST} is
-set, pricing information obtained from the Internet will be kept
-in this file.  Also, this file will be read after all other ledger
-files are read, so that full history information is available for
-reports.
-
-@item @strong{-O}
-Report commodity totals only, not their market value or basis cost.
-
-@item @strong{-V}
-Report commodity values in terms of their last known market price.
-
-@item @strong{-B}
-Report commodities in terms of their ``basis cost'', or what they cost
-at time of purchase.  Thus, totals in the register and balance
-report reflect the total amount spent.
-
-@item @strong{-G}
-Report commodities in terms of their net gain, which is: the market
-value minus the cost basis.  A balance report using this option
-shows very quickly the performance of investments.
-
-@item @strong{-Q}
-When needed (see the @samp{-L} option) pricing quotes are obtained by
-calling the script @command{getquote} (a sample Perl script is
-provided, but the interface is kept simple so replacements may be
-made).
-
-@item @strong{-L MINS}
-When using the @samp{-Q} flag, new quotes are obtained only if current
-pricing data is older than MINS minutes.  The default is one day,
-or 1440 minutes.
-
-@item @strong{-p ARG}
-If a string, such as ``COMM=$1.20'', the commodity COMM will be
-reported only in terms of the conversion factor, which supersedes
-all other pricing histories for that commodity.  This can be used to
-perform arbitrary value substitutions.  For example, to report the
-value of your dollars in terms of the ounces of gold they would buy,
-use: -p ``$=0.00280112 AU'' (or whatever the current exchange rate
-is).
 
 @end table
 
@@ -1666,7 +1516,7 @@ BORL=$19
 FEQTX=$32
 @end example
 
-Specify the prices file using the @samp{-p} option:
+Specify the prices file using the @option{-p} option:
 
 @example
 ledger -p prices.db balance brokerage
@@ -1735,13 +1585,12 @@ its various reports.  It will always report balances in terms of the
 commodity total, rather than the current value of those commodities.
 To enable pricing reports, several options are possible:
 
-@table @strong
+@table @code
 @item @strong{-P FILE}
-With this option, or if the environment variable @samp{PRICE_HIST} is
-set, pricing information obtained from the Internet will be kept
-in this file.  Also, this file will be read after all other ledger
-files are read, so that full history information is available for
-reports.
+With this option, or if the environment variable @var{PRICE_HIST} is
+set, pricing information obtained from the Internet will be kept in
+this file.  Also, this file will be read after all other ledger files
+are read, so that full history information is available for reports.
 
 @item @strong{-O}
 Report commodity totals only, not their market value or basis cost.
@@ -1760,13 +1609,13 @@ value minus the cost basis.  A balance report using this option
 shows very quickly the performance of investments.
 
 @item @strong{-Q}
-When needed (see the @samp{-L} option) pricing quotes are obtained by
+When needed (see the @option{-L} option) pricing quotes are obtained by
 calling the script @command{getquote} (a sample Perl script is
 provided, but the interface is kept simple so replacements may be
 made).
 
 @item @strong{-L MINS}
-When using the @samp{-Q} flag, new quotes are obtained only if current
+When using the @option{-Q} flag, new quotes are obtained only if current
 pricing data is older than MINS minutes.  The default is one day,
 or 1440 minutes.
 
@@ -1781,7 +1630,7 @@ is).
 
 @end table
 
-Note that the @samp{-B}, @samp{-O}, @samp{-V}, and @samp{-G} are mutually exclusive.
+Note that the @option{-B}, @option{-O}, @option{-V}, and @option{-G} are mutually exclusive.
 
 @node Accounts and Inventories, Understanding Equity, Commodities and Currencies, Keeping a ledger
 @section Accounts and Inventories
