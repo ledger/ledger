@@ -1,5 +1,5 @@
-#ifndef _AUTOXACT_H
-#define _AUTOXACT_H
+#ifndef _CONFIG_H
+#define _CONFIG_H
 
 #include "ledger.h"
 
