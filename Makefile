@@ -22,9 +22,9 @@ OBJS   = $(patsubst %.cc,%.o,$(CODE))
 CXX    = g++
 
 CFLAGS = -Wall -ansi -pedantic
-#DFLAGS = -O3 -fomit-frame-pointer -DRELEASE_LEVEL=0
-DFLAGS = -g -DRELEASE_LEVEL=4
-#DFLAGS = -g -DRELEASE_LEVEL=2 -pg
+#DFLAGS = -O3 -fomit-frame-pointer -DDEBUG_LEVEL=0
+DFLAGS = -g -DDEBUG_LEVEL=4
+#DFLAGS = -g -DDEBUG_LEVEL=2 -pg
 
 INCS   = -I/sw/include \
 	 -I/usr/include/gcc/darwin/3.3/c++ \
@@ -84,7 +84,7 @@ include make.deps
 
 install:
 	make clean
-	make DFLAGS="-O3 -fomit-frame-pointer -DRELEASE_LEVEL=0"
+	make DFLAGS="-O3 -fomit-frame-pointer -DDEBUG_LEVEL=0"
 	cp ledger $(HOME)/bin
 	strip $(HOME)/bin/ledger
 

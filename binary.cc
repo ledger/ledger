@@ -26,7 +26,7 @@ static std::deque<commodity_t *> commodities;
 static commodity_t::ident_t	 c_ident;
 std::deque<amount_t::bigint_t *> bigints;
 
-#if RELEASE_LEVEL >= ALPHA
+#if DEBUG_LEVEL >= ALPHA
 #define read_binary_guard(in, id) {		\
   unsigned short guard;				\
   in.read((char *)&guard, sizeof(guard));	\
@@ -267,7 +267,7 @@ unsigned int binary_parser_t::parse(std::istream&	in,
 			     journal, master);
 }
 
-#if RELEASE_LEVEL >= ALPHA
+#if DEBUG_LEVEL >= ALPHA
 #define write_binary_guard(in, id) {		\
   unsigned short guard = id;			\
   out.write((char *)&guard, sizeof(guard));	\

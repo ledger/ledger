@@ -7,20 +7,20 @@
 #define RELEASE     1
 #define NO_SEATBELT 0
 
-#ifndef RELEASE_LEVEL
-#define RELEASE_LEVEL RELEASE
+#ifndef DEBUG_LEVEL
+#define DEBUG_LEVEL RELEASE
 #endif
 
-#if RELEASE_LEVEL >= ALPHA
+#if DEBUG_LEVEL >= ALPHA
 #include <cstdlib>              // for `getenv'
 #include <cstring>              // for `strcmp'
 #endif
 
-#if RELEASE_LEVEL >= BETA
+#if DEBUG_LEVEL >= BETA
 #include <cassert>
 #endif
 
-#if RELEASE_LEVEL >= RELEASE
+#if DEBUG_LEVEL >= RELEASE
 #include <iostream>
 #endif
 
@@ -57,7 +57,7 @@ namespace ledger {
     throw exc(s.str().c_str());                 \
   }
 
-#if RELEASE_LEVEL >= ALPHA
+#if DEBUG_LEVEL >= ALPHA
 
 #include <pcre.h>
 #include <cstring>
@@ -91,13 +91,13 @@ bool _debug_active(const char * const cls);
 
 #define CONFIRM(x) assert(x)
 
-#if RELEASE_LEVEL == DEVELOPER
+#if DEBUG_LEVEL == DEVELOPER
 #define VALIDATE(x) assert(x)
 #else
 #define VALIDATE(x)
 #endif
 
-#else // RELEASE_LEVEL
+#else // DEBUG_LEVEL
 
 #define DEBUG_CLASS(cls)
 #define DEBUG(cls) 0
@@ -107,24 +107,24 @@ bool _debug_active(const char * const cls);
 
 #define VALIDATE(x)
 
-#if RELEASE_LEVEL == NO_SEATBELT
+#if DEBUG_LEVEL == NO_SEATBELT
 
 #undef assert
 #define assert(x)
 #define CONFIRM(x)
 
-#elif RELEASE_LEVEL >= RELEASE
+#elif DEBUG_LEVEL >= RELEASE
 
 extern std::ostream * warning_stream;
 #define CONFIRM(x)
 
-#elif RELEASE_LEVEL >= BETA
+#elif DEBUG_LEVEL >= BETA
 
 #define CONFIRM(x) assert(x)
 
 #endif
 
-#endif // RELEASE_LEVEL
+#endif // DEBUG_LEVEL
 
 } // namespace ledger
 

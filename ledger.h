@@ -16,10 +16,10 @@
 #include <ctime>
 #include <iostream>
 
-#ifdef RELEASE_LEVEL
-#if RELEASE_LEVEL >= 2
+#ifdef DEBUG_LEVEL
+#if DEBUG_LEVEL >= 2
 #include "debug.h"
-#elif RELEASE_LEVEL == 0
+#elif DEBUG_LEVEL == 0
 #define NO_CLEANUP 1
 #endif
 #endif
