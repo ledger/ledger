@@ -24,7 +24,7 @@ struct element_t
     ACCOUNT_NAME,
     ACCOUNT_FULLNAME,
     OPT_AMOUNT,
-    VALUE,
+    AMOUNT,
     TOTAL,
     SPACER,
     DEPTH_SPACER
@@ -55,7 +55,7 @@ struct format_t
   element_t * elements;
 
   static std::string	date_format;
-  static value_expr_t * value_expr;
+  static value_expr_t * amount_expr;
   static value_expr_t * total_expr;
 
   format_t() : elements(NULL) {}
@@ -77,9 +77,9 @@ struct format_t
 
   void format(std::ostream& out, const details_t& details) const;
 
-  static void compute_value(value_t& result, const details_t& details) {
-    if (value_expr)
-      value_expr->compute(result, details);
+  static void compute_amount(value_t& result, const details_t& details) {
+    if (amount_expr)
+      amount_expr->compute(result, details);
   }
 
   static void compute_total(value_t& result, const details_t& details) {

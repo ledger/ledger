@@ -18,7 +18,7 @@ config_t::config_t()
   cache_file += "/.ledger";
   price_db   += "/.pricedb";
 
-  value_expr	     = "a";
+  amount_expr	     = "a";
   total_expr	     = "O";
   pricing_leeway     = 24 * 3600;
   balance_format     = "%20T  %2_%-n\n";
@@ -168,11 +168,11 @@ void config_t::process_options(const std::string&     command,
   // Setup the values of %t and %T, used in format strings
 
   try {
-    if (! format_t::value_expr)
-      format_t::value_expr = parse_value_expr(value_expr);
-    if (! format_t::value_expr)
+    if (! format_t::amount_expr)
+      format_t::amount_expr = parse_value_expr(amount_expr);
+    if (! format_t::amount_expr)
       throw value_expr_error(std::string("Failed to parse '") +
-			     value_expr + "'");
+			     amount_expr + "'");
   }
   catch (const value_expr_error& err) {
     throw error(std::string("In value expression to -t: ") + err.what());
@@ -514,16 +514,16 @@ OPT_BEGIN(display, "d:") {
   config.display_predicate += ")";
 } OPT_END(display);
 
-OPT_BEGIN(value_expr, "t:") {
-  config.value_expr = optarg;
-} OPT_END(value_expr);
+OPT_BEGIN(amount_expr, "t:") {
+  config.amount_expr = optarg;
+} OPT_END(amount_expr);
 
 OPT_BEGIN(total_expr, "T:") {
   config.total_expr = optarg;
 } OPT_END(total_expr);
 
 OPT_BEGIN(value_data, "j") {
-  config.value_expr    = "S" + config.value_expr;
+  config.amount_expr    = "S" + config.amount_expr;
   config.format_string = config.plot_value_format;
 } OPT_END(value_data);
 
@@ -549,19 +549,19 @@ OPT_BEGIN(download, "Q") {
 } OPT_END(download);
 
 OPT_BEGIN(quantity, "O") {
-  config.value_expr = "a";
+  config.amount_expr = "a";
   config.total_expr = "O";
 } OPT_END(quantity);
 
 OPT_BEGIN(basis, "B") {
-  config.value_expr = "c";
+  config.amount_expr = "c";
   config.total_expr = "C";
 } OPT_END(basis);
 
 OPT_BEGIN(market, "V") {
   config.show_revalued = true;
 
-  config.value_expr = "v";
+  config.amount_expr = "v";
   config.total_expr = "V";
 } OPT_END(market);
 
@@ -569,27 +569,27 @@ OPT_BEGIN(gain, "G") {
   config.show_revalued      =
   config.show_revalued_only = true;
 
-  config.value_expr = "a";
+  config.amount_expr = "a";
   config.total_expr = "G";
 } OPT_END(gain);
 
 OPT_BEGIN(average, "A") {
-  config.value_expr = "a";
+  config.amount_expr = "a";
   config.total_expr = "MO";
 } OPT_END(average);
 
 OPT_BEGIN(deviation, "D") {
-  config.value_expr = "a";
+  config.amount_expr = "a";
   config.total_expr = "DMO";
 } OPT_END(deviation);
 
 OPT_BEGIN(trend, "X") {
-  config.value_expr = "a";
+  config.amount_expr = "a";
   config.total_expr = "MDMO";
 } OPT_END(trend);
 
 OPT_BEGIN(weighted_trend, "Z") {
-  config.value_expr = "a";
+  config.amount_expr = "a";
   config.total_expr
     = "MD(MO/(1+(((m-d)/(30*86400))<0?0:((m-d)/(30*86400)))))";
 } OPT_END(weighted_trend);
@@ -653,7 +653,7 @@ void export_config()
     .def_readwrite("equity_format", &config_t::equity_format)
     .def_readwrite("date_format", &config_t::date_format)
     .def_readwrite("sort_string", &config_t::sort_string)
-    .def_readwrite("value_expr", &config_t::value_expr)
+    .def_readwrite("amount_expr", &config_t::amount_expr)
     .def_readwrite("total_expr", &config_t::total_expr)
     .def_readwrite("pricing_leeway", &config_t::pricing_leeway)
     .def_readwrite("show_collapsed", &config_t::show_collapsed)

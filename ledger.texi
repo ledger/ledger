@@ -2115,6 +2115,29 @@ Using the ledger library as a Python module
 Setting up custom initialization using Python
 @end enumerate
 
+Note that this feature, while functional, is still under development.
+It will not be documented until it has been fully proven, probably in
+the next version of ledger.  For now, if you wish to make this of this
+functionality and are willing to debug problems that come up, pass the
+option @samp{--enable-python} to configure, and contact the author via
+email.
+
+Here is a quick example of text that could be pasted into a ledger
+file, to generate a customized amount's column in the register report:
+
+@example
+;; If Python support is enabled, then the following code may be
+;; uncomment to demonstrate a rather useless example.
+
+!python
+from ledger import *
+def foo(d, val):
+    return d.xact.amount + val
+!end
+
+--amount-expr 'foo'@{$100@}
+@end example
+
 @c Page published by Emacs Muse ends here
 @contents
 @bye

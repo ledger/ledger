@@ -35,7 +35,7 @@ std::string partial_account_name(const account_t&  account)
 }
 
 std::string    format_t::date_format = "%Y/%m/%d";
-value_expr_t * format_t::value_expr  = NULL;
+value_expr_t * format_t::amount_expr = NULL;
 value_expr_t * format_t::total_expr  = NULL;
 
 static struct _init_format {
@@ -44,8 +44,8 @@ static struct _init_format {
 
 _init_format::~_init_format()
 {
-  if (format_t::value_expr)
-    delete format_t::value_expr;
+  if (format_t::amount_expr)
+    delete format_t::amount_expr;
   if (format_t::total_expr)
     delete format_t::total_expr;
 }
@@ -164,7 +164,7 @@ element_t * format_t::parse_elements(const std::string& fmt)
     case 'n': current->type = element_t::ACCOUNT_NAME; break;
     case 'N': current->type = element_t::ACCOUNT_FULLNAME; break;
     case 'o': current->type = element_t::OPT_AMOUNT; break;
-    case 't': current->type = element_t::VALUE; break;
+    case 't': current->type = element_t::AMOUNT; break;
     case 'T': current->type = element_t::TOTAL; break;
     case '|': current->type = element_t::SPACER; break;
     case '_': current->type = element_t::DEPTH_SPACER; break;
@@ -202,13 +202,13 @@ void format_t::format(std::ostream& out, const details_t& details) const
       out << elem->chars;
       break;
 
-    case element_t::VALUE:
+    case element_t::AMOUNT:
     case element_t::TOTAL:
     case element_t::VALUE_EXPR: {
       value_expr_t * expr = NULL;
       switch (elem->type) {
-      case element_t::VALUE: expr = value_expr; break;
-      case element_t::TOTAL: expr = total_expr; break;
+      case element_t::AMOUNT: expr = amount_expr; break;
+      case element_t::TOTAL:  expr = total_expr; break;
       case element_t::VALUE_EXPR: expr = elem->val_expr; break;
 
       default:

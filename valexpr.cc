@@ -114,8 +114,8 @@ void value_expr_t::compute(value_t& result, const details_t& details) const
     break;
 
   case VALUE_EXPR:
-    assert(format_t::value_expr);
-    format_t::value_expr->compute(result, details);
+    assert(format_t::amount_expr);
+    format_t::amount_expr->compute(result, details);
     break;
   case TOTAL_EXPR:
     assert(format_t::total_expr);

@@ -44,7 +44,7 @@ struct config_t
   std::string   equity_format;
   std::string   date_format;
   std::string   sort_string;
-  std::string   value_expr;
+  std::string   amount_expr;
   std::string   total_expr;
   unsigned long pricing_leeway;
   bool		show_collapsed;
