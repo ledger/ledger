@@ -6,13 +6,20 @@ New features:
 
 - Ledger now compiles under gcc 2.95.
 
-- Fixed several edge-case core engine bugs.
+- Fixed several core engine bugs.
 
 - The configure setup has been changed to always use a combination of
   both compile and link testing for every feature, in order to
   identify environment problems right away.
 
-- Fixed several bugs with Ledger's own XML data format.
+- The "D <COMM>" command, released in 2.1, now requires a regular,
+  commoditized amount, such as "D $1,000.00".  This sets not only the
+  default commodity, but also the default flags and precision to be
+  used with that commodity.  It may also be used be many times; which
+  was most recently seen will be the default for the entries that
+  follow.
+
+- Fixed several bugs with Ledger's XML data format.
 
 - Erros in XML or Gnucash data now report the correct line number for
   the error, instead of always showing line 1.
