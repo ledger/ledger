@@ -61,7 +61,6 @@ struct config_t
   format_t      nformat;
 
   value_expr_t * sort_order;
-  std::ostream * output_stream;
 
   config_t();
   config_t(const config_t&) {
@@ -71,8 +70,6 @@ struct config_t
   ~config_t() {
     if (sort_order)
       delete sort_order;
-    if (output_stream)
-      delete output_stream;
   }
 
   void process_options(const std::string&     command,

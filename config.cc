@@ -45,7 +45,6 @@ config_t::config_t()
   use_cache	     = false;
   cache_dirty        = false;
   sort_order         = NULL;
-  output_stream      = NULL;
 }
 
 static void
@@ -218,11 +217,6 @@ void config_t::process_options(const std::string&     command,
     commodity_t::updater = new quotes_by_script(price_db,
 						pricing_leeway,
 						cache_dirty);
-
-  // Configure the output stream
-
-  if (! output_stream && ! output_file.empty())
-    output_stream = new std::ofstream(output_file.c_str());
 
   // Parse the interval specifier, if provided
 

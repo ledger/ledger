@@ -1,9 +1,21 @@
 #!/usr/bin/env python
 
+# Ledger, the command-line accounting tool
+#
+# Copyright (c) 2003-2004, New Artisans LLC. All rights reserved.
+#
+# This program is made available under the terms of the BSD Public
+# License.  See the LICENSE file included with the distribution for
+# details and disclaimer.
+#
+# This script provides a Python front-end to the ledger library, which
+# replicates the functionality of the C++ front-end found in main.cc.
+# It is provided as an alternative to main.cc, or as a starting point
+# for creating custom front-ends based on the Ledger module.  See the
+# documentation for API references, and how to use that module.
+
 import sys
 import os
-import time
-import re
 
 from ledger import *
 
@@ -12,7 +24,7 @@ journal = Journal ()
 add_config_option_handlers ()
 
 args = process_arguments (sys.argv[1:])
-config.use_cache = len (config.data_file) > 0
+config.use_cache = not config.data_file
 process_environment (os.environ, "LEDGER_")
 
 if os.environ.has_key ("LEDGER"):
@@ -100,7 +112,10 @@ class FormatTransaction (TransactionHandler):
 	    self.output.write(self.formatter.format(xact))
 	    self.last_entry = xact.entry
 
-handler = FormatTransaction()
+if command == "b" or command == "E":
+    handler = SetAccountValue()
+else:
+    handler = FormatTransaction()
 
 if not (command == "b" or command == "E"):
     if config.display_predicate:
@@ -139,6 +154,29 @@ else:
 	    handler (xact)
 
 handler.flush ()
+
+#if command == "b":
+#    format_account acct_formatter(out, config.format,
+#				  config.display_predicate);
+#    sum_accounts(*journal->master);
+#    walk_accounts(*journal->master, acct_formatter, config.sort_order);
+#    acct_formatter.flush();
+#
+#    if (journal->master->data) {
+#      ACCT_DATA(journal->master)->value = ACCT_DATA(journal->master)->total;
+#
+#      if (ACCT_DATA(journal->master)->dflags & ACCOUNT_TO_DISPLAY) {
+#	out << "--------------------\n";
+#	config.format.format(out, details_t(*journal->master));
+#      }
+#    }
+#elif command == "E":
+#    format_equity acct_formatter(out, config.format, config.nformat,
+#				 config.display_predicate);
+#    sum_accounts(*journal->master);
+#    walk_accounts(*journal->master, acct_formatter, config.sort_order);
+#    acct_formatter.flush();
+#  }
 
 if config.use_cache and config.cache_dirty and config.cache_file:
     write_binary_journal(config.cache_file, journal);

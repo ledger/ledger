@@ -237,9 +237,15 @@ int parse_and_report(int argc, char * argv[], char * envp[])
       return 1;
   }
 
-  // Walk the entries based on the report type and the options
+  // Configure the output stream
 
   TIMER_START(report_gen);
+
+  std::ostream * out = &std::cout;
+  if (! config.output_file.empty())
+    out = new std::ofstream(config.output_file.c_str());
+
+  // Walk the entries based on the report type and the options
 
   item_handler<transaction_t> * formatter;
   std::list<item_handler<transaction_t> *> formatter_ptrs;
@@ -248,9 +254,7 @@ int parse_and_report(int argc, char * argv[], char * envp[])
     formatter = new set_account_value;
     formatter = chain_formatters(command, formatter, formatter_ptrs);
   } else {
-    std::ostream& out(config.output_stream ?
-		      *config.output_stream : std::cout);
-    formatter = new format_transactions(out, config.format, config.nformat);
+    formatter = new format_transactions(*out, config.format, config.nformat);
     formatter = chain_formatters(command, formatter, formatter_ptrs);
   }
 
@@ -263,11 +267,8 @@ int parse_and_report(int argc, char * argv[], char * envp[])
 
   // For the balance and equity reports, output the sum totals.
 
-  std::ostream& out(config.output_stream ?
-		    *config.output_stream : std::cout);
-
   if (command == "b") {
-    format_account acct_formatter(out, config.format,
+    format_account acct_formatter(*out, config.format,
 				  config.display_predicate);
     sum_accounts(*journal->master);
     walk_accounts(*journal->master, acct_formatter, config.sort_order);
@@ -277,13 +278,13 @@ int parse_and_report(int argc, char * argv[], char * envp[])
       ACCT_DATA(journal->master)->value = ACCT_DATA(journal->master)->total;
 
       if (ACCT_DATA(journal->master)->dflags & ACCOUNT_TO_DISPLAY) {
-	out << "--------------------\n";
-	config.format.format(out, details_t(*journal->master));
+	*out << "--------------------\n";
+	config.format.format(*out, details_t(*journal->master));
       }
     }
   }
   else if (command == "E") {
-    format_equity acct_formatter(out, config.format, config.nformat,
+    format_equity acct_formatter(*out, config.format, config.nformat,
 				 config.display_predicate);
     sum_accounts(*journal->master);
     walk_accounts(*journal->master, acct_formatter, config.sort_order);
@@ -291,6 +292,9 @@ int parse_and_report(int argc, char * argv[], char * envp[])
   }
 
 #if DEBUG_LEVEL >= BETA
+  if (! config.output_file.empty())
+    delete out;
+
   for (std::list<item_handler<transaction_t> *>::iterator i
 	 = formatter_ptrs.begin();
        i != formatter_ptrs.end();
