@@ -254,16 +254,25 @@ amount_t& amount_t::negate()
   return *this;
 }
 
-// comparisons to zero
+// integer comparisons
+template <typename T>
+static inline void parse_num(amount_t& amt, T num) {
+  std::string str;
+  { std::ostringstream strstr(str);
+    strstr << num;
+  }
+  { std::istringstream strstr(str);
+    amt.parse(strstr);
+  }
+}
+
 bool amount_t::operator<(const int num) const
 {
   if (num == 0) {
     return quantity ? mpz_sgn(MPZ(quantity)) < 0 : false;
   } else {
-    std::string str;
-    std::ostringstream strstr(str);
-    strstr << num;
-    amount_t amt(strstr.str());
+    amount_t amt;
+    parse_num(amt, num);
     return *this < amt;
   }
 }
@@ -273,10 +282,8 @@ bool amount_t::operator<=(const int num) const
   if (num == 0) {
     return quantity ? mpz_sgn(MPZ(quantity)) <= 0 : true;
   } else {
-    std::string str;
-    std::ostringstream strstr(str);
-    strstr << num;
-    amount_t amt(strstr.str());
+    amount_t amt;
+    parse_num(amt, num);
     return *this <= amt;
   }
 }
@@ -286,10 +293,8 @@ bool amount_t::operator>(const int num) const
   if (num == 0) {
     return quantity ? mpz_sgn(MPZ(quantity)) > 0 : false;
   } else {
-    std::string str;
-    std::ostringstream strstr(str);
-    strstr << num;
-    amount_t amt(strstr.str());
+    amount_t amt;
+    parse_num(amt, num);
     return *this > amt;
   }
 }
@@ -299,11 +304,64 @@ bool amount_t::operator>=(const int num) const
   if (num == 0) {
     return quantity ? mpz_sgn(MPZ(quantity)) >= 0 : true;
   } else {
-    std::string str;
-    std::ostringstream strstr(str);
-    strstr << num;
-    amount_t amt(strstr.str());
+    amount_t amt;
+    parse_num(amt, num);
     return *this >= amt;
+  }
+}
+
+bool amount_t::operator<(const unsigned int num) const
+{
+  if (num == 0) {
+    return quantity ? mpz_sgn(MPZ(quantity)) < 0 : false;
+  } else {
+    amount_t amt;
+    parse_num(amt, num);
+    return *this < amt;
+  }
+}
+
+bool amount_t::operator<=(const unsigned int num) const
+{
+  if (num == 0) {
+    return quantity ? mpz_sgn(MPZ(quantity)) <= 0 : true;
+  } else {
+    amount_t amt;
+    parse_num(amt, num);
+    return *this <= amt;
+  }
+}
+
+bool amount_t::operator>(const unsigned int num) const
+{
+  if (num == 0) {
+    return quantity ? mpz_sgn(MPZ(quantity)) > 0 : false;
+  } else {
+    amount_t amt;
+    parse_num(amt, num);
+    return *this > amt;
+  }
+}
+
+bool amount_t::operator>=(const unsigned int num) const
+{
+  if (num == 0) {
+    return quantity ? mpz_sgn(MPZ(quantity)) >= 0 : true;
+  } else {
+    amount_t amt;
+    parse_num(amt, num);
+    return *this >= amt;
+  }
+}
+
+bool amount_t::operator==(const unsigned int num) const
+{
+  if (num == 0) {
+    return quantity ? mpz_sgn(MPZ(quantity)) == 0 : true;
+  } else {
+    amount_t amt;
+    parse_num(amt, num);
+    return *this == amt;
   }
 }
 

@@ -243,6 +243,12 @@ class balance_t
   bool operator<=(const amount_t& amt) const {
     return amount(amt.commodity) <= amt;
   }
+  bool operator<(const unsigned int val) const {
+    return amount() < val;
+  }
+  bool operator<=(const unsigned int val) const {
+    return amount() <= val;
+  }
 
   bool operator>(const balance_t& bal) const {
     for (amounts_map::const_iterator i = bal.amounts.begin();
@@ -283,6 +289,12 @@ class balance_t
   bool operator>=(const amount_t& amt) const {
     return amount(amt.commodity) >= amt;
   }
+  bool operator>(const unsigned int val) const {
+    return amount() > val;
+  }
+  bool operator>=(const unsigned int val) const {
+    return amount() >= val;
+  }
 
   bool operator==(const balance_t& bal) const {
     amounts_map::const_iterator i, j;
@@ -298,11 +310,17 @@ class balance_t
   bool operator==(const amount_t& amt) const {
     return amounts.size() == 1 && (*amounts.begin()).second == amt;
   }
+  bool operator==(const unsigned int val) const {
+    return amount() == val;
+  }
   bool operator!=(const balance_t& bal) const {
     return ! (*this == bal);
   }
   bool operator!=(const amount_t& amt) const {
     return ! (*this == amt);
+  }
+  bool operator!=(const unsigned int val) const {
+    return ! (*this == val);
   }
 
   // unary negation
@@ -322,7 +340,10 @@ class balance_t
     return negated();
   }
 
-  // test for non-zero (use ! for zero)
+  // conversion operators
+  operator amount_t() const {
+    return amount();
+  }
   operator bool() const {
     for (amounts_map::const_iterator i = amounts.begin();
 	 i != amounts.end();
@@ -338,14 +359,18 @@ class balance_t
   void      write(std::ostream& out,
 		  const int	first_width,
 		  const int	latter_width = -1) const;
+
+  void abs() {
+    for (amounts_map::iterator i = amounts.begin();
+	 i != amounts.end();
+	 i++)
+      (*i).second.abs();
+  }
 };
 
 inline balance_t abs(const balance_t& bal) {
-  balance_t temp;
-  for (amounts_map::const_iterator i = bal.amounts.begin();
-       i != bal.amounts.end();
-       i++)
-    temp += abs((*i).second);
+  balance_t temp = bal;
+  temp.abs();
   return temp;
 }
 

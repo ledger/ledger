@@ -41,15 +41,10 @@ class amount_t
       commodity = amt.commodity;
   }
   amount_t(const std::string& value) {
-    _init();
-    std::istringstream str(value);
-    str >> *this;
+    parse(value);
   }
   amount_t(const char * value) {
-    _init();
-    std::string valstr(value);
-    std::istringstream str(valstr);
-    str >> *this;
+    parse(value);
   }
   amount_t(const bool value);
   amount_t(const int value);
@@ -122,11 +117,20 @@ class amount_t
   // test for non-zero (use ! for zero)
   operator bool() const;
 
-  // comparisons to zero
+  // integer comparisons
   bool operator<(const int num) const;
   bool operator<=(const int num) const;
   bool operator>(const int num) const;
   bool operator>=(const int num) const;
+
+  bool operator<(const unsigned int num) const;
+  bool operator<=(const unsigned int num) const;
+  bool operator>(const unsigned int num) const;
+  bool operator>=(const unsigned int num) const;
+  bool operator==(const unsigned int num) const;
+  bool operator!=(const unsigned int num) const {
+    return ! (*this == num);
+  }
 
   // comparisons between amounts
   bool operator<(const amount_t& amt) const;
@@ -141,6 +145,11 @@ class amount_t
   }
 
   amount_t value(const std::time_t moment) const;
+
+  void abs() {
+    if (*this < 0)
+      negate();
+  }
 
   operator std::string() const;
 

@@ -60,15 +60,19 @@ mask_t::~mask_t() {
 }
 
 
-void value_expr_t::compute(balance_t& result, const details_t& details) const
+void value_expr_t::compute(value_t& result, const details_t& details,
+			   value_t::type_t type) const
 {
-  switch (type) {
-  case CONSTANT_A:
-    result = constant_a;
+  switch (kind) {
+  case CONSTANT_I:
+    result = constant_i;
     break;
-
   case CONSTANT_T:
     result = (unsigned int) constant_t;
+    break;
+
+  case CONSTANT_A:
+    result = constant_a;
     break;
 
   case AMOUNT:
@@ -183,11 +187,15 @@ void value_expr_t::compute(balance_t& result, const details_t& details) const
   case INDEX:
     if (details.xact)
       result = details.xact->index + 1;
+    else
+      result = 0U;
     break;
 
   case DEPTH:
     if (details.account)
-      result = details.account->depth - 1;
+      result = (unsigned int) (details.account->depth - 1);
+    else
+      result = 0U;
     break;
 
   case F_ARITH_MEAN:
@@ -212,15 +220,21 @@ void value_expr_t::compute(balance_t& result, const details_t& details) const
   case F_ABS:
     assert(left);
     left->compute(result, details);
-    result = abs(result);
+    result.abs();
     break;
 
   case F_STRIP: {
     assert(left);
     left->compute(result, details);
-    amount_t amt = result.amount();
-    amt.commodity = commodity_t::null_commodity;
-    result = amt;
+    if (result.type == value_t::BALANCE) {
+      // jww (2004-08-17): do something smarter here
+      result.cast(value_t::AMOUNT);
+    }
+    if (result.type == value_t::AMOUNT) {
+      amount_t amt = result;
+      amt.commodity = commodity_t::null_commodity;
+      result = amt;
+    }
     break;
   }
 
@@ -244,11 +258,11 @@ void value_expr_t::compute(balance_t& result, const details_t& details) const
 
   case F_VALUE: {
     assert(left);
-    left->compute(result, details);
+    left->compute(result, details, value_t::BALANCE);
 
     std::time_t moment = now;
     if (right) {
-      switch (right->type) {
+      switch (right->kind) {
       case DATE:
 	if (details.entry)
 	  moment = details.entry->date;
@@ -262,20 +276,20 @@ void value_expr_t::compute(balance_t& result, const details_t& details) const
 	throw compute_error("Invalid date passed to P(value,date)");
       }
     }
-    result = result.value(moment);
+    result = (*((balance_t *)result.data)).value(moment);
     break;
   }
 
   case O_NOT:
-    left->compute(result, details);
-    result = result ? false : true;
+    left->compute(result, details, value_t::BOOLEAN);
+    result.negate();
     break;
 
   case O_QUES:
     assert(left);
     assert(right);
-    assert(right->type == O_COL);
-    left->compute(result, details);
+    assert(right->kind == O_COL);
+    left->compute(result, details, value_t::BOOLEAN);
     if (result)
       right->left->compute(result, details);
     else
@@ -285,17 +299,17 @@ void value_expr_t::compute(balance_t& result, const details_t& details) const
   case O_AND:
     assert(left);
     assert(right);
-    left->compute(result, details);
+    left->compute(result, details, value_t::BOOLEAN);
     if (result)
-      right->compute(result, details);
+      right->compute(result, details, value_t::BOOLEAN);
     break;
 
   case O_OR:
     assert(left);
     assert(right);
-    left->compute(result, details);
+    left->compute(result, details, value_t::BOOLEAN);
     if (! result)
-      right->compute(result, details);
+      right->compute(result, details, value_t::BOOLEAN);
     break;
 
   case O_EQ:
@@ -305,10 +319,10 @@ void value_expr_t::compute(balance_t& result, const details_t& details) const
   case O_GTE: {
     assert(left);
     assert(right);
-    balance_t temp;
+    value_t temp;
     left->compute(temp, details);
     right->compute(result, details);
-    switch (type) {
+    switch (kind) {
     case O_EQ:  result = temp == result; break;
     case O_LT:  result = temp <  result; break;
     case O_LTE: result = temp <= result; break;
@@ -325,10 +339,10 @@ void value_expr_t::compute(balance_t& result, const details_t& details) const
   case O_DIV: {
     assert(left);
     assert(right);
-    balance_t temp;
+    value_t temp;
     right->compute(temp, details);
     left->compute(result, details);
-    switch (type) {
+    switch (kind) {
     case O_ADD: result += temp; break;
     case O_SUB: result -= temp; break;
     case O_MUL: result *= temp; break;
@@ -343,6 +357,9 @@ void value_expr_t::compute(balance_t& result, const details_t& details) const
     assert(0);
     break;
   }
+
+  if (type < value_t::ANY && type != result.type)
+    result.cast(type);
 }
 
 value_expr_t * parse_value_term(std::istream& in);
@@ -357,18 +374,22 @@ value_expr_t * parse_value_term(std::istream& in)
   value_expr_t * node = NULL;
 
   char c = peek_next_nonws(in);
-  if (std::isdigit(c) || c == '.' || c == '{') {
+  if (std::isdigit(c)) {
     static char buf[2048];
-    if (c == '{') {
+    READ_INTO(in, buf, 2048, c, std::isdigit(c));
+
+    node = new value_expr_t(value_expr_t::CONSTANT_I);
+    node->constant_i = std::atol(buf);
+    return node;
+  }
+  else if (c == '{') {
+    static char buf[2048];
+    in.get(c);
+    READ_INTO(in, buf, 2048, c, c != '}');
+    if (c == '}')
       in.get(c);
-      READ_INTO(in, buf, 2048, c, c != '}');
-      if (c == '}')
-	in.get(c);
-      else
-	throw value_expr_error("Missing '}'");
-    } else {
-      READ_INTO(in, buf, 2048, c, std::isdigit(c) || c == '.');
-    }
+    else
+      throw value_expr_error("Missing '}'");
 
     node = new value_expr_t(value_expr_t::CONSTANT_A);
     node->constant_a.parse(buf);
@@ -613,7 +634,7 @@ value_expr_t * parse_logic_expr(std::istream& in)
 	node = new value_expr_t(value_expr_t::O_LT);
 	if (peek_next_nonws(in) == '=') {
 	  in.get(c);
-	  node->type = value_expr_t::O_LTE;
+	  node->kind = value_expr_t::O_LTE;
 	}
 	node->left  = prev;
 	node->right = parse_add_expr(in);
@@ -625,7 +646,7 @@ value_expr_t * parse_logic_expr(std::istream& in)
 	node = new value_expr_t(value_expr_t::O_GT);
 	if (peek_next_nonws(in) == '=') {
 	  in.get(c);
-	  node->type = value_expr_t::O_GTE;
+	  node->kind = value_expr_t::O_GTE;
 	}
 	node->left  = prev;
 	node->right = parse_add_expr(in);
@@ -708,12 +729,15 @@ value_expr_t * parse_value_expr(std::istream& in)
 
 void dump_value_expr(std::ostream& out, const value_expr_t * node)
 {
-  switch (node->type) {
-  case value_expr_t::CONSTANT_A:
-    out << "CONST[" << node->constant_a << "]";
+  switch (node->kind) {
+  case value_expr_t::CONSTANT_I:
+    out << "UINT[" << node->constant_i << "]";
     break;
   case value_expr_t::CONSTANT_T:
     out << "DATE/TIME[" << node->constant_t << "]";
+    break;
+  case value_expr_t::CONSTANT_A:
+    out << "CONST[" << node->constant_a << "]";
     break;
 
   case value_expr_t::AMOUNT:	   out << "AMOUNT"; break;
@@ -794,7 +818,7 @@ void dump_value_expr(std::ostream& out, const value_expr_t * node)
   case value_expr_t::O_OR:
     out << "(";
     dump_value_expr(out, node->left);
-    switch (node->type) {
+    switch (node->kind) {
     case value_expr_t::O_AND: out << " & "; break;
     case value_expr_t::O_OR:  out << " | "; break;
     default: assert(0); break;
@@ -810,7 +834,7 @@ void dump_value_expr(std::ostream& out, const value_expr_t * node)
   case value_expr_t::O_GTE:
     out << "(";
     dump_value_expr(out, node->left);
-    switch (node->type) {
+    switch (node->kind) {
     case value_expr_t::O_EQ:  out << "="; break;
     case value_expr_t::O_LT:  out << "<"; break;
     case value_expr_t::O_LTE: out << "<="; break;
@@ -828,7 +852,7 @@ void dump_value_expr(std::ostream& out, const value_expr_t * node)
   case value_expr_t::O_DIV:
     out << "(";
     dump_value_expr(out, node->left);
-    switch (node->type) {
+    switch (node->kind) {
     case value_expr_t::O_ADD: out << "+"; break;
     case value_expr_t::O_SUB: out << "-"; break;
     case value_expr_t::O_MUL: out << "*"; break;

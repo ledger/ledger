@@ -2,6 +2,7 @@
 #define _EXPR_H
 
 #include "ledger.h"
+#include "value.h"
 #include "error.h"
 
 namespace ledger {
@@ -42,8 +43,9 @@ struct value_expr_t
 {
   enum kind_t {
     // Constants
-    CONSTANT_A,
+    CONSTANT_I,
     CONSTANT_T,
+    CONSTANT_A,
 
     // Item details
     AMOUNT,
@@ -93,16 +95,19 @@ struct value_expr_t
     LAST
   };
 
-  kind_t      type;
+  kind_t	 kind;
   value_expr_t * left;
   value_expr_t * right;
 
-  amount_t    constant_a;
-  std::time_t constant_t;
-  mask_t *    mask;
+  union {
+    std::time_t	 constant_t;
+    unsigned int constant_i;
+  };
+  amount_t	 constant_a;
+  mask_t *	 mask;
 
-  value_expr_t(const kind_t _type)
-    : type(_type), left(NULL), right(NULL), mask(NULL) {}
+  value_expr_t(const kind_t _kind)
+    : kind(_kind), left(NULL), right(NULL), mask(NULL) {}
 
   ~value_expr_t() {
     if (mask)  delete mask;
@@ -110,7 +115,14 @@ struct value_expr_t
     if (right) delete right;
   }
 
-  void compute(balance_t& result, const details_t& details) const;
+  void compute(value_t& result, const details_t& details,
+	       value_t::type_t type = value_t::ANY) const;
+
+  void compute(balance_t& result, const details_t& details) const {
+    value_t value;
+    compute(value, details, value_t::BALANCE);
+    result = value.operator balance_t();
+  }
 };
 
 value_expr_t * parse_value_expr(std::istream& in);
@@ -170,7 +182,7 @@ class item_predicate
 
   bool operator()(const T * item) const {
     if (predicate) {
-      balance_t result;
+      value_t result;
       predicate->compute(result, details_t(item));
       return result;
     } else {
