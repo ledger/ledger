@@ -572,16 +572,6 @@ amount_t::operator std::string() const
   return s.str();
 }
 
-static inline char peek_next_nonws(std::istream& in)
-{
-  char c = in.peek();
-  while (! in.eof() && std::isspace(c)) {
-    in.get(c);
-    c = in.peek();
-  }
-  return c;
-}
-
 void parse_quantity(std::istream& in, std::string& value)
 {
   static char buf[256];
@@ -605,7 +595,7 @@ void parse_commodity(std::istream& in, std::string& symbol)
       assert(0);
   } else {
     READ_INTO(in, buf, 256, c, ! std::isspace(c) && ! std::isdigit(c) &&
-	       c != '-' && c != '.');
+	      c != '-' && c != '.');
   }
   symbol = buf;
 }

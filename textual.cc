@@ -4,6 +4,7 @@
 #include "error.h"
 #include "option.h"
 #include "timing.h"
+#include "util.h"
 
 #include <fstream>
 #include <sstream>
@@ -17,31 +18,14 @@ namespace ledger {
 
 #define MAX_LINE 1024
 
-std::string             path;
-unsigned int		linenum;
+std::string  path;
+unsigned int linenum;
 
 #ifdef TIMELOG_SUPPORT
-static std::time_t	time_in;
-static account_t *	last_account;
-static std::string	last_desc;
+static std::time_t time_in;
+static account_t * last_account;
+static std::string last_desc;
 #endif
-
-inline char * skip_ws(char * ptr)
-{
-  while (*ptr == ' ' || *ptr == '\t' || *ptr == '\n')
-    ptr++;
-  return ptr;
-}
-
-inline char peek_next_nonws(std::istream& in)
-{
-  char c = in.peek();
-  while (! in.eof() && std::isspace(c) && c != '\n') {
-    in.get(c);
-    c = in.peek();
-  }
-  return c;
-}
 
 inline char * next_element(char * buf, bool variable = false)
 {

@@ -323,16 +323,6 @@ void value_expr_t::compute(balance_t& result, const details_t& details) const
   }
 }
 
-inline char peek_next_nonws(std::istream& in)
-{
-  char c = in.peek();
-  while (! in.eof() && std::isspace(c) && c != '\n') {
-    in.get(c);
-    c = in.peek();
-  }
-  return c;
-}
-
 value_expr_t * parse_value_term(std::istream& in);
 
 inline value_expr_t * parse_value_term(const char * p) {
