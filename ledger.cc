@@ -447,21 +447,37 @@ void totals::print(std::ostream& out, int width) const
   }
 }
 
-void totals::print_street(std::ostream& out, int width, std::time_t * when,
-			  bool use_history, bool download) const
+totals * totals::value() const
 {
-  totals street_balance;
+  totals * cost_basis = new totals;
+
+  for (const_iterator i = amounts.begin(); i != amounts.end(); i++) {
+    if ((*i).second->is_zero())
+      continue;
+
+    amount * value = (*i).second->value();
+    cost_basis->credit(value);
+    delete value;
+  }
+
+  return cost_basis;
+}
+
+totals * totals::street(std::time_t * when, bool use_history,
+			bool download) const
+{
+  totals * street_balance = new totals;
 
   for (const_iterator i = amounts.begin(); i != amounts.end(); i++) {
     if ((*i).second->is_zero())
       continue;
 
     amount * street = (*i).second->street(when, use_history, download);
-    street_balance.credit(street);
+    street_balance->credit(street);
     delete street;
   }
 
-  street_balance.print(out, width);
+  return street_balance;
 }
 
 account::~account()

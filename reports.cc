@@ -134,12 +134,15 @@ static inline void print_resolved_balance(std::ostream& out,
 					  totals& balance,
 					  bool added_base_value = false)
 {
-  if (! added_base_value || ! use_history || cost_basis)
+  if (! added_base_value || ! use_history || cost_basis) {
     balance.print(out, 12);
-  else
-    balance.print_street(out, 12,
-			 when ? when : (have_ending ? &end_date : NULL),
-			 use_history, get_quotes);
+  } else {
+    totals * street = balance.street(when ? when : (have_ending ?
+						    &end_date : NULL),
+				     use_history, get_quotes);
+    street->print(out, 12);
+    delete street;
+  }
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -409,22 +412,6 @@ enum periodicity_t {
   PERIOD_WEEKLY_MON
 };
 
-static totals * compute_street_balance(totals& balance, std::time_t * date)
-{
-  totals * prev_street_balance = new totals;
-
-  for (totals::const_iterator i = balance.amounts.begin();
-       i != balance.amounts.end();
-       i++)
-    if (! (*i).second->is_zero()) {
-      amount * street = (*i).second->street(date, use_history, get_quotes);
-      prev_street_balance->credit(street);
-      delete street;
-    }
-
-  return prev_street_balance;
-}
-
 static totals *    prev_balance = NULL;
 static std::time_t prev_date;
 
@@ -435,9 +422,9 @@ static void report_change_in_asset_value(std::ostream& out, std::time_t date,
 					 account * acct, totals& balance)
 {
   totals * prev_street_balance =
-    compute_street_balance(*prev_balance, &prev_date);
+    prev_balance->street(&prev_date, use_history, get_quotes);
   totals * curr_street_balance =
-    compute_street_balance(*prev_balance, &date);
+    prev_balance->street(&date, use_history, get_quotes);
 
   delete prev_balance;
   prev_balance = NULL;
@@ -634,8 +621,7 @@ void print_register(std::ostream& out, const std::string& acct_name,
     if (period_sum && period == PERIOD_MONTHLY &&
 	last_mon != -1 && entry_mon != last_mon) {
       assert(last_acct);
-      print_register_period(out, last_date, last_acct,
-			    *period_sum, balance);
+      print_register_period(out, last_date, last_acct, *period_sum, balance);
       delete period_sum;
       period_sum = NULL;
     }
@@ -650,8 +636,8 @@ void print_register(std::ostream& out, const std::string& acct_name,
       if (period == PERIOD_NONE) {
 	print_register_transaction(out, *i, *x, balance);
       } else {
-	amount * street = resolve_amount((*x)->cost, &(*i)->date,
-					 &balance, true);
+	amount * street = resolve_amount((*x)->cost, &(*i)->date, &balance,
+					 true);
 	if (period_sum) {
 	  period_sum->credit(street);
 	  delete street;
@@ -1131,6 +1117,13 @@ int main(int argc, char * argv[])
 
   int name_index = index;
   if (command == "register" || command == "reg") {
+    if (net_gain) {
+      std::cerr << ("Reporting the asset gain makes "
+		    "no sense for the register report.")
+		<< std::endl;
+      return 1;
+    }
+
     if (name_index == argc) {
       std::cerr << ("Error: Must specify an account name "
 		    "after the 'register' command.") << std::endl;

@@ -228,17 +228,18 @@ class totals
   totals() {}
   ~totals();
 
-  void credit(const amount * val);
-  void credit(const totals& other);
+  void     credit(const amount * val);
+  void     credit(const totals& other);
 
-  void negate();
+  void     negate();
 
-  bool is_zero() const;
-  bool is_negative() const;
+  bool     is_zero() const;
+  bool     is_negative() const;
 
-  void print(std::ostream& out, int width) const;
-  void print_street(std::ostream& out, int width,
-		    std::time_t * when = NULL,
+  void     print(std::ostream& out, int width) const;
+
+  totals * value() const;
+  totals * street(std::time_t * when = NULL,
 		    bool use_history = false,
 		    bool download = false) const;
 };

@@ -1,3 +1,10 @@
+1.7
+
+  Pricing histories are now supported, so that ledger remembers
+  historical prices of all commodities (if this information is
+  provided), and can give register reports based on past and present
+  market values, as well as original cost basis.
+
 1.6
 
   Can now parse timeclock files.  These are simple timelogs that track
