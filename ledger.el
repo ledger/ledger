@@ -1,4 +1,4 @@
-;;; ledger.el --- Helper code for using my "ledger" command-line tool
+;;; ledger.el --- Helper code for use with the "ledger" command-line tool
 
 ;; Copyright (C) 2004 John Wiegley (johnw AT gnu DOT org)
 
@@ -32,7 +32,14 @@
 
 ;;; Commentary:
 
-;; This code is only meaningful if you are using "ledger".
+;; To use this module: Load this file, open a ledger data file, and
+;; type M-x ledger-mode.  Once this is done, you can type:
+;;
+;;   C-c C-a  add a new entry, based on previous entries
+;;   C-c C-r  reconcile the entries related to an account
+;;
+;; In the reconcile buffer, use SPACE to toggle the cleared status of
+;; a transaction.
 
 (defvar ledger-version "1.1"
   "The version of ledger.el currently loaded")
