@@ -104,6 +104,8 @@ elif command == "output":
     command = "w"
 elif command == "emacs":
     command = "x"
+elif command == "xml":
+    command = "X"
 elif command == "entry":
     command = "e"
 elif command == "equity":
@@ -204,162 +206,12 @@ elif command == "w":
 else:
     format = config.print_format
 
-# The following two classes are responsible for outputing transactions
-# and accounts to the user.  There are corresponding C++ versions to
-# these, but they rely on I/O streams, which Boost.Python does not
-# provide a conversion layer for.
+# Configure the output file
 
-class FormatTransactions (TransactionHandler):
-    last_entry = None
-    output     = None
-
-    def __init__ (self, fmt):
-	try:
-	    i = string.index (fmt, '%/')
-	    self.formatter  = Format (fmt[: i])
-	    self.nformatter = Format (fmt[i + 2 :])
-	except ValueError:
-	    self.formatter  = Format (fmt)
-	    self.nformatter = None
-
-	self.last_entry = None
-
-	if config.output_file:
-	    self.output = open (config.output_file, "w")
-	else:
-	    self.output = sys.stdout
-
-	TransactionHandler.__init__ (self)
-
-    def __del__ (self):
-	if config.output_file:
-	    self.output.close ()
-
-    def flush (self):
-	self.output.flush ()
-
-    def __call__ (self, xact):
-	if not transaction_has_xdata (xact) or \
-	   not transaction_xdata (xact).dflags & TRANSACTION_DISPLAYED:
-	    if self.nformatter is not None and \
-	       self.last_entry is not None and \
-	       xact.entry == self.last_entry:
-		self.output.write (self.nformatter.format (xact))
-	    else:
-		self.output.write (self.formatter.format (xact))
-		self.last_entry = xact.entry
-	    transaction_xdata (xact).dflags |= TRANSACTION_DISPLAYED
-
-class FormatEntries (FormatTransactions):
-    def __init__ (self, fmt):
-	self.last_entry = None
-	FormatTransactions.__init__(self, fmt)
-
-    def flush (self):
-	self.format_last_entry ()
-	self.last_entry = None
-	FormatTransactions.flush (self)
-
-    def format_last_entry (self):
-	first = true
-	for x in self.last_entry:
-	    if transaction_has_xdata (x) and \
-	       transaction_xdata (x).dflags & TRANSACTION_TO_DISPLAY:
-		if first or self.nformatter is None:
-		    self.output.write (self.formatter.format (x))
-		    first = false
-		else:
-		    self.output.write (self.nformatter.format (x))
-	    transaction_xdata (x).dflags |= TRANSACTION_TO_DISPLAY
-
-    def __call__ (self, xact):
-	if self.last_entry and self.last_entry != xact.entry:
-	    self.format_last_entry ()
-
-	transaction_xdata (xact).dflags |= TRANSACTION_TO_DISPLAY
-
-	self.last_entry = xact.entry;
-
-class FormatAccounts (AccountHandler):
-    output = None
-
-    def __init__ (self, fmt, pred):
-	self.formatter = Format (fmt)
-	self.predicate = AccountPredicate (pred)
-
-	if config.output_file:
-	    self.output = open (config.output_file, "w")
-	else:
-	    self.output = sys.stdout
-
-	AccountHandler.__init__ (self)
-
-    def __del__ (self):
-	if config.output_file:
-	    self.output.close ()
-
-    def final (self, account):
-	if account_has_xdata (account):
-	    xdata = account_xdata (account)
-	    if xdata.dflags & ACCOUNT_TO_DISPLAY:
-		print "--------------------"
-		xdata.value = xdata.total
-		self.output.write (self.formatter.format (account))
-
-    def flush (self):
-	self.output.flush ()
-
-    def __call__ (self, account):
-	if display_account (account, self.predicate):
-	    if not account.parent:
-		account_xdata (account).dflags |= ACCOUNT_TO_DISPLAY
-	    else:
-		self.output.write (self.formatter.format (account))
-		account_xdata (account).dflags |= ACCOUNT_DISPLAYED
-
-class FormatEquity (AccountHandler):
-    output = None
-
-    def __init__ (self, fmt, pred):
-	try:
-	    i = string.index (fmt, '%/')
-	    self.formatter  = Format (fmt[: i])
-	    self.nformatter = Format (fmt[i + 2 :])
-	except ValueError:
-	    self.formatter  = Format (fmt)
-	    self.nformatter = None
-
-	self.predicate = AccountPredicate (pred)
-	self.total     = Value ()
-
-	if config.output_file:
-	    self.output = open (config.output_file, "w")
-	else:
-	    self.output = sys.stdout
-
-	AccountHandler.__init__ (self)
-
-	header_entry = Entry ()
-	header_entry.payee = "Opening Balances"
-	header_entry.date  = int (time.time ())
-	self.output.write (self.formatter.format (header_entry))
-
-    def __del__ (self):
-	if config.output_file:
-	    self.output.close ()
-
-    def flush (self):
-	summary = Account (Account (), "Equity:Opening Balances")
-	account_xdata (summary).value = - self.total
-	self.output.write (self.nformatter.format (summary))
-	self.output.flush ()
-
-    def __call__ (self, account):
-	if display_account (account, self.predicate):
-	    self.output.write (self.nformatter.format (account))
-	    if account_has_xdata (account):
-		self.total += account_xdata (account).value
-	    account_xdata (account).dflags |= ACCOUNT_DISPLAYED
+if config.output_file:
+    out = open (config.output_file, "w")
+else:
+    out = sys.stdout
 
 # Set the final transaction handler: for balances and equity reports,
 # it will simply add the value of the transaction to the account's
@@ -370,23 +222,16 @@ class FormatEquity (AccountHandler):
 if command == "b" or command == "E":
     handler = SetAccountValue ()
 elif command == "p" or command == "e":
-    handler = FormatEntries (format)
+    handler = FormatEntries (out, format)
 elif command == "x":
-    import emacs
-    handler = emacs.EmacsFormatTransactions ()
+    handler = FormatEmacsTransactions (out)
+elif command == "X":
+    handler = FormatXmlEntries (out, config.show_totals)
 else:
-    handler = FormatTransactions (format)
+    handler = FormatTransactions (out, format)
 
 if command == "w":
-    if config.output_file:
-	out = open (config.output_file, "w")
-    else:
-	out = sys.stdout
-
     write_textual_journal(journal, args, handler, out);
-
-    if config.output_file:
-	out.close ()
 else:
     # Chain transaction filters on top of the base handler.  Most of these
     # filters customize the output for reporting.  None of this is done
@@ -406,7 +251,8 @@ else:
 	    handler = SortTransactions (handler, config.sort_string)
 
 	if config.show_revalued:
-	    handler = ChangedValueTransactions (handler, config.show_revalued_only)
+	    handler = ChangedValueTransactions (handler,
+						config.show_revalued_only)
 
 	if config.show_collapsed:
 	    handler = CollapseTransactions (handler);
@@ -453,13 +299,13 @@ else:
     # can be walked using Python, it is significantly faster to do this
     # simple walk in C++, using `walk_entries'.
     #
-    #   if command == "e":
-    #       for xact in new_entry:
-    #           handler (xact)
-    #   else:
-    #       for entry in journal:
-    #           for xact in entry:
-    #               handler (xact)
+    # if command == "e":
+    #     for xact in new_entry:
+    #         handler (xact)
+    # else:
+    #     for entry in journal:
+    #         for xact in entry:
+    #             handler (xact)
 
     if command == "e":
 	walk_transactions (new_entry, handler)
@@ -480,14 +326,22 @@ else:
 # the transactions that were just walked.
 
 if command == "b":
-    acct_formatter = FormatAccounts (format, config.display_predicate)
+    acct_formatter = FormatAccount (out, format, config.display_predicate)
     sum_accounts (journal.master)
     walk_accounts (journal.master, acct_formatter, config.sort_string)
     acct_formatter.final (journal.master)
     acct_formatter.flush ()
 
+    if account_has_xdata (journal.master):
+      xdata = account_xdata (journal.master)
+      if not config.show_collapsed and xdata.total:
+	out.write("--------------------\n")
+	xdata.value = xdata.total
+	# jww (2005-02-15): yet to convert
+	#acct_formatter.format.format (out, details_t (journal.master))
+
 elif command == "E":
-    acct_formatter = FormatEquity (format, config.display_predicate)
+    acct_formatter = FormatEquity (out, format, config.display_predicate)
     sum_accounts (journal.master)
     walk_accounts (journal.master, acct_formatter, config.sort_string)
     acct_formatter.flush ()
