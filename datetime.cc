@@ -400,6 +400,22 @@ std::time_t interval_getitem(interval_t& interval, int i)
   return last_moment;
 }
 
+std::time_t py_parse_date(const char * date_str)
+{
+  std::time_t temp;
+  if (parse_date(date_str, &temp))
+    return temp;
+  return 0;
+}
+
+std::time_t py_parse_date_yr(const char * date_str, const int year)
+{
+  std::time_t temp;
+  if (parse_date(date_str, &temp, year))
+    return temp;
+  return 0;
+}
+
 void export_datetime()
 {
   class_< interval_t >
@@ -418,6 +434,9 @@ void export_datetime()
 
     .def("increment", &interval_t::increment)
     ;
+
+  def("parse_date", py_parse_date);
+  def("parse_date", py_parse_date_yr);
 }
 
 #endif // USE_BOOST_PYTHON
