@@ -106,7 +106,8 @@ class entry_t
 };
 
 
-#define ACCOUNT_DISPLAYED 0x1
+#define ACCOUNT_DISPLAYED  0x1
+#define ACCOUNT_TO_DISPLAY 0x2
 
 typedef std::map<const std::string, account_t *> accounts_map;
 typedef std::pair<const std::string, account_t *> accounts_pair;

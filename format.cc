@@ -385,12 +385,10 @@ bool format_account::disp_subaccounts_p(const account_t * account,
 }
 
 bool format_account::display_account(const account_t * account,
-				     const item_predicate<account_t>& disp_pred,
-				     const bool even_top)
+				     const item_predicate<account_t>& disp_pred)
 {
-  // Never display the master account, or an account that has already
-  // been displayed.
-  if (! (account->parent || even_top) || account->dflags & ACCOUNT_DISPLAYED)
+  // Never display an account that has already been displayed.
+  if (account->dflags & ACCOUNT_DISPLAYED)
     return false;
 
   // At this point, one of two possibilities exists: the account is a

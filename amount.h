@@ -18,10 +18,12 @@ class amount_t
   void _init();
   void _copy(const amount_t& amt);
   void _clear();
+  void _resize(int prec);
 
  public:
-  base_type	quantity;	// amount, to MAX_PRECISION
-  commodity_t *	commodity;
+  base_type	 quantity;	// amount, to MAX_PRECISION
+  unsigned short precision;
+  commodity_t *	 commodity;
 
   bool valid() const {
     if (quantity)
@@ -32,13 +34,15 @@ class amount_t
 
   // constructors
   amount_t(commodity_t * _commodity = NULL)
-    : quantity(NULL), commodity(_commodity) {}
+    : quantity(NULL), precision(0), commodity(_commodity) {}
 
   amount_t(const amount_t& amt) : quantity(NULL) {
-    if (amt.quantity)
+    if (amt.quantity) {
       _copy(amt);
-    else
+    } else {
       commodity = amt.commodity;
+      precision = amt.precision;
+    }
   }
   amount_t(const std::string& value) {
     parse(value);
@@ -67,12 +71,11 @@ class amount_t
   amount_t& operator=(const double value);
 
   // general methods
-  amount_t round(int precision = -1) const;
+  amount_t round(int prec = -1) const;
 
   // in-place arithmetic
   amount_t& operator*=(const amount_t& amt);
   amount_t& operator/=(const amount_t& amt);
-  amount_t& operator%=(const amount_t& amt);
   amount_t& operator+=(const amount_t& amt);
   amount_t& operator-=(const amount_t& amt);
 
@@ -85,11 +88,6 @@ class amount_t
   amount_t operator/(const amount_t& amt) const {
     amount_t temp = *this;
     temp /= amt;
-    return temp;
-  }
-  amount_t operator%(const amount_t& amt) const {
-    amount_t temp = *this;
-    temp %= amt;
     return temp;
   }
   amount_t operator+(const amount_t& amt) const {
@@ -209,6 +207,7 @@ class commodity_t
   typedef unsigned long ident_t;
 
   std::string	 symbol;
+  bool		 quote;
   std::string	 name;
   std::string	 note;
   unsigned short precision;
@@ -244,9 +243,19 @@ class commodity_t
   // Now the per-object constructor and methods
 
   commodity_t(const std::string& _symbol    = "",
-	      unsigned int	 _precision = 2,
+	      unsigned int	 _precision = 0,
 	      unsigned int       _flags	    = COMMODITY_STYLE_DEFAULTS)
-    : symbol(_symbol), precision(_precision), flags(_flags) {}
+    : symbol(_symbol), quote(false), precision(_precision), flags(_flags) {
+    check_symbol();
+  }
+
+  void check_symbol() {
+    for (const char * p = symbol.c_str(); *p; p++)
+      if (std::isspace(*p) || std::isdigit(*p) || *p == '-' || *p == '.') {
+	quote = true;
+	return;
+      }
+  }
 
   void add_price(const std::time_t date, const amount_t& price) {
     history.insert(history_pair(date, price));

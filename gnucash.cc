@@ -162,12 +162,16 @@ static void dataHandler(void *userData, const char *s, int len)
   }
 
   case COMM_SYM:
-    if (curr_comm)
+    if (curr_comm) {
       curr_comm->symbol = std::string(s, len);
-    else if (curr_account)
+      curr_comm->check_symbol();
+    }
+    else if (curr_account) {
       curr_account_comm = commodity_t::find_commodity(std::string(s, len));
-    else if (curr_entry)
+    }
+    else if (curr_entry) {
       entry_comm = commodity_t::find_commodity(std::string(s, len));
+    }
     break;
 
   case COMM_NAME:

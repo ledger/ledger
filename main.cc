@@ -334,7 +334,7 @@ int main(int argc, char * argv[], char * envp[])
       if (! config->show_subtotal) {
 	if (! config->display_predicate.empty())
 	  config->display_predicate += "&";
-	config->display_predicate += "!l";
+	config->display_predicate += "l<=1";
       }
     }
     else if (command == "E") {
@@ -591,9 +591,7 @@ int main(int argc, char * argv[], char * envp[])
 
     journal->master->value = journal->master->total;
 
-    if (format_account::display_account(journal->master,
-					item_predicate<account_t>("T"),
-					true)) {
+    if (journal->master->dflags & ACCOUNT_TO_DISPLAY) {
       std::string end_format = "--------------------\n";
       format.reset(end_format + f);
       format.format_elements(OUT(), details_t(journal->master));

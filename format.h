@@ -153,8 +153,7 @@ class format_account : public item_handler<account_t>
   }
 
   static bool display_account(const account_t * account,
-			      const item_predicate<account_t>& disp_pred,
-			      const bool even_top = false);
+			      const item_predicate<account_t>& disp_pred);
 
   virtual void flush() {
     output_stream.flush();
@@ -162,8 +161,12 @@ class format_account : public item_handler<account_t>
 
   virtual void operator()(account_t * account) {
     if (display_account(account, disp_pred)) {
-      format.format_elements(output_stream, details_t(account));
-      account->dflags |= ACCOUNT_DISPLAYED;
+      if (! account->parent) {
+	account->dflags |= ACCOUNT_TO_DISPLAY;
+      } else {
+	format.format_elements(output_stream, details_t(account));
+	account->dflags |= ACCOUNT_DISPLAYED;
+      }
     }
   }
 };

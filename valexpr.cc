@@ -171,7 +171,7 @@ void value_expr_t::compute(value_t& result, const details_t& details,
 
   case DEPTH:
     if (details.account)
-      result = (unsigned int) (details.account->depth - 1);
+      result = (unsigned int) details.account->depth;
     else
       result = 0U;
     break;

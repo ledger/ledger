@@ -154,8 +154,11 @@ bool finalize_entry(entry_t * entry)
        x != entry->transactions.end();
        x++)
     if (! ((*x)->flags & TRANSACTION_VIRTUAL) ||
-	((*x)->flags & TRANSACTION_BALANCE))
+	((*x)->flags & TRANSACTION_BALANCE)) {
+      DEBUG_PRINT("ledger.textual.finalize",
+		  "item cost is " << (*x)->cost);
       balance += (*x)->cost;
+    }
 
   // If one transaction of a two-line transaction is of a different
   // commodity than the others, and it has no per-unit price,
@@ -209,6 +212,8 @@ bool finalize_entry(entry_t * entry)
 
     balance = 0;
   }
+
+  DEBUG_PRINT("ledger.textual.finalize", "balance is " << balance);
 
   return ! balance;
 }
