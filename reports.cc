@@ -718,7 +718,7 @@ int main(int argc, char * argv[])
   else if (command == "print") {
     if (show_sorted)
       main_ledger->sort(cmp_entry_date());
-    main_ledger->print(std::cout, regexps, ! full_names);
+    main_ledger->print(std::cout, regexps, true);
   }
   else if (command == "equity") {
     equity_ledger(std::cout, regexps);
