@@ -392,13 +392,7 @@ amount_t& amount_t::operator*=(const amount_t& amt)
   INIT();
 
   mpz_mul(MPZ(quantity), MPZ(quantity), MPZ(amt.quantity));
-
-  // Truncate to the recorded precision: MAX_PRECISION.
-  mpz_t divisor;
-  mpz_init(divisor);
-  mpz_ui_pow_ui(divisor, 10, MAX_PRECISION);
-  mpz_tdiv_q(MPZ(quantity), MPZ(quantity), divisor);
-  mpz_clear(divisor);
+  mpz_tdiv_q(MPZ(quantity), MPZ(quantity), full_divisor);
 
   return *this;
 }
@@ -410,14 +404,8 @@ amount_t& amount_t::operator/=(const amount_t& amt)
 
   INIT();
 
-  mpz_t divisor;
-  mpz_init(divisor);
-  mpz_ui_pow_ui(divisor, 10, MAX_PRECISION);
-
-  mpz_mul(MPZ(quantity), MPZ(quantity), divisor);
+  mpz_mul(MPZ(quantity), MPZ(quantity), full_divisor);
   mpz_tdiv_q(MPZ(quantity), MPZ(quantity), MPZ(amt.quantity));
-
-  mpz_clear(divisor);
 
   return *this;
 }
@@ -429,14 +417,8 @@ amount_t& amount_t::operator%=(const amount_t& amt)
 
   INIT();
 
-  mpz_t divisor;
-  mpz_init(divisor);
-  mpz_ui_pow_ui(divisor, 10, MAX_PRECISION);
-
-  mpz_mul(MPZ(quantity), MPZ(quantity), divisor);
+  mpz_mul(MPZ(quantity), MPZ(quantity), full_divisor);
   mpz_tdiv_r(MPZ(quantity), MPZ(quantity), MPZ(amt.quantity));
-
-  mpz_clear(divisor);
 
   return *this;
 }
@@ -476,8 +458,7 @@ std::ostream& operator<<(std::ostream& out, const amount_t& amt)
   if (amt.commodity->precision != MAX_PRECISION)
     mpz_round(rquotient, MPZ(amt.quantity), amt.commodity->precision);
 
-  mpz_ui_pow_ui(divisor, 10, MAX_PRECISION);
-  mpz_tdiv_qr(quotient, remainder, rquotient, divisor);
+  mpz_tdiv_qr(quotient, remainder, rquotient, full_divisor);
 
   if (mpz_sgn(quotient) < 0 || mpz_sgn(remainder) < 0)
     negative = true;

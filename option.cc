@@ -87,6 +87,7 @@ void process_arguments(int argc, char ** argv, const bool anywhere,
 	  }
 	  else if ((*j).long_opt == *i + 2) {
 	    process_option(*j, argv[++index]);
+	    i++;
 	    goto next;
 	  }
 	}
@@ -105,6 +106,7 @@ void process_arguments(int argc, char ** argv, const bool anywhere,
 	if ((*i)[1] == (*j).short_opt) {
 	  if ((*j).wants_arg) {
 	    process_option(*j, argv[++index]);
+	    i++;
 	    goto next;
 	  } else {
 	    process_option(*j);
