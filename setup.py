@@ -2,6 +2,8 @@
 
 from distutils.core import setup, Extension
 
+libs = ["ledger", "boost_python", "gmp", "pcre", "xmlparse", "xmltok"]
+
 #setup(name         = "Amounts",
 #      version      = "2.0b",
 #      description  = "Amounts Library",
@@ -10,8 +12,8 @@ from distutils.core import setup, Extension
 #      url          = "http://www.newartisans.com/johnw/",
 #      ext_modules  = [
 #    Extension("amounts", ["pyamounts.cc"],
-#	      define_macros = [('PYTHON_MODULE', None)],
-#	      libraries     = ["ledger_bpy", "boost_python", "gmp"])])
+#	      define_macros = [('PYTHON_MODULE', 1)],
+#	      libraries     = libs)])
 
 setup(name         = "Ledger",
       version      = "2.0b",
@@ -21,6 +23,5 @@ setup(name         = "Ledger",
       url          = "http://www.newartisans.com/johnw/",
       ext_modules  = [
     Extension("ledger", ["pyledger.cc"],
-	      define_macros = [('PYTHON_MODULE', None)],
-	      libraries     = ["ledger_bpy", "boost_python", "gmp",
-			       "pcre", "xmlparse", "xmltok"])])
+	      define_macros = [('PYTHON_MODULE', 1)],
+	      libraries     = libs)])

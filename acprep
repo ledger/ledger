@@ -1,6 +1,6 @@
 #!/bin/sh
 
-libtoolize --automake -f -c
+glibtoolize --automake -f -c
 aclocal
 autoheader
 touch AUTHORS ChangeLog
@@ -18,14 +18,13 @@ INCDIRS="$INCDIRS -Wno-long-double"
 LIBDIRS="-L/sw/lib -L/sw/lib/python2.3/config"
 
 if [ "$1" = "--debug" ]; then
-    ./configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
-	CXXFLAGS="-g" --enable-debug --disable-shared
+    ./configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" CXXFLAGS="-g" \
+	--enable-debug
 elif [ "$1" = "--opt" ]; then
     ./configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
-	CXXFLAGS="-fomit-frame-pointer -fastf -mcpu=7450 -fPIC" --disable-shared
+	CXXFLAGS="-fomit-frame-pointer -fastf -mcpu=7450 -fPIC"
 elif [ "$1" = "--perf" ]; then
-    ./configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" CXXFLAGS="-g -pg" \
-	--disable-shared
+    ./configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" CXXFLAGS="-g -pg"
 fi
 
 rm AUTHORS ChangeLog

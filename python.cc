@@ -6,6 +6,11 @@
 
 using namespace boost::python;
 
+namespace {
+  bool python_initialized = false;
+  bool module_initialized = false;
+}
+
 void export_amount();
 void export_balance();
 void export_value();
@@ -18,27 +23,13 @@ void export_qif();
 void export_gnucash();
 #endif
 void export_option();
+void export_config();
 void export_walk();
 void export_format();
 void export_valexpr();
 void export_datetime();
 
-namespace ledger {
-
-python_support * python_interpretor = NULL;
-
-#ifndef PYTHON_MODULE
-
-static struct cleanup_python {
-  ~cleanup_python() {
-    if (python_interpretor) {
-      Py_Finalize();
-      delete python_interpretor;
-    }
-  }
-} _cleanup;
-
-void init_module()
+void initialize_ledger_for_python()
 {
   export_amount();
   export_balance();
@@ -52,22 +43,35 @@ void init_module()
   export_gnucash();
 #endif
   export_option();
+  export_config();
   export_walk();
   export_format();
   export_valexpr();
   export_datetime();
+
+  module_initialized = true;
 }
 
-#endif // PYTHON_MODULE
+namespace ledger {
+
+python_support * python_interpretor = NULL;
+
+static struct cleanup_python {
+  ~cleanup_python() {
+    if (python_initialized)
+      Py_Finalize();
+    if (python_interpretor)
+      delete python_interpretor;
+  }
+} _cleanup;
 
 void init_python()
 {
-  assert(! python_interpretor);
-
-#ifndef PYTHON_MODULE
-  Py_Initialize();
-  detail::init_module("ledger", &init_module);
-#endif
+  if (! module_initialized) {
+    Py_Initialize();
+    python_initialized = true;
+    detail::init_module("ledger", &initialize_ledger_for_python);
+  }
 
   python_interpretor = new python_support;
 }
