@@ -2156,8 +2156,10 @@ functionality and are willing to debug problems that come up, pass the
 option @samp{--enable-python} to configure, and contact the author via
 email.
 
-Here is a quick example of text that could be pasted into a ledger
-file, to generate a customized amount's column in the register report:
+Below is a quick example of text that could be pasted into a ledger
+file to generate a customized amount column in the register report.
+It does nothing more than add $100 to each transaction's amount, but
+it demonstrates the potential for more complex extensions:
 
 @example
 !python
