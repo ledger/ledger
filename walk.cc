@@ -230,9 +230,7 @@ void related_transactions::flush()
       } else {
 	transaction_xdata_t& xdata = transaction_xdata(**i);
 	if (! (xdata.dflags & TRANSACTION_HANDLED) &&
-	    (! (xdata.dflags & TRANSACTION_RECEIVED) ?
-	     ! ((*i)->flags & (TRANSACTION_AUTO | TRANSACTION_VIRTUAL)) :
-	     also_matching)) {
+	    ! ((*i)->flags & TRANSACTION_AUTO)) {
 	  xdata.dflags |= TRANSACTION_HANDLED;
 	  item_handler<transaction_t>::operator()(**i);
 	}
