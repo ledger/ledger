@@ -1,5 +1,5 @@
 \input texinfo    @c -*-texinfo-*-
-@comment $Id: ledger.texi,v 1.5 2003/10/01 21:55:40 johnw Exp $
+@comment $Id: ledger.texi,v 1.6 2003/10/01 22:11:23 johnw Exp $
 @comment %**start of header
 
 @setfilename ledger.info
@@ -194,17 +194,22 @@ from ``Assets:Checking'' in order to balance the entry.
 
 @section Commodities and currencies
 
-@code{ledger} makes no assumptions about the commodities you use.  It
-only requires that you specify which commodity.  The commodity may be
-any non-numeric string that does not contain a period, comma, forward
-slash or at sign (@@).  Here are some valid commodity specifiers:
+@code{ledger} makes no assumptions about the commodities you use; it
+only requires that you specify a commodity.  The commodity may be any
+non-numeric string that does not contain a period, comma, forward
+slash or at sign (@@).  It may appear before or after the amount,
+although it is assumed that symbols appearing before the amount refer
+to currencies, while non-joined symbols apearing after the amount
+refer to commodities.  Here are some valid currency and commodity
+specifiers:
 
 @example
-$20.00         ; twenty US dollars
-20 USD         ; the same
-AAPL 40        ; 40 shares of Apple Computer stock
-DM 60          ; 60 Deutsch Mark
-£50            ; 50 British pounds
+$20.00         ; currency: twenty US dollars
+USD 20         ; currency: the same
+40 AAPL        ; commodity: 40 shares of Apple Computer stock
+DM 60          ; currency: 60 Deutsch Mark
+£50            ; currency: 50 British pounds
+50e            ; currency: 50 Euros (use appropriate symbol)
 @end example
 
 @code{ledger} will examine the first use of any commodity to determine
