@@ -1,20 +1,20 @@
 #!/bin/bash
 
-binary=ledger
-LEDGER=$HOME/doc/finance/ledger.dat
-
-line="$binary -f $ledger"
-
 command=$1
 shift
 
 case "$command" in
-    balance)  $line "$@" balance -s -- -Equity -Income -Expenses -Retirement ;;
-    worth)    $line "$@" balance assets liabilities ;;
-    profit)   $line "$@" balance income expense ;;
-    spending) $line "$@" balance -F food movies gas tips \
+    balance)  ledger "$@" balance -- -Equity -Income -Expenses -Retirement ;;
+    worth)    ledger "$@" balance assets liabilities ;;
+    profit)   ledger "$@" balance income expense ;;
+    spending) ledger "$@" balance -F food movies gas tips \
 	health supplies -insurance -vacation ;;
-    huquq)    $line "$@" balance ^huquq ;;
-    gold)     $line "$@" balance -G $1 ^huquq ;;
-    equity)   $line "$@" equity -- -^Income -^Expenses -^Equity ;;
+    monthly_spending)
+	for i in jan feb mar apr may jun jul aug sep oct nov dec
+	do
+	  echo $i:
+	  $0 spending -d $i
+	done ;;
+    huquq)    ledger "$@" balance -n ^huquq ;;
+    equity)   ledger "$@" equity -- -^Income -^Expenses -^Equity ;;
 esac

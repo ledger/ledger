@@ -16,51 +16,25 @@ static bool        show_empty;
 static bool        no_subtotals;
 static bool        full_names;
 
-static bool account_matches(const account * acct,
-			    const std::list<mask>& regexps,
-			    bool * true_match)
-{
-  bool match = false;
-  *true_match = false;
-
-  if (show_children) {
-    for (const account * a = acct; a; a = a->parent) {
-      bool exclude = false;
-      if (matches(regexps, a->name, &exclude)) {
-	match = true;
-	*true_match = a == acct;
-	break;
-      }
-      if (exclude)
-	break;
-    }
-  } else {
-    match = matches(regexps, acct->as_str());
-    if (match)
-      *true_match = matches(regexps, acct->name);
-  }
-  return match;
-}
-
 static void display_total(std::ostream& out, totals& balance,
-			  account * acct, bool top_level,
-			  const std::list<mask>& regexps)
+			  account * acct, bool top_level)
 {
   bool displayed = false;
 
-  if (acct->checked == 1 && (show_empty || acct->balance)) {
+  if (acct->checked == 1 &&
+      (show_empty || ! acct->balance.is_zero())) {
     displayed = true;
 
-    out << acct->balance;
+    acct->balance.print(out, 20);
     if (! no_subtotals && top_level)
       balance.credit(acct->balance);
 
-    if (acct->parent && ! no_subtotals && ! full_names) {
+    if (acct->parent && ! full_names && ! top_level) {
       for (const account * a = acct; a; a = a->parent)
 	out << "  ";
       out << acct->name << std::endl;
     } else {
-      out << "  " << *acct << std::endl;
+      out << "  " << acct->as_str() << std::endl;
     }
   }
 
@@ -69,7 +43,7 @@ static void display_total(std::ostream& out, totals& balance,
   for (accounts_iterator i = acct->children.begin();
        i != acct->children.end();
        i++)
-    display_total(out, balance, (*i).second, ! displayed, regexps);
+    display_total(out, balance, (*i).second, ! displayed);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -77,7 +51,8 @@ static void display_total(std::ostream& out, totals& balance,
 // Balance reporting code
 //
 
-void report_balances(int argc, char **argv, std::ostream& out)
+void report_balances(int argc, char ** argv, regexps_t& regexps,
+		     std::ostream& out)
 {
   show_children = false;
   show_empty    = false;
@@ -120,22 +95,33 @@ void report_balances(int argc, char **argv, std::ostream& out)
 	   acct;
 	   acct = no_subtotals ? NULL : acct->parent) {
 	if (acct->checked == 0) {
-	  bool true_match = false;
-	  if (! (regexps.empty() ||
-		 account_matches(acct, regexps, &true_match)))
-	    acct->checked = 2;
-	  else if (! (true_match || show_children || ! acct->parent))
-	    acct->checked = 3;
-	  else
-	    acct->checked = 1;
+	  if (regexps.empty()) {
+	    if (! (show_children || ! acct->parent))
+	      acct->checked = 2;
+	    else
+	      acct->checked = 1;
+	  }
+	  else {
+	    bool by_exclusion;
+	    bool match = matches(regexps, acct->as_str(),
+				 &by_exclusion);
+	    if (! match) {
+	      acct->checked = 2;
+	    }
+	    else if (by_exclusion) {
+	      if (! (show_children || ! acct->parent))
+		acct->checked = 2;
+	      else
+		acct->checked = 1;
+	    }
+	    else {
+	      acct->checked = 1;
+	    }
+	  }
 	}
 
-	if (acct->checked == 2)
-	  break;
-	else if (acct->checked == 3)
-	  continue;
-
-	acct->balance.credit((*x)->cost->street());
+	if (acct->checked == 1)
+	  acct->balance.credit((*x)->cost->street());
       }
     }
   }
@@ -148,13 +134,15 @@ void report_balances(int argc, char **argv, std::ostream& out)
   for (accounts_iterator i = main_ledger.accounts.begin();
        i != main_ledger.accounts.end();
        i++)
-    display_total(out, balance, (*i).second, true, regexps);
+    display_total(out, balance, (*i).second, true);
 
   // Print the total of all the balances shown
 
-  if (! no_subtotals && balance)
-    out << "--------------------" << std::endl
-	<< balance << std::endl;
+  if (! no_subtotals && ! balance.is_zero()) {
+    out << "--------------------" << std::endl;
+    balance.print(out, 20);
+    out << std::endl;
+  }
 }
 
 } // namespace ledger

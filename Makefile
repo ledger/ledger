@@ -43,7 +43,7 @@ ledger.info: ledger.texi
 	g++ $(CFLAGS) $(INCS) $(DFLAGS) -c -o $@ $<
 
 clean:
-	rm -f ledger *.o
+	rm -f ledger ledger.info *.o *~ .\#*
 
 rebuild: clean deps all
 

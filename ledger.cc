@@ -34,9 +34,8 @@ void entry::print(std::ostream& out, bool shortcut) const
        x != xacts.end();
        x++) {
 #ifdef HUQUQULLAH
-    if ((*x)->acct->exempt_or_necessary &&
-	(! shortcut || ! ledger::matches(main_ledger.huquq_categories,
-					 (*x)->acct->as_str())))
+    if ((*x)->exempt_or_necessary ||
+	(! shortcut && (*x)->acct->exempt_or_necessary))
       out << "   !";
     else
 #endif
@@ -69,12 +68,12 @@ bool entry::validate(bool show_unaccounted) const
     if ((*x)->cost)
       balance.credit((*x)->cost->value());
 
-  if (show_unaccounted && balance) {
+  if (show_unaccounted && ! balance.is_zero()) {
     std::cerr << "Unaccounted-for balances are:" << std::endl;
     balance.print(std::cerr, 20);
     std::cerr << std::endl << std::endl;
   }
-  return ! balance;             // must balance to 0.0
+  return balance.is_zero();     // must balance to 0.0
 }
 
 bool entry::matches(const std::list<mask>& regexps) const
@@ -117,33 +116,37 @@ void totals::credit(const totals& other)
     credit((*i).second);
 }
 
-totals::operator bool() const
+bool totals::is_zero() const
 {
   for (const_iterator i = amounts.begin(); i != amounts.end(); i++)
-    if (*((*i).second))
-      return true;
-  return false;
+    if (! (*i).second->is_zero())
+      return false;
+  return true;
 }
 
 void totals::print(std::ostream& out, int width) const
 {
   bool first = true;
-  for (const_iterator i = amounts.begin(); i != amounts.end(); i++)
-    if (*((*i).second)) {
-      if (first)
-	first = false;
-      else
-	out << std::endl;
 
-      out.width(width);
-      out << std::right << (*i).second->as_str();
-    }
+  for (const_iterator i = amounts.begin(); i != amounts.end(); i++) {
+    if ((*i).second->is_zero())
+      continue;
+
+    if (first)
+      first = false;
+    else
+      out << std::endl;
+
+    out.width(width);
+    out << std::right << (*i).second->as_str();
+  }
 }
 
 // Print out the entire ledger that was read in, sorted by date.
 // This can be used to "wash" ugly ledger files.
 
-void print_ledger(int argc, char *argv[], std::ostream& out)
+void print_ledger(int argc, char ** argv, regexps_t& regexps,
+		  std::ostream& out)
 {
   bool use_shortcuts = true;
 
@@ -174,37 +177,40 @@ void print_ledger(int argc, char *argv[], std::ostream& out)
       (*i)->print(out, use_shortcuts);
 }
 
-void record_regexp(char * pattern, std::list<mask>& regexps)
+mask::mask(const std::string& pat) : exclude(false)
 {
-  bool exclude = false;
-
-  char * pat = pattern;
-  if (*pat == '-') {
+  const char * p = pat.c_str();
+  if (*p == '-') {
     exclude = true;
-    pat++;
-    while (std::isspace(*pat))
-      pat++;
+    p++;
+    while (std::isspace(*p))
+      p++;
   }
-  else if (*pat == '+') {
-    pat++;
-    while (std::isspace(*pat))
-      pat++;
+  else if (*p == '+') {
+    p++;
+    while (std::isspace(*p))
+      p++;
   }
+  pattern = p;
 
   const char *error;
   int erroffset;
-  pcre * re = pcre_compile(pat, PCRE_CASELESS, &error, &erroffset, NULL);
-  if (! re)
+  regexp = pcre_compile(pattern.c_str(), PCRE_CASELESS,
+			&error, &erroffset, NULL);
+  if (! regexp)
     std::cerr << "Warning: Failed to compile regexp: " << pattern
 	      << std::endl;
-  else
-    regexps.push_back(mask(exclude, re));
 }
 
-void read_regexps(const char * path, std::list<mask>& regexps)
+void record_regexp(const std::string& pattern, regexps_t& regexps)
 {
-  if (access(path, R_OK) != -1) {
-    std::ifstream file(path);
+  regexps.push_back(mask(pattern));
+}
+
+void read_regexps(const std::string& path, regexps_t& regexps)
+{
+  if (access(path.c_str(), R_OK) != -1) {
+    std::ifstream file(path.c_str());
 
     while (! file.eof()) {
       char buf[80];
@@ -215,14 +221,20 @@ void read_regexps(const char * path, std::list<mask>& regexps)
   }
 }
 
-bool matches(const std::list<mask>& regexps, const std::string& str,
-	     bool * exclude)
+bool matches(const regexps_t& regexps, const std::string& str,
+	     bool * by_exclusion)
 {
+  assert(! regexps.empty());
+
   // If the first pattern is an exclude, we assume all patterns match
-  // if they don't match the exclude.  If the first pattern is an
-  // include, then only accounts matching the include will match.
+  // if they don't match the exclude -- and by_exclusion will be set
+  // to true to reflect this "by default" behavior.  But if the first
+  // pattern is an include, only accounts matching the include will
+  // match, and these are a positive match.
 
   bool match = (*regexps.begin()).exclude;
+  if (match && by_exclusion)
+    *by_exclusion = true;
 
   for (std::list<mask>::const_iterator r = regexps.begin();
        r != regexps.end();
@@ -230,8 +242,8 @@ bool matches(const std::list<mask>& regexps, const std::string& str,
     int ovec[3];
     if (pcre_exec((*r).regexp, NULL, str.c_str(), str.length(),
 		  0, 0, ovec, 3) >= 0) {
-      if (exclude)
-	*exclude = (*r).exclude;
+      if (by_exclusion)
+	*by_exclusion = (*r).exclude;
       match = ! (*r).exclude;
     }
   }
@@ -261,12 +273,12 @@ state::~state()
 
 #endif // DO_CLEANUP
 
-void state::record_price(const char * setting)
+void state::record_price(const std::string& setting)
 {
   char buf[128];
-  std::strcpy(buf, setting);
+  std::strcpy(buf, setting.c_str());
 
-  assert(std::strlen(setting) < 128);
+  assert(setting.length() < 128);
 
   char * c = buf;
   char * p = std::strchr(buf, '=');
@@ -278,14 +290,14 @@ void state::record_price(const char * setting)
   }
 }
 
-account * state::find_account(const char * name, bool create)
+account * state::find_account(const std::string& name, bool create)
 {
   accounts_iterator i = accounts_cache.find(name);
   if (i != accounts_cache.end())
     return (*i).second;
 
-  char * buf = new char[std::strlen(name) + 1];
-  std::strcpy(buf, name);
+  char * buf = new char[name.length() + 1];
+  std::strcpy(buf, name.c_str());
 
   account * current = NULL;
   for (char * tok = std::strtok(buf, ":");
@@ -294,8 +306,10 @@ account * state::find_account(const char * name, bool create)
     if (! current) {
       accounts_iterator i = accounts.find(tok);
       if (i == accounts.end()) {
-	if (! create)
+	if (! create) {
+	  delete[] buf;
 	  return NULL;
+	}
 	current = new account(tok);
 	accounts.insert(accounts_entry(tok, current));
       } else {
@@ -304,8 +318,10 @@ account * state::find_account(const char * name, bool create)
     } else {
       accounts_iterator i = current->children.find(tok);
       if (i == current->children.end()) {
-	if (! create)
+	if (! create) {
+	  delete[] buf;
 	  return NULL;
+	}
 	current = new account(tok, current);
 	current->parent->children.insert(accounts_entry(tok, current));
       } else {

@@ -28,7 +28,8 @@ static std::string truncated(const std::string& str, int width)
 // Register printing code
 //
 
-void print_register(int argc, char **argv, std::ostream& out)
+void print_register(int argc, char ** argv, regexps_t& regexps,
+		    std::ostream& out)
 {
   optind = 1;
 

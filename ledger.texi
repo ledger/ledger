@@ -1,5 +1,5 @@
 \input texinfo    @c -*-texinfo-*-
-@comment $Id: ledger.texi,v 1.7 2003/10/02 00:07:14 johnw Exp $
+@comment $Id: ledger.texi,v 1.8 2003/10/02 05:04:38 johnw Exp $
 @comment %**start of header
 
 @setfilename ledger.info
@@ -24,17 +24,24 @@
 @contents
 
 @ifnottex
-@node Top
+@node Top, Introduction, (dir), (dir)
 @top Ledger Accouting Tool
 
 @c @insertcopying
 @end ifnottex
 
+@menu
+* Introduction::
+* Keeping a ledger::
+* Computing Huqúqu'lláh::
+@end menu
+
+@node Introduction, Keeping a ledger, Top, Top
 @chapter Introduction
 
 @code{ledger} is an accouting tool that has the chutzpah to exist.  It
 provides not one bell or whistle for the money, and returns the user
-back to the days before user interfaces were even a twinkle on their
+to the days before user interfaces were even a twinkle in their
 father's CRT.
 
 What it does do is provide a double-entry accouting ledger with all of
@@ -138,6 +145,7 @@ Your usage of @code{ledger} will have two parts: Keeping the ledger,
 and using the @code{ledger} tool to provide you with information
 summaries derived from your ledger's entries.
 
+@node Keeping a ledger, Computing Huqúqu'lláh, Introduction, Top
 @chapter Keeping a ledger
 
 The most important part of accounting is keeping a good ledger.  If
@@ -192,7 +200,79 @@ the balanced amount, if it is the same as the first line:
 For this entry, @code{ledger} will figure out that $-23.00 must come
 from ``Assets:Checking'' in order to balance the entry.
 
-@section Commodities and currencies
+@menu
+* Credits and Debits::
+* Commodities and Currencies::
+* Accounts and Inventories::
+* Understanding Equity::
+@end menu
+
+@node Credits and Debits, Commodities and Currencies, Keeping a ledger, Keeping a ledger
+@section Credits and Debits
+
+Credit and debit are simple enough terms in themselves, but the usages
+of the modern world have made them very hard to puzzle out.
+
+Basically, a credit means you add something to an account, and a debit
+means you take away.  A debit card is correctly name: From your point
+of view, it debits your checking account every time you use it.
+
+The credit card is strangely named, because you have to look at it
+from the merchant's point of view: Every time you use it, it credit's
+@emph{his} account right away.  This was a giant leap from the days of
+cash and checks, when the only other way to supply immediate credit
+was by a wire transfer.  But a credit card does not credit you
+anything at all.  In fact, from your point of view, it should be
+called a liability card, since it increases your liability to the
+issuing bank every time you use it.
+
+In @code{ledger}, credits and debits are given as they are, which
+means that sometimes you will see a minus sign where you don't expect
+one.  For example, when you get paid, in order to credit your bank
+account, you need to debit an income account:
+
+@example
+9/29  My Employer
+    Assets:Checking                           $500.00
+    Income:Salary                            $-500.00
+@end example
+
+But wait, you say, why is the Income a negative figure?  And when you
+look at the balance totals for your ledger, you will certainly be
+surprised to see Expenses as a positive figure, and Income as a
+negative figure.  Isn't that the opposite of how it should look?
+
+It may take getting used to, but to properly use a general ledger you
+will need to think in terms of correct debits and credits.  Rather
+than @code{ledger} ``fixing'' the minus signs, let's understand why
+they are there.
+
+When you earn money, the money has to come from somewhere.  Let's call
+that somewhere ``society''.  In order for society to give you an
+income, you must take money away from society (debit) in order to put
+it into your bank (credit).  When you then spend that money, it leaves
+your bank account (debit) and goes back to society (credit).  This is
+why Income will appear negative---it reflects the money you have drawn
+from society---and why Expenses will be positive---it is the amount
+you've given back.  These credits and debits will always cancel each
+other out in the end, because you don't have the ability to create new
+money: It must always come from somewhere, and in the end must always
+leave.  This is the beginning of economy, after which the explanation
+gets terribly difficult.
+
+Based on that explanation, here's another way to look at your balance
+report: Every negative figure means that that account or person or
+place has less money now than when you started your ledger; and every
+positive figure means that that account or person or place has more
+money now that when you started your ledger.  Make sense?
+
+Alos, credit cards will have a negative value, because you are
+spending @emph{from} them (debit) in order pay someone else (credit).
+They are called credit cards because you are able to instantly credit
+that other person, by simply waving a card.
+
+@node Commodities and Currencies, Accounts and Inventories, Credits and Debits, Keeping a ledger
+@section Commodities and Currencies
 
 @code{ledger} makes no assumptions about the commodities you use; it
 only requires that you specify a commodity.  The commodity may be any
@@ -292,6 +372,7 @@ Euro=DM 0.75
 This is a roundabout way of reporting AAPL shares in their Deutsch
 Mark equivalent.
 
+@node Accounts and Inventories, Understanding Equity, Commodities and Currencies, Keeping a ledger
 @section Accounts and Inventories
 
 Since @code{ledger}'s accounts and commodity system is so flexible,
@@ -329,8 +410,120 @@ would look like:
 Now you've turned 2 steaks into 15 gold, courtesy of your customer,
 Sturm Brightblade.
 
-@chapter Using @code{ledger}
+@node Understanding Equity,  , Accounts and Inventories, Keeping a ledger
+@section Understanding Equity
 
+The most confusing entry in any ledger will be your equity
+account---because starting balances can't come out of nowhere.
+
+When you first start your ledger, you will likely already have money
+in some of your accounts.  Let's say there's $100 in your checking
+account; then add an entry to your ledger to reflect this amount.
+Where will money come from?  The answer: your equity.
+
+@example
+10/2  Opening Balance
+    Assets:Checking                         $100.00
+    Equity:Opening Balances                $-100.00
+@end example
+
+But what is equity?  You may have heard of equity when people talked
+about house mortgages, as ``the part of the house that you own''.
+Basically, equity is like the value of something.  If you own a car
+worth $5000, then you have $5000 in equity in that car.  In order to
+turn that car (a commodity) into a cash flow, or a credit to your bank
+account, you will have to debit the equity by selling it.
+
+When you start a ledger, you are probably already worth something.
+Your net worth is your current equity.  By transferring the money in
+the ledger from your equity to your bank accounts, you are crediting
+the ledger account based on your prior equity value.  That is why,
+when you look at the balance report, you will see a large negative
+number for Equity that never changes: Because that is what you were
+worth (what you debited from yourself in order to start the ledger)
+before the money started moving around.  If the total positive value
+of your assets is greater than the absolute value of your starting
+equity, it means you are making money.
+
+Clear as mud?  Keep thinking about it.  Until you figure it out, put
+``-- -Equity'' at the end of your balance command, to remove the
+confusing figure from the totals.
+
+@chapter Using the @code{ledger} Tool
+
+Now that you have an orderly and well-organized general ledger, it's
+time to start generating some orderly and well-organized reports.
+This is where the @code{ledger} tool comes in.  With it, you can
+balance your checkbook, see where your money is going, tell whether
+you've made a profit this year, and even compute the present day value
+of your retirement accounts.  And all with the simplest of interfaces:
+the command-line.
+
+The most often used command will be the @code{balance} command:
+
+@example
+/home/johnw $ export LEDGER=/home/johnw/doc/finance/ledger.dat
+/home/johnw $ ledger balance
+@end example
+
+Here I've set my @code{LEDGER} environment variable to point to where
+my ledger file is hiding.  Thereafter, I needn't specify it again.
+
+The balance command prints out the summarized balances of all my
+top-level accounts, excluding sub-accounts.  In order to see the
+balances for a specific account, just specify a regular expression
+after the balance command:
+
+@example
+/home/johnw $ ledger balance expenses:food
+@end example
+
+This will show all the money that's been spent on food, since the
+beginning of the ledger.  For food spending just this month
+(September), use:
+
+@example
+/home/johnw $ ledger -d sep balance expenses:food
+@end example
+
+Or maybe I want to see all of my assets, in which case the -s (show
+sub-accounts) option comes in handy:
+
+@example
+/home/johnw $ ledger balance -s
+@end example
+
+To exclude a particular account, use a regular expression with a
+leading minus sign.  The following will show all expenses, but without
+food spending:
+
+@example
+/home/johnw $ ledger balance expenses -food
+@end example
+
+If you want to show all accounts but for one account, remember to use
+@samp{--} to separate the exclusion pattern from the options list:
+
+@example
+/home/johnw $ ledger balance -- -equity
+@end example
+
+@chapter Using GnuCash to Keep Your Ledger
+
+The @code{ledger} tool is fast and simple, but it gives you no special
+method of actually editing the ledger.  It assumes you know how to use
+a text editor, and like doing so.  Perhaps an Emacs mode will appear
+someday soon to make editing @code{ledger}'s data files much easier.
+
+Until then, you are free to use GnuCash to maintain your ledger, and
+the @code{ledger} program for querying and reporting on the contents
+of that ledger.  It takes a little longer to parse the XML data format
+that GnuCash uses, but the end result is identical.
+
+Then again, why would anyone use a Gnome-centric, 35 megabyte behemoth
+to edit their data, and a 65 kilobyte executable to query it@dots{}
+
+@node Computing Huqúqu'lláh,  , Keeping a ledger, Top
 @chapter Computing Huqúqu'lláh
 
 As a Bahá'í, I need to compute Huqúqu'lláh on some of my assets.  The
@@ -374,20 +567,7 @@ That's it.  To see how much Huqúq is currently owed based on your
 ledger data, type:
 
 @example
-/home/johnw $ ledger -f ledger.dat balance huquq
+/home/johnw $ ledger -f ledger.dat balance ^huquq
 @end example
-
-Not sure if you should pay yet?  Go to your newspaper, or look on the
-Web, and find the current price of gold per ounce.  Then pass this
-figure to the @samp{-G} option.  If it were $357.10, you would use:
-
-@example
-/home/johnw $ ledger -f ledger.dat balance -G 357.10 huquq
-@end example
-
-Now your balance report will be given in mi@underline{th}qáls of gold,
-not dollars.  If the balance on your Huqúqu'lláh account is more than
--19 mi@underline{th}qáls (remember, it is a liability account, so
-amounts are negative), then get out your checkbook.
 
 @bye

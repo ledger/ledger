@@ -1,8 +1,7 @@
-#include <sstream>
-
-#include <gmp.h>                // GNU multi-precision library
-
 #include "ledger.h"
+
+#include <sstream>
+#include <gmp.h>                // GNU multi-precision library
 
 namespace ledger {
 
@@ -10,11 +9,16 @@ namespace ledger {
 
 //////////////////////////////////////////////////////////////////////
 //
-// The `amount' structure.  Every transaction has an associated amount,
-// which is represented by this structure.  `amount' uses the GNU
-// multi-precision library, allowing for arbitrarily large amounts.
-// Each amount is a quantity of commodity at a certain price; the
-// default commodity is the US dollar, with a price of 1.00.
+// The `amount' structure.  Every transaction has an associated
+// amount, which is represented by this structure.  `amount' uses the
+// GNU multi-precision library, allowing for arbitrarily large
+// amounts.  Each amount is a quantity of a certain commodity, with
+// an optional price per-unit for that commodity at the time the
+// amount was stated.
+//
+// To create an amount, for example:
+//
+//     amount * cost = create_amount("50.2 MSFT @ $100.50");
 //
 
 class gmp_amount : public amount
@@ -57,20 +61,21 @@ class gmp_amount : public amount
   }
   virtual void set_value(const amount * val);
 
-  virtual operator bool() const;
+  virtual bool is_zero() const;
 
   virtual void negate() {
     mpz_ui_sub(quantity, 0, quantity);
   }
   virtual void credit(const amount * other);
 
-  virtual void parse(const char * num);
-  virtual std::string as_str(bool full_prec) const;
+  virtual void parse(const std::string& num);
+  virtual const std::string as_str(bool full_prec) const;
 
-  friend amount * create_amount(const char * value, const amount * cost);
+  friend amount * create_amount(const std::string& value,
+				const amount * cost);
 };
 
-amount * create_amount(const char * value, const amount * cost)
+amount * create_amount(const std::string& value, const amount * cost)
 {
   gmp_amount * a = new gmp_amount();
   a->parse(value);
@@ -277,7 +282,7 @@ void gmp_amount::set_value(const amount * val)
   mpz_clear(addend);
 }
 
-gmp_amount::operator bool() const
+bool gmp_amount::is_zero() const
 {
   mpz_t copy;
   mpz_init_set(copy, quantity);
@@ -286,7 +291,7 @@ gmp_amount::operator bool() const
     round(copy, copy, quantity_comm->precision);
   bool zero = mpz_sgn(copy) == 0;
   mpz_clear(copy);
-  return ! zero;
+  return zero;
 }
 
 static std::string amount_to_str(const commodity * comm, const mpz_t val,
@@ -416,7 +421,7 @@ static std::string amount_to_str(const commodity * comm, const mpz_t val,
   return s.str();
 }
 
-std::string gmp_amount::as_str(bool full_prec) const
+const std::string gmp_amount::as_str(bool full_prec) const
 {
   std::ostringstream s;
 
@@ -430,8 +435,11 @@ std::string gmp_amount::as_str(bool full_prec) const
   return s.str();
 }
 
-static void parse_number(mpz_t out, const char * num, commodity * comm)
+static void parse_number(mpz_t out, const std::string& number,
+			 commodity * comm)
 {
+  const char * num = number.c_str();
+
   if (char * p = std::strchr(num, '/')) {
     mpz_t numer;
     mpz_t val;
@@ -559,7 +567,7 @@ static commodity * parse_amount(mpz_t out, const char * num,
   return comm;
 }
 
-void gmp_amount::parse(const char * num)
+void gmp_amount::parse(const std::string& number)
 {
   // Compile the regular expression used for parsing amounts
   static pcre * re = NULL;
@@ -576,17 +584,20 @@ void gmp_amount::parse(const char * num)
   int ovector[60];
   int matched;
 
-  matched = pcre_exec(re, NULL, num, std::strlen(num), 0, 0, ovector, 60);
+  matched = pcre_exec(re, NULL, number.c_str(), number.length(),
+		      0, 0, ovector, 60);
   if (matched > 0) {
-    quantity_comm = parse_amount(quantity, num, matched, ovector, 1);
+    quantity_comm = parse_amount(quantity, number.c_str(), matched,
+				 ovector, 1);
 
     // If the following succeeded, then we have a price
     if (ovector[8 * 2] >= 0) {
       priced = true;
-      price_comm = parse_amount(price, num, matched, ovector, 9);
+      price_comm = parse_amount(price, number.c_str(), matched,
+				ovector, 9);
     }
   } else {
-    std::cerr << "Failed to parse amount: " << num << std::endl;
+    std::cerr << "Failed to parse amount: " << number << std::endl;
   }
 }
 

@@ -114,7 +114,9 @@ static void finalize_entry(entry * curr, bool compute_balances)
     }
 
 #ifdef HUQUQULLAH
-    if (! main_ledger.compute_huquq || ! (*x)->exempt_or_necessary)
+    if (! main_ledger.compute_huquq ||
+	! ((*x)->exempt_or_necessary ||
+	   (*x)->acct->exempt_or_necessary))
       continue;
 
     // Reflect 19% of the exempt or necessary transaction in the
@@ -307,10 +309,6 @@ bool parse_ledger(std::istream& in, bool compute_balances)
 #endif
 
       xact->acct = main_ledger.find_account(p);
-#ifdef HUQUQULLAH
-      if (xact->acct->exempt_or_necessary)
-	xact->exempt_or_necessary = true;
-#endif
       if (compute_balances && xact->cost)
 	xact->acct->balance.credit(xact->cost);
 

@@ -2,10 +2,10 @@
 
 namespace ledger {
 
-static void equity_entry(std::ostream& out, account * acct,
-			 const std::list<mask>& regexps)
+static void equity_entry(account * acct, regexps_t& regexps,
+			 std::ostream& out)
 {
-  if (acct->balance &&
+  if (! acct->balance.is_zero() &&
       (regexps.empty() || matches(regexps, acct->as_str()))) {
     entry opening;
 
@@ -17,7 +17,8 @@ static void equity_entry(std::ostream& out, account * acct,
     for (totals::const_iterator i = acct->balance.amounts.begin();
 	 i != acct->balance.amounts.end();
 	 i++) {
-      if (! *((*i).second))     // skip if zero balance for the commodity
+      // Skip it, if there is a zero balance for the commodity
+      if ((*i).second->is_zero())
 	continue;
 
       xact = new transaction();
@@ -40,7 +41,7 @@ static void equity_entry(std::ostream& out, account * acct,
   for (accounts_iterator i = acct->children.begin();
        i != acct->children.end();
        i++)
-    equity_entry(out, (*i).second, regexps);
+    equity_entry((*i).second, regexps, out);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -50,7 +51,8 @@ static void equity_entry(std::ostream& out, account * acct,
 // balances.
 //
 
-void equity_ledger(int argc, char **argv, std::ostream& out)
+void equity_ledger(int argc, char ** argv, regexps_t& regexps,
+		   std::ostream& out)
 {
   optind = 1;
 
@@ -67,7 +69,7 @@ void equity_ledger(int argc, char **argv, std::ostream& out)
   for (accounts_iterator i = main_ledger.accounts.begin();
        i != main_ledger.accounts.end();
        i++)
-    equity_entry(out, (*i).second, regexps);
+    equity_entry((*i).second, regexps, out);
 }
 
 } // namespace ledger

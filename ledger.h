@@ -1,5 +1,5 @@
 #ifndef _LEDGER_H
-#define _LEDGER_H "$Revision: 1.16 $"
+#define _LEDGER_H "$Revision: 1.17 $"
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -25,70 +25,6 @@
 #include <pcre.h>               // Perl regular expression library
 
 namespace ledger {
-
-// Format of a ledger entry (GNUcash account files are also supported):
-//
-// DATE [CLEARED] (CODE) DESCRIPTION
-//   ACCOUNT AMOUNT [; NOTE]
-//   ACCOUNT AMOUNT [; NOTE]
-//   ...
-//
-// The DATE can be YYYY.MM.DD or YYYY/MM/DD or MM/DD.
-// The CLEARED bit is a '*' if the account has been cleared.
-// The CODE can be anything, but must be enclosed in parenthesis.
-// The DESCRIPTION can be anything, up to a newline.
-//
-// The ACCOUNT is a colon-separated string naming the account.
-// The AMOUNT follows the form:
-//   [COMM][WS]QUANTITY[WS][COMM][[WS]@[WS][COMM]PRICE[COMM]]
-// For example:
-//   200 AAPL @ $40.00
-//   $50.00
-//   DM 12.54
-//   DM 12.54 @ $1.20
-// The NOTE can be anything.
-//
-// All entries must balance to 0.0, in every commodity.  This means
-// that a transaction with mixed commodities must balance by
-// converting one of those commodities to the other.  As a
-// convenience, this is done automatically for you in the case where
-// exactly two commodities are referred to, in which case the second
-// commodity is converted into the first by computing which the price
-// must have been in order to balance the transaction.  Example:
-//
-//   2004.06.18 * (BUY)  Apple Computer
-//     Assets:Brokerage     $-200.00
-//     Assets:Brokerage     100 AAPL
-//
-// What this transaction says is that $200 was paid from the
-// brokerage account to buy 100 shares of Apple stock, and then place
-// those same shares back in the brokerage account.  From this point
-// forward, the account "Assets:Brokerage" will have two balance
-// totals: The number of dollars in the account, and the number of
-// apple shares.
-//     In terms of the transaction, however, it must balance to zero,
-// otherwise it would mean that something had been lost without
-// accouting for it.  So in this case what ledger will do is divide
-// 100 by $200, to arrive at a per-share price of $2 for the APPL
-// stock, and it will read this transaction as if it had been
-// written:
-//
-//   2004.06.18 * (BUY)  Apple Computer
-//     Assets:Brokerage     $-200
-//     Assets:Brokerage     100 AAPL @ $2
-//
-// If you then wanted to give some of the shares to someone, in
-// exchange for services rendered, use the regular single-commodity
-// form of transaction:
-//
-//   2004.07.11 *  A kick-back for the broker
-//     Assets:Brokerage        -10 AAPL
-//     Expenses:Broker's Fees   10 AAPL
-//
-// This transaction does not need to know the price of AAPL on the
-// given day, because none of the shares are being converted to
-// another commodity.  It simply directly affects the total number of
-// AAPL shares held in "Assets:Brokerage".
 
 struct commodity
 {
@@ -127,9 +63,9 @@ class amount
   virtual bool has_price() const = 0;
   virtual void set_value(const amount * pr) = 0;
 
-  // Test if non-zero
+  // Test if the quantity is zero
 
-  virtual operator bool() const = 0;
+  virtual bool is_zero() const = 0;
 
   // Assignment
 
@@ -138,27 +74,28 @@ class amount
 
   // String conversion routines
 
-  virtual void parse(const char * num) = 0;
-  virtual std::string as_str(bool full_prec = false) const = 0;
+  virtual void parse(const std::string& num) = 0;
+  virtual const std::string as_str(bool full_prec = false) const = 0;
 };
 
-extern amount * create_amount(const char * value,
+extern amount * create_amount(const std::string& value,
 			      const amount * cost = NULL);
 
 struct mask
 {
-  bool   exclude;
-  pcre * regexp;
+  bool        exclude;
+  std::string pattern;
+  pcre *      regexp;
 
-  mask(bool exc, pcre * re) : exclude(exc), regexp(re) {}
+  mask(const std::string& pattern);
 };
 
-extern std::list<mask> regexps;
+typedef std::list<mask> regexps_t;
 
-extern void record_regexp(char * pattern, std::list<mask>& regexps);
-extern void read_regexps(const char * path, std::list<mask>& regexps);
-extern bool matches(const std::list<mask>& regexps,
-		    const std::string& str, bool * exclude = NULL);
+void record_regexp(const std::string& pattern, regexps_t& regexps);
+void read_regexps(const std::string& path, regexps_t& regexps);
+bool matches(const regexps_t& regexps, const std::string& str,
+	     bool * by_exclusion = NULL);
 
 
 struct account;
@@ -186,6 +123,7 @@ struct transaction
   }
 #endif
 };
+
 
 struct entry
 {
@@ -249,7 +187,7 @@ struct totals
   }
   void credit(const totals& other);
 
-  operator bool() const;
+  bool is_zero() const;
 
   void print(std::ostream& out, int width) const;
 
@@ -258,13 +196,6 @@ struct totals
     return amounts[comm];
   }
 };
-
-template<class Traits>
-std::basic_ostream<char, Traits> &
-operator<<(std::basic_ostream<char, Traits>& out, const totals& t) {
-  t.print(out, 20);
-  return out;
-}
 
 
 typedef std::map<const std::string, account *> accounts_t;
@@ -276,10 +207,14 @@ struct account
   account * parent;
 
   std::string name;
+#ifdef READ_GNUCASH
   commodity * comm;             // default commodity for this account
-  totals      balance;
+#endif
+  totals      balance;          // optional, parse-time computed balance
 
-  int  checked;
+  mutable std::string full_name;
+
+  int  checked;                 // 'balance' uses this for speed's sake
 #ifdef HUQUQULLAH
   bool exempt_or_necessary;
 #endif
@@ -301,25 +236,21 @@ struct account
   const std::string as_str() const {
     if (! parent)
       return name;
-    else
-      return parent->as_str() + ":" + name;
+    else if (full_name.empty())
+      full_name = parent->as_str() + ":" + name;
+
+    return full_name;
   }
 };
-
-template<class Traits>
-std::basic_ostream<char, Traits> &
-operator<<(std::basic_ostream<char, Traits>& out, const account& a) {
-  return (out << a.as_str());
-}
 
 
 struct state
 {
-  commodities_t commodities;
-  accounts_t    accounts;
-  accounts_t    accounts_cache; // maps full names to accounts
-  entries_t     entries;
-  totals        prices;
+  commodities_t   commodities;
+  accounts_t      accounts;
+  accounts_t      accounts_cache; // maps full names to accounts
+  entries_t       entries;
+  totals          prices;
 
 #ifdef HUQUQULLAH
   bool            compute_huquq;
@@ -336,8 +267,8 @@ struct state
   ~state();
 #endif
 
-  void record_price(const char * setting);
-  account * find_account(const char * name, bool create = true);
+  void record_price(const std::string& setting);
+  account * find_account(const std::string& name, bool create = true);
 };
 
 extern state main_ledger;

@@ -8,10 +8,14 @@ namespace ledger {
   extern bool parse_gnucash(std::istream& in, bool compute_balances);
 #endif
 
-  extern void report_balances(int argc, char **argv, std::ostream& out);
-  extern void print_register(int argc, char **argv, std::ostream& out);
-  extern void print_ledger(int argc, char *argv[], std::ostream& out);
-  extern void equity_ledger(int argc, char **argv, std::ostream& out);
+  extern void report_balances(int argc, char ** argv, regexps_t& regexps,
+			      std::ostream& out);
+  extern void print_register(int argc, char ** argv, regexps_t& regexps,
+			     std::ostream& out);
+  extern void print_ledger(int argc, char ** argv, regexps_t& regexps,
+			   std::ostream& out);
+  extern void equity_ledger(int argc, char ** argv, regexps_t& regexps,
+			    std::ostream& out);
 
   bool        show_cleared;
   bool        get_quotes;
@@ -75,7 +79,7 @@ static const char *formats[] = {
   NULL
 };
 
-static bool parse_date(const char * date_str, std::time_t * result)
+static bool parse_date(const std::string& date_str, std::time_t * result)
 {
   struct std::tm when;
 
@@ -84,7 +88,7 @@ static bool parse_date(const char * date_str, std::time_t * result)
 
   for (const char ** f = formats; *f; f++) {
     memset(&when, INT_MAX, sizeof(struct std::tm));
-    if (strptime(date_str, *f, &when)) {
+    if (strptime(date_str.c_str(), *f, &when)) {
       when.tm_hour = 0;
       when.tm_min  = 0;
       when.tm_sec  = 0;
@@ -113,11 +117,11 @@ static bool parse_date(const char * date_str, std::time_t * result)
 // Command-line parser and top-level logic.
 //
 
-int main(int argc, char *argv[])
+int main(int argc, char * argv[])
 {
-  // Parse the command-line options
-
   std::istream * file = NULL;
+
+  regexps_t regexps;
 
 #ifdef HUQUQULLAH
   bool compute_huquq = true;
@@ -125,6 +129,8 @@ int main(int argc, char *argv[])
   have_beginning = false;
   have_ending    = false;
   show_cleared   = false;
+
+  // Parse the command-line options
 
   int c;
   while (-1 != (c = getopt(argc, argv, "+b:e:d:cChHwf:i:p:Pv"))) {
@@ -328,13 +334,13 @@ int main(int argc, char *argv[])
   // Process the command
 
   if (command == "balance")
-    report_balances(argc - optind, &argv[optind], std::cout);
+    report_balances(argc - optind, &argv[optind], regexps, std::cout);
   else if (command == "register")
-    print_register(argc - optind, &argv[optind], std::cout);
+    print_register(argc - optind, &argv[optind], regexps, std::cout);
   else if (command == "print")
-    print_ledger(argc - optind, &argv[optind], std::cout);
+    print_ledger(argc - optind, &argv[optind], regexps, std::cout);
   else if (command == "equity")
-    equity_ledger(argc - optind, &argv[optind], std::cout);
+    equity_ledger(argc - optind, &argv[optind], regexps, std::cout);
 }
 
 // main.cc ends here.
