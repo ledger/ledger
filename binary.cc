@@ -11,7 +11,7 @@
 namespace ledger {
 
 static unsigned long  binary_magic_number = 0xFFEED765;
-static unsigned long  format_version      = 0x00020027;
+static unsigned long  format_version      = 0x00020028;
 
 static account_t **   accounts;
 static account_t **   accounts_next;
@@ -414,6 +414,13 @@ unsigned int read_binary_journal(std::istream&	    in,
   for (commodity_t::ident_t i = 0; i < c_count; i++)
     read_binary_commodity_extra(data, i);
 
+  commodity_t::ident_t ident;
+  read_binary_number(data, ident);
+  if (ident == 0xffffffff || ident == 0)
+    commodity_t::default_commodity = NULL;
+  else
+    commodity_t::default_commodity = commodities[ident - 1];
+
   // Read in the entries and transactions
 
   for (unsigned long i = 0; i < count; i++) {
@@ -691,6 +698,11 @@ void write_binary_journal(std::ostream& out, journal_t * journal,
        i++)
     if (! (*i).first.empty())
       write_binary_commodity_extra(out, (*i).second);
+
+  if (commodity_t::default_commodity)
+    write_binary_number(out, commodity_t::default_commodity->ident);
+  else
+    write_binary_number<commodity_t::ident_t>(out, 0xffffffff);
 
   // Write out the entries and transactions
 
