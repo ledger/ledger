@@ -25,7 +25,7 @@ class parse_error : public error
  public:
   parse_error(const std::string& _file, const unsigned int _line,
 	      const std::string& reason) throw()
-    : line(_line), file(_file), error(reason) {}
+    : error(reason), line(_line), file(_file) {}
   virtual ~parse_error() throw() {}
 
   virtual const char* what() const throw() {
