@@ -4,7 +4,8 @@
 #include "debug.h"
 
 #include <fstream>
-#include <stdlib.h>
+#include <cstdlib>
+#include <cstdio>
 
 namespace ledger {
 

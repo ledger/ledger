@@ -5,6 +5,7 @@
 #include "util.h"
 
 #include <cstring>
+#include <memory>
 
 namespace ledger {
 

@@ -3,6 +3,8 @@
 #include "error.h"
 #include "mask.h"
 
+#include <memory>
+
 namespace ledger {
 
 entry_t * derive_new_entry(journal_t& journal,
