@@ -10,12 +10,7 @@ state main_ledger;
 
 std::list<mask> regexps;
 
-#ifdef HUQUQULLAH
-bool compute_huquq;
-std::list<mask> huquq_categories;
-#endif
-
-void entry::print(std::ostream& out) const
+void entry::print(std::ostream& out, bool shortcut) const
 {
   char buf[32];
   std::strftime(buf, 31, "%Y.%m.%d ", std::localtime(&date));
@@ -30,46 +25,48 @@ void entry::print(std::ostream& out) const
 
   out << std::endl;
 
-  bool shortcut = xacts.size() == 2;
   if (shortcut &&
-      xacts.front()->cost->comm() != xacts.back()->cost->comm())
+      (xacts.size() != 2 ||
+       xacts.front()->cost->comm() != xacts.back()->cost->comm())) {
     shortcut = false;
+  }
 
-  for (std::list<transaction *>::const_iterator i = xacts.begin();
-       i != xacts.end();
-       i++) {
+  for (std::list<transaction *>::const_iterator x = xacts.begin();
+       x != xacts.end();
+       x++) {
     out << "    ";
 
     out.width(30);
-    out << std::left << (*i)->acct->as_str();
+    out << std::left << (*x)->acct->as_str();
 
-    if (! shortcut || i == xacts.begin()) {
+    if ((*x)->cost && (! shortcut || x == xacts.begin())) {
       out << "  ";
       out.width(10);
-      out << std::right << (*i)->cost->as_str(true);
+      out << std::right << (*x)->cost->as_str(true);
     }
 
-    if (! (*i)->note.empty())
-      out << "  ; " << (*i)->note;
+    if (! (*x)->note.empty())
+      out << "  ; " << (*x)->note;
 
     out << std::endl;
   }
   out << std::endl;
 }
 
-bool entry::validate() const
+bool entry::validate(bool show_unaccounted) const
 {
   totals balance;
 
-  for (std::list<transaction *>::const_iterator i = xacts.begin();
-       i != xacts.end();
-       i++)
-    balance.credit((*i)->cost->value());
+  for (std::list<transaction *>::const_iterator x = xacts.begin();
+       x != xacts.end();
+       x++)
+    if ((*x)->cost)
+      balance.credit((*x)->cost->value());
 
-  if (balance) {
-    std::cerr << "Totals are:" << std::endl;
+  if (show_unaccounted && balance) {
+    std::cerr << "Unaccounted-for balances are:" << std::endl;
     balance.print(std::cerr, 20);
-    std::cerr << std::endl;
+    std::cerr << std::endl << std::endl;
   }
   return ! balance;             // must balance to 0.0
 }
@@ -155,7 +152,16 @@ amount * totals::value(const std::string& commodity) const
 
 void print_ledger(int argc, char *argv[], std::ostream& out)
 {
+  bool use_shortcuts = true;
+
   optind = 1;
+
+  int c;
+  while (-1 != (c = getopt(argc, argv, "n"))) {
+    switch (char(c)) {
+    case 'n': use_shortcuts = false; break;
+    }
+  }
 
   // Compile the list of specified regular expressions, which can be
   // specified on the command line, or using an include/exclude file
@@ -172,7 +178,7 @@ void print_ledger(int argc, char *argv[], std::ostream& out)
        i != main_ledger.entries.end();
        i++)
     if ((*i)->matches(regexps))
-      (*i)->print(out);
+      (*i)->print(out, use_shortcuts);
 }
 
 void record_regexp(char * pattern, std::list<mask>& regexps)
@@ -317,9 +323,14 @@ account * state::find_account(const char * name, bool create)
 
   delete[] buf;
 
-  if (current)
+  if (current) {
     accounts_cache.insert(accounts_entry(name, current));
 
+#ifdef HUQUQULLAH
+    if (matches(main_ledger.huquq_categories, name))
+      current->exempt_or_necessary = true;
+#endif
+  }
   return current;
 }
 

@@ -24,16 +24,85 @@ namespace ledger {
 
 using namespace ledger;
 
-void show_help(std::ostream& out)
+static void show_help(std::ostream& out)
 {
-  out << "usage: ledger [options] DATA_FILE COMMAND [ARGS]"
-      << std::endl
-      << "options:" << std::endl
-      << "  -s  show sub-accounts in balance totals" << std::endl
-      << "  -S  show empty accounts in balance totals" << std::endl
-      << "commands:" << std::endl
-      << "  balance  show balance totals" << std::endl
-      << "  print    print all ledger entries" << std::endl;
+  std::cerr
+    << "usage: ledger [options] COMMAND [options] [REGEXPS]" << std::endl
+    << std::endl
+    << "ledger options:" << std::endl
+    << "  -C       also show cleared transactions" << std::endl
+    << "  -b DATE  specify a beginning date" << std::endl
+    << "  -c       do not show future entries (same as -e TODAY)" << std::endl
+    << "  -e DATE  specify an ending date" << std::endl
+    << "  -f FILE  specify pathname of ledger data file" << std::endl
+    << "  -h       display this help text" << std::endl
+#ifdef HUQUQULLAH
+    << "  -H       do not auto-compute Huququ'llah" << std::endl
+#endif
+    << "  -i FILE  read the list of inclusion regexps from FILE" << std::endl
+    << "  -p FILE  read the list of prices from FILE" << std::endl
+    << "  -P       download price quotes from the Internet" << std::endl
+    << "           (this works by running the command \"getquote SYMBOL\")"
+    << std::endl
+    << "  -w       print out warnings where applicable" << std::endl
+    << std::endl
+    << "commands:" << std::endl
+    << "  balance   show balance totals" << std::endl
+    << "  register  display a register for ACCOUNT" << std::endl
+    << "  print     print all ledger entries" << std::endl
+    << "  equity    generate equity ledger for all entries" << std::endl
+    << std::endl
+    << "`balance' options:" << std::endl
+    << "  -F        print each account's full name" << std::endl
+    << "  -n        do not generate totals for parent accounts" << std::endl
+    << "  -s        show sub-accounts in balance totals" << std::endl
+    << "  -S        show empty accounts in balance totals" << std::endl;
+}
+
+static const char *formats[] = {
+  "%Y/%m/%d",
+  "%m/%d",
+  "%Y.%m.%d",
+  "%m.%d",
+  "%a",
+  "%A",
+  "%b",
+  "%B",
+  "%Y",
+  NULL
+};
+
+static bool parse_date(const char * date_str, std::time_t * result)
+{
+  struct std::tm when;
+
+  std::time_t now = std::time(NULL);
+  struct std::tm * now_tm = std::localtime(&now);
+
+  for (const char ** f = formats; *f; f++) {
+    memset(&when, INT_MAX, sizeof(struct std::tm));
+    if (strptime(date_str, *f, &when)) {
+      when.tm_hour = 0;
+      when.tm_min  = 0;
+      when.tm_sec  = 0;
+
+      if (when.tm_year == -1)
+	when.tm_year = now_tm->tm_year;
+
+      if (std::strcmp(*f, "%Y") == 0) {
+	when.tm_mon  = 0;
+	when.tm_mday = 1;
+      } else {
+	if (when.tm_mon == -1)
+	  when.tm_mon = now_tm->tm_mon;
+	if (when.tm_mday == -1)
+	  when.tm_mday = now_tm->tm_mday;
+      }
+      *result = std::mktime(&when);
+      return true;
+    }
+  }
+  return false;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -53,37 +122,81 @@ int main(int argc, char *argv[])
   std::istream * file = NULL;
 
 #ifdef HUQUQULLAH
-  compute_huquq  = true;
+  bool compute_huquq = true;
 #endif
   have_beginning = false;
   have_ending    = false;
   show_cleared   = false;
 
   int c;
-  while (-1 != (c = getopt(argc, argv, "+b:e:cChHwf:i:p:P"))) {
+  while (-1 != (c = getopt(argc, argv, "+b:e:d:cChHwf:i:p:P"))) {
     switch (char(c)) {
-    case 'b': {
-      struct tm * when = getdate(optarg);
-      if (! when) {
-	std::cerr << "Error: Bad begin date string: " << optarg
-		  << std::endl;
-      } else {
-	begin_date = std::mktime(when);
-	have_beginning = true;
-      }
-      break;
-    }
+    case 'b':
     case 'e': {
-      struct tm * when = getdate(optarg);
-      if (! when) {
-	std::cerr << "Error: Bad end date string: " << optarg
-		  << std::endl;
+      std::time_t when;
+      if (! parse_date(optarg, &when)) {
+	std::cerr << "Error: Bad date string: " << optarg << std::endl;
+	return 1;
+      }
+
+      if (c == 'b') {
+	begin_date     = when;
+	have_beginning = true;
       } else {
-	end_date = std::mktime(when);
-	have_ending = true;
+	end_date       = when;
+	have_ending    = true;
       }
       break;
     }
+
+    case 'd': {
+      if (! parse_date(optarg, &begin_date)) {
+	std::cerr << "Error: Bad date string: " << optarg << std::endl;
+	return 1;
+      }
+      have_beginning = true;
+
+      struct std::tm when, then;
+      std::memset(&then, 0, sizeof(struct std::tm));
+
+      std::time_t now = std::time(NULL);
+      struct std::tm * now_tm = std::localtime(&now);
+
+      for (const char ** f = formats; *f; f++) {
+	memset(&when, INT_MAX, sizeof(struct std::tm));
+	if (strptime(optarg, *f, &when)) {
+	  then.tm_hour = 0;
+	  then.tm_min  = 0;
+	  then.tm_sec  = 0;
+
+	  if (when.tm_year != -1)
+	    then.tm_year = when.tm_year + 1;
+	  else
+	    then.tm_year = now_tm->tm_year;
+
+	  if (std::strcmp(*f, "%Y") == 0) {
+	    then.tm_mon  = 0;
+	    then.tm_mday = 1;
+	  } else {
+	    if (when.tm_mon != -1)
+	      then.tm_mon  = when.tm_mon + 1;
+	    else
+	      then.tm_mon = now_tm->tm_mon;
+
+	    if (when.tm_mday != -1)
+	      then.tm_mday = when.tm_mday + 1;
+	    else
+	      then.tm_mday = now_tm->tm_mday;
+	  }
+
+	  end_date = std::mktime(&then);
+	  have_ending = true;
+	  break;
+	}
+      }
+      break;
+    }
+
     case 'c':
       end_date = std::time(NULL);
       have_ending = true;
@@ -127,46 +240,40 @@ int main(int argc, char *argv[])
   }
 
   if (optind == argc) {
-    std::cerr
-      << "usage: ledger [options] COMMAND [options] [REGEXPS]" << std::endl
-      << std::endl
-      << "ledger options:" << std::endl
-      << "  -C       also show cleared transactions" << std::endl
-      << "  -b DATE  specify a beginning date" << std::endl
-      << "  -c       do not show future entries (same as -e TODAY)" << std::endl
-      << "  -e DATE  specify an ending date" << std::endl
-      << "  -f FILE  specify pathname of ledger data file" << std::endl
-      << "  -h       display this help text" << std::endl
-#ifdef HUQUQULLAH
-      << "  -H       do not auto-compute Huququ'llah" << std::endl
-#endif
-      << "  -i FILE  read the list of inclusion regexps from FILE" << std::endl
-      << "  -p FILE  read the list of prices from FILE" << std::endl
-      << "  -P       download price quotes from the Internet" << std::endl
-      << "           (this works by running the command \"getquote SYMBOL\")"
-      << std::endl
-      << "  -w       print out warnings where applicable" << std::endl
-      << std::endl
-      << "commands:" << std::endl
-      << "  balance   show balance totals" << std::endl
-      << "  register  display a register for ACCOUNT" << std::endl
-      << "  print     print all ledger entries" << std::endl
-      << "  equity    generate equity ledger for all entries" << std::endl
-      << std::endl
-      << "`balance' options:" << std::endl
-      << "  -F        print each account's full name" << std::endl
-      << "  -n        do not generate totals for parent accounts" << std::endl
-      << "  -s        show sub-accounts in balance totals" << std::endl
-      << "  -S        show empty accounts in balance totals" << std::endl;
+    show_help(std::cout);
     return 1;
   }
 
-  // The -f option is required
+  if (use_warnings && (have_beginning || have_ending)) {
+    std::cout << "Reporting";
 
-  if (! file || ! *file) {
-    std::cerr << "Please specify the ledger file using the -f option."
-	      << std::endl;
-    return 1;
+    if (have_beginning) {
+      char buf[32];
+      std::strftime(buf, 31, "%Y.%m.%d", std::localtime(&begin_date));
+      std::cout << " from " << buf;
+    }
+
+    if (have_ending) {
+      char buf[32];
+      std::strftime(buf, 31, "%Y.%m.%d", std::localtime(&end_date));
+      std::cout << " until " << buf;
+    }
+
+    std::cout << std::endl;
+  }
+
+  // A ledger data file must be specified
+
+  if (! file) {
+    const char * p = std::getenv("LEDGER");
+    if (p)
+      file = new std::ifstream(p);
+
+    if (! file || ! *file) {
+      std::cerr << "Please specify the ledger file using the -f option."
+		<< std::endl;
+      return 1;
+    }
   }
 
   // Read the command word
@@ -174,17 +281,34 @@ int main(int argc, char *argv[])
   const std::string command = argv[optind];
 
 #ifdef HUQUQULLAH
-  if (command == "register")
+  if (command == "register" && argv[optind + 1] &&
+      std::string(argv[optind + 1]) != "Huququ'llah" &&
+      std::string(argv[optind + 1]) != "Expenses:Huququ'llah")
     compute_huquq = false;
 
   if (compute_huquq) {
-    new commodity("H", true, true, true, false, 2);
+    main_ledger.compute_huquq = true;
+    main_ledger.huquq_commodity = new commodity("H", true, true,
+						true, false, 2);
+
+    // The allocation causes it to be inserted into the
+    // main_ledger.commodities mapping.
     new commodity("mithqal", false, true, true, false, 1);
 
-    read_regexps(".huquq", huquq_categories);
+    read_regexps(".huquq", main_ledger.huquq_categories);
 
     main_ledger.record_price("H=" DEFAULT_COMMODITY "0.19");
+
+    bool save_use_warnings = use_warnings;
+    use_warnings = false;
     main_ledger.record_price("troy=8.5410148523 mithqal");
+    use_warnings = save_use_warnings;
+
+    main_ledger.huquq = create_amount("H 1.00");
+
+    main_ledger.huquq_account = main_ledger.find_account("Huququ'llah");
+    main_ledger.huquq_expenses_account =
+      main_ledger.find_account("Expenses:Huququ'llah");
   }
 #endif
 

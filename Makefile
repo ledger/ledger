@@ -1,3 +1,14 @@
+define GNUCASH
+true
+endef
+define HUQUQ
+true
+endef
+
+#
+# Example build: make GNUCASH=1 COMMODITY=EUR
+#
+
 CODE =  amount.cc   \
 	ledger.cc   \
 	parse.cc    \
@@ -8,15 +19,22 @@ CODE =  amount.cc   \
 
 OBJS = $(patsubst %.cc,%.o,$(CODE))
 
-CFLAGS = -Wall -ansi -pedantic -DDEFAULT_COMMODITY="\"\$$\""
-CFLAGS := $(CFLAGS) -DHUQUQULLAH=1
+ifndef COMMODITY
+COMMODITY = \$$
+endif
 
-DFLAGS = -O3 -fomit-frame-pointer
-#DFLAGS = -g -O2 # -pg
+CFLAGS = -Wall -ansi -pedantic
+CFLAGS := $(CFLAGS) -DDEFAULT_COMMODITY="\"$(COMMODITY)\""
+
+#DFLAGS = -O3 -fomit-frame-pointer
+DFLAGS = -g # -O2 # -pg
 
 INCS   = -I/usr/include/xmltok
-
 LIBS   = -lgmpxx -lgmp -lpcre
+
+ifdef HUQUQ
+CFLAGS := $(CFLAGS) -DHUQUQULLAH=1
+endif
 
 ifdef GNUCASH
 CODE   := $(CODE) gnucash.cc

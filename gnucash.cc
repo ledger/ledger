@@ -204,7 +204,16 @@ static void dataHandler(void *userData, const char *s, int len)
     xact->acct = (*i).second;
 
     std::string value = curr_quant + " " + (*i).second->comm->symbol;
+
+    if (curr_value->comm() == (*i).second->comm) {
+      // assert: value must be equal to curr_value.
+      delete curr_value;
+      curr_value = NULL;
+    }
     xact->cost = create_amount(value.c_str(), curr_value);
+
+    if (curr_value)
+      delete curr_value;
 
     if (do_compute)
       xact->acct->balance.credit(xact->cost);

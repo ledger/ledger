@@ -11,6 +11,18 @@ extern bool have_beginning;
 extern std::time_t end_date;
 extern bool have_ending;
 
+static std::string truncated(const std::string& str, int width)
+{
+  char buf[256];
+  memset(buf, '\0', 255);
+  std::strncpy(buf, str.c_str(), width);
+  if (buf[width - 1])
+    std::strcpy(&buf[width - 3], "...");
+  else
+    buf[width] = '\0';
+  return buf;
+}
+
 //////////////////////////////////////////////////////////////////////
 //
 // Register printing code
@@ -19,15 +31,14 @@ extern bool have_ending;
 void print_register(int argc, char **argv, std::ostream& out)
 {
   optind = 1;
-#if 0
-  int c;
-  while (-1 != (c = getopt(argc, argv, ""))) {
-    switch (char(c)) {
-    }
-  }
-#endif
 
   // Find out which account this register is to be printed for
+
+  if (optind == argc) {
+    std::cerr << ("Error: Must specify an account name "
+		  "after the 'register' command.") << std::endl;
+    return;
+  }
 
   account * acct = main_ledger.find_account(argv[optind++], false);
   if (! acct) {
@@ -50,17 +61,7 @@ void print_register(int argc, char **argv, std::ostream& out)
   for (entries_iterator i = main_ledger.entries.begin();
        i != main_ledger.entries.end();
        i++) {
-    bool applies = false;
-    for (std::list<transaction *>::iterator x = (*i)->xacts.begin();
-	 x != (*i)->xacts.end();
-	 x++) {
-      if ((*x)->acct == acct) {
-	applies = true;
-	break;
-      }
-    }
-
-    if (! applies || ! (*i)->matches(regexps))
+    if (! (*i)->matches(regexps))
       continue;
 
     for (std::list<transaction *>::iterator x = (*i)->xacts.begin();
@@ -91,21 +92,59 @@ void print_register(int argc, char **argv, std::ostream& out)
       if ((*i)->desc.empty())
 	out << " ";
       else
-	out << std::left << (*i)->desc;
+	out << std::left << truncated((*i)->desc, 30);
       out << " ";
 
-      transaction * xact = (*i)->xacts.front();
+      // Always display the street value, if prices have been
+      // specified
+
+      amount * street = (*x)->cost->street();
+      balance.credit(street);
+
+      // If there are two transactions, use the one which does not
+      // refer to this account.  If there are more than two, we will
+      // just have to print all of the splits, like gnucash does.
+
+      transaction * xact;
+      if ((*i)->xacts.size() == 2) {
+	if (*x == (*i)->xacts.front())
+	  xact = (*i)->xacts.back();
+	else
+	  xact = (*i)->xacts.front();
+      } else {
+	xact = *x;
+      }
 
       out.width(22);
-      out << std::left << xact->acct->as_str() << " ";
+      out << std::left << truncated(xact->acct->as_str(), 22) << " ";
 
       out.width(12);
-      out << std::right << (*x)->cost->as_str(true);
+      out << std::right << street->as_str(true);
+      delete street;
 
-      balance.credit((*x)->cost);
       balance.print(out, 12);
 
       out << std::endl;
+
+      if (xact != *x)
+	continue;
+
+      for (std::list<transaction *>::iterator y = (*i)->xacts.begin();
+	   y != (*i)->xacts.end();
+	   y++) {
+	if (*x == *y)
+	  continue;
+
+	out << "                                      ";
+
+	out.width(22);
+	out << std::left << truncated((*y)->acct->as_str(), 22) << " ";
+
+	out.width(12);
+	street = (*y)->cost->street();
+	out << std::right << street->as_str(true) << std::endl;
+	delete street;
+      }
     }
   }
 }

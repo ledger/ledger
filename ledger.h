@@ -1,5 +1,5 @@
 #ifndef _LEDGER_H
-#define _LEDGER_H "$Revision: 1.12 $"
+#define _LEDGER_H "$Revision: 1.13 $"
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -15,7 +15,12 @@
 #include <list>
 #include <map>
 #include <ctime>
+
+#ifdef DEBUG
 #include <cassert>
+#else
+#define assert(x)
+#endif
 
 #include <pcre.h>               // Perl regular expression library
 
@@ -119,6 +124,9 @@ class amount
   virtual amount * value(amount * pr = NULL) const = 0;
   virtual amount * street() const = 0;
 
+  virtual bool has_price() const = 0;
+  virtual void set_value(const amount * pr) = 0;
+
   // Test if non-zero
 
   virtual operator bool() const = 0;
@@ -143,8 +151,8 @@ operator<<(std::basic_ostream<char, Traits>& out, const amount& a) {
   return (out << std::string(a));
 }
 
-extern amount * create_amount(const char * value, const amount * price = NULL);
-
+extern amount * create_amount(const char * value,
+			      const amount * cost = NULL);
 
 struct mask
 {
@@ -169,8 +177,16 @@ struct transaction
   amount *  cost;
 
   std::string note;
+#ifdef HUQUQULLAH
+  bool exempt_or_necessary;
+#endif
 
-  transaction() : acct(NULL), cost(NULL) {}
+  transaction(account * _acct = NULL, amount * _cost = NULL)
+    : acct(_acct), cost(_cost) {
+#ifdef HUQUQULLAH
+    exempt_or_necessary = false;
+#endif
+  }
 
 #ifdef DO_CLEANUP
   ~transaction() {
@@ -207,8 +223,8 @@ struct entry
 #endif
 
   bool matches(const std::list<mask>& regexps) const;
-  void print(std::ostream& out) const;
-  bool validate() const;
+  void print(std::ostream& out, bool shortcut = true) const;
+  bool validate(bool show_unaccounted = false) const;
 };
 
 struct cmp_entry_date {
@@ -268,7 +284,12 @@ struct account
   std::string name;
   commodity * comm;             // default commodity for this account
   totals      balance;
-  bool        display;
+
+  bool display;
+  int  checked;
+#ifdef HUQUQULLAH
+  bool exempt_or_necessary;
+#endif
 
   typedef std::map<const std::string, struct account *> map;
   typedef map::iterator iterator;
@@ -278,7 +299,11 @@ struct account
   map children;
 
   account(const std::string& _name, struct account * _parent = NULL)
-    : parent(_parent), name(_name), display(false) {}
+    : parent(_parent), name(_name), display(false), checked(0) {
+#ifdef HUQUQULLAH
+    exempt_or_necessary = false;
+#endif
+  }
 
   const std::string as_str() const {
     if (! parent)
@@ -300,11 +325,6 @@ typedef accounts_t::iterator accounts_iterator;
 typedef std::pair<const std::string, account *> accounts_entry;
 
 
-#ifdef HUQUQULLAH
-extern bool compute_huquq;
-extern std::list<mask> huquq_categories;
-#endif
-
 struct state
 {
   commodities_t commodities;
@@ -312,6 +332,17 @@ struct state
   accounts_t    accounts_cache; // maps full names to accounts
   entries_t     entries;
   totals        prices;
+
+#ifdef HUQUQULLAH
+  bool            compute_huquq;
+  std::list<mask> huquq_categories;
+  amount *        huquq;
+  commodity *     huquq_commodity;
+  account *       huquq_account;
+  account *       huquq_expenses_account;
+
+  state() : compute_huquq(false) {}
+#endif
 
 #ifdef DO_CLEANUP
   ~state();

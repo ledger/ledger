@@ -32,17 +32,101 @@ static char * next_element(char * buf, bool variable = false)
 
 static int linenum = 0;
 
-static inline void finalize_entry(entry * curr)
+static void finalize_entry(entry * curr, bool compute_balances)
 {
-  if (curr) {
-    if (! curr->validate()) {
-      std::cerr << "Failed to balance the following transaction, "
-		<< "ending on line " << (linenum - 1) << std::endl;
-      curr->print(std::cerr);
-    } else {
-      main_ledger.entries.push_back(curr);
+  assert(curr);
+
+  // Certain shorcuts are allowed in the case of exactly two
+  // transactions.
+
+  if (! curr->xacts.empty() && curr->xacts.size() == 2) {
+    transaction * first  = curr->xacts.front();
+    transaction * second = curr->xacts.back();
+
+    // If one transaction gives no value at all, then its value is
+    // the inverse of the computed value of the other.
+
+    if (! first->cost && second->cost) {
+      first->cost = second->cost->value();
+      first->cost->negate();
+
+      if (compute_balances)
+	first->acct->balance.credit(first->cost);
+    }
+    else if (! second->cost && first->cost) {
+      second->cost = first->cost->value();
+      second->cost->negate();
+
+      if (compute_balances)
+	second->acct->balance.credit(second->cost);
+    }
+    else if (first->cost && second->cost) {
+      // If one transaction is of a different commodity than the
+      // other, and it has no per-unit price, and its not of the
+      // default commodity, then determine its price by dividing the
+      // unit count into the total, to balance the transaction.
+
+      if (first->cost->comm() != second->cost->comm()) {
+	if (! second->cost->has_price() &&
+	    second->cost->comm_symbol() != DEFAULT_COMMODITY) {
+	  second->cost->set_value(first->cost);
+	}
+	else if (! first->cost->has_price() &&
+		 first->cost->comm_symbol() != DEFAULT_COMMODITY) {
+	  first->cost->set_value(second->cost);
+	}
+      }
     }
   }
+
+  if (! curr->validate()) {
+    std::cerr << "Error, line " << (linenum - 1)
+	      << ": Failed to balance the following transaction:"
+	      << std::endl;
+    curr->print(std::cerr);
+    curr->validate(true);
+    return;
+  }
+
+#ifdef HUQUQULLAH
+  if (main_ledger.compute_huquq) {
+    for (std::list<transaction *>::iterator x = curr->xacts.begin();
+	 x != curr->xacts.end();
+	 x++) {
+      if (! (*x)->exempt_or_necessary || ! (*x)->cost)
+	continue;
+
+      // Reflect the exempt or necessary transaction in the
+      // Huququ'llah account, using the H commodity, which is 19% of
+      // whichever DEFAULT_COMMODITY ledger was compiled with.
+
+      amount * temp = (*x)->cost->value();
+
+      transaction * t
+	= new transaction(main_ledger.huquq_account,
+			  temp->value(main_ledger.huquq));
+      curr->xacts.push_back(t);
+
+      if (compute_balances)
+	t->acct->balance.credit(t->cost);
+
+      // Balance the above transaction by recording the inverse in
+      // Expenses:Huququ'llah.
+
+      t = new transaction(main_ledger.huquq_expenses_account,
+			  temp->value(main_ledger.huquq));
+      t->cost->negate();
+      curr->xacts.push_back(t);
+
+      if (compute_balances)
+	t->acct->balance.credit(t->cost);
+
+      delete temp;
+    }
+  }
+#endif
+
+  main_ledger.entries.push_back(curr);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -59,7 +143,6 @@ bool parse_ledger(std::istream& in, bool compute_balances)
   char line[1024];
 
   struct std::tm moment;
-  memset(&moment, 0, sizeof(struct std::tm));
 
   entry * curr = NULL;
 
@@ -86,15 +169,15 @@ bool parse_ledger(std::istream& in, bool compute_balances)
       int matched = pcre_exec(entry_re, NULL, line, std::strlen(line),
 			      0, 0, ovector, 60);
       if (! matched) {
-	std::cerr << "Failed to parse, line " << linenum << ": "
-		  << line << std::endl;
+	std::cerr << "Error, line " << linenum
+		  << ": Failed to parse: " << line << std::endl;
 	continue;
       }
 
       // If we haven't finished with the last entry yet, do so now
 
       if (curr)
-	finalize_entry(curr);
+	finalize_entry(curr, compute_balances);
 
       curr = new entry;
 
@@ -114,6 +197,8 @@ bool parse_ledger(std::istream& in, bool compute_balances)
       pcre_copy_substring(line, ovector, matched, 4, buf, 255);
       int mday = std::atoi(buf);
 
+      memset(&moment, 0, sizeof(struct std::tm));
+
       moment.tm_mday = mday;
       moment.tm_mon  = mon - 1;
       moment.tm_year = year - 1900;
@@ -131,12 +216,11 @@ bool parse_ledger(std::istream& in, bool compute_balances)
       }
 
       if (ovector[8 * 2] >= 0) {
-	int result = pcre_copy_substring(line, ovector, matched, 8, buf, 255);
-	assert(result >= 0);
+	pcre_copy_substring(line, ovector, matched, 8, buf, 255);
 	curr->desc = buf;
       }
     }
-    else if (std::isspace(line[0])) {
+    else if (curr && std::isspace(line[0])) {
       transaction * xact = new transaction();
 
       char * p = line;
@@ -162,8 +246,7 @@ bool parse_ledger(std::istream& in, bool compute_balances)
 	  xact->note = cost_str;
 	}
 
-	xact->cost = curr->xacts.front()->cost->copy();
-	xact->cost->negate();
+	xact->cost = NULL;
       }
       else {
 	note_str = std::strchr(cost_str, ';');
@@ -183,56 +266,21 @@ bool parse_ledger(std::istream& in, bool compute_balances)
       }
 
 #ifdef HUQUQULLAH
-      bool exempt_or_necessary = false;
-      if (compute_huquq) {
-	if (*p == '!') {
-	  exempt_or_necessary = true;
-	  p++;
-	}
-	else if (matches(huquq_categories, p)) {
-	  exempt_or_necessary = true;
-	}
+      if (*p == '!') {
+	xact->exempt_or_necessary = true;
+	p++;
       }
 #endif
 
       xact->acct = main_ledger.find_account(p);
-      if (compute_balances)
+#ifdef HUQUQULLAH
+      if (xact->acct->exempt_or_necessary)
+	xact->exempt_or_necessary = true;
+#endif
+      if (compute_balances && xact->cost)
 	xact->acct->balance.credit(xact->cost);
 
       curr->xacts.push_back(xact);
-
-#ifdef HUQUQULLAH
-      if (exempt_or_necessary) {
-	static amount * huquq = create_amount("H 1.00");
-	amount * temp;
-
-	// Reflect the exempt or necessary transaction in the
-	// Huququ'llah account, using the H commodity, which is 19%
-	// of whichever DEFAULT_COMMODITY ledger was compiled with.
-	transaction * t = new transaction();
-	t->acct = main_ledger.find_account("Huququ'llah");
-	temp = xact->cost->value();
-	t->cost = temp->value(huquq);
-	delete temp;
-	curr->xacts.push_back(t);
-
-	if (compute_balances)
-	  t->acct->balance.credit(t->cost);
-
-	// Balance the above transaction by recording the inverse in
-	// Expenses:Huququ'llah.
-	t = new transaction();
-	t->acct = main_ledger.find_account("Expenses:Huququ'llah");
-	temp = xact->cost->value();
-	t->cost = temp->value(huquq);
-	delete temp;
-	t->cost->negate();
-	curr->xacts.push_back(t);
-
-	if (compute_balances)
-	  t->acct->balance.credit(t->cost);
-      }
-#endif
     }
     else if (line[0] == 'Y') {
       current_year = std::atoi(line + 2);
@@ -240,7 +288,7 @@ bool parse_ledger(std::istream& in, bool compute_balances)
   }
 
   if (curr)
-    finalize_entry(curr);
+    finalize_entry(curr, compute_balances);
 
   return true;
 }

@@ -51,7 +51,7 @@ static void display_total(std::ostream& out, totals& balance,
     displayed = true;
 
     out << acct->balance;
-    if (top_level)
+    if (! no_subtotals && top_level)
       balance.credit(acct->balance);
 
     if (acct->parent && ! no_subtotals && ! full_names) {
@@ -126,14 +126,23 @@ void report_balances(int argc, char **argv, std::ostream& out)
     for (std::list<transaction *>::iterator x = (*i)->xacts.begin();
 	 x != (*i)->xacts.end();
 	 x++) {
-      account * acct = (*x)->acct;
+      for (account * acct = (*x)->acct;
+	   acct;
+	   acct = no_subtotals ? NULL : acct->parent) {
+	if (acct->checked == 0) {
+	  bool true_match = false;
+	  if (! (regexps.empty() ||
+		 account_matches(acct, regexps, &true_match)))
+	    acct->checked = 2;
+	  else if (! (true_match || show_children || ! acct->parent))
+	    acct->checked = 3;
+	  else
+	    acct->checked = 1;
+	}
 
-      for (; acct; acct = no_subtotals ? NULL : acct->parent) {
-	bool true_match = false;
-	if (! (regexps.empty() ||
-	       account_matches(acct, regexps, &true_match)))
+	if (acct->checked == 2)
 	  break;
-	else if (! (true_match || show_children || ! acct->parent))
+	else if (acct->checked == 3)
 	  continue;
 
 	acct->display = true;
@@ -154,7 +163,7 @@ void report_balances(int argc, char **argv, std::ostream& out)
 
   // Print the total of all the balances shown
 
-  if (! no_subtotals)
+  if (! no_subtotals && balance)
     out << "--------------------" << std::endl
 	<< balance << std::endl;
 }

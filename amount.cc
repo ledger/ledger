@@ -52,6 +52,10 @@ class gmp_amount : public amount
   virtual amount * copy() const;
   virtual amount * value(amount *) const;
   virtual amount * street() const;
+  virtual bool has_price() const {
+    return priced;
+  }
+  virtual void set_value(const amount * val);
 
   virtual operator bool() const;
 
@@ -72,56 +76,15 @@ class gmp_amount : public amount
     return as_str(false);
   }
 
-  friend amount * create_amount(const char * value, const amount * price);
+  friend amount * create_amount(const char * value, const amount * cost);
 };
 
-amount * create_amount(const char * value, const amount * price)
+amount * create_amount(const char * value, const amount * cost)
 {
   gmp_amount * a = new gmp_amount();
   a->parse(value);
-
-  // If a price was specified, it refers to a total price for the
-  // whole `value', meaning we must divide to determine the
-  // per-commodity price.
-
-  if (price) {
-    assert(! a->priced);        // don't specify price twice!
-
-    const gmp_amount * p = dynamic_cast<const gmp_amount *>(price);
-    assert(p);
-
-    // There is no need for per-commodity pricing when the total
-    // price is in the same commodity as the quantity!  In that case,
-    // the two will always be identical.
-    if (a->quantity_comm == p->quantity_comm) {
-      assert(mpz_cmp(a->quantity, p->quantity) == 0);
-      return a;
-    }
-
-    mpz_t quotient;
-    mpz_t remainder;
-    mpz_t addend;
-
-    mpz_init(quotient);
-    mpz_init(remainder);
-    mpz_init(addend);
-
-    mpz_ui_pow_ui(addend, 10, MAX_PRECISION);
-
-    mpz_tdiv_qr(quotient, remainder, p->quantity, a->quantity);
-    mpz_mul(remainder, remainder, addend);
-    mpz_tdiv_q(remainder, remainder, a->quantity);
-    mpz_mul(quotient, quotient, addend);
-    mpz_add(quotient, quotient, remainder);
-
-    a->priced = true;
-    mpz_set(a->price, quotient);
-    a->price_comm = p->quantity_comm;
-
-    mpz_clear(quotient);
-    mpz_clear(remainder);
-    mpz_clear(addend);
-  }
+  if (cost)
+    a->set_value(cost);
   return a;
 }
 
@@ -137,15 +100,28 @@ static void round(mpz_t out, const mpz_t val, int prec)
 
   mpz_ui_pow_ui(divisor, 10, MAX_PRECISION - prec);
   mpz_tdiv_qr(quotient, remainder, val, divisor);
-
   mpz_ui_pow_ui(divisor, 10, MAX_PRECISION - prec - 1);
   mpz_mul_ui(divisor, divisor, 5);
-  if (mpz_cmp(remainder, divisor) >= 0) {
-    mpz_ui_pow_ui(divisor, 10, MAX_PRECISION - prec);
-    mpz_sub(remainder, divisor, remainder);
-    mpz_add(out, val, remainder);
+
+  if (mpz_sgn(remainder) < 0) {
+    mpz_ui_sub(divisor, 0, divisor);
+
+    if (mpz_cmp(remainder, divisor) < 0) {
+      mpz_ui_pow_ui(divisor, 10, MAX_PRECISION - prec);
+      mpz_add(remainder, divisor, remainder);
+      mpz_ui_sub(remainder, 0, remainder);
+      mpz_add(out, val, remainder);
+    } else {
+      mpz_sub(out, val, remainder);
+    }
   } else {
-    mpz_sub(out, val, remainder);
+    if (mpz_cmp(remainder, divisor) >= 0) {
+      mpz_ui_pow_ui(divisor, 10, MAX_PRECISION - prec);
+      mpz_sub(remainder, divisor, remainder);
+      mpz_add(out, val, remainder);
+    } else {
+      mpz_sub(out, val, remainder);
+    }
   }
 
   mpz_clear(divisor);
@@ -204,6 +180,10 @@ amount * gmp_amount::value(amount * pr) const
     else
       new_amt->quantity_comm = quantity_comm;
 
+    if (new_amt->quantity_comm->precision < MAX_PRECISION)
+      round(new_amt->quantity, new_amt->quantity,
+	    new_amt->quantity_comm->precision);
+
     return new_amt;
   }
   else if (! priced) {
@@ -211,8 +191,14 @@ amount * gmp_amount::value(amount * pr) const
   }
   else {
     gmp_amount * new_amt = new gmp_amount();
+
     multiply(new_amt->quantity, quantity, price);
+
     new_amt->quantity_comm = price_comm;
+    if (new_amt->quantity_comm->precision < MAX_PRECISION)
+      round(new_amt->quantity, new_amt->quantity,
+	    new_amt->quantity_comm->precision);
+
     return new_amt;
   }
 }
@@ -263,6 +249,39 @@ amount * gmp_amount::street() const
     }
   }
   return cost ? cost : copy();
+}
+
+void gmp_amount::set_value(const amount * val)
+{
+  assert(! priced);             // don't specify the pricing twice!
+
+  const gmp_amount * v = dynamic_cast<const gmp_amount *>(val);
+  assert(v);
+
+  mpz_t quotient;
+  mpz_t remainder;
+  mpz_t addend;
+
+  mpz_init(quotient);
+  mpz_init(remainder);
+  mpz_init(addend);
+
+  mpz_ui_pow_ui(addend, 10, MAX_PRECISION);
+
+  mpz_tdiv_qr(quotient, remainder, v->quantity, quantity);
+  mpz_mul(remainder, remainder, addend);
+  mpz_tdiv_q(remainder, remainder, quantity);
+  mpz_mul(quotient, quotient, addend);
+  mpz_add(quotient, quotient, remainder);
+  mpz_abs(quotient, quotient);
+
+  priced = true;
+  mpz_set(price, quotient);
+  price_comm = v->quantity_comm;
+
+  mpz_clear(quotient);
+  mpz_clear(remainder);
+  mpz_clear(addend);
 }
 
 gmp_amount::operator bool() const
@@ -535,16 +554,10 @@ static commodity * parse_amount(mpz_t out, const char * num,
 			   thousands, european, precision);
     } else {
       comm = (*item).second;
-#if 0
-      // If a finer precision was used than the commodity allows,
-      // increase the precision.
-      if (precision > comm->precision)
-	comm->precision = precision;
-#else
+
       if (use_warnings && precision > comm->precision)
 	std::cerr << "Warning: Use of higher precision than expected: "
 		  << value_str << std::endl;
-#endif
     }
   }
 
