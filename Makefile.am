@@ -12,7 +12,7 @@ endif
 
 bin_PROGRAMS = ledger
 if DEBUG
-ledger_CXXFLAGS = -DDEBUG_LEVEL=4 -DDO_CLEANUP
+ledger_CXXFLAGS = -DDEBUG_LEVEL=4
 endif
 ledger_SOURCES = main.cc
 ledger_LDADD = $(LIBOBJS) libledger.a

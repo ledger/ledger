@@ -119,11 +119,14 @@
        (with-temp-buffer
 	 (setq exit-code (apply 'ledger-run-ledger "entry" args))
 	 (if (= 0 exit-code)
-	     (if insert-year
-		 (buffer-string)
-	       (buffer-substring 5 (point-max)))
+	     (progn
+	       (goto-char (point-min))
+	       (delete-char 1)
+	       (if insert-year
+		   (buffer-string)
+		 (buffer-substring 5 (point-max))))
 	   (concat (if insert-year entry
-		     (substring entry 5)) "\n\n")))))))
+		     (substring entry 5)) "\n"))) "\n"))))
 
 (defun ledger-expand-entry ()
   (interactive)

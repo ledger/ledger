@@ -68,6 +68,8 @@ bool entry_t::valid() const
   return true;
 }
 
+void clean_commodity_history(char * item_pool, char * item_pool_end);
+
 journal_t::~journal_t()
 {
   DEBUG_PRINT("ledger.memory.dtors", "dtor journal_t");
@@ -85,6 +87,9 @@ journal_t::~journal_t()
       delete *i;
     else
       (*i)->~entry_t();
+
+  // Remove historical prices which were allocated in the item_pool.
+  clean_commodity_history(item_pool, item_pool_end);
 
   if (item_pool)
     delete[] item_pool;

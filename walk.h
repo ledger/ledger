@@ -40,9 +40,6 @@ struct item_handler {
 
 template <typename T>
 class compare_items {
-  value_t left_result;
-  value_t right_result;
-
   const value_expr_t * sort_order;
 
  public:
@@ -54,8 +51,12 @@ class compare_items {
   bool operator()(const T * left, const T * right) {
     assert(left);
     assert(right);
+
+    value_t left_result;
     sort_order->compute(left_result, details_t(left));
+    value_t right_result;
     sort_order->compute(right_result, details_t(right));
+
     return left_result < right_result;
   }
 };

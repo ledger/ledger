@@ -39,19 +39,26 @@ class balance_t
   }
   balance_t(const amount_t& amt) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor balance_t");
-    *this += amt;
+    if (amt)
+      amounts.insert(amounts_pair(amt.commodity, amt));
   }
   balance_t(const int value) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor balance_t");
-    *this += amount_t(value);
+    amount_t amt(value);
+    if (amt)
+      amounts.insert(amounts_pair(amt.commodity, amt));
   }
   balance_t(const unsigned int value) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor balance_t");
-    *this += amount_t(value);
+    amount_t amt(value);
+    if (amt)
+      amounts.insert(amounts_pair(amt.commodity, amt));
   }
   balance_t(const double value) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor balance_t");
-    *this += amount_t(value);
+    amount_t amt(value);
+    if (amt)
+      amounts.insert(amounts_pair(amt.commodity, amt));
   }
 
   // destructor

@@ -13,6 +13,7 @@
 #include "quotes.h"
 #include "option.h"
 #include "config.h"
+#include "debug.h"
 #include "timing.h"
 #include "error.h"
 
@@ -42,7 +43,7 @@ namespace {
   TIMER_DEF(read_cache,	    "reading cache file");
 }
 
-#ifndef DO_CLEANUP
+#if !defined(DEBUG_LEVEL) || DEBUG_LEVEL <= RELEASE
 
 #define auto_ptr bogus_auto_ptr
 
@@ -74,7 +75,7 @@ namespace std {
   };
 }
 
-#endif // !DO_CLEANUP
+#endif
 
 static void
 regexps_to_predicate(std::list<std::string>::const_iterator begin,
@@ -140,10 +141,8 @@ regexps_to_predicate(std::list<std::string>::const_iterator begin,
   }
 }
 
-int main(int argc, char * argv[], char * envp[])
+int parse_and_report(int argc, char * argv[], char * envp[])
 {
-  initialize();
-
   std::auto_ptr<journal_t> journal(new journal_t);
 
   // Initialize the global configuration object for this run
@@ -271,6 +270,8 @@ int main(int argc, char * argv[], char * envp[])
     return 1;
   }
 
+  VALIDATE(journal->valid());
+
   TIMER_STOP(parse_files);
 
   // Read the command word, and then check and simplify it
@@ -320,6 +321,8 @@ int main(int argc, char * argv[], char * envp[])
   std::auto_ptr<entry_t> new_entry;
   if (command == "e") {
     new_entry.reset(journal->derive_entry(arg, args.end()));
+    if (! new_entry.get())
+      return 1;
   } else {
     // Treat the remaining command-line arguments as regular
     // expressions, used for refining report results.
@@ -612,7 +615,7 @@ int main(int argc, char * argv[], char * envp[])
     acct_formatter.flush();
   }
 
-#ifdef DO_CLEANUP
+#if DEBUG_LEVEL >= BETA
   // Cleanup the data handlers that might be present on some objects.
 
   clear_transaction_data xact_cleanup;
@@ -635,13 +638,20 @@ int main(int argc, char * argv[], char * envp[])
 
   TIMER_STOP(write_cache);
 
-#ifdef DO_CLEANUP
-  VALIDATE(journal->valid());
+  return 0;
+}
 
+int main(int argc, char * argv[], char * envp[])
+{
+  initialize();
+
+  int status = parse_and_report(argc, argv, envp);
+
+#if DEBUG_LEVEL >= BETA
   shutdown();
 #endif
 
-  return 0;
+  return status;
 }
 
 // main.cc ends here.

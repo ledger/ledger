@@ -9,7 +9,7 @@
 namespace ledger {
 
 const unsigned long	   binary_magic_number = 0xFFEED765;
-static const unsigned long format_version      = 0x00020018;
+static const unsigned long format_version      = 0x00020019;
 
 static account_t **	   accounts;
 static account_t **	   accounts_next;
@@ -21,6 +21,7 @@ static unsigned int	   commodity_index;
 
 amount_t::bigint_t *	   bigints;
 amount_t::bigint_t *	   bigints_next;
+unsigned int		   bigints_index;
 unsigned int		   bigints_count;
 
 #if DEBUG_LEVEL >= ALPHA
@@ -287,11 +288,13 @@ unsigned int read_binary_journal(std::istream&	    in,
   std::size_t pool_size = (sizeof(entry_t) * count +
 			   sizeof(transaction_t) * xact_count +
 			   sizeof_bigint_t() * bigint_count);
+
   char * item_pool = new char[pool_size];
 
   entry_t *	  entry_pool = (entry_t *) item_pool;
   transaction_t * xact_pool  = (transaction_t *) (item_pool +
 						  sizeof(entry_t) * count);
+  bigints_index = 0;
   bigints = bigints_next
     = (amount_t::bigint_t *) (item_pool + sizeof(entry_t) * count +
 			      sizeof(transaction_t) * xact_count);
@@ -305,7 +308,7 @@ unsigned int read_binary_journal(std::istream&	    in,
     std::pair<commodities_map::iterator, bool> result
       = commodity_t::commodities.insert(commodities_pair(commodity->symbol,
 							 commodity));
-    assert(result.second || master);
+    assert(result.second);
   }
 
   // Read in the entries and transactions

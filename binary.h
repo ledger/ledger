@@ -20,6 +20,7 @@ class binary_parser_t : public parser_t
 
 extern amount_t::bigint_t * bigints;
 extern amount_t::bigint_t * bigints_next;
+extern unsigned int         bigints_index;
 extern unsigned int         bigints_count;
 
 void write_binary_journal(std::ostream&	 out,

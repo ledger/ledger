@@ -66,12 +66,37 @@ void initialize_amounts()
   commodity_t::null_commodity = commodity_t::find_commodity("", true);
 }
 
+void clean_commodity_history(char * item_pool, char * item_pool_end)
+{
+  for (commodities_map::iterator i = commodity_t::commodities.begin();
+       i != commodity_t::commodities.end();
+       i++)
+    for (history_map::iterator j = (*i).second->history.begin();
+	 j != (*i).second->history.end();
+	 j++) {
+      amount_t::bigint_t * quantity = (*j).second.quantity;
+      if (quantity &&
+	  (char *)quantity >= item_pool &&
+	  (char *)quantity < item_pool_end) {
+	assert(quantity->flags & BIGINT_BULK_ALLOC);
+
+	// Since the journal in which this price was bulk alloc'd (on
+	// reading from a binary file) is going away, we must make a
+	// new copy of the value, which other journals might still be
+	// using.
+
+	amount_t::bigint_t * q = new amount_t::bigint_t(*quantity);
+	if (--quantity->ref == 0)
+	  quantity->~bigint_t();
+	(*j).second.quantity = q;
+      }
+    }
+}
+
 void shutdown_amounts()
 {
   mpz_clear(divisor);
   mpz_clear(temp);
-
-  true_value.ref--;
 
   if (commodity_t::updater) {
     delete commodity_t::updater;
@@ -84,6 +109,8 @@ void shutdown_amounts()
     delete (*i).second;
 
   commodity_t::commodities.clear();
+
+  true_value.ref--;
 }
 
 static void mpz_round(mpz_t out, mpz_t value, int value_prec, int round_prec)
@@ -499,30 +526,32 @@ AMOUNT_CMP_UINT(>=)
 AMOUNT_CMP_UINT(==)
 
 // comparisons between amounts
-#define AMOUNT_CMP_AMOUNT(OP)						\
-bool amount_t::operator OP(const amount_t& amt) const			\
-{									\
-  if (! quantity)							\
-    return amt > 0;							\
-  if (! amt.quantity)							\
-    return *this < 0;							\
-									\
-  if (commodity != amt.commodity)					\
-    throw amount_error("Comparing amounts with different commodities");	\
-									\
-  if (quantity->prec == amt.quantity->prec) {				\
-    return mpz_cmp(MPZ(quantity), MPZ(amt.quantity)) OP 0;		\
-  }									\
-  else if (quantity->prec < amt.quantity->prec) {			\
-    amount_t temp = *this;						\
-    temp._resize(amt.quantity->prec);					\
-    return mpz_cmp(MPZ(temp.quantity), MPZ(amt.quantity)) OP 0;		\
-  }									\
-  else {								\
-    amount_t temp = amt;						\
-    temp._resize(quantity->prec);					\
-    return mpz_cmp(MPZ(quantity), MPZ(temp.quantity)) OP 0;		\
-  }									\
+#define AMOUNT_CMP_AMOUNT(OP)					\
+bool amount_t::operator OP(const amount_t& amt) const		\
+{								\
+  if (! quantity)						\
+    return amt > 0;						\
+  if (! amt.quantity)						\
+    return *this < 0;						\
+								\
+  if (commodity != amt.commodity &&				\
+      commodity != commodity_t::null_commodity &&		\
+      amt.commodity != commodity_t::null_commodity)		\
+    return false;						\
+								\
+  if (quantity->prec == amt.quantity->prec) {			\
+    return mpz_cmp(MPZ(quantity), MPZ(amt.quantity)) OP 0;	\
+  }								\
+  else if (quantity->prec < amt.quantity->prec) {		\
+    amount_t temp = *this;					\
+    temp._resize(amt.quantity->prec);				\
+    return mpz_cmp(MPZ(temp.quantity), MPZ(amt.quantity)) OP 0;	\
+  }								\
+  else {							\
+    amount_t temp = amt;					\
+    temp._resize(quantity->prec);				\
+    return mpz_cmp(MPZ(quantity), MPZ(temp.quantity)) OP 0;	\
+  }								\
 }
 
 AMOUNT_CMP_AMOUNT(<)
@@ -832,7 +861,6 @@ void amount_t::parse(const std::string& str)
 
 
 static char buf[4096];
-static int  index = 0;
 
 void amount_t::write_quantity(std::ostream& out) const
 {
@@ -845,7 +873,7 @@ void amount_t::write_quantity(std::ostream& out) const
   }
 
   if (quantity->index == 0) {
-    quantity->index = ++index;
+    quantity->index = ++bigints_index;
     bigints_count++;
 
     byte = 1;
@@ -906,8 +934,6 @@ void amount_t::read_quantity(std::istream& in)
     in.read((char *)&index, sizeof(index));
     quantity = bigints + (index - 1);
     quantity->ref++;
-    DEBUG_PRINT("ledger.amount.bigint-show",
-		"bigint " << quantity << " ++ref " << quantity->ref);
   }
 }
 
@@ -930,7 +956,7 @@ bool amount_t::valid() const
 
 void commodity_t::add_price(const std::time_t date, const amount_t& price)
 {
-  history_map::const_iterator i = history.find(date);
+  history_map::iterator i = history.find(date);
   if (i != history.end()) {
     (*i).second = price;
   } else {
