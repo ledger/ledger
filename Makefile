@@ -81,6 +81,12 @@ include make.deps
 
 # These next rules are for my own use.
 
+install:
+	make clean
+	make DFLAGS="-O3 -fomit-frame-pointer -DRELEASE_LEVEL=0"
+	cp ledger $(HOME)/bin
+	strip $(HOME)/bin/ledger
+
 README.html: README
 	(cd $(HOME)/Projects/muse && \
 	 ./publish --html $(shell pwd)/README && \
