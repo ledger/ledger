@@ -820,16 +820,56 @@ void format_equity::flush()
   xdata.value.negate();
   account_t summary(NULL, "Equity:Opening Balances");
   summary.data = &xdata;
-  next_lines_format.format(output_stream, details_t(summary));
+
+  if (total.type >= value_t::BALANCE) {
+    balance_t * bal;
+    if (total.type == value_t::BALANCE)
+      bal = (balance_t *) total.data;
+    else if (total.type == value_t::BALANCE_PAIR)
+      bal = &((balance_pair_t *) total.data)->quantity;
+    else
+      assert(0);
+
+    for (amounts_map::const_iterator i = bal->amounts.begin();
+	 i != bal->amounts.end();
+	 i++) {
+      xdata.value = (*i).second;
+      xdata.value.negate();
+      next_lines_format.format(output_stream, details_t(summary));
+    }
+  } else {
+    next_lines_format.format(output_stream, details_t(summary));
+  }
   output_stream.flush();
 }
 
 void format_equity::operator()(account_t& account)
 {
   if (display_account(account, disp_pred)) {
-    next_lines_format.format(output_stream, details_t(account));
-    if (account_has_xdata(account))
-      total += account_xdata_(account).value;
+    if (account_has_xdata(account)) {
+      value_t val = account_xdata_(account).value;
+
+      if (val.type >= value_t::BALANCE) {
+	balance_t * bal;
+	if (val.type == value_t::BALANCE)
+	  bal = (balance_t *) val.data;
+	else if (val.type == value_t::BALANCE_PAIR)
+	  bal = &((balance_pair_t *) val.data)->quantity;
+	else
+	  assert(0);
+
+	for (amounts_map::const_iterator i = bal->amounts.begin();
+	     i != bal->amounts.end();
+	     i++) {
+	  account_xdata_(account).value = (*i).second;
+	  next_lines_format.format(output_stream, details_t(account));
+	}
+	account_xdata_(account).value = val;
+      } else {
+	next_lines_format.format(output_stream, details_t(account));
+      }
+      total += val;
+    }
     account_xdata(account).dflags |= ACCOUNT_DISPLAYED;
   }
 }
