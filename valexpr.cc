@@ -1,6 +1,8 @@
 #include "valexpr.h"
 #include "error.h"
 #include "datetime.h"
+#include "debug.h"
+#include "util.h"
 
 #include <vector>
 
@@ -344,32 +346,20 @@ value_expr_t * parse_value_term(std::istream& in)
 
   char c = peek_next_nonws(in);
   if (std::isdigit(c) || c == '.' || c == '{') {
-    std::string ident;
-
+    static char buf[2048];
     if (c == '{') {
       in.get(c);
-      c = in.peek();
-      while (! in.eof() && c != '}') {
-	in.get(c);
-	ident += c;
-	c = in.peek();
-      }
+      READ_INTO(in, buf, 2048, c, c != '}');
       if (c == '}')
 	in.get(c);
       else
 	throw value_expr_error("Missing '}'");
     } else {
-      while (! in.eof() && std::isdigit(c) || c == '.') {
-	in.get(c);
-	ident += c;
-	c = in.peek();
-      }
+      READ_INTO(in, buf, 2048, c, std::isdigit(c) || c == '.');
     }
 
-    if (! ident.empty()) {
-      node = new value_expr_t(value_expr_t::CONSTANT_A);
-      node->constant_a.parse(ident);
-    }
+    node = new value_expr_t(value_expr_t::CONSTANT_A);
+    node->constant_a.parse(buf);
     return node;
   }
 
@@ -443,7 +433,6 @@ value_expr_t * parse_value_term(std::istream& in)
 
   // Other
   case '/': {
-    std::string ident;
     bool        payee_mask = false;
 
     c = peek_next_nonws(in);
@@ -453,22 +442,15 @@ value_expr_t * parse_value_term(std::istream& in)
       c = in.peek();
     }
 
-    while (! in.eof() && c != '/') {
-      in.get(c);
-      if (c == '\\')
-	in.get(c);
-      ident += c;
-      c = in.peek();
-    }
-
-    if (c == '/') {
-      in.get(c);
-      node = new value_expr_t(payee_mask ?
-			value_expr_t::F_PAYEE_MASK : value_expr_t::F_ACCOUNT_MASK);
-      node->mask = new mask_t(ident);
-    } else {
+    static char buf[4096];
+    READ_INTO(in, buf, 4096, c, c != '/');
+    if (c != '/')
       throw value_expr_error("Missing closing '/'");
-    }
+
+    in.get(c);
+    node = new value_expr_t(payee_mask ? value_expr_t::F_PAYEE_MASK :
+			    value_expr_t::F_ACCOUNT_MASK);
+    node->mask = new mask_t(buf);
     break;
   }
 
@@ -481,22 +463,15 @@ value_expr_t * parse_value_term(std::istream& in)
     break;
 
   case '[': {
-    std::string ident;
-
-    c = in.peek();
-    while (! in.eof() && c != ']') {
-      in.get(c);
-      ident += c;
-      c = in.peek();
-    }
-    if (c == ']') {
-      in.get(c);
-      node = new value_expr_t(value_expr_t::CONSTANT_T);
-      if (! parse_date(ident.c_str(), &node->constant_t))
-	throw value_expr_error("Failed to parse date");
-    } else {
+    static char buf[1024];
+    READ_INTO(in, buf, 1024, c, c != ']');
+    if (c != ']')
       throw value_expr_error("Missing ']'");
-    }
+
+    in.get(c);
+    node = new value_expr_t(value_expr_t::CONSTANT_T);
+    if (! parse_date(buf, &node->constant_t))
+      throw value_expr_error("Failed to parse date");
     break;
   }
 

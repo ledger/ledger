@@ -133,9 +133,11 @@ class item_predicate
     predicate = NULL;
     if (! _predicate.empty()) {
       try {
+#ifdef DEBUG_ENABLED
 	DEBUG_CLASS("valexpr.predicate.parse");
 
 	DEBUG_PRINT_("parsing: '" << _predicate << "'");
+#endif
 	predicate = parse_value_expr(_predicate);
 
 #ifdef DEBUG_ENABLED

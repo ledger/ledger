@@ -1,4 +1,5 @@
 #include "option.h"
+#include "util.h"
 
 #include <iostream>
 #include <cstdarg>
@@ -9,11 +10,16 @@ option_handler::option_handler(const std::string& label,
 {
   option_t opt;
 
+  static char buf[128];
+  char * p = buf;
   for (const char * q = label.c_str(); *q; q++)
     if (*q == '_')
-      opt.long_opt += '-';
+      *p++ = '-';
     else
-      opt.long_opt += *q;
+      *p++ = *q;
+  assert(p < buf + 127);
+  *p = '\0';
+  opt.long_opt = buf;
 
   handlers.insert(option_handler_pair(opt.long_opt, this));
 
@@ -130,15 +136,18 @@ void process_environment(char ** envp, const std::string& tag)
 {
   for (char ** p = envp; *p; p++)
     if (std::strncmp(*p, tag.c_str(), 7) == 0) {
-      std::string opt;
       char * q;
+      static char buf[128];
+      char * r = buf;
       for (q = *p + 7; *q && *q != '='; q++)
 	if (*q == '_')
-	  opt += '-';
+	  *r++ += '-';
 	else
-	  opt += std::tolower(*q);
+	  *r++ += std::tolower(*q);
+      assert(r < buf + 127);
+      *r = '\0';
 
       if (*q == '=')
-	process_option(opt, q + 1);
+	process_option(buf, q + 1);
     }
 }

@@ -42,12 +42,6 @@ all: make.deps ledger
 
 docs: ledger.info ledger.pdf
 
-install:
-	make clean
-	make DFLAGS="-O3 -fomit-frame-pointer"
-	cp ledger $(HOME)/bin
-	strip $(HOME)/bin/ledger
-
 libledger.a: $(OBJS)
 	ar rv $@ $?
 	ranlib $@

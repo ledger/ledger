@@ -1,6 +1,5 @@
-#include "amount.h"
-
-#include <list>
+#include "ledger.h"
+#include "util.h"
 
 #include "gmp.h"
 
@@ -585,43 +584,30 @@ static inline char peek_next_nonws(std::istream& in)
 
 void parse_quantity(std::istream& in, std::string& value)
 {
+  static char buf[256];
   char c = peek_next_nonws(in);
-  while (std::isdigit(c) || c == '-' || c == '.' || c == ',') {
-    in.get(c);
-    if (in.eof())
-      break;
-    value += c;
-    c = in.peek();
-  }
+  READ_INTO(in, buf, 256, c,
+	    std::isdigit(c) || c == '-' || c == '.' || c == ',');
+  value = buf;
 }
 
 void parse_commodity(std::istream& in, std::string& symbol)
 {
+  static char buf[256];
+
   char c = peek_next_nonws(in);
   if (c == '"') {
     in.get(c);
-    c = in.peek();
-    while (! in.eof() && c != '"') {
-      in.get(c);
-      if (c == '\\')
-	in.get(c);
-      symbol += c;
-      c = in.peek();
-    }
-
+    READ_INTO(in, buf, 256, c, c != '"');
     if (c == '"')
       in.get(c);
     else
       assert(0);
   } else {
-    while (! std::isspace(c) && ! std::isdigit(c) && c != '-' && c != '.') {
-      in.get(c);
-      if (in.eof())
-	break;
-      symbol += c;
-      c = in.peek();
-    }
+    READ_INTO(in, buf, 256, c, ! std::isspace(c) && ! std::isdigit(c) &&
+	       c != '-' && c != '.');
   }
+  symbol = buf;
 }
 
 void amount_t::parse(std::istream& in)

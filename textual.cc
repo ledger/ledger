@@ -385,12 +385,11 @@ unsigned int parse_textual_journal(std::istream& in, journal_t * journal,
 	  in >> c;
 	  in >> date;
 	  in >> time;
+	  date += " ";
+	  date += time;
 
 	  in.getline(line, MAX_LINE);
 	  linenum++;
-
-	  date += " ";
-	  date += time;
 
 	  struct std::tm when;
 	  if (strptime(date.c_str(), "%Y/%m/%d %H:%M:%S", &when)) {

@@ -20,8 +20,6 @@ config_t::config_t()
 {
   if (const char * p = std::getenv("HOME"))
     init_file = cache_file = price_db = p;
-  else
-    init_file = cache_file = price_db = "";
 
   init_file  += "/.ledgerrc";
   cache_file += "/.ledger";

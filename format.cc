@@ -47,7 +47,9 @@ element_t * format_t::parse_elements(const std::string& fmt)
 {
   element_t * result  = NULL;
   element_t * current = NULL;
-  std::string str;
+
+  static char buf[1024];
+  char * q = buf;
 
   for (const char * p = fmt.c_str(); *p; p++) {
     if (*p == '%') {
@@ -58,10 +60,10 @@ element_t * format_t::parse_elements(const std::string& fmt)
 	current = current->next;
       }
 
-      if (! str.empty()) {
+      if (q != buf) {
 	current->type  = element_t::STRING;
-	current->chars = str;
-	str = "";
+	current->chars = std::string(buf, q);
+	q = buf;
 
 	current->next  = new element_t;
 	current = current->next;
@@ -73,22 +75,23 @@ element_t * format_t::parse_elements(const std::string& fmt)
 	++p;
       }
 
-      std::string num;
-      while (*p && std::isdigit(*p))
-	num += *p++;
-      if (! num.empty())
-	current->min_width = std::atol(num.c_str());
+      int num = 0;
+      while (*p && std::isdigit(*p)) {
+	num *= 10;
+	num += *p++ - '0';
+      }
+      current->min_width = num;
 
       if (*p == '.') {
 	++p;
-	num = "";
-	while (*p && std::isdigit(*p))
-	  num += *p++;
-	if (! num.empty()) {
-	  current->max_width = std::atol(num.c_str());
-	  if (current->min_width == 0)
-	    current->min_width = current->max_width;
+	num = 0;
+	while (*p && std::isdigit(*p)) {
+	  num *= 10;
+	  num += *p++ - '0';
 	}
+	current->max_width = num;
+	if (current->min_width == 0)
+	  current->min_width = current->max_width;
       }
 
       switch (*p) {
@@ -97,29 +100,31 @@ element_t * format_t::parse_elements(const std::string& fmt)
 	current->chars = "%";
 	break;
 
-      case '(':
+      case '(': {
 	++p;
-	num = "";
+	const char * b = p;
 	while (*p && *p != ')')
-	  num += *p++;
+	  p++;
 	if (*p != ')')
 	  throw format_error("Missing ')'");
 
 	current->type     = element_t::VALUE_EXPR;
-	current->val_expr = parse_value_expr(num);
+	current->val_expr = parse_value_expr(std::string(b, p));
 	break;
+      }
 
-      case '[':
+      case '[': {
 	++p;
-	num = "";
+	const char * b = p;
 	while (*p && *p != ']')
-	  num += *p++;
+	  p++;
 	if (*p != ']')
 	  throw format_error("Missing ']'");
 
 	current->type  = element_t::DATE_STRING;
-	current->chars = num;
+	current->chars = std::string(b, p);
 	break;
+      }
 
       case 'D':
 	current->type  = element_t::DATE_STRING;
@@ -137,11 +142,11 @@ element_t * format_t::parse_elements(const std::string& fmt)
       case '_': current->type = element_t::SPACER; break;
       }
     } else {
-      str += *p;
+      *q++ = *p;
     }
   }
 
-  if (! str.empty()) {
+  if (q != buf) {
     if (! result) {
       current = result = new element_t;
     } else {
@@ -149,7 +154,7 @@ element_t * format_t::parse_elements(const std::string& fmt)
       current = current->next;
     }
     current->type  = element_t::STRING;
-    current->chars = str;
+    current->chars = std::string(buf, q);
   }
 
   return result;
