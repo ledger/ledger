@@ -67,8 +67,8 @@ Report filtering:\n\
   -c, --current         show only current and past entries (not future)\n\
   -C, --cleared         consider only cleared transactions\n\
   -U, --uncleared       consider only uncleared transactions\n\
-  -R, --real            consider only non-virtual transactions\n\n\
-  -r, --related         calculate report using related transactions\n\
+  -R, --real            consider only non-virtual transactions\n\
+  -r, --related         calculate report using related transactions\n\n\
 Output customization:\n\
   -F, --format STR      use STR as the format; for each report type, use:\n\
 			  --balance-format   --equity-format\n\
@@ -102,17 +102,13 @@ Commodity reporting:\n\
   -D, --deviation       report deviation from the average\n\
   -X, --trend           report average deviation from the average\n\
   -Z, --weighted-trend  same as trend, but older values are less significant\n\
-			(-D, -X and -Z make little sense in balance reports)\n\n\
+			(-D, -X and -Z make little sense in balance reports)\n\
 Commands:\n\
   balance [REGEXP]...   show balance totals for matching accounts\n\
   register [REGEXP]...  show register of matching transactions\n\
   print [REGEXP]...     print all matching entries\n\
   equity [REGEXP]...    output equity entries for matching accounts\n\
-  entry DATE PAYEE AMT  output a derived entry, based on the arguments\n\n\
-For commands that accepts a list of regular expressions, these match against\n\
-the account.  If the separator \"--\" is specified, regexps after it are\n\
-matched against the payee name.  For even more sophisticated entry matching,\n\
-use --limit; to affect display only (not calculation), use --display.\n";
+  entry DATE PAYEE AMT  output a derived entry, based on the arguments\n";
 }
 
 //////////////////////////////////////////////////////////////////////
