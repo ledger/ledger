@@ -1,5 +1,5 @@
 \input texinfo    @c -*-texinfo-*-
-@comment $Id: ledger.texi,v 1.9 2003/10/04 01:54:31 johnw Exp $
+@comment $Id: ledger.texi,v 1.10 2003/10/10 19:07:26 johnw Exp $
 @comment %**start of header
 
 @setfilename ledger.info
@@ -508,37 +508,54 @@ If you want to show all accounts but for one account, remember to use
 /home/johnw $ ledger balance -- -equity
 @end example
 
-@chapter Using GnuCash to Keep Your Ledger
+@section Virtual transactions
 
-The @code{ledger} tool is fast and simple, but it gives you no special
-method of actually editing the ledger.  It assumes you know how to use
-a text editor, and like doing so.  Perhaps an Emacs mode will appear
-someday soon to make editing @code{ledger}'s data files much easier.
+A virtual transaction is when you, in your mind, see money as moving to
+a certain place, when in reality that money has not moved at all.  There
+are several scenarios in which this type of tracking comes in handy, and
+each of them will be discussed in detail.
 
-Until then, you are free to use GnuCash to maintain your ledger, and
-the @code{ledger} program for querying and reporting on the contents
-of that ledger.  It takes a little longer to parse the XML data format
-that GnuCash uses, but the end result is identical.
+To enter a virtual transaction, surround the account name in
+parentheses.  This form of usage does not need to balance.  However, if
+you want to ensure the virtual transaction balances with other virtual
+transactions in the same entry, use square brackets.  For example:
 
-Then again, why would anyone use a Gnome-centric, 35 megabyte behemoth
-to edit their data, and a 65 kilobyte executable to query it@dots{}
+@example
+10/2  Paycheck
+    Assets:Checking                        $1000.00
+    Income:Salary                         $-1000.00
+    (Debt:Alimony)                          $200.00
+@end example
 
-@node Computing Huqúqu'lláh,  , Keeping a ledger, Top
-@chapter Using Virtual Accounts
+In this example, after receiving a paycheck an alimony debt is
+increased---even though no money has moved around yet.
 
-One special feature of the @code{ledger} is the management of virtual
-accounts.  A virtual account is when you, in your mind, see money as
-moving to certain places, when in reality that money has not moved at
-all.  There are several scenarios where this type of thinking comes in
-very handy, and each of them will be discussed in detail.
+@example
+10/2  Paycheck
+    Assets:Checking                        $1000.00
+    Income:Salary                         $-1000.00
+    [Savings:Trip]                          $200.00
+    [Assets:Checking]                      $-200.00
+@end example
 
-@section Saving for a Special Occasion
+In this example, $200 has been deducted from checking toward savings for
+a trip.  It will appear as though the money has been moved from the
+account into ``Savings:Trip'', although no money has actually moved
+anywhere.
 
-@section Keeping a Budget
+When balances are displayed, virtual transactions will be factored in.
+To view balances without any virtual balances factored in, using the
+@samp{-R} flag, for ``Reality''.
 
-@section Tracking Allocated Funds
+@subsection Saving for a Special Occasion
 
-@section Computing Bahá'í Huqúqu'lláh
+@subsection Keeping a Budget
+
+@subsection Tracking Allocated Funds
+
+@section Automated transactions
+
+@subsection Computing Bahá'í Huqúqu'lláh
 
 As a Bahá'í, I need to compute Huqúqu'lláh on some of my assets.  The
 exact details of this matter are rather complex, so if you have any
@@ -583,5 +600,20 @@ ledger data, type:
 @example
 /home/johnw $ ledger -f ledger.dat balance ^huquq
 @end example
+
+@chapter Using GnuCash to Keep Your Ledger
+
+The @code{ledger} tool is fast and simple, but it gives you no special
+method of actually editing the ledger.  It assumes you know how to use
+a text editor, and like doing so.  Perhaps an Emacs mode will appear
+someday soon to make editing @code{ledger}'s data files much easier.
+
+Until then, you are free to use GnuCash to maintain your ledger, and
+the @code{ledger} program for querying and reporting on the contents
+of that ledger.  It takes a little longer to parse the XML data format
+that GnuCash uses, but the end result is identical.
+
+Then again, why would anyone use a Gnome-centric, 35 megabyte behemoth
+to edit their data, and a 65 kilobyte executable to query it@dots{}
 
 @bye
