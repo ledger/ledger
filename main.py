@@ -21,8 +21,11 @@ journal = Journal ()
 parse_journal_file (args[0], journal)
 
 class OutputTransaction (TransactionHandler):
+    def __init__ (self):
+	self.formatter = Format ("%D %-20P %N")
+	TransactionHandler.__init__ (self)
     def __call__ (self, xact):
-	print xact.entry.payee
+	print self.formatter.format(xact)
 
 handler = OutputTransaction()
 handler = FilterTransactions (handler, "/Checking/")
@@ -31,6 +34,6 @@ for entry in journal:
     for xact in entry:
 	handler (xact)
 
-span = Interval ("monthly last year")
+span = Interval ("weekly last month")
 for date in span:
     print time.strftime ("%c", time.localtime (date))

@@ -73,7 +73,7 @@ struct format_t
 
   static element_t * parse_elements(const std::string& fmt);
 
-  void format_elements(std::ostream& out, const details_t& details) const;
+  void format(std::ostream& out, const details_t& details) const;
 
   static void compute_value(value_t& result, const details_t& details) {
     if (value_expr)
@@ -109,10 +109,10 @@ class format_transactions : public item_handler<transaction_t>
     if (! xact.data ||
 	! (XACT_DATA_(xact)->dflags & TRANSACTION_DISPLAYED)) {
       if (last_entry != xact.entry) {
-	first_line_format.format_elements(output_stream, details_t(xact));
+	first_line_format.format(output_stream, details_t(xact));
 	last_entry = xact.entry;
       } else {
-	next_lines_format.format_elements(output_stream, details_t(xact));
+	next_lines_format.format(output_stream, details_t(xact));
       }
       if (! xact.data)
 	xact.data = new transaction_data_t;
@@ -157,7 +157,7 @@ class format_account : public item_handler<account_t>
 	  account.data = new account_data_t;
 	ACCT_DATA_(account)->dflags |= ACCOUNT_TO_DISPLAY;
       } else {
-	format.format_elements(output_stream, details_t(account));
+	format.format(output_stream, details_t(account));
 	if (! account.data)
 	  account.data = new account_data_t;
 	ACCT_DATA_(account)->dflags |= ACCOUNT_DISPLAYED;
@@ -188,7 +188,7 @@ class format_equity : public item_handler<account_t>
     entry_t header_entry;
     header_entry.payee = "Opening Balances";
     header_entry.date  = std::time(NULL);
-    first_line_format.format_elements(output_stream, details_t(header_entry));
+    first_line_format.format(output_stream, details_t(header_entry));
   }
 
   virtual void flush() {
@@ -197,13 +197,13 @@ class format_equity : public item_handler<account_t>
     summary.data = acct_data.get();
     ((account_data_t *) summary.data)->value = total;
     ((account_data_t *) summary.data)->value.negate();
-    next_lines_format.format_elements(output_stream, details_t(summary));
+    next_lines_format.format(output_stream, details_t(summary));
     output_stream.flush();
   }
 
   virtual void operator()(account_t& account) {
     if (format_account::display_account(account, disp_pred)) {
-      next_lines_format.format_elements(output_stream, details_t(account));
+      next_lines_format.format(output_stream, details_t(account));
       if (! account.data)
 	account.data = new account_data_t;
       else

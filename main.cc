@@ -347,7 +347,7 @@ int parse_and_report(int argc, char * argv[], char * envp[])
 
       if (ACCT_DATA(journal->master)->dflags & ACCOUNT_TO_DISPLAY) {
 	out << "--------------------\n";
-	config.format.format_elements(out, details_t(*journal->master));
+	config.format.format(out, details_t(*journal->master));
       }
     }
   }

@@ -185,8 +185,7 @@ element_t * format_t::parse_elements(const std::string& fmt)
   return result.release();
 }
 
-void format_t::format_elements(std::ostream&    out,
-			       const details_t& details) const
+void format_t::format(std::ostream& out, const details_t& details) const
 {
   for (const element_t * elem = elements; elem; elem = elem->next) {
     if (elem->align_left)
@@ -439,15 +438,22 @@ bool format_account::display_account(const account_t& account,
 using namespace boost::python;
 using namespace ledger;
 
+template <typename T>
+std::string py_format(format_t& format, T& item) {
+  std::ostringstream out;
+  format.format(out, details_t(item));
+  return out.str();
+}
+
 void export_format()
 {
-#if 0
-  class_< format_transactions > ("FormatTransactions")
-    .def(init<item_handler<transaction_t> *>())
-    .def("flush", &format_transactions::flush)
-    .def("__call__", &format_transactions::operator());
+  class_< format_t > ("Format")
+    .def(init<std::string>())
+    .def("reset", &format_t::reset)
+    .def("format", py_format<account_t>)
+    .def("format", py_format<entry_t>)
+    .def("format", py_format<transaction_t>)
     ;
-#endif
 }
 
 #endif // USE_BOOST_PYTHON
