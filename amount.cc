@@ -73,17 +73,10 @@ static void mpz_round(mpz_t out, mpz_t value, int value_prec, int round_prec)
   mpz_init(quotient);
   mpz_init(remainder);
 
-  DEBUG_CLASS("ledger.amount.round");
-
-  DEBUG_PRINT_("mpz_round: value " << value);
   mpz_ui_pow_ui(divisor, 10, value_prec - round_prec);
-  DEBUG_PRINT_("mpz_round: divisor " << divisor);
   mpz_tdiv_qr(quotient, remainder, value, divisor);
-  DEBUG_PRINT_("mpz_round: quotient " << quotient);
-  DEBUG_PRINT_("mpz_round: remainder " << remainder);
   mpz_divexact_ui(divisor, divisor, 10);
   mpz_mul_ui(divisor, divisor, 5);
-  DEBUG_PRINT_("mpz_round: divisor " << divisor);
 
   if (mpz_sgn(remainder) < 0) {
     mpz_neg(divisor, divisor);
@@ -91,20 +84,16 @@ static void mpz_round(mpz_t out, mpz_t value, int value_prec, int round_prec)
       mpz_ui_pow_ui(divisor, 10, value_prec - round_prec);
       mpz_add(remainder, divisor, remainder);
       mpz_ui_sub(remainder, 0, remainder);
-      DEBUG_PRINT_("mpz_round: + remainder " << remainder);
       mpz_add(out, value, remainder);
     } else {
-      DEBUG_PRINT_("mpz_round: - remainder " << remainder);
       mpz_sub(out, value, remainder);
     }
   } else {
     if (mpz_cmp(remainder, divisor) >= 0) {
       mpz_ui_pow_ui(divisor, 10, value_prec - round_prec);
       mpz_sub(remainder, divisor, remainder);
-      DEBUG_PRINT_("mpz_round: + remainder " << remainder);
       mpz_add(out, value, remainder);
     } else {
-      DEBUG_PRINT_("mpz_round: - remainder " << remainder);
       mpz_sub(out, value, remainder);
     }
   }
@@ -171,8 +160,6 @@ amount_t::amount_t(const double value)
 
 void amount_t::_release()
 {
-  DEBUG_PRINT("ledger.amount.bigint-show",
-	      "bigint " << quantity << " --ref " << (quantity->ref - 1));
   if (--quantity->ref == 0)
     delete quantity;
 }
@@ -205,8 +192,6 @@ void amount_t::_copy(const amount_t& amt)
 
     quantity = amt.quantity;
     quantity->ref++;
-    DEBUG_PRINT("ledger.amount.bigint-show",
-		"bigint " << quantity << " ++ref " << quantity->ref);
   }
   commodity = amt.commodity;
 }
@@ -663,7 +648,9 @@ std::ostream& operator<<(std::ostream& out, const amount_t& amt)
     out << '0';
   }
   else if (! (amt.commodity->flags & COMMODITY_STYLE_THOUSANDS)) {
-    out << quotient;
+    char * p = mpz_get_str(NULL, 10, quotient);
+    out << p;
+    std::free(p);
   }
   else {
     std::list<std::string> strs;
@@ -704,7 +691,10 @@ std::ostream& operator<<(std::ostream& out, const amount_t& amt)
 
     out.width(amt.commodity->precision);
     out.fill('0');
-    out << rquotient;
+
+    char * p = mpz_get_str(NULL, 10, rquotient);
+    out << p;
+    std::free(p);
   }
 
   if (amt.commodity->flags & COMMODITY_STYLE_SUFFIXED) {
