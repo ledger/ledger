@@ -11,18 +11,7 @@
 
 namespace ledger {
 
-
-//////////////////////////////////////////////////////////////////////
-//
-// The command-line balance report
-//
-
 static const std::string bal_fmt = "%20T  %2_%-n\n";
-
-//////////////////////////////////////////////////////////////////////
-//
-// The command-line register and print report
-//
 
 static const std::string reg_fmt
   = "%10d %-.20p %-.22N %12.66t %12.80T\n\
@@ -31,104 +20,6 @@ static const std::string reg_fmt
 static const std::string print_fmt
   = "\n%10d %X%C%p\n    %-34N  %12o\n%/    %-34N  %12o\n";
 
-#if 0
-
-static void report_value_change(std::ostream&         out,
-				const std::time_t     date,
-				const balance_pair_t& balance,
-				const balance_pair_t& prev_balance,
-				const node_t *        predicate,
-				const format_t&       first_line_format,
-				const format_t&       next_lines_format)
-{
-}
-
-void register_report(std::ostream&   out,
-		     item_t *	     top,
-		     const node_t *  predicate,
-		     const node_t *  sort_order,
-		     const format_t& first_line_format,
-		     const format_t& next_lines_format,
-		     const bool      show_expanded)
-{
-  if (sort_order)
-    top->sort(sort_order);
-
-  balance_pair_t  balance;
-  balance_pair_t  last_reported;
-  account_t       splits(NULL, "<Total>");
-  value_predicate pred_obj(predicate);
-
-  for (items_deque::const_iterator i = top->subitems.begin();
-       i != top->subitems.end();
-       i++) {
-    bool first = true;
-
-    if ((*i)->subitems.size() > 1 && ! show_expanded) {
-      item_t summary(*i);
-      summary.parent  = *i;
-      summary.account = &splits;
-
-      summary.value   = 0;
-      for (items_deque::const_iterator j = (*i)->subitems.begin();
-	   j != (*i)->subitems.end();
-	   j++)
-	summary.value += (*j)->value;
-      summary.total = balance + summary.value;
-
-      bool show = pred_obj(&summary);
-      if (show && show_commodities_revalued)
-	report_value_change(out, summary.date, balance, last_reported,
-			    predicate, first_line_format, next_lines_format);
-
-      balance += summary.value;
-
-      if (show) {
-	if (! show_commodities_revalued_only)
-	  first_line_format.format_elements(out, &summary, top);
-
-	if (show_commodities_revalued)
-	  last_reported = balance;
-      }
-    } else {
-      for (items_deque::const_iterator j = (*i)->subitems.begin();
-	   j != (*i)->subitems.end();
-	   j++) {
-	(*j)->total = balance + (*j)->value;
-
-	bool show = pred_obj(*j);
-	if (show && first && show_commodities_revalued) {
-	  report_value_change(out, (*i)->date, balance, last_reported,
-			      predicate, first_line_format, next_lines_format);
-	  if (show_commodities_revalued_only)
-	    first = false;
-	}
-
-	balance += (*j)->value;
-
-	if (show) {
-	  if (! show_commodities_revalued_only) {
-	    if (first) {
-	      first = false;
-	      first_line_format.format_elements(out, *j, *i);
-	    } else {
-	      next_lines_format.format_elements(out, *j, *i);
-	    }
-	  }
-
-	  if (show_commodities_revalued)
-	    last_reported = balance;
-	}
-      }
-    }
-  }
-
-  if (show_commodities_revalued)
-    report_value_change(out, -1, balance, last_reported, predicate,
-			first_line_format, next_lines_format);
-}
-
-#endif
 
 void set_price_conversion(const std::string& setting)
 {
@@ -710,18 +601,17 @@ int main(int argc, char * argv[])
 
   unsigned int xact_display_flags = MATCHING_TRANSACTIONS;
 
-  if (command == "p" || command == "e") {
+  if (command == "p" || command == "e" || command == "E") {
+    xact_display_flags |= OTHER_TRANSACTIONS;
     show_expanded = true;
-  }
-  else if (command == "E") {
-    show_expanded = true;
-  }
-  else if (show_related && command == "r") {
-    xact_display_flags = OTHER_TRANSACTIONS;
-    show_inverted = true;
   }
   else if (show_related) {
-    xact_display_flags |= OTHER_TRANSACTIONS;
+    if (command == "r") {
+      xact_display_flags = OTHER_TRANSACTIONS;
+      show_inverted = true;
+    } else {
+      xact_display_flags |= OTHER_TRANSACTIONS;
+    }
   }
 
   const char * f;
@@ -737,11 +627,9 @@ int main(int argc, char * argv[])
   if (command == "b") {
     format_t format(f);
     format_account formatter(std::cout, format, display_predicate.get());
-    formatter.start();
     walk_accounts(journal->master, formatter, predicate.get(),
 		  xact_display_flags, show_subtotals, show_expanded ? 0 : 1,
 		  sort_order.get());
-    formatter.finish();
 
     if (! display_predicate.get() ||
 	item_predicate<account_t>(display_predicate.get())(journal->master)) {
@@ -766,12 +654,20 @@ int main(int argc, char * argv[])
 
     format_transaction formatter(std::cout, format, nformat,
 				 display_predicate.get(),
-				 ! show_subtotals, show_inverted);
-    formatter.start();
-
+#ifdef COLLAPSED_REGISTER
+				 ! show_subtotals,
+#endif
+				 show_inverted);
     if (! sort_order.get()) {
-      walk_entries(journal->entries.begin(), journal->entries.end(),
-		   formatter, predicate.get(), xact_display_flags);
+      if (show_commodities_revalued) {
+	changed_value_filter<format_transaction>
+	  filtered_formatter(formatter);
+	walk_entries(journal->entries.begin(), journal->entries.end(),
+		     filtered_formatter, predicate.get(), xact_display_flags);
+      } else {
+	walk_entries(journal->entries.begin(), journal->entries.end(),
+		     formatter, predicate.get(), xact_display_flags);
+      }
     } else {
       transactions_deque transactions_pool;
       walk_entries(journal->entries.begin(), journal->entries.end(),
@@ -782,7 +678,6 @@ int main(int argc, char * argv[])
       walk_transactions(transactions_pool.begin(), transactions_pool.end(),
 			formatter);
     }
-    formatter.finish();
   }
 
   // Save the cache, if need be

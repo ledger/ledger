@@ -87,17 +87,17 @@ class format_transaction
   std::ostream&   output_stream;
   const format_t& first_line_format;
   const format_t& next_lines_format;
+#ifdef COLLAPSED_REGISTER
   const bool      collapsed;
+#endif
   const bool      inverted;
 
   item_predicate<transaction_t> disp_pred_functor;
 
-  typedef bool (*intercept_t)(transaction_t * xact);
-
-  intercept_t intercept;
-
+#ifdef COLLAPSED_REGISTER
   mutable balance_pair_t  subtotal;
   mutable unsigned int    count;
+#endif
   mutable entry_t *	  last_entry;
   mutable transaction_t * last_xact;
 
@@ -106,29 +106,86 @@ class format_transaction
 		     const format_t& _first_line_format,
 		     const format_t& _next_lines_format,
 		     const node_t *  display_predicate,
+#ifdef COLLAPSED_REGISTER
 		     const bool      _collapsed = false,
-		     const bool      _inverted  = false,
-		     intercept_t     _intercept = NULL)
+#endif
+		     const bool      _inverted  = false)
     : output_stream(_output_stream),
       first_line_format(_first_line_format),
       next_lines_format(_next_lines_format),
-      collapsed(_collapsed), inverted(_inverted),
-      disp_pred_functor(display_predicate),
-      intercept(_intercept), count(0),
+#ifdef COLLAPSED_REGISTER
+      collapsed(_collapsed),
+#endif
+      inverted(_inverted), disp_pred_functor(display_predicate),
+#ifdef COLLAPSED_REGISTER
+      count(0),
+#endif
       last_entry(NULL), last_xact(NULL) {}
 
-  void start() const {}
-  void finish() const {
+#ifdef COLLAPSED_REGISTER
+  ~format_transaction() {
     if (subtotal)
       report_cumulative_subtotal();
   }
 
   void report_cumulative_subtotal() const;
+#endif
+
   void operator()(transaction_t * xact) const;
 };
 
-// An intercept that can be used to report changes in commodity value
-bool report_changed_values(transaction_t * xact);
+
+template <typename Function>
+class changed_value_filter
+{
+  const Function& functor;
+
+  mutable entry_t         modified_entry;
+  mutable transaction_t   modified_xact;
+  mutable transaction_t * last_xact;
+
+ public:
+  changed_value_filter(const Function& _functor)
+    : functor(_functor), modified_xact(&modified_entry, NULL),
+      last_xact(NULL) {
+    modified_entry.payee = "Commodities revalued";
+  }
+
+  ~changed_value_filter() {
+    (*this)(NULL);
+  }
+
+  void operator()(transaction_t * xact) const {
+    if (last_xact) {
+      balance_t prev_bal, cur_bal;
+
+      format_t::compute_total(prev_bal, details_t(last_xact));
+
+      std::time_t current    = xact ? xact->entry->date : std::time(NULL);
+      std::time_t prev_date  = last_xact->entry->date;
+      last_xact->entry->date = current;
+      format_t::compute_total(cur_bal,  details_t(last_xact));
+      last_xact->entry->date = prev_date;
+
+      if (balance_t diff = cur_bal - prev_bal) {
+	modified_entry.date  = current;
+
+	// jww (2004-08-07): What if there are multiple commodities?
+	assert(diff.amounts.size() == 1);
+	modified_xact.amount = diff.amount();
+	modified_xact.total  = diff;
+	modified_xact.total.negate();
+
+	functor(&modified_xact);
+      }
+    }
+
+    if (xact)
+      functor(xact);
+
+    last_xact = xact;
+  }
+};
 
 
 class format_account
@@ -138,19 +195,14 @@ class format_account
 
   item_predicate<account_t> disp_pred_functor;
 
-  mutable const account_t * last_account;
-
  public:
   format_account(std::ostream&   _output_stream,
 		 const format_t& _format,
 		 const node_t *  display_predicate = NULL)
     : output_stream(_output_stream), format(_format),
-      disp_pred_functor(display_predicate), last_account(NULL) {}
+      disp_pred_functor(display_predicate) {}
 
-  void start() const {}
-  void finish() const {}
-
-  void operator()(const account_t *  account,
+  void operator()(account_t *	     account,
 		  const unsigned int max_depth  = 1,
 		  const bool         report_top = false) const;
 };

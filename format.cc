@@ -14,18 +14,22 @@ std::string truncated(const std::string& str, unsigned int width)
   return buf;
 }
 
-std::string partial_account_name(const account_t *  account,
-				 const unsigned int start_depth)
+std::string partial_account_name(const account_t *  account)
 {
-  std::string	    name = account->name;
-  const account_t * acct = account->parent;
+  std::string name;
 
-  for (int i = account->depth - start_depth - 1;
-       --i >= 0 && acct->parent; ) {
-    assert(acct);
-    name = acct->name + ":" + name;
-    acct = acct->parent;
+  for (const account_t * acct = account;
+       acct && acct->parent;
+       acct = acct->parent) {
+    if (acct->flags & ACCOUNT_DISPLAYED)
+      break;
+
+    if (name.empty())
+      name = acct->name;
+    else
+      name = acct->name + ":" + name;
   }
+
   return name;
 }
 
@@ -206,8 +210,7 @@ void format_t::format_elements(std::ostream&    out,
       if (details.account) {
 	std::string name = (elem->type == element_t::ACCOUNT_FULLNAME ?
 			    details.account->fullname() :
-			    partial_account_name(details.account,
-						 details.depth));
+			    partial_account_name(details.account));
 	if (elem->max_width > 0)
 	  name = truncated(name, elem->max_width);
 
@@ -278,12 +281,15 @@ void format_t::format_elements(std::ostream&    out,
     }
 
     case element_t::SPACER:
-      for (unsigned int i = 0; i < details.depth; i++) {
-	if (elem->min_width > 0 || elem->max_width > 0)
-	  out.width(elem->min_width > elem->max_width ?
-		    elem->min_width : elem->max_width);
-	out << " ";
-      }
+      for (const account_t * acct = details.account;
+	   acct;
+	   acct = acct->parent)
+	if (acct->flags & ACCOUNT_DISPLAYED) {
+	  if (elem->min_width > 0 || elem->max_width > 0)
+	    out.width(elem->min_width > elem->max_width ?
+		      elem->min_width : elem->max_width);
+	  out << " ";
+	}
       break;
 
     default:
@@ -293,11 +299,12 @@ void format_t::format_elements(std::ostream&    out,
   }
 }
 
+#ifdef COLLAPSED_REGISTER
+
 void format_transaction::report_cumulative_subtotal() const
 {
   if (count == 1) {
-    if (! intercept || ! intercept(last_xact))
-      first_line_format.format_elements(output_stream, details_t(last_xact));
+    first_line_format.format_elements(output_stream, details_t(last_xact));
     return;
   }
 
@@ -321,9 +328,8 @@ void format_transaction::report_cumulative_subtotal() const
     splits_total.cost   = (*i).second;
     splits_total.total += (*i).second;
     if (first) {
-      if (! intercept || ! intercept(&splits_total))
-	first_line_format.format_elements(output_stream,
-					  details_t(&splits_total));
+      first_line_format.format_elements(output_stream,
+					details_t(&splits_total));
       first = false;
     } else {
       next_lines_format.format_elements(output_stream,
@@ -332,10 +338,12 @@ void format_transaction::report_cumulative_subtotal() const
   }
 }
 
+#endif // COLLAPSED_REGISTER
+
 void format_transaction::operator()(transaction_t * xact) const
 {
   if (last_xact)
-    xact->total = last_xact->total;
+    xact->total += last_xact->total;
 
   if (inverted) {
     xact->amount.negate();
@@ -353,6 +361,7 @@ void format_transaction::operator()(transaction_t * xact) const
   // This makes the assumption that transactions from a single entry
   // are always grouped together.
 
+#ifdef COLLAPSED_REGISTER
   if (collapsed) {
     // If we've reached a new entry, report on the subtotal
     // accumulated thus far.
@@ -365,10 +374,11 @@ void format_transaction::operator()(transaction_t * xact) const
 
     subtotal += *xact;
     count++;
-  } else {
+  } else
+#endif
+  {
     if (last_entry != xact->entry) {
-      if (! intercept || ! intercept(xact))
-	first_line_format.format_elements(output_stream, details_t(xact));
+      first_line_format.format_elements(output_stream, details_t(xact));
     } else {
       next_lines_format.format_elements(output_stream, details_t(xact));
     }
@@ -383,38 +393,8 @@ void format_transaction::operator()(transaction_t * xact) const
   last_xact  = xact;
 }
 
-#if 0
 
-bool report_changed_values(transaction_t * xact)
-{
-  static transaction_t * last_xact = NULL;
-
-  if (last_xact) {
-    balance_t prev_bal, cur_bal;
-    format_t::compute_total(prev_bal, details_t(last_xact));
-    format_t::compute_total(cur_bal,  details_t(xact));
-
-    if (balance_t diff = cur_bal - prev_bal) {
-      entry_t       modified_entry;
-      transaction_t new_xact(&modified_entry, NULL);
-
-      modified_entry.date = xact ? xact->entry->date : std::time(NULL);
-      modified_entry.payee = "Commodities revalued";
-
-      new_xact.amount = diff.amount();
-      format_t::compute_value(diff, details_t(xact));
-      new_xact.total  = cur_bal - diff;
-
-      functor(&new_xact);
-    }
-  }
-
-  last_xact = xact;
-}
-
-#endif
-
-void format_account::operator()(const account_t *  account,
+void format_account::operator()(account_t *	   account,
 				const unsigned int max_depth,
 				const bool         report_top) const
 {
@@ -425,7 +405,8 @@ void format_account::operator()(const account_t *  account,
   // parent account and a lone displayed child, then don't display the
   // parent."
 
-  if (bool output = report_top || account->parent != NULL) {
+  if (bool output = ((report_top || account->parent != NULL) &&
+		     disp_pred_functor(account))) {
     int  counted = 0;
     bool display = false;
 
@@ -445,17 +426,9 @@ void format_account::operator()(const account_t *  account,
     if (counted == 1 && ! display)
       output = false;
 
-    if (output) {
-      unsigned int depth = account->depth;
-      if (max_depth == 0 || depth <= max_depth) {
-	for (const account_t * acct = account;
-	     depth > 0 && acct && acct != last_account;
-	     acct = acct->parent)
-	  depth--;
-
-	format.format_elements(output_stream, details_t(account, depth));
-	last_account = account;
-      }
+    if (output && (max_depth == 0 || account->depth <= max_depth)) {
+      format.format_elements(output_stream, details_t(account));
+      account->flags |= ACCOUNT_DISPLAYED;
     }
   }
 }

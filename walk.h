@@ -161,7 +161,7 @@ inline void sort_accounts(account_t *	  account,
 }
 
 template <typename Function>
-void walk__accounts(const account_t *  account,
+void walk__accounts(account_t *        account,
 		    const Function&    functor,
 		    const unsigned int max_depth)
 {
@@ -174,7 +174,7 @@ void walk__accounts(const account_t *  account,
 }
 
 template <typename Function>
-void walk__accounts_sorted(const account_t *  account,
+void walk__accounts_sorted(account_t *        account,
 			   const Function&    functor,
 			   const unsigned int max_depth,
 			   const node_t *     sort_order)

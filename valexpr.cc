@@ -153,6 +153,8 @@ void node_t::compute(balance_t& result, const details_t& details) const
   case DATE:
     if (details.entry)
       result = (unsigned int) details.entry->date;
+    else
+      result = (unsigned int) std::time(NULL);
     break;
 
   case CLEARED:
@@ -207,12 +209,20 @@ void node_t::compute(balance_t& result, const details_t& details) const
     left->compute(result, details);
 
     std::time_t moment = -1;
-    if (right && details.entry) {
+    if (right) {
       switch (right->type) {
-      case DATE: moment = details.entry->date; break;
+      case DATE:
+	if (details.entry)
+	  moment = details.entry->date;
+	else
+	  moment = std::time(NULL);
+	break;
+
       default:
-	throw compute_error("Invalid date passed to P(v,d)");
+	throw compute_error("Invalid date passed to P(value,date)");
       }
+    } else {
+      moment = std::time(NULL);
     }
     result = result.value(moment);
     break;

@@ -94,6 +94,8 @@ class entry_t
 };
 
 
+#define ACCOUNT_DISPLAYED 0x1
+
 typedef std::map<const std::string, account_t *> accounts_map;
 typedef std::pair<const std::string, account_t *> accounts_pair;
 
@@ -109,6 +111,7 @@ class account_t
   balance_pair_t    value;
   balance_pair_t    total;
   unsigned long	    ident;
+  unsigned long	    flags;
 
   mutable std::string  _fullname;
   static unsigned long next_ident;
@@ -117,7 +120,7 @@ class account_t
 	    const std::string& _name = "",
 	    const std::string& _note = "")
     : parent(_parent), name(_name), note(_note),
-      depth(parent ? parent->depth + 1 : 0) {}
+      depth(parent ? parent->depth + 1 : 0), flags(0) {}
 
   ~account_t();
 
