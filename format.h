@@ -83,9 +83,15 @@ struct format_t
   }
 };
 
+template <typename T>
+struct item_formatter : public item_handler<T> {
+  virtual ~item_formatter() {}
+  virtual void flush() const = 0;
+};
+
 #define COLLAPSED_REGISTER 1	// support collapsed registers
 
-class format_transaction : public item_handler<transaction_t>
+class format_transaction : public item_formatter<transaction_t>
 {
   std::ostream&   output_stream;
   const format_t& first_line_format;
@@ -127,8 +133,13 @@ class format_transaction : public item_handler<transaction_t>
 
 #ifdef COLLAPSED_REGISTER
   virtual ~format_transaction() {
+    flush();
+  }
+
+  virtual void flush() const {
     if (subtotal)
       report_cumulative_subtotal();
+    output_stream.flush();
   }
 
   void report_cumulative_subtotal() const;
@@ -138,26 +149,34 @@ class format_transaction : public item_handler<transaction_t>
 };
 
 
-class changed_value_filter : public item_handler<transaction_t>
+class changed_value_filter : public item_formatter<transaction_t>
 {
-  const item_handler<transaction_t>& handler;
+  item_formatter<transaction_t> * handler;
 
   mutable entry_t         modified_entry;
   mutable transaction_t   modified_xact;
   mutable transaction_t * last_xact;
 
  public:
-  changed_value_filter(const item_handler<transaction_t>& _handler)
+  changed_value_filter(item_formatter<transaction_t> * _handler)
     : handler(_handler), modified_xact(&modified_entry, NULL),
       last_xact(NULL) {
+    assert(handler);
     modified_entry.payee = "Commodities revalued";
   }
 
   virtual ~changed_value_filter() {
+    flush();
+    handler->flush();
+    assert(handler);
+    delete handler;
+  }
+
+  virtual void flush() const {
     (*this)(NULL);
   }
 
-  void operator()(transaction_t * xact) const {
+  virtual void operator()(transaction_t * xact) const {
     if (last_xact) {
       balance_t prev_bal, cur_bal;
 
@@ -178,19 +197,19 @@ class changed_value_filter : public item_handler<transaction_t>
 	modified_xact.total  = diff;
 	modified_xact.total.negate();
 
-	handler(&modified_xact);
+	(*handler)(&modified_xact);
       }
     }
 
     if (xact)
-      handler(xact);
+      (*handler)(xact);
 
     last_xact = xact;
   }
 };
 
 
-class format_account : public item_handler<account_t>
+class format_account : public item_formatter<account_t>
 {
   std::ostream&   output_stream;
   const format_t& format;
@@ -204,6 +223,10 @@ class format_account : public item_handler<account_t>
     : output_stream(_output_stream), format(_format),
       disp_pred(display_predicate) {}
   virtual ~format_account() {}
+
+  virtual void flush() const {
+    output_stream.flush();
+  }
 
   static bool disp_subaccounts_p(const account_t * account,
 				 const item_predicate<account_t>& disp_pred,
@@ -225,7 +248,7 @@ class format_account : public item_handler<account_t>
 };
 
 
-class format_equity : public item_handler<account_t>
+class format_equity : public item_formatter<account_t>
 {
   std::ostream&   output_stream;
   const format_t& first_line_format;
@@ -251,9 +274,14 @@ class format_equity : public item_handler<account_t>
   }
 
   virtual ~format_equity() {
+    flush();
+  }
+
+  virtual void flush() const {
     account_t summary(NULL, "Equity:Opening Balances");
     summary.value = - total;
     next_lines_format.format_elements(output_stream, details_t(&summary));
+    output_stream.flush();
   }
 
   virtual void operator()(account_t * account) const {

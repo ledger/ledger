@@ -587,8 +587,10 @@ int main(int argc, char * argv[])
     first_line_format = next_lines_format = f;
   }
 
+  format_t format(first_line_format);
+  format_t nformat(next_lines_format);
+
   if (command == "b") {
-    format_t format(first_line_format);
     format_account formatter(std::cout, format, display_predicate);
     walk_accounts(journal->master, formatter, predicate,
 		  xact_display_flags, show_subtotals, sort_order.get());
@@ -600,15 +602,11 @@ int main(int argc, char * argv[])
     }
   }
   else if (command == "E") {
-    format_t format(first_line_format);
-    format_t nformat(next_lines_format);
     format_equity formatter(std::cout, format, nformat, display_predicate);
     walk_accounts(journal->master, formatter, predicate,
 		  xact_display_flags, true, sort_order.get());
   }
   else if (command == "e") {
-    format_t format(first_line_format);
-    format_t nformat(next_lines_format);
     format_transaction formatter(std::cout, format, nformat);
 
     for (transactions_list::iterator i = new_entry->transactions.begin();
@@ -617,22 +615,19 @@ int main(int argc, char * argv[])
       handle_transaction(*i, formatter, xact_display_flags);
   }
   else {
-    format_t format(first_line_format);
-    format_t nformat(next_lines_format);
-    format_transaction formatter(std::cout, format, nformat, display_predicate,
+    std::auto_ptr<item_formatter<transaction_t> >
+      formatter(new format_transaction(std::cout, format, nformat,
+				       display_predicate,
 #ifdef COLLAPSED_REGISTER
-				 ! show_subtotals,
+				       ! show_subtotals,
 #endif
-				 show_inverted);
+				       show_inverted));
+    if (show_commodities_revalued)
+      formatter.reset(new changed_value_filter(formatter.release()));
+
     if (! sort_order.get()) {
-      if (show_commodities_revalued) {
-	changed_value_filter filtered_formatter(formatter);
-	walk_entries(journal->entries.begin(), journal->entries.end(),
-		     filtered_formatter, predicate, xact_display_flags);
-      } else {
-	walk_entries(journal->entries.begin(), journal->entries.end(),
-		     formatter, predicate, xact_display_flags);
-      }
+      walk_entries(journal->entries.begin(), journal->entries.end(),
+		   *formatter.get(), predicate, xact_display_flags);
     } else {
       transactions_deque transactions_pool;
       walk_entries(journal->entries.begin(), journal->entries.end(),
@@ -640,15 +635,8 @@ int main(int argc, char * argv[])
 		   xact_display_flags);
       std::stable_sort(transactions_pool.begin(), transactions_pool.end(),
 		       compare_items<transaction_t>(sort_order.get()));
-
-      if (show_commodities_revalued) {
-	changed_value_filter filtered_formatter(formatter);
-	walk_transactions(transactions_pool.begin(), transactions_pool.end(),
-			  filtered_formatter);
-      } else {
-	walk_transactions(transactions_pool.begin(), transactions_pool.end(),
-			  formatter);
-      }
+      walk_transactions(transactions_pool.begin(), transactions_pool.end(),
+			*formatter.get());
     }
   }
 

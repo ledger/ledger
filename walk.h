@@ -12,6 +12,7 @@ namespace ledger {
 
 template <typename T>
 struct item_handler {
+  virtual ~item_handler() {}
   virtual void operator()(T * item) const = 0;
 };
 
