@@ -14,6 +14,7 @@ using namespace ledger;
 #include <fstream>
 #include <memory>
 #include <algorithm>
+#include <iterator>
 #include <string>
 #include <cstdlib>
 #include <cstring>
@@ -127,11 +128,9 @@ int main(int argc, char * argv[], char * envp[])
       journal->sources.pop_front();	// remove cache_file
 
       strings_list exceptions;
-#if 0
       std::set_difference(journal->sources.begin(), journal->sources.end(),
 			  config->files.begin(), config->files.end(),
-			  exceptions.begin());
-#endif
+			  std::back_insert_iterator<strings_list>(exceptions));
 
       if (entry_count == 0 || exceptions.size() > 0) {
 	journal.reset(new journal_t);
