@@ -269,8 +269,8 @@ Return the difference in the format of a time value."
   (set-buffer-modified-p nil)
   (ledger-display-balance))
 
-(defun ledger-reconcile (account)
-  (interactive "sAccount to reconcile: ")
+(defun ledger-reconcile (account &optional arg)
+  (interactive "sAccount to reconcile: \nP")
   (let* ((buf (current-buffer))
 	 (items
 	  (with-temp-buffer
@@ -300,7 +300,10 @@ Return the difference in the format of a time value."
 				   (list 'where (nth 0 item)))))))
       (goto-char (point-min))
       (set-buffer-modified-p nil)
-      (toggle-read-only t))))
+      (toggle-read-only t)
+      (when arg
+	(sit-for 0 0)
+	(call-interactively #'ledger-auto-reconcile)))))
 
 (defvar ledger-reconcile-mode-abbrev-table)
 
@@ -310,6 +313,8 @@ Return the difference in the format of a time value."
     (define-key map [(control ?c) (control ?r)] 'ledger-auto-reconcile)
     (define-key map [(control ?x) (control ?s)] 'ledger-reconcile-save)
     (define-key map [? ] 'ledger-reconcile-toggle)
+    (define-key map [?r] 'ledger-auto-reconcile)
+    (define-key map [?s] 'ledger-reconcile-save)
     (define-key map [?q]
       (function
        (lambda ()
