@@ -25,61 +25,59 @@ std::map<void *, int> ptrs;
 
 void * operator new(std::size_t size) throw (std::bad_alloc) {
   void * ptr = std::malloc(size);
-  if (DEBUG("ledger.debug.alloc")) {
+  if (DEBUG("debug.alloc")) {
     PRINT_INC("void * operator new(std::size_t size) throw (std::bad_alloc)\n");
   }
   return ptr;
 }
 void * operator new[](std::size_t size) throw (std::bad_alloc) {
   void * ptr = std::malloc(size);
-  if (DEBUG("ledger.debug.alloc")) {
+  if (DEBUG("debug.alloc")) {
     PRINT_INC("void * operator new[](std::size_t) throw (std::bad_alloc)\n");
   }
   return ptr;
 }
 void * operator new(std::size_t size, const std::nothrow_t&) throw() {
   void * ptr = std::malloc(size);
-  if (DEBUG("ledger.debug.alloc")) {
+  if (DEBUG("debug.alloc")) {
     PRINT_INC("void * operator new(std::size_t size, const std::nothrow_t&) throw()\n");
   }
   return ptr;
 }
 void * operator new[](std::size_t size, const std::nothrow_t&) throw() {
   void * ptr = std::malloc(size);
-  if (DEBUG("ledger.debug.alloc")) {
+  if (DEBUG("debug.alloc")) {
     PRINT_INC("void * operator new[](std::size_t size, const std::nothrow_t&) throw()\n");
   }
   return ptr;
 }
 void   operator delete(void * ptr) throw() {
-  if (DEBUG("ledger.debug.alloc")) {
+  if (DEBUG("debug.alloc")) {
     PRINT_DEC("void   operator delete(void * ptr) throw()\n");
   }
   std::free(ptr);
 }
 void   operator delete[](void * ptr) throw() {
-  if (DEBUG("ledger.debug.alloc")) {
+  if (DEBUG("debug.alloc")) {
     PRINT_DEC("void   operator delete[](void * ptr) throw()\n");
   }
   std::free(ptr);
 }
 void   operator delete(void * ptr, const std::nothrow_t&) throw() {
-  if (DEBUG("ledger.debug.alloc")) {
+  if (DEBUG("debug.alloc")) {
     PRINT_DEC("void   operator delete(void * ptr, const std::nothrow_t&) throw()\n");
   }
   std::free(ptr);
 }
 void   operator delete[](void * ptr, const std::nothrow_t&) throw() {
-  if (DEBUG("ledger.debug.alloc")) {
+  if (DEBUG("debug.alloc")) {
     PRINT_DEC("void   operator delete[](void * ptr, const std::nothrow_t&) throw()\n");
   }
   std::free(ptr);
 }
 
-namespace ledger {
-
-std::ostream * debug_stream	 = &std::cerr;
-bool	       free_debug_stream = false;
+std::ostream * _debug_stream	  = &std::cerr;
+bool	       _free_debug_stream = false;
 
 bool _debug_active(const char * const cls) {
   if (char * debug = std::getenv("DEBUG_CLASS")) {
@@ -99,18 +97,16 @@ static struct init_streams {
     // If debugging is enabled and DEBUG_FILE is set, all debugging
     // output goes to that file.
     if (const char * p = std::getenv("DEBUG_FILE")) {
-      debug_stream      = new std::ofstream(p);
-      free_debug_stream = true;
+      _debug_stream      = new std::ofstream(p);
+      _free_debug_stream = true;
     }
   }
   ~init_streams() {
-    if (free_debug_stream && debug_stream) {
-      delete debug_stream;
-      debug_stream = NULL;
+    if (_free_debug_stream && _debug_stream) {
+      delete _debug_stream;
+      _debug_stream = NULL;
     }
   }
 } _debug_init;
-
-} // namespace ledger
 
 #endif // DEBUG_ENABLED

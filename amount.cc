@@ -5,6 +5,7 @@
 #include "debug.h"
 
 #include <deque>
+#include <sstream>
 
 #include "gmp.h"
 
@@ -43,21 +44,37 @@ static mpz_t temp;
 static mpz_t divisor;
 static mpz_t true_value;
 
-static struct init_amounts {
-  init_amounts() {
-    mpz_init(temp);
-    mpz_init(divisor);
-    mpz_init(true_value);
-    mpz_set_ui(true_value, 1);
-  }
-#ifdef DO_CLEANUP
-  ~init_amounts() {
-    mpz_clear(true_value);
-    mpz_clear(divisor);
-    mpz_clear(temp);
-  }
-#endif
-} _init;
+commodity_t::updater_t * commodity_t::updater;
+commodities_map		 commodity_t::commodities;
+commodity_t *            commodity_t::null_commodity;
+
+void initialize_amounts()
+{
+  mpz_init(temp);
+  mpz_init(divisor);
+  mpz_init(true_value);
+  mpz_set_ui(true_value, 1);
+
+  commodity_t::updater	      = NULL;
+  commodity_t::null_commodity = commodity_t::find_commodity("", true);
+}
+
+void shutdown_amounts()
+{
+  mpz_clear(true_value);
+  mpz_clear(divisor);
+  mpz_clear(temp);
+
+  if (commodity_t::updater)
+    delete commodity_t::updater;
+
+  for (commodities_map::iterator i = commodity_t::commodities.begin();
+       i != commodity_t::commodities.end();
+       i++)
+    delete (*i).second;
+
+  commodity_t::commodities.clear();
+}
 
 static void mpz_round(mpz_t out, mpz_t value, int value_prec, int round_prec)
 {
@@ -549,6 +566,12 @@ amount_t& amount_t::operator*=(const amount_t& amt)
   mpz_mul(MPZ(quantity), MPZ(quantity), MPZ(amt.quantity));
   quantity->prec += amt.quantity->prec;
 
+  if (quantity->prec > commodity->precision + 6U) {
+    mpz_round(MPZ(quantity), MPZ(quantity),
+	      quantity->prec, commodity->precision + 6U);
+    quantity->prec = commodity->precision + 6U;
+  }
+
   return *this;
 }
 
@@ -567,6 +590,12 @@ amount_t& amount_t::operator/=(const amount_t& amt)
   mpz_mul(MPZ(quantity), MPZ(quantity), divisor);
   mpz_tdiv_q(MPZ(quantity), MPZ(quantity), MPZ(amt.quantity));
   quantity->prec += 6;
+
+  if (quantity->prec > commodity->precision + 6U) {
+    mpz_round(MPZ(quantity), MPZ(quantity),
+	      quantity->prec, commodity->precision + 6U);
+    quantity->prec = commodity->precision + 6U;
+  }
 
   return *this;
 }
@@ -712,6 +741,10 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
   mpz_clear(rquotient);
   mpz_clear(remainder);
 
+  // Things are output to a string first, so that if anyone has
+  // specified a width or fill for _out, it will be applied to the
+  // entire amount string, and not just the first part.
+
   _out << out.str();
 
   return _out;
@@ -831,6 +864,12 @@ void amount_t::parse(std::istream& in)
   delete[] buf;
 }
 
+void amount_t::parse(const std::string& str)
+{
+  std::istringstream stream(str);
+  parse(stream);
+}
+
 
 static char buf[4096];
 static int  index = 0;
@@ -911,27 +950,6 @@ void amount_t::read_quantity(std::istream& in)
   }
 }
 
-
-commodity_t::updater_t * commodity_t::updater = NULL;
-commodities_map		 commodity_t::commodities;
-commodity_t *            commodity_t::null_commodity =
-			     commodity_t::find_commodity("", true);
-
-#ifdef DO_CLEANUP
-static struct cleanup_t
-{
-  ~cleanup_t() {
-    if (commodity_t::updater)
-      delete commodity_t::updater;
-
-    for (commodities_map::iterator i
-	   = commodity_t::commodities.begin();
-	 i != commodity_t::commodities.end();
-	 i++)
-      delete (*i).second;
-  }
-} _cleanup;
-#endif
 
 commodity_t * commodity_t::find_commodity(const std::string& symbol,
 					  bool auto_create)

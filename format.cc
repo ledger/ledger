@@ -33,20 +33,24 @@ std::string partial_account_name(const account_t *  account)
   return name;
 }
 
-std::string    format_t::date_format = "%Y/%m/%d";
-value_expr_t * format_t::value_expr  = NULL;
-value_expr_t * format_t::total_expr  = NULL;
+std::string    format_t::date_format;
+value_expr_t * format_t::value_expr;
+value_expr_t * format_t::total_expr;
 
-#ifdef DO_CLEANUP
-static struct cleanup_t {
-  ~cleanup_t() {
-    if (format_t::value_expr)
-      delete format_t::value_expr;
-    if (format_t::total_expr)
-      delete format_t::total_expr;
-  }
-} _cleanup;
-#endif
+void initialize_formats()
+{
+  format_t::date_format = "%Y/%m/%d";
+  format_t::value_expr  = NULL;
+  format_t::total_expr  = NULL;
+}
+
+void shutdown_formats()
+{
+  if (format_t::value_expr)
+    delete format_t::value_expr;
+  if (format_t::total_expr)
+    delete format_t::total_expr;
+}
 
 element_t * format_t::parse_elements(const std::string& fmt)
 {
@@ -164,7 +168,8 @@ element_t * format_t::parse_elements(const std::string& fmt)
     case 'o': current->type = element_t::OPT_AMOUNT; break;
     case 't': current->type = element_t::VALUE; break;
     case 'T': current->type = element_t::TOTAL; break;
-    case '_': current->type = element_t::SPACER; break;
+    case '|': current->type = element_t::SPACER; break;
+    case '_': current->type = element_t::DEPTH_SPACER; break;
     }
   }
 
@@ -348,6 +353,10 @@ void format_t::format_elements(std::ostream&    out,
       break;
 
     case element_t::SPACER:
+      out << " ";
+      break;
+
+    case element_t::DEPTH_SPACER:
       for (const account_t * acct = details.account;
 	   acct;
 	   acct = acct->parent)

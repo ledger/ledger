@@ -296,14 +296,12 @@ unsigned int read_binary_journal(std::istream&	    in,
     journal->entries.push_back(entry_pool++);
   }
 
-#ifdef DO_CLEANUP
   journal->item_pool	 = item_pool;
   journal->item_pool_end = item_pool + pool_size;
 
   accounts.clear();
   commodities.clear();
   bigints.clear();
-#endif
 
   return count;
 }

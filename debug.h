@@ -11,26 +11,13 @@
 #define DEBUG_LEVEL RELEASE
 #endif
 
-#if DEBUG_LEVEL >= ALPHA
-#include <cstdlib>              // for `getenv'
-#include <cstring>              // for `strcmp'
-#endif
-
 #if DEBUG_LEVEL >= BETA
 #include <cassert>
 #endif
 
-#if DEBUG_LEVEL >= RELEASE
-#include <iostream>
-#endif
-
-#include <sstream>              // used for constructing exceptions
-
-namespace ledger {
-
 //////////////////////////////////////////////////////////////////////
 //
-// Debugging facilities for Ledger
+// General debugging facilities
 //
 // - In developer level, all checking and debugging facilities are
 //   active.
@@ -47,37 +34,30 @@ namespace ledger {
 // - Running with no seatbelt disables all checking except for normal
 //   syntax and semantic error checking.
 
-#define WARN(x)							\
-  if (ledger::warning_stream)					\
-    *ledger::warning_stream << "Warning: "<< x << std::endl
-
-#define ERR(exc, x) {				\
-    std::ostringstream s;                       \
-    s << x;                                     \
-    throw exc(s.str().c_str());                 \
-  }
-
 #if DEBUG_LEVEL >= ALPHA
 
 #include <pcre.h>
 #include <cstring>
+#include <new>
+#include <iostream>
+#include <cstdlib>
+#include <ctime>
 
 #define DEBUG_ENABLED
 
-extern std::ostream * warning_stream;
-extern std::ostream * debug_stream;
-extern bool           free_debug_stream;
+extern std::ostream * _debug_stream;
+extern bool           _free_debug_stream;
 
 bool _debug_active(const char * const cls);
 
 #define DEBUG_CLASS(cls) static const char * const _debug_cls = (cls)
 
-#define DEBUG(cls) (ledger::_debug_active(cls))
+#define DEBUG(cls) (_debug_active(cls))
 #define DEBUG_() DEBUG(_debug_cls)
 
-#define DEBUG_PRINT(cls, x)					\
-  if (ledger::debug_stream && ledger::_debug_active(cls)) {	\
-    *ledger::debug_stream << x << std::endl;			\
+#define DEBUG_PRINT(cls, x)			\
+  if (_debug_stream && _debug_active(cls)) {	\
+    *_debug_stream << x << std::endl;		\
   }
 #define DEBUG_PRINT_(x) DEBUG_PRINT(_debug_cls, x)
 
@@ -96,6 +76,15 @@ bool _debug_active(const char * const cls);
 #else
 #define VALIDATE(x)
 #endif
+
+void * operator new(std::size_t) throw (std::bad_alloc);
+void * operator new[](std::size_t) throw (std::bad_alloc);
+void   operator delete(void*) throw();
+void   operator delete[](void*) throw();
+void * operator new(std::size_t, const std::nothrow_t&) throw();
+void * operator new[](std::size_t, const std::nothrow_t&) throw();
+void   operator delete(void*, const std::nothrow_t&) throw();
+void   operator delete[](void*, const std::nothrow_t&) throw();
 
 #else // DEBUG_LEVEL
 
@@ -117,7 +106,6 @@ bool _debug_active(const char * const cls);
 
 #elif DEBUG_LEVEL >= RELEASE
 
-extern std::ostream * warning_stream;
 #define CONFIRM(x)
 
 #elif DEBUG_LEVEL >= BETA
@@ -127,20 +115,5 @@ extern std::ostream * warning_stream;
 #endif
 
 #endif // DEBUG_LEVEL
-
-} // namespace ledger
-
-#ifdef DEBUG_ENABLED
-
-void * operator new(std::size_t) throw (std::bad_alloc);
-void * operator new[](std::size_t) throw (std::bad_alloc);
-void   operator delete(void*) throw();
-void   operator delete[](void*) throw();
-void * operator new(std::size_t, const std::nothrow_t&) throw();
-void * operator new[](std::size_t, const std::nothrow_t&) throw();
-void   operator delete(void*, const std::nothrow_t&) throw();
-void   operator delete[](void*, const std::nothrow_t&) throw();
-
-#endif // DEBUG_ENABLED
 
 #endif // _DEBUG_H

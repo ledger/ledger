@@ -26,7 +26,8 @@ struct element_t
     OPT_AMOUNT,
     VALUE,
     TOTAL,
-    SPACER
+    SPACER,
+    DEPTH_SPACER
   };
 
   bool		 align_left;

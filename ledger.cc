@@ -8,8 +8,6 @@ namespace ledger {
 
 const std::string version = "2.0b";
 
-#ifdef DO_CLEANUP
-
 journal_t::~journal_t()
 {
   DEBUG_PRINT("ledger.memory.dtors", "dtor journal_t");
@@ -29,8 +27,6 @@ journal_t::~journal_t()
   if (item_pool)
     delete[] item_pool;
 }
-
-#endif // DO_CLEANUP
 
 bool journal_t::add_entry(entry_t * entry)
 {
@@ -182,6 +178,23 @@ entry_t * journal_t::derive_entry(strings_list::iterator i,
   }
 
   return added.release();
+}
+
+void initialize_amounts();
+void shutdown_amounts();
+
+void initialize_formats();
+void shutdown_formats();
+
+void initialize()
+{
+  initialize_amounts();
+  initialize_formats();
+}
+
+void shutdown()
+{
+  shutdown_formats();
 }
 
 } // namespace ledger

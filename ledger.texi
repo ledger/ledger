@@ -550,6 +550,10 @@ Inserts the results of the value expression specified by @samp{-T}.
 If @samp{-T} was not specified, the current report style's value
 expression is used.
 
+@item |
+Inserts a single space.  This is useful if a width is specified, for
+inserting a certain number of spaces.
+
 @item _
 Inserts a space for each level of an account's depth.  That is, if an
 account has two parents, this construct will insert two spaces.  If a

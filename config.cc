@@ -7,8 +7,7 @@ config_t * config = NULL;
 
 std::string bal_fmt	 = "%20T  %2_%-n\n";
 std::string reg_fmt
-  = "%D %-.20P %-.22N %12.66t %12.80T\n\
-%/                                %-.22N %12.66t %12.80T\n";
+  = "%D %-.20P %-.22N %12.66t %12.80T\n%/%32|%-.22N %12.66t %12.80T\n";
 std::string plot_value_fmt = "%D %t\n";
 std::string plot_total_fmt = "%D %T\n";
 std::string print_fmt

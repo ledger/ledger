@@ -165,10 +165,10 @@ class item_predicate
 	predicate = parse_value_expr(_predicate);
 
 #ifdef DEBUG_ENABLED
-	if (DEBUG_() && ledger::debug_stream) {
-	  *ledger::debug_stream << "dump: ";
-	  dump_value_expr(*ledger::debug_stream, predicate);
-	  *ledger::debug_stream << std::endl;
+	if (DEBUG_() && _debug_stream) {
+	  *_debug_stream << "dump: ";
+	  dump_value_expr(*_debug_stream, predicate);
+	  *_debug_stream << std::endl;
 	}
 #endif
       }

@@ -3,6 +3,7 @@
 #include "textual.h"
 #include "binary.h"
 #include "qif.h"
+#include "acconf.h"
 #ifdef READ_GNUCASH
 #include "gnucash.h"
 #endif
@@ -140,6 +141,10 @@ regexps_to_predicate(std::list<std::string>::const_iterator begin,
 
 int main(int argc, char * argv[], char * envp[])
 {
+#ifdef DO_CLEANUP
+  initialize();
+#endif
+
   std::auto_ptr<journal_t> journal(new journal_t);
 
   // Initialize the global configuration object for this run
@@ -189,6 +194,9 @@ int main(int argc, char * argv[], char * envp[])
 
   // Setup the parsers
   std::auto_ptr<binary_parser_t>  bin_parser(new binary_parser_t);
+#ifdef READ_GNUCASH
+  std::auto_ptr<gnucash_parser_t> gnucash_parser(new gnucash_parser_t);
+#endif
   std::auto_ptr<qif_parser_t>     qif_parser(new qif_parser_t);
   std::auto_ptr<textual_parser_t> text_parser(new textual_parser_t);
 
@@ -625,6 +633,10 @@ int main(int argc, char * argv[], char * envp[])
   }
 
   TIMER_STOP(write_cache);
+
+#ifdef DO_CLEANUP
+  shutdown();
+#endif
 
   return 0;
 }

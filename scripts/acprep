@@ -1,0 +1,12 @@
+#!/bin/sh
+
+aclocal
+
+if [ "$1" = "--dist" ]; then
+    automake -acfi
+else
+    automake -acf
+fi
+
+autoheader
+autoconf

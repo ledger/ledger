@@ -86,8 +86,11 @@ static void parse_inclusion_specifier(const std::string& word,
   if (when.tm_mday == -1)
     when.tm_mday = 1;
 
-  *begin = std::mktime(&when);
-  *end   = interval_t(0, saw_mon ? 1 : 0, saw_year ? 1 : 0).increment(*begin);
+  if (begin)
+    *begin = std::mktime(&when);
+  if (end)
+    *end   = interval_t(0, saw_mon ? 1 : 0,
+			saw_year ? 1 : 0).increment(*begin);
 }
 
 interval_t interval_t::parse(std::istream& in,
@@ -166,20 +169,28 @@ interval_t interval_t::parse(std::istream& in,
 
       if (type == "last") {
 	if (mon_spec) {
-	  *begin = interval_t(0, -1, 0).increment(*begin);
-	  *end   = interval_t(0, -1, 0).increment(*end);
+	  if (begin)
+	    *begin = interval_t(0, -1, 0).increment(*begin);
+	  if (end)
+	    *end   = interval_t(0, -1, 0).increment(*end);
 	} else {
-	  *begin = interval_t(0, 0, -1).increment(*begin);
-	  *end   = interval_t(0, 0, -1).increment(*end);
+	  if (begin)
+	    *begin = interval_t(0, 0, -1).increment(*begin);
+	  if (end)
+	    *end   = interval_t(0, 0, -1).increment(*end);
 	}
       }
       else if (type == "next") {
 	if (mon_spec) {
-	  *begin = interval_t(0, 1, 0).increment(*begin);
-	  *end   = interval_t(0, 1, 0).increment(*end);
+	  if (begin)
+	    *begin = interval_t(0, 1, 0).increment(*begin);
+	  if (end)
+	    *end   = interval_t(0, 1, 0).increment(*end);
 	} else {
-	  *begin = interval_t(0, 0, 1).increment(*begin);
-	  *end   = interval_t(0, 0, 1).increment(*end);
+	  if (begin)
+	    *begin = interval_t(0, 0, 1).increment(*begin);
+	  if (end)
+	    *end   = interval_t(0, 0, 1).increment(*end);
 	}
       }
     }

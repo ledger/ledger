@@ -370,21 +370,21 @@ inline value_expr_t * parse_value_term(const char * p) {
 
 value_expr_t * parse_value_term(std::istream& in)
 {
+  static char buf[256];
+
   std::auto_ptr<value_expr_t> node;
 
   char c = peek_next_nonws(in);
   if (std::isdigit(c)) {
-    static char buf[2048];
-    READ_INTO(in, buf, 2048, c, std::isdigit(c));
+    READ_INTO(in, buf, 255, c, std::isdigit(c));
 
     node.reset(new value_expr_t(value_expr_t::CONSTANT_I));
     node->constant_i = std::atol(buf);
     return node.release();
   }
   else if (c == '{') {
-    static char buf[2048];
     in.get(c);
-    READ_INTO(in, buf, 2048, c, c != '}');
+    READ_INTO(in, buf, 255, c, c != '}');
     if (c == '}')
       in.get(c);
     else
@@ -488,8 +488,7 @@ value_expr_t * parse_value_term(std::istream& in)
       }
     }
 
-    static char buf[4096];
-    READ_INTO(in, buf, 4096, c, c != '/');
+    READ_INTO(in, buf, 255, c, c != '/');
     if (c != '/')
       throw value_expr_error("Missing closing '/'");
 
@@ -511,15 +510,16 @@ value_expr_t * parse_value_term(std::istream& in)
     break;
 
   case '[': {
-    static char buf[1024];
-    READ_INTO(in, buf, 1024, c, c != ']');
+    READ_INTO(in, buf, 255, c, c != ']');
     if (c != ']')
       throw value_expr_error("Missing ']'");
-
     in.get(c);
+
     node.reset(new value_expr_t(value_expr_t::CONSTANT_T));
-    if (! parse_date(buf, &node->constant_t))
-      throw value_expr_error("Failed to parse date");
+
+    std::string datespec = buf;
+    std::istringstream stream(datespec);
+    interval_t::parse(stream, &node->constant_t, NULL);
     break;
   }
 

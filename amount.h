@@ -5,7 +5,6 @@
 #include <string>
 #include <ctime>
 #include <iostream>
-#include <sstream>
 
 #include "debug.h"
 
@@ -163,10 +162,7 @@ class amount_t
   }
 
   void parse(std::istream& in);
-  void parse(const std::string& str) {
-    std::istringstream stream(str);
-    parse(stream);
-  }
+  void parse(const std::string& str);
 
   void write_quantity(std::ostream& out) const;
   void read_quantity(std::istream& in);

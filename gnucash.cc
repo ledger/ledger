@@ -1,5 +1,7 @@
+#include "gnucash.h"
 #include "ledger.h"
 
+#include <iostream>
 #include <sstream>
 #include <cstring>
 

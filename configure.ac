@@ -13,9 +13,26 @@ AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 
 # Checks for libraries.
-AC_CHECK_LIB([gmp], [__gmpz_add],, [AC_MSG_FAILURE("Could not find libgmp!")])
-AC_CHECK_LIB([pcre], [pcre_compile],, [AC_MSG_FAILURE("Could not find libpcre!")])
-AC_CHECK_LIB([xmlparse], [XML_ParserCreate])
+AC_CHECK_LIB([gmp], [__gmpz_add], [],
+  AC_MSG_FAILURE("Could not find gmp (GNU multi-precision) library"))
+AC_CHECK_LIB([pcre], [pcre_compile], [],
+  AC_MSG_FAILURE("Could not find pcre (Perl regular expression) library"))
+AC_CHECK_LIB([xmlparse], [XML_ParserCreate],
+  [AC_DEFINE([READ_GNUCASH], [1], [Support reading gnucash files])
+   AM_CONDITIONAL(READ_GNUCASH, true)
+   AC_SUBST(LIBS, "-lxmlparse -lxmltok $LIBS")],
+  AC_MSG_NOTICE([Could not find xmlparse library; gnucash support disabled]),
+  [-lxmltok])
+
+# Check for options
+AC_ARG_ENABLE(debug,
+  [  --enable-debug    Turn on debugging],
+  [case "${enableval}" in
+    yes) debug=true ;;
+    no)  debug=false ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-debug) ;;
+  esac],[debug=false])
+AM_CONDITIONAL(DEBUG, test x$debug = xtrue)
 
 # Checks for header files.
 AC_STDC_HEADERS
