@@ -9,7 +9,7 @@
 namespace ledger {
 
 const unsigned long	   binary_magic_number = 0xFFEED765;
-static const unsigned long format_version      = 0x00020017;
+static const unsigned long format_version      = 0x00020018;
 
 static account_t **	   accounts;
 static account_t **	   accounts_next;
@@ -501,33 +501,12 @@ void write_binary_journal(std::ostream& out, journal_t * journal,
   write_binary_number<account_t::ident_t>(out, count_accounts(journal->master));
   write_binary_account(out, journal->master);
 
-  // Calculate some sizes
-
-  unsigned long xact_count = 0;
-  unsigned long string_size = 0;
-
-  for (entries_list::const_iterator i = journal->entries.begin();
-       i != journal->entries.end();
-       i++) {
-    string_size += 2 + (*i)->code.length() + (*i)->payee.length();
-#if DEBUG_LEVEL >= ALPHA
-    string_size += 4 * sizeof(unsigned short);
-#endif
-    xact_count  += (*i)->transactions.size();
-
-    for (transactions_list::const_iterator j = (*i)->transactions.begin();
-	 j != (*i)->transactions.end();
-	 j++) {
-      string_size += 1 + (*j)->note.length();
-#if DEBUG_LEVEL >= ALPHA
-      string_size += 2 * sizeof(unsigned short);
-#endif
-    }
-  }
-
   // Write out the string pool
 
-  write_binary_number<unsigned long>(out, string_size);
+  unsigned long xact_count = 0;
+
+  std::ostream::pos_type string_pool_val = out.tellp();
+  write_binary_number<unsigned long>(out, 0);
 
   for (entries_list::const_iterator i = journal->entries.begin();
        i != journal->entries.end();
@@ -537,21 +516,29 @@ void write_binary_journal(std::ostream& out, journal_t * journal,
 
     for (transactions_list::const_iterator j = (*i)->transactions.begin();
 	 j != (*i)->transactions.end();
-	 j++)
+	 j++) {
+      xact_count++;
       write_binary_string(out, (*j)->note);
+    }
   }
+
+  unsigned long string_pool_size = (((unsigned long) out.tellp()) -
+				    ((unsigned long) string_pool_val) -
+				    sizeof(unsigned long));
 
   // Write out the number of entries, transactions, and amounts
 
   write_binary_number<unsigned long>(out, journal->entries.size());
   write_binary_number<unsigned long>(out, xact_count);
-  std::ostream::pos_type here = out.tellp();
+  std::ostream::pos_type bigints_val = out.tellp();
   write_binary_number<unsigned long>(out, 0);
   bigints_count = 0;
 
   // Write out the commodities
 
-  write_binary_number<commodity_t::ident_t>(out, commodity_t::commodities.size() - 1);
+  write_binary_number<commodity_t::ident_t>
+    (out, commodity_t::commodities.size() - 1);
+
   for (commodities_map::const_iterator i = commodity_t::commodities.begin();
        i != commodity_t::commodities.end();
        i++)
@@ -567,7 +554,10 @@ void write_binary_journal(std::ostream& out, journal_t * journal,
 
   // Back-patch the count for amounts
 
-  out.seekp(here);
+  out.seekp(string_pool_val);
+  write_binary_number<unsigned long>(out, string_pool_size);
+
+  out.seekp(bigints_val);
   write_binary_number<unsigned long>(out, bigints_count);
 }
 
