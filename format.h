@@ -208,6 +208,11 @@ class format_account
 				 const item_predicate<account_t>&
 				     disp_pred_functor,
 				 const account_t *& to_show);
+  static bool disp_subaccounts_p(const account_t * account) {
+    const account_t * temp;
+    return disp_subaccounts_p(account, item_predicate<account_t>(NULL), temp);
+  }
+
   static bool display_account(const account_t * account,
 			      const item_predicate<account_t>&
 				  disp_pred_functor);

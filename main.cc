@@ -651,10 +651,11 @@ int main(int argc, char * argv[])
     walk_accounts(journal->master, formatter, predicate.get(),
 		  xact_display_flags, show_subtotals, sort_order.get());
 
-    std::string end_format = "--------------------\n";
-    format.reset(end_format + f);
-    format_account(std::cout, format,
-		   display_predicate.get())(journal->master);
+    if (format_account::disp_subaccounts_p(journal->master)) {
+      std::string end_format = "--------------------\n";
+      format.reset(end_format + f);
+      format.format_elements(std::cout, details_t(journal->master));
+    }
   }
   else if (command == "E") {
     format_t format(first_line_format);
