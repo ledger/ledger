@@ -3,11 +3,11 @@
 
 namespace ledger {
 
-#define xact_next(x)     ((transaction_t *)(x)->data)
-#define xact_next_ptr(x) ((transaction_t **)&(x)->data)
+#define xact_next(x)     ((transaction_t *)transaction_xdata(*x).ptr)
+#define xact_next_ptr(x) ((transaction_t **)&transaction_xdata(*x).ptr)
 
-bool search_for_balance(amount_t& amount,
-			transaction_t ** prev, transaction_t * next)
+static bool search_for_balance(amount_t& amount,
+			       transaction_t ** prev, transaction_t * next)
 {
   for (; next; next = xact_next(next)) {
     transaction_t * temp = *prev;
@@ -24,21 +24,15 @@ bool search_for_balance(amount_t& amount,
   return false;
 }
 
-static void push_chain_to_list(transaction_t * first,
-			       transactions_list& xact_list)
+void reconcile_transactions::push_to_handler(transaction_t * first)
 {
-  while (first) {
-    transaction_t * curr = first;
-    xact_list.push_back(curr);
-    first = xact_next(first);
-    curr->data = 0;
-  }
+  for (; first; first = xact_next(first))
+    item_handler<transaction_t>::operator()(*first);
+
+  item_handler<transaction_t>::flush();
 }
 
-void reconcile_transactions(transactions_list& xact_list,
-			    value_t&	       balance,
-			    const time_t       cutoff,
-			    const bool         all_pending)
+void reconcile_transactions::flush()
 {
   value_t cleared_balance;
   value_t pending_balance;
@@ -46,11 +40,9 @@ void reconcile_transactions(transactions_list& xact_list,
   transaction_t *  first    = NULL;
   transaction_t ** last_ptr = &first;
 
-  clear_transactions_xdata();
-
   bool found_pending = false;
-  for (transactions_list::iterator x = xact_list.begin();
-       x != xact_list.end();
+  for (transactions_list::iterator x = xacts.begin();
+       x != xacts.end();
        x++)
     if (! cutoff || std::difftime((*x)->entry->date, cutoff) < 0)
       switch ((*x)->entry->state) {
@@ -65,13 +57,12 @@ void reconcile_transactions(transactions_list& xact_list,
 	if (all_pending)
 	  found_pending = true;
 	*last_ptr = *x;
-	last_ptr = (transaction_t **) &(*x)->data;
+	last_ptr = xact_next_ptr(*x);
 	break;
       }
 
   if (all_pending) {
-    xact_list.clear();
-    push_chain_to_list(first, xact_list);
+    push_to_handler(first);
     return;
   }
 
@@ -95,11 +86,30 @@ void reconcile_transactions(transactions_list& xact_list,
   pending_balance.cast(value_t::AMOUNT);
   if (to_reconcile == *((amount_t *) pending_balance.data) ||
       search_for_balance(to_reconcile, &first, first)) {
-    xact_list.clear();
-    push_chain_to_list(first, xact_list);
+    push_to_handler(first);
   } else {
     throw error("Could not reconcile account!");
   }
 }
 
 } // namespace ledger
+
+#ifdef USE_BOOST_PYTHON
+
+#include <boost/python.hpp>
+
+using namespace boost::python;
+using namespace ledger;
+
+void export_reconcile()
+{
+  class_< reconcile_transactions, bases<item_handler<transaction_t> > >
+    ("ReconcileTransactions",
+     init<item_handler<transaction_t> *, const value_t&, time_t, bool>()
+     [with_custodian_and_ward<1, 2>()])
+    .def("flush", &reconcile_transactions::flush)
+    .def("__call__", &reconcile_transactions::operator())
+    ;
+}
+
+#endif // USE_BOOST_PYTHON
