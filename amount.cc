@@ -1158,10 +1158,10 @@ commodity_t * commodity_t::find_commodity(const std::string& symbol,
 
     // Start out the new commodity with the default commodity's flags
     // and precision, if one has been defined.
-    if (default_commodity) {
-      commodity->flags	   = default_commodity->flags;
-      commodity->precision = default_commodity->precision;
-    }
+    if (default_commodity)
+      commodity->flags =
+	(default_commodity->flags & ~COMMODITY_STYLE_THOUSANDS);
+
     return commodity;
   }
 

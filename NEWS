@@ -14,10 +14,10 @@ New features:
 
 - The "D <COMM>" command, released in 2.1, now requires a regular,
   commoditized amount, such as "D $1,000.00".  This sets not only the
-  default commodity, but also the default flags and precision to be
-  used with that commodity.  It may also be used be many times; which
-  was most recently seen will be the default for the entries that
-  follow.
+  default commodity, but also several default flags to be used with
+  all commodities (such as whether all numbering should be American or
+  European).  It may also be used be many times; which was most
+  recently seen will be the default for the entries that follow.
 
 - Fixed several bugs with Ledger's XML data format.
 
