@@ -245,7 +245,7 @@ account_t * account_t::find_account(const std::string& name,
   char buf[256];
 
   std::string::size_type sep = name.find(':');
-  assert(sep < 256);
+  assert(sep < 256|| sep == std::string::npos);
 
   const char * first, * rest;
   if (sep == std::string::npos) {
