@@ -96,7 +96,8 @@ if [test x$xml = xtrue ]; then
      LIBS="-lxmlparse -lxmltok $LIBS"
      AC_LANG_PUSH(C++)
      AC_TRY_LINK(
-       [extern "C" {
+       [#include <stdio.h>
+	extern "C" {
 	  #include <xmlparse.h>           // expat XML parser
 	}],
        [XML_Parser parser = XML_ParserCreate(NULL);
