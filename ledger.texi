@@ -1,5 +1,5 @@
 \input texinfo    @c -*-texinfo-*-
-@comment $Id: ledger.texi,v 1.2 2003/09/30 11:31:45 johnw Exp $
+@comment $Id: ledger.texi,v 1.3 2003/09/30 23:17:18 johnw Exp $
 @comment %**start of header
 
 @setfilename ledger.info
@@ -191,6 +191,101 @@ the balanced amount, if it is the same as the first line:
 
 For this entry, @code{ledger} will figure out that $-23.00 must come
 from ``Assets:Checking'' in order to balance the entry.
+
+@section Commodities and currencies
+
+@code{ledger} makes no assumptions about the commodities you use.  It
+only requires that you specify which commodity.  The commodity may be
+any non-numeric string that does not contain a period, comma, forward
+slash or at sign (@@).  Here are some valid commodity specifiers:
+
+@example
+$20.00         ; twenty US dollars
+20 USD         ; the same
+AAPL 40        ; 40 shares of Apple Computer stock
+DM 60          ; 60 Deutsch Mark
+£50            ; 50 British pounds
+@end example
+
+@code{ledger} will examine the first use of any commodity to determine
+how that commodity should be printed on reports.  It pays attention to
+whether the name of commodity was separated from the amount, whether
+it came before or after, the precision used in specifying the amount,
+whether thousand marks were used, etc.  This is done so that printing
+the commodity looks the same as the way you use it.
+
+An account may contain multiple commodities, in which case it will
+have separate totals for each.  For example, if your brokage account
+contains both cash, gold, and several stock quantities, the balance
+might look like:
+
+@example
+  $200.00
+100.00 AU
+  AAPL 40
+ BORL 100
+ FEQTX 50  Assets:Brokerage
+@end example
+
+This balance report shows how much of each commodity is in your
+brokerage account.
+
+Sometimes, you will want to know the current street value of your
+balance, and not the commodity totals.  For this to happen, you must
+specify what the current price is for each commodity.  The price can
+be in any commodity, in which case the balance will be computed in
+terms of that commodity.  The usual way to specify prices is with a
+file of price settings, which might look like this:
+
+@example
+AU=$357.00
+AAPL=$37
+BORL=$19
+FEQTX=$32
+@end example
+
+Specify the prices file using the @samp{-p} option:
+
+@example
+/home/johnw $ ledger -f ledger.dat -p prices.db balance brokerage
+@end example
+
+Now the balance for your brokerage account will be given in US
+dollars, since the prices database has specified conversion factors
+from each commodity into dollars:
+
+@example
+$40880.00  Assets:Brokerage
+@end example
+
+You can convert from any commodity to any other commodity.  Let's say
+you had $5000 in your checking account, and for whatever reason you
+wanted to know many ounces of gold that would buy.  If gold is
+currently $357 per ounce, then each dollar is worth 1/357 AU:
+
+@example
+/home/johnw $ ledger -f ledger.dat -p "\$=0.00280112 AU" balance checking
+@end example
+
+@example
+14.01 AU  Assets:Checking
+@end example
+
+$5000 would buy 14 ounces of gold, which becomes the new display
+commodity since a conversion factor was provided.
+
+Commodities conversions can also be chained, up to a depth of 15.
+Here is a sample prices database that uses chaining:
+
+@example
+AAPL=$15
+$=0.00280112 AU
+AU=300 Euro
+Euro=DM 0.75
+@end example
+
+This is a roundabout way of reporting AAPL shares in their Deutsch
+Mark equivalent.
 
 @chapter Using @code{ledger}
 

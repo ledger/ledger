@@ -98,13 +98,15 @@ static void endElement(void *userData, const char *name)
   if (std::strcmp(name, "gnc:account") == 0) {
     assert(curr_account);
     if (! curr_account->parent)
-      accounts.insert(accounts_entry(curr_account->name, curr_account));
+      main_ledger.accounts.insert(accounts_entry(curr_account->name,
+						 curr_account));
     accounts_by_id.insert(accounts_entry(curr_account_id, curr_account));
     curr_account = NULL;
   }
   else if (std::strcmp(name, "gnc:commodity") == 0) {
     assert(curr_comm);
-    commodities.insert(commodities_entry(curr_comm->symbol, curr_comm));
+    main_ledger.commodities.insert(commodities_entry(curr_comm->symbol,
+						     curr_comm));
     curr_comm = NULL;
   }
   else if (std::strcmp(name, "gnc:transaction") == 0) {
@@ -115,7 +117,7 @@ static void endElement(void *userData, const char *name)
 		<< XML_GetCurrentLineNumber(current_parser) << std::endl;
       curr_entry->print(std::cerr);
     } else {
-      ledger.push_back(curr_entry);
+      main_ledger.entries.push_back(curr_entry);
     }
     curr_entry = NULL;
   }
@@ -146,9 +148,9 @@ static void dataHandler(void *userData, const char *s, int len)
     if (curr_comm)
       curr_comm->symbol = std::string(s, len);
     else if (curr_account)
-      curr_account->comm = commodities[std::string(s, len)];
+      curr_account->comm = main_ledger.commodities[std::string(s, len)];
     else if (curr_entry)
-      entry_comm = commodities[std::string(s, len)];
+      entry_comm = main_ledger.commodities[std::string(s, len)];
     break;
 
   case COMM_NAME:

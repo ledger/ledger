@@ -1,5 +1,5 @@
 #ifndef _LEDGER_H
-#define _LEDGER_H "$Revision: 1.7 $"
+#define _LEDGER_H "$Revision: 1.8 $"
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -107,17 +107,6 @@ typedef std::map<const std::string, commodity *> commodities_t;
 typedef commodities_t::iterator commodities_iterator;
 typedef std::pair<const std::string, commodity *> commodities_entry;
 
-extern commodities_t commodities;
-
-inline commodity::commodity(const std::string& sym, bool pre, bool sep,
-			    bool thou, bool euro, int prec)
-  : symbol(sym), prefix(pre), separate(sep),
-    thousands(thou), european(euro), precision(prec) {
-  std::pair<commodities_iterator, bool> result =
-    commodities.insert(commodities_entry(sym, this));
-  assert(result.second);
-}
-
 
 class amount
 {
@@ -155,6 +144,23 @@ operator<<(std::basic_ostream<char, Traits>& out, const amount& a) {
 
 extern amount * create_amount(const char * value, const amount * price = NULL);
 
+
+struct mask
+{
+  bool   exclude;
+  pcre * regexp;
+
+  mask(bool exc, pcre * re) : exclude(exc), regexp(re) {}
+};
+
+extern std::list<mask> regexps;
+
+extern void record_regexp(char * pattern, std::list<mask>& regexps);
+extern void read_regexps(const char * path, std::list<mask>& regexps);
+extern bool matches(const std::list<mask>& regexps,
+		    const std::string& str);
+
+
 struct account;
 struct transaction
 {
@@ -190,6 +196,7 @@ struct entry
     }
   }
 
+  bool matches(const std::list<mask>& regexps) const;
   void print(std::ostream& out) const;
   bool validate() const;
 };
@@ -200,25 +207,24 @@ struct cmp_entry_date {
   }
 };
 
-typedef std::vector<entry *> ledger_t;
-typedef ledger_t::iterator ledger_iterator;
-
-extern ledger_t ledger;
+typedef std::vector<entry *> entries_t;
+typedef entries_t::iterator entries_iterator;
 
 
-class totals
+struct totals
 {
-  typedef std::map<const std::string, amount *> map_t;
-  typedef map_t::iterator iterator_t;
-  typedef map_t::const_iterator const_iterator_t;
-  typedef std::pair<const std::string, amount *> pair_t;
+  typedef std::map<const std::string, amount *> map;
+  typedef map::iterator iterator;
+  typedef map::const_iterator const_iterator;
+  typedef std::pair<const std::string, amount *> pair;
 
-  map_t amounts;
+  map amounts;
 
- public:
+  ~totals();
+
   void credit(const amount * val) {
-    std::pair<iterator_t, bool> result =
-      amounts.insert(pair_t(val->comm_symbol(), val->copy()));
+    std::pair<iterator, bool> result =
+      amounts.insert(pair(val->comm_symbol(), val->copy()));
     if (! result.second)
       amounts[val->comm_symbol()]->credit(val);
   }
@@ -226,7 +232,7 @@ class totals
 
   operator bool() const;
 
-  void print(std::ostream& out) const;
+  void print(std::ostream& out, int width) const;
 
   // Returns an allocated entity
   amount * value(const std::string& comm);
@@ -238,7 +244,7 @@ class totals
 template<class Traits>
 std::basic_ostream<char, Traits> &
 operator<<(std::basic_ostream<char, Traits>& out, const totals& t) {
-  t.print(out);
+  t.print(out, 20);
   return out;
 }
 
@@ -280,27 +286,38 @@ typedef std::map<const std::string, account *> accounts_t;
 typedef accounts_t::iterator accounts_iterator;
 typedef std::pair<const std::string, account *> accounts_entry;
 
-extern accounts_t accounts;
-
-struct mask
-{
-  bool   exclude;
-  pcre * regexp;
-
-  mask(bool exc, pcre * re) : exclude(exc), regexp(re) {}
-};
-
-extern void record_regexp(char * pattern, std::list<mask>& regexps);
-extern void read_regexps(const char * path, std::list<mask>& regexps);
-extern bool matches(const std::list<mask>& regexps,
-		    const std::string& str);
 
 #ifdef HUQUQULLAH
+#define DEFAULT_COMMODITY "$"
+
 extern bool compute_huquq;
 extern std::list<mask> huquq_categories;
 #endif
 
-extern bool use_warnings;
+struct state
+{
+  commodities_t commodities;
+  accounts_t    accounts;
+  entries_t     entries;
+  totals        prices;
+
+  ~state();
+
+  void record_price(const char * setting);
+  account * find_account(const char * name, bool create = true);
+};
+
+extern state main_ledger;
+extern bool  use_warnings;
+
+inline commodity::commodity(const std::string& sym, bool pre, bool sep,
+			    bool thou, bool euro, int prec)
+  : symbol(sym), prefix(pre), separate(sep),
+    thousands(thou), european(euro), precision(prec) {
+  std::pair<commodities_iterator, bool> result =
+    main_ledger.commodities.insert(commodities_entry(sym, this));
+  assert(result.second);
+}
 
 } // namespace ledger
 

@@ -40,42 +40,9 @@ static inline void finalize_entry(entry * curr)
 		<< "ending on line " << (linenum - 1) << std::endl;
       curr->print(std::cerr);
     } else {
-      ledger.push_back(curr);
+      main_ledger.entries.push_back(curr);
     }
   }
-}
-
-static account * find_account(const char * name)
-{
-  char * buf = new char[std::strlen(name) + 1];
-  std::strcpy(buf, name);
-
-  account * current = NULL;
-  for (char * tok = std::strtok(buf, ":");
-       tok;
-       tok = std::strtok(NULL, ":")) {
-    if (! current) {
-      accounts_iterator i = accounts.find(tok);
-      if (i == accounts.end()) {
-	current = new account(tok);
-	accounts.insert(accounts_entry(tok, current));
-      } else {
-	current = (*i).second;
-      }
-    } else {
-      account::iterator i = current->children.find(tok);
-      if (i == current->children.end()) {
-	current = new account(tok, current);
-	current->parent->children.insert(accounts_entry(tok, current));
-      } else {
-	current = (*i).second;
-      }
-    }
-  }
-
-  delete[] buf;
-
-  return current;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -230,7 +197,7 @@ bool parse_ledger(std::istream& in)
       }
 #endif
 
-      xact->acct = find_account(p);
+      xact->acct = main_ledger.find_account(p);
       xact->acct->balance.credit(xact->cost);
 
       curr->xacts.push_back(xact);
@@ -241,14 +208,14 @@ bool parse_ledger(std::istream& in)
 	amount * temp;
 
 	transaction * t = new transaction();
-	t->acct = find_account("Huququ'llah");
+	t->acct = main_ledger.find_account("Huququ'llah");
 	temp = xact->cost->value();
 	t->cost = temp->value(huquq);
 	delete temp;
 	curr->xacts.push_back(t);
 
 	t = new transaction();
-	t->acct = find_account("Expenses:Huququ'llah");
+	t->acct = main_ledger.find_account("Expenses:Huququ'llah");
 	temp = xact->cost->value();
 	t->cost = temp->value(huquq);
 	delete temp;

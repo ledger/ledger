@@ -2,7 +2,7 @@ define GNUCASH
 true
 endef
 
-CODE =  amount.cc ledger.cc parse.cc balance.cc main.cc
+CODE =  amount.cc ledger.cc parse.cc balance.cc register.cc main.cc
 ifdef GNUCASH
 CODE := $(CODE) gnucash.cc
 endif
@@ -10,7 +10,8 @@ endif
 OBJS = $(patsubst %.cc,%.o,$(CODE))
 
 CFLAGS = -Wall -ansi -pedantic -DHUQUQULLAH=1
-DFLAGS = -g
+#DFLAGS = -O3 -fomit-frame-pointer
+DFLAGS = -g # -pg
 INCS   = -I/usr/include/xmltok
 LIBS   = -lgmpxx -lgmp -lpcre
 ifdef GNUCASH

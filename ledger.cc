@@ -4,11 +4,11 @@
 
 namespace ledger {
 
-commodities_t commodities;
-accounts_t    accounts;
-ledger_t      ledger;
-
 bool use_warnings = false;
+
+state main_ledger;
+
+std::list<mask> regexps;
 
 #ifdef HUQUQULLAH
 bool compute_huquq;
@@ -40,18 +40,8 @@ void entry::print(std::ostream& out) const
        i++) {
     out << "    ";
 
-    std::string acct_name;
-    for (account * acct = (*i)->acct;
-	 acct;
-	 acct = acct->parent) {
-      if (acct_name.empty())
-	acct_name = acct->name;
-      else
-	acct_name = acct->name + ":" + acct_name;
-    }
-
     out.width(30);
-    out << std::left << acct_name;
+    out << std::left << (*i)->acct->as_str();
 
     if (! shortcut || i == xacts.begin()) {
       out << "  ";
@@ -78,40 +68,67 @@ bool entry::validate() const
 
   if (balance) {
     std::cerr << "Totals are:" << std::endl;
-    balance.print(std::cerr);
+    balance.print(std::cerr, 20);
     std::cerr << std::endl;
   }
   return ! balance;             // must balance to 0.0
 }
 
+bool entry::matches(const std::list<mask>& regexps) const
+{
+  if (regexps.empty() || (ledger::matches(regexps, code) ||
+			  ledger::matches(regexps, desc))) {
+    return true;
+  }
+  else {
+    bool match = false;
+
+    for (std::list<transaction *>::const_iterator x = xacts.begin();
+	 x != xacts.end();
+	 x++) {
+      if (ledger::matches(regexps, (*x)->acct->name) ||
+	  ledger::matches(regexps, (*x)->note)) {
+	match = true;
+	break;
+      }
+    }
+    return match;
+  }
+}
+
+totals::~totals()
+{
+  for (iterator i = amounts.begin(); i != amounts.end(); i++)
+    delete (*i).second;
+}
+
 void totals::credit(const totals& other)
 {
-  for (const_iterator_t i = other.amounts.begin();
+  for (const_iterator i = other.amounts.begin();
        i != other.amounts.end();
-       i++) {
+       i++)
     credit((*i).second);
-  }
 }
 
 totals::operator bool() const
 {
-  for (const_iterator_t i = amounts.begin(); i != amounts.end(); i++)
+  for (const_iterator i = amounts.begin(); i != amounts.end(); i++)
     if (*((*i).second))
       return true;
   return false;
 }
 
-void totals::print(std::ostream& out) const
+void totals::print(std::ostream& out, int width) const
 {
   bool first = true;
-  for (const_iterator_t i = amounts.begin(); i != amounts.end(); i++)
+  for (const_iterator i = amounts.begin(); i != amounts.end(); i++)
     if (*((*i).second)) {
       if (first)
 	first = false;
       else
 	out << std::endl;
 
-      out.width(20);
+      out.width(width);
       out << std::right << *((*i).second);
     }
 }
@@ -123,7 +140,7 @@ amount * totals::value(const std::string& commodity)
 
   amount * total = create_amount((commodity + " 0.00").c_str());
 
-  for (iterator_t i = amounts.begin(); i != amounts.end(); i++)
+  for (iterator i = amounts.begin(); i != amounts.end(); i++)
     *total += *((*i).second);
 
   return total;
@@ -134,18 +151,7 @@ amount * totals::value(const std::string& commodity)
 
 void print_ledger(int argc, char *argv[], std::ostream& out)
 {
-  std::list<mask> regexps;
-
-  int c;
   optind = 1;
-  while (-1 != (c = getopt(argc, argv, "i:"))) {
-    switch (char(c)) {
-    // -i path-to-file-of-regexps
-    case 'i':
-      read_regexps(optarg, regexps);
-      break;
-    }
-  }
 
   // Compile the list of specified regular expressions, which can be
   // specified on the command line, or using an include/exclude file
@@ -155,33 +161,14 @@ void print_ledger(int argc, char *argv[], std::ostream& out)
 
   // Sort the list of entries by date, then print them in order.
 
-  std::sort(ledger.begin(), ledger.end(), cmp_entry_date());
+  std::sort(main_ledger.entries.begin(), main_ledger.entries.end(),
+	    cmp_entry_date());
 
-  for (std::vector<entry *>::const_iterator i = ledger.begin();
-       i != ledger.end();
-       i++) {
-    if (regexps.empty() ||
-	(matches(regexps, (*i)->code) ||
-	 matches(regexps, (*i)->desc))) {
+  for (entries_iterator i = main_ledger.entries.begin();
+       i != main_ledger.entries.end();
+       i++)
+    if ((*i)->matches(regexps))
       (*i)->print(out);
-    }
-    else {
-      bool match = false;
-
-      for (std::list<transaction *>::const_iterator x = (*i)->xacts.begin();
-	   x != (*i)->xacts.end();
-	   x++) {
-	if (matches(regexps, (*x)->acct->name) ||
-	    matches(regexps, (*x)->note)) {
-	  match = true;
-	  break;
-	}
-      }
-
-      if (match)
-	(*i)->print(out);
-    }
-  }
 }
 
 void record_regexp(char * pattern, std::list<mask>& regexps)
@@ -243,6 +230,80 @@ bool matches(const std::list<mask>& regexps, const std::string& str)
   }
 
   return match;
+}
+
+state::~state()
+{
+#if 0
+  for (commodities_iterator i = commodities.begin();
+       i != commodities.end();
+       i++)
+    delete (*i).second;
+
+  for (accounts_iterator i = accounts.begin();
+       i != accounts.end();
+       i++)
+    delete (*i).second;
+
+  for (entries_iterator i = entries.begin();
+       i != entries.end();
+       i++)
+    delete *i;
+#endif
+}
+
+void state::record_price(const char * setting)
+{
+  char buf[128];
+  std::strcpy(buf, setting);
+
+  assert(std::strlen(setting) < 128);
+
+  char * c = buf;
+  char * p = std::strchr(buf, '=');
+  if (! p) {
+    std::cerr << "Warning: Invalid price setting: " << setting << std::endl;
+  } else {
+    *p++ = '\0';
+    prices.amounts.insert(totals::pair(c, create_amount(p)));
+  }
+}
+
+account * state::find_account(const char * name, bool create)
+{
+  char * buf = new char[std::strlen(name) + 1];
+  std::strcpy(buf, name);
+
+  account * current = NULL;
+  for (char * tok = std::strtok(buf, ":");
+       tok;
+       tok = std::strtok(NULL, ":")) {
+    if (! current) {
+      accounts_iterator i = accounts.find(tok);
+      if (i == accounts.end()) {
+	if (! create)
+	  return NULL;
+	current = new account(tok);
+	accounts.insert(accounts_entry(tok, current));
+      } else {
+	current = (*i).second;
+      }
+    } else {
+      account::iterator i = current->children.find(tok);
+      if (i == current->children.end()) {
+	if (! create)
+	  return NULL;
+	current = new account(tok, current);
+	current->parent->children.insert(accounts_entry(tok, current));
+      } else {
+	current = (*i).second;
+      }
+    }
+  }
+
+  delete[] buf;
+
+  return current;
 }
 
 } // namespace ledger

@@ -477,8 +477,8 @@ static commodity * parse_amount(mpz_t out, const char * num,
   commodity * comm = NULL;
 
   if (saw_commodity) {
-    commodities_iterator item = commodities.find(symbol.c_str());
-    if (item == commodities.end()) {
+    commodities_iterator item = main_ledger.commodities.find(symbol.c_str());
+    if (item == main_ledger.commodities.end()) {
       comm = new commodity(symbol, prefix, separate,
 			   thousands, european, precision);
     } else {

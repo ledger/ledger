@@ -1,19 +1,19 @@
 #include "ledger.h"
 
-#include <fstream>
 #include <unistd.h>
 
 namespace ledger {
 
-static bool show_cleared  = false;
+extern bool show_cleared;
+
+extern std::time_t begin_date;
+extern bool have_beginning;
+extern std::time_t end_date;
+extern bool have_ending;
+
 static bool show_children = false;
 static bool show_empty    = false;
 static bool no_subtotals  = false;
-
-static std::time_t begin_date;
-static bool have_beginning;
-static std::time_t end_date;
-static bool have_ending;
 
 static void display_total(std::ostream& out, totals& total_balance,
 			  const account * acct,
@@ -68,20 +68,6 @@ static void display_total(std::ostream& out, totals& total_balance,
     display_total(out, total_balance, (*i).second, balances, regexps);
 }
 
-static void record_price(char * setting,
-			 std::map<const std::string, amount *>& prices)
-{
-  char * c = setting;
-  char * p = std::strchr(setting, '=');
-  if (! p) {
-    std::cerr << "Warning: Invalid price setting: " << setting << std::endl;
-  } else {
-    *p++ = '\0';
-    amount * price = create_amount(p);
-    prices.insert(std::pair<const std::string, amount *>(c, price));
-  }
-}
-
 //////////////////////////////////////////////////////////////////////
 //
 // Balance reporting code
@@ -89,86 +75,21 @@ static void record_price(char * setting,
 
 void report_balances(int argc, char **argv, std::ostream& out)
 {
-  std::map<const std::string, amount *> prices;
-  std::list<mask> regexps;
-
-#ifdef HUQUQULLAH
-  if (compute_huquq) {
-    prices.insert(std::pair<const std::string, amount *>
-		  ("H", create_amount("$0.19")));
-    prices.insert(std::pair<const std::string, amount *>
-		  ("troy", create_amount("8.5410148523 mithqal")));
-  }
-#endif
-
-  have_beginning = false;
-  have_ending    = false;
-
-  int c;
   optind = 1;
-  while (-1 != (c = getopt(argc, argv, "b:e:cCsSni:p:G:"))) {
+  int c;
+  while (-1 != (c = getopt(argc, argv, "sSnG:"))) {
     switch (char(c)) {
-    case 'b': {
-      struct tm * when = getdate(optarg);
-      if (! when) {
-	std::cerr << "Error: Bad begin date string: " << optarg
-		  << std::endl;
-      } else {
-	begin_date = std::mktime(when);
-	have_beginning = true;
-      }
-      break;
-    }
-    case 'e': {
-      struct tm * when = getdate(optarg);
-      if (! when) {
-	std::cerr << "Error: Bad end date string: " << optarg
-		  << std::endl;
-      } else {
-	end_date = std::mktime(when);
-	have_ending = true;
-      }
-      break;
-    }
-    case 'c':
-      end_date = std::time(NULL);
-      have_ending = true;
-      break;
-
-    case 'C': show_cleared  = true; break;
     case 's': show_children = true; break;
     case 'S': show_empty    = true; break;
     case 'n': no_subtotals  = true; break;
-
-    // -i path-to-file-of-regexps
-    case 'i':
-      read_regexps(optarg, regexps);
-      break;
-
-    // -p "COMMODITY=PRICE"
-    // -p path-to-price-database
-    case 'p':
-      if (access(optarg, R_OK) != -1) {
-	std::ifstream pricedb(optarg);
-
-	while (! pricedb.eof()) {
-	  char buf[80];
-	  pricedb.getline(buf, 79);
-	  if (*buf && ! std::isspace(*buf))
-	    record_price(buf, prices);
-	}
-      } else {
-	record_price(optarg, prices);
-      }
-      break;
 
 #ifdef HUQUQULLAH
     case 'G': {
       double gold = std::atof(optarg);
       gold = 1 / gold;
       char buf[256];
-      std::sprintf(buf, "$=%f troy", gold);
-      record_price(buf, prices);
+      std::sprintf(buf, DEFAULT_COMMODITY "=%f troy", gold);
+      main_ledger.record_price(buf);
       break;
     }
 #endif
@@ -186,7 +107,9 @@ void report_balances(int argc, char **argv, std::ostream& out)
 
   std::map<account *, totals *> balances;
 
-  for (ledger_iterator i = ledger.begin(); i != ledger.end(); i++) {
+  for (entries_iterator i = main_ledger.entries.begin();
+       i != main_ledger.entries.end();
+       i++) {
     for (std::list<transaction *>::iterator x = (*i)->xacts.begin();
 	 x != (*i)->xacts.end();
 	 x++) {
@@ -223,9 +146,9 @@ void report_balances(int argc, char **argv, std::ostream& out)
 	bool allocated = false;
 	for (int cycles = 0; cost && cycles < 10; cycles++) {
 	  std::map<const std::string, amount *>::iterator pi
-	    = prices.find(cost->comm_symbol());
+	    = main_ledger.prices.amounts.find(cost->comm_symbol());
 
-	  if (pi == prices.end()) {
+	  if (pi == main_ledger.prices.amounts.end()) {
 	    balance->credit(cost);
 	    if (allocated)
 	      delete cost;
@@ -247,7 +170,9 @@ void report_balances(int argc, char **argv, std::ostream& out)
 
   totals total_balance;
 
-  for (accounts_iterator i = accounts.begin(); i != accounts.end(); i++)
+  for (accounts_iterator i = main_ledger.accounts.begin();
+       i != main_ledger.accounts.end();
+       i++)
     display_total(out, total_balance, (*i).second, balances, regexps);
 
   // Print the total of all the balances shown
@@ -260,11 +185,6 @@ void report_balances(int argc, char **argv, std::ostream& out)
 
   for (std::map<account *, totals *>::iterator i = balances.begin();
        i != balances.end();
-       i++)
-    delete (*i).second;
-
-  for (std::map<const std::string, amount *>::iterator i = prices.begin();
-       i != prices.end();
        i++)
     delete (*i).second;
 }

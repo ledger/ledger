@@ -1,0 +1,19 @@
+#!/bin/bash
+
+binary=./ledger
+ledger=ledger.dat
+
+line="$binary -f $ledger"
+
+command=$1
+shift
+
+case "$command" in
+    balance)  $line "$@" balance bank checking mastercard cash ;;
+    worth)    $line "$@" balance assets liabilities ;;
+    profit)   $line "$@" balance income expense ;;
+    spending) $line "$@" balance -n food movies gas tips \
+	health supplies -insurance -vacation ;;
+    huquq)    $line "$@" balance ^huquq ;;
+    gold)     $line "$@" balance -G $1 ^huquq ;;
+esac

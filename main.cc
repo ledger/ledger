@@ -7,7 +7,15 @@ namespace ledger {
   extern bool parse_gnucash(std::istream& in);
 
   extern void report_balances(int argc, char **argv, std::ostream& out);
+  extern void print_register(int argc, char **argv, std::ostream& out);
   extern void print_ledger(int argc, char *argv[], std::ostream& out);
+
+  bool show_cleared;
+
+  std::time_t begin_date;
+  bool        have_beginning;
+  std::time_t end_date;
+  bool        have_ending;
 }
 
 using namespace ledger;
@@ -36,18 +44,72 @@ int main(int argc, char *argv[])
   std::istream * file = NULL;
 
 #ifdef HUQUQULLAH
-  compute_huquq = true;
+  compute_huquq  = true;
 #endif
+  have_beginning = false;
+  have_ending    = false;
+  show_cleared   = false;
 
   int c;
-  while (-1 != (c = getopt(argc, argv, "+hHwf:"))) {
+  while (-1 != (c = getopt(argc, argv, "+b:e:cChHwf:i:p:"))) {
     switch (char(c)) {
+    case 'b': {
+      struct tm * when = getdate(optarg);
+      if (! when) {
+	std::cerr << "Error: Bad begin date string: " << optarg
+		  << std::endl;
+      } else {
+	begin_date = std::mktime(when);
+	have_beginning = true;
+      }
+      break;
+    }
+    case 'e': {
+      struct tm * when = getdate(optarg);
+      if (! when) {
+	std::cerr << "Error: Bad end date string: " << optarg
+		  << std::endl;
+      } else {
+	end_date = std::mktime(when);
+	have_ending = true;
+      }
+      break;
+    }
+    case 'c':
+      end_date = std::time(NULL);
+      have_ending = true;
+      break;
+
+    case 'C': show_cleared = true; break;
+
     case 'h': show_help(std::cout); break;
 #ifdef HUQUQULLAH
     case 'H': compute_huquq = false; break;
 #endif
     case 'w': use_warnings = true; break;
     case 'f': file = new std::ifstream(optarg); break;
+
+    // -i path-to-file-of-regexps
+    case 'i':
+      read_regexps(optarg, regexps);
+      break;
+
+    // -p "COMMODITY=PRICE"
+    // -p path-to-price-database
+    case 'p':
+      if (access(optarg, R_OK) != -1) {
+	std::ifstream pricedb(optarg);
+
+	while (! pricedb.eof()) {
+	  char buf[80];
+	  pricedb.getline(buf, 79);
+	  if (*buf && ! std::isspace(*buf))
+	    main_ledger.record_price(buf);
+	}
+      } else {
+	main_ledger.record_price(optarg);
+      }
+      break;
     }
   }
 
@@ -69,7 +131,7 @@ int main(int argc, char *argv[])
 
   // The -f option is required
 
-  if (! file) {
+  if (! file || ! *file) {
     std::cerr << "Please specify the ledger file using the -f option."
 	      << std::endl;
     return 1;
@@ -78,7 +140,7 @@ int main(int argc, char *argv[])
   // Global defaults
 
   commodity * usd = new commodity("$", true, false, true, false, 2);
-  commodities.insert(commodities_entry("USD", usd));
+  main_ledger.commodities.insert(commodities_entry("USD", usd));
 
 #ifdef HUQUQULLAH
   if (compute_huquq) {
@@ -86,7 +148,19 @@ int main(int argc, char *argv[])
     new commodity("mithqal", false, true, true, false, 1);
 
     read_regexps(".huquq", huquq_categories);
+
+    main_ledger.record_price("H=" DEFAULT_COMMODITY "0.19");
+    main_ledger.record_price("troy=8.5410148523 mithqal");
   }
+#endif
+
+  // Read the command word
+
+  const std::string command = argv[optind];
+
+#ifdef HUQUQ_CATEGORIES
+  if (command == "register")
+    compute_huquq = false;
 #endif
 
   // Parse the ledger
@@ -104,10 +178,10 @@ int main(int argc, char *argv[])
 
   // Process the command
 
-  const std::string command = argv[optind];
-
   if (command == "balance")
     report_balances(argc - optind, &argv[optind], std::cout);
+  else if (command == "register")
+    print_register(argc - optind, &argv[optind], std::cout);
   else if (command == "print")
     print_ledger(argc - optind, &argv[optind], std::cout);
 }
