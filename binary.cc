@@ -8,21 +8,21 @@
 
 namespace ledger {
 
-const unsigned long	   binary_magic_number = 0xFFEED765;
-static const unsigned long format_version      = 0x0002001a;
+static unsigned long  binary_magic_number = 0xFFEED765;
+static unsigned long  format_version      = 0x0002001a;
 
-static account_t **	   accounts;
-static account_t **	   accounts_next;
-static unsigned int	   account_index;
+static account_t **   accounts;
+static account_t **   accounts_next;
+static unsigned int   account_index;
 
-static commodity_t **	   commodities;
-static commodity_t **	   commodities_next;
-static unsigned int	   commodity_index;
+static commodity_t ** commodities;
+static commodity_t ** commodities_next;
+static unsigned int   commodity_index;
 
-amount_t::bigint_t *	   bigints;
-amount_t::bigint_t *	   bigints_next;
-unsigned int		   bigints_index;
-unsigned int		   bigints_count;
+extern char *         bigints;
+extern char *	      bigints_next;
+extern unsigned int   bigints_index;
+extern unsigned int   bigints_count;
 
 #if DEBUG_LEVEL >= ALPHA
 #define read_binary_guard(in, id) {		\
@@ -342,9 +342,8 @@ unsigned int read_binary_journal(std::istream&	    in,
   transaction_t * xact_pool  = (transaction_t *) (item_pool +
 						  sizeof(entry_t) * count);
   bigints_index = 0;
-  bigints = bigints_next
-    = (amount_t::bigint_t *) (item_pool + sizeof(entry_t) * count +
-			      sizeof(transaction_t) * xact_count);
+  bigints = bigints_next = (item_pool + sizeof(entry_t) * count +
+			    sizeof(transaction_t) * xact_count);
 
   // Read in the commodities
 

@@ -32,7 +32,7 @@ struct item_handler {
     if (handler)
       handler->flush();
   }
-  virtual void operator()(T * item) {
+  virtual void operator()(T& item) {
     if (handler)
       (*handler)(item);
   }
@@ -55,8 +55,8 @@ class compare_items {
     assert(left);
     assert(right);
 
-    sort_order->compute(left_result, details_t(left));
-    sort_order->compute(right_result, details_t(right));
+    sort_order->compute(left_result, details_t(*left));
+    sort_order->compute(right_result, details_t(*right));
 
     return left_result < right_result;
   }
@@ -71,7 +71,7 @@ inline void walk_transactions(transactions_list::iterator begin,
 			      transactions_list::iterator end,
 			      item_handler<transaction_t>& handler) {
   for (transactions_list::iterator i = begin; i != end; i++)
-    handler(*i);
+    handler(**i);
 }
 
 inline void walk_transactions(transactions_list& deque,
@@ -114,6 +114,7 @@ struct transaction_data_t
 };
 
 #define XACT_DATA(xact) ((transaction_data_t *) ((xact)->data))
+#define XACT_DATA_(xact) ((transaction_data_t *) ((xact).data))
 
 #define ACCOUNT_DISPLAYED  0x1
 #define ACCOUNT_TO_DISPLAY 0x2
@@ -137,22 +138,23 @@ struct account_data_t
 };
 
 #define ACCT_DATA(acct) ((account_data_t *) ((acct)->data))
+#define ACCT_DATA_(acct) ((account_data_t *) ((acct).data))
 
 //////////////////////////////////////////////////////////////////////
 
 class ignore_transactions : public item_handler<transaction_t>
 {
  public:
-  virtual void operator()(transaction_t * xact) {}
+  virtual void operator()(transaction_t& xact) {}
 };
 
 class clear_transaction_data : public item_handler<transaction_t>
 {
  public:
-  virtual void operator()(transaction_t * xact) {
-    if (xact->data) {
-      delete (transaction_data_t *) xact->data;
-      xact->data = NULL;
+  virtual void operator()(transaction_t& xact) {
+    if (xact.data) {
+      delete (transaction_data_t *) xact.data;
+      xact.data = NULL;
     }
   }
 };
@@ -163,12 +165,12 @@ class set_account_value : public item_handler<transaction_t>
   set_account_value(item_handler<transaction_t> * handler = NULL)
     : item_handler<transaction_t>(handler) {}
 
-  virtual void operator()(transaction_t * xact) {
-    if (! ACCT_DATA(xact->account))
-      xact->account->data = new account_data_t;
+  virtual void operator()(transaction_t& xact) {
+    if (! ACCT_DATA(xact.account))
+      xact.account->data = new account_data_t;
 
-    ACCT_DATA(xact->account)->value += *xact;
-    ACCT_DATA(xact->account)->subcount++;
+    add_transaction_to(xact, ACCT_DATA(xact.account)->value);
+    ACCT_DATA(xact.account)->subcount++;
 
     if (handler)
       (*handler)(xact);
@@ -187,8 +189,8 @@ class sort_transactions : public item_handler<transaction_t>
       sort_order(_sort_order) {}
 
   virtual void flush();
-  virtual void operator()(transaction_t * xact) {
-    transactions.push_back(xact);
+  virtual void operator()(transaction_t& xact) {
+    transactions.push_back(&xact);
   }
 };
 
@@ -201,7 +203,7 @@ class filter_transactions : public item_handler<transaction_t>
 		      const std::string& predicate)
     : item_handler<transaction_t>(handler), pred(predicate) {}
 
-  virtual void operator()(transaction_t * xact) {
+  virtual void operator()(transaction_t& xact) {
     if (pred(xact))
       (*handler)(xact);
   }
@@ -218,7 +220,7 @@ class calc_transactions : public item_handler<transaction_t>
     : item_handler<transaction_t>(handler),
       last_xact(NULL), inverted(_inverted) {}
 
-  virtual void operator()(transaction_t * xact);
+  virtual void operator()(transaction_t& xact);
 };
 
 class collapse_transactions : public item_handler<transaction_t>
@@ -262,18 +264,18 @@ class collapse_transactions : public item_handler<transaction_t>
 
   void report_cumulative_subtotal();
 
-  virtual void operator()(transaction_t * xact) {
+  virtual void operator()(transaction_t& xact) {
     // If we've reached a new entry, report on the subtotal
     // accumulated thus far.
 
-    if (last_entry && last_entry != xact->entry)
+    if (last_entry && last_entry != xact.entry)
       report_cumulative_subtotal();
 
-    subtotal += *xact;
+    add_transaction_to(xact, subtotal);
     count++;
 
-    last_entry = xact->entry;
-    last_xact  = xact;
+    last_entry = xact.entry;
+    last_xact  = &xact;
   }
 };
 
@@ -311,11 +313,14 @@ class changed_value_transactions : public item_handler<transaction_t>
   }
 
   virtual void flush() {
-    (*this)(NULL);
+    output_diff(std::time(NULL));
+    last_xact = NULL;
     item_handler<transaction_t>::flush();
   }
 
-  virtual void operator()(transaction_t * xact);
+  void output_diff(const std::time_t current);
+
+  virtual void operator()(transaction_t& xact);
 };
 
 class subtotal_transactions : public item_handler<transaction_t>
@@ -356,7 +361,7 @@ class subtotal_transactions : public item_handler<transaction_t>
   virtual void flush() {
     flush(NULL);
   }
-  virtual void operator()(transaction_t * xact);
+  virtual void operator()(transaction_t& xact);
 };
 
 class interval_transactions : public subtotal_transactions
@@ -377,7 +382,7 @@ class interval_transactions : public subtotal_transactions
     finish = interval.increment(begin);
   }
 
-  virtual void operator()(transaction_t * xact);
+  virtual void operator()(transaction_t& xact);
 };
 
 class dow_transactions : public subtotal_transactions
@@ -389,9 +394,9 @@ class dow_transactions : public subtotal_transactions
     : subtotal_transactions(handler) {}
 
   virtual void flush();
-  virtual void operator()(transaction_t * xact) {
-    struct std::tm * desc = std::localtime(&xact->entry->date);
-    days_of_the_week[desc->tm_wday].push_back(xact);
+  virtual void operator()(transaction_t& xact) {
+    struct std::tm * desc = std::localtime(&xact.entry->date);
+    days_of_the_week[desc->tm_wday].push_back(&xact);
   }
 };
 
@@ -405,18 +410,18 @@ class related_transactions : public item_handler<transaction_t>
     : item_handler<transaction_t>(handler),
       also_matching(_also_matching) {}
 
-  virtual void operator()(transaction_t * xact) {
-    for (transactions_list::iterator i = xact->entry->transactions.begin();
-	 i != xact->entry->transactions.end();
+  virtual void operator()(transaction_t& xact) {
+    for (transactions_list::iterator i = xact.entry->transactions.begin();
+	 i != xact.entry->transactions.end();
 	 i++)
       if ((! (*i)->data ||
 	   ! (XACT_DATA(*i)->dflags & TRANSACTION_HANDLED)) &&
-	  (*i == xact ? also_matching :
+	  (*i == &xact ? also_matching :
 	   ! ((*i)->flags & TRANSACTION_AUTO))) {
 	if (! (*i)->data)
 	  (*i)->data = new transaction_data_t;
 	XACT_DATA(*i)->dflags |= TRANSACTION_HANDLED;
-	(*handler)(*i);
+	(*handler)(**i);
       }
   }
 };
@@ -438,29 +443,29 @@ class clear_account_data : public item_handler<account_t>
   }
 };
 
-inline void sum_accounts(account_t * account) {
-  if (! account->data)
-    account->data = new account_data_t;
+inline void sum_accounts(account_t& account) {
+  if (! account.data)
+    account.data = new account_data_t;
 
-  for (accounts_map::iterator i = account->accounts.begin();
-       i != account->accounts.end();
+  for (accounts_map::iterator i = account.accounts.begin();
+       i != account.accounts.end();
        i++) {
-    sum_accounts((*i).second);
-    ACCT_DATA(account)->total += ACCT_DATA((*i).second)->total;
-    ACCT_DATA(account)->count += (ACCT_DATA((*i).second)->count +
+    sum_accounts(*(*i).second);
+    ACCT_DATA_(account)->total += ACCT_DATA((*i).second)->total;
+    ACCT_DATA_(account)->count += (ACCT_DATA((*i).second)->count +
 				  ACCT_DATA((*i).second)->subcount);
   }
-  ACCT_DATA(account)->total += ACCT_DATA(account)->value;
-  ACCT_DATA(account)->count += ACCT_DATA(account)->subcount;
+  ACCT_DATA_(account)->total += ACCT_DATA_(account)->value;
+  ACCT_DATA_(account)->count += ACCT_DATA_(account)->subcount;
 }
 
 typedef std::deque<account_t *> accounts_list;
 
-inline void sort_accounts(account_t *	       account,
+inline void sort_accounts(account_t&	       account,
 			  const value_expr_t * sort_order,
-			  accounts_list&      accounts) {
-  for (accounts_map::iterator i = account->accounts.begin();
-       i != account->accounts.end();
+			  accounts_list&       accounts) {
+  for (accounts_map::iterator i = account.accounts.begin();
+       i != account.accounts.end();
        i++)
     accounts.push_back((*i).second);
 
@@ -468,7 +473,7 @@ inline void sort_accounts(account_t *	       account,
 		   compare_items<account_t>(sort_order));
 }
 
-inline void walk_accounts(account_t *		   account,
+inline void walk_accounts(account_t&		   account,
 			  item_handler<account_t>& handler,
 			  const value_expr_t *     sort_order = NULL) {
   handler(account);
@@ -479,12 +484,12 @@ inline void walk_accounts(account_t *		   account,
     for (accounts_list::const_iterator i = accounts.begin();
 	 i != accounts.end();
 	 i++)
-      walk_accounts(*i, handler, sort_order);
+      walk_accounts(**i, handler, sort_order);
   } else {
-    for (accounts_map::const_iterator i = account->accounts.begin();
-	 i != account->accounts.end();
+    for (accounts_map::const_iterator i = account.accounts.begin();
+	 i != account.accounts.end();
 	 i++)
-      walk_accounts((*i).second, handler);
+      walk_accounts(*(*i).second, handler);
   }
 }
 

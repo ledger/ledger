@@ -335,8 +335,8 @@ int parse_and_report(int argc, char * argv[], char * envp[])
   if (command == "b") {
     format_account acct_formatter(out, config.format,
 				  config.display_predicate);
-    sum_accounts(journal->master);
-    walk_accounts(journal->master, acct_formatter, config.sort_order.get());
+    sum_accounts(*journal->master);
+    walk_accounts(*journal->master, acct_formatter, config.sort_order.get());
     acct_formatter.flush();
 
     if (journal->master->data) {
@@ -344,15 +344,15 @@ int parse_and_report(int argc, char * argv[], char * envp[])
 
       if (ACCT_DATA(journal->master)->dflags & ACCOUNT_TO_DISPLAY) {
 	out << "--------------------\n";
-	config.format.format_elements(out, details_t(journal->master));
+	config.format.format_elements(out, details_t(*journal->master));
       }
     }
   }
   else if (command == "E") {
     format_equity acct_formatter(out, config.format, config.nformat,
 				 config.display_predicate);
-    sum_accounts(journal->master);
-    walk_accounts(journal->master, acct_formatter, config.sort_order.get());
+    sum_accounts(*journal->master);
+    walk_accounts(*journal->master, acct_formatter, config.sort_order.get());
     acct_formatter.flush();
   }
 
@@ -363,7 +363,7 @@ int parse_and_report(int argc, char * argv[], char * envp[])
   walk_entries(journal->entries, xact_cleanup);
 
   clear_account_data acct_cleanup;
-  walk_accounts(journal->master, acct_cleanup);
+  walk_accounts(*journal->master, acct_cleanup);
 #endif
 
   TIMER_STOP(report_gen);
@@ -384,25 +384,16 @@ int parse_and_report(int argc, char * argv[], char * envp[])
 
 int main(int argc, char * argv[], char * envp[])
 {
-  int status = 0;
-
-  initialize();
-
   try {
-    status = parse_and_report(argc, argv, envp);
+    return parse_and_report(argc, argv, envp);
   }
   catch (error& err) {
     std::cerr << "Error: " << err.what() << std::endl;
-    status = 1;
+    return 1;
   }
   catch (int& val) {
-    status = val;
+    return val;			// this acts like a std::setjmp
   }
-
-#if DEBUG_LEVEL >= BETA
-  shutdown();
-#endif
-  return status;
 }
 
 // main.cc ends here.

@@ -6,8 +6,8 @@
 #include <ctime>
 #include <cctype>
 #include <iostream>
-
-#include "debug.h"
+#include <cassert>
+#include <exception>
 
 namespace ledger {
 
@@ -41,22 +41,17 @@ class amount_t
 
  public:
   // constructors
-  amount_t() : quantity(NULL), commodity_(NULL) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor amount_t");
-  }
+  amount_t() : quantity(NULL), commodity_(NULL) {}
   amount_t(const amount_t& amt) : quantity(NULL) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor amount_t");
     if (amt.quantity)
       _copy(amt);
     else
       commodity_ = NULL;
   }
   amount_t(const std::string& value) : quantity(NULL) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor amount_t");
     parse(value);
   }
   amount_t(const char * value) : quantity(NULL) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor amount_t");
     parse(value);
   }
   amount_t(const bool value);
@@ -66,7 +61,6 @@ class amount_t
 
   // destructor
   ~amount_t() {
-    DEBUG_PRINT("ledger.memory.dtors", "dtor amount_t");
     if (quantity)
       _release();
   }
@@ -74,6 +68,9 @@ class amount_t
   commodity_t& commodity() const;
   void set_commodity(commodity_t& comm) {
     commodity_ = &comm;
+  }
+  void clear_commodity() {
+    commodity_ = NULL;
   }
 
   // assignment operator
@@ -94,6 +91,19 @@ class amount_t
   amount_t& operator*=(const amount_t& amt);
   amount_t& operator/=(const amount_t& amt);
 
+  amount_t& operator+=(const int value) {
+    return *this += amount_t(value);
+  }
+  amount_t& operator-=(const int value) {
+    return *this -= amount_t(value);
+  }
+  amount_t& operator*=(const int value) {
+    return *this *= amount_t(value);
+  }
+  amount_t& operator/=(const int value) {
+    return *this /= amount_t(value);
+  }
+
   // simple arithmetic
   amount_t operator+(const amount_t& amt) const {
     amount_t temp = *this;
@@ -113,6 +123,27 @@ class amount_t
   amount_t operator/(const amount_t& amt) const {
     amount_t temp = *this;
     temp /= amt;
+    return temp;
+  }
+
+  amount_t operator+(const int value) const {
+    amount_t temp = *this;
+    temp += value;
+    return temp;
+  }
+  amount_t operator-(const int value) const {
+    amount_t temp = *this;
+    temp -= value;
+    return temp;
+  }
+  amount_t operator*(const int value) const {
+    amount_t temp = *this;
+    temp *= value;
+    return temp;
+  }
+  amount_t operator/(const int value) const {
+    amount_t temp = *this;
+    temp /= value;
     return temp;
   }
 
@@ -172,6 +203,7 @@ class amount_t
   void parse(const std::string& str);
 
   void read_quantity(char *& data);
+  void read_quantity(std::istream& in);
   void write_quantity(std::ostream& out) const;
 
   bool valid() const;
@@ -285,14 +317,8 @@ class commodity_t
 	      unsigned int       _flags	    = COMMODITY_STYLE_DEFAULTS)
     : symbol(_symbol), quote(false), precision(_precision),
       flags(_flags), last_lookup(0) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor commodity_t");
     check_symbol();
   }
-#ifdef DEBUG_ENABLED
-  ~commodity_t() {
-    DEBUG_PRINT("ledger.memory.dtors", "dtor commodity_t");
-  }
-#endif
 
   operator bool() const {
     return this != null_commodity;
@@ -346,7 +372,18 @@ inline commodity_t& amount_t::commodity() const {
     return *commodity_t::null_commodity;
   else
     return *commodity_;
- }
+}
+
+class amount_error : public std::exception {
+  std::string reason;
+ public:
+  amount_error(const std::string& _reason) throw() : reason(_reason) {}
+  virtual ~amount_error() throw() {}
+
+  virtual const char* what() const throw() {
+    return reason.c_str();
+  }
+};
 
 } // namespace ledger
 

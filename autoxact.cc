@@ -10,7 +10,7 @@ void automated_transaction_t::extend_entry(entry_t * entry)
   for (transactions_deque::iterator i = initial_xacts.begin();
        i != initial_xacts.end();
        i++)
-    if (predicate(*i))
+    if (predicate(**i))
       for (transactions_deque::iterator t = transactions.begin();
 	   t != transactions.end();
 	   t++) {

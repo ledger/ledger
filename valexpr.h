@@ -29,23 +29,12 @@ struct details_t
   const transaction_t * xact;
   const account_t *     account;
 
-  details_t(const entry_t * _entry)
-    : entry(_entry), xact(NULL), account(NULL) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor details_t");
-  }
-  details_t(const transaction_t * _xact)
-    : entry(_xact->entry), xact(_xact), account(_xact->account) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor details_t");
-  }
-  details_t(const account_t * _account)
-    : entry(NULL), xact(NULL), account(_account) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor details_t");
-  }
-#ifdef DEBUG_ENABLED
-  ~details_t() {
-    DEBUG_PRINT("ledger.memory.dtors", "dtor details_t");
-  }
-#endif
+  details_t(const entry_t& _entry)
+    : entry(&_entry), xact(NULL), account(NULL) {}
+  details_t(const transaction_t& _xact)
+    : entry(_xact.entry), xact(&_xact), account(_xact.account) {}
+  details_t(const account_t& _account)
+    : entry(NULL), xact(NULL), account(&_account) {}
 };
 
 struct value_expr_t
@@ -190,7 +179,7 @@ class item_predicate
       delete predicate;
   }
 
-  bool operator()(const T * item) const {
+  bool operator()(const T& item) const {
     if (predicate) {
       value_t result;
       predicate->compute(result, details_t(item));

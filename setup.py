@@ -10,6 +10,6 @@ setup(name         = "Ledger",
       url          = "http://www.newartisans.com/johnw/",
       ext_modules  = [
     Extension("ledger", ["python.cc"],
-              define_macros = [('PYTHON_MODULE', None)],
-              libraries     = ["ledger_bpy", "boost_python", "gmp", "pcre",
-                               "xmlparse", "xmltok"])])
+	      define_macros = [('PYTHON_MODULE', None)],
+	      libraries     = ["ledger_bpy", "boost_python", "gmp", "pcre",
+			       "xmlparse", "xmltok"])])

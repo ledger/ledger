@@ -1,10 +1,8 @@
 #include "amount.h"
-#include "binary.h"
-#include "error.h"
 #include "util.h"
 
 #include <sstream>
-#include <cstring>
+#include <deque>
 
 #include "gmp.h"
 
@@ -21,23 +19,17 @@ class amount_t::bigint_t {
   unsigned int	 index;
 
   bigint_t() : prec(0), flags(0), ref(1), index(0) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor amount_t::bigint_t");
     mpz_init(val);
   }
   bigint_t(mpz_t _val) : prec(0), flags(0), ref(1), index(0) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor amount_t::bigint_t");
     mpz_init_set(val, _val);
   }
   bigint_t(const bigint_t& other)
     : prec(other.prec), flags(0), ref(1), index(0) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor amount_t::bigint_t");
     mpz_init_set(val, other.val);
   }
   ~bigint_t() {
-    DEBUG_PRINT("ledger.memory.dtors", "dtor amount_t::bigint_t");
-#if DEBUG_LEVEL >= BETA
     assert(ref == 0);
-#endif
     mpz_clear(val);
   }
 };
@@ -56,7 +48,12 @@ commodity_t::updater_t *  commodity_t::updater = NULL;
 commodities_map		  commodity_t::commodities;
 commodity_t *             commodity_t::null_commodity;
 
-void initialize_amounts()
+static struct _init_amounts {
+  _init_amounts();
+  ~_init_amounts();
+} _init_obj;
+
+_init_amounts::_init_amounts()
 {
   mpz_init(temp);
   mpz_init(divisor);
@@ -65,6 +62,26 @@ void initialize_amounts()
 
   commodity_t::updater	      = NULL;
   commodity_t::null_commodity = commodity_t::find_commodity("", true);
+}
+
+_init_amounts::~_init_amounts()
+{
+  mpz_clear(divisor);
+  mpz_clear(temp);
+
+  if (commodity_t::updater) {
+    delete commodity_t::updater;
+    commodity_t::updater = NULL;
+  }
+
+  for (commodities_map::iterator i = commodity_t::commodities.begin();
+       i != commodity_t::commodities.end();
+       i++)
+    delete (*i).second;
+
+  commodity_t::commodities.clear();
+
+  true_value.ref--;
 }
 
 void clean_commodity_history(char * item_pool, char * item_pool_end)
@@ -92,26 +109,6 @@ void clean_commodity_history(char * item_pool, char * item_pool_end)
 	(*j).second.quantity = q;
       }
     }
-}
-
-void shutdown_amounts()
-{
-  mpz_clear(divisor);
-  mpz_clear(temp);
-
-  if (commodity_t::updater) {
-    delete commodity_t::updater;
-    commodity_t::updater = NULL;
-  }
-
-  for (commodities_map::iterator i = commodity_t::commodities.begin();
-       i != commodity_t::commodities.end();
-       i++)
-    delete (*i).second;
-
-  commodity_t::commodities.clear();
-
-  true_value.ref--;
 }
 
 static void mpz_round(mpz_t out, mpz_t value, int value_prec, int round_prec)
@@ -162,21 +159,17 @@ static void mpz_round(mpz_t out, mpz_t value, int value_prec, int round_prec)
 
 amount_t::amount_t(const bool value)
 {
-  DEBUG_PRINT("ledger.memory.ctors", "ctor amount_t");
-
   if (value) {
-    quantity  = &true_value;
+    quantity = &true_value;
     quantity->ref++;
   } else {
-    quantity  = NULL;
+    quantity = NULL;
   }
   commodity_ = NULL;
 }
 
 amount_t::amount_t(const int value)
 {
-  DEBUG_PRINT("ledger.memory.ctors", "ctor amount_t");
-
   if (value != 0) {
     quantity = new bigint_t;
     mpz_set_si(MPZ(quantity), value);
@@ -188,8 +181,6 @@ amount_t::amount_t(const int value)
 
 amount_t::amount_t(const unsigned int value)
 {
-  DEBUG_PRINT("ledger.memory.ctors", "ctor amount_t");
-
   if (value != 0) {
     quantity = new bigint_t;
     mpz_set_ui(MPZ(quantity), value);
@@ -201,8 +192,6 @@ amount_t::amount_t(const unsigned int value)
 
 amount_t::amount_t(const double value)
 {
-  DEBUG_PRINT("ledger.memory.ctors", "ctor amount_t");
-
   if (value != 0.0) {
     quantity = new bigint_t;
     mpz_set_d(MPZ(quantity), value);
@@ -668,7 +657,7 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
     std::free(p);
   }
   else {
-    strings_list strs;
+    std::deque<std::string> strs;
     char buf[4];
 
     for (int powers = 0; true; powers += 3) {
@@ -687,7 +676,7 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
 
     bool printed = false;
 
-    for (strings_list::reverse_iterator i = strs.rbegin();
+    for (std::deque<std::string>::reverse_iterator i = strs.rbegin();
 	 i != strs.rend();
 	 i++) {
       if (printed) {
@@ -858,7 +847,80 @@ void amount_t::parse(const std::string& str)
 }
 
 
+char *	     bigints;
+char *	     bigints_next;
+unsigned int bigints_index;
+unsigned int bigints_count;
+
+void amount_t::read_quantity(char *& data)
+{
+  char byte = *data++;;
+
+  if (byte == 0) {
+    quantity = NULL;
+  }
+  else if (byte == 1) {
+    quantity = new((bigint_t *)bigints_next) bigint_t;
+    bigints_next += sizeof(bigint_t);
+    quantity->flags |= BIGINT_BULK_ALLOC;
+
+    unsigned short len = *((unsigned short *) data);
+    data += sizeof(unsigned short);
+    mpz_import(MPZ(quantity), len / sizeof(short), 1, sizeof(short),
+	       0, 0, data);
+    data += len;
+
+    char negative = *data++;
+    if (negative)
+      mpz_neg(MPZ(quantity), MPZ(quantity));
+
+    quantity->prec = *((unsigned short *) data);
+    data += sizeof(unsigned short);
+  } else {
+    unsigned int index = *((unsigned int *) data);
+    data += sizeof(unsigned int);
+
+    quantity = (bigint_t *) (bigints + (index - 1) * sizeof(bigint_t));
+    quantity->ref++;
+  }
+}
+
 static char buf[4096];
+
+void amount_t::read_quantity(std::istream& in)
+{
+  static std::deque<bigint_t *> _bigints;
+
+  char byte;
+  in.read(&byte, sizeof(byte));
+
+  if (byte == 0) {
+    quantity = NULL;
+  }
+  else if (byte == 1) {
+    quantity = new bigint_t;
+    _bigints.push_back(quantity);
+
+    unsigned short len;
+    in.read((char *)&len, sizeof(len));
+    assert(len < 4096);
+    in.read(buf, len);
+    mpz_import(MPZ(quantity), len / sizeof(short), 1, sizeof(short),
+	       0, 0, buf);
+
+    char negative;
+    in.read(&negative, sizeof(negative));
+    if (negative)
+      mpz_neg(MPZ(quantity), MPZ(quantity));
+
+    in.read((char *)&quantity->prec, sizeof(quantity->prec));
+  } else {
+    unsigned int index;
+    in.read((char *)&index, sizeof(index));
+    quantity = _bigints[index - 1];
+    quantity->ref++;
+  }
+}
 
 void amount_t::write_quantity(std::ostream& out) const
 {
@@ -883,6 +945,7 @@ void amount_t::write_quantity(std::ostream& out) const
     out.write((char *)&len, sizeof(len));
 
     if (len) {
+      assert(len < 4096);
       out.write(buf, len);
 
       byte = mpz_sgn(MPZ(quantity)) < 0 ? 1 : 0;
@@ -898,38 +961,6 @@ void amount_t::write_quantity(std::ostream& out) const
     byte = 2;
     out.write(&byte, sizeof(byte));
     out.write((char *)&quantity->index, sizeof(quantity->index));
-  }
-}
-
-void amount_t::read_quantity(char *& data)
-{
-  char byte = *data++;;
-
-  if (byte == 0) {
-    quantity = NULL;
-  }
-  else if (byte == 1) {
-    quantity = new(bigints_next++) bigint_t;
-    quantity->flags |= BIGINT_BULK_ALLOC;
-
-    unsigned short len = *((unsigned short *) data);
-    data += sizeof(unsigned short);
-    mpz_import(MPZ(quantity), len / sizeof(short), 1, sizeof(short),
-	       0, 0, data);
-    data += len;
-
-    char negative = *data++;
-    if (negative)
-      mpz_neg(MPZ(quantity), MPZ(quantity));
-
-    quantity->prec = *((unsigned short *) data);
-    data += sizeof(unsigned short);
-  } else {
-    unsigned int index = *((unsigned int *) data);
-    data += sizeof(unsigned int);
-
-    quantity = bigints + (index - 1);
-    quantity->ref++;
   }
 }
 
@@ -1039,30 +1070,38 @@ void export_amount()
     .def("commodity", &amount_t::commodity,
 	 return_value_policy<reference_existing_object>())
     .def("set_commodity", &amount_t::set_commodity)
+    .def("clear_commodity", &amount_t::clear_commodity)
 
     .def(self += self)
+    .def(self += int())
     .def(self +  self)
+    .def(self +  int())
     .def(self -= self)
+    .def(self -= int())
     .def(self -  self)
+    .def(self -  int())
     .def(self *= self)
+    .def(self *= int())
     .def(self *  self)
+    .def(self *  int())
     .def(self /= self)
+    .def(self /= int())
     .def(self /  self)
-
-    .def(self <  int())
-    .def(self <= int())
-    .def(self >  int())
-    .def(self >= int())
-    .def(self == int())
-    .def(self != int())
+    .def(self /  int())
+    .def(- self)
 
     .def(self <  self)
+    .def(self <  int())
     .def(self <= self)
+    .def(self <= int())
     .def(self >  self)
+    .def(self >  int())
     .def(self >= self)
+    .def(self >= int())
     .def(self == self)
+    .def(self == int())
     .def(self != self)
-    .def(- self)
+    .def(self != int())
     .def(! self)
 
     .def(abs(self))

@@ -105,18 +105,18 @@ class format_transactions : public item_handler<transaction_t>
     output_stream.flush();
   }
 
-  virtual void operator()(transaction_t * xact) {
-    if (! xact->data ||
-	! (XACT_DATA(xact)->dflags & TRANSACTION_DISPLAYED)) {
-      if (last_entry != xact->entry) {
+  virtual void operator()(transaction_t& xact) {
+    if (! xact.data ||
+	! (XACT_DATA_(xact)->dflags & TRANSACTION_DISPLAYED)) {
+      if (last_entry != xact.entry) {
 	first_line_format.format_elements(output_stream, details_t(xact));
-	last_entry = xact->entry;
+	last_entry = xact.entry;
       } else {
 	next_lines_format.format_elements(output_stream, details_t(xact));
       }
-      if (! xact->data)
-	xact->data = new transaction_data_t;
-      XACT_DATA(xact)->dflags |= TRANSACTION_DISPLAYED;
+      if (! xact.data)
+	xact.data = new transaction_data_t;
+      XACT_DATA_(xact)->dflags |= TRANSACTION_DISPLAYED;
     }
   }
 };
@@ -135,32 +135,32 @@ class format_account : public item_handler<account_t>
     : output_stream(_output_stream), format(_format),
       disp_pred(display_predicate) {}
 
-  static bool disp_subaccounts_p(const account_t * account,
+  static bool disp_subaccounts_p(const account_t& account,
 				 const item_predicate<account_t>& disp_pred,
 				 const account_t *& to_show);
-  static bool disp_subaccounts_p(const account_t * account) {
+  static bool disp_subaccounts_p(const account_t& account) {
     const account_t * temp;
     return disp_subaccounts_p(account, item_predicate<account_t>(NULL), temp);
   }
 
-  static bool display_account(const account_t * account,
+  static bool display_account(const account_t& account,
 			      const item_predicate<account_t>& disp_pred);
 
   virtual void flush() {
     output_stream.flush();
   }
 
-  virtual void operator()(account_t * account) {
+  virtual void operator()(account_t& account) {
     if (display_account(account, disp_pred)) {
-      if (! account->parent) {
-	if (! account->data)
-	  account->data = new account_data_t;
-	ACCT_DATA(account)->dflags |= ACCOUNT_TO_DISPLAY;
+      if (! account.parent) {
+	if (! account.data)
+	  account.data = new account_data_t;
+	ACCT_DATA_(account)->dflags |= ACCOUNT_TO_DISPLAY;
       } else {
 	format.format_elements(output_stream, details_t(account));
-	if (! account->data)
-	  account->data = new account_data_t;
-	ACCT_DATA(account)->dflags |= ACCOUNT_DISPLAYED;
+	if (! account.data)
+	  account.data = new account_data_t;
+	ACCT_DATA_(account)->dflags |= ACCOUNT_DISPLAYED;
       }
     }
   }
@@ -188,7 +188,7 @@ class format_equity : public item_handler<account_t>
     entry_t header_entry;
     header_entry.payee = "Opening Balances";
     header_entry.date  = std::time(NULL);
-    first_line_format.format_elements(output_stream, details_t(&header_entry));
+    first_line_format.format_elements(output_stream, details_t(header_entry));
   }
 
   virtual void flush() {
@@ -197,18 +197,18 @@ class format_equity : public item_handler<account_t>
     summary.data = acct_data.get();
     ((account_data_t *) summary.data)->value = total;
     ((account_data_t *) summary.data)->value.negate();
-    next_lines_format.format_elements(output_stream, details_t(&summary));
+    next_lines_format.format_elements(output_stream, details_t(summary));
     output_stream.flush();
   }
 
-  virtual void operator()(account_t * account) {
+  virtual void operator()(account_t& account) {
     if (format_account::display_account(account, disp_pred)) {
       next_lines_format.format_elements(output_stream, details_t(account));
-      if (! account->data)
-	account->data = new account_data_t;
+      if (! account.data)
+	account.data = new account_data_t;
       else
-	total += ACCT_DATA(account)->value;
-      ACCT_DATA(account)->dflags |= ACCOUNT_DISPLAYED;
+	total += ACCT_DATA_(account)->value;
+      ACCT_DATA_(account)->dflags |= ACCOUNT_DISPLAYED;
     }
   }
 };

@@ -418,24 +418,6 @@ bool journal_t::valid() const
   return true;
 }
 
-void initialize_amounts();
-void shutdown_amounts();
-
-void initialize_formats();
-void shutdown_formats();
-
-void initialize()
-{
-  initialize_amounts();
-  initialize_formats();
-}
-
-void shutdown()
-{
-  shutdown_amounts();
-  shutdown_formats();
-}
-
 } // namespace ledger
 
 #ifdef USE_BOOST_PYTHON

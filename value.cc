@@ -1,6 +1,4 @@
 #include "value.h"
-#include "ledger.h"
-#include "error.h"
 
 namespace ledger {
 
@@ -170,45 +168,6 @@ DEF_VALUE_OP(+=)
 DEF_VALUE_OP(-=)
 DEF_VALUE_OP(*=)
 DEF_VALUE_OP(/=)
-
-value_t& value_t::operator +=(const transaction_t& xact)
-{
-  switch (type) {
-  case BOOLEAN:
-  case INTEGER:
-    cast(AMOUNT);
-
-  case AMOUNT:
-    if (xact.cost) {
-      cast(BALANCE_PAIR);
-      return *this += xact;
-    }
-    else if (((amount_t *) data)->commodity() != xact.amount.commodity()) {
-      cast(BALANCE);
-      return *this += xact;
-    }
-    *((amount_t *) data) += xact.amount;
-    break;
-
-  case BALANCE:
-    if (xact.cost) {
-      cast(BALANCE_PAIR);
-      return *this += xact;
-    }
-    *((balance_t *) data) += xact.amount;
-    break;
-
-  case BALANCE_PAIR:
-    *((balance_pair_t *) data) += xact;
-    break;
-
-  default:
-    assert(0);
-    break;
-  }
-
-  return *this;
-}
 
 #define DEF_VALUE_CMP_OP(OP)						\
 bool value_t::operator OP(const value_t& value)				\
@@ -435,7 +394,7 @@ void value_t::cast(type_t cast_type)
       break;
     }
     case INTEGER:
-      throw error("Cannot convert a balance to an integer");
+      throw value_error("Cannot convert a balance to an integer");
     case AMOUNT: {
       balance_t * temp = (balance_t *) data;
       if (temp->amounts.size() == 1) {
@@ -443,7 +402,8 @@ void value_t::cast(type_t cast_type)
 	destroy();
 	new((amount_t *)data) amount_t(amt);
       } else {
-	throw error("Cannot convert a balance with multiple commodities to an amount");
+	throw value_error("Cannot convert a balance with "
+			  "multiple commodities to an amount");
       }
       break;
     }
@@ -471,7 +431,7 @@ void value_t::cast(type_t cast_type)
       break;
     }
     case INTEGER:
-      throw error("Cannot convert a balance pair to an integer");
+      throw value_error("Cannot convert a balance pair to an integer");
 
     case AMOUNT: {
       balance_t * temp = &((balance_pair_t *) data)->quantity;
@@ -480,7 +440,8 @@ void value_t::cast(type_t cast_type)
 	destroy();
 	new((amount_t *)data) amount_t(amt);
       } else {
-	throw error("Cannot convert a balance pair with multiple commodities to an amount");
+	throw value_error("Cannot convert a balance pair with "
+			  "multiple commodities to an amount");
       }
       break;
     }
@@ -592,6 +553,34 @@ using namespace ledger;
 void export_value()
 {
   class_< value_t > ("Value")
+    .def(init<value_t>())
+    .def(init<balance_pair_t>())
+    .def(init<balance_t>())
+    .def(init<amount_t>())
+    .def(init<unsigned int>())
+    .def(init<bool>())
+
+    .def(self += self)
+    .def(self -= self)
+    .def(self *= self)
+    .def(self /= self)
+
+    .def(self <  self)
+    .def(self <= self)
+    .def(self >  self)
+    .def(self >= self)
+    .def(self == self)
+    .def(self != self)
+    .def(! self)
+
+#if 0
+    .def(abs(self))
+    .def(str(self))
+
+    .def("cast", &value_t::cast)
+#endif
+    .def("negate", &value_t::negate)
+    .def("cost", &value_t::cost)
     ;
 }
 

@@ -33,18 +33,15 @@ std::string partial_account_name(const account_t *  account)
   return name;
 }
 
-std::string    format_t::date_format;
-value_expr_t * format_t::value_expr;
-value_expr_t * format_t::total_expr;
+std::string    format_t::date_format = "%Y/%m/%d";
+value_expr_t * format_t::value_expr  = NULL;
+value_expr_t * format_t::total_expr  = NULL;
 
-void initialize_formats()
-{
-  format_t::date_format = "%Y/%m/%d";
-  format_t::value_expr  = NULL;
-  format_t::total_expr  = NULL;
-}
+static struct _init_format {
+  ~_init_format();
+} _init_obj;
 
-void shutdown_formats()
+_init_format::~_init_format()
 {
   if (format_t::value_expr)
     delete format_t::value_expr;
@@ -375,7 +372,7 @@ void format_t::format_elements(std::ostream&    out,
   }
 }
 
-bool format_account::disp_subaccounts_p(const account_t * account,
+bool format_account::disp_subaccounts_p(const account_t& account,
 					const item_predicate<account_t>&
 					    disp_pred,
 					const account_t *& to_show)
@@ -389,13 +386,13 @@ bool format_account::disp_subaccounts_p(const account_t * account,
 
   to_show = NULL;
 
-  for (accounts_map::const_iterator i = account->accounts.begin();
-       i != account->accounts.end();
+  for (accounts_map::const_iterator i = account.accounts.begin();
+       i != account.accounts.end();
        i++) {
-    if (! disp_pred((*i).second))
+    if (! disp_pred(*(*i).second))
       continue;
 
-    format_t::compute_total(result, details_t((*i).second));
+    format_t::compute_total(result, details_t(*(*i).second));
     if (! computed) {
       format_t::compute_total(acct_total, details_t(account));
       computed = true;
@@ -412,11 +409,11 @@ bool format_account::disp_subaccounts_p(const account_t * account,
   return display;
 }
 
-bool format_account::display_account(const account_t * account,
+bool format_account::display_account(const account_t& account,
 				     const item_predicate<account_t>& disp_pred)
 {
   // Never display an account that has already been displayed.
-  if (account->data && ACCT_DATA(account)->dflags & ACCOUNT_DISPLAYED)
+  if (account.data && ACCT_DATA_(account)->dflags & ACCOUNT_DISPLAYED)
     return false;
 
   // At this point, one of two possibilities exists: the account is a

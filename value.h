@@ -3,7 +3,8 @@
 
 #include "amount.h"
 #include "balance.h"
-#include "debug.h"
+
+#include <exception>
 
 namespace ledger {
 
@@ -15,8 +16,6 @@ namespace ledger {
 // allocations would occur for every operator.  With value_t, and the
 // fact that logic chains only need boolean values to continue, no
 // memory allocations need to take place at all.
-
-class transaction_t;
 
 class value_t
 {
@@ -32,40 +31,32 @@ class value_t
   } type;
 
   value_t() {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor value_t");
     *((unsigned int *) data) = 0;
     type = INTEGER;
   }
 
   value_t(const value_t& value) : type(INTEGER) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor value_t");
     *this = value;
   }
   value_t(const bool value) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor value_t");
     *((bool *) data) = value;
     type = BOOLEAN;
   }
   value_t(const unsigned int value) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor value_t");
     *((unsigned int *) data) = value;
     type = INTEGER;
   }
   value_t(const amount_t& value) : type(INTEGER) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor value_t");
     *this = value;
   }
   value_t(const balance_t& value) : type(INTEGER) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor value_t");
     *this = value;
   }
   value_t(const balance_pair_t& value) : type(INTEGER) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor value_t");
     *this = value;
   }
 
   ~value_t() {
-    DEBUG_PRINT("ledger.memory.dtors", "dtor value_t");
     destroy();
   }
 
@@ -130,17 +121,14 @@ class value_t
   value_t& operator*=(const value_t& value);
   value_t& operator/=(const value_t& value);
 
-  value_t& operator+=(const transaction_t& xact);
-
-  bool operator==(const value_t& value);
-  bool operator!=(const value_t& value) {
-    return ! (*this == value);
-  }
-
   bool operator<(const value_t& value);
   bool operator<=(const value_t& value);
   bool operator>(const value_t& value);
   bool operator>=(const value_t& value);
+  bool operator==(const value_t& value);
+  bool operator!=(const value_t& value) {
+    return ! (*this == value);
+  }
 
   template <typename T>
   operator T() const;
@@ -173,7 +161,18 @@ value_t::operator T() const
   }
   assert(0);
   return 0;
- }
+}
+
+class value_error : public std::exception {
+  std::string reason;
+ public:
+  value_error(const std::string& _reason) throw() : reason(_reason) {}
+  virtual ~value_error() throw() {}
+
+  virtual const char* what() const throw() {
+    return reason.c_str();
+  }
+};
 
 } // namespace ledger
 

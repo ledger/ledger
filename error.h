@@ -20,12 +20,6 @@ class error : public std::exception {
   }
 };
 
-class amount_error : public error {
- public:
-  amount_error(const std::string& reason) throw() : error(reason) {}
-  virtual ~amount_error() throw() {}
-};
-
 class compute_error : public error {
  public:
   compute_error(const std::string& reason) throw() : error(reason) {}

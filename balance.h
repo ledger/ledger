@@ -1,12 +1,11 @@
 #ifndef _BALANCE_H
 #define _BALANCE_H
 
+#include "amount.h"
+
 #include <map>
 #include <ctime>
 #include <iostream>
-
-#include "amount.h"
-#include "error.h"
 
 namespace ledger {
 
@@ -28,46 +27,32 @@ class balance_t
   }
 
   // constructors
-  balance_t() {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor balance_t");
-  }
+  balance_t() {}
   balance_t(const balance_t& bal) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor balance_t");
     for (amounts_map::const_iterator i = bal.amounts.begin();
 	 i != bal.amounts.end();
 	 i++)
       *this += (*i).second;
   }
   balance_t(const amount_t& amt) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor balance_t");
     if (amt)
       amounts.insert(amounts_pair(&amt.commodity(), amt));
   }
   balance_t(const int value) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor balance_t");
     amount_t amt(value);
     if (amt)
       amounts.insert(amounts_pair(&amt.commodity(), amt));
   }
   balance_t(const unsigned int value) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor balance_t");
     amount_t amt(value);
     if (amt)
       amounts.insert(amounts_pair(&amt.commodity(), amt));
   }
   balance_t(const double value) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor balance_t");
     amount_t amt(value);
     if (amt)
       amounts.insert(amounts_pair(&amt.commodity(), amt));
   }
-
-  // destructor
-#ifdef DEBUG_ENABLED
-  ~balance_t() {
-    DEBUG_PRINT("ledger.memory.dtors", "dtor balance_t");
-  }
-#endif
 
   // assignment operator
   balance_t& operator=(const balance_t& bal) {
@@ -351,12 +336,11 @@ class balance_t
 #endif
 
   // unary negation
-  balance_t& negate() {
+  void negate() {
     for (amounts_map::iterator i = amounts.begin();
 	 i != amounts.end();
 	 i++)
       (*i).second.negate();
-    return *this;
   }
   balance_t negated() const {
     balance_t temp = *this;
@@ -372,7 +356,8 @@ class balance_t
     if (amounts.size() == 1)
       return (*amounts.begin()).second;
     else
-      throw error("Cannot convert a balance with multiple commodities to an amount");
+      throw amount_error("Cannot convert a balance with "
+			 "multiple commodities to an amount");
   }
   operator bool() const {
     for (amounts_map::const_iterator i = amounts.begin();
@@ -404,60 +389,32 @@ inline balance_t abs(const balance_t& bal) {
   return temp;
 }
 
-#ifdef DEBUG_ENABLED
-inline std::ostream& operator<<(std::ostream& out, const balance_t& bal) {
-  bal.write(out, 12);
-  return out;
-}
-#endif
-
-class transaction_t;
-
 class balance_pair_t
 {
  public:
   balance_t quantity;
   balance_t * cost;
 
-  bool valid() const {
-    return quantity.valid() && (! cost || cost->valid());
-  }
-
   // constructors
-  balance_pair_t() : cost(NULL) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor balance_pair_t");
-  }
+  balance_pair_t() : cost(NULL) {}
   balance_pair_t(const balance_pair_t& bal_pair)
     : quantity(bal_pair.quantity), cost(NULL) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor balance_pair_t");
     if (bal_pair.cost)
       cost = new balance_t(*bal_pair.cost);
   }
   balance_pair_t(const balance_t& _quantity)
-    : quantity(_quantity), cost(NULL) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor balance_pair_t");
-  }
+    : quantity(_quantity), cost(NULL) {}
   balance_pair_t(const amount_t& _quantity)
-    : quantity(_quantity), cost(NULL) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor balance_pair_t");
-  }
+    : quantity(_quantity), cost(NULL) {}
   balance_pair_t(const int value)
-    : quantity(value), cost(NULL) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor balance_pair_t");
-  }
+    : quantity(value), cost(NULL) {}
   balance_pair_t(const unsigned int value)
-    : quantity(value), cost(NULL) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor balance_pair_t");
-  }
+    : quantity(value), cost(NULL) {}
   balance_pair_t(const double value)
-    : quantity(value), cost(NULL) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor balance_pair_t");
-  }
-  balance_pair_t(const transaction_t& xact);
+    : quantity(value), cost(NULL) {}
 
   // destructor
   ~balance_pair_t() {
-    DEBUG_PRINT("ledger.memory.dtors", "dtor balance_pair_t");
     if (cost)
       delete cost;
   }
@@ -541,7 +498,6 @@ class balance_pair_t
       *cost += amt;
     return *this;
   }
-  balance_pair_t& operator+=(const transaction_t& xact);
 
   balance_pair_t& operator-=(const balance_pair_t& bal_pair) {
     if (bal_pair.cost && ! cost)
@@ -566,7 +522,6 @@ class balance_pair_t
       *cost -= amt;
     return *this;
   }
-  balance_pair_t& operator-=(const transaction_t& xact);
 
   // simple arithmetic
   balance_pair_t operator+(const balance_pair_t& bal_pair) const {
@@ -741,11 +696,10 @@ class balance_pair_t
   }
 
   // unary negation
-  balance_pair_t& negate() {
+  void negate() {
     quantity.negate();
     if (cost)
       cost->negate();
-    return *this;
   }
   balance_pair_t negated() const {
     balance_pair_t temp = *this;
@@ -767,13 +721,30 @@ class balance_pair_t
     if (quantity.amounts.size() == 1)
       return (*quantity.amounts.begin()).second;
     else
-      throw error("Cannot convert a balance pair with multiple commodities to an amount");
+      throw amount_error("Cannot convert a balance pair with "
+			 "multiple commodities to an amount");
   }
 
   void abs() {
     quantity.abs();
     if (cost)
       cost->abs();
+  }
+
+  amount_t  amount(const commodity_t& commodity) const {
+    return quantity.amount(commodity);
+  }
+  balance_t value(const std::time_t moment) const {
+    return quantity.value(moment);
+  }
+  void      write(std::ostream& out,
+		  const int	first_width,
+		  const int	latter_width = -1) const {
+    quantity.write(out, first_width, latter_width);
+  }
+
+  bool valid() {
+    return quantity.valid() && (! cost || cost->valid());
   }
 };
 
