@@ -137,7 +137,7 @@ bool xml_parser_t::test(std::istream& in) const
   char buf[256];
 
   in.getline(buf, 255);
-  if (std::strncmp(buf, "<?xml version=\"1.0\"?>", 21) != 0) {
+  if (std::strncmp(buf, "<?xml", 5) != 0) {
     in.seekg(0, std::ios::beg);
     return false;
   }
