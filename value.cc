@@ -60,27 +60,32 @@ value_t& value_t::operator=(const value_t& value)
 #define DEF_VALUE_OP(OP)						\
 value_t& value_t::operator OP(const value_t& value)			\
 {									\
-  switch (value.type) {							\
+  switch (type) {							\
   case BOOLEAN:								\
   case INTEGER:								\
-    switch (type) {							\
+    cast(INTEGER);							\
+    switch (value.type) {						\
     case BOOLEAN:							\
-      cast(INTEGER);							\
+      *((unsigned int *) data) OP (*((bool *) value.data) ? 1U : 0U);	\
+      break;								\
 									\
     case INTEGER:							\
       *((unsigned int *) data) OP *((unsigned int *) value.data);	\
       break;								\
 									\
     case AMOUNT:							\
-      *((amount_t *) data) OP *((unsigned int *) value.data);		\
+      cast(AMOUNT);							\
+      *((amount_t *) data) OP *((amount_t *) value.data);		\
       break;								\
 									\
     case BALANCE:							\
-      *((balance_t *) data) OP amount_t(*((unsigned int *) value.data)); \
+      cast(BALANCE);							\
+      *((balance_t *) data) OP *((balance_t *) value.data);		\
       break;								\
 									\
     case BALANCE_PAIR:							\
-      *((balance_pair_t *) data) OP amount_t(*((unsigned int *) value.data)); \
+      cast(BALANCE_PAIR);						\
+      *((balance_pair_t *) data) OP *((balance_pair_t *) value.data);	\
       break;								\
 									\
     default:								\
@@ -90,10 +95,14 @@ value_t& value_t::operator OP(const value_t& value)			\
     break;								\
 									\
   case AMOUNT:								\
-    switch (type) {							\
+    switch (value.type) {						\
     case BOOLEAN:							\
+      *((amount_t *) data) OP (*((bool *) value.data) ? 1U : 0U);	\
+      break;								\
+									\
     case INTEGER:							\
-      cast(AMOUNT);							\
+      *((amount_t *) data) OP *((unsigned int *) value.data);		\
+      break;								\
 									\
     case AMOUNT:							\
       if (((amount_t *) data)->commodity() !=				\
@@ -105,11 +114,13 @@ value_t& value_t::operator OP(const value_t& value)			\
       break;								\
 									\
     case BALANCE:							\
-      *((balance_t *) data) OP *((amount_t *) value.data);		\
+      cast(BALANCE);							\
+      *((balance_t *) data) OP *((balance_t *) value.data);		\
       break;								\
 									\
     case BALANCE_PAIR:							\
-      *((balance_pair_t *) data) OP *((amount_t *) value.data);		\
+      cast(BALANCE_PAIR);						\
+      *((balance_pair_t *) data) OP *((balance_pair_t *) value.data);	\
       break;								\
 									\
     default:								\
@@ -119,18 +130,26 @@ value_t& value_t::operator OP(const value_t& value)			\
     break;								\
 									\
   case BALANCE:								\
-    switch (type) {							\
+    switch (value.type) {						\
     case BOOLEAN:							\
+      *((balance_t *) data) OP (*((bool *) value.data) ? 1U : 0U);	\
+      break;								\
+									\
     case INTEGER:							\
+      *((balance_t *) data) OP *((unsigned int *) value.data);		\
+      break;								\
+									\
     case AMOUNT:							\
-      cast(BALANCE);							\
+      *((balance_t *) data) OP *((amount_t *) value.data);		\
+      break;								\
 									\
     case BALANCE:							\
       *((balance_t *) data) OP *((balance_t *) value.data);		\
       break;								\
 									\
     case BALANCE_PAIR:							\
-      *((balance_pair_t *) data) OP *((balance_t *) value.data);	\
+      cast(BALANCE_PAIR);						\
+      *((balance_pair_t *) data) OP *((balance_pair_t *) value.data);	\
       break;								\
 									\
     default:								\
@@ -140,12 +159,22 @@ value_t& value_t::operator OP(const value_t& value)			\
     break;								\
 									\
   case BALANCE_PAIR:							\
-    switch (type) {							\
+    switch (value.type) {						\
     case BOOLEAN:							\
+      *((balance_pair_t *) data) OP (*((bool *) value.data) ? 1U : 0U);	\
+      break;								\
+									\
     case INTEGER:							\
+      *((balance_pair_t *) data) OP *((unsigned int *) value.data);	\
+      break;								\
+									\
     case AMOUNT:							\
+      *((balance_pair_t *) data) OP *((amount_t *) value.data);		\
+      break;								\
+									\
     case BALANCE:							\
-      cast(BALANCE_PAIR);						\
+      *((balance_pair_t *) data) OP *((balance_t *) value.data);	\
+      break;								\
 									\
     case BALANCE_PAIR:							\
       *((balance_pair_t *) data) OP *((balance_pair_t *) value.data);	\
@@ -172,23 +201,23 @@ DEF_VALUE_OP(/=)
 #define DEF_VALUE_CMP_OP(OP)						\
 bool value_t::operator OP(const value_t& value)				\
 {									\
-  switch (value.type) {							\
+  switch (type) {							\
   case BOOLEAN:								\
-    switch (type) {							\
+    switch (value.type) {						\
     case BOOLEAN:							\
       return *((bool *) data) OP *((bool *) value.data);		\
 									\
     case INTEGER:							\
-      return bool(*((unsigned int *) data)) OP *((bool *) value.data);	\
+      return *((bool *) data) OP bool(*((unsigned int *) value.data));	\
 									\
     case AMOUNT:							\
-      return bool(*((amount_t *) data)) OP *((bool *) value.data);	\
+      return *((bool *) data) OP bool(*((amount_t *) value.data));	\
 									\
     case BALANCE:							\
-      return bool(*((balance_t *) data)) OP *((bool *) value.data);	\
+      return *((bool *) data) OP bool(*((balance_t *) value.data));	\
 									\
     case BALANCE_PAIR:							\
-      return bool(*((balance_pair_t *) data)) OP *((bool *) value.data); \
+      return *((bool *) data) OP bool(*((balance_pair_t *) value.data)); \
 									\
     default:								\
       assert(0);							\
@@ -197,21 +226,26 @@ bool value_t::operator OP(const value_t& value)				\
     break;								\
 									\
   case INTEGER:								\
-    switch (type) {							\
+    switch (value.type) {						\
     case BOOLEAN:							\
-      return ((unsigned int) *((bool *) data)) OP *((unsigned int *) value.data); \
+      return (*((unsigned int *) data) OP				\
+	      ((unsigned int) *((bool *) value.data)));			\
 									\
     case INTEGER:							\
-      return *((unsigned int *) data) OP *((unsigned int *) value.data); \
+      return (*((unsigned int *) data) OP				\
+	      *((unsigned int *) value.data));				\
 									\
     case AMOUNT:							\
-      return ((unsigned int) *((amount_t *) data)) OP *((unsigned int *) value.data); \
+      return (*((unsigned int *) data) OP				\
+	      ((unsigned int) *((amount_t *) value.data)));		\
 									\
     case BALANCE:							\
-      return ((unsigned int) *((balance_t *) data)) OP *((unsigned int *) value.data); \
+      return (*((unsigned int *) data) OP				\
+	      ((unsigned int) *((balance_t *) value.data)));		\
 									\
     case BALANCE_PAIR:							\
-      return ((unsigned int) *((balance_pair_t *) data)) OP *((unsigned int *) value.data); \
+      return (*((unsigned int *) data) OP				\
+	      ((unsigned int) *((balance_pair_t *) value.data)));	\
 									\
     default:								\
       assert(0);							\
@@ -220,21 +254,26 @@ bool value_t::operator OP(const value_t& value)				\
     break;								\
 									\
   case AMOUNT:								\
-    switch (type) {							\
+    switch (value.type) {						\
     case BOOLEAN:							\
-      return amount_t(*((bool *) data)) OP *((amount_t *) value.data);	\
+      return *((amount_t *) data) OP amount_t(*((bool *) value.data));	\
 									\
     case INTEGER:							\
-      return amount_t(*((unsigned int *) data)) OP *((amount_t *) value.data); \
+      return (*((amount_t *) data) OP					\
+	      amount_t(*((unsigned int *) value.data)));		\
 									\
     case AMOUNT:							\
       return *((amount_t *) data) OP *((amount_t *) value.data);	\
 									\
     case BALANCE:							\
-      return ((balance_t *) data)->amount(((amount_t *) value.data)->commodity()) OP *((amount_t *) value.data); \
+      return (*((amount_t *) data) OP					\
+	      ((balance_t *) value.data)->				\
+	      amount(((amount_t *) data)->commodity()));		\
 									\
     case BALANCE_PAIR:							\
-      return ((balance_pair_t *) data)->quantity.amount(((amount_t *) value.data)->commodity()) OP *((amount_t *) value.data); \
+      return (*((amount_t *) data) OP					\
+	      ((balance_pair_t *) value.data)->				\
+	      quantity.amount(((amount_t *) data)->commodity()));	\
 									\
     default:								\
       assert(0);							\
@@ -243,21 +282,22 @@ bool value_t::operator OP(const value_t& value)				\
     break;								\
 									\
   case BALANCE:								\
-    switch (type) {							\
+    switch (value.type) {						\
     case BOOLEAN:							\
-      return balance_t(*((bool *) data)) OP *((balance_t *) value.data); \
+      return *((balance_t *) data) OP (unsigned int)*((bool *) value.data); \
 									\
     case INTEGER:							\
-      return balance_t(*((unsigned int *) data)) OP *((balance_t *) value.data); \
+      return *((balance_t *) data) OP *((unsigned int *) value.data);	\
 									\
     case AMOUNT:							\
-      return balance_t(*((amount_t *) data)) OP *((balance_t *) value.data); \
+      return *((balance_t *) data) OP *((amount_t *) value.data);	\
 									\
     case BALANCE:							\
       return *((balance_t *) data) OP *((balance_t *) value.data);	\
 									\
     case BALANCE_PAIR:							\
-      return *((balance_pair_t *) data) OP *((balance_t *) value.data);	\
+      return (*((balance_t *) data) OP					\
+	      ((balance_pair_t *) value.data)->quantity);		\
 									\
     default:								\
       assert(0);							\
@@ -266,21 +306,26 @@ bool value_t::operator OP(const value_t& value)				\
     break;								\
 									\
   case BALANCE_PAIR:							\
-    switch (type) {							\
+    switch (value.type) {						\
     case BOOLEAN:							\
-      return balance_pair_t(*((bool *) data)) OP *((balance_pair_t *) value.data); \
+      return (((balance_pair_t *) data)->quantity OP			\
+	      (unsigned int)*((bool *) value.data));			\
 									\
     case INTEGER:							\
-      return balance_pair_t(*((unsigned int *) data)) OP *((balance_pair_t *) value.data); \
+      return (((balance_pair_t *) data)->quantity OP			\
+	      *((unsigned int *) value.data));				\
 									\
     case AMOUNT:							\
-      return balance_pair_t(*((amount_t *) data)) OP *((balance_pair_t *) value.data); \
+      return (((balance_pair_t *) data)->quantity OP			\
+	      *((amount_t *) value.data));				\
 									\
     case BALANCE:							\
-      return balance_pair_t(*((balance_t *) data)) OP *((balance_pair_t *) value.data);	\
+      return (((balance_pair_t *) data)->quantity OP			\
+	      *((balance_t *) value.data));				\
 									\
     case BALANCE_PAIR:							\
-      return *((balance_pair_t *) data) OP *((balance_pair_t *) value.data); \
+      return (*((balance_pair_t *) data) OP				\
+	      *((balance_pair_t *) value.data));			\
 									\
     default:								\
       assert(0);							\

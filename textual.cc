@@ -532,22 +532,6 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	parse_automated_transactions(in, account_stack.front(), auto_xacts);
 	break;
 
-      case '@': {                 // account specific
-	in >> c;
-	if (in.peek() == '@') {
-	  in.get(c);
-	  account_stack.pop_front();
-	  break;
-	}
-
-	in.getline(line, MAX_LINE);
-	linenum++;
-
-	account_t * acct = account_stack.front()->find_account(skip_ws(line));
-	account_stack.push_front(acct);
-	break;
-      }
-
       case '!': {                 // directive
 	std::string word;
 	in.get(c);
@@ -560,8 +544,20 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	  push_var<std::string>  save_path(path);
 	  push_var<automated_transactions_t *>
 	    save_current_auto_xacts(current_auto_xacts);
+
 	  count += parse_journal_file(skip_ws(line), journal,
 				      account_stack.front());
+	}
+	else if (word == "account") {
+	  in.getline(line, MAX_LINE);
+	  linenum++;
+
+	  account_t * acct;
+	  acct = account_stack.front()->find_account(skip_ws(line));
+	  account_stack.push_front(acct);
+	}
+	else if (word == "end") {
+	  account_stack.pop_front();
 	}
 #ifdef USE_BOOST_PYTHON
 	else if (word == "python") {

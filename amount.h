@@ -91,16 +91,20 @@ class amount_t
   amount_t& operator*=(const amount_t& amt);
   amount_t& operator/=(const amount_t& amt);
 
-  amount_t& operator+=(const int value) {
+  template <typename T>
+  amount_t& operator+=(T value) {
     return *this += amount_t(value);
   }
-  amount_t& operator-=(const int value) {
+  template <typename T>
+  amount_t& operator-=(T value) {
     return *this -= amount_t(value);
   }
-  amount_t& operator*=(const int value) {
+  template <typename T>
+  amount_t& operator*=(T value) {
     return *this *= amount_t(value);
   }
-  amount_t& operator/=(const int value) {
+  template <typename T>
+  amount_t& operator/=(T value) {
     return *this /= amount_t(value);
   }
 
@@ -126,22 +130,26 @@ class amount_t
     return temp;
   }
 
-  amount_t operator+(const int value) const {
+  template <typename T>
+  amount_t operator+(T value) const {
     amount_t temp = *this;
     temp += value;
     return temp;
   }
-  amount_t operator-(const int value) const {
+  template <typename T>
+  amount_t operator-(T value) const {
     amount_t temp = *this;
     temp -= value;
     return temp;
   }
-  amount_t operator*(const int value) const {
+  template <typename T>
+  amount_t operator*(T value) const {
     amount_t temp = *this;
     temp *= value;
     return temp;
   }
-  amount_t operator/(const int value) const {
+  template <typename T>
+  amount_t operator/(T value) const {
     amount_t temp = *this;
     temp /= value;
     return temp;
@@ -161,25 +169,6 @@ class amount_t
   // test for non-zero (use ! for zero)
   operator bool() const;
 
-  // integer comparisons
-  bool operator<(const int num) const;
-  bool operator<=(const int num) const;
-  bool operator>(const int num) const;
-  bool operator>=(const int num) const;
-  bool operator==(const int num) const;
-  bool operator!=(const int num) const {
-    return ! (*this == num);
-  }
-
-  bool operator<(const unsigned int num) const;
-  bool operator<=(const unsigned int num) const;
-  bool operator>(const unsigned int num) const;
-  bool operator>=(const unsigned int num) const;
-  bool operator==(const unsigned int num) const;
-  bool operator!=(const unsigned int num) const {
-    return ! (*this == num);
-  }
-
   // comparisons between amounts
   bool operator<(const amount_t& amt) const;
   bool operator<=(const amount_t& amt) const;
@@ -190,6 +179,43 @@ class amount_t
     if (commodity_ != amt.commodity_)
       return true;
     return ! (*this == amt);
+  }
+
+  template <typename T>
+  void parse_num(T num) {
+    std::string str;
+    { std::ostringstream strstr(str);
+      strstr << num;
+    }
+    { std::istringstream strstr(str);
+      parse(strstr);
+    }
+  }
+
+  int sign() const;
+
+  // POD comparisons
+#define AMOUNT_CMP_INT(OP)					\
+  template <typename T>						\
+  bool operator OP (T num) const {			\
+    if (num == 0) {						\
+      return sign() OP 0;					\
+    } else {							\
+      amount_t amt;						\
+      amt.parse_num(num);					\
+      return *this OP amt;					\
+    }								\
+  }
+
+  AMOUNT_CMP_INT(<)
+  AMOUNT_CMP_INT(<=)
+  AMOUNT_CMP_INT(>)
+  AMOUNT_CMP_INT(>=)
+  AMOUNT_CMP_INT(==)
+
+  template <typename T>
+  bool operator!=(T num) const {
+    return ! (*this == num);
   }
 
   amount_t value(const std::time_t moment) const;

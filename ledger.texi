@@ -1438,7 +1438,7 @@ file:
 And two in your company ledger file:
 
 @example
-@@ Company XYZ
+!account Company XYZ
 
 2004/09/29  Circuit City
     Expenses:Computer:Software            $100.00
@@ -1448,7 +1448,7 @@ And two in your company ledger file:
     Accounts Payable:Your Name            $100.00
     Assets:Checking                      $-100.00
 
-@@@@
+!end
 @end example
 
 (Note: The @ above command means that all accounts mentioned in the

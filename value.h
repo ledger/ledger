@@ -249,20 +249,59 @@ class value_t
   value_t cost() const;
 };
 
-template <typename T>
-value_t operator+(const T& value, const value_t& obj) {
+inline value_t operator+(const balance_pair_t& value, const value_t& obj) {
+  return value_t(value) + obj;
+}
+inline value_t operator+(const balance_t& value, const value_t& obj) {
+  return value_t(value) + obj;
+}
+inline value_t operator+(const amount_t& value, const value_t& obj) {
   return value_t(value) + obj;
 }
 template <typename T>
-value_t operator-(const T& value, const value_t& obj) {
+inline value_t operator+(T value, const value_t& obj) {
+  return value_t(value) + obj;
+}
+
+inline value_t operator-(const balance_pair_t& value, const value_t& obj) {
+  return value_t(value) - obj;
+}
+inline value_t operator-(const balance_t& value, const value_t& obj) {
+  return value_t(value) - obj;
+}
+inline value_t operator-(const amount_t& value, const value_t& obj) {
   return value_t(value) - obj;
 }
 template <typename T>
-value_t operator*(const T& value, const value_t& obj) {
+inline value_t operator-(T value, const value_t& obj) {
+  return value_t(value) - obj;
+}
+
+inline value_t operator*(const balance_pair_t& value, const value_t& obj) {
+  return value_t(value) * obj;
+}
+inline value_t operator*(const balance_t& value, const value_t& obj) {
+  return value_t(value) * obj;
+}
+inline value_t operator*(const amount_t& value, const value_t& obj) {
   return value_t(value) * obj;
 }
 template <typename T>
-value_t operator/(const T& value, const value_t& obj) {
+inline value_t operator*(T value, const value_t& obj) {
+  return value_t(value) * obj;
+}
+
+inline value_t operator/(const balance_pair_t& value, const value_t& obj) {
+  return value_t(value) / obj;
+}
+inline value_t operator/(const balance_t& value, const value_t& obj) {
+  return value_t(value) / obj;
+}
+inline value_t operator/(const amount_t& value, const value_t& obj) {
+  return value_t(value) / obj;
+}
+template <typename T>
+inline value_t operator/(T value, const value_t& obj) {
   return value_t(value) / obj;
 }
 

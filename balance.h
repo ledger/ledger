@@ -38,17 +38,8 @@ class balance_t
     if (amt)
       amounts.insert(amounts_pair(&amt.commodity(), amt));
   }
-  balance_t(const int value) {
-    amount_t amt(value);
-    if (amt)
-      amounts.insert(amounts_pair(&amt.commodity(), amt));
-  }
-  balance_t(const unsigned int value) {
-    amount_t amt(value);
-    if (amt)
-      amounts.insert(amounts_pair(&amt.commodity(), amt));
-  }
-  balance_t(const double value) {
+  template <typename T>
+  balance_t(T value) {
     amount_t amt(value);
     if (amt)
       amounts.insert(amounts_pair(&amt.commodity(), amt));
@@ -70,19 +61,10 @@ class balance_t
     *this += amt;
     return *this;
   }
-  balance_t& operator=(const int value) {
+  template <typename T>
+  balance_t& operator=(T value) {
     amounts.clear();
-    *this += amount_t(value);
-    return *this;
-  }
-  balance_t& operator=(const unsigned int value) {
-    amounts.clear();
-    *this += amount_t(value);
-    return *this;
-  }
-  balance_t& operator=(const double value) {
-    amounts.clear();
-    *this += amount_t(value);
+    *this += value;
     return *this;
   }
 
@@ -102,6 +84,10 @@ class balance_t
       amounts.insert(amounts_pair(&amt.commodity(), amt));
     return *this;
   }
+  template <typename T>
+  balance_t& operator+=(T val) {
+    return *this += amount_t(val);
+  }
   balance_t& operator-=(const balance_t& bal) {
     for (amounts_map::const_iterator i = bal.amounts.begin();
 	 i != bal.amounts.end();
@@ -117,6 +103,10 @@ class balance_t
       amounts.insert(amounts_pair(&amt.commodity(), amt));
     return *this;
   }
+  template <typename T>
+  balance_t& operator-=(T val) {
+    return *this -= amount_t(val);
+  }
 
   // simple arithmetic
   balance_t operator+(const balance_t& bal) const {
@@ -129,6 +119,12 @@ class balance_t
     temp += amt;
     return temp;
   }
+  template <typename T>
+  balance_t operator+(T val) const {
+    balance_t temp = *this;
+    temp += val;
+    return temp;
+  }
   balance_t operator-(const balance_t& bal) const {
     balance_t temp = *this;
     temp -= bal;
@@ -137,6 +133,12 @@ class balance_t
   balance_t operator-(const amount_t& amt) const {
     balance_t temp = *this;
     temp -= amt;
+    return temp;
+  }
+  template <typename T>
+  balance_t operator-(T val) const {
+    balance_t temp = *this;
+    temp -= val;
     return temp;
   }
 
@@ -163,6 +165,10 @@ class balance_t
     }
     return *this;
   }
+  template <typename T>
+  balance_t& operator*=(T val) {
+    return *this *= amount_t(val);
+  }
 
   balance_t& operator/=(const balance_t& bal) {
     for (amounts_map::const_iterator i = bal.amounts.begin();
@@ -186,6 +192,10 @@ class balance_t
     }
     return *this;
   }
+  template <typename T>
+  balance_t& operator/=(T val) {
+    return *this /= amount_t(val);
+  }
 
   // multiplication and divide
   balance_t operator*(const balance_t& bal) const {
@@ -198,6 +208,12 @@ class balance_t
     temp *= amt;
     return temp;
   }
+  template <typename T>
+  balance_t operator*(T val) const {
+    balance_t temp = *this;
+    temp *= val;
+    return temp;
+  }
   balance_t operator/(const balance_t& bal) const {
     balance_t temp = *this;
     temp /= bal;
@@ -206,6 +222,12 @@ class balance_t
   balance_t operator/(const amount_t& amt) const {
     balance_t temp = *this;
     temp /= amt;
+    return temp;
+  }
+  template <typename T>
+  balance_t operator/(T val) const {
+    balance_t temp = *this;
+    temp /= val;
     return temp;
   }
 
@@ -228,6 +250,19 @@ class balance_t
 
     return true;
   }
+  bool operator<(const amount_t& amt) const {
+    return amount(amt.commodity()) < amt;
+  }
+  template <typename T>
+  bool operator<(T val) const {
+    for (amounts_map::const_iterator i = amounts.begin();
+	 i != amounts.end();
+	 i++)
+      if ((*i).second < val)
+	return true;
+    return false;
+  }
+
   bool operator<=(const balance_t& bal) const {
     for (amounts_map::const_iterator i = bal.amounts.begin();
 	 i != bal.amounts.end();
@@ -243,20 +278,18 @@ class balance_t
 
     return true;
   }
-  bool operator<(const amount_t& amt) const {
-    return amount(amt.commodity()) < amt;
-  }
   bool operator<=(const amount_t& amt) const {
     return amount(amt.commodity()) <= amt;
   }
-#if 0
-  bool operator<(const unsigned int val) const {
-    return amount() < val;
+  template <typename T>
+  bool operator<=(T val) const {
+    for (amounts_map::const_iterator i = amounts.begin();
+	 i != amounts.end();
+	 i++)
+      if ((*i).second <= val)
+	return true;
+    return false;
   }
-  bool operator<=(const unsigned int val) const {
-    return amount() <= val;
-  }
-#endif
 
   bool operator>(const balance_t& bal) const {
     for (amounts_map::const_iterator i = bal.amounts.begin();
@@ -276,6 +309,19 @@ class balance_t
 
     return true;
   }
+  bool operator>(const amount_t& amt) const {
+    return amount(amt.commodity()) > amt;
+  }
+  template <typename T>
+  bool operator>(T val) const {
+    for (amounts_map::const_iterator i = amounts.begin();
+	 i != amounts.end();
+	 i++)
+      if ((*i).second > val)
+	return true;
+    return false;
+  }
+
   bool operator>=(const balance_t& bal) const {
     for (amounts_map::const_iterator i = bal.amounts.begin();
 	 i != bal.amounts.end();
@@ -291,20 +337,18 @@ class balance_t
 
     return true;
   }
-  bool operator>(const amount_t& amt) const {
-    return amount(amt.commodity()) > amt;
-  }
   bool operator>=(const amount_t& amt) const {
     return amount(amt.commodity()) >= amt;
   }
-#if 0
-  bool operator>(const unsigned int val) const {
-    return amount() > val;
+  template <typename T>
+  bool operator>=(T val) const {
+    for (amounts_map::const_iterator i = amounts.begin();
+	 i != amounts.end();
+	 i++)
+      if ((*i).second >= val)
+	return true;
+    return false;
   }
-  bool operator>=(const unsigned int val) const {
-    return amount() >= val;
-  }
-#endif
 
   bool operator==(const balance_t& bal) const {
     amounts_map::const_iterator i, j;
@@ -317,23 +361,29 @@ class balance_t
     }
     return i == amounts.end() && j == bal.amounts.end();
   }
-  bool operator!=(const balance_t& bal) const {
-    return ! (*this == bal);
-  }
   bool operator==(const amount_t& amt) const {
     return amounts.size() == 1 && (*amounts.begin()).second == amt;
+  }
+  template <typename T>
+  bool operator==(T val) const {
+    for (amounts_map::const_iterator i = amounts.begin();
+	 i != amounts.end();
+	 i++)
+      if ((*i).second == val)
+	return true;
+    return false;
+  }
+
+  bool operator!=(const balance_t& bal) const {
+    return ! (*this == bal);
   }
   bool operator!=(const amount_t& amt) const {
     return ! (*this == amt);
   }
-#if 0
-  bool operator==(const unsigned int val) const {
-    return amount() == val;
-  }
-  bool operator!=(const unsigned int val) const {
+  template <typename T>
+  bool operator!=(T val) const {
     return ! (*this == val);
   }
-#endif
 
   // unary negation
   void negate() {
@@ -412,11 +462,8 @@ class balance_pair_t
     : quantity(_quantity), cost(NULL) {}
   balance_pair_t(const amount_t& _quantity)
     : quantity(_quantity), cost(NULL) {}
-  balance_pair_t(const int value)
-    : quantity(value), cost(NULL) {}
-  balance_pair_t(const unsigned int value)
-    : quantity(value), cost(NULL) {}
-  balance_pair_t(const double value)
+  template <typename T>
+  balance_pair_t(T value)
     : quantity(value), cost(NULL) {}
 
   // destructor
@@ -455,23 +502,8 @@ class balance_pair_t
     quantity = amt;
     return *this;
   }
-  balance_pair_t& operator=(const int value) {
-    if (cost) {
-      delete cost;
-      cost = NULL;
-    }
-    quantity = value;
-    return *this;
-  }
-  balance_pair_t& operator=(const unsigned int value) {
-    if (cost) {
-      delete cost;
-      cost = NULL;
-    }
-    quantity = value;
-    return *this;
-  }
-  balance_pair_t& operator=(const double value) {
+  template <typename T>
+  balance_pair_t& operator=(T value) {
     if (cost) {
       delete cost;
       cost = NULL;
@@ -504,6 +536,10 @@ class balance_pair_t
       *cost += amt;
     return *this;
   }
+  template <typename T>
+  balance_pair_t& operator+=(T val) {
+    return *this += amount_t(val);
+  }
 
   balance_pair_t& operator-=(const balance_pair_t& bal_pair) {
     if (bal_pair.cost && ! cost)
@@ -528,6 +564,10 @@ class balance_pair_t
       *cost -= amt;
     return *this;
   }
+  template <typename T>
+  balance_pair_t& operator-=(T val) {
+    return *this -= amount_t(val);
+  }
 
   // simple arithmetic
   balance_pair_t operator+(const balance_pair_t& bal_pair) const {
@@ -545,6 +585,12 @@ class balance_pair_t
     temp += amt;
     return temp;
   }
+  template <typename T>
+  balance_pair_t operator+(T val) const {
+    balance_pair_t temp = *this;
+    temp += val;
+    return temp;
+  }
 
   balance_pair_t operator-(const balance_pair_t& bal_pair) const {
     balance_pair_t temp = *this;
@@ -559,6 +605,12 @@ class balance_pair_t
   balance_pair_t operator-(const amount_t& amt) const {
     balance_pair_t temp = *this;
     temp -= amt;
+    return temp;
+  }
+  template <typename T>
+  balance_pair_t operator-(T val) const {
+    balance_pair_t temp = *this;
+    temp -= val;
     return temp;
   }
 
@@ -586,6 +638,10 @@ class balance_pair_t
       *cost *= amt;
     return *this;
   }
+  template <typename T>
+  balance_pair_t& operator*=(T val) {
+    return *this *= amount_t(val);
+  }
 
   balance_pair_t& operator/=(const balance_pair_t& bal_pair) {
     if (bal_pair.cost && ! cost)
@@ -610,6 +666,10 @@ class balance_pair_t
       *cost /= amt;
     return *this;
   }
+  template <typename T>
+  balance_pair_t& operator/=(T val) {
+    return *this /= amount_t(val);
+  }
 
   balance_pair_t operator*(const balance_pair_t& bal_pair) const {
     balance_pair_t temp = *this;
@@ -624,6 +684,12 @@ class balance_pair_t
   balance_pair_t operator*(const amount_t& amt) const {
     balance_pair_t temp = *this;
     temp *= amt;
+    return temp;
+  }
+  template <typename T>
+  balance_pair_t operator*(T val) const {
+    balance_pair_t temp = *this;
+    temp *= val;
     return temp;
   }
 
@@ -642,6 +708,12 @@ class balance_pair_t
     temp /= amt;
     return temp;
   }
+  template <typename T>
+  balance_pair_t operator/(T val) const {
+    balance_pair_t temp = *this;
+    temp /= val;
+    return temp;
+  }
 
   // comparison
   bool operator<(const balance_pair_t& bal_pair) const {
@@ -653,6 +725,11 @@ class balance_pair_t
   bool operator<(const amount_t& amt) const {
     return quantity < amt;
   }
+  template <typename T>
+  bool operator<(T val) const {
+    return quantity < val;
+  }
+
   bool operator<=(const balance_pair_t& bal_pair) const {
     return quantity <= bal_pair.quantity;
   }
@@ -661,6 +738,10 @@ class balance_pair_t
   }
   bool operator<=(const amount_t& amt) const {
     return quantity <= amt;
+  }
+  template <typename T>
+  bool operator<=(T val) const {
+    return quantity <= val;
   }
 
   bool operator>(const balance_pair_t& bal_pair) const {
@@ -672,6 +753,11 @@ class balance_pair_t
   bool operator>(const amount_t& amt) const {
     return quantity > amt;
   }
+  template <typename T>
+  bool operator>(T val) const {
+    return quantity > val;
+  }
+
   bool operator>=(const balance_pair_t& bal_pair) const {
     return quantity >= bal_pair.quantity;
   }
@@ -680,6 +766,10 @@ class balance_pair_t
   }
   bool operator>=(const amount_t& amt) const {
     return quantity >= amt;
+  }
+  template <typename T>
+  bool operator>=(T val) const {
+    return quantity >= val;
   }
 
   bool operator==(const balance_pair_t& bal_pair) const {
@@ -691,6 +781,11 @@ class balance_pair_t
   bool operator==(const amount_t& amt) const {
     return quantity == amt;
   }
+  template <typename T>
+  bool operator==(T val) const {
+    return quantity == val;
+  }
+
   bool operator!=(const balance_pair_t& bal_pair) const {
     return ! (*this == bal_pair);
   }
@@ -699,6 +794,10 @@ class balance_pair_t
   }
   bool operator!=(const amount_t& amt) const {
     return ! (*this == amt);
+  }
+  template <typename T>
+  bool operator!=(T val) const {
+    return ! (*this == val);
   }
 
   // unary negation

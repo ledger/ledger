@@ -463,53 +463,10 @@ void amount_t::negate()
   }
 }
 
-// integer comparisons
-template <typename T>
-static inline void parse_num(amount_t& amt, T num) {
-  std::string str;
-  { std::ostringstream strstr(str);
-    strstr << num;
-  }
-  { std::istringstream strstr(str);
-    amt.parse(strstr);
-  }
+int amount_t::sign() const
+{
+  return quantity ? mpz_sgn(MPZ(quantity)) : 0;
 }
-
-#define AMOUNT_CMP_INT(OP)					\
-bool amount_t::operator OP (const int num) const		\
-{								\
-  if (num == 0) {						\
-    return quantity ? mpz_sgn(MPZ(quantity)) OP 0 : false;	\
-  } else {							\
-    amount_t amt;						\
-    parse_num(amt, num);					\
-    return *this OP amt;					\
-  }								\
-}
-
-AMOUNT_CMP_INT(<)
-AMOUNT_CMP_INT(<=)
-AMOUNT_CMP_INT(>)
-AMOUNT_CMP_INT(>=)
-AMOUNT_CMP_INT(==)
-
-#define AMOUNT_CMP_UINT(OP)					\
-bool amount_t::operator OP (const unsigned int num) const	\
-{								\
-  if (num == 0) {						\
-    return quantity ? mpz_sgn(MPZ(quantity)) OP 0 : false;	\
-  } else {							\
-    amount_t amt;						\
-    parse_num(amt, num);					\
-    return *this OP amt;					\
-  }								\
-}
-
-AMOUNT_CMP_UINT(<)
-AMOUNT_CMP_UINT(<=)
-AMOUNT_CMP_UINT(>)
-AMOUNT_CMP_UINT(>=)
-AMOUNT_CMP_UINT(==)
 
 // comparisons between amounts
 #define AMOUNT_CMP_AMOUNT(OP)					\

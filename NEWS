@@ -61,11 +61,11 @@
   
 - To include entries from a file into a specific account, use:
 
-    @ ACCOUNT
+    !account ACCOUNT
     !include FILE
-    @@
+    !end
 
-  Entries specified within "@ ACCOUNT/@@" will affect only that
+  Entries specified within an !account block will affect only that
   account.
 
 - Register reports now show only the account affected by default.  Use
