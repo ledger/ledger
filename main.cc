@@ -97,12 +97,16 @@ int main(int argc, char * argv[], char * envp[])
 
   process_environment(envp, "LEDGER_");
 
+#if 1
+  // These are here until 3.x, for backwards compatability.
+
   if (const char * p = std::getenv("LEDGER"))
     process_option("file", p);
   if (const char * p = std::getenv("PRICE_HIST"))
     process_option("price-db", p);
   if (const char * p = std::getenv("PRICE_EXP"))
     process_option("price-exp", p);
+#endif
 
   TIMER_STOP(process_env);
 
@@ -123,9 +127,11 @@ int main(int argc, char * argv[], char * envp[])
       journal->sources.pop_front();	// remove cache_file
 
       strings_list exceptions;
+#if 0
       std::set_difference(journal->sources.begin(), journal->sources.end(),
 			  config->files.begin(), config->files.end(),
 			  exceptions.begin());
+#endif
 
       if (entry_count == 0 || exceptions.size() > 0) {
 	journal.reset(new journal_t);

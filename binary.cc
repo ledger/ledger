@@ -13,8 +13,8 @@
 
 namespace ledger {
 
-       unsigned long binary_magic_number = 0xFFEED765;
-static unsigned long format_version      = 0x0002000a;
+const unsigned long	   binary_magic_number = 0xFFEED765;
+static const unsigned long format_version      = 0x0002000b;
 
 static std::vector<account_t *>   accounts;
 static account_t::ident_t	  ident;
@@ -82,7 +82,7 @@ void read_binary_amount(std::istream& in, amount_t& amt)
 {
   commodity_t::ident_t id;
   read_binary_number(in, id);
-  if (id == 0xffff)
+  if (id == 0xffffffff)
     amt.commodity = NULL;
   else
     amt.commodity = commodities[id];
@@ -94,9 +94,7 @@ transaction_t * read_binary_transaction(std::istream& in, entry_t * entry)
 {
   transaction_t * xact = new transaction_t(entry, NULL);
 
-  account_t::ident_t id;
-  read_binary_number(in, id);
-  xact->account = accounts[id];
+  xact->account = accounts[read_binary_number<account_t::ident_t>(in)];
   xact->account->add_transaction(xact);
 
   read_binary_amount(in, xact->amount);
@@ -131,10 +129,8 @@ commodity_t * read_binary_commodity(std::istream& in)
   commodity_t * commodity = new commodity_t;
   commodities.push_back(commodity);
 
-  commodity_t::ident_t id;
-  read_binary_number(in, id);
-  commodity->ident = id;
-  assert(id == commodities.size() - 1);
+  commodity->ident = read_binary_number<commodity_t::ident_t>(in);
+  assert(commodity->ident == commodities.size() - 1);
 
   read_binary_string(in, commodity->symbol);
   read_binary_string(in, commodity->name);
@@ -162,13 +158,12 @@ account_t * read_binary_account(std::istream& in, account_t * master = NULL)
   account_t * acct = new account_t(NULL);
   accounts.push_back(acct);
 
-  account_t::ident_t id;
-  read_binary_number(in, id);
-  acct->ident = id;
-  assert(id == accounts.size() - 1);
+  acct->ident = read_binary_number<account_t::ident_t>(in);
+  assert(acct->ident == accounts.size() - 1);
 
+  account_t::ident_t id;
   read_binary_number(in, id);	// parent id
-  if (id == 0xffff)
+  if (id == 0xffffffff)
     acct->parent = NULL;
   else
     acct->parent = accounts[id];
@@ -289,7 +284,7 @@ void write_binary_amount(std::ostream& out, const amount_t& amt)
   if (amt.commodity)
     write_binary_number(out, amt.commodity->ident);
   else
-    write_binary_number<commodity_t::ident_t>(out, 0xffff);
+    write_binary_number<commodity_t::ident_t>(out, 0xffffffff);
 
   amt.write_quantity(out);
 }
@@ -349,7 +344,7 @@ void write_binary_account(std::ostream& out, account_t * account)
   if (account->parent)
     write_binary_number(out, account->parent->ident);
   else
-    write_binary_number<account_t::ident_t>(out, 0xffff);
+    write_binary_number<account_t::ident_t>(out, 0xffffffff);
 
   write_binary_string(out, account->name);
   write_binary_string(out, account->note);

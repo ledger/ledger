@@ -914,12 +914,13 @@ If you are an accountant, or you are familiar with accounting
 terminology, then you might be tearing your hair out after reading the
 above.  Please don't!
 
-Ledger is a lightweight tool that gets people comfortable with their
-finances.  Contemporary accounting practices will often seem
-counter-intuitive and confusing to the layman.  To make Ledger more
-accessible, it deviates from the accounting conventions and
-terminology.  However, Ledger is flexible enough that you can
-interpret your transactions however you wish.
+Ledger is intended to make people comfortable with their finances; to
+help them better control the flow of their money.  Contemporary
+accounting practices, on the other hand, often seem counter-intuitive
+and confusing to the layman.  To make Ledger more accessible, it
+avoids the use of standard accounting conventions and terminology.
+However, Ledger is flexible enough that you may interpret what is
+happening however you wish.
 
 Most probably, the following section will confuse you, and you should
 skip it if you've managed to understand everything so far.  However,
@@ -1101,13 +1102,12 @@ ledger, with the attached prefix "Billable":
 
 * Running Ledger
 
-Now that you have an orderly and well-organized general ledger, it's
-time to start generating some orderly and well-organized reports.
-This is where the Ledger tool comes in.  With it, you can balance your
+Once you have an orderly and well-organized general ledger, the next
+step is to generate orderly and well-organized reports.  This is where
+the Ledger command-line tool comes in.  With it, you can balance your
 checkbook, see where your money is going, tell whether you've made a
-profit this year, and even compute the present day value of your
-retirement accounts.  And all with the simplest of interfaces: the
-command-line.
+profit this year, and compute the present value of your retirement
+accounts.  And all with the simplest of interfaces, the command-line.
 
 The most often used command will be the "balance" command:
 
@@ -1344,26 +1344,66 @@ There is a shell script in the distribution called "entry", which
 simplifies the task of adding a new entry to your ledger, and then
 launches =vi= to let you confirm that the entry looks appropriate.
 
-** Option summary
+** Using command options
+
+With all of the commands, various command-line options are allowed
+that will modify the behavior of the command in some way.  And while
+the basic commands themselves are useful, you will often find
+yourselves adding option flags to the command-line to modify those
+commands.
+
+The command-line options always occur before the command word.  This
+is done to distinguish them from the matching expressions that always
+occur after the command word.  The basic form of any command is:
+
+<example>
+ledger [OPTIONS] COMMAND [MATCH]
+</example>
+
+Both the OPTIONS and MATCH expressions are optional.  You could, for
+example, just use "ledger balance" without any modification.  This
+would print the summarized total of all account types.  But to get
+more specific reporting, or to change the way the output looks, you
+must use the options.
 
 *** Basic options
 
-**-v** ::
-  Display the version of ledger being used.
+The =--help= (=-h=) option causes ledger to print a summary of all the
+options, and what they are used for.  This can be a handy way to
+remember which options do what.  This help screen is also printed if
+ledger is run without a command.
 
-**-h** ::
-  Print out quick help on the various options and commands.
+=--version= (=-v=) prints the current version of ledger and exits.
+This is useful for sending bug reports (to johnw@newartisans.com), to
+let the author know which version of ledger you are using.
 
-**-f FILE[<verbatim>=</verbatim>ACCOUNT]** ::
-  Read ledger entries from FILE.  This takes precedence over the
-  environment variable LEDGER.  If "<verbatim>=</verbatim>ACCOUNT" is
-  appended to the filename, then all of the entries are seen as if the
-  transactions accounts were prefixed by "ACCOUNT:".  There may be
-  multiple occurrences of the =-f= option.
+=--init FILE= (=-i FILE=) causes FILE to be read by ledger before any
+other ledger file.  This file may not contain any transactions, but it
+may contain option settings.  To specify options in the init file, use
+the same syntax as the command-line.  Here's an example init file:
 
-**-i FILE** ::
-  Read in the list of patterns to include/exclude from FILE.
-  Ordinarily, these are specified as arguments after the command.
+<example>
+--price-db ~/finance/.pricedb
+</example>
+
+Option settings on the command-line or in the environment always take
+precedence over settings in the init file.
+
+=--file FILE= (=-f FILE=) reads FILE as a ledger file.  This command
+may be used multiple times.  FILE may also be a list of file names
+separated by colons.  Typically, the environment variable
+=LEDGER_FILE= is set, rather than using this command-line option.
+
+=--cache FILE= identifies FILE as the default binary cache file.  That
+is, if the ledger files to be read are specified using the environment
+variable =LEDGER_FILE=, then whenever a command is finished a binary
+copy will be written to the specified cache, to speed up the loading
+time of subsequent queries.  This filename can also be given using the
+environment variable =LEDGER_CACHE=, or by putting the option into
+your init file.
+
+=--output FILE= (=-o FILE=) redirects output from any command to
+=FILE=.  By default, all output goes to standard output.
 
 *** Filtering options
 
@@ -1504,21 +1544,6 @@ launches =vi= to let you confirm that the entry looks appropriate.
   value of your dollars in terms of the ounces of gold they would buy,
   use: -p "$=0.00280112 AU" (or whatever the current exchange rate
   is).
-
-** Environment variables
-
-=LEDGER= ::
-  A colon-separated list of files to be parsed whenever ledger is run.
-  Easier than typing =-f= all the time.
-
-=PRICE_HIST= ::
-  The ledger file used to hold pricing data.  =~/.pricedb= would be a
-  good choice.
-
-=PRICE_EXP= ::
-  The number of minutes before pricing data becomes out-of-date.  The
-  default is one day.  Use =-L= to temporarily decrease or increase
-  the value.
 
 Footnotes:
 [1]  In some special cases, it will automatically balance the entry

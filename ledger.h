@@ -229,7 +229,7 @@ unsigned int parse_textual_journal(std::istream& in,
 				   journal_t *	 ledger,
 				   account_t *	 master = NULL);
 
-extern unsigned long binary_magic_number;
+extern const unsigned long binary_magic_number;
 
 unsigned int read_binary_journal(std::istream&	in,
 				 journal_t *	journal,
