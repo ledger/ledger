@@ -204,6 +204,11 @@ OPT_BEGIN(file, "f:", true) {
   use_cache = false;
 } OPT_END(file);
 
+#if 0
+OPT_BEGIN(cache, ":") {
+} OPT_END(cache);
+#endif
+
 OPT_BEGIN(output, "o:", false) {
   if (std::string(optarg) != "-")
     output_stream.reset(new std::ofstream(optarg));
@@ -448,7 +453,7 @@ int main(int argc, char * argv[], char * envp[])
 
   TIMER_START(read_cache);
 
-  // jww (2004-08-13): use LEDGER_FILE
+  // jww (2004-08-13): use LEDGER_FILE and LEDGER_CACHE
   use_cache = std::getenv("LEDGER") != NULL;
 
   if (use_cache) {

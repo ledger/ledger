@@ -525,7 +525,9 @@ std::ostream& operator<<(std::ostream& out, const amount_t& amt)
 
     bool printed = false;
 
-    for (strings_list::iterator i = strs.begin(); i != strs.end(); i++) {
+    for (strings_list::reverse_iterator i = strs.rbegin();
+	 i != strs.rend();
+	 i++) {
       if (printed) {
 	out << (amt.commodity->flags & COMMODITY_STYLE_EUROPEAN ? '.' : ',');
 	out.width(3);

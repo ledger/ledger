@@ -327,10 +327,10 @@ bool format_account::disp_subaccounts_p(const account_t * account,
   for (accounts_map::const_iterator i = account->accounts.begin();
        i != account->accounts.end();
        i++) {
-    // jww (2004-08-03): How do compute the right figure?  It should a
-    // value expression specified by the user, to say, "If this
-    // expression is equivalent between a parent account and a lone
-    // displayed child, then don't display the parent."
+    // jww (2004-08-03): How to compute the right figure?  It should
+    // be a value expression specified by the user which says, "If
+    // this expression is equivalent between a parent account and a
+    // lone displayed child, don't display the parent."
 
     if (! (*i).second->total || ! disp_pred((*i).second))
       continue;
