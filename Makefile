@@ -70,7 +70,7 @@ clean:
 	rm -f .gdb_history gmon.out out
 
 distclean fullclean: clean
-	rm -f *.texi *.info *.html *.pdf *.elc make.deps TAGS
+	rm -f *.info *.html *.pdf *.elc make.deps TAGS
 
 rebuild: clean deps all
 
@@ -89,18 +89,6 @@ install:
 	cp ledger $(HOME)/bin
 	strip $(HOME)/bin/ledger
 
-README.html: README
-	(cd $(HOME)/Projects/muse && \
-	 ./publish --html $(shell pwd)/README && \
-	 mv README.html $(shell pwd))
-
-ledger.texi: README
-	(cd $(HOME)/Projects/muse && \
-	 ./publish --texi $(shell pwd)/README && \
-	 cat README.texi | sed 's/README\.info/ledger.info/g' \
-	   > $(shell pwd)/ledger.texi && \
-	 rm README.texi)
-
 VERSION = $(shell scripts/version)
 
 dist:
@@ -110,8 +98,7 @@ dist:
 	  --exclude="1.7/" --exclude="*.out" --exclude="*~" \
 	  $(shell pwd)/ /tmp/ledger-$(VERSION)
 	(cd /tmp/ledger-$(VERSION) && \
-	 make fullclean && \
-	 make docs README.html && \
+	 make fullclean && make docs &&
 	 make clean && rm make.deps && \
 	 cat Makefile | sed 's/\/sw\//\/usr\/local\//g' > t && \
 	 mv t Makefile && \
