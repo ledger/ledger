@@ -64,14 +64,8 @@ class gmp_amount : public amount
   }
   virtual void credit(const amount * other);
 
-  virtual void parse(const char * num) {
-    *this = num;
-  }
-  virtual amount& operator=(const char * num);
+  virtual void parse(const char * num);
   virtual std::string as_str(bool full_prec) const;
-  virtual operator std::string() const {
-    return as_str(false);
-  }
 
   friend amount * create_amount(const char * value, const amount * cost);
 };
@@ -565,7 +559,7 @@ static commodity * parse_amount(mpz_t out, const char * num,
   return comm;
 }
 
-amount& gmp_amount::operator=(const char * num)
+void gmp_amount::parse(const char * num)
 {
   // Compile the regular expression used for parsing amounts
   static pcre * re = NULL;
@@ -594,7 +588,6 @@ amount& gmp_amount::operator=(const char * num)
   } else {
     std::cerr << "Failed to parse amount: " << num << std::endl;
   }
-  return *this;
 }
 
 void gmp_amount::credit(const amount * value)

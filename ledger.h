@@ -1,5 +1,5 @@
 #ifndef _LEDGER_H
-#define _LEDGER_H "$Revision: 1.15 $"
+#define _LEDGER_H "$Revision: 1.16 $"
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -139,16 +139,8 @@ class amount
   // String conversion routines
 
   virtual void parse(const char * num) = 0;
-  virtual amount& operator=(const char * num) = 0;
   virtual std::string as_str(bool full_prec = false) const = 0;
-  virtual operator std::string() const = 0;
 };
-
-template<class Traits>
-std::basic_ostream<char, Traits> &
-operator<<(std::basic_ostream<char, Traits>& out, const amount& a) {
-  return (out << std::string(a));
-}
 
 extern amount * create_amount(const char * value,
 			      const amount * cost = NULL);
@@ -294,6 +286,11 @@ struct account
 
   accounts_t children;
 
+  account() : parent(NULL), checked(0) {
+#ifdef HUQUQULLAH
+    exempt_or_necessary = false;
+#endif
+  }
   account(const std::string& _name, struct account * _parent = NULL)
     : parent(_parent), name(_name), checked(0) {
 #ifdef HUQUQULLAH

@@ -1,5 +1,5 @@
 \input texinfo    @c -*-texinfo-*-
-@comment $Id: ledger.texi,v 1.6 2003/10/01 22:11:23 johnw Exp $
+@comment $Id: ledger.texi,v 1.7 2003/10/02 00:07:14 johnw Exp $
 @comment %**start of header
 
 @setfilename ledger.info
@@ -328,10 +328,6 @@ would look like:
 
 Now you've turned 2 steaks into 15 gold, courtesy of your customer,
 Sturm Brightblade.
-
-Note that if you're playing on a system where ``Gold'' is the standard
-currency, you should use the @samp{-D} flag to tell @code{ledger} that
-that is the default commodity.
 
 @chapter Using @code{ledger}
 

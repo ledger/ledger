@@ -20,10 +20,10 @@ static bool account_matches(const account * acct,
 			    const std::list<mask>& regexps,
 			    bool * true_match)
 {
-  bool match = true;
+  bool match = false;
+  *true_match = false;
 
   if (show_children) {
-    match = false;
     for (const account * a = acct; a; a = a->parent) {
       bool exclude = false;
       if (matches(regexps, a->name, &exclude)) {
@@ -36,7 +36,8 @@ static bool account_matches(const account * acct,
     }
   } else {
     match = matches(regexps, acct->as_str());
-    *true_match = matches(regexps, acct->name);
+    if (match)
+      *true_match = matches(regexps, acct->name);
   }
   return match;
 }
@@ -134,7 +135,6 @@ void report_balances(int argc, char **argv, std::ostream& out)
 	else if (acct->checked == 3)
 	  continue;
 
-	acct->checked = 1;
 	acct->balance.credit((*x)->cost->street());
       }
     }

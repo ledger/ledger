@@ -136,7 +136,7 @@ void totals::print(std::ostream& out, int width) const
 	out << std::endl;
 
       out.width(width);
-      out << std::right << *((*i).second);
+      out << std::right << (*i).second->as_str();
     }
 }
 

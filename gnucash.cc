@@ -44,7 +44,7 @@ static void startElement(void *userData, const char *name, const char **atts)
 {
   if (std::strcmp(name, "gnc:account") == 0) {
     assert(! curr_account);
-    curr_account = new account(name);
+    curr_account = new account;
   }
   else if (std::strcmp(name, "act:name") == 0)
     action = ACCOUNT_NAME;
@@ -111,14 +111,8 @@ static void endElement(void *userData, const char *name)
   }
   else if (std::strcmp(name, "gnc:transaction") == 0) {
     assert(curr_entry);
-    if (! curr_entry->validate()) {
-      std::cerr << "Failed to balance the following transaction, "
-		<< "ending on line "
-		<< XML_GetCurrentLineNumber(current_parser) << std::endl;
-      curr_entry->print(std::cerr);
-    } else {
-      main_ledger.entries.push_back(curr_entry);
-    }
+    assert(curr_entry->validate());
+    main_ledger.entries.push_back(curr_entry);
     curr_entry = NULL;
   }
   action = NO_ACTION;
@@ -195,7 +189,6 @@ static void dataHandler(void *userData, const char *s, int len)
     accounts_iterator i = accounts_by_id.find(std::string(s, len));
     if (i == accounts_by_id.end()) {
       std::cerr << "Could not find account " << std::string(s, len)
-		<< " at line " << XML_GetCurrentLineNumber(current_parser)
 		<< std::endl;
       std::exit(1);
     }
@@ -203,9 +196,9 @@ static void dataHandler(void *userData, const char *s, int len)
     transaction * xact = curr_entry->xacts.back();
     xact->acct = (*i).second;
 
-    std::string value = curr_quant + " " + (*i).second->comm->symbol;
+    std::string value = curr_quant + " " + xact->acct->comm->symbol;
 
-    if (curr_value->comm() == (*i).second->comm) {
+    if (curr_value->comm() == xact->acct->comm) {
       // assert: value must be equal to curr_value.
       delete curr_value;
       curr_value = NULL;

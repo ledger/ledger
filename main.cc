@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
   show_cleared   = false;
 
   int c;
-  while (-1 != (c = getopt(argc, argv, "+b:e:d:D:cChHwf:i:p:Pv"))) {
+  while (-1 != (c = getopt(argc, argv, "+b:e:d:cChHwf:i:p:Pv"))) {
     switch (char(c)) {
     case 'b':
     case 'e': {
@@ -289,23 +289,6 @@ int main(int argc, char *argv[])
 
   const std::string command = argv[optind];
 
-#ifdef HUQUQULLAH
-  if (command == "register" && argv[optind + 1] &&
-      std::string(argv[optind + 1]) != "Huququ'llah" &&
-      std::string(argv[optind + 1]) != "Expenses:Huququ'llah")
-    compute_huquq = false;
-
-  if (compute_huquq) {
-    main_ledger.compute_huquq = true;
-
-    read_regexps(".huquq", main_ledger.huquq_categories);
-
-    main_ledger.huquq_account = main_ledger.find_account("Huququ'llah");
-    main_ledger.huquq_expenses_account =
-      main_ledger.find_account("Expenses:Huququ'llah");
-  }
-#endif
-
   // Parse the ledger
 
 #ifdef READ_GNUCASH
@@ -317,7 +300,26 @@ int main(int argc, char *argv[])
     parse_gnucash(*file, command == "equity");
   else
 #endif
+  {
+#ifdef HUQUQULLAH
+    if (command == "register" && argv[optind + 1] &&
+	std::string(argv[optind + 1]) != "Huququ'llah" &&
+	std::string(argv[optind + 1]) != "Expenses:Huququ'llah")
+      compute_huquq = false;
+
+    if (compute_huquq) {
+      main_ledger.compute_huquq = true;
+
+      read_regexps(".huquq", main_ledger.huquq_categories);
+
+      main_ledger.huquq_account = main_ledger.find_account("Huququ'llah");
+      main_ledger.huquq_expenses_account =
+	main_ledger.find_account("Expenses:Huququ'llah");
+    }
+#endif
+
     parse_ledger(*file, command == "equity");
+  }
 
 #ifdef DO_CLEANUP
   delete file;

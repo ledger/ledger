@@ -16,9 +16,8 @@ CODE =  amount.cc   \
 OBJS = $(patsubst %.cc,%.o,$(CODE))
 
 CFLAGS = -Wall -ansi -pedantic
-#DFLAGS = -O3 -fomit-frame-pointer
-DFLAGS = -g -O2 # -pg
-INCS   = -I/usr/include/xmltok
+DFLAGS = -g -O2 # -O3 -fomit-frame-pointer -mcpu=pentium
+INCS   =
 LIBS   = -lgmpxx -lgmp -lpcre
 
 ifdef HUQUQ
@@ -28,6 +27,7 @@ endif
 ifdef GNUCASH
 CODE   := $(CODE) gnucash.cc
 CFLAGS := $(CFLAGS) -DREAD_GNUCASH=1
+INCS   := $(INCS) -I/usr/include/xmltok
 LIBS   := $(LIBS) -lxmlparse
 endif
 
