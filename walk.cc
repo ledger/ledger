@@ -664,6 +664,7 @@ void clear_transactions_xdata()
        i != transactions_xdata_ptrs.end();
        i++)
     **i = NULL;
+  transactions_xdata_ptrs.clear();
 }
 
 template <>
@@ -782,6 +783,7 @@ void clear_accounts_xdata()
        i != accounts_xdata_ptrs.end();
        i++)
     **i = NULL;
+  accounts_xdata_ptrs.clear();
 }
 
 
