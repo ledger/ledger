@@ -1,5 +1,5 @@
 #ifndef _LEDGER_H
-#define _LEDGER_H "$Revision: 1.21 $"
+#define _LEDGER_H "$Revision: 1.22 $"
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -8,6 +8,7 @@
 //   by John Wiegley <johnw@newartisans.com>
 //
 // Copyright (c) 2003 New Artisans, Inc.  All Rights Reserved.
+//
 
 #include <iostream>
 #include <string>
@@ -26,25 +27,32 @@
 
 namespace ledger {
 
-struct amount;
-struct commodity
+class amount;
+class commodity
 {
+  commodity(const commodity&);
+
+ public:
   std::string name;
   std::string symbol;
 
   mutable amount * price;       // the current price
 
-  bool        prefix;
-  bool        separate;
-  bool        thousands;
-  bool        european;
+  bool prefix;
+  bool separate;
+  bool thousands;
+  bool european;
 
-  int         precision;
+  int precision;
 
-  commodity() : price(NULL), prefix(false), separate(true),
-       thousands(false), european(false) {}
-  commodity(const std::string& sym, bool pre = false, bool sep = true,
-	    bool thou = true, bool euro = false, int prec = 2);
+  explicit commodity() : price(NULL), prefix(false), separate(true),
+    thousands(false), european(false) {}
+
+  explicit commodity(const std::string& sym, bool pre = false,
+		     bool sep = true, bool thou = true,
+		     bool euro = false, int prec = 2);
+
+  ~commodity();
 };
 
 typedef std::map<const std::string, commodity *>  commodities_map;
@@ -83,22 +91,30 @@ class amount
 extern amount * create_amount(const std::string& value,
 			      const amount * cost = NULL);
 
-struct mask
+class mask
 {
+  // jww (2003-10-08): need to correct this
+  //mask(const mask&);
+
+ public:
   bool        exclude;
   std::string pattern;
   pcre *      regexp;
 
-  mask(const std::string& pattern);
+  explicit mask(const std::string& pattern);
 
+#if 0
   ~mask() {
     pcre_free(regexp);
   }
+#endif
+
+  bool match(const std::string& str) const;
 };
 
-typedef std::list<mask *>                 regexps_map;
-typedef std::list<mask *>::iterator       regexps_map_iterator;
-typedef std::list<mask *>::const_iterator regexps_map_const_iterator;
+typedef std::list<mask>                 regexps_map;
+typedef std::list<mask>::iterator       regexps_map_iterator;
+typedef std::list<mask>::const_iterator regexps_map_const_iterator;
 
 void record_regexp(const std::string& pattern, regexps_map& regexps);
 void read_regexps(const std::string& path, regexps_map& regexps);
@@ -106,9 +122,12 @@ bool matches(const regexps_map& regexps, const std::string& str,
 	     bool * by_exclusion = NULL);
 
 
-struct account;
-struct transaction
+class account;
+class transaction
 {
+  transaction(const transaction&);
+
+ public:
   account * acct;
   amount *  cost;
 
@@ -118,7 +137,7 @@ struct transaction
   bool must_balance;
   bool specified;
 
-  transaction(account * _acct = NULL, amount * _cost = NULL)
+  explicit transaction(account * _acct = NULL, amount * _cost = NULL)
     : acct(_acct), cost(_cost),
       is_virtual(false), must_balance(true), specified(false) {}
 
@@ -134,8 +153,11 @@ struct transaction
 };
 
 
-struct entry
+class entry
 {
+  entry(const entry&);
+
+ public:
   std::time_t date;
   std::string code;
   std::string desc;
@@ -144,7 +166,7 @@ struct entry
 
   std::list<transaction *> xacts;
 
-  entry() : cleared(false) {}
+  explicit entry() : cleared(false) {}
 
   // If we're running as a command-line tool, it's cheaper to just
   // throw away the heap on exit, than spend time freeing things up
@@ -175,8 +197,11 @@ typedef entries_list::iterator       entries_list_iterator;
 typedef entries_list::const_iterator entries_list_const_iterator;
 
 
-struct totals
+class totals
 {
+  totals(const totals&);
+
+ public:
   typedef std::map<commodity *, amount *>  map;
   typedef map::iterator                    iterator;
   typedef map::const_iterator              const_iterator;
@@ -184,24 +209,15 @@ struct totals
 
   map amounts;
 
+  totals() {}
   ~totals();
 
-  void credit(const amount * val) {
-    std::pair<iterator, bool> result =
-      amounts.insert(pair(val->commdty(), val->copy()));
-    if (! result.second)
-      amounts[val->commdty()]->credit(val);
-  }
+  void credit(const amount * val);
   void credit(const totals& other);
 
   bool is_zero() const;
 
   void print(std::ostream& out, int width) const;
-
-  // Returns an allocated entity
-  amount * sum(commodity * comm) {
-    return amounts[comm];
-  }
 };
 
 
@@ -209,8 +225,11 @@ typedef std::map<const std::string, account *>  accounts_map;
 typedef accounts_map::iterator                  accounts_map_iterator;
 typedef std::pair<const std::string, account *> accounts_map_pair;
 
-struct account
+class account
 {
+  account(const account&);
+
+ public:
   account * parent;
 
   std::string name;
@@ -223,30 +242,23 @@ struct account
 
   mutable std::string full_name;
 
-  account() : parent(NULL), checked(0) {}
+  explicit account() : parent(NULL), checked(0) {}
 
-  account(const std::string& _name, struct account * _parent = NULL)
+  explicit account(const std::string& _name,
+		   struct account * _parent = NULL)
     : parent(_parent), name(_name), checked(0) {}
 
-  const std::string as_str() const {
-    if (! parent)
-      return name;
-    else if (full_name.empty())
-      full_name = parent->as_str() + ":" + name;
+  ~account();
 
-    return full_name;
-  }
+  const std::string as_str() const;
 };
 
 
-struct book
+class book
 {
-  commodities_map commodities;
-  accounts_map    accounts;
-  accounts_map    accounts_cache; // maps full names to accounts
-  entries_list    entries;
-  int             current_year;
+  book(const book&);
 
+ public:
   typedef std::map<regexps_map *,
 		   std::list<transaction *> *> virtual_map;
 
@@ -255,8 +267,14 @@ struct book
 
   typedef virtual_map::const_iterator virtual_map_iterator;
 
-  virtual_map virtual_mapping;
+  commodities_map commodities;
+  accounts_map    accounts;
+  accounts_map    accounts_cache; // maps full names to accounts
+  virtual_map     virtual_mapping;
+  entries_list    entries;
+  int             current_year;
 
+  book() {}
   ~book();
 
   template<typename Compare>
@@ -269,7 +287,7 @@ struct book
 };
 
 extern book * main_ledger;
-extern bool    use_warnings;
+extern bool   use_warnings;
 
 inline commodity::commodity(const std::string& sym, bool pre, bool sep,
 			    bool thou, bool euro, int prec)

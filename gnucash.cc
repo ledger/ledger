@@ -203,10 +203,13 @@ static void dataHandler(void *userData, const char *s, int len)
       delete curr_value;
       curr_value = NULL;
     }
+
     xact->cost = create_amount(value.c_str(), curr_value);
 
-    if (curr_value)
+    if (curr_value) {
       delete curr_value;
+      curr_value = NULL;
+    }
 
     if (do_compute)
       xact->acct->balance.credit(xact->cost);

@@ -144,14 +144,10 @@ static void multiply(mpz_t out, const mpz_t l, const mpz_t r)
 amount * gmp_amount::copy() const
 {
   gmp_amount * new_amt = new gmp_amount();
-#if 0
-  // Don't copy the price
-  new_amt->priced = priced;
-  mpz_set(new_amt->price, price);
-  new_amt->price_comm = price_comm;
-#endif
+
   mpz_set(new_amt->quantity, quantity);
   new_amt->quantity_comm = quantity_comm;
+
   return new_amt;
 }
 
@@ -242,6 +238,7 @@ amount * gmp_amount::street(bool get_quotes) const
     if (amt->commdty() == old->commdty())
       break;
   }
+
   return amt;
 }
 

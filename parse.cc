@@ -242,8 +242,11 @@ entry * parse_entry(std::istream& in, book * ledger)
   for (std::list<transaction *>::iterator x = curr->xacts.begin();
        x != curr->xacts.end();
        x++)
-    if ((*x)->cost && ! (*x)->is_virtual)
-      balance.credit((*x)->cost->value());
+    if ((*x)->cost && ! (*x)->is_virtual) {
+      amount * value = (*x)->cost->value();
+      balance.credit(value);
+      delete value;
+    }
 
   // If one transaction is of a different commodity than the others,
   // and it has no per-unit price, determine its price by dividing
@@ -422,7 +425,7 @@ void parse_automated_transactions(std::istream& in, book * ledger)
 
     if (! masks)
       masks = new regexps_map;
-    masks->push_back(new mask(p));
+    masks->push_back(mask(p));
   }
 
   std::list<transaction *> * xacts = NULL;
@@ -494,7 +497,7 @@ book * parse_ledger(std::istream& in, regexps_map& regexps,
       linenum++;
 
       // Add the regexp to whatever masks currently exist
-      regexps.push_back(new mask(line));
+      regexps.push_back(mask(line));
       break;
 
     case '=':                   // automated transactions

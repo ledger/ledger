@@ -4,8 +4,14 @@
 
 namespace ledger {
 
-bool    use_warnings = false;
+bool   use_warnings = false;
 book * main_ledger;
+
+commodity::~commodity()
+{
+  if (price)
+    delete price;
+}
 
 const std::string transaction::acct_as_str() const
 {
@@ -96,8 +102,11 @@ bool entry::validate(bool show_unaccounted) const
   for (std::list<transaction *>::const_iterator x = xacts.begin();
        x != xacts.end();
        x++)
-    if ((*x)->cost && (*x)->must_balance)
-      balance.credit((*x)->cost->value());
+    if ((*x)->cost && (*x)->must_balance) {
+      amount * value = (*x)->cost->value();
+      balance.credit(value);
+      delete value;
+    }
 
   if (show_unaccounted && ! balance.is_zero()) {
     std::cerr << "Unaccounted-for balances are:" << std::endl;
@@ -135,6 +144,23 @@ totals::~totals()
     delete (*i).second;
 }
 
+void totals::credit(const amount * val)
+{
+  iterator i = amounts.find(val->commdty());
+  if (i != amounts.end())
+    (*i).second->credit(val);
+#ifndef DEBUG
+  else
+    amounts.insert(pair(val->commdty(), val->copy()));
+#else
+  else {
+    std::pair<iterator, bool> result =
+      amounts.insert(pair(val->commdty(), val->copy()));
+    assert(result.second);
+  }
+#endif
+}
+
 void totals::credit(const totals& other)
 {
   for (const_iterator i = other.amounts.begin();
@@ -167,6 +193,24 @@ void totals::print(std::ostream& out, int width) const
     out.width(width);
     out << std::right << (*i).second->as_str();
   }
+}
+
+account::~account()
+{
+  for (accounts_map_iterator i = children.begin();
+       i != children.end();
+       i++)
+    delete (*i).second;
+}
+
+const std::string account::as_str() const
+{
+  if (! parent)
+    return name;
+  else if (full_name.empty())
+    full_name = parent->as_str() + ":" + name;
+
+  return full_name;
 }
 
 // Print out the entire ledger that was read in, sorted by date.
@@ -216,9 +260,17 @@ void read_regexps(const std::string& path, regexps_map& regexps)
       char buf[80];
       file.getline(buf, 79);
       if (*buf && ! std::isspace(*buf))
-	regexps.push_back(new mask(buf));
+	regexps.push_back(mask(buf));
     }
   }
+}
+
+bool mask::match(const std::string& str) const
+{
+  static int ovec[30];
+  int result = pcre_exec(regexp, NULL, str.c_str(), str.length(),
+			 0, 0, ovec, 30);
+  return result >= 0 && ! exclude;
 }
 
 bool matches(const regexps_map& regexps, const std::string& str,
@@ -235,15 +287,15 @@ bool matches(const regexps_map& regexps, const std::string& str,
   for (regexps_map_const_iterator r = regexps.begin();
        r != regexps.end();
        r++) {
-//    out << "  Trying: " << (*r)->pattern << std::endl;
+//    out << "  Trying: " << (*r).pattern << std::endl;
 
     static int ovec[30];
-    int result = pcre_exec((*r)->regexp, NULL, str.c_str(), str.length(),
+    int result = pcre_exec((*r).regexp, NULL, str.c_str(), str.length(),
 			   0, 0, ovec, 30);
     if (result >= 0) {
 //      out << "    Definite ";
 
-      match = ! (*r)->exclude;
+      match = ! (*r).exclude;
 //      if (match)
 //	out << "match";
 //      else
@@ -255,7 +307,7 @@ bool matches(const regexps_map& regexps, const std::string& str,
 
 //      out << "    failure code = " << result << std::endl;
 
-      if ((*r)->exclude) {
+      if ((*r).exclude) {
 	if (! match) {
 	  match = ! definite;
 //	  if (match)
@@ -293,6 +345,19 @@ book::~book()
        i != accounts.end();
        i++)
     delete (*i).second;
+
+  for (virtual_map_iterator i = virtual_mapping.begin();
+       i != virtual_mapping.end();
+       i++) {
+    delete (*i).first;
+
+    for (std::list<transaction *>::iterator j = (*i).second->begin();
+	 j != (*i).second->end();
+	 j++) {
+      delete *j;
+    }
+    delete (*i).second;
+  }
 
   for (entries_list_iterator i = entries.begin();
        i != entries.end();

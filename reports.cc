@@ -22,6 +22,7 @@ static bool        show_cleared;
 static bool        show_virtual;
 static bool        get_quotes;
 static bool        show_children;
+static bool        show_sorted;
 static bool        show_empty;
 static bool        show_subtotals;
 static bool        full_names;
@@ -117,8 +118,11 @@ void report_balances(std::ostream& out, regexps_map& regexps)
 	  }
 	}
 
-	if (acct->checked == 1)
-	  acct->balance.credit((*x)->cost->street(get_quotes));
+	if (acct->checked == 1) {
+	  amount * street = (*x)->cost->street(get_quotes);
+	  acct->balance.credit(street);
+	  delete street;
+	}
       }
     }
   }
@@ -163,7 +167,17 @@ static std::string truncated(const std::string& str, int width)
 void print_register(const std::string& acct_name, std::ostream& out,
 		    regexps_map& regexps)
 {
-  account * acct = main_ledger->find_account(acct_name, false);
+  account * acct = NULL;
+  mask acct_regex(acct_name);
+
+  for (accounts_map_iterator i = main_ledger->accounts.begin();
+       i != main_ledger->accounts.end();
+       i++)
+    if (acct_regex.match((*i).second->as_str())) {
+      acct = (*i).second;
+      break;
+    }
+
   if (! acct) {
     std::cerr << "Error: Unknown account name: " << acct_name
 	      << std::endl;
@@ -380,19 +394,20 @@ int main(int argc, char * argv[])
   regexps_map    regexps;
   int            index;
 
-  have_beginning  = false;
-  have_ending     = false;
-  show_cleared    = false;
-  show_virtual    = true;
-  show_children   = false;
-  show_empty      = false;
-  show_subtotals  = true;
-  full_names      = false;
+  have_beginning = false;
+  have_ending    = false;
+  show_cleared   = false;
+  show_virtual   = true;
+  show_children  = false;
+  show_sorted    = false;
+  show_empty     = false;
+  show_subtotals = true;
+  full_names     = false;
 
   // Parse the command-line options
 
   int c;
-  while (-1 != (c = getopt(argc, argv, "+b:e:d:cChRV:wf:i:p:PvsSnF"))) {
+  while (-1 != (c = getopt(argc, argv, "+b:e:d:cChRV:wf:i:p:PvsSEnF"))) {
     switch (char(c)) {
     case 'b':
     case 'e': {
@@ -468,13 +483,14 @@ int main(int argc, char * argv[])
       break;
 
     case 'h': show_help(std::cout); break;
-    case 'f': file           = new std::ifstream(optarg); break;
+    case 'f': file = new std::ifstream(optarg); break;
 
     case 'C': show_cleared   = true;  break;
     case 'R': show_virtual   = false; break;
     case 'w': use_warnings   = true;  break;
     case 's': show_children  = true;  break;
-    case 'S': show_empty     = true;  break;
+    case 'S': show_sorted    = true;  break;
+    case 'E': show_empty     = true;  break;
     case 'n': show_subtotals = false; break;
     case 'F': full_names     = true;  break;
 
@@ -565,7 +581,7 @@ int main(int argc, char * argv[])
   // specified after the command, or using the '-i FILE' option
 
   for (; index < argc; index++)
-    regexps.push_back(new mask(argv[index]));
+    regexps.push_back(mask(argv[index]));
 
   // Parse the ledger
 
@@ -607,10 +623,13 @@ int main(int argc, char * argv[])
     report_balances(std::cout, regexps);
   }
   else if (command == "register") {
+    if (show_sorted)
+      main_ledger->sort(cmp_entry_date());
     print_register(argv[name_index], std::cout, regexps);
   }
   else if (command == "print") {
-    main_ledger->sort(cmp_entry_date());
+    if (show_sorted)
+      main_ledger->sort(cmp_entry_date());
     main_ledger->print(std::cout, regexps, true);
   }
   else if (command == "equity") {
@@ -618,18 +637,10 @@ int main(int argc, char * argv[])
   }
 
 #ifdef DEBUG
-  // Ordinarily, deleting the main ledger just isn't necessary at
-  // this point.
+  // Ordinarily, deleting the main ledger isn't necessary, since the
+  // process is about to give back its heap to the OS.
 
   delete main_ledger;
-
-  // Delete the known regexp maps.
-
-  for (regexps_map_iterator r = regexps.begin();
-       r != regexps.end();
-       r++) {
-    delete *r;
-  }
 #endif
 }
 
