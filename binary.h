@@ -5,7 +5,7 @@
 
 namespace ledger {
 
-extern unsigned long magic_number;
+extern unsigned long binary_magic_number;
 
 extern unsigned int read_binary_ledger(std::istream&	  in,
 				       const std::string& leader,

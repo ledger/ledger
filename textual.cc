@@ -1,8 +1,9 @@
 #include "textual.h"
+#include "datetime.h"
+#include "autoxact.h"
+#include "valexpr.h"
 #include "error.h"
-#include "expr.h"
 
-#include <vector>
 #include <fstream>
 #include <sstream>
 #include <cstring>
@@ -12,11 +13,6 @@
 #define TIMELOG_SUPPORT 1
 
 namespace ledger {
-
-#if 0
-static const std::string entry1_fmt = "%10d %p";
-static const std::string entryn_fmt = "    %-30a  %15t";
-#endif
 
 #define MAX_LINE 1024
 
@@ -29,36 +25,21 @@ static account_t *	last_account;
 static std::string	last_desc;
 #endif
 
-static std::time_t	now	  = std::time(NULL);
-static struct std::tm * now_tm	  = std::localtime(&now);
-
-static std::time_t	base      = -1;
-static int		base_year = -1;
-
-static const int	month_days[12] = {
-  31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
-};
-
-static const char *	formats[] = {
-  "%Y/%m/%d",
-  "%m/%d",
-  "%Y.%m.%d",
-  "%m.%d",
-  "%Y-%m-%d",
-  "%m-%d",
-  "%a",
-  "%A",
-  "%b",
-  "%B",
-  "%Y",
-  NULL
-};
-
 inline char * skip_ws(char * ptr)
 {
   while (*ptr == ' ' || *ptr == '\t' || *ptr == '\n')
     ptr++;
   return ptr;
+}
+
+inline char peek_next_nonws(std::istream& in)
+{
+  char c = in.peek();
+  while (! in.eof() && std::isspace(c) && c != '\n') {
+    in.get(c);
+    c = in.peek();
+  }
+  return c;
 }
 
 inline char * next_element(char * buf, bool variable = false)
@@ -81,109 +62,6 @@ inline char * next_element(char * buf, bool variable = false)
     }
   }
   return NULL;
-}
-
-bool parse_date_mask(const char * date_str, struct std::tm * result)
-{
-  for (const char ** f = formats; *f; f++) {
-    memset(result, INT_MAX, sizeof(struct std::tm));
-    if (strptime(date_str, *f, result))
-      return true;
-  }
-  return false;
-}
-
-bool parse_date(const char * date_str, std::time_t * result, const int year)
-{
-  struct std::tm when;
-
-  if (! parse_date_mask(date_str, &when))
-    return false;
-
-  when.tm_hour = 0;
-  when.tm_min  = 0;
-  when.tm_sec  = 0;
-
-  if (when.tm_year == -1)
-    when.tm_year = ((year == -1) ? now_tm->tm_year : (year - 1900));
-
-  if (when.tm_mon == -1)
-    when.tm_mon = 0;
-
-  if (when.tm_mday == -1)
-    when.tm_mday = 1;
-
-  *result = std::mktime(&when);
-
-  return true;
-}
-
-static bool quick_parse_date(char * date_str, std::time_t * result)
-{
-  int year = -1, month = -1, day, num = 0;
-
-  for (char * p = date_str; *p; p++) {
-    if (*p == '/' || *p == '-' || *p == '.') {
-      if (year == -1)
-	year = num;
-      else
-	month = num;
-      num = 0;
-    }
-    else if (*p < '0' || *p > '9') {
-      return false;
-    }
-    else {
-      num *= 10;
-      num += *p - '0';
-    }
-  }
-
-  day = num;
-
-  if (month == -1) {
-    month = year;
-    year  = -1;
-  }
-
-  if (base == -1 || year != base_year) {
-    struct std::tm when;
-
-    when.tm_hour = 0;
-    when.tm_min  = 0;
-    when.tm_sec  = 0;
-
-    base_year    = year == -1 ? now_tm->tm_year + 1900 : year;
-    when.tm_year = year == -1 ? now_tm->tm_year : year - 1900;
-    when.tm_mon  = 0;
-    when.tm_mday = 1;
-
-    base = std::mktime(&when);
-  }
-
-  *result = base;
-
-  --month;
-  while (--month >= 0) {
-    *result += month_days[month] * 24 * 60 * 60;
-    if (month == 1 && year % 4 == 0 && year != 2000) // february in leap years
-      *result += 24 * 60 * 60;
-  }
-
-  if (--day)
-    *result += day * 24 * 60 * 60;
-
-  return true;
-}
-
-inline char peek_next_nonws(std::istream& in)
-{
-  char c = in.peek();
-  while (! in.eof() && std::isspace(c) && c != '\n') {
-    in.get(c);
-    c = in.peek();
-  }
-  return c;
 }
 
 transaction_t * parse_transaction_text(char * line, account_t * account,
@@ -233,9 +111,9 @@ transaction_t * parse_transaction_text(char * line, account_t * account,
   xact->account = account->find_account(p);
 
   if (! xact->amount.commodity)
-    xact->amount.commodity = commodity_t::find_commodity("", true);
+    xact->amount.commodity = commodity_t::null_commodity;
   if (! xact->cost.commodity)
-    xact->cost.commodity = commodity_t::find_commodity("", true);
+    xact->cost.commodity = commodity_t::null_commodity;
 
   return xact;
 }
@@ -249,95 +127,6 @@ transaction_t * parse_transaction(std::istream& in, account_t * account,
 
   return parse_transaction_text(line, account, entry);
 }
-
-class automated_transaction_t
-{
-public:
-  masks_list        masks;
-  transactions_list transactions;
-
-  automated_transaction_t(masks_list& _masks,
-			  transactions_list& _transactions) {
-    masks.insert(masks.begin(), _masks.begin(), _masks.end());
-    transactions.insert(transactions.begin(),
-			_transactions.begin(), _transactions.end());
-    // Take over ownership of the pointers
-    _transactions.clear();
-  }
-
-  ~automated_transaction_t() {
-    for (transactions_list::iterator i = transactions.begin();
-	 i != transactions.end();
-	 i++)
-      delete *i;
-  }
-
-  void extend_entry(entry_t * entry);
-};
-
-typedef std::vector<automated_transaction_t *>
-  automated_transactions_vector;
-
-void automated_transaction_t::extend_entry(entry_t * entry)
-{
-  for (transactions_list::iterator i = entry->transactions.begin();
-       i != entry->transactions.end();
-       i++)
-    if (matches(masks, *((*i)->account))) {
-      for (transactions_list::iterator t = transactions.begin();
-	   t != transactions.end();
-	   t++) {
-	amount_t amt;
-	if ((*t)->amount.commodity->symbol.empty())
-	  amt = (*i)->amount * (*t)->amount;
-	else
-	  amt = (*t)->amount;
-
-	transaction_t * xact
-	  = new transaction_t(entry, (*t)->account, amt, amt,
-			      (*t)->flags | TRANSACTION_AUTO);
-	entry->add_transaction(xact);
-      }
-    }
-}
-
-class automated_transactions_t
-{
-public:
-  automated_transactions_vector automated_transactions;
-
-  ~automated_transactions_t() {
-    for (automated_transactions_vector::iterator i
-	   = automated_transactions.begin();
-	 i != automated_transactions.end();
-	 i++)
-      delete *i;
-  }
-
-  void extend_entry(entry_t * entry) {
-    for (automated_transactions_vector::iterator i
-	   = automated_transactions.begin();
-	 i != automated_transactions.end();
-	 i++)
-      (*i)->extend_entry(entry);
-  }
-
-  void add_automated_transaction(automated_transaction_t * auto_xact) {
-    automated_transactions.push_back(auto_xact);
-  }
-  bool remove_automated_transaction(automated_transaction_t * auto_xact) {
-    for (automated_transactions_vector::iterator i
-	   = automated_transactions.begin();
-	 i != automated_transactions.end();
-	 i++) {
-      if (*i == auto_xact) {
-	automated_transactions.erase(i);
-	return true;
-      }
-    }
-    return false;
-  }
-};
 
 void parse_automated_transactions(std::istream& in, account_t * account,
 				  automated_transactions_t& auto_xacts)
@@ -497,11 +286,6 @@ entry_t * parse_entry(std::istream& in, account_t * master)
 
   return curr;
 }
-
-//////////////////////////////////////////////////////////////////////
-//
-// Textual ledger parser
-//
 
 unsigned int parse_textual_ledger(std::istream& in, ledger_t * journal,
 				  account_t * master)
@@ -676,7 +460,8 @@ unsigned int parse_textual_ledger(std::istream& in, ledger_t * journal,
 	amount_t    price;
 
 	parse_commodity(in, symbol);
-	in >> line;		// the price
+	in.getline(line, MAX_LINE);
+	linenum++;
 	price.parse(line);
 
 	commodity_t * commodity = commodity_t::find_commodity(symbol, true);
@@ -733,7 +518,8 @@ unsigned int parse_textual_ledger(std::istream& in, ledger_t * journal,
 	  unsigned int curr_linenum = linenum;
 	  std::string  curr_path    = path;
 
-	  count += parse_textual_ledger(stream, journal, account_stack.front());
+	  count += parse_textual_ledger(stream, journal,
+					account_stack.front());
 
 	  linenum = curr_linenum;
 	  path    = curr_path;

@@ -14,7 +14,7 @@
 
 namespace ledger {
 
-       unsigned long		  magic_number   = 0xFFEED765;
+       unsigned long		  binary_magic_number   = 0xFFEED765;
 static unsigned long		  format_version = 0x00020009;
 
 static char			  buf[4096];
@@ -292,7 +292,7 @@ unsigned int read_binary_ledger(std::istream&	   in,
 
   unsigned long magic;
   in.read((char *)&magic, sizeof(magic));
-  if (magic != magic_number)
+  if (magic != binary_magic_number)
     return 0;
 
 #ifdef DEBUG
@@ -560,7 +560,7 @@ void write_binary_account(std::ostream& out, account_t * account)
 void write_binary_ledger(std::ostream& out, ledger_t * ledger,
 			 const std::string& leader)
 {
-  out.write((char *)&magic_number, sizeof(magic_number));
+  out.write((char *)&binary_magic_number, sizeof(binary_magic_number));
 
 #ifdef DEBUG
   {

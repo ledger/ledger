@@ -1,5 +1,4 @@
 #include "ledger.h"
-#include "balance.h"
 
 namespace ledger {
 
@@ -85,7 +84,6 @@ void balance_t::write(std::ostream& out,
     out << std::right << "0";
   }
 }
-
 
 balance_pair_t::balance_pair_t(const transaction_t& xact)
   : quantity(xact.amount), cost(xact.cost) {}

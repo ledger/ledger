@@ -1,11 +1,10 @@
 #include "ledger.h"
-#include "balance.h"
 #include "error.h"
 #include "textual.h"
 #include "binary.h"
-#include "item.h"
-#include "expr.h"
+#include "valexpr.h"
 #include "format.h"
+#include "walk.h"
 
 #include <fstream>
 #include <cstring>
@@ -20,7 +19,9 @@ namespace ledger {
 // The command-line balance report
 //
 
-static const std::string bal_fmt = "%20T%2_%-n\n";
+static const std::string bal_fmt = "%20T  %2_%-n\n";
+
+#if 0
 
 unsigned int show_balances(std::ostream&   out,
 			   items_deque&	   items,
@@ -80,6 +81,7 @@ void balance_report(std::ostream&   out,
   }
 }
 
+#endif
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -95,6 +97,8 @@ static const std::string print_fmt
 
 static bool show_commodities_revalued      = false;
 static bool show_commodities_revalued_only = false;
+
+#if 0
 
 static void report_value_change(std::ostream&         out,
 				const std::time_t     date,
@@ -218,6 +222,7 @@ void register_report(std::ostream&   out,
 			first_line_format, next_lines_format);
 }
 
+#endif
 
 void set_price_conversion(const std::string& setting)
 {
@@ -362,6 +367,7 @@ int main(int argc, char * argv[])
   bool show_expanded  = false;
   bool show_related   = false;
   bool show_inverted  = false;
+  bool show_empty     = false;
 
 #ifdef DEBUG
   bool debug = false;
@@ -492,11 +498,9 @@ int main(int argc, char * argv[])
       format_string = optarg;
       break;
 
-#if 0
     case 'E':
       show_empty = true;
       break;
-#endif
 
     case 'n':
       show_subtotals = false;
@@ -708,7 +712,11 @@ int main(int argc, char * argv[])
 	else
 	  predicate_string += "(";
 	first = false;
-      } else {
+      }
+      else if (argv[index][0] == '-') {
+	predicate_string += "&";
+      }
+      else {
 	predicate_string += "|";
       }
 
@@ -736,6 +744,8 @@ int main(int argc, char * argv[])
 
       if (first)
 	first = false;
+      else if (argv[index][0] == '-')
+	predicate_string += "&";
       else
 	predicate_string += "|";
 
@@ -753,7 +763,7 @@ int main(int argc, char * argv[])
       predicate_string += ")";
   }
 
-  // Compile the predicate
+  // Compile the predicates
 
   if (! predicate_string.empty()) {
 #ifdef DEBUG
@@ -762,6 +772,9 @@ int main(int argc, char * argv[])
 #endif
     predicate.reset(ledger::parse_expr(predicate_string));
   }
+
+  if (display_predicate_string.empty() && command == "b" && ! show_empty)
+    display_predicate_string = "T";
 
   if (! display_predicate_string.empty()) {
 #ifdef DEBUG
@@ -795,74 +808,53 @@ int main(int argc, char * argv[])
     show_inverted = true;
   }
 
-  std::auto_ptr<ledger::item_t> top;
-  std::auto_ptr<ledger::item_t> list;
+  const char * f;
+  if (! format_string.empty())
+    f = format_string.c_str();
+  else if (command == "b")
+    f = ledger::bal_fmt.c_str();
+  else if (command == "r")
+    f = ledger::reg_fmt.c_str();
+  else
+    f = ledger::print_fmt.c_str();
 
-  if (command == "e") {
-    top.reset(new ledger::item_t);
-    ledger::item_t * item = new ledger::item_t(new_entry.get());
-    for (ledger::transactions_list::const_iterator i
-	   = new_entry->transactions.begin();
-	 i != new_entry->transactions.end();
-	 i++)
-      item->add_item(new ledger::item_t(*i));
-    top->add_item(item);
-  }
-  else if ((! show_related || ! predicate.get()) &&
-	   (command == "b" || command == "E")) {
-    top.reset(ledger::walk_accounts(NULL, journal->master, predicate.get(),
-				    command != "E" && show_subtotals,
-				    command == "E"));
-  }
-  else {
-    top.reset(ledger::walk_entries(journal->entries.begin(),
-				   journal->entries.end(), predicate.get(),
-				   show_related, show_inverted));
-    if (top.get() && command == "b" || command == "E") {
-      list.reset(top.release());
-      top.reset(ledger::walk_accounts(list.get(), journal->master,
-				      predicate.get(),
-				      command != "E" && show_subtotals,
-				      command == "E"));
+  if (command == "b") {
+    std::auto_ptr<ledger::format_t> format(new ledger::format_t(f));
+
+    ledger::walk_accounts(journal->master,
+			  ledger::format_account(std::cout, *format.get()),
+			  predicate.get(), show_related, show_inverted,
+			  show_subtotals, display_predicate.get());
+
+    if (! display_predicate.get() ||
+	ledger::item_predicate(display_predicate.get())(journal->master)) {
+      std::string end_format = "--------------------\n";
+      end_format += f;
+      format.get()->elements.reset(ledger::format_t::parse_elements(end_format));
+      ledger::format_account(std::cout, *format.get())(journal->master, true);
     }
-  }
+  } else {
+    std::string first_line_format;
+    std::string next_lines_format;
 
-  if (top.get()) {
-    const char * f;
-    if (! format_string.empty())
-      f = format_string.c_str();
-    else if (command == "b")
-      f = ledger::bal_fmt.c_str();
-    else if (command == "r")
-      f = ledger::reg_fmt.c_str();
-    else
-      f = ledger::print_fmt.c_str();
-
-    if (command == "b") {
-      std::auto_ptr<ledger::format_t> format(new ledger::format_t(f));
-      ledger::balance_report(std::cout, top.get(), display_predicate.get(),
-			     sort_order.get(), *format, show_expanded,
-			     show_subtotals);
+    if (const char * p = std::strstr(f, "%/")) {
+      first_line_format = std::string(f, 0, p - f);
+      next_lines_format = std::string(p + 2);
     } else {
-      std::string first_line_format;
-      std::string next_lines_format;
-
-      if (const char * p = std::strstr(f, "%/")) {
-	first_line_format = std::string(f, 0, p - f);
-	next_lines_format = std::string(p + 2);
-      } else {
-	first_line_format = next_lines_format = f;
-      }
-
-      std::auto_ptr<ledger::format_t>
-	format(new ledger::format_t(first_line_format));
-      std::auto_ptr<ledger::format_t>
-	nformat(new ledger::format_t(next_lines_format));
-
-      ledger::register_report(std::cout, top.get(), display_predicate.get(),
-			      sort_order.get(), *format, *nformat,
-			      show_expanded);
+      first_line_format = next_lines_format = f;
     }
+
+    std::auto_ptr<ledger::format_t>
+      format(new ledger::format_t(first_line_format));
+    std::auto_ptr<ledger::format_t>
+      nformat(new ledger::format_t(next_lines_format));
+
+    ledger::walk_entries(journal->entries.begin(), journal->entries.end(),
+			 ledger::format_transaction(std::cout,
+						    first_line_format,
+						    next_lines_format),
+			 predicate.get(), show_related, show_inverted,
+			 display_predicate.get());
   }
 
   // Save the cache, if need be

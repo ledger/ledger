@@ -10,6 +10,24 @@
 
 namespace ledger {
 
+static mpz_t full_divisor;
+static mpz_t true_value;
+
+static class init_amounts
+{
+ public:
+  init_amounts() {
+    mpz_init(full_divisor);
+    mpz_init(true_value);
+    mpz_ui_pow_ui(full_divisor, 10, MAX_PRECISION);
+    mpz_mul_ui(true_value, full_divisor, 1);
+  }
+  ~init_amounts() {
+    mpz_clear(full_divisor);
+    mpz_clear(true_value);
+  }
+} initializer;
+
 static void mpz_round(mpz_t out, mpz_t value, int precision)
 {
   mpz_t divisor;
@@ -52,7 +70,49 @@ static void mpz_round(mpz_t out, mpz_t value, int precision)
   mpz_clear(remainder);
 }
 
-// destructor
+amount_t::amount_t(const bool value)
+  : quantity(NULL), commodity(NULL)
+{
+  if (value) {
+    commodity = commodity_t::null_commodity;
+    quantity = new MP_INT;
+    mpz_init_set(MPZ(quantity), true_value);
+  }
+}
+
+amount_t::amount_t(const int value)
+  : quantity(NULL), commodity(NULL)
+{
+  if (value != 0) {
+    _init();
+    commodity = commodity_t::null_commodity;
+    mpz_set_si(MPZ(quantity), value);
+    mpz_mul(MPZ(quantity), MPZ(quantity), full_divisor);
+  }
+}
+
+amount_t::amount_t(const unsigned int value)
+  : quantity(NULL), commodity(NULL)
+{
+  if (value != 0) {
+    _init();
+    commodity = commodity_t::null_commodity;
+    mpz_set_ui(MPZ(quantity), value);
+    mpz_mul(MPZ(quantity), MPZ(quantity), full_divisor);
+  }
+}
+
+amount_t::amount_t(const double value)
+  : quantity(NULL), commodity(NULL)
+{
+  if (value != 0.0) {
+    _init();
+    commodity = commodity_t::null_commodity;
+    mpz_set_d(MPZ(quantity), value);
+    mpz_mul(MPZ(quantity), MPZ(quantity), full_divisor);
+  }
+}
+
 void amount_t::_clear()
 {
   mpz_clear(MPZ(quantity));
@@ -92,6 +152,22 @@ amount_t& amount_t::operator=(const amount_t& amt)
   return *this;
 }
 
+amount_t& amount_t::operator=(const bool value)
+{
+  if (! value) {
+    if (quantity) {
+      _clear();
+      quantity  = NULL;
+      commodity = NULL;
+    }
+  } else {
+    commodity = commodity_t::null_commodity;
+    quantity = new MP_INT;
+    mpz_init_set(MPZ(quantity), true_value);
+  }
+  return *this;
+}
+
 amount_t& amount_t::operator=(const int value)
 {
   if (value == 0) {
@@ -101,10 +177,9 @@ amount_t& amount_t::operator=(const int value)
       commodity = NULL;
     }
   } else {
-    std::string str;
-    std::ostringstream strstr(str);
-    strstr << value;
-    parse(strstr.str());
+    commodity = commodity_t::null_commodity;
+    mpz_set_si(MPZ(quantity), value);
+    mpz_mul(MPZ(quantity), MPZ(quantity), full_divisor);
   }
   return *this;
 }
@@ -118,10 +193,9 @@ amount_t& amount_t::operator=(const unsigned int value)
       commodity = NULL;
     }
   } else {
-    std::string str;
-    std::ostringstream strstr(str);
-    strstr << value;
-    parse(strstr.str());
+    commodity = commodity_t::null_commodity;
+    mpz_set_ui(MPZ(quantity), value);
+    mpz_mul(MPZ(quantity), MPZ(quantity), full_divisor);
   }
   return *this;
 }
@@ -135,10 +209,9 @@ amount_t& amount_t::operator=(const double value)
       commodity = NULL;
     }
   } else {
-    std::string str;
-    std::ostringstream strstr(str);
-    strstr << value;
-    parse(strstr.str());
+    commodity = commodity_t::null_commodity;
+    mpz_set_d(MPZ(quantity), value);
+    mpz_mul(MPZ(quantity), MPZ(quantity), full_divisor);
   }
   return *this;
 }
@@ -279,7 +352,16 @@ amount_t::operator bool() const
 {
   if (quantity) {
     assert(commodity);
-    return mpz_sgn(MPZ(round().quantity)) != 0;
+    mpz_t temp;
+    mpz_t divisor;
+    mpz_init_set(temp, MPZ(quantity));
+    mpz_init(divisor);
+    mpz_ui_pow_ui(divisor, 10, MAX_PRECISION - commodity->precision);
+    mpz_tdiv_q(temp, temp, divisor);
+    bool zero = mpz_sgn(temp) == 0;
+    mpz_clear(divisor);
+    mpz_clear(temp);
+    return ! zero;
   } else {
     return false;
   }
@@ -682,6 +764,8 @@ void (*commodity_t::updater)(commodity_t *     commodity,
 			     const std::time_t moment) = NULL;
 
 commodities_map commodity_t::commodities;
+commodity_t *   commodity_t::null_commodity =
+		     commodity_t::find_commodity("", true);
 
 struct cleanup_commodities
 {

@@ -201,7 +201,7 @@ amount, if it is the same as the first line:
 For this entry, Ledger will figure out that $-23.00 must come from
 "Assets:Checking" in order to balance the entry.
 
-** Transactions: Additions and Subtractions
+** Stating where money goes
 
 Accountants will talk of `credits' and `debits', but their meaning is
 often different from the layman's definitions.  To avoid this semantic

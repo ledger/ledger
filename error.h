@@ -1,8 +1,19 @@
 #ifndef _ERROR_H
 #define _ERROR_H
 
+#include "ledger.h"
+
 #include <exception>
-#include <sstream>
+#include <string>
+
+#ifdef DEBUG
+#include <cassert>
+#else
+#ifdef assert
+#undef assert
+#endif
+#define assert(x)
+#endif
 
 namespace ledger {
 
@@ -49,13 +60,9 @@ class parse_error : public error
     : error(reason), line(_line), file(_file) {}
   virtual ~parse_error() throw() {}
 
-  virtual const char* what() const throw() {
-    static std::ostringstream msg;
-    msg << file << ", line " << line << ": " << error::what();
-    return msg.str().c_str();
-  }
+  virtual const char* what() const throw();
 };
 
 } // namespace ledger
 
-#endif // _CONSTRAINT_H
+#endif // _ERROR_H

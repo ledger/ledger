@@ -1,5 +1,6 @@
 #include "ledger.h"
-#include "expr.h"
+#include "valexpr.h"
+#include "datetime.h"
 #include "textual.h"
 #include "binary.h"
 
@@ -8,6 +9,29 @@
 namespace ledger {
 
 const std::string version = "2.0b";
+
+#if 0
+
+struct cmp_items {
+  const node_t * sort_order;
+
+  cmp_items(const node_t * _sort_order) : sort_order(_sort_order) {
+    assert(sort_order);
+  }
+
+  bool operator()(const item_t * left, const item_t * right) const {
+    assert(left);
+    assert(right);
+    return sort_order->compute(left) < sort_order->compute(right);
+  }
+};
+
+void item_t::sort(const node_t * sort_order)
+{
+  std::stable_sort(subitems.begin(), subitems.end(), cmp_items(sort_order));
+}
+
+#endif
 
 ledger_t::~ledger_t()
 {
@@ -200,7 +224,7 @@ int parse_ledger_file(char * p, ledger_t * journal)
   stream.read((char *)&magic, sizeof(magic));
   stream.seekg(start);
 
-  if (magic == magic_number)
+  if (magic == binary_magic_number)
     return read_binary_ledger(stream, "", journal, master);
   else
     return parse_textual_ledger(stream, journal, master);

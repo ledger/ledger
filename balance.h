@@ -1,7 +1,11 @@
 #ifndef _BALANCE_H
 #define _BALANCE_H
 
-#include "ledger.h"
+#include <map>
+#include <ctime>
+#include <iostream>
+
+#include "amount.h"
 
 namespace ledger {
 
@@ -349,6 +353,7 @@ inline std::ostream& operator<<(std::ostream& out, const balance_t& bal) {
 }
 #endif
 
+class transaction_t;
 
 class balance_pair_t
 {

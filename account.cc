@@ -15,30 +15,26 @@ account_t::~account_t()
     delete (*i).second;
 }
 
-account_t * account_t::find_account(const std::string& ident,
+account_t * account_t::find_account(const std::string& name,
 				    const bool	       auto_create)
 {
-  accounts_map::const_iterator c = accounts_cache.find(ident);
-  if (c != accounts_cache.end())
-    return (*c).second;
-
-  accounts_map::const_iterator i = accounts.find(ident);
+  accounts_map::const_iterator i = accounts.find(name);
   if (i != accounts.end())
     return (*i).second;
 
   static char buf[256];
 
-  std::string::size_type sep = ident.find(':');
+  std::string::size_type sep = name.find(':');
   const char * first, * rest;
   if (sep == std::string::npos) {
-    first = ident.c_str();
+    first = name.c_str();
     rest  = NULL;
   } else {
-    std::strncpy(buf, ident.c_str(), sep);
+    std::strncpy(buf, name.c_str(), sep);
     buf[sep] = '\0';
 
     first = buf;
-    rest  = ident.c_str() + sep + 1;
+    rest  = name.c_str() + sep + 1;
   }
 
   account_t * account;
@@ -55,8 +51,6 @@ account_t * account_t::find_account(const std::string& ident,
 
   if (rest)
     account = account->find_account(rest, auto_create);
-
-  accounts_cache.insert(accounts_pair(ident, account));
 
   return account;
 }
@@ -76,16 +70,22 @@ bool account_t::remove_transaction(transaction_t * xact)
 
 std::string account_t::fullname() const
 {
-  const account_t *	first	 = this;
-  std::string		fullname = name;
+  if (! _fullname.empty()) {
+    return _fullname;
+  } else {
+    const account_t *	first	 = this;
+    std::string		fullname = name;
 
-  while (first->parent) {
-    first = first->parent;
-    if (! first->name.empty())
-      fullname = first->name + ":" + fullname;
+    while (first->parent) {
+      first = first->parent;
+      if (! first->name.empty())
+	fullname = first->name + ":" + fullname;
+    }
+
+    _fullname = fullname;
+
+    return fullname;
   }
-
-  return fullname;
 }
 
 } // namespace ledger

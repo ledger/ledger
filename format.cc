@@ -14,13 +14,18 @@ std::string truncated(const std::string& str, unsigned int width)
   return buf;
 }
 
-std::string maximal_account_name(const item_t * item, const item_t * parent)
+std::string partial_account_name(const account_t *  account,
+				 const unsigned int start_depth)
 {
-  std::string name = item->account->name;
-  for (const item_t * i = item->parent;
-       i && i->account && i != parent;
-       i = i->parent)
-    name = i->account->name + ":" + name;
+  std::string	    name = account->name;
+  const account_t * acct = account->parent;
+
+  for (int i = account->depth - start_depth - 1;
+       --i >= 0 && acct->parent; ) {
+    assert(acct);
+    name = acct->name + ":" + name;
+    acct = acct->parent;
+  }
   return name;
 }
 
@@ -139,14 +144,10 @@ element_t * format_t::parse_elements(const std::string& fmt)
   return result;
 }
 
-void format_t::format_elements(std::ostream& out, const item_t * item,
-			       const item_t * displayed_parent) const
+void format_t::format_elements(std::ostream&    out,
+			       const details_t& details) const
 {
-  std::string result;
-
-  for (const element_t * elem = elements;
-       elem;
-       elem = elem->next) {
+  for (const element_t * elem = elements.get(); elem; elem = elem->next) {
     if (elem->align_left)
       out << std::left;
     else
@@ -161,16 +162,18 @@ void format_t::format_elements(std::ostream& out, const item_t * item,
       break;
 
     case element_t::VALUE_EXPR: {
-      balance_t value = elem->val_expr->compute(item);
-      value.write(out, elem->min_width,
-		  elem->max_width > 0 ? elem->max_width : elem->min_width);
+      balance_t value;
+      elem->val_expr->compute(value, details);
+      value.write(out, elem->min_width, (elem->max_width > 0 ?
+					 elem->max_width : elem->min_width));
       break;
     }
 
     case element_t::DATE_STRING:
-      if (item->date != -1) {
+      if (details.entry && details.entry->date != -1) {
 	char buf[256];
-	std::strftime(buf, 255, elem->chars.c_str(), std::gmtime(&item->date));
+	std::strftime(buf, 255, elem->chars.c_str(),
+		      std::gmtime(&details.entry->date));
 	out << (elem->max_width == 0 ? buf : truncated(buf, elem->max_width));
       } else {
 	out << " ";
@@ -178,35 +181,38 @@ void format_t::format_elements(std::ostream& out, const item_t * item,
       break;
 
     case element_t::CLEARED:
-      if (item->state == entry_t::CLEARED)
+      if (details.entry && details.entry->state == entry_t::CLEARED)
 	out << "* ";
       else
 	out << "";
       break;
 
     case element_t::CODE:
-      if (! item->code.empty())
-	out << "(" << item->code << ") ";
+      if (details.entry && ! details.entry->code.empty())
+	out << "(" << details.entry->code << ") ";
       else
 	out << "";
       break;
 
     case element_t::PAYEE:
-      out << (elem->max_width == 0 ?
-	      item->payee : truncated(item->payee, elem->max_width));
+      if (details.entry)
+	out << (elem->max_width == 0 ?
+		details.entry->payee : truncated(details.entry->payee,
+						 elem->max_width));
       break;
 
     case element_t::ACCOUNT_NAME:
     case element_t::ACCOUNT_FULLNAME:
-      if (item->account) {
+      if (details.account) {
 	std::string name = (elem->type == element_t::ACCOUNT_FULLNAME ?
-			    item->account->fullname() :
-			    maximal_account_name(item, displayed_parent));
+			    details.account->fullname() :
+			    partial_account_name(details.account,
+						 details.depth));
 	if (elem->max_width > 0)
 	  name = truncated(name, elem->max_width);
 
-	if (item->flags & TRANSACTION_VIRTUAL) {
-	  if (item->flags & TRANSACTION_BALANCE)
+	if (details.xact && details.xact->flags & TRANSACTION_VIRTUAL) {
+	  if (details.xact->flags & TRANSACTION_BALANCE)
 	    name = "[" + name + "]";
 	  else
 	    name = "(" + name + ")";
@@ -218,81 +224,67 @@ void format_t::format_elements(std::ostream& out, const item_t * item,
       break;
 
     case element_t::OPT_AMOUNT: {
+      if (! details.entry || ! details.xact)
+	break;
+
       std::string disp;
       bool        use_disp = false;
 
-      if (std::find(displayed_parent->subitems.begin(),
-		    displayed_parent->subitems.end(), item) !=
-	  displayed_parent->subitems.end()) {
-	if (displayed_parent->subitems.size() == 2 &&
-	    item == displayed_parent->subitems.back() &&
-	    (displayed_parent->subitems.front()->value.quantity ==
-	     displayed_parent->subitems.front()->value.cost) &&
-	    (displayed_parent->subitems.front()->value ==
-	     - displayed_parent->subitems.back()->value)) {
+      if (std::find(details.entry->transactions.begin(),
+		    details.entry->transactions.end(), details.xact) !=
+	  details.entry->transactions.end()) {
+	if (details.entry->transactions.size() == 2 &&
+	    details.xact == details.entry->transactions.back() &&
+	    (details.entry->transactions.front()->amount ==
+	     details.entry->transactions.front()->cost) &&
+	    (details.entry->transactions.front()->amount ==
+	     - details.entry->transactions.back()->amount)) {
 	  use_disp = true;
 	}
-	else if (displayed_parent->subitems.size() != 2 &&
-		 item->value.quantity != item->value.cost &&
-		 item->value.quantity.amounts.size() == 1 &&
-		 item->value.cost.amounts.size() == 1 &&
-		 ((*item->value.quantity.amounts.begin()).first !=
-		  (*item->value.cost.amounts.begin()).first)) {
-	  amount_t unit_cost
-	    = ((*item->value.cost.amounts.begin()).second /
-	       (*item->value.quantity.amounts.begin()).second);
+	else if (details.entry->transactions.size() != 2 &&
+		 details.xact->amount != details.xact->cost) {
+	  amount_t unit_cost = details.xact->cost / details.xact->amount;
 	  std::ostringstream stream;
-	  stream << item->value.quantity << " @ " << unit_cost;
+	  stream << details.xact->amount << " @ " << unit_cost;
 	  disp = stream.str();
 	  use_disp = true;
 	}
       }
 
-      if (use_disp)
-	out << disp;
-      else
-	item->value.quantity.write(out, elem->min_width,
-				   elem->max_width > 0 ?
-				   elem->max_width : elem->min_width);
+      if (! use_disp)
+	disp = std::string(details.xact->amount);
+      out << disp;
 
       // jww (2004-07-31): this should be handled differently
-      if (! item->note.empty())
-	out << "  ; " << item->note;
+      if (! details.xact->note.empty())
+	out << "  ; " << details.xact->note;
       break;
     }
 
     case element_t::VALUE: {
-      balance_t value = compute_value(item);
-      value.write(out, elem->min_width,
-		  elem->max_width > 0 ? elem->max_width : elem->min_width);
+      balance_t value;
+      compute_value(value, details);
+      value.write(out, elem->min_width, (elem->max_width > 0 ?
+					 elem->max_width : elem->min_width));
       break;
     }
 
     case element_t::TOTAL: {
-      balance_t value = compute_total(item);
-      value.write(out, elem->min_width,
-		  elem->max_width > 0 ? elem->max_width : elem->min_width);
+      balance_t value;
+      compute_total(value, details);
+      value.write(out, elem->min_width, (elem->max_width > 0 ?
+					 elem->max_width : elem->min_width));
       break;
     }
 
-    case element_t::SPACER: {
-      int depth = 0;
-      for (const item_t * i = item; i->parent; i = i->parent)
-	depth++;
-
-      for (const item_t * i = item->parent;
-	   i && i->account && i != displayed_parent;
-	   i = i->parent)
-	depth--;
-
-      while (--depth >= 0) {
+    case element_t::SPACER:
+      for (unsigned int i = 0; i < details.depth; i++) {
 	if (elem->min_width > 0 || elem->max_width > 0)
 	  out.width(elem->min_width > elem->max_width ?
 		    elem->min_width : elem->max_width);
 	out << " ";
       }
       break;
-    }
 
     default:
       assert(0);

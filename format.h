@@ -2,13 +2,14 @@
 #define _FORMAT_H
 
 #include "ledger.h"
-#include "balance.h"
-#include "expr.h"
+#include "valexpr.h"
 
 namespace ledger {
 
 std::string truncated(const std::string& str, unsigned int width);
-std::string maximal_account_name(const item_t * item, const item_t * parent);
+
+std::string partial_account_name(const account_t *  account,
+				 const unsigned int start_depth);
 
 struct element_t
 {
@@ -48,28 +49,27 @@ struct element_t
 
 struct format_t
 {
-  element_t * elements;
+  std::auto_ptr<element_t> elements;
 
-  static std::auto_ptr<node_t> value_expr;
-  static std::auto_ptr<node_t> total_expr;
+  static std::auto_ptr<node_t>	  value_expr;
+  static std::auto_ptr<node_t>	  total_expr;
 
   format_t(const std::string& _format) {
-    elements = parse_elements(_format);
-  }
-  ~format_t() {
-    if (elements)   delete elements;
+    elements.reset(parse_elements(_format));
   }
 
   static element_t * parse_elements(const std::string& fmt);
 
-  void format_elements(std::ostream& out, const item_t * item,
-		       const item_t * displayed_parent = NULL) const;
+  void format_elements(std::ostream& out, const details_t& details) const;
 
-  static balance_t compute_value(const item_t * item) {
-    return value_expr.get() ? value_expr->compute(item) : balance_t();
+  static void compute_value(balance_t& result, const details_t& details) {
+    if (value_expr.get())
+      value_expr->compute(result, details);
   }
-  static balance_t compute_total(const item_t * item) {
-    return total_expr.get() ? total_expr->compute(item) : balance_t();
+
+  static void compute_total(balance_t& result, const details_t& details) {
+    if (total_expr.get())
+      total_expr->compute(result, details);
   }
 };
 

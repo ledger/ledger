@@ -1,17 +1,34 @@
-CODE   = amount.cc balance.cc account.cc ledger.cc \
-	 item.cc expr.cc format.cc textual.cc binary.cc
+CODE   = account.cc  \
+	 amount.cc   \
+	 autoxact.cc \
+	 balance.cc  \
+	 binary.cc   \
+	 datetime.cc \
+	 error.cc    \
+	 format.cc   \
+	 ledger.cc   \
+	 textual.cc  \
+	 valexpr.cc  \
+	 walk.cc
+
 OBJS   = $(patsubst %.cc,%.o,$(CODE))
+
 #CXX    = cc
 CXX    = g++
+
 CFLAGS = -Wall -ansi -pedantic
 #DFLAGS = -O3 -fomit-frame-pointer
 DFLAGS = -g -DDEBUG=1
 #DFLAGS = -g -pg
-INCS   = -I/sw/include -I/usr/include/gcc/darwin/3.3/c++ -I/usr/include/gcc/darwin/3.3/c++/ppc-darwin
-LIBS   = -L/sw/lib  -lgmpxx -lgmp -lpcre
+
+INCS   = -I/sw/include \
+	 -I/usr/include/gcc/darwin/3.3/c++ \
+	 -I/usr/include/gcc/darwin/3.3/c++/ppc-darwin
+LIBS   = -L/sw/lib -lgmpxx -lgmp -lpcre
 
 ifdef GNUCASH
 CODE   := $(CODE)   gnucash.cc
+OBJS   := $(OBJS)   gnucash.o
 CFLAGS := $(CFLAGS) -DREAD_GNUCASH=1
 INCS   := $(INCS)   -I/usr/include/httpd/xml
 LIBS   := $(LIBS)   -L/sw/lib -lxmlparse
@@ -34,8 +51,8 @@ libledger.a: $(OBJS)
 ledger: libledger.a main.o
 	$(CXX) $(CFLAGS) $(INCS) $(DFLAGS) -o $@ main.o -L. -lledger $(LIBS)
 
-report: libledger.a report.cc
-	$(CXX) $(CFLAGS) $(INCS) $(DFLAGS) -DTEST -o $@ report.cc \
+valexpr: libledger.a valexpr.cc
+	$(CXX) $(CFLAGS) $(INCS) $(DFLAGS) -DTEST -o $@ valexpr.cc \
 		-L. -lledger $(LIBS)
 
 ledger.info: ledger.texi
@@ -48,9 +65,9 @@ ledger.pdf: ledger.texi
 	$(CXX) $(CFLAGS) $(INCS) $(DFLAGS) -c -o $@ $<
 
 clean:
-	rm -f ledger report libledger.a *.o *.elc *~ .\#*
+	rm -f ledger valexpr libledger.a *.o *.elc *~ .\#*
 	rm -f *.aux *.cp *.fn *.ky *.log *.pg *.toc *.tp *.vr
-	rm -f .gdb_history
+	rm -f .gdb_history gmon.out out
 
 distclean fullclean: clean
 	rm -f *.texi *.info *.html *.pdf *.elc make.deps TAGS
@@ -60,7 +77,7 @@ rebuild: clean deps all
 deps: make.deps
 
 make.deps: Makefile
-	cc -M $(INCS) $(CODE) > $@
+	cc -M $(INCS) $(CODE) main.cc > $@
 
 include make.deps
 
@@ -95,11 +112,6 @@ dist:
 	 mv t Makefile && \
 	 perl -ne 'print if 1 .. /^include make.deps/;' Makefile > t && \
 	 mv t Makefile && \
-	 cd $(HOME)/Public && \
-	 tar cvzf ledger-$(VERSION).tar.gz /tmp/ledger-$(VERSION))
-
-publish: dist
-	(cd $(HOME)/Public && \
-	 ln -sf ledger-$(VERSION).tar.gz ledger.tar.gz && \
-	 rm -fr /tmp/ledger-$(VERSION) && \
-	 upload)
+	 cd /tmp && \
+	 tar cvzf $(HOME)/Sites/ledger/ledger-$(VERSION).tar.gz \
+		  ledger-$(VERSION))

@@ -2,8 +2,6 @@
 #define _EXPR_H
 
 #include "ledger.h"
-#include "balance.h"
-#include "item.h"
 
 namespace ledger {
 
@@ -29,6 +27,33 @@ bool matches(const masks_list& regexps, const std::string& str,
 	     bool * by_exclusion = NULL);
 #endif
 
+
+struct details_t
+{
+  const entry_t *	 entry;
+  const transaction_t *  xact;
+  const account_t *      account;
+  const balance_pair_t * balance;
+  const unsigned int *   index;
+  const unsigned int     depth;
+
+  details_t(const entry_t *	   _entry,
+	    const balance_pair_t * _balance = NULL,
+	    const unsigned int *   _index   = NULL)
+    : entry(_entry), xact(NULL), account(NULL),
+      balance(_balance), index(_index), depth(0) {}
+
+  details_t(const transaction_t *  _xact,
+	    const balance_pair_t * _balance = NULL,
+	    const unsigned int *   _index   = NULL)
+    : entry(_xact->entry), xact(_xact), account(_xact->account),
+      balance(_balance), index(_index), depth(0) {}
+
+  details_t(const account_t *  _account,
+	    const unsigned int _depth = 0)
+    : entry(NULL), xact(NULL), account(_account),
+      balance(NULL), index(NULL), depth(_depth) {}
+};
 
 struct node_t
 {
@@ -95,7 +120,7 @@ struct node_t
     if (right) delete right;
   }
 
-  balance_t compute(const item_t * item) const;
+  void compute(balance_t& result, const details_t& details) const;
 };
 
 node_t * parse_expr(std::istream& in);
@@ -119,64 +144,6 @@ inline node_t * find_node(node_t * node, node_t::kind_t type) {
     result = find_node(node->right, type);
   return result;
 }
-
-void dump_tree(std::ostream& out, node_t * node);
-
-class value_predicate
-{
- public:
-  const node_t * predicate;
-
-  explicit value_predicate(const node_t * _predicate)
-    : predicate(_predicate) {}
-
-  bool operator ()(const transaction_t * xact) const {
-    if (! predicate) {
-      return true;
-    } else {
-      item_t temp;
-      temp.date    = xact->entry->date;
-      temp.state   = xact->entry->state;
-      temp.code    = xact->entry->code;
-      temp.payee   = xact->entry->payee;
-      temp.flags   = xact->flags;
-      temp.account = xact->account;
-      return predicate->compute(&temp);
-    }
-  }
-
-  bool operator ()(const entry_t * entry) const {
-    if (! predicate) {
-      return true;
-    } else {
-      item_t temp;
-      temp.date  = entry->date;
-      temp.payee = entry->payee;
-      temp.state = entry->state;
-      temp.code  = entry->code;
-
-      // Although there may be conflicting account masks for the whole
-      // set of transactions -- for example, /rent/&!/expenses/, which
-      // might match one by not another transactions -- we let the
-      // entry through if at least one of the transactions meets the
-      // criterion
-
-      for (transactions_list::const_iterator i = entry->transactions.begin();
-	   i != entry->transactions.end();
-	   i++) {
-	temp.flags   = (*i)->flags;
-	temp.account = (*i)->account;
-	if (predicate->compute(&temp))
-	  return true;
-      }
-      return false;
-    }
-  }
-
-  bool operator ()(const item_t * item) const {
-    return ! predicate || predicate->compute(item);
-  }
-};
 
 } // namespace report
 

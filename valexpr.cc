@@ -1,5 +1,6 @@
-#include "expr.h"
+#include "valexpr.h"
 #include "error.h"
+#include "datetime.h"
 #include "textual.h"
 
 #include <pcre.h>
@@ -90,138 +91,199 @@ bool matches(const masks_list& regexps, const std::string& str,
 
 #endif
 
-balance_t node_t::compute(const item_t * item) const
+void node_t::compute(balance_t& result, const details_t& details) const
 {
-  balance_t temp;
-
   switch (type) {
   case CONSTANT_A:
-    temp = constant_a;
+    result = constant_a;
     break;
 
   case CONSTANT_T:
-    temp = amount_t((unsigned int) constant_t);
+    result = (unsigned int) constant_t;
     break;
 
   case AMOUNT:
-    temp = item->value.quantity;
+    if (details.xact)
+      result = details.xact->amount;
+    else if (details.account)
+      result = details.account->value.quantity;
     break;
+
   case COST:
-    temp = item->value.cost;
+    if (details.xact)
+      result = details.xact->cost;
+    else if (details.account)
+      result = details.account->value.cost;
     break;
 
   case BALANCE:
-    temp = item->total.quantity - item->value.quantity;
+    if (details.balance) {
+      result = details.balance->quantity;
+      if (details.xact)
+	result -= details.xact->amount;
+      else if (details.account)
+	result -= details.account->value.quantity;
+    }
     break;
+
   case COST_BALANCE:
-    temp = item->total.cost - item->value.cost;
+    if (details.balance) {
+      result = details.balance->cost;
+      if (details.xact)
+	result -= details.xact->cost;
+      else if (details.account)
+	result -= details.account->value.cost;
+    }
     break;
 
   case TOTAL:
-    temp = item->total.quantity;
+    if (details.balance)
+      result = details.balance->quantity;
+    else if (details.account)
+      result = details.account->total.quantity;
     break;
   case COST_TOTAL:
-    temp = item->total.cost;
+    if (details.balance)
+      result = details.balance->cost;
+    else if (details.account)
+      result = details.account->total.cost;
     break;
 
   case DATE:
-    temp = amount_t((unsigned int) item->date);
+    if (details.entry)
+      result = (unsigned int) details.entry->date;
     break;
 
   case CLEARED:
-    temp = amount_t(item->state == entry_t::CLEARED ? 1 : 0);
+    if (details.entry)
+      result = details.entry->state == entry_t::CLEARED;
     break;
 
   case REAL:
-    temp = amount_t(item->flags & TRANSACTION_VIRTUAL ? 0 : 1);
+    if (details.xact)
+      result = bool(details.xact->flags & TRANSACTION_VIRTUAL);
     break;
 
   case INDEX:
-    temp = amount_t(item->index + 1);
+    if (details.index)
+      result = *details.index + 1;
     break;
 
   case F_ARITH_MEAN:
-    assert(left);
-    temp = left->compute(item);
-    temp /= amount_t(item->index + 1);
+    if (details.index) {
+      assert(left);
+      left->compute(result, details);
+      result /= amount_t(*details.index + 1);
+    }
     break;
 
   case F_NEG:
     assert(left);
-    temp = left->compute(item).negated();
+    left->compute(result, details);
+    result.negate();
     break;
 
   case F_ABS:
     assert(left);
-    temp = abs(left->compute(item));
+    left->compute(result, details);
+    result = abs(result);
     break;
 
   case F_PAYEE_MASK:
     assert(mask);
-    temp = (mask->match(item->payee) || mask->match(item->note)) ? 1 : 0;
+    if (details.entry)
+      result = mask->match(details.entry->payee);
     break;
 
   case F_ACCOUNT_MASK:
     assert(mask);
-    temp = (item->account &&
-	    mask->match(item->account->fullname())) ? 1 : 0;
+    if (details.account)
+      result = mask->match(details.account->fullname());
     break;
 
   case F_VALUE: {
     assert(left);
-    temp = left->compute(item);
+    left->compute(result, details);
 
     std::time_t moment = -1;
-    if (right) {
+    if (right && details.entry) {
       switch (right->type) {
-      case DATE: moment = item->date; break;
+      case DATE: moment = details.entry->date; break;
       default:
 	throw compute_error("Invalid date passed to P(v,d)");
       }
     }
-    temp = temp.value(moment);
+    result = result.value(moment);
     break;
   }
 
   case O_NOT:
-    temp = left->compute(item) ? 0 : 1;
+    left->compute(result, details);
+    result = result ? false : true;
     break;
 
   case O_QUES:
-    temp = left->compute(item);
-    if (temp)
-      temp = right->left->compute(item);
+    assert(left);
+    assert(right);
+    assert(right->type == O_COL);
+    left->compute(result, details);
+    if (result)
+      right->left->compute(result, details);
     else
-      temp = right->right->compute(item);
+      right->right->compute(result, details);
     break;
 
   case O_AND:
+    assert(left);
+    assert(right);
+    left->compute(result, details);
+    if (result)
+      right->compute(result, details);
+    break;
+
   case O_OR:
+    assert(left);
+    assert(right);
+    left->compute(result, details);
+    if (! result)
+      right->compute(result, details);
+    break;
+
   case O_EQ:
   case O_LT:
   case O_LTE:
   case O_GT:
-  case O_GTE:
+  case O_GTE: {
+    assert(left);
+    assert(right);
+    left->compute(result, details);
+    balance_t temp = result;
+    right->compute(result, details);
+    switch (type) {
+    case O_EQ:  result = temp == result; break;
+    case O_LT:  result = temp <  result; break;
+    case O_LTE: result = temp <= result; break;
+    case O_GT:  result = temp >  result; break;
+    case O_GTE: result = temp >= result; break;
+    default: assert(0); break;
+    }
+    break;
+  }
+
   case O_ADD:
   case O_SUB:
   case O_MUL:
   case O_DIV: {
     assert(left);
     assert(right);
-    balance_t left_bal  = left->compute(item);
-    balance_t right_bal = right->compute(item);
+    right->compute(result, details);
+    balance_t temp = result;
+    left->compute(result, details);
     switch (type) {
-    case O_AND: temp = (left_bal && right_bal) ? 1 : 0; break;
-    case O_OR:  temp = (left_bal || right_bal) ? 1 : 0; break;
-    case O_EQ:  temp = (left_bal == right_bal) ? 1 : 0; break;
-    case O_LT:  temp = (left_bal <  right_bal) ? 1 : 0; break;
-    case O_LTE: temp = (left_bal <= right_bal) ? 1 : 0; break;
-    case O_GT:  temp = (left_bal >  right_bal) ? 1 : 0; break;
-    case O_GTE: temp = (left_bal >= right_bal) ? 1 : 0; break;
-    case O_ADD: temp = left_bal + right_bal; break;
-    case O_SUB: temp = left_bal - right_bal; break;
-    case O_MUL: temp = left_bal * right_bal; break;
-    case O_DIV: temp = left_bal / right_bal; break;
+    case O_ADD: result += temp; break;
+    case O_SUB: result -= temp; break;
+    case O_MUL: result *= temp; break;
+    case O_DIV: result /= temp; break;
     default: assert(0); break;
     }
     break;
@@ -232,8 +294,6 @@ balance_t node_t::compute(const item_t * item) const
     assert(0);
     break;
   }
-
-  return temp;
 }
 
 node_t * parse_term(std::istream& in);
@@ -608,8 +668,13 @@ namespace ledger {
 static void dump_tree(std::ostream& out, node_t * node)
 {
   switch (node->type) {
-  case node_t::CONSTANT_A:   out << "CONST[" << node->constant_a << "]"; break;
-  case node_t::CONSTANT_T:   out << "DATE/TIME[" << node->constant_t << "]"; break;
+  case node_t::CONSTANT_A:
+    out << "CONST[" << node->constant_a << "]";
+    break;
+  case node_t::CONSTANT_T:
+    out << "DATE/TIME[" << node->constant_t << "]";
+    break;
+
   case node_t::AMOUNT:	     out << "AMOUNT"; break;
   case node_t::COST:	     out << "COST"; break;
   case node_t::DATE:	     out << "DATE"; break;
@@ -674,11 +739,36 @@ static void dump_tree(std::ostream& out, node_t * node)
 
   case node_t::O_AND:
   case node_t::O_OR:
+    out << "(";
+    dump_tree(out, node->left);
+    switch (node->type) {
+    case node_t::O_AND: out << " & "; break;
+    case node_t::O_OR:  out << " | "; break;
+    default: assert(0); break;
+    }
+    dump_tree(out, node->right);
+    out << ")";
+    break;
+
   case node_t::O_EQ:
   case node_t::O_LT:
   case node_t::O_LTE:
   case node_t::O_GT:
   case node_t::O_GTE:
+    out << "(";
+    dump_tree(out, node->left);
+    switch (node->type) {
+    case node_t::O_EQ:  out << "="; break;
+    case node_t::O_LT:  out << "<"; break;
+    case node_t::O_LTE: out << "<="; break;
+    case node_t::O_GT:  out << ">"; break;
+    case node_t::O_GTE: out << ">="; break;
+    default: assert(0); break;
+    }
+    dump_tree(out, node->right);
+    out << ")";
+    break;
+
   case node_t::O_ADD:
   case node_t::O_SUB:
   case node_t::O_MUL:
@@ -686,13 +776,6 @@ static void dump_tree(std::ostream& out, node_t * node)
     out << "(";
     dump_tree(out, node->left);
     switch (node->type) {
-    case node_t::O_AND: out << " & "; break;
-    case node_t::O_OR:  out << " | "; break;
-    case node_t::O_EQ:  out << "="; break;
-    case node_t::O_LT:  out << "<"; break;
-    case node_t::O_LTE: out << "<="; break;
-    case node_t::O_GT:  out << ">"; break;
-    case node_t::O_GTE: out << ">="; break;
     case node_t::O_ADD: out << "+"; break;
     case node_t::O_SUB: out << "-"; break;
     case node_t::O_MUL: out << "*"; break;
@@ -714,7 +797,7 @@ static void dump_tree(std::ostream& out, node_t * node)
 
 int main(int argc, char *argv[])
 {
-  ledger::dump_tree(std::cout, ledger::parse_expr(argv[1], NULL));
+  ledger::dump_tree(std::cout, ledger::parse_expr(argv[1]));
   std::cout << std::endl;
 }
 
