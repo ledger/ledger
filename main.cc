@@ -570,10 +570,19 @@ int main(int argc, char * argv[])
   }
 
   if (display_predicate_string.empty()) {
-    if (command == "b" && ! show_empty)
-      display_predicate_string = "T";
-    else if (command == "E")
+    if (command == "b") {
+      if (! show_empty)
+	display_predicate_string = "T";
+
+      if (! show_expanded) {
+	if (! display_predicate_string.empty())
+	  display_predicate_string += "&";
+	display_predicate_string += "!n";
+      }
+    }
+    else if (command == "E") {
       display_predicate_string = "a";
+    }
   }
 
   if (! display_predicate_string.empty()) {
@@ -640,16 +649,12 @@ int main(int argc, char * argv[])
     format_t format(first_line_format);
     format_account formatter(std::cout, format, display_predicate.get());
     walk_accounts(journal->master, formatter, predicate.get(),
-		  xact_display_flags, show_subtotals, show_expanded ? 0 : 1,
-		  sort_order.get());
+		  xact_display_flags, show_subtotals, sort_order.get());
 
-    if (! display_predicate.get() ||
-	item_predicate<account_t>(display_predicate.get())(journal->master)) {
-      std::string end_format = "--------------------\n";
-      format.reset(end_format + f);
-      format_account(std::cout, format)(journal->master, true,
-					display_predicate.get());
-    }
+    std::string end_format = "--------------------\n";
+    format.reset(end_format + f);
+    format_account(std::cout, format,
+		   display_predicate.get())(journal->master);
   }
   else if (command == "E") {
     format_t format(first_line_format);
@@ -657,7 +662,7 @@ int main(int argc, char * argv[])
     format_equity formatter(std::cout, format, nformat,
 			    display_predicate.get());
     walk_accounts(journal->master, formatter, predicate.get(),
-		  xact_display_flags, true, 0, sort_order.get());
+		  xact_display_flags, true, sort_order.get());
   }
   else if (command == "e") {
     format_t format(first_line_format);

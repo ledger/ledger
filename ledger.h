@@ -41,9 +41,10 @@ class transaction_t
   amount_t	 cost;
   unsigned int	 flags;
   std::string	 note;
-  balance_pair_t total;
-  unsigned int   index;
-  unsigned int	 dflags;
+
+  mutable balance_pair_t total;
+  mutable unsigned int   index;
+  mutable unsigned int	 dflags;
 
   transaction_t(entry_t * _entry, account_t * _account)
     : entry(_entry), account(_account), flags(TRANSACTION_NORMAL),
@@ -105,15 +106,16 @@ class account_t
   account_t *	    parent;
   std::string	    name;
   std::string	    note;
-  unsigned long	    depth;
+  unsigned int	    depth;
   accounts_map	    accounts;
   transactions_list transactions;
-  balance_pair_t    value;
-  balance_pair_t    total;
-  unsigned long	    ident;
-  unsigned long	    dflags;
 
-  mutable std::string  _fullname;
+  mutable balance_pair_t value;
+  mutable balance_pair_t total;
+  mutable unsigned long	 ident;
+  mutable unsigned long	 dflags;
+  mutable std::string	 _fullname;
+
   static unsigned long next_ident;
 
   account_t(account_t *        _parent,

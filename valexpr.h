@@ -57,7 +57,7 @@ struct node_t
     DATE,
     CLEARED,
     REAL,
-    INDEX,
+    INDEX,			// for accounts, this is the DEPTH
 
     // Item totals
     BALANCE,

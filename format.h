@@ -204,9 +204,20 @@ class format_account
     : output_stream(_output_stream), format(_format),
       disp_pred_functor(display_predicate) {}
 
-  void operator()(account_t *	     account,
-		  const unsigned int max_depth  = 1,
-		  const bool         report_top = false) const;
+  static bool disp_subaccounts_p(const account_t * account,
+				 const item_predicate<account_t>&
+				     disp_pred_functor,
+				 const account_t *& to_show);
+  static bool display_account(const account_t * account,
+			      const item_predicate<account_t>&
+				  disp_pred_functor);
+
+  void operator()(const account_t * account) const {
+    if (display_account(account, disp_pred_functor)) {
+      format.format_elements(output_stream, details_t(account));
+      account->dflags |= ACCOUNT_DISPLAYED;
+    }
+  }
 };
 
 
@@ -241,11 +252,8 @@ class format_equity
     next_lines_format.format_elements(output_stream, details_t(&summary));
   }
 
-  void operator()(account_t *	     account,
-		  const unsigned int max_depth  = 1,
-		  const bool         report_top = false) const {
-    if ((report_top || account->parent != NULL) &&
-	disp_pred_functor(account)) {
+  void operator()(const account_t * account) const {
+    if (format_account::display_account(account, disp_pred_functor)) {
       next_lines_format.format_elements(output_stream, details_t(account));
       account->dflags |= ACCOUNT_DISPLAYED;
       total += account->value.quantity;

@@ -154,25 +154,22 @@ inline void sort_accounts(account_t *	  account,
 }
 
 template <typename Function>
-void walk__accounts(account_t *        account,
-		    const Function&    functor,
-		    const unsigned int max_depth)
+void walk__accounts(account_t * account, const Function& functor)
 {
-  functor(account, max_depth);
+  functor(account);
 
   for (accounts_map::const_iterator i = account->accounts.begin();
        i != account->accounts.end();
        i++)
-    walk__accounts((*i).second, functor, max_depth);
+    walk__accounts((*i).second, functor);
 }
 
 template <typename Function>
-void walk__accounts_sorted(account_t *        account,
-			   const Function&    functor,
-			   const unsigned int max_depth,
-			   const node_t *     sort_order)
+void walk__accounts_sorted(account_t *     account,
+			   const Function& functor,
+			   const node_t *  sort_order)
 {
-  functor(account, max_depth);
+  functor(account);
 
   accounts_deque accounts;
 
@@ -187,7 +184,7 @@ void walk__accounts_sorted(account_t *        account,
   for (accounts_deque::const_iterator i = accounts.begin();
        i != accounts.end();
        i++)
-    walk__accounts_sorted(*i, functor, max_depth, sort_order);
+    walk__accounts_sorted(*i, functor, sort_order);
 }
 
 template <typename Function>
@@ -217,13 +214,12 @@ inline void sum__accounts(account_t * account)
 }
 
 template <typename Function>
-void walk_accounts(account_t *	      account,
-		   const Function&    functor,
-		   const node_t *     predicate,
-		   unsigned int	      flags,
-		   const bool	      calc_subtotals,
-		   const unsigned int max_depth,
-		   const node_t *     sort_order = NULL)
+void walk_accounts(account_t *	   account,
+		   const Function& functor,
+		   const node_t *  predicate,
+		   unsigned int	   flags,
+		   const bool	   calc_subtotals,
+		   const node_t *  sort_order = NULL)
 {
   item_predicate<transaction_t> pred_functor(predicate);
 
@@ -232,9 +228,9 @@ void walk_accounts(account_t *	      account,
     sum__accounts(account);
 
   if (sort_order)
-    walk__accounts_sorted<Function>(account, functor, max_depth, sort_order);
+    walk__accounts_sorted<Function>(account, functor, sort_order);
   else
-    walk__accounts<Function>(account, functor, max_depth);
+    walk__accounts<Function>(account, functor);
 }
 
 } // namespace ledger

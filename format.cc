@@ -397,44 +397,59 @@ void format_transaction::operator()(transaction_t * xact) const
   last_xact  = xact;
 }
 
-
-void format_account::operator()(account_t *	   account,
-				const unsigned int max_depth,
-				const bool         report_top) const
+bool format_account::disp_subaccounts_p(const account_t * account,
+					const item_predicate<account_t>&
+					    disp_pred_functor,
+					const account_t *& to_show)
 {
-  // Don't output the account if only one child will be displayed
-  // which shows the exact same amount.  jww (2004-08-03): How do
-  // compute the right figure?  It should a value expression specified
-  // by the user, to say, "If this expression is equivalent between a
-  // parent account and a lone displayed child, then don't display the
-  // parent."
+  bool	       display = false;
+  unsigned int counted = 0;
 
-  if (bool output = ((report_top || account->parent != NULL) &&
-		     disp_pred_functor(account))) {
-    int  counted = 0;
-    bool display = false;
+  to_show = NULL;
 
-    for (accounts_map::const_iterator i = account->accounts.begin();
-	 i != account->accounts.end();
-	 i++) {
-      if (! (*i).second->total)
-	continue;
+  for (accounts_map::const_iterator i = account->accounts.begin();
+       i != account->accounts.end();
+       i++) {
+    // jww (2004-08-03): How do compute the right figure?  It should a
+    // value expression specified by the user, to say, "If this
+    // expression is equivalent between a parent account and a lone
+    // displayed child, then don't display the parent."
 
-      if ((*i).second->total != account->total || counted > 0) {
-	display = true;
-	break;
-      }
-      counted++;
+    if (! (*i).second->total || ! disp_pred_functor((*i).second))
+      continue;
+
+    if ((*i).second->total != account->total || counted > 0) {
+      display = true;
+      break;
     }
-
-    if (counted == 1 && ! display)
-      output = false;
-
-    if (output && (max_depth == 0 || account->depth <= max_depth)) {
-      format.format_elements(output_stream, details_t(account));
-      account->dflags |= ACCOUNT_DISPLAYED;
-    }
+    to_show = (*i).second;
+    counted++;
   }
+
+  return display;
+}
+
+bool format_account::display_account(const account_t * account,
+				     const item_predicate<account_t>&
+					 disp_pred_functor)
+{
+  // Never display the master account, or an account that has already
+  // been displayed.
+  if (! account->parent || account->dflags & ACCOUNT_DISPLAYED)
+    return false;
+
+  // At this point, one of two possibilities exists: the account is a
+  // leaf which matches the predicate restrictions; or it is a parent
+  // and two or more children must be subtotaled; or it is a parent
+  // and its child has been hidden by the predicate.  So first,
+  // determine if it is a parent that must be displayed regardless of
+  // the predicate.
+
+  const account_t * account_to_show = NULL;
+  if (disp_subaccounts_p(account, disp_pred_functor, account_to_show))
+    return true;
+
+  return ! account_to_show && disp_pred_functor(account);
 }
 
 } // namespace ledger

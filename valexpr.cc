@@ -158,18 +158,46 @@ void node_t::compute(balance_t& result, const details_t& details) const
     break;
 
   case CLEARED:
-    if (details.entry)
+    if (details.entry) {
       result = details.entry->state == entry_t::CLEARED;
+    }
+    else if (details.account) {
+      bool all_clear = true;
+      for (transactions_list::const_iterator i
+	     = details.account->transactions.begin();
+	   i != details.account->transactions.end();
+	   i++)
+	if ((*i)->entry->state != entry_t::CLEARED) {
+	  all_clear = false;
+	  break;
+	}
+      result = all_clear;
+    }
     break;
 
   case REAL:
-    if (details.xact)
+    if (details.xact) {
       result = ! (details.xact->flags & TRANSACTION_VIRTUAL);
+    }
+    else if (details.account) {
+      bool all_real = true;
+      for (transactions_list::const_iterator i
+	     = details.account->transactions.begin();
+	   i != details.account->transactions.end();
+	   i++)
+	if ((*i)->flags & TRANSACTION_VIRTUAL) {
+	  all_real = false;
+	  break;
+	}
+      result = all_real;
+    }
     break;
 
   case INDEX:
     if (details.xact)
       result = details.xact->index + 1;
+    else if (details.account)
+      result = details.account->depth - 1;
     break;
 
   case F_ARITH_MEAN:
@@ -359,7 +387,7 @@ node_t * parse_term(std::istream& in)
   case 'd': node = new node_t(node_t::DATE); break;
   case 'X': node = new node_t(node_t::CLEARED); break;
   case 'R': node = new node_t(node_t::REAL); break;
-  case 'i': node = new node_t(node_t::INDEX); break;
+  case 'n': node = new node_t(node_t::INDEX); break;
   case 'B': node = new node_t(node_t::BALANCE); break;
   case 'T': node = new node_t(node_t::TOTAL); break;
   case 'C': node = new node_t(node_t::COST_TOTAL); break;
