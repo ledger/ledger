@@ -90,6 +90,9 @@
 - The use of "+" and "-" in ledger files (to specify permanent
   regexps) has been removed.
 
+- The "-from" argument is no longer needed with the "entry" command.
+  It can simply be removed, with no other changes.
+
 - -l now takes a value expression as the "calculation predicate".
   To mimic the old behavior of "-l \$100", use: -d "T&AT>{\$100}"
 

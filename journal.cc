@@ -1,6 +1,7 @@
 #include "ledger.h"
 #include "valexpr.h"
 #include "datetime.h"
+#include "error.h"
 #include "acconf.h"
 
 #include <fstream>
@@ -191,6 +192,26 @@ account_t * account_t::find_account(const std::string& name,
   return account;
 }
 
+static inline
+account_t * find_account_re_(account_t * account, const mask_t& regexp)
+{
+  if (regexp.match(account->fullname()))
+    return account;
+
+  for (accounts_map::iterator i = account->accounts.begin();
+       i != account->accounts.end();
+       i++)
+    if (account_t * a = find_account_re_((*i).second, regexp))
+      return a;
+
+  return NULL;
+}
+
+account_t * journal_t::find_account_re(const std::string& regexp)
+{
+  return find_account_re_(master, mask_t(regexp));
+}
+
 bool account_t::remove_transaction(transaction_t * xact)
 {
   transactions.remove(xact);
@@ -314,7 +335,7 @@ bool journal_t::remove_entry(entry_t * entry)
 }
 
 entry_t * journal_t::derive_entry(strings_list::iterator i,
-				  strings_list::iterator end) const
+				  strings_list::iterator end)
 {
   std::auto_ptr<entry_t> added(new entry_t);
 
@@ -328,7 +349,7 @@ entry_t * journal_t::derive_entry(strings_list::iterator i,
 
   mask_t regexp(*i++);
 
-  for (entries_list::const_reverse_iterator j = entries.rbegin();
+  for (entries_list::reverse_iterator j = entries.rbegin();
        j != entries.rend();
        j++)
     if (regexp.match((*j)->payee)) {
@@ -343,13 +364,12 @@ entry_t * journal_t::derive_entry(strings_list::iterator i,
 
   if ((*i)[0] == '-' || std::isdigit((*i)[0])) {
     if (! matching)
-      throw error("Missing account name for non-matching entry");
+      throw error("Could not determine the account to draw from");
 
     transaction_t * m_xact, * xact, * first;
     m_xact = matching->transactions.front();
 
-    amount_t amt(*i++);
-    first = xact = new transaction_t(m_xact->account, amt);
+    first = xact = new transaction_t(m_xact->account, amount_t(*i++));
     added->add_transaction(xact);
 
     if (xact->amount.commodity().symbol.empty())
@@ -360,18 +380,19 @@ entry_t * journal_t::derive_entry(strings_list::iterator i,
     xact = new transaction_t(m_xact->account, - first->amount);
     added->add_transaction(xact);
 
-    if (i != end && std::string(*i++) == "-from" && i != end)
+    if (i != end)
       if (account_t * acct = find_account(*i))
 	added->transactions.back()->account = acct;
   } else {
-    while (std::string(*i) != "-from") {
-      mask_t acct_regex(*i++);
-
+    while (i != end) {
+      std::string&  re_pat(*i++);
       account_t *   acct  = NULL;
       commodity_t * cmdty = NULL;
 
       if (matching) {
-	for (transactions_list::iterator x
+	mask_t acct_regex(re_pat);
+
+	for (transactions_list::const_iterator x
 	       = matching->transactions.begin();
 	     x != matching->transactions.end();
 	     x++) {
@@ -383,38 +404,37 @@ entry_t * journal_t::derive_entry(strings_list::iterator i,
 	}
       }
 
-      if (! acct)
-	acct = find_account(acct_regex.pattern);
+      if (! acct) {
+	acct = find_account_re(re_pat);
+	if (acct && acct->transactions.size() > 0)
+	  cmdty = &acct->transactions.back()->amount.commodity();
+      }
 
       if (! acct)
-	throw error(std::string("Could not find account name '") +
-		    acct_regex.pattern + "'");
+	acct = find_account(re_pat);
 
-      if (i == end)
-	throw error("Too few arguments to 'entry'");
+      if (i == end) {
+	added->add_transaction(new transaction_t(acct));
+	goto done;
+      }
 
-      amount_t amt(*i++);
-      transaction_t * xact = new transaction_t(acct, amt);
-      added->add_transaction(xact);
-
+      transaction_t * xact = new transaction_t(acct, amount_t(*i++));
       if (! xact->amount.commodity())
 	xact->amount.set_commodity(*cmdty);
+
+      added->add_transaction(xact);
     }
 
-    if (i != end && std::string(*i++) == "-from" && i != end) {
-      if (account_t * acct = find_account(*i++))
-	added->add_transaction(new transaction_t(acct));
-    }
-    else if (! matching) {
-      throw error("Could not figure out the account to draw from");
-    }
-    else {
+    if (! matching) {
+      throw error("Could not determine the account to draw from");
+    } else {
       transaction_t * xact
 	= new transaction_t(matching->transactions.back()->account);
       added->add_transaction(xact);
     }
   }
 
+ done:
   return added.release();
 }
 
@@ -443,6 +463,7 @@ bool journal_t::valid() const
 #ifdef USE_BOOST_PYTHON
 
 #include <boost/python.hpp>
+#include <boost/python/exception_translator.hpp>
 
 using namespace boost::python;
 using namespace ledger;
@@ -565,6 +586,17 @@ account_t * py_find_account_2(journal_t& journal, const std::string& name,
   return journal.find_account(name, auto_create);
 }
 
+#define EXC_TRANSLATOR(type)				\
+  void exc_translate_ ## type(const type& err) {	\
+    PyErr_SetString(PyExc_RuntimeError, err.what());	\
+  }
+
+EXC_TRANSLATOR(error)
+EXC_TRANSLATOR(compute_error)
+EXC_TRANSLATOR(value_expr_error)
+EXC_TRANSLATOR(interval_expr_error)
+EXC_TRANSLATOR(format_error)
+EXC_TRANSLATOR(parse_error)
 
 void export_journal()
 {
@@ -669,6 +701,16 @@ void export_journal()
     .value("CLEARED",   entry_t::CLEARED)
     .value("PENDING",   entry_t::PENDING)
     ;
+
+#define EXC_TRANSLATE(type)					\
+  register_exception_translator<type>(&exc_translate_ ## type);
+
+  EXC_TRANSLATE(error);
+  EXC_TRANSLATE(compute_error);
+  EXC_TRANSLATE(value_expr_error);
+  EXC_TRANSLATE(interval_expr_error);
+  EXC_TRANSLATE(format_error);
+  EXC_TRANSLATE(parse_error);
 }
 
 #endif // USE_BOOST_PYTHON

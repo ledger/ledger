@@ -224,17 +224,13 @@ class journal_t
     accounts_cache.insert(accounts_pair(name, account));
     return account;
   }
-  account_t * find_account(const std::string& name) const {
-    // With auto_create false, the other `find_account' will not
-    // change the object.
-    return const_cast<journal_t *>(this)->find_account(name, false);
-  }
+  account_t * find_account_re(const std::string& regexp);
 
   bool add_entry(entry_t * entry);
   bool remove_entry(entry_t * entry);
 
   entry_t * derive_entry(strings_list::iterator begin,
-			 strings_list::iterator end) const;
+			 strings_list::iterator end);
 
   bool valid() const;
 };

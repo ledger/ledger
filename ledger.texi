@@ -294,7 +294,22 @@ exit code to 1.
 
 There is a shell script in the distribution called ``entry'', which
 simplifies the task of adding a new entry to your ledger, and then
-launches @command{vi} to let you confirm that the entry looks appropriate.
+launches @command{vi} to let you confirm that the entry looks
+appropriate.
+
+Here are a few more examples of the entry command, assuming the above
+journal entry:
+
+@example
+# Pay $11.00 to first transaction account (food)
+ledger entry 4/9 viva 11.00
+
+# Pay $11.00 to food from checking
+ledger entry 4/9 viva 11.00 checking
+
+# Pay DM 11.00 to dining, no matter what the entry said
+ledger entry 4/9 viva dining "DM 11.00"
+@end example
 
 @node Options, Format strings, Commands, Running Ledger
 @section Options
