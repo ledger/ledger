@@ -67,19 +67,19 @@ class fdoutbuf : public std::streambuf {
   protected:
     // write one character
     virtual int_type overflow (int_type c) {
-        if (c != EOF) {
-            char z = c;
-            if (write (fd, &z, 1) != 1) {
-                return EOF;
-            }
-        }
-        return c;
+	if (c != EOF) {
+	    char z = c;
+	    if (write (fd, &z, 1) != 1) {
+		return EOF;
+	    }
+	}
+	return c;
     }
     // write multiple characters
     virtual
     std::streamsize xsputn (const char* s,
-                            std::streamsize num) {
-        return write(fd,s,num);
+			    std::streamsize num) {
+	return write(fd,s,num);
     }
 };
 
@@ -88,7 +88,7 @@ class fdostream : public std::ostream {
     fdoutbuf buf;
   public:
     fdostream (int fd) : std::ostream(0), buf(fd) {
-        rdbuf(&buf);
+	rdbuf(&buf);
     }
 };
 
@@ -118,54 +118,54 @@ class fdinbuf : public std::streambuf {
      * => force underflow()
      */
     fdinbuf (int _fd) : fd(_fd) {
-        setg (buffer+pbSize,     // beginning of putback area
-              buffer+pbSize,     // read position
-              buffer+pbSize);    // end position
+	setg (buffer+pbSize,     // beginning of putback area
+	      buffer+pbSize,     // read position
+	      buffer+pbSize);    // end position
     }
 
   protected:
     // insert new characters into the buffer
     virtual int_type underflow () {
 #ifndef _MSC_VER
-        using std::memmove;
+	using std::memmove;
 #endif
 
-        // is read position before end of buffer?
-        if (gptr() < egptr()) {
-            return traits_type::to_int_type(*gptr());
-        }
+	// is read position before end of buffer?
+	if (gptr() < egptr()) {
+	    return traits_type::to_int_type(*gptr());
+	}
 
-        /* process size of putback area
-         * - use number of characters read
-         * - but at most size of putback area
-         */
-        int numPutback;
-        numPutback = gptr() - eback();
-        if (numPutback > pbSize) {
-            numPutback = pbSize;
-        }
+	/* process size of putback area
+	 * - use number of characters read
+	 * - but at most size of putback area
+	 */
+	int numPutback;
+	numPutback = gptr() - eback();
+	if (numPutback > pbSize) {
+	    numPutback = pbSize;
+	}
 
-        /* copy up to pbSize characters previously read into
-         * the putback area
-         */
-        memmove (buffer+(pbSize-numPutback), gptr()-numPutback,
-                numPutback);
+	/* copy up to pbSize characters previously read into
+	 * the putback area
+	 */
+	memmove (buffer+(pbSize-numPutback), gptr()-numPutback,
+		numPutback);
 
-        // read at most bufSize new characters
-        int num;
-        num = read (fd, buffer+pbSize, bufSize);
-        if (num <= 0) {
-            // ERROR or EOF
-            return EOF;
-        }
+	// read at most bufSize new characters
+	int num;
+	num = read (fd, buffer+pbSize, bufSize);
+	if (num <= 0) {
+	    // ERROR or EOF
+	    return EOF;
+	}
 
-        // reset buffer pointers
-        setg (buffer+(pbSize-numPutback),   // beginning of putback area
-              buffer+pbSize,                // read position
-              buffer+pbSize+num);           // end of buffer
+	// reset buffer pointers
+	setg (buffer+(pbSize-numPutback),   // beginning of putback area
+	      buffer+pbSize,                // read position
+	      buffer+pbSize+num);           // end of buffer
 
-        // return next character
-        return traits_type::to_int_type(*gptr());
+	// return next character
+	return traits_type::to_int_type(*gptr());
     }
 };
 
@@ -174,7 +174,7 @@ class fdistream : public std::istream {
     fdinbuf buf;
   public:
     fdistream (int fd) : std::istream(0), buf(fd) {
-        rdbuf(&buf);
+	rdbuf(&buf);
     }
 };
 

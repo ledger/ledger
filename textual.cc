@@ -653,9 +653,9 @@ void write_textual_journal(journal_t& journal, std::string path,
   istream_pos_type pos = 0;
   istream_pos_type jump_to;
 
-  format_t hdr_fmt(config.write_hdr_format);
-
+  format_t	hdr_fmt(config.write_hdr_format);
   std::ifstream in(found.c_str());
+
   while (! in.eof()) {
     entry_base_t * base = NULL;
     if (el != journal.entries.end() &&
