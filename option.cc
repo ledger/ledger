@@ -189,7 +189,7 @@ namespace {
 }
 
 void py_add_option_handler(const std::string& long_opt,
-			const std::string& short_opt, object func)
+			   const std::string& short_opt, object func)
 {
   wrappers.push_back(func_option_wrapper(func));
   add_option_handler(options, long_opt, short_opt, wrappers.back());
