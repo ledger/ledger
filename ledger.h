@@ -1,5 +1,5 @@
 #ifndef _LEDGER_H
-#define _LEDGER_H "$Revision: 1.20 $"
+#define _LEDGER_H "$Revision: 1.21 $"
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -96,7 +96,9 @@ struct mask
   }
 };
 
-typedef std::list<mask> regexps_map;
+typedef std::list<mask *>                 regexps_map;
+typedef std::list<mask *>::iterator       regexps_map_iterator;
+typedef std::list<mask *>::const_iterator regexps_map_const_iterator;
 
 void record_regexp(const std::string& pattern, regexps_map& regexps);
 void read_regexps(const std::string& path, regexps_map& regexps);
@@ -156,7 +158,7 @@ struct entry
     }
   }
 
-  bool matches(const std::list<mask>& regexps) const;
+  bool matches(const regexps_map& regexps) const;
   bool validate(bool show_unaccounted = false) const;
 
   void print(std::ostream& out, bool shortcut = true) const;
@@ -245,10 +247,10 @@ struct book
   entries_list    entries;
   int             current_year;
 
-  typedef std::map<std::list<mask> *,
+  typedef std::map<regexps_map *,
 		   std::list<transaction *> *> virtual_map;
 
-  typedef std::pair<std::list<mask> *,
+  typedef std::pair<regexps_map *,
 		    std::list<transaction *> *> virtual_map_pair;
 
   typedef virtual_map::const_iterator virtual_map_iterator;

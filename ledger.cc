@@ -107,7 +107,7 @@ bool entry::validate(bool show_unaccounted) const
   return balance.is_zero();     // must balance to 0.0
 }
 
-bool entry::matches(const std::list<mask>& regexps) const
+bool entry::matches(const regexps_map& regexps) const
 {
   if (regexps.empty() || (ledger::matches(regexps, code) ||
 			  ledger::matches(regexps, desc))) {
@@ -216,7 +216,7 @@ void read_regexps(const std::string& path, regexps_map& regexps)
       char buf[80];
       file.getline(buf, 79);
       if (*buf && ! std::isspace(*buf))
-	regexps.push_back(mask(buf));
+	regexps.push_back(new mask(buf));
     }
   }
 }
@@ -226,27 +226,58 @@ bool matches(const regexps_map& regexps, const std::string& str,
 {
   assert(! regexps.empty());
 
-  // If the first pattern is an exclude, we assume all patterns match
-  // if they don't match the exclude -- and by_exclusion will be set
-  // to true to reflect this "by default" behavior.  But if the first
-  // pattern is an include, only accounts matching the include will
-  // match, and these are a positive match.
+  bool match    = false;
+  bool definite = false;
 
-  bool match = (*regexps.begin()).exclude;
-  if (match && by_exclusion)
-    *by_exclusion = true;
+//  std::ofstream out("regex.out", std::ios_base::app);
+//  out << "Matching against: " << str << std::endl;
 
-  for (std::list<mask>::const_iterator r = regexps.begin();
+  for (regexps_map_const_iterator r = regexps.begin();
        r != regexps.end();
        r++) {
-    int ovec[3];
-    if (pcre_exec((*r).regexp, NULL, str.c_str(), str.length(),
-		  0, 0, ovec, 3) >= 0) {
-      if (by_exclusion)
-	*by_exclusion = (*r).exclude;
-      match = ! (*r).exclude;
+//    out << "  Trying: " << (*r)->pattern << std::endl;
+
+    static int ovec[30];
+    int result = pcre_exec((*r)->regexp, NULL, str.c_str(), str.length(),
+			   0, 0, ovec, 30);
+    if (result >= 0) {
+//      out << "    Definite ";
+
+      match = ! (*r)->exclude;
+//      if (match)
+//	out << "match";
+//      else
+//	out << "unmatch";
+
+      definite = true;
+    } else {
+      assert(result == -1);
+
+//      out << "    failure code = " << result << std::endl;
+
+      if ((*r)->exclude) {
+	if (! match) {
+	  match = ! definite;
+//	  if (match)
+//	    out << "    indefinite match by exclusion" << std::endl;
+	}
+      } else {
+	definite = true;
+      }
     }
+
+//    out << "  Current status: "
+//	  << (definite ? "definite " : "")
+//	  << (match ? "match" : "not match") << std::endl;
   }
+
+  if (match && ! definite && by_exclusion) {
+//    out << "  Note: Matched by exclusion rule" << std::endl;
+    *by_exclusion = true;
+  }
+
+//  out << "  Final result: " << (match ? "match" : "not match")
+//	<< std::endl;
 
   return match;
 }

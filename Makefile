@@ -2,13 +2,7 @@ define GNUCASH
 true
 endef
 
-CODE =  amount.cc   \
-	ledger.cc   \
-	parse.cc    \
-	balance.cc  \
-	register.cc \
-	equity.cc   \
-	main.cc
+CODE =  amount.cc ledger.cc parse.cc reports.cc
 
 OBJS = $(patsubst %.cc,%.o,$(CODE))
 

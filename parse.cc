@@ -24,7 +24,11 @@ static inline char * next_element(char * buf, bool variable = false)
       *p = '\0';
       return skip_ws(p + 1);
     }
-    else if (*(p + 1) == ' ' || *(p + 1) == '\t') {
+    else if (*p == '\t') {
+      *p = '\0';
+      return skip_ws(p + 1);
+    }
+    else if (*(p + 1) == ' ') {
       *p = '\0';
       return skip_ws(p + 2);
     }
@@ -407,7 +411,7 @@ void parse_automated_transactions(std::istream& in, book * ledger)
 {
   static char line[MAX_LINE + 1];
 
-  std::list<mask> * masks = NULL;
+  regexps_map * masks = NULL;
 
   while (! in.eof() && in.peek() == '=') {
     in.getline(line, MAX_LINE);
@@ -417,8 +421,8 @@ void parse_automated_transactions(std::istream& in, book * ledger)
     p = skip_ws(p);
 
     if (! masks)
-      masks = new std::list<mask>;
-    masks->push_back(mask(p));
+      masks = new regexps_map;
+    masks->push_back(new mask(p));
   }
 
   std::list<transaction *> * xacts = NULL;
@@ -490,7 +494,7 @@ book * parse_ledger(std::istream& in, regexps_map& regexps,
       linenum++;
 
       // Add the regexp to whatever masks currently exist
-      regexps.push_back(mask(line));
+      regexps.push_back(new mask(line));
       break;
 
     case '=':                   // automated transactions

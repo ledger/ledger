@@ -82,8 +82,8 @@ int main(int argc, char * argv[])
 {
   std::istream * file = NULL;
   std::string    prices;
-
-  regexps_map regexps;
+  regexps_map    regexps;
+  int            index;
 
   have_beginning  = false;
   have_ending     = false;
@@ -217,6 +217,8 @@ int main(int argc, char * argv[])
     return 1;
   }
 
+  index = optind;
+
   if (use_warnings && (have_beginning || have_ending)) {
     std::cout << "Reporting";
 
@@ -252,17 +254,23 @@ int main(int argc, char * argv[])
 
   // Read the command word
 
-  const std::string command = argv[optind++];
+  const std::string command = argv[index++];
 
-  int optind_begin = optind;
+  int name_index = index;
   if (command == "register") {
     if (optind == argc) {
       std::cerr << ("Error: Must specify an account name "
 		    "after the 'register' command.") << std::endl;
       return 1;
     }
-    optind++;
+    index++;
   }
+
+  // Compile the list of specified regular expressions, which can be
+  // specified after the command, or using the '-i FILE' option
+
+  for (; index < argc; index++)
+    regexps.push_back(new mask(argv[index]));
 
   // Parse the ledger
 
@@ -281,12 +289,6 @@ int main(int argc, char * argv[])
 
   if (! main_ledger)
     std::exit(1);
-
-  // Compile the list of specified regular expressions, which can be
-  // specified after the command, or using the '-i FILE' option
-
-  for (; optind < argc; optind++)
-    regexps.push_back(mask(argv[optind]));
 
   // Record any prices specified by the user
 
@@ -310,7 +312,7 @@ int main(int argc, char * argv[])
     report_balances(std::cout, regexps);
   }
   else if (command == "register") {
-    print_register(argv[optind_begin], std::cout, regexps);
+    print_register(argv[name_index], std::cout, regexps);
   }
   else if (command == "print") {
     main_ledger->sort(cmp_entry_date());
@@ -325,6 +327,14 @@ int main(int argc, char * argv[])
   // this point.
 
   delete main_ledger;
+
+  // Delete the known regexp maps.
+
+  for (regexps_map_iterator r = regexps.begin();
+       r != regexps.end();
+       r++) {
+    delete *r;
+  }
 #endif
 }
 
