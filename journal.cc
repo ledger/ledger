@@ -380,9 +380,13 @@ entry_t * journal_t::derive_entry(strings_list::iterator i,
     xact = new transaction_t(m_xact->account, - first->amount);
     added->add_transaction(xact);
 
-    if (i != end)
-      if (account_t * acct = find_account(*i))
+    if (i != end) {
+      account_t * acct = find_account_re(*i);
+      if (! acct)
+	acct = find_account(*i);
+      if (acct)
 	added->transactions.back()->account = acct;
+    }
   } else {
     while (i != end) {
       std::string&  re_pat(*i++);
@@ -668,6 +672,8 @@ void export_journal()
     .def("remove_account", &journal_t::remove_account)
     .def("find_account", py_find_account_1, return_internal_reference<1>())
     .def("find_account", py_find_account_2, return_internal_reference<1>())
+    .def("find_account_re", &journal_t::find_account_re,
+	 return_internal_reference<1>())
 
     .def("add_entry", &journal_t::add_entry)
     .def("remove_entry", &journal_t::remove_entry)
