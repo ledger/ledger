@@ -22,14 +22,12 @@ typedef std::pair<const std::string, option_handler *> option_handler_pair;
 
 struct option_handler {
   bool handled;
-  bool multiple;
 
   static std::vector<option_t> options;
   static option_handler_map    handlers;
 
   option_handler(const std::string& label,
-		 const std::string& opt_chars,
-		 const bool         _multiple);
+		 const std::string& opt_chars);
 
   virtual void handle_option(const char * arg = NULL) = 0;
 };
@@ -43,9 +41,9 @@ void process_environment(char ** envp, const std::string& tag);
   std::vector<option_t> option_handler::options;	\
   option_handler_map    option_handler::handlers
 
-#define OPT_BEGIN(tag, chars, multi)				\
+#define OPT_BEGIN(tag, chars)					\
   static struct tag ## _handler : public option_handler {	\
-    tag ## _handler() : option_handler(#tag, chars, multi) {}	\
+    tag ## _handler() : option_handler(#tag, chars) {}		\
     virtual void handle_option(const char * optarg)
 
 #define OPT_END(tag) } tag ## _handler_obj

@@ -169,14 +169,10 @@ bool quick_parse_date(char * date_str, std::time_t * result)
 
   if (base == -1 || year != base_year) {
     struct std::tm when;
-
-    when.tm_hour = 0;
-    when.tm_min  = 0;
-    when.tm_sec  = 0;
+    std::memset(&when, 0, sizeof(when));
 
     base_year    = year == -1 ? now_tm->tm_year + 1900 : year;
     when.tm_year = year == -1 ? now_tm->tm_year : year - 1900;
-    when.tm_mon  = 0;
     when.tm_mday = 1;
 
     base = std::mktime(&when);

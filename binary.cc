@@ -23,7 +23,7 @@ static std::vector<commodity_t *> commodities;
 static commodity_t::ident_t	  c_ident;
 
 
-#ifdef RELEASE_LEVEL >= ALPHA
+#if RELEASE_LEVEL >= ALPHA
 #define read_binary_guard(in, id) {		\
   unsigned short guard;				\
   in.read((char *)&guard, sizeof(guard));	\
@@ -252,7 +252,7 @@ unsigned int read_binary_journal(std::istream& in,
 }
 
 
-#ifdef RELEASE_LEVEL >= ALPHA
+#if RELEASE_LEVEL >= ALPHA
 #define write_binary_guard(in, id) {		\
   unsigned short guard = id;			\
   out.write((char *)&guard, sizeof(guard));	\

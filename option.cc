@@ -4,9 +4,8 @@
 #include <cstdarg>
 
 option_handler::option_handler(const std::string& label,
-			       const std::string& opt_chars,
-			       const bool         _multiple)
-  : handled(false), multiple(_multiple)
+			       const std::string& opt_chars)
+  : handled(false)
 {
   option_t opt;
 
@@ -33,7 +32,7 @@ option_handler::option_handler(const std::string& label,
 
 static inline void process_option(const option_t& opt,
 				  const char * arg = NULL) {
-  if (! opt.handler->handled || opt.handler->multiple) {
+  if (! opt.handler->handled) {
     opt.handler->handle_option(arg);
     opt.handler->handled = true;
   }
@@ -43,7 +42,7 @@ bool process_option(const std::string& opt, const char * arg)
 {
   option_handler_map::iterator handler = option_handler::handlers.find(opt);
   if (handler != option_handler::handlers.end()) {
-    if (! (*handler).second->handled || (*handler).second->multiple) {
+    if (! (*handler).second->handled) {
       (*handler).second->handle_option(arg);
       (*handler).second->handled = true;
     }

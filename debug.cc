@@ -2,8 +2,79 @@
 
 #ifdef DEBUG_ENABLED
 
+#include <map>
 #include <fstream>
 #include <cstdlib>
+#include <cstring>
+
+int offset = 0;
+
+std::map<void *, int> ptrs;
+
+#define PRINT_INC(x) {					\
+  char buf[128];					\
+  std::sprintf(buf, "%d: %p: %s", ++offset, ptr, x);	\
+  write(1, buf, std::strlen(buf));			\
+}
+
+#define PRINT_DEC(x) {					\
+  char buf[128];					\
+  std::sprintf(buf, "%d: %p: %s", --offset, ptr, x);	\
+  write(1, buf, std::strlen(buf));			\
+}
+
+void * operator new(std::size_t size) throw (std::bad_alloc) {
+  void * ptr = std::malloc(size);
+  if (DEBUG("ledger.debug.alloc")) {
+    PRINT_INC("void * operator new(std::size_t size) throw (std::bad_alloc)\n");
+  }
+  return ptr;
+}
+void * operator new[](std::size_t size) throw (std::bad_alloc) {
+  void * ptr = std::malloc(size);
+  if (DEBUG("ledger.debug.alloc")) {
+    PRINT_INC("void * operator new[](std::size_t) throw (std::bad_alloc)\n");
+  }
+  return ptr;
+}
+void * operator new(std::size_t size, const std::nothrow_t&) throw() {
+  void * ptr = std::malloc(size);
+  if (DEBUG("ledger.debug.alloc")) {
+    PRINT_INC("void * operator new(std::size_t size, const std::nothrow_t&) throw()\n");
+  }
+  return ptr;
+}
+void * operator new[](std::size_t size, const std::nothrow_t&) throw() {
+  void * ptr = std::malloc(size);
+  if (DEBUG("ledger.debug.alloc")) {
+    PRINT_INC("void * operator new[](std::size_t size, const std::nothrow_t&) throw()\n");
+  }
+  return ptr;
+}
+void   operator delete(void * ptr) throw() {
+  if (DEBUG("ledger.debug.alloc")) {
+    PRINT_DEC("void   operator delete(void * ptr) throw()\n");
+  }
+  std::free(ptr);
+}
+void   operator delete[](void * ptr) throw() {
+  if (DEBUG("ledger.debug.alloc")) {
+    PRINT_DEC("void   operator delete[](void * ptr) throw()\n");
+  }
+  std::free(ptr);
+}
+void   operator delete(void * ptr, const std::nothrow_t&) throw() {
+  if (DEBUG("ledger.debug.alloc")) {
+    PRINT_DEC("void   operator delete(void * ptr, const std::nothrow_t&) throw()\n");
+  }
+  std::free(ptr);
+}
+void   operator delete[](void * ptr, const std::nothrow_t&) throw() {
+  if (DEBUG("ledger.debug.alloc")) {
+    PRINT_DEC("void   operator delete[](void * ptr, const std::nothrow_t&) throw()\n");
+  }
+  std::free(ptr);
+}
 
 namespace ledger {
 
@@ -19,16 +90,13 @@ static struct init_streams {
       free_debug_stream = true;
     }
   }
-} _debug_init;
-
-static struct free_streams {
-  ~free_streams() {
+  ~init_streams() {
     if (free_debug_stream && debug_stream) {
       delete debug_stream;
       debug_stream = NULL;
     }
   }
-} _debug_cleanup;
+} _debug_init;
 
 } // namespace ledger
 

@@ -113,21 +113,21 @@ Commands:\n\
 
 DEF_OPT_HANDLERS();
 
-OPT_BEGIN(help, "h", false) {
+OPT_BEGIN(help, "h") {
   option_help(std::cout);
   std::exit(0);
 } OPT_END(help);
 
-OPT_BEGIN(version, "v", false) {
+OPT_BEGIN(version, "v") {
   show_version(std::cout);
   std::exit(0);
 } OPT_END(version);
 
-OPT_BEGIN(init, "i:", true) {
+OPT_BEGIN(init, "i:") {
   config->init_file = optarg;
 } OPT_END(init);
 
-OPT_BEGIN(file, "f:", true) {
+OPT_BEGIN(file, "f:") {
   char * buf = new char[std::strlen(optarg) + 1];
   std::strcpy(buf, optarg);
   for (char * p = std::strtok(buf, ":");
@@ -137,16 +137,16 @@ OPT_BEGIN(file, "f:", true) {
   delete[] buf;
 } OPT_END(file);
 
-OPT_BEGIN(cache, ":", false) {
+OPT_BEGIN(cache, ":") {
   config->cache_file = optarg;
 } OPT_END(cache);
 
-OPT_BEGIN(output, "o:", false) {
+OPT_BEGIN(output, "o:") {
   if (std::string(optarg) != "-")
     config->output_file = optarg;
 } OPT_END(output);
 
-OPT_BEGIN(set_price, "p:", true) {
+OPT_BEGIN(set_price, "p:") {
   if (std::strchr(optarg, '='))
     config->price_settings.push_back(optarg);
   else
@@ -157,7 +157,7 @@ OPT_BEGIN(set_price, "p:", true) {
 //
 // Report filtering
 
-OPT_BEGIN(begin_date, "b:", false) {
+OPT_BEGIN(begin_date, "b:") {
   if (! config->predicate.empty())
     config->predicate += "&";
   config->predicate += "(d>=[";
@@ -165,7 +165,7 @@ OPT_BEGIN(begin_date, "b:", false) {
   config->predicate += "])";
 } OPT_END(begin_date);
 
-OPT_BEGIN(end_date, "e:", false) {
+OPT_BEGIN(end_date, "e:") {
   if (! config->predicate.empty())
     config->predicate += "&";
   config->predicate += "(d<[";
@@ -173,25 +173,25 @@ OPT_BEGIN(end_date, "e:", false) {
   config->predicate += "])";
 } OPT_END(end_date);
 
-OPT_BEGIN(current, "c", false) {
+OPT_BEGIN(current, "c") {
   if (! config->predicate.empty())
     config->predicate += "&";
   config->predicate += "(d<t)";
 } OPT_END(current);
 
-OPT_BEGIN(cleared, "C", false) {
+OPT_BEGIN(cleared, "C") {
   if (! config->predicate.empty())
     config->predicate += "&";
   config->predicate += "X";
 } OPT_END(cleared);
 
-OPT_BEGIN(uncleared, "U", false) {
+OPT_BEGIN(uncleared, "U") {
   if (! config->predicate.empty())
     config->predicate += "&";
   config->predicate += "!X";
 } OPT_END(uncleared);
 
-OPT_BEGIN(real, "R", false) {
+OPT_BEGIN(real, "R") {
   if (! config->predicate.empty())
     config->predicate += "&";
   config->predicate += "R";
@@ -201,55 +201,55 @@ OPT_BEGIN(real, "R", false) {
 //
 // Output customization
 
-OPT_BEGIN(format, "F:", false) {
+OPT_BEGIN(format, "F:") {
   config->format_string = optarg;
 } OPT_END(format);
 
-OPT_BEGIN(date_format, "y:", false) {
+OPT_BEGIN(date_format, "y:") {
   config->date_format = optarg;
 } OPT_END(date_format);
 
-OPT_BEGIN(empty, "E", false) {
+OPT_BEGIN(empty, "E") {
   config->show_empty = true;
 } OPT_END(empty);
 
-OPT_BEGIN(collapse, "n", false) {
+OPT_BEGIN(collapse, "n") {
   config->show_subtotals = false;
 } OPT_END(collapse);
 
-OPT_BEGIN(show_all, "s", false) {
+OPT_BEGIN(show_all, "s") {
   config->show_expanded = true;
 } OPT_END(show_all);
 
-OPT_BEGIN(sort, "S:", false) {
+OPT_BEGIN(sort, "S:") {
   config->sort_string = optarg;
 } OPT_END(sort);
 
-OPT_BEGIN(related, "r", false) {
+OPT_BEGIN(related, "r") {
   config->show_related = true;
 } OPT_END(related);
 
-OPT_BEGIN(interval, "z:", false) {
+OPT_BEGIN(interval, "z:") {
   config->interval_text = optarg;
 } OPT_END(interval);
 
-OPT_BEGIN(weekly, "W", false) {
+OPT_BEGIN(weekly, "W") {
   config->interval_text = "weekly";
 } OPT_END(weekly);
 
-OPT_BEGIN(dow, "w", false) {
+OPT_BEGIN(dow, "w") {
   config->days_of_the_week = true;
 } OPT_END(dow);
 
-OPT_BEGIN(monthly, "M", false) {
+OPT_BEGIN(monthly, "M") {
   config->interval_text = "monthly";
 } OPT_END(monthly);
 
-OPT_BEGIN(yearly, "Y", false) {
+OPT_BEGIN(yearly, "Y") {
   config->interval_text = "yearly";
 } OPT_END(yearly);
 
-OPT_BEGIN(limit, "l:", false) {
+OPT_BEGIN(limit, "l:") {
   if (! config->predicate.empty())
     config->predicate += "&";
   config->predicate += "(";
@@ -257,7 +257,7 @@ OPT_BEGIN(limit, "l:", false) {
   config->predicate += ")";
 } OPT_END(limit);
 
-OPT_BEGIN(display, "d:", false) {
+OPT_BEGIN(display, "d:") {
   if (! config->display_predicate.empty())
     config->display_predicate += "&";
   config->display_predicate += "(";
@@ -265,20 +265,20 @@ OPT_BEGIN(display, "d:", false) {
   config->display_predicate += ")";
 } OPT_END(display);
 
-OPT_BEGIN(value, "t:", false) {
+OPT_BEGIN(value, "t:") {
   config->value_expr = optarg;
 } OPT_END(value);
 
-OPT_BEGIN(total, "T:", false) {
+OPT_BEGIN(total, "T:") {
   config->total_expr = optarg;
 } OPT_END(total);
 
-OPT_BEGIN(value_data, "j", false) {
+OPT_BEGIN(value_data, "j") {
   config->value_expr    = "S" + config->value_expr;
   config->format_string = plot_value_fmt;
 } OPT_END(value_data);
 
-OPT_BEGIN(total_data, "J", false) {
+OPT_BEGIN(total_data, "J") {
   config->total_expr    = "S" + config->total_expr;
   config->format_string = plot_total_fmt;
 } OPT_END(total_data);
@@ -287,36 +287,36 @@ OPT_BEGIN(total_data, "J", false) {
 //
 // Commodity reporting
 
-OPT_BEGIN(price_db, "P:", false) {
+OPT_BEGIN(price_db, "P:") {
   config->price_db = optarg;
 } OPT_END(price_db);
 
-OPT_BEGIN(price_exp, "L:", false) {
+OPT_BEGIN(price_exp, "L:") {
   config->pricing_leeway = std::atol(optarg) * 60;
 } OPT_END(price_exp);
 
-OPT_BEGIN(download, "Q", false) {
+OPT_BEGIN(download, "Q") {
   config->download_quotes = true;
 } OPT_END(download);
 
-OPT_BEGIN(quantity, "O", false) {
+OPT_BEGIN(quantity, "O") {
   config->value_expr = "a";
   config->total_expr = "T";
 } OPT_END(quantity);
 
-OPT_BEGIN(basis, "B", false) {
+OPT_BEGIN(basis, "B") {
   config->value_expr = "c";
   config->total_expr = "C";
 } OPT_END(basis);
 
-OPT_BEGIN(market, "V", false) {
+OPT_BEGIN(market, "V") {
   config->show_revalued = true;
 
   config->value_expr = "v";
   config->total_expr = "V";
 } OPT_END(market);
 
-OPT_BEGIN(gain, "G", false) {
+OPT_BEGIN(gain, "G") {
   config->show_revalued      =
   config->show_revalued_only = true;
 
@@ -324,22 +324,22 @@ OPT_BEGIN(gain, "G", false) {
   config->total_expr = "G";
 } OPT_END(gain);
 
-OPT_BEGIN(average, "A", false) {
+OPT_BEGIN(average, "A") {
   config->value_expr = "a";
   config->total_expr = "MT";
 } OPT_END(average);
 
-OPT_BEGIN(deviation, "D", false) {
+OPT_BEGIN(deviation, "D") {
   config->value_expr = "a";
   config->total_expr = "DMT";
 } OPT_END(deviation);
 
-OPT_BEGIN(trend, "X", false) {
+OPT_BEGIN(trend, "X") {
   config->value_expr = "a";
   config->total_expr = "MDMT";
 } OPT_END(trend);
 
-OPT_BEGIN(weighted_trend, "Z", false) {
+OPT_BEGIN(weighted_trend, "Z") {
   config->value_expr = "a";
   config->total_expr
     = "MD(MT/(1+(((t-d)/(30*86400))<0?0:((t-d)/(30*86400)))))";
