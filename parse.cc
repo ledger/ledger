@@ -420,7 +420,7 @@ int parse_ledger(book * ledger, std::istream& in,
     case 'P': {			// a pricing entry
       in >> c;
 
-      time_t      date;
+      std::time_t date;
       std::string symbol;
 
       in >> line;		// the date
@@ -429,6 +429,16 @@ int parse_ledger(book * ledger, std::istream& in,
 		  << ": Failed to parse date: " << line << std::endl;
 	break;
       }
+
+      int hour, min, sec;
+      in >> hour;		// the time
+      in >> c;
+      in >> min;
+      in >> c;
+      in >> sec;
+      date = std::time_t(((unsigned long) date) +
+			 hour * 3600 + min * 60 + sec);
+      
       in >> symbol;		// the commodity
       in >> line;		// the price
 

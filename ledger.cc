@@ -31,7 +31,7 @@ void commodity::set_price(amount * price, std::time_t * when)
 
 amount * commodity::price(std::time_t * when, bool download) const
 {
-  if (conversion)
+  if (conversion || ! when)
     return conversion;
 
   std::time_t age;
@@ -40,7 +40,7 @@ amount * commodity::price(std::time_t * when, bool download) const
   for (price_map::reverse_iterator i = history.rbegin();
        i != history.rend();
        i++) {
-    if (*when >= (*i).first) {
+    if (std::difftime(*when, (*i).first) >= 0) {
       age   = (*i).first;
       price = (*i).second;
       break;
@@ -48,9 +48,11 @@ amount * commodity::price(std::time_t * when, bool download) const
   }
 
   extern long pricing_leeway;
+  time_t now = time(NULL);	// the time of the query
 
   if (download && ! sought &&
-      (! price || (*when - age) > pricing_leeway)) {
+      std::difftime(now, *when) < pricing_leeway &&
+      (! price || std::difftime(*when, age) > pricing_leeway)) {
     using namespace std;
 
     // Only consult the Internet once for any commodity
@@ -59,7 +61,17 @@ amount * commodity::price(std::time_t * when, bool download) const
     char buf[256];
     buf[0] = '\0';
 
-    std::cout << "Consulting the Internet: " << symbol << std::endl;
+    cout << "Consulting the Internet for " << symbol << endl;
+    strftime(buf, 127, "%Y/%m/%d %H:%M:%S", localtime(when));
+    cout << "  when: " << buf << endl;
+    if (price) {
+      strftime(buf, 127, "%Y/%m/%d %H:%M:%S", localtime(&age));
+      cout << "  age: " << buf << endl;
+      cout << "  diff (when, age): " << difftime(*when, age) << endl;
+    } else {
+      cout << "  diff (now, when): " << difftime(now, *when) << endl;
+    }
+
     if (FILE * fp = popen((string("getquote ") + symbol).c_str(), "r")) {
       if (feof(fp) || ! fgets(buf, 255, fp)) {
 	fclose(fp);
@@ -73,12 +85,12 @@ amount * commodity::price(std::time_t * when, bool download) const
       if (p) *p = '\0';
 
       price = create_amount(buf);
-      const_cast<commodity *>(this)->set_price(price, when);
+      const_cast<commodity *>(this)->set_price(price, &now);
 
       extern string price_db;
       if (! price_db.empty()) {
 	char buf[128];
-	strftime(buf, 127, "%Y/%m/%d", localtime(when));
+	strftime(buf, 127, "%Y/%m/%d %H:%M:%S", localtime(&now));
 	ofstream database(price_db.c_str(), ios_base::out | ios_base::app);
 	database << "P " << buf << " " << symbol << " "
 		 << price->as_str() << endl;
@@ -224,34 +236,30 @@ bool entry::finalize(bool do_compute)
       delete value;
     }
 
-  // If one transaction is of a different commodity than the others,
-  // and it has no per-unit price, determine its price by dividing
-  // the unit count into the value of the balance.
-  //
-  // NOTE: We don't do this for prefix-style or joined-symbol
-  // commodities.  Also, do it for the last eligible commodity first,
-  // if it meets the criteria.
+  // If one transaction of a two-line transaction is of a different
+  // commodity than the others, and it has no per-unit price,
+  // determine its price by dividing the unit count into the value of
+  // the balance.  This is done for the last eligible commodity.
 
   if (! balance.amounts.empty() && balance.amounts.size() == 2) {
     for (std::list<transaction *>::iterator x = xacts.begin();
 	 x != xacts.end();
 	 x++) {
-      if ((*x)->is_virtual)
+      if ((*x)->is_virtual || (*x)->cost->has_price())
 	continue;
 
-      if (! (*x)->cost->has_price() &&
-	  ! (*x)->cost->commdty()->prefix &&
-	  (*x)->cost->commdty()->separate) {
-	for (totals::iterator i = balance.amounts.begin();
-	     i != balance.amounts.end();
-	     i++) {
-	  if ((*i).second->commdty() != (*x)->cost->commdty()) {
-	    (*x)->cost->set_value((*i).second);
-	    break;
-	  }
+      for (totals::iterator i = balance.amounts.begin();
+	   i != balance.amounts.end();
+	   i++)
+	if ((*i).second->commdty() != (*x)->cost->commdty()) {
+	  (*x)->cost->set_value((*i).second);
+	  assert((*x)->cost->has_price());
+	  (*x)->cost->commdty()->set_price((*x)->cost->per_item_price(),
+					   &date);
+	  break;
 	}
-	break;
-      }
+
+      break;
     }
   }
 

@@ -56,11 +56,14 @@ class gmp_amount : public amount
 
   virtual amount * copy() const;
   virtual amount * value(const amount *) const;
-  virtual amount * street(bool get_quotes) const;
+  virtual void set_value(const amount * val);
+  virtual amount * street(std::time_t * when = NULL,
+			  bool get_quotes = false) const;
+
   virtual bool has_price() const {
     return priced;
   }
-  virtual void set_value(const amount * val);
+  virtual amount * per_item_price() const;
 
   virtual bool is_zero() const;
   virtual bool is_negative() const;
@@ -158,6 +161,19 @@ amount * gmp_amount::copy() const
   return new_amt;
 }
 
+amount * gmp_amount::per_item_price() const
+{
+  if (! priced)
+    return NULL;
+
+  gmp_amount * new_amt = new gmp_amount();
+
+  mpz_set(new_amt->quantity, price);
+  new_amt->quantity_comm = price_comm;
+
+  return new_amt;
+}
+
 amount * gmp_amount::value(const amount * pr) const
 {
   if (pr) {
@@ -199,9 +215,11 @@ amount * gmp_amount::value(const amount * pr) const
   }
 }
 
-amount * gmp_amount::street(bool get_quotes) const
+amount * gmp_amount::street(std::time_t * when, bool get_quotes) const
 {
   static std::time_t now = std::time(NULL);
+  if (! when)
+    when = &now;
 
   amount * amt = copy();
 
@@ -210,7 +228,7 @@ amount * gmp_amount::street(bool get_quotes) const
 
   int  max = 10;
   while (--max >= 0) {
-    amount * price = amt->commdty()->price(&now, get_quotes);
+    amount * price = amt->commdty()->price(when, get_quotes);
     if (! price)
       break;
 

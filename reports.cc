@@ -274,7 +274,7 @@ void report_balances(std::ostream& out, regexps_list& regexps)
 	}
 
 	if (acct->checked == 1) {
-	  amount * street = (*x)->cost->street(get_quotes);
+	  amount * street = (*x)->cost->street(&end_date, get_quotes);
 	  if (cost_basis &&
 	      street->commdty() == (*x)->cost->commdty() &&
 	      (*x)->cost->has_price()) {
@@ -362,7 +362,7 @@ void print_register_transaction(std::ostream& out, entry *ent,
   // Always display the street value, if prices have been
   // specified
 
-  amount * street = xact->cost->street(get_quotes);
+  amount * street = xact->cost->street(&ent->date, get_quotes);
   balance.credit(street);
 
   // If there are two transactions, use the one which does not
@@ -411,7 +411,7 @@ void print_register_transaction(std::ostream& out, entry *ent,
     out << std::left << truncated((*y)->acct_as_str(), 22) << " ";
 
     out.width(12);
-    street = (*y)->cost->street(get_quotes);
+    street = (*y)->cost->street(&ent->date, get_quotes);
     out << std::right << street->as_str(true) << std::endl;
     delete street;
   }
@@ -492,7 +492,7 @@ void print_register(std::ostream& out, const std::string& acct_name,
       if (period == PERIOD_NONE) {
 	print_register_transaction(out, *i, *x, balance);
       } else {
-	amount * street = (*x)->cost->street(get_quotes);
+	amount * street = (*x)->cost->street(&(*i)->date, get_quotes);
 	balance.credit(street);
 
 	if (period_sum) {
@@ -544,12 +544,12 @@ static void equity_entry(account * acct, regexps_list& regexps,
 
       transaction * xact = new transaction();
       xact->acct = const_cast<account *>(acct);
-      xact->cost = (*i).second->street(get_quotes);
+      xact->cost = (*i).second->street(&end_date, get_quotes);
       opening.xacts.push_back(xact);
 
       xact = new transaction();
       xact->acct = main_ledger->find_account("Equity:Opening Balances");
-      xact->cost = (*i).second->street(get_quotes);
+      xact->cost = (*i).second->street(&end_date, get_quotes);
       xact->cost->negate();
       opening.xacts.push_back(xact);
     }
@@ -833,7 +833,6 @@ int main(int argc, char * argv[])
     case 'f': files.push_back(optarg); break;
     case 'C': cleared_only   = true;  break;
     case 'U': uncleared_only = true;  break;
-    case 'B': cost_basis     = true;  break;
     case 'R': show_virtual   = false; break;
     case 's': show_children  = true;  break;
     case 'S': show_sorted    = true;  break;
@@ -869,6 +868,12 @@ int main(int argc, char * argv[])
     case 'Q':
       get_quotes = true;
       price_db = optarg;
+      break;
+
+    case 'B':
+      cost_basis = true;
+      get_quotes = false;
+      price_db   = "";
       break;
 
     case 'l':
@@ -920,14 +925,16 @@ int main(int argc, char * argv[])
   // If a price history file is specified with the environment
   // variable PRICE_HIST, add it to the list of ledger files to read.
 
-  if (price_db.empty())
-    if (char * p = std::getenv("PRICE_HIST")) {
-      get_quotes = true;
-      price_db = p;
-    }
+  if (! cost_basis) {
+    if (price_db.empty())
+      if (char * p = std::getenv("PRICE_HIST")) {
+	get_quotes = true;
+	price_db = p;
+      }
 
-  if (char * p = std::getenv("PRICE_EXP"))
-    pricing_leeway = std::atol(p) * 60;
+    if (char * p = std::getenv("PRICE_EXP"))
+      pricing_leeway = std::atol(p) * 60;
+  }
 
   // A ledger data file must be specified
 

@@ -1040,7 +1040,9 @@ launches =vi= to let you confirm that the entry looks appropriate.
 -B ::
   When printing accounts containing commodities, display the base
   price for the commodity, rather than the quantity of that commodity
-  (the default) or its current price (if -P is used).
+  (the default) or its current price (if =-P= or =-Q= is used).  This
+  option causes only the price at time(s) of purchase to be
+  considered, not the current or historical price afterwards.
 
 -b DATE ::
   Only consider entries occuring on or after the given date.

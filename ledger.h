@@ -82,10 +82,12 @@ class amount
 
   virtual amount * copy() const = 0;
   virtual amount * value(const amount * pr = NULL) const = 0;
-  virtual amount * street(bool get_quotes) const = 0;
+  virtual void set_value(const amount * pr) = 0;
+  virtual amount * street(std::time_t * when = NULL,
+			  bool get_quotes = false) const = 0;
 
   virtual bool has_price() const = 0;
-  virtual void set_value(const amount * pr) = 0;
+  virtual amount * per_item_price() const = 0;
 
   // Comparison
 
