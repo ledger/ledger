@@ -504,10 +504,10 @@ static void show_help(std::ostream& out)
 
 int main(int argc, char * argv[])
 {
-  std::list<std::string>   files;
-  ledger::ledger_t *	   book = NULL;
-  ledger::constraints_t    constraints;
-  ledger::format_t format;
+  std::list<std::string> files;
+  ledger::ledger_t *	 book = NULL;
+  ledger::constraints_t  constraints;
+  ledger::format_t       format;
 
   std::string sort_order;
   std::string value_style = "a";
@@ -826,8 +826,7 @@ int main(int argc, char * argv[])
   else if (command == "equity") {
 #if 0
     ledger::item_t * top
-      = ledger::walk_accounts(book->master, constraints,
-			      constraints.show_subtotals);
+      = ledger::walk_accounts(book->master, constraints);
 
     ledger::entry_report(std::cout, top, constraints, format);
 
@@ -843,8 +842,7 @@ int main(int argc, char * argv[])
       format.format_string = ledger::bal_fmt;
 
     if (ledger::item_t * top
-	  = ledger::walk_accounts(book->master, constraints,
-				  constraints.show_subtotals)) {
+	  = ledger::walk_accounts(book->master, constraints)) {
       ledger::balance_report(std::cout, top, constraints, format);
 #ifdef DEBUG
       delete top;
@@ -859,8 +857,7 @@ int main(int argc, char * argv[])
 	  = ledger::walk_entries(book->entries.begin(),
 				 book->entries.end(), constraints))
       if (ledger::item_t * top
-	    = ledger::walk_items(list, book->master, constraints,
-				 constraints.show_subtotals)) {
+	    = ledger::walk_items(list, book->master, constraints)) {
 	ledger::balance_report(std::cout, top, constraints, format);
 #ifdef DEBUG
 	delete top;

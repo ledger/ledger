@@ -200,6 +200,10 @@ bool constraints_t::operator ()(const item_t * item) const
     return false;
 
 #if 0
+  // jww (2004-07-26): It shouldn't be necessary to check against the
+  // account here, since this is always done during initial compiling
+  // of the item_t tree.
+
   if (! account_masks.empty()) {
     bool match = false;
 

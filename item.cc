@@ -8,8 +8,7 @@ namespace ledger {
 // subaccounts, empty balanced or no
 
 item_t * walk_accounts(const account_t *    account,
-		       const constraints_t& constraints,
-		       const bool           compute_subtotals)
+		       const constraints_t& constraints)
 {
   item_t * item = new item_t;
   item->account = account;
@@ -21,64 +20,60 @@ item_t * walk_accounts(const account_t *    account,
        i != account->transactions.end();
        i++) {
     item->value += *(*i);
-    if (compute_subtotals)
+    if (constraints.show_subtotals)
       item->total += *(*i);
   }
 
   for (accounts_map::const_iterator i = account->accounts.begin();
        i != account->accounts.end();
        i++) {
-    item_t * subitem = walk_accounts((*i).second, constraints,
-				     compute_subtotals);
+    item_t * subitem = walk_accounts((*i).second, constraints);
     subitem->parent = item;
 
-    if (compute_subtotals)
+    if (constraints.show_subtotals)
       item->total += subitem->total;
 
-    if (compute_subtotals ? subitem->total : subitem->value)
+    if (constraints.show_subtotals ? subitem->total : subitem->value)
       item->subitems.push_back(subitem);
   }
 
   return item;
 }
 
-static inline void sum_items(const item_t * top,
-			     item_t *       item,
-			     const bool     compute_subtotals)
+static inline void sum_items(const item_t *	  top,
+			     const constraints_t& constraints,
+			     item_t *		  item)
 {
   if (top->account == item->account) {
     item->value += top->value;
-    if (compute_subtotals)
+    if (constraints.show_subtotals)
       item->total += top->value;
   }
 
   for (items_deque::const_iterator i = top->subitems.begin();
        i != top->subitems.end();
        i++)
-    sum_items(*i, item, compute_subtotals);
+    sum_items(*i, constraints, item);
 }
 
-item_t * walk_items(const item_t *       top,
-		    const account_t *    account,
-		    const constraints_t& constraints,
-		    const bool           compute_subtotals)
+item_t * walk_items(const item_t * top, const account_t * account,
+		    const constraints_t& constraints)
 {
   item_t * item = new item_t;
   item->account = account;
 
-  sum_items(top, item, compute_subtotals);
+  sum_items(top, constraints, item);
 
   for (accounts_map::const_iterator i = account->accounts.begin();
        i != account->accounts.end();
        i++) {
-    item_t * subitem = walk_items(top, (*i).second, constraints,
-				  compute_subtotals);
+    item_t * subitem = walk_items(top, (*i).second, constraints);
     subitem->parent = item;
 
-    if (compute_subtotals)
+    if (constraints.show_subtotals)
       item->total += subitem->total;
 
-    if (compute_subtotals ? subitem->total : subitem->value)
+    if (constraints.show_subtotals ? subitem->total : subitem->value)
       item->subitems.push_back(subitem);
   }
 

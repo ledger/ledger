@@ -1,6 +1,6 @@
-#include "ledger.h"
-#include "constraint.h"
 #include "textual.h"
+#include "constraint.h"
+#include "error.h"
 
 #include <vector>
 #include <fstream>
@@ -14,7 +14,7 @@
 namespace ledger {
 
 #if 0
-static const std::string entry1_fmt = "%?10d %p";
+static const std::string entry1_fmt = "%10d %p";
 static const std::string entryn_fmt = "    %-30a  %15t";
 #endif
 
@@ -360,13 +360,11 @@ void parse_automated_transactions(std::istream& in, ledger_t * ledger,
 
   while (! in.eof() && (in.peek() == ' ' || in.peek() == '\t')) {
     if (transaction_t * xact = parse_transaction(in, ledger, account, NULL)) {
-      if (! xact->amount) {
-	std::cerr << "Error in " << path << ", line " << (linenum - 1)
-		  << ": All automated transactions must have a value."
-		  << std::endl;
-      } else {
+      if (! xact->amount)
+	throw parse_error(path, linenum,
+			  "All automated transactions must have a value");
+      else
 	xacts.push_back(xact);
-      }
     }
   }
 
@@ -461,11 +459,8 @@ entry_t * parse_entry(std::istream& in, ledger_t * ledger,
 
   char * next = next_element(line);
 
-  if (! quick_parse_date(line, &curr->date)) {
-    std::cerr << "Error in " << path << ", line " << (linenum - 1)
-	      << ": Failed to parse date: " << line << std::endl;
-    return NULL;
-  }
+  if (! quick_parse_date(line, &curr->date))
+    throw parse_error(path, linenum, "Failed to parse date");
 
   // Parse the optional cleared flag: *
 
@@ -532,241 +527,241 @@ unsigned int parse_textual_ledger(std::istream& in, ledger_t *& ledger,
   linenum = 1;
 
   while (! in.eof()) {
-    switch (in.peek()) {
-    case -1:                    // end of file
-      goto done;
+    try {
+      switch (in.peek()) {
+      case -1:                    // end of file
+	goto done;
 
-    case ' ':
-    case '\t':
-      if (peek_next_nonws(in) != '\n') {
-	std::cerr << "Error in " << path << ", line " << (linenum - 1)
-		  << ": Ignoring entry beginning with whitespace."
-		  << std::endl;
-	in.getline(line, MAX_LINE);
+      case ' ':
+      case '\t':
+	if (peek_next_nonws(in) != '\n') {
+	  in.getline(line, MAX_LINE);
+	  linenum++;
+	  throw parse_error(path, linenum,
+			    "Ignoring entry beginning with whitespace");
+	}
+	// fall through...
+
+      case '\n':
 	linenum++;
+      case '\r':                  // skip blank lines
+	in.get(c);
 	break;
-      }
-      // fall through...
-
-    case '\n':
-      linenum++;
-    case '\r':                  // skip blank lines
-      in.get(c);
-      break;
 
 #ifdef TIMELOG_SUPPORT
-    case 'i':
-    case 'I': {
-      std::string date, time;
-
-      in >> c;
-      in >> date;
-      in >> time;
-      date += " ";
-      date += time;
-
-      in.getline(line, MAX_LINE);
-      linenum++;
-
-      char * p = skip_ws(line);
-      char * n = next_element(p, true);
-      last_desc = n ? n : "";
-
-      static struct std::tm when;
-      if (strptime(date.c_str(), "%Y/%m/%d %H:%M:%S", &when)) {
-	time_in      = std::mktime(&when);
-	last_account = account_stack.front()->find_account(p);
-      } else {
-	std::cerr << "Error in " << path << ", line " << (linenum - 1)
-		  << ": Cannot parse timelog entry date." << std::endl;
-	last_account = NULL;
-      }
-      break;
-    }
-
-    case 'o':
-    case 'O':
-      if (last_account) {
+      case 'i':
+      case 'I': {
 	std::string date, time;
 
 	in >> c;
 	in >> date;
 	in >> time;
-
-	in.getline(line, MAX_LINE);
-	linenum++;
-
 	date += " ";
 	date += time;
 
+	in.getline(line, MAX_LINE);
+	linenum++;
+
+	char * p = skip_ws(line);
+	char * n = next_element(p, true);
+	last_desc = n ? n : "";
+
 	static struct std::tm when;
 	if (strptime(date.c_str(), "%Y/%m/%d %H:%M:%S", &when)) {
-	  entry_t * curr = new entry_t;
-	  curr->date  = std::mktime(&when);
-	  curr->state = entry_t::CLEARED;
-	  curr->code  = "";
-	  curr->payee = last_desc;
-
-	  double diff = std::difftime(curr->date, time_in) / 60.0 / 60.0;
-	  char   buf[32];
-	  std::sprintf(buf, "%fh", diff);
-	  amount_t amt;
-	  amt.parse(buf, ledger);
-	  time_commodity = amt.commodity;
-
-	  transaction_t * xact = new transaction_t(curr, last_account, amt, amt,
-						   TRANSACTION_VIRTUAL);
-	  curr->add_transaction(xact);
-
-	  if (! finalize_entry(curr) || ! ledger->add_entry(curr))
-	    assert(0);
-
-	  count++;
+	  time_in      = std::mktime(&when);
+	  last_account = account_stack.front()->find_account(p);
 	} else {
-	  std::cerr << "Error in " << path << ", line " << (linenum - 1)
-		    << ": Cannot parse timelog entry date." << std::endl;
+	  last_account = NULL;
+	  throw parse_error(path, linenum, "Cannot parse timelog entry date");
 	}
-
-	last_account = NULL;
-      } else {
-	in.getline(line, MAX_LINE);
-	linenum++;
+	break;
       }
-      break;
+
+      case 'o':
+      case 'O':
+	if (last_account) {
+	  std::string date, time;
+
+	  in >> c;
+	  in >> date;
+	  in >> time;
+
+	  in.getline(line, MAX_LINE);
+	  linenum++;
+
+	  date += " ";
+	  date += time;
+
+	  static struct std::tm when;
+	  if (strptime(date.c_str(), "%Y/%m/%d %H:%M:%S", &when)) {
+	    entry_t * curr = new entry_t;
+	    curr->date  = std::mktime(&when);
+	    curr->state = entry_t::CLEARED;
+	    curr->code  = "";
+	    curr->payee = last_desc;
+
+	    double diff = std::difftime(curr->date, time_in) / 60.0 / 60.0;
+	    char   buf[32];
+	    std::sprintf(buf, "%fh", diff);
+	    amount_t amt;
+	    amt.parse(buf, ledger);
+	    time_commodity = amt.commodity;
+
+	    transaction_t * xact = new transaction_t(curr, last_account, amt, amt,
+						     TRANSACTION_VIRTUAL);
+	    curr->add_transaction(xact);
+
+	    if (! finalize_entry(curr) || ! ledger->add_entry(curr))
+	      assert(0);
+
+	    count++;
+	  } else {
+	    throw parse_error(path, linenum, "Cannot parse timelog entry date");
+	  }
+
+	  last_account = NULL;
+	} else {
+	  in.getline(line, MAX_LINE);
+	  linenum++;
+	}
+	break;
 #endif // TIMELOG_SUPPORT
 
-    case 'P': {			// a pricing entry
-      in >> c;
+      case 'P': {			// a pricing entry
+	in >> c;
 
-      std::time_t date;
-      std::string symbol;
+	std::time_t date;
+	std::string symbol;
 
-      in >> line;		// the date
-      if (! quick_parse_date(line, &date)) {
-	std::cerr << "Error in " << path << ", line " << (linenum - 1)
-		  << ": Failed to parse date: " << line << std::endl;
+	in >> line;		// the date
+	if (! quick_parse_date(line, &date))
+	  throw parse_error(path, linenum, "Failed to parse date");
+
+	int hour, min, sec;
+
+	in >> hour;		// the time
+	in >> c;
+	in >> min;
+	in >> c;
+	in >> sec;
+
+	date = std::time_t(((unsigned long) date) +
+			   hour * 3600 + min * 60 + sec);
+
+	amount_t price;
+
+	parse_commodity(in, symbol);
+	in >> line;		// the price
+	price.parse(line, ledger);
+
+	commodity_t * commodity = ledger->find_commodity(symbol, true);
+	commodity->add_price(date, price);
 	break;
       }
 
-      int hour, min, sec;
+      case 'N': {			// don't download prices
+	std::string symbol;
 
-      in >> hour;		// the time
-      in >> c;
-      in >> min;
-      in >> c;
-      in >> sec;
+	in >> c;
+	parse_commodity(in, symbol);
 
-      date = std::time_t(((unsigned long) date) +
-			 hour * 3600 + min * 60 + sec);
+	commodity_t * commodity = ledger->find_commodity(line, true);
+	commodity->flags |= (COMMODITY_STYLE_CONSULTED |
+			     COMMODITY_STYLE_NOMARKET);
+	break;
+      }
 
-      amount_t price;
+      case 'C': {			// a flat conversion
+	in >> c;
 
-      parse_commodity(in, symbol);
-      in >> line;		// the price
-      price.parse(line, ledger);
+	std::string symbol;
+	amount_t    price;
 
-      commodity_t * commodity = ledger->find_commodity(symbol, true);
-      commodity->add_price(date, price);
-      break;
-    }
+	parse_commodity(in, symbol);
+	in >> line;		// the price
+	price.parse(line, ledger);
 
-    case 'N': {			// don't download prices
-      std::string symbol;
+	commodity_t * commodity = ledger->find_commodity(symbol, true);
+	commodity->set_conversion(price);
+	break;
+      }
 
-      in >> c;
-      parse_commodity(in, symbol);
-
-      commodity_t * commodity = ledger->find_commodity(line, true);
-      commodity->flags |= (COMMODITY_STYLE_CONSULTED |
-			   COMMODITY_STYLE_NOMARKET);
-      break;
-    }
-
-    case 'C': {			// a flat conversion
-      in >> c;
-
-      std::string symbol;
-      amount_t    price;
-
-      parse_commodity(in, symbol);
-      in >> line;		// the price
-      price.parse(line, ledger);
-
-      commodity_t * commodity = ledger->find_commodity(symbol, true);
-      commodity->set_conversion(price);
-      break;
-    }
-
-    case 'Y':                   // set the current year
-      in >> c;
-      in >> now_tm->tm_year;
-      now_tm->tm_year -= 1900;
-      break;
+      case 'Y':                   // set the current year
+	in >> c;
+	in >> now_tm->tm_year;
+	now_tm->tm_year -= 1900;
+	break;
 
 #ifdef TIMELOG_SUPPORT
-    case 'h':
-    case 'b':
+      case 'h':
+      case 'b':
 #endif
-    case ';':                   // a comment line
-      in.getline(line, MAX_LINE);
-      linenum++;
-      break;
-
-    case '=':                   // automated transactions
-      parse_automated_transactions(in, ledger, account_stack.front(),
-				   auto_xacts);
-      break;
-
-    case '@': {                 // account specific
-      in >> c;
-      if (in.peek() == '@') {
-	in.get(c);
-	account_stack.pop_front();
+      case ';':                   // a comment line
+	in.getline(line, MAX_LINE);
+	linenum++;
 	break;
-      }
 
-      in.getline(line, MAX_LINE);
-      linenum++;
+      case '=':                   // automated transactions
+	parse_automated_transactions(in, ledger, account_stack.front(),
+				     auto_xacts);
+	break;
 
-      account_t * acct = account_stack.front()->find_account(skip_ws(line));
-      account_stack.push_front(acct);
-      break;
-    }
+      case '@': {                 // account specific
+	in >> c;
+	if (in.peek() == '@') {
+	  in.get(c);
+	  account_stack.pop_front();
+	  break;
+	}
 
-    case '!':                   // directive
-      in >> line;
-      if (std::string(line) == "!include") {
 	in.getline(line, MAX_LINE);
 	linenum++;
 
-	char * path = skip_ws(line);
-	std::ifstream stream(path);
-
-	ledger->sources.push_back(path);
-
-	unsigned int curr_linenum = linenum;
-	count += parse_textual_ledger(stream, ledger, account_stack.front());
-	linenum = curr_linenum;
+	account_t * acct = account_stack.front()->find_account(skip_ws(line));
+	account_stack.push_front(acct);
+	break;
       }
-      break;
 
-    default: {
-      unsigned int first_line = linenum;
-      if (entry_t * entry = parse_entry(in, ledger, account_stack.front())) {
-	if (! auto_xacts.automated_transactions.empty())
-	  auto_xacts.extend_entry(entry);
+      case '!':                   // directive
+	in >> line;
+	if (std::string(line) == "!include") {
+	  in.getline(line, MAX_LINE);
+	  linenum++;
 
-	if (ledger->add_entry(entry))
-	  count++;
-	else
-	  std::cerr << "Error in " << path << ", line " << first_line
-		    << ": Entry does not balance." << std::endl;
-      } else {
-	std::cerr << "Error in " << path << ", line " << first_line
-		  << ": Failed to parse entry." << std::endl;
+	  char * p = skip_ws(line);
+	  std::ifstream stream(p);
+
+	  ledger->sources.push_back(p);
+
+	  unsigned int curr_linenum = linenum;
+	  std::string  curr_path    = path;
+
+	  count += parse_textual_ledger(stream, ledger, account_stack.front());
+
+	  linenum = curr_linenum;
+	  path    = curr_path;
+	}
+	break;
+
+      default: {
+	unsigned int first_line = linenum;
+	if (entry_t * entry = parse_entry(in, ledger, account_stack.front())) {
+	  if (! auto_xacts.automated_transactions.empty())
+	    auto_xacts.extend_entry(entry);
+
+	  if (ledger->add_entry(entry))
+	    count++;
+	  else
+	    throw parse_error(path, first_line, "Entry does not balance");
+	} else {
+	  throw parse_error(path, first_line, "Failed to parse entry");
+	}
+	break;
       }
-      break;
+      }
     }
+    catch (const parse_error& err) {
+      std::cerr << err.what() << std::endl;
     }
   }
 
