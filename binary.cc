@@ -9,17 +9,19 @@
 namespace ledger {
 
 const unsigned long	   binary_magic_number = 0xFFEED765;
-static const unsigned long format_version      = 0x00020015;
+static const unsigned long format_version      = 0x00020017;
 
-static account_t **   accounts;
-static account_t **   accounts_next;
-static unsigned int   account_index;
+static account_t **	   accounts;
+static account_t **	   accounts_next;
+static unsigned int	   account_index;
 
-static commodity_t ** commodities;
-static commodity_t ** commodities_next;
-static unsigned int   commodity_index;
+static commodity_t **	   commodities;
+static commodity_t **	   commodities_next;
+static unsigned int	   commodity_index;
 
-std::deque<amount_t::bigint_t *>  bigints;
+amount_t::bigint_t *	   bigints;
+amount_t::bigint_t *	   bigints_next;
+unsigned int		   bigints_count;
 
 #if DEBUG_LEVEL >= ALPHA
 #define read_binary_guard(in, id) {		\
@@ -135,6 +137,7 @@ inline void read_binary_transaction(std::istream& in, transaction_t * xact,
     xact->cost = NULL;
   }
   read_binary_number(in, xact->flags);
+  xact->flags |= TRANSACTION_BULK_ALLOC;
   init_binary_string(string_pool, &xact->note);
 
   xact->data = NULL;
@@ -236,6 +239,9 @@ unsigned int read_binary_journal(std::istream&	    in,
   account_index   =
   commodity_index = 0;
 
+  // Read in the files that participated in this journal, so that they
+  // can be checked for changes on reading.
+
   if (! file.empty()) {
     for (unsigned short i = 0,
 	   count = read_binary_number<unsigned short>(in);
@@ -256,9 +262,42 @@ unsigned int read_binary_journal(std::istream&	    in,
     }
   }
 
+  // Read in the accounts
+
   account_t::ident_t a_count = read_binary_number<account_t::ident_t>(in);
   accounts = accounts_next = new (account_t *)[a_count];
   journal->master = read_binary_account(in, master);
+
+  // Read in the string pool
+
+  unsigned long string_size = read_binary_number<unsigned long>(in);
+
+  char * string_pool = new char[string_size];
+  char * string_next = string_pool;
+
+  in.read(string_pool, string_size);
+
+  // Allocate the memory needed for the entries and transactions in
+  // one large block, which is then chopped up and custom constructed
+  // as necessary.
+
+  unsigned long count        = read_binary_number<unsigned long>(in);
+  unsigned long xact_count   = read_binary_number<unsigned long>(in);
+  unsigned long bigint_count = read_binary_number<unsigned long>(in);
+
+  std::size_t pool_size = (sizeof(entry_t) * count +
+			   sizeof(transaction_t) * xact_count +
+			   sizeof_bigint_t() * bigint_count);
+  char * item_pool = new char[pool_size];
+
+  entry_t *	  entry_pool = (entry_t *) item_pool;
+  transaction_t * xact_pool  = (transaction_t *) (item_pool +
+						  sizeof(entry_t) * count);
+  bigints = bigints_next
+    = (amount_t::bigint_t *) (item_pool + sizeof(entry_t) * count +
+			      sizeof(transaction_t) * xact_count);
+
+  // Read in the commodities
 
   commodity_t::ident_t c_count = read_binary_number<commodity_t::ident_t>(in);
   commodities = commodities_next = new (commodity_t *)[c_count];
@@ -270,27 +309,7 @@ unsigned int read_binary_journal(std::istream&	    in,
     assert(result.second || master);
   }
 
-  unsigned long string_size = read_binary_number<unsigned long>(in);
-
-  char * string_pool = new char[string_size];
-  char * string_next = string_pool;
-
-  in.read(string_pool, string_size);
-
-  // Memory needed for the entries and transactions is allocated in
-  // one large block, which is then chopped up and custom constructed
-  // as necessary.  This reduces binary load time by 20%!
-
-  unsigned long count       = read_binary_number<unsigned long>(in);
-  unsigned long xact_count  = read_binary_number<unsigned long>(in);
-
-  std::size_t pool_size = (sizeof(entry_t) * count +
-			   sizeof(transaction_t) * xact_count);
-  char * item_pool = new char[pool_size];
-
-  entry_t *	  entry_pool = (entry_t *) item_pool;
-  transaction_t * xact_pool  = (transaction_t *) (item_pool +
-						  sizeof(entry_t) * count);
+  // Read in the entries and transactions
 
   for (unsigned long i = 0; i < count; i++) {
     read_binary_entry(in, entry_pool, xact_pool, string_next);
@@ -299,14 +318,14 @@ unsigned int read_binary_journal(std::istream&	    in,
 
   assert(string_next == string_pool + string_size);
 
+  // Clean up and return the number of entries read
+
   journal->item_pool	 = item_pool;
   journal->item_pool_end = item_pool + pool_size;
 
   delete[] accounts;
   delete[] commodities;
   delete[] string_pool;
-
-  bigints.clear();
 
   return count;
 }
@@ -460,6 +479,9 @@ void write_binary_journal(std::ostream& out, journal_t * journal,
   write_binary_number(out, binary_magic_number);
   write_binary_number(out, format_version);
 
+  // Write out the files that participated in this journal, so that
+  // they can be checked for changes on reading.
+
   if (! files) {
     write_binary_number<unsigned short>(out, 0);
   } else {
@@ -474,15 +496,12 @@ void write_binary_journal(std::ostream& out, journal_t * journal,
     }
   }
 
+  // Write out the accounts
+
   write_binary_number<account_t::ident_t>(out, count_accounts(journal->master));
   write_binary_account(out, journal->master);
 
-  write_binary_number<commodity_t::ident_t>(out, commodity_t::commodities.size() - 1);
-  for (commodities_map::const_iterator i = commodity_t::commodities.begin();
-       i != commodity_t::commodities.end();
-       i++)
-    if (! (*i).first.empty())
-      write_binary_commodity(out, (*i).second);
+  // Calculate some sizes
 
   unsigned long xact_count = 0;
   unsigned long string_size = 0;
@@ -506,6 +525,8 @@ void write_binary_journal(std::ostream& out, journal_t * journal,
     }
   }
 
+  // Write out the string pool
+
   write_binary_number<unsigned long>(out, string_size);
 
   for (entries_list::const_iterator i = journal->entries.begin();
@@ -520,13 +541,34 @@ void write_binary_journal(std::ostream& out, journal_t * journal,
       write_binary_string(out, (*j)->note);
   }
 
+  // Write out the number of entries, transactions, and amounts
+
   write_binary_number<unsigned long>(out, journal->entries.size());
   write_binary_number<unsigned long>(out, xact_count);
+  std::ostream::pos_type here = out.tellp();
+  write_binary_number<unsigned long>(out, 0);
+  bigints_count = 0;
+
+  // Write out the commodities
+
+  write_binary_number<commodity_t::ident_t>(out, commodity_t::commodities.size() - 1);
+  for (commodities_map::const_iterator i = commodity_t::commodities.begin();
+       i != commodity_t::commodities.end();
+       i++)
+    if (! (*i).first.empty())
+      write_binary_commodity(out, (*i).second);
+
+  // Write out the entries and transactions
 
   for (entries_list::const_iterator i = journal->entries.begin();
        i != journal->entries.end();
        i++)
     write_binary_entry(out, *i);
+
+  // Back-patch the count for amounts
+
+  out.seekp(here);
+  write_binary_number<unsigned long>(out, bigints_count);
 }
 
 } // namespace ledger

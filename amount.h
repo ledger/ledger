@@ -170,6 +170,8 @@ class amount_t
   friend std::istream& operator>>(std::istream& in, amount_t& amt);
 };
 
+unsigned int sizeof_bigint_t();
+
 void parse_quantity(std::istream& in, std::string& value);
 void parse_commodity(std::istream& in, std::string& symbol);
 

@@ -11,23 +11,26 @@
 
 namespace ledger {
 
+#define BIGINT_BULK_ALLOC 0x0001
+
 class amount_t::bigint_t {
  public:
-  mpz_t        val;
-  unsigned int prec;
-  unsigned int ref;
-  unsigned int index;
+  mpz_t		 val;
+  unsigned short prec;
+  unsigned short flags;
+  unsigned int	 ref;
+  unsigned int	 index;
 
-  bigint_t() : prec(0), ref(1), index(0) {
+  bigint_t() : prec(0), flags(0), ref(1), index(0) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor amount_t::bigint_t");
     mpz_init(val);
   }
-  bigint_t(mpz_t _val) : prec(0), ref(1), index(0) {
+  bigint_t(mpz_t _val) : prec(0), flags(0), ref(1), index(0) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor amount_t::bigint_t");
     mpz_init_set(val, _val);
   }
   bigint_t(const bigint_t& other)
-    : prec(other.prec), ref(1), index(0) {
+    : prec(other.prec), flags(0), ref(1), index(0) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor amount_t::bigint_t");
     mpz_init_set(val, other.val);
   }
@@ -37,6 +40,10 @@ class amount_t::bigint_t {
     mpz_clear(val);
   }
 };
+
+unsigned int sizeof_bigint_t() {
+  return sizeof(amount_t::bigint_t);
+}
 
 #define MPZ(x) ((x)->val)
 
@@ -177,8 +184,12 @@ amount_t::amount_t(const double value)
 
 void amount_t::_release()
 {
-  if (--quantity->ref == 0)
-    delete quantity;
+  if (--quantity->ref == 0) {
+    if (! (quantity->flags & BIGINT_BULK_ALLOC))
+      delete quantity;
+    else
+      quantity->~bigint_t();
+  }
 }
 
 void amount_t::_init()
@@ -886,6 +897,7 @@ void amount_t::write_quantity(std::ostream& out) const
 
   if (quantity->index == 0) {
     quantity->index = ++index;
+    bigints_count++;
 
     byte = 1;
     out.write(&byte, sizeof(byte));
@@ -925,8 +937,8 @@ void amount_t::read_quantity(std::istream& in)
     return;
 
   if (byte == 1) {
-    quantity = new bigint_t;
-    bigints.push_back(quantity);
+    quantity = new(bigints_next++) bigint_t;
+    quantity->flags |= BIGINT_BULK_ALLOC;
 
     unsigned short len;
     in.read((char *)&len, sizeof(len));
@@ -942,8 +954,7 @@ void amount_t::read_quantity(std::istream& in)
   } else {
     unsigned int index;
     in.read((char *)&index, sizeof(index));
-    assert(index <= bigints.size());
-    quantity = bigints[index - 1];
+    quantity = bigints + (index - 1);
     quantity->ref++;
     DEBUG_PRINT("ledger.amount.bigint-show",
 		"bigint " << quantity << " ++ref " << quantity->ref);

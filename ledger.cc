@@ -83,6 +83,8 @@ journal_t::~journal_t()
     if (! item_pool ||
 	((char *) *i) < item_pool || ((char *) *i) >= item_pool_end)
       delete *i;
+    else
+      (*i)->~entry_t();
 
   if (item_pool)
     delete[] item_pool;

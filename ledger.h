@@ -22,10 +22,11 @@
 namespace ledger {
 
 // These flags persist with the object
-#define TRANSACTION_NORMAL    0x0000
-#define TRANSACTION_VIRTUAL   0x0001
-#define TRANSACTION_BALANCE   0x0002
-#define TRANSACTION_AUTO      0x0004
+#define TRANSACTION_NORMAL     0x0000
+#define TRANSACTION_VIRTUAL    0x0001
+#define TRANSACTION_BALANCE    0x0002
+#define TRANSACTION_AUTO       0x0004
+#define TRANSACTION_BULK_ALLOC 0x0008
 
 class entry_t;
 class account_t;
@@ -84,7 +85,10 @@ class entry_t
     for (transactions_list::iterator i = transactions.begin();
 	 i != transactions.end();
 	 i++)
-      delete *i;
+      if (! ((*i)->flags & TRANSACTION_BULK_ALLOC))
+	delete *i;
+      else
+	(*i)->~transaction_t();
   }
 
   void add_transaction(transaction_t * xact) {
