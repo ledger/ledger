@@ -53,7 +53,7 @@ element_t * format_t::parse_elements(const std::string& fmt)
   char * q = buf;
 
   for (const char * p = fmt.c_str(); *p; p++) {
-    if (*p != '%') {
+    if (*p != '%' && *p != '\\') {
       *q++ = *p;
       continue;
     }
@@ -73,6 +73,20 @@ element_t * format_t::parse_elements(const std::string& fmt)
 
       current->next  = new element_t;
       current = current->next;
+    }
+
+    if (*p == '\\') {
+      p++;
+      current->type = element_t::STRING;
+      switch (*p) {
+      case 'b': current->chars = "\b"; break;
+      case 'f': current->chars = "\f"; break;
+      case 'n': current->chars = "\n"; break;
+      case 'r': current->chars = "\r"; break;
+      case 't': current->chars = "\t"; break;
+      case 'v': current->chars = "\v"; break;
+      }
+      continue;
     }
 
     ++p;

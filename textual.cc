@@ -71,14 +71,19 @@ transaction_t * parse_transaction_text(char * line, account_t * account,
     }
 
     char * price_str = std::strchr(cost_str, '@');
+    bool   per_unit  = true;
     if (price_str) {
       *price_str++ = '\0';
+      if (*price_str == '@') {
+	per_unit = false;
+	price_str++;
+      }
       xact->cost = new amount_t;
       xact->cost->parse(price_str);
     }
 
     xact->amount.parse(cost_str);
-    if (price_str)
+    if (price_str && per_unit)
       *xact->cost *= xact->amount;
   }
 

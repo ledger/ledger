@@ -41,11 +41,11 @@ void process_environment(char ** envp, const std::string& tag);
   std::vector<option_t> option_handler::options;	\
   option_handler_map    option_handler::handlers
 
-#define OPT_BEGIN(tag, chars)					\
-  static struct tag ## _handler : public option_handler {	\
-    tag ## _handler() : option_handler(#tag, chars) {}		\
+#define OPT_BEGIN(tag, chars)						\
+  static struct opt_ ## tag ## _handler : public option_handler {	\
+    opt_ ## tag ## _handler() : option_handler(#tag, chars) {}		\
     virtual void handle_option(const char * optarg)
 
-#define OPT_END(tag) } tag ## _handler_obj
+#define OPT_END(tag) } opt_ ## tag ## _handler_obj
 
 #endif // _OPTION_H

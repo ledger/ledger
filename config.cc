@@ -5,15 +5,15 @@ namespace ledger {
 
 config_t * config = NULL;
 
-const std::string bal_fmt	 = "%20T  %2_%-n\n";
-const std::string reg_fmt
+std::string bal_fmt	 = "%20T  %2_%-n\n";
+std::string reg_fmt
   = "%D %-.20P %-.22N %12.66t %12.80T\n\
 %/                                %-.22N %12.66t %12.80T\n";
-const std::string plot_value_fmt = "%D %t\n";
-const std::string plot_total_fmt = "%D %T\n";
-const std::string print_fmt
+std::string plot_value_fmt = "%D %t\n";
+std::string plot_total_fmt = "%D %T\n";
+std::string print_fmt
   = "\n%D %X%C%P\n    %-34N  %12o\n%/    %-34N  %12o\n";
-const std::string equity_fmt
+std::string equity_fmt
   = "\n%D %X%C%P\n%/    %-34N  %12t\n";
 
 config_t::config_t()
@@ -71,7 +71,10 @@ Report filtering:\n\
   -R, --real            consider only non-virtual transactions\n\n\
   -r, --related         calculate report using related transactions\n\
 Output customization:\n\
-  -F, --format STR      use STR as the report format\n\
+  -F, --format STR      use STR as the format; for each report type, use:\n\
+			  --balance-format   --equity-format\n\
+			  --register-format  --plot-value-format\n\
+			  --print-format     --plot-total-format\n\
   -y, --date-format STR use STR as the date format (def: %Y/%m/%d)\n\
   -E, --empty           balance: show accounts with zero balance\n\
   -n, --collapse        register: collapse entries with multiple transactions\n\
@@ -212,6 +215,30 @@ OPT_BEGIN(format, "F:") {
 OPT_BEGIN(date_format, "y:") {
   config->date_format = optarg;
 } OPT_END(date_format);
+
+OPT_BEGIN(balance_format, ":") {
+  bal_fmt = optarg;
+} OPT_END(balance_format);
+
+OPT_BEGIN(register_format, ":") {
+  reg_fmt = optarg;
+} OPT_END(register_format);
+
+OPT_BEGIN(plot_value_format, ":") {
+  plot_value_fmt = optarg;
+} OPT_END(plot_value_format);
+
+OPT_BEGIN(plot_total_format, ":") {
+  plot_total_fmt = optarg;
+} OPT_END(plot_total_format);
+
+OPT_BEGIN(print_format, ":") {
+  print_fmt = optarg;
+} OPT_END(print_format);
+
+OPT_BEGIN(equity_format, ":") {
+  equity_fmt = optarg;
+} OPT_END(equity_format);
 
 OPT_BEGIN(empty, "E") {
   config->show_empty = true;

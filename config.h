@@ -8,12 +8,12 @@
 
 namespace ledger {
 
-extern const std::string bal_fmt;
-extern const std::string reg_fmt;
-extern const std::string plot_value_fmt;
-extern const std::string plot_total_fmt;
-extern const std::string print_fmt;
-extern const std::string equity_fmt;
+extern std::string bal_fmt;
+extern std::string reg_fmt;
+extern std::string plot_value_fmt;
+extern std::string plot_total_fmt;
+extern std::string print_fmt;
+extern std::string equity_fmt;
 
 struct config_t
 {
