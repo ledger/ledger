@@ -231,8 +231,10 @@ void print_register(const std::string& acct_name, std::ostream& out,
       balance.credit(street);
 
       // If there are two transactions, use the one which does not
-      // refer to this account.  If there are more than two, we will
-      // just have to print all of the splits, like gnucash does.
+      // refer to this account.  If there are more than two, print
+      // "<Splits...>", unless the -s option is being used (show
+      // children), in which case print all of the splits, like
+      // gnucash does.
 
       transaction * xact;
       if ((*i)->xacts.size() == 2) {
@@ -259,7 +261,7 @@ void print_register(const std::string& acct_name, std::ostream& out,
 
       out << std::endl;
 
-      if (! show_subtotals || xact != *x)
+      if (! show_children || xact != *x)
 	continue;
 
       for (std::list<transaction *>::iterator y = (*i)->xacts.begin();
@@ -268,7 +270,7 @@ void print_register(const std::string& acct_name, std::ostream& out,
 	if (*x == *y)
 	  continue;
 
-	out << "                                      ";
+	out << "                                ";
 
 	out.width(22);
 	out << std::left << truncated((*y)->acct_as_str(), 22) << " ";
