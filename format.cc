@@ -366,7 +366,7 @@ void format_transaction::operator()(transaction_t * xact) const
   xact->total += *xact;
   xact->index = last_xact ? last_xact->index + 1 : 0;
 
-  if (disp_pred_functor(xact)) {
+  if (disp_pred(xact)) {
     xact->dflags |= TRANSACTION_DISPLAYED;
 
     // This makes the assumption that transactions from a single entry
@@ -407,7 +407,7 @@ void format_transaction::operator()(transaction_t * xact) const
 
 bool format_account::disp_subaccounts_p(const account_t * account,
 					const item_predicate<account_t>&
-					    disp_pred_functor,
+					    disp_pred,
 					const account_t *& to_show)
 {
   bool	       display = false;
@@ -423,7 +423,7 @@ bool format_account::disp_subaccounts_p(const account_t * account,
     // expression is equivalent between a parent account and a lone
     // displayed child, then don't display the parent."
 
-    if (! (*i).second->total || ! disp_pred_functor((*i).second))
+    if (! (*i).second->total || ! disp_pred((*i).second))
       continue;
 
     if ((*i).second->total != account->total || counted > 0) {
@@ -438,8 +438,7 @@ bool format_account::disp_subaccounts_p(const account_t * account,
 }
 
 bool format_account::display_account(const account_t * account,
-				     const item_predicate<account_t>&
-					 disp_pred_functor)
+				     const item_predicate<account_t>& disp_pred)
 {
   // Never display the master account, or an account that has already
   // been displayed.
@@ -454,10 +453,10 @@ bool format_account::display_account(const account_t * account,
   // the predicate.
 
   const account_t * account_to_show = NULL;
-  if (disp_subaccounts_p(account, disp_pred_functor, account_to_show))
+  if (disp_subaccounts_p(account, disp_pred, account_to_show))
     return true;
 
-  return ! account_to_show && disp_pred_functor(account);
+  return ! account_to_show && disp_pred(account);
 }
 
 } // namespace ledger

@@ -626,8 +626,7 @@ int main(int argc, char * argv[])
 				 show_inverted);
     if (! sort_order.get()) {
       if (show_commodities_revalued) {
-	changed_value_filter<format_transaction>
-	  filtered_formatter(formatter);
+	changed_value_filter filtered_formatter(formatter);
 	walk_entries(journal->entries.begin(), journal->entries.end(),
 		     filtered_formatter, predicate, xact_display_flags);
       } else {
@@ -643,8 +642,7 @@ int main(int argc, char * argv[])
 		       compare_items<transaction_t>(sort_order.get()));
 
       if (show_commodities_revalued) {
-	changed_value_filter<format_transaction>
-	  filtered_formatter(formatter);
+	changed_value_filter filtered_formatter(formatter);
 	walk_transactions(transactions_pool.begin(), transactions_pool.end(),
 			  filtered_formatter);
       } else {

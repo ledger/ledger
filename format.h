@@ -3,6 +3,7 @@
 
 #include "ledger.h"
 #include "valexpr.h"
+#include "walk.h"
 
 namespace ledger {
 
@@ -84,7 +85,7 @@ struct format_t
 
 #define COLLAPSED_REGISTER 1	// support collapsed registers
 
-class format_transaction
+class format_transaction : public item_handler<transaction_t>
 {
   std::ostream&   output_stream;
   const format_t& first_line_format;
@@ -94,7 +95,7 @@ class format_transaction
 #endif
   const bool      inverted;
 
-  item_predicate<transaction_t> disp_pred_functor;
+  item_predicate<transaction_t> disp_pred;
 
 #ifdef COLLAPSED_REGISTER
   mutable balance_pair_t  subtotal;
@@ -118,14 +119,14 @@ class format_transaction
 #ifdef COLLAPSED_REGISTER
       collapsed(_collapsed),
 #endif
-      inverted(_inverted), disp_pred_functor(display_predicate),
+      inverted(_inverted), disp_pred(display_predicate),
 #ifdef COLLAPSED_REGISTER
       count(0),
 #endif
       last_entry(NULL), last_xact(NULL) {}
 
 #ifdef COLLAPSED_REGISTER
-  ~format_transaction() {
+  virtual ~format_transaction() {
     if (subtotal)
       report_cumulative_subtotal();
   }
@@ -133,27 +134,26 @@ class format_transaction
   void report_cumulative_subtotal() const;
 #endif
 
-  void operator()(transaction_t * xact) const;
+  virtual void operator()(transaction_t * xact) const;
 };
 
 
-template <typename Function>
-class changed_value_filter
+class changed_value_filter : public item_handler<transaction_t>
 {
-  const Function& functor;
+  const item_handler<transaction_t>& handler;
 
   mutable entry_t         modified_entry;
   mutable transaction_t   modified_xact;
   mutable transaction_t * last_xact;
 
  public:
-  changed_value_filter(const Function& _functor)
-    : functor(_functor), modified_xact(&modified_entry, NULL),
+  changed_value_filter(const item_handler<transaction_t>& _handler)
+    : handler(_handler), modified_xact(&modified_entry, NULL),
       last_xact(NULL) {
     modified_entry.payee = "Commodities revalued";
   }
 
-  ~changed_value_filter() {
+  virtual ~changed_value_filter() {
     (*this)(NULL);
   }
 
@@ -178,35 +178,35 @@ class changed_value_filter
 	modified_xact.total  = diff;
 	modified_xact.total.negate();
 
-	functor(&modified_xact);
+	handler(&modified_xact);
       }
     }
 
     if (xact)
-      functor(xact);
+      handler(xact);
 
     last_xact = xact;
   }
 };
 
 
-class format_account
+class format_account : public item_handler<account_t>
 {
   std::ostream&   output_stream;
   const format_t& format;
 
-  item_predicate<account_t> disp_pred_functor;
+  item_predicate<account_t> disp_pred;
 
  public:
   format_account(std::ostream&      _output_stream,
 		 const format_t&    _format,
 		 const std::string& display_predicate = NULL)
     : output_stream(_output_stream), format(_format),
-      disp_pred_functor(display_predicate) {}
+      disp_pred(display_predicate) {}
+  virtual ~format_account() {}
 
   static bool disp_subaccounts_p(const account_t * account,
-				 const item_predicate<account_t>&
-				     disp_pred_functor,
+				 const item_predicate<account_t>& disp_pred,
 				 const account_t *& to_show);
   static bool disp_subaccounts_p(const account_t * account) {
     const account_t * temp;
@@ -214,11 +214,10 @@ class format_account
   }
 
   static bool display_account(const account_t * account,
-			      const item_predicate<account_t>&
-				  disp_pred_functor);
+			      const item_predicate<account_t>& disp_pred);
 
-  void operator()(const account_t * account) const {
-    if (display_account(account, disp_pred_functor)) {
+  virtual void operator()(account_t * account) const {
+    if (display_account(account, disp_pred)) {
       format.format_elements(output_stream, details_t(account));
       account->dflags |= ACCOUNT_DISPLAYED;
     }
@@ -226,13 +225,13 @@ class format_account
 };
 
 
-class format_equity
+class format_equity : public item_handler<account_t>
 {
   std::ostream&   output_stream;
   const format_t& first_line_format;
   const format_t& next_lines_format;
 
-  item_predicate<account_t> disp_pred_functor;
+  item_predicate<account_t> disp_pred;
 
   mutable balance_t total;
 
@@ -244,21 +243,21 @@ class format_equity
     : output_stream(_output_stream),
       first_line_format(_first_line_format),
       next_lines_format(_next_lines_format),
-      disp_pred_functor(display_predicate) {
+      disp_pred(display_predicate) {
     entry_t header_entry;
     header_entry.payee = "Opening Balances";
     header_entry.date  = std::time(NULL);
     first_line_format.format_elements(output_stream, details_t(&header_entry));
   }
 
-  ~format_equity() {
+  virtual ~format_equity() {
     account_t summary(NULL, "Equity:Opening Balances");
     summary.value = - total;
     next_lines_format.format_elements(output_stream, details_t(&summary));
   }
 
-  void operator()(const account_t * account) const {
-    if (format_account::display_account(account, disp_pred_functor)) {
+  virtual void operator()(account_t * account) const {
+    if (format_account::display_account(account, disp_pred)) {
       next_lines_format.format_elements(output_stream, details_t(account));
       account->dflags |= ACCOUNT_DISPLAYED;
       total += account->value.quantity;
