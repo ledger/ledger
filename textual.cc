@@ -304,6 +304,27 @@ static inline void parse_symbol(char *& p, std::string& symbol)
     throw parse_error(path, linenum, "Failed to parse commodity");
 }
 
+bool textual_parser_t::test(std::istream& in) const
+{
+  char buf[5];
+
+  assert(in.good());
+  in.read(buf, 5);
+  std::cerr << "buf (" << buf[0] << ")" << std::endl;
+  assert(in.good());
+  if (std::strncmp(buf, "<?xml", 5) == 0) {
+#ifdef HAVE_XMLPARSE
+    throw parse_error(path, linenum, "Ledger file contains XML data, but no XML support present");
+#else
+    throw parse_error(path, linenum, "Ledger file contains XML data, but format was not recognized");
+#endif
+  }
+
+  in.seekg(0, std::ios::beg);
+  assert(in.good());
+  return true;
+}
+
 unsigned int textual_parser_t::parse(std::istream&	 in,
 				     journal_t *	 journal,
 				     account_t *	 master,

@@ -9,9 +9,7 @@ namespace ledger {
 class textual_parser_t : public parser_t
 {
  public:
-  virtual bool test(std::istream& in) const {
-    return true;
-  }
+  virtual bool test(std::istream& in) const;
 
   virtual unsigned int parse(std::istream&	 in,
 			     journal_t *	 journal,
