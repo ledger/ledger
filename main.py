@@ -19,5 +19,13 @@ register_parser (parser)
 journal = Journal ()
 parse_journal_file (args[0], journal)
 
+class OutputTransaction (TransactionHandler):
+    def __call__ (self, xact):
+	print xact.entry.payee
+
+handler = OutputTransaction()
+chain = FilterTransactions (handler, "/Checking/")
+
 for entry in journal:
-    print entry.payee
+    for xact in entry:
+	chain (xact)

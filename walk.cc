@@ -300,3 +300,125 @@ void dow_transactions::flush()
 }
 
 } // namespace ledger
+
+#ifdef USE_BOOST_PYTHON
+
+#include <boost/python.hpp>
+
+using namespace boost::python;
+using namespace ledger;
+
+template <typename T>
+struct item_handler_wrap : public item_handler<T>
+{
+  PyObject* self;
+  item_handler_wrap(PyObject * self_) : self(self_) {}
+  item_handler_wrap(PyObject * self_, const item_handler<T>& handler)
+    : item_handler<T>(const_cast<item_handler<T> *>(&handler)), self(self_) {}
+
+  void flush() {
+    call_method<void>(self, "flush");
+  }
+  void default_flush() {
+    item_handler<T>::flush();
+  }
+
+  void operator()(T& item) {
+    call_method<void>(self, "__call__", item);
+  }
+  void default_call(T& item) {
+    item_handler<T>::operator()(item);
+  }
+};
+
+void (subtotal_transactions::*subtotal_transactions_flush)() =
+  &subtotal_transactions::flush;
+
+void export_walk()
+{
+  class_< item_handler<transaction_t>,
+	  item_handler_wrap<transaction_t> > ("TransactionHandler")
+    .def(init<item_handler<transaction_t> *>())
+
+    .def("flush", &item_handler<transaction_t>::flush,
+	 &item_handler_wrap<transaction_t>::default_flush)
+    .def("__call__", &item_handler<transaction_t>::operator(),
+	 &item_handler_wrap<transaction_t>::default_call)
+    ;
+
+  class_< ignore_transactions > ("IgnoreTransactions")
+    .def("flush", &item_handler<transaction_t>::flush)
+    .def("__call__", &ignore_transactions::operator());
+    ;
+
+  class_< clear_transaction_data > ("ClearTransactionData")
+    .def("flush", &item_handler<transaction_t>::flush)
+    .def("__call__", &clear_transaction_data::operator());
+    ;
+
+  class_< set_account_value >
+    ("SetAccountValue", init<item_handler<transaction_t> *>())
+    .def("flush", &item_handler<transaction_t>::flush)
+    .def("__call__", &set_account_value::operator());
+    ;
+
+#if 0
+  class_< sort_transactions >
+    ("SortTransactions", init<item_handler<transaction_t> *>())
+    .def("flush", &sort_transactions::flush)
+    .def("__call__", &sort_transactions::operator());
+    ;
+#endif
+
+  class_< filter_transactions >
+    ("FilterTransactions", init<item_handler<transaction_t> *, std::string>())
+    .def("flush", &item_handler<transaction_t>::flush)
+    .def("__call__", &filter_transactions::operator());
+    ;
+
+  class_< calc_transactions >
+    ("CalcTransactions", init<item_handler<transaction_t> *, optional<bool> >())
+    .def("flush", &item_handler<transaction_t>::flush)
+    .def("__call__", &calc_transactions::operator());
+    ;
+
+  class_< collapse_transactions >
+    ("CollapseTransactions", init<item_handler<transaction_t> *>())
+    .def("flush", &collapse_transactions::flush)
+    .def("__call__", &collapse_transactions::operator());
+    ;
+
+  class_< changed_value_transactions >
+    ("ChangeValueTransactions", init<item_handler<transaction_t> *, bool>())
+    .def("flush", &changed_value_transactions::flush)
+    .def("__call__", &changed_value_transactions::operator());
+    ;
+
+  class_< subtotal_transactions >
+    ("SubtotalTransactions", init<item_handler<transaction_t> *>())
+    .def("flush", subtotal_transactions_flush)
+    .def("__call__", &subtotal_transactions::operator());
+    ;
+
+#if 0
+  class_< interval_transactions >
+    ("IntervalTransactions", init<item_handler<transaction_t> *>())
+    .def("flush", &item_handler<transaction_t>::flush)
+    .def("__call__", &interval_transactions::operator());
+    ;
+#endif
+
+  class_< dow_transactions >
+    ("DowTransactions", init<item_handler<transaction_t> *>())
+    .def("flush", &dow_transactions::flush)
+    .def("__call__", &dow_transactions::operator());
+    ;
+
+  class_< related_transactions >
+    ("RelatedTransactions", init<item_handler<transaction_t> *, optional<bool> >())
+    .def("flush", &item_handler<transaction_t>::flush)
+    .def("__call__", &related_transactions::operator());
+    ;
+}
+
+#endif // USE_BOOST_PYTHON

@@ -397,6 +397,11 @@ using namespace ledger;
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(journal_find_account_overloads,
 				       find_account, 1, 2)
 
+entry_t& transaction_entry(const transaction_t& xact)
+{
+  return *xact.entry;
+}
+
 unsigned int transactions_len(entry_t& entry)
 {
   return entry.transactions.size();
@@ -504,7 +509,9 @@ void export_journal()
   class_< transaction_t > ("Transaction")
     .def(init<account_t *, amount_t, optional<unsigned int, std::string> >())
 
-    .def_readwrite("entry", &transaction_t::entry)
+    .add_property("entry",
+		  make_getter(&transaction_t::entry,
+			      return_value_policy<reference_existing_object>()))
     .def_readwrite("account", &transaction_t::account)
     .def_readwrite("amount", &transaction_t::amount)
     .def_readwrite("cost", &transaction_t::cost)

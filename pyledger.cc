@@ -17,6 +17,8 @@ void export_qif();
 void export_gnucash();
 #endif
 void export_option();
+void export_walk();
+void export_format();
 
 BOOST_PYTHON_MODULE(ledger) {
   export_amount();
@@ -31,4 +33,6 @@ BOOST_PYTHON_MODULE(ledger) {
   export_gnucash();
 #endif
   export_option();
+  export_walk();
+  export_format();
 }

@@ -62,6 +62,13 @@ class transaction_t
       delete cost;
   }
 
+#ifdef USE_BOOST_PYTHON
+  entry_t& get_entry() const {
+    assert(entry);
+    return *entry;
+  }
+#endif
+
   bool valid() const;
 };
 

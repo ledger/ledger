@@ -431,3 +431,23 @@ bool format_account::display_account(const account_t& account,
 }
 
 } // namespace ledger
+
+#ifdef USE_BOOST_PYTHON
+
+#include <boost/python.hpp>
+
+using namespace boost::python;
+using namespace ledger;
+
+void export_format()
+{
+#if 0
+  class_< format_transactions > ("FormatTransactions")
+    .def(init<item_handler<transaction_t> *>())
+    .def("flush", &format_transactions::flush)
+    .def("__call__", &format_transactions::operator());
+    ;
+#endif
+}
+
+#endif // USE_BOOST_PYTHON
