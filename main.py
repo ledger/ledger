@@ -37,12 +37,6 @@ journal = Journal ()
 
 add_config_option_handlers ()
 
-output_for_emacs = false
-def handle_emacs_option (arg):
-    global output_for_emacs
-    output_for_emacs = true
-add_option_handler ("emacs", "", handle_emacs_option)
-
 averages = {}
 compute_monthly_avg = false
 
@@ -106,6 +100,10 @@ elif command == "register" or command == "reg" or command == "r":
     command = "r"
 elif command == "print" or command == "p":
     command = "p"
+elif command == "output":
+    command = "w"
+elif command == "emacs":
+    command = "x"
 elif command == "entry":
     command = "e"
 elif command == "equity":
@@ -125,20 +123,27 @@ else:
 # module was built with such support (which requires the xmlparse C
 # library).
 
-text_parser = TextualParser ()
 bin_parser  = BinaryParser ()
-qif_parser  = QifParser ()
 gnucash_parser = None
-try:
-    gnucash_parser = GnucashParser ()
-except:
-    pass
+xml_parser = None
+try: xml_parser = GnucashParser ()
+except: pass
+try: gnucash_parser = GnucashParser ()
+except: pass
+try: ofx_parser = OfxParser ()
+except: pass
+qif_parser  = QifParser ()
+text_parser = TextualParser ()
 
-register_parser (text_parser)
 register_parser (bin_parser)
+if xml_parser:
+    register_parser (xml_parser)
 if gnucash_parser:
     register_parser (gnucash_parser)
+if ofx_parser:
+    register_parser (ofx_parser)
 register_parser (qif_parser)
+register_parser (text_parser)
 
 # Parse all entries from the user specified locations (found in
 # 'config') into the journal object we created.  The two parsers given
@@ -194,6 +199,8 @@ elif command == "P":
     format = config.prices_format
 elif command == "D":
     format = config.pricesdb_format
+elif command == "w":
+    format = config.write_xact_format
 else:
     format = config.print_format
 
@@ -364,93 +371,108 @@ if command == "b" or command == "E":
     handler = SetAccountValue ()
 elif command == "p" or command == "e":
     handler = FormatEntries (format)
-elif output_for_emacs:
+elif command == "x":
     import emacs
     handler = emacs.EmacsFormatTransactions ()
 else:
     handler = FormatTransactions (format)
 
-# Chain transaction filters on top of the base handler.  Most of these
-# filters customize the output for reporting.  None of this is done
-# for balance or equity reports, which don't need it.
+if command == "w":
+    if config.output_file:
+	out = open (config.output_file, "w")
+    else:
+	out = sys.stdout
 
-if not (command == "b" or command == "E"):
-    if config.display_predicate:
-	handler = FilterTransactions (handler, config.display_predicate)
+    write_textual_journal(journal, args, handler, out);
 
-    handler = CalcTransactions (handler)
-
-    if config.sort_string:
-	handler = SortTransactions (handler, config.sort_string)
-
-    if config.show_revalued:
-	handler = ChangedValueTransactions (handler, config.show_revalued_only)
-
-    if config.show_collapsed:
-	handler = CollapseTransactions (handler);
-
-if config.show_subtotal and not (command == "b" or command == "E"):
-    handler = SubtotalTransactions (handler)
-
-if config.days_of_the_week:
-    handler = DowTransactions (handler)
-elif config.by_payee:
-    handler = ByPayeeTransactions (handler)
-
-if config.report_period:
-    handler = IntervalTransactions (handler, config.report_period,
-				    config.report_period_sort)
-    handler = SortTransactions (handler, "d")
-
-if compute_monthly_avg:
-    handler = ComputeMonthlyAvg (handler)
-
-# The next set of transaction filters are used by all reports.
-
-if config.show_inverted:
-    handler = InvertTransactions (handler)
-
-if config.show_related:
-    handler = RelatedTransactions (handler, config.show_all_related)
-
-if config.predicate:
-    handler = FilterTransactions (handler, config.predicate)
-
-if config.budget_flags:
-    handler = BudgetTransactions (handler, config.budget_flags)
-    handler.add_period_entries (journal)
-elif config.forecast_limit:
-    handler = ForecastTransactions (handler, config.forecast_limit)
-    handler.add_period_entries (journal)
-
-if config.comm_as_payee:
-    handler = SetCommAsPayee (handler)
-
-# Walk the journal's entries, and pass each entry's transaction to the
-# handler chain established above.  And although a journal's entries
-# can be walked using Python, it is significantly faster to do this
-# simple walk in C++, using `walk_entries'.
-#
-#   if command == "e":
-#       for xact in new_entry:
-#           handler (xact)
-#   else:
-#       for entry in journal:
-#           for xact in entry:
-#               handler (xact)
-
-if command == "e":
-    walk_transactions (new_entry, handler)
-elif command == "P" or command == "D":
-    walk_commodities (handler)
+    if config.output_file:
+	out.close ()
 else:
-    walk_entries (journal, handler)
+    # Chain transaction filters on top of the base handler.  Most of these
+    # filters customize the output for reporting.  None of this is done
+    # for balance or equity reports, which don't need it.
 
-# Flush the handlers, causing them to output whatever data is still
-# pending.
+    if not (command == "b" or command == "E"):
+	if config.head_entries or config.tail_entries:
+	    handler = TruncateEntries (handler, config.head_entries,
+				       config.tail_entries)
 
-if command != "P" and command != "D":
-    handler.flush ()
+	if config.display_predicate:
+	    handler = FilterTransactions (handler, config.display_predicate)
+
+	handler = CalcTransactions (handler)
+
+	if config.sort_string:
+	    handler = SortTransactions (handler, config.sort_string)
+
+	if config.show_revalued:
+	    handler = ChangedValueTransactions (handler, config.show_revalued_only)
+
+	if config.show_collapsed:
+	    handler = CollapseTransactions (handler);
+
+    if config.show_subtotal and not (command == "b" or command == "E"):
+	handler = SubtotalTransactions (handler)
+
+    if config.days_of_the_week:
+	handler = DowTransactions (handler)
+    elif config.by_payee:
+	handler = ByPayeeTransactions (handler)
+
+    if config.report_period:
+	handler = IntervalTransactions (handler, config.report_period,
+					config.report_period_sort)
+	handler = SortTransactions (handler, "d")
+
+    if compute_monthly_avg:
+	handler = ComputeMonthlyAvg (handler)
+
+    # The next set of transaction filters are used by all reports.
+
+    if config.show_inverted:
+	handler = InvertTransactions (handler)
+
+    if config.show_related:
+	handler = RelatedTransactions (handler, config.show_all_related)
+
+    if config.predicate:
+	handler = FilterTransactions (handler, config.predicate)
+
+    if config.budget_flags:
+	handler = BudgetTransactions (handler, config.budget_flags)
+	handler.add_period_entries (journal)
+    elif config.forecast_limit:
+	handler = ForecastTransactions (handler, config.forecast_limit)
+	handler.add_period_entries (journal)
+
+    if config.comm_as_payee:
+	handler = SetCommAsPayee (handler)
+
+    # Walk the journal's entries, and pass each entry's transaction to the
+    # handler chain established above.  And although a journal's entries
+    # can be walked using Python, it is significantly faster to do this
+    # simple walk in C++, using `walk_entries'.
+    #
+    #   if command == "e":
+    #       for xact in new_entry:
+    #           handler (xact)
+    #   else:
+    #       for entry in journal:
+    #           for xact in entry:
+    #               handler (xact)
+
+    if command == "e":
+	walk_transactions (new_entry, handler)
+    elif command == "P" or command == "D":
+	walk_commodities (handler)
+    else:
+	walk_entries (journal, handler)
+
+    # Flush the handlers, causing them to output whatever data is still
+    # pending.
+
+    if command != "P" and command != "D":
+	handler.flush ()
 
 # For the balance and equity reports, the account totals now need to
 # be displayed.  This is different from outputting transactions, in
@@ -473,8 +495,7 @@ elif command == "E":
 # If it were important to clean things up, we would have to clear out
 # the accumulated xdata at this point:
 
-#clear_transactions_xdata ()
-#clear_accounts_xdata ()
+#clear_all_xdata ()
 
 # If the cache is being used, and is dirty, update it now.
 
