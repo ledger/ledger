@@ -19,6 +19,7 @@ void export_gnucash();
 void export_option();
 void export_walk();
 void export_format();
+void export_datetime();
 
 BOOST_PYTHON_MODULE(ledger) {
   export_amount();
@@ -35,4 +36,5 @@ BOOST_PYTHON_MODULE(ledger) {
   export_option();
   export_walk();
   export_format();
+  export_datetime();
 }

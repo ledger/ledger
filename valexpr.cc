@@ -512,9 +512,8 @@ value_expr_t * parse_value_term(std::istream& in)
 
     node.reset(new value_expr_t(value_expr_t::CONSTANT_T));
 
-    std::string datespec = buf;
-    std::istringstream stream(datespec);
-    interval_t::parse(stream, &node->constant_t, NULL);
+    interval_t timespan(buf);
+    node->constant_t = timespan.first();
     break;
   }
 

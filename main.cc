@@ -202,8 +202,7 @@ chain_formatters(const std::string& command,
     else if (config.report_interval)
       ptrs.push_back(formatter =
 		     new interval_transactions(formatter,
-					       config.report_interval,
-					       config.interval_begin));
+					       config.report_interval));
     else if (config.days_of_the_week)
       ptrs.push_back(formatter = new dow_transactions(formatter));
   }

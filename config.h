@@ -55,7 +55,6 @@ struct config_t
   bool          use_cache;
   bool          cache_dirty;
   interval_t    report_interval;
-  std::time_t   interval_begin;
   format_t      format;
   format_t      nformat;
 

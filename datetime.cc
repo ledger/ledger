@@ -30,6 +30,30 @@ static const char * formats[] = {
   NULL
 };
 
+std::time_t interval_t::first(const std::time_t moment)
+{
+  std::time_t quant = begin;
+
+  if (moment && std::difftime(moment, quant) > 0) {
+    if (! seconds) {
+      struct std::tm * desc = std::localtime(&moment);
+      if (years)
+	desc->tm_mon = 0;
+      desc->tm_mday = 1;
+      desc->tm_hour = 0;
+      desc->tm_min  = 0;
+      desc->tm_sec  = 0;
+      quant = std::mktime(desc);
+    }
+
+    std::time_t temp;
+    while (std::difftime(moment, temp = increment(quant)) > 0)
+      quant = temp;
+  }
+
+  return quant;
+}
+
 std::time_t interval_t::increment(const std::time_t moment)
 {
   std::time_t then = moment;
@@ -93,15 +117,10 @@ static void parse_inclusion_specifier(const std::string& word,
 			saw_year ? 1 : 0).increment(*begin);
 }
 
-interval_t interval_t::parse(std::istream& in,
-			     std::time_t * begin,
-			     std::time_t * end)
+void interval_t::parse(std::istream& in)
 {
-  unsigned long years   = 0;
-  unsigned long months  = 0;
-  unsigned long seconds = 0;
-
   std::string word;
+
   while (! in.eof()) {
     in >> word;
     if (word == "every") {
@@ -165,57 +184,47 @@ interval_t interval_t::parse(std::istream& in,
 	word = buf;
       }
 
-      parse_inclusion_specifier(word, begin, end);
+      parse_inclusion_specifier(word, &begin, &end);
 
       if (type == "last") {
 	if (mon_spec) {
-	  if (begin)
-	    *begin = interval_t(0, -1, 0).increment(*begin);
-	  if (end)
-	    *end   = interval_t(0, -1, 0).increment(*end);
+	  begin = interval_t(0, -1, 0).increment(begin);
+	  end   = interval_t(0, -1, 0).increment(end);
 	} else {
-	  if (begin)
-	    *begin = interval_t(0, 0, -1).increment(*begin);
-	  if (end)
-	    *end   = interval_t(0, 0, -1).increment(*end);
+	  begin = interval_t(0, 0, -1).increment(begin);
+	  end   = interval_t(0, 0, -1).increment(end);
 	}
       }
       else if (type == "next") {
 	if (mon_spec) {
-	  if (begin)
-	    *begin = interval_t(0, 1, 0).increment(*begin);
-	  if (end)
-	    *end   = interval_t(0, 1, 0).increment(*end);
+	  begin = interval_t(0, 1, 0).increment(begin);
+	  end   = interval_t(0, 1, 0).increment(end);
 	} else {
-	  if (begin)
-	    *begin = interval_t(0, 0, 1).increment(*begin);
-	  if (end)
-	    *end   = interval_t(0, 0, 1).increment(*end);
+	  begin = interval_t(0, 0, 1).increment(begin);
+	  end   = interval_t(0, 0, 1).increment(end);
 	}
       }
     }
     else if (word == "in") {
       in >> word;
-      parse_inclusion_specifier(word, begin, end);
+      parse_inclusion_specifier(word, &begin, &end);
     }
     else if (word == "from") {
       in >> word;
-      if (! parse_date(word.c_str(), begin))
+      if (! parse_date(word.c_str(), &begin))
 	throw interval_expr_error("Could not parse 'from' date");
       if (! in.eof())
 	in >> word;
     }
     else if (word == "to") {
       in >> word;
-      if (! parse_date(word.c_str(), end))
+      if (! parse_date(word.c_str(), &end))
 	throw interval_expr_error("Could not parse 'to' date");
     }
     else {
-      parse_inclusion_specifier(word, begin, end);
+      parse_inclusion_specifier(word, &begin, &end);
     }
   }
-
-  return interval_t(seconds, months, years);
 }
 
 bool parse_date_mask(const char * date_str, struct std::tm * result)
@@ -308,3 +317,63 @@ bool quick_parse_date(char * date_str, std::time_t * result)
 }
 
 } // namespace ledger
+
+#ifdef USE_BOOST_PYTHON
+
+#include <boost/python.hpp>
+
+using namespace boost::python;
+using namespace ledger;
+
+unsigned int interval_len(interval_t& interval)
+{
+  int periods = 1;
+  std::time_t when = interval.first();
+  while (interval.end && when < interval.end) {
+    when = interval.increment(when);
+    if (when < interval.end)
+      periods++;
+  }
+  return periods;
+}
+
+std::time_t interval_getitem(interval_t& interval, int i)
+{
+  static std::time_t last_index = 0;
+  static std::time_t last_moment = 0;
+
+  if (i == 0) {
+    last_index = 0;
+    last_moment = interval.first();
+  }
+  else {
+    last_moment = interval.increment(last_moment);
+    if (interval.end && last_moment >= interval.end) {
+      PyErr_SetString(PyExc_IndexError, "Index out of range");
+      throw_error_already_set();
+    }
+  }
+  return last_moment;
+}
+
+void export_datetime()
+{
+  class_< interval_t >
+    ("Interval", init<optional<int, int, int, std::time_t, std::time_t> >())
+    .def(init<std::string>())
+    .def(! self)
+
+    .def_readwrite("years", &interval_t::years)
+    .def_readwrite("months", &interval_t::months)
+    .def_readwrite("seconds", &interval_t::seconds)
+    .def_readwrite("begin", &interval_t::begin)
+    .def_readwrite("end", &interval_t::end)
+
+    .def("__len__", interval_len)
+    .def("__getitem__", interval_getitem)
+
+    .def("increment", &interval_t::increment)
+    ;
+}
+
+#endif // USE_BOOST_PYTHON

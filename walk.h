@@ -379,20 +379,18 @@ class subtotal_transactions : public item_handler<transaction_t>
 
 class interval_transactions : public subtotal_transactions
 {
-  std::time_t     begin;
   interval_t      interval;
   transaction_t * last_xact;
 
  public:
   interval_transactions(item_handler<transaction_t> * handler,
-			const interval_t& _interval,
-			const std::time_t _begin = 0)
-    : subtotal_transactions(handler), begin(_begin),
-      interval(_interval), last_xact(NULL) {}
+			const interval_t& _interval)
+    : subtotal_transactions(handler), interval(_interval),
+      last_xact(NULL) {}
 
   virtual ~interval_transactions() {
-    start  = begin;
-    finish = interval.increment(begin);
+    start  = interval.begin;
+    finish = interval.increment(interval.begin);
   }
 
   virtual void operator()(transaction_t& xact);

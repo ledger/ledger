@@ -256,10 +256,10 @@ void subtotal_transactions::operator()(transaction_t& xact)
 
 void interval_transactions::operator()(transaction_t& xact)
 {
-  std::time_t quant = interval.increment(begin);
+  std::time_t quant = interval.increment(interval.begin);
   if (std::difftime(xact.entry->date, quant) > 0) {
     if (last_xact) {
-      start  = begin;
+      start  = interval.begin;
       finish = quant;
       flush();
     }
@@ -279,7 +279,7 @@ void interval_transactions::operator()(transaction_t& xact)
     while (std::difftime(xact.entry->date,
 			 temp = interval.increment(quant)) > 0)
       quant = temp;
-    begin = quant;
+    interval.begin = quant;
   }
 
   subtotal_transactions::operator()(xact);

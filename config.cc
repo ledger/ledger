@@ -42,7 +42,6 @@ config_t::config_t()
   download_quotes    = false;
   use_cache	     = false;
   cache_dirty        = false;
-  interval_begin     = 0;
 }
 
 static void
@@ -226,25 +225,22 @@ void config_t::process_options(const std::string&     command,
   if (! report_interval && ! interval_text.empty()) {
     try {
       std::istringstream stream(interval_text);
-      std::time_t begin = -1, end = -1;
 
-      report_interval = interval_t::parse(stream, &begin, &end);
+      report_interval.parse(stream);
 
-      if (begin != -1) {
-	interval_begin = begin;
-
+      if (report_interval.begin) {
 	if (! predicate.empty())
 	  predicate += "&";
 	char buf[32];
-	std::sprintf(buf, "d>=%lu", begin);
+	std::sprintf(buf, "d>=%lu", report_interval.begin);
 	predicate += buf;
       }
 
-      if (end != -1) {
+      if (report_interval.end) {
 	if (! predicate.empty())
 	  predicate += "&";
 	char buf[32];
-	std::sprintf(buf, "d<%lu", end);
+	std::sprintf(buf, "d<%lu", report_interval.end);
 	predicate += buf;
       }
     }

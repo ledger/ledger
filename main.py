@@ -1,5 +1,6 @@
 import sys
 import os
+import time
 
 from ledger import *
 
@@ -29,3 +30,7 @@ handler = FilterTransactions (handler, "/Checking/")
 for entry in journal:
     for xact in entry:
 	handler (xact)
+
+span = Interval ("monthly last year")
+for date in span:
+    print time.strftime ("%c", time.localtime (date))
