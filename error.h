@@ -18,6 +18,20 @@ class error : public std::exception
   }
 };
 
+class compute_error : public error
+{
+ public:
+  compute_error(const std::string& reason) throw() : error(reason) {}
+  virtual ~compute_error() throw() {}
+};
+
+class expr_error : public error
+{
+ public:
+  expr_error(const std::string& reason) throw() : error(reason) {}
+  virtual ~expr_error() throw() {}
+};
+
 class parse_error : public error
 {
   unsigned int line;

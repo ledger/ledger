@@ -1,4 +1,5 @@
 #include "expr.h"
+#include "error.h"
 #include "textual.h"
 
 namespace ledger {
@@ -87,7 +88,8 @@ balance_t node_t::compute(const item_t *    item,
       case DATE:       moment = item->date; break;
       case BEGIN_DATE: moment = begin; break;
       case END_DATE:   moment = end; break;
-      default: assert(0); break;
+      default:
+	throw compute_error("Invalid date passed to P(v,d)");
       }
     }
     temp = temp.value(moment);
@@ -173,7 +175,7 @@ node_t * parse_term(std::istream& in, ledger_t * ledger)
       if (c == '}')
 	in.get(c);
       else
-	ident = "0";
+	throw expr_error("Missing '}'");
     } else {
       while (! in.eof() && std::isdigit(c) || c == '.') {
 	in.get(c);
@@ -244,6 +246,8 @@ node_t * parse_term(std::istream& in, ledger_t * ledger)
       }
       if (in.peek() == ')')
 	in.get(c);
+      else
+	throw expr_error("Missing ')'");
     } else {
       node->left = parse_term(in, ledger);
     }
@@ -266,7 +270,7 @@ node_t * parse_term(std::istream& in, ledger_t * ledger)
       node = new node_t(F_REGEXP);
       node->mask = new mask_t(ident);
     } else {
-      assert(0);
+      throw expr_error("Missing closing '/'");
     }
     break;
   }
@@ -276,7 +280,7 @@ node_t * parse_term(std::istream& in, ledger_t * ledger)
     if (in.peek() == ')')
       in.get(c);
     else
-      assert(0);
+      throw expr_error("Missing ')'");
     break;
 
   case '[': {
@@ -292,9 +296,9 @@ node_t * parse_term(std::istream& in, ledger_t * ledger)
       in.get(c);
       node = new node_t(CONSTANT_T);
       if (! parse_date(ident.c_str(), &node->constant_t))
-	assert(0);
+	throw expr_error("Failed to parse date");
     } else {
-      assert(0);
+      throw expr_error("Missing ']'");
     }
     break;
   }
@@ -427,9 +431,11 @@ node_t * parse_logic_expr(std::istream& in, ledger_t * ledger)
       }
 
       default:
-	if (! in.eof())
-	  assert(0);
-	break;
+	if (! in.eof()) {
+	  std::ostringstream err;
+	  err << "Unexpected character '" << c << "'";
+	  throw expr_error(err.str());
+	}
       }
     }
   }
@@ -472,16 +478,22 @@ node_t * parse_expr(std::istream& in, ledger_t * ledger)
 	node->right = choices;
 	choices->left = parse_logic_expr(in, ledger);
 	c = in.peek();
-	assert(c == ':');
+	if (c != ':') {
+	  std::ostringstream err;
+	  err << "Unexpected character '" << c << "'";
+	  throw expr_error(err.str());
+	}
 	in.get(c);
 	choices->right = parse_logic_expr(in, ledger);
 	break;
       }
 
       default:
-	if (! in.eof())
-	  assert(0);
-	break;
+	if (! in.eof()) {
+	  std::ostringstream err;
+	  err << "Unexpected character '" << c << "'";
+	  throw expr_error(err.str());
+	}
       }
       c = in.peek();
     }
