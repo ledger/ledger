@@ -569,6 +569,16 @@ account_t * py_find_account_2(journal_t& journal, const std::string& name,
   return journal.find_account(name, auto_create);
 }
 
+PyObject * py_account_get_data(account_t& account)
+{
+  return (PyObject *) account.data;
+}
+
+void py_account_set_data(account_t& account, PyObject * obj)
+{
+  account.data = obj;
+}
+
 struct py_entry_finalizer_t : public entry_finalizer_t {
   object pyobj;
   py_entry_finalizer_t() {}
@@ -656,7 +666,7 @@ void export_journal()
     .def_readwrite("note", &account_t::note)
     .def_readonly("depth", &account_t::depth)
     .def_readonly("transactions", &account_t::transactions)
-    .def_readwrite("data", &account_t::data)
+    .add_property("data", py_account_get_data, py_account_set_data)
     .def_readonly("ident", &account_t::ident)
 
     .def(self_ns::str(self))

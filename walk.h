@@ -143,14 +143,7 @@ inline void walk_entries(entries_list& list,
   walk_entries(list.begin(), list.end(), handler);
 }
 
-inline void clear_transactions_xdata() {
-  transactions_xdata.clear();
-
-  for (std::list<void **>::iterator i = transactions_xdata_ptrs.begin();
-       i != transactions_xdata_ptrs.end();
-       i++)
-    **i = NULL;
-}
+void clear_transactions_xdata();
 
 //////////////////////////////////////////////////////////////////////
 

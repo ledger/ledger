@@ -242,10 +242,18 @@ class value_t
   template <typename T>
   operator T() const;
 
-  void cast(type_t cast_type);
   void negate();
-  void abs();
+  value_t negated() const {
+    value_t temp = *this;
+    temp.negate();
+    return temp;
+  }
+  value_t operator-() const {
+    return negated();
+  }
 
+  void    abs();
+  void    cast(type_t cast_type);
   value_t cost() const;
 };
 

@@ -309,6 +309,16 @@ void dow_transactions::flush()
   }
 }
 
+void clear_transactions_xdata()
+{
+  transactions_xdata.clear();
+
+  for (std::list<void **>::iterator i = transactions_xdata_ptrs.begin();
+       i != transactions_xdata_ptrs.end();
+       i++)
+    **i = NULL;
+}
+
 void sum_accounts(account_t& account)
 {
   for (accounts_map::iterator i = account.accounts.begin();
@@ -469,6 +479,7 @@ void export_walk()
 
   def("transaction_has_xdata", transaction_has_xdata);
   def("transaction_xdata", transaction_xdata, return_internal_reference<1>());
+  def("clear_transactions_xdata", clear_transactions_xdata);
 
   class_< xact_handler_t, item_handler_wrap<transaction_t> >
     ("TransactionHandler")
@@ -579,6 +590,7 @@ void export_walk()
 
   def("account_has_xdata", account_has_xdata);
   def("account_xdata", account_xdata, return_internal_reference<1>());
+  def("clear_accounts_xdata", clear_accounts_xdata);
 
   class_< account_handler_t, item_handler_wrap<account_t> > ("AccountHandler")
     .def(init<account_handler_t *>())

@@ -17,6 +17,7 @@
 import os
 import sys
 import string
+import time
 
 true, false = 1, 0
 
@@ -243,6 +244,50 @@ class FormatAccount (AccountHandler):
 		self.output.write(self.formatter.format(account))
 		account_xdata (account).dflags |= ACCOUNT_DISPLAYED
 
+class FormatEquity (AccountHandler):
+    output = None
+
+    def __init__ (self, fmt, pred):
+	try:
+	    i = string.index (fmt, '%/')
+	    self.formatter  = Format (fmt[: i])
+	    self.nformatter = Format (fmt[i + 2 :])
+	except ValueError:
+	    self.formatter  = Format (fmt)
+	    self.nformatter = None
+
+	self.predicate = AccountPredicate (pred)
+	self.total     = Value ()
+
+	if config.output_file:
+	    self.output = open(config.output_file, "w")
+	else:
+	    self.output = sys.stdout
+
+	AccountHandler.__init__ (self)
+
+	header_entry = Entry ()
+	header_entry.payee = "Opening Balances"
+	header_entry.date  = int(time.time())
+	self.output.write (self.formatter.format (header_entry))
+
+    def __del__ (self):
+	if config.output_file:
+	    self.output.close ()
+
+    def flush (self):
+	summary = Account(Account (), "Equity:Opening Balances")
+	account_xdata (summary).value = - self.total
+	self.output.write (self.nformatter.format (summary))
+	self.output.flush ()
+
+    def __call__ (self, account):
+	if display_account (account, self.predicate):
+	    self.output.write(self.nformatter.format (account))
+	    if account_has_xdata (account):
+		self.total += account_xdata (account).value
+	    account_xdata (account).dflags |= ACCOUNT_DISPLAYED
+
 # Set the final transaction handler: for balances and equity reports,
 # it will simply add the value of the transaction to the account's
 # xdata, which is used a bit later to report those totals.  For all
@@ -332,12 +377,11 @@ if command == "b":
     #      print "--------------------"
     #      config.format.format(out, details_t(*journal->master));
 
-#elif command == "E":
-#    format_equity acct_formatter(out, config.format, config.nformat,
-#				 config.display_predicate);
-#    sum_accounts(*journal->master);
-#    walk_accounts(*journal->master, acct_formatter, config.sort_string);
-#    acct_formatter.flush();
+elif command == "E":
+    acct_formatter = FormatEquity (format, config.display_predicate)
+    sum_accounts (journal.master)
+    walk_accounts (journal.master, acct_formatter, config.sort_string)
+    acct_formatter.flush ()
 
 # If the cache is being used, and is dirty, update it now.
 
@@ -345,3 +389,6 @@ if config.use_cache and config.cache_dirty and config.cache_file:
     write_binary_journal(config.cache_file, journal);
 
 # We're done!
+
+clear_transactions_xdata ()
+clear_accounts_xdata ()

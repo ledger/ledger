@@ -707,6 +707,8 @@ void export_value()
     .def(other<amount_t>() / self)
     .def(int() / self)
 
+    .def(- self)
+
     .def(self += self)
     .def(self += other<balance_pair_t>())
     .def(self += other<balance_t>())
