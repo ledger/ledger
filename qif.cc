@@ -31,6 +31,10 @@ unsigned int parse_qif_file(std::istream& in, journal_t * journal,
   account_t *             misc = journal->find_account("Miscellaneous");
   unsigned int            count;
 
+  entry.reset(new entry_t);
+  xact = new transaction_t(master);
+  entry->add_transaction(xact);
+
   path	  = journal->sources.back();
   linenum = 1;
 
@@ -65,10 +69,6 @@ unsigned int parse_qif_file(std::istream& in, journal_t * journal,
       break;
 
     case 'D':
-      entry.reset(new entry_t);
-      xact = new transaction_t(master);
-      entry->add_transaction(xact);
-
       in >> line;
       if (! parse_date(line, &entry->date))
 	throw parse_error(path, linenum, "Failed to parse date");
@@ -150,6 +150,10 @@ unsigned int parse_qif_file(std::istream& in, journal_t * journal,
 
       if (journal->add_entry(entry.release()))
 	count++;
+
+      entry.reset(new entry_t);
+      xact = new transaction_t(master);
+      entry->add_transaction(xact);
       break;
     }
   }
