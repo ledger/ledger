@@ -66,20 +66,13 @@ void handle_transaction(transaction_t * xact,
 			const Function&	functor,
 			unsigned int	flags)
 {
-  if ((flags & MATCHING_TRANSACTIONS) &&
-      ! (xact->flags & TRANSACTION_HANDLED)) {
-    xact->flags |= TRANSACTION_HANDLED;
-    functor(xact);
-  }
-
-  if (flags & OTHER_TRANSACTIONS)
-    for (transactions_list::iterator i = xact->entry->transactions.begin();
-	 i != xact->entry->transactions.end();
-	 i++) {
-      if (*i == xact || ((*i)->flags & (TRANSACTION_AUTO |
-					TRANSACTION_HANDLED)))
-	continue;
-
+  for (transactions_list::iterator i = xact->entry->transactions.begin();
+       i != xact->entry->transactions.end();
+       i++)
+    if (! ((*i)->flags & (TRANSACTION_AUTO | TRANSACTION_HANDLED)) &&
+	(*i == xact ?
+	 (flags & MATCHING_TRANSACTIONS) :
+	 (flags & OTHER_TRANSACTIONS))) {
       (*i)->flags |= TRANSACTION_HANDLED;
       functor(*i);
     }

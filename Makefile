@@ -19,7 +19,7 @@ CXX    = g++
 CFLAGS = -Wall -ansi -pedantic
 #DFLAGS = -O3 -fomit-frame-pointer
 DFLAGS = -g -DDEBUG=1
-#DFLAGS = -g -pg
+#DFLAGS = -g -DDEBUG=1 -pg
 
 INCS   = -I/sw/include \
 	 -I/usr/include/gcc/darwin/3.3/c++ \

@@ -226,43 +226,48 @@ void format_t::format_elements(std::ostream&    out,
       }
       break;
 
-    case element_t::OPT_AMOUNT: {
-      if (! details.entry || ! details.xact)
-	break;
+    case element_t::OPT_AMOUNT:
+      if (details.xact) {
+	std::string disp;
+	bool        use_disp = false;
 
-      std::string disp;
-      bool        use_disp = false;
-
-      if (std::find(details.entry->transactions.begin(),
-		    details.entry->transactions.end(), details.xact) !=
-	  details.entry->transactions.end()) {
-	if (details.entry->transactions.size() == 2 &&
-	    details.xact == details.entry->transactions.back() &&
-	    (details.entry->transactions.front()->amount ==
-	     details.entry->transactions.front()->cost) &&
-	    (details.entry->transactions.front()->amount ==
-	     - details.entry->transactions.back()->amount)) {
-	  use_disp = true;
-	}
-	else if (details.entry->transactions.size() != 2 &&
-		 details.xact->amount != details.xact->cost) {
+	if (details.xact->amount != details.xact->cost) {
 	  amount_t unit_cost = details.xact->cost / details.xact->amount;
 	  std::ostringstream stream;
 	  stream << details.xact->amount << " @ " << unit_cost;
 	  disp = stream.str();
 	  use_disp = true;
+	} else {
+	  unsigned int xacts_real_count = 0;
+	  transaction_t * first = NULL;
+	  transaction_t * last  = NULL;
+
+	  for (transactions_list::const_iterator i
+		 = details.entry->transactions.begin();
+	       i != details.entry->transactions.end();
+	       i++)
+	    if (! ((*i)->flags & TRANSACTION_AUTO)) {
+	      xacts_real_count++;
+
+	      if (! first)
+		first = *i;
+	      last = *i;
+	    }
+
+	  use_disp = (xacts_real_count == 2 &&
+		      details.xact == last &&
+		      first->amount == - last->amount);
 	}
+
+	if (! use_disp)
+	  disp = std::string(details.xact->amount);
+	out << disp;
+
+	// jww (2004-07-31): this should be handled differently
+	if (! details.xact->note.empty())
+	  out << "  ; " << details.xact->note;
       }
-
-      if (! use_disp)
-	disp = std::string(details.xact->amount);
-      out << disp;
-
-      // jww (2004-07-31): this should be handled differently
-      if (! details.xact->note.empty())
-	out << "  ; " << details.xact->note;
       break;
-    }
 
     case element_t::VALUE: {
       balance_t value;
