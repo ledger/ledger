@@ -1,13 +1,17 @@
 
-Welcome to Ledger, a command-line accounting program.
+	Welcome to Ledger, a command-line accounting program.
 
 Quick start
 ===========
 
-To build Ledger, you will first need these two libraries installed:
+To build Ledger, you will need a fairly modern C++ compiler (gcc 2.95
+will not work), and at least these two libraries installed:
 
     gmp        GNU multi-precision library
     pcre       Perl regular expression library
+
+(On some GNU/Linux systems, the packages you need to install are
+called "gmp-dev" and "pcre-dev").
 
 If you wish to read Gnucash data files, you will also need two XML
 libraries, which may or may not be available in a single package (it

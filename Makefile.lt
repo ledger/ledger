@@ -2,7 +2,6 @@ lib_LTLIBRARIES = libledger.la
 libledger_la_CXXFLAGS =
 libledger_la_SOURCES = \
 	amount.cc      \
-	autoxact.cc    \
 	balance.cc     \
 	binary.cc      \
 	config.cc      \
@@ -20,12 +19,12 @@ libledger_la_SOURCES = \
 	value.cc       \
 	walk.cc
 if HAVE_XMLPARSE
+libledger_la_CXXFLAGS += -DHAVE_XMLPARSE=1
 libledger_la_SOURCES += gnucash.cc xml.cc
 endif
 if HAVE_BOOST_PYTHON
 libledger_la_CXXFLAGS += -DUSE_BOOST_PYTHON=1
 libledger_la_SOURCES  += py_eval.cc
-libledger_la_LIBADD    = $(LIBOBJS) -lboost_python -lpython$(PYTHON_VERSION)
 endif
 if DEBUG
 libledger_la_CXXFLAGS += -DDEBUG_LEVEL=4
@@ -36,7 +35,6 @@ libledger_la_LDFLAGS = -static -version-info 2:0
 pkginclude_HEADERS = \
 	acconf.h     \
 	amount.h     \
-	autoxact.h   \
 	balance.h    \
 	binary.h     \
 	config.h     \
