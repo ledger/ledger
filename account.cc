@@ -5,6 +5,8 @@
 
 namespace ledger {
 
+#ifdef DO_CLEANUP
+
 account_t::~account_t()
 {
   DEBUG_PRINT("ledger.memory.ctors", "dtor account_t");
@@ -15,6 +17,8 @@ account_t::~account_t()
        i++)
     delete (*i).second;
 }
+
+#endif // DO_CLEANUP
 
 account_t * account_t::find_account(const std::string& name,
 				    const bool	       auto_create)

@@ -54,11 +54,13 @@ class transaction_t
       cost(NULL), flags(_flags), note(_note), data(NULL) {
   }
 
+#ifdef DO_CLEANUP
   ~transaction_t() {
     //assert(! data);
     if (cost)
       delete cost;
   }
+#endif
 };
 
 
@@ -78,12 +80,14 @@ class entry_t
   transactions_list transactions;
 
   entry_t() : date(-1), state(UNCLEARED) {}
+#ifdef DO_CLEANUP
   ~entry_t() {
     for (transactions_list::iterator i = transactions.begin();
 	 i != transactions.end();
 	 i++)
       delete *i;
   }
+#endif
 
   void add_transaction(transaction_t * xact) {
     xact->entry = this;
@@ -120,7 +124,9 @@ class account_t
     : parent(_parent), name(_name), note(_note),
       depth(parent ? parent->depth + 1 : 0), data(NULL), ident(0) {}
 
+#ifdef DO_CLEANUP
   ~account_t();
+#endif
 
   std::string fullname() const;
 
@@ -163,13 +169,22 @@ class journal_t
   account_t *  master;
   entries_list entries;
   strings_list sources;
+#ifdef DO_CLEANUP
+  char *       item_pool;
+  char *       item_pool_end;
+#endif
 
   mutable accounts_map accounts_cache;
 
   journal_t() {
     master = new account_t(NULL, "");
+#ifdef DO_CLEANUP
+    item_pool = NULL;
+#endif
   }
+#ifdef DO_CLEANUP
   ~journal_t();
+#endif
 
   void add_account(account_t * acct) {
     master->add_account(acct);

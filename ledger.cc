@@ -8,6 +8,8 @@ namespace ledger {
 
 const std::string version = "2.0b";
 
+#ifdef DO_CLEANUP
+
 journal_t::~journal_t()
 {
   DEBUG_PRINT("ledger.memory.dtors", "dtor journal_t");
@@ -20,8 +22,15 @@ journal_t::~journal_t()
   for (entries_list::iterator i = entries.begin();
        i != entries.end();
        i++)
-    delete *i;
+    if (! item_pool ||
+	((char *) *i) < item_pool || ((char *) *i) >= item_pool_end)
+      delete *i;
+
+  if (item_pool)
+    delete[] item_pool;
 }
+
+#endif // DO_CLEANUP
 
 bool journal_t::add_entry(entry_t * entry)
 {
