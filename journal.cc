@@ -267,16 +267,11 @@ entry_t * journal_t::derive_entry(strings_list::iterator i,
 
   entry_t * matching = NULL;
 
-  if (! parse_date((*i).c_str(), &added->date)) {
-    std::cerr << "Error: Bad entry date: " << *i << std::endl;
-    return false;
-  }
-  ++i;
+  if (! parse_date((*i).c_str(), &added->date))
+    throw error("Bad date passed to 'entry'");
 
-  if (i == end) {
-    std::cerr << "Error: Too few arguments to 'entry'." << std::endl;
-    return false;
-  }
+  if (++i == end)
+    throw error("Too few arguments to 'entry'");
 
   mask_t regexp(*i++);
 
@@ -290,17 +285,12 @@ entry_t * journal_t::derive_entry(strings_list::iterator i,
 
   added->payee = matching ? matching->payee : regexp.pattern;
 
-  if (i == end) {
-    std::cerr << "Error: Too few arguments to 'entry'." << std::endl;
-    return false;
-  }
+  if (i == end)
+    throw error("Too few arguments to 'entry'");
 
   if ((*i)[0] == '-' || std::isdigit((*i)[0])) {
-    if (! matching) {
-      std::cerr << "Error: Missing account name for non-matching entry."
-		<< std::endl;
-      return false;
-    }
+    if (! matching)
+      throw error("Missing account name for non-matching entry");
 
     transaction_t * m_xact, * xact, * first;
     m_xact = matching->transactions.front();
@@ -343,16 +333,12 @@ entry_t * journal_t::derive_entry(strings_list::iterator i,
       if (! acct)
 	acct = find_account(acct_regex.pattern);
 
-      if (! acct) {
-	std::cerr << "Error: Could not find account name '"
-		  << acct_regex.pattern << "'." << std::endl;
-	return false;
-      }
+      if (! acct)
+	throw error(std::string("Could not find account name '") +
+		    acct_regex.pattern + "'");
 
-      if (i == end) {
-	std::cerr << "Error: Too few arguments to 'entry'." << std::endl;
-	return false;
-      }
+      if (i == end)
+	throw error("Too few arguments to 'entry'");
 
       amount_t amt(*i++);
       transaction_t * xact = new transaction_t(acct, amt);
@@ -365,12 +351,11 @@ entry_t * journal_t::derive_entry(strings_list::iterator i,
     if (i != end && std::string(*i++) == "-from" && i != end) {
       if (account_t * acct = find_account(*i++))
 	added->add_transaction(new transaction_t(acct));
-    } else {
-      if (! matching) {
-	std::cerr << "Error: Could not figure out the account to draw from."
-		  << std::endl;
-	std::exit(1);
-      }
+    }
+    else if (! matching) {
+      throw error("Could not figure out the account to draw from");
+    }
+    else {
       transaction_t * xact
 	= new transaction_t(matching->transactions.back()->account);
       added->add_transaction(xact);
@@ -419,6 +404,10 @@ unsigned int transactions_len(entry_t& entry)
 
 transaction_t& transactions_getitem(entry_t& entry, int i)
 {
+  static int last_index = 0;
+  static entry_t * last_entry = NULL;
+  static transactions_list::iterator elem;
+
   std::size_t len = entry.transactions.size();
 
   if (abs(i) >= len) {
@@ -426,10 +415,18 @@ transaction_t& transactions_getitem(entry_t& entry, int i)
     throw_error_already_set();
   }
 
+  if (&entry == last_entry && i == last_index + 1) {
+    last_index = i;
+    return **++elem;
+  }
+
   int x = i < 0 ? len + i : i;
-  transactions_list::iterator elem = entry.transactions.begin();
+  elem = entry.transactions.begin();
   while (--x >= 0)
     elem++;
+
+  last_entry = &entry;
+  last_index = i;
 
   return **elem;
 }
@@ -441,6 +438,10 @@ unsigned int entries_len(journal_t& journal)
 
 entry_t& entries_getitem(journal_t& journal, int i)
 {
+  static int last_index = 0;
+  static journal_t * last_journal = NULL;
+  static entries_list::iterator elem;
+
   std::size_t len = journal.entries.size();
 
   if (abs(i) >= len) {
@@ -448,10 +449,18 @@ entry_t& entries_getitem(journal_t& journal, int i)
     throw_error_already_set();
   }
 
+  if (&journal == last_journal && i == last_index + 1) {
+    last_index = i;
+    return **++elem;
+  }
+
   int x = i < 0 ? len + i : i;
-  entries_list::iterator elem = journal.entries.begin();
+  elem = journal.entries.begin();
   while (--x >= 0)
     elem++;
+
+  last_journal = &journal;
+  last_index   = i;
 
   return **elem;
 }
@@ -461,21 +470,33 @@ unsigned int accounts_len(account_t& account)
   return account.accounts.size();
 }
 
-account_t& accounts_getitem(account_t& account, int index)
+account_t& accounts_getitem(account_t& account, int i)
 {
+  static int last_index = 0;
+  static account_t * last_account = NULL;
+  static accounts_map::iterator elem;
+
   std::size_t len = account.accounts.size();
 
-  if (abs(index) >= len) {
+  if (abs(i) >= len) {
     PyErr_SetString(PyExc_IndexError, "Index out of range");
     throw_error_already_set();
   }
 
-  int x = 0;
-  for (accounts_map::iterator i = account.accounts.begin();
-       i != account.accounts.end();
-       i++)
-    if (x++ == index)
-      return *((*i).second);
+  if (&account == last_account && i == last_index + 1) {
+    last_index = i;
+    return *(*++elem).second;
+  }
+
+  int x = i < 0 ? len + i : i;
+  elem = account.accounts.begin();
+  while (--x >= 0)
+    elem++;
+
+  last_account = &account;
+  last_index   = i;
+
+  return *(*elem).second;
 }
 
 void export_journal()

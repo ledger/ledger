@@ -290,11 +290,8 @@ int parse_and_report(int argc, char * argv[], char * envp[])
     command = "e";
   else if (command == "equity")
     command = "E";
-  else {
-    std::ostringstream msg;
-    msg << "Unrecognized command '" << command << "'";
-    throw error(msg.str());
-  }
+  else
+    throw error(std::string("Unrecognized command '") + command + "'");
 
   config.process_options(command, arg, args.end());
 

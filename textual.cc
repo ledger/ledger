@@ -576,11 +576,8 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
     time_commodity->flags |= COMMODITY_STYLE_NOMARKET;
   }
 
-  if (errors > 0) {
-    std::ostringstream msg;
-    msg << "Errors parsing file '" << path << "'";
-    throw error(msg.str());
-  }
+  if (errors > 0)
+    throw error(std::string("Errors parsing file '") + path + "'");
 
   return count;
 }

@@ -392,7 +392,7 @@ OPT_BEGIN(set_price, "z:") {
   if (std::strchr(optarg, '='))
     config.price_settings.push_back(optarg);
   else
-    std::cerr << "Error: Invalid price setting: " << optarg << std::endl;
+    throw error(std::string("Invalid price setting: ") + optarg);
 } OPT_END(set_price);
 
 OPT_BEGIN(account, "a:") {

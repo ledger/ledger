@@ -1,5 +1,6 @@
 #include "gnucash.h"
 #include "ledger.h"
+#include "error.h"
 
 #include <iostream>
 #include <sstream>
@@ -218,21 +219,17 @@ static void dataHandler(void *userData, const char *s, int len)
 
   case XACT_ACCOUNT: {
     accounts_map::iterator i = accounts_by_id.find(std::string(s, len));
-    if (i == accounts_by_id.end()) {
-      std::cerr << "Could not find account " << std::string(s, len)
-		<< std::endl;
-      std::exit(1);
-    }
+    if (i == accounts_by_id.end())
+      throw error(std::string("Could not find account ") + std::string(s, len));
 
     transaction_t * xact = curr_entry->transactions.back();
     xact->account = (*i).second;
 
     account_comm_map::iterator ac = account_comms.find(xact->account);
-    if (ac == account_comms.end()) {
-      std::cerr << "Could not find account " << *(xact->account)
-		<< std::endl;
-      std::exit(1);
-    }
+    if (ac == account_comms.end())
+      throw error(std::string("Could not find account ") +
+		  std::string(*(xact->account)));
+
     commodity_t * default_commodity = (*ac).second;
 
     curr_quant.set_commodity(*default_commodity);
@@ -300,13 +297,10 @@ unsigned int gnucash_parser_t::parse(std::istream&	 in,
 
   while (! in.eof()) {
     in.getline(buf, BUFSIZ - 1);
-
-    if (! XML_Parse(parser, buf, std::strlen(buf), in.eof())) {
-      std::cerr << XML_ErrorString(XML_GetErrorCode(parser))
-		<< " at line " << XML_GetCurrentLineNumber(parser)
-		<< std::endl;
-      return NULL;
-    }
+    if (! XML_Parse(parser, buf, std::strlen(buf), in.eof()))
+      throw parse_error(original_file ? *original_file : "<gnucash>",
+			XML_GetCurrentLineNumber(parser),
+			XML_ErrorString(XML_GetErrorCode(parser)));
   }
   XML_ParserFree(parser);
 

@@ -642,11 +642,10 @@ value_expr_t * parse_logic_expr(std::istream& in)
       }
 
       default:
-	if (! in.eof()) {
-	  std::ostringstream err;
-	  err << "Unexpected character '" << c << "'";
-	  throw value_expr_error(err.str());
-	}
+	if (! in.eof())
+	  throw value_expr_error(std::string("Unexpected character '") +
+				 c + "'");
+	break;
       }
     }
   }
@@ -687,22 +686,19 @@ value_expr_t * parse_value_expr(std::istream& in)
 	node->right = choices = new value_expr_t(value_expr_t::O_COL);
 	choices->left = parse_logic_expr(in);
 	c = peek_next_nonws(in);
-	if (c != ':') {
-	  std::ostringstream err;
-	  err << "Unexpected character '" << c << "'";
-	  throw value_expr_error(err.str());
-	}
+	if (c != ':')
+	  throw value_expr_error(std::string("Unexpected character '") +
+				 c + "'");
 	in.get(c);
 	choices->right = parse_logic_expr(in);
 	break;
       }
 
       default:
-	if (! in.eof()) {
-	  std::ostringstream err;
-	  err << "Unexpected character '" << c << "'";
-	  throw value_expr_error(err.str());
-	}
+	if (! in.eof())
+	  throw value_expr_error(std::string("Unexpected character '") +
+				 c + "'");
+	break;
       }
       c = peek_next_nonws(in);
     }

@@ -19,4 +19,5 @@ register_parser (parser)
 journal = Journal ()
 parse_journal_file (args[0], journal)
 
-print journal[-1].payee
+for entry in journal:
+    print entry.payee
