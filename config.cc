@@ -97,7 +97,8 @@ Commodity reporting:\n\
   -A, --average         report average transaction amount\n\
   -D, --deviation       report deviation from the average\n\
   -X, --trend           report average deviation from the average\n\
-  -Z, --weighted-trend  same as trend, but older values less significant\n\n\
+  -Z, --weighted-trend  same as trend, but older values are less significant\n\
+			(-D, -X and -Z make little sense in balance reports)\n\n\
 Commands:\n\
   balance [REGEXP]...   show balance totals for matching accounts\n\
   register [REGEXP]...  show register of matching transactions\n\
@@ -345,7 +346,7 @@ OPT_BEGIN(trend, "X") {
 OPT_BEGIN(weighted_trend, "Z") {
   config->value_expr = "a";
   config->total_expr
-    = "MD(MO/(1+(((t-d)/(30*86400))<0?0:((t-d)/(30*86400)))))";
+    = "MD(MO/(1+(((N-d)/(30*86400))<0?0:((N-d)/(30*86400)))))";
 } OPT_END(weighted_trend);
 
 } // namespace ledger

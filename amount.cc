@@ -1,4 +1,5 @@
 #include "ledger.h"
+#include "error.h"
 #include "util.h"
 
 #include "gmp.h"
@@ -6,8 +7,6 @@
 #define MAX_PRECISION 10
 
 #define MPZ(x) ((MP_INT *)(x))
-
-#define INIT() if (! quantity) _init()
 
 namespace ledger {
 
@@ -229,8 +228,14 @@ amount_t& amount_t::operator=(const double value)
 amount_t& amount_t::operator+=(const amount_t& amt)
 {
   if (amt.quantity) {
-    assert(! commodity || commodity == amt.commodity);
-    INIT();
+    if (! quantity) {
+      _init();
+      commodity = amt.commodity;
+    }
+
+    if (commodity != amt.commodity)
+      throw amount_error("Adding amounts with different commodities");
+
     mpz_add(MPZ(quantity), MPZ(quantity), MPZ(amt.quantity));
   }
   return *this;
@@ -239,8 +244,14 @@ amount_t& amount_t::operator+=(const amount_t& amt)
 amount_t& amount_t::operator-=(const amount_t& amt)
 {
   if (amt.quantity) {
-    assert(commodity == amt.commodity);
-    INIT();
+    if (! quantity) {
+      _init();
+      commodity = amt.commodity;
+    }
+
+    if (commodity != amt.commodity)
+      throw amount_error("Subtracting amounts with different commodities");
+
     mpz_sub(MPZ(quantity), MPZ(quantity), MPZ(amt.quantity));
   }
   return *this;
@@ -372,7 +383,10 @@ bool amount_t::operator<(const amount_t& amt) const
     return amt > 0;
   if (! amt.quantity)		// equivalent to zero
     return *this < 0;
-  assert(commodity == amt.commodity);
+
+  if (commodity != amt.commodity)
+    throw amount_error("Comparing amounts with different commodities");
+
   return mpz_cmp(MPZ(quantity), MPZ(amt.quantity)) < 0;
 }
 
@@ -382,7 +396,10 @@ bool amount_t::operator<=(const amount_t& amt) const
     return amt >= 0;
   if (! amt.quantity)		// equivalent to zero
     return *this <= 0;
-  assert(commodity == amt.commodity);
+
+  if (commodity != amt.commodity)
+    throw amount_error("Comparing amounts with different commodities");
+
   return mpz_cmp(MPZ(quantity), MPZ(amt.quantity)) <= 0;
 }
 
@@ -392,7 +409,10 @@ bool amount_t::operator>(const amount_t& amt) const
     return amt < 0;
   if (! amt.quantity)		// equivalent to zero
     return *this > 0;
-  assert(commodity == amt.commodity);
+
+  if (commodity != amt.commodity)
+    throw amount_error("Comparing amounts with different commodities");
+
   return mpz_cmp(MPZ(quantity), MPZ(amt.quantity)) > 0;
 }
 
@@ -402,16 +422,23 @@ bool amount_t::operator>=(const amount_t& amt) const
     return amt <= 0;
   if (! amt.quantity)		// equivalent to zero
     return *this >= 0;
-  assert(commodity == amt.commodity);
+
+  if (commodity != amt.commodity)
+    throw amount_error("Comparing amounts with different commodities");
+
   return mpz_cmp(MPZ(quantity), MPZ(amt.quantity)) >= 0;
 }
 
 bool amount_t::operator==(const amount_t& amt) const
 {
-  if (commodity != amt.commodity)
+  if (! quantity && ! amt.quantity)
+    return true;
+  else if (! quantity || ! amt.quantity)
     return false;
-  assert(amt.quantity);
-  assert(quantity);
+
+  if (commodity != amt.commodity)
+    throw amount_error("Comparing amounts with different commodities");
+
   return mpz_cmp(MPZ(quantity), MPZ(amt.quantity)) == 0;
 }
 
@@ -448,7 +475,10 @@ amount_t& amount_t::operator*=(const amount_t& amt)
   if (! amt.quantity)
     return *this;
 
-  INIT();
+  if (! quantity) {
+    _init();
+    commodity = amt.commodity;
+  }
 
   mpz_mul(MPZ(quantity), MPZ(quantity), MPZ(amt.quantity));
   mpz_tdiv_q(MPZ(quantity), MPZ(quantity), full_divisor);
@@ -461,7 +491,10 @@ amount_t& amount_t::operator/=(const amount_t& amt)
   if (! amt.quantity)
     return *this;
 
-  INIT();
+  if (! quantity) {
+    _init();
+    commodity = amt.commodity;
+  }
 
   mpz_mul(MPZ(quantity), MPZ(quantity), full_divisor);
   mpz_tdiv_q(MPZ(quantity), MPZ(quantity), MPZ(amt.quantity));
@@ -474,7 +507,10 @@ amount_t& amount_t::operator%=(const amount_t& amt)
   if (! amt.quantity)
     return *this;
 
-  INIT();
+  if (! quantity) {
+    _init();
+    commodity = amt.commodity;
+  }
 
   mpz_mul(MPZ(quantity), MPZ(quantity), full_divisor);
   mpz_tdiv_r(MPZ(quantity), MPZ(quantity), MPZ(amt.quantity));
@@ -650,7 +686,7 @@ void parse_commodity(std::istream& in, std::string& symbol)
     if (c == '"')
       in.get(c);
     else
-      assert(0);
+      throw amount_error("Quoted commodity symbol lacks closing quote");
   } else {
     READ_INTO(in, buf, 256, c, ! std::isspace(c) && ! std::isdigit(c) &&
 	      c != '-' && c != '.');
@@ -670,7 +706,8 @@ void amount_t::parse(std::istream& in)
   unsigned int flags	 = COMMODITY_STYLE_DEFAULTS;;
   unsigned int precision = MAX_PRECISION;
 
-  INIT();
+  if (! quantity)
+    _init();
 
   char c = peek_next_nonws(in);
   if (std::isdigit(c) || c == '.' || c == '-') {
@@ -794,7 +831,8 @@ void amount_t::read_quantity(std::istream& in)
   in.read((char *)&len, sizeof(len));
   if (len) {
     in.read(buf, len);
-    INIT();
+    if (! quantity)
+      _init();
 #ifdef WRITE_AMOUNTS_TEXTUALLY
     buf[len] = '\0';
     mpz_set_str(MPZ(quantity), buf, 10);

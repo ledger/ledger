@@ -8,8 +8,7 @@
 
 namespace ledger {
 
-class error : public std::exception
-{
+class error : public std::exception {
   std::string reason;
  public:
   error(const std::string& _reason) throw() : reason(_reason) {}
@@ -20,36 +19,37 @@ class error : public std::exception
   }
 };
 
-class compute_error : public error
-{
+class amount_error : public error {
+ public:
+  amount_error(const std::string& reason) throw() : error(reason) {}
+  virtual ~amount_error() throw() {}
+};
+
+class compute_error : public error {
  public:
   compute_error(const std::string& reason) throw() : error(reason) {}
   virtual ~compute_error() throw() {}
 };
 
-class value_expr_error : public error
-{
+class value_expr_error : public error {
  public:
   value_expr_error(const std::string& reason) throw() : error(reason) {}
   virtual ~value_expr_error() throw() {}
 };
 
-class interval_expr_error : public error
-{
+class interval_expr_error : public error {
  public:
   interval_expr_error(const std::string& reason) throw() : error(reason) {}
   virtual ~interval_expr_error() throw() {}
 };
 
-class format_error : public error
-{
+class format_error : public error {
  public:
   format_error(const std::string& reason) throw() : error(reason) {}
   virtual ~format_error() throw() {}
 };
 
-class parse_error : public error
-{
+class parse_error : public error {
   unsigned int line;
   std::string  file;
  public:

@@ -106,16 +106,19 @@ regexps_to_predicate(std::list<std::string>::const_iterator begin,
       if (i != regexps.begin()) {
 	config->predicate += "!";
       }
-      else if (add_account_short_masks &&
-	       (*i).find(':') == std::string::npos) {
-	if (! config->display_predicate.empty())
-	  config->display_predicate += "&";
-	else if (! config->show_empty)
-	  config->display_predicate += "T&";
+      else if (add_account_short_masks) {
+	if ((*i).find(':') != std::string::npos) {
+	  config->show_subtotal = true;
+	} else {
+	  if (! config->display_predicate.empty())
+	    config->display_predicate += "&";
+	  else if (! config->show_empty)
+	    config->display_predicate += "T&";
 
-	config->display_predicate += "///(?:";
-	config->display_predicate += *i;
-	config->display_predicate += ")/";
+	  config->display_predicate += "///(?:";
+	  config->display_predicate += *i;
+	  config->display_predicate += ")/";
+	}
       }
 
       if (! account_regexp)
@@ -257,7 +260,28 @@ int main(int argc, char * argv[], char * envp[])
     return 1;
   }
 
-  // Process the remaining command-line arguments
+  // Configure some other options depending on report type
+
+  bool show_all_related = false;
+
+  if (command == "p" || command == "e") {
+    config->show_related  =
+    show_all_related	  =
+    config->show_subtotal = true;
+  }
+  else if (command == "E") {
+    config->show_subtotal = true;
+  }
+  else if (config->show_related) {
+    if (command == "r") {
+      config->show_inverted = true;
+    } else {
+      config->show_subtotal = true;
+      show_all_related      = true;
+    }
+  }
+
+  // Process remaining command-line arguments
 
   std::auto_ptr<entry_t> new_entry;
   if (command == "e") {
@@ -278,7 +302,7 @@ int main(int argc, char * argv[], char * envp[])
       regexps_to_predicate(i, args.end(), config);
   }
 
-  // Compile the predicates
+  // Setup default value for the display predicate
 
   if (config->display_predicate.empty()) {
     if (command == "b") {
@@ -295,7 +319,7 @@ int main(int argc, char * argv[], char * envp[])
     }
   }
 
-  // Compile the sorting criteria
+  // Compile sorting criteria
 
   std::auto_ptr<value_expr_t> sort_order;
 
@@ -319,7 +343,7 @@ int main(int argc, char * argv[], char * envp[])
     }
   }
 
-  // Setup the meaning of %t and %T, used in format strings
+  // Setup the values of %t and %T, used in format strings
 
   try {
 #ifdef NO_CLEANUP
@@ -347,27 +371,7 @@ int main(int argc, char * argv[], char * envp[])
     return 1;
   }
 
-  // Configure some option depending on the report type
-
-  bool show_all_related = false;
-
-  if (command == "p" || command == "e") {
-    config->show_related  =
-    show_all_related	  =
-    config->show_subtotal = true;
-  }
-  else if (command == "E") {
-    config->show_subtotal = true;
-  }
-  else if (config->show_related) {
-    if (command == "r")
-      config->show_inverted = true;
-    else
-      show_all_related = true;
-  }
-
-  // Setup a few local and global variables, depending on the config
-  // settings.
+  // Setup local and global variables, depending on config settings.
 
   std::auto_ptr<std::ostream> output_stream;
   std::auto_ptr<interval_t>   report_interval;
@@ -458,59 +462,23 @@ int main(int argc, char * argv[], char * envp[])
 
   TIMER_START(report_gen);
 
-  if (command == "b") {
-    std::auto_ptr<item_handler<transaction_t> > formatter;
-    formatter.reset(new add_to_account_value);
-    if (config->show_related)
-      formatter.reset(new related_transactions(formatter.release(),
-					       show_all_related));
-    formatter.reset(new filter_transactions(formatter.release(),
-					    config->predicate));
-    walk_entries(journal->entries, *formatter);
-    formatter->flush();
+  // Stack up all the formatter needed to fulfills the user's
+  // requests.  Some of these are order dependent, in terms of
+  // whether calc_transactions occurs before or after them.
 
-    format_account acct_formatter(OUT(), format, config->display_predicate);
-    sum_accounts(journal->master);
-    walk_accounts(journal->master, acct_formatter, sort_order.get());
-    acct_formatter.flush();
+  std::auto_ptr<item_handler<transaction_t> > formatter;
 
-    journal->master->value = journal->master->total;
-    if (format_account::display_account(journal->master,
-					item_predicate<account_t>("T"),
-					true)) {
-      std::string end_format = "--------------------\n";
-      format.reset(end_format + f);
-      format.format_elements(OUT(), details_t(journal->master));
-    }
-  }
-  else if (command == "E") {
-    std::auto_ptr<item_handler<transaction_t> > formatter;
-    formatter.reset(new add_to_account_value);
-    formatter.reset(new filter_transactions(formatter.release(),
-					    config->predicate));
-    walk_entries(journal->entries, *formatter);
-    formatter->flush();
-
-    format_equity acct_formatter(OUT(), format, nformat,
-				 config->display_predicate);
-    sum_accounts(journal->master);
-    walk_accounts(journal->master, acct_formatter, sort_order.get());
-    acct_formatter.flush();
-  }
-  else if (command == "e") {
-    format_transactions formatter(OUT(), format, nformat);
-    walk_transactions(new_entry->transactions, formatter);
-    formatter.flush();
-  }
-  else {
-    std::auto_ptr<item_handler<transaction_t> > formatter;
-
-    // Stack up all the formatter needed to fulfills the user's
-    // requests.  Some of these are order dependent, in terms of
-    // whether calc_transactions occurs before or after them.
-
-    // format_transactions write each transaction received to the
-    // output stream.
+  // format_transactions write each transaction received to the
+  // output stream.
+  if (command == "b" || command == "E") {
+#ifdef DEBUG_ENABLED
+    if (DEBUG("ledger.balance.items")) {
+      formatter.reset(new format_transactions(OUT(), format, nformat));
+      formatter.reset(new set_account_value(formatter.release()));
+    } else
+#endif
+    formatter.reset(new set_account_value);
+  } else {
     formatter.reset(new format_transactions(OUT(), format, nformat));
 
     // sort_transactions will sort all the transactions it sees, based
@@ -562,35 +530,68 @@ int main(int argc, char * argv[], char * envp[])
 						interval_begin));
     else if (config->days_of_the_week)
       formatter.reset(new dow_transactions(formatter.release()));
-
-    // related_transactions will pass along all transactions related
-    // to the transaction received.  If `show_all_related' is true,
-    // then all the entry's transactions are passed; meaning that if
-    // one transaction of an entry is to be printed, all the
-    // transaction for that entry will be printed.
-    if (config->show_related)
-      formatter.reset(new related_transactions(formatter.release(),
-					       show_all_related));
-
-    // This filter_transactions will only pass through transactions
-    // matching the `predicate'.
-    formatter.reset(new filter_transactions(formatter.release(),
-					    config->predicate));
-
-    // Once the filters are chained, walk `journal's entries and start
-    // feeding each transaction that matches `predicate' to the chain.
-    walk_entries(journal->entries, *formatter);
-    formatter->flush();
-
-#ifdef DEBUG_ENABLED
-    // The transaction display flags (dflags) are not recorded in the
-    // binary cache, and only need to be cleared if the transactions
-    // are to be displayed a second time.
-    clear_display_flags cleanup;
-    walk_entries(journal->entries, cleanup);
-    cleanup.flush();
-#endif
   }
+
+  // related_transactions will pass along all transactions related
+  // to the transaction received.  If `show_all_related' is true,
+  // then all the entry's transactions are passed; meaning that if
+  // one transaction of an entry is to be printed, all the
+  // transaction for that entry will be printed.
+  if (config->show_related)
+    formatter.reset(new related_transactions(formatter.release(),
+					     show_all_related));
+
+  // This filter_transactions will only pass through transactions
+  // matching the `predicate'.
+  formatter.reset(new filter_transactions(formatter.release(),
+					  config->predicate));
+
+  // Once the filters are chained, walk `journal's entries and start
+  // feeding each transaction that matches `predicate' to the chain.
+  if (command == "e")
+    walk_transactions(new_entry->transactions, *formatter);
+  else
+    walk_entries(journal->entries, *formatter);
+
+  formatter->flush();
+
+  // At this point all printing is finished if doing a register
+  // report; but if it's a balance or equity report, we've only
+  // finished calculating the totals and there is still reporting to
+  // be done.
+
+  if (command == "b") {
+    format_account acct_formatter(OUT(), format, config->display_predicate);
+    sum_accounts(journal->master);
+    walk_accounts(journal->master, acct_formatter, sort_order.get());
+    acct_formatter.flush();
+
+    journal->master->value = journal->master->total;
+
+    if (format_account::display_account(journal->master,
+					item_predicate<account_t>("T"),
+					true)) {
+      std::string end_format = "--------------------\n";
+      format.reset(end_format + f);
+      format.format_elements(OUT(), details_t(journal->master));
+    }
+  }
+  else if (command == "E") {
+    format_equity acct_formatter(OUT(), format, nformat,
+				 config->display_predicate);
+    sum_accounts(journal->master);
+    walk_accounts(journal->master, acct_formatter, sort_order.get());
+    acct_formatter.flush();
+  }
+
+#ifndef NO_CLEANUP
+  // The transaction display flags (dflags) are not recorded in the
+  // binary cache, and only need to be cleared if the transactions
+  // are to be displayed a second time.
+  clear_display_flags cleanup;
+  walk_entries(journal->entries, cleanup);
+  cleanup.flush();
+#endif
 
   TIMER_STOP(report_gen);
 

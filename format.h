@@ -113,10 +113,6 @@ class format_transactions : public item_handler<transaction_t>
       first_line_format(_first_line_format),
       next_lines_format(_next_lines_format), last_entry(NULL) {}
 
-  virtual ~format_transactions() {
-    flush();
-  }
-
   virtual void flush() {
     output_stream.flush();
   }
@@ -147,10 +143,6 @@ class format_account : public item_handler<account_t>
 		 const std::string& display_predicate = NULL)
     : output_stream(_output_stream), format(_format),
       disp_pred(display_predicate) {}
-
-  virtual ~format_account() {
-    flush();
-  }
 
   static bool disp_subaccounts_p(const account_t * account,
 				 const item_predicate<account_t>& disp_pred,
@@ -199,10 +191,6 @@ class format_equity : public item_handler<account_t>
     header_entry.payee = "Opening Balances";
     header_entry.date  = std::time(NULL);
     first_line_format.format_elements(output_stream, details_t(&header_entry));
-  }
-
-  virtual ~format_equity() {
-    flush();
   }
 
   virtual void flush() {

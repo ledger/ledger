@@ -42,7 +42,7 @@ void calc_transactions::operator()(transaction_t * xact)
     xact->cost.negate();
   }
 
-  last_xact  = xact;
+  last_xact = xact;
 }
 
 void collapse_transactions::report_cumulative_subtotal()
@@ -59,8 +59,8 @@ void collapse_transactions::report_cumulative_subtotal()
     for (amounts_map::const_iterator i = result.amounts.begin();
 	 i != result.amounts.end();
 	 i++) {
-      transaction_t * total_xact = new transaction_t(last_entry,
-						     totals_account);
+      transaction_t * total_xact
+	= new transaction_t(last_entry, totals_account);
       xact_temps.push_back(total_xact);
 
       total_xact->amount = (*i).second;

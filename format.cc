@@ -52,97 +52,98 @@ element_t * format_t::parse_elements(const std::string& fmt)
   char * q = buf;
 
   for (const char * p = fmt.c_str(); *p; p++) {
-    if (*p == '%') {
-      if (! result) {
-	current = result = new element_t;
-      } else {
-	current->next = new element_t;
-	current = current->next;
-      }
+    if (*p != '%') {
+      *q++ = *p;
+      continue;
+    }
 
-      if (q != buf) {
-	current->type  = element_t::STRING;
-	current->chars = std::string(buf, q);
-	q = buf;
+    if (! result) {
+      current = result = new element_t;
+    } else {
+      current->next = new element_t;
+      current = current->next;
+    }
 
-	current->next  = new element_t;
-	current = current->next;
-      }
+    if (q != buf) {
+      current->type  = element_t::STRING;
+      current->chars = std::string(buf, q);
+      q = buf;
 
+      current->next  = new element_t;
+      current = current->next;
+    }
+
+    ++p;
+    if (*p == '-') {
+      current->align_left = true;
       ++p;
-      if (*p == '-') {
-	current->align_left = true;
-	++p;
-      }
+    }
 
-      int num = 0;
+    int num = 0;
+    while (*p && std::isdigit(*p)) {
+      num *= 10;
+      num += *p++ - '0';
+    }
+    current->min_width = num;
+
+    if (*p == '.') {
+      ++p;
+      num = 0;
       while (*p && std::isdigit(*p)) {
 	num *= 10;
 	num += *p++ - '0';
       }
-      current->min_width = num;
+      current->max_width = num;
+      if (current->min_width == 0)
+	current->min_width = current->max_width;
+    }
 
-      if (*p == '.') {
-	++p;
-	num = 0;
-	while (*p && std::isdigit(*p)) {
-	  num *= 10;
-	  num += *p++ - '0';
-	}
-	current->max_width = num;
-	if (current->min_width == 0)
-	  current->min_width = current->max_width;
-      }
+    switch (*p) {
+    case '%':
+      current->type  = element_t::STRING;
+      current->chars = "%";
+      break;
 
-      switch (*p) {
-      case '%':
-	current->type  = element_t::STRING;
-	current->chars = "%";
-	break;
+    case '(': {
+      ++p;
+      const char * b = p;
+      while (*p && *p != ')')
+	p++;
+      if (*p != ')')
+	throw format_error("Missing ')'");
 
-      case '(': {
-	++p;
-	const char * b = p;
-	while (*p && *p != ')')
-	  p++;
-	if (*p != ')')
-	  throw format_error("Missing ')'");
+      current->type     = element_t::VALUE_EXPR;
+      current->val_expr = parse_value_expr(std::string(b, p));
+      break;
+    }
 
-	current->type     = element_t::VALUE_EXPR;
-	current->val_expr = parse_value_expr(std::string(b, p));
-	break;
-      }
+    case '[': {
+      ++p;
+      const char * b = p;
+      while (*p && *p != ']')
+	p++;
+      if (*p != ']')
+	throw format_error("Missing ']'");
 
-      case '[': {
-	++p;
-	const char * b = p;
-	while (*p && *p != ']')
-	  p++;
-	if (*p != ']')
-	  throw format_error("Missing ']'");
+      current->type  = element_t::DATE_STRING;
+      current->chars = std::string(b, p);
+      break;
+    }
 
-	current->type  = element_t::DATE_STRING;
-	current->chars = std::string(b, p);
-	break;
-      }
+    case 'D':
+      current->type  = element_t::DATE_STRING;
+      current->chars = format_t::date_format;
+      break;
 
-      case 'D':
-	current->type  = element_t::DATE_STRING;
-	current->chars = format_t::date_format;
-	break;
-
-      case 'X': current->type = element_t::CLEARED; break;
-      case 'C': current->type = element_t::CODE; break;
-      case 'P': current->type = element_t::PAYEE; break;
-      case 'n': current->type = element_t::ACCOUNT_NAME; break;
-      case 'N': current->type = element_t::ACCOUNT_FULLNAME; break;
-      case 'o': current->type = element_t::OPT_AMOUNT; break;
-      case 't': current->type = element_t::VALUE; break;
-      case 'T': current->type = element_t::TOTAL; break;
-      case '_': current->type = element_t::SPACER; break;
-      }
-    } else {
-      *q++ = *p;
+    case 'X': current->type = element_t::CLEARED; break;
+    case 'C': current->type = element_t::CODE; break;
+    case 'P': current->type = element_t::PAYEE; break;
+    case 'n': current->type = element_t::ACCOUNT_NAME; break;
+    case 'N': current->type = element_t::ACCOUNT_FULLNAME; break;
+    case 'o': current->type = element_t::OPT_AMOUNT; break;
+    case 't': current->type = element_t::VALUE; break;
+    case 'T': current->type = element_t::TOTAL; break;
+    case '_': current->type = element_t::SPACER; break;
     }
   }
 

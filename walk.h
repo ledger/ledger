@@ -18,18 +18,19 @@ struct item_handler {
  public:
   item_handler() : handler(NULL) {}
   item_handler(item_handler * _handler) : handler(_handler) {}
-  virtual ~item_handler() {}
-  virtual void close() {
-    if (handler) {
+
+  virtual ~item_handler() {
+    if (handler)
       delete handler;
-      handler = NULL;
-    }
   }
   virtual void flush() {
     if (handler)
       handler->flush();
   }
-  virtual void operator()(T * item) = 0;
+  virtual void operator()(T * item) {
+    if (handler)
+      (*handler)(item);
+  }
 };
 
 template <typename T>
@@ -112,12 +113,18 @@ class clear_display_flags : public item_handler<transaction_t>
   }
 };
 
-class add_to_account_value : public item_handler<transaction_t>
+class set_account_value : public item_handler<transaction_t>
 {
  public:
+  set_account_value(item_handler<transaction_t> * handler = NULL)
+    : item_handler<transaction_t>(handler) {}
+
   virtual void operator()(transaction_t * xact) {
     xact->account->value += *xact;
     xact->account->count++;
+
+    if (handler)
+      (*handler)(xact);
   }
 };
 
@@ -131,7 +138,6 @@ class sort_transactions : public item_handler<transaction_t>
 		    const value_expr_t * _sort_order)
     : item_handler<transaction_t>(handler),
       sort_order(_sort_order) {}
-  virtual ~sort_transactions() { close(); }
 
   virtual void flush();
   virtual void operator()(transaction_t * xact) {
@@ -147,8 +153,6 @@ class filter_transactions : public item_handler<transaction_t>
   filter_transactions(item_handler<transaction_t> * handler,
 		      const std::string& predicate)
     : item_handler<transaction_t>(handler), pred(predicate) {}
-
-  virtual ~filter_transactions() { close(); }
 
   virtual void operator()(transaction_t * xact) {
     if (pred(xact))
@@ -166,8 +170,6 @@ class calc_transactions : public item_handler<transaction_t>
 		    const bool _inverted = false)
     : item_handler<transaction_t>(handler),
       last_xact(NULL), inverted(_inverted) {}
-
-  virtual ~calc_transactions() { close(); }
 
   virtual void operator()(transaction_t * xact);
 };
@@ -189,7 +191,6 @@ class collapse_transactions : public item_handler<transaction_t>
   }
 
   virtual ~collapse_transactions() {
-    close();
     delete totals_account;
     for (transactions_deque::iterator i = xact_temps.begin();
 	 i != xact_temps.end();
@@ -237,8 +238,6 @@ class changed_value_transactions : public item_handler<transaction_t>
       changed_values_only(_changed_values_only), last_xact(NULL) {}
 
   virtual ~changed_value_transactions() {
-    close();
-
     for (entries_deque::iterator i = entry_temps.begin();
 	 i != entry_temps.end();
 	 i++)
@@ -275,8 +274,6 @@ class subtotal_transactions : public item_handler<transaction_t>
     : item_handler<transaction_t>(handler) {}
 
   virtual ~subtotal_transactions() {
-    close();
-
     for (entries_deque::iterator i = entry_temps.begin();
 	 i != entry_temps.end();
 	 i++)
@@ -341,8 +338,6 @@ class related_transactions : public item_handler<transaction_t>
 		       const bool _also_matching = false)
     : item_handler<transaction_t>(handler),
       also_matching(_also_matching) {}
-
-  virtual ~related_transactions() { close(); }
 
   virtual void operator()(transaction_t * xact) {
     for (transactions_list::iterator i = xact->entry->transactions.begin();

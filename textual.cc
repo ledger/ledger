@@ -110,6 +110,10 @@ transaction_t * parse_transaction(std::istream& in, account_t * account,
   in.getline(line, MAX_LINE);
   linenum++;
 
+  // Skip a possible blank line
+  if (*skip_ws(line) == '\0')
+    return NULL;
+
   return parse_transaction_text(line, account, entry);
 }
 
@@ -321,8 +325,7 @@ unsigned int parse_textual_journal(std::istream& in, journal_t * journal,
 	if (peek_next_nonws(in) != '\n') {
 	  in.getline(line, MAX_LINE);
 	  linenum++;
-	  throw parse_error(path, linenum,
-			    "Ignoring entry beginning with whitespace");
+	  throw parse_error(path, linenum, "Line begins with whitespace");
 	}
 	// fall through...
 
