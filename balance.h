@@ -70,11 +70,13 @@ class balance_t
 
   // assignment operator
   balance_t& operator=(const balance_t& bal) {
-    amounts.clear();
-    for (amounts_map::const_iterator i = bal.amounts.begin();
-	 i != bal.amounts.end();
-	 i++)
-      *this += (*i).second;
+    if (this != &bal) {
+      amounts.clear();
+      for (amounts_map::const_iterator i = bal.amounts.begin();
+	   i != bal.amounts.end();
+	   i++)
+	*this += (*i).second;
+    }
     return *this;
   }
   balance_t& operator=(const amount_t& amt) {
@@ -452,15 +454,16 @@ class balance_pair_t
 
   // assignment operator
   balance_pair_t& operator=(const balance_pair_t& bal_pair) {
-    if (cost) {
-      delete cost;
-      cost = NULL;
+    if (this != &bal_pair) {
+      if (cost) {
+	delete cost;
+	cost = NULL;
+      }
+
+      quantity = bal_pair.quantity;
+      if (bal_pair.cost)
+	cost = new balance_t(*bal_pair.cost);
     }
-
-    quantity = bal_pair.quantity;
-    if (bal_pair.cost)
-      cost = new balance_t(*bal_pair.cost);
-
     return *this;
   }
   balance_pair_t& operator=(const balance_t& bal) {

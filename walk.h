@@ -53,8 +53,9 @@ class compare_items {
     assert(right);
 
     value_t left_result;
-    sort_order->compute(left_result, details_t(left));
     value_t right_result;
+
+    sort_order->compute(left_result, details_t(left));
     sort_order->compute(right_result, details_t(right));
 
     return left_result < right_result;

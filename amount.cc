@@ -276,11 +276,12 @@ amount_t& amount_t::operator=(const char * value)
 // assignment operator
 amount_t& amount_t::operator=(const amount_t& amt)
 {
-  if (amt.quantity)
-    _copy(amt);
-  else if (quantity)
-    _clear();
-
+  if (this != &amt) {
+    if (amt.quantity)
+      _copy(amt);
+    else if (quantity)
+      _clear();
+  }
   return *this;
 }
 

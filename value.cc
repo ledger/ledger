@@ -22,6 +22,9 @@ void value_t::destroy()
 
 value_t& value_t::operator=(const value_t& value)
 {
+  if (this == &value)
+    return *this;
+
   destroy();
   switch (value.type) {
   case BOOLEAN:
