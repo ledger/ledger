@@ -134,6 +134,10 @@ transaction_t * parse_transaction(char * line, account_t * account)
     }
   }
 
+  char * q = p + std::strlen(p) - 1;
+  while (q >= p && std::isspace(*q))
+    *q-- = '\0';
+
   if (*p == '[' || *p == '(') {
     xact->flags |= TRANSACTION_VIRTUAL;
     if (*p == '[')
