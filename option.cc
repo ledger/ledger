@@ -1,4 +1,5 @@
 #include "option.h"
+#include "debug.h"
 #include "util.h"
 
 #include <iostream>
