@@ -30,21 +30,24 @@ static void show_help(std::ostream& out)
     << "usage: ledger [options] COMMAND [options] [REGEXPS]" << std::endl
     << std::endl
     << "ledger options:" << std::endl
-    << "  -C       also show cleared transactions" << std::endl
-    << "  -b DATE  specify a beginning date" << std::endl
-    << "  -c       do not show future entries (same as -e TODAY)" << std::endl
-    << "  -e DATE  specify an ending date" << std::endl
-    << "  -f FILE  specify pathname of ledger data file" << std::endl
-    << "  -h       display this help text" << std::endl
-#ifdef HUQUQULLAH
-    << "  -H       do not auto-compute Huququ'llah" << std::endl
-#endif
-    << "  -i FILE  read the list of inclusion regexps from FILE" << std::endl
-    << "  -p FILE  read the list of prices from FILE" << std::endl
-    << "  -P       download price quotes from the Internet" << std::endl
-    << "           (this works by running the command \"getquote SYMBOL\")"
+    << "  -C        also show cleared transactions" << std::endl
+    << "  -d DATE   specify an implicit date range (e.g., -d april)"
     << std::endl
-    << "  -w       print out warnings where applicable" << std::endl
+    << "  -b DATE   specify a beginning date" << std::endl
+    << "  -e DATE   specify an ending date" << std::endl
+    << "  -c        do not show future entries (same as -e TODAY)" << std::endl
+    << "  -f FILE   specify pathname of ledger data file" << std::endl
+    << "  -h        display this help text" << std::endl
+#ifdef HUQUQULLAH
+    << "  -H        do not auto-compute Huququ'llah" << std::endl
+#endif
+    << "  -i FILE   read the list of inclusion regexps from FILE" << std::endl
+    << "  -p FILE   read the list of prices from FILE" << std::endl
+    << "  -P        download price quotes from the Internet" << std::endl
+    << "            (works by running the command \"getquote SYMBOL\")"
+    << std::endl
+    << "  -v        display version information" << std::endl
+    << "  -w        print out warnings where applicable" << std::endl
     << std::endl
     << "commands:" << std::endl
     << "  balance   show balance totals" << std::endl
@@ -124,7 +127,7 @@ int main(int argc, char *argv[])
   show_cleared   = false;
 
   int c;
-  while (-1 != (c = getopt(argc, argv, "+b:e:d:D:cChHwf:i:p:P"))) {
+  while (-1 != (c = getopt(argc, argv, "+b:e:d:D:cChHwf:i:p:Pv"))) {
     switch (char(c)) {
     case 'b':
     case 'e': {
@@ -198,7 +201,6 @@ int main(int argc, char *argv[])
       break;
 
     case 'C': show_cleared = true; break;
-
     case 'h': show_help(std::cout); break;
 #ifdef HUQUQULLAH
     case 'H': compute_huquq = false; break;
@@ -231,6 +233,18 @@ int main(int argc, char *argv[])
     case 'P':
       get_quotes = true;
       break;
+
+    case 'v':
+      std::cout
+	<< "Ledger Accouting Tool 1.0" << std::endl
+	<< "    Copyright (c) 2003 John Wiegley <johnw@newartisans.com>"
+	<< std::endl << std::endl
+	<< "This program is made available under the terms of the BSD"
+	<< std::endl
+	<< "Public License.  See the LICENSE file included with the"
+	<< std::endl
+	<< "distribution for details and disclaimer." << std::endl;
+      return 0;
     }
   }
 
