@@ -71,6 +71,10 @@ ledger_LDADD = $(LIBOBJS) libledger.a -lboost_python -lpython$(PYTHON_VERSION)
 else
 ledger_LDADD = $(LIBOBJS) libledger.a
 endif
+if HAVE_XMLPARSE
+ledger_CXXFLAGS += -DHAVE_XMLPARSE=1
+ledger_LDADD += -lxmlparse -lxmltok
+endif
 if DEBUG
 ledger_CXXFLAGS += -DDEBUG_LEVEL=4
 endif
