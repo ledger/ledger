@@ -18,6 +18,7 @@
 
 #include <datetime.h>
 #include <format.h>
+#include <emacs.h>
 #include <quotes.h>
 #include <valexpr.h>
 #include <walk.h>

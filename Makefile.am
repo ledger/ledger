@@ -7,6 +7,7 @@ libledger_a_SOURCES = \
 	config.cc      \
 	datetime.cc    \
 	derive.cc      \
+	emacs.cc       \
 	format.cc      \
 	journal.cc     \
 	mask.cc        \
@@ -45,6 +46,7 @@ pkginclude_HEADERS = \
 	datetime.h   \
 	debug.h      \
 	derive.h     \
+	emacs.h      \
 	error.h      \
 	format.h     \
 	gnucash.h    \

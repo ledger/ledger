@@ -240,6 +240,8 @@ int parse_and_report(int argc, char * argv[], char * envp[])
     command = "p";
   else if (command == "output")
     command = "w";
+  else if (command == "emacs")
+    command = "x";
   else if (command == "xml")
     command = "X";
   else if (command == "entry")
@@ -250,8 +252,6 @@ int parse_and_report(int argc, char * argv[], char * envp[])
     command = "P";
   else if (command == "pricesdb")
     command = "D";
-  else if (command == "reconcile")
-    command = "R";
   else
     throw error(std::string("Unrecognized command '") + command + "'");
 
@@ -313,7 +313,7 @@ int parse_and_report(int argc, char * argv[], char * envp[])
     format = &config.format_string;
   else if (command == "b")
     format = &config.balance_format;
-  else if (command == "r" || command == "R")
+  else if (command == "r")
     format = &config.register_format;
   else if (command == "E")
     format = &config.equity_format;
@@ -356,16 +356,25 @@ def vmax(d, val):\n\
   // Walk the entries based on the report type and the options
 
   item_handler<transaction_t> *		   formatter;
+  item_handler<transaction_t> *		   base_formatter;
   std::list<item_handler<transaction_t> *> formatter_ptrs;
 
   if (command == "b" || command == "E")
-    formatter = new set_account_value;
+    base_formatter = new set_account_value;
   else if (command == "p" || command == "e")
-    formatter = new format_entries(*out, *format);
+    base_formatter = new format_entries(*out, *format);
+  else if (command == "x")
+    base_formatter = new format_emacs_transactions(*out);
   else if (command == "X")
-    formatter = new format_xml_entries(*out, config.show_totals);
+    base_formatter = new format_xml_entries(*out, config.show_totals);
   else
-    formatter = new format_transactions(*out, *format);
+    base_formatter = new format_transactions(*out, *format);
+
+  transactions_list xacts_to_reconcile;
+  if (! config.reconcile_balance.empty())
+    formatter = new push_to_transactions_list(xacts_to_reconcile);
+  else
+    formatter = base_formatter;
 
   formatter = chain_xact_handlers(command, formatter, journal.get(),
 				  journal->master, formatter_ptrs);
@@ -374,15 +383,6 @@ def vmax(d, val):\n\
     walk_transactions(new_entry->transactions, *formatter);
   else if (command == "P" || command == "D")
     walk_commodities(commodity_t::commodities, *formatter);
-  else if (command == "R") {
-    account_t * account = journal->find_account_re(*arg);
-    if (! account)
-      throw error(std::string("Could not find account matching '") +
-		  *arg + "'");
-    reconcile_results_t results = reconcile_account(*journal, *account,
-						    value_t(*++arg));
-    walk_transactions(results.pending_xacts, *formatter);
-  }
   else if (command == "w")
     write_textual_journal(*journal, *arg, *formatter, *out);
   else
@@ -390,6 +390,32 @@ def vmax(d, val):\n\
 
   if (command != "P")
     formatter->flush();
+
+  // If we are generating a reconcile report, determine the final set
+  // of transactions.
+
+  if (! config.reconcile_balance.empty()) {
+    bool    reconcilable = false;
+    value_t target_balance;
+    if (config.reconcile_balance == "<all>")
+      reconcilable = true;
+    else
+      target_balance = value_t(config.reconcile_balance);
+
+    time_t  cutoff = now;
+    if (! config.reconcile_date.empty())
+      parse_date(config.reconcile_date.c_str(), &cutoff);
+
+    reconcile_transactions(xacts_to_reconcile, target_balance, cutoff,
+			   reconcilable);
+
+    // Since all the work of the other formatters was completed by
+    // now, simply output the list, ignoring any other special
+    // details.
+    calc_transactions final_formatter(base_formatter);
+    walk_transactions(xacts_to_reconcile, final_formatter);
+    final_formatter.flush();
+  }
 
   // For the balance and equity reports, output the sum totals.
 
@@ -427,6 +453,7 @@ def vmax(d, val):\n\
        i != formatter_ptrs.end();
        i++)
     delete *i;
+  formatter_ptrs.clear();
 
 #endif // DEBUG_LEVEL >= BETA
 
