@@ -754,6 +754,10 @@ void amount_t::write_quantity(std::ostream& out) const
     assert(len);
     out.write((char *)&len, sizeof(len));
     out.write(buf, len);
+#ifndef WRITE_AMOUNTS_TEXTUALLY
+    char negative = mpz_sgn(MPZ(quantity)) < 0 ? 1 : 0;
+    out.write(&negative, sizeof(negative));
+#endif
   } else {
     len = 0;
     out.write((char *)&len, sizeof(len));
@@ -771,7 +775,11 @@ void amount_t::read_quantity(std::istream& in)
     buf[len] = '\0';
     mpz_set_str(MPZ(quantity), buf, 10);
 #else
+    char negative;
+    in.read(&negative, sizeof(negative));
     mpz_import(MPZ(quantity), len / sizeof(int), 1, sizeof(int), 0, 0, buf);
+    if (negative)
+      mpz_neg(MPZ(quantity), MPZ(quantity));
 #endif
   } else {
     if (quantity)

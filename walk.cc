@@ -20,8 +20,12 @@ void sort_transactions::flush()
 
 void calc_transactions::operator()(transaction_t * xact)
 {
-  if (last_xact)
+  if (last_xact) {
     xact->total += last_xact->total;
+    xact->index = last_xact->index + 1;
+  } else {
+    xact->index = 0;
+  }
 
   if (inverted) {
     xact->amount.negate();
@@ -29,7 +33,6 @@ void calc_transactions::operator()(transaction_t * xact)
   }
 
   xact->total += *xact;
-  xact->index = last_xact ? last_xact->index + 1 : 0;
 
   (*handler)(xact);
 
