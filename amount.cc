@@ -1056,6 +1056,16 @@ struct commodity_updater_wrap : public commodity_t::updater_t
   }
 };
 
+commodity_t * py_find_commodity_1(const std::string& symbol)
+{
+  return commodity_t::find_commodity(symbol);
+}
+
+commodity_t * py_find_commodity_2(const std::string& symbol, bool auto_create)
+{
+  return commodity_t::find_commodity(symbol, auto_create);
+}
+
 void export_amount()
 {
   class_< amount_t > ("Amount")
@@ -1117,6 +1127,13 @@ void export_amount()
     ("Updater")
     ;
 
+  scope().attr("COMMODITY_STYLE_DEFAULTS")  = COMMODITY_STYLE_DEFAULTS;
+  scope().attr("COMMODITY_STYLE_SUFFIXED")  = COMMODITY_STYLE_SUFFIXED;
+  scope().attr("COMMODITY_STYLE_SEPARATED") = COMMODITY_STYLE_SEPARATED;
+  scope().attr("COMMODITY_STYLE_EUROPEAN")  = COMMODITY_STYLE_EUROPEAN;
+  scope().attr("COMMODITY_STYLE_THOUSANDS") = COMMODITY_STYLE_THOUSANDS;
+  scope().attr("COMMODITY_STYLE_NOMARKET")  = COMMODITY_STYLE_NOMARKET;
+
   class_< commodity_t > ("Commodity")
     .def(init<std::string, optional<unsigned int, unsigned int> >())
 
@@ -1131,18 +1148,21 @@ void export_amount()
     .def_readwrite("ident", &commodity_t::ident)
     .def_readwrite("updater", &commodity_t::updater)
 
-    .def("add_commodity", &commodity_t::add_commodity)
-    .def("remove_commodity", &commodity_t::remove_commodity)
-    .def("find_commodity", &commodity_t::find_commodity,
-	 return_value_policy<reference_existing_object>())
+    .def(self_ns::str(self))
 
     .def("add_price", &commodity_t::add_price)
     .def("remove_price", &commodity_t::remove_price)
-    .def("set_conversion", &commodity_t::set_conversion)
     .def("value", &commodity_t::value)
 
     .def("valid", &commodity_t::valid)
     ;
+
+  def("add_commodity", &commodity_t::add_commodity);
+  def("remove_commodity", &commodity_t::remove_commodity);
+  def("find_commodity", py_find_commodity_1,
+      return_value_policy<reference_existing_object>());
+  def("find_commodity", py_find_commodity_2,
+      return_value_policy<reference_existing_object>());
 }
 
 #endif // USE_BOOST_PYTHON

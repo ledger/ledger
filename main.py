@@ -37,6 +37,5 @@ for entry in journal:
     for xact in entry:
 	handler (xact)
 
-span = Interval ("weekly last month")
-for date in span:
+for date in Interval ("weekly last month"):
     print time.strftime ("%c", time.localtime (date))

@@ -346,10 +346,6 @@ class commodity_t
     return n > 0;
   }
 
-  void set_conversion(const amount_t& price) {
-    conversion = price;
-  }
-
   amount_t value(const std::time_t moment = std::time(NULL));
 
   bool valid() const {
@@ -368,6 +364,11 @@ class commodity_t
     return true;
   }
 };
+
+inline std::ostream& operator<<(std::ostream& out, const commodity_t& comm) {
+  out << comm.symbol;
+  return out;
+}
 
 inline commodity_t& amount_t::commodity() const {
   if (! commodity_)

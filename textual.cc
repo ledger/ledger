@@ -484,7 +484,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	price.parse(skip_ws(line));
 
 	commodity_t * commodity = commodity_t::find_commodity(symbol, true);
-	commodity->set_conversion(price);
+	commodity->conversion = price;
 	break;
       }
 
