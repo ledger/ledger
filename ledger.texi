@@ -3225,10 +3225,23 @@ Now money can be spent directly from a fund:
 @end smallexample
 
 When reports are generated, by default they will appear in terms of
-the funds, income and expenses.  If the @option{--real} option is
-used, the report is in terms of the accounts.  If more asset accounts
-are needed as the source of a transaction, just list them as you would
-normally, for example:
+the funds, income and expenses.  In this case, you will likely want to
+mask out your @samp{Assets} account, becausue the balance won't make
+much sense:
+
+@example
+ledger bal -^Assets
+@end example
+
+If the @option{--real} option is used, the report is in terms of the
+real accounts:
+
+@example
+ledger --real bal
+@end example
+
+If more asset accounts are needed as the source of a transaction, just
+list them as you would normally, for example:
 
 @smallexample
 2004/03/25 Payment for books (paid from Checking)
@@ -3606,8 +3619,12 @@ transaction has been cleared or not.  There is also an
 user wishes.
 
 After the initial entry data, there must follow a set of transactions
-marked with @samp{en:transactions}.  Within this tag is a series of
-one or more @samp{transaction}'s, which have the following form:
+marked with @samp{en:transactions}.  Typically these transactions will
+all balance each other, but if not they will be automatically balanced
+into an account named @samp{<Unknown>}.
+
+Within the @samp{en:transactions} tag is a series of one or more
+@samp{transaction}'s, which have the following form:
 
 @smallexample
 <transaction>
@@ -3705,9 +3722,9 @@ example:
 @end smallexample
 
 That is the extent of the XML data format used by Ledger.  It will
-output such data if the @command{xml} command is used, and it can read
-such data as long as the @file{xmlparse} library was available at the
-time Ledger was built.
+output such data if the @command{xml} command is used, and can read
+the same data as long as the @file{xmlparse} library was available
+when Ledger was built.
 
 @node Extending with Python,  , Using XML, Top
 @chapter Extending with Python
