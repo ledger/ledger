@@ -111,7 +111,7 @@ entry_t * journal_t::derive_entry(strings_list::iterator i,
 			     - first->amount, - first->amount);
     added->add_transaction(xact);
 
-    if (std::string(*i++) == "-from" && i != end)
+    if (i != end && std::string(*i++) == "-from" && i != end)
       if (account_t * acct = find_account(*i))
 	added->transactions.back()->account = acct;
   } else {
@@ -157,7 +157,7 @@ entry_t * journal_t::derive_entry(strings_list::iterator i,
       added->add_transaction(xact);
     }
 
-    if (std::string(*i++) == "-from" && i != end) {
+    if (i != end && std::string(*i++) == "-from" && i != end) {
       if (account_t * acct = find_account(*i++)) {
 	transaction_t * xact = new transaction_t(NULL, acct);
 	added->add_transaction(xact);
