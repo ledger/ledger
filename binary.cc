@@ -168,6 +168,8 @@ inline void read_binary_amount(char *& data, amount_t& amt)
   read_binary_number(data, ident);
   if (ident == 0xffffffff)
     amt.commodity_ = NULL;
+  else if (ident == 0)
+    amt.commodity_ = commodity_t::null_commodity;
   else
     amt.commodity_ = commodities[ident - 1];
 
@@ -628,6 +630,9 @@ void write_binary_account(std::ostream& out, account_t * account)
 void write_binary_journal(std::ostream& out, journal_t * journal,
 			  strings_list * files)
 {
+  account_index   =
+  commodity_index = 0;
+
   write_binary_number(out, binary_magic_number);
   write_binary_number(out, format_version);
 
@@ -678,6 +683,8 @@ void write_binary_journal(std::ostream& out, journal_t * journal,
        i++)
     if (! (*i).first.empty())
       write_binary_commodity(out, (*i).second);
+    else
+      (*i).second->ident = 0;
 
   for (commodities_map::const_iterator i = commodity_t::commodities.begin();
        i != commodity_t::commodities.end();
