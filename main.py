@@ -247,20 +247,19 @@ else:
 
 	handler = CalcTransactions (handler)
 
-	#if config.reconcile_balance:
-	#  reconcilable = False
-	#  if config.reconcile_balance == "<all>"
-	#    reconcilable = True
-	#  else
-	#    target_balance = Value (config.reconcile_balance)
-	#
-	#  cutoff = time.time ()
-	#  # jww (2005-02-15): needs conversion
-	#  #if config.reconcile_date:
-	#  #  cutoff = parse_date (config.reconcile_date)
-	#
-	#  handler = ReconcileTransactions (handler, target_balance,
-	#                                   cutoff, reconcilable)
+	if config.reconcile_balance:
+	  reconcilable = False
+	  if config.reconcile_balance == "<all>"
+	    reconcilable = True
+	  else
+	    target_balance = Value (config.reconcile_balance)
+
+	  cutoff = time.time ()
+	  if config.reconcile_date:
+	    cutoff = parse_date (config.reconcile_date)
+
+	  handler = ReconcileTransactions (handler, target_balance,
+					   cutoff, reconcilable)
 
 	if config.sort_string:
 	    handler = SortTransactions (handler, config.sort_string)
