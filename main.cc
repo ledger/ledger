@@ -102,6 +102,34 @@ void download_price_quote(commodity_t *	    commodity,
 } // namespace ledger
 
 
+static void assemble_regexp_predicate(std::string& predicate_string,
+				      const std::list<std::string>& strings,
+				      const bool exclude = false,
+				      const bool payee   = false)
+{
+  if (strings.size() == 0)
+    return;
+
+  if (! predicate_string.empty())
+    predicate_string += "&";
+  if (exclude)
+    predicate_string += "!";
+  if (payee)
+    predicate_string += "/";
+  predicate_string += "/(";
+  bool first = true;
+  for (std::list<std::string>::const_iterator i = strings.begin();
+       i != strings.end();
+       i++) {
+    if (first)
+      first = false;
+    else
+      predicate_string += "|";
+    predicate_string += *i;
+  }
+  predicate_string += ")/";
+}
+
 static void show_help(std::ostream& out)
 {
   std::cerr
@@ -494,78 +522,45 @@ int main(int argc, char * argv[])
   if (command == "e") {
     new_entry.reset(journal->derive_entry(argc - index, &argv[index]));
   } else {
+    std::list<std::string> account_include_regexps;
+    std::list<std::string> account_exclude_regexps;
+    std::list<std::string> payee_include_regexps;
+    std::list<std::string> payee_exclude_regexps;
+
     // Treat the remaining command-line arguments as regular
     // expressions, used for refining report results.
-
-    bool have_regexps = index < argc;
-    bool first	      = true;
 
     for (; index < argc; index++) {
       if (std::strcmp(argv[index], "--") == 0) {
 	index++;
-	if (! first && index < argc)
-	  predicate_string += ")";
 	break;
       }
 
       if (! show_expanded && command == "b")
 	show_expanded = true;
 
-      if (first) {
-	if (! predicate_string.empty())
-	  predicate_string += "&(";
-	else
-	  predicate_string += "(";
-	first = false;
-      }
-      else if (argv[index][0] == '-') {
-	predicate_string += "&";
-      }
-      else {
-	predicate_string += "|";
-      }
-
-      if (argv[index][0] == '-') {
-	predicate_string += "!/";
-	predicate_string += argv[index] + 1;
-      } else {
-	predicate_string += "/";
-	predicate_string += argv[index];
-      }
-      predicate_string += "/";
-    }
-
-    if (index < argc) {
-      if (! predicate_string.empty())
-	predicate_string += "&(";
+      if (argv[index][0] == '-')
+	account_exclude_regexps.push_back(argv[index] + 1);
       else
-	predicate_string += "(";
+	account_include_regexps.push_back(argv[index]);
     }
 
-    first = true;
     for (; index < argc; index++) {
       if (! show_expanded && command == "b")
 	show_expanded = true;
 
-      if (first)
-	first = false;
-      else if (argv[index][0] == '-')
-	predicate_string += "&";
+      if (argv[index][0] == '-')
+	payee_exclude_regexps.push_back(argv[index] + 1);
       else
-	predicate_string += "|";
-
-      if (argv[index][0] == '-') {
-	predicate_string += "!//";
-	predicate_string += argv[index] + 1;
-      } else {
-	predicate_string += "//";
-	predicate_string += argv[index];
-      }
-      predicate_string += "/";
+	payee_include_regexps.push_back(argv[index]);
     }
 
-    if (have_regexps)
-      predicate_string += ")";
+    assemble_regexp_predicate(predicate_string, account_include_regexps);
+    assemble_regexp_predicate(predicate_string, account_exclude_regexps, true);
+    assemble_regexp_predicate(predicate_string, payee_include_regexps,
+			      false, true);
+    assemble_regexp_predicate(predicate_string, payee_exclude_regexps,
+			      true, true);
   }
 
   // Compile the predicates
@@ -586,7 +581,7 @@ int main(int argc, char * argv[])
   } else {
 #ifdef DEBUG
     if (debug)
-      std::cerr << "display-p = " << display_predicate_string << std::endl;
+      std::cerr << "disp-pred = " << display_predicate_string << std::endl;
 #endif
     display_predicate.reset(parse_expr(display_predicate_string));
   }
