@@ -12,12 +12,35 @@ namespace ledger {
 
 std::string truncated(const std::string& str, unsigned int width)
 {
+  const int len = str.length();
+  if (len <= width)
+    return str;
+
+  assert(width < 254);
+
   char buf[256];
-  std::memset(buf, '\0', 255);
-  assert(width < 256);
-  std::strncpy(buf, str.c_str(), str.length());
-  if (buf[width])
-    std::strcpy(&buf[width - 2], "..");
+#if 1
+  // This method truncates at the end.
+  std::strncpy(buf, str.c_str(), width - 2);
+  buf[width - 2] = '.';
+  buf[width - 1] = '.';
+#else
+#if 0
+  // This method truncates at the beginning.
+  std::strncpy(buf, str.c_str() + (len - width), width);
+  buf[0] = '.';
+  buf[1] = '.';
+#else
+  // This method truncates in the middle.
+  std::strncpy(buf, str.c_str(), width / 2);
+  std::strncpy(buf + width / 2,
+	       str.c_str() + (len - (width / 2 + width % 2)),
+	       width / 2 + width % 2);
+  buf[width / 2 - 1] = '.';
+  buf[width / 2] = '.';
+#endif
+#endif
+  buf[width] = '\0';
   return buf;
 }
 
@@ -608,21 +631,24 @@ void xml_write_value(std::ostream& out, const value_t& value,
   out << "</value>\n";
 }
 
-std::string xml_string(const std::string& str)
+void output_xml_string(std::ostream& out, const std::string& str)
 {
-  std::string::size_type pos   = 0;
-  std::string::size_type index = str.find('&', pos);
-  if (index == std::string::npos)
-    return str;
-
-  std::string temp;
-  while (index != std::string::npos) {
-    temp += std::string(str, pos, index) + "&amp;";
-    pos = index + 1;
-    index = str.find('&', pos);
+  for (const char * s = str.c_str(); *s; s++) {
+    switch (*s) {
+    case '<':
+      out << "&lt;";
+      break;
+    case '>':
+      out << "&rt;";
+      break;
+    case '&':
+      out << "&amp;";
+      break;
+    default:
+      out << *s;
+      break;
+    }
   }
-
-  return temp;
 }
 
 void format_xml_entries::format_last_entry()
@@ -639,13 +665,17 @@ void format_xml_entries::format_last_entry()
   else if (last_entry->state == entry_t::PENDING)
     output_stream << "    <en:pending/>\n";
 
-  if (! last_entry->code.empty())
-    output_stream << "    <en:code>" << xml_string(last_entry->code)
-		  << "</en:code>\n";
+  if (! last_entry->code.empty()) {
+    output_stream << "    <en:code>";
+    output_xml_string(output_stream, last_entry->code);
+    output_stream << "</en:code>\n";
+  }
 
-  if (! last_entry->payee.empty())
-    output_stream << "    <en:payee>" << xml_string(last_entry->payee)
-		  << "</en:payee>\n";
+  if (! last_entry->payee.empty()) {
+    output_stream << "    <en:payee>";
+    output_xml_string(output_stream, last_entry->payee);
+    output_stream << "</en:payee>\n";
+  }
 
   bool first = true;
   for (transactions_list::const_iterator i = last_entry->transactions.begin();
@@ -671,7 +701,10 @@ void format_xml_entries::format_last_entry()
 	  name = "[TOTAL]";
 	else if (name == "<Unknown>")
 	  name = "[UNKNOWN]";
-	output_stream << "        <tr:account>" << name << "</tr:account>\n";
+
+	output_stream << "        <tr:account>";
+	output_xml_string(output_stream, name);
+	output_stream << "</tr:account>\n";
       }
 
       output_stream << "        <tr:amount>\n";
@@ -688,9 +721,11 @@ void format_xml_entries::format_last_entry()
 	output_stream << "        </tr:cost>\n";
       }
 
-      if (! (*i)->note.empty())
-	output_stream << "        <tr:note>" << xml_string((*i)->note)
-		      << "</tr:note>\n";
+      if (! (*i)->note.empty()) {
+	output_stream << "        <tr:note>";
+	output_xml_string(output_stream, (*i)->note);
+	output_stream << "</tr:note>\n";
+      }
 
       if (show_totals) {
 	output_stream << "        <total>\n";
