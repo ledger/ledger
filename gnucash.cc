@@ -85,8 +85,7 @@ static void startElement(void *userData, const char *name, const char **atts)
     action = ENTRY_DESC;
   else if (std::strcmp(name, "trn:split") == 0) {
     assert(curr_entry);
-    curr_entry->add_transaction(new transaction_t(curr_entry, curr_account,
-						  amount_t()));
+    curr_entry->add_transaction(new transaction_t(curr_entry, curr_account));
   }
   else if (std::strcmp(name, "split:reconciled-state") == 0)
     action = XACT_STATE;
