@@ -64,15 +64,15 @@ The entry might look like this:
 	   Checking                   $-23.00     $77.00
 </example>
 
-The first line shows a credit (or payment) to Pacific Bell for $23.00.
-Because there is no "balance" in a general ledger -- it's always zero
--- we write in the total balance of all payments to "Pacific Bell",
-which now is $223.00 (previously the balance was $200.00).  This is
-done by looking at the last entry for "Pacific Bell" in the ledger,
-adding $23.00 to that amount, and writing the total in the balance
-column.  And the money came from "Checking" -- a debit (or withdrawal)
-of $23.00 -- which leaves the ending balance in "Checking" at $77.00.
-This is a very manual procedure; but that's where computers come in...
+The first line shows a payment to Pacific Bell for $23.00.  Because
+there is no "balance" in a general ledger -- it's always zero -- we
+write in the total balance of all payments to "Pacific Bell", which
+now is $223.00 (previously the balance was $200.00).  This is done by
+looking at the last entry for "Pacific Bell" in the ledger, adding
+$23.00 to that amount, and writing the total in the balance column.
+And the money came from "Checking" -- a withdrawal of $23.00 -- which
+leaves the ending balance in "Checking" at $77.00.  This is a very
+manual procedure; but that's where computers come in...
 
 The transaction must balance to $0: $23 went to Pacific Bell, $23 came
 from Checking.  There is nothing left over to be accounted for, since
@@ -82,17 +82,17 @@ existence; it is always a transaction from one account to another.
 
 Keeping a general ledger is the same as keeping two separate ledgers:
 One for Pacific Bell and one for Checking.  In that case, each time a
-credit is written into one, you write a corresponding debit into the
-other.  This makes it easier to write in a "running balance", since
-you don't have to look back at the last time the account was
+payment is written into one, you write a corresponding withdrawal into
+the other.  This makes it easier to write in a "running balance",
+since you don't have to look back at the last time the account was
 referenced -- but it also means having a lot of ledger books, if you
 deal with multiple accounts.
 
 Enter the beauty of computerized accounting.  The purpose of the
 Ledger program is to make general ledger accounting simple, by keeping
 track of the balances for you.  Your only job is to enter the
-credit/debit transactions.  If a transaction does not balance, Ledger
-will display an error and indicate which transaction is wrong.[1]
+transactions.  If a transaction does not balance, Ledger will display
+an error and indicate which transaction is wrong.[1]
 
 In summary, there are two aspects of Ledger use: updating the ledger
 data file, and using the Ledger tool to view the summarized result of
@@ -170,7 +170,7 @@ automagically determining as much information as possible based on the
 nature of your entries.
 
 For example, you do not need to tell Ledger about the accounts you
-use.  Any time Ledger sees a debit or a credit to an account it knows
+use.  Any time Ledger sees a transaction involving an account it knows
 nothing about, it will create it.  If you use a commodity that is new
 to Ledger, it will create that commodity, and determine its display
 characteristics (placement of the symbol before or after the amount,
@@ -201,28 +201,23 @@ amount, if it is the same as the first line:
 For this entry, Ledger will figure out that $-23.00 must come from
 "Assets:Checking" in order to balance the entry.
 
-** Credits and Debits
+** Transactions: Additions and Subtractions
 
-Credit and debit are simple enough terms in themselves, but the usages
-of the modern world have made them very hard to puzzle out.
+Accountants will talk of `credits' and `debits', but their meaning is
+often different from the layman's definitions.  To avoid this semantic
+overloading, we will refer to subtractions and additions.  See
+[[README#DtAC]["Differences to Accounting Conventions"]] for how to
+reconcile the two systems.
 
-Basically, a credit means you add something to an account, and a debit
-means you take away.  A debit card is correctly name: From your point
-of view, it debits your checking account every time you use it.
+Recall that every transaction will involve two or more accounts.
+Money is transferred from one group of accounts to another group.  To
+record the transaction, *subtract* an amount from the source
+accounts, and *add* the same amount to the target accounts.
 
-The credit card is strangely named, because you have to look at it
-from the merchant's point of view: Every time you use it, it credit's
-*his* account right away.  This was a giant leap from the days of cash
-and checks, when the only other way to supply immediate credit was by
-a wire transfer.  But a credit card does not credit you anything at
-all.  In fact, from your point of view, it should be called a
-liability card, since it increases your liability to the issuing bank
-every time you use it.
-
-In Ledger, credits and debits are given as they are, which means that
-sometimes you will see a minus sign where you don't expect one.  For
-example, when you get paid, in order to credit your bank account, you
-need to debit an income account:
+In order to write the Ledger entry correctly, you must determine where
+the money comes from, and where it goes to.  For example, when you are
+paid, in order to add to your bank account, you must subtract from an
+income account:
 
 <example>
 9/29  My Employer
@@ -236,33 +231,27 @@ surprised to see Expenses as a positive figure, and Income as a
 negative figure.  Isn't that the opposite of how it should look?
 
 It may take getting used to, but to properly use a general ledger you
-will need to think in terms of correct debits and credits.  Rather
-than Ledger "fixing" the minus signs, let's understand why they are
-there.
+will need to think in terms of money flows.  Rather than Ledger
+"fixing" the minus signs, let's understand why they are there.
 
 When you earn money, the money has to come from somewhere.  Let's call
 that somewhere "society".  In order for society to give you an income,
-you must take money away from society (debit) in order to put it into
-your bank (credit).  When you then spend that money, it leaves your
-bank account (debit) and goes back to society (credit).  This is why
-Income will appear negative -- it reflects the money you have drawn
-from society -- and why Expenses will be positive -- it is the amount
-you've given back.  These credits and debits will always cancel each
-other out in the end, because you don't have the ability to create new
-money: It must always come from somewhere, and in the end must always
-leave.  This is the beginning of economy, after which the explanation
-gets terribly difficult.
+you must take money away (withdraw) from society in order to put it
+into (make a payment to) your bank.  When you then spend that money,
+it leaves your bank account (a withdrawal) and goes back to society (a
+payment).  This is why Income will appear negative -- it reflects the
+money you have drawn from society -- and why Expenses will be positive
+-- it is the amount you've given back.  These additions and
+subtractions will always cancel each other out in the end, because you
+don't have the ability to create new money: it must always come from
+somewhere, and in the end must always leave.  This is the beginning of
+economy, after which the explanation gets terribly difficult.
 
 Based on that explanation, here's another way to look at your balance
 report: every negative figure means that that account or person or
 place has less money now than when you started your ledger; and every
 positive figure means that that account or person or place has more
 money now that when you started your ledger.  Make sense?
-
-Also, credit cards will have a negative value, because you are
-spending *from* them (debit) in order pay someone else (credit).  They
-are called credit cards because you are able to instantly credit that
-other person, by simply waving a card.
 
 ** Assets and Liabilities
 
@@ -304,7 +293,7 @@ $ ledger balance ^assets ^liabilities
 </example>
 
 Relatedly, your Income accounts will show up negative, because they
-transfer money *from* an account in order to credit your assets.  Your
+transfer money *from* an account in order to increase your assets.  Your
 Expenses accounts will show up positive, because that is where the
 money went.  The combined total your Income and Expenses is your cash
 flow.  A negative cash flow means that you are spending more money
@@ -676,7 +665,7 @@ EverQuest account:
 
 Now your EverQuest:Inventory has 3 apples and 5 steaks in it.  The
 amounts are negative, because you are taking *from* Black's Tavern in
-order to credit your Inventory account.  Note that you don't have to
+order to add to your Inventory account.  Note that you don't have to
 use "Places:Black's Tavern" as the source account.  You could use
 "EverQuest:System" to represent the fact that you acquired them
 online.  The only purpose for choosing one kind of source account over
@@ -917,6 +906,58 @@ ledger entries, use:
 ledger balance Liabilities:Huqúq
 </example>
 
+
+** Differences to Accounting Conventions
+#DtAC
+
+If you are an accountant, or you are familiar with accounting
+terminology, then you might be tearing your hair out after reading the
+above.  Please don't!
+
+Ledger is a lightweight tool that gets people comfortable with their
+finances.  Contemporary accounting practices will often seem
+counter-intuitive and confusing to the layman.  To make Ledger more
+accessible, it deviates from the accounting conventions and
+terminology.  However, Ledger is flexible enough that you can
+interpret your transactions however you wish.
+
+Most probably, the following section will confuse you, and you should
+skip it if you've managed to understand everything so far.  However,
+if you intend to communicate your accounting practices to a
+professional accountant, the following explanations may be useful.
+
+The entity ::
+The individual or organisation under consideration: the someone or
+something on whose behalf you are accounting.  Probably you.
+
+Assets ::
+Future economic benefits controlled by the entity as a result of a
+past transaction or event.
+
+Liabilities ::
+Future sacrifices of economic benefits that the entity is obliged to
+make as a result of a past transaction or event.
+
+The format of the data files used by Ledger is more akin to a general
+journal than a ledger.  In an accounting ledger, transactions are
+grouped by account.  In a general journal, transactions are commonly
+listed in chronological order.
+
+In general, an "addition" in Ledger is an accounting debit, and a
+"subtraction" in Ledger is an accounting credit.  The following table
+shows the "normal" balances for the different types of accounts.
+Accountants avoid using negative balances where possible, instead
+prefering a positive amount in "credit" balance.
+
+System     || Asset   || Liability || Income  || Expense
+
+**Accounting** | debit    | credit     | credit   | debit
+**Ledger**     | positive | negative   | negative | positive
+
+That's correct: accountants call an addition to their cash a debit!
+However, from the bank's perspective it is a credit: the accountant's
+cash is a liability for the bank.  Consequently, payments to the
+account will show up as credits on his bank statement.
 
 ** Using Emacs to Keep Your Ledger
 
