@@ -2126,9 +2126,6 @@ Here is a quick example of text that could be pasted into a ledger
 file, to generate a customized amount's column in the register report:
 
 @example
-;; If Python support is enabled, then the following code may be
-;; uncomment to demonstrate a rather useless example.
-
 !python
 from ledger import *
 def foo(d, val):
