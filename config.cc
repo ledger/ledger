@@ -586,7 +586,7 @@ OPT_BEGIN(cache, ":") {
 } OPT_END(cache);
 
 OPT_BEGIN(no_cache, "") {
-  config.cache_file = "";
+  config.cache_file = "<none>";
 } OPT_END(no_cache);
 
 OPT_BEGIN(output, "o:") {
