@@ -214,11 +214,12 @@ Return the difference in the format of a time value."
       (let ((exit-code (ledger-run-ledger buffer "-C" "balance" account)))
 	(if (/= 0 exit-code)
 	    (message "Error determining cleared balance")
-	  (goto-char (point-min))
+	  (goto-char (1- (point-max)))
+	  (goto-char (line-beginning-position))
 	  (delete-horizontal-space)
-	  (skip-syntax-forward "^ ")
 	  (message "Cleared balance = %s"
-		   (buffer-substring-no-properties (point-min) (point))))))))
+		   (buffer-substring-no-properties (point)
+						   (line-end-position))))))))
 
 (defun ledger-reconcile-toggle ()
   (interactive)
