@@ -58,15 +58,6 @@ AC_ARG_ENABLE(debug,
   esac],[debug=false])
 AM_CONDITIONAL(DEBUG, test x$debug = xtrue)
 
-AC_ARG_ENABLE(standalone,
-  [  --enable-standalone  Build standalone on OS/X (see README)],
-  [case "${enableval}" in
-    yes) standalone=true ;;
-    no)  standalone=false ;;
-    *) AC_MSG_ERROR(bad value ${enableval} for --enable-standalone) ;;
-  esac],[standalone=false])
-AM_CONDITIONAL(STANDALONE, test x$standalone = xtrue)
-
 # Checks for header files.
 AC_STDC_HEADERS
 AC_HAVE_HEADERS(sys/stat.h)

@@ -8,10 +8,6 @@ endif
 if DEBUG
 libledger_la_CXXFLAGS = -DDEBUG_LEVEL=4
 libledger_la_SOURCES += debug.cc
-else
-if STANDALONE
-libledger_a_CXXFLAGS = -DSGI_STL_USE_SINGLE_CLIENT_ALLOCATOR=1
-endif
 endif
 libledger_la_LDFLAGS = -version-info 2:0
 
@@ -20,10 +16,6 @@ libledger_la_LDFLAGS = -version-info 2:0
 bin_PROGRAMS = ledger
 if DEBUG
 ledger_CXXFLAGS = -DDEBUG_LEVEL=4
-else
-if STANDALONE
-ledger_CXXFLAGS = -DSGI_STL_USE_SINGLE_CLIENT_ALLOCATOR=1
-endif
 endif
 ledger_SOURCES = main.cc
 ledger_LDADD = $(LIBOBJS) libledger.la
@@ -72,6 +64,9 @@ bin_PROGRAMS += ledger.so
 
 ledger.so: python.cc libledger_bpy.a
 	CFLAGS="$(CPPFLAGS) -L." python setup.py build --build-lib=.
+
+install-exec-hook:
+	CFLAGS="$(CPPFLAGS) -L." python setup.py install --prefix=$(DESTDIR)
 
 endif
 endif

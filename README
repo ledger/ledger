@@ -3,26 +3,27 @@ Welcome to Ledger, a command-line accounting program.
 Quick start
 ===========
 
-To build ledger, you will first need these two libraries installed:
+To build Ledger, you will first need these two libraries installed:
 
     gmp        GNU multi-precision library
     pcre       Perl regular expression library
 
-If you wish to read Gnucash data files, you will also need two XML libraries,
-which may or may not be available in a single package (it depends on your
-distribution):
+If you wish to read Gnucash data files, you will also need two XML
+libraries, which may or may not be available in a single package (it
+depends on your distribution):
 
     xmlparse
     xmltok
 
 Once you have determined where the headers and libraries for the above
-packages are installed, run the script "configure", passing those paths.  If
-you installed everything under /usr/local, you can probably just type
-"./configure".  Otherwise, do this:
+packages are installed, run the script "configure", passing those
+paths.  If you installed everything under /usr/local, you can probably
+just type "./configure".  Otherwise, do this:
 
     ./configure CPPFLAGS=-I<INCLUDE-PATH>  LDFLAGS=-L<LIBRARY-PATH>
 
-If you need to specify multiple include or library paths, then do this:
+If you need to specify multiple include or library paths, then do
+this:
 
     ./configure CPPFLAGS="-I<PATH1> -I<PATH2>"  LDFLAGS="-L<PATH1> -L<PATH2>"
 
@@ -30,40 +31,12 @@ Once configure is done running, just type:
 
     make install
 
-Building on OS/X
-================
+Building Ledger as a Python Module
+==================================
 
-If you are building ledger for OS/X, there are a couple of things you can do
-to ensure that it runs as quickly as possible.  First, you will want to
-configure ledger using this command, which you can cut and paste from here:
-
-    ./configure CPPFLAGS="-I/sw/include -I/usr/include/httpd/xml" \
-		LDFLAGS=-L/sw/lib \
-		CXXFLAGS="-fomit-frame-pointer -fastf -mcpu=7450" \
-		--enable-standalone
-
-Next, if you are interested, we need to change the system headers so that
-command-line ledger can use an STL allocator that is not thread-safe.  Being
-hread-safe has no benefit for the standalone, command-line version of ledger,
-and so is needlessly 10% slower.  However, there is no easy way to do this,
-other than modifying the system headers.  So, sudo over to a root shell, and
-edit this file:
-
-  /usr/include/gcc/darwin/3.3/c++/bits/stl_alloc.h
-
-Around line 617, you will find a typedef declaration that looks like this:
-
-  typedef __default_alloc_template<true,0>    __alloc;
-
-Replace this line with the following block, which will permit the ledger
-sources to select a different default allocator:
-
-  #ifdef SGI_STL_USE_SINGLE_CLIENT_ALLOCATOR
-    typedef __default_alloc_template<false,0>   __alloc;
-  #else
-    typedef __default_alloc_template<true,0>    __alloc;
-  #endif 
-
-The disadvantage to doing this, in general, is that an app using a different
-default will not be able to link to other C++ libraries, which use another
-default.  But since ledger doesn't use any C++ libraries, this is no problem.
+If you have Python 2.2 or higher installed, and Boost.Python, then
+Ledger will also be built as a Python module.  This means you can
+interact with your Ledger data from Python, making it easier to write
+very custom reporting code.  See the developer documentation for
+information on Ledger's interfaces, and for some example reports
+written in Python.
