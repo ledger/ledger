@@ -32,7 +32,8 @@ void calc_transactions::operator()(transaction_t * xact)
     xact->cost.negate();
   }
 
-  xact->total += *xact;
+  if (! (xact->dflags & TRANSACTION_NO_TOTAL))
+    xact->total += *xact;
 
   (*handler)(xact);
 
@@ -102,8 +103,12 @@ void changed_value_transactions::operator()(transaction_t * xact)
 	xact_temps.push_back(temp_xact);
 
 	temp_xact->amount = (*i).second;
-	temp_xact->total  = (*i).second;
-	temp_xact->total.negate();
+	if (changed_values_only) {
+	  temp_xact->dflags |= TRANSACTION_NO_TOTAL;
+	} else {
+	  temp_xact->total  = (*i).second;
+	  temp_xact->total.negate();
+	}
 
 	(*handler)(temp_xact);
       }

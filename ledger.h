@@ -34,6 +34,7 @@ namespace ledger {
 
 #define TRANSACTION_HANDLED   0x10
 #define TRANSACTION_DISPLAYED 0x20
+#define TRANSACTION_NO_TOTAL  0x40
 
 class entry_t;
 class account_t;

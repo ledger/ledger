@@ -407,7 +407,7 @@ OPT_BEGIN(gain, "G", false) {
   show_revalued      =
   show_revalued_only = true;
 
-  value_expr = "c";
+  value_expr = "a";
   total_expr = "G";
 } OPT_END(gain);
 
