@@ -646,8 +646,8 @@ void write_textual_journal(journal_t& journal, std::string path,
     throw error(std::string("Journal does not refer to file '") +
 		found + "'");
 
-  entries_list::iterator	  el = journal.entries.begin();
-  auto_entries_list::iterator	  al = journal.auto_entries.begin();
+  entries_list::iterator	el = journal.entries.begin();
+  auto_entries_list::iterator	al = journal.auto_entries.begin();
   period_entries_list::iterator pl = journal.period_entries.begin();
 
   istream_pos_type pos = 0;

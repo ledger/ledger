@@ -323,6 +323,13 @@ int parse_and_report(int argc, char * argv[], char * envp[])
 
   // process the command word and its following arguments
 
+  std::string first_arg;
+  if (command == "w") {
+    if (arg == args.end())
+      throw error("The 'output' command requires a file argument");
+    first_arg = *arg++;
+  }
+
   config.process_options(command, arg, args.end());
 
   std::auto_ptr<entry_t> new_entry;
@@ -389,6 +396,7 @@ int parse_and_report(int argc, char * argv[], char * envp[])
   // Compile the format strings
 
   const std::string * format;
+
   if (! config.format_string.empty())
     format = &config.format_string;
   else if (command == "b")
@@ -450,7 +458,7 @@ def vmax(d, val):\n\
     formatter = new format_transactions(*out, *format);
 
   if (command == "w") {
-    write_textual_journal(*journal, *arg, *formatter, *out);
+    write_textual_journal(*journal, first_arg, *formatter, *out);
   } else {
     formatter = chain_xact_handlers(command, formatter, journal.get(),
 				    journal->master, formatter_ptrs);
