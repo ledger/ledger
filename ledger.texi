@@ -16,9 +16,6 @@
 
 @node Top, Introduction, (dir), (dir)
 @top Overview
-@c Page published by Emacs Muse begins here
-
-
 
 @menu
 * Introduction::
@@ -776,7 +773,36 @@ involved.  Some examples are:
 
 Value expressions support most simple math and logic operators, in
 addition to a set of one letter functions and variables.  A function's
-argument is whatever follows it.
+argument is whatever follows it.  The following is a display predicate
+that I use with the @command{balance} command:
+
+@example
+ledger -d /^Liabilities/?T<0:AT>100 balance
+@end example
+
+The effect is that account totals are displayed only if: 1) A
+Liabitilies account has a total less than zero; or 2) the absolute
+value of the account's total exceeds 100 units of whatever commodity
+contains.  If it contains multiple commodities, only one of them must
+exceed 100 units.
+
+Display predicates are also very handy with register reports, to
+constrain which entries are printed.  For example, the following
+command shows only entries from the beginning of the current month,
+while still calculating the running balance based on all entries:
+
+@example
+ledger -d "d>[$(date +%Y/%m/01)]" register checking
+@end example
+
+This advantage to this command's complexity is that it prints the
+running total in terms of all entries in the register.  The following,
+simpler command is similar, but totals only the transactions
+displayed:
+
+@example
+ledger -b "this month" register checking
+@end example
 
 @subsection Variables
 
@@ -1005,100 +1031,106 @@ ledger balance -- -equity
 @node File format,  , Typical queries, Running Ledger
 @section File format
 
-The ledger file format is quite simple, but supports many options.
-These are summarized here.
+The ledger file format is quite simple, but also very flexible.  It
+supports many options, though typically the user can ignore most of
+them.  They are summarized below.
 
-The initial character of each line determines what that line means,
-and how it should be parsed.  The possibilities are:
+The initial character of each line determines what the line means, and
+how it should be interpreted.  Allowable initial characters are:
 
 @table @code
 @item NUMBER
-A line starting with a number denotes a regular ledger entry.  It
-may be followed by any number of lines that beginning whitespace, to
-denote account transactions.  The format of the header line is:
+A line beginning with a number denotes an entry.  It may be followed
+by any number of lines, each beginning with whitespace, to denote the
+entry's account transactions.  The format of the first line is:
+
 @example
 DATE [*] [(CODE)] DESC
 @end example
 
-@item +
-If a line begins with plus, it denotes an inclusion regexp that
-will always be considered, as if it had been specified by the user
-at the end of their command-line.
-
-@item -
-If a line begins with minus, it denotes an exclusion regexp that
-will always be considered, as if it had been specified by the user
-at the end of their command-line.
+If @samp{*} appears after the date, it indicates that entry is
+``cleared'', meaning it has been seen a bank statement, or otherwise
+verified.  If a @samp{CODE} appears in parentheses, it can be used to
+indicate a check number, or the type of the transaction.  Following
+these is the payee, or a description of the transaction.
 
 @item =
-If a line begins with equals, it denotes an automated transaction.
-The next item on the line must be a regular expression.  Any number
-of such lines may appear, with no intervening whitespace.
-Following this block of lines can be a list of account transactions
-preceded by whitespace.
+An automated transaction.  A value expression must appear after the
+equal sign.
 
-@item !WORD
-A line beginning with an exclamation mark denotes a command
-directive.  It must be immediately followed by a word specifying
-which directories.  At the moment, only @samp{!include} is supported, for
-including the content of other ledger files into the current one.
+After this initial line there should be a set of one or more
+transactions, just as if it were normal entry.  If the amounts of the
+transactions have no commodity, they will be applied as modifiers to
+whichever real transaction is matched by the value expression.
 
-@item whitespace
-A line beginning with whitespace, which is not part of a regular or
-automated transaction, is ignored.
+@item !
+A line beginning with an exclamation mark denotes a command directive.
+It must be immediately followed by the command word.  The supported
+commands are:
 
+@table @strong
+@item include
+Include the stated ledger file.
+
+@item account
+The account name is given is taken to be the parent of all
+transactions that follow, until @samp{!end} is seen.
+
+@item end
+Ends an account block.
+
+@item python
+If Python support is available, all of the lines following
+@samp{!python} will be passed to the Python interpretor.  Any
+functions defined will be available to later Python blocks, and can be
+called from a value expression.  The Python code block must be ended
+with @samp{!end}.
 @end table
 
-@quotation
-If a line begins with semicolon it is ignored.  This is the
-preferred method of entering comments.
-@end quotation
+@item ;
+A line beginning with a colon indicates a comment, and is ignored.
 
-@table @code
-@item Y NUM
-If a line begins with a capital Y, it denotes the year to be used
-for all subsequent entries that specify a date, whatever their type.
-This sets the ``default year'', which ordinarily is the current year
-at the time the program is run.  Useful at the beginning of a file
-to specify the file's year.
+@item (whitespace)
+A line beginning with whitespace, which is not part of a regular or
+automated transaction, is also ignored.
 
-@item P DATE SYMBOL PRICE
-Capital P specifies a historical price for a commodity.  Any such
-number of entries are allowed.  These are usually found in a pricing
-history file (see the @option{-Q} option).
+@item Y
+If a line begins with a capital Y, it denotes the year used for all
+subsequent entries that give a date without a year.  The year should
+appear immediately after the Y, for example: @samp{Y2004}.  This is
+useful at the beginning of a file, to specify the year for that file.
+If all entries specify a year, however, this command has no effect.
 
-@item C SYMBOL PRICE
-Capital C specifies a conversion price for a commodity.  This has
-no reference to time, and always takes precedence over any
-historical price (even very current prices).
+@item P
+Specifies a historical price for a commodity.  These are usually found
+in a pricing history file (see the @option{-Q} option).  The syntax
+is:
+@example
+P DATE SYMBOL PRICE
+@end example
+
+@item C
+Specifies a conversion price for a commodity.  This has no reference
+to time, and takes precedence over all historical prices (even the
+current prices).  Syntax is:
+@example
+C SYMBOL PRICE
+@end example
 
 @item N SYMBOL
-Capital N indicates that no implicit price conversions should be
-obtained for the given symbol.  This means that no quotes will ever
-be downloaded for that symbol.  Useful for a home currency, such as
-the dollar ($).  Be aware that these pricing options will set the
-default reporting characteristics for a commodity.  Thus it is
-recommended that pricing options occur only after all regular ledger
-entries have been parsed.
+Indicates that pricing information is to be ignored for a given
+symbol, nor will quotes ever be downloaded for that symbol.  Useful
+with a home currency, such as the dollar ($).  It is recommended that
+these pricing options be set in the price database file, which
+defaults to @filename{~/.pricedb}.  The syntax for this command is:
+@example
+N SYMBOL
+@end example
 
-@item i DATE TIME ACCOUNT  [DESC]
-Lowercase (and capital) i indicate an time-in event.  This will
-start accumulating hours in the account specified.  Usually these
-entries are created in a timelog file by the timeclock program,
-which is distributed with ledger.  There must be two spaces between
-the account name, and the optional description, if one is used.
-
-@item o DATE TIME ACCOUNT  [DESC]
-Lowercase (and capital) o indicate an time-out event.  This will
-accumulate hours in the account specified.  Usually these entries
-are created in a timelog file by the timeclock program, which is
-distributed with ledger.  There must be two spaces between the
-account name, and the optional description, if one is used.
-
-@item b, h
-Entries beginning with lowercase b and h are ignored.  These are
-special entries used by timeclock, but ignored by ledger.
-
+@item i, o, b, h
+These four options relate to timeclock support, which permits ledger
+to read timelog files.  See the timeclock's documentation for more
+info on the syntax of its timelog files.
 @end table
 
 @node Keeping a ledger, Extending with Python, Running Ledger, Top
@@ -1165,7 +1197,7 @@ For this entry, Ledger will figure out that $-23.00 must come from
 * Archiving previous years::
 * Virtual transactions::
 * Automated transactions::
-* Differences to Accounting Conventions::
+* Differences with accounting conventions::
 * Using Emacs to Keep Your Ledger::
 * Using GnuCash to Keep Your Ledger::
 * Using timeclock to record billable time::
@@ -1177,8 +1209,8 @@ For this entry, Ledger will figure out that $-23.00 must come from
 Accountants will talk of `credits' and `debits', but their meaning is
 often different from the layman's definitions.  To avoid this semantic
 overloading, we will refer to subtractions and additions.  See
-@uref{README.texi#DtAC, ``Differences to Accounting Conventions''} for how to
-reconcile the two systems.
+@ref{Differences with accounting conventions} on how to reconcile the
+two systems.
 
 Recall that every transaction will involve two or more accounts.
 Money is transferred from one group of accounts to another group.  To
@@ -1847,16 +1879,17 @@ To view balances without any virtual balances factored in, using the
 Write about: Saving for a Special Occasion; Keeping a Budget; Tracking
 Allocated Funds.
 
-@node Automated transactions, Differences to Accounting Conventions, Virtual transactions, Keeping a ledger
+@node Automated transactions, Differences with accounting conventions, Virtual transactions, Keeping a ledger
 @section Automated transactions
 
-As a Bahá'í, I need to compute Huqúqu'lláh whenever I acquire assets.
-The exact details of this are a bit complex, so if you have further
-interest, please consult the Web.
+As a Bahá'í, I need to compute Huqúqu'lláh as I acquire assets.  It is
+similar to tithing for Jews and Christians, and to Zakát for Muslims.
+The exact details of computing Huqúqu'lláh are a bit complex, but if
+you have further interest, please consult the Web.
 
-For any fellow Bahá'ís out there who want to track Huqúqu'lláh, the
-Ledger tool makes this extremely easy.  Just set up the following
-automated transaction at the top of your ledger file:
+Ledger makes this otherwise difficult calculation quite easy.  Just
+set up the following automated transaction at the top of your ledger
+file:
 
 @example
 ; These entries will compute Huqúqu'lláh based on the
@@ -1874,12 +1907,13 @@ automated transaction at the top of your ledger file:
 This automated transaction works by looking at each transaction
 appearing afterward in the ledger file.  If any match the account
 regexps, occurring after the equal signs above, 19% of the value of
-that transaction is applied to the ``Liabilities:Huqúqu'lláh'' account.
-So if $1000 is earned through Income:Salary, which is seen as a debit
-from Income, a debit of $190 is applied to ``Liabilities:Huqúqu'lláh'';
-if $1000 is spent on Rent---seen as a credit to the Expense account---a credit of $190 is applied to Huqúqu'lláh.  The ultimate balance
-of Huqúqu'lláh reflects how much must be paid to that account in order
-to balance it to zero.
+that transaction is applied to the ``Liabilities:Huqúqu'lláh''
+account.  So if $1000 is earned through Income:Salary, which is seen
+as a debit from Income, a debit of $190 is applied to
+``Liabilities:Huqúqu'lláh''; if $1000 is spent on Rent---seen as a
+credit to the Expense account---a credit of $190 is applied to
+Huqúqu'lláh.  The ultimate balance of Huqúqu'lláh reflects how much
+must be paid to that account in order to balance it to zero.
 
 When you're ready to pay, just write a check directly to the account
 ``Liabilities:Huqúqu'lláh'':
@@ -1898,8 +1932,8 @@ ledger balance Liabilities:Huqúq
 @end example
 
 
-@node Differences to Accounting Conventions, Using Emacs to Keep Your Ledger, Automated transactions, Keeping a ledger
-@section Differences to Accounting Conventions
+@node Differences with accounting conventions, Using Emacs to Keep Your Ledger, Automated transactions, Keeping a ledger
+@section Differences with accounting conventions
 If you are an accountant, or you are familiar with accounting
 terminology, then you might be tearing your hair out after reading the
 above.  Please don't!
@@ -1957,7 +1991,7 @@ However, from the bank's perspective it is a credit: the accountant's
 cash is a liability for the bank.  Consequently, payments to the
 account will show up as credits on his bank statement.
 
-@node Using Emacs to Keep Your Ledger, Using GnuCash to Keep Your Ledger, Differences to Accounting Conventions, Keeping a ledger
+@node Using Emacs to Keep Your Ledger, Using GnuCash to Keep Your Ledger, Differences with accounting conventions, Keeping a ledger
 @section Using Emacs to Keep Your Ledger
 
 In the Ledger tarball is an Emacs module, @file{ledger.el}.  This module
@@ -2135,6 +2169,5 @@ def foo(d, val):
 --amount-expr 'foo'@{$100@}
 @end example
 
-@c Page published by Emacs Muse ends here
 @contents
 @bye
