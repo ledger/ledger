@@ -145,7 +145,12 @@ static amount_t convert_number(const std::string& number)
     amount_t amt(numer_str);
     amount_t den(denom_str);
 
-    return amt / den;
+    if (! den) {
+      have_error = "Denominator in entry is zero!";
+      return amt;
+    } else {
+      return amt / den;
+    }
   } else {
     return amount_t(number);
   }
