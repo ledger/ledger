@@ -1,11 +1,11 @@
 #include "ledger.h"
+#include "amount.h"
 #include "binary.h"
 #include "error.h"
 #include "util.h"
-#include "debug.h"
 
-#include <deque>
 #include <sstream>
+#include <cstring>
 
 #include "gmp.h"
 
@@ -47,20 +47,20 @@ unsigned int sizeof_bigint_t() {
 
 #define MPZ(x) ((x)->val)
 
-static mpz_t temp;
-static mpz_t divisor;
-static mpz_t true_value;
+static mpz_t		  temp;
+static mpz_t		  divisor;
+static amount_t::bigint_t true_value;
 
-commodity_t::updater_t * commodity_t::updater;
-commodities_map		 commodity_t::commodities;
-commodity_t *            commodity_t::null_commodity;
+commodity_t::updater_t *  commodity_t::updater = NULL;
+commodities_map		  commodity_t::commodities;
+commodity_t *             commodity_t::null_commodity;
 
 void initialize_amounts()
 {
   mpz_init(temp);
   mpz_init(divisor);
-  mpz_init(true_value);
-  mpz_set_ui(true_value, 1);
+
+  mpz_set_ui(true_value.val, 1);
 
   commodity_t::updater	      = NULL;
   commodity_t::null_commodity = commodity_t::find_commodity("", true);
@@ -68,12 +68,15 @@ void initialize_amounts()
 
 void shutdown_amounts()
 {
-  mpz_clear(true_value);
   mpz_clear(divisor);
   mpz_clear(temp);
 
-  if (commodity_t::updater)
+  true_value.ref--;
+
+  if (commodity_t::updater) {
     delete commodity_t::updater;
+    commodity_t::updater = NULL;
+  }
 
   for (commodities_map::iterator i = commodity_t::commodities.begin();
        i != commodity_t::commodities.end();
@@ -121,20 +124,21 @@ static void mpz_round(mpz_t out, mpz_t value, int value_prec, int round_prec)
       mpz_sub(out, value, remainder);
     }
   }
+  mpz_clear(quotient);
+  mpz_clear(remainder);
 
   // chop off the rounded bits
   mpz_ui_pow_ui(divisor, 10, value_prec - round_prec);
   mpz_tdiv_q(out, out, divisor);
-
-  mpz_clear(quotient);
-  mpz_clear(remainder);
 }
 
 amount_t::amount_t(const bool value)
 {
   DEBUG_PRINT("ledger.memory.ctors", "ctor amount_t");
+
   if (value) {
-    quantity  = new bigint_t(true_value);
+    quantity  = &true_value;
+    quantity->ref++;
     commodity = commodity_t::null_commodity;
   } else {
     quantity  = NULL;
@@ -145,6 +149,7 @@ amount_t::amount_t(const bool value)
 amount_t::amount_t(const int value)
 {
   DEBUG_PRINT("ledger.memory.ctors", "ctor amount_t");
+
   if (value != 0) {
     quantity = new bigint_t;
     mpz_set_si(MPZ(quantity), value);
@@ -158,6 +163,7 @@ amount_t::amount_t(const int value)
 amount_t::amount_t(const unsigned int value)
 {
   DEBUG_PRINT("ledger.memory.ctors", "ctor amount_t");
+
   if (value != 0) {
     quantity = new bigint_t;
     mpz_set_ui(MPZ(quantity), value);
@@ -171,6 +177,7 @@ amount_t::amount_t(const unsigned int value)
 amount_t::amount_t(const double value)
 {
   DEBUG_PRINT("ledger.memory.ctors", "ctor amount_t");
+
   if (value != 0.0) {
     quantity = new bigint_t;
     mpz_set_d(MPZ(quantity), value);
@@ -233,7 +240,7 @@ amount_t& amount_t::operator=(const std::string& value)
 
 amount_t& amount_t::operator=(const char * value)
 {
-  std::string valstr(value);
+  std::string	     valstr(value);
   std::istringstream str(valstr);
   parse(str);
   return *this;
@@ -257,8 +264,10 @@ amount_t& amount_t::operator=(const bool value)
       _clear();
   } else {
     commodity = commodity_t::null_commodity;
-    _init();
-    mpz_set(MPZ(quantity), true_value);
+    if (quantity)
+      _release();
+    quantity = &true_value;
+    quantity->ref++;
   }
   return *this;
 }
@@ -306,6 +315,8 @@ amount_t& amount_t::operator=(const double value)
 
 void amount_t::_resize(unsigned int prec)
 {
+  assert(prec < 256);
+
   if (! quantity || prec == quantity->prec)
     return;
 
@@ -329,8 +340,7 @@ amount_t& amount_t::operator+=(const amount_t& amt)
     return *this;
 
   if (! quantity) {
-    quantity  = new bigint_t(*amt.quantity);
-    commodity = amt.commodity;
+    _copy(amt);
     return *this;
   }
 
@@ -361,8 +371,8 @@ amount_t& amount_t::operator-=(const amount_t& amt)
 
   if (! quantity) {
     quantity  = new bigint_t(*amt.quantity);
-    mpz_neg(MPZ(quantity), MPZ(quantity));
     commodity = amt.commodity;
+    mpz_neg(MPZ(quantity), MPZ(quantity));
     return *this;
   }
 
@@ -382,187 +392,6 @@ amount_t& amount_t::operator-=(const amount_t& amt)
     temp._resize(quantity->prec);
     mpz_sub(MPZ(quantity), MPZ(quantity), MPZ(temp.quantity));
   }
-
-  return *this;
-}
-
-// unary negation
-amount_t& amount_t::negate()
-{
-  if (quantity) {
-    _dup();
-    mpz_ui_sub(MPZ(quantity), 0, MPZ(quantity));
-  }
-  return *this;
-}
-
-// integer comparisons
-template <typename T>
-static inline void parse_num(amount_t& amt, T num) {
-  std::string str;
-  { std::ostringstream strstr(str);
-    strstr << num;
-  }
-  { std::istringstream strstr(str);
-    amt.parse(strstr);
-  }
-}
-
-bool amount_t::operator<(const int num) const
-{
-  if (num == 0) {
-    return quantity ? mpz_sgn(MPZ(quantity)) < 0 : false;
-  } else {
-    amount_t amt;
-    parse_num(amt, num);
-    return *this < amt;
-  }
-}
-
-bool amount_t::operator<=(const int num) const
-{
-  if (num == 0) {
-    return quantity ? mpz_sgn(MPZ(quantity)) <= 0 : true;
-  } else {
-    amount_t amt;
-    parse_num(amt, num);
-    return *this <= amt;
-  }
-}
-
-bool amount_t::operator>(const int num) const
-{
-  if (num == 0) {
-    return quantity ? mpz_sgn(MPZ(quantity)) > 0 : false;
-  } else {
-    amount_t amt;
-    parse_num(amt, num);
-    return *this > amt;
-  }
-}
-
-bool amount_t::operator>=(const int num) const
-{
-  if (num == 0) {
-    return quantity ? mpz_sgn(MPZ(quantity)) >= 0 : true;
-  } else {
-    amount_t amt;
-    parse_num(amt, num);
-    return *this >= amt;
-  }
-}
-
-bool amount_t::operator<(const unsigned int num) const
-{
-  if (num == 0) {
-    return quantity ? mpz_sgn(MPZ(quantity)) < 0 : false;
-  } else {
-    amount_t amt;
-    parse_num(amt, num);
-    return *this < amt;
-  }
-}
-
-bool amount_t::operator<=(const unsigned int num) const
-{
-  if (num == 0) {
-    return quantity ? mpz_sgn(MPZ(quantity)) <= 0 : true;
-  } else {
-    amount_t amt;
-    parse_num(amt, num);
-    return *this <= amt;
-  }
-}
-
-bool amount_t::operator>(const unsigned int num) const
-{
-  if (num == 0) {
-    return quantity ? mpz_sgn(MPZ(quantity)) > 0 : false;
-  } else {
-    amount_t amt;
-    parse_num(amt, num);
-    return *this > amt;
-  }
-}
-
-bool amount_t::operator>=(const unsigned int num) const
-{
-  if (num == 0) {
-    return quantity ? mpz_sgn(MPZ(quantity)) >= 0 : true;
-  } else {
-    amount_t amt;
-    parse_num(amt, num);
-    return *this >= amt;
-  }
-}
-
-bool amount_t::operator==(const unsigned int num) const
-{
-  if (num == 0) {
-    return quantity ? mpz_sgn(MPZ(quantity)) == 0 : true;
-  } else {
-    amount_t amt;
-    parse_num(amt, num);
-    return *this == amt;
-  }
-}
-
-// comparisons between amounts
-#define DEF_CMP_OPERATOR(OP)						\
-bool amount_t::operator OP(const amount_t& amt) const			\
-{									\
-  if (! quantity)							\
-    return amt > 0;							\
-  if (! amt.quantity)							\
-    return *this < 0;							\
-									\
-  if (commodity != amt.commodity)					\
-    throw amount_error("Comparing amounts with different commodities");	\
-									\
-  if (quantity->prec == amt.quantity->prec) {				\
-    return mpz_cmp(MPZ(quantity), MPZ(amt.quantity)) OP 0;		\
-  }									\
-  else if (quantity->prec < amt.quantity->prec) {			\
-    amount_t temp = *this;						\
-    temp._resize(amt.quantity->prec);					\
-    return mpz_cmp(MPZ(temp.quantity), MPZ(amt.quantity)) OP 0;		\
-  }									\
-  else {								\
-    amount_t temp = amt;						\
-    temp._resize(quantity->prec);					\
-    return mpz_cmp(MPZ(quantity), MPZ(temp.quantity)) OP 0;		\
-  }									\
-}
-
-DEF_CMP_OPERATOR(<)
-DEF_CMP_OPERATOR(<=)
-DEF_CMP_OPERATOR(>)
-DEF_CMP_OPERATOR(>=)
-DEF_CMP_OPERATOR(==)
-
-amount_t::operator bool() const
-{
-  if (quantity) {
-    if (quantity->prec <= commodity->precision) {
-      return mpz_sgn(MPZ(quantity)) != 0;
-    } else {
-      assert(commodity);
-      mpz_set(temp, MPZ(quantity));
-      mpz_ui_pow_ui(divisor, 10, quantity->prec - commodity->precision);
-      mpz_tdiv_q(temp, temp, divisor);
-      bool zero = mpz_sgn(temp) == 0;
-      return ! zero;
-    }
-  } else {
-    return false;
-  }
-}
-
-amount_t amount_t::value(const std::time_t moment) const
-{
-  if (quantity && ! (commodity->flags & COMMODITY_STYLE_NOMARKET))
-    if (amount_t amt = commodity->value(moment))
-      return (amt * *this).round(commodity->precision);
 
   return *this;
 }
@@ -611,18 +440,135 @@ amount_t& amount_t::operator/=(const amount_t& amt)
   return *this;
 }
 
+// unary negation
+amount_t& amount_t::negate()
+{
+  if (quantity) {
+    _dup();
+    mpz_neg(MPZ(quantity), MPZ(quantity));
+  }
+  return *this;
+}
+
+// integer comparisons
+template <typename T>
+static inline void parse_num(amount_t& amt, T num) {
+  std::string str;
+  { std::ostringstream strstr(str);
+    strstr << num;
+  }
+  { std::istringstream strstr(str);
+    amt.parse(strstr);
+  }
+}
+
+#define AMOUNT_CMP_INT(OP)					\
+bool amount_t::operator OP (const int num) const		\
+{								\
+  if (num == 0) {						\
+    return quantity ? mpz_sgn(MPZ(quantity)) OP 0 : false;	\
+  } else {							\
+    amount_t amt;						\
+    parse_num(amt, num);					\
+    return *this OP amt;					\
+  }								\
+}
+
+AMOUNT_CMP_INT(<)
+AMOUNT_CMP_INT(<=)
+AMOUNT_CMP_INT(>)
+AMOUNT_CMP_INT(>=)
+AMOUNT_CMP_INT(==)
+
+#define AMOUNT_CMP_UINT(OP)					\
+bool amount_t::operator OP (const unsigned int num) const	\
+{								\
+  if (num == 0) {						\
+    return quantity ? mpz_sgn(MPZ(quantity)) OP 0 : false;	\
+  } else {							\
+    amount_t amt;						\
+    parse_num(amt, num);					\
+    return *this OP amt;					\
+  }								\
+}
+
+AMOUNT_CMP_UINT(<)
+AMOUNT_CMP_UINT(<=)
+AMOUNT_CMP_UINT(>)
+AMOUNT_CMP_UINT(>=)
+AMOUNT_CMP_UINT(==)
+
+// comparisons between amounts
+#define AMOUNT_CMP_AMOUNT(OP)						\
+bool amount_t::operator OP(const amount_t& amt) const			\
+{									\
+  if (! quantity)							\
+    return amt > 0;							\
+  if (! amt.quantity)							\
+    return *this < 0;							\
+									\
+  if (commodity != amt.commodity)					\
+    throw amount_error("Comparing amounts with different commodities");	\
+									\
+  if (quantity->prec == amt.quantity->prec) {				\
+    return mpz_cmp(MPZ(quantity), MPZ(amt.quantity)) OP 0;		\
+  }									\
+  else if (quantity->prec < amt.quantity->prec) {			\
+    amount_t temp = *this;						\
+    temp._resize(amt.quantity->prec);					\
+    return mpz_cmp(MPZ(temp.quantity), MPZ(amt.quantity)) OP 0;		\
+  }									\
+  else {								\
+    amount_t temp = amt;						\
+    temp._resize(quantity->prec);					\
+    return mpz_cmp(MPZ(quantity), MPZ(temp.quantity)) OP 0;		\
+  }									\
+}
+
+AMOUNT_CMP_AMOUNT(<)
+AMOUNT_CMP_AMOUNT(<=)
+AMOUNT_CMP_AMOUNT(>)
+AMOUNT_CMP_AMOUNT(>=)
+AMOUNT_CMP_AMOUNT(==)
+
+amount_t::operator bool() const
+{
+  if (! quantity)
+    return false;
+
+  if (quantity->prec <= commodity->precision) {
+    return mpz_sgn(MPZ(quantity)) != 0;
+  } else {
+    assert(commodity);
+    mpz_set(temp, MPZ(quantity));
+    mpz_ui_pow_ui(divisor, 10, quantity->prec - commodity->precision);
+    mpz_tdiv_q(temp, temp, divisor);
+    bool zero = mpz_sgn(temp) == 0;
+    return ! zero;
+  }
+}
+
+amount_t amount_t::value(const std::time_t moment) const
+{
+  if (quantity && ! (commodity->flags & COMMODITY_STYLE_NOMARKET))
+    if (amount_t amt = commodity->value(moment))
+      return (amt * *this).round(commodity->precision);
+
+  return *this;
+}
+
 amount_t amount_t::round(unsigned int prec) const
 {
-  if (! quantity || quantity->prec <= prec) {
+  if (! quantity || quantity->prec <= prec)
     return *this;
-  } else {
-    amount_t temp = *this;
-    temp._dup();
-    mpz_round(MPZ(temp.quantity), MPZ(temp.quantity),
-	      temp.quantity->prec, prec);
-    temp.quantity->prec = prec;
-    return temp;
-  }
+
+  amount_t temp = *this;
+  temp._dup();
+
+  mpz_round(MPZ(temp.quantity), MPZ(temp.quantity), temp.quantity->prec, prec);
+  temp.quantity->prec = prec;
+
+  return temp;
 }
 
 std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
@@ -827,52 +773,55 @@ void amount_t::parse(std::istream& in)
   std::string::size_type last_comma  = quant.rfind(',');
   std::string::size_type last_period = quant.rfind('.');
 
-  unsigned int precision = 0;
-
   if (last_comma != std::string::npos && last_period != std::string::npos) {
     flags |= COMMODITY_STYLE_THOUSANDS;
     if (last_comma > last_period) {
       flags |= COMMODITY_STYLE_EUROPEAN;
-      precision = quant.length() - last_comma - 1;
+      quantity->prec = quant.length() - last_comma - 1;
     } else {
-      precision = quant.length() - last_period - 1;
+      quantity->prec = quant.length() - last_period - 1;
     }
   }
   else if (last_comma != std::string::npos) {
     flags |= COMMODITY_STYLE_EUROPEAN;
-    precision = quant.length() - last_comma - 1;
+    quantity->prec = quant.length() - last_comma - 1;
   }
   else if (last_period != std::string::npos) {
-    precision = quant.length() - last_period - 1;
+    quantity->prec = quant.length() - last_period - 1;
   }
-
-  quantity->prec = precision;
+  else {
+    quantity->prec = 0;
+  }
 
   // Create the commodity if has not already been seen.
   commodity = commodity_t::find_commodity(symbol, true);
   commodity->flags |= flags;
-  if (precision > commodity->precision)
-    commodity->precision = precision;
+  if (quantity->prec > commodity->precision)
+    commodity->precision = quantity->prec;
 
-  // The number is specified as the user desires, with the commodity
-  // flags telling how to parse it.
+  // Now we have the final number.  Remove commas and periods, if
+  // necessary.
 
-  int	 len	 = quant.length();
-  char * buf	 = new char[len + 1];
+  if (last_comma != std::string::npos || last_period != std::string::npos) {
+    int	 len	 = quant.length();
+    char * buf	 = new char[len + 1];
 
-  const char * p = quant.c_str();
-  char * t       = buf;
+    const char * p = quant.c_str();
+    char * t       = buf;
 
-  while (*p) {
-    if (*p == ',' || *p == '.')
-      p++;
-    *t++ = *p++;
+    while (*p) {
+      if (*p == ',' || *p == '.')
+	p++;
+      *t++ = *p++;
+    }
+    *t = '\0';
+
+    mpz_set_str(MPZ(quantity), buf, 10);
+
+    delete[] buf;
+  } else {
+    mpz_set_str(MPZ(quantity), quant.c_str(), 10);
   }
-  *t = '\0';
-
-  mpz_set_str(MPZ(quantity), buf, 10);
-
-  delete[] buf;
 }
 
 void amount_t::parse(const std::string& str)
@@ -943,7 +892,8 @@ void amount_t::read_quantity(std::istream& in)
     unsigned short len;
     in.read((char *)&len, sizeof(len));
     in.read(buf, len);
-    mpz_import(MPZ(quantity), len / sizeof(short), 1, sizeof(short), 0, 0, buf);
+    mpz_import(MPZ(quantity), len / sizeof(short), 1, sizeof(short),
+	       0, 0, buf);
 
     char negative;
     in.read(&negative, sizeof(negative));
@@ -961,6 +911,34 @@ void amount_t::read_quantity(std::istream& in)
   }
 }
 
+bool amount_t::valid() const
+{
+  if (quantity) {
+    if (! commodity)
+      return false;
+
+    if (quantity->ref == 0)
+      return false;
+  }
+  else if (commodity) {
+    return false;
+  }
+
+  return true;
+}
+
+
+void commodity_t::add_price(const std::time_t date, const amount_t& price)
+{
+  history_map::const_iterator i = history.find(date);
+  if (i != history.end()) {
+    (*i).second = price;
+  } else {
+    std::pair<history_map::iterator, bool> result
+      = history.insert(history_pair(date, price));
+    assert(result.second);
+  }
+}
 
 commodity_t * commodity_t::find_commodity(const std::string& symbol,
 					  bool auto_create)

@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <ctime>
+#include <cctype>
 #include <iostream>
 
 #include "debug.h"
@@ -21,10 +22,14 @@ class amount_t
   void _resize(unsigned int prec);
 
   void _clear() {
-    if (quantity)
+    if (quantity) {
+      assert(commodity);
       _release();
-    quantity  = NULL;
-    commodity = NULL;
+      quantity  = NULL;
+      commodity = NULL;
+    } else {
+      assert(! commodity);
+    }
   }
 
  public:
@@ -33,19 +38,10 @@ class amount_t
   bigint_t *	quantity;
   commodity_t *	commodity;
 
-  bool valid() const {
-    if (quantity)
-      return commodity != NULL;
-    else
-      return commodity == NULL;
-  }
-
   // constructors
-  amount_t(commodity_t * _commodity = NULL)
-    : quantity(NULL), commodity(_commodity) {
+  amount_t() : quantity(NULL), commodity(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor amount_t");
   }
-
   amount_t(const amount_t& amt) : quantity(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor amount_t");
     if (amt.quantity)
@@ -86,10 +82,10 @@ class amount_t
   amount_t round(unsigned int prec) const;
 
   // in-place arithmetic
-  amount_t& operator*=(const amount_t& amt);
-  amount_t& operator/=(const amount_t& amt);
   amount_t& operator+=(const amount_t& amt);
   amount_t& operator-=(const amount_t& amt);
+  amount_t& operator*=(const amount_t& amt);
+  amount_t& operator/=(const amount_t& amt);
 
   // simple arithmetic
   amount_t operator*(const amount_t& amt) const {
@@ -132,6 +128,10 @@ class amount_t
   bool operator<=(const int num) const;
   bool operator>(const int num) const;
   bool operator>=(const int num) const;
+  bool operator==(const int num) const;
+  bool operator!=(const int num) const {
+    return ! (*this == num);
+  }
 
   bool operator<(const unsigned int num) const;
   bool operator<=(const unsigned int num) const;
@@ -166,6 +166,8 @@ class amount_t
 
   void write_quantity(std::ostream& out) const;
   void read_quantity(std::istream& in);
+
+  bool valid() const;
 
   friend std::istream& operator>>(std::istream& in, amount_t& amt);
 };
@@ -229,19 +231,23 @@ class commodity_t
   // If set, this global function pointer is called to determine
   // whether prices have been updated in the meanwhile.
 
-  static updater_t * updater;
+  static updater_t *     updater;
 
-  // This map remembers all commodities that have been
-  // defined thus far.
+  // This map remembers all commodities that have been defined.
 
   static commodities_map commodities;
   static commodity_t *   null_commodity;
 
   static void add_commodity(commodity_t * commodity,
 			    const std::string symbol = "") {
-    commodities.insert(commodities_pair((symbol.empty() ?
-					 commodity->symbol : symbol),
-					commodity));
+    // The argument "symbol" is useful for creating a symbol alias to
+    // an underlying commodity type; it is used by the Gnucash parser
+    // to link "USD" to "$".
+    std::pair<commodities_map::iterator, bool> result
+      = commodities.insert(commodities_pair((symbol.empty() ?
+					     commodity->symbol : symbol),
+					    commodity));
+    assert(result.second);
   }
   static bool remove_commodity(commodity_t * commodity) {
     commodities_map::size_type n = commodities.erase(commodity->symbol);
@@ -274,9 +280,7 @@ class commodity_t
       }
   }
 
-  void add_price(const std::time_t date, const amount_t& price) {
-    history.insert(history_pair(date, price));
-  }
+  void add_price(const std::time_t date, const amount_t& price);
   bool remove_price(const std::time_t date) {
     history_map::size_type n = history.erase(date);
     return n > 0;
@@ -287,6 +291,22 @@ class commodity_t
   }
 
   amount_t value(const std::time_t moment = std::time(NULL));
+
+  bool valid() const {
+    if (symbol.empty() && this != null_commodity)
+      return false;
+
+    if (precision > 16)
+      return false;
+
+    if (flags & ~0x1f)
+      return false;
+
+    if (! conversion.valid())
+      return false;
+
+    return true;
+  }
 };
 
 } // namespace ledger

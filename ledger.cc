@@ -253,6 +253,12 @@ bool journal_t::valid() const
     if (! (*i)->valid())
       return false;
 
+  for (commodities_map::const_iterator i = commodity_t::commodities.begin();
+       i != commodity_t::commodities.end();
+       i++)
+    if (! (*i).second->valid())
+      return false;
+
   return true;
 }
 

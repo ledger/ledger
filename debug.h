@@ -8,7 +8,7 @@
 #define NO_SEATBELT 0
 
 #ifndef DEBUG_LEVEL
-#define DEBUG_LEVEL RELEASE
+#define DEBUG_LEVEL NO_SEATBELT
 #endif
 
 #if DEBUG_LEVEL >= RELEASE
