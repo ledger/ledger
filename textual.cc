@@ -121,7 +121,8 @@ transaction_t * parse_transaction(std::istream& in, account_t * account,
   return parse_transaction_text(line, account, entry);
 }
 
-void parse_automated_transactions(std::istream& in, account_t * account,
+void parse_automated_transactions(std::istream& in,
+				  account_t *	account,
 				  automated_transactions_t& auto_xacts)
 {
   static char line[MAX_LINE + 1];
@@ -238,7 +239,8 @@ namespace {
   TIMER_DEF(entry_date,    "parsing entry date");
 }
 
-entry_t * parse_entry(std::istream& in, account_t * master)
+entry_t * parse_entry(std::istream& in, account_t * master,
+		      textual_parser_t& parser)
 {
   std::auto_ptr<entry_t> curr(new entry_t);
 
@@ -296,8 +298,10 @@ entry_t * parse_entry(std::istream& in, account_t * master)
 
   TIMER_START(entry_finish);
 
-  if (curr->transactions.empty() || ! finalize_entry(curr.get()))
+  if (curr->transactions.empty() ||
+      ! parser.run_finalize_hooks(curr.get())) {
     return NULL;		// ~auto_ptr will delete curr
+  }
 
   TIMER_STOP(entry_finish);
 
@@ -325,6 +329,8 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
   std::deque<account_t *>  account_stack;
   automated_transactions_t auto_xacts;
+
+  current_auto_xacts = &auto_xacts;
 
   if (! master)
     master = journal->master;
@@ -417,10 +423,10 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	      = new transaction_t(last_account, amt, TRANSACTION_VIRTUAL);
 	    curr->add_transaction(xact);
 
-	    if (! finalize_entry(curr.get()) ||
+	    if (! run_finalize_hooks(curr.get()) ||
 		! journal->add_entry(curr.release()))
-	      assert(0);
-
+	      throw parse_error(path, linenum,
+				"Failed to record 'out' timelog entry");
 	    count++;
 	  } else {
 	    throw parse_error(path, linenum, "Cannot parse timelog entry date");
@@ -551,7 +557,9 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	  linenum++;
 
 	  push_var<unsigned int> save_linenum(linenum);
-	  push_var<std::string> save_path(path);
+	  push_var<std::string>  save_path(path);
+	  push_var<automated_transactions_t *>
+	    save_current_auto_xacts(current_auto_xacts);
 	  count += parse_journal_file(skip_ws(line), journal,
 				      account_stack.front());
 	}
@@ -566,10 +574,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
       default: {
 	unsigned int first_line = linenum;
-	if (entry_t * entry = parse_entry(in, account_stack.front())) {
-	  if (! auto_xacts.automated_transactions.empty())
-	    auto_xacts.extend_entry(entry);
-
+	if (entry_t * entry = parse_entry(in, account_stack.front(), *this)) {
 	  if (journal->add_entry(entry))
 	    count++;
 	  else

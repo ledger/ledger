@@ -116,12 +116,44 @@ class FormatTransaction (TransactionHandler):
 	self.output.flush ()
 
     def __call__ (self, xact):
-	if self.nformatter is not None and self.last_entry is not None and \
-	   xact.entry == self.last_entry:
-	    self.output.write(self.nformatter.format(xact))
+	if not transaction_has_xdata (xact) or \
+	   not transaction_xdata (xact).dflags & TRANSACTION_DISPLAYED:
+	    if self.nformatter is not None and \
+	       self.last_entry is not None and \
+	       xact.entry == self.last_entry:
+		self.output.write(self.nformatter.format(xact))
+	    else:
+		self.output.write(self.formatter.format(xact))
+		self.last_entry = xact.entry
+
+class FormatAccount (AccountHandler):
+    output = None
+
+    def __init__ (self, fmt, pred):
+	self.formatter = Format (fmt)
+	self.predicate = AccountPredicate (pred)
+
+	if config.output_file:
+	    self.output = open(config.output_file, "w")
 	else:
-	    self.output.write(self.formatter.format(xact))
-	    self.last_entry = xact.entry
+	    self.output = sys.stdout
+
+	AccountHandler.__init__ (self)
+
+    def __del__ (self):
+	if config.output_file:
+	    self.output.close ()
+
+    def flush (self):
+	self.output.flush ()
+
+    def __call__ (self, account):
+	if display_account (account, self.predicate):
+	    if not account.parent:
+		account_xdata (account).dflags |= ACCOUNT_TO_DISPLAY
+	    else:
+		self.output.write(self.formatter.format(account))
+		account_xdata (account).dflags |= ACCOUNT_DISPLAYED
 
 if command == "b" or command == "E":
     handler = SetAccountValue()
@@ -166,28 +198,24 @@ else:
 
 handler.flush ()
 
-#if command == "b":
-#    format_account acct_formatter(out, config.format,
-#				  config.display_predicate);
-#    sum_accounts(*journal->master);
-#    walk_accounts(*journal->master, acct_formatter, config.sort_string);
-#    acct_formatter.flush();
-#
-#    if (journal->master->data) {
-#      ACCT_DATA(journal->master)->value = ACCT_DATA(journal->master)->total;
-#
-#      if (ACCT_DATA(journal->master)->dflags & ACCOUNT_TO_DISPLAY) {
-#	out << "--------------------\n";
-#	config.format.format(out, details_t(*journal->master));
-#      }
-#    }
+if command == "b":
+    acct_formatter = FormatAccount (format, config.display_predicate)
+    sum_accounts (journal.master)
+    walk_accounts (journal.master, acct_formatter, config.sort_string)
+    acct_formatter.flush ()
+    #if account_has_xdata(journal.master):
+    #  account_xdata(journal.master).value = account_xdata(journal.master).total;
+    #
+    #  if account_xdata(journal.master).dflags & ACCOUNT_TO_DISPLAY:
+    #      print "--------------------"
+    #      config.format.format(out, details_t(*journal->master));
+
 #elif command == "E":
 #    format_equity acct_formatter(out, config.format, config.nformat,
 #				 config.display_predicate);
 #    sum_accounts(*journal->master);
 #    walk_accounts(*journal->master, acct_formatter, config.sort_string);
 #    acct_formatter.flush();
-#  }
 
 if config.use_cache and config.cache_dirty and config.cache_file:
     write_binary_journal(config.cache_file, journal);

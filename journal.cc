@@ -193,15 +193,8 @@ account_t * account_t::find_account(const std::string& name,
 
 bool account_t::remove_transaction(transaction_t * xact)
 {
-  for (transactions_list::iterator i = transactions.begin();
-       i != transactions.end();
-       i++)
-    if (*i == xact) {
-      transactions.erase(i);
-      return true;
-    }
-
-  return false;
+  transactions.remove(xact);
+  return true;
 }
 
 std::string account_t::fullname() const
@@ -222,6 +215,12 @@ std::string account_t::fullname() const
 
     return fullname;
   }
+}
+
+std::ostream& operator<<(std::ostream& out, const account_t& account)
+{
+  out << account.fullname();
+  return out;
 }
 
 bool account_t::valid() const
@@ -599,7 +598,9 @@ void export_journal()
     .def(self == self)
     .def(self != self)
 
-    .def_readwrite("parent", &account_t::parent)
+    .add_property("parent",
+		  make_getter(&account_t::parent,
+			      return_internal_reference<1>()))
     .def_readwrite("name", &account_t::name)
     .def_readwrite("note", &account_t::note)
     .def_readonly("depth", &account_t::depth)
@@ -624,6 +625,9 @@ void export_journal()
     .def(self == self)
     .def(self != self)
 
+    .add_property("master",
+		  make_getter(&journal_t::master,
+			      return_internal_reference<1>()))
     .def_readonly("sources", &journal_t::sources)
 
     .def("__len__", entries_len)

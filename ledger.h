@@ -178,10 +178,7 @@ class account_t
   bool valid() const;
 };
 
-inline std::ostream& operator<<(std::ostream& out, const account_t& acct) {
-  out << acct.fullname();
-  return out;
-}
+std::ostream& operator<<(std::ostream& out, const account_t& account);
 
 
 typedef std::list<entry_t *>   entries_list;

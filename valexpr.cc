@@ -945,6 +945,16 @@ void export_valexpr()
 
   def("parse_value_expr", py_parse_value_expr,
       return_value_policy<manage_new_object>());
+
+  class_< item_predicate<transaction_t> >
+    ("TransactionPredicate", init<std::string>())
+    .def("__call__", &item_predicate<transaction_t>::operator())
+    ;
+
+  class_< item_predicate<account_t> >
+    ("AccountPredicate", init<std::string>())
+    .def("__call__", &item_predicate<account_t>::operator())
+    ;
 }
 
 #endif // USE_BOOST_PYTHON

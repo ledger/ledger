@@ -298,6 +298,76 @@ void dow_transactions::flush()
   }
 }
 
+void sum_accounts(account_t& account)
+{
+  for (accounts_map::iterator i = account.accounts.begin();
+       i != account.accounts.end();
+       i++) {
+    sum_accounts(*(*i).second);
+    account_xdata(account).total += account_xdata(*(*i).second).total;
+    account_xdata(account).count += (account_xdata(*(*i).second).count +
+				     account_xdata(*(*i).second).subcount);
+  }
+  account_xdata(account).total += account_xdata(account).value;
+  account_xdata(account).count += account_xdata(account).subcount;
+}
+
+void sort_accounts(account_t&		account,
+		   const value_expr_t * sort_order,
+		   accounts_deque&      accounts)
+{
+  for (accounts_map::iterator i = account.accounts.begin();
+       i != account.accounts.end();
+       i++)
+    accounts.push_back((*i).second);
+
+  std::stable_sort(accounts.begin(), accounts.end(),
+		   compare_items<account_t>(sort_order));
+}
+
+void walk_accounts(account_t&		    account,
+		   item_handler<account_t>& handler,
+		   const value_expr_t *     sort_order)
+{
+  handler(account);
+
+  if (sort_order) {
+    accounts_deque accounts;
+    sort_accounts(account, sort_order, accounts);
+    for (accounts_deque::const_iterator i = accounts.begin();
+	 i != accounts.end();
+	 i++)
+      walk_accounts(**i, handler, sort_order);
+  } else {
+    for (accounts_map::const_iterator i = account.accounts.begin();
+	 i != account.accounts.end();
+	 i++)
+      walk_accounts(*(*i).second, handler, NULL);
+  }
+}
+
+void walk_accounts(account_t&		    account,
+		   item_handler<account_t>& handler,
+		   const std::string&       sort_string)
+{
+  if (! sort_string.empty()) {
+    std::auto_ptr<value_expr_t> sort_order(parse_value_expr(sort_string));
+    walk_accounts(account, handler, sort_order.get());
+  } else {
+    walk_accounts(account, handler);
+  }
+}
+
+void clear_accounts_xdata()
+{
+  accounts_xdata.clear();
+
+  for (std::list<void **>::iterator i = accounts_xdata_ptrs.begin();
+       i != accounts_xdata_ptrs.end();
+       i++)
+    **i = NULL;
+}
+
 } // namespace ledger
 
 #ifdef USE_BOOST_PYTHON
@@ -324,7 +394,7 @@ struct item_handler_wrap : public item_handler<T>
   }
 
   virtual void operator()(T& item) {
-    call_method<void>(self, "__call__", item);
+    call_method<void>(self, "__call__", ptr(&item));
   }
   void default_call(T& item) {
     item_handler<T>::operator()(item);
@@ -342,6 +412,26 @@ void py_walk_entries(journal_t& journal, item_handler<transaction_t>& handler)
 void py_walk_transactions(entry_t& entry, item_handler<transaction_t>& handler)
 {
   walk_transactions(entry.transactions, handler);
+}
+
+void py_walk_accounts_1(account_t&		 account,
+			item_handler<account_t>& handler)
+{
+  walk_accounts(account, handler);
+}
+
+void py_walk_accounts_2(account_t&		 account,
+			item_handler<account_t>& handler,
+			const value_expr_t *     sort_order)
+{
+  walk_accounts(account, handler, sort_order);
+}
+
+void py_walk_accounts_3(account_t&		 account,
+			item_handler<account_t>& handler,
+			const std::string&       sort_string)
+{
+  walk_accounts(account, handler, sort_string);
 }
 
 void export_walk()
@@ -377,9 +467,8 @@ void export_walk()
     .def("__call__", &ignore_transactions::operator());
     ;
 
-  class_< set_account_value, bases<xact_handler_t> >
-    ("SetAccountValue", init<xact_handler_t *>()
-     [with_custodian_and_ward<1, 2>()])
+  class_< set_account_value, bases<xact_handler_t> > ("SetAccountValue")
+    .def(init<xact_handler_t *>()[with_custodian_and_ward<1, 2>()])
     .def("flush", &xact_handler_t::flush)
     .def("__call__", &set_account_value::operator());
     ;
@@ -455,6 +544,36 @@ void export_walk()
 
   def("walk_entries", py_walk_entries);
   def("walk_transactions", py_walk_transactions);
+
+  typedef item_handler<account_t> account_handler_t;
+
+  scope().attr("ACCOUNT_DISPLAYED")  = ACCOUNT_DISPLAYED;
+  scope().attr("ACCOUNT_TO_DISPLAY") = ACCOUNT_TO_DISPLAY;
+
+  class_< account_xdata_t > ("AccountXData")
+    .def_readwrite("value", &account_xdata_t::value)
+    .def_readwrite("total", &account_xdata_t::total)
+    .def_readwrite("count", &account_xdata_t::count)
+    .def_readwrite("subcount", &account_xdata_t::subcount)
+    .def_readwrite("dflags", &account_xdata_t::dflags)
+    ;
+
+  def("account_has_xdata", account_has_xdata);
+  def("account_xdata", account_xdata, return_internal_reference<1>());
+
+  class_< account_handler_t, item_handler_wrap<account_t> > ("AccountHandler")
+    .def(init<account_handler_t *>())
+
+    .def("flush", &account_handler_t::flush,
+	 &item_handler_wrap<account_t>::default_flush)
+    .def("__call__", &account_handler_t::operator(),
+	 &item_handler_wrap<account_t>::default_call)
+    ;
+
+  def("sum_accounts", sum_accounts);
+  def("walk_accounts", py_walk_accounts_1);
+  def("walk_accounts", py_walk_accounts_2);
+  def("walk_accounts", py_walk_accounts_3);
 }
 
 #endif // USE_BOOST_PYTHON

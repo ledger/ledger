@@ -27,4 +27,15 @@ void automated_transaction_t::extend_entry(entry_t * entry)
       }
 }
 
+automated_transactions_t * current_auto_xacts = NULL;
+
+bool handle_auto_xacts(entry_t * entry)
+{
+  if (current_auto_xacts &&
+      ! current_auto_xacts->automated_transactions.empty())
+    current_auto_xacts->extend_entry(entry);
+
+  return true;
+}
+
 } // namespace ledger

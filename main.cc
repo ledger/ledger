@@ -1,6 +1,7 @@
 #include "ledger.h"
 #include "parser.h"
 #include "textual.h"
+#include "autoxact.h"
 #include "binary.h"
 #include "qif.h"
 #include "acconf.h"
@@ -216,6 +217,7 @@ int parse_and_report(int argc, char * argv[], char * envp[])
 #endif
   std::auto_ptr<qif_parser_t>     qif_parser(new qif_parser_t);
   std::auto_ptr<textual_parser_t> text_parser(new textual_parser_t);
+  text_parser->add_finalize_hook(handle_auto_xacts);
 
   register_parser(bin_parser.get());
 #ifdef READ_GNUCASH

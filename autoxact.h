@@ -88,6 +88,10 @@ public:
   }
 };
 
+extern automated_transactions_t * current_auto_xacts;
+
+bool handle_auto_xacts(entry_t * entry);
+
 } // namespace ledger
 
 #endif // _AUTOXACT_H

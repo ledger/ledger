@@ -444,72 +444,23 @@ inline void set_account_value::operator()(transaction_t& xact) {
 
 //////////////////////////////////////////////////////////////////////
 
-inline void sum_accounts(account_t& account) {
-  for (accounts_map::iterator i = account.accounts.begin();
-       i != account.accounts.end();
-       i++) {
-    sum_accounts(*(*i).second);
-    account_xdata(account).total += account_xdata(*(*i).second).total;
-    account_xdata(account).count += (account_xdata(*(*i).second).count +
-				     account_xdata(*(*i).second).subcount);
-  }
-  account_xdata(account).total += account_xdata(account).value;
-  account_xdata(account).count += account_xdata(account).subcount;
-}
+void sum_accounts(account_t& account);
 
 typedef std::deque<account_t *> accounts_deque;
 
-inline void sort_accounts(account_t&	       account,
-			  const value_expr_t * sort_order,
-			  accounts_deque&      accounts) {
-  for (accounts_map::iterator i = account.accounts.begin();
-       i != account.accounts.end();
-       i++)
-    accounts.push_back((*i).second);
+void sort_accounts(account_t&	        account,
+		   const value_expr_t * sort_order,
+		   accounts_deque&      accounts);
 
-  std::stable_sort(accounts.begin(), accounts.end(),
-		   compare_items<account_t>(sort_order));
-}
+void walk_accounts(account_t&		    account,
+		   item_handler<account_t>& handler,
+		   const value_expr_t *     sort_order = NULL);
 
-inline void walk_accounts(account_t&		   account,
-			  item_handler<account_t>& handler,
-			  const value_expr_t *     sort_order = NULL) {
-  handler(account);
+void walk_accounts(account_t&		    account,
+		   item_handler<account_t>& handler,
+		   const std::string&       sort_string);
 
-  if (sort_order) {
-    accounts_deque accounts;
-    sort_accounts(account, sort_order, accounts);
-    for (accounts_deque::const_iterator i = accounts.begin();
-	 i != accounts.end();
-	 i++)
-      walk_accounts(**i, handler, sort_order);
-  } else {
-    for (accounts_map::const_iterator i = account.accounts.begin();
-	 i != account.accounts.end();
-	 i++)
-      walk_accounts(*(*i).second, handler, NULL);
-  }
-}
-
-inline void walk_accounts(account_t&		   account,
-			  item_handler<account_t>& handler,
-			  const std::string&       sort_string) {
-  if (! sort_string.empty()) {
-    std::auto_ptr<value_expr_t> sort_order(parse_value_expr(sort_string));
-    walk_accounts(account, handler, sort_order.get());
-  } else {
-    walk_accounts(account, handler);
-  }
-}
-
-inline void clear_accounts_xdata() {
-  accounts_xdata.clear();
-
-  for (std::list<void **>::iterator i = accounts_xdata_ptrs.begin();
-       i != accounts_xdata_ptrs.end();
-       i++)
-    **i = NULL;
-}
+void clear_accounts_xdata();
 
 } // namespace ledger
 

@@ -373,10 +373,37 @@ void format_t::format(std::ostream& out, const details_t& details) const
   }
 }
 
-bool format_account::disp_subaccounts_p(const account_t& account,
-					const item_predicate<account_t>&
-					    disp_pred,
-					const account_t *& to_show)
+format_transactions::format_transactions(std::ostream&      _output_stream,
+					 const std::string& format)
+  : output_stream(_output_stream), last_entry(NULL)
+{
+  const char * f = format.c_str();
+  if (const char * p = std::strstr(f, "%/")) {
+    first_line_format.reset(std::string(f, 0, p - f));
+    next_lines_format.reset(std::string(p + 2));
+  } else {
+    first_line_format.reset(format);
+    next_lines_format.reset(format);
+  }
+}
+
+void format_transactions::operator()(transaction_t& xact)
+{
+  if (! transaction_has_xdata(xact) ||
+      ! (transaction_xdata(xact).dflags & TRANSACTION_DISPLAYED)) {
+    if (last_entry != xact.entry) {
+      first_line_format.format(output_stream, details_t(xact));
+      last_entry = xact.entry;
+    } else {
+      next_lines_format.format(output_stream, details_t(xact));
+    }
+    transaction_xdata(xact).dflags |= TRANSACTION_DISPLAYED;
+  }
+}
+
+bool disp_subaccounts_p(const account_t&		 account,
+			const item_predicate<account_t>& disp_pred,
+			const account_t *&		 to_show)
 {
   bool	       display  = false;
   unsigned int counted  = 0;
@@ -410,8 +437,8 @@ bool format_account::disp_subaccounts_p(const account_t& account,
   return display;
 }
 
-bool format_account::display_account(const account_t& account,
-				     const item_predicate<account_t>& disp_pred)
+bool display_account(const account_t&		      account,
+		     const item_predicate<account_t>& disp_pred)
 {
   // Never display an account that has already been displayed.
   if (account_has_xdata(account) &&
@@ -430,6 +457,59 @@ bool format_account::display_account(const account_t& account,
     return true;
 
   return ! account_to_show && disp_pred(account);
+}
+
+void format_account::operator()(account_t& account)
+{
+  if (display_account(account, disp_pred)) {
+    if (! account.parent) {
+      account_xdata(account).dflags |= ACCOUNT_TO_DISPLAY;
+    } else {
+      format.format(output_stream, details_t(account));
+      account_xdata(account).dflags |= ACCOUNT_DISPLAYED;
+    }
+  }
+}
+
+format_equity::format_equity(std::ostream&      _output_stream,
+			     const std::string& _format,
+			     const std::string& display_predicate)
+  : output_stream(_output_stream), disp_pred(display_predicate)
+{
+  const char * f = _format.c_str();
+  if (const char * p = std::strstr(f, "%/")) {
+    first_line_format.reset(std::string(f, 0, p - f));
+    next_lines_format.reset(std::string(p + 2));
+  } else {
+    first_line_format.reset(_format);
+    next_lines_format.reset(_format);
+  }
+
+  entry_t header_entry;
+  header_entry.payee = "Opening Balances";
+  header_entry.date  = std::time(NULL);
+  first_line_format.format(output_stream, details_t(header_entry));
+}
+
+void format_equity::flush()
+{
+  account_xdata_t xdata;
+  xdata.value = total;
+  xdata.value.negate();
+  account_t summary(NULL, "Equity:Opening Balances");
+  summary.data = &xdata;
+  next_lines_format.format(output_stream, details_t(summary));
+  output_stream.flush();
+}
+
+void format_equity::operator()(account_t& account)
+{
+  if (display_account(account, disp_pred)) {
+    next_lines_format.format(output_stream, details_t(account));
+    if (account_has_xdata(account))
+      total += account_xdata(account).value;
+    account_xdata(account).dflags |= ACCOUNT_DISPLAYED;
+  }
 }
 
 } // namespace ledger
@@ -471,6 +551,8 @@ void export_format()
 #if 0
   def("partial_account_name", partial_account_name);
 #endif
+
+  def("display_account", display_account);
 }
 
 #endif // USE_BOOST_PYTHON
