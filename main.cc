@@ -382,8 +382,7 @@ def vmax(d, val):\n\
 
 #if DEBUG_LEVEL >= BETA
 
-  clear_transactions_xdata();
-  clear_accounts_xdata();
+  clear_all_xdata();
 
   if (! config.output_file.empty())
     delete out;

@@ -4,6 +4,8 @@
 #include <fstream>
 #ifdef WIN32
 #include <io.h>
+#else
+#include <unistd.h>
 #endif
 
 namespace ledger {

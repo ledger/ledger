@@ -342,28 +342,27 @@ void interval_transactions::report_subtotal(const std::time_t moment)
 
 void interval_transactions::operator()(transaction_t& xact)
 {
-  if ((interval.begin &&
-       std::difftime(xact.entry->date, interval.begin) < 0) ||
-      (interval.end &&
-       std::difftime(xact.entry->date, interval.end) >= 0))
+  const std::time_t date = xact.entry->date;
+
+  if ((interval.begin && std::difftime(date, interval.begin) < 0) ||
+      (interval.end   && std::difftime(date, interval.end) >= 0))
     return;
 
   if (interval) {
     if (! started) {
       if (! interval.begin)
-	interval.start(xact.entry->date);
+	interval.start(date);
       start   = interval.begin;
       started = true;
     }
 
     std::time_t quant = interval.increment(interval.begin);
-    if (std::difftime(xact.entry->date, quant) >= 0) {
+    if (std::difftime(date, quant) >= 0) {
       if (last_xact)
 	report_subtotal(quant);
 
       std::time_t temp;
-      while (std::difftime(xact.entry->date,
-			   temp = interval.increment(quant)) >= 0) {
+      while (std::difftime(date, temp = interval.increment(quant)) >= 0) {
 	if (quant == temp)
 	  break;
 	quant = temp;
@@ -1077,6 +1076,7 @@ void export_walk()
   def("account_has_xdata", account_has_xdata);
   def("account_xdata", account_xdata, return_internal_reference<1>());
   def("clear_accounts_xdata", clear_accounts_xdata);
+  def("clear_all_xdata", clear_all_xdata);
 
   class_< account_handler_t, item_handler_wrap<account_t> >
     ("AccountHandler")

@@ -620,6 +620,9 @@ std::string amount_t::quantity_string() const
   }
   mpz_set(rquotient, remainder);
 
+  if (mpz_sgn(quotient) == 0 && mpz_sgn(rquotient) == 0)
+    return "0";
+
   if (negative)
     out << "-";
 

@@ -92,12 +92,25 @@
 		       mark desc)))))
       (forward-line))))
 
+(defun ledger-time-less-p (t1 t2)
+  "Say whether time value T1 is less than time value T2."
+  (or (< (car t1) (car t2))
+      (and (= (car t1) (car t2))
+	   (< (nth 1 t1) (nth 1 t2)))))
+
+(defun ledger-time-subtract (t1 t2)
+  "Subtract two time values.
+Return the difference in the format of a time value."
+  (let ((borrow (< (cadr t1) (cadr t2))))
+    (list (- (car t1) (car t2) (if borrow 1 0))
+	  (- (+ (if borrow 65536 0) (cadr t1)) (cadr t2)))))
+
 (defun ledger-find-slot (moment)
   (catch 'found
     (ledger-iterate-entries
      (function
       (lambda (start date mark desc)
-	(if (time-less-p moment date)
+	(if (ledger-time-less-p moment date)
 	    (throw 'found t)))))))
 
 (defun ledger-add-entry (entry-text)
@@ -159,6 +172,8 @@
   (shell-command (format "%s -f %s %s" ledger-binary-path
 			 buffer-file-name command)))
 
+(defvar ledger-mode-abbrev-table)
+
 (define-derived-mode ledger-mode text-mode "Ledger"
   "A mode for editing ledger data files."
   (set (make-local-variable 'comment-start) ";")
@@ -179,7 +194,7 @@
      (function
       (lambda (start date mark desc)
 	(when (and (or all-p (not mark))
-		   (time-less-p after-date date))
+		   (ledger-time-less-p after-date date))
 	  (forward-line)
 	  (setq total 0.0)
 	  (while (looking-at
@@ -202,6 +217,7 @@
     entries))
 
 (defvar ledger-reconcile-text "Reconcile")
+(defvar ledger-reconcile-mode-abbrev-table)
 
 (define-derived-mode ledger-reconcile-mode text-mode 'ledger-reconcile-text
   "A mode for reconciling ledger entries."
@@ -256,8 +272,8 @@
 
 (defun ledger-reconcile (account &optional days)
   (interactive "sAccount to reconcile: \nnBack how far (default 30 days): ")
-  (let* ((then (time-subtract (current-time)
-			      (seconds-to-time (* (or days 30) 24 60 60))))
+  (let* ((then (ledger-time-subtract
+		(current-time) (seconds-to-time (* (or days 30) 24 60 60))))
 	 (items (save-excursion
 		  (goto-char (point-min))
 		  (ledger-parse-entries account t then)))

@@ -682,8 +682,7 @@ void print_entry(std::ostream& out, const entry_t& entry)
 		    formatter);
   formatter.flush();
 
-  clear_transactions_xdata();
-  clear_accounts_xdata();
+  clear_all_xdata();
 }
 
 bool disp_subaccounts_p(const account_t&		 account,

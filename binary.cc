@@ -371,7 +371,7 @@ unsigned int read_binary_journal(std::istream&	    in,
   // Read in the accounts
 
   account_t::ident_t a_count = read_binary_number<account_t::ident_t>(data);
-  accounts = accounts_next = new (account_t *)[a_count];
+  accounts = accounts_next = new account_t *[a_count];
   journal->master = read_binary_account(data, master);
 
   // Allocate the memory needed for the entries and transactions in
@@ -400,7 +400,7 @@ unsigned int read_binary_journal(std::istream&	    in,
   // Read in the commodities
 
   commodity_t::ident_t c_count = read_binary_number<commodity_t::ident_t>(data);
-  commodities = commodities_next = new (commodity_t *)[c_count];
+  commodities = commodities_next = new commodity_t *[c_count];
   for (commodity_t::ident_t i = 0; i < c_count; i++) {
     commodity_t * commodity = read_binary_commodity(data);
     std::pair<commodities_map::iterator, bool> result

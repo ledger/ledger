@@ -568,7 +568,13 @@ void walk_accounts(account_t&		    account,
 void walk_accounts(account_t&		    account,
 		   item_handler<account_t>& handler,
 		   const std::string&       sort_string);
+
 void clear_accounts_xdata();
+
+inline void clear_all_xdata() {
+  clear_transactions_xdata();
+  clear_accounts_xdata();
+}
 
 //////////////////////////////////////////////////////////////////////
 

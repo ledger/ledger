@@ -37,7 +37,7 @@ Mailing List and IRC
 ====================
 
 If you need help on how to use Ledger, or run into problems, you can
-just the Ledger mailing list at the following Web address:
+join the Ledger mailing list at the following Web address:
 
     https://lists.sourceforge.net/lists/listinfo/ledger-discuss
 
@@ -54,4 +54,4 @@ passed to the configure script.  This means you can interact with your
 Ledger data from Python, making it easy to write custom reports.
 
 This feature is mostly undocumented in version 2.0, although main.py
-is offered as a working example.
+is a working example.
