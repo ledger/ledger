@@ -63,16 +63,7 @@ void init_python()
   Py_Initialize();
   python_interpretor = new python_support;
 
-#if 1
-  boost::python::detail::init_module("ledger", &init_module);
-#else
-  object m_obj(python_interpretor->main_module);
-  scope  current_module(m_obj);
-
-  python_interpretor->main_namespace.attr("bar") = 10;
-
-  handle_exception(init_module_main);
-#endif
+  detail::init_module("ledger", &init_module);
 }
 
 } // namespace ledger

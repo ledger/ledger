@@ -250,6 +250,23 @@ class value_t
 };
 
 template <typename T>
+value_t operator+(const T& value, const value_t& obj) {
+  return value_t(value) + obj;
+}
+template <typename T>
+value_t operator-(const T& value, const value_t& obj) {
+  return value_t(value) - obj;
+}
+template <typename T>
+value_t operator*(const T& value, const value_t& obj) {
+  return value_t(value) * obj;
+}
+template <typename T>
+value_t operator/(const T& value, const value_t& obj) {
+  return value_t(value) / obj;
+}
+
+template <typename T>
 value_t::operator T() const
 {
   switch (type) {

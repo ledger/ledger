@@ -642,6 +642,26 @@ void export_value()
     .def(self / other<amount_t>())
     .def(self / int())
 
+    .def(other<balance_pair_t>() + self)
+    .def(other<balance_t>() + self)
+    .def(other<amount_t>() + self)
+    .def(int() + self)
+
+    .def(other<balance_pair_t>() - self)
+    .def(other<balance_t>() - self)
+    .def(other<amount_t>() - self)
+    .def(int() - self)
+
+    .def(other<balance_pair_t>() * self)
+    .def(other<balance_t>() * self)
+    .def(other<amount_t>() * self)
+    .def(int() * self)
+
+    .def(other<balance_pair_t>() / self)
+    .def(other<balance_t>() / self)
+    .def(other<amount_t>() / self)
+    .def(int() / self)
+
     .def(self += self)
     .def(self += other<balance_pair_t>())
     .def(self += other<balance_t>())
