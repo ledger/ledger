@@ -184,28 +184,25 @@ class amount_t
 
   template <typename T>
   void parse_num(T num) {
-    std::string str;
-    { std::ostringstream strstr(str);
-      strstr << num;
-    }
-    { std::istringstream strstr(str);
-      parse(strstr);
-    }
+    std::ostringstream temp;
+    temp << num;
+    std::istringstream in(temp.str());
+    parse(in);
   }
 
   int sign() const;
 
   // POD comparisons
-#define AMOUNT_CMP_INT(OP)					\
-  template <typename T>						\
-  bool operator OP (T num) const {			\
-    if (num == 0) {						\
-      return sign() OP 0;					\
-    } else {							\
-      amount_t amt;						\
-      amt.parse_num(num);					\
-      return *this OP amt;					\
-    }								\
+#define AMOUNT_CMP_INT(OP)			\
+  template <typename T>				\
+  bool operator OP (T num) const {		\
+    if (num == 0) {				\
+      return sign() OP 0;			\
+    } else {					\
+      amount_t amt;				\
+      amt.parse_num(num);			\
+      return *this OP amt;			\
+    }						\
   }
 
   AMOUNT_CMP_INT(<)
