@@ -1120,9 +1120,8 @@ void export_amount()
   class_< commodity_t > ("Commodity")
     .def(init<std::string, optional<unsigned int, unsigned int> >())
 
-    // make this a function which called check_symbol after being set
-    .def_readwrite("symbol", &commodity_t::symbol)
-    .def_readwrite("quote", &commodity_t::quote)
+    .def_readonly("symbol", &commodity_t::symbol)
+    .def("set_symbol", &commodity_t::set_symbol)
     .def_readwrite("name", &commodity_t::name)
     .def_readwrite("note", &commodity_t::name)
     .def_readwrite("precision", &commodity_t::precision)
@@ -1137,7 +1136,6 @@ void export_amount()
     .def("find_commodity", &commodity_t::find_commodity,
 	 return_value_policy<reference_existing_object>())
 
-    .def("check_symbol", &commodity_t::check_symbol)
     .def("add_price", &commodity_t::add_price)
     .def("remove_price", &commodity_t::remove_price)
     .def("set_conversion", &commodity_t::set_conversion)

@@ -9,7 +9,7 @@
 namespace ledger {
 
 static unsigned long  binary_magic_number = 0xFFEED765;
-static unsigned long  format_version      = 0x0002001a;
+static unsigned long  format_version      = 0x0002001b;
 
 static account_t **   accounts;
 static account_t **   accounts_next;
@@ -216,7 +216,8 @@ inline commodity_t * read_binary_commodity(char *& data)
 
   commodity->ident = read_binary_number<commodity_t::ident_t>(data);
 
-  read_binary_string(data, commodity->symbol);
+  read_binary_string(data, *(const_cast<std::string *>(&commodity->symbol)));
+  read_binary_number(data, commodity->quote);
   read_binary_string(data, commodity->name);
   read_binary_string(data, commodity->note);
   read_binary_number(data, commodity->precision);
@@ -472,6 +473,7 @@ void write_binary_commodity(std::ostream& out, commodity_t * commodity)
 
   write_binary_number(out, commodity->ident);
   write_binary_string(out, commodity->symbol);
+  write_binary_number(out, commodity->quote);
   write_binary_string(out, commodity->name);
   write_binary_string(out, commodity->note);
   write_binary_number(out, commodity->precision);

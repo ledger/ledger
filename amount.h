@@ -271,16 +271,16 @@ class commodity_t
 
   typedef unsigned long ident_t;
 
-  std::string	 symbol;
-  bool		 quote;
-  std::string	 name;
-  std::string	 note;
-  unsigned short precision;
-  unsigned short flags;
-  history_map	 history;
-  std::time_t	 last_lookup;
-  amount_t	 conversion;
-  ident_t	 ident;
+  const std::string symbol;
+  bool		    quote;
+  std::string	    name;
+  std::string	    note;
+  unsigned short    precision;
+  unsigned short    flags;
+  history_map	    history;
+  std::time_t	    last_lookup;
+  amount_t	    conversion;
+  ident_t	    ident;
 
   // If set, this global function pointer is called to determine
   // whether prices have been updated in the meanwhile.
@@ -315,9 +315,8 @@ class commodity_t
   commodity_t(const std::string& _symbol    = "",
 	      unsigned int	 _precision = 0,
 	      unsigned int       _flags	    = COMMODITY_STYLE_DEFAULTS)
-    : symbol(_symbol), quote(false), precision(_precision),
-      flags(_flags), last_lookup(0) {
-    check_symbol();
+    : precision(_precision), flags(_flags), last_lookup(0) {
+    set_symbol(_symbol);
   }
 
   operator bool() const {
@@ -330,12 +329,15 @@ class commodity_t
     return this != &comm;
   }
 
-  void check_symbol() {
+  void set_symbol(const std::string& sym) {
+    *(const_cast<std::string *>(&symbol)) = sym;
+    quote = false;
     for (const char * p = symbol.c_str(); *p; p++)
       if (std::isspace(*p) || std::isdigit(*p) || *p == '-' || *p == '.') {
 	quote = true;
 	return;
       }
+
   }
 
   void add_price(const std::time_t date, const amount_t& price);

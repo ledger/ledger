@@ -335,6 +335,16 @@ struct item_handler_wrap : public item_handler<T>
 void (subtotal_transactions::*subtotal_transactions_flush)() =
   &subtotal_transactions::flush;
 
+void py_walk_entries(journal_t& journal, item_handler<transaction_t>& handler)
+{
+  walk_entries(journal.entries, handler);
+}
+
+void py_walk_transactions(entry_t& entry, item_handler<transaction_t>& handler)
+{
+  walk_transactions(entry.transactions, handler);
+}
+
 void export_walk()
 {
   class_< item_handler<transaction_t>,
@@ -431,6 +441,9 @@ void export_walk()
     .def("flush", &item_handler<transaction_t>::flush)
     .def("__call__", &related_transactions::operator());
     ;
+
+  def("walk_entries", py_walk_entries);
+  def("walk_transactions", py_walk_transactions);
 }
 
 #endif // USE_BOOST_PYTHON
