@@ -1,5 +1,5 @@
 \input texinfo    @c -*-texinfo-*-
-@comment $Id: ledger.texi,v 1.1 2003/09/30 00:09:43 johnw Exp $
+@comment $Id: ledger.texi,v 1.2 2003/09/30 11:31:45 johnw Exp $
 @comment %**start of header
 
 @setfilename ledger.info
@@ -179,8 +179,78 @@ transaction:
 
 As you can see, it is very similar to what would be written on paper,
 minus the computed balance totals, and adding in account names that
-work better with @code{ledger}'s scheme of things.
+work better with @code{ledger}'s scheme of things.  In fact, since
+@code{ledger} is smart about many things, you don't need to specify
+the balanced amount, if it is the same as the first line:
+
+@example
+9/29  (100)  Pacific Bell
+    Expenses:Utilities:Telephone               $23.00
+    Assets:Checking
+@end example
+
+For this entry, @code{ledger} will figure out that $-23.00 must come
+from ``Assets:Checking'' in order to balance the entry.
 
 @chapter Using @code{ledger}
+
+@chapter Computing Huqúqu'lláh
+
+As a Bahá'í, I need to compute Huqúqu'lláh on some of my assets.  The
+exact details of this matter are rather complex, so if you have any
+interest, I encourage you to do research on the Web.
+
+For any fellow Bahá'ís out there who want to track Huqúqu'lláh, the
+@code{ledger} tool makes this extraordinarily easy.  Just too easy, in
+fact.  Here's all you have to do: If an expense is exempt from
+Huqúqu'lláh---a ``necessary'' expense---put an exclamation mark befroe
+the account name:
+
+@example
+2002.12.31  Rent
+   !Expenses:Rent                      $450.00
+    Assets:Checking                   $-450.00
+@end example
+
+Even easier than that, simply put a list of regular expressions that
+match the categories you consider exempt in a file called
+@file{.huquq}, and the special marking will be done for you.  Here is
+the file I use:
+
+@example
+^Income:
+^Retirement:
+^Expenses:Rent
+^Expenses:Taxes
+@end example
+
+When you're ready to pay Huqúqu'lláh, just write the check to the
+account ``Huququ'llah'' (no accents, one apostrophe):
+
+@example
+2003.01.20 * (101)  Baha'i Huququ'llah Trust
+    Huququ'llah                      $1,000.00
+    Assets:Checking                 $-1,000.00
+@end example
+
+That's it.  To see how much Huqúq is currently owed based on your
+ledger data, type:
+
+@example
+/home/johnw $ ledger -f ledger.dat balance huquq
+@end example
+
+Not sure if you should pay yet?  Go to your newspaper, or look on the
+Web, and find the current price of gold per ounce.  Then pass this
+figure to the @samp{-G} option.  If it were $357.10, you would use:
+
+@example
+/home/johnw $ ledger -f ledger.dat balance -G 357.10 huquq
+@end example
+
+Now your balance report will be given in mi@underline{th}qáls of gold,
+not dollars.  If the balance on your Huqúqu'lláh account is more than
+-19 mi@underline{th}qáls (remember, it is a liability account, so
+amounts are negative), then get out your checkbook.
 
 @bye

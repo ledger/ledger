@@ -1,5 +1,5 @@
 #ifndef _LEDGER_H
-#define _LEDGER_H "$Revision: 1.5 $"
+#define _LEDGER_H "$Revision: 1.6 $"
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -16,6 +16,8 @@
 #include <map>
 #include <ctime>
 #include <cassert>
+
+#include <pcre.h>               // Perl regular expression library
 
 namespace ledger {
 
@@ -278,6 +280,24 @@ typedef accounts_t::iterator accounts_iterator;
 typedef std::pair<const std::string, account *> accounts_entry;
 
 extern accounts_t accounts;
+
+struct mask
+{
+  bool   exclude;
+  pcre * regexp;
+
+  mask(bool exc, pcre * re) : exclude(exc), regexp(re) {}
+};
+
+extern void record_regexp(char * pattern, std::list<mask>& regexps);
+extern void read_regexps(const char * path, std::list<mask>& regexps);
+extern bool matches(const std::list<mask>& regexps,
+		    const std::string& str);
+
+#ifdef HUQUQULLAH
+extern bool compute_huquq;
+extern std::list<mask> huquq_categories;
+#endif
 
 extern bool use_warnings;
 

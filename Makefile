@@ -9,7 +9,7 @@ endif
 
 OBJS = $(patsubst %.cc,%.o,$(CODE))
 
-CFLAGS = -Wall -ansi -pedantic
+CFLAGS = -Wall -ansi -pedantic -DHUQUQULLAH=1
 DFLAGS = -g
 INCS   = -I/usr/include/xmltok
 LIBS   = -lgmpxx -lgmp -lpcre

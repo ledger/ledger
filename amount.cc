@@ -1,7 +1,6 @@
 #include <sstream>
 
 #include <gmp.h>                // GNU multi-precision library
-#include <pcre.h>               // Perl regular expression library
 
 #include "ledger.h"
 
@@ -192,9 +191,18 @@ amount * gmp_amount::value(amount * pr) const
   if (pr) {
     gmp_amount * p = dynamic_cast<gmp_amount *>(pr);
     assert(p);
+
     gmp_amount * new_amt = new gmp_amount();
+
     multiply(new_amt->quantity, quantity, p->quantity);
-    new_amt->quantity_comm = p->quantity_comm;
+
+    // If the price we are multiplying by has no commodity, use the
+    // commodity of the current amount.
+    if (p->quantity_comm)
+      new_amt->quantity_comm = p->quantity_comm;
+    else
+      new_amt->quantity_comm = quantity_comm;
+
     return new_amt;
   }
   else if (! priced) {
@@ -393,11 +401,11 @@ static void parse_number(mpz_t out, const char * num, commodity * comm)
     std::memset(buf, '0', 255);
     std::strncpy(buf, num, std::strlen(num));
 
-    if (comm->thousands)
+    if (comm && comm->thousands)
       while (char * t = std::strchr(buf, comm->european ? '.' : ','))
 	do { *t = *(t + 1); } while (*(t++ + 1));
 
-    char * t = std::strchr(buf, comm->european ? ',' : '.');
+    char * t = std::strchr(buf, (comm && comm->european) ? ',' : '.');
     if (! t)
       t = buf + std::strlen(num);
 
@@ -468,10 +476,7 @@ static commodity * parse_amount(mpz_t out, const char * num,
 
   commodity * comm = NULL;
 
-  if (! saw_commodity) {
-    std::cerr << "Error: No commodity specified: " << value_str << std::endl;
-    std::exit(1);
-  } else {
+  if (saw_commodity) {
     commodities_iterator item = commodities.find(symbol.c_str());
     if (item == commodities.end()) {
       comm = new commodity(symbol, prefix, separate,
@@ -490,7 +495,6 @@ static commodity * parse_amount(mpz_t out, const char * num,
 #endif
     }
   }
-  assert(comm);
 
   parse_number(out, value_str.c_str(), comm);
 

@@ -2,7 +2,6 @@
 
 #include <fstream>
 #include <unistd.h>
-#include <pcre.h>               // Perl regular expression library
 
 namespace ledger {
 
@@ -11,35 +10,6 @@ static bool show_cleared  = false;
 static bool show_children = false;
 static bool show_empty    = false;
 static bool no_subtotals  = false;
-
-struct mask
-{
-  bool   exclude;
-  pcre * regexp;
-
-  mask(bool exc, pcre * re) : exclude(exc), regexp(re) {}
-};
-
-static inline bool matches(const std::list<mask>& regexps,
-			   const std::string& str)
-{
-  // If the first pattern is an exclude, we assume all patterns match
-  // if they don't match the exclude.  If the first pattern is an
-  // include, then only accounts matching the include will match.
-
-  bool match = (*regexps.begin()).exclude;
-
-  for (std::list<mask>::const_iterator r = regexps.begin();
-       r != regexps.end();
-       r++) {
-    int ovec[3];
-    if (pcre_exec((*r).regexp, NULL, str.c_str(), str.length(),
-		  0, 0, ovec, 3) >= 0)
-      match = ! (*r).exclude;
-  }
-
-  return match;
-}
 
 static void display_total(std::ostream& out, totals& total_balance,
 			  const account * acct,
@@ -70,15 +40,17 @@ static void display_total(std::ostream& out, totals& total_balance,
       if (match) {
 	out << *balance;
 
+	// jww (2003-09-30): Don't check "! acct->parent", but simply
+	// make sure this is the parent which matched the regexp.
+	if (! show_children || ! acct->parent)
+	  total_balance.credit(*balance);
+
 	if (acct->parent) {
 	  for (const account * a = acct; a; a = a->parent)
 	    out << "  ";
 	  out << acct->name << std::endl;
 	} else {
 	  out << "  " << *acct << std::endl;
-
-	  // For top-level accounts, update the total running balance
-	  total_balance.credit(*balance);
 	}
       }
     }
@@ -106,33 +78,6 @@ static void record_price(char * setting,
   }
 }
 
-static void record_regexp(char * pattern, std::list<mask>& regexps)
-{
-  bool exclude = false;
-
-  char * pat = pattern;
-  if (*pat == '-') {
-    exclude = true;
-    pat++;
-    while (std::isspace(*pat))
-      pat++;
-  }
-  else if (*pat == '+') {
-    pat++;
-    while (std::isspace(*pat))
-      pat++;
-  }
-
-  const char *error;
-  int erroffset;
-  pcre * re = pcre_compile(pat, PCRE_CASELESS, &error, &erroffset, NULL);
-  if (! re)
-    std::cerr << "Warning: Failed to compile regexp: " << pattern
-	      << std::endl;
-  else
-    regexps.push_back(mask(exclude, re));
-}
-
 //////////////////////////////////////////////////////////////////////
 //
 // Balance reporting code
@@ -143,9 +88,18 @@ void report_balances(int argc, char **argv, std::ostream& out)
   std::map<const std::string, amount *> prices;
   std::list<mask> regexps;
 
+#ifdef HUQUQULLAH
+  if (compute_huquq) {
+    prices.insert(std::pair<const std::string, amount *>
+		  ("H", create_amount("$0.19")));
+    prices.insert(std::pair<const std::string, amount *>
+		  ("troy", create_amount("8.5410148523 mithqal")));
+  }
+#endif
+
   int c;
   optind = 1;
-  while (-1 != (c = getopt(argc, argv, "cCsSni:p:"))) {
+  while (-1 != (c = getopt(argc, argv, "cCsSni:p:G:"))) {
     switch (char(c)) {
     case 'c': show_current  = true; break;
     case 'C': show_cleared  = true; break;
@@ -155,16 +109,7 @@ void report_balances(int argc, char **argv, std::ostream& out)
 
     // -i path-to-file-of-regexps
     case 'i':
-      if (access(optarg, R_OK) != -1) {
-	std::ifstream include(optarg);
-
-	while (! include.eof()) {
-	  char buf[80];
-	  include.getline(buf, 79);
-	  if (*buf && ! std::isspace(*buf))
-	    record_regexp(buf, regexps);
-	}
-      }
+      read_regexps(optarg, regexps);
       break;
 
     // -p "COMMODITY=PRICE"
@@ -183,6 +128,17 @@ void report_balances(int argc, char **argv, std::ostream& out)
 	record_price(optarg, prices);
       }
       break;
+
+#ifdef HUQUQULLAH
+    case 'G': {
+      double gold = std::atof(optarg);
+      gold = 1 / gold;
+      char buf[256];
+      std::sprintf(buf, "$=%f troy", gold);
+      record_price(buf, prices);
+      break;
+    }
+#endif
     }
   }
 
@@ -205,7 +161,7 @@ void report_balances(int argc, char **argv, std::ostream& out)
       account * acct = (*x)->acct;
 
       for (; acct; acct = no_subtotals ? NULL : acct->parent) {
-	if (! show_children && acct->parent)
+	if (! show_children && acct->parent && regexps.empty())
 	  continue;
 
 	totals * balance = NULL;
@@ -235,15 +191,25 @@ void report_balances(int argc, char **argv, std::ostream& out)
 	if (! do_credit)
 	  continue;
 
-	std::map<const std::string, amount *>::iterator pi
-	  = prices.find((*x)->cost->comm_symbol());
+	amount * cost = (*x)->cost;
 
-	if (pi == prices.end()) {
-	  balance->credit((*x)->cost);
-	} else {
-	  amount * value = (*x)->cost->value((*pi).second);
-	  balance->credit(value);
-	  delete value;
+	bool allocated = false;
+	for (int cycles = 0; cost && cycles < 10; cycles++) {
+	  std::map<const std::string, amount *>::iterator pi
+	    = prices.find(cost->comm_symbol());
+
+	  if (pi == prices.end()) {
+	    balance->credit(cost);
+	    if (allocated)
+	      delete cost;
+	    break;
+	  } else {
+	    amount * temp = cost;
+	    cost = temp->value((*pi).second);
+	    if (allocated)
+	      delete temp;
+	    allocated = true;
+	  }
 	}
       }
     }

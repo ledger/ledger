@@ -1,10 +1,8 @@
+#include "ledger.h"
+
 #include <cstring>
 #include <ctime>
 #include <cctype>
-
-#include "ledger.h"
-
-#include <pcre.h>               // Perl regular expression library
 
 namespace ledger {
 
@@ -42,6 +40,39 @@ static inline void finalize_entry(entry * curr)
   }
 }
 
+static account * find_account(const char * name)
+{
+  char * buf = new char[std::strlen(name) + 1];
+  std::strcpy(buf, name);
+
+  account * current = NULL;
+  for (char * tok = std::strtok(buf, ":");
+       tok;
+       tok = std::strtok(NULL, ":")) {
+    if (! current) {
+      accounts_iterator i = accounts.find(tok);
+      if (i == accounts.end()) {
+	current = new account(tok);
+	accounts.insert(accounts_entry(tok, current));
+      } else {
+	current = (*i).second;
+      }
+    } else {
+      account::iterator i = current->children.find(tok);
+      if (i == current->children.end()) {
+	current = new account(tok, current);
+	current->parent->children.insert(accounts_entry(tok, current));
+      } else {
+	current = (*i).second;
+      }
+    }
+  }
+
+  delete[] buf;
+
+  return current;
+}
+
 //////////////////////////////////////////////////////////////////////
 //
 // Ledger parser
@@ -66,7 +97,7 @@ bool parse_ledger(std::istream& in)
     const char *error;
     int erroffset;
     static const std::string regexp =
-      "^(([0-9]{4})[./])?([0-9]{2})[./]([0-9]{2})\\s+(\\*\\s+)?"
+      "^(([0-9]{4})[./])?([0-9]+)[./]([0-9]+)\\s+(\\*\\s+)?"
       "(\\(([^)]+)\\)\\s+)?(.+)";
     entry_re = pcre_compile(regexp.c_str(), 0, &error, &erroffset, NULL);
   }
@@ -155,13 +186,13 @@ bool parse_ledger(std::istream& in)
       // amount; we must use the opposite of the value of the
       // preceding transaction.
 
-      if (! cost_str || *cost_str == ';') {
-	if (cost_str) {
+      if (! cost_str || ! *cost_str || *cost_str == ';') {
+	if (cost_str && *cost_str) {
 	  while (*cost_str == ';' || std::isspace(*cost_str))
 	    cost_str++;
 	  xact->note = cost_str;
 	}
-	xact->cost = curr->xacts.back()->cost->copy();
+	xact->cost = curr->xacts.front()->cost->copy();
 	xact->cost->negate();
       }
       else {
@@ -181,31 +212,43 @@ bool parse_ledger(std::istream& in)
 	xact->cost = create_amount(cost_str);
       }
 
-      account * current = NULL;
-      for (char * tok = std::strtok(p, ":");
-	   tok;
-	   tok = std::strtok(NULL, ":")) {
-	if (! current) {
-	  accounts_iterator i = accounts.find(tok);
-	  if (i == accounts.end()) {
-	    current = new account(tok);
-	    accounts.insert(accounts_entry(tok, current));
-	  } else {
-	    current = (*i).second;
-	  }
-	} else {
-	  account::iterator i = current->children.find(tok);
-	  if (i == current->children.end()) {
-	    current = new account(tok, current);
-	    current->parent->children.insert(accounts_entry(tok, current));
-	  } else {
-	    current = (*i).second;
-	  }
+#ifdef HUQUQULLAH
+      bool exempt = false;
+      if (compute_huquq) {
+	if (*p == '!') {
+	  exempt = true;
+	  p++;
+	}
+	else if (matches(huquq_categories, p)) {
+	  exempt = true;
 	}
       }
-      xact->acct = current;
+#endif
 
+      xact->acct = find_account(p);
       curr->xacts.push_back(xact);
+
+#ifdef HUQUQULLAH
+      if (exempt) {
+	static amount * huquq = create_amount("H 1.00");
+	amount * temp;
+
+	transaction * t = new transaction();
+	t->acct = find_account("Huququ'llah");
+	temp = xact->cost->value();
+	t->cost = temp->value(huquq);
+	delete temp;
+	curr->xacts.push_back(t);
+
+	t = new transaction();
+	t->acct = find_account("Expenses:Huququ'llah");
+	temp = xact->cost->value();
+	t->cost = temp->value(huquq);
+	delete temp;
+	t->cost->negate();
+	curr->xacts.push_back(t);
+      }
+#endif
     }
     else if (line[0] == 'Y') {
       current_year = std::atoi(line + 2);
