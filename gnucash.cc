@@ -1,13 +1,11 @@
 #include <sstream>
-#include <vector>
 #include <cstring>
-#include <cassert>
+
+#include "ledger.h"
 
 extern "C" {
 #include <xmlparse.h>           // expat XML parser
 }
-
-#include "ledger.h"
 
 namespace ledger {
 
@@ -19,8 +17,6 @@ static commodity * curr_comm;
 static amount *    curr_value;
 static std::string curr_quant;
 static XML_Parser  current_parser;
-
-static std::vector<entry *> * current_ledger;
 
 enum {
   NO_ACTION,
@@ -116,7 +112,7 @@ static void endElement(void *userData, const char *name)
 		<< XML_GetCurrentLineNumber(current_parser) << std::endl;
       curr_entry->print(std::cerr);
     } else {
-      current_ledger->push_back(curr_entry);
+      ledger.push_back(curr_entry);
     }
     curr_entry = NULL;
   }
@@ -192,11 +188,18 @@ static void dataHandler(void *userData, const char *s, int len)
 
   case XACT_ACCOUNT: {
     accounts_iterator i = accounts.find(std::string(s, len));
-    assert(i != accounts.end());
-    curr_entry->xacts.back()->acct = (*i).second;
+    if (i == accounts.end()) {
+      std::cerr << "Could not find account " << std::string(s, len)
+		<< " at line " << XML_GetCurrentLineNumber(current_parser)
+		<< std::endl;
+      std::exit(1);
+    }
+
+    transaction * xact = curr_entry->xacts.back();
+    xact->acct = (*i).second;
 
     std::string value = curr_quant + " " + (*i).second->comm->symbol;
-    curr_entry->xacts.back()->cost = create_amount(value.c_str(), curr_value);
+    xact->cost = create_amount(value.c_str(), curr_value);
     break;
   }
 
@@ -215,18 +218,9 @@ static void dataHandler(void *userData, const char *s, int len)
   }
 }
 
-bool parse_gnucash(std::istream& in, std::vector<entry *>& ledger)
+bool parse_gnucash(std::istream& in)
 {
   char buf[BUFSIZ];
-
-  XML_Parser parser = XML_ParserCreate(NULL);
-  current_parser = parser;
-
-  //XML_SetUserData(parser, &depth);
-  XML_SetElementHandler(parser, startElement, endElement);
-  XML_SetCharacterDataHandler(parser, dataHandler);
-
-  current_ledger = &ledger;
 
   curr_account = NULL;
   curr_entry   = NULL;
@@ -234,8 +228,15 @@ bool parse_gnucash(std::istream& in, std::vector<entry *>& ledger)
 
   action = NO_ACTION;
 
+  XML_Parser parser = XML_ParserCreate(NULL);
+  current_parser = parser;
+
+  XML_SetElementHandler(parser, startElement, endElement);
+  XML_SetCharacterDataHandler(parser, dataHandler);
+
   while (! in.eof()) {
     in.getline(buf, BUFSIZ - 1);
+
     if (! XML_Parse(parser, buf, std::strlen(buf), in.eof())) {
       std::cerr << XML_ErrorString(XML_GetErrorCode(parser))
 		<< " at line " << XML_GetCurrentLineNumber(parser)

@@ -1,13 +1,11 @@
-#include <vector>
-
 #include "ledger.h"
 
 namespace ledger {
 
 commodities_t commodities;
 commodity *   commodity_usd;
-
-accounts_t accounts;
+accounts_t    accounts;
+ledger_t      ledger;
 
 void entry::print(std::ostream& out) const
 {
@@ -105,10 +103,10 @@ amount * totals::value(const std::string& commodity)
   return total;
 }
 
-// Print out the entire ledger that was read in, but now sorted.
+// Print out the entire ledger that was read in, sorted by date.
 // This can be used to "wash" ugly ledger files.
 
-void print_ledger(std::ostream& out, std::vector<entry *>& ledger)
+void print_ledger(int argc, char *argv[], std::ostream& out)
 {
   // Sort the list of entries by date, then print them in order.
 

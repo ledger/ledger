@@ -1,5 +1,4 @@
 #include <sstream>
-#include <cassert>
 
 #include <gmp.h>                // GNU multi-precision library
 #include <pcre.h>               // Perl regular expression library
@@ -337,9 +336,6 @@ amount& gmp_amount::operator=(const char * num)
       commodities_iterator item = commodities.find(symbol.c_str());
       if (item == commodities.end()) {
 	quantity_comm = new commodity(symbol, prefix, separate, precision);
-	std::pair<commodities_iterator, bool> insert_result =
-	  commodities.insert(commodities_entry(symbol, quantity_comm));
-	assert(insert_result.second);
       } else {
 	quantity_comm = (*item).second;
 
@@ -396,9 +392,6 @@ amount& gmp_amount::operator=(const char * num)
 	commodities_iterator item = commodities.find(symbol.c_str());
 	if (item == commodities.end()) {
 	  price_comm = new commodity(symbol, prefix, separate, precision);
-	  std::pair<commodities_iterator, bool> insert_result =
-	    commodities.insert(commodities_entry(symbol, price_comm));
-	  assert(insert_result.second);
 	} else {
 	  price_comm = (*item).second;
 

@@ -1,0 +1,186 @@
+\input texinfo    @c -*-texinfo-*-
+@comment $Id: ledger.texi,v 1.1 2003/09/30 00:09:43 johnw Exp $
+@comment %**start of header
+
+@setfilename ledger.info
+
+@settitle Ledger Accouting Tool
+@syncodeindex pg cp
+@comment %**end of header
+
+@dircategory Ledger Accouting Tool
+@direntry
+* ledger:    (ledger)The Ledger Accouting Tool.
+@end direntry
+
+@titlepage
+@title Ledger Accouting Tool
+@author John Wiegley <@email{johnw@@newartisans.com}>
+@page
+@vskip 0pt plus 1filll
+@c @insertcopying
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top Ledger Accouting Tool
+
+@c @insertcopying
+@end ifnottex
+
+@chapter Introduction
+
+@code{ledger} is an accouting tool that has the chutzpah to exist.  It
+provides not one bell or whistle for the money, and returns the user
+back to the days before user interfaces were even a twinkle on their
+father's CRT.
+
+What it does do is provide a double-entry accouting ledger with all of
+the flexibility and muscle of its modern day cousins---without any of
+the fat.  Think of it as the bran muffin of accouting tools.
+
+To begin with, you need to start keeping a ledger.  This is the basis
+of all accouting, and if you don't know how to do it, now is the time
+to learn.  The little booklet that comes with your checkbook is a
+ledger, so we'll describe double-entry accouting in terms of that.
+
+A checkbook ledger records debits (subtractions, or withdrawals) and
+credits (additions, or deposits) with reference to a single account:
+your checking account.  Where the money comes from, and where it goes
+to, are simply described in the memo field where you write the person
+or the company's name.  The ultimate aim of keeping a checkbook ledger
+is so you know how much money is available to spend at all times.
+That is really the aim of all ledgers.
+
+What computers add is the ability to walk through all of those
+transactions and tell you things about your spending habits; let you
+devise budgets to get control over your spending; squirrel away money
+into virtual savings account without having to physically move the
+money around; etc.  As you keep your checkbook ledger, you are
+recording a lot of information about your life and your habits, and
+sometimes that information can tell you things you aren't even aware
+of.  That is the aim of all good accouting tools.
+
+The next step up from a checkbook ledger is a ledger that covers all
+of your accounts, not just your checking account.  In this ledger, you
+write not only who the money goes to---in the case of a debit---but
+where the money is coming from.  In the checkbook ledger, its assumed
+that all of the money is coming from your checking account.  But in a
+general ledger, you have to write two-lines: The source and target.
+There must always be a debit from some account for any credit made to
+anyone else.  This is what is meant by ``double-entry'' accouting.
+
+For example, let's say you have a checking account and a brokerage
+account, and that you can write checks from both of them.  Rather than
+keeping two checkbooks, you decide to use one ledger for both.  Once
+you get the hang of this, you'll be ready to use one ledger for all of
+your accouting needs, which gets you to the point of this
+introduction.
+
+So in your general ledger, you need to pay Pacific Bell Telephone for
+your monthly phone bill.  The cost is $23.00.  In a checkbook ledger,
+you would write out a line that credits your account with Pacific Bell
+by $23 as follows:
+
+@example
+9/29  100  Pacific Bell                        $23.00     $77.00
+@end example
+
+Very simple: You've written check #100 for $23 to Pacific Bell, which
+leaves your balance in checking at $77.
+
+But in a general ledger, you need to say where the money is coming
+from.  A general ledger entry would look like this:
+
+@example
+9/29  100  Pacific Bell                        $23.00    $223.00
+	   Checking                           $-23.00     $77.00
+@end example
+
+What does all of this mean?  The first line shows a credit (or
+payment) to Pacific Bell to the tune of $23.00.  Then, because there
+is no one ``balance'' in a general ledger, we've written in the total
+balance of your payments to the account ``Pacific Bell''.  This was
+done by looking at the last entry for ``Pacific Bell'' in the general
+ledger, adding $23.00 to that amount, and writing in the total in the
+balance column.
+
+Secondly, the money is coming from your ``Checking'' account, which
+means a debit (or withdrawal) of $23.00, which will leave the ending
+balance in your ``Checking'' account at $77.00.
+
+The transaction itself must balance to $0: $23 goes to Pacific Bell,
+$23 comes from Checking: there is nothing left over to be accounted
+for.  The money has in fact moved from one account to another.  This
+is basis of double-entry accounting: That money never pops out of
+existence, it is always described as a transaction between
+accounts---as a flow from one place to another.
+
+Keeping a general ledger is the same as keeping two separate ledgers:
+One for Pacific Bell and one for Checking.  In that case, each time
+you write a credit into one, you write a corresponding debit into the
+other.  This makes it much easier to write in the running balance,
+since you don't have to go looking back for the last time an account
+was referenced, but it also means having a lot of ledger books if you
+deal with multiple accounts.
+
+Enter the beauty of a computerized accouting tool.  The purpose of
+@code{ledger} is to make general ledger accouting simple by keeping
+track of the balances for you.  Your only job is to enter credit/debit
+pairs and make sure they balance.  If a transaction does not balance,
+@code{ledger} will display an error and ignore the
+transaction.@footnote{In some special cases, it will automatically
+balance the entry for you.}
+
+Your usage of @code{ledger} will have two parts: Keeping the ledger,
+and using the @code{ledger} tool to provide you with information
+summaries derived from your ledger's entries.
+
+@chapter Keeping a ledger
+
+The most important part of accounting is keeping a good ledger.  If
+you have a good ledger, tools can be written to work whatever
+mathematically tricks you need to better understand your spending
+patterns.  Without a good ledger, no tool, however smart, can help
+you.
+
+The @code{ledger} program aims at making ledger entry as simple as
+possible.  Since it is a command-line tool, it does not provide a user
+interface for keeping a ledger.  If you like, you may use
+@code{gnucash} to maintain your ledger, in which case the
+@code{ledger} program will read @code{gnucash}'s data files directly.
+In that case, read the @code{gnucash} manual now, and skip to the next
+chapter.
+
+If you are not using @code{gnucash}, but a text editor to maintain
+your ledger, read on.  @code{ledger} has been designed to make data
+entry as simple as possible, by keeping the ledger format easy, and
+also by automagically determining as much information as possible
+based on the nature of your entries.
+
+For example, you do not need to tell @code{ledger} about the accounts
+you use.  Any time @code{ledger} sees a debit or a credit to an
+account it knows nothing about, it will create it.  If you use a
+commodity that is new to @code{ledger}, it will create that commodity,
+and determine its display characteristics (placement of the symbol
+before or after the amount, display precision, etc) based on how you
+used the commodity in the transaction.
+
+Here is the Pacific Bell example from above, given as a @code{ledger}
+transaction:
+
+@example
+9/29  (100)  Pacific Bell
+    Expenses:Utilities:Telephone               $23.00
+    Assets:Checking                           $-23.00
+@end example
+
+As you can see, it is very similar to what would be written on paper,
+minus the computed balance totals, and adding in account names that
+work better with @code{ledger}'s scheme of things.
+
+@chapter Using @code{ledger}
+
+@bye

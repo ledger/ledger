@@ -1,13 +1,10 @@
-#include <iostream>
-#include <vector>
 #include <cstring>
 #include <ctime>
 #include <cctype>
-#include <cassert>
-
-#include <pcre.h>               // Perl regular expression library
 
 #include "ledger.h"
+
+#include <pcre.h>               // Perl regular expression library
 
 namespace ledger {
 
@@ -37,8 +34,7 @@ char * next_element(char * buf, bool variable = false)
 
 static int linenum = 0;
 
-void finalize_entry(entry * curr, std::vector<entry *>& ledger)
-{
+inline void finalize_entry(entry * curr) {
   if (curr) {
     if (! curr->validate()) {
       std::cerr << "Failed to balance the following transaction, "
@@ -50,7 +46,7 @@ void finalize_entry(entry * curr, std::vector<entry *>& ledger)
   }
 }
 
-bool parse_ledger(std::istream& in, std::vector<entry *>& ledger)
+bool parse_ledger(std::istream& in)
 {
   static std::time_t now = std::time(NULL);
   static struct std::tm * now_tm = std::localtime(&now);
@@ -94,7 +90,7 @@ bool parse_ledger(std::istream& in, std::vector<entry *>& ledger)
       }
 
       if (curr)
-	finalize_entry(curr, ledger);
+	finalize_entry(curr);
       curr = new entry;
 
       // Parse the date
@@ -165,11 +161,6 @@ bool parse_ledger(std::istream& in, std::vector<entry *>& ledger)
 	    current = (*i).second;
 	  }
 	}
-
-	// Apply transaction to account (and all parent accounts)
-
-	assert(current);
-	current->credit(curr, xact->cost);
       }
       xact->acct = current;
 
@@ -181,7 +172,7 @@ bool parse_ledger(std::istream& in, std::vector<entry *>& ledger)
   }
 
   if (curr)
-    finalize_entry(curr, ledger);
+    finalize_entry(curr);
 
   return true;
 }

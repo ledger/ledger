@@ -1,5 +1,5 @@
 #ifndef _LEDGER_H
-#define _LEDGER_H "$Revision: 1.2 $"
+#define _LEDGER_H "$Revision: 1.3 $"
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -11,9 +11,11 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 #include <list>
 #include <map>
 #include <ctime>
+#include <cassert>
 
 namespace ledger {
 
@@ -47,7 +49,7 @@ namespace ledger {
 // commodity is converted into the first by computing which the price
 // must have been in order to balance the transaction.  Example:
 //
-//   2004.06.18 c (BUY) Apple Computer
+//   2004.06.18 * (BUY)  Apple Computer
 //     Assets:Brokerage     $-200.00
 //     Assets:Brokerage     100 AAPL
 //
@@ -64,7 +66,7 @@ namespace ledger {
 // stock, and it will read this transaction as if it had been
 // written:
 //
-//   2004.06.18 c (BUY) Apple Computer
+//   2004.06.18 * (BUY)  Apple Computer
 //     Assets:Brokerage     $-200
 //     Assets:Brokerage     100 AAPL @ $2
 //
@@ -72,7 +74,7 @@ namespace ledger {
 // exchange for services rendered, use the regular single-commodity
 // form of transaction:
 //
-//   2004.07.11 c A kick-back for the broker
+//   2004.07.11 *  A kick-back for the broker
 //     Assets:Brokerage        -10 AAPL
 //     Expenses:Broker's Fees   10 AAPL
 //
@@ -92,8 +94,7 @@ struct commodity
   int precision;
 
   commodity() : prefix(false), separate(true) {}
-  commodity(const std::string& sym, bool pre, bool sep, int prec)
-    : symbol(sym), prefix(pre), separate(sep), precision(prec) {}
+  commodity(const std::string& sym, bool pre, bool sep, int prec);
 };
 
 typedef std::map<const std::string, commodity *> commodities_t;
@@ -102,6 +103,15 @@ typedef std::pair<const std::string, commodity *> commodities_entry;
 
 extern commodities_t commodities;
 extern commodity *   commodity_usd;
+
+inline commodity::commodity(const std::string& sym,
+			    bool pre, bool sep, int prec)
+  : symbol(sym), prefix(pre), separate(sep), precision(prec) {
+  std::pair<commodities_iterator, bool> result =
+    commodities.insert(commodities_entry(sym, this));
+  assert(result.second);
+}
+
 
 class amount
 {
@@ -181,6 +191,12 @@ struct cmp_entry_date {
   }
 };
 
+typedef std::vector<entry *> ledger_t;
+typedef ledger_t::iterator ledger_iterator;
+
+extern ledger_t ledger;
+
+
 class totals
 {
   typedef std::map<const std::string, amount *> map_t;
@@ -217,6 +233,7 @@ operator<<(std::basic_ostream<char, Traits>& out, const totals& t) {
   return out;
 }
 
+
 struct account
 {
   std::string name;
@@ -231,25 +248,8 @@ struct account
 
   map children;
 
-  // Balance totals, by commodity
-  totals future;
-  totals current;
-  totals cleared;
-
   account(const std::string& _name, struct account * _parent = NULL)
     : name(_name), parent(_parent) {}
-
-  void credit(const entry * ent, const amount * amt) {
-    for (account * acct = this; acct; acct = acct->parent) {
-      acct->future.credit(amt);
-
-      if (difftime(ent->date, std::time(NULL)) < 0)
-	acct->current.credit(amt);
-
-      if (ent->cleared)
-	acct->cleared.credit(amt);
-    }
-  }
 
   operator std::string() const {
     if (! parent)
