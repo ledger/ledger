@@ -9,16 +9,7 @@
 namespace ledger {
 
 const unsigned long	   binary_magic_number = 0xFFEED765;
-static const unsigned long format_version      = 0x00020013;
-
-bool binary_parser_t::test(std::istream& in) const
-{
-  unsigned long magic;
-  in.read((char *)&magic, sizeof(magic));
-  in.seekg(0);
-
-  return magic == binary_magic_number;
-}
+static const unsigned long format_version      = 0x00020014;
 
 static std::deque<account_t *>   accounts;
 static unsigned int              account_index;
@@ -75,33 +66,6 @@ inline void read_binary_string(std::istream& in, std::string& str)
   read_binary_guard(in, 0x3002);
 }
 
-inline void init_binary_string(std::istream& in, std::string * str)
-{
-  read_binary_guard(in, 0x3001);
-
-  unsigned char len;
-  read_binary_number(in, len);
-  if (len == 0xff) {
-    unsigned short slen;
-    read_binary_number(in, slen);
-    char * buf = new char[slen + 1];
-    in.read(buf, slen);
-    buf[slen] = '\0';
-    new(str) std::string(buf);
-    delete[] buf;
-  }
-  else if (len) {
-    char buf[256];
-    in.read(buf, len);
-    buf[len] = '\0';
-    new(str) std::string(buf);
-  } else {
-    new(str) std::string("");
-  }
-
-  read_binary_guard(in, 0x3002);
-}
-
 inline std::string read_binary_string(std::istream& in)
 {
   std::string temp;
@@ -121,7 +85,38 @@ inline void read_binary_amount(std::istream& in, amount_t& amt)
   amt.read_quantity(in);
 }
 
-inline void read_binary_transaction(std::istream& in, transaction_t * xact)
+inline void init_binary_string(char *& string_pool, std::string * str)
+{
+#if DEBUG_LEVEL >= ALPHA
+  unsigned short guard;
+  guard = *((unsigned short *) string_pool);
+  string_pool += sizeof(unsigned short);
+  assert(guard == 0x3001);
+#endif
+
+  unsigned char len = *string_pool++;
+  if (len == 0xff) {
+    unsigned short slen = *((unsigned short *) string_pool);
+    new(str) std::string(string_pool + sizeof(unsigned short), slen);
+    string_pool += sizeof(unsigned short) + slen;
+  }
+  else if (len) {
+    new(str) std::string(string_pool, len);
+    string_pool += len;
+  }
+  else {
+    new(str) std::string("");
+  }
+
+#if DEBUG_LEVEL >= ALPHA
+  guard = *((unsigned short *) string_pool);
+  string_pool += sizeof(unsigned short);
+  assert(guard == 0x3002);
+#endif
+}
+
+inline void read_binary_transaction(std::istream& in, transaction_t * xact,
+				    char *& string_pool)
 {
   xact->account = accounts[read_binary_number<account_t::ident_t>(in) - 1];
   xact->account->add_transaction(xact);
@@ -136,25 +131,25 @@ inline void read_binary_transaction(std::istream& in, transaction_t * xact)
     xact->cost = NULL;
   }
   read_binary_number(in, xact->flags);
-  init_binary_string(in, &xact->note);
+  init_binary_string(string_pool, &xact->note);
 
   xact->data = NULL;
 }
 
 inline void read_binary_entry(std::istream& in, entry_t * entry,
-			      transaction_t *& xact_pool, journal_t * journal)
+			      transaction_t *& xact_pool, char *& string_pool)
 {
   read_binary_number(in, entry->date);
   read_binary_number(in, entry->state);
-  init_binary_string(in, &entry->code);
-  init_binary_string(in, &entry->payee);
+  init_binary_string(string_pool, &entry->code);
+  init_binary_string(string_pool, &entry->payee);
 
   new(&entry->transactions) transactions_list;
 
   for (unsigned long i = 0, count = read_binary_number<unsigned long>(in);
        i < count;
        i++) {
-    read_binary_transaction(in, xact_pool);
+    read_binary_transaction(in, xact_pool, string_pool);
     xact_pool->entry = entry;
     entry->transactions.push_back(xact_pool++);
   }
@@ -239,10 +234,6 @@ unsigned int read_binary_journal(std::istream&	    in,
   account_index   =
   commodity_index = 0;
 
-  if (read_binary_number<unsigned long>(in) != binary_magic_number ||
-      read_binary_number<unsigned long>(in) != format_version)
-    return 0;
-
   if (! file.empty()) {
     for (unsigned short i = 0,
 	   count = read_binary_number<unsigned short>(in);
@@ -276,12 +267,19 @@ unsigned int read_binary_journal(std::istream&	    in,
     assert(result.second || master);
   }
 
-  unsigned long   count      = read_binary_number<unsigned long>(in);
-  unsigned long   xact_count = read_binary_number<unsigned long>(in);
+  unsigned long string_size = read_binary_number<unsigned long>(in);
+
+  char * string_pool = new char[string_size];
+  char * string_next = string_pool;
+
+  in.read(string_pool, string_size);
 
   // Memory needed for the entries and transactions is allocated in
   // one large block, which is then chopped up and custom constructed
   // as necessary.  This reduces binary load time by 20%!
+
+  unsigned long count       = read_binary_number<unsigned long>(in);
+  unsigned long xact_count  = read_binary_number<unsigned long>(in);
 
   std::size_t pool_size = (sizeof(entry_t) * count +
 			   sizeof(transaction_t) * xact_count);
@@ -292,9 +290,11 @@ unsigned int read_binary_journal(std::istream&	    in,
 						  sizeof(entry_t) * count);
 
   for (unsigned long i = 0; i < count; i++) {
-    read_binary_entry(in, entry_pool, xact_pool, journal);
+    read_binary_entry(in, entry_pool, xact_pool, string_next);
     journal->entries.push_back(entry_pool++);
   }
+
+  assert(string_next == string_pool + string_size);
 
   journal->item_pool	 = item_pool;
   journal->item_pool_end = item_pool + pool_size;
@@ -303,7 +303,19 @@ unsigned int read_binary_journal(std::istream&	    in,
   commodities.clear();
   bigints.clear();
 
+  delete[] string_pool;
+
   return count;
+}
+
+bool binary_parser_t::test(std::istream& in) const
+{
+  if (read_binary_number<unsigned long>(in) == binary_magic_number &&
+      read_binary_number<unsigned long>(in) == format_version)
+    return true;
+
+  in.seekg(0);
+  return false;
 }
 
 unsigned int binary_parser_t::parse(std::istream&	in,
@@ -369,15 +381,12 @@ void write_binary_transaction(std::ostream& out, transaction_t * xact)
     write_binary_number<char>(out, 0);
   }
   write_binary_number(out, xact->flags);
-  write_binary_string(out, xact->note);
 }
 
 void write_binary_entry(std::ostream& out, entry_t * entry)
 {
   write_binary_number(out, entry->date);
   write_binary_number(out, entry->state);
-  write_binary_string(out, entry->code);
-  write_binary_string(out, entry->payee);
 
   write_binary_number<unsigned long>(out, entry->transactions.size());
   for (transactions_list::const_iterator i = entry->transactions.begin();
@@ -460,10 +469,40 @@ void write_binary_journal(std::ostream& out, journal_t * journal,
       write_binary_commodity(out, (*i).second);
 
   unsigned long xact_count = 0;
+  unsigned long string_size = 0;
+
   for (entries_list::const_iterator i = journal->entries.begin();
        i != journal->entries.end();
-       i++)
-    xact_count += (*i)->transactions.size();
+       i++) {
+    string_size += 2 + (*i)->code.length() + (*i)->payee.length();
+#if DEBUG_LEVEL >= ALPHA
+    string_size += 4 * sizeof(unsigned short);
+#endif
+    xact_count  += (*i)->transactions.size();
+
+    for (transactions_list::const_iterator j = (*i)->transactions.begin();
+	 j != (*i)->transactions.end();
+	 j++) {
+      string_size += 1 + (*j)->note.length();
+#if DEBUG_LEVEL >= ALPHA
+      string_size += 2 * sizeof(unsigned short);
+#endif
+    }
+  }
+
+  write_binary_number<unsigned long>(out, string_size);
+
+  for (entries_list::const_iterator i = journal->entries.begin();
+       i != journal->entries.end();
+       i++) {
+    write_binary_string(out, (*i)->code);
+    write_binary_string(out, (*i)->payee);
+
+    for (transactions_list::const_iterator j = (*i)->transactions.begin();
+	 j != (*i)->transactions.end();
+	 j++)
+      write_binary_string(out, (*j)->note);
+  }
 
   write_binary_number<unsigned long>(out, journal->entries.size());
   write_binary_number<unsigned long>(out, xact_count);
