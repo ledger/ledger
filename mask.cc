@@ -1,6 +1,8 @@
 #include "mask.h"
 #include "debug.h"
 
+#include <cstdlib>
+
 #include <pcre.h>
 
 mask_t::mask_t(const std::string& pat) : exclude(false)
