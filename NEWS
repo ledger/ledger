@@ -3,8 +3,8 @@
 
 * 2.0
 
-- The code base has been rewritten for clarity and consistency.  The
-  code is now simpler, more robust, and a fair bit faster.
+- The code base was rewritten for clarity and consistency.  It is now
+  simpler, more robust, and faster.
 
 - The most significant feature addition in this version is the use of
   "value expressions".  These are now used in many places to indicate
@@ -22,8 +22,32 @@
   "-f" flag was seen (i.e., if the LEDGER environment variable is
   used).
 
+- New "-o FILE" option will output data to the given FILE.  If FILE is
+  "-", the output is the same as the default (stdout).
+
+- New -j and -J options replace the old -G (gnuplot) option.  -j
+  reports the values column in a way gnuplot can consume, and -J
+  reports the totals column.  An example can be found in
+  scripts/report.
+
 - New "-y DATEFMT" options will change the date format used throughout
   ledger.  The default is "%Y/%m/%d".
+
+- New -Y and -W options prints yearly and weekly subtotals, just as
+  the -M option printed monthly subtotals in the previous version.
+
+- New "-z INTERVAL" allows for more flexible interval reporting.  The
+  sublanguage used will probably mature over time, but for now it
+  supports expression like:
+
+    monthly
+    every week
+    every 3 quarters
+    weekly from 12/20
+
+  Note that when using the "from" date, this does not constrain the
+  report.  It is only used for aligning report dates, for example if
+  you wish weekly reporting to start on Sundays.
 
 - Regexps specified after the command name now apply to account names
   only.  To search on a payee, use "--" to separate the two kinds of

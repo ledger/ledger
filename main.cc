@@ -15,6 +15,8 @@ static const std::string bal_fmt = "%20T  %2_%-n\n";
 static const std::string reg_fmt
   = "%D %-.20P %-.22N %12.66t %12.80T\n\
 %/                                %-.22N %12.66t %12.80T\n";
+static const std::string plot_value_fmt = "%D %t\n";
+static const std::string plot_total_fmt = "%D %T\n";
 static const std::string print_fmt
   = "\n%D %X%C%P\n    %-34N  %12o\n%/    %-34N  %12o\n";
 static const std::string equity_fmt
@@ -219,7 +221,7 @@ int main(int argc, char * argv[])
   int c, index;
   while (-1 !=
 	 (c = getopt(argc, argv,
-	     "+ABb:Ccd:DEe:F:f:Ghi:L:l:MnOo:P:p:QRrS:sT:t:UVvWXYy:Zz:"))) {
+	     "+ABb:Ccd:DEe:F:f:Ghi:JjL:l:MnOo:P:p:QRrS:sT:t:UVvWXYy:Zz:"))) {
     switch (char(c)) {
     // Basic options
     case 'h':
@@ -433,6 +435,16 @@ int main(int argc, char * argv[])
     case 'Z':
       value_expr = "a";
       total_expr = "MD(MT/(1+(((t-d)/(30*86400))<0?0:((t-d)/(30*86400)))))";
+      break;
+
+    case 'j':
+      value_expr    = "S" + value_expr;
+      format_string = plot_value_fmt;
+      break;
+
+    case 'J':
+      total_expr    = "S" + total_expr;
+      format_string = plot_total_fmt;
       break;
 
     default:

@@ -1,17 +1,15 @@
-#!/bin/sh
-
-args=("$@")
-last=${args[`expr ${#args} - 3`]}
+#!/bin/bash
 
 cd /tmp
-ledger "$@" | stripreg > $last
+ledger -j reg "$@" > report
 
 gnuplot <<EOF
 set terminal png
 set output "report.png"
 set xdata time
 set timefmt "%Y/%m/%d"
-plot "$1" using 1:2 with linespoints
+plot "report" using 1:2 with linespoints
 EOF
 
+rm -f report
 open report.png
