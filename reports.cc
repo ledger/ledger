@@ -9,7 +9,6 @@ namespace ledger {
 
 static bool cleared_only   = false;
 static bool uncleared_only = false;
-static bool cost_basis     = false;
 static bool show_virtual   = true;
 static bool show_children  = false;
 static bool show_sorted    = false;
@@ -19,7 +18,10 @@ static bool full_names     = false;
 static bool print_monthly  = false;
 static bool gnuplot_safe   = false;
 
-static bool get_quotes = false;
+static bool cost_basis  = false;
+static bool use_history = false;
+static bool read_prices = false;
+static bool get_quotes  = false;
        long pricing_leeway = 24 * 3600;
        std::string price_db;
 
@@ -69,6 +71,58 @@ static bool matches_date_range(entry * ent)
   }
 
   return true;
+}
+
+static amount * resolve_amount(amount *      amt,
+			       std::time_t * when           = NULL,
+			       totals *      balance        = NULL,
+			       bool          add_base_value = false,
+			       bool          free_memory    = false)
+{
+  amount * value;
+  bool     alloced = true;
+  
+  if (! use_history) {
+    value   = amt;
+    alloced = false;
+  }
+  else if (cost_basis) {
+    value = amt->value();
+  }
+  else {
+    value = amt->street(when ? when : (have_ending ? &end_date : NULL),
+			use_history, get_quotes);
+  }
+
+  if (balance) {
+    if (add_base_value)
+      balance->credit(cost_basis ? value : amt);
+    else
+      balance->credit(value);
+  }
+
+  if (free_memory && alloced) {
+    delete value;
+    value = NULL;
+  }
+  else if (! free_memory && ! alloced) {
+    value = value->copy();
+  }
+
+  return value;
+}
+
+static inline void print_resolved_balance(std::ostream& out,
+					  std::time_t * when,
+					  totals& balance,
+					  bool added_base_value = false)
+{
+  if (! added_base_value || ! use_history || cost_basis)
+    balance.print(out, 12);
+  else
+    balance.print_street(out, 12,
+			 when ? when : (have_ending ? &end_date : NULL),
+			 use_history, get_quotes);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -274,16 +328,7 @@ void report_balances(std::ostream& out, regexps_list& regexps)
 	}
 
 	if (acct->checked == 1) {
-	  amount * street = (*x)->cost->street(have_ending ? &end_date : NULL,
-					       cost_basis || get_quotes,
-					       get_quotes);
-	  if (cost_basis &&
-	      street->commdty() == (*x)->cost->commdty() &&
-	      (*x)->cost->has_price()) {
-	    street = (*x)->cost->value();
-	  }
-	  acct->balance.credit(street);
-	  delete street;
+	  resolve_amount((*x)->cost, NULL, &acct->balance, false, true);
 	}
 	else if (show_subtotals) {
 	  if (! regexps.empty() && ! match) {
@@ -364,9 +409,7 @@ void print_register_transaction(std::ostream& out, entry *ent,
   // Always display the street value, if prices have been
   // specified
 
-  amount * street = xact->cost->street(&ent->date, cost_basis || get_quotes,
-				       get_quotes);
-  balance.credit(street);
+  amount * street = resolve_amount(xact->cost, &ent->date, &balance, true);
 
   // If there are two transactions, use the one which does not
   // refer to this account.  If there are more than two, print
@@ -395,7 +438,7 @@ void print_register_transaction(std::ostream& out, entry *ent,
   out << std::right << street->as_str(true);
   delete street;
 
-  balance.print(out, 12);
+  print_resolved_balance(out, &ent->date, balance, true);
 
   out << std::endl;
 
@@ -412,17 +455,16 @@ void print_register_transaction(std::ostream& out, entry *ent,
 
     out.width(22);
     out << std::left << truncated((*y)->acct_as_str(), 22) << " ";
-
     out.width(12);
-    street = (*y)->cost->street(&ent->date, cost_basis || get_quotes,
-				get_quotes);
+
+    street = resolve_amount((*y)->cost, &ent->date);
     out << std::right << street->as_str(true) << std::endl;
     delete street;
   }
 }
 
 void print_register_period(std::ostream& out, std::time_t date,
-			   account *acct, amount& sum, totals& balance)
+			   account * acct, amount& sum, totals& balance)
 {
   char buf[32];
   std::strftime(buf, 31, "%Y/%m/%d ", std::localtime(&date));
@@ -448,7 +490,7 @@ void print_register_period(std::ostream& out, std::time_t date,
   out << std::right << sum.as_str();
 
   if (! gnuplot_safe)
-    balance.print(out, 12);
+    print_resolved_balance(out, &date, balance, true);
 
   out << std::endl;
 }
@@ -496,11 +538,8 @@ void print_register(std::ostream& out, const std::string& acct_name,
       if (period == PERIOD_NONE) {
 	print_register_transaction(out, *i, *x, balance);
       } else {
-	amount * street = (*x)->cost->street(&(*i)->date,
-					     cost_basis || get_quotes,
-					     get_quotes);
-	balance.credit(street);
-
+	amount * street = resolve_amount((*x)->cost, &(*i)->date,
+					 &balance, true);
 	if (period_sum) {
 	  period_sum->credit(street);
 	  delete street;
@@ -550,16 +589,12 @@ static void equity_entry(account * acct, regexps_list& regexps,
 
       transaction * xact = new transaction();
       xact->acct = const_cast<account *>(acct);
-      xact->cost = (*i).second->street(have_ending ? &end_date : NULL,
-				       cost_basis || get_quotes,
-				       get_quotes);
+      xact->cost = (*i).second->copy();
       opening.xacts.push_back(xact);
 
       xact = new transaction();
       xact->acct = main_ledger->find_account("Equity:Opening Balances");
-      xact->cost = (*i).second->street(have_ending ? &end_date : NULL,
-				       cost_basis || get_quotes,
-				       get_quotes);
+      xact->cost = (*i).second->copy();
       xact->cost->negate();
       opening.xacts.push_back(xact);
     }
@@ -605,8 +640,7 @@ void price_report(std::ostream& out, regexps_list& regexps)
        i++)
     if (regexps.empty() || matches(regexps, (*i).first)) {
       amount * price = (*i).second->price(have_ending ? &end_date : NULL,
-					  cost_basis || get_quotes,
-					  get_quotes);
+					  use_history, get_quotes);
       if (price && ! price->is_zero()) {
 	out.width(20);
 	out << std::right << price->as_str() << " " << (*i).first
@@ -787,28 +821,33 @@ static void show_help(std::ostream& out)
     << "usage: ledger [options] COMMAND [options] [REGEXPS]" << std::endl
     << std::endl
     << "ledger options:" << std::endl
+    << "  -B        report commodities in terms of their basis cost" << std::endl
     << "  -b DATE   specify a beginning date" << std::endl
-    << "  -e DATE   specify an ending date" << std::endl
-    << "  -c        do not show future entries (same as -e TODAY)" << std::endl
     << "  -C        show only cleared transactions and balances" << std::endl
+    << "  -c        do not show future entries (same as -e TODAY)" << std::endl
     << "  -d DATE   specify a date mask ('-d mon', for all mondays)" << std::endl
     << "  -E        also show accounts with zero totals" << std::endl
-    << "  -f FILE   specify pathname of ledger data file" << std::endl
+    << "  -e DATE   specify an ending date" << std::endl
     << "  -F        print each account's full name" << std::endl
+    << "  -f FILE   specify pathname of ledger data file" << std::endl
+    << "  -G        use with -M to produce gnuplot-friendly output" << std::endl
     << "  -h        display this help text" << std::endl
     << "  -i FILE   read the list of inclusion regexps from FILE" << std::endl
+    << "  -L MINS   fetch price quotes if info older than MINS" << std::endl
     << "  -l AMT    don't print balance totals whose abs value is <AMT" << std::endl
     << "  -M        print register using monthly sub-totals" << std::endl
-    << "  -G        use with -M to produce gnuplot-friendly output" << std::endl
-    << "  -n        do not calculate parent account totals" << std::endl
     << "  -N REGEX  accounts matching REGEXP only display if negative" << std::endl
-    << "  -p ARG    set a price, or read prices from a file" << std::endl
+    << "  -n        do not calculate parent account totals" << std::endl
     << "  -P        download price quotes from the Internet" << std::endl
     << "            (works by running the command \"getquote SYMBOL\")" << std::endl
+    << "  -p ARG    set a direct price conversion: COMM=PRICE" << std::endl
+    << "  -Q FILE   keep price histories in FILE (implies -P)" << std::endl
     << "  -R        do not factor in virtual transactions" << std::endl
-    << "  -s        show sub-accounts in balance totals" << std::endl
     << "  -S        sort the output of \"print\" by date" << std::endl
+    << "  -s        show sub-accounts in balance totals" << std::endl
+    << "  -T        report only commodities totals, not their value" << std::endl
     << "  -U        show only uncleared transactions and balances" << std::endl
+    << "  -V        report commodity values, but don't download quotes" << std::endl
     << "  -v        display version information" << std::endl << std::endl
     << "commands:" << std::endl
     << "  balance   show balance totals" << std::endl
@@ -830,17 +869,24 @@ int main(int argc, char * argv[])
   std::string   prices;
   std::string   limit;
   regexps_list  regexps;
-  bool          no_history = false;
 
   std::vector<std::string> files;
 
   main_ledger = new book;
 
+  // Initialize some variables based on environment variable settings
+
+  if (char * p = std::getenv("PRICE_HIST"))
+    price_db = p;
+
+  if (char * p = std::getenv("PRICE_EXP"))
+    pricing_leeway = std::atol(p) * 60;
+
   // Parse the command-line options
 
   int c;
   while (-1 != (c = getopt(argc, argv,
-			   "+b:e:d:cCUhBRV:f:i:p:PL:Q:TvsSEnFMGl:N:"))) {
+			   "+Bb:Ccd:Ee:Ff:Ghi:L:l:MN:nPp:Q:RSsTUVv"))) {
     switch (char(c)) {
     case 'b':
       have_beginning = true;
@@ -900,24 +946,43 @@ int main(int argc, char * argv[])
       break;
 
     case 'P':
-      get_quotes = true;
+      cost_basis  = false;
+      use_history = true;
+      get_quotes  = true;
+      read_prices = true;
+      break;
+
+    case 'Q':
+      cost_basis  = false;
+      use_history = true;
+      get_quotes  = true;
+      read_prices = true;
+      price_db    = optarg;
+      break;
+
+    case 'V':
+      cost_basis  = false;
+      use_history = true;
+      get_quotes  = false;
+      read_prices = true;
+      break;
+
+    case 'B':
+      cost_basis  = true;
+      use_history = true;
+      get_quotes  = false;
+      read_prices = false;
+      break;
+      
+    case 'T':
+      cost_basis  = false;
+      use_history = false;
+      get_quotes  = false;
+      read_prices = false;
       break;
 
     case 'L':
       pricing_leeway = std::atol(optarg) * 60;
-      break;
-
-    case 'Q':
-      get_quotes = true;
-      price_db = optarg;
-      break;
-
-    case 'B':
-      cost_basis = true;
-      // fall through...
-    case 'T':
-      no_history = true;
-      get_quotes = false;
       break;
 
     case 'l':
@@ -966,20 +1031,6 @@ int main(int argc, char * argv[])
     for (; index < argc; index++)
       regexps.push_back(mask(argv[index]));
 
-  // If a price history file is specified with the environment
-  // variable PRICE_HIST, add it to the list of ledger files to read.
-
-  if (! no_history) {
-    if (price_db.empty())
-      if (char * p = std::getenv("PRICE_HIST")) {
-	get_quotes = true;
-	price_db = p;
-      }
-
-    if (char * p = std::getenv("PRICE_EXP"))
-      pricing_leeway = std::atol(p) * 60;
-  }
-
   // A ledger data file must be specified
 
   int entry_count = 0;
@@ -989,8 +1040,8 @@ int main(int argc, char * argv[])
       for (p = std::strtok(p, ":"); p; p = std::strtok(NULL, ":")) {
 	char * sep = std::strrchr(p, '=');
 	if (sep) *sep++ = '\0';
-	entry_count += parse_ledger_file(main_ledger, std::string(p),
-					 regexps, command == "equity", sep);
+	entry_count += parse_ledger_file(main_ledger, std::string(p), regexps,
+					 command == "equity", sep);
       }
     }
   } else {
@@ -1001,14 +1052,14 @@ int main(int argc, char * argv[])
       std::strcpy(p, (*i).c_str());
       char * sep = std::strrchr(p, '=');
       if (sep) *sep++ = '\0';
-      entry_count += parse_ledger_file(main_ledger, std::string(p),
-				       regexps, command == "equity", sep);
+      entry_count += parse_ledger_file(main_ledger, std::string(p), regexps,
+				       command == "equity", sep);
     }
   }
 
-  if (! no_history && ! price_db.empty())
-    entry_count += parse_ledger_file(main_ledger, price_db,
-				     regexps, command == "equity");
+  if (read_prices && ! price_db.empty())
+    entry_count += parse_ledger_file(main_ledger, price_db, regexps,
+				     command == "equity");
 
   if (entry_count == 0) {
     std::cerr << ("Please specify ledger file(s) using -f option "

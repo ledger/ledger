@@ -448,6 +448,23 @@ void totals::print(std::ostream& out, int width) const
   }
 }
 
+void totals::print_street(std::ostream& out, int width, std::time_t * when,
+			  bool use_history, bool download) const
+{
+  totals street_balance;
+
+  for (const_iterator i = amounts.begin(); i != amounts.end(); i++) {
+    if ((*i).second->is_zero())
+      continue;
+
+    amount * street = (*i).second->street(when, use_history, download);
+    street_balance.credit(street);
+    delete street;
+  }
+
+  street_balance.print(out, width);
+}
+
 account::~account()
 {
   for (accounts_map_iterator i = children.begin();

@@ -237,6 +237,10 @@ class totals
   bool is_negative() const;
 
   void print(std::ostream& out, int width) const;
+  void print_street(std::ostream& out, int width,
+		    std::time_t * when = NULL,
+		    bool use_history = false,
+		    bool download = false) const;
 };
 
 
@@ -347,7 +351,6 @@ extern void read_regexps(const std::string& path, regexps_list& regexps);
 extern bool matches(const regexps_list& regexps, const std::string& str,
 		    bool * by_exclusion = NULL);
 
-extern void read_prices(const std::string& path);
 extern void parse_price_setting(const std::string& setting);
 
 } // namespace ledger
