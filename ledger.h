@@ -1,5 +1,5 @@
 #ifndef _LEDGER_H
-#define _LEDGER_H "$Revision: 1.6 $"
+#define _LEDGER_H "$Revision: 1.7 $"
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -245,10 +245,11 @@ operator<<(std::basic_ostream<char, Traits>& out, const totals& t) {
 
 struct account
 {
+  struct account * parent;
+
   std::string name;
   commodity * comm;             // default commodity for this account
-
-  struct account * parent;
+  totals      balance;
 
   typedef std::map<const std::string, struct account *> map;
   typedef map::iterator iterator;
@@ -258,20 +259,20 @@ struct account
   map children;
 
   account(const std::string& _name, struct account * _parent = NULL)
-    : name(_name), parent(_parent) {}
+    : parent(_parent), name(_name) {}
 
-  operator std::string() const {
+  const std::string as_str() const {
     if (! parent)
       return name;
     else
-      return std::string(*parent) + ":" + name;
+      return parent->as_str() + ":" + name;
   }
 };
 
 template<class Traits>
 std::basic_ostream<char, Traits> &
 operator<<(std::basic_ostream<char, Traits>& out, const account& a) {
-  return (out << std::string(a));
+  return (out << a.as_str());
 }
 
 

@@ -10,6 +10,11 @@ static char * next_element(char * buf, bool variable = false)
 {
   char * p;
 
+  // Convert any tabs to spaces, for simplicity's sake
+  for (p = buf; *p; p++)
+    if (*p == '\t')
+      *p = ' ';
+
   if (variable)
     p = std::strstr(buf, "  ");
   else
@@ -226,6 +231,8 @@ bool parse_ledger(std::istream& in)
 #endif
 
       xact->acct = find_account(p);
+      xact->acct->balance.credit(xact->cost);
+
       curr->xacts.push_back(xact);
 
 #ifdef HUQUQULLAH

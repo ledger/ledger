@@ -203,6 +203,7 @@ static void dataHandler(void *userData, const char *s, int len)
 
     std::string value = curr_quant + " " + (*i).second->comm->symbol;
     xact->cost = create_amount(value.c_str(), curr_value);
+    xact->acct->balance.credit(xact->cost);
     break;
   }
 

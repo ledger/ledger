@@ -5,11 +5,15 @@
 
 namespace ledger {
 
-static bool show_current  = false;
 static bool show_cleared  = false;
 static bool show_children = false;
 static bool show_empty    = false;
 static bool no_subtotals  = false;
+
+static std::time_t begin_date;
+static bool have_beginning;
+static std::time_t end_date;
+static bool have_ending;
 
 static void display_total(std::ostream& out, totals& total_balance,
 			  const account * acct,
@@ -27,13 +31,13 @@ static void display_total(std::ostream& out, totals& total_balance,
 	if (show_children) {
 	  match = false;
 	  for (const account * a = acct; a; a = a->parent) {
-	    if (matches(regexps, a->name)) {
+	    if (matches(regexps, a->as_str())) {
 	      match = true;
 	      break;
 	    }
 	  }
 	} else {
-	  match = matches(regexps, acct->name);
+	  match = matches(regexps, acct->as_str());
 	}
       }
 
@@ -45,7 +49,7 @@ static void display_total(std::ostream& out, totals& total_balance,
 	if (! show_children || ! acct->parent)
 	  total_balance.credit(*balance);
 
-	if (acct->parent) {
+	if (acct->parent && ! no_subtotals) {
 	  for (const account * a = acct; a; a = a->parent)
 	    out << "  ";
 	  out << acct->name << std::endl;
@@ -97,11 +101,40 @@ void report_balances(int argc, char **argv, std::ostream& out)
   }
 #endif
 
+  have_beginning = false;
+  have_ending    = false;
+
   int c;
   optind = 1;
-  while (-1 != (c = getopt(argc, argv, "cCsSni:p:G:"))) {
+  while (-1 != (c = getopt(argc, argv, "b:e:cCsSni:p:G:"))) {
     switch (char(c)) {
-    case 'c': show_current  = true; break;
+    case 'b': {
+      struct tm * when = getdate(optarg);
+      if (! when) {
+	std::cerr << "Error: Bad begin date string: " << optarg
+		  << std::endl;
+      } else {
+	begin_date = std::mktime(when);
+	have_beginning = true;
+      }
+      break;
+    }
+    case 'e': {
+      struct tm * when = getdate(optarg);
+      if (! when) {
+	std::cerr << "Error: Bad end date string: " << optarg
+		  << std::endl;
+      } else {
+	end_date = std::mktime(when);
+	have_ending = true;
+      }
+      break;
+    }
+    case 'c':
+      end_date = std::time(NULL);
+      have_ending = true;
+      break;
+
     case 'C': show_cleared  = true; break;
     case 's': show_children = true; break;
     case 'S': show_empty    = true; break;
@@ -152,7 +185,6 @@ void report_balances(int argc, char **argv, std::ostream& out)
   // totals
 
   std::map<account *, totals *> balances;
-  std::time_t now = std::time(NULL);
 
   for (ledger_iterator i = ledger.begin(); i != ledger.end(); i++) {
     for (std::list<transaction *>::iterator x = (*i)->xacts.begin();
@@ -174,19 +206,14 @@ void report_balances(int argc, char **argv, std::ostream& out)
 	  balance = (*t).second;
 	}
 
-	bool do_credit = false;
+	bool do_credit = true;
 
-	if (show_current) {
-	  if (difftime((*i)->date, now) < 0)
-	    do_credit = true;
-	}
-	else if (show_cleared) {
-	  if ((*i)->cleared)
-	    do_credit = true;
-	}
-	else {
-	  do_credit = true;
-	}
+	if (have_beginning && difftime((*i)->date, begin_date) < 0)
+	  do_credit = false;
+	else if (have_ending && difftime((*i)->date, end_date) > 0)
+	  do_credit = false;
+	else if (show_cleared && ! (*i)->cleared)
+	  do_credit = false;
 
 	if (! do_credit)
 	  continue;
