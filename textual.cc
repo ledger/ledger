@@ -17,6 +17,7 @@
 #include <cstring>
 #include <ctime>
 #include <cctype>
+#include <cstdio>
 
 #define TIMELOG_SUPPORT 1
 

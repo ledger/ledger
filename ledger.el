@@ -353,6 +353,8 @@ Return the difference in the format of a time value."
     (define-key map [? ] 'ledger-reconcile-toggle)
     (define-key map [?a] 'ledger-reconcile-add)
     (define-key map [?d] 'ledger-reconcile-delete)
+    (define-key map [?n] 'next-line)
+    (define-key map [?p] 'previous-line)
     (define-key map [?r] 'ledger-auto-reconcile)
     (define-key map [?s] 'ledger-reconcile-save)
     (define-key map [?q]
