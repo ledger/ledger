@@ -248,13 +248,14 @@ int parse_and_report(int argc, char * argv[], char * envp[])
   item_handler<transaction_t> * formatter;
   std::list<item_handler<transaction_t> *> formatter_ptrs;
 
-  if (command == "b" || command == "E") {
+  if (command == "b" || command == "E")
     formatter = new set_account_value;
-    formatter = chain_formatters(command, formatter, formatter_ptrs);
-  } else {
+  else if (command == "p")
+    formatter = new format_entries(*out, *format);
+  else
     formatter = new format_transactions(*out, *format);
-    formatter = chain_formatters(command, formatter, formatter_ptrs);
-  }
+
+  formatter = chain_formatters(command, formatter, formatter_ptrs);
 
   if (command == "e")
     walk_transactions(new_entry->transactions, *formatter);

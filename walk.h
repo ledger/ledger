@@ -65,9 +65,10 @@ class compare_items {
 // Transaction handlers
 //
 
-#define TRANSACTION_HANDLED   0x0001
-#define TRANSACTION_DISPLAYED 0x0002
-#define TRANSACTION_NO_TOTAL  0x0004
+#define TRANSACTION_HANDLED    0x0001
+#define TRANSACTION_TO_DISPLAY 0x0002
+#define TRANSACTION_DISPLAYED  0x0004
+#define TRANSACTION_NO_TOTAL   0x0008
 
 struct transaction_xdata_t
 {
@@ -404,8 +405,8 @@ class related_transactions : public item_handler<transaction_t>
 // Account walking functions
 //
 
-#define ACCOUNT_DISPLAYED  0x1
-#define ACCOUNT_TO_DISPLAY 0x2
+#define ACCOUNT_TO_DISPLAY 0x1
+#define ACCOUNT_DISPLAYED  0x2
 
 struct account_xdata_t
 {

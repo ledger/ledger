@@ -90,6 +90,7 @@ struct format_t
 
 class format_transactions : public item_handler<transaction_t>
 {
+ protected:
   std::ostream& output_stream;
   format_t	first_line_format;
   format_t	next_lines_format;
@@ -102,7 +103,23 @@ class format_transactions : public item_handler<transaction_t>
   virtual void flush() {
     output_stream.flush();
   }
+  virtual void operator()(transaction_t& xact);
+};
 
+class format_entries : public format_transactions
+{
+ public:
+  format_entries(std::ostream& output_stream, const std::string& format)
+    : format_transactions(output_stream, format) {}
+
+  void format_last_entry();
+
+  virtual void flush() {
+    format_last_entry();
+    last_entry = NULL;
+
+    format_transactions::flush();
+  }
   virtual void operator()(transaction_t& xact);
 };
 
@@ -113,7 +130,7 @@ bool disp_subaccounts_p(const account_t& account,
 inline bool disp_subaccounts_p(const account_t& account) {
   const account_t * temp;
   return disp_subaccounts_p(account, item_predicate<account_t>(NULL), temp);
- }
+}
 
 bool display_account(const account_t& account,
 		     const item_predicate<account_t>& disp_pred);

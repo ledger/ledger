@@ -18,6 +18,8 @@ import os
 import sys
 import string
 
+true, false = 1, 0
+
 from ledger import *
 
 # Create the main journal object, into which all entries will be
@@ -141,7 +143,7 @@ else:
 # these, but they rely on I/O streams, which Boost.Python does not
 # provide a conversion layer for.
 
-class FormatTransaction (TransactionHandler):
+class FormatTransactions (TransactionHandler):
     last_entry = None
     output     = None
 
@@ -176,10 +178,41 @@ class FormatTransaction (TransactionHandler):
 	    if self.nformatter is not None and \
 	       self.last_entry is not None and \
 	       xact.entry == self.last_entry:
-		self.output.write(self.nformatter.format(xact))
+		self.output.write (self.nformatter.format (xact))
 	    else:
-		self.output.write(self.formatter.format(xact))
+		self.output.write (self.formatter.format (xact))
 		self.last_entry = xact.entry
+	    transaction_xdata (xact).dflags |= TRANSACTION_DISPLAYED
+
+class FormatEntries (FormatTransactions):
+    def __init__ (self, fmt):
+	self.last_entry = None
+	FormatTransactions.__init__(self, fmt)
+
+    def flush (self):
+	self.format_last_entry ()
+	self.last_entry = None
+	FormatTransactions.flush (self)
+
+    def format_last_entry (self):
+	first = true
+	for x in self.last_entry:
+	    if transaction_has_xdata (x) and \
+	       transaction_xdata (x).dflags & TRANSACTION_TO_DISPLAY:
+		if first or self.nformatter is None:
+		    self.output.write (self.formatter.format (x))
+		    first = false
+		else:
+		    self.output.write (self.nformatter.format (x))
+	    transaction_xdata (x).dflags |= TRANSACTION_TO_DISPLAY
+
+    def __call__ (self, xact):
+	if self.last_entry and self.last_entry != xact.entry:
+	    self.format_last_entry ()
+
+	transaction_xdata (xact).dflags |= TRANSACTION_TO_DISPLAY
+
+	self.last_entry = xact.entry;
 
 class FormatAccount (AccountHandler):
     output = None
@@ -218,8 +251,10 @@ class FormatAccount (AccountHandler):
 
 if command == "b" or command == "E":
     handler = SetAccountValue()
+elif command == "p":
+    handler = FormatEntries(format)
 else:
-    handler = FormatTransaction(format)
+    handler = FormatTransactions(format)
 
 # Chain transaction filters on top of the base handler.  Most of these
 # filters customize the output for reporting.  None of this is done
@@ -286,7 +321,7 @@ handler.flush ()
 # the transactions that were just walked.
 
 if command == "b":
-    acct_formatter = FormatAccount (format, config.display_predicate)
+    acct_formatter = FormatAccounts (format, config.display_predicate)
     sum_accounts (journal.master)
     walk_accounts (journal.master, acct_formatter, config.sort_string)
     acct_formatter.flush ()

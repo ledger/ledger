@@ -456,9 +456,10 @@ void export_walk()
 {
   typedef item_handler<transaction_t> xact_handler_t;
 
-  scope().attr("TRANSACTION_HANDLED")	= TRANSACTION_HANDLED;
-  scope().attr("TRANSACTION_DISPLAYED") = TRANSACTION_DISPLAYED;
-  scope().attr("TRANSACTION_NO_TOTAL")	= TRANSACTION_NO_TOTAL;
+  scope().attr("TRANSACTION_HANDLED")	 = TRANSACTION_HANDLED;
+  scope().attr("TRANSACTION_TO_DISPLAY") = TRANSACTION_TO_DISPLAY;
+  scope().attr("TRANSACTION_DISPLAYED")  = TRANSACTION_DISPLAYED;
+  scope().attr("TRANSACTION_NO_TOTAL")	 = TRANSACTION_NO_TOTAL;
 
   class_< transaction_xdata_t > ("TransactionXData")
     .def_readwrite("total", &transaction_xdata_t::total)
@@ -565,8 +566,8 @@ void export_walk()
 
   typedef item_handler<account_t> account_handler_t;
 
-  scope().attr("ACCOUNT_DISPLAYED")  = ACCOUNT_DISPLAYED;
   scope().attr("ACCOUNT_TO_DISPLAY") = ACCOUNT_TO_DISPLAY;
+  scope().attr("ACCOUNT_DISPLAYED")  = ACCOUNT_DISPLAYED;
 
   class_< account_xdata_t > ("AccountXData")
     .def_readwrite("value", &account_xdata_t::value)

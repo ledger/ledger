@@ -332,11 +332,14 @@ void format_t::format(std::ostream& out, const details_t& details) const
 		 = details.entry->transactions.begin();
 	       i != details.entry->transactions.end();
 	       i++) {
-	    xacts_count++;
+	    if (transaction_has_xdata(**i) &&
+		transaction_xdata(**i).dflags & TRANSACTION_TO_DISPLAY) {
+	      xacts_count++;
 
-	    if (! first)
-	      first = *i;
-	    last = *i;
+	      if (! first)
+		first = *i;
+	      last = *i;
+	    }
 	  }
 
 	  use_disp = (xacts_count == 2 && details.xact == last &&
@@ -404,6 +407,35 @@ void format_transactions::operator()(transaction_t& xact)
     }
     transaction_xdata(xact).dflags |= TRANSACTION_DISPLAYED;
   }
+}
+
+void format_entries::format_last_entry()
+{
+  bool first = true;
+  for (transactions_list::const_iterator i = last_entry->transactions.begin();
+       i != last_entry->transactions.end();
+       i++) {
+    if (transaction_has_xdata(**i) &&
+	transaction_xdata(**i).dflags & TRANSACTION_TO_DISPLAY) {
+      if (first) {
+	first_line_format.format(output_stream, details_t(**i));
+	first = false;
+      } else {
+	next_lines_format.format(output_stream, details_t(**i));
+      }
+      transaction_xdata(**i).dflags |= TRANSACTION_DISPLAYED;
+    }
+  }
+}
+
+void format_entries::operator()(transaction_t& xact)
+{
+  if (last_entry && xact.entry != last_entry)
+    format_last_entry();
+
+  transaction_xdata(xact).dflags |= TRANSACTION_TO_DISPLAY;
+
+  last_entry = xact.entry;
 }
 
 bool disp_subaccounts_p(const account_t&		 account,
