@@ -143,20 +143,32 @@ Return the difference in the format of a time value."
       (insert
        (with-temp-buffer
 	 (setq exit-code
-	       (ledger-run-ledger
-		ledger-buf "entry"
-		(with-temp-buffer
-		  (insert entry-text)
-		  (goto-char (point-min))
-		  (while (re-search-forward "\\([&$]\\)" nil t)
-		    (replace-match "\\\\\\1"))
-		  (buffer-string))))
+	       (apply #'ledger-run-ledger
+		      ledger-buf "entry"
+		      (split-string
+		       (with-temp-buffer
+			 (insert entry-text)
+			 (goto-char (point-min))
+			 (while (re-search-forward "\\([&$]\\)" nil t)
+			   (replace-match "\\\\\\1"))
+			 (buffer-string)))))
 	 (if (= 0 exit-code)
 	     (if insert-year
 		 (buffer-substring 2 (point-max))
 	       (buffer-substring 7 (point-max)))
 	   (concat (if insert-year entry-text
 		     (substring entry-text 6)) "\n"))) "\n"))))
+
+(defun ledger-delete-current-entry ()
+  (interactive)
+  (save-excursion
+    (when (or (looking-at "^[0-9]")
+	      (re-search-backward "^[0-9]" nil t))
+      (let ((beg (point)))
+	(while (not (eolp))
+	  (forward-line))
+	(delete-blank-lines)
+	(delete-region beg (point))))))
 
 (defun ledger-toggle-current ()
   (interactive)
@@ -184,6 +196,7 @@ Return the difference in the format of a time value."
 	   '(ledger-font-lock-keywords nil t)))
   (let ((map (current-local-map)))
     (define-key map [(control ?c) (control ?a)] 'ledger-add-entry)
+    (define-key map [(control ?c) (control ?d)] 'ledger-delete-current-entry)
     (define-key map [(control ?c) (control ?y)] 'ledger-set-year)
     (define-key map [(control ?c) (control ?m)] 'ledger-set-month)
     (define-key map [(control ?c) (control ?c)] 'ledger-toggle-current)
@@ -261,6 +274,26 @@ Return the difference in the format of a time value."
 	  (ledger-reconcile-toggle))))
     (goto-char (point-min))))
 
+(defun ledger-reconcile-add ()
+  (interactive)
+  (with-current-buffer ledger-buf
+    (call-interactively #'ledger-add-entry))
+  (let ((inhibit-read-only t))
+    (erase-buffer)
+    (ledger-do-reconcile)
+    (set-buffer-modified-p t)))
+
+(defun ledger-reconcile-delete ()
+  (interactive)
+  (let ((where (get-text-property (point) 'where)))
+    (with-current-buffer ledger-buf
+      (goto-char where)
+      (ledger-delete-current-entry))
+    (let ((inhibit-read-only t))
+      (goto-char (line-beginning-position))
+      (delete-region (point) (1+ (line-end-position)))
+      (set-buffer-modified-p t))))
+
 (defun ledger-reconcile-save ()
   (interactive)
   (with-current-buffer ledger-buf
@@ -269,9 +302,9 @@ Return the difference in the format of a time value."
   (set-buffer-modified-p nil)
   (ledger-display-balance))
 
-(defun ledger-reconcile (account &optional arg)
-  (interactive "sAccount to reconcile: \nP")
-  (let* ((buf (current-buffer))
+(defun ledger-do-reconcile ()
+  (let* ((buf ledger-buf)
+	 (account ledger-acct)
 	 (items
 	  (with-temp-buffer
 	    (let ((exit-code
@@ -281,26 +314,31 @@ Return the difference in the format of a time value."
 		(unless (looking-at "(")
 		  (error (buffer-string)))
 		(read (current-buffer)))))))
+    (dolist (item items)
+      (dolist (xact (nthcdr 5 item))
+	(let ((beg (point)))
+	  (insert (format "%s %-30s %-25s %15s\n"
+			  (format-time-string "%m/%d" (nth 2 item))
+			  (nth 4 item) (nth 0 xact) (nth 1 xact)))
+	  (if (nth 1 item)
+	      (set-text-properties beg (1- (point))
+				   (list 'face 'bold
+					 'where (nth 0 item)))
+	    (set-text-properties beg (1- (point))
+				 (list 'where (nth 0 item)))))))
+    (goto-char (point-min))
+    (set-buffer-modified-p nil)
+    (toggle-read-only t)))
+
+(defun ledger-reconcile (account &optional arg)
+  (interactive "sAccount to reconcile: \nP")
+  (let ((buf (current-buffer)))
     (with-current-buffer
 	(pop-to-buffer (generate-new-buffer "*Reconcile*"))
       (ledger-reconcile-mode)
       (set (make-local-variable 'ledger-buf) buf)
       (set (make-local-variable 'ledger-acct) account)
-      (dolist (item items)
-	(dolist (xact (nthcdr 5 item))
-	  (let ((beg (point)))
-	    (insert (format "%s %-30s %-25s %15s\n"
-			    (format-time-string "%m/%d" (nth 2 item))
-			    (nth 4 item) (nth 0 xact) (nth 1 xact)))
-	    (if (nth 1 item)
-		(set-text-properties beg (1- (point))
-				     (list 'face 'bold
-					   'where (nth 0 item)))
-	      (set-text-properties beg (1- (point))
-				   (list 'where (nth 0 item)))))))
-      (goto-char (point-min))
-      (set-buffer-modified-p nil)
-      (toggle-read-only t)
+      (ledger-do-reconcile)
       (when arg
 	(sit-for 0 0)
 	(call-interactively #'ledger-auto-reconcile)))))
@@ -313,6 +351,8 @@ Return the difference in the format of a time value."
     (define-key map [(control ?c) (control ?r)] 'ledger-auto-reconcile)
     (define-key map [(control ?x) (control ?s)] 'ledger-reconcile-save)
     (define-key map [? ] 'ledger-reconcile-toggle)
+    (define-key map [?a] 'ledger-reconcile-add)
+    (define-key map [?d] 'ledger-reconcile-delete)
     (define-key map [?r] 'ledger-auto-reconcile)
     (define-key map [?s] 'ledger-reconcile-save)
     (define-key map [?q]
