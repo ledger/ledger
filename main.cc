@@ -141,47 +141,50 @@ void parse_ledger_data(journal_t * journal,
 
 item_handler<transaction_t> *
 chain_formatters(const std::string& command,
-		 item_handler<transaction_t> * base_formatter)
+		 item_handler<transaction_t> * base_formatter,
+		 std::list<item_handler<transaction_t> *>& ptrs)
 {
-  std::auto_ptr<item_handler<transaction_t> > formatter;
+  item_handler<transaction_t> * formatter = NULL;
 
   // format_transactions write each transaction received to the
   // output stream.
   if (command == "b" || command == "E") {
-    formatter.reset(base_formatter);
+    ptrs.push_back(formatter = base_formatter);
   } else {
-    formatter.reset(base_formatter);
+    ptrs.push_back(formatter = base_formatter);
 
     // filter_transactions will only pass through transactions
     // matching the `display_predicate'.
     if (! config.display_predicate.empty())
-      formatter.reset(new filter_transactions(formatter.release(),
-					      config.display_predicate));
+      ptrs.push_back(formatter =
+		     new filter_transactions(formatter,
+					     config.display_predicate));
 
     // calc_transactions computes the running total.  When this
     // appears will determine, for example, whether filtered
     // transactions are included or excluded from the running total.
-    formatter.reset(new calc_transactions(formatter.release(),
-					  config.show_inverted));
+    ptrs.push_back(formatter =
+		   new calc_transactions(formatter, config.show_inverted));
 
     // sort_transactions will sort all the transactions it sees, based
     // on the `sort_order' value expression.
     if (config.sort_order.get())
-      formatter.reset(new sort_transactions(formatter.release(),
-					    config.sort_order.get()));
+      ptrs.push_back(formatter =
+		     new sort_transactions(formatter, config.sort_order.get()));
 
     // changed_value_transactions adds virtual transactions to the
     // list to account for changes in market value of commodities,
     // which otherwise would affect the running total unpredictably.
     if (config.show_revalued)
-      formatter.reset(new changed_value_transactions(formatter.release(),
-						     config.show_revalued_only));
+      ptrs.push_back(formatter =
+		     new changed_value_transactions(formatter,
+						    config.show_revalued_only));
 
     // collapse_transactions causes entries with multiple transactions
     // to appear as entries with a subtotaled transaction for each
     // commodity used.
     if (config.show_collapsed)
-      formatter.reset(new collapse_transactions(formatter.release()));
+      ptrs.push_back(formatter = new collapse_transactions(formatter));
 
     // subtotal_transactions combines all the transactions it receives
     // into one subtotal entry, which has one transaction for each
@@ -195,13 +198,14 @@ chain_formatters(const std::string& command,
     // reports all the transactions that fall on each subsequent day
     // of the week.
     if (config.show_subtotal)
-      formatter.reset(new subtotal_transactions(formatter.release()));
+      ptrs.push_back(formatter = new subtotal_transactions(formatter));
     else if (config.report_interval)
-      formatter.reset(new interval_transactions(formatter.release(),
-						config.report_interval,
-						config.interval_begin));
+      ptrs.push_back(formatter =
+		     new interval_transactions(formatter,
+					       config.report_interval,
+					       config.interval_begin));
     else if (config.days_of_the_week)
-      formatter.reset(new dow_transactions(formatter.release()));
+      ptrs.push_back(formatter = new dow_transactions(formatter));
   }
 
   // related_transactions will pass along all transactions related
@@ -210,16 +214,17 @@ chain_formatters(const std::string& command,
   // one transaction of an entry is to be printed, all the
   // transaction for that entry will be printed.
   if (config.show_related)
-    formatter.reset(new related_transactions(formatter.release(),
-					     config.show_all_related));
+    ptrs.push_back(formatter =
+		   new related_transactions(formatter,
+					    config.show_all_related));
 
   // This filter_transactions will only pass through transactions
   // matching the `predicate'.
   if (! config.predicate.empty())
-    formatter.reset(new filter_transactions(formatter.release(),
-					    config.predicate));
+    ptrs.push_back(formatter = new filter_transactions(formatter,
+						       config.predicate));
 
-  return formatter.release();
+  return formatter;
 }
 
 int parse_and_report(int argc, char * argv[], char * envp[])
@@ -306,15 +311,17 @@ int parse_and_report(int argc, char * argv[], char * envp[])
 
   TIMER_START(report_gen);
 
-  std::auto_ptr<item_handler<transaction_t> > formatter;
+  item_handler<transaction_t> * formatter;
+  std::list<item_handler<transaction_t> *> formatter_ptrs;
 
   if (command == "b" || command == "E") {
-    formatter.reset(chain_formatters(command, new set_account_value));
+    formatter = new set_account_value;
+    formatter = chain_formatters(command, formatter, formatter_ptrs);
   } else {
     std::ostream& out(config.output_stream.get() ?
 		      *config.output_stream : std::cout);
-    formatter.reset(chain_formatters(command,
-      new format_transactions(out, config.format, config.nformat)));
+    formatter = new format_transactions(out, config.format, config.nformat);
+    formatter = chain_formatters(command, formatter, formatter_ptrs);
   }
 
   if (command == "e")
@@ -354,6 +361,12 @@ int parse_and_report(int argc, char * argv[], char * envp[])
   }
 
 #if DEBUG_LEVEL >= BETA
+  for (std::list<item_handler<transaction_t> *>::iterator i
+	 = formatter_ptrs.begin();
+       i != formatter_ptrs.end();
+       i++)
+    delete *i;
+
   // Cleanup the data handlers that might be present on some objects.
 
   clear_transaction_data xact_cleanup;

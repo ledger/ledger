@@ -25,8 +25,6 @@ struct item_handler {
 
   virtual ~item_handler() {
     DEBUG_PRINT("ledger.memory.dtors", "dtor item_handler<T>");
-    if (handler)
-      delete handler;
   }
   virtual void flush() {
     if (handler)

@@ -312,18 +312,19 @@ template <typename T>
 struct item_handler_wrap : public item_handler<T>
 {
   PyObject* self;
+
   item_handler_wrap(PyObject * self_) : self(self_) {}
   item_handler_wrap(PyObject * self_, const item_handler<T>& handler)
     : item_handler<T>(const_cast<item_handler<T> *>(&handler)), self(self_) {}
 
-  void flush() {
+  virtual void flush() {
     call_method<void>(self, "flush");
   }
   void default_flush() {
     item_handler<T>::flush();
   }
 
-  void operator()(T& item) {
+  virtual void operator()(T& item) {
     call_method<void>(self, "__call__", item);
   }
   void default_call(T& item) {
@@ -357,65 +358,76 @@ void export_walk()
     ;
 
   class_< set_account_value >
-    ("SetAccountValue", init<item_handler<transaction_t> *>())
+    ("SetAccountValue", init<item_handler<transaction_t> *>()
+     [with_custodian_and_ward<1, 2>()])
     .def("flush", &item_handler<transaction_t>::flush)
     .def("__call__", &set_account_value::operator());
     ;
 
 #if 0
   class_< sort_transactions >
-    ("SortTransactions", init<item_handler<transaction_t> *>())
+    ("SortTransactions", init<item_handler<transaction_t> *>()
+     [with_custodian_and_ward<1, 2>()])
     .def("flush", &sort_transactions::flush)
     .def("__call__", &sort_transactions::operator());
     ;
 #endif
 
   class_< filter_transactions >
-    ("FilterTransactions", init<item_handler<transaction_t> *, std::string>())
+    ("FilterTransactions", init<item_handler<transaction_t> *, std::string>()
+     [with_custodian_and_ward<1, 2>()])
     .def("flush", &item_handler<transaction_t>::flush)
     .def("__call__", &filter_transactions::operator());
     ;
 
   class_< calc_transactions >
-    ("CalcTransactions", init<item_handler<transaction_t> *, optional<bool> >())
+    ("CalcTransactions", init<item_handler<transaction_t> *, optional<bool> >()
+     [with_custodian_and_ward<1, 2>()])
     .def("flush", &item_handler<transaction_t>::flush)
     .def("__call__", &calc_transactions::operator());
     ;
 
   class_< collapse_transactions >
-    ("CollapseTransactions", init<item_handler<transaction_t> *>())
+    ("CollapseTransactions", init<item_handler<transaction_t> *>()
+     [with_custodian_and_ward<1, 2>()])
     .def("flush", &collapse_transactions::flush)
     .def("__call__", &collapse_transactions::operator());
     ;
 
   class_< changed_value_transactions >
-    ("ChangeValueTransactions", init<item_handler<transaction_t> *, bool>())
+    ("ChangeValueTransactions", init<item_handler<transaction_t> *, bool>()
+     [with_custodian_and_ward<1, 2>()])
     .def("flush", &changed_value_transactions::flush)
     .def("__call__", &changed_value_transactions::operator());
     ;
 
   class_< subtotal_transactions >
-    ("SubtotalTransactions", init<item_handler<transaction_t> *>())
+    ("SubtotalTransactions", init<item_handler<transaction_t> *>()
+     [with_custodian_and_ward<1, 2>()])
     .def("flush", subtotal_transactions_flush)
     .def("__call__", &subtotal_transactions::operator());
     ;
 
 #if 0
   class_< interval_transactions >
-    ("IntervalTransactions", init<item_handler<transaction_t> *>())
+    ("IntervalTransactions", init<item_handler<transaction_t> *>()
+     [with_custodian_and_ward<1, 2>()])
     .def("flush", &item_handler<transaction_t>::flush)
     .def("__call__", &interval_transactions::operator());
     ;
 #endif
 
   class_< dow_transactions >
-    ("DowTransactions", init<item_handler<transaction_t> *>())
+    ("DowTransactions", init<item_handler<transaction_t> *>()
+     [with_custodian_and_ward<1, 2>()])
     .def("flush", &dow_transactions::flush)
     .def("__call__", &dow_transactions::operator());
     ;
 
   class_< related_transactions >
-    ("RelatedTransactions", init<item_handler<transaction_t> *, optional<bool> >())
+    ("RelatedTransactions",
+     init<item_handler<transaction_t> *, optional<bool> >()
+     [with_custodian_and_ward<1, 2>()])
     .def("flush", &item_handler<transaction_t>::flush)
     .def("__call__", &related_transactions::operator());
     ;

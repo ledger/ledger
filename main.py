@@ -24,8 +24,8 @@ class OutputTransaction (TransactionHandler):
 	print xact.entry.payee
 
 handler = OutputTransaction()
-chain = FilterTransactions (handler, "/Checking/")
+handler = FilterTransactions (handler, "/Checking/")
 
 for entry in journal:
     for xact in entry:
-	chain (xact)
+	handler (xact)
