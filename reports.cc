@@ -992,7 +992,7 @@ int main(int argc, char * argv[])
 
   int c;
   while (-1 != (c = getopt(argc, argv,
-			   "+Bb:Ccd:Ee:Ff:Ghi:L:l:MN:nPp:Q:RSsTUVv"))) {
+			   "+Bb:Ccd:Ee:Ff:Ghi:L:l:MN:nP:p:QRSsTUVv"))) {
     switch (char(c)) {
     case 'b':
       have_beginning = true;
@@ -1056,11 +1056,11 @@ int main(int argc, char * argv[])
       break;
 
     case 'Q':
-      get_quotes  = true;
+      get_quotes = true;
       break;
 
     case 'B':
-      cost_basis  = true;
+      cost_basis = true;
       // fall through...
     case 'V':
       use_history = true;
