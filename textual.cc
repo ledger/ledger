@@ -389,6 +389,11 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	break;
 #endif // TIMELOG_SUPPORT
 
+      case 'D':			// a default commodity for "entry"
+	commodity_t::default_commodity =
+	  commodity_t::find_commodity(skip_ws(line + 1), true);
+	break;
+
       case 'C':			// a set of conversions
 	if (char * p = std::strchr(line + 1, '=')) {
 	  *p++ = '\0';
