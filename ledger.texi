@@ -1531,7 +1531,8 @@ environment variable @env{LEDGER_FILE}, then whenever a command is
 finished a binary copy will be written to the specified cache, to
 speed up the loading time of subsequent queries.  This filename can
 also be given using the environment variable @env{LEDGER_CACHE}, or by
-putting the option into your init file.
+putting the option into your init file.  The @option{--no-cache}
+option causes Ledger to always ignore the binary cache.
 
 @option{--account NAME} (@option{-a NAME}) specifies the default
 account which QIF file transactions are assumed to relate to.
