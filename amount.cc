@@ -296,13 +296,27 @@ static std::string amount_to_str(const commodity * comm, const mpz_t val,
   else
     s << '.';
 
-  if (full_precision)
-    s.width(MAX_PRECISION);
-  else
+  if (mpz_sgn(rquotient) == 0) {
     s.width(comm->precision);
+    s.fill('0');
+    s << 0;
+  } else {
+    char buf[MAX_PRECISION + 1];
+    gmp_sprintf(buf, "%Zd", rquotient);
 
-  s.fill('0');
-  s << rquotient;
+    int width = std::strlen(buf);
+    char * p = buf + (width - 1);
+
+    width = MAX_PRECISION - width;
+
+    while (p >= buf && *p == '0')
+      p--;
+    *(p + 1) = '\0';
+
+    s.width(width + std::strlen(buf));
+    s.fill('0');
+    s << buf;
+  }
 
   if (! comm->prefix) {
     if (comm->separate)
