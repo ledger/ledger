@@ -144,10 +144,6 @@ void value_expr_t::compute(balance_t& result, const details_t& details) const
       result = (unsigned int) now;
     break;
 
-  case TODAY:
-    result = (unsigned int) now;
-    break;
-
   case CLEARED:
     if (details.entry) {
       result = details.entry->state == entry_t::CLEARED;
@@ -190,9 +186,7 @@ void value_expr_t::compute(balance_t& result, const details_t& details) const
     break;
 
   case DEPTH:
-    if (details.xact)
-      result = details.xact->account->depth - 1;
-    else if (details.account)
+    if (details.account)
       result = details.account->depth - 1;
     break;
 
@@ -252,25 +246,21 @@ void value_expr_t::compute(balance_t& result, const details_t& details) const
     assert(left);
     left->compute(result, details);
 
-    std::time_t moment = -1;
+    std::time_t moment = now;
     if (right) {
       switch (right->type) {
       case DATE:
 	if (details.entry)
 	  moment = details.entry->date;
-	else
-	  moment = now;
 	break;
 
-      case TODAY:
-	moment = now;
+      case CONSTANT_T:
+	moment = right->constant_t;
 	break;
 
       default:
 	throw compute_error("Invalid date passed to P(value,date)");
       }
-    } else {
-      moment = now;
     }
     result = result.value(moment);
     break;
@@ -315,9 +305,8 @@ void value_expr_t::compute(balance_t& result, const details_t& details) const
   case O_GTE: {
     assert(left);
     assert(right);
-    left->compute(result, details);
-    balance_t temp = result;
-    result = 0;
+    balance_t temp;
+    left->compute(temp, details);
     right->compute(result, details);
     switch (type) {
     case O_EQ:  result = temp == result; break;
@@ -336,9 +325,8 @@ void value_expr_t::compute(balance_t& result, const details_t& details) const
   case O_DIV: {
     assert(left);
     assert(right);
-    right->compute(result, details);
-    balance_t temp = result;
-    result = 0;
+    balance_t temp;
+    right->compute(temp, details);
     left->compute(result, details);
     switch (type) {
     case O_ADD: result += temp; break;
@@ -390,10 +378,14 @@ value_expr_t * parse_value_term(std::istream& in)
   in.get(c);
   switch (c) {
   // Basic terms
+  case 'N':
+    node = new value_expr_t(value_expr_t::CONSTANT_T);
+    node->constant_t = now;
+    break;
+
   case 'a': node = new value_expr_t(value_expr_t::AMOUNT); break;
   case 'c': node = new value_expr_t(value_expr_t::COST); break;
   case 'd': node = new value_expr_t(value_expr_t::DATE); break;
-  case 'N': node = new value_expr_t(value_expr_t::TODAY); break;
   case 'X': node = new value_expr_t(value_expr_t::CLEARED); break;
   case 'R': node = new value_expr_t(value_expr_t::REAL); break;
   case 'n': node = new value_expr_t(value_expr_t::INDEX); break;
@@ -727,7 +719,6 @@ void dump_value_expr(std::ostream& out, const value_expr_t * node)
   case value_expr_t::AMOUNT:	   out << "AMOUNT"; break;
   case value_expr_t::COST:	   out << "COST"; break;
   case value_expr_t::DATE:	   out << "DATE"; break;
-  case value_expr_t::TODAY:	   out << "TODAY"; break;
   case value_expr_t::CLEARED:	   out << "CLEARED"; break;
   case value_expr_t::REAL:	   out << "REAL"; break;
   case value_expr_t::INDEX:	   out << "INDEX"; break;

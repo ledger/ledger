@@ -2,6 +2,7 @@
 #define _EXPR_H
 
 #include "ledger.h"
+#include "value.h"
 #include "error.h"
 
 namespace ledger {
@@ -49,7 +50,6 @@ struct value_expr_t
     AMOUNT,
     COST,
     DATE,
-    TODAY,
     CLEARED,
     REAL,
     INDEX,

@@ -176,7 +176,7 @@ OPT_BEGIN(end_date, "e:") {
 OPT_BEGIN(current, "c") {
   if (! config->predicate.empty())
     config->predicate += "&";
-  config->predicate += "(d<N)";
+  config->predicate += "(d<=N)";
 } OPT_END(current);
 
 OPT_BEGIN(cleared, "C") {
