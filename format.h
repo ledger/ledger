@@ -49,13 +49,16 @@ struct element_t
 
 struct format_t
 {
-  std::auto_ptr<element_t> elements;
+  element_t * elements;
 
-  static std::auto_ptr<node_t>	  value_expr;
-  static std::auto_ptr<node_t>	  total_expr;
+  static std::auto_ptr<node_t> value_expr;
+  static std::auto_ptr<node_t> total_expr;
 
   format_t(const std::string& _format) {
-    elements.reset(parse_elements(_format));
+    elements = parse_elements(_format);
+  }
+  ~format_t() {
+    if (elements) delete elements;
   }
 
   static element_t * parse_elements(const std::string& fmt);

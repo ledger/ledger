@@ -1,5 +1,4 @@
 #include "ledger.h"
-#include "textual.h"
 
 #include <vector>
 #include <fstream>
@@ -97,7 +96,7 @@ transaction_t * read_binary_transaction(std::istream& in, entry_t * entry)
   return xact;
 }
 
-entry_t * read_binary_entry(std::istream& in, ledger_t * ledger)
+entry_t * read_binary_entry(std::istream& in, journal_t * journal)
 {
   entry_t * entry = new entry_t;
 
@@ -258,7 +257,7 @@ account_t * read_binary_account(std::istream& in, account_t * master = NULL)
 
   // If all of the subaccounts will be added to a different master
   // account, throw away what we've learned about the recorded
-  // ledger's own master account.
+  // journal's own master account.
 
   if (master) {
     delete acct;
@@ -282,9 +281,9 @@ account_t * read_binary_account(std::istream& in, account_t * master = NULL)
   return acct;
 }
 
-unsigned int read_binary_ledger(std::istream&	   in,
+unsigned int read_binary_journal(std::istream&	   in,
 				const std::string& leader,
-				ledger_t *	   ledger,
+				journal_t *	   journal,
 				account_t *	   master)
 {
   ident = 0;
@@ -325,7 +324,7 @@ unsigned int read_binary_ledger(std::istream&	   in,
     in.read(buf, len);
     buf[len] = '\0';
 
-    ledger->sources.push_back(buf);
+    journal->sources.push_back(buf);
 
     std::time_t old_mtime;
     struct stat info;
@@ -335,7 +334,7 @@ unsigned int read_binary_ledger(std::istream&	   in,
       return 0;
   }
 
-  ledger->master = read_binary_account(in, master);
+  journal->master = read_binary_account(in, master);
 
   unsigned long count;
   in.read((char *)&count, sizeof(count));
@@ -351,8 +350,8 @@ unsigned int read_binary_ledger(std::istream&	   in,
   in.read((char *)&count, sizeof(count));
 
   for (int i = count; --i >= 0; ) {
-    entry_t * entry = read_binary_entry(in, ledger);
-    ledger->entries.push_back(entry);
+    entry_t * entry = read_binary_entry(in, journal);
+    journal->entries.push_back(entry);
   }
 
 #ifdef DEBUG
@@ -557,7 +556,7 @@ void write_binary_account(std::ostream& out, account_t * account)
 #endif
 }
 
-void write_binary_ledger(std::ostream& out, ledger_t * ledger,
+void write_binary_journal(std::ostream& out, journal_t * journal,
 			 const std::string& leader)
 {
   out.write((char *)&binary_magic_number, sizeof(binary_magic_number));
@@ -576,11 +575,11 @@ void write_binary_ledger(std::ostream& out, ledger_t * ledger,
   out.write((char *)&len, sizeof(len));
   out.write(leader.c_str(), len);
 
-  len = ledger->sources.size();
+  len = journal->sources.size();
   out.write((char *)&len, sizeof(len));
 
-  for (std::list<std::string>::const_iterator i = ledger->sources.begin();
-       i != ledger->sources.end();
+  for (std::list<std::string>::const_iterator i = journal->sources.begin();
+       i != journal->sources.end();
        i++) {
     len = (*i).length();
     out.write((char *)&len, sizeof(len));
@@ -591,7 +590,7 @@ void write_binary_ledger(std::ostream& out, ledger_t * ledger,
     out.write((char *)&info.st_mtime, sizeof(info.st_mtime));
   }
 
-  write_binary_account(out, ledger->master);
+  write_binary_account(out, journal->master);
 
   unsigned long count = commodity_t::commodities.size();
   out.write((char *)&count, sizeof(count));
@@ -601,11 +600,11 @@ void write_binary_ledger(std::ostream& out, ledger_t * ledger,
        i++)
     write_binary_commodity(out, (*i).second);
 
-  count = ledger->entries.size();
+  count = journal->entries.size();
   out.write((char *)&count, sizeof(count));
 
-  for (entries_list::const_iterator i = ledger->entries.begin();
-       i != ledger->entries.end();
+  for (entries_list::const_iterator i = journal->entries.begin();
+       i != journal->entries.end();
        i++)
     write_binary_entry(out, *i);
 

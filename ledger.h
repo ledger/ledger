@@ -133,14 +133,14 @@ class account_t
     return fullname();
   }
 
-  // These functions should only be called from ledger_t::add_entry
-  // and ledger_t::remove_entry; or from the various parsers.
+  // These functions should only be called from journal_t::add_entry
+  // and journal_t::remove_entry; or from the various parsers.
   void add_transaction(transaction_t * xact) {
     transactions.push_back(xact);
   }
   bool remove_transaction(transaction_t * xact);
 
-  friend class ledger_t;
+  friend class journal_t;
 };
 
 inline std::ostream& operator<<(std::ostream& out, const account_t& acct) {
@@ -151,7 +151,7 @@ inline std::ostream& operator<<(std::ostream& out, const account_t& acct) {
 
 typedef std::list<entry_t *> entries_list;
 
-class ledger_t
+class journal_t
 {
  public:
   account_t *		 master;
@@ -159,13 +159,13 @@ class ledger_t
   mutable accounts_map	 accounts_cache;
   std::list<std::string> sources;
 
-  ledger_t() {
+  journal_t() {
     master = new account_t(NULL, "");
     master->ident = 0;
     account_t::next_ident = 1;
   }
 
-  ~ledger_t();
+  ~journal_t();
 
   void add_account(account_t * acct) {
     master->add_account(acct);
@@ -186,7 +186,7 @@ class ledger_t
   account_t * find_account(const std::string& name) const {
     // With auto_create false, the other `find_account' will not
     // change the object.
-    return const_cast<ledger_t *>(this)->find_account(name, false);
+    return const_cast<journal_t *>(this)->find_account(name, false);
   }
 
   bool add_entry(entry_t * entry);
@@ -195,7 +195,21 @@ class ledger_t
   entry_t * derive_entry(int argc, char **argv) const;
 };
 
-int parse_ledger_file(char * p, ledger_t * journal);
+int parse_journal_file(char * p, journal_t * journal);
+
+unsigned int parse_textual_journal(std::istream& in, journal_t * ledger,
+				   account_t * master = NULL);
+
+extern unsigned long binary_magic_number;
+
+unsigned int read_binary_journal(std::istream&	    in,
+				 const std::string& leader,
+				 journal_t *        journal,
+				 account_t *        master = NULL);
+
+void write_binary_journal(std::ostream&	     out,
+			  journal_t *	     journal,
+			  const std::string& leader);
 
 extern const std::string version;
 

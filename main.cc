@@ -1,7 +1,5 @@
 #include "ledger.h"
 #include "error.h"
-#include "textual.h"
-#include "binary.h"
 #include "valexpr.h"
 #include "format.h"
 #include "walk.h"
@@ -350,11 +348,13 @@ static void show_help(std::ostream& out)
 
 int main(int argc, char * argv[])
 {
-  std::auto_ptr<ledger::ledger_t> journal(new ledger::ledger_t);
-  std::list<std::string>	  files;
-  std::auto_ptr<ledger::node_t>   predicate;
-  std::auto_ptr<ledger::node_t>   display_predicate;
-  std::auto_ptr<ledger::node_t>   sort_order;
+  using namespace ledger;
+
+  std::auto_ptr<journal_t> journal(new journal_t);
+  std::list<std::string>  files;
+  std::auto_ptr<node_t>   predicate;
+  std::auto_ptr<node_t>   display_predicate;
+  std::auto_ptr<node_t>   sort_order;
 
   std::string predicate_string;
   std::string display_predicate_string;
@@ -376,10 +376,10 @@ int main(int argc, char * argv[])
   // Initialize some variables based on environment variable settings
 
   if (char * p = std::getenv("PRICE_HIST"))
-    ledger::price_db = p;
+    price_db = p;
 
   if (char * p = std::getenv("PRICE_EXP"))
-    ledger::pricing_leeway = std::atol(p) * 60;
+    pricing_leeway = std::atol(p) * 60;
 
   // A ledger data file must be specified
 
@@ -392,18 +392,18 @@ int main(int argc, char * argv[])
 	break;
       }
 
-    ledger::cache_dirty = true;
+    cache_dirty = true;
 
     if (use_cache)
       if (const char * p = std::getenv("LEDGER_CACHE"))
 	if (access(p, R_OK) != -1) {
 	  std::ifstream instr(p);
-	  if (! ledger::read_binary_ledger(instr, std::getenv("LEDGER"),
-					   journal.get())) {
+	  if (! read_binary_journal(instr, std::getenv("LEDGER"),
+				   journal.get())) {
 	    // Throw away what's been read, and create a new journal
-	    journal.reset(new ledger::ledger_t);
+	    journal.reset(new journal_t);
 	  } else {
-	    ledger::cache_dirty = false;
+	    cache_dirty = false;
 	  }
 	}
   }
@@ -428,7 +428,7 @@ int main(int argc, char * argv[])
 
     case 'v':
       std::cout
-	<< "Ledger " << ledger::version
+	<< "Ledger " << version
 	<< ", the command-line accounting tool" << std::endl
 	<< "  Copyright (c) 2003-2004, New Artisans LLC. All rights reserved."
 	<< std::endl << std::endl
@@ -445,7 +445,7 @@ int main(int argc, char * argv[])
       break;
 
     case 'p':
-      ledger::set_price_conversion(optarg);
+      set_price_conversion(optarg);
       break;
 
     case 'b':
@@ -536,15 +536,15 @@ int main(int argc, char * argv[])
 
     // Commodity reporting
     case 'P':
-      ledger::price_db = optarg;
+      price_db = optarg;
       break;
 
     case 'L':
-      ledger::pricing_leeway = std::atol(optarg) * 60;
+      pricing_leeway = std::atol(optarg) * 60;
       break;
 
     case 'Q':
-      ledger::commodity_t::updater = ledger::download_price_quote;
+      commodity_t::updater = download_price_quote;
       break;
 
     case 't':
@@ -566,15 +566,15 @@ int main(int argc, char * argv[])
       break;
 
     case 'V':
-      ledger::show_commodities_revalued = true;
+      show_commodities_revalued = true;
 
       value_expr = "v";
       total_expr = "V";
       break;
 
     case 'G':
-      ledger::show_commodities_revalued      =
-      ledger::show_commodities_revalued_only = true;
+      show_commodities_revalued      =
+      show_commodities_revalued_only = true;
 
       value_expr = "c";
       total_expr = "G";
@@ -622,36 +622,36 @@ int main(int argc, char * argv[])
 
   // Read the ledger file, unless we already read it from the cache
 
-  if (! use_cache || ledger::cache_dirty) {
+  if (! use_cache || cache_dirty) {
     int entry_count = 0;
 
     try {
       if (files.empty()) {
 	if (char * p = std::getenv("LEDGER"))
 	  for (p = std::strtok(p, ":"); p; p = std::strtok(NULL, ":"))
-	    entry_count += parse_ledger_file(p, journal.get());
+	    entry_count += parse_journal_file(p, journal.get());
       } else {
 	for (std::list<std::string>::iterator i = files.begin();
 	     i != files.end(); i++) {
 	  char buf[4096];
 	  char * p = buf;
 	  std::strcpy(p, (*i).c_str());
-	  entry_count += parse_ledger_file(p, journal.get());
+	  entry_count += parse_journal_file(p, journal.get());
 	}
       }
 
       // Read prices from their own ledger file, after all others have
       // been read.
 
-      if (! ledger::price_db.empty()) {
-	const char * path = ledger::price_db.c_str();
+      if (! price_db.empty()) {
+	const char * path = price_db.c_str();
 	std::ifstream db(path);
 	journal->sources.push_back(path);
-	entry_count += ledger::parse_textual_ledger(db, journal.get(),
+	entry_count += parse_textual_journal(db, journal.get(),
 						    journal->master);
       }
     }
-    catch (ledger::error& err) {
+    catch (error& err) {
       std::cerr << "Fatal: " << err.what() << std::endl;
       return 1;
     }
@@ -685,7 +685,7 @@ int main(int argc, char * argv[])
 
   // Process the remaining command-line arguments
 
-  std::auto_ptr<ledger::entry_t> new_entry;
+  std::auto_ptr<entry_t> new_entry;
   if (command == "entry") {
     new_entry.reset(journal->derive_entry(argc - index, &argv[index]));
   } else {
@@ -770,7 +770,7 @@ int main(int argc, char * argv[])
     if (debug)
       std::cerr << "predicate = " << predicate_string << std::endl;
 #endif
-    predicate.reset(ledger::parse_expr(predicate_string));
+    predicate.reset(parse_expr(predicate_string));
   }
 
   if (display_predicate_string.empty() && command == "b" && ! show_empty)
@@ -782,18 +782,18 @@ int main(int argc, char * argv[])
       std::cerr << "display predicate = " << display_predicate_string
 		<< std::endl;
 #endif
-    display_predicate.reset(ledger::parse_expr(display_predicate_string));
+    display_predicate.reset(parse_expr(display_predicate_string));
   }
 
   // Compile the sorting string
 
   if (! sort_string.empty())
-    sort_order.reset(ledger::parse_expr(sort_string));
+    sort_order.reset(parse_expr(sort_string));
 
   // Setup the meaning of %t and %T encountered in format strings
 
-  ledger::format_t::value_expr.reset(ledger::parse_expr(value_expr));
-  ledger::format_t::total_expr.reset(ledger::parse_expr(total_expr));
+  format_t::value_expr.reset(parse_expr(value_expr));
+  format_t::total_expr.reset(parse_expr(total_expr));
 
   // Now handle the command that was identified above.
 
@@ -812,26 +812,24 @@ int main(int argc, char * argv[])
   if (! format_string.empty())
     f = format_string.c_str();
   else if (command == "b")
-    f = ledger::bal_fmt.c_str();
+    f = bal_fmt.c_str();
   else if (command == "r")
-    f = ledger::reg_fmt.c_str();
+    f = reg_fmt.c_str();
   else
-    f = ledger::print_fmt.c_str();
+    f = print_fmt.c_str();
 
   if (command == "b") {
-    std::auto_ptr<ledger::format_t> format(new ledger::format_t(f));
-
-    ledger::walk_accounts(journal->master,
-			  ledger::format_account(std::cout, *format.get()),
-			  predicate.get(), show_related, show_inverted,
-			  show_subtotals, display_predicate.get());
+    format_t format(f);
+    walk_accounts(journal->master, format_account(std::cout, format),
+		  predicate.get(), show_related, show_inverted,
+		  show_subtotals, display_predicate.get());
 
     if (! display_predicate.get() ||
-	ledger::item_predicate(display_predicate.get())(journal->master)) {
+	item_predicate(display_predicate.get())(journal->master)) {
       std::string end_format = "--------------------\n";
       end_format += f;
-      format.get()->elements.reset(ledger::format_t::parse_elements(end_format));
-      ledger::format_account(std::cout, *format.get())(journal->master, true);
+      format.elements = format_t::parse_elements(end_format);
+      format_account(std::cout, format)(journal->master, true);
     }
   } else {
     std::string first_line_format;
@@ -844,27 +842,34 @@ int main(int argc, char * argv[])
       first_line_format = next_lines_format = f;
     }
 
-    std::auto_ptr<ledger::format_t>
-      format(new ledger::format_t(first_line_format));
-    std::auto_ptr<ledger::format_t>
-      nformat(new ledger::format_t(next_lines_format));
+    format_t format(first_line_format);
+    format_t nformat(next_lines_format);
+    format_transaction formatter(std::cout, format, nformat);
 
-    ledger::walk_entries(journal->entries.begin(), journal->entries.end(),
-			 ledger::format_transaction(std::cout,
-						    first_line_format,
-						    next_lines_format),
-			 predicate.get(), show_related, show_inverted,
-			 display_predicate.get());
+    if (! sort_order.get()) {
+      walk_entries(journal->entries.begin(), journal->entries.end(),
+		   formatter, predicate.get(), show_related, show_inverted,
+		   display_predicate.get());
+    } else {
+      transactions_deque transactions_pool;
+      walk_entries(journal->entries.begin(), journal->entries.end(),
+		   collect_transactions(transactions_pool), predicate.get(),
+		   show_related, show_inverted, display_predicate.get());
+      std::stable_sort(transactions_pool.begin(), transactions_pool.end(),
+		       compare_transactions(sort_order.get()));
+      walk_transactions(transactions_pool.begin(), transactions_pool.end(),
+			formatter, NULL, show_related, show_inverted,
+			display_predicate.get());
+    }
   }
 
   // Save the cache, if need be
 
-  if (use_cache && ledger::cache_dirty)
+  if (use_cache && cache_dirty)
     if (const char * p = std::getenv("LEDGER_CACHE")) {
       std::ofstream outstr(p);
       assert(std::getenv("LEDGER"));
-      ledger::write_binary_ledger(outstr, journal.get(),
-				  std::getenv("LEDGER"));
+      write_binary_journal(outstr, journal.get(), std::getenv("LEDGER"));
     }
 
   return 0;

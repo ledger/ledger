@@ -147,7 +147,7 @@ element_t * format_t::parse_elements(const std::string& fmt)
 void format_t::format_elements(std::ostream&    out,
 			       const details_t& details) const
 {
-  for (const element_t * elem = elements.get(); elem; elem = elem->next) {
+  for (const element_t * elem = elements; elem; elem = elem->next) {
     if (elem->align_left)
       out << std::left;
     else
@@ -158,7 +158,7 @@ void format_t::format_elements(std::ostream&    out,
 
     switch (elem->type) {
     case element_t::STRING:
-      out << elem->chars;;
+      out << elem->chars;
       break;
 
     case element_t::VALUE_EXPR: {

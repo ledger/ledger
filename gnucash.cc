@@ -15,7 +15,7 @@ typedef std::pair<const std::string, account_t *> accounts_pair;
 typedef std::map<account_t *, commodity_t *> account_comm_map;
 typedef std::pair<account_t *, commodity_t *> account_comm_pair;
 
-static ledger_t *	curr_ledger;
+static journal_t *	curr_journal;
 static account_t *	curr_account;
 static commodity_t *	curr_account_comm;
 static std::string	curr_account_id;
@@ -107,7 +107,7 @@ static void endElement(void *userData, const char *name)
   if (std::strcmp(name, "gnc:account") == 0) {
     assert(curr_account);
     if (! curr_account->parent)
-      curr_ledger->add_account(curr_account);
+      curr_journal->add_account(curr_account);
     accounts_by_id.insert(accounts_pair(curr_account_id, curr_account));
     curr_account = NULL;
   }
@@ -118,7 +118,7 @@ static void endElement(void *userData, const char *name)
   }
   else if (std::strcmp(name, "gnc:transaction") == 0) {
     assert(curr_entry);
-    if (! curr_ledger->add_entry(curr_entry))
+    if (! curr_journal->add_entry(curr_entry))
       assert(0);
     curr_entry = NULL;
   }
@@ -256,13 +256,13 @@ static void dataHandler(void *userData, const char *s, int len)
   }
 }
 
-int parse_gnucash(std::istream& in, ledger_t * ledger, account_t * master)
+int parse_gnucash(std::istream& in, journal_t * journal, account_t * master)
 {
   char buf[BUFSIZ];
 
   count        = 0;
   action       = NO_ACTION;
-  curr_ledger  = ledger;
+  curr_journal  = journal;
   curr_account = NULL;
   curr_entry   = NULL;
   curr_comm    = NULL;

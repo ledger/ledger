@@ -7,6 +7,7 @@
 #include "valexpr.h"
 
 #include <iostream>
+#include <deque>
 
 namespace ledger {
 
@@ -84,7 +85,45 @@ class format_transaction
   void operator()(transaction_t *  xact,
 		  balance_pair_t * balance,
 		  unsigned int *   index,
-		  const bool	  inverted) const;
+		  const bool	   inverted) const;
+};
+
+struct compare_transactions {
+  const node_t * sort_order;
+
+  compare_transactions(const node_t * _sort_order)
+    : sort_order(_sort_order) {
+    assert(sort_order);
+  }
+
+  bool operator()(const transaction_t * left,
+		  const transaction_t * right) const {
+    assert(left);
+    assert(right);
+    balance_t left_result;
+    sort_order->compute(left_result, details_t(left));
+    balance_t right_result;
+    sort_order->compute(right_result, details_t(right));
+    return left_result < right_result;
+  }
+};
+
+typedef std::deque<transaction_t *> transactions_deque;
+
+class collect_transactions
+{
+  transactions_deque& transactions;
+
+ public:
+  collect_transactions(transactions_deque& _transactions)
+    : transactions(_transactions) {}
+
+  void operator()(transaction_t *  xact,
+		  balance_pair_t * balance,
+		  unsigned int *   index,
+		  const bool	   inverted) {
+    transactions.push_back(xact);
+  }
 };
 
 class ignore_transaction
@@ -151,6 +190,38 @@ void walk_entries(entries_list::iterator begin,
       if (pred_functor(*j))
 	handle_transaction(*j, functor, disp_pred_functor,
 			   related, inverted, &balance, &index);
+}
+
+template <typename Function>
+void walk_transactions(transactions_list::iterator begin,
+		       transactions_list::iterator end,
+		       Function	      functor,
+		       const node_t * predicate,
+		       const bool     related,
+		       const bool     inverted,
+		       const node_t * display_predicate = NULL)
+{
+  balance_pair_t balance;
+  unsigned int   index;
+
+  for (transactions_list::iterator i = begin; i != end; i++)
+    functor(*i, &balance, &index, inverted);
+}
+
+template <typename Function>
+void walk_transactions(transactions_deque::iterator begin,
+		       transactions_deque::iterator end,
+		       Function	      functor,
+		       const node_t * predicate,
+		       const bool     related,
+		       const bool     inverted,
+		       const node_t * display_predicate = NULL)
+{
+  balance_pair_t balance;
+  unsigned int   index;
+
+  for (transactions_deque::iterator i = begin; i != end; i++)
+    functor(*i, &balance, &index, inverted);
 }
 
 class format_account

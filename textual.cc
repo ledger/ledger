@@ -1,4 +1,3 @@
-#include "textual.h"
 #include "datetime.h"
 #include "autoxact.h"
 #include "valexpr.h"
@@ -287,8 +286,8 @@ entry_t * parse_entry(std::istream& in, account_t * master)
   return curr;
 }
 
-unsigned int parse_textual_ledger(std::istream& in, ledger_t * journal,
-				  account_t * master)
+unsigned int parse_textual_journal(std::istream& in, journal_t * journal,
+				   account_t * master)
 {
   static char   line[MAX_LINE + 1];
   char		c;
@@ -518,8 +517,8 @@ unsigned int parse_textual_ledger(std::istream& in, ledger_t * journal,
 	  unsigned int curr_linenum = linenum;
 	  std::string  curr_path    = path;
 
-	  count += parse_textual_ledger(stream, journal,
-					account_stack.front());
+	  count += parse_textual_journal(stream, journal,
+					 account_stack.front());
 
 	  linenum = curr_linenum;
 	  path    = curr_path;

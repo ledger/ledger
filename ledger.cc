@@ -1,8 +1,6 @@
 #include "ledger.h"
 #include "valexpr.h"
 #include "datetime.h"
-#include "textual.h"
-#include "binary.h"
 
 #include <fstream>
 
@@ -10,30 +8,7 @@ namespace ledger {
 
 const std::string version = "2.0b";
 
-#if 0
-
-struct cmp_items {
-  const node_t * sort_order;
-
-  cmp_items(const node_t * _sort_order) : sort_order(_sort_order) {
-    assert(sort_order);
-  }
-
-  bool operator()(const item_t * left, const item_t * right) const {
-    assert(left);
-    assert(right);
-    return sort_order->compute(left) < sort_order->compute(right);
-  }
-};
-
-void item_t::sort(const node_t * sort_order)
-{
-  std::stable_sort(subitems.begin(), subitems.end(), cmp_items(sort_order));
-}
-
-#endif
-
-ledger_t::~ledger_t()
+journal_t::~journal_t()
 {
   delete master;
 
@@ -46,7 +21,7 @@ ledger_t::~ledger_t()
     delete *i;
 }
 
-bool ledger_t::add_entry(entry_t * entry)
+bool journal_t::add_entry(entry_t * entry)
 {
   entries.push_back(entry);
 
@@ -64,7 +39,7 @@ bool ledger_t::add_entry(entry_t * entry)
   return true;
 }
 
-bool ledger_t::remove_entry(entry_t * entry)
+bool journal_t::remove_entry(entry_t * entry)
 {
   entries.remove(entry);
 
@@ -77,7 +52,7 @@ bool ledger_t::remove_entry(entry_t * entry)
   return true;
 }
 
-entry_t * ledger_t::derive_entry(int argc, char **argv) const
+entry_t * journal_t::derive_entry(int argc, char **argv) const
 {
   entry_t *  added    = new entry_t;
   entry_t *  matching = NULL;
@@ -204,7 +179,7 @@ entry_t * ledger_t::derive_entry(int argc, char **argv) const
   return added;
 }
 
-int parse_ledger_file(char * p, ledger_t * journal)
+int parse_journal_file(char * p, journal_t * journal)
 {
   char * sep = std::strrchr(p, '=');
   if (sep) *sep++ = '\0';
@@ -225,9 +200,9 @@ int parse_ledger_file(char * p, ledger_t * journal)
   stream.seekg(start);
 
   if (magic == binary_magic_number)
-    return read_binary_ledger(stream, "", journal, master);
+    return read_binary_journal(stream, "", journal, master);
   else
-    return parse_textual_ledger(stream, journal, master);
+    return parse_textual_journal(stream, journal, master);
 }
 
 } // namespace ledger
