@@ -1256,7 +1256,7 @@ options:
 @item --wide-register-format
 @command{register} report when @option{-w} (wide) is used.  Default:
 @smallexample
-%[%Y/%m/%d %H:%M:%S %Z]   %-10A %12t %12T\n
+%D  %-.35P %-.38A %22.108t %22.132T\n%/%48|%-.38A %22.108t %22.132T\n
 @end smallexample
 @end table
 
