@@ -1,0 +1,13 @@
+Welcome to ledger, a command-line accounting program that uses a
+text-based ledger file, yet provides full double-entry accouting, use
+of commodities, unlimited accounts, etc.
+
+Ledger is written in ANSI C++, and should compile on any platform.  It
+only depends on the GNU multiprecision integer library (gmp, or
+libgmp), and the Perl regular expression library (pcre, or libpcre).
+
+To build and install, once you have these libraries on your system,
+enter these commands:
+
+  make
+  cp ledger /usr/local/bin
