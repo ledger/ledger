@@ -231,11 +231,11 @@ void print_register(const std::string& acct_name, std::ostream& out,
 #endif
       out << " ";
 
-      out.width(30);
+      out.width(24);
       if ((*i)->desc.empty())
 	out << " ";
       else
-	out << std::left << truncated((*i)->desc, 30);
+	out << std::left << truncated((*i)->desc, 24);
       out << " ";
 
       // Always display the street value, if prices have been
@@ -718,7 +718,7 @@ int main(int argc, char * argv[])
   else if (command == "print") {
     if (show_sorted)
       main_ledger->sort(cmp_entry_date());
-    main_ledger->print(std::cout, regexps, true);
+    main_ledger->print(std::cout, regexps, ! full_names);
   }
   else if (command == "equity") {
     equity_ledger(std::cout, regexps);
