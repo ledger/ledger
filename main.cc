@@ -590,18 +590,14 @@ int main(int argc, char * argv[])
 
   if (command == "b") {
     std::auto_ptr<item_handler<transaction_t> > formatter;
-
     formatter.reset(new add_to_account_value);
     if (show_related)
       formatter.reset(new related_transactions(formatter.release(),
 					       show_all_related));
-    formatter.reset(new filter_transactions(formatter.release(),
-					    predicate));
-
+    formatter.reset(new filter_transactions(formatter.release(), predicate));
     walk_entries(journal->entries, *formatter.get());
 
     format_account acct_formatter(std::cout, format, display_predicate);
-
     if (show_subtotals)
       sum_accounts(journal->master);
     walk_accounts(journal->master, acct_formatter, sort_order.get());
@@ -613,11 +609,12 @@ int main(int argc, char * argv[])
     }
   }
   else if (command == "E") {
-    add_to_account_value formatter;
-    walk_entries(journal->entries, formatter);
+    std::auto_ptr<item_handler<transaction_t> > formatter;
+    formatter.reset(new add_to_account_value);
+    formatter.reset(new filter_transactions(formatter.release(), predicate));
+    walk_entries(journal->entries, *formatter.get());
 
-    format_equity acct_formatter(std::cout, format, nformat,
-				 display_predicate);
+    format_equity acct_formatter(std::cout, format, nformat, display_predicate);
     sum_accounts(journal->master);
     walk_accounts(journal->master, acct_formatter, sort_order.get());
   }
@@ -693,12 +690,14 @@ int main(int argc, char * argv[])
 
     // Once the filters are chained, walk `journal's entries and start
     // feeding each transaction that matches `predicate' to the chain.
-    walk_entries(journal->entries.begin(), journal->entries.end(),
-		 *formatter.get());
+    walk_entries(journal->entries, *formatter.get());
 
 #ifdef DEBUG_ENABLED
+    // The transaction display flags (dflags) are not recorded in the
+    // binary cache, and only need to be cleared if the transactions
+    // are to be displayed a second time.
     clear_display_flags cleanup;
-    walk_entries(journal->entries.begin(), journal->entries.end(), cleanup);
+    walk_entries(journal->entries, cleanup);
 #endif
   }
 
