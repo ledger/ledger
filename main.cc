@@ -142,7 +142,14 @@ int main(int argc, char *argv[])
   commodity * usd = new commodity("$", true, false, true, false, 2);
   main_ledger.commodities.insert(commodities_entry("USD", usd));
 
+  // Read the command word
+
+  const std::string command = argv[optind];
+
 #ifdef HUQUQULLAH
+  if (command == "register")
+    compute_huquq = false;
+
   if (compute_huquq) {
     new commodity("H", true, true, true, false, 2);
     new commodity("mithqal", false, true, true, false, 1);
@@ -152,15 +159,6 @@ int main(int argc, char *argv[])
     main_ledger.record_price("H=" DEFAULT_COMMODITY "0.19");
     main_ledger.record_price("troy=8.5410148523 mithqal");
   }
-#endif
-
-  // Read the command word
-
-  const std::string command = argv[optind];
-
-#ifdef HUQUQ_CATEGORIES
-  if (command == "register")
-    compute_huquq = false;
 #endif
 
   // Parse the ledger

@@ -66,13 +66,14 @@ void print_register(int argc, char **argv, std::ostream& out)
     for (std::list<transaction *>::iterator x = (*i)->xacts.begin();
 	 x != (*i)->xacts.end();
 	 x++) {
-      if ((*x)->acct == acct || ! show_cleared && (*i)->cleared)
+      if ((*x)->acct != acct || ! show_cleared && (*i)->cleared)
 	continue;
 
       char buf[32];
-      std::strftime(buf, 31, "%Y.%m.%d ", std::localtime(&(*i)->date));
+      std::strftime(buf, 31, "%m.%d ", std::localtime(&(*i)->date));
       out << buf;
 
+#if 0
       if ((*i)->cleared)
 	out << "* ";
       else
@@ -83,19 +84,20 @@ void print_register(int argc, char **argv, std::ostream& out)
 	out << " ";
       else
 	out << std::left << (*i)->code;
+#endif
       out << " ";
 
-      out.width(20);
+      out.width(30);
       if ((*i)->desc.empty())
 	out << " ";
       else
 	out << std::left << (*i)->desc;
       out << " ";
 
-      out.width(18);
-      out << std::left << (*x)->acct->as_str() << " ";
+      transaction * xact = (*i)->xacts.front();
 
-      (*x)->cost->negate();
+      out.width(22);
+      out << std::left << xact->acct->as_str() << " ";
 
       out.width(12);
       out << std::right << (*x)->cost->as_str(true);

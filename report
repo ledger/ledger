@@ -9,10 +9,10 @@ command=$1
 shift
 
 case "$command" in
-    balance)  $line "$@" balance bank checking mastercard cash ;;
+    balance)  $line "$@" balance -s -- -Equity -Income -Expenses -Retirement ;;
     worth)    $line "$@" balance assets liabilities ;;
     profit)   $line "$@" balance income expense ;;
-    spending) $line "$@" balance -n food movies gas tips \
+    spending) $line "$@" balance -F food movies gas tips \
 	health supplies -insurance -vacation ;;
     huquq)    $line "$@" balance ^huquq ;;
     gold)     $line "$@" balance -G $1 ^huquq ;;

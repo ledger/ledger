@@ -11,9 +11,10 @@ extern bool have_beginning;
 extern std::time_t end_date;
 extern bool have_ending;
 
-static bool show_children = false;
-static bool show_empty    = false;
-static bool no_subtotals  = false;
+static bool show_children;
+static bool show_empty;
+static bool no_subtotals;
+static bool full_names;
 
 static void display_total(std::ostream& out, totals& total_balance,
 			  const account * acct,
@@ -27,29 +28,30 @@ static void display_total(std::ostream& out, totals& total_balance,
 
     if (balance && (show_empty || *balance)) {
       bool match = true;
+      bool true_match = false;
       if (! regexps.empty()) {
 	if (show_children) {
 	  match = false;
 	  for (const account * a = acct; a; a = a->parent) {
-	    if (matches(regexps, a->as_str())) {
-	      match = true;
+	    if (matches(regexps, a->name)) {
+	      match      = true;
+	      true_match = a == acct;
 	      break;
 	    }
 	  }
 	} else {
-	  match = matches(regexps, acct->as_str());
+	  match      = matches(regexps, acct->as_str());
+	  true_match = matches(regexps, acct->name);
 	}
       }
 
       if (match) {
 	out << *balance;
 
-	// jww (2003-09-30): Don't check "! acct->parent", but simply
-	// make sure this is the parent which matched the regexp.
-	if (! show_children || ! acct->parent)
+	if (! acct->parent || true_match)
 	  total_balance.credit(*balance);
 
-	if (acct->parent && ! no_subtotals) {
+	if (acct->parent && ! no_subtotals && ! full_names) {
 	  for (const account * a = acct; a; a = a->parent)
 	    out << "  ";
 	  out << acct->name << std::endl;
@@ -75,13 +77,20 @@ static void display_total(std::ostream& out, totals& total_balance,
 
 void report_balances(int argc, char **argv, std::ostream& out)
 {
+  show_children = false;
+  show_empty    = false;
+  no_subtotals  = false;
+  full_names    = false;
+
   optind = 1;
+
   int c;
-  while (-1 != (c = getopt(argc, argv, "sSnG:"))) {
+  while (-1 != (c = getopt(argc, argv, "sSnFG:"))) {
     switch (char(c)) {
     case 's': show_children = true; break;
     case 'S': show_empty    = true; break;
     case 'n': no_subtotals  = true; break;
+    case 'F': full_names    = true; break;
 
 #ifdef HUQUQULLAH
     case 'G': {
@@ -116,7 +125,8 @@ void report_balances(int argc, char **argv, std::ostream& out)
       account * acct = (*x)->acct;
 
       for (; acct; acct = no_subtotals ? NULL : acct->parent) {
-	if (! show_children && acct->parent && regexps.empty())
+	if (! show_children && acct->parent &&
+	    (regexps.empty() || ! matches(regexps, acct->name)))
 	  continue;
 
 	totals * balance = NULL;
