@@ -279,7 +279,7 @@ simplifies the task of adding a new entry to your ledger, and then
 launches @samp{vi} to let you confirm that the entry looks appropriate.
 
 @node Options, Format strings, Commands, Running Ledger
-@section Command-line options
+@section Options
 
 @subsection Basic options
 
@@ -329,6 +329,161 @@ your init file.
 
 @samp{--output FILE} (@samp{-o FILE}) redirects output from any command to
 @samp{FILE}.  By default, all output goes to standard output.
+
+@subsection Report filtering
+
+@samp{--begin-date DATE} (@samp{-b DATE}) constrains the report to
+entries on or after @samp{DATE}.  Only entries after that date will be
+calculated, which means that the running total in the balance report
+will always start at zero with the first matching entry.  (Note: This
+is different from using @samp{--display} to constrain the entries
+displayed, in which case the running total includes the undisplayed
+entries).
+
+@sp 1
+
+@samp{--end-date DATE} (@samp{-e DATE}) contrains the report so that
+entries on or after @samp{DATE} are not considered.  This ending date
+is not inclusive, therefore always use a date that is later than the
+last entry you want to see.
+
+@sp 1
+
+@samp{--current}(@samp{-c}) displays only entries occurring on or
+before the current date.
+
+@sp 1
+
+@samp{--cleared} (@samp{-C}) displays only transactions whose entry
+has been marked ``cleared'' (by placing an asterix to the right of the
+date).
+
+@sp 1
+
+@samp{--uncleared} (@samp{-U}) displays only transactions whose entry
+has not been marked ``cleared'' (i.e., if there is no asterix to the
+right of the date).
+
+@sp 1
+
+@samp{--real} (@samp{-R}) displays only real transactions, not
+virtual.  (A virtual transaction is indicated by surrounding the
+account name with parentheses or brackets; see the section on using
+virtual transactions for more information).
+
+@sp 1
+
+@samp{--related} (@samp{-r}) displays transactions that are related to
+whichever transactions would otherwise have matched the filtering
+criteria.  In the register report, this shows where money went to, or
+the account it came from.  In the balance report, it shows all the
+accounts affected by entries having a related transaction.  For
+example, if a file had this entry:
+
+@example
+2004/03/20 Safeway
+    Expenses:Food                       $65.00
+    Expenses:Cash                       $20.00
+    Assets:Checking
+@end example
+
+And if the register command was:
+
+@example
+ledger -r register food
+@end example
+
+This would be the output, to show the transactions related to the
+transaction that matched.
+
+@example
+2004/03/20 Safeway  Expenses:Cash    $-20.00  $-20.00
+		    Assets:Checking   $85.00   $65.00
+@end example
+
+@subsection Output customization
+
+@samp{--date-format STR} (@samp{-y STR})
+
+@sp 1
+
+@samp{--format STR} (@samp{-F STR})
+
+@samp{--balance-format STR}
+@samp{--equity-format STR}
+@samp{--register-format STR}
+@samp{--plot-value-format STR}
+@samp{--print-format STR}
+@samp{--plot-total-format STR}
+
+@sp 1
+
+@samp{--empty} (@samp{-E})
+
+@sp 1
+
+@samp{--collapse} (@samp{-n})
+
+@samp{--subtotal} (@samp{-s})
+
+@sp 1
+
+@samp{--sort EXPR} (@samp{-S EXPR})
+
+@sp 1
+
+@samp{--interval STR} (@samp{-z STR})
+
+@sp 1
+
+@samp{--dow}
+
+@samp{--weekly} (@samp{-W})
+
+@samp{--monthly} (@samp{-M})
+
+@samp{--yearly} (@samp{-Y})
+
+@sp 1
+
+@samp{--limit EXPR} (@samp{-l EXPR})
+
+@samp{--display EXPR} (@samp{-d EXPR})
+
+@sp 1
+
+@samp{--value EXPR} (@samp{-t EXPR})
+
+@samp{--total EXPR} (@samp{-T EXPR})
+
+@sp 1
+
+@samp{--value-data} (@samp{-j})
+
+@samp{--total-data} (@samp{-J})
+
+@subsection Commodity reporting
+
+@samp{--price-db FILE} (@samp{-P FILE})
+
+@sp 1
+
+@samp{--download} (@samp{-Q})
+
+@sp 1
+
+@samp{--price-exp MINS} (@samp{-L MINS})
+
+@sp 1
+
+@samp{--quantity} (@samp{-O})
+@samp{--basis} (@samp{-B})
+@samp{--market} (@samp{-V})
+@samp{--gain} (@samp{-G})
+@samp{--average} (@samp{-A})
+@samp{--deviation} (@samp{-D})
+@samp{--trend} (@samp{-X})
+@samp{--weighted-trend} (@samp{-Z})
 
 @subsection Environment variables
 
