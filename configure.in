@@ -14,6 +14,45 @@ AC_PROG_RANLIB
 #AC_PROG_LIBTOOL
 #AM_PROG_LIBTOOL
 
+# check if UNIX pipes are available
+AC_CACHE_CHECK(
+  [if pipes can be used],
+  [pipes_avail],
+  [AC_LANG_PUSH(C++)
+   AC_TRY_LINK(
+     [#include <sys/types.h>
+      #include <sys/wait.h>
+      #include <unistd.h>
+      #include <stdlib.h>
+      #include <string.h>
+      #include <stdio.h>],
+     [int status, pfd[2];
+      status = pipe(pfd);
+      status = fork();
+      if (status < 0) {
+	;
+      } else if (status == 0) {
+	char *arg0;
+
+	status = dup2(pfd[0], STDIN_FILENO);
+
+	close(pfd[1]);
+	close(pfd[0]);
+
+	execlp("", arg0, (char *)0);
+	perror("execl");
+	exit(1);
+      } else {
+	close(pfd[0]);
+      }],
+     [pipes_avail=true],
+     [pipes_avail=false])
+   AC_LANG_POP])
+
+if [test x$pipes_avail = xtrue ]; then
+  AC_DEFINE([HAVE_UNIX_PIPES], [1], [Whether UNIX pipes are available])
+fi
+
 # check for gmp
 AC_CACHE_CHECK(
   [if libgmp is available],
