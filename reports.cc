@@ -1,13 +1,13 @@
 #include "ledger.h"
 
-#define LEDGER_VERSION "1.2"
+#define LEDGER_VERSION "1.3"
 
 #include <fstream>
 #include <unistd.h>
 
 namespace ledger {
 
-static bool show_cleared   = false;
+static bool cleared_only   = false;
 static bool show_virtual   = true;
 static bool get_quotes     = false;
 static bool show_children  = false;
@@ -105,7 +105,7 @@ void report_balances(std::ostream& out, regexps_map& regexps)
   for (entries_list_iterator i = main_ledger->entries.begin();
        i != main_ledger->entries.end();
        i++) {
-    if ((show_cleared && ! (*i)->cleared) || ! matches_date_range(*i))
+    if ((cleared_only && ! (*i)->cleared) || ! matches_date_range(*i))
       continue;
 
     for (std::list<transaction *>::iterator x = (*i)->xacts.begin();
@@ -203,7 +203,7 @@ void print_register(const std::string& acct_name, std::ostream& out,
        i != main_ledger->entries.end();
        i++) {
     if ((! have_beginning && ! have_ending && ! have_date_mask &&
-	 ! show_cleared && (*i)->cleared) ||
+	 ! (cleared_only ? (*i)->cleared : ! (*i)->cleared)) ||
 	! matches_date_range(*i) || ! (*i)->matches(regexps))
       continue;
 
@@ -374,7 +374,7 @@ void add_new_entry(int index, int argc, char **argv)
     std::exit(1);
   }
 
-  added.cleared = show_cleared;
+  added.cleared = cleared_only;
 
   if (index == argc) {
     std::cerr << "Error: Too few arguments to 'entry'." << std::endl;
@@ -591,7 +591,7 @@ int main(int argc, char * argv[])
     case 'h': show_help(std::cout); break;
     case 'f': file = new std::ifstream(optarg); break;
 
-    case 'C': show_cleared   = true;  break;
+    case 'C': cleared_only   = true;  break;
     case 'R': show_virtual   = false; break;
     case 's': show_children  = true;  break;
     case 'S': show_sorted    = true;  break;
@@ -718,7 +718,7 @@ int main(int argc, char * argv[])
   else if (command == "print") {
     if (show_sorted)
       main_ledger->sort(cmp_entry_date());
-    main_ledger->print(std::cout, regexps, true);
+    main_ledger->print(std::cout, regexps, ! full_names);
   }
   else if (command == "equity") {
     equity_ledger(std::cout, regexps);

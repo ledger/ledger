@@ -229,19 +229,23 @@ amount * gmp_amount::street(bool get_quotes) const
   int  max = 10;
 
   while (--max >= 0) {
-    if (! amt->commdty()->price) {
+    if (! amt->commdty()->price && ! amt->commdty()->sought) {
       if (get_quotes)
 	get_commodity_price(amt->commdty());
+      amt->commdty()->sought = true;
       if (! amt->commdty()->price)
 	break;
     }
 
     amount * old = amt;
     amt = amt->value(amt->commdty()->price);
-    delete old;
 
-    if (amt->commdty() == old->commdty())
+    if (amt->commdty() == old->commdty()) {
+      delete old;
       break;
+    }
+
+    delete old;
   }
 
   return amt;

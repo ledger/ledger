@@ -37,6 +37,15 @@
 (defvar ledger-version "1.1"
   "The version of ledger.el currently loaded")
 
+(defgroup ledger nil
+  "Interface to the Ledger command-line accounting program."
+  :group 'data)
+
+(defcustom ledger-binary-path (executable-find "ledger")
+  "Path to the ledger executable."
+  :type 'file
+  :group 'ledger)
+
 (defun ledger-iterate-entries (callback)
   (goto-char (point-min))
   (let* ((now (current-time))
@@ -87,7 +96,7 @@
       (insert
        (with-temp-buffer
 	 (setq exit-code
-	       (apply 'call-process "/home/johnw/bin/ledger" nil t nil
+	       (apply 'call-process ledger-binary-path nil t nil
 		      (cons "entry" args)))
 	 (if (= 0 exit-code)
 	     (buffer-substring (+ (point-min) 5) (point-max))
@@ -123,15 +132,13 @@
     (define-key map [(control ?c) (control ?a)] 'ledger-add-entry)
     (define-key map [(control ?c) (control ?c)] 'ledger-toggle-current)))
 
-(defun ledger-parse-entries (account &optional all-p)
-  ;; `then' is 45 days ago
-  (let ((then (time-subtract (current-time)
-			     (seconds-to-time (* 45 24 60 60))))
-	total entries)
+(defun ledger-parse-entries (account &optional all-p after-date)
+  (let (total entries)
     (ledger-iterate-entries
      (function
       (lambda (start date mark desc)
-	(when (or all-p (not mark) (time-less-p then date))
+	(when (and (or all-p (not mark))
+		   (time-less-p after-date date))
 	  (forward-line)
 	  (setq total 0.0)
 	  (while (looking-at
@@ -148,53 +155,76 @@
 				    mark date desc (or amt total))
 			      entries))))
 	    (forward-line))))))
-    (nreverse entries)))
+    entries))
 
-(define-derived-mode ledger-reconcile-mode text-mode "Reconcile"
+(defvar ledger-reconcile-text "Reconcile")
+
+(define-derived-mode ledger-reconcile-mode text-mode 'ledger-reconcile-text
   "A mode for reconciling ledger entries."
   (let ((map (make-sparse-keymap)))
     (define-key map [? ] 'ledger-reconcile-toggle)
     (use-local-map map)))
 
+(add-to-list 'minor-mode-alist
+	     '(ledger-reconcile-mode ledger-reconcile-text))
+
 (defvar ledger-buf nil)
-(make-variable-buffer-local 'ledger-buf)
+(defvar ledger-acct nil)
 
 (defun ledger-reconcile-toggle ()
   (interactive)
   (let ((where (get-text-property (point) 'where))
+	(account ledger-acct)
 	cleared)
     (with-current-buffer ledger-buf
       (goto-char where)
-      (setq cleared (ledger-toggle-current)))
+      (setq cleared (ledger-toggle-current))
+      (save-buffer))
     (if cleared
 	(add-text-properties (line-beginning-position)
 			     (line-end-position)
 			     (list 'face 'bold))
       (remove-text-properties (line-beginning-position)
 			      (line-end-position)
-			      (list 'face)))))
+			      (list 'face)))
+    (with-temp-buffer
+      (let ((exit-code
+	     (apply 'call-process ledger-binary-path nil t nil
+		    (list "-C" "balance" account))))
+	(if (/= 0 exit-code)
+	    (setq ledger-reconcile-text "Reconcile [ERR]")
+	  (goto-char (point-min))
+	  (delete-horizontal-space)
+	  (skip-syntax-forward "^ ")
+	  (setq ledger-reconcile-text
+		(concat "Reconcile ["
+			(buffer-substring-no-properties (point-min) (point))
+			"]")))))))
 
 (defun ledger-reconcile (account)
   (interactive "sAccount to reconcile: ")
-  (let ((items (save-excursion
-		 (goto-char (point-min))
-		 (ledger-parse-entries account)))
-	(buf (current-buffer)))
+  (let* ((then (time-subtract (current-time)
+			      (seconds-to-time (* 90 24 60 60))))
+	 (items (save-excursion
+		  (goto-char (point-min))
+		  (ledger-parse-entries account t then)))
+	 (buf (current-buffer)))
     (pop-to-buffer (generate-new-buffer "*Reconcile*"))
     (ledger-reconcile-mode)
-    (setq ledger-buf buf)
+    (set (make-local-variable 'ledger-buf) buf)
+    (set (make-local-variable 'ledger-acct) account)
     (dolist (item items)
       (let ((beg (point)))
 	(insert (format "%s %-30s %8.2f\n"
-			(format-time-string "%Y.%m.%d" (nth 2 item))
+			(format-time-string "%Y/%m/%d" (nth 2 item))
 			(nth 3 item) (nth 4 item)))
 	(if (nth 1 item)
 	    (set-text-properties beg (1- (point))
 				 (list 'face 'bold
 				       'where (nth 0 item)))
 	  (set-text-properties beg (1- (point))
-			       (list 'where (nth 0 item))))))
-    (goto-char (point-min))))
+			       (list 'where (nth 0 item)))))
+      (goto-char (point-min)))))
 
 (provide 'ledger)
 

@@ -1,5 +1,5 @@
 #ifndef _LEDGER_H
-#define _LEDGER_H "$Revision: 1.28 $"
+#define _LEDGER_H "$Revision: 1.29 $"
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -40,6 +40,7 @@ class commodity
   std::string symbol;
 
   mutable amount * price;       // the current price
+  mutable bool sought;
 
   bool prefix;
   bool separate;
@@ -48,8 +49,8 @@ class commodity
 
   int precision;
 
-  explicit commodity() : price(NULL), prefix(false), separate(true),
-    thousands(false), european(false) {}
+  explicit commodity() : price(NULL), sought(false),
+    prefix(false), separate(true), thousands(false), european(false) {}
 
   explicit commodity(const std::string& sym, bool pre = false,
 		     bool sep = true, bool thou = true,
@@ -298,7 +299,7 @@ extern book * main_ledger;
 
 inline commodity::commodity(const std::string& sym, bool pre, bool sep,
 			    bool thou, bool euro, int prec)
-  : symbol(sym), price(NULL), prefix(pre), separate(sep),
+  : symbol(sym), price(NULL), sought(false), prefix(pre), separate(sep),
     thousands(thou), european(euro), precision(prec) {
 #ifdef DEBUG
   std::pair<commodities_map_iterator, bool> result =
