@@ -1,7 +1,6 @@
-#include "ledger.h"
+#include "journal.h"
 #include "parser.h"
 #include "textual.h"
-#include "autoxact.h"
 #include "binary.h"
 #include "qif.h"
 #include "acconf.h"
@@ -163,8 +162,6 @@ chain_formatters(const std::string& command,
 int parse_and_report(int argc, char * argv[], char * envp[])
 {
   std::auto_ptr<journal_t> journal(new journal_t);
-
-  add_hook(journal->entry_finalize_hooks, handle_auto_xacts);
 
   // Parse command-line arguments, and those set in the environment
 

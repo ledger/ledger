@@ -1,7 +1,7 @@
 #ifndef _CONFIG_H
 #define _CONFIG_H
 
-#include "ledger.h"
+#include "journal.h"
 #include "option.h"
 #include "valexpr.h"
 #include "datetime.h"

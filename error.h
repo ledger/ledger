@@ -1,7 +1,7 @@
 #ifndef _ERROR_H
 #define _ERROR_H
 
-#include "ledger.h"
+#include "journal.h"
 
 #include <exception>
 #include <string>

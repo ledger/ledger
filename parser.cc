@@ -1,5 +1,5 @@
 #include "parser.h"
-#include "ledger.h"
+#include "journal.h"
 
 #include <fstream>
 #include <deque>

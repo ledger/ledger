@@ -1,7 +1,7 @@
 #ifndef _AUTOXACT_H
 #define _AUTOXACT_H
 
-#include "ledger.h"
+#include "journal.h"
 #include "valexpr.h"
 
 #include <deque>

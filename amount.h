@@ -6,6 +6,7 @@
 #include <ctime>
 #include <cctype>
 #include <iostream>
+#include <sstream>
 #include <cassert>
 #include <exception>
 

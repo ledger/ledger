@@ -1,7 +1,7 @@
 #ifndef _DATETIME_H
 #define _DATETIME_H
 
-#include "ledger.h"
+#include "journal.h"
 
 #include <ctime>
 #include <sstream>

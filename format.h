@@ -1,7 +1,7 @@
 #ifndef _FORMAT_H
 #define _FORMAT_H
 
-#include "ledger.h"
+#include "journal.h"
 #include "valexpr.h"
 #include "walk.h"
 

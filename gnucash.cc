@@ -1,5 +1,5 @@
 #include "gnucash.h"
-#include "ledger.h"
+#include "journal.h"
 #include "error.h"
 
 #include <iostream>

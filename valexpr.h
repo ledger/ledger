@@ -1,7 +1,7 @@
 #ifndef _EXPR_H
 #define _EXPR_H
 
-#include "ledger.h"
+#include "journal.h"
 #include "value.h"
 #include "error.h"
 

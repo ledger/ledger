@@ -1,5 +1,5 @@
 #include "python.h"
-#include "ledger.h"
+#include "journal.h"
 #include "acconf.h"
 
 #include <boost/python.hpp>

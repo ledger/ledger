@@ -1,4 +1,4 @@
-#include "ledger.h"
+#include "journal.h"
 #include "binary.h"
 
 #include <fstream>

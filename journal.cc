@@ -1,4 +1,4 @@
-#include "ledger.h"
+#include "journal.h"
 #include "valexpr.h"
 #include "datetime.h"
 #include "error.h"

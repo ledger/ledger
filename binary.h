@@ -1,7 +1,7 @@
 #ifndef _BINARY_H
 #define _BINARY_H
 
-#include "ledger.h"
+#include "journal.h"
 #include "parser.h"
 
 #include <deque>

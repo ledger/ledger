@@ -1,7 +1,7 @@
 #ifndef _WALK_H
 #define _WALK_H
 
-#include "ledger.h"
+#include "journal.h"
 #include "balance.h"
 #include "valexpr.h"
 #include "datetime.h"

@@ -1,4 +1,4 @@
-#include "ledger.h"
+#include "journal.h"
 #include "textual.h"
 #include "datetime.h"
 #include "autoxact.h"
@@ -223,6 +223,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 				     account_t *	 master,
 				     const std::string * original_file)
 {
+  static bool   added_autoxact_hook = false;
   static char   line[MAX_LINE + 1];
   char		c;
   unsigned int  count = 0;
@@ -431,6 +432,10 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
       }
 
       case '=':                   // automated transactions
+	if (! added_autoxact_hook) {
+	  add_hook(journal->entry_finalize_hooks, handle_auto_xacts);
+	  added_autoxact_hook = true;
+	}
 	parse_automated_transactions(in, account_stack.front(), auto_xacts);
 	break;
 
