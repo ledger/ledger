@@ -18,20 +18,6 @@ amount_t balance_t::amount(const commodity_t * commodity) const
   return amount_t();
 }
 
-#if 0
-balance_t balance_t::round() const
-{
-  balance_t temp;
-
-  for (amounts_map::const_iterator i = amounts.begin();
-       i != amounts.end();
-       i++)
-    temp += (*i).second.round();
-
-  return temp;
-}
-#endif
-
 balance_t balance_t::value(const std::time_t moment) const
 {
   balance_t temp;
@@ -41,11 +27,7 @@ balance_t balance_t::value(const std::time_t moment) const
        i++)
     temp += (*i).second.value(moment);
 
-#if 1
   return temp;
-#else
-  return temp.round();
-#endif
 }
 
 void balance_t::write(std::ostream& out,

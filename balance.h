@@ -333,14 +333,11 @@ class balance_t
   }
 
   amount_t  amount(const commodity_t * commodity = NULL) const;
-#if 0
-  balance_t round() const;
-#endif
   balance_t value(const std::time_t moment) const;
 
-  void      write(std::ostream&     out,
-			  const int first_width,
-			  const int latter_width = -1) const;
+  void      write(std::ostream& out,
+		  const int	first_width,
+		  const int	latter_width = -1) const;
 };
 
 inline balance_t abs(const balance_t& bal) {

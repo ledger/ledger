@@ -503,32 +503,37 @@ std::ostream& operator<<(std::ostream& out, const amount_t& amt)
     out << quotient;
   }
   else {
-    bool printed = false;
+    strings_list strs;
+    char buf[4];
 
     mpz_t temp;
     mpz_init(temp);
 
-    // jww (2003-09-29): use a smarter starting value for `powers'
-    for (int powers = 15; powers >= 0; powers -= 3) {
-      mpz_ui_pow_ui(divisor, 10, powers);
-      mpz_tdiv_q(temp, quotient, divisor);
+    for (int powers = 0; true; powers += 3) {
+      if (powers > 0) {
+	mpz_ui_pow_ui(divisor, 10, powers);
+	mpz_tdiv_q(temp, quotient, divisor);
+	if (mpz_sgn(temp) == 0)
+	  break;
+	mpz_tdiv_r_ui(temp, temp, 1000);
+      } else {
+	mpz_tdiv_r_ui(temp, quotient, 1000);
+      }
+      mpz_get_str(buf, 10, temp);
+      strs.push_back(buf);
+    }
 
-      if (mpz_sgn(temp) == 0)
-	continue;
+    bool printed = false;
 
-      mpz_ui_pow_ui(divisor, 10, 3);
-      mpz_tdiv_r(temp, temp, divisor);
-
+    for (strings_list::iterator i = strs.begin(); i != strs.end(); i++) {
       if (printed) {
+	out << (amt.commodity->flags & COMMODITY_STYLE_EUROPEAN ? '.' : ',');
 	out.width(3);
 	out.fill('0');
       }
-      out << temp;
+      out << *i;
 
-      if (powers > 0) {
-	out << ((amt.commodity->flags & COMMODITY_STYLE_EUROPEAN) ? '.' : ',');
-	printed = true;
-      }
+      printed = true;
     }
 
     mpz_clear(temp);
@@ -622,10 +627,10 @@ void amount_t::parse(std::istream& in)
   //   [-]NUM[ ]SYM [@ AMOUNT]
   //   SYM[ ][-]NUM [@ AMOUNT]
 
-  std::string   symbol;
-  std::string   quant;
-  unsigned int	flags	  = COMMODITY_STYLE_DEFAULTS;;
-  unsigned int	precision = MAX_PRECISION;
+  std::string  symbol;
+  std::string  quant;
+  unsigned int flags	 = COMMODITY_STYLE_DEFAULTS;;
+  unsigned int precision = MAX_PRECISION;
 
   INIT();
 
