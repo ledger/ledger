@@ -3,6 +3,7 @@
 @setfilename ledger.info
 @settitle Ledger: Command-Line Accounting
 
+@dircategory User Applications
 @copying
 Copyright (c) 2003-2004, John Wiegley.  All rights reserved.
 
@@ -44,6 +45,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @title Ledger: Command-Line Accounting
 @author John Wiegley
 @end titlepage
+
+@direntry
+* Ledger: (ledger).           Command Line Accounting
+@end direntry
 
 @contents
 
