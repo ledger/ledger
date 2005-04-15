@@ -29,8 +29,8 @@ config_t::config_t()
   pricing_leeway     = 24 * 3600;
   budget_flags       = BUDGET_NO_BUDGET;
   balance_format     = "%20T  %2_%-a\n";
-  register_format    = ("%D %-.20P %-.22A %12.66t %12.80T\n%/"
-			"%32|%-.22A %12.66t %12.80T\n");
+  register_format    = ("%D %-.20P %-.22A %12.67t %12.80T\n%/"
+			"%32|%-.22A %12.67t %12.80T\n");
   wide_register_format = ("%D  %-.35P %-.38A %22.108t %22.132T\n%/"
 			  "%48|%-.38A %22.108t %22.132T\n");
   plot_amount_format = "%D %(St)\n";
