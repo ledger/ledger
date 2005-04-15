@@ -248,6 +248,7 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 {
   for (const element_t * elem = elements; elem; elem = elem->next) {
     std::ostringstream out;
+    bool ignore_max_width = false;
 
     if (elem->align_left)
       out << std::left;
@@ -302,6 +303,7 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 
 	bal->write(out, elem->min_width,
 		   (elem->max_width > 0 ? elem->max_width : elem->min_width));
+	ignore_max_width = true;
 	break;
       default:
 	assert(0);
@@ -492,7 +494,8 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
     }
 
     std::string temp = out.str();
-    if (elem->max_width > 0 && elem->max_width < temp.length())
+    if (! ignore_max_width &&
+	elem->max_width > 0 && elem->max_width < temp.length())
       temp.erase(elem->max_width);
     out_str << temp;
   }
