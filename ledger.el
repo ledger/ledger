@@ -232,7 +232,7 @@ Return the difference in the format of a time value."
 	(inhibit-read-only t)
 	cleared)
     (with-current-buffer ledger-buf
-      (goto-char where)
+      (goto-char (cdr where))
       (setq cleared (ledger-toggle-current 'pending)))
     (if cleared
 	(add-text-properties (line-beginning-position)
@@ -244,7 +244,7 @@ Return the difference in the format of a time value."
     (forward-line)))
 
 (defun ledger-auto-reconcile (balance date)
-  (interactive "sReconcile to balance (negative for a liability): \nsStatement date: ")
+  (interactive "sReconcile to balance (negative for a liability): \nsStatement date (default: now): ")
   (let ((buffer ledger-buf)
 	(account ledger-acct) cleared)
     ;; attempt to auto-reconcile in the background
@@ -275,7 +275,7 @@ Return the difference in the format of a time value."
     (let ((inhibit-redisplay t))
       (dolist (pos cleared)
 	(while (and (not (eobp))
-		    (/= pos (get-text-property (point) 'where)))
+		    (/= pos (cdr (get-text-property (point) 'where))))
 	  (forward-line))
 	(unless (eobp)
 	  (ledger-reconcile-toggle))))
@@ -308,7 +308,7 @@ Return the difference in the format of a time value."
   (interactive)
   (let ((where (get-text-property (point) 'where)))
     (with-current-buffer ledger-buf
-      (goto-char where)
+      (goto-char (cdr where))
       (ledger-delete-current-entry))
     (let ((inhibit-read-only t))
       (goto-char (line-beginning-position))
@@ -319,7 +319,7 @@ Return the difference in the format of a time value."
   (interactive)
   (let ((where (get-text-property (point) 'where)))
     (switch-to-buffer-other-window ledger-buf)
-    (goto-char where)))
+    (goto-char (cdr where))))
 
 (defun ledger-reconcile-save ()
   (interactive)
@@ -337,7 +337,7 @@ Return the difference in the format of a time value."
 	    (face  (get-text-property (point) 'face)))
 	(if (eq face 'bold)
 	    (with-current-buffer ledger-buf
-	      (goto-char where)
+	      (goto-char (cdr where))
 	      (ledger-toggle-current 'cleared))))
       (forward-line 1)))
   (ledger-reconcile-save))
@@ -355,21 +355,20 @@ Return the difference in the format of a time value."
 		  (error (buffer-string)))
 		(read (current-buffer)))))))
     (dolist (item items)
-      (dolist (xact (nthcdr 5 item))
-	(let ((beg (point)))
+      (dolist (xact (nthcdr 6 item))
+	(let ((beg (point))
+	      (where (with-current-buffer buf
+		       (cons (nth 0 item)
+			     (copy-marker (nth 1 item))))))
 	  (insert (format "%s %-30s %-25s %15s\n"
-			  (format-time-string "%m/%d" (nth 2 item))
-			  (nth 4 item) (nth 0 xact) (nth 1 xact)))
-	  (if (nth 1 item)
+			  (format-time-string "%m/%d" (nth 3 item))
+			  (nth 5 item) (nth 0 xact) (nth 1 xact)))
+	  (if (nth 2 item)
 	      (set-text-properties beg (1- (point))
 				   (list 'face 'bold
-					 'where
-					 (with-current-buffer buf
-					   (copy-marker (nth 0 item)))))
+					 'where where))
 	    (set-text-properties beg (1- (point))
-				 (list 'where
-				       (with-current-buffer buf
-					 (copy-marker (nth 0 item)))))))))
+				 (list 'where where))))))
     (goto-char (point-min))
     (set-buffer-modified-p nil)
     (toggle-read-only t)))
