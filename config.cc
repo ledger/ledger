@@ -203,7 +203,7 @@ void config_t::process_options(const std::string&     command,
     else if (command == "E") {
       display_predicate = "t";
     }
-    else if (command == "r") {
+    else if (command == "r" && ! show_empty) {
       display_predicate = "a";
     }
   }
