@@ -249,9 +249,9 @@ else:
 
 	if config.reconcile_balance:
 	  reconcilable = False
-	  if config.reconcile_balance == "<all>"
+	  if config.reconcile_balance == "<all>":
 	    reconcilable = True
-	  else
+	  else:
 	    target_balance = Value (config.reconcile_balance)
 
 	  cutoff = time.time ()
