@@ -307,6 +307,9 @@ bool parse_date(const char * date_str, std::time_t * result, const int year)
 
 bool quick_parse_date(const char * date_str, std::time_t * result)
 {
+#if 1
+  return parse_date(date_str, result, now_year);
+#else
   int year = -1, month = -1, day, num = 0;
 
   for (const char * p = date_str; *p; p++) {
@@ -358,6 +361,7 @@ bool quick_parse_date(const char * date_str, std::time_t * result)
     *result += day * 24 * 60 * 60;
 
   return true;
+#endif
 }
 
 } // namespace ledger
