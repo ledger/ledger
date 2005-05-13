@@ -308,7 +308,7 @@ bool parse_date(const char * date_str, std::time_t * result, const int year)
 bool quick_parse_date(const char * date_str, std::time_t * result)
 {
 #if 1
-  return parse_date(date_str, result, now_year);
+  return parse_date(date_str, result, now_year + 1900);
 #else
   int year = -1, month = -1, day, num = 0;
 
