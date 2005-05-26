@@ -138,9 +138,10 @@ Return the difference in the format of a time value."
 	 (ledger-buf (current-buffer))
 	 exit-code)
     (if (string-match "\\([0-9]+\\)/\\([0-9]+\\)/\\([0-9]+\\)" date)
-	(setq date (encode-time 0 0 0 (string-to-int (match-string 3 date))
-				(string-to-int (match-string 2 date))
-				(string-to-int (match-string 1 date)))))
+	(setq date
+	      (encode-time 0 0 0 (string-to-number (match-string 3 date))
+			   (string-to-number (match-string 2 date))
+			   (string-to-number (match-string 1 date)))))
     (ledger-find-slot date)
     (save-excursion
       (if (re-search-backward "^Y " nil t)
@@ -328,6 +329,10 @@ Return the difference in the format of a time value."
   (set-buffer-modified-p nil)
   (ledger-display-balance))
 
+(defun ledger-reconcile-quit ()
+  (interactive)
+  (kill-buffer (current-buffer)))
+
 (defun ledger-reconcile-finish ()
   (interactive)
   (save-excursion
@@ -351,9 +356,10 @@ Return the difference in the format of a time value."
 		   (ledger-run-ledger buf "--uncleared" "emacs" account)))
 	      (when (= 0 exit-code)
 		(goto-char (point-min))
-		(unless (looking-at "(")
-		  (error (buffer-string)))
-		(read (current-buffer)))))))
+		(unless (eobp)
+		  (unless (looking-at "(")
+		    (error (buffer-string)))
+		  (read (current-buffer))))))))
     (dolist (item items)
       (dolist (xact (nthcdr 6 item))
 	(let ((beg (point))
@@ -408,11 +414,7 @@ Return the difference in the format of a time value."
     (define-key map [?p] 'previous-line)
     (define-key map [?r] 'ledger-auto-reconcile)
     (define-key map [?s] 'ledger-reconcile-save)
-    (define-key map [?q]
-      (function
-       (lambda ()
-	 (interactive)
-	 (kill-buffer (current-buffer)))))
+    (define-key map [?q] 'ledger-reconcile-quit)
     (use-local-map map)))
 
 ;; A sample function for $ users
