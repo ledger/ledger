@@ -36,6 +36,7 @@ namespace ledger {
 
 static std::string  path;
 static unsigned int linenum;
+static accounts_map account_aliases;
 
 #ifdef TIMELOG_SUPPORT
 static std::time_t time_in;
@@ -161,7 +162,13 @@ transaction_t * parse_transaction(char * line, account_t * account)
     *e = '\0';
   }
 
-  xact->account = account->find_account(p);
+  if (account_aliases.size() > 0) {
+    accounts_map::const_iterator i = account_aliases.find(p);
+    if (i != account_aliases.end())
+      xact->account = (*i).second;
+  }
+  if (! xact->account)
+    xact->account = account->find_account(p);
 
   return xact.release();
 }
@@ -587,6 +594,25 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	  python_eval(in, PY_EVAL_MULTI);
 	}
 #endif
+	else if (word == "alias") {
+	  char * b = skip_ws(p);
+	  if (char * e = std::strchr(b, '=')) {
+	    char * z = e - 1;
+	    while (std::isspace(*z))
+	      *z-- = '\0';
+	    *e++ = '\0';
+	    e = skip_ws(e);
+
+	    // Once we have an alias name (b) and the target account
+	    // name (e), add a reference to the account in the
+	    // `account_aliases' map, which is used by the transaction
+	    // parser to resolve alias references.
+	    account_t * acct = account_stack.front()->find_account(e);
+	    std::pair<accounts_map::iterator, bool> result
+	      = account_aliases.insert(accounts_pair(b, acct));
+	    assert(result.second);
+	  }
+	}
 	break;
       }
 
