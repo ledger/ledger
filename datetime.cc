@@ -45,7 +45,7 @@ std::time_t interval_t::first(const std::time_t moment) const
     // late enough that we don't spend hundreds of thousands of loops
     // skipping through time.
 
-    struct std::tm * desc = std::gmtime(&moment);
+    struct std::tm * desc = std::localtime(&moment);
     if (years)
       desc->tm_mon = 0;
     desc->tm_mday = 1;
@@ -70,7 +70,7 @@ std::time_t interval_t::increment(const std::time_t moment) const
   std::time_t then = moment;
 
   if (years || months) {
-    struct std::tm * desc = std::gmtime(&then);
+    struct std::tm * desc = std::localtime(&then);
 
     if (years)
       desc->tm_year += years;
@@ -138,8 +138,7 @@ static void parse_inclusion_specifier(const std::string& word,
   }
 }
 
-static inline
-void read_lower_word(std::istream& in, std::string& word) {
+static inline void read_lower_word(std::istream& in, std::string& word) {
   in >> word;
   for (int i = 0, l = word.length(); i < l; i++)
     word[i] = std::tolower(word[i]);
