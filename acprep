@@ -5,9 +5,9 @@ touch AUTHORS COPYING
 aclocal
 autoheader
 if [ "$1" = "--dist" ]; then
-    automake -acfi
+    automake -a -c -f -i
 else
-    automake -acf
+    automake -a -c -f
 fi
 autoconf
 
