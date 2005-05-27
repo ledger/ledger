@@ -329,6 +329,32 @@ bool textual_parser_t::test(std::istream& in) const
   return true;
 }
 
+static void clock_out_from_timelog(const std::time_t when,
+				   journal_t * journal)
+{
+  std::auto_ptr<entry_t> curr(new entry_t);
+  curr->date  = when;
+  curr->state = entry_t::CLEARED;
+  curr->code  = "";
+  curr->payee = last_desc;
+
+  double diff = std::difftime(curr->date, time_in);
+  char   buf[32];
+  std::sprintf(buf, "%lds", long(diff));
+  amount_t amt;
+  amt.parse(buf);
+
+  transaction_t * xact
+    = new transaction_t(last_account, amt, TRANSACTION_VIRTUAL);
+  curr->add_transaction(xact);
+
+  if (! journal->add_entry(curr.get()))
+    throw parse_error(path, linenum,
+		      "Failed to record 'out' timelog entry");
+  else
+    curr.release();
+}
+
 unsigned int textual_parser_t::parse(std::istream&	 in,
 				     journal_t *	 journal,
 				     account_t *	 master,
@@ -404,28 +430,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
 	  struct std::tm when;
 	  if (strptime(date.c_str(), "%Y/%m/%d %H:%M:%S", &when)) {
-	    std::auto_ptr<entry_t> curr(new entry_t);
-	    curr->date  = std::mktime(&when);
-	    curr->state = entry_t::CLEARED;
-	    curr->code  = "";
-	    curr->payee = last_desc;
-
-	    double diff = std::difftime(curr->date, time_in);
-	    char   buf[32];
-	    std::sprintf(buf, "%lds", long(diff));
-	    amount_t amt;
-	    amt.parse(buf);
-
-	    transaction_t * xact
-	      = new transaction_t(last_account, amt, TRANSACTION_VIRTUAL);
-	    curr->add_transaction(xact);
-
-	    if (! journal->add_entry(curr.get()))
-	      throw parse_error(path, linenum,
-				"Failed to record 'out' timelog entry");
-	    else
-	      curr.release();
-
+	    clock_out_from_timelog(std::mktime(&when), journal);
 	    count++;
 	  } else {
 	    throw parse_error(path, linenum, "Cannot parse timelog entry date");
@@ -655,6 +660,11 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
   }
 
  done:
+  if (last_account) {
+    clock_out_from_timelog(now, journal);
+    last_account = NULL;
+  }
+
   if (added_auto_entry_hook)
     journal->remove_entry_finalizer(&auto_entry_finalizer);
 
