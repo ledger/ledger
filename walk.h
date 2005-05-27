@@ -220,7 +220,13 @@ class sort_transactions : public item_handler<transaction_t>
       delete sort_order;
   }
 
-  virtual void flush();
+  virtual void post_accumulated_xacts();
+
+  virtual void flush() {
+    post_accumulated_xacts();
+    item_handler<transaction_t>::flush();
+  }
+
   virtual void operator()(transaction_t& xact) {
     transactions.push_back(&xact);
   }
@@ -402,7 +408,7 @@ class interval_transactions : public subtotal_transactions
   transaction_t * last_xact;
   bool            started;
 
-  item_handler<transaction_t> * sorter;
+  sort_transactions * sorter;
 
  public:
   interval_transactions(item_handler<transaction_t> * _handler,

@@ -117,7 +117,7 @@ void set_account_value::operator()(transaction_t& xact)
   item_handler<transaction_t>::operator()(xact);
 }
 
-void sort_transactions::flush()
+void sort_transactions::post_accumulated_xacts()
 {
   std::stable_sort(transactions.begin(), transactions.end(),
 		   compare_items<transaction_t>(sort_order));
@@ -128,8 +128,6 @@ void sort_transactions::flush()
     transaction_xdata(**i).dflags &= ~TRANSACTION_SORT_CALC;
     item_handler<transaction_t>::operator()(**i);
   }
-
-  item_handler<transaction_t>::flush();
 
   transactions.clear();
 }
@@ -402,7 +400,7 @@ void interval_transactions::report_subtotal(const std::time_t moment)
   subtotal_transactions::report_subtotal();
 
   if (sorter)
-    subtotal_transactions::flush();
+    sorter->post_accumulated_xacts();
 
   last_xact = NULL;
 }
