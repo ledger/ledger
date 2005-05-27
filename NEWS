@@ -1,5 +1,16 @@
 			     Ledger NEWS
 
+* 2.3
+
+- The directive "!alias ALIAS = ACCOUNT" makes it possible to use
+  "ALIAS" as an alternate account name in a textual ledger file.
+
+- The --version page shows which optional modules ledger has been
+  configured for.
+
+- Fixed several minor problems, plus a few major ones dealing with
+  imprecise date parsing.
+
 * 2.2
 
 New features:
