@@ -783,11 +783,11 @@ OPT_BEGIN(period, "p:") {
   char buf[32];
   interval_t interval(config.report_period);
   if (interval.begin) {
-    std::strftime(buf, 31, "%Y/%m/%d", std::gmtime(&interval.begin));
+    std::strftime(buf, 31, "%Y/%m/%d", std::localtime(&interval.begin));
     process_option(config_options, "begin", buf);
   }
   if (interval.end) {
-    std::strftime(buf, 31, "%Y/%m/%d", std::gmtime(&interval.end));
+    std::strftime(buf, 31, "%Y/%m/%d", std::localtime(&interval.end));
     process_option(config_options, "end", buf);
   }
 } OPT_END(period);
