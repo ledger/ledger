@@ -871,7 +871,8 @@ void amount_t::parse(std::istream& in, unsigned short flags)
 
       parse_commodity(in, symbol);
 
-      comm_flags |= COMMODITY_STYLE_SUFFIXED;
+      if (! symbol.empty())
+	comm_flags |= COMMODITY_STYLE_SUFFIXED;
     }
   } else {
     parse_commodity(in, symbol);
