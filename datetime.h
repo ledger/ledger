@@ -23,7 +23,7 @@ struct interval_t
     DEBUG_PRINT("ledger.memory.ctors", "ctor interval_t");
   }
   interval_t(const std::string& desc)
-    : years(0), months(0), seconds(0), begin(0), end(0){
+    : years(0), months(0), seconds(0), begin(0), end(0) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor interval_t");
     std::istringstream stream(desc);
     parse(stream);
