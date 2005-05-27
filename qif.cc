@@ -92,15 +92,25 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
       break;
 
     case 'T':
-    case '$':
+    case '$': {
       in >> line;
       xact->amount.parse(line);
+
+      unsigned long  flags = xact->amount.commodity().flags;
+      unsigned short prec  = xact->amount.commodity().precision;
+
       if (! def_commodity)
 	def_commodity = commodity_t::find_commodity("$", true);
       xact->amount.set_commodity(*def_commodity);
+
+      def_commodity->flags |= flags;
+      if (prec > def_commodity->precision)
+	def_commodity->precision = prec;
+
       if (c == '$')
 	xact->amount.negate();
       break;
+    }
 
     case 'C':
       if (in.peek() == '*') {
