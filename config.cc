@@ -1,6 +1,7 @@
 #include "config.h"
 #include "acconf.h"
 #include "option.h"
+#include "datetime.h"
 #include "quotes.h"
 #include "walk.h"
 #ifdef USE_BOOST_PYTHON
@@ -687,6 +688,12 @@ OPT_BEGIN(format, "F:") {
 OPT_BEGIN(date_format, "y:") {
   config.date_format = optarg;
 } OPT_END(date_format);
+
+OPT_BEGIN(input_date_format, ":") {
+  std::strcpy(input_format, optarg);
+  formats[0] = input_format;
+  formats[1] = NULL;
+} OPT_END(input_date_format);
 
 OPT_BEGIN(balance_format, ":") {
   config.balance_format = optarg;
