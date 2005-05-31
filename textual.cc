@@ -463,8 +463,12 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	if (! p) break;
 	*p++ = '\0';
 
-	if (! quick_parse_date(b, &date))
+	struct std::tm when;
+	if (strptime(b, "%Y/%m/%d %H:%M:%S", &when)) {
+	  date = std::mktime(&when);
+	} else {
 	  throw parse_error(path, linenum, "Failed to parse date");
+	}
 
 	int hour, min, sec;
 
