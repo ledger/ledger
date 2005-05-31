@@ -232,16 +232,17 @@ Return the difference in the format of a time value."
 	(account ledger-acct)
 	(inhibit-read-only t)
 	cleared)
-    (with-current-buffer ledger-buf
-      (goto-char (cdr where))
-      (setq cleared (ledger-toggle-current 'pending)))
-    (if cleared
-	(add-text-properties (line-beginning-position)
-			     (line-end-position)
-			     (list 'face 'bold))
-      (remove-text-properties (line-beginning-position)
-			      (line-end-position)
-			      (list 'face)))
+    (when (equal (car where) "<stdin>")
+      (with-current-buffer ledger-buf
+	  (goto-char (cdr where))
+	(setq cleared (ledger-toggle-current 'pending)))
+      (if cleared
+	  (add-text-properties (line-beginning-position)
+			       (line-end-position)
+			       (list 'face 'bold))
+	(remove-text-properties (line-beginning-position)
+				(line-end-position)
+				(list 'face))))
     (forward-line)))
 
 (defun ledger-auto-reconcile (balance date)
@@ -308,19 +309,21 @@ Return the difference in the format of a time value."
 (defun ledger-reconcile-delete ()
   (interactive)
   (let ((where (get-text-property (point) 'where)))
-    (with-current-buffer ledger-buf
-      (goto-char (cdr where))
-      (ledger-delete-current-entry))
-    (let ((inhibit-read-only t))
-      (goto-char (line-beginning-position))
-      (delete-region (point) (1+ (line-end-position)))
-      (set-buffer-modified-p t))))
+    (when (equal (car where) "<stdin>")
+      (with-current-buffer ledger-buf
+	(goto-char (cdr where))
+	(ledger-delete-current-entry))
+      (let ((inhibit-read-only t))
+	(goto-char (line-beginning-position))
+	(delete-region (point) (1+ (line-end-position)))
+	(set-buffer-modified-p t)))))
 
 (defun ledger-reconcile-visit ()
   (interactive)
   (let ((where (get-text-property (point) 'where)))
-    (switch-to-buffer-other-window ledger-buf)
-    (goto-char (cdr where))))
+    (when (equal (car where) "<stdin>")
+      (switch-to-buffer-other-window ledger-buf)
+      (goto-char (cdr where)))))
 
 (defun ledger-reconcile-save ()
   (interactive)
@@ -340,7 +343,8 @@ Return the difference in the format of a time value."
     (while (not (eobp))
       (let ((where (get-text-property (point) 'where))
 	    (face  (get-text-property (point) 'face)))
-	(if (eq face 'bold)
+	(if (and (eq face 'bold)
+		 (equal (car where) "<stdin>"))
 	    (with-current-buffer ledger-buf
 	      (goto-char (cdr where))
 	      (ledger-toggle-current 'cleared))))
