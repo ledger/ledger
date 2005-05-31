@@ -36,6 +36,7 @@ namespace ledger {
 
 static std::string  path;
 static unsigned int linenum;
+static unsigned int src_idx;
 static accounts_map account_aliases;
 
 #ifdef TIMELOG_SUPPORT
@@ -375,6 +376,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
   account_stack.push_front(master);
 
   path	  = journal->sources.back();
+  src_idx = journal->sources.size() - 1;
   linenum = 1;
 
   while (in.good() && ! in.eof()) {
@@ -537,7 +539,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	if (parse_transactions(in, account_stack.front(), *ae, "automated")) {
 	  if (ae->finalize()) {
 	    journal->auto_entries.push_back(ae);
-	    ae->src_idx = journal->sources.size() - 1;
+	    ae->src_idx = src_idx;
 	    ae->beg_pos = beg_pos;
 	    ae->end_pos = in.tellg();
 	  } else {
@@ -558,7 +560,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	  if (pe->finalize()) {
 	    extend_entry_base(journal, *pe);
 	    journal->period_entries.push_back(pe);
-	    pe->src_idx = journal->sources.size() - 1;
+	    pe->src_idx = src_idx;
 	    pe->beg_pos = beg_pos;
 	    pe->end_pos = in.tellg();
 	  } else {
@@ -574,8 +576,9 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	  *p++ = '\0';
 	std::string word(line + 1);
 	if (word == "include") {
-	  push_var<unsigned int> save_linenum(linenum);
 	  push_var<std::string>  save_path(path);
+	  push_var<unsigned int> save_src_idx(src_idx);
+	  push_var<unsigned int> save_linenum(linenum);
 
 	  path = skip_ws(p);
 	  if (path[0] != '/' && path[0] != '\\') {
@@ -627,11 +630,10 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
       default: {
 	unsigned int first_line = linenum;
-
 	if (entry_t * entry = parse_entry(in, line, account_stack.front(),
 					  *this)) {
 	  if (journal->add_entry(entry)) {
-	    entry->src_idx = journal->sources.size() - 1;
+	    entry->src_idx = src_idx;
 	    entry->beg_pos = beg_pos;
 	    entry->end_pos = in.tellg();
 	    count++;
