@@ -20,7 +20,9 @@ static const int    month_days[12] = {
   31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
 };
 
-static const char * formats[] = {
+char input_format[128];
+
+const char * formats[] = {
   "%Y/%m/%d",
   "%m/%d",
   "%Y.%m.%d",

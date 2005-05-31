@@ -47,14 +47,14 @@ struct interval_t
   void parse(std::istream& in);
 };
 
-extern std::time_t now;
-extern int	   now_year;
+extern std::time_t  now;
+extern int	    now_year;
+extern char         input_format[128];
+extern const char * formats[];
 
 bool parse_date_mask(const char * date_str, struct std::tm * result);
-
 bool parse_date(const char * date_str, std::time_t * result,
 		const int year = -1);
-
 bool quick_parse_date(const char * date_str, std::time_t * result);
 
 } // namespace ledger
