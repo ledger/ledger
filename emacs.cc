@@ -5,7 +5,6 @@ namespace ledger {
 void format_emacs_transactions::write_entry(entry_t& entry)
 {
   int idx = entry.src_idx;
-
   for (strings_list::iterator i = entry.journal->sources.begin();
        i != entry.journal->sources.end();
        i++)
