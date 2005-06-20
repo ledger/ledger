@@ -113,7 +113,8 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
     }
 
     case 'C':
-      if (in.peek() == '*') {
+      c = in.peek();
+      if (c == '*' || c == 'X') {
 	in.get(c);
 	entry->state = entry_t::CLEARED;
       }
@@ -131,34 +132,30 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
     case 'L':
     case 'S':
     case 'E': {
-      char b = c;
-      int len;
-      c = in.peek();
-      if (! std::isspace(c) && c != '\n') {
-	get_line(in);
+      get_line(in);
 
-	switch (b) {
-	case 'P':
-	  entry->payee = line;
-	  break;
+      switch (c) {
+      case 'P':
+	entry->payee = line;
+	break;
 
-	case 'S':
-	  xact = new transaction_t(NULL);
-	  entry->add_transaction(xact);
-	  // fall through...
-	case 'L':
-	  len = std::strlen(line);
-	  if (line[len - 1] == ']')
-	    line[len - 1] = '\0';
-	  xact->account = journal->find_account(line[0] == '[' ?
-						line + 1 : line);
-	  break;
+      case 'S':
+	xact = new transaction_t(NULL);
+	entry->add_transaction(xact);
+	// fall through...
+      case 'L': {
+	int len = std::strlen(line);
+	if (line[len - 1] == ']')
+	  line[len - 1] = '\0';
+	xact->account = journal->find_account(line[0] == '[' ?
+					      line + 1 : line);
+	break;
+      }
 
-	case 'M':
-	case 'E':
-	  xact->note = line;
-	  break;
-	}
+      case 'M':
+      case 'E':
+	xact->note = line;
+	break;
       }
       break;
     }
@@ -168,14 +165,19 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
       get_line(in);
       break;
 
-    case '^':
+    case '^': {
+      account_t * other;
       if (xact->account == master) {
 	if (! misc)
 	  misc = journal->find_account("Miscellaneous");
-	transaction_t * nxact = new transaction_t(misc);
-	entry->add_transaction(nxact);
-	nxact->amount.negate();
+	other = misc;
+      } else {
+	other = master;
       }
+
+      transaction_t * nxact = new transaction_t(other);
+      entry->add_transaction(nxact);
+      nxact->amount.negate();
 
       if (journal->add_entry(entry.get())) {
 	entry.release();
@@ -186,6 +188,7 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
       xact = new transaction_t(master);
       entry->add_transaction(xact);
       break;
+    }
     }
   }
 
