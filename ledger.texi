@@ -2588,6 +2588,7 @@ place of a payee.  For example:
   Expenses:Phone              $125.00
   Expenses:Utilities          $100.00
   Expenses:Movies              $50.00
+  Expenses                    $200.00  ; all other expenses
   Assets
 
 ~ Yearly
