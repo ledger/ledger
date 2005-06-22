@@ -320,6 +320,7 @@ class journal_t
 {
  public:
   account_t *  master;
+  account_t *  basket;
   entries_list entries;
   strings_list sources;
   std::string  price_db;
@@ -332,7 +333,7 @@ class journal_t
 
   std::list<entry_finalizer_t *> entry_finalize_hooks;
 
-  journal_t() {
+  journal_t() : basket(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor journal_t");
     master = new account_t(NULL, "");
     master->journal = this;
