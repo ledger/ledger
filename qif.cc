@@ -176,8 +176,9 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
       }
 
       transaction_t * nxact = new transaction_t(other);
+      // The amount doesn't need to be set because the code below will
+      // balance this transaction against the other.
       entry->add_transaction(nxact);
-      nxact->amount.negate();
 
       if (journal->add_entry(entry.get())) {
 	entry.release();
