@@ -11,7 +11,7 @@
 namespace ledger {
 
 static unsigned long  binary_magic_number = 0xFFEED765;
-static unsigned long  format_version      = 0x00020034;
+static unsigned long  format_version      = 0x00020035;
 
 static account_t **   accounts;
 static account_t **   accounts_next;
@@ -387,6 +387,8 @@ unsigned int read_binary_journal(std::istream&	    in,
   account_t::ident_t a_count = read_binary_number<account_t::ident_t>(data);
   accounts = accounts_next = new account_t *[a_count];
   journal->master = read_binary_account(data, journal, master);
+  if (read_binary_number<bool>(data))
+    journal->basket = read_binary_account(data, journal);
 
   // Allocate the memory needed for the entries and transactions in
   // one large block, which is then chopped up and custom constructed
@@ -689,6 +691,13 @@ void write_binary_journal(std::ostream& out, journal_t * journal)
 
   write_binary_number<account_t::ident_t>(out, count_accounts(journal->master));
   write_binary_account(out, journal->master);
+
+  if (journal->basket) {
+    write_binary_number<bool>(out, true);
+    write_binary_account(out, journal->basket);
+  } else {
+    write_binary_number<bool>(out, false);
+  }
 
   // Write out the number of entries, transactions, and amounts
 
