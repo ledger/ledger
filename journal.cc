@@ -85,12 +85,20 @@ bool entry_base_t::finalize()
   if (no_amounts)
     return true;
 
+  if (journal && journal->basket && transactions.size() == 1) {
+    assert(balance.type < value_t::BALANCE);
+    transaction_t * nxact = new transaction_t(journal->basket);
+    // The amount doesn't need to be set because the code below will
+    // balance this transaction against the other.
+    add_transaction(nxact);
+  }
+
   // If one transaction of a two-line transaction is of a different
   // commodity than the others, and it has no per-unit price,
   // determine its price by dividing the unit count into the value of
   // the balance.  This is done for the last eligible commodity.
 
-  if (balance.type == value_t::BALANCE &&
+  if (balance && balance.type == value_t::BALANCE &&
       ((balance_t *) balance.data)->amounts.size() == 2)
     for (transactions_list::const_iterator x = transactions.begin();
 	 x != transactions.end();
@@ -127,20 +135,59 @@ bool entry_base_t::finalize()
 	 ! ((*x)->flags & TRANSACTION_BALANCE)))
       continue;
 
-    if (! empty_allowed || ! balance || balance.type != value_t::AMOUNT)
-      return false;
-
+    if (! empty_allowed)
+      break;
     empty_allowed = false;
 
-    // If one transaction gives no value at all -- and all the
-    // rest are of the same commodity -- then its value is the
-    // inverse of the computed value of the others.
+    // If one transaction gives no value at all, its value will become
+    // the inverse of the value of the others.  If multiple
+    // commodities are involved, multiple transactions will be
+    // generated to balance them all.
 
-    assert(balance.type == value_t::AMOUNT);
-    (*x)->amount = *((amount_t *) balance.data);
-    (*x)->amount.negate();
+    balance_t * bal = NULL;
+    switch (balance.type) {
+    case value_t::BALANCE_PAIR:
+      bal = &((balance_pair_t *) balance.data)->quantity;
+      // fall through...
 
-    balance = 0L;
+    case value_t::BALANCE:
+      if (! bal)
+	bal = (balance_t *) balance.data;
+
+      if (bal->amounts.size() < 2) {
+	balance.cast(value_t::AMOUNT);
+      } else {
+	bool first = true;
+	for (amounts_map::const_iterator i = bal->amounts.begin();
+	     i != bal->amounts.end();
+	     i++) {
+	  amount_t amt = (*i).second;
+	  amt.negate();
+
+	  if (first) {
+	    (*x)->amount = amt;
+	    first = false;
+	  } else {
+	    transaction_t * nxact = new transaction_t((*x)->account);
+	    add_transaction(nxact);
+	    nxact->amount = amt;
+	  }
+
+	  balance += amt;
+	}
+      }
+      break;
+
+    case value_t::AMOUNT:
+      (*x)->amount = *((amount_t *) balance.data);
+      (*x)->amount.negate();
+
+      balance += (*x)->amount;
+      break;
+
+    default:
+      break;
+    }
   }
 
   return ! balance;
@@ -394,12 +441,15 @@ journal_t::~journal_t()
 
 bool journal_t::add_entry(entry_t * entry)
 {
+  entry->journal = this;
+
   if (! entry->finalize() ||
-      ! run_hooks(entry_finalize_hooks, *entry))
+      ! run_hooks(entry_finalize_hooks, *entry)) {
+    entry->journal = NULL;
     return false;
+  }
 
   entries.push_back(entry);
-  entry->journal = this;
 
   for (transactions_list::const_iterator i = entry->transactions.begin();
        i != entry->transactions.end();
