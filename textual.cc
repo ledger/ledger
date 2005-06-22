@@ -67,9 +67,80 @@ inline char * next_element(char * buf, bool variable = false)
   return NULL;
 }
 
+static inline bool is_mathchr(const char c) {
+  return (c == '(' || c == ')' ||
+	  c == '+' || c == '-' ||
+	  c == '*' || c == '/');
+}
+
+static inline void copy_wsbuf(char *& q, char *& wq, char * wsbuf) {
+  *wq = '\0';
+  std::strcpy(q, wsbuf);
+  q += std::strlen(wsbuf);
+  wq = wsbuf;
+}
+
+static char * parse_inline_math(const char * expr)
+{
+  char * buf	 = new char[std::strlen(expr) * 2];
+  char * q	 = buf;
+  char   wsbuf[64];
+  char * wq      = wsbuf;
+  bool	 in_math = true;
+  bool	 could   = true;
+
+  *q++ = '(';
+
+  for (const char * p = expr; *p; p++) {
+    if (std::isspace(*p)) {
+      *wq++ = *p;
+    } else {
+      bool saw_math = is_mathchr(*p);
+      if (in_math && ! saw_math) {
+	copy_wsbuf(q, wq, wsbuf);
+	*q++ = '{';
+	in_math = could = false;
+      }
+      else if (! in_math && saw_math && could) {
+	*q++ = '}';
+	copy_wsbuf(q, wq, wsbuf);
+	in_math = true;
+      }
+      else if (wq != wsbuf) {
+	copy_wsbuf(q, wq, wsbuf);
+      }
+
+      if (! in_math && std::isdigit(*p))
+	could = true;
+
+      *q++ = *p;
+    }
+  }
+
+  if (! in_math)
+    *q++ = '}';
+
+  *q++ = ')';
+  *q++ = '\0';
+
+  DEBUG_PRINT("ledger.textual.inlinemath",
+	      "Parsed '" << expr << "' as '" << buf << "'");
+
+  return buf;
+}
+
 void parse_amount(const char * text, amount_t& amt, unsigned short flags,
 		  transaction_t& xact)
 {
+  char * altbuf = NULL;
+
+  if (*text)
+    for (const char * p = text + 1; *p; p++)
+      if (is_mathchr(*p)) {
+	text = altbuf = parse_inline_math(text);
+	break;
+      }
+
   if (*text != '(') {
     amt.parse(text, flags);
   } else {
@@ -89,10 +160,15 @@ void parse_amount(const char * text, amount_t& amt, unsigned short flags,
 
     case value_t::BALANCE:
     case value_t::BALANCE_PAIR:
+      if (altbuf)
+	delete[] altbuf;
       throw parse_error(path, linenum, "Value expression yields a balance");
       break;
     }
   }
+
+  if (altbuf)
+    delete[] altbuf;
 }
 
 transaction_t * parse_transaction(char * line, account_t * account)
@@ -101,10 +177,10 @@ transaction_t * parse_transaction(char * line, account_t * account)
 
   std::auto_ptr<transaction_t> xact(new transaction_t(NULL));
 
-  // The call to `next_element' will skip past the account name,
-  // and return a pointer to the beginning of the amount.  Once
-  // we know where the amount is, we can strip off any
-  // transaction note, and parse it.
+  // The call to `next_element' will skip past the account name, and
+  // return a pointer to the beginning of the amount.  Once we know
+  // where the amount is, we can strip off any transaction note, and
+  // parse it.
 
   char * p = skip_ws(line);
   if (char * cost_str = next_element(p, true)) {
@@ -253,7 +329,16 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
 
   // Parse the description text
 
-  curr->payee = next ? next : "<Unspecified payee>";
+  if (next) {
+    char * first = next_element(next, true);
+    curr->payee = next;
+
+    if (first)
+      if (transaction_t * xact = parse_transaction(first, master))
+	curr->add_transaction(xact);
+  } else {
+    curr->payee = "<Unspecified payee>";
+  }
 
   TIMER_STOP(entry_details);
 
@@ -449,6 +534,11 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	commodity_t::default_commodity = &amt.commodity();
 	break;
       }
+
+      case 'A':		        // a default account for unbalanced xacts
+	journal->basket =
+	  account_stack.front()->find_account(skip_ws(line + 1));
+	break;
 
       case 'C':			// a set of conversions
 	if (char * p = std::strchr(line + 1, '=')) {
