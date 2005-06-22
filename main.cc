@@ -186,16 +186,43 @@ chain_xact_handlers(const std::string&		  command,
   // them against anything but the future balance.
 
   if (config.budget_flags) {
+    // Don't generate a cache file after calculating a budget report,
+    // since certain intermediary accounts may get created which
+    // aren't intended to be saved.  For example, the user might have
+    // an "Expenses" budget, to catch all other expenses.  This will
+    // result in an "Expenses" account being created in the journal --
+    // to reflect the calculated totals -- even though no such account
+    // was ever actually used.  Because budgeting and forecasting
+    // might create such "ghost" accounts for internal purposes, we
+    // don't want to change the cache.
+    config.use_cache = false;
+
     budget_transactions * handler
       = new budget_transactions(formatter, config.budget_flags);
     handler->add_period_entries(journal->period_entries);
     ptrs.push_back(formatter = handler);
+
+    // Apply this before the budget handler, so that only matching
+    // transactions are calculated toward the budget.  The use of
+    // filter_transactions above will further clean the results so
+    // that no automated transactions that don't match the filter get
+    // reported.
+    if (! config.predicate.empty())
+      ptrs.push_back(formatter = new filter_transactions(formatter,
+							 config.predicate));
   }
   else if (! config.forecast_limit.empty()) {
+    config.use_cache = false;	// see note above
+
     forecast_transactions * handler
       = new forecast_transactions(formatter, config.forecast_limit);
     handler->add_period_entries(journal->period_entries);
     ptrs.push_back(formatter = handler);
+
+    // See above, under budget_transactions.
+    if (! config.predicate.empty())
+      ptrs.push_back(formatter = new filter_transactions(formatter,
+							 config.predicate));
   }
 
   if (config.comm_as_payee)
