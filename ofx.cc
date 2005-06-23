@@ -10,12 +10,6 @@
 
 namespace ledger {
 
-#define MAX_LINE 1024
-
-static char         line[MAX_LINE + 1];
-static std::string  path;
-static unsigned int linenum;
-
 typedef std::map<const std::string, account_t *>  accounts_map;
 typedef std::pair<const std::string, account_t *> accounts_pair;
 
