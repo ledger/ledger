@@ -34,6 +34,14 @@ static account_comm_map	account_comms;
 static unsigned int	count;
 static std::string	have_error;
 
+static std::istream *   instreamp;
+static unsigned int     offset;
+static XML_Parser       parser;
+static std::string      path;
+static unsigned int     src_idx;
+static istream_pos_type beg_pos;
+static unsigned long    beg_line;
+
 static enum {
   NO_ACTION,
   ACCOUNT_NAME,
@@ -126,6 +134,11 @@ static void endElement(void *userData, const char *name)
       have_error = "The above entry does not balance";
       delete curr_entry;
     } else {
+      curr_entry->src_idx  = src_idx;
+      curr_entry->beg_pos  = beg_pos;
+      curr_entry->beg_line = beg_line;
+      curr_entry->end_pos  = instreamp->tellg();
+      curr_entry->end_line = XML_GetCurrentLineNumber(parser) - offset;
       count++;
     }
     curr_entry = NULL;
@@ -309,6 +322,10 @@ unsigned int gnucash_parser_t::parse(std::istream&	 in,
   curr_comm	 = NULL;
   entry_comm	 = NULL;
 
+  instreamp = &in;
+  path	    = original_file ? *original_file : "<gnucash>";
+  src_idx   = journal->sources.size() - 1;
+
   // GnuCash uses the USD commodity without defining it, which really
   // means $.
   commodity_t * usd;
@@ -317,28 +334,28 @@ unsigned int gnucash_parser_t::parse(std::istream&	 in,
   usd = new commodity_t("$", 2, COMMODITY_STYLE_THOUSANDS);
   commodity_t::add_commodity(usd, "USD");
 
-  unsigned int offset = 2;
-  XML_Parser   parser = XML_ParserCreate(NULL);
-  current_parser = parser;
+  offset = 2;
+  parser = current_parser = XML_ParserCreate(NULL);
 
   XML_SetElementHandler(parser, startElement, endElement);
   XML_SetCharacterDataHandler(parser, dataHandler);
 
-  while (! in.eof()) {
+  while (in.good() && ! in.eof()) {
+    beg_pos  = in.tellg();
+    beg_line = (XML_GetCurrentLineNumber(parser) - offset) + 1;
+
     in.getline(buf, BUFSIZ - 1);
     std::strcat(buf, "\n");
     if (! XML_Parse(parser, buf, std::strlen(buf), in.eof())) {
       unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
       const char *  msg  = XML_ErrorString(XML_GetErrorCode(parser));
       XML_ParserFree(parser);
-      throw parse_error(original_file ? *original_file : "<gnucash>", line,
-			msg);
+      throw parse_error(path, line, msg);
     }
 
     if (! have_error.empty()) {
       unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
-      parse_error err(original_file ? *original_file : "<gnucash>", line,
-		      have_error);
+      parse_error err(path, line, have_error);
       std::cerr << "Error: " << err.what() << std::endl;
       have_error = "";
     }
