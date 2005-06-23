@@ -213,7 +213,9 @@ element_t * format_t::parse_elements(const std::string& fmt)
 
     case 'S': current->type = element_t::SOURCE; break;
     case 'B': current->type = element_t::BEG_POS; break;
+    case 'b': current->type = element_t::BEG_LINE; break;
     case 'E': current->type = element_t::END_POS; break;
+    case 'e': current->type = element_t::END_LINE; break;
     case 'X': current->type = element_t::CLEARED; break;
     case 'C': current->type = element_t::CODE; break;
     case 'P': current->type = element_t::PAYEE; break;
@@ -379,9 +381,19 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 	out << (unsigned long)details.entry->beg_pos;
       break;
 
+    case element_t::BEG_LINE:
+      if (details.entry)
+	out << details.entry->beg_line;
+      break;
+
     case element_t::END_POS:
       if (details.entry)
 	out << (unsigned long)details.entry->end_pos;
+      break;
+
+    case element_t::END_LINE:
+      if (details.entry)
+	out << details.entry->end_line;
       break;
 
     case element_t::DATE_STRING:
