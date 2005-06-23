@@ -13,6 +13,7 @@ namespace ledger {
 
 static char         line[MAX_LINE + 1];
 static std::string  path;
+static unsigned int src_idx;
 static unsigned int linenum;
 
 static inline char * get_line(std::istream& in) {
@@ -53,9 +54,19 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
   entry->add_transaction(xact);
 
   path	  = journal->sources.back();
+  src_idx = journal->sources.size() - 1;
   linenum = 1;
 
-  while (! in.eof()) {
+  istream_pos_type beg_pos  = 0;
+  unsigned long    beg_line = 0;
+
+#define SET_BEG_POS_AND_LINE()			\
+  if (! beg_line) {				\
+    beg_pos  = in.tellg();			\
+    beg_line = linenum;				\
+  }
+
+  while (in.good() && ! in.eof()) {
     char c;
     in.get(c);
     switch (c) {
@@ -86,6 +97,7 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
       break;
 
     case 'D':
+      SET_BEG_POS_AND_LINE();
       in >> line;
       if (! parse_date(line, &entry->date))
 	throw parse_error(path, linenum, "Failed to parse date");
@@ -93,6 +105,7 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
 
     case 'T':
     case '$': {
+      SET_BEG_POS_AND_LINE();
       in >> line;
       xact->amount.parse(line);
 
@@ -113,6 +126,7 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
     }
 
     case 'C':
+      SET_BEG_POS_AND_LINE();
       c = in.peek();
       if (c == '*' || c == 'X') {
 	in.get(c);
@@ -121,6 +135,7 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
       break;
 
     case 'N':
+      SET_BEG_POS_AND_LINE();
       if (std::isdigit(in.peek())) {
 	in >> line;
 	entry->code = line;
@@ -132,6 +147,7 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
     case 'L':
     case 'S':
     case 'E': {
+      SET_BEG_POS_AND_LINE();
       get_line(in);
 
       switch (c) {
@@ -161,6 +177,7 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
     }
 
     case 'A':
+      SET_BEG_POS_AND_LINE();
       // jww (2004-08-19): these are ignored right now
       get_line(in);
       break;
@@ -181,6 +198,11 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
       entry->add_transaction(nxact);
 
       if (journal->add_entry(entry.get())) {
+	entry->src_idx  = src_idx;
+	entry->beg_pos  = beg_pos;
+	entry->beg_line = beg_line;
+	entry->end_pos  = in.tellg();
+	entry->end_line = linenum;
 	entry.release();
 	count++;
       }
@@ -188,6 +210,8 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
       entry.reset(new entry_t);
       xact = new transaction_t(master);
       entry->add_transaction(xact);
+
+      beg_line = 0;		// reset for next entry
       break;
     }
     }
