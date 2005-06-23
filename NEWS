@@ -2,7 +2,8 @@
 
 * 2.4
 
-- Simple, inline math is now supported in transactions.  For example:
+- Simple, inline math (using the operators +-/*, and/or parentheses)
+  is now supported in transactions.  For example:
 
     2004/05/27 Book Store
       Expenses:Dining                 $20.00 + $2.50
