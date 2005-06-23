@@ -2,6 +2,9 @@
 
 * 2.4
 
+- Both "-$100.00" and "$-100.00" are now supported as equivalent
+  amounts.
+
 - Simple, inline math (using the operators +-/*, and/or parentheses)
   is now supported in transactions.  For example:
 
