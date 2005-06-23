@@ -858,10 +858,17 @@ void amount_t::parse(std::istream& in, unsigned short flags)
 
   std::string  symbol;
   std::string  quant;
-  unsigned int comm_flags = COMMODITY_STYLE_DEFAULTS;;
+  unsigned int comm_flags = COMMODITY_STYLE_DEFAULTS;
+  bool         negative = false;
 
   char c = peek_next_nonws(in);
-  if (std::isdigit(c) || c == '.' || c == '-') {
+  if (c == '-') {
+    negative = true;
+    in.get(c);
+    c = peek_next_nonws(in);
+  }
+
+  if (std::isdigit(c) || c == '.') {
     parse_quantity(in, quant);
 
     char n;
@@ -954,6 +961,9 @@ void amount_t::parse(std::istream& in, unsigned short flags)
   } else {
     mpz_set_str(MPZ(quantity), quant.c_str(), 10);
   }
+
+  if (negative)
+    negate();
 
   if (! (flags & AMOUNT_PARSE_NO_REDUCE))
     reduce();
