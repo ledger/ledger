@@ -85,7 +85,9 @@ class entry_base_t
   journal_t *       journal;
   unsigned long     src_idx;
   istream_pos_type  beg_pos;
+  unsigned long     beg_line;
   istream_pos_type  end_pos;
+  unsigned long     end_line;
   transactions_list transactions;
 
   entry_base_t() {
