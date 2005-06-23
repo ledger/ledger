@@ -466,7 +466,8 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
   while (in.good() && ! in.eof()) {
     try {
-      istream_pos_type beg_pos = in.tellg();
+      istream_pos_type beg_pos  = in.tellg();
+      unsigned long    beg_line = linenum;
 
       in.getline(line, MAX_LINE);
       if (in.eof())
@@ -629,9 +630,11 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	if (parse_transactions(in, account_stack.front(), *ae, "automated")) {
 	  if (ae->finalize()) {
 	    journal->auto_entries.push_back(ae);
-	    ae->src_idx = src_idx;
-	    ae->beg_pos = beg_pos;
-	    ae->end_pos = in.tellg();
+	    ae->src_idx  = src_idx;
+	    ae->beg_pos  = beg_pos;
+	    ae->beg_line = beg_line;
+	    ae->end_pos  = in.tellg();
+	    ae->end_line = linenum;
 	  } else {
 	    throw parse_error(path, linenum,
 			      "Automated entry failed to balance");
@@ -650,9 +653,11 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	  if (pe->finalize()) {
 	    extend_entry_base(journal, *pe);
 	    journal->period_entries.push_back(pe);
-	    pe->src_idx = src_idx;
-	    pe->beg_pos = beg_pos;
-	    pe->end_pos = in.tellg();
+	    pe->src_idx	 = src_idx;
+	    pe->beg_pos	 = beg_pos;
+	    pe->beg_line = beg_line;
+	    pe->end_pos	 = in.tellg();
+	    pe->end_line = linenum;
 	  } else {
 	    throw parse_error(path, linenum, "Period entry failed to balance");
 	  }
@@ -723,9 +728,11 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	if (entry_t * entry = parse_entry(in, line, account_stack.front(),
 					  *this)) {
 	  if (journal->add_entry(entry)) {
-	    entry->src_idx = src_idx;
-	    entry->beg_pos = beg_pos;
-	    entry->end_pos = in.tellg();
+	    entry->src_idx  = src_idx;
+	    entry->beg_pos  = beg_pos;
+	    entry->beg_line = beg_line;
+	    entry->end_pos  = in.tellg();
+	    entry->end_line = linenum;
 	    count++;
 	  } else {
 	    print_entry(std::cerr, *entry);
