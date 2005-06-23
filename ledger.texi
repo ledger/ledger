@@ -1971,8 +1971,14 @@ Insert the pathname of the file from which the entry's data was read.
 @item B
 Inserts the beginning character position of that entry within the file.
 
+@item b
+Inserts the beginning line of that entry within the file.
+
 @item E
 Inserts the ending character position of that entry within the file.
+
+@item e
+Inserts the ending line of that entry within the file.
 
 @item D
 By default, this is the same as @samp{%[%Y/%m%/d]}.  The date format
