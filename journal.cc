@@ -175,8 +175,9 @@ bool entry_base_t::finalize()
 
 	  balance += amt;
 	}
+	break;
       }
-      break;
+      // fall through...
 
     case value_t::AMOUNT:
       (*x)->amount = *((amount_t *) balance.data);
@@ -767,6 +768,9 @@ void export_journal()
     .add_property("master",
 		  make_getter(&journal_t::master,
 			      return_internal_reference<1>()))
+    .add_property("basket",
+		  make_getter(&journal_t::basket,
+			      return_internal_reference<1>()))
     .def_readwrite("price_db", &journal_t::price_db)
     .def_readonly("sources", &journal_t::sources)
 
@@ -796,7 +800,9 @@ void export_journal()
     .def_readonly("journal", &entry_base_t::journal)
     .def_readonly("src_idx", &entry_base_t::src_idx)
     .def_readonly("beg_pos", &entry_base_t::beg_pos)
+    .def_readonly("beg_line", &entry_base_t::beg_line)
     .def_readonly("end_pos", &entry_base_t::end_pos)
+    .def_readonly("end_line", &entry_base_t::end_line)
 
     .def("add_transaction", py_add_transaction)
     .def("remove_transaction", &entry_base_t::remove_transaction)
