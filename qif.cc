@@ -165,6 +165,8 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
 	  line[len - 1] = '\0';
 	xact->account = journal->find_account(line[0] == '[' ?
 					      line + 1 : line);
+	// Negate the amount, to show the correct direction of flow
+	xact->amount.negate();
 	break;
       }
 
