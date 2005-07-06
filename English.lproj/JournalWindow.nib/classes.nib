@@ -1,0 +1,33 @@
+{
+    IBClasses = (
+        {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {
+            ACTIONS = {invokeQuery = id; setQueryPeriod = id; setQueryPredicate = id; }; 
+            CLASS = JournalController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                accountQuery = NSFormCell; 
+                accountsList = NSOutlineView; 
+                balanceGraph = NSView; 
+                entriesList = NSTableView; 
+                inFlowPie = NSView; 
+                outFlowPie = NSView; 
+                payeeQuery = NSFormCell; 
+            }; 
+            SUPERCLASS = NSWindowController; 
+        }, 
+        {
+            CLASS = JournalDocument; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                accountsList = NSOutlineView; 
+                balanceGraph = NSView; 
+                entriesList = NSTableView; 
+                inFlowPie = NSView; 
+                outFlowPie = NSView; 
+            }; 
+            SUPERCLASS = NSDocument; 
+        }
+    ); 
+    IBVersion = 1; 
+}
