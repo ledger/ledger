@@ -19,8 +19,6 @@
 
 void AddEntriesToArray::register_last_entry()
 {
-  NSMutableArray * array = [[NSMutableArray alloc] init];
-
   for (transactions_list::const_iterator i = last_entry->transactions.begin();
        i != last_entry->transactions.end();
        i++) {
@@ -34,12 +32,9 @@ void AddEntriesToArray::register_last_entry()
 	account_xdata_(*xact.account).virtuals++;
 
       // Add the transaction as an NSValue object within an array
-      [array addObject:[NSValue valueWithPointer:&xact]];
+      [records addObject:[NSValue valueWithPointer:&xact]];
     }
   }
-
-  [records addObject:array];
-  [array release];
 }
 
 void AddEntriesToArray::operator()(transaction_t& xact)
@@ -137,9 +132,9 @@ void AddAccountsToArray::operator()(account_t& account)
 
   formatter_ptrs = new std::list<item_handler<transaction_t> *>;
 
+  ledger_config = new config_t;
   std::list<std::string> args;
-  config.reset();
-  config.process_options("r", args.begin(), args.end());
+  ledger_config->process_options("r", args.begin(), args.end());
 
   [self invokeQuery:self];
 }
@@ -164,6 +159,7 @@ void clear_formatter_ptrs(std::list<item_handler<transaction_t> *>&
 
   clear_formatter_ptrs(*formatter_ptrs);
   delete formatter_ptrs;
+  delete ledger_config;
 
   [super dealloc];
 }
@@ -179,12 +175,10 @@ void clear_formatter_ptrs(std::list<item_handler<transaction_t> *>&
   [[[entriesList tableColumnWithIdentifier:@"date"] dataCell] 
    setFormatter:formatter];
   [formatter release];
-
-  [accountsList
-   setOutlineTableColumn:[accountsList tableColumnWithIdentifier:@"account"]];
 }
 
-void setup_predicates(NSString * query, bool for_account)
+static void setup_predicates(config_t * ledger_config,
+			     NSString * query, bool for_account)
 {
   std::list<std::string> args;
 
@@ -197,17 +191,18 @@ void setup_predicates(NSString * query, bool for_account)
     }
   }
 
-  config.regexps_to_predicate("r", args.begin(), args.end(), for_account);
+  ledger_config->regexps_to_predicate("r", args.begin(), args.end(),
+				      for_account);
 }
 
 - (IBAction)setQueryPredicate:(id)sender
 {
   // Reset Ledger's predicates before determining them again
-  config.predicate	   = "";
-  config.display_predicate = "";
+  ledger_config->predicate	   = "";
+  ledger_config->display_predicate = "";
 
-  setup_predicates([accountQuery stringValue], true);
-  setup_predicates([payeeQuery stringValue], false);
+  setup_predicates(ledger_config, [accountQuery stringValue], true);
+  setup_predicates(ledger_config, [payeeQuery stringValue], false);
 
   [self invokeQuery:self];
 }
@@ -216,22 +211,60 @@ void setup_predicates(NSString * query, bool for_account)
 {
   switch ([[sender selectedCell] tag]) {
   case PERIOD_NONE:
-    config.report_period = "";
+    ledger_config->report_period = "";
     break;
   case PERIOD_DAILY:
-    config.report_period = "daily";
+    ledger_config->report_period = "daily";
     break;
   case PERIOD_WEEKLY:
-    config.report_period = "weekly";
+    ledger_config->report_period = "weekly";
     break;
   case PERIOD_MONTHLY:
-    config.report_period = "monthly";
+    ledger_config->report_period = "monthly";
     break;
   case PERIOD_QUARTERLY:
-    config.report_period = "quarterly";
+    ledger_config->report_period = "quarterly";
     break;
   case PERIOD_YEARLY:
-    config.report_period = "yearly";
+    ledger_config->report_period = "yearly";
+    break;
+  }
+
+  [self invokeQuery:self];
+}
+
+- (IBAction)setQuerySort:(id)sender
+{
+  ledger_config->sort_string	    = [[sortBy stringValue] cString];
+  ledger_config->report_period_sort = [[sortPeriodBy stringValue] cString];
+
+  [self invokeQuery:self];
+}
+
+- (IBAction)setQueryOption:(id)sender
+{
+  NSButton * button = [sender selectedCell];
+  switch ([button tag]) {
+  case OPTION_COLLAPSED:
+    ledger_config->show_collapsed = [button state] == NSOnState;
+    break;
+  case OPTION_RELATED:
+    ledger_config->show_related = [button state] == NSOnState;
+    break;
+  case OPTION_BUDGET:
+    if ([button state] == NSOnState)
+      ledger_config->budget_flags = BUDGET_BUDGETED;
+    else
+      ledger_config->budget_flags = BUDGET_NO_BUDGET;
+    break;
+  case OPTION_BY_WEEKDAY:
+    ledger_config->days_of_the_week = [button state] == NSOnState;
+    break;
+  case OPTION_SUBTOTALED:
+    ledger_config->show_subtotal = [button state] == NSOnState;
+    break;
+  case OPTION_BY_PAYEE:
+    ledger_config->by_payee = [button state] == NSOnState;
     break;
   }
 
@@ -257,8 +290,8 @@ void setup_predicates(NSString * query, bool for_account)
 
       clear_formatter_ptrs(*formatter_ptrs);
       item_handler<transaction_t> * formatter
-	= config.chain_xact_handlers("r", functor, journal, journal->master,
-				     *formatter_ptrs);
+	= ledger_config->chain_xact_handlers("r", functor, journal,
+					     journal->master, *formatter_ptrs);
       walk_entries(journal->entries, *formatter);
       formatter->flush();
     }
@@ -267,7 +300,7 @@ void setup_predicates(NSString * query, bool for_account)
     {
       AddAccountsToArray functor(accounts, accountNames, journal->master);
       sum_accounts(*journal->master);
-      walk_accounts(*journal->master, functor, config.sort_string);
+      walk_accounts(*journal->master, functor, ledger_config->sort_string);
       functor.flush();
     }
 
@@ -318,13 +351,28 @@ static NSString * getValueString(value_t& value)
 
   case value_t::BALANCE:
   case value_t::BALANCE_PAIR:
-    NSLog(@"Balances cannot be displayed yet");
+    //NSLog(@"Balances cannot be displayed yet");
     break;
   }
 
   value_stream.flush();
   return [NSString stringWithCString:value_stream.str().c_str()];
 }
+
+#if 0
+static void calculate_subtotal()
+{
+  value_t subtotal;
+
+  int len = [item count];
+  for (int i = 0; i < len; i++) {
+    value = [item objectAtIndex:i];
+    xact  = reinterpret_cast<transaction_t *>([value pointerValue]);
+    add_transaction_to(*xact, subtotal);
+  }
+  return getValueString(subtotal);
+}
+#endif
 
 - (int)numberOfRowsInTableView:(NSTableView *)aTableView
 {
@@ -336,49 +384,37 @@ static NSString * getValueString(value_t& value)
     row:(int)rowIndex
 {
   NSString * ident  = [tableColumn identifier];
-  NSValue  * value  = [[entries objectAtIndex:rowIndex] objectAtIndex:0];
+  NSValue  * value  = [entries objectAtIndex:rowIndex];
 
-  transaction_t * xact;
-  xact = reinterpret_cast<transaction_t *>([value pointerValue]);
+  transaction_t * xact
+    = reinterpret_cast<transaction_t *>([value pointerValue]);
 
-  if ([ident compare:@"date"] == 0) {
-    return [NSDate dateWithTimeIntervalSince1970:xact->entry->date];
-  }
-  else if ([ident compare:@"payee"] == 0) {
-    return [NSString stringWithCString:xact->entry->payee.c_str()];
-  }
-  else if ([ident compare:@"account"] == 0) {
-#if 0
-    if (single)
-#endif
-      return [NSString stringWithCString:xact->account->fullname().c_str()];
-#if 0
-    else
-      return @"<Total>";
-#endif
-  }
-  else if ([ident compare:@"amount"] == 0) {
-#if 0
-    if (single) {
-#endif
-      return getValueString(xact->amount);
-#if 0
-    } else {
-      value_t subtotal;
-
-      int len = [item count];
-      for (int i = 0; i < len; i++) {
-	value = [item objectAtIndex:i];
-	xact  = reinterpret_cast<transaction_t *>([value pointerValue]);
-	add_transaction_to(*xact, subtotal);
-      }
-      return getValueString(subtotal);
+  int index = 0;
+  for (transactions_list::const_iterator i
+	 = xact->entry->transactions.begin();
+       i != xact->entry->transactions.end();
+       i++) {
+    transaction_t& x = **i;
+    if (transaction_has_xdata(x) &&
+	transaction_xdata_(x).dflags & TRANSACTION_TO_DISPLAY) {
+      if (&x == xact)
+	break;
+      index++;
     }
-#endif
   }
-  else if ([ident compare:@"total"] == 0) {
+  bool first = index == 0;
+
+  if (first && [ident isEqualToString:@"date"])
+    return [NSDate dateWithTimeIntervalSince1970:xact->entry->date];
+  else if (first && [ident isEqualToString:@"payee"])
+    return [NSString stringWithCString:xact->entry->payee.c_str()];
+  else if ([ident isEqualToString:@"account"])
+    return [NSString stringWithCString:xact->account->fullname().c_str()];
+  else if ([ident isEqualToString:@"amount"])
+    return getValueString(xact->amount);
+  else if ([ident isEqualToString:@"total"])
     return getValueString(transaction_xdata(*xact).total);
-  }
+
   return nil;
 }
 

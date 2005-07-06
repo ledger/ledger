@@ -2,7 +2,13 @@
     IBClasses = (
         {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
         {
-            ACTIONS = {invokeQuery = id; setQueryPeriod = id; setQueryPredicate = id; }; 
+            ACTIONS = {
+                invokeQuery = id; 
+                setQueryOption = id; 
+                setQueryPeriod = id; 
+                setQueryPredicate = id; 
+                setQuerySort = id; 
+            }; 
             CLASS = JournalController; 
             LANGUAGE = ObjC; 
             OUTLETS = {
@@ -13,6 +19,8 @@
                 inFlowPie = NSView; 
                 outFlowPie = NSView; 
                 payeeQuery = NSFormCell; 
+                sortBy = NSFormCell; 
+                sortPeriodBy = NSFormCell; 
             }; 
             SUPERCLASS = NSWindowController; 
         }, 

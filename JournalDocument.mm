@@ -67,14 +67,9 @@
 {
   // Parse initialization files, ledger data, price database, etc.
 
-  config.use_cache = false;
-#if 0
-  config.init_file = init_file;
-  config.price_db  = prices_file;
-#endif
-  config.data_file = [fileName cString];
-
-  if (config.parse_ledger_data(journal) > 0)
+  bool dirty;
+  if (parse_ledger_data(journal, "", [fileName cString], "",
+			false, "", dirty, "") > 0)
     return YES;
   else
     return NO;

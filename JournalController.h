@@ -29,7 +29,6 @@ class AddEntriesToArray : public item_handler<transaction_t>
       register_last_entry();
       last_entry = NULL;
     }
-    item_handler<transaction_t>::flush();
   }
 
   virtual void operator()(transaction_t& xact);
@@ -64,6 +63,13 @@ class AddAccountsToArray : public item_handler<account_t>
 #define PERIOD_QUARTERLY 4
 #define PERIOD_YEARLY	 5
 
+#define OPTION_COLLAPSED  0
+#define OPTION_RELATED	  1
+#define OPTION_BUDGET	  2
+#define OPTION_BY_WEEKDAY 3
+#define OPTION_SUBTOTALED 4
+#define OPTION_BY_PAYEE	  5
+
 @interface JournalController : NSWindowController
 {
   IBOutlet NSOutlineView * accountsList;
@@ -73,15 +79,21 @@ class AddAccountsToArray : public item_handler<account_t>
   IBOutlet NSView *	   balanceGraph;
   IBOutlet NSFormCell *    accountQuery;
   IBOutlet NSFormCell *    payeeQuery;
+  IBOutlet NSFormCell *    sortBy;
+  IBOutlet NSFormCell *    sortPeriodBy;
 
   NSMutableArray *	accounts;
   NSMutableDictionary * accountNames;
   NSMutableArray *	entries;
 
+  config_t * ledger_config;
   std::list<item_handler<transaction_t> *> * formatter_ptrs;
 }
 
 - (IBAction)setQueryPredicate:(id)sender;
 - (IBAction)setQueryPeriod:(id)sender;
+- (IBAction)setQuerySort:(id)sender;
+- (IBAction)setQueryOption:(id)sender;
+
 - (IBAction)invokeQuery:(id)sender;
 @end
