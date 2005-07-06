@@ -186,7 +186,7 @@ void config_t::process_options(const std::string&     command,
 			 (command == "b" && ! show_subtotal &&
 			  display_predicate.empty()));
     if (i != args_end)
-      regexps_to_predicate(*this, command, i, args_end);
+      regexps_to_predicate(*this, command, ++i, args_end);
   }
 
   // Setup the default value for the display predicate
