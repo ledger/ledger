@@ -154,8 +154,8 @@ class format_account : public item_handler<account_t>
   format_account(std::ostream&      _output_stream,
 		 const std::string& _format,
 		 const std::string& display_predicate = NULL)
-    : output_stream(_output_stream), format(_format),
-      disp_pred(display_predicate) {}
+    : output_stream(_output_stream), disp_pred(display_predicate),
+      format(_format) {}
 
   virtual void flush() {
     output_stream.flush();
