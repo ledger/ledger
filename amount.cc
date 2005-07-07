@@ -1172,7 +1172,8 @@ commodity_t * commodity_t::find_commodity(const std::string& symbol,
     // and precision, if one has been defined.
     if (default_commodity)
       commodity->flags =
-	(default_commodity->flags & ~COMMODITY_STYLE_THOUSANDS);
+	(default_commodity->flags & ~(COMMODITY_STYLE_THOUSANDS |
+				      COMMODITY_STYLE_NOMARKET));
 
     return commodity;
   }
