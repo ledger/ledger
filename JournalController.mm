@@ -9,13 +9,11 @@
 #import "JournalController.h"
 #import "JournalDocument.h"
 
-#include <iostream>
-#include <fstream>
+#include <list>
+#include <string>
 #include <strstream>
-#include <memory>
 #include <cstring>
 #include <exception>
-#include <cstdlib>
 
 void AddEntriesToArray::register_last_entry()
 {
