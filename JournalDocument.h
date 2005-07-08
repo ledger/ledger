@@ -12,8 +12,8 @@
 
 @interface JournalDocument : NSDocument
 {
-  ledger::journal_t * journal;
+  ledger::journal_t * _journal;
 }
 
-- (ledger::journal_t *)journalPointer;
+- (ledger::journal_t *)journal;
 @end

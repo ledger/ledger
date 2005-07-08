@@ -14,27 +14,22 @@
 - (id)init
 {
   self = [super init];
-  if (self) {
-    journal = new journal_t;
-    if (! journal)
-      return nil;
-  }
+  if (self)
+    _journal = new journal_t;
   return self;
 }
 
 - (void)dealloc
 {
-  if (journal) {
-    clear_all_xdata();
-    delete journal;
-  }
+  clear_all_xdata();
+  delete _journal;
 
   [super dealloc];
 }
 
-- (ledger::journal_t *)journalPointer
+- (ledger::journal_t *)journal
 {
-  return journal;
+  return _journal;
 }
 
 - (NSString *)windowNibName
@@ -68,8 +63,8 @@
   // Parse initialization files, ledger data, price database, etc.
 
   bool dirty;
-  if (parse_ledger_data(journal, "", [fileName cString], "",
-			false, "", dirty, "") > 0)
+  if (parse_ledger_data(_journal, "", [fileName cString], "", false, "",
+			dirty, "") > 0)
     return YES;
   else
     return NO;

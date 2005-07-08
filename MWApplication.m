@@ -4,9 +4,9 @@
 
 - (void)orderFrontStandardAboutPanel:(id)sender
 {
-  if (aboutPanel == nil) {
+  if (aboutPanel == nil)
     [NSBundle loadNibNamed:@"AboutPanel" owner:self];
-  }
+
   [aboutPanel makeKeyAndOrderFront:self];
 }
 

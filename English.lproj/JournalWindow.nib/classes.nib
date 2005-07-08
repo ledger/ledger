@@ -6,6 +6,7 @@
                 invokeQuery = id; 
                 setQueryOption = id; 
                 setQueryPeriod = id; 
+                setQueryPeriodSort = id; 
                 setQueryPredicate = id; 
                 setQuerySort = id; 
             }; 
@@ -19,8 +20,6 @@
                 inFlowPie = NSView; 
                 outFlowPie = NSView; 
                 payeeQuery = NSFormCell; 
-                sortBy = NSFormCell; 
-                sortPeriodBy = NSFormCell; 
             }; 
             SUPERCLASS = NSWindowController; 
         }, 

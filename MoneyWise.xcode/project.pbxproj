@@ -131,6 +131,10 @@
 				2A37F4ACFDCFA73011CA2CEA,
 				33D62807087E039000D91B9A,
 				33D62808087E039000D91B9A,
+				3325A649087E291D00DDC078,
+				3325A64A087E291D00DDC078,
+				3325A676087E2C6A00DDC078,
+				3325A659087E2AB800DDC078,
 			);
 			isa = PBXGroup;
 			name = Classes;
@@ -299,6 +303,62 @@
 //332
 //333
 //334
+		3325A649087E291D00DDC078 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = LedgerInterface.cc;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		3325A64A087E291D00DDC078 = {
+			explicitFileType = sourcecode.cpp.h;
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			path = LedgerInterface.h;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		3325A64B087E291D00DDC078 = {
+			fileRef = 3325A649087E291D00DDC078;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3325A64C087E291D00DDC078 = {
+			fileRef = 3325A64A087E291D00DDC078;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3325A659087E2AB800DDC078 = {
+			explicitFileType = sourcecode.cpp.h;
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			path = LedgerFunctors.h;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		3325A65B087E2AB800DDC078 = {
+			fileRef = 3325A659087E2AB800DDC078;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3325A676087E2C6A00DDC078 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.cpp.objcpp;
+			path = LedgerFunctors.mm;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		3325A677087E2C6A00DDC078 = {
+			fileRef = 3325A676087E2C6A00DDC078;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		335FBAD0087A16A900F4EF67 = {
 			isa = PBXFileReference;
 			lastKnownFileType = "compiled.mach-o.dylib";
@@ -522,6 +582,8 @@
 				8D15AC2A0486D014006FF6A4,
 				33BC70330878A8BF00197981,
 				33D62809087E039000D91B9A,
+				3325A64C087E291D00DDC078,
+				3325A65B087E2AB800DDC078,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -581,6 +643,8 @@
 				8D15AC320486D014006FF6A4,
 				33BC70340878A8BF00197981,
 				33D6280A087E039000D91B9A,
+				3325A64B087E291D00DDC078,
+				3325A677087E2C6A00DDC078,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
