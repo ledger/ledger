@@ -1,6 +1,6 @@
 //
 //  main.m
-//  LedgerPro
+//  MoneyWise
 //
 //  Created by John Wiegley on Sun Jul 03 2005.
 //  Copyright (c) 2005 __MyCompanyName__. All rights reserved.

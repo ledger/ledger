@@ -118,7 +118,7 @@
 				19C28FB0FE9D524F11CA2CBB,
 			);
 			isa = PBXGroup;
-			name = LedgerPro;
+			name = MoneyWise;
 			path = "";
 			refType = 4;
 			sourceTree = "<group>";
@@ -282,7 +282,7 @@
 			fileEncoding = 4;
 			isa = PBXFileReference;
 			lastKnownFileType = sourcecode.c.h;
-			path = LedgerPro_Prefix.pch;
+			path = MoneyWise_Prefix.pch;
 			refType = 4;
 			sourceTree = "<group>";
 		};
@@ -437,17 +437,17 @@
 				GCC_ENABLE_TRIGRAPHS = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = LedgerPro_Prefix.pch;
+				GCC_PREFIX_HEADER = MoneyWise_Prefix.pch;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = NO;
 				GCC_WARN_FOUR_CHARACTER_CONSTANTS = NO;
 				GCC_WARN_UNKNOWN_PRAGMAS = NO;
 				HEADER_SEARCH_PATHS = "/home/johnw/src/ledger /sw/lib";
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
-				LIBRARY_SEARCH_PATHS = "/home/johnw/src/ledger/.libs /Users/johnw/src/LedgerPro /sw/lib";
+				LIBRARY_SEARCH_PATHS = "/home/johnw/src/ledger/.libs /Users/johnw/src/MoneyWise /sw/lib";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
-				PRODUCT_NAME = LedgerPro;
+				PRODUCT_NAME = MoneyWise;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
 				WRAPPER_EXTENSION = app;
@@ -455,9 +455,9 @@
 			dependencies = (
 			);
 			isa = PBXNativeTarget;
-			name = LedgerPro;
+			name = MoneyWise;
 			productInstallPath = "$(HOME)/Applications";
-			productName = LedgerPro;
+			productName = MoneyWise;
 			productReference = 8D15AC370486D014006FF6A4;
 			productType = "com.apple.product-type.application";
 		};
@@ -574,7 +574,7 @@
 			explicitFileType = wrapper.application;
 			includeInIndex = 0;
 			isa = PBXFileReference;
-			path = LedgerPro.app;
+			path = MoneyWise.app;
 			refType = 3;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};

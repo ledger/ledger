@@ -26,7 +26,7 @@
 		</dict>
 	</array>
 	<key>CFBundleExecutable</key>
-	<string>LedgerPro</string>
+	<string>MoneyWise</string>
 	<key>CFBundleIconFile</key>
 	<string></string>
 	<key>CFBundleIdentifier</key>
