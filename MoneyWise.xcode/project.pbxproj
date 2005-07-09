@@ -135,6 +135,9 @@
 				3325A64A087E291D00DDC078,
 				3325A676087E2C6A00DDC078,
 				3325A659087E2AB800DDC078,
+				3325A692087E345F00DDC078,
+				3325A693087E345F00DDC078,
+				336269CD088079FC00835060,
 			);
 			isa = PBXGroup;
 			name = Classes;
@@ -359,6 +362,34 @@
 			settings = {
 			};
 		};
+		3325A692087E345F00DDC078 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			path = GraphView.h;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		3325A693087E345F00DDC078 = {
+			explicitFileType = sourcecode.cpp.objcpp;
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			path = GraphView.mm;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		3325A694087E345F00DDC078 = {
+			fileRef = 3325A692087E345F00DDC078;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3325A695087E345F00DDC078 = {
+			fileRef = 3325A693087E345F00DDC078;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		335FBAD0087A16A900F4EF67 = {
 			isa = PBXFileReference;
 			lastKnownFileType = "compiled.mach-o.dylib";
@@ -407,6 +438,20 @@
 		};
 		335FBAEA087A1D5900F4EF67 = {
 			fileRef = 335FBAE9087A1D5900F4EF67;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		336269CD088079FC00835060 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			path = NSLogStream.h;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		336269CE088079FC00835060 = {
+			fileRef = 336269CD088079FC00835060;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -584,6 +629,8 @@
 				33D62809087E039000D91B9A,
 				3325A64C087E291D00DDC078,
 				3325A65B087E2AB800DDC078,
+				3325A694087E345F00DDC078,
+				336269CE088079FC00835060,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -645,6 +692,7 @@
 				33D6280A087E039000D91B9A,
 				3325A64B087E291D00DDC078,
 				3325A677087E2C6A00DDC078,
+				3325A695087E345F00DDC078,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;

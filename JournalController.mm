@@ -9,6 +9,9 @@
 #import "JournalController.h"
 #import "JournalDocument.h"
 #import "LedgerFunctors.h"
+#if 0
+#import "NSLogStream.h"
+#endif
 
 @implementation JournalController
 
@@ -45,6 +48,11 @@
   [[[entriesList tableColumnWithIdentifier:@"date"] dataCell] 
    setFormatter:formatter];
   [formatter release];
+
+#if 0
+  NSLogStream output;
+  output << "Hello world" << std::endl;
+#endif
 }
 
 - (IBAction)setQueryPredicate:(id)sender
