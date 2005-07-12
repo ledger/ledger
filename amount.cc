@@ -541,7 +541,7 @@ amount_t amount_t::value(const std::time_t moment) const
     commodity_t& comm = commodity();
     if (! (comm.flags & COMMODITY_STYLE_NOMARKET))
       if (amount_t amt = comm.value(moment))
-	return (amt * *this).round(comm.precision);
+	return (amt * *this).round(amt.commodity().precision);
   }
   return *this;
 }
@@ -1187,16 +1187,31 @@ amount_t commodity_t::value(const std::time_t moment)
   amount_t    price;
 
   if (history) {
+    assert(history->prices.size() > 0);
+
     if (moment == 0) {
-      history_map::reverse_iterator i = history->prices.rbegin();
-      age   = (*i).first;
-      price = (*i).second;
+      history_map::reverse_iterator r = history->prices.rbegin();
+      age   = (*r).first;
+      price = (*r).second;
     } else {
       history_map::iterator i = history->prices.lower_bound(moment);
-      if (i != history->prices.begin()) {
-	--i;
-	age   = (*i).first;
-	price = (*i).second;
+      if (i == history->prices.end()) {
+	history_map::reverse_iterator r = history->prices.rbegin();
+	age   = (*r).first;
+	price = (*r).second;
+      } else {
+	age = (*i).first;
+	if (std::difftime(moment, age) != 0) {
+	  if (i != history->prices.begin()) {
+	    --i;
+	    age	  = (*i).first;
+	    price = (*i).second;
+	  } else {
+	    age = 0;
+	  }
+	} else {
+	  price = (*i).second;
+	}
       }
     }
   }
