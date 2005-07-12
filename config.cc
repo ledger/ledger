@@ -692,7 +692,6 @@ OPT_BEGIN(date_format, "y:") {
 OPT_BEGIN(input_date_format, ":") {
   std::strcpy(input_format, optarg);
   formats[0] = input_format;
-  formats[1] = NULL;
 } OPT_END(input_date_format);
 
 OPT_BEGIN(balance_format, ":") {
@@ -787,14 +786,14 @@ OPT_BEGIN(period, "p:") {
   // modify the calculation predicate (via the --begin and --end
   // options) to take this into account.
 
-  char buf[32];
+  char buf[128];
   interval_t interval(config.report_period);
   if (interval.begin) {
-    std::strftime(buf, 31, "%Y/%m/%d", std::localtime(&interval.begin));
+    std::strftime(buf, 127, formats[0], std::localtime(&interval.begin));
     process_option(config_options, "begin", buf);
   }
   if (interval.end) {
-    std::strftime(buf, 31, "%Y/%m/%d", std::localtime(&interval.end));
+    std::strftime(buf, 127, formats[0], std::localtime(&interval.end));
     process_option(config_options, "end", buf);
   }
 } OPT_END(period);
