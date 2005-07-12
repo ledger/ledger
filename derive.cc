@@ -33,10 +33,18 @@ entry_t * derive_new_entry(journal_t& journal,
 
   added->payee = matching ? matching->payee : regexp.pattern;
 
-  if (i == end)
-    throw error("Too few arguments to 'entry'");
+  if (i == end) {
+    // If no argument were given but the payee, assume the user wants
+    // to see the same transaction as last time.
+    added->state = matching->state;
+    added->code  = matching->code;
 
-  if ((*i)[0] == '-' || std::isdigit((*i)[0])) {
+    for (transactions_list::iterator j = matching->transactions.begin();
+	 j != matching->transactions.end();
+	 j++)
+      added->add_transaction(new transaction_t(**j));
+  }
+  else if ((*i)[0] == '-' || std::isdigit((*i)[0])) {
     if (! matching)
       throw error("Could not determine the account to draw from");
 
@@ -61,7 +69,8 @@ entry_t * derive_new_entry(journal_t& journal,
       if (acct)
 	added->transactions.back()->account = acct;
     }
-  } else {
+  }
+  else {
     while (i != end) {
       std::string&  re_pat(*i++);
       account_t *   acct  = NULL;
