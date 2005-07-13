@@ -45,13 +45,18 @@ entry_t * derive_new_entry(journal_t& journal,
       added->add_transaction(new transaction_t(**j));
   }
   else if ((*i)[0] == '-' || std::isdigit((*i)[0])) {
-    if (! matching)
+    account_t * draw_acct;
+    if (matching)
+      draw_acct = matching->transactions.front()->account;
+    else if (journal.basket)
+      draw_acct = journal.basket;
+    else
       throw error("Could not determine the account to draw from");
 
     transaction_t * m_xact, * xact, * first;
     m_xact = matching->transactions.front();
 
-    first = xact = new transaction_t(m_xact->account, amount_t(*i++));
+    first = xact = new transaction_t(draw_acct, amount_t(*i++));
     added->add_transaction(xact);
 
     if (! xact->amount.commodity())
@@ -59,7 +64,7 @@ entry_t * derive_new_entry(journal_t& journal,
 
     m_xact = matching->transactions.back();
 
-    xact = new transaction_t(m_xact->account, - first->amount);
+    xact = new transaction_t(draw_acct, - first->amount);
     added->add_transaction(xact);
 
     if (i != end) {
@@ -112,13 +117,16 @@ entry_t * derive_new_entry(journal_t& journal,
       added->add_transaction(xact);
     }
 
-    if (! matching) {
+    account_t * draw_acct;
+    if (matching)
+      draw_acct = matching->transactions.back()->account;
+    else if (journal.basket)
+      draw_acct = journal.basket;
+    else
       throw error("Could not determine the account to draw from");
-    } else {
-      transaction_t * xact
-	= new transaction_t(matching->transactions.back()->account);
-      added->add_transaction(xact);
-    }
+
+    transaction_t * xact = new transaction_t(draw_acct);
+    added->add_transaction(xact);
   }
 
  done:
