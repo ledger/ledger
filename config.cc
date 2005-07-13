@@ -128,7 +128,7 @@ regexps_to_predicate(config_t& config, const std::string& command,
       add_predicate = 1;
     }
 
-    if (i != 1 && command == "b") {
+    if (i != 1 && command == "b" && account_regexp) {
       if (! config.display_predicate.empty())
 	config.display_predicate += "&";
       else if (! config.show_empty)
@@ -182,11 +182,11 @@ void config_t::process_options(const std::string&     command,
       if (*i == "--")
 	break;
 
-    regexps_to_predicate(*this, command, arg, i, true,
+    regexps_to_predicate(*this, command, arg, i++, true,
 			 (command == "b" && ! show_subtotal &&
 			  display_predicate.empty()));
     if (i != args_end)
-      regexps_to_predicate(*this, command, ++i, args_end);
+      regexps_to_predicate(*this, command, i, args_end);
   }
 
   // Setup the default value for the display predicate
