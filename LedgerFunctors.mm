@@ -85,10 +85,11 @@ void AddEntriesToArray::register_last_entry()
     if (transaction_has_xdata(xact) &&
 	transaction_xdata_(xact).dflags & TRANSACTION_TO_DISPLAY) {
       // Calculate totals for the parent account
-      add_transaction_to(xact, account_xdata(*xact.account).value);
-      account_xdata_(*xact.account).count++;
+      account_xdata_t& xdata = account_xdata(xact_account(xact));
+      add_transaction_to(xact, xdata.value);
+      xdata.count++;
       if (xact.flags & TRANSACTION_VIRTUAL)
-	account_xdata_(*xact.account).virtuals++;
+	xdata.virtuals++;
 
       // Add the transaction as an NSValue object within an array
       [records addObject:[NSValue valueWithPointer:&xact]];

@@ -15,6 +15,10 @@
 
 @implementation JournalController
 
+// jww (2005-07-09): Before the document decides to close, we must run
+// this command:
+//  ledgerConfig->clear_query([[self document] journal]);
+
 - (void)windowDidLoad
 {
   [super windowDidLoad];
@@ -22,6 +26,7 @@
   accounts     = [[NSMutableArray alloc] init];
   accountNames = [[NSMutableDictionary alloc] init];
   entries      = [[NSMutableArray alloc] init];
+
   ledgerConfig = new ledger_interface;
 
   [self invokeQuery:self];
@@ -32,6 +37,7 @@
   [accounts release];
   [accountNames release];
   [entries release];
+
   delete ledgerConfig;
 
   [super dealloc];
@@ -205,7 +211,7 @@ static void calculate_subtotal()
   else if (first && [ident isEqualToString:@"payee"])
     return [NSString stringWithCString:xact->entry->payee.c_str()];
   else if ([ident isEqualToString:@"account"])
-    return [NSString stringWithCString:xact->account->fullname().c_str()];
+    return [NSString stringWithCString:xact_account(*xact)->fullname().c_str()];
   else if ([ident isEqualToString:@"amount"])
     return getValueString(xact->amount);
   else if ([ident isEqualToString:@"total"])

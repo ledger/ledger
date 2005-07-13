@@ -15,13 +15,12 @@
 {
   self = [super init];
   if (self)
-    _journal = new journal_t;
+    _journal = new ledger::journal_t;
   return self;
 }
 
 - (void)dealloc
 {
-  clear_all_xdata();
   delete _journal;
 
   [super dealloc];
@@ -60,11 +59,7 @@
 
 - (BOOL)readFromFile:(NSString *)fileName ofType:(NSString *)docType
 {
-  // Parse initialization files, ledger data, price database, etc.
-
-  bool dirty;
-  if (parse_ledger_data(_journal, "", [fileName cString], "", false, "",
-			dirty, "") > 0)
+  if (ledger::parse_ledger_data(_journal, [fileName cString]) > 0)
     return YES;
   else
     return NO;

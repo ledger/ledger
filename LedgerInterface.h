@@ -8,8 +8,6 @@
 
 #include <ledger.h>
 
-using namespace ledger;
-
 #define PERIOD_NONE	 0
 #define PERIOD_DAILY	 1
 #define PERIOD_WEEKLY	 2
@@ -26,9 +24,9 @@ using namespace ledger;
 
 class ledger_interface
 {
-  config_t * config;
+  ledger::config_t * config;
 
-  std::list<item_handler<transaction_t> *> * formatter_ptrs;
+  std::list<ledger::item_handler<ledger::transaction_t> *> * formatter_ptrs;
 
   void clear_formatter_ptrs();
 
@@ -49,7 +47,13 @@ public:
   void set_report_period(int period);
   void set_query_option(int option, bool enable);
 
-  void perform_query(journal_t * journal,
-		     item_handler<account_t> * accounts_functor,
-		     item_handler<transaction_t> * entries_functor);
+  void perform_query
+    (ledger::journal_t * journal,
+     ledger::item_handler<ledger::account_t> * accounts_functor,
+     ledger::item_handler<ledger::transaction_t> * entries_functor);
+
+  void clear_query(ledger::journal_t * journal) {
+    clear_formatter_ptrs();
+    clear_journal_xdata(journal);
+  }
 };

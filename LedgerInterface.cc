@@ -8,6 +8,8 @@
 
 #import "LedgerInterface.h"
 
+using namespace ledger;
+
 ledger_interface::ledger_interface()
 {
   config = new config_t;
@@ -21,7 +23,6 @@ ledger_interface::~ledger_interface()
 {
   clear_formatter_ptrs();
   delete formatter_ptrs;
-
   delete config;
 }
 
@@ -122,8 +123,9 @@ void ledger_interface::perform_query
    item_handler<account_t> * accounts_functor,
    item_handler<transaction_t> * entries_functor)
 {
-  // Remove all (possible) previous query results
-  clear_all_xdata();
+  // Remove all (possible) previous query results for the given
+  // journal
+  clear_query(journal);
 
   // Collect all the revelant transactions
   clear_formatter_ptrs();
