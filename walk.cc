@@ -537,58 +537,51 @@ void generate_transactions::add_transaction(const interval_t& period,
 
 void budget_transactions::report_budget_items(const std::time_t moment)
 {
-  if (pending_xacts.size() > 0) {
-    std::list<pending_xacts_list::iterator> to_clear;
+  if (pending_xacts.size() == 0)
+    return;
 
-    bool reported;
-    do {
-      reported = false;
-      for (pending_xacts_list::iterator i = pending_xacts.begin();
-	   i != pending_xacts.end();
-	   i++) {
-	std::time_t& begin = (*i).first.begin;
-	if (! begin) {
-	  (*i).first.start(moment);
-	  begin = (*i).first.begin;
-	}
-
-	if (std::difftime(begin, moment) < 0 &&
-	    (! (*i).first.end || std::difftime(begin, (*i).first.end) < 0)) {
-	  transaction_t& xact  = *(*i).second;
-
-	  DEBUG_PRINT("ledger.walk.budget", "Reporting budget for "
-		      << xact.account->fullname());
-	  DEBUG_PRINT_TIME("ledger.walk.budget", begin);
-	  DEBUG_PRINT_TIME("ledger.walk.budget", moment);
-
-	  entry_temps.push_back(entry_t());
-	  entry_t& entry = entry_temps.back();
-	  entry.payee = "Budget entry";
-	  entry.date  = begin;
-
-	  xact_temps.push_back(xact);
-	  transaction_t& temp = xact_temps.back();
-	  temp.entry = &entry;
-	  temp.flags |= TRANSACTION_AUTO;
-	  temp.amount.negate();
-	  temp.flags |= TRANSACTION_BULK_ALLOC;
-	  entry.add_transaction(&temp);
-
-	  begin = (*i).first.increment(begin);
-
-	  item_handler<transaction_t>::operator()(temp);
-
-	  reported = true;
-	}
+  bool reported;
+  do {
+    reported = false;
+    for (pending_xacts_list::iterator i = pending_xacts.begin();
+	 i != pending_xacts.end();
+	 i++) {
+      std::time_t& begin = (*i).first.begin;
+      if (! begin) {
+	(*i).first.start(moment);
+	begin = (*i).first.begin;
       }
-    } while (reported);
 
-    for (std::list<pending_xacts_list::iterator>::iterator
-	   i = to_clear.begin();
-	 i != to_clear.end();
-	 i++)
-      pending_xacts.erase(*i);
-  }
+      if (std::difftime(begin, moment) < 0 &&
+	  (! (*i).first.end || std::difftime(begin, (*i).first.end) < 0)) {
+	transaction_t& xact  = *(*i).second;
+
+	DEBUG_PRINT("ledger.walk.budget", "Reporting budget for "
+		    << xact.account->fullname());
+	DEBUG_PRINT_TIME("ledger.walk.budget", begin);
+	DEBUG_PRINT_TIME("ledger.walk.budget", moment);
+
+	entry_temps.push_back(entry_t());
+	entry_t& entry = entry_temps.back();
+	entry.payee = "Budget entry";
+	entry.date  = begin;
+
+	xact_temps.push_back(xact);
+	transaction_t& temp = xact_temps.back();
+	temp.entry = &entry;
+	temp.flags |= TRANSACTION_AUTO;
+	temp.amount.negate();
+	temp.flags |= TRANSACTION_BULK_ALLOC;
+	entry.add_transaction(&temp);
+
+	begin = (*i).first.increment(begin);
+
+	item_handler<transaction_t>::operator()(temp);
+
+	reported = true;
+      }
+    }
+  } while (reported);
 }
 
 void budget_transactions::operator()(transaction_t& xact)
@@ -601,8 +594,10 @@ void budget_transactions::operator()(transaction_t& xact)
     for (account_t * acct = xact.account; acct; acct = acct->parent) {
       if (acct == (*i).second->account) {
 	xact_in_budget = true;
+
 	// Report the transaction as if it had occurred in the parent
-	// account.
+	// account.  jww (2005-07-13): Note that this assignment will
+	// irrevocably change the underlying transaction.
 	if (xact.account != acct)
 	  xact.account = acct;
 	goto handle;
