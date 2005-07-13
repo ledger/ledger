@@ -554,6 +554,8 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	char * b = skip_ws(line + 1);
 	char * p = std::strchr(b, ' ');
 	if (! p) break;
+	p = std::strchr(skip_ws(p), ' ');
+	if (! p) break;
 	*p++ = '\0';
 
 	struct std::tm when;
@@ -562,21 +564,6 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	} else {
 	  throw parse_error(path, linenum, "Failed to parse date");
 	}
-
-	int hour, min, sec;
-
-	if (! *p) break; hour = (*p++ - '0') * 10;
-	if (! *p) break; hour += *p++ - '0';
-	p++; if (! *p) break;
-	if (! *p) break; min = (*p++ - '0') * 10;
-	if (! *p) break; min += *p++ - '0';
-	p++; if (! *p) break;
-	if (! *p) break; sec = (*p++ - '0') * 10;
-	if (! *p) break; sec += *p++ - '0';
-	p++; if (! *p) break;
-
-	date = std::time_t(((unsigned long) date) +
-			   hour * 3600 + min * 60 + sec);
 
 	std::string symbol;
 	amount_t    price;
