@@ -355,8 +355,8 @@ void subtotal_transactions::report_subtotal(const char * spec_fmt)
   for (values_map::iterator i = values.begin();
        i != values.end();
        i++)
-    handle_value((*i).second, (*i).first, &entry, 0, xact_temps,
-		 *handler, finish);
+    handle_value((*i).second.value, (*i).second.account, &entry, 0,
+		 xact_temps, *handler, finish);
 
   values.clear();
 }
@@ -368,13 +368,16 @@ void subtotal_transactions::operator()(transaction_t& xact)
   if (! finish || std::difftime(xact.entry->date, finish) > 0)
     finish = xact.entry->date;
 
-  values_map::iterator i = values.find(xact.account);
+  account_t * acct = xact.account;
+  assert(acct);
+
+  values_map::iterator i = values.find(acct->fullname());
   if (i == values.end()) {
     value_t temp;
     add_transaction_to(xact, temp);
-    values.insert(values_pair(xact.account, temp));
+    values.insert(values_pair(acct->fullname(), acct_value_t(acct, temp)));
   } else {
-    add_transaction_to(xact, (*i).second);
+    add_transaction_to(xact, (*i).second.value);
   }
 
   // If the account for this transaction is all virtual, mark it as

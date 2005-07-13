@@ -367,8 +367,18 @@ class changed_value_transactions : public item_handler<transaction_t>
 
 class subtotal_transactions : public item_handler<transaction_t>
 {
-  typedef std::map<account_t *, value_t>  values_map;
-  typedef std::pair<account_t *, value_t> values_pair;
+  struct acct_value_t {
+    account_t * account;
+    value_t     value;
+
+    acct_value_t(account_t * a) : account(a) {}
+    acct_value_t(account_t * a, value_t& v) : account(a), value(v) {}
+    acct_value_t(const acct_value_t& av)
+      : account(av.account), value(av.value) {}
+  };
+
+  typedef std::map<std::string, acct_value_t>  values_map;
+  typedef std::pair<std::string, acct_value_t> values_pair;
 
  protected:
   values_map values;
