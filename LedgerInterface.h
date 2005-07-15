@@ -21,13 +21,15 @@
 #define OPTION_BY_WEEKDAY 3
 #define OPTION_SUBTOTALED 4
 #define OPTION_BY_PAYEE	  5
-#define OPTION_AVERAGE    6
-#define OPTION_DEVIATION  7
 
 #define REPORT_COMMODITY  0
 #define REPORT_MARKET     1
 #define REPORT_BASIS      2
 #define REPORT_CUSTOM     3
+
+#define REPORT_TOTALS     100
+#define REPORT_AVERAGE    101
+#define REPORT_DEVIATION  102
 
 class ledger_interface
 {

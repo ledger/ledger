@@ -117,20 +117,6 @@ void ledger_interface::set_query_option(int option, bool enable)
   case OPTION_BY_PAYEE:
     config->by_payee = enable;
     break;
-  case OPTION_AVERAGE:
-    if (enable)
-      config->total_expr = std::string("A(") + base_total_expr + ")";
-    else:
-      config->total_expr = base_total_expr;
-    ledger::total_expr.reset(parse_value_expr(config->total_expr));
-    break;
-  case OPTION_DEVIATION:
-    if (enable)
-      config->total_expr = std::string("t-A(") + base_total_expr + ")";
-    else:
-      config->total_expr = base_total_expr;
-    ledger::total_expr.reset(parse_value_expr(config->total_expr));
-    break;
   }
 }
 
@@ -143,27 +129,47 @@ void ledger_interface::set_report_type(int type, bool show_revalued,
     config->show_revalued = false;
     config->amount_expr   = "a";
     config->total_expr    = "O";
+
+    base_total_expr = config->total_expr;
     break;
+
   case REPORT_MARKET:
     config->show_revalued = true;
     config->amount_expr   = "v";
     config->total_expr    = "V";
+
+    base_total_expr = config->total_expr;
     break;
+
   case REPORT_BASIS:
     config->show_revalued = false;
     config->amount_expr   = "b";
     config->total_expr    = "B";
+
+    base_total_expr = config->total_expr;
     break;
+
   case REPORT_CUSTOM:
     config->show_revalued = show_revalued;
     config->amount_expr   = amount_expr;
     config->total_expr    = total_expr;
+
+    base_total_expr = config->total_expr;
+    break;
+
+  case REPORT_TOTALS:
+    config->total_expr = base_total_expr;
+    break;
+  case REPORT_AVERAGE:
+    config->total_expr = std::string("A(") + base_total_expr + ")";
+    break;
+  case REPORT_DEVIATION:
+    config->total_expr = std::string("t-A(") + base_total_expr + ")";
     break;
   }
 
-  base_total_expr = config->total_expr;
+  // jww (2005-07-14): These globals should be removed from format.cc
 
-  // jww (2005-07-14): These globals should be removed
   ledger::amount_expr.reset(parse_value_expr(config->amount_expr));
   ledger::total_expr.reset(parse_value_expr(config->total_expr));
 }
