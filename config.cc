@@ -78,6 +78,8 @@ regexps_to_predicate(config_t& config, const std::string& command,
 {
   std::string regexps[2];
 
+  assert(begin != end);
+
   // Treat the remaining command-line arguments as regular
   // expressions, used for refining report results.
 
