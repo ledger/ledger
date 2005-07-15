@@ -9,6 +9,7 @@
                 setQueryPeriod = id; 
                 setQueryPeriodSort = id; 
                 setQueryPredicate = id; 
+                setQueryReportType = id; 
                 setQuerySort = id; 
             }; 
             CLASS = JournalController; 

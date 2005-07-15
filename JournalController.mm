@@ -93,6 +93,12 @@
   [self invokeQuery:self];
 }
 
+- (IBAction)setQueryReportType:(id)sender
+{
+  ledgerConfig->set_report_type([[sender selectedCell] tag]);
+  [self invokeQuery:self];
+}
+
 - (IBAction)invokeQuery:(id)sender
 {
   try {
@@ -109,8 +115,8 @@
     std::auto_ptr<AddEntriesToArray>
       entries_functor(new AddEntriesToArray(entries));
 
-    ledgerConfig->perform_query(journal,
-				accounts_functor.get(), entries_functor.get());
+    ledgerConfig->perform_query(journal, accounts_functor.get(),
+				entries_functor.get());
   }
   catch (const std::exception& err) {
     NSAlert *alert = [[NSAlert alloc] init];
@@ -127,37 +133,16 @@
   [entriesList reloadData];
 }
 
-static NSString * getValueString(amount_t& amount)
-{
-  std::string amount_string;
-  std::ostringstream amount_stream(amount_string);
-  amount_stream << amount;
-  amount_stream.flush();
-  return [NSString stringWithCString:amount_stream.str().c_str()];
-}
-
-static NSString * getValueString(value_t& value)
+template <typename T>
+static NSString * getValueString(T& obj, bool total = false)
 {
   std::string value_string;
   std::ostringstream value_stream(value_string);
 
-  switch (value.type) {
-  case value_t::BOOLEAN:
-  case value_t::INTEGER:
-    assert(0);
-    break;
-
-  case value_t::AMOUNT:
-    value_stream << *((amount_t *) value.data);
-    break;
-
-  case value_t::BALANCE:
-  case value_t::BALANCE_PAIR:
-    //NSLog(@"Balances cannot be displayed yet");
-    break;
-  }
-
+  format_t fmt(total ? "%T" : "%t");
+  fmt.format(value_stream, details_t(obj));
   value_stream.flush();
+
   return [NSString stringWithCString:value_stream.str().c_str()];
 }
 
@@ -210,12 +195,17 @@ static void calculate_subtotal()
     return [NSDate dateWithTimeIntervalSince1970:xact->entry->date];
   else if (first && [ident isEqualToString:@"payee"])
     return [NSString stringWithCString:xact->entry->payee.c_str()];
-  else if ([ident isEqualToString:@"account"])
-    return [NSString stringWithCString:xact_account(*xact)->fullname().c_str()];
+  else if ([ident isEqualToString:@"account"]) {
+    account_t * acct = xact_account(*xact);
+    if (acct)
+      return [NSString stringWithCString:acct->fullname().c_str()];
+    else
+      return @"";
+  }
   else if ([ident isEqualToString:@"amount"])
-    return getValueString(xact->amount);
+    return getValueString(*xact);
   else if ([ident isEqualToString:@"total"])
-    return getValueString(transaction_xdata(*xact).total);
+    return getValueString(*xact, true);
 
   return nil;
 }
@@ -251,7 +241,7 @@ static void calculate_subtotal()
   assert(account_xdata(*account).dflags & ACCOUNT_DISPLAYED);
 
   if ([ident isEqualToString:@"total"]) {
-    return getValueString(account_xdata(*account).total);
+    return getValueString(*account, true);
   }
   else if ([ident isEqualToString:@"account"]) {
     NSString * fullname

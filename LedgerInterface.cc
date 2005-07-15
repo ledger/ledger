@@ -16,6 +16,8 @@ ledger_interface::ledger_interface()
   std::list<std::string> args;
   config->process_options("r", args.begin(), args.end());
 
+  base_total_expr  = config->total_expr;
+
   formatter_ptrs = new std::list<item_handler<transaction_t> *>;
 }
 
@@ -51,8 +53,8 @@ static void setup_predicates(config_t * config, const std::string& query,
     }
   }
 
-  config->regexps_to_predicate("r", args.begin(), args.end(),
-				      for_account);
+  if (args.begin() != args.end())
+    config->regexps_to_predicate("r", args.begin(), args.end(), for_account);
 }
 
 void ledger_interface::set_query_predicates
@@ -115,7 +117,55 @@ void ledger_interface::set_query_option(int option, bool enable)
   case OPTION_BY_PAYEE:
     config->by_payee = enable;
     break;
+  case OPTION_AVERAGE:
+    if (enable)
+      config->total_expr = std::string("A(") + base_total_expr + ")";
+    else:
+      config->total_expr = base_total_expr;
+    ledger::total_expr.reset(parse_value_expr(config->total_expr));
+    break;
+  case OPTION_DEVIATION:
+    if (enable)
+      config->total_expr = std::string("t-A(") + base_total_expr + ")";
+    else:
+      config->total_expr = base_total_expr;
+    ledger::total_expr.reset(parse_value_expr(config->total_expr));
+    break;
   }
+}
+
+void ledger_interface::set_report_type(int type, bool show_revalued,
+                                       const std::string& amount_expr,
+                                       const std::string& total_expr)
+{
+  switch (type) {
+  case REPORT_COMMODITY:
+    config->show_revalued = false;
+    config->amount_expr   = "a";
+    config->total_expr    = "O";
+    break;
+  case REPORT_MARKET:
+    config->show_revalued = true;
+    config->amount_expr   = "v";
+    config->total_expr    = "V";
+    break;
+  case REPORT_BASIS:
+    config->show_revalued = false;
+    config->amount_expr   = "b";
+    config->total_expr    = "B";
+    break;
+  case REPORT_CUSTOM:
+    config->show_revalued = show_revalued;
+    config->amount_expr   = amount_expr;
+    config->total_expr    = total_expr;
+    break;
+  }
+
+  base_total_expr = config->total_expr;
+
+  // jww (2005-07-14): These globals should be removed
+  ledger::amount_expr.reset(parse_value_expr(config->amount_expr));
+  ledger::total_expr.reset(parse_value_expr(config->total_expr));
 }
 
 void ledger_interface::perform_query

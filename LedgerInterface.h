@@ -21,16 +21,26 @@
 #define OPTION_BY_WEEKDAY 3
 #define OPTION_SUBTOTALED 4
 #define OPTION_BY_PAYEE	  5
+#define OPTION_AVERAGE    6
+#define OPTION_DEVIATION  7
+
+#define REPORT_COMMODITY  0
+#define REPORT_MARKET     1
+#define REPORT_BASIS      2
+#define REPORT_CUSTOM     3
 
 class ledger_interface
 {
   ledger::config_t * config;
+  std::string	     base_total_expr;
 
   std::list<ledger::item_handler<ledger::transaction_t> *> * formatter_ptrs;
-
   void clear_formatter_ptrs();
 
 public:
+  std::auto_ptr<ledger::value_expr_t> amount_expr;
+  std::auto_ptr<ledger::value_expr_t> total_expr;
+
   ledger_interface();
   ~ledger_interface();
 
@@ -46,6 +56,9 @@ public:
 
   void set_report_period(int period);
   void set_query_option(int option, bool enable);
+  void set_report_type(int type, bool show_revalued   = false,
+                       const std::string& amount_expr = "a",
+                       const std::string& total_expr  = "O");
 
   void perform_query
     (ledger::journal_t * journal,

@@ -32,6 +32,7 @@
 - (IBAction)setQuerySort:(id)sender;
 - (IBAction)setQueryPeriodSort:(id)sender;
 - (IBAction)setQueryOption:(id)sender;
+- (IBAction)setQueryReportType:(id)sender;
 
 - (IBAction)invokeQuery:(id)sender;
 @end
