@@ -1,8 +1,33 @@
 
-	Welcome to Ledger, a command-line accounting program.
+			  Welcome to Ledger
 
-Quick start
-===========
+		 the command-line accounting program
+
+Introduction
+============
+
+Ledger is an accounting program which is invoked from the command-line
+using a textual ledger file.  To start using Ledger, you will need to
+create such a file containing your financial transactions.  A sample
+has been provided in the file "sample.dat".  See the documentation
+(ledger.pdf, or ledger.info) for full documentation on creating a
+ledger file and using Ledger to generate reports.
+
+Once you have such a file -- you might call it "ledger.dat" -- you can
+start looking at balances and account registers using commands like
+the following:
+
+  ledger -f ledger.dat balance assets:checking
+  ledger -f ledger.dat register expenses:food
+
+This assumes, of course, that like the sample file you use account
+names such as "Assets:Checking" and "Expenses:Food".  If you use other
+account names, you will need to vary the reporting commands you use
+accordingly.
+
+
+Building
+========
 
 To build Ledger, you will need a fairly modern C++ compiler (gcc 2.95
 will not work), and at least these two libraries installed:
@@ -53,9 +78,9 @@ Building Ledger as a Python Module
 ==================================
 
 If you have Python 2.2 or higher installed, and Boost.Python, then
-Ledger can also be built as a Python module, if --enable-python is
+Ledger can also be built as a Python module if --enable-python is
 passed to the configure script.  This means you can interact with your
-Ledger data from Python, making it easy to write custom reports.
+Ledger data from Python, making it easier to write custom reports.
 
 This feature is mostly undocumented in version 2.0, although main.py
-is a working example.
+gives a working example.
