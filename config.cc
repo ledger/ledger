@@ -182,10 +182,11 @@ void config_t::process_options(const std::string&     command,
       if (*i == "--")
 	break;
 
-    regexps_to_predicate(*this, command, arg, i++, true,
-			 (command == "b" && ! show_subtotal &&
-			  display_predicate.empty()));
-    if (i != args_end)
+    if (i != arg)
+      regexps_to_predicate(*this, command, arg, i, true,
+			   (command == "b" && ! show_subtotal &&
+			    display_predicate.empty()));
+    if (i != args_end && ++i != args_end)
       regexps_to_predicate(*this, command, i, args_end);
   }
 
