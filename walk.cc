@@ -109,10 +109,15 @@ void truncate_entries::flush()
 
 void set_account_value::operator()(transaction_t& xact)
 {
-  add_transaction_to(xact, account_xdata(*xact.account).value);
-  account_xdata_(*xact.account).count++;
+  account_t * acct = xact_account(xact);
+  assert(acct);
+
+  account_xdata_t& xdata = account_xdata(*acct);
+  add_transaction_to(xact, xdata.value);
+
+  xdata.count++;
   if (xact.flags & TRANSACTION_VIRTUAL)
-    account_xdata_(*xact.account).virtuals++;
+    xdata.virtuals++;
 
   item_handler<transaction_t>::operator()(xact);
 }
