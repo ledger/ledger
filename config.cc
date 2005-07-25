@@ -297,26 +297,6 @@ void parse_ledger_data(journal_t * journal, parser_t * cache_parser,
     if (! config.account.empty())
       account = journal->find_account(config.account);
 
-    // Add time commodity conversions, so that timelog's may be parsed
-    // in terms of seconds, but reported as minutes or hours.
-    commodity_t * commodity;
-
-    commodity = commodity_t::find_commodity("s", true);
-    commodity->flags |= COMMODITY_STYLE_NOMARKET;
-
-    parse_conversion("1.0m", "60s");
-    parse_conversion("1.0h", "60m");
-
-#if 0
-    commodity = commodity_t::find_commodity("b", true);
-    commodity->flags |= COMMODITY_STYLE_NOMARKET;
-
-    parse_conversion("1.00 Kb", "1024 b");
-    parse_conversion("1.00 Mb", "1024 Kb");
-    parse_conversion("1.00 Gb", "1024 Mb");
-    parse_conversion("1.00 Tb", "1024 Gb");
-#endif
-
     journal->price_db = config.price_db;
     if (! journal->price_db.empty() &&
 	access(journal->price_db.c_str(), R_OK) != -1) {

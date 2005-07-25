@@ -60,6 +60,26 @@ static struct _init_amounts {
     commodity_t::updater	   = NULL;
     commodity_t::null_commodity    = commodity_t::find_commodity("", true);
     commodity_t::default_commodity = NULL;
+
+    // Add time commodity conversions, so that timelog's may be parsed
+    // in terms of seconds, but reported as minutes or hours.
+    commodity_t * commodity;
+
+    commodity = commodity_t::find_commodity("s", true);
+    commodity->flags |= COMMODITY_STYLE_NOMARKET;
+
+    parse_conversion("1.0m", "60s");
+    parse_conversion("1.0h", "60m");
+
+#if 0
+    commodity = commodity_t::find_commodity("b", true);
+    commodity->flags |= COMMODITY_STYLE_NOMARKET;
+
+    parse_conversion("1.00 Kb", "1024 b");
+    parse_conversion("1.00 Mb", "1024 Kb");
+    parse_conversion("1.00 Gb", "1024 Mb");
+    parse_conversion("1.00 Tb", "1024 Gb");
+#endif
   }
 
   ~_init_amounts() {
