@@ -66,14 +66,14 @@ static struct _init_amounts {
     commodity_t * commodity;
 
     commodity = commodity_t::find_commodity("s", true);
-    commodity->flags |= COMMODITY_STYLE_NOMARKET;
+    commodity->flags |= COMMODITY_STYLE_NOMARKET | COMMODITY_STYLE_BUILTIN;
 
     parse_conversion("1.0m", "60s");
     parse_conversion("1.0h", "60m");
 
 #if 0
     commodity = commodity_t::find_commodity("b", true);
-    commodity->flags |= COMMODITY_STYLE_NOMARKET;
+    commodity->flags |= COMMODITY_STYLE_NOMARKET | COMMODITY_STYLE_BUILTIN;
 
     parse_conversion("1.00 Kb", "1024 b");
     parse_conversion("1.00 Mb", "1024 Kb");

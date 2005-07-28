@@ -11,7 +11,7 @@
 namespace ledger {
 
 static unsigned long  binary_magic_number = 0xFFEED765;
-static unsigned long  format_version      = 0x00020039;
+static unsigned long  format_version      = 0x00020040;
 
 static account_t **   accounts;
 static account_t **   accounts_next;
@@ -421,10 +421,14 @@ unsigned int read_binary_journal(std::istream&	    in,
   commodities = commodities_next = new commodity_t *[c_count];
   for (commodity_t::ident_t i = 0; i < c_count; i++) {
     commodity_t * commodity = read_binary_commodity(data);
-    std::pair<commodities_map::iterator, bool> result
-      = commodity_t::commodities.insert(commodities_pair(commodity->symbol,
-							 commodity));
-    assert(result.second);
+    if (! (commodity->flags & COMMODITY_STYLE_BUILTIN)) {
+      std::pair<commodities_map::iterator, bool> result
+	= commodity_t::commodities.insert(commodities_pair(commodity->symbol,
+							   commodity));
+      if (! result.second)
+	throw error(std::string("Failed to read commodity from cache: ") +
+		    commodity->symbol);
+    }
   }
 
   for (commodity_t::ident_t i = 0; i < c_count; i++)

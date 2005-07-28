@@ -288,6 +288,7 @@ inline std::istream& operator>>(std::istream& in, amount_t& amt) {
 #define COMMODITY_STYLE_THOUSANDS  0x0008
 #define COMMODITY_STYLE_NOMARKET   0x0010
 #define COMMODITY_STYLE_VARIABLE   0x0020
+#define COMMODITY_STYLE_BUILTIN    0x0040
 
 typedef std::map<const std::time_t, amount_t>  history_map;
 typedef std::pair<const std::time_t, amount_t> history_pair;
@@ -398,9 +399,6 @@ class commodity_t
       return false;
 
     if (precision > 16)
-      return false;
-
-    if (flags & ~0x1f)
       return false;
 
     return true;
