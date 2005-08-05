@@ -655,9 +655,7 @@ In this example, the displayed transactions start from @samp{5/14},
 but the calculated total starts from the beginning of @samp{may}.
 
 @option{--end DATE} (@option{-e DATE}) states when reporting should
-end, both calculation and display.  This ending date is not inclusive,
-which means you must always use a date that is at least one day after
-the last transaction you want to see.
+end, both calculation and display.  The ending date is inclusive.
 
 The @var{DATE} argument to the @option{-b} and @option{-e} options can
 be rather flexible.  Assuming the current date to be November 15,
@@ -1609,9 +1607,8 @@ is different from using @option{--display} to constrain what is
 displayed).
 
 @option{--end DATE} (@option{-e DATE}) constrains the report so that
-entries on or after @var{DATE} are not considered.  This ending date
-is not inclusive, therefore always use a date that is later than the
-last entry you want to see.
+entries on or after @var{DATE} are not considered.  The ending date
+is inclusive.
 
 @option{--period STR} (@option{-p STR}) sets the reporting period
 to @var{STR}.  This will subtotal all matching entries within each
@@ -3379,11 +3376,10 @@ Let's take an example file, with data ranging from year 2000 until
 2004.  We want to archive years 2000 and 2001 to their own file,
 leaving just 2003 and 2004 in the current file.  So, use
 @command{print} to output all the earlier entries to a file called
-@file{ledger-old.dat}.  (Keeping in mind that the ending date is not
-inclusive, which is why 2002 is mentioned in this command):
+@file{ledger-old.dat}:
 
 @smallexample
-ledger -f ledger.dat -b 2000 -e 2002 print > ledger-old.dat
+ledger -f ledger.dat -b 2000 -e 2001 print > ledger-old.dat
 @end smallexample
 
 To delete older data from the current ledger file, use @command{print}
