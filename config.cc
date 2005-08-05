@@ -615,18 +615,34 @@ OPT_BEGIN(account, "a:") {
 // Report filtering
 
 OPT_BEGIN(begin, "b:") {
+  char buf[128];
+  interval_t interval(optarg);
+  if (interval.begin)
+    std::strftime(buf, 127, formats[0], std::localtime(&interval.begin));
+  else
+    throw error(std::string("Could not determine beginning of period '") +
+		optarg + "'");
+
   if (! config.predicate.empty())
     config.predicate += "&";
   config.predicate += "d>=[";
-  config.predicate += optarg;
+  config.predicate += buf;
   config.predicate += "]";
 } OPT_END(begin);
 
 OPT_BEGIN(end, "e:") {
+  char buf[128];
+  interval_t interval(optarg);
+  if (interval.end)
+    std::strftime(buf, 127, formats[0], std::localtime(&interval.end));
+  else
+    throw error(std::string("Could not determine end of period '") +
+		optarg + "'");
+
   if (! config.predicate.empty())
     config.predicate += "&";
   config.predicate += "d<[";
-  config.predicate += optarg;
+  config.predicate += buf;
   config.predicate += "]";
 } OPT_END(end);
 
