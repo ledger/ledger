@@ -24,6 +24,7 @@ highlight default link transDate Question
 
 " folding: how to represent a transaction in one line.
 function! MyFoldText()
+   let line = strpart(getline(v:foldstart), 0, 65)
    " get the amount at the end of the second line
    let line2 = getline(v:foldstart+1)
    let pos = match(line2, "[0-9.]*$")
