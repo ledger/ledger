@@ -44,10 +44,14 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
 {
   std::auto_ptr<entry_t>  entry;
   std::auto_ptr<amount_t> amount;
-  transaction_t *	  xact;
-  unsigned int            count = 0;
-  account_t *             misc = NULL;
-  commodity_t *           def_commodity = NULL;
+
+  transaction_t * xact;
+  unsigned int    count		= 0;
+  account_t *     misc		= NULL;
+  commodity_t *   def_commodity = NULL;
+  bool            saw_splits    = false;
+  bool            saw_category  = false;
+  transaction_t * total         = NULL;
 
   entry.reset(new entry_t);
   xact = new transaction_t(master);
@@ -86,14 +90,14 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
     case '!':
       in >> line;
 
-      // jww (2004-08-19): these types are not supported yet
-      assert(std::strcmp(line, "Type:Invst") != 0 &&
-	     std::strcmp(line, "Account") != 0 &&
-	     std::strcmp(line, "Type:Cat") != 0 &&
-	     std::strcmp(line, "Type:Class") != 0 &&
-	     std::strcmp(line, "Type:Memorized") != 0);
-
-      get_line(in);
+      if (std::strcmp(line, "Type:Invst") == 0 ||
+	  std::strcmp(line, "Account") == 0 ||
+	  std::strcmp(line, "Type:Cat") == 0 ||
+	  std::strcmp(line, "Type:Class") == 0 ||
+	  std::strcmp(line, "Type:Memorized") == 0)
+	throw parse_error(path, linenum,
+			  std::string("QIF files of type ") + line +
+			  " are not supported.");
       break;
 
     case 'D':
@@ -120,8 +124,12 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
       if (prec > def_commodity->precision)
 	def_commodity->precision = prec;
 
-      if (c == '$')
+      if (c == '$') {
+	saw_splits = true;
 	xact->amount.negate();
+      } else {
+	total = xact;
+      }
       break;
     }
 
@@ -139,6 +147,8 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
       if (std::isdigit(in.peek())) {
 	in >> line;
 	entry->code = line;
+      } else {
+	in >> line;
       }
       break;
 
@@ -165,8 +175,8 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
 	  line[len - 1] = '\0';
 	xact->account = journal->find_account(line[0] == '[' ?
 					      line + 1 : line);
-	// Negate the amount, to show the correct direction of flow
-	xact->amount.negate();
+	if (c == 'L')
+	  saw_category = true;
 	break;
       }
 
@@ -194,10 +204,19 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
 	other = master;
       }
 
-      transaction_t * nxact = new transaction_t(other);
-      // The amount doesn't need to be set because the code below will
-      // balance this transaction against the other.
-      entry->add_transaction(nxact);
+      if (total && saw_category) {
+	if (! saw_splits)
+	  total->amount.negate(); // negate, to show correct flow
+	else
+	  total->account = other;
+      }
+
+      if (! saw_splits) {
+	transaction_t * nxact = new transaction_t(other);
+	// The amount doesn't need to be set because the code below
+	// will balance this transaction against the other.
+	entry->add_transaction(nxact);
+      }
 
       if (journal->add_entry(entry.get())) {
 	entry->src_idx  = src_idx;
@@ -216,6 +235,10 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
       beg_line = 0;		// reset for next entry
       break;
     }
+
+    default:
+      get_line(in);
+      break;
     }
   }
 
