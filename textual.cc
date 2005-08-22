@@ -329,16 +329,7 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
 
   // Parse the description text
 
-  if (next) {
-    char * first = next_element(next, true);
-    curr->payee = next;
-
-    if (first)
-      if (transaction_t * xact = parse_transaction(first, master))
-	curr->add_transaction(xact);
-  } else {
-    curr->payee = "<Unspecified payee>";
-  }
+  curr->payee = next ? next : "<Unspecified payee>";
 
   TIMER_STOP(entry_details);
 
