@@ -99,28 +99,31 @@ bool entry_base_t::finalize()
   // the balance.  This is done for the last eligible commodity.
 
   if (balance && balance.type == value_t::BALANCE &&
-      ((balance_t *) balance.data)->amounts.size() == 2)
-    for (transactions_list::const_iterator x = transactions.begin();
-	 x != transactions.end();
-	 x++) {
-      if ((*x)->cost || ((*x)->flags & TRANSACTION_VIRTUAL))
+      ((balance_t *) balance.data)->amounts.size() == 2) {
+    transactions_list::const_iterator x = transactions.begin();
+    commodity_t& this_comm = (*x)->amount.commodity();
+
+    amounts_map::const_iterator this_bal =
+      ((balance_t *) balance.data)->amounts.find(&this_comm);
+    amounts_map::const_iterator other_bal =
+      ((balance_t *) balance.data)->amounts.begin();
+    if (this_bal == other_bal)
+      other_bal++;
+
+    amount_t per_unit_cost = (*other_bal).second / (*this_bal).second;
+
+    for (; x != transactions.end(); x++) {
+      if ((*x)->cost || ((*x)->flags & TRANSACTION_VIRTUAL) ||
+	  (*x)->amount.commodity() != this_comm)
 	continue;
 
-      for (amounts_map::const_iterator i
-	     = ((balance_t *) balance.data)->amounts.begin();
-	   i != ((balance_t *) balance.data)->amounts.end();
-	   i++)
-	if ((*i).second.commodity() != (*x)->amount.commodity()) {
-	  assert((*x)->amount);
-	  balance -= (*x)->amount;
-	  assert(! (*x)->cost);
-	  (*x)->cost = new amount_t(- (*i).second);
-	  balance += *(*x)->cost;
-	  break;
-	}
+      assert((*x)->amount);
 
-      break;
+      balance -= (*x)->amount;
+      (*x)->cost = new amount_t(- (per_unit_cost * (*x)->amount));
+      balance += *(*x)->cost;
     }
+  }
 
   // Walk through each of the transactions, fixing up any that we
   // can, and performing any on-the-fly calculations.
