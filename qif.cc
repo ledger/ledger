@@ -88,7 +88,7 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
       break;
 
     case '!':
-      in >> line;
+      get_line(in);
 
       if (std::strcmp(line, "Type:Invst") == 0 ||
 	  std::strcmp(line, "Account") == 0 ||
