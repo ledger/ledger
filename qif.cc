@@ -228,11 +228,15 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
 	count++;
       }
 
+      // reset things for the next entry
       entry.reset(new entry_t);
       xact = new transaction_t(master);
       entry->add_transaction(xact);
 
-      beg_line = 0;		// reset for next entry
+      saw_splits   = false;
+      saw_category = false;
+      total        = NULL;
+      beg_line	   = 0;
       break;
     }
 
