@@ -144,12 +144,8 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
 
     case 'N':
       SET_BEG_POS_AND_LINE();
-      if (std::isdigit(in.peek())) {
-	get_line(in);
-	entry->code = line;
-      } else {
-	get_line(in);
-      }
+      get_line(in);
+      entry->code = line;
       break;
 
     case 'P':
