@@ -102,7 +102,7 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
 
     case 'D':
       SET_BEG_POS_AND_LINE();
-      in >> line;
+      get_line(in);
       if (! parse_date(line, &entry->date))
 	throw parse_error(path, linenum, "Failed to parse date");
       break;
@@ -110,7 +110,7 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
     case 'T':
     case '$': {
       SET_BEG_POS_AND_LINE();
-      in >> line;
+      get_line(in);
       xact->amount.parse(line);
 
       unsigned long  flags = xact->amount.commodity().flags;
@@ -145,10 +145,10 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
     case 'N':
       SET_BEG_POS_AND_LINE();
       if (std::isdigit(in.peek())) {
-	in >> line;
+	get_line(in);
 	entry->code = line;
       } else {
-	in >> line;
+	get_line(in);
       }
       break;
 
