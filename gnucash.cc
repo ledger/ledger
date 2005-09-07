@@ -147,7 +147,8 @@ static void endElement(void *userData, const char *name)
 }
 
 
-static amount_t convert_number(const std::string& number)
+static amount_t convert_number(const std::string& number,
+			       int * precision = NULL)
 {
   const char * num = number.c_str();
 
@@ -157,6 +158,9 @@ static amount_t convert_number(const std::string& number)
 
     amount_t amt(numer_str);
     amount_t den(denom_str);
+
+    if (precision)
+      *precision = denom_str.length() - 1;
 
     if (! den) {
       have_error = "Denominator in entry is zero!";
@@ -238,11 +242,16 @@ static void dataHandler(void *userData, const char *s, int len)
       curr_entry->state = entry_t::CLEARED;
     break;
 
-  case XACT_VALUE:
+  case XACT_VALUE: {
+    int precision;
     assert(entry_comm);
-    curr_value = convert_number(std::string(s, len));
+    curr_value = convert_number(std::string(s, len), &precision);
     curr_value.set_commodity(*entry_comm);
+
+    if (precision > entry_comm->precision)
+      entry_comm->precision = precision;
     break;
+  }
 
   case XACT_QUANTITY:
     curr_quant = convert_number(std::string(s, len));
