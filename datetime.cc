@@ -116,6 +116,7 @@ static void parse_inclusion_specifier(const std::string& word,
 
   bool saw_year = true;
   bool saw_mon  = true;
+  bool saw_day  = true;
 
   if (when.tm_year == -1) {
     when.tm_year = now_year;
@@ -127,13 +128,19 @@ static void parse_inclusion_specifier(const std::string& word,
   } else {
     saw_year = false;		// don't increment by year if month used
   }
-  if (when.tm_mday == -1)
+  if (when.tm_mday == -1) {
     when.tm_mday = 1;
+    saw_day = false;
+  } else {
+    saw_mon = false;		// don't increment by month if day used
+    saw_year = false;		// don't increment by year if day used
+  }
 
   if (begin) {
     *begin = std::mktime(&when);
     if (end)
-      *end = interval_t(0, saw_mon ? 1 : 0, saw_year ? 1 : 0).increment(*begin);
+      *end = interval_t(saw_day ? 86400 : 0, saw_mon ? 1 : 0,
+			saw_year ? 1 : 0).increment(*begin);
   }
   else if (end) {
     *end = std::mktime(&when);
