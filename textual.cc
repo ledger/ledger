@@ -338,17 +338,23 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
   TIMER_START(entry_xacts);
 
   while (! in.eof() && (in.peek() == ' ' || in.peek() == '\t')) {
+    line[0] = '\0';
     in.getline(line, MAX_LINE);
-    if (in.eof())
+    if (in.eof() && line[0] == '\0')
       break;
+
     linenum++;
     if (line[0] == ' ' || line[0] == '\t' || line[0] == '\r') {
       char * p = skip_ws(line);
       if (! *p || *p == '\r')
 	break;
     }
+
     if (transaction_t * xact = parse_transaction(line, master))
       curr->add_transaction(xact);
+
+    if (in.eof())
+      break;
   }
 
   TIMER_STOP(entry_xacts);
