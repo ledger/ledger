@@ -400,7 +400,7 @@ bool textual_parser_t::test(std::istream& in) const
 
   in.read(buf, 5);
   if (std::strncmp(buf, "<?xml", 5) == 0) {
-#ifdef HAVE_XMLPARSE
+#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
     throw parse_error(path, linenum, "Ledger file contains XML data, but format was not recognized");
 #else
     throw parse_error(path, linenum, "Ledger file contains XML data, but no XML support present");

@@ -20,6 +20,10 @@ libledger_a_SOURCES = \
 	valexpr.cc     \
 	value.cc       \
 	walk.cc
+if HAVE_EXPAT
+libledger_a_CXXFLAGS += -DHAVE_EXPAT=1
+libledger_a_SOURCES += gnucash.cc xml.cc
+endif
 if HAVE_XMLPARSE
 libledger_a_CXXFLAGS += -DHAVE_XMLPARSE=1
 libledger_a_SOURCES += gnucash.cc xml.cc
@@ -79,6 +83,10 @@ ledger_LDADD = $(LIBOBJS) libledger.a -lboost_python -lpython$(PYTHON_VERSION)
 else
 ledger_LDADD = $(LIBOBJS) libledger.a
 endif
+if HAVE_EXPAT
+ledger_CXXFLAGS += -DHAVE_EXPAT=1
+ledger_LDADD += -lexpat
+endif
 if HAVE_XMLPARSE
 ledger_CXXFLAGS += -DHAVE_XMLPARSE=1
 ledger_LDADD += -lxmlparse -lxmltok
@@ -99,6 +107,11 @@ if HAVE_BOOST_PYTHON
 
 noinst_PROGRAMS = ledger.so
 
+if HAVE_EXPAT
+HAVE_EXPAT_VALUE = true
+else
+HAVE_EXPAT_VALUE = false
+endif
 if HAVE_XMLPARSE
 HAVE_XMLPARSE_VALUE = true
 else
@@ -112,12 +125,14 @@ endif
 
 ledger.so: py_eval.cc libledger.a
 	CFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS) -L." \
+	HAVE_EXPAT="$(HAVE_EXPAT_VALUE)" \
 	HAVE_XMLPARSE="$(HAVE_XMLPARSE_VALUE)" \
 	HAVE_LIBOFX="$(HAVE_LIBOFX_VALUE)" \
 	    python setup.py build --build-lib=.
 
 install-exec-hook:
 	CFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS) -L." \
+	HAVE_EXPAT="$(HAVE_EXPAT_VALUE)" \
 	HAVE_XMLPARSE="$(HAVE_XMLPARSE_VALUE)" \
 	HAVE_LIBOFX="$(HAVE_LIBOFX_VALUE)" \
 	    python setup.py install --prefix=$(prefix)

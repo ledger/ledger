@@ -122,7 +122,7 @@ else:
 # so that Ledger will try each one in turn whenever it is presented
 # with a data file.  They are attempted in reverse order to their
 # registry.  Note that Gnucash parsing is only available if the Ledger
-# module was built with such support (which requires the xmlparse C
+# module was built with such support (which requires the expat C
 # library).
 
 bin_parser  = BinaryParser ()

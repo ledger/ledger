@@ -343,7 +343,7 @@ See LICENSE file included with the distribution for details and disclaimer.\n";
 #ifdef USE_BOOST_PYTHON
   out << ", python";
 #endif
-#ifdef HAVE_XMLPARSE
+#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
   out << ", xml";
 #endif
 #ifdef HAVE_LIBOFX

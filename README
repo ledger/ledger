@@ -42,8 +42,7 @@ If you wish to read Gnucash data files, you will also need two XML
 libraries, which may or may not be available in a single package (it
 depends on your distribution):
 
-    xmlparse
-    xmltok
+    libexpat, or libxmlparse and libxmltok
 
 Once you have determined where the headers and libraries for the above
 packages are installed, run the script "configure", passing those

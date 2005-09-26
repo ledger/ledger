@@ -99,7 +99,7 @@ else
   AC_MSG_FAILURE("Could not find pcre library (set CPPFLAGS and LDFLAGS?)")
 fi
 
-# check for xmlparse
+# check for expat or xmlparse
 AC_ARG_ENABLE(xml,
   [  --enable-xml            Turn on support for XML parsing],
   [case "${enableval}" in
@@ -111,23 +111,50 @@ AM_CONDITIONAL(USE_XML, test x$xml = xtrue)
 
 if [test x$xml = xtrue ]; then
   AC_CACHE_CHECK(
-    [if libxmlparse is available],
-    [libxmlparse_avail],
-    [libxmlparse_save_libs=$LIBS
-     LIBS="-lxmlparse -lxmltok $LIBS"
+    [if libexpat is available],
+    [libexpat_avail],
+    [libexpat_save_libs=$LIBS
+     LIBS="-lexpat $LIBS"
      AC_LANG_PUSH(C++)
      AC_TRY_LINK(
        [#include <stdio.h>
 	extern "C" {
-	#include <xmlparse.h>           // expat XML parser
+	#include <expat.h>           // expat XML parser
 	}],
        [XML_Parser parser = XML_ParserCreate(NULL);
 	return parser != NULL;],
-       [libxmlparse_avail=true],
-       [libxmlparse_avail=false])
+       [libexpat_avail=true],
+       [libexpat_avail=false])
      AC_LANG_POP
-     LIBS=$libxmlparse_save_libs])
-  AM_CONDITIONAL(HAVE_XMLPARSE, test x$libxmlparse_avail = xtrue)
+     LIBS=$libexpat_save_libs])
+  AM_CONDITIONAL(HAVE_EXPAT, test x$libexpat_avail = xtrue)
+else
+  AM_CONDITIONAL(HAVE_EXPAT, false)
+fi
+
+if [test x$xml = xtrue ]; then
+  if [test x$libexpat_avail = xfalse ]; then
+    AC_CACHE_CHECK(
+      [if libxmlparse is available],
+      [libxmlparse_avail],
+      [libxmlparse_save_libs=$LIBS
+       LIBS="-lxmlparse -lxmltok $LIBS"
+       AC_LANG_PUSH(C++)
+       AC_TRY_LINK(
+	 [#include <stdio.h>
+	extern "C" {
+	#include <xmlparse.h>           // expat XML parser
+	}],
+	 [XML_Parser parser = XML_ParserCreate(NULL);
+	return parser != NULL;],
+	 [libxmlparse_avail=true],
+	 [libxmlparse_avail=false])
+       AC_LANG_POP
+       LIBS=$libxmlparse_save_libs])
+    AM_CONDITIONAL(HAVE_XMLPARSE, test x$libxmlparse_avail = xtrue)
+  else
+    AM_CONDITIONAL(HAVE_XMLPARSE, false)
+  fi
 else
   AM_CONDITIONAL(HAVE_XMLPARSE, false)
 fi

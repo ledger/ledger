@@ -2,13 +2,20 @@
 #include "journal.h"
 #include "format.h"
 #include "error.h"
+#include "acconf.h"
 
 #include <iostream>
 #include <sstream>
 #include <cstring>
 
 extern "C" {
-#include <xmlparse.h>           // expat XML parser
+#if defined(HAVE_EXPAT)
+#include <expat.h>           // expat XML parser
+#elif defined(HAVE_XMLPARSE)
+#include <xmlparse.h>        // expat XML parser
+#else
+#error "No XML parser library defined."
+#endif
 }
 
 namespace ledger {

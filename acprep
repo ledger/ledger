@@ -11,10 +11,10 @@ else
 fi
 autoconf
 
-INCDIRS="-I/sw/include -I/usr/include/httpd/xml -I/sw/include/python2.3"
-INCDIRS="$INCDIRS -I/sw/include/libofx"
+INCDIRS="-I/sw/include -I/usr/include/httpd/xml -I/usr/include/python2.3"
+#INCDIRS="$INCDIRS -I/sw/include/libofx"
 INCDIRS="$INCDIRS -Wno-long-double"
-LIBDIRS="-L/sw/lib -L/sw/lib/python2.3/config"
+LIBDIRS="-L/sw/lib -L/usr/lib/python2.3/config"
 
 if [ "$1" = "--debug" ]; then
     ./configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" CXXFLAGS="-g" \
@@ -24,13 +24,13 @@ elif [ "$1" = "--debug-python" ]; then
 	--enable-debug --enable-python
 elif [ "$1" = "--opt" ]; then
     ./configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
-	CXXFLAGS="-fomit-frame-pointer -fastf -mcpu=7450 -fPIC"
+	CXXFLAGS="-fomit-frame-pointer -O3 -mcpu=7450 -fPIC"
 elif [ "$1" = "--flat-opt" ]; then
     ./configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
-	CXXFLAGS="-fomit-frame-pointer -fastf -mcpu=7450"
+	CXXFLAGS="-fomit-frame-pointer -O3 -mcpu=7450"
 elif [ "$1" = "--safe-opt" ]; then
     ./configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
-	CXXFLAGS="-fomit-frame-pointer -fastf -mcpu=7450 -fPIC -DDEBUG_LEVEL=1" \
+	CXXFLAGS="-fomit-frame-pointer -O3 -mcpu=7450 -fPIC -DDEBUG_LEVEL=1" \
 	--enable-python
 elif [ "$1" = "--perf" ]; then
     ./configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" CXXFLAGS="-g -pg"

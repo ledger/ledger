@@ -2,19 +2,17 @@
 
 * 2.4
 
-- The --end date is now inclusive.
-
-- Both "-$100.00" and "$-100.00" are supported as equivalent amounts.
+- Both "-$100.00" and "$-100.00" are now equivalent amounts.
 
 - Simple, inline math (using the operators +-/*, and/or parentheses)
-  is now supported in transactions.  For example:
+  is supported in transactions.  For example:
 
     2004/05/27 Book Store
       Expenses:Dining                 $20.00 + $2.50
       Liabilities:MasterCard
 
-  This won't register the tax/tip in its own account, but it might
-  make later reading of the ledger file easier.
+  This won't register the tax/tip in its own account, but might make
+  later reading of the ledger file easier.
 
 - Use of a "catch all" account is now possible, which auto-balances
   entries that contain _only one transaction_.  For sanity's sake this
@@ -28,14 +26,6 @@
 
   This is equivalent to the entry in the previous bullet.
 
-- Further, entries with a single transaction may specify that
-  transaction directly after the payee, if followed by two or more
-  spaces:
-
-    A Liabilities:MasterCard
-
-    2004/05/27 Book Store           Expenses:Dining     $20.00 + $2.50
-
 - Entries that contain a single transaction with no amount now always
   balance, even if multiple commodities are involved.  This means that
   the following is now supported which wasn't previously:
@@ -46,8 +36,12 @@
         Retirement          300 FUNDC
         Equity:Adjustments
 
-- Fixed some obscure bugs relating to QIF parsing, and budgeting and
+- Fixed several bugs relating to QIF parsing, budgeting and
   forecasting.
+
+- The configure process now looks for libexpat, in addition to
+  searching for libxmlparse+libxmltok (which is how expat used to be
+  packaged).
 
 * 2.3
 
