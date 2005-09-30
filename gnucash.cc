@@ -49,7 +49,7 @@ static unsigned int     src_idx;
 static istream_pos_type beg_pos;
 static unsigned long    beg_line;
 
-static enum {
+static enum action_t {
   NO_ACTION,
   ACCOUNT_NAME,
   ACCOUNT_ID,
