@@ -15,18 +15,6 @@ void format_emacs_transactions::write_entry(entry_t& entry)
 
   out << (((unsigned long)entry.beg_pos) + 1) << " ";
 
-  switch (entry.state) {
-  case entry_t::CLEARED:
-    out << "t ";
-    break;
-  case entry_t::PENDING:
-    out << "pending ";
-    break;
-  case entry_t::UNCLEARED:
-    out << "nil ";
-    break;
-  }
-
   out << "(" << (entry.date / 65536) << " "
       << (entry.date % 65536) << " 0) ";
 
@@ -61,6 +49,19 @@ void format_emacs_transactions::operator()(transaction_t& xact)
 
     out << "  (\"" << xact.account->fullname() << "\" \""
 	<< xact.amount << "\"";
+
+    switch (xact.state) {
+    case transaction_t::CLEARED:
+      out << " t";
+      break;
+    case transaction_t::PENDING:
+      out << " pending";
+      break;
+    default:
+      out << " nil";
+      break;
+    }
+
     if (xact.cost)
       out << " \"" << *xact.cost << "\"";
     else if (! xact.note.empty())

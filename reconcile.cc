@@ -45,12 +45,12 @@ void reconcile_transactions::flush()
        x != xacts.end();
        x++) {
     if (! cutoff || std::difftime((*x)->entry->date, cutoff) < 0) {
-      switch ((*x)->entry->state) {
-      case entry_t::CLEARED:
+      switch ((*x)->state) {
+      case transaction_t::CLEARED:
 	cleared_balance += (*x)->amount;
 	break;
-      case entry_t::UNCLEARED:
-      case entry_t::PENDING:
+      case transaction_t::UNCLEARED:
+      case transaction_t::PENDING:
 	pending_balance += (*x)->amount;
 	*last_ptr = *x;
 	last_ptr = xact_next_ptr(*x);

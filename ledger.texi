@@ -1267,13 +1267,13 @@ options:
 @item --equity-format
 @command{equity} report.  Default:
 @smallexample
-\n%D %X%C%P\n    %-34A  %12o%n\n%/    %-34A  %12o%n\n
+\n%D %Y%C%P\n    %-34W  %12o%n\n%/    %-34W  %12o%n\n
 @end smallexample
 
 @item --prices-format
 @command{prices} report.  Default:
 @smallexample
-\n%D %X%C%P\n%/    %-34A  %12t\n
+\n%D %Y%C%P\n%/    %-34W  %12t\n
 @end smallexample
 
 @item --wide-register-format
@@ -1987,6 +1987,10 @@ output.
 If a transaction has been cleared, this inserts @samp{*} followed by a
 space; otherwise nothing is inserted.
 
+@item Y
+This is the same as @samp{%X}, except that it only displays a state
+character if all of the member transactions have the same state.
+
 @item C
 Inserts the checking number for an entry, in parentheses, followed by
 a space; if none was specified, nothing is inserted.
@@ -2001,6 +2005,13 @@ has not been printed yet, otherwise it just prints the account's name.
 
 @item A
 Inserts the full name of an account.
+
+@item W
+This is the same as @samp{%A}, except that it first displays the
+transaction's state @emph{if the entry's transaction states are not
+all the same}, followed by the full account name.  This is offered as
+a printing optimization, so that combined with @samp{%Y}, only the
+minimum amount of state detail is printed.
 
 @item o
 Inserts the ``optimized'' form of a transaction's amount.  This is

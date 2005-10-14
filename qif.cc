@@ -138,7 +138,7 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
       c = in.peek();
       if (c == '*' || c == 'X') {
 	in.get(c);
-	entry->state = entry_t::CLEARED;
+	xact->state = transaction_t::CLEARED;
       }
       break;
 

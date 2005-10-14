@@ -60,6 +60,11 @@
   :type 'file
   :group 'ledger)
 
+(defcustom ledger-clear-whole-entries nil
+  "If non-nil, clear whole entries, not individual transactions."
+  :type 'boolean
+  :group 'ledger)
+
 (defvar bold 'bold)
 (defvar ledger-font-lock-keywords
   '(("^[0-9./]+\\s-+\\(?:([^)]+)\\s-+\\)?\\([^*].+\\)" 1 bold)
@@ -159,18 +164,21 @@ Return the difference in the format of a time value."
 	   (concat (if insert-year entry-text
 		     (substring entry-text 6)) "\n"))) "\n"))))
 
-(defun ledger-delete-current-entry ()
-  (interactive)
+(defun ledger-current-entry-bounds ()
   (save-excursion
     (when (or (looking-at "^[0-9]")
 	      (re-search-backward "^[0-9]" nil t))
       (let ((beg (point)))
 	(while (not (eolp))
 	  (forward-line))
-	(delete-blank-lines)
-	(delete-region beg (point))))))
+	(cons (copy-marker beg) (point-marker))))))
 
-(defun ledger-toggle-current (&optional style)
+(defun ledger-delete-current-entry ()
+  (interactive)
+  (let ((bounds (ledger-current-entry-bounds)))
+    (delete-region (car bounds) (cdr bounds))))
+
+(defun ledger-toggle-current-entry (&optional style)
   (interactive)
   (let (clear)
     (save-excursion
@@ -188,6 +196,118 @@ Return the difference in the format of a time value."
 	    (insert " * "))
 	  (setq clear t))))
     clear))
+
+(defun ledger-toggle-current-transaction (&optional style)
+  "Toggle the cleared status of the transaction under point.
+Optional argument STYLE may be `pending' or `cleared', depending
+on which type of status the caller wishes to indicate (default is
+`cleared').
+This function is rather complicated because it must preserve both
+the overall formatting of the ledger entry, as well as ensuring
+that the most minimal display format is used.  This could be
+achieved more certainly by passing the entry to ledger for
+formatting, but doing so causes inline math expressions to be
+dropped."
+  (interactive)
+  (let ((bounds (ledger-current-entry-bounds))
+	clear cleared)
+    ;; Uncompact the entry, to make it easier to toggle the
+    ;; transaction
+    (save-excursion
+      (goto-char (car bounds))
+      (skip-chars-forward "0-9./ \t")
+      (setq cleared (and (member (char-after) '(?\* ?\!))
+			 (char-after)))
+      (when cleared
+	(let ((here (point)))
+	  (skip-chars-forward "*! ")
+	  (let ((width (- (point) here)))
+	    (when (> width 0)
+	      (delete-region here (point))
+	      (if (search-forward "  " (line-end-position) t)
+		  (insert (make-string width ? ))))))
+	(forward-line)
+	(while (looking-at "[ \t]")
+	  (skip-chars-forward " \t")
+	  (assert (not (looking-at "[!*]")))
+	  (insert cleared " ")
+	  (if (search-forward "  " (line-end-position) t)
+	      (delete-char 2))
+	  (forward-line))))
+    ;; Toggle the individual transaction
+    (save-excursion
+      (goto-char (line-beginning-position))
+      (when (looking-at "[ \t]")
+	(skip-chars-forward " \t")
+	(let ((here (point))
+	      (cleared (member (char-after) '(?\* ?\!))))
+	  (skip-chars-forward "*! ")
+	  (let ((width (- (point) here)))
+	    (when (> width 0)
+	      (delete-region here (point))
+	      (save-excursion
+		(if (search-forward "  " (line-end-position) t)
+		    (insert (make-string width ? ))))))
+	  (let (inserted)
+	    (if cleared
+		(if (and style (eq style 'cleared))
+		    (progn
+		      (insert "* ")
+		      (setq inserted t)))
+	      (if (and style (eq style 'pending))
+		  (progn
+		    (insert "! ")
+		    (setq inserted t))
+		(progn
+		  (insert "* ")
+		  (setq inserted t))))
+	    (if (and inserted
+		     (search-forward "  " (line-end-position) t))
+		(delete-char 2))
+	    (setq clear inserted)))))
+    ;; Clean up the entry so that it displays minimally
+    (save-excursion
+      (goto-char (car bounds))
+      (forward-line)
+      (let ((first t)
+	    (state ? )
+	    (hetero nil))
+	(while (and (not hetero) (looking-at "[ \t]"))
+	  (skip-chars-forward " \t")
+	  (let ((cleared (if (member (char-after) '(?\* ?\!))
+			     (char-after)
+			   ? )))
+	    (if first
+		(setq state cleared
+		      first nil)
+	      (if (/= state cleared)
+		  (setq hetero t))))
+	  (forward-line))
+	(when (and (not hetero) (/= state ? ))
+	  (goto-char (car bounds))
+	  (forward-line)
+	  (while (looking-at "[ \t]")
+	    (skip-chars-forward " \t")
+	    (let ((here (point)))
+	      (skip-chars-forward "*! ")
+	      (let ((width (- (point) here)))
+		(when (> width 0)
+		  (delete-region here (point))
+		  (if (search-forward "  " (line-end-position) t)
+		      (insert (make-string width ? ))))))
+	    (forward-line))
+	  (goto-char (car bounds))
+	  (skip-chars-forward "0-9./ \t")
+	  (insert state " ")
+	  (if (search-forward "  " (line-end-position) t)
+	      (delete-char 2)))))
+    clear))
+
+(defun ledger-toggle-current (&optional style)
+  (interactive)
+  (if ledger-clear-whole-entries
+      (ledger-toggle-current-entry style)
+    (ledger-toggle-current-transaction style)))
 
 (defvar ledger-mode-abbrev-table)
 
@@ -365,20 +485,33 @@ Return the difference in the format of a time value."
 		    (error (buffer-string)))
 		  (read (current-buffer))))))))
     (dolist (item items)
-      (dolist (xact (nthcdr 6 item))
+      (let ((index 1))
+	(dolist (xact (nthcdr 5 item))
 	(let ((beg (point))
-	      (where (with-current-buffer buf
-		       (cons (nth 0 item)
-			     (copy-marker (nth 1 item))))))
+		(where
+		 (with-current-buffer buf
+		   (cons
+		    (nth 0 item)
+		    (if ledger-clear-whole-entries
+			(copy-marker (nth 1 item))
+		      (save-excursion
+			(goto-char (nth 1 item))
+			(let ((i 0))
+			  (while (< i index)
+			    (re-search-forward
+			     account (cdr (ledger-current-entry-bounds)))
+			    (setq i (1+ i))))
+			(point-marker)))))))
 	  (insert (format "%s %-30s %-25s %15s\n"
-			  (format-time-string "%m/%d" (nth 3 item))
-			  (nth 5 item) (nth 0 xact) (nth 1 xact)))
-	  (if (nth 2 item)
+			    (format-time-string "%m/%d" (nth 2 item))
+			    (nth 4 item) (nth 0 xact) (nth 1 xact)))
+	    (if (nth 2 xact)
 	      (set-text-properties beg (1- (point))
 				   (list 'face 'bold
 					 'where where))
 	    (set-text-properties beg (1- (point))
-				 (list 'where where))))))
+				   (list 'where where))))
+	  (setq index (1+ index)))))
     (goto-char (point-min))
     (set-buffer-modified-p nil)
     (toggle-read-only t)))
@@ -456,6 +589,15 @@ Return the difference in the format of a time value."
       (apply #'call-process-region
 	     (append (list (point-min) (point-max)
 			   ledger-binary-path nil buf nil "-f" "-")
+		     args)))))
+
+(defun ledger-run-ledger-and-delete (buffer &rest args)
+  "run ledger with supplied arguments"
+  (let ((buf (current-buffer)))
+    (with-current-buffer buffer
+      (apply #'call-process-region
+	     (append (list (point-min) (point-max)
+			   ledger-binary-path t buf nil "-f" "-")
 		     args)))))
 
 (defun ledger-set-year (newyear)

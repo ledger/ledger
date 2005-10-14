@@ -36,10 +36,10 @@ config_t::config_t()
 			  "%48|%-.38A %22.108t %22.132T\n");
   plot_amount_format = "%D %(St)\n";
   plot_total_format  = "%D %(ST)\n";
-  print_format       = "\n%D %X%C%P\n    %-34A  %12o%n\n%/    %-34A  %12o%n\n";
-  write_hdr_format   = "%D %X%C%P\n";
-  write_xact_format  = "    %-34A  %12o%n\n";
-  equity_format      = "\n%D %X%C%P\n%/    %-34A  %12t\n";
+  print_format       = "\n%D %Y%C%P\n    %-34W  %12o%n\n%/    %-34W  %12o%n\n";
+  write_hdr_format   = "%D %Y%C%P\n";
+  write_xact_format  = "    %-34W  %12o%n\n";
+  equity_format      = "\n%D %Y%C%P\n%/    %-34W  %12t\n";
 #ifndef USE_BOOST_PYTHON
   prices_format      = "%[%Y/%m/%d %H:%M:%S %Z]   %-10A %12t %12T\n";
 #else
@@ -47,6 +47,9 @@ config_t::config_t()
 			"%10t %10(@vmin(t)) %10(@vmax(t)) %12T\n");
 #endif
   pricesdb_format    = "P %[%Y/%m/%d %H:%M:%S] %A %t\n";
+
+  predicate	    = "";
+  display_predicate = "";
 
   head_entries = 0;
   tail_entries = 0;

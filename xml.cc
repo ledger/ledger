@@ -27,6 +27,8 @@ static entry_t *     curr_entry;
 static commodity_t * curr_comm;
 static std::string   comm_flags;
 
+static transaction_t::state_t curr_state;
+
 static std::string   data;
 static bool          ignore;
 static std::string   have_error;
@@ -39,10 +41,13 @@ static void startElement(void *userData, const char *name, const char **attrs)
   if (std::strcmp(name, "entry") == 0) {
     assert(! curr_entry);
     curr_entry = new entry_t;
+    curr_state = transaction_t::UNCLEARED;
   }
   else if (std::strcmp(name, "transaction") == 0) {
     assert(curr_entry);
     curr_entry->add_transaction(new transaction_t);
+    if (curr_state != transaction_t::UNCLEARED)
+      curr_entry->transactions.back()->state = curr_state;
   }
   else if (std::strcmp(name, "commodity") == 0) {
     if (std::string(attrs[0]) == "flags")
@@ -80,20 +85,26 @@ static void endElement(void *userData, const char *name)
   else if (std::strcmp(name, "en:date") == 0) {
     quick_parse_date(data.c_str(), &curr_entry->date);
   }
-  else if (std::strcmp(name, "en:cleared") == 0) {
-    curr_entry->state = entry_t::CLEARED;
-  }
-  else if (std::strcmp(name, "en:pending") == 0) {
-    curr_entry->state = entry_t::PENDING;
-  }
   else if (std::strcmp(name, "en:code") == 0) {
     curr_entry->code = data;
+  }
+  else if (std::strcmp(name, "en:cleared") == 0) {
+    curr_state = transaction_t::CLEARED;
+  }
+  else if (std::strcmp(name, "en:pending") == 0) {
+    curr_state = transaction_t::PENDING;
   }
   else if (std::strcmp(name, "en:payee") == 0) {
     curr_entry->payee = data;
   }
   else if (std::strcmp(name, "tr:account") == 0) {
     curr_entry->transactions.back()->account = curr_journal->find_account(data);
+  }
+  else if (std::strcmp(name, "tr:cleared") == 0) {
+    curr_entry->transactions.back()->state = transaction_t::CLEARED;
+  }
+  else if (std::strcmp(name, "tr:pending") == 0) {
+    curr_entry->transactions.back()->state = transaction_t::PENDING;
   }
   else if (std::strcmp(name, "tr:virtual") == 0) {
     curr_entry->transactions.back()->flags |= TRANSACTION_VIRTUAL;
@@ -325,11 +336,6 @@ void format_xml_entries::format_last_entry()
   output_stream << "  <entry>\n"
 		<< "    <en:date>" << buf << "</en:date>\n";
 
-  if (last_entry->state == entry_t::CLEARED)
-    output_stream << "    <en:cleared/>\n";
-  else if (last_entry->state == entry_t::PENDING)
-    output_stream << "    <en:pending/>\n";
-
   if (! last_entry->code.empty()) {
     output_stream << "    <en:code>";
     output_xml_string(output_stream, last_entry->code);
@@ -354,6 +360,11 @@ void format_xml_entries::format_last_entry()
       }
 
       output_stream << "      <transaction>\n";
+
+      if ((*i)->state == transaction_t::CLEARED)
+	output_stream << "        <tr:cleared/>\n";
+      else if ((*i)->state == transaction_t::PENDING)
+	output_stream << "        <tr:pending/>\n";
 
       if ((*i)->flags & TRANSACTION_VIRTUAL)
 	output_stream << "        <tr:virtual/>\n";

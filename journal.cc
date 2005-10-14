@@ -19,6 +19,9 @@ bool transaction_t::valid() const
   if (! entry)
     return false;
 
+  if (state != UNCLEARED && state != CLEARED && state != PENDING)
+    return false;
+
   bool found = false;
   for (transactions_list::const_iterator i = entry->transactions.begin();
        i != entry->transactions.end();
@@ -198,7 +201,7 @@ bool entry_base_t::finalize()
 }
 
 entry_t::entry_t(const entry_t& e)
-  : entry_base_t(e), date(e.date), state(e.state), code(e.code), payee(e.payee)
+  : entry_base_t(e), date(e.date), code(e.code), payee(e.payee)
 {
   DEBUG_PRINT("ledger.memory.ctors", "ctor entry_t");
 
@@ -217,9 +220,6 @@ void entry_t::add_transaction(transaction_t * xact)
 bool entry_t::valid() const
 {
   if (! date || ! journal)
-    return false;
-
-  if (state != UNCLEARED && state != CLEARED && state != PENDING)
     return false;
 
   for (transactions_list::const_iterator i = transactions.begin();
@@ -729,11 +729,20 @@ void export_journal()
     .add_property("cost",
 		  make_getter(&transaction_t::cost,
 			      return_internal_reference<1>()))
+    .def_readwrite("state", &transaction_t::state)
     .def_readwrite("flags", &transaction_t::flags)
     .def_readwrite("note", &transaction_t::note)
+#if 0
     .def_readwrite("data", &transaction_t::data)
+#endif
 
     .def("valid", &transaction_t::valid)
+    ;
+
+  enum_< transaction_t::state_t > ("State")
+    .value("UNCLEARED", transaction_t::UNCLEARED)
+    .value("CLEARED",   transaction_t::CLEARED)
+    .value("PENDING",   transaction_t::PENDING)
     ;
 
   class_< account_t >
@@ -818,7 +827,6 @@ void export_journal()
 
   scope in_entry = class_< entry_t, bases<entry_base_t> > ("Entry")
     .def_readwrite("date", &entry_t::date)
-    .def_readwrite("state", &entry_t::state)
     .def_readwrite("code", &entry_t::code)
     .def_readwrite("payee", &entry_t::payee)
 
@@ -839,12 +847,6 @@ void export_journal()
     .def_readonly("period_string", &period_entry_t::period_string)
 
     .def("valid", &period_entry_t::valid)
-    ;
-
-  enum_< entry_t::state_t > ("State")
-    .value("UNCLEARED", entry_t::UNCLEARED)
-    .value("CLEARED",   entry_t::CLEARED)
-    .value("PENDING",   entry_t::PENDING)
     ;
 
 #define EXC_TRANSLATE(type)					\

@@ -217,8 +217,10 @@ element_t * format_t::parse_elements(const std::string& fmt)
     case 'E': current->type = element_t::END_POS; break;
     case 'e': current->type = element_t::END_LINE; break;
     case 'X': current->type = element_t::CLEARED; break;
+    case 'Y': current->type = element_t::ENTRY_CLEARED; break;
     case 'C': current->type = element_t::CODE; break;
     case 'P': current->type = element_t::PAYEE; break;
+    case 'W': current->type = element_t::OPT_ACCOUNT; break;
     case 'a': current->type = element_t::ACCOUNT_NAME; break;
     case 'A': current->type = element_t::ACCOUNT_FULLNAME; break;
     case 't': current->type = element_t::AMOUNT; break;
@@ -246,10 +248,32 @@ element_t * format_t::parse_elements(const std::string& fmt)
   return result.release();
 }
 
+static bool entry_state(const entry_t * entry, transaction_t::state_t * state)
+{
+  bool first  = true;
+  bool hetero = false;
+
+  for (transactions_list::const_iterator i = entry->transactions.begin();
+       i != entry->transactions.end();
+       i++) {
+    if (first) {
+      *state = (*i)->state;
+      first = false;
+    }
+    else if (*state != (*i)->state) {
+      hetero = true;
+      break;
+    }
+  }
+
+  return ! hetero;
+}
+
 void format_t::format(std::ostream& out_str, const details_t& details) const
 {
   for (const element_t * elem = elements; elem; elem = elem->next) {
     std::ostringstream out;
+    std::string name;
     bool ignore_max_width = false;
 
     if (elem->align_left)
@@ -408,10 +432,31 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
       break;
 
     case element_t::CLEARED:
-      if (details.entry && details.entry->state == entry_t::CLEARED)
+      if (details.xact) {
+	switch (details.xact->state) {
+	case transaction_t::CLEARED:
 	out << "* ";
-      else
-	out << "";
+	  break;
+	case transaction_t::PENDING:
+	  out << "! ";
+	  break;
+	}
+      }
+      break;
+
+    case element_t::ENTRY_CLEARED:
+      if (details.entry) {
+	transaction_t::state_t state;
+	if (entry_state(details.entry, &state))
+	  switch (state) {
+	  case transaction_t::CLEARED:
+	    out << "* ";
+	    break;
+	  case transaction_t::PENDING:
+	    out << "! ";
+	    break;
+	  }
+      }
       break;
 
     case element_t::CODE: {
@@ -444,10 +489,25 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 					       elem->max_width));
       break;
 
+    case element_t::OPT_ACCOUNT:
+      if (details.entry && details.xact) {
+	transaction_t::state_t state;
+	if (! entry_state(details.entry, &state))
+	  switch (details.xact->state) {
+	  case transaction_t::CLEARED:
+	    name = "* ";
+	    break;
+	  case transaction_t::PENDING:
+	    name = "! ";
+	    break;
+	  }
+      }
+      // fall through...
+
     case element_t::ACCOUNT_NAME:
     case element_t::ACCOUNT_FULLNAME:
       if (details.account) {
-	std::string name = (elem->type == element_t::ACCOUNT_FULLNAME ?
+	name += (elem->type == element_t::ACCOUNT_FULLNAME ?
 			    details.account->fullname() :
 			    partial_account_name(*details.account));
 

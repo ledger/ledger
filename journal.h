@@ -29,17 +29,20 @@ class account_t;
 class transaction_t
 {
  public:
+  enum state_t { UNCLEARED, CLEARED, PENDING };
+
   entry_t *	 entry;
   account_t *	 account;
   amount_t	 amount;
   amount_t *	 cost;
+  state_t        state;
   unsigned short flags;
   std::string	 note;
   mutable void * data;
 
   transaction_t(account_t * _account = NULL)
     : entry(NULL), account(_account), cost(NULL),
-      flags(TRANSACTION_NORMAL), data(NULL) {
+      state(UNCLEARED), flags(TRANSACTION_NORMAL), data(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor transaction_t");
   }
 
@@ -48,14 +51,16 @@ class transaction_t
 		unsigned int	   _flags = TRANSACTION_NORMAL,
 		const std::string& _note  = "")
     : entry(NULL), account(_account), amount(_amount),
-      cost(NULL), flags(_flags), note(_note), data(NULL) {
+      cost(NULL), state(UNCLEARED), flags(_flags),
+      note(_note), data(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor transaction_t");
   }
 
   transaction_t(const transaction_t& xact)
     : entry(xact.entry), account(xact.account), amount(xact.amount),
       cost(xact.cost ? new amount_t(*xact.cost) : NULL),
-      flags(xact.flags), note(xact.note), data(NULL) {
+      state(xact.state), flags(xact.flags), note(xact.note),
+      data(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor transaction_t");
   }
 
@@ -128,14 +133,11 @@ class entry_base_t
 class entry_t : public entry_base_t
 {
  public:
-  enum state_t { UNCLEARED, CLEARED, PENDING };
-
   std::time_t date;
-  state_t     state;
   std::string code;
   std::string payee;
 
-  entry_t() : date(0), state(UNCLEARED) {
+  entry_t() : date(0) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor entry_t");
   }
   entry_t(const entry_t& e);

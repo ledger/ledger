@@ -494,13 +494,13 @@ void set_comm_as_payee::operator()(transaction_t& xact)
   entry_temps.push_back(*xact.entry);
   entry_t& entry = entry_temps.back();
   entry.date  = xact.entry->date;
-  entry.state = xact.entry->state;
   entry.code  = xact.entry->code;
   entry.payee = xact.amount.commodity().symbol;
 
   xact_temps.push_back(xact);
   transaction_t& temp = xact_temps.back();
   temp.entry = &entry;
+  temp.state = xact.state;
   temp.flags |= TRANSACTION_BULK_ALLOC;
   entry.add_transaction(&temp);
 

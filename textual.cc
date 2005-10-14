@@ -174,7 +174,6 @@ void parse_amount(const char * text, amount_t& amt, unsigned short flags,
 transaction_t * parse_transaction(char * line, account_t * account)
 {
   // The account will be determined later...
-
   std::auto_ptr<transaction_t> xact(new transaction_t(NULL));
 
   // The call to `next_element' will skip past the account name, and
@@ -182,45 +181,48 @@ transaction_t * parse_transaction(char * line, account_t * account)
   // where the amount is, we can strip off any transaction note, and
   // parse it.
 
-  char * p = skip_ws(line);
-  if (char * cost_str = next_element(p, true)) {
-    cost_str = skip_ws(cost_str);
-    bool has_amount = *cost_str;
+  char * amount	  = NULL;
+  char * price	  = NULL;
+  bool	 per_unit = true;
 
-    if (char * note_str = std::strchr(cost_str, ';')) {
-      if (cost_str == note_str)
-	has_amount = false;
+  char * p = skip_ws(line);
+  switch (*p) {
+  case '*':
+    xact->state = transaction_t::CLEARED;
+    p = skip_ws(++p);
+    break;
+  case '!':
+    xact->state = transaction_t::PENDING;
+    p = skip_ws(++p);
+    break;
+  }
+
+  if (amount = next_element(p, true)) {
+    amount = skip_ws(amount);
+    if (! *amount)
+      amount = NULL;
+    else {
+      if (char * note_str = std::strchr(amount, ';')) {
+	if (amount == note_str)
+	  amount = NULL;
       *note_str++ = '\0';
       xact->note = skip_ws(note_str);
     }
 
-    if (has_amount) {
-      bool   per_unit  = true;
-      char * price_str = std::strchr(cost_str, '@');
-      if (price_str) {
-	if (price_str == cost_str)
+      if (amount) {
+	price = std::strchr(amount, '@');
+	if (price) {
+	  if (price == amount)
 	  throw parse_error(path, linenum, "Cost specified without amount");
 
-	*price_str++ = '\0';
-	if (*price_str == '@') {
+	  *price++ = '\0';
+	  if (*price == '@') {
 	  per_unit = false;
-	  price_str++;
+	    price++;
 	}
+	  price = skip_ws(price);
       }
-
-      parse_amount(skip_ws(cost_str), xact->amount, AMOUNT_PARSE_NO_REDUCE,
-		   *xact);
-      if (price_str) {
-	xact->cost = new amount_t;
-	parse_amount(skip_ws(price_str), *xact->cost, AMOUNT_PARSE_NO_MIGRATE,
-		     *xact);
       }
-
-      if (price_str && per_unit) {
-	*xact->cost *= xact->amount;
-	*xact->cost = xact->cost->round(xact->cost->commodity().precision);
-      }
-      xact->amount.reduce();
     }
   }
 
@@ -246,6 +248,22 @@ transaction_t * parse_transaction(char * line, account_t * account)
   }
   if (! xact->account)
     xact->account = account->find_account(p);
+
+  // If an amount (and optional price) were seen, parse them now
+  if (amount) {
+    parse_amount(amount, xact->amount, AMOUNT_PARSE_NO_REDUCE, *xact);
+
+    if (price) {
+      xact->cost = new amount_t;
+      parse_amount(price, *xact->cost, AMOUNT_PARSE_NO_MIGRATE, *xact);
+
+      if (per_unit) {
+	*xact->cost *= xact->amount;
+	*xact->cost = xact->cost->round(xact->cost->commodity().precision);
+      }
+    }
+    xact->amount.reduce();
+  }
 
   return xact.release();
 }
@@ -304,14 +322,15 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
 
   TIMER_START(entry_details);
 
+  transaction_t::state_t state = transaction_t::UNCLEARED;
   if (next) {
     switch (*next) {
     case '*':
-      curr->state = entry_t::CLEARED;
+      state = transaction_t::CLEARED;
       next = skip_ws(++next);
       break;
     case '!':
-      curr->state = entry_t::PENDING;
+      state = transaction_t::PENDING;
       next = skip_ws(++next);
       break;
     }
@@ -350,8 +369,12 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
 	break;
     }
 
-    if (transaction_t * xact = parse_transaction(line, master))
+    if (transaction_t * xact = parse_transaction(line, master)) {
+      if (state != transaction_t::UNCLEARED &&
+	  xact->state == transaction_t::UNCLEARED)
+	xact->state = state;
       curr->add_transaction(xact);
+    }
 
     if (in.eof())
       break;
@@ -417,7 +440,6 @@ static void clock_out_from_timelog(const std::time_t when,
 {
   std::auto_ptr<entry_t> curr(new entry_t);
   curr->date  = when;
-  curr->state = entry_t::CLEARED;
   curr->code  = "";
   curr->payee = last_desc;
 
@@ -429,6 +451,7 @@ static void clock_out_from_timelog(const std::time_t when,
 
   transaction_t * xact
     = new transaction_t(last_account, amt, TRANSACTION_VIRTUAL);
+  xact->state = transaction_t::CLEARED;
   curr->add_transaction(xact);
 
   if (! journal->add_entry(curr.get()))

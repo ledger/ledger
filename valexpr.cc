@@ -114,8 +114,8 @@ void value_expr_t::compute(value_t& result, const details_t& details) const
     break;
 
   case CLEARED:
-    if (details.entry)
-      result = details.entry->state == entry_t::CLEARED;
+    if (details.xact)
+      result = details.xact->state == transaction_t::CLEARED;
     else
       result = false;
     break;
@@ -269,6 +269,14 @@ void value_expr_t::compute(value_t& result, const details_t& details) const
     assert(mask);
     if (details.account)
       result = mask->match(details.account->name);
+    else
+      result = false;
+    break;
+
+  case F_COMMODITY_MASK:
+    assert(mask);
+    if (details.xact)
+      result = mask->match(details.xact->amount.commodity().symbol);
     else
       result = false;
     break;
@@ -512,12 +520,14 @@ value_expr_t * parse_value_term(std::istream& in)
 
   // Other
   case 'c':
+  case 'C':
   case 'p':
   case 'w':
   case 'W':
   case 'e':
   case '/': {
     bool code_mask	    = c == 'c';
+    bool commodity_mask	    = c == 'C';
     bool payee_mask	    = c == 'p';
     bool note_mask	    = c == 'e';
     bool short_account_mask = c == 'w';
@@ -550,6 +560,8 @@ value_expr_t * parse_value_term(std::istream& in)
       kind = value_expr_t::F_SHORT_ACCOUNT_MASK;
     else if (code_mask)
       kind = value_expr_t::F_CODE_MASK;
+    else if (commodity_mask)
+      kind = value_expr_t::F_COMMODITY_MASK;
     else if (payee_mask)
       kind = value_expr_t::F_PAYEE_MASK;
     else if (note_mask)
@@ -886,6 +898,11 @@ void dump_value_expr(std::ostream& out, const value_expr_t * node)
   case value_expr_t::F_SHORT_ACCOUNT_MASK:
     assert(node->mask);
     out << "M_SACCT(" << node->mask->pattern << ')';
+    break;
+
+  case value_expr_t::F_COMMODITY_MASK:
+    assert(node->mask);
+    out << "M_COMM(" << node->mask->pattern << ')';
     break;
 
   case value_expr_t::F_VALUE:

@@ -19,11 +19,11 @@ if os.environ.has_key ("HAVE_LIBOFX") and\
     libs.extend (["ofx"])
 
 setup(name         = "Ledger",
-      version      = "2.0b",
+      version      = "2.5",
       description  = "Ledger Accounting Tool",
       author       = "John Wiegley",
       author_email = "johnw@newartisans.com",
-      url          = "http://www.newartisans.com/johnw/",
+      url          = "http://www.newartisans.com/ledger.html",
       ext_modules  = [
     Extension("ledger", ["pyledger.cc"],
 	      define_macros = [('PYTHON_MODULE', 1)],

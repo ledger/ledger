@@ -49,6 +49,8 @@ static unsigned int     src_idx;
 static istream_pos_type beg_pos;
 static unsigned long    beg_line;
 
+static transaction_t::state_t curr_state;
+
 static enum action_t {
   NO_ACTION,
   ACCOUNT_NAME,
@@ -244,9 +246,9 @@ static void dataHandler(void *userData, const char *s, int len)
 
   case XACT_STATE:
     if (*s == 'y')
-      curr_entry->state = entry_t::PENDING;
+      curr_state = transaction_t::PENDING;
     else
-      curr_entry->state = entry_t::CLEARED;
+      curr_state = transaction_t::CLEARED;
     break;
 
   case XACT_VALUE: {
@@ -292,9 +294,12 @@ static void dataHandler(void *userData, const char *s, int len)
       value = curr_quant;
     }
 
+    xact->state  = curr_state;
     xact->amount = value;
     if (value != curr_value)
       xact->cost = new amount_t(curr_value);
+
+    curr_state = transaction_t::UNCLEARED;
     break;
   }
 
@@ -337,6 +342,7 @@ unsigned int gnucash_parser_t::parse(std::istream&	 in,
   curr_entry	 = NULL;
   curr_comm	 = NULL;
   entry_comm	 = NULL;
+  curr_state	 = transaction_t::UNCLEARED;
 
   instreamp = &in;
   path	    = original_file ? *original_file : "<gnucash>";
