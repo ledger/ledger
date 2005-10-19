@@ -796,11 +796,21 @@ OPT_BEGIN(period, "p:") {
   interval_t interval(config.report_period);
   if (interval.begin) {
     std::strftime(buf, 127, formats[0], std::localtime(&interval.begin));
-    process_option(config_options, "begin", buf);
+
+    if (! config.predicate.empty())
+      config.predicate += "&";
+    config.predicate += "d>=[";
+    config.predicate += buf;
+    config.predicate += "]";
   }
   if (interval.end) {
     std::strftime(buf, 127, formats[0], std::localtime(&interval.end));
-    process_option(config_options, "end", buf);
+
+    if (! config.predicate.empty())
+      config.predicate += "&";
+    config.predicate += "d<[";
+    config.predicate += buf;
+    config.predicate += "]";
   }
 } OPT_END(period);
 
@@ -893,9 +903,11 @@ OPT_BEGIN(amount_data, "j") {
   config.format_string = config.plot_amount_format;
 } OPT_END(amount_data);
 
+
 OPT_BEGIN(total_data, "J") {
   config.format_string = config.plot_total_format;
 } OPT_END(total_data);
+
 
 //////////////////////////////////////////////////////////////////////
 //
