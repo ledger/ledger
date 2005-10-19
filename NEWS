@@ -1,5 +1,86 @@
 			     Ledger NEWS
 
+* 2.5
+
+- Effective dates may now be specified for entries:
+
+    2004/10/03=2004/09/30 Credit card company
+      Liabilities:MasterCard         $100.00
+      Assets:Checking
+
+  This entry says that although the actual transactions occurred on
+  October 3rd, their effective date was September 30th.  This is
+  especially useful for budgeting, in case you want the transactions
+  to show up in September instead of October.
+
+  To report using effective dates, use the --effective option.
+
+- Actual and effective dates may now be specified for individual
+  transactions:
+
+    2004/10/03=2004/09/30 Credit card company
+      Liabilities:MasterCard         $100.00
+      Assets:Checking                         ; [2004/10/10=2004/09/15]
+
+  This states that although the actual date of the entry is
+  2004/10/03, and the effective date of the entry is 2004/09/30, the
+  actual date of the Checking transaction itself is 2004/10/10, and
+  its effective date is 2004/09/15.  The effective date is optional
+  (just specifying the actual date would have read "[2004/10/10]").
+
+  If no effective date is given for a transaction, the effective date
+  of the entry is assumed.  If no actual date is given, the actual
+  date of the entry is assumed.  The syntax of the latter is simply
+  [=2004/09/15].
+
+- To support the above, there is a new formatting option: "%d".  This
+  outputs only the date (like "%D") if there is no effective date, but
+  outputs "ADATE=EDATE" if there is one.  The "print" report now uses
+  this.
+
+- To support the above, the register report may now split up entries
+  whose component transactions have different dates.  For example,
+  given the following entry:
+
+    2005/10/15=2005/09/01 iTunes
+      Expenses:Music                 $1.08 ; [2005/10/20=2005/08/01]
+      Liabilities:MasterCard
+
+  The command "ledger register" on this data file reports:
+
+    2005/10/20 iTunes   Expenses:Music            $1.08    $1.08
+    2005/10/15 iTunes   Liabilities:MasterCard   $-1.08        0
+
+  The command "ledger --effective register" reports:
+
+    2005/08/01 iTunes   Expenses:Music            $1.08    $1.08
+    2005/09/01 iTunes   Liabilities:MasterCard   $-1.08        0
+
+  Although it appears as though two entries are being reported, both
+  transactions belong to the same entry.
+
+- Individual transactions may now be cleared separately.  The old
+  syntax, which is still supported, clears all transactions in an
+  entry:
+
+    2004/05/27 * Book Store
+      Expenses:Dining                 $20.00
+      Liabilities:MasterCard
+
+  The new (and optional) syntax allows clearing just the MasterCard
+  transaction:
+
+    2004/05/27 Book Store
+      Expenses:Dining                 $20.00
+      * Liabilities:MasterCard
+
+  NOTE: This changes the output format of the "emacs" and "xml"
+  reports.  ledger.el will use the new syntax unless the Lisp variable
+  `ledger-clear-whole-entries' is set to t.
+
+- Added a new value expression regexp command:
+    C//  compare against transaction amount's commodity symbol
+
 * 2.4
 
 - Both "-$100.00" and "$-100.00" are now equivalent amounts.

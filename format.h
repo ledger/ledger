@@ -24,6 +24,7 @@ struct element_t
     END_POS,
     END_LINE,
     DATE_STRING,
+    COMPLETE_DATE_STRING,
     CLEARED,
     ENTRY_CLEARED,
     CODE,
@@ -97,10 +98,11 @@ struct format_t
 class format_transactions : public item_handler<transaction_t>
 {
  protected:
-  std::ostream& output_stream;
-  format_t	first_line_format;
-  format_t	next_lines_format;
-  entry_t *     last_entry;
+  std::ostream&   output_stream;
+  format_t	  first_line_format;
+  format_t	  next_lines_format;
+  entry_t *       last_entry;
+  transaction_t * last_xact;
 
  public:
   format_transactions(std::ostream& _output_stream,

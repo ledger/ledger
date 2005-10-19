@@ -206,6 +206,10 @@ element_t * format_t::parse_elements(const std::string& fmt)
       break;
     }
 
+    case 'd':
+      current->type  = element_t::COMPLETE_DATE_STRING;
+      current->chars = format_t::date_format;
+      break;
     case 'D':
       current->type  = element_t::DATE_STRING;
       current->chars = format_t::date_format;
@@ -420,16 +424,51 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 	out << details.entry->end_line;
       break;
 
-    case element_t::DATE_STRING:
-      if (details.entry && details.entry->date) {
-	char buf[256];
-	std::strftime(buf, 255, elem->chars.c_str(),
-		      std::localtime(&details.entry->date));
+    case element_t::DATE_STRING: {
+      std::time_t date = 0;
+      if (details.xact)
+	date = details.xact->date();
+      else if (details.entry)
+	date = details.entry->date();
+
+      char buf[256];
+      std::strftime(buf, 255, elem->chars.c_str(), std::localtime(&date));
+      out << (elem->max_width == 0 ? buf : truncated(buf, elem->max_width));
+      break;
+    }
+
+    case element_t::COMPLETE_DATE_STRING: {
+      std::time_t actual_date = 0;
+      std::time_t effective_date = 0;
+      if (details.xact) {
+	actual_date    = details.xact->actual_date();
+	effective_date = details.xact->effective_date();
+      }
+      else if (details.entry) {
+	actual_date    = details.entry->actual_date();
+	effective_date = details.entry->effective_date();
+      }
+
+      char abuf[256];
+      std::strftime(abuf, 255, elem->chars.c_str(),
+		    std::localtime(&actual_date));
+
+      if (effective_date) {
+	char buf[512];
+	char ebuf[256];
+	std::strftime(ebuf, 255, elem->chars.c_str(),
+		    std::localtime(&effective_date));
+
+	std::strcpy(buf, abuf);
+	std::strcat(buf, "=");
+	std::strcat(buf, ebuf);
+
 	out << (elem->max_width == 0 ? buf : truncated(buf, elem->max_width));
       } else {
-	out << " ";
+	out << (elem->max_width == 0 ? abuf : truncated(abuf, elem->max_width));
       }
       break;
+    }
 
     case element_t::CLEARED:
       if (details.xact) {
@@ -575,7 +614,7 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 
 format_transactions::format_transactions(std::ostream&      _output_stream,
 					 const std::string& format)
-  : output_stream(_output_stream), last_entry(NULL)
+  : output_stream(_output_stream), last_entry(NULL), last_xact(NULL)
 {
   const char * f = format.c_str();
   if (const char * p = std::strstr(f, "%/")) {
@@ -594,10 +633,16 @@ void format_transactions::operator()(transaction_t& xact)
     if (last_entry != xact.entry) {
       first_line_format.format(output_stream, details_t(xact));
       last_entry = xact.entry;
-    } else {
+    }
+    else if (last_xact->date() != xact.date()) {
+      first_line_format.format(output_stream, details_t(xact));
+    }
+    else {
       next_lines_format.format(output_stream, details_t(xact));
     }
+
     transaction_xdata(xact).dflags |= TRANSACTION_DISPLAYED;
+    last_xact = &xact;
   }
 }
 
@@ -729,7 +774,7 @@ format_equity::format_equity(std::ostream&      _output_stream,
 
   entry_t header_entry;
   header_entry.payee = "Opening Balances";
-  header_entry.date  = now;
+  header_entry._date = now;
   first_line_format.format(output_stream, details_t(header_entry));
 }
 

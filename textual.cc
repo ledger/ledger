@@ -205,7 +205,27 @@ transaction_t * parse_transaction(char * line, account_t * account)
       if (char * note_str = std::strchr(amount, ';')) {
 	if (amount == note_str)
 	  amount = NULL;
+
       *note_str++ = '\0';
+	note_str = skip_ws(note_str);
+
+	if (char * b = std::strchr(note_str, '['))
+	  if (char * e = std::strchr(note_str, ']')) {
+	    char buf[256];
+	    std::strncpy(buf, b + 1, e - b);
+	    buf[e - b] = '\0';
+
+	    if (char * p = std::strchr(buf, '=')) {
+	      *p++ = '\0';
+	      if (! quick_parse_date(p, &xact->_date_eff))
+		throw parse_error(path, linenum,
+				  "Failed to parse effective date");
+	    }
+
+	    if (buf[0] && ! quick_parse_date(buf, &xact->_date))
+	      throw parse_error(path, linenum, "Failed to parse date");
+	  }
+
       xact->note = skip_ws(note_str);
     }
 
@@ -313,7 +333,13 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
 
   char * next = next_element(line);
 
-  if (! quick_parse_date(line, &curr->date))
+  if (char * p = std::strchr(line, '=')) {
+    *p++ = '\0';
+    if (! quick_parse_date(p, &curr->_date_eff))
+      throw parse_error(path, linenum, "Failed to parse effective date");
+  }
+
+  if (! quick_parse_date(line, &curr->_date))
     throw parse_error(path, linenum, "Failed to parse date");
 
   TIMER_STOP(entry_date);
@@ -439,11 +465,11 @@ static void clock_out_from_timelog(const std::time_t when,
 				   journal_t * journal)
 {
   std::auto_ptr<entry_t> curr(new entry_t);
-  curr->date  = when;
+  curr->_date = when;
   curr->code  = "";
   curr->payee = last_desc;
 
-  double diff = std::difftime(curr->date, time_in);
+  double diff = std::difftime(curr->_date, time_in);
   char   buf[32];
   std::sprintf(buf, "%lds", long(diff));
   amount_t amt;

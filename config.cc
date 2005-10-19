@@ -36,8 +36,8 @@ config_t::config_t()
 			  "%48|%-.38A %22.108t %22.132T\n");
   plot_amount_format = "%D %(St)\n";
   plot_total_format  = "%D %(ST)\n";
-  print_format       = "\n%D %Y%C%P\n    %-34W  %12o%n\n%/    %-34W  %12o%n\n";
-  write_hdr_format   = "%D %Y%C%P\n";
+  print_format       = "\n%d %Y%C%P\n    %-34W  %12o%n\n%/    %-34W  %12o%n\n";
+  write_hdr_format   = "%d %Y%C%P\n";
   write_xact_format  = "    %-34W  %12o%n\n";
   equity_format      = "\n%D %Y%C%P\n%/    %-34W  %12t\n";
 #ifndef USE_BOOST_PYTHON
@@ -714,6 +714,10 @@ OPT_BEGIN(plot_amount_format, ":") {
 
 OPT_BEGIN(plot_total_format, ":") {
   config.plot_total_format = optarg;
+
+OPT_BEGIN(effective, "") {
+  transaction_t::use_effective_date = true;
+} OPT_END(effective);
 } OPT_END(plot_total_format);
 
 OPT_BEGIN(print_format, ":") {

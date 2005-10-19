@@ -44,7 +44,7 @@ void reconcile_transactions::flush()
   for (transactions_list::iterator x = xacts.begin();
        x != xacts.end();
        x++) {
-    if (! cutoff || std::difftime((*x)->entry->date, cutoff) < 0) {
+    if (! cutoff || std::difftime((*x)->date(), cutoff) < 0) {
       switch ((*x)->state) {
       case transaction_t::CLEARED:
 	cleared_balance += (*x)->amount;

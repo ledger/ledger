@@ -83,7 +83,10 @@ static void endElement(void *userData, const char *name)
     curr_entry = NULL;
   }
   else if (std::strcmp(name, "en:date") == 0) {
-    quick_parse_date(data.c_str(), &curr_entry->date);
+    quick_parse_date(data.c_str(), &curr_entry->_date);
+  }
+  else if (std::strcmp(name, "en:date_eff") == 0) {
+    quick_parse_date(data.c_str(), &curr_entry->_date_eff);
   }
   else if (std::strcmp(name, "en:code") == 0) {
     curr_entry->code = data;
@@ -331,10 +334,16 @@ void format_xml_entries::format_last_entry()
 {
   char buf[256];
   std::strftime(buf, 255, format_t::date_format.c_str(),
-		std::localtime(&last_entry->date));
+		std::localtime(&last_entry->_date));
 
   output_stream << "  <entry>\n"
 		<< "    <en:date>" << buf << "</en:date>\n";
+
+  if (last_entry->_date_eff) {
+    std::strftime(buf, 255, format_t::date_format.c_str(),
+		  std::localtime(&last_entry->_date_eff));
+    output_stream << "    <en:date_eff>" << buf << "</en:date_eff>\n";
+  }
 
   if (! last_entry->code.empty()) {
     output_stream << "    <en:code>";
@@ -360,6 +369,17 @@ void format_xml_entries::format_last_entry()
       }
 
       output_stream << "      <transaction>\n";
+
+      if ((*i)->_date) {
+	std::strftime(buf, 255, format_t::date_format.c_str(),
+		      std::localtime(&(*i)->_date));
+	output_stream << "        <tr:date>" << buf << "</tr:date>\n";
+      }
+      if ((*i)->_date_eff) {
+	std::strftime(buf, 255, format_t::date_format.c_str(),
+		      std::localtime(&(*i)->_date_eff));
+	output_stream << "        <tr:date_eff>" << buf << "</tr:date_eff>\n";
+      }
 
       if ((*i)->state == transaction_t::CLEARED)
 	output_stream << "        <tr:cleared/>\n";

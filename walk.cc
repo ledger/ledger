@@ -232,7 +232,7 @@ void collapse_transactions::report_subtotal()
     entry_temps.push_back(entry_t());
     entry_t& entry = entry_temps.back();
     entry.payee = last_entry->payee;
-    entry.date  = last_entry->date;
+    entry._date = last_entry->_date;
 
     handle_value(subtotal, &totals_account, last_entry, 0, xact_temps,
 		 *handler);
@@ -308,7 +308,7 @@ void changed_value_transactions::output_diff(const std::time_t current)
     entry_temps.push_back(entry_t());
     entry_t& entry = entry_temps.back();
     entry.payee = "Commodities revalued";
-    entry.date  = current;
+    entry._date = current;
 
     handle_value(diff, NULL, &entry, TRANSACTION_NO_TOTAL, xact_temps,
 		 *handler);
@@ -321,8 +321,8 @@ void changed_value_transactions::operator()(transaction_t& xact)
     std::time_t moment = 0;
     if (transaction_has_xdata(*last_xact))
       moment = transaction_xdata_(*last_xact).date;
-    if (! moment)
-      moment = xact.entry->date;
+    else
+      moment = xact.date();
     output_diff(moment);
   }
 
@@ -352,7 +352,7 @@ void subtotal_transactions::report_subtotal(const char * spec_fmt)
   entry_temps.push_back(entry_t());
   entry_t& entry = entry_temps.back();
   entry.payee = buf;
-  entry.date  = start;
+  entry._date = start;
 
   for (values_map::iterator i = values.begin();
        i != values.end();
@@ -365,10 +365,10 @@ void subtotal_transactions::report_subtotal(const char * spec_fmt)
 
 void subtotal_transactions::operator()(transaction_t& xact)
 {
-  if (! start || std::difftime(xact.entry->date, start) < 0)
-    start = xact.entry->date;
-  if (! finish || std::difftime(xact.entry->date, finish) > 0)
-    finish = xact.entry->date;
+  if (! start || std::difftime(xact.date(), start) < 0)
+    start = xact.date();
+  if (! finish || std::difftime(xact.date(), finish) > 0)
+    finish = xact.date();
 
   account_t * acct = xact.account;
   assert(acct);
@@ -400,7 +400,7 @@ void interval_transactions::report_subtotal(const std::time_t moment)
   if (moment)
     finish = moment - 86400;
   else
-    finish = last_xact->entry->date;
+    finish = last_xact->date();
 
   subtotal_transactions::report_subtotal();
 
@@ -412,7 +412,7 @@ void interval_transactions::report_subtotal(const std::time_t moment)
 
 void interval_transactions::operator()(transaction_t& xact)
 {
-  const std::time_t date = xact.entry->date;
+  const std::time_t date = xact.date();
 
   if ((interval.begin && std::difftime(date, interval.begin) < 0) ||
       (interval.end   && std::difftime(date, interval.end) >= 0))
@@ -483,8 +483,8 @@ void by_payee_transactions::operator()(transaction_t& xact)
     i = result.first;
   }
 
-  if (std::difftime(xact.entry->date, (*i).second->start) > 0)
-    (*i).second->start = xact.entry->date;
+  if (std::difftime(xact.date(), (*i).second->start) > 0)
+    (*i).second->start = xact.date();
 
   (*(*i).second)(xact);
 }
@@ -493,7 +493,7 @@ void set_comm_as_payee::operator()(transaction_t& xact)
 {
   entry_temps.push_back(*xact.entry);
   entry_t& entry = entry_temps.back();
-  entry.date  = xact.entry->date;
+  entry._date = xact.date();
   entry.code  = xact.entry->code;
   entry.payee = xact.amount.commodity().symbol;
 
@@ -569,7 +569,7 @@ void budget_transactions::report_budget_items(const std::time_t moment)
 	entry_temps.push_back(entry_t());
 	entry_t& entry = entry_temps.back();
 	entry.payee = "Budget entry";
-	entry.date  = begin;
+	entry._date = begin;
 
 	xact_temps.push_back(xact);
 	transaction_t& temp = xact_temps.back();
@@ -611,7 +611,7 @@ void budget_transactions::operator()(transaction_t& xact)
 
  handle:
   if (xact_in_budget && flags & BUDGET_BUDGETED) {
-    report_budget_items(xact.entry->date);
+    report_budget_items(xact.date());
     item_handler<transaction_t>::operator()(xact);
   }
   else if (! xact_in_budget && flags & BUDGET_UNBUDGETED) {
@@ -661,7 +661,7 @@ void forecast_transactions::flush()
     entry_temps.push_back(entry_t());
     entry_t& entry = entry_temps.back();
     entry.payee = "Forecast entry";
-    entry.date  = begin;
+    entry._date = begin;
 
     xact_temps.push_back(xact);
     transaction_t& temp = xact_temps.back();
@@ -682,7 +682,7 @@ void forecast_transactions::flush()
 	transaction_xdata_(temp).dflags & TRANSACTION_MATCHES) {
       if (! pred(temp))
 	break;
-      last = temp.entry->date;
+      last = temp.date();
       passed.clear();
     } else {
       bool found = false;
@@ -856,7 +856,7 @@ void walk_commodities(commodities_map& commodities,
       for (history_map::iterator j = (*i).second->history->prices.begin();
 	   j != (*i).second->history->prices.end();
 	   j++) {
-	entry_temps.back().date = (*j).first;
+	entry_temps.back()._date = (*j).first;
 
 	xact_temps.push_back(transaction_t(&acct_temps.back()));
 	transaction_t& temp = xact_temps.back();

@@ -15,8 +15,8 @@ void format_emacs_transactions::write_entry(entry_t& entry)
 
   out << (((unsigned long)entry.beg_pos) + 1) << " ";
 
-  out << "(" << (entry.date / 65536) << " "
-      << (entry.date % 65536) << " 0) ";
+  std::time_t date = entry.date();
+  out << "(" << (date / 65536) << " " << (date % 65536) << " 0) ";
 
   if (entry.code.empty())
     out << "nil ";

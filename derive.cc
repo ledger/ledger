@@ -15,7 +15,7 @@ entry_t * derive_new_entry(journal_t& journal,
 
   entry_t * matching = NULL;
 
-  if (! parse_date((*i).c_str(), &added->date))
+  if (! parse_date((*i).c_str(), &added->_date))
     throw error("Bad date passed to 'entry'");
 
   if (++i == end)

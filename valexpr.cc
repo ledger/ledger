@@ -107,12 +107,13 @@ void value_expr_t::compute(value_t& result, const details_t& details) const
     if (details.xact && transaction_has_xdata(*details.xact) &&
 	transaction_xdata_(*details.xact).date)
       result = long(transaction_xdata_(*details.xact).date);
+    else if (details.xact)
+      result = long(details.xact->date());
     else if (details.entry)
-      result = long(details.entry->date);
+      result = long(details.entry->date());
     else
       result = long(now);
     break;
-
   case CLEARED:
     if (details.xact)
       result = details.xact->state == transaction_t::CLEARED;
@@ -292,8 +293,10 @@ void value_expr_t::compute(value_t& result, const details_t& details) const
 	if (details.xact && transaction_has_xdata(*details.xact) &&
 	    transaction_xdata_(*details.xact).date)
 	  moment = transaction_xdata_(*details.xact).date;
+	else if (details.xact)
+	  moment = details.xact->date();
 	else if (details.entry)
-	  moment = details.entry->date;
+	  moment = details.entry->date();
 	break;
       case CONSTANT_T:
 	moment = right->constant_t;

@@ -14,6 +14,26 @@ namespace ledger {
 
 const std::string version = PACKAGE_VERSION;
 
+bool transaction_t::use_effective_date = false;
+
+std::time_t transaction_t::actual_date() const
+{
+  if (_date == 0) {
+    assert(entry);
+    return entry->actual_date();
+  }
+  return _date;
+}
+
+std::time_t transaction_t::effective_date() const
+{
+  if (_date_eff == 0) {
+    assert(entry);
+    return entry->effective_date();
+  }
+  return _date_eff;
+}
+
 bool transaction_t::valid() const
 {
   if (! entry)
@@ -201,7 +221,8 @@ bool entry_base_t::finalize()
 }
 
 entry_t::entry_t(const entry_t& e)
-  : entry_base_t(e), date(e.date), code(e.code), payee(e.payee)
+  : entry_base_t(e), _date(e._date), _date_eff(e._date_eff),
+    code(e.code), payee(e.payee)
 {
   DEBUG_PRINT("ledger.memory.ctors", "ctor entry_t");
 
@@ -219,7 +240,7 @@ void entry_t::add_transaction(transaction_t * xact)
 
 bool entry_t::valid() const
 {
-  if (! date || ! journal)
+  if (! _date || ! journal)
     return false;
 
   for (transactions_list::const_iterator i = transactions.begin();
@@ -459,7 +480,7 @@ bool journal_t::add_entry(entry_t * entry)
        i != entry->transactions.end();
        i++)
     if ((*i)->cost && (*i)->amount)
-      (*i)->amount.commodity().add_price(entry->date,
+      (*i)->amount.commodity().add_price(entry->date(),
 					 *(*i)->cost / (*i)->amount);
 
   return true;

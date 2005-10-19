@@ -11,7 +11,7 @@
 namespace ledger {
 
 static unsigned long  binary_magic_number = 0xFFEED765;
-static unsigned long  format_version      = 0x00020042;
+static unsigned long  format_version      = 0x00020044;
 
 static account_t **   accounts;
 static account_t **   accounts_next;
@@ -178,8 +178,9 @@ inline void read_binary_amount(char *& data, amount_t& amt)
 
 inline void read_binary_transaction(char *& data, transaction_t * xact)
 {
+  read_binary_number(data, xact->_date);
+  read_binary_number(data, xact->_date_eff);
   xact->account = accounts[read_binary_number<account_t::ident_t>(data) - 1];
-
   read_binary_amount(data, xact->amount);
 
   if (*data++ == 1) {
@@ -188,6 +189,7 @@ inline void read_binary_transaction(char *& data, transaction_t * xact)
   } else {
     xact->cost = NULL;
   }
+
   read_binary_number(data, xact->state);
   read_binary_number(data, xact->flags);
   xact->flags |= TRANSACTION_BULK_ALLOC;
@@ -218,7 +220,8 @@ inline void read_binary_entry(char *& data, entry_t * entry,
 			      transaction_t *& xact_pool)
 {
   read_binary_entry_base(data, entry, xact_pool);
-  read_binary_number(data, entry->date);
+  read_binary_number(data, entry->_date);
+  read_binary_number(data, entry->_date_eff);
   read_binary_string(data, &entry->code);
   read_binary_string(data, &entry->payee);
 }
@@ -540,14 +543,18 @@ void write_binary_amount(std::ostream& out, const amount_t& amt)
 
 void write_binary_transaction(std::ostream& out, transaction_t * xact)
 {
+  write_binary_number(out, xact->_date);
+  write_binary_number(out, xact->_date_eff);
   write_binary_number(out, xact->account->ident);
   write_binary_amount(out, xact->amount);
+
   if (xact->cost) {
     write_binary_number<char>(out, 1);
     write_binary_amount(out, *xact->cost);
   } else {
     write_binary_number<char>(out, 0);
   }
+
   write_binary_number(out, xact->state);
   write_binary_number(out, xact->flags);
   write_binary_string(out, xact->note);
@@ -571,7 +578,8 @@ void write_binary_entry_base(std::ostream& out, entry_base_t * entry)
 void write_binary_entry(std::ostream& out, entry_t * entry)
 {
   write_binary_entry_base(out, entry);
-  write_binary_number(out, entry->date);
+  write_binary_number(out, entry->_date);
+  write_binary_number(out, entry->_date_eff);
   write_binary_string(out, entry->code);
   write_binary_string(out, entry->payee);
 }

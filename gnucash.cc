@@ -236,7 +236,7 @@ static void dataHandler(void *userData, const char *s, int len)
   case ENTRY_DATE: {
     struct tm when;
     strptime(std::string(s, len).c_str(), "%Y-%m-%d %H:%M:%S %z", &when);
-    curr_entry->date = std::mktime(&when);
+    curr_entry->_date = std::mktime(&when);
     break;
   }
 

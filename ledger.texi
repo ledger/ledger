@@ -1983,6 +1983,11 @@ used can be changed at any time with the @option{-y} flag, however.
 Using @samp{%D} gives the user more control over the way dates are
 output.
 
+@item d
+This is the same as the @samp{%D} option, unless the entry has an
+effective date, in which case it prints
+@samp{[ACTUAL_DATE=EFFECtIVE_DATE]}.
+
 @item X
 If a transaction has been cleared, this inserts @samp{*} followed by a
 space; otherwise nothing is inserted.
@@ -2369,17 +2374,32 @@ by any number of lines, each beginning with whitespace, to denote the
 entry's account transactions.  The format of the first line is:
 
 @example
-DATE [*|!] [(CODE)] DESC
+DATE[=EDATE] [*|!] [(CODE)] DESC
 @end example
 
-If @samp{*} appears after the date, it indicates that entry is
-``cleared'', meaning it has been seen a bank statement, or otherwise
-verified.  If @samp{!} appears after the date, it indicates that the
-entry is ``pending''; i.e., tentatively cleared from the user's point
-of view, but not yet cleared with your financial institution.  If a
-@samp{CODE} appears in parentheses, it may be used to indicate a check
-number, or the type of the transaction.  Following these is the payee,
-or a description of the transaction.
+If @samp{*} appears after the date (with optional effective date), it
+indicates the entry is ``cleared'', which can mean whatever the user
+wants it t omean.  If @samp{!} appears after the date, it indicates d
+the entry is ``pending''; i.e., tentatively cleared from the user's
+point of view, but not yet actually cleared.  If a @samp{CODE} appears
+in parentheses, it may be used to indicate a check number, or the type
+of the transaction.  Following these is the payee, or a description of
+the transaction.
+
+The format of each following transaction is:
+
+@example
+  ACCOUNT  AMOUNT  [; NOTE]
+@end example
+
+The @samp{ACCOUNT} may be surrounded by parentheses if it is a virtual
+transactions, or square brackets if it is a virtual transactions that
+must balance.  The @samp{AMOUNT} can be followed by a per-unit
+transaction cost, by specifying @samp{@ AMOUNT}, or a complete
+transaction cost with @samp{@@ AMOUNT}.  Lastly, the @samp{NOTE} may
+specify an actual and/or effective date for the transaction by using
+the syntax @samp{[ACTUAL_DATE]} or @samp{[=EFFECTIVE_DATE]} or
+@samp{[ACTUAL_DATE=EFFECtIVE_DATE]}.
 
 @item =
 An automated entry.  A value expression must appear after the equal
