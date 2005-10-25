@@ -109,10 +109,10 @@ class entry_base_t
   unsigned long     end_line;
   transactions_list transactions;
 
-  entry_base_t() {
+  entry_base_t() : journal(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor entry_base_t");
   }
-  entry_base_t(const entry_base_t& e) {
+  entry_base_t(const entry_base_t& e) : journal(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor entry_base_t");
     for (transactions_list::const_iterator i = e.transactions.begin();
 	 i != e.transactions.end();
