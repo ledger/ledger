@@ -138,6 +138,9 @@ static void endElement(void *userData, const char *name)
   }
   else if (std::strcmp(name, "gnc:transaction") == 0) {
     assert(curr_entry);
+
+    // Add the new entry (what gnucash calls a 'transaction') to the
+    // journal
     if (! curr_journal->add_entry(curr_entry)) {
       print_entry(std::cerr, *curr_entry);
       have_error = "The above entry does not balance";
@@ -150,8 +153,48 @@ static void endElement(void *userData, const char *name)
       curr_entry->end_line = XML_GetCurrentLineNumber(parser) - offset;
       count++;
     }
+
+    // Clear the relevant variables for the next run
     curr_entry = NULL;
+    entry_comm = NULL;
   }
+  else if (std::strcmp(name, "trn:split") == 0) {
+    transaction_t * xact = curr_entry->transactions.back();
+
+    // Identify the commodity to use for the value of this
+    // transaction.  The quantity indicates how many times that value
+    // the transaction is worth.
+    amount_t value;
+    commodity_t * default_commodity = NULL;
+    if (entry_comm) {
+      default_commodity = entry_comm;
+    } else {
+      account_comm_map::iterator ac = account_comms.find(xact->account);
+      if (ac != account_comms.end())
+	default_commodity = (*ac).second;
+    }
+
+    if (default_commodity) {
+      curr_quant.set_commodity(*default_commodity);
+      value = curr_quant.round(default_commodity->precision);
+
+      if (curr_value.commodity() == *default_commodity)
+	curr_value = value;
+    } else {
+      value = curr_quant;
+    }
+
+    xact->state  = curr_state;
+    xact->amount = value;
+    if (value != curr_value)
+      xact->cost = new amount_t(curr_value);
+
+    // Clear the relevant variables for the next run
+    curr_state = transaction_t::UNCLEARED;
+    curr_value = amount_t();
+    curr_quant = amount_t();
+  }
+
   action = NO_ACTION;
 }
 
@@ -246,9 +289,11 @@ static void dataHandler(void *userData, const char *s, int len)
 
   case XACT_STATE:
     if (*s == 'y')
-      curr_state = transaction_t::PENDING;
-    else
       curr_state = transaction_t::CLEARED;
+    else if (*s == 'n')
+      curr_state = transaction_t::UNCLEARED;
+    else
+      curr_state = transaction_t::PENDING;
     break;
 
   case XACT_VALUE: {
@@ -278,28 +323,6 @@ static void dataHandler(void *userData, const char *s, int len)
       have_error = (std::string("Could not find account ") +
 		    std::string(s, len));
     }
-
-    amount_t value;
-
-    account_comm_map::iterator ac = account_comms.find(xact->account);
-    if (ac != account_comms.end()) {
-      commodity_t * default_commodity = (*ac).second;
-
-      curr_quant.set_commodity(*default_commodity);
-      value = curr_quant.round(default_commodity->precision);
-
-      if (curr_value.commodity() == *default_commodity)
-	curr_value = value;
-    } else {
-      value = curr_quant;
-    }
-
-    xact->state  = curr_state;
-    xact->amount = value;
-    if (value != curr_value)
-      xact->cost = new amount_t(curr_value);
-
-    curr_state = transaction_t::UNCLEARED;
     break;
   }
 
