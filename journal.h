@@ -45,8 +45,9 @@ class transaction_t
   static bool    use_effective_date;
 
   transaction_t(account_t * _account = NULL)
-    : entry(NULL), _date(0), account(_account), cost(NULL),
-      state(UNCLEARED), flags(TRANSACTION_NORMAL), data(NULL) {
+    : entry(NULL), _date(0), _date_eff(0), account(_account),
+      cost(NULL), state(UNCLEARED), flags(TRANSACTION_NORMAL),
+      data(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor transaction_t");
   }
 
@@ -54,15 +55,15 @@ class transaction_t
 		const amount_t&    _amount,
 		unsigned int	   _flags = TRANSACTION_NORMAL,
 		const std::string& _note  = "")
-    : entry(NULL), _date(0), account(_account), amount(_amount),
-      cost(NULL), state(UNCLEARED), flags(_flags),
+    : entry(NULL), _date(0), _date_eff(0), account(_account),
+      amount(_amount), cost(NULL), state(UNCLEARED), flags(_flags),
       note(_note), data(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor transaction_t");
   }
 
   transaction_t(const transaction_t& xact)
-    : entry(xact.entry), _date(0), account(xact.account),
-      amount(xact.amount),
+    : entry(xact.entry), _date(0), _date_eff(0),
+      account(xact.account), amount(xact.amount),
       cost(xact.cost ? new amount_t(*xact.cost) : NULL),
       state(xact.state), flags(xact.flags), note(xact.note),
       data(NULL) {
