@@ -3,6 +3,7 @@
 #include "option.h"
 #include "datetime.h"
 #include "quotes.h"
+#include "valexpr.h"
 #include "walk.h"
 #ifdef USE_BOOST_PYTHON
 #include "py_eval.h"
@@ -647,6 +648,8 @@ OPT_BEGIN(end, "e:") {
   config.predicate += "d<[";
   config.predicate += buf;
   config.predicate += "]";
+
+  terminus = interval.end;
 } OPT_END(end);
 
 OPT_BEGIN(current, "c") {
@@ -811,6 +814,8 @@ OPT_BEGIN(period, "p:") {
     config.predicate += "d<[";
     config.predicate += buf;
     config.predicate += "]";
+
+    terminus = interval.end;
   }
 } OPT_END(period);
 

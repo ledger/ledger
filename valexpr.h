@@ -127,6 +127,8 @@ struct value_expr_t
 extern std::auto_ptr<value_expr_t> amount_expr;
 extern std::auto_ptr<value_expr_t> total_expr;
 
+extern std::time_t terminus;
+
 inline void compute_amount(value_t& result, const details_t& details) {
   if (amount_expr.get())
     amount_expr->compute(result, details);
