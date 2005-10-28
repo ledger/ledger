@@ -13,6 +13,8 @@ namespace ledger {
 std::auto_ptr<value_expr_t> amount_expr;
 std::auto_ptr<value_expr_t> total_expr;
 
+std::time_t terminus = now;
+
 void value_expr_t::compute(value_t& result, const details_t& details) const
 {
   switch (kind) {
@@ -112,7 +114,7 @@ void value_expr_t::compute(value_t& result, const details_t& details) const
     else if (details.entry)
       result = long(details.entry->date());
     else
-      result = long(now);
+      result = long(terminus);
     break;
   case CLEARED:
     if (details.xact)
@@ -286,7 +288,7 @@ void value_expr_t::compute(value_t& result, const details_t& details) const
     assert(left);
     left->compute(result, details);
 
-    std::time_t moment = now;
+    std::time_t moment = terminus;
     if (right) {
       switch (right->kind) {
       case DATE:
@@ -453,7 +455,7 @@ value_expr_t * parse_value_term(std::istream& in)
   // Basic terms
   case 'm':
     node.reset(new value_expr_t(value_expr_t::CONSTANT_T));
-    node->constant_t = now;
+    node->constant_t = terminus;
     break;
 
   case 'a': node.reset(new value_expr_t(value_expr_t::AMOUNT)); break;
