@@ -453,7 +453,7 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
       std::strftime(abuf, 255, elem->chars.c_str(),
 		    std::localtime(&actual_date));
 
-      if (effective_date && effective_date != actual_date) {
+      if (effective_date != 0 && effective_date != actual_date) {
 	char buf[512];
 	char ebuf[256];
 	std::strftime(ebuf, 255, elem->chars.c_str(),
