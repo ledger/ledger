@@ -48,6 +48,7 @@ struct value_expr_t
     COST,
     DATE,
     CLEARED,
+    PENDING,
     REAL,
     ACTUAL,
     INDEX,

@@ -116,9 +116,16 @@ void value_expr_t::compute(value_t& result, const details_t& details) const
     else
       result = long(terminus);
     break;
+
   case CLEARED:
     if (details.xact)
       result = details.xact->state == transaction_t::CLEARED;
+    else
+      result = false;
+    break;
+  case PENDING:
+    if (details.xact)
+      result = details.xact->state == transaction_t::PENDING;
     else
       result = false;
     break;
@@ -462,6 +469,7 @@ value_expr_t * parse_value_term(std::istream& in)
   case 'b': node.reset(new value_expr_t(value_expr_t::COST)); break;
   case 'd': node.reset(new value_expr_t(value_expr_t::DATE)); break;
   case 'X': node.reset(new value_expr_t(value_expr_t::CLEARED)); break;
+  case 'Y': node.reset(new value_expr_t(value_expr_t::PENDING)); break;
   case 'R': node.reset(new value_expr_t(value_expr_t::REAL)); break;
   case 'L': node.reset(new value_expr_t(value_expr_t::ACTUAL)); break;
   case 'n': node.reset(new value_expr_t(value_expr_t::INDEX)); break;
@@ -848,6 +856,7 @@ void dump_value_expr(std::ostream& out, const value_expr_t * node)
   case value_expr_t::COST:	   out << "COST"; break;
   case value_expr_t::DATE:	   out << "DATE"; break;
   case value_expr_t::CLEARED:	   out << "CLEARED"; break;
+  case value_expr_t::PENDING:	   out << "PENDING"; break;
   case value_expr_t::REAL:	   out << "REAL"; break;
   case value_expr_t::ACTUAL:	   out << "ACTUAL"; break;
   case value_expr_t::INDEX:	   out << "INDEX"; break;
