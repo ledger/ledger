@@ -474,7 +474,7 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
       if (details.xact) {
 	switch (details.xact->state) {
 	case transaction_t::CLEARED:
-	out << "* ";
+	  out << "* ";
 	  break;
 	case transaction_t::PENDING:
 	  out << "! ";
@@ -547,8 +547,8 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
     case element_t::ACCOUNT_FULLNAME:
       if (details.account) {
 	name += (elem->type == element_t::ACCOUNT_FULLNAME ?
-			    details.account->fullname() :
-			    partial_account_name(*details.account));
+		 details.account->fullname() :
+		 partial_account_name(*details.account));
 
 	if (details.xact && details.xact->flags & TRANSACTION_VIRTUAL) {
 	  if (elem->max_width > 2)
@@ -685,7 +685,9 @@ void print_entry(std::ostream& out, const entry_t& entry)
 		    formatter);
   formatter.flush();
 
-  clear_all_xdata();
+  clear_transaction_xdata cleaner;
+  walk_transactions(const_cast<transactions_list&>(entry.transactions),
+		    cleaner);
 }
 
 bool disp_subaccounts_p(const account_t&		 account,

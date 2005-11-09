@@ -211,7 +211,7 @@ transaction_t * parse_transaction(char * line, account_t * account)
 	if (amount == note_str)
 	  amount = NULL;
 
-      *note_str++ = '\0';
+	*note_str++ = '\0';
 	note_str = skip_ws(note_str);
 
 	if (char * b = std::strchr(note_str, '['))
@@ -231,22 +231,22 @@ transaction_t * parse_transaction(char * line, account_t * account)
 	      throw parse_error(path, linenum, "Failed to parse date");
 	  }
 
-      xact->note = skip_ws(note_str);
-    }
+	xact->note = skip_ws(note_str);
+      }
 
       if (amount) {
 	price = std::strchr(amount, '@');
 	if (price) {
 	  if (price == amount)
-	  throw parse_error(path, linenum, "Cost specified without amount");
+	    throw parse_error(path, linenum, "Cost specified without amount");
 
 	  *price++ = '\0';
 	  if (*price == '@') {
-	  per_unit = false;
+	    per_unit = false;
 	    price++;
-	}
+	  }
 	  price = skip_ws(price);
-      }
+	}
       }
     }
   }
@@ -321,7 +321,6 @@ bool parse_transactions(std::istream&	   in,
 }
 
 namespace {
-  TIMER_DEF(entry_finish,  "finalizing entry");
   TIMER_DEF(entry_xacts,   "parsing transactions");
   TIMER_DEF(entry_details, "parsing entry details");
   TIMER_DEF(entry_date,    "parsing entry date");
@@ -817,6 +816,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
 void write_textual_journal(journal_t& journal, std::string path,
 			   item_handler<transaction_t>& formatter,
+			   const std::string& write_hdr_format,
 			   std::ostream& out)
 {
   unsigned long index = 0;
@@ -859,7 +859,7 @@ void write_textual_journal(journal_t& journal, std::string path,
   istream_pos_type pos = 0;
   istream_pos_type jump_to;
 
-  format_t	hdr_fmt(config.write_hdr_format);
+  format_t	hdr_fmt(write_hdr_format);
   std::ifstream in(found.c_str());
 
   while (! in.eof()) {

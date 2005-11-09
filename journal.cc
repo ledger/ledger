@@ -728,11 +728,11 @@ EXC_TRANSLATOR(parse_error)
 
 void export_journal()
 {
-  scope().attr("TRANSACTION_NORMAL")	   = TRANSACTION_NORMAL;
-  scope().attr("TRANSACTION_VIRTUAL")	   = TRANSACTION_VIRTUAL;
-  scope().attr("TRANSACTION_BALANCE")	   = TRANSACTION_BALANCE;
-  scope().attr("TRANSACTION_AUTO")	   = TRANSACTION_AUTO;
-  scope().attr("TRANSACTION_BULK_ALLOC")   = TRANSACTION_BULK_ALLOC;
+  scope().attr("TRANSACTION_NORMAL")	 = TRANSACTION_NORMAL;
+  scope().attr("TRANSACTION_VIRTUAL")	 = TRANSACTION_VIRTUAL;
+  scope().attr("TRANSACTION_BALANCE")	 = TRANSACTION_BALANCE;
+  scope().attr("TRANSACTION_AUTO")	 = TRANSACTION_AUTO;
+  scope().attr("TRANSACTION_BULK_ALLOC") = TRANSACTION_BULK_ALLOC;
 
   class_< transaction_t > ("Transaction")
     .def(init<account_t *, amount_t, optional<unsigned int, std::string> >())

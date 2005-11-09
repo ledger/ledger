@@ -36,7 +36,7 @@ entry_t * derive_new_entry(journal_t& journal,
   if (i == end) {
     // If no argument were given but the payee, assume the user wants
     // to see the same transaction as last time.
-    added->code  = matching->code;
+    added->code = matching->code;
 
     for (transactions_list::iterator j = matching->transactions.begin();
 	 j != matching->transactions.end();

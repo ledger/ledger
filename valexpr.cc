@@ -15,6 +15,12 @@ std::auto_ptr<value_expr_t> total_expr;
 
 std::time_t terminus = now;
 
+details_t::details_t(const transaction_t& _xact)
+  : entry(_xact.entry), xact(&_xact), account(xact_account(_xact))
+{
+  DEBUG_PRINT("ledger.memory.ctors", "ctor details_t");
+}
+
 void value_expr_t::compute(value_t& result, const details_t& details) const
 {
   switch (kind) {

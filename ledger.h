@@ -26,7 +26,6 @@
 #include <reconcile.h>
 #include <error.h>
 #include <option.h>
-#include <config.h>
 
 #include <parser.h>
 #include <textual.h>
@@ -35,5 +34,16 @@
 #include <gnucash.h>
 #include <qif.h>
 #include <ofx.h>
+
+namespace ledger {
+  extern parser_t * binary_parser_ptr;
+  extern parser_t * xml_parser_ptr;
+  extern parser_t * gnucash_parser_ptr;
+  extern parser_t * ofx_parser_ptr;
+  extern parser_t * qif_parser_ptr;
+  extern parser_t * textual_parser_ptr;
+}
+
+#include <config.h>
 
 #endif // _LEDGER_H

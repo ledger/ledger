@@ -1,6 +1,6 @@
-lib_LIBRARIES = libledger.a
-libledger_a_CXXFLAGS =
-libledger_a_SOURCES = \
+lib_LTLIBRARIES = libledger.la
+libledger_la_CXXFLAGS =
+libledger_la_SOURCES = \
 	amount.cc      \
 	balance.cc     \
 	binary.cc      \
@@ -16,30 +16,32 @@ libledger_a_SOURCES = \
 	qif.cc	       \
 	quotes.cc      \
 	reconcile.cc   \
+	startup.cc     \
 	textual.cc     \
 	valexpr.cc     \
 	value.cc       \
 	walk.cc
 if HAVE_EXPAT
-libledger_a_CXXFLAGS += -DHAVE_EXPAT=1
-libledger_a_SOURCES += gnucash.cc xml.cc
+libledger_la_CXXFLAGS += -DHAVE_EXPAT=1
+libledger_la_SOURCES += gnucash.cc xml.cc
 endif
 if HAVE_XMLPARSE
-libledger_a_CXXFLAGS += -DHAVE_XMLPARSE=1
-libledger_a_SOURCES += gnucash.cc xml.cc
+libledger_la_CXXFLAGS += -DHAVE_XMLPARSE=1
+libledger_la_SOURCES += gnucash.cc xml.cc
 endif
 if HAVE_LIBOFX
-libledger_a_CXXFLAGS += -DHAVE_LIBOFX=1
-libledger_a_SOURCES += ofx.cc
+libledger_la_CXXFLAGS += -DHAVE_LIBOFX=1
+libledger_la_SOURCES += ofx.cc
 endif
 if HAVE_BOOST_PYTHON
-libledger_a_CXXFLAGS += -DUSE_BOOST_PYTHON=1
-libledger_a_SOURCES  += py_eval.cc
+libledger_la_CXXFLAGS += -DUSE_BOOST_PYTHON=1
+libledger_la_SOURCES  += py_eval.cc
 endif
 if DEBUG
-libledger_a_CXXFLAGS += -DDEBUG_LEVEL=4
-libledger_a_SOURCES  += debug.cc
+libledger_la_CXXFLAGS += -DDEBUG_LEVEL=4
+libledger_la_SOURCES  += debug.cc
 endif
+libledger_la_LDFLAGS = -version-info 3:0
 
 pkginclude_HEADERS = \
 	acconf.h     \
@@ -79,9 +81,9 @@ ledger_CXXFLAGS =
 ledger_SOURCES = main.cc
 if HAVE_BOOST_PYTHON
 ledger_CXXFLAGS += -DUSE_BOOST_PYTHON=1
-ledger_LDADD = $(LIBOBJS) libledger.a -lboost_python -lpython$(PYTHON_VERSION)
+ledger_LDADD = $(LIBOBJS) libledger.la -lboost_python -lpython$(PYTHON_VERSION)
 else
-ledger_LDADD = $(LIBOBJS) libledger.a
+ledger_LDADD = $(LIBOBJS) libledger.la
 endif
 if HAVE_EXPAT
 ledger_CXXFLAGS += -DHAVE_EXPAT=1
@@ -98,6 +100,7 @@ endif
 if DEBUG
 ledger_CXXFLAGS += -DDEBUG_LEVEL=4
 endif
+ledger_LDFLAGS = -static	# for the sake of command-line speed
 
 info_TEXINFOS = ledger.texi
 
@@ -123,15 +126,15 @@ else
 HAVE_LIBOFX_VALUE = false
 endif
 
-ledger.so: py_eval.cc libledger.a
-	CFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS) -L." \
+ledger.so: py_eval.cc libledger.la
+	CFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS) -L. -L.libs" \
 	HAVE_EXPAT="$(HAVE_EXPAT_VALUE)" \
 	HAVE_XMLPARSE="$(HAVE_XMLPARSE_VALUE)" \
 	HAVE_LIBOFX="$(HAVE_LIBOFX_VALUE)" \
 	    python setup.py build --build-lib=.
 
 install-exec-hook:
-	CFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS) -L." \
+	CFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS) -L. -L.libs" \
 	HAVE_EXPAT="$(HAVE_EXPAT_VALUE)" \
 	HAVE_XMLPARSE="$(HAVE_XMLPARSE_VALUE)" \
 	HAVE_LIBOFX="$(HAVE_LIBOFX_VALUE)" \
@@ -143,7 +146,7 @@ all-clean: maintainer-clean
 	rm -fr	*~ .*~ .\#* *.html *.info *.pdf *.a *.so *.o *.lo *.la \
 		*.elc *.aux *.cp *.fn *.ky *.log *.pg *.toc *.tp *.vr *.pyc \
 		.gdb_history gmon.out h out TAGS ledger valexpr .deps \
-		build AUTHORS COPYING INSTALL Makefile aclocal.m4 autom4te \
-		acconf.h acconf.h.in  config.guess config.sub configure \
-		depcomp install-sh missing stamp texinfo.tex Makefile.in \
-		results.out
+		.libs build AUTHORS COPYING INSTALL Makefile acconf.h \
+		acconf.h.in aclocal.m4 autom4te config.guess config.sub \
+		configure depcomp install-sh libtool ltconfig ltmain.sh \
+		missing stamp texinfo.tex Makefile.in
