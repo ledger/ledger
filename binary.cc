@@ -11,7 +11,11 @@
 namespace ledger {
 
 static unsigned long  binary_magic_number = 0xFFEED765;
+#ifdef DEBUG_ENABLED
+static unsigned long  format_version      = 0x00020501;
+#else
 static unsigned long  format_version      = 0x00020500;
+#endif
 
 static account_t **   accounts;
 static account_t **   accounts_next;
