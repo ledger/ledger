@@ -134,12 +134,17 @@ void parse_amount(const char * text, amount_t& amt, unsigned short flags,
 {
   char * altbuf = NULL;
 
-  if (*text)
+  if (*text) {
+    bool in_quote = false;
     for (const char * p = text + 1; *p; p++)
-      if (is_mathchr(*p)) {
+      if (*p == '"') {
+	in_quote = ! in_quote;
+      }
+      else if (! in_quote && is_mathchr(*p)) {
 	text = altbuf = parse_inline_math(text);
 	break;
       }
+  }
 
   if (*text != '(') {
     amt.parse(text, flags);
