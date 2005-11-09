@@ -149,4 +149,5 @@ all-clean: maintainer-clean
 		.libs build AUTHORS COPYING INSTALL Makefile acconf.h \
 		acconf.h.in aclocal.m4 autom4te config.guess config.sub \
 		configure depcomp install-sh libtool ltconfig ltmain.sh \
-		missing stamp texinfo.tex Makefile.in
+		missing stamp texinfo.tex Makefile.in mkinstalldirs \
+		py-compile
