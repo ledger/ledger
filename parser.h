@@ -35,6 +35,24 @@ unsigned int parse_journal_file(const std::string&  path,
 				account_t *	    master        = NULL,
 				const std::string * original_file = NULL);
 
+unsigned int parse_ledger_data(journal_t *	  journal,
+			       const std::string& data_file,
+			       const std::string& init_file	  = "",
+			       const std::string& price_db	  = "",
+			       bool		  use_cache	  = false,
+			       const std::string& cache_file	  = "",
+			       bool *		  cache_dirty	  = NULL,
+			       parser_t *         cache_parser	  = NULL,
+			       parser_t *         xml_parser	  = NULL,
+			       parser_t *         stdin_parser	  = NULL,
+			       const std::string& default_account = "");
+
+class config_t;
+unsigned int parse_ledger_data(journal_t * journal, config_t& config);
+
+void initialize_parser_support();
+void shutdown_parser_support();
+
 } // namespace ledger
 
 #endif // _PARSER_H

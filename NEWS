@@ -2,6 +2,9 @@
 
 * 2.5
 
+- Much internal restruction to allow the use of libledger.so in a
+  non-command-line environment.
+
 - Effective dates may now be specified for entries:
 
     2004/10/03=2004/09/30 Credit card company

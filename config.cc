@@ -20,10 +20,11 @@
 
 namespace ledger {
 
-config_t	    config;
 std::list<option_t> config_options;
 
-config_t::config_t()
+static config_t * config = NULL;
+
+void config_t::reset()
 {
   amount_expr	     = "a";
   total_expr	     = "O";
@@ -73,12 +74,13 @@ config_t::config_t()
   cache_dirty        = false;
 }
 
-static void
-regexps_to_predicate(config_t& config, const std::string& command,
-		     std::list<std::string>::const_iterator begin,
-		     std::list<std::string>::const_iterator end,
-		     const bool account_regexp		= false,
-		     const bool add_account_short_masks = false)
+void
+config_t::regexps_to_predicate(const std::string& command,
+			       std::list<std::string>::const_iterator begin,
+			       std::list<std::string>::const_iterator end,
+			       const bool account_regexp,
+			       const bool add_account_short_masks,
+			       const bool logical_and)
 {
   std::string regexps[2];
 
@@ -110,12 +112,12 @@ regexps_to_predicate(config_t& config, const std::string& command,
     if (regexps[i].empty())
       continue;
 
-    if (! config.predicate.empty())
-      config.predicate += "&";
+    if (! predicate.empty())
+      predicate += logical_and ? "&" : "|";
 
     int add_predicate = 0;	// 1 adds /.../, 2 adds ///.../
     if (i == 1) {
-      config.predicate += "!";
+      predicate += "!";
     }
     else if (add_account_short_masks) {
       if (regexps[i].find(':') != std::string::npos ||
@@ -124,7 +126,7 @@ regexps_to_predicate(config_t& config, const std::string& command,
 	  regexps[i].find('+') != std::string::npos ||
 	  regexps[i].find('[') != std::string::npos ||
 	  regexps[i].find('(') != std::string::npos) {
-	config.show_subtotal = true;
+	show_subtotal = true;
 	add_predicate = 1;
       } else {
 	add_predicate = 2;
@@ -135,24 +137,47 @@ regexps_to_predicate(config_t& config, const std::string& command,
     }
 
     if (i != 1 && command == "b" && account_regexp) {
-      if (! config.display_predicate.empty())
-	config.display_predicate += "&";
-      else if (! config.show_empty)
-	config.display_predicate += "T&";
+      if (! display_predicate.empty())
+	display_predicate += "&";
+      else if (! show_empty)
+	display_predicate += "T&";
 
       if (add_predicate == 2)
-	config.display_predicate += "//";
-      config.display_predicate += "/(?:";
-      config.display_predicate += regexps[i];
-      config.display_predicate += ")/";
+	display_predicate += "//";
+      display_predicate += "/(?:";
+      display_predicate += regexps[i];
+      display_predicate += ")/";
     }
 
     if (! account_regexp)
-      config.predicate += "/";
-    config.predicate += "/(?:";
-    config.predicate += regexps[i];
-    config.predicate += ")/";
+      predicate += "/";
+    predicate += "/(?:";
+    predicate += regexps[i];
+    predicate += ")/";
   }
+}
+
+bool config_t::process_option(const std::string& opt, const char * arg)
+{
+  config = this;
+  bool result = ::process_option(config_options, opt, arg);
+  config = NULL;
+  return result;
+}
+
+void config_t::process_arguments(int argc, char ** argv, const bool anywhere,
+				 std::list<std::string>& args)
+{
+  config = this;
+  ::process_arguments(config_options, argc, argv, anywhere, args);
+  config = NULL;
+}
+
+void config_t::process_environment(char ** envp, const std::string& tag)
+{
+  config = this;
+  ::process_environment(config_options, envp, tag);
+  config = NULL;
 }
 
 void config_t::process_options(const std::string&     command,
@@ -189,11 +214,11 @@ void config_t::process_options(const std::string&     command,
 	break;
 
     if (i != arg)
-      regexps_to_predicate(*this, command, arg, i, true,
+      regexps_to_predicate(command, arg, i, true,
 			   (command == "b" && ! show_subtotal &&
 			    display_predicate.empty()));
     if (i != args_end && ++i != args_end)
-      regexps_to_predicate(*this, command, i, args_end);
+      regexps_to_predicate(command, i, args_end);
   }
 
   // Setup the default value for the display predicate
@@ -258,83 +283,157 @@ void config_t::process_options(const std::string&     command,
     format_t::date_format = date_format;
 }
 
-void parse_ledger_data(journal_t * journal, parser_t * cache_parser,
-		       parser_t * text_parser, parser_t * xml_parser)
+item_handler<transaction_t> *
+config_t::chain_xact_handlers(const std::string& command,
+			      item_handler<transaction_t> * base_formatter,
+			      journal_t * journal,
+			      account_t * master,
+			      std::list<item_handler<transaction_t> *>& ptrs)
 {
-  int entry_count = 0;
+  item_handler<transaction_t> * formatter = NULL;
 
-  DEBUG_PRINT("ledger.config.cache", "3. use_cache = " << config.use_cache);
+  ptrs.push_back(formatter = base_formatter);
 
-  if (! config.init_file.empty() &&
-      access(config.init_file.c_str(), R_OK) != -1) {
-    if (parse_journal_file(config.init_file, journal) ||
-	journal->auto_entries.size() > 0 ||
-	journal->period_entries.size() > 0)
-      throw error(std::string("Entries found in initialization file '") +
-		  config.init_file + "'");
+  // format_transactions write each transaction received to the
+  // output stream.
+  if (! (command == "b" || command == "E")) {
+    // truncate_entries cuts off a certain number of _entries_ from
+    // being displayed.  It does not affect calculation.
+    if (head_entries || tail_entries)
+      ptrs.push_back(formatter =
+		     new truncate_entries(formatter,
+					  head_entries, tail_entries));
 
-    journal->sources.pop_front(); // remove init file
+    // filter_transactions will only pass through transactions
+    // matching the `display_predicate'.
+    if (! display_predicate.empty())
+      ptrs.push_back(formatter =
+		     new filter_transactions(formatter,
+					     display_predicate));
+
+    // calc_transactions computes the running total.  When this
+    // appears will determine, for example, whether filtered
+    // transactions are included or excluded from the running total.
+    ptrs.push_back(formatter = new calc_transactions(formatter));
+
+    // reconcile_transactions will pass through only those
+    // transactions which can be reconciled to a given balance
+    // (calculated against the transactions which it receives).
+    if (! reconcile_balance.empty()) {
+      value_t target_balance(reconcile_balance);
+      time_t  cutoff = now;
+      if (! reconcile_date.empty())
+	parse_date(reconcile_date.c_str(), &cutoff);
+      ptrs.push_back(formatter =
+		     new reconcile_transactions(formatter, target_balance,
+						cutoff));
+    }
+
+    // sort_transactions will sort all the transactions it sees, based
+    // on the `sort_order' value expression.
+    if (! sort_string.empty())
+      ptrs.push_back(formatter =
+		     new sort_transactions(formatter, sort_string));
+
+    // changed_value_transactions adds virtual transactions to the
+    // list to account for changes in market value of commodities,
+    // which otherwise would affect the running total unpredictably.
+    if (show_revalued)
+      ptrs.push_back(formatter =
+		     new changed_value_transactions(formatter,
+						    show_revalued_only));
+
+    // collapse_transactions causes entries with multiple transactions
+    // to appear as entries with a subtotaled transaction for each
+    // commodity used.
+    if (show_collapsed)
+      ptrs.push_back(formatter = new collapse_transactions(formatter));
   }
 
-  if (cache_parser && config.use_cache &&
-      ! config.cache_file.empty() &&
-      ! config.data_file.empty()) {
-    DEBUG_PRINT("ledger.config.cache", "using_cache " << config.cache_file);
-    config.cache_dirty = true;
-    if (access(config.cache_file.c_str(), R_OK) != -1) {
-      std::ifstream stream(config.cache_file.c_str());
-      if (cache_parser->test(stream)) {
-	std::string price_db_orig = journal->price_db;
-	journal->price_db = config.price_db;
-	entry_count += cache_parser->parse(stream, journal, NULL,
-					   &config.data_file);
-	if (entry_count > 0)
-	  config.cache_dirty = false;
-	else
-	  journal->price_db = price_db_orig;
-      }
-    }
+  // subtotal_transactions combines all the transactions it receives
+  // into one subtotal entry, which has one transaction for each
+  // commodity in each account.
+  //
+  // period_transactions is like subtotal_transactions, but it
+  // subtotals according to time periods rather than totalling
+  // everything.
+  //
+  // dow_transactions is like period_transactions, except that it
+  // reports all the transactions that fall on each subsequent day
+  // of the week.
+  if (show_subtotal && ! (command == "b" || command == "E"))
+    ptrs.push_back(formatter = new subtotal_transactions(formatter));
+
+  if (days_of_the_week)
+    ptrs.push_back(formatter = new dow_transactions(formatter));
+  else if (by_payee)
+    ptrs.push_back(formatter = new by_payee_transactions(formatter));
+
+  if (! report_period.empty()) {
+    ptrs.push_back(formatter =
+		   new interval_transactions(formatter,
+					     report_period,
+					     report_period_sort));
+    ptrs.push_back(formatter = new sort_transactions(formatter, "d"));
   }
 
-  if (entry_count == 0 && ! config.data_file.empty()) {
-    account_t * account = NULL;
-    if (! config.account.empty())
-      account = journal->find_account(config.account);
+  // invert_transactions inverts the value of the transactions it
+  // receives.
+  if (show_inverted)
+    ptrs.push_back(formatter = new invert_transactions(formatter));
 
-    journal->price_db = config.price_db;
-    if (! journal->price_db.empty() &&
-	access(journal->price_db.c_str(), R_OK) != -1) {
-      if (parse_journal_file(journal->price_db, journal)) {
-	throw error("Entries not allowed in price history file");
-      } else {
-	DEBUG_PRINT("ledger.config.cache",
-		    "read price database " << journal->price_db);
-	journal->sources.pop_back();
-      }
-    }
+  // related_transactions will pass along all transactions related
+  // to the transaction received.  If `show_all_related' is true,
+  // then all the entry's transactions are passed; meaning that if
+  // one transaction of an entry is to be printed, all the
+  // transaction for that entry will be printed.
+  if (show_related)
+    ptrs.push_back(formatter =
+		   new related_transactions(formatter,
+					    show_all_related));
 
-    DEBUG_PRINT("ledger.config.cache",
-		"rejected cache, parsing " << config.data_file);
-    if (config.data_file == "-") {
-      config.use_cache = false;
-      journal->sources.push_back("<stdin>");
-      if (xml_parser && std::cin.peek() == '<')
-	entry_count += xml_parser->parse(std::cin, journal, account);
-      else
-	entry_count += text_parser->parse(std::cin, journal, account);
-    }
-    else if (access(config.data_file.c_str(), R_OK) != -1) {
-      entry_count += parse_journal_file(config.data_file, journal, account);
-      if (! journal->price_db.empty())
-	journal->sources.push_back(journal->price_db);
-    }
+  // This filter_transactions will only pass through transactions
+  // matching the `predicate'.
+  if (! predicate.empty())
+    ptrs.push_back(formatter = new filter_transactions(formatter, predicate));
+
+  // budget_transactions takes a set of transactions from a data
+  // file and uses them to generate "budget transactions" which
+  // balance against the reported transactions.
+  //
+  // forecast_transactions is a lot like budget_transactions, except
+  // that it adds entries only for the future, and does not balance
+  // them against anything but the future balance.
+
+  if (budget_flags) {
+    budget_transactions * handler
+      = new budget_transactions(formatter, budget_flags);
+    handler->add_period_entries(journal->period_entries);
+    ptrs.push_back(formatter = handler);
+
+    // Apply this before the budget handler, so that only matching
+    // transactions are calculated toward the budget.  The use of
+    // filter_transactions above will further clean the results so
+    // that no automated transactions that don't match the filter get
+    // reported.
+    if (! predicate.empty())
+      ptrs.push_back(formatter = new filter_transactions(formatter, predicate));
+  }
+  else if (! forecast_limit.empty()) {
+    forecast_transactions * handler
+      = new forecast_transactions(formatter, forecast_limit);
+    handler->add_period_entries(journal->period_entries);
+    ptrs.push_back(formatter = handler);
+
+    // See above, under budget_transactions.
+    if (! predicate.empty())
+      ptrs.push_back(formatter = new filter_transactions(formatter, predicate));
   }
 
-  if (entry_count == 0)
-    throw error("Please specify ledger file using -f"
-		" or LEDGER_FILE environment variable.");
+  if (comm_as_payee)
+    ptrs.push_back(formatter = new set_comm_as_payee(formatter));
 
-  VALIDATE(journal->valid());
+  return formatter;
 }
 
 static void show_version(std::ostream& out)
@@ -586,37 +685,41 @@ OPT_BEGIN(version, "v") {
 } OPT_END(version);
 
 OPT_BEGIN(init_file, "i:") {
-  config.init_file = optarg;
+  config->init_file = optarg;
 } OPT_END(init_file);
 
 OPT_BEGIN(file, "f:") {
   if (std::string(optarg) == "-" || access(optarg, R_OK) != -1)
-    config.data_file = optarg;
+    config->data_file = optarg;
   else
     throw error(std::string("The ledger file '") + optarg +
 		"' does not exist or is not readable");
 } OPT_END(file);
 
 OPT_BEGIN(cache, ":") {
-  config.cache_file = optarg;
+  config->cache_file = optarg;
 } OPT_END(cache);
 
 OPT_BEGIN(no_cache, "") {
-  config.cache_file = "<none>";
+  config->cache_file = "<none>";
 } OPT_END(no_cache);
 
 OPT_BEGIN(output, "o:") {
   if (std::string(optarg) != "-")
-    config.output_file = optarg;
+    config->output_file = optarg;
 } OPT_END(output);
 
 OPT_BEGIN(account, "a:") {
-  config.account = optarg;
+  config->account = optarg;
 } OPT_END(account);
 
 //////////////////////////////////////////////////////////////////////
 //
 // Report filtering
+
+OPT_BEGIN(effective, "") {
+  transaction_t::use_effective_date = true;
+} OPT_END(effective);
 
 OPT_BEGIN(begin, "b:") {
   char buf[128];
@@ -627,11 +730,11 @@ OPT_BEGIN(begin, "b:") {
     throw error(std::string("Could not determine beginning of period '") +
 		optarg + "'");
 
-  if (! config.predicate.empty())
-    config.predicate += "&";
-  config.predicate += "d>=[";
-  config.predicate += buf;
-  config.predicate += "]";
+  if (! config->predicate.empty())
+    config->predicate += "&";
+  config->predicate += "d>=[";
+  config->predicate += buf;
+  config->predicate += "]";
 } OPT_END(begin);
 
 OPT_BEGIN(end, "e:") {
@@ -643,43 +746,43 @@ OPT_BEGIN(end, "e:") {
     throw error(std::string("Could not determine end of period '") +
 		optarg + "'");
 
-  if (! config.predicate.empty())
-    config.predicate += "&";
-  config.predicate += "d<[";
-  config.predicate += buf;
-  config.predicate += "]";
+  if (! config->predicate.empty())
+    config->predicate += "&";
+  config->predicate += "d<[";
+  config->predicate += buf;
+  config->predicate += "]";
 
   terminus = interval.end;
 } OPT_END(end);
 
 OPT_BEGIN(current, "c") {
-  if (! config.predicate.empty())
-    config.predicate += "&";
-  config.predicate += "d<=m";
+  if (! config->predicate.empty())
+    config->predicate += "&";
+  config->predicate += "d<=m";
 } OPT_END(current);
 
 OPT_BEGIN(cleared, "C") {
-  if (! config.predicate.empty())
-    config.predicate += "&";
-  config.predicate += "X";
+  if (! config->predicate.empty())
+    config->predicate += "&";
+  config->predicate += "X";
 } OPT_END(cleared);
 
 OPT_BEGIN(uncleared, "U") {
-  if (! config.predicate.empty())
-    config.predicate += "&";
-  config.predicate += "!X";
+  if (! config->predicate.empty())
+    config->predicate += "&";
+  config->predicate += "!X";
 } OPT_END(uncleared);
 
 OPT_BEGIN(real, "R") {
-  if (! config.predicate.empty())
-    config.predicate += "&";
-  config.predicate += "R";
+  if (! config->predicate.empty())
+    config->predicate += "&";
+  config->predicate += "R";
 } OPT_END(real);
 
 OPT_BEGIN(actual, "L") {
-  if (! config.predicate.empty())
-    config.predicate += "&";
-  config.predicate += "L";
+  if (! config->predicate.empty())
+    config->predicate += "&";
+  config->predicate += "L";
 } OPT_END(actual);
 
 //////////////////////////////////////////////////////////////////////
@@ -687,11 +790,11 @@ OPT_BEGIN(actual, "L") {
 // Output customization
 
 OPT_BEGIN(format, "F:") {
-  config.format_string = optarg;
+  config->format_string = optarg;
 } OPT_END(format);
 
 OPT_BEGIN(date_format, "y:") {
-  config.date_format = optarg;
+  config->date_format = optarg;
 } OPT_END(date_format);
 
 OPT_BEGIN(input_date_format, ":") {
@@ -700,95 +803,91 @@ OPT_BEGIN(input_date_format, ":") {
 } OPT_END(input_date_format);
 
 OPT_BEGIN(balance_format, ":") {
-  config.balance_format = optarg;
+  config->balance_format = optarg;
 } OPT_END(balance_format);
 
 OPT_BEGIN(register_format, ":") {
-  config.register_format = optarg;
+  config->register_format = optarg;
 } OPT_END(register_format);
 
 OPT_BEGIN(wide_register_format, ":") {
-  config.wide_register_format = optarg;
+  config->wide_register_format = optarg;
 } OPT_END(wide_register_format);
 
 OPT_BEGIN(plot_amount_format, ":") {
-  config.plot_amount_format = optarg;
+  config->plot_amount_format = optarg;
 } OPT_END(plot_amount_format);
 
 OPT_BEGIN(plot_total_format, ":") {
-  config.plot_total_format = optarg;
-
-OPT_BEGIN(effective, "") {
-  transaction_t::use_effective_date = true;
-} OPT_END(effective);
+  config->plot_total_format = optarg;
 } OPT_END(plot_total_format);
 
 OPT_BEGIN(print_format, ":") {
-  config.print_format = optarg;
+  config->print_format = optarg;
 } OPT_END(print_format);
 
 OPT_BEGIN(write_hdr_format, ":") {
-  config.write_hdr_format = optarg;
+  config->write_hdr_format = optarg;
 } OPT_END(write_hdr_format);
 
 OPT_BEGIN(write_xact_format, ":") {
-  config.write_xact_format = optarg;
+  config->write_xact_format = optarg;
 } OPT_END(write_xact_format);
 
 OPT_BEGIN(equity_format, ":") {
-  config.equity_format = optarg;
+  config->equity_format = optarg;
 } OPT_END(equity_format);
 
 OPT_BEGIN(prices_format, ":") {
-  config.prices_format = optarg;
+  config->prices_format = optarg;
 } OPT_END(prices_format);
 
 OPT_BEGIN(wide, "w") {
-  config.register_format = config.wide_register_format;
+  config->register_format = config->wide_register_format;
 } OPT_END(wide);
 
 OPT_BEGIN(head, ":") {
-  config.head_entries = std::atoi(optarg);
+  config->head_entries = std::atoi(optarg);
 } OPT_END(head);
 
 OPT_BEGIN(tail, ":") {
-  config.tail_entries = std::atoi(optarg);
+  config->tail_entries = std::atoi(optarg);
 } OPT_END(tail);
 
 OPT_BEGIN(pager, ":") {
-  config.pager = optarg;
+  config->pager = optarg;
 } OPT_END(pager);
 
 OPT_BEGIN(empty, "E") {
-  config.show_empty = true;
+  config->show_empty = true;
 } OPT_END(empty);
 
 OPT_BEGIN(collapse, "n") {
-  config.show_collapsed = true;
+  config->show_collapsed = true;
 } OPT_END(collapse);
 
 OPT_BEGIN(subtotal, "s") {
-  config.show_subtotal = true;
+  config->show_subtotal = true;
 } OPT_END(subtotal);
 
 OPT_BEGIN(totals, "") {
-  config.show_totals = true;
+  config->show_totals = true;
 } OPT_END(totals);
 
 OPT_BEGIN(sort, "S:") {
-  config.sort_string = optarg;
+  config->sort_string = optarg;
 } OPT_END(sort);
 
 OPT_BEGIN(related, "r") {
-  config.show_related = true;
+  config->show_related = true;
 } OPT_END(related);
 
 OPT_BEGIN(period, "p:") {
-  if (config.report_period.empty()) {
-    config.report_period = optarg;
+  if (config->report_period.empty()) {
+    config->report_period = optarg;
   } else {
-    config.report_period += " ";
-    config.report_period += optarg;
+    config->report_period += " ";
+    config->report_period += optarg;
   }
 
   // If the period gives a beginning and/or ending date, make sure to
@@ -796,180 +895,180 @@ OPT_BEGIN(period, "p:") {
   // options) to take this into account.
 
   char buf[128];
-  interval_t interval(config.report_period);
+  interval_t interval(config->report_period);
+
   if (interval.begin) {
     std::strftime(buf, 127, formats[0], std::localtime(&interval.begin));
 
-    if (! config.predicate.empty())
-      config.predicate += "&";
-    config.predicate += "d>=[";
-    config.predicate += buf;
-    config.predicate += "]";
+    if (! config->predicate.empty())
+      config->predicate += "&";
+    config->predicate += "d>=[";
+    config->predicate += buf;
+    config->predicate += "]";
   }
+
   if (interval.end) {
     std::strftime(buf, 127, formats[0], std::localtime(&interval.end));
 
-    if (! config.predicate.empty())
-      config.predicate += "&";
-    config.predicate += "d<[";
-    config.predicate += buf;
-    config.predicate += "]";
+    if (! config->predicate.empty())
+      config->predicate += "&";
+    config->predicate += "d<[";
+    config->predicate += buf;
+    config->predicate += "]";
 
     terminus = interval.end;
   }
 } OPT_END(period);
 
 OPT_BEGIN(period_sort, ":") {
-  config.report_period_sort = optarg;
+  config->report_period_sort = optarg;
 } OPT_END(period_sort);
 
 OPT_BEGIN(weekly, "W") {
-  if (config.report_period.empty())
-    config.report_period = "weekly";
+  if (config->report_period.empty())
+    config->report_period = "weekly";
   else
-    config.report_period = std::string("weekly ") + config.report_period;
+    config->report_period = std::string("weekly ") + config->report_period;
 } OPT_END(weekly);
 
 OPT_BEGIN(monthly, "M") {
-  if (config.report_period.empty())
-    config.report_period = "monthly";
+  if (config->report_period.empty())
+    config->report_period = "monthly";
   else
-    config.report_period = std::string("monthly ") + config.report_period;
+    config->report_period = std::string("monthly ") + config->report_period;
 } OPT_END(monthly);
 
 OPT_BEGIN(yearly, "Y") {
-  if (config.report_period.empty())
-    config.report_period = "yearly";
+  if (config->report_period.empty())
+    config->report_period = "yearly";
   else
-    config.report_period = std::string("yearly ") + config.report_period;
+    config->report_period = std::string("yearly ") + config->report_period;
 } OPT_END(yearly);
 
 OPT_BEGIN(dow, "") {
-  config.days_of_the_week = true;
+  config->days_of_the_week = true;
 } OPT_END(dow);
 
 OPT_BEGIN(by_payee, "P") {
-  config.by_payee = true;
+  config->by_payee = true;
 } OPT_END(by_payee);
 
 OPT_BEGIN(comm_as_payee, "x") {
-  config.comm_as_payee = true;
+  config->comm_as_payee = true;
 } OPT_END(comm_as_payee);
 
 OPT_BEGIN(budget, "") {
-  config.budget_flags = BUDGET_BUDGETED;
+  config->budget_flags = BUDGET_BUDGETED;
 } OPT_END(budget);
 
 OPT_BEGIN(add_budget, "") {
-  config.budget_flags = BUDGET_BUDGETED | BUDGET_UNBUDGETED;
+  config->budget_flags = BUDGET_BUDGETED | BUDGET_UNBUDGETED;
 } OPT_END(add_budget);
 
 OPT_BEGIN(unbudgeted, "") {
-  config.budget_flags = BUDGET_UNBUDGETED;
+  config->budget_flags = BUDGET_UNBUDGETED;
 } OPT_END(unbudgeted);
 
 OPT_BEGIN(forecast, ":") {
-  config.forecast_limit = optarg;
+  config->forecast_limit = optarg;
 } OPT_END(forecast);
 
 OPT_BEGIN(reconcile, ":") {
-  config.reconcile_balance = optarg;
+  config->reconcile_balance = optarg;
 } OPT_END(reconcile);
 
 OPT_BEGIN(reconcile_date, ":") {
-  config.reconcile_date = optarg;
+  config->reconcile_date = optarg;
 } OPT_END(reconcile_date);
 
 OPT_BEGIN(limit, "l:") {
-  if (! config.predicate.empty())
-    config.predicate += "&";
-  config.predicate += "(";
-  config.predicate += optarg;
-  config.predicate += ")";
+  if (! config->predicate.empty())
+    config->predicate += "&";
+  config->predicate += "(";
+  config->predicate += optarg;
+  config->predicate += ")";
 } OPT_END(limit);
 
 OPT_BEGIN(display, "d:") {
-  if (! config.display_predicate.empty())
-    config.display_predicate += "&";
-  config.display_predicate += "(";
-  config.display_predicate += optarg;
-  config.display_predicate += ")";
+  if (! config->display_predicate.empty())
+    config->display_predicate += "&";
+  config->display_predicate += "(";
+  config->display_predicate += optarg;
+  config->display_predicate += ")";
 } OPT_END(display);
 
 OPT_BEGIN(amount, "t:") {
-  config.amount_expr = optarg;
+  config->amount_expr = optarg;
 } OPT_END(amount);
 
 OPT_BEGIN(total, "T:") {
-  config.total_expr = optarg;
+  config->total_expr = optarg;
 } OPT_END(total);
 
 OPT_BEGIN(amount_data, "j") {
-  config.format_string = config.plot_amount_format;
+  config->format_string = config->plot_amount_format;
 } OPT_END(amount_data);
 
-
 OPT_BEGIN(total_data, "J") {
-  config.format_string = config.plot_total_format;
+  config->format_string = config->plot_total_format;
 } OPT_END(total_data);
-
 
 //////////////////////////////////////////////////////////////////////
 //
 // Commodity reporting
 
 OPT_BEGIN(price_db, ":") {
-  config.price_db = optarg;
+  config->price_db = optarg;
 } OPT_END(price_db);
 
 OPT_BEGIN(price_exp, "Z:") {
-  config.pricing_leeway = std::atol(optarg) * 60;
+  config->pricing_leeway = std::atol(optarg) * 60;
 } OPT_END(price_exp);
 
 OPT_BEGIN(download, "Q") {
-  config.download_quotes = true;
+  config->download_quotes = true;
 } OPT_END(download);
 
 OPT_BEGIN(quantity, "O") {
-  config.amount_expr = "a";
-  config.total_expr  = "O";
+  config->amount_expr = "a";
+  config->total_expr  = "O";
 } OPT_END(quantity);
 
 OPT_BEGIN(basis, "B") {
-  config.amount_expr = "b";
-  config.total_expr  = "B";
+  config->amount_expr = "b";
+  config->total_expr  = "B";
 } OPT_END(basis);
 
 OPT_BEGIN(market, "V") {
-  config.show_revalued = true;
+  config->show_revalued = true;
 
-  config.amount_expr = "v";
-  config.total_expr  = "V";
+  config->amount_expr = "v";
+  config->total_expr  = "V";
 } OPT_END(market);
 
 OPT_BEGIN(performance, "g") {
-  config.amount_expr = "P(a,m)-b"; // same as 'g', but priced now
-  config.total_expr  = "P(O,m)-B";
+  config->amount_expr = "P(a,m)-b"; // same as 'g', but priced now
+  config->total_expr  = "P(O,m)-B";
 } OPT_END(performance);
 
 OPT_BEGIN(gain, "G") {
-  config.show_revalued      =
-  config.show_revalued_only = true;
+  config->show_revalued      =
+  config->show_revalued_only = true;
 
-  config.amount_expr = "a";
-  config.total_expr  = "G";
+  config->amount_expr = "a";
+  config->total_expr  = "G";
 } OPT_END(gain);
 
 OPT_BEGIN(average, "A") {
-  config.total_expr_template = "A#";
+  config->total_expr_template = "A#";
 } OPT_END(average);
 
 OPT_BEGIN(deviation, "D") {
-  config.total_expr_template = "t-A#";
+  config->total_expr_template = "t-A#";
 } OPT_END(deviation);
 
 OPT_BEGIN(percentage, "%") {
-  config.total_expr_template = "^#&{100.0%}*(#/^#)";
+  config->total_expr_template = "^#&{100.0%}*(#/^#)";
 } OPT_END(percentage);
 
 #ifdef USE_BOOST_PYTHON
@@ -1016,9 +1115,6 @@ void py_add_config_option_handlers()
 {
   add_other_option_handlers(config_options);
 }
-
-BOOST_PYTHON_FUNCTION_OVERLOADS(parse_ledger_data_overloads,
-				parse_ledger_data, 1, 2)
 
 void py_option_help()
 {
@@ -1082,10 +1178,9 @@ void export_config()
     .def("process_options", py_process_options)
     ;
 
-  scope().attr("config") = ptr(&config);
+  scope().attr("config") = ptr(config);
 
   def("option_help", py_option_help);
-  def("parse_ledger_data", parse_ledger_data, parse_ledger_data_overloads());
   def("add_config_option_handlers", py_add_config_option_handlers);
 }
 

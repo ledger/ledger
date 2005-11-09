@@ -91,17 +91,16 @@ struct transaction_xdata_t
   unsigned int   index;
   unsigned short dflags;
   std::time_t    date;
+  account_t *    account;
   void *         ptr;
 
-  transaction_xdata_t() : index(0), dflags(0), date(0), ptr(0) {}
+  transaction_xdata_t()
+    : index(0), dflags(0), date(0), account(0), ptr(0) {}
 };
 
 inline bool transaction_has_xdata(const transaction_t& xact) {
   return xact.data != NULL;
 }
-
-extern std::list<transaction_xdata_t> transactions_xdata;
-extern std::list<void **>	      transactions_xdata_ptrs;
 
 inline transaction_xdata_t& transaction_xdata_(const transaction_t& xact) {
   return *((transaction_xdata_t *) xact.data);
@@ -109,6 +108,17 @@ inline transaction_xdata_t& transaction_xdata_(const transaction_t& xact) {
 
 transaction_xdata_t& transaction_xdata(const transaction_t& xact);
 void add_transaction_to(const transaction_t& xact, value_t& value);
+
+inline account_t * xact_account(transaction_t& xact) {
+  account_t * account = transaction_xdata(xact).account;
+  if (account)
+    return account;
+  return xact.account;
+}
+
+inline const account_t * xact_account(const transaction_t& xact) {
+  return xact_account(const_cast<transaction_t&>(xact));
+}
 
 //////////////////////////////////////////////////////////////////////
 
@@ -136,14 +146,23 @@ inline void walk_entries(entries_list& list,
   walk_entries(list.begin(), list.end(), handler);
 }
 
-void clear_transactions_xdata();
-
 //////////////////////////////////////////////////////////////////////
 
 class ignore_transactions : public item_handler<transaction_t>
 {
  public:
   virtual void operator()(transaction_t& xact) {}
+};
+
+class clear_transaction_xdata : public item_handler<transaction_t>
+{
+ public:
+  virtual void operator()(transaction_t& xact) {
+    if (xact.data) {
+      delete (transaction_xdata_t *) xact.data;
+      xact.data = NULL;
+    }
+  }
 };
 
 class truncate_entries : public item_handler<transaction_t>
@@ -594,9 +613,6 @@ inline bool account_has_xdata(const account_t& account) {
   return account.data != NULL;
 }
 
-extern std::list<account_xdata_t> accounts_xdata;
-extern std::list<void **>	  accounts_xdata_ptrs;
-
 inline account_xdata_t& account_xdata_(const account_t& account) {
   return *((account_xdata_t *) account.data);
 }
@@ -604,6 +620,17 @@ inline account_xdata_t& account_xdata_(const account_t& account) {
 account_xdata_t& account_xdata(const account_t& account);
 
 //////////////////////////////////////////////////////////////////////
+
+class clear_account_xdata : public item_handler<account_t>
+{
+ public:
+  virtual void operator()(account_t& acct) {
+    if (acct.data) {
+      delete (account_xdata_t *) acct.data;
+      acct.data = NULL;
+    }
+  }
+};
 
 void sum_accounts(account_t& account);
 
@@ -619,17 +646,18 @@ void walk_accounts(account_t&		    account,
 		   item_handler<account_t>& handler,
 		   const std::string&       sort_string);
 
-void clear_accounts_xdata();
-
-inline void clear_all_xdata() {
-  clear_transactions_xdata();
-  clear_accounts_xdata();
-}
-
 //////////////////////////////////////////////////////////////////////
 
 void walk_commodities(commodities_map& commodities,
 		      item_handler<transaction_t>& handler);
+
+inline void clear_journal_xdata(journal_t * journal) {
+  clear_transaction_xdata xact_cleaner;
+  walk_entries(journal->entries, xact_cleaner);
+
+  clear_account_xdata acct_cleaner;
+  walk_accounts(*journal->master, acct_cleaner);
+}
 
 } // namespace ledger
 

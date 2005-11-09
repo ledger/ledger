@@ -487,7 +487,7 @@ dropped."
     (dolist (item items)
       (let ((index 1))
 	(dolist (xact (nthcdr 5 item))
-	(let ((beg (point))
+	  (let ((beg (point))
 		(where
 		 (with-current-buffer buf
 		   (cons
@@ -502,14 +502,14 @@ dropped."
 			     account (cdr (ledger-current-entry-bounds)))
 			    (setq i (1+ i))))
 			(point-marker)))))))
-	  (insert (format "%s %-30s %-25s %15s\n"
+	    (insert (format "%s %-30s %-25s %15s\n"
 			    (format-time-string "%m/%d" (nth 2 item))
 			    (nth 4 item) (nth 0 xact) (nth 1 xact)))
 	    (if (nth 2 xact)
+		(set-text-properties beg (1- (point))
+				     (list 'face 'bold
+					   'where where))
 	      (set-text-properties beg (1- (point))
-				   (list 'face 'bold
-					 'where where))
-	    (set-text-properties beg (1- (point))
 				   (list 'where where))))
 	  (setq index (1+ index)))))
     (goto-char (point-min))

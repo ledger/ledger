@@ -7,12 +7,6 @@
 
 namespace ledger {
 
-std::list<transaction_xdata_t> transactions_xdata;
-std::list<void **>	       transactions_xdata_ptrs;
-
-std::list<account_xdata_t>     accounts_xdata;
-std::list<void **>	       accounts_xdata_ptrs;
-
 template <>
 bool compare_items<transaction_t>::operator()(const transaction_t * left,
 					      const transaction_t * right)
@@ -37,11 +31,8 @@ bool compare_items<transaction_t>::operator()(const transaction_t * left,
 
 transaction_xdata_t& transaction_xdata(const transaction_t& xact)
 {
-  if (! xact.data) {
-    transactions_xdata.push_back(transaction_xdata_t());
-    xact.data = &transactions_xdata.back();
-    transactions_xdata_ptrs.push_back(&xact.data);
-  }
+  if (! xact.data)
+    xact.data = new transaction_xdata_t();
   return *((transaction_xdata_t *) xact.data);
 }
 
@@ -109,7 +100,10 @@ void truncate_entries::flush()
 
 void set_account_value::operator()(transaction_t& xact)
 {
-  account_xdata_t& xdata = account_xdata(*xact.account);
+  account_t * acct = xact_account(xact);
+  assert(acct);
+
+  account_xdata_t& xdata = account_xdata(*acct);
   add_transaction_to(xact, xdata.value);
 
   xdata.count++;
@@ -370,7 +364,7 @@ void subtotal_transactions::operator()(transaction_t& xact)
   if (! finish || std::difftime(xact.date(), finish) > 0)
     finish = xact.date();
 
-  account_t * acct = xact.account;
+  account_t * acct = xact_account(xact);
   assert(acct);
 
   values_map::iterator i = values.find(acct->fullname());
@@ -387,9 +381,9 @@ void subtotal_transactions::operator()(transaction_t& xact)
   // that contain only virtual transactions.
 
   if (! (xact.flags & TRANSACTION_VIRTUAL))
-    account_xdata(*xact.account).dflags |= ACCOUNT_HAS_NON_VIRTUALS;
+    account_xdata(*xact_account(xact)).dflags |= ACCOUNT_HAS_NON_VIRTUALS;
   else if (! (xact.flags & TRANSACTION_BALANCE))
-    account_xdata(*xact.account).dflags |= ACCOUNT_HAS_UNB_VIRTUALS;
+    account_xdata(*xact_account(xact)).dflags |= ACCOUNT_HAS_UNB_VIRTUALS;
 }
 
 void interval_transactions::report_subtotal(const std::time_t moment)
@@ -559,10 +553,10 @@ void budget_transactions::report_budget_items(const std::time_t moment)
 
       if (std::difftime(begin, moment) < 0 &&
 	  (! (*i).first.end || std::difftime(begin, (*i).first.end) < 0)) {
-	transaction_t& xact  = *(*i).second;
+	transaction_t& xact = *(*i).second;
 
 	DEBUG_PRINT("ledger.walk.budget", "Reporting budget for "
-		    << xact.account->fullname());
+		    << xact_account(xact)->fullname());
 	DEBUG_PRINT_TIME("ledger.walk.budget", begin);
 	DEBUG_PRINT_TIME("ledger.walk.budget", moment);
 
@@ -573,10 +567,9 @@ void budget_transactions::report_budget_items(const std::time_t moment)
 
 	xact_temps.push_back(xact);
 	transaction_t& temp = xact_temps.back();
-	temp.entry = &entry;
-	temp.flags |= TRANSACTION_AUTO;
+	temp.entry   = &entry;
+	temp.flags  |= TRANSACTION_AUTO | TRANSACTION_BULK_ALLOC;
 	temp.amount.negate();
-	temp.flags |= TRANSACTION_BULK_ALLOC;
 	entry.add_transaction(&temp);
 
 	begin = (*i).first.increment(begin);
@@ -596,15 +589,15 @@ void budget_transactions::operator()(transaction_t& xact)
   for (pending_xacts_list::iterator i = pending_xacts.begin();
        i != pending_xacts.end();
        i++)
-    for (account_t * acct = xact.account; acct; acct = acct->parent) {
-      if (acct == (*i).second->account) {
+    for (account_t * acct = xact_account(xact);
+	 acct;
+	 acct = acct->parent) {
+      if (acct == xact_account(*(*i).second)) {
 	xact_in_budget = true;
-
 	// Report the transaction as if it had occurred in the parent
-	// account.  jww (2005-07-13): Note that this assignment will
-	// irrevocably change the underlying transaction.
-	if (xact.account != acct)
-	  xact.account = acct;
+	// account.
+	if (xact_account(xact) != acct)
+	  transaction_xdata(xact).account = acct;
 	goto handle;
       }
     }
@@ -705,17 +698,6 @@ void forecast_transactions::flush()
   item_handler<transaction_t>::flush();
 }
 
-void clear_transactions_xdata()
-{
-  transactions_xdata.clear();
-
-  for (std::list<void **>::iterator i = transactions_xdata_ptrs.begin();
-       i != transactions_xdata_ptrs.end();
-       i++)
-    **i = NULL;
-  transactions_xdata_ptrs.clear();
-}
-
 template <>
 bool compare_items<account_t>::operator()(const account_t * left,
 					  const account_t * right)
@@ -740,11 +722,9 @@ bool compare_items<account_t>::operator()(const account_t * left,
 
 account_xdata_t& account_xdata(const account_t& account)
 {
-  if (! account.data) {
-    accounts_xdata.push_back(account_xdata_t());
-    account.data = &accounts_xdata.back();
-    accounts_xdata_ptrs.push_back(&account.data);
-  }
+  if (! account.data)
+    account.data = new account_xdata_t();
+
   return *((account_xdata_t *) account.data);
 }
 
@@ -823,18 +803,6 @@ void walk_accounts(account_t&		    account,
     walk_accounts(account, handler);
   }
 }
-
-void clear_accounts_xdata()
-{
-  accounts_xdata.clear();
-
-  for (std::list<void **>::iterator i = accounts_xdata_ptrs.begin();
-       i != accounts_xdata_ptrs.end();
-       i++)
-    **i = NULL;
-  accounts_xdata_ptrs.clear();
-}
-
 
 void walk_commodities(commodities_map& commodities,
 		      item_handler<transaction_t>& handler)
@@ -972,7 +940,6 @@ void export_walk()
 
   def("transaction_has_xdata", transaction_has_xdata);
   def("transaction_xdata", transaction_xdata, return_internal_reference<1>());
-  def("clear_transactions_xdata", clear_transactions_xdata);
   def("add_transaction_to", add_transaction_to);
 
   class_< xact_handler_t, item_handler_wrap<transaction_t> >
@@ -989,6 +956,12 @@ void export_walk()
     ("IgnoreTransactions")
     .def("flush", &xact_handler_t::flush)
     .def("__call__", &ignore_transactions::operator());
+    ;
+
+  class_< clear_transaction_xdata, bases<xact_handler_t> >
+    ("ClearTransactionXData")
+    .def("flush", &xact_handler_t::flush)
+    .def("__call__", &clear_transaction_xdata::operator());
     ;
 
   class_< truncate_entries, bases<xact_handler_t> >
@@ -1149,8 +1122,6 @@ void export_walk()
 
   def("account_has_xdata", account_has_xdata);
   def("account_xdata", account_xdata, return_internal_reference<1>());
-  def("clear_accounts_xdata", clear_accounts_xdata);
-  def("clear_all_xdata", clear_all_xdata);
 
   class_< account_handler_t, item_handler_wrap<account_t> >
     ("AccountHandler")
@@ -1160,6 +1131,12 @@ void export_walk()
 	 &item_handler_wrap<account_t>::default_flush)
     .def("__call__", &account_handler_t::operator(),
 	 &item_handler_wrap<account_t>::default_call)
+    ;
+
+  class_< clear_account_xdata, bases<account_handler_t> >
+    ("ClearAccountXData")
+    .def("flush", &account_handler_t::flush)
+    .def("__call__", &clear_account_xdata::operator());
     ;
 
   def("sum_accounts", sum_accounts);

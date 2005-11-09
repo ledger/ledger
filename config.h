@@ -1,12 +1,7 @@
 #ifndef _CONFIG_H
 #define _CONFIG_H
 
-#include "journal.h"
-#include "option.h"
-#include "valexpr.h"
-#include "datetime.h"
-#include "format.h"
-#include "parser.h"
+#include "ledger.h"
 
 #include <iostream>
 #include <memory>
@@ -14,8 +9,9 @@
 
 namespace ledger {
 
-struct config_t
+class config_t
 {
+ public:
   // These options can all be set used text fields.
 
   strings_list  price_settings;
@@ -70,26 +66,42 @@ struct config_t
   bool          use_cache;
   bool          cache_dirty;
 
-  config_t();
+  config_t() {
+    reset();
+  }
   config_t(const config_t&) {
     assert(0);
   }
 
+  void reset();
+
+  void regexps_to_predicate(const std::string& command,
+			    std::list<std::string>::const_iterator begin,
+			    std::list<std::string>::const_iterator end,
+			    const bool account_regexp	       = false,
+			    const bool add_account_short_masks = false,
+			    const bool logical_and             = true);
+
+  bool process_option(const std::string& opt, const char * arg = NULL);
+  void process_arguments(int argc, char ** argv, const bool anywhere,
+			 std::list<std::string>& args);
+  void process_environment(char ** envp, const std::string& tag);
+
   void process_options(const std::string&     command,
 		       strings_list::iterator arg,
 		       strings_list::iterator args_end);
+
+  item_handler<transaction_t> *
+  chain_xact_handlers(const std::string& command,
+		      item_handler<transaction_t> * base_formatter,
+		      journal_t * journal,
+		      account_t * master,
+		      std::list<item_handler<transaction_t> *>& ptrs);
 };
 
-extern config_t		   config;
 extern std::list<option_t> config_options;
 
 void option_help(std::ostream& out);
-
-// Parse what ledger data can be determined from the config settings
-void parse_ledger_data(journal_t * journal,
-		       parser_t *  cache_parser = NULL,
-		       parser_t *  text_parser	= NULL,
-		       parser_t *  xml_parser	= NULL);
 
 struct declared_option_handler : public option_handler {
   declared_option_handler(const std::string& label,

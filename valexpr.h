@@ -20,10 +20,7 @@ struct details_t
     : entry(&_entry), xact(NULL), account(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor details_t");
   }
-  details_t(const transaction_t& _xact)
-    : entry(_xact.entry), xact(&_xact), account(_xact.account) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor details_t");
-  }
+  details_t(const transaction_t& _xact);
   details_t(const account_t& _account)
     : entry(NULL), xact(NULL), account(&_account) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor details_t");
@@ -127,7 +124,6 @@ struct value_expr_t
 
 extern std::auto_ptr<value_expr_t> amount_expr;
 extern std::auto_ptr<value_expr_t> total_expr;
-
 extern std::time_t terminus;
 
 inline void compute_amount(value_t& result, const details_t& details) {

@@ -1,16 +1,6 @@
-#include <ledger.h>
-#include "acconf.h"
-#include "debug.h"
-#ifdef USE_BOOST_PYTHON
-#include "py_eval.h"
-#endif
-
-using namespace ledger;
-
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <memory>
 #include <algorithm>
 #include <exception>
 #include <iterator>
@@ -27,218 +17,34 @@ using namespace ledger;
 #include "fdstream.hpp"
 #endif
 
-#if !defined(DEBUG_LEVEL) || DEBUG_LEVEL <= RELEASE
-
-#define auto_ptr bogus_auto_ptr
-
-// This version of auto_ptr does not delete on deconstruction.
-namespace std {
-  template <typename T>
-  struct bogus_auto_ptr {
-    T * ptr;
-    bogus_auto_ptr() : ptr(NULL) {}
-    explicit bogus_auto_ptr(T * _ptr) : ptr(_ptr) {}
-    T& operator*() const throw() {
-      return *ptr;
-    }
-    T * operator->() const throw() {
-      return ptr;
-    }
-    T * get() const throw() { return ptr; }
-    T * release() throw() {
-      T * tmp = ptr;
-      ptr = 0;
-      return tmp;
-    }
-    void reset(T * p = 0) throw() {
-      if (p != ptr) {
-	delete ptr;
-	ptr = p;
-      }
-    }
-  };
-}
-
+#include "ledger.h"
+#ifdef USE_BOOST_PYTHON
+#include "py_eval.h"
 #endif
+#include "timing.h"
 
-item_handler<transaction_t> *
-chain_xact_handlers(const std::string&		  command,
-		    item_handler<transaction_t> * base_formatter,
-		    journal_t *			  journal,
-		    account_t *			  master,
-		    std::list<item_handler<transaction_t> *>& ptrs)
-{
-  item_handler<transaction_t> * formatter = NULL;
+using namespace ledger;
 
-  ptrs.push_back(formatter = base_formatter);
-
-  // format_transactions write each transaction received to the
-  // output stream.
-  if (! (command == "b" || command == "E")) {
-    // truncate_entries cuts off a certain number of _entries_ from
-    // being displayed.  It does not affect calculation.
-    if (config.head_entries || config.tail_entries)
-      ptrs.push_back(formatter =
-		     new truncate_entries(formatter,
-					  config.head_entries,
-					  config.tail_entries));
-
-    // filter_transactions will only pass through transactions
-    // matching the `display_predicate'.
-    if (! config.display_predicate.empty())
-      ptrs.push_back(formatter =
-		     new filter_transactions(formatter,
-					     config.display_predicate));
-
-    // calc_transactions computes the running total.  When this
-    // appears will determine, for example, whether filtered
-    // transactions are included or excluded from the running total.
-    ptrs.push_back(formatter = new calc_transactions(formatter));
-
-    // reconcile_transactions will pass through only those
-    // transactions which can be reconciled to a given balance
-    // (calculated against the transactions which it receives).
-    if (! config.reconcile_balance.empty()) {
-      value_t target_balance(config.reconcile_balance);
-      time_t  cutoff = now;
-      if (! config.reconcile_date.empty())
-	parse_date(config.reconcile_date.c_str(), &cutoff);
-      ptrs.push_back(formatter =
-		     new reconcile_transactions(formatter, target_balance,
-						cutoff));
-    }
-
-    // sort_transactions will sort all the transactions it sees, based
-    // on the `sort_order' value expression.
-    if (! config.sort_string.empty())
-      ptrs.push_back(formatter =
-		     new sort_transactions(formatter, config.sort_string));
-
-    // changed_value_transactions adds virtual transactions to the
-    // list to account for changes in market value of commodities,
-    // which otherwise would affect the running total unpredictably.
-    if (config.show_revalued)
-      ptrs.push_back(formatter =
-		     new changed_value_transactions(formatter,
-						    config.show_revalued_only));
-
-    // collapse_transactions causes entries with multiple transactions
-    // to appear as entries with a subtotaled transaction for each
-    // commodity used.
-    if (config.show_collapsed)
-      ptrs.push_back(formatter = new collapse_transactions(formatter));
-  }
-
-  // subtotal_transactions combines all the transactions it receives
-  // into one subtotal entry, which has one transaction for each
-  // commodity in each account.
-  //
-  // period_transactions is like subtotal_transactions, but it
-  // subtotals according to time periods rather than totalling
-  // everything.
-  //
-  // dow_transactions is like period_transactions, except that it
-  // reports all the transactions that fall on each subsequent day
-  // of the week.
-  if (config.show_subtotal && ! (command == "b" || command == "E"))
-    ptrs.push_back(formatter = new subtotal_transactions(formatter));
-
-  if (config.days_of_the_week)
-    ptrs.push_back(formatter = new dow_transactions(formatter));
-  else if (config.by_payee)
-    ptrs.push_back(formatter = new by_payee_transactions(formatter));
-
-  if (! config.report_period.empty()) {
-    ptrs.push_back(formatter =
-		   new interval_transactions(formatter,
-					     config.report_period,
-					     config.report_period_sort));
-    ptrs.push_back(formatter = new sort_transactions(formatter, "d"));
-  }
-
-  // invert_transactions inverts the value of the transactions it
-  // receives.
-  if (config.show_inverted)
-    ptrs.push_back(formatter = new invert_transactions(formatter));
-
-  // related_transactions will pass along all transactions related
-  // to the transaction received.  If `show_all_related' is true,
-  // then all the entry's transactions are passed; meaning that if
-  // one transaction of an entry is to be printed, all the
-  // transaction for that entry will be printed.
-  if (config.show_related)
-    ptrs.push_back(formatter =
-		   new related_transactions(formatter,
-					    config.show_all_related));
-
-  // This filter_transactions will only pass through transactions
-  // matching the `predicate'.
-  if (! config.predicate.empty())
-    ptrs.push_back(formatter = new filter_transactions(formatter,
-						       config.predicate));
-
-  // budget_transactions takes a set of transactions from a data
-  // file and uses them to generate "budget transactions" which
-  // balance against the reported transactions.
-  //
-  // forecast_transactions is a lot like budget_transactions, except
-  // that it adds entries only for the future, and does not balance
-  // them against anything but the future balance.
-
-  if (config.budget_flags) {
-    // Don't generate a cache file after calculating a budget report,
-    // since certain intermediary accounts may get created which
-    // aren't intended to be saved.  For example, the user might have
-    // an "Expenses" budget, to catch all other expenses.  This will
-    // result in an "Expenses" account being created in the journal --
-    // to reflect the calculated totals -- even though no such account
-    // was ever actually used.  Because budgeting and forecasting
-    // might create such "ghost" accounts for internal purposes, we
-    // don't want to change the cache.
-    config.use_cache = false;
-
-    budget_transactions * handler
-      = new budget_transactions(formatter, config.budget_flags);
-    handler->add_period_entries(journal->period_entries);
-    ptrs.push_back(formatter = handler);
-
-    // Apply this before the budget handler, so that only matching
-    // transactions are calculated toward the budget.  The use of
-    // filter_transactions above will further clean the results so
-    // that no automated transactions that don't match the filter get
-    // reported.
-    if (! config.predicate.empty())
-      ptrs.push_back(formatter = new filter_transactions(formatter,
-							 config.predicate));
-  }
-  else if (! config.forecast_limit.empty()) {
-    config.use_cache = false;	// see note above
-
-    forecast_transactions * handler
-      = new forecast_transactions(formatter, config.forecast_limit);
-    handler->add_period_entries(journal->period_entries);
-    ptrs.push_back(formatter = handler);
-
-    // See above, under budget_transactions.
-    if (! config.predicate.empty())
-      ptrs.push_back(formatter = new filter_transactions(formatter,
-							 config.predicate));
-  }
-
-  if (config.comm_as_payee)
-    ptrs.push_back(formatter = new set_comm_as_payee(formatter));
-
-  return formatter;
+namespace {
+  TIMER_DEF_(setup);
+  TIMER_DEF_(parse);
+  TIMER_DEF_(process);
+  TIMER_DEF_(walk);
+  TIMER_DEF_(cleanup);
 }
 
 int parse_and_report(int argc, char * argv[], char * envp[])
 {
+  TIMER_START(setup);
+
+  config_t config;
+
   std::auto_ptr<journal_t> journal(new journal_t);
 
   // Parse command-line arguments, and those set in the environment
 
   std::list<std::string> args;
-  process_arguments(config_options, argc - 1, argv + 1, false, args);
+  config.process_arguments(argc - 1, argv + 1, false, args);
 
   if (args.empty()) {
     option_help(std::cerr);
@@ -252,19 +58,19 @@ int parse_and_report(int argc, char * argv[], char * envp[])
     config.use_cache = config.data_file.empty() && config.price_db.empty();
   DEBUG_PRINT("ledger.config.cache", "1. use_cache = " << config.use_cache);
 
-  process_environment(config_options, envp, "LEDGER_");
+  config.process_environment(envp, "LEDGER_");
 
 #if 1
   // These are here for backwards compatability, but are deprecated.
 
   if (const char * p = std::getenv("LEDGER"))
-    process_option(config_options, "file", p);
+    config.process_option("file", p);
   if (const char * p = std::getenv("LEDGER_INIT"))
-    process_option(config_options, "init-file", p);
+    config.process_option("init-file", p);
   if (const char * p = std::getenv("PRICE_HIST"))
-    process_option(config_options, "price-db", p);
+    config.process_option("price-db", p);
   if (const char * p = std::getenv("PRICE_EXP"))
-    process_option(config_options, "price-exp", p);
+    config.process_option("price-exp", p);
 #endif
 
   const char * p    = std::getenv("HOME");
@@ -311,37 +117,21 @@ int parse_and_report(int argc, char * argv[], char * envp[])
   else
     throw error(std::string("Unrecognized command '") + command + "'");
 
+  TIMER_STOP(setup);
+
   // Parse initialization files, ledger data, price database, etc.
 
-  std::auto_ptr<binary_parser_t>  bin_parser(new binary_parser_t);
-#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
-  std::auto_ptr<xml_parser_t>     xml_parser(new xml_parser_t);
-  std::auto_ptr<gnucash_parser_t> gnucash_parser(new gnucash_parser_t);
-#endif
-#ifdef HAVE_LIBOFX
-  std::auto_ptr<ofx_parser_t>     ofx_parser(new ofx_parser_t);
-#endif
-  std::auto_ptr<qif_parser_t>     qif_parser(new qif_parser_t);
-  std::auto_ptr<textual_parser_t> text_parser(new textual_parser_t);
+  TIMER_START(parse);
 
-  register_parser(bin_parser.get());
-#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
-  register_parser(xml_parser.get());
-  register_parser(gnucash_parser.get());
-#endif
-#ifdef HAVE_LIBOFX
-  register_parser(ofx_parser.get());
-#endif
-  register_parser(qif_parser.get());
-  register_parser(text_parser.get());
+  if (parse_ledger_data(journal.get(), config) == 0)
+    throw error("Please specify ledger file using -f"
+		" or LEDGER_FILE environment variable.");
 
-  parse_ledger_data(journal.get(), bin_parser.get(), text_parser.get()
-#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
-		    , xml_parser.get()
-#endif
-		    );
+  TIMER_STOP(parse);
 
   // process the command word and its following arguments
+
+  TIMER_START(process);
 
   std::string first_arg;
   if (command == "w") {
@@ -461,7 +251,11 @@ def vmax(d, val):\n\
 
 #endif // USE_BOOST_PYTHON
 
+  TIMER_STOP(process);
+
   // Walk the entries based on the report type and the options
+
+  TIMER_START(walk);
 
   item_handler<transaction_t> *		   formatter;
   std::list<item_handler<transaction_t> *> formatter_ptrs;
@@ -482,10 +276,11 @@ def vmax(d, val):\n\
     formatter = new format_transactions(*out, *format);
 
   if (command == "w") {
-    write_textual_journal(*journal, first_arg, *formatter, *out);
+    write_textual_journal(*journal, first_arg, *formatter,
+			  config.write_hdr_format, *out);
   } else {
-    formatter = chain_xact_handlers(command, formatter, journal.get(),
-				    journal->master, formatter_ptrs);
+    formatter = config.chain_xact_handlers(command, formatter, journal.get(),
+					   journal->master, formatter_ptrs);
     if (command == "e")
       walk_transactions(new_entry->transactions, *formatter);
     else if (command == "P" || command == "D")
@@ -521,8 +316,16 @@ def vmax(d, val):\n\
     acct_formatter.flush();
   }
 
+  TIMER_STOP(walk);
+
+  TIMER_START(cleanup);
+
 #if DEBUG_LEVEL >= BETA
-  clear_all_xdata();
+  clear_transaction_xdata xact_cleaner;
+  walk_entries(journal->entries, xact_cleaner);
+
+  clear_account_xdata acct_cleaner;
+  walk_accounts(*journal->master, acct_cleaner);
 
   if (! config.output_file.empty())
     delete out;
@@ -554,13 +357,13 @@ def vmax(d, val):\n\
   }
 #endif
 
+  TIMER_STOP(cleanup);
+
   return 0;
 }
 
 int main(int argc, char * argv[], char * envp[])
 {
-  std::ios::sync_with_stdio(false);
-
   try {
     return parse_and_report(argc, argv, envp);
   }

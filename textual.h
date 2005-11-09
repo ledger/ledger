@@ -2,6 +2,7 @@
 #define _TEXTUAL_H
 
 #include "parser.h"
+#include "format.h"
 #include "walk.h"
 
 namespace ledger {
@@ -22,6 +23,7 @@ transaction_t * parse_transaction(std::istream& in, account_t * account);
 
 void write_textual_journal(journal_t& journal, std::string path,
 			   item_handler<transaction_t>& formatter,
+			   const std::string& write_hdr_format,
 			   std::ostream& out);
 
 } // namespace ledger

@@ -2,6 +2,7 @@
 
 touch AUTHORS COPYING
 
+glibtoolize --automake -f -c
 aclocal
 autoheader
 if [ "$1" = "--dist" ]; then
