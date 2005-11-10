@@ -41,6 +41,10 @@ int parse_and_report(int argc, char * argv[], char * envp[])
 
   std::auto_ptr<journal_t> journal(new journal_t);
 
+  // Configure the terminus for value expressions
+
+  ledger::terminus = now;
+
   // Parse command-line arguments, and those set in the environment
 
   std::list<std::string> args;
