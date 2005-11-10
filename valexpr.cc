@@ -13,7 +13,7 @@ namespace ledger {
 std::auto_ptr<value_expr_t> amount_expr;
 std::auto_ptr<value_expr_t> total_expr;
 
-std::time_t terminus = now;
+std::time_t terminus;
 
 details_t::details_t(const transaction_t& _xact)
   : entry(_xact.entry), xact(&_xact), account(xact_account(_xact))
