@@ -29,7 +29,8 @@ void quotes_by_script::operator()(commodity_t&      commodity,
   if ((commodity.history &&
        std::difftime(now, commodity.history->last_lookup) < pricing_leeway) ||
       std::difftime(now, last) < pricing_leeway ||
-      (price && std::difftime(moment, date) <= pricing_leeway))
+      (price && std::difftime(moment, date) > 0 &&
+       std::difftime(moment, date) <= pricing_leeway))
     return;
 
   using namespace std;
