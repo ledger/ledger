@@ -34,6 +34,9 @@ entry_t * derive_new_entry(journal_t& journal,
   added->payee = matching ? matching->payee : regexp.pattern;
 
   if (i == end) {
+    if (! matching)
+      throw error("Could not find a matching payee");
+
     // If no argument were given but the payee, assume the user wants
     // to see the same transaction as last time.
     added->code = matching->code;
