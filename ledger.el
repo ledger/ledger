@@ -67,7 +67,7 @@
 
 (defvar bold 'bold)
 (defvar ledger-font-lock-keywords
-  '(("^[0-9./]+\\s-+\\(?:([^)]+)\\s-+\\)?\\([^*].+\\)" 1 bold)
+  '(("^[0-9./=]+\\s-+\\(?:([^)]+)\\s-+\\)?\\([^*].+\\)" 1 bold)
     ("^\\s-+.+?\\(  \\|\t\\|\\s-+$\\)" . font-lock-keyword-face))
   "Default expressions to highlight in Ledger mode.")
 
@@ -184,7 +184,7 @@ Return the difference in the format of a time value."
     (save-excursion
       (when (or (looking-at "^[0-9]")
 		(re-search-backward "^[0-9]" nil t))
-	(skip-chars-forward "0-9./")
+	(skip-chars-forward "0-9./=")
 	(delete-horizontal-space)
 	(if (member (char-after) '(?\* ?\!))
 	    (progn
@@ -215,7 +215,7 @@ dropped."
     ;; transaction
     (save-excursion
       (goto-char (car bounds))
-      (skip-chars-forward "0-9./ \t")
+      (skip-chars-forward "0-9./= \t")
       (setq cleared (and (member (char-after) '(?\* ?\!))
 			 (char-after)))
       (when cleared
@@ -297,7 +297,7 @@ dropped."
 		      (insert (make-string width ? ))))))
 	    (forward-line))
 	  (goto-char (car bounds))
-	  (skip-chars-forward "0-9./ \t")
+	  (skip-chars-forward "0-9./= \t")
 	  (insert state " ")
 	  (if (search-forward "  " (line-end-position) t)
 	      (delete-char 2)))))
