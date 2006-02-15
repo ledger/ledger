@@ -2,8 +2,10 @@
 
 * 2.5
 
-- Much internal restruction to allow the use of libledger.so in a
-  non-command-line environment.
+- Added a new "csv" command, for outputting results in CSV format.
+
+- Added a new value expression regexp command:
+    C//  compare against transaction amount's commodity symbol
 
 - Effective dates may now be specified for entries:
 
@@ -54,7 +56,7 @@
     2005/10/20 iTunes   Expenses:Music            $1.08    $1.08
     2005/10/15 iTunes   Liabilities:MasterCard   $-1.08        0
 
-  The command "ledger --effective register" reports:
+  While the command "ledger --effective register" reports:
 
     2005/08/01 iTunes   Expenses:Music            $1.08    $1.08
     2005/09/01 iTunes   Liabilities:MasterCard   $-1.08        0
@@ -63,7 +65,7 @@
   transactions belong to the same entry.
 
 - Individual transactions may now be cleared separately.  The old
-  syntax, which is still supported, clears all transactions in an
+  syntax, which is still supported, clears all transactions in the
   entry:
 
     2004/05/27 * Book Store
@@ -81,12 +83,10 @@
   reports.  ledger.el will use the new syntax unless the Lisp variable
   `ledger-clear-whole-entries' is set to t.
 
-- Added a new value expression regexp command:
-    C//  compare against transaction amount's commodity symbol
+- Removed Python integration support.
 
-- Added a new "csv" command, for outputting results in CSV format.
-
-- Completely removed Python integration.
+- Did much internal restructuring to allow the use of libledger.so in
+  non-command-line environments.
 
 * 2.4
 
