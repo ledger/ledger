@@ -118,6 +118,10 @@ int parse_and_report(int argc, char * argv[], char * envp[])
     command = "P";
   else if (command == "pricesdb")
     command = "D";
+  else if (command == "csv") {
+    config.register_format = config.csv_register_format;
+    command = "r";
+  }
   else
     throw error(std::string("Unrecognized command '") + command + "'");
 
