@@ -13,6 +13,9 @@ AC_PROG_MAKE_SET
 AC_PROG_LIBTOOL
 AM_PROG_LIBTOOL
 
+# Checks for emacs lisp path
+AM_PATH_LISPDIR
+
 # check if UNIX pipes are available
 AC_CACHE_CHECK(
   [if pipes can be used],

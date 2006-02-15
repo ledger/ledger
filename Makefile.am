@@ -95,6 +95,11 @@ info_TEXINFOS = ledger.texi
 
 ######################################################################
 
+lisp_LISP = ledger.el timeclock.el
+dist_lisp_LISP = ledger.el timeclock.el
+
+######################################################################
+
 all-clean: maintainer-clean
 	rm -fr	*~ .*~ .\#* *.html *.info *.pdf *.a *.so *.o *.lo *.la \
 		*.elc *.aux *.cp *.fn *.ky *.log *.pg *.toc *.tp *.vr \
