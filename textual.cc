@@ -457,6 +457,7 @@ bool textual_parser_t::test(std::istream& in) const
 #endif
   }
 
+  in.clear();
   in.seekg(0, std::ios::beg);
   assert(in.good());
   return true;

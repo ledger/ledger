@@ -345,6 +345,7 @@ bool gnucash_parser_t::test(std::istream& in) const
 {
   char buf[5];
   in.read(buf, 5);
+  in.clear();
   in.seekg(0, std::ios::beg);
 
   return std::strncmp(buf, "<?xml", 5) == 0;

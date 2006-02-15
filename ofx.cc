@@ -172,10 +172,12 @@ bool ofx_parser_t::test(std::istream& in) const
 
   in.getline(buf, 79);
   if (std::strncmp(buf, "OFXHEADER", 9) == 0) {
+    in.clear();
     in.seekg(0, std::ios::beg);
     return true;
   }
   else if (std::strncmp(buf, "<?xml", 5) != 0) {
+    in.clear();
     in.seekg(0, std::ios::beg);
     return false;
   }
@@ -183,10 +185,12 @@ bool ofx_parser_t::test(std::istream& in) const
   in.getline(buf, 79);
   if (std::strncmp(buf, "<?OFX", 5) != 0 &&
       std::strncmp(buf, "<?ofx", 5) != 0) {
+    in.clear();
     in.seekg(0, std::ios::beg);
     return false;
   }
 
+  in.clear();
   in.seekg(0, std::ios::beg);
   return true;
 }

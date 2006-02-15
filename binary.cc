@@ -489,6 +489,7 @@ bool binary_parser_t::test(std::istream& in) const
       read_binary_number<unsigned long>(in) == format_version)
     return true;
 
+  in.clear();
   in.seekg(0, std::ios::beg);
   return false;
 }

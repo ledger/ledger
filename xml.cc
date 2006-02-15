@@ -158,16 +158,19 @@ bool xml_parser_t::test(std::istream& in) const
 
   in.getline(buf, 79);
   if (std::strncmp(buf, "<?xml", 5) != 0) {
+    in.clear();
     in.seekg(0, std::ios::beg);
     return false;
   }
 
   in.getline(buf, 79);
   if (! std::strstr(buf, "<ledger")) {
+    in.clear();
     in.seekg(0, std::ios::beg);
     return false;
   }
 
+  in.clear();
   in.seekg(0, std::ios::beg);
   return true;
 }
