@@ -2,7 +2,11 @@
 
 touch AUTHORS COPYING
 
-glibtoolize --automake -f -c
+if which glibtoolize > /dev/null 2>&1; then
+    glibtoolize --automake -f -c
+else
+    libtoolize --automake -f -c
+fi
 aclocal
 autoheader
 if [ "$1" = "--dist" ]; then
