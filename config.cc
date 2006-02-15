@@ -36,6 +36,7 @@ void config_t::reset()
 			"%32|%-.22A %12.67t %12.80T\n");
   wide_register_format = ("%D  %-.35P %-.38A %22.108t %22.132T\n%/"
 			  "%48|%-.38A %22.108t %22.132T\n");
+  csv_register_format = "\"%D\",\"%P\",\"%A\",\"%t\",\"%T\"\n";
   plot_amount_format = "%D %(St)\n";
   plot_total_format  = "%D %(ST)\n";
   print_format       = "\n%d %Y%C%P\n    %-34W  %12o%n\n%/    %-34W  %12o%n\n";
@@ -512,7 +513,7 @@ Output customization:\n\
   -F, --format STR       use STR as the format; for each report type, use:\n\
       --balance-format      --register-format       --print-format\n\
       --plot-amount-format  --plot-total-format     --equity-format\n\
-      --prices-format       --wide-register-format\n\
+      --prices-format       --wide-register-format\n\n\
 Commodity reporting:\n\
       --price-db FILE    sets the price database to FILE (def: ~/.pricedb)\n\
   -L, --price-exp MINS   download quotes only if newer than MINS (def: 1440)\n\
@@ -813,6 +814,10 @@ OPT_BEGIN(register_format, ":") {
 OPT_BEGIN(wide_register_format, ":") {
   config->wide_register_format = optarg;
 } OPT_END(wide_register_format);
+
+OPT_BEGIN(csv_register_format, ":") {
+  config->csv_register_format = optarg;
+} OPT_END(csv_register_format);
 
 OPT_BEGIN(plot_amount_format, ":") {
   config->plot_amount_format = optarg;
@@ -1138,6 +1143,7 @@ void export_config()
     .def_readwrite("balance_format", &config_t::balance_format)
     .def_readwrite("register_format", &config_t::register_format)
     .def_readwrite("wide_register_format", &config_t::wide_register_format)
+    .def_readwrite("csv_register_format", &config_t::csv_register_format)
     .def_readwrite("plot_amount_format", &config_t::plot_amount_format)
     .def_readwrite("plot_total_format", &config_t::plot_total_format)
     .def_readwrite("print_format", &config_t::print_format)
