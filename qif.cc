@@ -30,6 +30,7 @@ bool qif_parser_t::test(std::istream& in) const
   char magic[sizeof(unsigned int) + 1];
   in.read(magic, sizeof(unsigned int));
   magic[sizeof(unsigned int)] = '\0';
+  in.clear();
   in.seekg(0, std::ios::beg);
 
   return (std::strcmp(magic, "!Typ") == 0 ||
