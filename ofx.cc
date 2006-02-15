@@ -93,9 +93,9 @@ int ofx_proc_transaction_cb(struct OfxTransactionData data,
 	      << " from " << *xact->account);
 
   if (data.date_initiated_valid)
-    entry->date = data.date_initiated;
+    entry->_date = data.date_initiated;
   else if (data.date_posted_valid)
-    entry->date = data.date_posted;
+    entry->_date = data.date_posted;
 
   if (data.check_number_valid)
     entry->code = data.check_number;
