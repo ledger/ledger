@@ -73,7 +73,6 @@ struct value_expr_t
     F_ACCOUNT_MASK,
     F_SHORT_ACCOUNT_MASK,
     F_COMMODITY_MASK,
-    F_INTERP_FUNC,
 
     // Binary operators
     O_ADD,

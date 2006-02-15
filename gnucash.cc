@@ -415,22 +415,3 @@ unsigned int gnucash_parser_t::parse(std::istream&	 in,
 }
 
 } // namespace ledger
-
-#ifdef USE_BOOST_PYTHON
-
-#include <boost/python.hpp>
-
-using namespace boost::python;
-using namespace ledger;
-
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(gnucash_parse_overloads,
-				       gnucash_parser_t::parse, 2, 4)
-
-void export_gnucash() {
-  class_< gnucash_parser_t, bases<parser_t> > ("GnucashParser")
-    .def("test", &gnucash_parser_t::test)
-    .def("parse", &gnucash_parser_t::parse, gnucash_parse_overloads())
-    ;
-}
-
-#endif // USE_BOOST_PYTHON

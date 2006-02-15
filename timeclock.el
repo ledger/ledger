@@ -284,10 +284,10 @@ display (non-nil means on)."
 		  (> (prefix-numeric-value arg) 0)
 		(not timeclock-modeline-display))))
     (if on-p
-        (progn
-          (or (memq 'timeclock-mode-string global-mode-string)
-              (setq global-mode-string
-                    (append global-mode-string '(timeclock-mode-string))))
+	(progn
+	  (or (memq 'timeclock-mode-string global-mode-string)
+	      (setq global-mode-string
+		    (append global-mode-string '(timeclock-mode-string))))
 	  (unless (memq 'timeclock-update-modeline timeclock-event-hook)
 	    (add-hook 'timeclock-event-hook 'timeclock-update-modeline))
 	  (when timeclock-update-timer
@@ -296,13 +296,13 @@ display (non-nil means on)."
 	  (if (boundp 'display-time-hook)
 	      (remove-hook 'display-time-hook 'timeclock-update-modeline))
 	  (if timeclock-use-display-time
-              (progn
-                ;; Update immediately so there is a visible change
-                ;; on calling this function.
-                (if display-time-mode (timeclock-update-modeline)
-                  (message "Activate `display-time-mode' to see \
+	      (progn
+		;; Update immediately so there is a visible change
+		;; on calling this function.
+		(if display-time-mode (timeclock-update-modeline)
+		  (message "Activate `display-time-mode' to see \
 timeclock information"))
-                (add-hook 'display-time-hook 'timeclock-update-modeline))
+		(add-hook 'display-time-hook 'timeclock-update-modeline))
 	    (setq timeclock-update-timer
 		  (run-at-time nil 60 'timeclock-update-modeline))))
       (setq global-mode-string
@@ -358,9 +358,9 @@ discover the name of the project."
       (timeclock-reread-log))
     ;; Either no log file, or day has rolled over.
     (unless (and timeclock-last-event
-                 (equal (timeclock-time-to-date
-                         (cadr timeclock-last-event))
-                        (timeclock-time-to-date (current-time))))
+		 (equal (timeclock-time-to-date
+			 (cadr timeclock-last-event))
+			(timeclock-time-to-date (current-time))))
       (let ((workday (or (and (numberp arg) arg)
 			 (and arg 0)
 			 (and timeclock-get-workday-function
@@ -412,8 +412,8 @@ If TODAY-ONLY is non-nil, the value returned will be relative only to
 the time worked today, and not to past time."
   (let ((discrep (timeclock-find-discrep)))
     (if discrep
-        (- (if today-only (cadr discrep)
-             (car discrep)))
+	(- (if today-only (cadr discrep)
+	     (car discrep)))
       0.0)))
 
 ;;;###autoload
@@ -424,8 +424,8 @@ If TODAY-ONLY is non-nil, the display will be relative only to time
 worked today, ignoring the time worked on previous days."
   (interactive "P")
   (let ((remainder (timeclock-workday-remaining)) ; today-only?
-        (last-in (equal (car timeclock-last-event) "i"))
-        status)
+	(last-in (equal (car timeclock-last-event) "i"))
+	status)
     (setq status
 	  (format "Currently %s since %s (%s), %s %s, leave at %s"
 		  (if last-in "IN" "OUT")
@@ -619,7 +619,7 @@ The value of `timeclock-relative' affects the display as described in
 that variable's documentation."
   (interactive)
   (let ((remainder (timeclock-workday-remaining (not timeclock-relative)))
-        (last-in (equal (car timeclock-last-event) "i")))
+	(last-in (equal (car timeclock-last-event) "i")))
     (when (and (< remainder 0)
 	       (not (and timeclock-day-over
 			 (equal timeclock-day-over
@@ -629,12 +629,12 @@ that variable's documentation."
 	    (timeclock-time-to-date (current-time)))
       (run-hooks 'timeclock-day-over-hook))
     (setq timeclock-mode-string
-          (propertize
-           (format " %c%s%c "
-                   (if last-in ?< ?[)
- 		   (timeclock-seconds-to-string remainder nil t)
+	  (propertize
+	   (format " %c%s%c "
+		   (if last-in ?< ?[)
+		   (timeclock-seconds-to-string remainder nil t)
 		   (if last-in ?> ?]))
-           'help-echo "timeclock: time remaining"))))
+	   'help-echo "timeclock: time remaining"))))
 
 (put 'timeclock-mode-string 'risky-local-variable t)
 

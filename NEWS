@@ -84,6 +84,10 @@
 - Added a new value expression regexp command:
     C//  compare against transaction amount's commodity symbol
 
+- Added a new "csv" command, for outputting results in CSV format.
+
+- Completely removed Python integration.
+
 * 2.4
 
 - Both "-$100.00" and "$-100.00" are now equivalent amounts.

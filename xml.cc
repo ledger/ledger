@@ -442,33 +442,3 @@ void format_xml_entries::format_last_entry()
 }
 
 } // namespace ledger
-
-#ifdef USE_BOOST_PYTHON
-
-#include <boost/python.hpp>
-
-using namespace boost::python;
-using namespace ledger;
-
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(xml_parse_overloads,
-				       xml_parser_t::parse, 2, 4)
-
-void export_xml() {
-  class_< xml_parser_t, bases<parser_t> > ("XmlParser")
-    .def("test", &xml_parser_t::test)
-    .def("parse", &xml_parser_t::parse, xml_parse_overloads())
-    ;
-
-  typedef
-    pystream_handler_wrap<format_xml_entries, transaction_t, bool>
-    format_xml_entries_wrap;
-
-  class_< format_xml_entries_wrap, bases<item_handler<transaction_t> > >
-    ("FormatXmlEntries",
-     init<PyObject *, bool>()[with_custodian_and_ward<1, 2>()])
-    .def("flush", &format_xml_entries_wrap::flush)
-    .def("__call__", &format_xml_entries_wrap::operator())
-    ;
-}
-
-#endif // USE_BOOST_PYTHON

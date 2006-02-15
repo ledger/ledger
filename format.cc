@@ -1,9 +1,6 @@
 #include "format.h"
 #include "error.h"
 #include "util.h"
-#ifdef USE_BOOST_PYTHON
-#include "py_eval.h"
-#endif
 
 #include <cstdlib>
 #include <ctime>
@@ -172,18 +169,6 @@ element_t * format_t::parse_elements(const std::string& fmt)
 	throw value_expr_error(std::string("In format expression '") +
 			       std::string(b, p) + "': " + err.what());
       }
-      break;
-    }
-
-    case '@': {
-      const char * s = ++p;
-      while (*p && *p != '(')
-	p++;
-      if (*p && *++p != ')')
-	throw format_error("Missing ')'");
-
-      current->type  = element_t::INTERP_FUNC;
-      current->chars = std::string(s, (p - s) - 1);
       break;
     }
 
@@ -585,20 +570,6 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 	}
       break;
 
-    case element_t::INTERP_FUNC:
-#ifdef USE_BOOST_PYTHON
-      try {
-	object func = python_eval(elem->chars);
-	out << call<std::string>(func.ptr(), details);
-      }
-      catch(const boost::python::error_already_set&) {
-	PyErr_Print();
-	throw format_error(std::string("While calling Python function '") +
-			   elem->chars + "'");
-      }
-#endif
-      break;
-
     default:
       assert(0);
       break;
@@ -842,91 +813,3 @@ void format_equity::operator()(account_t& account)
 }
 
 } // namespace ledger
-
-#ifdef USE_BOOST_PYTHON
-
-#include <boost/python.hpp>
-
-using namespace boost::python;
-using namespace ledger;
-
-std::string py_format_1(format_t& format, const details_t& item)
-{
-  std::ostringstream out;
-  format.format(out, item);
-  return out.str();
-}
-
-template <typename T>
-std::string py_format(format_t& format, const T& item)
-{
-  std::ostringstream out;
-  format.format(out, details_t(item));
-  return out.str();
-}
-
-void export_format()
-{
-  typedef
-    pystream_handler_wrap<format_transactions, transaction_t, std::string>
-    format_transactions_wrap;
-
-  class_< format_transactions_wrap, bases<item_handler<transaction_t> > >
-    ("FormatTransactions",
-     init<PyObject *, std::string>()[with_custodian_and_ward<1, 2>()])
-    .def("flush", &format_transactions_wrap::flush)
-    .def("__call__", &format_transactions_wrap::operator())
-    ;
-
-  typedef
-    pystream_handler_wrap<format_entries, transaction_t, std::string>
-    format_entries_wrap;
-
-  class_< format_entries_wrap, bases<item_handler<transaction_t> > >
-    ("FormatEntries",
-     init<PyObject *, std::string>()[with_custodian_and_ward<1, 2>()])
-    .def("flush", &format_entries_wrap::flush)
-    .def("__call__", &format_entries_wrap::operator())
-    ;
-
-  typedef
-    pystream_handler_wrap<format_account, account_t, std::string, std::string>
-    format_account_wrap;
-
-  class_< format_account_wrap, bases<item_handler<transaction_t> > >
-    ("FormatAccount",
-     init<PyObject *, std::string, std::string>()
-     [with_custodian_and_ward<1, 2>()])
-    .def("flush", &format_account_wrap::flush)
-    .def("__call__", &format_account_wrap::operator())
-    ;
-
-  typedef
-    pystream_handler_wrap<format_equity, account_t, std::string, std::string>
-    format_equity_wrap;
-
-  class_< format_equity_wrap, bases<item_handler<transaction_t> > >
-    ("FormatEquity",
-     init<PyObject *, std::string, std::string>()
-     [with_custodian_and_ward<1, 2>()])
-    .def("flush", &format_equity_wrap::flush)
-    .def("__call__", &format_equity_wrap::operator())
-    ;
-
-  class_< format_t > ("Format")
-    .def(init<std::string>())
-    .def("reset", &format_t::reset)
-    .def("format", py_format_1)
-    .def("format", py_format<account_t>)
-    .def("format", py_format<entry_t>)
-    .def("format", py_format<transaction_t>)
-    ;
-
-  def("truncated", truncated);
-#if 0
-  def("partial_account_name", partial_account_name);
-#endif
-  def("display_account", display_account);
-}
-
-#endif // USE_BOOST_PYTHON

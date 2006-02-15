@@ -5,9 +5,6 @@
 #include "quotes.h"
 #include "valexpr.h"
 #include "walk.h"
-#ifdef USE_BOOST_PYTHON
-#include "py_eval.h"
-#endif
 
 #include <fstream>
 #include <ctime>
@@ -43,12 +40,7 @@ void config_t::reset()
   write_hdr_format   = "%d %Y%C%P\n";
   write_xact_format  = "    %-34W  %12o%n\n";
   equity_format      = "\n%D %Y%C%P\n%/    %-34W  %12t\n";
-#ifndef USE_BOOST_PYTHON
   prices_format      = "%[%Y/%m/%d %H:%M:%S %Z]   %-10A %12t %12T\n";
-#else
-  prices_format      = ("%[%Y/%m/%d %H:%M:%S %Z]   %-8A "
-			"%10t %10(@vmin(t)) %10(@vmax(t)) %12T\n");
-#endif
   pricesdb_format    = "P %[%Y/%m/%d %H:%M:%S] %A %t\n";
 
   predicate	    = "";
@@ -444,9 +436,6 @@ static void show_version(std::ostream& out)
 This program is made available under the terms of the BSD Public License.\n\
 See LICENSE file included with the distribution for details and disclaimer.\n";
   out << "\n(modules: gmp, pcre";
-#ifdef USE_BOOST_PYTHON
-  out << ", python";
-#endif
 #if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
   out << ", xml";
 #endif
@@ -523,12 +512,6 @@ Commodity reporting:\n\
   -V, --market           report last known market value\n\
   -g, --performance      report gain/loss for each displayed transaction\n\
   -G, --gain             report net gain/loss\n\n";
-#ifdef USE_BOOST_PYTHON
-  out
-    << "Python support:\n\
-      --import MODULE    on startup, import the given Python MODULE\n\
-      --import-stdin     on start, read Python code from standard input\n\n";
-#endif
   out
     << "Commands:\n\
   balance  [REGEXP]...   show balance totals for matching accounts\n\
@@ -547,9 +530,6 @@ Use -H to see all the help text on one page, or:\n\
       --help-calc        calculation options\n\
       --help-disp        display options\n\
       --help-comm        commodity options\n";
-#ifdef USE_BOOST_PYTHON
-  out << "      --help-python      Python options\n";
-#endif
   out << "\nBasic options:\n\
   -h, --help             display this help text\n\
   -v, --version          show version information\n\
@@ -635,15 +615,6 @@ void option_comm_help(std::ostream& out)
   -G, --gain             report net gain/loss\n";
 }
 
-#ifdef USE_BOOST_PYTHON
-void option_python_help(std::ostream& out)
-{
-  out << "Python support options:\n\
-      --import MODULE    on startup, import the given Python MODULE\n\
-      --import-stdin     on start, read Python code from standard input\n\n";
-}
-#endif
-
 //////////////////////////////////////////////////////////////////////
 //
 // Basic options
@@ -672,13 +643,6 @@ OPT_BEGIN(help_comm, "") {
   option_comm_help(std::cout);
   throw 0;
 } OPT_END(help_comm);
-
-#ifdef USE_BOOST_PYTHON
-OPT_BEGIN(help_python, "") {
-  option_python_help(std::cout);
-  throw 0;
-} OPT_END(help_python);
-#endif
 
 OPT_BEGIN(version, "v") {
   show_version(std::cout);
@@ -1076,118 +1040,4 @@ OPT_BEGIN(percentage, "%") {
   config->total_expr_template = "^#&{100.0%}*(#/^#)";
 } OPT_END(percentage);
 
-#ifdef USE_BOOST_PYTHON
-
-//////////////////////////////////////////////////////////////////////
-//
-// Python support
-
-OPT_BEGIN(import, ":") {
-  python_eval(std::string("import ") + optarg, PY_EVAL_STMT);
-} OPT_END(import);
-
-OPT_BEGIN(import_stdin, "") {
-  python_eval(std::cin, PY_EVAL_MULTI);
-} OPT_END(import_stdin);
-
-#endif // USE_BOOST_PYTHON
-
 } // namespace ledger
-
-#ifdef USE_BOOST_PYTHON
-
-#include <boost/python.hpp>
-#include <boost/python/detail/api_placeholder.hpp>
-
-using namespace boost::python;
-using namespace ledger;
-
-void py_process_options(config_t& config, const std::string& command,
-			list args)
-{
-  strings_list strs;
-
-  int l = len(args);
-  for (int i = 0; i < l; i++)
-    strs.push_back(std::string(extract<char *>(args[i])));
-
-  config.process_options(command, strs.begin(), strs.end());
-}
-
-void add_other_option_handlers(const std::list<option_t>& other);
-
-void py_add_config_option_handlers()
-{
-  add_other_option_handlers(config_options);
-}
-
-void py_option_help()
-{
-  option_help(std::cout);
-}
-
-void export_config()
-{
-  class_< config_t > ("Config")
-    .def_readwrite("init_file", &config_t::init_file)
-    .def_readwrite("data_file", &config_t::data_file)
-    .def_readwrite("cache_file", &config_t::cache_file)
-    .def_readwrite("price_db", &config_t::price_db)
-    .def_readwrite("output_file", &config_t::output_file)
-    .def_readwrite("account", &config_t::account)
-    .def_readwrite("predicate", &config_t::predicate)
-    .def_readwrite("display_predicate", &config_t::display_predicate)
-    .def_readwrite("report_period", &config_t::report_period)
-    .def_readwrite("report_period_sort", &config_t::report_period_sort)
-    .def_readwrite("format_string", &config_t::format_string)
-    .def_readwrite("balance_format", &config_t::balance_format)
-    .def_readwrite("register_format", &config_t::register_format)
-    .def_readwrite("wide_register_format", &config_t::wide_register_format)
-    .def_readwrite("csv_register_format", &config_t::csv_register_format)
-    .def_readwrite("plot_amount_format", &config_t::plot_amount_format)
-    .def_readwrite("plot_total_format", &config_t::plot_total_format)
-    .def_readwrite("print_format", &config_t::print_format)
-    .def_readwrite("write_hdr_format", &config_t::write_hdr_format)
-    .def_readwrite("write_xact_format", &config_t::write_xact_format)
-    .def_readwrite("equity_format", &config_t::equity_format)
-    .def_readwrite("prices_format", &config_t::prices_format)
-    .def_readwrite("pricesdb_format", &config_t::pricesdb_format)
-    .def_readwrite("date_format", &config_t::date_format)
-    .def_readwrite("sort_string", &config_t::sort_string)
-    .def_readwrite("amount_expr", &config_t::amount_expr)
-    .def_readwrite("total_expr", &config_t::total_expr)
-    .def_readwrite("total_expr_template", &config_t::total_expr_template)
-    .def_readwrite("forecast_limit", &config_t::forecast_limit)
-    .def_readwrite("reconcile_balance", &config_t::reconcile_balance)
-    .def_readwrite("reconcile_date", &config_t::reconcile_date)
-    .def_readwrite("budget_flags", &config_t::budget_flags)
-    .def_readwrite("pricing_leeway", &config_t::pricing_leeway)
-    .def_readwrite("show_collapsed", &config_t::show_collapsed)
-    .def_readwrite("show_subtotal", &config_t::show_subtotal)
-    .def_readwrite("show_totals", &config_t::show_totals)
-    .def_readwrite("show_related", &config_t::show_related)
-    .def_readwrite("show_all_related", &config_t::show_all_related)
-    .def_readwrite("show_inverted", &config_t::show_inverted)
-    .def_readwrite("show_empty", &config_t::show_empty)
-    .def_readwrite("head_entries", &config_t::head_entries)
-    .def_readwrite("tail_entries", &config_t::tail_entries)
-    .def_readwrite("pager", &config_t::pager)
-    .def_readwrite("days_of_the_week", &config_t::days_of_the_week)
-    .def_readwrite("by_payee", &config_t::by_payee)
-    .def_readwrite("comm_as_payee", &config_t::comm_as_payee)
-    .def_readwrite("show_revalued", &config_t::show_revalued)
-    .def_readwrite("show_revalued_only", &config_t::show_revalued_only)
-    .def_readwrite("download_quotes", &config_t::download_quotes)
-    .def_readwrite("use_cache", &config_t::use_cache)
-    .def_readwrite("cache_dirty", &config_t::cache_dirty)
-
-    .def("process_options", py_process_options)
-    ;
-
-  scope().attr("config") = ptr(config);
-
-  def("option_help", py_option_help);
-  def("add_config_option_handlers", py_add_config_option_handlers);
-}
-
-#endif // USE_BOOST_PYTHON

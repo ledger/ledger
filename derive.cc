@@ -132,30 +132,3 @@ entry_t * derive_new_entry(journal_t& journal,
 }
 
 } // namespace ledger
-
-#ifdef USE_BOOST_PYTHON
-
-#include <boost/python.hpp>
-#include <boost/python/detail/api_placeholder.hpp>
-
-using namespace boost::python;
-using namespace ledger;
-
-entry_t * py_derive_new_entry(journal_t& journal, list args)
-{
-  strings_list strs;
-
-  int l = len(args);
-  for (int i = 0; i < l; i++)
-    strs.push_back(extract<std::string>(args[i]));
-
-  return derive_new_entry(journal, strs.begin(), strs.end());
-}
-
-void export_derive()
-{
-  def("derive_new_entry", py_derive_new_entry,
-      return_value_policy<manage_new_object>());
-}
-
-#endif // USE_BOOST_PYTHON
