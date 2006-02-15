@@ -71,15 +71,3 @@ join the Ledger mailing list at the following Web address:
 
 You can also find help at the #ledger channel on the IRC server
 irc.freenode.net.
-
-
-Building Ledger as a Python Module
-==================================
-
-If you have Python 2.2 or higher installed, and Boost.Python, then
-Ledger can also be built as a Python module if --enable-python is
-passed to the configure script.  This means you can interact with your
-Ledger data from Python, making it easier to write custom reports.
-
-This feature is mostly undocumented in version 2.0, although main.py
-gives a working example.

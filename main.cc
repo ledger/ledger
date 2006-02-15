@@ -18,9 +18,6 @@
 #endif
 
 #include "ledger.h"
-#ifdef USE_BOOST_PYTHON
-#include "py_eval.h"
-#endif
 #include "timing.h"
 
 using namespace ledger;
@@ -231,33 +228,6 @@ int parse_and_report(int argc, char * argv[], char * envp[])
     format = &config.write_xact_format;
   else
     format = &config.print_format;
-
-#ifdef USE_BOOST_PYTHON
-
-  // If Python support is compiled, we can easily report minimum and
-  // maximum values for each commodity.  There is a line in config.cc
-  // which configures the prices report to call these two functions,
-  // if Python is available.
-
-  if (command == "P")
-    python_eval("\
-min_val = 0\n\
-def vmin(d, val):\n\
-    global min_val\n\
-    if not min_val or val < min_val:\n\
-	min_val = val\n\
-	return val\n\
-    return min_val\n\
-\n\
-max_val = 0\n\
-def vmax(d, val):\n\
-    global max_val\n\
-    if not max_val or val > max_val:\n\
-	max_val = val\n\
-	return val\n\
-    return max_val\n", PY_EVAL_MULTI);
-
-#endif // USE_BOOST_PYTHON
 
   TIMER_STOP(process);
 

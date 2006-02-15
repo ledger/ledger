@@ -12,9 +12,6 @@
 #include "timing.h"
 #include "util.h"
 #include "acconf.h"
-#ifdef USE_BOOST_PYTHON
-#include "py_eval.h"
-#endif
 
 #include <fstream>
 #include <sstream>
@@ -733,11 +730,6 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	else if (word == "end") {
 	  account_stack.pop_front();
 	}
-#ifdef USE_BOOST_PYTHON
-	else if (word == "python") {
-	  python_eval(in, PY_EVAL_MULTI);
-	}
-#endif
 	else if (word == "alias") {
 	  char * b = skip_ws(p);
 	  if (char * e = std::strchr(b, '=')) {
@@ -904,22 +896,3 @@ void write_textual_journal(journal_t& journal, std::string path,
 }
 
 } // namespace ledger
-
-#ifdef USE_BOOST_PYTHON
-
-#include <boost/python.hpp>
-
-using namespace boost::python;
-using namespace ledger;
-
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(textual_parse_overloads,
-				       textual_parser_t::parse, 2, 4)
-
-void export_textual() {
-  class_< textual_parser_t, bases<parser_t> > ("TextualParser")
-    .def("test", &textual_parser_t::test)
-    .def("parse", &textual_parser_t::parse, textual_parse_overloads())
-    ;
-}
-
-#endif // USE_BOOST_PYTHON

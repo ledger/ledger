@@ -86,23 +86,3 @@ void reconcile_transactions::flush()
 }
 
 } // namespace ledger
-
-#ifdef USE_BOOST_PYTHON
-
-#include <boost/python.hpp>
-
-using namespace boost::python;
-using namespace ledger;
-
-void export_reconcile()
-{
-  class_< reconcile_transactions, bases<item_handler<transaction_t> > >
-    ("ReconcileTransactions",
-     init<item_handler<transaction_t> *, const value_t&, time_t>()
-     [with_custodian_and_ward<1, 2>()])
-    .def("flush", &reconcile_transactions::flush)
-    .def("__call__", &reconcile_transactions::operator())
-    ;
-}
-
-#endif // USE_BOOST_PYTHON

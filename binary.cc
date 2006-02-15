@@ -795,30 +795,3 @@ void write_binary_journal(std::ostream& out, journal_t * journal)
 }
 
 } // namespace ledger
-
-#ifdef USE_BOOST_PYTHON
-
-#include <boost/python.hpp>
-
-using namespace boost::python;
-using namespace ledger;
-
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(binary_parse_overloads,
-				       binary_parser_t::parse, 2, 4)
-
-void py_write_binary_journal(const std::string& path, journal_t * journal)
-{
-  std::ofstream out(path.c_str());
-  write_binary_journal(out, journal);
-}
-
-void export_binary() {
-  class_< binary_parser_t, bases<parser_t> > ("BinaryParser")
-    .def("test", &binary_parser_t::test)
-    .def("parse", &binary_parser_t::parse, binary_parse_overloads())
-    ;
-
-  def("write_binary_journal", py_write_binary_journal);
-}
-
-#endif // USE_BOOST_PYTHON

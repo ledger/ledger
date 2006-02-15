@@ -77,26 +77,3 @@ void format_emacs_transactions::operator()(transaction_t& xact)
 }
 
 } // namespace ledger
-
-#ifdef USE_BOOST_PYTHON
-
-#include <boost/python.hpp>
-
-using namespace boost::python;
-using namespace ledger;
-
-void export_emacs()
-{
-  typedef
-    pystream_handler_wrap<format_emacs_transactions, transaction_t>
-    format_emacs_transactions_wrap;
-
-  class_< format_emacs_transactions_wrap, bases<item_handler<transaction_t> > >
-    ("FormatEmacsTransactions",
-     init<PyObject *>()[with_custodian_and_ward<1, 2>()])
-    .def("flush", &format_emacs_transactions_wrap::flush)
-    .def("__call__", &format_emacs_transactions_wrap::operator())
-    ;
-}
-
-#endif // USE_BOOST_PYTHON
