@@ -189,6 +189,11 @@ static void endElement(void *userData, const char *name)
     if (value != curr_value)
       xact->cost = new amount_t(curr_value);
 
+    xact->beg_pos  = beg_pos;
+    xact->beg_line = beg_line;
+    xact->end_pos  = instreamp->tellg();
+    xact->end_line = XML_GetCurrentLineNumber(parser) - offset;
+
     // Clear the relevant variables for the next run
     curr_state = transaction_t::UNCLEARED;
     curr_value = amount_t();

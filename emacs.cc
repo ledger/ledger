@@ -47,7 +47,8 @@ void format_emacs_transactions::operator()(transaction_t& xact)
       out << "\n";
     }
 
-    out << "  (\"" << xact_account(xact)->fullname() << "\" \""
+    out << "  (" << (((unsigned long)xact.beg_pos) + 1) << " ";
+    out << "\"" << xact_account(xact)->fullname() << "\" \""
 	<< xact.amount << "\"";
 
     switch (xact.state) {

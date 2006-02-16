@@ -31,23 +31,27 @@ class transaction_t
  public:
   enum state_t { UNCLEARED, CLEARED, PENDING };
 
-  entry_t *	 entry;
-  std::time_t	 _date;
-  std::time_t	 _date_eff;
-  account_t *	 account;
-  amount_t	 amount;
-  amount_t *	 cost;
-  state_t        state;
-  unsigned short flags;
-  std::string	 note;
-  mutable void * data;
+  entry_t *	   entry;
+  std::time_t	   _date;
+  std::time_t	   _date_eff;
+  account_t *	   account;
+  amount_t	   amount;
+  amount_t *	   cost;
+  state_t	   state;
+  unsigned short   flags;
+  std::string	   note;
+  istream_pos_type beg_pos;
+  unsigned long    beg_line;
+  istream_pos_type end_pos;
+  unsigned long    end_line;
+  mutable void *   data;
 
   static bool    use_effective_date;
 
   transaction_t(account_t * _account = NULL)
     : entry(NULL), _date(0), _date_eff(0), account(_account),
       cost(NULL), state(UNCLEARED), flags(TRANSACTION_NORMAL),
-      data(NULL) {
+      data(NULL), beg_pos(0), beg_line(0), end_pos(0), end_line(0) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor transaction_t");
   }
 
@@ -57,7 +61,8 @@ class transaction_t
 		const std::string& _note  = "")
     : entry(NULL), _date(0), _date_eff(0), account(_account),
       amount(_amount), cost(NULL), state(UNCLEARED), flags(_flags),
-      note(_note), data(NULL) {
+      note(_note), data(NULL), beg_pos(0), beg_line(0), end_pos(0),
+      end_line(0) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor transaction_t");
   }
 
@@ -66,7 +71,7 @@ class transaction_t
       account(xact.account), amount(xact.amount),
       cost(xact.cost ? new amount_t(*xact.cost) : NULL),
       state(xact.state), flags(xact.flags), note(xact.note),
-      data(NULL) {
+      data(NULL), beg_pos(0), beg_line(0), end_pos(0), end_line(0) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor transaction_t");
   }
 

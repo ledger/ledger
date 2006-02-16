@@ -191,6 +191,17 @@ element_t * format_t::parse_elements(const std::string& fmt)
       break;
     }
 
+    case 'x':
+      switch (*++p) {
+      case 'B': current->type = element_t::XACT_BEG_POS; break;
+      case 'b': current->type = element_t::XACT_BEG_LINE; break;
+      case 'E': current->type = element_t::XACT_END_POS; break;
+      case 'e': current->type = element_t::XACT_END_LINE; break;
+      case '\0':
+	goto END;
+      }
+      break;
+
     case 'd':
       current->type  = element_t::COMPLETE_DATE_STRING;
       current->chars = format_t::date_format;
@@ -201,10 +212,10 @@ element_t * format_t::parse_elements(const std::string& fmt)
       break;
 
     case 'S': current->type = element_t::SOURCE; break;
-    case 'B': current->type = element_t::BEG_POS; break;
-    case 'b': current->type = element_t::BEG_LINE; break;
-    case 'E': current->type = element_t::END_POS; break;
-    case 'e': current->type = element_t::END_LINE; break;
+    case 'B': current->type = element_t::ENTRY_BEG_POS; break;
+    case 'b': current->type = element_t::ENTRY_BEG_LINE; break;
+    case 'E': current->type = element_t::ENTRY_END_POS; break;
+    case 'e': current->type = element_t::ENTRY_END_LINE; break;
     case 'X': current->type = element_t::CLEARED; break;
     case 'Y': current->type = element_t::ENTRY_CLEARED; break;
     case 'C': current->type = element_t::CODE; break;
@@ -222,6 +233,7 @@ element_t * format_t::parse_elements(const std::string& fmt)
     }
   }
 
+ END:
   if (q != buf) {
     if (! result.get()) {
       result.reset(new element_t);
@@ -389,24 +401,44 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
       }
       break;
 
-    case element_t::BEG_POS:
+    case element_t::ENTRY_BEG_POS:
       if (details.entry)
 	out << (unsigned long)details.entry->beg_pos;
       break;
 
-    case element_t::BEG_LINE:
+    case element_t::ENTRY_BEG_LINE:
       if (details.entry)
 	out << details.entry->beg_line;
       break;
 
-    case element_t::END_POS:
+    case element_t::ENTRY_END_POS:
       if (details.entry)
 	out << (unsigned long)details.entry->end_pos;
       break;
 
-    case element_t::END_LINE:
+    case element_t::ENTRY_END_LINE:
       if (details.entry)
 	out << details.entry->end_line;
+      break;
+
+    case element_t::XACT_BEG_POS:
+      if (details.xact)
+	out << (unsigned long)details.xact->beg_pos;
+      break;
+
+    case element_t::XACT_BEG_LINE:
+      if (details.xact)
+	out << details.xact->beg_line;
+      break;
+
+    case element_t::XACT_END_POS:
+      if (details.xact)
+	out << (unsigned long)details.xact->end_pos;
+      break;
+
+    case element_t::XACT_END_LINE:
+      if (details.xact)
+	out << details.xact->end_line;
       break;
 
     case element_t::DATE_STRING: {
