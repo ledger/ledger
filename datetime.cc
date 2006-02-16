@@ -237,7 +237,7 @@ void interval_t::parse(std::istream& in)
 	seconds = 86400;
       else if (word == "week")
 	seconds = 7 * 86400;
-      else if (word == "monthly")
+      else if (word == "month")
 	months = 1;
       else if (word == "quarter")
 	months = 3;
