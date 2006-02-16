@@ -384,6 +384,9 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
   TIMER_START(entry_xacts);
 
   while (! in.eof() && (in.peek() == ' ' || in.peek() == '\t')) {
+    istream_pos_type beg_pos  = in.tellg();
+    unsigned long    beg_line = linenum;
+
     line[0] = '\0';
     in.getline(line, MAX_LINE);
     if (in.eof() && line[0] == '\0')
@@ -400,6 +403,12 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
       if (state != transaction_t::UNCLEARED &&
 	  xact->state == transaction_t::UNCLEARED)
 	xact->state = state;
+
+      xact->beg_pos  = beg_pos;
+      xact->beg_line = beg_line;
+      xact->end_pos  = in.tellg();
+      xact->end_line = linenum;
+
       curr->add_transaction(xact);
     }
 

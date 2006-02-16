@@ -12,9 +12,9 @@ namespace ledger {
 
 static unsigned long  binary_magic_number = 0xFFEED765;
 #ifdef DEBUG_ENABLED
-static unsigned long  format_version      = 0x00020501;
+static unsigned long  format_version      = 0x00020503;
 #else
-static unsigned long  format_version      = 0x00020500;
+static unsigned long  format_version      = 0x00020502;
 #endif
 
 static account_t **   accounts;
@@ -198,6 +198,10 @@ inline void read_binary_transaction(char *& data, transaction_t * xact)
   read_binary_number(data, xact->flags);
   xact->flags |= TRANSACTION_BULK_ALLOC;
   read_binary_string(data, &xact->note);
+  read_binary_number(data, xact->beg_pos);
+  read_binary_number(data, xact->beg_line);
+  read_binary_number(data, xact->end_pos);
+  read_binary_number(data, xact->end_line);
 
   xact->data = NULL;
 }
@@ -564,6 +568,10 @@ void write_binary_transaction(std::ostream& out, transaction_t * xact)
   write_binary_number(out, xact->state);
   write_binary_number(out, xact->flags);
   write_binary_string(out, xact->note);
+  write_binary_number<istream_pos_type>(out, xact->beg_pos);
+  write_binary_number<unsigned long>(out, xact->beg_line);
+  write_binary_number<istream_pos_type>(out, xact->end_pos);
+  write_binary_number<unsigned long>(out, xact->end_line);
 }
 
 void write_binary_entry_base(std::ostream& out, entry_base_t * entry)

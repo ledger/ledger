@@ -372,15 +372,9 @@ dropped."
     ;; attempt to auto-reconcile in the background
     (with-temp-buffer
       (let ((exit-code
-	     (ledger-run-ledger
-	      buffer "--format" "%B\\n" "--reconcile"
-	      (with-temp-buffer
-		(insert balance)
-		(goto-char (point-min))
-		(while (re-search-forward "\\([&$]\\)" nil t)
-		  (replace-match "\\\\\\1"))
-		(buffer-string))
-	      "--reconcile-date" date "register" account)))
+	     (ledger-run-ledger buffer "--format" "%xB\\n"
+	      "--reconcile" balance "--reconcile-date" date
+	      "register" account)))
 	(if (/= 0 exit-code)
 	    (error "Failed to reconcile account '%s' to balance '%s'"
 		   account balance)
@@ -494,18 +488,11 @@ dropped."
 		    (nth 0 item)
 		    (if ledger-clear-whole-entries
 			(copy-marker (nth 1 item))
-		      (save-excursion
-			(goto-char (nth 1 item))
-			(let ((i 0))
-			  (while (< i index)
-			    (re-search-forward
-			     account (cdr (ledger-current-entry-bounds)))
-			    (setq i (1+ i))))
-			(point-marker)))))))
+		      (copy-marker (nth 0 xact)))))))
 	    (insert (format "%s %-30s %-25s %15s\n"
 			    (format-time-string "%m/%d" (nth 2 item))
-			    (nth 4 item) (nth 0 xact) (nth 1 xact)))
-	    (if (nth 2 xact)
+			    (nth 4 item) (nth 1 xact) (nth 2 xact)))
+	    (if (nth 3 xact)
 		(set-text-properties beg (1- (point))
 				     (list 'face 'bold
 					   'where where))
