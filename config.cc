@@ -988,6 +988,7 @@ OPT_BEGIN(total_data, "J") {
 
 OPT_BEGIN(price_db, ":") {
   config->price_db = optarg;
+  std::cerr << "Setting --price_db=" << optarg << std::endl;
 } OPT_END(price_db);
 
 OPT_BEGIN(price_exp, "Z:") {
