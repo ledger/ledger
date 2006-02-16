@@ -1821,11 +1821,11 @@ There are also specific format commands for each report type:
 
 These options affect how commodity values are displayed:
 
-@option{--price-db FILE} (@option{-P FILE}) sets the file that is used
-for recording downloaded commodity prices.  It is always read on
-startup, to determine historical prices.  Other settings can be placed
-in this file manually, to prevent downloading quotes for a specific,
-for example.  This is done by adding a line like the following:
+@option{--price-db FILE} sets the file that is used for recording
+downloaded commodity prices.  It is always read on startup, to
+determine historical prices.  Other settings can be placed in this
+file manually, to prevent downloading quotes for a specific, for
+example.  This is done by adding a line like the following:
 
 @example
 ; Don't download quotes for the dollar, or timelog values
