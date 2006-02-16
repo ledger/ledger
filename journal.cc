@@ -15,19 +15,15 @@ bool transaction_t::use_effective_date = false;
 
 std::time_t transaction_t::actual_date() const
 {
-  if (_date == 0) {
-    assert(entry);
+  if (_date == 0 && entry)
     return entry->actual_date();
-  }
   return _date;
 }
 
 std::time_t transaction_t::effective_date() const
 {
-  if (_date_eff == 0) {
-    assert(entry);
+  if (_date_eff == 0 && entry)
     return entry->effective_date();
-  }
   return _date_eff;
 }
 
