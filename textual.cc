@@ -430,15 +430,12 @@ static inline void parse_symbol(char *& p, std::string& symbol)
     symbol = std::string(p + 1, 0, q - p - 1);
     p = q + 2;
   } else {
-    char * q = std::strchr(p, ' ');
-    if (q) {
-      *q = '\0';
-      symbol = std::string(p, 0, q - p);
-      p = q + 1;
-    } else {
-      symbol = p;
+    char * q = next_element(p);
+    symbol = p;
+    if (q)
+      p = q;
+    else
       p += symbol.length();
-    }
   }
   if (symbol.empty())
     throw parse_error(path, linenum, "Failed to parse commodity");
@@ -599,15 +596,19 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
       case 'P': {		// a pricing entry
 	std::time_t date;
 
-	char * b = skip_ws(line + 1);
-	char * p = std::strchr(b, ' ');
-	if (! p) break;
-	p = std::strchr(skip_ws(p), ' ');
-	if (! p) break;
-	*p++ = '\0';
+	char * date_field = skip_ws(line + 1);
+	char * time_field = next_element(date_field);
+	if (! time_field) break;
+	char * symbol_and_price = next_element(time_field);
+	if (! symbol_and_price) break;
+
+	char date_buffer[64];
+	std::strcpy(date_buffer, date_field);
+	date_buffer[std::strlen(date_field)] = ' ';
+	std::strcpy(&date_buffer[std::strlen(date_field) + 1], time_field);
 
 	struct std::tm when;
-	if (strptime(b, "%Y/%m/%d %H:%M:%S", &when)) {
+	if (strptime(date_buffer, "%Y/%m/%d %H:%M:%S", &when)) {
 	  date = std::mktime(&when);
 	} else {
 	  throw parse_error(path, linenum, "Failed to parse date");
@@ -616,8 +617,8 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	std::string symbol;
 	amount_t    price;
 
-	parse_symbol(p, symbol);
-	price.parse(skip_ws(p));
+	parse_symbol(symbol_and_price, symbol);
+	price.parse(symbol_and_price);
 
 	commodity_t * commodity = commodity_t::find_commodity(symbol, true);
 	commodity->add_price(date, price);
@@ -646,12 +647,13 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	break;
 
       case '-': {                 // option setting
-	char * p = std::strchr(line, ' ');
-	if (! p)
+	char * p = next_element(line);
+	if (! p) {
 	  p = std::strchr(line, '=');
-	if (p)
-	  *p++ = '\0';
-	process_option(config_options, line + 2, p ? skip_ws(p) : NULL);
+	  if (p)
+	    *p++ = '\0';
+	}
+	process_option(config_options, line + 2, p);
 	break;
       }
 
@@ -701,16 +703,14 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
       }
 
       case '!': {                 // directive
-	char * p = std::strchr(line, ' ');
-	if (p)
-	  *p++ = '\0';
+	char * p = next_element(line);
 	std::string word(line + 1);
 	if (word == "include") {
 	  push_var<std::string>  save_path(path);
 	  push_var<unsigned int> save_src_idx(src_idx);
 	  push_var<unsigned int> save_linenum(linenum);
 
-	  path = skip_ws(p);
+	  path = p;
 	  if (path[0] != '/' && path[0] != '\\') {
 	    std::string::size_type pos = save_path.prev.rfind('/');
 	    if (pos == std::string::npos)
@@ -725,14 +725,14 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	}
 	else if (word == "account") {
 	  account_t * acct;
-	  acct = account_stack.front()->find_account(skip_ws(p));
+	  acct = account_stack.front()->find_account(p);
 	  account_stack.push_front(acct);
 	}
 	else if (word == "end") {
 	  account_stack.pop_front();
 	}
 	else if (word == "alias") {
-	  char * b = skip_ws(p);
+	  char * b = p;
 	  if (char * e = std::strchr(b, '=')) {
 	    char * z = e - 1;
 	    while (std::isspace(*z))
