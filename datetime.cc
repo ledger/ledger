@@ -90,9 +90,10 @@ std::time_t interval_t::increment(const std::time_t moment) const
       }
     }
 
-    desc->tm_hour = 0;
-    desc->tm_min  = 0;
-    desc->tm_sec  = 0;
+    desc->tm_hour  = 0;
+    desc->tm_min   = 0;
+    desc->tm_sec   = 0;
+    desc->tm_isdst = 0;
 
     then = std::mktime(desc);
   }
