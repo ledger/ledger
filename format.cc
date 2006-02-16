@@ -637,7 +637,7 @@ void format_transactions::operator()(transaction_t& xact)
       first_line_format.format(output_stream, details_t(xact));
       last_entry = xact.entry;
     }
-    else if (last_xact->date() != xact.date()) {
+    else if (last_xact && last_xact->date() != xact.date()) {
       first_line_format.format(output_stream, details_t(xact));
     }
     else {
