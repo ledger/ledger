@@ -608,8 +608,6 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	date_buffer[std::strlen(date_field)] = ' ';
 	std::strcpy(&date_buffer[std::strlen(date_field) + 1], time_field);
 
-	std::cerr << "date_buffer = " << date_buffer << std::endl;
-
 	struct std::tm when;
 	if (strptime(date_buffer, "%Y/%m/%d %H:%M:%S", &when)) {
 	  date = std::mktime(&when);
