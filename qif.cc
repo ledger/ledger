@@ -39,6 +39,7 @@ bool qif_parser_t::test(std::istream& in) const
 }
 
 unsigned int qif_parser_t::parse(std::istream&	     in,
+				 config_t&           config,
 				 journal_t *	     journal,
 				 account_t *	     master,
 				 const std::string * original_file)

@@ -487,6 +487,7 @@ static void clock_out_from_timelog(const std::time_t when,
 }
 
 unsigned int textual_parser_t::parse(std::istream&	 in,
+				     config_t&           config,
 				     journal_t *	 journal,
 				     account_t *	 master,
 				     const std::string * original_file)
@@ -607,6 +608,8 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	date_buffer[std::strlen(date_field)] = ' ';
 	std::strcpy(&date_buffer[std::strlen(date_field) + 1], time_field);
 
+	std::cerr << "date_buffer = " << date_buffer << std::endl;
+
 	struct std::tm when;
 	if (strptime(date_buffer, "%Y/%m/%d %H:%M:%S", &when)) {
 	  date = std::mktime(&when);
@@ -653,7 +656,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	  if (p)
 	    *p++ = '\0';
 	}
-	process_option(config_options, line + 2, p);
+	config.process_option(line + 2, p);
 	break;
       }
 
@@ -721,7 +724,8 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
 	  DEBUG_PRINT("ledger.textual.include",
 		      "Including path '" << path << "'");
-	  count += parse_journal_file(path, journal, account_stack.front());
+	  count += parse_journal_file(path, config, journal,
+				      account_stack.front());
 	}
 	else if (word == "account") {
 	  account_t * acct;
