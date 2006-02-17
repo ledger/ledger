@@ -569,23 +569,31 @@ dropped."
 
 ;; General helper functions
 
+(defvar ledger-delete-after nil)
+
 (defun ledger-run-ledger (buffer &rest args)
   "run ledger with supplied arguments"
-  (let ((buf (current-buffer)))
-    (with-current-buffer buffer
-      (apply #'call-process-region
-	     (append (list (point-min) (point-max)
-			   ledger-binary-path nil buf nil "-f" "-")
-		     args)))))
+  (cond
+   ((null ledger-binary-path)
+    (error "The variable `ledger-binary-path' has not been set"))
+   ((not (file-exists-p ledger-binary-path))
+    (error "The file `ledger-binary-path' (\"%s\") does not exist"
+	   ledger-binary-path))
+   ((not (file-executable-p ledger-binary-path))
+    (error "The file `ledger-binary-path' (\"%s\") cannot be executed"
+	   ledger-binary-path))
+   (t
+    (let ((buf (current-buffer)))
+      (with-current-buffer buffer
+	(apply #'call-process-region
+	       (append (list (point-min) (point-max)
+			     ledger-binary-path ledger-delete-after
+			     buf nil "-f" "-")
+		       args)))))))
 
 (defun ledger-run-ledger-and-delete (buffer &rest args)
-  "run ledger with supplied arguments"
-  (let ((buf (current-buffer)))
-    (with-current-buffer buffer
-      (apply #'call-process-region
-	     (append (list (point-min) (point-max)
-			   ledger-binary-path t buf nil "-f" "-")
-		     args)))))
+  (let ((ledger-delete-after t))
+    (apply #'ledger-run-ledger buffer args)))
 
 (defun ledger-set-year (newyear)
   "Set ledger's idea of the current year to the prefix argument."
