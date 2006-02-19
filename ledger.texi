@@ -3538,7 +3538,7 @@ subtotal either way, use this instead:
 ledger -Q -T "/Liab.*Huquq/?(O/P@{2.22 AU@}<=@{-1.0@}&O):O" -s bal liab
 @end smallexample
 
-In some cases, you may wish to refer to the account of whatever
+In some cases, you may wish to refer to the account of whichever
 transaction matched your automated entry's value expression.  To do
 this, use the special account name @samp{$account}:
 
