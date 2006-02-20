@@ -336,16 +336,14 @@ void output_xml_string(std::ostream& out, const std::string& str)
 
 void format_xml_entries::format_last_entry()
 {
-  char buf[256];
-  std::strftime(buf, 255, format_t::date_format.c_str(),
-		std::localtime(&last_entry->_date));
+  char buf[32];
+  std::strftime(buf, 31, "%Y/%m/%d", std::localtime(&last_entry->_date));
 
   output_stream << "  <entry>\n"
 		<< "    <en:date>" << buf << "</en:date>\n";
 
   if (last_entry->_date_eff) {
-    std::strftime(buf, 255, format_t::date_format.c_str(),
-		  std::localtime(&last_entry->_date_eff));
+    std::strftime(buf, 31, "%Y/%m/%d", std::localtime(&last_entry->_date_eff));
     output_stream << "    <en:date_eff>" << buf << "</en:date_eff>\n";
   }
 
@@ -375,13 +373,11 @@ void format_xml_entries::format_last_entry()
       output_stream << "      <transaction>\n";
 
       if ((*i)->_date) {
-	std::strftime(buf, 255, format_t::date_format.c_str(),
-		      std::localtime(&(*i)->_date));
+	std::strftime(buf, 31, "%Y/%m/%d", std::localtime(&(*i)->_date));
 	output_stream << "        <tr:date>" << buf << "</tr:date>\n";
       }
       if ((*i)->_date_eff) {
-	std::strftime(buf, 255, format_t::date_format.c_str(),
-		      std::localtime(&(*i)->_date_eff));
+	std::strftime(buf, 31, "%Y/%m/%d", std::localtime(&(*i)->_date_eff));
 	output_stream << "        <tr:date_eff>" << buf << "</tr:date_eff>\n";
       }
 
