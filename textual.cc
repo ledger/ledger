@@ -675,17 +675,12 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
 	auto_entry_t * ae = new auto_entry_t(skip_ws(line + 1));
 	if (parse_transactions(in, account_stack.front(), *ae, "automated")) {
-	  if (ae->finalize()) {
-	    journal->auto_entries.push_back(ae);
-	    ae->src_idx  = src_idx;
-	    ae->beg_pos  = beg_pos;
-	    ae->beg_line = beg_line;
-	    ae->end_pos  = in.tellg();
-	    ae->end_line = linenum;
-	  } else {
-	    throw parse_error(path, linenum,
-			      "Automated entry failed to balance");
-	  }
+	  journal->auto_entries.push_back(ae);
+	  ae->src_idx  = src_idx;
+	  ae->beg_pos  = beg_pos;
+	  ae->beg_line = beg_line;
+	  ae->end_pos  = in.tellg();
+	  ae->end_line = linenum;
 	}
 	break;
       }
@@ -778,7 +773,12 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	  } else {
 	    print_entry(std::cerr, *entry);
 	    delete entry;
-	    throw parse_error(path, first_line, "Entry above does not balance");
+
+	    std::string msgbuf;
+	    std::ostringstream msg(msgbuf);
+	    msg << "Entry above does not balance; remainder is: "
+		<< entry_balance;
+	    throw parse_error(path, first_line, msg.str());
 	  }
 	} else {
 	  throw parse_error(path, first_line, "Failed to parse entry");
