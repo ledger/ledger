@@ -150,6 +150,8 @@ class entry_base_t
   virtual bool valid() const = 0;
 };
 
+extern value_t entry_balance;
+
 class entry_t : public entry_base_t
 {
  public:
