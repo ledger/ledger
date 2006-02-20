@@ -72,13 +72,15 @@ bool entry_base_t::remove_transaction(transaction_t * xact)
   return true;
 }
 
+value_t entry_balance;
+
 bool entry_base_t::finalize()
 {
   // Scan through and compute the total balance for the entry.  This
   // is used for auto-calculating the value of entries with no cost,
   // and the per-unit price of unpriced commodities.
 
-  value_t balance;
+  value_t& balance = entry_balance;
 
   bool no_amounts = true;
   for (transactions_list::const_iterator x = transactions.begin();
@@ -453,8 +455,7 @@ bool journal_t::add_entry(entry_t * entry)
 {
   entry->journal = this;
 
-  if (! entry->finalize() ||
-      ! run_hooks(entry_finalize_hooks, *entry)) {
+  if (! run_hooks(entry_finalize_hooks, *entry) || ! entry->finalize()) {
     entry->journal = NULL;
     return false;
   }
