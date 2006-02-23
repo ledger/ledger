@@ -8,6 +8,7 @@
 struct option_handler {
   bool handled;
   option_handler() : handled(false) {}
+  virtual ~option_handler() {}
   virtual void operator()(const char * arg = NULL) = 0;
 };
 

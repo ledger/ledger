@@ -51,7 +51,7 @@ class transaction_t
   transaction_t(account_t * _account = NULL)
     : entry(NULL), _date(0), _date_eff(0), account(_account),
       cost(NULL), state(UNCLEARED), flags(TRANSACTION_NORMAL),
-      data(NULL), beg_pos(0), beg_line(0), end_pos(0), end_line(0) {
+      beg_pos(0), beg_line(0), end_pos(0), end_line(0), data(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor transaction_t");
   }
 
@@ -61,8 +61,8 @@ class transaction_t
 		const std::string& _note  = "")
     : entry(NULL), _date(0), _date_eff(0), account(_account),
       amount(_amount), cost(NULL), state(UNCLEARED), flags(_flags),
-      note(_note), data(NULL), beg_pos(0), beg_line(0), end_pos(0),
-      end_line(0) {
+      note(_note), beg_pos(0), beg_line(0), end_pos(0), end_line(0),
+      data(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor transaction_t");
   }
 
@@ -71,7 +71,7 @@ class transaction_t
       account(xact.account), amount(xact.amount),
       cost(xact.cost ? new amount_t(*xact.cost) : NULL),
       state(xact.state), flags(xact.flags), note(xact.note),
-      data(NULL), beg_pos(0), beg_line(0), end_pos(0), end_line(0) {
+      beg_pos(0), beg_line(0), end_pos(0), end_line(0), data(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor transaction_t");
   }
 
