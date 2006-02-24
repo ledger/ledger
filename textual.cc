@@ -232,7 +232,24 @@ transaction_t * parse_transaction(char * line, account_t * account)
       }
 
       if (amount) {
-	price = std::strchr(amount, '@');
+	bool in_quote	 = false;
+	int  paren_depth = 0;
+	for (char * q = amount; *q; q++) {
+	  if (*q == '"') {
+	      in_quote = ! in_quote;
+	  }
+	  else if (! in_quote) {
+	    if (*q == '(')
+	      paren_depth++;
+	    else if (*q == ')')
+	      paren_depth--;
+	    else if (paren_depth == 0 && *q == '@') {
+	      price = q;
+	      break;
+	    }
+	  }
+	}
+
 	if (price) {
 	  if (price == amount)
 	    throw parse_error(path, linenum, "Cost specified without amount");
