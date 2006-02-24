@@ -131,7 +131,7 @@ void parse_amount(const char * text, amount_t& amt, unsigned short flags,
 {
   char * altbuf = NULL;
 
-  if (*text) {
+  if (*text && *text != '(') {
     bool in_quote = false;
     for (const char * p = text + 1; *p; p++)
       if (*p == '"') {
