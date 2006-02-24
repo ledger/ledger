@@ -294,6 +294,56 @@ void value_expr_t::compute(value_t& result, const details_t& details) const
       result = false;
     break;
 
+  case F_FUNC: {
+    if (constant_s == "min" || constant_s == "max") {
+      assert(left);
+      if (! right) {
+	left->compute(result, details);
+	break;
+      }
+      value_t temp;
+      left->compute(temp, details);
+      assert(right->kind == O_ARG);
+      right->left->compute(result, details);
+
+      if (constant_s == "min") {
+	if (temp < result)
+	  result = temp;
+      } else {
+	if (temp > result)
+	  result = temp;
+      }
+    }
+    else if (constant_s == "price") {
+      assert(left);
+      left->compute(result, details);
+
+      std::time_t moment = terminus;
+      if (right) {
+	assert(right->kind == O_ARG);
+	switch (right->left->kind) {
+	case DATE:
+	  if (details.xact && transaction_has_xdata(*details.xact) &&
+	      transaction_xdata_(*details.xact).date)
+	    moment = transaction_xdata_(*details.xact).date;
+	  else if (details.xact)
+	    moment = details.xact->date();
+	  else if (details.entry)
+	    moment = details.entry->date();
+	  break;
+	case CONSTANT_T:
+	  moment = right->left->constant_t;
+	  break;
+	default:
+	  throw compute_error("Invalid date passed to @price(value,date)");
+	}
+      }
+
+      result = result.value(moment);
+    }
+    break;
+  }
+
   case F_VALUE: {
     assert(left);
     left->compute(result, details);
@@ -578,6 +628,33 @@ value_expr_t * parse_value_term(std::istream& in)
     in.get(c);
     node.reset(new value_expr_t(kind));
     node->mask = new mask_t(buf);
+    break;
+  }
+
+  case '@': {
+    READ_INTO(in, buf, 255, c, c != '(');
+    if (c != '(')
+      unexpected(c, '(');
+
+    node.reset(new value_expr_t(value_expr_t::F_FUNC));
+    node->constant_s = buf;
+
+    in.get(c);
+    if (peek_next_nonws(in) == ')') {
+      in.get(c);
+    } else {
+      value_expr_t * cur = node.get();
+      cur->left = parse_value_expr(in, true);
+      in.get(c);
+      while (! in.eof() && c == ',') {
+	cur->right = new value_expr_t(value_expr_t::O_ARG);
+	cur = cur->right;
+	cur->left = parse_value_expr(in, true);
+	in.get(c);
+      }
+      if (c != ')')
+	unexpected(c, ')');
+    }
     break;
   }
 
