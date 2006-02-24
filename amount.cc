@@ -509,7 +509,7 @@ amount_t::operator bool() const
   } else {
     mpz_set(temp, MPZ(quantity));
     if (commodity_)
-      mpz_ui_pow_ui(divisor, 10, quantity->prec - commodity_->precision);
+      mpz_ui_pow_ui(divisor, 10, quantity->prec - commodity().precision);
     else
       mpz_ui_pow_ui(divisor, 10, quantity->prec);
     mpz_tdiv_q(temp, temp, divisor);
@@ -685,8 +685,8 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
   if (amt.commodity().larger) {
     amount_t last(amt);
     while (last.commodity().larger) {
-      last /= *last.commodity_->larger;
-      last.commodity_ = last.commodity_->larger->commodity_;
+      last /= *last.commodity().larger;
+      last.commodity_ = last.commodity().larger->commodity_;
       if (ledger::abs(last) < 1)
 	break;
       base = last;
@@ -945,7 +945,7 @@ void amount_t::parse(std::istream& in, unsigned short flags)
     quantity->prec = quant.length() - last_comma - 1;
   }
   else if (last_period != std::string::npos &&
-	   ! (commodity_->flags & COMMODITY_STYLE_EUROPEAN)) {
+	   ! (commodity().flags & COMMODITY_STYLE_EUROPEAN)) {
     quantity->prec = quant.length() - last_period - 1;
   }
   else {
@@ -955,9 +955,9 @@ void amount_t::parse(std::istream& in, unsigned short flags)
   // Set the commodity's flags and precision accordingly
 
   if (newly_created || ! (flags & AMOUNT_PARSE_NO_MIGRATE)) {
-    commodity_->flags |= comm_flags;
-    if (quantity->prec > commodity_->precision)
-      commodity_->precision = quantity->prec;
+    commodity().flags |= comm_flags;
+    if (quantity->prec > commodity().precision)
+      commodity().precision = quantity->prec;
   }
 
   // Now we have the final number.  Remove commas and periods, if
@@ -991,9 +991,9 @@ void amount_t::parse(std::istream& in, unsigned short flags)
 
 void amount_t::reduce()
 {
-  while (commodity_ && commodity_->smaller) {
-    *this *= *commodity_->smaller;
-    commodity_ = commodity_->smaller->commodity_;
+  while (commodity_ && commodity().smaller) {
+    *this *= *commodity().smaller;
+    commodity_ = commodity().smaller->commodity_;
   }
 }
 
@@ -1137,8 +1137,12 @@ void amount_t::write_quantity(std::ostream& out) const
 bool amount_t::valid() const
 {
   if (quantity) {
+#if 0
+    // jww (2006-02-24): It's OK for commodity_ to be null here, it
+    // just means to use the null_commodity
     if (! commodity_)
       return false;
+#endif
 
     if (quantity->ref == 0)
       return false;
