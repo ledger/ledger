@@ -8,6 +8,8 @@
 - Added a new value expression regexp command:
     C//  compare against transaction amount's commodity symbol
 
+- Added new @min(x,y) and @max(x,y) value expression functions.
+
 - Effective dates may now be specified for entries:
 
     2004/10/03=2004/09/30 Credit card company
