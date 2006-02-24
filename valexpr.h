@@ -64,6 +64,7 @@ struct value_expr_t
     F_PARENT,
     F_ARITH_MEAN,
     F_VALUE,
+    F_FUNC,
     F_NEG,
     F_ABS,
     F_STRIP,
