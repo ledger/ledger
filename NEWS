@@ -3,18 +3,18 @@
 
 * 2.5
 
-- A new configure option "--disable-emacs" will disable generation of
-  transaction and entry location info, which is used by ledger.el and
-  the "write" command.  If you use neither of these, then disabling
-  them will cut textual parsing time in half, and binary loading time
-  by a third.
-
 - Added a new "csv" command, for outputting results in CSV format.
 
 - Added a new value expression regexp command:
     C//  compare against transaction amount's commodity symbol
 
 - Added new @min(x,y) and @max(x,y) value expression functions.
+
+- A new configure option "--disable-emacs" will disable generation of
+  transaction and entry location info, which is used by ledger.el and
+  the "write" command.  If you use neither of these, then disabling
+  them will cut textual parsing time in half, and binary loading time
+  (and cache file size) by a third.
 
 - Effective dates may now be specified for entries:
 

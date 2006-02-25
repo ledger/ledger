@@ -13,15 +13,15 @@ namespace ledger {
 static unsigned long  binary_magic_number = 0xFFEED765;
 #ifdef USE_EDITOR
 #ifdef DEBUG_ENABLED
-static unsigned long  format_version      = 0x00020583;
+static unsigned long  format_version      = 0x00020585;
 #else
-static unsigned long  format_version      = 0x00020582;
+static unsigned long  format_version      = 0x00020584;
 #endif
 #else
 #ifdef DEBUG_ENABLED
-static unsigned long  format_version      = 0x00020503;
+static unsigned long  format_version      = 0x00020505;
 #else
-static unsigned long  format_version      = 0x00020502;
+static unsigned long  format_version      = 0x00020504;
 #endif
 #endif
 
