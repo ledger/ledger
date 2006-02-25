@@ -13,15 +13,15 @@ namespace ledger {
 static unsigned long  binary_magic_number = 0xFFEED765;
 #ifdef USE_EDITOR
 #ifdef DEBUG_ENABLED
-static unsigned long  format_version      = 0x00020587;
+static unsigned long  format_version      = 0x00020589;
 #else
-static unsigned long  format_version      = 0x00020586;
+static unsigned long  format_version      = 0x00020588;
 #endif
 #else
 #ifdef DEBUG_ENABLED
-static unsigned long  format_version      = 0x00020507;
+static unsigned long  format_version      = 0x00020509;
 #else
-static unsigned long  format_version      = 0x00020506;
+static unsigned long  format_version      = 0x00020508;
 #endif
 #endif
 
@@ -338,7 +338,7 @@ inline void read_binary_transaction(char *& data, transaction_t * xact)
 }
 
 inline void read_binary_entry_base(char *& data, entry_base_t * entry,
-				   transaction_t *& xact_pool)
+				   transaction_t *& xact_pool, bool& finalize)
 {
 #ifdef USE_EDITOR
   read_binary_long(data, entry->src_idx);
@@ -348,19 +348,23 @@ inline void read_binary_entry_base(char *& data, entry_base_t * entry,
   read_binary_long(data, entry->end_line);
 #endif
 
+  bool ignore_calculated = read_binary_number<char>(data) == 1;
+
   for (unsigned long i = 0, count = read_binary_long<unsigned long>(data);
        i < count;
        i++) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor transaction_t");
     read_binary_transaction(data, xact_pool);
+    if (ignore_calculated && xact_pool->flags & TRANSACTION_CALCULATED)
+      finalize = true;
     entry->add_transaction(xact_pool++);
   }
 }
 
 inline void read_binary_entry(char *& data, entry_t * entry,
-			      transaction_t *& xact_pool)
+			      transaction_t *& xact_pool, bool& finalize)
 {
-  read_binary_entry_base(data, entry, xact_pool);
+  read_binary_entry_base(data, entry, xact_pool, finalize);
   read_binary_long(data, entry->_date);
   read_binary_long(data, entry->_date_eff);
   read_binary_string(data, &entry->code);
@@ -370,15 +374,16 @@ inline void read_binary_entry(char *& data, entry_t * entry,
 inline void read_binary_auto_entry(char *& data, auto_entry_t * entry,
 				   transaction_t *& xact_pool)
 {
-  read_binary_entry_base(data, entry, xact_pool);
+  bool ignore;
+  read_binary_entry_base(data, entry, xact_pool, ignore);
   read_binary_string(data, &entry->predicate_string);
   entry->predicate = new item_predicate<transaction_t>(entry->predicate_string);
 }
 
 inline void read_binary_period_entry(char *& data, period_entry_t * entry,
-				     transaction_t *& xact_pool)
+				     transaction_t *& xact_pool, bool& finalize)
 {
-  read_binary_entry_base(data, entry, xact_pool);
+  read_binary_entry_base(data, entry, xact_pool, finalize);
   read_binary_string(data, &entry->period_string);
   std::istringstream stream(entry->period_string);
   entry->period.parse(stream);
@@ -595,8 +600,11 @@ unsigned int read_binary_journal(std::istream&	    in,
 
   for (unsigned long i = 0; i < count; i++) {
     new(entry_pool) entry_t;
-    read_binary_entry(data, entry_pool, xact_pool);
+    bool finalize = false;
+    read_binary_entry(data, entry_pool, xact_pool, finalize);
     entry_pool->journal = journal;
+    if (finalize && ! entry_pool->finalize())
+      continue;
     journal->entries.push_back(entry_pool++);
   }
 
@@ -609,8 +617,11 @@ unsigned int read_binary_journal(std::istream&	    in,
 
   for (unsigned long i = 0; i < period_count; i++) {
     period_entry_t * period_entry = new period_entry_t;
-    read_binary_period_entry(data, period_entry, xact_pool);
+    bool finalize = false;
+    read_binary_period_entry(data, period_entry, xact_pool, finalize);
     period_entry->journal = journal;
+    if (finalize && ! period_entry->finalize())
+      continue;
     journal->period_entries.push_back(period_entry);
   }
 
@@ -623,13 +634,15 @@ unsigned int read_binary_journal(std::istream&	    in,
   delete[] commodities;
   delete[] data_pool;
 
+  VALIDATE(journal->valid());
+
   return count;
 }
 
 bool binary_parser_t::test(std::istream& in) const
 {
   if (read_binary_number<unsigned long>(in) == binary_magic_number &&
-      read_binary_long<unsigned long>(in) == format_version)
+      read_binary_number<unsigned long>(in) == format_version)
     return true;
 
   in.clear();
@@ -759,7 +772,8 @@ void write_binary_value_expr(std::ostream& out, value_expr_t * expr)
   }
 }
 
-void write_binary_transaction(std::ostream& out, transaction_t * xact)
+void write_binary_transaction(std::ostream& out, transaction_t * xact,
+			      bool ignore_calculated)
 {
   write_binary_long(out, xact->_date);
   write_binary_long(out, xact->_date_eff);
@@ -770,10 +784,14 @@ void write_binary_transaction(std::ostream& out, transaction_t * xact)
     write_binary_value_expr(out, xact->amount_expr);
   } else {
     write_binary_number<char>(out, 0);
-    write_binary_amount(out, xact->amount);
+    if (ignore_calculated && xact->flags & TRANSACTION_CALCULATED)
+      write_binary_amount(out, amount_t());
+    else
+      write_binary_amount(out, xact->amount);
   }
 
-  if (xact->cost) {
+  if (xact->cost &&
+      (! (ignore_calculated && xact->flags & TRANSACTION_CALCULATED))) {
     write_binary_number<char>(out, 1);
     if (xact->cost_expr != NULL) {
       write_binary_number<char>(out, 1);
@@ -808,11 +826,22 @@ void write_binary_entry_base(std::ostream& out, entry_base_t * entry)
   write_binary_long(out, entry->end_line);
 #endif
 
+  bool ignore_calculated = false;
+  for (transactions_list::const_iterator i = entry->transactions.begin();
+       i != entry->transactions.end();
+       i++)
+    if ((*i)->amount_expr || (*i)->cost_expr) {
+      ignore_calculated = true;
+      break;
+    }
+
+  write_binary_number<char>(out, ignore_calculated ? 1 : 0);
+
   write_binary_long(out, entry->transactions.size());
   for (transactions_list::const_iterator i = entry->transactions.begin();
        i != entry->transactions.end();
        i++)
-    write_binary_transaction(out, *i);
+    write_binary_transaction(out, *i, ignore_calculated);
 }
 
 void write_binary_entry(std::ostream& out, entry_t * entry)
@@ -917,7 +946,7 @@ void write_binary_journal(std::ostream& out, journal_t * journal)
   commodity_index = 0;
 
   write_binary_number(out, binary_magic_number);
-  write_binary_long(out, format_version);
+  write_binary_number(out, format_version);
 
   // Write out the files that participated in this journal, so that
   // they can be checked for changes on reading.

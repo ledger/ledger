@@ -22,6 +22,7 @@ namespace ledger {
 #define TRANSACTION_BALANCE    0x0002
 #define TRANSACTION_AUTO       0x0004
 #define TRANSACTION_BULK_ALLOC 0x0008
+#define TRANSACTION_CALCULATED 0x0010
 
 class entry_t;
 class account_t;
@@ -132,10 +133,18 @@ class entry_base_t
 #endif
   transactions_list transactions;
 
-  entry_base_t() : journal(NULL) {
+  entry_base_t() : journal(NULL),
+#ifdef USE_EDITOR
+    beg_pos(0), beg_line(0), end_pos(0), end_line(0)
+#endif
+  {
     DEBUG_PRINT("ledger.memory.ctors", "ctor entry_base_t");
   }
-  entry_base_t(const entry_base_t& e) : journal(NULL) {
+  entry_base_t(const entry_base_t& e) : journal(NULL),
+#ifdef USE_EDITOR
+    beg_pos(0), beg_line(0), end_pos(0), end_line(0)
+#endif
+  {
     DEBUG_PRINT("ledger.memory.ctors", "ctor entry_base_t");
     for (transactions_list::const_iterator i = e.transactions.begin();
 	 i != e.transactions.end();

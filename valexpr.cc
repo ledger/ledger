@@ -130,6 +130,10 @@ void value_expr_t::compute(value_t& result, const details_t& details) const
       result = 0L;
     break;
 
+  case F_NOW:
+    result = long(terminus);
+    break;
+
   case DATE:
     if (details.xact && transaction_has_xdata(*details.xact) &&
 	transaction_xdata_(*details.xact).date)
@@ -525,11 +529,7 @@ value_expr_t * parse_value_term(std::istream& in)
   in.get(c);
   switch (c) {
   // Basic terms
-  case 'm':
-    node.reset(new value_expr_t(value_expr_t::CONSTANT_T));
-    node->constant_t = terminus;
-    break;
-
+  case 'm': node.reset(new value_expr_t(value_expr_t::F_NOW)); break;
   case 'a': node.reset(new value_expr_t(value_expr_t::AMOUNT)); break;
   case 'b': node.reset(new value_expr_t(value_expr_t::COST)); break;
   case 'd': node.reset(new value_expr_t(value_expr_t::DATE)); break;
