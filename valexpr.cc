@@ -348,6 +348,8 @@ void value_expr_t::compute(value_t& result, const details_t& details) const
       if (right) {
 	assert(right->kind == O_ARG);
 	switch (right->left->kind) {
+	case F_NOW:
+	  break;		// already set to now
 	case DATE:
 	  if (details.xact && transaction_has_xdata(*details.xact) &&
 	      transaction_xdata_(*details.xact).date)
@@ -377,6 +379,8 @@ void value_expr_t::compute(value_t& result, const details_t& details) const
     std::time_t moment = terminus;
     if (right) {
       switch (right->kind) {
+	case F_NOW:
+	  break;		// already set to now
       case DATE:
 	if (details.xact && transaction_has_xdata(*details.xact) &&
 	    transaction_xdata_(*details.xact).date)

@@ -69,10 +69,8 @@ int parse_and_report(int argc, char * argv[], char * envp[])
     config.process_option("file", p);
   if (const char * p = std::getenv("LEDGER_INIT"))
     config.process_option("init-file", p);
-#if 0
   if (const char * p = std::getenv("PRICE_HIST"))
     config.process_option("price-db", p);
-#endif
   if (const char * p = std::getenv("PRICE_EXP"))
     config.process_option("price-exp", p);
 #endif
