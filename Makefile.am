@@ -7,7 +7,6 @@ libledger_la_SOURCES = \
 	config.cc      \
 	datetime.cc    \
 	derive.cc      \
-	emacs.cc       \
 	format.cc      \
 	journal.cc     \
 	mask.cc        \
@@ -21,6 +20,10 @@ libledger_la_SOURCES = \
 	valexpr.cc     \
 	value.cc       \
 	walk.cc
+if USE_EDITOR
+libledger_la_CXXFLAGS += -DUSE_EDITOR=1
+libledger_la_SOURCES += emacs.cc
+endif
 if HAVE_EXPAT
 libledger_la_CXXFLAGS += -DHAVE_EXPAT=1
 libledger_la_SOURCES += gnucash.cc xml.cc

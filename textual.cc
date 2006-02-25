@@ -335,6 +335,7 @@ bool parse_transactions(std::istream&	   in,
 }
 
 namespace {
+  TIMER_DEF(parsing_total, "total parsing time");
   TIMER_DEF(entry_xacts,   "parsing transactions");
   TIMER_DEF(entry_details, "parsing entry details");
   TIMER_DEF(entry_date,    "parsing entry date");
@@ -401,8 +402,10 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
   TIMER_START(entry_xacts);
 
   while (! in.eof() && (in.peek() == ' ' || in.peek() == '\t')) {
+#ifdef USE_EDITOR
     istream_pos_type beg_pos  = in.tellg();
     unsigned long    beg_line = linenum;
+#endif
 
     line[0] = '\0';
     in.getline(line, MAX_LINE);
@@ -421,10 +424,12 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
 	  xact->state == transaction_t::UNCLEARED)
 	xact->state = state;
 
+#ifdef USE_EDITOR
       xact->beg_pos  = beg_pos;
       xact->beg_line = beg_line;
       xact->end_pos  = in.tellg();
       xact->end_line = linenum;
+#endif
 
       curr->add_transaction(xact);
     }
@@ -524,6 +529,8 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
   unsigned int  count = 0;
   unsigned int  errors = 0;
 
+  TIMER_START(parsing_total);
+
   std::list<account_t *> account_stack;
   auto_entry_finalizer_t auto_entry_finalizer(journal);
 
@@ -538,8 +545,10 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
   while (in.good() && ! in.eof()) {
     try {
+#ifdef USE_EDITOR
       istream_pos_type beg_pos  = in.tellg();
       unsigned long    beg_line = linenum;
+#endif
 
       in.getline(line, MAX_LINE);
       if (in.eof())
@@ -693,11 +702,13 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	auto_entry_t * ae = new auto_entry_t(skip_ws(line + 1));
 	if (parse_transactions(in, account_stack.front(), *ae, "automated")) {
 	  journal->auto_entries.push_back(ae);
+#ifdef USE_EDITOR
 	  ae->src_idx  = src_idx;
 	  ae->beg_pos  = beg_pos;
 	  ae->beg_line = beg_line;
 	  ae->end_pos  = in.tellg();
 	  ae->end_line = linenum;
+#endif
 	}
 	break;
       }
@@ -712,11 +723,13 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	  if (pe->finalize()) {
 	    extend_entry_base(journal, *pe);
 	    journal->period_entries.push_back(pe);
+#ifdef USE_EDITOR
 	    pe->src_idx	 = src_idx;
 	    pe->beg_pos	 = beg_pos;
 	    pe->beg_line = beg_line;
 	    pe->end_pos	 = in.tellg();
 	    pe->end_line = linenum;
+#endif
 	  } else {
 	    throw parse_error(path, linenum, "Period entry failed to balance");
 	  }
@@ -781,11 +794,13 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	if (entry_t * entry = parse_entry(in, line, account_stack.front(),
 					  *this)) {
 	  if (journal->add_entry(entry)) {
+#ifdef USE_EDITOR
 	    entry->src_idx  = src_idx;
 	    entry->beg_pos  = beg_pos;
 	    entry->beg_line = beg_line;
 	    entry->end_pos  = in.tellg();
 	    entry->end_line = linenum;
+#endif
 	    count++;
 	  } else {
 	    print_entry(std::cerr, *entry);
@@ -832,8 +847,12 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
   if (errors > 0)
     throw error(std::string("Errors parsing file '") + path + "'");
 
+  TIMER_STOP(parsing_total);
+
   return count;
 }
+
+#ifdef USE_EDITOR
 
 void write_textual_journal(journal_t& journal, std::string path,
 			   item_handler<transaction_t>& formatter,
@@ -885,18 +904,15 @@ void write_textual_journal(journal_t& journal, std::string path,
 
   while (! in.eof()) {
     entry_base_t * base = NULL;
-    if (el != journal.entries.end() &&
-	pos == (*el)->beg_pos) {
+    if (el != journal.entries.end() && pos == (*el)->beg_pos) {
       hdr_fmt.format(out, details_t(**el));
       base = *el++;
     }
-    else if (al != journal.auto_entries.end() &&
-	     pos == (*al)->beg_pos) {
+    else if (al != journal.auto_entries.end() && pos == (*al)->beg_pos) {
       out << "= " << (*al)->predicate_string << '\n';
       base = *al++;
     }
-    else if (pl != journal.period_entries.end() &&
-	     pos == (*pl)->beg_pos) {
+    else if (pl != journal.period_entries.end() && pos == (*pl)->beg_pos) {
       out << "~ " << (*pl)->period_string << '\n';
       base = *pl++;
     }
@@ -923,5 +939,7 @@ void write_textual_journal(journal_t& journal, std::string path,
     }
   }
 }
+
+#endif // USE_EDITOR
 
 } // namespace ledger

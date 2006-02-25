@@ -129,8 +129,7 @@ unsigned int parse_ledger_data(config_t&   config,
       ! config.data_file.empty()) {
     DEBUG_PRINT("ledger.config.cache",
 		"using_cache " << config.cache_file);
-    if (config.cache_dirty)
-      config.cache_dirty = true;
+    config.cache_dirty = true;
     if (access(config.cache_file.c_str(), R_OK) != -1) {
       std::ifstream stream(config.cache_file.c_str());
       if (cache_parser && cache_parser->test(stream)) {
@@ -138,12 +137,10 @@ unsigned int parse_ledger_data(config_t&   config,
 	journal->price_db = config.price_db;
 	entry_count += cache_parser->parse(stream, config, journal,
 					   NULL, &config.data_file);
-	if (entry_count > 0) {
-	  if (config.cache_dirty)
-	    config.cache_dirty = false;
-	} else {
+	if (entry_count > 0)
+	  config.cache_dirty = false;
+	else
 	  journal->price_db = price_db_orig;
-	}
       }
     }
   }
