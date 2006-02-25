@@ -13,15 +13,15 @@ namespace ledger {
 static unsigned long  binary_magic_number = 0xFFEED765;
 #ifdef USE_EDITOR
 #ifdef DEBUG_ENABLED
-static unsigned long  format_version      = 0x00020585;
+static unsigned long  format_version      = 0x00020587;
 #else
-static unsigned long  format_version      = 0x00020584;
+static unsigned long  format_version      = 0x00020586;
 #endif
 #else
 #ifdef DEBUG_ENABLED
-static unsigned long  format_version      = 0x00020505;
+static unsigned long  format_version      = 0x00020507;
 #else
-static unsigned long  format_version      = 0x00020504;
+static unsigned long  format_version      = 0x00020506;
 #endif
 #endif
 
@@ -249,16 +249,70 @@ inline void read_binary_amount(char *& data, amount_t& amt)
   amt.read_quantity(data);
 }
 
+inline void read_binary_mask(char *& data, mask_t *& mask)
+{
+  bool exclude;
+  read_binary_number(data, exclude);
+  std::string pattern;
+  read_binary_string(data, pattern);
+
+  mask = new mask_t(pattern);
+  mask->exclude = exclude;
+}
+
+inline void read_binary_value_expr(char *& data, value_expr_t *& expr)
+{
+  if (read_binary_number<unsigned char>(data) == 0) {
+    expr = NULL;
+    return;
+  }
+
+  value_expr_t::kind_t kind;
+  read_binary_number(data, kind);
+
+  expr = new value_expr_t(kind);
+
+  read_binary_value_expr(data, expr->left);
+  read_binary_value_expr(data, expr->right);
+
+  switch (expr->kind) {
+  case value_expr_t::CONSTANT_T:
+    read_binary_number(data, expr->constant_t);
+    break;
+  case value_expr_t::CONSTANT_I:
+    read_binary_long(data, expr->constant_i);
+    break;
+  case value_expr_t::CONSTANT_A:
+    read_binary_amount(data, expr->constant_a);
+    break;
+  case value_expr_t::F_FUNC:
+    read_binary_string(data, expr->constant_s);
+    break;
+  }
+
+  if (read_binary_number<unsigned char>(data) == 1)
+    read_binary_mask(data, expr->mask);
+}
+
+
 inline void read_binary_transaction(char *& data, transaction_t * xact)
 {
   read_binary_long(data, xact->_date);
   read_binary_long(data, xact->_date_eff);
   xact->account = accounts[read_binary_long<account_t::ident_t>(data) - 1];
-  read_binary_amount(data, xact->amount);
+
+  if (read_binary_number<char>(data) == 1)
+    read_binary_value_expr(data, xact->amount_expr);
+  else
+    read_binary_amount(data, xact->amount);
 
   if (*data++ == 1) {
     xact->cost = new amount_t;
-    read_binary_amount(data, *xact->cost);
+
+    if (read_binary_number<char>(data) == 1)
+      read_binary_value_expr(data, xact->cost_expr);
+    else
+      read_binary_amount(data, *xact->cost);
   } else {
     xact->cost = NULL;
   }
@@ -276,6 +330,11 @@ inline void read_binary_transaction(char *& data, transaction_t * xact)
 #endif
 
   xact->data = NULL;
+
+  if (xact->amount_expr)
+    compute_amount(xact->amount_expr, xact->amount, *xact);
+  if (xact->cost_expr)
+    compute_amount(xact->cost_expr, *xact->cost, *xact);
 }
 
 inline void read_binary_entry_base(char *& data, entry_base_t * entry,
@@ -507,9 +566,15 @@ unsigned int read_binary_journal(std::istream&	    in,
   for (commodity_t::ident_t i = 0; i < c_count; i++) {
     commodity_t * commodity = read_binary_commodity(data);
     if (! (commodity->flags & COMMODITY_STYLE_BUILTIN)) {
-      std::pair<commodities_map::iterator, bool> result
-	= commodity_t::commodities.insert(commodities_pair(commodity->symbol,
-							   commodity));
+      if (commodity->symbol == "") {
+	commodity_t::commodities.erase(commodity->symbol);
+	delete commodity_t::null_commodity;
+	commodity_t::null_commodity = commodity;
+      }
+
+      std::pair<commodities_map::iterator, bool> result =
+	commodity_t::commodities.insert(commodities_pair(commodity->symbol,
+							 commodity));
       if (! result.second)
 	throw error(std::string("Failed to read commodity from cache: ") +
 		    commodity->symbol);
@@ -653,16 +718,70 @@ void write_binary_amount(std::ostream& out, const amount_t& amt)
   amt.write_quantity(out);
 }
 
+void write_binary_mask(std::ostream& out, mask_t * mask)
+{
+  write_binary_number(out, mask->exclude);
+  write_binary_string(out, mask->pattern);
+}
+
+void write_binary_value_expr(std::ostream& out, value_expr_t * expr)
+{
+  if (expr == NULL) {
+    write_binary_number<unsigned char>(out, 0);
+    return;
+  }
+  write_binary_number<unsigned char>(out, 1);
+
+  write_binary_number(out, expr->kind);
+  write_binary_value_expr(out, expr->left);
+  write_binary_value_expr(out, expr->right);
+
+  switch (expr->kind) {
+  case value_expr_t::CONSTANT_T:
+    write_binary_number(out, expr->constant_t);
+    break;
+  case value_expr_t::CONSTANT_I:
+    write_binary_long(out, expr->constant_i);
+    break;
+  case value_expr_t::CONSTANT_A:
+    write_binary_amount(out, expr->constant_a);
+    break;
+  case value_expr_t::F_FUNC:
+    write_binary_string(out, expr->constant_s);
+    break;
+  }
+
+  if (expr->mask) {
+    write_binary_number<char>(out, 1);
+    write_binary_mask(out, expr->mask);
+  } else {
+    write_binary_number<char>(out, 0);
+  }
+}
+
 void write_binary_transaction(std::ostream& out, transaction_t * xact)
 {
   write_binary_long(out, xact->_date);
   write_binary_long(out, xact->_date_eff);
   write_binary_long(out, xact->account->ident);
-  write_binary_amount(out, xact->amount);
+
+  if (xact->amount_expr != NULL) {
+    write_binary_number<char>(out, 1);
+    write_binary_value_expr(out, xact->amount_expr);
+  } else {
+    write_binary_number<char>(out, 0);
+    write_binary_amount(out, xact->amount);
+  }
 
   if (xact->cost) {
     write_binary_number<char>(out, 1);
-    write_binary_amount(out, *xact->cost);
+    if (xact->cost_expr != NULL) {
+      write_binary_number<char>(out, 1);
+      write_binary_value_expr(out, xact->cost_expr);
+    } else {
+      write_binary_number<char>(out, 0);
+      write_binary_amount(out, *xact->cost);
+    }
   } else {
     write_binary_number<char>(out, 0);
   }
@@ -852,21 +971,17 @@ void write_binary_journal(std::ostream& out, journal_t * journal)
   // Write out the commodities
 
   write_binary_long<commodity_t::ident_t>
-    (out, commodity_t::commodities.size() - 1);
+    (out, commodity_t::commodities.size());
 
   for (commodities_map::const_iterator i = commodity_t::commodities.begin();
        i != commodity_t::commodities.end();
        i++)
-    if (! (*i).first.empty())
-      write_binary_commodity(out, (*i).second);
-    else
-      (*i).second->ident = 0;
+    write_binary_commodity(out, (*i).second);
 
   for (commodities_map::const_iterator i = commodity_t::commodities.begin();
        i != commodity_t::commodities.end();
        i++)
-    if (! (*i).first.empty())
-      write_binary_commodity_extra(out, (*i).second);
+    write_binary_commodity_extra(out, (*i).second);
 
   if (commodity_t::default_commodity)
     write_binary_long(out, commodity_t::default_commodity->ident);

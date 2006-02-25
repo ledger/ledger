@@ -126,51 +126,49 @@ static char * parse_inline_math(const char * expr)
   return buf;
 }
 
-void parse_amount(const char * text, amount_t& amt, unsigned short flags,
-		  transaction_t& xact)
+value_expr_t * parse_amount(const char * text, amount_t& amt,
+			    unsigned short flags, transaction_t& xact)
 {
   char * altbuf = NULL;
 
   if (*text && *text != '(') {
-    bool in_quote = false;
+    bool in_quote   = false;
+    bool seen_digit = false;
     for (const char * p = text + 1; *p; p++)
       if (*p == '"') {
 	in_quote = ! in_quote;
       }
-      else if (! in_quote && is_mathchr(*p)) {
-	text = altbuf = parse_inline_math(text);
-	break;
+      else if (! in_quote) {
+	if (is_mathchr(*p)) {
+	  if (*p == '-' && ! seen_digit)
+	    continue;
+	  text = altbuf = parse_inline_math(text);
+	  break;
+	}
+	else if (std::isdigit(*p)) {
+	  seen_digit = true;
+	}
       }
   }
 
+  value_expr_t * expr = NULL;
+
   if (*text != '(') {
     amt.parse(text, flags);
-  } else {
-    value_expr_t * expr = parse_value_expr(text);
-    value_t result;
-    expr->compute(result, details_t(xact));
-    switch (result.type) {
-    case value_t::BOOLEAN:
-      amt = *((bool *) result.data);
-      break;
-    case value_t::INTEGER:
-      amt = *((long *) result.data);
-      break;
-    case value_t::AMOUNT:
-      amt = *((amount_t *) result.data);
-      break;
 
-    case value_t::BALANCE:
-    case value_t::BALANCE_PAIR:
-      if (altbuf)
-	delete[] altbuf;
+    if (altbuf)
+      delete[] altbuf;
+  } else {
+    expr = parse_value_expr(text);
+
+    if (altbuf)
+      delete[] altbuf;
+
+    if (! compute_amount(expr, amt, xact))
       throw parse_error(path, linenum, "Value expression yields a balance");
-      break;
-    }
   }
 
-  if (altbuf)
-    delete[] altbuf;
+  return expr;
 }
 
 transaction_t * parse_transaction(char * line, account_t * account)
@@ -290,12 +288,12 @@ transaction_t * parse_transaction(char * line, account_t * account)
 
   // If an amount (and optional price) were seen, parse them now
   if (amount) {
-    parse_amount(amount, xact->amount, AMOUNT_PARSE_NO_REDUCE, *xact);
-
+    xact->amount_expr = parse_amount(amount, xact->amount,
+				     AMOUNT_PARSE_NO_REDUCE, *xact);
     if (price) {
       xact->cost = new amount_t;
-      parse_amount(price, *xact->cost, AMOUNT_PARSE_NO_MIGRATE, *xact);
-
+      xact->cost_expr = parse_amount(price, *xact->cost,
+				     AMOUNT_PARSE_NO_MIGRATE, *xact);
       if (per_unit) {
 	*xact->cost *= xact->amount;
 	*xact->cost = xact->cost->round(xact->cost->commodity().precision);
