@@ -200,6 +200,15 @@ AC_ARG_ENABLE(debug,
   esac],[debug=false])
 AM_CONDITIONAL(DEBUG, test x$debug = xtrue)
 
+AC_ARG_ENABLE(emacs,
+  [  --enable-emacs          Turn on Emacs support],
+  [case "${enableval}" in
+    yes) emacs=true ;;
+    no)  emacs=false ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-emacs) ;;
+  esac],[emacs=true])
+AM_CONDITIONAL(USE_EDITOR, test x$emacs = xtrue)
+
 # Checks for header files.
 AC_STDC_HEADERS
 AC_HAVE_HEADERS(sys/stat.h)

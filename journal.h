@@ -40,10 +40,12 @@ class transaction_t
   state_t	   state;
   unsigned short   flags;
   std::string	   note;
+#ifdef USE_EDITOR
   istream_pos_type beg_pos;
   unsigned long    beg_line;
   istream_pos_type end_pos;
   unsigned long    end_line;
+#endif
   mutable void *   data;
 
   static bool    use_effective_date;
@@ -51,7 +53,10 @@ class transaction_t
   transaction_t(account_t * _account = NULL)
     : entry(NULL), _date(0), _date_eff(0), account(_account),
       cost(NULL), state(UNCLEARED), flags(TRANSACTION_NORMAL),
-      beg_pos(0), beg_line(0), end_pos(0), end_line(0), data(NULL) {
+#ifdef USE_EDITOR
+      beg_pos(0), beg_line(0), end_pos(0), end_line(0),
+#endif
+      data(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor transaction_t");
   }
 
@@ -61,7 +66,10 @@ class transaction_t
 		const std::string& _note  = "")
     : entry(NULL), _date(0), _date_eff(0), account(_account),
       amount(_amount), cost(NULL), state(UNCLEARED), flags(_flags),
-      note(_note), beg_pos(0), beg_line(0), end_pos(0), end_line(0),
+      note(_note),
+#ifdef USE_EDITOR
+      beg_pos(0), beg_line(0), end_pos(0), end_line(0),
+#endif
       data(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor transaction_t");
   }
@@ -71,7 +79,10 @@ class transaction_t
       account(xact.account), amount(xact.amount),
       cost(xact.cost ? new amount_t(*xact.cost) : NULL),
       state(xact.state), flags(xact.flags), note(xact.note),
-      beg_pos(0), beg_line(0), end_pos(0), end_line(0), data(NULL) {
+#ifdef USE_EDITOR
+      beg_pos(0), beg_line(0), end_pos(0), end_line(0),
+#endif
+      data(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor transaction_t");
   }
 
@@ -108,11 +119,13 @@ class entry_base_t
 {
  public:
   journal_t *       journal;
+#ifdef USE_EDITOR
   unsigned long     src_idx;
   istream_pos_type  beg_pos;
   unsigned long     beg_line;
   istream_pos_type  end_pos;
   unsigned long     end_line;
+#endif
   transactions_list transactions;
 
   entry_base_t() : journal(NULL) {

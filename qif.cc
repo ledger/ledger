@@ -63,6 +63,7 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
   src_idx = journal->sources.size() - 1;
   linenum = 1;
 
+#ifdef USE_EDITOR
   istream_pos_type beg_pos  = 0;
   unsigned long    beg_line = 0;
 
@@ -71,6 +72,9 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
     beg_pos  = in.tellg();			\
     beg_line = linenum;				\
   }
+#else
+#define SET_BEG_POS_AND_LINE()
+#endif
 
   while (in.good() && ! in.eof()) {
     char c;
@@ -217,11 +221,13 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
       }
 
       if (journal->add_entry(entry.get())) {
+#ifdef USE_EDITOR
 	entry->src_idx  = src_idx;
 	entry->beg_pos  = beg_pos;
 	entry->beg_line = beg_line;
 	entry->end_pos  = in.tellg();
 	entry->end_line = linenum;
+#endif
 	entry.release();
 	count++;
       }
@@ -234,7 +240,9 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
       saw_splits   = false;
       saw_category = false;
       total        = NULL;
+#ifdef USE_EDITOR
       beg_line	   = 0;
+#endif
       break;
     }
 

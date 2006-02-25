@@ -28,6 +28,7 @@ namespace {
   TIMER_DEF_(process);
   TIMER_DEF_(walk);
   TIMER_DEF_(cleanup);
+  TIMER_DEF_(cache_write);
 }
 
 int parse_and_report(int argc, char * argv[], char * envp[])
@@ -105,8 +106,10 @@ int parse_and_report(int argc, char * argv[], char * envp[])
     command = "p";
   else if (command == "output")
     command = "w";
+#ifdef USE_EDITOR
   else if (command == "emacs")
     command = "x";
+#endif
   else if (command == "xml")
     command = "X";
   else if (command == "entry")
@@ -244,8 +247,10 @@ int parse_and_report(int argc, char * argv[], char * envp[])
     formatter = new set_account_value;
   else if (command == "p" || command == "e")
     formatter = new format_entries(*out, *format);
+#ifdef USE_EDITOR
   else if (command == "x")
     formatter = new format_emacs_transactions(*out);
+#endif
   else if (command == "X") {
 #if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
     formatter = new format_xml_entries(*out, config.show_totals);
@@ -256,8 +261,10 @@ int parse_and_report(int argc, char * argv[], char * envp[])
     formatter = new format_transactions(*out, *format);
 
   if (command == "w") {
+#ifdef USE_EDITOR
     write_textual_journal(*journal, first_arg, *formatter,
 			  config.write_hdr_format, *out);
+#endif
   } else {
     formatter = config.chain_xact_handlers(command, formatter, journal.get(),
 					   journal->master, formatter_ptrs);
@@ -318,12 +325,18 @@ int parse_and_report(int argc, char * argv[], char * envp[])
   formatter_ptrs.clear();
 #endif
 
+  TIMER_STOP(cleanup);
+
   // Write out the binary cache, if need be
+
+  TIMER_START(cache_write);
 
   if (config.use_cache && config.cache_dirty && ! config.cache_file.empty()) {
     std::ofstream stream(config.cache_file.c_str());
     write_binary_journal(stream, journal.get());
   }
+
+  TIMER_STOP(cache_write);
 
 #ifdef HAVE_UNIX_PIPES
   if (! config.pager.empty()) {
@@ -336,8 +349,6 @@ int parse_and_report(int argc, char * argv[], char * envp[])
       throw error("Something went wrong in the pager");
   }
 #endif
-
-  TIMER_STOP(cleanup);
 
   return 0;
 }

@@ -229,7 +229,6 @@ dropped."
 	(forward-line)
 	(while (looking-at "[ \t]")
 	  (skip-chars-forward " \t")
-	  (assert (not (looking-at "[!*]")))
 	  (insert cleared " ")
 	  (if (search-forward "  " (line-end-position) t)
 	      (delete-char 2))
