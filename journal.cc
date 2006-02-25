@@ -55,7 +55,7 @@ bool transaction_t::valid() const
   if (cost && ! cost->valid())
     return false;
 
-  if (flags & ~0x000f)
+  if (flags & ~0x001f)
     return false;
 
   return true;
@@ -109,6 +109,7 @@ bool entry_base_t::finalize()
     // The amount doesn't need to be set because the code below will
     // balance this transaction against the other.
     add_transaction(nxact);
+    nxact->flags |= TRANSACTION_CALCULATED;
   }
 
   // If one transaction of a two-line transaction is of a different
@@ -191,6 +192,7 @@ bool entry_base_t::finalize()
 	  } else {
 	    transaction_t * nxact = new transaction_t((*x)->account);
 	    add_transaction(nxact);
+	    nxact->flags |= TRANSACTION_CALCULATED;
 	    nxact->amount = amt;
 	  }
 
@@ -203,6 +205,7 @@ bool entry_base_t::finalize()
     case value_t::AMOUNT:
       (*x)->amount = *((amount_t *) balance.data);
       (*x)->amount.negate();
+      (*x)->flags |= TRANSACTION_CALCULATED;
 
       balance += (*x)->amount;
       break;

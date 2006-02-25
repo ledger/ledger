@@ -77,6 +77,9 @@ bin_PROGRAMS = ledger
 ledger_CXXFLAGS =
 ledger_SOURCES = main.cc
 ledger_LDADD = $(LIBOBJS) libledger.la
+if USE_EDITOR
+ledger_CXXFLAGS += -DUSE_EDITOR=1
+endif
 if HAVE_EXPAT
 ledger_CXXFLAGS += -DHAVE_EXPAT=1
 ledger_LDADD += -lexpat

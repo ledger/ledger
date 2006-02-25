@@ -61,6 +61,7 @@ struct value_expr_t
     TOTAL_EXPR,
 
     // Functions
+    F_NOW,
     F_PARENT,
     F_ARITH_MEAN,
     F_VALUE,
