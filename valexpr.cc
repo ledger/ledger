@@ -18,6 +18,28 @@ details_t::details_t(const transaction_t& _xact)
   DEBUG_PRINT("ledger.memory.ctors", "ctor details_t");
 }
 
+bool compute_amount(value_expr_t * expr, amount_t& amt, transaction_t& xact)
+{
+  value_t result;
+  expr->compute(result, details_t(xact));
+  switch (result.type) {
+  case value_t::BOOLEAN:
+    amt = *((bool *) result.data);
+    break;
+  case value_t::INTEGER:
+    amt = *((long *) result.data);
+    break;
+  case value_t::AMOUNT:
+    amt = *((amount_t *) result.data);
+    break;
+
+  case value_t::BALANCE:
+  case value_t::BALANCE_PAIR:
+    return false;
+  }
+  return true;
+}
+
 void value_expr_t::compute(value_t& result, const details_t& details) const
 {
   switch (kind) {

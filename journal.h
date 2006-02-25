@@ -25,6 +25,7 @@ namespace ledger {
 
 class entry_t;
 class account_t;
+class value_expr_t;
 
 class transaction_t
 {
@@ -36,7 +37,9 @@ class transaction_t
   std::time_t	   _date_eff;
   account_t *	   account;
   amount_t	   amount;
+  value_expr_t *   amount_expr;
   amount_t *	   cost;
+  value_expr_t *   cost_expr;
   state_t	   state;
   unsigned short   flags;
   std::string	   note;
@@ -52,7 +55,8 @@ class transaction_t
 
   transaction_t(account_t * _account = NULL)
     : entry(NULL), _date(0), _date_eff(0), account(_account),
-      cost(NULL), state(UNCLEARED), flags(TRANSACTION_NORMAL),
+      amount_expr(NULL), cost(NULL), cost_expr(NULL),
+      state(UNCLEARED), flags(TRANSACTION_NORMAL),
 #ifdef USE_EDITOR
       beg_pos(0), beg_line(0), end_pos(0), end_line(0),
 #endif
@@ -65,8 +69,8 @@ class transaction_t
 		unsigned int	   _flags = TRANSACTION_NORMAL,
 		const std::string& _note  = "")
     : entry(NULL), _date(0), _date_eff(0), account(_account),
-      amount(_amount), cost(NULL), state(UNCLEARED), flags(_flags),
-      note(_note),
+      amount(_amount), amount_expr(NULL), cost(NULL), cost_expr(NULL),
+      state(UNCLEARED), flags(_flags), note(_note),
 #ifdef USE_EDITOR
       beg_pos(0), beg_line(0), end_pos(0), end_line(0),
 #endif
@@ -75,9 +79,9 @@ class transaction_t
   }
 
   transaction_t(const transaction_t& xact)
-    : entry(xact.entry), _date(0), _date_eff(0),
-      account(xact.account), amount(xact.amount),
-      cost(xact.cost ? new amount_t(*xact.cost) : NULL),
+    : entry(xact.entry), _date(0), _date_eff(0), account(xact.account),
+      amount(xact.amount), amount_expr(NULL),
+      cost(xact.cost ? new amount_t(*xact.cost) : NULL), cost_expr(NULL),
       state(xact.state), flags(xact.flags), note(xact.note),
 #ifdef USE_EDITOR
       beg_pos(0), beg_line(0), end_pos(0), end_line(0),
