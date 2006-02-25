@@ -308,7 +308,8 @@ transaction_t * parse_transaction(char * line, account_t * account)
 bool parse_transactions(std::istream&	   in,
 			account_t *	   account,
 			entry_base_t&	   entry,
-			const std::string& kind)
+			const std::string& kind,
+			istream_pos_type&  beg_pos)
 {
   static char line[MAX_LINE + 1];
   bool	      added = false;
@@ -317,6 +318,9 @@ bool parse_transactions(std::istream&	   in,
     in.getline(line, MAX_LINE);
     if (in.eof())
       break;
+#ifdef USE_EDITOR
+    beg_pos += istream_pos_type(std::strlen(line) + 1);
+#endif
     linenum++;
     if (line[0] == ' ' || line[0] == '\t' || line[0] == '\r') {
       char * p = skip_ws(line);
@@ -340,7 +344,7 @@ namespace {
 }
 
 entry_t * parse_entry(std::istream& in, char * line, account_t * master,
-		      textual_parser_t& parser)
+		      textual_parser_t& parser, istream_pos_type& beg_pos)
 {
   std::auto_ptr<entry_t> curr(new entry_t);
 
@@ -399,16 +403,18 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
 
   TIMER_START(entry_xacts);
 
-  while (! in.eof() && (in.peek() == ' ' || in.peek() == '\t')) {
 #ifdef USE_EDITOR
-    istream_pos_type beg_pos  = in.tellg();
-    unsigned long    beg_line = linenum;
+  istream_pos_type end_pos;
+  unsigned long    beg_line = linenum;
 #endif
-
+  while (! in.eof() && (in.peek() == ' ' || in.peek() == '\t')) {
     line[0] = '\0';
     in.getline(line, MAX_LINE);
     if (in.eof() && line[0] == '\0')
       break;
+#ifdef USE_EDITOR
+    end_pos = beg_pos + istream_pos_type(std::strlen(line) + 1);
+#endif
 
     linenum++;
     if (line[0] == ' ' || line[0] == '\t' || line[0] == '\r') {
@@ -425,10 +431,10 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
 #ifdef USE_EDITOR
       xact->beg_pos  = beg_pos;
       xact->beg_line = beg_line;
-      xact->end_pos  = in.tellg();
+      xact->end_pos  = end_pos;
       xact->end_line = linenum;
+      beg_pos = end_pos;
 #endif
-
       curr->add_transaction(xact);
     }
 
@@ -541,17 +547,20 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
   src_idx = journal->sources.size() - 1;
   linenum = 1;
 
+#ifdef USE_EDITOR
+  istream_pos_type beg_pos  = in.tellg();
+  istream_pos_type end_pos;
+  unsigned long    beg_line = linenum;
+#endif
   while (in.good() && ! in.eof()) {
     try {
-#ifdef USE_EDITOR
-      istream_pos_type beg_pos  = in.tellg();
-      unsigned long    beg_line = linenum;
-#endif
-
       in.getline(line, MAX_LINE);
       if (in.eof())
 	break;
       linenum++;
+#ifdef USE_EDITOR
+      end_pos = beg_pos + istream_pos_type(std::strlen(line) + 1);
+#endif
 
       switch (line[0]) {
       case '\0':
@@ -698,13 +707,14 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	}
 
 	auto_entry_t * ae = new auto_entry_t(skip_ws(line + 1));
-	if (parse_transactions(in, account_stack.front(), *ae, "automated")) {
+	if (parse_transactions(in, account_stack.front(), *ae,
+			       "automated", end_pos)) {
 	  journal->auto_entries.push_back(ae);
 #ifdef USE_EDITOR
 	  ae->src_idx  = src_idx;
 	  ae->beg_pos  = beg_pos;
 	  ae->beg_line = beg_line;
-	  ae->end_pos  = in.tellg();
+	  ae->end_pos  = end_pos;
 	  ae->end_line = linenum;
 #endif
 	}
@@ -717,7 +727,8 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	  throw parse_error(path, linenum,
 			    std::string("Parsing time period '") + line + "'");
 
-	if (parse_transactions(in, account_stack.front(), *pe, "period")) {
+	if (parse_transactions(in, account_stack.front(), *pe,
+			       "period", end_pos)) {
 	  if (pe->finalize()) {
 	    extend_entry_base(journal, *pe);
 	    journal->period_entries.push_back(pe);
@@ -725,7 +736,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	    pe->src_idx	 = src_idx;
 	    pe->beg_pos	 = beg_pos;
 	    pe->beg_line = beg_line;
-	    pe->end_pos	 = in.tellg();
+	    pe->end_pos	 = end_pos;
 	    pe->end_line = linenum;
 #endif
 	  } else {
@@ -739,9 +750,13 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	char * p = next_element(line);
 	std::string word(line + 1);
 	if (word == "include") {
-	  push_var<std::string>  save_path(path);
-	  push_var<unsigned int> save_src_idx(src_idx);
-	  push_var<unsigned int> save_linenum(linenum);
+	  push_var<std::string>	     save_path(path);
+	  push_var<unsigned int>     save_src_idx(src_idx);
+#ifdef USE_EDITOR
+	  push_var<istream_pos_type> save_beg_pos(beg_pos);
+	  push_var<istream_pos_type> save_end_pos(end_pos);
+#endif
+	  push_var<unsigned int>     save_linenum(linenum);
 
 	  path = p;
 	  if (path[0] != '/' && path[0] != '\\') {
@@ -789,14 +804,19 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
       default: {
 	unsigned int first_line = linenum;
-	if (entry_t * entry = parse_entry(in, line, account_stack.front(),
-					  *this)) {
+#ifdef USE_EDITOR
+	istream_pos_type pos = end_pos;
+#else
+	istream_pos_type pos;
+#endif
+	if (entry_t * entry =
+	    parse_entry(in, line, account_stack.front(), *this, pos)) {
 	  if (journal->add_entry(entry)) {
 #ifdef USE_EDITOR
 	    entry->src_idx  = src_idx;
 	    entry->beg_pos  = beg_pos;
 	    entry->beg_line = beg_line;
-	    entry->end_pos  = in.tellg();
+	    entry->end_pos  = end_pos;
 	    entry->end_line = linenum;
 #endif
 	    count++;
@@ -813,6 +833,9 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	} else {
 	  throw parse_error(path, first_line, "Failed to parse entry");
 	}
+#ifdef USE_EDITOR
+	end_pos = pos;
+#endif
 	break;
       }
       }
@@ -831,6 +854,9 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 		<< err.what() << std::endl;;
       errors++;
     }
+#ifdef USE_EDITOR
+    beg_pos = end_pos;
+#endif
   }
 
  done:
