@@ -130,16 +130,21 @@ config_t::regexps_to_predicate(const std::string& command,
     }
 
     if (i != 1 && command == "b" && account_regexp) {
-      if (! display_predicate.empty())
-	display_predicate += "&";
-      else if (! show_empty)
-	display_predicate += "T&";
+      if (! show_related && ! show_all_related) {
+	if (! display_predicate.empty())
+	  display_predicate += "&";
+	else if (! show_empty)
+	  display_predicate += "T&";
 
-      if (add_predicate == 2)
-	display_predicate += "//";
-      display_predicate += "/(?:";
-      display_predicate += regexps[i];
-      display_predicate += ")/";
+	if (add_predicate == 2)
+	  display_predicate += "//";
+	display_predicate += "/(?:";
+	display_predicate += regexps[i];
+	display_predicate += ")/";
+      }
+      else if (! show_empty) {
+	display_predicate += "T";
+      }
     }
 
     if (! account_regexp)
