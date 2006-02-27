@@ -133,7 +133,7 @@ config_t::regexps_to_predicate(const std::string& command,
       if (! show_related && ! show_all_related) {
 	if (! display_predicate.empty())
 	  display_predicate += "&";
-	else if (! show_empty)
+	if (! show_empty)
 	  display_predicate += "T&";
 
 	if (add_predicate == 2)
