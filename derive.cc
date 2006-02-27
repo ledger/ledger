@@ -23,7 +23,8 @@ entry_t * derive_new_entry(journal_t& journal,
 
   mask_t regexp(*i++);
 
-  for (entries_list::reverse_iterator j = journal.entries.rbegin();
+  entries_list::reverse_iterator j;
+  for (j = journal.entries.rbegin();
        j != journal.entries.rend();
        j++)
     if (regexp.match((*j)->payee)) {
@@ -33,23 +34,42 @@ entry_t * derive_new_entry(journal_t& journal,
 
   added->payee = matching ? matching->payee : regexp.pattern;
 
-  if (i == end) {
-    if (! matching)
-      throw error("Could not find a matching payee");
+  if (! matching) {
+    account_t * acct;
+    if (i == end || ((*i)[0] == '-' || std::isdigit((*i)[0]))) {
+      acct = journal.find_account("Expenses");
+    }
+    else if (i != end) {
+      acct = journal.find_account_re(*i);
+      if (! acct)
+	acct = journal.find_account(*i);
+      assert(acct);
+      i++;
+    }
 
+    if (i == end)
+      added->add_transaction(new transaction_t(acct));
+    else
+      added->add_transaction(new transaction_t(acct, amount_t(*i++)));
+
+    if (journal.basket)
+      acct = journal.basket;
+    else
+      acct = journal.find_account("Equity");
+
+    added->add_transaction(new transaction_t(acct));
+  }
+  else if (i == end) {
     // If no argument were given but the payee, assume the user wants
     // to see the same transaction as last time.
     added->code = matching->code;
 
-    for (transactions_list::iterator j = matching->transactions.begin();
-	 j != matching->transactions.end();
-	 j++)
-      added->add_transaction(new transaction_t(**j));
+    for (transactions_list::iterator k = matching->transactions.begin();
+	 k != matching->transactions.end();
+	 k++)
+      added->add_transaction(new transaction_t(**k));
   }
   else if ((*i)[0] == '-' || std::isdigit((*i)[0])) {
-    if (! matching)
-      throw error("Could not determine the account to draw from");
-
     transaction_t * m_xact, * xact, * first;
     m_xact = matching->transactions.front();
 
@@ -68,67 +88,65 @@ entry_t * derive_new_entry(journal_t& journal,
       account_t * acct = journal.find_account_re(*i);
       if (! acct)
 	acct = journal.find_account(*i);
-      if (acct)
-	added->transactions.back()->account = acct;
+      assert(acct);
+      added->transactions.back()->account = acct;
     }
   }
   else {
     while (i != end) {
-      std::string&  re_pat(*i++);
-      account_t *   acct  = NULL;
-      commodity_t * cmdty = NULL;
+      std::string& re_pat(*i++);
+      account_t *  acct = NULL;
+      amount_t *   amt  = NULL;
 
-      if (matching) {
-	mask_t acct_regex(re_pat);
+      mask_t acct_regex(re_pat);
 
-	for (transactions_list::const_iterator x
-	       = matching->transactions.begin();
-	     x != matching->transactions.end();
-	     x++) {
-	  if (acct_regex.match((*x)->account->fullname())) {
-	    acct  = (*x)->account;
-	    cmdty = &(*x)->amount.commodity();
-	    break;
-	  }
+      for (; j != journal.entries.rend(); j++)
+	if (regexp.match((*j)->payee)) {
+	  entry_t * entry = *j;
+	  for (transactions_list::const_iterator x =
+		 entry->transactions.begin();
+	       x != entry->transactions.end();
+	       x++)
+	    if (acct_regex.match((*x)->account->fullname())) {
+	      acct = (*x)->account;
+	      amt  = &(*x)->amount;
+	      matching = entry;
+	      goto found;
+	    }
 	}
-      }
 
+    found:
       if (! acct)
 	acct = journal.find_account_re(re_pat);
       if (! acct)
 	acct = journal.find_account(re_pat);
 
+      transaction_t * xact;
       if (i == end) {
-	added->add_transaction(new transaction_t(acct));
-	goto done;
+	if (amt)
+	  xact = new transaction_t(acct, *amt);
+	else
+	  xact = new transaction_t(acct);
+      } else {
+	xact = new transaction_t(acct, amount_t(*i++));
+	if (! xact->amount.commodity()) {
+	  if (amt)
+	    xact->amount.set_commodity(amt->commodity());
+	  else if (commodity_t::default_commodity)
+	    xact->amount.set_commodity(*commodity_t::default_commodity);
+	}
       }
-
-      transaction_t * xact = new transaction_t(acct, amount_t(*i++));
-      if (! xact->amount.commodity()) {
-	if (cmdty)
-	  xact->amount.set_commodity(*cmdty);
-	else if (commodity_t::default_commodity)
-	  xact->amount.set_commodity(*commodity_t::default_commodity);
-      }
-
       added->add_transaction(xact);
     }
 
-    account_t * draw_acct;
-    if (matching)
-      draw_acct = matching->transactions.back()->account;
-    else if (journal.basket)
-      draw_acct = journal.basket;
-    else
-      throw error("Could not determine the account to draw from");
-
-    transaction_t * xact = new transaction_t(draw_acct);
-    added->add_transaction(xact);
+    assert(matching->transactions.back()->account);
+    if (account_t * draw_acct = matching->transactions.back()->account)
+      added->add_transaction(new transaction_t(draw_acct));
   }
 
  done:
-  if (! added->finalize() ||
-      ! run_hooks(journal.entry_finalize_hooks, *added))
+  if (! run_hooks(journal.entry_finalize_hooks, *added) ||
+      ! added->finalize())
     throw error("Failed to finalize derived entry (check commodities)");
 
   return added.release();
