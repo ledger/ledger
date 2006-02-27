@@ -266,6 +266,7 @@ class value_t
   void     abs();
   void     cast(type_t cast_type);
   value_t  cost() const;
+  value_t  factor_price() const;
   value_t& add(const amount_t& amount, const amount_t * cost = NULL);
 
   value_t value(const std::time_t moment) const {
@@ -290,7 +291,7 @@ class value_t
     case AMOUNT: {
       amount_t& amount = *((amount_t *) data);
       if (amount.commodity())
-	amount = amount.round(amount.commodity().precision);
+	amount = amount.round(amount.commodity().precision());
       break;
     }
     case BALANCE:

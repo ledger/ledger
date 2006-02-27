@@ -104,10 +104,10 @@ int parse_and_report(int argc, char * argv[], char * envp[])
     command = "p";
   else if (command == "output")
     command = "w";
-#ifdef USE_EDITOR
   else if (command == "emacs")
     command = "x";
-#endif
+  else if (command == "lisp")
+    command = "x";
   else if (command == "xml")
     command = "X";
   else if (command == "entry")
@@ -121,6 +121,20 @@ int parse_and_report(int argc, char * argv[], char * envp[])
   else if (command == "csv") {
     config.register_format = config.csv_register_format;
     command = "r";
+  }
+  else if (command == "parse") {
+    value_auto_ptr expr(ledger::parse_value_expr(*arg));
+    if (config.debug_mode) {
+      ledger::dump_value_expr(std::cout, expr.get());
+      std::cout << std::endl;
+    }
+    value_t result;
+    expr->compute(result, details_t());
+    std::cout << result << std::endl;
+    return 0;
+  }
+  else if (command == "expr") {
+    // this gets done below...
   }
   else
     throw error(std::string("Unrecognized command '") + command + "'");
@@ -211,6 +225,20 @@ int parse_and_report(int argc, char * argv[], char * envp[])
   }
 #endif
 
+  // Are we handling the parse or expr commands?  Do so now.
+
+  if (command == "expr") {
+    value_auto_ptr expr(ledger::parse_value_expr(*arg));
+    if (config.debug_mode) {
+      ledger::dump_value_expr(std::cout, expr.get());
+      std::cout << std::endl;
+    }
+    value_t result;
+    expr->compute(result, details_t());
+    std::cout << result << std::endl;
+    return 0;
+  }
+
   // Compile the format strings
 
   const std::string * format;
@@ -245,10 +273,8 @@ int parse_and_report(int argc, char * argv[], char * envp[])
     formatter = new set_account_value;
   else if (command == "p" || command == "e")
     formatter = new format_entries(*out, *format);
-#ifdef USE_EDITOR
   else if (command == "x")
     formatter = new format_emacs_transactions(*out);
-#endif
   else if (command == "X") {
 #if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
     formatter = new format_xml_entries(*out, config.show_totals);

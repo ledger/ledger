@@ -7,6 +7,8 @@
 
 namespace ledger {
 
+bool show_lots = false;
+
 template <>
 bool compare_items<transaction_t>::operator()(const transaction_t * left,
 					      const transaction_t * right)
@@ -39,12 +41,20 @@ transaction_xdata_t& transaction_xdata(const transaction_t& xact)
 void add_transaction_to(const transaction_t& xact, value_t& value)
 {
   if (transaction_has_xdata(xact) &&
-      transaction_xdata_(xact).dflags & TRANSACTION_COMPOSITE)
+      transaction_xdata_(xact).dflags & TRANSACTION_COMPOSITE) {
     value += transaction_xdata_(xact).composite_amount;
-  else if (xact.cost || value)
-    value.add(xact.amount, xact.cost);
-  else
-    value = xact.amount;
+  }
+  else if (xact.cost || value) {
+    amount_t * cost = xact.cost;
+    if (cost && cost->commodity().price)
+      cost = new amount_t(cost->base_amount());
+    value.add(translate_amount(xact.amount), cost);
+    if (cost != xact.cost)
+      delete cost;
+  }
+  else {
+    value = translate_amount(xact.amount);
+  }
 }
 
 void truncate_entries::flush()
@@ -790,7 +800,7 @@ void walk_accounts(account_t&		    account,
 		   const std::string&       sort_string)
 {
   if (! sort_string.empty()) {
-    std::auto_ptr<value_expr_t> sort_order;
+    value_auto_ptr sort_order;
     try {
       sort_order.reset(parse_value_expr(sort_string));
     }
@@ -814,15 +824,15 @@ void walk_commodities(commodities_map& commodities,
   for (commodities_map::iterator i = commodities.begin();
        i != commodities.end();
        i++) {
-    if ((*i).second->flags & COMMODITY_STYLE_NOMARKET)
+    if ((*i).second->flags() & COMMODITY_STYLE_NOMARKET)
       continue;
 
     entry_temps.push_back(entry_t());
     acct_temps.push_back(account_t(NULL, (*i).second->symbol));
 
-    if ((*i).second->history)
-      for (history_map::iterator j = (*i).second->history->prices.begin();
-	   j != (*i).second->history->prices.end();
+    if ((*i).second->history())
+      for (history_map::iterator j = (*i).second->history()->prices.begin();
+	   j != (*i).second->history()->prices.end();
 	   j++) {
 	entry_temps.back()._date = (*j).first;
 

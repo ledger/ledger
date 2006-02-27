@@ -3,18 +3,87 @@
 
 * 2.5
 
-- Added a new "csv" command, for outputting results in CSV format.
+- There have a few changes to value expression syntax.  The most
+  significant incompatibilities being:
+
+  * Equality is now ==, not =
+  * The U, A, and S functions now requires parens around the argument.
+    Whereas before At was acceptable, now it must be specified as
+    A(t).
+  * The P function now always requires two arguments.  The old
+    one-argument version P(x) is now the same as P(x,m).
+
+  The following value expression features are new:
+
+  * A C-like comma operator is supported, where all but the last term
+    are ignored.  The is significant for the next feature:
+  * Function definitions are now supported.  Scoping is governed
+    by parentheses.  For example:
+      (x=100, x+10)      ; yields 110 as the result
+      (f(x)=x*2,f(100))  ; yields 200 as the result
+  * Identifier names may be any length.  Along with this support comes
+    alternate, longer names for all of the current one-letter value
+    expression variables:
+
+     Old    New
+     ---    ---
+     m      now
+     a      amount
+     a      amount
+     b      cost
+     i      price
+     d      date
+     X      cleared
+     Y      pending
+     R      real
+     L      actual
+     n      index
+     N      count
+     l      depth
+     O      total
+     B      cost_total
+     I      price_total
+     v      market
+     V      market_total
+     g      gain
+     G      gain_total
+     U(x)   abs(x)
+     S(x)   quant(x), quantity(x)
+            comm(x), commodity(x)
+            setcomm(x,y), set_commodity(x,y)
+     A(x)   mean(x), avg(x), average(x)
+     P(x,y) val(x,y), value(x,y)
+            min(x,y)
+            max(x,y)
+
+- There are new "parse" and "expr" commands, whose argument is a
+  single value expression.  Ledger will simply print out the result of
+  evaluating it.  "parse" happens before parsing your ledger file,
+  while "expr" happens afterward.  Although "expr" is slower as a
+  result, any commodities you use will be formatted based on patterns
+  of usage seen in your ledger file.
+
+  These commands can be used to test value expressions, or for doing
+  calculation of commoditized amounts from a script.
+
+  A new "--debug" will also dump the resulting parse tree, useful for
+  submitting bug reports.
+
+- Added new min(x,y) and max(x,y) value expression functions.
 
 - Added a new value expression regexp command:
-    C//  compare against transaction amount's commodity symbol
+    C//  compare against a transaction amount's commodity symbol
 
-- Added new @min(x,y) and @max(x,y) value expression functions.
+- Value expression function may now be defined within your ledger file
+  (or initialization file) using the following syntax:
 
-- A new configure option "--disable-emacs" will disable generation of
-  transaction and entry location info, which is used by ledger.el and
-  the "write" command.  If you use neither of these, then disabling
-  them will cut textual parsing time in half, and binary loading time
-  (and cache file size) by a third.
+    @def foo(x)=x*1000
+
+  This line makes the function "foo" available to all subsequent value
+  expressions, to all command-line options taking a value expression,
+  and to the new "expr" command (see above).
+
+- Added a new "csv" command, for outputting results in CSV format.
 
 - Effective dates may now be specified for entries:
 
@@ -74,28 +143,27 @@
   transactions belong to the same entry.
 
 - Individual transactions may now be cleared separately.  The old
-  syntax, which is still supported, clears all transactions in the
+  syntax, which is still supported, clears all transactions in an
   entry:
 
     2004/05/27 * Book Store
       Expenses:Dining                 $20.00
       Liabilities:MasterCard
 
-  The new (and optional) syntax allows clearing just the MasterCard
-  transaction:
+  The new syntax allows clearing of just the MasterCard transaction:
 
     2004/05/27 Book Store
       Expenses:Dining                 $20.00
       * Liabilities:MasterCard
 
-  NOTE: This changes the output format of the "emacs" and "xml"
-  reports.  ledger.el will use the new syntax unless the Lisp variable
+  NOTE: This changes the output format of both the "emacs" and "xml"
+  reports.  ledger.el uses the new syntax unless the Lisp variable
   `ledger-clear-whole-entries' is set to t.
 
 - Removed Python integration support.
 
 - Did much internal restructuring to allow the use of libledger.so in
-  non-command-line environments.
+  non-command-line environments (such as GUI tools).
 
 * 2.4
 
@@ -264,27 +332,27 @@ command-line driver.
 
   -d now specifies the display predicate.  To give a date mask similar
   to 1.7, use the -p (period) option.
-  
+
   -P now generates the "by payee" report.  To specify a price database
   to use, use --price-db.
-  
+
   -G now generates a net gain report.  To print totals in a format
   consumable by gnuplot, use -J.
-  
+
   -l now specifies the calculation predicate.  To emulate the old
   usage of "-l \$100", use: -d "AT>100".
-  
+
   -N is gone.  Instead of "-N REGEX", use: -d "/REGEX/?T>0:T".
-  
+
   -F now specifies the report format string.  The old meaning of -F
   now has little use.
-  
+
   -S now takes a value expression as the sorting criterion.  To get
   the old meaning of "-S", use "-S d".
-  
+
   -n now means "collapse entries in the register report".  The get the
   old meaning of -n in the balance report, use "-T a".
-  
+
   -p now specifies the reporting period.  You can convert commodities
   in a report using value expressions.  For example, to display hours
   at $10 per hour:
@@ -329,7 +397,7 @@ command-line driver.
 
   Note: This command is identical (and internally converted) to:
     ledger -l "/expenses/|//john/" register
-  
+
 - To include entries from another file into a specific account, use:
     !account ACCOUNT
     !include FILE

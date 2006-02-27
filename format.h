@@ -51,7 +51,7 @@ struct element_t
 
   kind_t	 type;
   std::string	 chars;
-  value_expr_t * val_expr;
+  value_expr *   val_expr;
 
   struct element_t * next;
 

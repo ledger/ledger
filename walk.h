@@ -120,6 +120,11 @@ inline const account_t * xact_account(const transaction_t& xact) {
   return xact_account(const_cast<transaction_t&>(xact));
 }
 
+extern bool show_lots;
+
+#define translate_amount(amt)						\
+  ((! show_lots && amt.commodity().price) ? amt.base_amount() : amt)
+
 //////////////////////////////////////////////////////////////////////
 
 inline void walk_transactions(transactions_list::iterator begin,
@@ -212,20 +217,19 @@ class sort_transactions : public item_handler<transaction_t>
 
   transactions_deque   transactions;
   const value_expr_t * sort_order;
-  bool                 allocated;
 
  public:
   sort_transactions(item_handler<transaction_t> * handler,
 		    const value_expr_t * _sort_order)
     : item_handler<transaction_t>(handler),
-      sort_order(_sort_order), allocated(false) {}
+      sort_order(_sort_order) {}
 
   sort_transactions(item_handler<transaction_t> * handler,
 		    const std::string& _sort_order)
-    : item_handler<transaction_t>(handler), allocated(false) {
+    : item_handler<transaction_t>(handler) {
     try {
       sort_order = parse_value_expr(_sort_order);
-      allocated  = true;
+      sort_order->acquire();
     }
     catch (value_expr_error& err) {
       throw value_expr_error(std::string("In sort string '") + _sort_order +
@@ -235,8 +239,7 @@ class sort_transactions : public item_handler<transaction_t>
 
   virtual ~sort_transactions() {
     assert(sort_order);
-    if (allocated)
-      delete sort_order;
+    sort_order->release();
   }
 
   virtual void post_accumulated_xacts();

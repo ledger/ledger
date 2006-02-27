@@ -34,6 +34,22 @@ balance_t balance_t::value(const std::time_t moment) const
   return temp;
 }
 
+balance_t balance_t::factor_price() const
+{
+  balance_t temp;
+
+  for (amounts_map::const_iterator i = amounts.begin();
+       i != amounts.end();
+       i++) {
+    if ((*i).second.commodity().price)
+      temp += *((*i).second.commodity().price) * (*i).second;
+    else
+      temp += (*i).second;
+  }
+
+  return temp;
+}
+
 struct compare_amount_commodities {
   bool operator()(const amount_t * left, const amount_t * right) const {
     return left->commodity().symbol < right->commodity().symbol;

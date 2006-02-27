@@ -290,13 +290,49 @@ transaction_t * parse_transaction(char * line, account_t * account)
   if (amount) {
     xact->amount_expr = parse_amount(amount, xact->amount,
 				     AMOUNT_PARSE_NO_REDUCE, *xact);
+    if (xact->amount_expr)
+      xact->amount_expr->acquire();
     if (price) {
       xact->cost = new amount_t;
       xact->cost_expr = parse_amount(price, *xact->cost,
 				     AMOUNT_PARSE_NO_MIGRATE, *xact);
+      if (xact->cost_expr)
+	xact->cost_expr->acquire();
       if (per_unit) {
+	if (xact->amount.commodity().base == NULL) {
+	  std::string symbol = xact->amount.commodity().symbol;
+	  symbol += " {";
+	  symbol += price;
+	  symbol += "}";
+
+	  commodity_t * priced_commodity =
+	    commodity_t::find_commodity(symbol, true);
+
+	  priced_commodity->price = new amount_t(*xact->cost);
+	  priced_commodity->base  = &xact->amount.commodity();
+
+	  xact->amount.set_commodity(*priced_commodity);
+	}
+
 	*xact->cost *= xact->amount;
-	*xact->cost = xact->cost->round(xact->cost->commodity().precision);
+	*xact->cost = xact->cost->round(xact->cost->commodity().precision());
+      }
+      else if (xact->amount.commodity().base == NULL) {
+	amount_t cost(*xact->cost);
+	cost /= xact->amount;
+	cost = cost.round(cost.commodity().precision());
+
+	std::string symbol;
+	std::ostringstream symstr(symbol);
+	symstr << xact->amount.commodity().symbol << " {" << cost << "}";
+
+	commodity_t * priced_commodity =
+	  commodity_t::find_commodity(symstr.str(), true);
+
+	priced_commodity->price = new amount_t(cost);
+	priced_commodity->base  = &xact->amount.commodity();
+
+	xact->amount.set_commodity(*priced_commodity);
       }
     }
     xact->amount.reduce();
@@ -318,10 +354,9 @@ bool parse_transactions(std::istream&	   in,
     in.getline(line, MAX_LINE);
     if (in.eof())
       break;
-#ifdef USE_EDITOR
     beg_pos += istream_pos_type(std::strlen(line) + 1);
-#endif
     linenum++;
+
     if (line[0] == ' ' || line[0] == '\t' || line[0] == '\r') {
       char * p = skip_ws(line);
       if (! *p || *p == '\r')
@@ -403,20 +438,17 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
 
   TIMER_START(entry_xacts);
 
-#ifdef USE_EDITOR
   istream_pos_type end_pos;
   unsigned long    beg_line = linenum;
-#endif
+
   while (! in.eof() && (in.peek() == ' ' || in.peek() == '\t')) {
     line[0] = '\0';
     in.getline(line, MAX_LINE);
     if (in.eof() && line[0] == '\0')
       break;
-#ifdef USE_EDITOR
     end_pos = beg_pos + istream_pos_type(std::strlen(line) + 1);
-#endif
-
     linenum++;
+
     if (line[0] == ' ' || line[0] == '\t' || line[0] == '\r') {
       char * p = skip_ws(line);
       if (! *p || *p == '\r')
@@ -547,20 +579,17 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
   src_idx = journal->sources.size() - 1;
   linenum = 1;
 
-#ifdef USE_EDITOR
   istream_pos_type beg_pos  = in.tellg();
   istream_pos_type end_pos;
   unsigned long    beg_line = linenum;
-#endif
+
   while (in.good() && ! in.eof()) {
     try {
       in.getline(line, MAX_LINE);
       if (in.eof())
 	break;
-      linenum++;
-#ifdef USE_EDITOR
       end_pos = beg_pos + istream_pos_type(std::strlen(line) + 1);
-#endif
+      linenum++;
 
       switch (line[0]) {
       case '\0':
@@ -674,7 +703,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	parse_symbol(p, symbol);
 
 	commodity_t * commodity = commodity_t::find_commodity(symbol, true);
-	commodity->flags |= COMMODITY_STYLE_NOMARKET;
+	commodity->flags() |= COMMODITY_STYLE_NOMARKET;
 	break;
       }
 
@@ -732,13 +761,11 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	  if (pe->finalize()) {
 	    extend_entry_base(journal, *pe);
 	    journal->period_entries.push_back(pe);
-#ifdef USE_EDITOR
 	    pe->src_idx	 = src_idx;
 	    pe->beg_pos	 = beg_pos;
 	    pe->beg_line = beg_line;
 	    pe->end_pos	 = end_pos;
 	    pe->end_line = linenum;
-#endif
 	  } else {
 	    throw parse_error(path, linenum, "Period entry failed to balance");
 	  }
@@ -746,16 +773,15 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	break;
       }
 
+      case '@':
       case '!': {                 // directive
 	char * p = next_element(line);
 	std::string word(line + 1);
 	if (word == "include") {
 	  push_var<std::string>	     save_path(path);
 	  push_var<unsigned int>     save_src_idx(src_idx);
-#ifdef USE_EDITOR
 	  push_var<istream_pos_type> save_beg_pos(beg_pos);
 	  push_var<istream_pos_type> save_end_pos(end_pos);
-#endif
 	  push_var<unsigned int>     save_linenum(linenum);
 
 	  path = p;
@@ -799,26 +825,25 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	    assert(result.second);
 	  }
 	}
+	else if (word == "def") {
+	  if (! global_scope.get())
+	    init_value_expr();
+	  value_auto_ptr expr(parse_boolean_expr(p, global_scope.get()));
+	}
 	break;
       }
 
       default: {
 	unsigned int first_line = linenum;
-#ifdef USE_EDITOR
 	istream_pos_type pos = end_pos;
-#else
-	istream_pos_type pos;
-#endif
 	if (entry_t * entry =
 	    parse_entry(in, line, account_stack.front(), *this, pos)) {
 	  if (journal->add_entry(entry)) {
-#ifdef USE_EDITOR
 	    entry->src_idx  = src_idx;
 	    entry->beg_pos  = beg_pos;
 	    entry->beg_line = beg_line;
 	    entry->end_pos  = end_pos;
 	    entry->end_line = linenum;
-#endif
 	    count++;
 	  } else {
 	    print_entry(std::cerr, *entry);
@@ -833,9 +858,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	} else {
 	  throw parse_error(path, first_line, "Failed to parse entry");
 	}
-#ifdef USE_EDITOR
 	end_pos = pos;
-#endif
 	break;
       }
       }
@@ -854,9 +877,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 		<< err.what() << std::endl;;
       errors++;
     }
-#ifdef USE_EDITOR
     beg_pos = end_pos;
-#endif
   }
 
  done:
@@ -875,8 +896,6 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
   return count;
 }
-
-#ifdef USE_EDITOR
 
 void write_textual_journal(journal_t& journal, std::string path,
 			   item_handler<transaction_t>& formatter,
@@ -963,7 +982,5 @@ void write_textual_journal(journal_t& journal, std::string path,
     }
   }
 }
-
-#endif // USE_EDITOR
 
 } // namespace ledger

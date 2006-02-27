@@ -73,6 +73,7 @@ class amount_t
   void clear_commodity() {
     commodity_ = NULL;
   }
+  amount_t base_amount() const;
 
   bool null() const {
     return ! quantity && ! commodity_;
@@ -316,21 +317,47 @@ class commodity_t
     std::time_t	    last_lookup;
   };
 
+  history_t * history_;
+
+  history_t *& history() {
+    return base ? base->history() : history_;
+  }
+
   const std::string symbol;
   bool		    quote;
-  std::string	    name;
-  std::string	    note;
-  unsigned short    precision;
-  unsigned short    flags;
+  std::string	    name_;
+  std::string	    note_;
+  unsigned short    precision_;
+  unsigned short    flags_;
   ident_t	    ident;
-  history_t *       history;
-  amount_t *	    smaller;
-  amount_t *	    larger;
+  amount_t *	    smaller_;
+  amount_t *	    larger_;
+  commodity_t *	    base;	// base commodity for AAPL {$10} is AAPL
+  amount_t *	    price;	// its price is therefore $10.00
+
+  std::string& name() {
+    return base ? base->name() : name_;
+  }
+  std::string& note() {
+    return base ? base->note() : note_;
+  }
+  unsigned short& precision() {
+    return base ? base->precision() : precision_;
+  }
+  unsigned short& flags() {
+    return base ? base->flags() : flags_;
+  }
+  amount_t *& smaller() {
+    return base ? base->smaller() : smaller_;
+  }
+  amount_t *& larger() {
+    return base ? base->larger() : larger_;
+  }
 
   // If set, this global function pointer is called to determine
   // whether prices have been updated in the meanwhile.
 
-  static updater_t *     updater;
+  static updater_t * updater;
 
   // This map remembers all commodities that have been defined.
 
@@ -361,14 +388,15 @@ class commodity_t
   commodity_t(const std::string& _symbol    = "",
 	      unsigned int	 _precision = 0,
 	      unsigned int       _flags	    = COMMODITY_STYLE_DEFAULTS)
-    : precision(_precision), flags(_flags), history(NULL),
-      smaller(NULL), larger(NULL) {
+    : precision_(_precision), flags_(_flags), history_(NULL),
+      smaller_(NULL), larger_(NULL), base(NULL), price(NULL) {
     set_symbol(_symbol);
   }
   ~commodity_t() {
-    if (history) delete history;
-    if (smaller) delete smaller;
-    if (larger)  delete larger;
+    if (history_) delete history_;
+    if (smaller_) delete smaller_;
+    if (larger_)  delete larger_;
+    if (price)    delete price;
   }
 
   operator bool() const {
@@ -385,8 +413,8 @@ class commodity_t
 
   void add_price(const std::time_t date, const amount_t& price);
   bool remove_price(const std::time_t date) {
-    if (history) {
-      history_map::size_type n = history->prices.erase(date);
+    if (history_) {
+      history_map::size_type n = history_->prices.erase(date);
       return n > 0;
     }
     return false;
@@ -398,7 +426,7 @@ class commodity_t
     if (symbol.empty() && this != null_commodity)
       return false;
 
-    if (precision > 16)
+    if (precision_ > 16)
       return false;
 
     return true;
@@ -415,6 +443,17 @@ inline commodity_t& amount_t::commodity() const {
     return *commodity_t::null_commodity;
   else
     return *commodity_;
+}
+
+inline amount_t amount_t::base_amount() const {
+  if (commodity_ && commodity_->price) {
+    amount_t temp(*this);
+    assert(commodity_->base);
+    temp.set_commodity(*(commodity_->base));
+    return temp;
+  } else {
+    return *this;
+  }
 }
 
 class amount_error : public std::exception {

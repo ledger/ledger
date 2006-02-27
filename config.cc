@@ -17,15 +17,43 @@
 
 namespace ledger {
 
-std::list<option_t> config_options;
+namespace {
+  config_t * config = NULL;
 
-static config_t * config = NULL;
+  void xact_amount(value_t& result, const details_t& details, value_expr_t *)
+  {
+    if (transaction_has_xdata(*details.xact) &&
+	transaction_xdata_(*details.xact).dflags & TRANSACTION_COMPOSITE)
+      result = transaction_xdata_(*details.xact).composite_amount;
+    else
+      result = details.xact->amount;
+  }
+
+  void xact_running_total(value_t& result, const details_t& details,
+			  value_expr_t *)
+  {
+    result = transaction_xdata_(*details.xact).total;
+  }
+
+  void account_amount(value_t& result, const details_t& details,
+		      value_expr_t *)
+  {
+    if (account_has_xdata(*details.account))
+      result = account_xdata(*details.account).value;
+  }
+
+  void account_total(value_t& result, const details_t& details,
+		     value_expr_t *)
+  {
+    if (account_has_xdata(*details.account))
+      result = account_xdata(*details.account).total;
+  }
+}
 
 void config_t::reset()
 {
-  amount_expr	     = "a";
-  total_expr	     = "O";
-  total_expr_template = "#";
+  amount_expr        = "a";
+  total_expr         = "O";
   pricing_leeway     = 24 * 3600;
   budget_flags       = BUDGET_NO_BUDGET;
   balance_format     = "%20T  %2_%-a\n";
@@ -34,8 +62,8 @@ void config_t::reset()
   wide_register_format = ("%D  %-.35P %-.38A %22.108t %22.132T\n%/"
 			  "%48|%-.38A %22.108t %22.132T\n");
   csv_register_format = "\"%D\",\"%P\",\"%A\",\"%t\",\"%T\"\n";
-  plot_amount_format = "%D %(St)\n";
-  plot_total_format  = "%D %(ST)\n";
+  plot_amount_format = "%D %(S(t))\n";
+  plot_total_format  = "%D %(S(T))\n";
   print_format       = "\n%d %Y%C%P\n    %-34W  %12o%n\n%/    %-34W  %12o%n\n";
   write_hdr_format   = "%d %Y%C%P\n";
   write_xact_format  = "    %-34W  %12o%n\n";
@@ -62,6 +90,7 @@ void config_t::reset()
   show_revalued      = false;
   show_revalued_only = false;
   download_quotes    = false;
+  debug_mode         = false;
 
   use_cache	     = false;
   cache_dirty        = false;
@@ -133,7 +162,7 @@ config_t::regexps_to_predicate(const std::string& command,
       if (! show_related && ! show_all_related) {
 	if (! display_predicate.empty())
 	  display_predicate += "&";
-	else if (! show_empty)
+	if (! show_empty)
 	  display_predicate += "T&";
 
 	if (add_predicate == 2)
@@ -143,6 +172,8 @@ config_t::regexps_to_predicate(const std::string& command,
 	display_predicate += ")/";
       }
       else if (! show_empty) {
+	if (! display_predicate.empty())
+	  display_predicate += "&";
 	display_predicate += "T";
       }
     }
@@ -176,6 +207,18 @@ void config_t::process_environment(char ** envp, const std::string& tag)
   config = this;
   ::process_environment(config_options, envp, tag);
   config = NULL;
+}
+
+static std::string expand_value_expr(const std::string& tmpl,
+				     const std::string& expr)
+{
+  std::string xp = tmpl;
+  for (std::string::size_type i = xp.find('#');
+       i != std::string::npos;
+       i = xp.find('#'))
+    xp = (std::string(xp, 0, i) + "(" + expr + ")" +
+	  std::string(xp, i + 1));
+  return xp;
 }
 
 void config_t::process_options(const std::string&     command,
@@ -244,32 +287,8 @@ void config_t::process_options(const std::string&     command,
 
   // Setup the values of %t and %T, used in format strings
 
-  try {
-    ledger::amount_expr.reset(parse_value_expr(amount_expr));
-  }
-  catch (const value_expr_error& err) {
-    throw error(std::string("In amount expression '") + amount_expr +
-		"': " + err.what());
-  }
-
-  std::string expr = total_expr_template;
-  for (std::string::size_type i = expr.find('#');
-       i != std::string::npos;
-       i = expr.find('#'))
-    expr = (std::string(expr, 0, i) + "(" + total_expr + ")" +
-	    std::string(expr, i + 1));
-
-  DEBUG_PRINT("ledger.config.total_expr",
-	      "Total expression template = " << total_expr_template);
-  DEBUG_PRINT("ledger.config.total_expr",
-	      "Total expression is now   = " << expr);
-  try {
-    ledger::total_expr.reset(parse_value_expr(expr));
-  }
-  catch (const value_expr_error& err) {
-    throw error(std::string("In total expression '") + expr + "': " +
-		err.what());
-  }
+  ledger::amount_expr.reset(new value_expr(amount_expr));
+  ledger::total_expr.reset(new value_expr(total_expr));
 
   // If downloading is to be supported, configure the updater
 
@@ -683,6 +702,10 @@ OPT_BEGIN(account, "a:") {
   config->account = optarg;
 } OPT_END(account);
 
+OPT_BEGIN(debug, "") {
+  config->debug_mode = true;
+} OPT_END(debug);
+
 //////////////////////////////////////////////////////////////////////
 //
 // Report filtering
@@ -754,6 +777,10 @@ OPT_BEGIN(actual, "L") {
     config->predicate += "&";
   config->predicate += "L";
 } OPT_END(actual);
+
+OPT_BEGIN(lots, "") {
+  show_lots = true;
+} OPT_END(lots);
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -1013,6 +1040,12 @@ OPT_BEGIN(basis, "B") {
   config->total_expr  = "B";
 } OPT_END(basis);
 
+OPT_BEGIN(price, "I") {
+  show_lots = true;		// don't show them, but use in calculations
+  config->amount_expr = "i";
+  config->total_expr  = "I";
+} OPT_END(price);
+
 OPT_BEGIN(market, "V") {
   config->show_revalued = true;
 
@@ -1034,15 +1067,98 @@ OPT_BEGIN(gain, "G") {
 } OPT_END(gain);
 
 OPT_BEGIN(average, "A") {
-  config->total_expr_template = "A#";
+  config->total_expr = expand_value_expr("A(#)", config->total_expr);
 } OPT_END(average);
 
 OPT_BEGIN(deviation, "D") {
-  config->total_expr_template = "t-A#";
+  config->total_expr = expand_value_expr("t-A(#)", config->total_expr);
 } OPT_END(deviation);
 
 OPT_BEGIN(percentage, "%") {
-  config->total_expr_template = "^#&{100.0%}*(#/^#)";
+  config->total_expr = expand_value_expr("^#&{100.0%}*(#/^#)", config->total_expr);
 } OPT_END(percentage);
+
+//////////////////////////////////////////////////////////////////////
+
+option_t config_options[CONFIG_OPTIONS_SIZE] = {
+  { "account", 'a', true, opt_account, false },
+  { "actual", 'L', false, opt_actual, false },
+  { "add-budget", '\0', false, opt_add_budget, false },
+  { "amount", 't', true, opt_amount, false },
+  { "amount-data", 'j', false, opt_amount_data, false },
+  { "average", 'A', false, opt_average, false },
+  { "balance-format", '\0', true, opt_balance_format, false },
+  { "basis", 'B', false, opt_basis, false },
+  { "begin", 'b', true, opt_begin, false },
+  { "budget", '\0', false, opt_budget, false },
+  { "by-payee", 'P', false, opt_by_payee, false },
+  { "cache", '\0', true, opt_cache, false },
+  { "cleared", 'C', false, opt_cleared, false },
+  { "collapse", 'n', false, opt_collapse, false },
+  { "comm-as-payee", 'x', false, opt_comm_as_payee, false },
+  { "csv-register-format", '\0', true, opt_csv_register_format, false },
+  { "current", 'c', false, opt_current, false },
+  { "date-format", 'y', true, opt_date_format, false },
+  { "debug", '\0', false, opt_debug, false },
+  { "deviation", 'D', false, opt_deviation, false },
+  { "display", 'd', true, opt_display, false },
+  { "dow", '\0', false, opt_dow, false },
+  { "download", 'Q', false, opt_download, false },
+  { "effective", '\0', false, opt_effective, false },
+  { "empty", 'E', false, opt_empty, false },
+  { "end", 'e', true, opt_end, false },
+  { "equity-format", '\0', true, opt_equity_format, false },
+  { "file", 'f', true, opt_file, false },
+  { "forecast", '\0', true, opt_forecast, false },
+  { "format", 'F', true, opt_format, false },
+  { "full-help", 'H', false, opt_full_help, false },
+  { "gain", 'G', false, opt_gain, false },
+  { "head", '\0', true, opt_head, false },
+  { "help", 'h', false, opt_help, false },
+  { "help-calc", '\0', false, opt_help_calc, false },
+  { "help-comm", '\0', false, opt_help_comm, false },
+  { "help-disp", '\0', false, opt_help_disp, false },
+  { "init-file", 'i', true, opt_init_file, false },
+  { "input-date-format", '\0', true, opt_input_date_format, false },
+  { "limit", 'l', true, opt_limit, false },
+  { "lots", '\0', false, opt_lots, false },
+  { "market", 'V', false, opt_market, false },
+  { "monthly", 'M', false, opt_monthly, false },
+  { "no-cache", '\0', false, opt_no_cache, false },
+  { "output", 'o', true, opt_output, false },
+  { "pager", '\0', true, opt_pager, false },
+  { "percentage", '%', false, opt_percentage, false },
+  { "performance", 'g', false, opt_performance, false },
+  { "period", 'p', true, opt_period, false },
+  { "period-sort", '\0', true, opt_period_sort, false },
+  { "plot-amount-format", '\0', true, opt_plot_amount_format, false },
+  { "plot-total-format", '\0', true, opt_plot_total_format, false },
+  { "price", 'I', false, opt_price, false },
+  { "price-db", '\0', true, opt_price_db, false },
+  { "price-exp", 'Z', true, opt_price_exp, false },
+  { "prices-format", '\0', true, opt_prices_format, false },
+  { "print-format", '\0', true, opt_print_format, false },
+  { "quantity", 'O', false, opt_quantity, false },
+  { "real", 'R', false, opt_real, false },
+  { "reconcile", '\0', true, opt_reconcile, false },
+  { "reconcile-date", '\0', true, opt_reconcile_date, false },
+  { "register-format", '\0', true, opt_register_format, false },
+  { "related", 'r', false, opt_related, false },
+  { "sort", 'S', true, opt_sort, false },
+  { "subtotal", 's', false, opt_subtotal, false },
+  { "tail", '\0', true, opt_tail, false },
+  { "total", 'T', true, opt_total, false },
+  { "total-data", 'J', false, opt_total_data, false },
+  { "totals", '\0', false, opt_totals, false },
+  { "unbudgeted", '\0', false, opt_unbudgeted, false },
+  { "uncleared", 'U', false, opt_uncleared, false },
+  { "version", 'v', false, opt_version, false },
+  { "weekly", 'W', false, opt_weekly, false },
+  { "wide", 'w', false, opt_wide, false },
+  { "wide-register-format", '\0', true, opt_wide_register_format, false },
+  { "write-hdr-format", '\0', true, opt_write_hdr_format, false },
+  { "write-xact-format", '\0', true, opt_write_xact_format, false },
+  { "yearly", 'Y', false, opt_yearly, false },
+};
 
 } // namespace ledger

@@ -162,13 +162,9 @@ element_t * format_t::parse_elements(const std::string& fmt)
 	throw format_error("Missing ')'");
 
       current->type = element_t::VALUE_EXPR;
-      try {
-	current->val_expr = parse_value_expr(std::string(b, p));
-      }
-      catch (value_expr_error& err) {
-	throw value_expr_error(std::string("In format expression '") +
-			       std::string(b, p) + "': " + err.what());
-      }
+
+      assert(current->val_expr == NULL);
+      current->val_expr = new value_expr(std::string(b, p));
       break;
     }
 
@@ -293,22 +289,22 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
     case element_t::AMOUNT:
     case element_t::TOTAL:
     case element_t::VALUE_EXPR: {
-      value_expr_t * expr = NULL;
+      value_calc * calc = NULL;
       switch (elem->type) {
-      case element_t::AMOUNT:     expr = amount_expr.get(); break;
-      case element_t::TOTAL:      expr = total_expr.get(); break;
-      case element_t::VALUE_EXPR: expr = elem->val_expr; break;
+      case element_t::AMOUNT:     calc = amount_expr.get(); break;
+      case element_t::TOTAL:      calc = total_expr.get(); break;
+      case element_t::VALUE_EXPR: calc = elem->val_expr; break;
       default:
 	assert(0);
 	break;
       }
-      if (! expr)
+      if (! calc)
 	break;
 
       value_t     value;
       balance_t * bal = NULL;
 
-      expr->compute(value, details);
+      calc->compute(value, details);
 
       switch (value.type) {
       case value_t::BOOLEAN:
@@ -348,9 +344,9 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 	  amount_t unit_cost = *details.xact->cost / details.xact->amount;
 
 	  commodity_t& comm(unit_cost.commodity());
-	  bool has_flag = comm.flags & COMMODITY_STYLE_VARIABLE;
+	  bool has_flag = comm.flags() & COMMODITY_STYLE_VARIABLE;
 	  if (! has_flag)
-	    unit_cost.commodity().flags |= COMMODITY_STYLE_VARIABLE;
+	    unit_cost.commodity().flags() |= COMMODITY_STYLE_VARIABLE;
 
 	  std::ostringstream stream;
 	  stream << details.xact->amount << " @ " << unit_cost;
@@ -358,7 +354,7 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 	  use_disp = true;
 
 	  if (! has_flag)
-	    unit_cost.commodity().flags &= ~COMMODITY_STYLE_VARIABLE;
+	    unit_cost.commodity().flags() &= ~COMMODITY_STYLE_VARIABLE;
 	}
 	else if (details.entry) {
 	  unsigned int    xacts_count = 0;
@@ -388,7 +384,6 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
       }
       break;
 
-#ifdef USE_EDITOR
     case element_t::SOURCE:
       if (details.entry && details.entry->journal) {
 	int idx = details.entry->src_idx;
@@ -441,7 +436,6 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
       if (details.xact)
 	out << details.xact->end_line;
       break;
-#endif
 
     case element_t::DATE_STRING: {
       std::time_t date = 0;
@@ -617,7 +611,7 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
   }
 }
 
-format_transactions::format_transactions(std::ostream&      _output_stream,
+format_transactions::format_transactions(std::ostream& _output_stream,
 					 const std::string& format)
   : output_stream(_output_stream), last_entry(NULL), last_xact(NULL)
 {
@@ -731,7 +725,7 @@ bool disp_subaccounts_p(const account_t&		 account,
   return display;
 }
 
-bool display_account(const account_t&		      account,
+bool display_account(const account_t& account,
 		     const item_predicate<account_t>& disp_pred)
 {
   // Never display an account that has already been displayed.

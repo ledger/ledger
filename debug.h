@@ -55,6 +55,9 @@ bool _debug_active(const char * const cls);
 #define DEBUG(cls) (_debug_active(cls))
 #define DEBUG_() DEBUG(_debug_cls)
 
+#define DEBUG_IF(cls) if (_debug_active(cls))
+#define DEBUG_IF_() if (_debug_active(_debug_cls))
+
 #define DEBUG_PRINT(cls, x)			\
   if (_debug_stream && _debug_active(cls)) {	\
     *_debug_stream << x << std::endl;		\
@@ -91,6 +94,8 @@ void   operator delete[](void*, const std::nothrow_t&) throw();
 #define DEBUG_CLASS(cls)
 #define DEBUG(cls) 0
 #define DEBUG_() 0
+#define DEBUG_IF(cls)
+#define DEBUG_IF_()
 #define DEBUG_PRINT(cls, x)
 #define DEBUG_PRINT_(x)
 #define DEBUG_PRINT_TIME(cls, x)

@@ -13,6 +13,14 @@ const std::string version = PACKAGE_VERSION;
 
 bool transaction_t::use_effective_date = false;
 
+transaction_t::~transaction_t()
+{
+  DEBUG_PRINT("ledger.memory.dtors", "dtor transaction_t");
+  if (cost) delete cost;
+  if (amount_expr) amount_expr->release();
+  if (cost_expr) cost_expr->release();
+}
+
 std::time_t transaction_t::actual_date() const
 {
   if (_date == 0 && entry)
@@ -96,6 +104,10 @@ bool entry_base_t::finalize()
 	} else {
 	  balance += *p;
 	}
+
+	if ((*x)->cost && (*x)->amount.commodity().price)
+	  balance += (*((*x)->amount.commodity().price) * (*x)->amount -
+		      *((*x)->cost));
       }
     }
 

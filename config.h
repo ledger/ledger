@@ -42,7 +42,6 @@ class config_t
   std::string   sort_string;
   std::string   amount_expr;
   std::string   total_expr;
-  std::string   total_expr_template;
   std::string   forecast_limit;
   std::string   reconcile_balance;
   std::string   reconcile_date;
@@ -66,6 +65,7 @@ class config_t
   bool		download_quotes;
   bool          use_cache;
   bool          cache_dirty;
+  bool          debug_mode;
 
   config_t() {
     reset();
@@ -73,7 +73,6 @@ class config_t
   config_t(const config_t&) {
     assert(0);
   }
-
   void reset();
 
   void regexps_to_predicate(const std::string& command,
@@ -100,24 +99,15 @@ class config_t
 		      std::list<item_handler<transaction_t> *>& ptrs);
 };
 
-extern std::list<option_t> config_options;
+#define CONFIG_OPTIONS_SIZE 78
+extern option_t config_options[CONFIG_OPTIONS_SIZE];
 
 void option_help(std::ostream& out);
 
-struct declared_option_handler : public option_handler {
-  declared_option_handler(const std::string& label,
-			  const std::string& opt_chars) {
-    add_option_handler(config_options, label, opt_chars, *this);
-  }
-};
+#define OPT_BEGIN(tag, chars)			\
+    void opt_ ## tag(const char * optarg)
 
-#define OPT_BEGIN(tag, chars)						\
-  static struct opt_ ## tag ## _handler					\
-      : public declared_option_handler {				\
-    opt_ ## tag ## _handler() : declared_option_handler(#tag, chars) {}	\
-    virtual void operator()(const char * optarg)
-
-#define OPT_END(tag) } opt_ ## tag ## _handler_obj
+#define OPT_END(tag)
 
 } // namespace ledger
 

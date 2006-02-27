@@ -115,18 +115,32 @@ static void endElement(void *userData, const char *name)
   else if (std::strcmp(name, "tr:generated") == 0) {
     curr_entry->transactions.back()->flags |= TRANSACTION_AUTO;
   }
-  else if (std::strcmp(name, "commodity") == 0) {
+  else if (std::strcmp(name, "symbol") == 0) {
     assert(! curr_comm);
     curr_comm = commodity_t::find_commodity(data, true);
-    curr_comm->flags |= COMMODITY_STYLE_SUFFIXED;
-    if (! comm_flags.empty())
-      for (std::string::size_type i = 0, l = comm_flags.length(); i < l; i++)
+    curr_comm->flags() |= COMMODITY_STYLE_SUFFIXED;
+    if (! comm_flags.empty()) {
+      for (std::string::size_type i = 0, l = comm_flags.length(); i < l; i++) {
 	switch (comm_flags[i]) {
-	case 'P': curr_comm->flags &= ~COMMODITY_STYLE_SUFFIXED; break;
-	case 'S': curr_comm->flags |= COMMODITY_STYLE_SEPARATED; break;
-	case 'T': curr_comm->flags |= COMMODITY_STYLE_THOUSANDS; break;
-	case 'E': curr_comm->flags |= COMMODITY_STYLE_EUROPEAN; break;
+	case 'P': curr_comm->flags() &= ~COMMODITY_STYLE_SUFFIXED; break;
+	case 'S': curr_comm->flags() |= COMMODITY_STYLE_SEPARATED; break;
+	case 'T': curr_comm->flags() |= COMMODITY_STYLE_THOUSANDS; break;
+	case 'E': curr_comm->flags() |= COMMODITY_STYLE_EUROPEAN; break;
 	}
+      }
+    }
+  }
+  else if (std::strcmp(name, "price") == 0) {
+    assert(curr_comm);
+    amount_t * price = new amount_t(data);
+    std::string symbol;
+    std::ostringstream symstr(symbol);
+    symstr << curr_comm->symbol << " {" << *price << "}";
+    commodity_t * priced_comm =
+      commodity_t::find_commodity(symstr.str(), true);
+    priced_comm->price = price;
+    priced_comm->base = curr_comm;
+    curr_comm = priced_comm;
   }
   else if (std::strcmp(name, "quantity") == 0) {
     curr_entry->transactions.back()->amount.parse(data);
@@ -134,8 +148,8 @@ static void endElement(void *userData, const char *name)
       std::string::size_type i = data.find('.');
       if (i != std::string::npos) {
 	int precision = data.length() - i - 1;
-	if (precision > curr_comm->precision)
-	  curr_comm->precision = precision;
+	if (precision > curr_comm->precision())
+	  curr_comm->precision() = precision;
       }
       curr_entry->transactions.back()->amount.set_commodity(*curr_comm);
       curr_comm = NULL;
@@ -240,11 +254,24 @@ void xml_write_amount(std::ostream& out, const amount_t& amount,
   commodity_t& c = amount.commodity();
   for (int i = 0; i < depth + 2; i++) out << ' ';
   out << "<commodity flags=\"";
-  if (! (c.flags & COMMODITY_STYLE_SUFFIXED)) out << 'P';
-  if (c.flags & COMMODITY_STYLE_SEPARATED)    out << 'S';
-  if (c.flags & COMMODITY_STYLE_THOUSANDS)    out << 'T';
-  if (c.flags & COMMODITY_STYLE_EUROPEAN)     out << 'E';
-  out << "\">" << c.symbol << "</commodity>\n";
+  if (! (c.flags() & COMMODITY_STYLE_SUFFIXED)) out << 'P';
+  if (c.flags() & COMMODITY_STYLE_SEPARATED)    out << 'S';
+  if (c.flags() & COMMODITY_STYLE_THOUSANDS)    out << 'T';
+  if (c.flags() & COMMODITY_STYLE_EUROPEAN)     out << 'E';
+  out << "\">\n";
+  for (int i = 0; i < depth + 4; i++) out << ' ';
+  if (c.price) {
+    out << "<symbol>" << c.base->symbol << "</symbol>\n";
+    for (int i = 0; i < depth + 4; i++) out << ' ';
+    out << "<price>\n";
+    xml_write_amount(out, *c.price, depth + 6);
+    for (int i = 0; i < depth + 4; i++) out << ' ';
+    out << "</price>\n";
+  } else {
+    out << "<symbol>" << c.symbol << "</symbol>\n";
+  }
+  for (int i = 0; i < depth + 2; i++) out << ' ';
+  out << "</commodity>\n";
 
   for (int i = 0; i < depth + 2; i++) out << ' ';
   out << "<quantity>";

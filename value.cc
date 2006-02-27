@@ -747,6 +747,38 @@ value_t value_t::cost() const
   return value_t();
 }
 
+value_t value_t::factor_price() const
+{
+  switch (type) {
+  case BOOLEAN:
+  case INTEGER:
+    return *this;
+
+  case AMOUNT: {
+    commodity_t& comm = ((amount_t *) data)->commodity();
+    if (comm.price != NULL)
+      return value_t(*comm.price * *((amount_t *) data));
+    return *this;
+  }
+
+  case BALANCE:
+    return ((balance_t *) data)->factor_price();
+
+  case BALANCE_PAIR: {
+    balance_pair_t temp(((balance_pair_t *) data)->quantity.factor_price());
+    if (((balance_pair_t *) data)->cost)
+      temp.cost = new balance_t(((balance_pair_t *) data)->cost);
+    return temp;
+  }
+
+  default:
+    assert(0);
+    break;
+  }
+  assert(0);
+  return value_t();
+}
+
 value_t& value_t::add(const amount_t& amount, const amount_t * cost)
 {
   switch (type) {

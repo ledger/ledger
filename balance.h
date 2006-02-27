@@ -426,6 +426,7 @@ class balance_t
 
   amount_t  amount(const commodity_t& commodity) const;
   balance_t value(const std::time_t moment) const;
+  balance_t factor_price() const;
 
   void      write(std::ostream& out,
 		  const int	first_width,
@@ -443,7 +444,7 @@ class balance_t
 	 i != amounts.end();
 	 i++)
       if ((*i).second.commodity())
-	(*i).second = (*i).second.round((*i).second.commodity().precision);
+	(*i).second = (*i).second.round((*i).second.commodity().precision());
   }
 };
 

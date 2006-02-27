@@ -66,14 +66,14 @@ static struct _init_amounts {
     commodity_t * commodity;
 
     commodity = commodity_t::find_commodity("s", true);
-    commodity->flags |= COMMODITY_STYLE_NOMARKET | COMMODITY_STYLE_BUILTIN;
+    commodity->flags() |= COMMODITY_STYLE_NOMARKET | COMMODITY_STYLE_BUILTIN;
 
     parse_conversion("1.0m", "60s");
     parse_conversion("1.0h", "60m");
 
 #if 0
     commodity = commodity_t::find_commodity("b", true);
-    commodity->flags |= COMMODITY_STYLE_NOMARKET | COMMODITY_STYLE_BUILTIN;
+    commodity->flags() |= COMMODITY_STYLE_NOMARKET | COMMODITY_STYLE_BUILTIN;
 
     parse_conversion("1.00 Kb", "1024 b");
     parse_conversion("1.00 Mb", "1024 Kb");
@@ -417,7 +417,7 @@ amount_t& amount_t::operator*=(const amount_t& amt)
   mpz_mul(MPZ(quantity), MPZ(quantity), MPZ(amt.quantity));
   quantity->prec += amt.quantity->prec;
 
-  unsigned int comm_prec = commodity().precision;
+  unsigned int comm_prec = commodity().precision();
   if (quantity->prec > comm_prec + 6U) {
     mpz_round(MPZ(quantity), MPZ(quantity), quantity->prec, comm_prec + 6U);
     quantity->prec = comm_prec + 6U;
@@ -442,7 +442,7 @@ amount_t& amount_t::operator/=(const amount_t& amt)
   mpz_tdiv_q(MPZ(quantity), MPZ(quantity), MPZ(amt.quantity));
   quantity->prec += 6;
 
-  unsigned int comm_prec = commodity().precision;
+  unsigned int comm_prec = commodity().precision();
   if (quantity->prec > comm_prec + 6U) {
     mpz_round(MPZ(quantity), MPZ(quantity), quantity->prec, comm_prec + 6U);
     quantity->prec = comm_prec + 6U;
@@ -504,12 +504,12 @@ amount_t::operator bool() const
   if (! quantity)
     return false;
 
-  if (quantity->prec <= commodity().precision) {
+  if (quantity->prec <= commodity().precision()) {
     return mpz_sgn(MPZ(quantity)) != 0;
   } else {
     mpz_set(temp, MPZ(quantity));
     if (commodity_)
-      mpz_ui_pow_ui(divisor, 10, quantity->prec - commodity().precision);
+      mpz_ui_pow_ui(divisor, 10, quantity->prec - commodity().precision());
     else
       mpz_ui_pow_ui(divisor, 10, quantity->prec);
     mpz_tdiv_q(temp, temp, divisor);
@@ -559,9 +559,9 @@ amount_t amount_t::value(const std::time_t moment) const
 {
   if (quantity) {
     commodity_t& comm = commodity();
-    if (! (comm.flags & COMMODITY_STYLE_NOMARKET))
+    if (! (comm.flags() & COMMODITY_STYLE_NOMARKET))
       if (amount_t amt = comm.value(moment))
-	return (amt * *this).round(amt.commodity().precision);
+	return (amt * *this).round(amt.commodity().precision());
   }
   return *this;
 }
@@ -604,24 +604,23 @@ std::string amount_t::quantity_string() const
   unsigned short precision;
 
   if (comm == *commodity_t::null_commodity ||
-      comm.flags & COMMODITY_STYLE_VARIABLE) {
+      comm.flags() & COMMODITY_STYLE_VARIABLE) {
     mpz_ui_pow_ui(divisor, 10, quantity->prec);
     mpz_tdiv_qr(quotient, remainder, MPZ(quantity), divisor);
     precision = quantity->prec;
   }
-  else if (comm.precision < quantity->prec) {
-    mpz_round(rquotient, MPZ(quantity), quantity->prec,
-	      comm.precision);
-    mpz_ui_pow_ui(divisor, 10, comm.precision);
+  else if (comm.precision() < quantity->prec) {
+    mpz_round(rquotient, MPZ(quantity), quantity->prec, comm.precision());
+    mpz_ui_pow_ui(divisor, 10, comm.precision());
     mpz_tdiv_qr(quotient, remainder, rquotient, divisor);
-    precision = comm.precision;
+    precision = comm.precision();
   }
-  else if (comm.precision > quantity->prec) {
-    mpz_ui_pow_ui(divisor, 10, comm.precision - quantity->prec);
+  else if (comm.precision() > quantity->prec) {
+    mpz_ui_pow_ui(divisor, 10, comm.precision() - quantity->prec);
     mpz_mul(rquotient, MPZ(quantity), divisor);
-    mpz_ui_pow_ui(divisor, 10, comm.precision);
+    mpz_ui_pow_ui(divisor, 10, comm.precision());
     mpz_tdiv_qr(quotient, remainder, rquotient, divisor);
-    precision = comm.precision;
+    precision = comm.precision();
   }
   else if (quantity->prec) {
     mpz_ui_pow_ui(divisor, 10, quantity->prec);
@@ -682,11 +681,11 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
   }
 
   amount_t base(amt);
-  if (amt.commodity().larger) {
+  if (amt.commodity().larger()) {
     amount_t last(amt);
-    while (last.commodity().larger) {
-      last /= *last.commodity().larger;
-      last.commodity_ = last.commodity().larger->commodity_;
+    while (last.commodity().larger()) {
+      last /= *last.commodity().larger();
+      last.commodity_ = last.commodity().larger()->commodity_;
       if (ledger::abs(last) < 1)
 	break;
       base = last;
@@ -712,24 +711,24 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
   unsigned short precision;
 
   if (comm == *commodity_t::null_commodity ||
-      comm.flags & COMMODITY_STYLE_VARIABLE) {
+      comm.flags() & COMMODITY_STYLE_VARIABLE) {
     mpz_ui_pow_ui(divisor, 10, base.quantity->prec);
     mpz_tdiv_qr(quotient, remainder, MPZ(base.quantity), divisor);
     precision = base.quantity->prec;
   }
-  else if (comm.precision < base.quantity->prec) {
+  else if (comm.precision() < base.quantity->prec) {
     mpz_round(rquotient, MPZ(base.quantity), base.quantity->prec,
-	      comm.precision);
-    mpz_ui_pow_ui(divisor, 10, comm.precision);
+	      comm.precision());
+    mpz_ui_pow_ui(divisor, 10, comm.precision());
     mpz_tdiv_qr(quotient, remainder, rquotient, divisor);
-    precision = comm.precision;
+    precision = comm.precision();
   }
-  else if (comm.precision > base.quantity->prec) {
-    mpz_ui_pow_ui(divisor, 10, comm.precision - base.quantity->prec);
+  else if (comm.precision() > base.quantity->prec) {
+    mpz_ui_pow_ui(divisor, 10, comm.precision() - base.quantity->prec);
     mpz_mul(rquotient, MPZ(base.quantity), divisor);
-    mpz_ui_pow_ui(divisor, 10, comm.precision);
+    mpz_ui_pow_ui(divisor, 10, comm.precision());
     mpz_tdiv_qr(quotient, remainder, rquotient, divisor);
-    precision = comm.precision;
+    precision = comm.precision();
   }
   else if (base.quantity->prec) {
     mpz_ui_pow_ui(divisor, 10, base.quantity->prec);
@@ -755,12 +754,18 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
     return _out;
   }
 
-  if (! (comm.flags & COMMODITY_STYLE_SUFFIXED)) {
-    if (comm.quote)
-      out << "\"" << comm.symbol << "\"";
-    else
+  if (! (comm.flags() & COMMODITY_STYLE_SUFFIXED)) {
+    if (comm.quote) {
+      std::string::size_type idx = comm.symbol.find(" {", 0);
+      if (idx != std::string::npos)
+	out << "\"" << comm.symbol.substr(0, idx) << "\""
+	    << comm.symbol.substr(idx);
+      else
+	out << "\"" << comm.symbol << "\"";
+    } else {
       out << comm.symbol;
-    if (comm.flags & COMMODITY_STYLE_SEPARATED)
+    }
+    if (comm.flags() & COMMODITY_STYLE_SEPARATED)
       out << " ";
   }
 
@@ -770,7 +775,7 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
   if (mpz_sgn(quotient) == 0) {
     out << '0';
   }
-  else if (! (comm.flags & COMMODITY_STYLE_THOUSANDS)) {
+  else if (! (comm.flags() & COMMODITY_STYLE_THOUSANDS)) {
     char * p = mpz_get_str(NULL, 10, quotient);
     out << p;
     std::free(p);
@@ -799,7 +804,7 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
 	 i != strs.rend();
 	 i++) {
       if (printed) {
-	out << (comm.flags & COMMODITY_STYLE_EUROPEAN ? '.' : ',');
+	out << (comm.flags() & COMMODITY_STYLE_EUROPEAN ? '.' : ',');
 	out.width(3);
 	out.fill('0');
       }
@@ -810,7 +815,7 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
   }
 
   if (precision) {
-    out << ((comm.flags & COMMODITY_STYLE_EUROPEAN) ? ',' : '.');
+    out << ((comm.flags() & COMMODITY_STYLE_EUROPEAN) ? ',' : '.');
 
     out.width(precision);
     out.fill('0');
@@ -820,13 +825,19 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
     std::free(p);
   }
 
-  if (comm.flags & COMMODITY_STYLE_SUFFIXED) {
-    if (comm.flags & COMMODITY_STYLE_SEPARATED)
+  if (comm.flags() & COMMODITY_STYLE_SUFFIXED) {
+    if (comm.flags() & COMMODITY_STYLE_SEPARATED)
       out << " ";
-    if (comm.quote)
-      out << "\"" << comm.symbol << "\"";
-    else
+    if (comm.quote) {
+      std::string::size_type idx = comm.symbol.find(" {", 0);
+      if (idx != std::string::npos)
+	out << "\"" << comm.symbol.substr(0, idx) << "\""
+	    << comm.symbol.substr(idx);
+      else
+	out << "\"" << comm.symbol << "\"";
+    } else {
       out << comm.symbol;
+    }
   }
 
   mpz_clear(quotient);
@@ -878,6 +889,7 @@ void amount_t::parse(std::istream& in, unsigned short flags)
 
   std::string  symbol;
   std::string  quant;
+  std::string  price;
   unsigned int comm_flags = COMMODITY_STYLE_DEFAULTS;
   bool         negative = false;
 
@@ -923,6 +935,34 @@ void amount_t::parse(std::istream& in, unsigned short flags)
 
   commodity_ = commodity_t::find_commodity(symbol, true);
 
+  // If a per-unit price is specified for this amount, record it by
+  // creating a specialized commodity at that price.  This is a
+  // different from the whole transaction cost, which is associated
+  // with the transaction and not with the amount.  For example, a
+  // sale of 10 AAPL shares for $100 (the cost) is a different thing
+  // from selling 10 AAPL {$10} (where $10 is the commodity price) for
+  // $50, which implies a capital loss of $50.
+
+  if (peek_next_nonws(in) == '{') {
+    char c;
+    char buf[256];
+    in.get(c);
+    READ_INTO(in, buf, 255, c, c != '}');
+    if (c == '}')
+      in.get(c);
+    else
+      throw amount_error("Commodity price lacks closing brace");
+
+    symbol = symbol + " {" + buf + "}";
+    commodity_t * priced_commodity =
+      commodity_t::find_commodity(symbol, true);
+
+    priced_commodity->price = new amount_t(buf);
+    priced_commodity->base = commodity_;
+
+    commodity_ = priced_commodity;
+  }
+
   // Determine the precision of the amount, based on the usage of
   // comma or period.
 
@@ -940,12 +980,12 @@ void amount_t::parse(std::istream& in, unsigned short flags)
   }
   else if (last_comma != std::string::npos &&
 	   (! commodity_t::default_commodity ||
-	    commodity_t::default_commodity->flags & COMMODITY_STYLE_EUROPEAN)) {
+	    commodity_t::default_commodity->flags() & COMMODITY_STYLE_EUROPEAN)) {
       comm_flags |= COMMODITY_STYLE_EUROPEAN;
     quantity->prec = quant.length() - last_comma - 1;
   }
   else if (last_period != std::string::npos &&
-	   ! (commodity().flags & COMMODITY_STYLE_EUROPEAN)) {
+	   ! (commodity().flags() & COMMODITY_STYLE_EUROPEAN)) {
     quantity->prec = quant.length() - last_period - 1;
   }
   else {
@@ -955,9 +995,9 @@ void amount_t::parse(std::istream& in, unsigned short flags)
   // Set the commodity's flags and precision accordingly
 
   if (newly_created || ! (flags & AMOUNT_PARSE_NO_MIGRATE)) {
-    commodity().flags |= comm_flags;
-    if (quantity->prec > commodity().precision)
-      commodity().precision = quantity->prec;
+    commodity().flags() |= comm_flags;
+    if (quantity->prec > commodity().precision())
+      commodity().precision() = quantity->prec;
   }
 
   // Now we have the final number.  Remove commas and periods, if
@@ -991,9 +1031,9 @@ void amount_t::parse(std::istream& in, unsigned short flags)
 
 void amount_t::reduce()
 {
-  while (commodity_ && commodity().smaller) {
-    *this *= *commodity().smaller;
-    commodity_ = commodity().smaller->commodity_;
+  while (commodity_ && commodity().smaller()) {
+    *this *= *commodity().smaller();
+    commodity_ = commodity().smaller()->commodity_;
   }
 }
 
@@ -1014,12 +1054,12 @@ void parse_conversion(const std::string& larger_str,
   larger *= smaller;
 
   if (larger.commodity()) {
-    larger.commodity().smaller = new amount_t(smaller);
-    larger.commodity().flags   = (smaller.commodity().flags |
-				  COMMODITY_STYLE_NOMARKET);
+    larger.commodity().smaller() = new amount_t(smaller);
+    larger.commodity().flags()   = (smaller.commodity().flags() |
+				    COMMODITY_STYLE_NOMARKET);
   }
   if (smaller.commodity())
-    smaller.commodity().larger = new amount_t(larger);
+    smaller.commodity().larger() = new amount_t(larger);
 }
 
 
@@ -1161,6 +1201,8 @@ void commodity_t::set_symbol(const std::string& sym)
   quote = false;
   for (const char * p = symbol.c_str(); *p; p++)
     if (std::isspace(*p) || std::isdigit(*p) || *p == '-' || *p == '.') {
+      if (std::isspace(*p) && *(p + 1) == '{')
+	return;
       quote = true;
       return;
     }
@@ -1168,15 +1210,15 @@ void commodity_t::set_symbol(const std::string& sym)
 
 void commodity_t::add_price(const std::time_t date, const amount_t& price)
 {
-  if (! history)
-    history = new history_t;
+  if (! history())
+    history() = new history_t;
 
-  history_map::iterator i = history->prices.find(date);
-  if (i != history->prices.end()) {
+  history_map::iterator i = history()->prices.find(date);
+  if (i != history()->prices.end()) {
     (*i).second = price;
   } else {
     std::pair<history_map::iterator, bool> result
-      = history->prices.insert(history_pair(date, price));
+      = history()->prices.insert(history_pair(date, price));
     assert(result.second);
   }
 }
@@ -1195,9 +1237,9 @@ commodity_t * commodity_t::find_commodity(const std::string& symbol,
     // Start out the new commodity with the default commodity's flags
     // and precision, if one has been defined.
     if (default_commodity)
-      commodity->flags =
-	(default_commodity->flags & ~(COMMODITY_STYLE_THOUSANDS |
-				      COMMODITY_STYLE_NOMARKET));
+      commodity->flags() =
+	(default_commodity->flags() & ~(COMMODITY_STYLE_THOUSANDS |
+					COMMODITY_STYLE_NOMARKET));
 
     return commodity;
   }
@@ -1210,23 +1252,23 @@ amount_t commodity_t::value(const std::time_t moment)
   std::time_t age = 0;
   amount_t    price;
 
-  if (history) {
-    assert(history->prices.size() > 0);
+  if (history()) {
+    assert(history()->prices.size() > 0);
 
     if (moment == 0) {
-      history_map::reverse_iterator r = history->prices.rbegin();
+      history_map::reverse_iterator r = history()->prices.rbegin();
       age   = (*r).first;
       price = (*r).second;
     } else {
-      history_map::iterator i = history->prices.lower_bound(moment);
-      if (i == history->prices.end()) {
-	history_map::reverse_iterator r = history->prices.rbegin();
+      history_map::iterator i = history()->prices.lower_bound(moment);
+      if (i == history()->prices.end()) {
+	history_map::reverse_iterator r = history()->prices.rbegin();
 	age   = (*r).first;
 	price = (*r).second;
       } else {
 	age = (*i).first;
 	if (std::difftime(moment, age) != 0) {
-	  if (i != history->prices.begin()) {
+	  if (i != history()->prices.begin()) {
 	    --i;
 	    age	  = (*i).first;
 	    price = (*i).second;
@@ -1242,8 +1284,8 @@ amount_t commodity_t::value(const std::time_t moment)
 
   if (updater)
     (*updater)(*this, moment, age,
-	       (history && history->prices.size() > 0 ?
-		(*history->prices.rbegin()).first : 0), price);
+	       (history() && history()->prices.size() > 0 ?
+		(*history()->prices.rbegin()).first : 0), price);
 
   return price;
 }

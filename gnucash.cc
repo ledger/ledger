@@ -45,11 +45,9 @@ static std::istream *   instreamp;
 static unsigned int     offset;
 static XML_Parser       parser;
 static std::string      path;
-#ifdef USE_EDITOR
 static unsigned int     src_idx;
 static istream_pos_type beg_pos;
 static unsigned long    beg_line;
-#endif
 
 static transaction_t::state_t curr_state;
 
@@ -148,13 +146,11 @@ static void endElement(void *userData, const char *name)
       have_error = "The above entry does not balance";
       delete curr_entry;
     } else {
-#ifdef USE_EDITOR
       curr_entry->src_idx  = src_idx;
       curr_entry->beg_pos  = beg_pos;
       curr_entry->beg_line = beg_line;
       curr_entry->end_pos  = instreamp->tellg();
       curr_entry->end_line = XML_GetCurrentLineNumber(parser) - offset;
-#endif
       count++;
     }
 
@@ -180,7 +176,7 @@ static void endElement(void *userData, const char *name)
 
     if (default_commodity) {
       curr_quant.set_commodity(*default_commodity);
-      value = curr_quant.round(default_commodity->precision);
+      value = curr_quant.round(default_commodity->precision());
 
       if (curr_value.commodity() == *default_commodity)
 	curr_value = value;
@@ -193,12 +189,10 @@ static void endElement(void *userData, const char *name)
     if (value != curr_value)
       xact->cost = new amount_t(curr_value);
 
-#ifdef USE_EDITOR
     xact->beg_pos  = beg_pos;
     xact->beg_line = beg_line;
     xact->end_pos  = instreamp->tellg();
     xact->end_line = XML_GetCurrentLineNumber(parser) - offset;
-#endif
 
     // Clear the relevant variables for the next run
     curr_state = transaction_t::UNCLEARED;
@@ -264,23 +258,23 @@ static void dataHandler(void *userData, const char *s, int len)
       std::string symbol(s, len);
       commodity_t * comm = commodity_t::find_commodity(symbol, true);
       if (symbol != "$" && symbol != "USD")
-	comm->flags |= COMMODITY_STYLE_SEPARATED;
+	comm->flags() |= COMMODITY_STYLE_SEPARATED;
       account_comms.insert(account_comm_pair(curr_account, comm));
     }
     else if (curr_entry) {
       std::string symbol(s, len);
       entry_comm = commodity_t::find_commodity(symbol, true);
       if (symbol != "$" && symbol != "USD")
-	entry_comm->flags |= COMMODITY_STYLE_SEPARATED;
+	entry_comm->flags() |= COMMODITY_STYLE_SEPARATED;
     }
     break;
 
   case COMM_NAME:
-    curr_comm->name = std::string(s, len);
+    curr_comm->name() = std::string(s, len);
     break;
 
   case COMM_PREC:
-    curr_comm->precision = len - 1;
+    curr_comm->precision() = len - 1;
     break;
 
   case ENTRY_NUM:
@@ -313,8 +307,8 @@ static void dataHandler(void *userData, const char *s, int len)
     curr_value = convert_number(std::string(s, len), &precision);
     curr_value.set_commodity(*entry_comm);
 
-    if (precision > entry_comm->precision)
-      entry_comm->precision = precision;
+    if (precision > entry_comm->precision())
+      entry_comm->precision() = precision;
     break;
   }
 
@@ -382,9 +376,7 @@ unsigned int gnucash_parser_t::parse(std::istream&	 in,
 
   instreamp = &in;
   path	    = original_file ? *original_file : "<gnucash>";
-#ifdef USE_EDITOR
   src_idx   = journal->sources.size() - 1;
-#endif
 
   // GnuCash uses the USD commodity without defining it, which really
   // means $.
@@ -401,10 +393,8 @@ unsigned int gnucash_parser_t::parse(std::istream&	 in,
   XML_SetCharacterDataHandler(parser, dataHandler);
 
   while (in.good() && ! in.eof()) {
-#ifdef USE_EDITOR
     beg_pos  = in.tellg();
     beg_line = (XML_GetCurrentLineNumber(parser) - offset) + 1;
-#endif
 
     in.getline(buf, BUFSIZ - 1);
     std::strcat(buf, "\n");
