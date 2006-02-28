@@ -164,7 +164,7 @@ value_expr_t * parse_amount(const char * text, amount_t& amt,
     if (altbuf)
       delete[] altbuf;
 
-    if (! compute_amount(expr, amt, xact))
+    if (! compute_amount(expr, amt, &xact))
       throw parse_error(path, linenum, "Value expression yields a balance");
   }
 

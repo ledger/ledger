@@ -733,11 +733,10 @@ value_t value_t::price() const
     return *this;
 
   case BALANCE_PAIR:
-    assert(((balance_pair_t *) data)->price);
     if (((balance_pair_t *) data)->price)
       return *(((balance_pair_t *) data)->price);
     else
-      return ((balance_pair_t *) data)->quantity;
+      return 0L;
 
   default:
     assert(0);

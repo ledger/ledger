@@ -19,10 +19,11 @@ details_t::details_t(const transaction_t& _xact)
   DEBUG_PRINT("ledger.memory.ctors", "ctor details_t");
 }
 
-bool compute_amount(value_expr_t * expr, amount_t& amt, transaction_t& xact)
+bool compute_amount(value_expr_t * expr, amount_t& amt,
+		    const transaction_t * xact, value_expr_t * context)
 {
   value_t result;
-  expr->compute(result, details_t(xact));
+  expr->compute(result, xact ? details_t(*xact) : details_t(), context);
   switch (result.type) {
   case value_t::BOOLEAN:
     amt = *((bool *) result.data);
@@ -537,11 +538,10 @@ void value_expr_t::compute(value_t& result, const details_t& details,
 
     index = 0;
     expr = find_leaf(context, 1, index);
-    value_t temp;
-    expr->compute(temp, details, context);
 
-    if (expr->kind == CONSTANT_T)
-      result = result.value(expr->constant_t);
+    amount_t moment;
+    if (compute_amount(expr, moment, details.xact, context))
+      result = result.value((long)moment);
     else
       throw compute_error("Invalid date passed to P(value,date)");
 
@@ -1279,6 +1279,7 @@ void init_value_expr()
   globals->define("P", node);
   globals->define("val", node);
   globals->define("value", node);
+  parse_boolean_expr("current_value(x)=P(x,m)", globals);
 
   // Macros
   node = parse_value_expr("P(a,d)");

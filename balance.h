@@ -144,9 +144,12 @@ class balance_t
 
   // multiplication and divide
   balance_t& operator*=(const balance_t& bal) {
-    if (amounts.size() == 1 && bal.amounts.size() == 1)
+    if (! *this || ! bal)
+      return (*this = 0L);
+    else if (amounts.size() == 1 && bal.amounts.size() == 1)
       return *this *= (*bal.amounts.begin()).second;
-    throw amount_error("It makes no sense to multiply two balances");
+    else
+      throw amount_error("It makes no sense to multiply two balances");
   }
   balance_t& operator*=(const amount_t& amt) {
     // Multiplying by the null commodity causes all amounts to be
@@ -173,9 +176,14 @@ class balance_t
   }
 
   balance_t& operator/=(const balance_t& bal) {
-    if (amounts.size() == 1 && bal.amounts.size() == 1)
+    if (! *this)
+      return (*this = 0L);
+    else if (! bal)
+      throw amount_error("Attempt to divide by zero");
+    else if (amounts.size() == 1 && bal.amounts.size() == 1)
       return *this /= (*bal.amounts.begin()).second;
-    throw amount_error("It makes no sense to divide two balances");
+    else
+      throw amount_error("It makes no sense to divide two balances");
   }
   balance_t& operator/=(const amount_t& amt) {
     // Dividing by the null commodity causes all amounts to be
@@ -428,9 +436,8 @@ class balance_t
   balance_t value(const std::time_t moment) const;
   balance_t price() const;
 
-  void      write(std::ostream& out,
-		  const int	first_width,
-		  const int	latter_width = -1) const;
+  void write(std::ostream& out, const int first_width,
+	     const int latter_width = -1) const;
 
   void abs() {
     for (amounts_map::iterator i = amounts.begin();
@@ -563,7 +570,6 @@ class balance_pair_t
       else
 	cost = new balance_t(*bal_pair.cost);
     }
-
     return *this;
   }
   balance_pair_t& operator+=(const balance_t& bal) {
@@ -594,7 +600,6 @@ class balance_pair_t
       else
 	cost = new balance_t(- *bal_pair.cost);
     }
-
     return *this;
   }
   balance_pair_t& operator-=(const balance_t& bal) {
@@ -677,7 +682,6 @@ class balance_pair_t
 	cost = NULL;
       }
     }
-
     return *this;
   }
   balance_pair_t& operator*=(const balance_t& bal) {
@@ -694,21 +698,19 @@ class balance_pair_t
   }
 
   balance_pair_t& operator/=(const balance_pair_t& bal_pair) {
-    quantity /= bal_pair.quantity;
+    if (bal_pair.quantity)
+      quantity /= bal_pair.quantity;
+    else
+      throw amount_error("Attempt to divide by zero");
 
     if (bal_pair.price) {
       if (price)
 	*price /= *bal_pair.price;
-    } else {
-      throw amount_error("Attempt to divide by zero");
     }
     if (bal_pair.cost) {
       if (cost)
 	*cost /= *bal_pair.cost;
-    } else {
-      throw amount_error("Attempt to divide by zero");
     }
-
     return *this;
   }
   balance_pair_t& operator/=(const balance_t& bal) {
@@ -899,8 +901,7 @@ class balance_pair_t
 
   balance_pair_t& add(const amount_t&  amount,
 		      const amount_t * a_price = NULL,
-		      const amount_t * a_cost  = NULL)
-  {
+		      const amount_t * a_cost  = NULL) {
     quantity += amount;
 
     if (a_price) {
@@ -915,7 +916,6 @@ class balance_pair_t
       else
 	cost = new balance_t(*a_cost);
     }
-
     return *this;
   }
 

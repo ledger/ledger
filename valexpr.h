@@ -215,10 +215,18 @@ struct scope_t
     DEBUG_PRINT("ledger.valexpr.syms",
 		"Defining '" << name << "' = " << def);
     std::pair<symbol_map::iterator, bool> result
-      = symbols.insert(symbol_pair(name, def->acquire()));
-    if (! result.second)
-      throw value_expr_error(std::string("Redefinition of '") +
-			     name + "' in same scope");
+      = symbols.insert(symbol_pair(name, def));
+    if (! result.second) {
+      symbols.erase(name);
+      std::pair<symbol_map::iterator, bool> result
+	= symbols.insert(symbol_pair(name, def));
+      if (! result.second) {
+	def->release();
+	throw value_expr_error(std::string("Redefinition of '") +
+			       name + "' in same scope");
+      }
+    }
+    def->acquire();
   }
   value_expr_t * lookup(const std::string& name) {
     symbol_map::const_iterator i = symbols.find(name);
@@ -237,7 +245,9 @@ extern bool	   initialized;
 
 void init_value_expr();
 
-bool compute_amount(value_expr_t * expr, amount_t& amt, transaction_t& xact);
+bool compute_amount(value_expr_t * expr, amount_t& amt,
+		    const transaction_t * xact,
+		    value_expr_t * context = NULL);
 
 struct scope_t;
 value_expr_t * parse_boolean_expr(std::istream& in, scope_t * scope);

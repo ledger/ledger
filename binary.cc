@@ -343,9 +343,9 @@ inline void read_binary_transaction(char *& data, transaction_t * xact)
   xact->data = NULL;
 
   if (xact->amount_expr)
-    compute_amount(xact->amount_expr, xact->amount, *xact);
+    compute_amount(xact->amount_expr, xact->amount, xact);
   if (xact->cost_expr)
-    compute_amount(xact->cost_expr, *xact->cost, *xact);
+    compute_amount(xact->cost_expr, *xact->cost, xact);
 }
 
 inline void read_binary_entry_base(char *& data, entry_base_t * entry,
