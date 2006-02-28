@@ -171,10 +171,13 @@ value_expr_t * parse_amount(const char * text, amount_t& amt,
   return expr;
 }
 
-transaction_t * parse_transaction(char * line, account_t * account)
+transaction_t * parse_transaction(char * line, account_t * account,
+				  entry_t * entry = NULL)
 {
   // The account will be determined later...
   std::auto_ptr<transaction_t> xact(new transaction_t(NULL));
+  if (entry)
+    xact->entry = entry;
 
   // The call to `next_element' will skip past the account name, and
   // return a pointer to the beginning of the amount.  Once we know
@@ -455,7 +458,7 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
 	break;
     }
 
-    if (transaction_t * xact = parse_transaction(line, master)) {
+    if (transaction_t * xact = parse_transaction(line, master, curr.get())) {
       if (state != transaction_t::UNCLEARED &&
 	  xact->state == transaction_t::UNCLEARED)
 	xact->state = state;
