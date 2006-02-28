@@ -122,9 +122,6 @@ inline const account_t * xact_account(const transaction_t& xact) {
 
 extern bool show_lots;
 
-#define translate_amount(amt)						\
-  ((! show_lots && amt.commodity().price) ? amt.base_amount() : amt)
-
 //////////////////////////////////////////////////////////////////////
 
 inline void walk_transactions(transactions_list::iterator begin,

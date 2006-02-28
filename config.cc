@@ -1041,7 +1041,6 @@ OPT_BEGIN(basis, "B") {
 } OPT_END(basis);
 
 OPT_BEGIN(price, "I") {
-  show_lots = true;		// don't show them, but use in calculations
   config->amount_expr = "i";
   config->total_expr  = "I";
 } OPT_END(price);

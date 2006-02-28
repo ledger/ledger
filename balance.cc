@@ -34,18 +34,14 @@ balance_t balance_t::value(const std::time_t moment) const
   return temp;
 }
 
-balance_t balance_t::factor_price() const
+balance_t balance_t::price() const
 {
   balance_t temp;
 
   for (amounts_map::const_iterator i = amounts.begin();
        i != amounts.end();
-       i++) {
-    if ((*i).second.commodity().price)
-      temp += *((*i).second.commodity().price) * (*i).second;
-    else
-      temp += (*i).second;
-  }
+       i++)
+    temp += (*i).second.price();
 
   return temp;
 }

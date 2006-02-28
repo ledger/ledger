@@ -73,7 +73,8 @@ class amount_t
   void clear_commodity() {
     commodity_ = NULL;
   }
-  amount_t base_amount() const;
+  amount_t base() const;
+  amount_t price() const;
 
   bool null() const {
     return ! quantity && ! commodity_;
@@ -274,6 +275,9 @@ inline amount_t abs(const amount_t& amt) {
   return amt < 0 ? amt.negated() : amt;
 }
 
+#define base_amount(amt)					\
+  ((! show_lots && amt.commodity().price) ? amt.base() : amt)
+
 std::ostream& operator<<(std::ostream& out, const amount_t& amt);
 
 inline std::istream& operator>>(std::istream& in, amount_t& amt) {
@@ -445,7 +449,7 @@ inline commodity_t& amount_t::commodity() const {
     return *commodity_;
 }
 
-inline amount_t amount_t::base_amount() const {
+inline amount_t amount_t::base() const {
   if (commodity_ && commodity_->price) {
     amount_t temp(*this);
     assert(commodity_->base);
@@ -453,6 +457,16 @@ inline amount_t amount_t::base_amount() const {
     return temp;
   } else {
     return *this;
+  }
+}
+
+inline amount_t amount_t::price() const {
+  if (commodity_ && commodity_->price) {
+    amount_t temp(*commodity_->price);
+    temp *= *this;
+    return temp;
+  } else {
+    return 0L;
   }
 }
 

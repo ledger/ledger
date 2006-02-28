@@ -158,13 +158,12 @@ void value_expr_t::compute(value_t& result, const details_t& details,
     break;
 
   case AMOUNT:
-  case PRICE:
     if (details.xact) {
       if (transaction_has_xdata(*details.xact) &&
 	  transaction_xdata_(*details.xact).dflags & TRANSACTION_COMPOSITE)
 	result = transaction_xdata_(*details.xact).composite_amount;
       else
-	result = translate_amount(details.xact->amount);
+	result = base_amount(details.xact->amount);
     }
     else if (details.account && account_has_xdata(*details.account)) {
       result = account_xdata(*details.account).value;
@@ -172,8 +171,27 @@ void value_expr_t::compute(value_t& result, const details_t& details,
     else {
       result = 0L;
     }
-    if (kind == PRICE)
-      result = result.factor_price();
+    break;
+
+  case PRICE:
+    if (details.xact) {
+      bool set = false;
+      if (transaction_has_xdata(*details.xact)) {
+	transaction_xdata_t& xdata(transaction_xdata_(*details.xact));
+	if (xdata.dflags & TRANSACTION_COMPOSITE) {
+	  result = xdata.composite_amount.price();
+	  set = true;
+	}
+      }
+      if (! set)
+	result = details.xact->amount.price();
+    }
+    else if (details.account && account_has_xdata(*details.account)) {
+      result = account_xdata(*details.account).value.price();
+    }
+    else {
+      result = 0L;
+    }
     break;
 
   case COST:
@@ -182,11 +200,7 @@ void value_expr_t::compute(value_t& result, const details_t& details,
       if (transaction_has_xdata(*details.xact)) {
 	transaction_xdata_t& xdata(transaction_xdata_(*details.xact));
 	if (xdata.dflags & TRANSACTION_COMPOSITE) {
-	  if (xdata.composite_amount.type == value_t::BALANCE_PAIR &&
-	      ((balance_pair_t *) xdata.composite_amount.data)->cost)
-	    result = *((balance_pair_t *) xdata.composite_amount.data)->cost;
-	  else
-	    result = xdata.composite_amount;
+	  result = xdata.composite_amount.cost();
 	  set = true;
 	}
       }
@@ -195,7 +209,7 @@ void value_expr_t::compute(value_t& result, const details_t& details,
 	if (details.xact->cost)
 	  result = *details.xact->cost;
 	else
-	  result = translate_amount(details.xact->amount);
+	  result = base_amount(details.xact->amount);
       }
     }
     else if (details.account && account_has_xdata(*details.account)) {
@@ -207,15 +221,20 @@ void value_expr_t::compute(value_t& result, const details_t& details,
     break;
 
   case TOTAL:
-  case PRICE_TOTAL:
     if (details.xact && transaction_has_xdata(*details.xact))
       result = transaction_xdata_(*details.xact).total;
     else if (details.account && account_has_xdata(*details.account))
       result = account_xdata(*details.account).total;
     else
       result = 0L;
-    if (kind == PRICE_TOTAL)
-      result = result.factor_price();
+    break;
+  case PRICE_TOTAL:
+    if (details.xact && transaction_has_xdata(*details.xact))
+      result = transaction_xdata_(*details.xact).total.price();
+    else if (details.account && account_has_xdata(*details.account))
+      result = account_xdata(*details.account).total.price();
+    else
+      result = 0L;
     break;
   case COST_TOTAL:
     if (details.xact && transaction_has_xdata(*details.xact))
@@ -1140,13 +1159,13 @@ void init_value_expr()
   globals->define("a", node);
   globals->define("amount", node);
 
-  node = new value_expr_t(value_expr_t::COST);
-  globals->define("b", node);
-  globals->define("cost", node);
-
   node = new value_expr_t(value_expr_t::PRICE);
   globals->define("i", node);
   globals->define("price", node);
+
+  node = new value_expr_t(value_expr_t::COST);
+  globals->define("b", node);
+  globals->define("cost", node);
 
   node = new value_expr_t(value_expr_t::DATE);
   globals->define("d", node);
@@ -1184,13 +1203,13 @@ void init_value_expr()
   globals->define("O", node);
   globals->define("total", node);
 
-  node = new value_expr_t(value_expr_t::COST_TOTAL);
-  globals->define("B", node);
-  globals->define("cost_total", node);
-
   node = new value_expr_t(value_expr_t::PRICE_TOTAL);
   globals->define("I", node);
   globals->define("price_total", node);
+
+  node = new value_expr_t(value_expr_t::COST_TOTAL);
+  globals->define("B", node);
+  globals->define("cost_total", node);
 
   // Relating to format_t
   globals->define("t", new value_expr_t(value_expr_t::VALUE_EXPR));
@@ -1340,8 +1359,8 @@ void dump_value_expr(std::ostream& out, const value_expr_t * node,
     break;
 
   case value_expr_t::AMOUNT: out << "AMOUNT"; break;
-  case value_expr_t::COST: out << "COST"; break;
   case value_expr_t::PRICE: out << "PRICE"; break;
+  case value_expr_t::COST: out << "COST"; break;
   case value_expr_t::DATE: out << "DATE"; break;
   case value_expr_t::CLEARED: out << "CLEARED"; break;
   case value_expr_t::PENDING: out << "PENDING"; break;
@@ -1351,8 +1370,8 @@ void dump_value_expr(std::ostream& out, const value_expr_t * node,
   case value_expr_t::COUNT: out << "COUNT"; break;
   case value_expr_t::DEPTH: out << "DEPTH"; break;
   case value_expr_t::TOTAL: out << "TOTAL"; break;
-  case value_expr_t::COST_TOTAL: out << "COST_TOTAL"; break;
   case value_expr_t::PRICE_TOTAL: out << "PRICE_TOTAL"; break;
+  case value_expr_t::COST_TOTAL: out << "COST_TOTAL"; break;
 
   case value_expr_t::F_NOW: out << "F_NOW"; break;
   case value_expr_t::F_ARITH_MEAN: out << "F_ARITH_MEAN"; break;
