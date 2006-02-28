@@ -537,6 +537,7 @@ unsigned int read_binary_journal(std::istream&	    in,
 
   account_t::ident_t a_count = read_binary_long<account_t::ident_t>(data);
   accounts = accounts_next = new account_t *[a_count];
+  delete journal->master;
   journal->master = read_binary_account(data, journal, master);
   if (read_binary_number<bool>(data))
     journal->basket = accounts[read_binary_long<account_t::ident_t>(data) - 1];
