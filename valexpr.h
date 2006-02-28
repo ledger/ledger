@@ -72,6 +72,8 @@ struct value_expr_t
     COST,
     PRICE,
     DATE,
+    ACT_DATE,
+    EFF_DATE,
     CLEARED,
     PENDING,
     REAL,

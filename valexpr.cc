@@ -270,6 +270,30 @@ void value_expr_t::compute(value_t& result, const details_t& details,
       result = long(terminus);
     break;
 
+  case ACT_DATE:
+    if (details.xact && transaction_has_xdata(*details.xact) &&
+	transaction_xdata_(*details.xact).date)
+      result = long(transaction_xdata_(*details.xact).date);
+    else if (details.xact)
+      result = long(details.xact->actual_date());
+    else if (details.entry)
+      result = long(details.entry->actual_date());
+    else
+      result = long(terminus);
+    break;
+
+  case EFF_DATE:
+    if (details.xact && transaction_has_xdata(*details.xact) &&
+	transaction_xdata_(*details.xact).date)
+      result = long(transaction_xdata_(*details.xact).date);
+    else if (details.xact)
+      result = long(details.xact->effective_date());
+    else if (details.entry)
+      result = long(details.entry->effective_date());
+    else
+      result = long(terminus);
+    break;
+
   case CLEARED:
     if (details.xact)
       result = details.xact->state == transaction_t::CLEARED;
@@ -513,28 +537,14 @@ void value_expr_t::compute(value_t& result, const details_t& details,
 
     index = 0;
     expr = find_leaf(context, 1, index);
+    value_t temp;
+    expr->compute(temp, details, context);
 
-    std::time_t moment = terminus;
-    switch (expr->kind) {
-    case F_NOW:
-      break;			// already set to now
-    case DATE:
-      if (details.xact && transaction_has_xdata(*details.xact) &&
-	  transaction_xdata_(*details.xact).date)
-	moment = transaction_xdata_(*details.xact).date;
-      else if (details.xact)
-	moment = details.xact->date();
-      else if (details.entry)
-	moment = details.entry->date();
-      break;
-    case CONSTANT_T:
-      moment = expr->constant_t;
-      break;
-    default:
+    if (expr->kind == CONSTANT_T)
+      result = result.value(expr->constant_t);
+    else
       throw compute_error("Invalid date passed to P(value,date)");
-    }
 
-    result = result.value(moment);
     break;
   }
 
@@ -1171,6 +1181,14 @@ void init_value_expr()
   globals->define("d", node);
   globals->define("date", node);
 
+  node = new value_expr_t(value_expr_t::ACT_DATE);
+  globals->define("act_date", node);
+  globals->define("actual_date", node);
+
+  node = new value_expr_t(value_expr_t::EFF_DATE);
+  globals->define("eff_date", node);
+  globals->define("effective_date", node);
+
   node = new value_expr_t(value_expr_t::CLEARED);
   globals->define("X", node);
   globals->define("cleared", node);
@@ -1362,6 +1380,8 @@ void dump_value_expr(std::ostream& out, const value_expr_t * node,
   case value_expr_t::PRICE: out << "PRICE"; break;
   case value_expr_t::COST: out << "COST"; break;
   case value_expr_t::DATE: out << "DATE"; break;
+  case value_expr_t::ACT_DATE: out << "ACT_DATE"; break;
+  case value_expr_t::EFF_DATE: out << "EFF_DATE"; break;
   case value_expr_t::CLEARED: out << "CLEARED"; break;
   case value_expr_t::PENDING: out << "PENDING"; break;
   case value_expr_t::REAL: out << "REAL"; break;
