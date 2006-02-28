@@ -99,10 +99,12 @@ void balance_t::write(std::ostream& out,
 
 balance_t& balance_t::operator*=(const balance_t& bal)
 {
-  if (! *this || ! bal)
+  if (! *this || ! bal) {
     return (*this = 0L);
-  else if (amounts.size() == 1 && bal.amounts.size() == 1)
+  }
+  else if (amounts.size() == 1 && bal.amounts.size() == 1) {
     return *this *= (*bal.amounts.begin()).second;
+  }
   else {
     std::string msg;
     std::ostringstream errmsg(msg);
@@ -163,10 +165,8 @@ balance_pair_t& balance_pair_t::operator/=(const balance_pair_t& bal_pair)
   if (cost)
     *cost /= bal_pair.cost ? *bal_pair.cost : bal_pair.quantity;
 
-  if (bal_pair.price && *bal_pair.price) {
-    if (price)
+  if (bal_pair.price && *bal_pair.price && price)
       *price /= *bal_pair.price;
-  }
   return *this;
 }
 
