@@ -1291,3 +1291,180 @@ amount_t commodity_t::value(const std::time_t moment)
 }
 
 } // namespace ledger
+
+#ifdef USE_BOOST_PYTHON
+
+#include <boost/python.hpp>
+#include <Python.h>
+
+using namespace boost::python;
+using namespace ledger;
+
+int py_amount_quantity(amount_t& amount)
+{
+  std::string quant = amount.quantity_string();
+  return std::atol(quant.c_str());
+}
+
+void py_parse_1(amount_t& amount, const std::string& str,
+		unsigned short flags) {
+  amount.parse(str, flags);
+}
+void py_parse_2(amount_t& amount, const std::string& str) {
+  amount.parse(str);
+}
+
+struct commodity_updater_wrap : public commodity_t::updater_t
+{
+  PyObject * self;
+  commodity_updater_wrap(PyObject * self_) : self(self_) {}
+
+  virtual void operator()(commodity_t&      commodity,
+			  const std::time_t moment,
+			  const std::time_t date,
+			  const std::time_t last,
+			  amount_t&         price) {
+    call_method<void>(self, "__call__", commodity, moment, date, last, price);
+  }
+};
+
+commodity_t * py_find_commodity_1(const std::string& symbol)
+{
+  return commodity_t::find_commodity(symbol);
+}
+
+commodity_t * py_find_commodity_2(const std::string& symbol, bool auto_create)
+{
+  return commodity_t::find_commodity(symbol, auto_create);
+}
+
+#define EXC_TRANSLATOR(type)				\
+  void exc_translate_ ## type(const type& err) {	\
+    PyErr_SetString(PyExc_RuntimeError, err.what());	\
+  }
+
+EXC_TRANSLATOR(amount_error)
+
+void export_amount()
+{
+  scope().attr("AMOUNT_PARSE_NO_MIGRATE") = AMOUNT_PARSE_NO_MIGRATE;
+  scope().attr("AMOUNT_PARSE_NO_REDUCE")  = AMOUNT_PARSE_NO_REDUCE;
+
+  class_< amount_t > ("Amount")
+    .def(init<amount_t>())
+    .def(init<std::string>())
+    .def(init<char *>())
+    .def(init<bool>())
+    .def(init<long>())
+    .def(init<unsigned long>())
+    .def(init<double>())
+
+    .def(self += self)
+    .def(self += long())
+    .def(self +  self)
+    .def(self +  long())
+    .def(self -= self)
+    .def(self -= long())
+    .def(self -  self)
+    .def(self -  long())
+    .def(self *= self)
+    .def(self *= long())
+    .def(self *  self)
+    .def(self *  long())
+    .def(self /= self)
+    .def(self /= long())
+    .def(self /  self)
+    .def(self /  long())
+    .def(- self)
+
+    .def(self <  self)
+    .def(self <  long())
+    .def(self <= self)
+    .def(self <= long())
+    .def(self >  self)
+    .def(self >  long())
+    .def(self >= self)
+    .def(self >= long())
+    .def(self == self)
+    .def(self == long())
+    .def(self != self)
+    .def(self != long())
+    .def(! self)
+
+    .def(self_ns::int_(self))
+    .def(self_ns::float_(self))
+    .def(self_ns::str(self))
+    .def(abs(self))
+
+    .add_property("commodity",
+		  make_function(&amount_t::commodity,
+				return_value_policy<reference_existing_object>()),
+		  &amount_t::set_commodity)
+    .add_property("quantity", py_amount_quantity)
+
+    .def("negate", &amount_t::negate)
+    .def("parse", py_parse_1)
+    .def("parse", py_parse_2)
+    .def("reduce", &amount_t::reduce)
+
+    .def("valid", &amount_t::valid)
+    ;
+
+  class_< commodity_t::updater_t, commodity_updater_wrap, boost::noncopyable >
+    ("Updater")
+    ;
+
+  scope().attr("COMMODITY_STYLE_DEFAULTS")  = COMMODITY_STYLE_DEFAULTS;
+  scope().attr("COMMODITY_STYLE_SUFFIXED")  = COMMODITY_STYLE_SUFFIXED;
+  scope().attr("COMMODITY_STYLE_SEPARATED") = COMMODITY_STYLE_SEPARATED;
+  scope().attr("COMMODITY_STYLE_EUROPEAN")  = COMMODITY_STYLE_EUROPEAN;
+  scope().attr("COMMODITY_STYLE_THOUSANDS") = COMMODITY_STYLE_THOUSANDS;
+  scope().attr("COMMODITY_STYLE_NOMARKET")  = COMMODITY_STYLE_NOMARKET;
+  scope().attr("COMMODITY_STYLE_VARIABLE")  = COMMODITY_STYLE_VARIABLE;
+
+  class_< commodity_t > ("Commodity")
+    .def(init<std::string, optional<unsigned int, unsigned int> >())
+
+    .add_property("symbol", &commodity_t::symbol,
+		  &commodity_t::set_symbol)
+
+    // jww (2006-02-28): Use getters and setters!
+    .def_readwrite("name", &commodity_t::name_)
+    .def_readwrite("note", &commodity_t::note_)
+    .def_readwrite("precision", &commodity_t::precision_)
+    .def_readwrite("flags", &commodity_t::flags_)
+    .def_readwrite("ident", &commodity_t::ident)
+    .def_readwrite("updater", &commodity_t::updater)
+
+    .add_property("smaller",
+		  make_getter(&commodity_t::smaller_,
+			      return_value_policy<reference_existing_object>()))
+    .add_property("larger",
+		  make_getter(&commodity_t::larger_,
+			      return_value_policy<reference_existing_object>()))
+
+    .def(self_ns::str(self))
+
+    .def("add_price", &commodity_t::add_price)
+    .def("remove_price", &commodity_t::remove_price)
+    .def("value", &commodity_t::value)
+
+    .def("valid", &commodity_t::valid)
+    ;
+
+  scope().attr("NullCommodity") = commodity_t::null_commodity;
+
+  def("add_commodity", &commodity_t::add_commodity);
+  def("remove_commodity", &commodity_t::remove_commodity);
+  def("find_commodity", py_find_commodity_1,
+      return_value_policy<reference_existing_object>());
+  def("find_commodity", py_find_commodity_2,
+      return_value_policy<reference_existing_object>());
+
+#define EXC_TRANSLATE(type)					\
+  register_exception_translator<type>(&exc_translate_ ## type);
+
+  EXC_TRANSLATE(amount_error);
+}
+
+#endif // USE_BOOST_PYTHON

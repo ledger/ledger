@@ -1,8 +1,14 @@
-lib_LTLIBRARIES = libledger.la
-libledger_la_CXXFLAGS =
-libledger_la_SOURCES = \
+lib_LTLIBRARIES = libamounts.la libledger.la
+libamounts_la_CXXFLAGS =
+libamounts_la_SOURCES = \
 	amount.cc      \
 	balance.cc     \
+	value.cc
+if HAVE_BOOST_PYTHON
+libamounts_la_CXXFLAGS += -DUSE_BOOST_PYTHON=1
+endif
+libledger_la_CXXFLAGS =
+libledger_la_SOURCES = \
 	binary.cc      \
 	config.cc      \
 	datetime.cc    \
@@ -19,7 +25,6 @@ libledger_la_SOURCES = \
 	startup.cc     \
 	textual.cc     \
 	valexpr.cc     \
-	value.cc       \
 	walk.cc
 if HAVE_EXPAT
 libledger_la_CXXFLAGS += -DHAVE_EXPAT=1
@@ -37,12 +42,16 @@ if DEBUG
 libledger_la_CXXFLAGS += -DDEBUG_LEVEL=4
 libledger_la_SOURCES  += debug.cc
 endif
-libledger_la_LDFLAGS = -version-info 3:0
+libledger_la_LDFLAGS = -version-info 2:6
 
 pkginclude_HEADERS = \
 	acconf.h     \
+		     \
 	amount.h     \
 	balance.h    \
+	value.h      \
+	util.h	     \
+		     \
 	binary.h     \
 	config.h     \
 	datetime.h   \
@@ -62,9 +71,7 @@ pkginclude_HEADERS = \
 	reconcile.h  \
 	textual.h    \
 	timing.h     \
-	util.h	     \
 	valexpr.h    \
-	value.h      \
 	walk.h       \
 	xml.h
 
@@ -73,18 +80,15 @@ pkginclude_HEADERS = \
 bin_PROGRAMS = ledger
 ledger_CXXFLAGS =
 ledger_SOURCES = main.cc
-ledger_LDADD = $(LIBOBJS) libledger.la
+ledger_LDADD = $(LIBOBJS) libamounts.la libledger.la
 if HAVE_EXPAT
 ledger_CXXFLAGS += -DHAVE_EXPAT=1
-ledger_LDADD += -lexpat
 endif
 if HAVE_XMLPARSE
 ledger_CXXFLAGS += -DHAVE_XMLPARSE=1
-ledger_LDADD += -lxmlparse -lxmltok
 endif
 if HAVE_LIBOFX
 ledger_CXXFLAGS += -DHAVE_LIBOFX=1
-ledger_LDADD += -lofx
 endif
 if DEBUG
 ledger_CXXFLAGS += -DDEBUG_LEVEL=4
@@ -97,6 +101,22 @@ info_TEXINFOS = ledger.texi
 
 lisp_LISP = ledger.el timeclock.el
 dist_lisp_LISP = ledger.el timeclock.el
+
+######################################################################
+
+if HAVE_BOOST_PYTHON
+
+noinst_PROGRAMS = amounts.so
+
+amounts.so: amounts.cc libamounts.la
+	CFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS) -L. -L.libs" \
+	    python setup.py build --build-lib=.
+
+install-exec-hook:
+	CFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS) -L. -L.libs" \
+	    python setup.py install --prefix=$(prefix)
+
+endif
 
 ######################################################################
 

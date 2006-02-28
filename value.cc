@@ -814,3 +814,274 @@ value_t& value_t::add(const amount_t& amount,
 }
 
 } // namespace ledger
+
+#ifdef USE_BOOST_PYTHON
+
+#include <boost/python.hpp>
+
+using namespace boost::python;
+using namespace ledger;
+
+long	 balance_len(balance_t& bal);
+amount_t balance_getitem(balance_t& bal, int i);
+long	 balance_pair_len(balance_pair_t& bal_pair);
+amount_t balance_pair_getitem(balance_pair_t& bal_pair, int i);
+
+long value_len(value_t& value)
+{
+  switch (value.type) {
+  case value_t::BOOLEAN:
+  case value_t::INTEGER:
+  case value_t::AMOUNT:
+    return 1;
+
+  case value_t::BALANCE:
+    return balance_len(*((balance_t *) value.data));
+
+  case value_t::BALANCE_PAIR:
+    return balance_pair_len(*((balance_pair_t *) value.data));
+
+  default:
+    assert(0);
+    break;
+  }
+  assert(0);
+  return 0;
+}
+
+amount_t value_getitem(value_t& value, int i)
+{
+  std::size_t len = value_len(value);
+
+  if (abs(i) >= len) {
+    PyErr_SetString(PyExc_IndexError, "Index out of range");
+    throw_error_already_set();
+  }
+
+  switch (value.type) {
+  case value_t::BOOLEAN:
+  case value_t::INTEGER:
+    return long(value);
+
+  case value_t::AMOUNT:
+    return *((amount_t *) value.data);
+
+  case value_t::BALANCE:
+    return balance_getitem(*((balance_t *) value.data), i);
+
+  case value_t::BALANCE_PAIR:
+    return balance_pair_getitem(*((balance_pair_t *) value.data), i);
+
+  default:
+    assert(0);
+    break;
+  }
+  assert(0);
+  return 0L;
+}
+
+double py_to_float(value_t& value)
+{
+  return double(value);
+}
+
+void export_value()
+{
+  scope in_value = class_< value_t > ("Value")
+    .def(init<value_t>())
+    .def(init<balance_pair_t>())
+    .def(init<balance_t>())
+    .def(init<amount_t>())
+    .def(init<std::string>())
+    .def(init<double>())
+    .def(init<long>())
+
+    .def(self + self)
+    .def(self + other<balance_pair_t>())
+    .def(self + other<balance_t>())
+    .def(self + other<amount_t>())
+    .def(self + long())
+    .def(self + double())
+
+    .def(other<balance_pair_t>() + self)
+    .def(other<balance_t>() + self)
+    .def(other<amount_t>() + self)
+    .def(long() + self)
+    .def(double() + self)
+
+    .def(self - self)
+    .def(self - other<balance_pair_t>())
+    .def(self - other<balance_t>())
+    .def(self - other<amount_t>())
+    .def(self - long())
+    .def(self - double())
+
+    .def(other<balance_pair_t>() - self)
+    .def(other<balance_t>() - self)
+    .def(other<amount_t>() - self)
+    .def(long() - self)
+    .def(double() - self)
+
+    .def(self * self)
+    .def(self * other<balance_pair_t>())
+    .def(self * other<balance_t>())
+    .def(self * other<amount_t>())
+    .def(self * long())
+    .def(self * double())
+
+    .def(other<balance_pair_t>() * self)
+    .def(other<balance_t>() * self)
+    .def(other<amount_t>() * self)
+    .def(long() * self)
+    .def(double() * self)
+
+    .def(self / self)
+    .def(self / other<balance_pair_t>())
+    .def(self / other<balance_t>())
+    .def(self / other<amount_t>())
+    .def(self / long())
+    .def(self / double())
+
+    .def(other<balance_pair_t>() / self)
+    .def(other<balance_t>() / self)
+    .def(other<amount_t>() / self)
+    .def(long() / self)
+    .def(double() / self)
+
+    .def(- self)
+
+    .def(self += self)
+    .def(self += other<balance_pair_t>())
+    .def(self += other<balance_t>())
+    .def(self += other<amount_t>())
+    .def(self += long())
+    .def(self += double())
+
+    .def(self -= self)
+    .def(self -= other<balance_pair_t>())
+    .def(self -= other<balance_t>())
+    .def(self -= other<amount_t>())
+    .def(self -= long())
+    .def(self -= double())
+
+    .def(self *= self)
+    .def(self *= other<balance_pair_t>())
+    .def(self *= other<balance_t>())
+    .def(self *= other<amount_t>())
+    .def(self *= long())
+    .def(self *= double())
+
+    .def(self /= self)
+    .def(self /= other<balance_pair_t>())
+    .def(self /= other<balance_t>())
+    .def(self /= other<amount_t>())
+    .def(self /= long())
+    .def(self /= double())
+
+    .def(self <  self)
+    .def(self < other<balance_pair_t>())
+    .def(self < other<balance_t>())
+    .def(self < other<amount_t>())
+    .def(self < long())
+    .def(self < double())
+
+    .def(other<balance_pair_t>() < self)
+    .def(other<balance_t>() < self)
+    .def(other<amount_t>() < self)
+    .def(long() < self)
+    .def(double() < self)
+
+    .def(self <= self)
+    .def(self <= other<balance_pair_t>())
+    .def(self <= other<balance_t>())
+    .def(self <= other<amount_t>())
+    .def(self <= long())
+    .def(self <= double())
+
+    .def(other<balance_pair_t>() <= self)
+    .def(other<balance_t>() <= self)
+    .def(other<amount_t>() <= self)
+    .def(long() <= self)
+    .def(double() <= self)
+
+    .def(self >  self)
+    .def(self > other<balance_pair_t>())
+    .def(self > other<balance_t>())
+    .def(self > other<amount_t>())
+    .def(self > long())
+    .def(self > double())
+
+    .def(other<balance_pair_t>() > self)
+    .def(other<balance_t>() > self)
+    .def(other<amount_t>() > self)
+    .def(long() > self)
+    .def(double() > self)
+
+    .def(self >= self)
+    .def(self >= other<balance_pair_t>())
+    .def(self >= other<balance_t>())
+    .def(self >= other<amount_t>())
+    .def(self >= long())
+    .def(self >= double())
+
+    .def(other<balance_pair_t>() >= self)
+    .def(other<balance_t>() >= self)
+    .def(other<amount_t>() >= self)
+    .def(long() >= self)
+    .def(double() >= self)
+
+    .def(self == self)
+    .def(self == other<balance_pair_t>())
+    .def(self == other<balance_t>())
+    .def(self == other<amount_t>())
+    .def(self == long())
+    .def(self == double())
+
+    .def(other<balance_pair_t>() == self)
+    .def(other<balance_t>() == self)
+    .def(other<amount_t>() == self)
+    .def(long() == self)
+    .def(double() == self)
+
+    .def(self != self)
+    .def(self != other<balance_pair_t>())
+    .def(self != other<balance_t>())
+    .def(self != other<amount_t>())
+    .def(self != long())
+    .def(self != double())
+
+    .def(other<balance_pair_t>() != self)
+    .def(other<balance_t>() != self)
+    .def(other<amount_t>() != self)
+    .def(long() != self)
+    .def(double() != self)
+
+    .def(! self)
+
+    .def(self_ns::int_(self))
+    .def(self_ns::float_(self))
+    .def(self_ns::str(self))
+    .def(abs(self))
+
+    .def_readonly("type", &value_t::type)
+
+    .def("__len__", value_len)
+    .def("__getitem__", value_getitem)
+
+    .def("cast", &value_t::cast)
+    .def("negate", &value_t::negate)
+    .def("price", &value_t::price)
+    .def("cost", &value_t::cost)
+    .def("add", &value_t::add, return_internal_reference<>())
+    ;
+
+  enum_< value_t::type_t > ("ValueType")
+    .value("BOOLEAN", value_t::BOOLEAN)
+    .value("INTEGER", value_t::INTEGER)
+    .value("AMOUNT", value_t::AMOUNT)
+    .value("BALANCE", value_t::BALANCE)
+    .value("BALANCE_PAIR", value_t::BALANCE_PAIR)
+    ;
+}
+
+#endif // USE_BOOST_PYTHON
