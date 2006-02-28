@@ -40,7 +40,7 @@ if DEBUG
 libledger_la_CXXFLAGS += -DDEBUG_LEVEL=4
 libledger_la_SOURCES  += debug.cc
 endif
-libledger_la_LDFLAGS = -version-info 3:0
+libledger_la_LDFLAGS = -version-info 2:5
 
 pkginclude_HEADERS = \
 	acconf.h     \
