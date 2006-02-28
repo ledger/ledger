@@ -143,14 +143,7 @@ class balance_t
   }
 
   // multiplication and divide
-  balance_t& operator*=(const balance_t& bal) {
-    if (! *this || ! bal)
-      return (*this = 0L);
-    else if (amounts.size() == 1 && bal.amounts.size() == 1)
-      return *this *= (*bal.amounts.begin()).second;
-    else
-      throw amount_error("It makes no sense to multiply two balances");
-  }
+  balance_t& operator*=(const balance_t& bal);
   balance_t& operator*=(const amount_t& amt) {
     // Multiplying by the null commodity causes all amounts to be
     // increased by the same factor.
@@ -175,16 +168,7 @@ class balance_t
     return *this *= amount_t(val);
   }
 
-  balance_t& operator/=(const balance_t& bal) {
-    if (! *this)
-      return (*this = 0L);
-    else if (! bal)
-      throw amount_error("Attempt to divide by zero");
-    else if (amounts.size() == 1 && bal.amounts.size() == 1)
-      return *this /= (*bal.amounts.begin()).second;
-    else
-      throw amount_error("It makes no sense to divide two balances");
-  }
+  balance_t& operator/=(const balance_t& bal);
   balance_t& operator/=(const amount_t& amt) {
     // Dividing by the null commodity causes all amounts to be
     // increased by the same factor.
@@ -414,15 +398,7 @@ class balance_t
   }
 
   // conversion operators
-  operator amount_t() const {
-    if (amounts.size() == 1)
-      return (*amounts.begin()).second;
-    else if (amounts.size() == 0)
-      return amount_t();
-    else
-      throw amount_error("Cannot convert a balance with "
-			 "multiple commodities to an amount");
-  }
+  operator amount_t() const;
   operator bool() const {
     for (amounts_map::const_iterator i = amounts.begin();
 	 i != amounts.end();
@@ -465,7 +441,6 @@ inline std::ostream& operator<<(std::ostream& out, const balance_t& bal) {
   bal.write(out, 12);
   return out;
 }
-
 
 class balance_pair_t
 {
@@ -556,28 +531,30 @@ class balance_pair_t
 
   // in-place arithmetic
   balance_pair_t& operator+=(const balance_pair_t& bal_pair) {
+    if (bal_pair.cost && ! cost)
+      cost = new balance_t(quantity);
     quantity += bal_pair.quantity;
+    if (cost)
+      *cost += bal_pair.cost ? *bal_pair.cost : bal_pair.quantity;
 
     if (bal_pair.price) {
-      if (price)
-	*price += *bal_pair.price;
-      else
+      if (! price)
 	price = new balance_t(*bal_pair.price);
-    }
-    if (bal_pair.cost) {
-      if (cost)
-	*cost += *bal_pair.cost;
       else
-	cost = new balance_t(*bal_pair.cost);
+	price += *bal_pair.price;
     }
     return *this;
   }
   balance_pair_t& operator+=(const balance_t& bal) {
     quantity += bal;
+    if (cost)
+      *cost += bal;
     return *this;
   }
   balance_pair_t& operator+=(const amount_t& amt) {
     quantity += amt;
+    if (cost)
+      *cost += amt;
     return *this;
   }
   template <typename T>
@@ -586,28 +563,32 @@ class balance_pair_t
   }
 
   balance_pair_t& operator-=(const balance_pair_t& bal_pair) {
+    if (bal_pair.cost && ! cost)
+      cost = new balance_t(quantity);
     quantity -= bal_pair.quantity;
+    if (cost)
+      *cost -= bal_pair.cost ? *bal_pair.cost : bal_pair.quantity;
 
     if (bal_pair.price) {
-      if (price)
-	*price -= *bal_pair.price;
-      else
-	price = new balance_t(- *bal_pair.price);
-    }
-    if (bal_pair.cost) {
-      if (cost)
-	*cost -= *bal_pair.cost;
-      else
-	cost = new balance_t(- *bal_pair.cost);
+      if (! price) {
+	price = new balance_t(*bal_pair.price);
+	price->negate();
+      } else {
+	price -= *bal_pair.price;
+      }
     }
     return *this;
   }
   balance_pair_t& operator-=(const balance_t& bal) {
     quantity -= bal;
+    if (cost)
+      *cost -= bal;
     return *this;
   }
   balance_pair_t& operator-=(const amount_t& amt) {
     quantity -= amt;
+    if (cost)
+      *cost -= amt;
     return *this;
   }
   template <typename T>
@@ -662,34 +643,32 @@ class balance_pair_t
 
   // multiplication and division
   balance_pair_t& operator*=(const balance_pair_t& bal_pair) {
+    if (bal_pair.cost && ! cost)
+      cost = new balance_t(quantity);
     quantity *= bal_pair.quantity;
+    if (cost)
+      *cost *= bal_pair.cost ? *bal_pair.cost : bal_pair.quantity;
 
-    if (bal_pair.price) {
+    if (bal_pair.price && *bal_pair.price) {
       if (price)
 	*price *= *bal_pair.price;
-    } else {
-      if (price) {
-	delete price;
-	price = NULL;
-      }
     }
-    if (bal_pair.cost) {
-      if (cost)
-	*cost *= *bal_pair.cost;
-    } else {
-      if (cost) {
-	delete cost;
-	cost = NULL;
-      }
+    else if (price) {
+      delete price;
+      price = NULL;
     }
     return *this;
   }
   balance_pair_t& operator*=(const balance_t& bal) {
     quantity *= bal;
+    if (cost)
+      *cost *= bal;
     return *this;
   }
   balance_pair_t& operator*=(const amount_t& amt) {
     quantity *= amt;
+    if (cost)
+      *cost *= amt;
     return *this;
   }
   template <typename T>
@@ -697,28 +676,17 @@ class balance_pair_t
     return *this *= amount_t(val);
   }
 
-  balance_pair_t& operator/=(const balance_pair_t& bal_pair) {
-    if (bal_pair.quantity)
-      quantity /= bal_pair.quantity;
-    else
-      throw amount_error("Attempt to divide by zero");
-
-    if (bal_pair.price) {
-      if (price)
-	*price /= *bal_pair.price;
-    }
-    if (bal_pair.cost) {
-      if (cost)
-	*cost /= *bal_pair.cost;
-    }
-    return *this;
-  }
+  balance_pair_t& operator/=(const balance_pair_t& bal_pair);
   balance_pair_t& operator/=(const balance_t& bal) {
     quantity /= bal;
+    if (cost)
+      *cost /= bal;
     return *this;
   }
   balance_pair_t& operator/=(const amount_t& amt) {
     quantity /= amt;
+    if (cost)
+      *cost /= amt;
     return *this;
   }
   template <typename T>
@@ -902,19 +870,17 @@ class balance_pair_t
   balance_pair_t& add(const amount_t&  amount,
 		      const amount_t * a_price = NULL,
 		      const amount_t * a_cost  = NULL) {
+    if (a_cost && ! cost)
+      cost = new balance_t(quantity);
     quantity += amount;
+    if (cost)
+      *cost += a_cost ? *a_cost : amount;
 
     if (a_price) {
-      if (price)
-	*price += *a_price;
-      else
+      if (! price)
 	price = new balance_t(*a_price);
-    }
-    if (a_cost) {
-      if (cost)
-	*cost += *a_cost;
       else
-	cost = new balance_t(*a_cost);
+	price += *a_price;
     }
     return *this;
   }
