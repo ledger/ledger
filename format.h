@@ -45,13 +45,13 @@ struct element_t
     DEPTH_SPACER
   };
 
-  bool		 align_left;
-  unsigned int	 min_width;
-  unsigned int	 max_width;
+  bool	       align_left;
+  unsigned int min_width;
+  unsigned int max_width;
 
-  kind_t	 type;
-  std::string	 chars;
-  value_expr *   val_expr;
+  kind_t       type;
+  std::string  chars;
+  value_expr * val_expr;
 
   struct element_t * next;
 

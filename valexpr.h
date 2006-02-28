@@ -151,7 +151,10 @@ struct value_expr_t
 
   value_expr_t(const kind_t _kind)
     : kind(_kind), refc(0), left(NULL), right(NULL) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor value_expr_t");
+    DEBUG_PRINT("ledger.memory.ctors", "ctor value_expr_t " << this);
+  }
+  value_expr_t(const value_expr_t&) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor value_expr_t (copy) " << this);
   }
   ~value_expr_t();
 
@@ -203,8 +206,11 @@ struct scope_t
   
   symbol_map symbols;
 
-  scope_t(scope_t * _parent = NULL) : parent(_parent) {}
+  scope_t(scope_t * _parent = NULL) : parent(_parent) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor scope_t");
+  }
   ~scope_t() {
+    DEBUG_PRINT("ledger.memory.dtors", "dtor scope_t");
     for (symbol_map::iterator i = symbols.begin();
 	 i != symbols.end();
 	 i++)
@@ -328,6 +334,7 @@ class value_expr : public value_calc
 
 public:
   value_expr(const std::string& _expr) : expr(_expr) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor value_expr");
     try {
       parsed = parse_value_expr(expr);
       parsed->acquire();
@@ -337,9 +344,11 @@ public:
 		  expr + "': " + err.what());
     }
   }
-  value_expr(value_expr_t * _parsed) : parsed(_parsed->acquire()) {}
-
+  value_expr(value_expr_t * _parsed) : parsed(_parsed->acquire()) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor value_expr");
+  }
   virtual ~value_expr() {
+    DEBUG_PRINT("ledger.memory.dtors", "dtor value_expr");
     if (parsed != NULL)
       parsed->release();
   }

@@ -283,9 +283,8 @@ class account_t
 	    const std::string& _note   = "")
     : parent(_parent), name(_name), note(_note),
       depth(parent ? parent->depth + 1 : 0), data(NULL), ident(0) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor account_t");
+    DEBUG_PRINT("ledger.memory.ctors", "ctor account_t " << this);
   }
-
   ~account_t();
 
   bool operator==(const account_t& account) {

@@ -44,7 +44,7 @@ bool compute_amount(value_expr_t * expr, amount_t& amt,
 
 value_expr_t::~value_expr_t()
 {
-  DEBUG_PRINT("ledger.memory.dtors", "dtor value_expr_t");
+  DEBUG_PRINT("ledger.memory.dtors", "dtor value_expr_t " << this);
 
   DEBUG_PRINT("ledger.valexpr.memory", "Destroying " << this);
   assert(refc == 0);
@@ -1279,7 +1279,8 @@ void init_value_expr()
   globals->define("P", node);
   globals->define("val", node);
   globals->define("value", node);
-  parse_boolean_expr("current_value(x)=P(x,m)", globals);
+  node = parse_boolean_expr("current_value(x)=P(x,m)", globals);
+  delete node;
 
   // Macros
   node = parse_value_expr("P(a,d)");
@@ -1298,8 +1299,10 @@ void init_value_expr()
   globals->define("G", node);
   globals->define("gain_total", node);
 
-  parse_boolean_expr("min(x,y)=x<y?x:y", globals);
-  parse_boolean_expr("max(x,y)=x>y?x:y", globals);
+  node = parse_boolean_expr("min(x,y)=x<y?x:y", globals);
+  delete node;
+  node = parse_boolean_expr("max(x,y)=x>y?x:y", globals);
+  delete node;
 }
 
 value_expr_t * parse_value_expr(std::istream& in, scope_t * scope,

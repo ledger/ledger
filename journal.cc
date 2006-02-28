@@ -309,7 +309,7 @@ void auto_entry_t::extend_entry(entry_base_t& entry)
 
 account_t::~account_t()
 {
-  DEBUG_PRINT("ledger.memory.dtors", "dtor account_t");
+  DEBUG_PRINT("ledger.memory.dtors", "dtor account_t " << this);
   //assert(! data);
 
   for (accounts_map::iterator i = accounts.begin();
