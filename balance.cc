@@ -166,7 +166,26 @@ balance_pair_t& balance_pair_t::operator/=(const balance_pair_t& bal_pair)
     *cost /= bal_pair.cost ? *bal_pair.cost : bal_pair.quantity;
 
   if (bal_pair.price && *bal_pair.price && price)
-      *price /= *bal_pair.price;
+    *price /= *bal_pair.price;
+  return *this;
+}
+
+balance_pair_t& balance_pair_t::add(const amount_t&  amount,
+				    const amount_t * a_price,
+				    const amount_t * a_cost)
+{
+  if (a_cost && ! cost)
+    cost = new balance_t(quantity);
+  quantity += amount;
+  if (cost)
+    *cost += a_cost ? *a_cost : amount;
+
+  if (a_price) {
+    if (! price)
+      price = new balance_t(*a_price);
+    else
+      *price += *a_price;
+  }
   return *this;
 }
 

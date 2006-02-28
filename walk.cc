@@ -45,12 +45,13 @@ void add_transaction_to(const transaction_t& xact, value_t& value)
     value += transaction_xdata_(xact).composite_amount;
   }
   else if (xact.cost || xact.amount.commodity().price || value) {
-    std::auto_ptr<amount_t> price;
-    amount_t * cost  = xact.cost;
-    if (xact.amount.commodity().price)
-      price.reset(new amount_t(*xact.amount.commodity().price *
-			       xact.amount));
-    value.add(base_amount(xact.amount), price.get(), cost);
+    if (xact.amount.commodity().price) {
+      amount_t price(*xact.amount.commodity().price);
+      price *= xact.amount;
+      value.add(base_amount(xact.amount), &price, xact.cost);
+    } else {
+      value.add(base_amount(xact.amount), NULL, xact.cost);
+    }
   }
   else {
     value = xact.amount;

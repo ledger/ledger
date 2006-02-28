@@ -541,7 +541,7 @@ class balance_pair_t
       if (! price)
 	price = new balance_t(*bal_pair.price);
       else
-	price += *bal_pair.price;
+	*price += *bal_pair.price;
     }
     return *this;
   }
@@ -574,7 +574,7 @@ class balance_pair_t
 	price = new balance_t(*bal_pair.price);
 	price->negate();
       } else {
-	price -= *bal_pair.price;
+	*price -= *bal_pair.price;
       }
     }
     return *this;
@@ -827,7 +827,7 @@ class balance_pair_t
   void negate() {
     quantity.negate();
     if (price) price->negate();
-    if (cost) cost->negate();
+    if (cost)  cost->negate();
   }
   balance_pair_t negated() const {
     balance_pair_t temp = *this;
@@ -852,7 +852,7 @@ class balance_pair_t
   void abs() {
     quantity.abs();
     if (price) price->abs();
-    if (cost) cost->abs();
+    if (cost)  cost->abs();
   }
 
   amount_t  amount(const commodity_t& commodity) const {
@@ -861,29 +861,14 @@ class balance_pair_t
   balance_t value(const std::time_t moment) const {
     return quantity.value(moment);
   }
-  void      write(std::ostream& out,
-		  const int	first_width,
-		  const int	latter_width = -1) const {
+  void write(std::ostream& out, const int first_width,
+	     const int latter_width = -1) const {
     quantity.write(out, first_width, latter_width);
   }
 
   balance_pair_t& add(const amount_t&  amount,
 		      const amount_t * a_price = NULL,
-		      const amount_t * a_cost  = NULL) {
-    if (a_cost && ! cost)
-      cost = new balance_t(quantity);
-    quantity += amount;
-    if (cost)
-      *cost += a_cost ? *a_cost : amount;
-
-    if (a_price) {
-      if (! price)
-	price = new balance_t(*a_price);
-      else
-	price += *a_price;
-    }
-    return *this;
-  }
+		      const amount_t * a_cost  = NULL);
 
   bool valid() {
     return (quantity.valid() &&
