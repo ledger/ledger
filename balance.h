@@ -143,11 +143,7 @@ class balance_t
   }
 
   // multiplication and divide
-  balance_t& operator*=(const balance_t& bal) {
-    if (amounts.size() == 1 && bal.amounts.size() == 1)
-      return *this *= (*bal.amounts.begin()).second;
-    throw amount_error("It makes no sense to multiply two balances");
-  }
+  balance_t& operator*=(const balance_t& bal);
   balance_t& operator*=(const amount_t& amt) {
     // Multiplying by the null commodity causes all amounts to be
     // increased by the same factor.
@@ -172,11 +168,7 @@ class balance_t
     return *this *= amount_t(val);
   }
 
-  balance_t& operator/=(const balance_t& bal) {
-    if (amounts.size() == 1 && bal.amounts.size() == 1)
-      return *this /= (*bal.amounts.begin()).second;
-    throw amount_error("It makes no sense to divide two balances");
-  }
+  balance_t& operator/=(const balance_t& bal);
   balance_t& operator/=(const amount_t& amt) {
     // Dividing by the null commodity causes all amounts to be
     // increased by the same factor.
@@ -406,15 +398,7 @@ class balance_t
   }
 
   // conversion operators
-  operator amount_t() const {
-    if (amounts.size() == 1)
-      return (*amounts.begin()).second;
-    else if (amounts.size() == 0)
-      return amount_t();
-    else
-      throw amount_error("Cannot convert a balance with "
-			 "multiple commodities to an amount");
-  }
+  operator amount_t() const;
   operator bool() const {
     for (amounts_map::const_iterator i = amounts.begin();
 	 i != amounts.end();
@@ -427,9 +411,8 @@ class balance_t
   amount_t  amount(const commodity_t& commodity) const;
   balance_t value(const std::time_t moment) const;
 
-  void      write(std::ostream& out,
-		  const int	first_width,
-		  const int	latter_width = -1) const;
+  void write(std::ostream& out, const int first_width,
+	     const int latter_width = -1) const;
 
   void abs() {
     for (amounts_map::iterator i = amounts.begin();
@@ -462,7 +445,7 @@ inline std::ostream& operator<<(std::ostream& out, const balance_t& bal) {
 class balance_pair_t
 {
  public:
-  balance_t quantity;
+  balance_t   quantity;
   balance_t * cost;
 
   // constructors

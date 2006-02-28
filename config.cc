@@ -143,6 +143,8 @@ config_t::regexps_to_predicate(const std::string& command,
 	display_predicate += ")/";
       }
       else if (! show_empty) {
+	if (! display_predicate.empty())
+	  display_predicate += "&";
 	display_predicate += "T";
       }
     }
