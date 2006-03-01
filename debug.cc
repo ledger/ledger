@@ -7,6 +7,8 @@
 #include <cstdlib>
 #include <cstring>
 
+#include <unistd.h>		// for the `write' method
+
 int offset = 0;
 
 std::map<void *, int> ptrs;
