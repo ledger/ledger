@@ -285,10 +285,8 @@ int parse_and_report(int argc, char * argv[], char * envp[])
     formatter = new format_transactions(*out, *format);
 
   if (command == "w") {
-#ifdef USE_EDITOR
     write_textual_journal(*journal, first_arg, *formatter,
 			  config.write_hdr_format, *out);
-#endif
   } else {
     formatter = config.chain_xact_handlers(command, formatter, journal.get(),
 					   journal->master, formatter_ptrs);

@@ -463,13 +463,12 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
 	  xact->state == transaction_t::UNCLEARED)
 	xact->state = state;
 
-#ifdef USE_EDITOR
       xact->beg_pos  = beg_pos;
       xact->beg_line = beg_line;
       xact->end_pos  = end_pos;
       xact->end_line = linenum;
       beg_pos = end_pos;
-#endif
+
       curr->add_transaction(xact);
     }
 
@@ -738,13 +737,11 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	if (parse_transactions(in, account_stack.front(), *ae,
 			       "automated", end_pos)) {
 	  journal->auto_entries.push_back(ae);
-#ifdef USE_EDITOR
 	  ae->src_idx  = src_idx;
 	  ae->beg_pos  = beg_pos;
 	  ae->beg_line = beg_line;
 	  ae->end_pos  = end_pos;
 	  ae->end_line = linenum;
-#endif
 	}
 	break;
       }
