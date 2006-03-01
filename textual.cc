@@ -650,8 +650,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 #endif // TIMELOG_SUPPORT
 
       case 'D':	{		// a default commodity for "entry"
-	amount_t amt;
-	amt.parse(skip_ws(line + 1));
+	amount_t amt(skip_ws(line + 1));
 	commodity_t::default_commodity = &amt.commodity();
 	break;
       }
@@ -669,8 +668,6 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	break;
 
       case 'P': {		// a pricing entry
-	std::time_t date;
-
 	char * date_field = skip_ws(line + 1);
 	char * time_field = next_element(date_field);
 	if (! time_field) break;
@@ -682,6 +679,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	date_buffer[std::strlen(date_field)] = ' ';
 	std::strcpy(&date_buffer[std::strlen(date_field) + 1], time_field);
 
+	std::time_t date;
 	struct std::tm when;
 	if (strptime(date_buffer, "%Y/%m/%d %H:%M:%S", &when)) {
 	  date = std::mktime(&when);
@@ -690,10 +688,8 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	}
 
 	std::string symbol;
-	amount_t    price;
-
 	parse_symbol(symbol_and_price, symbol);
-	price.parse(symbol_and_price);
+	amount_t price(symbol_and_price);
 
 	commodity_t * commodity = commodity_t::find_commodity(symbol, true);
 	commodity->add_price(date, price);

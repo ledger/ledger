@@ -1279,8 +1279,7 @@ void init_value_expr()
   globals->define("P", node);
   globals->define("val", node);
   globals->define("value", node);
-  node = parse_boolean_expr("current_value(x)=P(x,m)", globals);
-  delete node;
+  value_auto_ptr cval(parse_boolean_expr("current_value(x)=P(x,m)", globals));
 
   // Macros
   node = parse_value_expr("P(a,d)");
@@ -1299,10 +1298,8 @@ void init_value_expr()
   globals->define("G", node);
   globals->define("gain_total", node);
 
-  node = parse_boolean_expr("min(x,y)=x<y?x:y", globals);
-  delete node;
-  node = parse_boolean_expr("max(x,y)=x>y?x:y", globals);
-  delete node;
+  value_auto_ptr minx(parse_boolean_expr("min(x,y)=x<y?x:y", globals));
+  value_auto_ptr maxx(parse_boolean_expr("max(x,y)=x>y?x:y", globals));
 }
 
 value_expr_t * parse_value_expr(std::istream& in, scope_t * scope,
