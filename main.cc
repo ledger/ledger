@@ -104,10 +104,8 @@ int parse_and_report(int argc, char * argv[], char * envp[])
     command = "p";
   else if (command == "output")
     command = "w";
-#ifdef USE_EDITOR
   else if (command == "emacs")
     command = "x";
-#endif
   else if (command == "xml")
     command = "X";
   else if (command == "entry")
@@ -245,10 +243,8 @@ int parse_and_report(int argc, char * argv[], char * envp[])
     formatter = new set_account_value;
   else if (command == "p" || command == "e")
     formatter = new format_entries(*out, *format);
-#ifdef USE_EDITOR
   else if (command == "x")
     formatter = new format_emacs_transactions(*out);
-#endif
   else if (command == "X") {
 #if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
     formatter = new format_xml_entries(*out, config.show_totals);
@@ -259,10 +255,8 @@ int parse_and_report(int argc, char * argv[], char * envp[])
     formatter = new format_transactions(*out, *format);
 
   if (command == "w") {
-#ifdef USE_EDITOR
     write_textual_journal(*journal, first_arg, *formatter,
 			  config.write_hdr_format, *out);
-#endif
   } else {
     formatter = config.chain_xact_handlers(command, formatter, journal.get(),
 					   journal->master, formatter_ptrs);

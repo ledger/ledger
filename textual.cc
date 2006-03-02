@@ -318,9 +318,7 @@ bool parse_transactions(std::istream&	   in,
     in.getline(line, MAX_LINE);
     if (in.eof())
       break;
-#ifdef USE_EDITOR
     beg_pos += istream_pos_type(std::strlen(line) + 1);
-#endif
     linenum++;
     if (line[0] == ' ' || line[0] == '\t' || line[0] == '\r') {
       char * p = skip_ws(line);
@@ -403,18 +401,14 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
 
   TIMER_START(entry_xacts);
 
-#ifdef USE_EDITOR
   istream_pos_type end_pos;
   unsigned long    beg_line = linenum;
-#endif
   while (! in.eof() && (in.peek() == ' ' || in.peek() == '\t')) {
     line[0] = '\0';
     in.getline(line, MAX_LINE);
     if (in.eof() && line[0] == '\0')
       break;
-#ifdef USE_EDITOR
     end_pos = beg_pos + istream_pos_type(std::strlen(line) + 1);
-#endif
 
     linenum++;
     if (line[0] == ' ' || line[0] == '\t' || line[0] == '\r') {
@@ -428,13 +422,11 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
 	  xact->state == transaction_t::UNCLEARED)
 	xact->state = state;
 
-#ifdef USE_EDITOR
       xact->beg_pos  = beg_pos;
       xact->beg_line = beg_line;
       xact->end_pos  = end_pos;
       xact->end_line = linenum;
       beg_pos = end_pos;
-#endif
       curr->add_transaction(xact);
     }
 
@@ -547,20 +539,16 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
   src_idx = journal->sources.size() - 1;
   linenum = 1;
 
-#ifdef USE_EDITOR
   istream_pos_type beg_pos  = in.tellg();
   istream_pos_type end_pos;
   unsigned long    beg_line = linenum;
-#endif
   while (in.good() && ! in.eof()) {
     try {
       in.getline(line, MAX_LINE);
       if (in.eof())
 	break;
       linenum++;
-#ifdef USE_EDITOR
       end_pos = beg_pos + istream_pos_type(std::strlen(line) + 1);
-#endif
 
       switch (line[0]) {
       case '\0':
@@ -710,13 +698,11 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	if (parse_transactions(in, account_stack.front(), *ae,
 			       "automated", end_pos)) {
 	  journal->auto_entries.push_back(ae);
-#ifdef USE_EDITOR
 	  ae->src_idx  = src_idx;
 	  ae->beg_pos  = beg_pos;
 	  ae->beg_line = beg_line;
 	  ae->end_pos  = end_pos;
 	  ae->end_line = linenum;
-#endif
 	}
 	break;
       }
@@ -732,13 +718,11 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	  if (pe->finalize()) {
 	    extend_entry_base(journal, *pe);
 	    journal->period_entries.push_back(pe);
-#ifdef USE_EDITOR
 	    pe->src_idx	 = src_idx;
 	    pe->beg_pos	 = beg_pos;
 	    pe->beg_line = beg_line;
 	    pe->end_pos	 = end_pos;
 	    pe->end_line = linenum;
-#endif
 	  } else {
 	    throw parse_error(path, linenum, "Period entry failed to balance");
 	  }
@@ -752,10 +736,8 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	if (word == "include") {
 	  push_var<std::string>	     save_path(path);
 	  push_var<unsigned int>     save_src_idx(src_idx);
-#ifdef USE_EDITOR
 	  push_var<istream_pos_type> save_beg_pos(beg_pos);
 	  push_var<istream_pos_type> save_end_pos(end_pos);
-#endif
 	  push_var<unsigned int>     save_linenum(linenum);
 
 	  path = p;
@@ -804,21 +786,15 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
       default: {
 	unsigned int first_line = linenum;
-#ifdef USE_EDITOR
 	istream_pos_type pos = end_pos;
-#else
-	istream_pos_type pos;
-#endif
 	if (entry_t * entry =
 	    parse_entry(in, line, account_stack.front(), *this, pos)) {
 	  if (journal->add_entry(entry)) {
-#ifdef USE_EDITOR
 	    entry->src_idx  = src_idx;
 	    entry->beg_pos  = beg_pos;
 	    entry->beg_line = beg_line;
 	    entry->end_pos  = end_pos;
 	    entry->end_line = linenum;
-#endif
 	    count++;
 	  } else {
 	    print_entry(std::cerr, *entry);
@@ -833,9 +809,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	} else {
 	  throw parse_error(path, first_line, "Failed to parse entry");
 	}
-#ifdef USE_EDITOR
 	end_pos = pos;
-#endif
 	break;
       }
       }
@@ -854,9 +828,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 		<< err.what() << std::endl;;
       errors++;
     }
-#ifdef USE_EDITOR
     beg_pos = end_pos;
-#endif
   }
 
  done:
@@ -875,8 +847,6 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
   return count;
 }
-
-#ifdef USE_EDITOR
 
 void write_textual_journal(journal_t& journal, std::string path,
 			   item_handler<transaction_t>& formatter,
@@ -963,7 +933,5 @@ void write_textual_journal(journal_t& journal, std::string path,
     }
   }
 }
-
-#endif // USE_EDITOR
 
 } // namespace ledger

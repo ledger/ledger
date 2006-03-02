@@ -388,7 +388,6 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
       }
       break;
 
-#ifdef USE_EDITOR
     case element_t::SOURCE:
       if (details.entry && details.entry->journal) {
 	int idx = details.entry->src_idx;
@@ -441,7 +440,6 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
       if (details.xact)
 	out << details.xact->end_line;
       break;
-#endif
 
     case element_t::DATE_STRING: {
       std::time_t date = 0;

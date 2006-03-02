@@ -7,6 +7,7 @@ libledger_la_SOURCES = \
 	config.cc      \
 	datetime.cc    \
 	derive.cc      \
+	emacs.cc       \
 	format.cc      \
 	journal.cc     \
 	mask.cc        \
@@ -20,10 +21,6 @@ libledger_la_SOURCES = \
 	valexpr.cc     \
 	value.cc       \
 	walk.cc
-if USE_EDITOR
-libledger_la_CXXFLAGS += -DUSE_EDITOR=1
-libledger_la_SOURCES += emacs.cc
-endif
 if HAVE_EXPAT
 libledger_la_CXXFLAGS += -DHAVE_EXPAT=1
 libledger_la_SOURCES += gnucash.cc xml.cc
@@ -77,9 +74,6 @@ bin_PROGRAMS = ledger
 ledger_CXXFLAGS =
 ledger_SOURCES = main.cc
 ledger_LDADD = $(LIBOBJS) libledger.la
-if USE_EDITOR
-ledger_CXXFLAGS += -DUSE_EDITOR=1
-endif
 if HAVE_EXPAT
 ledger_CXXFLAGS += -DHAVE_EXPAT=1
 ledger_LDADD += -lexpat

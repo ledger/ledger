@@ -44,12 +44,10 @@ class transaction_t
   state_t	   state;
   unsigned short   flags;
   std::string	   note;
-#ifdef USE_EDITOR
   istream_pos_type beg_pos;
   unsigned long    beg_line;
   istream_pos_type end_pos;
   unsigned long    end_line;
-#endif
   mutable void *   data;
 
   static bool    use_effective_date;
@@ -58,9 +56,7 @@ class transaction_t
     : entry(NULL), _date(0), _date_eff(0), account(_account),
       amount_expr(NULL), cost(NULL), cost_expr(NULL),
       state(UNCLEARED), flags(TRANSACTION_NORMAL),
-#ifdef USE_EDITOR
       beg_pos(0), beg_line(0), end_pos(0), end_line(0),
-#endif
       data(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor transaction_t");
   }
@@ -72,9 +68,7 @@ class transaction_t
     : entry(NULL), _date(0), _date_eff(0), account(_account),
       amount(_amount), amount_expr(NULL), cost(NULL), cost_expr(NULL),
       state(UNCLEARED), flags(_flags), note(_note),
-#ifdef USE_EDITOR
       beg_pos(0), beg_line(0), end_pos(0), end_line(0),
-#endif
       data(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor transaction_t");
   }
@@ -84,9 +78,7 @@ class transaction_t
       amount(xact.amount), amount_expr(NULL),
       cost(xact.cost ? new amount_t(*xact.cost) : NULL), cost_expr(NULL),
       state(xact.state), flags(xact.flags), note(xact.note),
-#ifdef USE_EDITOR
       beg_pos(0), beg_line(0), end_pos(0), end_line(0),
-#endif
       data(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor transaction_t");
   }
@@ -124,26 +116,20 @@ class entry_base_t
 {
  public:
   journal_t *       journal;
-#ifdef USE_EDITOR
   unsigned long     src_idx;
   istream_pos_type  beg_pos;
   unsigned long     beg_line;
   istream_pos_type  end_pos;
   unsigned long     end_line;
-#endif
   transactions_list transactions;
 
   entry_base_t() : journal(NULL),
-#ifdef USE_EDITOR
     beg_pos(0), beg_line(0), end_pos(0), end_line(0)
-#endif
   {
     DEBUG_PRINT("ledger.memory.ctors", "ctor entry_base_t");
   }
   entry_base_t(const entry_base_t& e) : journal(NULL),
-#ifdef USE_EDITOR
     beg_pos(0), beg_line(0), end_pos(0), end_line(0)
-#endif
   {
     DEBUG_PRINT("ledger.memory.ctors", "ctor entry_base_t");
     for (transactions_list::const_iterator i = e.transactions.begin();

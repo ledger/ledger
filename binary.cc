@@ -11,18 +11,10 @@
 namespace ledger {
 
 static unsigned long  binary_magic_number = 0xFFEED765;
-#ifdef USE_EDITOR
 #ifdef DEBUG_ENABLED
-static unsigned long  format_version      = 0x00020589;
+static unsigned long  format_version      = 0x0002050b;
 #else
-static unsigned long  format_version      = 0x00020588;
-#endif
-#else
-#ifdef DEBUG_ENABLED
-static unsigned long  format_version      = 0x00020509;
-#else
-static unsigned long  format_version      = 0x00020508;
-#endif
+static unsigned long  format_version      = 0x0002050a;
 #endif
 
 static account_t **   accounts;
@@ -322,12 +314,10 @@ inline void read_binary_transaction(char *& data, transaction_t * xact)
   xact->flags |= TRANSACTION_BULK_ALLOC;
   read_binary_string(data, &xact->note);
 
-#ifdef USE_EDITOR
   xact->beg_pos = read_binary_long<unsigned long>(data);
   read_binary_long(data, xact->beg_line);
   xact->end_pos = read_binary_long<unsigned long>(data);
   read_binary_long(data, xact->end_line);
-#endif
 
   xact->data = NULL;
 
@@ -340,13 +330,11 @@ inline void read_binary_transaction(char *& data, transaction_t * xact)
 inline void read_binary_entry_base(char *& data, entry_base_t * entry,
 				   transaction_t *& xact_pool, bool& finalize)
 {
-#ifdef USE_EDITOR
   read_binary_long(data, entry->src_idx);
   entry->beg_pos = read_binary_long<unsigned long>(data);
   read_binary_long(data, entry->beg_line);
   entry->end_pos = read_binary_long<unsigned long>(data);
   read_binary_long(data, entry->end_line);
-#endif
 
   bool ignore_calculated = read_binary_number<char>(data) == 1;
 
@@ -809,23 +797,19 @@ void write_binary_transaction(std::ostream& out, transaction_t * xact,
   write_binary_number(out, xact->flags);
   write_binary_string(out, xact->note);
 
-#ifdef USE_EDITOR
   write_binary_long(out, xact->beg_pos);
   write_binary_long(out, xact->beg_line);
   write_binary_long(out, xact->end_pos);
   write_binary_long(out, xact->end_line);
-#endif
 }
 
 void write_binary_entry_base(std::ostream& out, entry_base_t * entry)
 {
-#ifdef USE_EDITOR
   write_binary_long(out, entry->src_idx);
   write_binary_long(out, entry->beg_pos);
   write_binary_long(out, entry->beg_line);
   write_binary_long(out, entry->end_pos);
   write_binary_long(out, entry->end_line);
-#endif
 
   bool ignore_calculated = false;
   for (transactions_list::const_iterator i = entry->transactions.begin();
