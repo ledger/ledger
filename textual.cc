@@ -131,7 +131,7 @@ value_expr_t * parse_amount(const char * text, amount_t& amt,
 {
   char * altbuf = NULL;
 
-  if (*text && *text != '(') {
+  if (*text && *text != '(' && *text != '-') {
     bool in_quote   = false;
     bool seen_digit = false;
     for (const char * p = text + 1; *p; p++)
@@ -309,7 +309,7 @@ bool parse_transactions(std::istream&	   in,
 			account_t *	   account,
 			entry_base_t&	   entry,
 			const std::string& kind,
-			istream_pos_type&  beg_pos)
+			unsigned long      beg_pos)
 {
   static char line[MAX_LINE + 1];
   bool	      added = false;
@@ -318,7 +318,7 @@ bool parse_transactions(std::istream&	   in,
     in.getline(line, MAX_LINE);
     if (in.eof())
       break;
-    beg_pos += istream_pos_type(std::strlen(line) + 1);
+    beg_pos += std::strlen(line) + 1;
     linenum++;
     if (line[0] == ' ' || line[0] == '\t' || line[0] == '\r') {
       char * p = skip_ws(line);
@@ -342,7 +342,7 @@ namespace {
 }
 
 entry_t * parse_entry(std::istream& in, char * line, account_t * master,
-		      textual_parser_t& parser, istream_pos_type& beg_pos)
+		      textual_parser_t& parser, unsigned long beg_pos)
 {
   std::auto_ptr<entry_t> curr(new entry_t);
 
@@ -401,14 +401,14 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
 
   TIMER_START(entry_xacts);
 
-  istream_pos_type end_pos;
-  unsigned long    beg_line = linenum;
+  unsigned long end_pos;
+  unsigned long beg_line = linenum;
   while (! in.eof() && (in.peek() == ' ' || in.peek() == '\t')) {
     line[0] = '\0';
     in.getline(line, MAX_LINE);
     if (in.eof() && line[0] == '\0')
       break;
-    end_pos = beg_pos + istream_pos_type(std::strlen(line) + 1);
+    end_pos = beg_pos + std::strlen(line) + 1;
 
     linenum++;
     if (line[0] == ' ' || line[0] == '\t' || line[0] == '\r') {
@@ -539,16 +539,16 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
   src_idx = journal->sources.size() - 1;
   linenum = 1;
 
-  istream_pos_type beg_pos  = in.tellg();
-  istream_pos_type end_pos;
-  unsigned long    beg_line = linenum;
+  unsigned long beg_pos = in.tellg();
+  unsigned long end_pos;
+  unsigned long beg_line = linenum;
   while (in.good() && ! in.eof()) {
     try {
       in.getline(line, MAX_LINE);
       if (in.eof())
 	break;
       linenum++;
-      end_pos = beg_pos + istream_pos_type(std::strlen(line) + 1);
+      end_pos = beg_pos + std::strlen(line) + 1;
 
       switch (line[0]) {
       case '\0':
@@ -734,11 +734,11 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	char * p = next_element(line);
 	std::string word(line + 1);
 	if (word == "include") {
-	  push_var<std::string>	     save_path(path);
-	  push_var<unsigned int>     save_src_idx(src_idx);
-	  push_var<istream_pos_type> save_beg_pos(beg_pos);
-	  push_var<istream_pos_type> save_end_pos(end_pos);
-	  push_var<unsigned int>     save_linenum(linenum);
+	  push_var<std::string>	  save_path(path);
+	  push_var<unsigned int>  save_src_idx(src_idx);
+	  push_var<unsigned long> save_beg_pos(beg_pos);
+	  push_var<unsigned long> save_end_pos(end_pos);
+	  push_var<unsigned int>  save_linenum(linenum);
 
 	  path = p;
 	  if (path[0] != '/' && path[0] != '\\') {
@@ -786,7 +786,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
       default: {
 	unsigned int first_line = linenum;
-	istream_pos_type pos = end_pos;
+	unsigned long pos = end_pos;
 	if (entry_t * entry =
 	    parse_entry(in, line, account_stack.front(), *this, pos)) {
 	  if (journal->add_entry(entry)) {
@@ -890,8 +890,7 @@ void write_textual_journal(journal_t& journal, std::string path,
   auto_entries_list::iterator	al = journal.auto_entries.begin();
   period_entries_list::iterator pl = journal.period_entries.begin();
 
-  istream_pos_type pos = 0;
-  istream_pos_type jump_to;
+  unsigned long pos = 0;
 
   format_t	hdr_fmt(write_hdr_format);
   std::ifstream in(found.c_str());
