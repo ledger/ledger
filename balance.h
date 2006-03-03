@@ -147,7 +147,7 @@ class balance_t
   balance_t& operator*=(const amount_t& amt) {
     // Multiplying by the null commodity causes all amounts to be
     // increased by the same factor.
-    if (amt.commodity().symbol.empty()) {
+    if (! amt.commodity()) {
       for (amounts_map::iterator i = amounts.begin();
 	   i != amounts.end();
 	   i++)
@@ -172,7 +172,7 @@ class balance_t
   balance_t& operator/=(const amount_t& amt) {
     // Dividing by the null commodity causes all amounts to be
     // increased by the same factor.
-    if (amt.commodity().symbol.empty()) {
+    if (! amt.commodity()) {
       for (amounts_map::iterator i = amounts.begin();
 	   i != amounts.end();
 	   i++)

@@ -96,7 +96,7 @@ namespace {
   value_expr_t * reduce_leaves(value_expr_t * expr, const details_t& details,
 			       value_expr_t * context)
   {
-    if (expr == NULL)
+    if (! expr)
       return NULL;
 
     value_auto_ptr temp;
@@ -119,7 +119,7 @@ namespace {
 
   value_expr_t * find_leaf(value_expr_t * context, int goal, int& found)
   {
-    if (context == NULL)
+    if (! context)
       return NULL;
 
     if (context->kind != value_expr_t::O_COM) {
@@ -164,7 +164,7 @@ void value_expr_t::compute(value_t& result, const details_t& details,
 	  transaction_xdata_(*details.xact).dflags & TRANSACTION_COMPOSITE)
 	result = transaction_xdata_(*details.xact).composite_amount;
       else
-	result = base_amount(details.xact->amount);
+	result = details.xact->amount;
     }
     else if (details.account && account_has_xdata(*details.account)) {
       result = account_xdata(*details.account).value;
@@ -210,7 +210,7 @@ void value_expr_t::compute(value_t& result, const details_t& details,
 	if (details.xact->cost)
 	  result = *details.xact->cost;
 	else
-	  result = base_amount(details.xact->amount);
+	  result = details.xact->amount;
       }
     }
     else if (details.account && account_has_xdata(*details.account)) {
@@ -493,7 +493,7 @@ void value_expr_t::compute(value_t& result, const details_t& details,
   case F_COMMODITY_MASK:
     assert(mask);
     if (details.xact)
-      result = mask->match(details.xact->amount.commodity().symbol);
+      result = mask->match(details.xact->amount.commodity().symbol());
     else
       result = false;
     break;
@@ -757,7 +757,7 @@ value_expr_t * parse_value_term(std::istream& in, scope_t * scope)
 
       // Define the value associated with the defined identifier
       value_auto_ptr def(parse_boolean_expr(in, params.get()));
-      if (def.get() == NULL)
+      if (! def.get())
 	throw value_expr_error(std::string("Definition failed for '") + buf + "'");
 
       node.reset(new value_expr_t(value_expr_t::O_DEF));
@@ -773,7 +773,7 @@ value_expr_t * parse_value_term(std::istream& in, scope_t * scope)
     } else {
       assert(scope);
       value_expr_t * def = scope->lookup(buf);
-      if (def == NULL) {
+      if (! def) {
 	if (buf[1] == '\0' &&
 	    (buf[0] == 'c' || buf[0] == 'C' || buf[0] == 'p' ||
 	     buf[0] == 'w' || buf[0] == 'W' || buf[0] == 'e'))
@@ -796,15 +796,14 @@ value_expr_t * parse_value_term(std::istream& in, scope_t * scope)
 	  }
 	  in.get(c);
 
-	  if (args.get() != NULL) {
+	  if (args.get()) {
 	    count = count_leaves(args.get());
 	    node->set_right(args.release());
 	  }
 	}
 
 	if (count != def->left->constant_i) {
-	  std::string msg;
-	  std::ostringstream errmsg(msg);
+	  std::ostringstream errmsg;
 	  errmsg << "Wrong number of arguments to '" << buf
 		 << "': saw " << count
 		 << ", wanted " << def->left->constant_i;
@@ -905,7 +904,8 @@ value_expr_t * parse_value_term(std::istream& in, scope_t * scope)
       unexpected(c, '}');
 
     node.reset(new value_expr_t(value_expr_t::CONSTANT_A));
-    node->constant_a = new amount_t(buf);
+    node->constant_a = new amount_t();
+    node->constant_a->parse(buf, AMOUNT_PARSE_NO_MIGRATE);
     break;
   }
 
@@ -1447,10 +1447,10 @@ void dump_value_expr(std::ostream& out, const value_expr_t * node,
       if (node->right)
 	dump_value_expr(out, node->right, depth + 1);
     } else {
-      assert(node->right == NULL);
+      assert(! node->right);
     }
   } else {
-    assert(node->left == NULL);
+    assert(! node->left);
   }
 }
 

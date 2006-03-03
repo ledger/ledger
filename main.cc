@@ -209,7 +209,7 @@ int parse_and_report(int argc, char * argv[], char * envp[])
       // rightmost '/' character in the pager pathname.  See manpage
       // for strrchr.
       arg0 = std::strrchr(config.pager.c_str(), '/');
-      if (arg0 != NULL)
+      if (arg0)
 	arg0++;
       else
 	arg0 = config.pager.c_str(); // No slashes in pager.

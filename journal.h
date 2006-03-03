@@ -167,11 +167,9 @@ class entry_t : public entry_base_t
   }
   entry_t(const entry_t& e);
 
-#ifdef DEBUG_ENABLED
   virtual ~entry_t() {
     DEBUG_PRINT("ledger.memory.dtors", "dtor entry_t");
   }
-#endif
 
   std::time_t actual_date() const {
     return _date;
@@ -247,11 +245,9 @@ class period_entry_t : public entry_base_t
     DEBUG_PRINT("ledger.memory.ctors", "ctor period_entry_t");
   }
 
-#ifdef DEBUG_ENABLED
   virtual ~period_entry_t() {
     DEBUG_PRINT("ledger.memory.dtors", "dtor period_entry_t");
   }
-#endif
 
   virtual bool valid() const {
     return period;

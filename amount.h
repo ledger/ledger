@@ -10,6 +10,8 @@
 #include <cassert>
 #include <exception>
 
+#include "debug.h"
+
 namespace ledger {
 
 class commodity_t;
@@ -70,10 +72,15 @@ class amount_t
   void set_commodity(commodity_t& comm) {
     commodity_ = &comm;
   }
+  void annotate_commodity(const amount_t& price,
+			  const std::time_t  date = 0,
+			  const std::string& tag  = "");
+  void reduce_commodity(const bool keep_price = false,
+			const bool keep_date  = false,
+			const bool keep_tag   = false);
   void clear_commodity() {
     commodity_ = NULL;
   }
-  amount_t base() const;
   amount_t price() const;
 
   bool null() const {
@@ -298,127 +305,57 @@ inline std::istream& operator>>(std::istream& in, amount_t& amt) {
 typedef std::map<const std::time_t, amount_t>  history_map;
 typedef std::pair<const std::time_t, amount_t> history_pair;
 
-typedef std::map<const std::string, commodity_t *>  commodities_map;
-typedef std::pair<const std::string, commodity_t *> commodities_pair;
+class commodity_base_t;
 
-class commodity_t
+typedef std::map<const std::string, commodity_base_t *>  base_commodities_map;
+typedef std::pair<const std::string, commodity_base_t *> base_commodities_pair;
+
+class commodity_base_t
 {
  public:
-  class updater_t {
-   public:
-    virtual ~updater_t() {}
-    virtual void operator()(commodity_t&      commodity,
-			    const std::time_t moment,
-			    const std::time_t date,
-			    const std::time_t last,
-			    amount_t&         price) = 0;
-  };
+  friend class commodity_t;
+  friend class annotated_commodity_t;
 
   typedef unsigned long ident_t;
 
+  ident_t	 ident;
+  std::string	 name;
+  std::string	 note;
+  unsigned short precision;
+  unsigned short flags;
+  amount_t *	 smaller;
+  amount_t *	 larger;
+
+  commodity_base_t() : precision(0), flags(COMMODITY_STYLE_DEFAULTS),
+		       history(NULL), smaller(NULL), larger(NULL) {}
+
+  commodity_base_t(const std::string& _symbol,
+		   unsigned int	_precision = 0,
+		   unsigned int _flags	   = COMMODITY_STYLE_DEFAULTS)
+    : precision(_precision), flags(_flags), history(NULL),
+      smaller(NULL), larger(NULL), symbol(_symbol) {}
+
+  ~commodity_base_t() {
+    if (history) delete history;
+    if (smaller) delete smaller;
+    if (larger)  delete larger;
+  }
+
+  static base_commodities_map commodities;
+  static commodity_base_t * create(const std::string& symbol);
+
+  std::string symbol;
+
   struct history_t {
-    history_map	    prices;
-    std::time_t	    last_lookup;
+    history_map	prices;
+    std::time_t	last_lookup;
   };
-
-  history_t * history_;
-
-  history_t *& history() {
-    return base ? base->history() : history_;
-  }
-
-  const std::string symbol;
-  bool		    quote;
-  std::string	    name_;
-  std::string	    note_;
-  unsigned short    precision_;
-  unsigned short    flags_;
-  ident_t	    ident;
-  amount_t *	    smaller_;
-  amount_t *	    larger_;
-  commodity_t *	    base;	// base commodity for AAPL {$10} is AAPL
-  amount_t *	    price;	// its price is therefore $10.00
-
-  std::string& name() {
-    return base ? base->name() : name_;
-  }
-  std::string& note() {
-    return base ? base->note() : note_;
-  }
-  unsigned short& precision() {
-    return base ? base->precision() : precision_;
-  }
-  unsigned short& flags() {
-    return base ? base->flags() : flags_;
-  }
-  amount_t *& smaller() {
-    return base ? base->smaller() : smaller_;
-  }
-  amount_t *& larger() {
-    return base ? base->larger() : larger_;
-  }
-
-  // If set, this global function pointer is called to determine
-  // whether prices have been updated in the meanwhile.
-
-  static updater_t * updater;
-
-  // This map remembers all commodities that have been defined.
-
-  static commodities_map commodities;
-  static commodity_t *   null_commodity;
-  static commodity_t *   default_commodity;
-
-  static bool add_commodity(commodity_t * commodity,
-			    const std::string symbol = "") {
-    // The argument "symbol" is useful for creating a symbol alias to
-    // an underlying commodity type; it is used by the Gnucash parser
-    // to link "USD" to "$".
-    std::pair<commodities_map::iterator, bool> result
-      = commodities.insert(commodities_pair((symbol.empty() ?
-					     commodity->symbol : symbol),
-					    commodity));
-    return result.second;
-  }
-  static bool remove_commodity(commodity_t * commodity) {
-    commodities_map::size_type n = commodities.erase(commodity->symbol);
-    return n > 0;
-  }
-  static commodity_t * find_commodity(const std::string& symbol,
-				      bool auto_create = false);
-
-  // Now the per-object constructor and methods
-
-  commodity_t(const std::string& _symbol    = "",
-	      unsigned int	 _precision = 0,
-	      unsigned int       _flags	    = COMMODITY_STYLE_DEFAULTS)
-    : precision_(_precision), flags_(_flags), history_(NULL),
-      smaller_(NULL), larger_(NULL), base(NULL), price(NULL) {
-    set_symbol(_symbol);
-  }
-  ~commodity_t() {
-    if (history_) delete history_;
-    if (smaller_) delete smaller_;
-    if (larger_)  delete larger_;
-    if (price)    delete price;
-  }
-
-  operator bool() const {
-    return this != null_commodity;
-  }
-  bool operator==(const commodity_t& comm) const {
-    return this == &comm;
-  }
-  bool operator!=(const commodity_t& comm) const {
-    return this != &comm;
-  }
-
-  void set_symbol(const std::string& sym);
+  history_t * history;
 
   void add_price(const std::time_t date, const amount_t& price);
   bool remove_price(const std::time_t date) {
-    if (history_) {
-      history_map::size_type n = history_->prices.erase(date);
+    if (history) {
+      history_map::size_type n = history->prices.erase(date);
       return n > 0;
     }
     return false;
@@ -426,19 +363,206 @@ class commodity_t
 
   amount_t value(const std::time_t moment = std::time(NULL));
 
+  class updater_t {
+   public:
+    virtual ~updater_t() {}
+    virtual void operator()(commodity_base_t& commodity,
+			    const std::time_t moment,
+			    const std::time_t date,
+			    const std::time_t last,
+			    amount_t&         price) = 0;
+  };
+  friend class updater_t;
+
+  static updater_t * updater;
+};
+
+typedef std::map<const std::string, commodity_t *>  commodities_map;
+typedef std::pair<const std::string, commodity_t *> commodities_pair;
+
+class commodity_t
+{
+  friend class annotated_commodity_t;
+
+ public:
+  // This map remembers all commodities that have been defined.
+
+  static commodities_map commodities;
+  static commodity_t *   null_commodity;
+  static commodity_t *   default_commodity;
+
+  static commodity_t * create(const std::string& symbol);
+  static commodity_t * find(const std::string& name);
+  static commodity_t * find_or_create(const std::string& symbol);
+
+  static bool needs_quotes(const std::string& symbol);
+
+  static void make_alias(const std::string& symbol,
+			 commodity_t * commodity);
+
+  // These are specific to each commodity reference
+
+  typedef unsigned long ident_t;
+
+  ident_t	     ident;
+  commodity_base_t * ptr;
+  std::string	     qualified_symbol;
+  bool		     annotated;
+
+ public:
+  explicit commodity_t() : ptr(NULL), annotated(false) {}
+
+  operator bool() const {
+    return this != null_commodity;
+  }
+  bool operator==(const commodity_t& comm) const {
+    return ptr == comm.ptr;
+  }
+  bool operator!=(const commodity_t& comm) const {
+    return ptr != comm.ptr;
+  }
+
+  std::string base_symbol() const {
+    return ptr->symbol;
+  }
+  std::string symbol() const {
+    return qualified_symbol;
+  }
+
+  void write(std::ostream& out) const {
+    out << symbol();
+  }
+
+  std::string name() const {
+    return ptr->name;
+  }
+  void set_name(const std::string& arg) {
+    ptr->name = arg;
+  }
+
+  std::string note() const {
+    return ptr->note;
+  }
+  void set_note(const std::string& arg) {
+    ptr->note = arg;
+  }
+
+  unsigned short precision() const {
+    return ptr->precision;
+  }
+  void set_precision(unsigned short arg) {
+    ptr->precision = arg;
+  }
+
+  unsigned short flags() const {
+    return ptr->flags;
+  }
+  void set_flags(unsigned short arg) {
+    ptr->flags = arg;
+  }
+  void add_flags(unsigned short arg) {
+    ptr->flags |= arg;
+  }
+  void drop_flags(unsigned short arg) {
+    ptr->flags &= ~arg;
+  }
+
+  amount_t * smaller() const {
+    return ptr->smaller;
+  }
+  void set_smaller(const amount_t& arg) {
+    if (ptr->smaller)
+      delete ptr->smaller;
+    ptr->smaller = new amount_t(arg);
+  }
+
+  amount_t * larger() const {
+    return ptr->larger;
+  }
+  void set_larger(const amount_t& arg) {
+    if (ptr->larger)
+      delete ptr->larger;
+    ptr->larger = new amount_t(arg);
+  }
+
+  commodity_base_t::history_t * history() const {
+    return ptr->history;
+  }
+
+  void add_price(const std::time_t date, const amount_t& price) {
+    return ptr->add_price(date, price);
+  }
+  bool remove_price(const std::time_t date) {
+    return ptr->remove_price(date);
+  }
+  amount_t value(const std::time_t moment = std::time(NULL)) const {
+    return ptr->value(moment);
+  }
+
   bool valid() const {
-    if (symbol.empty() && this != null_commodity)
+    if (symbol().empty() && this != null_commodity)
       return false;
 
-    if (precision_ > 16)
+    if (precision() > 16)
       return false;
 
     return true;
   }
 };
 
+class annotated_commodity_t : public commodity_t
+{
+ public:
+  const commodity_t * base;
+
+  amount_t    price;
+  std::time_t date;
+  std::string tag;
+
+  static std::string date_format;
+
+  static void write_annotations(std::ostream&      out,
+				const amount_t&    price,
+				const std::time_t  date,
+				const std::string& tag);
+  static
+  std::string make_qualified_name(const commodity_t& comm,
+				  const amount_t& price,
+				  const std::time_t date,
+				  const std::string& tag);
+  static
+  annotated_commodity_t * create(const commodity_t& comm,
+				 const amount_t&    price,
+				 const std::time_t  date,
+				 const std::string& tag,
+				 const std::string& entry_name = "");
+  static
+  annotated_commodity_t * create(const std::string& symbol,
+				 const amount_t&    price,
+				 const std::time_t  date,
+				 const std::string& tag);
+  static
+  annotated_commodity_t * create(const std::string& symbol,
+				 const std::string& price,
+				 const std::string& date,
+				 const std::string& tag);
+  static
+  annotated_commodity_t * find_or_create(const commodity_t& comm,
+					 const amount_t&    price,
+					 const std::time_t  date,
+					 const std::string& tag);
+
+  explicit annotated_commodity_t() {
+    annotated = true;
+  }
+
+  void write_annotations(std::ostream& out) const {
+    annotated_commodity_t::write_annotations(out, price, date, tag);
+  }
+};
+
 inline std::ostream& operator<<(std::ostream& out, const commodity_t& comm) {
-  out << comm.symbol;
+  out << comm.symbol();
   return out;
 }
 
@@ -449,21 +573,12 @@ inline commodity_t& amount_t::commodity() const {
     return *commodity_;
 }
 
-inline amount_t amount_t::base() const {
-  if (commodity_ && commodity_->price) {
-    amount_t temp(*this);
-    assert(commodity_->base);
-    temp.set_commodity(*(commodity_->base));
-    return temp;
-  } else {
-    return *this;
-  }
-}
-
 inline amount_t amount_t::price() const {
-  if (commodity_ && commodity_->price) {
-    amount_t temp(*commodity_->price);
+  if (commodity_ && commodity_->annotated) {
+    amount_t temp(((annotated_commodity_t *)commodity_)->price);
     temp *= *this;
+    DEBUG_PRINT("amounts.commodities",
+		"Returning price of " << *this << " = " << temp);
     return temp;
   } else {
     return 0L;

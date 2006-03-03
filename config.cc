@@ -292,9 +292,9 @@ void config_t::process_options(const std::string&     command,
 
   // If downloading is to be supported, configure the updater
 
-  if (! commodity_t::updater && download_quotes)
-    commodity_t::updater = new quotes_by_script(price_db, pricing_leeway,
-						cache_dirty);
+  if (! commodity_base_t::updater && download_quotes)
+    commodity_base_t::updater =
+      new quotes_by_script(price_db, pricing_leeway, cache_dirty);
 
   if (! date_format.empty())
     format_t::date_format = date_format;
@@ -702,8 +702,9 @@ OPT_BEGIN(account, "a:") {
   config->account = optarg;
 } OPT_END(account);
 
-OPT_BEGIN(debug, "") {
+OPT_BEGIN(debug, ":") {
   config->debug_mode = true;
+  ::setenv("DEBUG_CLASS", optarg, 1);
 } OPT_END(debug);
 
 //////////////////////////////////////////////////////////////////////
@@ -1098,7 +1099,7 @@ option_t config_options[CONFIG_OPTIONS_SIZE] = {
   { "csv-register-format", '\0', true, opt_csv_register_format, false },
   { "current", 'c', false, opt_current, false },
   { "date-format", 'y', true, opt_date_format, false },
-  { "debug", '\0', false, opt_debug, false },
+  { "debug", '\0', true, opt_debug, false },
   { "deviation", 'D', false, opt_deviation, false },
   { "display", 'd', true, opt_display, false },
   { "dow", '\0', false, opt_dow, false },

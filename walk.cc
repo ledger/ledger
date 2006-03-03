@@ -44,14 +44,8 @@ void add_transaction_to(const transaction_t& xact, value_t& value)
       transaction_xdata_(xact).dflags & TRANSACTION_COMPOSITE) {
     value += transaction_xdata_(xact).composite_amount;
   }
-  else if (xact.cost || xact.amount.commodity().price || value) {
-    if (xact.amount.commodity().price) {
-      amount_t price(*xact.amount.commodity().price);
-      price *= xact.amount;
-      value.add(base_amount(xact.amount), &price, xact.cost);
-    } else {
-      value.add(base_amount(xact.amount), NULL, xact.cost);
-    }
+  else if (xact.cost || xact.amount.commodity().annotated || value) {
+    value.add(xact.amount, xact.cost);
   }
   else {
     value = xact.amount;
@@ -500,7 +494,7 @@ void set_comm_as_payee::operator()(transaction_t& xact)
   entry_t& entry = entry_temps.back();
   entry._date = xact.date();
   entry.code  = xact.entry->code;
-  entry.payee = xact.amount.commodity().symbol;
+  entry.payee = xact.amount.commodity().symbol();
 
   xact_temps.push_back(xact);
   transaction_t& temp = xact_temps.back();
@@ -829,7 +823,7 @@ void walk_commodities(commodities_map& commodities,
       continue;
 
     entry_temps.push_back(entry_t());
-    acct_temps.push_back(account_t(NULL, (*i).second->symbol));
+    acct_temps.push_back(account_t(NULL, (*i).second->symbol()));
 
     if ((*i).second->history())
       for (history_map::iterator j = (*i).second->history()->prices.begin();

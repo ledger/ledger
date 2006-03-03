@@ -163,7 +163,7 @@ element_t * format_t::parse_elements(const std::string& fmt)
 
       current->type = element_t::VALUE_EXPR;
 
-      assert(current->val_expr == NULL);
+      assert(! current->val_expr);
       current->val_expr = new value_expr(std::string(b, p));
       break;
     }
@@ -346,7 +346,7 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 	  commodity_t& comm(unit_cost.commodity());
 	  bool has_flag = comm.flags() & COMMODITY_STYLE_VARIABLE;
 	  if (! has_flag)
-	    unit_cost.commodity().flags() |= COMMODITY_STYLE_VARIABLE;
+	    comm.add_flags(COMMODITY_STYLE_VARIABLE);
 
 	  std::ostringstream stream;
 	  stream << details.xact->amount << " @ " << unit_cost;
@@ -354,7 +354,7 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 	  use_disp = true;
 
 	  if (! has_flag)
-	    unit_cost.commodity().flags() &= ~COMMODITY_STYLE_VARIABLE;
+	    comm.drop_flags(COMMODITY_STYLE_VARIABLE);
 	}
 	else if (details.entry) {
 	  unsigned int    xacts_count = 0;

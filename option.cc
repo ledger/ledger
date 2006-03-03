@@ -49,7 +49,7 @@ bool process_option(option_t * options, const std::string& name,
 		    const char * arg)
 {
   option_t * opt = search_options(options, name.c_str());
-  if (opt != NULL && ! opt->handled) {
+  if (opt && ! opt->handled) {
     opt->handler(arg);
     opt->handled = true;
     return true;
@@ -89,12 +89,12 @@ void process_arguments(option_t * options, int argc, char ** argv,
       }
 
       opt = search_options(options, name);
-      if (opt == NULL)
+      if (! opt)
 	throw option_error(std::string("illegal option --") + name);
       
-      if (opt->wants_arg && value == NULL) {
+      if (opt->wants_arg && ! value) {
 	value = *++i;
-	if (value == NULL)
+	if (! value)
 	  throw option_error(std::string("missing option argument for --") +
 			     name);
       }
@@ -102,18 +102,18 @@ void process_arguments(option_t * options, int argc, char ** argv,
     } else {
       char c = (*i)[1];
       opt = search_options(options, c);
-      if (opt == NULL)
+      if (! opt)
 	throw option_error(std::string("illegal option -") + c);
 
       if (opt->wants_arg) {
 	value = *++i;
-	if (value == NULL)
+	if (! value)
 	  throw option_error(std::string("missing option argument for -") + c);
       }
     }
 
     assert(opt);
-    assert(value == NULL || opt->wants_arg);
+    assert(! value || opt->wants_arg);
     process_option(opt, value);
 
    next:

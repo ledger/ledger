@@ -71,7 +71,7 @@ void reconcile_transactions::flush()
   balance -= cleared_balance;
   if (balance.type >= value_t::BALANCE)
     throw error(std::string("Reconcile balance is not of the same commodity ('") +
-		b_comm.symbol + "' != '" + cb_comm.symbol + "')");
+		b_comm.symbol() + "' != '" + cb_comm.symbol() + "')");
 
   // If the amount to reconcile is the same as the pending balance,
   // then assume an exact match and return the results right away.

@@ -1,4 +1,5 @@
 #include "amount.h"
+#include "datetime.h"
 #include "util.h"
 
 #include <list>
@@ -45,10 +46,13 @@ static mpz_t		  temp;
 static mpz_t		  divisor;
 static amount_t::bigint_t true_value;
 
-commodity_t::updater_t *  commodity_t::updater = NULL;
-commodities_map		  commodity_t::commodities;
-commodity_t *             commodity_t::null_commodity;
-commodity_t *             commodity_t::default_commodity = NULL;
+base_commodities_map commodity_base_t::commodities;
+
+commodity_base_t::updater_t * commodity_base_t::updater = NULL;
+
+commodities_map	commodity_t::commodities;
+commodity_t *   commodity_t::null_commodity;
+commodity_t *   commodity_t::default_commodity = NULL;
 
 static struct _init_amounts {
   _init_amounts() {
@@ -57,23 +61,26 @@ static struct _init_amounts {
 
     mpz_set_ui(true_value.val, 1);
 
-    commodity_t::updater	   = NULL;
-    commodity_t::null_commodity    = commodity_t::find_commodity("", true);
+    commodity_base_t::updater	   = NULL;
+    commodity_t::null_commodity    = commodity_t::create("");
     commodity_t::default_commodity = NULL;
+
+    commodity_t::null_commodity->add_flags(COMMODITY_STYLE_NOMARKET |
+					   COMMODITY_STYLE_BUILTIN);
 
     // Add time commodity conversions, so that timelog's may be parsed
     // in terms of seconds, but reported as minutes or hours.
     commodity_t * commodity;
 
-    commodity = commodity_t::find_commodity("s", true);
-    commodity->flags() |= COMMODITY_STYLE_NOMARKET | COMMODITY_STYLE_BUILTIN;
+    commodity = commodity_t::create("s");
+    commodity->add_flags(COMMODITY_STYLE_NOMARKET | COMMODITY_STYLE_BUILTIN);
 
     parse_conversion("1.0m", "60s");
     parse_conversion("1.0h", "60m");
 
 #if 0
-    commodity = commodity_t::find_commodity("b", true);
-    commodity->flags() |= COMMODITY_STYLE_NOMARKET | COMMODITY_STYLE_BUILTIN;
+    commodity = commodity_t::create("b");
+    commodity->add_flags(COMMODITY_STYLE_NOMARKET | COMMODITY_STYLE_BUILTIN);
 
     parse_conversion("1.00 Kb", "1024 b");
     parse_conversion("1.00 Mb", "1024 Kb");
@@ -86,9 +93,9 @@ static struct _init_amounts {
     mpz_clear(temp);
     mpz_clear(divisor);
 
-    if (commodity_t::updater) {
-      delete commodity_t::updater;
-      commodity_t::updater = NULL;
+    if (commodity_base_t::updater) {
+      delete commodity_base_t::updater;
+      commodity_base_t::updater = NULL;
     }
 
     for (commodities_map::iterator i = commodity_t::commodities.begin();
@@ -603,8 +610,7 @@ std::string amount_t::quantity_string() const
   commodity_t&   comm(commodity());
   unsigned short precision;
 
-  if (comm == *commodity_t::null_commodity ||
-      comm.flags() & COMMODITY_STYLE_VARIABLE) {
+  if (! comm || comm.flags() & COMMODITY_STYLE_VARIABLE) {
     mpz_ui_pow_ui(divisor, 10, quantity->prec);
     mpz_tdiv_qr(quotient, remainder, MPZ(quantity), divisor);
     precision = quantity->prec;
@@ -707,11 +713,10 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
   // Ensure the value is rounded to the commodity's precision before
   // outputting it.  NOTE: `rquotient' is used here as a temp variable!
 
-  commodity_t&   comm(base.commodity());
+  commodity_t& comm(base.commodity());
   unsigned short precision;
 
-  if (comm == *commodity_t::null_commodity ||
-      comm.flags() & COMMODITY_STYLE_VARIABLE) {
+  if (! comm || comm.flags() & COMMODITY_STYLE_VARIABLE) {
     mpz_ui_pow_ui(divisor, 10, base.quantity->prec);
     mpz_tdiv_qr(quotient, remainder, MPZ(base.quantity), divisor);
     precision = base.quantity->prec;
@@ -755,16 +760,8 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
   }
 
   if (! (comm.flags() & COMMODITY_STYLE_SUFFIXED)) {
-    if (comm.quote) {
-      std::string::size_type idx = comm.symbol.find(" {", 0);
-      if (idx != std::string::npos)
-	out << "\"" << comm.symbol.substr(0, idx) << "\""
-	    << comm.symbol.substr(idx);
-      else
-	out << "\"" << comm.symbol << "\"";
-    } else {
-      out << comm.symbol;
-    }
+    comm.write(out);
+
     if (comm.flags() & COMMODITY_STYLE_SEPARATED)
       out << " ";
   }
@@ -828,21 +825,21 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
   if (comm.flags() & COMMODITY_STYLE_SUFFIXED) {
     if (comm.flags() & COMMODITY_STYLE_SEPARATED)
       out << " ";
-    if (comm.quote) {
-      std::string::size_type idx = comm.symbol.find(" {", 0);
-      if (idx != std::string::npos)
-	out << "\"" << comm.symbol.substr(0, idx) << "\""
-	    << comm.symbol.substr(idx);
-      else
-	out << "\"" << comm.symbol << "\"";
-    } else {
-      out << comm.symbol;
-    }
+
+    comm.write(out);
   }
 
   mpz_clear(quotient);
   mpz_clear(rquotient);
   mpz_clear(remainder);
+
+  // If there are any annotations associated with this commodity,
+  // output them now.
+
+  if (comm.annotated) {
+    annotated_commodity_t& ann(static_cast<annotated_commodity_t&>(comm));
+    ann.write_annotations(out);
+  }
 
   // Things are output to a string first, so that if anyone has
   // specified a width or fill for _out, it will be applied to the
@@ -862,7 +859,9 @@ void parse_quantity(std::istream& in, std::string& value)
   value = buf;
 }
 
-void parse_commodity(std::istream& in, std::string& symbol)
+void parse_commodity(std::istream& in, std::string& name,
+		     std::string& symbol, std::string& price,
+		     std::string& date, std::string& tag)
 {
   char buf[256];
   char c = peek_next_nonws(in);
@@ -877,7 +876,84 @@ void parse_commodity(std::istream& in, std::string& symbol)
     READ_INTO(in, buf, 255, c, ! std::isspace(c) && ! std::isdigit(c) &&
 	      c != '-' && c != '.');
   }
-  symbol = buf;
+  name = symbol = buf;
+
+  bool added_name = false;
+
+  c = peek_next_nonws(in);
+
+  if (c == '{') {
+    in.get(c);
+    READ_INTO(in, buf, 255, c, c != '}');
+    if (c == '}')
+      in.get(c);
+    else
+      throw amount_error("Commodity price lacks closing brace");
+    price = buf;
+    if (! added_name) {
+      added_name = true;
+      if (commodity_t::needs_quotes(symbol)) {
+	name = "\"";
+	name += symbol;
+	name += "\"";
+      }
+    }
+    name += " {";
+    name += price;
+    name += "}";
+    c = peek_next_nonws(in);
+  }
+
+  if (c == '[') {
+    in.get(c);
+    READ_INTO(in, buf, 255, c, c != ']');
+    if (c == ']')
+      in.get(c);
+    else
+      throw amount_error("Commodity date lacks closing bracket");
+    date = buf;
+    if (! added_name) {
+      added_name = true;
+      if (commodity_t::needs_quotes(symbol)) {
+	name = "\"";
+	name += symbol;
+	name += "\"";
+      }
+    }
+    name += " [";
+    name += date;
+    name += "]";
+    c = peek_next_nonws(in);
+  }
+
+  if (c == '(') {
+    in.get(c);
+    READ_INTO(in, buf, 255, c, c != ')');
+    if (c == ')')
+      in.get(c);
+    else
+      throw amount_error("Commodity tag lacks closing parenthesis");
+    tag = buf;
+    if (! added_name) {
+      added_name = true;
+      if (commodity_t::needs_quotes(symbol)) {
+	name = "\"";
+	name += symbol;
+	name += "\"";
+      }
+    }
+    name += " (";
+    name += tag;
+    name += ")";
+    c = peek_next_nonws(in);
+  }
+
+  DEBUG_PRINT("amounts.commodities", "Parsed commodity: "
+	      << "name " << name << " "
+	      << "symbol " << symbol << std::endl
+	      << "  price " << price << " "
+	      << "  date " << date << " "
+	      << "  tag " << tag);
 }
 
 void amount_t::parse(std::istream& in, unsigned short flags)
@@ -887,9 +963,12 @@ void amount_t::parse(std::istream& in, unsigned short flags)
   //   [-]NUM[ ]SYM [@ AMOUNT]
   //   SYM[ ][-]NUM [@ AMOUNT]
 
+  std::string  name;
   std::string  symbol;
   std::string  quant;
   std::string  price;
+  std::string  date;
+  std::string  tag;
   unsigned int comm_flags = COMMODITY_STYLE_DEFAULTS;
   bool         negative = false;
 
@@ -908,13 +987,13 @@ void amount_t::parse(std::istream& in, unsigned short flags)
       if (std::isspace(n))
 	comm_flags |= COMMODITY_STYLE_SEPARATED;
 
-      parse_commodity(in, symbol);
+      parse_commodity(in, name, symbol, price, date, tag);
 
       if (! symbol.empty())
 	comm_flags |= COMMODITY_STYLE_SUFFIXED;
     }
   } else {
-    parse_commodity(in, symbol);
+    parse_commodity(in, name, symbol, price, date, tag);
 
     if (std::isspace(in.peek()))
       comm_flags |= COMMODITY_STYLE_SEPARATED;
@@ -930,37 +1009,19 @@ void amount_t::parse(std::istream& in, unsigned short flags)
   // Create the commodity if has not already been seen, and update the
   // precision if something greater was used for the quantity.
 
-  bool newly_created = (commodity_t::commodities.find(symbol) ==
-			commodity_t::commodities.end());
+  bool newly_created = false;
 
-  commodity_ = commodity_t::find_commodity(symbol, true);
+  commodity_ = commodity_t::find(name);
+  if (! commodity_) {
+    newly_created = true;
 
-  // If a per-unit price is specified for this amount, record it by
-  // creating a specialized commodity at that price.  This is a
-  // different from the whole transaction cost, which is associated
-  // with the transaction and not with the amount.  For example, a
-  // sale of 10 AAPL shares for $100 (the cost) is a different thing
-  // from selling 10 AAPL {$10} (where $10 is the commodity price) for
-  // $50, which implies a capital loss of $50.
-
-  if (peek_next_nonws(in) == '{') {
-    char c;
-    char buf[256];
-    in.get(c);
-    READ_INTO(in, buf, 255, c, c != '}');
-    if (c == '}')
-      in.get(c);
-    else
-      throw amount_error("Commodity price lacks closing brace");
-
-    symbol = symbol + " {" + buf + "}";
-    commodity_t * priced_commodity =
-      commodity_t::find_commodity(symbol, true);
-
-    priced_commodity->price = new amount_t(buf);
-    priced_commodity->base = commodity_;
-
-    commodity_ = priced_commodity;
+    if (! price.empty() || ! date.empty() || ! tag.empty()) {
+      commodity_ = annotated_commodity_t::create(symbol, price, date, tag);
+    } else {
+      assert(name == symbol);
+      commodity_ = commodity_t::create(symbol);
+    }
+    assert(commodity_);
   }
 
   // Determine the precision of the amount, based on the usage of
@@ -995,9 +1056,9 @@ void amount_t::parse(std::istream& in, unsigned short flags)
   // Set the commodity's flags and precision accordingly
 
   if (newly_created || ! (flags & AMOUNT_PARSE_NO_MIGRATE)) {
-    commodity().flags() |= comm_flags;
+    commodity().add_flags(comm_flags);
     if (quantity->prec > commodity().precision())
-      commodity().precision() = quantity->prec;
+      commodity().set_precision(quantity->prec);
   }
 
   // Now we have the final number.  Remove commas and periods, if
@@ -1054,12 +1115,12 @@ void parse_conversion(const std::string& larger_str,
   larger *= smaller;
 
   if (larger.commodity()) {
-    larger.commodity().smaller() = new amount_t(smaller);
-    larger.commodity().flags()   = (smaller.commodity().flags() |
-				    COMMODITY_STYLE_NOMARKET);
+    larger.commodity().set_smaller(smaller);
+    larger.commodity().add_flags(smaller.commodity().flags() |
+				 COMMODITY_STYLE_NOMARKET);
   }
   if (smaller.commodity())
-    smaller.commodity().larger() = new amount_t(larger);
+    smaller.commodity().set_larger(larger);
 }
 
 
@@ -1177,98 +1238,187 @@ void amount_t::write_quantity(std::ostream& out) const
 bool amount_t::valid() const
 {
   if (quantity) {
-#if 0
-    // jww (2006-02-24): It's OK for commodity_ to be null here, it
-    // just means to use the null_commodity
-    if (! commodity_)
-      return false;
-#endif
-
     if (quantity->ref == 0)
       return false;
   }
   else if (commodity_) {
     return false;
   }
-
   return true;
 }
 
-
-void commodity_t::set_symbol(const std::string& sym)
+void amount_t::annotate_commodity(const amount_t&    price,
+				  const std::time_t  date,
+				  const std::string& tag)
 {
-  *(const_cast<std::string *>(&symbol)) = sym;
-  quote = false;
-  for (const char * p = symbol.c_str(); *p; p++)
-    if (std::isspace(*p) || std::isdigit(*p) || *p == '-' || *p == '.') {
-      if (std::isspace(*p) && *(p + 1) == '{')
-	return;
-      quote = true;
-      return;
-    }
+  const commodity_t *	  this_base;
+  annotated_commodity_t * this_ann = NULL;
+
+  if (commodity().annotated) {
+    this_ann = &static_cast<annotated_commodity_t&>(commodity());
+    this_base = this_ann->base;
+  } else {
+    this_base = &commodity();
+  }
+
+  DEBUG_PRINT("amounts.commodities", "Annotating commodity for amount "
+	      << *this << std::endl
+	      << "  price " << price << " "
+	      << "  date " << date << " "
+	      << "  tag " << tag);
+
+  annotated_commodity_t * ann_comm =
+    annotated_commodity_t::find_or_create(*this_base, price,
+					  date == 0 && this_ann ?
+					  this_ann->date : date,
+					  tag.empty() && this_ann ?
+					  this_ann->tag : tag);
+  if (ann_comm)
+    set_commodity(*ann_comm);
+
+  DEBUG_PRINT("amounts.commodities", "  Annotated amount is " << *this);
 }
 
-void commodity_t::add_price(const std::time_t date, const amount_t& price)
+void amount_t::reduce_commodity(const bool keep_price,
+				const bool keep_date,
+				const bool keep_tag)
 {
-  if (! history())
-    history() = new history_t;
+  if (! commodity().annotated)
+    return;
+  if (keep_price && keep_date && keep_tag)
+    return;
 
-  history_map::iterator i = history()->prices.find(date);
-  if (i != history()->prices.end()) {
+  DEBUG_PRINT("amounts.commodities", "Reducing commodity for amount "
+	      << *this << std::endl
+	      << "  keep price " << keep_price << " "
+	      << "  keep date " << keep_date << " "
+	      << "  keep tag " << keep_tag);
+
+  annotated_commodity_t&
+    ann_comm(static_cast<annotated_commodity_t&>(commodity()));
+
+  annotated_commodity_t * new_ann_comm =
+    annotated_commodity_t::find_or_create(*ann_comm.base,
+					  keep_price ?
+					  ann_comm.price : amount_t(),
+					  keep_date ? ann_comm.date : 0,
+					  keep_tag ? ann_comm.tag : "");
+  assert(new_ann_comm);
+  set_commodity(*new_ann_comm);
+
+  DEBUG_PRINT("amounts.commodities", "  Reduced amount is " << *this);
+}
+
+
+void commodity_base_t::add_price(const std::time_t date, const amount_t& price)
+{
+  if (! history)
+    history = new history_t;
+
+  history_map::iterator i = history->prices.find(date);
+  if (i != history->prices.end()) {
     (*i).second = price;
   } else {
     std::pair<history_map::iterator, bool> result
-      = history()->prices.insert(history_pair(date, price));
+      = history->prices.insert(history_pair(date, price));
     assert(result.second);
   }
 }
 
-commodity_t * commodity_t::find_commodity(const std::string& symbol,
-					  bool auto_create)
+commodity_base_t * commodity_base_t::create(const std::string& symbol)
 {
+  commodity_base_t * commodity = new commodity_base_t(symbol);
+
+  DEBUG_PRINT("amounts.commodities", "Creating base commodity " << symbol);
+
+  std::pair<base_commodities_map::iterator, bool> result
+    = commodities.insert(base_commodities_pair(symbol, commodity));
+  assert(result.second);
+
+  return commodity;
+}
+
+bool commodity_t::needs_quotes(const std::string& symbol)
+{
+  for (const char * p = symbol.c_str(); *p; p++)
+    if (std::isspace(*p) || std::isdigit(*p) || *p == '-' || *p == '.')
+      return true;
+
+  return false;
+}
+
+commodity_t * commodity_t::create(const std::string& symbol)
+{
+  std::auto_ptr<commodity_t> commodity(new commodity_t);
+
+  commodity->ptr = commodity_base_t::create(symbol);
+
+  if (needs_quotes(symbol)) {
+    commodity->qualified_symbol = "\"";
+    commodity->qualified_symbol += symbol;
+    commodity->qualified_symbol += "\"";
+  } else {
+    commodity->qualified_symbol = symbol;
+  }
+
+  DEBUG_PRINT("amounts.commodities",
+	      "Creating commodity " << commodity->qualified_symbol);
+
+  std::pair<commodities_map::iterator, bool> result
+    = commodities.insert(commodities_pair(symbol, commodity.get()));
+  if (! result.second)
+    return NULL;
+
+  // Start out the new commodity with the default commodity's flags
+  // and precision, if one has been defined.
+  if (default_commodity)
+    commodity->drop_flags(COMMODITY_STYLE_THOUSANDS |
+			  COMMODITY_STYLE_NOMARKET);
+
+  return commodity.release();
+}
+
+commodity_t * commodity_t::find_or_create(const std::string& symbol)
+{
+  DEBUG_PRINT("amounts.commodities", "Find-or-create commodity " << symbol);
+
+  commodity_t * commodity = find(symbol);
+  if (! commodity)
+    return create(symbol);
+}
+
+commodity_t * commodity_t::find(const std::string& symbol)
+{
+  DEBUG_PRINT("amounts.commodities", "Find commodity " << symbol);
+
   commodities_map::const_iterator i = commodities.find(symbol);
   if (i != commodities.end())
     return (*i).second;
-
-  if (auto_create) {
-    commodity_t * commodity = new commodity_t(symbol);
-    add_commodity(commodity);
-
-    // Start out the new commodity with the default commodity's flags
-    // and precision, if one has been defined.
-    if (default_commodity)
-      commodity->flags() =
-	(default_commodity->flags() & ~(COMMODITY_STYLE_THOUSANDS |
-					COMMODITY_STYLE_NOMARKET));
-
-    return commodity;
-  }
-
   return NULL;
 }
 
-amount_t commodity_t::value(const std::time_t moment)
+amount_t commodity_base_t::value(const std::time_t moment)
 {
   std::time_t age = 0;
   amount_t    price;
 
-  if (history()) {
-    assert(history()->prices.size() > 0);
+  if (history) {
+    assert(history->prices.size() > 0);
 
     if (moment == 0) {
-      history_map::reverse_iterator r = history()->prices.rbegin();
+      history_map::reverse_iterator r = history->prices.rbegin();
       age   = (*r).first;
       price = (*r).second;
     } else {
-      history_map::iterator i = history()->prices.lower_bound(moment);
-      if (i == history()->prices.end()) {
-	history_map::reverse_iterator r = history()->prices.rbegin();
+      history_map::iterator i = history->prices.lower_bound(moment);
+      if (i == history->prices.end()) {
+	history_map::reverse_iterator r = history->prices.rbegin();
 	age   = (*r).first;
 	price = (*r).second;
       } else {
 	age = (*i).first;
 	if (std::difftime(moment, age) != 0) {
-	  if (i != history()->prices.begin()) {
+	  if (i != history->prices.begin()) {
 	    --i;
 	    age	  = (*i).first;
 	    price = (*i).second;
@@ -1284,10 +1434,144 @@ amount_t commodity_t::value(const std::time_t moment)
 
   if (updater)
     (*updater)(*this, moment, age,
-	       (history() && history()->prices.size() > 0 ?
-		(*history()->prices.rbegin()).first : 0), price);
+	       (history && history->prices.size() > 0 ?
+		(*history->prices.rbegin()).first : 0), price);
 
   return price;
+}
+
+std::string annotated_commodity_t::date_format = "%Y/%m/%d";
+
+void
+annotated_commodity_t::write_annotations(std::ostream&      out,
+					 const amount_t&    price,
+					 const std::time_t  date,
+					 const std::string& tag)
+{
+  if (price)
+    out << " {" << price << '}';
+
+  if (date) {
+    char buf[128];
+    std::strftime(buf, 127, annotated_commodity_t::date_format.c_str(),
+		  std::localtime(&date));
+    out << " [" << buf << ']';
+  }
+
+  if (! tag.empty())
+    out << " (" << tag << ')';
+}
+
+std::string
+annotated_commodity_t::make_qualified_name(const commodity_t& comm,
+					   const amount_t&    price,
+					   const std::time_t  date,
+					   const std::string& tag)
+{
+  std::ostringstream name;
+
+  comm.write(name);
+  write_annotations(name, price, date, tag);
+
+  DEBUG_PRINT("amounts.commodities", "make_qualified_name for "
+	      << comm.qualified_symbol << std::endl
+	      << "  price " << price << " "
+	      << "  date " << date << " "
+	      << "  tag " << tag);
+
+  DEBUG_PRINT("amounts.commodities", "qualified_name is " << name.str());
+
+  return name.str();
+}
+
+annotated_commodity_t *
+annotated_commodity_t::create(const commodity_t& comm,
+			      const amount_t&    price,
+			      const std::time_t  date,
+			      const std::string& tag,
+			      const std::string& entry_name)
+{
+  std::auto_ptr<annotated_commodity_t> commodity(new annotated_commodity_t);
+
+  // Set the annotated bits
+  commodity->price = price;
+  commodity->date  = date;
+  commodity->tag   = tag;
+  commodity->base  = &comm;
+  commodity->ptr   = comm.ptr;
+
+  commodity->qualified_symbol = comm.symbol();
+
+  std::string mapping_key;
+  if (entry_name.empty())
+    mapping_key = make_qualified_name(comm, price, date, tag);
+  else
+    mapping_key = entry_name;
+
+  DEBUG_PRINT("amounts.commodities", "Creating annotated commodity "
+	      << "symbol " << commodity->symbol()
+	      << " key " << mapping_key << std::endl
+	      << "  price " << price << " "
+	      << "  date " << date << " "
+	      << "  tag " << tag);
+
+  // Add the fully annotated name to the map, so that this symbol may
+  // quickly be found again.
+  std::pair<commodities_map::iterator, bool> result
+    = commodities.insert(commodities_pair(mapping_key, commodity.get()));
+  if (! result.second)
+    return NULL;
+
+  return commodity.release();
+}
+
+annotated_commodity_t *
+annotated_commodity_t::create(const std::string& symbol,
+			      const amount_t&    price,
+			      const std::time_t  date,
+			      const std::string& tag)
+{
+  commodity_t * comm = commodity_t::find_or_create(symbol);
+  assert(comm);
+  return create(*comm, price, date, tag);
+}
+
+annotated_commodity_t *
+annotated_commodity_t::create(const std::string& symbol,
+			      const std::string& price,
+			      const std::string& date,
+			      const std::string& tag)
+{
+  commodity_t * comm = commodity_t::find_or_create(symbol);
+  assert(comm);
+
+  amount_t real_price;
+  if (! price.empty())
+    real_price.parse(price);
+
+  std::time_t real_date = 0;
+  if (! date.empty())
+    parse_date(date.c_str(), &real_date);
+
+  return create(*comm, real_price, real_date, tag);
+}
+
+annotated_commodity_t *
+annotated_commodity_t::find_or_create(const commodity_t& comm,
+				      const amount_t&    price,
+				      const std::time_t  date,
+				      const std::string& tag)
+{
+  std::string name = make_qualified_name(comm, price, date, tag);
+
+  commodity_t * base = commodity_t::find(name);
+  if (base) {
+    assert(base->annotated);
+    return static_cast<annotated_commodity_t *>(base);
+  }
+  base = commodity_t::find_or_create(comm.base_symbol());
+
+  return create(*base, price, date, tag, name);
 }
 
 } // namespace ledger
@@ -1314,12 +1598,12 @@ void py_parse_2(amount_t& amount, const std::string& str) {
   amount.parse(str);
 }
 
-struct commodity_updater_wrap : public commodity_t::updater_t
+struct commodity_updater_wrap : public commodity_base_t::updater_t
 {
   PyObject * self;
   commodity_updater_wrap(PyObject * self_) : self(self_) {}
 
-  virtual void operator()(commodity_t&      commodity,
+  virtual void operator()(commodity_base_t& commodity,
 			  const std::time_t moment,
 			  const std::time_t date,
 			  const std::time_t last,
@@ -1328,14 +1612,9 @@ struct commodity_updater_wrap : public commodity_t::updater_t
   }
 };
 
-commodity_t * py_find_commodity_1(const std::string& symbol)
+commodity_t * py_find_commodity(const std::string& symbol)
 {
-  return commodity_t::find_commodity(symbol);
-}
-
-commodity_t * py_find_commodity_2(const std::string& symbol, bool auto_create)
-{
-  return commodity_t::find_commodity(symbol, auto_create);
+  return commodity_t::find(symbol);
 }
 
 #define EXC_TRANSLATOR(type)				\
@@ -1410,7 +1689,8 @@ void export_amount()
     .def("valid", &amount_t::valid)
     ;
 
-  class_< commodity_t::updater_t, commodity_updater_wrap, boost::noncopyable >
+  class_< commodity_base_t::updater_t, commodity_updater_wrap,
+          boost::noncopyable >
     ("Updater")
     ;
 
@@ -1422,28 +1702,30 @@ void export_amount()
   scope().attr("COMMODITY_STYLE_NOMARKET")  = COMMODITY_STYLE_NOMARKET;
   scope().attr("COMMODITY_STYLE_VARIABLE")  = COMMODITY_STYLE_VARIABLE;
 
+#if 0
   class_< commodity_t > ("Commodity")
-    .def(init<std::string, optional<unsigned int, unsigned int> >())
+    .add_property("symbol", &commodity_t::symbol)
 
-    .add_property("symbol", &commodity_t::symbol,
-		  &commodity_t::set_symbol)
-
-    // jww (2006-02-28): Use getters and setters!
-    .def_readwrite("name", &commodity_t::name_)
-    .def_readwrite("note", &commodity_t::note_)
-    .def_readwrite("precision", &commodity_t::precision_)
-    .def_readwrite("flags", &commodity_t::flags_)
-    .def_readwrite("ident", &commodity_t::ident)
-    .def_readwrite("updater", &commodity_t::updater)
+    .add_property("name", &commodity_t::name)
+    .add_property("note", &commodity_t::note)
+    .add_property("precision", &commodity_t::precision)
+    .add_property("flags", &commodity_t::flags)
+#if 0
+    .add_property("updater", &commodity_t::updater)
+#endif
 
     .add_property("smaller",
-		  make_getter(&commodity_t::smaller_,
+		  make_getter(&commodity_t::smaller,
 			      return_value_policy<reference_existing_object>()))
     .add_property("larger",
-		  make_getter(&commodity_t::larger_,
+		  make_getter(&commodity_t::larger,
 			      return_value_policy<reference_existing_object>()))
 
     .def(self_ns::str(self))
+
+    .def("find", py_find_commodity,
+	 return_value_policy<reference_existing_object>())
+    .staticmethod("find")
 
     .def("add_price", &commodity_t::add_price)
     .def("remove_price", &commodity_t::remove_price)
@@ -1451,15 +1733,7 @@ void export_amount()
 
     .def("valid", &commodity_t::valid)
     ;
-
-  scope().attr("NullCommodity") = commodity_t::null_commodity;
-
-  def("add_commodity", &commodity_t::add_commodity);
-  def("remove_commodity", &commodity_t::remove_commodity);
-  def("find_commodity", py_find_commodity_1,
-      return_value_policy<reference_existing_object>());
-  def("find_commodity", py_find_commodity_2,
-      return_value_policy<reference_existing_object>());
+#endif
 
 #define EXC_TRANSLATE(type)					\
   register_exception_translator<type>(&exc_translate_ ## type);

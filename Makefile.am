@@ -1,17 +1,23 @@
 lib_LTLIBRARIES = libamounts.la libledger.la
+
 libamounts_la_CXXFLAGS =
 libamounts_la_SOURCES = \
 	amount.cc      \
 	balance.cc     \
+	datetime.cc    \
 	value.cc
 if HAVE_BOOST_PYTHON
 libamounts_la_CXXFLAGS += -DUSE_BOOST_PYTHON=1
 endif
+if DEBUG
+libamounts_la_CXXFLAGS += -DDEBUG_LEVEL=4
+libamounts_la_SOURCES  += debug.cc
+endif
+
 libledger_la_CXXFLAGS =
 libledger_la_SOURCES = \
 	binary.cc      \
 	config.cc      \
-	datetime.cc    \
 	derive.cc      \
 	emacs.cc       \
 	format.cc      \
@@ -40,7 +46,6 @@ libledger_la_SOURCES += ofx.cc
 endif
 if DEBUG
 libledger_la_CXXFLAGS += -DDEBUG_LEVEL=4
-libledger_la_SOURCES  += debug.cc
 endif
 libledger_la_LDFLAGS = -version-info 2:6
 
@@ -49,13 +54,13 @@ pkginclude_HEADERS = \
 		     \
 	amount.h     \
 	balance.h    \
+	datetime.h   \
 	value.h      \
+	debug.h	     \
 	util.h	     \
 		     \
 	binary.h     \
 	config.h     \
-	datetime.h   \
-	debug.h      \
 	derive.h     \
 	emacs.h      \
 	error.h      \

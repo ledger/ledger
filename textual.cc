@@ -131,7 +131,7 @@ value_expr_t * parse_amount(const char * text, amount_t& amt,
 {
   char * altbuf = NULL;
 
-  if (*text && *text != '(') {
+  if (*text && *text != '(' && *text != '-') {
     bool in_quote   = false;
     bool seen_digit = false;
     for (const char * p = text + 1; *p; p++)
@@ -295,47 +295,29 @@ transaction_t * parse_transaction(char * line, account_t * account,
 				     AMOUNT_PARSE_NO_REDUCE, *xact);
     if (xact->amount_expr)
       xact->amount_expr->acquire();
+
     if (price) {
       xact->cost = new amount_t;
       xact->cost_expr = parse_amount(price, *xact->cost,
 				     AMOUNT_PARSE_NO_MIGRATE, *xact);
       if (xact->cost_expr)
 	xact->cost_expr->acquire();
+
       if (per_unit) {
-	if (xact->amount.commodity().base == NULL) {
-	  std::string symbol = xact->amount.commodity().symbol;
-	  symbol += " {";
-	  symbol += price;
-	  symbol += "}";
-
-	  commodity_t * priced_commodity =
-	    commodity_t::find_commodity(symbol, true);
-
-	  priced_commodity->price = new amount_t(*xact->cost);
-	  priced_commodity->base  = &xact->amount.commodity();
-
-	  xact->amount.set_commodity(*priced_commodity);
-	}
-
+	if (! xact->amount.commodity().annotated)
+	  xact->amount.annotate_commodity(*xact->cost,
+					  xact->entry->actual_date(),
+					  xact->entry->code);
 	*xact->cost *= xact->amount;
 	*xact->cost = xact->cost->round(xact->cost->commodity().precision());
       }
-      else if (xact->amount.commodity().base == NULL) {
+      else if (! xact->amount.commodity().annotated) {
 	amount_t cost(*xact->cost);
 	cost /= xact->amount;
 	cost = cost.round(cost.commodity().precision());
 
-	std::string symbol;
-	std::ostringstream symstr(symbol);
-	symstr << xact->amount.commodity().symbol << " {" << cost << "}";
-
-	commodity_t * priced_commodity =
-	  commodity_t::find_commodity(symstr.str(), true);
-
-	priced_commodity->price = new amount_t(cost);
-	priced_commodity->base  = &xact->amount.commodity();
-
-	xact->amount.set_commodity(*priced_commodity);
+	xact->amount.annotate_commodity(cost, xact->entry->actual_date(),
+					xact->entry->code);
       }
     }
     xact->amount.reduce();
@@ -348,7 +330,7 @@ bool parse_transactions(std::istream&	   in,
 			account_t *	   account,
 			entry_base_t&	   entry,
 			const std::string& kind,
-			istream_pos_type&  beg_pos)
+			unsigned long      beg_pos)
 {
   static char line[MAX_LINE + 1];
   bool	      added = false;
@@ -357,7 +339,7 @@ bool parse_transactions(std::istream&	   in,
     in.getline(line, MAX_LINE);
     if (in.eof())
       break;
-    beg_pos += istream_pos_type(std::strlen(line) + 1);
+    beg_pos += std::strlen(line) + 1;
     linenum++;
 
     if (line[0] == ' ' || line[0] == '\t' || line[0] == '\r') {
@@ -382,7 +364,7 @@ namespace {
 }
 
 entry_t * parse_entry(std::istream& in, char * line, account_t * master,
-		      textual_parser_t& parser, istream_pos_type& beg_pos)
+		      textual_parser_t& parser, unsigned long beg_pos)
 {
   std::auto_ptr<entry_t> curr(new entry_t);
 
@@ -441,15 +423,15 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
 
   TIMER_START(entry_xacts);
 
-  istream_pos_type end_pos;
-  unsigned long    beg_line = linenum;
+  unsigned long end_pos;
+  unsigned long beg_line = linenum;
 
   while (! in.eof() && (in.peek() == ' ' || in.peek() == '\t')) {
     line[0] = '\0';
     in.getline(line, MAX_LINE);
     if (in.eof() && line[0] == '\0')
       break;
-    end_pos = beg_pos + istream_pos_type(std::strlen(line) + 1);
+    end_pos = beg_pos + std::strlen(line) + 1;
     linenum++;
 
     if (line[0] == ' ' || line[0] == '\t' || line[0] == '\r') {
@@ -581,16 +563,16 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
   src_idx = journal->sources.size() - 1;
   linenum = 1;
 
-  istream_pos_type beg_pos  = in.tellg();
-  istream_pos_type end_pos;
-  unsigned long    beg_line = linenum;
+  unsigned long beg_pos = in.tellg();
+  unsigned long end_pos;
+  unsigned long beg_line = linenum;
 
   while (in.good() && ! in.eof()) {
     try {
       in.getline(line, MAX_LINE);
       if (in.eof())
 	break;
-      end_pos = beg_pos + istream_pos_type(std::strlen(line) + 1);
+      end_pos = beg_pos + std::strlen(line) + 1;
       linenum++;
 
       switch (line[0]) {
@@ -690,8 +672,8 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	parse_symbol(symbol_and_price, symbol);
 	amount_t price(symbol_and_price);
 
-	commodity_t * commodity = commodity_t::find_commodity(symbol, true);
-	commodity->add_price(date, price);
+	if (commodity_t * commodity = commodity_t::find_or_create(symbol))
+	  commodity->add_price(date, price);
 	break;
       }
 
@@ -700,8 +682,8 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	std::string symbol;
 	parse_symbol(p, symbol);
 
-	commodity_t * commodity = commodity_t::find_commodity(symbol, true);
-	commodity->flags() |= COMMODITY_STYLE_NOMARKET;
+	if (commodity_t * commodity = commodity_t::find_or_create(symbol))
+	  commodity->add_flags(COMMODITY_STYLE_NOMARKET);
 	break;
       }
 
@@ -774,11 +756,11 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	char * p = next_element(line);
 	std::string word(line + 1);
 	if (word == "include") {
-	  push_var<std::string>	     save_path(path);
-	  push_var<unsigned int>     save_src_idx(src_idx);
-	  push_var<istream_pos_type> save_beg_pos(beg_pos);
-	  push_var<istream_pos_type> save_end_pos(end_pos);
-	  push_var<unsigned int>     save_linenum(linenum);
+	  push_var<std::string>	  save_path(path);
+	  push_var<unsigned int>  save_src_idx(src_idx);
+	  push_var<unsigned long> save_beg_pos(beg_pos);
+	  push_var<unsigned long> save_end_pos(end_pos);
+	  push_var<unsigned int>  save_linenum(linenum);
 
 	  path = p;
 	  if (path[0] != '/' && path[0] != '\\') {
@@ -831,7 +813,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
       default: {
 	unsigned int first_line = linenum;
-	istream_pos_type pos = end_pos;
+	unsigned long pos = end_pos;
 	if (entry_t * entry =
 	    parse_entry(in, line, account_stack.front(), *this, pos)) {
 	  if (journal->add_entry(entry)) {
@@ -845,11 +827,10 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	    print_entry(std::cerr, *entry);
 	    delete entry;
 
-	    std::string msgbuf;
-	    std::ostringstream msg(msgbuf);
-	    msg << "Entry above does not balance; remainder is: "
-		<< entry_balance;
-	    throw parse_error(path, first_line, msg.str());
+	    std::ostringstream errmsg;
+	    errmsg << "Entry above does not balance; remainder is: "
+		   << entry_balance;
+	    throw parse_error(path, first_line, errmsg.str());
 	  }
 	} else {
 	  throw parse_error(path, first_line, "Failed to parse entry");
@@ -935,10 +916,9 @@ void write_textual_journal(journal_t& journal, std::string path,
   auto_entries_list::iterator	al = journal.auto_entries.begin();
   period_entries_list::iterator pl = journal.period_entries.begin();
 
-  istream_pos_type pos = 0;
-  istream_pos_type jump_to;
+  unsigned long pos = 0;
 
-  format_t	hdr_fmt(write_hdr_format);
+  format_t hdr_fmt(write_hdr_format);
   std::ifstream in(found.c_str());
 
   while (! in.eof()) {

@@ -3,12 +3,9 @@
 #endif
 
 #include "datetime.h"
-#include "error.h"
 
 #include <ctime>
 #include <cctype>
-
-namespace ledger {
 
 std::time_t         now	      = std::time(NULL);
 int                 now_year  = std::localtime(&now)->tm_year;
@@ -108,8 +105,7 @@ static void parse_inclusion_specifier(const std::string& word,
   struct std::tm when;
 
   if (! parse_date_mask(word.c_str(), &when))
-    throw interval_expr_error(std::string("Could not parse date mask: ") +
-			      word);
+    throw datetime_error(std::string("Could not parse date mask: ") + word);
 
   when.tm_hour = 0;
   when.tm_min  = 0;
@@ -316,61 +312,5 @@ bool parse_date(const char * date_str, std::time_t * result, const int year)
 
 bool quick_parse_date(const char * date_str, std::time_t * result)
 {
-#if 1
   return parse_date(date_str, result, now_year + 1900);
-#else
-  int year = -1, month = -1, day, num = 0;
-
-  for (const char * p = date_str; *p; p++) {
-    if (*p == '/' || *p == '-' || *p == '.') {
-      if (year == -1)
-	year = num;
-      else
-	month = num;
-      num = 0;
-    }
-    else if (*p < '0' || *p > '9') {
-      return false;
-    }
-    else {
-      num *= 10;
-      num += *p - '0';
-    }
-  }
-
-  day = num;
-
-  if (month == -1) {
-    month = year;
-    year  = now_year + 1900;
-  }
-
-  if (base == -1 || year != base_year) {
-    struct std::tm when;
-    std::memset(&when, 0, sizeof(when));
-
-    base_year    = year == -1 ? now_year + 1900 : year;
-    when.tm_year = year == -1 ? now_year : year - 1900;
-    when.tm_mday = 1;
-
-    base = std::mktime(&when);
-    year = base_year;
-  }
-
-  *result = base;
-
-  --month;
-  while (--month >= 0) {
-    *result += month_days[month] * 24 * 60 * 60;
-    if (month == 1 && year % 4 == 0 && year != 2000) // february in leap years
-      *result += 24 * 60 * 60;
-  }
-
-  if (--day)
-    *result += day * 24 * 60 * 60;
-
-  return true;
-#endif
 }
-
-} // namespace ledger

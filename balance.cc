@@ -48,7 +48,7 @@ balance_t balance_t::price() const
 
 struct compare_amount_commodities {
   bool operator()(const amount_t * left, const amount_t * right) const {
-    return left->commodity().symbol < right->commodity().symbol;
+    return left->commodity().symbol() < right->commodity().symbol();
   }
 };
 
@@ -106,8 +106,7 @@ balance_t& balance_t::operator*=(const balance_t& bal)
     return *this *= (*bal.amounts.begin()).second;
   }
   else {
-    std::string msg;
-    std::ostringstream errmsg(msg);
+    std::ostringstream errmsg;
     errmsg << "It makes no sense to multiply two balances: "
 	   << *this << " * " << bal;
     throw amount_error(errmsg.str());
@@ -120,8 +119,7 @@ balance_t& balance_t::operator/=(const balance_t& bal)
     return (*this = 0L);
   }
   else if (! bal) {
-    std::string msg;
-    std::ostringstream errmsg(msg);
+    std::ostringstream errmsg;
     errmsg << "Attempt to divide by zero: " << *this << " / " << bal;
     throw amount_error(errmsg.str());
   }
@@ -132,8 +130,7 @@ balance_t& balance_t::operator/=(const balance_t& bal)
     return (*this = 1L);
   }
   else {
-    std::string msg;
-    std::ostringstream errmsg(msg);
+    std::ostringstream errmsg;
     errmsg << "It makes no sense to divide two balances: "
 	   << *this << " / " << bal;
     throw amount_error(errmsg.str());
@@ -149,8 +146,7 @@ balance_t::operator amount_t() const
     return amount_t();
   }
   else {
-    std::string msg;
-    std::ostringstream errmsg(msg);
+    std::ostringstream errmsg;
     errmsg << "Cannot convert a balance with "
 	   << "multiple commodities to an amount: " << *this;
     throw amount_error(errmsg.str());

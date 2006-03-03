@@ -105,15 +105,21 @@ bool entry_base_t::finalize()
 	  balance += *p;
 	}
 
-	if ((*x)->cost && (*x)->amount.commodity().price)
-	  balance += (*((*x)->amount.commodity().price) * (*x)->amount -
-		      *((*x)->cost));
+	if ((*x)->cost && (*x)->amount.commodity().annotated) {
+	  annotated_commodity_t&
+	    ann_comm(static_cast<annotated_commodity_t&>((*x)->amount.commodity()));
+	  if (ann_comm.price)
+	    balance += ann_comm.price * (*x)->amount - *((*x)->cost);
+	}
       }
     }
 
   // If it's a null entry, then let the user have their fun
   if (no_amounts)
     return true;
+
+  // If there is only one transaction, balance against the basket
+  // account if one has been set.
 
   if (journal && journal->basket && transactions.size() == 1) {
     assert(balance.type < value_t::BALANCE);
@@ -149,8 +155,13 @@ bool entry_base_t::finalize()
 	continue;
 
       assert((*x)->amount);
-
       balance -= (*x)->amount;
+
+      entry_t * entry = dynamic_cast<entry_t *>(this);
+      (*x)->amount.annotate_commodity(abs(per_unit_cost),
+				      entry ? entry->actual_date() : 0,
+				      entry ? entry->code : "");
+
       (*x)->cost = new amount_t(- (per_unit_cost * (*x)->amount));
       balance += *(*x)->cost;
     }
@@ -289,7 +300,7 @@ void auto_entry_t::extend_entry(entry_base_t& entry)
 	   t != transactions.end();
 	   t++) {
 	amount_t amt;
-	if ((*t)->amount.commodity().symbol.empty())
+	if (! (*t)->amount.commodity())
 	  amt = (*i)->amount * (*t)->amount;
 	else
 	  amt = (*t)->amount;

@@ -69,8 +69,7 @@ int ofx_proc_transaction_cb(struct OfxTransactionData data,
   assert(ac != ofx_account_currencies.end());
   commodity_t * default_commodity = (*ac).second;
 
-  std::string buf;
-  std::ostringstream stream(buf);
+  std::ostringstream stream;
   stream << - data.units;
 
   // jww (2005-02-09): what if the amount contains fees?
@@ -84,7 +83,7 @@ int ofx_proc_transaction_cb(struct OfxTransactionData data,
   }
 
   if (data.unitprice_valid && data.unitprice != 1.0) {
-    std::ostringstream cstream(buf);
+    std::ostringstream cstream;
     stream << - data.unitprice;
     xact->cost = new amount_t(stream.str() + " " + default_commodity->symbol);
   }

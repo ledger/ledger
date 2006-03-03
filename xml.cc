@@ -117,24 +117,26 @@ static void endElement(void *userData, const char *name)
   }
   else if (std::strcmp(name, "symbol") == 0) {
     assert(! curr_comm);
-    curr_comm = commodity_t::find_commodity(data, true);
-    curr_comm->flags() |= COMMODITY_STYLE_SUFFIXED;
+    curr_comm = commodity_t::find_or_create(data);
+    assert(curr_comm);
+    curr_comm->add_flags(COMMODITY_STYLE_SUFFIXED);
     if (! comm_flags.empty()) {
       for (std::string::size_type i = 0, l = comm_flags.length(); i < l; i++) {
 	switch (comm_flags[i]) {
-	case 'P': curr_comm->flags() &= ~COMMODITY_STYLE_SUFFIXED; break;
-	case 'S': curr_comm->flags() |= COMMODITY_STYLE_SEPARATED; break;
-	case 'T': curr_comm->flags() |= COMMODITY_STYLE_THOUSANDS; break;
-	case 'E': curr_comm->flags() |= COMMODITY_STYLE_EUROPEAN; break;
+	case 'P': curr_comm->drop_flags(COMMODITY_STYLE_SUFFIXED); break;
+	case 'S': curr_comm->add_flags(COMMODITY_STYLE_SEPARATED); break;
+	case 'T': curr_comm->add_flags(COMMODITY_STYLE_THOUSANDS); break;
+	case 'E': curr_comm->add_flags(COMMODITY_STYLE_EUROPEAN); break;
 	}
       }
     }
   }
+#if 0
+  // jww (2006-03-02): !!!
   else if (std::strcmp(name, "price") == 0) {
     assert(curr_comm);
     amount_t * price = new amount_t(data);
-    std::string symbol;
-    std::ostringstream symstr(symbol);
+    std::ostringstream symstr;
     symstr << curr_comm->symbol << " {" << *price << "}";
     commodity_t * priced_comm =
       commodity_t::find_commodity(symstr.str(), true);
@@ -142,6 +144,7 @@ static void endElement(void *userData, const char *name)
     priced_comm->base = curr_comm;
     curr_comm = priced_comm;
   }
+#endif
   else if (std::strcmp(name, "quantity") == 0) {
     curr_entry->transactions.back()->amount.parse(data);
     if (curr_comm) {
@@ -149,7 +152,7 @@ static void endElement(void *userData, const char *name)
       if (i != std::string::npos) {
 	int precision = data.length() - i - 1;
 	if (precision > curr_comm->precision())
-	  curr_comm->precision() = precision;
+	  curr_comm->set_precision(precision);
       }
       curr_entry->transactions.back()->amount.set_commodity(*curr_comm);
       curr_comm = NULL;
@@ -260,6 +263,8 @@ void xml_write_amount(std::ostream& out, const amount_t& amount,
   if (c.flags() & COMMODITY_STYLE_EUROPEAN)     out << 'E';
   out << "\">\n";
   for (int i = 0; i < depth + 4; i++) out << ' ';
+#if 0
+  // jww (2006-03-02): !!!
   if (c.price) {
     out << "<symbol>" << c.base->symbol << "</symbol>\n";
     for (int i = 0; i < depth + 4; i++) out << ' ';
@@ -270,6 +275,7 @@ void xml_write_amount(std::ostream& out, const amount_t& amount,
   } else {
     out << "<symbol>" << c.symbol << "</symbol>\n";
   }
+#endif
   for (int i = 0; i < depth + 2; i++) out << ' ';
   out << "</commodity>\n";
 

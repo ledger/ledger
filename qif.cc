@@ -118,13 +118,15 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
       unsigned long  flags = xact->amount.commodity().flags();
       unsigned short prec  = xact->amount.commodity().precision();
 
-      if (! def_commodity)
-	def_commodity = commodity_t::find_commodity("$", true);
+      if (! def_commodity) {
+	def_commodity = commodity_t::find_or_create("$");
+	assert(def_commodity);
+      }
       xact->amount.set_commodity(*def_commodity);
 
-      def_commodity->flags() |= flags;
+      def_commodity->add_flags(flags);
       if (prec > def_commodity->precision())
-	def_commodity->precision() = prec;
+	def_commodity->set_precision(prec);
 
       if (c == '$') {
 	saw_splits = true;

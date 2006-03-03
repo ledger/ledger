@@ -349,7 +349,7 @@ public:
   }
   virtual ~value_expr() {
     DEBUG_PRINT("ledger.memory.dtors", "dtor value_expr");
-    if (parsed != NULL)
+    if (parsed)
       parsed->release();
   }
 
@@ -363,12 +363,12 @@ extern std::auto_ptr<value_calc> amount_expr;
 extern std::auto_ptr<value_calc> total_expr;
 
 inline void compute_amount(value_t& result, const details_t& details) {
-  if (amount_expr.get() != NULL)
+  if (amount_expr.get())
     amount_expr->compute(result, details);
 }
 
 inline void compute_total(value_t& result, const details_t& details) {
-  if (total_expr.get() != NULL)
+  if (total_expr.get())
     total_expr->compute(result, details);
 }
 

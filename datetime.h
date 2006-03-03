@@ -1,12 +1,8 @@
 #ifndef _DATETIME_H
 #define _DATETIME_H
 
-#include "debug.h"
-
 #include <ctime>
 #include <sstream>
-
-namespace ledger {
 
 struct interval_t
 {
@@ -20,19 +16,12 @@ struct interval_t
 	     std::time_t _begin = 0, std::time_t _end = 0)
     : years(_years), months(_months), seconds(_seconds),
       begin(_begin), end(_end) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor interval_t");
   }
   interval_t(const std::string& desc)
     : years(0), months(0), seconds(0), begin(0), end(0) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor interval_t");
     std::istringstream stream(desc);
     parse(stream);
   }
-#ifdef DEBUG_ENABLED
-  ~interval_t() {
-    DEBUG_PRINT("ledger.memory.dtors", "dtor interval_t");
-  }
-#endif
 
   operator bool() const {
     return seconds > 0 || months > 0 || years > 0;
@@ -57,6 +46,15 @@ bool parse_date(const char * date_str, std::time_t * result,
 		const int year = -1);
 bool quick_parse_date(const char * date_str, std::time_t * result);
 
-} // namespace ledger
+class datetime_error : public std::exception {
+  std::string reason;
+ public:
+  datetime_error(const std::string& _reason) throw() : reason(_reason) {}
+  virtual ~datetime_error() throw() {}
+
+  virtual const char* what() const throw() {
+    return reason.c_str();
+  }
+};
 
 #endif // _DATETIME_H
