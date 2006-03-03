@@ -388,7 +388,6 @@ inline commodity_t * read_binary_commodity(char *& data)
   read_binary_string(data, commodity->note);
   read_binary_number(data, commodity->precision);
   read_binary_number(data, commodity->flags);
-  read_binary_long(data, commodity->ident);
 
   return commodity;
 }
@@ -440,7 +439,6 @@ account_t * read_binary_account(char *& data, journal_t * journal,
   account_t * acct = new account_t(NULL);
   *accounts_next++ = acct;
 
-  acct->ident   = read_binary_long<account_t::ident_t>(data);
   acct->journal = journal;
 
   account_t::ident_t id;
@@ -859,7 +857,6 @@ void write_binary_commodity(std::ostream& out, commodity_t * commodity)
   write_binary_number(out, commodity->precision);
   write_binary_number(out, commodity->flags);
   commodity->ident = ++commodity_index;
-  write_binary_long(out, commodity->ident);
 }
 
 void write_binary_commodity_extra(std::ostream& out, commodity_t * commodity)
@@ -908,7 +905,6 @@ void write_binary_account(std::ostream& out, account_t * account)
 {
   account->ident = ++account_index;
 
-  write_binary_long(out, account->ident);
   if (account->parent)
     write_binary_long(out, account->parent->ident);
   else
