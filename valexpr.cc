@@ -13,6 +13,10 @@ std::auto_ptr<value_calc> total_expr;
 std::auto_ptr<scope_t> global_scope;
 std::time_t terminus;
 
+bool keep_price = false;
+bool keep_date  = false;
+bool keep_tag   = false;
+
 details_t::details_t(const transaction_t& _xact)
   : entry(_xact.entry), xact(&_xact), account(xact_account(_xact))
 {
@@ -643,6 +647,9 @@ void value_expr_t::compute(value_t& result, const details_t& details,
     assert(0);
     break;
   }
+
+  if (! keep_price || ! keep_date || ! keep_tag)
+    result = result.reduce(keep_price, keep_date, keep_tag);
 }
 
 static inline void unexpected(char c, char wanted = '\0') {

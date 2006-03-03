@@ -249,6 +249,10 @@ extern std::auto_ptr<scope_t> global_scope;
 extern std::time_t terminus;
 extern bool	   initialized;
 
+extern bool keep_price;
+extern bool keep_date;
+extern bool keep_tag;
+
 void init_value_expr();
 
 bool compute_amount(value_expr_t * expr, amount_t& amt,

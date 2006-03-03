@@ -120,8 +120,6 @@ inline const account_t * xact_account(const transaction_t& xact) {
   return xact_account(const_cast<transaction_t&>(xact));
 }
 
-extern bool show_lots;
-
 //////////////////////////////////////////////////////////////////////
 
 inline void walk_transactions(transactions_list::iterator begin,

@@ -7,8 +7,6 @@
 
 namespace ledger {
 
-bool show_lots = false;
-
 template <>
 bool compare_items<transaction_t>::operator()(const transaction_t * left,
 					      const transaction_t * right)
@@ -44,7 +42,7 @@ void add_transaction_to(const transaction_t& xact, value_t& value)
       transaction_xdata_(xact).dflags & TRANSACTION_COMPOSITE) {
     value += transaction_xdata_(xact).composite_amount;
   }
-  else if (xact.cost || xact.amount.commodity().annotated || value) {
+  else if (xact.cost || value) {
     value.add(xact.amount, xact.cost);
   }
   else {

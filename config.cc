@@ -780,8 +780,20 @@ OPT_BEGIN(actual, "L") {
 } OPT_END(actual);
 
 OPT_BEGIN(lots, "") {
-  show_lots = true;
+  keep_price = keep_date = keep_tag = true;
 } OPT_END(lots);
+
+OPT_BEGIN(lot_prices, "") {
+  keep_price = true;
+} OPT_END(lots_prices);
+
+OPT_BEGIN(lot_dates, "") {
+  keep_date = true;
+} OPT_END(lots_dates);
+
+OPT_BEGIN(lot_tags, "") {
+  keep_tag = true;
+} OPT_END(lots_tags);
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -1121,6 +1133,9 @@ option_t config_options[CONFIG_OPTIONS_SIZE] = {
   { "init-file", 'i', true, opt_init_file, false },
   { "input-date-format", '\0', true, opt_input_date_format, false },
   { "limit", 'l', true, opt_limit, false },
+  { "lot-dates", '\0', false, opt_lot_dates, false },
+  { "lot-prices", '\0', false, opt_lot_prices, false },
+  { "lot-tags", '\0', false, opt_lot_tags, false },
   { "lots", '\0', false, opt_lots, false },
   { "market", 'V', false, opt_market, false },
   { "monthly", 'M', false, opt_monthly, false },

@@ -411,6 +411,9 @@ class balance_t
   amount_t  amount(const commodity_t& commodity) const;
   balance_t value(const std::time_t moment) const;
   balance_t price() const;
+  balance_t reduce(const bool keep_price = false,
+		   const bool keep_date  = false,
+		   const bool keep_tag   = false) const;
 
   void write(std::ostream& out, const int first_width,
 	     const int latter_width = -1) const;
@@ -446,56 +449,42 @@ class balance_pair_t
 {
  public:
   balance_t   quantity;
-  balance_t * price;
   balance_t * cost;
 
   // constructors
-  balance_pair_t() : price(NULL), cost(NULL) {}
+  balance_pair_t() : cost(NULL) {}
   balance_pair_t(const balance_pair_t& bal_pair)
-    : quantity(bal_pair.quantity), price(NULL), cost(NULL) {
-    if (bal_pair.price)
-      price = new balance_t(*bal_pair.price);
+    : quantity(bal_pair.quantity), cost(NULL) {
     if (bal_pair.cost)
       cost = new balance_t(*bal_pair.cost);
   }
   balance_pair_t(const balance_t& _quantity)
-    : quantity(_quantity), price(NULL), cost(NULL) {}
+    : quantity(_quantity), cost(NULL) {}
   balance_pair_t(const amount_t& _quantity)
-    : quantity(_quantity), price(NULL), cost(NULL) {}
+    : quantity(_quantity), cost(NULL) {}
   template <typename T>
-  balance_pair_t(T value) : quantity(value), price(NULL), cost(NULL) {}
+  balance_pair_t(T value) : quantity(value), cost(NULL) {}
 
   // destructor
   ~balance_pair_t() {
-    if (price) delete price;
-    if (cost)  delete cost;
+    if (cost) delete cost;
   }
 
   // assignment operator
   balance_pair_t& operator=(const balance_pair_t& bal_pair) {
     if (this != &bal_pair) {
-      if (price) {
-	delete price;
-	price = NULL;
-      }
       if (cost) {
 	delete cost;
 	cost = NULL;
       }
 
       quantity = bal_pair.quantity;
-      if (bal_pair.price)
-	price = new balance_t(*bal_pair.price);
       if (bal_pair.cost)
 	cost = new balance_t(*bal_pair.cost);
     }
     return *this;
   }
   balance_pair_t& operator=(const balance_t& bal) {
-    if (price) {
-      delete price;
-      price = NULL;
-    }
     if (cost) {
       delete cost;
       cost = NULL;
@@ -504,10 +493,6 @@ class balance_pair_t
     return *this;
   }
   balance_pair_t& operator=(const amount_t& amt) {
-    if (price) {
-      delete price;
-      price = NULL;
-    }
     if (cost) {
       delete cost;
       cost = NULL;
@@ -517,10 +502,6 @@ class balance_pair_t
   }
   template <typename T>
   balance_pair_t& operator=(T value) {
-    if (price) {
-      delete price;
-      price = NULL;
-    }
     if (cost) {
       delete cost;
       cost = NULL;
@@ -536,13 +517,6 @@ class balance_pair_t
     quantity += bal_pair.quantity;
     if (cost)
       *cost += bal_pair.cost ? *bal_pair.cost : bal_pair.quantity;
-
-    if (bal_pair.price) {
-      if (! price)
-	price = new balance_t(*bal_pair.price);
-      else
-	*price += *bal_pair.price;
-    }
     return *this;
   }
   balance_pair_t& operator+=(const balance_t& bal) {
@@ -568,15 +542,6 @@ class balance_pair_t
     quantity -= bal_pair.quantity;
     if (cost)
       *cost -= bal_pair.cost ? *bal_pair.cost : bal_pair.quantity;
-
-    if (bal_pair.price) {
-      if (! price) {
-	price = new balance_t(*bal_pair.price);
-	price->negate();
-      } else {
-	*price -= *bal_pair.price;
-      }
-    }
     return *this;
   }
   balance_pair_t& operator-=(const balance_t& bal) {
@@ -648,15 +613,6 @@ class balance_pair_t
     quantity *= bal_pair.quantity;
     if (cost)
       *cost *= bal_pair.cost ? *bal_pair.cost : bal_pair.quantity;
-
-    if (bal_pair.price && *bal_pair.price) {
-      if (price)
-	*price *= *bal_pair.price;
-    }
-    else if (price) {
-      delete price;
-      price = NULL;
-    }
     return *this;
   }
   balance_pair_t& operator*=(const balance_t& bal) {
@@ -826,8 +782,7 @@ class balance_pair_t
   // unary negation
   void negate() {
     quantity.negate();
-    if (price) price->negate();
-    if (cost)  cost->negate();
+    if (cost) cost->negate();
   }
   balance_pair_t negated() const {
     balance_pair_t temp = *this;
@@ -851,8 +806,7 @@ class balance_pair_t
 
   void abs() {
     quantity.abs();
-    if (price) price->abs();
-    if (cost)  cost->abs();
+    if (cost) cost->abs();
   }
 
   amount_t  amount(const commodity_t& commodity) const {
@@ -867,12 +821,10 @@ class balance_pair_t
   }
 
   balance_pair_t& add(const amount_t&  amount,
-		      const amount_t * a_price = NULL,
-		      const amount_t * a_cost  = NULL);
+		      const amount_t * a_cost = NULL);
 
   bool valid() {
-    return (quantity.valid() &&
-	    (! price || price->valid()) && (! cost || cost->valid()));
+    return quantity.valid() && (! cost || cost->valid());
   }
 
   void round() {

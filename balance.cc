@@ -46,6 +46,19 @@ balance_t balance_t::price() const
   return temp;
 }
 
+balance_t balance_t::reduce(const bool keep_price, const bool keep_date,
+			    const bool keep_tag) const
+{
+  balance_t temp;
+
+  for (amounts_map::const_iterator i = amounts.begin();
+       i != amounts.end();
+       i++)
+    temp += (*i).second.reduce_commodity(keep_price, keep_date, keep_tag);
+
+  return temp;
+}
+
 struct compare_amount_commodities {
   bool operator()(const amount_t * left, const amount_t * right) const {
     return left->commodity().symbol() < right->commodity().symbol();
@@ -160,14 +173,10 @@ balance_pair_t& balance_pair_t::operator/=(const balance_pair_t& bal_pair)
   quantity /= bal_pair.quantity;
   if (cost)
     *cost /= bal_pair.cost ? *bal_pair.cost : bal_pair.quantity;
-
-  if (bal_pair.price && *bal_pair.price && price)
-    *price /= *bal_pair.price;
   return *this;
 }
 
 balance_pair_t& balance_pair_t::add(const amount_t&  amount,
-				    const amount_t * a_price,
 				    const amount_t * a_cost)
 {
   if (a_cost && ! cost)
@@ -175,13 +184,6 @@ balance_pair_t& balance_pair_t::add(const amount_t&  amount,
   quantity += amount;
   if (cost)
     *cost += a_cost ? *a_cost : amount;
-
-  if (a_price) {
-    if (! price)
-      price = new balance_t(*a_price);
-    else
-      *price += *a_price;
-  }
   return *this;
 }
 
@@ -290,8 +292,10 @@ void export_balance()
     .def("negate", &balance_t::negate)
     .def("amount", &balance_t::amount)
     .def("value",  &balance_t::value)
+    .def("price",  &balance_t::price)
+    .def("reduce", &balance_t::reduce)
     .def("write",  &balance_t::write)
-    .def("valid", &balance_t::valid)
+    .def("valid",  &balance_t::valid)
     ;
 
   class_< balance_pair_t > ("BalancePair")
@@ -368,9 +372,6 @@ void export_balance()
     .def("__len__", balance_pair_len)
     .def("__getitem__", balance_pair_getitem)
 
-    .add_property("price",
-		  make_getter(&balance_pair_t::price,
-			      return_value_policy<reference_existing_object>()))
     .add_property("cost",
 		  make_getter(&balance_pair_t::cost,
 			      return_value_policy<reference_existing_object>()))

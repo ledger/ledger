@@ -1279,14 +1279,13 @@ void amount_t::annotate_commodity(const amount_t&    price,
   DEBUG_PRINT("amounts.commodities", "  Annotated amount is " << *this);
 }
 
-void amount_t::reduce_commodity(const bool keep_price,
-				const bool keep_date,
-				const bool keep_tag)
+amount_t amount_t::reduce_commodity(const bool keep_price,
+				    const bool keep_date,
+				    const bool keep_tag) const
 {
-  if (! commodity().annotated)
-    return;
-  if (keep_price && keep_date && keep_tag)
-    return;
+  if (! commodity().annotated ||
+      (keep_price && keep_date && keep_tag))
+    return *this;
 
   DEBUG_PRINT("amounts.commodities", "Reducing commodity for amount "
 	      << *this << std::endl
@@ -1297,16 +1296,27 @@ void amount_t::reduce_commodity(const bool keep_price,
   annotated_commodity_t&
     ann_comm(static_cast<annotated_commodity_t&>(commodity()));
 
-  annotated_commodity_t * new_ann_comm =
-    annotated_commodity_t::find_or_create(*ann_comm.base,
-					  keep_price ?
-					  ann_comm.price : amount_t(),
-					  keep_date ? ann_comm.date : 0,
-					  keep_tag ? ann_comm.tag : "");
-  assert(new_ann_comm);
-  set_commodity(*new_ann_comm);
+  commodity_t * new_comm;
 
-  DEBUG_PRINT("amounts.commodities", "  Reduced amount is " << *this);
+  if ((keep_price && ann_comm.price) ||
+      (keep_date && ann_comm.date) ||
+      (keep_tag && ! ann_comm.tag.empty()))
+  {
+    new_comm = annotated_commodity_t::find_or_create
+      (*ann_comm.base, keep_price ? ann_comm.price : amount_t(),
+       keep_date ? ann_comm.date : 0, keep_tag ? ann_comm.tag : "");
+  } else {
+    new_comm = commodity_t::find_or_create(ann_comm.base_symbol());
+  }
+
+  assert(new_comm);
+
+  amount_t temp(*this);
+  temp.set_commodity(*new_comm);
+
+  DEBUG_PRINT("amounts.commodities", "  Reduced amount is " << temp);
+
+  return temp;
 }
 
 
@@ -1345,6 +1355,22 @@ bool commodity_t::needs_quotes(const std::string& symbol)
       return true;
 
   return false;
+}
+
+bool commodity_t::valid() const
+{
+  if (symbol().empty() && this != null_commodity)
+    return false;
+
+#if 0
+  if (annotated && ! base)
+    return false;
+#endif
+
+  if (precision() > 16)
+    return false;
+
+  return true;
 }
 
 commodity_t * commodity_t::create(const std::string& symbol)
@@ -1497,8 +1523,11 @@ annotated_commodity_t::create(const commodity_t& comm,
   commodity->price = price;
   commodity->date  = date;
   commodity->tag   = tag;
+
   commodity->base  = &comm;
+  assert(commodity->base);
   commodity->ptr   = comm.ptr;
+  assert(commodity->ptr);
 
   commodity->qualified_symbol = comm.symbol();
 

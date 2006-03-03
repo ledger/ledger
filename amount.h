@@ -75,9 +75,9 @@ class amount_t
   void annotate_commodity(const amount_t& price,
 			  const std::time_t  date = 0,
 			  const std::string& tag  = "");
-  void reduce_commodity(const bool keep_price = false,
-			const bool keep_date  = false,
-			const bool keep_tag   = false);
+  amount_t reduce_commodity(const bool keep_price = false,
+			    const bool keep_date  = false,
+			    const bool keep_tag   = false) const;
   void clear_commodity() {
     commodity_ = NULL;
   }
@@ -281,9 +281,6 @@ void parse_conversion(const std::string& larger,
 inline amount_t abs(const amount_t& amt) {
   return amt < 0 ? amt.negated() : amt;
 }
-
-#define base_amount(amt)					\
-  ((! show_lots && amt.commodity().price) ? amt.base() : amt)
 
 std::ostream& operator<<(std::ostream& out, const amount_t& amt);
 
@@ -499,15 +496,7 @@ class commodity_t
     return ptr->value(moment);
   }
 
-  bool valid() const {
-    if (symbol().empty() && this != null_commodity)
-      return false;
-
-    if (precision() > 16)
-      return false;
-
-    return true;
-  }
+  bool valid() const;
 };
 
 class annotated_commodity_t : public commodity_t

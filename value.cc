@@ -728,16 +728,42 @@ value_t value_t::price() const
   switch (type) {
   case BOOLEAN:
   case INTEGER:
-  case AMOUNT:
-  case BALANCE:
     return *this;
 
-  case BALANCE_PAIR:
-    if (((balance_pair_t *) data)->price)
-      return *(((balance_pair_t *) data)->price);
-    else
-      return 0L;
+  case AMOUNT:
+    return ((amount_t *) data)->price();
 
+  case BALANCE:
+    return ((balance_t *) data)->price();
+
+  case BALANCE_PAIR:
+    return ((balance_pair_t *) data)->quantity.price();
+
+  default:
+    assert(0);
+    break;
+  }
+  assert(0);
+  return value_t();
+}
+
+value_t value_t::reduce(const bool keep_price, const bool keep_date,
+			const bool keep_tag) const
+{
+  switch (type) {
+  case BOOLEAN:
+  case INTEGER:
+    return *this;
+
+  case AMOUNT:
+    return ((amount_t *) data)->reduce_commodity(keep_price, keep_date,
+						 keep_tag);
+  case BALANCE:
+    return ((balance_t *) data)->reduce(keep_price, keep_date, keep_tag);
+
+  case BALANCE_PAIR:
+    return ((balance_pair_t *) data)->quantity.reduce(keep_price, keep_date,
+						      keep_tag);
   default:
     assert(0);
     break;
@@ -770,22 +796,21 @@ value_t value_t::cost() const
   return value_t();
 }
 
-value_t& value_t::add(const amount_t& amount,
-		      const amount_t * price, const amount_t * cost)
+value_t& value_t::add(const amount_t& amount, const amount_t * cost)
 {
   switch (type) {
   case BOOLEAN:
   case INTEGER:
   case AMOUNT:
-    if (price || cost) {
+    if (cost) {
       cast(BALANCE_PAIR);
-      return add(amount, price, cost);
+      return add(amount, cost);
     }
     else if ((type == AMOUNT &&
 	      ((amount_t *) data)->commodity() != amount.commodity()) ||
 	     (type != AMOUNT && amount.commodity())) {
       cast(BALANCE);
-      return add(amount, price, cost);
+      return add(amount, cost);
     }
     else if (type != AMOUNT) {
       cast(AMOUNT);
@@ -794,15 +819,15 @@ value_t& value_t::add(const amount_t& amount,
     break;
 
   case BALANCE:
-    if (price || cost) {
+    if (cost) {
       cast(BALANCE_PAIR);
-      return add(amount, price, cost);
+      return add(amount, cost);
     }
     *((balance_t *) data) += amount;
     break;
 
   case BALANCE_PAIR:
-    ((balance_pair_t *) data)->add(amount, price, cost);
+    ((balance_pair_t *) data)->add(amount, cost);
     break;
 
   default:

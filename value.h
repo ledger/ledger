@@ -145,7 +145,7 @@ class value_t
   }
   value_t& operator=(const balance_pair_t& value) {
     if ((balance_pair_t *) data != &value) {
-      if (! value.price && ! value.cost) {
+      if (! value.cost) {
 	return *this = value.quantity;
       } else {
 	destroy();
@@ -267,9 +267,10 @@ class value_t
   void     cast(type_t cast_type);
   value_t  cost() const;
   value_t  price() const;
-  value_t& add(const amount_t&  amount,
-	       const amount_t * price = NULL,
-	       const amount_t * cost = NULL);
+  value_t  reduce(const bool keep_price = false,
+		  const bool keep_date  = false,
+		  const bool keep_tag   = false) const;
+  value_t& add(const amount_t&  amount, const amount_t * cost = NULL);
 
   value_t value(const std::time_t moment) const {
     switch (type) {

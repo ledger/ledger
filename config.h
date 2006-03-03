@@ -99,7 +99,7 @@ class config_t
 		      std::list<item_handler<transaction_t> *>& ptrs);
 };
 
-#define CONFIG_OPTIONS_SIZE 78
+#define CONFIG_OPTIONS_SIZE 81
 extern option_t config_options[CONFIG_OPTIONS_SIZE];
 
 void option_help(std::ostream& out);
