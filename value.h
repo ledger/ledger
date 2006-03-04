@@ -89,6 +89,7 @@ class value_t
   }
 
   void destroy();
+  void simplify();
 
   value_t& operator=(const value_t& value);
   value_t& operator=(const bool value) {
