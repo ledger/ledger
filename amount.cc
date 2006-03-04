@@ -1478,8 +1478,9 @@ commodity_t * commodity_t::find_or_create(const std::string& symbol)
   DEBUG_PRINT("amounts.commodities", "Find-or-create commodity " << symbol);
 
   commodity_t * commodity = find(symbol);
-  if (! commodity)
-    return create(symbol);
+  if (commodity)
+    return commodity;
+  return create(symbol);
 }
 
 commodity_t * commodity_t::find(const std::string& symbol)
@@ -1631,6 +1632,7 @@ annotated_commodity_t::create(const std::string& symbol,
 {
   commodity_t * comm = commodity_t::find_or_create(symbol);
   assert(comm);
+
   if (! price && ! date && tag.empty())
     return comm;
 
@@ -1668,7 +1670,9 @@ annotated_commodity_t::find_or_create(const commodity_t& comm,
   commodity_t * base = commodity_t::find(name);
   if (base)
     return base;
+
   base = commodity_t::find_or_create(comm.base_symbol());
+  assert(base);
 
   return create(*base, price, date, tag, name);
 }
