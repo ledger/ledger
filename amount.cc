@@ -437,10 +437,10 @@ amount_t& amount_t::operator/=(const amount_t& amt)
 
   // Increase the value's precision, to capture fractional parts after
   // the divide.
-  mpz_ui_pow_ui(divisor, 10, amt.quantity->prec + 6);
+  mpz_ui_pow_ui(divisor, 10, amt.quantity->prec + 6U);
   mpz_mul(MPZ(quantity), MPZ(quantity), divisor);
   mpz_tdiv_q(MPZ(quantity), MPZ(quantity), MPZ(amt.quantity));
-  quantity->prec += 6;
+  quantity->prec += 6U;
 
   unsigned int comm_prec = commodity().precision;
   if (quantity->prec > comm_prec + 6U) {
