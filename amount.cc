@@ -810,14 +810,28 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
   }
 
   if (precision) {
-    out << ((comm.flags & COMMODITY_STYLE_EUROPEAN) ? ',' : '.');
+    out << ((comm.flags() & COMMODITY_STYLE_EUROPEAN) ? ',' : '.');
 
-    out.width(precision);
-    out.fill('0');
-
+    std::ostringstream final;
+    final.width(precision);
+    final.fill('0');
     char * p = mpz_get_str(NULL, 10, rquotient);
-    out << p;
+    final << p;
     std::free(p);
+
+    const std::string& str(final.str());
+    int i, len = str.length();
+    const char * q = str.c_str();
+    for (i = len; i > 0; i--)
+      if (q[i - 1] != '0')
+	break;
+
+    if (i == len)
+      out << str;
+    else if (i < comm.precision())
+      out << std::string(str, 0, comm.precision());
+    else
+      out << std::string(str, 0, i);
   }
 
   if (comm.flags & COMMODITY_STYLE_SUFFIXED) {
