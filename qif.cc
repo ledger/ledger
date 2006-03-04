@@ -115,8 +115,8 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
       get_line(in);
       xact->amount.parse(line);
 
-      unsigned long  flags = xact->amount.commodity().flags();
-      unsigned short prec  = xact->amount.commodity().precision();
+      unsigned char flags = xact->amount.commodity().flags();
+      unsigned char prec  = xact->amount.commodity().precision();
 
       if (! def_commodity) {
 	def_commodity = commodity_t::find_or_create("$");

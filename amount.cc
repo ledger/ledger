@@ -15,11 +15,11 @@ namespace ledger {
 
 class amount_t::bigint_t {
  public:
-  mpz_t		 val;
-  unsigned short prec;
-  unsigned short flags;
-  unsigned int	 ref;
-  unsigned int	 index;
+  mpz_t		val;
+  unsigned char prec;
+  unsigned char flags;
+  unsigned int	ref;
+  unsigned int	index;
 
   bigint_t() : prec(0), flags(0), ref(1), index(0) {
     mpz_init(val);
@@ -631,8 +631,8 @@ std::string amount_t::quantity_string() const
   // Ensure the value is rounded to the commodity's precision before
   // outputting it.  NOTE: `rquotient' is used here as a temp variable!
 
-  commodity_t&   comm(commodity());
-  unsigned short precision;
+  commodity_t&  comm(commodity());
+  unsigned char precision;
 
   if (! comm || quantity->flags & BIGINT_KEEP_PREC) {
     mpz_ui_pow_ui(divisor, 10, quantity->prec);
@@ -737,8 +737,8 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
   // Ensure the value is rounded to the commodity's precision before
   // outputting it.  NOTE: `rquotient' is used here as a temp variable!
 
-  commodity_t& comm(base.commodity());
-  unsigned short precision;
+  commodity_t&	comm(base.commodity());
+  unsigned char precision;
 
   if (! comm || base.quantity->flags & BIGINT_KEEP_PREC) {
     mpz_ui_pow_ui(divisor, 10, base.quantity->prec);
@@ -1007,7 +1007,7 @@ void parse_annotations(std::istream& in, const std::string& symbol,
 	      << "  tag " << tag);
 }
 
-void amount_t::parse(std::istream& in, unsigned short flags)
+void amount_t::parse(std::istream& in, unsigned char flags)
 {
   // The possible syntax for an amount is:
   //
@@ -1168,7 +1168,7 @@ void amount_t::reduce()
   }
 }
 
-void amount_t::parse(const std::string& str, unsigned short flags)
+void amount_t::parse(const std::string& str, unsigned char flags)
 {
   std::istringstream stream(str);
   parse(stream, flags);
@@ -1209,7 +1209,6 @@ void amount_t::read_quantity(char *& data)
   else if (byte == 1) {
     quantity = new((bigint_t *)bigints_next) bigint_t;
     bigints_next += sizeof(bigint_t);
-    quantity->flags |= BIGINT_BULK_ALLOC;
 
     unsigned short len = *((unsigned short *) data);
     data += sizeof(unsigned short);
@@ -1221,8 +1220,11 @@ void amount_t::read_quantity(char *& data)
     if (negative)
       mpz_neg(MPZ(quantity), MPZ(quantity));
 
-    quantity->prec = *((unsigned short *) data);
-    data += sizeof(unsigned short);
+    quantity->prec = *((unsigned char *) data);
+    data += sizeof(unsigned char);
+    quantity->flags = *((unsigned char *) data);
+    data += sizeof(unsigned char);
+    quantity->flags |= BIGINT_BULK_ALLOC;
   } else {
     unsigned int index = *((unsigned int *) data);
     data += sizeof(unsigned int);
@@ -1258,6 +1260,7 @@ void amount_t::read_quantity(std::istream& in)
       mpz_neg(MPZ(quantity), MPZ(quantity));
 
     in.read((char *)&quantity->prec, sizeof(quantity->prec));
+    in.read((char *)&quantity->flags, sizeof(quantity->flags));
   }
   else {
     assert(0);
@@ -1294,6 +1297,9 @@ void amount_t::write_quantity(std::ostream& out) const
     out.write(&byte, sizeof(byte));
 
     out.write((char *)&quantity->prec, sizeof(quantity->prec));
+    unsigned char flags = quantity->flags & ~BIGINT_BULK_ALLOC;
+    assert(sizeof(flags) == sizeof(quantity->flags));
+    out.write((char *)&flags, sizeof(flags));
   } else {
     assert(quantity->ref > 1);
 
@@ -1330,6 +1336,7 @@ void amount_t::annotate_commodity(const amount_t&    price,
   } else {
     this_base = &commodity();
   }
+  assert(this_base);
 
   DEBUG_PRINT("amounts.commodities", "Annotating commodity for amount "
 	      << *this << std::endl
@@ -1364,6 +1371,7 @@ amount_t amount_t::reduce_commodity(const bool keep_price,
 
   annotated_commodity_t&
     ann_comm(static_cast<annotated_commodity_t&>(commodity()));
+  assert(ann_comm.base);
 
   commodity_t * new_comm;
 
@@ -1377,7 +1385,6 @@ amount_t amount_t::reduce_commodity(const bool keep_price,
   } else {
     new_comm = commodity_t::find_or_create(ann_comm.base_symbol());
   }
-
   assert(new_comm);
 
   amount_t temp(*this);
@@ -1694,7 +1701,7 @@ int py_amount_quantity(amount_t& amount)
 }
 
 void py_parse_1(amount_t& amount, const std::string& str,
-		unsigned short flags) {
+		unsigned char flags) {
   amount.parse(str, flags);
 }
 void py_parse_2(amount_t& amount, const std::string& str) {

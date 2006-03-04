@@ -12,9 +12,9 @@ namespace ledger {
 
 static unsigned long binary_magic_number = 0xFFEED765;
 #ifdef DEBUG_ENABLED
-static unsigned long format_version      = 0x00020605;
+static unsigned long format_version      = 0x00020607;
 #else
-static unsigned long format_version      = 0x00020604;
+static unsigned long format_version      = 0x00020606;
 #endif
 
 static account_t **	   accounts;
@@ -475,6 +475,8 @@ inline commodity_t * read_binary_commodity_annotated(char *& data)
   read_binary_string(data, commodity->qualified_symbol);
   commodity->annotated = true;
 
+  commodity->base =
+    commodities[read_binary_long<commodity_t::ident_t>(data) - 1];
   read_binary_amount(data, commodity->price);
   read_binary_long(data, commodity->date);
   read_binary_string(data, commodity->tag);
@@ -998,6 +1000,7 @@ void write_binary_commodity_annotated(std::ostream& out,
   annotated_commodity_t * ann_comm =
     static_cast<annotated_commodity_t *>(commodity);
 
+  write_binary_long(out, ann_comm->base->ident);
   write_binary_amount(out, ann_comm->price);
   write_binary_long(out, ann_comm->date);
   write_binary_string(out, ann_comm->tag);
@@ -1116,10 +1119,17 @@ void write_binary_journal(std::ostream& out, journal_t * journal)
   for (commodities_map::const_iterator i = commodity_t::commodities.begin();
        i != commodity_t::commodities.end();
        i++) {
-    write_binary_number<char>(out, (*i).second->annotated ? 1 : 0);
     if (! (*i).second->annotated) {
+      write_binary_number<char>(out, 0);
       write_binary_commodity(out, (*i).second);
-    } else {
+    }
+  }
+
+  for (commodities_map::const_iterator i = commodity_t::commodities.begin();
+       i != commodity_t::commodities.end();
+       i++) {
+    if ((*i).second->annotated) {
+      write_binary_number<char>(out, 1);
       write_binary_string(out, (*i).first); // the mapping key
       write_binary_commodity_annotated(out, (*i).second);
     }

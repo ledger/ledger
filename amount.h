@@ -249,8 +249,8 @@ class amount_t
 #define AMOUNT_PARSE_NO_MIGRATE 0x01
 #define AMOUNT_PARSE_NO_REDUCE  0x02
 
-  void parse(std::istream& in, unsigned short flags = 0);
-  void parse(const std::string& str, unsigned short flags = 0);
+  void parse(std::istream& in, unsigned char flags = 0);
+  void parse(const std::string& str, unsigned char flags = 0);
   void reduce();
 
   void read_quantity(char *& data);
@@ -349,13 +349,13 @@ class commodity_base_t
 
   typedef unsigned long ident_t;
 
-  ident_t	 ident;
-  std::string	 name;
-  std::string	 note;
-  unsigned short precision;
-  unsigned short flags;
-  amount_t *	 smaller;
-  amount_t *	 larger;
+  ident_t	ident;
+  std::string	name;
+  std::string	note;
+  unsigned char precision;
+  unsigned char flags;
+  amount_t *	smaller;
+  amount_t *	larger;
 
   commodity_base_t() : precision(0), flags(COMMODITY_STYLE_DEFAULTS),
 		       history(NULL), smaller(NULL), larger(NULL) {}
@@ -479,23 +479,23 @@ class commodity_t
     ptr->note = arg;
   }
 
-  unsigned short precision() const {
+  unsigned char precision() const {
     return ptr->precision;
   }
-  void set_precision(unsigned short arg) {
+  void set_precision(unsigned char arg) {
     ptr->precision = arg;
   }
 
-  unsigned short flags() const {
+  unsigned char flags() const {
     return ptr->flags;
   }
-  void set_flags(unsigned short arg) {
+  void set_flags(unsigned char arg) {
     ptr->flags = arg;
   }
-  void add_flags(unsigned short arg) {
+  void add_flags(unsigned char arg) {
     ptr->flags |= arg;
   }
-  void drop_flags(unsigned short arg) {
+  void drop_flags(unsigned char arg) {
     ptr->flags &= ~arg;
   }
 
