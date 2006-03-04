@@ -19,27 +19,6 @@ void value_t::destroy()
   }
 }
 
-void value_t::simplify()
-{
-  if (! *this) {
-    *this = 0L;
-    return;
-  }
-
-  if (type == BALANCE_PAIR &&
-      (! ((balance_pair_t *) data)->cost ||
-       ! *((balance_pair_t *) data)->cost))
-    cast(BALANCE);
-      
-  if (type == BALANCE &&
-      ((balance_t *) data)->amounts.size() == 1)
-    cast(AMOUNT);
-      
-  if (type == AMOUNT &&
-      ! ((amount_t *) data)->commodity())
-    cast(INTEGER);
-}
-
 value_t& value_t::operator=(const value_t& value)
 {
   if (this == &value)
@@ -336,18 +315,11 @@ value_t& value_t::operator-=(const value_t& value)
     break;
   }
 
-  simplify();
-
   return *this;
 }
 
 value_t& value_t::operator*=(const value_t& value)
 {
-  if (! value) {
-    *this = 0L;
-    return *this;
-  }
-
   switch (type) {
   case BOOLEAN:
   case INTEGER:

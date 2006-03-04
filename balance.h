@@ -97,14 +97,10 @@ class balance_t
   }
   balance_t& operator-=(const amount_t& amt) {
     amounts_map::iterator i = amounts.find(&amt.commodity());
-    if (i != amounts.end()) {
+    if (i != amounts.end())
       (*i).second -= amt;
-      if (! (*i).second)
-	amounts.erase(&amt.commodity());
-    }
-    else if (amt) {
+    else
       amounts.insert(amounts_pair(&amt.commodity(), - amt));
-    }
     return *this;
   }
   template <typename T>
@@ -151,10 +147,7 @@ class balance_t
   balance_t& operator*=(const amount_t& amt) {
     // Multiplying by the null commodity causes all amounts to be
     // increased by the same factor.
-    if (! amt) {
-      amounts.clear();
-    }
-    else if (! amt.commodity()) {
+    if (! amt.commodity()) {
       for (amounts_map::iterator i = amounts.begin();
 	   i != amounts.end();
 	   i++)
