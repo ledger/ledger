@@ -812,10 +812,14 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
   if (precision) {
     out << ((comm.flags & COMMODITY_STYLE_EUROPEAN) ? ',' : '.');
 
+    char * p = mpz_get_str(NULL, 10, rquotient);
+    int len = std::strlen(p);
+    if (len < precision)
+      precision = len < comm.precision() ? comm.precision() : len;
+
     out.width(precision);
     out.fill('0');
 
-    char * p = mpz_get_str(NULL, 10, rquotient);
     out << p;
     std::free(p);
   }
