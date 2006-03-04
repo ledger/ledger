@@ -100,7 +100,7 @@ class balance_t
     if (i != amounts.end())
       (*i).second -= amt;
     else if (amt)
-      amounts.insert(amounts_pair(&amt.commodity(), amt));
+      amounts.insert(amounts_pair(&amt.commodity(), - amt));
     return *this;
   }
   template <typename T>
