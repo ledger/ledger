@@ -146,7 +146,8 @@ bool entry_base_t::finalize()
     if (this_bal == other_bal)
       other_bal++;
 
-    amount_t per_unit_cost = (*other_bal).second / (*this_bal).second;
+    amount_t per_unit_cost =
+      amount_t((*other_bal).second / (*this_bal).second).unround();
 
     for (; x != transactions.end(); x++) {
       if ((*x)->cost || ((*x)->flags & TRANSACTION_VIRTUAL) ||
@@ -157,12 +158,11 @@ bool entry_base_t::finalize()
       balance -= (*x)->amount;
 
       entry_t * entry = dynamic_cast<entry_t *>(this);
-      if ((*x)->amount.commodity().annotated)
-	throw error("Cannot self-balance an annotated commodity");
-	
-      (*x)->amount.annotate_commodity(abs(per_unit_cost),
-				      entry ? entry->actual_date() : 0,
-				      entry ? entry->code : "");
+
+      if (! (*x)->amount.commodity().annotated)
+	(*x)->amount.annotate_commodity(abs(per_unit_cost),
+					entry ? entry->actual_date() : 0,
+					entry ? entry->code : "");
 
       (*x)->cost = new amount_t(- (per_unit_cost * (*x)->amount));
       balance += *(*x)->cost;
