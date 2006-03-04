@@ -38,7 +38,7 @@ int ofx_proc_account_cb(struct OfxAccountData data, void * account_data)
 
   if (data.currency_valid) {
     commodity_t * commodity = commodity_t::find_commodity(data.currency, true);
-    commodity->flags |= COMMODITY_STYLE_SUFFIXED | COMMODITY_STYLE_SEPARATED;
+    commodity->add_flags(COMMODITY_STYLE_SUFFIXED | COMMODITY_STYLE_SEPARATED);
 
     commodities_map::iterator i = ofx_account_currencies.find(data.account_id);
     if (i == ofx_account_currencies.end())
@@ -79,13 +79,13 @@ int ofx_proc_transaction_cb(struct OfxTransactionData data,
     assert(s != ofx_securities.end());
     xact->amount = stream.str() + " " + (*s).second->symbol;
   } else {
-    xact->amount = stream.str() + " " + default_commodity->symbol;
+    xact->amount = stream.str() + " " + default_commodity->base_symbol();
   }
 
   if (data.unitprice_valid && data.unitprice != 1.0) {
     std::ostringstream cstream;
     stream << - data.unitprice;
-    xact->cost = new amount_t(stream.str() + " " + default_commodity->symbol);
+    xact->cost = new amount_t(stream.str() + " " + default_commodity->base_symbol());
   }
 
   DEBUG_PRINT("ledger.ofx.parse", "xact " << xact->amount
@@ -138,13 +138,13 @@ int ofx_proc_security_cb(struct OfxSecurityData data, void * security_data)
     return -1;
 
   commodity_t * commodity = commodity_t::find_commodity(symbol, true);
-  commodity->flags |= COMMODITY_STYLE_SUFFIXED | COMMODITY_STYLE_SEPARATED;
+  commodity->add_flags(COMMODITY_STYLE_SUFFIXED | COMMODITY_STYLE_SEPARATED);
 
   if (data.secname_valid)
-    commodity->name = data.secname;
+    commodity->set_name(data.secname);
 
   if (data.memo_valid)
-    commodity->note = data.memo;
+    commodity->set_note(data.memo);
 
   commodities_map::iterator i = ofx_securities.find(data.unique_id);
   if (i == ofx_securities.end()) {
