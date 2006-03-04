@@ -7,6 +7,10 @@
 
 namespace ledger {
 
+bool format_t::keep_price = false;
+bool format_t::keep_date  = false;
+bool format_t::keep_tag   = false;
+
 std::string truncated(const std::string& str, unsigned int width,
 		      const int style)
 {
@@ -306,6 +310,9 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 
       calc->compute(value, details);
 
+      if (! keep_price || ! keep_date || ! keep_tag)
+	value = value.reduce(keep_price, keep_date, keep_tag);
+
       switch (value.type) {
       case value_t::BOOLEAN:
 	out << (*((bool *) value.data) ? "1" : "0");
@@ -341,20 +348,12 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 	bool        use_disp = false;
 
 	if (details.xact->cost && details.xact->amount) {
-	  amount_t unit_cost = *details.xact->cost / details.xact->amount;
-
-	  commodity_t& comm(unit_cost.commodity());
-	  bool has_flag = comm.flags() & COMMODITY_STYLE_VARIABLE;
-	  if (! has_flag)
-	    comm.add_flags(COMMODITY_STYLE_VARIABLE);
-
 	  std::ostringstream stream;
-	  stream << details.xact->amount << " @ " << unit_cost;
+	  stream << details.xact->amount << " @ "
+		 << amount_t(*details.xact->cost /
+			     details.xact->amount).unround();
 	  disp = stream.str();
 	  use_disp = true;
-
-	  if (! has_flag)
-	    comm.drop_flags(COMMODITY_STYLE_VARIABLE);
 	}
 	else if (details.entry) {
 	  unsigned int    xacts_count = 0;

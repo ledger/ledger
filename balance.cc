@@ -46,6 +46,23 @@ balance_t balance_t::price() const
   return temp;
 }
 
+std::time_t balance_t::date() const
+{
+  std::time_t temp = 0;
+
+  for (amounts_map::const_iterator i = amounts.begin();
+       i != amounts.end();
+       i++) {
+    std::time_t date = (*i).second.date();
+    if (temp == 0 && date != 0)
+      temp = date;
+    else if (temp != date)
+      return 0;
+  }
+
+  return temp;
+}
+
 balance_t balance_t::reduce(const bool keep_price, const bool keep_date,
 			    const bool keep_tag) const
 {
@@ -61,7 +78,35 @@ balance_t balance_t::reduce(const bool keep_price, const bool keep_date,
 
 struct compare_amount_commodities {
   bool operator()(const amount_t * left, const amount_t * right) const {
-    return left->commodity().symbol() < right->commodity().symbol();
+    commodity_t& leftcomm(left->commodity());
+    commodity_t& rightcomm(right->commodity());
+
+    int cmp = leftcomm.symbol().compare(rightcomm.symbol());
+    if (cmp != 0)
+      return cmp < 0;
+
+    if (! leftcomm.annotated) {
+      assert(rightcomm.annotated);
+      return true;
+    }
+    else if (! rightcomm.annotated) {
+      assert(leftcomm.annotated);
+      return false;
+    }
+    else {
+      annotated_commodity_t& aleftcomm(static_cast<annotated_commodity_t&>(leftcomm));
+      annotated_commodity_t& arightcomm(static_cast<annotated_commodity_t&>(rightcomm));
+
+      amount_t val = aleftcomm.price - arightcomm.price;
+      if (val)
+	return val < 0;
+
+      int diff = aleftcomm.date - arightcomm.date;
+      if (diff)
+	return diff < 0;
+
+      return aleftcomm.tag < arightcomm.tag;
+    }
   }
 };
 
@@ -75,32 +120,51 @@ void balance_t::write(std::ostream& out,
   if (lwidth == -1)
     lwidth = first_width;
 
-  typedef std::deque<const amount_t *> amounts_deque;
-  amounts_deque sorted;
+  if (commodity_t::commodities_sorted) {
+    for (amounts_map::const_iterator i = amounts.begin();
+	 i != amounts.end();
+	 i++) {
+      int width;
+      if (! first) {
+	out << std::endl;
+	width = lwidth;
+      } else {
+	first = false;
+	width = first_width;
+      }
 
-  for (amounts_map::const_iterator i = amounts.begin();
-       i != amounts.end();
-       i++)
-    if ((*i).second)
-      sorted.push_back(&(*i).second);
-
-  std::stable_sort(sorted.begin(), sorted.end(), compare_amount_commodities());
-
-  for (amounts_deque::const_iterator i = sorted.begin();
-       i != sorted.end();
-       i++) {
-    int width;
-    if (! first) {
-      out << std::endl;
-      width = lwidth;
-    } else {
-      first = false;
-      width = first_width;
+      out.width(width);
+      out.fill(' ');
+      out << std::right << (*i).second;
     }
+  } else {
+    typedef std::deque<const amount_t *> amounts_deque;
+    amounts_deque sorted;
 
-    out.width(width);
-    out.fill(' ');
-    out << std::right << **i;
+    for (amounts_map::const_iterator i = amounts.begin();
+	 i != amounts.end();
+	 i++)
+      if ((*i).second)
+	sorted.push_back(&(*i).second);
+
+    std::stable_sort(sorted.begin(), sorted.end(), compare_amount_commodities());
+
+    for (amounts_deque::const_iterator i = sorted.begin();
+	 i != sorted.end();
+	 i++) {
+      int width;
+      if (! first) {
+	out << std::endl;
+	width = lwidth;
+      } else {
+	first = false;
+	width = first_width;
+      }
+
+      out.width(width);
+      out.fill(' ');
+      out << std::right << **i;
+    }
   }
 
   if (first) {

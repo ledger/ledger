@@ -128,8 +128,11 @@ int parse_and_report(int argc, char * argv[], char * envp[])
       ledger::dump_value_expr(std::cout, expr.get());
       std::cout << std::endl;
     }
-    value_t result;
-    expr->compute(result, details_t());
+
+    value_t result = expr->compute();
+    if (! config.keep_price || ! config.keep_date || ! config.keep_tag)
+      result = result.reduce(config.keep_price, config.keep_date,
+			     config.keep_tag);
     std::cout << result << std::endl;
     return 0;
   }
@@ -233,8 +236,10 @@ int parse_and_report(int argc, char * argv[], char * envp[])
       ledger::dump_value_expr(std::cout, expr.get());
       std::cout << std::endl;
     }
-    value_t result;
-    expr->compute(result, details_t());
+    value_t result = expr->compute();
+    if (! config.keep_price || ! config.keep_date || ! config.keep_tag)
+      result = result.reduce(config.keep_price, config.keep_date,
+			     config.keep_tag);
     std::cout << result << std::endl;
     return 0;
   }
@@ -344,21 +349,18 @@ int parse_and_report(int argc, char * argv[], char * envp[])
        i != formatter_ptrs.end();
        i++)
     delete *i;
-  formatter_ptrs.clear();
 #endif
 
   TIMER_STOP(cleanup);
 
   // Write out the binary cache, if need be
 
-  TIMER_START(cache_write);
-
   if (config.use_cache && config.cache_dirty && ! config.cache_file.empty()) {
+    TIMER_START(cache_write);
     std::ofstream stream(config.cache_file.c_str());
     write_binary_journal(stream, journal.get());
+    TIMER_STOP(cache_write);
   }
-
-  TIMER_STOP(cache_write);
 
 #ifdef HAVE_UNIX_PIPES
   if (! config.pager.empty()) {

@@ -91,6 +91,9 @@ void config_t::reset()
   show_revalued_only = false;
   download_quotes    = false;
   debug_mode         = false;
+  keep_price         = false;
+  keep_date          = false;
+  keep_tag           = false;
 
   use_cache	     = false;
   cache_dirty        = false;
@@ -296,8 +299,16 @@ void config_t::process_options(const std::string&     command,
     commodity_base_t::updater =
       new quotes_by_script(price_db, pricing_leeway, cache_dirty);
 
-  if (! date_format.empty())
-    format_t::date_format = date_format;
+  // Now setup the various formatting strings
+
+  if (! date_format.empty()) {
+    format_t::date_format	       = date_format;
+    annotated_commodity_t::date_format = date_format;
+  }
+
+  format_t::keep_price = keep_price;
+  format_t::keep_date  = keep_date;
+  format_t::keep_tag   = keep_tag;
 }
 
 item_handler<transaction_t> *
@@ -780,19 +791,21 @@ OPT_BEGIN(actual, "L") {
 } OPT_END(actual);
 
 OPT_BEGIN(lots, "") {
-  keep_price = keep_date = keep_tag = true;
+  config->keep_price =
+  config->keep_date  =
+  config->keep_tag   = true;
 } OPT_END(lots);
 
 OPT_BEGIN(lot_prices, "") {
-  keep_price = true;
+  config->keep_price = true;
 } OPT_END(lots_prices);
 
 OPT_BEGIN(lot_dates, "") {
-  keep_date = true;
+  config->keep_date = true;
 } OPT_END(lots_dates);
 
 OPT_BEGIN(lot_tags, "") {
-  keep_tag = true;
+  config->keep_tag = true;
 } OPT_END(lots_tags);
 
 //////////////////////////////////////////////////////////////////////

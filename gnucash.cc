@@ -182,7 +182,7 @@ static void endElement(void *userData, const char *name)
 
     if (default_commodity) {
       curr_quant.set_commodity(*default_commodity);
-      value = curr_quant.round(default_commodity->precision());
+      value = curr_quant.round();
 
       if (curr_value.commodity() == *default_commodity)
 	curr_value = value;

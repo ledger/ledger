@@ -64,265 +64,225 @@ inline char * next_element(char * buf, bool variable = false)
   return NULL;
 }
 
-static inline bool is_mathchr(const char c) {
-  return (c == '(' || c == ')' ||
-	  c == '+' || c == '-' ||
-	  c == '*' || c == '/');
-}
-
-static inline void copy_wsbuf(char *& q, char *& wq, char * wsbuf) {
-  *wq = '\0';
-  std::strcpy(q, wsbuf);
-  q += std::strlen(wsbuf);
-  wq = wsbuf;
-}
-
-static char * parse_inline_math(const char * expr)
-{
-  char * buf	 = new char[std::strlen(expr) * 2];
-  char * q	 = buf;
-  char   wsbuf[64];
-  char * wq      = wsbuf;
-  bool	 in_math = true;
-  bool	 could   = true;
-
-  *q++ = '(';
-
-  for (const char * p = expr; *p; p++) {
-    if (std::isspace(*p)) {
-      *wq++ = *p;
-    } else {
-      bool saw_math = is_mathchr(*p);
-      if (in_math && ! saw_math) {
-	copy_wsbuf(q, wq, wsbuf);
-	*q++ = '{';
-	in_math = could = false;
-      }
-      else if (! in_math && saw_math && could) {
-	*q++ = '}';
-	copy_wsbuf(q, wq, wsbuf);
-	in_math = true;
-      }
-      else if (wq != wsbuf) {
-	copy_wsbuf(q, wq, wsbuf);
-      }
-
-      if (! in_math && std::isdigit(*p))
-	could = true;
-
-      *q++ = *p;
-    }
-  }
-
-  if (! in_math)
-    *q++ = '}';
-
-  *q++ = ')';
-  *q++ = '\0';
-
-  DEBUG_PRINT("ledger.textual.inlinemath",
-	      "Parsed '" << expr << "' as '" << buf << "'");
-
-  return buf;
-}
-
-value_expr_t * parse_amount(const char * text, amount_t& amt,
-			    unsigned short flags, transaction_t& xact)
-{
-  char * altbuf = NULL;
-
-  if (*text && *text != '(' && *text != '-') {
-    bool in_quote   = false;
-    bool seen_digit = false;
-    for (const char * p = text + 1; *p; p++)
-      if (*p == '"') {
-	in_quote = ! in_quote;
-      }
-      else if (! in_quote) {
-	if (is_mathchr(*p)) {
-	  if (*p == '-' && ! seen_digit)
-	    continue;
-	  text = altbuf = parse_inline_math(text);
-	  break;
-	}
-	else if (std::isdigit(*p)) {
-	  seen_digit = true;
-	}
-      }
-  }
-
-  value_expr_t * expr = NULL;
-
-  if (*text != '(') {
-    amt.parse(text, flags);
-
-    if (altbuf)
-      delete[] altbuf;
-  } else {
-    expr = parse_value_expr(text);
-
-    if (altbuf)
-      delete[] altbuf;
-
-    if (! compute_amount(expr, amt, &xact))
-      throw parse_error(path, linenum, "Value expression yields a balance");
-  }
-
-  return expr;
-}
-
 transaction_t * parse_transaction(char * line, account_t * account,
 				  entry_t * entry = NULL)
 {
+  std::istringstream in(line);
+
   // The account will be determined later...
   std::auto_ptr<transaction_t> xact(new transaction_t(NULL));
   if (entry)
     xact->entry = entry;
 
-  // The call to `next_element' will skip past the account name, and
-  // return a pointer to the beginning of the amount.  Once we know
-  // where the amount is, we can strip off any transaction note, and
-  // parse it.
+  // Parse the state flag
 
-  char * amount	  = NULL;
-  char * price	  = NULL;
-  bool	 per_unit = true;
-
-  char * p = skip_ws(line);
-  switch (*p) {
+  char p = peek_next_nonws(in);
+  switch (p) {
   case '*':
     xact->state = transaction_t::CLEARED;
-    p = skip_ws(++p);
+    in.get(p);
+    p = peek_next_nonws(in);
+    DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+		"Parsed the CLEARED flag");
     break;
   case '!':
     xact->state = transaction_t::PENDING;
-    p = skip_ws(++p);
+    in.get(p);
+    p = peek_next_nonws(in);
+    DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+		"Parsed the PENDING flag");
     break;
   }
 
-  if (amount = next_element(p, true)) {
-    amount = skip_ws(amount);
-    if (! *amount)
-      amount = NULL;
-    else {
-      if (char * note_str = std::strchr(amount, ';')) {
-	if (amount == note_str)
-	  amount = NULL;
+  // Parse the account name
 
-	*note_str++ = '\0';
-	note_str = skip_ws(note_str);
-
-	if (char * b = std::strchr(note_str, '['))
-	  if (char * e = std::strchr(note_str, ']')) {
-	    char buf[256];
-	    std::strncpy(buf, b + 1, e - b);
-	    buf[e - b] = '\0';
-
-	    if (char * p = std::strchr(buf, '=')) {
-	      *p++ = '\0';
-	      if (! quick_parse_date(p, &xact->_date_eff))
-		throw parse_error(path, linenum,
-				  "Failed to parse effective date");
-	    }
-
-	    if (buf[0] && ! quick_parse_date(buf, &xact->_date))
-	      throw parse_error(path, linenum, "Failed to parse date");
-	  }
-
-	xact->note = skip_ws(note_str);
-      }
-
-      if (amount) {
-	bool in_quote	 = false;
-	int  paren_depth = 0;
-	for (char * q = amount; *q; q++) {
-	  if (*q == '"') {
-	      in_quote = ! in_quote;
-	  }
-	  else if (! in_quote) {
-	    if (*q == '(')
-	      paren_depth++;
-	    else if (*q == ')')
-	      paren_depth--;
-	    else if (paren_depth == 0 && *q == '@') {
-	      price = q;
-	      break;
-	    }
-	  }
-	}
-
-	if (price) {
-	  if (price == amount)
-	    throw parse_error(path, linenum, "Cost specified without amount");
-
-	  *price++ = '\0';
-	  if (*price == '@') {
-	    per_unit = false;
-	    price++;
-	  }
-	  price = skip_ws(price);
-	}
-      }
-    }
+  unsigned long account_beg = in.tellg();
+  unsigned long account_end = account_beg;
+  while (! in.eof()) {
+    in.get(p);
+    if (in.eof() || (std::isspace(p) &&
+		     (p == '\t' || std::isspace(in.peek()))))
+      break;
+    account_end++;
   }
 
-  char * q = p + std::strlen(p) - 1;
-  while (q >= p && std::isspace(*q))
-    *q-- = '\0';
+  if (account_beg == account_end)
+    throw parse_error(path, linenum, "No account was specified");
 
-  if (*p == '[' || *p == '(') {
+  char * b = &line[account_beg];
+  char * e = &line[account_end];
+  if ((*b == '[' && *(e - 1) == ']') ||
+      (*b == '(' && *(e - 1) == ')')) {
     xact->flags |= TRANSACTION_VIRTUAL;
-    if (*p == '[')
+    DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+		"Parsed a virtual account name");
+    if (*b == '[') {
       xact->flags |= TRANSACTION_BALANCE;
-    p++;
-
-    char * e = p + (std::strlen(p) - 1);
-    assert(*e == ')' || *e == ']');
-    *e = '\0';
+      DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+		  "Parsed a balanced virtual account name");
+    }
+    b++; e--;
   }
 
+  std::string name(b, e - b);
+  DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+	      "Parsed account name " << name);
   if (account_aliases.size() > 0) {
-    accounts_map::const_iterator i = account_aliases.find(p);
+    accounts_map::const_iterator i = account_aliases.find(name);
     if (i != account_aliases.end())
       xact->account = (*i).second;
   }
   if (! xact->account)
-    xact->account = account->find_account(p);
+    xact->account = account->find_account(name);
 
-  // If an amount (and optional price) were seen, parse them now
-  if (amount) {
-    xact->amount_expr = parse_amount(amount, xact->amount,
-				     AMOUNT_PARSE_NO_REDUCE, *xact);
-    if (xact->amount_expr)
-      xact->amount_expr->acquire();
+  // Parse the optional amount
 
-    if (price) {
-      xact->cost = new amount_t;
-      xact->cost_expr = parse_amount(price, *xact->cost,
-				     AMOUNT_PARSE_NO_MIGRATE, *xact);
-      if (xact->cost_expr)
-	xact->cost_expr->acquire();
-
-      if (per_unit) {
-	if (! xact->amount.commodity().annotated)
-	  xact->amount.annotate_commodity(*xact->cost,
-					  xact->entry->actual_date(),
-					  xact->entry->code);
-	*xact->cost *= xact->amount;
-	*xact->cost = xact->cost->round(xact->cost->commodity().precision());
+  if (in.good() && ! in.eof()) {
+    p = peek_next_nonws(in);
+    if (in.eof())
+      goto finished;
+    if (p == ';')
+      goto parse_note;
+    if (p == '(') {
+      xact->amount_expr = parse_value_expr(in)->acquire();
+      DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+		  "Parsed an amount expression");
+#ifdef DEBUG_ENABLED
+      DEBUG_IF("ledger.textual.parse") {
+	if (_debug_stream) {
+	  ledger::dump_value_expr(*_debug_stream, xact->amount_expr);
+	  *_debug_stream << std::endl;
+	}
       }
-      else if (! xact->amount.commodity().annotated) {
-	amount_t cost(*xact->cost);
-	cost /= xact->amount;
-	cost = cost.round(cost.commodity().precision());
+#endif
+      if (! compute_amount(xact->amount_expr, xact->amount, xact.get()))
+	throw parse_error(path, linenum,
+			  "Value expression for amount failed to compute");
+      DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+		  "The computed amount is " << xact->amount);
+    } else {
+      xact->amount.parse(in, AMOUNT_PARSE_NO_REDUCE);
+      DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+		  "Parsed amount " << xact->amount);
 
-	xact->amount.annotate_commodity(cost, xact->entry->actual_date(),
-					xact->entry->code);
+      // Parse any inline math
+      p = peek_next_nonws(in);
+      while (in.good() && ! in.eof() && (p == '-' || p == '+')) {
+	DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+		    "Parsed inline math operator " << p);
+	in.get(p);
+	amount_t temp;
+	temp.parse(in, AMOUNT_PARSE_NO_REDUCE);
+	switch (p) {
+	case '-':
+	  xact->amount -= temp;
+	  break;
+	case '+':
+	  xact->amount += temp;
+	  break;
+	}
+	DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+		    "Calculated amount is " << xact->amount);
+	p = peek_next_nonws(in);
       }
     }
-    xact->amount.reduce();
   }
 
+  // Parse the optional cost (@ PER-UNIT-COST, @@ TOTAL-COST)
+
+  if (in.good() && ! in.eof()) {
+    p = peek_next_nonws(in);
+    if (p == '@') {
+      DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+		  "Found a price indicator");
+      bool per_unit = true;
+      in.get(p);
+      if (in.peek() == '@') {
+	in.get(p);
+	per_unit = false;
+	DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+		    "And it's for a total price");
+      }
+
+      if (in.good() && ! in.eof()) {
+	xact->cost = new amount_t;
+
+	p = peek_next_nonws(in);
+	if (p == '(')
+	  throw parse_error(path, linenum,
+			    "A transaction's cost may not be a value expression");
+
+	xact->cost->parse(in, AMOUNT_PARSE_NO_MIGRATE);
+	DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+		    "Parsed cost " << *xact->cost);
+
+	amount_t per_unit_cost(*xact->cost);
+	if (per_unit)
+	  *xact->cost *= xact->amount;
+	else
+	  per_unit_cost /= xact->amount;
+
+	if (! xact->amount.commodity().annotated) {
+	  xact->amount.annotate_commodity(per_unit_cost,
+					  xact->entry->actual_date(),
+					  xact->entry->code);
+	} else {
+	  annotated_commodity_t& ann(static_cast<annotated_commodity_t&>
+				     (xact->amount.commodity()));
+	  xact->amount.annotate_commodity(! ann.price ? per_unit_cost : amount_t(),
+					  ! ann.date ? xact->entry->actual_date() : 0,
+					  ann.tag.empty() ? xact->entry->code : "");
+	}
+
+	DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+		    "Total cost is " << *xact->cost);
+	DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+		    "Per-unit cost is " << per_unit_cost);
+	DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+		    "Annotated amount is " << xact->amount);
+      }
+    }
+  }
+
+  xact->amount.reduce();
+  DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+	      "Reduced amount is " << xact->amount);
+
+  // Parse the optional note
+
+ parse_note:
+  if (in.good() && ! in.eof()) {
+    p = peek_next_nonws(in);
+    if (p == ';') {
+      in.get(p);
+      p = peek_next_nonws(in);
+      xact->note = &line[in.tellg()];
+      DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+		  "Parsed a note '" << xact->note << "'");
+
+      if (char * b = std::strchr(xact->note.c_str(), '['))
+	if (char * e = std::strchr(xact->note.c_str(), ']')) {
+	  char buf[256];
+	  std::strncpy(buf, b + 1, e - b - 1);
+	  buf[e - b - 1] = '\0';
+
+	  DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+		      "Parsed a transaction date " << buf);
+
+	  if (char * p = std::strchr(buf, '=')) {
+	    *p++ = '\0';
+	    if (! quick_parse_date(p, &xact->_date_eff))
+	      throw parse_error(path, linenum,
+				"Failed to parse effective date");
+	  }
+
+	  if (buf[0] && ! quick_parse_date(buf, &xact->_date))
+	    throw parse_error(path, linenum, "Failed to parse date");
+	}
+    }
+  }
+
+ finished:
   return xact.release();
 }
 
@@ -771,7 +731,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	      path = std::string(save_path.prev, 0, pos + 1) + path;
 	  }
 
-	  DEBUG_PRINT("ledger.textual.include",
+	  DEBUG_PRINT("ledger.textual.include", "line " << linenum << ": " <<
 		      "Including path '" << path << "'");
 	  count += parse_journal_file(path, config, journal,
 				      account_stack.front());

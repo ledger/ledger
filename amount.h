@@ -2,6 +2,7 @@
 #define _AMOUNT_H
 
 #include <map>
+#include <stack>
 #include <string>
 #include <ctime>
 #include <cctype>
@@ -82,6 +83,7 @@ class amount_t
     commodity_ = NULL;
   }
   amount_t price() const;
+  std::time_t date() const;
 
   bool null() const {
     return ! quantity && ! commodity_;
@@ -100,6 +102,8 @@ class amount_t
 
   // general methods
   amount_t round(unsigned int prec) const;
+  amount_t round() const;
+  amount_t unround() const;
 
   // in-place arithmetic
   amount_t& operator+=(const amount_t& amt);
@@ -186,6 +190,8 @@ class amount_t
   operator bool() const;
   operator long() const;
   operator double() const;
+
+  bool realzero() const;
 
   // comparisons between amounts
   bool operator<(const amount_t& amt) const;
@@ -275,8 +281,37 @@ unsigned int sizeof_bigint_t();
 
 void parse_quantity(std::istream& in, std::string& value);
 void parse_commodity(std::istream& in, std::string& symbol);
+void parse_annotations(std::istream& in, const std::string& symbol,
+		       std::string& name, std::string& price,
+		       std::string& date, std::string& tag);
 void parse_conversion(const std::string& larger,
 		      const std::string& smaller);
+
+inline bool is_quote_or_paren(char * p) {
+  return *p == '"' || *p == '{' || *p == '[' || *p == '(';
+}  
+
+inline char * scan_past_quotes_and_parens(char * expr)
+{
+  std::stack<char> paren_stack;
+
+  for (const char * p = expr; *p; p++) {
+    if (*p == '"' ||
+	((*p == '(' || ((*p == '{' || *p == '[') &&
+			paren_stack.top() != '(')) &&
+	 paren_stack.top() != '"')) {
+      paren_stack.push(*p);
+    }
+    else if ((*p == ')' && paren_stack.top() == '(') ||
+	     (*p == '}' && paren_stack.top() == '{') ||
+	     (*p == ']' && paren_stack.top() == '[') ||
+	     (*p == '"' && paren_stack.top() == '"')) {
+      paren_stack.pop();
+      if (paren_stack.size() == 0)
+	break;
+    }
+  }
+}
 
 inline amount_t abs(const amount_t& amt) {
   return amt < 0 ? amt.negated() : amt;
@@ -296,8 +331,7 @@ inline std::istream& operator>>(std::istream& in, amount_t& amt) {
 #define COMMODITY_STYLE_EUROPEAN   0x0004
 #define COMMODITY_STYLE_THOUSANDS  0x0008
 #define COMMODITY_STYLE_NOMARKET   0x0010
-#define COMMODITY_STYLE_VARIABLE   0x0020
-#define COMMODITY_STYLE_BUILTIN    0x0040
+#define COMMODITY_STYLE_BUILTIN    0x0020
 
 typedef std::map<const std::time_t, amount_t>  history_map;
 typedef std::pair<const std::time_t, amount_t> history_pair;
@@ -385,6 +419,7 @@ class commodity_t
   // This map remembers all commodities that have been defined.
 
   static commodities_map commodities;
+  static bool            commodities_sorted;
   static commodity_t *   null_commodity;
   static commodity_t *   default_commodity;
 
@@ -519,27 +554,23 @@ class annotated_commodity_t : public commodity_t
 				  const amount_t& price,
 				  const std::time_t date,
 				  const std::string& tag);
-  static
-  annotated_commodity_t * create(const commodity_t& comm,
-				 const amount_t&    price,
-				 const std::time_t  date,
-				 const std::string& tag,
-				 const std::string& entry_name = "");
-  static
-  annotated_commodity_t * create(const std::string& symbol,
-				 const amount_t&    price,
-				 const std::time_t  date,
-				 const std::string& tag);
-  static
-  annotated_commodity_t * create(const std::string& symbol,
-				 const std::string& price,
-				 const std::string& date,
-				 const std::string& tag);
-  static
-  annotated_commodity_t * find_or_create(const commodity_t& comm,
-					 const amount_t&    price,
-					 const std::time_t  date,
-					 const std::string& tag);
+  static commodity_t * create(const commodity_t& comm,
+			      const amount_t&    price,
+			      const std::time_t  date,
+			      const std::string& tag,
+			      const std::string& entry_name = "");
+  static commodity_t * create(const std::string& symbol,
+			      const amount_t&    price,
+			      const std::time_t  date,
+			      const std::string& tag);
+  static commodity_t * create(const std::string& symbol,
+			      const std::string& price,
+			      const std::string& date,
+			      const std::string& tag);
+  static commodity_t * find_or_create(const commodity_t& comm,
+				      const amount_t&    price,
+				      const std::time_t  date,
+				      const std::string& tag);
 
   explicit annotated_commodity_t() {
     annotated = true;
@@ -553,6 +584,10 @@ class annotated_commodity_t : public commodity_t
 inline std::ostream& operator<<(std::ostream& out, const commodity_t& comm) {
   out << comm.symbol();
   return out;
+}
+
+inline amount_t amount_t::round() const {
+  return round(commodity().precision());
 }
 
 inline commodity_t& amount_t::commodity() const {
@@ -569,6 +604,17 @@ inline amount_t amount_t::price() const {
     DEBUG_PRINT("amounts.commodities",
 		"Returning price of " << *this << " = " << temp);
     return temp;
+  } else {
+    return 0L;
+  }
+}
+
+inline std::time_t amount_t::date() const {
+  if (commodity_ && commodity_->annotated) {
+    DEBUG_PRINT("amounts.commodities",
+		"Returning date of " << *this << " = "
+		<< ((annotated_commodity_t *)commodity_)->date);
+    return ((annotated_commodity_t *)commodity_)->date;
   } else {
     return 0L;
   }

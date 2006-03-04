@@ -97,10 +97,14 @@ class balance_t
   }
   balance_t& operator-=(const amount_t& amt) {
     amounts_map::iterator i = amounts.find(&amt.commodity());
-    if (i != amounts.end())
+    if (i != amounts.end()) {
       (*i).second -= amt;
-    else if (amt)
-      amounts.insert(amounts_pair(&amt.commodity(), amt));
+      if ((*i).second.realzero())
+	amounts.erase(&amt.commodity());
+    }
+    else if (! amt.realzero()) {
+      amounts.insert(amounts_pair(&amt.commodity(), - amt));
+    }
     return *this;
   }
   template <typename T>
@@ -147,7 +151,10 @@ class balance_t
   balance_t& operator*=(const amount_t& amt) {
     // Multiplying by the null commodity causes all amounts to be
     // increased by the same factor.
-    if (! amt.commodity()) {
+    if (amt.realzero()) {
+      amounts.clear();
+    }
+    else if (! amt.commodity()) {
       for (amounts_map::iterator i = amounts.begin();
 	   i != amounts.end();
 	   i++)
@@ -411,6 +418,7 @@ class balance_t
   amount_t  amount(const commodity_t& commodity) const;
   balance_t value(const std::time_t moment) const;
   balance_t price() const;
+  std::time_t date() const;
   balance_t reduce(const bool keep_price = false,
 		   const bool keep_date  = false,
 		   const bool keep_tag   = false) const;
@@ -430,7 +438,18 @@ class balance_t
 	 i != amounts.end();
 	 i++)
       if ((*i).second.commodity())
-	(*i).second = (*i).second.round((*i).second.commodity().precision());
+	(*i).second = (*i).second.round();
+  }
+
+  bool realzero() const {
+    if (amounts.size() == 0)
+      return true;
+    for (amounts_map::const_iterator i = amounts.begin();
+	 i != amounts.end();
+	 i++)
+      if (! (*i).second.realzero())
+	return false;
+    return true;
   }
 };
 
@@ -829,6 +848,11 @@ class balance_pair_t
 
   void round() {
     quantity.round();
+    if (cost) cost->round();
+  }
+
+  bool realzero() const {
+    return ((! cost || cost->realzero()) && quantity.realzero());
   }
 };
 

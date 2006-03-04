@@ -33,16 +33,19 @@ struct details_t
 #endif
 };
 
-typedef void (*value_func_t)(value_t& result, const details_t& details,
-			     value_expr_t * context);
-
 class value_calc
 {
 public:
   virtual ~value_calc() {}
-  virtual void compute(value_t& result, const details_t& details,
-		       value_expr_t * context = NULL) = 0;
+  virtual void compute(value_t& result,
+		       const details_t& details = details_t(),
+		       value_expr_t *   context = NULL) = 0;
+  virtual value_t compute(const details_t& details = details_t(),
+			  value_expr_t *   context = NULL) = 0;
 };
+
+typedef void (*value_func_t)(value_t& result, const details_t& details,
+			     value_expr_t * context);
 
 class value_func : public value_calc
 {
@@ -50,9 +53,16 @@ class value_func : public value_calc
 public:
   value_func(value_func_t _func) : func(_func) {}
 
-  virtual void compute(value_t& result, const details_t& details,
-		       value_expr_t * context = NULL) {
+  virtual void compute(value_t& result,
+		       const details_t& details = details_t(),
+		       value_expr_t *   context = NULL) {
     func(result, details, context);
+  }
+  virtual value_t compute(const details_t& details = details_t(),
+			  value_expr_t *   context = NULL) {
+    value_t temp;
+    func(temp, details, context);
+    return temp;
   }
 };
 
@@ -99,6 +109,10 @@ struct value_expr_t
     F_SET_COMMODITY,
     F_VALUE,
     F_ABS,
+    F_ROUND,
+    F_PRICE,
+    F_DATE,
+    F_DATECMP,
     F_CODE_MASK,
     F_PAYEE_MASK,
     F_NOTE_MASK,
@@ -193,8 +207,15 @@ struct value_expr_t
     right = expr ? expr->acquire() : NULL;
   }
 
-  void compute(value_t& result, const details_t& details,
-	       value_expr_t * context = NULL) const;
+  void compute(value_t& result,
+	       const details_t& details = details_t(),
+	       value_expr_t *   context = NULL) const;
+  value_t compute(const details_t& details = details_t(),
+		  value_expr_t *   context = NULL) const {
+    value_t temp;
+    compute(temp, details, context);
+    return temp;
+  }
 };
 
 struct scope_t
@@ -248,10 +269,6 @@ extern std::auto_ptr<scope_t> global_scope;
 
 extern std::time_t terminus;
 extern bool	   initialized;
-
-extern bool keep_price;
-extern bool keep_date;
-extern bool keep_tag;
 
 void init_value_expr();
 
@@ -357,23 +374,42 @@ public:
       parsed->release();
   }
 
-  virtual void compute(value_t& result, const details_t& details,
-		       value_expr_t * context = NULL) {
+  virtual void compute(value_t& result,
+		       const details_t& details = details_t(),
+		       value_expr_t *   context = NULL) {
     parsed->compute(result, details, context);
+  }
+  virtual value_t compute(const details_t& details = details_t(),
+			  value_expr_t *   context = NULL) {
+    value_t temp;
+    parsed->compute(temp, details, context);
+    return temp;
   }
 };
 
 extern std::auto_ptr<value_calc> amount_expr;
 extern std::auto_ptr<value_calc> total_expr;
 
-inline void compute_amount(value_t& result, const details_t& details) {
+inline void compute_amount(value_t& result,
+			   const details_t& details = details_t()) {
   if (amount_expr.get())
     amount_expr->compute(result, details);
 }
 
-inline void compute_total(value_t& result, const details_t& details) {
+inline value_t compute_amount(const details_t& details = details_t()) {
+  if (amount_expr.get())
+    return amount_expr->compute(details);
+}
+
+inline void compute_total(value_t& result,
+			  const details_t& details = details_t()) {
   if (total_expr.get())
     total_expr->compute(result, details);
+}
+
+inline value_t compute_total(const details_t& details = details_t()) {
+  if (total_expr.get())
+    return total_expr->compute(details);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -408,12 +444,7 @@ class item_predicate
   }
 
   bool operator()(const T& item) const {
-    if (predicate) {
-      value_t result;
-      predicate->compute(result, details_t(item));
-      return result;
-    }
-    return true;
+    return ! predicate || predicate->compute(details_t(item));
   }
 };
 

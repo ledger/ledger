@@ -12,9 +12,9 @@ namespace ledger {
 
 static unsigned long binary_magic_number = 0xFFEED765;
 #ifdef DEBUG_ENABLED
-static unsigned long format_version      = 0x00020603;
+static unsigned long format_version      = 0x00020605;
 #else
-static unsigned long format_version      = 0x00020602;
+static unsigned long format_version      = 0x00020604;
 #endif
 
 static account_t **	   accounts;
@@ -323,13 +323,7 @@ inline void read_binary_transaction(char *& data, transaction_t * xact)
 
   if (*data++ == 1) {
     xact->cost = new amount_t;
-
-    if (read_binary_number<char>(data) == 1) {
-      read_binary_value_expr(data, xact->cost_expr);
-      if (xact->cost_expr) xact->cost_expr->acquire();
-    } else {
-      read_binary_amount(data, *xact->cost);
-    }
+    read_binary_amount(data, *xact->cost);
   } else {
     xact->cost = NULL;
   }
@@ -348,8 +342,6 @@ inline void read_binary_transaction(char *& data, transaction_t * xact)
 
   if (xact->amount_expr)
     compute_amount(xact->amount_expr, xact->amount, xact);
-  if (xact->cost_expr)
-    compute_amount(xact->cost_expr, *xact->cost, xact);
 }
 
 inline void read_binary_entry_base(char *& data, entry_base_t * entry,
@@ -884,13 +876,7 @@ void write_binary_transaction(std::ostream& out, transaction_t * xact,
   if (xact->cost &&
       (! (ignore_calculated && xact->flags & TRANSACTION_CALCULATED))) {
     write_binary_number<char>(out, 1);
-    if (xact->cost_expr) {
-      write_binary_number<char>(out, 1);
-      write_binary_value_expr(out, xact->cost_expr);
-    } else {
-      write_binary_number<char>(out, 0);
-      write_binary_amount(out, *xact->cost);
-    }
+    write_binary_amount(out, *xact->cost);
   } else {
     write_binary_number<char>(out, 0);
   }
@@ -917,7 +903,7 @@ void write_binary_entry_base(std::ostream& out, entry_base_t * entry)
   for (transactions_list::const_iterator i = entry->transactions.begin();
        i != entry->transactions.end();
        i++)
-    if ((*i)->amount_expr || (*i)->cost_expr) {
+    if ((*i)->amount_expr) {
       ignore_calculated = true;
       break;
     }

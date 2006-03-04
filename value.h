@@ -89,6 +89,7 @@ class value_t
   }
 
   void destroy();
+  void simplify();
 
   value_t& operator=(const value_t& value);
   value_t& operator=(const bool value) {
@@ -120,40 +121,54 @@ class value_t
     return *this = amount_t(value);
   }
   value_t& operator=(const amount_t& value) {
-    if ((amount_t *) data != &value) {
-      if (! value) {
-	return *this = 0L;
-      } else {
-	destroy();
-	new((amount_t *)data) amount_t(value);
-	type = AMOUNT;
-      }
+    if (type == AMOUNT &&
+	(amount_t *) data == &value)
+      return *this;
+    
+    if (value.realzero()) {
+      return *this = 0L;
+    } else {
+      destroy();
+      new((amount_t *)data) amount_t(value);
+      type = AMOUNT;
     }
     return *this;
   }
   value_t& operator=(const balance_t& value) {
-    if ((balance_t *) data != &value) {
-      if (value.amounts.size() == 1) {
-	return *this = (*value.amounts.begin()).second;
-      } else {
-	destroy();
-	new((balance_t *)data) balance_t(value);
-	type = BALANCE;
-      }
+    if (type == BALANCE &&
+	(balance_t *) data == &value)
+      return *this;
+    
+    if (value.realzero()) {
+      return *this = 0L;
     }
-    return *this;
+    else if (value.amounts.size() == 1) {
+      return *this = (*value.amounts.begin()).second;
+    }
+    else {
+      destroy();
+      new((balance_t *)data) balance_t(value);
+      type = BALANCE;
+      return *this;
+    }
   }
   value_t& operator=(const balance_pair_t& value) {
-    if ((balance_pair_t *) data != &value) {
-      if (! value.cost) {
-	return *this = value.quantity;
-      } else {
-	destroy();
-	new((balance_pair_t *)data) balance_pair_t(value);
-	type = BALANCE_PAIR;
-      }
+    if (type == BALANCE_PAIR &&
+	(balance_pair_t *) data == &value)
+      return *this;
+    
+    if (value.realzero()) {
+      return *this = 0L;
     }
-    return *this;
+    else if (! value.cost) {
+      return *this = value.quantity;
+    }
+    else {
+      destroy();
+      new((balance_pair_t *)data) balance_pair_t(value);
+      type = BALANCE_PAIR;
+      return *this;
+    }
   }
 
   value_t& operator+=(const value_t& value);
@@ -263,10 +278,32 @@ class value_t
     return negated();
   }
 
+  bool realzero() const {
+    switch (type) {
+    case BOOLEAN:
+      return ! *((bool *) data);
+    case INTEGER:
+      return *((long *) data) == 0;
+    case AMOUNT:
+      return ((amount_t *) data)->realzero();
+    case BALANCE:
+      return ((balance_t *) data)->realzero();
+    case BALANCE_PAIR:
+      return ((balance_pair_t *) data)->realzero();
+
+    default:
+      assert(0);
+      break;
+    }
+    assert(0);
+    return 0;
+  }
+
   void     abs();
   void     cast(type_t cast_type);
   value_t  cost() const;
   value_t  price() const;
+  value_t  date() const;
   value_t  reduce(const bool keep_price = false,
 		  const bool keep_date  = false,
 		  const bool keep_tag   = false) const;
@@ -291,12 +328,9 @@ class value_t
     case BOOLEAN:
     case INTEGER:
       break;
-    case AMOUNT: {
-      amount_t& amount = *((amount_t *) data);
-      if (amount.commodity())
-	amount = amount.round(amount.commodity().precision());
+    case AMOUNT:
+      *((amount_t *) data) = ((amount_t *) data)->round();
       break;
-    }
     case BALANCE:
       ((balance_t *) data)->round();
       break;

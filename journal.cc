@@ -18,7 +18,6 @@ transaction_t::~transaction_t()
   DEBUG_PRINT("ledger.memory.dtors", "dtor transaction_t");
   if (cost) delete cost;
   if (amount_expr) amount_expr->release();
-  if (cost_expr) cost_expr->release();
 }
 
 std::time_t transaction_t::actual_date() const
@@ -130,8 +129,8 @@ bool entry_base_t::finalize()
     nxact->flags |= TRANSACTION_CALCULATED;
   }
 
-  // If one transaction of a two-line transaction is of a different
-  // commodity than the others, and it has no per-unit price,
+  // If the first transaction of a two-transaction entry is of a
+  // different commodity than the other, and it has no per-unit price,
   // determine its price by dividing the unit count into the value of
   // the balance.  This is done for the last eligible commodity.
 
@@ -158,6 +157,9 @@ bool entry_base_t::finalize()
       balance -= (*x)->amount;
 
       entry_t * entry = dynamic_cast<entry_t *>(this);
+      if ((*x)->amount.commodity().annotated)
+	throw error("Cannot self-balance an annotated commodity");
+	
       (*x)->amount.annotate_commodity(abs(per_unit_cost),
 				      entry ? entry->actual_date() : 0,
 				      entry ? entry->code : "");

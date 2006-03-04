@@ -13,10 +13,6 @@ std::auto_ptr<value_calc> total_expr;
 std::auto_ptr<scope_t> global_scope;
 std::time_t terminus;
 
-bool keep_price = false;
-bool keep_date  = false;
-bool keep_tag   = false;
-
 details_t::details_t(const transaction_t& _xact)
   : entry(_xact.entry), xact(&_xact), account(xact_account(_xact))
 {
@@ -351,6 +347,40 @@ void value_expr_t::compute(value_t& result, const details_t& details,
       result = 0L;
     break;
 
+  case F_PRICE: {
+    int index = 0;
+    value_expr_t * expr = find_leaf(context, 0, index);
+    expr->compute(result, details, context);
+    result = result.price();
+    break;
+  }
+
+  case F_DATE: {
+    int index = 0;
+    value_expr_t * expr = find_leaf(context, 0, index);
+    expr->compute(result, details, context);
+    result = result.date();
+    break;
+  }
+
+  case F_DATECMP: {
+    int index = 0;
+    value_expr_t * expr = find_leaf(context, 0, index);
+    expr->compute(result, details, context);
+    result = result.date();
+    if (! result)
+      break;
+
+    index = 0;
+    expr = find_leaf(context, 1, index);
+    amount_t moment;
+    if (compute_amount(expr, moment, NULL, context))
+      result -= moment;
+    else
+      throw compute_error("Invalid date passed to datecmp(value,date)");
+    break;
+  }
+
   case F_ARITH_MEAN: {
     int index = 0;
     value_expr_t * expr = find_leaf(context, 0, index);
@@ -379,6 +409,14 @@ void value_expr_t::compute(value_t& result, const details_t& details,
     value_expr_t * expr = find_leaf(context, 0, index);
     expr->compute(result, details, context);
     result.abs();
+    break;
+  }
+
+  case F_ROUND: {
+    int index = 0;
+    value_expr_t * expr = find_leaf(context, 0, index);
+    expr->compute(result, details, context);
+    result.round();
     break;
   }
 
@@ -647,9 +685,6 @@ void value_expr_t::compute(value_t& result, const details_t& details,
     assert(0);
     break;
   }
-
-  if (! keep_price || ! keep_date || ! keep_tag)
-    result = result.reduce(keep_price, keep_date, keep_tag);
 }
 
 static inline void unexpected(char c, char wanted = '\0') {
@@ -685,7 +720,8 @@ value_expr_t * parse_value_term(std::istream& in, scope_t * scope)
 
     if (std::strchr(buf, '.')) {
       node.reset(new value_expr_t(value_expr_t::CONSTANT_A));
-      node->constant_a = new amount_t(buf);
+      node->constant_a = new amount_t;
+      node->constant_a->parse(buf, AMOUNT_PARSE_NO_MIGRATE);
     } else {
       node.reset(new value_expr_t(value_expr_t::CONSTANT_I));
       node->constant_i = std::atol(buf);
@@ -911,7 +947,7 @@ value_expr_t * parse_value_term(std::istream& in, scope_t * scope)
       unexpected(c, '}');
 
     node.reset(new value_expr_t(value_expr_t::CONSTANT_A));
-    node->constant_a = new amount_t();
+    node->constant_a = new amount_t;
     node->constant_a->parse(buf, AMOUNT_PARSE_NO_MIGRATE);
     break;
   }
@@ -1171,6 +1207,7 @@ void init_value_expr()
   node = new value_expr_t(value_expr_t::F_NOW);
   globals->define("m", node);
   globals->define("now", node);
+  globals->define("today", node);
 
   node = new value_expr_t(value_expr_t::AMOUNT);
   globals->define("a", node);
@@ -1230,11 +1267,11 @@ void init_value_expr()
 
   node = new value_expr_t(value_expr_t::PRICE_TOTAL);
   globals->define("I", node);
-  globals->define("price_total", node);
+  globals->define("total_price", node);
 
   node = new value_expr_t(value_expr_t::COST_TOTAL);
   globals->define("B", node);
-  globals->define("cost_total", node);
+  globals->define("total_cost", node);
 
   // Relating to format_t
   globals->define("t", new value_expr_t(value_expr_t::VALUE_EXPR));
@@ -1247,6 +1284,12 @@ void init_value_expr()
   node->set_right(new value_expr_t(value_expr_t::F_ABS));
   globals->define("U", node);
   globals->define("abs", node);
+
+  node = new value_expr_t(value_expr_t::O_DEF);
+  node->set_left(new value_expr_t(value_expr_t::CONSTANT_I));
+  node->left->constant_i = 1;
+  node->set_right(new value_expr_t(value_expr_t::F_ROUND));
+  globals->define("round", node);
 
   node = new value_expr_t(value_expr_t::O_DEF);
   node->set_left(new value_expr_t(value_expr_t::CONSTANT_I));
@@ -1284,9 +1327,28 @@ void init_value_expr()
   node->left->constant_i = 2;
   node->set_right(new value_expr_t(value_expr_t::F_VALUE));
   globals->define("P", node);
-  globals->define("val", node);
-  globals->define("value", node);
-  value_auto_ptr cval(parse_boolean_expr("current_value(x)=P(x,m)", globals));
+  value_auto_ptr val(parse_boolean_expr("value=P(t,m)", globals));
+  value_auto_ptr tval(parse_boolean_expr("total_value=P(T,m)", globals));
+  value_auto_ptr valof(parse_boolean_expr("valueof(x)=P(x,m)", globals));
+  value_auto_ptr dvalof(parse_boolean_expr("datedvalueof(x,y)=P(x,y)", globals));
+
+  node = new value_expr_t(value_expr_t::O_DEF);
+  node->set_left(new value_expr_t(value_expr_t::CONSTANT_I));
+  node->left->constant_i = 1;
+  node->set_right(new value_expr_t(value_expr_t::F_PRICE));
+  globals->define("priceof", node);
+
+  node = new value_expr_t(value_expr_t::O_DEF);
+  node->set_left(new value_expr_t(value_expr_t::CONSTANT_I));
+  node->left->constant_i = 1;
+  node->set_right(new value_expr_t(value_expr_t::F_DATE));
+  globals->define("dateof", node);
+
+  node = new value_expr_t(value_expr_t::O_DEF);
+  node->set_left(new value_expr_t(value_expr_t::CONSTANT_I));
+  node->left->constant_i = 2;
+  node->set_right(new value_expr_t(value_expr_t::F_DATECMP));
+  globals->define("datecmp", node);
 
   // Macros
   node = parse_value_expr("P(a,d)");
@@ -1295,7 +1357,7 @@ void init_value_expr()
 
   node = parse_value_expr("P(O,d)");
   globals->define("V", node);
-  globals->define("market_total", node);
+  globals->define("total_market", node);
 
   node = parse_value_expr("v-b");
   globals->define("g", node);
@@ -1303,7 +1365,7 @@ void init_value_expr()
 
   node = parse_value_expr("V-B");
   globals->define("G", node);
-  globals->define("gain_total", node);
+  globals->define("total_gain", node);
 
   value_auto_ptr minx(parse_boolean_expr("min(x,y)=x<y?x:y", globals));
   value_auto_ptr maxx(parse_boolean_expr("max(x,y)=x>y?x:y", globals));
@@ -1417,6 +1479,8 @@ void dump_value_expr(std::ostream& out, const value_expr_t * node,
   case value_expr_t::F_COMMODITY_MASK:
     out << "F_COMMODITY_MASK"; break;
   case value_expr_t::F_VALUE: out << "F_VALUE"; break;
+  case value_expr_t::F_PRICE: out << "F_PRICE"; break;
+  case value_expr_t::F_DATE: out << "F_DATE"; break;
 
   case value_expr_t::O_NOT: out << "O_NOT"; break;
   case value_expr_t::O_ARG: out << "O_ARG"; break;

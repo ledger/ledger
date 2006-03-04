@@ -2,6 +2,7 @@
 #include "datetime.h"
 #include "error.h"
 #include "mask.h"
+#include "walk.h"
 
 #include <memory>
 
@@ -47,10 +48,31 @@ entry_t * derive_new_entry(journal_t& journal,
       i++;
     }
 
-    if (i == end)
+    if (i == end) {
       added->add_transaction(new transaction_t(acct));
-    else
-      added->add_transaction(new transaction_t(acct, amount_t(*i++)));
+    } else {
+      transaction_t * xact = new transaction_t(acct, amount_t(*i++));
+      added->add_transaction(xact);
+
+      if (! xact->amount.commodity()) {
+	// If the amount has no commodity, we can determine it given
+	// the account by creating a final for the account and then
+	// checking if it contains only a single commodity.  An
+	// account to which only dollars are applied would imply that
+	// dollars are wanted now too.
+
+	std::auto_ptr<item_handler<transaction_t> > formatter;
+	formatter.reset(new set_account_value);
+	walk_entries(journal.entries, *formatter.get());
+	formatter->flush();
+
+	sum_accounts(*journal.master);
+
+	value_t total = account_xdata(*acct).total;
+	if (total.type == value_t::AMOUNT)
+	  xact->amount.set_commodity(((amount_t *) total.data)->commodity());
+      }
+    }
 
     if (journal.basket)
       acct = journal.basket;

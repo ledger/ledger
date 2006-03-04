@@ -66,6 +66,9 @@ class config_t
   bool          use_cache;
   bool          cache_dirty;
   bool          debug_mode;
+  bool          keep_price;
+  bool          keep_date;
+  bool          keep_tag;
 
   config_t() {
     reset();
