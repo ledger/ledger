@@ -810,7 +810,7 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
   }
 
   if (precision) {
-    out << ((comm.flags() & COMMODITY_STYLE_EUROPEAN) ? ',' : '.');
+    out << ((comm.flags & COMMODITY_STYLE_EUROPEAN) ? ',' : '.');
 
     std::ostringstream final;
     final.width(precision);
@@ -828,8 +828,8 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
 
     if (i == len)
       out << str;
-    else if (i < comm.precision())
-      out << std::string(str, 0, comm.precision());
+    else if (i < comm.precision)
+      out << std::string(str, 0, comm.precision);
     else
       out << std::string(str, 0, i);
   }

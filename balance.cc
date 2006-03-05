@@ -87,10 +87,7 @@ void balance_t::write(std::ostream& out,
 
 balance_t& balance_t::operator*=(const balance_t& bal)
 {
-  if (! *this || ! bal) {
-    return (*this = 0L);
-  }
-  else if (amounts.size() == 1 && bal.amounts.size() == 1) {
+  if (amounts.size() == 1 && bal.amounts.size() == 1) {
     return *this *= (*bal.amounts.begin()).second;
   }
   else {
@@ -103,15 +100,7 @@ balance_t& balance_t::operator*=(const balance_t& bal)
 
 balance_t& balance_t::operator/=(const balance_t& bal)
 {
-  if (! *this) {
-    return (*this = 0L);
-  }
-  else if (! bal) {
-    std::ostringstream errmsg;
-    errmsg << "Attempt to divide by zero: " << *this << " / " << bal;
-    throw amount_error(errmsg.str());
-  }
-  else if (amounts.size() == 1 && bal.amounts.size() == 1) {
+  if (amounts.size() == 1 && bal.amounts.size() == 1) {
     return *this /= (*bal.amounts.begin()).second;
   }
   else if (*this == bal) {
