@@ -1,15 +1,17 @@
 #!/bin/sh
 
 rsync -Lav --delete --delete-excluded \
-    --exclude=".libs/"	 \
-    --exclude="build/"	 \
-    --exclude="*.[oa]"	 \
-    --exclude="*.l[oa]"  \
-    --exclude="*.so"	 \
-    --exclude="ledger"	 \
-    --exclude="*~"	 \
-    --exclude="_darcs/"  \
-    --exclude="scripts/" \
+    --exclude=".libs/"	  \
+    --exclude="build/"	  \
+    --exclude="CVS/"	  \
+    --exclude="branches/" \
+    --exclude="*.[oa]"	  \
+    --exclude="*.l[oa]"   \
+    --exclude="*.so"	  \
+    --exclude="ledger"	  \
+    --exclude="*~"	  \
+    --exclude="_darcs/"   \
+    --exclude="scripts/"  \
     ./ /tmp/ledger-verify/
 
 cd /tmp/ledger-verify

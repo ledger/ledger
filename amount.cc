@@ -38,10 +38,7 @@ class amount_t::bigint_t {
       ref(1), index(0) {
     mpz_init_set(val, other.val);
   }
-  ~bigint_t() {
-    assert(ref == 0);
-    mpz_clear(val);
-  }
+  ~bigint_t();
 };
 
 unsigned int sizeof_bigint_t() {
@@ -50,9 +47,15 @@ unsigned int sizeof_bigint_t() {
 
 #define MPZ(x) ((x)->val)
 
-static mpz_t		  temp;
-static mpz_t		  divisor;
+static mpz_t temp;		// these are the global temp variables
+static mpz_t divisor;
+
 static amount_t::bigint_t true_value;
+
+inline amount_t::bigint_t::~bigint_t() {
+  assert(ref == 0 || (! do_cleanup && this == &true_value));
+  mpz_clear(val);
+}
 
 base_commodities_map commodity_base_t::commodities;
 
