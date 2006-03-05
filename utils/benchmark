@@ -1,0 +1,22 @@
+#!/bin/sh
+
+rsync -Lav --delete --delete-excluded \
+    --exclude=".libs/" 	 \
+    --exclude="build/" 	 \
+    --exclude="*.[oa]" 	 \
+    --exclude="*.l[oa]"  \
+    --exclude="*.so" 	 \
+    --exclude="ledger" 	 \
+    --exclude="*~" 	 \
+    --exclude="_darcs/"  \
+    --exclude="scripts/" \
+    ./ /tmp/ledger-bench/
+
+cd /tmp/ledger-bench
+make all-clean
+./acprep --flat-opt
+
+if make ledger; then
+   strip ledger
+   utils/speedcmp 50 ./ledger
+fi

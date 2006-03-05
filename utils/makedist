@@ -1,0 +1,21 @@
+#!/bin/sh
+
+HERE=$(pwd)
+VERSION=$(utils/version)
+
+rsync -Lav --delete --delete-excluded \
+    --exclude="CVS/" --exclude="acprep*" \
+    --exclude="utils/" --exclude="ledger" \
+    --exclude="TAGS"  --exclude="ledger.dat" \
+    --exclude='*.[oa]' --exclude='*.l[oa]' --exclude='*.so' \
+    $HERE/ /tmp/ledger-$VERSION/
+
+make ledger.info ledger.pdf
+cd /tmp/ledger-$VERSION
+make all-clean
+$HERE/acprep --dist
+cp $HERE/ledger.info $HERE/ledger.pdf .
+rm -fr autom4te.cache TODO .clean .cvsignore
+
+cd /tmp
+tar cvzf /tmp/ledger-$VERSION.tar.gz ledger-$VERSION

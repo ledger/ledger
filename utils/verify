@@ -1,0 +1,22 @@
+#!/bin/sh
+
+rsync -Lav --delete --delete-excluded \
+    --exclude=".libs/"	 \
+    --exclude="build/"	 \
+    --exclude="*.[oa]"	 \
+    --exclude="*.l[oa]"  \
+    --exclude="*.so"	 \
+    --exclude="ledger"	 \
+    --exclude="*~"	 \
+    --exclude="_darcs/"  \
+    --exclude="scripts/" \
+    ./ /tmp/ledger-verify/
+
+cd /tmp/ledger-verify
+make all-clean
+./acprep --safe-opt
+
+if make ledger; then
+   strip ledger
+   nice -n 20 utils/tests
+fi

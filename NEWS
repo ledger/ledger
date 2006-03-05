@@ -1,0 +1,550 @@
+
+			     Ledger NEWS
+
+* 2.5
+
+- Add a new --only predicate, which occurs during transaction
+  processing between --limit and --display.  Here is a summary of how
+  the three supported predicates are used:
+
+    --limit "a>100"
+
+      This flag limits computation to *only transactions whose amount
+      is greater than 100 of a given commodity*.  It means that if you
+      scan your dining expenses, for example, only individual bills
+      greater than $100 would be caculated by the report.
+
+    --only "a>100"
+
+      This flag happens much later than --limit, and corresponding
+      more directly to what one normally expects.  If --limit isn't
+      used, then ALL your dining expenses contribute to the report,
+      *but only those calculated transactions whose value is greater
+      than $100 are used*.  This becomes important when doing a
+      monthly costs report, for example, because it makes the
+      following command possible:
+
+        ledger -M --only "a>100" reg ^Expenses:Food
+
+      This shows only *months* whose amount is greater than 100.  If
+      --limit had been used, it would have been a monthly summary of
+      all individual dinner bills greater than 100 -- which is a very
+      different thing.
+
+    --display "a>100"
+
+      This predicate does not constrain calculation, but only display.
+      Consider the same command as above:
+
+        ledger -M --display "a>100" reg ^Expenses:Food
+
+      This displays only lines whose amount is greater than 100, *yet
+      the running total still includes amounts from all transactions*.
+      This command has more particular application, such as showing
+      the current month's checking register while still giving a
+      correct ending balance:
+
+        ledger --display "d>[this month]" reg Checking
+
+    Note that these predicates can be combined.  Here is a report that
+    considers only food bills whose individual cost is greater than
+    $20, but shows the monthly total only if it is greater than $500.
+    Finally, we only display the months of the last year, but we
+    retain an accurate running total with respect to the entire ledger
+    file:
+
+        ledger -M --limit "a>20" --only "a>200" \
+          --display "year == yearof([last year])" reg ^Expenses:Food
+
+- There have a few changes to value expression syntax.  The most
+  significant incompatibilities being:
+
+  * Equality is now ==, not =
+  * The U, A, and S functions now requires parens around the argument.
+    Whereas before At was acceptable, now it must be specified as
+    A(t).
+  * The P function now always requires two arguments.  The old
+    one-argument version P(x) is now the same as P(x,m).
+
+  The following value expression features are new:
+
+  * A C-like comma operator is supported, where all but the last term
+    are ignored.  The is significant for the next feature:
+  * Function definitions are now supported.  Scoping is governed
+    by parentheses.  For example:
+      (x=100, x+10)      ; yields 110 as the result
+      (f(x)=x*2,f(100))  ; yields 200 as the result
+  * Identifier names may be any length.  Along with this support comes
+    alternate, longer names for all of the current one-letter value
+    expression variables:
+
+     Old    New
+     ---    ---
+     m      now
+     a      amount
+     a      amount
+     b      cost
+     i      price
+     d      date
+     X      cleared
+     Y      pending
+     R      real
+     L      actual
+     n      index
+     N      count
+     l      depth
+     O      total
+     B      cost_total
+     I      price_total
+     v      market
+     V      market_total
+     g      gain
+     G      gain_total
+     U(x)   abs(x)
+     S(x)   quant(x), quantity(x)
+            comm(x), commodity(x)
+            setcomm(x,y), set_commodity(x,y)
+     A(x)   mean(x), avg(x), average(x)
+     P(x,y) val(x,y), value(x,y)
+            min(x,y)
+            max(x,y)
+
+- There are new "parse" and "expr" commands, whose argument is a
+  single value expression.  Ledger will simply print out the result of
+  evaluating it.  "parse" happens before parsing your ledger file,
+  while "expr" happens afterward.  Although "expr" is slower as a
+  result, any commodities you use will be formatted based on patterns
+  of usage seen in your ledger file.
+
+  These commands can be used to test value expressions, or for doing
+  calculation of commoditized amounts from a script.
+
+  A new "--debug" will also dump the resulting parse tree, useful for
+  submitting bug reports.
+
+- Added new min(x,y) and max(x,y) value expression functions.
+
+- Added a new value expression regexp command:
+    C//  compare against a transaction amount's commodity symbol
+
+- Value expression function may now be defined within your ledger file
+  (or initialization file) using the following syntax:
+
+    @def foo(x)=x*1000
+
+  This line makes the function "foo" available to all subsequent value
+  expressions, to all command-line options taking a value expression,
+  and to the new "expr" command (see above).
+
+- Added a new "csv" command, for outputting results in CSV format.
+
+- Effective dates may now be specified for entries:
+
+    2004/10/03=2004/09/30 Credit card company
+      Liabilities:MasterCard         $100.00
+      Assets:Checking
+
+  This entry says that although the actual transactions occurred on
+  October 3rd, their effective date was September 30th.  This is
+  especially useful for budgeting, in case you want the transactions
+  to show up in September instead of October.
+
+  To report using effective dates, use the --effective option.
+
+- Actual and effective dates may now be specified for individual
+  transactions:
+
+    2004/10/03=2004/09/30 Credit card company
+      Liabilities:MasterCard         $100.00
+      Assets:Checking                         ; [2004/10/10=2004/09/15]
+
+  This states that although the actual date of the entry is
+  2004/10/03, and the effective date of the entry is 2004/09/30, the
+  actual date of the Checking transaction itself is 2004/10/10, and
+  its effective date is 2004/09/15.  The effective date is optional
+  (just specifying the actual date would have read "[2004/10/10]").
+
+  If no effective date is given for a transaction, the effective date
+  of the entry is assumed.  If no actual date is given, the actual
+  date of the entry is assumed.  The syntax of the latter is simply
+  [=2004/09/15].
+
+- To support the above, there is a new formatting option: "%d".  This
+  outputs only the date (like "%D") if there is no effective date, but
+  outputs "ADATE=EDATE" if there is one.  The "print" report now uses
+  this.
+
+- To support the above, the register report may now split up entries
+  whose component transactions have different dates.  For example,
+  given the following entry:
+
+    2005/10/15=2005/09/01 iTunes
+      Expenses:Music                 $1.08 ; [2005/10/20=2005/08/01]
+      Liabilities:MasterCard
+
+  The command "ledger register" on this data file reports:
+
+    2005/10/20 iTunes   Expenses:Music            $1.08    $1.08
+    2005/10/15 iTunes   Liabilities:MasterCard   $-1.08        0
+
+  While the command "ledger --effective register" reports:
+
+    2005/08/01 iTunes   Expenses:Music            $1.08    $1.08
+    2005/09/01 iTunes   Liabilities:MasterCard   $-1.08        0
+
+  Although it appears as though two entries are being reported, both
+  transactions belong to the same entry.
+
+- Individual transactions may now be cleared separately.  The old
+  syntax, which is still supported, clears all transactions in an
+  entry:
+
+    2004/05/27 * Book Store
+      Expenses:Dining                 $20.00
+      Liabilities:MasterCard
+
+  The new syntax allows clearing of just the MasterCard transaction:
+
+    2004/05/27 Book Store
+      Expenses:Dining                 $20.00
+      * Liabilities:MasterCard
+
+  NOTE: This changes the output format of both the "emacs" and "xml"
+  reports.  ledger.el uses the new syntax unless the Lisp variable
+  `ledger-clear-whole-entries' is set to t.
+
+- Removed Python integration support.
+
+- Did much internal restructuring to allow the use of libledger.so in
+  non-command-line environments (such as GUI tools).
+
+* 2.4
+
+- Both "-$100.00" and "$-100.00" are now equivalent amounts.
+
+- Simple, inline math (using the operators +-/*, and/or parentheses)
+  is supported in transactions.  For example:
+
+    2004/05/27 Book Store
+      Expenses:Dining                 $20.00 + $2.50
+      Liabilities:MasterCard
+
+  This won't register the tax/tip in its own account, but might make
+  later reading of the ledger file easier.
+
+- Use of a "catch all" account is now possible, which auto-balances
+  entries that contain _only one transaction_.  For sanity's sake this
+  is not used to balance all entries, as that would make locating
+  unbalanced entries a nightmare.  Example:
+
+    A Liabilities:MasterCard
+
+    2004/05/27 Book Store
+      Expenses:Dining                 $20.00 + $2.50
+
+  This is equivalent to the entry in the previous bullet.
+
+- Entries that contain a single transaction with no amount now always
+  balance, even if multiple commodities are involved.  This means that
+  the following is now supported, which wasn't previously:
+
+    2004/06/21 Adjustment
+        Retirement          100 FUNDA
+        Retirement          200 FUNDB
+        Retirement          300 FUNDC
+        Equity:Adjustments
+
+- Fixed several bugs relating to QIF parsing, budgeting and
+  forecasting.
+
+- The configure process now looks for libexpat in addition to
+  searching for libxmlparse+libxmltok (how expat used to be packaged).
+
+* 2.3
+
+- The directive "!alias ALIAS = ACCOUNT" makes it possible to use
+  "ALIAS" as an alternative name for ACCOUNT in a textual ledger file.
+  You might use this to associate the single word "Bank" with the
+  checking account you use most, for example.
+
+- The --version page shows the optional modules ledger was built with.
+
+- Fixed several minor problems, plus a few major ones dealing with
+  imprecise date parsing.
+
+* 2.2
+
+- Ledger now compiles under gcc 2.95.
+
+- Fixed several core engine bugs, and problems with Ledger's XML data
+  format.
+
+- Erros in XML or Gnucash data now report the correct line number for
+  the error, instead of always showing line 1.
+
+- 'configure' has been changed to always use a combination of both
+  compile and link tests for every feature, in order to identify
+  environment problems right away.
+
+- The "D <COMM>" command, released in 2.1, now requires a commoditized
+  amount, such as "D $1,000.00".  This sets not only the default
+  commodity, but several flags to be used with all such commodities
+  (such as whether numbering should be American or European by
+  default).  This entry may be used be many times; the most recent
+  seen specifies the default for entries that follow.
+
+- The binary cache now remembers the price history database that was
+  used, so that if LEDGER_PRICE_DB is silently changed, the cache will
+  be thrown away and rebuilt.
+
+- OFX data importing is now supported, using libofx
+  (http://libofx.sourceforge.net).  configure will check if the
+  library is available.  You may need to add CPPFLAGS or LDFLAGS to
+  the command-line for the appropriate headers and library to be
+  found.  This support is preliminary, and as such is not documented
+  yet.
+
+- All journal entries now remember where they were read from.  New
+  format codes to access this information are: %S for source path, %B
+  for beginning character position, and %E for ending character
+  position.
+
+- Added "pricesdb" command, which is identical to "prices" except that
+  it uses the same format as Ledger's usual price history database.
+
+- Added "output FILE" command, which attempts to reproduce the input
+  journal FILE exactly.  Meant for future GUI usage.  This command
+  relies on --write-hdr-format and --write-xact-format, instead of
+  --print-format.
+
+- Added "--reconcile BALANCE" option, which attempts to reconcile all
+  matching transactions to the given BALANCE, outputting those that
+  would need to be "cleared" to match it.  Using by the
+  auto-reconciling feature of ledger.el (see below).
+
+  "--reconcile-date DATE" ignores any uncleared transactions after
+  DATE in the reconciling algorithm.  Since the algorithm is O(n^2)
+  (where 'n' is the number of uncleared transactions to consider),
+  this could have a substantial impact.
+
+- In ledger.el's *Reconcile* mode ('C-c C-r' from a ledger-mode file):
+  . 'a' adds a missing transaction
+  . 'd' deletes the current transaction
+  . 'r' attempts to auto-reconcile (same as 'C-u C-c C-r')
+  . 's' or 'C-x C-s' will save the ledger data file and show the
+    currently cleared balance
+  . 'C-c C-c' commits the pending transactions, marking them cleared.
+  This feature now works with Emacs 21.3.
+  Also, the reconciler no longer needs to ask "how far back" to go.
+
+- To support the reconciler, textual entries may now have a "!" flag
+  (pending) after the date, instead of a "*" flag (cleared).
+
+- There are a new set of value expression regexp commands:
+    c//  entry code
+    p//  payee
+    w//  short account name
+    W//  full account name
+    e//  transaction note
+
+  This makes it possible to display transactions whose comment field
+  matches a particular text string.  For example:
+
+    ledger -l e/{tax}/ reg
+
+  prints out all the transactions with the comment "{tax}", which
+  might be used to identify items related to a tax report.
+
+* 2.1
+
+- Improved the autoconf system to be smarter about finding XML libs
+
+- Added --no-cache option, to always ignore any binary cache file
+
+- `ledger-reconcile' (in ledger.el) no longer asks for a number of days
+
+- Fixed %.XY format, where X is shorter than the string generated by Y
+
+- New directive for text files: "D <COMM>" specifies the default commodity
+  used by the entry command
+
+* 2.0
+
+This version represents a full rewrite, while preserving much of the
+original data format and command-line syntax.  There are too many new
+features to describe in full, but a quick list: value expressions,
+complex date masks, binary caching of ledger data, several new
+reporting options, a simple way to specify payee regexps, calculation
+and display predicates, and two-way Python integration.  Ledger also
+uses autoconf now, and builds as a library in addition to a
+command-line driver.
+
+** Differences from 1.7
+
+- changes in option syntax:
+
+  -d now specifies the display predicate.  To give a date mask similar
+  to 1.7, use the -p (period) option.
+
+  -P now generates the "by payee" report.  To specify a price database
+  to use, use --price-db.
+
+  -G now generates a net gain report.  To print totals in a format
+  consumable by gnuplot, use -J.
+
+  -l now specifies the calculation predicate.  To emulate the old
+  usage of "-l \$100", use: -d "AT>100".
+
+  -N is gone.  Instead of "-N REGEX", use: -d "/REGEX/?T>0:T".
+
+  -F now specifies the report format string.  The old meaning of -F
+  now has little use.
+
+  -S now takes a value expression as the sorting criterion.  To get
+  the old meaning of "-S", use "-S d".
+
+  -n now means "collapse entries in the register report".  The get the
+  old meaning of -n in the balance report, use "-T a".
+
+  -p now specifies the reporting period.  You can convert commodities
+  in a report using value expressions.  For example, to display hours
+  at $10 per hour:
+    -T "O>={0.01h}?{\$10.00}*O:O"
+  Or, to reduce totals, so that every $417 becomes 1.0 AU:
+    -T "O>={\$0.01}?{1.0 AU}*(O/{\$417}):O"
+
+- The use of "+" and "-" in ledger files to specify permanent regexps
+  has been removed.
+
+- The "-from" argument is no longer used by the "entry" command.
+  Simply remove it.
+
+** Features new to 2.0
+
+- The most significant feature to be added is "value expressions".
+  They are used in many places to indicate what to display, sorting
+  order, how to calculate totals, etc.  Logic and math operators are
+  supported, as well as simple functions.  See the manual.
+
+- If the environment variable LEDGER_FILE (or LEDGER) is used, a
+  binary cache of that ledger is kept in ~/.ledger-cache (or the file
+  given by LEDGER_CACHE).  This greatly speeds up subsequent queries.
+  Happens only if "-f" or "--file" is not used.
+
+- New 'xml' report outputs an XML version of what "register" would
+  have displayed.  This can be used to manipulate reported data in a
+  more scriptable way.
+
+  Ledger can also read as input the output from the "xml" report.  If
+  the "xml" report did not contain balanced entries, they will be
+  balanced by the "<Unknown>" account.  For example:
+    ledger reg rent
+  displays the same results as:
+    ledger xml rent | ledger -f - reg rent
+
+- Regexps given directly after the command name now apply only to
+  account names.  To match on a payee, use "--" to separate the two
+  kinds of regexps.  For example, to find a payee named "John" within
+  all Expenses accounts, use:
+    ledger register expenses -- john
+
+  Note: This command is identical (and internally converted) to:
+    ledger -l "/expenses/|//john/" register
+
+- To include entries from another file into a specific account, use:
+    !account ACCOUNT
+    !include FILE
+    !end
+
+- Register reports now show only matching account transactions.  Use
+  "-r" to see "related accounts" -- the account the transfer came from
+  or went to (This was the old behavior in 1.x, but led to confusion).
+  "-r" also works with balance reports, where it will total all the
+  transactions related to your query.
+
+- Automated transactions now use value expressions for the predicate.
+  The new syntax is:
+    = VALUE-EXPR
+      TRANSACTIONS...
+
+  Only one VALUE-EXPR is supported (compared to multiple account
+  regexps before).  However, since value expression allow for logic
+  chaining, there is no loss of functionality.  Matching can also be
+  much more comprehensive.
+
+- If Boost.Python is installed (libboost_python.a), ledger can support
+  two-way Python integration.  This feature is enabled by passing
+  --enable-python to the "configure" script before building.  Ledger
+  can then be used as a module (ledger.so), as well as supporting
+  Python function calls directly from value expressions.  See main.py
+  for an example of driving Ledger from Python.  It implements nearly
+  all the functionality of the C++ driver, main.cc.
+
+  (This feature has yet to mature, and so is being offered as a beta
+  feature in this release.  It is mostly functional, and those curious
+  are welcome to play with it.)
+
+- New reporting options:
+
+  "-o FILE" outputs data to FILE.  If "-", output goes to stdout (the
+  default).
+
+  -O shows base commodity values (this is the old behavior)
+  -B shows basis cost of commodities
+  -V shows market value of commodities
+  -g reports gain/loss performance of each register item
+  -G reports net gain/loss over time
+  -A reports average transaction value (arithmetic mean)
+  -D reports each transaction's deviation from the average
+
+  -w uses 132 columns for the register report, rather than 80.  Set
+   the environment variable LEDGER_WIDE for this to be the default.
+
+  "-p INTERVAL" allows for more flexible period reporting, such as:
+
+    monthly
+    every week
+    every 3 quarters
+    weekly from 12/20
+    monthly in 2003
+    weekly from last month until dec
+
+  "-y DATEFMT" changes the date format used in all reports.  The
+  default is "%Y/%m/%d".
+
+  -Y and -W print yearly and weekly subtotals, just as -M prints
+  monthly subtotals.
+
+  --dow shows cumulative totals for each day of the week.
+
+  -P reports transactions grouped by payee
+
+  -x reports the payee as the commodity; useful in some cases
+
+  -j and -J replace the previous -G (gnuplot) option.  -j reports the
+  amounts column in a way gnuplot can consume, and -J the totals
+  column.  An example is in "scripts/report".
+
+  "--period-sort EXPR" sorts transactions within a reporting period.
+  The regular -S option sorts all reported transactions.
+
+* 1.7
+
+- Pricing histories are now supported, so that ledger remembers the
+  historical prices of all commodities, and can present register
+  reports based on past and present market values as well as original
+  cost basis.  See the manual for more details on the new option
+  switches.
+
+* 1.6
+
+- Ledger can now parse timeclock files.  These are simple timelogs
+  that track in/out events, which can be maintained using my timeclock
+  tool.  By allowing ledger to parse these, it means that reporting
+  can be done on them in the same way as ledger files (the commodity
+  used is "h", for hours); it means that doing things like tracking
+  billable hours for clients, and invoicing those clients to transfer
+  hours into dollar values via a receivable account, is now trivial.
+  See the docs for more on how to do this.
+
+- Began keeping a NEWS file. :)

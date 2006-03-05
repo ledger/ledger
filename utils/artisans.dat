@@ -1,0 +1,143 @@
+; -*-ledger-*-
+
+!account Billable
+!include /home/johnw/Projects/ledger/utils/.timelog
+!end
+
+2003/09/21 * Digital Foto Discount Club
+    Expenses:Computer                    $222.85  ; Carrying case
+    Expenses:Shipping                     $23.90
+    Liabilities:Payable:John Wiegley    $-246.75
+
+2003/10/04 * Apple Computer
+    Expenses:Computer                    $747.36
+    Expenses:Computer                     $74.69
+    Expenses:Computer                  $3,345.66  ; PowerBook 15"
+    Expenses:Computer                     $36.07
+    Expenses:Computer                     $85.52
+    Liabilities:Payable:John Wiegley  $-4,289.30
+
+2003/10/06 * ACM Membership
+    Expenses:Subscriptions                $99.00  ; ACM Membership
+    Expenses:Subscriptions                $99.00  ; ACM Digital Library
+    Liabilities:Payable:John Wiegley    $-198.00
+
+2003/10/15 * Fry's Electronics
+    Expenses:Computer                     $79.99  ; Headphones
+    Expenses:Computer                    $329.98  ; Toner and Virtual PC
+    Expenses:Taxes:Sales                  $33.82
+    Liabilities:Payable:John Wiegley    $-443.79
+
+2003/10/15 * Apple Store
+    Expenses:Computer                     $43.30
+    Liabilities:Payable:John Wiegley
+
+2003/10/22 * Office Depot
+    Expenses:Computer                    $159.98  ; UPS
+    Expenses:Taxes:Sales                  $13.20
+    Liabilities:Payable:John Wiegley    $-173.18
+
+2003/10/24 * Apple Computer
+    Expenses:Computer                    $129.00  ; Upgrade to Panther
+    Expenses:Taxes:Sales                  $10.64
+    Liabilities:Payable:John Wiegley    $-139.64
+
+2003/10/31 * Barnes & Noble
+    Expenses:Books                       $149.99
+    Expenses:Taxes:Sales                  $12.37
+    Liabilities:Payable:John Wiegley    $-162.36
+
+2003/11/13 * David McCants
+    Expenses:Marketing                   $500.00
+    Liabilities:Payable:John Wiegley
+
+2004/03/11 * T-Mobile Hotspot
+    Expenses:Internet                     $12.00
+    Liabilities:Payable:John Wiegley
+
+2004/04/05 * Edison Design Group, Inc. (Inv#1)
+    Assets:Checking                   $20,000.00
+    Billable:EDG                         -200.0h @ $100.00
+
+2004/04/05 * Time lost due to missing Gay's paper
+    (Billable:EDG)                        -16.87h
+
+2004/04/12 * ForumJobs, Inc. (Inv#2)
+    Assets:Receivable:ForumJobs        $4,000.00
+    Billable:ForumJobs                    -80.0h @ $50.00
+
+2004/04/21 * (101) John Wiegley
+    Liabilities:Payable:John Wiegley   $6,208.32
+    Assets:Checking
+
+2004/04/22 * DirectNIC.com
+    Expenses:Internet                     $12.00
+    Liabilities:Payable:John Wiegley
+
+2004/04/30 * Office Depot
+    Expenses:Supplies                     $86.55  ; Paper shredder
+    Liabilities:Payable:John Wiegley
+
+2004/05/01 * (102) John Wiegley
+    Expenses:Employees:John Wiegley    $2,916.66
+    Assets:Checking
+
+2004/05/06 * (103) ForumJobs, Inc.
+    Assets:ForumJobs:Stock        25,000.00 FRJB
+    Assets:Checking                       $-2.50
+
+2004/05/09 * fastmail.fm
+    Expenses:Internet                     $39.95
+    Liabilities:Payable:John Wiegley
+
+2004/05/27 * ForumJobs, Inc. (Inv#2)
+    Assets:Checking                    $4,000.00
+    Assets:Receivable:ForumJobs
+
+2004/05/27 * John Wiegley
+    Expenses:Employees:John Wiegley      $256.90
+    Assets:Checking
+
+2004/06/04 * (104) John Wiegley
+    Expenses:Employees:John Wiegley    $2,916.66
+    Assets:Checking
+
+2004/06/04 * (105) John Wiegley
+    Liabilities:Payable:John Wiegley     $138.50
+    Assets:Checking
+
+2004/06/14 * DirectNIC.com
+    Expenses:Internet                     $12.00
+    Liabilities:Payable:John Wiegley
+
+2004/07/01 (106) John Wiegley
+    Expenses:Employees:John Wiegley    $2,916.66
+    Assets:Checking
+
+2004/07/06 * Office Depot
+    Expenses:Computer                    $429.11
+    Liabilities:Payable:John Wiegley
+
+2004/07/19 * DirectNIC.com
+    Expenses:Internet                     $12.00
+    Liabilities:Payable:John Wiegley
+
+2004/08/01 (107) John Wiegley
+    Expenses:Employees:John Wiegley    $2,916.66
+    Liabilities:Payable:John Wiegley     $453.11
+    Assets:Checking                   $-3,369.77
+
+2004/08/24 Borders
+    Expenses:Books                       $113.60
+    Liabilities:Payable:John Wiegley
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+2004/10/01 (108) John Wiegley
+    Expenses:Employees:John Wiegley    $2,916.66
+    Assets:Checking
+
+2004/11/01 (109) John Wiegley
+    Expenses:Employees:John Wiegley    $2,243.77
+    Liabilities:Payable:John Wiegley     $113.60
+    Assets:Checking                   $-2,357.37

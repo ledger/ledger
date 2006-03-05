@@ -1,0 +1,29 @@
+#!/bin/zsh
+
+generate=false
+if [ "$1" = "--generate" ]; then
+    generate=true
+fi
+
+runtest() {
+    num=$1
+    shift
+    if [ $generate = true ]; then
+	ledger -f utils/standard.dat "$@" > utils/test.$num
+    else
+	echo test $num: ledger "$@"
+	ledger -f utils/standard.dat "$@" > utils/test.out
+	diff utils/test.$num utils/test.out
+    fi
+}
+
+runtest 1 reg rent
+runtest 2 -r reg rent
+runtest 3 -r -n reg rent
+runtest 4 -r -s reg rent
+runtest 5 -r -s -n reg rent
+runtest 6 -M reg rent
+runtest 7 -M -r reg rent
+runtest 8 -M -r -n reg rent
+runtest 9 -M -r -s reg rent
+runtest 10 -M -r -s -n reg rent

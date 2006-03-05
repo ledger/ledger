@@ -1,0 +1,5643 @@
+; -*-ledger-*-
+
+= /^Income:Gifts Received/
+    (Liabilities:Gifts)                         1.00
+
+; These entries will compute Huququ'llah based on the contents of the
+; ledger.
+
+= /^(?:Income:|Expenses:(?:Business|Rent$|Furnishings|Bedding|Clothing|Taxes|Insurance|Marriage))/ & !/^Income:Employer Match/
+    (Liabilities:Huququ'llah)                   0.19
+
+2002/01/01 * Opening Balance
+    Assets:Mansour Seddigh                   $474.31
+    Equity:Opening Balances
+
+2002/03/01 * Chevron
+    Assets:Reimbursements:Borland             $14.91
+    Equity:Opening Balances
+
+2002/03/09 * Best Western Scotts Valley
+    Assets:Reimbursements:Borland          $1,173.15
+    Equity:Opening Balances
+
+2002/03/09 * Avis Rent-a-car
+    Assets:Reimbursements:Borland            $693.23
+    Equity:Opening Balances
+
+2002/03/09 * Tucson Airport Parking
+    Assets:Reimbursements:Borland             $64.00
+    Equity:Opening Balances
+
+2002/05/18 * Best Western Scotts Valley
+    Assets:Reimbursements:Borland            $481.25
+    Equity:Opening Balances
+
+2002/05/18 * Avis Rent-a-car
+    Assets:Reimbursements:Borland            $357.93
+    Equity:Opening Balances
+
+2002/09/14 * Tucson Airport Parking
+    Assets:Reimbursements:Borland             $32.00
+    Equity:Opening Balances
+
+2002/09/14 * Avis Rent-a-car
+    Assets:Reimbursements:Borland            $338.83
+    Equity:Opening Balances
+
+2002/09/14 * Best Western Scotts Valley
+    Assets:Reimbursements:Borland            $481.25
+    Equity:Opening Balances
+
+2002/09/30 * Opening Balance
+    Retirement:Great West 401(k)       866.231 TWCUX
+    Equity:Opening Investments           $-17,783.72
+
+2002/09/30 * Opening Balance
+    Retirement:Great West 401(k)     1,925.940 AGTHX
+    Equity:Opening Investments           $-33,299.47
+
+2002/09/30 * Opening Balance
+    Retirement:Great West 401(k)       564.042 OPTFX
+    Equity:Opening Investments           $-15,810.10
+
+2002/10/01 * Rent at 345 S. 6th Ave.
+    Equity:Opening Balances                  $450.00
+    Liabilities:Betsy Pettit
+
+2002/10/01 * Initial deposit (first and last)
+    Liabilities:Betsy Pettit                 $900.00
+    Equity:Opening Balances
+
+2002/10/18 * Best Western Scotts Valley
+    Assets:Reimbursements:Borland            $343.75
+    Equity:Opening Balances
+
+2002/10/19 * Union 76
+    Assets:Reimbursements:Borland             $17.59
+    Equity:Opening Balances
+
+2002/10/20 * Best Western Scotts Valley
+    Assets:Reimbursements:Borland            $137.50
+    Equity:Opening Balances
+
+2002/10/25 * Avis Rent-a-car
+    Assets:Reimbursements:Borland            $589.40
+    Equity:Opening Balances
+
+2002/10/25 * Best Western Scotts Valley
+    Assets:Reimbursements:Borland            $354.36
+    Equity:Opening Balances
+
+2002/10/27 * (2031) Elizabeth Pettit
+    Liabilities:Betsy Pettit                 $900.00
+    Equity:Opening Balances
+
+2002/10/31 * Rent at 345 S. 6th Ave.
+    Equity:Opening Balances                  $450.00
+    Liabilities:Betsy Pettit
+
+2002/11/30 * Rent at 345 S. 6th Ave.
+    Equity:Opening Balances                  $450.00
+    Liabilities:Betsy Pettit
+
+2002/12/17 * Cambria Bicycle Outfitters
+    Expenses:Bicycles                         $39.90
+    Liabilities:NRL:MasterCard
+
+2002/12/22 * Opening Balance
+    Retirement:Fidelity SEP             82.288 FEQTX
+    Equity:Opening Investments            $-1,465.55
+
+2002/12/22 * Opening Balance
+    Retirement:Fidelity IRA          1,012.251 FEQTX
+    Equity:Opening Investments           $-18,028.19
+
+2002/12/24 * Qwest
+    Expenses:Phone                           $128.45
+    Liabilities:Mary Eiland                   $64.22
+    Liabilities:Qwest                       $-128.45
+    Expenses:Marriage                        $-64.22
+
+2002/12/25 * Love's Country
+    Liabilities:Mary Eiland                   $11.53
+    Liabilities:NRL:MasterCard
+
+2002/12/28 * Safeway
+    Liabilities:Mary Eiland                   $11.68
+    Liabilities:NRL:MasterCard
+
+2002/12/30 * Blue Willow
+    Liabilities:Mary Eiland                   $15.40
+    Liabilities:NRL:MasterCard
+
+2002/12/31 * Internet service
+    Expenses:Internet                         $20.00
+    Liabilities:Gain Comm
+
+2002/12/31 * Rent at 345 S. 6th Ave.
+    Expenses:Rent                            $450.00
+    Liabilities:Betsy Pettit
+
+2002/12/31 * Opening Balance
+    Assets:Borland ESPP                    $1,200.04
+    Equity:Opening Balances
+
+2002/12/31 * Opening Balance
+    Equity:Opening Balances                  $484.29
+    Liabilities:NRL:MasterCard
+
+2002/12/31 * Opening Balance
+    Assets:E*Trade:Brokerage              $13,692.31
+    Equity:Opening Balances
+
+2002/12/31 * Opening Balance
+    Equity:Opening Balances               $82,589.97
+    Liabilities:Mary Eiland
+
+2002/12/31 * Opening Balance
+    (Liabilities:Huququ'llah)            $-18,384.85
+
+2002/12/31 * Opening Balance
+    Assets:NRL:Checking                    $7,650.70
+    Equity:Opening Balances
+
+2002/12/31 * (2097) Desert Rose Baha'i Institute
+    Expenses:Travel                           $55.00
+    Assets:NRL:Checking
+
+2003/01/01 * Persian Room
+    Expenses:Food                             $87.21
+    Assets:NRL:Checking
+
+2003/01/01 * WITHDRAWAL TRANSFER
+    Equity:Opening Balances                $3,000.00
+    Assets:NRL:Checking
+
+2003/01/01 * DEPOSIT TRANSFER
+    Assets:NRL:Checking                   $77,589.97
+    Equity:Opening Balances
+
+2003/01/01 * Borland
+    Assets:NRL:Checking                    $1,812.50
+    Assets:Borland ESPP                      $600.02
+    Expenses:Taxes:Federal                   $539.70
+    Expenses:Taxes:Social Security           $245.00
+    Expenses:Taxes:Medicare                   $57.30
+    Expenses:Taxes:State/Province             $97.15
+    Expenses:Insurance:Health                 $48.46
+    Retirement:Great West 401(k)             $600.02
+    (Liabilities:Huququ'llah)                $114.00
+    Income:Salary                         $-4,000.15
+
+2003/01/01 * Employer contribution
+    Retirement:Great West 401(k)             $120.01
+    Income:Employer Match
+
+2003/01/01 * (2089) Rio Grande
+    Expenses:Marriage                         $21.51
+    Liabilities:Mary Eiland                   $21.51
+    Assets:NRL:Checking                      $-43.02
+
+2003/01/01 * (2098) Elizabeth Pettit
+    Liabilities:Betsy Pettit                 $450.00
+    Assets:NRL:Checking
+
+2003/01/01 * Casa Sanchez
+    Liabilities:Mary Eiland                   $19.01
+    Liabilities:NRL:MasterCard
+
+2003/01/02 * Opening Balance
+    Assets:NRL:Savings                         $5.00
+    Equity:Opening Balances
+
+2003/01/02 * Legendary Automative
+    Liabilities:Mary Eiland                   $30.00
+    Liabilities:NRL:MasterCard
+
+2003/01/02 * Legendary Automative
+    Liabilities:Mary Eiland                  $367.75
+    Liabilities:NRL:MasterCard
+
+2003/01/02 * Safeway
+    Liabilities:Mary Eiland                   $36.16
+    Liabilities:NRL:MasterCard
+
+2003/01/02 * Safeway
+    Liabilities:Mary Eiland                   $12.74
+    Liabilities:NRL:MasterCard
+
+2003/01/02 * Distribution
+    Retirement:Great West 401(k)         5.838 OPTFX
+    Retirement:Great West 401(k)            $-180.00
+
+2003/01/02 * Distribution
+    Retirement:Great West 401(k)         8.262 TWCUX
+    Retirement:Great West 401(k)            $-180.02
+
+2003/01/02 * Distribution
+    Retirement:Great West 401(k)        18.930 AGTHX
+    Retirement:Great West 401(k)            $-360.01
+
+2003/01/03 * Safeway
+    Expenses:Food                             $10.16
+    Expenses:Cash                             $50.00
+    Assets:NRL:Checking                      $-60.16
+
+2003/01/04 * Kmart
+    Liabilities:Mary Eiland                    $4.93
+    Liabilities:NRL:MasterCard
+
+2003/01/04 * Picacho Peak
+    Liabilities:Mary Eiland                   $12.06
+    Liabilities:NRL:MasterCard
+
+2003/01/05 * (2099) E*Trade Bank
+    Assets:E*Trade:Bank                  $100,000.00
+    Assets:NRL:Checking
+
+2003/01/05 * Sale of BORL Options
+    Assets:E*Trade:Brokerage               $8,210.09
+    Expenses:Taxes:Federal                 $3,400.62
+    Expenses:Fees                             $20.68
+    Expenses:Marriage                      $1,552.69
+    Expenses:Taxes:Medicare                  $182.63
+    Expenses:Taxes:Social Security           $780.89
+    Income:Options                       $-12,594.91
+    Liabilities:Mary Eiland               $-1,552.69  ; After withholding (at total 34.7%)
+
+2003/01/05 * Mansour Seddigh
+    Assets:NRL:Checking                      $200.00
+    Expenses:Marriage                        $100.00
+    Assets:Mansour Seddigh                  $-200.00
+    Liabilities:Mary Eiland                 $-100.00
+
+2003/01/05 * May
+    Assets:NRL:Checking                       $21.94
+    Equity:Opening Balances
+
+2003/01/05 * Gain Communications
+    Liabilities:Gain Comm                     $20.00
+    Assets:NRL:Checking
+
+2003/01/05 * Exxon
+    Expenses:Auto:Gas                         $18.61
+    Assets:NRL:Checking
+
+2003/01/05 * (2100) USAA
+    Expenses:Insurance:Rental                $178.67
+    Assets:NRL:Checking
+
+2003/01/05 * (2101) Harris Direct
+    Expenses:Fees                             $15.00
+    Liabilities:Mary Eiland                    $7.50
+    Assets:NRL:Checking                      $-15.00
+    Expenses:Marriage                         $-7.50
+
+2003/01/05 * (2102) Mary Eiland
+    Liabilities:Mary Eiland                $1,500.00
+    Assets:NRL:Checking
+
+2003/01/06 * DEPOSIT TRANSFER
+    Assets:NRL:Checking                    $2,537.79
+    Equity:Opening Balances
+
+2003/01/06 * Persian Room
+    Expenses:Food                            $128.91
+    Assets:NRL:Checking
+
+2003/01/06 * DEPOSIT TRANSFER
+    Assets:NRL:Checking                  $103,789.94
+    Equity:Opening Balances
+
+2003/01/07 * Bashas
+    Liabilities:Mary Eiland                   $26.19
+    Liabilities:NRL:MasterCard
+
+2003/01/07 * Subway
+    Liabilities:Mary Eiland                    $3.22
+    Liabilities:NRL:MasterCard
+
+2003/01/07 * Safeway
+    Expenses:Food                              $9.75
+    Assets:NRL:Checking
+
+2003/01/07 * (2095) Mary Eiland
+    Liabilities:Mary Eiland               $82,589.97
+    Assets:NRL:Checking
+
+2003/01/08 * (2103) City of Tucson
+    Expenses:Fees                            $190.00  ; Speeding ticket
+    Assets:NRL:Checking
+
+2003/01/09 * Circle K
+    Liabilities:Mary Eiland                   $12.74
+    Liabilities:NRL:MasterCard
+
+2003/01/09 * am/pm
+    Expenses:Auto:Gas                         $19.54
+    Assets:NRL:Checking
+
+2003/01/10 * Mira Flores
+    Expenses:Food                             $11.45
+    Assets:NRL:Checking
+
+2003/01/10 * Rent-a-computer
+    Expenses:Supplies                         $16.14
+    Assets:NRL:Checking
+
+2003/01/11 * P.F. Chang's
+    Expenses:Food                             $33.41
+    Assets:NRL:Checking
+
+2003/01/12 * USAA Dividend
+    Assets:NRL:Checking                       $32.93
+    Expenses:Marriage                         $16.46
+    Income:Dividend                          $-32.93
+    Liabilities:Mary Eiland                  $-16.46
+
+2003/01/12 * Interest
+    Assets:E*Trade:Bank                      $137.74
+    Income:Interest:Money Market
+
+2003/01/12 * Safeway
+    Expenses:Food                             $14.01
+    Expenses:Cash                             $20.00
+    Assets:NRL:Checking                      $-34.01
+
+2003/01/12 * Deli
+    Expenses:Food                              $3.78
+    Assets:NRL:Checking
+
+2003/01/12 * Bridgeway Fund Inc
+    Assets:E*Trade:Brokerage          1,558.89 BRSIX
+    Assets:E*Trade:Brokerage             $-13,500.00
+
+2003/01/12 * (2096) Qwest
+    Liabilities:Qwest                        $128.45
+    Assets:NRL:Checking
+
+2003/01/13 * Office Max
+    Expenses:Supplies                         $23.63
+    Assets:NRL:Checking
+
+2003/01/13 * Safeway
+    Expenses:Food                             $21.41
+    Expenses:Cash                             $50.00
+    Assets:NRL:Checking                      $-71.41
+
+2003/01/13 * New Account Bonus
+    Assets:E*Trade:Bank                       $75.00
+    Income:Interest:Money Market
+
+2003/01/14 * Amazon.com
+    Expenses:Gifts                            $75.00
+    Assets:NRL:Checking
+
+2003/01/14 * (2104) Qwest
+    Liabilities:Qwest                        $105.17
+    Assets:NRL:Checking
+
+2003/01/15 * Office Max
+    Expenses:Supplies                         $16.12
+    Assets:NRL:Checking
+
+2003/01/15 * (2106) John Wiegley
+    Assets:E*Trade:Bank                    $5,000.00
+    Assets:NRL:Checking
+
+2003/01/15 * Irene Straus
+    Assets:E*Trade:Bank                       $50.00
+    Income:Gifts Received
+
+2003/01/15 * (2105) Douglas Wiegley
+    Expenses:Gifts                            $60.00
+    Assets:NRL:Checking
+
+2003/01/15 * Susan Wiegley
+    Assets:E*Trade:Bank                      $100.00
+    Income:Gifts Received
+
+2003/01/15 * Borland
+    Assets:NRL:Checking                    $1,812.49
+    Assets:Borland ESPP                      $600.02
+    Expenses:Taxes:Federal                   $539.70
+    Expenses:Taxes:Social Security           $245.01
+    Expenses:Taxes:Medicare                   $57.30
+    Expenses:Taxes:State/Province             $97.15
+    Expenses:Insurance:Health                 $48.46
+    Retirement:Great West 401(k)             $600.02
+    (Liabilities:Huququ'llah)                $114.00
+    Income:Salary                         $-4,000.15
+
+2003/01/15 * Employer contribution
+    Retirement:Great West 401(k)             $120.01
+    Income:Employer Match
+
+2003/01/15 * NRL Federal Credit Union
+    Liabilities:NRL:MasterCard               $484.29
+    Liabilities:Mary Eiland                  $242.14  ; Shared costs
+    Assets:NRL:Checking                     $-484.29
+    Expenses:Marriage                       $-242.14
+
+2003/01/16 * Money Market dividend
+    Assets:E*Trade:Brokerage                   $3.79
+    Income:Dividend
+
+2003/01/16 * Distribution
+    Retirement:Great West 401(k)         5.871 OPTFX
+    Retirement:Great West 401(k)            $-180.00
+
+2003/01/16 * Distribution
+    Retirement:Great West 401(k)        18.970 AGTHX
+    Retirement:Great West 401(k)            $-360.01
+
+2003/01/16 * Distribution
+    Retirement:Great West 401(k)         8.389 TWCUX
+    Retirement:Great West 401(k)            $-180.02
+
+2003/01/16 * US Postal Service
+    Expenses:Postage                          $11.40
+    Assets:NRL:Checking
+
+2003/01/17 * Safeway
+    Expenses:Food                             $24.02
+    Expenses:Cash                             $20.00
+    Assets:NRL:Checking                      $-44.02
+
+2003/01/18 * Chevron
+    Expenses:Auto:Gas                         $20.44
+    Assets:NRL:Checking
+
+2003/01/18 * C Locksmiths
+    Expenses:Auto:Parking                     $40.00
+    Assets:NRL:Checking
+
+2003/01/19 * Qwest
+    Expenses:Phone                           $105.17
+    Liabilities:Qwest
+
+2003/01/20 * (101) Baha'i Huququ'llah Trust
+    Expenses:Huququ'llah                  $25,000.00
+    (Liabilities:Huququ'llah)             $25,000.00
+    Assets:E*Trade:Bank
+
+2003/01/21 * Soul Feather's
+    Expenses:Food                             $19.71
+    Expenses:Cash                             $35.00
+    Assets:NRL:Checking                      $-54.71
+
+2003/01/22 * Bridgeway Fund Inc
+    Assets:E*Trade:Brokerage         -1,558.89 BRSIX
+    Assets:E*Trade:Brokerage              $13,281.74
+
+2003/01/24 * Whole Foods Market
+    Expenses:Food                             $20.00
+    Liabilities:NRL:MasterCard
+
+2003/01/24 * Peublo Plaza Supermarket
+    Expenses:Food                             $20.77
+    Liabilities:NRL:MasterCard
+
+2003/01/25 * Freddie Quick Shop
+    Expenses:Supplies                          $8.34
+    Liabilities:NRL:MasterCard
+
+2003/01/27 * ATM
+    Expenses:Cash                            $100.00
+    Expenses:Fees                              $2.25
+    Assets:NRL:Checking                     $-102.25
+
+2003/01/27 * Amingo
+    Expenses:Auto:Gas                         $22.25
+    Liabilities:NRL:MasterCard
+
+2003/01/29 * Credit interest
+    Assets:E*Trade:Brokerage                   $0.73
+    Income:Interest:Money Market
+
+2003/01/29 * CDSC Fee on sale of Bridgeway
+    Expenses:Fees                            $265.64
+    Assets:E*Trade:Brokerage
+
+2003/01/29 * Borland
+    Assets:NRL:Checking                    $1,811.55
+    Assets:Borland ESPP                      $600.02
+    Expenses:Taxes:Federal                   $539.70
+    Expenses:Taxes:Social Security           $245.79
+    Expenses:Taxes:Medicare                   $57.46
+    Expenses:Taxes:State/Province             $97.15
+    Expenses:Insurance:Health                 $48.46
+    Retirement:Great West 401(k)             $600.02
+    (Liabilities:Huququ'llah)                $114.00
+    Income:Salary                         $-4,000.15
+
+2003/01/29 * Employer contribution
+    Retirement:Great West 401(k)             $120.01
+    Income:Employer Match
+
+2003/01/30 * Full Cycle
+    Expenses:Bicycles                         $13.45
+    Liabilities:NRL:MasterCard
+
+2003/01/30 * Distribution
+    Retirement:Great West 401(k)         8.764 TWCUX
+    Retirement:Great West 401(k)            $-180.02
+
+2003/01/30 * Distribution
+    Retirement:Great West 401(k)        19.890 AGTHX
+    Retirement:Great West 401(k)            $-360.01
+
+2003/01/30 * Distribution
+    Retirement:Great West 401(k)         6.164 OPTFX
+    Retirement:Great West 401(k)            $-180.00
+
+2003/01/30 * Money Market dividend
+    Assets:E*Trade:Brokerage                   $1.98
+    Income:Dividend
+
+2003/01/30 * Sale of BORL Options
+    Assets:E*Trade:Brokerage                 $425.81
+    Expenses:Marriage                      $1,898.27
+    Expenses:Taxes:Federal                 $1,571.69
+    Expenses:Fees                             $19.95
+    Expenses:Taxes:Medicare                   $84.41
+    Expenses:Taxes:Social Security           $360.91
+    Assets:Reimbursements:Borland          $3,358.30  ; Excessive withholding
+    Income:Options                        $-5,821.07
+    Liabilities:Mary Eiland               $-1,898.27  ; After withholding (at total 34.7%)
+
+2003/01/30 * Safeway
+    Expenses:Food                             $12.69
+    Assets:NRL:Checking
+
+2003/01/31 * Internet service
+    Expenses:Internet                         $20.00
+    Liabilities:Gain Comm
+
+2003/01/31 * Rent at 345 S. 6th Ave.
+    Expenses:Rent                            $450.00
+    Liabilities:Betsy Pettit
+
+2003/02/01 * Union 76
+    Expenses:Auto:Gas                         $13.84
+    Assets:NRL:Checking
+
+2003/02/02 * Transfer from Brokerage
+    Assets:E*Trade:Bank                   $16,450.00
+    Assets:E*Trade:Brokerage
+
+2003/02/03 * (2107) Munirih McLaren
+    Expenses:Health                           $55.00
+    Assets:NRL:Checking
+
+2003/02/03 * Ace Hardware
+    Expenses:Supplies                         $11.47
+    Assets:NRL:Checking
+
+2003/02/03 * Bookman's
+    Expenses:Computer                          $8.61
+    Assets:NRL:Checking
+
+2003/02/03 * (2108) Elizabeth Pettit
+    Liabilities:Betsy Pettit                 $450.00
+    Assets:NRL:Checking
+
+2003/02/05 * Gain Communications
+    Liabilities:Gain Comm                     $20.00
+    Assets:NRL:Checking
+
+2003/02/06 * Sushi Ten
+    Expenses:Food                             $14.95
+    Assets:NRL:Checking
+
+2003/02/06 * ATM
+    Expenses:Cash                            $100.00
+    Expenses:Fees                              $2.00
+    Assets:NRL:Checking                     $-102.00
+
+2003/02/07 * Rigo's Restaurant
+    Expenses:Food                             $12.21
+    Assets:NRL:Checking
+
+2003/02/07 * Circle K
+    Expenses:Auto:Gas                         $22.44
+    Assets:NRL:Checking
+
+2003/02/07 * Best Buy
+    Expenses:Supplies                         $35.49  ; CD-R and case
+    Assets:NRL:Checking
+
+2003/02/09 * Supply
+    Liabilities:Gifts                         $26.13
+    Assets:NRL:Checking
+
+2003/02/09 * Kentucky Fried Chicken
+    Expenses:Food                              $6.20
+    Assets:NRL:Checking
+
+2003/02/09 * Safeway
+    Expenses:Food                             $22.33
+    Assets:NRL:Checking
+
+2003/02/09 * Transfer from Brokerage
+    Assets:E*Trade:Bank                    $5,400.00
+    Assets:E*Trade:Brokerage
+
+2003/02/09 * Interest
+    Assets:E*Trade:Brokerage                   $0.49
+    Income:Interest:Money Market
+
+2003/02/10 * (2109) Munirih McLaren
+    Expenses:Health                           $58.80
+    Assets:NRL:Checking
+
+2003/02/11 * Penspiration
+    Liabilities:Gifts                        $234.00
+    Assets:NRL:Checking
+
+2003/02/12 * Borland
+    Assets:NRL:Checking                    $1,812.49
+    Assets:Borland ESPP                      $600.02
+    Expenses:Taxes:Federal                   $539.70
+    Expenses:Taxes:Social Security           $245.01
+    Expenses:Taxes:Medicare                   $57.30
+    Expenses:Taxes:State/Province             $97.15
+    Expenses:Insurance:Health                 $48.46
+    Retirement:Great West 401(k)             $600.02
+    (Liabilities:Huququ'llah)                $114.00
+    Income:Salary                         $-4,000.15
+
+2003/02/12 * Borland
+    Assets:NRL:Checking                    $1,560.56
+    Assets:Borland ESPP                      $514.59
+    Expenses:Taxes:Federal                   $926.25
+    Expenses:Taxes:Social Security           $212.69
+    Expenses:Taxes:Medicare                   $49.75
+    Expenses:Taxes:State/Province            $166.73
+    Income:Bonus                          $-3,430.57
+
+2003/02/12 * Employer contribution
+    Retirement:Great West 401(k)             $120.01
+    Income:Employer Match
+
+2003/02/12 * Trader Joe's
+    Expenses:Food                             $48.51
+    Assets:NRL:Checking
+
+2003/02/13 * Office Max
+    Liabilities:Gifts                         $17.20
+    Assets:NRL:Checking
+
+2003/02/15 * Walgreen's
+    Expenses:Health                           $64.56
+    Assets:NRL:Checking
+
+2003/02/16 * NRL Federal Credit Union
+    Liabilities:NRL:MasterCard               $603.31
+    Assets:NRL:Checking
+
+2003/02/16 * Susan Wiegley
+    Assets:NRL:Checking                      $100.00
+    Income:Gifts Received
+
+2003/02/16 * (2110) Munirih McLaren
+    Expenses:Health                           $19.60
+    Assets:NRL:Checking
+
+2003/02/16 * (2111) Qwest
+    Liabilities:Qwest                        $132.77
+    Assets:NRL:Checking
+
+2003/02/16 * (2112) USAA
+    Expenses:Insurance:Rental                $119.12
+    Expenses:Insurance:Auto                  $151.80
+    Income:Dividend                          $-68.03
+    Assets:NRL:Checking                     $-202.89
+
+2003/02/17 * Qwest
+    Expenses:Phone                           $132.77
+    Liabilities:Qwest
+
+2003/02/17 * Walgreen's
+    Expenses:Health                           $10.00
+    Assets:NRL:Checking
+
+2003/02/17 * Distribution
+    Retirement:Great West 401(k)         6.218 OPTFX
+    Retirement:Great West 401(k)            $-180.00
+
+2003/02/17 * Distribution
+    Retirement:Great West 401(k)        20.020 AGTHX
+    Retirement:Great West 401(k)            $-360.01
+
+2003/02/17 * Distribution
+    Retirement:Great West 401(k)         8.803 TWCUX
+    Retirement:Great West 401(k)            $-180.02
+
+2003/02/19 * Walgreen's
+    Expenses:Health                           $23.25
+    Assets:NRL:Checking
+
+2003/02/19 * Supercuts
+    Expenses:Health                           $13.95
+    Assets:NRL:Checking
+
+2003/02/19 * Jocko's Tacos
+    Expenses:Food                             $11.83
+    Assets:NRL:Checking
+
+2003/02/19 * (102) Baha'i Fund of Tucson
+    Expenses:Charity                       $1,500.00
+    Assets:E*Trade:Bank
+
+2003/02/20 * Mansour Seddigh
+    Expenses:Gifts                           $274.31
+    Assets:Mansour Seddigh
+
+2003/02/23 * ATM
+    Expenses:Cash                            $100.00
+    Expenses:Fees                              $1.50
+    Assets:NRL:Checking                     $-101.50
+
+2003/02/23 * Zanotto's
+    Expenses:Food                              $9.16
+    Assets:NRL:Checking
+
+2003/02/24 * Naka Sushi
+    Expenses:Food                             $42.00
+    Assets:NRL:Checking
+
+2003/02/25 * Starbucks
+    Expenses:Food                              $3.40
+    Assets:NRL:Checking
+
+2003/02/25 * Borland
+    Assets:NRL:Checking                    $1,811.52
+    Assets:Borland ESPP                      $600.02
+    Expenses:Taxes:Federal                   $539.70
+    Expenses:Taxes:Social Security           $245.80
+    Expenses:Taxes:Medicare                   $57.48
+    Expenses:Taxes:State/Province             $97.15
+    Expenses:Insurance:Health                 $48.46
+    Retirement:Great West 401(k)             $600.02
+    (Liabilities:Huququ'llah)                $114.00
+    Income:Salary                         $-4,000.15
+
+2003/02/25 * Employer contribution
+    Retirement:Great West 401(k)             $120.01
+    Income:Employer Match
+
+2003/02/26 * Interest
+    Assets:E*Trade:Brokerage                   $0.39
+    Income:Interest:Money Market
+
+2003/02/26 * Arco Gas
+    Assets:Reimbursements:Borland             $10.35
+    Assets:NRL:Checking
+
+2003/02/26 * El Palomar
+    Expenses:Food                              $5.86
+    Assets:NRL:Checking
+
+2003/02/27 * Distribution
+    Retirement:Great West 401(k)         8.846 TWCUX
+    Retirement:Great West 401(k)            $-180.02
+
+2003/02/27 * Interest
+    Assets:E*Trade:Bank                      $167.36
+    Income:Interest:Money Market
+
+2003/02/27 * Distribution
+    Retirement:Great West 401(k)        20.050 AGTHX
+    Retirement:Great West 401(k)            $-360.01
+
+2003/02/27 * Distribution
+    Retirement:Great West 401(k)         6.276 OPTFX
+    Retirement:Great West 401(k)            $-180.00
+
+2003/02/27 * Dividend
+    Assets:E*Trade:Brokerage                   $1.53
+    Income:Dividend
+
+2003/02/28 * TCBY
+    Assets:Reimbursements:Borland              $2.70
+    Liabilities:NRL:MasterCard
+
+2003/02/28 * Waterstone's
+    Expenses:Books                             $7.57
+    Liabilities:NRL:MasterCard
+
+2003/02/28 * Rent at 345 S. 6th Ave.
+    Expenses:Rent                            $450.00
+    Liabilities:Betsy Pettit
+
+2003/02/28 * Internet service
+    Expenses:Internet                         $20.00
+    Liabilities:Gain Comm
+
+2003/02/28 * Avis
+    Assets:Reimbursements:Borland            $340.77
+    Liabilities:NRL:MasterCard
+
+2003/02/28 * Tucson Airport Parking
+    Assets:Reimbursements:Borland             $32.00
+    Liabilities:NRL:MasterCard
+
+2003/02/28 * McDonald's
+    Assets:Reimbursements:Borland              $7.78
+    Liabilities:NRL:MasterCard
+
+2003/03/01 * (2114) E*Trade Bank
+    Assets:E*Trade:Bank                    $4,500.00
+    Assets:NRL:Checking
+
+2003/03/01 * John Wiegley
+    Assets:E*Trade:Bank                    $5,079.15
+    Assets:Reimbursements:Borland
+
+2003/03/01 * Roger Wiegley
+    Assets:NRL:Checking                      $400.00
+    Income:Gifts Received
+
+2003/03/01 * Performance Bicycles
+    Assets:NRL:Checking                        $2.02
+    Income:Gifts Received
+
+2003/03/01 * Boston Market
+    Expenses:Food                              $6.45
+    Assets:NRL:Checking
+
+2003/03/01 * Safeway
+    Expenses:Food                             $11.85
+    Expenses:Cash                             $20.00
+    Assets:NRL:Checking                      $-31.85
+
+2003/03/01 * (2113) Elizabeth Pettit
+    Liabilities:Betsy Pettit                 $450.00
+    Assets:NRL:Checking
+
+2003/03/02 * Islamic Bookstore.com
+    Liabilities:Gifts                         $42.98
+    Liabilities:NRL:MasterCard
+
+2003/03/02 * Union 76
+    Expenses:Health                            $1.93
+    Assets:NRL:Checking
+
+2003/03/02 * Olive Garden
+    Expenses:Food                             $12.05
+    Expenses:Cash                             $10.00
+    Assets:NRL:Checking                      $-22.05
+
+2003/03/03 * (2115) Munirih McLaren
+    Expenses:Health                            $9.80
+    Assets:NRL:Checking
+
+2003/03/03 * Safeway
+    Expenses:Food                             $18.37
+    Assets:NRL:Checking
+
+2003/03/03 * Soul Feather's
+    Expenses:Food                             $18.24
+    Assets:NRL:Checking
+
+2003/03/03 * Vehicle Inspection Station
+    Expenses:Fees                             $10.00
+    Expenses:Cash
+
+2003/03/04 * Motor Vehicles Division
+    Expenses:Fees                             $66.33
+    Liabilities:NRL:MasterCard
+
+2003/03/04 * Chevron
+    Expenses:Auto:Gas                         $28.43
+    Liabilities:NRL:MasterCard
+
+2003/03/04 * Pop-a-Lock
+    Expenses:Fees                             $35.00
+    Liabilities:NRL:MasterCard
+
+2003/03/05 * Walgreens
+    Expenses:Health                            $4.38
+    Expenses:Supplies                          $6.78
+    Expenses:Food                              $2.24
+    Liabilities:NRL:MasterCard               $-13.40
+
+2003/03/05 * Gain Communications
+    Liabilities:Gain Comm                     $20.00
+    Assets:NRL:Checking
+
+2003/03/05 * Papyrus
+    Liabilities:Gifts                         $12.91
+    Liabilities:NRL:MasterCard
+
+2003/03/06 * Dividend received
+    Retirement:Fidelity IRA              3.729 FEQTX
+    Income:Dividend                          $-60.75
+
+2003/03/06 * Dividend received
+    Retirement:Fidelity SEP              0.303 FEQTX
+    Income:Dividend                           $-4.94
+
+2003/03/07 * Ali Baba
+    Expenses:Food                             $18.04
+    Liabilities:NRL:MasterCard
+
+2003/03/07 * Coffee Exchange
+    Expenses:Food                              $4.00
+    Liabilities:NRL:MasterCard
+
+2003/03/09 * Epic Cafe
+    Expenses:Food                              $2.50
+    Liabilities:NRL:MasterCard
+
+2003/03/10 * Coffee Exchange
+    Expenses:Food                              $4.25
+    Liabilities:NRL:MasterCard
+
+2003/03/11 * (2116) Qwest
+    Liabilities:Qwest                         $96.00
+    Assets:NRL:Checking
+
+2003/03/12 * Ali Baba
+    Expenses:Food                              $9.66
+    Liabilities:NRL:MasterCard
+
+2003/03/12 * Safeway
+    Expenses:Food                             $11.72
+    Expenses:Cash                             $20.00
+    Assets:NRL:Checking                      $-31.72
+
+2003/03/12 * Borland
+    Assets:NRL:Checking                    $1,832.04
+    Assets:Borland ESPP                      $600.02
+    Expenses:Taxes:Federal                   $548.42
+    Expenses:Taxes:Social Security           $247.01
+    Expenses:Taxes:Medicare                   $57.77
+    Expenses:Taxes:State/Province             $98.72
+    Expenses:Insurance:Health                 $16.15
+    Retirement:Great West 401(k)             $600.02
+    (Liabilities:Huququ'llah)                $114.00
+    Income:Salary                         $-4,000.15
+
+2003/03/12 * Employer contribution
+    Retirement:Great West 401(k)             $120.01
+    Income:Employer Match
+
+2003/03/12 * Cambria Bicycle Outfitters
+    Liabilities:Gifts                         $64.95
+    Liabilities:NRL:MasterCard
+
+2003/03/13 * (2117) Jamie J. Just
+    Expenses:Health                            $9.00
+    Assets:NRL:Checking
+
+2003/03/13 * Olive Garden
+    Expenses:Food                             $12.50
+    Liabilities:NRL:MasterCard
+
+2003/03/14 * Safeway
+    Expenses:Food                              $3.36
+    Expenses:Cash                             $50.00
+    Assets:NRL:Checking                      $-53.36
+
+2003/03/14 * Fund raising dinner at Enayat's
+    Expenses:Food                             $25.00
+    Expenses:Cash
+
+2003/03/15 * Park Place Cinema
+    Expenses:Movies                            $5.00
+    Expenses:Cash
+
+2003/03/16 * La Parrilla Suiza
+    Expenses:Food                              $9.00
+    Expenses:Cash
+
+2003/03/17 * NRL Federal Credit Union
+    Liabilities:NRL:MasterCard                $84.81
+    Assets:NRL:Checking
+
+2003/03/17 * Boston Market
+    Expenses:Food                              $6.45
+    Assets:NRL:Checking
+
+2003/03/17 * American GKC
+    Expenses:Movies                            $3.50
+    Expenses:Cash
+
+2003/03/18 * Distribution
+    Retirement:Great West 401(k)         6.038 OPTFX
+    Retirement:Great West 401(k)            $-180.00
+
+2003/03/18 * Circle K
+    Expenses:Food                              $3.28
+    Liabilities:NRL:MasterCard
+
+2003/03/18 * Circle K
+    Expenses:Auto:Gas                         $24.05
+    Liabilities:NRL:MasterCard
+
+2003/03/18 * Qwest
+    Expenses:Phone                            $96.00
+    Liabilities:Qwest
+
+2003/03/18 * Distribution
+    Retirement:Great West 401(k)        19.530 AGTHX
+    Retirement:Great West 401(k)            $-360.01
+
+2003/03/18 * Distribution
+    Retirement:Great West 401(k)         8.452 TWCUX
+    Retirement:Great West 401(k)            $-180.02
+
+2003/03/21 * Park Place Cinema
+    Expenses:Movies                            $8.25
+    Expenses:Cash
+
+2003/03/21 * Sushi Ten
+    Expenses:Food                             $17.07
+    Liabilities:NRL:MasterCard
+
+2003/03/21 * McDonald's
+    Expenses:Food                              $5.48
+    Assets:NRL:Checking
+
+2003/03/22 * Safeway
+    Expenses:Food                              $3.58
+    Expenses:Cash                             $20.00
+    Assets:NRL:Checking                      $-23.58
+
+2003/03/23 * Soul Feather's
+    Expenses:Food                              $2.42
+    Assets:NRL:Checking
+
+2003/03/23 * Deli
+    Expenses:Food                              $3.28
+    Assets:NRL:Checking
+
+2003/03/24 * (104) Kingdom Project
+    Expenses:Charity                      $10,000.00
+    Assets:E*Trade:Bank
+
+2003/03/24 * El Minuto Cafe
+    Expenses:Food                              $8.50
+    Liabilities:NRL:MasterCard
+
+2003/03/25 * Bookman's Used Books
+    Liabilities:Mary Eiland                   $32.28
+    Liabilities:NRL:MasterCard
+
+2003/03/26 * Borland
+    Assets:NRL:Checking                    $7,745.85
+    Expenses:Taxes:Federal                   $548.42
+    Expenses:Taxes:Social Security           $247.79
+    Expenses:Taxes:Medicare                   $57.95
+    Expenses:Taxes:State/Province             $98.72
+    Expenses:Insurance:Health                 $16.15
+    Retirement:Great West 401(k)             $600.02
+    (Liabilities:Huququ'llah)                $114.00
+    Income:Salary                         $-4,000.15
+    Assets:Borland ESPP                   $-5,314.75
+
+2003/03/26 * Employer contribution
+    Retirement:Great West 401(k)             $120.01
+    Income:Employer Match
+
+2003/03/26 * CS Online Service
+    Liabilities:Mary Eiland                   $21.95
+    Assets:NRL:Checking
+
+2003/03/26 * Transfer to Brokerage
+    Assets:E*Trade:Brokerage              $50,000.00
+    Assets:E*Trade:Bank
+
+2003/03/27 * Starbucks
+    Expenses:Food                              $2.21
+    Assets:NRL:Checking
+
+2003/03/27 * Distribution
+    Retirement:Great West 401(k)         6.110 OPTFX
+    Retirement:Great West 401(k)            $-180.00
+
+2003/03/27 * Distribution
+    Retirement:Great West 401(k)        19.620 AGTHX
+    Retirement:Great West 401(k)            $-360.01
+
+2003/03/27 * Distribution
+    Retirement:Great West 401(k)         8.464 TWCUX
+    Retirement:Great West 401(k)            $-180.02
+
+2003/03/27 * Interest
+    Assets:E*Trade:Brokerage                   $0.28
+    Income:Interest:Money Market
+
+2003/03/27 * Safeway
+    Expenses:Food                              $3.00
+    Assets:NRL:Checking
+
+2003/03/27 * Safeway
+    Expenses:Food                              $3.98
+    Assets:NRL:Checking
+
+2003/03/27 * Safeway
+    Expenses:Food                              $9.46
+    Expenses:Cash                             $20.00
+    Assets:NRL:Checking                      $-29.46
+
+2003/03/28 * Century Theaters
+    Expenses:Movies                            $8.25
+    Expenses:Cash
+
+2003/03/28 * Rae Zen Sun
+    Expenses:Food                              $4.00
+    Expenses:Cash
+
+2003/03/30 * The Fat Greek
+    Expenses:Food                              $7.27
+    Assets:NRL:Checking
+
+2003/03/30 * Interest
+    Assets:E*Trade:Bank                      $170.64
+    Income:Interest:Money Market
+
+2003/03/30 * Dividend
+    Assets:E*Trade:Brokerage                   $1.76
+    Income:Dividend
+
+2003/03/31 * 7-Eleven
+    Expenses:Food                             $10.64
+    Expenses:Cash                             $10.00
+    Assets:NRL:Checking                      $-20.64
+
+2003/03/31 * Rent at 345 S. 6th Ave.
+    Expenses:Rent                            $450.00
+    Liabilities:Betsy Pettit
+
+2003/03/31 * Internet service
+    Expenses:Internet                         $20.00
+    Liabilities:Gain Comm
+
+2003/03/31 * (2119) Michelle Ostovar
+    Expenses:Gifts                           $250.00
+    Assets:NRL:Checking
+
+2003/03/31 * (2118) Elizabeth Pettit
+    Liabilities:Betsy Pettit                 $450.00
+    Assets:NRL:Checking
+
+2003/03/31 * Congress Grill
+    Expenses:Food                             $11.41
+    Expenses:Cash                             $21.00
+    Liabilities:NRL:MasterCard               $-32.41
+
+2003/04/01 * Transfer
+    Assets:E*Trade:Bank                   $50,005.00
+    Assets:E*Trade:Brokerage
+
+2003/04/01 * Royal Carwash
+    Expenses:Auto:Repair                      $49.98
+    Liabilities:NRL:MasterCard
+
+2003/04/01 * Safeway
+    Expenses:Food                             $36.62
+    Expenses:Cash                             $20.00
+    Assets:NRL:Checking                      $-56.62
+
+2003/04/01 * Circle K
+    Expenses:Auto:Gas                         $26.22
+    Assets:NRL:Checking
+
+2003/04/02 * Ali Baba
+    Expenses:Food                              $9.66
+    Liabilities:NRL:MasterCard
+
+2003/04/02 * Munirih McLaren
+    Expenses:Health                           $19.60
+    Expenses:Cash
+
+2003/04/04 * Congress Grill
+    Expenses:Food                             $18.52
+    Liabilities:NRL:MasterCard
+
+2003/04/04 * The B-Line
+    Expenses:Food                             $10.00
+    Expenses:Cash
+
+2003/04/05 * Sushi Ten
+    Expenses:Food                             $14.38
+    Liabilities:NRL:MasterCard
+
+2003/04/05 * Coffee Exchange
+    Expenses:Food                              $3.00
+    Liabilities:NRL:MasterCard
+
+2003/04/05 * Gain Communications
+    Liabilities:Gain Comm                     $20.00
+    Assets:NRL:Checking
+
+2003/04/05 * Walgreen's
+    Expenses:Supplies                          $3.43
+    Expenses:Cash                             $20.00
+    Assets:NRL:Checking                      $-23.43
+
+2003/04/07 * USPS
+    Expenses:Postage                           $2.67
+    Liabilities:NRL:MasterCard
+
+2003/04/07 * Mail Boxes Etc
+    Expenses:Postage                           $2.13
+    Liabilities:NRL:MasterCard
+
+2003/04/07 * Mail Boxes Etc
+    Expenses:Mailbox                          $97.92
+    Liabilities:NRL:MasterCard
+
+2003/04/07 * Safeway
+    Expenses:Food                             $25.84
+    Expenses:Cash                             $20.00
+    Assets:NRL:Checking                      $-45.84
+
+2003/04/07 * (2120) Sprint
+    Liabilities:Sprint                         $5.34
+    Assets:NRL:Checking
+
+2003/04/08 * Sears
+    Expenses:Clothing                         $32.25
+    Liabilities:NRL:MasterCard
+
+2003/04/08 * Dillard's
+    Expenses:Bedding                          $11.84
+    Liabilities:NRL:MasterCard
+
+2003/04/08 * JcPenny
+    Expenses:Clothing                         $19.37
+    Liabilities:NRL:MasterCard
+
+2003/04/08 * Circle K
+    Expenses:Auto:Gas                         $26.93
+    Liabilities:NRL:MasterCard
+
+2003/04/08 * AAA
+    Expenses:Insurance:Auto                   $98.00
+    Liabilities:NRL:MasterCard
+
+2003/04/08 * (2121) Baha'i Fund of Tucson
+    Expenses:Charity                          $50.00
+    Assets:NRL:Checking
+
+2003/04/09 * La Parrilla Suiza
+    Expenses:Food                             $13.00
+    Liabilities:Mary Eiland
+
+2003/04/09 * Intuit
+    Expenses:Taxes:Preparation                $64.45
+    Liabilities:Mary Eiland                   $32.22
+    Liabilities:NRL:MasterCard               $-64.45
+    Expenses:Marriage                        $-32.22
+
+2003/04/09 * Long distance
+    Expenses:Phone                             $5.34
+    Liabilities:Sprint
+
+2003/04/10 * Borland
+    Assets:NRL:Checking                    $2,432.06
+    Expenses:Taxes:Federal                   $548.42
+    Expenses:Taxes:Social Security           $247.01
+    Expenses:Taxes:Medicare                   $57.77
+    Expenses:Taxes:State/Province             $98.72
+    Expenses:Insurance:Health                 $16.15
+    Retirement:Great West 401(k)             $600.02
+    (Liabilities:Huququ'llah)                $114.00
+    Income:Salary                         $-4,000.15
+
+2003/04/10 * Mary Eiland
+    Assets:NRL:Checking                      $104.04
+    Liabilities:Mary Eiland
+
+2003/04/10 * (2122) Equity Income II
+    Retirement:Fidelity IRA            173.820 FEQTX
+    (Liabilities:Huququ'llah)                $570.00  ; 19% of value
+    Assets:NRL:Checking                   $-3,000.00
+
+2003/04/10 * P.F. Chang's
+    Expenses:Food                              $8.00
+    Expenses:Cash
+
+2003/04/10 * Raging Sage
+    Expenses:Food                              $6.00
+    Expenses:Cash
+
+2003/04/11 * Soul Feather's
+    Expenses:Food                             $13.30
+    Liabilities:NRL:MasterCard
+
+2003/04/12 * Pleasure Pizza
+    Expenses:Food                              $8.00
+    Expenses:Cash
+
+2003/04/13 * Denny's
+    Expenses:Food                              $9.89
+    Liabilities:NRL:MasterCard
+
+2003/04/13 * Chevron
+    Expenses:Food                              $5.00
+    Expenses:Cash
+
+2003/04/14 * Mario Lang
+    Assets:NRL:Checking                       $47.75
+    Income:Gifts Received
+
+2003/04/14 * ATM
+    Expenses:Cash                             $60.00
+    Expenses:Fees                              $1.50
+    Assets:NRL:Checking                      $-61.50
+
+2003/04/14 * Del Mar Theather
+    Expenses:Movies                            $8.25
+    Expenses:Cash
+
+2003/04/14 * Mobo Sushi
+    Expenses:Food                             $21.95
+    Expenses:Cash                             $10.00
+    Liabilities:NRL:MasterCard               $-31.95
+
+2003/04/14 * Federal Income Tax
+    Expenses:Taxes:Federal                 $2,292.00
+    Liabilities:Mary Eiland                $1,146.00
+    Assets:NRL:Checking                   $-2,292.00
+    Expenses:Marriage                     $-1,146.00
+
+2003/04/14 * State Income Tax
+    Expenses:Taxes:State/Province            $111.00
+    Liabilities:Mary Eiland                   $55.50
+    Assets:NRL:Checking                     $-111.00
+    Expenses:Marriage                        $-55.50
+
+2003/04/14 * Employer contribution
+    Retirement:Great West 401(k)             $120.01
+    Income:Employer Match
+
+2003/04/15 * Distribution
+    Retirement:Great West 401(k)        19.150 AGTHX
+    Retirement:Great West 401(k)            $-360.01
+
+2003/04/15 * Distribution
+    Retirement:Great West 401(k)         8.198 TWCUX
+    Retirement:Great West 401(k)            $-180.02
+
+2003/04/15 * Distribution
+    Retirement:Great West 401(k)         5.920 OPTFX
+    Retirement:Great West 401(k)            $-180.00
+
+2003/04/15 * Santa Cruz Cinema 9
+    Expenses:Movies                            $8.25
+    Expenses:Cash
+
+2003/04/15 * Zanotto's
+    Expenses:Food                              $9.43
+    Liabilities:NRL:MasterCard
+
+2003/04/16 * NRL Federal Credit Union
+    Liabilities:NRL:MasterCard               $705.77
+    Assets:NRL:Checking
+
+2003/04/16 * Shadowbrook
+    Expenses:Food                             $29.81
+    Liabilities:NRL:MasterCard
+
+2003/04/17 * Il Pirata
+    Expenses:Food                             $20.00
+    Expenses:Cash
+
+2003/04/18 * Sushi in Palo Alto
+    Expenses:Food                             $43.30
+    Assets:Loans                              $25.00  ; Loan to Chris
+    Liabilities:NRL:MasterCard               $-68.30
+
+2003/04/18 * Best Western
+    Assets:Reimbursements:Borland            $412.50
+    Liabilities:NRL:MasterCard
+
+2003/04/19 * Dishdash
+    Expenses:Food                             $17.10
+    Liabilities:NRL:MasterCard
+
+2003/04/19 * Qwest
+    Expenses:Phone                            $54.49
+    Liabilities:Qwest
+
+2003/04/20 * Starbucks
+    Expenses:Food                              $3.63
+    Liabilities:NRL:MasterCard
+
+2003/04/20 * Avis
+    Assets:Reimbursements:Borland            $394.09
+    Liabilities:NRL:MasterCard
+
+2003/04/20 * Chili's
+    Expenses:Food                              $5.40
+    Liabilities:NRL:MasterCard
+
+2003/04/21 * Soul Feather's
+    Expenses:Food                              $3.23
+    Liabilities:NRL:MasterCard
+
+2003/04/21 * Tucson Airport Parking
+    Assets:Reimbursements:Borland             $36.00
+    Liabilities:NRL:MasterCard
+
+2003/04/21 * Coffee Exchange
+    Expenses:Food                              $2.65
+    Liabilities:NRL:MasterCard
+
+2003/04/21 * Cricket Communications
+    Expenses:Phone                           $156.09
+    Liabilities:NRL:MasterCard
+
+2003/04/22 * Starbucks
+    Expenses:Food                              $3.82
+    Liabilities:NRL:MasterCard
+
+2003/04/22 * Safeway
+    Expenses:Food                             $17.26
+    Expenses:Cash                             $20.00
+    Assets:NRL:Checking                      $-37.26
+
+2003/04/22 * World Wide Wrappers
+    Expenses:Food                              $5.49
+    Assets:NRL:Checking
+
+2003/04/23 * Sushi Ten
+    Expenses:Food                              $9.00
+    Liabilities:NRL:MasterCard
+
+2003/04/24 * Sushi Ten
+    Expenses:Food                              $9.84
+    Liabilities:NRL:MasterCard
+
+2003/04/24 * Reconcile balance
+    Expenses:Gifts                             $2.27
+    Liabilities:Mary Eiland
+
+2003/04/25 * Borland
+    Assets:NRL:Checking                    $3,545.27
+    Expenses:Taxes:Federal                   $756.84
+    Expenses:Taxes:Social Security           $297.97
+    Expenses:Taxes:Medicare                   $69.69
+    Expenses:Taxes:State/Province            $136.23
+    Expenses:Insurance:Health                  $9.69
+    Income:Salary                         $-4,815.69
+
+2003/04/25 * (2123) City of Tucson
+    Expenses:Fees                             $30.00
+    Assets:NRL:Checking
+
+2003/04/26 * Texaco
+    Expenses:Auto:Gas                         $22.07
+    Liabilities:NRL:MasterCard
+
+2003/04/27 * Sushi Ten
+    Expenses:Food                             $13.30
+    Liabilities:NRL:MasterCard
+
+2003/04/28 * Safeway
+    Expenses:Food                              $2.09
+    Assets:NRL:Checking
+
+2003/04/28 * ATM
+    Expenses:Cash                             $40.00
+    Expenses:Fees                              $1.50
+    Assets:NRL:Checking                      $-41.50
+
+2003/04/28 * Taco Bell
+    Expenses:Food                              $9.94
+    Expenses:Cash
+
+2003/04/28 * University of Tucson
+    Expenses:School                           $40.00
+    Liabilities:NRL:MasterCard
+
+2003/04/29 * Walgreens
+    Expenses:Health                           $10.00
+    Liabilities:NRL:MasterCard
+
+2003/04/29 * Cienaga Partners
+    Expenses:Health                            $1.00
+    Liabilities:NRL:MasterCard
+
+2003/04/29 * Cienaga Partners
+    Expenses:Health                            $9.00
+    Liabilities:NRL:MasterCard
+
+2003/04/29 * Walgreens
+    Expenses:Food                              $5.39
+    Liabilities:NRL:MasterCard
+
+2003/04/30 * Dividend
+    Assets:E*Trade:Brokerage                   $0.84
+    Income:Dividend
+
+2003/04/30 * C&D Travel
+    Expenses:Vacation:Travel                 $848.00
+    Liabilities:NRL:MasterCard
+
+2003/04/30 * Safeway
+    Expenses:Food                              $9.53
+    Liabilities:NRL:MasterCard
+
+2003/04/30 * Legendary Automative
+    Expenses:Auto:Repair                      $81.92
+    Liabilities:NRL:MasterCard
+
+2003/04/30 * Lucky Wishbone
+    Expenses:Food                              $5.60
+    Expenses:Cash
+
+2003/04/30 * Chipotle
+    Expenses:Food                              $5.80
+    Expenses:Cash
+
+2003/04/30 * Interest
+    Assets:E*Trade:Bank                      $162.00
+    Income:Interest:Money Market
+
+2003/05/01 * Safeway
+    Expenses:Food                              $5.16
+    Liabilities:NRL:MasterCard
+
+2003/05/01 * Rent at 345 S. 6th Ave.
+    Expenses:Rent                            $450.00
+    Liabilities:Betsy Pettit
+
+2003/05/02 * Park Place Cinema
+    Expenses:Movies                            $8.75
+    Expenses:Cash
+
+2003/05/03 * Walgreens
+    Expenses:Food                              $6.48
+    Liabilities:NRL:MasterCard
+
+2003/05/03 * The B-Line
+    Expenses:Food                              $6.00
+    Expenses:Cash
+
+2003/05/05 * Safeway
+    Expenses:Food                              $4.96
+    Expenses:Cash                             $20.00
+    Assets:NRL:Checking                      $-24.96
+
+2003/05/05 * Starbucks
+    Expenses:Food                              $3.28
+    Liabilities:NRL:MasterCard
+
+2003/05/06 * Sushi Ten
+    Expenses:Food                              $9.00
+    Liabilities:NRL:MasterCard
+
+2003/05/06 * Exxon
+    Expenses:Auto:Gas                         $25.53
+    Liabilities:NRL:MasterCard
+
+2003/05/06 * Safeway
+    Expenses:Food                             $14.27
+    Liabilities:NRL:MasterCard
+
+2003/05/07 * Long distance
+    Expenses:Phone                            $12.27
+    Liabilities:Sprint
+
+2003/05/07 * IHOP
+    Expenses:Food                             $10.78
+    Liabilities:NRL:MasterCard
+
+2003/05/08 * (2124) Qwest
+    Liabilities:Qwest                         $54.49
+    Assets:NRL:Checking
+
+2003/05/08 * (2125) Sprint
+    Liabilities:Sprint                        $12.27
+    Assets:NRL:Checking
+
+2003/05/09 * Casa Sanchez
+    Expenses:Food                              $5.02
+    Liabilities:NRL:MasterCard
+
+2003/05/09 * Barnes & Noble
+    Expenses:Legal                            $17.90
+    Liabilities:NRL:MasterCard
+
+2003/05/09 * IHOP
+    Expenses:Food                              $7.21
+    Liabilities:NRL:MasterCard
+
+2003/05/09 * Supercuts
+    Expenses:Health                           $14.00
+    Liabilities:NRL:MasterCard
+
+2003/05/09 * Safeway
+    Expenses:Food                             $19.18
+    Expenses:Cash                             $20.00
+    Assets:NRL:Checking                      $-39.18
+
+2003/05/11 * Kinko's
+    Expenses:Supplies                          $4.25
+    Liabilities:NRL:MasterCard
+
+2003/05/13 * Laundromat
+    Expenses:Laundry                           $8.25
+    Expenses:Cash
+
+2003/05/14 * GKC Theaters
+    Expenses:Movies                            $3.50
+    Expenses:Cash
+
+2003/05/14 * Congress Grill
+    Expenses:Food                             $19.00
+    Liabilities:NRL:MasterCard
+
+2003/05/14 * Midtown Liquors
+    Expenses:Food                              $2.55
+    Liabilities:NRL:MasterCard
+
+2003/05/14 * Coffee Exchange
+    Expenses:Food                              $9.00
+    Liabilities:NRL:MasterCard
+
+2003/05/15 * Century Theaters
+    Expenses:Movies                            $8.25
+    Expenses:Cash
+
+2003/05/15 * Safeway
+    Expenses:Food                              $4.86
+    Expenses:Cash                             $20.00
+    Assets:NRL:Checking                      $-24.86
+
+2003/05/15 * Cricket Communications
+    Expenses:Phone                            $37.09
+    Liabilities:NRL:MasterCard
+
+2003/05/16 * NRL Federal Credit Union
+    Liabilities:NRL:MasterCard               $633.26
+    Assets:NRL:Checking
+
+2003/05/16 * Lucky Wishbone
+    Expenses:Food                              $4.20
+    Liabilities:NRL:MasterCard
+
+2003/05/16 * Exhaust Works
+    Expenses:Auto:Repair                     $144.34
+    Liabilities:NRL:MasterCard
+
+2003/05/17 * Chevron
+    Expenses:Food                              $2.98
+    Liabilities:NRL:MasterCard
+
+2003/05/17 * P.F. Chang's
+    Expenses:Food                              $7.70
+    Liabilities:NRL:MasterCard
+
+2003/05/17 * Midtown Liquors
+    Expenses:Food                              $1.99
+    Liabilities:NRL:MasterCard
+
+2003/05/17 * (2126) Baha'i Fund of Tucson
+    Expenses:Charity                          $25.00
+    Assets:NRL:Checking
+
+2003/05/18 * Mobil
+    Expenses:Auto:Gas                         $23.69
+    Liabilities:NRL:MasterCard
+
+2003/05/18 * Diner
+    Expenses:Food                              $6.37
+    Liabilities:NRL:MasterCard
+
+2003/05/19 * Midtown Liquors
+    Expenses:Food                              $4.78
+    Liabilities:NRL:MasterCard
+
+2003/05/19 * (2127) Anna Maria Machado
+    Expenses:Cleaning                         $50.00
+    Assets:NRL:Checking
+
+2003/05/20 * Cricket Communications
+    Expenses:Phone                             $7.52
+    Liabilities:NRL:MasterCard
+
+2003/05/20 * La Salsa
+    Expenses:Food                              $7.51
+    Liabilities:NRL:MasterCard
+
+2003/05/20 * La Salsa
+    Expenses:Food                              $5.11
+    Liabilities:NRL:MasterCard
+
+2003/05/20 * Exxon
+    Expenses:Auto:Gas                         $17.61
+    Liabilities:NRL:MasterCard
+
+2003/05/20 * Exxon
+    Expenses:Food                              $2.59
+    Liabilities:NRL:MasterCard
+
+2003/05/21 * The Tin Fish
+    Expenses:Food                              $5.00
+    Expenses:Cash
+
+2003/05/21 * Starbucks
+    Expenses:Food                              $3.55
+    Liabilities:NRL:MasterCard
+
+2003/05/22 * ATM
+    Expenses:Cash                            $100.00
+    Expenses:Fees                              $1.00
+    Assets:NRL:Checking                     $-101.00
+
+2003/05/22 * Mobil
+    Expenses:Auto:Gas                         $22.03
+    Liabilities:NRL:MasterCard
+
+2003/05/22 * Wahrenbrock's Book House
+    Expenses:Books                             $3.77
+    Liabilities:NRL:MasterCard
+
+2003/05/23 * Ralphs
+    Expenses:Food                              $6.79
+    Liabilities:NRL:MasterCard
+
+2003/05/23 * Douglas Wiegley
+    Expenses:Food                             $20.00
+    Expenses:Cash
+
+2003/05/24 * Blockbuster
+    Expenses:Movies                            $5.76
+    Expenses:Cash                              $5.00
+    Assets:NRL:Checking                      $-10.76
+
+2003/05/24 * (2128) Susan Wiegley
+    Expenses:Phone                            $60.50
+    Expenses:Movies                            $9.50
+    Assets:NRL:Checking                      $-70.00
+
+2003/05/24 * Ralphs
+    Expenses:Food                              $5.03
+    Liabilities:NRL:MasterCard
+
+2003/05/24 * Wal*Mart
+    Expenses:Food                              $4.77
+    Liabilities:NRL:MasterCard
+
+2003/05/25 * Regal Theaters
+    Expenses:Movies                            $6.25
+    Expenses:Cash
+
+2003/05/25 * Starbucks
+    Expenses:Food                              $3.55
+    Liabilities:NRL:MasterCard
+
+2003/05/25 * Trader Joe's
+    Expenses:Food                              $5.66
+    Liabilities:NRL:MasterCard
+
+2003/05/26 * Chris Campbell
+    Assets:NRL:Checking                       $25.00
+    Assets:Loans
+
+2003/05/26 * Borland
+    Assets:NRL:Checking                    $1,545.11
+    Expenses:Taxes:Federal                   $192.35
+    Expenses:Taxes:Social Security           $118.97
+    Expenses:Taxes:Medicare                   $27.82
+    Expenses:Taxes:State/Province             $34.62
+    Income:Salary                         $-1,918.87
+
+2003/05/26 * Ralphs
+    Expenses:Food                              $2.98
+    Expenses:Cash                              $4.00
+    Liabilities:NRL:MasterCard                $-6.98
+
+2003/05/26 * Jeff Wiegley
+    Expenses:Food                             $20.00
+    Expenses:Cash
+
+2003/05/29 * Restaurante Catalana
+    Expenses:Vacation:Food                    $21.34
+    Liabilities:NRL:MasterCard
+
+2003/05/29 * Hotel Oasis
+    Expenses:Vacation:Lodging                 $53.35
+    Liabilities:NRL:MasterCard
+
+2003/05/30 * ATM
+    Expenses:Cash                            $178.45
+    Assets:NRL:Checking
+
+2003/05/31 * Interest
+    Assets:E*Trade:Bank                      $170.50
+    Income:Interest:Money Market
+
+2003/05/31 * Viajes Playa de Oro
+    Expenses:Vacation:Lodging                $847.71
+    Assets:Deposits:Viajes                   $160.00
+    Liabilities:NRL:MasterCard            $-1,007.71
+
+2003/06/02 * ATM
+    Expenses:Cash                            $179.97
+    Assets:NRL:Checking
+
+2003/06/03 * ATM
+    Expenses:Cash                            $178.84
+    Assets:NRL:Checking
+
+2003/06/04 * ATM
+    Expenses:Cash                            $178.24
+    Assets:NRL:Checking
+
+2003/06/05 * El Corte Ingles
+    Expenses:Vacation:Lodging                 $27.15
+    Liabilities:NRL:MasterCard
+
+2003/06/07 * Restaurante Costa Dorad
+    Expenses:Vacation:Food                    $92.89
+    Liabilities:NRL:MasterCard
+
+2003/06/09 * ATM
+    Expenses:Cash                            $201.63
+    Assets:NRL:Checking
+
+2003/06/11 * USAA Refund
+    Assets:NRL:Checking                       $89.17
+    Expenses:Insurance:Rental                      ; Cancellation of policy
+
+2003/06/12 * Viajes Playa de Oro
+    Expenses:Vacation:Travel                  $78.25
+    Liabilities:NRL:MasterCard
+
+2003/06/15 * Cricket Communications
+    Expenses:Phone                            $11.75
+    Liabilities:NRL:MasterCard
+
+2003/06/16 * Viajes Playa de Oro
+    Expenses:Vacation:Travel                  $44.36
+    Liabilities:NRL:MasterCard
+
+2003/06/16 * NRL MasterCard
+    Liabilities:NRL:MasterCard             $2,345.10
+    Assets:NRL:Checking
+
+2003/06/16 * ATM
+    Expenses:Cash                            $179.73
+    Assets:NRL:Checking
+
+2003/06/19 * Transfer
+    Retirement:Great West 401(k)    331.296869 LMVTX @ $53.66
+    Retirement:Great West 401(k)   -523.942988 OPTFX @ $33.93
+    Retirement:Great West 401(k)     55.981364 LMVTX @ $53.66
+    Retirement:Great West 401(k)    -88.534054 OPTFX @ $33.93
+
+2003/06/23 * ATM
+    Expenses:Cash                            $177.81
+    Assets:NRL:Checking
+
+2003/06/25 * ATM
+    Expenses:Cash                            $175.55
+    Assets:NRL:Checking
+
+2003/06/25 * Trenitalia
+    Expenses:Vacation:Travel                  $13.07
+    Liabilities:NRL:MasterCard
+
+2003/06/26 * ATM
+    Expenses:Cash                             $58.23
+    Assets:NRL:Checking
+
+2003/06/27 * ATM
+    Expenses:Cash                            $186.58
+    Assets:NRL:Checking
+
+2003/06/30 * ATM
+    Expenses:Cash                            $172.81
+    Assets:NRL:Checking
+
+2003/06/30 * ATM
+    Expenses:Cash                            $172.81
+    Assets:NRL:Checking
+
+2003/06/30 * Interest
+    Assets:E*Trade:Bank                      $165.27
+    Income:Interest:Money Market
+
+2003/07/01 * (103) Transfer
+    Assets:NRL:Checking                   $10,000.00
+    Assets:E*Trade:Bank
+
+2003/07/03 * Trattoria Antico Fatto
+    Expenses:Vacation:Food                    $40.48
+    Liabilities:NRL:MasterCard
+
+2003/07/07 * ATM
+    Expenses:Cash                            $174.78
+    Assets:NRL:Checking
+
+2003/07/07 * ATM
+    Expenses:Cash                            $174.19
+    Assets:NRL:Checking
+
+2003/07/10 * ATM
+    Expenses:Cash                            $171.67
+    Assets:NRL:Checking
+
+2003/07/10 * ATM
+    Expenses:Cash                            $171.67
+    Assets:NRL:Checking
+
+2003/07/11 * ATM
+    Expenses:Cash                            $172.17
+    Assets:NRL:Checking
+
+2003/07/14 * ATM
+    Expenses:Cash                            $171.76
+    Assets:NRL:Checking
+
+2003/07/14 * ATM
+    Expenses:Cash                            $172.58
+    Assets:NRL:Checking
+
+2003/07/15 * Cricket Communications
+    Expenses:Phone                            $11.75
+    Liabilities:NRL:MasterCard
+
+2003/07/16 * NRL MasterCard
+    Liabilities:NRL:MasterCard             $1,616.30
+    Assets:NRL:Checking
+
+2003/07/16 * ATM
+    Expenses:Cash                            $171.27
+    Assets:NRL:Checking
+
+2003/07/21 * ATM
+    Expenses:Cash                            $203.14
+    Assets:NRL:Checking
+
+2003/07/21 * ATM
+    Expenses:Cash                            $170.19
+    Assets:NRL:Checking
+
+2003/07/21 * ATM
+    Expenses:Cash                            $171.11
+    Assets:NRL:Checking
+
+2003/07/23 * ATM
+    Expenses:Cash                            $171.97
+    Assets:NRL:Checking
+
+2003/07/24 * ATM
+    Expenses:Cash                            $172.10
+    Assets:NRL:Checking
+
+2003/07/28 * ATM
+    Expenses:Cash                            $174.15
+    Assets:NRL:Checking
+
+2003/07/28 * ATM
+    Expenses:Cash                            $174.92
+    Assets:NRL:Checking
+
+2003/07/29 * ATM
+    Expenses:Cash                            $208.78
+    Assets:NRL:Checking
+
+2003/07/30 * ATM
+    Expenses:Cash                            $174.36
+    Assets:NRL:Checking
+
+2003/07/31 * Interest
+    Assets:E*Trade:Bank                      $158.25
+    Income:Interest:Money Market
+
+2003/08/04 * ATM
+    Expenses:Cash                            $202.43
+    Assets:NRL:Checking
+
+2003/08/04 * ATM
+    Expenses:Cash                            $202.43
+    Assets:NRL:Checking
+
+2003/08/06 * ATM
+    Expenses:Cash                            $205.56
+    Assets:NRL:Checking
+
+2003/08/06 * ATM
+    Expenses:Cash                            $172.35
+    Assets:NRL:Checking
+
+2003/08/08 * ATM
+    Expenses:Cash                            $205.78
+    Assets:NRL:Checking
+
+2003/08/11 * ATM
+    Expenses:Cash                            $205.53
+    Assets:NRL:Checking
+
+2003/08/11 * ATM
+    Expenses:Cash                            $171.82
+    Assets:NRL:Checking
+
+2003/08/13 * ATM
+    Expenses:Cash                            $205.16
+    Assets:NRL:Checking
+
+2003/08/14 * ATM
+    Expenses:Cash                            $170.00
+    Assets:NRL:Checking
+
+2003/08/15 * NRL MasterCard
+    Liabilities:NRL:MasterCard               $109.66
+    Assets:NRL:Checking
+
+2003/08/17 * Exxon
+    Expenses:Auto:Gas                         $25.55
+    Liabilities:NRL:MasterCard
+
+2003/08/17 * European Vacation
+    Expenses:Vacation:Food                 $4,224.52
+    Expenses:Vacation:Lodging              $2,574.00
+    Expenses:Cash                         $-6,798.52
+
+2003/08/17 * Some chinese restaurant
+    Expenses:Food                             $20.00
+    Expenses:Cash
+
+2003/08/18 * ATM
+    Expenses:Cash                            $200.00
+    Expenses:Fees                              $1.50
+    Assets:NRL:Checking                     $-201.50
+
+2003/08/18 * The Cheese Shop
+    Expenses:Food                             $12.00
+    Liabilities:NRL:MasterCard
+
+2003/08/18 * Cricket Communications
+    Expenses:Phone                            $11.76
+    Liabilities:NRL:MasterCard
+
+2003/08/19 * Panda Express
+    Expenses:Food                              $6.87
+    Expenses:Cash
+
+2003/08/19 * Ralphs
+    Expenses:Food                             $15.65
+    Liabilities:NRL:MasterCard
+
+2003/08/20 * Ralphs
+    Expenses:Food                             $22.90
+    Liabilities:NRL:MasterCard
+
+2003/08/20 * Edwards 20 Aliso Viejo
+    Expenses:Movies                           $10.00
+    Expenses:Cash
+
+2003/08/22 * O-Nami Restaurant
+    Expenses:Food                             $16.95
+    Liabilities:NRL:MasterCard
+
+2003/08/22 * Ralphs
+    Expenses:Food                              $5.88
+    Liabilities:NRL:MasterCard
+
+2003/08/23 * Taco Bell
+    Expenses:Food                              $6.56
+    Expenses:Cash
+
+2003/08/23 * Supercuts
+    Expenses:Health                           $23.50
+    Liabilities:NRL:MasterCard
+
+2003/08/23 * Target
+    Expenses:Health                           $48.51
+    Liabilities:NRL:MasterCard
+
+2003/08/24 * Barnes & Noble
+    Expenses:Food                              $3.93
+    Liabilities:NRL:MasterCard
+
+2003/08/25 * P.F. Chang's
+    Expenses:Food                             $11.64
+    Liabilities:NRL:MasterCard
+
+2003/08/28 * KFC
+    Expenses:Food                              $5.70
+    Liabilities:NRL:MasterCard
+
+2003/08/29 * Chevron
+    Expenses:Auto:Gas                         $27.67
+    Liabilities:NRL:MasterCard
+
+2003/08/29 * Exxon
+    Expenses:Auto:Gas                         $31.56
+    Liabilities:NRL:MasterCard
+
+2003/08/29 * Mama Java Coffee House
+    Expenses:Food                              $7.65
+    Liabilities:NRL:MasterCard
+
+2003/08/30 * Chiropractic
+    Expenses:Health                            $9.80
+    Expenses:Cash
+
+2003/08/31 * Chevron
+    Expenses:Auto:Gas                         $21.69
+    Liabilities:NRL:MasterCard
+
+2003/08/31 * IHOP
+    Expenses:Food                              $7.01
+    Liabilities:NRL:MasterCard
+
+2003/08/31 * Interest
+    Assets:E*Trade:Bank                      $119.98
+    Income:Interest:Money Market
+
+2003/09/01 * Olive Garden
+    Expenses:Food                             $12.86
+    Liabilities:NRL:MasterCard
+
+2003/09/02 * Sushi Ten
+    Expenses:Food                             $13.35
+    Liabilities:NRL:MasterCard
+
+2003/09/02 * USAA
+    Expenses:Insurance:Auto                  $202.39
+    Assets:NRL:Checking
+
+2003/09/03 * Wal*Mart
+    Expenses:Supplies                          $3.21
+    Liabilities:NRL:MasterCard
+
+2003/09/03 * Soul Feather's
+    Expenses:Food                             $14.36
+    Liabilities:NRL:MasterCard
+
+2003/09/04 * Time Market
+    Expenses:Food                             $10.29
+    Liabilities:NRL:MasterCard
+
+2003/09/05 * New China
+    Expenses:Food                              $8.91
+    Liabilities:NRL:MasterCard
+
+2003/09/05 * Tohono Chul Tea Room
+    Expenses:Food                              $9.90
+    Liabilities:NRL:MasterCard
+
+2003/09/06 * Casa Sanchez
+    Expenses:Food                             $10.03
+    Liabilities:NRL:MasterCard
+
+2003/09/06 * Blockbuster
+    Expenses:Movies                           $10.33
+    Liabilities:NRL:MasterCard
+
+2003/09/06 * IHOP
+    Expenses:Food                              $7.45
+    Liabilities:NRL:MasterCard
+
+2003/09/07 * Borders
+    Expenses:Food                              $3.82
+    Liabilities:NRL:MasterCard
+
+2003/09/07 * Chevron
+    Expenses:Food                              $1.89
+    Assets:NRL:Checking
+
+2003/09/07 * Miraflores
+    Expenses:Food                             $11.45
+    Liabilities:NRL:MasterCard
+
+2003/09/08 * ATM
+    Expenses:Cash                            $200.00
+    Assets:NRL:Checking
+
+2003/09/08 * KFC
+    Expenses:Food                              $5.59
+    Liabilities:NRL:MasterCard
+
+2003/09/08 * Safeway
+    Expenses:Food                             $16.96
+    Liabilities:NRL:MasterCard
+
+2003/09/08 * DirectNIC.com
+    Expenses:Computer                         $15.00
+    Liabilities:NRL:MasterCard
+
+2003/09/08 * DirectNIC.com
+    Expenses:Computer                         $15.00
+    Liabilities:NRL:MasterCard
+
+2003/09/08 * Century Theaters
+    Expenses:Movies                           $17.50
+    Expenses:Cash
+
+2003/09/09 * IHOP
+    Expenses:Food                              $7.34
+    Liabilities:NRL:MasterCard
+
+2003/09/09 * Chevron
+    Expenses:Auto:Gas                         $25.52
+    Liabilities:NRL:MasterCard
+
+2003/09/09 * Chevron
+    Expenses:Food                              $2.79
+    Liabilities:NRL:MasterCard
+
+2003/09/10 * Blockbuster
+    Expenses:Movies                            $4.00
+    Liabilities:NRL:MasterCard
+
+2003/09/10 * DirectNIC.com
+    Expenses:Computer                         $10.00
+    Liabilities:NRL:MasterCard
+
+2003/09/11 * Wal*Mart
+    Expenses:Food                              $4.45
+    Liabilities:NRL:MasterCard
+
+2003/09/11 * Casa Molinito's
+    Expenses:Food                             $14.80
+    Liabilities:NRL:MasterCard
+
+2003/09/12 * Catalina Theater
+    Expenses:Movies                            $7.75
+    Expenses:Cash
+
+2003/09/12 * Sushi Ten
+    Expenses:Food                             $28.50
+    Liabilities:NRL:MasterCard
+
+2003/09/13 * Century Theaters
+    Expenses:Movies                            $5.25
+    Expenses:Cash
+
+2003/09/13 * Boston Market
+    Expenses:Food                              $6.45
+    Liabilities:NRL:MasterCard
+
+2003/09/15 * Soul Feather's
+    Expenses:Food                              $7.73
+    Liabilities:NRL:MasterCard
+
+2003/09/16 * Texaco
+    Expenses:Auto:Gas                         $17.01
+    Liabilities:NRL:MasterCard
+
+2003/09/16 * Texaco
+    Expenses:Auto:Gas                         $27.90
+    Liabilities:NRL:MasterCard
+
+2003/09/16 * NRL MasterCard
+    Liabilities:NRL:MasterCard                $11.75
+    Assets:NRL:Checking
+
+2003/09/17 * Sav-on Drugs
+    Expenses:Health                            $9.55
+    Liabilities:NRL:MasterCard
+
+2003/09/18 * Petro 2
+    Expenses:Food                              $9.50
+    Liabilities:NRL:MasterCard
+
+2003/09/18 * Arco Gas
+    Expenses:Auto:Gas                         $25.35
+    Assets:NRL:Checking
+
+2003/09/18 * Petro 2
+    Expenses:Auto:Gas                         $23.29
+    Liabilities:NRL:MasterCard
+
+2003/09/19 * AMC Mercado
+    Expenses:Food                             $19.00
+    Liabilities:NRL:MasterCard
+
+2003/09/19 * Verizon Wireless
+    Expenses:Phone                            $31.54
+    Liabilities:NRL:MasterCard
+
+2003/09/20 * El Palomar
+    Expenses:Food                              $5.86
+    Liabilities:NRL:MasterCard
+
+2003/09/20 * King & I
+    Expenses:Food                             $10.00
+    Liabilities:NRL:MasterCard
+
+2003/09/21 * Digital Foto Discount Club
+    Assets:Reimbursements:New Artisans       $246.75
+    Liabilities:NRL:MasterCard
+
+2003/09/21 * Trader Joe's
+    Expenses:Food                             $12.73
+    Liabilities:NRL:MasterCard
+
+2003/09/22 * Andy's BBQ
+    Expenses:Food                             $24.50
+    Liabilities:NRL:MasterCard
+
+2003/09/22 * Starbucks
+    Expenses:Food                              $3.30
+    Liabilities:NRL:MasterCard
+
+2003/09/22 * Texaco
+    Expenses:Auto:Gas                         $27.73
+    Liabilities:NRL:MasterCard
+
+2003/09/24 * San Jose Improv
+    Expenses:Movies                           $10.00
+    Expenses:Food                             $15.00
+    Expenses:Cash                            $-25.00
+
+2003/09/24 * Taco Bell
+    Expenses:Food                              $5.29
+    Expenses:Cash
+
+2003/09/24 * Papa John's
+    Expenses:Food                             $25.18
+    Liabilities:NRL:MasterCard
+
+2003/09/24 * Longs Drugs
+    Expenses:Food                              $3.39
+    Liabilities:NRL:MasterCard
+
+2003/09/25 * (2129) Behling and Associates
+    Expenses:Rent                            $950.00
+    Expenses:Fees                             $30.00
+    Assets:Deposits:Behling                  $940.00
+    Assets:NRL:Checking                   $-1,920.00
+
+2003/09/25 * (2130) Bill McKee
+    Expenses:Rent                            $200.00
+    Assets:NRL:Checking                     $-140.00
+    Expenses:Cash                            $-60.00
+
+2003/09/26 * Viva Italiano
+    Expenses:Food                             $15.00
+    Liabilities:NRL:MasterCard
+
+2003/09/26 * USPS
+    Expenses:Postage                           $7.40
+    Expenses:Cash
+
+2003/09/26 * Safeway
+    Expenses:Supplies                         $11.78
+    Expenses:Food                             $20.20
+    Liabilities:NRL:MasterCard               $-31.98
+
+2003/09/26 * Dog Eared Books
+    Expenses:Books                            $21.70
+    Liabilities:NRL:MasterCard
+
+2003/09/26 * ATM
+    Expenses:Cash                            $100.00
+    Expenses:Fees                              $1.50
+    Assets:NRL:Checking                     $-101.50
+
+2003/09/26 * SportMart
+    Expenses:Food                             $10.74  ; 6 Zen Blends
+    Liabilities:NRL:MasterCard
+
+2003/09/26 * Target
+    Expenses:Bedding                           $5.40
+    Liabilities:NRL:MasterCard
+
+2003/09/26 * Tam's Cuisine of China
+    Expenses:Food                             $14.22
+    Liabilities:NRL:MasterCard
+
+2003/09/26 * SportMart
+    Expenses:Bedding                          $59.52
+    Liabilities:NRL:MasterCard
+
+2003/09/27 * Safeway
+    Expenses:Food                              $5.88
+    Expenses:Supplies                         $10.67
+    Liabilities:NRL:MasterCard               $-16.55
+
+2003/09/27 * 7-Eleven
+    Expenses:Supplies                          $4.28
+    Liabilities:NRL:MasterCard
+
+2003/09/27 * Daly City Century 20
+    Expenses:Movies                            $9.50
+    Expenses:Cash
+
+2003/09/28 * Jenny's taco place in SF
+    Expenses:Food                             $16.65
+    Expenses:Cash
+
+2003/09/28 * Safeway
+    Expenses:Laundry                           $8.99
+    Expenses:Health                            $6.66
+    Liabilities:NRL:MasterCard               $-15.65
+
+2003/09/29 * Viva Italiano
+    Expenses:Food                              $7.00
+    Expenses:Cash
+
+2003/09/30 * Interest
+    Assets:E*Trade:Bank                      $111.38
+    Income:Interest:Money Market
+
+2003/09/30 * El Grano de Oro
+    Expenses:Food                              $7.00
+    Expenses:Cash
+
+2003/09/30 * Office Depot
+    Expenses:Furnishings                       $7.03
+    Liabilities:NRL:MasterCard
+
+2003/09/30 * Office Depot
+    Expenses:Furnishings                     $129.88
+    Liabilities:NRL:MasterCard
+
+2003/10/01 El Grano de Oro
+    Expenses:Food                              $6.25
+    Expenses:Cash
+
+2003/10/02 * Atash Kadeh
+    Expenses:Food                             $31.46
+    Liabilities:NRL:MasterCard
+
+2003/10/02 Atash Kadeh
+    Expenses:Food                             $12.00
+    Expenses:Cash
+
+2003/10/03 El Grano de Oro
+    Expenses:Food                              $5.00
+    Expenses:Cash
+
+2003/10/03 * Kragen Auto Parts
+    Expenses:Auto:Repair                      $27.04
+    Liabilities:NRL:MasterCard
+
+2003/10/03 * ATM
+    Expenses:Cash                            $100.00
+    Expenses:Fees                              $1.50
+    Assets:NRL:Checking                     $-101.50
+
+2003/10/03 Viva Italiano
+    Expenses:Food                              $7.00
+    Expenses:Cash
+
+2003/10/04 * Union 76
+    Expenses:Auto:Gas                         $25.09
+    Liabilities:NRL:MasterCard
+
+2003/10/04 Bosch Bookshop Cafe
+    Expenses:Food                              $8.00
+    Expenses:Cash
+
+2003/10/04 * Palace Art and Office
+    Expenses:Supplies                         $17.25
+    Liabilities:NRL:MasterCard
+
+2003/10/04 * Bruno's BBQ
+    Expenses:Food                             $19.74
+    Liabilities:NRL:MasterCard
+
+2003/10/04 * Bookshop Santa Cruz
+    Expenses:Books                            $26.99
+    Liabilities:NRL:MasterCard
+
+2003/10/04 * Safeway
+    Expenses:Food                              $7.99
+    Expenses:Food                              $0.66
+    Liabilities:NRL:MasterCard                $-8.65
+
+2003/10/04 * Apple Computer
+    Assets:Reimbursements:New Artisans     $4,289.30
+    Liabilities:NRL:MasterCard
+
+2003/10/06 * Aramark Service Co (Borland)
+    Expenses:Food                              $6.87
+    Liabilities:NRL:MasterCard
+
+2003/10/06 * ACM Membership
+    Assets:Reimbursements:New Artisans       $198.00
+    Liabilities:NRL:MasterCard
+
+2003/10/06 * Bookshop Santa Cruz
+    Expenses:Computer:Software                $57.19
+    Liabilities:NRL:MasterCard
+
+2003/10/07 BART
+    Expenses:Travel                            $6.00
+    Expenses:Cash
+
+2003/10/07 * Zarzuela
+    Expenses:Food                             $19.25
+    Liabilities:NRL:MasterCard
+
+2003/10/08 * House of Staunton
+    Expenses:Chess                            $39.95
+    Expenses:Shipping                          $8.05
+    Liabilities:NRL:MasterCard               $-48.00
+
+2003/10/08 Dante's
+    Expenses:Food                             $10.00
+    Expenses:Cash
+
+2003/10/08 Korean hair salon
+    Expenses:Health                           $20.00
+    Expenses:Cash
+
+2003/10/14 * Mi Bandera
+    Expenses:Food                             $56.48
+    Liabilities:NRL:MasterCard
+
+2003/10/14 Yellow Cab
+    Expenses:Travel                           $17.25
+    Expenses:Cash
+
+2003/10/15 * Union 76
+    Expenses:Auto:Gas                         $27.03
+    Liabilities:NRL:MasterCard
+
+2003/10/15 * Fry's Electronics
+    Expenses:Food                              $6.42
+    Liabilities:NRL:MasterCard
+
+2003/10/15 * Fry's Electronics
+    Assets:Reimbursements:New Artisans       $443.79
+    Liabilities:NRL:MasterCard
+
+2003/10/15 * Apple Store
+    Assets:Reimbursements:New Artisans        $43.30
+    Liabilities:NRL:MasterCard
+
+2003/10/16 * NRL MasterCard
+    Liabilities:NRL:MasterCard               $571.91
+    Assets:NRL:Checking
+
+2003/10/16 * iTunes
+    Expenses:Music                             $4.95
+    Liabilities:NRL:MasterCard
+
+2003/10/16 * Viva Italiano
+    Expenses:Food                             $15.45
+    Liabilities:NRL:MasterCard
+
+2003/10/16 * Safeway
+    Expenses:Food                              $3.79
+    Expenses:Cash                             $50.00
+    Assets:NRL:Checking                      $-53.79
+
+2003/10/16 * Fonts.com
+    Expenses:Computer:Software                $79.20  ; Adobe Garamond Volume
+    Expenses:Computer:Software               $118.80  ; ... Expert Volume
+    Liabilities:NRL:MasterCard              $-198.00
+
+2003/10/17 El Grano de Oro
+    Expenses:Food                             $10.00
+    Expenses:Cash
+
+2003/10/17 Embarcadero Theater
+    Expenses:Movies                            $9.75
+    Expenses:Cash
+
+2003/10/18 * iTunes
+    Expenses:Music                             $0.99
+    Liabilities:NRL:MasterCard
+
+2003/10/18 * Safeway
+    Expenses:Food                             $11.97
+    Liabilities:NRL:MasterCard
+
+2003/10/19 * Mervyn's
+    Expenses:Clothing                         $19.43
+    Liabilities:NRL:MasterCard
+
+2003/10/19 * Gottschalk's
+    Expenses:Clothing                         $53.46
+    Liabilities:NRL:MasterCard
+
+2003/10/19 La Fondita
+    Expenses:Food                             $18.00
+    Expenses:Cash
+
+2003/10/20 * ATM
+    Expenses:Cash                             $40.00
+    Assets:NRL:Checking
+
+2003/10/20 * iTunes
+    Expenses:Music                             $0.99
+    Liabilities:NRL:MasterCard
+
+2003/10/20 Santa Cruz Cinema 9
+    Expenses:Movies                            $5.75
+    Expenses:Cash
+
+2003/10/20 * Atash Kadeh
+    Expenses:Food                              $5.00  ; appetizer
+    Expenses:Cash                             $-5.00
+    Expenses:Food                              $7.98
+    Liabilities:NRL:MasterCard
+
+2003/10/21 El Grano de Oro
+    Expenses:Food                              $6.00
+    Expenses:Cash
+
+2003/10/21 Viva Italiano
+    Expenses:Food                              $8.00
+    Expenses:Cash
+
+2003/10/22 El Grano de Oro
+    Expenses:Food                              $5.50
+    Expenses:Cash
+
+2003/10/22 * iTunes
+    Expenses:Music                             $1.98
+    Liabilities:NRL:MasterCard
+
+2003/10/22 * Texaco
+    Expenses:Auto:Gas                         $27.53
+    Liabilities:NRL:MasterCard
+
+2003/10/22 * SportMart
+    Expenses:Food                             $10.74  ; 6 Zen Blends
+    Liabilities:NRL:MasterCard
+
+2003/10/22 * Office Depot
+    Assets:Reimbursements:New Artisans       $173.18
+    Liabilities:NRL:MasterCard
+
+2003/10/22 * Safeway
+    Expenses:Food                              $6.38
+    Liabilities:NRL:MasterCard
+
+2003/10/23 Viva Italiano
+    Expenses:Food                             $10.00
+    Expenses:Cash
+
+2003/10/23 * Video Plus
+    Expenses:Movies                            $4.00
+    Liabilities:NRL:MasterCard
+
+2003/10/24 * Apple Computer
+    Assets:Reimbursements:New Artisans       $139.64
+    Liabilities:NRL:MasterCard
+
+2003/10/24 * Lori's Diner
+    Expenses:Food                              $4.30
+    Liabilities:NRL:MasterCard
+
+2003/10/25 * Okoze Sushi
+    Expenses:Food                             $15.73
+    Liabilities:NRL:MasterCard
+
+2003/10/26 * John Wiegley
+    Assets:NRL:Checking                    $7,000.00
+    Assets:E*Trade:Bank
+
+2003/10/26 * (2131) PG&E
+    Expenses:Utilities:Electric                $3.17
+    Assets:NRL:Checking
+
+2003/10/26 * ATM
+    Expenses:Cash                             $80.00
+    Expenses:Fees                              $1.50
+    Assets:NRL:Checking                      $-81.50
+
+2003/10/27 * (2132) Behling and Associates
+    Expenses:Rent                            $950.00
+    Assets:NRL:Checking
+
+2003/10/27 Daly City Century 20
+    Expenses:Movies                            $9.50  ; "Kill Bill"
+    Expenses:Cash
+
+2003/10/27 * 88 Rice Bowl
+    Expenses:Food                              $4.64
+    Liabilities:NRL:MasterCard
+
+2003/10/27 * iTunes
+    Expenses:Music                             $2.97
+    Liabilities:NRL:MasterCard
+
+2003/10/28 McDonald's
+    Expenses:Food                              $6.00
+    Expenses:Cash
+
+2003/10/29 * Fry's Electronics
+    Expenses:Computer:Software                $21.64  ; Dungeon Siege
+    Liabilities:NRL:MasterCard
+
+2003/10/29 * Tam's Cuisine of China
+    Expenses:Food                             $14.68
+    Liabilities:NRL:MasterCard
+
+2003/10/29 * Safeway
+    Expenses:Food                              $5.04
+    Liabilities:NRL:MasterCard
+
+2003/10/29 * Colombo's Delicatessen
+    Expenses:Food                              $8.93
+    Liabilities:NRL:MasterCard
+
+2003/10/30 * Starbucks
+    Expenses:Food                              $7.15
+    Liabilities:NRL:MasterCard
+
+2003/10/30 * iTunes
+    Expenses:Music                             $4.95
+    Liabilities:NRL:MasterCard
+
+2003/10/30 * Safeway
+    Expenses:Food                              $4.88
+    Liabilities:NRL:MasterCard
+
+2003/10/31 * Interest
+    Assets:E*Trade:Bank                      $112.00
+    Income:Interest:Money Market
+
+2003/10/31 * Ethan Lipmann
+    Expenses:Computer:Hardware                $10.00  ; Laptop Ethernet card
+    Assets:NRL:Checking
+
+2003/10/31 * Barnes & Noble
+    Assets:Reimbursements:New Artisans       $162.36
+    Liabilities:NRL:MasterCard
+
+2003/10/31 Taco Bell
+    Expenses:Food                              $8.21
+    Expenses:Cash
+
+2003/11/01 * Texaco
+    Expenses:Auto:Gas                         $25.07
+    Liabilities:NRL:MasterCard
+
+2003/11/01 * Chinese Place?
+    Expenses:Food                             $23.43
+    Liabilities:NRL:MasterCard
+
+2003/11/03 * Atash Kadeh
+    Expenses:Food                             $37.00
+    Liabilities:NRL:MasterCard
+
+2003/11/03 * 7-Eleven
+    Expenses:Food                              $9.81
+    Liabilities:NRL:MasterCard
+
+2003/11/04 * Union 76
+    Expenses:Auto:Gas                         $27.14
+    Liabilities:NRL:MasterCard
+
+2003/11/04 * Atash Kadeh
+    Expenses:Food                             $35.00
+    Liabilities:NRL:MasterCard
+
+2003/11/05 * Fandango
+    Expenses:Movies                           $11.00  ; "Matrix 3"
+    Expenses:Cash                             $10.00
+    Liabilities:NRL:MasterCard               $-21.00
+
+2003/11/06 * (2133) Galaxy / PCR
+    Expenses:Computer:Hardware                 $5.00  ; dongle
+    Assets:NRL:Checking
+
+2003/11/06 El Grano de Oro
+    Expenses:Food                              $7.00
+    Expenses:Cash
+
+2003/11/06 * Safeway
+    Expenses:Food                             $21.71
+    Expenses:Cash                             $50.00
+    Assets:NRL:Checking                      $-71.71
+
+2003/11/07 * (2134) PG&E
+    Expenses:Utilities:Electric               $21.09
+    Assets:NRL:Checking
+
+2003/11/07 * (2135) SBC
+    Expenses:Phone                            $65.41
+    Expenses:Internet                         $51.32
+    Assets:NRL:Checking                     $-116.73
+
+2003/11/07 * Todai
+    Expenses:Food                             $30.00
+    Liabilities:NRL:MasterCard
+
+2003/11/08 Berkeley Baha'is
+    Expenses:Food                             $20.00
+    Expenses:Cash
+
+2003/11/09 * Tam's Cuisine of China
+    Expenses:Food                             $14.00
+    Liabilities:NRL:MasterCard
+
+2003/11/11 * Safeway
+    Expenses:Food                              $5.89
+    Liabilities:NRL:MasterCard
+
+2003/11/12 * Safeway
+    Expenses:Food                              $3.19
+    Expenses:Cash                             $50.00
+    Assets:NRL:Checking                      $-53.19
+
+2003/11/13 * USAA
+    Assets:NRL:Checking                       $11.14
+    Income:Dividend
+
+2003/11/13 * (2136) David McCants
+    Assets:Reimbursements:New Artisans       $500.00
+    Assets:NRL:Checking
+
+2003/11/13 El Grano de Oro
+    Expenses:Food                              $7.00
+    Expenses:Cash
+
+2003/11/13 * Safeway
+    Expenses:Food                             $20.83
+    Liabilities:NRL:MasterCard
+
+2003/11/14 * Longlife Noodle
+    Expenses:Food                              $8.14
+    Liabilities:NRL:MasterCard
+
+2003/11/15 Atash Kadeh
+    Expenses:Food                             $16.00
+    Expenses:Cash
+
+2003/11/16 * Arco Gas
+    Expenses:Auto:Gas                         $21.97
+    Assets:NRL:Checking
+
+2003/11/16 * Safeway
+    Expenses:Food                             $17.24
+    Liabilities:NRL:MasterCard
+
+2003/11/16 * Fandango
+    Expenses:Movies                           $16.50
+    Assets:NRL:Checking
+
+2003/11/17 * NRL MasterCard
+    Liabilities:NRL:MasterCard             $6,061.95
+    Assets:NRL:Checking
+
+2003/11/17 * Macy's
+    Expenses:Gifts                            $39.30
+    Liabilities:NRL:MasterCard
+
+2003/11/17 * Colombo's Delicatessen
+    Expenses:Food                              $7.52
+    Liabilities:NRL:MasterCard
+
+2003/11/17 * Video Plus
+    Expenses:Movies                            $7.99
+    Liabilities:NRL:MasterCard
+
+2003/11/17 * PCS Cellular Accessory
+    Expenses:Computer:Hardware                $19.90
+    Liabilities:NRL:MasterCard
+
+2003/11/18 El Grano de Oro
+    Expenses:Food                              $7.00
+    Expenses:Cash
+
+2003/11/18 * ATM
+    Expenses:Cash                             $60.00
+    Expenses:Fees                              $1.50
+    Assets:NRL:Checking                      $-61.50
+
+2003/11/19 Quizno's Subs
+    Expenses:Food                              $5.08
+    Expenses:Cash
+
+2003/11/19 * Viva Italiano
+    Expenses:Food                             $11.85
+    Liabilities:NRL:MasterCard
+
+2003/11/19 * Safeway
+    Expenses:Food                              $5.99
+    Assets:NRL:Checking
+
+2003/11/20 * CatalogCity.com
+    Expenses:Gifts                           $177.50
+    Liabilities:NRL:MasterCard
+
+2003/11/20 * Mitsu
+    Expenses:Food                             $21.35
+    Liabilities:NRL:MasterCard
+
+2003/11/22 * Chevron
+    Expenses:Auto:Gas                         $21.22
+    Liabilities:NRL:MasterCard
+
+2003/11/22 * Ralph's
+    Expenses:Food                              $9.29
+    Liabilities:NRL:MasterCard
+
+2003/11/22 * Union 76
+    Expenses:Auto:Gas                         $24.54
+    Liabilities:NRL:MasterCard
+
+2003/11/23 * 7-Eleven
+    Expenses:Food                              $9.52
+    Assets:NRL:Checking
+
+2003/11/23 * Longs Drugs
+    Expenses:Health                           $10.31
+    Liabilities:NRL:MasterCard
+
+2003/11/23 * Blockbuster
+    Expenses:Movies                           $12.25
+    Liabilities:NRL:MasterCard
+
+2003/11/26 * Verizon Wireless
+    Expenses:Phone                           $146.30
+    Liabilities:NRL:MasterCard
+
+2003/11/28 * (2137) SD Baha'i Fund
+    Expenses:Travel                           $50.00
+    Assets:NRL:Checking
+
+2003/11/29 * Sammy's Woodfired Pizza
+    Expenses:Food                             $21.34
+    Expenses:Cash                             $47.00
+    Liabilities:NRL:MasterCard               $-68.34
+
+2003/11/29 * Godiva Chocolatier
+    Expenses:Food                              $5.48
+    Liabilities:NRL:MasterCard
+
+2003/11/29 * Chevron
+    Expenses:Auto:Gas                         $27.15
+    Liabilities:NRL:MasterCard
+
+2003/11/30 * Interest
+    Assets:E*Trade:Bank                      $100.78
+    Income:Interest:Money Market
+
+2003/11/30 The Cottage Cafe
+    Expenses:Food                             $11.00
+    Expenses:Cash
+
+2003/11/30 Edwards 20 Aliso Viejo
+    Expenses:Movies                            $7.00
+    Expenses:Cash
+
+2003/11/30 * (2138) Behling and Associates
+    Expenses:Rent                            $950.00
+    Assets:NRL:Checking
+
+2003/12/01 * American Gas Co.
+    Expenses:Auto:Gas                         $21.83
+    Liabilities:NRL:MasterCard
+
+2003/12/01 * Sears Auto Center
+    Expenses:Auto:Repair                      $59.99
+    Liabilities:NRL:MasterCard
+
+2003/12/02 El Grano de Oro
+    Expenses:Food                              $7.00
+    Expenses:Cash
+
+2003/12/02 * Safeway
+    Expenses:Food                              $6.29
+    Liabilities:NRL:MasterCard
+
+2003/12/02 * Video Plus
+    Expenses:Movies                            $7.99
+    Liabilities:NRL:MasterCard
+
+2003/12/02 * Viva Italiano
+    Expenses:Food                             $14.00
+    Liabilities:NRL:MasterCard
+
+2003/12/03 * 7-Eleven
+    Expenses:Food                              $4.73
+    Liabilities:NRL:MasterCard
+
+2003/12/03 El Grano de Oro
+    Expenses:Food                              $6.00
+    Expenses:Cash
+
+2003/12/03 * Starbucks
+    Expenses:Food                              $7.95
+    Liabilities:NRL:MasterCard
+
+2003/12/03 * Safeway
+    Expenses:Food                             $25.54
+    Liabilities:NRL:MasterCard
+
+2003/12/04 * Tam's Cuisine of China
+    Expenses:Food                             $14.00
+    Liabilities:NRL:MasterCard
+
+2003/12/05 * Rite-Aid
+    Expenses:Health                            $8.74
+    Liabilities:NRL:MasterCard
+
+2003/12/06 * Shell
+    Expenses:Auto:Gas                         $23.93
+    Liabilities:NRL:MasterCard
+
+2003/12/07 * Viva Italiano
+    Expenses:Food                             $12.28
+    Liabilities:NRL:MasterCard
+
+2003/12/08 * 7-Eleven
+    Expenses:Food                              $5.84
+    Liabilities:NRL:MasterCard
+
+2003/12/08 * USPS
+    Expenses:Postage                           $8.26
+    Liabilities:NRL:MasterCard
+
+2003/12/08 * Brung Siam Thai Cuisine
+    Expenses:Food                             $29.85
+    Liabilities:NRL:MasterCard
+
+2003/12/08 * Safeway
+    Expenses:Food                              $7.08
+    Expenses:Cash                             $50.00
+    Assets:NRL:Checking                      $-57.08
+
+2003/12/09 * Tam's Cuisine of China
+    Expenses:Food                             $12.01
+    Liabilities:NRL:MasterCard
+
+2003/12/10 * Quizno's Subs
+    Expenses:Food                              $4.69
+    Expenses:Food                              $0.39
+    Liabilities:NRL:MasterCard                $-5.08
+
+2003/12/10 * Safeway
+    Expenses:Food                              $9.67
+    Liabilities:NRL:MasterCard
+
+2003/12/11 * Rite-Aid
+    Expenses:Health                            $7.56
+    Liabilities:NRL:MasterCard
+
+2003/12/12 * Mitsu
+    Expenses:Food                             $21.35
+    Liabilities:NRL:MasterCard
+
+2003/12/12 * Video Plus
+    Expenses:Movies                            $4.00
+    Liabilities:NRL:MasterCard
+
+2003/12/13 * Union 76
+    Expenses:Auto:Gas                         $25.43
+    Liabilities:NRL:MasterCard
+
+2003/12/14 * Viva Italiano
+    Expenses:Food                             $11.28
+    Liabilities:NRL:MasterCard
+
+2003/12/14 * Video Plus
+    Expenses:Movies                            $4.00
+    Liabilities:NRL:MasterCard
+
+2003/12/17 * Safeway
+    Expenses:Food                             $17.45
+    Expenses:Cash                             $50.00
+    Assets:NRL:Checking                      $-67.45
+
+2003/12/17 * Starbucks
+    Expenses:Food                              $3.55
+    Liabilities:NRL:MasterCard
+
+2003/12/18 * NRL MasterCard
+    Liabilities:NRL:MasterCard             $1,318.06
+    Assets:NRL:Checking
+
+2003/12/18 * Long's Drugs
+    Expenses:Health                            $4.85
+    Liabilities:NRL:MasterCard
+
+2003/12/19 * Video Plus
+    Expenses:Movies                            $4.00
+    Liabilities:NRL:MasterCard
+
+2003/12/19 * Yeah Restaurant
+    Expenses:Food                             $22.00
+    Liabilities:NRL:MasterCard
+
+2003/12/19 * iTunes
+    Expenses:Music                             $0.99
+    Liabilities:NRL:MasterCard
+
+2003/12/20 * Mo's Smokehouse BBQ
+    Expenses:Food                             $15.89
+    Liabilities:NRL:MasterCard
+
+2003/12/20 * Union 76
+    Expenses:Auto:Gas                         $22.59
+    Liabilities:NRL:MasterCard
+
+2003/12/20 * Union 76
+    Expenses:Auto:Gas                         $22.82
+    Liabilities:NRL:MasterCard
+
+2003/12/21 * Pizza Bite
+    Expenses:Food                             $11.15
+    Liabilities:NRL:MasterCard
+
+2003/12/22 * (2139) PG&E
+    Expenses:Utilities:Electric               $33.53
+    Assets:NRL:Checking
+
+2003/12/22 * (2140) Behling and Associates
+    Expenses:Rent                            $950.00
+    Assets:NRL:Checking
+
+2003/12/22 * Mobil
+    Expenses:Food                              $5.32
+    Liabilities:NRL:MasterCard
+
+2003/12/22 * Edwards Theaters
+    Expenses:Movies                           $16.00
+    Liabilities:NRL:MasterCard
+
+2003/12/23 * Mission Ranch Market
+    Expenses:Food                             $27.22
+    Liabilities:NRL:MasterCard
+
+2003/12/23 * Supercuts
+    Expenses:Health                           $15.50
+    Liabilities:NRL:MasterCard
+
+2003/12/24 * Tomahawk
+    Expenses:Auto:Gas                         $25.07
+    Liabilities:NRL:MasterCard
+
+2003/12/25 * Del Taco
+    Expenses:Food                              $6.12
+    Expenses:Fees                              $0.75
+    Assets:NRL:Checking                       $-6.87
+
+2003/12/25 * Albertson's
+    Expenses:Food                             $24.72
+    Liabilities:NRL:MasterCard
+
+2003/12/25 * Panda Express
+    Expenses:Food                              $6.25
+    Liabilities:NRL:MasterCard
+
+2003/12/25 * AMC
+    Expenses:Movies                            $8.50
+    Liabilities:NRL:MasterCard
+
+2003/12/26 * Fatburger
+    Expenses:Food                              $8.10
+    Liabilities:NRL:MasterCard
+
+2003/12/26 * Persian Room
+    Expenses:Food                             $27.24
+    Liabilities:NRL:MasterCard
+
+2003/12/27 * Macaroni Grill
+    Expenses:Food                             $15.00
+    Expenses:Cash                             $21.00
+    Liabilities:NRL:MasterCard               $-36.00
+
+2003/12/27 * Starbucks
+    Expenses:Food                              $3.19
+    Liabilities:NRL:MasterCard
+
+2003/12/27 * World Noodles
+    Expenses:Food                              $7.03
+    Liabilities:NRL:MasterCard
+
+2003/12/28 * Soul Feathers
+    Expenses:Food                             $20.25
+    Liabilities:NRL:MasterCard
+
+2003/12/29 * Casa Sanchez
+    Expenses:Food                              $5.02
+    Liabilities:NRL:MasterCard
+
+2003/12/29 * Coffee Exchange
+    Expenses:Food                              $4.99
+    Liabilities:NRL:MasterCard
+
+2003/12/29 * Bookman's
+    Expenses:Books                            $15.06
+    Liabilities:NRL:MasterCard
+
+2003/12/29 * USAA
+    Assets:NRL:Checking                       $42.17
+    Income:Dividend
+
+2003/12/30 * Caravan Foods
+    Expenses:Food                             $13.52
+    Liabilities:NRL:MasterCard
+
+2003/12/31 * Circle K
+    Expenses:Auto:Gas                         $21.61
+    Liabilities:NRL:MasterCard
+
+2003/12/31 * Cracker Barrel Store
+    Expenses:Food                              $9.97
+    Liabilities:NRL:MasterCard
+
+2003/12/31 * Interest
+    Assets:E*Trade:Bank                      $103.70
+    Income:Interest:Money Market
+
+2004/01/03 * Dillard's
+    Expenses:Clothing                          $8.61
+    Liabilities:NRL:MasterCard
+
+2004/01/03 * One Hour Martinizing
+    Expenses:Cleaning                          $9.15
+    Liabilities:NRL:MasterCard
+
+2004/01/04 * ATM
+    Expenses:Cash                            $100.00
+    Expenses:Fees                              $2.00
+    Assets:NRL:Checking                     $-102.00
+
+2004/01/04 * Chevron
+    Expenses:Auto:Gas                         $22.94
+    Liabilities:NRL:MasterCard
+
+2004/01/05 * Legendary Automotive
+    Expenses:Auto:Repair                      $22.00
+    Liabilities:NRL:MasterCard
+
+2004/01/05 * Discount Tire
+    Expenses:Auto:Repair                      $12.00
+    Liabilities:NRL:MasterCard
+
+2004/01/05 * Sushi Ten
+    Expenses:Food                             $11.15
+    Liabilities:NRL:MasterCard
+
+2004/01/06 * Casa Sanchez
+    Expenses:Food                              $5.02
+    Liabilities:NRL:MasterCard
+
+2004/01/06 * Jamie Just
+    Expenses:Dentist                         $508.00
+    Liabilities:NRL:MasterCard
+
+2004/01/06 * Sushi Ten
+    Expenses:Food                             $34.37
+    Liabilities:NRL:MasterCard
+
+2004/01/07 * Caravan Foods
+    Expenses:Gifts                            $35.88
+    Liabilities:NRL:MasterCard
+
+2004/01/07 * Exxon
+    Expenses:Auto:Gas                         $20.54
+    Liabilities:NRL:MasterCard
+
+2004/01/07 * Travel Center of America
+    Expenses:Auto:Gas                         $18.41
+    Liabilities:NRL:MasterCard
+
+2004/01/08 * Pizza Bite
+    Expenses:Food                             $11.69
+    Liabilities:NRL:MasterCard
+
+2004/01/08 * Shell
+    Expenses:Auto:Gas                         $28.11
+    Liabilities:NRL:MasterCard
+
+2004/01/10 * Safeway
+    Expenses:Food                             $11.43
+    Liabilities:NRL:MasterCard
+
+2004/01/11 * Safeway
+    Expenses:Food                             $18.22
+    Liabilities:NRL:MasterCard
+
+2004/01/11 * Tam's Cuisine of China
+    Expenses:Food                             $13.01
+    Liabilities:NRL:MasterCard
+
+2004/01/11 * Video Plus
+    Expenses:Movies                           $81.00
+    Liabilities:NRL:MasterCard
+
+2004/01/12 * Transfer
+    Assets:NRL:Checking                    $5,000.00
+    Assets:E*Trade:Bank
+
+2004/01/12 * Chinese film distributor
+    Expenses:Movies                           $13.99  ; "Hero"
+    Assets:NRL:Checking
+
+2004/01/14 * Quizno's Subs
+    Expenses:Food                              $7.46
+    Liabilities:NRL:MasterCard
+
+2004/01/14 * cheaptickets.com
+    Liabilities:Gifts                        $182.19  ; ticket to Dad's house
+    Liabilities:NRL:MasterCard
+
+2004/01/14 * Circuit City
+    Expenses:Phone                            $19.47
+    Liabilities:NRL:MasterCard
+
+2004/01/15 * Yaas Restaurant
+    Expenses:Food                             $20.71
+    Liabilities:NRL:MasterCard
+
+2004/01/16 * NRL MasterCard
+    Liabilities:NRL:MasterCard               $979.13
+    Assets:NRL:Checking
+
+2004/01/16 * Safeway
+    Expenses:Food                              $5.93
+    Liabilities:NRL:MasterCard
+
+2004/01/16 * Viva Italiano
+    Expenses:Food                             $15.00
+    Liabilities:NRL:MasterCard
+
+2004/01/17 * Safeway
+    Expenses:Food                             $11.14
+    Liabilities:NRL:MasterCard
+
+2004/01/17 * Bosch Baha'i School
+    Expenses:Books                             $8.59
+    Liabilities:NRL:MasterCard
+
+2004/01/18 * AMI Gasoline
+    Expenses:Auto:Gas                         $25.69
+    Liabilities:NRL:MasterCard
+
+2004/01/17 * Marriot JW
+    Expenses:Lodging                         $117.67
+    Liabilities:NRL:MasterCard
+
+2004/01/19 * ATM
+    Expenses:Cash                            $100.00
+    Expenses:Fees                              $2.00
+    Assets:NRL:Checking                     $-102.00
+
+2004/01/19 * Denny's
+    Expenses:Food                              $9.61
+    Liabilities:NRL:MasterCard
+
+2004/01/20 * Tide USA Corp
+    Expenses:Health                          $114.75
+    Expenses:Shipping                         $13.50
+    Liabilities:NRL:MasterCard              $-128.25
+
+2004/01/20 * (2142) PG&E
+    Expenses:Utilities:Electric               $28.04
+    Assets:NRL:Checking
+
+2004/01/20 * (2143) SBC
+    Expenses:Phone                            $16.86
+    Expenses:Phone                            $16.84
+    Expenses:Fees                              $0.70
+    Expenses:Internet                         $29.95
+    Expenses:Internet                         $29.95
+    Assets:NRL:Checking                      $-94.30
+
+2004/01/20 * (2144) Verizon Wireless
+    Expenses:Phone                           $154.22
+    Assets:NRL:Checking
+
+2004/01/20 * Mitsu
+    Expenses:Food                             $21.85
+    Liabilities:NRL:MasterCard
+
+2004/01/22 * (2145) Sina Mossayeb
+    Expenses:Computer:Hardware                $90.00
+    Assets:NRL:Checking
+
+2004/01/23 * Safeway
+    Expenses:Food                             $10.77
+    Liabilities:NRL:MasterCard
+
+2004/01/26 * Viva Italiano
+    Expenses:Food                             $12.28
+    Liabilities:NRL:MasterCard
+
+2004/01/27 * Tam's Cuisine of China
+    Expenses:Food                             $15.22
+    Liabilities:NRL:MasterCard
+
+2004/01/27 * Safeway
+    Expenses:Food                             $23.78
+    Liabilities:NRL:MasterCard
+
+2004/01/29 * 7-Eleven
+    Expenses:Food                              $6.12
+    Liabilities:NRL:MasterCard
+
+2004/01/30 * Tide USA Corp
+    Expenses:Gifts                            $33.85
+    Expenses:Shipping                          $5.40
+    Liabilities:NRL:MasterCard               $-39.25
+
+2004/01/30 * Walgreens
+    Expenses:Health                           $31.34
+    Liabilities:NRL:MasterCard
+
+2004/01/30 * Union 76
+    Expenses:Auto:Gas                         $27.94
+    Liabilities:NRL:MasterCard
+
+2004/01/30 * Yaas Restaurant
+    Expenses:Food                             $15.50
+    Liabilities:NRL:MasterCard
+
+2004/01/31 * Interest
+    Assets:E*Trade:Bank                       $98.02
+    Income:Interest:Money Market
+
+2004/01/31 * iTunes
+    Expenses:Music                             $0.99
+    Liabilities:NRL:MasterCard
+
+2004/02/01 * (2146) Behling and Associates
+    Expenses:Rent                            $950.00
+    Assets:NRL:Checking
+
+2004/02/02 * Erik's Deli Cafe
+    Expenses:Food                              $5.35
+    Liabilities:NRL:MasterCard
+
+2004/02/03 * (2147) DMV
+    Expenses:Auto:Fees                        $24.00
+    Assets:NRL:Checking
+
+2004/02/03 * Viva Italiano
+    Expenses:Food                             $14.35
+    Liabilities:NRL:MasterCard
+
+2004/02/03 * Safeway
+    Expenses:Food                              $8.85
+    Expenses:Cash                             $50.00
+    Assets:NRL:Checking                      $-58.85
+
+2004/02/04 * iTunes
+    Expenses:Music                             $0.99
+    Liabilities:NRL:MasterCard
+
+2004/02/05 * Roger Wiegley
+    Assets:NRL:Checking                      $250.00
+    Income:Gifts Received
+
+2004/02/05 * Bill & Irene Straus
+    Assets:NRL:Checking                       $50.00
+    Income:Gifts Received
+
+2004/02/05 * (2148) SBC
+    Expenses:Phone                            $46.81
+    Assets:NRL:Checking
+
+2004/02/05 * (2149) Verizon Wireless
+    Expenses:Phone                            $45.75
+    Assets:NRL:Checking
+
+2004/02/05 * (2150) PG&E
+    Expenses:Phone                            $23.67
+    Assets:NRL:Checking
+
+2004/02/05 * Tam's Cuisine of China
+    Expenses:Food                             $13.60
+    Liabilities:NRL:MasterCard
+
+2004/02/07 * iTunes
+    Expenses:Music                             $6.93
+    Liabilities:NRL:MasterCard
+
+2004/02/08 * Togo's
+    Expenses:Food                              $6.87
+    Liabilities:NRL:MasterCard
+
+2004/02/08 * CVS Pharmacy
+    Expenses:Health                           $11.98
+    Expenses:Food                              $8.21
+    Liabilities:NRL:MasterCard               $-20.19
+
+2004/02/12 * iTunes
+    Expenses:Music                             $2.97
+    Liabilities:NRL:MasterCard
+
+2004/02/12 * Maharani Indian Cuisine
+    Expenses:Food                            $109.97
+    Liabilities:NRL:MasterCard
+
+2004/02/14 * Stamford Marriott
+    Expenses:Food                             $12.60
+    Liabilities:NRL:MasterCard
+
+2004/02/14 * Harper's Flowershop
+    Expenses:Gifts                            $94.71
+    Liabilities:NRL:MasterCard
+
+2004/02/15 * Bennigan's
+    Expenses:Food                             $22.12
+    Liabilities:NRL:MasterCard
+
+2004/02/16 * NRL MasterCard
+    Liabilities:NRL:MasterCard             $1,489.05
+    Assets:NRL:Checking
+
+2004/02/16 * IHOP
+    Expenses:Food                             $15.94
+    Liabilities:NRL:MasterCard
+
+2004/02/17 * Exxon
+    Expenses:Auto:Gas                         $39.07
+    Liabilities:NRL:MasterCard
+
+2004/02/17 * Dante's Place
+    Expenses:Food                             $17.75
+    Liabilities:NRL:MasterCard
+
+2004/02/18 * Underhill's Crossing
+    Expenses:Food                             $45.27
+    Expenses:Cash                             $30.00
+    Liabilities:NRL:MasterCard               $-75.27
+
+2004/02/19 * ATM
+    Expenses:Cash                            $100.00
+    Expenses:Fees                              $1.50
+    Assets:NRL:Checking                     $-101.50
+
+2004/02/19 * Safeway
+    Expenses:Food                             $17.58
+    Liabilities:NRL:MasterCard
+
+2004/02/20 * 7-Eleven
+    Expenses:Food                              $6.12
+    Liabilities:NRL:MasterCard
+
+2004/02/20 * Colombo's Delicatessen
+    Expenses:Food                              $6.95
+    Liabilities:NRL:MasterCard
+
+2004/02/21 * See's Candies
+    Expenses:Gifts                            $17.50
+    Liabilities:NRL:MasterCard
+
+2004/02/21 * Union 76
+    Expenses:Auto:Gas                         $31.37
+    Liabilities:NRL:MasterCard
+
+2004/02/22 * Todai
+    Expenses:Food                            $101.00
+    Expenses:Cash                             $20.00
+    Liabilities:NRL:MasterCard              $-121.00
+
+2004/02/23 * Pizza Bite
+    Expenses:Food                              $7.95
+    Liabilities:NRL:MasterCard
+
+2004/02/23 * Union 76
+    Expenses:Auto:Gas                         $31.58
+    Liabilities:NRL:MasterCard
+
+2004/02/26 * Palm Mini Mart
+    Expenses:Auto:Gas                         $27.76
+    Liabilities:NRL:MasterCard
+
+2004/02/26 * Casey Moore's
+    Expenses:Food                             $21.50
+    Liabilities:NRL:MasterCard
+
+2004/02/29 * Interest
+    Assets:E*Trade:Bank                       $82.91
+    Income:Interest:Money Market
+
+2004/02/29 * Union 76
+    Expenses:Auto:Gas                         $29.40
+    Liabilities:NRL:MasterCard
+
+2004/02/29 * Persian Room
+    Expenses:Food                             $20.74
+    Liabilities:NRL:MasterCard
+
+2004/03/01 * Chevron
+    Expenses:Auto:Gas                         $26.52
+    Liabilities:NRL:MasterCard
+
+2004/03/01 * (2151) Behling and Associates
+    Expenses:Rent                            $950.00
+    Assets:NRL:Checking
+
+2004/03/01 * (2152) Sina Mossayeb
+    Expenses:Rent                            $250.00
+    Assets:NRL:Checking
+
+2004/03/01 * USAA
+    Expenses:Insurance:Auto                  $181.74
+    Assets:NRL:Checking
+
+2004/03/02 * Transfer
+    Assets:NRL:Checking                    $5,000.00
+    Assets:E*Trade:Bank
+
+2004/03/02 * Best Buy
+    Expenses:Music                            $41.94
+    Assets:NRL:Checking
+
+2004/03/02 * Cracker Barrel
+    Expenses:Food                              $6.00
+    Assets:NRL:Checking
+
+2004/03/03 * Sher-i-Punjab
+    Expenses:Food                             $17.68
+    Assets:NRL:Checking
+
+2004/03/04 * Bookman's
+    Expenses:Books                            $16.68
+    Assets:NRL:Checking
+
+2004/03/05 * La Parrilla Suiza
+    Expenses:Food                             $12.48
+    Assets:NRL:Checking
+
+2004/03/07 * Persian Room
+    Expenses:Food                             $42.02
+    Assets:NRL:Checking
+
+2004/03/08 * Chevron
+    Expenses:Auto:Gas                         $26.58
+    Assets:NRL:Checking
+
+2004/03/08 * Sweet Tomato's
+    Expenses:Food                             $12.88
+    Assets:NRL:Checking
+
+2004/03/08 * Dillard's
+    Expenses:Clothing                          $9.68
+    Assets:NRL:Checking
+
+2004/03/09 * IHOP
+    Expenses:Food                              $7.95
+    Assets:NRL:Checking
+
+2004/03/09 * Macaroni Grill
+    Expenses:Food                             $19.03
+    Assets:NRL:Checking
+
+2004/03/09 * Blockbuster
+    Expenses:Movies                            $4.00
+    Assets:NRL:Checking
+
+2004/03/09 * Safeway
+    Expenses:Food                              $2.19
+    Expenses:Cash                             $50.00
+    Assets:NRL:Checking                      $-52.19
+
+2004/03/10 * Barnes & Noble
+    Expenses:Books                            $25.86
+    Expenses:Supplies                         $29.90
+    Assets:NRL:Checking                      $-55.76
+
+2004/03/10 * AMC Desert Ridge
+    Expenses:Movies                           $17.00
+    Assets:NRL:Checking
+
+2004/03/11 * T-Mobile Hotspot
+    Assets:Reimbursements:New Artisans        $12.00
+    Liabilities:NRL:MasterCard
+
+2004/03/11 * Sushi Ten
+    Expenses:Food                             $18.00
+    Assets:NRL:Checking
+
+2004/03/13 * Heartline Cafe
+    Expenses:Food                             $72.33
+    Assets:NRL:Checking
+
+2004/03/13 * Union 76
+    Expenses:Auto:Gas                         $23.47
+    Assets:NRL:Checking
+
+2004/03/14 * Kona Grill
+    Expenses:Food                             $49.00
+    Assets:NRL:Checking
+
+2004/03/14 * T. Cook's Restaurant
+    Expenses:Food                             $11.23
+    Assets:NRL:Checking
+
+2004/03/15 * Soul Feathers
+    Expenses:Food                             $22.33
+    Assets:NRL:Checking
+
+2004/03/16 * NRL MasterCard
+    Liabilities:NRL:MasterCard               $728.85
+    Assets:NRL:Checking
+
+2004/03/16 * Safeway
+    Expenses:Gifts                            $13.72
+    Assets:NRL:Checking
+
+2004/03/16 * iTunes
+    Expenses:Music                             $0.99
+    Liabilities:NRL:MasterCard
+
+2004/03/17 * Sushi Ten
+    Expenses:Food                             $12.00
+    Assets:NRL:Checking
+
+2004/03/18 * Coffee Exchange
+    Expenses:Food                              $5.06
+    Assets:NRL:Checking
+
+2004/03/18 * Chevron
+    Expenses:Auto:Gas                         $26.09
+    Assets:NRL:Checking
+
+2004/03/18 * Basha's
+    Expenses:Food                              $4.99
+    Assets:NRL:Checking
+
+2004/03/21 * Congress Grill
+    Expenses:Food                             $19.13
+    Assets:NRL:Checking
+
+2004/03/21 * Blockbuster
+    Expenses:Movies                            $4.00
+    Assets:NRL:Checking
+
+2004/03/22 * Walgreens
+    Expenses:Health                            $9.67
+    Assets:NRL:Checking
+
+2004/03/22 * Safeway
+    Expenses:Health                            $8.44
+    Assets:NRL:Checking
+
+2004/03/24 * Basha's
+    Expenses:Food                             $15.92
+    Assets:NRL:Checking
+
+2004/03/25 * Da Vang Restaurant
+    Expenses:Food                             $30.77
+    Assets:NRL:Checking
+
+2004/03/25 * Walgreens
+    Expenses:Health                            $7.10
+    Assets:NRL:Checking
+
+2004/03/26 * AMC Desert Ridge
+    Expenses:Movies                           $15.00
+    Assets:NRL:Checking
+
+2004/03/27 * Sapporo
+    Expenses:Food                             $65.67
+    Expenses:Cash                             $35.00
+    Assets:NRL:Checking                     $-100.67
+
+2004/03/27 * Danny's Tatum
+    Expenses:Auto:Gas                         $27.68
+    Assets:NRL:Checking
+
+2004/03/27 * Village Inn
+    Expenses:Food                              $9.56
+    Assets:NRL:Checking
+
+2004/03/28 * Wal*mart
+    Expenses:Health                            $5.37
+    Assets:NRL:Checking
+
+2004/03/28 * Days Inn
+    Expenses:Lodging                          $60.25
+    Assets:NRL:Checking
+
+2004/03/28 * Fiesta Mexicana
+    Expenses:Food                             $13.50
+    Assets:NRL:Checking
+
+2004/03/29 * Walgreens
+    Expenses:Food                             $14.62
+    Assets:NRL:Checking
+
+2004/03/30 * Zinc Bistro
+    Expenses:Food                             $36.27
+    Assets:NRL:Checking
+
+2004/03/31 * Interest
+    Assets:E*Trade:Bank                       $77.09
+    Income:Interest:Money Market
+
+2004/03/31 * Safeway
+    Expenses:Food                              $3.94
+    Expenses:Cash                             $50.00
+    Assets:NRL:Checking                      $-53.94
+
+2004/03/31 * Indoor Cafe
+    Expenses:Food                              $7.87
+    Assets:NRL:Checking
+
+2004/03/31 * Quiktrip
+    Expenses:Auto:Gas                         $27.13
+    Assets:NRL:Checking
+
+2004/03/31 * Quiktrip
+    Expenses:Food                              $8.57
+    Assets:NRL:Checking
+
+2004/04/01 * A.J. Spurs
+    Expenses:Food                             $23.00
+    Assets:NRL:Checking
+
+2004/04/01 * Union 76
+    Expenses:Auto:Gas                         $32.39
+    Assets:NRL:Checking
+
+2004/04/02 * USPS
+    Expenses:Postage                           $7.40
+    Assets:NRL:Checking
+
+2004/04/02 * Arco Gas
+    Expenses:Auto:Gas                         $27.17
+    Assets:NRL:Checking
+
+2004/04/02 * (2153) Behling and Associates
+    Expenses:Rent                            $950.00
+    Assets:NRL:Checking
+
+2004/04/02 * (2154) PG&E
+    Expenses:Utilities:Electric               $15.13
+    Assets:NRL:Checking
+
+2004/04/02 * (2155) SBC
+    Expenses:Phone                           $114.76
+    Assets:NRL:Checking
+
+2004/04/02 * (2156) Verizon Wireless
+    Expenses:Phone                            $87.94
+    Assets:NRL:Checking
+
+2004/04/02 * Safeway
+    Expenses:Supplies                         $31.98
+    Expenses:Food                             $11.42
+    Expenses:Cash                             $50.00
+    Assets:NRL:Checking                      $-93.40
+
+2004/04/02 Daly City Century 20
+    Expenses:Movies                            $9.50  ; "Hellboy"
+    Expenses:Cash
+
+2004/04/03 * Howard Johnson Express Inn
+    Expenses:Gifts                           $526.94
+    Liabilities:NRL:MasterCard
+
+2004/04/03 * Safeway
+    Expenses:Food                             $25.05
+    Liabilities:NRL:MasterCard
+
+2004/04/04 * Tam's Cuisine of China
+    Expenses:Food                             $11.50
+    Liabilities:NRL:MasterCard
+
+2004/04/05 * SportMart
+    Expenses:Supplies                         $54.40  ; free weights
+    Liabilities:NRL:MasterCard
+
+2004/04/05 * Viva Italiano
+    Expenses:Food                             $13.85
+    Liabilities:NRL:MasterCard
+
+2004/04/06 Vicolo Pizzeria
+    Expenses:Food                             $15.00
+    Expenses:Cash
+
+2004/04/06 * Safeway
+    Expenses:Food                             $21.24
+    Liabilities:NRL:MasterCard
+
+2004/04/07 * Llamagraphics
+    Expenses:Computer:Software                $64.95
+    Liabilities:NRL:MasterCard
+
+2004/04/07 * Roger Wiegley
+    Assets:NRL:Checking                      $250.00
+    Income:Gifts Received
+
+2004/04/07 * Susan Wiegley
+    Assets:NRL:Checking                      $100.00
+    Income:Gifts Received
+
+2004/04/07 * Knifeart.com
+    Liabilities:Gifts                        $313.00  ; Small Sebenza
+    Liabilities:NRL:MasterCard
+
+2004/04/08 * The Sports Authority
+    Liabilities:Gifts                         $99.99  ; Drueke Grandmaster
+    Liabilities:NRL:MasterCard
+
+2004/04/08 * Tide USA Corp
+    Expenses:Health                          $150.45
+    Expenses:Shipping                         $17.10
+    Liabilities:NRL:MasterCard              $-167.55
+
+2004/04/08 * iTunes
+    Expenses:Music                             $2.97
+    Liabilities:NRL:MasterCard
+
+2004/04/08 * ATM
+    Expenses:Cash                             $60.00
+    Expenses:Fees                              $1.50
+    Assets:NRL:Checking                      $-61.50
+
+2004/04/08 * Tam's Cuisine of China
+    Expenses:Food                             $11.75
+    Liabilities:NRL:MasterCard
+
+2004/04/10 Daly City Century 20
+    Expenses:Movies                            $9.50
+    Expenses:Cash
+
+2004/04/10 * Intuit
+    Expenses:Taxes:Preparation                $69.90
+    Liabilities:NRL:MasterCard
+
+2004/04/10 * iTunes
+    Expenses:Music                             $1.98
+    Liabilities:NRL:MasterCard
+
+2004/04/10 * iTunes
+    Expenses:Music                            $15.84
+    Liabilities:NRL:MasterCard
+
+2004/04/11 * Safeway
+    Expenses:Food                             $12.99
+    Liabilities:NRL:MasterCard
+
+2004/04/11 * (2157) Ilza
+    Expenses:Cleaning                         $50.00
+    Assets:NRL:Checking
+
+2004/04/13 * Plaza Lane Optometry
+    Expenses:Health:Vision                   $272.00
+    Liabilities:NRL:MasterCard
+
+2004/04/13 * Union 76
+    Expenses:Auto:Gas                         $25.41
+    Liabilities:NRL:MasterCard
+
+2004/04/14 * Atlantic Coast PLC
+    Expenses:Computer:Software                $19.95
+    Liabilities:NRL:MasterCard
+
+2004/04/15 * iTunes
+    Expenses:Music                             $0.99
+    Liabilities:NRL:MasterCard
+
+2004/04/15 * NRL MasterCard
+    Liabilities:NRL:MasterCard               $655.43
+    Assets:NRL:Checking
+
+2004/04/15 * Todai
+    Expenses:Food                             $29.64
+    Liabilities:NRL:MasterCard
+
+2004/04/16 * PG&E
+    Expenses:Utilities:Electric                $4.90
+    Assets:NRL:Checking
+
+2004/04/16 * SBC
+    Expenses:Phone                            $85.33
+    Assets:NRL:Checking
+
+2004/04/16 * Soquel Auto Repair
+    Expenses:Auto:Repair                     $146.16
+    Liabilities:NRL:MasterCard
+
+2004/04/16 * 7-Eleven
+    Expenses:Food                              $7.84
+    Liabilities:NRL:MasterCard
+
+2004/04/18 * Arco Gas
+    Expenses:Auto:Gas                         $30.11
+    Assets:NRL:Checking
+
+2004/04/18 * (2158) Bosch Baha'i School
+    Expenses:Food                             $10.00
+    Assets:NRL:Checking
+
+2004/04/18 * El Palomar
+    Expenses:Food                              $6.36
+    Liabilities:NRL:MasterCard
+
+2004/04/19 * Safeway
+    Expenses:Food                              $1.79
+    Liabilities:NRL:MasterCard
+
+2004/04/19 * Pier Market
+    Expenses:Food                             $16.25
+    Liabilities:NRL:MasterCard
+
+2004/04/20 * Behling and Associates
+    Expenses:Rent                            $950.00
+    Assets:NRL:Checking
+
+2004/04/20 * Safeway
+    Expenses:Food                             $17.72
+    Expenses:Cash                             $50.00
+    Assets:NRL:Checking                      $-67.72
+
+2004/04/20 * Pacifica Thai Cuisine
+    Expenses:Food                             $22.00
+    Liabilities:NRL:MasterCard
+
+2004/04/20 * Tam's Cuisine of China
+    Expenses:Food                             $11.50
+    Liabilities:NRL:MasterCard
+
+2004/04/21 * Federal Income Tax
+    Assets:NRL:Checking                    $8,103.00
+    Income:Tax Refund
+
+2004/04/21 * State Income Tax
+    Assets:NRL:Checking                      $188.00
+    Income:Tax Refund
+
+2004/04/21 * New Artisans LLC
+    Assets:NRL:Checking                    $6,208.32
+    Assets:Reimbursements:New Artisans
+
+2004/04/21 * Opening Balance
+    Assets:E*Trade:Brokerage                 70 AAPL
+    Equity:Opening Balances               $-5,000.00
+
+2004/04/21 * Apple Computer
+    Assets:E*Trade:Brokerage                -70 AAPL
+    Liabilities:Mary Eiland                 $-955.98
+    Expenses:Marriage                        $955.98
+    Assets:E*Trade:Brokerage               $1,911.96
+
+2004/04/21 * Safeway
+    Expenses:Food                              $8.32
+    Liabilities:NRL:MasterCard
+
+2004/04/22 * DirectNIC.com
+    Assets:Reimbursements:New Artisans        $12.00
+    Liabilities:NRL:MasterCard
+
+2004/04/22 * Safeway
+    Expenses:Food                              $3.24
+    Liabilities:NRL:MasterCard
+
+2004/04/23 * (2159) Mary Eiland
+    Liabilities:Mary Eiland                  $955.98
+    Assets:NRL:Checking
+
+2004/04/23 * Union 76
+    Expenses:Auto:Gas                         $34.39
+    Liabilities:NRL:MasterCard
+
+2004/04/24 * Little Nepal
+    Expenses:Food                             $33.89
+    Liabilities:NRL:MasterCard
+
+2004/04/25 * Safeway
+    Expenses:Food                              $3.79
+    Expenses:Cash                             $50.00
+    Assets:NRL:Checking                      $-53.79
+
+2004/04/25 * Ristorante Portofino
+    Expenses:Food                             $43.70
+    Liabilities:NRL:MasterCard
+
+2004/04/26 * BuyExtras.com
+    Expenses:Computer:Hardware                $26.41  ; laptop cooler
+    Liabilities:NRL:MasterCard
+
+2004/04/25 * Safeway
+    Expenses:Food                             $19.01
+    Liabilities:NRL:MasterCard
+
+2004/04/26 * Transfer
+    Assets:E*Trade:Bank                    $1,913.00
+    Assets:E*Trade:Brokerage
+
+2004/04/26 Daly City Century 20
+    Expenses:Movies                            $9.50  ; "The Punisher"
+    Expenses:Cash
+
+2004/04/26 * Caravan's Restaurant
+    Expenses:Food                             $17.02
+    Liabilities:NRL:MasterCard
+
+2004/04/27 * iTunes
+    Expenses:Music                             $0.99
+    Liabilities:NRL:MasterCard
+
+2004/04/27 * Starbucks
+    Expenses:Food                             $20.00
+    Liabilities:NRL:MasterCard
+
+2004/04/28 * Verizon Wireless
+    Expenses:Phone                            $44.18
+    Assets:NRL:Checking
+
+2004/04/28 * Taco Bell
+    Expenses:Food                              $7.16
+    Assets:NRL:Checking
+
+2004/04/28 * 7-Eleven
+    Expenses:Food                             $10.04
+    Liabilities:NRL:MasterCard
+
+2004/04/29 * Tam's Cuisine of China
+    Expenses:Food                             $11.74
+    Liabilities:NRL:MasterCard
+
+2004/04/30 * Circuit City
+    Liabilities:Gifts                        $356.83
+    Expenses:Photography                     $956.20
+    Liabilities:NRL:MasterCard            $-1,313.03
+
+2004/04/30 * Office Depot
+    Assets:Reimbursements:New Artisans        $86.55
+    Liabilities:NRL:MasterCard
+
+2004/04/30 * Office Depot
+    Expenses:Supplies                         $44.76  ; street map
+    Liabilities:NRL:MasterCard
+
+2004/04/30 * Interest
+    Assets:E*Trade:Bank                       $74.83
+    Income:Interest:Money Market
+
+2004/05/01 * New Artisans LLC
+    Assets:NRL:Checking                    $2,916.66
+    Income:Salary
+
+2004/05/01 * (2160) John Wiegley
+    Assets:E*Trade:Bank                   $13,000.00
+    Assets:NRL:Checking
+
+2004/05/01 * 7-Eleven
+    Expenses:Food                              $4.89
+    Liabilities:NRL:MasterCard
+
+2004/05/03 * Carpo's
+    Expenses:Food                             $20.68
+    Liabilities:NRL:MasterCard
+
+2004/05/03 * Shell
+    Expenses:Auto:Gas                         $32.02
+    Liabilities:NRL:MasterCard
+
+2004/05/04 * Safeway
+    Expenses:Food                             $15.84
+    Expenses:Cash                             $50.00
+    Assets:NRL:Checking                      $-65.84
+
+2004/05/04 * Tam's Cuisine of China
+    Expenses:Food                             $11.50
+    Liabilities:NRL:MasterCard
+
+2004/05/05 * Safeway
+    Expenses:Food                             $33.68
+    Liabilities:NRL:MasterCard
+
+2004/05/05 * Pacifica Thai Cuisine
+    Expenses:Food                             $17.05
+    Liabilities:NRL:MasterCard
+
+2004/05/06 * NRL
+    Expenses:Fees                             $10.00  ; Bill Pay
+    Assets:NRL:Checking
+
+2004/05/07 * (2161) DMV
+    Expenses:Auto:Registration               $119.00
+    Assets:NRL:Checking
+
+2004/05/07 * Tam's Cuisine of China
+    Expenses:Food                             $11.74
+    Liabilities:NRL:MasterCard
+
+2004/05/08 * (2162) Parvin
+    Expenses:Food                             $22.00
+    Assets:NRL:Checking
+
+2004/05/09 * Borland
+    Assets:NRL:Checking                    $1,236.19
+    Assets:Reimbursements:Borland
+
+2004/05/09 * fastmail.fm
+    Assets:Reimbursements:New Artisans        $39.95
+    Liabilities:NRL:MasterCard
+
+2004/05/09 * Safeway
+    Expenses:Food                             $25.61
+    Expenses:Cash                             $20.00
+    Assets:NRL:Checking                      $-45.61
+
+2004/05/10 * Shell
+    Expenses:Auto:Gas                         $34.14
+    Liabilities:NRL:MasterCard
+
+2004/05/10 * Chevron
+    Expenses:Auto:Gas                         $22.32
+    Liabilities:NRL:MasterCard
+
+2004/05/10 * Chevron
+    Expenses:Auto:Gas                          $3.18
+    Liabilities:NRL:MasterCard
+
+2004/05/10 * Transfer
+    Retirement:Great West 401(k)   2,242.324241 EGINX @ $22.73
+    Retirement:Great West 401(k)   2,558.818182 MMPPII @ $8.91
+    Retirement:Great West 401(k)     604.908255 TAVFX @ $41.31
+    Retirement:Great West 401(k)  -2,084.582278 AGTHX @ $24.45
+    Retirement:Great West 401(k)    -387.278233 LMVTX @ $58.87
+    Retirement:Great West 401(k)    -936.961582 TWCUX @ $26.67
+    Retirement:Great West 401(k)               $0.02
+
+2004/05/10 Adjustment
+    Retirement:Great West 401(k)      2.552582 TWCUX
+    Retirement:Great West 401(k)      2.482278 AGTHX
+    Retirement:Great West 401(k)      0.000042 OPTFX
+    Equity:Adjustments               -2.552582 TWCUX
+    Equity:Adjustments               -2.482278 AGTHX
+    Equity:Adjustments               -0.000042 OPTFX
+
+2004/05/11 * Tea Light Cafe
+    Expenses:Food                             $20.00
+    Liabilities:NRL:MasterCard
+
+2004/05/12 * Basha's
+    Expenses:Food                             $26.48
+    Liabilities:NRL:MasterCard
+
+2004/05/12 * Maggie Moo's
+    Expenses:Food                              $8.50
+    Liabilities:NRL:MasterCard
+
+2004/05/13 * iTunes
+    Expenses:Music                             $0.99
+    Liabilities:NRL:MasterCard
+
+2004/05/13 * Sushi Ko
+    Expenses:Food                             $23.17
+    Liabilities:NRL:MasterCard
+
+2004/05/13 * Shell
+    Expenses:Auto:Gas                         $30.35
+    Liabilities:NRL:MasterCard
+
+2004/05/14 * Meritage Steakhouse
+    Expenses:Food                             $53.40
+    Liabilities:NRL:MasterCard
+
+2004/05/14 * AMC Desert Ridge
+    Expenses:Movies                           $17.00
+    Liabilities:NRL:MasterCard
+
+2004/05/15 * NRL MasterCard
+    Liabilities:NRL:MasterCard             $1,732.25
+    Assets:NRL:Checking
+
+2004/05/15 * Safeway
+    Expenses:Food                              $4.05
+    Liabilities:NRL:MasterCard
+
+2004/05/16 * PG&E
+    Expenses:Utilities:Electric               $17.21
+    Assets:NRL:Checking
+
+2004/05/16 * SBC
+    Expenses:Phone                            $84.51
+    Assets:NRL:Checking
+
+2004/05/16 * Chevron
+    Expenses:Auto:Gas                          $7.85
+    Liabilities:NRL:MasterCard    
+
+2004/05/16 * Persian Room
+    Expenses:Food                             $41.48
+    Liabilities:NRL:MasterCard
+
+2004/05/17 * The Cottage Cafe
+    Expenses:Food                             $13.48
+    Liabilities:NRL:MasterCard
+
+2004/05/17 * Chevron
+    Expenses:Auto:Gas                         $28.77
+    Liabilities:NRL:MasterCard
+
+2004/05/17 * Union 76
+    Expenses:Auto:Gas                          $9.98
+    Liabilities:NRL:MasterCard
+
+2004/05/17 * ATM
+    Expenses:Cash                             $40.00
+    Expenses:Fees                              $1.50
+    Assets:NRL:Checking                      $-41.50
+
+2004/05/18 * Exxon
+    Expenses:Auto:Gas                         $27.69
+    Liabilities:NRL:MasterCard
+
+2004/05/18 * Bison Witches
+    Expenses:Food                             $15.41
+    Liabilities:NRL:MasterCard
+
+2004/05/18 * Barnes & Noble
+    Expenses:Food                              $8.03
+    Liabilities:NRL:MasterCard
+
+2004/05/18 * Barnes & Noble
+    Expenses:Supplies                         $10.51
+    Liabilities:NRL:MasterCard
+
+2004/05/18 * P.F. Chang's
+    Expenses:Food                             $21.68
+    Liabilities:NRL:MasterCard    
+
+2004/05/18 * Bookman's
+    Expenses:Books                             $3.77
+    Liabilities:NRL:MasterCard
+
+2004/05/19 * Barnes & Noble
+    Expenses:Gifts                            $23.13
+    Liabilities:NRL:MasterCard    
+
+2004/05/19 * (2163) Sina Mossayeb (Costco)
+    Expenses:Gifts                            $37.12
+    Assets:NRL:Checking
+
+2004/05/19 * P.F. Chang's
+    Expenses:Food                             $17.10
+    Liabilities:NRL:MasterCard    
+
+2004/05/19 * Blockbuster
+    Expenses:Movies                            $4.00
+    Liabilities:NRL:MasterCard
+
+2004/05/20 * Behling and Associates
+    Expenses:Rent                            $950.00
+    Assets:NRL:Checking
+
+2004/05/20 * Macaroni Grill
+    Expenses:Food                             $11.19
+    Liabilities:NRL:MasterCard
+
+2004/05/20 * Office Depot
+    Expenses:Gifts                            $11.27
+    Liabilities:NRL:MasterCard
+
+2004/05/21 * Sunset Photo
+    Expenses:Photography                      $15.32  ; Hoya UV Filter
+    Liabilities:NRL:MasterCard
+
+2004/05/21 * Catalina Mart
+    Expenses:Food                              $3.38
+    Liabilities:NRL:MasterCard
+
+2004/05/21 * Congress Grill
+    Expenses:Food                              $9.02
+    Liabilities:NRL:MasterCard
+
+2004/05/21 * Chipotle
+    Expenses:Food                              $6.65
+    Liabilities:NRL:MasterCard
+
+2004/05/21 * Office Depot
+    Expenses:Gifts                             $3.52
+    Liabilities:NRL:MasterCard    
+
+2004/05/21 * Sushi Ten
+    Expenses:Food                             $19.14
+    Liabilities:NRL:MasterCard    
+
+2004/05/22 * Cracker Barrel
+    Expenses:Food                             $23.22
+    Liabilities:NRL:MasterCard
+
+2004/05/22 * Chevron
+    Expenses:Auto:Gas                         $23.01
+    Liabilities:NRL:MasterCard    
+
+2004/05/22 * ATM
+    Expenses:Cash                            $100.00
+    Expenses:Fees                              $1.50
+    Assets:NRL:Checking                     $-101.50
+
+2004/05/23 * Cedar Creek Inn
+    Expenses:Food                             $26.86
+    Liabilities:NRL:MasterCard
+
+2004/05/23 * Barnes & Noble
+    Expenses:Food                              $6.80
+    Liabilities:NRL:MasterCard
+
+2004/05/23 * Ralph's
+    Expenses:Food                             $10.58
+    Liabilities:NRL:MasterCard    
+
+2004/05/25 * Exxon
+    Expenses:Auto:Gas                         $34.39
+    Liabilities:NRL:MasterCard
+
+2004/05/25 * Exxon
+    Expenses:Food                              $5.38
+    Liabilities:NRL:MasterCard
+
+2004/05/25 * Target
+    Expenses:Food                              $8.01
+    Liabilities:NRL:MasterCard
+
+2004/05/26 * Arco Gas
+    Expenses:Auto:Gas                         $32.26
+    Assets:NRL:Checking           
+
+2004/05/26 * Safeway
+    Expenses:Food                              $9.71
+    Liabilities:NRL:MasterCard    
+
+2004/05/26 * Tam's Cuisine of China
+    Expenses:Food                             $11.49
+    Liabilities:NRL:MasterCard    
+
+2004/05/27 * Kragen Auto Parts
+    Expenses:Auto:Repair                      $13.50
+    Liabilities:NRL:MasterCard
+
+2004/05/27 * Amazon.com
+    Expenses:Photography                      $58.70  ; two books on Photoshop CS
+    Liabilities:NRL:MasterCard
+
+2004/05/27 Luquan Yu
+    (Expenses:Photography)                   $256.90  ; Hitachi 4 GB CF card
+
+2004/05/28 * Connor Gleason
+    Expenses:Photography                     $329.72  ; Adobe Photoshop CS
+    Assets:NRL:Checking
+
+2004/05/28 * DxO Labs
+    Expenses:Photography                      $95.25  ; DxO Optics Pro
+    Liabilities:NRL:MasterCard
+
+2004/05/28 * El Palomar
+    Expenses:Food                             $11.34
+    Liabilities:NRL:MasterCard    
+
+2004/05/28 * eBay Deposits
+    Assets:NRL:Checking                        $0.41
+    Income:Gifts Received                     $-0.30
+    Income:Gifts Received                     $-0.11
+
+2004/05/29 * Ristorante Portofino
+    Expenses:Food                             $34.17
+    Liabilities:NRL:MasterCard    
+
+2004/05/30 * iTunes
+    Expenses:Music                             $0.99
+    Liabilities:NRL:MasterCard
+
+2004/05/30 * Colombo's Delicatessen
+    Expenses:Food                              $8.95
+    Liabilities:NRL:MasterCard
+
+2004/05/30 * (2165) Parvin
+    Expenses:Food                             $15.00
+    Assets:NRL:Checking
+
+2004/05/31 * Schaub's
+    Expenses:Food                             $14.04
+    Expenses:Cash                             $20.00
+    Liabilities:NRL:MasterCard               $-34.04
+
+2004/05/31 * Interest
+    Assets:E*Trade:Bank                       $90.65
+    Income:Interest:Money Market
+
+2004/06/01 * Arco Gas
+    Expenses:Auto:Gas                         $30.88
+    Assets:NRL:Checking           
+
+2004/06/01 * Verizon Wireless
+    Expenses:Phone                            $44.18
+    Assets:NRL:Checking
+
+2004/06/01 * B&H Photo
+    Expenses:Photography                      $58.15  ; filter & swivel head
+    Liabilities:NRL:MasterCard
+
+2004/06/01 * JG Camera
+    Expenses:Photography                     $103.99  ; Gitzo G1564 Monopod
+    Assets:NRL:Checking
+
+2004/06/01 * Accessories Pro Shop
+    Expenses:Photography                      $24.94  ; (2) BP-511 batteries
+    Assets:NRL:Checking
+
+2004/06/01 * Misc eBay Sellers
+    Expenses:Clothing                         $12.00
+    Expenses:Clothing                          $9.50
+    Expenses:Clothing                         $21.00
+    Assets:NRL:Checking                      $-42.50
+
+2004/06/01 * Starbucks
+    Expenses:Food                             $20.00
+    Liabilities:NRL:MasterCard
+
+2004/06/01 * Tam's Cuisine of China
+    Expenses:Food                             $11.50
+    Liabilities:NRL:MasterCard
+
+2004/06/01 * Caravan's Restaurant
+    Expenses:Food                             $15.12
+    Expenses:Cash                             $20.00
+    Liabilities:NRL:MasterCard               $-35.12
+
+2004/06/01 * PayPal.com
+    Expenses:Fees                              $1.95
+    Liabilities:NRL:MasterCard
+
+2004/06/02 * Pixel Genius, LLC
+    Expenses:Photography                      $99.95  ; PhotoKit Sharpener
+    Liabilities:NRL:MasterCard
+
+2004/06/02 * eBay Seller
+    Expenses:Photography                     $204.97  ; ColorVision Spyder
+    Assets:NRL:Checking
+
+2004/06/02 * Safeway
+    Expenses:Food                             $28.91
+    Liabilities:NRL:MasterCard
+
+2004/06/03 * Macy's
+    Expenses:Clothing                         $21.11
+    Liabilities:NRL:MasterCard
+
+2004/06/03 * Tam's Cuisine of China
+    Expenses:Food                             $12.01
+    Liabilities:NRL:MasterCard
+
+2004/06/04 * Speedee Oil Change
+    Expenses:Auto:Registration               $108.24  ; Smog Check
+    Liabilities:NRL:MasterCard
+
+2004/06/04 * New Artisans LLC
+    Assets:NRL:Checking                    $2,916.66
+    Income:Salary
+
+2004/06/04 * New Artisans LLC
+    Assets:NRL:Checking                      $138.50
+    Assets:Reimbursements:New Artisans
+
+2004/06/04 * (2166) Bob C. Patterson
+    Expenses:Charity                          $50.00
+    Assets:NRL:Checking
+
+2004/06/05 * Mitsu
+    Expenses:Food                             $21.85
+    Liabilities:NRL:MasterCard    
+
+2004/06/05 * Safeway
+    Expenses:Food                             $14.71
+    Liabilities:NRL:MasterCard    
+
+2004/06/06 * Viva Italiano
+    Expenses:Food                             $12.28
+    Liabilities:NRL:MasterCard    
+
+2004/06/07 * eBay Seller
+    Expenses:Clothing                          $9.04
+    Assets:NRL:Checking
+
+2004/06/07 * eBay Seller
+    Expenses:Clothing                         $20.99
+    Assets:NRL:Checking
+
+2004/06/07 * (2167) San Mateo Superior Court
+    Expenses:Auto:Fees                       $152.25  ; speeding ticket
+    Assets:NRL:Checking
+
+2004/06/10 * Safeway
+    Expenses:Food                             $25.85
+    Liabilities:NRL:MasterCard    
+
+2004/06/10 * Circuit City
+    Expenses:Photography                      $43.29  ; Memory card reader
+    Liabilities:NRL:MasterCard
+
+2004/06/11 * Tam's Cuisine of China
+    Expenses:Food                             $11.74
+    Liabilities:NRL:MasterCard    
+
+2004/06/12 * ATM
+    Expenses:Cash                            $100.00
+    Expenses:Fees                              $2.00
+    Assets:NRL:Checking                     $-102.00
+
+2004/06/12 * Mitsu
+    Expenses:Food                             $27.13
+    Liabilities:NRL:MasterCard    
+
+2004/06/13 * Caravan's Restaurant
+    Expenses:Food                             $18.91
+    Liabilities:NRL:MasterCard    
+
+2004/06/13 * Safeway
+    Expenses:Food                             $17.67
+    Liabilities:NRL:MasterCard    
+
+2004/06/14 * DirectNIC.com
+    Assets:Reimbursements:New Artisans        $12.00
+    Liabilities:NRL:MasterCard
+
+2004/06/14 * Shell
+    Expenses:Auto:Gas                         $31.34
+    Liabilities:NRL:MasterCard    
+
+2004/06/15 * Blue Cross
+    Expenses:Insurance:Health                 $30.40
+    Liabilities:NRL:MasterCard    
+
+2004/06/15 * Blue Cross
+    Expenses:Insurance:Dental                 $18.13
+    Liabilities:NRL:MasterCard    
+
+2004/06/15 * NRL MasterCard
+    Liabilities:NRL:MasterCard             $2,342.71
+    Assets:NRL:Checking
+
+2004/06/15 * Viva Italiano
+    Expenses:Food                             $10.83
+    Liabilities:NRL:MasterCard    
+
+2004/06/16 * PG&E
+    Expenses:Utilities:Electric               $17.44
+    Assets:NRL:Checking
+
+2004/06/16 * SBC
+    Expenses:Phone                            $83.44
+    Assets:NRL:Checking
+
+2004/06/18 * iTunes
+    Expenses:Music                             $0.99
+    Liabilities:NRL:MasterCard
+
+2004/06/19 * eBay Seller: fashnstmt
+    Expenses:Clothing                         $14.49
+    Assets:NRL:Checking
+
+2004/06/19 * eBay Seller: fashnstmt
+    Expenses:Clothing                         $11.00
+    Assets:NRL:Checking
+
+2004/06/19 * Amazon.com
+    Expenses:Photography                      $28.49  ; Photoshop book
+    Liabilities:NRL:MasterCard
+
+2004/06/19 * Macy's
+    Expenses:Gifts                            $10.83
+    Liabilities:NRL:MasterCard
+
+2004/06/19 * Mervyn's
+    Expenses:Clothing                          $9.99
+    Liabilities:NRL:MasterCard
+
+2004/06/19 * Target
+    Expenses:Clothing                          $9.17
+    Liabilities:NRL:MasterCard    
+
+2004/06/20 * Behling and Associates
+    Expenses:Rent                            $950.00
+    Assets:NRL:Checking
+
+2004/06/20 * Barnes & Noble
+    Expenses:Gifts                            $25.87
+    Liabilities:NRL:MasterCard    
+
+2004/06/20 * Safeway
+    Expenses:Food                              $8.22
+    Liabilities:NRL:MasterCard    
+
+2004/06/21 * (2168) Ilza
+    Expenses:Cleaning                         $50.00
+    Assets:NRL:Checking
+
+2004/06/21 * USPS
+    Expenses:Postage                           $8.82
+    Liabilities:NRL:MasterCard
+
+2004/06/21 * Jo-Ann Crafts
+    Expenses:Gifts                             $3.33
+    Liabilities:NRL:MasterCard
+
+2004/06/21 * Jo-Ann Crafts
+    Expenses:Gifts                             $9.17
+    Liabilities:NRL:MasterCard
+
+2004/06/21 * Schaub's
+    Expenses:Food                              $7.49
+    Liabilities:NRL:MasterCard    
+
+2004/06/21 * Papyrus
+    Expenses:Gifts                             $2.71
+    Liabilities:NRL:MasterCard    
+
+2004/06/21 * Godiva Chocolatier
+    Expenses:Gifts                             $6.48
+    Liabilities:NRL:MasterCard    
+
+2004/06/21 * Ritz Camera
+    Expenses:Gifts                             $5.77  ; 4x6 frame
+    Liabilities:NRL:MasterCard
+
+2004/06/21 * Fred Meyer Jewelers
+    Expenses:Gifts                            $77.93  ; earrings
+    Liabilities:NRL:MasterCard
+
+2004/06/21 * Circuit City
+    Expenses:Photography                      $32.46
+    Liabilities:NRL:MasterCard    
+
+2004/06/22 * Pacifica Thai Cuisine
+    Expenses:Food                             $23.00
+    Liabilities:NRL:MasterCard    
+
+2004/06/23 * Pinecrest Restaurant
+    Expenses:Food                             $19.40
+    Liabilities:NRL:MasterCard    
+
+2004/06/23 * Union Square Garage
+    Expenses:Auto:Parking                     $28.00
+    Liabilities:NRL:MasterCard    
+
+2004/06/23 * Ristorante Portofino
+    Expenses:Food                             $59.85
+    Liabilities:NRL:MasterCard    
+
+2004/06/24 * Cafe de la Presse
+    Expenses:Food                              $4.53
+    Liabilities:NRL:MasterCard    
+
+2004/06/24 * Shell
+    Expenses:Auto:Gas                         $33.55
+    Liabilities:NRL:MasterCard    
+
+2004/06/25 * Union Square Garage
+    Expenses:Auto:Parking                     $56.00
+    Liabilities:NRL:MasterCard    
+
+2004/06/25 * Mitsu
+    Expenses:Food                             $23.97
+    Liabilities:NRL:MasterCard    
+
+2004/06/26 * Union Square Garage
+    Expenses:Auto:Parking                     $28.00
+    Liabilities:NRL:MasterCard    
+
+2004/06/26 * 7-Eleven
+    Expenses:Food                              $8.88
+    Liabilities:NRL:MasterCard    
+
+2004/06/26 * Union Square Garage
+    Expenses:Auto:Parking                     $28.00
+    Liabilities:NRL:MasterCard    
+
+2004/06/27 * Starbucks
+    Expenses:Food                              $1.41
+    Liabilities:NRL:MasterCard    
+
+2004/06/27 * Chevron
+    Expenses:Food                              $8.31
+    Liabilities:NRL:MasterCard    
+
+2004/06/27 * Chevron
+    Expenses:Auto:Gas                         $20.76
+    Liabilities:NRL:MasterCard    
+
+2004/06/28 * Chevron
+    Expenses:Auto:Gas                         $15.55
+    Liabilities:NRL:MasterCard    
+
+2004/06/28 * Barney's
+    Expenses:Food                             $27.98
+    Liabilities:NRL:MasterCard    
+
+2004/06/29 * Pizza Bite
+    Expenses:Food                             $16.46
+    Liabilities:NRL:MasterCard    
+
+2004/06/29 * Sushi Ichibancho
+    Expenses:Food                             $27.52
+    Liabilities:NRL:MasterCard    
+
+2004/06/30 * Trader Joe's
+    Expenses:Food                             $28.89
+    Liabilities:NRL:MasterCard    
+
+2004/06/30 * Shell
+    Expenses:Auto:Gas                         $32.95
+    Liabilities:NRL:MasterCard    
+
+2004/06/30 * Interest
+    Assets:E*Trade:Bank                       $89.48
+    Income:Interest:Money Market
+
+2004/07/01 * Safeway
+    Expenses:Food                             $28.11
+    Expenses:Cash                             $50.00
+    Assets:NRL:Checking                      $-78.11
+
+2004/07/01 * New Artisans LLC
+    Assets:NRL:Checking                    $2,916.66
+    Income:Salary
+
+2004/07/01 * Tam's Cuisine of China
+    Expenses:Food                             $11.74
+    Liabilities:NRL:MasterCard    
+
+2004/07/01 * Blue Cross
+    Expenses:Insurance:Dental                 $34.00
+    Liabilities:NRL:MasterCard    
+
+2004/07/01 * Blue Cross
+    Expenses:Insurance:Health                 $57.00
+    Liabilities:NRL:MasterCard    
+
+2004/07/01 * iTunes
+    Expenses:Music                             $0.99
+    Liabilities:NRL:MasterCard    
+
+2004/07/02 * Starbucks
+    Expenses:Food                             $23.55
+    Liabilities:NRL:MasterCard    
+
+2004/07/03 * Safeway
+    Expenses:Food                             $16.12
+    Liabilities:NRL:MasterCard    
+
+2004/07/03 * Caravan's Restaurant
+    Expenses:Food                             $28.49
+    Liabilities:NRL:MasterCard    
+
+2004/07/05 * Pacifica Thai Cuisine
+    Expenses:Food                             $18.05
+    Liabilities:NRL:MasterCard    
+
+2004/07/05 * Safeway
+    Expenses:Food                              $6.16
+    Liabilities:NRL:MasterCard    
+
+2004/07/06 * Office Depot
+    Assets:Reimbursements:New Artisans       $429.11
+    Liabilities:NRL:MasterCard    
+
+2004/07/06 * Mitsu
+    Expenses:Food                             $18.16
+    Liabilities:NRL:MasterCard    
+
+2004/07/07 * Quizno's Subs
+    Expenses:Food                              $3.56
+    Liabilities:NRL:MasterCard    
+
+2004/07/08 * Safeway
+    Expenses:Food                             $26.58
+    Expenses:Cash                             $20.00
+    Assets:NRL:Checking                      $-46.58
+
+2004/07/09 * Union 76
+    Expenses:Auto:Gas                         $34.49
+    Liabilities:NRL:MasterCard    
+
+2004/07/09 * Corral Steakhouse
+    Expenses:Food                             $27.24
+    Liabilities:NRL:MasterCard    
+
+2004/07/11 * Mitsu
+    Expenses:Food                             $19.18
+    Liabilities:NRL:MasterCard    
+
+2004/07/12 * (2169) Baha'i Fund of Pacifica
+    Expenses:Charity                          $75.00
+    Assets:NRL:Checking
+
+2004/07/12 * Safeway
+    Expenses:Food                             $10.31
+    Liabilities:NRL:MasterCard    
+
+2004/07/13 * Denny's
+    Expenses:Food                             $10.97
+    Liabilities:NRL:MasterCard    
+
+2004/07/14 * USPS
+    Expenses:Postage                           $4.90
+    Liabilities:NRL:MasterCard    
+
+2004/07/14 * Hahn's Hibachi
+    Expenses:Food                             $11.23
+    Liabilities:NRL:MasterCard    
+
+2004/07/15 * NRL MasterCard
+    Liabilities:NRL:MasterCard             $1,301.46
+    Assets:NRL:Checking
+
+2004/07/16 * 7-Eleven
+    Expenses:Food                              $8.77
+    Liabilities:NRL:MasterCard    
+
+2004/07/16 * Mitsu
+    Expenses:Food                             $11.20
+    Liabilities:NRL:MasterCard    
+
+2004/07/17 * Safeway
+    Expenses:Food                             $18.71
+    Expenses:Cash                             $50.00
+    Assets:NRL:Checking                      $-68.71
+
+2004/07/18 * Mitsu
+    Expenses:Food                              $7.45
+    Liabilities:NRL:MasterCard    
+
+2004/07/18 * Chevron
+    Expenses:Auto:Gas                         $33.98
+    Liabilities:NRL:MasterCard    
+
+2004/07/18 * Safeway
+    Expenses:Food                              $3.99
+    Liabilities:NRL:MasterCard    
+
+2004/07/19 * Safeway
+    Expenses:Food                              $9.95
+    Assets:NRL:Checking
+
+2004/07/19 * cheaptickets.com
+    Expenses:Travel                          $173.20   ; ticket to Fiona's
+    Liabilities:NRL:MasterCard
+
+2004/07/19 * DirectNIC.com
+    Assets:Reimbursements:New Artisans        $12.00
+    Liabilities:NRL:MasterCard
+
+2004/07/19 * Tam's Cuisine of China
+    Expenses:Food                             $11.75
+    Liabilities:NRL:MasterCard    
+
+2004/07/20 * Behling and Associates
+    Expenses:Rent                            $950.00
+    Assets:NRL:Checking
+
+2004/07/20 * Blue Water Towing
+    Expenses:Auto:Fees                       $215.00  ; release from impound
+    Liabilities:NRL:MasterCard    
+
+2004/07/20 * SportMart
+    Expenses:Bedding                          $49.99
+    Expenses:Supplies                         $36.15
+    Liabilities:NRL:MasterCard               $-86.14
+
+2004/07/20 * Safeway
+    Expenses:Food                              $4.79
+    Liabilities:NRL:MasterCard    
+
+2004/07/21 * Amazon.com
+    Expenses:Books                            $22.32
+    Liabilities:NRL:MasterCard    
+
+2004/07/21 * PG&E
+    Expenses:Utilities:Electric               $23.80
+    Assets:NRL:Checking
+
+2004/07/21 * Verizon Wireless
+    Expenses:Phone                            $44.18
+    Assets:NRL:Checking
+
+2004/07/21 * SBC
+    Expenses:Phone                            $79.91
+    Assets:NRL:Checking
+
+2004/07/21 * Barnes & Noble
+    Expenses:Food                              $8.88
+    Liabilities:NRL:MasterCard    
+
+2004/07/21 * Mitsu
+    Expenses:Food                             $15.49
+    Liabilities:NRL:MasterCard    
+
+2004/07/21 Adjustment
+    Retirement:Great West 401(k)  17.358388 MMPPII
+    Equity:Adjustments
+
+2004/07/23 * Shell
+    Expenses:Auto:Gas                         $19.48
+    Liabilities:NRL:MasterCard    
+
+2004/07/23 * Shell
+    Expenses:Auto:Gas                         $12.82
+    Liabilities:NRL:MasterCard    
+
+2004/07/23 * Iron Skillet
+    Expenses:Food                             $12.71
+    Liabilities:NRL:MasterCard
+
+2004/07/23 * Safeway
+    Expenses:Food                             $25.47
+    Expenses:Cash                            $100.00
+    Assets:NRL:Checking                     $-125.47
+
+2004/07/23 * Amazon
+    Expenses:Books                             $6.77
+    Assets:NRL:Checking
+
+2004/07/23 * Amazon
+    Expenses:Books                            $10.43
+    Assets:NRL:Checking
+
+2004/07/23 * Amazon
+    Expenses:Books                             $5.86
+    Assets:NRL:Checking
+
+2004/07/23 * Amazon
+    Expenses:Books                             $3.98
+    Assets:NRL:Checking
+
+2004/07/25 * Chevron
+    Expenses:Auto:Gas                         $20.15
+    Liabilities:NRL:MasterCard    
+
+2004/07/25 * Safeway
+    Expenses:Food                             $11.85
+    Liabilities:NRL:MasterCard    
+
+2004/07/26 * TrafficSchoolOnline.com
+    Expenses:Auto:Fees                        $37.45
+    Liabilities:NRL:MasterCard
+
+2004/07/26 * Safeway
+    Expenses:Food                             $12.52
+    Liabilities:NRL:MasterCard    
+
+2004/07/26 * Tam's Cuisine of China
+    Expenses:Food                             $11.74
+    Liabilities:NRL:MasterCard    
+
+2004/07/27 Daly City Century 20
+    Expenses:Movies                            $9.75  ; "Bourne Supremacy"
+    Expenses:Cash
+
+2004/07/27 * Safeway
+    Expenses:Food                              $2.15
+    Liabilities:NRL:MasterCard    
+
+2004/07/27 * Safeway
+    Expenses:Food                             $14.65
+    Liabilities:NRL:MasterCard    
+
+2004/07/27 * Mitsu
+    Expenses:Food                             $14.41
+    Liabilities:NRL:MasterCard    
+
+2004/07/27 * 7-Eleven
+    Expenses:Food                              $4.46
+    Liabilities:NRL:MasterCard    
+
+2004/07/30 * Mitsu
+    Expenses:Food                             $22.93
+    Liabilities:NRL:MasterCard    
+
+2004/07/30 * Viva Italiano
+    Expenses:Food                             $11.78
+    Liabilities:NRL:MasterCard    
+
+2004/07/31 The Metreon
+    Expenses:Movies                           $10.00  ; "What the Bleep"
+    Expenses:Cash
+
+2004/07/30 * payment@hcoop.net
+    Expenses:Internet                         $36.46  ; for 8/04-8/05
+    Assets:NRL:Checking
+
+2004/07/30 * godaddy.com
+    Expenses:Internet                          $7.95
+    Liabilities:NRL:MasterCard
+
+2004/07/31 Santa Cruz Cinema 9
+    Expenses:Movies                            $8.75  ; "The Village"
+    Expenses:Cash
+
+2004/07/31 * Union 76
+    Expenses:Auto:Gas                         $33.65
+    Liabilities:NRL:MasterCard    
+
+2004/08/01 * directnic.com
+    Expenses:Internet                          $5.00
+    Liabilities:NRL:MasterCard    
+
+2004/08/01 * New Artisans LLC
+    Assets:NRL:Checking                    $3,369.77
+    Assets:Reimbursements:New Artisans      $-453.11
+    Income:Salary                         $-2,916.66
+
+2004/08/01 * Blue Cross
+    Expenses:Insurance:Dental                 $34.00
+    Liabilities:NRL:MasterCard    
+
+2004/08/01 * Blue Cross
+    Expenses:Insurance:Health                 $57.00
+    Liabilities:NRL:MasterCard    
+
+2004/08/02 * Caravan's Restaurant
+    Expenses:Food                             $16.48
+    Liabilities:NRL:MasterCard    
+
+2004/08/02 * Safeway
+    Expenses:Food                              $4.79
+    Expenses:Cash                             $50.00
+    Assets:NRL:Checking                      $-54.79
+
+2004/08/03 * Mitsu
+    Expenses:Food                             $14.11
+    Liabilities:NRL:MasterCard
+
+2004/08/03 * Crab Pot Restaurant
+    Expenses:Food                              $9.07
+    Liabilities:NRL:MasterCard
+
+2004/08/04 * AZ '88
+    Expenses:Food                             $20.27
+    Liabilities:NRL:MasterCard
+
+2004/08/05 * Starbucks
+    Expenses:Food                              $5.18
+    Liabilities:NRL:MasterCard                      
+
+2004/08/05 * Walgreens
+    Expenses:Food                              $5.80
+    Liabilities:NRL:MasterCard                      
+
+2004/08/06 * AMC Desert Ridge
+    Expenses:Movies                           $17.00  ; "Harold & Kumar..."
+    Liabilities:NRL:MasterCard
+
+2004/08/06 * Someplace
+    Expenses:Food                              $7.71
+    Liabilities:NRL:MasterCard                      
+
+2004/08/06 * Barnes & Noble
+    Expenses:Food                              $3.55
+    Liabilities:NRL:MasterCard                      
+
+2004/08/06 * Barnes & Noble
+    Expenses:Books                             $9.64
+    Liabilities:NRL:MasterCard                      
+
+2004/08/06 * Islands
+    Expenses:Food                             $23.91
+    Liabilities:NRL:MasterCard                      
+
+2004/08/07 * Wal*Mart
+    Expenses:Health                           $24.36
+    Liabilities:NRL:MasterCard
+
+2004/08/07 * Denny's
+    Expenses:Food                              $8.18
+    Liabilities:NRL:MasterCard                      
+
+2004/08/08 * Kona Grill
+    Expenses:Food                             $19.37
+    Liabilities:NRL:MasterCard
+
+2004/08/08 * Exxon
+    Expenses:Auto:Gas                         $27.40
+    Liabilities:NRL:MasterCard
+
+2004/08/09 * Flo's
+    Expenses:Food                             $29.69
+    Liabilities:NRL:MasterCard                      
+
+2004/08/09 * Red Planet Diner
+    Expenses:Food                             $17.11
+    Liabilities:NRL:MasterCard                      
+
+2004/08/10 * Dahl & Diluca
+    Expenses:Food                             $70.04
+    Liabilities:NRL:MasterCard                      
+
+2004/08/10 * Red Planet Diner
+    Expenses:Food                              $8.19
+    Liabilities:NRL:MasterCard                      
+
+2004/08/10 * Sally's Mesquite Grill
+    Expenses:Food                              $5.75
+    Liabilities:NRL:MasterCard                      
+
+2004/08/11 * Canyon Breeze
+    Expenses:Food                             $13.09
+    Liabilities:NRL:MasterCard                      
+
+2004/08/11 * Chipotle
+    Expenses:Food                             $13.57
+    Liabilities:NRL:MasterCard                      
+
+2004/08/11 * Starbucks
+    Expenses:Food                              $2.96
+    Liabilities:NRL:MasterCard                      
+
+2004/08/11 * Walgreens
+    Expenses:Food                              $3.05
+    Liabilities:NRL:MasterCard                      
+
+2004/08/11 * Love's Country
+    Expenses:Auto:Gas                         $24.30
+    Liabilities:NRL:MasterCard                      
+
+2004/08/11 * Los Betos
+    Expenses:Food                              $7.09
+    Liabilities:NRL:MasterCard                      
+
+2004/08/12 * Applebee's
+    Expenses:Food                              $7.87
+    Liabilities:NRL:MasterCard                      
+
+2004/08/13 Foothills Cinemas
+    Expenses:Movies                            $5.50
+    Expenses:Cash
+
+2004/08/13 * Macaroni Grill
+    Expenses:Food                              $8.88
+    Liabilities:NRL:MasterCard                      
+
+2004/08/13 * Safeway
+    Expenses:Food                              $7.86
+    Liabilities:NRL:MasterCard                      
+
+2004/08/14 * KFC
+    Expenses:Food                              $6.74
+    Liabilities:NRL:MasterCard                      
+
+2004/08/14 * Walgreens
+    Expenses:Food                              $3.18
+    Expenses:Cash                             $20.00
+    Assets:NRL:Checking                      $-23.18
+
+2004/08/15 * NRL MasterCard
+    Liabilities:NRL:MasterCard             $1,626.35
+    Assets:NRL:Checking
+
+2004/08/16 Tam's Cuisine of China
+    Expenses:Food                             $11.74
+    Liabilities:NRL:MasterCard                      
+
+2004/08/16 Shell
+    Expenses:Auto:Gas                         $13.08
+    Liabilities:NRL:MasterCard                      
+
+2004/08/16 Safeway
+    Expenses:Food                              $9.93
+    Liabilities:NRL:MasterCard                      
+
+2004/08/16 * Amazon
+    Assets:NRL:Checking                        $3.45
+    Expenses:Books
+
+2004/08/17 Mitsu
+    Expenses:Food                             $27.22
+    Liabilities:NRL:MasterCard                      
+
+2004/08/19 iTunes
+    Expenses:Music                             $1.98
+    Liabilities:NRL:MasterCard    
+
+2004/08/19 Safeway
+    Expenses:Food                             $22.50
+    Expenses:Cash                             $20.00
+    Assets:NRL:Checking                      $-42.50
+
+2004/08/19 Barnes & Noble
+    Expenses:Books                             $7.04
+    Liabilities:NRL:MasterCard                      
+
+2004/08/19 Caravan's Restaurant
+    Expenses:Food                             $16.50
+    Liabilities:NRL:MasterCard                      
+
+2004/08/19 Colombo's Delicatessen
+    Expenses:Food                              $9.24
+    Liabilities:NRL:MasterCard                      
+
+2004/08/20 * Safeway
+    Expenses:Food                              $2.50
+    Expenses:Cash                             $40.00
+    Assets:NRL:Checking                      $-42.50
+
+2004/08/20 * Behling and Associates
+    Expenses:Rent                            $950.00
+    Assets:NRL:Checking
+
+2004/08/21 * PG&E
+    Expenses:Utilities:Electric               $29.17
+    Assets:NRL:Checking
+
+2004/08/21 * SBC
+    Expenses:Phone                            $79.46
+    Assets:NRL:Checking
+
+2004/08/21 Mitsu
+    Expenses:Food                             $14.00
+    Expenses:Cash
+
+2004/08/21 Rainbow Island
+    Expenses:Food                             $12.25
+    Liabilities:NRL:MasterCard                     
+
+2004/08/22 * Verizon Wireless
+    Expenses:Phone                            $49.35
+    Assets:NRL:Checking
+
+2004/08/22 * Douglas Wiegley
+    Expenses:Food                             $67.00
+    Assets:NRL:Checking
+
+2004/08/24 Mitsu
+    Expenses:Food                              $6.95
+    Liabilities:NRL:MasterCard                      
+
+2004/08/24 Borders
+    Assets:Reimbursements:New Artisans       $113.60
+    Liabilities:NRL:MasterCard                     
+
+2004/08/25 Verizon Wireless
+    Expenses:Phone                            $49.41
+    Assets:NRL:Checking
+
+2004/08/25 ATM
+    Expenses:Cash                            $100.00
+    Expenses:Fees                              $2.00
+    Assets:NRL:Checking                     $-102.00
+
+2004/08/25 Starbucks
+    Expenses:Food                              $3.05
+    Liabilities:NRL:MasterCard                      
+
+2004/08/25 Mexican Grill
+    Expenses:Food                              $6.46
+    Liabilities:NRL:MasterCard                     
+
+2004/08/25 Union 76
+    Expenses:Auto:Gas                         $32.94
+    Liabilities:NRL:MasterCard                      
+
+2004/08/27 Safeway
+    Expenses:Food                             $25.77
+    Liabilities:NRL:MasterCard                      
+
+2004/08/27 Tam's Cuisine of China
+    Expenses:Food                             $11.75
+    Liabilities:NRL:MasterCard                      
+
+2004/08/28 Empire Cinema
+    Expenses:Movies                            $9.50  ; "Garden State"
+    Expenses:Cash                                  
+
+2004/08/28 Rite Aid
+    Expenses:Health                           $37.94
+    Liabilities:NRL:MasterCard                     
+
+2004/08/28 Mitsu
+    Expenses:Food                             $21.84
+    Liabilities:NRL:MasterCard                      
+
+2004/08/29 Daly City Century 20
+    Expenses:Movies                            $9.75  ; "Hero"
+    Expenses:Cash                                   
+
+2004/08/29 KFC
+    Expenses:Food                              $6.48
+    Expenses:Cash                                   
+
+2004/08/30 La Barrenada
+    Expenses:Food                              $6.71
+    Liabilities:NRL:MasterCard                     
+
+2004/08/30 Denny's
+    Expenses:Food                             $15.37
+    Liabilities:NRL:MasterCard                      
+
+2004/08/30 7-Eleven
+    Expenses:Food                              $3.89
+    Liabilities:NRL:MasterCard                      
+
+2004/09/01 Blue Cross
+    Expenses:Insurance:Dental                 $34.00
+    Liabilities:NRL:MasterCard    
+
+2004/09/01 Blue Cross
+    Expenses:Insurance:Health                 $57.00
+    Liabilities:NRL:MasterCard    
+
+2004/09/01 Shell
+    Expenses:Auto:Gas                         $21.67
+    Liabilities:NRL:MasterCard                      
+
+2004/09/01 Yosemite White Wolf
+    Expenses:Food                             $17.48
+    Liabilities:NRL:MasterCard                     
+
+2004/09/01 Stan's BBQ
+    Expenses:Food                             $18.19
+    Liabilities:NRL:MasterCard                     
+
+2004/09/02 Tioga Lodge
+    Expenses:Food                             $24.32
+    Liabilities:NRL:MasterCard                     
+
+2004/09/03 ATM
+    Expenses:Cash                             $60.00
+    Expenses:Fees                              $3.00
+    Assets:NRL:Checking                      $-63.00
+
+2004/09/03 Tuolumne Meadows Store
+    Expenses:Health                           $17.15  ; sunglasses
+    Assets:NRL:Checking                            
+
+2004/09/03 Tuolumne Fast Foods
+    Expenses:Food                              $7.51
+    Expenses:Cash                                  
+
+2004/09/04 Left at Albeq
+    Expenses:Food                             $16.50
+    Liabilities:NRL:MasterCard                     
+
+2004/09/04 Yosemite Village Grill
+    Expenses:Food                              $8.35
+    Expenses:Cash                                  
+
+2004/09/05 Mitsu
+    Expenses:Food                             $23.43
+    Liabilities:NRL:MasterCard                      
+
+2004/09/06 7-Eleven
+    Expenses:Food                              $4.88
+    Liabilities:NRL:MasterCard                      
+
+2004/09/07 7-Eleven
+    Expenses:Food                              $9.36
+    Liabilities:NRL:MasterCard                      
+
+2004/09/07 Safeway
+    Expenses:Food                             $19.85
+    Liabilities:NRL:MasterCard
+
+2004/09/08 Caravan's Restaurant
+    Expenses:Food                             $16.50
+    Liabilities:NRL:MasterCard                      
+
+2004/09/08 Daly City Century 20
+    Expenses:Movies                            $9.75  ; "Suspect Zero"
+    Expenses:Cash                                   
+
+2004/09/09 Union 76
+    Expenses:Auto:Gas                         $30.70
+    Liabilities:NRL:MasterCard                      
+
+2004/09/10 Daly City Century 20
+    Expenses:Movies                           $19.50  ; "Resident Evil 2"
+    Expenses:Cash
+
+2004/09/10 Safeway
+    Expenses:Food                              $3.59
+    Expenses:Cash                             $50.00
+    Assets:NRL:Checking                      $-53.59
+
+2004/09/12 7-Eleven
+    Expenses:Food                              $7.85
+    Liabilities:NRL:MasterCard                      
+
+2004/09/12 Video Plus
+    Expenses:Movies                            $8.00
+    Expenses:Cash                                   
+
+2004/09/12 Safeway
+    Expenses:Food                             $12.81
+    Liabilities:NRL:MasterCard                      
+
+2004/09/13 Logos
+    Expenses:Books                             $4.35
+    Expenses:Cash                                  
+
+2004/09/14 John Wiegley
+    Assets:NRL:Checking                    $3,000.00
+    Assets:E*Trade:Bank
+
+2004/09/15 iTunes
+    Expenses:Music                             $2.97
+    Liabilities:NRL:MasterCard    
+
+2004/09/15 Marie Callender's
+    Expenses:Food                             $25.57
+    Liabilities:NRL:MasterCard                     
+
+2004/09/15 Union 76
+    Expenses:Auto:Gas                         $23.47
+    Liabilities:NRL:MasterCard                      
+
+2004/09/15 Denny's
+    Expenses:Food                             $12.87
+    Liabilities:NRL:MasterCard                      
+
+2004/09/16 Safeway
+    Expenses:Food                              $3.99
+    Liabilities:NRL:MasterCard                      
+
+2004/09/17 Safeway
+    Expenses:Food                              $5.99
+    Liabilities:NRL:MasterCard                      
+
+2004/09/17 Pacifica Thai Cuisine
+    Expenses:Food                             $17.55
+    Liabilities:NRL:MasterCard                      
+
+2004/09/18 Video Plus
+    Expenses:Movies                            $8.00
+    Expenses:Cash                                   
+
+2004/09/18 Norikonoko
+    Expenses:Food                             $18.77
+    Liabilities:NRL:MasterCard                     
+
+2004/09/19 Daly City Century 20
+    Expenses:Movies                            $9.75  ; "Sky Captain"
+    Expenses:Food                             $29.50  ; paid to Doug
+    Expenses:Cash
+
+2004/09/19 iTunes
+    Expenses:Music                             $0.99
+    Liabilities:NRL:MasterCard    
+
+2004/09/21 PG&E
+    Expenses:Utilities:Electric               $17.21
+    Assets:NRL:Checking
+
+2004/09/21 SBC
+    Expenses:Phone                            $79.56
+    Assets:NRL:Checking
+
+2004/09/21 Borders
+    Expenses:Books                             $8.65
+    Liabilities:NRL:MasterCard                      
+
+2004/09/21 Safeway
+    Expenses:Food                             $28.34
+    Liabilities:NRL:MasterCard                      
+
+2004/09/22 Mitsu
+    Expenses:Food                             $13.91
+    Liabilities:NRL:MasterCard                      
+
+2004/09/23 7-Eleven
+    Expenses:Food                              $4.99
+    Liabilities:NRL:MasterCard                      
+
+2004/09/24 Video Plus
+    Expenses:Movies                            $8.00
+    Expenses:Cash                                   
+
+2004/09/24 Safeway
+    Expenses:Food                             $21.65
+    Expenses:Cash                             $50.00
+    Assets:NRL:Checking                      $-71.65
+
+2004/09/25 Mitsu
+    Expenses:Food                             $20.00
+    Expenses:Cash                             $15.00
+    Liabilities:NRL:MasterCard               $-35.00
+
+2004/09/26 Mandarin Gourmet
+    Expenses:Food                             $23.87
+    Liabilities:NRL:MasterCard                      
+
+2004/09/26 Union 76
+    Expenses:Auto:Gas                         $26.67
+    Liabilities:NRL:MasterCard                      
+
+2004/09/26 Oakridge Century 20
+    Expenses:Movies                            $9.50  ; "Forgotten"
+    Expenses:Cash                                   
+
+2004/09/26 Jonesy's Famous Steak Restaurant
+    Expenses:Food                             $13.80
+    Liabilities:NRL:MasterCard                      
+
+2004/09/27 Safeway
+    Expenses:Food                             $13.15
+    Liabilities:NRL:MasterCard
+
+2004/09/28 Starbucks
+    Expenses:Food                              $3.05
+    Liabilities:NRL:MasterCard
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+2004/10/01 New Artisans LLC
+    Assets:NRL:Checking                    $2,916.66
+    Income:Salary      
+
+2004/09/21 Verizon Wireless
+    Expenses:Phone                            $44.28
+    Assets:NRL:Checking

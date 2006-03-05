@@ -1,0 +1,18 @@
+#!/bin/sh
+
+for test in \
+    "-O nrl:checking" \
+    "-O ^expenses"    \
+    "-B 401"	      \
+    "-V 401"	      \
+    "-G 401"	      \
+    "-B ira"	      \
+    "-V ira"	      \
+    "-G ira"	      \
+    "-B retire"       \
+    "-V retire"       \
+    "-G retire"
+do
+  echo testing: $test
+  python utils/confirm.py $test
+done

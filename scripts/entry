@@ -1,0 +1,16 @@
+#!/bin/sh
+
+if [ -z "$LEDGER" -o ! -r "$LEDGER" ]; then
+   echo Please set your LEDGER environment variable.
+fi
+
+line=`wc -l $LEDGER | awk '{print $1}'`
+
+if ledger entry "$@" > /tmp/entry; then
+   cat /tmp/entry >> $LEDGER
+else
+   echo "$@" >> $LEDGER
+fi
+rm /tmp/entry
+
+vi +$line $LEDGER

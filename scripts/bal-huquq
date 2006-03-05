@@ -1,0 +1,21 @@
+#!/bin/sh
+
+switch="-c"
+limit="-t (/Liabilities/?(/Huquq/?a/P{2.22AU}<={-1.0}:a<0):Ua>100)&a"
+
+if [ "$1" = "-C" -o "$1" = "-U" ]; then
+  switch="$1"
+  shift
+elif [ "$1" = "-b" -o "$1" = "-e" -o "$1" = "-p" ]; then
+  switch="$1 $2"
+  shift 2
+fi
+
+accts="$@"
+if [ -z "$accts" ]; then
+  accts="-Equity -Income -Expenses"
+else
+  limit=""
+fi
+
+ledger -VQ $switch $limit -s -S "-UT" balance $accts

@@ -1,0 +1,22 @@
+#!/bin/sh
+
+# ex: speedcmp ledger ledger-2.4 50
+
+export LEDGER=$PWD/utils/temp.dat
+export LEDGER_CACHE=$PWD/utils/temp.cache
+
+if [ -f "$LEDGER.bz2" ]; then
+    bzip2 -dv $LEDGER.bz2
+fi
+
+count=$1
+shift 1
+
+for i in "$@"; do
+    echo -n "textual $i: "
+    average -n $count $i -o /dev/null -f $LEDGER reg rent
+
+    rm -f $LEDGER_CACHE; $i -o /dev/null reg rent > /dev/null 2>&1
+    echo -n "binary  $i: "
+    average -n $count $i -o /dev/null reg rent
+done

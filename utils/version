@@ -1,0 +1,5 @@
+#!/bin/sh
+
+cat acconf.h | \
+    grep "^#define PACKAGE_VERSION" | \
+    sed 's/#define PACKAGE_VERSION "\([0-9.A-Za-z]*\)"/\1/'
