@@ -36,6 +36,7 @@ class value_t
   enum type_t {
     BOOLEAN,
     INTEGER,
+    DATETIME,
     AMOUNT,
     BALANCE,
     BALANCE_PAIR
@@ -56,6 +57,10 @@ class value_t
   value_t(const long value) {
     *((long *) data) = value;
     type = INTEGER;
+  }
+  value_t(const datetime_t value) {
+    *((datetime_t *) data) = value;
+    type = DATETIME;
   }
   value_t(const unsigned long value) {
     new((amount_t *) data) amount_t(value);
@@ -105,6 +110,14 @@ class value_t
       destroy();
       *((long *) data) = value;
       type = INTEGER;
+    }
+    return *this;
+  }
+  value_t& operator=(const datetime_t value) {
+    if ((datetime_t *) data != &value) {
+      destroy();
+      *((datetime_t *) data) = value;
+      type = DATETIME;
     }
     return *this;
   }
@@ -284,6 +297,8 @@ class value_t
       return ! *((bool *) data);
     case INTEGER:
       return *((long *) data) == 0;
+    case DATETIME:
+      return ! *((datetime_t *) data);
     case AMOUNT:
       return ((amount_t *) data)->realzero();
     case BALANCE:
@@ -299,46 +314,19 @@ class value_t
     return 0;
   }
 
-  void     abs();
-  void     cast(type_t cast_type);
-  value_t  cost() const;
-  value_t  price() const;
-  value_t  date() const;
-  value_t  reduce(const bool keep_price = false,
-		  const bool keep_date  = false,
-		  const bool keep_tag   = false) const;
+  void    abs();
+  void    cast(type_t cast_type);
+  value_t cost() const;
+  value_t price() const;
+  value_t date() const;
+
+  value_t strip_annotations(const bool keep_price = amount_t::keep_price,
+			    const bool keep_date  = amount_t::keep_date,
+			    const bool keep_tag   = amount_t::keep_tag) const;
+
   value_t& add(const amount_t&  amount, const amount_t * cost = NULL);
-
-  value_t value(const std::time_t moment) const {
-    switch (type) {
-    case BOOLEAN:
-    case INTEGER:
-      return *this;
-    case AMOUNT:
-      return ((amount_t *) data)->value(moment);
-    case BALANCE:
-      return ((balance_t *) data)->value(moment);
-    case BALANCE_PAIR:
-      return ((balance_pair_t *) data)->quantity.value(moment);
-    }
-  }
-
-  void round() {
-    switch (type) {
-    case BOOLEAN:
-    case INTEGER:
-      break;
-    case AMOUNT:
-      *((amount_t *) data) = ((amount_t *) data)->round();
-      break;
-    case BALANCE:
-      ((balance_t *) data)->round();
-      break;
-    case BALANCE_PAIR:
-      ((balance_pair_t *) data)->round();
-      break;
-    }
-  }
+  value_t  value(const std::time_t moment) const;
+  void     round();
 };
 
 #define DEF_VALUE_AUX_OP(OP)					\
@@ -379,6 +367,8 @@ value_t::operator T() const
     return *((bool *) data);
   case INTEGER:
     return *((long *) data);
+  case DATETIME:
+    return *((datetime_t *) data);
   case AMOUNT:
     return *((amount_t *) data);
   case BALANCE:
@@ -395,6 +385,7 @@ value_t::operator T() const
 }
 
 template <> value_t::operator long() const;
+template <> value_t::operator datetime_t() const;
 template <> value_t::operator double() const;
 
 inline value_t abs(const value_t& value) {
@@ -406,10 +397,13 @@ inline value_t abs(const value_t& value) {
 inline std::ostream& operator<<(std::ostream& out, const value_t& value) {
   switch (value.type) {
   case value_t::BOOLEAN:
-    out << *((bool *) value.data);
+    out << *((bool *) value.data) ? "true" : "false";
     break;
   case value_t::INTEGER:
     out << *((long *) value.data);
+    break;
+  case value_t::DATETIME:
+    out << *((datetime_t *) value.data);
     break;
   case value_t::AMOUNT:
     out << *((amount_t *) value.data);

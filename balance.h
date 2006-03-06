@@ -2,6 +2,7 @@
 #define _BALANCE_H
 
 #include "amount.h"
+#include "datetime.h"
 
 #include <map>
 #include <ctime>
@@ -35,13 +36,13 @@ class balance_t
       *this += (*i).second;
   }
   balance_t(const amount_t& amt) {
-    if (amt)
+    if (! amt.realzero())
       amounts.insert(amounts_pair(&amt.commodity(), amt));
   }
   template <typename T>
   balance_t(T value) {
     amount_t amt(value);
-    if (amt)
+    if (! amt.realzero())
       amounts.insert(amounts_pair(&amt.commodity(), amt));
   }
 
@@ -80,7 +81,7 @@ class balance_t
     amounts_map::iterator i = amounts.find(&amt.commodity());
     if (i != amounts.end())
       (*i).second += amt;
-    else if (amt)
+    else if (! amt.realzero())
       amounts.insert(amounts_pair(&amt.commodity(), amt));
     return *this;
   }
@@ -148,53 +149,14 @@ class balance_t
 
   // multiplication and divide
   balance_t& operator*=(const balance_t& bal);
-  balance_t& operator*=(const amount_t& amt) {
-    // Multiplying by the null commodity causes all amounts to be
-    // increased by the same factor.
-    if (amt.realzero()) {
-      amounts.clear();
-    }
-    else if (! amt.commodity()) {
-      for (amounts_map::iterator i = amounts.begin();
-	   i != amounts.end();
-	   i++)
-	(*i).second *= amt;
-    }
-    else if (amounts.size() == 1) {
-      (*amounts.begin()).second *= amt;
-    }
-    else {
-      amounts_map::iterator i = amounts.find(&amt.commodity());
-      if (i != amounts.end())
-	(*i).second *= amt;
-    }
-    return *this;
-  }
+  balance_t& operator*=(const amount_t& amt);
   template <typename T>
   balance_t& operator*=(T val) {
     return *this *= amount_t(val);
   }
 
   balance_t& operator/=(const balance_t& bal);
-  balance_t& operator/=(const amount_t& amt) {
-    // Dividing by the null commodity causes all amounts to be
-    // increased by the same factor.
-    if (! amt.commodity()) {
-      for (amounts_map::iterator i = amounts.begin();
-	   i != amounts.end();
-	   i++)
-	(*i).second /= amt;
-    }
-    else if (amounts.size() == 1) {
-      (*amounts.begin()).second /= amt;
-    }
-    else {
-      amounts_map::iterator i = amounts.find(&amt.commodity());
-      if (i != amounts.end())
-	(*i).second /= amt;
-    }
-    return *this;
-  }
+  balance_t& operator/=(const amount_t& amt);
   template <typename T>
   balance_t& operator/=(T val) {
     return *this /= amount_t(val);
@@ -415,13 +377,27 @@ class balance_t
     return false;
   }
 
-  amount_t  amount(const commodity_t& commodity) const;
-  balance_t value(const std::time_t moment) const;
-  balance_t price() const;
+  bool realzero() const {
+    if (amounts.size() == 0)
+      return true;
+    for (amounts_map::const_iterator i = amounts.begin();
+	 i != amounts.end();
+	 i++)
+      if (! (*i).second.realzero())
+	return false;
+    return true;
+  }
+
+  amount_t    amount(const commodity_t& commodity =
+		     *commodity_t::null_commodity) const;
+  balance_t   value(const std::time_t moment = now) const;
+  balance_t   price() const;
   std::time_t date() const;
-  balance_t reduce(const bool keep_price = false,
-		   const bool keep_date  = false,
-		   const bool keep_tag   = false) const;
+
+  balance_t
+  strip_annotations(const bool keep_price = amount_t::keep_price,
+		    const bool keep_date  = amount_t::keep_date,
+		    const bool keep_tag   = amount_t::keep_tag) const;
 
   void write(std::ostream& out, const int first_width,
 	     const int latter_width = -1) const;
@@ -439,17 +415,6 @@ class balance_t
 	 i++)
       if ((*i).second.commodity())
 	(*i).second = (*i).second.round();
-  }
-
-  bool realzero() const {
-    if (amounts.size() == 0)
-      return true;
-    for (amounts_map::const_iterator i = amounts.begin();
-	 i != amounts.end();
-	 i++)
-      if (! (*i).second.realzero())
-	return false;
-    return true;
   }
 };
 
@@ -496,7 +461,6 @@ class balance_pair_t
 	delete cost;
 	cost = NULL;
       }
-
       quantity = bal_pair.quantity;
       if (bal_pair.cost)
 	cost = new balance_t(*bal_pair.cost);
@@ -651,7 +615,14 @@ class balance_pair_t
     return *this *= amount_t(val);
   }
 
-  balance_pair_t& operator/=(const balance_pair_t& bal_pair);
+  balance_pair_t& operator/=(const balance_pair_t& bal_pair) {
+    if (bal_pair.cost && ! cost)
+      cost = new balance_t(quantity);
+    quantity /= bal_pair.quantity;
+    if (cost)
+      *cost /= bal_pair.cost ? *bal_pair.cost : bal_pair.quantity;
+    return *this;
+  }
   balance_pair_t& operator/=(const balance_t& bal) {
     quantity /= bal;
     if (cost)
@@ -813,14 +784,18 @@ class balance_pair_t
   }
 
   // test for non-zero (use ! for zero)
-  operator bool() const {
-    return quantity;
-  }
   operator balance_t() const {
     return quantity;
   }
   operator amount_t() const {
     return quantity;
+  }
+  operator bool() const {
+    return quantity;
+  }
+
+  bool realzero() const {
+    return ((! cost || cost->realzero()) && quantity.realzero());
   }
 
   void abs() {
@@ -828,19 +803,41 @@ class balance_pair_t
     if (cost) cost->abs();
   }
 
-  amount_t  amount(const commodity_t& commodity) const {
+  amount_t  amount(const commodity_t& commodity =
+		   *commodity_t::null_commodity) const {
     return quantity.amount(commodity);
   }
-  balance_t value(const std::time_t moment) const {
+  balance_t value(const std::time_t moment = now) const {
     return quantity.value(moment);
   }
+  balance_t price() const {
+    return quantity.price();
+  }
+  std::time_t date() const {
+    return quantity.date();
+  }
+
+  balance_t
+  strip_annotations(const bool keep_price = amount_t::keep_price,
+		    const bool keep_date  = amount_t::keep_date,
+		    const bool keep_tag   = amount_t::keep_tag) const {
+    return quantity.strip_annotations(keep_price, keep_date, keep_tag);
+  }
+
   void write(std::ostream& out, const int first_width,
 	     const int latter_width = -1) const {
     quantity.write(out, first_width, latter_width);
   }
 
   balance_pair_t& add(const amount_t&  amount,
-		      const amount_t * a_cost = NULL);
+		      const amount_t * a_cost = NULL) {
+    if (a_cost && ! cost)
+      cost = new balance_t(quantity);
+    quantity += amount;
+    if (cost)
+      *cost += a_cost ? *a_cost : amount;
+    return *this;
+  }
 
   bool valid() {
     return quantity.valid() && (! cost || cost->valid());
@@ -849,10 +846,6 @@ class balance_pair_t
   void round() {
     quantity.round();
     if (cost) cost->round();
-  }
-
-  bool realzero() const {
-    return ((! cost || cost->realzero()) && quantity.realzero());
   }
 };
 

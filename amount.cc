@@ -10,6 +10,12 @@
 
 namespace ledger {
 
+bool do_cleanup = true;
+
+bool amount_t::keep_price = false;
+bool amount_t::keep_date  = false;
+bool amount_t::keep_tag   = false;
+
 #define BIGINT_BULK_ALLOC 0x0001
 #define BIGINT_KEEP_PREC  0x0002
 
@@ -32,10 +38,7 @@ class amount_t::bigint_t {
       ref(1), index(0) {
     mpz_init_set(val, other.val);
   }
-  ~bigint_t() {
-    assert(ref == 0);
-    mpz_clear(val);
-  }
+  ~bigint_t();
 };
 
 unsigned int sizeof_bigint_t() {
@@ -44,9 +47,15 @@ unsigned int sizeof_bigint_t() {
 
 #define MPZ(x) ((x)->val)
 
-static mpz_t		  temp;
-static mpz_t		  divisor;
+static mpz_t temp;		// these are the global temp variables
+static mpz_t divisor;
+
 static amount_t::bigint_t true_value;
+
+inline amount_t::bigint_t::~bigint_t() {
+  assert(ref == 0 || (! do_cleanup && this == &true_value));
+  mpz_clear(val);
+}
 
 base_commodities_map commodity_base_t::commodities;
 
@@ -93,6 +102,9 @@ static struct _init_amounts {
   }
 
   ~_init_amounts() {
+    if (! do_cleanup)
+      return;
+
     mpz_clear(temp);
     mpz_clear(divisor);
 
@@ -1355,19 +1367,19 @@ void amount_t::annotate_commodity(const amount_t&    price,
   DEBUG_PRINT("amounts.commodities", "  Annotated amount is " << *this);
 }
 
-amount_t amount_t::reduce_commodity(const bool keep_price,
-				    const bool keep_date,
-				    const bool keep_tag) const
+amount_t amount_t::strip_annotations(const bool _keep_price,
+				     const bool _keep_date,
+				     const bool _keep_tag) const
 {
   if (! commodity().annotated ||
-      (keep_price && keep_date && keep_tag))
+      (_keep_price && _keep_date && _keep_tag))
     return *this;
 
   DEBUG_PRINT("amounts.commodities", "Reducing commodity for amount "
 	      << *this << std::endl
-	      << "  keep price " << keep_price << " "
-	      << "  keep date " << keep_date << " "
-	      << "  keep tag " << keep_tag);
+	      << "  keep price " << _keep_price << " "
+	      << "  keep date " << _keep_date << " "
+	      << "  keep tag " << _keep_tag);
 
   annotated_commodity_t&
     ann_comm(static_cast<annotated_commodity_t&>(commodity()));
@@ -1375,13 +1387,13 @@ amount_t amount_t::reduce_commodity(const bool keep_price,
 
   commodity_t * new_comm;
 
-  if ((keep_price && ann_comm.price) ||
-      (keep_date && ann_comm.date) ||
-      (keep_tag && ! ann_comm.tag.empty()))
+  if ((_keep_price && ann_comm.price) ||
+      (_keep_date && ann_comm.date) ||
+      (_keep_tag && ! ann_comm.tag.empty()))
   {
     new_comm = annotated_commodity_t::find_or_create
-      (*ann_comm.base, keep_price ? ann_comm.price : amount_t(),
-       keep_date ? ann_comm.date : 0, keep_tag ? ann_comm.tag : "");
+      (*ann_comm.base, _keep_price ? ann_comm.price : amount_t(),
+       _keep_date ? ann_comm.date : 0, _keep_tag ? ann_comm.tag : "");
   } else {
     new_comm = commodity_t::find_or_create(ann_comm.base_symbol());
   }
@@ -1543,8 +1555,6 @@ amount_t commodity_base_t::value(const std::time_t moment)
   return price;
 }
 
-std::string annotated_commodity_t::date_format = "%Y/%m/%d";
-
 void
 annotated_commodity_t::write_annotations(std::ostream&      out,
 					 const amount_t&    price,
@@ -1554,12 +1564,8 @@ annotated_commodity_t::write_annotations(std::ostream&      out,
   if (price)
     out << " {" << price << '}';
 
-  if (date) {
-    char buf[128];
-    std::strftime(buf, 127, annotated_commodity_t::date_format.c_str(),
-		  std::localtime(&date));
-    out << " [" << buf << ']';
-  }
+  if (date)
+    out << " [" << datetime_t(date) << ']';
 
   if (! tag.empty())
     out << " (" << tag << ')';

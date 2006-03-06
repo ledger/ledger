@@ -72,12 +72,6 @@ struct format_t
   std::string format_string;
   element_t * elements;
 
-  static bool keep_price;
-  static bool keep_date;
-  static bool keep_tag;
-
-  static std::string date_format;
-
   format_t() : elements(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor format_t");
   }

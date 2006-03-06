@@ -10,6 +10,8 @@
 #include <cstring>
 #include <ctime>
 
+#include "acconf.h"
+
 #ifdef HAVE_UNIX_PIPES
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -18,27 +20,11 @@
 #endif
 
 #include "ledger.h"
-#include "timing.h"
 
 using namespace ledger;
 
-namespace {
-  TIMER_DEF_(setup);
-  TIMER_DEF_(parse);
-  TIMER_DEF_(process);
-  TIMER_DEF_(walk);
-  TIMER_DEF_(cleanup);
-  TIMER_DEF_(cache_write);
-}
-
-int parse_and_report(int argc, char * argv[], char * envp[])
+int parse_and_report(config_t& config, int argc, char * argv[], char * envp[])
 {
-  TIMER_START(setup);
-
-  config_t config;
-
-  std::auto_ptr<journal_t> journal(new journal_t);
-
   // Configure the terminus for value expressions
 
   ledger::terminus = now;
@@ -59,6 +45,8 @@ int parse_and_report(int argc, char * argv[], char * envp[])
   else
     config.use_cache = config.data_file.empty() && config.price_db.empty();
   DEBUG_PRINT("ledger.config.cache", "1. use_cache = " << config.use_cache);
+
+  TRACE(main, "Processing options and environment variables");
 
   config.process_environment(envp, "LEDGER_");
 
@@ -89,6 +77,14 @@ int parse_and_report(int argc, char * argv[], char * envp[])
   if (config.data_file == config.cache_file)
     config.use_cache = false;
   DEBUG_PRINT("ledger.config.cache", "2. use_cache = " << config.use_cache);
+
+  TRACE(main, std::string("Initialization file is ") + config.init_file);
+  TRACE(main, std::string("Price database is ") + config.price_db);
+  TRACE(main, std::string("Binary cache is ") + config.cache_file);
+  TRACE(main, std::string("Main journal is ") + config.data_file);
+
+  TRACE(main, std::string("Based on option settings, binary cache ") +
+	(config.use_cache ? "WILL " : "will NOT ") + "be used");
 
   // Read the command word, canonicalize it to its one letter form,
   // then configure the system based on the kind of report to be
@@ -124,15 +120,23 @@ int parse_and_report(int argc, char * argv[], char * envp[])
   }
   else if (command == "parse") {
     value_auto_ptr expr(ledger::parse_value_expr(*arg));
-    if (config.debug_mode) {
+    if (config.verbose_mode) {
       ledger::dump_value_expr(std::cout, expr.get());
       std::cout << std::endl;
     }
 
     value_t result = expr->compute();
-    if (! config.keep_price || ! config.keep_date || ! config.keep_tag)
-      result = result.reduce(config.keep_price, config.keep_date,
-			     config.keep_tag);
+    if (! config.keep_price || ! config.keep_date || ! config.keep_tag) {
+      switch (result.type) {
+      case value_t::AMOUNT:
+      case value_t::BALANCE:
+      case value_t::BALANCE_PAIR:
+	result = result.strip_annotations();
+	break;
+      default:
+	break;
+      }
+    }
     std::cout << result << std::endl;
     return 0;
   }
@@ -142,21 +146,19 @@ int parse_and_report(int argc, char * argv[], char * envp[])
   else
     throw error(std::string("Unrecognized command '") + command + "'");
 
-  TIMER_STOP(setup);
-
   // Parse initialization files, ledger data, price database, etc.
 
-  TIMER_START(parse);
+  std::auto_ptr<journal_t> journal(new journal_t);
 
-  if (parse_ledger_data(config, journal.get()) == 0)
-    throw error("Please specify ledger file using -f"
-		" or LEDGER_FILE environment variable.");
+  { TRACE_PUSH(parser, "Parsing journal file");
 
-  TIMER_STOP(parse);
+    if (parse_ledger_data(config, journal.get()) == 0)
+      throw error("Please specify ledger file using -f"
+		  " or LEDGER_FILE environment variable.");
+
+    TRACE_POP(parser, "Finished parsing"); }
 
   // process the command word and its following arguments
-
-  TIMER_START(process);
 
   std::string first_arg;
   if (command == "w") {
@@ -164,6 +166,9 @@ int parse_and_report(int argc, char * argv[], char * envp[])
       throw error("The 'output' command requires a file argument");
     first_arg = *arg++;
   }
+
+  TRACE(options, std::string("Post-processing options ") +
+	"for command \"" + command + "\"");
 
   config.process_options(command, arg, args.end());
 
@@ -232,14 +237,22 @@ int parse_and_report(int argc, char * argv[], char * envp[])
 
   if (command == "expr") {
     value_auto_ptr expr(ledger::parse_value_expr(*arg));
-    if (config.debug_mode) {
+    if (config.verbose_mode) {
       ledger::dump_value_expr(std::cout, expr.get());
       std::cout << std::endl;
     }
     value_t result = expr->compute();
-    if (! config.keep_price || ! config.keep_date || ! config.keep_tag)
-      result = result.reduce(config.keep_price, config.keep_date,
-			     config.keep_tag);
+    if (! config.keep_price || ! config.keep_date || ! config.keep_tag) {
+      switch (result.type) {
+      case value_t::AMOUNT:
+      case value_t::BALANCE:
+      case value_t::BALANCE_PAIR:
+	result = result.strip_annotations();
+	break;
+      default:
+	break;
+      }
+    }
     std::cout << result << std::endl;
     return 0;
   }
@@ -265,11 +278,7 @@ int parse_and_report(int argc, char * argv[], char * envp[])
   else
     format = &config.print_format;
 
-  TIMER_STOP(process);
-
   // Walk the entries based on the report type and the options
-
-  TIMER_START(walk);
 
   item_handler<transaction_t> *		   formatter;
   std::list<item_handler<transaction_t> *> formatter_ptrs;
@@ -290,9 +299,13 @@ int parse_and_report(int argc, char * argv[], char * envp[])
     formatter = new format_transactions(*out, *format);
 
   if (command == "w") {
+    TRACE_PUSH(text_writer, "Writing journal file");
     write_textual_journal(*journal, first_arg, *formatter,
 			  config.write_hdr_format, *out);
+    TRACE_POP(text_writer, "Finished writing");
   } else {
+    TRACE_PUSH(main, "Walking journal entries");
+
     formatter = config.chain_xact_handlers(command, formatter, journal.get(),
 					   journal->master, formatter_ptrs);
     if (command == "e")
@@ -304,11 +317,15 @@ int parse_and_report(int argc, char * argv[], char * envp[])
 
     if (command != "P" && command != "D")
       formatter->flush();
+
+    TRACE_POP(main, "Finished entry walk");
   }
 
   // For the balance and equity reports, output the sum totals.
 
   if (command == "b") {
+    TRACE_PUSH(main, "Walking journal accounts");
+
     format_account acct_formatter(*out, *format, config.display_predicate);
     sum_accounts(*journal->master);
     walk_accounts(*journal->master, acct_formatter, config.sort_string);
@@ -322,19 +339,22 @@ int parse_and_report(int argc, char * argv[], char * envp[])
 	acct_formatter.format.format(*out, details_t(*journal->master));
       }
     }
+    TRACE_POP(main, "Finished account walk");
   }
   else if (command == "E") {
+    TRACE_PUSH(main, "Walking journal accounts");
+
     format_equity acct_formatter(*out, *format, config.display_predicate);
     sum_accounts(*journal->master);
     walk_accounts(*journal->master, acct_formatter, config.sort_string);
     acct_formatter.flush();
+
+    TRACE_POP(main, "Finished account walk");
   }
 
-  TIMER_STOP(walk);
-
-  TIMER_START(cleanup);
-
 #if DEBUG_LEVEL >= BETA
+  { TRACE_PUSH(cleanup, "Cleaning up allocated memory");
+
   clear_transaction_xdata xact_cleaner;
   walk_entries(journal->entries, xact_cleaner);
 
@@ -349,17 +369,19 @@ int parse_and_report(int argc, char * argv[], char * envp[])
        i != formatter_ptrs.end();
        i++)
     delete *i;
-#endif
 
-  TIMER_STOP(cleanup);
+  TRACE_POP(cleanup, "Finished cleaning"); }
+#endif
 
   // Write out the binary cache, if need be
 
   if (config.use_cache && config.cache_dirty && ! config.cache_file.empty()) {
-    TIMER_START(cache_write);
+    TRACE_PUSH(binary_cache, "Writing journal file");
+
     std::ofstream stream(config.cache_file.c_str());
     write_binary_journal(stream, journal.get());
-    TIMER_STOP(cache_write);
+
+    TRACE_POP(binary_cache, "Finished writing");
   }
 
 #ifdef HAVE_UNIX_PIPES
@@ -380,7 +402,14 @@ int parse_and_report(int argc, char * argv[], char * envp[])
 int main(int argc, char * argv[], char * envp[])
 {
   try {
-    return parse_and_report(argc, argv, envp);
+#if DEBUG_LEVEL < BETA
+    ledger::do_cleanup = false;
+#endif
+    config_t config;
+    TRACE_PUSH(main, "Starting Ledger " PACKAGE_VERSION);
+    int status = parse_and_report(config, argc, argv, envp);
+    TRACE_POP(main, "Ledger done");
+    return status;
   }
   catch (const std::exception& err) {
     std::cerr << "Error: " << err.what() << std::endl;

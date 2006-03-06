@@ -71,8 +71,9 @@ void config_t::reset()
   prices_format      = "%[%Y/%m/%d %H:%M:%S %Z]   %-10A %12t %12T\n";
   pricesdb_format    = "P %[%Y/%m/%d %H:%M:%S] %A %t\n";
 
-  predicate	    = "";
-  display_predicate = "";
+  predicate	      = "";
+  secondary_predicate = "";
+  display_predicate   = "";
 
   head_entries = 0;
   tail_entries = 0;
@@ -91,6 +92,8 @@ void config_t::reset()
   show_revalued_only = false;
   download_quotes    = false;
   debug_mode         = false;
+  verbose_mode       = false;
+  trace_mode         = false;
   keep_price         = false;
   keep_date          = false;
   keep_tag           = false;
@@ -301,14 +304,12 @@ void config_t::process_options(const std::string&     command,
 
   // Now setup the various formatting strings
 
-  if (! date_format.empty()) {
-    format_t::date_format	       = date_format;
-    annotated_commodity_t::date_format = date_format;
-  }
+  if (! date_format.empty())
+    datetime_t::date_format = date_format;
 
-  format_t::keep_price = keep_price;
-  format_t::keep_date  = keep_date;
-  format_t::keep_tag   = keep_tag;
+  amount_t::keep_price = keep_price;
+  amount_t::keep_date  = keep_date;
+  amount_t::keep_tag   = keep_tag;
 }
 
 item_handler<transaction_t> *
@@ -348,14 +349,20 @@ config_t::chain_xact_handlers(const std::string& command,
     // transactions which can be reconciled to a given balance
     // (calculated against the transactions which it receives).
     if (! reconcile_balance.empty()) {
-      value_t target_balance(reconcile_balance);
-      time_t  cutoff = now;
+      std::time_t cutoff = now;
       if (! reconcile_date.empty())
 	parse_date(reconcile_date.c_str(), &cutoff);
       ptrs.push_back(formatter =
-		     new reconcile_transactions(formatter, target_balance,
-						cutoff));
+		     new reconcile_transactions
+		       (formatter, value_t(reconcile_balance), cutoff));
     }
+
+    // filter_transactions will only pass through transactions
+    // matching the `secondary_predicate'.
+    if (! secondary_predicate.empty())
+      ptrs.push_back(formatter =
+		     new filter_transactions(formatter,
+					     secondary_predicate));
 
     // sort_transactions will sort all the transactions it sees, based
     // on the `sort_order' value expression.
@@ -718,6 +725,14 @@ OPT_BEGIN(debug, ":") {
   ::setenv("DEBUG_CLASS", optarg, 1);
 } OPT_END(debug);
 
+OPT_BEGIN(verbose, "") {
+  config->verbose_mode = true;
+} OPT_END(verbose);
+
+OPT_BEGIN(trace, "") {
+  config->trace_mode = true;
+} OPT_END(trace);
+
 //////////////////////////////////////////////////////////////////////
 //
 // Report filtering
@@ -1016,6 +1031,14 @@ OPT_BEGIN(limit, "l:") {
   config->predicate += ")";
 } OPT_END(limit);
 
+OPT_BEGIN(only, ":") {
+  if (! config->secondary_predicate.empty())
+    config->secondary_predicate += "&";
+  config->secondary_predicate += "(";
+  config->secondary_predicate += optarg;
+  config->secondary_predicate += ")";
+} OPT_END(only);
+
 OPT_BEGIN(display, "d:") {
   if (! config->display_predicate.empty())
     config->display_predicate += "&";
@@ -1153,6 +1176,7 @@ option_t config_options[CONFIG_OPTIONS_SIZE] = {
   { "market", 'V', false, opt_market, false },
   { "monthly", 'M', false, opt_monthly, false },
   { "no-cache", '\0', false, opt_no_cache, false },
+  { "only", '\0', true, opt_only, false },
   { "output", 'o', true, opt_output, false },
   { "pager", '\0', true, opt_pager, false },
   { "percentage", '%', false, opt_percentage, false },
@@ -1178,8 +1202,10 @@ option_t config_options[CONFIG_OPTIONS_SIZE] = {
   { "total", 'T', true, opt_total, false },
   { "total-data", 'J', false, opt_total_data, false },
   { "totals", '\0', false, opt_totals, false },
+  { "trace", '\0', false, opt_trace, false },
   { "unbudgeted", '\0', false, opt_unbudgeted, false },
   { "uncleared", 'U', false, opt_uncleared, false },
+  { "verbose", '\0', false, opt_verbose, false },
   { "version", 'v', false, opt_version, false },
   { "weekly", 'W', false, opt_weekly, false },
   { "wide", 'w', false, opt_wide, false },
@@ -1188,5 +1214,32 @@ option_t config_options[CONFIG_OPTIONS_SIZE] = {
   { "write-xact-format", '\0', true, opt_write_xact_format, false },
   { "yearly", 'Y', false, opt_yearly, false },
 };
+
+//////////////////////////////////////////////////////////////////////
+
+void trace(const std::string& cat, const std::string& str)
+{
+  char buf[32];
+  std::time_t now = std::time(NULL);
+  std::strftime(buf, 31, "%H:%M:%S", std::localtime(&now));
+
+  std::cerr << buf << " " << cat << ": " << str << std::endl;
+}
+
+void trace_push(const std::string& cat, const std::string& str,
+		timing_t& timer)
+{
+  timer.start();
+  trace(cat, str);
+}
+
+void trace_pop(const std::string& cat, const std::string& str,
+	       timing_t& timer)
+{
+  timer.stop();
+  std::ostringstream out;
+  out << str << ": " << (double(timer.cumulative) / double(CLOCKS_PER_SEC)) << "s";
+  trace(cat, out.str());
+}
 
 } // namespace ledger

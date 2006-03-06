@@ -49,6 +49,8 @@ namespace {
 
   startup::~startup()
   {
+    if (! ledger::do_cleanup)
+      return;
     shutdown_parser_support();
   }
 }

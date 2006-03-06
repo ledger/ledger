@@ -15,12 +15,18 @@
 
 namespace ledger {
 
+extern bool do_cleanup;
+
 class commodity_t;
 
 class amount_t
 {
  public:
   class bigint_t;
+
+  static bool keep_price;
+  static bool keep_date;
+  static bool keep_tag;
 
  protected:
   void _init();
@@ -76,9 +82,9 @@ class amount_t
   void annotate_commodity(const amount_t& price,
 			  const std::time_t  date = 0,
 			  const std::string& tag  = "");
-  amount_t reduce_commodity(const bool keep_price = false,
-			    const bool keep_date  = false,
-			    const bool keep_tag   = false) const;
+  amount_t strip_annotations(const bool _keep_price = keep_price,
+			     const bool _keep_date  = keep_date,
+			     const bool _keep_tag   = keep_tag) const;
   void clear_commodity() {
     commodity_ = NULL;
   }
@@ -542,8 +548,6 @@ class annotated_commodity_t : public commodity_t
   amount_t    price;
   std::time_t date;
   std::string tag;
-
-  static std::string date_format;
 
   static void write_annotations(std::ostream&      out,
 				const amount_t&    price,

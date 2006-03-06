@@ -2,6 +2,7 @@
 #define _CONFIG_H
 
 #include "ledger.h"
+#include "timing.h"
 
 #include <iostream>
 #include <memory>
@@ -22,6 +23,7 @@ class config_t
   std::string   output_file;
   std::string   account;
   std::string   predicate;
+  std::string   secondary_predicate;
   std::string   display_predicate;
   std::string   report_period;
   std::string   report_period_sort;
@@ -66,6 +68,8 @@ class config_t
   bool          use_cache;
   bool          cache_dirty;
   bool          debug_mode;
+  bool          verbose_mode;
+  bool          trace_mode;
   bool          keep_price;
   bool          keep_date;
   bool          keep_tag;
@@ -102,7 +106,7 @@ class config_t
 		      std::list<item_handler<transaction_t> *>& ptrs);
 };
 
-#define CONFIG_OPTIONS_SIZE 81
+#define CONFIG_OPTIONS_SIZE 84
 extern option_t config_options[CONFIG_OPTIONS_SIZE];
 
 void option_help(std::ostream& out);
@@ -111,6 +115,29 @@ void option_help(std::ostream& out);
     void opt_ ## tag(const char * optarg)
 
 #define OPT_END(tag)
+
+//////////////////////////////////////////////////////////////////////
+
+void trace(const std::string& cat, const std::string& str);
+void trace_push(const std::string& cat, const std::string& str,
+		timing_t& timer);
+void trace_pop(const std::string& cat, const std::string& str,
+	       timing_t& timer);
+
+#define TRACE(cat, msg) if (config.trace_mode) trace(#cat, msg)
+#define TRACE_(cat, msg) if (trace_mode) trace(#cat, msg)
+
+#define TRACE_PUSH(cat, msg)					\
+  timing_t timer_ ## cat(#cat);					\
+  if (config.trace_mode) trace_push(#cat, msg, timer_ ## cat)
+#define TRACE_PUSH_(cat, msg)					\
+  timing_t timer_ ## cat(#cat);					\
+  if (trace_mode) trace_push(#cat, msg, timer_ ## cat)
+
+#define TRACE_POP(cat, msg)					\
+  if (config.trace_mode) trace_pop(#cat, msg, timer_ ## cat)
+#define TRACE_POP_(cat, msg)					\
+  if (trace_mode) trace_pop(#cat, msg, timer_ ## cat)
 
 } // namespace ledger
 

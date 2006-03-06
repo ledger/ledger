@@ -7,10 +7,6 @@
 
 namespace ledger {
 
-bool format_t::keep_price = false;
-bool format_t::keep_date  = false;
-bool format_t::keep_tag   = false;
-
 std::string truncated(const std::string& str, unsigned int width,
 		      const int style)
 {
@@ -71,8 +67,6 @@ std::string partial_account_name(const account_t& account)
 
   return name;
 }
-
-std::string format_t::date_format = "%Y/%m/%d";
 
 element_t * format_t::parse_elements(const std::string& fmt)
 {
@@ -204,11 +198,11 @@ element_t * format_t::parse_elements(const std::string& fmt)
 
     case 'd':
       current->type  = element_t::COMPLETE_DATE_STRING;
-      current->chars = format_t::date_format;
+      current->chars = datetime_t::date_format;
       break;
     case 'D':
       current->type  = element_t::DATE_STRING;
-      current->chars = format_t::date_format;
+      current->chars = datetime_t::date_format;
       break;
 
     case 'S': current->type = element_t::SOURCE; break;
@@ -310,15 +304,29 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 
       calc->compute(value, details);
 
-      if (! keep_price || ! keep_date || ! keep_tag)
-	value = value.reduce(keep_price, keep_date, keep_tag);
+      if (! amount_t::keep_price ||
+	  ! amount_t::keep_date ||
+	  ! amount_t::keep_tag) {
+	switch (value.type) {
+	case value_t::AMOUNT:
+	case value_t::BALANCE:
+	case value_t::BALANCE_PAIR:
+	  value = value.strip_annotations();
+	  break;
+	default:
+	  break;
+	}
+      }
 
       switch (value.type) {
       case value_t::BOOLEAN:
-	out << (*((bool *) value.data) ? "1" : "0");
+	out << (*((bool *) value.data) ? "true" : "false");
 	break;
       case value_t::INTEGER:
-	out << *((unsigned int *) value.data);
+	out << *((long *) value.data);
+	break;
+      case value_t::DATETIME:
+	out << *((datetime_t *) value.data);
 	break;
       case value_t::AMOUNT:
 	out << *((amount_t *) value.data);

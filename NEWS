@@ -3,6 +3,59 @@
 
 * 2.5
 
+- Add a new --only predicate, which occurs during transaction
+  processing between --limit and --display.  Here is a summary of how
+  the three supported predicates are used:
+
+    --limit "a>100"
+
+      This flag limits computation to *only transactions whose amount
+      is greater than 100 of a given commodity*.  It means that if you
+      scan your dining expenses, for example, only individual bills
+      greater than $100 would be caculated by the report.
+
+    --only "a>100"
+
+      This flag happens much later than --limit, and corresponding
+      more directly to what one normally expects.  If --limit isn't
+      used, then ALL your dining expenses contribute to the report,
+      *but only those calculated transactions whose value is greater
+      than $100 are used*.  This becomes important when doing a
+      monthly costs report, for example, because it makes the
+      following command possible:
+
+        ledger -M --only "a>100" reg ^Expenses:Food
+
+      This shows only *months* whose amount is greater than 100.  If
+      --limit had been used, it would have been a monthly summary of
+      all individual dinner bills greater than 100 -- which is a very
+      different thing.
+
+    --display "a>100"
+
+      This predicate does not constrain calculation, but only display.
+      Consider the same command as above:
+
+        ledger -M --display "a>100" reg ^Expenses:Food
+
+      This displays only lines whose amount is greater than 100, *yet
+      the running total still includes amounts from all transactions*.
+      This command has more particular application, such as showing
+      the current month's checking register while still giving a
+      correct ending balance:
+
+        ledger --display "d>[this month]" reg Checking
+
+    Note that these predicates can be combined.  Here is a report that
+    considers only food bills whose individual cost is greater than
+    $20, but shows the monthly total only if it is greater than $500.
+    Finally, we only display the months of the last year, but we
+    retain an accurate running total with respect to the entire ledger
+    file:
+
+        ledger -M --limit "a>20" --only "a>200" \
+          --display "year == yearof([last year])" reg ^Expenses:Food
+
 - There have a few changes to value expression syntax.  The most
   significant incompatibilities being:
 

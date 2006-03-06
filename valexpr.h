@@ -113,6 +113,9 @@ struct value_expr_t
     F_PRICE,
     F_DATE,
     F_DATECMP,
+    F_YEAR,
+    F_MONTH,
+    F_DAY,
     F_CODE_MASK,
     F_PAYEE_MASK,
     F_NOTE_MASK,
@@ -155,7 +158,7 @@ struct value_expr_t
   value_expr_t * left;
 
   union {
-    std::time_t	   constant_t;
+    datetime_t *   constant_t;
     long	   constant_i;
     amount_t *	   constant_a;
     value_t *	   constant_v;

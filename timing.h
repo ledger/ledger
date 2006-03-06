@@ -20,6 +20,9 @@ class timing_t
   timing_t(const std::string& _symbol, const std::string& _category)
     : begin(0), cumulative(0), symbol(_symbol), category(_category) {}
 
+  timing_t(const std::string& _symbol)
+    : begin(0), cumulative(0), symbol(_symbol) {}
+
   ~timing_t() {
     std::string cls = "timing.results.";
     cls += symbol;
@@ -31,6 +34,9 @@ class timing_t
   void start(const std::string& _file, unsigned long _line) {
     file  = _file;
     line  = _line;
+    begin = std::clock();
+  }
+  void start() {
     begin = std::clock();
   }
 

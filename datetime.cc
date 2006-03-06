@@ -34,6 +34,8 @@ const char * formats[] = {
   NULL
 };
 
+std::string datetime_t::date_format = "%Y/%m/%d";
+
 std::time_t interval_t::first(const std::time_t moment) const
 {
   std::time_t quant = begin;

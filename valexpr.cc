@@ -35,6 +35,7 @@ bool compute_amount(value_expr_t * expr, amount_t& amt,
     amt = *((amount_t *) result.data);
     break;
 
+  case value_t::DATETIME:
   case value_t::BALANCE:
   case value_t::BALANCE_PAIR:
     return false;
@@ -68,8 +69,12 @@ value_expr_t::~value_expr_t()
     delete constant_a;
     break;
 
-  case CONSTANT_I:
   case CONSTANT_T:
+    assert(constant_t);
+    delete constant_t;
+    break;
+
+  case CONSTANT_I:
   case CONSTANT_V:
     break;
 
@@ -145,7 +150,7 @@ void value_expr_t::compute(value_t& result, const details_t& details,
     result = constant_i;
     break;
   case CONSTANT_T:
-    result = long(constant_t);
+    result = *constant_t;
     break;
   case CONSTANT_A:
     result = *constant_a;
@@ -155,7 +160,7 @@ void value_expr_t::compute(value_t& result, const details_t& details,
     break;
 
   case F_NOW:
-    result = long(terminus);
+    result = datetime_t(terminus);
     break;
 
   case AMOUNT:
@@ -262,37 +267,37 @@ void value_expr_t::compute(value_t& result, const details_t& details,
   case DATE:
     if (details.xact && transaction_has_xdata(*details.xact) &&
 	transaction_xdata_(*details.xact).date)
-      result = long(transaction_xdata_(*details.xact).date);
+      result = datetime_t(transaction_xdata_(*details.xact).date);
     else if (details.xact)
-      result = long(details.xact->date());
+      result = datetime_t(details.xact->date());
     else if (details.entry)
-      result = long(details.entry->date());
+      result = datetime_t(details.entry->date());
     else
-      result = long(terminus);
+      result = datetime_t(terminus);
     break;
 
   case ACT_DATE:
     if (details.xact && transaction_has_xdata(*details.xact) &&
 	transaction_xdata_(*details.xact).date)
-      result = long(transaction_xdata_(*details.xact).date);
+      result = datetime_t(transaction_xdata_(*details.xact).date);
     else if (details.xact)
-      result = long(details.xact->actual_date());
+      result = datetime_t(details.xact->actual_date());
     else if (details.entry)
-      result = long(details.entry->actual_date());
+      result = datetime_t(details.entry->actual_date());
     else
-      result = long(terminus);
+      result = datetime_t(terminus);
     break;
 
   case EFF_DATE:
     if (details.xact && transaction_has_xdata(*details.xact) &&
 	transaction_xdata_(*details.xact).date)
-      result = long(transaction_xdata_(*details.xact).date);
+      result = datetime_t(transaction_xdata_(*details.xact).date);
     else if (details.xact)
-      result = long(details.xact->effective_date());
+      result = datetime_t(details.xact->effective_date());
     else if (details.entry)
-      result = long(details.entry->effective_date());
+      result = datetime_t(details.entry->effective_date());
     else
-      result = long(terminus);
+      result = datetime_t(terminus);
     break;
 
   case CLEARED:
@@ -373,11 +378,40 @@ void value_expr_t::compute(value_t& result, const details_t& details,
 
     index = 0;
     expr = find_leaf(context, 1, index);
-    amount_t moment;
-    if (compute_amount(expr, moment, NULL, context))
+    value_t moment;
+    expr->compute(moment, details, context);
+    if (moment.type == value_t::DATETIME) {
+      result.cast(value_t::INTEGER);
+      moment.cast(value_t::INTEGER);
       result -= moment;
-    else
+    } else {
       throw compute_error("Invalid date passed to datecmp(value,date)");
+    }
+    break;
+  }
+
+  case F_YEAR:
+  case F_MONTH:
+  case F_DAY: {
+    int index = 0;
+    value_expr_t * expr = find_leaf(context, 0, index);
+    expr->compute(result, details, context);
+
+    // jww (2006-03-05): Generate an error if result is not a DATETIME
+    std::time_t moment = (long)result;
+    struct std::tm * desc = std::localtime(&moment);
+
+    switch (kind) {
+    case F_YEAR:
+      result = (long)desc->tm_year + 1900L;
+      break;
+    case F_MONTH:
+      result = (long)desc->tm_mon + 1L;
+      break;
+    case F_DAY:
+      result = (long)desc->tm_mday;
+      break;
+    }
     break;
   }
 
@@ -580,13 +614,12 @@ void value_expr_t::compute(value_t& result, const details_t& details,
 
     index = 0;
     expr = find_leaf(context, 1, index);
-
-    amount_t moment;
-    if (compute_amount(expr, moment, details.xact, context))
-      result = result.value((long)moment);
-    else
+    value_t moment;
+    expr->compute(moment, details, context);
+    if (moment.type != value_t::DATETIME)
       throw compute_error("Invalid date passed to P(value,date)");
 
+    result = result.value(*((datetime_t *)moment.data));
     break;
   }
 
@@ -756,14 +789,18 @@ value_expr_t * parse_value_term(std::istream& in, scope_t * scope)
       c = peek_next_nonws(in);
     }
 
+    bool definition = false;
     if (c == '=') {
       in.get(c);
       if (peek_next_nonws(in) == '=') {
 	in.unget();
 	c = '\0';
-	goto parsed;		// parse this as == operator
+      } else {
+	definition = true;
       }
+    }
 
+    if (definition) {
       std::auto_ptr<scope_t> params(new scope_t(scope));
 
       int index = 0;
@@ -970,7 +1007,7 @@ value_expr_t * parse_value_term(std::istream& in, scope_t * scope)
     node.reset(new value_expr_t(value_expr_t::CONSTANT_T));
 
     interval_t timespan(buf);
-    node->constant_t = timespan.first();
+    node->constant_t = new datetime_t(timespan.first());
     break;
   }
 
@@ -1350,6 +1387,28 @@ void init_value_expr()
   node->set_right(new value_expr_t(value_expr_t::F_DATECMP));
   globals->define("datecmp", node);
 
+  node = new value_expr_t(value_expr_t::O_DEF);
+  node->set_left(new value_expr_t(value_expr_t::CONSTANT_I));
+  node->left->constant_i = 1;
+  node->set_right(new value_expr_t(value_expr_t::F_YEAR));
+  globals->define("yearof", node);
+
+  node = new value_expr_t(value_expr_t::O_DEF);
+  node->set_left(new value_expr_t(value_expr_t::CONSTANT_I));
+  node->left->constant_i = 1;
+  node->set_right(new value_expr_t(value_expr_t::F_MONTH));
+  globals->define("monthof", node);
+
+  node = new value_expr_t(value_expr_t::O_DEF);
+  node->set_left(new value_expr_t(value_expr_t::CONSTANT_I));
+  node->left->constant_i = 1;
+  node->set_right(new value_expr_t(value_expr_t::F_DAY));
+  globals->define("dayof", node);
+
+  value_auto_ptr year(parse_boolean_expr("year=yearof(d)", globals));
+  value_auto_ptr month(parse_boolean_expr("month=monthof(d)", globals));
+  value_auto_ptr day(parse_boolean_expr("day=dayof(d)", globals));
+
   // Macros
   node = parse_value_expr("P(a,d)");
   globals->define("v", node);
@@ -1437,7 +1496,7 @@ void dump_value_expr(std::ostream& out, const value_expr_t * node,
     out << "CONSTANT_I - " << node->constant_i;
     break;
   case value_expr_t::CONSTANT_T:
-    out << "CONSTANT_T - [" << node->constant_t << ']';
+    out << "CONSTANT_T - [" << *(node->constant_t) << ']';
     break;
   case value_expr_t::CONSTANT_A:
     out << "CONSTANT_A - {" << *(node->constant_a) << '}';
@@ -1481,6 +1540,10 @@ void dump_value_expr(std::ostream& out, const value_expr_t * node,
   case value_expr_t::F_VALUE: out << "F_VALUE"; break;
   case value_expr_t::F_PRICE: out << "F_PRICE"; break;
   case value_expr_t::F_DATE: out << "F_DATE"; break;
+  case value_expr_t::F_DATECMP: out << "F_DATECMP"; break;
+  case value_expr_t::F_YEAR: out << "F_YEAR"; break;
+  case value_expr_t::F_MONTH: out << "F_MONTH"; break;
+  case value_expr_t::F_DAY: out << "F_DAY"; break;
 
   case value_expr_t::O_NOT: out << "O_NOT"; break;
   case value_expr_t::O_ARG: out << "O_ARG"; break;

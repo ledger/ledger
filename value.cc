@@ -64,6 +64,10 @@ value_t& value_t::operator=(const value_t& value)
     *((long *) data) = *((long *) value.data);
     break;
 
+  case DATETIME:
+    *((datetime_t *) data) = *((datetime_t *) value.data);
+    break;
+
   case AMOUNT:
     new((amount_t *)data) amount_t(*((amount_t *) value.data));
     break;
@@ -88,14 +92,17 @@ value_t& value_t::operator=(const value_t& value)
 
 value_t& value_t::operator+=(const value_t& value)
 {
+  if (value.type == BOOLEAN)
+    throw value_error("Cannot add a boolean to a value");
+  else if (value.type == DATETIME)
+    throw value_error("Cannot add a date/time to a value");
+    
   switch (type) {
   case BOOLEAN:
+    throw value_error("Cannot add a value to a boolean");
+
   case INTEGER:
-    cast(INTEGER);
     switch (value.type) {
-    case BOOLEAN:
-      *((long *) data) += (*((bool *) value.data) ? 1L : 0L);
-      break;
     case INTEGER:
       *((long *) data) += *((long *) value.data);
       break;
@@ -117,17 +124,28 @@ value_t& value_t::operator+=(const value_t& value)
     }
     break;
 
+  case DATETIME:
+    switch (value.type) {
+    case INTEGER:
+      *((datetime_t *) data) += *((long *) value.data);
+      break;
+    case AMOUNT:
+      *((datetime_t *) data) += long(*((amount_t *) value.data));
+      break;
+    case BALANCE:
+      *((datetime_t *) data) += long(*((balance_t *) value.data));
+      break;
+    case BALANCE_PAIR:
+      *((datetime_t *) data) += long(*((balance_pair_t *) value.data));
+      break;
+    default:
+      assert(0);
+      break;
+    }
+    break;
+
   case AMOUNT:
     switch (value.type) {
-    case BOOLEAN:
-      if (*((bool *) value.data) &&
-	  ((amount_t *) data)->commodity()) {
-	cast(BALANCE);
-	return *this += value;
-      }
-      *((amount_t *) data) += (*((bool *) value.data) ? 1L : 0L);
-      break;
-
     case INTEGER:
       if (*((long *) value.data) &&
 	  ((amount_t *) data)->commodity()) {
@@ -164,9 +182,6 @@ value_t& value_t::operator+=(const value_t& value)
 
   case BALANCE:
     switch (value.type) {
-    case BOOLEAN:
-      *((balance_t *) data) += (*((bool *) value.data) ? 1L : 0L);
-      break;
     case INTEGER:
       *((balance_t *) data) += *((long *) value.data);
       break;
@@ -188,9 +203,6 @@ value_t& value_t::operator+=(const value_t& value)
 
   case BALANCE_PAIR:
     switch (value.type) {
-    case BOOLEAN:
-      *((balance_pair_t *) data) += (*((bool *) value.data) ? 1L : 0L);
-      break;
     case INTEGER:
       *((balance_pair_t *) data) += *((long *) value.data);
       break;
@@ -218,14 +230,17 @@ value_t& value_t::operator+=(const value_t& value)
 
 value_t& value_t::operator-=(const value_t& value)
 {
+  if (value.type == BOOLEAN)
+    throw value_error("Cannot subtract a boolean from a value");
+  else if (value.type == DATETIME)
+    throw value_error("Cannot subtract a date/time from a value");
+    
   switch (type) {
   case BOOLEAN:
+    throw value_error("Cannot subtract a value from a boolean");
+
   case INTEGER:
-    cast(INTEGER);
     switch (value.type) {
-    case BOOLEAN:
-      *((long *) data) -= (*((bool *) value.data) ? 1L : 0L);
-      break;
     case INTEGER:
       *((long *) data) -= *((long *) value.data);
       break;
@@ -249,15 +264,6 @@ value_t& value_t::operator-=(const value_t& value)
 
   case AMOUNT:
     switch (value.type) {
-    case BOOLEAN:
-      if (*((bool *) value.data) &&
-	  ((amount_t *) data)->commodity()) {
-	cast(BALANCE);
-	return *this -= value;
-      }
-      *((amount_t *) data) -= (*((bool *) value.data) ? 1L : 0L);
-      break;
-
     case INTEGER:
       if (*((long *) value.data) &&
 	  ((amount_t *) data)->commodity()) {
@@ -294,9 +300,6 @@ value_t& value_t::operator-=(const value_t& value)
 
   case BALANCE:
     switch (value.type) {
-    case BOOLEAN:
-      *((balance_t *) data) -= (*((bool *) value.data) ? 1L : 0L);
-      break;
     case INTEGER:
       *((balance_t *) data) -= *((long *) value.data);
       break;
@@ -318,9 +321,6 @@ value_t& value_t::operator-=(const value_t& value)
 
   case BALANCE_PAIR:
     switch (value.type) {
-    case BOOLEAN:
-      *((balance_pair_t *) data) -= (*((bool *) value.data) ? 1L : 0L);
-      break;
     case INTEGER:
       *((balance_pair_t *) data) -= *((long *) value.data);
       break;
@@ -351,6 +351,11 @@ value_t& value_t::operator-=(const value_t& value)
 
 value_t& value_t::operator*=(const value_t& value)
 {
+  if (value.type == BOOLEAN)
+    throw value_error("Cannot multiply a boolean by a value");
+  else if (value.type == DATETIME)
+    throw value_error("Cannot multiply a date/time by a value");
+    
   if (value.realzero()) {
     *this = 0L;
     return *this;
@@ -358,12 +363,10 @@ value_t& value_t::operator*=(const value_t& value)
 
   switch (type) {
   case BOOLEAN:
+    throw value_error("Cannot multiply a value by a boolean");
+
   case INTEGER:
-    cast(INTEGER);
     switch (value.type) {
-    case BOOLEAN:
-      *((long *) data) *= (*((bool *) value.data) ? 1L : 0L);
-      break;
     case INTEGER:
       *((long *) data) *= *((long *) value.data);
       break;
@@ -387,9 +390,6 @@ value_t& value_t::operator*=(const value_t& value)
 
   case AMOUNT:
     switch (value.type) {
-    case BOOLEAN:
-      *((amount_t *) data) *= (*((bool *) value.data) ? 1L : 0L);
-      break;
     case INTEGER:
       *((amount_t *) data) *= *((long *) value.data);
       break;
@@ -412,9 +412,6 @@ value_t& value_t::operator*=(const value_t& value)
 
   case BALANCE:
     switch (value.type) {
-    case BOOLEAN:
-      *((balance_t *) data) *= (*((bool *) value.data) ? 1L : 0L);
-      break;
     case INTEGER:
       *((balance_t *) data) *= *((long *) value.data);
       break;
@@ -436,9 +433,6 @@ value_t& value_t::operator*=(const value_t& value)
 
   case BALANCE_PAIR:
     switch (value.type) {
-    case BOOLEAN:
-      *((balance_pair_t *) data) *= (*((bool *) value.data) ? 1L : 0L);
-      break;
     case INTEGER:
       *((balance_pair_t *) data) *= *((long *) value.data);
       break;
@@ -466,14 +460,17 @@ value_t& value_t::operator*=(const value_t& value)
 
 value_t& value_t::operator/=(const value_t& value)
 {
+  if (value.type == BOOLEAN)
+    throw value_error("Cannot divide a boolean by a value");
+  else if (value.type == DATETIME)
+    throw value_error("Cannot divide a date/time by a value");
+    
   switch (type) {
   case BOOLEAN:
+    throw value_error("Cannot divide a value by a boolean");
+
   case INTEGER:
-    cast(INTEGER);
     switch (value.type) {
-    case BOOLEAN:
-      *((long *) data) /= (*((bool *) value.data) ? 1L : 0L);
-      break;
     case INTEGER:
       *((long *) data) /= *((long *) value.data);
       break;
@@ -497,9 +494,6 @@ value_t& value_t::operator/=(const value_t& value)
 
   case AMOUNT:
     switch (value.type) {
-    case BOOLEAN:
-      *((amount_t *) data) /= (*((bool *) value.data) ? 1L : 0L);
-      break;
     case INTEGER:
       *((amount_t *) data) /= *((long *) value.data);
       break;
@@ -522,9 +516,6 @@ value_t& value_t::operator/=(const value_t& value)
 
   case BALANCE:
     switch (value.type) {
-    case BOOLEAN:
-      *((balance_t *) data) /= (*((bool *) value.data) ? 1L : 0L);
-      break;
     case INTEGER:
       *((balance_t *) data) /= *((long *) value.data);
       break;
@@ -546,9 +537,6 @@ value_t& value_t::operator/=(const value_t& value)
 
   case BALANCE_PAIR:
     switch (value.type) {
-    case BOOLEAN:
-      *((balance_pair_t *) data) /= (*((bool *) value.data) ? 1L : 0L);
-      break;
     case INTEGER:
       *((balance_pair_t *) data) /= *((long *) value.data);
       break;
@@ -586,6 +574,9 @@ bool value_t::operator OP(const value_t& value)				\
     case INTEGER:							\
       return *((bool *) data) OP bool(*((long *) value.data));		\
 									\
+    case DATETIME:							\
+      return *((bool *) data) OP bool(*((datetime_t *) value.data));	\
+									\
     case AMOUNT:							\
       return *((bool *) data) OP bool(*((amount_t *) value.data));	\
 									\
@@ -608,8 +599,11 @@ bool value_t::operator OP(const value_t& value)				\
 	      ((long) *((bool *) value.data)));				\
 									\
     case INTEGER:							\
+      return (*((long *) data) OP *((long *) value.data));		\
+									\
+    case DATETIME:							\
       return (*((long *) data) OP					\
-	      *((long *) value.data));					\
+	      ((long) *((datetime_t *) value.data)));			\
 									\
     case AMOUNT:							\
       return (amount_t(*((long *) data)) OP				\
@@ -629,14 +623,45 @@ bool value_t::operator OP(const value_t& value)				\
     }									\
     break;								\
 									\
+  case DATETIME:							\
+    switch (value.type) {						\
+    case BOOLEAN:							\
+      throw value_error("Cannot compare a date/time to a boolean");	\
+									\
+    case INTEGER:							\
+      return (*((datetime_t *) data) OP					\
+	      datetime_t(*((long *) value.data)));			\
+									\
+    case DATETIME:							\
+      return (*((datetime_t *) data) OP					\
+	      *((datetime_t *) value.data));				\
+									\
+    case AMOUNT:							\
+      throw value_error("Cannot compare a date/time to an amount");	\
+									\
+    case BALANCE:							\
+      throw value_error("Cannot compare a date/time to a balance");	\
+									\
+    case BALANCE_PAIR:							\
+      throw value_error("Cannot compare a date/time to a balance pair"); \
+									\
+    default:								\
+      assert(0);							\
+      break;								\
+    }									\
+    break;								\
+									\
   case AMOUNT:								\
     switch (value.type) {						\
     case BOOLEAN:							\
-      return *((amount_t *) data) OP amount_t(*((bool *) value.data));	\
+      throw value_error("Cannot compare an amount to a boolean");	\
 									\
     case INTEGER:							\
       return (*((amount_t *) data) OP					\
 	      amount_t(*((long *) value.data)));			\
+									\
+    case DATETIME:							\
+      throw value_error("Cannot compare an amount to a date/time");	\
 									\
     case AMOUNT:							\
       return *((amount_t *) data) OP *((amount_t *) value.data);	\
@@ -660,10 +685,13 @@ bool value_t::operator OP(const value_t& value)				\
   case BALANCE:								\
     switch (value.type) {						\
     case BOOLEAN:							\
-      return *((balance_t *) data) OP (long)*((bool *) value.data);	\
+      throw value_error("Cannot compare a balance to a boolean");	\
 									\
     case INTEGER:							\
       return *((balance_t *) data) OP *((long *) value.data);		\
+									\
+    case DATETIME:							\
+      throw value_error("Cannot compare a balance to a date/time");	\
 									\
     case AMOUNT:							\
       return *((balance_t *) data) OP *((amount_t *) value.data);	\
@@ -684,12 +712,14 @@ bool value_t::operator OP(const value_t& value)				\
   case BALANCE_PAIR:							\
     switch (value.type) {						\
     case BOOLEAN:							\
-      return (((balance_pair_t *) data)->quantity OP			\
-	      (long)*((bool *) value.data));				\
+      throw value_error("Cannot compare a balance pair to a boolean");	\
 									\
     case INTEGER:							\
       return (((balance_pair_t *) data)->quantity OP			\
 	      *((long *) value.data));					\
+									\
+    case DATETIME:							\
+      throw value_error("Cannot compare a balance pair to a date/time"); \
 									\
     case AMOUNT:							\
       return (((balance_pair_t *) data)->quantity OP			\
@@ -727,15 +757,42 @@ value_t::operator long() const
 {
   switch (type) {
   case BOOLEAN:
-    return *((bool *) data) ? 1L : 0L;
+    throw value_error("Cannot convert a boolean to an integer");
   case INTEGER:
     return *((long *) data);
+  case DATETIME:
+    return *((datetime_t *) data);
   case AMOUNT:
     return *((amount_t *) data);
   case BALANCE:
-    throw value_error("Cannot convert a value balance to a long");
+    throw value_error("Cannot convert a balance to an integer");
   case BALANCE_PAIR:
-    throw value_error("Cannot convert a value balance pair to a long");
+    throw value_error("Cannot convert a balance pair to an integer");
+
+  default:
+    assert(0);
+    break;
+  }
+  assert(0);
+  return 0;
+}
+
+template <>
+value_t::operator datetime_t() const
+{
+  switch (type) {
+  case BOOLEAN:
+    throw value_error("Cannot convert a boolean to a date/time");
+  case INTEGER:
+    return *((long *) data);
+  case DATETIME:
+    return *((datetime_t *) data);
+  case AMOUNT:
+    throw value_error("Cannot convert an amount to a date/time");
+  case BALANCE:
+    throw value_error("Cannot convert a balance to a date/time");
+  case BALANCE_PAIR:
+    throw value_error("Cannot convert a balance pair to a date/time");
 
   default:
     assert(0);
@@ -750,15 +807,17 @@ value_t::operator double() const
 {
   switch (type) {
   case BOOLEAN:
-    return *((bool *) data) ? 1.0 : 0.0;
+    throw value_error("Cannot convert a boolean to a double");
   case INTEGER:
     return *((long *) data);
+  case DATETIME:
+    return *((datetime_t *) data);
   case AMOUNT:
     return *((amount_t *) data);
   case BALANCE:
-    throw value_error("Cannot convert a value balance to a double");
+    throw value_error("Cannot convert a balance to a double");
   case BALANCE_PAIR:
-    throw value_error("Cannot convert a value balance pair to a double");
+    throw value_error("Cannot convert a balance pair to a double");
 
   default:
     assert(0);
@@ -776,17 +835,15 @@ void value_t::cast(type_t cast_type)
     case BOOLEAN:
       break;
     case INTEGER:
-      *((long *) data) = *((bool *) data);
-      break;
+      throw value_error("Cannot convert a boolean to an integer");
+    case DATETIME:
+      throw value_error("Cannot convert a boolean to a date/time");
     case AMOUNT:
-      new((amount_t *)data) amount_t(*((bool *) data));
-      break;
+      throw value_error("Cannot convert a boolean to an amount");
     case BALANCE:
-      new((balance_t *)data) balance_t(*((bool *) data));
-      break;
+      throw value_error("Cannot convert a boolean to a balance");
     case BALANCE_PAIR:
-      new((balance_pair_t *)data) balance_pair_t(*((bool *) data));
-      break;
+      throw value_error("Cannot convert a boolean to a balance pair");
 
     default:
       assert(0);
@@ -801,6 +858,9 @@ void value_t::cast(type_t cast_type)
       break;
     case INTEGER:
       break;
+    case DATETIME:
+      *((datetime_t *) data) = datetime_t(*((long *) data));
+      break;
     case AMOUNT:
       new((amount_t *)data) amount_t(*((long *) data));
       break;
@@ -810,6 +870,29 @@ void value_t::cast(type_t cast_type)
     case BALANCE_PAIR:
       new((balance_pair_t *)data) balance_pair_t(*((long *) data));
       break;
+
+    default:
+      assert(0);
+      break;
+    }
+    break;
+
+  case DATETIME:
+    switch (cast_type) {
+    case BOOLEAN:
+      *((bool *) data) = *((datetime_t *) data);
+      break;
+    case INTEGER:
+      *((long *) data) = *((datetime_t *) data);
+      break;
+    case DATETIME:
+      break;
+    case AMOUNT:
+      throw value_error("Cannot convert a date/time to an amount");
+    case BALANCE:
+      throw value_error("Cannot convert a date/time to a balance");
+    case BALANCE_PAIR:
+      throw value_error("Cannot convert a date/time to a balance pair");
 
     default:
       assert(0);
@@ -831,6 +914,8 @@ void value_t::cast(type_t cast_type)
       *((long *)data) = temp;
       break;
     }
+    case DATETIME:
+      throw value_error("Cannot convert an amount to a date/time");
     case AMOUNT:
       break;
     case BALANCE: {
@@ -862,6 +947,9 @@ void value_t::cast(type_t cast_type)
     }
     case INTEGER:
       throw value_error("Cannot convert a balance to an integer");
+    case DATETIME:
+      throw value_error("Cannot convert a balance to a date/time");
+
     case AMOUNT: {
       balance_t * temp = (balance_t *) data;
       if (temp->amounts.size() == 1) {
@@ -903,6 +991,8 @@ void value_t::cast(type_t cast_type)
     }
     case INTEGER:
       throw value_error("Cannot convert a balance pair to an integer");
+    case DATETIME:
+      throw value_error("Cannot convert a balance pair to a date/time");
 
     case AMOUNT: {
       balance_t * temp = &((balance_pair_t *) data)->quantity;
@@ -951,6 +1041,8 @@ void value_t::negate()
   case INTEGER:
     *((long *) data) = - *((long *) data);
     break;
+  case DATETIME:
+    throw value_error("Cannot negate a date/time");
   case AMOUNT:
     ((amount_t *) data)->negate();
     break;
@@ -976,6 +1068,8 @@ void value_t::abs()
     if (*((long *) data) < 0)
       *((long *) data) = - *((long *) data);
     break;
+  case DATETIME:
+    break;
   case AMOUNT:
     ((amount_t *) data)->abs();
     break;
@@ -992,12 +1086,54 @@ void value_t::abs()
   }
 }
 
+value_t value_t::value(const std::time_t moment) const
+{
+  switch (type) {
+  case BOOLEAN:
+    throw value_error("Cannot find the value of a boolean");
+  case DATETIME:
+    throw value_error("Cannot find the value of a date/time");
+  case INTEGER:
+    return *this;
+  case AMOUNT:
+    return ((amount_t *) data)->value(moment);
+  case BALANCE:
+    return ((balance_t *) data)->value(moment);
+  case BALANCE_PAIR:
+    return ((balance_pair_t *) data)->quantity.value(moment);
+  }
+}
+
+void value_t::round()
+{
+  switch (type) {
+  case BOOLEAN:
+    throw value_error("Cannot round a boolean");
+  case DATETIME:
+    throw value_error("Cannot round a date/time");
+  case INTEGER:
+    break;
+  case AMOUNT:
+    *((amount_t *) data) = ((amount_t *) data)->round();
+    break;
+  case BALANCE:
+    ((balance_t *) data)->round();
+    break;
+  case BALANCE_PAIR:
+    ((balance_pair_t *) data)->round();
+    break;
+  }
+}
+
 value_t value_t::price() const
 {
   switch (type) {
   case BOOLEAN:
+    throw value_error("Cannot find the price of a boolean");
   case INTEGER:
     return *this;
+  case DATETIME:
+    throw value_error("Cannot find the price of a date/time");
 
   case AMOUNT:
     return ((amount_t *) data)->price();
@@ -1020,7 +1156,10 @@ value_t value_t::date() const
 {
   switch (type) {
   case BOOLEAN:
+    throw value_error("Cannot find the date of a boolean");
   case INTEGER:
+    return 0L;
+  case DATETIME:
     return *this;
 
   case AMOUNT:
@@ -1040,23 +1179,28 @@ value_t value_t::date() const
   return value_t();
 }
 
-value_t value_t::reduce(const bool keep_price, const bool keep_date,
-			const bool keep_tag) const
+value_t value_t::strip_annotations(const bool keep_price,
+				   const bool keep_date,
+				   const bool keep_tag) const
 {
   switch (type) {
   case BOOLEAN:
+    throw value_error("Cannot strip commodity annotations from a boolean");
   case INTEGER:
     return *this;
+  case DATETIME:
+    throw value_error("Cannot strip commodity annotations from a date/time");
 
   case AMOUNT:
-    return ((amount_t *) data)->reduce_commodity(keep_price, keep_date,
-						 keep_tag);
+    return ((amount_t *) data)->strip_annotations
+      (keep_price, keep_date, keep_tag);
   case BALANCE:
-    return ((balance_t *) data)->reduce(keep_price, keep_date, keep_tag);
-
+    return ((balance_t *) data)->strip_annotations
+      (keep_price, keep_date, keep_tag);
   case BALANCE_PAIR:
-    return ((balance_pair_t *) data)->quantity.reduce(keep_price, keep_date,
-						      keep_tag);
+    return ((balance_pair_t *) data)->quantity.strip_annotations
+      (keep_price, keep_date, keep_tag);
+
   default:
     assert(0);
     break;
@@ -1069,10 +1213,13 @@ value_t value_t::cost() const
 {
   switch (type) {
   case BOOLEAN:
+    throw value_error("Cannot find the cost of a boolean");
   case INTEGER:
   case AMOUNT:
   case BALANCE:
     return *this;
+  case DATETIME:
+    throw value_error("Cannot find the cost of a date/time");
 
   case BALANCE_PAIR:
     assert(((balance_pair_t *) data)->cost);
@@ -1093,6 +1240,9 @@ value_t& value_t::add(const amount_t& amount, const amount_t * cost)
 {
   switch (type) {
   case BOOLEAN:
+    throw value_error("Cannot add an amount to a boolean");
+  case DATETIME:
+    throw value_error("Cannot add an amount to a date/time");
   case INTEGER:
   case AMOUNT:
     if (cost) {
@@ -1150,6 +1300,7 @@ long value_len(value_t& value)
   switch (value.type) {
   case value_t::BOOLEAN:
   case value_t::INTEGER:
+  case value_t::DATETIME:
   case value_t::AMOUNT:
     return 1;
 
@@ -1178,8 +1329,13 @@ amount_t value_getitem(value_t& value, int i)
 
   switch (value.type) {
   case value_t::BOOLEAN:
+    throw value_error("Cannot cast a boolean to an amount");
+
   case value_t::INTEGER:
     return long(value);
+
+  case value_t::DATETIME:
+    throw value_error("Cannot cast a date/time to an amount");
 
   case value_t::AMOUNT:
     return *((amount_t *) value.data);
@@ -1213,6 +1369,7 @@ void export_value()
     .def(init<std::string>())
     .def(init<double>())
     .def(init<long>())
+    .def(init<datetime_t>())
 
     .def(self + self)
     .def(self + other<balance_pair_t>())
@@ -1301,12 +1458,14 @@ void export_value()
     .def(self < other<balance_t>())
     .def(self < other<amount_t>())
     .def(self < long())
+    .def(self < other<datetime_t>())
     .def(self < double())
 
     .def(other<balance_pair_t>() < self)
     .def(other<balance_t>() < self)
     .def(other<amount_t>() < self)
     .def(long() < self)
+    .def(other<datetime_t>() < self)
     .def(double() < self)
 
     .def(self <= self)
@@ -1314,12 +1473,14 @@ void export_value()
     .def(self <= other<balance_t>())
     .def(self <= other<amount_t>())
     .def(self <= long())
+    .def(self <= other<datetime_t>())
     .def(self <= double())
 
     .def(other<balance_pair_t>() <= self)
     .def(other<balance_t>() <= self)
     .def(other<amount_t>() <= self)
     .def(long() <= self)
+    .def(other<datetime_t>() <= self)
     .def(double() <= self)
 
     .def(self >  self)
@@ -1327,12 +1488,14 @@ void export_value()
     .def(self > other<balance_t>())
     .def(self > other<amount_t>())
     .def(self > long())
+    .def(self > other<datetime_t>())
     .def(self > double())
 
     .def(other<balance_pair_t>() > self)
     .def(other<balance_t>() > self)
     .def(other<amount_t>() > self)
     .def(long() > self)
+    .def(other<datetime_t>() > self)
     .def(double() > self)
 
     .def(self >= self)
@@ -1340,12 +1503,14 @@ void export_value()
     .def(self >= other<balance_t>())
     .def(self >= other<amount_t>())
     .def(self >= long())
+    .def(self >= other<datetime_t>())
     .def(self >= double())
 
     .def(other<balance_pair_t>() >= self)
     .def(other<balance_t>() >= self)
     .def(other<amount_t>() >= self)
     .def(long() >= self)
+    .def(other<datetime_t>() >= self)
     .def(double() >= self)
 
     .def(self == self)
@@ -1353,12 +1518,14 @@ void export_value()
     .def(self == other<balance_t>())
     .def(self == other<amount_t>())
     .def(self == long())
+    .def(self == other<datetime_t>())
     .def(self == double())
 
     .def(other<balance_pair_t>() == self)
     .def(other<balance_t>() == self)
     .def(other<amount_t>() == self)
     .def(long() == self)
+    .def(other<datetime_t>() == self)
     .def(double() == self)
 
     .def(self != self)
@@ -1366,12 +1533,14 @@ void export_value()
     .def(self != other<balance_t>())
     .def(self != other<amount_t>())
     .def(self != long())
+    .def(self != other<datetime_t>())
     .def(self != double())
 
     .def(other<balance_pair_t>() != self)
     .def(other<balance_t>() != self)
     .def(other<amount_t>() != self)
     .def(long() != self)
+    .def(other<datetime_t>() != self)
     .def(double() != self)
 
     .def(! self)
@@ -1386,16 +1555,23 @@ void export_value()
     .def("__len__", value_len)
     .def("__getitem__", value_getitem)
 
+    .def("abs", &value_t::abs)
     .def("cast", &value_t::cast)
-    .def("negate", &value_t::negate)
-    .def("price", &value_t::price)
     .def("cost", &value_t::cost)
+    .def("price", &value_t::price)
+    .def("date", &value_t::date)
+    .def("strip_annotations", &value_t::strip_annotations)
     .def("add", &value_t::add, return_internal_reference<>())
+    .def("value", &value_t::value)
+    .def("round", &value_t::round)
+    .def("negate", &value_t::negate)
+    .def("negated", &value_t::negated)
     ;
 
   enum_< value_t::type_t > ("ValueType")
     .value("BOOLEAN", value_t::BOOLEAN)
     .value("INTEGER", value_t::INTEGER)
+    .value("DATETIME", value_t::DATETIME)
     .value("AMOUNT", value_t::AMOUNT)
     .value("BALANCE", value_t::BALANCE)
     .value("BALANCE_PAIR", value_t::BALANCE_PAIR)

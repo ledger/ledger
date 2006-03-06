@@ -4,6 +4,71 @@
 #include <ctime>
 #include <sstream>
 
+struct interval_t;
+
+struct datetime_t
+{
+  std::time_t when;
+
+  static std::string date_format;
+
+  datetime_t(const std::time_t _when) : when(_when) {}
+
+  datetime_t& operator+=(const long secs) {
+    when += secs;
+    return *this;
+  }
+  datetime_t& operator-=(const long secs) {
+    when -= secs;
+    return *this;
+  }
+
+  datetime_t& operator=(const interval_t& period);
+  datetime_t& operator+=(const interval_t& period);
+
+#define DEF_DATETIME_OP(OP)			\
+  bool operator OP(const datetime_t& other) {	\
+    return when OP other.when;			\
+  }
+
+  DEF_DATETIME_OP(<)
+  DEF_DATETIME_OP(<=)
+  DEF_DATETIME_OP(>)
+  DEF_DATETIME_OP(>=)
+  DEF_DATETIME_OP(==)
+  DEF_DATETIME_OP(!=)
+
+  operator bool() const {
+    return when != 0;
+  }
+  operator long() const {
+    return (long)when;
+  }
+  operator double() const {
+    return (double)when;
+  }
+
+  int year() const {
+    struct std::tm * desc = std::localtime(&when);
+    return desc->tm_year + 1900;
+  }
+  int month() const {
+    struct std::tm * desc = std::localtime(&when);
+    return desc->tm_mon + 1;
+  }
+  int day() const {
+    struct std::tm * desc = std::localtime(&when);
+    return desc->tm_mday;
+  }
+};
+
+inline std::ostream& operator<<(std::ostream& out, const datetime_t& moment) {
+  char buf[32];
+  std::strftime(buf, 31, datetime_t::date_format.c_str(),
+		std::localtime(&moment.when));
+  out << buf;
+}
+
 struct interval_t
 {
   unsigned int years;
@@ -35,6 +100,15 @@ struct interval_t
 
   void parse(std::istream& in);
 };
+
+inline datetime_t& datetime_t::operator=(const interval_t& period) {
+  when = period.first();
+  return *this;
+}
+inline datetime_t& datetime_t::operator+=(const interval_t& period) {
+  when = period.increment(when);
+  return *this;
+}
 
 extern std::time_t  now;
 extern int	    now_year;

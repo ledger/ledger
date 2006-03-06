@@ -340,7 +340,7 @@ void subtotal_transactions::report_subtotal(const char * spec_fmt)
 
   if (! spec_fmt) {
     std::string fmt = "- ";
-    fmt += format_t::date_format;
+    fmt += datetime_t::date_format;
     std::strftime(buf, 255, fmt.c_str(), std::localtime(&finish));
   } else {
     std::strftime(buf, 255, spec_fmt, std::localtime(&finish));
