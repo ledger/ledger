@@ -1,6 +1,7 @@
 #!/bin/sh
 
 rsync -Lav --delete --delete-excluded \
+    --exclude="autom4te.cache/" \
     --exclude=".libs/"	  \
     --exclude="build/"	  \
     --exclude="CVS/"	  \

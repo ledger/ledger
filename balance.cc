@@ -14,6 +14,11 @@ amount_t balance_t::amount(const commodity_t& commodity) const
       return (*i).second;
     }
     else if (amounts.size() > 1) {
+      // Try stripping annotations before giving an error.
+      balance_t temp(strip_annotations());
+      if (temp.amounts.size() == 1)
+	return temp.amount(commodity);
+
       std::ostringstream errmsg;
       errmsg << "Requested amount of a balance with multiple commodities: "
 	     << *this;
@@ -208,8 +213,7 @@ balance_t& balance_t::operator*=(const balance_t& bal)
       return *this = bal * temp;
 
     std::ostringstream errmsg;
-    errmsg << "It makes no sense to multiply two balances: "
-	   << *this << " * " << bal;
+    errmsg << "Cannot multiply two balances: " << *this << " * " << bal;
     throw amount_error(errmsg.str());
   }
 }
@@ -280,8 +284,7 @@ balance_t& balance_t::operator/=(const balance_t& bal)
       return *this /= temp;
 
     std::ostringstream errmsg;
-    errmsg << "It makes no sense to divide two balances: "
-	   << *this << " / " << bal;
+    errmsg << "Cannot divide between two balances: " << *this << " / " << bal;
     throw amount_error(errmsg.str());
   }
 }
@@ -313,6 +316,12 @@ balance_t& balance_t::operator/=(const amount_t& amt)
     if (i != amounts.end()) {
       (*i).second /= amt;
     } else {
+      // Try stripping annotations before giving an error.
+      balance_t temp(strip_annotations());
+      if (temp.amounts.size() == 1 &&
+	  (*temp.amounts.begin()).first == &amt.commodity())
+	return *this = temp / amt;
+
       std::ostringstream errmsg;
       errmsg << "Attempt to divide balance by a commodity"
 	     << " not found in that balance: "
@@ -332,6 +341,11 @@ balance_t::operator amount_t() const
     return amount_t();
   }
   else {
+    // Try stripping annotations before giving an error.
+    balance_t temp(strip_annotations());
+    if (temp.amounts.size() == 1)
+      return (*temp.amounts.begin()).second;
+
     std::ostringstream errmsg;
     errmsg << "Cannot convert a balance with "
 	   << "multiple commodities to an amount: " << *this;

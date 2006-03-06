@@ -371,8 +371,6 @@ int parse_and_report(config_t& config, int argc, char * argv[], char * envp[])
     delete *i;
 
   TRACE_POP(cleanup, "Finished cleaning"); }
-#else
-  ledger::do_cleanup = false;
 #endif
 
   // Write out the binary cache, if need be
@@ -404,6 +402,9 @@ int parse_and_report(config_t& config, int argc, char * argv[], char * envp[])
 int main(int argc, char * argv[], char * envp[])
 {
   try {
+#if DEBUG_LEVEL < BETA
+    ledger::do_cleanup = false;
+#endif
     config_t config;
     TRACE_PUSH(main, "Starting Ledger " PACKAGE_VERSION);
     int status = parse_and_report(config, argc, argv, envp);
