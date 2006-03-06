@@ -10,6 +10,8 @@
 #include <cstring>
 #include <ctime>
 
+#include "acconf.h"
+
 #ifdef HAVE_UNIX_PIPES
 #include <sys/types.h>
 #include <sys/wait.h>
