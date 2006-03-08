@@ -1331,6 +1331,55 @@ value_t& value_t::add(const amount_t& amount, const amount_t * cost)
   return *this;
 }
 
+value_context::value_context(const value_t& _bal,
+			     const std::string& desc) throw()
+  : bal(new value_t(_bal)), error_context(desc) {}
+
+value_context::~value_context() throw()
+{
+  delete bal;
+}
+
+void value_context::describe(std::ostream& out) const throw()
+{
+  if (! desc.empty())
+    out << desc << std::endl;
+
+  ledger::balance_t * ptr = NULL;
+
+  out << std::right;
+  out.width(20);
+
+  switch (bal->type) {
+  case ledger::value_t::BOOLEAN:
+    out << (*((bool *) bal->data) ? "true" : "false");
+    break;
+  case ledger::value_t::INTEGER:
+    out << *((long *) bal->data);
+    break;
+  case ledger::value_t::DATETIME:
+    out << *((datetime_t *) bal->data);
+    break;
+  case ledger::value_t::AMOUNT:
+    out << *((ledger::amount_t *) bal->data);
+    break;
+  case ledger::value_t::BALANCE:
+    ptr = (ledger::balance_t *) bal->data;
+    // fall through...
+
+  case ledger::value_t::BALANCE_PAIR:
+    if (! ptr)
+      ptr = &((ledger::balance_pair_t *) bal->data)->quantity;
+
+    ptr->write(out, 20);
+    break;
+  default:
+    assert(0);
+    break;
+  }
+  out << std::endl;
+}
+
 } // namespace ledger
 
 #ifdef USE_BOOST_PYTHON

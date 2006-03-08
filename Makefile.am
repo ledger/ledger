@@ -20,7 +20,6 @@ libledger_la_SOURCES = \
 	config.cc      \
 	derive.cc      \
 	emacs.cc       \
-	error.cc       \
 	format.cc      \
 	journal.cc     \
 	mask.cc        \

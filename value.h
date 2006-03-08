@@ -3,6 +3,7 @@
 
 #include "amount.h"
 #include "balance.h"
+#include "error.h"
 
 #include <exception>
 
@@ -411,6 +412,24 @@ inline std::ostream& operator<<(std::ostream& out, const value_t& value) {
   }
   return out;
 }
+
+class value_context : public error_context
+{
+  value_t * bal;
+ public:
+  value_context(const value_t& _bal,
+		const std::string& desc = "") throw();
+  virtual ~value_context() throw();
+
+  virtual void describe(std::ostream& out) const throw();
+};
+
+class value_error : public error {
+ public:
+  value_error(const std::string& reason, error_context * ctxt = NULL) throw()
+    : error(reason, ctxt) {}
+  virtual ~value_error() throw() {}
+};
 
 } // namespace ledger
 

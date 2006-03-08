@@ -189,6 +189,13 @@ class format_equity : public item_handler<account_t>
   virtual void operator()(account_t& account);
 };
 
+class format_error : public error {
+ public:
+  format_error(const std::string& reason, error_context * ctxt = NULL) throw()
+    : error(reason, ctxt) {}
+  virtual ~format_error() throw() {}
+};
+
 } // namespace ledger
 
 #endif // _FORMAT_H

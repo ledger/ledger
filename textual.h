@@ -27,6 +27,20 @@ void write_textual_journal(journal_t& journal, std::string path,
 			   const std::string& write_hdr_format,
 			   std::ostream& out);
 
+class include_context : public file_context {
+ public:
+  include_context(const std::string& file, unsigned long line,
+		  const std::string& desc = "") throw()
+    : file_context(file, line, desc) {}
+  virtual ~include_context() throw() {}
+
+  virtual void describe(std::ostream& out) const throw() {
+    if (! desc.empty())
+      out << desc << ": ";
+    out << "\"" << file << "\", line " << line << ":" << std::endl;
+  }
+};
+
 } // namespace ledger
 
 #endif // _TEXTUAL_H

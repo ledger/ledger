@@ -97,6 +97,15 @@ class transaction_t
   bool valid() const;
 };
 
+class xact_context : public file_context {
+ public:
+  const transaction_t& xact;
+
+  xact_context(const transaction_t& _xact,
+	       const std::string& desc = "") throw();
+  virtual ~xact_context() throw() {}
+};
+
 class journal_t;
 
 typedef std::list<transaction_t *> transactions_list;
@@ -191,6 +200,25 @@ class entry_t : public entry_base_t
 struct entry_finalizer_t {
   virtual ~entry_finalizer_t() {}
   virtual bool operator()(entry_t& entry) = 0;
+};
+
+class entry_context : public error_context {
+ public:
+  const entry_base_t& entry;
+
+  entry_context(const entry_base_t& _entry,
+		const std::string& desc = "") throw()
+    : entry(_entry), error_context(desc) {}
+  virtual ~entry_context() throw() {}
+
+  virtual void describe(std::ostream& out) const throw();
+};
+
+class balance_error : public error {
+ public:
+  balance_error(const std::string& reason, error_context * ctxt = NULL) throw()
+    : error(reason, ctxt) {}
+  virtual ~balance_error() throw() {}
 };
 
 

@@ -188,6 +188,33 @@ struct value_expr_t
   }
 };
 
+class valexpr_context : public error_context {
+ public:
+  const ledger::value_expr_t * expr;
+  const ledger::value_expr_t * error_node;
+
+  valexpr_context(const ledger::value_expr_t * _expr,
+		  const std::string& desc = "") throw();
+  virtual ~valexpr_context() throw();
+
+  virtual void describe(std::ostream& out) const throw();
+};
+
+class compute_error : public error {
+ public:
+  compute_error(const std::string& reason, error_context * ctxt = NULL) throw()
+    : error(reason, ctxt) {}
+  virtual ~compute_error() throw() {}
+};
+
+class value_expr_error : public error {
+ public:
+  value_expr_error(const std::string& reason,
+		   error_context * ctxt = NULL) throw()
+    : error(reason, ctxt) {}
+  virtual ~value_expr_error() throw() {}
+};
+
 struct scope_t
 {
   scope_t * parent;
