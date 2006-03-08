@@ -12,7 +12,28 @@
 #endif
 
 #if DEBUG_LEVEL >= RELEASE
-#include <cassert>
+#include "error.h"
+
+#ifdef assert
+#undef assert
+#endif
+#if DEBUG_LEVEL >= BETA
+void debug_assert(const std::string& reason,
+		  const std::string& file,
+		  unsigned long      line);
+#define assert(x)							\
+  if (! (x))								\
+    debug_assert(#x, __FILE__, __LINE__)
+#else
+#define assert(x)							\
+  if (! (x))								\
+    throw new fatal_assert(#x, new file_context(__FILE__, __LINE__))
+#endif
+#else
+#ifdef assert
+#undef assert
+#endif
+#define assert(x)
 #endif
 
 //////////////////////////////////////////////////////////////////////
@@ -105,7 +126,9 @@ void   operator delete[](void*, const std::nothrow_t&) throw();
 
 #if DEBUG_LEVEL == NO_SEATBELT
 
+#ifdef assert
 #undef assert
+#endif
 #define assert(x)
 #define CONFIRM(x)
 

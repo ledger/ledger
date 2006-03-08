@@ -133,7 +133,8 @@ class format_entries : public format_transactions
   virtual void operator()(transaction_t& xact);
 };
 
-void print_entry(std::ostream& out, const entry_t& entry);
+void print_entry(std::ostream& out, const entry_base_t& entry,
+		 const std::string& prefix = "");
 
 bool disp_subaccounts_p(const account_t& account,
 			const item_predicate<account_t>& disp_pred,

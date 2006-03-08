@@ -27,7 +27,8 @@ mask_t::mask_t(const std::string& pat) : exclude(false)
   regexp = pcre_compile(pattern.c_str(), PCRE_CASELESS,
 			&error, &erroffset, NULL);
   if (! regexp)
-    throw mask_error(std::string("Failed to compile regexp '") + pattern + "'");
+    throw new mask_error(std::string("Failed to compile regexp '") +
+			 pattern + "'");
 }
 
 mask_t::mask_t(const mask_t& m) : exclude(m.exclude), pattern(m.pattern)

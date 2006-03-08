@@ -5,6 +5,8 @@
 #include <string>
 #include <exception>
 
+#include "error.h"
+
 typedef void (*handler_t)(const char * arg);
 
 struct option_t {
@@ -15,15 +17,10 @@ struct option_t {
   bool         handled;
 };
 
-class option_error : public std::exception {
-  std::string reason;
+class option_error : public error {
  public:
-  option_error(const std::string& _reason) throw() : reason(_reason) {}
+  option_error(const std::string& reason) throw() : error(reason) {}
   virtual ~option_error() throw() {}
-
-  virtual const char* what() const throw() {
-    return reason.c_str();
-  }
 };
 
 bool process_option(option_t * options, const std::string& opt,

@@ -69,6 +69,9 @@ transaction_t * parse_transaction(char * line, account_t * account,
 {
   std::istringstream in(line);
 
+  std::string err_desc;
+  try {
+
   // The account will be determined later...
   std::auto_ptr<transaction_t> xact(new transaction_t(NULL));
   if (entry)
@@ -107,7 +110,7 @@ transaction_t * parse_transaction(char * line, account_t * account,
   }
 
   if (account_beg == account_end)
-    throw parse_error(path, linenum, "No account was specified");
+    throw new parse_error("No account was specified");
 
   char * b = &line[account_beg];
   char * e = &line[account_end];
@@ -144,7 +147,13 @@ transaction_t * parse_transaction(char * line, account_t * account,
     if (p == ';')
       goto parse_note;
     if (p == '(') {
-      xact->amount_expr = parse_value_expr(in)->acquire();
+      try {
+	xact->amount_expr = parse_value_expr(in)->acquire();
+      }
+      catch (error * err) {
+	err_desc = "While parsing transaction amount's value expression:";
+	throw err;
+      }
       DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
 		  "Parsed an amount expression");
 #ifdef DEBUG_ENABLED
@@ -156,8 +165,7 @@ transaction_t * parse_transaction(char * line, account_t * account,
       }
 #endif
       if (! compute_amount(xact->amount_expr, xact->amount, xact.get()))
-	throw parse_error(path, linenum,
-			  "Value expression for amount failed to compute");
+	throw new parse_error("Value expression for amount failed to compute");
       DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
 		  "The computed amount is " << xact->amount);
     } else {
@@ -209,8 +217,7 @@ transaction_t * parse_transaction(char * line, account_t * account,
 
 	p = peek_next_nonws(in);
 	if (p == '(')
-	  throw parse_error(path, linenum,
-			    "A transaction's cost may not be a value expression");
+	  throw new parse_error("A transaction's cost may not be a value expression");
 
 	xact->cost->parse(in, AMOUNT_PARSE_NO_MIGRATE);
 	DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
@@ -272,18 +279,26 @@ transaction_t * parse_transaction(char * line, account_t * account,
 	  if (char * p = std::strchr(buf, '=')) {
 	    *p++ = '\0';
 	    if (! quick_parse_date(p, &xact->_date_eff))
-	      throw parse_error(path, linenum,
-				"Failed to parse effective date");
+	      throw new parse_error("Failed to parse effective date");
 	  }
 
 	  if (buf[0] && ! quick_parse_date(buf, &xact->_date))
-	    throw parse_error(path, linenum, "Failed to parse date");
+	    throw new parse_error("Failed to parse date");
 	}
     }
   }
 
  finished:
   return xact.release();
+
+  }
+  catch (error * err) {
+    err->context.push_back
+      (new line_context(line, (long)in.tellg() - 1,
+			! err_desc.empty() ?
+			err_desc : "While parsing transaction:"));
+    throw err;
+  }
 }
 
 bool parse_transactions(std::istream&	   in,
@@ -337,11 +352,11 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
   if (char * p = std::strchr(line, '=')) {
     *p++ = '\0';
     if (! quick_parse_date(p, &curr->_date_eff))
-      throw parse_error(path, linenum, "Failed to parse effective date");
+      throw new parse_error("Failed to parse effective date");
   }
 
   if (! quick_parse_date(line, &curr->_date))
-    throw parse_error(path, linenum, "Failed to parse date");
+    throw new parse_error("Failed to parse date");
 
   TIMER_STOP(entry_date);
 
@@ -436,8 +451,7 @@ static inline void parse_symbol(char *& p, std::string& symbol)
   if (*p == '"') {
     char * q = std::strchr(p + 1, '"');
     if (! q)
-      throw parse_error(path, linenum,
-			"Quoted commodity symbol lacks closing quote");
+      throw new parse_error("Quoted commodity symbol lacks closing quote");
     symbol = std::string(p + 1, 0, q - p - 1);
     p = q + 2;
   } else {
@@ -449,7 +463,7 @@ static inline void parse_symbol(char *& p, std::string& symbol)
       p += symbol.length();
   }
   if (symbol.empty())
-    throw parse_error(path, linenum, "Failed to parse commodity");
+    throw new parse_error("Failed to parse commodity");
 }
 
 bool textual_parser_t::test(std::istream& in) const
@@ -459,9 +473,9 @@ bool textual_parser_t::test(std::istream& in) const
   in.read(buf, 5);
   if (std::strncmp(buf, "<?xml", 5) == 0) {
 #if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
-    throw parse_error(path, linenum, "Ledger file contains XML data, but format was not recognized");
+    throw new parse_error("Ledger file contains XML data, but format was not recognized");
 #else
-    throw parse_error(path, linenum, "Ledger file contains XML data, but no XML support present");
+    throw new parse_error("Ledger file contains XML data, but no XML support present");
 #endif
   }
 
@@ -491,11 +505,12 @@ static void clock_out_from_timelog(const std::time_t when,
   curr->add_transaction(xact);
 
   if (! journal->add_entry(curr.get()))
-    throw parse_error(path, linenum,
-		      "Failed to record 'out' timelog entry");
+    throw new parse_error("Failed to record 'out' timelog entry");
   else
     curr.release();
 }
+
+static std::list<std::pair<std::string, int> > include_stack;
 
 unsigned int textual_parser_t::parse(std::istream&	 in,
 				     config_t&           config,
@@ -544,7 +559,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
       case '\t': {
 	char * p = skip_ws(line);
 	if (*p && *p != '\r')
-	  throw parse_error(path, linenum - 1, "Line begins with whitespace");
+	  throw new parse_error("Line begins with whitespace");
 	break;
       }
 
@@ -563,7 +578,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	  last_account = account_stack.front()->find_account(p);
 	} else {
 	  last_account = NULL;
-	  throw parse_error(path, linenum, "Cannot parse timelog entry date");
+	  throw new parse_error("Cannot parse timelog entry date");
 	}
 	break;
       }
@@ -582,7 +597,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	    clock_out_from_timelog(std::mktime(&when), journal);
 	    count++;
 	  } else {
-	    throw parse_error(path, linenum, "Cannot parse timelog entry date");
+	    throw new parse_error("Cannot parse timelog entry date");
 	  }
 
 	  last_account = NULL;
@@ -625,7 +640,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	if (strptime(date_buffer, "%Y/%m/%d %H:%M:%S", &when)) {
 	  date = std::mktime(&when);
 	} else {
-	  throw parse_error(path, linenum, "Failed to parse date");
+	  throw new parse_error("Failed to parse date");
 	}
 
 	std::string symbol;
@@ -691,8 +706,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
       case '~': {		// period entry
 	period_entry_t * pe = new period_entry_t(skip_ws(line + 1));
 	if (! pe->period)
-	  throw parse_error(path, linenum,
-			    std::string("Parsing time period '") + line + "'");
+	  throw new parse_error(std::string("Parsing time period '") + line + "'");
 
 	if (parse_transactions(in, account_stack.front(), *pe,
 			       "period", end_pos)) {
@@ -705,7 +719,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	    pe->end_pos	 = end_pos;
 	    pe->end_line = linenum;
 	  } else {
-	    throw parse_error(path, linenum, "Period entry failed to balance");
+	    throw new parse_error("Period entry failed to balance");
 	  }
 	}
 	break;
@@ -730,11 +744,14 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	    if (pos != std::string::npos)
 	      path = std::string(save_path.prev, 0, pos + 1) + path;
 	  }
-
 	  DEBUG_PRINT("ledger.textual.include", "line " << linenum << ": " <<
 		      "Including path '" << path << "'");
+
+	  include_stack.push_back(std::pair<std::string, int>
+				  (journal->sources.back(), linenum - 1));
 	  count += parse_journal_file(path, config, journal,
 				      account_stack.front());
+	  include_stack.pop_back();
 	}
 	else if (word == "account") {
 	  account_t * acct;
@@ -784,34 +801,32 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	    entry->end_line = linenum;
 	    count++;
 	  } else {
-	    print_entry(std::cerr, *entry);
 	    delete entry;
-
-	    std::ostringstream errmsg;
-	    errmsg << "Entry above does not balance; remainder is: "
-		   << entry_balance;
-	    throw parse_error(path, first_line, errmsg.str());
+	    throw new parse_error("Entry does not balance");
 	  }
 	} else {
-	  throw parse_error(path, first_line, "Failed to parse entry");
+	  throw new parse_error("Failed to parse entry");
 	}
 	end_pos = pos;
 	break;
       }
       }
     }
-    catch (const parse_error& err) {
-      std::cerr << "Error: " << err.what() << std::endl;
-      errors++;
-    }
-    catch (const amount_error& err) {
-      std::cerr << "Error: " << path << ", line " << (linenum - 1) << ": "
-		<< err.what() << std::endl;;
-      errors++;
-    }
-    catch (const error& err) {
-      std::cerr << "Error: " << path << ", line " << (linenum - 1) << ": "
-		<< err.what() << std::endl;;
+    catch (error * err) {
+      for (std::list<std::pair<std::string, int> >::reverse_iterator i =
+	     include_stack.rbegin();
+	   i != include_stack.rend();
+	   i++)
+	err->context.push_back(new include_context((*i).first, (*i).second,
+						    "In file included from"));
+      err->context.push_front(new file_context(path, linenum - 1));
+
+      std::cout.flush();
+      if (errors > 0)
+	std::cerr << std::endl;
+      err->reveal_context(std::cerr, "Error");
+      std::cerr << err->what() << std::endl;
+      delete err;
       errors++;
     }
     beg_pos = end_pos;
@@ -827,7 +842,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
     journal->remove_entry_finalizer(&auto_entry_finalizer);
 
   if (errors > 0)
-    throw error(std::string("Errors parsing file '") + path + "'");
+    throw (int)errors;
 
   TIMER_STOP(parsing_total);
 
@@ -869,8 +884,8 @@ void write_textual_journal(journal_t& journal, std::string path,
 #endif
 
   if (found.empty())
-    throw error(std::string("Journal does not refer to file '") +
-		path + "'");
+    throw new error(std::string("Journal does not refer to file '") +
+		    path + "'");
 
   entries_list::iterator	el = journal.entries.begin();
   auto_entries_list::iterator	al = journal.auto_entries.begin();

@@ -157,7 +157,7 @@ element_t * format_t::parse_elements(const std::string& fmt)
 	p++;
       }
       if (*p != ')')
-	throw format_error("Missing ')'");
+	throw new format_error("Missing ')'");
 
       current->type = element_t::VALUE_EXPR;
 
@@ -178,7 +178,7 @@ element_t * format_t::parse_elements(const std::string& fmt)
 	p++;
       }
       if (*p != ']')
-	throw format_error("Missing ']'");
+	throw new format_error("Missing ']'");
 
       current->type  = element_t::DATE_STRING;
       current->chars = std::string(b, p);
@@ -287,7 +287,7 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
     case element_t::AMOUNT:
     case element_t::TOTAL:
     case element_t::VALUE_EXPR: {
-      value_calc * calc = NULL;
+      value_expr * calc = NULL;
       switch (elem->type) {
       case element_t::AMOUNT:     calc = amount_expr.get(); break;
       case element_t::TOTAL:      calc = total_expr.get(); break;
@@ -681,18 +681,37 @@ void format_entries::operator()(transaction_t& xact)
   last_entry = xact.entry;
 }
 
-void print_entry(std::ostream& out, const entry_t& entry)
+void print_entry(std::ostream& out, const entry_base_t& entry_base,
+		 const std::string& prefix)
 {
-  const std::string print_format
-    = "\n%D %X%C%P\n    %-34A  %12o\n%/    %-34A  %12o\n";
+  std::string print_format;
+
+  if (const entry_t * entry = dynamic_cast<const entry_t *>(&entry_base)) {
+    print_format = (prefix + "%D %X%C%P\n" +
+		    prefix + "    %-34A  %12o\n%/" +
+		    prefix + "    %-34A  %12o\n");
+  }
+  else if (const auto_entry_t * entry =
+	   dynamic_cast<const auto_entry_t *>(&entry_base)) {
+    out << "= " << entry->predicate_string << '\n';
+    print_format = prefix + "    %-34A  %12o\n";
+  }
+  else if (const period_entry_t * entry =
+	   dynamic_cast<const period_entry_t *>(&entry_base)) {
+    out << "~ " << entry->period_string << '\n';
+    print_format = prefix + "    %-34A  %12o\n";
+  }
+  else {
+    assert(0);
+  }
 
   format_entries formatter(out, print_format);
-  walk_transactions(const_cast<transactions_list&>(entry.transactions),
+  walk_transactions(const_cast<transactions_list&>(entry_base.transactions),
 		    formatter);
   formatter.flush();
 
   clear_transaction_xdata cleaner;
-  walk_transactions(const_cast<transactions_list&>(entry.transactions),
+  walk_transactions(const_cast<transactions_list&>(entry_base.transactions),
 		    cleaner);
 }
 

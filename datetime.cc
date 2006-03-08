@@ -107,7 +107,7 @@ static void parse_inclusion_specifier(const std::string& word,
   struct std::tm when;
 
   if (! parse_date_mask(word.c_str(), &when))
-    throw datetime_error(std::string("Could not parse date mask: ") + word);
+    throw new datetime_error(std::string("Could not parse date mask: ") + word);
 
   when.tm_hour = 0;
   when.tm_min  = 0;

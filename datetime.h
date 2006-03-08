@@ -4,6 +4,8 @@
 #include <ctime>
 #include <sstream>
 
+#include "error.h"
+
 struct interval_t;
 
 struct datetime_t
@@ -69,6 +71,10 @@ inline std::ostream& operator<<(std::ostream& out, const datetime_t& moment) {
   out << buf;
 }
 
+inline long operator-(const datetime_t& left, const datetime_t& right) {
+  return (long)left.when - (long)right.when;
+}
+
 struct interval_t
 {
   unsigned int years;
@@ -120,15 +126,10 @@ bool parse_date(const char * date_str, std::time_t * result,
 		const int year = -1);
 bool quick_parse_date(const char * date_str, std::time_t * result);
 
-class datetime_error : public std::exception {
-  std::string reason;
+class datetime_error : public error {
  public:
-  datetime_error(const std::string& _reason) throw() : reason(_reason) {}
+  datetime_error(const std::string& reason) throw() : error(reason) {}
   virtual ~datetime_error() throw() {}
-
-  virtual const char* what() const throw() {
-    return reason.c_str();
-  }
 };
 
 #endif // _DATETIME_H

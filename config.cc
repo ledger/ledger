@@ -52,8 +52,9 @@ namespace {
 
 void config_t::reset()
 {
-  amount_expr        = "a";
-  total_expr         = "O";
+  ledger::amount_expr.reset(new value_expr("a"));
+  ledger::total_expr.reset(new value_expr("O"));
+
   pricing_leeway     = 24 * 3600;
   budget_flags       = BUDGET_NO_BUDGET;
   balance_format     = "%20T  %2_%-a\n";
@@ -293,8 +294,10 @@ void config_t::process_options(const std::string&     command,
 
   // Setup the values of %t and %T, used in format strings
 
-  ledger::amount_expr.reset(new value_expr(amount_expr));
-  ledger::total_expr.reset(new value_expr(total_expr));
+  if (! amount_expr.empty())
+    ledger::amount_expr.reset(new value_expr(amount_expr));
+  if (! total_expr.empty())
+    ledger::total_expr.reset(new value_expr(total_expr));
 
   // If downloading is to be supported, configure the updater
 
@@ -699,8 +702,8 @@ OPT_BEGIN(file, "f:") {
   if (std::string(optarg) == "-" || access(optarg, R_OK) != -1)
     config->data_file = optarg;
   else
-    throw error(std::string("The ledger file '") + optarg +
-		"' does not exist or is not readable");
+    throw new error(std::string("The ledger file '") + optarg +
+		    "' does not exist or is not readable");
 } OPT_END(file);
 
 OPT_BEGIN(cache, ":") {
@@ -747,8 +750,8 @@ OPT_BEGIN(begin, "b:") {
   if (interval.begin)
     std::strftime(buf, 127, formats[0], std::localtime(&interval.begin));
   else
-    throw error(std::string("Could not determine beginning of period '") +
-		optarg + "'");
+    throw new error(std::string("Could not determine beginning of period '") +
+		    optarg + "'");
 
   if (! config->predicate.empty())
     config->predicate += "&";
@@ -763,8 +766,8 @@ OPT_BEGIN(end, "e:") {
   if (interval.end)
     std::strftime(buf, 127, formats[0], std::localtime(&interval.end));
   else
-    throw error(std::string("Could not determine end of period '") +
-		optarg + "'");
+    throw new error(std::string("Could not determine end of period '") +
+		    optarg + "'");
 
   if (! config->predicate.empty())
     config->predicate += "&";
@@ -1048,11 +1051,11 @@ OPT_BEGIN(display, "d:") {
 } OPT_END(display);
 
 OPT_BEGIN(amount, "t:") {
-  config->amount_expr = optarg;
+  ledger::amount_expr.reset(new value_expr(optarg));
 } OPT_END(amount);
 
 OPT_BEGIN(total, "T:") {
-  config->total_expr = optarg;
+  ledger::total_expr.reset(new value_expr(optarg));
 } OPT_END(total);
 
 OPT_BEGIN(amount_data, "j") {
@@ -1080,50 +1083,56 @@ OPT_BEGIN(download, "Q") {
 } OPT_END(download);
 
 OPT_BEGIN(quantity, "O") {
-  config->amount_expr = "a";
-  config->total_expr  = "O";
+  ledger::amount_expr.reset(new value_expr("a"));
+  ledger::total_expr.reset(new value_expr("O"));
 } OPT_END(quantity);
 
 OPT_BEGIN(basis, "B") {
-  config->amount_expr = "b";
-  config->total_expr  = "B";
+  ledger::amount_expr.reset(new value_expr("b"));
+  ledger::total_expr.reset(new value_expr("B"));
 } OPT_END(basis);
 
 OPT_BEGIN(price, "I") {
-  config->amount_expr = "i";
-  config->total_expr  = "I";
+  ledger::amount_expr.reset(new value_expr("i"));
+  ledger::total_expr.reset(new value_expr("I"));
 } OPT_END(price);
 
 OPT_BEGIN(market, "V") {
   config->show_revalued = true;
 
-  config->amount_expr = "v";
-  config->total_expr  = "V";
+  ledger::amount_expr.reset(new value_expr("v"));
+  ledger::total_expr.reset(new value_expr("V"));
 } OPT_END(market);
 
 OPT_BEGIN(performance, "g") {
-  config->amount_expr = "P(a,m)-b"; // same as 'g', but priced now
-  config->total_expr  = "P(O,m)-B";
+  ledger::amount_expr.reset(new value_expr("P(a,m)-b"));
+  ledger::total_expr.reset(new value_expr("P(O,m)-B"));
 } OPT_END(performance);
 
 OPT_BEGIN(gain, "G") {
   config->show_revalued      =
   config->show_revalued_only = true;
 
-  config->amount_expr = "a";
-  config->total_expr  = "G";
+  ledger::amount_expr.reset(new value_expr("a"));
+  ledger::total_expr.reset(new value_expr("G"));
 } OPT_END(gain);
 
 OPT_BEGIN(average, "A") {
-  config->total_expr = expand_value_expr("A(#)", config->total_expr);
+  ledger::total_expr.reset
+    (new value_expr(expand_value_expr("A(#)", ledger::total_expr->expr)));
 } OPT_END(average);
 
 OPT_BEGIN(deviation, "D") {
-  config->total_expr = expand_value_expr("t-A(#)", config->total_expr);
+  ledger::total_expr.reset(new value_expr("O"));
+  ledger::total_expr.reset
+    (new value_expr(expand_value_expr("t-A(#)", ledger::total_expr->expr)));
 } OPT_END(deviation);
 
 OPT_BEGIN(percentage, "%") {
-  config->total_expr = expand_value_expr("^#&{100.0%}*(#/^#)", config->total_expr);
+  ledger::total_expr.reset(new value_expr("O"));
+  ledger::total_expr.reset
+    (new value_expr(expand_value_expr("^#&{100.0%}*(#/^#)",
+				      ledger::total_expr->expr)));
 } OPT_END(percentage);
 
 //////////////////////////////////////////////////////////////////////

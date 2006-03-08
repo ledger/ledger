@@ -121,11 +121,16 @@ int parse_and_report(config_t& config, int argc, char * argv[], char * envp[])
   else if (command == "parse") {
     value_auto_ptr expr(ledger::parse_value_expr(*arg));
     if (config.verbose_mode) {
+      std::cout << "Value expression tree:" << std::endl;
       ledger::dump_value_expr(std::cout, expr.get());
       std::cout << std::endl;
+      std::cout << "Value expression parsed was:" << std::endl;
+      ledger::write_value_expr(std::cout, expr.get());
+      std::cout << std::endl << std::endl;
+      std::cout << "Result of computation: ";
     }
+    value_t result = guarded_compute(expr.get());
 
-    value_t result = expr->compute();
     if (! config.keep_price || ! config.keep_date || ! config.keep_tag) {
       switch (result.type) {
       case value_t::AMOUNT:
@@ -138,13 +143,15 @@ int parse_and_report(config_t& config, int argc, char * argv[], char * envp[])
       }
     }
     std::cout << result << std::endl;
+
     return 0;
   }
   else if (command == "expr") {
     // this gets done below...
   }
-  else
-    throw error(std::string("Unrecognized command '") + command + "'");
+  else {
+    throw new error(std::string("Unrecognized command '") + command + "'");
+  }
 
   // Parse initialization files, ledger data, price database, etc.
 
@@ -153,8 +160,8 @@ int parse_and_report(config_t& config, int argc, char * argv[], char * envp[])
   { TRACE_PUSH(parser, "Parsing journal file");
 
     if (parse_ledger_data(config, journal.get()) == 0)
-      throw error("Please specify ledger file using -f"
-		  " or LEDGER_FILE environment variable.");
+      throw new error("Please specify ledger file using -f"
+		      " or LEDGER_FILE environment variable.");
 
     TRACE_POP(parser, "Finished parsing"); }
 
@@ -163,7 +170,7 @@ int parse_and_report(config_t& config, int argc, char * argv[], char * envp[])
   std::string first_arg;
   if (command == "w") {
     if (arg == args.end())
-      throw error("The 'output' command requires a file argument");
+      throw new error("The 'output' command requires a file argument");
     first_arg = *arg++;
   }
 
@@ -193,11 +200,11 @@ int parse_and_report(config_t& config, int argc, char * argv[], char * envp[])
   else if (! config.pager.empty()) {
     status = pipe(pfd);
     if (status == -1)
-      throw error("Failed to create pipe");
+      throw new error("Failed to create pipe");
 
     status = fork();
     if (status < 0) {
-      throw error("Failed to fork child process");
+      throw new error("Failed to fork child process");
     }
     else if (status == 0) {	// child
       const char *arg0;
@@ -238,10 +245,16 @@ int parse_and_report(config_t& config, int argc, char * argv[], char * envp[])
   if (command == "expr") {
     value_auto_ptr expr(ledger::parse_value_expr(*arg));
     if (config.verbose_mode) {
+      std::cout << "Value expression tree:" << std::endl;
       ledger::dump_value_expr(std::cout, expr.get());
       std::cout << std::endl;
+      std::cout << "Value expression parsed was:" << std::endl;
+      ledger::write_value_expr(std::cout, expr.get(), NULL, 0);
+      std::cout << std::endl << std::endl;
+      std::cout << "Result of computation: ";
     }
-    value_t result = expr->compute();
+    value_t result = guarded_compute(expr.get());
+
     if (! config.keep_price || ! config.keep_date || ! config.keep_tag) {
       switch (result.type) {
       case value_t::AMOUNT:
@@ -254,6 +267,7 @@ int parse_and_report(config_t& config, int argc, char * argv[], char * envp[])
       }
     }
     std::cout << result << std::endl;
+
     return 0;
   }
 
@@ -293,7 +307,7 @@ int parse_and_report(config_t& config, int argc, char * argv[], char * envp[])
 #if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
     formatter = new format_xml_entries(*out, config.show_totals);
 #else
-    throw error("XML support was not compiled into this copy of Ledger");
+    throw new error("XML support was not compiled into this copy of Ledger");
 #endif
   } else
     formatter = new format_transactions(*out, *format);
@@ -392,7 +406,7 @@ int parse_and_report(config_t& config, int argc, char * argv[], char * envp[])
     // Wait for child to finish
     wait(&status);
     if (status & 0xffff != 0)
-      throw error("Something went wrong in the pager");
+      throw new error("Something went wrong in the pager");
   }
 #endif
 
@@ -411,12 +425,35 @@ int main(int argc, char * argv[], char * envp[])
     TRACE_POP(main, "Ledger done");
     return status;
   }
+  catch (error * err) {
+    std::cout.flush();
+    // Push a null here since there's no file context
+    if (err->context.empty() ||
+	! dynamic_cast<xact_context *>(err->context.front()))
+      err->context.push_front(new error_context(""));
+    err->reveal_context(std::cerr, "Error");
+    std::cerr << err->what() << std::endl;
+    delete err;
+    return 1;
+  }
+  catch (fatal * err) {
+    std::cout.flush();
+    // Push a null here since there's no file context
+    if (err->context.empty() ||
+	! dynamic_cast<xact_context *>(err->context.front()))
+      err->context.push_front(new error_context(""));
+    err->reveal_context(std::cerr, "Fatal");
+    std::cerr << err->what() << std::endl;
+    delete err;
+    return 1;
+  }
   catch (const std::exception& err) {
+    std::cout.flush();
     std::cerr << "Error: " << err.what() << std::endl;
     return 1;
   }
-  catch (int& val) {
-    return val;			// this acts like a std::setjmp
+  catch (int status) {
+    return status;
   }
 }
 

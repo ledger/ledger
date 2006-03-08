@@ -1,6 +1,7 @@
 #include "option.h"
 #include "config.h"
 #include "debug.h"
+#include "error.h"
 
 #include <iostream>
 #include <cstdarg>
@@ -10,7 +11,17 @@
 namespace {
   inline void process_option(option_t * opt, const char * arg = NULL) {
     if (! opt->handled) {
-      opt->handler(arg);
+      try {
+	opt->handler(arg);
+      }
+      catch (error * err) {
+	err->context.push_back
+	  (new error_context
+	   (std::string("While parsing option '--") + opt->long_opt +
+	    "'" + (opt->short_opt != '\0' ?
+		   (std::string(" (-") + opt->short_opt + "):") : ":")));
+	throw err;
+      }
       opt->handled = true;
     }
   }
@@ -49,9 +60,8 @@ bool process_option(option_t * options, const std::string& name,
 		    const char * arg)
 {
   option_t * opt = search_options(options, name.c_str());
-  if (opt && ! opt->handled) {
-    opt->handler(arg);
-    opt->handled = true;
+  if (opt) {
+    process_option(opt, arg);
     return true;
   }
   return false;
@@ -90,25 +100,25 @@ void process_arguments(option_t * options, int argc, char ** argv,
 
       opt = search_options(options, name);
       if (! opt)
-	throw option_error(std::string("illegal option --") + name);
+	throw new option_error(std::string("illegal option --") + name);
       
       if (opt->wants_arg && ! value) {
 	value = *++i;
 	if (! value)
-	  throw option_error(std::string("missing option argument for --") +
-			     name);
+	  throw new option_error(std::string("missing option argument for --") +
+				 name);
       }
       process_option(opt, value);
     } else {
       char c = (*i)[1];
       opt = search_options(options, c);
       if (! opt)
-	throw option_error(std::string("illegal option -") + c);
+	throw new option_error(std::string("illegal option -") + c);
 
       if (opt->wants_arg) {
 	value = *++i;
 	if (! value)
-	  throw option_error(std::string("missing option argument for -") + c);
+	  throw new option_error(std::string("missing option argument for -") + c);
       }
     }
 
@@ -141,7 +151,18 @@ void process_environment(option_t * options, char ** envp,
 	  *r++ = std::tolower(*q);
       *r = '\0';
 
-      if (*q == '=')
-	process_option(options, buf, q + 1);
+      if (*q == '=') {
+	try {
+	  process_option(options, buf, q + 1);
+	}
+	catch (error * err) {
+	  err->context.pop_back();
+	  err->context.push_back
+	    (new error_context
+	     (std::string("While parsing environment variable option '") +
+	      *p + "':"));
+	  throw err;
+	}
+      }
     }
 }
