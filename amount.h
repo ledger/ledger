@@ -12,6 +12,7 @@
 #include <exception>
 
 #include "debug.h"
+#include "error.h"
 
 namespace ledger {
 
@@ -624,15 +625,10 @@ inline std::time_t amount_t::date() const {
   }
 }
 
-class amount_error : public std::exception {
-  std::string reason;
+class amount_error : public error {
  public:
-  amount_error(const std::string& _reason) throw() : reason(_reason) {}
+  amount_error(const std::string& reason) throw() : error(reason) {}
   virtual ~amount_error() throw() {}
-
-  virtual const char* what() const throw() {
-    return reason.c_str();
-  }
 };
 
 } // namespace ledger

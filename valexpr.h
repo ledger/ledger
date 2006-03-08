@@ -33,39 +33,6 @@ struct details_t
 #endif
 };
 
-class value_calc
-{
-public:
-  virtual ~value_calc() {}
-  virtual void compute(value_t& result,
-		       const details_t& details = details_t(),
-		       value_expr_t *   context = NULL) = 0;
-  virtual value_t compute(const details_t& details = details_t(),
-			  value_expr_t *   context = NULL) = 0;
-};
-
-typedef void (*value_func_t)(value_t& result, const details_t& details,
-			     value_expr_t * context);
-
-class value_func : public value_calc
-{
-  value_func_t func;
-public:
-  value_func(value_func_t _func) : func(_func) {}
-
-  virtual void compute(value_t& result,
-		       const details_t& details = details_t(),
-		       value_expr_t *   context = NULL) {
-    func(result, details, context);
-  }
-  virtual value_t compute(const details_t& details = details_t(),
-			  value_expr_t *   context = NULL) {
-    value_t temp;
-    func(temp, details, context);
-    return temp;
-  }
-};
-
 struct value_expr_t
 {
   enum kind_t {
@@ -252,8 +219,8 @@ struct scope_t
 	= symbols.insert(symbol_pair(name, def));
       if (! result.second) {
 	def->release();
-	throw value_expr_error(std::string("Redefinition of '") +
-			       name + "' in same scope");
+	throw new compute_error(std::string("Redefinition of '") +
+				name + "' in same scope");
       }
     }
     def->acquire();
@@ -282,36 +249,86 @@ bool compute_amount(value_expr_t * expr, amount_t& amt,
 struct scope_t;
 value_expr_t * parse_boolean_expr(std::istream& in, scope_t * scope);
 
-inline value_expr_t * parse_boolean_expr(const char * p,
-					 scope_t * scope = NULL) {
-  std::istringstream stream(p);
-  return parse_boolean_expr(stream, scope);
-}
-
 inline value_expr_t * parse_boolean_expr(const std::string& str,
 					 scope_t * scope = NULL) {
-  return parse_boolean_expr(str.c_str(), scope);
+  std::istringstream stream(str);
+  try {
+    return parse_boolean_expr(stream, scope);
+  }
+  catch (error * err) {
+    err->context.push_back
+      (new error_context("While parsing value expression: " + str));
+    throw err;
+  }
+}
+
+inline value_expr_t * parse_boolean_expr(const char * p,
+					 scope_t * scope = NULL) {
+  return parse_boolean_expr(std::string(p), scope);
 }
 
 value_expr_t * parse_value_expr(std::istream& in,
 				scope_t * scope = NULL,
 				const bool partial = false);
 
-inline value_expr_t * parse_value_expr(const char * p,
-				       scope_t * scope = NULL,
-				       const bool partial = false) {
-  std::istringstream stream(p);
-  return parse_value_expr(stream, scope, partial);
-}
-
 inline value_expr_t * parse_value_expr(const std::string& str,
 				       scope_t * scope = NULL,
 				       const bool partial = false) {
-  return parse_value_expr(str.c_str(), scope);
+  std::istringstream stream(str);
+  try {
+    return parse_value_expr(stream, scope, partial);
+  }
+  catch (error * err) {
+    err->context.push_back
+      (new line_context(str, (long)stream.tellg() - 1,
+			"While parsing value expression:"));
+    throw err;
+  }
+}
+
+inline value_expr_t * parse_value_expr(const char * p,
+				       scope_t * scope = NULL,
+				       const bool partial = false) {
+  return parse_value_expr(std::string(p), scope, partial);
 }
 
 void dump_value_expr(std::ostream& out, const value_expr_t * node,
 		     const int depth = 0);
+
+unsigned long write_value_expr(std::ostream&	    out,
+			       const value_expr_t * node,
+			       const value_expr_t * node_to_find = NULL,
+			       unsigned long	    start_pos    = 0UL);
+
+//////////////////////////////////////////////////////////////////////
+
+inline void guarded_compute(const value_expr_t * expr,
+			    value_t&		 result,
+			    const details_t&	 details = details_t(),
+			    value_expr_t *       context = NULL) {
+  try {
+    expr->compute(result, details);
+  }
+  catch (error * err) {
+    if (err->context.empty() ||
+	! dynamic_cast<valexpr_context *>(err->context.back()))
+      err->context.push_back(new valexpr_context(expr));
+    error_context * last = err->context.back();
+    if (valexpr_context * ctxt = dynamic_cast<valexpr_context *>(last)) {
+      ctxt->expr = expr->acquire();
+      ctxt->desc = "While computing value expression:";
+    }
+    throw err;
+  }
+}
+
+inline value_t guarded_compute(const value_expr_t * expr,
+			       const details_t&	    details = details_t(),
+			       value_expr_t *       context = NULL) {
+  value_t temp;
+  guarded_compute(expr, temp, details, context);
+  return temp;
+}
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -323,10 +340,11 @@ void dump_value_expr(std::ostream& out, const value_expr_t * node,
 struct value_auto_ptr {
   value_expr_t * ptr;
   value_auto_ptr() : ptr(NULL) {}
-  explicit value_auto_ptr(value_expr_t * _ptr) : ptr(_ptr) {}
+  explicit value_auto_ptr(value_expr_t * _ptr)
+    : ptr(_ptr ? _ptr->acquire() : NULL) {}
   ~value_auto_ptr() {
-    if (ptr && ptr->refc == 0)
-      delete ptr;
+    if (ptr)
+      ptr->release();
   }
   value_expr_t& operator*() const throw() {
     return *ptr;
@@ -342,31 +360,24 @@ struct value_auto_ptr {
   }
   void reset(value_expr_t * p = 0) throw() {
     if (p != ptr) {
-      if (ptr && ptr->refc == 0)
-	delete ptr;
-      ptr = p;
+      if (ptr)
+	ptr->release();
+      ptr = p->acquire();
     }
   }
 };
 
 //////////////////////////////////////////////////////////////////////
 
-class value_expr : public value_calc
+class value_expr
 {
-  std::string    expr;
   value_expr_t * parsed;
-
 public:
+  std::string    expr;
+
   value_expr(const std::string& _expr) : expr(_expr) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor value_expr");
-    try {
-      parsed = parse_value_expr(expr);
-      parsed->acquire();
-    }
-    catch (const value_expr_error& err) {
-      throw error(std::string("In value expression '") +
-		  expr + "': " + err.what());
-    }
+    parsed = parse_value_expr(expr)->acquire();
   }
   value_expr(value_expr_t * _parsed) : parsed(_parsed->acquire()) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor value_expr");
@@ -380,18 +391,18 @@ public:
   virtual void compute(value_t& result,
 		       const details_t& details = details_t(),
 		       value_expr_t *   context = NULL) {
-    parsed->compute(result, details, context);
+    guarded_compute(parsed, result, details, context);
   }
   virtual value_t compute(const details_t& details = details_t(),
 			  value_expr_t *   context = NULL) {
     value_t temp;
-    parsed->compute(temp, details, context);
+    guarded_compute(parsed, temp, details, context);
     return temp;
   }
 };
 
-extern std::auto_ptr<value_calc> amount_expr;
-extern std::auto_ptr<value_calc> total_expr;
+extern std::auto_ptr<value_expr> amount_expr;
+extern std::auto_ptr<value_expr> total_expr;
 
 inline void compute_amount(value_t& result,
 			   const details_t& details = details_t()) {
@@ -425,15 +436,8 @@ class item_predicate
 
   item_predicate(const std::string& _predicate) : predicate(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor item_predicate<T>");
-    if (! _predicate.empty()) {
-      try {
-	predicate = parse_value_expr(_predicate)->acquire();
-      }
-      catch (value_expr_error& err) {
-	throw value_expr_error(std::string("In predicate '") +
-			       _predicate + "': " + err.what());
-      }
-    }
+    if (! _predicate.empty())
+      predicate = parse_value_expr(_predicate)->acquire();
   }
   item_predicate(const value_expr_t * _predicate = NULL)
     : predicate(_predicate->acquire()) {

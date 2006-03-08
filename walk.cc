@@ -16,13 +16,13 @@ bool compare_items<transaction_t>::operator()(const transaction_t * left,
 
   transaction_xdata_t& lxdata(transaction_xdata(*left));
   if (! (lxdata.dflags & TRANSACTION_SORT_CALC)) {
-    sort_order->compute(lxdata.sort_value, details_t(*left));
+    guarded_compute(sort_order, lxdata.sort_value, details_t(*left));
     lxdata.dflags |= TRANSACTION_SORT_CALC;
   }
 
   transaction_xdata_t& rxdata(transaction_xdata(*right));
   if (! (rxdata.dflags & TRANSACTION_SORT_CALC)) {
-    sort_order->compute(rxdata.sort_value, details_t(*right));
+    guarded_compute(sort_order, rxdata.sort_value, details_t(*right));
     rxdata.dflags |= TRANSACTION_SORT_CALC;
   }
 
@@ -133,6 +133,8 @@ void sort_transactions::post_accumulated_xacts()
 
 void calc_transactions::operator()(transaction_t& xact)
 {
+  try {
+
   transaction_xdata_t& xdata(transaction_xdata(xact));
 
   if (last_xact && transaction_has_xdata(*last_xact)) {
@@ -148,6 +150,13 @@ void calc_transactions::operator()(transaction_t& xact)
   item_handler<transaction_t>::operator()(xact);
 
   last_xact = &xact;
+
+  }
+  catch (error * err) {
+    err->context.push_front
+      (new xact_context(xact, "Calculating transaction at"));
+    throw err;
+  }
 }
 
 void invert_transactions::operator()(transaction_t& xact)
@@ -710,13 +719,13 @@ bool compare_items<account_t>::operator()(const account_t * left,
 
   account_xdata_t& lxdata(account_xdata(*left));
   if (! (lxdata.dflags & ACCOUNT_SORT_CALC)) {
-    sort_order->compute(lxdata.sort_value, details_t(*left));
+    guarded_compute(sort_order, lxdata.sort_value, details_t(*left));
     lxdata.dflags |= ACCOUNT_SORT_CALC;
   }
 
   account_xdata_t& rxdata(account_xdata(*right));
   if (! (rxdata.dflags & ACCOUNT_SORT_CALC)) {
-    sort_order->compute(rxdata.sort_value, details_t(*right));
+    guarded_compute(sort_order, rxdata.sort_value, details_t(*right));
     rxdata.dflags |= ACCOUNT_SORT_CALC;
   }
 
@@ -794,13 +803,7 @@ void walk_accounts(account_t&		    account,
 {
   if (! sort_string.empty()) {
     value_auto_ptr sort_order;
-    try {
-      sort_order.reset(parse_value_expr(sort_string));
-    }
-    catch (value_expr_error& err) {
-      throw error(std::string("In sort string '" + sort_string + "': " +
-			      err.what()));
-    }
+    sort_order.reset(parse_value_expr(sort_string));
     walk_accounts(account, handler, sort_order.get());
   } else {
     walk_accounts(account, handler);

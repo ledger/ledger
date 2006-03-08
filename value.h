@@ -8,17 +8,6 @@
 
 namespace ledger {
 
-class value_error : public std::exception {
-  std::string reason;
- public:
-  value_error(const std::string& _reason) throw() : reason(_reason) {}
-  virtual ~value_error() throw() {}
-
-  virtual const char* what() const throw() {
-    return reason.c_str();
-  }
-};
-
 // The following type is a polymorphous value type used solely for
 // performance reasons.  The alternative is to compute value
 // expressions (valexpr.cc) in terms of the largest data type,
@@ -327,6 +316,7 @@ class value_t
   value_t& add(const amount_t&  amount, const amount_t * cost = NULL);
   value_t  value(const std::time_t moment) const;
   void     round();
+  value_t  unround() const;
 };
 
 #define DEF_VALUE_AUX_OP(OP)					\

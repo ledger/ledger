@@ -22,7 +22,7 @@ amount_t balance_t::amount(const commodity_t& commodity) const
       std::ostringstream errmsg;
       errmsg << "Requested amount of a balance with multiple commodities: "
 	     << *this;
-      throw amount_error(errmsg.str());
+      throw new amount_error(errmsg.str());
     }
   }
   else if (amounts.size() > 0) {
@@ -214,7 +214,7 @@ balance_t& balance_t::operator*=(const balance_t& bal)
 
     std::ostringstream errmsg;
     errmsg << "Cannot multiply two balances: " << *this << " * " << bal;
-    throw amount_error(errmsg.str());
+    throw new amount_error(errmsg.str());
   }
 }
 
@@ -255,7 +255,7 @@ balance_t& balance_t::operator*=(const amount_t& amt)
       errmsg << "Attempt to multiply balance by a commodity"
 	     << " not found in that balance: "
 	     << *this << " * " << amt;
-      throw amount_error(errmsg.str());
+      throw new amount_error(errmsg.str());
     }
   }
   return *this;
@@ -266,7 +266,7 @@ balance_t& balance_t::operator/=(const balance_t& bal)
   if (bal.realzero()) {
     std::ostringstream errmsg;
     errmsg << "Attempt to divide by zero: " << *this << " / " << bal;
-    throw amount_error(errmsg.str());
+    throw new amount_error(errmsg.str());
   }
   else if (realzero()) {
     return *this = 0L;
@@ -285,7 +285,7 @@ balance_t& balance_t::operator/=(const balance_t& bal)
 
     std::ostringstream errmsg;
     errmsg << "Cannot divide between two balances: " << *this << " / " << bal;
-    throw amount_error(errmsg.str());
+    throw new amount_error(errmsg.str());
   }
 }
 
@@ -294,7 +294,7 @@ balance_t& balance_t::operator/=(const amount_t& amt)
   if (amt.realzero()) {
     std::ostringstream errmsg;
     errmsg << "Attempt to divide by zero: " << *this << " / " << amt;
-    throw amount_error(errmsg.str());
+    throw new amount_error(errmsg.str());
   }
   else if (realzero()) {
     return *this = 0L;
@@ -326,7 +326,7 @@ balance_t& balance_t::operator/=(const amount_t& amt)
       errmsg << "Attempt to divide balance by a commodity"
 	     << " not found in that balance: "
 	     << *this << " * " << amt;
-      throw amount_error(errmsg.str());
+      throw new amount_error(errmsg.str());
     }
   }
   return *this;
@@ -349,7 +349,7 @@ balance_t::operator amount_t() const
     std::ostringstream errmsg;
     errmsg << "Cannot convert a balance with "
 	   << "multiple commodities to an amount: " << *this;
-    throw amount_error(errmsg.str());
+    throw new amount_error(errmsg.str());
   }
 }
 
@@ -464,7 +464,6 @@ void export_balance()
     .def("date",  &balance_t::date)
     .def("strip_annotations", &balance_t::strip_annotations)
     .def("write",  &balance_t::write)
-    .def("abs",  &balance_t::abs)
     .def("round",  &balance_t::round)
     .def("negate", &balance_t::negate)
     .def("negated", &balance_t::negated)
@@ -553,7 +552,6 @@ void export_balance()
     .def("date",  &balance_pair_t::date)
     .def("strip_annotations", &balance_pair_t::strip_annotations)
     .def("write",  &balance_pair_t::write)
-    .def("abs",  &balance_pair_t::abs)
     .def("round",  &balance_pair_t::round)
     .def("negate", &balance_pair_t::negate)
     .def("negated", &balance_pair_t::negated)

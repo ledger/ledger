@@ -23,10 +23,10 @@ struct item_handler {
   item_handler(item_handler * _handler) : handler(_handler) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor item_handler<T>");
   }
-
   virtual ~item_handler() {
     DEBUG_PRINT("ledger.memory.dtors", "dtor item_handler<T>");
   }
+
   virtual void flush() {
     if (handler)
       handler->flush();
@@ -56,8 +56,8 @@ bool compare_items<T>::operator()(const T * left, const T * right)
 
   value_t left_result;
   value_t right_result;
-  sort_order->compute(left_result, details_t(*left));
-  sort_order->compute(right_result, details_t(*right));
+  guarded_compute(sort_order, left_result, details_t(*left));
+  guarded_compute(sort_order, right_result, details_t(*right));
 
   return left_result < right_result;
 }
@@ -222,14 +222,8 @@ class sort_transactions : public item_handler<transaction_t>
   sort_transactions(item_handler<transaction_t> * handler,
 		    const std::string& _sort_order)
     : item_handler<transaction_t>(handler) {
-    try {
-      sort_order = parse_value_expr(_sort_order);
-      sort_order->acquire();
-    }
-    catch (value_expr_error& err) {
-      throw value_expr_error(std::string("In sort string '") + _sort_order +
-			     "': " + err.what());
-    }
+    assert(! _sort_order.empty());
+    sort_order = parse_value_expr(_sort_order)->acquire();
   }
 
   virtual ~sort_transactions() {

@@ -416,6 +416,16 @@ class balance_t
       if ((*i).second.commodity())
 	(*i).second = (*i).second.round();
   }
+
+  balance_t unround() const {
+    balance_t temp;
+    for (amounts_map::const_iterator i = amounts.begin();
+	 i != amounts.end();
+	 i++)
+      if ((*i).second.commodity())
+	temp += (*i).second.unround();
+    return temp;
+  }
 };
 
 inline balance_t abs(const balance_t& bal) {
@@ -846,6 +856,13 @@ class balance_pair_t
   void round() {
     quantity.round();
     if (cost) cost->round();
+  }
+
+  balance_pair_t unround() {
+    balance_pair_t temp(quantity.unround());
+    if (cost)
+      temp.cost = new balance_t(cost->unround());
+    return temp;
   }
 };
 

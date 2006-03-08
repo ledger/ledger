@@ -79,15 +79,13 @@ bool entry_base_t::remove_transaction(transaction_t * xact)
   return true;
 }
 
-value_t entry_balance;
-
 bool entry_base_t::finalize()
 {
   // Scan through and compute the total balance for the entry.  This
   // is used for auto-calculating the value of entries with no cost,
   // and the per-unit price of unpriced commodities.
 
-  value_t& balance = entry_balance;
+  value_t balance;
 
   bool no_amounts = true;
   for (transactions_list::const_iterator x = transactions.begin();
@@ -106,7 +104,8 @@ bool entry_base_t::finalize()
 
 	if ((*x)->cost && (*x)->amount.commodity().annotated) {
 	  annotated_commodity_t&
-	    ann_comm(static_cast<annotated_commodity_t&>((*x)->amount.commodity()));
+	    ann_comm(static_cast<annotated_commodity_t&>
+		     ((*x)->amount.commodity()));
 	  if (ann_comm.price)
 	    balance += ann_comm.price * (*x)->amount - *((*x)->cost);
 	}
@@ -240,7 +239,16 @@ bool entry_base_t::finalize()
     }
   }
 
-  return ! balance;
+  if (balance) {
+    error * err =
+      new balance_error("Entry does not balance",
+			new entry_context(*this, "While balancing entry:"));
+    err->context.push_front
+      (new value_context(balance, "Unbalanced remainder is:"));
+    throw err;
+  }
+
+  return true;
 }
 
 entry_t::entry_t(const entry_t& e)

@@ -83,7 +83,7 @@ unsigned int parse_journal_file(const std::string&  path,
   journal->sources.push_back(path);
 
   if (access(path.c_str(), R_OK) == -1)
-    throw error(std::string("Cannot read file '") + path + "'");
+    throw new error(std::string("Cannot read file '") + path + "'");
 
   if (! original_file)
     original_file = &path;
@@ -119,8 +119,8 @@ unsigned int parse_ledger_data(config_t&   config,
     if (parse_journal_file(config.init_file, config, journal) ||
 	journal->auto_entries.size() > 0 ||
 	journal->period_entries.size() > 0)
-      throw error(std::string("Entries found in initialization file '") +
-		  config.init_file + "'");
+      throw new error(std::string("Entries found in initialization file '") +
+		      config.init_file + "'");
 
     journal->sources.pop_front(); // remove init file
   }
@@ -154,7 +154,7 @@ unsigned int parse_ledger_data(config_t&   config,
     if (! journal->price_db.empty() &&
 	access(journal->price_db.c_str(), R_OK) != -1) {
       if (parse_journal_file(journal->price_db, config, journal)) {
-	throw error("Entries not allowed in price history file");
+	throw new error("Entries not allowed in price history file");
       } else {
 	DEBUG_PRINT("ledger.config.cache",
 		    "read price database " << journal->price_db);

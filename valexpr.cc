@@ -7,8 +7,8 @@
 
 namespace ledger {
 
-std::auto_ptr<value_calc> amount_expr;
-std::auto_ptr<value_calc> total_expr;
+std::auto_ptr<value_expr> amount_expr;
+std::auto_ptr<value_expr> total_expr;
 
 std::auto_ptr<scope_t> global_scope;
 std::time_t terminus;
@@ -23,22 +23,21 @@ bool compute_amount(value_expr_t * expr, amount_t& amt,
 		    const transaction_t * xact, value_expr_t * context)
 {
   value_t result;
-  expr->compute(result, xact ? details_t(*xact) : details_t(), context);
-  switch (result.type) {
-  case value_t::BOOLEAN:
-    amt = *((bool *) result.data);
-    break;
-  case value_t::INTEGER:
-    amt = *((long *) result.data);
-    break;
-  case value_t::AMOUNT:
+  try {
+    expr->compute(result, xact ? details_t(*xact) : details_t(), context);
+    result.cast(value_t::AMOUNT);
     amt = *((amount_t *) result.data);
-    break;
-
-  case value_t::DATETIME:
-  case value_t::BALANCE:
-  case value_t::BALANCE_PAIR:
-    return false;
+  }
+  catch (error * err) {
+    if (err->context.empty() ||
+	! dynamic_cast<valexpr_context *>(err->context.back()))
+      err->context.push_back(new valexpr_context(expr));
+    error_context * last = err->context.back();
+    if (valexpr_context * ctxt = dynamic_cast<valexpr_context *>(last)) {
+      ctxt->expr = expr->acquire();
+      ctxt->desc = "While computing amount expression:";
+    }
+    throw err;
   }
   return true;
 }
@@ -145,6 +144,7 @@ namespace {
 void value_expr_t::compute(value_t& result, const details_t& details,
 			   value_expr_t * context) const
 {
+  try {
   switch (kind) {
   case CONSTANT_I:
     result = constant_i;
@@ -385,7 +385,8 @@ void value_expr_t::compute(value_t& result, const details_t& details,
       moment.cast(value_t::INTEGER);
       result -= moment;
     } else {
-      throw compute_error("Invalid date passed to datecmp(value,date)");
+      throw new compute_error("Invalid date passed to datecmp(value,date)",
+			      new valexpr_context(expr));
     }
     break;
   }
@@ -459,7 +460,8 @@ void value_expr_t::compute(value_t& result, const details_t& details,
     value_expr_t * expr = find_leaf(context, 0, index);
     expr->compute(result, details, context);
     if (result.type != value_t::AMOUNT)
-      throw compute_error("Argument to commodity() must be a commoditized amount");
+      throw new compute_error("Argument to commodity() must be a commoditized amount",
+			      new valexpr_context(expr));
     amount_t temp("1");
     temp.set_commodity(((amount_t *) result.data)->commodity());
     result = temp;
@@ -476,7 +478,8 @@ void value_expr_t::compute(value_t& result, const details_t& details,
     expr = find_leaf(context, 1, index);
     expr->compute(result, details, context);
     if (result.type != value_t::AMOUNT)
-      throw compute_error("Second argument to set_commodity() must be a commoditized amount");
+      throw new compute_error("Second argument to set_commodity() must be a commoditized amount",
+			      new valexpr_context(expr));
     amount_t one("1");
     one.set_commodity(((amount_t *) result.data)->commodity());
     result = one;
@@ -594,7 +597,7 @@ void value_expr_t::compute(value_t& result, const details_t& details,
     break;
 
   case O_DEF:
-    throw compute_error("Cannot compute function definition");
+    throw new compute_error("Cannot compute function definition");
 
   case O_REF: {
     assert(left);
@@ -617,7 +620,8 @@ void value_expr_t::compute(value_t& result, const details_t& details,
     value_t moment;
     expr->compute(moment, details, context);
     if (moment.type != value_t::DATETIME)
-      throw compute_error("Invalid date passed to P(value,date)");
+      throw new compute_error("Invalid date passed to P(value,date)",
+			      new valexpr_context(expr));
 
     result = result.value(*((datetime_t *)moment.data));
     break;
@@ -718,20 +722,27 @@ void value_expr_t::compute(value_t& result, const details_t& details,
     assert(0);
     break;
   }
+  }
+  catch (error * err) {
+    if (err->context.empty() ||
+	! dynamic_cast<valexpr_context *>(err->context.back()))
+      err->context.push_back(new valexpr_context(this));
+    throw err;
+  }
 }
 
 static inline void unexpected(char c, char wanted = '\0') {
   if ((unsigned char) c == 0xff) {
     if (wanted)
-      throw value_expr_error(std::string("Missing '") + wanted + "'");
+      throw new value_expr_error(std::string("Missing '") + wanted + "'");
     else
-      throw value_expr_error("Unexpected end");
+      throw new value_expr_error("Unexpected end");
   } else {
     if (wanted)
-      throw value_expr_error(std::string("Invalid char '") + c +
+      throw new value_expr_error(std::string("Invalid char '") + c +
 			     "' (wanted '" + wanted + "')");
     else
-      throw value_expr_error(std::string("Invalid char '") + c + "'");
+      throw new value_expr_error(std::string("Invalid char '") + c + "'");
   }
 }
 
@@ -838,7 +849,7 @@ value_expr_t * parse_value_term(std::istream& in, scope_t * scope)
       // Define the value associated with the defined identifier
       value_auto_ptr def(parse_boolean_expr(in, params.get()));
       if (! def.get())
-	throw value_expr_error(std::string("Definition failed for '") + buf + "'");
+	throw new value_expr_error(std::string("Definition failed for '") + buf + "'");
 
       node.reset(new value_expr_t(value_expr_t::O_DEF));
       node->set_left(new value_expr_t(value_expr_t::CONSTANT_I));
@@ -858,7 +869,7 @@ value_expr_t * parse_value_term(std::istream& in, scope_t * scope)
 	    (buf[0] == 'c' || buf[0] == 'C' || buf[0] == 'p' ||
 	     buf[0] == 'w' || buf[0] == 'W' || buf[0] == 'e'))
 	  goto find_term;
-	throw value_expr_error(std::string("Unknown identifier '") + buf + "'");
+	throw new value_expr_error(std::string("Unknown identifier '") + buf + "'");
       }
       else if (def->kind == value_expr_t::O_DEF) {
 	node.reset(new value_expr_t(value_expr_t::O_REF));
@@ -887,7 +898,7 @@ value_expr_t * parse_value_term(std::istream& in, scope_t * scope)
 	  errmsg << "Wrong number of arguments to '" << buf
 		 << "': saw " << count
 		 << ", wanted " << def->left->constant_i;
-	  throw value_expr_error(errmsg.str());
+	  throw new value_expr_error(errmsg.str());
 	}
       }
       else {
@@ -1467,7 +1478,7 @@ value_expr_t * parse_value_expr(std::istream& in, scope_t * scope,
   if (! node.get()) {
     in.get(c);
     if (in.eof())
-      throw value_expr_error(std::string("Failed to parse value expression"));
+      throw new value_expr_error(std::string("Failed to parse value expression"));
     else
       unexpected(c);
   } else if (! partial) {
@@ -1479,6 +1490,264 @@ value_expr_t * parse_value_expr(std::istream& in, scope_t * scope,
   }
 
   return node.release();
+}
+
+unsigned long write_value_expr(std::ostream&	    out,
+			       const value_expr_t * node,
+			       const value_expr_t * node_to_find,
+			       unsigned long	    start_pos)
+{
+  long pos = start_pos;
+
+  switch (node->kind) {
+  case value_expr_t::CONSTANT_I:
+    out << node->constant_i;
+    break;
+  case value_expr_t::CONSTANT_T:
+    out << "[" << *(node->constant_t) << ']';
+    break;
+  case value_expr_t::CONSTANT_A:
+    out << "{" << *(node->constant_a) << '}';
+    break;
+  case value_expr_t::CONSTANT_V:
+    out << "{" << *(node->constant_v) << '}';
+    break;
+
+  case value_expr_t::AMOUNT: out << "amount"; break;
+  case value_expr_t::PRICE: out << "price"; break;
+  case value_expr_t::COST: out << "cost"; break;
+  case value_expr_t::DATE: out << "date"; break;
+  case value_expr_t::ACT_DATE: out << "actual_date"; break;
+  case value_expr_t::EFF_DATE: out << "effective_date"; break;
+  case value_expr_t::CLEARED: out << "cleared"; break;
+  case value_expr_t::PENDING: out << "pending"; break;
+  case value_expr_t::REAL: out << "real"; break;
+  case value_expr_t::ACTUAL: out << "actual"; break;
+  case value_expr_t::INDEX: out << "index"; break;
+  case value_expr_t::COUNT: out << "count"; break;
+  case value_expr_t::DEPTH: out << "depth"; break;
+  case value_expr_t::TOTAL: out << "total"; break;
+  case value_expr_t::PRICE_TOTAL: out << "total_price"; break;
+  case value_expr_t::COST_TOTAL: out << "total_cost"; break;
+  case value_expr_t::F_NOW: out << "now"; break;
+
+  case value_expr_t::F_ARITH_MEAN:
+    out << "average(";
+    pos = write_value_expr(out, node->left, node_to_find, pos);
+    out << ")";
+    break;
+  case value_expr_t::F_ABS: out << "abs"; break;
+    out << "abs(";
+    pos = write_value_expr(out, node->left, node_to_find, pos);
+    out << ")";
+    break;
+  case value_expr_t::F_QUANTITY: out << "quantity"; break;
+    out << "quantity(";
+    pos = write_value_expr(out, node->left, node_to_find, pos);
+    out << ")";
+    break;
+  case value_expr_t::F_COMMODITY: out << "commodity"; break;
+    out << "commodity(";
+    pos = write_value_expr(out, node->left, node_to_find, pos);
+    out << ")";
+    break;
+  case value_expr_t::F_SET_COMMODITY: out << "set_commodity"; break;
+    out << "average(";
+    pos = write_value_expr(out, node->left, node_to_find, pos);
+    out << ")";
+    break;
+  case value_expr_t::F_VALUE: out << "valueof"; break;
+    out << "average(";
+    pos = write_value_expr(out, node->left, node_to_find, pos);
+    out << ")";
+    break;
+  case value_expr_t::F_PRICE: out << "priceof"; break;
+    out << "average(";
+    pos = write_value_expr(out, node->left, node_to_find, pos);
+    out << ")";
+    break;
+  case value_expr_t::F_DATE: out << "dateof"; break;
+    out << "average(";
+    pos = write_value_expr(out, node->left, node_to_find, pos);
+    out << ")";
+    break;
+  case value_expr_t::F_DATECMP: out << "datecmp"; break;
+    out << "average(";
+    pos = write_value_expr(out, node->left, node_to_find, pos);
+    out << ")";
+    break;
+  case value_expr_t::F_YEAR: out << "yearof"; break;
+    out << "average(";
+    pos = write_value_expr(out, node->left, node_to_find, pos);
+    out << ")";
+    break;
+  case value_expr_t::F_MONTH: out << "monthof"; break;
+    out << "average(";
+    pos = write_value_expr(out, node->left, node_to_find, pos);
+    out << ")";
+    break;
+  case value_expr_t::F_DAY: out << "dayof"; break;
+    out << "average(";
+    pos = write_value_expr(out, node->left, node_to_find, pos);
+    out << ")";
+    break;
+
+  case value_expr_t::F_CODE_MASK:
+    out << "c/" << node->mask->pattern << "/";
+    break;
+  case value_expr_t::F_PAYEE_MASK:
+    out << "p/" << node->mask->pattern << "/";
+    break;
+  case value_expr_t::F_NOTE_MASK:
+    out << "e/" << node->mask->pattern << "/";
+    break;
+  case value_expr_t::F_ACCOUNT_MASK:
+    out << "W/" << node->mask->pattern << "/";
+    break;
+  case value_expr_t::F_SHORT_ACCOUNT_MASK:
+    out << "w/" << node->mask->pattern << "/";
+    break;
+  case value_expr_t::F_COMMODITY_MASK:
+    out << "C/" << node->mask->pattern << "/";
+    break;
+
+  case value_expr_t::O_NOT:
+    out << "!";
+    pos = write_value_expr(out, node->left, node_to_find, pos);
+    break;
+  case value_expr_t::O_NEG:
+    out << "-";
+    pos = write_value_expr(out, node->left, node_to_find, pos);
+    break;
+  case value_expr_t::O_PERC:
+    out << "%";
+    pos = write_value_expr(out, node->left, node_to_find, pos);
+    break;
+
+  case value_expr_t::O_ARG:
+    out << "arg" << node->constant_i;
+    break;
+  case value_expr_t::O_DEF:
+    out << "O_DEF";
+    break;
+  case value_expr_t::O_REF:
+    break;
+
+  case value_expr_t::O_COM:
+    pos = write_value_expr(out, node->left, node_to_find, pos);
+    out << ", ";
+    pos = write_value_expr(out, node->right, node_to_find, pos);
+    break;
+  case value_expr_t::O_QUES:
+    out << "(";
+    pos = write_value_expr(out, node->left, node_to_find, pos);
+    out << " ? ";
+    pos = write_value_expr(out, node->right, node_to_find, pos);
+    out << ")";
+    break;
+  case value_expr_t::O_COL:
+    pos = write_value_expr(out, node->left, node_to_find, pos);
+    out << " : ";
+    pos = write_value_expr(out, node->right, node_to_find, pos);
+    break;
+
+  case value_expr_t::O_AND: out << "O_AND"; break;
+    out << "(";
+    pos = write_value_expr(out, node->left, node_to_find, pos);
+    out << " & ";
+    pos = write_value_expr(out, node->right, node_to_find, pos);
+    out << ")";
+    break;
+  case value_expr_t::O_OR: out << "O_OR"; break;
+    out << "(";
+    pos = write_value_expr(out, node->left, node_to_find, pos);
+    out << " | ";
+    pos = write_value_expr(out, node->right, node_to_find, pos);
+    out << ")";
+    break;
+
+  case value_expr_t::O_NEQ:
+    out << "(";
+    pos = write_value_expr(out, node->left, node_to_find, pos);
+    out << " != ";
+    pos = write_value_expr(out, node->right, node_to_find, pos);
+    out << ")";
+    break;
+  case value_expr_t::O_EQ:
+    out << "(";
+    pos = write_value_expr(out, node->left, node_to_find, pos);
+    out << " == ";
+    pos = write_value_expr(out, node->right, node_to_find, pos);
+    out << ")";
+    break;
+  case value_expr_t::O_LT:
+    out << "(";
+    pos = write_value_expr(out, node->left, node_to_find, pos);
+    out << " < ";
+    pos = write_value_expr(out, node->right, node_to_find, pos);
+    out << ")";
+    break;
+  case value_expr_t::O_LTE:
+    out << "(";
+    pos = write_value_expr(out, node->left, node_to_find, pos);
+    out << " <= ";
+    pos = write_value_expr(out, node->right, node_to_find, pos);
+    out << ")";
+    break;
+  case value_expr_t::O_GT:
+    out << "(";
+    pos = write_value_expr(out, node->left, node_to_find, pos);
+    out << " > ";
+    pos = write_value_expr(out, node->right, node_to_find, pos);
+    out << ")";
+    break;
+  case value_expr_t::O_GTE:
+    out << "(";
+    pos = write_value_expr(out, node->left, node_to_find, pos);
+    out << " >= ";
+    pos = write_value_expr(out, node->right, node_to_find, pos);
+    out << ")";
+    break;
+
+  case value_expr_t::O_ADD:
+    out << "(";
+    pos = write_value_expr(out, node->left, node_to_find, pos);
+    out << " + ";
+    pos = write_value_expr(out, node->right, node_to_find, pos);
+    out << ")";
+    break;
+  case value_expr_t::O_SUB:
+    out << "(";
+    pos = write_value_expr(out, node->left, node_to_find, pos);
+    out << " - ";
+    pos = write_value_expr(out, node->right, node_to_find, pos);
+    out << ")";
+    break;
+  case value_expr_t::O_MUL:
+    out << "(";
+    pos = write_value_expr(out, node->left, node_to_find, pos);
+    out << " * ";
+    pos = write_value_expr(out, node->right, node_to_find, pos);
+    out << ")";
+    break;
+  case value_expr_t::O_DIV:
+    out << "(";
+    pos = write_value_expr(out, node->left, node_to_find, pos);
+    out << " / ";
+    pos = write_value_expr(out, node->right, node_to_find, pos);
+    out << ")";
+    break;
+
+  case value_expr_t::LAST:
+  default:
+    assert(0);
+    break;
+  }
+
+  if (node == node_to_find)
+    pos = (long)out.tellp() - 1;
+  
+  return pos;
 }
 
 void dump_value_expr(std::ostream& out, const value_expr_t * node,

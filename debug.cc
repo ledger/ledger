@@ -4,8 +4,6 @@
 
 #include <map>
 #include <fstream>
-#include <cstdlib>
-#include <cstring>
 
 #include <unistd.h>		// for the `write' method
 
@@ -112,3 +110,16 @@ static struct init_streams {
 } _debug_init;
 
 #endif // DEBUG_ENABLED
+
+#if DEBUG_LEVEL >= BETA
+
+#include <string>
+
+void debug_assert(const std::string& reason,
+		  const std::string& file,
+		  unsigned long      line)
+{
+  throw new fatal_assert(reason, new file_context(file, line));
+}
+
+#endif

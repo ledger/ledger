@@ -223,14 +223,12 @@ unsigned int xml_parser_t::parse(std::istream&	     in,
     catch (const std::exception& err) {
       unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
       XML_ParserFree(parser);
-      throw parse_error(original_file ? *original_file : "<xml>", line,
-			err.what());
+      throw new parse_error(err.what());
     }
 
     if (! have_error.empty()) {
       unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
-      parse_error err(original_file ? *original_file : "<xml>", line,
-		      have_error);
+      parse_error err(have_error);
       std::cerr << "Error: " << err.what() << std::endl;
       have_error = "";
     }
@@ -239,7 +237,7 @@ unsigned int xml_parser_t::parse(std::istream&	     in,
       unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
       const char *  err  = XML_ErrorString(XML_GetErrorCode(parser));
       XML_ParserFree(parser);
-      throw parse_error(original_file ? *original_file : "<xml>", line, err);
+      throw new parse_error(err);
     }
   }
 

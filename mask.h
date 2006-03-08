@@ -4,6 +4,8 @@
 #include <string>
 #include <exception>
 
+#include "error.h"
+
 class mask_t
 {
  public:
@@ -18,15 +20,10 @@ class mask_t
   bool match(const std::string& str) const;
 };
 
-class mask_error : public std::exception {
-  std::string reason;
+class mask_error : public error {
  public:
-  mask_error(const std::string& _reason) throw() : reason(_reason) {}
+  mask_error(const std::string& reason) throw() : error(reason) {}
   virtual ~mask_error() throw() {}
-
-  virtual const char* what() const throw() {
-    return reason.c_str();
-  }
 };
 
 #endif // _MASK_H

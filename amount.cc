@@ -378,7 +378,7 @@ amount_t& amount_t::operator+=(const amount_t& amt)
   _dup();
 
   if (commodity_ != amt.commodity_)
-    throw amount_error("Adding amounts with different commodities");
+    throw new amount_error("Adding amounts with different commodities");
 
   if (quantity->prec == amt.quantity->prec) {
     mpz_add(MPZ(quantity), MPZ(quantity), MPZ(amt.quantity));
@@ -411,7 +411,7 @@ amount_t& amount_t::operator-=(const amount_t& amt)
   _dup();
 
   if (commodity_ != amt.commodity_)
-    throw amount_error("Subtracting amounts with different commodities");
+    throw new amount_error("Subtracting amounts with different commodities");
 
   if (quantity->prec == amt.quantity->prec) {
     mpz_sub(MPZ(quantity), MPZ(quantity), MPZ(amt.quantity));
@@ -453,7 +453,7 @@ amount_t& amount_t::operator*=(const amount_t& amt)
 amount_t& amount_t::operator/=(const amount_t& amt)
 {
   if (! amt.quantity || ! amt)
-    throw amount_error("Divide by zero");
+    throw new amount_error("Divide by zero");
   else if (! quantity)
     return *this;
 
@@ -919,7 +919,7 @@ void parse_commodity(std::istream& in, std::string& symbol)
     if (c == '"')
       in.get(c);
     else
-      throw amount_error("Quoted commodity symbol lacks closing quote");
+      throw new amount_error("Quoted commodity symbol lacks closing quote");
   } else {
     READ_INTO(in, buf, 255, c, ! std::isspace(c) && ! std::isdigit(c) &&
 	      c != '-' && c != '.');
@@ -939,14 +939,14 @@ void parse_annotations(std::istream& in, const std::string& symbol,
     char c = peek_next_nonws(in);
     if (c == '{') {
       if (! price.empty())
-	throw amount_error("Commodity specifies more than one price");
+	throw new amount_error("Commodity specifies more than one price");
 
       in.get(c);
       READ_INTO(in, buf, 255, c, c != '}');
       if (c == '}')
 	in.get(c);
       else
-	throw amount_error("Commodity price lacks closing brace");
+	throw new amount_error("Commodity price lacks closing brace");
       price = buf;
       if (! added_name) {
 	added_name = true;
@@ -962,14 +962,14 @@ void parse_annotations(std::istream& in, const std::string& symbol,
     }
     else if (c == '[') {
       if (! date.empty())
-	throw amount_error("Commodity specifies more than one date");
+	throw new amount_error("Commodity specifies more than one date");
 
       in.get(c);
       READ_INTO(in, buf, 255, c, c != ']');
       if (c == ']')
 	in.get(c);
       else
-	throw amount_error("Commodity date lacks closing bracket");
+	throw new amount_error("Commodity date lacks closing bracket");
       date = buf;
       if (! added_name) {
 	added_name = true;
@@ -985,14 +985,14 @@ void parse_annotations(std::istream& in, const std::string& symbol,
     }
     else if (c == '(') {
       if (! tag.empty())
-	throw amount_error("Commodity specifies more than one tag");
+	throw new amount_error("Commodity specifies more than one tag");
 
       in.get(c);
       READ_INTO(in, buf, 255, c, c != ')');
       if (c == ')')
 	in.get(c);
       else
-	throw amount_error("Commodity tag lacks closing parenthesis");
+	throw new amount_error("Commodity tag lacks closing parenthesis");
       tag = buf;
       if (! added_name) {
 	added_name = true;
@@ -1075,7 +1075,7 @@ void amount_t::parse(std::istream& in, unsigned char flags)
   }
 
   if (quant.empty())
-    throw amount_error("No quantity specified for amount");
+    throw new amount_error("No quantity specified for amount");
 
   _init();
 
@@ -1794,10 +1794,13 @@ void export_amount()
     .add_property("commodity",
 		  make_function(&amount_t::commodity,
 				return_value_policy<reference_existing_object>()),
-		  &amount_t::set_commodity)
-    .add_property("quantity", py_amount_quantity)
+		  make_function(&amount_t::set_commodity,
+				with_custodian_and_ward<1, 2>()))
+
+    .def("strip_annotations", &amount_t::strip_annotations)
 
     .def("negate", &amount_t::negate)
+    .def("negated", &amount_t::negated)
     .def("parse", py_parse_1)
     .def("parse", py_parse_2)
     .def("reduce", &amount_t::reduce)
@@ -1816,24 +1819,32 @@ void export_amount()
   scope().attr("COMMODITY_STYLE_EUROPEAN")  = COMMODITY_STYLE_EUROPEAN;
   scope().attr("COMMODITY_STYLE_THOUSANDS") = COMMODITY_STYLE_THOUSANDS;
   scope().attr("COMMODITY_STYLE_NOMARKET")  = COMMODITY_STYLE_NOMARKET;
+  scope().attr("COMMODITY_STYLE_BUILTIN")   = COMMODITY_STYLE_BUILTIN;
 
-#if 0
   class_< commodity_t > ("Commodity")
     .add_property("symbol", &commodity_t::symbol)
 
-    .add_property("name", &commodity_t::name)
-    .add_property("note", &commodity_t::note)
-    .add_property("precision", &commodity_t::precision)
-    .add_property("flags", &commodity_t::flags)
+#if 0
+    .add_property("name", &commodity_t::name, &commodity_t::set_name)
+    .add_property("note", &commodity_t::note, &commodity_t::set_note)
+    .add_property("precision", &commodity_t::precision,
+		  &commodity_t::set_precision)
+    .add_property("flags", &commodity_t::flags, &commodity_t::set_flags)
+    .add_property("add_flags", &commodity_t::add_flags)
+    .add_property("drop_flags", &commodity_t::drop_flags)
 #if 0
     .add_property("updater", &commodity_t::updater)
 #endif
 
     .add_property("smaller",
 		  make_getter(&commodity_t::smaller,
+			      return_value_policy<reference_existing_object>()),
+		  make_setter(&commodity_t::smaller,
 			      return_value_policy<reference_existing_object>()))
     .add_property("larger",
 		  make_getter(&commodity_t::larger,
+			      return_value_policy<reference_existing_object>()),
+		  make_setter(&commodity_t::larger,
 			      return_value_policy<reference_existing_object>()))
 
     .def(self_ns::str(self))
@@ -1841,6 +1852,7 @@ void export_amount()
     .def("find", py_find_commodity,
 	 return_value_policy<reference_existing_object>())
     .staticmethod("find")
+#endif
 
     .def("add_price", &commodity_t::add_price)
     .def("remove_price", &commodity_t::remove_price)
@@ -1848,7 +1860,6 @@ void export_amount()
 
     .def("valid", &commodity_t::valid)
     ;
-#endif
 
 #define EXC_TRANSLATE(type)					\
   register_exception_translator<type>(&exc_translate_ ## type);
