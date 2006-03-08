@@ -1,7 +1,10 @@
 
 			     Ledger NEWS
 
-* 2.5
+* 2.6
+
+- Error reporting has been greatly improving, now showing full
+  contextual information for most error messages.
 
 - Add a new --only predicate, which occurs during transaction
   processing between --limit and --display.  Here is a summary of how
@@ -124,9 +127,6 @@
 
 - Added new min(x,y) and max(x,y) value expression functions.
 
-- Added a new value expression regexp command:
-    C//  compare against a transaction amount's commodity symbol
-
 - Value expression function may now be defined within your ledger file
   (or initialization file) using the following syntax:
 
@@ -135,6 +135,11 @@
   This line makes the function "foo" available to all subsequent value
   expressions, to all command-line options taking a value expression,
   and to the new "expr" command (see above).
+
+* 2.5
+
+- Added a new value expression regexp command:
+    C//  compare against a transaction amount's commodity symbol
 
 - Added a new "csv" command, for outputting results in CSV format.
 
