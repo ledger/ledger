@@ -1492,6 +1492,39 @@ value_expr_t * parse_value_expr(std::istream& in, scope_t * scope,
   return node.release();
 }
 
+valexpr_context::valexpr_context(const ledger::value_expr_t * _expr,
+				 const std::string& desc) throw()
+  : expr(NULL), error_node(_expr), error_context(desc)
+{
+  error_node->acquire();
+}
+
+valexpr_context::~valexpr_context() throw()
+{
+  if (expr) expr->release();
+  if (error_node) error_node->release();
+}
+
+void valexpr_context::describe(std::ostream& out) const throw()
+{
+  if (! expr) {
+    out << "Valexpr_context expr not set!" << std::endl;
+    return;
+  }
+
+  if (! desc.empty())
+    out << desc << std::endl;
+
+  out << "  ";
+  unsigned long start = out.tellp();
+  unsigned long pos   = ledger::write_value_expr(out, expr,
+						 error_node, start);
+  out << std::endl << "  ";
+  for (int i = 0; i < pos - start; i++)
+    out << " ";
+  out << "^" << std::endl;
+}
+
 unsigned long write_value_expr(std::ostream&	    out,
 			       const value_expr_t * node,
 			       const value_expr_t * node_to_find,

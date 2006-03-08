@@ -822,7 +822,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
       err->context.push_front(new file_context(path, linenum - 1));
 
       std::cout.flush();
-      if (errors > 0)
+      if (errors > 0 && err->context.size() > 1)
 	std::cerr << std::endl;
       err->reveal_context(std::cerr, "Error");
       std::cerr << err->what() << std::endl;

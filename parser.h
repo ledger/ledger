@@ -4,6 +4,8 @@
 #include <iostream>
 #include <string>
 
+#include "error.h"
+
 namespace ledger {
 
 class account_t;
@@ -47,6 +49,13 @@ unsigned int parse_ledger_data(config_t&   config,
 
 void initialize_parser_support();
 void shutdown_parser_support();
+
+class parse_error : public error {
+ public:
+  parse_error(const std::string& reason, error_context * ctxt = NULL) throw()
+    : error(reason, ctxt) {}
+  virtual ~parse_error() throw() {}
+};
 
 } // namespace ledger
 

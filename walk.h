@@ -423,6 +423,14 @@ class subtotal_transactions : public item_handler<transaction_t>
   virtual void operator()(transaction_t& xact);
 };
 
+class interval_expr_error : public error {
+ public:
+  interval_expr_error(const std::string& reason,
+		      error_context * ctxt = NULL) throw()
+    : error(reason, ctxt) {}
+  virtual ~interval_expr_error() throw() {}
+};
+
 class interval_transactions : public subtotal_transactions
 {
   interval_t      interval;

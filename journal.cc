@@ -2,7 +2,7 @@
 #include "datetime.h"
 #include "valexpr.h"
 #include "mask.h"
-#include "error.h"
+#include "format.h"
 #include "acconf.h"
 
 #include <fstream>
@@ -544,6 +544,30 @@ bool journal_t::valid() const
       return false;
 
   return true;
+}
+
+void entry_context::describe(std::ostream& out) const throw()
+{
+  if (! desc.empty())
+    out << desc << std::endl;
+
+  print_entry(out, entry, "  ");
+}
+
+xact_context::xact_context(const ledger::transaction_t& _xact,
+			   const std::string& desc) throw()
+  : xact(_xact), file_context("", 0, desc)
+{
+  const ledger::strings_list& sources(xact.entry->journal->sources);
+  int x = 0;
+  for (ledger::strings_list::const_iterator i = sources.begin();
+       i != sources.end();
+       i++, x++)
+    if (x == xact.entry->src_idx) {
+      file = *i;
+      break;
+    }
+  line = xact.beg_line;
 }
 
 } // namespace ledger

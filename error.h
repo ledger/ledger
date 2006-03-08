@@ -39,31 +39,6 @@ class file_context : public error_context
   }
 };
 
-namespace ledger { class value_t; }
-class value_context : public error_context
-{
-  ledger::value_t * bal;
- public:
-  value_context(const ledger::value_t& _bal,
-		  const std::string& desc = "") throw();
-  virtual ~value_context() throw();
-
-  virtual void describe(std::ostream& out) const throw();
-};
-
-namespace ledger { class value_expr_t; }
-class valexpr_context : public error_context {
- public:
-  const ledger::value_expr_t * expr;
-  const ledger::value_expr_t * error_node;
-
-  valexpr_context(const ledger::value_expr_t * _expr,
-		  const std::string& desc = "") throw();
-  virtual ~valexpr_context() throw();
-
-  virtual void describe(std::ostream& out) const throw();
-};
-
 class line_context : public error_context {
  public:
   std::string line;
@@ -74,44 +49,16 @@ class line_context : public error_context {
     : line(_line), pos(_pos), error_context(desc) {}
   virtual ~line_context() throw() {}
 
-  virtual void describe(std::ostream& out) const throw();
-};
-
-class include_context : public file_context {
- public:
-  include_context(const std::string& file, unsigned long line,
-		  const std::string& desc = "") throw()
-    : file_context(file, line, desc) {}
-  virtual ~include_context() throw() {}
-
   virtual void describe(std::ostream& out) const throw() {
     if (! desc.empty())
-      out << desc << ": ";
-    out << "\"" << file << "\", line " << line << ":" << std::endl;
+      out << desc << std::endl;
+
+    out << "  " << line << std::endl << "  ";
+    long idx = pos < 0 ? line.length() - 1 : pos;
+    for (int i = 0; i < idx; i++)
+      out << " ";
+    out << "^" << std::endl;
   }
-};
-
-namespace ledger { class entry_base_t; }
-class entry_context : public error_context {
- public:
-  const ledger::entry_base_t& entry;
-
-  entry_context(const ledger::entry_base_t& _entry,
-		const std::string& desc = "") throw()
-    : entry(_entry), error_context(desc) {}
-  virtual ~entry_context() throw() {}
-
-  virtual void describe(std::ostream& out) const throw();
-};
-
-namespace ledger { class transaction_t; }
-class xact_context : public file_context {
- public:
-  const ledger::transaction_t& xact;
-
-  xact_context(const ledger::transaction_t& _xact,
-	       const std::string& desc = "") throw();
-  virtual ~xact_context() throw() {}
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -174,60 +121,5 @@ class fatal_assert : public fatal {
     : fatal(std::string("assertion failed '") + reason + "'", ctxt) {}
   virtual ~fatal_assert() throw() {}
 };
-
-namespace ledger {
-
-class compute_error : public error {
- public:
-  compute_error(const std::string& reason, error_context * ctxt = NULL) throw()
-    : error(reason, ctxt) {}
-  virtual ~compute_error() throw() {}
-};
-
-class value_expr_error : public error {
- public:
-  value_expr_error(const std::string& reason,
-		   error_context * ctxt = NULL) throw()
-    : error(reason, ctxt) {}
-  virtual ~value_expr_error() throw() {}
-};
-
-class interval_expr_error : public error {
- public:
-  interval_expr_error(const std::string& reason,
-		      error_context * ctxt = NULL) throw()
-    : error(reason, ctxt) {}
-  virtual ~interval_expr_error() throw() {}
-};
-
-class format_error : public error {
- public:
-  format_error(const std::string& reason, error_context * ctxt = NULL) throw()
-    : error(reason, ctxt) {}
-  virtual ~format_error() throw() {}
-};
-
-class parse_error : public error {
- public:
-  parse_error(const std::string& reason, error_context * ctxt = NULL) throw()
-    : error(reason, ctxt) {}
-  virtual ~parse_error() throw() {}
-};
-
-class value_error : public error {
- public:
-  value_error(const std::string& reason, error_context * ctxt = NULL) throw()
-    : error(reason, ctxt) {}
-  virtual ~value_error() throw() {}
-};
-
-class balance_error : public error {
- public:
-  balance_error(const std::string& reason, error_context * ctxt = NULL) throw()
-    : error(reason, ctxt) {}
-  virtual ~balance_error() throw() {}
-};
-
-} // namespace ledger
 
 #endif // _ERROR_H
