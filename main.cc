@@ -249,7 +249,7 @@ int parse_and_report(config_t& config, int argc, char * argv[], char * envp[])
       ledger::dump_value_expr(std::cout, expr.get());
       std::cout << std::endl;
       std::cout << "Value expression parsed was:" << std::endl;
-      ledger::write_value_expr(std::cout, expr.get(), NULL, 0);
+      ledger::write_value_expr(std::cout, expr.get());
       std::cout << std::endl << std::endl;
       std::cout << "Result of computation: ";
     }

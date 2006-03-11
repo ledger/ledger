@@ -39,11 +39,35 @@
 ;;   C-c C-y  set default year for entry mode
 ;;   C-c C-m  set default month for entry mode
 ;;   C-c C-r  reconcile uncleared entries related to an account
+;;   C-c C-o C-r   run a ledger report
+;;   C-C C-o C-g   goto the ledger report buffer
+;;   C-c C-o C-e   edit the defined ledger reports
+;;   C-c C-o C-s   save a report definition based on the current report
+;;   C-c C-o C-a   rerun a ledger report
+;;   C-c C-o C-k   kill the ledger report buffer
 ;;
 ;; In the reconcile buffer, use SPACE to toggle the cleared status of
 ;; a transaction, C-x C-s to save changes (to the ledger file as
 ;; well), or C-c C-r to attempt an auto-reconcilation based on the
 ;; statement's ending date and balance.
+;;
+;; The ledger reports command asks the user to select a report to run
+;; then creates a report buffer containing the results of running the
+;; associated command line.  Its' behavior is modified by a prefix
+;; argument which, when given, causes the generated command line that
+;; will be used to create the report to be presented for editing
+;; before the report is actually run.  Arbitrary unnamed command lines
+;; can be run by specifying an empty name for the report.  The command
+;; line used can later be named and saved for future use as a named
+;; report from the generated reports buffer.
+;;
+;; In a report buffer, the following keys are available:
+;;   (space)  scroll up
+;;   e        edit the defined ledger reports
+;;   s        save a report definition based on the current report
+;;   q        quit the report (return to ledger buffer)
+;;   r        redo the report
+;;   k        kill the report buffer
 
 (require 'esh-util)
 (require 'esh-arg)
@@ -63,6 +87,16 @@
 (defcustom ledger-clear-whole-entries nil
   "If non-nil, clear whole entries, not individual transactions."
   :type 'boolean
+  :group 'ledger)
+
+(defcustom ledger-reports
+  '(("bal" "ledger bal")
+    ("reg" "ledger reg"))
+  "Definition of reports to run.  
+
+Each element has the form (NAME CMDLINE)"
+  :type '(repeat (list (string :tag "Report Name")
+                       (string :tag "Command Line")))
   :group 'ledger)
 
 (defvar bold 'bold)
@@ -324,7 +358,18 @@ dropped."
     (define-key map [(control ?c) (control ?y)] 'ledger-set-year)
     (define-key map [(control ?c) (control ?m)] 'ledger-set-month)
     (define-key map [(control ?c) (control ?c)] 'ledger-toggle-current)
-    (define-key map [(control ?c) (control ?r)] 'ledger-reconcile)))
+    (define-key map [(control ?c) (control ?r)] 'ledger-reconcile)
+    (define-key map [(control ?c) (control ?o) (control ?r)] 'ledger-report)
+    (define-key map [(control ?c) (control ?o) (control ?g)] 
+      'ledger-report-goto)
+    (define-key map [(control ?c) (control ?o) (control ?a)] 
+      'ledger-report-redo)
+    (define-key map [(control ?c) (control ?o) (control ?s)] 
+      'ledger-report-save)
+    (define-key map [(control ?c) (control ?o) (control ?e)] 
+      'ledger-report-edit)
+    (define-key map [(control ?c) (control ?o) (control ?k)] 
+      'ledger-report-kill)))
 
 ;; Reconcile mode
 
@@ -539,6 +584,187 @@ dropped."
     (define-key map [?s] 'ledger-reconcile-save)
     (define-key map [?q] 'ledger-reconcile-quit)
     (use-local-map map)))
+
+;; Ledger report mode
+
+(defvar ledger-report-buffer-name "*Ledger Report*")
+
+(defvar ledger-report-name nil)
+(defvar ledger-report-cmd nil)
+(defvar ledger-report-name-prompt-history nil)
+(defvar ledger-report-cmd-prompt-history nil)
+(defvar ledger-original-window-cfg nil)
+
+(defvar ledger-report-mode-abbrev-table)
+
+(define-derived-mode ledger-report-mode text-mode "Ledger-Report"
+  "A mode for viewing ledger reports."
+  (let ((map (make-sparse-keymap)))
+    (define-key map [? ] 'scroll-up)
+    (define-key map [?r] 'ledger-report-redo)
+    (define-key map [?s] 'ledger-report-save)
+    (define-key map [?k] 'ledger-report-kill)
+    (define-key map [?e] 'ledger-report-edit)
+    (define-key map [?q] 'ledger-report-quit)
+    (define-key map [(control ?c) (control ?l) (control ?r)] 
+      'ledger-report-redo)
+    (define-key map [(control ?c) (control ?l) (control ?S)] 
+      'ledger-report-save)
+    (define-key map [(control ?c) (control ?l) (control ?k)] 
+      'ledger-report-kill)
+    (define-key map [(control ?c) (control ?l) (control ?e)] 
+      'ledger-report-edit)
+    (use-local-map map)))
+
+(defun ledger-report-read-name ()
+  "Read the name of a ledger report to use, with completion.
+
+The empty string and unknown names are allowed."
+  (completing-read "Report name: " 
+                   ledger-reports nil nil nil
+                   'ledger-report-name-prompt-history nil))
+
+(defun ledger-report (report-name edit)
+  "Run a user-specified report from `ledger-reports'.
+
+Prompts the user for the name of the report to run.  If no name is
+entered, the user will be prompted for a command line to run.  The
+command line specified or associated with the selected report name
+is run and the output is made available in another buffer for viewing.
+If a prefix argument is given and the user selects a valid report
+name, the user is prompted with the corresponding command line for
+editing before the command is run.
+
+The output buffer will be in `ledger-report-mode', which defines
+commands for saving a new named report based on the command line
+used to generate the buffer, navigating the buffer, etc."
+  (interactive 
+   (let ((rname (ledger-report-read-name))
+         (edit (not (null current-prefix-arg))))
+     (list rname edit)))
+  (let ((buf (current-buffer))
+	(rbuf (get-buffer ledger-report-buffer-name))
+        (wcfg (current-window-configuration)))
+    (if rbuf
+	(kill-buffer rbuf))
+    (with-current-buffer
+	(pop-to-buffer (get-buffer-create ledger-report-buffer-name))
+      (ledger-report-mode)
+      (set (make-local-variable 'ledger-buf) buf)
+      (set (make-local-variable 'ledger-report-name) report-name)
+      (set (make-local-variable 'ledger-original-window-cfg) wcfg)
+      (ledger-do-report (ledger-report-cmd report-name edit))
+      (shrink-window-if-larger-than-buffer))))
+
+(defun string-empty-p (s)
+  "Check for the empty string."
+  (string-equal "" s))
+
+(defun ledger-report-name-exists (name)
+  "Check to see if the given report name exists.
+
+If name exists, returns the object naming the report, otherwise returns nil."
+  (unless (string-empty-p name)
+    (car (assoc name ledger-reports))))
+
+(defun ledger-reports-add (name cmd)
+  "Add a new report to `ledger-reports'."
+  (setq ledger-reports (cons (list name cmd) ledger-reports)))
+
+(defun ledger-reports-custom-save ()  
+  "Save the `ledger-reports' variable using the customize framework."
+  (customize-save-variable 'ledger-reports ledger-reports))
+
+(defun ledger-report-read-command (report-cmd)
+  "Read the command line to create a report."
+  (read-from-minibuffer "Report command line: "
+                        (if (null report-cmd) "ledger " report-cmd)
+                        nil nil 'ledger-report-cmd-prompt-history))
+
+(defun ledger-report-cmd (report-name edit)
+  "Get the command line to run the report."
+  (let ((report-cmd (car (cdr (assoc report-name ledger-reports)))))
+    ;; logic for substitution goes here
+    (when (or (null report-cmd) edit)
+      (setq report-cmd (ledger-report-read-command report-cmd)))
+    (set (make-local-variable 'ledger-report-cmd) report-cmd)
+    (or (string-empty-p report-name)
+        (ledger-report-name-exists report-name)
+        (ledger-reports-add report-name report-cmd)
+        (ledger-reports-custom-save))
+    report-cmd))
+
+(defun ledger-do-report (cmd)
+  "Run a report command line."
+  (goto-char (point-min))
+  (insert (format "Report: %s\n" cmd) 
+	  (make-string (- (window-width) 1) ?=)
+	  "\n")
+  (shell-command cmd t nil))
+
+(defun ledger-report-goto ()
+  "Goto the ledger report buffer."
+  (interactive)
+  (let ((rbuf (get-buffer ledger-report-buffer-name)))
+    (if (not rbuf)
+        (error "There is no ledger report buffer"))
+    (pop-to-buffer rbuf)
+    (shrink-window-if-larger-than-buffer)))
+
+(defun ledger-report-redo ()
+  "Redo the report in the current ledger report buffer."
+  (interactive)
+  (ledger-report-goto)
+  (erase-buffer)
+  (ledger-do-report ledger-report-cmd))
+
+(defun ledger-report-quit ()
+  "Quit the ledger report buffer."
+  (interactive)
+  (ledger-report-goto)
+  (set-window-configuration ledger-original-window-cfg))
+
+(defun ledger-report-kill ()
+  "Kill the ledger report buffer."
+  (interactive)
+  (ledger-report-quit)
+  (kill-buffer (get-buffer ledger-report-buffer-name)))
+
+(defun ledger-report-edit ()
+  "Edit the defined ledger reports."
+  (interactive)
+  (customize-variable 'ledger-reports))
+
+(defun ledger-report-read-new-name ()
+  "Read the name for a new report from the minibuffer."
+  (let ((name ""))
+    (while (string-empty-p name)
+      (setq name (read-from-minibuffer "Report name: " nil nil nil
+                                       'ledger-report-name-prompt-history)))
+    name))
+
+(defun ledger-report-save ()
+  "Save the current report command line as a named report."
+  (interactive)
+  (ledger-report-goto)
+  (let (existing-name)
+    (when (string-empty-p ledger-report-name)
+      (setq ledger-report-name (ledger-report-read-new-name)))
+
+    (while (setq existing-name (ledger-report-name-exists ledger-report-name))
+      (cond ((y-or-n-p (format "Overwrite existing report named '%s' " 
+                               ledger-report-name))
+             (when (string-equal 
+                    ledger-report-cmd
+                    (car (cdr (assq existing-name ledger-reports))))
+               (error "Current command is identical to existing saved one"))
+             (setq ledger-reports 
+                   (assq-delete-all existing-name ledger-reports)))
+            (t
+             (setq ledger-report-name (ledger-report-read-new-name)))))
+
+    (ledger-reports-add ledger-report-name ledger-report-cmd)
+    (ledger-reports-custom-save)))
 
 ;; A sample function for $ users
 
