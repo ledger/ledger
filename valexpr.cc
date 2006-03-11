@@ -1516,21 +1516,35 @@ void valexpr_context::describe(std::ostream& out) const throw()
     out << desc << std::endl;
 
   out << "  ";
-  unsigned long start = out.tellp();
-  unsigned long pos   = ledger::write_value_expr(out, expr,
-						 error_node, start);
-  out << std::endl << "  ";
-  for (int i = 0; i < pos - start; i++)
-    out << " ";
-  out << "^" << std::endl;
+  unsigned long start = (long)out.tellp() - 1;
+  unsigned long begin;
+  unsigned long end;
+  bool found = ledger::write_value_expr(out, expr, error_node, &begin, &end);
+  out << std::endl;
+  if (found) {
+    out << "  ";
+    for (int i = 0; i < end - start; i++) {
+      if (i >= begin - start)
+	out << "^";
+      else
+	out << " ";
+    }
+    out << std::endl;
+  }
 }
 
-unsigned long write_value_expr(std::ostream&	    out,
-			       const value_expr_t * node,
-			       const value_expr_t * node_to_find,
-			       unsigned long	    start_pos)
+bool write_value_expr(std::ostream&	   out,
+		      const value_expr_t * node,
+		      const value_expr_t * node_to_find,
+		      unsigned long *	   start_pos,
+		      unsigned long *	   end_pos)
 {
-  long pos = start_pos;
+  bool found = false;
+
+  if (start_pos && node == node_to_find) {
+    *start_pos = (long)out.tellp() - 1;
+    found = true;
+  }
 
   switch (node->kind) {
   case value_expr_t::CONSTANT_I:
@@ -1566,62 +1580,74 @@ unsigned long write_value_expr(std::ostream&	    out,
 
   case value_expr_t::F_ARITH_MEAN:
     out << "average(";
-    pos = write_value_expr(out, node->left, node_to_find, pos);
+    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+      found = true;
     out << ")";
     break;
   case value_expr_t::F_ABS: out << "abs"; break;
     out << "abs(";
-    pos = write_value_expr(out, node->left, node_to_find, pos);
+    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+      found = true;
     out << ")";
     break;
   case value_expr_t::F_QUANTITY: out << "quantity"; break;
     out << "quantity(";
-    pos = write_value_expr(out, node->left, node_to_find, pos);
+    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+      found = true;
     out << ")";
     break;
   case value_expr_t::F_COMMODITY: out << "commodity"; break;
     out << "commodity(";
-    pos = write_value_expr(out, node->left, node_to_find, pos);
+    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+      found = true;
     out << ")";
     break;
   case value_expr_t::F_SET_COMMODITY: out << "set_commodity"; break;
     out << "average(";
-    pos = write_value_expr(out, node->left, node_to_find, pos);
+    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+      found = true;
     out << ")";
     break;
   case value_expr_t::F_VALUE: out << "valueof"; break;
     out << "average(";
-    pos = write_value_expr(out, node->left, node_to_find, pos);
+    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+      found = true;
     out << ")";
     break;
   case value_expr_t::F_PRICE: out << "priceof"; break;
     out << "average(";
-    pos = write_value_expr(out, node->left, node_to_find, pos);
+    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+      found = true;
     out << ")";
     break;
   case value_expr_t::F_DATE: out << "dateof"; break;
     out << "average(";
-    pos = write_value_expr(out, node->left, node_to_find, pos);
+    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+      found = true;
     out << ")";
     break;
   case value_expr_t::F_DATECMP: out << "datecmp"; break;
     out << "average(";
-    pos = write_value_expr(out, node->left, node_to_find, pos);
+    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+      found = true;
     out << ")";
     break;
   case value_expr_t::F_YEAR: out << "yearof"; break;
     out << "average(";
-    pos = write_value_expr(out, node->left, node_to_find, pos);
+    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+      found = true;
     out << ")";
     break;
   case value_expr_t::F_MONTH: out << "monthof"; break;
     out << "average(";
-    pos = write_value_expr(out, node->left, node_to_find, pos);
+    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+      found = true;
     out << ")";
     break;
   case value_expr_t::F_DAY: out << "dayof"; break;
     out << "average(";
-    pos = write_value_expr(out, node->left, node_to_find, pos);
+    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+      found = true;
     out << ")";
     break;
 
@@ -1646,15 +1672,18 @@ unsigned long write_value_expr(std::ostream&	    out,
 
   case value_expr_t::O_NOT:
     out << "!";
-    pos = write_value_expr(out, node->left, node_to_find, pos);
+    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+      found = true;
     break;
   case value_expr_t::O_NEG:
     out << "-";
-    pos = write_value_expr(out, node->left, node_to_find, pos);
+    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+      found = true;
     break;
   case value_expr_t::O_PERC:
     out << "%";
-    pos = write_value_expr(out, node->left, node_to_find, pos);
+    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+      found = true;
     break;
 
   case value_expr_t::O_ARG:
@@ -1667,107 +1696,137 @@ unsigned long write_value_expr(std::ostream&	    out,
     break;
 
   case value_expr_t::O_COM:
-    pos = write_value_expr(out, node->left, node_to_find, pos);
+    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+      found = true;
     out << ", ";
-    pos = write_value_expr(out, node->right, node_to_find, pos);
+    if (write_value_expr(out, node->right, node_to_find, start_pos, end_pos))
+      found = true;
     break;
   case value_expr_t::O_QUES:
     out << "(";
-    pos = write_value_expr(out, node->left, node_to_find, pos);
+    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+      found = true;
     out << " ? ";
-    pos = write_value_expr(out, node->right, node_to_find, pos);
+    if (write_value_expr(out, node->right, node_to_find, start_pos, end_pos))
+      found = true;
     out << ")";
     break;
   case value_expr_t::O_COL:
-    pos = write_value_expr(out, node->left, node_to_find, pos);
+    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+      found = true;
     out << " : ";
-    pos = write_value_expr(out, node->right, node_to_find, pos);
+    if (write_value_expr(out, node->right, node_to_find, start_pos, end_pos))
+      found = true;
     break;
 
   case value_expr_t::O_AND: out << "O_AND"; break;
     out << "(";
-    pos = write_value_expr(out, node->left, node_to_find, pos);
+    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+      found = true;
     out << " & ";
-    pos = write_value_expr(out, node->right, node_to_find, pos);
+    if (write_value_expr(out, node->right, node_to_find, start_pos, end_pos))
+      found = true;
     out << ")";
     break;
   case value_expr_t::O_OR: out << "O_OR"; break;
     out << "(";
-    pos = write_value_expr(out, node->left, node_to_find, pos);
+    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+      found = true;
     out << " | ";
-    pos = write_value_expr(out, node->right, node_to_find, pos);
+    if (write_value_expr(out, node->right, node_to_find, start_pos, end_pos))
+      found = true;
     out << ")";
     break;
 
   case value_expr_t::O_NEQ:
     out << "(";
-    pos = write_value_expr(out, node->left, node_to_find, pos);
+    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+      found = true;
     out << " != ";
-    pos = write_value_expr(out, node->right, node_to_find, pos);
+    if (write_value_expr(out, node->right, node_to_find, start_pos, end_pos))
+      found = true;
     out << ")";
     break;
   case value_expr_t::O_EQ:
     out << "(";
-    pos = write_value_expr(out, node->left, node_to_find, pos);
+    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+      found = true;
     out << " == ";
-    pos = write_value_expr(out, node->right, node_to_find, pos);
+    if (write_value_expr(out, node->right, node_to_find, start_pos, end_pos))
+      found = true;
     out << ")";
     break;
   case value_expr_t::O_LT:
     out << "(";
-    pos = write_value_expr(out, node->left, node_to_find, pos);
+    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+      found = true;
     out << " < ";
-    pos = write_value_expr(out, node->right, node_to_find, pos);
+    if (write_value_expr(out, node->right, node_to_find, start_pos, end_pos))
+      found = true;
     out << ")";
     break;
   case value_expr_t::O_LTE:
     out << "(";
-    pos = write_value_expr(out, node->left, node_to_find, pos);
+    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+      found = true;
     out << " <= ";
-    pos = write_value_expr(out, node->right, node_to_find, pos);
+    if (write_value_expr(out, node->right, node_to_find, start_pos, end_pos))
+      found = true;
     out << ")";
     break;
   case value_expr_t::O_GT:
     out << "(";
-    pos = write_value_expr(out, node->left, node_to_find, pos);
+    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+      found = true;
     out << " > ";
-    pos = write_value_expr(out, node->right, node_to_find, pos);
+    if (write_value_expr(out, node->right, node_to_find, start_pos, end_pos))
+      found = true;
     out << ")";
     break;
   case value_expr_t::O_GTE:
     out << "(";
-    pos = write_value_expr(out, node->left, node_to_find, pos);
+    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+      found = true;
     out << " >= ";
-    pos = write_value_expr(out, node->right, node_to_find, pos);
+    if (write_value_expr(out, node->right, node_to_find, start_pos, end_pos))
+      found = true;
     out << ")";
     break;
 
   case value_expr_t::O_ADD:
     out << "(";
-    pos = write_value_expr(out, node->left, node_to_find, pos);
+    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+      found = true;
     out << " + ";
-    pos = write_value_expr(out, node->right, node_to_find, pos);
+    if (write_value_expr(out, node->right, node_to_find, start_pos, end_pos))
+      found = true;
     out << ")";
     break;
   case value_expr_t::O_SUB:
     out << "(";
-    pos = write_value_expr(out, node->left, node_to_find, pos);
+    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+      found = true;
     out << " - ";
-    pos = write_value_expr(out, node->right, node_to_find, pos);
+    if (write_value_expr(out, node->right, node_to_find, start_pos, end_pos))
+      found = true;
     out << ")";
     break;
   case value_expr_t::O_MUL:
     out << "(";
-    pos = write_value_expr(out, node->left, node_to_find, pos);
+    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+      found = true;
     out << " * ";
-    pos = write_value_expr(out, node->right, node_to_find, pos);
+    if (write_value_expr(out, node->right, node_to_find, start_pos, end_pos))
+      found = true;
     out << ")";
     break;
   case value_expr_t::O_DIV:
     out << "(";
-    pos = write_value_expr(out, node->left, node_to_find, pos);
+    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+      found = true;
     out << " / ";
-    pos = write_value_expr(out, node->right, node_to_find, pos);
+    if (write_value_expr(out, node->right, node_to_find, start_pos, end_pos))
+      found = true;
     out << ")";
     break;
 
@@ -1777,10 +1836,10 @@ unsigned long write_value_expr(std::ostream&	    out,
     break;
   }
 
-  if (node == node_to_find)
-    pos = (long)out.tellp() - 1;
+  if (end_pos && node == node_to_find)
+    *end_pos = (long)out.tellp() - 1;
   
-  return pos;
+  return found;
 }
 
 void dump_value_expr(std::ostream& out, const value_expr_t * node,

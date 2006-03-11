@@ -322,10 +322,11 @@ inline value_expr_t * parse_value_expr(const char * p,
 void dump_value_expr(std::ostream& out, const value_expr_t * node,
 		     const int depth = 0);
 
-unsigned long write_value_expr(std::ostream&	    out,
-			       const value_expr_t * node,
-			       const value_expr_t * node_to_find = NULL,
-			       unsigned long	    start_pos    = 0UL);
+bool write_value_expr(std::ostream&	   out,
+		      const value_expr_t * node,
+		      const value_expr_t * node_to_find = NULL,
+		      unsigned long *	   start_pos    = NULL,
+		      unsigned long *	   end_pos      = NULL);
 
 //////////////////////////////////////////////////////////////////////
 

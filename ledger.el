@@ -683,7 +683,7 @@ If name exists, returns the object naming the report, otherwise returns nil."
 
 (defun ledger-report-cmd (report-name edit)
   "Get the command line to run the report."
-  (let ((report-cmd (first (cdr (assoc report-name ledger-reports)))))
+  (let ((report-cmd (car (cdr (assoc report-name ledger-reports)))))
     ;; logic for substitution goes here
     (when (or (null report-cmd) edit)
       (setq report-cmd (ledger-report-read-command report-cmd)))
@@ -756,7 +756,7 @@ If name exists, returns the object naming the report, otherwise returns nil."
                                ledger-report-name))
              (when (string-equal 
                     ledger-report-cmd
-                    (first (cdr (assq existing-name ledger-reports))))
+                    (car (cdr (assq existing-name ledger-reports))))
                (error "Current command is identical to existing saved one"))
              (setq ledger-reports 
                    (assq-delete-all existing-name ledger-reports)))
