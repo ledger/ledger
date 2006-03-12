@@ -94,8 +94,43 @@ struct transaction_xdata_t
   account_t *    account;
   void *         ptr;
 
+  transactions_list * component_xacts;
+
   transaction_xdata_t()
-    : index(0), dflags(0), date(0), account(0), ptr(0) {}
+    : index(0), dflags(0), date(0), account(NULL), ptr(NULL),
+      component_xacts(NULL) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor transaction_xdata_t " << this);
+  }
+
+  ~transaction_xdata_t() {
+    DEBUG_PRINT("ledger.memory.dtors", "dtor transaction_xdata_t " << this);
+    if (component_xacts)
+      delete component_xacts;
+  }
+
+  void remember_xact(transaction_t& xact) {
+    if (! component_xacts)
+      component_xacts = new transactions_list;
+    component_xacts->push_back(&xact);
+  }
+
+  bool have_component_xacts() const {
+    return component_xacts != NULL && ! component_xacts->empty();
+  }
+
+  void copy_component_xacts(transactions_list& xacts) {
+    for (transactions_list::const_iterator i = xacts.begin();
+	 i != xacts.end();
+	 i++)
+      remember_xact(**i);
+  }
+
+  void walk_component_xacts(item_handler<transaction_t>& handler) const {
+    for (transactions_list::const_iterator i = component_xacts->begin();
+	 i != component_xacts->end();
+	 i++)
+      handler(**i);
+  }
 };
 
 inline bool transaction_has_xdata(const transaction_t& xact) {
@@ -323,6 +358,22 @@ class collapse_transactions : public item_handler<transaction_t>
   virtual void operator()(transaction_t& xact);
 };
 
+class component_transactions : public item_handler<transaction_t>
+{
+  item_predicate<transaction_t> pred;
+
+ public:
+  component_transactions(item_handler<transaction_t> * handler,
+			 const value_expr_t * predicate)
+    : item_handler<transaction_t>(handler), pred(predicate) {}
+
+  component_transactions(item_handler<transaction_t> * handler,
+			 const std::string& predicate)
+    : item_handler<transaction_t>(handler), pred(predicate) {}
+
+  virtual void operator()(transaction_t& xact);
+};
+
 class related_transactions : public item_handler<transaction_t>
 {
   transactions_list transactions;
@@ -379,8 +430,10 @@ class changed_value_transactions : public item_handler<transaction_t>
 class subtotal_transactions : public item_handler<transaction_t>
 {
   struct acct_value_t {
-    account_t * account;
-    value_t     value;
+    account_t *	account;
+    value_t	value;
+
+    transactions_list components;
 
     acct_value_t(account_t * a) : account(a) {}
     acct_value_t(account_t * a, value_t& v) : account(a), value(v) {}
@@ -393,6 +446,7 @@ class subtotal_transactions : public item_handler<transaction_t>
 
  protected:
   values_map values;
+  bool       remember_components;
 
   std::list<entry_t>       entry_temps;
   std::list<transaction_t> xact_temps;
@@ -401,15 +455,16 @@ class subtotal_transactions : public item_handler<transaction_t>
   std::time_t start;
   std::time_t finish;
 
-  subtotal_transactions(item_handler<transaction_t> * handler)
-    : item_handler<transaction_t>(handler), start(0), finish(0) {}
+  subtotal_transactions(item_handler<transaction_t> * handler,
+			bool _remember_components = false)
+    : item_handler<transaction_t>(handler),
+      remember_components(_remember_components), start(0), finish(0) {}
 #ifdef DEBUG_ENABLED
   subtotal_transactions(const subtotal_transactions&) {
     assert(0);
   }
 #endif
-
-  ~subtotal_transactions() {
+  virtual ~subtotal_transactions() {
     clear_entries_transactions(entry_temps);
   }
 
@@ -442,9 +497,11 @@ class interval_transactions : public subtotal_transactions
  public:
   interval_transactions(item_handler<transaction_t> * _handler,
 			const interval_t&    _interval,
-			const value_expr_t * sort_order = NULL)
-    : subtotal_transactions(_handler), interval(_interval),
-      last_xact(NULL), started(false), sorter(NULL) {
+			const value_expr_t * sort_order = NULL,
+			bool remember_components = false)
+    : subtotal_transactions(_handler, remember_components),
+      interval(_interval), last_xact(NULL), started(false),
+      sorter(NULL) {
     if (sort_order) {
       sorter = new sort_transactions(handler, sort_order);
       handler = sorter;
@@ -452,15 +509,16 @@ class interval_transactions : public subtotal_transactions
   }
   interval_transactions(item_handler<transaction_t> * _handler,
 			const std::string& _interval,
-			const std::string& sort_order = "")
-    : subtotal_transactions(_handler), interval(_interval),
-      last_xact(NULL), started(false), sorter(NULL) {
+			const std::string& sort_order = "",
+			bool remember_components = false)
+    : subtotal_transactions(_handler, remember_components),
+      interval(_interval), last_xact(NULL), started(false),
+      sorter(NULL) {
     if (! sort_order.empty()) {
       sorter = new sort_transactions(handler, sort_order);
       handler = sorter;
     }
   }
-
   virtual ~interval_transactions() {
     if (sorter)
       delete sorter;
@@ -482,11 +540,13 @@ class by_payee_transactions : public item_handler<transaction_t>
   typedef std::pair<std::string, subtotal_transactions *> payee_subtotals_pair;
 
   payee_subtotals_map payee_subtotals;
+  bool remember_components;
 
  public:
-  by_payee_transactions(item_handler<transaction_t> * handler)
-    : item_handler<transaction_t>(handler) {}
-
+  by_payee_transactions(item_handler<transaction_t> * handler,
+			bool _remember_components = false)
+    : item_handler<transaction_t>(handler),
+      remember_components(_remember_components) {}
   virtual ~by_payee_transactions();
 
   virtual void flush();
@@ -514,8 +574,9 @@ class dow_transactions : public subtotal_transactions
   transactions_list days_of_the_week[7];
 
  public:
-  dow_transactions(item_handler<transaction_t> * handler)
-    : subtotal_transactions(handler) {}
+  dow_transactions(item_handler<transaction_t> * handler,
+		   bool remember_components = false)
+    : subtotal_transactions(handler, remember_components) {}
 
   virtual void flush();
   virtual void operator()(transaction_t& xact) {

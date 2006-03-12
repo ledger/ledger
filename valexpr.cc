@@ -1578,6 +1578,17 @@ bool write_value_expr(std::ostream&	   out,
   case value_expr_t::COST_TOTAL: out << "total_cost"; break;
   case value_expr_t::F_NOW: out << "now"; break;
 
+  case value_expr_t::VALUE_EXPR:
+    if (write_value_expr(out, amount_expr->parsed,
+			 node_to_find, start_pos, end_pos))
+      found = true;
+    break;
+  case value_expr_t::TOTAL_EXPR:
+    if (write_value_expr(out, total_expr->parsed,
+			 node_to_find, start_pos, end_pos))
+      found = true;
+    break;
+
   case value_expr_t::F_ARITH_MEAN:
     out << "average(";
     if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
@@ -1882,6 +1893,9 @@ void dump_value_expr(std::ostream& out, const value_expr_t * node,
   case value_expr_t::TOTAL: out << "TOTAL"; break;
   case value_expr_t::PRICE_TOTAL: out << "PRICE_TOTAL"; break;
   case value_expr_t::COST_TOTAL: out << "COST_TOTAL"; break;
+
+  case value_expr_t::VALUE_EXPR: out << "VALUE_EXPR"; break;
+  case value_expr_t::TOTAL_EXPR: out << "TOTAL_EXPR"; break;
 
   case value_expr_t::F_NOW: out << "F_NOW"; break;
   case value_expr_t::F_ARITH_MEAN: out << "F_ARITH_MEAN"; break;

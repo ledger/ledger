@@ -427,6 +427,12 @@ public:
     guarded_compute(parsed, temp, details, context);
     return temp;
   }
+
+  friend bool write_value_expr(std::ostream&	    out,
+			       const value_expr_t * node,
+			       const value_expr_t * node_to_find,
+			       unsigned long *	    start_pos,
+			       unsigned long *	    end_pos);
 };
 
 extern std::auto_ptr<value_expr> amount_expr;
