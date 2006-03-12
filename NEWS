@@ -6,7 +6,7 @@
 - Error reporting has been greatly improving, now showing full
   contextual information for most error messages.
 
-- Add a new --only predicate, which occurs during transaction
+- Added a new --only predicate, which occurs during transaction
   processing between --limit and --display.  Here is a summary of how
   the three supported predicates are used:
 
@@ -58,6 +58,26 @@
 
         ledger -M --limit "a>20" --only "a>200" \
           --display "year == yearof([last year])" reg ^Expenses:Food
+
+- Added new "--descend AMOUNT" and "--descend-if VALEXPR" reporting
+  options.  For any reports that display valued transactions (i.e.,
+  register, print, etc), you can now descend into the component
+  transactions that made up any of the values you see.
+
+  For example, say you request a --monthtly expenses report:
+
+    $ ledger --monthly --descend "\$500.00" register ^Expenses
+
+  Now, in one of the reported months you see $500.00 spent on
+  Expenses:Food.  You can ask Ledger to "descend" into, and show the
+  component transactions of, that $500.00 by respecifying the query
+  with the --descend option:
+
+    $ ledger --monthly --descend "\$500.00" register ^Expenses
+
+  The --descend-if option has the same effect, but takes a value
+  expression which is evaluated as a boolean to locate the desired
+  reported transaction.
 
 - There have a few changes to value expression syntax.  The most
   significant incompatibilities being:
