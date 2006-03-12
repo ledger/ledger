@@ -181,13 +181,20 @@ void handle_value(const value_t&	       value,
 		  unsigned int		       flags,
 		  std::list<transaction_t>&    temps,
 		  item_handler<transaction_t>& handler,
-		  const std::time_t            date = 0)
+		  const std::time_t            date = 0,
+		  transactions_list *          component_xacts = NULL)
 {
   temps.push_back(transaction_t(account));
   transaction_t& xact(temps.back());
   xact.entry = entry;
   xact.flags |= TRANSACTION_BULK_ALLOC;
   entry->add_transaction(&xact);
+
+  // If there are component transactions to associate with this
+  // temporary, do so now.
+
+  if (component_xacts)
+    transaction_xdata(xact).copy_component_xacts(*component_xacts);
 
   // If the account for this transaction is all virtual, then report
   // the transaction as such.  This allows subtotal reports to show
@@ -343,6 +350,17 @@ void changed_value_transactions::operator()(transaction_t& xact)
   last_xact = &xact;
 }
 
+void component_transactions::operator()(transaction_t& xact)
+{
+  if (handler && pred(xact)) {
+    if (transaction_has_xdata(xact) &&
+	transaction_xdata_(xact).have_component_xacts())
+      transaction_xdata_(xact).walk_component_xacts(*handler);
+    else
+      (*handler)(xact);
+  }
+}
+
 void subtotal_transactions::report_subtotal(const char * spec_fmt)
 {
   char buf[256];
@@ -364,7 +382,7 @@ void subtotal_transactions::report_subtotal(const char * spec_fmt)
        i != values.end();
        i++)
     handle_value((*i).second.value, (*i).second.account, &entry, 0,
-		 xact_temps, *handler, finish);
+		 xact_temps, *handler, finish, &(*i).second.components);
 
   values.clear();
 }
@@ -383,9 +401,18 @@ void subtotal_transactions::operator()(transaction_t& xact)
   if (i == values.end()) {
     value_t temp;
     add_transaction_to(xact, temp);
-    values.insert(values_pair(acct->fullname(), acct_value_t(acct, temp)));
+    std::pair<values_map::iterator, bool> result
+      = values.insert(values_pair(acct->fullname(),
+				  acct_value_t(acct, temp)));
+    assert(result.second);
+
+    if (remember_components)
+      (*result.first).second.components.push_back(&xact);
   } else {
     add_transaction_to(xact, (*i).second.value);
+
+    if (remember_components)
+      (*i).second.components.push_back(&xact);
   }
 
   // If the account for this transaction is all virtual, mark it as
@@ -478,8 +505,9 @@ void by_payee_transactions::operator()(transaction_t& xact)
 {
   payee_subtotals_map::iterator i = payee_subtotals.find(xact.entry->payee);
   if (i == payee_subtotals.end()) {
-    payee_subtotals_pair temp(xact.entry->payee,
-			      new subtotal_transactions(handler));
+    payee_subtotals_pair
+      temp(xact.entry->payee,
+	   new subtotal_transactions(handler, remember_components));
     std::pair<payee_subtotals_map::iterator, bool> result
       = payee_subtotals.insert(temp);
 

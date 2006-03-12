@@ -76,6 +76,8 @@ void config_t::reset()
   secondary_predicate = "";
   display_predicate   = "";
 
+  descend_expr = "";
+
   head_entries = 0;
   tail_entries = 0;
 
@@ -322,6 +324,8 @@ config_t::chain_xact_handlers(const std::string& command,
 			      account_t * master,
 			      std::list<item_handler<transaction_t> *>& ptrs)
 {
+  bool remember_components = false;
+
   item_handler<transaction_t> * formatter = NULL;
 
   ptrs.push_back(formatter = base_formatter);
@@ -347,6 +351,30 @@ config_t::chain_xact_handlers(const std::string& command,
     // appears will determine, for example, whether filtered
     // transactions are included or excluded from the running total.
     ptrs.push_back(formatter = new calc_transactions(formatter));
+
+    // component_transactions looks for reported transaction that
+    // match the given `descend_expr', and then reports the
+    // transactions which made up the total for that reported
+    // transaction.
+    if (! descend_expr.empty()) {
+      std::list<std::string> descend_exprs;
+
+      std::string::size_type beg = 0;
+      for (std::string::size_type pos = descend_expr.find(';');
+	   pos != std::string::npos;
+	   beg = pos + 1, pos = descend_expr.find(';', beg))
+	descend_exprs.push_back(std::string(descend_expr, beg, pos));
+      descend_exprs.push_back(std::string(descend_expr, beg));
+
+      for (std::list<std::string>::reverse_iterator i =
+	     descend_exprs.rbegin();
+	   i != descend_exprs.rend();
+	   i++)
+	ptrs.push_back(formatter =
+		       new component_transactions(formatter, *i));
+
+      remember_components = true;
+    }
 
     // reconcile_transactions will pass through only those
     // transactions which can be reconciled to a given balance
@@ -400,18 +428,22 @@ config_t::chain_xact_handlers(const std::string& command,
   // reports all the transactions that fall on each subsequent day
   // of the week.
   if (show_subtotal && ! (command == "b" || command == "E"))
-    ptrs.push_back(formatter = new subtotal_transactions(formatter));
+    ptrs.push_back(formatter =
+		   new subtotal_transactions(formatter, remember_components));
 
   if (days_of_the_week)
-    ptrs.push_back(formatter = new dow_transactions(formatter));
+    ptrs.push_back(formatter =
+		   new dow_transactions(formatter, remember_components));
   else if (by_payee)
-    ptrs.push_back(formatter = new by_payee_transactions(formatter));
+    ptrs.push_back(formatter =
+		   new by_payee_transactions(formatter, remember_components));
 
   if (! report_period.empty()) {
     ptrs.push_back(formatter =
 		   new interval_transactions(formatter,
 					     report_period,
-					     report_period_sort));
+					     report_period_sort,
+					     remember_components));
     ptrs.push_back(formatter = new sort_transactions(formatter, "d"));
   }
 
@@ -927,6 +959,23 @@ OPT_BEGIN(related, "r") {
   config->show_related = true;
 } OPT_END(related);
 
+OPT_BEGIN(descend, "") {
+  std::string arg(optarg);
+  std::string::size_type beg = 0;
+  config->descend_expr = "";
+  for (std::string::size_type pos = arg.find(';');
+       pos != std::string::npos;
+       beg = pos + 1, pos = arg.find(';', beg))
+    config->descend_expr += (std::string("t=={") +
+			     std::string(arg, beg, pos) + "};");
+  config->descend_expr += (std::string("t=={") +
+			   std::string(arg, beg) + "}");
+} OPT_END(descend);
+
+OPT_BEGIN(descend_if, "") {
+  config->descend_expr = optarg;
+} OPT_END(descend_if);
+
 OPT_BEGIN(period, "p:") {
   if (config->report_period.empty()) {
     config->report_period = optarg;
@@ -1157,6 +1206,8 @@ option_t config_options[CONFIG_OPTIONS_SIZE] = {
   { "current", 'c', false, opt_current, false },
   { "date-format", 'y', true, opt_date_format, false },
   { "debug", '\0', true, opt_debug, false },
+  { "descend", '\0', true, opt_descend, false },
+  { "descend-if", '\0', true, opt_descend_if, false },
   { "deviation", 'D', false, opt_deviation, false },
   { "display", 'd', true, opt_display, false },
   { "dow", '\0', false, opt_dow, false },
