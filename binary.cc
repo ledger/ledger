@@ -455,7 +455,7 @@ inline commodity_t * read_binary_commodity(char *& data)
   commodity_t * commodity = new commodity_t;
   *commodities_next++ = commodity;
 
-  commodity->ptr =
+  commodity->base =
     base_commodities[read_binary_long<commodity_base_t::ident_t>(data) - 1];
 
   read_binary_string(data, commodity->qualified_symbol);
@@ -469,13 +469,13 @@ inline commodity_t * read_binary_commodity_annotated(char *& data)
   annotated_commodity_t * commodity = new annotated_commodity_t;
   *commodities_next++ = commodity;
 
-  commodity->ptr =
+  commodity->base =
     base_commodities[read_binary_long<commodity_base_t::ident_t>(data) - 1];
 
   read_binary_string(data, commodity->qualified_symbol);
   commodity->annotated = true;
 
-  commodity->base =
+  commodity->ptr =
     commodities[read_binary_long<commodity_t::ident_t>(data) - 1];
   read_binary_amount(data, commodity->price);
   read_binary_long(data, commodity->date);
@@ -658,7 +658,7 @@ unsigned int read_binary_journal(std::istream&	    in,
 
     if (read_binary_number<char>(data) == 0) {
       commodity	  = read_binary_commodity(data);
-      mapping_key = commodity->ptr->symbol;
+      mapping_key = commodity->base->symbol;
     } else {
       read_binary_string(data, mapping_key);
       commodity = read_binary_commodity_annotated(data);
@@ -677,7 +677,7 @@ unsigned int read_binary_journal(std::istream&	    in,
 						       commodity));
     if (! result.second && commodity->annotated)
       throw new error(std::string("Failed to read commodity from cache: ") +
-		      commodity->ptr->symbol);
+		      commodity->base->symbol);
   }
 
   commodity_t::ident_t ident;
@@ -1005,7 +1005,7 @@ void write_binary_commodity(std::ostream& out, commodity_t * commodity)
 {
   commodity->ident = ++commodity_index;
 
-  write_binary_long(out, commodity->ptr->ident);
+  write_binary_long(out, commodity->base->ident);
   write_binary_string(out, commodity->qualified_symbol);
 }
 
@@ -1014,7 +1014,7 @@ void write_binary_commodity_annotated(std::ostream& out,
 {
   commodity->ident = ++commodity_index;
 
-  write_binary_long(out, commodity->ptr->ident);
+  write_binary_long(out, commodity->base->ident);
   write_binary_string(out, commodity->qualified_symbol);
 
   annotated_commodity_t * ann_comm =

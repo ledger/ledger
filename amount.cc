@@ -1344,7 +1344,7 @@ void amount_t::annotate_commodity(const amount_t&    price,
 
   if (commodity().annotated) {
     this_ann = &static_cast<annotated_commodity_t&>(commodity());
-    this_base = this_ann->base;
+    this_base = this_ann->ptr;
   } else {
     this_base = &commodity();
   }
@@ -1392,7 +1392,7 @@ amount_t amount_t::strip_annotations(const bool _keep_price,
       (_keep_tag && ! ann_comm.tag.empty()))
   {
     new_comm = annotated_commodity_t::find_or_create
-      (*ann_comm.base, _keep_price ? ann_comm.price : amount_t(),
+      (*ann_comm.ptr, _keep_price ? ann_comm.price : amount_t(),
        _keep_date ? ann_comm.date : 0, _keep_tag ? ann_comm.tag : "");
   } else {
     new_comm = commodity_t::find_or_create(ann_comm.base_symbol());
@@ -1465,7 +1465,7 @@ commodity_t * commodity_t::create(const std::string& symbol)
 {
   std::auto_ptr<commodity_t> commodity(new commodity_t);
 
-  commodity->ptr = commodity_base_t::create(symbol);
+  commodity->base = commodity_base_t::create(symbol);
 
   if (needs_quotes(symbol)) {
     commodity->qualified_symbol = "\"";
@@ -1607,10 +1607,10 @@ annotated_commodity_t::create(const commodity_t& comm,
   commodity->date  = date;
   commodity->tag   = tag;
 
-  commodity->base  = &comm;
-  assert(commodity->base);
-  commodity->ptr   = comm.ptr;
+  commodity->ptr = &comm;
   assert(commodity->ptr);
+  commodity->base = comm.base;
+  assert(commodity->base);
 
   commodity->qualified_symbol = comm.symbol();
 
