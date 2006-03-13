@@ -350,6 +350,9 @@ int parse_and_report(int argc, char * argv[], char * envp[])
 int main(int argc, char * argv[], char * envp[])
 {
   try {
+#if DEBUG_LEVEL < BETA
+    ledger::do_cleanup = false;
+#endif
     return parse_and_report(argc, argv, envp);
   }
   catch (const std::exception& err) {

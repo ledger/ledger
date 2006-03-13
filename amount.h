@@ -12,6 +12,8 @@
 
 namespace ledger {
 
+extern bool do_cleanup;
+
 class commodity_t;
 
 class amount_t

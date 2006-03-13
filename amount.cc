@@ -9,6 +9,8 @@
 
 namespace ledger {
 
+bool do_cleanup = true;
+
 #define BIGINT_BULK_ALLOC 0x0001
 
 class amount_t::bigint_t {
@@ -29,10 +31,7 @@ class amount_t::bigint_t {
     : prec(other.prec), flags(0), ref(1), index(0) {
     mpz_init_set(val, other.val);
   }
-  ~bigint_t() {
-    assert(ref == 0);
-    mpz_clear(val);
-  }
+  ~bigint_t();
 };
 
 unsigned int sizeof_bigint_t() {
@@ -41,9 +40,15 @@ unsigned int sizeof_bigint_t() {
 
 #define MPZ(x) ((x)->val)
 
-static mpz_t		  temp;
-static mpz_t		  divisor;
+static mpz_t temp;
+static mpz_t divisor;
+
 static amount_t::bigint_t true_value;
+
+inline amount_t::bigint_t::~bigint_t() {
+  assert(ref == 0 || (! do_cleanup && this == &true_value));
+  mpz_clear(val);
+}
 
 commodity_t::updater_t *  commodity_t::updater = NULL;
 commodities_map		  commodity_t::commodities;
@@ -83,6 +88,9 @@ static struct _init_amounts {
   }
 
   ~_init_amounts() {
+    if (! do_cleanup)
+      return;
+
     mpz_clear(temp);
     mpz_clear(divisor);
 
