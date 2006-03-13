@@ -694,14 +694,12 @@ bool value_t::operator OP(const value_t& value)				\
       return *((amount_t *) data) OP *((amount_t *) value.data);	\
 									\
     case BALANCE:							\
-      return (*((amount_t *) data) OP					\
-	      ((balance_t *) value.data)->				\
-	      amount(((amount_t *) data)->commodity()));		\
+      return (balance_t(*((amount_t *) data)) OP			\
+	      *((balance_t *) value.data));				\
 									\
     case BALANCE_PAIR:							\
-      return (*((amount_t *) data) OP					\
-	      ((balance_pair_t *) value.data)->				\
-	      quantity.amount(((amount_t *) data)->commodity()));	\
+      return (balance_t(*((amount_t *) data)) OP			\
+	      *((balance_pair_t *) value.data));			\
 									\
     default:								\
       assert(0);							\
