@@ -1,10 +1,15 @@
 
 			     Ledger NEWS
 
-* 2.6
+* 3.0
 
 - Error reporting has been greatly improving, now showing full
   contextual information for most error messages.
+
+- Added new --ansi reporting option, which shows negative values as
+  red using ANSI terminal codes; --ansi-invert makes non-negative
+  values red (which makes more sense for income and budget reports,
+  for example).
 
 - Added a new --only predicate, which occurs during transaction
   processing between --limit and --display.  Here is a summary of how

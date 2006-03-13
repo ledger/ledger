@@ -1115,6 +1115,16 @@ OPT_BEGIN(total_data, "J") {
   config->format_string = config->plot_total_format;
 } OPT_END(total_data);
 
+OPT_BEGIN(ansi, "") {
+  format_t::ansi_codes  = true;
+  format_t::ansi_invert = false;
+} OPT_END(ansi);
+
+OPT_BEGIN(ansi_invert, "") {
+  format_t::ansi_codes  =
+  format_t::ansi_invert = true;
+} OPT_END(ansi);
+
 //////////////////////////////////////////////////////////////////////
 //
 // Commodity reporting
@@ -1192,6 +1202,8 @@ option_t config_options[CONFIG_OPTIONS_SIZE] = {
   { "add-budget", '\0', false, opt_add_budget, false },
   { "amount", 't', true, opt_amount, false },
   { "amount-data", 'j', false, opt_amount_data, false },
+  { "ansi", '\0', false, opt_ansi, false },
+  { "ansi-invert", '\0', false, opt_ansi_invert, false },
   { "average", 'A', false, opt_average, false },
   { "balance-format", '\0', true, opt_balance_format, false },
   { "basis", 'B', false, opt_basis, false },

@@ -72,6 +72,9 @@ struct format_t
   std::string format_string;
   element_t * elements;
 
+  static bool ansi_codes;
+  static bool ansi_invert;
+
   format_t() : elements(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor format_t");
   }

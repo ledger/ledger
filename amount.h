@@ -444,25 +444,25 @@ class commodity_t
   typedef unsigned long ident_t;
 
   ident_t	     ident;
-  commodity_base_t * ptr;
+  commodity_base_t * base;
   std::string	     qualified_symbol;
   bool		     annotated;
 
  public:
-  explicit commodity_t() : ptr(NULL), annotated(false) {}
+  explicit commodity_t() : base(NULL), annotated(false) {}
 
   operator bool() const {
     return this != null_commodity;
   }
   bool operator==(const commodity_t& comm) const {
-    return ptr == comm.ptr;
+    return base == comm.base;
   }
   bool operator!=(const commodity_t& comm) const {
-    return ptr != comm.ptr;
+    return base != comm.base;
   }
 
   std::string base_symbol() const {
-    return ptr->symbol;
+    return base->symbol;
   }
   std::string symbol() const {
     return qualified_symbol;
@@ -473,69 +473,69 @@ class commodity_t
   }
 
   std::string name() const {
-    return ptr->name;
+    return base->name;
   }
   void set_name(const std::string& arg) {
-    ptr->name = arg;
+    base->name = arg;
   }
 
   std::string note() const {
-    return ptr->note;
+    return base->note;
   }
   void set_note(const std::string& arg) {
-    ptr->note = arg;
+    base->note = arg;
   }
 
   unsigned char precision() const {
-    return ptr->precision;
+    return base->precision;
   }
   void set_precision(unsigned char arg) {
-    ptr->precision = arg;
+    base->precision = arg;
   }
 
   unsigned char flags() const {
-    return ptr->flags;
+    return base->flags;
   }
   void set_flags(unsigned char arg) {
-    ptr->flags = arg;
+    base->flags = arg;
   }
   void add_flags(unsigned char arg) {
-    ptr->flags |= arg;
+    base->flags |= arg;
   }
   void drop_flags(unsigned char arg) {
-    ptr->flags &= ~arg;
+    base->flags &= ~arg;
   }
 
   amount_t * smaller() const {
-    return ptr->smaller;
+    return base->smaller;
   }
   void set_smaller(const amount_t& arg) {
-    if (ptr->smaller)
-      delete ptr->smaller;
-    ptr->smaller = new amount_t(arg);
+    if (base->smaller)
+      delete base->smaller;
+    base->smaller = new amount_t(arg);
   }
 
   amount_t * larger() const {
-    return ptr->larger;
+    return base->larger;
   }
   void set_larger(const amount_t& arg) {
-    if (ptr->larger)
-      delete ptr->larger;
-    ptr->larger = new amount_t(arg);
+    if (base->larger)
+      delete base->larger;
+    base->larger = new amount_t(arg);
   }
 
   commodity_base_t::history_t * history() const {
-    return ptr->history;
+    return base->history;
   }
 
   void add_price(const std::time_t date, const amount_t& price) {
-    return ptr->add_price(date, price);
+    return base->add_price(date, price);
   }
   bool remove_price(const std::time_t date) {
-    return ptr->remove_price(date);
+    return base->remove_price(date);
   }
   amount_t value(const std::time_t moment = std::time(NULL)) const {
-    return ptr->value(moment);
+    return base->value(moment);
   }
 
   bool valid() const;
@@ -544,7 +544,7 @@ class commodity_t
 class annotated_commodity_t : public commodity_t
 {
  public:
-  const commodity_t * base;
+  const commodity_t * ptr;
 
   amount_t    price;
   std::time_t date;

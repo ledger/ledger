@@ -7,6 +7,9 @@
 
 namespace ledger {
 
+bool format_t::ansi_codes  = false;
+bool format_t::ansi_invert = false;
+
 std::string truncated(const std::string& str, unsigned int width,
 		      const int style)
 {
@@ -264,6 +267,26 @@ static bool entry_state(const entry_t * entry, transaction_t::state_t * state)
   return ! hetero;
 }
 
+namespace {
+  void mark_red(std::ostream& out, const element_t * elem) {
+    out.setf(std::ios::left);
+    out.width(0);
+    out << "\e[31m";
+
+    if (elem->align_left)
+      out << std::left;
+    else
+      out << std::right;
+
+    if (elem->min_width > 0)
+      out.width(elem->min_width);
+  }
+
+  void mark_plain(std::ostream& out) {
+    out << "\e[0m";
+  }
+}
+
 void format_t::format(std::ostream& out_str, const details_t& details) const
 {
   for (const element_t * elem = elements; elem; elem = elem->next) {
@@ -322,15 +345,37 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
       case value_t::BOOLEAN:
 	out << (*((bool *) value.data) ? "true" : "false");
 	break;
+
       case value_t::INTEGER:
+	if (ansi_codes) {
+	  if (ansi_invert) {
+	    if (*((long *) value.data) > 0)
+	      mark_red(out, elem);
+	  } else {
+	    if (*((long *) value.data) < 0)
+	      mark_red(out, elem);
+	  }
+	}
 	out << *((long *) value.data);
 	break;
+
       case value_t::DATETIME:
 	out << *((datetime_t *) value.data);
 	break;
+
       case value_t::AMOUNT:
+	if (ansi_codes) {
+	  if (ansi_invert) {
+	    if (*((amount_t *) value.data) > 0)
+	      mark_red(out, elem);
+	  } else {
+	    if (*((amount_t *) value.data) < 0)
+	      mark_red(out, elem);
+	  }
+	}
 	out << *((amount_t *) value.data);
 	break;
+
       case value_t::BALANCE:
 	bal = (balance_t *) value.data;
 	// fall through...
@@ -339,14 +384,28 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 	if (! bal)
 	  bal = &((balance_pair_t *) value.data)->quantity;
 
+	if (ansi_codes) {
+	  if (ansi_invert) {
+	    if (*bal > 0)
+	      mark_red(out, elem);
+	  } else {
+	    if (*bal < 0)
+	      mark_red(out, elem);
+	  }
+	}
 	bal->write(out, elem->min_width,
-		   (elem->max_width > 0 ? elem->max_width : elem->min_width));
+		   (elem->max_width > 0 ?
+		    elem->max_width : elem->min_width));
+
 	ignore_max_width = true;
 	break;
       default:
 	assert(0);
 	break;
       }
+
+      if (ansi_codes)
+	mark_plain(out);
       break;
     }
 
