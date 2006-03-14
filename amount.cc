@@ -15,6 +15,7 @@ bool do_cleanup = true;
 bool amount_t::keep_price = false;
 bool amount_t::keep_date  = false;
 bool amount_t::keep_tag   = false;
+bool amount_t::keep_base  = false;
 
 #define BIGINT_BULK_ALLOC 0x0001
 #define BIGINT_KEEP_PREC  0x0002
@@ -723,7 +724,7 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
   }
 
   amount_t base(amt);
-  if (amt.commodity().larger()) {
+  if (! amount_t::keep_base && amt.commodity().larger()) {
     amount_t last(amt);
     while (last.commodity().larger()) {
       last /= *last.commodity().larger();

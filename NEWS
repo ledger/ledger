@@ -6,14 +6,29 @@
 - Error reporting has been greatly improving, now showing full
   contextual information for most error messages.
 
-- Added new --ansi reporting option, which shows negative values as
-  red using ANSI terminal codes; --ansi-invert makes non-negative
-  values red (which makes more sense for income and budget reports,
-  for example).
+- Added --base reporting option, for reporting convertible commodities
+  in their most basic form.  For example, if you read a timeclock file
+  with Ledger, the time values are reported as hour and minutes --
+  whichever is the most compact form.  But with --base, Ledger reports
+  only in seconds.
 
-- Added a new --only predicate, which occurs during transaction
-  processing between --limit and --display.  Here is a summary of how
-  the three supported predicates are used:
+  NOTE: Setting up convertible commodities is easy; here's how to use
+  Ledger for tracking quantities of data, where the most compact form
+  is reported (unless --base is specified):
+
+    C 1.00 Kb = 1024 b
+    C 1.00 Mb = 1024 Kb
+    C 1.00 Gb = 1024 Mb
+    C 1.00 Tb = 1024 Gb
+
+- Added --ansi reporting option, which shows negative values as red
+  using ANSI terminal codes; --ansi-invert makes non-negative values
+  red (which makes more sense for income and budget reports, for
+  example).
+
+- Added --only predicate, which occurs during transaction processing
+  between --limit and --display.  Here is a summary of how the three
+  supported predicates are used:
 
     --limit "a>100"
 

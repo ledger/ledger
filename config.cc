@@ -1129,6 +1129,10 @@ OPT_BEGIN(ansi_invert, "") {
 //
 // Commodity reporting
 
+OPT_BEGIN(base, ":") {
+  amount_t::keep_base = true;
+} OPT_END(base);
+
 OPT_BEGIN(price_db, ":") {
   config->price_db = optarg;
 } OPT_END(price_db);
@@ -1206,6 +1210,7 @@ option_t config_options[CONFIG_OPTIONS_SIZE] = {
   { "ansi-invert", '\0', false, opt_ansi_invert, false },
   { "average", 'A', false, opt_average, false },
   { "balance-format", '\0', true, opt_balance_format, false },
+  { "base", '\0', false, opt_base, false },
   { "basis", 'B', false, opt_basis, false },
   { "begin", 'b', true, opt_begin, false },
   { "budget", '\0', false, opt_budget, false },
