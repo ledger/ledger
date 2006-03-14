@@ -28,6 +28,7 @@ class amount_t
   static bool keep_price;
   static bool keep_date;
   static bool keep_tag;
+  static bool keep_base;
 
  protected:
   void _init();
