@@ -21,10 +21,22 @@
     C 1.00 Gb = 1024 Mb
     C 1.00 Tb = 1024 Gb
 
-- Added --ansi reporting option, which shows negative values as red
-  using ANSI terminal codes; --ansi-invert makes non-negative values
-  red (which makes more sense for income and budget reports, for
-  example).
+- Added --ansi reporting option, which shows negative values in the
+  running total column of the register report as red, using ANSI
+  terminal codes; --ansi-invert makes non-negative values red (which
+  makes more sense for the income and budget reports).
+
+  The --ansi functionality is triggered by the format modifier "!",
+  for example the register reports uses the following for the total
+  (last) column:
+
+    %!12.80T
+
+  At the moment neither the balance report nor any of the other
+  reports make use of the ! modifier, and so will not change color
+  even if --ansi is used.  However, you can modify these report format
+  strings yourself in ~/.ledgerrc if you wish to see red coloring of
+  negative sums in other places.
 
 - Added --only predicate, which occurs during transaction processing
   between --limit and --display.  Here is a summary of how the three

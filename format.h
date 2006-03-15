@@ -13,6 +13,9 @@ std::string truncated(const std::string& str, unsigned int width,
 std::string partial_account_name(const account_t&   account,
 				 const unsigned int start_depth);
 
+#define ELEMENT_ALIGN_LEFT 0x01
+#define ELEMENT_HIGHLIGHT  0x02
+
 struct element_t
 {
   enum kind_t {
@@ -45,18 +48,18 @@ struct element_t
     DEPTH_SPACER
   };
 
-  bool	       align_left;
-  unsigned int min_width;
-  unsigned int max_width;
-
-  kind_t       type;
-  std::string  chars;
-  value_expr * val_expr;
+  kind_t	type;
+  unsigned char flags;
+  std::string	chars;
+  unsigned char min_width;
+  unsigned char max_width;
+  value_expr *	val_expr;
 
   struct element_t * next;
 
-  element_t() : align_left(false), min_width(0), max_width(0),
-		type(STRING), val_expr(NULL), next(NULL) {
+  element_t() : type(STRING), flags(false),
+		min_width(0), max_width(0),
+		val_expr(NULL), next(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor element_t");
   }
 

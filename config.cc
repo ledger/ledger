@@ -58,10 +58,10 @@ void config_t::reset()
   pricing_leeway     = 24 * 3600;
   budget_flags       = BUDGET_NO_BUDGET;
   balance_format     = "%20T  %2_%-a\n";
-  register_format    = ("%D %-.20P %-.22A %12.67t %12.80T\n%/"
-			"%32|%-.22A %12.67t %12.80T\n");
-  wide_register_format = ("%D  %-.35P %-.38A %22.108t %22.132T\n%/"
-			  "%48|%-.38A %22.108t %22.132T\n");
+  register_format    = ("%D %-.20P %-.22A %12.67t %!12.80T\n%/"
+			"%32|%-.22A %12.67t %!12.80T\n");
+  wide_register_format = ("%D  %-.35P %-.38A %22.108t %!22.132T\n%/"
+			  "%48|%-.38A %22.108t %!22.132T\n");
   csv_register_format = "\"%D\",\"%P\",\"%A\",\"%t\",\"%T\"\n";
   plot_amount_format = "%D %(S(t))\n";
   plot_total_format  = "%D %(S(T))\n";
