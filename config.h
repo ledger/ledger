@@ -117,6 +117,8 @@ void option_help(std::ostream& out);
 
 #define OPT_END(tag)
 
+std::string resolve_path(const std::string& path);
+
 //////////////////////////////////////////////////////////////////////
 
 void trace(const std::string& cat, const std::string& str);

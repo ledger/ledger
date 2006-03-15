@@ -460,6 +460,12 @@ inline value_t compute_total(const details_t& details = details_t()) {
     return total_expr->compute(details);
 }
 
+inline void parse_value_definition(const std::string& str,
+				   scope_t * scope = NULL) {
+  value_auto_ptr expr
+    (parse_boolean_expr(str, scope ? scope : global_scope.get()));
+}
+
 //////////////////////////////////////////////////////////////////////
 
 template <typename T>

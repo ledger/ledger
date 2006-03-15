@@ -21,7 +21,7 @@
 #include <cstdio>
 #include <cstdlib>
 
-#if defined(__GNUG__) && __GNUG__ < 3
+#ifdef HAVE_REALPATH
 extern "C" char *realpath(const char *, char resolved_path[]);
 #endif
 
@@ -737,13 +737,15 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	  push_var<unsigned int>  save_linenum(linenum);
 
 	  path = p;
-	  if (path[0] != '/' && path[0] != '\\') {
+	  if (path[0] != '/' && path[0] != '\\' && path[0] != '~') {
 	    std::string::size_type pos = save_path.prev.rfind('/');
 	    if (pos == std::string::npos)
 	      pos = save_path.prev.rfind('\\');
 	    if (pos != std::string::npos)
 	      path = std::string(save_path.prev, 0, pos + 1) + path;
 	  }
+	  path = resolve_path(path);
+
 	  DEBUG_PRINT("ledger.textual.include", "line " << linenum << ": " <<
 		      "Including path '" << path << "'");
 
@@ -783,7 +785,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	else if (word == "def") {
 	  if (! global_scope.get())
 	    init_value_expr();
-	  value_auto_ptr expr(parse_boolean_expr(p, global_scope.get()));
+	  parse_value_definition(p);
 	}
 	break;
       }
@@ -856,10 +858,11 @@ void write_textual_journal(journal_t& journal, std::string path,
 {
   unsigned long index = 0;
   std::string   found;
-  char          buf1[PATH_MAX];
-  char          buf2[PATH_MAX];
 
 #ifdef HAVE_REALPATH
+  char buf1[PATH_MAX];
+  char buf2[PATH_MAX];
+
   ::realpath(path.c_str(), buf1);
   for (strings_list::iterator i = journal.sources.begin();
        i != journal.sources.end();

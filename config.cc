@@ -15,6 +15,14 @@
 #include <unistd.h>
 #endif
 
+#ifdef HAVE_REALPATH
+extern "C" char *realpath(const char *, char resolved_path[]);
+#endif
+
+#if defined(HAVE_GETPWUID) || defined(HAVE_GETPWNAM)
+#include <pwd.h>
+#endif
+
 namespace ledger {
 
 namespace {
@@ -50,6 +58,71 @@ namespace {
   }
 }
 
+
+std::string expand_path(const std::string& path)
+{
+  if (path.length() == 0 || path[0] != '~')
+    return path;
+
+  const char * pfx = NULL;
+  std::string::size_type pos = path.find_first_of('/');
+
+  if (path.length() == 1 || pos == 1) {
+    pfx = std::getenv("HOME");
+#ifdef HAVE_GETPWUID
+    if (! pfx) {
+      // Punt. We're trying to expand ~/, but HOME isn't set
+      struct passwd * pw = getpwuid(getuid());
+      if (pw)
+	pfx = pw->pw_dir;
+    }
+#endif
+  }
+#ifdef HAVE_GETPWNAM
+  else {
+    std::string user(path, 1, pos == std::string::npos ?
+		     std::string::npos : pos - 1);
+    struct passwd * pw = getpwnam(user.c_str());
+    if (pw)
+      pfx = pw->pw_dir;
+  }
+#endif
+
+  // if we failed to find an expansion, return the path unchanged.
+
+  if (! pfx)
+    return path;
+
+  std::string result(pfx);
+
+  if (pos == std::string::npos)
+    return result;
+
+  if (result.length() == 0 || result[result.length() - 1] != '/')
+    result += '/';
+
+  result += path.substr(pos + 1);
+
+  return result;
+}
+
+std::string resolve_path(const std::string& path)
+{
+  std::string resolved;;
+  if (path[0] == '~')
+    resolved = expand_path(path);
+  else
+    resolved = path;
+
+#ifdef HAVE_REALPATH
+  char buf[PATH_MAX];
+  ::realpath(resolved.c_str(), buf);
+  return std::string(buf);
+#else
+  return resolved;
+#endif
+}
+
 void config_t::reset()
 {
   ledger::amount_expr.reset(new value_expr("a"));
@@ -58,10 +131,10 @@ void config_t::reset()
   pricing_leeway     = 24 * 3600;
   budget_flags       = BUDGET_NO_BUDGET;
   balance_format     = "%20T  %2_%-a\n";
-  register_format    = ("%D %-.20P %-.22A %12.67t %12.80T\n%/"
-			"%32|%-.22A %12.67t %12.80T\n");
-  wide_register_format = ("%D  %-.35P %-.38A %22.108t %22.132T\n%/"
-			  "%48|%-.38A %22.108t %22.132T\n");
+  register_format    = ("%D %-.20P %-.22A %12.67t %!12.80T\n%/"
+			"%32|%-.22A %12.67t %!12.80T\n");
+  wide_register_format = ("%D  %-.35P %-.38A %22.108t %!22.132T\n%/"
+			  "%48|%-.38A %22.108t %!22.132T\n");
   csv_register_format = "\"%D\",\"%P\",\"%A\",\"%t\",\"%T\"\n";
   plot_amount_format = "%D %(S(t))\n";
   plot_total_format  = "%D %(S(T))\n";
@@ -727,19 +800,29 @@ OPT_BEGIN(version, "v") {
 } OPT_END(version);
 
 OPT_BEGIN(init_file, "i:") {
-  config->init_file = optarg;
+  std::string path = resolve_path(optarg);
+  if (access(path.c_str(), R_OK) != -1)
+    config->init_file = path;
+  else
+    throw new error(std::string("The init file '") + path +
+		    "' does not exist or is not readable");
 } OPT_END(init_file);
 
 OPT_BEGIN(file, "f:") {
-  if (std::string(optarg) == "-" || access(optarg, R_OK) != -1)
+  if (std::string(optarg) == "-") {
     config->data_file = optarg;
-  else
-    throw new error(std::string("The ledger file '") + optarg +
-		    "' does not exist or is not readable");
+  } else {
+    std::string path = resolve_path(optarg);
+    if (access(path.c_str(), R_OK) != -1)
+      config->data_file = path;
+    else
+      throw new error(std::string("The ledger file '") + path +
+		      "' does not exist or is not readable");
+  }
 } OPT_END(file);
 
 OPT_BEGIN(cache, ":") {
-  config->cache_file = optarg;
+  config->cache_file = resolve_path(optarg);
 } OPT_END(cache);
 
 OPT_BEGIN(no_cache, "") {
@@ -747,8 +830,14 @@ OPT_BEGIN(no_cache, "") {
 } OPT_END(no_cache);
 
 OPT_BEGIN(output, "o:") {
-  if (std::string(optarg) != "-")
-    config->output_file = optarg;
+  if (std::string(optarg) != "-") {
+    std::string path = resolve_path(optarg);
+    if (access(path.c_str(), W_OK) != -1)
+      config->output_file = path;
+    else
+      throw new error(std::string("The output file '") + path +
+		      "' is not writable");
+  }
 } OPT_END(output);
 
 OPT_BEGIN(account, "a:") {

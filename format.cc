@@ -118,8 +118,15 @@ element_t * format_t::parse_elements(const std::string& fmt)
     }
 
     ++p;
-    if (*p == '-') {
-      current->align_left = true;
+    while (*p == '!' || *p == '-') {
+      switch (*p) {
+      case '-':
+	current->flags |= ELEMENT_ALIGN_LEFT;
+	break;
+      case '!':
+	current->flags |= ELEMENT_HIGHLIGHT;
+	break;
+      }
       ++p;
     }
 
@@ -273,7 +280,7 @@ namespace {
     out.width(0);
     out << "\e[31m";
 
-    if (elem->align_left)
+    if (elem->flags & ELEMENT_ALIGN_LEFT)
       out << std::left;
     else
       out << std::right;
@@ -294,7 +301,7 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
     std::string name;
     bool ignore_max_width = false;
 
-    if (elem->align_left)
+    if (elem->flags & ELEMENT_ALIGN_LEFT)
       out << std::left;
     else
       out << std::right;
@@ -347,7 +354,7 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 	break;
 
       case value_t::INTEGER:
-	if (ansi_codes) {
+	if (ansi_codes && elem->flags & ELEMENT_HIGHLIGHT) {
 	  if (ansi_invert) {
 	    if (*((long *) value.data) > 0)
 	      mark_red(out, elem);
@@ -364,7 +371,7 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 	break;
 
       case value_t::AMOUNT:
-	if (ansi_codes) {
+	if (ansi_codes && elem->flags & ELEMENT_HIGHLIGHT) {
 	  if (ansi_invert) {
 	    if (*((amount_t *) value.data) > 0)
 	      mark_red(out, elem);
@@ -384,7 +391,7 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 	if (! bal)
 	  bal = &((balance_pair_t *) value.data)->quantity;
 
-	if (ansi_codes) {
+	if (ansi_codes && elem->flags & ELEMENT_HIGHLIGHT) {
 	  if (ansi_invert) {
 	    if (*bal > 0)
 	      mark_red(out, elem);
@@ -404,7 +411,7 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 	break;
       }
 
-      if (ansi_codes)
+      if (ansi_codes && elem->flags & ELEMENT_HIGHLIGHT)
 	mark_plain(out);
       break;
     }
