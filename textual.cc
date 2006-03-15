@@ -783,7 +783,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	else if (word == "def") {
 	  if (! global_scope.get())
 	    init_value_expr();
-	  value_auto_ptr expr(parse_boolean_expr(p, global_scope.get()));
+	  parse_value_definition(p);
 	}
 	break;
       }

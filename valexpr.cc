@@ -1375,10 +1375,11 @@ void init_value_expr()
   node->left->constant_i = 2;
   node->set_right(new value_expr_t(value_expr_t::F_VALUE));
   globals->define("P", node);
-  value_auto_ptr val(parse_boolean_expr("value=P(t,m)", globals));
-  value_auto_ptr tval(parse_boolean_expr("total_value=P(T,m)", globals));
-  value_auto_ptr valof(parse_boolean_expr("valueof(x)=P(x,m)", globals));
-  value_auto_ptr dvalof(parse_boolean_expr("datedvalueof(x,y)=P(x,y)", globals));
+
+  parse_value_definition("value=P(t,m)", globals);
+  parse_value_definition("total_value=P(T,m)", globals);
+  parse_value_definition("valueof(x)=P(x,m)", globals);
+  parse_value_definition("datedvalueof(x,y)=P(x,y)", globals);
 
   node = new value_expr_t(value_expr_t::O_DEF);
   node->set_left(new value_expr_t(value_expr_t::CONSTANT_I));
@@ -1416,9 +1417,9 @@ void init_value_expr()
   node->set_right(new value_expr_t(value_expr_t::F_DAY));
   globals->define("dayof", node);
 
-  value_auto_ptr year(parse_boolean_expr("year=yearof(d)", globals));
-  value_auto_ptr month(parse_boolean_expr("month=monthof(d)", globals));
-  value_auto_ptr day(parse_boolean_expr("day=dayof(d)", globals));
+  parse_value_definition("year=yearof(d)", globals);
+  parse_value_definition("month=monthof(d)", globals);
+  parse_value_definition("day=dayof(d)", globals);
 
   // Macros
   node = parse_value_expr("P(a,d)");
@@ -1437,8 +1438,8 @@ void init_value_expr()
   globals->define("G", node);
   globals->define("total_gain", node);
 
-  value_auto_ptr minx(parse_boolean_expr("min(x,y)=x<y?x:y", globals));
-  value_auto_ptr maxx(parse_boolean_expr("max(x,y)=x>y?x:y", globals));
+  parse_value_definition("min(x,y)=x<y?x:y", globals);
+  parse_value_definition("max(x,y)=x>y?x:y", globals);
 }
 
 value_expr_t * parse_value_expr(std::istream& in, scope_t * scope,
