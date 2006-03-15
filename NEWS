@@ -195,6 +195,9 @@
 
 - Added a new "csv" command, for outputting results in CSV format.
 
+- Ledger now expands ~ in file pathnames specified in environment
+  variables, initialization files and journal files.
+
 - Effective dates may now be specified for entries:
 
     2004/10/03=2004/09/30 Credit card company
