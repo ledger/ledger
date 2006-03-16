@@ -36,11 +36,15 @@ std::time_t transaction_t::effective_date() const
 
 bool transaction_t::valid() const
 {
-  if (! entry)
+  if (! entry) {
+    DEBUG_PRINT("ledger.validate", "transaction_t: ! entry");
     return false;
+  }
 
-  if (state != UNCLEARED && state != CLEARED && state != PENDING)
+  if (state != UNCLEARED && state != CLEARED && state != PENDING) {
+    DEBUG_PRINT("ledger.validate", "transaction_t: state is bad");
     return false;
+  }
 
   bool found = false;
   for (transactions_list::const_iterator i = entry->transactions.begin();
@@ -50,20 +54,30 @@ bool transaction_t::valid() const
       found = true;
       break;
     }
-  if (! found)
+  if (! found) {
+    DEBUG_PRINT("ledger.validate", "transaction_t: ! found");
     return false;
+  }
 
-  if (! account)
+  if (! account) {
+    DEBUG_PRINT("ledger.validate", "transaction_t: ! account");
     return false;
+  }
 
-  if (! amount.valid())
+  if (! amount.valid()) {
+    DEBUG_PRINT("ledger.validate", "transaction_t: ! amount.valid()");
     return false;
+  }
 
-  if (cost && ! cost->valid())
+  if (cost && ! cost->valid()) {
+    DEBUG_PRINT("ledger.validate", "transaction_t: cost && ! cost->valid()");
     return false;
+  }
 
-  if (flags & ~0x001f)
+  if (flags & ~0x001f) {
+    DEBUG_PRINT("ledger.validate", "transaction_t: flags are bad");
     return false;
+  }
 
   return true;
 }
@@ -158,7 +172,8 @@ bool entry_base_t::finalize()
 
       entry_t * entry = dynamic_cast<entry_t *>(this);
 
-      if (! (*x)->amount.commodity().annotated)
+      if ((*x)->amount.commodity() &&
+	  ! (*x)->amount.commodity().annotated)
 	(*x)->amount.annotate_commodity(abs(per_unit_cost),
 					entry ? entry->actual_date() : 0,
 					entry ? entry->code : "");
@@ -271,14 +286,18 @@ void entry_t::add_transaction(transaction_t * xact)
 
 bool entry_t::valid() const
 {
-  if (! _date || ! journal)
+  if (! _date || ! journal) {
+    DEBUG_PRINT("ledger.validate", "entry_t: ! _date || ! journal");
     return false;
+  }
 
   for (transactions_list::const_iterator i = transactions.begin();
        i != transactions.end();
        i++)
-    if ((*i)->entry != this || ! (*i)->valid())
+    if ((*i)->entry != this || ! (*i)->valid()) {
+      DEBUG_PRINT("ledger.validate", "entry_t: transaction not valid");
       return false;
+    }
 
   return true;
 }
@@ -434,14 +453,18 @@ std::ostream& operator<<(std::ostream& out, const account_t& account)
 
 bool account_t::valid() const
 {
-  if (depth > 256 || ! journal)
+  if (depth > 256 || ! journal) {
+    DEBUG_PRINT("ledger.validate", "account_t: depth > 256 || ! journal");
     return false;
+  }
 
   for (accounts_map::const_iterator i = accounts.begin();
        i != accounts.end();
        i++)
-    if (! (*i).second->valid())
+    if (! (*i).second->valid()) {
+      DEBUG_PRINT("ledger.validate", "account_t: child not valid");
       return false;
+    }
 
   return true;
 }
@@ -528,20 +551,26 @@ bool journal_t::remove_entry(entry_t * entry)
 
 bool journal_t::valid() const
 {
-  if (! master->valid())
+  if (! master->valid()) {
+    DEBUG_PRINT("ledger.validate", "journal_t: master not valid");
     return false;
+  }
 
   for (entries_list::const_iterator i = entries.begin();
        i != entries.end();
        i++)
-    if (! (*i)->valid())
+    if (! (*i)->valid()) {
+      DEBUG_PRINT("ledger.validate", "journal_t: entry not valid");
       return false;
+    }
 
   for (commodities_map::const_iterator i = commodity_t::commodities.begin();
        i != commodity_t::commodities.end();
        i++)
-    if (! (*i).second->valid())
+    if (! (*i).second->valid()) {
+      DEBUG_PRINT("ledger.validate", "journal_t: commodity not valid");
       return false;
+    }
 
   return true;
 }

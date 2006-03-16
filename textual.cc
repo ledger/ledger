@@ -229,16 +229,19 @@ transaction_t * parse_transaction(char * line, account_t * account,
 	else
 	  per_unit_cost /= xact->amount;
 
-	if (! xact->amount.commodity().annotated) {
-	  xact->amount.annotate_commodity(per_unit_cost,
-					  xact->entry->actual_date(),
-					  xact->entry->code);
-	} else {
-	  annotated_commodity_t& ann(static_cast<annotated_commodity_t&>
-				     (xact->amount.commodity()));
-	  xact->amount.annotate_commodity(! ann.price ? per_unit_cost : amount_t(),
-					  ! ann.date ? xact->entry->actual_date() : 0,
-					  ann.tag.empty() ? xact->entry->code : "");
+	if (xact->amount.commodity()) {
+	  if (! xact->amount.commodity().annotated) {
+	    xact->amount.annotate_commodity(per_unit_cost,
+					    xact->entry->actual_date(),
+					    xact->entry->code);
+	  } else {
+	    annotated_commodity_t& ann(static_cast<annotated_commodity_t&>
+				       (xact->amount.commodity()));
+	    xact->amount.annotate_commodity
+	      (! ann.price ? per_unit_cost : amount_t(),
+	       ! ann.date ? xact->entry->actual_date() : 0,
+	       ann.tag.empty() ? xact->entry->code : "");
+	  }
 	}
 
 	DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
