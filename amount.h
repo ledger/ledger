@@ -595,29 +595,6 @@ inline commodity_t& amount_t::commodity() const {
     return *commodity_;
 }
 
-inline amount_t amount_t::price() const {
-  if (commodity_ && commodity_->annotated) {
-    amount_t temp(((annotated_commodity_t *)commodity_)->price);
-    temp *= *this;
-    DEBUG_PRINT("amounts.commodities",
-		"Returning price of " << *this << " = " << temp);
-    return temp;
-  } else {
-    return 0L;
-  }
-}
-
-inline std::time_t amount_t::date() const {
-  if (commodity_ && commodity_->annotated) {
-    DEBUG_PRINT("amounts.commodities",
-		"Returning date of " << *this << " = "
-		<< ((annotated_commodity_t *)commodity_)->date);
-    return ((annotated_commodity_t *)commodity_)->date;
-  } else {
-    return 0L;
-  }
-}
-
 class amount_error : public error {
  public:
   amount_error(const std::string& reason) throw() : error(reason) {}

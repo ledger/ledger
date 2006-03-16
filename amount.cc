@@ -1396,6 +1396,29 @@ amount_t amount_t::strip_annotations(const bool _keep_price,
   return temp;
 }
 
+amount_t amount_t::price() const
+{
+  if (commodity_ && commodity_->annotated) {
+    amount_t temp(((annotated_commodity_t *)commodity_)->price);
+    temp *= *this;
+    DEBUG_PRINT("amounts.commodities",
+		"Returning price of " << *this << " = " << temp);
+    return temp;
+  }
+  return *this;
+}
+
+std::time_t amount_t::date() const
+{
+  if (commodity_ && commodity_->annotated) {
+    DEBUG_PRINT("amounts.commodities",
+		"Returning date of " << *this << " = "
+		<< ((annotated_commodity_t *)commodity_)->date);
+    return ((annotated_commodity_t *)commodity_)->date;
+  }
+  return 0L;
+}
+
 
 void commodity_base_t::add_price(const std::time_t date, const amount_t& price)
 {
