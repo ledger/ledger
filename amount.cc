@@ -818,8 +818,6 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
   }
 
   if (precision) {
-    out << ((comm.flags & COMMODITY_STYLE_EUROPEAN) ? ',' : '.');
-
     std::ostringstream final;
     final.width(precision);
     final.fill('0');
@@ -834,12 +832,18 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
       if (q[i - 1] != '0')
 	break;
 
+    std::string ender;
     if (i == len)
-      out << str;
-    else if (i < comm.precision)
-      out << std::string(str, 0, comm.precision);
+      ender = str;
+    else if (i < comm.precision())
+      ender = std::string(str, 0, comm.precision());
     else
-      out << std::string(str, 0, i);
+      ender = std::string(str, 0, i);
+
+    if (! ender.empty()) {
+      out << ((comm.flags() & COMMODITY_STYLE_EUROPEAN) ? ',' : '.');
+      out << ender;
+    }
   }
 
   if (comm.flags & COMMODITY_STYLE_SUFFIXED) {
