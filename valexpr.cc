@@ -404,7 +404,10 @@ void value_expr_t::compute(value_t& result, const details_t& details) const
 
   case O_NOT:
     left->compute(result, details);
-    result.negate();
+    if (result)
+      result = 0L;
+    else
+      result = 1L;
     break;
 
   case O_QUES: {
