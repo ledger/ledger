@@ -491,7 +491,8 @@ class item_predicate
   }
 
   bool operator()(const T& item) const {
-    return ! predicate || predicate->compute(details_t(item));
+    return (! predicate ||
+	    predicate->compute(details_t(item)).strip_annotations());
   }
 };
 

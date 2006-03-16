@@ -551,33 +551,6 @@ class annotated_commodity_t : public commodity_t
   std::time_t date;
   std::string tag;
 
-  static void write_annotations(std::ostream&      out,
-				const amount_t&    price,
-				const std::time_t  date,
-				const std::string& tag);
-  static
-  std::string make_qualified_name(const commodity_t& comm,
-				  const amount_t& price,
-				  const std::time_t date,
-				  const std::string& tag);
-  static commodity_t * create(const commodity_t& comm,
-			      const amount_t&    price,
-			      const std::time_t  date,
-			      const std::string& tag,
-			      const std::string& entry_name = "");
-  static commodity_t * create(const std::string& symbol,
-			      const amount_t&    price,
-			      const std::time_t  date,
-			      const std::string& tag);
-  static commodity_t * create(const std::string& symbol,
-			      const std::string& price,
-			      const std::string& date,
-			      const std::string& tag);
-  static commodity_t * find_or_create(const commodity_t& comm,
-				      const amount_t&    price,
-				      const std::time_t  date,
-				      const std::string& tag);
-
   explicit annotated_commodity_t() {
     annotated = true;
   }
@@ -585,6 +558,25 @@ class annotated_commodity_t : public commodity_t
   void write_annotations(std::ostream& out) const {
     annotated_commodity_t::write_annotations(out, price, date, tag);
   }
+
+  static void write_annotations(std::ostream&      out,
+				const amount_t&    price,
+				const std::time_t  date,
+				const std::string& tag);
+
+ private:
+  static commodity_t * create(const commodity_t& comm,
+			      const amount_t&    price,
+			      const std::time_t  date,
+			      const std::string& tag,
+			      const std::string& mapping_key);
+
+  static commodity_t * find_or_create(const commodity_t& comm,
+				      const amount_t&    price,
+				      const std::time_t  date,
+				      const std::string& tag);
+
+  friend class amount_t;
 };
 
 inline std::ostream& operator<<(std::ostream& out, const commodity_t& comm) {

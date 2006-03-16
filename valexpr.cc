@@ -629,7 +629,10 @@ void value_expr_t::compute(value_t& result, const details_t& details,
 
   case O_NOT:
     left->compute(result, details, context);
-    result.negate();
+    if (result.strip_annotations())
+      result = false;
+    else
+      result = true;
     break;
 
   case O_QUES: {
@@ -637,7 +640,7 @@ void value_expr_t::compute(value_t& result, const details_t& details,
     assert(right);
     assert(right->kind == O_COL);
     left->compute(result, details, context);
-    if (result)
+    if (result.strip_annotations())
       right->left->compute(result, details, context);
     else
       right->right->compute(result, details, context);
@@ -648,6 +651,7 @@ void value_expr_t::compute(value_t& result, const details_t& details,
     assert(left);
     assert(right);
     left->compute(result, details, context);
+    result = result.strip_annotations();
     if (result)
       right->compute(result, details, context);
     break;
@@ -656,7 +660,7 @@ void value_expr_t::compute(value_t& result, const details_t& details,
     assert(left);
     assert(right);
     left->compute(result, details, context);
-    if (! result)
+    if (! result.strip_annotations())
       right->compute(result, details, context);
     break;
 

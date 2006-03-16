@@ -1233,11 +1233,9 @@ value_t value_t::strip_annotations(const bool keep_price,
 {
   switch (type) {
   case BOOLEAN:
-    throw new value_error("Cannot strip commodity annotations from a boolean");
   case INTEGER:
-    return *this;
   case DATETIME:
-    throw new value_error("Cannot strip commodity annotations from a date/time");
+    return *this;
 
   case AMOUNT:
     return ((amount_t *) data)->strip_annotations

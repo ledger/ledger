@@ -101,7 +101,7 @@ class balance_t
     if (i != amounts.end()) {
       (*i).second -= amt;
       if ((*i).second.realzero())
-	amounts.erase(&amt.commodity());
+	amounts.erase(i);
     }
     else if (! amt.realzero()) {
       amounts.insert(amounts_pair(&amt.commodity(), - amt));
