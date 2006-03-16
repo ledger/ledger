@@ -197,7 +197,7 @@ bool entry_base_t::finalize()
       continue;
 
     if (! empty_allowed)
-      break;
+      throw new error("Only one transaction with null amount allowed per entry");
     empty_allowed = false;
 
     // If one transaction gives no value at all, its value will become

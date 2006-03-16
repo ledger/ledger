@@ -42,7 +42,7 @@ void add_transaction_to(const transaction_t& xact, value_t& value)
       transaction_xdata_(xact).dflags & TRANSACTION_COMPOSITE) {
     value += transaction_xdata_(xact).composite_amount;
   }
-  else if (xact.cost || value) {
+  else if (xact.cost || ! value.realzero()) {
     value.add(xact.amount, xact.cost);
   }
   else {
@@ -784,7 +784,7 @@ void sum_accounts(account_t& account)
 
   value_t result;
   compute_amount(result, details_t(account));
-  if (result)
+  if (! result.realzero())
     xdata.total += result;
   xdata.total_count += xdata.count;
 }
