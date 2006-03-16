@@ -106,21 +106,10 @@ std::string expand_path(const std::string& path)
   return result;
 }
 
-std::string resolve_path(const std::string& path)
-{
-  std::string resolved;;
+inline std::string resolve_path(const std::string& path) {
   if (path[0] == '~')
-    resolved = expand_path(path);
-  else
-    resolved = path;
-
-#ifdef HAVE_REALPATH
-  char buf[PATH_MAX];
-  ::realpath(resolved.c_str(), buf);
-  return std::string(buf);
-#else
-  return resolved;
-#endif
+    return expand_path(path);
+  return path;
 }
 
 void config_t::reset()
@@ -1256,6 +1245,38 @@ OPT_BEGIN(market, "V") {
   ledger::total_expr.reset(new value_expr("V"));
 } OPT_END(market);
 
+namespace {
+  void parse_price_setting(const char * optarg)
+  {
+    char * equals = std::strchr(optarg, '=');
+    if (! equals)
+      return;
+
+    while (std::isspace(*optarg))
+      optarg++;
+    while (equals > optarg && std::isspace(*(equals - 1)))
+      equals--;
+
+    std::string symbol(optarg, 0, equals - optarg);
+    amount_t price(equals + 1);
+
+    if (commodity_t * commodity = commodity_t::find_or_create(symbol)) {
+      commodity->add_price(now, price);
+      commodity->history()->bogus_time = now;
+    }
+  }
+}
+
+OPT_BEGIN(set_price, ":") {
+  std::string arg(optarg);
+  std::string::size_type beg = 0;
+  for (std::string::size_type pos = arg.find(';');
+       pos != std::string::npos;
+       beg = pos + 1, pos = arg.find(';', beg))
+    parse_price_setting(std::string(arg, beg, pos).c_str());
+  parse_price_setting(std::string(arg, beg).c_str());
+} OPT_END(set_price);
+
 OPT_BEGIN(performance, "g") {
   ledger::amount_expr.reset(new value_expr("P(a,m)-b"));
   ledger::total_expr.reset(new value_expr("P(O,m)-B"));
@@ -1362,6 +1383,7 @@ option_t config_options[CONFIG_OPTIONS_SIZE] = {
   { "reconcile-date", '\0', true, opt_reconcile_date, false },
   { "register-format", '\0', true, opt_register_format, false },
   { "related", 'r', false, opt_related, false },
+  { "set-price", '\0', true, opt_set_price, false },
   { "sort", 'S', true, opt_sort, false },
   { "subtotal", 's', false, opt_subtotal, false },
   { "tail", '\0', true, opt_tail, false },

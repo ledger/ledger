@@ -12,9 +12,9 @@ namespace ledger {
 
 static unsigned long binary_magic_number = 0xFFEED765;
 #ifdef DEBUG_ENABLED
-static unsigned long format_version      = 0x00020607;
+static unsigned long format_version      = 0x00020609;
 #else
-static unsigned long format_version      = 0x00020606;
+static unsigned long format_version      = 0x00020608;
 #endif
 
 static account_t **	   accounts;
@@ -415,6 +415,7 @@ inline void read_binary_commodity_base_extra(char *& data,
 {
   commodity_base_t * commodity = base_commodities[ident];
 
+  bool read_history = false;
   for (unsigned long i = 0, count = read_binary_long<unsigned long>(data);
        i < count;
        i++) {
@@ -429,8 +430,9 @@ inline void read_binary_commodity_base_extra(char *& data,
     if (! commodity->history)
       commodity->history = new commodity_base_t::history_t;
     commodity->history->prices.insert(history_pair(when, amt));
+    read_history = true;
   }
-  if (commodity->history)
+  if (read_history)
     read_binary_long(data, commodity->history->last_lookup);
 
   unsigned char flag;
@@ -629,8 +631,7 @@ unsigned int read_binary_journal(std::istream&	    in,
       // expression passed to an option, we'll just override the
       // flags, but keep the commodity pointer intact.
       if (c == commodity_base_t::commodities.end() ||
-	  (*c).second->history || (*c).second->smaller ||
-	  (*c).second->larger)
+	  (*c).second->smaller || (*c).second->larger)
 	throw new error(std::string("Failed to read base commodity from cache: ") +
 			commodity->symbol);
 
@@ -638,16 +639,12 @@ unsigned int read_binary_journal(std::istream&	    in,
       (*c).second->note	     = commodity->note;
       (*c).second->precision = commodity->precision;
       (*c).second->flags     = commodity->flags;
-      (*c).second->history   = commodity->history;
       (*c).second->smaller   = commodity->smaller;
       (*c).second->larger    = commodity->larger;
 
       *(base_commodities_next - 1) = (*c).second;
     }
   }
-
-  for (commodity_base_t::ident_t i = 0; i < bc_count; i++)
-    read_binary_commodity_base_extra(data, i);
 
   commodity_t::ident_t c_count  = read_binary_long<commodity_t::ident_t>(data);
   commodities = commodities_next = new commodity_t *[c_count];
@@ -679,6 +676,9 @@ unsigned int read_binary_journal(std::istream&	    in,
       throw new error(std::string("Failed to read commodity from cache: ") +
 		      commodity->base->symbol);
   }
+
+  for (commodity_base_t::ident_t i = 0; i < bc_count; i++)
+    read_binary_commodity_base_extra(data, i);
 
   commodity_t::ident_t ident;
   read_binary_long(data, ident);
@@ -971,8 +971,12 @@ void write_binary_commodity_base(std::ostream& out, commodity_base_t * commodity
   write_binary_number(out, commodity->flags);
 }
 
-void write_binary_commodity_base_extra(std::ostream& out, commodity_base_t * commodity)
+void write_binary_commodity_base_extra(std::ostream& out,
+				       commodity_base_t * commodity)
 {
+  if (commodity->history && commodity->history->bogus_time)
+    commodity->remove_price(commodity->history->bogus_time);
+
   if (! commodity->history) {
     write_binary_long<unsigned long>(out, 0);
   } else {
@@ -1127,12 +1131,6 @@ void write_binary_journal(std::ostream& out, journal_t * journal)
        i++)
     write_binary_commodity_base(out, (*i).second);
 
-  for (base_commodities_map::const_iterator i =
-	 commodity_base_t::commodities.begin();
-       i != commodity_base_t::commodities.end();
-       i++)
-    write_binary_commodity_base_extra(out, (*i).second);
-
   write_binary_long<commodity_t::ident_t>
     (out, commodity_t::commodities.size());
 
@@ -1154,6 +1152,16 @@ void write_binary_journal(std::ostream& out, journal_t * journal)
       write_binary_commodity_annotated(out, (*i).second);
     }
   }
+
+  // Write out the history and smaller/larger convertible links after
+  // both the base and the main commodities have been written, since
+  // the amounts in both will refer to the mains.
+
+  for (base_commodities_map::const_iterator i =
+	 commodity_base_t::commodities.begin();
+       i != commodity_base_t::commodities.end();
+       i++)
+    write_binary_commodity_base_extra(out, (*i).second);
 
   if (commodity_t::default_commodity)
     write_binary_long(out, commodity_t::default_commodity->ident);

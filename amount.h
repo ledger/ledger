@@ -283,6 +283,9 @@ class amount_t
 
   friend void clean_commodity_history(char * item_pool,
 				      char * item_pool_end);
+
+  friend void parse_annotations(std::istream& in, amount_t& price,
+				std::time_t& date, std::string& tag);
 };
 
 unsigned int sizeof_bigint_t();
@@ -365,8 +368,9 @@ class commodity_base_t
   amount_t *	smaller;
   amount_t *	larger;
 
-  commodity_base_t() : precision(0), flags(COMMODITY_STYLE_DEFAULTS),
-		       history(NULL), smaller(NULL), larger(NULL) {}
+  commodity_base_t()
+    : precision(0), flags(COMMODITY_STYLE_DEFAULTS),
+      history(NULL), smaller(NULL), larger(NULL) {}
 
   commodity_base_t(const std::string& _symbol,
 		   unsigned int	_precision = 0,
@@ -388,18 +392,13 @@ class commodity_base_t
   struct history_t {
     history_map	prices;
     std::time_t	last_lookup;
+    std::time_t	bogus_time;
+    history_t() : last_lookup(0), bogus_time(0) {}
   };
   history_t * history;
 
-  void add_price(const std::time_t date, const amount_t& price);
-  bool remove_price(const std::time_t date) {
-    if (history) {
-      history_map::size_type n = history->prices.erase(date);
-      return n > 0;
-    }
-    return false;
-  }
-
+  void	   add_price(const std::time_t date, const amount_t& price);
+  bool	   remove_price(const std::time_t date);
   amount_t value(const std::time_t moment = std::time(NULL));
 
   class updater_t {

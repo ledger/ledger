@@ -596,10 +596,9 @@ bool amount_t::realzero() const
 amount_t amount_t::value(const std::time_t moment) const
 {
   if (quantity) {
-    commodity_t& comm = commodity();
-    if (! (comm.flags() & COMMODITY_STYLE_NOMARKET))
-      if (amount_t amt = comm.value(moment))
-	return (amt * *this).round();
+    amount_t amt(commodity().value(moment));
+    if (! amt.realzero())
+      return (amt * *this).round();
   }
   return *this;
 }
@@ -973,6 +972,13 @@ void parse_annotations(std::istream& in, amount_t& price,
 
       price.parse(buf, AMOUNT_PARSE_NO_MIGRATE);
       price.reduce();
+
+      // Since this price will maintain its own precision, make sure
+      // it is at least as large as the base commodity, since the user
+      // may have only specified {$1} or something similar.
+
+      if (price.quantity->prec < price.commodity().precision())
+	price = price.round();	// no need to retain individual precision
     }
     else if (c == '[') {
       if (date)
@@ -1084,7 +1090,7 @@ void amount_t::parse(std::istream& in, unsigned char flags)
     }
     assert(commodity_);
 
-    if (price || date || ! tag.empty())
+    if (! price.realzero() || date || ! tag.empty())
       commodity_ =
 	annotated_commodity_t::find_or_create(*commodity_, price, date, tag);
   }
@@ -1433,6 +1439,19 @@ void commodity_base_t::add_price(const std::time_t date, const amount_t& price)
       = history->prices.insert(history_pair(date, price));
     assert(result.second);
   }
+}
+
+bool commodity_base_t::remove_price(const std::time_t date)
+{
+  if (history) {
+    history_map::size_type n = history->prices.erase(date);
+    if (n > 0) {
+      if (history->prices.empty())
+	history = NULL;
+      return true;
+    }
+  }
+  return false;
 }
 
 commodity_base_t * commodity_base_t::create(const std::string& symbol)

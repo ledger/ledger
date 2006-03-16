@@ -389,7 +389,8 @@ int parse_and_report(config_t& config, int argc, char * argv[], char * envp[])
 
   // Write out the binary cache, if need be
 
-  if (config.use_cache && config.cache_dirty && ! config.cache_file.empty()) {
+  if (config.use_cache && config.cache_dirty &&
+      ! config.cache_file.empty()) {
     TRACE_PUSH(binary_cache, "Writing journal file");
 
     std::ofstream stream(config.cache_file.c_str());

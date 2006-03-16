@@ -630,20 +630,36 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	char * date_field = skip_ws(line + 1);
 	char * time_field = next_element(date_field);
 	if (! time_field) break;
-	char * symbol_and_price = next_element(time_field);
-	if (! symbol_and_price) break;
 
-	char date_buffer[64];
-	std::strcpy(date_buffer, date_field);
-	date_buffer[std::strlen(date_field)] = ' ';
-	std::strcpy(&date_buffer[std::strlen(date_field) + 1], time_field);
-
-	std::time_t date;
+	char *	       symbol_and_price;
+	std::time_t    date;
 	struct std::tm when;
-	if (strptime(date_buffer, "%Y/%m/%d %H:%M:%S", &when)) {
-	  date = std::mktime(&when);
+
+	if (std::isdigit(time_field[0])) {
+	  symbol_and_price = next_element(time_field);
+	  if (! symbol_and_price) break;
+
+	  char date_buffer[64];
+	  std::strcpy(date_buffer, date_field);
+	  date_buffer[std::strlen(date_field)] = ' ';
+	  std::strcpy(&date_buffer[std::strlen(date_field) + 1], time_field);
+
+	  if (strptime(date_buffer, "%Y/%m/%d %H:%M:%S", &when)) {
+	    date = std::mktime(&when);
+	  } else {
+	    throw new parse_error("Failed to parse date/time");
+	  }
 	} else {
-	  throw new parse_error("Failed to parse date");
+	  symbol_and_price = time_field;
+
+	  if (strptime(date_field, "%Y/%m/%d", &when)) {
+	    when.tm_hour = 0;
+	    when.tm_min	 = 0;
+	    when.tm_sec	 = 0;
+	    date = std::mktime(&when);
+	  } else {
+	    throw new parse_error("Failed to parse date");
+	  }
 	}
 
 	std::string symbol;
