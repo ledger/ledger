@@ -106,7 +106,8 @@ std::string expand_path(const std::string& path)
   return result;
 }
 
-inline std::string resolve_path(const std::string& path) {
+std::string resolve_path(const std::string& path)
+{
   if (path[0] == '~')
     return expand_path(path);
   return path;
