@@ -75,6 +75,7 @@ class config_t
   bool          keep_date;
   bool          keep_tag;
   bool          entry_sort;
+  bool          sort_all;
 
   config_t() {
     reset();

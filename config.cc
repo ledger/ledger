@@ -164,6 +164,7 @@ void config_t::reset()
   keep_date          = false;
   keep_tag           = false;
   entry_sort         = false;
+  sort_all           = false;
 
   use_cache	     = false;
   cache_dirty        = false;
@@ -382,6 +383,9 @@ void config_t::process_options(const std::string&     command,
   amount_t::keep_price = keep_price;
   amount_t::keep_date  = keep_date;
   amount_t::keep_tag   = keep_tag;
+
+  if (! report_period.empty() && ! sort_all)
+    entry_sort = true;
 }
 
 item_handler<transaction_t> *
@@ -1041,8 +1045,6 @@ OPT_BEGIN(totals, "") {
 
 OPT_BEGIN(sort, "S:") {
   config->sort_string = optarg;
-  if (! config->report_period.empty())
-    config->entry_sort = true;
 } OPT_END(sort);
 
 OPT_BEGIN(sort_entries, "") {
@@ -1053,6 +1055,7 @@ OPT_BEGIN(sort_entries, "") {
 OPT_BEGIN(sort_all, "") {
   config->sort_string = optarg;
   config->entry_sort = false;
+  config->sort_all   = true;
 } OPT_END(sort_all);
 
 OPT_BEGIN(period_sort, ":") {
