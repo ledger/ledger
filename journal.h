@@ -10,6 +10,7 @@
 #include "amount.h"
 #include "datetime.h"
 #include "value.h"
+#include "valexpr.h"
 #include "error.h"
 #include "debug.h"
 #include "util.h"
@@ -26,7 +27,6 @@ namespace ledger {
 
 class entry_t;
 class account_t;
-class value_expr_t;
 
 class transaction_t
 {
@@ -38,8 +38,9 @@ class transaction_t
   std::time_t	   _date_eff;
   account_t *	   account;
   amount_t	   amount;
-  value_expr_t *   amount_expr;
+  value_expr       amount_expr;
   amount_t *	   cost;
+  std::string      cost_expr;
   state_t	   state;
   unsigned short   flags;
   std::string	   note;
@@ -53,9 +54,8 @@ class transaction_t
 
   transaction_t(account_t * _account = NULL)
     : entry(NULL), _date(0), _date_eff(0), account(_account),
-      amount_expr(NULL), cost(NULL), state(UNCLEARED),
-      flags(TRANSACTION_NORMAL), beg_pos(0), beg_line(0),
-      end_pos(0), end_line(0), data(NULL) {
+      cost(NULL), state(UNCLEARED), flags(TRANSACTION_NORMAL),
+      beg_pos(0), beg_line(0), end_pos(0), end_line(0), data(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor transaction_t");
   }
   transaction_t(account_t *	   _account,
@@ -63,15 +63,14 @@ class transaction_t
 		unsigned int	   _flags = TRANSACTION_NORMAL,
 		const std::string& _note  = "")
     : entry(NULL), _date(0), _date_eff(0), account(_account),
-      amount(_amount), amount_expr(NULL), cost(NULL),
-      state(UNCLEARED), flags(_flags), note(_note),
-      beg_pos(0), beg_line(0), end_pos(0), end_line(0), data(NULL) {
+      amount(_amount), cost(NULL), state(UNCLEARED), flags(_flags),
+      note(_note), beg_pos(0), beg_line(0), end_pos(0), end_line(0),
+      data(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor transaction_t");
   }
   transaction_t(const transaction_t& xact)
     : entry(xact.entry), _date(0), _date_eff(0), account(xact.account),
-      amount(xact.amount), amount_expr(NULL),
-      cost(xact.cost ? new amount_t(*xact.cost) : NULL),
+      amount(xact.amount), cost(xact.cost ? new amount_t(*xact.cost) : NULL),
       state(xact.state), flags(xact.flags), note(xact.note),
       beg_pos(0), beg_line(0), end_pos(0), end_line(0), data(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor transaction_t");
@@ -199,7 +198,7 @@ class entry_t : public entry_base_t
 
 struct entry_finalizer_t {
   virtual ~entry_finalizer_t() {}
-  virtual bool operator()(entry_t& entry) = 0;
+  virtual bool operator()(entry_t& entry, bool post) = 0;
 };
 
 class entry_context : public error_context {
@@ -238,7 +237,7 @@ public:
 
   virtual ~auto_entry_t();
 
-  virtual void extend_entry(entry_base_t& entry);
+  virtual void extend_entry(entry_base_t& entry, bool post);
   virtual bool valid() const {
     return true;
   }
@@ -248,7 +247,7 @@ class journal_t;
 struct auto_entry_finalizer_t : public entry_finalizer_t {
   journal_t * journal;
   auto_entry_finalizer_t(journal_t * _journal) : journal(_journal) {}
-  virtual bool operator()(entry_t& entry);
+  virtual bool operator()(entry_t& entry, bool post);
 };
 
 
@@ -342,12 +341,12 @@ std::ostream& operator<<(std::ostream& out, const account_t& account);
 
 
 struct func_finalizer_t : public entry_finalizer_t {
-  typedef bool (*func_t)(entry_t& entry);
+  typedef bool (*func_t)(entry_t& entry, bool post);
   func_t func;
   func_finalizer_t(func_t _func) : func(_func) {}
   func_finalizer_t(const func_finalizer_t& other) : func(other.func) {}
-  virtual bool operator()(entry_t& entry) {
-    return func(entry);
+  virtual bool operator()(entry_t& entry, bool post) {
+    return func(entry, post);
   }
 };
 
@@ -365,11 +364,11 @@ void remove_hook(std::list<T>& list, T obj) {
 }
 
 template <typename T, typename Data>
-bool run_hooks(std::list<T>& list, Data& item) {
+bool run_hooks(std::list<T>& list, Data& item, bool post) {
   for (typename std::list<T>::const_iterator i = list.begin();
        i != list.end();
        i++)
-    if (! (*(*i))(item))
+    if (! (*(*i))(item, post))
       return false;
   return true;
 }
@@ -446,15 +445,16 @@ class journal_t
   bool valid() const;
 };
 
-inline void extend_entry_base(journal_t * journal, entry_base_t& entry) {
+inline void extend_entry_base(journal_t * journal, entry_base_t& entry,
+			      bool post) {
   for (auto_entries_list::iterator i = journal->auto_entries.begin();
        i != journal->auto_entries.end();
        i++)
-    (*i)->extend_entry(entry);
+    (*i)->extend_entry(entry, post);
 }
 
-inline bool auto_entry_finalizer_t::operator()(entry_t& entry) {
-  extend_entry_base(journal, entry);
+inline bool auto_entry_finalizer_t::operator()(entry_t& entry, bool post) {
+  extend_entry_base(journal, entry, post);
   return true;
 }
 

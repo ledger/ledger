@@ -31,8 +31,8 @@ namespace {
   void xact_amount(value_t& result, const details_t& details, value_expr_t *)
   {
     if (transaction_has_xdata(*details.xact) &&
-	transaction_xdata_(*details.xact).dflags & TRANSACTION_COMPOSITE)
-      result = transaction_xdata_(*details.xact).composite_amount;
+	transaction_xdata_(*details.xact).dflags & TRANSACTION_COMPOUND)
+      result = transaction_xdata_(*details.xact).value;
     else
       result = details.xact->amount;
   }
@@ -115,8 +115,8 @@ std::string resolve_path(const std::string& path)
 
 void config_t::reset()
 {
-  ledger::amount_expr.reset(new value_expr("a"));
-  ledger::total_expr.reset(new value_expr("O"));
+  ledger::amount_expr = "@a";
+  ledger::total_expr  = "@O";
 
   pricing_leeway     = 24 * 3600;
   budget_flags       = BUDGET_NO_BUDGET;
@@ -126,8 +126,8 @@ void config_t::reset()
   wide_register_format = ("%D  %-.35P %-.38A %22.108t %!22.132T\n%/"
 			  "%48|%-.38A %22.108t %!22.132T\n");
   csv_register_format = "\"%D\",\"%P\",\"%A\",\"%t\",\"%T\"\n";
-  plot_amount_format = "%D %(S(t))\n";
-  plot_total_format  = "%D %(S(T))\n";
+  plot_amount_format = "%D %(@S(@t))\n";
+  plot_total_format  = "%D %(@S(@T))\n";
   print_format       = "\n%d %Y%C%P\n    %-34W  %12o%n\n%/    %-34W  %12o%n\n";
   write_hdr_format   = "%d %Y%C%P\n";
   write_xact_format  = "    %-34W  %12o%n\n";
@@ -315,6 +315,9 @@ void config_t::process_options(const std::string&     command,
     }
   }
 
+  if (command != "b" && command != "r")
+    amount_t::keep_base = true;
+
   // Process remaining command-line arguments
 
   if (command != "e") {
@@ -360,9 +363,9 @@ void config_t::process_options(const std::string&     command,
   // Setup the values of %t and %T, used in format strings
 
   if (! amount_expr.empty())
-    ledger::amount_expr.reset(new value_expr(amount_expr));
+    ledger::amount_expr = amount_expr;
   if (! total_expr.empty())
-    ledger::total_expr.reset(new value_expr(total_expr));
+    ledger::total_expr  = total_expr;
 
   // If downloading is to be supported, configure the updater
 
@@ -1097,6 +1100,13 @@ OPT_BEGIN(period_sort, ":") {
   config->report_period_sort = optarg;
 } OPT_END(period_sort);
 
+OPT_BEGIN(daily, "") {
+  if (config->report_period.empty())
+    config->report_period = "daily";
+  else
+    config->report_period = std::string("daily ") + config->report_period;
+} OPT_END(daily);
+
 OPT_BEGIN(weekly, "W") {
   if (config->report_period.empty())
     config->report_period = "weekly";
@@ -1179,11 +1189,11 @@ OPT_BEGIN(display, "d:") {
 } OPT_END(display);
 
 OPT_BEGIN(amount, "t:") {
-  ledger::amount_expr.reset(new value_expr(optarg));
+  ledger::amount_expr = optarg;
 } OPT_END(amount);
 
 OPT_BEGIN(total, "T:") {
-  ledger::total_expr.reset(new value_expr(optarg));
+  ledger::total_expr = optarg;
 } OPT_END(total);
 
 OPT_BEGIN(amount_data, "j") {
@@ -1225,25 +1235,25 @@ OPT_BEGIN(download, "Q") {
 } OPT_END(download);
 
 OPT_BEGIN(quantity, "O") {
-  ledger::amount_expr.reset(new value_expr("a"));
-  ledger::total_expr.reset(new value_expr("O"));
+  ledger::amount_expr = "@a";
+  ledger::total_expr  = "@O";
 } OPT_END(quantity);
 
 OPT_BEGIN(basis, "B") {
-  ledger::amount_expr.reset(new value_expr("b"));
-  ledger::total_expr.reset(new value_expr("B"));
+  ledger::amount_expr = "@b";
+  ledger::total_expr  = "@B";
 } OPT_END(basis);
 
 OPT_BEGIN(price, "I") {
-  ledger::amount_expr.reset(new value_expr("i"));
-  ledger::total_expr.reset(new value_expr("I"));
+  ledger::amount_expr = "@i";
+  ledger::total_expr  = "@I";
 } OPT_END(price);
 
 OPT_BEGIN(market, "V") {
   config->show_revalued = true;
 
-  ledger::amount_expr.reset(new value_expr("v"));
-  ledger::total_expr.reset(new value_expr("V"));
+  ledger::amount_expr = "@v";
+  ledger::total_expr  = "@V";
 } OPT_END(market);
 
 namespace {
@@ -1279,34 +1289,29 @@ OPT_BEGIN(set_price, ":") {
 } OPT_END(set_price);
 
 OPT_BEGIN(performance, "g") {
-  ledger::amount_expr.reset(new value_expr("P(a,m)-b"));
-  ledger::total_expr.reset(new value_expr("P(O,m)-B"));
+  ledger::amount_expr = "@P(@a,@m)-@b";
+  ledger::total_expr  = "@P(@O,@m)-@B";
 } OPT_END(performance);
 
 OPT_BEGIN(gain, "G") {
   config->show_revalued      =
   config->show_revalued_only = true;
 
-  ledger::amount_expr.reset(new value_expr("a"));
-  ledger::total_expr.reset(new value_expr("G"));
+  ledger::amount_expr = "@a";
+  ledger::total_expr  = "@G";
 } OPT_END(gain);
 
 OPT_BEGIN(average, "A") {
-  ledger::total_expr.reset
-    (new value_expr(expand_value_expr("A(#)", ledger::total_expr->expr)));
+  ledger::total_expr = expand_value_expr("@A(#)", ledger::total_expr.expr);
 } OPT_END(average);
 
 OPT_BEGIN(deviation, "D") {
-  ledger::total_expr.reset(new value_expr("O"));
-  ledger::total_expr.reset
-    (new value_expr(expand_value_expr("t-A(#)", ledger::total_expr->expr)));
+  ledger::total_expr = expand_value_expr("@t-@A(#)", ledger::total_expr.expr);
 } OPT_END(deviation);
 
 OPT_BEGIN(percentage, "%") {
-  ledger::total_expr.reset(new value_expr("O"));
-  ledger::total_expr.reset
-    (new value_expr(expand_value_expr("^#&{100.0%}*(#/^#)",
-				      ledger::total_expr->expr)));
+  ledger::total_expr = expand_value_expr("^#&{100.0%}*(#/^#)",
+					 ledger::total_expr.expr);
 } OPT_END(percentage);
 
 //////////////////////////////////////////////////////////////////////
@@ -1332,6 +1337,7 @@ option_t config_options[CONFIG_OPTIONS_SIZE] = {
   { "comm-as-payee", 'x', false, opt_comm_as_payee, false },
   { "csv-register-format", '\0', true, opt_csv_register_format, false },
   { "current", 'c', false, opt_current, false },
+  { "daily", '\0', false, opt_daily, false },
   { "date-format", 'y', true, opt_date_format, false },
   { "debug", '\0', true, opt_debug, false },
   { "descend", '\0', true, opt_descend, false },

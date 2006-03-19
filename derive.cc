@@ -167,8 +167,9 @@ entry_t * derive_new_entry(journal_t& journal,
   }
 
  done:
-  if (! run_hooks(journal.entry_finalize_hooks, *added) ||
-      ! added->finalize())
+  if (! run_hooks(journal.entry_finalize_hooks, *added, false) ||
+      ! added->finalize() ||
+      ! run_hooks(journal.entry_finalize_hooks, *added, true))
     throw new error("Failed to finalize derived entry (check commodities)");
 
   return added.release();

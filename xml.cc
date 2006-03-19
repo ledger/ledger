@@ -435,9 +435,9 @@ void format_xml_entries::format_last_entry()
       }
 
       output_stream << "        <tr:amount>\n";
-      if (transaction_xdata_(**i).dflags & TRANSACTION_COMPOSITE)
+      if (transaction_xdata_(**i).dflags & TRANSACTION_COMPOUND)
 	xml_write_value(output_stream,
-			transaction_xdata_(**i).composite_amount, 10);
+			transaction_xdata_(**i).value, 10);
       else
 	xml_write_value(output_stream, value_t((*i)->amount), 10);
       output_stream << "        </tr:amount>\n";

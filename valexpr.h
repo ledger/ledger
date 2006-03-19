@@ -1,7 +1,6 @@
 #ifndef _VALEXPR_H
 #define _VALEXPR_H
 
-#include "journal.h"
 #include "value.h"
 #include "error.h"
 #include "mask.h"
@@ -9,6 +8,10 @@
 #include <memory>
 
 namespace ledger {
+
+class entry_t;
+class transaction_t;
+class account_t;
 
 struct details_t
 {
@@ -37,10 +40,9 @@ struct value_expr_t
 {
   enum kind_t {
     // Constants
-    CONSTANT_I,
-    CONSTANT_T,
-    CONSTANT_A,
-    CONSTANT_V,
+    CONSTANT,
+    ARG_INDEX,
+    ZERO,
 
     CONSTANTS,
 
@@ -125,20 +127,15 @@ struct value_expr_t
   value_expr_t * left;
 
   union {
-    datetime_t *   constant_t;
-    long	   constant_i;
-    amount_t *	   constant_a;
-    value_t *	   constant_v;
+    value_t *	   value;
     mask_t *	   mask;
+    unsigned int   arg_index;	// used by ARG_INDEX and O_ARG
     value_expr_t * right;
   };
 
   value_expr_t(const kind_t _kind)
     : kind(_kind), refc(0), left(NULL), right(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor value_expr_t " << this);
-  }
-  value_expr_t(const value_expr_t&) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor value_expr_t (copy) " << this);
   }
   ~value_expr_t();
 
@@ -180,11 +177,17 @@ struct value_expr_t
   void compute(value_t& result,
 	       const details_t& details = details_t(),
 	       value_expr_t *   context = NULL) const;
+
   value_t compute(const details_t& details = details_t(),
 		  value_expr_t *   context = NULL) const {
     value_t temp;
     compute(temp, details, context);
     return temp;
+  }
+
+ private:
+  value_expr_t(const value_expr_t&) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor value_expr_t (copy) " << this);
   }
 };
 
@@ -273,37 +276,21 @@ bool compute_amount(value_expr_t * expr, amount_t& amt,
 		    const transaction_t * xact,
 		    value_expr_t * context = NULL);
 
-struct scope_t;
-value_expr_t * parse_boolean_expr(std::istream& in, scope_t * scope);
-
-inline value_expr_t * parse_boolean_expr(const std::string& str,
-					 scope_t * scope = NULL) {
-  std::istringstream stream(str);
-  try {
-    return parse_boolean_expr(stream, scope);
-  }
-  catch (error * err) {
-    err->context.push_back
-      (new error_context("While parsing value expression: " + str));
-    throw err;
-  }
-}
-
-inline value_expr_t * parse_boolean_expr(const char * p,
-					 scope_t * scope = NULL) {
-  return parse_boolean_expr(std::string(p), scope);
-}
+#define PARSE_VALEXPR_NORMAL  0x00
+#define PARSE_VALEXPR_PARTIAL 0x01
+#define PARSE_VALEXPR_RELAXED 0x02
 
 value_expr_t * parse_value_expr(std::istream& in,
 				scope_t * scope = NULL,
-				const bool partial = false);
+				const short flags = PARSE_VALEXPR_RELAXED);
 
-inline value_expr_t * parse_value_expr(const std::string& str,
-				       scope_t * scope = NULL,
-				       const bool partial = false) {
+inline value_expr_t *
+parse_value_expr(const std::string& str,
+		 scope_t *	    scope = NULL,
+		 const short        flags = PARSE_VALEXPR_RELAXED) {
   std::istringstream stream(str);
   try {
-    return parse_value_expr(stream, scope, partial);
+    return parse_value_expr(stream, scope, flags);
   }
   catch (error * err) {
     err->context.push_back
@@ -313,10 +300,11 @@ inline value_expr_t * parse_value_expr(const std::string& str,
   }
 }
 
-inline value_expr_t * parse_value_expr(const char * p,
-				       scope_t * scope = NULL,
-				       const bool partial = false) {
-  return parse_value_expr(std::string(p), scope, partial);
+inline value_expr_t *
+parse_value_expr(const char * p,
+		 scope_t *    scope = NULL,
+		 const short  flags  = PARSE_VALEXPR_RELAXED) {
+  return parse_value_expr(std::string(p), scope, flags);
 }
 
 void dump_value_expr(std::ostream& out, const value_expr_t * node,
@@ -324,6 +312,7 @@ void dump_value_expr(std::ostream& out, const value_expr_t * node,
 
 bool write_value_expr(std::ostream&	   out,
 		      const value_expr_t * node,
+		      const bool           relaxed      = true,
 		      const value_expr_t * node_to_find = NULL,
 		      unsigned long *	   start_pos    = NULL,
 		      unsigned long *	   end_pos      = NULL);
@@ -359,27 +348,70 @@ inline value_t guarded_compute(const value_expr_t * expr,
 }
 
 //////////////////////////////////////////////////////////////////////
-//
-// This class is used so that during the "in between" stages of value
-// expression parsing -- while no one yet holds a reference to the
-// value_expr_t object -- we can be assured of deletion should an
-// exception happen to whip by.
 
-struct value_auto_ptr {
+class value_expr
+{
   value_expr_t * ptr;
-  value_auto_ptr() : ptr(NULL) {}
-  explicit value_auto_ptr(value_expr_t * _ptr)
-    : ptr(_ptr ? _ptr->acquire() : NULL) {}
-  ~value_auto_ptr() {
+public:
+  std::string    expr;
+
+  value_expr() : ptr(NULL) {}
+
+  value_expr(const std::string& _expr) : expr(_expr) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor value_expr");
+    if (! _expr.empty())
+      ptr = parse_value_expr(expr)->acquire();
+    else
+      ptr = NULL;
+  }
+  value_expr(value_expr_t * _ptr)
+    : ptr(_ptr ? _ptr->acquire(): NULL) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor value_expr");
+  }
+  value_expr(const value_expr& other)
+    : ptr(other.ptr ? other.ptr->acquire() : NULL),
+      expr(other.expr) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor value_expr");
+  }
+  virtual ~value_expr() {
+    DEBUG_PRINT("ledger.memory.dtors", "dtor value_expr");
     if (ptr)
       ptr->release();
   }
+
+  value_expr& operator=(const std::string& _expr) {
+    expr = _expr;
+    reset(parse_value_expr(expr));
+    return *this;
+  }
+  value_expr& operator=(value_expr_t * _expr) {
+    expr = "";
+    reset(_expr);
+    return *this;
+  }
+  value_expr& operator=(const value_expr& _expr) {
+    expr = _expr.expr;
+    reset(_expr.get());
+    return *this;
+  }
+
+  operator bool() const throw() {
+    return ptr != NULL;
+  }
+  operator std::string() const throw() {
+    return expr;
+  }
+  operator value_expr_t *() const throw() {
+    return ptr;
+  }
+
   value_expr_t& operator*() const throw() {
     return *ptr;
   }
   value_expr_t * operator->() const throw() {
     return ptr;
   }
+
   value_expr_t * get() const throw() { return ptr; }
   value_expr_t * release() throw() {
     value_expr_t * tmp = ptr;
@@ -390,41 +422,19 @@ struct value_auto_ptr {
     if (p != ptr) {
       if (ptr)
 	ptr->release();
-      ptr = p->acquire();
+      ptr = p ? p->acquire() : NULL;
     }
-  }
-};
-
-//////////////////////////////////////////////////////////////////////
-
-class value_expr
-{
-  value_expr_t * parsed;
-public:
-  std::string    expr;
-
-  value_expr(const std::string& _expr) : expr(_expr) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor value_expr");
-    parsed = parse_value_expr(expr)->acquire();
-  }
-  value_expr(value_expr_t * _parsed) : parsed(_parsed->acquire()) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor value_expr");
-  }
-  virtual ~value_expr() {
-    DEBUG_PRINT("ledger.memory.dtors", "dtor value_expr");
-    if (parsed)
-      parsed->release();
   }
 
   virtual void compute(value_t& result,
 		       const details_t& details = details_t(),
 		       value_expr_t *   context = NULL) {
-    guarded_compute(parsed, result, details, context);
+    guarded_compute(ptr, result, details, context);
   }
   virtual value_t compute(const details_t& details = details_t(),
 			  value_expr_t *   context = NULL) {
     value_t temp;
-    guarded_compute(parsed, temp, details, context);
+    guarded_compute(ptr, temp, details, context);
     return temp;
   }
 
@@ -435,35 +445,40 @@ public:
 			       unsigned long *	    end_pos);
 };
 
-extern std::auto_ptr<value_expr> amount_expr;
-extern std::auto_ptr<value_expr> total_expr;
+extern value_expr amount_expr;
+extern value_expr total_expr;
 
 inline void compute_amount(value_t& result,
 			   const details_t& details = details_t()) {
-  if (amount_expr.get())
+  if (amount_expr)
     amount_expr->compute(result, details);
 }
 
 inline value_t compute_amount(const details_t& details = details_t()) {
-  if (amount_expr.get())
+  if (amount_expr)
     return amount_expr->compute(details);
 }
 
 inline void compute_total(value_t& result,
 			  const details_t& details = details_t()) {
-  if (total_expr.get())
+  if (total_expr)
     total_expr->compute(result, details);
 }
 
 inline value_t compute_total(const details_t& details = details_t()) {
-  if (total_expr.get())
+  if (total_expr)
     return total_expr->compute(details);
 }
 
+value_expr_t * parse_boolean_expr(std::istream& in, scope_t * scope,
+				  const short flags);
+
 inline void parse_value_definition(const std::string& str,
 				   scope_t * scope = NULL) {
-  value_auto_ptr expr
-    (parse_boolean_expr(str, scope ? scope : global_scope.get()));
+  std::istringstream def(str);
+  value_expr expr
+    (parse_boolean_expr(def, scope ? scope : global_scope.get(),
+			PARSE_VALEXPR_RELAXED));
 }
 
 //////////////////////////////////////////////////////////////////////

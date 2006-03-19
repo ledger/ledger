@@ -172,7 +172,7 @@ element_t * format_t::parse_elements(const std::string& fmt)
       current->type = element_t::VALUE_EXPR;
 
       assert(! current->val_expr);
-      current->val_expr = new value_expr(std::string(b, p));
+      current->val_expr = std::string(b, p);
       break;
     }
 
@@ -275,7 +275,7 @@ static bool entry_state(const entry_t * entry, transaction_t::state_t * state)
 }
 
 namespace {
-  void mark_red(std::ostream& out, const element_t * elem) {
+  inline void mark_red(std::ostream& out, const element_t * elem) {
     out.setf(std::ios::left);
     out.width(0);
     out << "\e[31m";
@@ -289,7 +289,7 @@ namespace {
       out.width(elem->min_width);
   }
 
-  void mark_plain(std::ostream& out) {
+  inline void mark_plain(std::ostream& out) {
     out << "\e[0m";
   }
 }
@@ -317,10 +317,10 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
     case element_t::AMOUNT:
     case element_t::TOTAL:
     case element_t::VALUE_EXPR: {
-      value_expr * calc = NULL;
+      value_expr calc;
       switch (elem->type) {
-      case element_t::AMOUNT:     calc = amount_expr.get(); break;
-      case element_t::TOTAL:      calc = total_expr.get(); break;
+      case element_t::AMOUNT:     calc = amount_expr; break;
+      case element_t::TOTAL:      calc = total_expr; break;
       case element_t::VALUE_EXPR: calc = elem->val_expr; break;
       default:
 	assert(0);
@@ -348,6 +348,8 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 	}
       }
 
+      bool highlighted = false;
+
       switch (value.type) {
       case value_t::BOOLEAN:
 	out << (*((bool *) value.data) ? "true" : "false");
@@ -356,11 +358,15 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
       case value_t::INTEGER:
 	if (ansi_codes && elem->flags & ELEMENT_HIGHLIGHT) {
 	  if (ansi_invert) {
-	    if (*((long *) value.data) > 0)
+	    if (*((long *) value.data) > 0) {
 	      mark_red(out, elem);
+	      highlighted = true;
+	    }
 	  } else {
-	    if (*((long *) value.data) < 0)
+	    if (*((long *) value.data) < 0) {
 	      mark_red(out, elem);
+	      highlighted = true;
+	    }
 	  }
 	}
 	out << *((long *) value.data);
@@ -373,11 +379,15 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
       case value_t::AMOUNT:
 	if (ansi_codes && elem->flags & ELEMENT_HIGHLIGHT) {
 	  if (ansi_invert) {
-	    if (*((amount_t *) value.data) > 0)
+	    if (*((amount_t *) value.data) > 0) {
 	      mark_red(out, elem);
+	      highlighted = true;
+	    }
 	  } else {
-	    if (*((amount_t *) value.data) < 0)
+	    if (*((amount_t *) value.data) < 0) {
 	      mark_red(out, elem);
+	      highlighted = true;
+	    }
 	  }
 	}
 	out << *((amount_t *) value.data);
@@ -393,11 +403,15 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 
 	if (ansi_codes && elem->flags & ELEMENT_HIGHLIGHT) {
 	  if (ansi_invert) {
-	    if (*bal > 0)
+	    if (*bal > 0) {
 	      mark_red(out, elem);
+	      highlighted = true;
+	    }
 	  } else {
-	    if (*bal < 0)
+	    if (*bal < 0) {
 	      mark_red(out, elem);
+	      highlighted = true;
+	    }
 	  }
 	}
 	bal->write(out, elem->min_width,
@@ -411,7 +425,7 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 	break;
       }
 
-      if (ansi_codes && elem->flags & ELEMENT_HIGHLIGHT)
+      if (highlighted)
 	mark_plain(out);
       break;
     }
@@ -419,13 +433,20 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
     case element_t::OPT_AMOUNT:
       if (details.xact) {
 	std::string disp;
-	bool        use_disp = false;
+	bool use_disp = false;
 
 	if (details.xact->cost && details.xact->amount) {
 	  std::ostringstream stream;
-	  stream << details.xact->amount << " @ "
-		 << amount_t(*details.xact->cost /
-			     details.xact->amount).unround();
+	  if (! details.xact->amount_expr.expr.empty())
+	    stream << details.xact->amount_expr.expr;
+	  else
+	    stream << details.xact->amount.strip_annotations();
+
+	  if (! details.xact->cost_expr.empty())
+	    stream << details.xact->cost_expr;
+	  else
+	    stream << " @ " << amount_t(*details.xact->cost /
+					details.xact->amount).unround();
 	  disp = stream.str();
 	  use_disp = true;
 	}
@@ -450,10 +471,14 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 		      first->amount == - last->amount);
 	}
 
-	if (! use_disp)
-	  out << details.xact->amount;
-	else
+	if (! use_disp) {
+	  if (! details.xact->amount_expr.expr.empty())
+	    out << details.xact->amount_expr.expr;
+	  else
+	    out << details.xact->amount.strip_annotations();
+	} else {
 	  out << disp;
+	}
       }
       break;
 

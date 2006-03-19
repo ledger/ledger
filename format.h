@@ -53,19 +53,17 @@ struct element_t
   std::string	chars;
   unsigned char min_width;
   unsigned char max_width;
-  value_expr *	val_expr;
+  value_expr	val_expr;
 
   struct element_t * next;
 
   element_t() : type(STRING), flags(false),
-		min_width(0), max_width(0),
-		val_expr(NULL), next(NULL) {
+		min_width(0), max_width(0), next(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor element_t");
   }
 
   ~element_t() {
     DEBUG_PRINT("ledger.memory.dtors", "dtor element_t");
-    if (val_expr) delete val_expr;
     if (next) delete next;	// recursive, but not too deep
   }
 };

@@ -39,8 +39,8 @@ transaction_xdata_t& transaction_xdata(const transaction_t& xact)
 void add_transaction_to(const transaction_t& xact, value_t& value)
 {
   if (transaction_has_xdata(xact) &&
-      transaction_xdata_(xact).dflags & TRANSACTION_COMPOSITE) {
-    value += transaction_xdata_(xact).composite_amount;
+      transaction_xdata_(xact).dflags & TRANSACTION_COMPOUND) {
+    value += transaction_xdata_(xact).value;
   }
   else if (xact.cost || ! value.realzero()) {
     value.add(xact.amount, xact.cost);
@@ -162,8 +162,8 @@ void calc_transactions::operator()(transaction_t& xact)
 void invert_transactions::operator()(transaction_t& xact)
 {
   if (transaction_has_xdata(xact) &&
-      transaction_xdata_(xact).dflags & TRANSACTION_COMPOSITE) {
-    transaction_xdata_(xact).composite_amount.negate();
+      transaction_xdata_(xact).dflags & TRANSACTION_COMPOUND) {
+    transaction_xdata_(xact).value.negate();
   } else {
     xact.amount.negate();
     if (xact.cost)
@@ -209,28 +209,30 @@ void handle_value(const value_t&	       value,
 
   transaction_xdata_t& xdata(transaction_xdata(xact));
 
-  switch (value.type) {
-  case value_t::BOOLEAN:
-    xact.amount = *((bool *) value.data);
-    break;
-  case value_t::INTEGER:
-    xact.amount = *((long *) value.data);
-    break;
-  case value_t::AMOUNT:
-    xact.amount = *((amount_t *) value.data);
-    break;
-
-  case value_t::BALANCE:
-  case value_t::BALANCE_PAIR:
-    xdata.composite_amount = value;
-    flags |= TRANSACTION_COMPOSITE;
-    break;
-  }
-
   if (date)
     xdata.date = date;
   if (flags)
     xdata.dflags |= flags;
+
+  value_t temp(value);
+
+  switch (value.type) {
+  case value_t::BOOLEAN:
+  case value_t::DATETIME:
+  case value_t::INTEGER:
+    temp.cast(value_t::AMOUNT);
+    // fall through...
+
+  case value_t::AMOUNT:
+    xact.amount = *((amount_t *) temp.data);
+    break;
+
+  case value_t::BALANCE:
+  case value_t::BALANCE_PAIR:
+    xdata.value = temp;
+    flags |= TRANSACTION_COMPOUND;
+    break;
+  }
 
   handler(xact);
 }
@@ -830,7 +832,7 @@ void walk_accounts(account_t&		    account,
 		   const std::string&       sort_string)
 {
   if (! sort_string.empty()) {
-    value_auto_ptr sort_order;
+    value_expr sort_order;
     sort_order.reset(parse_value_expr(sort_string));
     walk_accounts(account, handler, sort_order.get());
   } else {
