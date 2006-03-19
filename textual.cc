@@ -716,7 +716,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	if (parse_transactions(in, account_stack.front(), *pe,
 			       "period", end_pos)) {
 	  if (pe->finalize()) {
-	    extend_entry_base(journal, *pe);
+	    extend_entry_base(journal, *pe, true);
 	    journal->period_entries.push_back(pe);
 	    pe->src_idx	 = src_idx;
 	    pe->beg_pos	 = beg_pos;

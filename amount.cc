@@ -835,13 +835,13 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
     std::string ender;
     if (i == len)
       ender = str;
-    else if (i < comm.precision())
-      ender = std::string(str, 0, comm.precision());
+    else if (i < comm.precision)
+      ender = std::string(str, 0, comm.precision);
     else
       ender = std::string(str, 0, i);
 
     if (! ender.empty()) {
-      out << ((comm.flags() & COMMODITY_STYLE_EUROPEAN) ? ',' : '.');
+      out << ((comm.flags & COMMODITY_STYLE_EUROPEAN) ? ',' : '.');
       out << ender;
     }
   }

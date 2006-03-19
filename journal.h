@@ -203,7 +203,7 @@ class entry_t : public entry_base_t
 
 struct entry_finalizer_t {
   virtual ~entry_finalizer_t() {}
-  virtual bool operator()(entry_t& entry) = 0;
+  virtual bool operator()(entry_t& entry, bool post) = 0;
 };
 
 
@@ -223,7 +223,7 @@ public:
 
   virtual ~auto_entry_t();
 
-  virtual void extend_entry(entry_base_t& entry);
+  virtual void extend_entry(entry_base_t& entry, bool post);
   virtual bool valid() const {
     return true;
   }
@@ -233,7 +233,7 @@ class journal_t;
 struct auto_entry_finalizer_t : public entry_finalizer_t {
   journal_t * journal;
   auto_entry_finalizer_t(journal_t * _journal) : journal(_journal) {}
-  virtual bool operator()(entry_t& entry);
+  virtual bool operator()(entry_t& entry, bool post);
 };
 
 
@@ -328,12 +328,12 @@ std::ostream& operator<<(std::ostream& out, const account_t& account);
 
 
 struct func_finalizer_t : public entry_finalizer_t {
-  typedef bool (*func_t)(entry_t& entry);
+  typedef bool (*func_t)(entry_t& entry, bool post);
   func_t func;
   func_finalizer_t(func_t _func) : func(_func) {}
   func_finalizer_t(const func_finalizer_t& other) : func(other.func) {}
-  virtual bool operator()(entry_t& entry) {
-    return func(entry);
+  virtual bool operator()(entry_t& entry, bool post) {
+    return func(entry, post);
   }
 };
 
@@ -351,11 +351,11 @@ void remove_hook(std::list<T>& list, T obj) {
 }
 
 template <typename T, typename Data>
-bool run_hooks(std::list<T>& list, Data& item) {
+bool run_hooks(std::list<T>& list, Data& item, bool post) {
   for (typename std::list<T>::const_iterator i = list.begin();
        i != list.end();
        i++)
-    if (! (*(*i))(item))
+    if (! (*(*i))(item, post))
       return false;
   return true;
 }
@@ -432,15 +432,16 @@ class journal_t
   bool valid() const;
 };
 
-inline void extend_entry_base(journal_t * journal, entry_base_t& entry) {
+inline void extend_entry_base(journal_t * journal, entry_base_t& entry,
+			      bool post) {
   for (auto_entries_list::iterator i = journal->auto_entries.begin();
        i != journal->auto_entries.end();
        i++)
-    (*i)->extend_entry(entry);
+    (*i)->extend_entry(entry, post);
 }
 
-inline bool auto_entry_finalizer_t::operator()(entry_t& entry) {
-  extend_entry_base(journal, entry);
+inline bool auto_entry_finalizer_t::operator()(entry_t& entry, bool post) {
+  extend_entry_base(journal, entry, post);
   return true;
 }
 
