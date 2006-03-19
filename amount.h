@@ -181,16 +181,22 @@ class amount_t
   operator double() const;
 
   // comparisons between amounts
-  bool operator<(const amount_t& amt) const;
-  bool operator<=(const amount_t& amt) const;
-  bool operator>(const amount_t& amt) const;
-  bool operator>=(const amount_t& amt) const;
-  bool operator==(const amount_t& amt) const;
-  bool operator!=(const amount_t& amt) const {
-    if (commodity_ != amt.commodity_)
-      return true;
-    return ! (*this == amt);
+  int compare(const amount_t& amt) const;
+
+  bool operator<(const amount_t& amt) const {
+    return compare(amt) < 0;
   }
+  bool operator<=(const amount_t& amt) const {
+    return compare(amt) <= 0;
+  }
+  bool operator>(const amount_t& amt) const {
+    return compare(amt) > 0;
+  }
+  bool operator>=(const amount_t& amt) const {
+    return compare(amt) >= 0;
+  }
+  bool operator==(const amount_t& amt) const;
+  bool operator!=(const amount_t& amt) const;
 
   template <typename T>
   void parse_num(T num) {

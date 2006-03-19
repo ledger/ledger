@@ -473,39 +473,50 @@ int amount_t::sign() const
   return quantity ? mpz_sgn(MPZ(quantity)) : 0;
 }
 
-// comparisons between amounts
-#define AMOUNT_CMP_AMOUNT(OP)					\
-bool amount_t::operator OP(const amount_t& amt) const		\
-{								\
-  if (! quantity)						\
-    return 0 OP amt;						\
-  if (! amt.quantity)						\
-    return *this OP 0;						\
-								\
-  if (commodity() && amt.commodity() &&				\
-      commodity() != amt.commodity())                           \
-    return false;						\
-								\
-  if (quantity->prec == amt.quantity->prec) {			\
-    return mpz_cmp(MPZ(quantity), MPZ(amt.quantity)) OP 0;	\
-  }								\
-  else if (quantity->prec < amt.quantity->prec) {		\
-    amount_t temp = *this;					\
-    temp._resize(amt.quantity->prec);				\
-    return mpz_cmp(MPZ(temp.quantity), MPZ(amt.quantity)) OP 0;	\
-  }								\
-  else {							\
-    amount_t temp = amt;					\
-    temp._resize(quantity->prec);				\
-    return mpz_cmp(MPZ(quantity), MPZ(temp.quantity)) OP 0;	\
-  }								\
+int amount_t::compare(const amount_t& amt) const
+{
+  if (! quantity) {
+    if (! amt.quantity)
+      return 0;
+    return - amt.sign();
+  }
+  if (! amt.quantity)
+    return sign();
+
+  if (commodity() && amt.commodity() &&
+      commodity() != amt.commodity())
+    throw new amount_error
+      (std::string("Cannot compare amounts with different commodities: ") +
+       commodity().symbol + " and " + amt.commodity().symbol);
+
+  if (quantity->prec == amt.quantity->prec) {
+    return mpz_cmp(MPZ(quantity), MPZ(amt.quantity));
+  }
+  else if (quantity->prec < amt.quantity->prec) {
+    amount_t temp = *this;
+    temp._resize(amt.quantity->prec);
+    return mpz_cmp(MPZ(temp.quantity), MPZ(amt.quantity));
+  }
+  else {
+    amount_t temp = amt;
+    temp._resize(quantity->prec);
+    return mpz_cmp(MPZ(quantity), MPZ(temp.quantity));
+  }
 }
 
-AMOUNT_CMP_AMOUNT(<)
-AMOUNT_CMP_AMOUNT(<=)
-AMOUNT_CMP_AMOUNT(>)
-AMOUNT_CMP_AMOUNT(>=)
-AMOUNT_CMP_AMOUNT(==)
+bool amount_t::operator==(const amount_t& amt) const
+{
+  if (commodity() != amt.commodity())
+    return false;
+  return compare(amt) == 0;
+}
+
+bool amount_t::operator!=(const amount_t& amt) const
+{
+  if (commodity() != amt.commodity())
+    return true;
+  return compare(amt) != 0;
+}
 
 amount_t::operator bool() const
 {
