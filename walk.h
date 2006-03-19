@@ -252,7 +252,7 @@ class sort_transactions : public item_handler<transaction_t>
   sort_transactions(item_handler<transaction_t> * handler,
 		    const value_expr_t * _sort_order)
     : item_handler<transaction_t>(handler),
-      sort_order(_sort_order) {}
+      sort_order(_sort_order->acquire()) {}
 
   sort_transactions(item_handler<transaction_t> * handler,
 		    const std::string& _sort_order)
@@ -275,6 +275,35 @@ class sort_transactions : public item_handler<transaction_t>
 
   virtual void operator()(transaction_t& xact) {
     transactions.push_back(&xact);
+  }
+};
+
+class sort_entries : public item_handler<transaction_t>
+{
+  sort_transactions sorter;
+  entry_t * last_entry;
+
+ public:
+  sort_entries(item_handler<transaction_t> * handler,
+	       const value_expr_t * _sort_order)
+    : sorter(handler, _sort_order) {}
+
+  sort_entries(item_handler<transaction_t> * handler,
+	       const std::string& _sort_order)
+    : sorter(handler, _sort_order) {}
+
+  virtual void flush() {
+    sorter.flush();
+    item_handler<transaction_t>::flush();
+  }
+
+  virtual void operator()(transaction_t& xact) {
+    if (last_entry && xact.entry != last_entry)
+      sorter.post_accumulated_xacts();
+
+    sorter(xact);
+
+    last_entry = xact.entry;
   }
 };
 
@@ -492,37 +521,18 @@ class interval_transactions : public subtotal_transactions
   transaction_t * last_xact;
   bool            started;
 
-  sort_transactions * sorter;
-
  public:
   interval_transactions(item_handler<transaction_t> * _handler,
-			const interval_t&    _interval,
-			const value_expr_t * sort_order = NULL,
+			const interval_t& _interval,
 			bool remember_components = false)
     : subtotal_transactions(_handler, remember_components),
-      interval(_interval), last_xact(NULL), started(false),
-      sorter(NULL) {
-    if (sort_order) {
-      sorter = new sort_transactions(handler, sort_order);
-      handler = sorter;
-    }
-  }
+      interval(_interval), last_xact(NULL), started(false) {}
+
   interval_transactions(item_handler<transaction_t> * _handler,
 			const std::string& _interval,
-			const std::string& sort_order = "",
 			bool remember_components = false)
     : subtotal_transactions(_handler, remember_components),
-      interval(_interval), last_xact(NULL), started(false),
-      sorter(NULL) {
-    if (! sort_order.empty()) {
-      sorter = new sort_transactions(handler, sort_order);
-      handler = sorter;
-    }
-  }
-  virtual ~interval_transactions() {
-    if (sorter)
-      delete sorter;
-  }
+      interval(_interval), last_xact(NULL), started(false) {}
 
   void report_subtotal(const std::time_t moment = 0);
 
