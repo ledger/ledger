@@ -80,14 +80,14 @@ bool compare_items<account_t>::operator()(const account_t * left,
 #define TRANSACTION_DISPLAYED  0x0008
 #define TRANSACTION_NO_TOTAL   0x0010
 #define TRANSACTION_SORT_CALC  0x0020
-#define TRANSACTION_COMPOSITE  0x0040
+#define TRANSACTION_COMPOUND   0x0040
 #define TRANSACTION_MATCHES    0x0080
 
 struct transaction_xdata_t
 {
   value_t	 total;
   value_t	 sort_value;
-  value_t	 composite_amount;
+  value_t	 value;
   unsigned int   index;
   unsigned short dflags;
   std::time_t    date;

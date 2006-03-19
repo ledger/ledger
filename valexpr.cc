@@ -7,8 +7,8 @@
 
 namespace ledger {
 
-std::auto_ptr<value_expr> amount_expr;
-std::auto_ptr<value_expr> total_expr;
+value_expr amount_expr;
+value_expr total_expr;
 
 std::auto_ptr<scope_t> global_scope;
 std::time_t terminus;
@@ -63,18 +63,9 @@ value_expr_t::~value_expr_t()
     delete mask;
     break;
 
-  case CONSTANT_A:
-    assert(constant_a);
-    delete constant_a;
-    break;
-
-  case CONSTANT_T:
-    assert(constant_t);
-    delete constant_t;
-    break;
-
-  case CONSTANT_I:
-  case CONSTANT_V:
+  case CONSTANT:
+    assert(value);
+    delete value;
     break;
 
   default:
@@ -103,15 +94,15 @@ namespace {
     if (! expr)
       return NULL;
 
-    value_auto_ptr temp;
+    value_expr temp;
 
     if (expr->kind != value_expr_t::O_COM) {
       if (expr->kind < value_expr_t::TERMINALS) {
 	temp.reset(expr);
       } else {
-	temp.reset(new value_expr_t(value_expr_t::CONSTANT_V));
-	temp->constant_v = new value_t();
-	expr->compute(*(temp->constant_v), details, context);
+	temp.reset(new value_expr_t(value_expr_t::CONSTANT));
+	temp->value = new value_t;
+	expr->compute(*(temp->value), details, context);
       }
     } else {
       temp.reset(new value_expr_t(value_expr_t::O_COM));
@@ -146,17 +137,16 @@ void value_expr_t::compute(value_t& result, const details_t& details,
 {
   try {
   switch (kind) {
-  case CONSTANT_I:
-    result = constant_i;
+  case ZERO:
+    result = 0L;
     break;
-  case CONSTANT_T:
-    result = *constant_t;
-    break;
-  case CONSTANT_A:
-    result = *constant_a;
-    break;
-  case CONSTANT_V:
-    result = *constant_v;
+
+  case ARG_INDEX:
+    throw new compute_error("Cannot directly compute an arg_index");
+
+  case CONSTANT:
+    assert(value);
+    result = *value;
     break;
 
   case F_NOW:
@@ -166,8 +156,8 @@ void value_expr_t::compute(value_t& result, const details_t& details,
   case AMOUNT:
     if (details.xact) {
       if (transaction_has_xdata(*details.xact) &&
-	  transaction_xdata_(*details.xact).dflags & TRANSACTION_COMPOSITE)
-	result = transaction_xdata_(*details.xact).composite_amount;
+	  transaction_xdata_(*details.xact).dflags & TRANSACTION_COMPOUND)
+	result = transaction_xdata_(*details.xact).value;
       else
 	result = details.xact->amount;
     }
@@ -184,8 +174,8 @@ void value_expr_t::compute(value_t& result, const details_t& details,
       bool set = false;
       if (transaction_has_xdata(*details.xact)) {
 	transaction_xdata_t& xdata(transaction_xdata_(*details.xact));
-	if (xdata.dflags & TRANSACTION_COMPOSITE) {
-	  result = xdata.composite_amount.price();
+	if (xdata.dflags & TRANSACTION_COMPOUND) {
+	  result = xdata.value.price();
 	  set = true;
 	}
       }
@@ -205,8 +195,8 @@ void value_expr_t::compute(value_t& result, const details_t& details,
       bool set = false;
       if (transaction_has_xdata(*details.xact)) {
 	transaction_xdata_t& xdata(transaction_xdata_(*details.xact));
-	if (xdata.dflags & TRANSACTION_COMPOSITE) {
-	  result = xdata.composite_amount.cost();
+	if (xdata.dflags & TRANSACTION_COMPOUND) {
+	  result = xdata.value.cost();
 	  set = true;
 	}
       }
@@ -353,31 +343,31 @@ void value_expr_t::compute(value_t& result, const details_t& details,
     break;
 
   case F_PRICE: {
-    int index = 0;
-    value_expr_t * expr = find_leaf(context, 0, index);
+    int arg_index = 0;
+    value_expr_t * expr = find_leaf(context, 0, arg_index);
     expr->compute(result, details, context);
     result = result.price();
     break;
   }
 
   case F_DATE: {
-    int index = 0;
-    value_expr_t * expr = find_leaf(context, 0, index);
+    int arg_index = 0;
+    value_expr_t * expr = find_leaf(context, 0, arg_index);
     expr->compute(result, details, context);
     result = result.date();
     break;
   }
 
   case F_DATECMP: {
-    int index = 0;
-    value_expr_t * expr = find_leaf(context, 0, index);
+    int arg_index = 0;
+    value_expr_t * expr = find_leaf(context, 0, arg_index);
     expr->compute(result, details, context);
     result = result.date();
     if (! result)
       break;
 
-    index = 0;
-    expr = find_leaf(context, 1, index);
+    arg_index = 0;
+    expr = find_leaf(context, 1, arg_index);
     value_t moment;
     expr->compute(moment, details, context);
     if (moment.type == value_t::DATETIME) {
@@ -394,8 +384,8 @@ void value_expr_t::compute(value_t& result, const details_t& details,
   case F_YEAR:
   case F_MONTH:
   case F_DAY: {
-    int index = 0;
-    value_expr_t * expr = find_leaf(context, 0, index);
+    int arg_index = 0;
+    value_expr_t * expr = find_leaf(context, 0, arg_index);
     expr->compute(result, details, context);
 
     // jww (2006-03-05): Generate an error if result is not a DATETIME
@@ -417,8 +407,8 @@ void value_expr_t::compute(value_t& result, const details_t& details,
   }
 
   case F_ARITH_MEAN: {
-    int index = 0;
-    value_expr_t * expr = find_leaf(context, 0, index);
+    int arg_index = 0;
+    value_expr_t * expr = find_leaf(context, 0, arg_index);
     if (details.xact && transaction_has_xdata(*details.xact)) {
       expr->compute(result, details, context);
       result /= amount_t(long(transaction_xdata_(*details.xact).index + 1));
@@ -440,24 +430,24 @@ void value_expr_t::compute(value_t& result, const details_t& details,
     break;
 
   case F_ABS: {
-    int index = 0;
-    value_expr_t * expr = find_leaf(context, 0, index);
+    int arg_index = 0;
+    value_expr_t * expr = find_leaf(context, 0, arg_index);
     expr->compute(result, details, context);
     result.abs();
     break;
   }
 
   case F_ROUND: {
-    int index = 0;
-    value_expr_t * expr = find_leaf(context, 0, index);
+    int arg_index = 0;
+    value_expr_t * expr = find_leaf(context, 0, arg_index);
     expr->compute(result, details, context);
     result.round();
     break;
   }
 
   case F_COMMODITY: {
-    int index = 0;
-    value_expr_t * expr = find_leaf(context, 0, index);
+    int arg_index = 0;
+    value_expr_t * expr = find_leaf(context, 0, arg_index);
     expr->compute(result, details, context);
     if (result.type != value_t::AMOUNT)
       throw new compute_error("Argument to commodity() must be a commoditized amount",
@@ -469,17 +459,18 @@ void value_expr_t::compute(value_t& result, const details_t& details,
   }
 
   case F_SET_COMMODITY: {
-    int index = 0;
-    value_expr_t * expr = find_leaf(context, 0, index);
+    int arg_index = 0;
+    value_expr_t * expr = find_leaf(context, 0, arg_index);
     value_t temp;
     expr->compute(temp, details, context);
 
-    index = 0;
-    expr = find_leaf(context, 1, index);
+    arg_index = 0;
+    expr = find_leaf(context, 1, arg_index);
     expr->compute(result, details, context);
     if (result.type != value_t::AMOUNT)
-      throw new compute_error("Second argument to set_commodity() must be a commoditized amount",
-			      new valexpr_context(expr));
+      throw new compute_error
+	("Second argument to set_commodity() must be a commoditized amount",
+	 new valexpr_context(expr));
     amount_t one("1");
     one.set_commodity(((amount_t *) result.data)->commodity());
     result = one;
@@ -489,8 +480,8 @@ void value_expr_t::compute(value_t& result, const details_t& details,
   }
 
   case F_QUANTITY: {
-    int index = 0;
-    value_expr_t * expr = find_leaf(context, 0, index);
+    int arg_index = 0;
+    value_expr_t * expr = find_leaf(context, 0, arg_index);
     expr->compute(result, details, context);
 
     balance_t * bal = NULL;
@@ -578,10 +569,10 @@ void value_expr_t::compute(value_t& result, const details_t& details,
     break;
 
   case O_ARG: {
-    int index = 0;
+    int arg_index = 0;
     assert(left);
-    assert(left->kind == CONSTANT_I);
-    value_expr_t * expr = find_leaf(context, left->constant_i, index);
+    assert(left->kind == ARG_INDEX);
+    value_expr_t * expr = find_leaf(context, left->arg_index, arg_index);
     if (expr)
       expr->compute(result, details, context);
     else
@@ -602,7 +593,7 @@ void value_expr_t::compute(value_t& result, const details_t& details,
   case O_REF: {
     assert(left);
     if (right) {
-      value_auto_ptr args(reduce_leaves(right, details, context));
+      value_expr args(reduce_leaves(right, details, context));
       left->compute(result, details, args.get());
     } else {
       left->compute(result, details, context);
@@ -611,12 +602,12 @@ void value_expr_t::compute(value_t& result, const details_t& details,
   }
 
   case F_VALUE: {
-    int index = 0;
-    value_expr_t * expr = find_leaf(context, 0, index);
+    int arg_index = 0;
+    value_expr_t * expr = find_leaf(context, 0, arg_index);
     expr->compute(result, details, context);
 
-    index = 0;
-    expr = find_leaf(context, 1, index);
+    arg_index = 0;
+    expr = find_leaf(context, 1, arg_index);
     value_t moment;
     expr->compute(moment, details, context);
     if (moment.type != value_t::DATETIME)
@@ -750,30 +741,64 @@ static inline void unexpected(char c, char wanted = '\0') {
   }
 }
 
-value_expr_t * parse_value_term(std::istream& in, scope_t * scope);
+value_expr_t * parse_value_term(std::istream& in, scope_t * scope,
+				const short flags);
 
-inline value_expr_t * parse_value_term(const char * p, scope_t * scope) {
+inline value_expr_t * parse_value_term(const char * p, scope_t * scope,
+				       const short flags) {
   std::istringstream stream(p);
-  return parse_value_term(stream, scope);
+  return parse_value_term(stream, scope, flags);
 }
 
-value_expr_t * parse_value_term(std::istream& in, scope_t * scope)
+value_expr_t * parse_value_term(std::istream& in, scope_t * scope,
+				const short flags)
 {
-  value_auto_ptr node;
+  value_expr node;
 
   char buf[256];
   char c = peek_next_nonws(in);
+
+  if (flags & PARSE_VALEXPR_RELAXED) {
+    if (c == '@') {
+      in.get(c);
+      c = peek_next_nonws(in);
+    }
+    else if (! (c == '(' || c == '[' || c == '{' || c == '/')) {
+      amount_t temp;
+      char prev_c = c;
+      unsigned long pos = 0;
+      // When in relaxed parsing mode, we do want to migrate commodity
+      // flags, so that any precision specified by the user updates
+      // the current maximum precision displayed.
+      try {
+	pos = (long)in.tellg();
+	temp.parse(in);
+      }
+      catch (amount_error * err) {
+	// If the amount had no commodity, it must be an unambiguous
+	// variable reference
+	if (std::strcmp(err->what(), "No quantity specified for amount") == 0) {
+	  in.clear();
+	  in.seekg(pos, std::ios::beg);
+	  c = prev_c;
+	  goto parse_ident;
+	} else {
+	  throw err;
+	}
+      }
+      node.reset(new value_expr_t(value_expr_t::CONSTANT));
+      node->value = new value_t(temp);
+      goto parsed;
+    }
+  }
+
+ parse_ident:
   if (std::isdigit(c) || c == '.') {
     READ_INTO(in, buf, 255, c, std::isdigit(c) || c == '.');
-
-    if (std::strchr(buf, '.')) {
-      node.reset(new value_expr_t(value_expr_t::CONSTANT_A));
-      node->constant_a = new amount_t;
-      node->constant_a->parse(buf, AMOUNT_PARSE_NO_MIGRATE);
-    } else {
-      node.reset(new value_expr_t(value_expr_t::CONSTANT_I));
-      node->constant_i = std::atol(buf);
-    }
+    amount_t temp;
+    temp.parse(buf, AMOUNT_PARSE_NO_MIGRATE);
+    node.reset(new value_expr_t(value_expr_t::CONSTANT));
+    node->value = new value_t(temp);
     goto parsed;
   }
   else if (std::isalnum(c) || c == '_') {
@@ -818,7 +843,7 @@ value_expr_t * parse_value_term(std::istream& in, scope_t * scope)
     if (definition) {
       std::auto_ptr<scope_t> params(new scope_t(scope));
 
-      int index = 0;
+      int arg_index = 0;
       if (have_args) {
 	bool done = false;
 
@@ -838,8 +863,8 @@ value_expr_t * parse_value_term(std::istream& in, scope_t * scope)
 	  // Define the parameter so that on lookup the parser will find
 	  // an O_ARG value.
 	  node.reset(new value_expr_t(value_expr_t::O_ARG));
-	  node->set_left(new value_expr_t(value_expr_t::CONSTANT_I));
-	  node->left->constant_i = index++;
+	  node->set_left(new value_expr_t(value_expr_t::ARG_INDEX));
+	  node->left->arg_index = arg_index++;
 	  params->define(ident, node.release());
 	}
 	
@@ -851,20 +876,19 @@ value_expr_t * parse_value_term(std::istream& in, scope_t * scope)
       }
 
       // Define the value associated with the defined identifier
-      value_auto_ptr def(parse_boolean_expr(in, params.get()));
+      value_expr def(parse_boolean_expr(in, params.get(), flags));
       if (! def.get())
 	throw new value_expr_error(std::string("Definition failed for '") + buf + "'");
 
       node.reset(new value_expr_t(value_expr_t::O_DEF));
-      node->set_left(new value_expr_t(value_expr_t::CONSTANT_I));
-      node->left->constant_i = index;
+      node->set_left(new value_expr_t(value_expr_t::ARG_INDEX));
+      node->left->arg_index = arg_index;
       node->set_right(def.release());
       
       scope->define(buf, node.release());
 
       // Returning a dummy value in place of the definition
-      node.reset(new value_expr_t(value_expr_t::CONSTANT_I));
-      node->constant_i = 0;
+      node.reset(new value_expr_t(value_expr_t::ZERO));
     } else {
       assert(scope);
       value_expr_t * def = scope->lookup(buf);
@@ -873,7 +897,8 @@ value_expr_t * parse_value_term(std::istream& in, scope_t * scope)
 	    (buf[0] == 'c' || buf[0] == 'C' || buf[0] == 'p' ||
 	     buf[0] == 'w' || buf[0] == 'W' || buf[0] == 'e'))
 	  goto find_term;
-	throw new value_expr_error(std::string("Unknown identifier '") + buf + "'");
+	throw new value_expr_error(std::string("Unknown identifier '") +
+				   buf + "'");
       }
       else if (def->kind == value_expr_t::O_DEF) {
 	node.reset(new value_expr_t(value_expr_t::O_REF));
@@ -883,7 +908,8 @@ value_expr_t * parse_value_term(std::istream& in, scope_t * scope)
 	if (have_args) {
 	  in.clear();
 	  in.seekg(beg, std::ios::beg);
-	  value_auto_ptr args(parse_value_expr(in, scope, true));
+	  value_expr args
+	    (parse_value_expr(in, scope, flags | PARSE_VALEXPR_PARTIAL));
 
 	  if (peek_next_nonws(in) != ')') {
 	    in.get(c);
@@ -897,11 +923,10 @@ value_expr_t * parse_value_term(std::istream& in, scope_t * scope)
 	  }
 	}
 
-	if (count != def->left->constant_i) {
+	if (count != def->left->arg_index) {
 	  std::ostringstream errmsg;
 	  errmsg << "Wrong number of arguments to '" << buf
-		 << "': saw " << count
-		 << ", wanted " << def->left->constant_i;
+		 << "': saw " << count << ", wanted " << def->left->arg_index;
 	  throw new value_expr_error(errmsg.str());
 	}
       }
@@ -918,7 +943,7 @@ value_expr_t * parse_value_term(std::istream& in, scope_t * scope)
   // Functions
   case '^':
     node.reset(new value_expr_t(value_expr_t::F_PARENT));
-    node->set_left(parse_value_term(in, scope));
+    node->set_left(parse_value_term(in, scope, flags));
     break;
 
   // Other
@@ -979,34 +1004,21 @@ value_expr_t * parse_value_term(std::istream& in, scope_t * scope)
   }
 
   case '{': {
-    int paren_depth = 0;
-    int i = 0;
-    while (i < 255 && ! in.eof()) {
-      in.get(c);
-      if (c == '{') {
-	paren_depth++;
-      }
-      else if (c == '}') {
-	if (paren_depth == 0)
-	  break;
-	paren_depth--;
-      }
-      buf[i++] = c;
-    }
-    buf[i] = '\0';
-
+    amount_t temp;
+    temp.parse(in, AMOUNT_PARSE_NO_MIGRATE);
+    in.get(c);
     if (c != '}')
       unexpected(c, '}');
 
-    node.reset(new value_expr_t(value_expr_t::CONSTANT_A));
-    node->constant_a = new amount_t;
-    node->constant_a->parse(buf, AMOUNT_PARSE_NO_MIGRATE);
+    node.reset(new value_expr_t(value_expr_t::CONSTANT));
+    node->value = new value_t(temp);
     break;
   }
 
   case '(': {
     std::auto_ptr<scope_t> locals(new scope_t(scope));
-    node.reset(parse_value_expr(in, locals.get(), true));
+    node.reset(parse_value_expr(in, locals.get(),
+				flags | PARSE_VALEXPR_PARTIAL));
     in.get(c);
     if (c != ')')
       unexpected(c, ')');
@@ -1019,10 +1031,9 @@ value_expr_t * parse_value_term(std::istream& in, scope_t * scope)
       unexpected(c, ']');
     in.get(c);
 
-    node.reset(new value_expr_t(value_expr_t::CONSTANT_T));
-
+    node.reset(new value_expr_t(value_expr_t::CONSTANT));
     interval_t timespan(buf);
-    node->constant_t = new datetime_t(timespan.first());
+    node->value = new value_t(datetime_t(timespan.first()));
     break;
   }
 
@@ -1035,19 +1046,20 @@ value_expr_t * parse_value_term(std::istream& in, scope_t * scope)
   return node.release();
 }
 
-value_expr_t * parse_mul_expr(std::istream& in, scope_t * scope)
+value_expr_t * parse_mul_expr(std::istream& in, scope_t * scope,
+			      const short flags)
 {
-  value_auto_ptr node;
+  value_expr node;
 
   if (peek_next_nonws(in) == '%') {
     char c;
     in.get(c);
     node.reset(new value_expr_t(value_expr_t::O_PERC));
-    node->set_left(parse_value_term(in, scope));
+    node->set_left(parse_value_term(in, scope, flags));
     return node.release();
   }
 
-  node.reset(parse_value_term(in, scope));
+  node.reset(parse_value_term(in, scope, flags));
 
   if (node.get() && ! in.eof()) {
     char c = peek_next_nonws(in);
@@ -1055,18 +1067,18 @@ value_expr_t * parse_mul_expr(std::istream& in, scope_t * scope)
       in.get(c);
       switch (c) {
       case '*': {
-	value_auto_ptr prev(node.release());
+	value_expr prev(node.release());
 	node.reset(new value_expr_t(value_expr_t::O_MUL));
 	node->set_left(prev.release());
-	node->set_right(parse_value_term(in, scope));
+	node->set_right(parse_value_term(in, scope, flags));
 	break;
       }
 
       case '/': {
-	value_auto_ptr prev(node.release());
+	value_expr prev(node.release());
 	node.reset(new value_expr_t(value_expr_t::O_DIV));
 	node->set_left(prev.release());
-	node->set_right(parse_value_term(in, scope));
+	node->set_right(parse_value_term(in, scope, flags));
 	break;
       }
       }
@@ -1077,20 +1089,17 @@ value_expr_t * parse_mul_expr(std::istream& in, scope_t * scope)
   return node.release();
 }
 
-value_expr_t * parse_add_expr(std::istream& in, scope_t * scope)
+value_expr_t * parse_add_expr(std::istream& in, scope_t * scope,
+			      const short flags)
 {
-  value_auto_ptr node;
+  value_expr node;
 
   if (peek_next_nonws(in) == '-') {
     char c;
     in.get(c);
-    value_auto_ptr expr(parse_mul_expr(in, scope));
-    if (expr->kind == value_expr_t::CONSTANT_I) {
-      expr->constant_i = - expr->constant_i;
-      return expr.release();
-    }
-    else if (expr->kind == value_expr_t::CONSTANT_A) {
-      expr->constant_a->negate();
+    value_expr expr(parse_mul_expr(in, scope, flags));
+    if (expr->kind == value_expr_t::CONSTANT) {
+      expr->value->negate();
       return expr.release();
     }
     node.reset(new value_expr_t(value_expr_t::O_NEG));
@@ -1098,7 +1107,7 @@ value_expr_t * parse_add_expr(std::istream& in, scope_t * scope)
     return node.release();
   }
 
-  node.reset(parse_mul_expr(in, scope));
+  node.reset(parse_mul_expr(in, scope, flags));
 
   if (node.get() && ! in.eof()) {
     char c = peek_next_nonws(in);
@@ -1106,18 +1115,18 @@ value_expr_t * parse_add_expr(std::istream& in, scope_t * scope)
       in.get(c);
       switch (c) {
       case '+': {
-	value_auto_ptr prev(node.release());
+	value_expr prev(node.release());
 	node.reset(new value_expr_t(value_expr_t::O_ADD));
 	node->set_left(prev.release());
-	node->set_right(parse_mul_expr(in, scope));
+	node->set_right(parse_mul_expr(in, scope, flags));
 	break;
       }
 
       case '-': {
-	value_auto_ptr prev(node.release());
+	value_expr prev(node.release());
 	node.reset(new value_expr_t(value_expr_t::O_SUB));
 	node->set_left(prev.release());
-	node->set_right(parse_mul_expr(in, scope));
+	node->set_right(parse_mul_expr(in, scope, flags));
 	break;
       }
       }
@@ -1128,19 +1137,20 @@ value_expr_t * parse_add_expr(std::istream& in, scope_t * scope)
   return node.release();
 }
 
-value_expr_t * parse_logic_expr(std::istream& in, scope_t * scope)
+value_expr_t * parse_logic_expr(std::istream& in, scope_t * scope,
+				const short flags)
 {
-  value_auto_ptr node;
+  value_expr node;
 
   if (peek_next_nonws(in) == '!') {
     char c;
     in.get(c);
     node.reset(new value_expr_t(value_expr_t::O_NOT));
-    node->set_left(parse_add_expr(in, scope));
+    node->set_left(parse_add_expr(in, scope, flags));
     return node.release();
   }
 
-  node.reset(parse_add_expr(in, scope));
+  node.reset(parse_add_expr(in, scope, flags));
 
   if (node.get() && ! in.eof()) {
     char c = peek_next_nonws(in);
@@ -1154,35 +1164,35 @@ value_expr_t * parse_logic_expr(std::istream& in, scope_t * scope)
 	  in.get(c);
 	else
 	  unexpected(c, '=');
-	value_auto_ptr prev(node.release());
+	value_expr prev(node.release());
 	node.reset(new value_expr_t(negate ? value_expr_t::O_NEQ :
 				    value_expr_t::O_EQ));
 	node->set_left(prev.release());
-	node->set_right(parse_add_expr(in, scope));
+	node->set_right(parse_add_expr(in, scope, flags));
 	break;
       }
 
       case '<': {
-	value_auto_ptr prev(node.release());
+	value_expr prev(node.release());
 	node.reset(new value_expr_t(value_expr_t::O_LT));
 	if (peek_next_nonws(in) == '=') {
 	  in.get(c);
 	  node->kind = value_expr_t::O_LTE;
 	}
 	node->set_left(prev.release());
-	node->set_right(parse_add_expr(in, scope));
+	node->set_right(parse_add_expr(in, scope, flags));
 	break;
       }
 
       case '>': {
-	value_auto_ptr prev(node.release());
+	value_expr prev(node.release());
 	node.reset(new value_expr_t(value_expr_t::O_GT));
 	if (peek_next_nonws(in) == '=') {
 	  in.get(c);
 	  node->kind = value_expr_t::O_GTE;
 	}
 	node->set_left(prev.release());
-	node->set_right(parse_add_expr(in, scope));
+	node->set_right(parse_add_expr(in, scope, flags));
 	break;
       }
 
@@ -1197,9 +1207,10 @@ value_expr_t * parse_logic_expr(std::istream& in, scope_t * scope)
   return node.release();
 }
 
-value_expr_t * parse_boolean_expr(std::istream& in, scope_t * scope)
+value_expr_t * parse_boolean_expr(std::istream& in, scope_t * scope,
+				  const short flags)
 {
-  value_auto_ptr node(parse_logic_expr(in, scope));
+  value_expr node(parse_logic_expr(in, scope, flags));
 
   if (node.get() && ! in.eof()) {
     char c = peek_next_nonws(in);
@@ -1207,32 +1218,32 @@ value_expr_t * parse_boolean_expr(std::istream& in, scope_t * scope)
       in.get(c);
       switch (c) {
       case '&': {
-	value_auto_ptr prev(node.release());
+	value_expr prev(node.release());
 	node.reset(new value_expr_t(value_expr_t::O_AND));
 	node->set_left(prev.release());
-	node->set_right(parse_logic_expr(in, scope));
+	node->set_right(parse_logic_expr(in, scope, flags));
 	break;
       }
 
       case '|': {
-	value_auto_ptr prev(node.release());
+	value_expr prev(node.release());
 	node.reset(new value_expr_t(value_expr_t::O_OR));
 	node->set_left(prev.release());
-	node->set_right(parse_logic_expr(in, scope));
+	node->set_right(parse_logic_expr(in, scope, flags));
 	break;
       }
 
       case '?': {
-	value_auto_ptr prev(node.release());
+	value_expr prev(node.release());
 	node.reset(new value_expr_t(value_expr_t::O_QUES));
 	node->set_left(prev.release());
 	node->set_right(new value_expr_t(value_expr_t::O_COL));
-	node->right->set_left(parse_logic_expr(in, scope));
+	node->right->set_left(parse_logic_expr(in, scope, flags));
 	c = peek_next_nonws(in);
 	if (c != ':')
 	  unexpected(c, ':');
 	in.get(c);
-	node->right->set_right(parse_logic_expr(in, scope));
+	node->right->set_right(parse_logic_expr(in, scope, flags));
 	break;
       }
 
@@ -1331,43 +1342,43 @@ void init_value_expr()
 
   // Functions
   node = new value_expr_t(value_expr_t::O_DEF);
-  node->set_left(new value_expr_t(value_expr_t::CONSTANT_I));
-  node->left->constant_i = 1;
+  node->set_left(new value_expr_t(value_expr_t::ARG_INDEX));
+  node->left->arg_index = 1;
   node->set_right(new value_expr_t(value_expr_t::F_ABS));
   globals->define("U", node);
   globals->define("abs", node);
 
   node = new value_expr_t(value_expr_t::O_DEF);
-  node->set_left(new value_expr_t(value_expr_t::CONSTANT_I));
-  node->left->constant_i = 1;
+  node->set_left(new value_expr_t(value_expr_t::ARG_INDEX));
+  node->left->arg_index = 1;
   node->set_right(new value_expr_t(value_expr_t::F_ROUND));
   globals->define("round", node);
 
   node = new value_expr_t(value_expr_t::O_DEF);
-  node->set_left(new value_expr_t(value_expr_t::CONSTANT_I));
-  node->left->constant_i = 1;
+  node->set_left(new value_expr_t(value_expr_t::ARG_INDEX));
+  node->left->arg_index = 1;
   node->set_right(new value_expr_t(value_expr_t::F_QUANTITY));
   globals->define("S", node);
   globals->define("quant", node);
   globals->define("quantity", node);
 
   node = new value_expr_t(value_expr_t::O_DEF);
-  node->set_left(new value_expr_t(value_expr_t::CONSTANT_I));
-  node->left->constant_i = 1;
+  node->set_left(new value_expr_t(value_expr_t::ARG_INDEX));
+  node->left->arg_index = 1;
   node->set_right(new value_expr_t(value_expr_t::F_COMMODITY));
   globals->define("comm", node);
   globals->define("commodity", node);
 
   node = new value_expr_t(value_expr_t::O_DEF);
-  node->set_left(new value_expr_t(value_expr_t::CONSTANT_I));
-  node->left->constant_i = 2;
+  node->set_left(new value_expr_t(value_expr_t::ARG_INDEX));
+  node->left->arg_index = 2;
   node->set_right(new value_expr_t(value_expr_t::F_SET_COMMODITY));
   globals->define("setcomm", node);
   globals->define("set_commodity", node);
 
   node = new value_expr_t(value_expr_t::O_DEF);
-  node->set_left(new value_expr_t(value_expr_t::CONSTANT_I));
-  node->left->constant_i = 1;
+  node->set_left(new value_expr_t(value_expr_t::ARG_INDEX));
+  node->left->arg_index = 1;
   node->set_right(new value_expr_t(value_expr_t::F_ARITH_MEAN));
   globals->define("A", node);
   globals->define("avg", node);
@@ -1375,87 +1386,87 @@ void init_value_expr()
   globals->define("average", node);
 
   node = new value_expr_t(value_expr_t::O_DEF);
-  node->set_left(new value_expr_t(value_expr_t::CONSTANT_I));
-  node->left->constant_i = 2;
+  node->set_left(new value_expr_t(value_expr_t::ARG_INDEX));
+  node->left->arg_index = 2;
   node->set_right(new value_expr_t(value_expr_t::F_VALUE));
   globals->define("P", node);
 
-  parse_value_definition("value=P(t,m)", globals);
-  parse_value_definition("total_value=P(T,m)", globals);
-  parse_value_definition("valueof(x)=P(x,m)", globals);
-  parse_value_definition("datedvalueof(x,y)=P(x,y)", globals);
+  parse_value_definition("@value=@P(@t,@m)", globals);
+  parse_value_definition("@total_value=@P(@T,@m)", globals);
+  parse_value_definition("@valueof(x)=@P(@x,@m)", globals);
+  parse_value_definition("@datedvalueof(x,y)=@P(@x,@y)", globals);
 
   node = new value_expr_t(value_expr_t::O_DEF);
-  node->set_left(new value_expr_t(value_expr_t::CONSTANT_I));
-  node->left->constant_i = 1;
+  node->set_left(new value_expr_t(value_expr_t::ARG_INDEX));
+  node->left->arg_index = 1;
   node->set_right(new value_expr_t(value_expr_t::F_PRICE));
   globals->define("priceof", node);
 
   node = new value_expr_t(value_expr_t::O_DEF);
-  node->set_left(new value_expr_t(value_expr_t::CONSTANT_I));
-  node->left->constant_i = 1;
+  node->set_left(new value_expr_t(value_expr_t::ARG_INDEX));
+  node->left->arg_index = 1;
   node->set_right(new value_expr_t(value_expr_t::F_DATE));
   globals->define("dateof", node);
 
   node = new value_expr_t(value_expr_t::O_DEF);
-  node->set_left(new value_expr_t(value_expr_t::CONSTANT_I));
-  node->left->constant_i = 2;
+  node->set_left(new value_expr_t(value_expr_t::ARG_INDEX));
+  node->left->arg_index = 2;
   node->set_right(new value_expr_t(value_expr_t::F_DATECMP));
   globals->define("datecmp", node);
 
   node = new value_expr_t(value_expr_t::O_DEF);
-  node->set_left(new value_expr_t(value_expr_t::CONSTANT_I));
-  node->left->constant_i = 1;
+  node->set_left(new value_expr_t(value_expr_t::ARG_INDEX));
+  node->left->arg_index = 1;
   node->set_right(new value_expr_t(value_expr_t::F_YEAR));
   globals->define("yearof", node);
 
   node = new value_expr_t(value_expr_t::O_DEF);
-  node->set_left(new value_expr_t(value_expr_t::CONSTANT_I));
-  node->left->constant_i = 1;
+  node->set_left(new value_expr_t(value_expr_t::ARG_INDEX));
+  node->left->arg_index = 1;
   node->set_right(new value_expr_t(value_expr_t::F_MONTH));
   globals->define("monthof", node);
 
   node = new value_expr_t(value_expr_t::O_DEF);
-  node->set_left(new value_expr_t(value_expr_t::CONSTANT_I));
-  node->left->constant_i = 1;
+  node->set_left(new value_expr_t(value_expr_t::ARG_INDEX));
+  node->left->arg_index = 1;
   node->set_right(new value_expr_t(value_expr_t::F_DAY));
   globals->define("dayof", node);
 
-  parse_value_definition("year=yearof(d)", globals);
-  parse_value_definition("month=monthof(d)", globals);
-  parse_value_definition("day=dayof(d)", globals);
+  parse_value_definition("@year=@yearof(@d)", globals);
+  parse_value_definition("@month=@monthof(@d)", globals);
+  parse_value_definition("@day=@dayof(@d)", globals);
 
   // Macros
-  node = parse_value_expr("P(a,d)");
+  node = parse_value_expr("@P(@a,@d)");
   globals->define("v", node);
   globals->define("market", node);
 
-  node = parse_value_expr("P(O,d)");
+  node = parse_value_expr("@P(@O,@d)");
   globals->define("V", node);
   globals->define("total_market", node);
 
-  node = parse_value_expr("v-b");
+  node = parse_value_expr("@v-@b");
   globals->define("g", node);
   globals->define("gain", node);
 
-  node = parse_value_expr("V-B");
+  node = parse_value_expr("@V-@B");
   globals->define("G", node);
   globals->define("total_gain", node);
 
-  parse_value_definition("min(x,y)=x<y?x:y", globals);
-  parse_value_definition("max(x,y)=x>y?x:y", globals);
+  parse_value_definition("@min(x,y)=@x<@y?@x:@y", globals);
+  parse_value_definition("@max(x,y)=@x>@y?@x:@y", globals);
 }
 
 value_expr_t * parse_value_expr(std::istream& in, scope_t * scope,
-				const bool partial)
+				const short flags)
 {
   if (! global_scope.get())
     init_value_expr();
 
   std::auto_ptr<scope_t> this_scope(new scope_t(scope ? scope :
 						global_scope.get()));
-  value_auto_ptr node;
-  node.reset(parse_boolean_expr(in, this_scope.get()));
+  value_expr node;
+  node.reset(parse_boolean_expr(in, this_scope.get(), flags));
 
   if (node.get() && ! in.eof()) {
     char c = peek_next_nonws(in);
@@ -1463,10 +1474,10 @@ value_expr_t * parse_value_expr(std::istream& in, scope_t * scope,
       in.get(c);
       switch (c) {
       case ',': {
-	value_auto_ptr prev(node.release());
+	value_expr prev(node.release());
 	node.reset(new value_expr_t(value_expr_t::O_COM));
 	node->set_left(prev.release());
-	node->set_right(parse_logic_expr(in, this_scope.get()));
+	node->set_right(parse_logic_expr(in, this_scope.get(), flags));
 	break;
       }
 
@@ -1486,7 +1497,7 @@ value_expr_t * parse_value_expr(std::istream& in, scope_t * scope,
       throw new value_expr_error(std::string("Failed to parse value expression"));
     else
       unexpected(c);
-  } else if (! partial) {
+  } else if (! (flags & PARSE_VALEXPR_PARTIAL)) {
     in.get(c);
     if (! in.eof())
       unexpected(c);
@@ -1499,7 +1510,7 @@ value_expr_t * parse_value_expr(std::istream& in, scope_t * scope,
 
 valexpr_context::valexpr_context(const ledger::value_expr_t * _expr,
 				 const std::string& desc) throw()
-  : expr(NULL), error_node(_expr), error_context(desc)
+  : expr(_expr), error_node(_expr), error_context(desc)
 {
   error_node->acquire();
 }
@@ -1513,7 +1524,7 @@ valexpr_context::~valexpr_context() throw()
 void valexpr_context::describe(std::ostream& out) const throw()
 {
   if (! expr) {
-    out << "Valexpr_context expr not set!" << std::endl;
+    out << "valexpr_context expr not set!" << std::endl;
     return;
   }
 
@@ -1524,7 +1535,8 @@ void valexpr_context::describe(std::ostream& out) const throw()
   unsigned long start = (long)out.tellp() - 1;
   unsigned long begin;
   unsigned long end;
-  bool found = ledger::write_value_expr(out, expr, error_node, &begin, &end);
+  bool found = ledger::write_value_expr(out, expr, true,
+					error_node, &begin, &end);
   out << std::endl;
   if (found) {
     out << "  ";
@@ -1540,132 +1552,122 @@ void valexpr_context::describe(std::ostream& out) const throw()
 
 bool write_value_expr(std::ostream&	   out,
 		      const value_expr_t * node,
+		      const bool           relaxed,
 		      const value_expr_t * node_to_find,
 		      unsigned long *	   start_pos,
 		      unsigned long *	   end_pos)
 {
+  int arg_index = 0;
   bool found = false;
+  value_expr_t * expr;
 
   if (start_pos && node == node_to_find) {
     *start_pos = (long)out.tellp() - 1;
     found = true;
   }
 
+  std::string symbol;
+
   switch (node->kind) {
-  case value_expr_t::CONSTANT_I:
-    out << node->constant_i;
+  case value_expr_t::ZERO:
+    out << '0';
     break;
-  case value_expr_t::CONSTANT_T:
-    out << "[" << *(node->constant_t) << ']';
-    break;
-  case value_expr_t::CONSTANT_A:
-    out << "{" << *(node->constant_a) << '}';
-    break;
-  case value_expr_t::CONSTANT_V:
-    out << "{" << *(node->constant_v) << '}';
+  case value_expr_t::ARG_INDEX:
     break;
 
-  case value_expr_t::AMOUNT: out << "amount"; break;
-  case value_expr_t::PRICE: out << "price"; break;
-  case value_expr_t::COST: out << "cost"; break;
-  case value_expr_t::DATE: out << "date"; break;
-  case value_expr_t::ACT_DATE: out << "actual_date"; break;
-  case value_expr_t::EFF_DATE: out << "effective_date"; break;
-  case value_expr_t::CLEARED: out << "cleared"; break;
-  case value_expr_t::PENDING: out << "pending"; break;
-  case value_expr_t::REAL: out << "real"; break;
-  case value_expr_t::ACTUAL: out << "actual"; break;
-  case value_expr_t::INDEX: out << "index"; break;
-  case value_expr_t::COUNT: out << "count"; break;
-  case value_expr_t::DEPTH: out << "depth"; break;
-  case value_expr_t::TOTAL: out << "total"; break;
-  case value_expr_t::PRICE_TOTAL: out << "total_price"; break;
-  case value_expr_t::COST_TOTAL: out << "total_cost"; break;
-  case value_expr_t::F_NOW: out << "now"; break;
+  case value_expr_t::CONSTANT:
+    switch (node->value->type) {
+    case value_t::BOOLEAN:
+      assert(0);
+      break;
+    case value_t::DATETIME:
+      out << '[' << *(node->value) << ']';
+      break;
+    case value_t::INTEGER:
+    case value_t::AMOUNT:
+      if (! relaxed)
+	out << '{';
+      out << *(node->value);
+      if (! relaxed)
+	out << '}';
+      break;
+    case value_t::BALANCE:
+    case value_t::BALANCE_PAIR:
+      assert(0);
+      break;
+    }
+    break;
+
+  case value_expr_t::AMOUNT:
+    symbol = "amount"; break;
+  case value_expr_t::PRICE:
+    symbol = "price"; break;
+  case value_expr_t::COST:
+    symbol = "cost"; break;
+  case value_expr_t::DATE:
+    symbol = "date"; break;
+  case value_expr_t::ACT_DATE:
+    symbol = "actual_date"; break;
+  case value_expr_t::EFF_DATE:
+    symbol = "effective_date"; break;
+  case value_expr_t::CLEARED:
+    symbol = "cleared"; break;
+  case value_expr_t::PENDING:
+    symbol = "pending"; break;
+  case value_expr_t::REAL:
+    symbol = "real"; break;
+  case value_expr_t::ACTUAL:
+    symbol = "actual"; break;
+  case value_expr_t::INDEX:
+    symbol = "index"; break;
+  case value_expr_t::COUNT:
+    symbol = "count"; break;
+  case value_expr_t::DEPTH:
+    symbol = "depth"; break;
+  case value_expr_t::TOTAL:
+    symbol = "total"; break;
+  case value_expr_t::PRICE_TOTAL:
+    symbol = "total_price"; break;
+  case value_expr_t::COST_TOTAL:
+    symbol = "total_cost"; break;
+  case value_expr_t::F_NOW:
+    symbol = "now"; break;
 
   case value_expr_t::VALUE_EXPR:
-    if (write_value_expr(out, amount_expr->parsed,
+    if (write_value_expr(out, amount_expr.get(), relaxed,
 			 node_to_find, start_pos, end_pos))
       found = true;
     break;
   case value_expr_t::TOTAL_EXPR:
-    if (write_value_expr(out, total_expr->parsed,
+    if (write_value_expr(out, total_expr.get(), relaxed,
 			 node_to_find, start_pos, end_pos))
       found = true;
     break;
 
   case value_expr_t::F_ARITH_MEAN:
-    out << "average(";
-    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
-      found = true;
-    out << ")";
-    break;
-  case value_expr_t::F_ABS: out << "abs"; break;
-    out << "abs(";
-    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
-      found = true;
-    out << ")";
-    break;
-  case value_expr_t::F_QUANTITY: out << "quantity"; break;
-    out << "quantity(";
-    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
-      found = true;
-    out << ")";
-    break;
-  case value_expr_t::F_COMMODITY: out << "commodity"; break;
-    out << "commodity(";
-    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
-      found = true;
-    out << ")";
-    break;
-  case value_expr_t::F_SET_COMMODITY: out << "set_commodity"; break;
-    out << "average(";
-    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
-      found = true;
-    out << ")";
-    break;
-  case value_expr_t::F_VALUE: out << "valueof"; break;
-    out << "average(";
-    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
-      found = true;
-    out << ")";
-    break;
-  case value_expr_t::F_PRICE: out << "priceof"; break;
-    out << "average(";
-    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
-      found = true;
-    out << ")";
-    break;
-  case value_expr_t::F_DATE: out << "dateof"; break;
-    out << "average(";
-    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
-      found = true;
-    out << ")";
-    break;
-  case value_expr_t::F_DATECMP: out << "datecmp"; break;
-    out << "average(";
-    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
-      found = true;
-    out << ")";
-    break;
-  case value_expr_t::F_YEAR: out << "yearof"; break;
-    out << "average(";
-    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
-      found = true;
-    out << ")";
-    break;
-  case value_expr_t::F_MONTH: out << "monthof"; break;
-    out << "average(";
-    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
-      found = true;
-    out << ")";
-    break;
-  case value_expr_t::F_DAY: out << "dayof"; break;
-    out << "average(";
-    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
-      found = true;
-    out << ")";
-    break;
+    symbol = "average"; break;
+  case value_expr_t::F_ABS:
+    symbol = "abs"; break;
+  case value_expr_t::F_QUANTITY:
+    symbol = "quantity"; break;
+  case value_expr_t::F_COMMODITY:
+    symbol = "commodity"; break;
+  case value_expr_t::F_SET_COMMODITY:
+    symbol = "set_commodity"; break;
+  case value_expr_t::F_VALUE:
+    symbol = "valueof"; break;
+  case value_expr_t::F_PRICE:
+    symbol = "priceof"; break;
+  case value_expr_t::F_DATE:
+    symbol = "dateof"; break;
+  case value_expr_t::F_DATECMP:
+    symbol = "datecmp"; break;
+  case value_expr_t::F_YEAR:
+    symbol = "yearof"; break;
+  case value_expr_t::F_MONTH:
+    symbol = "monthof"; break;
+  case value_expr_t::F_DAY:
+    symbol = "dayof"; break;
 
   case value_expr_t::F_CODE_MASK:
     out << "c/" << node->mask->pattern << "/";
@@ -1688,160 +1690,169 @@ bool write_value_expr(std::ostream&	   out,
 
   case value_expr_t::O_NOT:
     out << "!";
-    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+    if (write_value_expr(out, node->left, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     break;
   case value_expr_t::O_NEG:
     out << "-";
-    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+    if (write_value_expr(out, node->left, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     break;
   case value_expr_t::O_PERC:
     out << "%";
-    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+    if (write_value_expr(out, node->left, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     break;
 
   case value_expr_t::O_ARG:
-    out << "arg" << node->constant_i;
+    out << "@arg" << node->arg_index;
     break;
   case value_expr_t::O_DEF:
     out << "O_DEF";
     break;
+
   case value_expr_t::O_REF:
+    if (write_value_expr(out, node->left, relaxed, node_to_find, start_pos, end_pos))
+      found = true;
+    if (node->right) {
+      out << "(";
+      if (write_value_expr(out, node->right, relaxed, node_to_find, start_pos, end_pos))
+	found = true;
+      out << ")";
+    }
     break;
 
   case value_expr_t::O_COM:
-    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+    if (write_value_expr(out, node->left, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << ", ";
-    if (write_value_expr(out, node->right, node_to_find, start_pos, end_pos))
+    if (write_value_expr(out, node->right, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     break;
   case value_expr_t::O_QUES:
     out << "(";
-    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+    if (write_value_expr(out, node->left, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << " ? ";
-    if (write_value_expr(out, node->right, node_to_find, start_pos, end_pos))
+    if (write_value_expr(out, node->right, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case value_expr_t::O_COL:
-    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+    if (write_value_expr(out, node->left, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << " : ";
-    if (write_value_expr(out, node->right, node_to_find, start_pos, end_pos))
+    if (write_value_expr(out, node->right, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     break;
 
-  case value_expr_t::O_AND: out << "O_AND"; break;
+  case value_expr_t::O_AND:
     out << "(";
-    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+    if (write_value_expr(out, node->left, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << " & ";
-    if (write_value_expr(out, node->right, node_to_find, start_pos, end_pos))
+    if (write_value_expr(out, node->right, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
-  case value_expr_t::O_OR: out << "O_OR"; break;
+  case value_expr_t::O_OR:
     out << "(";
-    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+    if (write_value_expr(out, node->left, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << " | ";
-    if (write_value_expr(out, node->right, node_to_find, start_pos, end_pos))
+    if (write_value_expr(out, node->right, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
 
   case value_expr_t::O_NEQ:
     out << "(";
-    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+    if (write_value_expr(out, node->left, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << " != ";
-    if (write_value_expr(out, node->right, node_to_find, start_pos, end_pos))
+    if (write_value_expr(out, node->right, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case value_expr_t::O_EQ:
     out << "(";
-    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+    if (write_value_expr(out, node->left, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << " == ";
-    if (write_value_expr(out, node->right, node_to_find, start_pos, end_pos))
+    if (write_value_expr(out, node->right, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case value_expr_t::O_LT:
     out << "(";
-    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+    if (write_value_expr(out, node->left, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << " < ";
-    if (write_value_expr(out, node->right, node_to_find, start_pos, end_pos))
+    if (write_value_expr(out, node->right, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case value_expr_t::O_LTE:
     out << "(";
-    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+    if (write_value_expr(out, node->left, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << " <= ";
-    if (write_value_expr(out, node->right, node_to_find, start_pos, end_pos))
+    if (write_value_expr(out, node->right, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case value_expr_t::O_GT:
     out << "(";
-    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+    if (write_value_expr(out, node->left, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << " > ";
-    if (write_value_expr(out, node->right, node_to_find, start_pos, end_pos))
+    if (write_value_expr(out, node->right, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case value_expr_t::O_GTE:
     out << "(";
-    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+    if (write_value_expr(out, node->left, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << " >= ";
-    if (write_value_expr(out, node->right, node_to_find, start_pos, end_pos))
+    if (write_value_expr(out, node->right, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
 
   case value_expr_t::O_ADD:
     out << "(";
-    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+    if (write_value_expr(out, node->left, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << " + ";
-    if (write_value_expr(out, node->right, node_to_find, start_pos, end_pos))
+    if (write_value_expr(out, node->right, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case value_expr_t::O_SUB:
     out << "(";
-    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+    if (write_value_expr(out, node->left, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << " - ";
-    if (write_value_expr(out, node->right, node_to_find, start_pos, end_pos))
+    if (write_value_expr(out, node->right, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case value_expr_t::O_MUL:
     out << "(";
-    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+    if (write_value_expr(out, node->left, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << " * ";
-    if (write_value_expr(out, node->right, node_to_find, start_pos, end_pos))
+    if (write_value_expr(out, node->right, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case value_expr_t::O_DIV:
     out << "(";
-    if (write_value_expr(out, node->left, node_to_find, start_pos, end_pos))
+    if (write_value_expr(out, node->left, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << " / ";
-    if (write_value_expr(out, node->right, node_to_find, start_pos, end_pos))
+    if (write_value_expr(out, node->right, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
@@ -1850,6 +1861,12 @@ bool write_value_expr(std::ostream&	   out,
   default:
     assert(0);
     break;
+  }
+
+  if (! symbol.empty()) {
+    if (commodity_t::find(symbol))
+      out << '@';
+    out << symbol;
   }
 
   if (end_pos && node == node_to_find)
@@ -1869,17 +1886,14 @@ void dump_value_expr(std::ostream& out, const value_expr_t * node,
     out << " ";
 
   switch (node->kind) {
-  case value_expr_t::CONSTANT_I:
-    out << "CONSTANT_I - " << node->constant_i;
+  case value_expr_t::ZERO:
+    out << "ZERO";
     break;
-  case value_expr_t::CONSTANT_T:
-    out << "CONSTANT_T - [" << *(node->constant_t) << ']';
+  case value_expr_t::ARG_INDEX:
+    out << "ARG_INDEX - " << node->arg_index;
     break;
-  case value_expr_t::CONSTANT_A:
-    out << "CONSTANT_A - {" << *(node->constant_a) << '}';
-    break;
-  case value_expr_t::CONSTANT_V:
-    out << "CONSTANT_V - {" << *(node->constant_v) << '}';
+  case value_expr_t::CONSTANT:
+    out << "CONSTANT - " << *(node->value);
     break;
 
   case value_expr_t::AMOUNT: out << "AMOUNT"; break;

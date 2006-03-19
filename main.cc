@@ -100,9 +100,7 @@ int parse_and_report(config_t& config, int argc, char * argv[], char * envp[])
     command = "p";
   else if (command == "output")
     command = "w";
-  else if (command == "emacs")
-    command = "x";
-  else if (command == "lisp")
+  else if (command == "emacs" || command == "lisp")
     command = "x";
   else if (command == "xml")
     command = "X";
@@ -119,7 +117,7 @@ int parse_and_report(config_t& config, int argc, char * argv[], char * envp[])
     command = "r";
   }
   else if (command == "parse") {
-    value_auto_ptr expr(ledger::parse_value_expr(*arg));
+    value_expr expr(ledger::parse_value_expr(*arg));
     if (config.verbose_mode) {
       std::cout << "Value expression tree:" << std::endl;
       ledger::dump_value_expr(std::cout, expr.get());
@@ -243,7 +241,7 @@ int parse_and_report(config_t& config, int argc, char * argv[], char * envp[])
   // Are we handling the parse or expr commands?  Do so now.
 
   if (command == "expr") {
-    value_auto_ptr expr(ledger::parse_value_expr(*arg));
+    value_expr expr(ledger::parse_value_expr(*arg));
     if (config.verbose_mode) {
       std::cout << "Value expression tree:" << std::endl;
       ledger::dump_value_expr(std::cout, expr.get());

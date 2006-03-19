@@ -64,6 +64,35 @@ inline char * next_element(char * buf, bool variable = false)
   return NULL;
 }
 
+value_expr parse_amount_expr(std::istream& in, amount_t& amount,
+			     transaction_t * xact)
+{
+  value_expr expr(parse_value_expr(in, NULL, PARSE_VALEXPR_RELAXED |
+				   PARSE_VALEXPR_PARTIAL)->acquire());
+
+  DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+	      "Parsed an amount expression");
+
+#ifdef DEBUG_ENABLED
+  DEBUG_IF("ledger.textual.parse") {
+    if (_debug_stream) {
+      ledger::dump_value_expr(*_debug_stream, expr);
+      *_debug_stream << std::endl;
+    }
+  }
+#endif
+
+  if (! compute_amount(expr, amount, xact))
+    throw new parse_error("Amount expression failed to compute");
+    
+  if (expr->kind == value_expr_t::CONSTANT)
+    expr = NULL;
+
+  DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+	      "The transaction amount is " << xact->amount);
+  return expr;
+}
+
 transaction_t * parse_transaction(char * line, account_t * account,
 				  entry_t * entry = NULL)
 {
@@ -146,53 +175,19 @@ transaction_t * parse_transaction(char * line, account_t * account,
       goto finished;
     if (p == ';')
       goto parse_note;
-    if (p == '(') {
-      try {
-	xact->amount_expr = parse_value_expr(in)->acquire();
-      }
-      catch (error * err) {
-	err_desc = "While parsing transaction amount's value expression:";
-	throw err;
-      }
-      DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
-		  "Parsed an amount expression");
-#ifdef DEBUG_ENABLED
-      DEBUG_IF("ledger.textual.parse") {
-	if (_debug_stream) {
-	  ledger::dump_value_expr(*_debug_stream, xact->amount_expr);
-	  *_debug_stream << std::endl;
-	}
-      }
-#endif
-      if (! compute_amount(xact->amount_expr, xact->amount, xact.get()))
-	throw new parse_error("Value expression for amount failed to compute");
-      DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
-		  "The computed amount is " << xact->amount);
-    } else {
-      xact->amount.parse(in, AMOUNT_PARSE_NO_REDUCE);
-      DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
-		  "Parsed amount " << xact->amount);
 
-      // Parse any inline math
-      p = peek_next_nonws(in);
-      while (in.good() && ! in.eof() && (p == '-' || p == '+')) {
-	DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
-		    "Parsed inline math operator " << p);
-	in.get(p);
-	amount_t temp;
-	temp.parse(in, AMOUNT_PARSE_NO_REDUCE);
-	switch (p) {
-	case '-':
-	  xact->amount -= temp;
-	  break;
-	case '+':
-	  xact->amount += temp;
-	  break;
-	}
-	DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
-		    "Calculated amount is " << xact->amount);
-	p = peek_next_nonws(in);
-      }
+    try {
+      unsigned long beg = (long)in.tellg();
+
+      xact->amount_expr =
+	parse_amount_expr(in, xact->amount, xact.get());
+
+      unsigned long end = (long)in.tellg();
+      xact->amount_expr.expr = std::string(line, beg, end - beg);
+    }
+    catch (error * err) {
+      err_desc = "While parsing transaction amount:";
+      throw err;
     }
   }
 
@@ -215,13 +210,25 @@ transaction_t * parse_transaction(char * line, account_t * account,
       if (in.good() && ! in.eof()) {
 	xact->cost = new amount_t;
 
-	p = peek_next_nonws(in);
-	if (p == '(')
-	  throw new parse_error("A transaction's cost may not be a value expression");
+	try {
+	  unsigned long beg = (long)in.tellg();
 
-	xact->cost->parse(in, AMOUNT_PARSE_NO_MIGRATE);
-	DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
-		    "Parsed cost " << *xact->cost);
+	  if (parse_amount_expr(in, *xact->cost, xact.get()))
+	    throw new parse_error("A transaction's cost must evalute to a constant value");
+
+	  unsigned long end = (long)in.tellg();
+
+	  if (per_unit)
+	    xact->cost_expr = (std::string("@") +
+			       std::string(line, beg, end - beg));
+	  else
+	    xact->cost_expr = (std::string("@@") +
+			       std::string(line, beg, end - beg));
+	}
+	catch (error * err) {
+	  err_desc = "While parsing transaction cost:";
+	  throw err;
+	}
 
 	if (*xact->cost < 0)
 	  throw new parse_error("A transaction's cost may not be a negative value");
@@ -733,7 +740,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	if (parse_transactions(in, account_stack.front(), *pe,
 			       "period", end_pos)) {
 	  if (pe->finalize()) {
-	    extend_entry_base(journal, *pe);
+	    extend_entry_base(journal, *pe, true);
 	    journal->period_entries.push_back(pe);
 	    pe->src_idx	 = src_idx;
 	    pe->beg_pos	 = beg_pos;

@@ -932,8 +932,40 @@ void parse_quantity(std::istream& in, std::string& value)
   char c = peek_next_nonws(in);
   READ_INTO(in, buf, 255, c,
 	    std::isdigit(c) || c == '-' || c == '.' || c == ',');
+
+  int len = std::strlen(buf);
+  while (len > 0 && ! std::isdigit(buf[len - 1])) {
+    buf[--len] = '\0';
+    in.unget();
+  }
+
   value = buf;
 }
+
+// Invalid commodity characters:
+//   SPACE, TAB, NEWLINE, RETURN
+//   0-9 . , ; - + * / ^ ? : & | ! =
+//   < > { } [ ] ( ) @
+
+int invalid_chars[256] = {
+      /* 0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f */
+/* 00 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0,
+/* 10 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* 20 */ 1, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1,
+/* 30 */ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+/* 40 */ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* 50 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0,
+/* 60 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* 70 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0,
+/* 80 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* 90 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* a0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* b0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* c0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* d0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* e0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* f0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+};
 
 void parse_commodity(std::istream& in, std::string& symbol)
 {
@@ -947,8 +979,7 @@ void parse_commodity(std::istream& in, std::string& symbol)
     else
       throw new amount_error("Quoted commodity symbol lacks closing quote");
   } else {
-    READ_INTO(in, buf, 255, c, ! std::isspace(c) && ! std::isdigit(c) &&
-	      c != '-' && c != '.');
+    READ_INTO(in, buf, 255, c, ! invalid_chars[(unsigned char)c]);
   }
   symbol = buf;
 }
@@ -1041,7 +1072,7 @@ void amount_t::parse(std::istream& in, unsigned char flags)
   }
 
   char n;
-  if (std::isdigit(c) || c == '.') {
+  if (std::isdigit(c)) {
     parse_quantity(in, quant);
 
     if (! in.eof() && ((n = in.peek()) != '\n')) {
@@ -1065,7 +1096,7 @@ void amount_t::parse(std::istream& in, unsigned char flags)
 
       parse_quantity(in, quant);
 
-      if (! in.eof() && ((n = in.peek()) != '\n'))
+      if (! quant.empty() && ! in.eof() && ((n = in.peek()) != '\n'))
 	parse_annotations(in, price, date, tag);
     }
   }

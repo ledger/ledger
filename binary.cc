@@ -245,6 +245,31 @@ inline void read_binary_amount(char *& data, amount_t& amt)
   amt.read_quantity(data);
 }
 
+inline void read_binary_value(char *& data, value_t& val)
+{
+  val.type = static_cast<value_t::type_t>(read_binary_long<int>(data));
+
+  switch (val.type) {
+  case value_t::BOOLEAN:
+    *((bool *) val.data) = read_binary_number<char>(data) == 1;
+    break;
+  case value_t::INTEGER:
+    read_binary_long(data, *((long *) val.data));
+    break;
+  case value_t::DATETIME:
+    read_binary_number(data, ((datetime_t *) val.data)->when);
+    break;
+  case value_t::AMOUNT:
+    read_binary_amount(data, *((amount_t *) val.data));
+    break;
+
+  case value_t::BALANCE:
+  case value_t::BALANCE_PAIR:
+    assert(0);
+    break;
+  }
+}
+
 inline void read_binary_mask(char *& data, mask_t *& mask)
 {
   bool exclude;
@@ -274,18 +299,13 @@ inline void read_binary_value_expr(char *& data, value_expr_t *& expr)
   }
 
   switch (expr->kind) {
-  case value_expr_t::CONSTANT_T:
-    read_binary_number(data, expr->constant_t);
+  case value_expr_t::O_ARG:
+  case value_expr_t::INDEX:
+    read_binary_long(data, expr->arg_index);
     break;
-  case value_expr_t::CONSTANT_I:
-    read_binary_long(data, expr->constant_i);
-    break;
-  case value_expr_t::CONSTANT_A:
-    expr->constant_a = new amount_t();
-    read_binary_amount(data, *(expr->constant_a));
-    break;
-  case value_expr_t::CONSTANT_V:
-    assert(0);
+  case value_expr_t::CONSTANT:
+    expr->value = new value_t;
+    read_binary_value(data, *expr->value);
     break;
 
   case value_expr_t::F_CODE_MASK:
@@ -314,16 +334,26 @@ inline void read_binary_transaction(char *& data, transaction_t * xact)
   read_binary_long(data, xact->_date_eff);
   xact->account = accounts[read_binary_long<account_t::ident_t>(data) - 1];
 
-  if (read_binary_number<char>(data) == 1) {
-    read_binary_value_expr(data, xact->amount_expr);
-    if (xact->amount_expr) xact->amount_expr->acquire();
-  } else {
+  char flag = read_binary_number<char>(data);
+  if (flag == 0) {
     read_binary_amount(data, xact->amount);
+  }
+  else if (flag == 1) {
+    read_binary_amount(data, xact->amount);
+    read_binary_string(data, xact->amount_expr.expr);
+  }
+  else {
+    value_expr_t * ptr = NULL;
+    read_binary_value_expr(data, ptr);
+    assert(ptr);
+    xact->amount_expr.reset(ptr);
+    read_binary_string(data, xact->amount_expr.expr);
   }
 
   if (*data++ == 1) {
     xact->cost = new amount_t;
     read_binary_amount(data, *xact->cost);
+    read_binary_string(data, xact->cost_expr);
   } else {
     xact->cost = NULL;
   }
@@ -358,7 +388,7 @@ inline void read_binary_entry_base(char *& data, entry_base_t * entry,
   for (unsigned long i = 0, count = read_binary_long<unsigned long>(data);
        i < count;
        i++) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor transaction_t");
+    new(xact_pool) transaction_t;
     read_binary_transaction(data, xact_pool);
     if (ignore_calculated && xact_pool->flags & TRANSACTION_CALCULATED)
       finalize = true;
@@ -601,6 +631,9 @@ unsigned int read_binary_journal(std::istream&	    in,
 
   char * item_pool = new char[pool_size];
 
+  journal->item_pool	 = item_pool;
+  journal->item_pool_end = item_pool + pool_size;
+
   entry_t *	  entry_pool = (entry_t *) item_pool;
   transaction_t * xact_pool  = (transaction_t *) (item_pool +
 						  sizeof(entry_t) * count);
@@ -718,9 +751,6 @@ unsigned int read_binary_journal(std::istream&	    in,
 
   // Clean up and return the number of entries read
 
-  journal->item_pool	 = item_pool;
-  journal->item_pool_end = item_pool + pool_size;
-
   delete[] accounts;
   delete[] commodities;
   delete[] data_pool;
@@ -822,6 +852,30 @@ void write_binary_amount(std::ostream& out, const amount_t& amt)
   amt.write_quantity(out);
 }
 
+void write_binary_value(std::ostream& out, const value_t& val)
+{
+  write_binary_long(out, (int)val.type);
+
+  switch (val.type) {
+  case value_t::BOOLEAN:
+    write_binary_number<char>(out, *((bool *) val.data) ? 1 : 0);
+    break;
+  case value_t::INTEGER:
+    write_binary_long(out, *((long *) val.data));
+    break;
+  case value_t::DATETIME:
+    write_binary_number(out, ((datetime_t *) val.data)->when);
+    break;
+  case value_t::AMOUNT:
+    write_binary_amount(out, *((amount_t *) val.data));
+    break;
+
+  case value_t::BALANCE:
+  case value_t::BALANCE_PAIR:
+    throw new error("Cannot write a balance to the binary cache");
+  }
+}
+
 void write_binary_mask(std::ostream& out, mask_t * mask)
 {
   write_binary_number(out, mask->exclude);
@@ -842,17 +896,12 @@ void write_binary_value_expr(std::ostream& out, const value_expr_t * expr)
     write_binary_value_expr(out, expr->left);
 
   switch (expr->kind) {
-  case value_expr_t::CONSTANT_T:
-    write_binary_number(out, expr->constant_t);
+  case value_expr_t::O_ARG:
+  case value_expr_t::INDEX:
+    write_binary_long(out, expr->arg_index);
     break;
-  case value_expr_t::CONSTANT_I:
-    write_binary_long(out, expr->constant_i);
-    break;
-  case value_expr_t::CONSTANT_A:
-    write_binary_amount(out, *(expr->constant_a));
-    break;
-  case value_expr_t::CONSTANT_V:
-    assert(0);
+  case value_expr_t::CONSTANT:
+    write_binary_value(out, *expr->value);
     break;
 
   case value_expr_t::F_CODE_MASK:
@@ -884,21 +933,30 @@ void write_binary_transaction(std::ostream& out, transaction_t * xact,
   write_binary_long(out, xact->_date_eff);
   write_binary_long(out, xact->account->ident);
 
-  if (xact->amount_expr) {
-    write_binary_number<char>(out, 1);
-    write_binary_value_expr(out, xact->amount_expr);
-  } else {
+  if (ignore_calculated && xact->flags & TRANSACTION_CALCULATED) {
     write_binary_number<char>(out, 0);
-    if (ignore_calculated && xact->flags & TRANSACTION_CALCULATED)
-      write_binary_amount(out, amount_t());
-    else
-      write_binary_amount(out, xact->amount);
+    write_binary_amount(out, amount_t());
+  }
+  else if (xact->amount_expr) {
+    write_binary_number<char>(out, 2);
+    write_binary_value_expr(out, xact->amount_expr.get());
+    write_binary_string(out, xact->amount_expr.expr);
+  }
+  else if (! xact->amount_expr.expr.empty()) {
+    write_binary_number<char>(out, 1);
+    write_binary_amount(out, xact->amount);
+    write_binary_string(out, xact->amount_expr.expr);
+  }
+  else {
+    write_binary_number<char>(out, 0);
+    write_binary_amount(out, xact->amount);
   }
 
   if (xact->cost &&
       (! (ignore_calculated && xact->flags & TRANSACTION_CALCULATED))) {
     write_binary_number<char>(out, 1);
     write_binary_amount(out, *xact->cost);
+    write_binary_string(out, xact->cost_expr);
   } else {
     write_binary_number<char>(out, 0);
   }

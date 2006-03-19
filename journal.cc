@@ -17,7 +17,6 @@ transaction_t::~transaction_t()
 {
   DEBUG_PRINT("ledger.memory.dtors", "dtor transaction_t");
   if (cost) delete cost;
-  if (amount_expr) amount_expr->release();
 }
 
 std::time_t transaction_t::actual_date() const
@@ -74,7 +73,7 @@ bool transaction_t::valid() const
     return false;
   }
 
-  if (flags & ~0x001f) {
+  if (flags & ~0x003f) {
     DEBUG_PRINT("ledger.validate", "transaction_t: flags are bad");
     return false;
   }
@@ -316,35 +315,41 @@ auto_entry_t::~auto_entry_t()
     delete predicate;
 }
 
-void auto_entry_t::extend_entry(entry_base_t& entry)
+void auto_entry_t::extend_entry(entry_base_t& entry, bool post)
 {
   transactions_list initial_xacts(entry.transactions.begin(),
 				  entry.transactions.end());
 
   for (transactions_list::iterator i = initial_xacts.begin();
        i != initial_xacts.end();
-       i++)
-    if ((*predicate)(**i))
+       i++) {
+    if ((*predicate)(**i)) {
       for (transactions_list::iterator t = transactions.begin();
 	   t != transactions.end();
 	   t++) {
 	amount_t amt;
-	if (! (*t)->amount.commodity())
+	if (! (*t)->amount.commodity()) {
+	  if (! post)
+	    continue;
 	  amt = (*i)->amount * (*t)->amount;
-	else
+	} else {
+	  if (post)
+	    continue;
 	  amt = (*t)->amount;
+	}
 
 	account_t * account  = (*t)->account;
 	std::string fullname = account->fullname();
 	assert(! fullname.empty());
-
-	if (fullname == "$account")
+	if (fullname == "$account" || fullname == "@account")
 	  account = (*i)->account;
 
 	transaction_t * xact
 	  = new transaction_t(account, amt, (*t)->flags | TRANSACTION_AUTO);
 	entry.add_transaction(xact);
       }
+    }
+  }
 }
 
 account_t::~account_t()
@@ -514,7 +519,9 @@ bool journal_t::add_entry(entry_t * entry)
 {
   entry->journal = this;
 
-  if (! run_hooks(entry_finalize_hooks, *entry) || ! entry->finalize()) {
+  if (! run_hooks(entry_finalize_hooks, *entry, false) ||
+      ! entry->finalize() ||
+      ! run_hooks(entry_finalize_hooks, *entry, true)) {
     entry->journal = NULL;
     return false;
   }

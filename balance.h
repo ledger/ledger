@@ -216,7 +216,15 @@ class balance_t
     return true;
   }
   bool operator<(const amount_t& amt) const {
-    return amount(amt.commodity()) < amt;
+    if (amt.commodity())
+      return amount(amt.commodity()) < amt;
+
+    for (amounts_map::const_iterator i = amounts.begin();
+	 i != amounts.end();
+	 i++)
+      if ((*i).second < amt)
+	return true;
+    return false;
   }
   template <typename T>
   bool operator<(T val) const {
@@ -244,7 +252,15 @@ class balance_t
     return true;
   }
   bool operator<=(const amount_t& amt) const {
-    return amount(amt.commodity()) <= amt;
+    if (amt.commodity())
+      return amount(amt.commodity()) <= amt;
+
+    for (amounts_map::const_iterator i = amounts.begin();
+	 i != amounts.end();
+	 i++)
+      if ((*i).second <= amt)
+	return true;
+    return false;
   }
   template <typename T>
   bool operator<=(T val) const {
@@ -275,7 +291,15 @@ class balance_t
     return true;
   }
   bool operator>(const amount_t& amt) const {
-    return amount(amt.commodity()) > amt;
+    if (amt.commodity())
+      return amount(amt.commodity()) > amt;
+
+    for (amounts_map::const_iterator i = amounts.begin();
+	 i != amounts.end();
+	 i++)
+      if ((*i).second > amt)
+	return true;
+    return false;
   }
   template <typename T>
   bool operator>(T val) const {
@@ -303,7 +327,15 @@ class balance_t
     return true;
   }
   bool operator>=(const amount_t& amt) const {
-    return amount(amt.commodity()) >= amt;
+    if (amt.commodity())
+      return amount(amt.commodity()) >= amt;
+
+    for (amounts_map::const_iterator i = amounts.begin();
+	 i != amounts.end();
+	 i++)
+      if ((*i).second >= amt)
+	return true;
+    return false;
   }
   template <typename T>
   bool operator>=(T val) const {
@@ -327,7 +359,15 @@ class balance_t
     return i == amounts.end() && j == bal.amounts.end();
   }
   bool operator==(const amount_t& amt) const {
-    return amounts.size() == 1 && (*amounts.begin()).second == amt;
+    if (amt.commodity())
+      return amounts.size() == 1 && (*amounts.begin()).second == amt;
+
+    for (amounts_map::const_iterator i = amounts.begin();
+	 i != amounts.end();
+	 i++)
+      if ((*i).second == amt)
+	return true;
+    return false;
   }
   template <typename T>
   bool operator==(T val) const {
