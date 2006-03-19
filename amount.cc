@@ -1651,6 +1651,9 @@ namespace {
 				  const std::time_t  date,
 				  const std::string& tag)
   {
+    if (price < 0)
+      throw new amount_error("A commodity's price may not be negative");
+
     std::ostringstream name;
 
     comm.write(name);

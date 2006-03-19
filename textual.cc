@@ -223,6 +223,9 @@ transaction_t * parse_transaction(char * line, account_t * account,
 	DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
 		    "Parsed cost " << *xact->cost);
 
+	if (*xact->cost < 0)
+	  throw new parse_error("A transaction's cost may not be a negative value");
+
 	amount_t per_unit_cost(*xact->cost);
 	if (per_unit)
 	  *xact->cost *= xact->amount;
