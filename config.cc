@@ -163,6 +163,8 @@ void config_t::reset()
   keep_price         = false;
   keep_date          = false;
   keep_tag           = false;
+  entry_sort         = false;
+  sort_all           = false;
 
   use_cache	     = false;
   cache_dirty        = false;
@@ -381,6 +383,9 @@ void config_t::process_options(const std::string&     command,
   amount_t::keep_price = keep_price;
   amount_t::keep_date  = keep_date;
   amount_t::keep_tag   = keep_tag;
+
+  if (! report_period.empty() && ! sort_all)
+    entry_sort = true;
 }
 
 item_handler<transaction_t> *
@@ -451,7 +456,7 @@ config_t::chain_xact_handlers(const std::string& command,
 	parse_date(reconcile_date.c_str(), &cutoff);
       ptrs.push_back(formatter =
 		     new reconcile_transactions
-		       (formatter, value_t(reconcile_balance), cutoff));
+		     (formatter, value_t(reconcile_balance), cutoff));
     }
 
     // filter_transactions will only pass through transactions
@@ -463,9 +468,14 @@ config_t::chain_xact_handlers(const std::string& command,
 
     // sort_transactions will sort all the transactions it sees, based
     // on the `sort_order' value expression.
-    if (! sort_string.empty())
-      ptrs.push_back(formatter =
-		     new sort_transactions(formatter, sort_string));
+    if (! sort_string.empty()) {
+      if (entry_sort)
+	ptrs.push_back(formatter =
+		       new sort_entries(formatter, sort_string));
+      else
+	ptrs.push_back(formatter =
+		       new sort_transactions(formatter, sort_string));
+    }
 
     // changed_value_transactions adds virtual transactions to the
     // list to account for changes in market value of commodities,
@@ -480,37 +490,37 @@ config_t::chain_xact_handlers(const std::string& command,
     // commodity used.
     if (show_collapsed)
       ptrs.push_back(formatter = new collapse_transactions(formatter));
-  }
 
-  // subtotal_transactions combines all the transactions it receives
-  // into one subtotal entry, which has one transaction for each
-  // commodity in each account.
-  //
-  // period_transactions is like subtotal_transactions, but it
-  // subtotals according to time periods rather than totalling
-  // everything.
-  //
-  // dow_transactions is like period_transactions, except that it
-  // reports all the transactions that fall on each subsequent day
-  // of the week.
-  if (show_subtotal && ! (command == "b" || command == "E"))
-    ptrs.push_back(formatter =
-		   new subtotal_transactions(formatter, remember_components));
+    // subtotal_transactions combines all the transactions it receives
+    // into one subtotal entry, which has one transaction for each
+    // commodity in each account.
+    //
+    // period_transactions is like subtotal_transactions, but it
+    // subtotals according to time periods rather than totalling
+    // everything.
+    //
+    // dow_transactions is like period_transactions, except that it
+    // reports all the transactions that fall on each subsequent day
+    // of the week.
+    if (show_subtotal)
+      ptrs.push_back(formatter =
+		     new subtotal_transactions(formatter, remember_components));
 
-  if (days_of_the_week)
-    ptrs.push_back(formatter =
-		   new dow_transactions(formatter, remember_components));
-  else if (by_payee)
-    ptrs.push_back(formatter =
-		   new by_payee_transactions(formatter, remember_components));
+    if (days_of_the_week)
+      ptrs.push_back(formatter =
+		     new dow_transactions(formatter, remember_components));
+    else if (by_payee)
+      ptrs.push_back(formatter =
+		     new by_payee_transactions(formatter, remember_components));
 
-  if (! report_period.empty()) {
-    ptrs.push_back(formatter =
-		   new interval_transactions(formatter,
-					     report_period,
-					     report_period_sort,
-					     remember_components));
-    ptrs.push_back(formatter = new sort_transactions(formatter, "d"));
+    // interval_transactions groups transactions together based on a
+    // time period, such as weekly or monthly.
+    if (! report_period.empty()) {
+      ptrs.push_back(formatter =
+		     new interval_transactions(formatter, report_period,
+					       remember_components));
+      ptrs.push_back(formatter = new sort_transactions(formatter, "d"));
+    }
   }
 
   // invert_transactions inverts the value of the transactions it
@@ -1037,6 +1047,22 @@ OPT_BEGIN(sort, "S:") {
   config->sort_string = optarg;
 } OPT_END(sort);
 
+OPT_BEGIN(sort_entries, "") {
+  config->sort_string = optarg;
+  config->entry_sort = true;
+} OPT_END(sort_entries);
+
+OPT_BEGIN(sort_all, "") {
+  config->sort_string = optarg;
+  config->entry_sort = false;
+  config->sort_all   = true;
+} OPT_END(sort_all);
+
+OPT_BEGIN(period_sort, ":") {
+  config->sort_string = optarg;
+  config->entry_sort = true;
+} OPT_END(period_sort);
+
 OPT_BEGIN(related, "r") {
   config->show_related = true;
 } OPT_END(related);
@@ -1095,10 +1121,6 @@ OPT_BEGIN(period, "p:") {
     terminus = interval.end;
   }
 } OPT_END(period);
-
-OPT_BEGIN(period_sort, ":") {
-  config->report_period_sort = optarg;
-} OPT_END(period_sort);
 
 OPT_BEGIN(daily, "") {
   if (config->report_period.empty())
@@ -1392,6 +1414,8 @@ option_t config_options[CONFIG_OPTIONS_SIZE] = {
   { "related", 'r', false, opt_related, false },
   { "set-price", '\0', true, opt_set_price, false },
   { "sort", 'S', true, opt_sort, false },
+  { "sort-all", '\0', true, opt_sort_all, false },
+  { "sort-entries", '\0', true, opt_sort_entries, false },
   { "subtotal", 's', false, opt_subtotal, false },
   { "tail", '\0', true, opt_tail, false },
   { "total", 'T', true, opt_total, false },

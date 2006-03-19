@@ -439,9 +439,6 @@ void interval_transactions::report_subtotal(const std::time_t moment)
 
   subtotal_transactions::report_subtotal();
 
-  if (sorter)
-    sorter->post_accumulated_xacts();
-
   last_xact = NULL;
 }
 

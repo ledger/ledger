@@ -74,6 +74,8 @@ class config_t
   bool          keep_price;
   bool          keep_date;
   bool          keep_tag;
+  bool          entry_sort;
+  bool          sort_all;
 
   config_t() {
     reset();
@@ -107,7 +109,7 @@ class config_t
 		      std::list<item_handler<transaction_t> *>& ptrs);
 };
 
-#define CONFIG_OPTIONS_SIZE 91
+#define CONFIG_OPTIONS_SIZE 93
 extern option_t config_options[CONFIG_OPTIONS_SIZE];
 
 void option_help(std::ostream& out);
