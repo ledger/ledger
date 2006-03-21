@@ -606,6 +606,10 @@ class amount_error : public error {
   virtual ~amount_error() throw() {}
 };
 
+struct compare_amount_commodities {
+  bool operator()(const amount_t * left, const amount_t * right) const;
+};
+
 } // namespace ledger
 
 #endif // _AMOUNT_H

@@ -88,40 +88,6 @@ balance_t balance_t::strip_annotations(const bool keep_price,
   return temp;
 }
 
-struct compare_amount_commodities {
-  bool operator()(const amount_t * left, const amount_t * right) const {
-    commodity_t& leftcomm(left->commodity());
-    commodity_t& rightcomm(right->commodity());
-
-    int cmp = leftcomm.symbol().compare(rightcomm.symbol());
-    if (cmp != 0)
-      return cmp < 0;
-
-    if (! leftcomm.annotated) {
-      assert(rightcomm.annotated);
-      return true;
-    }
-    else if (! rightcomm.annotated) {
-      assert(leftcomm.annotated);
-      return false;
-    }
-    else {
-      annotated_commodity_t& aleftcomm(static_cast<annotated_commodity_t&>(leftcomm));
-      annotated_commodity_t& arightcomm(static_cast<annotated_commodity_t&>(rightcomm));
-
-      amount_t val = aleftcomm.price - arightcomm.price;
-      if (val)
-	return val < 0;
-
-      int diff = aleftcomm.date - arightcomm.date;
-      if (diff)
-	return diff < 0;
-
-      return aleftcomm.tag < arightcomm.tag;
-    }
-  }
-};
-
 void balance_t::write(std::ostream& out,
 		      const int     first_width,
 		      const int     latter_width) const
