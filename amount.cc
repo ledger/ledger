@@ -1729,6 +1729,40 @@ annotated_commodity_t::find_or_create(const commodity_t& comm,
   return create(comm, price, date, tag, name);
 }
 
+bool compare_amount_commodities::operator()(const amount_t * left,
+					    const amount_t * right) const
+{
+  commodity_t& leftcomm(left->commodity());
+  commodity_t& rightcomm(right->commodity());
+
+  int cmp = leftcomm.base_symbol().compare(rightcomm.base_symbol());
+  if (cmp != 0)
+    return cmp < 0;
+
+  if (! leftcomm.annotated) {
+    assert(rightcomm.annotated);
+    return true;
+  }
+  else if (! rightcomm.annotated) {
+    assert(leftcomm.annotated);
+    return false;
+  }
+  else {
+    annotated_commodity_t& aleftcomm(static_cast<annotated_commodity_t&>(leftcomm));
+    annotated_commodity_t& arightcomm(static_cast<annotated_commodity_t&>(rightcomm));
+
+    amount_t val = aleftcomm.price - arightcomm.price;
+    if (val)
+      return val < 0;
+
+    int diff = aleftcomm.date - arightcomm.date;
+    if (diff)
+      return diff < 0;
+
+    return aleftcomm.tag < arightcomm.tag;
+  }
+}
+
 } // namespace ledger
 
 #ifdef USE_BOOST_PYTHON

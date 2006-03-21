@@ -1,5 +1,10 @@
 #!/bin/sh
 
+TMPDIR=/tmp
+if [ -d /Volumes/RamDisk ]; then
+    TMPDIR=/Volumes/RamDisk
+fi
+
 rsync -Lav --delete --delete-excluded \
     --exclude="autom4te.cache/" \
     --exclude=".libs/"	  \
@@ -13,9 +18,9 @@ rsync -Lav --delete --delete-excluded \
     --exclude="*~"	  \
     --exclude="_darcs/"   \
     --exclude="scripts/"  \
-    ./ /tmp/ledger-verify/
+    ./ $TMPDIR/ledger-verify/
 
-cd /tmp/ledger-bench
+cd $TMPDIR/ledger-bench
 make all-clean
 ./acprep --flat-opt
 
