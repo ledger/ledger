@@ -528,13 +528,40 @@ void set_comm_as_payee::operator()(transaction_t& xact)
   entry_t& entry = entry_temps.back();
   entry._date = xact.date();
   entry.code  = xact.entry->code;
-  entry.payee = xact.amount.commodity().symbol();
+
+  if (xact.amount.commodity())
+    entry.payee = xact.amount.commodity().symbol();
+  else
+    entry.payee = "<none>";
 
   xact_temps.push_back(xact);
   transaction_t& temp = xact_temps.back();
   temp.entry = &entry;
   temp.state = xact.state;
   temp.flags |= TRANSACTION_BULK_ALLOC;
+
+  entry.add_transaction(&temp);
+
+  item_handler<transaction_t>::operator()(temp);
+}
+
+void set_code_as_payee::operator()(transaction_t& xact)
+{
+  entry_temps.push_back(*xact.entry);
+  entry_t& entry = entry_temps.back();
+  entry._date = xact.date();
+
+  if (! xact.entry->code.empty())
+    entry.payee = xact.entry->code;
+  else
+    entry.payee = "<none>";
+
+  xact_temps.push_back(xact);
+  transaction_t& temp = xact_temps.back();
+  temp.entry = &entry;
+  temp.state = xact.state;
+  temp.flags |= TRANSACTION_BULK_ALLOC;
+
   entry.add_transaction(&temp);
 
   item_handler<transaction_t>::operator()(temp);

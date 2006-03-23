@@ -563,7 +563,7 @@ void value_expr_t::compute(value_t& result, const details_t& details,
   case F_COMMODITY_MASK:
     assert(mask);
     if (details.xact)
-      result = mask->match(details.xact->amount.commodity().symbol());
+      result = mask->match(details.xact->amount.commodity().base_symbol());
     else
       result = false;
     break;
@@ -895,8 +895,10 @@ value_expr_t * parse_value_term(std::istream& in, scope_t * scope,
       if (! def) {
 	if (buf[1] == '\0' &&
 	    (buf[0] == 'c' || buf[0] == 'C' || buf[0] == 'p' ||
-	     buf[0] == 'w' || buf[0] == 'W' || buf[0] == 'e'))
+	     buf[0] == 'w' || buf[0] == 'W' || buf[0] == 'e')) {
+	  in.unget();
 	  goto find_term;
+	}
 	throw new value_expr_error(std::string("Unknown identifier '") +
 				   buf + "'");
       }

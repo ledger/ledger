@@ -63,6 +63,7 @@ class config_t
   bool		days_of_the_week;
   bool		by_payee;
   bool		comm_as_payee;
+  bool		code_as_payee;
   bool		show_revalued;
   bool		show_revalued_only;
   bool		download_quotes;
@@ -109,7 +110,7 @@ class config_t
 		      std::list<item_handler<transaction_t> *>& ptrs);
 };
 
-#define CONFIG_OPTIONS_SIZE 93
+#define CONFIG_OPTIONS_SIZE 94
 extern option_t config_options[CONFIG_OPTIONS_SIZE];
 
 void option_help(std::ostream& out);

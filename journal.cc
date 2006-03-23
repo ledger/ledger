@@ -147,7 +147,7 @@ bool entry_base_t::finalize()
   // the balance.  This is done for the last eligible commodity.
 
   if (balance && balance.type == value_t::BALANCE &&
-      ((balance_t *) balance.data)->amounts.size() == 2) {
+      ((balance_t *) balance.data)->strip_annotations().amounts.size() == 2) {
     transactions_list::const_iterator x = transactions.begin();
     commodity_t& this_comm = (*x)->amount.commodity();
 
@@ -163,7 +163,7 @@ bool entry_base_t::finalize()
 
     for (; x != transactions.end(); x++) {
       if ((*x)->cost || ((*x)->flags & TRANSACTION_VIRTUAL) ||
-	  (*x)->amount.commodity() != this_comm)
+	  ! (*x)->amount || (*x)->amount.commodity() != this_comm)
 	continue;
 
       assert((*x)->amount);

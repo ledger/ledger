@@ -3296,8 +3296,8 @@ with three different accounts:
 @end itemize
 
 From a religious point of view, the community expects to divide its
-resources into multiple ``funds'', from which it expects to make
-purchases or reserve resources for later:
+resources into multiple ``funds'', from which it makes purchases or
+reserves resources for later:
 
 @itemize
 @item School fund
@@ -3306,22 +3306,21 @@ purchases or reserve resources for later:
 @end itemize
 
 The problem with this kind of setup is that when you spend money, it
-comes from two or more places: the account and the fund.  And yet, the
-correlation of amounts between funds and accounts is rarely
+comes from two or more places at once: the account and the fund.  And
+yet, the correlation of amounts between funds and accounts is rarely
 one-to-one.  What if the school fund has @samp{$500.00}, but
 @samp{$400.00} of that comes from Checking, and @samp{$100.00} from
 Savings?
 
-Using a traditional finance package would require that money reside in
-only one place.  But there are really two views to the data: from the
-account point of view, you want one set of reports; from the fund
-point of view, another set entirely -- and yet both sets should
-reflect the same expenses and incoming.  It's just where the money
-``resides'' that differs.
+Traditional finance packages require that the money reside in only one
+place.  But there are really two ``views'' of the data: from the
+account point of view and from the fund point of view -- yet both sets
+should reflect the same overall expenses and cash flow.  It's simply
+where the money resides that differs.
 
-This situation can be handled using virtual transactions to represent
-the fact that money is moving to and from two kind of accounts at the
-same time:
+This situation can be handled one of two ways.  The first is using
+virtual transactions to represent the fact that money is moving to and
+from two kind of accounts at the same time:
 
 @smallexample
 2004/03/20 Contributions
@@ -3335,9 +3334,9 @@ same time:
 @end smallexample
 
 The use of square brackets in the second entry ensures that the
-virtual transactions balance to zero.
-
-Now money can be spent directly from a fund:
+virtual transactions balance to zero.  Now money can be spent directly
+from a fund at the same time as money is drawn from a physical
+account:
 
 @smallexample
 2004/03/25 Payment for books (paid from Checking)
@@ -3346,17 +3345,17 @@ Now money can be spent directly from a fund:
     (Funds:School)                   $-100.00
 @end smallexample
 
-When reports are generated, by default they will appear in terms of
-the funds, income and expenses.  In this case, you will likely want to
-mask out your @samp{Assets} account, becausue the balance won't make
-much sense:
+When reports are generated, by default they'll appear in terms of the
+funds.  In this case, you will likely want to mask out your
+@samp{Assets} account, because otherwise the balance won't make much
+sense:
 
 @example
 ledger bal -^Assets
 @end example
 
-If the @option{--real} option is used, the report is in terms of the
-real accounts:
+If the @option{--real} option is used, the report will be in terms of
+the real accounts:
 
 @example
 ledger --real bal
@@ -3372,6 +3371,50 @@ list them as you would normally, for example:
     Liabilities:Credit Card           $-50.00
     (Funds:School)                   $-100.00
 @end smallexample
+
+The second way of tracking funds is to use entry codes.  In this
+respect the codes become like virtual accounts that embrace the entire
+set of transactions.  Basically, we are associating an entry with a
+fund by setting its code.  Here are two entries that desposit money
+into, and spend money from, the @samp{Funds:School} fund:
+
+@smallexample
+2004/03/25 (Funds:School) Donations
+    Assets:Checking                   $100.00
+    Income:Donations
+
+2004/04/25 (Funds:School) Payment for books
+    Expenses:Books                     $50.00
+    Assets:Checking
+@end smallexample
+
+Note how the accounts now relate only to the real accounts, and any
+balance or registers reports will reflect this.  That the entries
+relate to a particular fund is kept only in the code.
+
+How does this become a fund report?  By using the
+@option{--code-as-payee} option, you can generate a register report
+where the payee for each transaction shows the code.  Alone, this is
+not terribly interesting; but when combined with the
+@option{--by-payee} option, you will now see account subtotals for any
+transactions related to a specific fund.  So, to see the current
+monetary balances of all funds, the command would be:
+
+@smallexample
+ledger --code-as-payee -P reg ^Assets
+@end smallexample
+
+Or to see a particular funds expenses, the @samp{School} fund in this
+case:
+
+@smallexample
+ledger --code-as-payee -P reg ^Expenses -- School
+@end smallexample
+
+Both approaches yield different kinds of flexibility, depending on how
+you prefer to think of your funds: as virtual accounts, or as tags
+associated with particular entries.  Your own tastes will decide which
+is best for your situation.
 
 @node Archiving previous years, Virtual transactions, Working with multiple funds and accounts, Keeping a ledger
 @section Archiving previous years

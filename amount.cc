@@ -1633,6 +1633,30 @@ amount_t commodity_base_t::value(const std::time_t moment)
   return price;
 }
 
+bool annotated_commodity_t::operator==(const commodity_t& comm) const
+{
+  // If the base commodities don't match, the game's up.
+  if (base != comm.base)
+    return false;
+
+  if (price &&
+      (! comm.annotated ||
+       price != static_cast<const annotated_commodity_t&>(comm).price))
+    return false;
+
+  if (date &&
+      (! comm.annotated ||
+       date != static_cast<const annotated_commodity_t&>(comm).date))
+    return false;
+
+  if (! tag.empty() &&
+      (! comm.annotated ||
+       tag != static_cast<const annotated_commodity_t&>(comm).tag))
+    return false;
+
+  return true;
+}
+
 void
 annotated_commodity_t::write_annotations(std::ostream&      out,
 					 const amount_t&    price,
@@ -1751,15 +1775,55 @@ bool compare_amount_commodities::operator()(const amount_t * left,
     annotated_commodity_t& aleftcomm(static_cast<annotated_commodity_t&>(leftcomm));
     annotated_commodity_t& arightcomm(static_cast<annotated_commodity_t&>(rightcomm));
 
-    amount_t val = aleftcomm.price - arightcomm.price;
-    if (val)
-      return val < 0;
+    if (! aleftcomm.price && arightcomm.price)
+      return true;
+    if (aleftcomm.price && ! arightcomm.price)
+      return false;
 
-    int diff = aleftcomm.date - arightcomm.date;
-    if (diff)
-      return diff < 0;
+    if (aleftcomm.price && arightcomm.price) {
+      amount_t leftprice(aleftcomm.price);
+      leftprice.reduce();
+      amount_t rightprice(arightcomm.price);
+      rightprice.reduce();
 
-    return aleftcomm.tag < arightcomm.tag;
+      if (leftprice.commodity() == rightprice.commodity()) {
+	amount_t val = leftprice - rightprice;
+	if (val)
+	  return val < 0;
+      } else {
+	// Since we have two different amounts, there's really no way
+	// to establish a true sorting order; we'll just do it based
+	// on the numerical values.
+	leftprice.clear_commodity();
+	rightprice.clear_commodity();
+
+	amount_t val = leftprice - rightprice;
+	if (val)
+	  return val < 0;
+      }
+    }
+
+    if (! aleftcomm.date && arightcomm.date)
+      return true;
+    if (aleftcomm.date && ! arightcomm.date)
+      return false;
+
+    if (aleftcomm.date && arightcomm.date) {
+      int diff = aleftcomm.date - arightcomm.date;
+      if (diff)
+	return diff < 0;
+    }
+
+    if (aleftcomm.tag.empty() && ! arightcomm.tag.empty())
+      return true;
+    if (! aleftcomm.tag.empty() && arightcomm.tag.empty())
+      return false;
+
+    if (! aleftcomm.tag.empty() && ! arightcomm.tag.empty())
+      return aleftcomm.tag < arightcomm.tag;
+
+    assert(0);
+    return true;
   }
 }
 
