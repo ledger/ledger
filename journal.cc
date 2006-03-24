@@ -101,6 +101,7 @@ bool entry_base_t::finalize()
   value_t balance;
 
   bool no_amounts = true;
+  bool saw_null   = false;
   for (transactions_list::const_iterator x = transactions.begin();
        x != transactions.end();
        x++)
@@ -122,6 +123,8 @@ bool entry_base_t::finalize()
 	  if (ann_comm.price)
 	    balance += ann_comm.price * (*x)->amount - *((*x)->cost);
 	}
+      } else {
+	saw_null = true;
       }
     }
 
@@ -146,8 +149,8 @@ bool entry_base_t::finalize()
   // determine its price by dividing the unit count into the value of
   // the balance.  This is done for the last eligible commodity.
 
-  if (balance && balance.type == value_t::BALANCE &&
-      ((balance_t *) balance.data)->strip_annotations().amounts.size() == 2) {
+  if (! saw_null && balance && balance.type == value_t::BALANCE &&
+      ((balance_t *) balance.data)->amounts.size() == 2) {
     transactions_list::const_iterator x = transactions.begin();
     commodity_t& this_comm = (*x)->amount.commodity();
 
