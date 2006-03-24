@@ -456,7 +456,7 @@ inline void read_binary_commodity_base_extra(char *& data,
 
     // Upon insertion, amt will be copied, which will cause the amount
     // to be duplicated (and thus not lost when the journal's
-    // item_pool is deleted.
+    // item_pool is deleted).
     if (! commodity->history)
       commodity->history = new commodity_base_t::history_t;
     commodity->history->prices.insert(history_pair(when, amt));
@@ -509,7 +509,14 @@ inline commodity_t * read_binary_commodity_annotated(char *& data)
 
   commodity->ptr =
     commodities[read_binary_long<commodity_t::ident_t>(data) - 1];
-  read_binary_amount(data, commodity->price);
+
+  // This read-and-then-assign causes a new amount to be allocated
+  // which does not live within the bulk allocation pool, since that
+  // pool will be deleted *before* the commodities are destroyed.
+  amount_t amt;
+  read_binary_amount(data, amt);
+  commodity->price = amt;
+
   read_binary_long(data, commodity->date);
   read_binary_string(data, commodity->tag);
 
