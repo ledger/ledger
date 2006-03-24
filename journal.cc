@@ -468,11 +468,17 @@ bool account_t::valid() const
 
   for (accounts_map::const_iterator i = accounts.begin();
        i != accounts.end();
-       i++)
+       i++) {
+    if (this == (*i).second) {
+      DEBUG_PRINT("ledger.validate", "account_t: parent refers to itself!");
+      return false;
+    }
+
     if (! (*i).second->valid()) {
       DEBUG_PRINT("ledger.validate", "account_t: child not valid");
       return false;
     }
+  }
 
   return true;
 }

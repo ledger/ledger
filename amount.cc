@@ -217,6 +217,8 @@ amount_t::amount_t(const double value)
 
 void amount_t::_release()
 {
+  DEBUG_PRINT("amounts.refs",
+	      quantity << " ref--, now " << (quantity->ref - 1));
   if (--quantity->ref == 0) {
     if (! (quantity->flags & BIGINT_BULK_ALLOC))
       delete quantity;
@@ -257,6 +259,8 @@ void amount_t::_copy(const amount_t& amt)
       quantity = new bigint_t(*amt.quantity);
     } else {
       quantity = amt.quantity;
+      DEBUG_PRINT("amounts.refs",
+		  quantity << " ref++, now " << (quantity->ref + 1));
       quantity->ref++;
     }
   }
@@ -506,8 +510,7 @@ int amount_t::compare(const amount_t& amt) const
   if (! amt.quantity)
     return sign();
 
-  if (commodity() && amt.commodity() &&
-      commodity() != amt.commodity())
+  if (commodity() && amt.commodity() && commodity() != amt.commodity())
     throw new amount_error
       (std::string("Cannot compare amounts with different commodities: ") +
        commodity().symbol() + " and " + amt.commodity().symbol());
@@ -619,7 +622,7 @@ amount_t amount_t::round(unsigned int prec) const
   amount_t temp = *this;
 
   if (! quantity || quantity->prec <= prec) {
-    if (quantity->flags & BIGINT_KEEP_PREC) {
+    if (quantity && quantity->flags & BIGINT_KEEP_PREC) {
       temp._dup();
       temp.quantity->flags &= ~BIGINT_KEEP_PREC;
     }
@@ -1276,6 +1279,8 @@ void amount_t::read_quantity(char *& data)
     data += sizeof(unsigned int);
 
     quantity = (bigint_t *) (bigints + (index - 1) * sizeof(bigint_t));
+    DEBUG_PRINT("amounts.refs",
+		quantity << " ref++, now " << (quantity->ref + 1));
     quantity->ref++;
   }
 }
@@ -1625,7 +1630,7 @@ amount_t commodity_base_t::value(const std::time_t moment)
     }
   }
 
-  if (updater)
+  if (updater && ! (flags & COMMODITY_STYLE_NOMARKET))
     (*updater)(*this, moment, age,
 	       (history && history->prices.size() > 0 ?
 		(*history->prices.rbegin()).first : 0), price);

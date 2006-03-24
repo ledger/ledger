@@ -456,7 +456,7 @@ inline void read_binary_commodity_base_extra(char *& data,
 
     // Upon insertion, amt will be copied, which will cause the amount
     // to be duplicated (and thus not lost when the journal's
-    // item_pool is deleted.
+    // item_pool is deleted).
     if (! commodity->history)
       commodity->history = new commodity_base_t::history_t;
     commodity->history->prices.insert(history_pair(when, amt));
@@ -509,7 +509,14 @@ inline commodity_t * read_binary_commodity_annotated(char *& data)
 
   commodity->ptr =
     commodities[read_binary_long<commodity_t::ident_t>(data) - 1];
-  read_binary_amount(data, commodity->price);
+
+  // This read-and-then-assign causes a new amount to be allocated
+  // which does not live within the bulk allocation pool, since that
+  // pool will be deleted *before* the commodities are destroyed.
+  amount_t amt;
+  read_binary_amount(data, amt);
+  commodity->price = amt;
+
   read_binary_long(data, commodity->date);
   read_binary_string(data, commodity->tag);
 
@@ -540,7 +547,7 @@ account_t * read_binary_account(char *& data, journal_t * journal,
   // account, throw away what we've learned about the recorded
   // journal's own master account.
 
-  if (master) {
+  if (master && acct != master) {
     delete acct;
     acct = master;
   }
@@ -551,6 +558,7 @@ account_t * read_binary_account(char *& data, journal_t * journal,
        i++) {
     account_t * child = read_binary_account(data, journal);
     child->parent = acct;
+    assert(acct != child);
     acct->add_account(child);
   }
 
@@ -575,9 +583,6 @@ unsigned int read_binary_journal(std::istream&	    in,
 	 i < count;
 	 i++) {
       std::string path = read_binary_string(in);
-      if (i == 0 && path != file)
-	return 0;
-
       std::time_t old_mtime;
       read_binary_long(in, old_mtime);
       struct stat info;
@@ -609,7 +614,8 @@ unsigned int read_binary_journal(std::istream&	    in,
   account_t::ident_t a_count = read_binary_long<account_t::ident_t>(data);
   accounts = accounts_next = new account_t *[a_count];
 
-  assert(journal->master); delete journal->master;
+  assert(journal->master);
+  delete journal->master;
   journal->master = read_binary_account(data, journal, master);
 
   if (read_binary_number<bool>(data))
@@ -650,9 +656,6 @@ unsigned int read_binary_journal(std::istream&	    in,
   for (commodity_base_t::ident_t i = 0; i < bc_count; i++) {
     commodity_base_t * commodity = read_binary_commodity_base(data);
 
-    if (commodity->flags & COMMODITY_STYLE_BUILTIN)
-      commodity_base_t::commodities.erase(commodity->symbol);
-
     std::pair<base_commodities_map::iterator, bool> result =
       commodity_base_t::commodities.insert
       (base_commodities_pair(commodity->symbol, commodity));
@@ -663,8 +666,7 @@ unsigned int read_binary_journal(std::istream&	    in,
       // It's possible the user might have used a commodity in a value
       // expression passed to an option, we'll just override the
       // flags, but keep the commodity pointer intact.
-      if (c == commodity_base_t::commodities.end() ||
-	  (*c).second->smaller || (*c).second->larger)
+      if (c == commodity_base_t::commodities.end())
 	throw new error(std::string("Failed to read base commodity from cache: ") +
 			commodity->symbol);
 
@@ -672,10 +674,15 @@ unsigned int read_binary_journal(std::istream&	    in,
       (*c).second->note	     = commodity->note;
       (*c).second->precision = commodity->precision;
       (*c).second->flags     = commodity->flags;
+      if ((*c).second->smaller)
+	delete (*c).second->smaller;
       (*c).second->smaller   = commodity->smaller;
+      if ((*c).second->larger)
+	delete (*c).second->larger;
       (*c).second->larger    = commodity->larger;
 
       *(base_commodities_next - 1) = (*c).second;
+      delete commodity;
     }
   }
 
@@ -694,20 +701,19 @@ unsigned int read_binary_journal(std::istream&	    in,
       commodity = read_binary_commodity_annotated(data);
     }
 
-    if (commodity->flags() & COMMODITY_STYLE_BUILTIN) {
-      commodity_t::commodities.erase(mapping_key);
-      if (commodity->symbol() == "") {
-	delete commodity_t::null_commodity;
-	commodity_t::null_commodity = commodity;
-      }
-    }
-
     std::pair<commodities_map::iterator, bool> result =
-      commodity_t::commodities.insert(commodities_pair(mapping_key,
-						       commodity));
-    if (! result.second && commodity->annotated)
-      throw new error(std::string("Failed to read commodity from cache: ") +
-		      commodity->base->symbol);
+      commodity_t::commodities.insert(commodities_pair
+				        (mapping_key, commodity));
+    if (! result.second) {
+      commodities_map::iterator c =
+	commodity_t::commodities.find(mapping_key);
+      if (c == commodity_t::commodities.end())
+	throw new error(std::string("Failed to read commodity from cache: ") +
+			commodity->symbol());
+
+      *(commodities_next - 1) = (*c).second;
+      delete commodity;
+    }
   }
 
   for (commodity_base_t::ident_t i = 0; i < bc_count; i++)

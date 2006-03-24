@@ -23,7 +23,8 @@
 
 using namespace ledger;
 
-int parse_and_report(config_t& config, int argc, char * argv[], char * envp[])
+int parse_and_report(config_t& config, report_t& report,
+		     int argc, char * argv[], char * envp[])
 {
   // Configure the terminus for value expressions
 
@@ -32,7 +33,7 @@ int parse_and_report(config_t& config, int argc, char * argv[], char * envp[])
   // Parse command-line arguments, and those set in the environment
 
   std::list<std::string> args;
-  config.process_arguments(argc - 1, argv + 1, false, args);
+  process_arguments(ledger::config_options, argc - 1, argv + 1, false, args);
 
   if (args.empty()) {
     option_help(std::cerr);
@@ -48,19 +49,19 @@ int parse_and_report(config_t& config, int argc, char * argv[], char * envp[])
 
   TRACE(main, "Processing options and environment variables");
 
-  config.process_environment(envp, "LEDGER_");
+  process_environment(ledger::config_options, envp, "LEDGER_");
 
 #if 1
   // These are here for backwards compatability, but are deprecated.
 
   if (const char * p = std::getenv("LEDGER"))
-    config.process_option("file", p);
+    process_option(ledger::config_options, "file", p);
   if (const char * p = std::getenv("LEDGER_INIT"))
-    config.process_option("init-file", p);
+    process_option(ledger::config_options, "init-file", p);
   if (const char * p = std::getenv("PRICE_HIST"))
-    config.process_option("price-db", p);
+    process_option(ledger::config_options, "price-db", p);
   if (const char * p = std::getenv("PRICE_EXP"))
-    config.process_option("price-exp", p);
+    process_option(ledger::config_options, "price-exp", p);
 #endif
 
   const char * p    = std::getenv("HOME");
@@ -100,6 +101,8 @@ int parse_and_report(config_t& config, int argc, char * argv[], char * envp[])
     command = "p";
   else if (command == "output")
     command = "w";
+  else if (command == "dump")
+    command = "W";
   else if (command == "emacs" || command == "lisp")
     command = "x";
   else if (command == "xml")
@@ -118,6 +121,7 @@ int parse_and_report(config_t& config, int argc, char * argv[], char * envp[])
   }
   else if (command == "parse") {
     value_expr expr(ledger::parse_value_expr(*arg));
+
     if (config.verbose_mode) {
       std::cout << "Value expression tree:" << std::endl;
       ledger::dump_value_expr(std::cout, expr.get());
@@ -127,20 +131,9 @@ int parse_and_report(config_t& config, int argc, char * argv[], char * envp[])
       std::cout << std::endl << std::endl;
       std::cout << "Result of computation: ";
     }
-    value_t result = guarded_compute(expr.get());
 
-    if (! config.keep_price || ! config.keep_date || ! config.keep_tag) {
-      switch (result.type) {
-      case value_t::AMOUNT:
-      case value_t::BALANCE:
-      case value_t::BALANCE_PAIR:
-	result = result.strip_annotations();
-	break;
-      default:
-	break;
-      }
-    }
-    std::cout << result << std::endl;
+    value_t result = guarded_compute(expr.get());
+    std::cout << result.strip_annotations() << std::endl;
 
     return 0;
   }
@@ -171,11 +164,23 @@ int parse_and_report(config_t& config, int argc, char * argv[], char * envp[])
       throw new error("The 'output' command requires a file argument");
     first_arg = *arg++;
   }
+  else if (command == "W") {
+    if (report.output_file.empty())
+      throw new error("The 'dump' command requires use of the --output option");
+  }
 
   TRACE(options, std::string("Post-processing options ") +
 	"for command \"" + command + "\"");
 
-  config.process_options(command, arg, args.end());
+  report.process_options(command, arg, args.end());
+
+  // If downloading is to be supported, configure the updater
+
+  // jww (2006-03-23): Should the pricing_leeway be in config_t?
+  // Should download_quotes be in report_t?
+  if (! commodity_base_t::updater && config.download_quotes)
+    commodity_base_t::updater =
+      new quotes_by_script(config.price_db, report.pricing_leeway, config.cache_dirty);
 
   std::auto_ptr<entry_t> new_entry;
   if (command == "e") {
@@ -191,8 +196,8 @@ int parse_and_report(config_t& config, int argc, char * argv[], char * envp[])
 #endif
   std::ostream * out = &std::cout;
 
-  if (! config.output_file.empty()) {
-    out = new std::ofstream(config.output_file.c_str());
+  if (! report.output_file.empty()) {
+    out = new std::ofstream(report.output_file.c_str());
   }
 #ifdef HAVE_UNIX_PIPES
   else if (! config.pager.empty()) {
@@ -242,6 +247,7 @@ int parse_and_report(config_t& config, int argc, char * argv[], char * envp[])
 
   if (command == "expr") {
     value_expr expr(ledger::parse_value_expr(*arg));
+
     if (config.verbose_mode) {
       std::cout << "Value expression tree:" << std::endl;
       ledger::dump_value_expr(std::cout, expr.get());
@@ -251,20 +257,9 @@ int parse_and_report(config_t& config, int argc, char * argv[], char * envp[])
       std::cout << std::endl << std::endl;
       std::cout << "Result of computation: ";
     }
-    value_t result = guarded_compute(expr.get());
 
-    if (! config.keep_price || ! config.keep_date || ! config.keep_tag) {
-      switch (result.type) {
-      case value_t::AMOUNT:
-      case value_t::BALANCE:
-      case value_t::BALANCE_PAIR:
-	result = result.strip_annotations();
-	break;
-      default:
-	break;
-      }
-    }
-    std::cout << result << std::endl;
+    value_t result = guarded_compute(expr.get());
+    std::cout << result.strip_annotations() << std::endl;
 
     return 0;
   }
@@ -273,8 +268,8 @@ int parse_and_report(config_t& config, int argc, char * argv[], char * envp[])
 
   const std::string * format;
 
-  if (! config.format_string.empty())
-    format = &config.format_string;
+  if (! report.format_string.empty())
+    format = &report.format_string;
   else if (command == "b")
     format = &config.balance_format;
   else if (command == "r")
@@ -301,13 +296,14 @@ int parse_and_report(config_t& config, int argc, char * argv[], char * envp[])
     formatter = new format_entries(*out, *format);
   else if (command == "x")
     formatter = new format_emacs_transactions(*out);
-  else if (command == "X") {
 #if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
-    formatter = new format_xml_entries(*out, config.show_totals);
+  else if (command == "X")
+    formatter = new format_xml_entries(*out, report.show_totals);
 #else
+  else if (command == "X")
     throw new error("XML support was not compiled into this copy of Ledger");
 #endif
-  } else
+  else
     formatter = new format_transactions(*out, *format);
 
   if (command == "w") {
@@ -315,10 +311,17 @@ int parse_and_report(config_t& config, int argc, char * argv[], char * envp[])
     write_textual_journal(*journal, first_arg, *formatter,
 			  config.write_hdr_format, *out);
     TRACE_POP(text_writer, "Finished writing");
-  } else {
+  }
+  else if (command == "W") {
+    TRACE_PUSH(binary_writer, "Writing binary file");
+    std::ofstream stream(report.output_file.c_str());
+    write_binary_journal(stream, journal.get());
+    TRACE_POP(binary_writer, "Finished writing");
+  }
+  else {
     TRACE_PUSH(main, "Walking journal entries");
 
-    formatter = config.chain_xact_handlers(command, formatter, journal.get(),
+    formatter = report.chain_xact_handlers(command, formatter, journal.get(),
 					   journal->master, formatter_ptrs);
     if (command == "e")
       walk_transactions(new_entry->transactions, *formatter);
@@ -338,14 +341,14 @@ int parse_and_report(config_t& config, int argc, char * argv[], char * envp[])
   if (command == "b") {
     TRACE_PUSH(main, "Walking journal accounts");
 
-    format_account acct_formatter(*out, *format, config.display_predicate);
+    format_account acct_formatter(*out, *format, report.display_predicate);
     sum_accounts(*journal->master);
-    walk_accounts(*journal->master, acct_formatter, config.sort_string);
+    walk_accounts(*journal->master, acct_formatter, report.sort_string);
     acct_formatter.flush();
 
     if (account_has_xdata(*journal->master)) {
       account_xdata_t& xdata = account_xdata(*journal->master);
-      if (! config.show_collapsed && xdata.total) {
+      if (! report.show_collapsed && xdata.total) {
 	*out << "--------------------\n";
 	xdata.value = xdata.total;
 	acct_formatter.format.format(*out, details_t(*journal->master));
@@ -356,9 +359,9 @@ int parse_and_report(config_t& config, int argc, char * argv[], char * envp[])
   else if (command == "E") {
     TRACE_PUSH(main, "Walking journal accounts");
 
-    format_equity acct_formatter(*out, *format, config.display_predicate);
+    format_equity acct_formatter(*out, *format, report.display_predicate);
     sum_accounts(*journal->master);
-    walk_accounts(*journal->master, acct_formatter, config.sort_string);
+    walk_accounts(*journal->master, acct_formatter, report.sort_string);
     acct_formatter.flush();
 
     TRACE_POP(main, "Finished account walk");
@@ -373,7 +376,7 @@ int parse_and_report(config_t& config, int argc, char * argv[], char * envp[])
   clear_account_xdata acct_cleaner;
   walk_accounts(*journal->master, acct_cleaner);
 
-  if (! config.output_file.empty())
+  if (! report.output_file.empty())
     delete out;
 
   for (std::list<item_handler<transaction_t> *>::iterator i
@@ -419,8 +422,11 @@ int main(int argc, char * argv[], char * envp[])
     ledger::do_cleanup = false;
 #endif
     config_t config;
-    TRACE_PUSH(main, "Starting Ledger " PACKAGE_VERSION);
-    int status = parse_and_report(config, argc, argv, envp);
+    report_t report;
+    ledger::config = &config;
+    ledger::report = &report;
+    TRACE_PUSH(main, "Ledger starting");
+    int status = parse_and_report(config, report, argc, argv, envp);
     TRACE_POP(main, "Ledger done");
     return status;
   }

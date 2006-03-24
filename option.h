@@ -30,4 +30,24 @@ void process_arguments(option_t * options, int argc, char ** argv,
 void process_environment(option_t * options, char ** envp,
 			 const std::string& tag);
 
+namespace ledger {
+
+class config_t;
+class report_t;
+
+extern config_t * config;
+extern report_t * report;
+
+#define CONFIG_OPTIONS_SIZE 94
+extern option_t config_options[CONFIG_OPTIONS_SIZE];
+
+void option_help(std::ostream& out);
+
+#define OPT_BEGIN(tag, chars)			\
+    void opt_ ## tag(const char * optarg)
+
+#define OPT_END(tag)
+
+} // namespace ledger
+
 #endif // _OPTION_H

@@ -1129,6 +1129,25 @@ value_t value_t::value(const std::time_t moment) const
   }
 }
 
+void value_t::reduce()
+{
+  switch (type) {
+  case BOOLEAN:
+  case DATETIME:
+  case INTEGER:
+    break;
+  case AMOUNT:
+    ((amount_t *) data)->reduce();
+    break;
+  case BALANCE:
+    ((balance_t *) data)->reduce();
+    break;
+  case BALANCE_PAIR:
+    ((balance_pair_t *) data)->reduce();
+    break;
+  }
+}
+
 void value_t::round()
 {
   switch (type) {

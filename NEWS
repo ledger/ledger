@@ -111,6 +111,15 @@
   expression which is evaluated as a boolean to locate the desired
   reported transaction.
 
+- Added a "dump" command for creating binary files, which load much
+  faster than their textual originals.  For example:
+
+    ledger -f huge.dat -o huge.cache dump
+    ledger -f huge.cache bal
+
+  The second command will load significantly faster (usually about six
+  times on my machine).
+
 - There have a few changes to value expression syntax.  The most
   significant incompatibilities being:
 

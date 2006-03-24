@@ -197,9 +197,8 @@ balance_t& balance_t::operator*=(const amount_t& amt)
 	 i++)
       (*i).second *= amt;
   }
-  else if (amounts.size() == 1 &&
-	   (*amounts.begin()).first == &amt.commodity()) {
-    (*amounts.begin()).second *= amt;
+  else if (amounts.size() == 1) {
+    *this = (*amounts.begin()).second * amt;
   }
   else {
     amounts_map::iterator i = amounts.find(&amt.commodity());
@@ -208,9 +207,8 @@ balance_t& balance_t::operator*=(const amount_t& amt)
     } else {
       // Try stripping annotations before giving an error.
       balance_t temp(strip_annotations());
-      if (temp.amounts.size() == 1 &&
-	  (*temp.amounts.begin()).first == &amt.commodity()) {
-	return *this = temp * amt;
+      if (temp.amounts.size() == 1) {
+	return *this = (*temp.amounts.begin()).second * amt;
       } else {
 	i = temp.amounts.find(&amt.commodity());
 	if (i != temp.amounts.end())

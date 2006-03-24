@@ -45,5 +45,6 @@ namespace ledger {
 }
 
 #include <config.h>
+#include <report.h>
 
 #endif // _LEDGER_H

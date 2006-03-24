@@ -276,9 +276,10 @@ bool compute_amount(value_expr_t * expr, amount_t& amt,
 		    const transaction_t * xact,
 		    value_expr_t * context = NULL);
 
-#define PARSE_VALEXPR_NORMAL  0x00
-#define PARSE_VALEXPR_PARTIAL 0x01
-#define PARSE_VALEXPR_RELAXED 0x02
+#define PARSE_VALEXPR_NORMAL	 0x00
+#define PARSE_VALEXPR_PARTIAL	 0x01
+#define PARSE_VALEXPR_RELAXED	 0x02
+#define PARSE_VALEXPR_NO_MIGRATE 0x04
 
 value_expr_t * parse_value_expr(std::istream& in,
 				scope_t * scope = NULL,
