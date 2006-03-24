@@ -510,8 +510,7 @@ int amount_t::compare(const amount_t& amt) const
   if (! amt.quantity)
     return sign();
 
-  if (commodity() && amt.commodity() &&
-      commodity() != amt.commodity())
+  if (commodity() && amt.commodity() && commodity() != amt.commodity())
     throw new amount_error
       (std::string("Cannot compare amounts with different commodities: ") +
        commodity().symbol() + " and " + amt.commodity().symbol());
