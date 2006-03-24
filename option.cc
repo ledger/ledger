@@ -427,11 +427,7 @@ OPT_BEGIN(no_cache, "") {
 OPT_BEGIN(output, "o:") {
   if (std::string(optarg) != "-") {
     std::string path = resolve_path(optarg);
-    if (access(path.c_str(), W_OK) != -1)
-      report->output_file = path;
-    else
-      throw new error(std::string("The output file '") + path +
-		      "' is not writable");
+    report->output_file = path;
   }
 } OPT_END(output);
 

@@ -168,6 +168,7 @@ unsigned int parse_ledger_data(config_t&   config,
       config.use_cache = false;
       journal->sources.push_back("<stdin>");
 #if 0
+      // jww (2006-03-23): Why doesn't XML work on stdin?
       if (xml_parser && std::cin.peek() == '<')
 	entry_count += xml_parser->parse(std::cin, config, journal,
 					 acct);

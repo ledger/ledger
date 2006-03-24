@@ -547,7 +547,7 @@ account_t * read_binary_account(char *& data, journal_t * journal,
   // account, throw away what we've learned about the recorded
   // journal's own master account.
 
-  if (master) {
+  if (master && acct != master) {
     delete acct;
     acct = master;
   }
@@ -558,6 +558,7 @@ account_t * read_binary_account(char *& data, journal_t * journal,
        i++) {
     account_t * child = read_binary_account(data, journal);
     child->parent = acct;
+    assert(acct != child);
     acct->add_account(child);
   }
 
@@ -582,9 +583,6 @@ unsigned int read_binary_journal(std::istream&	    in,
 	 i < count;
 	 i++) {
       std::string path = read_binary_string(in);
-      if (i == 0 && path != file)
-	return 0;
-
       std::time_t old_mtime;
       read_binary_long(in, old_mtime);
       struct stat info;

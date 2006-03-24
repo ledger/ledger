@@ -101,6 +101,8 @@ int parse_and_report(config_t& config, report_t& report,
     command = "p";
   else if (command == "output")
     command = "w";
+  else if (command == "dump")
+    command = "W";
   else if (command == "emacs" || command == "lisp")
     command = "x";
   else if (command == "xml")
@@ -161,6 +163,10 @@ int parse_and_report(config_t& config, report_t& report,
     if (arg == args.end())
       throw new error("The 'output' command requires a file argument");
     first_arg = *arg++;
+  }
+  else if (command == "W") {
+    if (report.output_file.empty())
+      throw new error("The 'dump' command requires use of the --output option");
   }
 
   TRACE(options, std::string("Post-processing options ") +
@@ -290,13 +296,14 @@ int parse_and_report(config_t& config, report_t& report,
     formatter = new format_entries(*out, *format);
   else if (command == "x")
     formatter = new format_emacs_transactions(*out);
-  else if (command == "X") {
 #if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
+  else if (command == "X")
     formatter = new format_xml_entries(*out, report.show_totals);
 #else
+  else if (command == "X")
     throw new error("XML support was not compiled into this copy of Ledger");
 #endif
-  } else
+  else
     formatter = new format_transactions(*out, *format);
 
   if (command == "w") {
@@ -304,7 +311,14 @@ int parse_and_report(config_t& config, report_t& report,
     write_textual_journal(*journal, first_arg, *formatter,
 			  config.write_hdr_format, *out);
     TRACE_POP(text_writer, "Finished writing");
-  } else {
+  }
+  else if (command == "W") {
+    TRACE_PUSH(binary_writer, "Writing binary file");
+    std::ofstream stream(report.output_file.c_str());
+    write_binary_journal(stream, journal.get());
+    TRACE_POP(binary_writer, "Finished writing");
+  }
+  else {
     TRACE_PUSH(main, "Walking journal entries");
 
     formatter = report.chain_xact_handlers(command, formatter, journal.get(),

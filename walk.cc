@@ -17,12 +17,14 @@ bool compare_items<transaction_t>::operator()(const transaction_t * left,
   transaction_xdata_t& lxdata(transaction_xdata(*left));
   if (! (lxdata.dflags & TRANSACTION_SORT_CALC)) {
     guarded_compute(sort_order, lxdata.sort_value, details_t(*left));
+    lxdata.sort_value.reduce();
     lxdata.dflags |= TRANSACTION_SORT_CALC;
   }
 
   transaction_xdata_t& rxdata(transaction_xdata(*right));
   if (! (rxdata.dflags & TRANSACTION_SORT_CALC)) {
     guarded_compute(sort_order, rxdata.sort_value, details_t(*right));
+    rxdata.sort_value.reduce();
     rxdata.dflags |= TRANSACTION_SORT_CALC;
   }
 

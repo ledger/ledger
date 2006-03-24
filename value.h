@@ -316,6 +316,14 @@ class value_t
 
   value_t& add(const amount_t&  amount, const amount_t * cost = NULL);
   value_t  value(const std::time_t moment) const;
+  void     reduce();
+
+  value_t reduced() const {
+    value_t temp(*this);
+    temp.reduce();
+    return temp;
+  }
+
   void     round();
   value_t  unround() const;
 };

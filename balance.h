@@ -449,6 +449,19 @@ class balance_t
       (*i).second.abs();
   }
 
+  void reduce() {
+    for (amounts_map::iterator i = amounts.begin();
+	 i != amounts.end();
+	 i++)
+      (*i).second.reduce();
+  }
+
+  balance_t reduced() const {
+    balance_t temp(*this);
+    temp.reduce();
+    return temp;
+  }
+
   void round() {
     for (amounts_map::iterator i = amounts.begin();
 	 i != amounts.end();
@@ -891,6 +904,17 @@ class balance_pair_t
 
   bool valid() {
     return quantity.valid() && (! cost || cost->valid());
+  }
+
+  void reduce() {
+    quantity.reduce();
+    if (cost) cost->reduce();
+  }
+
+  balance_pair_t reduced() const {
+    balance_pair_t temp(*this);
+    temp.reduce();
+    return temp;
   }
 
   void round() {
