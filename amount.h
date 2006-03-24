@@ -267,6 +267,12 @@ class amount_t
   void parse(const std::string& str, unsigned char flags = 0);
   void reduce();
 
+  amount_t reduced() const {
+    amount_t temp(*this);
+    temp.reduce();
+    return temp;
+  }
+
   void read_quantity(char *& data);
   void read_quantity(std::istream& in);
   void write_quantity(std::ostream& out) const;
@@ -456,15 +462,18 @@ class commodity_t
 
  public:
   explicit commodity_t() : base(NULL), annotated(false) {}
+  virtual ~commodity_t() {}
 
   operator bool() const {
     return this != null_commodity;
   }
-  bool operator==(const commodity_t& comm) const {
+  virtual bool operator==(const commodity_t& comm) const {
+    if (comm.annotated)
+      return comm == *this;
     return base == comm.base;
   }
   bool operator!=(const commodity_t& comm) const {
-    return base != comm.base;
+    return ! (*this == comm);
   }
 
   std::string base_symbol() const {
@@ -559,6 +568,8 @@ class annotated_commodity_t : public commodity_t
   explicit annotated_commodity_t() {
     annotated = true;
   }
+
+  virtual bool operator==(const commodity_t& comm) const;
 
   void write_annotations(std::ostream& out) const {
     annotated_commodity_t::write_annotations(out, price, date, tag);

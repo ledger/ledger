@@ -579,6 +579,22 @@ class set_comm_as_payee : public item_handler<transaction_t>
   virtual void operator()(transaction_t& xact);
 };
 
+class set_code_as_payee : public item_handler<transaction_t>
+{
+  std::list<entry_t>       entry_temps;
+  std::list<transaction_t> xact_temps;
+
+ public:
+  set_code_as_payee(item_handler<transaction_t> * handler)
+    : item_handler<transaction_t>(handler) {}
+
+  ~set_code_as_payee() {
+    clear_entries_transactions(entry_temps);
+  }
+
+  virtual void operator()(transaction_t& xact);
+};
+
 class dow_transactions : public subtotal_transactions
 {
   transactions_list days_of_the_week[7];

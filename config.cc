@@ -154,6 +154,7 @@ void config_t::reset()
   days_of_the_week   = false;
   by_payee           = false;
   comm_as_payee      = false;
+  code_as_payee      = false;
   show_revalued      = false;
   show_revalued_only = false;
   download_quotes    = false;
@@ -578,6 +579,8 @@ config_t::chain_xact_handlers(const std::string& command,
 
   if (comm_as_payee)
     ptrs.push_back(formatter = new set_comm_as_payee(formatter));
+  else if (code_as_payee)
+    ptrs.push_back(formatter = new set_code_as_payee(formatter));
 
   return formatter;
 }
@@ -1162,6 +1165,10 @@ OPT_BEGIN(comm_as_payee, "x") {
   config->comm_as_payee = true;
 } OPT_END(comm_as_payee);
 
+OPT_BEGIN(code_as_payee, "") {
+  config->code_as_payee = true;
+} OPT_END(code_as_payee);
+
 OPT_BEGIN(budget, "") {
   config->budget_flags = BUDGET_BUDGETED;
 } OPT_END(budget);
@@ -1355,6 +1362,7 @@ option_t config_options[CONFIG_OPTIONS_SIZE] = {
   { "by-payee", 'P', false, opt_by_payee, false },
   { "cache", '\0', true, opt_cache, false },
   { "cleared", 'C', false, opt_cleared, false },
+  { "code-as-payee", '\0', false, opt_code_as_payee, false },
   { "collapse", 'n', false, opt_collapse, false },
   { "comm-as-payee", 'x', false, opt_comm_as_payee, false },
   { "csv-register-format", '\0', true, opt_csv_register_format, false },
