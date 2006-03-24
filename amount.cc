@@ -217,6 +217,8 @@ amount_t::amount_t(const double value)
 
 void amount_t::_release()
 {
+  DEBUG_PRINT("amounts.refs",
+	      quantity << " ref--, now " << (quantity->ref - 1));
   if (--quantity->ref == 0) {
     if (! (quantity->flags & BIGINT_BULK_ALLOC))
       delete quantity;
@@ -257,6 +259,8 @@ void amount_t::_copy(const amount_t& amt)
       quantity = new bigint_t(*amt.quantity);
     } else {
       quantity = amt.quantity;
+      DEBUG_PRINT("amounts.refs",
+		  quantity << " ref++, now " << (quantity->ref + 1));
       quantity->ref++;
     }
   }
@@ -1276,6 +1280,8 @@ void amount_t::read_quantity(char *& data)
     data += sizeof(unsigned int);
 
     quantity = (bigint_t *) (bigints + (index - 1) * sizeof(bigint_t));
+    DEBUG_PRINT("amounts.refs",
+		quantity << " ref++, now " << (quantity->ref + 1));
     quantity->ref++;
   }
 }

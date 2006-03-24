@@ -64,10 +64,11 @@ inline char * next_element(char * buf, bool variable = false)
   return NULL;
 }
 
-value_expr parse_amount_expr(std::istream& in, amount_t& amount,
-			     transaction_t * xact)
+static value_expr parse_amount_expr(std::istream& in, amount_t& amount,
+				    transaction_t * xact,
+				    unsigned short flags = 0)
 {
-  value_expr expr(parse_value_expr(in, NULL, PARSE_VALEXPR_RELAXED |
+  value_expr expr(parse_value_expr(in, NULL, flags | PARSE_VALEXPR_RELAXED |
 				   PARSE_VALEXPR_PARTIAL)->acquire());
 
   DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
@@ -213,8 +214,10 @@ transaction_t * parse_transaction(char * line, account_t * account,
 	try {
 	  unsigned long beg = (long)in.tellg();
 
-	  if (parse_amount_expr(in, *xact->cost, xact.get()))
-	    throw new parse_error("A transaction's cost must evalute to a constant value");
+	  if (parse_amount_expr(in, *xact->cost, xact.get(),
+				PARSE_VALEXPR_NO_MIGRATE))
+	    throw new parse_error
+	      ("A transaction's cost must evalute to a constant value");
 
 	  unsigned long end = (long)in.tellg();
 
@@ -700,7 +703,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	  if (p)
 	    *p++ = '\0';
 	}
-	config.process_option(line + 2, p);
+	process_option(config_options, line + 2, p);
 	break;
       }
 

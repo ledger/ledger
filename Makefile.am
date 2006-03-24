@@ -28,6 +28,7 @@ libledger_la_SOURCES = \
 	qif.cc	       \
 	quotes.cc      \
 	reconcile.cc   \
+	report.cc      \
 	startup.cc     \
 	textual.cc     \
 	valexpr.cc     \
@@ -74,6 +75,7 @@ pkginclude_HEADERS = \
 	qif.h	     \
 	quotes.h     \
 	reconcile.h  \
+	report.h     \
 	textual.h    \
 	timing.h     \
 	valexpr.h    \

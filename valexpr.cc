@@ -772,7 +772,8 @@ value_expr_t * parse_value_term(std::istream& in, scope_t * scope,
       // the current maximum precision displayed.
       try {
 	pos = (long)in.tellg();
-	temp.parse(in);
+	temp.parse(in, flags & PARSE_VALEXPR_NO_MIGRATE ?
+		   AMOUNT_PARSE_NO_MIGRATE : 0);
       }
       catch (amount_error * err) {
 	// If the amount had no commodity, it must be an unambiguous
