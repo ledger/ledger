@@ -1133,9 +1133,7 @@ void value_t::reduce()
 {
   switch (type) {
   case BOOLEAN:
-    throw new value_error("Cannot reduce a boolean");
   case DATETIME:
-    throw new value_error("Cannot reduce a date/time");
   case INTEGER:
     break;
   case AMOUNT:

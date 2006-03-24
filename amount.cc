@@ -622,7 +622,7 @@ amount_t amount_t::round(unsigned int prec) const
   amount_t temp = *this;
 
   if (! quantity || quantity->prec <= prec) {
-    if (quantity->flags & BIGINT_KEEP_PREC) {
+    if (quantity && quantity->flags & BIGINT_KEEP_PREC) {
       temp._dup();
       temp.quantity->flags &= ~BIGINT_KEEP_PREC;
     }
@@ -1630,7 +1630,7 @@ amount_t commodity_base_t::value(const std::time_t moment)
     }
   }
 
-  if (updater)
+  if (updater && ! (flags & COMMODITY_STYLE_NOMARKET))
     (*updater)(*this, moment, age,
 	       (history && history->prices.size() > 0 ?
 		(*history->prices.rbegin()).first : 0), price);

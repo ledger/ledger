@@ -26,10 +26,11 @@ def find_files(path):
     entries = os.listdir(path)
     for entry in entries:
         entry = join(path, entry)
-	if isdir(entry) and entry != "/proc":
-            find_files(entry)
-        elif not islink(entry):
-            report_file(entry)
+	if not islink(entry):
+	    if isdir(entry) and entry != "/proc":
+		find_files(entry)
+	    else:
+		report_file(entry)
 
 args = sys.argv[1:]
 if len(args):
