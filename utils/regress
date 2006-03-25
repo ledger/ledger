@@ -40,6 +40,9 @@ runtest() {
     rm -f $TMPDIR/*-$$.out
 }
 
+runtest 1031 -f $CASES/1030.dat reg
+runtest 1030 -f $CASES/1030.dat bal
+
 runtest 1029 -f $CASES/1002.dat entry 2006/10/20 "stock option"
 runtest 1028 -f $CASES/1002.dat entry 2006/10/20 "stock option" -20
 runtest 1027 -f $CASES/1002.dat entry 2006/10/20 "stock option" opti
