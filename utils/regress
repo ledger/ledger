@@ -1,0 +1,88 @@
+#!/bin/zsh
+
+TMPDIR=/tmp
+if [ -d /Volumes/RamDisk ]; then
+    TMPDIR=/Volumes/RamDisk
+fi
+
+UTILS=utils
+CASES=$UTILS/cases
+
+result=0
+
+generate=false
+if [ "$1" = "--generate" ]; then
+    generate=true
+fi
+
+runtest() {
+    num=$1
+    shift
+    if [ $generate = true ]; then
+	echo generating $num
+	./ledger "$@" > $UTILS/baseline/$num 2> $TMPDIR/errors-$$.out
+	cat $TMPDIR/errors-$$.out >> $UTILS/baseline/$num
+    else
+	echo regression $num
+
+	./ledger "$@" > $TMPDIR/test-$$.out 2> $TMPDIR/errors-$$.out
+	cat $TMPDIR/errors-$$.out >> $TMPDIR/test-$$.out
+
+	diff $UTILS/baseline/$num $TMPDIR/test-$$.out \
+	    > $TMPDIR/result-$$.out 2>&1
+	if [ -s $TMPDIR/result-$$.out ]; then
+	    echo ERROR: REGRESSION FAILED
+	    echo ":: regression $num: ./ledger $@" >> errors.out
+	    cat $TMPDIR/result-$$.out >> errors.out
+	    result=`expr $result + 1`
+	fi
+    fi
+    rm -f $TMPDIR/*-$$.out
+}
+
+runtest 1029 -f $CASES/1002.dat entry 2006/10/20 "stock option"
+runtest 1028 -f $CASES/1002.dat entry 2006/10/20 "stock option" -20
+runtest 1027 -f $CASES/1002.dat entry 2006/10/20 "stock option" opti
+runtest 1026 -f $CASES/1002.dat entry 2006/10/20 "stock option" time
+runtest 1025 -f $CASES/1002.dat entry 2006/10/20 "stock option" gain
+runtest 1024 -f $CASES/1002.dat entry 2006/10/20 "stock option" opti -20
+runtest 1023 -f $CASES/1002.dat entry 2006/10/20 "stock option" time -20
+runtest 1022 -f $CASES/1002.dat entry 2006/10/20 "stock option" gain -20
+
+runtest 1021 -f $CASES/1002.dat entry 2006/10/20 "stock optionx"
+runtest 1020 -f $CASES/1002.dat entry 2006/10/20 "stock optionx" -20
+runtest 1019 -f $CASES/1002.dat entry 2006/10/20 "stock optionx" opti
+runtest 1018 -f $CASES/1002.dat entry 2006/10/20 "stock optionx" time
+runtest 1017 -f $CASES/1002.dat entry 2006/10/20 "stock optionx" gain
+runtest 1016 -f $CASES/1002.dat entry 2006/10/20 "stock optionx" opti -20
+runtest 1015 -f $CASES/1002.dat entry 2006/10/20 "stock optionx" time -20
+runtest 1014 -f $CASES/1002.dat entry 2006/10/20 "stock optionx" gain -20
+
+runtest 1013 -f $CASES/1002.dat entry 2006/10/20 "stock option" xopti
+runtest 1012 -f $CASES/1002.dat entry 2006/10/20 "stock option" xtime
+runtest 1011 -f $CASES/1002.dat entry 2006/10/20 "stock option" xgain
+runtest 1010 -f $CASES/1002.dat entry 2006/10/20 "stock option" xopti -20
+runtest 1009 -f $CASES/1002.dat entry 2006/10/20 "stock option" xtime -20
+runtest 1008 -f $CASES/1002.dat entry 2006/10/20 "stock option" xgain -20
+
+runtest 1007 -f $CASES/1002.dat entry 2006/10/20 "stock optionx" xopti
+runtest 1006 -f $CASES/1002.dat entry 2006/10/20 "stock optionx" xtime
+runtest 1005 -f $CASES/1002.dat entry 2006/10/20 "stock optionx" xgain
+runtest 1004 -f $CASES/1002.dat entry 2006/10/20 "stock optionx" xopti -20
+runtest 1003 -f $CASES/1002.dat entry 2006/10/20 "stock optionx" xtime -20
+runtest 1002 -f $CASES/1002.dat entry 2006/10/20 "stock optionx" xgain -20
+
+runtest 1001 -f $CASES/1001.dat bal
+
+runtest 10 -f $UTILS/standard.dat -M -r -s -n reg rent
+runtest 9 -f $UTILS/standard.dat -M -r -s reg rent
+runtest 8 -f $UTILS/standard.dat -M -r -n reg rent
+runtest 7 -f $UTILS/standard.dat -M -r reg rent
+runtest 6 -f $UTILS/standard.dat -M reg rent
+runtest 5 -f $UTILS/standard.dat -r -s -n reg rent
+runtest 4 -f $UTILS/standard.dat -r -s reg rent
+runtest 3 -f $UTILS/standard.dat -r -n reg rent
+runtest 2 -f $UTILS/standard.dat -r reg rent
+runtest 1 -f $UTILS/standard.dat reg rent
+
+exit $result

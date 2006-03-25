@@ -5,7 +5,7 @@ if [ -d /Volumes/RamDisk ]; then
     TMPDIR=/Volumes/RamDisk
 fi
 
-rsync -Lav --delete --delete-excluded \
+rsync -Lav --delete \
     --exclude="autom4te.cache/" \
     --exclude=".libs/"	  \
     --exclude="build/"	  \
@@ -21,10 +21,18 @@ rsync -Lav --delete --delete-excluded \
     ./ $TMPDIR/ledger-verify/
 
 cd $TMPDIR/ledger-verify
-make all-clean
-./acprep --safe-opt
+#make all-clean > /dev/null 2>&1
 
-if make ledger; then
+if ./acprep --safe-opt && make ledger; then
    strip ledger
-   nice -n 20 utils/tests
+
+   errors=0
+
+   nice -n 20 utils/regtest
+   errors=`expr $errors + $?`
+
+   nice -n 20 utils/regress
+   errors=`expr $errors + $?`
+
+   nice -n 20 utils/runtests $errors
 fi

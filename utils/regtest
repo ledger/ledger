@@ -1,5 +1,7 @@
 #!/bin/sh
 
+errors=0
+
 for test in \
     "-O nrl:checking" \
     "-O ^expenses"    \
@@ -15,4 +17,7 @@ for test in \
 do
   echo testing: $test
   python utils/confirm.py $test
+  errors=`expr $errors + $?`
 done
+
+exit $errors

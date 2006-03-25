@@ -1,0 +1,25 @@
+D $1,000.00
+
+A Liabilities:MasterCard
+
+@def foo(x)=x*1000
+
+2006/02/14 Buy
+  Broker            AAPL 10 @ $200.00  ; this is a little note [2006/10/10]
+  Broker            AAPL 10 @ $300.00
+  Bank     ; this is a comment
+
+2006/02/14 Sell
+  Bank              $2000.00 + $500.00
+  Broker            AAPL -5 [2005/10/20] {$200.0015} @ $500.00
+  Capital Gains	    $-1500.00
+
+2005/10/20 Stock option vesting schedule
+    Brokerage:Options  (1.00 COMP {$10.00}*min(((m-[2005/10/20])/3600/24)*0.15, 5000))
+    Equity:Options
+
+P 2006/02/27 00:00:00 COMP $15.00
+
+;2005/10/20 Stock option vesting schedule
+;    Brokerage:Time  (1+@now)
+;    Equity:Time

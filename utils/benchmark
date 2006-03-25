@@ -21,10 +21,9 @@ rsync -Lav --delete --delete-excluded \
     ./ $TMPDIR/ledger-verify/
 
 cd $TMPDIR/ledger-bench
-make all-clean
-./acprep --flat-opt
+make all-clean > /dev/null 2>&1
 
-if make ledger; then
+if ./acprep --flat-opt && make ledger; then
    strip ledger
    utils/speedcmp 50 ./ledger
 fi
