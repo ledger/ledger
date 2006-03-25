@@ -208,7 +208,7 @@ Ledger data:\n\
     ledger entry 3/25 chevron \\$20\n\
     ledger entry 3/25 chevron gas 20\n\
     ledger entry 3/25 chevron gas \\$20 checking\n\n\
-Final note: Ledger never modifies your data!  You are responsible for\n\
+A final note: Ledger never modifies your data!  You are responsible for\n\
 appending the output of this command to your Ledger file if you so choose."
 		<< std::endl;
       return 1;
