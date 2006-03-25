@@ -882,32 +882,38 @@ void write_textual_journal(journal_t& journal, std::string path,
   unsigned long index = 0;
   std::string   found;
 
+  if (path.empty()) {
+    if (! journal.sources.empty())
+      found = *journal.sources.begin();
+  } else {
 #ifdef HAVE_REALPATH
-  char buf1[PATH_MAX];
-  char buf2[PATH_MAX];
+    char buf1[PATH_MAX];
+    char buf2[PATH_MAX];
 
-  ::realpath(path.c_str(), buf1);
-  for (strings_list::iterator i = journal.sources.begin();
-       i != journal.sources.end();
-       i++) {
-    ::realpath((*i).c_str(), buf2);
-    if (std::strcmp(buf1, buf2) == 0) {
-      found = *i;
-      break;
+    ::realpath(path.c_str(), buf1);
+
+    for (strings_list::iterator i = journal.sources.begin();
+	 i != journal.sources.end();
+	 i++) {
+      ::realpath((*i).c_str(), buf2);
+      if (std::strcmp(buf1, buf2) == 0) {
+	found = *i;
+	break;
+      }
+      index++;
     }
-    index++;
-  }
 #else
-  for (strings_list::iterator i = journal.sources.begin();
-       i != journal.sources.end();
-       i++) {
-    if (path == *i) {
-      found = *i;
-      break;
+    for (strings_list::iterator i = journal.sources.begin();
+	 i != journal.sources.end();
+	 i++) {
+      if (path == *i) {
+	found = *i;
+	break;
+      }
+      index++;
     }
-    index++;
-  }
 #endif
+  }
 
   if (found.empty())
     throw new error(std::string("Journal does not refer to file '") +

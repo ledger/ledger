@@ -160,9 +160,8 @@ int parse_and_report(config_t& config, report_t& report,
 
   std::string first_arg;
   if (command == "w") {
-    if (arg == args.end())
-      throw new error("The 'output' command requires a file argument");
-    first_arg = *arg++;
+    if (arg != args.end())
+      first_arg = *arg++;
   }
   else if (command == "W") {
     if (report.output_file.empty())
@@ -184,6 +183,36 @@ int parse_and_report(config_t& config, report_t& report,
 
   std::auto_ptr<entry_t> new_entry;
   if (command == "e") {
+    if (arg == args.end()) {
+      std::cout << "\
+The entry command requires at least one argument, so Ledger can intelligently\n\
+create a new entry for you.  The possible arguments are:\n\
+    DATE  PAYEE  [ACCOUNT] [AMOUNT] [DRAW ACCOUNT]\n\n\
+Some things to note:\n\
+  - The ACCOUNT is optional; if no account is given, the last account affected\n\
+    by PAYEE is used.  If no payee can be found, the generic account 'Expenses'\n\
+    is used.\n\
+  - The AMOUNT is optional; if not specified, the same amount is used as the\n\
+    last time PAYEE was seen, or 0 if not applicable.\n\
+  - The AMOUNT does not require a commodity; if none is given, the commodity\n\
+    currently contained within ACCOUNT is used, or no commodity at all if\n\
+    either: the ACCOUNT was not found, or it contains more than one commodity.\n\
+  - Lastly, the DRAW ACCOUNT is optional; if not present, the last account\n\
+    drawn from by PAYEE is used, or the 'basket' account (specified with\n\
+    'A ACCOUNT' in your Ledger file) if that does not apply, or the generic\n\
+    account 'Equity' is used.\n\n\
+Here are a few examples, all of which may be equivalent depending on your\n\
+Ledger data:\n\
+    ledger entry 3/25 chevron\n\
+    ledger entry 3/25 chevron 20\n\
+    ledger entry 3/25 chevron \\$20\n\
+    ledger entry 3/25 chevron gas 20\n\
+    ledger entry 3/25 chevron gas \\$20 checking\n\n\
+A final note: Ledger never modifies your data!  You are responsible for\n\
+appending the output of this command to your Ledger file if you so choose."
+		<< std::endl;
+      return 1;
+    }
     new_entry.reset(derive_new_entry(*journal, arg, args.end()));
     if (! new_entry.get())
       return 1;
