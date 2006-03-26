@@ -50,10 +50,12 @@ std::time_t interval_t::first(const std::time_t moment) const
     struct std::tm * desc = std::localtime(&moment);
     if (years)
       desc->tm_mon = 0;
-    desc->tm_mday = 1;
-    desc->tm_hour = 0;
-    desc->tm_min  = 0;
-    desc->tm_sec  = 0;
+    desc->tm_mday  = 1;
+    desc->tm_hour  = 0;
+    desc->tm_min   = 0;
+    desc->tm_sec   = 0;
+    desc->tm_isdst = -1;
+
     quant = std::mktime(desc);
 
     std::time_t temp;
@@ -93,7 +95,7 @@ std::time_t interval_t::increment(const std::time_t moment) const
     desc->tm_hour  = 0;
     desc->tm_min   = 0;
     desc->tm_sec   = 0;
-    desc->tm_isdst = 0;
+    desc->tm_isdst = -1;
 
     then = std::mktime(desc);
   }
@@ -111,9 +113,10 @@ static void parse_inclusion_specifier(const std::string& word,
     throw interval_expr_error(std::string("Could not parse date mask: ") +
 			      word);
 
-  when.tm_hour = 0;
-  when.tm_min  = 0;
-  when.tm_sec  = 0;
+  when.tm_hour	= 0;
+  when.tm_min	= 0;
+  when.tm_sec	= 0;
+  when.tm_isdst = -1;
 
   bool saw_year = true;
   bool saw_mon  = true;
@@ -296,9 +299,10 @@ bool parse_date(const char * date_str, std::time_t * result, const int year)
   if (! parse_date_mask(date_str, &when))
     return false;
 
-  when.tm_hour = 0;
-  when.tm_min  = 0;
-  when.tm_sec  = 0;
+  when.tm_hour	= 0;
+  when.tm_min	= 0;
+  when.tm_sec	= 0;
+  when.tm_isdst = -1;
 
   if (when.tm_year == -1)
     when.tm_year = ((year == -1) ? now_year : (year - 1900));
@@ -348,6 +352,7 @@ bool quick_parse_date(const char * date_str, std::time_t * result)
   if (base == -1 || year != base_year) {
     struct std::tm when;
     std::memset(&when, 0, sizeof(when));
+    when.tm_isdst = -1;
 
     base_year    = year == -1 ? now_year + 1900 : year;
     when.tm_year = year == -1 ? now_year : year - 1900;

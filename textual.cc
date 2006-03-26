@@ -573,6 +573,8 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	last_desc = n ? n : "";
 
 	struct std::tm when;
+	std::memset(&when, 0, sizeof(struct std::tm));
+	when.tm_isdst = -1;
 	if (strptime(date.c_str(), "%Y/%m/%d %H:%M:%S", &when)) {
 	  time_in      = std::mktime(&when);
 	  last_account = account_stack.front()->find_account(p);
@@ -593,6 +595,8 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	    last_desc = p;
 
 	  struct std::tm when;
+	  std::memset(&when, 0, sizeof(struct std::tm));
+	  when.tm_isdst = -1;
 	  if (strptime(date.c_str(), "%Y/%m/%d %H:%M:%S", &when)) {
 	    clock_out_from_timelog(std::mktime(&when), journal);
 	    count++;
@@ -639,6 +643,8 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	std::strcpy(&date_buffer[std::strlen(date_field) + 1], time_field);
 
 	struct std::tm when;
+	std::memset(&when, 0, sizeof(struct std::tm));
+	when.tm_isdst = -1;
 	if (strptime(date_buffer, "%Y/%m/%d %H:%M:%S", &when)) {
 	  date = std::mktime(&when);
 	} else {
