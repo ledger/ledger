@@ -456,7 +456,7 @@ account_t * read_binary_account(char *& data, journal_t * journal,
   // account, throw away what we've learned about the recorded
   // journal's own master account.
 
-  if (master) {
+  if (master && acct != master) {
     delete acct;
     acct = master;
   }
