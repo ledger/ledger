@@ -137,10 +137,6 @@ void value_expr_t::compute(value_t& result, const details_t& details,
 {
   try {
   switch (kind) {
-  case ZERO:
-    result = 0L;
-    break;
-
   case ARG_INDEX:
     throw new compute_error("Cannot directly compute an arg_index");
 
@@ -589,7 +585,8 @@ void value_expr_t::compute(value_t& result, const details_t& details,
     break;
 
   case O_DEF:
-    throw new compute_error("Cannot compute function definition");
+    result = 0L;
+    break;
 
   case O_REF: {
     assert(left);
@@ -869,7 +866,7 @@ value_expr_t * parse_value_term(std::istream& in, scope_t * scope,
 	  node->left->arg_index = arg_index++;
 	  params->define(ident, node.release());
 	}
-	
+
 	if (peek_next_nonws(in) != '=') {
 	  in.get(c);
 	  unexpected(c, '=');
@@ -886,11 +883,8 @@ value_expr_t * parse_value_term(std::istream& in, scope_t * scope,
       node->set_left(new value_expr_t(value_expr_t::ARG_INDEX));
       node->left->arg_index = arg_index;
       node->set_right(def.release());
-      
-      scope->define(buf, node.release());
 
-      // Returning a dummy value in place of the definition
-      node.reset(new value_expr_t(value_expr_t::ZERO));
+      scope->define(buf, node.get());
     } else {
       assert(scope);
       value_expr_t * def = scope->lookup(buf);
@@ -1573,10 +1567,8 @@ bool write_value_expr(std::ostream&	   out,
   std::string symbol;
 
   switch (node->kind) {
-  case value_expr_t::ZERO:
-    out << '0';
-    break;
   case value_expr_t::ARG_INDEX:
+    out << node->arg_index;
     break;
 
   case value_expr_t::CONSTANT:
@@ -1712,7 +1704,13 @@ bool write_value_expr(std::ostream&	   out,
     out << "@arg" << node->arg_index;
     break;
   case value_expr_t::O_DEF:
-    out << "O_DEF";
+    out << "<def args=\"";
+    if (write_value_expr(out, node->left, relaxed, node_to_find, start_pos, end_pos))
+      found = true;
+    out << "\" value=\"";
+    if (write_value_expr(out, node->right, relaxed, node_to_find, start_pos, end_pos))
+      found = true;
+    out << "\">";
     break;
 
   case value_expr_t::O_REF:
@@ -1875,7 +1873,7 @@ bool write_value_expr(std::ostream&	   out,
 
   if (end_pos && node == node_to_find)
     *end_pos = (long)out.tellp() - 1;
-  
+
   return found;
 }
 
@@ -1890,9 +1888,6 @@ void dump_value_expr(std::ostream& out, const value_expr_t * node,
     out << " ";
 
   switch (node->kind) {
-  case value_expr_t::ZERO:
-    out << "ZERO";
-    break;
   case value_expr_t::ARG_INDEX:
     out << "ARG_INDEX - " << node->arg_index;
     break;

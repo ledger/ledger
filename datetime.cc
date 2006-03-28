@@ -253,6 +253,12 @@ void interval_t::parse(std::istream& in)
 	  months = 3 * quantity;
 	else if (word == "years")
 	  years = quantity;
+	else if (word == "hours")
+	  hours = quantity;
+	else if (word == "minutes")
+	  minutes = quantity;
+	else if (word == "seconds")
+	  seconds = quantity;
       }
       else if (word == "day")
 	days = 1;
@@ -264,6 +270,12 @@ void interval_t::parse(std::istream& in)
 	months = 3;
       else if (word == "year")
 	years = 1;
+      else if (word == "hour")
+	hours = 1;
+      else if (word == "minute")
+	minutes = 1;
+      else if (word == "second")
+	seconds = 1;
     }
     else if (word == "daily")
       days = 1;
@@ -279,6 +291,8 @@ void interval_t::parse(std::istream& in)
       months = 3;
     else if (word == "yearly")
       years = 1;
+    else if (word == "hourly")
+      hours = 1;
     else if (word == "this" || word == "last" || word == "next") {
       parse_date_words(in, word, &begin, &end);
     }

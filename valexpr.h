@@ -42,7 +42,6 @@ struct value_expr_t
     // Constants
     CONSTANT,
     ARG_INDEX,
-    ZERO,
 
     CONSTANTS,
 

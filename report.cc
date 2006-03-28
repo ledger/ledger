@@ -260,7 +260,7 @@ report_t::chain_xact_handlers(const std::string& command,
       for (std::string::size_type pos = descend_expr.find(';');
 	   pos != std::string::npos;
 	   beg = pos + 1, pos = descend_expr.find(';', beg))
-	descend_exprs.push_back(std::string(descend_expr, beg, pos));
+	descend_exprs.push_back(std::string(descend_expr, beg, pos - beg));
       descend_exprs.push_back(std::string(descend_expr, beg));
 
       for (std::list<std::string>::reverse_iterator i =

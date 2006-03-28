@@ -73,6 +73,16 @@ struct format_t
   std::string format_string;
   element_t * elements;
 
+  enum elision_style_t {
+    TRUNCATE_TRAILING,
+    TRUNCATE_MIDDLE,
+    TRUNCATE_LEADING,
+    ABBREVIATE
+  };
+
+  static elision_style_t elision_style;
+  static int abbrev_length;
+
   static bool ansi_codes;
   static bool ansi_invert;
 
@@ -96,6 +106,9 @@ struct format_t
   }
 
   static element_t * parse_elements(const std::string& fmt);
+
+  static std::string truncate(const std::string& str, unsigned int width,
+			      const bool is_account = false);
 
   void format(std::ostream& out, const details_t& details) const;
 };

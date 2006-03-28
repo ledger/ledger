@@ -38,7 +38,7 @@ class report_t;
 extern config_t * config;
 extern report_t * report;
 
-#define CONFIG_OPTIONS_SIZE 95
+#define CONFIG_OPTIONS_SIZE 97
 extern option_t config_options[CONFIG_OPTIONS_SIZE];
 
 void option_help(std::ostream& out);
