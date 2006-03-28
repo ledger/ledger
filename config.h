@@ -31,8 +31,12 @@ class config_t
   std::string prices_format;
   std::string pricesdb_format;
 
+  std::string date_input_format;
+
   std::string account;
   std::string pager;
+
+  unsigned long pricing_leeway;
 
   bool download_quotes;
   bool use_cache;

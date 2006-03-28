@@ -8,14 +8,15 @@ namespace ledger {
 
 class reconcile_transactions : public item_handler<transaction_t>
 {
-  value_t balance;
-  time_t  cutoff;
+  value_t    balance;
+  datetime_t cutoff;
 
   transactions_list xacts;
 
  public:
   reconcile_transactions(item_handler<transaction_t> * handler,
-			 const value_t& _balance, const time_t _cutoff)
+			 const value_t&    _balance,
+			 const datetime_t& _cutoff)
     : item_handler<transaction_t>(handler),
       balance(_balance), cutoff(_cutoff) {}
 

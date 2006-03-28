@@ -16,10 +16,8 @@ entry_t * derive_new_entry(journal_t& journal,
 
   entry_t * matching = NULL;
 
-  if (! parse_date((*i).c_str(), &added->_date))
-    throw new error("Bad date passed to 'entry'");
-
-  if (++i == end)
+  added->_date = *i++;
+  if (i == end)
     throw new error("Too few arguments to 'entry'");
 
   mask_t regexp(*i++);

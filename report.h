@@ -27,10 +27,9 @@ class report_t
   std::string forecast_limit;
   std::string reconcile_balance;
   std::string reconcile_date;
-  std::string date_format;
+  std::string date_output_format;
 
   unsigned long budget_flags;
-  unsigned long pricing_leeway;
 
   int head_entries;
   int tail_entries;

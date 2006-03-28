@@ -11,7 +11,7 @@ value_expr amount_expr;
 value_expr total_expr;
 
 std::auto_ptr<scope_t> global_scope;
-std::time_t terminus;
+datetime_t terminus;
 
 details_t::details_t(const transaction_t& _xact)
   : entry(_xact.entry), xact(&_xact), account(xact_account(_xact))
@@ -150,7 +150,7 @@ void value_expr_t::compute(value_t& result, const details_t& details,
     break;
 
   case F_NOW:
-    result = datetime_t(terminus);
+    result = terminus;
     break;
 
   case AMOUNT:
@@ -257,37 +257,37 @@ void value_expr_t::compute(value_t& result, const details_t& details,
   case DATE:
     if (details.xact && transaction_has_xdata(*details.xact) &&
 	transaction_xdata_(*details.xact).date)
-      result = datetime_t(transaction_xdata_(*details.xact).date);
+      result = transaction_xdata_(*details.xact).date;
     else if (details.xact)
-      result = datetime_t(details.xact->date());
+      result = details.xact->date();
     else if (details.entry)
-      result = datetime_t(details.entry->date());
+      result = details.entry->date();
     else
-      result = datetime_t(terminus);
+      result = terminus;
     break;
 
   case ACT_DATE:
     if (details.xact && transaction_has_xdata(*details.xact) &&
 	transaction_xdata_(*details.xact).date)
-      result = datetime_t(transaction_xdata_(*details.xact).date);
+      result = transaction_xdata_(*details.xact).date;
     else if (details.xact)
-      result = datetime_t(details.xact->actual_date());
+      result = details.xact->actual_date();
     else if (details.entry)
-      result = datetime_t(details.entry->actual_date());
+      result = details.entry->actual_date();
     else
-      result = datetime_t(terminus);
+      result = terminus;
     break;
 
   case EFF_DATE:
     if (details.xact && transaction_has_xdata(*details.xact) &&
 	transaction_xdata_(*details.xact).date)
-      result = datetime_t(transaction_xdata_(*details.xact).date);
+      result = transaction_xdata_(*details.xact).date;
     else if (details.xact)
-      result = datetime_t(details.xact->effective_date());
+      result = details.xact->effective_date();
     else if (details.entry)
-      result = datetime_t(details.entry->effective_date());
+      result = details.entry->effective_date();
     else
-      result = datetime_t(terminus);
+      result = terminus;
     break;
 
   case CLEARED:
@@ -388,19 +388,20 @@ void value_expr_t::compute(value_t& result, const details_t& details,
     value_expr_t * expr = find_leaf(context, 0, arg_index);
     expr->compute(result, details, context);
 
-    // jww (2006-03-05): Generate an error if result is not a DATETIME
-    std::time_t moment = (long)result;
-    struct std::tm * desc = std::localtime(&moment);
+    if (result.type != value_t::DATETIME)
+      throw new compute_error("Invalid date passed to year|month|day(date)",
+			      new valexpr_context(expr));
 
+    datetime_t& moment(*((datetime_t *)result.data));
     switch (kind) {
     case F_YEAR:
-      result = (long)desc->tm_year + 1900L;
+      result = (long)moment.year();
       break;
     case F_MONTH:
-      result = (long)desc->tm_mon + 1L;
+      result = (long)moment.month();
       break;
     case F_DAY:
-      result = (long)desc->tm_mday;
+      result = (long)moment.day();
       break;
     }
     break;
@@ -1036,7 +1037,7 @@ value_expr_t * parse_value_term(std::istream& in, scope_t * scope,
 
     node.reset(new value_expr_t(value_expr_t::CONSTANT));
     interval_t timespan(buf);
-    node->value = new value_t(datetime_t(timespan.first()));
+    node->value = new value_t(timespan.first());
     break;
   }
 

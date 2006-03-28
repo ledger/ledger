@@ -7,19 +7,12 @@
 #include <ctime>
 #include <cctype>
 
-std::time_t         now	      = std::time(NULL);
-int                 now_year  = std::localtime(&now)->tm_year;
+date_t       date_t::now(std::time(NULL));
+int	     date_t::current_year = date_t::now.year();
+std::string  date_t::input_format;
+std::string  date_t::output_format = "%Y/%m/%d";
 
-static std::time_t  base      = -1;
-static int	    base_year = -1;
-
-static const int    month_days[12] = {
-  31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
-};
-
-char input_format[128];
-
-const char * formats[] = {
+const char * date_t::formats[] = {
   "%Y/%m/%d",
   "%m/%d",
   "%Y.%m.%d",
@@ -34,29 +27,70 @@ const char * formats[] = {
   NULL
 };
 
-std::string datetime_t::date_format = "%Y/%m/%d";
+datetime_t datetime_t::now(std::time(NULL));
 
-std::time_t interval_t::first(const std::time_t moment) const
+namespace {
+  static std::time_t base = -1;
+  static int base_year = -1;
+
+  static const int month_days[12] = {
+    31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
+  };
+
+  bool parse_date_mask(const char * date_str, struct std::tm * result);
+  bool parse_date(const char * date_str, std::time_t * result,
+		  const int year = -1);
+  bool quick_parse_date(const char * date_str, std::time_t * result);
+}
+
+date_t::date_t(const std::string& _when)
 {
-  std::time_t quant = begin;
+  if (! quick_parse_date(_when.c_str(), &when))
+    throw new date_error
+      (std::string("Invalid date string: ") + _when);
+}
 
-  if (moment && std::difftime(moment, quant) > 0) {
+datetime_t::datetime_t(const std::string& _when)
+{
+  if (const char * p = std::strchr(_when.c_str(), ' ')) {
+    date_t date(std::string(_when, 0, p - _when.c_str()));
+
+    struct std::tm moment = *std::localtime(&date.when);
+    if (! strptime(++p, "%H:%M:%S", &moment))
+      throw new datetime_error
+	(std::string("Invalid date/time string: ") + _when);
+
+    when = std::mktime(&moment);
+  } else {
+    when = date_t(_when).when;
+  }
+}
+
+datetime_t interval_t::first(const datetime_t& moment) const
+{
+  datetime_t quant(begin);
+
+  if (moment && moment > quant) {
     // Find an efficient starting point for the upcoming while loop.
     // We want a date early enough that the range will be correct, but
     // late enough that we don't spend hundreds of thousands of loops
     // skipping through time.
 
-    struct std::tm * desc = std::localtime(&moment);
+    struct std::tm * desc = std::localtime(&moment.when);
+
     if (years)
       desc->tm_mon = 0;
-    desc->tm_mday = 1;
-    desc->tm_hour = 0;
-    desc->tm_min  = 0;
-    desc->tm_sec  = 0;
+    desc->tm_mday  = 1;
+
+    desc->tm_hour  = 0;
+    desc->tm_min   = 0;
+    desc->tm_sec   = 0;
+    desc->tm_isdst = -1;
+
     quant = std::mktime(desc);
 
-    std::time_t temp;
-    while (std::difftime(moment, temp = increment(quant)) >= 0) {
+    datetime_t temp;
+    while (moment >= (temp = increment(quant))) {
       if (quant == temp)
 	break;
       quant = temp;
@@ -66,145 +100,134 @@ std::time_t interval_t::first(const std::time_t moment) const
   return quant;
 }
 
-std::time_t interval_t::increment(const std::time_t moment) const
+datetime_t interval_t::increment(const datetime_t& moment) const
 {
-  std::time_t then = moment;
+  struct std::tm * desc = std::localtime(&moment.when);
 
-  if (years || months) {
-    struct std::tm * desc = std::localtime(&then);
+  if (years)
+    desc->tm_year += years;
+  if (months)
+    desc->tm_mon += months;
+  if (days)
+    desc->tm_mon += days;
 
-    if (years)
-      desc->tm_year += years;
+  desc->tm_hour += hours;
+  desc->tm_min  += minutes;
+  desc->tm_sec  += seconds;
 
-    if (months) {
-      desc->tm_mon += months;
+  desc->tm_isdst = -1;
 
-      if (desc->tm_mon > 11) {
-	desc->tm_year++;
-	desc->tm_mon -= 12;
-      }
-      else if (desc->tm_mon < 0) {
-	desc->tm_year--;
-	desc->tm_mon += 12;
-      }
+  return std::mktime(desc);
+}
+
+namespace {
+  void parse_inclusion_specifier(const std::string& word,
+				 datetime_t * begin, datetime_t * end)
+  {
+    struct std::tm when;
+
+    if (! parse_date_mask(word.c_str(), &when))
+      throw new datetime_error(std::string("Could not parse date mask: ") + word);
+
+    when.tm_hour	= 0;
+    when.tm_min	= 0;
+    when.tm_sec	= 0;
+    when.tm_isdst = -1;
+
+    bool saw_year = true;
+    bool saw_mon  = true;
+    bool saw_day  = true;
+
+    if (when.tm_year == -1) {
+      when.tm_year = date_t::current_year;
+      saw_year = false;
+    }
+    if (when.tm_mon == -1) {
+      when.tm_mon = 0;
+      saw_mon = false;
+    } else {
+      saw_year = false;		// don't increment by year if month used
+    }
+    if (when.tm_mday == -1) {
+      when.tm_mday = 1;
+      saw_day = false;
+    } else {
+      saw_mon = false;		// don't increment by month if day used
+      saw_year = false;		// don't increment by year if day used
     }
 
-    desc->tm_hour  = 0;
-    desc->tm_min   = 0;
-    desc->tm_sec   = 0;
-    desc->tm_isdst = 0;
-
-    then = std::mktime(desc);
-  }
-
-  return then + seconds;
-}
-
-static void parse_inclusion_specifier(const std::string& word,
-				      std::time_t *	 begin,
-				      std::time_t *	 end)
-{
-  struct std::tm when;
-
-  if (! parse_date_mask(word.c_str(), &when))
-    throw new datetime_error(std::string("Could not parse date mask: ") + word);
-
-  when.tm_hour = 0;
-  when.tm_min  = 0;
-  when.tm_sec  = 0;
-
-  bool saw_year = true;
-  bool saw_mon  = true;
-  bool saw_day  = true;
-
-  if (when.tm_year == -1) {
-    when.tm_year = now_year;
-    saw_year = false;
-  }
-  if (when.tm_mon == -1) {
-    when.tm_mon = 0;
-    saw_mon = false;
-  } else {
-    saw_year = false;		// don't increment by year if month used
-  }
-  if (when.tm_mday == -1) {
-    when.tm_mday = 1;
-    saw_day = false;
-  } else {
-    saw_mon = false;		// don't increment by month if day used
-    saw_year = false;		// don't increment by year if day used
-  }
-
-  if (begin) {
-    *begin = std::mktime(&when);
-    if (end)
-      *end = interval_t(saw_day ? 86400 : 0, saw_mon ? 1 : 0,
-			saw_year ? 1 : 0).increment(*begin);
-  }
-  else if (end) {
-    *end = std::mktime(&when);
-  }
-}
-
-static inline void read_lower_word(std::istream& in, std::string& word) {
-  in >> word;
-  for (int i = 0, l = word.length(); i < l; i++)
-    word[i] = std::tolower(word[i]);
-}
-
-static void parse_date_words(std::istream& in, std::string& word,
-			     std::time_t * begin, std::time_t * end)
-{
-  std::string type;
-  bool	      mon_spec = false;
-  char	      buf[32];
-
-  if (word == "this" || word == "last" || word == "next") {
-    type = word;
-    if (! in.eof())
-      read_lower_word(in, word);
-    else
-      word = "month";
-  } else {
-    type = "this";
-  }
-
-  if (word == "month") {
-    std::strftime(buf, 31, "%B", std::localtime(&now));
-    word = buf;
-    mon_spec = true;
-  }
-  else if (word == "year") {
-    std::strftime(buf, 31, "%Y", std::localtime(&now));
-    word = buf;
-  }
-
-  parse_inclusion_specifier(word, begin, end);
-
-  if (type == "last") {
-    if (mon_spec) {
-      if (begin)
-	*begin = interval_t(0, -1, 0).increment(*begin);
+    if (begin) {
+      *begin = std::mktime(&when);
       if (end)
-	*end   = interval_t(0, -1, 0).increment(*end);
-    } else {
-      if (begin)
-	*begin = interval_t(0, 0, -1).increment(*begin);
-      if (end)
-	*end   = interval_t(0, 0, -1).increment(*end);
+	*end = interval_t(saw_day ? 86400 : 0, saw_mon ? 1 : 0,
+			  saw_year ? 1 : 0).increment(*begin);
+    }
+    else if (end) {
+      *end = std::mktime(&when);
     }
   }
-  else if (type == "next") {
-    if (mon_spec) {
-      if (begin)
-	*begin = interval_t(0, 1, 0).increment(*begin);
-      if (end)
-	*end   = interval_t(0, 1, 0).increment(*end);
+
+  inline void read_lower_word(std::istream& in, std::string& word) {
+    in >> word;
+    for (int i = 0, l = word.length(); i < l; i++)
+      word[i] = std::tolower(word[i]);
+  }
+
+  void parse_date_words(std::istream& in, std::string& word,
+			datetime_t * begin, datetime_t * end)
+  {
+    std::string type;
+
+    bool mon_spec = false;
+    char buf[32];
+
+    if (word == "this" || word == "last" || word == "next") {
+      type = word;
+      if (! in.eof())
+	read_lower_word(in, word);
+      else
+	word = "month";
     } else {
-      if (begin)
-	*begin = interval_t(0, 0, 1).increment(*begin);
-      if (end)
-	*end   = interval_t(0, 0, 1).increment(*end);
+      type = "this";
+    }
+
+    if (word == "month") {
+      std::strftime(buf, 31, "%B", datetime_t::now.localtime());
+      word = buf;
+      mon_spec = true;
+    }
+    else if (word == "year") {
+      std::strftime(buf, 31, "%Y", datetime_t::now.localtime());
+      word = buf;
+    }
+
+    parse_inclusion_specifier(word, begin, end);
+
+    if (type == "last") {
+      if (mon_spec) {
+	if (begin)
+	  *begin = interval_t(0, -1, 0).increment(*begin);
+	if (end)
+	  *end   = interval_t(0, -1, 0).increment(*end);
+      } else {
+	if (begin)
+	  *begin = interval_t(0, 0, -1).increment(*begin);
+	if (end)
+	  *end   = interval_t(0, 0, -1).increment(*end);
+      }
+    }
+    else if (type == "next") {
+      if (mon_spec) {
+	if (begin)
+	  *begin = interval_t(0, 1, 0).increment(*begin);
+	if (end)
+	  *end   = interval_t(0, 1, 0).increment(*end);
+      } else {
+	if (begin)
+	  *begin = interval_t(0, 0, 1).increment(*begin);
+	if (end)
+	  *end   = interval_t(0, 0, 1).increment(*end);
+      }
     }
   }
 }
@@ -221,9 +244,9 @@ void interval_t::parse(std::istream& in)
 	int quantity = std::atol(word.c_str());
 	read_lower_word(in, word);
 	if (word == "days")
-	  seconds = 86400 * quantity;
+	  days = quantity;
 	else if (word == "weeks")
-	  seconds = 7 * 86400 * quantity;
+	  days = 7 * quantity;
 	else if (word == "months")
 	  months = quantity;
 	else if (word == "quarters")
@@ -232,9 +255,9 @@ void interval_t::parse(std::istream& in)
 	  years = quantity;
       }
       else if (word == "day")
-	seconds = 86400;
+	days = 1;
       else if (word == "week")
-	seconds = 7 * 86400;
+	days = 7;
       else if (word == "month")
 	months = 1;
       else if (word == "quarter")
@@ -243,11 +266,11 @@ void interval_t::parse(std::istream& in)
 	years = 1;
     }
     else if (word == "daily")
-      seconds = 86400;
+      days = 1;
     else if (word == "weekly")
-      seconds = 7 * 86400;
+      days = 7;
     else if (word == "biweekly")
-      seconds = 14 * 86400;
+      days = 14;
     else if (word == "monthly")
       months = 1;
     else if (word == "bimonthly")
@@ -277,42 +300,49 @@ void interval_t::parse(std::istream& in)
   }
 }
 
-bool parse_date_mask(const char * date_str, struct std::tm * result)
-{
-  for (const char ** f = formats; *f; f++) {
-    memset(result, INT_MAX, sizeof(struct std::tm));
-    if (strptime(date_str, *f, result))
-      return true;
-  }
-  return false;
-}
-
-bool parse_date(const char * date_str, std::time_t * result, const int year)
-{
-  struct std::tm when;
-
-  if (! parse_date_mask(date_str, &when))
+namespace {
+  bool parse_date_mask(const char * date_str, struct std::tm * result)
+  {
+    if (! date_t::input_format.empty()) {
+      std::memset(result, INT_MAX, sizeof(struct std::tm));
+      if (strptime(date_str, date_t::input_format.c_str(), result))
+	return true;
+    }
+    for (const char ** f = date_t::formats; *f; f++) {
+      std::memset(result, INT_MAX, sizeof(struct std::tm));
+      if (strptime(date_str, *f, result))
+	return true;
+    }
     return false;
+  }
 
-  when.tm_hour = 0;
-  when.tm_min  = 0;
-  when.tm_sec  = 0;
+  bool parse_date(const char * date_str, std::time_t * result, const int year)
+  {
+    struct std::tm when;
 
-  if (when.tm_year == -1)
-    when.tm_year = ((year == -1) ? now_year : (year - 1900));
+    if (! parse_date_mask(date_str, &when))
+      return false;
 
-  if (when.tm_mon == -1)
-    when.tm_mon = 0;
+    when.tm_hour = 0;
+    when.tm_min  = 0;
+    when.tm_sec  = 0;
 
-  if (when.tm_mday == -1)
-    when.tm_mday = 1;
+    if (when.tm_year == -1)
+      when.tm_year = ((year == -1) ? date_t::current_year : (year - 1900));
 
-  *result = std::mktime(&when);
+    if (when.tm_mon == -1)
+      when.tm_mon = 0;
 
-  return true;
-}
+    if (when.tm_mday == -1)
+      when.tm_mday = 1;
 
-bool quick_parse_date(const char * date_str, std::time_t * result)
-{
-  return parse_date(date_str, result, now_year + 1900);
+    *result = std::mktime(&when);
+
+    return true;
+  }
+
+  bool quick_parse_date(const char * date_str, std::time_t * result)
+  {
+    return parse_date(date_str, result, date_t::current_year + 1900);
+  }
 }

@@ -224,7 +224,7 @@ struct scope_t
 
   typedef std::map<const std::string, value_expr_t *>  symbol_map;
   typedef std::pair<const std::string, value_expr_t *> symbol_pair;
-  
+
   symbol_map symbols;
 
   scope_t(scope_t * _parent = NULL) : parent(_parent) {
@@ -267,8 +267,8 @@ struct scope_t
 
 extern std::auto_ptr<scope_t> global_scope;
 
-extern std::time_t terminus;
-extern bool	   initialized;
+extern datetime_t terminus;
+extern bool	  initialized;
 
 void init_value_expr();
 

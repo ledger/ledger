@@ -315,7 +315,7 @@ class value_t
 			    const bool keep_tag   = amount_t::keep_tag) const;
 
   value_t& add(const amount_t&  amount, const amount_t * cost = NULL);
-  value_t  value(const std::time_t moment) const;
+  value_t  value(const datetime_t& moment) const;
   void     reduce();
 
   value_t reduced() const {

@@ -4,7 +4,6 @@
 #include <map>
 #include <list>
 #include <string>
-#include <ctime>
 #include <iostream>
 
 #include "amount.h"
@@ -34,8 +33,8 @@ class transaction_t
   enum state_t { UNCLEARED, CLEARED, PENDING };
 
   entry_t *	   entry;
-  std::time_t	   _date;
-  std::time_t	   _date_eff;
+  datetime_t	   _date;
+  datetime_t	   _date_eff;
   account_t *	   account;
   amount_t	   amount;
   value_expr       amount_expr;
@@ -53,8 +52,8 @@ class transaction_t
   static bool    use_effective_date;
 
   transaction_t(account_t * _account = NULL)
-    : entry(NULL), _date(0), _date_eff(0), account(_account),
-      cost(NULL), state(UNCLEARED), flags(TRANSACTION_NORMAL),
+    : entry(NULL), account(_account), cost(NULL),
+      state(UNCLEARED), flags(TRANSACTION_NORMAL),
       beg_pos(0), beg_line(0), end_pos(0), end_line(0), data(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor transaction_t");
   }
@@ -62,24 +61,24 @@ class transaction_t
 		const amount_t&    _amount,
 		unsigned int	   _flags = TRANSACTION_NORMAL,
 		const std::string& _note  = "")
-    : entry(NULL), _date(0), _date_eff(0), account(_account),
-      amount(_amount), cost(NULL), state(UNCLEARED), flags(_flags),
+    : entry(NULL), account(_account), amount(_amount), cost(NULL),
+      state(UNCLEARED), flags(_flags),
       note(_note), beg_pos(0), beg_line(0), end_pos(0), end_line(0),
       data(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor transaction_t");
   }
   transaction_t(const transaction_t& xact)
-    : entry(xact.entry), _date(0), _date_eff(0), account(xact.account),
-      amount(xact.amount), cost(xact.cost ? new amount_t(*xact.cost) : NULL),
+    : entry(xact.entry), account(xact.account), amount(xact.amount),
+      cost(xact.cost ? new amount_t(*xact.cost) : NULL),
       state(xact.state), flags(xact.flags), note(xact.note),
       beg_pos(0), beg_line(0), end_pos(0), end_line(0), data(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor transaction_t");
   }
   ~transaction_t();
 
-  std::time_t actual_date() const;
-  std::time_t effective_date() const;
-  std::time_t date() const {
+  datetime_t actual_date() const;
+  datetime_t effective_date() const;
+  datetime_t date() const {
     if (use_effective_date)
       return effective_date();
     else
@@ -162,12 +161,12 @@ class entry_base_t
 class entry_t : public entry_base_t
 {
  public:
-  std::time_t _date;
-  std::time_t _date_eff;
+  datetime_t  _date;
+  datetime_t  _date_eff;
   std::string code;
   std::string payee;
 
-  entry_t() : _date(0), _date_eff(0) {
+  entry_t() {
     DEBUG_PRINT("ledger.memory.ctors", "ctor entry_t");
   }
   entry_t(const entry_t& e);
@@ -176,15 +175,15 @@ class entry_t : public entry_base_t
     DEBUG_PRINT("ledger.memory.dtors", "dtor entry_t");
   }
 
-  std::time_t actual_date() const {
+  datetime_t actual_date() const {
     return _date;
   }
-  std::time_t effective_date() const {
-    if (_date_eff == 0)
+  datetime_t effective_date() const {
+    if (! _date_eff)
       return _date;
     return _date_eff;
   }
-  std::time_t date() const {
+  datetime_t date() const {
     if (transaction_t::use_effective_date)
       return effective_date();
     else

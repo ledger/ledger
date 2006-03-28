@@ -6,31 +6,206 @@
 
 #include "error.h"
 
-struct interval_t;
+class date_error : public error {
+ public:
+  date_error(const std::string& reason) throw() : error(reason) {}
+  virtual ~date_error() throw() {}
+};
 
-struct datetime_t
+struct interval_t;
+class  datetime_t;
+
+class date_t
 {
+  date_t(const datetime_t& _when);
+
+ protected:
   std::time_t when;
 
-  static std::string date_format;
+ public:
+  static date_t       now;
+  static const char * formats[];
+  static int	      current_year;
+  static std::string  input_format;
+  static std::string  output_format;
 
-  datetime_t(const std::time_t _when) : when(_when) {}
+  date_t() : when(0) {}
+  date_t(const date_t& _when) : when(_when.when) {}
 
-  datetime_t& operator+=(const long secs) {
+  date_t(const std::time_t _when) : when(_when) {
+#if 0
+    struct std::tm * moment = std::localtime(&_when);
+    moment->tm_hour = 0;
+    moment->tm_min  = 0;
+    moment->tm_sec  = 0;
+    when = std::mktime(moment);
+#endif
+  }
+  date_t(const interval_t& period);
+  date_t(const std::string& _when);
+
+  virtual ~date_t() {}
+
+  date_t& operator=(const date_t& _when) {
+    when = _when.when;
+    return *this;
+  }
+  date_t& operator=(const std::time_t _when) {
+    return *this = date_t(_when);
+  }
+  date_t& operator=(const datetime_t& _when) {
+    return *this = date_t(_when);
+  }
+  date_t& operator=(const interval_t& period) {
+    return *this = date_t(period);
+  }
+  date_t& operator=(const std::string& _when) {
+    return *this = date_t(_when);
+  }
+
+  date_t& operator+=(const interval_t& period);
+
+  long operator-=(const date_t& date) {
+    return (when - date.when) / 86400;
+  }
+
+  virtual date_t& operator+=(const long days) {
+    // jww (2006-03-26): This is not accurate enough when DST is in effect!
+    assert(0);
+    when += days * 86400;
+    return *this;
+  }
+  virtual date_t& operator-=(const long days) {
+    assert(0);
+    when -= days * 86400;
+    return *this;
+  }
+
+#define DEF_DATE_OP(OP)				\
+  bool operator OP(const date_t& other) const {	\
+    return when OP other.when;			\
+  }
+
+  DEF_DATE_OP(<)
+  DEF_DATE_OP(<=)
+  DEF_DATE_OP(>)
+  DEF_DATE_OP(>=)
+  DEF_DATE_OP(==)
+  DEF_DATE_OP(!=)
+
+  operator bool() const {
+    return when != 0;
+  }
+  operator std::time_t() const {
+    return when;
+  }
+  operator std::string() const {
+    return to_string();
+  }
+
+  std::string to_string(const std::string& format = output_format) const {
+    char buf[64];
+    std::strftime(buf, 63, format.c_str(), localtime());
+    return buf;
+  }    
+
+  int year() const {
+    return localtime()->tm_year + 1900;
+  }
+  int month() const {
+    return localtime()->tm_mon + 1;
+  }
+  int day() const {
+    return localtime()->tm_mday;
+  }
+  int wday() const {
+    return localtime()->tm_wday;
+  }
+
+  std::tm * localtime() const {
+    return std::localtime(&when);
+  }
+
+  void write(std::ostream& out,
+	     const std::string& format = output_format) const {
+    out << to_string(format);
+  }    
+
+  friend class datetime_t;
+  friend struct interval_t;
+};
+
+inline long operator-(const date_t& left, const date_t& right) {
+  date_t temp(left);
+  temp -= right;
+  return temp;
+}
+
+inline date_t operator+(const date_t& left, const long days) {
+  date_t temp(left);
+  temp += days;
+  return temp;
+}
+
+inline date_t operator-(const date_t& left, const long days) {
+  date_t temp(left);
+  temp -= days;
+  return temp;
+}
+
+inline std::ostream& operator<<(std::ostream& out, const date_t& moment) {
+  moment.write(out);
+}
+
+class datetime_error : public error {
+ public:
+  datetime_error(const std::string& reason) throw() : error(reason) {}
+  virtual ~datetime_error() throw() {}
+};
+
+class datetime_t : public date_t
+{
+ public:
+  static datetime_t now;
+
+  datetime_t() : date_t() {}
+  datetime_t(const datetime_t& _when) : date_t(_when.when) {}
+  datetime_t(const date_t& _when) : date_t(_when) {}
+
+  datetime_t(const std::time_t _when) : date_t(_when) {}
+  datetime_t(const std::string& _when);
+
+  datetime_t& operator=(const datetime_t& _when) {
+    when = _when.when;
+    return *this;
+  }
+  datetime_t& operator=(const date_t& _when) {
+    when = _when.when;
+    return *this;
+  }
+  datetime_t& operator=(const std::time_t _when) {
+    return *this = datetime_t(_when);
+  }
+  datetime_t& operator=(const std::string& _when) {
+    return *this = datetime_t(_when);
+  }
+
+  long operator-=(const datetime_t& date) {
+    return when - date.when;
+  }
+
+  virtual datetime_t& operator+=(const long secs) {
     when += secs;
     return *this;
   }
-  datetime_t& operator-=(const long secs) {
+  virtual datetime_t& operator-=(const long secs) {
     when -= secs;
     return *this;
   }
 
-  datetime_t& operator=(const interval_t& period);
-  datetime_t& operator+=(const interval_t& period);
-
-#define DEF_DATETIME_OP(OP)			\
-  bool operator OP(const datetime_t& other) {	\
-    return when OP other.when;			\
+#define DEF_DATETIME_OP(OP)				\
+  bool operator OP(const datetime_t& other) const {	\
+    return when OP other.when;				\
   }
 
   DEF_DATETIME_OP(<)
@@ -40,96 +215,98 @@ struct datetime_t
   DEF_DATETIME_OP(==)
   DEF_DATETIME_OP(!=)
 
-  operator bool() const {
-    return when != 0;
+  int hour() const {
+    return localtime()->tm_hour;
   }
-  operator long() const {
-    return (long)when;
+  int min() const {
+    return localtime()->tm_min;
   }
-  operator double() const {
-    return (double)when;
-  }
-
-  int year() const {
-    struct std::tm * desc = std::localtime(&when);
-    return desc->tm_year + 1900;
-  }
-  int month() const {
-    struct std::tm * desc = std::localtime(&when);
-    return desc->tm_mon + 1;
-  }
-  int day() const {
-    struct std::tm * desc = std::localtime(&when);
-    return desc->tm_mday;
+  int sec() const {
+    return localtime()->tm_sec;
   }
 };
 
-inline std::ostream& operator<<(std::ostream& out, const datetime_t& moment) {
-  char buf[32];
-  std::strftime(buf, 31, datetime_t::date_format.c_str(),
-		std::localtime(&moment.when));
-  out << buf;
+inline long operator-(const datetime_t& left, const datetime_t& right) {
+  datetime_t temp(left);
+  temp -= right;
+  return temp;
 }
 
-inline long operator-(const datetime_t& left, const datetime_t& right) {
-  return (long)left.when - (long)right.when;
+inline datetime_t operator+(const datetime_t& left, const long seconds) {
+  datetime_t temp(left);
+  temp += seconds;
+  return temp;
+}
+
+inline datetime_t operator-(const datetime_t& left, const long seconds) {
+  datetime_t temp(left);
+  temp -= seconds;
+  return temp;
+}
+
+inline std::ostream& operator<<(std::ostream& out,
+				const datetime_t& moment) {
+  char buf[64];
+  std::strftime(buf, 63, (date_t::output_format + " %H:%M:%S").c_str(),
+		moment.localtime());
+  out << buf;
 }
 
 struct interval_t
 {
-  unsigned int years;
-  unsigned int months;
-  unsigned int seconds;
-  std::time_t  begin;
-  std::time_t  end;
+  unsigned short years;
+  unsigned short months;
+  unsigned short days;
+  unsigned short hours;
+  unsigned short minutes;
+  unsigned short seconds;
 
-  interval_t(int _seconds = 0, int _months = 0, int _years = 0,
-	     std::time_t _begin = 0, std::time_t _end = 0)
-    : years(_years), months(_months), seconds(_seconds),
-      begin(_begin), end(_end) {
-  }
+  datetime_t begin;
+  datetime_t end;
+
+  interval_t(int _days = 0, int _months = 0, int _years = 0,
+	     const date_t& _begin = date_t(),
+	     const date_t& _end   = date_t())
+    : years(_years), months(_months), days(_days),
+      hours(0), minutes(0), seconds(0),
+      begin(_begin), end(_end) {}
+
   interval_t(const std::string& desc)
-    : years(0), months(0), seconds(0), begin(0), end(0) {
+    : years(0), months(0), days(0),
+      hours(0), minutes(0), seconds(0) {
     std::istringstream stream(desc);
     parse(stream);
   }
 
   operator bool() const {
-    return seconds > 0 || months > 0 || years > 0;
+    return (years > 0 || months > 0  || days > 0 ||
+	    hours > 0 || minutes > 0 || seconds > 0);
   }
 
-  void start(const std::time_t moment) {
+  void start(const datetime_t& moment) {
     begin = first(moment);
   }
-  std::time_t first(const std::time_t moment = 0) const;
-  std::time_t increment(const std::time_t) const;
+  datetime_t first(const datetime_t& moment = datetime_t()) const;
+  datetime_t increment(const datetime_t&) const;
 
   void parse(std::istream& in);
 };
 
-inline datetime_t& datetime_t::operator=(const interval_t& period) {
-  when = period.first();
-  return *this;
-}
-inline datetime_t& datetime_t::operator+=(const interval_t& period) {
-  when = period.increment(when);
-  return *this;
+inline date_t::date_t(const interval_t& period) {
+  when = period.first().when;
 }
 
-extern std::time_t  now;
-extern int	    now_year;
-extern char         input_format[128];
-extern const char * formats[];
+inline date_t& date_t::operator+=(const interval_t& period) {
+  return *this = period.increment(*this);
+}
 
-bool parse_date_mask(const char * date_str, struct std::tm * result);
-bool parse_date(const char * date_str, std::time_t * result,
-		const int year = -1);
-bool quick_parse_date(const char * date_str, std::time_t * result);
-
-class datetime_error : public error {
- public:
-  datetime_error(const std::string& reason) throw() : error(reason) {}
-  virtual ~datetime_error() throw() {}
-};
+inline date_t::date_t(const datetime_t& _when) {
+  assert(0);
+  struct std::tm * moment = _when.localtime();
+  moment->tm_hour = 0;
+  moment->tm_min  = 0;
+  moment->tm_sec  = 0;
+  when = std::mktime(moment);
+}
 
 #endif // _DATETIME_H
