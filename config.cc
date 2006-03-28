@@ -7,7 +7,6 @@
 #include "walk.h"
 
 #include <fstream>
-#include <ctime>
 #include <cstdlib>
 #ifdef WIN32
 #include <io.h>
@@ -96,12 +95,14 @@ config_t::config_t()
   prices_format	       = "%[%Y/%m/%d %H:%M:%S %Z]   %-10A %12t %12T\n";
   pricesdb_format      = "P %[%Y/%m/%d %H:%M:%S] %A %t\n";
 
-  download_quotes    = false;
-  use_cache	     = false;
-  cache_dirty        = false;
-  debug_mode         = false;
-  verbose_mode       = false;
-  trace_mode         = false;
+  pricing_leeway       = 24 * 3600;
+
+  download_quotes      = false;
+  use_cache	       = false;
+  cache_dirty	       = false;
+  debug_mode	       = false;
+  verbose_mode	       = false;
+  trace_mode	       = false;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -109,9 +110,7 @@ config_t::config_t()
 void trace(const std::string& cat, const std::string& str)
 {
   char buf[32];
-  std::time_t now = std::time(NULL);
-  std::strftime(buf, 31, "%H:%M:%S", std::localtime(&now));
-
+  std::strftime(buf, 31, "%H:%M:%S", datetime_t::now.localtime());
   std::cerr << buf << " " << cat << ": " << str << std::endl;
 }
 

@@ -836,7 +836,7 @@ value_t::operator double() const
   case INTEGER:
     return *((long *) data);
   case DATETIME:
-    return *((datetime_t *) data);
+    throw new value_error("Cannot convert a date/time to a double");
   case AMOUNT:
     return *((amount_t *) data);
   case BALANCE:
@@ -1111,7 +1111,7 @@ void value_t::abs()
   }
 }
 
-value_t value_t::value(const std::time_t moment) const
+value_t value_t::value(const datetime_t& moment) const
 {
   switch (type) {
   case BOOLEAN:
@@ -1225,18 +1225,18 @@ value_t value_t::date() const
   case BOOLEAN:
     throw new value_error("Cannot find the date of a boolean");
   case INTEGER:
-    return 0L;
+    return datetime_t();
   case DATETIME:
     return *this;
 
   case AMOUNT:
-    return ((amount_t *) data)->date();
+    return datetime_t(((amount_t *) data)->date());
 
   case BALANCE:
-    return (long)((balance_t *) data)->date();
+    return datetime_t(((balance_t *) data)->date());
 
   case BALANCE_PAIR:
-    return (long)((balance_pair_t *) data)->quantity.date();
+    return datetime_t(((balance_pair_t *) data)->quantity.date());
 
   default:
     assert(0);

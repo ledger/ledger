@@ -12,12 +12,12 @@ extern "C" {
 #include <expat.h>           // expat XML parser
 #elif defined(HAVE_XMLPARSE)
 #include <xmlparse.h>        // expat XML parser
-#else
-#error "No XML parser library defined."
 #endif
 }
 
 namespace ledger {
+
+#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
 
 static XML_Parser    current_parser;
 static unsigned int  count;
@@ -83,10 +83,10 @@ static void endElement(void *userData, const char *name)
     curr_entry = NULL;
   }
   else if (std::strcmp(name, "en:date") == 0) {
-    quick_parse_date(data.c_str(), &curr_entry->_date);
+    curr_entry->_date = data;
   }
   else if (std::strcmp(name, "en:date_eff") == 0) {
-    quick_parse_date(data.c_str(), &curr_entry->_date_eff);
+    curr_entry->_date_eff = data;
   }
   else if (std::strcmp(name, "en:code") == 0) {
     curr_entry->code = data;
@@ -246,6 +246,8 @@ unsigned int xml_parser_t::parse(std::istream&	     in,
   return count;
 }
 
+#endif // defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
+
 void xml_write_amount(std::ostream& out, const amount_t& amount,
 		      const int depth = 0)
 {
@@ -367,16 +369,14 @@ void output_xml_string(std::ostream& out, const std::string& str)
 
 void format_xml_entries::format_last_entry()
 {
-  char buf[32];
-  std::strftime(buf, 31, "%Y/%m/%d", std::localtime(&last_entry->_date));
-
   output_stream << "  <entry>\n"
-		<< "    <en:date>" << buf << "</en:date>\n";
+		<< "    <en:date>" << last_entry->_date.to_string("%Y/%m/%d")
+		<< "</en:date>\n";
 
-  if (last_entry->_date_eff) {
-    std::strftime(buf, 31, "%Y/%m/%d", std::localtime(&last_entry->_date_eff));
-    output_stream << "    <en:date_eff>" << buf << "</en:date_eff>\n";
-  }
+  if (last_entry->_date_eff)
+    output_stream << "    <en:date_eff>"
+		  << last_entry->_date_eff.to_string("%Y/%m/%d")
+		  << "</en:date_eff>\n";
 
   if (! last_entry->code.empty()) {
     output_stream << "    <en:code>";
@@ -403,14 +403,15 @@ void format_xml_entries::format_last_entry()
 
       output_stream << "      <transaction>\n";
 
-      if ((*i)->_date) {
-	std::strftime(buf, 31, "%Y/%m/%d", std::localtime(&(*i)->_date));
-	output_stream << "        <tr:date>" << buf << "</tr:date>\n";
-      }
-      if ((*i)->_date_eff) {
-	std::strftime(buf, 31, "%Y/%m/%d", std::localtime(&(*i)->_date_eff));
-	output_stream << "        <tr:date_eff>" << buf << "</tr:date_eff>\n";
-      }
+      if ((*i)->_date)
+	output_stream << "        <tr:date>"
+		      << (*i)->_date.to_string("%Y/%m/%d")
+		      << "</tr:date>\n";
+
+      if ((*i)->_date_eff)
+	output_stream << "        <tr:date_eff>"
+		      << (*i)->_date_eff.to_string("%Y/%m/%d")
+		      << "</tr:date_eff>\n";
 
       if ((*i)->state == transaction_t::CLEARED)
 	output_stream << "        <tr:cleared/>\n";

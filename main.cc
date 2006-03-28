@@ -8,7 +8,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <ctime>
 
 #include "acconf.h"
 
@@ -28,7 +27,7 @@ int parse_and_report(config_t& config, report_t& report,
 {
   // Configure the terminus for value expressions
 
-  ledger::terminus = now;
+  ledger::terminus = datetime_t::now;
 
   // Parse command-line arguments, and those set in the environment
 
@@ -49,7 +48,8 @@ int parse_and_report(config_t& config, report_t& report,
 
   TRACE(main, "Processing options and environment variables");
 
-  process_environment(ledger::config_options, envp, "LEDGER_");
+  process_environment(ledger::config_options,
+		      const_cast<const char **>(envp), "LEDGER_");
 
 #if 1
   // These are here for backwards compatability, but are deprecated.
@@ -175,11 +175,10 @@ int parse_and_report(config_t& config, report_t& report,
 
   // If downloading is to be supported, configure the updater
 
-  // jww (2006-03-23): Should the pricing_leeway be in config_t?
-  // Should download_quotes be in report_t?
   if (! commodity_base_t::updater && config.download_quotes)
     commodity_base_t::updater =
-      new quotes_by_script(config.price_db, report.pricing_leeway, config.cache_dirty);
+      new quotes_by_script(config.price_db, config.pricing_leeway,
+			   config.cache_dirty);
 
   std::auto_ptr<entry_t> new_entry;
   if (command == "e") {
@@ -325,13 +324,8 @@ appending the output of this command to your Ledger file if you so choose."
     formatter = new format_entries(*out, *format);
   else if (command == "x")
     formatter = new format_emacs_transactions(*out);
-#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
   else if (command == "X")
     formatter = new format_xml_entries(*out, report.show_totals);
-#else
-  else if (command == "X")
-    throw new error("XML support was not compiled into this copy of Ledger");
-#endif
   else
     formatter = new format_transactions(*out, *format);
 

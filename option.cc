@@ -93,7 +93,7 @@ void process_arguments(option_t * options, int argc, char ** argv,
       if ((*i)[2] == '\0')
 	break;
 
-      char * name  = *i + 2;
+      char * name = *i + 2;
       if (char * p = std::strchr(name, '=')) {
 	*p++ = '\0';
 	value = p;
@@ -132,17 +132,17 @@ void process_arguments(option_t * options, int argc, char ** argv,
   }
 }
 
-void process_environment(option_t * options, char ** envp,
+void process_environment(option_t * options, const char ** envp,
 			 const std::string& tag)
 {
   const char * tag_p   = tag.c_str();
   unsigned int tag_len = tag.length();
 
-  for (char ** p = envp; *p; p++)
+  for (const char ** p = envp; *p; p++)
     if (! tag_p || std::strncmp(*p, tag_p, tag_len) == 0) {
       char   buf[128];
       char * r = buf;
-      char * q;
+      const char * q;
       for (q = *p + tag_len;
 	   *q && *q != '=' && r - buf < 128;
 	   q++)
@@ -459,32 +459,28 @@ OPT_BEGIN(effective, "") {
 OPT_BEGIN(begin, "b:") {
   char buf[128];
   interval_t interval(optarg);
-  if (interval.begin)
-    std::strftime(buf, 127, formats[0], std::localtime(&interval.begin));
-  else
+  if (! interval.begin)
     throw new error(std::string("Could not determine beginning of period '") +
 		    optarg + "'");
 
   if (! report->predicate.empty())
     report->predicate += "&";
   report->predicate += "d>=[";
-  report->predicate += buf;
+  report->predicate += interval.begin.to_string();
   report->predicate += "]";
 } OPT_END(begin);
 
 OPT_BEGIN(end, "e:") {
   char buf[128];
   interval_t interval(optarg);
-  if (interval.end)
-    std::strftime(buf, 127, formats[0], std::localtime(&interval.end));
-  else
+  if (! interval.end)
     throw new error(std::string("Could not determine end of period '") +
 		    optarg + "'");
 
   if (! report->predicate.empty())
     report->predicate += "&";
   report->predicate += "d<[";
-  report->predicate += buf;
+  report->predicate += interval.end.to_string();
   report->predicate += "]";
 
   terminus = interval.end;
@@ -547,12 +543,11 @@ OPT_BEGIN(format, "F:") {
 } OPT_END(format);
 
 OPT_BEGIN(date_format, "y:") {
-  report->date_format = optarg;
+  report->date_output_format = optarg;
 } OPT_END(date_format);
 
 OPT_BEGIN(input_date_format, ":") {
-  std::strcpy(input_format, optarg);
-  formats[0] = input_format;
+  config->date_input_format = optarg;
 } OPT_END(input_date_format);
 
 OPT_BEGIN(balance_format, ":") {
@@ -684,26 +679,21 @@ OPT_BEGIN(period, "p:") {
   // modify the calculation predicate (via the --begin and --end
   // options) to take this into account.
 
-  char buf[128];
   interval_t interval(report->report_period);
 
   if (interval.begin) {
-    std::strftime(buf, 127, formats[0], std::localtime(&interval.begin));
-
     if (! report->predicate.empty())
       report->predicate += "&";
     report->predicate += "d>=[";
-    report->predicate += buf;
+    report->predicate += interval.begin.to_string();
     report->predicate += "]";
   }
 
   if (interval.end) {
-    std::strftime(buf, 127, formats[0], std::localtime(&interval.end));
-
     if (! report->predicate.empty())
       report->predicate += "&";
     report->predicate += "d<[";
-    report->predicate += buf;
+    report->predicate += interval.end.to_string();
     report->predicate += "]";
 
     terminus = interval.end;
@@ -730,6 +720,13 @@ OPT_BEGIN(monthly, "M") {
   else
     report->report_period = std::string("monthly ") + report->report_period;
 } OPT_END(monthly);
+
+OPT_BEGIN(quarterly, "") {
+  if (report->report_period.empty())
+    report->report_period = "quarterly";
+  else
+    report->report_period = std::string("quarterly ") + report->report_period;
+} OPT_END(quarterly);
 
 OPT_BEGIN(yearly, "Y") {
   if (report->report_period.empty())
@@ -841,7 +838,7 @@ OPT_BEGIN(price_db, ":") {
 } OPT_END(price_db);
 
 OPT_BEGIN(price_exp, "Z:") {
-  report->pricing_leeway = std::atol(optarg) * 60;
+  config->pricing_leeway = std::atol(optarg) * 60;
 } OPT_END(price_exp);
 
 OPT_BEGIN(download, "Q") {
@@ -886,8 +883,8 @@ namespace {
     amount_t price(equals + 1);
 
     if (commodity_t * commodity = commodity_t::find_or_create(symbol)) {
-      commodity->add_price(now, price);
-      commodity->history()->bogus_time = now;
+      commodity->add_price(datetime_t::now, price);
+      commodity->history()->bogus_time = datetime_t::now;
     }
   }
 }
@@ -1012,6 +1009,7 @@ option_t config_options[CONFIG_OPTIONS_SIZE] = {
   { "prices-format", '\0', true, opt_prices_format, false },
   { "print-format", '\0', true, opt_print_format, false },
   { "quantity", 'O', false, opt_quantity, false },
+  { "quarterly", '\0', false, opt_quarterly, false },
   { "real", 'R', false, opt_real, false },
   { "reconcile", '\0', true, opt_reconcile, false },
   { "reconcile-date", '\0', true, opt_reconcile_date, false },

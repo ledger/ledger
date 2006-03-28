@@ -10,15 +10,15 @@
 namespace ledger {
 
 void quotes_by_script::operator()(commodity_base_t& commodity,
-				  const std::time_t moment,
-				  const std::time_t date,
-				  const std::time_t last,
+				  const datetime_t& moment,
+				  const datetime_t& date,
+				  const datetime_t& last,
 				  amount_t&	    price)
 {
   DEBUG_CLASS("ledger.quotes.download");
 
   DEBUG_PRINT_("commodity: " << commodity.symbol);
-  DEBUG_PRINT_TIME_(now);
+  DEBUG_PRINT_TIME_(datetime_t::now);
   DEBUG_PRINT_TIME_(moment);
   DEBUG_PRINT_TIME_(date);
   DEBUG_PRINT_TIME_(last);
@@ -27,10 +27,9 @@ void quotes_by_script::operator()(commodity_base_t& commodity,
   DEBUG_PRINT_("pricing_leeway is " << pricing_leeway);
 
   if ((commodity.history &&
-       std::difftime(now, commodity.history->last_lookup) < pricing_leeway) ||
-      std::difftime(now, last) < pricing_leeway ||
-      (price && std::difftime(moment, date) > 0 &&
-       std::difftime(moment, date) <= pricing_leeway))
+       (datetime_t::now - commodity.history->last_lookup) < pricing_leeway) ||
+      (datetime_t::now - last) < pricing_leeway ||
+      (price && moment > date && (moment - date) <= pricing_leeway))
     return;
 
   using namespace std;
@@ -59,20 +58,19 @@ void quotes_by_script::operator()(commodity_base_t& commodity,
     DEBUG_PRINT_("downloaded quote: " << buf);
 
     price.parse(buf);
-    commodity.add_price(now, price);
+    commodity.add_price(datetime_t::now, price);
 
-    commodity.history->last_lookup = now;
+    commodity.history->last_lookup = datetime_t::now;
     cache_dirty = true;
 
     if (price && ! price_db.empty()) {
-      strftime(buf, 127, "%Y/%m/%d %H:%M:%S", localtime(&now));
 #if defined(__GNUG__) && __GNUG__ < 3
       ofstream database(price_db.c_str(), ios::out | ios::app);
 #else
       ofstream database(price_db.c_str(), ios_base::out | ios_base::app);
 #endif
-      database << "P " << buf << " " << commodity.symbol
-	       << " " << price << endl;
+      database << "P " << datetime_t::now.to_string("%Y/%m/%d %H:%M:%S")
+	       << " " << commodity.symbol << " " << price << endl;
     }
   } else {
     throw new error(std::string("Failed to download price for '") +

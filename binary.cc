@@ -3,7 +3,6 @@
 #include "binary.h"
 
 #include <fstream>
-#include <ctime>
 #include <sys/stat.h>
 
 #define TIMELOG_SUPPORT 1
@@ -12,9 +11,9 @@ namespace ledger {
 
 static unsigned long binary_magic_number = 0xFFEED765;
 #ifdef DEBUG_ENABLED
-static unsigned long format_version      = 0x00020609;
+static unsigned long format_version      = 0x0002060b;
 #else
-static unsigned long format_version      = 0x00020608;
+static unsigned long format_version      = 0x0002060a;
 #endif
 
 static account_t **	   accounts;
@@ -34,49 +33,95 @@ extern char *		   bigints_next;
 extern unsigned int	   bigints_index;
 extern unsigned int	   bigints_count;
 
-#if DEBUG_LEVEL >= ALPHA
-#define read_binary_guard(in, id) {		\
-  unsigned short guard;				\
-  in.read((char *)&guard, sizeof(guard));	\
-  assert(guard == id);				\
+template <typename T>
+inline void read_binary_number_nocheck(std::istream& in, T& num) {
+  in.read((char *)&num, sizeof(num));
 }
+
+template <typename T>
+inline T read_binary_number_nocheck(std::istream& in) {
+  T num;
+  read_binary_number_nocheck(in, num);
+  return num;
+}
+
+template <typename T>
+inline void read_binary_number_nocheck(char *& data, T& num) {
+  num = *((T *) data);
+  data += sizeof(T);
+}
+
+template <typename T>
+inline T read_binary_number_nocheck(char *& data) {
+  T num;
+  read_binary_number_nocheck(data, num);
+  return num;
+}
+
+#if DEBUG_LEVEL >= ALPHA
+static void assert_failed() {
+  assert(0);
+}
+#define read_binary_guard(in, id)				\
+  if (read_binary_number_nocheck<unsigned short>(in) != id)	\
+      assert_failed();
 #else
 #define read_binary_guard(in, id)
 #endif
 
 template <typename T>
 inline void read_binary_number(std::istream& in, T& num) {
+  read_binary_guard(in, 0x2003);
   in.read((char *)&num, sizeof(num));
+  read_binary_guard(in, 0x2004);
+}
+
+inline void read_binary_bool(std::istream& in, bool& num) {
+  read_binary_guard(in, 0x2005);
+  unsigned char val;
+  in.read((char *)&val, sizeof(val));
+  num = val == 1;
+  read_binary_guard(in, 0x2006);
 }
 
 template <typename T>
 inline void read_binary_long(std::istream& in, T& num) {
+  read_binary_guard(in, 0x2001);
+
   unsigned char len;
-  in.read((char *)&len, sizeof(unsigned char));
+  read_binary_number_nocheck(in, len);
 
   num = 0;
   unsigned char temp;
   if (len > 3) {
-    in.read((char *)&temp, sizeof(unsigned char));
+    read_binary_number_nocheck(in, temp);
     num |= ((unsigned long)temp) << 24;
   }
   if (len > 2) {
-    in.read((char *)&temp, sizeof(unsigned char));
+    read_binary_number_nocheck(in, temp);
     num |= ((unsigned long)temp) << 16;
   }
   if (len > 1) {
-    in.read((char *)&temp, sizeof(unsigned char));
+    read_binary_number_nocheck(in, temp);
     num |= ((unsigned long)temp) << 8;
   }
 
-  in.read((char *)&temp, sizeof(unsigned char));
+  read_binary_number_nocheck(in, temp);
   num |= ((unsigned long)temp);
+
+  read_binary_guard(in, 0x2002);
 }
 
 template <typename T>
 inline T read_binary_number(std::istream& in) {
   T num;
   read_binary_number(in, num);
+  return num;
+}
+
+inline bool read_binary_bool(std::istream& in) {
+  bool num;
+  read_binary_bool(in, num);
   return num;
 }
 
@@ -92,10 +137,10 @@ inline void read_binary_string(std::istream& in, std::string& str)
   read_binary_guard(in, 0x3001);
 
   unsigned char len;
-  read_binary_number(in, len);
+  read_binary_number_nocheck(in, len);
   if (len == 0xff) {
     unsigned short slen;
-    read_binary_number(in, slen);
+    read_binary_number_nocheck(in, slen);
     char * buf = new char[slen + 1];
     in.read(buf, slen);
     buf[slen] = '\0';
@@ -114,8 +159,7 @@ inline void read_binary_string(std::istream& in, std::string& str)
   read_binary_guard(in, 0x3002);
 }
 
-inline std::string read_binary_string(std::istream& in)
-{
+inline std::string read_binary_string(std::istream& in) {
   std::string temp;
   read_binary_string(in, temp);
   return temp;
@@ -123,37 +167,58 @@ inline std::string read_binary_string(std::istream& in)
 
 template <typename T>
 inline void read_binary_number(char *& data, T& num) {
+  read_binary_guard(data, 0x2003);
   num = *((T *) data);
   data += sizeof(T);
+  read_binary_guard(data, 0x2004);
+}
+
+inline void read_binary_bool(char *& data, bool& num) {
+  read_binary_guard(data, 0x2005);
+  unsigned char val = *((unsigned char *) data);
+  data += sizeof(unsigned char);
+  num = val == 1;
+  read_binary_guard(data, 0x2006);
 }
 
 template <typename T>
 inline void read_binary_long(char *& data, T& num) {
-  unsigned char len = *((unsigned char *)data++);
+  read_binary_guard(data, 0x2001);
+
+  unsigned char len;
+  read_binary_number_nocheck(data, len);
 
   num = 0;
   unsigned char temp;
   if (len > 3) {
-    temp =  *((unsigned char *)data++);
+    read_binary_number_nocheck(data, temp);
     num |= ((unsigned long)temp) << 24;
   }
   if (len > 2) {
-    temp =  *((unsigned char *)data++);
+    read_binary_number_nocheck(data, temp);
     num |= ((unsigned long)temp) << 16;
   }
   if (len > 1) {
-    temp =  *((unsigned char *)data++);
+    read_binary_number_nocheck(data, temp);
     num |= ((unsigned long)temp) << 8;
   }
 
-  temp =  *((unsigned char *)data++);
+  read_binary_number_nocheck(data, temp);
   num |= ((unsigned long)temp);
+
+  read_binary_guard(data, 0x2002);
 }
 
 template <typename T>
 inline T read_binary_number(char *& data) {
   T num;
   read_binary_number(data, num);
+  return num;
+}
+
+inline bool read_binary_bool(char *& data) {
+  bool num;
+  read_binary_bool(data, num);
   return num;
 }
 
@@ -166,18 +231,15 @@ inline T read_binary_long(char *& data) {
 
 inline void read_binary_string(char *& data, std::string& str)
 {
-#if DEBUG_LEVEL >= ALPHA
-  unsigned short guard;
-  guard = *((unsigned short *) data);
-  data += sizeof(unsigned short);
-  assert(guard == 0x3001);
-#endif
+  read_binary_guard(data, 0x3001);
 
-  unsigned char len = *data++;
+  unsigned char len;
+  read_binary_number_nocheck(data, len);
   if (len == 0xff) {
-    unsigned short slen = *((unsigned short *) data);
-    str = std::string(data + sizeof(unsigned short), slen);
-    data += sizeof(unsigned short) + slen;
+    unsigned short slen;
+    read_binary_number_nocheck(data, slen);
+    str = std::string(data, slen);
+    data += slen;
   }
   else if (len) {
     str = std::string(data, len);
@@ -187,11 +249,7 @@ inline void read_binary_string(char *& data, std::string& str)
     str = "";
   }
 
-#if DEBUG_LEVEL >= ALPHA
-  guard = *((unsigned short *) data);
-  data += sizeof(unsigned short);
-  assert(guard == 0x3002);
-#endif
+  read_binary_guard(data, 0x3002);
 }
 
 inline std::string read_binary_string(char *& data)
@@ -203,18 +261,15 @@ inline std::string read_binary_string(char *& data)
 
 inline void read_binary_string(char *& data, std::string * str)
 {
-#if DEBUG_LEVEL >= ALPHA
-  unsigned short guard;
-  guard = *((unsigned short *) data);
-  data += sizeof(unsigned short);
-  assert(guard == 0x3001);
-#endif
+  read_binary_guard(data, 0x3001);
 
-  unsigned char len = *data++;
+  unsigned char len;
+  read_binary_number_nocheck(data, len);
   if (len == 0xff) {
-    unsigned short slen = *((unsigned short *) data);
-    new(str) std::string(data + sizeof(unsigned short), slen);
-    data += sizeof(unsigned short) + slen;
+    unsigned short slen;
+    read_binary_number_nocheck(data, slen);
+    new(str) std::string(data, slen);
+    data += slen;
   }
   else if (len) {
     new(str) std::string(data, len);
@@ -224,11 +279,7 @@ inline void read_binary_string(char *& data, std::string * str)
     new(str) std::string("");
   }
 
-#if DEBUG_LEVEL >= ALPHA
-  guard = *((unsigned short *) data);
-  data += sizeof(unsigned short);
-  assert(guard == 0x3002);
-#endif
+  read_binary_guard(data, 0x3002);
 }
 
 inline void read_binary_amount(char *& data, amount_t& amt)
@@ -251,13 +302,13 @@ inline void read_binary_value(char *& data, value_t& val)
 
   switch (val.type) {
   case value_t::BOOLEAN:
-    *((bool *) val.data) = read_binary_number<char>(data) == 1;
+    read_binary_bool(data, *((bool *) val.data));
     break;
   case value_t::INTEGER:
     read_binary_long(data, *((long *) val.data));
     break;
   case value_t::DATETIME:
-    read_binary_number(data, ((datetime_t *) val.data)->when);
+    read_binary_number(data, *((datetime_t *) val.data));
     break;
   case value_t::AMOUNT:
     read_binary_amount(data, *((amount_t *) val.data));
@@ -283,7 +334,7 @@ inline void read_binary_mask(char *& data, mask_t *& mask)
 
 inline void read_binary_value_expr(char *& data, value_expr_t *& expr)
 {
-  if (read_binary_number<unsigned char>(data) == 0) {
+  if (! read_binary_bool(data)) {
     expr = NULL;
     return;
   }
@@ -314,7 +365,7 @@ inline void read_binary_value_expr(char *& data, value_expr_t *& expr)
   case value_expr_t::F_ACCOUNT_MASK:
   case value_expr_t::F_SHORT_ACCOUNT_MASK:
   case value_expr_t::F_COMMODITY_MASK:
-    if (read_binary_number<unsigned char>(data) == 1)
+    if (read_binary_bool(data))
       read_binary_mask(data, expr->mask);
     break;
 
@@ -330,11 +381,11 @@ inline void read_binary_value_expr(char *& data, value_expr_t *& expr)
 
 inline void read_binary_transaction(char *& data, transaction_t * xact)
 {
-  read_binary_long(data, xact->_date);
-  read_binary_long(data, xact->_date_eff);
+  read_binary_number(data, xact->_date);
+  read_binary_number(data, xact->_date_eff);
   xact->account = accounts[read_binary_long<account_t::ident_t>(data) - 1];
 
-  char flag = read_binary_number<char>(data);
+  unsigned char flag = read_binary_number<unsigned char>(data);
   if (flag == 0) {
     read_binary_amount(data, xact->amount);
   }
@@ -350,7 +401,7 @@ inline void read_binary_transaction(char *& data, transaction_t * xact)
     read_binary_string(data, xact->amount_expr.expr);
   }
 
-  if (*data++ == 1) {
+  if (read_binary_bool(data)) {
     xact->cost = new amount_t;
     read_binary_amount(data, *xact->cost);
     read_binary_string(data, xact->cost_expr);
@@ -383,7 +434,7 @@ inline void read_binary_entry_base(char *& data, entry_base_t * entry,
   entry->end_pos = read_binary_long<unsigned long>(data);
   read_binary_long(data, entry->end_line);
 
-  bool ignore_calculated = read_binary_number<char>(data) == 1;
+  bool ignore_calculated = read_binary_bool(data);
 
   for (unsigned long i = 0, count = read_binary_long<unsigned long>(data);
        i < count;
@@ -400,8 +451,8 @@ inline void read_binary_entry(char *& data, entry_t * entry,
 			      transaction_t *& xact_pool, bool& finalize)
 {
   read_binary_entry_base(data, entry, xact_pool, finalize);
-  read_binary_long(data, entry->_date);
-  read_binary_long(data, entry->_date_eff);
+  read_binary_number(data, entry->_date);
+  read_binary_number(data, entry->_date_eff);
   read_binary_string(data, &entry->code);
   read_binary_string(data, &entry->payee);
 }
@@ -449,8 +500,8 @@ inline void read_binary_commodity_base_extra(char *& data,
   for (unsigned long i = 0, count = read_binary_long<unsigned long>(data);
        i < count;
        i++) {
-    std::time_t when;
-    read_binary_long(data, when);
+    datetime_t when;
+    read_binary_number(data, when);
     amount_t amt;
     read_binary_amount(data, amt);
 
@@ -460,22 +511,19 @@ inline void read_binary_commodity_base_extra(char *& data,
     if (! commodity->history)
       commodity->history = new commodity_base_t::history_t;
     commodity->history->prices.insert(history_pair(when, amt));
+
     read_history = true;
   }
   if (read_history)
-    read_binary_long(data, commodity->history->last_lookup);
+    read_binary_number(data, commodity->history->last_lookup);
 
-  unsigned char flag;
-
-  flag = read_binary_number<unsigned char>(data);
-  if (flag) {
+  if (read_binary_bool(data)) {
     amount_t amt;
     read_binary_amount(data, amt);
     commodity->smaller = new amount_t(amt);
   }
 
-  flag = read_binary_number<unsigned char>(data);
-  if (flag) {
+  if (read_binary_bool(data)) {
     amount_t amt;
     read_binary_amount(data, amt);
     commodity->larger = new amount_t(amt);
@@ -517,7 +565,7 @@ inline commodity_t * read_binary_commodity_annotated(char *& data)
   read_binary_amount(data, amt);
   commodity->price = amt;
 
-  read_binary_long(data, commodity->date);
+  read_binary_number(data, commodity->date);
   read_binary_string(data, commodity->tag);
 
   return commodity;
@@ -584,7 +632,7 @@ unsigned int read_binary_journal(std::istream&	    in,
 	 i++) {
       std::string path = read_binary_string(in);
       std::time_t old_mtime;
-      read_binary_long(in, old_mtime);
+      read_binary_number(in, old_mtime);
       struct stat info;
       stat(path.c_str(), &info);
       if (std::difftime(info.st_mtime, old_mtime) > 0)
@@ -618,7 +666,7 @@ unsigned int read_binary_journal(std::istream&	    in,
   delete journal->master;
   journal->master = read_binary_account(data, journal, master);
 
-  if (read_binary_number<bool>(data))
+  if (read_binary_bool(data))
     journal->basket = accounts[read_binary_long<account_t::ident_t>(data) - 1];
 
   // Allocate the memory needed for the entries and transactions in
@@ -693,7 +741,7 @@ unsigned int read_binary_journal(std::istream&	    in,
     commodity_t * commodity;
     std::string   mapping_key;
 
-    if (read_binary_number<char>(data) == 0) {
+    if (! read_binary_bool(data)) {
       commodity	  = read_binary_commodity(data);
       mapping_key = commodity->base->symbol;
     } else {
@@ -768,8 +816,8 @@ unsigned int read_binary_journal(std::istream&	    in,
 
 bool binary_parser_t::test(std::istream& in) const
 {
-  if (read_binary_number<unsigned long>(in) == binary_magic_number &&
-      read_binary_number<unsigned long>(in) == format_version)
+  if (read_binary_number_nocheck<unsigned long>(in) == binary_magic_number &&
+      read_binary_number_nocheck<unsigned long>(in) == format_version)
     return true;
 
   in.clear();
@@ -787,22 +835,36 @@ unsigned int binary_parser_t::parse(std::istream&	in,
 			     journal, master);
 }
 
-#if DEBUG_LEVEL >= ALPHA
-#define write_binary_guard(in, id) {		\
-  unsigned short guard = id;			\
-  out.write((char *)&guard, sizeof(guard));	\
+template <typename T>
+inline void write_binary_number_nocheck(std::ostream& out, T num) {
+  out.write((char *)&num, sizeof(num));
 }
+
+#if DEBUG_LEVEL >= ALPHA
+#define write_binary_guard(out, id)			\
+  write_binary_number_nocheck<unsigned short>(out, id)
 #else
 #define write_binary_guard(in, id)
 #endif
 
 template <typename T>
 inline void write_binary_number(std::ostream& out, T num) {
+  write_binary_guard(out, 0x2003);
   out.write((char *)&num, sizeof(num));
+  write_binary_guard(out, 0x2004);
+}
+
+inline void write_binary_bool(std::ostream& out, bool num) {
+  write_binary_guard(out, 0x2005);
+  unsigned char val = num ? 1 : 0;
+  out.write((char *)&val, sizeof(val));
+  write_binary_guard(out, 0x2006);
 }
 
 template <typename T>
 inline void write_binary_long(std::ostream& out, T num) {
+  write_binary_guard(out, 0x2001);
+
   unsigned char len = 4;
   if (((unsigned long)num) < 0x00000100UL)
     len = 1;
@@ -810,23 +872,26 @@ inline void write_binary_long(std::ostream& out, T num) {
     len = 2;
   else if (((unsigned long)num) < 0x01000000UL)
     len = 3;
-  out.write((char *)&len, sizeof(unsigned char));
+  write_binary_number_nocheck<unsigned char>(out, len);
 
+  unsigned char temp;
   if (len > 3) {
-    unsigned char temp = (((unsigned long)num) & 0xFF000000UL) >> 24;
-    out.write((char *)&temp, sizeof(unsigned char));
+    temp = (((unsigned long)num) & 0xFF000000UL) >> 24;
+    write_binary_number_nocheck(out, temp);
   }
   if (len > 2) {
-    unsigned char temp = (((unsigned long)num) & 0x00FF0000UL) >> 16;
-    out.write((char *)&temp, sizeof(unsigned char));
+    temp = (((unsigned long)num) & 0x00FF0000UL) >> 16;
+    write_binary_number_nocheck(out, temp);
   }
   if (len > 1) {
-    unsigned char temp = (((unsigned long)num) & 0x0000FF00UL) >> 8;
-    out.write((char *)&temp, sizeof(unsigned char));
+    temp = (((unsigned long)num) & 0x0000FF00UL) >> 8;
+    write_binary_number_nocheck(out, temp);
   }
 
-  unsigned char temp = (((unsigned long)num) & 0x000000FFUL);
-  out.write((char *)&temp, sizeof(unsigned char));
+  temp = (((unsigned long)num) & 0x000000FFUL);
+  write_binary_number_nocheck(out, temp);
+
+  write_binary_guard(out, 0x2002);
 }
 
 inline void write_binary_string(std::ostream& out, const std::string& str)
@@ -836,10 +901,10 @@ inline void write_binary_string(std::ostream& out, const std::string& str)
   unsigned long len = str.length();
   if (len > 255) {
     assert(len < 65536);
-    write_binary_number<unsigned char>(out, 0xff);
-    write_binary_number<unsigned short>(out, len);
+    write_binary_number_nocheck<unsigned char>(out, 0xff);
+    write_binary_number_nocheck<unsigned short>(out, len);
   } else {
-    write_binary_number<unsigned char>(out, len);
+    write_binary_number_nocheck<unsigned char>(out, len);
   }
 
   if (len)
@@ -864,13 +929,13 @@ void write_binary_value(std::ostream& out, const value_t& val)
 
   switch (val.type) {
   case value_t::BOOLEAN:
-    write_binary_number<char>(out, *((bool *) val.data) ? 1 : 0);
+    write_binary_bool(out, *((bool *) val.data));
     break;
   case value_t::INTEGER:
     write_binary_long(out, *((long *) val.data));
     break;
   case value_t::DATETIME:
-    write_binary_number(out, ((datetime_t *) val.data)->when);
+    write_binary_number(out, *((datetime_t *) val.data));
     break;
   case value_t::AMOUNT:
     write_binary_amount(out, *((amount_t *) val.data));
@@ -891,11 +956,10 @@ void write_binary_mask(std::ostream& out, mask_t * mask)
 void write_binary_value_expr(std::ostream& out, const value_expr_t * expr)
 {
   if (! expr) {
-    write_binary_number<unsigned char>(out, 0);
+    write_binary_bool(out, false);
     return;
   }
-  write_binary_number<unsigned char>(out, 1);
-
+  write_binary_bool(out, true);
   write_binary_number(out, expr->kind);
 
   if (expr->kind > value_expr_t::TERMINALS)
@@ -917,10 +981,10 @@ void write_binary_value_expr(std::ostream& out, const value_expr_t * expr)
   case value_expr_t::F_SHORT_ACCOUNT_MASK:
   case value_expr_t::F_COMMODITY_MASK:
     if (expr->mask) {
-      write_binary_number<char>(out, 1);
+      write_binary_bool(out, true);
       write_binary_mask(out, expr->mask);
     } else {
-      write_binary_number<char>(out, 0);
+      write_binary_bool(out, false);
     }
     break;
 
@@ -935,36 +999,36 @@ void write_binary_value_expr(std::ostream& out, const value_expr_t * expr)
 void write_binary_transaction(std::ostream& out, transaction_t * xact,
 			      bool ignore_calculated)
 {
-  write_binary_long(out, xact->_date);
-  write_binary_long(out, xact->_date_eff);
+  write_binary_number(out, xact->_date);
+  write_binary_number(out, xact->_date_eff);
   write_binary_long(out, xact->account->ident);
 
   if (ignore_calculated && xact->flags & TRANSACTION_CALCULATED) {
-    write_binary_number<char>(out, 0);
+    write_binary_number<unsigned char>(out, 0);
     write_binary_amount(out, amount_t());
   }
   else if (xact->amount_expr) {
-    write_binary_number<char>(out, 2);
+    write_binary_number<unsigned char>(out, 2);
     write_binary_value_expr(out, xact->amount_expr.get());
     write_binary_string(out, xact->amount_expr.expr);
   }
   else if (! xact->amount_expr.expr.empty()) {
-    write_binary_number<char>(out, 1);
+    write_binary_number<unsigned char>(out, 1);
     write_binary_amount(out, xact->amount);
     write_binary_string(out, xact->amount_expr.expr);
   }
   else {
-    write_binary_number<char>(out, 0);
+    write_binary_number<unsigned char>(out, 0);
     write_binary_amount(out, xact->amount);
   }
 
   if (xact->cost &&
       (! (ignore_calculated && xact->flags & TRANSACTION_CALCULATED))) {
-    write_binary_number<char>(out, 1);
+    write_binary_bool(out, true);
     write_binary_amount(out, *xact->cost);
     write_binary_string(out, xact->cost_expr);
   } else {
-    write_binary_number<char>(out, 0);
+    write_binary_bool(out, false);
   }
 
   write_binary_number(out, xact->state);
@@ -994,7 +1058,7 @@ void write_binary_entry_base(std::ostream& out, entry_base_t * entry)
       break;
     }
 
-  write_binary_number<char>(out, ignore_calculated ? 1 : 0);
+  write_binary_bool(out, ignore_calculated);
 
   write_binary_long(out, entry->transactions.size());
   for (transactions_list::const_iterator i = entry->transactions.begin();
@@ -1006,8 +1070,8 @@ void write_binary_entry_base(std::ostream& out, entry_base_t * entry)
 void write_binary_entry(std::ostream& out, entry_t * entry)
 {
   write_binary_entry_base(out, entry);
-  write_binary_long(out, entry->_date);
-  write_binary_long(out, entry->_date_eff);
+  write_binary_number(out, entry->_date);
+  write_binary_number(out, entry->_date_eff);
   write_binary_string(out, entry->code);
   write_binary_string(out, entry->payee);
 }
@@ -1048,24 +1112,24 @@ void write_binary_commodity_base_extra(std::ostream& out,
     for (history_map::const_iterator i = commodity->history->prices.begin();
 	 i != commodity->history->prices.end();
 	 i++) {
-      write_binary_long(out, (*i).first);
+      write_binary_number(out, (*i).first);
       write_binary_amount(out, (*i).second);
     }
-    write_binary_long(out, commodity->history->last_lookup);
+    write_binary_number(out, commodity->history->last_lookup);
   }
 
   if (commodity->smaller) {
-    write_binary_number<unsigned char>(out, 1);
+    write_binary_bool(out, true);
     write_binary_amount(out, *commodity->smaller);
   } else {
-    write_binary_number<unsigned char>(out, 0);
+    write_binary_bool(out, false);
   }
 
   if (commodity->larger) {
-    write_binary_number<unsigned char>(out, 1);
+    write_binary_bool(out, true);
     write_binary_amount(out, *commodity->larger);
   } else {
-    write_binary_number<unsigned char>(out, 0);
+    write_binary_bool(out, false);
   }
 }
 
@@ -1090,7 +1154,7 @@ void write_binary_commodity_annotated(std::ostream& out,
 
   write_binary_long(out, ann_comm->base->ident);
   write_binary_amount(out, ann_comm->price);
-  write_binary_long(out, ann_comm->date);
+  write_binary_number(out, ann_comm->date);
   write_binary_string(out, ann_comm->tag);
 }
 
@@ -1132,13 +1196,13 @@ void write_binary_journal(std::ostream& out, journal_t * journal)
   base_commodity_index = 
   commodity_index      = 0;
 
-  write_binary_number(out, binary_magic_number);
-  write_binary_number(out, format_version);
+  write_binary_number_nocheck(out, binary_magic_number);
+  write_binary_number_nocheck(out, format_version);
 
   // Write out the files that participated in this journal, so that
   // they can be checked for changes on reading.
 
-  if (journal->sources.size() == 0) {
+  if (journal->sources.empty()) {
     write_binary_number<unsigned short>(out, 0);
   } else {
     write_binary_number<unsigned short>(out, journal->sources.size());
@@ -1148,7 +1212,7 @@ void write_binary_journal(std::ostream& out, journal_t * journal)
       write_binary_string(out, *i);
       struct stat info;
       stat((*i).c_str(), &info);
-      write_binary_long(out, std::time_t(info.st_mtime));
+      write_binary_number(out, std::time_t(info.st_mtime));
     }
 
     // Write out the price database that relates to this data file, so
@@ -1165,10 +1229,10 @@ void write_binary_journal(std::ostream& out, journal_t * journal)
   write_binary_account(out, journal->master);
 
   if (journal->basket) {
-    write_binary_number<bool>(out, true);
+    write_binary_bool(out, true);
     write_binary_long(out, journal->basket->ident);
   } else {
-    write_binary_number<bool>(out, false);
+    write_binary_bool(out, false);
   }
 
   // Write out the number of entries, transactions, and amounts
@@ -1178,10 +1242,11 @@ void write_binary_journal(std::ostream& out, journal_t * journal)
   write_binary_long<unsigned long>(out, journal->period_entries.size());
 
   ostream_pos_type xacts_val = out.tellp();
-
   write_binary_number<unsigned long>(out, 0);
+
   ostream_pos_type bigints_val = out.tellp();
   write_binary_number<unsigned long>(out, 0);
+
   bigints_count = 0;
 
   // Write out the commodities
@@ -1202,7 +1267,7 @@ void write_binary_journal(std::ostream& out, journal_t * journal)
        i != commodity_t::commodities.end();
        i++) {
     if (! (*i).second->annotated) {
-      write_binary_number<char>(out, 0);
+      write_binary_bool(out, false);
       write_binary_commodity(out, (*i).second);
     }
   }
@@ -1211,7 +1276,7 @@ void write_binary_journal(std::ostream& out, journal_t * journal)
        i != commodity_t::commodities.end();
        i++) {
     if ((*i).second->annotated) {
-      write_binary_number<char>(out, 1);
+      write_binary_bool(out, true);
       write_binary_string(out, (*i).first); // the mapping key
       write_binary_commodity_annotated(out, (*i).second);
     }

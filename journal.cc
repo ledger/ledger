@@ -19,16 +19,16 @@ transaction_t::~transaction_t()
   if (cost) delete cost;
 }
 
-std::time_t transaction_t::actual_date() const
+datetime_t transaction_t::actual_date() const
 {
-  if (_date == 0 && entry)
+  if (! _date && entry)
     return entry->actual_date();
   return _date;
 }
 
-std::time_t transaction_t::effective_date() const
+datetime_t transaction_t::effective_date() const
 {
-  if (_date_eff == 0 && entry)
+  if (! _date_eff && entry)
     return entry->effective_date();
   return _date_eff;
 }
@@ -176,9 +176,10 @@ bool entry_base_t::finalize()
 
       if ((*x)->amount.commodity() &&
 	  ! (*x)->amount.commodity().annotated)
-	(*x)->amount.annotate_commodity(abs(per_unit_cost),
-					entry ? entry->actual_date() : 0,
-					entry ? entry->code : "");
+	(*x)->amount.annotate_commodity
+	  (abs(per_unit_cost),
+	   entry ? entry->actual_date() : datetime_t(),
+	   entry ? entry->code : "");
 
       (*x)->cost = new amount_t(- (per_unit_cost * (*x)->amount));
       balance += *(*x)->cost;

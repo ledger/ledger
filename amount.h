@@ -4,13 +4,13 @@
 #include <map>
 #include <stack>
 #include <string>
-#include <ctime>
 #include <cctype>
 #include <iostream>
 #include <sstream>
 #include <cassert>
 #include <exception>
 
+#include "datetime.h"
 #include "debug.h"
 #include "error.h"
 
@@ -81,8 +81,8 @@ class amount_t
   void set_commodity(commodity_t& comm) {
     commodity_ = &comm;
   }
-  void annotate_commodity(const amount_t& price,
-			  const std::time_t  date = 0,
+  void annotate_commodity(const amount_t&    price,
+			  const datetime_t&  date = datetime_t(),
 			  const std::string& tag  = "");
   amount_t strip_annotations(const bool _keep_price = keep_price,
 			     const bool _keep_date  = keep_date,
@@ -91,7 +91,7 @@ class amount_t
     commodity_ = NULL;
   }
   amount_t price() const;
-  std::time_t date() const;
+  datetime_t date() const;
 
   bool null() const {
     return ! quantity && ! commodity_;
@@ -253,7 +253,7 @@ class amount_t
     return ! (*this == num);
   }
 
-  amount_t value(const std::time_t moment) const;
+  amount_t value(const datetime_t& moment) const;
 
   void abs() {
     if (*this < 0)
@@ -297,7 +297,7 @@ class amount_t
 				      char * item_pool_end);
 
   friend void parse_annotations(std::istream& in, amount_t& price,
-				std::time_t& date, std::string& tag);
+				datetime_t& date, std::string& tag);
 };
 
 unsigned int sizeof_bigint_t();
@@ -356,8 +356,8 @@ inline std::istream& operator>>(std::istream& in, amount_t& amt) {
 #define COMMODITY_STYLE_NOMARKET   0x0010
 #define COMMODITY_STYLE_BUILTIN    0x0020
 
-typedef std::map<const std::time_t, amount_t>  history_map;
-typedef std::pair<const std::time_t, amount_t> history_pair;
+typedef std::map<const datetime_t, amount_t>  history_map;
+typedef std::pair<const datetime_t, amount_t> history_pair;
 
 class commodity_base_t;
 
@@ -403,24 +403,24 @@ class commodity_base_t
 
   struct history_t {
     history_map	prices;
-    std::time_t	last_lookup;
-    std::time_t	bogus_time;
+    datetime_t	last_lookup;
+    datetime_t	bogus_time;
     history_t() : last_lookup(0), bogus_time(0) {}
   };
   history_t * history;
 
-  void	   add_price(const std::time_t date, const amount_t& price);
-  bool	   remove_price(const std::time_t date);
-  amount_t value(const std::time_t moment = std::time(NULL));
+  void	   add_price(const datetime_t& date, const amount_t& price);
+  bool	   remove_price(const datetime_t& date);
+  amount_t value(const datetime_t& moment = datetime_t::now);
 
   class updater_t {
    public:
     virtual ~updater_t() {}
     virtual void operator()(commodity_base_t& commodity,
-			    const std::time_t moment,
-			    const std::time_t date,
-			    const std::time_t last,
-			    amount_t&         price) = 0;
+			    const datetime_t& moment,
+			    const datetime_t& date,
+			    const datetime_t& last,
+			    amount_t& price) = 0;
   };
   friend class updater_t;
 
@@ -543,13 +543,13 @@ class commodity_t
     return base->history;
   }
 
-  void add_price(const std::time_t date, const amount_t& price) {
+  void add_price(const datetime_t& date, const amount_t& price) {
     return base->add_price(date, price);
   }
-  bool remove_price(const std::time_t date) {
+  bool remove_price(const datetime_t& date) {
     return base->remove_price(date);
   }
-  amount_t value(const std::time_t moment = std::time(NULL)) const {
+  amount_t value(const datetime_t& moment = datetime_t::now) const {
     return base->value(moment);
   }
 
@@ -562,7 +562,7 @@ class annotated_commodity_t : public commodity_t
   const commodity_t * ptr;
 
   amount_t    price;
-  std::time_t date;
+  datetime_t  date;
   std::string tag;
 
   explicit annotated_commodity_t() {
@@ -577,25 +577,26 @@ class annotated_commodity_t : public commodity_t
 
   static void write_annotations(std::ostream&      out,
 				const amount_t&    price,
-				const std::time_t  date,
+				const datetime_t&  date,
 				const std::string& tag);
 
  private:
   static commodity_t * create(const commodity_t& comm,
 			      const amount_t&    price,
-			      const std::time_t  date,
+			      const datetime_t&  date,
 			      const std::string& tag,
 			      const std::string& mapping_key);
 
   static commodity_t * find_or_create(const commodity_t& comm,
 				      const amount_t&    price,
-				      const std::time_t  date,
+				      const datetime_t&  date,
 				      const std::string& tag);
 
   friend class amount_t;
 };
 
-inline std::ostream& operator<<(std::ostream& out, const commodity_t& comm) {
+inline std::ostream& operator<<(std::ostream& out,
+				const commodity_t& comm) {
   out << comm.symbol();
   return out;
 }

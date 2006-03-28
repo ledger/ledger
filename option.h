@@ -27,7 +27,7 @@ bool process_option(option_t * options, const std::string& opt,
 		    const char * arg = NULL);
 void process_arguments(option_t * options, int argc, char ** argv,
 		       const bool anywhere, std::list<std::string>& args);
-void process_environment(option_t * options, char ** envp,
+void process_environment(option_t * options, const char ** envp,
 			 const std::string& tag);
 
 namespace ledger {
@@ -38,7 +38,7 @@ class report_t;
 extern config_t * config;
 extern report_t * report;
 
-#define CONFIG_OPTIONS_SIZE 94
+#define CONFIG_OPTIONS_SIZE 95
 extern option_t config_options[CONFIG_OPTIONS_SIZE];
 
 void option_help(std::ostream& out);

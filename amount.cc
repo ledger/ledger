@@ -1,5 +1,4 @@
 #include "amount.h"
-#include "datetime.h"
 #include "util.h"
 
 #include <list>
@@ -607,7 +606,7 @@ bool amount_t::realzero() const
   return mpz_sgn(MPZ(quantity)) == 0;
 }
 
-amount_t amount_t::value(const std::time_t moment) const
+amount_t amount_t::value(const datetime_t& moment) const
 {
   if (quantity) {
     amount_t amt(commodity().value(moment));
@@ -999,7 +998,7 @@ void parse_commodity(std::istream& in, std::string& symbol)
 }
 
 void parse_annotations(std::istream& in, amount_t& price,
-		       std::time_t& date, std::string& tag)
+		       datetime_t& date, std::string& tag)
 {
   do {
     char buf[256];
@@ -1036,7 +1035,7 @@ void parse_annotations(std::istream& in, amount_t& price,
       else
 	throw new amount_error("Commodity date lacks closing bracket");
 
-      parse_date(buf, &date);
+      date = buf;
     }
     else if (c == '(') {
       if (! tag.empty())
@@ -1073,7 +1072,7 @@ void amount_t::parse(std::istream& in, unsigned char flags)
   std::string  symbol;
   std::string  quant;
   amount_t     price;
-  std::time_t  date = 0;
+  datetime_t   date;
   std::string  tag;
   unsigned int comm_flags = COMMODITY_STYLE_DEFAULTS;
   bool         negative = false;
@@ -1378,7 +1377,7 @@ bool amount_t::valid() const
 }
 
 void amount_t::annotate_commodity(const amount_t&    price,
-				  const std::time_t  date,
+				  const datetime_t&  date,
 				  const std::string& tag)
 {
   const commodity_t *	  this_base;
@@ -1401,7 +1400,7 @@ void amount_t::annotate_commodity(const amount_t&    price,
   commodity_t * ann_comm =
     annotated_commodity_t::find_or_create
       (*this_base, ! price && this_ann ? this_ann->price : price,
-       date == 0 && this_ann ? this_ann->date : date,
+       ! date && this_ann ? this_ann->date : date,
        tag.empty() && this_ann ? this_ann->tag : tag);
   if (ann_comm)
     set_commodity(*ann_comm);
@@ -1435,7 +1434,8 @@ amount_t amount_t::strip_annotations(const bool _keep_price,
   {
     new_comm = annotated_commodity_t::find_or_create
       (*ann_comm.ptr, _keep_price ? ann_comm.price : amount_t(),
-       _keep_date ? ann_comm.date : 0, _keep_tag ? ann_comm.tag : "");
+       _keep_date ? ann_comm.date : datetime_t(),
+       _keep_tag ? ann_comm.tag : "");
   } else {
     new_comm = commodity_t::find_or_create(ann_comm.base_symbol());
   }
@@ -1461,7 +1461,7 @@ amount_t amount_t::price() const
   return *this;
 }
 
-std::time_t amount_t::date() const
+datetime_t amount_t::date() const
 {
   if (commodity_ && commodity_->annotated) {
     DEBUG_PRINT("amounts.commodities",
@@ -1473,7 +1473,8 @@ std::time_t amount_t::date() const
 }
 
 
-void commodity_base_t::add_price(const std::time_t date, const amount_t& price)
+void commodity_base_t::add_price(const datetime_t& date,
+				 const amount_t&   price)
 {
   if (! history)
     history = new history_t;
@@ -1488,7 +1489,7 @@ void commodity_base_t::add_price(const std::time_t date, const amount_t& price)
   }
 }
 
-bool commodity_base_t::remove_price(const std::time_t date)
+bool commodity_base_t::remove_price(const datetime_t& date)
 {
   if (history) {
     history_map::size_type n = history->prices.erase(date);
@@ -1595,15 +1596,15 @@ commodity_t * commodity_t::find(const std::string& symbol)
   return NULL;
 }
 
-amount_t commodity_base_t::value(const std::time_t moment)
+amount_t commodity_base_t::value(const datetime_t& moment)
 {
-  std::time_t age = 0;
-  amount_t    price;
+  datetime_t age;
+  amount_t   price;
 
   if (history) {
     assert(history->prices.size() > 0);
 
-    if (moment == 0) {
+    if (! moment) {
       history_map::reverse_iterator r = history->prices.rbegin();
       age   = (*r).first;
       price = (*r).second;
@@ -1615,7 +1616,7 @@ amount_t commodity_base_t::value(const std::time_t moment)
 	price = (*r).second;
       } else {
 	age = (*i).first;
-	if (std::difftime(moment, age) != 0) {
+	if (moment != age) {
 	  if (i != history->prices.begin()) {
 	    --i;
 	    age	  = (*i).first;
@@ -1633,7 +1634,7 @@ amount_t commodity_base_t::value(const std::time_t moment)
   if (updater && ! (flags & COMMODITY_STYLE_NOMARKET))
     (*updater)(*this, moment, age,
 	       (history && history->prices.size() > 0 ?
-		(*history->prices.rbegin()).first : 0), price);
+		(*history->prices.rbegin()).first : datetime_t()), price);
 
   return price;
 }
@@ -1665,14 +1666,14 @@ bool annotated_commodity_t::operator==(const commodity_t& comm) const
 void
 annotated_commodity_t::write_annotations(std::ostream&      out,
 					 const amount_t&    price,
-					 const std::time_t  date,
+					 const datetime_t&  date,
 					 const std::string& tag)
 {
   if (price)
     out << " {" << price << '}';
 
   if (date)
-    out << " [" << datetime_t(date) << ']';
+    out << " [" << date << ']';
 
   if (! tag.empty())
     out << " (" << tag << ')';
@@ -1681,7 +1682,7 @@ annotated_commodity_t::write_annotations(std::ostream&      out,
 commodity_t *
 annotated_commodity_t::create(const commodity_t& comm,
 			      const amount_t&    price,
-			      const std::time_t  date,
+			      const datetime_t&  date,
 			      const std::string& tag,
 			      const std::string& mapping_key)
 {
@@ -1719,7 +1720,7 @@ annotated_commodity_t::create(const commodity_t& comm,
 namespace {
   std::string make_qualified_name(const commodity_t& comm,
 				  const amount_t&    price,
-				  const std::time_t  date,
+				  const datetime_t&  date,
 				  const std::string& tag)
   {
     if (price < 0)
@@ -1745,7 +1746,7 @@ namespace {
 commodity_t *
 annotated_commodity_t::find_or_create(const commodity_t& comm,
 				      const amount_t&    price,
-				      const std::time_t  date,
+				      const datetime_t&  date,
 				      const std::string& tag)
 {
   std::string name = make_qualified_name(comm, price, date, tag);
@@ -1862,9 +1863,9 @@ struct commodity_updater_wrap : public commodity_base_t::updater_t
   commodity_updater_wrap(PyObject * self_) : self(self_) {}
 
   virtual void operator()(commodity_base_t& commodity,
-			  const std::time_t moment,
-			  const std::time_t date,
-			  const std::time_t last,
+			  const datetime_t& moment,
+			  const datetime_t& date,
+			  const datetime_t& last,
 			  amount_t&         price) {
     call_method<void>(self, "__call__", commodity, moment, date, last, price);
   }

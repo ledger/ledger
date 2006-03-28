@@ -183,7 +183,7 @@ void handle_value(const value_t&	       value,
 		  unsigned int		       flags,
 		  std::list<transaction_t>&    temps,
 		  item_handler<transaction_t>& handler,
-		  const std::time_t            date = 0,
+		  const datetime_t&            date = datetime_t(),
 		  transactions_list *          component_xacts = NULL)
 {
   temps.push_back(transaction_t(account));
@@ -312,7 +312,7 @@ void related_transactions::flush()
   item_handler<transaction_t>::flush();
 }
 
-void changed_value_transactions::output_diff(const std::time_t current)
+void changed_value_transactions::output_diff(const datetime_t& current)
 {
   value_t cur_bal;
 
@@ -335,7 +335,7 @@ void changed_value_transactions::output_diff(const std::time_t current)
 void changed_value_transactions::operator()(transaction_t& xact)
 {
   if (last_xact) {
-    std::time_t moment = 0;
+    datetime_t moment;
     if (transaction_has_xdata(*last_xact))
       moment = transaction_xdata_(*last_xact).date;
     else
@@ -367,19 +367,18 @@ void component_transactions::operator()(transaction_t& xact)
 
 void subtotal_transactions::report_subtotal(const char * spec_fmt)
 {
-  char buf[256];
-
+  std::ostringstream out_date;
   if (! spec_fmt) {
     std::string fmt = "- ";
-    fmt += datetime_t::date_format;
-    std::strftime(buf, 255, fmt.c_str(), std::localtime(&finish));
+    fmt += date_t::output_format;
+    finish.write(out_date, fmt);
   } else {
-    std::strftime(buf, 255, spec_fmt, std::localtime(&finish));
+    finish.write(out_date, spec_fmt);
   }
 
   entry_temps.push_back(entry_t());
   entry_t& entry = entry_temps.back();
-  entry.payee = buf;
+  entry.payee = out_date.str();
   entry._date = start;
 
   for (values_map::iterator i = values.begin();
@@ -393,9 +392,9 @@ void subtotal_transactions::report_subtotal(const char * spec_fmt)
 
 void subtotal_transactions::operator()(transaction_t& xact)
 {
-  if (! start || std::difftime(xact.date(), start) < 0)
+  if (! start || xact.date() < start)
     start = xact.date();
-  if (! finish || std::difftime(xact.date(), finish) > 0)
+  if (! finish || xact.date() > finish)
     finish = xact.date();
 
   account_t * acct = xact_account(xact);
@@ -429,13 +428,13 @@ void subtotal_transactions::operator()(transaction_t& xact)
     account_xdata(*xact_account(xact)).dflags |= ACCOUNT_HAS_UNB_VIRTUALS;
 }
 
-void interval_transactions::report_subtotal(const std::time_t moment)
+void interval_transactions::report_subtotal(const datetime_t& moment)
 {
   assert(last_xact);
 
   start = interval.begin;
   if (moment)
-    finish = moment - 86400;
+    finish = moment - 86400L;
   else
     finish = last_xact->date();
 
@@ -446,10 +445,10 @@ void interval_transactions::report_subtotal(const std::time_t moment)
 
 void interval_transactions::operator()(transaction_t& xact)
 {
-  const std::time_t date = xact.date();
+  const datetime_t date = xact.date();
 
-  if ((interval.begin && std::difftime(date, interval.begin) < 0) ||
-      (interval.end   && std::difftime(date, interval.end) >= 0))
+  if ((interval.begin && date < interval.begin) ||
+      (interval.end   && date >= interval.end))
     return;
 
   if (interval) {
@@ -460,13 +459,13 @@ void interval_transactions::operator()(transaction_t& xact)
       started = true;
     }
 
-    std::time_t quant = interval.increment(interval.begin);
-    if (std::difftime(date, quant) >= 0) {
+    datetime_t quant = interval.increment(interval.begin);
+    if (date >= quant) {
       if (last_xact)
 	report_subtotal(quant);
 
-      std::time_t temp;
-      while (std::difftime(date, temp = interval.increment(quant)) >= 0) {
+      datetime_t temp;
+      while (date >= (temp = interval.increment(quant))) {
 	if (quant == temp)
 	  break;
 	quant = temp;
@@ -518,7 +517,7 @@ void by_payee_transactions::operator()(transaction_t& xact)
     i = result.first;
   }
 
-  if (std::difftime(xact.date(), (*i).second->start) > 0)
+  if (xact.date() > (*i).second->start)
     (*i).second->start = xact.date();
 
   (*(*i).second)(xact);
@@ -602,7 +601,7 @@ void generate_transactions::add_transaction(const interval_t& period,
   pending_xacts.push_back(pending_xacts_pair(period, &xact));
 }
 
-void budget_transactions::report_budget_items(const std::time_t moment)
+void budget_transactions::report_budget_items(const datetime_t& moment)
 {
   if (pending_xacts.size() == 0)
     return;
@@ -613,14 +612,14 @@ void budget_transactions::report_budget_items(const std::time_t moment)
     for (pending_xacts_list::iterator i = pending_xacts.begin();
 	 i != pending_xacts.end();
 	 i++) {
-      std::time_t& begin = (*i).first.begin;
+      datetime_t& begin = (*i).first.begin;
       if (! begin) {
 	(*i).first.start(moment);
 	begin = (*i).first.begin;
       }
 
-      if (std::difftime(begin, moment) < 0 &&
-	  (! (*i).first.end || std::difftime(begin, (*i).first.end) < 0)) {
+      if (begin < moment &&
+	  (! (*i).first.end || begin < (*i).first.end)) {
 	transaction_t& xact = *(*i).second;
 
 	DEBUG_PRINT("ledger.walk.budget", "Reporting budget for "
@@ -687,10 +686,10 @@ void forecast_transactions::add_transaction(const interval_t& period,
 
   interval_t& i = pending_xacts.back().first;
   if (! i.begin) {
-    i.start(now);
+    i.start(datetime_t::now);
     i.begin = i.increment(i.begin);
   } else {
-    while (std::difftime(i.begin, now) < 0)
+    while (i.begin < datetime_t::now)
       i.begin = i.increment(i.begin);
   }
 }
@@ -698,20 +697,19 @@ void forecast_transactions::add_transaction(const interval_t& period,
 void forecast_transactions::flush()
 {
   transactions_list passed;
-  std::time_t       last = 0;
+  datetime_t last;
 
   while (pending_xacts.size() > 0) {
     pending_xacts_list::iterator least = pending_xacts.begin();
     for (pending_xacts_list::iterator i = ++pending_xacts.begin();
 	 i != pending_xacts.end();
 	 i++)
-      if (std::difftime((*i).first.begin, (*least).first.begin) < 0)
+      if ((*i).first.begin < (*least).first.begin)
 	least = i;
 
-    std::time_t& begin = (*least).first.begin;
+    datetime_t& begin = (*least).first.begin;
 
-    if ((*least).first.end &&
-	std::difftime(begin, (*least).first.end) >= 0) {
+    if ((*least).first.end && begin >= (*least).first.end) {
       pending_xacts.erase(least);
       passed.remove((*least).second);
       continue;
@@ -731,9 +729,9 @@ void forecast_transactions::flush()
     temp.flags |= TRANSACTION_BULK_ALLOC;
     entry.add_transaction(&temp);
 
-    std::time_t next = (*least).first.increment(begin);
-    if (std::difftime(next, begin) < 0 || // wraparound
-	(last && std::difftime(next, last) > 5 * 365 * 24 * 60 * 60))
+    datetime_t next = (*least).first.increment(begin);
+    if (next < begin || // wraparound
+	(last && (next - last) > 365 * 5 * 24 * 3600))
       break;
     begin = next;
 

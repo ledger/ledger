@@ -19,9 +19,9 @@ class quotes_by_script : public commodity_base_t::updater_t
       cache_dirty(_cache_dirty) {}
 
   virtual void operator()(commodity_base_t& commodity,
-			  const std::time_t moment,
-			  const std::time_t date,
-			  const std::time_t last,
+			  const datetime_t& moment,
+			  const datetime_t& date,
+			  const datetime_t& last,
 			  amount_t&	    price);
 };
 

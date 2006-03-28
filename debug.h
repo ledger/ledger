@@ -62,7 +62,8 @@ void debug_assert(const std::string& reason,
 #include <new>
 #include <iostream>
 #include <cstdlib>
-#include <ctime>
+
+#include "datetime.h"
 
 #define DEBUG_ENABLED
 
@@ -85,10 +86,8 @@ bool _debug_active(const char * const cls);
   }
 #define DEBUG_PRINT_(x) DEBUG_PRINT(_debug_cls, x)
 
-#define DEBUG_PRINT_TIME(cls, x) {				\
-  char buf[32];							\
-  std::strftime(buf, 31, "%Y/%m/%d:%H", std::localtime(&x));	\
-  DEBUG_PRINT(cls, #x << " is " << buf);			\
+#define DEBUG_PRINT_TIME(cls, x) {		\
+  DEBUG_PRINT(cls, #x << " is " << x);		\
 }
 
 #define DEBUG_PRINT_TIME_(x) DEBUG_PRINT_TIME(_debug_cls, x)

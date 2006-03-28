@@ -12,7 +12,6 @@ report_t::report_t()
   display_predicate   = "";
   descend_expr	      = "";
 
-  pricing_leeway = 24 * 3600;
   budget_flags   = BUDGET_NO_BUDGET;
 
   head_entries = 0;
@@ -204,8 +203,8 @@ void report_t::process_options(const std::string&     command,
 
   // Now setup the various formatting strings
 
-  if (! date_format.empty())
-    datetime_t::date_format = date_format;
+  if (! date_output_format.empty())
+    date_t::output_format = date_output_format;
 
   amount_t::keep_price = keep_price;
   amount_t::keep_date  = keep_date;
@@ -278,9 +277,9 @@ report_t::chain_xact_handlers(const std::string& command,
     // transactions which can be reconciled to a given balance
     // (calculated against the transactions which it receives).
     if (! reconcile_balance.empty()) {
-      std::time_t cutoff = now;
+      datetime_t cutoff = datetime_t::now;
       if (! reconcile_date.empty())
-	parse_date(reconcile_date.c_str(), &cutoff);
+	cutoff = reconcile_date;
       ptrs.push_back(formatter =
 		     new reconcile_transactions
 		     (formatter, value_t(reconcile_balance), cutoff));

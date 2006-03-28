@@ -90,15 +90,15 @@ struct transaction_xdata_t
   value_t	 value;
   unsigned int   index;
   unsigned short dflags;
-  std::time_t    date;
+  datetime_t     date;
   account_t *    account;
   void *         ptr;
 
   transactions_list * component_xacts;
 
   transaction_xdata_t()
-    : index(0), dflags(0), date(0), account(NULL), ptr(NULL),
-      component_xacts(NULL) {
+    : index(0), dflags(0),
+      account(NULL), ptr(NULL), component_xacts(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor transaction_xdata_t " << this);
   }
 
@@ -445,13 +445,13 @@ class changed_value_transactions : public item_handler<transaction_t>
 
   virtual void flush() {
     if (last_xact) {
-      output_diff(now);
+      output_diff(datetime_t::now);
       last_xact = NULL;
     }
     item_handler<transaction_t>::flush();
   }
 
-  void output_diff(const std::time_t current);
+  void output_diff(const datetime_t& current);
 
   virtual void operator()(transaction_t& xact);
 };
@@ -481,13 +481,13 @@ class subtotal_transactions : public item_handler<transaction_t>
   std::list<transaction_t> xact_temps;
 
  public:
-  std::time_t start;
-  std::time_t finish;
+  datetime_t start;
+  datetime_t finish;
 
   subtotal_transactions(item_handler<transaction_t> * handler,
 			bool _remember_components = false)
     : item_handler<transaction_t>(handler),
-      remember_components(_remember_components), start(0), finish(0) {}
+      remember_components(_remember_components) {}
 #ifdef DEBUG_ENABLED
   subtotal_transactions(const subtotal_transactions&) {
     assert(0);
@@ -534,7 +534,7 @@ class interval_transactions : public subtotal_transactions
     : subtotal_transactions(_handler, remember_components),
       interval(_interval), last_xact(NULL), started(false) {}
 
-  void report_subtotal(const std::time_t moment = 0);
+  void report_subtotal(const datetime_t& moment = datetime_t());
 
   virtual void flush() {
     if (last_xact)
@@ -606,9 +606,7 @@ class dow_transactions : public subtotal_transactions
 
   virtual void flush();
   virtual void operator()(transaction_t& xact) {
-    std::time_t when = xact.date();
-    struct std::tm * desc = std::localtime(&when);
-    days_of_the_week[desc->tm_wday].push_back(&xact);
+    days_of_the_week[xact.date().wday()].push_back(&xact);
   }
 };
 
@@ -648,7 +646,7 @@ class budget_transactions : public generate_transactions
 		      unsigned long _flags = BUDGET_BUDGETED)
     : generate_transactions(handler), flags(_flags) {}
 
-  void report_budget_items(const std::time_t moment);
+  void report_budget_items(const datetime_t& moment);
 
   virtual void operator()(transaction_t& xact);
 };

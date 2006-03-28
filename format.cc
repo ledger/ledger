@@ -3,7 +3,6 @@
 #include "util.h"
 
 #include <cstdlib>
-#include <ctime>
 
 namespace ledger {
 
@@ -208,11 +207,11 @@ element_t * format_t::parse_elements(const std::string& fmt)
 
     case 'd':
       current->type  = element_t::COMPLETE_DATE_STRING;
-      current->chars = datetime_t::date_format;
+      current->chars = datetime_t::output_format;
       break;
     case 'D':
       current->type  = element_t::DATE_STRING;
-      current->chars = datetime_t::date_format;
+      current->chars = datetime_t::output_format;
       break;
 
     case 'S': current->type = element_t::SOURCE; break;
@@ -536,21 +535,21 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
       break;
 
     case element_t::DATE_STRING: {
-      std::time_t date = 0;
+      datetime_t date;
       if (details.xact)
 	date = details.xact->date();
       else if (details.entry)
 	date = details.entry->date();
 
       char buf[256];
-      std::strftime(buf, 255, elem->chars.c_str(), std::localtime(&date));
+      std::strftime(buf, 255, elem->chars.c_str(), date.localtime());
       out << (elem->max_width == 0 ? buf : truncated(buf, elem->max_width));
       break;
     }
 
     case element_t::COMPLETE_DATE_STRING: {
-      std::time_t actual_date = 0;
-      std::time_t effective_date = 0;
+      datetime_t actual_date;
+      datetime_t effective_date;
       if (details.xact) {
 	actual_date    = details.xact->actual_date();
 	effective_date = details.xact->effective_date();
@@ -561,14 +560,13 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
       }
 
       char abuf[256];
-      std::strftime(abuf, 255, elem->chars.c_str(),
-		    std::localtime(&actual_date));
+      std::strftime(abuf, 255, elem->chars.c_str(), actual_date.localtime());
 
-      if (effective_date != 0 && effective_date != actual_date) {
+      if (effective_date && effective_date != actual_date) {
 	char buf[512];
 	char ebuf[256];
 	std::strftime(ebuf, 255, elem->chars.c_str(),
-		    std::localtime(&effective_date));
+		      effective_date.localtime());
 
 	std::strcpy(buf, abuf);
 	std::strcat(buf, "=");
@@ -892,7 +890,7 @@ format_equity::format_equity(std::ostream&      _output_stream,
 
   entry_t header_entry;
   header_entry.payee = "Opening Balances";
-  header_entry._date = now;
+  header_entry._date = datetime_t::now;
   first_line_format.format(output_stream, details_t(header_entry));
 }
 

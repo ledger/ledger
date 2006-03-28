@@ -16,7 +16,6 @@
 #include <fstream>
 #include <sstream>
 #include <cstring>
-#include <ctime>
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
@@ -36,10 +35,15 @@ static unsigned int linenum;
 static unsigned int src_idx;
 static accounts_map account_aliases;
 
+static std::list<std::pair<std::string, int> > include_stack;
+
 #ifdef TIMELOG_SUPPORT
-static std::time_t time_in;
-static account_t * last_account;
-static std::string last_desc;
+struct time_entry_t {
+  datetime_t  checkin;
+  account_t * account;
+  std::string desc;
+};
+std::list<time_entry_t> time_entries;
 #endif
 
 inline char * next_element(char * buf, bool variable = false)
@@ -85,7 +89,7 @@ static value_expr parse_amount_expr(std::istream& in, amount_t& amount,
 
   if (! compute_amount(expr, amount, xact))
     throw new parse_error("Amount expression failed to compute");
-    
+
   if (expr->kind == value_expr_t::CONSTANT)
     expr = NULL;
 
@@ -285,12 +289,10 @@ transaction_t * parse_transaction(char * line, account_t * account,
 
 	  if (char * p = std::strchr(buf, '=')) {
 	    *p++ = '\0';
-	    if (! quick_parse_date(p, &xact->_date_eff))
-	      throw new parse_error("Failed to parse effective date");
+	    xact->_date_eff = p;
 	  }
-
-	  if (buf[0] && ! quick_parse_date(buf, &xact->_date))
-	    throw new parse_error("Failed to parse date");
+	  if (buf[0])
+	    xact->_date = buf;
 	}
     }
   }
@@ -358,12 +360,9 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
 
   if (char * p = std::strchr(line, '=')) {
     *p++ = '\0';
-    if (! quick_parse_date(p, &curr->_date_eff))
-      throw new parse_error("Failed to parse effective date");
+    curr->_date_eff = p;
   }
-
-  if (! quick_parse_date(line, &curr->_date))
-    throw new parse_error("Failed to parse date");
+  curr->_date = line;
 
   TIMER_STOP(entry_date);
 
@@ -492,22 +491,61 @@ bool textual_parser_t::test(std::istream& in) const
   return true;
 }
 
-static void clock_out_from_timelog(const std::time_t when,
-				   journal_t * journal)
+static void clock_out_from_timelog(const datetime_t& when,
+				   account_t *	account,
+				   const char *	desc,
+				   journal_t *	journal)
 {
+  time_entry_t event;
+  bool found = false;
+
+  if (time_entries.size() == 1) {
+    event = time_entries.back();
+    time_entries.clear();
+  }
+  else if (time_entries.empty()) {
+    throw new parse_error("Timelog check-out event without a check-in");
+  }
+  else if (! account) {
+    throw new parse_error
+      ("When multiple check-ins are active, checking out requires an account");
+  }
+  else {
+    for (std::list<time_entry_t>::iterator i = time_entries.begin();
+	 i != time_entries.end();
+	 i++)
+      if (account == (*i).account) {
+	event = *i;
+	found = true;
+	time_entries.erase(i);
+	break;
+      }
+    if (! found)
+      throw new parse_error
+	("Timelog check-out event does not match any current check-ins");
+  }
+
+  if (desc && event.desc.empty()) {
+    event.desc = desc;
+    desc = NULL;
+  }
+
   std::auto_ptr<entry_t> curr(new entry_t);
   curr->_date = when;
-  curr->code  = "";
-  curr->payee = last_desc;
+  curr->code  = desc ? desc : "";
+  curr->payee = event.desc;
 
-  double diff = std::difftime(curr->_date, time_in);
-  char   buf[32];
-  std::sprintf(buf, "%lds", long(diff));
+  if (curr->_date < event.checkin)
+    throw new parse_error
+      ("Timelog check-out date less than corresponding check-in");
+
+  char buf[32];
+  std::sprintf(buf, "%lds", curr->_date - event.checkin);
   amount_t amt;
   amt.parse(buf);
 
   transaction_t * xact
-    = new transaction_t(last_account, amt, TRANSACTION_VIRTUAL);
+    = new transaction_t(event.account, amt, TRANSACTION_VIRTUAL);
   xact->state = transaction_t::CLEARED;
   curr->add_transaction(xact);
 
@@ -516,8 +554,6 @@ static void clock_out_from_timelog(const std::time_t when,
   else
     curr.release();
 }
-
-static std::list<std::pair<std::string, int> > include_stack;
 
 unsigned int textual_parser_t::parse(std::istream&	 in,
 				     config_t&           config,
@@ -577,37 +613,38 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
 	char * p = skip_ws(line + 22);
 	char * n = next_element(p, true);
-	last_desc = n ? n : "";
 
-	struct std::tm when;
-	if (strptime(date.c_str(), "%Y/%m/%d %H:%M:%S", &when)) {
-	  time_in      = std::mktime(&when);
-	  last_account = account_stack.front()->find_account(p);
-	} else {
-	  last_account = NULL;
-	  throw new parse_error("Cannot parse timelog entry date");
-	}
+	time_entry_t event;
+	event.desc    = n ? n : "";
+	event.checkin = date;
+	event.account = account_stack.front()->find_account(p);
+
+	if (! time_entries.empty())
+	  for (std::list<time_entry_t>::iterator i = time_entries.begin();
+	       i != time_entries.end();
+	       i++)
+	    if (event.account == (*i).account)
+	      throw new parse_error
+		("Cannot double check-in to the same account");
+
+	time_entries.push_back(event);
 	break;
       }
 
       case 'o':
       case 'O':
-	if (last_account) {
+	if (time_entries.empty()) {
+	  throw new parse_error("Timelog check-out event without a check-in");
+	} else {
 	  std::string date(line, 2, 19);
 
 	  char * p = skip_ws(line + 22);
-	  if (last_desc.empty() && *p)
-	    last_desc = p;
+	  char * n = next_element(p, true);
 
-	  struct std::tm when;
-	  if (strptime(date.c_str(), "%Y/%m/%d %H:%M:%S", &when)) {
-	    clock_out_from_timelog(std::mktime(&when), journal);
-	    count++;
-	  } else {
-	    throw new parse_error("Cannot parse timelog entry date");
-	  }
-
-	  last_account = NULL;
+	  clock_out_from_timelog
+	    (date, p ? account_stack.front()->find_account(p) : NULL, n,
+	     journal);
+	  count++;
 	}
 	break;
 #endif // TIMELOG_SUPPORT
@@ -631,39 +668,21 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	break;
 
       case 'P': {		// a pricing entry
-	char * date_field = skip_ws(line + 1);
-	char * time_field = next_element(date_field);
-	if (! time_field) break;
+	char * date_field_ptr = skip_ws(line + 1);
+	char * time_field_ptr = next_element(date_field_ptr);
+	if (! time_field_ptr) break;
+	std::string date_field = date_field_ptr;
 
-	char *	       symbol_and_price;
-	std::time_t    date;
-	struct std::tm when;
+	char *     symbol_and_price;
+	datetime_t datetime;
 
-	if (std::isdigit(time_field[0])) {
-	  symbol_and_price = next_element(time_field);
+	if (std::isdigit(time_field_ptr[0])) {
+	  symbol_and_price = next_element(time_field_ptr);
 	  if (! symbol_and_price) break;
-
-	  char date_buffer[64];
-	  std::strcpy(date_buffer, date_field);
-	  date_buffer[std::strlen(date_field)] = ' ';
-	  std::strcpy(&date_buffer[std::strlen(date_field) + 1], time_field);
-
-	  if (strptime(date_buffer, "%Y/%m/%d %H:%M:%S", &when)) {
-	    date = std::mktime(&when);
-	  } else {
-	    throw new parse_error("Failed to parse date/time");
-	  }
+	  datetime = date_field + " " + time_field_ptr;
 	} else {
-	  symbol_and_price = time_field;
-
-	  if (strptime(date_field, "%Y/%m/%d", &when)) {
-	    when.tm_hour = 0;
-	    when.tm_min	 = 0;
-	    when.tm_sec	 = 0;
-	    date = std::mktime(&when);
-	  } else {
-	    throw new parse_error("Failed to parse date");
-	  }
+	  symbol_and_price = time_field_ptr;
+	  datetime = date_t(date_field);
 	}
 
 	std::string symbol;
@@ -671,7 +690,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	amount_t price(symbol_and_price);
 
 	if (commodity_t * commodity = commodity_t::find_or_create(symbol))
-	  commodity->add_price(date, price);
+	  commodity->add_price(datetime, price);
 	break;
       }
 
@@ -686,7 +705,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
       }
 
       case 'Y':                   // set the current year
-	now_year = std::atoi(skip_ws(line + 1)) - 1900;
+	date_t::current_year = std::atoi(skip_ws(line + 1)) - 1900;
 	break;
 
 #ifdef TIMELOG_SUPPORT
@@ -858,9 +877,12 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
   }
 
  done:
-  if (last_account) {
-    clock_out_from_timelog(now, journal);
-    last_account = NULL;
+  if (! time_entries.empty()) {
+    for (std::list<time_entry_t>::iterator i = time_entries.begin();
+	 i != time_entries.end();
+	 i++)
+      clock_out_from_timelog(datetime_t::now, (*i).account, NULL, journal);
+    time_entries.clear();
   }
 
   if (added_auto_entry_hook)

@@ -2,10 +2,8 @@
 #define _BALANCE_H
 
 #include "amount.h"
-#include "datetime.h"
 
 #include <map>
-#include <ctime>
 #include <iostream>
 
 namespace ledger {
@@ -428,11 +426,11 @@ class balance_t
     return true;
   }
 
-  amount_t    amount(const commodity_t& commodity =
-		     *commodity_t::null_commodity) const;
-  balance_t   value(const std::time_t moment = now) const;
-  balance_t   price() const;
-  std::time_t date() const;
+  amount_t   amount(const commodity_t& commodity =
+		    *commodity_t::null_commodity) const;
+  balance_t  value(const datetime_t& moment = datetime_t::now) const;
+  balance_t  price() const;
+  datetime_t date() const;
 
   balance_t
   strip_annotations(const bool keep_price = amount_t::keep_price,
@@ -870,13 +868,13 @@ class balance_pair_t
 		   *commodity_t::null_commodity) const {
     return quantity.amount(commodity);
   }
-  balance_t value(const std::time_t moment = now) const {
+  balance_t value(const datetime_t& moment = datetime_t::now) const {
     return quantity.value(moment);
   }
   balance_t price() const {
     return quantity.price();
   }
-  std::time_t date() const {
+  datetime_t date() const {
     return quantity.date();
   }
 

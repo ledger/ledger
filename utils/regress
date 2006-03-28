@@ -22,7 +22,7 @@ runtest() {
 	echo generating $num
 	./ledger "$@" > $UTILS/baseline/$num 2> $TMPDIR/errors-$$.out
 	cat $TMPDIR/errors-$$.out >> $UTILS/baseline/$num
-    else
+    elif [ -r $UTILS/baseline/$num ]; then
 	echo regression $num
 
 	./ledger "$@" > $TMPDIR/test-$$.out 2> $TMPDIR/errors-$$.out
@@ -39,6 +39,8 @@ runtest() {
     fi
     rm -f $TMPDIR/*-$$.out
 }
+
+runtest 1032 -f $CASES/1032.dat -S t bal
 
 runtest 1031 -f $CASES/1030.dat reg
 runtest 1030 -f $CASES/1030.dat bal

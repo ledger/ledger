@@ -104,8 +104,7 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
     case 'D':
       SET_BEG_POS_AND_LINE();
       get_line(in);
-      if (! parse_date(line, &entry->_date))
-	throw new parse_error("Failed to parse date");
+      entry->_date = line;
       break;
 
     case 'T':

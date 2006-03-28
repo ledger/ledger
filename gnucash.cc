@@ -292,12 +292,9 @@ static void dataHandler(void *userData, const char *s, int len)
     curr_entry->code = std::string(s, len);
     break;
 
-  case ENTRY_DATE: {
-    struct tm when;
-    strptime(std::string(s, len).c_str(), "%Y-%m-%d %H:%M:%S %z", &when);
-    curr_entry->_date = std::mktime(&when);
+  case ENTRY_DATE:
+    curr_entry->_date = std::string(s, len);
     break;
-  }
 
   case ENTRY_DESC:
     curr_entry->payee = std::string(s, len);
@@ -374,6 +371,10 @@ unsigned int gnucash_parser_t::parse(std::istream&	 in,
 				     const std::string * original_file)
 {
   char buf[BUFSIZ];
+
+  // This is the date format used by Gnucash, so override whatever the
+  // user specified.
+  date_t::input_format = "%Y-%m-%d %H:%M:%S %z";
 
   count		 = 0;
   action	 = NO_ACTION;
