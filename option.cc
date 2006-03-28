@@ -38,9 +38,9 @@ namespace {
       if ((result = (int)name[0] - (int)array[mid].long_opt[0]) == 0)
 	result = std::strcmp(name, array[mid].long_opt);
 
-      if (result > 0) 
+      if (result > 0)
 	first = mid + 1;		// repeat search in top half.
-      else if (result < 0) 
+      else if (result < 0)
 	last = mid - 1;		// repeat search in bottom half.
       else
 	return &array[mid];
@@ -102,7 +102,7 @@ void process_arguments(option_t * options, int argc, char ** argv,
       opt = search_options(options, name);
       if (! opt)
 	throw new option_error(std::string("illegal option --") + name);
-      
+
       if (opt->wants_arg && ! value) {
 	value = *++i;
 	if (! value)
@@ -610,6 +610,22 @@ OPT_BEGIN(pager, ":") {
   config->pager = optarg;
 } OPT_END(pager);
 
+OPT_BEGIN(truncate, ":") {
+  std::string style(optarg);
+  if (style == "leading")
+    format_t::elision_style = format_t::TRUNCATE_LEADING;
+  else if (style == "middle")
+    format_t::elision_style = format_t::TRUNCATE_MIDDLE;
+  else if (style == "trailing")
+    format_t::elision_style = format_t::TRUNCATE_TRAILING;
+  else if (style == "abbrev")
+    format_t::elision_style = format_t::ABBREVIATE;
+} OPT_END(truncate);
+
+OPT_BEGIN(abbrev_len, ":") {
+  format_t::abbrev_length = std::atoi(optarg);
+} OPT_END(abbrev_len);
+
 OPT_BEGIN(empty, "E") {
   report->show_empty = true;
 } OPT_END(empty);
@@ -658,7 +674,7 @@ OPT_BEGIN(descend, "") {
        pos != std::string::npos;
        beg = pos + 1, pos = arg.find(';', beg))
     report->descend_expr += (std::string("t=={") +
-			     std::string(arg, beg, pos) + "};");
+			     std::string(arg, beg, pos - beg) + "};");
   report->descend_expr += (std::string("t=={") +
 			   std::string(arg, beg) + "}");
 } OPT_END(descend);
@@ -895,7 +911,7 @@ OPT_BEGIN(set_price, ":") {
   for (std::string::size_type pos = arg.find(';');
        pos != std::string::npos;
        beg = pos + 1, pos = arg.find(';', beg))
-    parse_price_setting(std::string(arg, beg, pos).c_str());
+    parse_price_setting(std::string(arg, beg, pos - beg).c_str());
   parse_price_setting(std::string(arg, beg).c_str());
 } OPT_END(set_price);
 
@@ -940,6 +956,7 @@ OPT_BEGIN(percentage, "%") {
 //////////////////////////////////////////////////////////////////////
 
 option_t config_options[CONFIG_OPTIONS_SIZE] = {
+  { "abbrev-len", '\0', true, opt_abbrev_len, false },
   { "account", 'a', true, opt_account, false },
   { "actual", 'L', false, opt_actual, false },
   { "add-budget", '\0', false, opt_add_budget, false },
@@ -1025,6 +1042,7 @@ option_t config_options[CONFIG_OPTIONS_SIZE] = {
   { "total-data", 'J', false, opt_total_data, false },
   { "totals", '\0', false, opt_totals, false },
   { "trace", '\0', false, opt_trace, false },
+  { "truncate", '\0', true, opt_truncate, false },
   { "unbudgeted", '\0', false, opt_unbudgeted, false },
   { "uncleared", 'U', false, opt_uncleared, false },
   { "verbose", '\0', false, opt_verbose, false },

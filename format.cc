@@ -6,29 +6,32 @@
 
 namespace ledger {
 
+format_t::elision_style_t format_t::elision_style = ABBREVIATE;
+int format_t::abbrev_length = 2;
+
 bool format_t::ansi_codes  = false;
 bool format_t::ansi_invert = false;
 
-std::string truncated(const std::string& str, unsigned int width,
-		      const int style)
+std::string format_t::truncate(const std::string& str, unsigned int width,
+			       const bool is_account)
 {
   const int len = str.length();
   if (len <= width)
     return str;
 
-  assert(width < 254);
+  assert(width < 4095);
 
-  char buf[256];
+  char buf[4096];
 
-  switch (style) {
-  case 0:
+  switch (elision_style) {
+  case TRUNCATE_LEADING:
     // This method truncates at the beginning.
     std::strncpy(buf, str.c_str() + (len - width), width);
     buf[0] = '.';
     buf[1] = '.';
     break;
 
-  case 1:
+  case TRUNCATE_MIDDLE:
     // This method truncates in the middle.
     std::strncpy(buf, str.c_str(), width / 2);
     std::strncpy(buf + width / 2,
@@ -38,7 +41,52 @@ std::string truncated(const std::string& str, unsigned int width,
     buf[width / 2] = '.';
     break;
 
-  case 2:
+  case ABBREVIATE:
+    if (is_account) {
+      std::list<std::string> parts;
+      std::string::size_type beg = 0;
+      for (std::string::size_type pos = str.find(':');
+	   pos != std::string::npos;
+	   beg = pos + 1, pos = str.find(':', beg))
+	parts.push_back(std::string(str, beg, pos - beg));
+      parts.push_back(std::string(str, beg));
+
+      std::string result;
+      int newlen = len;
+      for (std::list<std::string>::iterator i = parts.begin();
+	   i != parts.end();
+	   i++) {
+	// Don't contract the last element
+	std::list<std::string>::iterator x = i;
+	if (++x == parts.end()) {
+	  result += *i;
+	  break;
+	}
+
+	if (newlen > width) {
+	  result += std::string(*i, 0, abbrev_length);
+	  result += ":";
+	  newlen -= (*i).length() - abbrev_length;
+	} else {
+	  result += *i;
+	  result += ":";
+	}
+      }
+
+      if (newlen > width) {
+	// Even abbreviated its too big to show the last account, so
+	// abbreviate all but the last and truncate at the beginning.
+	std::strncpy(buf, result.c_str() + (result.length() - width), width);
+	buf[0] = '.';
+	buf[1] = '.';
+      } else {
+	std::strcpy(buf, result.c_str());
+      }
+      break;
+    }
+    // fall through...
+
+  case TRUNCATE_TRAILING:
     // This method truncates at the end (the default).
     std::strncpy(buf, str.c_str(), width - 2);
     buf[width - 2] = '.';
@@ -543,7 +591,7 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 
       char buf[256];
       std::strftime(buf, 255, elem->chars.c_str(), date.localtime());
-      out << (elem->max_width == 0 ? buf : truncated(buf, elem->max_width));
+      out << (elem->max_width == 0 ? buf : truncate(buf, elem->max_width));
       break;
     }
 
@@ -572,9 +620,9 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 	std::strcat(buf, "=");
 	std::strcat(buf, ebuf);
 
-	out << (elem->max_width == 0 ? buf : truncated(buf, elem->max_width));
+	out << (elem->max_width == 0 ? buf : truncate(buf, elem->max_width));
       } else {
-	out << (elem->max_width == 0 ? abuf : truncated(abuf, elem->max_width));
+	out << (elem->max_width == 0 ? abuf : truncate(abuf, elem->max_width));
       }
       break;
     }
@@ -621,8 +669,8 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
     case element_t::PAYEE:
       if (details.entry)
 	out << (elem->max_width == 0 ?
-		details.entry->payee : truncated(details.entry->payee,
-						 elem->max_width));
+		details.entry->payee : truncate(details.entry->payee,
+						elem->max_width));
       break;
 
     case element_t::OPT_NOTE:
@@ -633,8 +681,8 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
     case element_t::NOTE:
       if (details.xact)
 	out << (elem->max_width == 0 ?
-		details.xact->note : truncated(details.xact->note,
-					       elem->max_width));
+		details.xact->note : truncate(details.xact->note,
+					      elem->max_width));
       break;
 
     case element_t::OPT_ACCOUNT:
@@ -661,7 +709,7 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 
 	if (details.xact && details.xact->flags & TRANSACTION_VIRTUAL) {
 	  if (elem->max_width > 2)
-	    name = truncated(name, elem->max_width - 2);
+	    name = truncate(name, elem->max_width - 2, true);
 
 	  if (details.xact->flags & TRANSACTION_BALANCE)
 	    name = "[" + name + "]";
@@ -669,7 +717,7 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 	    name = "(" + name + ")";
 	}
 	else if (elem->max_width > 0)
-	  name = truncated(name, elem->max_width);
+	  name = truncate(name, elem->max_width, true);
 
 	out << name;
       } else {

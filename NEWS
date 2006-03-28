@@ -1,7 +1,42 @@
-
 			     Ledger NEWS
 
 * 3.0
+
+- The style for eliding long account names (for example, in the
+  register report) has been changed.  Previously Ledger would elide
+  the end of long names, replacing the excess length with "..".
+  However, in some cases this caused the base account name to be
+  missing from the report!
+
+  What Ledger now does is that if an account name is too long, it will
+  start abbreviating the first parts of the account name down to two
+  letters in length.  If this results in a string that is still too
+  long, the front will be elided -- not the end.  For example:
+
+    Expenses:Cash           ; OK, not too long
+    Ex:Wednesday:Cash       ; "Expenses" was abbreviated to fit
+    Ex:We:Afternoon:Cash    ; "Expenses" and "Wednesday" abbreviated
+    ; Expenses:Wednesday:Afternoon:Lunch:Snack:Candy:Chocolate:Cash
+    ..:Af:Lu:Sn:Ca:Ch:Cash  ; Abbreviated and elided!
+
+  As you can see, it now takes a very deep account name before any
+  elision will occur, whereas in 2.x elisions were fairly common.
+
+- In addition to the new elision change mentioned above, the style is
+  also configurable:
+
+    --truncate leading      ; elide at the beginning
+    --truncate middle       ; elide in the middle
+    --truncate trailing     ; elide at end (Ledger 2.x's behavior)
+    --truncate abbrev       ; the new behavior
+
+    --abbrev-len 2          ; set length of abbreviations
+
+  These elision styles affect all format strings which have a maximum
+  width, so they will also affect the payee in a register report, for
+  example.  In the case of non-account names, "abbrev" is equivalent
+  to "trailing", even though it elides at the beginning for long
+  account names.
 
 - Error reporting has been greatly improving, now showing full
   contextual information for most error messages.
@@ -59,7 +94,7 @@
       monthly costs report, for example, because it makes the
       following command possible:
 
-        ledger -M --only "a>100" reg ^Expenses:Food
+	ledger -M --only "a>100" reg ^Expenses:Food
 
       This shows only *months* whose amount is greater than 100.  If
       --limit had been used, it would have been a monthly summary of
@@ -71,7 +106,7 @@
       This predicate does not constrain calculation, but only display.
       Consider the same command as above:
 
-        ledger -M --display "a>100" reg ^Expenses:Food
+	ledger -M --display "a>100" reg ^Expenses:Food
 
       This displays only lines whose amount is greater than 100, *yet
       the running total still includes amounts from all transactions*.
@@ -79,7 +114,7 @@
       the current month's checking register while still giving a
       correct ending balance:
 
-        ledger --display "d>[this month]" reg Checking
+	ledger --display "d>[this month]" reg Checking
 
     Note that these predicates can be combined.  Here is a report that
     considers only food bills whose individual cost is greater than
@@ -88,8 +123,8 @@
     retain an accurate running total with respect to the entire ledger
     file:
 
-        ledger -M --limit "a>20" --only "a>200" \
-          --display "year == yearof([last year])" reg ^Expenses:Food
+	ledger -M --limit "a>20" --only "a>200" \
+	  --display "year == yearof([last year])" reg ^Expenses:Food
 
 - Added new "--descend AMOUNT" and "--descend-if VALEXPR" reporting
   options.  For any reports that display valued transactions (i.e.,
@@ -166,12 +201,12 @@
      G      gain_total
      U(x)   abs(x)
      S(x)   quant(x), quantity(x)
-            comm(x), commodity(x)
-            setcomm(x,y), set_commodity(x,y)
+	    comm(x), commodity(x)
+	    setcomm(x,y), set_commodity(x,y)
      A(x)   mean(x), avg(x), average(x)
      P(x,y) val(x,y), value(x,y)
-            min(x,y)
-            max(x,y)
+	    min(x,y)
+	    max(x,y)
 
 - There are new "parse" and "expr" commands, whose argument is a
   single value expression.  Ledger will simply print out the result of
@@ -318,10 +353,10 @@
   the following is now supported, which wasn't previously:
 
     2004/06/21 Adjustment
-        Retirement          100 FUNDA
-        Retirement          200 FUNDB
-        Retirement          300 FUNDC
-        Equity:Adjustments
+	Retirement          100 FUNDA
+	Retirement          200 FUNDB
+	Retirement          300 FUNDC
+	Equity:Adjustments
 
 - Fixed several bugs relating to QIF parsing, budgeting and
   forecasting.
