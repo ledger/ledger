@@ -976,6 +976,7 @@ option_t config_options[CONFIG_OPTIONS_SIZE] = {
   { "code-as-payee", '\0', false, opt_code_as_payee, false },
   { "collapse", 'n', false, opt_collapse, false },
   { "comm-as-payee", 'x', false, opt_comm_as_payee, false },
+  { "cost", '\0', false, opt_basis, false },
   { "csv-register-format", '\0', true, opt_csv_register_format, false },
   { "current", 'c', false, opt_current, false },
   { "daily", '\0', false, opt_daily, false },
