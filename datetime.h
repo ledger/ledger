@@ -107,7 +107,7 @@ class date_t
     char buf[64];
     std::strftime(buf, 63, format.c_str(), localtime());
     return buf;
-  }    
+  }
 
   int year() const {
     return localtime()->tm_year + 1900;
@@ -129,7 +129,7 @@ class date_t
   void write(std::ostream& out,
 	     const std::string& format = output_format) const {
     out << to_string(format);
-  }    
+  }
 
   friend class datetime_t;
   friend struct interval_t;
@@ -227,9 +227,9 @@ class datetime_t : public date_t
 };
 
 inline long operator-(const datetime_t& left, const datetime_t& right) {
-  datetime_t temp(left);
-  temp -= right;
-  return temp;
+  std::time_t left_time(left);
+  std::time_t right_time(right);
+  return left_time - right_time;
 }
 
 inline datetime_t operator+(const datetime_t& left, const long seconds) {

@@ -185,7 +185,8 @@ transaction_t * parse_transaction(char * line, account_t * account,
       unsigned long beg = (long)in.tellg();
 
       xact->amount_expr =
-	parse_amount_expr(in, xact->amount, xact.get());
+	parse_amount_expr(in, xact->amount, xact.get(),
+			  PARSE_VALEXPR_NO_REDUCE);
 
       unsigned long end = (long)in.tellg();
       xact->amount_expr.expr = std::string(line, beg, end - beg);
@@ -492,12 +493,11 @@ bool textual_parser_t::test(std::istream& in) const
 }
 
 static void clock_out_from_timelog(const datetime_t& when,
-				   account_t *	account,
-				   const char *	desc,
-				   journal_t *	journal)
+				   account_t *	     account,
+				   const char *	     desc,
+				   journal_t *	     journal)
 {
   time_entry_t event;
-  bool found = false;
 
   if (time_entries.size() == 1) {
     event = time_entries.back();
@@ -511,6 +511,8 @@ static void clock_out_from_timelog(const datetime_t& when,
       ("When multiple check-ins are active, checking out requires an account");
   }
   else {
+    bool found = false;
+
     for (std::list<time_entry_t>::iterator i = time_entries.begin();
 	 i != time_entries.end();
 	 i++)
@@ -520,6 +522,7 @@ static void clock_out_from_timelog(const datetime_t& when,
 	time_entries.erase(i);
 	break;
       }
+
     if (! found)
       throw new parse_error
 	("Timelog check-out event does not match any current check-ins");
