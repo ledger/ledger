@@ -32,14 +32,15 @@ libledger_la_SOURCES = \
 	startup.cc     \
 	textual.cc     \
 	valexpr.cc     \
-	walk.cc
+	walk.cc        \
+	xml.cc
 if HAVE_EXPAT
 libledger_la_CXXFLAGS += -DHAVE_EXPAT=1
-libledger_la_SOURCES += gnucash.cc xml.cc
+libledger_la_SOURCES += gnucash.cc
 endif
 if HAVE_XMLPARSE
 libledger_la_CXXFLAGS += -DHAVE_XMLPARSE=1
-libledger_la_SOURCES += gnucash.cc xml.cc
+libledger_la_SOURCES += gnucash.cc
 endif
 if HAVE_LIBOFX
 libledger_la_CXXFLAGS += -DHAVE_LIBOFX=1
