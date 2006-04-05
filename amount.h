@@ -312,7 +312,7 @@ void parse_conversion(const std::string& larger,
 
 inline bool is_quote_or_paren(char * p) {
   return *p == '"' || *p == '{' || *p == '[' || *p == '(';
-}  
+}
 
 inline char * scan_past_quotes_and_parens(char * expr)
 {

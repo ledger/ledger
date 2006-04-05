@@ -1952,7 +1952,7 @@ void export_amount()
     ;
 
   class_< commodity_base_t::updater_t, commodity_updater_wrap,
-          boost::noncopyable >
+	  boost::noncopyable >
     ("Updater")
     ;
 
