@@ -10,6 +10,7 @@ fi
 aclocal
 autoheader
 if [ "$1" = "--dist" ]; then
+    shift 1
     automake -a -c -f -i
 else
     automake -a -c -f
@@ -23,19 +24,24 @@ INCDIRS="$INCDIRS -Wno-long-double"
 LIBDIRS="-L/sw/lib -L/usr/local/lib -L/sw/lib/python2.4/config"
 
 if [ "$1" = "--debug" ]; then
+    shift 1
     ./configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" CXXFLAGS="-g" \
-	--enable-debug --enable-python
+	--enable-debug --enable-python "$@"
 elif [ "$1" = "--opt" ]; then
+    shift 1
     ./configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
-	CXXFLAGS="-fomit-frame-pointer -O3 -mcpu=7450 -fPIC"
+	CXXFLAGS="-fomit-frame-pointer -O3 -mcpu=7450 -fPIC" "$@"
 elif [ "$1" = "--flat-opt" ]; then
+    shift 1
     ./configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
-	CXXFLAGS="-fomit-frame-pointer -O3 -mcpu=7450"
+	CXXFLAGS="-fomit-frame-pointer -O3 -mcpu=7450" "$@"
 elif [ "$1" = "--safe-opt" ]; then
+    shift 1
     ./configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
-	CXXFLAGS="-fomit-frame-pointer -O3 -mcpu=7450 -fPIC -DDEBUG_LEVEL=1"
+	CXXFLAGS="-fomit-frame-pointer -O3 -mcpu=7450 -fPIC -DDEBUG_LEVEL=1" "$@"
 elif [ "$1" = "--perf" ]; then
-    ./configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" CXXFLAGS="-g -pg"
+    shift 1
+    ./configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" CXXFLAGS="-g -pg" "$@"
 fi
 
 rm AUTHORS COPYING
