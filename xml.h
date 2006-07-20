@@ -6,6 +6,8 @@
 
 namespace ledger {
 
+#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
+
 class xml_parser_t : public parser_t
 {
  public:
@@ -17,6 +19,8 @@ class xml_parser_t : public parser_t
 			     account_t *	 master        = NULL,
 			     const std::string * original_file = NULL);
 };
+
+#endif
 
 class format_xml_entries : public format_entries
 {
