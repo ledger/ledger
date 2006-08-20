@@ -396,7 +396,7 @@ inline value_t abs(const value_t& value) {
 inline std::ostream& operator<<(std::ostream& out, const value_t& value) {
   switch (value.type) {
   case value_t::BOOLEAN:
-    out << *((bool *) value.data) ? "true" : "false";
+    out << (*((bool *) value.data) ? "true" : "false");
     break;
   case value_t::INTEGER:
     out << *((long *) value.data);

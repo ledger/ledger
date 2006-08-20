@@ -155,6 +155,7 @@ inline date_t operator-(const date_t& left, const long days) {
 
 inline std::ostream& operator<<(std::ostream& out, const date_t& moment) {
   moment.write(out);
+  return out;
 }
 
 class datetime_error : public error {
@@ -250,6 +251,7 @@ inline std::ostream& operator<<(std::ostream& out,
   std::strftime(buf, 63, (date_t::output_format + " %H:%M:%S").c_str(),
 		moment.localtime());
   out << buf;
+  return out;
 }
 
 struct interval_t
