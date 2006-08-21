@@ -151,7 +151,7 @@ endif
 alltests.cc: $(TESTSUITES)
 	test -f $(TESTGEN) && python $(TESTGEN) -o $@ --error-printer $(TESTSUITES)
 
-alltests: alltests.cc
+alltests: alltests.cc ledger
 	$(CXXCOMPILE) -I$(CXXTEST_DIR) -lexpat -lgmp -lpcre -o $@ \
 		alltests.cc -L. -L.libs -lamounts -lledger
 
