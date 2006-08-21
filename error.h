@@ -28,7 +28,7 @@ class file_context : public error_context
  public:
   file_context(const std::string& _file, unsigned long _line,
 	       const std::string& desc = "") throw()
-    : file(_file), line(_line), error_context(desc) {}
+    : error_context(desc), file(_file), line(_line) {}
   virtual ~file_context() throw() {}
 
   virtual void describe(std::ostream& out) const throw() {
@@ -46,7 +46,7 @@ class line_context : public error_context {
 
   line_context(const std::string& _line, long _pos,
 	       const std::string& desc = "") throw()
-    : line(_line), pos(_pos), error_context(desc) {}
+    : error_context(desc), line(_line), pos(_pos) {}
   virtual ~line_context() throw() {}
 
   virtual void describe(std::ostream& out) const throw() {

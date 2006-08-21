@@ -206,7 +206,7 @@ class entry_context : public error_context {
 
   entry_context(const entry_base_t& _entry,
 		const std::string& desc = "") throw()
-    : entry(_entry), error_context(desc) {}
+    : error_context(desc), entry(_entry) {}
   virtual ~entry_context() throw() {}
 
   virtual void describe(std::ostream& out) const throw();

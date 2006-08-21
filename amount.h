@@ -318,7 +318,8 @@ inline char * scan_past_quotes_and_parens(char * expr)
 {
   std::stack<char> paren_stack;
 
-  for (const char * p = expr; *p; p++) {
+  char * p;
+  for (p = expr; *p; p++) {
     if (*p == '"' ||
 	((*p == '(' || ((*p == '{' || *p == '[') &&
 			paren_stack.top() != '(')) &&
@@ -334,6 +335,7 @@ inline char * scan_past_quotes_and_parens(char * expr)
 	break;
     }
   }
+  return p;
 }
 
 inline amount_t abs(const amount_t& amt) {
@@ -382,13 +384,13 @@ class commodity_base_t
 
   commodity_base_t()
     : precision(0), flags(COMMODITY_STYLE_DEFAULTS),
-      history(NULL), smaller(NULL), larger(NULL) {}
+      smaller(NULL), larger(NULL), history(NULL) {}
 
   commodity_base_t(const std::string& _symbol,
 		   unsigned int	_precision = 0,
 		   unsigned int _flags	   = COMMODITY_STYLE_DEFAULTS)
-    : precision(_precision), flags(_flags), history(NULL),
-      smaller(NULL), larger(NULL), symbol(_symbol) {}
+    : precision(_precision), flags(_flags),
+      smaller(NULL), larger(NULL), symbol(_symbol), history(NULL) {}
 
   ~commodity_base_t() {
     if (history) delete history;
