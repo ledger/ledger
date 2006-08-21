@@ -15,7 +15,7 @@ last_line = ""
 errors = 0
 
 report = sys.argv[1]
-for line in os.popen("./ledger -f utils/standard.dat -e 2004/4 %s reg %s" % 
+for line in os.popen("./ledger -f utils/standard.dat -e 2004/4 %s reg %s" %
 		     (report, sys.argv[2])):
     value = clean(line[55:67])
     total = clean(line[68:])
@@ -36,7 +36,7 @@ for line in os.popen("./ledger -f utils/standard.dat -e 2004/4 %s reg %s" %
 
 balance_total = 0.0
 
-for line in os.popen("./ledger -f utils/standard.dat -e 2004/4 %s bal %s" % 
+for line in os.popen("./ledger -f utils/standard.dat -e 2004/4 %s bal %s" %
 		     (report, sys.argv[2])):
     if line[0] != '-':
 	balance_total = clean(line[:20])

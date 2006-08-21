@@ -128,6 +128,41 @@ endif
 
 ######################################################################
 
+TESTS = alltests
+
+CXXTEST_DIR = /usr/local/cxxtest
+TESTGEN = $(CXXTEST_DIR)/cxxtestgen.py
+TESTSUITES = tests/*.h
+
+AM_CXXFLAGS =
+if HAVE_EXPAT
+AM_CXXFLAGS += -DHAVE_EXPAT=1
+endif
+if HAVE_XMLPARSE
+AM_CXXFLAGS += -DHAVE_XMLPARSE=1
+endif
+if HAVE_LIBOFX
+AM_CXXFLAGS += -DHAVE_LIBOFX=1
+endif
+if DEBUG
+AM_CXXFLAGS += -DDEBUG_LEVEL=4
+endif
+
+alltests.cc: $(TESTSUITES)
+	test -f $(TESTGEN) && python $(TESTGEN) -o $@ --error-printer $(TESTSUITES)
+
+alltests: alltests.cc
+	$(CXXCOMPILE) -I$(CXXTEST_DIR) -lexpat -lgmp -lpcre -o $@ \
+		alltests.cc -L. -L.libs -lamounts -lledger
+
+runtests: alltests
+	./alltests && tests/regress && tests/regtest
+
+verify: runtests
+	python tests/runtests.py
+
+######################################################################
+
 all-clean: maintainer-clean
 	rm -fr	*~ .*~ .\#* *.html *.info *.pdf *.a *.so *.o *.lo *.la \
 		*.elc *.aux *.cp *.fn *.ky *.log *.pg *.toc *.tp *.vr \

@@ -2,6 +2,10 @@
 
 errors=0
 
+if [ ! -f utils/standard.dat ]; then
+    exit 0
+fi
+
 for test in \
     "-O nrl:checking" \
     "-O ^expenses"    \
@@ -16,7 +20,7 @@ for test in \
     "-G retire"
 do
   echo testing: $test
-  python utils/confirm.py $test
+  python tests/confirm.py $test
   errors=`expr $errors + $?`
 done
 

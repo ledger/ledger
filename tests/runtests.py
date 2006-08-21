@@ -170,13 +170,13 @@ while loop:
 	       count % 1000 == 0:
 		if signals > 0 and errors > 0:
 		    print "%d tests ... (%d signals, %d errors)" % \
-                          (count, signals, errors)
-                elif signals > 0:
+			  (count, signals, errors)
+		elif signals > 0:
 		    print "%d tests ... (%d signals)" % \
-                          (count, signals)
+			  (count, signals)
 		elif errors > 0:
 		    print "%d tests ... (%d errors)" % \
-                          (count, errors)
+			  (count, errors)
 		else:
 		    print "%d tests ..." % count
 

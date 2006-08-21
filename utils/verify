@@ -28,11 +28,6 @@ if ./acprep --safe-opt && make ledger; then
 
    errors=0
 
-   nice -n 20 utils/regtest
+   nice -n 20 make verify
    errors=`expr $errors + $?`
-
-   nice -n 20 utils/regress
-   errors=`expr $errors + $?`
-
-   nice -n 20 utils/runtests $errors
 fi
