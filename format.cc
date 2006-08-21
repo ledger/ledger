@@ -300,27 +300,6 @@ element_t * format_t::parse_elements(const std::string& fmt)
   return result.release();
 }
 
-static bool entry_state(const entry_t * entry, transaction_t::state_t * state)
-{
-  bool first  = true;
-  bool hetero = false;
-
-  for (transactions_list::const_iterator i = entry->transactions.begin();
-       i != entry->transactions.end();
-       i++) {
-    if (first) {
-      *state = (*i)->state;
-      first = false;
-    }
-    else if (*state != (*i)->state) {
-      hetero = true;
-      break;
-    }
-  }
-
-  return ! hetero;
-}
-
 namespace {
   inline void mark_red(std::ostream& out, const element_t * elem) {
     out.setf(std::ios::left);
@@ -643,7 +622,7 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
     case element_t::ENTRY_CLEARED:
       if (details.entry) {
 	transaction_t::state_t state;
-	if (entry_state(details.entry, &state))
+	if (details.entry->get_state(&state))
 	  switch (state) {
 	  case transaction_t::CLEARED:
 	    out << "* ";
@@ -688,7 +667,7 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
     case element_t::OPT_ACCOUNT:
       if (details.entry && details.xact) {
 	transaction_t::state_t state;
-	if (! entry_state(details.entry, &state))
+	if (! details.entry->get_state(&state))
 	  switch (details.xact->state) {
 	  case transaction_t::CLEARED:
 	    name = "* ";

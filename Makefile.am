@@ -18,6 +18,7 @@ libledger_la_CXXFLAGS =
 libledger_la_SOURCES = \
 	binary.cc      \
 	config.cc      \
+	csv.cc         \
 	derive.cc      \
 	emacs.cc       \
 	format.cc      \
@@ -63,6 +64,7 @@ pkginclude_HEADERS = \
 		     \
 	binary.h     \
 	config.h     \
+	csv.h        \
 	derive.h     \
 	emacs.h      \
 	error.h      \

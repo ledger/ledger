@@ -115,10 +115,8 @@ int parse_and_report(config_t& config, report_t& report,
     command = "P";
   else if (command == "pricesdb")
     command = "D";
-  else if (command == "csv") {
-    config.register_format = config.csv_register_format;
-    command = "r";
-  }
+  else if (command == "csv")
+    command = "c";
   else if (command == "parse") {
     value_expr expr(ledger::parse_value_expr(*arg));
 
@@ -326,6 +324,8 @@ appending the output of this command to your Ledger file if you so choose."
     formatter = new format_emacs_transactions(*out);
   else if (command == "X")
     formatter = new format_xml_entries(*out, report.show_totals);
+  else if (command == "c")
+    formatter = new format_csv_transactions(*out);
   else
     formatter = new format_transactions(*out, *format);
 

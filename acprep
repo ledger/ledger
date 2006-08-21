@@ -19,9 +19,9 @@ autoconf
 
 INCDIRS="-I/sw/include -I/usr/local/include/boost-1_33 -I/usr/include/httpd/xml"
 #INCDIRS="$INCDIRS -I/sw/include/libofx"
-INCDIRS="$INCDIRS -I/sw/include/python2.4"
+INCDIRS="$INCDIRS -I/usr/include/python2.3"
 INCDIRS="$INCDIRS -Wno-long-double"
-LIBDIRS="-L/sw/lib -L/usr/local/lib -L/sw/lib/python2.4/config"
+LIBDIRS="-L/sw/lib -L/usr/local/lib -L/usr/lib/python2.3/config"
 
 if [ "$1" = "--debug" ]; then
     shift 1

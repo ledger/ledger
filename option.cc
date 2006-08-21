@@ -562,10 +562,6 @@ OPT_BEGIN(wide_register_format, ":") {
   config->wide_register_format = optarg;
 } OPT_END(wide_register_format);
 
-OPT_BEGIN(csv_register_format, ":") {
-  config->csv_register_format = optarg;
-} OPT_END(csv_register_format);
-
 OPT_BEGIN(plot_amount_format, ":") {
   config->plot_amount_format = optarg;
 } OPT_END(plot_amount_format);
@@ -977,7 +973,6 @@ option_t config_options[CONFIG_OPTIONS_SIZE] = {
   { "collapse", 'n', false, opt_collapse, false },
   { "comm-as-payee", 'x', false, opt_comm_as_payee, false },
   { "cost", '\0', false, opt_basis, false },
-  { "csv-register-format", '\0', true, opt_csv_register_format, false },
   { "current", 'c', false, opt_current, false },
   { "daily", '\0', false, opt_daily, false },
   { "date-format", 'y', true, opt_date_format, false },

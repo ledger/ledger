@@ -281,6 +281,27 @@ entry_t::entry_t(const entry_t& e)
     (*i)->entry = this;
 }
 
+bool entry_t::get_state(transaction_t::state_t * state) const
+{
+  bool first  = true;
+  bool hetero = false;
+
+  for (transactions_list::const_iterator i = transactions.begin();
+       i != transactions.end();
+       i++) {
+    if (first) {
+      *state = (*i)->state;
+      first = false;
+    }
+    else if (*state != (*i)->state) {
+      hetero = true;
+      break;
+    }
+  }
+
+  return ! hetero;
+}
+
 void entry_t::add_transaction(transaction_t * xact)
 {
   xact->entry = this;
