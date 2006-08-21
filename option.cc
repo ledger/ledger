@@ -86,46 +86,55 @@ void process_arguments(option_t * options, int argc, char ** argv,
 
     // --long-option or -s
    again:
-    option_t * opt   = NULL;
-    char *     value = NULL;
-
     if ((*i)[1] == '-') {
       if ((*i)[2] == '\0')
 	break;
 
-      char * name = *i + 2;
+      char * name  = *i + 2;
+      char * value = NULL;
       if (char * p = std::strchr(name, '=')) {
 	*p++ = '\0';
 	value = p;
       }
 
-      opt = search_options(options, name);
+      option_t * opt = search_options(options, name);
       if (! opt)
 	throw new option_error(std::string("illegal option --") + name);
 
-      if (opt->wants_arg && ! value) {
+      if (opt->wants_arg && value == NULL) {
 	value = *++i;
-	if (! value)
+	if (value == NULL)
 	  throw new option_error(std::string("missing option argument for --") +
 				 name);
       }
       process_option(opt, value);
-    } else {
-      char c = (*i)[1];
-      opt = search_options(options, c);
-      if (! opt)
-	throw new option_error(std::string("illegal option -") + c);
+    }
+    else if ((*i)[1] == '\0') {
+      throw new option_error(std::string("illegal option -"));
+    }
+    else {
+      std::list<option_t *> opt_queue;
 
-      if (opt->wants_arg) {
-	value = *++i;
-	if (! value)
-	  throw new option_error(std::string("missing option argument for -") + c);
+      int x = 1;
+      for (char c = (*i)[x]; c != '\0'; x++, c = (*i)[x]) {
+	option_t * opt = search_options(options, c);
+	if (! opt)
+	  throw new option_error(std::string("illegal option -") + c);
+	opt_queue.push_back(opt);
+      }
+
+      for (std::list<option_t *>::iterator o = opt_queue.begin();
+	   o != opt_queue.end(); o++) {
+	char * value = NULL;
+	if ((*o)->wants_arg) {
+	  value = *++i;
+	  if (value == NULL)
+	    throw new option_error(std::string("missing option argument for -") +
+				   (*o)->short_opt);
+	}
+	process_option(*o, value);
       }
     }
-
-    assert(opt);
-    assert(! value || opt->wants_arg);
-    process_option(opt, value);
 
    next:
     ;
