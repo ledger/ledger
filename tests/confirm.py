@@ -17,8 +17,11 @@ errors = 0
 report = sys.argv[1]
 for line in os.popen("./ledger -f utils/standard.dat -e 2004/4 %s reg %s" %
 		     (report, sys.argv[2])):
-    value = clean(line[55:67])
-    total = clean(line[68:])
+    match = re.match("\\s*([-$,0-9.]+)\\s+([-$,0-9.]+)", line[55:])
+    if not match:
+	continue
+    value = clean(match.group(1))
+    total = clean(match.group(2))
 
     running_total += value
     diff = abs(running_total - total)

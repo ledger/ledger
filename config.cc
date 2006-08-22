@@ -85,7 +85,6 @@ config_t::config_t()
 			  "%32|%-.22A %12.67t %!12.80T\n");
   wide_register_format = ("%D  %-.35P %-.38A %22.108t %!22.132T\n%/"
 			  "%48|%-.38A %22.108t %!22.132T\n");
-  csv_register_format  = "\"%D\",\"%P\",\"%A\",\"%t\",\"%T\"\n";
   plot_amount_format   = "%D %(@S(@t))\n";
   plot_total_format    = "%D %(@S(@T))\n";
   print_format	       = "\n%d %Y%C%P\n    %-34W  %12o%n\n%/    %-34W  %12o%n\n";

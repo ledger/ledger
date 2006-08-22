@@ -193,6 +193,8 @@ class entry_t : public entry_base_t
   virtual void add_transaction(transaction_t * xact);
 
   virtual bool valid() const;
+
+  bool get_state(transaction_t::state_t * state) const;
 };
 
 struct entry_finalizer_t {

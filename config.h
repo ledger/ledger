@@ -21,7 +21,6 @@ class config_t
   std::string balance_format;
   std::string register_format;
   std::string wide_register_format;
-  std::string csv_register_format;
   std::string plot_amount_format;
   std::string plot_total_format;
   std::string print_format;
