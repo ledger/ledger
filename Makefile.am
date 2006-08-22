@@ -158,7 +158,7 @@ alltests: alltests.cc ledger
 		alltests.cc -L. -L.libs -lamounts -lledger
 
 runtests: alltests
-	./alltests && tests/regress && tests/regtest
+	LD_LIBRARY_PATH=.libs ./alltests && tests/regress && tests/regtest
 
 verify: runtests
 	python tests/runtests.py
