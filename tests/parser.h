@@ -3,11 +3,7 @@
 
 #include <cxxtest/TestSuite.h>
 
-#include <textual.h>
-#include <xml.h>
-#include <binary.h>
-#include <gnucash.h>
-#include <qif.h>
+#include <ledger.h>
 
 using namespace std;
 using namespace ledger;
@@ -24,6 +20,7 @@ public:
 	TS_ASSERT_EQUALS(0, emptyStream.tellg());
     }
 
+#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
     void testEmptyFileIsNotXMLFile()
     {
 	stringstream emptyStream(stringstream::in);
@@ -33,20 +30,21 @@ public:
 	TS_ASSERT_EQUALS(0, emptyStream.tellg());
     }
 
-    void testEmptyFileIsNotBinaryFile()
-    {
-	stringstream emptyStream(stringstream::in);
-	binary_parser_t binaryParser;
-	TS_ASSERT(!binaryParser.test(emptyStream));
-	TS_ASSERT(emptyStream.good());
-	TS_ASSERT_EQUALS(0, emptyStream.tellg());
-    }
-
     void testEmptyFileIsNotGnuCashFile()
     {
 	stringstream emptyStream(stringstream::in);
 	gnucash_parser_t gnucashParser;
 	TS_ASSERT(!gnucashParser.test(emptyStream));
+	TS_ASSERT(emptyStream.good());
+	TS_ASSERT_EQUALS(0, emptyStream.tellg());
+    }
+#endif
+
+    void testEmptyFileIsNotBinaryFile()
+    {
+	stringstream emptyStream(stringstream::in);
+	binary_parser_t binaryParser;
+	TS_ASSERT(!binaryParser.test(emptyStream));
 	TS_ASSERT(emptyStream.good());
 	TS_ASSERT_EQUALS(0, emptyStream.tellg());
     }
