@@ -1475,7 +1475,7 @@ double py_to_float(value_t& value)
 
 void export_value()
 {
-  scope in_value = class_< value_t > ("Value")
+  class_< value_t > ("Value")
     .def(init<value_t>())
     .def(init<balance_pair_t>())
     .def(init<balance_t>())

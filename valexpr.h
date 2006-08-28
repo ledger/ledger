@@ -118,6 +118,12 @@ struct value_expr_t
     O_REF,
     O_ARG,
 
+#ifdef USE_BOOST_PYTHON
+    O_PYDEF,
+    O_PYREF,
+    O_PYLAMBDA,
+#endif
+
     LAST
   };
 
@@ -130,6 +136,9 @@ struct value_expr_t
     mask_t *	   mask;
     unsigned int   arg_index;	// used by ARG_INDEX and O_ARG
     value_expr_t * right;
+#ifdef USE_BOOST_PYTHON
+    void *         pyobject;
+#endif
   };
 
   value_expr_t(const kind_t _kind)

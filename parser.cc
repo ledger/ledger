@@ -28,7 +28,7 @@ void shutdown_parser_support()
   }
 }
 
-bool add_parser(parser_t * parser)
+bool register_parser(parser_t * parser)
 {
   parsers_list::iterator i;
   for (i = parsers->begin(); i != parsers->end(); i++)
@@ -42,7 +42,7 @@ bool add_parser(parser_t * parser)
   return true;
 }
 
-bool remove_parser(parser_t * parser)
+bool unregister_parser(parser_t * parser)
 {
   parsers_list::iterator i;
   for (i = parsers->begin(); i != parsers->end(); i++)
@@ -209,18 +209,22 @@ struct py_parser_t : public parser_t
   }
 };
 
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(parser_parse_overloads,
+				       py_parser_t::parse, 3, 5)
+
 BOOST_PYTHON_FUNCTION_OVERLOADS(parse_journal_overloads, parse_journal, 3, 5)
 BOOST_PYTHON_FUNCTION_OVERLOADS(parse_journal_file_overloads,
 				parse_journal_file, 3, 5)
 
 void export_parser() {
   class_< parser_t, py_parser_t, boost::noncopyable > ("Parser")
-    .def("test", &parser_t::test)
-    .def("parse", &parser_t::parse)
+    .def("test", &py_parser_t::test)
+    .def("parse", &py_parser_t::parse, parser_parse_overloads())
     ;
 
-  def("add_parser", add_parser);
-  def("remove_parser", remove_parser);
+  def("register_parser", register_parser);
+  def("unregister_parser", unregister_parser);
+
   def("parse_journal", parse_journal, parse_journal_overloads());
   def("parse_journal_file", parse_journal_file, parse_journal_file_overloads());
 }

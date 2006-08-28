@@ -71,6 +71,11 @@ value_expr_t::~value_expr_t()
     delete value;
     break;
 
+  case O_PYDEF:
+    assert(pyobject);
+    delete (object *)pyobject;
+    break;
+
   default:
     if (kind > TERMINALS && right)
       right->release();
@@ -134,6 +139,60 @@ namespace {
     return NULL;
   }
 }
+
+#ifdef USE_BOOST_PYTHON
+
+bool python_call(object& func, value_expr_t * arg_expr,
+		 const details_t& details, bool send_details,
+		 value_t& result)
+{
+  std::string func_name = "<Unknown>";
+
+  try {
+    if (arg_expr) {
+      if (arg_expr->kind == value_expr_t::O_COM) {
+	list args;
+	for (value_expr_t * arg = arg_expr; arg; arg = arg->right) {
+	  assert(arg->kind == value_expr_t::O_COM);
+	  value_t value;
+	  arg->left->compute(value, details);
+	  args.append(value);
+	}
+
+	if (PyObject * val =
+	    PyObject_CallObject(func.ptr(), tuple(args).ptr())) {
+	  result = extract<value_t>(val)();
+	  Py_DECREF(val);
+	}
+	else if (PyObject * err = PyErr_Occurred()) {
+	  PyErr_Print();
+	  throw new value_expr_error(std::string("While calling Python function '") +
+				     func_name + "'");
+	}
+	else {
+	  return false;
+	}
+      } else {
+	value_t value;
+	arg_expr->compute(value, details);
+	result = call<value_t>(func.ptr(), value);
+      }
+    } else {
+      if (send_details)
+	result = call<value_t>(func.ptr(), details);
+      else
+	result = call<value_t>(func.ptr());
+    }
+    return true;
+  }
+  catch(const boost::python::error_already_set&) {
+    PyErr_Print();
+    throw new value_expr_error(std::string("While calling Python function '") +
+			       func_name + "'");
+  }
+}
+
+#endif // USE_BOOST_PYTHON
 
 void value_expr_t::compute(value_t& result, const details_t& details,
 			   value_expr_t * context) const
@@ -602,6 +661,25 @@ void value_expr_t::compute(value_t& result, const details_t& details,
     break;
   }
 
+#ifdef USE_BOOST_PYTHON
+  case O_PYDEF:
+  case O_PYLAMBDA:
+    result = 0L;
+    break;
+
+  case O_PYREF:
+    assert(left->kind == O_PYDEF || left->kind == O_PYLAMBDA);
+    assert(left->pyobject);
+    if (right) {
+      value_expr args(reduce_leaves(right, details, context));
+      python_call(*(object *)left->pyobject, args, details, false, result);
+    } else {
+      python_call(*(object *)left->pyobject, NULL, details,
+		  left->kind == O_PYLAMBDA, result);
+    }
+    break;
+#endif
+
   case F_VALUE: {
     int arg_index = 0;
     value_expr_t * expr = find_leaf(context, 0, arg_index);
@@ -751,12 +829,37 @@ inline value_expr_t * parse_value_term(const char * p, scope_t * scope,
   return parse_value_term(stream, scope, flags);
 }
 
+unsigned int parse_args(std::istream& in, istream_pos_type beg,
+			scope_t * scope, const short flags,
+			value_expr_t * node)
+{
+  char c;
+
+  in.clear();
+  in.seekg(beg, std::ios::beg);
+  value_expr args(parse_value_expr(in, scope, flags | PARSE_VALEXPR_PARTIAL));
+
+  if (peek_next_nonws(in) != ')') {
+    in.get(c);
+    unexpected(c, ')');
+  }
+  in.get(c);
+
+  int count = 0;
+  if (args.get()) {
+    count = count_leaves(args.get());
+    node->set_right(args.release());
+  }
+
+  return count;
+}
+
 value_expr_t * parse_value_term(std::istream& in, scope_t * scope,
 				const short flags)
 {
   value_expr node;
 
-  char buf[256];
+  char buf[4096];
   char c = peek_next_nonws(in);
 
   if (flags & PARSE_VALEXPR_RELAXED) {
@@ -813,7 +916,7 @@ value_expr_t * parse_value_term(std::istream& in, scope_t * scope,
     bool have_args = false;
     istream_pos_type beg;
 
-    READ_INTO(in, buf, 255, c, std::isalnum(c) || c == '_');
+    READ_INTO(in, buf, 255, c, std::isalnum(c) || c == '_' || c == '.');
     c = peek_next_nonws(in);
     if (c == '(') {
       in.get(c);
@@ -904,31 +1007,44 @@ value_expr_t * parse_value_term(std::istream& in, scope_t * scope,
 	  in.unget();
 	  goto find_term;
 	}
+
+#ifdef USE_BOOST_PYTHON
+	try {
+	  bool is_lambda = false;
+	  if (std::strcmp(buf, "lambda") == 0) {
+	    READ_INTO(in, &buf[std::strlen(buf)], 3800, c, true);
+	    is_lambda = true;
+	  }
+
+	  object func = python_eval(buf);
+
+	  node.reset(new value_expr_t(value_expr_t::O_PYREF));
+	  node->set_left(new value_expr_t(is_lambda ? value_expr_t::O_PYLAMBDA :
+					  value_expr_t::O_PYDEF));
+	  node->left->pyobject = new object(func);
+
+	  parse_args(in, beg, scope, flags, node);
+
+	  goto parsed;
+	}
+	catch(const boost::python::error_already_set&) {
+	  throw new value_expr_error(std::string("Unknown identifier '") +
+				     buf + "'");
+	}
+#else
 	throw new value_expr_error(std::string("Unknown identifier '") +
 				   buf + "'");
+#endif
       }
-      else if (def->kind == value_expr_t::O_DEF) {
+
+      assert(def);
+      if (def->kind == value_expr_t::O_DEF) {
 	node.reset(new value_expr_t(value_expr_t::O_REF));
 	node->set_left(def->right);
 
 	int count = 0;
-	if (have_args) {
-	  in.clear();
-	  in.seekg(beg, std::ios::beg);
-	  value_expr args
-	    (parse_value_expr(in, scope, flags | PARSE_VALEXPR_PARTIAL));
-
-	  if (peek_next_nonws(in) != ')') {
-	    in.get(c);
-	    unexpected(c, ')');
-	  }
-	  in.get(c);
-
-	  if (args.get()) {
-	    count = count_leaves(args.get());
-	    node->set_right(args.release());
-	  }
-	}
+	if (have_args)
+	  count = parse_args(in, beg, scope, flags, node);
 
 	if (count != def->left->arg_index) {
 	  std::ostringstream errmsg;
@@ -936,8 +1052,7 @@ value_expr_t * parse_value_term(std::istream& in, scope_t * scope,
 		 << "': saw " << count << ", wanted " << def->left->arg_index;
 	  throw new value_expr_error(errmsg.str());
 	}
-      }
-      else {
+      } else {
 	node.reset(def);
       }
     }
@@ -1732,6 +1847,26 @@ bool write_value_expr(std::ostream&	   out,
       out << ")";
     }
     break;
+
+#ifdef USE_BOOST_PYTHON
+  case value_expr_t::O_PYDEF:
+    out << "<pydef>";
+    break;
+  case value_expr_t::O_PYLAMBDA:
+    out << "<pylambda>";
+    break;
+
+  case value_expr_t::O_PYREF:
+    if (write_value_expr(out, node->left, relaxed, node_to_find, start_pos, end_pos))
+      found = true;
+    if (node->right) {
+      out << "(";
+      if (write_value_expr(out, node->right, relaxed, node_to_find, start_pos, end_pos))
+	found = true;
+      out << ")";
+    }
+    break;
+#endif
 
   case value_expr_t::O_COM:
     if (write_value_expr(out, node->left, relaxed, node_to_find, start_pos, end_pos))

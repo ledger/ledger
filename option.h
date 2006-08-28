@@ -37,24 +37,8 @@ struct option_handler_t
   virtual ~option_handler_t() {}
 
   virtual bool check(option_source_t source);
-  virtual void run(const char * arg = NULL) {}
+  virtual void run(const char * arg = NULL) = 0;
 };
-
-typedef std::map<const std::string, option_handler_t *>
-  option_handlers_map;
-typedef std::pair<const std::string, option_handler_t *>
-  option_handlers_pair;
-
-extern option_handlers_map option_handlers;
-
-typedef std::list<option_handler_t *> option_handlers_list;
-
-extern option_handlers_list all_option_handlers;
-
-void add_option(option_handler_t * handler);
-void clear_options();
-
-typedef void (*handler_t)(const char * arg);
 
 struct static_option_t {
   const char * long_opt;

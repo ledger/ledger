@@ -1,22 +1,12 @@
-lib_LTLIBRARIES = libamounts.la libledger.la
-
-libamounts_la_CXXFLAGS =
-libamounts_la_SOURCES = \
-	amount.cc      \
-	balance.cc     \
-	datetime.cc    \
-	value.cc
-if HAVE_BOOST_PYTHON
-libamounts_la_CXXFLAGS += -DUSE_BOOST_PYTHON=1
-endif
-if DEBUG
-libamounts_la_CXXFLAGS += -DDEBUG_LEVEL=4
-libamounts_la_SOURCES  += debug.cc
-endif
-libamounts_la_LDFLAGS = -release 3.0
+lib_LTLIBRARIES = libledger.la
 
 libledger_la_CXXFLAGS =
 libledger_la_SOURCES = \
+	amount.cc      \
+	balance.cc     \
+	datetime.cc    \
+	value.cc       \
+                       \
 	binary.cc      \
 	config.cc      \
 	csv.cc         \
@@ -54,6 +44,7 @@ libledger_la_SOURCES += py_eval.cc
 endif
 if DEBUG
 libledger_la_CXXFLAGS += -DDEBUG_LEVEL=4
+libledger_la_SOURCES  += debug.cc
 endif
 libledger_la_LDFLAGS = -release 3.0
 
@@ -96,7 +87,7 @@ pkginclude_HEADERS = \
 bin_PROGRAMS = ledger
 ledger_CXXFLAGS =
 ledger_SOURCES = main.cc
-ledger_LDADD = $(LIBOBJS) libamounts.la libledger.la
+ledger_LDADD = $(LIBOBJS) libledger.la
 if HAVE_EXPAT
 ledger_CXXFLAGS += -DHAVE_EXPAT=1
 endif
@@ -122,21 +113,15 @@ dist_lisp_LISP = ledger.el timeclock.el
 
 if HAVE_BOOST_PYTHON
 
-noinst_PROGRAMS = amounts.so ledger.so
+noinst_PROGRAMS = ledger.so
 
-amounts.so: amounts.cc libamounts.la
+ledger.so: py_eval.cc pyledger.cc libledger.la
 	CFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS) -L. -L.libs" \
-	    python amounts-setup.py build --build-lib=.
-
-ledger.so: py_eval.cc pyledger.cc libledger.la amounts.so
-	CFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS) -L. -L.libs" \
-	    python ledger-setup.py build --build-lib=.
+	    python setup.py build --build-lib=.
 
 install-exec-hook:
 	CFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS) -L. -L.libs" \
-	    python amounts-setup.py install --prefix=$(prefix)
-	CFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS) -L. -L.libs" \
-	    python ledger-setup.py install --prefix=$(prefix)
+	    python setup.py install --prefix=$(prefix)
 
 endif
 
@@ -167,7 +152,7 @@ alltests.cc: $(TESTSUITES)
 
 alltests: alltests.cc ledger
 	$(CXXCOMPILE) -I$(CXXTEST_DIR) -lexpat -lgmp -lpcre -o $@ \
-		alltests.cc -L. -L.libs -lamounts -lledger
+		alltests.cc -L. -L.libs -lledger
 
 runtests: alltests
 	LD_LIBRARY_PATH=.libs ./alltests && tests/regress && tests/regtest

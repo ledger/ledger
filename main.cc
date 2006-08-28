@@ -18,7 +18,11 @@
 #include "fdstream.hpp"
 #endif
 
+#ifdef USE_BOOST_PYTHON
+#include "pyledger.h"
+#else
 #include "ledger.h"
+#endif
 
 using namespace ledger;
 
@@ -42,8 +46,6 @@ int parse_and_report(config_t& config, report_t& report,
   ledger::terminus = datetime_t::now;
 
   // Parse command-line arguments, and those set in the environment
-
-  set_option_handler(new option_foo("foo", '\0', false));
 
   std::list<std::string> args;
   process_arguments(ledger::options, argc - 1, argv + 1, false, args);
@@ -437,24 +439,27 @@ appending the output of this command to your Ledger file if you so choose."
 #if DEBUG_LEVEL >= BETA
   { TRACE_PUSH(cleanup, "Cleaning up allocated memory");
 
-  clear_transaction_xdata xact_cleaner;
-  walk_entries(journal->entries, xact_cleaner);
+    //shutdown_ledger_for_python();
 
-  clear_account_xdata acct_cleaner;
-  walk_accounts(*journal->master, acct_cleaner);
+    for (int i = 0; i < OPTIONS_SIZE; i++)
+      delete options[i].handler;
 
-  if (! report.output_file.empty())
-    delete out;
+    clear_transaction_xdata xact_cleaner;
+    walk_entries(journal->entries, xact_cleaner);
 
-  for (std::list<item_handler<transaction_t> *>::iterator i
-	 = formatter_ptrs.begin();
-       i != formatter_ptrs.end();
-       i++)
-    delete *i;
+    clear_account_xdata acct_cleaner;
+    walk_accounts(*journal->master, acct_cleaner);
 
-  clear_option_handlers();
+    if (! report.output_file.empty())
+      delete out;
 
-  TRACE_POP(cleanup, "Finished cleaning"); }
+    for (std::list<item_handler<transaction_t> *>::iterator i
+	   = formatter_ptrs.begin();
+	 i != formatter_ptrs.end();
+	 i++)
+      delete *i;
+
+    TRACE_POP(cleanup, "Finished cleaning"); }
 #endif
 
   // Write out the binary cache, if need be

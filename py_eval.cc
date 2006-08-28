@@ -26,11 +26,9 @@ void export_valexpr();
 
 void initialize_ledger_for_python()
 {
-#if 0
   export_amount();
   export_balance();
   export_value();
-#endif
   //export_datetime();
 
   //export_journal();
@@ -42,6 +40,13 @@ void initialize_ledger_for_python()
   //export_valexpr();
 
   module_initialized = true;
+}
+
+void shutdown_option();
+
+void shutdown_ledger_for_python()
+{
+  shutdown_option();
 }
 
 namespace ledger {
@@ -89,6 +94,28 @@ void init_python()
   python_main = new python_main_t;
 }
 
+object python_import(const std::string& str)
+{
+  if (! python_initialized)
+    init_python();
+
+  assert(Py_IsInitialized());
+
+  try {
+    PyObject * mod = PyImport_Import(PyString_FromString(str.c_str()));
+    if (! mod)
+      throw error(std::string("Failed to import Python module ") + str);
+
+    object newmod(handle<>(borrowed(mod)));
+    python_main->nspace[std::string(PyModule_GetName(mod))] = newmod;
+    return newmod;
+  }
+  catch(const boost::python::error_already_set&) {
+    PyErr_Print();
+    throw error(std::string("Importing Python module ") + str);
+  }
+}
+
 object python_eval(std::istream& in, py_eval_mode_t mode)
 {
   if (! python_initialized)
@@ -128,8 +155,20 @@ object python_eval(std::istream& in, py_eval_mode_t mode)
 
 object python_eval(const std::string& str, py_eval_mode_t mode)
 {
-  std::istringstream stream(str);
-  return python_eval(stream, mode);
+  try {
+    int input_mode;
+    switch (mode) {
+    case PY_EVAL_EXPR:  input_mode = Py_eval_input;   break;
+    case PY_EVAL_STMT:  input_mode = Py_single_input; break;
+    case PY_EVAL_MULTI: input_mode = Py_file_input;   break;
+    }
+    assert(Py_IsInitialized());
+    return python_run(str, input_mode);
+  }
+  catch(const boost::python::error_already_set&) {
+    PyErr_Print();
+    throw error("Evaluating Python code");
+  }
 }
 
 object python_eval(const char * c_str, py_eval_mode_t mode)

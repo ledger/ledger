@@ -12,8 +12,9 @@
 
 #include "util.h"
 
-option_handlers_map option_handlers;
-option_handlers_list	 all_option_handlers;
+#ifdef USE_BOOST_PYTHON
+option_handler_t * find_option_handler(const std::string& name);
+#endif
 
 namespace {
   void process_option(option_handler_t * opt,
@@ -54,12 +55,11 @@ namespace {
 	return array[mid].handler;
     }
 
-    option_handlers_map::const_iterator i =
-      option_handlers.find(name);
-    if (i != option_handlers.end())
-      return (*i).second;
-
+#ifdef USE_BOOST_PYTHON
+    return find_option_handler(name);
+#else
     return NULL;
+#endif
   }
 
   option_handler_t * search_options(static_option_t * array, const char letter)
@@ -78,31 +78,6 @@ bool option_handler_t::check(option_source_t source)
     return true;
   }
   return false;
-}
-
-void add_option(option_handler_t * handler)
-{
-  all_option_handlers.push_back(handler);
-
-  std::pair<option_handlers_map::iterator, bool> lresult
-    = option_handlers.insert
-	(option_handlers_pair(handler->long_opt, handler));
-  if (! lresult.second)
-    option_handlers[handler->long_opt] = handler;
-}
-
-void clear_options()
-{
-  option_handlers.clear();
-
-#if 0
-  for (option_handlers_list::iterator i = all_option_handlers.begin();
-       i != all_option_handlers.end();
-       i++)
-    delete *i;
-#endif
-
-  all_option_handlers.clear();
 }
 
 bool process_option(static_option_t * options,
@@ -1016,9 +991,24 @@ OPT_BEGIN(percentage, "%") {
 
 #ifdef USE_BOOST_PYTHON
 
-OPT_BEGIN(import, ":") {
-  python_eval(std::string("import ") + optarg, PY_EVAL_STMT);
-} OPT_END(import);
+struct option_import : public option_handler_t
+{
+  std::list<object> modules;
+
+  option_import() : option_handler_t("import", true) {}
+
+  virtual ~option_import() {
+    modules.clear();
+  }
+
+  virtual bool check(option_source_t source) {
+    // Allow any number of modules to be imported, from any source
+    return true;
+  }
+  virtual void run(const char * optarg) {
+    modules.push_back(python_import(optarg));
+  }
+};
 
 OPT_BEGIN(import_stdin, "") {
   python_eval(std::cin, PY_EVAL_MULTI);
@@ -1119,8 +1109,7 @@ static_option_t options[OPTIONS_SIZE] = {
     new option_help_comm("help-comm", '\0', false) },
   { "help-disp", '\0',
     new option_help_disp("help-disp", '\0', false) },
-  { "import", '\0',
-    new option_import("import", '\0', true) },
+  { "import", '\0', new option_import() },
   { "import-stdin", '\0',
     new option_import_stdin("import-stdin", '\0', false) },
   { "init-file", 'i',
@@ -1235,6 +1224,7 @@ static_option_t options[OPTIONS_SIZE] = {
 
 #include <boost/python.hpp>
 #include <boost/python/detail/api_placeholder.hpp>
+#include <boost/python/suite/indexing/map_indexing_suite.hpp>
 #include <vector>
 
 using namespace boost::python;
@@ -1245,14 +1235,12 @@ struct py_option_handler_t : public option_handler_t
   py_option_handler_t(PyObject * self_,
 		      const std::string& long_opt,
 		      const bool wants_arg)
-    : self(self_), option_handler_t(long_opt, wants_arg) {
-    Py_INCREF(self);
-  }
-  virtual ~py_option_handler_t() {
-    Py_DECREF(self);
-  }
+    : self(self_), option_handler_t(long_opt, wants_arg) {}
+  virtual ~py_option_handler_t() {}
 
   virtual bool check(option_source_t source) {
+    // jww (2006-08-28): What if check hasn't been defined?  Then we
+    // run into an infinite loop!
     return call_method<bool>(self, "check", source);
   }
   virtual void run(const char * optarg = NULL) {
@@ -1264,14 +1252,33 @@ struct py_option_handler_t : public option_handler_t
 };
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(option_handler_run_overloads,
-				       option_handler_t::run, 0, 1)
+				       py_option_handler_t::run, 0, 1)
+
+typedef std::map<const std::string, object>  option_handlers_map;
+typedef std::pair<const std::string, object> option_handlers_pair;
+
+option_handlers_map option_handlers;
+
+option_handler_t * find_option_handler(const std::string& name)
+{
+  option_handlers_map::const_iterator i =
+    option_handlers.find(name);
+  if (i != option_handlers.end())
+    return extract<py_option_handler_t *>((*i).second.ptr());
+  return NULL;
+}
+
+void shutdown_option()
+{
+  option_handlers.clear();
+}
 
 void export_option()
 {
   class_< option_handler_t, py_option_handler_t, boost::noncopyable >
     ("OptionHandler", init<const std::string&, bool>())
-    .def("check", &option_handler_t::check)
-    .def("run", &option_handler_t::run, option_handler_run_overloads())
+    .def("check", &py_option_handler_t::check)
+    .def("run", &py_option_handler_t::run, option_handler_run_overloads())
     ;
 
   enum_< option_handler_t::option_source_t > ("OptionSource")
@@ -1281,7 +1288,11 @@ void export_option()
     .value("CommandLine", option_handler_t::command_line)
     ;
 
-  def("add_option", add_option);
+  class_< option_handlers_map > ("OptionHandlersMap")
+    .def(map_indexing_suite<option_handlers_map>())
+    ;
+
+  scope().attr("options") = ptr(&option_handlers);
 }
 
 #endif // USE_BOOST_PYTHON
