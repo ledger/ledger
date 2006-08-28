@@ -134,6 +134,7 @@ void trace_pop(const std::string& cat, const std::string& str,
 
 } // namespace ledger
 
+#if 0
 #ifdef USE_BOOST_PYTHON
 
 #include <boost/python.hpp>
@@ -234,3 +235,4 @@ void export_config()
 }
 
 #endif // USE_BOOST_PYTHON
+#endif

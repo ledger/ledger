@@ -3,6 +3,7 @@
 #endif
 
 #include "datetime.h"
+#include "util.h"
 
 #include <ctime>
 #include <cctype>
@@ -50,20 +51,106 @@ date_t::date_t(const std::string& _when)
       (std::string("Invalid date string: ") + _when);
 }
 
+void date_t::parse(std::istream& in)
+{
+  char buf[256];
+  char c = peek_next_nonws(in);
+  READ_INTO(in, buf, 255, c,
+	    std::isalnum(c) || c == '-' || c == '.' || c == '/');
+
+  if (! quick_parse_date(buf, &when))
+    throw new date_error
+      (std::string("Invalid date string: ") + buf);
+}
+
 datetime_t::datetime_t(const std::string& _when)
 {
-  if (const char * p = std::strchr(_when.c_str(), ' ')) {
-    date_t date(std::string(_when, 0, p - _when.c_str()));
+  std::istringstream datestr(_when);
 
-    struct std::tm moment = *std::localtime(&date.when);
-    if (! strptime(++p, "%H:%M:%S", &moment))
-      throw new datetime_error
-	(std::string("Invalid date/time string: ") + _when);
+  parse(datestr);		// parse both the date and optional time
 
-    when = std::mktime(&moment);
-  } else {
-    when = date_t(_when).when;
+  if (! datestr.eof())
+    throw new datetime_error
+      (std::string("Invalid date/time string: ") + _when);
+}
+
+void datetime_t::parse(std::istream& in)
+{
+  date_t::parse(in);		// first grab the date part
+
+  istream_pos_type beg_pos = in.tellg();
+
+  int hour = 0;
+  int min  = 0;
+  int sec  = 0;
+
+  // Now look for the (optional) time specifier.  If no time is given,
+  // we use midnight of the given day.
+  char buf[256];
+  char c = peek_next_nonws(in);
+  READ_INTO(in, buf, 255, c, std::isdigit(c));
+  if (buf[0] == '\0')
+    goto abort;
+
+  hour = std::atoi(buf);
+  if (hour > 23)
+    goto abort;
+
+  if (in.peek() == ':') {
+    in.get(c);
+    READ_INTO(in, buf, 255, c, std::isdigit(c));
+    if (buf[0] == '\0')
+      goto abort;
+
+    min = std::atoi(buf);
+    if (min > 59)
+      goto abort;
+
+    if (in.peek() == ':') {
+      in.get(c);
+      READ_INTO(in, buf, 255, c, std::isdigit(c));
+      if (buf[0] == '\0')
+	goto abort;
+
+      sec = std::atoi(buf);
+      if (sec > 59)
+	goto abort;
+    }
   }
+
+  c = peek_next_nonws(in);
+  if (c == 'a' || c == 'p' || c == 'A' || c == 'P') {
+    if (hour > 12)
+      goto abort;
+    in.get(c);
+
+    if (c == 'p' || c == 'P') {
+      if (hour != 12)
+	hour += 12;
+    } else {
+      if (hour == 12)
+	hour = 0;
+    }
+
+    c = in.peek();
+    if (c == 'm' || c == 'M')
+      in.get(c);
+  }
+
+  struct std::tm * desc = std::localtime(&when);
+
+  desc->tm_hour  = hour;
+  desc->tm_min   = min;
+  desc->tm_sec   = sec;
+  desc->tm_isdst = -1;
+
+  when = std::mktime(desc);
+
+  return;			// the time has been successfully parsed
+
+ abort:				// there was no valid time string to parse
+  in.clear();
+  in.seekg(beg_pos, std::ios::beg);
 }
 
 datetime_t interval_t::first(const datetime_t& moment) const

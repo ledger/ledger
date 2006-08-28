@@ -642,6 +642,7 @@ xact_context::xact_context(const ledger::transaction_t& _xact,
 
 } // namespace ledger
 
+#if 0
 #ifdef USE_BOOST_PYTHON
 
 #include <boost/python.hpp>
@@ -994,3 +995,4 @@ void export_journal()
 }
 
 #endif // USE_BOOST_PYTHON
+#endif

@@ -274,7 +274,7 @@ AC_STRUCT_TM
 # Checks for library functions.
 #AC_FUNC_ERROR_AT_LINE
 AC_HEADER_STDC
-AC_CHECK_FUNCS([access mktime realpath stat strftime strptime getpwuid getpwnam])
+AC_CHECK_FUNCS([access mktime realpath strftime strptime getpwuid getpwnam])
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

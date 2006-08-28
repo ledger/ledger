@@ -618,8 +618,8 @@ unsigned int read_binary_journal(std::istream&	    in,
 				 journal_t *	    journal,
 				 account_t *	    master)
 {
-  account_index	       = 
-  base_commodity_index = 
+  account_index	       =
+  base_commodity_index =
   commodity_index      = 0;
 
   // Read in the files that participated in this journal, so that they
@@ -751,7 +751,7 @@ unsigned int read_binary_journal(std::istream&	    in,
 
     std::pair<commodities_map::iterator, bool> result =
       commodity_t::commodities.insert(commodities_pair
-				        (mapping_key, commodity));
+					(mapping_key, commodity));
     if (! result.second) {
       commodities_map::iterator c =
 	commodity_t::commodities.find(mapping_key);
@@ -1192,8 +1192,8 @@ void write_binary_account(std::ostream& out, account_t * account)
 
 void write_binary_journal(std::ostream& out, journal_t * journal)
 {
-  account_index	       = 
-  base_commodity_index = 
+  account_index	       =
+  base_commodity_index =
   commodity_index      = 0;
 
   write_binary_number_nocheck(out, binary_magic_number);

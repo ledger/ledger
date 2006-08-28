@@ -131,6 +131,8 @@ class date_t
     out << to_string(format);
   }
 
+  void parse(std::istream& in);
+
   friend class datetime_t;
   friend struct interval_t;
 };
@@ -156,6 +158,11 @@ inline date_t operator-(const date_t& left, const long days) {
 inline std::ostream& operator<<(std::ostream& out, const date_t& moment) {
   moment.write(out);
   return out;
+}
+
+inline std::istream& operator>>(std::istream& in, date_t& moment) {
+  moment.parse(in);
+  return in;
 }
 
 class datetime_error : public error {
@@ -225,6 +232,8 @@ class datetime_t : public date_t
   int sec() const {
     return localtime()->tm_sec;
   }
+
+  void parse(std::istream& in);
 };
 
 inline long operator-(const datetime_t& left, const datetime_t& right) {
@@ -252,6 +261,11 @@ inline std::ostream& operator<<(std::ostream& out,
 		moment.localtime());
   out << buf;
   return out;
+}
+
+inline std::istream& operator>>(std::istream& in, datetime_t& moment) {
+  moment.parse(in);
+  return in;
 }
 
 struct interval_t

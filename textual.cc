@@ -353,17 +353,19 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
 {
   std::auto_ptr<entry_t> curr(new entry_t);
 
+  std::istringstream line_in(line);
+  char c;
+
   // Parse the date
 
   TIMER_START(entry_date);
 
-  char * next = next_element(line);
+  curr->_date.parse(line_in);
 
-  if (char * p = std::strchr(line, '=')) {
-    *p++ = '\0';
-    curr->_date_eff = p;
+  if (peek_next_nonws(line_in) == '=') {
+    line_in.get(c);
+    curr->_date_eff.parse(line_in);
   }
-  curr->_date = line;
 
   TIMER_STOP(entry_date);
 
@@ -372,32 +374,35 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
   TIMER_START(entry_details);
 
   transaction_t::state_t state = transaction_t::UNCLEARED;
-  if (next) {
-    switch (*next) {
-    case '*':
-      state = transaction_t::CLEARED;
-      next = skip_ws(++next);
-      break;
-    case '!':
-      state = transaction_t::PENDING;
-      next = skip_ws(++next);
-      break;
-    }
+  switch (peek_next_nonws(line_in)) {
+  case '*':
+    state = transaction_t::CLEARED;
+    line_in.get(c);
+    break;
+  case '!':
+    state = transaction_t::PENDING;
+    line_in.get(c);
+    break;
   }
 
   // Parse the optional code: (TEXT)
 
-  if (next && *next == '(') {
-    if (char * p = std::strchr(next++, ')')) {
-      *p++ = '\0';
-      curr->code = next;
-      next = skip_ws(p);
-    }
+  char buf[256];
+
+  if (peek_next_nonws(line_in) == '(') {
+    line_in.get(c);
+    READ_INTO(line_in, buf, 255, c, c != ')');
+    curr->code = buf;
+    if (c == ')')
+      line_in.get(c);
+    peek_next_nonws(line_in);
   }
 
-  // Parse the description text
+  // Parse the payee/description text
 
-  curr->payee = next ? next : "<Unspecified payee>";
+  std::memset(buf, 0, 255);
+  line_in.read(buf, 255);
+  curr->payee = buf[0] != '\0' ? buf : "<Unspecified payee>";
 
   TIMER_STOP(entry_details);
 

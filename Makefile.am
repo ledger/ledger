@@ -47,6 +47,10 @@ if HAVE_LIBOFX
 libledger_la_CXXFLAGS += -DHAVE_LIBOFX=1
 libledger_la_SOURCES += ofx.cc
 endif
+if HAVE_BOOST_PYTHON
+libledger_la_CXXFLAGS += -DUSE_BOOST_PYTHON=1
+libledger_la_SOURCES += pyledger.cc py_eval.cc
+endif
 if DEBUG
 libledger_la_CXXFLAGS += -DDEBUG_LEVEL=4
 endif
