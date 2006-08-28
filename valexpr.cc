@@ -4,6 +4,9 @@
 #include "datetime.h"
 #include "debug.h"
 #include "util.h"
+#ifdef USE_BOOST_PYTHON
+#include "py_eval.h"
+#endif
 
 namespace ledger {
 
@@ -1988,3 +1991,102 @@ void dump_value_expr(std::ostream& out, const value_expr_t * node,
 }
 
 } // namespace ledger
+
+#ifdef USE_BOOST_PYTHON
+
+#include <boost/python.hpp>
+
+using namespace boost::python;
+using namespace ledger;
+
+value_t py_compute_1(value_expr_t& value_expr, const details_t& item)
+{
+  value_t result;
+  value_expr.compute(result, item);
+  return result;
+}
+
+template <typename T>
+value_t py_compute(value_expr_t& value_expr, const T& item)
+{
+  value_t result;
+  value_expr.compute(result, details_t(item));
+  return result;
+}
+
+value_expr_t * py_parse_value_expr_1(const std::string& str)
+{
+  return parse_value_expr(str);
+}
+
+value_expr_t * py_parse_value_expr_2(const std::string& str, const bool partial)
+{
+  return parse_value_expr(str, partial);
+}
+
+#define EXC_TRANSLATOR(type)				\
+  void exc_translate_ ## type(const type& err) {	\
+    PyErr_SetString(PyExc_RuntimeError, err.what());	\
+  }
+
+EXC_TRANSLATOR(value_expr_error)
+EXC_TRANSLATOR(compute_error)
+EXC_TRANSLATOR(mask_error)
+
+void export_valexpr()
+{
+  class_< details_t > ("Details", init<const entry_t&>())
+    .def(init<const transaction_t&>())
+    .def(init<const account_t&>())
+    .add_property("entry",
+		  make_getter(&details_t::entry,
+			      return_value_policy<reference_existing_object>()))
+    .add_property("xact",
+		  make_getter(&details_t::xact,
+			      return_value_policy<reference_existing_object>()))
+    .add_property("account",
+		  make_getter(&details_t::account,
+			      return_value_policy<reference_existing_object>()))
+    ;
+
+  class_< value_expr_t > ("ValueExpr", init<value_expr_t::kind_t>())
+    .def("compute", py_compute_1)
+    .def("compute", py_compute<account_t>)
+    .def("compute", py_compute<entry_t>)
+    .def("compute", py_compute<transaction_t>)
+    ;
+
+  def("parse_value_expr", py_parse_value_expr_1,
+      return_value_policy<manage_new_object>());
+  def("parse_value_expr", py_parse_value_expr_2,
+      return_value_policy<manage_new_object>());
+
+  class_< item_predicate<transaction_t> >
+    ("TransactionPredicate", init<std::string>())
+    .def("__call__", &item_predicate<transaction_t>::operator())
+    ;
+
+  class_< item_predicate<account_t> >
+    ("AccountPredicate", init<std::string>())
+    .def("__call__", &item_predicate<account_t>::operator())
+    ;
+
+#define EXC_TRANSLATE(type)					\
+  register_exception_translator<type>(&exc_translate_ ## type);
+
+  EXC_TRANSLATE(value_expr_error);
+  EXC_TRANSLATE(compute_error);
+  EXC_TRANSLATE(mask_error);
+}
+
+#endif // USE_BOOST_PYTHON
+
+#ifdef TEST
+
+int main(int argc, char *argv[])
+{
+  ledger::dump_value_expr(std::cout, ledger::parse_value_expr(argv[1]));
+  std::cout << std::endl;
+}
+
+#endif // TEST

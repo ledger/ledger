@@ -3,17 +3,25 @@
 #include "report.h"
 #include "debug.h"
 #include "error.h"
+#ifdef USE_BOOST_PYTHON
+#include "py_eval.h"
+#endif
 
 #include <iostream>
 #include <cstdarg>
 
 #include "util.h"
 
+long_option_handlers_map  long_option_handlers;
+short_option_handlers_map short_option_handlers;
+option_handlers_list	  all_option_handlers;
+
 namespace {
-  inline void process_option(option_t * opt, const char * arg = NULL) {
-    if (! opt->handled) {
+  void process_option(option_handler_t * opt, const char * arg = NULL)
+  {
+    if (opt->prep(option_handler_t::init_file)) {
       try {
-	opt->handler(arg);
+	opt->run(arg);
       }
       catch (error * err) {
 	err->context.push_back
@@ -23,14 +31,13 @@ namespace {
 		   (std::string(" (-") + opt->short_opt + "):") : ":")));
 	throw err;
       }
-      opt->handled = true;
     }
   }
 
-  option_t * search_options(option_t * array, const char * name)
+  option_handler_t * search_options(static_option_t * array, const char * name)
   {
     int first = 0;
-    int last  = CONFIG_OPTIONS_SIZE;
+    int last  = OPTIONS_SIZE;
     while (first <= last) {
       int mid = (first + last) / 2; // compute mid point.
 
@@ -43,32 +50,82 @@ namespace {
       else if (result < 0)
 	last = mid - 1;		// repeat search in bottom half.
       else
-	return &array[mid];
+	return array[mid].handler;
     }
+
+    long_option_handlers_map::const_iterator i =
+      long_option_handlers.find(name);
+    if (i != long_option_handlers.end())
+      return (*i).second;
+
     return NULL;
   }
 
-  option_t * search_options(option_t * array, const char letter)
+  option_handler_t * search_options(static_option_t * array, const char letter)
   {
-    for (int i = 0; i < CONFIG_OPTIONS_SIZE; i++)
+    for (int i = 0; i < OPTIONS_SIZE; i++)
       if (letter == array[i].short_opt)
-	return &array[i];
+	return array[i].handler;
+
+    short_option_handlers_map::const_iterator i =
+      short_option_handlers.find(letter);
+    if (i != short_option_handlers.end())
+      return (*i).second;
+
     return NULL;
   }
 }
 
-bool process_option(option_t * options, const std::string& name,
+bool option_handler_t::prep(option_source_t source)
+{
+  if (! handled) {
+    handled |= (unsigned short)source;
+    return true;
+  }
+  return false;
+}
+
+void set_option_handler(option_handler_t * handler)
+{
+  all_option_handlers.push_back(handler);
+
+  std::pair<short_option_handlers_map::iterator, bool> sresult
+    = short_option_handlers.insert
+	(short_option_handlers_pair(handler->short_opt, handler));
+  if (! sresult.second)
+    short_option_handlers[handler->short_opt] = handler;
+
+  std::pair<long_option_handlers_map::iterator, bool> lresult
+    = long_option_handlers.insert
+	(long_option_handlers_pair(handler->long_opt, handler));
+  if (! lresult.second)
+    long_option_handlers[handler->long_opt] = handler;
+}
+
+void clear_option_handlers()
+{
+  short_option_handlers.clear();
+  long_option_handlers.clear();
+
+  for (option_handlers_list::iterator i = all_option_handlers.begin();
+       i != all_option_handlers.end();
+       i++)
+    delete *i;
+
+  all_option_handlers.clear();
+}
+
+bool process_option(static_option_t * options, const std::string& name,
 		    const char * arg)
 {
-  option_t * opt = search_options(options, name.c_str());
-  if (opt) {
+  if (option_handler_t * opt = search_options(options, name.c_str())) {
     process_option(opt, arg);
     return true;
   }
   return false;
 }
 
-void process_arguments(option_t * options, int argc, char ** argv,
+void process_arguments(static_option_t * options, int argc, char ** argv,
 		       const bool anywhere, std::list<std::string>& args)
 {
   int index = 0;
@@ -97,7 +154,7 @@ void process_arguments(option_t * options, int argc, char ** argv,
 	value = p;
       }
 
-      option_t * opt = search_options(options, name);
+      option_handler_t * opt = search_options(options, name);
       if (! opt)
 	throw new option_error(std::string("illegal option --") + name);
 
@@ -113,18 +170,19 @@ void process_arguments(option_t * options, int argc, char ** argv,
       throw new option_error(std::string("illegal option -"));
     }
     else {
-      std::list<option_t *> opt_queue;
+      std::list<option_handler_t *> opt_queue;
 
       int x = 1;
       for (char c = (*i)[x]; c != '\0'; x++, c = (*i)[x]) {
-	option_t * opt = search_options(options, c);
+	option_handler_t * opt = search_options(options, c);
 	if (! opt)
 	  throw new option_error(std::string("illegal option -") + c);
 	opt_queue.push_back(opt);
       }
 
-      for (std::list<option_t *>::iterator o = opt_queue.begin();
-	   o != opt_queue.end(); o++) {
+      for (std::list<option_handler_t *>::iterator o = opt_queue.begin();
+	   o != opt_queue.end();
+	   o++) {
 	char * value = NULL;
 	if ((*o)->wants_arg) {
 	  value = *++i;
@@ -141,7 +199,7 @@ void process_arguments(option_t * options, int argc, char ** argv,
   }
 }
 
-void process_environment(option_t * options, const char ** envp,
+void process_environment(static_option_t * options, const char ** envp,
 			 const std::string& tag)
 {
   const char * tag_p   = tag.c_str();
@@ -191,6 +249,9 @@ static void show_version(std::ostream& out)
 This program is made available under the terms of the BSD Public License.\n\
 See LICENSE file included with the distribution for details and disclaimer.\n";
   out << "\n(modules: gmp, pcre";
+#ifdef USE_BOOST_PYTHON
+  out << ", python";
+#endif
 #if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
   out << ", xml";
 #endif
@@ -200,7 +261,7 @@ See LICENSE file included with the distribution for details and disclaimer.\n";
   out << ")\n";
 }
 
-void option_full_help(std::ostream& out)
+void full_help(std::ostream& out)
 {
   out << "usage: ledger [options] COMMAND [ACCT REGEX]... [-- [PAYEE REGEX]...]\n\n\
 Basic options:\n\
@@ -277,7 +338,7 @@ Commands:\n\
   entry DATE PAYEE AMT   output a derived entry, based on the arguments\n";
 }
 
-void option_help(std::ostream& out)
+void help(std::ostream& out)
 {
   out << "usage: ledger [options] COMMAND [ACCT REGEX]... [-- [PAYEE REGEX]...]\n\n\
 Use -H to see all the help text on one page, or:\n\
@@ -303,7 +364,7 @@ Commands:\n\
   entry DATE PAYEE AMT   output a derived entry, based on the arguments\n";
 }
 
-void option_calc_help(std::ostream& out)
+void calc_help(std::ostream& out)
 {
   out << "Options to control how a report is calculated:\n\
   -c, --current          show only current and past entries (not future)\n\
@@ -325,7 +386,7 @@ void option_calc_help(std::ostream& out)
   -T, --total EXPR       use EXPR to calculate the displayed total\n";
 }
 
-void option_disp_help(std::ostream& out)
+void disp_help(std::ostream& out)
 {
   out << "Output to control how report results are displayed:\n\
   -n, --collapse         register: collapse entries; balance: no grand total\n\
@@ -356,7 +417,7 @@ void option_disp_help(std::ostream& out)
       --prices-format       --wide-register-format\n";
 }
 
-void option_comm_help(std::ostream& out)
+void comm_help(std::ostream& out)
 {
   out << "Options to control how commodity values are determined:\n\
       --price-db FILE    sets the price database to FILE (def: ~/.pricedb)\n\
@@ -374,27 +435,27 @@ void option_comm_help(std::ostream& out)
 // Basic options
 
 OPT_BEGIN(full_help, "H") {
-  option_full_help(std::cout);
+  full_help(std::cout);
   throw 0;
 } OPT_END(full_help);
 
 OPT_BEGIN(help, "h") {
-  option_help(std::cout);
+  help(std::cout);
   throw 0;
 } OPT_END(help);
 
 OPT_BEGIN(help_calc, "") {
-  option_calc_help(std::cout);
+  calc_help(std::cout);
   throw 0;
 } OPT_END(help_calc);
 
 OPT_BEGIN(help_disp, "") {
-  option_disp_help(std::cout);
+  disp_help(std::cout);
   throw 0;
 } OPT_END(help_disp);
 
 OPT_BEGIN(help_comm, "") {
-  option_comm_help(std::cout);
+  comm_help(std::cout);
   throw 0;
 } OPT_END(help_comm);
 
@@ -960,104 +1021,292 @@ OPT_BEGIN(percentage, "%") {
 
 //////////////////////////////////////////////////////////////////////
 
-option_t config_options[CONFIG_OPTIONS_SIZE] = {
-  { "abbrev-len", '\0', true, opt_abbrev_len, false },
-  { "account", 'a', true, opt_account, false },
-  { "actual", 'L', false, opt_actual, false },
-  { "add-budget", '\0', false, opt_add_budget, false },
-  { "amount", 't', true, opt_amount, false },
-  { "amount-data", 'j', false, opt_amount_data, false },
-  { "ansi", '\0', false, opt_ansi, false },
-  { "ansi-invert", '\0', false, opt_ansi_invert, false },
-  { "average", 'A', false, opt_average, false },
-  { "balance-format", '\0', true, opt_balance_format, false },
-  { "base", '\0', false, opt_base, false },
-  { "basis", 'B', false, opt_basis, false },
-  { "begin", 'b', true, opt_begin, false },
-  { "budget", '\0', false, opt_budget, false },
-  { "by-payee", 'P', false, opt_by_payee, false },
-  { "cache", '\0', true, opt_cache, false },
-  { "cleared", 'C', false, opt_cleared, false },
-  { "code-as-payee", '\0', false, opt_code_as_payee, false },
-  { "collapse", 'n', false, opt_collapse, false },
-  { "comm-as-payee", 'x', false, opt_comm_as_payee, false },
-  { "cost", '\0', false, opt_basis, false },
-  { "current", 'c', false, opt_current, false },
-  { "daily", '\0', false, opt_daily, false },
-  { "date-format", 'y', true, opt_date_format, false },
-  { "debug", '\0', true, opt_debug, false },
-  { "descend", '\0', true, opt_descend, false },
-  { "descend-if", '\0', true, opt_descend_if, false },
-  { "deviation", 'D', false, opt_deviation, false },
-  { "display", 'd', true, opt_display, false },
-  { "dow", '\0', false, opt_dow, false },
-  { "download", 'Q', false, opt_download, false },
-  { "effective", '\0', false, opt_effective, false },
-  { "empty", 'E', false, opt_empty, false },
-  { "end", 'e', true, opt_end, false },
-  { "equity-format", '\0', true, opt_equity_format, false },
-  { "file", 'f', true, opt_file, false },
-  { "forecast", '\0', true, opt_forecast, false },
-  { "format", 'F', true, opt_format, false },
-  { "full-help", 'H', false, opt_full_help, false },
-  { "gain", 'G', false, opt_gain, false },
-  { "head", '\0', true, opt_head, false },
-  { "help", 'h', false, opt_help, false },
-  { "help-calc", '\0', false, opt_help_calc, false },
-  { "help-comm", '\0', false, opt_help_comm, false },
-  { "help-disp", '\0', false, opt_help_disp, false },
-  { "init-file", 'i', true, opt_init_file, false },
-  { "input-date-format", '\0', true, opt_input_date_format, false },
-  { "limit", 'l', true, opt_limit, false },
-  { "lot-dates", '\0', false, opt_lot_dates, false },
-  { "lot-prices", '\0', false, opt_lot_prices, false },
-  { "lot-tags", '\0', false, opt_lot_tags, false },
-  { "lots", '\0', false, opt_lots, false },
-  { "market", 'V', false, opt_market, false },
-  { "monthly", 'M', false, opt_monthly, false },
-  { "no-cache", '\0', false, opt_no_cache, false },
-  { "only", '\0', true, opt_only, false },
-  { "output", 'o', true, opt_output, false },
-  { "pager", '\0', true, opt_pager, false },
-  { "percentage", '%', false, opt_percentage, false },
-  { "performance", 'g', false, opt_performance, false },
-  { "period", 'p', true, opt_period, false },
-  { "period-sort", '\0', true, opt_period_sort, false },
-  { "plot-amount-format", '\0', true, opt_plot_amount_format, false },
-  { "plot-total-format", '\0', true, opt_plot_total_format, false },
-  { "price", 'I', false, opt_price, false },
-  { "price-db", '\0', true, opt_price_db, false },
-  { "price-exp", 'Z', true, opt_price_exp, false },
-  { "prices-format", '\0', true, opt_prices_format, false },
-  { "print-format", '\0', true, opt_print_format, false },
-  { "quantity", 'O', false, opt_quantity, false },
-  { "quarterly", '\0', false, opt_quarterly, false },
-  { "real", 'R', false, opt_real, false },
-  { "reconcile", '\0', true, opt_reconcile, false },
-  { "reconcile-date", '\0', true, opt_reconcile_date, false },
-  { "register-format", '\0', true, opt_register_format, false },
-  { "related", 'r', false, opt_related, false },
-  { "set-price", '\0', true, opt_set_price, false },
-  { "sort", 'S', true, opt_sort, false },
-  { "sort-all", '\0', true, opt_sort_all, false },
-  { "sort-entries", '\0', true, opt_sort_entries, false },
-  { "subtotal", 's', false, opt_subtotal, false },
-  { "tail", '\0', true, opt_tail, false },
-  { "total", 'T', true, opt_total, false },
-  { "total-data", 'J', false, opt_total_data, false },
-  { "totals", '\0', false, opt_totals, false },
-  { "trace", '\0', false, opt_trace, false },
-  { "truncate", '\0', true, opt_truncate, false },
-  { "unbudgeted", '\0', false, opt_unbudgeted, false },
-  { "uncleared", 'U', false, opt_uncleared, false },
-  { "verbose", '\0', false, opt_verbose, false },
-  { "version", 'v', false, opt_version, false },
-  { "weekly", 'W', false, opt_weekly, false },
-  { "wide", 'w', false, opt_wide, false },
-  { "wide-register-format", '\0', true, opt_wide_register_format, false },
-  { "write-hdr-format", '\0', true, opt_write_hdr_format, false },
-  { "write-xact-format", '\0', true, opt_write_xact_format, false },
-  { "yearly", 'Y', false, opt_yearly, false },
+static_option_t options[OPTIONS_SIZE] = {
+  { "abbrev-len", '\0',
+    new option_abbrev_len("abbrev-len", '\0', true) },
+  { "account", 'a',
+    new option_account("account", 'a', true) },
+  { "actual", 'L',
+    new option_actual("actual", 'L', false) },
+  { "add-budget", '\0',
+    new option_add_budget("add-budget", '\0', false) },
+  { "amount", 't',
+    new option_amount("amount", 't', true) },
+  { "amount-data", 'j',
+    new option_amount_data("amount-data", 'j', false) },
+  { "ansi", '\0',
+    new option_ansi("ansi", '\0', false) },
+  { "ansi-invert", '\0',
+    new option_ansi_invert("ansi-invert", '\0', false) },
+  { "average", 'A',
+    new option_average("average", 'A', false) },
+  { "balance-format", '\0',
+    new option_balance_format("balance-format", '\0', true) },
+  { "base", '\0',
+    new option_base("base", '\0', false) },
+  { "basis", 'B',
+    new option_basis("basis", 'B', false) },
+  { "begin", 'b',
+    new option_begin("begin", 'b', true) },
+  { "budget", '\0',
+    new option_budget("budget", '\0', false) },
+  { "by-payee", 'P',
+    new option_by_payee("by-payee", 'P', false) },
+  { "cache", '\0',
+    new option_cache("cache", '\0', true) },
+  { "cleared", 'C',
+    new option_cleared("cleared", 'C', false) },
+  { "code-as-payee", '\0',
+    new option_code_as_payee("code-as-payee", '\0', false) },
+  { "collapse", 'n',
+    new option_collapse("collapse", 'n', false) },
+  { "comm-as-payee", 'x',
+    new option_comm_as_payee("comm-as-payee", 'x', false) },
+  { "cost", '\0',
+    new option_basis("cost", '\0', false) },
+  { "current", 'c',
+    new option_current("current", 'c', false) },
+  { "daily", '\0',
+    new option_daily("daily", '\0', false) },
+  { "date-format", 'y',
+    new option_date_format("date-format", 'y', true) },
+  { "debug", '\0',
+    new option_debug("debug", '\0', true) },
+  { "descend", '\0',
+    new option_descend("descend", '\0', true) },
+  { "descend-if", '\0',
+    new option_descend_if("descend-if", '\0', true) },
+  { "deviation", 'D',
+    new option_deviation("deviation", 'D', false) },
+  { "display", 'd',
+    new option_display("display", 'd', true) },
+  { "dow", '\0',
+    new option_dow("dow", '\0', false) },
+  { "download", 'Q',
+    new option_download("download", 'Q', false) },
+  { "effective", '\0',
+    new option_effective("effective", '\0', false) },
+  { "empty", 'E',
+    new option_empty("empty", 'E', false) },
+  { "end", 'e',
+    new option_end("end", 'e', true) },
+  { "equity-format", '\0',
+    new option_equity_format("equity-format", '\0', true) },
+  { "file", 'f',
+    new option_file("file", 'f', true) },
+  { "forecast", '\0',
+    new option_forecast("forecast", '\0', true) },
+  { "format", 'F',
+    new option_format("format", 'F', true) },
+  { "full-help", 'H',
+    new option_full_help("full-help", 'H', false) },
+  { "gain", 'G',
+    new option_gain("gain", 'G', false) },
+  { "head", '\0',
+    new option_head("head", '\0', true) },
+  { "help", 'h',
+    new option_help("help", 'h', false) },
+  { "help-calc", '\0',
+    new option_help_calc("help-calc", '\0', false) },
+  { "help-comm", '\0',
+    new option_help_comm("help-comm", '\0', false) },
+  { "help-disp", '\0',
+    new option_help_disp("help-disp", '\0', false) },
+  { "init-file", 'i',
+    new option_init_file("init-file", 'i', true) },
+  { "input-date-format", '\0',
+    new option_input_date_format("input-date-format", '\0', true) },
+  { "limit", 'l',
+    new option_limit("limit", 'l', true) },
+  { "lot-dates", '\0',
+    new option_lot_dates("lot-dates", '\0', false) },
+  { "lot-prices", '\0',
+    new option_lot_prices("lot-prices", '\0', false) },
+  { "lot-tags", '\0',
+    new option_lot_tags("lot-tags", '\0', false) },
+  { "lots", '\0',
+    new option_lots("lots", '\0', false) },
+  { "market", 'V',
+    new option_market("market", 'V', false) },
+  { "monthly", 'M',
+    new option_monthly("monthly", 'M', false) },
+  { "no-cache", '\0',
+    new option_no_cache("no-cache", '\0', false) },
+  { "only", '\0',
+    new option_only("only", '\0', true) },
+  { "output", 'o',
+    new option_output("output", 'o', true) },
+  { "pager", '\0',
+    new option_pager("pager", '\0', true) },
+  { "percentage", '%',
+    new option_percentage("percentage", '%', false) },
+  { "performance", 'g',
+    new option_performance("performance", 'g', false) },
+  { "period", 'p',
+    new option_period("period", 'p', true) },
+  { "period-sort", '\0',
+    new option_period_sort("period-sort", '\0', true) },
+  { "plot-amount-format", '\0',
+    new option_plot_amount_format("plot-amount-format", '\0', true) },
+  { "plot-total-format", '\0',
+    new option_plot_total_format("plot-total-format", '\0', true) },
+  { "price", 'I',
+    new option_price("price", 'I', false) },
+  { "price-db", '\0',
+    new option_price_db("price-db", '\0', true) },
+  { "price-exp", 'Z',
+    new option_price_exp("price-exp", 'Z', true) },
+  { "prices-format", '\0',
+    new option_prices_format("prices-format", '\0', true) },
+  { "print-format", '\0',
+    new option_print_format("print-format", '\0', true) },
+  { "quantity", 'O',
+    new option_quantity("quantity", 'O', false) },
+  { "quarterly", '\0',
+    new option_quarterly("quarterly", '\0', false) },
+  { "real", 'R',
+    new option_real("real", 'R', false) },
+  { "reconcile", '\0',
+    new option_reconcile("reconcile", '\0', true) },
+  { "reconcile-date", '\0',
+    new option_reconcile_date("reconcile-date", '\0', true) },
+  { "register-format", '\0',
+    new option_register_format("register-format", '\0', true) },
+  { "related", 'r',
+    new option_related("related", 'r', false) },
+  { "set-price", '\0',
+    new option_set_price("set-price", '\0', true) },
+  { "sort", 'S',
+    new option_sort("sort", 'S', true) },
+  { "sort-all", '\0',
+    new option_sort_all("sort-all", '\0', true) },
+  { "sort-entries", '\0',
+    new option_sort_entries("sort-entries", '\0', true) },
+  { "subtotal", 's',
+    new option_subtotal("subtotal", 's', false) },
+  { "tail", '\0',
+    new option_tail("tail", '\0', true) },
+  { "total", 'T',
+    new option_total("total", 'T', true) },
+  { "total-data", 'J',
+    new option_total_data("total-data", 'J', false) },
+  { "totals", '\0',
+    new option_totals("totals", '\0', false) },
+  { "trace", '\0',
+    new option_trace("trace", '\0', false) },
+  { "truncate", '\0',
+    new option_truncate("truncate", '\0', true) },
+  { "unbudgeted", '\0',
+    new option_unbudgeted("unbudgeted", '\0', false) },
+  { "uncleared", 'U',
+    new option_uncleared("uncleared", 'U', false) },
+  { "verbose", '\0',
+    new option_verbose("verbose", '\0', false) },
+  { "version", 'v',
+    new option_version("version", 'v', false) },
+  { "weekly", 'W',
+    new option_weekly("weekly", 'W', false) },
+  { "wide", 'w',
+    new option_wide("wide", 'w', false) },
+  { "wide-register-format", '\0',
+    new option_wide_register_format("wide-register-format", '\0', true) },
+  { "write-hdr-format", '\0',
+    new option_write_hdr_format("write-hdr-format", '\0', true) },
+  { "write-xact-format", '\0',
+    new option_write_xact_format("write-xact-format", '\0', true) },
+  { "yearly", 'Y',
+    new option_yearly("yearly", 'Y', false) },
 };
 
 } // namespace ledger
+
+#ifdef USE_BOOST_PYTHON
+
+#include <boost/python.hpp>
+#include <boost/python/detail/api_placeholder.hpp>
+#include <vector>
+
+using namespace boost::python;
+
+struct func_option_wrapper : public option_handler
+{
+  object self;
+  func_option_wrapper(object _self) : self(_self) {}
+
+  virtual void operator()(const char * arg) {
+    call<void>(self.ptr(), arg);
+  }
+};
+
+namespace {
+  std::list<func_option_wrapper> wrappers;
+  std::list<option_t>            options;
+}
+
+void py_add_option_handler(const std::string& long_opt,
+			   const std::string& short_opt, object func)
+{
+  wrappers.push_back(func_option_wrapper(func));
+  add_option_handler(options, long_opt, short_opt, wrappers.back());
+}
+
+void add_other_option_handlers(const std::list<option_t>& other)
+{
+  options.insert(options.begin(), other.begin(), other.end());
+}
+
+bool py_process_option(const std::string& opt, const char * arg)
+{
+  return process_option(options, opt, arg);
+}
+
+list py_process_arguments(list args, bool anywhere = false)
+{
+  std::vector<char *> strs;
+
+  int l = len(args);
+  for (int i = 0; i < l; i++)
+    strs.push_back(extract<char *>(args[i]));
+
+  std::list<std::string> newargs;
+  process_arguments(options, strs.size(), &strs.front(), anywhere, newargs);
+
+  list py_newargs;
+  for (std::list<std::string>::iterator i = newargs.begin();
+       i != newargs.end();
+       i++)
+    py_newargs.append(*i);
+  return py_newargs;
+}
+
+BOOST_PYTHON_FUNCTION_OVERLOADS(py_proc_args_overloads,
+				py_process_arguments, 1, 2)
+
+void py_process_environment(object env, const std::string& tag)
+{
+  std::vector<char *>      strs;
+  std::vector<std::string> storage;
+
+  list items = call_method<list>(env.ptr(), "items");
+  int l = len(items);
+  for (int i = 0; i < l; i++) {
+    tuple pair = extract<tuple>(items[i]);
+    std::string s = extract<std::string>(pair[0]);
+    s += "=";
+    s += extract<std::string>(pair[1]);
+    storage.push_back(s);
+    strs.push_back(const_cast<char *>(storage.back().c_str()));
+  }
+
+  process_environment(options, &strs.front(), tag);
+}
+
+void export_option()
+{
+  def("add_option_handler",  py_add_option_handler);
+  def("process_option",      py_process_option);
+  def("process_arguments",   py_process_arguments, py_proc_args_overloads());
+  def("process_environment", py_process_environment);
+}
+
+#endif // USE_BOOST_PYTHON

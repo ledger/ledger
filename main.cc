@@ -22,6 +22,18 @@
 
 using namespace ledger;
 
+struct option_foo : public option_handler_t {
+  option_foo(const std::string& long_opt,
+	     const char		short_opt,
+	     const bool		wants_arg)
+  : option_handler_t(long_opt, short_opt, wants_arg) {}
+
+  virtual void run(const char * optarg) {
+    help(std::cout);
+    throw 0;
+  }
+};
+
 int parse_and_report(config_t& config, report_t& report,
 		     int argc, char * argv[], char * envp[])
 {
@@ -31,11 +43,13 @@ int parse_and_report(config_t& config, report_t& report,
 
   // Parse command-line arguments, and those set in the environment
 
+  set_option_handler(new option_foo("foo", '\0', false));
+
   std::list<std::string> args;
-  process_arguments(ledger::config_options, argc - 1, argv + 1, false, args);
+  process_arguments(ledger::options, argc - 1, argv + 1, false, args);
 
   if (args.empty()) {
-    option_help(std::cerr);
+    help(std::cerr);
     return 1;
   }
   strings_list::iterator arg = args.begin();
@@ -48,20 +62,20 @@ int parse_and_report(config_t& config, report_t& report,
 
   TRACE(main, "Processing options and environment variables");
 
-  process_environment(ledger::config_options,
+  process_environment(ledger::options,
 		      const_cast<const char **>(envp), "LEDGER_");
 
 #if 1
   // These are here for backwards compatability, but are deprecated.
 
   if (const char * p = std::getenv("LEDGER"))
-    process_option(ledger::config_options, "file", p);
+    process_option(ledger::options, "file", p);
   if (const char * p = std::getenv("LEDGER_INIT"))
-    process_option(ledger::config_options, "init-file", p);
+    process_option(ledger::options, "init-file", p);
   if (const char * p = std::getenv("PRICE_HIST"))
-    process_option(ledger::config_options, "price-db", p);
+    process_option(ledger::options, "price-db", p);
   if (const char * p = std::getenv("PRICE_EXP"))
-    process_option(ledger::config_options, "price-exp", p);
+    process_option(ledger::options, "price-exp", p);
 #endif
 
   const char * p    = std::getenv("HOME");
@@ -311,6 +325,24 @@ appending the output of this command to your Ledger file if you so choose."
   else
     format = &config.print_format;
 
+  // DEBUG
+
+#if 0
+  {
+    std::auto_ptr<repitem_t> master(repitem_t::wrap_item(journal->master));
+    master->populate_entries(journal->entries);
+    std::cout << "Entries Tree:" << std::endl;
+    master->print_tree(std::cout);
+  }
+
+  {
+    std::auto_ptr<repitem_t> master(repitem_t::wrap_item(journal->master));
+    master->populate_accounts(journal->entries);
+    std::cout << "Accounts Tree:" << std::endl;
+    master->print_tree(std::cout);
+  }
+#endif
+
   // Walk the entries based on the report type and the options
 
   item_handler<transaction_t> *		   formatter;
@@ -407,6 +439,8 @@ appending the output of this command to your Ledger file if you so choose."
        i != formatter_ptrs.end();
        i++)
     delete *i;
+
+  clear_option_handlers();
 
   TRACE_POP(cleanup, "Finished cleaning"); }
 #endif

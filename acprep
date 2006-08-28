@@ -17,7 +17,7 @@ else
 fi
 autoconf
 
-INCDIRS="-I/sw/include -I/usr/local/include/boost-1_33 -I/usr/include/httpd/xml"
+INCDIRS="-I/sw/include -I/sw/include/boost -I/usr/include/httpd/xml"
 #INCDIRS="$INCDIRS -I/sw/include/libofx"
 INCDIRS="$INCDIRS -I/usr/include/python2.3"
 INCDIRS="$INCDIRS -Wno-long-double"

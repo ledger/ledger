@@ -410,4 +410,304 @@ report_t::chain_xact_handlers(const std::string& command,
   return formatter;
 }
 
+repitem_t::~repitem_t()
+{
+  if (istemp) {
+    switch (kind) {
+    case XACT:
+      delete xact;
+      break;
+    case ENTRY:
+      delete entry;
+      break;
+    case ACCOUNT:
+      delete account_ptr;
+      break;
+    }
+  }
+  if (contents) delete contents;
+  if (children) delete children;
+  if (next) delete next;
+}
+
+void repitem_t::add_total(value_t& val) const
+{
+  add_value(val);
+
+  for (repitem_t * ptr = children; ptr; ptr = ptr->next)
+    ptr->add_total(val);
+}
+
+void repitem_t::add_value(value_t& val) const
+{
+  switch (kind) {
+  case XACT:
+    add_transaction_to(*xact, val);
+    break;
+
+  case ENTRY:
+  case ACCOUNT:
+    for (repitem_t * ptr = contents; ptr; ptr = ptr->next)
+      ptr->add_total(val);
+    break;
+  }
+}
+
+void repitem_t::add_sort_value(value_t& val) const
+{
+  assert(0);
+}
+
+datetime_t repitem_t::date() const
+{
+  if (reported_date)
+    return reported_date;
+
+  switch (kind) {
+  case XACT: return xact->date();
+  case ENTRY: return entry->date();
+
+  case ACCOUNT:
+    assert(0);
+    return datetime_t();
+  }
+}
+
+datetime_t repitem_t::effective_date() const
+{
+  if (reported_date)
+    return reported_date;
+
+  switch (kind) {
+  case XACT:  return xact->effective_date();
+  case ENTRY: return entry->effective_date();
+
+  case ACCOUNT:
+    assert(0);
+    return datetime_t();
+  }
+}
+
+datetime_t repitem_t::actual_date() const
+{
+  if (reported_date)
+    return reported_date;
+
+  switch (kind) {
+  case XACT: return xact->actual_date();
+  case ENTRY: return entry->actual_date();
+
+  case ACCOUNT:
+    assert(0);
+    return datetime_t();
+  }
+}
+
+account_t * repitem_t::account() const
+{
+  if (reported_account != NULL)
+    return reported_account;
+
+  switch (kind) {
+  case XACT:
+    return xact->account;
+  case ENTRY:
+    return NULL;
+  case ACCOUNT:
+    return account_ptr;
+  }
+}
+
+bool repitem_t::valid() const
+{
+  assert(0);
+  return false;
+}
+
+repitem_t * repitem_t::wrap_item(transaction_t * txact)
+{
+  repitem_t * temp = new repitem_t;
+  temp->xact = txact;
+  temp->kind = XACT;
+  return temp;
+}
+
+repitem_t * repitem_t::wrap_item(entry_t * tentry)
+{
+  repitem_t * temp = new repitem_t;
+  temp->entry = tentry;
+  temp->kind = ENTRY;
+  return temp;
+}
+
+repitem_t * repitem_t::wrap_item(account_t * taccount)
+{
+  repitem_t * temp = new repitem_t;
+  temp->account_ptr = taccount;
+  temp->kind = ACCOUNT;
+  return temp;
+}
+
+repitem_t * repitem_t::add_content(repitem_t * item)
+{
+  repitem_t * start = item;
+  if (contents == NULL) {
+    assert(content_next_ptr == NULL);
+    contents = item;
+  } else {
+    *content_next_ptr = item;
+  }
+  while (item->next)
+    item = item->next;
+  content_next_ptr = &item->next;
+  return start;
+}
+
+repitem_t * repitem_t::add_child(repitem_t * item)
+{
+  repitem_t * start = item;
+  if (children == NULL) {
+    assert(child_next_ptr == NULL);
+    children = item;
+  } else {
+    *child_next_ptr = item;
+  }
+  while (item->next)
+    item = item->next;
+  child_next_ptr = &item->next;
+  return start;
+}
+
+repitem_t * repitem_t::fake_transaction(account_t * taccount)
+{
+  repitem_t * temp = new repitem_t;
+  temp->xact = new transaction_t(taccount);
+  temp->kind = XACT;
+  temp->istemp = true;
+  return temp;
+}
+
+repitem_t * repitem_t::fake_entry(const datetime_t& date, const std::string& payee)
+{
+  repitem_t * temp = new repitem_t;
+  temp->entry = new entry_t;
+  temp->entry->_date = date;
+  temp->entry->payee = payee;
+  temp->kind = ENTRY;
+  temp->istemp = true;
+  return temp;
+}
+
+void repitem_t::populate_entries(entries_list& entries,
+				 const value_expr_t * filter)
+{
+  item_predicate<transaction_t> predicate(filter);
+
+  for (entries_list::iterator i = entries.begin();
+       i != entries.end();
+       i++) {
+    repitem_t * entry = NULL;
+    for (transactions_list::iterator j = (*i)->transactions.begin();
+	 j != (*i)->transactions.end();
+	 j++) {
+      if (predicate(**j)) {
+	if (entry == NULL)
+	  entry = repitem_t::wrap_item(*i);
+	entry->add_content(repitem_t::wrap_item(*j));
+      }
+    }
+    if (entry != NULL)
+      add_content(entry);
+  }
+}
+
+void repitem_t::populate_entries(entries_list& entries)
+{
+  for (entries_list::iterator i = entries.begin();
+       i != entries.end();
+       i++) {
+    repitem_t * entry = repitem_t::wrap_item(*i);
+    for (transactions_list::iterator j = (*i)->transactions.begin();
+	 j != (*i)->transactions.end();
+	 j++)
+      entry->add_content(repitem_t::wrap_item(*j));
+    add_content(entry);
+  }
+}
+
+void repitem_t::populate_account(account_t& acct, repitem_t * item)
+{
+  repitem_t * acct_item;
+  if (acct.parent == NULL)
+    acct_item = this;
+  else if (acct.data == NULL)
+    acct.data = acct_item = repitem_t::wrap_item(&acct);
+  else
+    acct_item = (repitem_t *) acct.data;
+
+  if (item->kind == ACCOUNT)
+    acct_item->add_child(item);
+  else
+    acct_item->add_content(item);
+
+  if (acct.parent && acct.parent->data == NULL)
+    populate_account(*acct.parent, acct_item);
+}
+
+void repitem_t::populate_accounts(entries_list& entries,
+				  const value_expr_t * filter)
+{
+  item_predicate<transaction_t> predicate(filter);
+  for (entries_list::iterator i = entries.begin();
+       i != entries.end();
+       i++)
+    for (transactions_list::iterator j = (*i)->transactions.begin();
+	 j != (*i)->transactions.end();
+	 j++)
+      if (predicate(**j))
+	populate_account(*(*j)->account, repitem_t::wrap_item(*j));
+}
+
+void repitem_t::populate_accounts(entries_list& entries)
+{
+  for (entries_list::iterator i = entries.begin();
+       i != entries.end();
+       i++)
+    for (transactions_list::iterator j = (*i)->transactions.begin();
+	 j != (*i)->transactions.end();
+	 j++)
+      populate_account(*(*j)->account, repitem_t::wrap_item(*j));
+}
+
+void repitem_t::print_tree(std::ostream& out, int depth)
+{
+  for (int i = 0; i < depth; i++)
+    out << "  ";
+
+  switch (kind) {
+  case XACT: out << "XACT " << xact; break;
+  case ENTRY: out << "ENTRY " << entry; break;
+  case ACCOUNT: out << "ACCOUNT " << account_ptr; break;
+  }
+  out << std::endl;
+
+  if (contents) {
+    for (int i = 0; i < depth; i++)
+      out << "  ";
+    out << "Contents:" << std::endl;
+
+    for (repitem_t * ptr = contents; ptr; ptr = ptr->next)
+      ptr->print_tree(out, depth + 1);
+  }
+
+  if (children) {
+    for (int i = 0; i < depth; i++)
+      out << "  ";
+    out << "Children:" << std::endl;
+
+    for (repitem_t * ptr = children; ptr; ptr = ptr->next)
+      ptr->print_tree(out, depth + 1);
+  }
+}
+
 } // namespace ledger

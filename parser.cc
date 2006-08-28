@@ -191,3 +191,45 @@ unsigned int parse_ledger_data(config_t&   config,
 }
 
 } // namespace ledger
+
+#ifdef USE_BOOST_PYTHON
+
+#include <boost/python.hpp>
+#include <Python.h>
+
+using namespace boost::python;
+using namespace ledger;
+
+struct parser_wrap : public parser_t
+{
+  PyObject * self;
+  parser_wrap(PyObject * self_) : self(self_) {}
+
+  virtual bool test(std::istream& in) const {
+    return call_method<bool>(self, "test", in);
+  }
+
+  virtual unsigned int parse(std::istream&	 in,
+			     journal_t *	 journal,
+			     account_t *	 master        = NULL,
+			     const std::string * original_file = NULL) {
+    return call_method<unsigned int>(self, "__call__", in, journal, master,
+				     original_file);
+  }
+};
+
+BOOST_PYTHON_FUNCTION_OVERLOADS(parse_journal_overloads, parse_journal, 2, 4)
+BOOST_PYTHON_FUNCTION_OVERLOADS(parse_journal_file_overloads,
+				parse_journal_file, 2, 4)
+
+void export_parser() {
+  class_< parser_t, parser_wrap, boost::noncopyable > ("Parser")
+    ;
+
+  def("register_parser", register_parser);
+  def("unregister_parser", unregister_parser);
+  def("parse_journal", parse_journal, parse_journal_overloads());
+  def("parse_journal_file", parse_journal_file, parse_journal_file_overloads());
+}
+
+#endif // USE_BOOST_PYTHON

@@ -903,3 +903,39 @@ void walk_commodities(commodities_map& commodities,
 }
 
 } // namespace ledger
+
+#ifdef USE_BOOST_PYTHON
+
+#include <boost/python.hpp>
+
+using namespace boost::python;
+using namespace ledger;
+
+template <typename T>
+struct item_handler_wrap : public item_handler<T>
+{
+  PyObject * self;
+
+  item_handler_wrap(PyObject * self_) : self(self_) {}
+  item_handler_wrap(PyObject * self_, const item_handler<T>& _handler)
+    : item_handler<T>(const_cast<item_handler<T> *>(&_handler)),
+      self(self_) {}
+  item_handler_wrap(PyObject * self_, item_handler<T> * _handler)
+    : item_handler<T>(_handler), self(self_) {}
+
+  virtual void flush() {
+    call_method<void>(self, "flush");
+  }
+  void default_flush() {
+    item_handler<T>::flush();
+  }
+
+  virtual void operator()(T& item) {
+    call_method<void>(self, "__call__", ptr(&item));
+  }
+  void default_call(T& item) {
+    item_handler<T>::operator()(item);
+  }
+};
+
+#endif

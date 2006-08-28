@@ -5,6 +5,9 @@
 #include "quotes.h"
 #include "valexpr.h"
 #include "walk.h"
+#ifdef USE_BOOST_PYTHON
+#include "py_eval.h"
+#endif
 
 #include <fstream>
 #include <cstdlib>
@@ -130,3 +133,104 @@ void trace_pop(const std::string& cat, const std::string& str,
 }
 
 } // namespace ledger
+
+#ifdef USE_BOOST_PYTHON
+
+#include <boost/python.hpp>
+#include <boost/python/detail/api_placeholder.hpp>
+
+using namespace boost::python;
+using namespace ledger;
+
+void py_process_options(config_t& config, const std::string& command,
+			list args)
+{
+  strings_list strs;
+
+  int l = len(args);
+  for (int i = 0; i < l; i++)
+    strs.push_back(std::string(extract<char *>(args[i])));
+
+  config.process_options(command, strs.begin(), strs.end());
+}
+
+void add_other_option_handlers(const std::list<option_t>& other);
+
+void py_add_config_option_handlers()
+{
+  add_other_option_handlers(config_options);
+}
+
+BOOST_PYTHON_FUNCTION_OVERLOADS(parse_ledger_data_overloads,
+				parse_ledger_data, 1, 2)
+
+void py_option_help()
+{
+  help(std::cout);
+}
+
+void export_config()
+{
+  class_< config_t > ("Config")
+    .def_readwrite("init_file", &config_t::init_file)
+    .def_readwrite("data_file", &config_t::data_file)
+    .def_readwrite("cache_file", &config_t::cache_file)
+    .def_readwrite("price_db", &config_t::price_db)
+    .def_readwrite("output_file", &config_t::output_file)
+    .def_readwrite("account", &config_t::account)
+    .def_readwrite("predicate", &config_t::predicate)
+    .def_readwrite("display_predicate", &config_t::display_predicate)
+    .def_readwrite("report_period", &config_t::report_period)
+    .def_readwrite("report_period_sort", &config_t::report_period_sort)
+    .def_readwrite("format_string", &config_t::format_string)
+    .def_readwrite("balance_format", &config_t::balance_format)
+    .def_readwrite("register_format", &config_t::register_format)
+    .def_readwrite("wide_register_format", &config_t::wide_register_format)
+    .def_readwrite("plot_amount_format", &config_t::plot_amount_format)
+    .def_readwrite("plot_total_format", &config_t::plot_total_format)
+    .def_readwrite("print_format", &config_t::print_format)
+    .def_readwrite("write_hdr_format", &config_t::write_hdr_format)
+    .def_readwrite("write_xact_format", &config_t::write_xact_format)
+    .def_readwrite("equity_format", &config_t::equity_format)
+    .def_readwrite("prices_format", &config_t::prices_format)
+    .def_readwrite("pricesdb_format", &config_t::pricesdb_format)
+    .def_readwrite("date_format", &config_t::date_format)
+    .def_readwrite("sort_string", &config_t::sort_string)
+    .def_readwrite("amount_expr", &config_t::amount_expr)
+    .def_readwrite("total_expr", &config_t::total_expr)
+    .def_readwrite("total_expr_template", &config_t::total_expr_template)
+    .def_readwrite("forecast_limit", &config_t::forecast_limit)
+    .def_readwrite("reconcile_balance", &config_t::reconcile_balance)
+    .def_readwrite("reconcile_date", &config_t::reconcile_date)
+    .def_readwrite("budget_flags", &config_t::budget_flags)
+    .def_readwrite("pricing_leeway", &config_t::pricing_leeway)
+    .def_readwrite("show_collapsed", &config_t::show_collapsed)
+    .def_readwrite("show_subtotal", &config_t::show_subtotal)
+    .def_readwrite("show_totals", &config_t::show_totals)
+    .def_readwrite("show_related", &config_t::show_related)
+    .def_readwrite("show_all_related", &config_t::show_all_related)
+    .def_readwrite("show_inverted", &config_t::show_inverted)
+    .def_readwrite("show_empty", &config_t::show_empty)
+    .def_readwrite("head_entries", &config_t::head_entries)
+    .def_readwrite("tail_entries", &config_t::tail_entries)
+    .def_readwrite("pager", &config_t::pager)
+    .def_readwrite("days_of_the_week", &config_t::days_of_the_week)
+    .def_readwrite("by_payee", &config_t::by_payee)
+    .def_readwrite("comm_as_payee", &config_t::comm_as_payee)
+    .def_readwrite("show_revalued", &config_t::show_revalued)
+    .def_readwrite("show_revalued_only", &config_t::show_revalued_only)
+    .def_readwrite("download_quotes", &config_t::download_quotes)
+    .def_readwrite("use_cache", &config_t::use_cache)
+    .def_readwrite("cache_dirty", &config_t::cache_dirty)
+
+    .def("process_options", py_process_options)
+    ;
+
+  scope().attr("config") = ptr(&config);
+
+  def("option_help", py_option_help);
+  def("parse_ledger_data", parse_ledger_data, parse_ledger_data_overloads());
+  def("add_config_option_handlers", py_add_config_option_handlers);
+}
+
+#endif // USE_BOOST_PYTHON

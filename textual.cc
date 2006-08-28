@@ -725,7 +725,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	  if (p)
 	    *p++ = '\0';
 	}
-	process_option(config_options, line + 2, p);
+	process_option(options, line + 2, p);
 	break;
       }
 
