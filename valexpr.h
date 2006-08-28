@@ -145,6 +145,10 @@ struct value_expr_t
     : kind(_kind), refc(0), left(NULL), right(NULL) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor value_expr_t " << this);
   }
+  value_expr_t(const value_expr_t&) {
+    DEBUG_PRINT("ledger.memory.ctors", "ctor value_expr_t (copy) " << this);
+    assert(0);
+  }
   ~value_expr_t();
 
   void release() const {
@@ -191,11 +195,6 @@ struct value_expr_t
     value_t temp;
     compute(temp, details, context);
     return temp;
-  }
-
- private:
-  value_expr_t(const value_expr_t&) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor value_expr_t (copy) " << this);
   }
 };
 

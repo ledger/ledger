@@ -72,6 +72,7 @@ value_expr_t::~value_expr_t()
     break;
 
   case O_PYDEF:
+  case O_PYLAMBDA:
     assert(pyobject);
     delete (object *)pyobject;
     break;
@@ -1012,8 +1013,9 @@ value_expr_t * parse_value_term(std::istream& in, scope_t * scope,
 	try {
 	  bool is_lambda = false;
 	  if (std::strcmp(buf, "lambda") == 0) {
-	    READ_INTO(in, &buf[std::strlen(buf)], 3800, c, true);
 	    is_lambda = true;
+	    std::strcat(buf, " ");
+	    READ_INTO(in, &buf[std::strlen(buf)], 3800, c, true);
 	  }
 
 	  object func = python_eval(buf);
@@ -1023,7 +1025,8 @@ value_expr_t * parse_value_term(std::istream& in, scope_t * scope,
 					  value_expr_t::O_PYDEF));
 	  node->left->pyobject = new object(func);
 
-	  parse_args(in, beg, scope, flags, node);
+	  if (! is_lambda)
+	    parse_args(in, beg, scope, flags, node);
 
 	  goto parsed;
 	}
@@ -2127,7 +2130,6 @@ void dump_value_expr(std::ostream& out, const value_expr_t * node,
 
 } // namespace ledger
 
-#if 0
 #ifdef USE_BOOST_PYTHON
 
 #include <boost/python.hpp>
@@ -2153,11 +2155,6 @@ value_t py_compute(value_expr_t& value_expr, const T& item)
 value_expr_t * py_parse_value_expr_1(const std::string& str)
 {
   return parse_value_expr(str);
-}
-
-value_expr_t * py_parse_value_expr_2(const std::string& str, const bool partial)
-{
-  return parse_value_expr(str, partial);
 }
 
 #define EXC_TRANSLATOR(type)				\
@@ -2194,8 +2191,6 @@ void export_valexpr()
 
   def("parse_value_expr", py_parse_value_expr_1,
       return_value_policy<manage_new_object>());
-  def("parse_value_expr", py_parse_value_expr_2,
-      return_value_policy<manage_new_object>());
 
   class_< item_predicate<transaction_t> >
     ("TransactionPredicate", init<std::string>())
@@ -2225,5 +2220,4 @@ int main(int argc, char *argv[])
   std::cout << std::endl;
 }
 
-#endif // USE_BOOST_PYTHON
-#endif
+#endif // TEST

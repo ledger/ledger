@@ -16,6 +16,7 @@ void export_parser();
 void export_option();
 void export_config();
 void export_walk();
+void export_report();
 void export_format();
 void export_valexpr();
 
@@ -32,13 +33,14 @@ namespace {
     export_value();
     //export_datetime();
 
-    //export_journal();
+    export_journal();
     export_parser();
     export_option();
     //export_config();
     //export_walk();
     //export_format();
-    //export_valexpr();
+    export_report();
+    export_valexpr();
 
     module_initialized = true;
   }
@@ -155,6 +157,9 @@ object python_eval(std::istream& in, py_eval_mode_t mode)
 
 object python_eval(const std::string& str, py_eval_mode_t mode)
 {
+  if (! python_initialized)
+    init_python();
+
   try {
     int input_mode;
     switch (mode) {

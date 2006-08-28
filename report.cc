@@ -711,3 +711,57 @@ void repitem_t::print_tree(std::ostream& out, int depth)
 }
 
 } // namespace ledger
+
+#ifdef USE_BOOST_PYTHON
+
+#include <boost/python.hpp>
+#include <boost/python/exception_translator.hpp>
+
+using namespace boost::python;
+using namespace ledger;
+
+value_t py_repitem_total(repitem_t * item) {
+  value_t temp;
+  item->add_total(temp);
+  return temp;
+}
+
+value_t py_repitem_value(repitem_t * item) {
+  value_t temp;
+  item->add_value(temp);
+  return temp;
+}
+
+value_t py_repitem_sort_value(repitem_t * item) {
+  value_t temp;
+  item->add_sort_value(temp);
+  return temp;
+}
+
+void export_report()
+{
+  class_< repitem_t > ("ReportItem")
+    //.def(self == self)
+    //.def(self != self)
+
+    .add_property("total", &py_repitem_total)
+    .add_property("value", &py_repitem_value)
+    .add_property("sort_value", &py_repitem_sort_value)
+
+    .add_property("date", &repitem_t::date)
+    .add_property("effective_date", &repitem_t::effective_date)
+    .add_property("actual_date", &repitem_t::actual_date)
+
+    //.add_property("account", &repitem_t::account, return_value_policy<reference_existing_object>())
+
+    // jww (2006-08-28): Use with_custodian_and_ward here...
+    .def("add_content", &repitem_t::add_content,
+	 return_value_policy<reference_existing_object>())
+    .def("add_child", &repitem_t::add_child,
+	 return_value_policy<reference_existing_object>())
+
+    .def("valid", &repitem_t::valid)
+    ;
+}
+
+#endif // USE_BOOST_PYTHON

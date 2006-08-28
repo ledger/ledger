@@ -642,7 +642,6 @@ xact_context::xact_context(const ledger::transaction_t& _xact,
 
 } // namespace ledger
 
-#if 0
 #ifdef USE_BOOST_PYTHON
 
 #include <boost/python.hpp>
@@ -803,8 +802,8 @@ struct py_entry_finalizer_t : public entry_finalizer_t {
   py_entry_finalizer_t(object obj) : pyobj(obj) {}
   py_entry_finalizer_t(const py_entry_finalizer_t& other)
     : pyobj(other.pyobj) {}
-  virtual bool operator()(entry_t& entry) {
-    return call<bool>(pyobj.ptr(), entry);
+  virtual bool operator()(entry_t& entry, bool post) {
+    return call<bool>(pyobj.ptr(), entry, post);
   }
 };
 
@@ -828,9 +827,9 @@ void py_remove_entry_finalizer(journal_t& journal, object x)
     }
 }
 
-void py_run_entry_finalizers(journal_t& journal, entry_t& entry)
+void py_run_entry_finalizers(journal_t& journal, entry_t& entry, bool post)
 {
-  run_hooks(journal.entry_finalize_hooks, entry);
+  run_hooks(journal.entry_finalize_hooks, entry, post);
 }
 
 #define EXC_TRANSLATOR(type)				\
@@ -838,10 +837,14 @@ void py_run_entry_finalizers(journal_t& journal, entry_t& entry)
     PyErr_SetString(PyExc_RuntimeError, err.what());	\
   }
 
-EXC_TRANSLATOR(error)
-EXC_TRANSLATOR(interval_expr_error)
-EXC_TRANSLATOR(format_error)
-EXC_TRANSLATOR(parse_error)
+//EXC_TRANSLATOR(balance_error)
+//EXC_TRANSLATOR(interval_expr_error)
+//EXC_TRANSLATOR(format_error)
+//EXC_TRANSLATOR(parse_error)
+
+value_t py_transaction_amount(transaction_t * xact) {
+  return value_t(xact->amount);
+}
 
 void export_journal()
 {
@@ -851,8 +854,15 @@ void export_journal()
   scope().attr("TRANSACTION_AUTO")	   = TRANSACTION_AUTO;
   scope().attr("TRANSACTION_BULK_ALLOC")   = TRANSACTION_BULK_ALLOC;
 
+  enum_< transaction_t::state_t > ("State")
+    .value("UNCLEARED", transaction_t::UNCLEARED)
+    .value("CLEARED",   transaction_t::CLEARED)
+    .value("PENDING",   transaction_t::PENDING)
+    ;
+
   class_< transaction_t > ("Transaction")
-    .def(init<account_t *, amount_t, optional<unsigned int, std::string> >())
+    .def(init<optional<account_t *> >())
+    .def(init<account_t *, amount_t, optional<unsigned int, const std::string&> >())
 
     .def(self == self)
     .def(self != self)
@@ -863,13 +873,24 @@ void export_journal()
     .add_property("account",
 		  make_getter(&transaction_t::account,
 			      return_value_policy<reference_existing_object>()))
-    .def_readwrite("amount", &transaction_t::amount)
+    .add_property("amount", &py_transaction_amount)
+    //.def_readonly("amount_expr", &transaction_t::amount_expr)
     .add_property("cost",
 		  make_getter(&transaction_t::cost,
 			      return_internal_reference<1>()))
+    .def_readonly("cost_expr", &transaction_t::cost_expr)
+    .def_readwrite("state", &transaction_t::state)
     .def_readwrite("flags", &transaction_t::flags)
     .def_readwrite("note", &transaction_t::note)
-    .def_readwrite("data", &transaction_t::data)
+    .def_readonly("beg_pos", &transaction_t::beg_pos)
+    .def_readonly("beg_line", &transaction_t::beg_line)
+    .def_readonly("end_pos", &transaction_t::end_pos)
+    .def_readonly("end_line", &transaction_t::end_line)
+    //.def_readwrite("data", &transaction_t::data)
+
+    .def("actual_date", &transaction_t::actual_date)
+    .def("effective_date", &transaction_t::effective_date)
+    .def("date", &transaction_t::date)
 
     .def("valid", &transaction_t::valid)
     ;
@@ -956,7 +977,6 @@ void export_journal()
 
   scope in_entry = class_< entry_t, bases<entry_base_t> > ("Entry")
     .def_readwrite("date", &entry_t::date)
-    .def_readwrite("state", &entry_t::state)
     .def_readwrite("code", &entry_t::code)
     .def_readwrite("payee", &entry_t::payee)
 
@@ -979,20 +999,13 @@ void export_journal()
     .def("valid", &period_entry_t::valid)
     ;
 
-  enum_< entry_t::state_t > ("State")
-    .value("UNCLEARED", entry_t::UNCLEARED)
-    .value("CLEARED",   entry_t::CLEARED)
-    .value("PENDING",   entry_t::PENDING)
-    ;
-
 #define EXC_TRANSLATE(type)					\
   register_exception_translator<type>(&exc_translate_ ## type);
 
-  EXC_TRANSLATE(error);
-  EXC_TRANSLATE(interval_expr_error);
-  EXC_TRANSLATE(format_error);
-  EXC_TRANSLATE(parse_error);
+  //EXC_TRANSLATE(balance_error);
+  //EXC_TRANSLATE(interval_expr_error);
+  //EXC_TRANSLATE(format_error);
+  //EXC_TRANSLATE(parse_error);
 }
 
 #endif // USE_BOOST_PYTHON
-#endif
