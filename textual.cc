@@ -580,13 +580,13 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
   std::list<account_t *> account_stack;
   auto_entry_finalizer_t auto_entry_finalizer(journal);
 
-  if (! master)
+  if (! master && journal)
     master = journal->master;
 
   account_stack.push_front(master);
 
-  path	  = journal->sources.back();
-  src_idx = journal->sources.size() - 1;
+  path	  = journal ? journal->sources.back() : *original_file;
+  src_idx = journal ? journal->sources.size() - 1 : 0;
   linenum = 1;
 
   unsigned long beg_pos = in.tellg();
@@ -730,7 +730,8 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	  if (p)
 	    *p++ = '\0';
 	}
-	process_option(options, line + 2, p);
+	process_option(options, journal ? option_handler_t::data_file :
+		       option_handler_t::init_file, line + 2, p);
 	break;
       }
 

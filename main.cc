@@ -69,13 +69,13 @@ int parse_and_report(config_t& config, report_t& report,
   // These are here for backwards compatability, but are deprecated.
 
   if (const char * p = std::getenv("LEDGER"))
-    process_option(ledger::options, "file", p);
+    process_option(options, option_handler_t::environment, "file", p);
   if (const char * p = std::getenv("LEDGER_INIT"))
-    process_option(ledger::options, "init-file", p);
+    process_option(options, option_handler_t::environment, "init-file", p);
   if (const char * p = std::getenv("PRICE_HIST"))
-    process_option(ledger::options, "price-db", p);
+    process_option(options, option_handler_t::environment, "price-db", p);
   if (const char * p = std::getenv("PRICE_EXP"))
-    process_option(ledger::options, "price-exp", p);
+    process_option(options, option_handler_t::environment, "price-exp", p);
 #endif
 
   const char * p    = std::getenv("HOME");
@@ -156,7 +156,19 @@ int parse_and_report(config_t& config, report_t& report,
     throw new error(std::string("Unrecognized command '") + command + "'");
   }
 
-  // Parse initialization files, ledger data, price database, etc.
+  // Parse the initialization file, which can only be textual
+
+  if (! config.init_file.empty()) {
+    if (access(config.init_file.c_str(), R_OK) == -1)
+      throw new error(std::string("Cannot read init file '") +
+		      config.init_file + "'");
+
+    std::ifstream init(config.init_file.c_str());
+    extern parser_t * ledger::textual_parser_ptr;
+    textual_parser_ptr->parse(init, config, NULL, NULL, &config.init_file);
+  }
+
+  // Parse ledger data, price database, etc.
 
   std::auto_ptr<journal_t> journal(new journal_t);
 

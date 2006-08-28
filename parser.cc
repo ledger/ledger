@@ -28,7 +28,7 @@ void shutdown_parser_support()
   }
 }
 
-bool register_parser(parser_t * parser)
+bool add_parser(parser_t * parser)
 {
   parsers_list::iterator i;
   for (i = parsers->begin(); i != parsers->end(); i++)
@@ -42,7 +42,7 @@ bool register_parser(parser_t * parser)
   return true;
 }
 
-bool unregister_parser(parser_t * parser)
+bool remove_parser(parser_t * parser)
 {
   parsers_list::iterator i;
   for (i = parsers->begin(); i != parsers->end(); i++)
@@ -62,7 +62,7 @@ unsigned int parse_journal(std::istream&       in,
 			   account_t *	       master,
 			   const std::string * original_file)
 {
-  if (! master)
+  if (! master && journal)
     master = journal->master;
 
   for (parsers_list::iterator i = parsers->begin();
@@ -80,7 +80,8 @@ unsigned int parse_journal_file(const std::string&  path,
 				account_t *	    master,
 				const std::string * original_file)
 {
-  journal->sources.push_back(path);
+  if (journal)
+    journal->sources.push_back(path);
 
   if (access(path.c_str(), R_OK) == -1)
     throw new error(std::string("Cannot read file '") + path + "'");
@@ -113,17 +114,6 @@ unsigned int parse_ledger_data(config_t&   config,
 
   DEBUG_PRINT("ledger.config.cache",
 	      "3. use_cache = " << config.use_cache);
-
-  if (! config.init_file.empty() &&
-      access(config.init_file.c_str(), R_OK) != -1) {
-    if (parse_journal_file(config.init_file, config, journal) ||
-	journal->auto_entries.size() > 0 ||
-	journal->period_entries.size() > 0)
-      throw new error(std::string("Entries found in initialization file '") +
-		      config.init_file + "'");
-
-    journal->sources.pop_front(); // remove init file
-  }
 
   if (config.use_cache && ! config.cache_file.empty() &&
       ! config.data_file.empty()) {
@@ -200,34 +190,37 @@ unsigned int parse_ledger_data(config_t&   config,
 using namespace boost::python;
 using namespace ledger;
 
-struct parser_wrap : public parser_t
+struct py_parser_t : public parser_t
 {
   PyObject * self;
-  parser_wrap(PyObject * self_) : self(self_) {}
+  py_parser_t(PyObject * self_) : self(self_) {}
 
   virtual bool test(std::istream& in) const {
     return call_method<bool>(self, "test", in);
   }
 
   virtual unsigned int parse(std::istream&	 in,
+			     config_t&		 config,
 			     journal_t *	 journal,
 			     account_t *	 master        = NULL,
 			     const std::string * original_file = NULL) {
-    return call_method<unsigned int>(self, "__call__", in, journal, master,
-				     original_file);
+    return call_method<unsigned int>(self, "parse", in, config, journal,
+				     master, original_file);
   }
 };
 
-BOOST_PYTHON_FUNCTION_OVERLOADS(parse_journal_overloads, parse_journal, 2, 4)
+BOOST_PYTHON_FUNCTION_OVERLOADS(parse_journal_overloads, parse_journal, 3, 5)
 BOOST_PYTHON_FUNCTION_OVERLOADS(parse_journal_file_overloads,
-				parse_journal_file, 2, 4)
+				parse_journal_file, 3, 5)
 
 void export_parser() {
-  class_< parser_t, parser_wrap, boost::noncopyable > ("Parser")
+  class_< parser_t, py_parser_t, boost::noncopyable > ("Parser")
+    .def("test", &parser_t::test)
+    .def("parse", &parser_t::parse)
     ;
 
-  def("register_parser", register_parser);
-  def("unregister_parser", unregister_parser);
+  def("add_parser", add_parser);
+  def("remove_parser", remove_parser);
   def("parse_journal", parse_journal, parse_journal_overloads());
   def("parse_journal_file", parse_journal_file, parse_journal_file_overloads());
 }

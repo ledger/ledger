@@ -35,16 +35,16 @@ namespace {
 
     initialize_parser_support();
 
-    register_parser(&binary_parser);   binary_parser_ptr  = &binary_parser;
+    add_parser(&binary_parser);   binary_parser_ptr  = &binary_parser;
 #if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
-    register_parser(&xml_parser);      xml_parser_ptr	  = &xml_parser;
-    register_parser(&gnucash_parser);  gnucash_parser_ptr = &gnucash_parser;
+    add_parser(&xml_parser);      xml_parser_ptr     = &xml_parser;
+    add_parser(&gnucash_parser);  gnucash_parser_ptr = &gnucash_parser;
 #endif
 #ifdef HAVE_LIBOFX
-    register_parser(&ofx_parser);      ofx_parser_ptr	  = &ofx_parser;
+    add_parser(&ofx_parser);      ofx_parser_ptr     = &ofx_parser;
 #endif
-    register_parser(&qif_parser);      qif_parser_ptr	  = &qif_parser;
-    register_parser(&textual_parser);  textual_parser_ptr = &textual_parser;
+    add_parser(&qif_parser);      qif_parser_ptr     = &qif_parser;
+    add_parser(&textual_parser);  textual_parser_ptr = &textual_parser;
   }
 
   startup::~startup()

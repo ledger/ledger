@@ -29,38 +29,36 @@ struct option_handler_t
     : long_opt(_long_opt), short_opt(_short_opt),
       wants_arg(_wants_arg) {}
 
+  option_handler_t(const std::string& _long_opt,
+		   const bool	      _wants_arg)
+    : long_opt(_long_opt), short_opt('\0'),
+      wants_arg(_wants_arg) {}
+
   virtual ~option_handler_t() {}
 
-  virtual bool prep(option_source_t source);
-  virtual void run(const char * arg) = 0;
+  virtual bool check(option_source_t source);
+  virtual void run(const char * arg = NULL) {}
 };
 
 typedef std::map<const std::string, option_handler_t *>
-  long_option_handlers_map;
+  option_handlers_map;
 typedef std::pair<const std::string, option_handler_t *>
-  long_option_handlers_pair;
+  option_handlers_pair;
 
-extern long_option_handlers_map long_option_handlers;
-
-typedef std::map<const char, option_handler_t *>
-  short_option_handlers_map;
-typedef std::pair<const char, option_handler_t *>
-  short_option_handlers_pair;
-
-extern short_option_handlers_map short_option_handlers;
+extern option_handlers_map option_handlers;
 
 typedef std::list<option_handler_t *> option_handlers_list;
 
 extern option_handlers_list all_option_handlers;
 
-void set_option_handler(option_handler_t * handler);
-void clear_option_handlers();
+void add_option(option_handler_t * handler);
+void clear_options();
 
 typedef void (*handler_t)(const char * arg);
 
 struct static_option_t {
   const char * long_opt;
-  char	       short_opt;
+  const char   short_opt;
 
   option_handler_t * handler;
 };
@@ -71,8 +69,9 @@ class option_error : public error {
   virtual ~option_error() throw() {}
 };
 
-bool process_option(static_option_t * options, const std::string& opt,
-		    const char * arg = NULL);
+bool process_option(static_option_t * options,
+		    option_handler_t::option_source_t source,
+		    const std::string& opt, const char * arg = NULL);
 void process_arguments(static_option_t * options, int argc, char ** argv,
 		       const bool anywhere, std::list<std::string>& args);
 void process_environment(static_option_t * options, const char ** envp,
@@ -86,7 +85,7 @@ class report_t;
 extern config_t * config;
 extern report_t * report;
 
-#define OPTIONS_SIZE 97
+#define OPTIONS_SIZE 99
 extern static_option_t options[OPTIONS_SIZE];
 
 void help(std::ostream& out);
@@ -98,9 +97,13 @@ void help(std::ostream& out);
 		   const bool	      wants_arg)		\
       : option_handler_t(long_opt, short_opt, wants_arg) {}	\
 								\
+    option_ ## tag(const std::string& long_opt,			\
+		   const bool	      wants_arg)		\
+      : option_handler_t(long_opt, wants_arg) {}		\
+								\
     virtual void run(const char * optarg)
 
-#define OPT_END(tag)				\
+#define OPT_END(tag)						\
     }
 
 } // namespace ledger

@@ -1992,6 +1992,7 @@ void dump_value_expr(std::ostream& out, const value_expr_t * node,
 
 } // namespace ledger
 
+#if 0
 #ifdef USE_BOOST_PYTHON
 
 #include <boost/python.hpp>
@@ -2089,4 +2090,5 @@ int main(int argc, char *argv[])
   std::cout << std::endl;
 }
 
-#endif // TEST
+#endif // USE_BOOST_PYTHON
+#endif

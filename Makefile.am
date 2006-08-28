@@ -13,6 +13,7 @@ if DEBUG
 libamounts_la_CXXFLAGS += -DDEBUG_LEVEL=4
 libamounts_la_SOURCES  += debug.cc
 endif
+libamounts_la_LDFLAGS = -release 3.0
 
 libledger_la_CXXFLAGS =
 libledger_la_SOURCES = \
@@ -49,7 +50,7 @@ libledger_la_SOURCES += ofx.cc
 endif
 if HAVE_BOOST_PYTHON
 libledger_la_CXXFLAGS += -DUSE_BOOST_PYTHON=1
-libledger_la_SOURCES += pyledger.cc py_eval.cc
+libledger_la_SOURCES += py_eval.cc
 endif
 if DEBUG
 libledger_la_CXXFLAGS += -DDEBUG_LEVEL=4
@@ -79,6 +80,7 @@ pkginclude_HEADERS = \
 	mask.h       \
 	option.h     \
 	parser.h     \
+	py_eval.h    \
 	qif.h	     \
 	quotes.h     \
 	reconcile.h  \
@@ -120,15 +122,21 @@ dist_lisp_LISP = ledger.el timeclock.el
 
 if HAVE_BOOST_PYTHON
 
-noinst_PROGRAMS = amounts.so
+noinst_PROGRAMS = amounts.so ledger.so
 
 amounts.so: amounts.cc libamounts.la
 	CFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS) -L. -L.libs" \
-	    python setup.py build --build-lib=.
+	    python amounts-setup.py build --build-lib=.
+
+ledger.so: py_eval.cc pyledger.cc libledger.la amounts.so
+	CFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS) -L. -L.libs" \
+	    python ledger-setup.py build --build-lib=.
 
 install-exec-hook:
 	CFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS) -L. -L.libs" \
-	    python setup.py install --prefix=$(prefix)
+	    python amounts-setup.py install --prefix=$(prefix)
+	CFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS) -L. -L.libs" \
+	    python ledger-setup.py install --prefix=$(prefix)
 
 endif
 

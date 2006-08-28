@@ -127,7 +127,7 @@ class value_t
     if (type == AMOUNT &&
 	(amount_t *) data == &value)
       return *this;
-    
+
     if (value.realzero()) {
       return *this = 0L;
     } else {
@@ -141,7 +141,7 @@ class value_t
     if (type == BALANCE &&
 	(balance_t *) data == &value)
       return *this;
-    
+
     if (value.realzero()) {
       return *this = 0L;
     }
@@ -159,7 +159,7 @@ class value_t
     if (type == BALANCE_PAIR &&
 	(balance_pair_t *) data == &value)
       return *this;
-    
+
     if (value.realzero()) {
       return *this = 0L;
     }

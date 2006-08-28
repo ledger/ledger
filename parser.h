@@ -26,8 +26,8 @@ class parser_t
 			     const std::string * original_file = NULL) = 0;
 };
 
-bool register_parser(parser_t * parser);
-bool unregister_parser(parser_t * parser);
+bool add_parser(parser_t * parser);
+bool remove_parser(parser_t * parser);
 
 unsigned int parse_journal(std::istream&       in,
 			   config_t&           config,

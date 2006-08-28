@@ -12,14 +12,15 @@
 
 #include "util.h"
 
-long_option_handlers_map  long_option_handlers;
-short_option_handlers_map short_option_handlers;
-option_handlers_list	  all_option_handlers;
+option_handlers_map option_handlers;
+option_handlers_list	 all_option_handlers;
 
 namespace {
-  void process_option(option_handler_t * opt, const char * arg = NULL)
+  void process_option(option_handler_t * opt,
+		      option_handler_t::option_source_t source,
+		      const char * arg = NULL)
   {
-    if (opt->prep(option_handler_t::init_file)) {
+    if (opt->check(source)) {
       try {
 	opt->run(arg);
       }
@@ -53,9 +54,9 @@ namespace {
 	return array[mid].handler;
     }
 
-    long_option_handlers_map::const_iterator i =
-      long_option_handlers.find(name);
-    if (i != long_option_handlers.end())
+    option_handlers_map::const_iterator i =
+      option_handlers.find(name);
+    if (i != option_handlers.end())
       return (*i).second;
 
     return NULL;
@@ -66,17 +67,11 @@ namespace {
     for (int i = 0; i < OPTIONS_SIZE; i++)
       if (letter == array[i].short_opt)
 	return array[i].handler;
-
-    short_option_handlers_map::const_iterator i =
-      short_option_handlers.find(letter);
-    if (i != short_option_handlers.end())
-      return (*i).second;
-
     return NULL;
   }
 }
 
-bool option_handler_t::prep(option_source_t source)
+bool option_handler_t::check(option_source_t source)
 {
   if (! handled) {
     handled |= (unsigned short)source;
@@ -85,41 +80,37 @@ bool option_handler_t::prep(option_source_t source)
   return false;
 }
 
-void set_option_handler(option_handler_t * handler)
+void add_option(option_handler_t * handler)
 {
   all_option_handlers.push_back(handler);
 
-  std::pair<short_option_handlers_map::iterator, bool> sresult
-    = short_option_handlers.insert
-	(short_option_handlers_pair(handler->short_opt, handler));
-  if (! sresult.second)
-    short_option_handlers[handler->short_opt] = handler;
-
-  std::pair<long_option_handlers_map::iterator, bool> lresult
-    = long_option_handlers.insert
-	(long_option_handlers_pair(handler->long_opt, handler));
+  std::pair<option_handlers_map::iterator, bool> lresult
+    = option_handlers.insert
+	(option_handlers_pair(handler->long_opt, handler));
   if (! lresult.second)
-    long_option_handlers[handler->long_opt] = handler;
+    option_handlers[handler->long_opt] = handler;
 }
 
-void clear_option_handlers()
+void clear_options()
 {
-  short_option_handlers.clear();
-  long_option_handlers.clear();
+  option_handlers.clear();
 
+#if 0
   for (option_handlers_list::iterator i = all_option_handlers.begin();
        i != all_option_handlers.end();
        i++)
     delete *i;
+#endif
 
   all_option_handlers.clear();
 }
 
-bool process_option(static_option_t * options, const std::string& name,
-		    const char * arg)
+bool process_option(static_option_t * options,
+		    option_handler_t::option_source_t source,
+		    const std::string& name, const char * arg)
 {
   if (option_handler_t * opt = search_options(options, name.c_str())) {
-    process_option(opt, arg);
+    process_option(opt, source, arg);
     return true;
   }
   return false;
@@ -164,7 +155,7 @@ void process_arguments(static_option_t * options, int argc, char ** argv,
 	  throw new option_error(std::string("missing option argument for --") +
 				 name);
       }
-      process_option(opt, value);
+      process_option(opt, option_handler_t::command_line, value);
     }
     else if ((*i)[1] == '\0') {
       throw new option_error(std::string("illegal option -"));
@@ -190,7 +181,7 @@ void process_arguments(static_option_t * options, int argc, char ** argv,
 	    throw new option_error(std::string("missing option argument for -") +
 				   (*o)->short_opt);
 	}
-	process_option(*o, value);
+	process_option(*o, option_handler_t::command_line, value);
       }
     }
 
@@ -221,7 +212,7 @@ void process_environment(static_option_t * options, const char ** envp,
 
       if (*q == '=') {
 	try {
-	  process_option(options, buf, q + 1);
+	  process_option(options, option_handler_t::environment, buf, q + 1);
 	}
 	catch (error * err) {
 	  err->context.pop_back();
@@ -1020,6 +1011,22 @@ OPT_BEGIN(percentage, "%") {
 } OPT_END(percentage);
 
 //////////////////////////////////////////////////////////////////////
+//
+// Python support
+
+#ifdef USE_BOOST_PYTHON
+
+OPT_BEGIN(import, ":") {
+  python_eval(std::string("import ") + optarg, PY_EVAL_STMT);
+} OPT_END(import);
+
+OPT_BEGIN(import_stdin, "") {
+  python_eval(std::cin, PY_EVAL_MULTI);
+} OPT_END(import_stdin);
+
+#endif
+
+//////////////////////////////////////////////////////////////////////
 
 static_option_t options[OPTIONS_SIZE] = {
   { "abbrev-len", '\0',
@@ -1112,6 +1119,10 @@ static_option_t options[OPTIONS_SIZE] = {
     new option_help_comm("help-comm", '\0', false) },
   { "help-disp", '\0',
     new option_help_disp("help-disp", '\0', false) },
+  { "import", '\0',
+    new option_import("import", '\0', true) },
+  { "import-stdin", '\0',
+    new option_import_stdin("import-stdin", '\0', false) },
   { "init-file", 'i',
     new option_init_file("init-file", 'i', true) },
   { "input-date-format", '\0',
@@ -1228,85 +1239,49 @@ static_option_t options[OPTIONS_SIZE] = {
 
 using namespace boost::python;
 
-struct func_option_wrapper : public option_handler
+struct py_option_handler_t : public option_handler_t
 {
-  object self;
-  func_option_wrapper(object _self) : self(_self) {}
+  PyObject * self;
+  py_option_handler_t(PyObject * self_,
+		      const std::string& long_opt,
+		      const bool wants_arg)
+    : self(self_), option_handler_t(long_opt, wants_arg) {
+    Py_INCREF(self);
+  }
+  virtual ~py_option_handler_t() {
+    Py_DECREF(self);
+  }
 
-  virtual void operator()(const char * arg) {
-    call<void>(self.ptr(), arg);
+  virtual bool check(option_source_t source) {
+    return call_method<bool>(self, "check", source);
+  }
+  virtual void run(const char * optarg = NULL) {
+    if (optarg)
+      return call_method<void>(self, "run", optarg);
+    else
+      return call_method<void>(self, "run");
   }
 };
 
-namespace {
-  std::list<func_option_wrapper> wrappers;
-  std::list<option_t>            options;
-}
-
-void py_add_option_handler(const std::string& long_opt,
-			   const std::string& short_opt, object func)
-{
-  wrappers.push_back(func_option_wrapper(func));
-  add_option_handler(options, long_opt, short_opt, wrappers.back());
-}
-
-void add_other_option_handlers(const std::list<option_t>& other)
-{
-  options.insert(options.begin(), other.begin(), other.end());
-}
-
-bool py_process_option(const std::string& opt, const char * arg)
-{
-  return process_option(options, opt, arg);
-}
-
-list py_process_arguments(list args, bool anywhere = false)
-{
-  std::vector<char *> strs;
-
-  int l = len(args);
-  for (int i = 0; i < l; i++)
-    strs.push_back(extract<char *>(args[i]));
-
-  std::list<std::string> newargs;
-  process_arguments(options, strs.size(), &strs.front(), anywhere, newargs);
-
-  list py_newargs;
-  for (std::list<std::string>::iterator i = newargs.begin();
-       i != newargs.end();
-       i++)
-    py_newargs.append(*i);
-  return py_newargs;
-}
-
-BOOST_PYTHON_FUNCTION_OVERLOADS(py_proc_args_overloads,
-				py_process_arguments, 1, 2)
-
-void py_process_environment(object env, const std::string& tag)
-{
-  std::vector<char *>      strs;
-  std::vector<std::string> storage;
-
-  list items = call_method<list>(env.ptr(), "items");
-  int l = len(items);
-  for (int i = 0; i < l; i++) {
-    tuple pair = extract<tuple>(items[i]);
-    std::string s = extract<std::string>(pair[0]);
-    s += "=";
-    s += extract<std::string>(pair[1]);
-    storage.push_back(s);
-    strs.push_back(const_cast<char *>(storage.back().c_str()));
-  }
-
-  process_environment(options, &strs.front(), tag);
-}
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(option_handler_run_overloads,
+				       option_handler_t::run, 0, 1)
 
 void export_option()
 {
-  def("add_option_handler",  py_add_option_handler);
-  def("process_option",      py_process_option);
-  def("process_arguments",   py_process_arguments, py_proc_args_overloads());
-  def("process_environment", py_process_environment);
+  class_< option_handler_t, py_option_handler_t, boost::noncopyable >
+    ("OptionHandler", init<const std::string&, bool>())
+    .def("check", &option_handler_t::check)
+    .def("run", &option_handler_t::run, option_handler_run_overloads())
+    ;
+
+  enum_< option_handler_t::option_source_t > ("OptionSource")
+    .value("InitFile",    option_handler_t::init_file)
+    .value("Environment", option_handler_t::environment)
+    .value("DataFile",    option_handler_t::data_file)
+    .value("CommandLine", option_handler_t::command_line)
+    ;
+
+  def("add_option", add_option);
 }
 
 #endif // USE_BOOST_PYTHON
