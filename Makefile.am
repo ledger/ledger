@@ -97,6 +97,9 @@ endif
 if HAVE_LIBOFX
 ledger_CXXFLAGS += -DHAVE_LIBOFX=1
 endif
+if HAVE_BOOST_PYTHON
+ledger_CXXFLAGS += -DUSE_BOOST_PYTHON=1
+endif
 if DEBUG
 ledger_CXXFLAGS += -DDEBUG_LEVEL=4
 endif
@@ -115,7 +118,7 @@ if HAVE_BOOST_PYTHON
 
 noinst_PROGRAMS = ledger.so
 
-ledger.so: py_eval.cc pyledger.cc libledger.la
+ledger.so: pyledger.cc libledger.la
 	CFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS) -L. -L.libs" \
 	    python setup.py build --build-lib=.
 

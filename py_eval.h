@@ -1,5 +1,5 @@
-#ifndef _PYTHON_H
-#define _PYTHON_H
+#ifndef _PY_EVAL_H
+#define _PY_EVAL_H
 
 #include <string>
 #include <iostream>
@@ -26,4 +26,4 @@ object python_eval(const char * c_str, py_eval_mode_t mode = PY_EVAL_EXPR);
 
 } // namespace ledger
 
-#endif // _PYTHON_H
+#endif // _PY_EVAL_H

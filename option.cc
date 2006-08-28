@@ -993,20 +993,14 @@ OPT_BEGIN(percentage, "%") {
 
 struct option_import : public option_handler_t
 {
-  std::list<object> modules;
-
   option_import() : option_handler_t("import", true) {}
-
-  virtual ~option_import() {
-    modules.clear();
-  }
 
   virtual bool check(option_source_t source) {
     // Allow any number of modules to be imported, from any source
     return true;
   }
   virtual void run(const char * optarg) {
-    modules.push_back(python_import(optarg));
+    python_import(optarg);
   }
 };
 
@@ -1239,8 +1233,6 @@ struct py_option_handler_t : public option_handler_t
   virtual ~py_option_handler_t() {}
 
   virtual bool check(option_source_t source) {
-    // jww (2006-08-28): What if check hasn't been defined?  Then we
-    // run into an infinite loop!
     return call_method<bool>(self, "check", source);
   }
   virtual void run(const char * optarg = NULL) {

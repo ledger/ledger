@@ -439,7 +439,9 @@ appending the output of this command to your Ledger file if you so choose."
 #if DEBUG_LEVEL >= BETA
   { TRACE_PUSH(cleanup, "Cleaning up allocated memory");
 
-    //shutdown_ledger_for_python();
+#ifdef USE_BOOST_PYTHON
+    shutdown_ledger_for_python();
+#endif
 
     for (int i = 0; i < OPTIONS_SIZE; i++)
       delete options[i].handler;

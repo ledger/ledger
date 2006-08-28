@@ -6,11 +6,6 @@
 #include <sstream>
 #include <map>
 
-namespace {
-  bool python_initialized = false;
-  bool module_initialized = false;
-}
-
 void export_amount();
 void export_balance();
 void export_value();
@@ -24,32 +19,37 @@ void export_walk();
 void export_format();
 void export_valexpr();
 
-void initialize_ledger_for_python()
-{
-  export_amount();
-  export_balance();
-  export_value();
-  //export_datetime();
+void shutdown_option();
 
-  //export_journal();
-  export_parser();
-  export_option();
-  //export_config();
-  //export_walk();
-  //export_format();
-  //export_valexpr();
+namespace {
+  bool python_initialized = false;
+  bool module_initialized = false;
 
-  module_initialized = true;
+  void initialize_ledger_for_python()
+  {
+    export_amount();
+    export_balance();
+    export_value();
+    //export_datetime();
+
+    //export_journal();
+    export_parser();
+    export_option();
+    //export_config();
+    //export_walk();
+    //export_format();
+    //export_valexpr();
+
+    module_initialized = true;
+  }
 }
 
-void shutdown_option();
+namespace ledger {
 
 void shutdown_ledger_for_python()
 {
   shutdown_option();
 }
-
-namespace ledger {
 
 static struct python_main_t
 {
