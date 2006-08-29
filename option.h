@@ -69,7 +69,7 @@ class report_t;
 extern config_t * config;
 extern report_t * report;
 
-#define OPTIONS_SIZE 99
+#define OPTIONS_SIZE 102
 extern static_option_t options[OPTIONS_SIZE];
 
 void help(std::ostream& out);

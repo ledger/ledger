@@ -987,6 +987,17 @@ OPT_BEGIN(percentage, "%") {
 
 //////////////////////////////////////////////////////////////////////
 //
+// Transforms
+
+DEFR_OPT(pre_split, "pre-split")
+  pre_transform_queue.push_back(new split_transform); END_DEFR()
+DEFR_OPT(split, "split")
+  transform_queue.push_back(new split_transform); END_DEFR()
+DEFR_OPT(post_split, "post-split")
+  post_transform_queue.push_back(new split_transform); END_DEFR()
+
+//////////////////////////////////////////////////////////////////////
+//
 // Python support
 
 #ifdef USE_BOOST_PYTHON
@@ -1140,6 +1151,8 @@ static_option_t options[OPTIONS_SIZE] = {
     new option_plot_amount_format("plot-amount-format", '\0', true) },
   { "plot-total-format", '\0',
     new option_plot_total_format("plot-total-format", '\0', true) },
+  { "post-split", '\0', new option_post_split },
+  { "pre-split", '\0', new option_pre_split },
   { "price", 'I',
     new option_price("price", 'I', false) },
   { "price-db", '\0',
@@ -1172,6 +1185,7 @@ static_option_t options[OPTIONS_SIZE] = {
     new option_sort_all("sort-all", '\0', true) },
   { "sort-entries", '\0',
     new option_sort_entries("sort-entries", '\0', true) },
+  { "split", '\0', new option_split },
   { "subtotal", 's',
     new option_subtotal("subtotal", 's', false) },
   { "tail", '\0',
@@ -1215,7 +1229,6 @@ static_option_t options[OPTIONS_SIZE] = {
 #include <boost/python.hpp>
 #include <boost/python/detail/api_placeholder.hpp>
 #include <boost/python/suite/indexing/map_indexing_suite.hpp>
-#include <vector>
 
 using namespace boost::python;
 

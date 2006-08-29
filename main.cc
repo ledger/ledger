@@ -341,14 +341,20 @@ appending the output of this command to your Ledger file if you so choose."
 
   // DEBUG
 
-#if 0
   {
     std::auto_ptr<repitem_t> master(repitem_t::wrap_item(journal->master));
     master->populate_entries(journal->entries);
-    std::cout << "Entries Tree:" << std::endl;
+
+    std::cout << "Entries Tree Before:" << std::endl;
+    master->print_tree(std::cout);
+
+    apply_transform_queue(master->contents);
+
+    std::cout << "Entries Tree After:" << std::endl;
     master->print_tree(std::cout);
   }
 
+#if 0
   {
     std::auto_ptr<repitem_t> master(repitem_t::wrap_item(journal->master));
     master->populate_accounts(journal->entries);
