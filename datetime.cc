@@ -504,6 +504,41 @@ std::time_t py_parse_date_yr(const char * date_str, const int year)
 
 void export_datetime()
 {
+  class_< date_t > ("Date")
+    .def("now", &date_t::now)
+    .def("formats", &date_t::formats)
+    .def("current_year", &date_t::current_year)
+    .def("input_format", &date_t::input_format)
+    .def("output_format", &date_t::output_format)
+
+    .def(init<>())
+    .def(init<const date_t&>())
+    .def(init<const std::time_t&>())
+    .def(init<const interval_t&>())
+    .def(init<const std::string&>())
+
+    .def(self += other<const interval_t&>())
+    .def(self -= other<const date_t&>())
+    .def(self += long())
+    .def(self -= long())
+
+    .def(self < other<const date_t&>())
+    .def(self <= other<const date_t&>())
+    .def(self > other<const date_t&>())
+    .def(self >= other<const date_t&>())
+    .def(self == other<const date_t&>())
+    .def(self != other<const date_t&>())
+
+    .def("year", &date_t::year)
+    .def("month", &date_t::month)
+    .def("day", &date_t::day)
+    .def("wday", &date_t::wday)
+    .def("localtime", &date_t::localtime)
+
+    .def("write", &date_t::write)
+    .def("parse", &date_t::parse)
+    ;
+
   class_< interval_t >
     ("Interval", init<optional<int, int, int, std::time_t, std::time_t> >())
     .def(init<std::string>())
@@ -511,13 +546,19 @@ void export_datetime()
 
     .def_readwrite("years", &interval_t::years)
     .def_readwrite("months", &interval_t::months)
+    .def_readwrite("days", &interval_t::days)
+    .def_readwrite("hours", &interval_t::hours)
+    .def_readwrite("minutes", &interval_t::minutes)
     .def_readwrite("seconds", &interval_t::seconds)
+
     .def_readwrite("begin", &interval_t::begin)
     .def_readwrite("end", &interval_t::end)
 
     .def("__len__", interval_len)
     .def("__getitem__", interval_getitem)
 
+    .def("start", &interval_t::start)
+    .def("first", &interval_t::first)
     .def("increment", &interval_t::increment)
     ;
 

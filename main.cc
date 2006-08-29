@@ -71,13 +71,13 @@ int parse_and_report(config_t& config, report_t& report,
   // These are here for backwards compatability, but are deprecated.
 
   if (const char * p = std::getenv("LEDGER"))
-    process_option(options, option_handler_t::environment, "file", p);
+    process_option(options, option_handler_t::ENVIRONMENT, "file", p);
   if (const char * p = std::getenv("LEDGER_INIT"))
-    process_option(options, option_handler_t::environment, "init-file", p);
+    process_option(options, option_handler_t::ENVIRONMENT, "init-file", p);
   if (const char * p = std::getenv("PRICE_HIST"))
-    process_option(options, option_handler_t::environment, "price-db", p);
+    process_option(options, option_handler_t::ENVIRONMENT, "price-db", p);
   if (const char * p = std::getenv("PRICE_EXP"))
-    process_option(options, option_handler_t::environment, "price-exp", p);
+    process_option(options, option_handler_t::ENVIRONMENT, "price-exp", p);
 #endif
 
   const char * p    = std::getenv("HOME");

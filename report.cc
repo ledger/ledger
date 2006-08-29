@@ -551,30 +551,54 @@ repitem_t * repitem_t::wrap_item(account_t * taccount)
 repitem_t * repitem_t::add_content(repitem_t * item)
 {
   repitem_t * start = item;
+
   if (contents == NULL) {
-    assert(content_next_ptr == NULL);
+    assert(last_content == NULL);
     contents = item;
+    item->prev = NULL;
   } else {
-    *content_next_ptr = item;
+    assert(last_content != NULL);
+    last_content->next = item;
+    item->prev = last_content;
   }
-  while (item->next)
-    item = item->next;
-  content_next_ptr = &item->next;
+
+  item->parent = this;
+  while (item->next) {
+    repitem_t * next_item = item->next;
+    next_item->prev   = item;
+    next_item->parent = this;
+    item = next_item;
+  }
+
+  last_content = item;
+
   return start;
 }
 
 repitem_t * repitem_t::add_child(repitem_t * item)
 {
   repitem_t * start = item;
+
   if (children == NULL) {
-    assert(child_next_ptr == NULL);
+    assert(last_child == NULL);
     children = item;
+    item->prev = NULL;
   } else {
-    *child_next_ptr = item;
+    assert(last_child != NULL);
+    last_child->next = item;
+    item->prev = last_child;
   }
-  while (item->next)
-    item = item->next;
-  child_next_ptr = &item->next;
+
+  item->parent = this;
+  while (item->next) {
+    repitem_t * next_item = item->next;
+    next_item->prev   = item;
+    next_item->parent = this;
+    item = next_item;
+  }
+
+  last_child = item;
+
   return start;
 }
 
@@ -752,13 +776,15 @@ void export_report()
     .add_property("effective_date", &repitem_t::effective_date)
     .add_property("actual_date", &repitem_t::actual_date)
 
-    //.add_property("account", &repitem_t::account, return_value_policy<reference_existing_object>())
+    .add_property("account",
+		  make_function(&repitem_t::account,
+				return_value_policy<reference_existing_object>()))
 
-    // jww (2006-08-28): Use with_custodian_and_ward here...
     .def("add_content", &repitem_t::add_content,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<1, with_custodian_and_ward<1, 2> >())
+
     .def("add_child", &repitem_t::add_child,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<1, with_custodian_and_ward<1, 2> >())
 
     .def("valid", &repitem_t::valid)
     ;

@@ -130,7 +130,7 @@ void process_arguments(static_option_t * options, int argc, char ** argv,
 	  throw new option_error(std::string("missing option argument for --") +
 				 name);
       }
-      process_option(opt, option_handler_t::command_line, value);
+      process_option(opt, option_handler_t::COMMAND_LINE, value);
     }
     else if ((*i)[1] == '\0') {
       throw new option_error(std::string("illegal option -"));
@@ -156,7 +156,7 @@ void process_arguments(static_option_t * options, int argc, char ** argv,
 	    throw new option_error(std::string("missing option argument for -") +
 				   (*o)->short_opt);
 	}
-	process_option(*o, option_handler_t::command_line, value);
+	process_option(*o, option_handler_t::COMMAND_LINE, value);
       }
     }
 
@@ -187,7 +187,7 @@ void process_environment(static_option_t * options, const char ** envp,
 
       if (*q == '=') {
 	try {
-	  process_option(options, option_handler_t::environment, buf, q + 1);
+	  process_option(options, option_handler_t::ENVIRONMENT, buf, q + 1);
 	}
 	catch (error * err) {
 	  err->context.pop_back();
@@ -991,10 +991,7 @@ OPT_BEGIN(percentage, "%") {
 
 #ifdef USE_BOOST_PYTHON
 
-struct option_import : public option_handler_t
-{
-  option_import() : option_handler_t("import", true) {}
-
+DEF_OPT_(import, "import")
   virtual bool check(option_source_t source) {
     // Allow any number of modules to be imported, from any source
     return true;
@@ -1002,11 +999,11 @@ struct option_import : public option_handler_t
   virtual void run(const char * optarg) {
     python_import(optarg);
   }
-};
+END_DEF()
 
-OPT_BEGIN(import_stdin, "") {
+DEFR_OPT(import_stdin, "import-stdin")
   python_eval(std::cin, PY_EVAL_MULTI);
-} OPT_END(import_stdin);
+END_DEFR()
 
 #endif
 
@@ -1103,9 +1100,8 @@ static_option_t options[OPTIONS_SIZE] = {
     new option_help_comm("help-comm", '\0', false) },
   { "help-disp", '\0',
     new option_help_disp("help-disp", '\0', false) },
-  { "import", '\0', new option_import() },
-  { "import-stdin", '\0',
-    new option_import_stdin("import-stdin", '\0', false) },
+  { "import",       '\0', new option_import() },
+  { "import-stdin", '\0', new option_import_stdin() },
   { "init-file", 'i',
     new option_init_file("init-file", 'i', true) },
   { "input-date-format", '\0',
@@ -1274,10 +1270,10 @@ void export_option()
     ;
 
   enum_< option_handler_t::option_source_t > ("OptionSource")
-    .value("InitFile",    option_handler_t::init_file)
-    .value("Environment", option_handler_t::environment)
-    .value("DataFile",    option_handler_t::data_file)
-    .value("CommandLine", option_handler_t::command_line)
+    .value("InitFile",    option_handler_t::INIT_FILE)
+    .value("Environment", option_handler_t::ENVIRONMENT)
+    .value("DataFile",    option_handler_t::DATA_FILE)
+    .value("CommandLine", option_handler_t::COMMAND_LINE)
     ;
 
   class_< option_handlers_map > ("OptionHandlersMap")

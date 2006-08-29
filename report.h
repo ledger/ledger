@@ -77,7 +77,9 @@ class report_t
 class repitem_t
 {
 public:
+  repitem_t * parent;
   repitem_t * next;
+  repitem_t * prev;
 
   union {
     transaction_t * xact;
@@ -88,12 +90,13 @@ public:
   enum kind_t { XACT, ENTRY, ACCOUNT };
   kind_t kind;
 
-  bool istemp; // if item pointer is a temporary; assert that its journal pointer is NULL
+  bool istemp; // if item pointer is a temporary; assert that its
+	       // journal pointer is NULL
 
   repitem_t * contents;
-  repitem_t ** content_next_ptr;
+  repitem_t * last_content;
   repitem_t * children;
-  repitem_t ** child_next_ptr;
+  repitem_t * last_child;
 
   mutable value_t _total;
   mutable value_t _value;
@@ -103,10 +106,11 @@ public:
   account_t *	  reported_account;
   datetime_t	  reported_date;
 
-  repitem_t() : next(NULL), istemp(false),
-		contents(NULL), content_next_ptr(NULL),
-		children(NULL), child_next_ptr(NULL),
-		flags(0), parents_elided(0), reported_account(NULL) {}
+  repitem_t()
+    : parent(NULL), next(NULL), prev(NULL), istemp(false),
+      contents(NULL), last_content(NULL),
+      children(NULL), last_child(NULL),
+      flags(0), parents_elided(0), reported_account(NULL) {}
 
   virtual ~repitem_t();
 

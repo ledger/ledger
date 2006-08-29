@@ -49,7 +49,7 @@ class transaction_t
   unsigned long    end_line;
   mutable void *   data;
 
-  static bool    use_effective_date;
+  static bool use_effective_date;
 
   transaction_t(account_t * _account = NULL)
     : entry(NULL), account(_account), cost(NULL),

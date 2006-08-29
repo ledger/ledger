@@ -837,7 +837,7 @@ void py_run_entry_finalizers(journal_t& journal, entry_t& entry, bool post)
     PyErr_SetString(PyExc_RuntimeError, err.what());	\
   }
 
-//EXC_TRANSLATOR(balance_error)
+EXC_TRANSLATOR(balance_error)
 //EXC_TRANSLATOR(interval_expr_error)
 //EXC_TRANSLATOR(format_error)
 //EXC_TRANSLATOR(parse_error)
@@ -846,18 +846,27 @@ value_t py_transaction_amount(transaction_t * xact) {
   return value_t(xact->amount);
 }
 
+transaction_t::state_t py_entry_state(entry_t * entry) {
+  transaction_t::state_t state;
+  if (entry->get_state(&state))
+    return state;
+  else
+    return transaction_t::UNCLEARED;
+}
+
 void export_journal()
 {
-  scope().attr("TRANSACTION_NORMAL")	   = TRANSACTION_NORMAL;
-  scope().attr("TRANSACTION_VIRTUAL")	   = TRANSACTION_VIRTUAL;
-  scope().attr("TRANSACTION_BALANCE")	   = TRANSACTION_BALANCE;
-  scope().attr("TRANSACTION_AUTO")	   = TRANSACTION_AUTO;
-  scope().attr("TRANSACTION_BULK_ALLOC")   = TRANSACTION_BULK_ALLOC;
+  scope().attr("TRANSACTION_NORMAL")	 = TRANSACTION_NORMAL;
+  scope().attr("TRANSACTION_VIRTUAL")	 = TRANSACTION_VIRTUAL;
+  scope().attr("TRANSACTION_BALANCE")	 = TRANSACTION_BALANCE;
+  scope().attr("TRANSACTION_AUTO")	 = TRANSACTION_AUTO;
+  scope().attr("TRANSACTION_BULK_ALLOC") = TRANSACTION_BULK_ALLOC;
+  scope().attr("TRANSACTION_CALCULATED") = TRANSACTION_CALCULATED;
 
   enum_< transaction_t::state_t > ("State")
-    .value("UNCLEARED", transaction_t::UNCLEARED)
-    .value("CLEARED",   transaction_t::CLEARED)
-    .value("PENDING",   transaction_t::PENDING)
+    .value("Uncleared", transaction_t::UNCLEARED)
+    .value("Cleared",   transaction_t::CLEARED)
+    .value("Pending",   transaction_t::PENDING)
     ;
 
   class_< transaction_t > ("Transaction")
@@ -873,15 +882,18 @@ void export_journal()
     .add_property("account",
 		  make_getter(&transaction_t::account,
 			      return_value_policy<reference_existing_object>()))
+
     .add_property("amount", &py_transaction_amount)
     //.def_readonly("amount_expr", &transaction_t::amount_expr)
     .add_property("cost",
 		  make_getter(&transaction_t::cost,
 			      return_internal_reference<1>()))
     .def_readonly("cost_expr", &transaction_t::cost_expr)
+
     .def_readwrite("state", &transaction_t::state)
     .def_readwrite("flags", &transaction_t::flags)
     .def_readwrite("note", &transaction_t::note)
+
     .def_readonly("beg_pos", &transaction_t::beg_pos)
     .def_readonly("beg_line", &transaction_t::beg_line)
     .def_readonly("end_pos", &transaction_t::end_pos)
@@ -891,6 +903,8 @@ void export_journal()
     .def("actual_date", &transaction_t::actual_date)
     .def("effective_date", &transaction_t::effective_date)
     .def("date", &transaction_t::date)
+
+    //.def("use_effective_date", &transaction_t::use_effective_date)
 
     .def("valid", &transaction_t::valid)
     ;
@@ -902,21 +916,28 @@ void export_journal()
     .def(self == self)
     .def(self != self)
 
-    .def_readonly("journal", &account_t::journal)
+    .def(self_ns::str(self))
+
+    .def("__len__", accounts_len)
+    .def("__getitem__", accounts_getitem, return_internal_reference<1>())
+
+    .add_property("journal",
+		  make_getter(&account_t::journal,
+			      return_value_policy<reference_existing_object>()))
     .add_property("parent",
 		  make_getter(&account_t::parent,
-			      return_internal_reference<1>()))
+			      return_value_policy<reference_existing_object>()))
     .def_readwrite("name", &account_t::name)
     .def_readwrite("note", &account_t::note)
     .def_readonly("depth", &account_t::depth)
     .add_property("data", py_account_get_data, py_account_set_data)
     .def_readonly("ident", &account_t::ident)
 
-    .def(self_ns::str(self))
-
     .def("fullname", &account_t::fullname)
+
     .def("add_account", &account_t::add_account)
     .def("remove_account", &account_t::remove_account)
+
     .def("find_account", &account_t::find_account,
 	 return_value_policy<reference_existing_object>())
 
@@ -927,19 +948,21 @@ void export_journal()
     .def(self == self)
     .def(self != self)
 
-    .add_property("master",
-		  make_getter(&journal_t::master,
-			      return_internal_reference<1>()))
-    .add_property("basket",
-		  make_getter(&journal_t::basket,
-			      return_internal_reference<1>()))
-    .def_readwrite("price_db", &journal_t::price_db)
-    .def_readonly("sources", &journal_t::sources)
-
     .def("__len__", entries_len)
     .def("__getitem__", entries_getitem, return_internal_reference<1>())
+
+    .add_property("master", make_getter(&journal_t::master,
+					return_internal_reference<1>()))
+    .add_property("basket", make_getter(&journal_t::basket,
+					return_internal_reference<1>()))
+
+    .def_readonly("sources", &journal_t::sources)
+
+    .def_readwrite("price_db", &journal_t::price_db)
+
     .def("add_account", &journal_t::add_account)
     .def("remove_account", &journal_t::remove_account)
+
     .def("find_account", py_find_account_1, return_internal_reference<1>())
     .def("find_account", py_find_account_2, return_internal_reference<1>())
     .def("find_account_re", &journal_t::find_account_re,
@@ -947,6 +970,7 @@ void export_journal()
 
     .def("add_entry", py_add_entry)
     .def("remove_entry", &journal_t::remove_entry)
+
     .def("add_entry_finalizer", py_add_entry_finalizer)
     .def("remove_entry_finalizer", py_remove_entry_finalizer)
     .def("run_entry_finalizers", py_run_entry_finalizers)
@@ -960,6 +984,7 @@ void export_journal()
 	 return_internal_reference<1>())
 
     .def_readonly("journal", &entry_base_t::journal)
+
     .def_readonly("src_idx", &entry_base_t::src_idx)
     .def_readonly("beg_pos", &entry_base_t::beg_pos)
     .def_readonly("beg_line", &entry_base_t::beg_line)
@@ -972,37 +997,27 @@ void export_journal()
     .def(self == self)
     .def(self != self)
 
+    .def("finalize", &entry_base_t::finalize)
     .def("valid", &entry_base_t::valid)
     ;
 
-  scope in_entry = class_< entry_t, bases<entry_base_t> > ("Entry")
-    .def_readwrite("date", &entry_t::date)
+  class_< entry_t, bases<entry_base_t> > ("Entry")
+    .add_property("date", &entry_t::date)
+    .add_property("effective_date", &entry_t::effective_date)
+    .add_property("actual_date", &entry_t::actual_date)
+
     .def_readwrite("code", &entry_t::code)
     .def_readwrite("payee", &entry_t::payee)
 
+    .add_property("state", &py_entry_state)
+
     .def("valid", &entry_t::valid)
-    ;
-
-  class_< auto_entry_t, bases<entry_base_t> > ("AutoEntry")
-    .add_property("predicate",
-		  make_getter(&auto_entry_t::predicate,
-			      return_internal_reference<1>()))
-    .def_readonly("predicate_string", &auto_entry_t::predicate_string)
-
-    .def("valid", &auto_entry_t::valid)
-    ;
-
-  class_< period_entry_t, bases<entry_base_t> > ("PeriodEntry")
-    .def_readonly("period", &period_entry_t::period)
-    .def_readonly("period_string", &period_entry_t::period_string)
-
-    .def("valid", &period_entry_t::valid)
     ;
 
 #define EXC_TRANSLATE(type)					\
   register_exception_translator<type>(&exc_translate_ ## type);
 
-  //EXC_TRANSLATE(balance_error);
+  EXC_TRANSLATE(balance_error);
   //EXC_TRANSLATE(interval_expr_error);
   //EXC_TRANSLATE(format_error);
   //EXC_TRANSLATE(parse_error);

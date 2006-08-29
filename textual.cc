@@ -730,8 +730,8 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	  if (p)
 	    *p++ = '\0';
 	}
-	process_option(options, journal ? option_handler_t::data_file :
-		       option_handler_t::init_file, line + 2, p);
+	process_option(options, journal ? option_handler_t::DATA_FILE :
+		       option_handler_t::INIT_FILE, line + 2, p);
 	break;
       }
 
