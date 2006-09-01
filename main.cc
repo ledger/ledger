@@ -29,7 +29,6 @@ using namespace ledger;
 static int parse_and_report(report_t * report, int argc, char * argv[],
 			    char * envp[])
 {
-#if 0
   // Configure the terminus for value expressions
 
   ledger::terminus = datetime_t::now;
@@ -37,8 +36,7 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
   // Parse command-line arguments, and those set in the environment
 
   std::list<std::string> args;
-  process_arguments(ledger::static_options, argc - 1, argv + 1, false,
-		    args, &report);
+  process_arguments(argc - 1, argv + 1, false, args, report);
 
   if (args.empty()) {
     help(std::cerr);
@@ -46,6 +44,7 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
   }
   strings_list::iterator arg = args.begin();
 
+#if 0
   if (config.cache_file == "<none>")
     config.use_cache = false;
   else
@@ -74,8 +73,8 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
 		   "price-exp", p);
 #endif
 
-  const char * p    = std::getenv("HOME");
-  std::string  home = p ? p : "";
+  const char * p = std::getenv("HOME");
+  std::string home = p ? p : "";
 
   if (config.init_file.empty())
     config.init_file  = home + "/.ledgerrc";
