@@ -23,10 +23,16 @@
 #include <quotes.h>
 #include <valexpr.h>
 #include <walk.h>
+#include <report.h>
+#include <session.h>
+#include <repitem.h>
+#include <transform.h>
 #include <derive.h>
 #include <reconcile.h>
 #include <error.h>
 #include <option.h>
+#include <trace.h>
+#include <util.h>
 
 #include <parser.h>
 #include <textual.h>
@@ -46,6 +52,5 @@ namespace ledger {
 }
 
 #include <config.h>
-#include <report.h>
 
 #endif // _LEDGER_H

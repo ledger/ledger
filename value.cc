@@ -16,6 +16,9 @@ void value_t::destroy()
   case BALANCE_PAIR:
     ((balance_pair_t *)data)->~balance_pair_t();
     break;
+  case STRING:
+    delete *(std::string **) data;
+    break;
   default:
     break;
   }
@@ -54,6 +57,31 @@ value_t& value_t::operator=(const value_t& value)
   if (this == &value)
     return *this;
 
+  if (type == BOOLEAN && value.type == BOOLEAN) {
+    *((bool *) data) = *((bool *) value.data);
+    return *this;
+  }
+  else if (type == INTEGER && value.type == INTEGER) {
+    *((long *) data) = *((long *) value.data);
+    return *this;
+  }
+  else if (type == DATETIME && value.type == DATETIME) {
+    *((datetime_t *) data) = *((datetime_t *) value.data);
+    return *this;
+  }
+  else if (type == AMOUNT && value.type == AMOUNT) {
+    *(amount_t *) data = *(amount_t *) value.data;
+    return *this;
+  }
+  else if (type == BALANCE && value.type == BALANCE) {
+    *(balance_t *) data = *(balance_t *) value.data;
+    return *this;
+  }
+  else if (type == BALANCE_PAIR && value.type == BALANCE_PAIR) {
+    *(balance_pair_t *) data = *(balance_pair_t *) value.data;
+    return *this;
+  }
+
   destroy();
 
   switch (value.type) {
@@ -81,6 +109,14 @@ value_t& value_t::operator=(const value_t& value)
     new((balance_pair_t *)data) balance_pair_t(*((balance_pair_t *) value.data));
     break;
 
+  case STRING:
+    *(std::string **) data = new std::string(**(std::string **) value.data);
+    break;
+
+  case POINTER:
+    *(void **) data = *(void **) value.data;
+    break;
+
   default:
     assert(0);
     break;
@@ -97,6 +133,8 @@ value_t& value_t::operator+=(const value_t& value)
     throw new value_error("Cannot add a boolean to a value");
   else if (value.type == DATETIME)
     throw new value_error("Cannot add a date/time to a value");
+  else if (value.type == POINTER)
+    throw new value_error("Cannot add a pointer to a value");
 
   switch (type) {
   case BOOLEAN:
@@ -119,6 +157,8 @@ value_t& value_t::operator+=(const value_t& value)
       cast(BALANCE_PAIR);
       *((balance_pair_t *) data) += *((balance_pair_t *) value.data);
       break;
+    case STRING:
+      throw new value_error("Cannot add a string to an integer");
     default:
       assert(0);
       break;
@@ -139,6 +179,8 @@ value_t& value_t::operator+=(const value_t& value)
     case BALANCE_PAIR:
       *((datetime_t *) data) += long(*((balance_pair_t *) value.data));
       break;
+    case STRING:
+      throw new value_error("Cannot add a string to an date/time");
     default:
       assert(0);
       break;
@@ -175,6 +217,9 @@ value_t& value_t::operator+=(const value_t& value)
       *((balance_pair_t *) data) += *((balance_pair_t *) value.data);
       break;
 
+    case STRING:
+      throw new value_error("Cannot add a string to an amount");
+
     default:
       assert(0);
       break;
@@ -196,6 +241,8 @@ value_t& value_t::operator+=(const value_t& value)
       cast(BALANCE_PAIR);
       *((balance_pair_t *) data) += *((balance_pair_t *) value.data);
       break;
+    case STRING:
+      throw new value_error("Cannot add a string to an balance");
     default:
       assert(0);
       break;
@@ -216,11 +263,35 @@ value_t& value_t::operator+=(const value_t& value)
     case BALANCE_PAIR:
       *((balance_pair_t *) data) += *((balance_pair_t *) value.data);
       break;
+    case STRING:
+      throw new value_error("Cannot add a string to an balance pair");
     default:
       assert(0);
       break;
     }
     break;
+
+  case STRING:
+    switch (value.type) {
+    case INTEGER:
+      throw new value_error("Cannot add an integer to a string");
+    case AMOUNT:
+      throw new value_error("Cannot add an amount to a string");
+    case BALANCE:
+      throw new value_error("Cannot add a balance to a string");
+    case BALANCE_PAIR:
+      throw new value_error("Cannot add a balance pair to a string");
+    case STRING:
+      **(std::string **) data += **(std::string **) value.data;
+      break;
+    default:
+      assert(0);
+      break;
+    }
+    break;
+
+  case POINTER:
+    throw new value_error("Cannot add a value to a pointer");
 
   default:
     assert(0);
@@ -235,6 +306,10 @@ value_t& value_t::operator-=(const value_t& value)
     throw new value_error("Cannot subtract a boolean from a value");
   else if (value.type == DATETIME && type != DATETIME)
     throw new value_error("Cannot subtract a date/time from a value");
+  else if (value.type == STRING)
+    throw new value_error("Cannot subtract a string from a value");
+  else if (value.type == POINTER)
+    throw new value_error("Cannot subtract a pointer from a value");
 
   switch (type) {
   case BOOLEAN:
@@ -366,6 +441,11 @@ value_t& value_t::operator-=(const value_t& value)
     }
     break;
 
+  case STRING:
+    throw new value_error("Cannot subtract a value from a string");
+  case POINTER:
+    throw new value_error("Cannot subtract a value from a pointer");
+
   default:
     assert(0);
     break;
@@ -382,6 +462,10 @@ value_t& value_t::operator*=(const value_t& value)
     throw new value_error("Cannot multiply a boolean by a value");
   else if (value.type == DATETIME)
     throw new value_error("Cannot multiply a date/time by a value");
+  else if (value.type == STRING)
+    throw new value_error("Cannot multiply a string by a value");
+  else if (value.type == POINTER)
+    throw new value_error("Cannot multiply a pointer by a value");
 
   if (value.realzero()) {
     *this = 0L;
@@ -478,6 +562,11 @@ value_t& value_t::operator*=(const value_t& value)
     }
     break;
 
+  case STRING:
+    throw new value_error("Cannot multiply a value from a string");
+  case POINTER:
+    throw new value_error("Cannot multiply a value from a pointer");
+
   default:
     assert(0);
     break;
@@ -491,6 +580,10 @@ value_t& value_t::operator/=(const value_t& value)
     throw new value_error("Cannot divide a boolean by a value");
   else if (value.type == DATETIME)
     throw new value_error("Cannot divide a date/time by a value");
+  else if (value.type == STRING)
+    throw new value_error("Cannot divide a string by a value");
+  else if (value.type == POINTER)
+    throw new value_error("Cannot divide a pointer by a value");
 
   switch (type) {
   case BOOLEAN:
@@ -582,11 +675,130 @@ value_t& value_t::operator/=(const value_t& value)
     }
     break;
 
+  case STRING:
+    throw new value_error("Cannot divide a value from a string");
+  case POINTER:
+    throw new value_error("Cannot divide a value from a pointer");
+
   default:
     assert(0);
     break;
   }
   return *this;
+}
+
+template <>
+value_t::operator bool() const
+{
+  switch (type) {
+  case BOOLEAN:
+    return *(bool *) data;
+  case INTEGER:
+    return *(long *) data;
+  case DATETIME:
+    return *(datetime_t *) data;
+  case AMOUNT:
+    return *(amount_t *) data;
+  case BALANCE:
+    return *(balance_t *) data;
+  case STRING:
+    return ! (**((std::string **) data)).empty();
+  case POINTER:
+    return *(void **) data != NULL;
+
+  default:
+    assert(0);
+    break;
+  }
+  assert(0);
+  return 0;
+}
+
+template <>
+value_t::operator long() const
+{
+  switch (type) {
+  case BOOLEAN:
+    throw new value_error("Cannot convert a boolean to an integer");
+  case INTEGER:
+    return *((long *) data);
+  case DATETIME:
+    return *((datetime_t *) data);
+  case AMOUNT:
+    return *((amount_t *) data);
+  case BALANCE:
+    throw new value_error("Cannot convert a balance to an integer");
+  case BALANCE_PAIR:
+    throw new value_error("Cannot convert a balance pair to an integer");
+  case STRING:
+    throw new value_error("Cannot convert a string to an integer");
+  case POINTER:
+    throw new value_error("Cannot convert a pointer to an integer");
+
+  default:
+    assert(0);
+    break;
+  }
+  assert(0);
+  return 0;
+}
+
+template <>
+value_t::operator datetime_t() const
+{
+  switch (type) {
+  case BOOLEAN:
+    throw new value_error("Cannot convert a boolean to a date/time");
+  case INTEGER:
+    return *((long *) data);
+  case DATETIME:
+    return *((datetime_t *) data);
+  case AMOUNT:
+    throw new value_error("Cannot convert an amount to a date/time");
+  case BALANCE:
+    throw new value_error("Cannot convert a balance to a date/time");
+  case BALANCE_PAIR:
+    throw new value_error("Cannot convert a balance pair to a date/time");
+  case STRING:
+    throw new value_error("Cannot convert a string to a date/time");
+  case POINTER:
+    throw new value_error("Cannot convert a pointer to a date/time");
+
+  default:
+    assert(0);
+    break;
+  }
+  assert(0);
+  return 0;
+}
+
+template <>
+value_t::operator double() const
+{
+  switch (type) {
+  case BOOLEAN:
+    throw new value_error("Cannot convert a boolean to a double");
+  case INTEGER:
+    return *((long *) data);
+  case DATETIME:
+    throw new value_error("Cannot convert a date/time to a double");
+  case AMOUNT:
+    return *((amount_t *) data);
+  case BALANCE:
+    throw new value_error("Cannot convert a balance to a double");
+  case BALANCE_PAIR:
+    throw new value_error("Cannot convert a balance pair to a double");
+  case STRING:
+    throw new value_error("Cannot convert a string to a double");
+  case POINTER:
+    throw new value_error("Cannot convert a pointer to a double");
+
+  default:
+    assert(0);
+    break;
+  }
+  assert(0);
+  return 0;
 }
 
 #define DEF_VALUE_CMP_OP(OP)						\
@@ -612,6 +824,11 @@ bool value_t::operator OP(const value_t& value)				\
 									\
     case BALANCE_PAIR:							\
       return *((bool *) data) OP bool(*((balance_pair_t *) value.data)); \
+									\
+    case STRING:							\
+      throw new value_error("Cannot compare a boolean to a string");	\
+    case POINTER:							\
+      throw new value_error("Cannot compare a boolean to a pointer"); \
 									\
     default:								\
       assert(0);							\
@@ -644,6 +861,11 @@ bool value_t::operator OP(const value_t& value)				\
       return (balance_pair_t(*((long *) data)) OP			\
 	      *((balance_pair_t *) value.data));			\
 									\
+    case STRING:							\
+      throw new value_error("Cannot compare an integer to a string");	\
+    case POINTER:							\
+      throw new value_error("Cannot compare an integer to a pointer"); \
+									\
     default:								\
       assert(0);							\
       break;								\
@@ -665,12 +887,14 @@ bool value_t::operator OP(const value_t& value)				\
 									\
     case AMOUNT:							\
       throw new value_error("Cannot compare a date/time to an amount");	\
-									\
     case BALANCE:							\
       throw new value_error("Cannot compare a date/time to a balance");	\
-									\
     case BALANCE_PAIR:							\
       throw new value_error("Cannot compare a date/time to a balance pair"); \
+    case STRING:							\
+      throw new value_error("Cannot compare a date/time to a string");	\
+    case POINTER:							\
+      throw new value_error("Cannot compare a date/time to a pointer"); \
 									\
     default:								\
       assert(0);							\
@@ -701,6 +925,11 @@ bool value_t::operator OP(const value_t& value)				\
       return (balance_t(*((amount_t *) data)) OP			\
 	      *((balance_pair_t *) value.data));			\
 									\
+    case STRING:							\
+      throw new value_error("Cannot compare an amount to a string");	\
+    case POINTER:							\
+      throw new value_error("Cannot compare an amount to a pointer"); \
+									\
     default:								\
       assert(0);							\
       break;								\
@@ -727,6 +956,11 @@ bool value_t::operator OP(const value_t& value)				\
     case BALANCE_PAIR:							\
       return (*((balance_t *) data) OP					\
 	      ((balance_pair_t *) value.data)->quantity);		\
+									\
+    case STRING:							\
+      throw new value_error("Cannot compare a balance to a string");	\
+    case POINTER:							\
+      throw new value_error("Cannot compare a balance to a pointer"); \
 									\
     default:								\
       assert(0);							\
@@ -758,11 +992,47 @@ bool value_t::operator OP(const value_t& value)				\
       return (*((balance_pair_t *) data) OP				\
 	      *((balance_pair_t *) value.data));			\
 									\
+    case STRING:							\
+      throw new value_error("Cannot compare a balance pair to a string"); \
+    case POINTER:							\
+      throw new value_error("Cannot compare a balance pair to a pointer"); \
+									\
     default:								\
       assert(0);							\
       break;								\
     }									\
     break;								\
+									\
+  case STRING:								\
+    switch (value.type) {						\
+    case BOOLEAN:							\
+      throw new value_error("Cannot compare a string to a boolean");	\
+    case INTEGER:							\
+      throw new value_error("Cannot compare a string to an integer");	\
+    case DATETIME:							\
+      throw new value_error("Cannot compare a string to a date/time");	\
+    case AMOUNT:							\
+      throw new value_error("Cannot compare a string to an amount");	\
+    case BALANCE:							\
+      throw new value_error("Cannot compare a string to a balance");	\
+    case BALANCE_PAIR:							\
+      throw new value_error("Cannot compare a string to a balance pair"); \
+									\
+    case STRING:							\
+      return (**((std::string **) data) OP				\
+	      **((std::string **) value.data));				\
+									\
+    case POINTER:							\
+      throw new value_error("Cannot compare a string to a pointer"); \
+									\
+    default:								\
+      assert(0);							\
+      break;								\
+    }									\
+    break;								\
+									\
+  case POINTER:								\
+    throw new value_error("Cannot compare a value to a pointer");	\
 									\
   default:								\
     assert(0);								\
@@ -776,81 +1046,6 @@ DEF_VALUE_CMP_OP(<)
 DEF_VALUE_CMP_OP(<=)
 DEF_VALUE_CMP_OP(>)
 DEF_VALUE_CMP_OP(>=)
-
-template <>
-value_t::operator long() const
-{
-  switch (type) {
-  case BOOLEAN:
-    throw new value_error("Cannot convert a boolean to an integer");
-  case INTEGER:
-    return *((long *) data);
-  case DATETIME:
-    return *((datetime_t *) data);
-  case AMOUNT:
-    return *((amount_t *) data);
-  case BALANCE:
-    throw new value_error("Cannot convert a balance to an integer");
-  case BALANCE_PAIR:
-    throw new value_error("Cannot convert a balance pair to an integer");
-
-  default:
-    assert(0);
-    break;
-  }
-  assert(0);
-  return 0;
-}
-
-template <>
-value_t::operator datetime_t() const
-{
-  switch (type) {
-  case BOOLEAN:
-    throw new value_error("Cannot convert a boolean to a date/time");
-  case INTEGER:
-    return *((long *) data);
-  case DATETIME:
-    return *((datetime_t *) data);
-  case AMOUNT:
-    throw new value_error("Cannot convert an amount to a date/time");
-  case BALANCE:
-    throw new value_error("Cannot convert a balance to a date/time");
-  case BALANCE_PAIR:
-    throw new value_error("Cannot convert a balance pair to a date/time");
-
-  default:
-    assert(0);
-    break;
-  }
-  assert(0);
-  return 0;
-}
-
-template <>
-value_t::operator double() const
-{
-  switch (type) {
-  case BOOLEAN:
-    throw new value_error("Cannot convert a boolean to a double");
-  case INTEGER:
-    return *((long *) data);
-  case DATETIME:
-    throw new value_error("Cannot convert a date/time to a double");
-  case AMOUNT:
-    return *((amount_t *) data);
-  case BALANCE:
-    throw new value_error("Cannot convert a balance to a double");
-  case BALANCE_PAIR:
-    throw new value_error("Cannot convert a balance pair to a double");
-
-  default:
-    assert(0);
-    break;
-  }
-  assert(0);
-  return 0;
-}
 
 void value_t::cast(type_t cast_type)
 {
@@ -869,6 +1064,10 @@ void value_t::cast(type_t cast_type)
       throw new value_error("Cannot convert a boolean to a balance");
     case BALANCE_PAIR:
       throw new value_error("Cannot convert a boolean to a balance pair");
+    case STRING:
+      throw new value_error("Cannot convert a boolean to a string");
+    case POINTER:
+      throw new value_error("Cannot convert a boolean to a pointer");
 
     default:
       assert(0);
@@ -895,6 +1094,10 @@ void value_t::cast(type_t cast_type)
     case BALANCE_PAIR:
       new((balance_pair_t *)data) balance_pair_t(*((long *) data));
       break;
+    case STRING:
+      throw new value_error("Cannot convert an integer to a string");
+    case POINTER:
+      throw new value_error("Cannot convert an integer to a pointer");
 
     default:
       assert(0);
@@ -918,6 +1121,10 @@ void value_t::cast(type_t cast_type)
       throw new value_error("Cannot convert a date/time to a balance");
     case BALANCE_PAIR:
       throw new value_error("Cannot convert a date/time to a balance pair");
+    case STRING:
+      throw new value_error("Cannot convert a date/time to a string");
+    case POINTER:
+      throw new value_error("Cannot convert a date/time to a pointer");
 
     default:
       assert(0);
@@ -955,6 +1162,10 @@ void value_t::cast(type_t cast_type)
       new((balance_pair_t *)data) balance_pair_t(temp);
       break;
     }
+    case STRING:
+      throw new value_error("Cannot convert an amount to a string");
+    case POINTER:
+      throw new value_error("Cannot convert an amount to a pointer");
 
     default:
       assert(0);
@@ -987,7 +1198,7 @@ void value_t::cast(type_t cast_type)
       }
       else {
 	throw new value_error("Cannot convert a balance with "
-			  "multiple commodities to an amount");
+			      "multiple commodities to an amount");
       }
       break;
     }
@@ -999,6 +1210,10 @@ void value_t::cast(type_t cast_type)
       new((balance_pair_t *)data) balance_pair_t(temp);
       break;
     }
+    case STRING:
+      throw new value_error("Cannot convert a balance to a string");
+    case POINTER:
+      throw new value_error("Cannot convert a balance to a pointer");
 
     default:
       assert(0);
@@ -1031,7 +1246,7 @@ void value_t::cast(type_t cast_type)
       }
       else {
 	throw new value_error("Cannot convert a balance pair with "
-			  "multiple commodities to an amount");
+			      "multiple commodities to an amount");
       }
       break;
     }
@@ -1043,12 +1258,21 @@ void value_t::cast(type_t cast_type)
     }
     case BALANCE_PAIR:
       break;
+    case STRING:
+      throw new value_error("Cannot convert a balance pair to a string");
+    case POINTER:
+      throw new value_error("Cannot convert a balance pair to a pointer");
 
     default:
       assert(0);
       break;
     }
     break;
+
+  case STRING:
+    throw new value_error("Cannot convert a string to a value");
+  case POINTER:
+    throw new value_error("Cannot convert a pointer to a value");
 
   default:
     assert(0);
@@ -1077,6 +1301,10 @@ void value_t::negate()
   case BALANCE_PAIR:
     ((balance_pair_t *) data)->negate();
     break;
+  case STRING:
+    throw new value_error("Cannot negate a string");
+  case POINTER:
+    throw new value_error("Cannot negate a pointer");
 
   default:
     assert(0);
@@ -1104,6 +1332,10 @@ void value_t::abs()
   case BALANCE_PAIR:
     ((balance_pair_t *) data)->abs();
     break;
+  case STRING:
+    throw new value_error("Cannot take the absolute value of a string");
+  case POINTER:
+    throw new value_error("Cannot take the absolute value of a pointer");
 
   default:
     assert(0);
@@ -1126,6 +1358,10 @@ value_t value_t::value(const datetime_t& moment) const
     return ((balance_t *) data)->value(moment);
   case BALANCE_PAIR:
     return ((balance_pair_t *) data)->quantity.value(moment);
+  case STRING:
+    throw new value_error("Cannot find the value of a string");
+  case POINTER:
+    throw new value_error("Cannot find the value of a pointer");
   }
 }
 
@@ -1145,6 +1381,10 @@ void value_t::reduce()
   case BALANCE_PAIR:
     ((balance_pair_t *) data)->reduce();
     break;
+  case STRING:
+    throw new value_error("Cannot reduce a string");
+  case POINTER:
+    throw new value_error("Cannot reduce a pointer");
   }
 }
 
@@ -1166,6 +1406,10 @@ void value_t::round()
   case BALANCE_PAIR:
     ((balance_pair_t *) data)->round();
     break;
+  case STRING:
+    throw new value_error("Cannot round a string");
+  case POINTER:
+    throw new value_error("Cannot round a pointer");
   }
 }
 
@@ -1188,6 +1432,10 @@ value_t value_t::unround() const
   case BALANCE_PAIR:
     temp = ((balance_pair_t *) data)->unround();
     break;
+  case STRING:
+    throw new value_error("Cannot un-round a string");
+  case POINTER:
+    throw new value_error("Cannot un-round a pointer");
   }
   return temp;
 }
@@ -1210,6 +1458,11 @@ value_t value_t::price() const
 
   case BALANCE_PAIR:
     return ((balance_pair_t *) data)->quantity.price();
+
+  case STRING:
+    throw new value_error("Cannot find the price of a string");
+  case POINTER:
+    throw new value_error("Cannot find the price of a pointer");
 
   default:
     assert(0);
@@ -1237,6 +1490,11 @@ value_t value_t::date() const
 
   case BALANCE_PAIR:
     return datetime_t(((balance_pair_t *) data)->quantity.date());
+
+  case STRING:
+    throw new value_error("Cannot find the date of a string");
+  case POINTER:
+    throw new value_error("Cannot find the date of a pointer");
 
   default:
     assert(0);
@@ -1266,6 +1524,11 @@ value_t value_t::strip_annotations(const bool keep_price,
     return ((balance_pair_t *) data)->quantity.strip_annotations
       (keep_price, keep_date, keep_tag);
 
+  case STRING:
+    throw new value_error("Cannot strip annotations from a string");
+  case POINTER:
+    throw new value_error("Cannot strip annotations from a pointer");
+
   default:
     assert(0);
     break;
@@ -1292,6 +1555,11 @@ value_t value_t::cost() const
       return *(((balance_pair_t *) data)->cost);
     else
       return ((balance_pair_t *) data)->quantity;
+
+  case STRING:
+    throw new value_error("Cannot find the cost of a string");
+  case POINTER:
+    throw new value_error("Cannot find the cost of a pointer");
 
   default:
     assert(0);
@@ -1338,12 +1606,51 @@ value_t& value_t::add(const amount_t& amount, const amount_t * cost)
     ((balance_pair_t *) data)->add(amount, cost);
     break;
 
+  case STRING:
+    throw new value_error("Cannot add an amount to a string");
+  case POINTER:
+    throw new value_error("Cannot add an amount to a pointer");
+
   default:
     assert(0);
     break;
   }
 
   return *this;
+}
+
+std::ostream& operator<<(std::ostream& out, const value_t& value)
+{
+  switch (value.type) {
+  case value_t::BOOLEAN:
+    out << (*((bool *) value.data) ? "true" : "false");
+    break;
+  case value_t::INTEGER:
+    out << *(long *) value.data;
+    break;
+  case value_t::DATETIME:
+    out << *(datetime_t *) value.data;
+    break;
+  case value_t::AMOUNT:
+    out << *(amount_t *) value.data;
+    break;
+  case value_t::BALANCE:
+    out << *(balance_t *) value.data;
+    break;
+  case value_t::BALANCE_PAIR:
+    out << *(balance_pair_t *) value.data;
+    break;
+  case value_t::STRING:
+    out << **(std::string **) value.data;
+    break;
+  case value_t::POINTER:
+    throw new value_error("Cannot output a pointer");
+
+  default:
+    assert(0);
+    break;
+  }
+  return out;
 }
 
 value_context::value_context(const value_t& _bal,
@@ -1424,6 +1731,10 @@ long value_len(value_t& value)
   case value_t::BALANCE_PAIR:
     return balance_pair_len(*((balance_pair_t *) value.data));
 
+  case value_t::STRING:
+  case value_t::POINTER:
+    return 1;
+
   default:
     assert(0);
     break;
@@ -1460,6 +1771,11 @@ amount_t value_getitem(value_t& value, int i)
   case value_t::BALANCE_PAIR:
     return balance_pair_getitem(*((balance_pair_t *) value.data), i);
 
+  case value_t::STRING:
+    throw new value_error("Cannot cast a string to an amount");
+  case value_t::POINTER:
+    throw new value_error("Cannot cast a pointer to an amount");
+
   default:
     assert(0);
     break;
@@ -1486,12 +1802,14 @@ void export_value()
     .def(init<datetime_t>())
 
     .def(self + self)
+    .def(self + other<std::string>())
     .def(self + other<balance_pair_t>())
     .def(self + other<balance_t>())
     .def(self + other<amount_t>())
     .def(self + long())
     .def(self + double())
 
+    .def(other<std::string>() + self)
     .def(other<balance_pair_t>() + self)
     .def(other<balance_t>() + self)
     .def(other<amount_t>() + self)
@@ -1499,12 +1817,14 @@ void export_value()
     .def(double() + self)
 
     .def(self - self)
+    .def(self - other<std::string>())
     .def(self - other<balance_pair_t>())
     .def(self - other<balance_t>())
     .def(self - other<amount_t>())
     .def(self - long())
     .def(self - double())
 
+    .def(other<std::string>() - self)
     .def(other<balance_pair_t>() - self)
     .def(other<balance_t>() - self)
     .def(other<amount_t>() - self)
@@ -1512,12 +1832,14 @@ void export_value()
     .def(double() - self)
 
     .def(self * self)
+    .def(self * other<std::string>())
     .def(self * other<balance_pair_t>())
     .def(self * other<balance_t>())
     .def(self * other<amount_t>())
     .def(self * long())
     .def(self * double())
 
+    .def(other<std::string>() * self)
     .def(other<balance_pair_t>() * self)
     .def(other<balance_t>() * self)
     .def(other<amount_t>() * self)
@@ -1525,12 +1847,14 @@ void export_value()
     .def(double() * self)
 
     .def(self / self)
+    .def(self / other<std::string>())
     .def(self / other<balance_pair_t>())
     .def(self / other<balance_t>())
     .def(self / other<amount_t>())
     .def(self / long())
     .def(self / double())
 
+    .def(other<std::string>() / self)
     .def(other<balance_pair_t>() / self)
     .def(other<balance_t>() / self)
     .def(other<amount_t>() / self)
@@ -1540,6 +1864,7 @@ void export_value()
     .def(- self)
 
     .def(self += self)
+    .def(self += other<std::string>())
     .def(self += other<balance_pair_t>())
     .def(self += other<balance_t>())
     .def(self += other<amount_t>())
@@ -1547,6 +1872,7 @@ void export_value()
     .def(self += double())
 
     .def(self -= self)
+    .def(self -= other<std::string>())
     .def(self -= other<balance_pair_t>())
     .def(self -= other<balance_t>())
     .def(self -= other<amount_t>())
@@ -1554,6 +1880,7 @@ void export_value()
     .def(self -= double())
 
     .def(self *= self)
+    .def(self *= other<std::string>())
     .def(self *= other<balance_pair_t>())
     .def(self *= other<balance_t>())
     .def(self *= other<amount_t>())
@@ -1561,6 +1888,7 @@ void export_value()
     .def(self *= double())
 
     .def(self /= self)
+    .def(self /= other<std::string>())
     .def(self /= other<balance_pair_t>())
     .def(self /= other<balance_t>())
     .def(self /= other<amount_t>())
@@ -1568,6 +1896,7 @@ void export_value()
     .def(self /= double())
 
     .def(self <  self)
+    .def(self < other<std::string>())
     .def(self < other<balance_pair_t>())
     .def(self < other<balance_t>())
     .def(self < other<amount_t>())
@@ -1575,6 +1904,7 @@ void export_value()
     .def(self < other<datetime_t>())
     .def(self < double())
 
+    .def(other<std::string>() < self)
     .def(other<balance_pair_t>() < self)
     .def(other<balance_t>() < self)
     .def(other<amount_t>() < self)
@@ -1583,6 +1913,7 @@ void export_value()
     .def(double() < self)
 
     .def(self <= self)
+    .def(self <= other<std::string>())
     .def(self <= other<balance_pair_t>())
     .def(self <= other<balance_t>())
     .def(self <= other<amount_t>())
@@ -1590,6 +1921,7 @@ void export_value()
     .def(self <= other<datetime_t>())
     .def(self <= double())
 
+    .def(other<std::string>() <= self)
     .def(other<balance_pair_t>() <= self)
     .def(other<balance_t>() <= self)
     .def(other<amount_t>() <= self)
@@ -1597,7 +1929,8 @@ void export_value()
     .def(other<datetime_t>() <= self)
     .def(double() <= self)
 
-    .def(self >  self)
+    .def(self > self)
+    .def(self > other<std::string>())
     .def(self > other<balance_pair_t>())
     .def(self > other<balance_t>())
     .def(self > other<amount_t>())
@@ -1605,6 +1938,7 @@ void export_value()
     .def(self > other<datetime_t>())
     .def(self > double())
 
+    .def(other<std::string>() > self)
     .def(other<balance_pair_t>() > self)
     .def(other<balance_t>() > self)
     .def(other<amount_t>() > self)
@@ -1613,6 +1947,7 @@ void export_value()
     .def(double() > self)
 
     .def(self >= self)
+    .def(self >= other<std::string>())
     .def(self >= other<balance_pair_t>())
     .def(self >= other<balance_t>())
     .def(self >= other<amount_t>())
@@ -1620,6 +1955,7 @@ void export_value()
     .def(self >= other<datetime_t>())
     .def(self >= double())
 
+    .def(other<std::string>() >= self)
     .def(other<balance_pair_t>() >= self)
     .def(other<balance_t>() >= self)
     .def(other<amount_t>() >= self)
@@ -1628,6 +1964,7 @@ void export_value()
     .def(double() >= self)
 
     .def(self == self)
+    .def(self == other<std::string>())
     .def(self == other<balance_pair_t>())
     .def(self == other<balance_t>())
     .def(self == other<amount_t>())
@@ -1635,6 +1972,7 @@ void export_value()
     .def(self == other<datetime_t>())
     .def(self == double())
 
+    .def(other<std::string>() == self)
     .def(other<balance_pair_t>() == self)
     .def(other<balance_t>() == self)
     .def(other<amount_t>() == self)
@@ -1643,6 +1981,7 @@ void export_value()
     .def(double() == self)
 
     .def(self != self)
+    .def(self != other<std::string>())
     .def(self != other<balance_pair_t>())
     .def(self != other<balance_t>())
     .def(self != other<amount_t>())
@@ -1650,6 +1989,7 @@ void export_value()
     .def(self != other<datetime_t>())
     .def(self != double())
 
+    .def(other<std::string>() != self)
     .def(other<balance_pair_t>() != self)
     .def(other<balance_t>() != self)
     .def(other<amount_t>() != self)
@@ -1682,12 +2022,14 @@ void export_value()
     ;
 
   enum_< value_t::type_t > ("ValueType")
-    .value("BOOLEAN", value_t::BOOLEAN)
-    .value("INTEGER", value_t::INTEGER)
-    .value("DATETIME", value_t::DATETIME)
-    .value("AMOUNT", value_t::AMOUNT)
-    .value("BALANCE", value_t::BALANCE)
-    .value("BALANCE_PAIR", value_t::BALANCE_PAIR)
+    .value("Boolean", value_t::BOOLEAN)
+    .value("Integer", value_t::INTEGER)
+    .value("DateTime", value_t::DATETIME)
+    .value("Amount", value_t::AMOUNT)
+    .value("Balance", value_t::BALANCE)
+    .value("BalancePair", value_t::BALANCE_PAIR)
+    .value("String", value_t::STRING)
+    .value("Pointer", value_t::POINTER)
     ;
 }
 

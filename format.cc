@@ -1066,8 +1066,8 @@ void export_format()
     .def("format", py_format<transaction_t>)
     ;
 
-  //def("truncated", truncated);
 #if 0
+  def("truncated", truncated);
   def("partial_account_name", partial_account_name);
 #endif
   def("display_account", display_account);

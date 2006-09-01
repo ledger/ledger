@@ -8,7 +8,11 @@
 
 #include "error.h"
 
-struct option_handler_t
+namespace ledger {
+
+class report_t;
+
+struct option_t
 {
   const std::string long_opt;
   const char	    short_opt;
@@ -23,28 +27,35 @@ struct option_handler_t
 
   unsigned short handled;
 
-  option_handler_t(const std::string& _long_opt,
-		   const char	      _short_opt,
-		   const bool	      _wants_arg = false)
+  option_t(const std::string& _long_opt,
+	   const char	      _short_opt,
+	   const bool	      _wants_arg = false)
     : long_opt(_long_opt), short_opt(_short_opt),
       wants_arg(_wants_arg) {}
 
-  option_handler_t(const std::string& _long_opt,
-		   const bool	      _wants_arg = false)
+  option_t(const std::string& _long_opt,
+	   const bool	      _wants_arg = false)
     : long_opt(_long_opt), short_opt('\0'),
       wants_arg(_wants_arg) {}
 
-  virtual ~option_handler_t() {}
+  virtual ~option_t() {}
 
-  virtual bool check(option_source_t source);
-  virtual void run(const char * arg = NULL) = 0;
+  virtual bool check(option_source_t source) {
+    if (! handled) {
+      handled |= (unsigned short)source;
+      return true;
+    }
+    return false;
+  }
+
+  virtual void select(report_t * report, const char * arg = NULL) = 0;
 };
 
 struct static_option_t {
   const char * long_opt;
   const char   short_opt;
 
-  option_handler_t * handler;
+  option_t * handler;
 };
 
 class option_error : public error {
@@ -53,71 +64,30 @@ class option_error : public error {
   virtual ~option_error() throw() {}
 };
 
-bool process_option(static_option_t * options,
-		    option_handler_t::option_source_t source,
-		    const std::string& opt, const char * arg = NULL);
-void process_arguments(static_option_t * options, int argc, char ** argv,
-		       const bool anywhere, std::list<std::string>& args);
-void process_environment(static_option_t * options, const char ** envp,
-			 const std::string& tag);
+void process_option(option_t * opt, option_t::option_source_t source,
+		    report_t * report, const char * arg = NULL);
 
-namespace ledger {
+option_t * search_options(static_option_t * array, const char * name);
 
-class config_t;
-class report_t;
+inline bool process_option(static_option_t * static_options,
+			   option_t::option_source_t source,
+			   const std::string& name, report_t * report,
+			   const char * arg = NULL)
+{
+  if (option_t * opt = search_options(static_options, name.c_str())) {
+    process_option(opt, source, report, arg);
+    return true;
+  }
+  return false;
+}
 
-extern config_t * config;
-extern report_t * report;
+void process_environment(static_option_t * static_options,
+			 const char ** envp, const std::string& tag,
+			 report_t * report);
 
-#define OPTIONS_SIZE 102
-extern static_option_t options[OPTIONS_SIZE];
-
-void help(std::ostream& out);
-
-
-#define DEF_OPT(tag, option)					\
-  struct option_ ## tag : public option_handler_t {		\
-    option_ ## tag() : option_handler_t(option) {}
-
-#define END_DEF()						\
-  };
-
-#define DEFR_OPT(tag, option)					\
-  struct option_ ## tag : public option_handler_t {		\
-    option_ ## tag() : option_handler_t(option) {}		\
-								\
-  virtual void run(const char * optarg) {
-
-#define END_DEFR()						\
-    }								\
-  };
-
-#define DEF_OPT_(tag, option)					\
-  struct option_ ## tag : public option_handler_t {		\
-    option_ ## tag() : option_handler_t(option, true) {}
-
-#define DEFR_OPT_(tag, option)					\
-  struct option_ ## tag : public option_handler_t {		\
-    option_ ## tag() : option_handler_t(option, true) {}	\
-								\
-  virtual void run(const char * optarg) {
-
-
-#define OPT_BEGIN(tag, chars)					\
-  struct option_ ## tag : public option_handler_t {		\
-    option_ ## tag(const std::string& long_opt,			\
-		   const char	      short_opt,		\
-		   const bool	      wants_arg = false)	\
-      : option_handler_t(long_opt, short_opt, wants_arg) {}	\
-								\
-    option_ ## tag(const std::string& long_opt,			\
-		   const bool	      wants_arg = false)	\
-      : option_handler_t(long_opt, wants_arg) {}		\
-								\
-    virtual void run(const char * optarg)
-
-#define OPT_END(tag)						\
-    }
+void process_arguments(static_option_t * static_options,
+		       int argc, char ** argv, const bool anywhere,
+		       report_t * report, std::list<std::string>& args);
 
 } // namespace ledger
 

@@ -14,7 +14,6 @@ void export_datetime();
 void export_journal();
 void export_parser();
 void export_option();
-void export_config();
 void export_walk();
 void export_report();
 void export_format();
@@ -31,14 +30,17 @@ namespace {
     export_amount();
     export_balance();
     export_value();
-    //export_datetime();
+#if 0
+    export_datetime();
+#endif
 
     export_journal();
     export_parser();
     export_option();
-    //export_config();
-    //export_walk();
-    //export_format();
+#if 0
+    export_walk();
+    export_format();
+#endif
     export_report();
     export_valexpr();
 

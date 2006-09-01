@@ -29,7 +29,9 @@ class value_t
     DATETIME,
     AMOUNT,
     BALANCE,
-    BALANCE_PAIR
+    BALANCE_PAIR,
+    STRING,
+    POINTER
   } type;
 
   value_t() {
@@ -77,6 +79,9 @@ class value_t
   }
   value_t(const balance_pair_t& value) : type(INTEGER) {
     *this = value;
+  }
+  value_t(void * item) : type(POINTER) {
+    *this = item;
   }
 
   ~value_t() {
@@ -172,6 +177,31 @@ class value_t
       type = BALANCE_PAIR;
       return *this;
     }
+  }
+  value_t& operator=(void * item) {
+    if (type == POINTER && *(void **) data == item)
+      return *this;
+
+    if (! item) {
+      return *this = 0L;
+    }
+    else {
+      destroy();
+      *(void **)data = item;
+      type = POINTER;
+      return *this;
+    }
+  }
+
+  value_t& set_string(const std::string& str) {
+    if (type != STRING) {
+      destroy();
+      *(std::string **) data = new std::string(str);
+      type = STRING;
+    } else {
+      **(std::string **) data = str;
+    }
+    return *this;
   }
 
   value_t& operator+=(const value_t& value);
@@ -295,6 +325,10 @@ class value_t
       return ((balance_t *) data)->realzero();
     case BALANCE_PAIR:
       return ((balance_pair_t *) data)->realzero();
+    case STRING:
+      return ((std::string *) data)->empty();
+    case POINTER:
+      return *(void **) data == NULL;
 
     default:
       assert(0);
@@ -363,17 +397,19 @@ value_t::operator T() const
 {
   switch (type) {
   case BOOLEAN:
-    return *((bool *) data);
+    return *(bool *) data;
   case INTEGER:
-    return *((long *) data);
+    return *(long *) data;
   case DATETIME:
-    return *((datetime_t *) data);
+    return *(datetime_t *) data;
   case AMOUNT:
-    return *((amount_t *) data);
+    return *(amount_t *) data;
   case BALANCE:
-    return *((balance_t *) data);
-  case BALANCE_PAIR:
-    return *((balance_pair_t *) data);
+    return *(balance_t *) data;
+  case STRING:
+    return **(std::string **) data;
+  case POINTER:
+    return *(void **) data;
 
   default:
     assert(0);
@@ -383,6 +419,7 @@ value_t::operator T() const
   return 0;
 }
 
+template <> value_t::operator bool() const;
 template <> value_t::operator long() const;
 template <> value_t::operator datetime_t() const;
 template <> value_t::operator double() const;
@@ -393,33 +430,7 @@ inline value_t abs(const value_t& value) {
   return temp;
 }
 
-inline std::ostream& operator<<(std::ostream& out, const value_t& value) {
-  switch (value.type) {
-  case value_t::BOOLEAN:
-    out << (*((bool *) value.data) ? "true" : "false");
-    break;
-  case value_t::INTEGER:
-    out << *((long *) value.data);
-    break;
-  case value_t::DATETIME:
-    out << *((datetime_t *) value.data);
-    break;
-  case value_t::AMOUNT:
-    out << *((amount_t *) value.data);
-    break;
-  case value_t::BALANCE:
-    out << *((balance_t *) value.data);
-    break;
-  case value_t::BALANCE_PAIR:
-    out << *((balance_pair_t *) value.data);
-    break;
-
-  default:
-    assert(0);
-    break;
-  }
-  return out;
-}
+std::ostream& operator<<(std::ostream& out, const value_t& value);
 
 class value_context : public error_context
 {

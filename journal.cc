@@ -383,7 +383,9 @@ void auto_entry_t::extend_entry(entry_base_t& entry, bool post)
 account_t::~account_t()
 {
   DEBUG_PRINT("ledger.memory.dtors", "dtor account_t " << this);
-  //assert(! data);
+#if 0
+  assert(! data);
+#endif
 
   for (accounts_map::iterator i = accounts.begin();
        i != accounts.end();
@@ -838,9 +840,11 @@ void py_run_entry_finalizers(journal_t& journal, entry_t& entry, bool post)
   }
 
 EXC_TRANSLATOR(balance_error)
-//EXC_TRANSLATOR(interval_expr_error)
-//EXC_TRANSLATOR(format_error)
-//EXC_TRANSLATOR(parse_error)
+#if 0
+EXC_TRANSLATOR(interval_expr_error)
+EXC_TRANSLATOR(format_error)
+EXC_TRANSLATOR(parse_error)
+#endif
 
 value_t py_transaction_amount(transaction_t * xact) {
   return value_t(xact->amount);
@@ -884,7 +888,9 @@ void export_journal()
 			      return_value_policy<reference_existing_object>()))
 
     .add_property("amount", &py_transaction_amount)
-    //.def_readonly("amount_expr", &transaction_t::amount_expr)
+#if 0
+    .def_readonly("amount_expr", &transaction_t::amount_expr)
+#endif
     .add_property("cost",
 		  make_getter(&transaction_t::cost,
 			      return_internal_reference<1>()))
@@ -898,13 +904,17 @@ void export_journal()
     .def_readonly("beg_line", &transaction_t::beg_line)
     .def_readonly("end_pos", &transaction_t::end_pos)
     .def_readonly("end_line", &transaction_t::end_line)
-    //.def_readwrite("data", &transaction_t::data)
+#if 0
+    .def_readwrite("data", &transaction_t::data)
+#endif
 
     .def("actual_date", &transaction_t::actual_date)
     .def("effective_date", &transaction_t::effective_date)
     .def("date", &transaction_t::date)
 
-    //.def("use_effective_date", &transaction_t::use_effective_date)
+#if 0
+    .def("use_effective_date", &transaction_t::use_effective_date)
+#endif
 
     .def("valid", &transaction_t::valid)
     ;
@@ -1018,9 +1028,11 @@ void export_journal()
   register_exception_translator<type>(&exc_translate_ ## type);
 
   EXC_TRANSLATE(balance_error);
-  //EXC_TRANSLATE(interval_expr_error);
-  //EXC_TRANSLATE(format_error);
-  //EXC_TRANSLATE(parse_error);
+#if 0
+  EXC_TRANSLATE(interval_expr_error);
+  EXC_TRANSLATE(format_error);
+  EXC_TRANSLATE(parse_error);
+#endif
 }
 
 #endif // USE_BOOST_PYTHON

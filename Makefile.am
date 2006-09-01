@@ -20,9 +20,14 @@ libledger_la_SOURCES = \
 	qif.cc	       \
 	quotes.cc      \
 	reconcile.cc   \
+	repitem.cc     \
 	report.cc      \
+	session.cc     \
 	startup.cc     \
 	textual.cc     \
+	trace.cc       \
+	transform.cc   \
+	util.cc        \
 	valexpr.cc     \
 	walk.cc        \
 	xml.cc
@@ -75,9 +80,13 @@ pkginclude_HEADERS = \
 	qif.h	     \
 	quotes.h     \
 	reconcile.h  \
+	repitem.h    \
 	report.h     \
+	session.h    \
 	textual.h    \
 	timing.h     \
+	trace.h      \
+	transform.h  \
 	valexpr.h    \
 	walk.h       \
 	xml.h

@@ -8,7 +8,6 @@
 #include "valexpr.h"
 #include "error.h"
 #include "option.h"
-#include "config.h"
 #include "timing.h"
 #include "util.h"
 #include "acconf.h"
@@ -564,7 +563,6 @@ static void clock_out_from_timelog(const datetime_t& when,
 }
 
 unsigned int textual_parser_t::parse(std::istream&	 in,
-				     config_t&           config,
 				     journal_t *	 journal,
 				     account_t *	 master,
 				     const std::string * original_file)
@@ -730,8 +728,13 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	  if (p)
 	    *p++ = '\0';
 	}
-	process_option(options, journal ? option_handler_t::DATA_FILE :
-		       option_handler_t::INIT_FILE, line + 2, p);
+#if 0
+	// jww (2006-08-31): Need to pass the report pointer here, and
+	// find the pointer to static_options; does it need to be
+	// passed through at all?
+	process_option(static_options, journal ? option_t::DATA_FILE :
+		       option_t::INIT_FILE, line + 2, NULL, p);
+#endif
 	break;
       }
 
@@ -802,8 +805,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
 	  include_stack.push_back(std::pair<std::string, int>
 				  (journal->sources.back(), linenum - 1));
-	  count += parse_journal_file(path, config, journal,
-				      account_stack.front());
+	  count += parse_journal_file(path, journal, account_stack.front());
 	  include_stack.pop_back();
 	}
 	else if (word == "account") {

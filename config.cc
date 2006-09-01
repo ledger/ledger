@@ -1,238 +1,1012 @@
 #include "config.h"
-#include "acconf.h"
-#include "option.h"
-#include "datetime.h"
-#include "quotes.h"
-#include "valexpr.h"
-#include "walk.h"
+#include "report.h"
+#include "transform.h"
+#include "journal.h"
+#include "format.h"
 #ifdef USE_BOOST_PYTHON
 #include "py_eval.h"
 #endif
 
-#include <fstream>
-#include <cstdlib>
-#ifdef WIN32
-#include <io.h>
-#else
-#include <unistd.h>
-#endif
-
-#ifdef HAVE_REALPATH
-extern "C" char *realpath(const char *, char resolved_path[]);
-#endif
-
-#if defined(HAVE_GETPWUID) || defined(HAVE_GETPWNAM)
-#include <pwd.h>
-#endif
+#include <iostream>
 
 namespace ledger {
 
-std::string expand_path(const std::string& path)
+//////////////////////////////////////////////////////////////////////
+//
+// Help options
+//
+
+static void show_version(std::ostream& out)
 {
-  if (path.length() == 0 || path[0] != '~')
-    return path;
-
-  const char * pfx = NULL;
-  std::string::size_type pos = path.find_first_of('/');
-
-  if (path.length() == 1 || pos == 1) {
-    pfx = std::getenv("HOME");
-#ifdef HAVE_GETPWUID
-    if (! pfx) {
-      // Punt. We're trying to expand ~/, but HOME isn't set
-      struct passwd * pw = getpwuid(getuid());
-      if (pw)
-	pfx = pw->pw_dir;
-    }
+  out << "Ledger " << ledger::version << ", the command-line accounting tool";
+  out << "\n\nCopyright (c) 2003-2006, John Wiegley.  All rights reserved.\n\n\
+This program is made available under the terms of the BSD Public License.\n\
+See LICENSE file included with the distribution for details and disclaimer.\n";
+  out << "\n(modules: gmp, pcre";
+#ifdef USE_BOOST_PYTHON
+  out << ", python";
 #endif
-  }
-#ifdef HAVE_GETPWNAM
-  else {
-    std::string user(path, 1, pos == std::string::npos ?
-		     std::string::npos : pos - 1);
-    struct passwd * pw = getpwnam(user.c_str());
-    if (pw)
-      pfx = pw->pw_dir;
-  }
+#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
+  out << ", xml";
 #endif
-
-  // if we failed to find an expansion, return the path unchanged.
-
-  if (! pfx)
-    return path;
-
-  std::string result(pfx);
-
-  if (pos == std::string::npos)
-    return result;
-
-  if (result.length() == 0 || result[result.length() - 1] != '/')
-    result += '/';
-
-  result += path.substr(pos + 1);
-
-  return result;
+#ifdef HAVE_LIBOFX
+  out << ", ofx";
+#endif
+  out << ")\n";
 }
 
-std::string resolve_path(const std::string& path)
+void full_help(std::ostream& out)
 {
-  if (path[0] == '~')
-    return expand_path(path);
-  return path;
+  out << "usage: ledger [options] COMMAND [ACCT REGEX]... [-- [PAYEE REGEX]...]\n\n\
+Basic options:\n\
+  -H, --full-help        display this help text\n\
+  -h, --help             display summarized help text\n\
+  -v, --version          show version information\n\
+  -f, --file FILE        read ledger data from FILE\n\
+  -o, --output FILE      write output to FILE\n\
+  -i, --init-file FILE   initialize ledger using FILE (default: ~/.ledgerrc)\n\
+      --cache FILE       use FILE as a binary cache when --file is not used\n\
+      --no-cache         don't use a cache, even if it would be appropriate\n\
+  -a, --account NAME     use NAME for the default account (useful with QIF)\n\n\
+Report filtering:\n\
+  -c, --current          show only current and past entries (not future)\n\
+  -b, --begin DATE       set report begin date\n\
+  -e, --end DATE         set report end date\n\
+  -p, --period STR       report using the given period\n\
+      --period-sort EXPR sort each report period's entries by EXPR\n\
+  -C, --cleared          consider only cleared transactions\n\
+  -U, --uncleared        consider only uncleared transactions\n\
+  -R, --real             consider only real (non-virtual) transactions\n\
+  -L, --actual           consider only actual (non-automated) transactions\n\
+  -r, --related          calculate report using related transactions\n\
+      --budget           generate budget entries based on FILE\n\
+      --add-budget       show all transactions plus the budget\n\
+      --unbudgeted       show only unbudgeted transactions\n\
+      --forecast EXPR    generate forecast entries while EXPR is true\n\
+  -l, --limit EXPR       calculate only transactions matching EXPR\n\
+  -t, --amount EXPR      use EXPR to calculate the displayed amount\n\
+  -T, --total EXPR       use EXPR to calculate the displayed total\n\n\
+Output customization:\n\
+  -n, --collapse         register: collapse entries; balance: no grand total\n\
+  -s, --subtotal         balance: show sub-accounts; other: show subtotals\n\
+  -P, --by-payee         show summarized totals by payee\n\
+  -x, --comm-as-payee    set commodity name as the payee, for reporting\n\
+  -E, --empty            balance: show accounts with zero balance\n\
+  -W, --weekly           show weekly sub-totals\n\
+  -M, --monthly          show monthly sub-totals\n\
+  -Y, --yearly           show yearly sub-totals\n\
+      --dow              show a days-of-the-week report\n\
+  -S, --sort EXPR        sort report according to the value expression EXPR\n\
+  -w, --wide             for the default register report, use 132 columns\n\
+      --head COUNT       show only the first COUNT entries (negative inverts)\n\
+      --tail COUNT       show only the last COUNT entries (negative inverts)\n\
+      --pager PAGER      send all output through the given PAGER program\n\
+  -A, --average          report average transaction amount\n\
+  -D, --deviation        report deviation from the average\n\
+  -%, --percentage       report balance totals as a percentile of the parent\n\
+      --totals           in the \"xml\" report, include running total\n\
+  -j, --amount-data      print only raw amount data (useful for scripting)\n\
+  -J, --total-data       print only raw total data\n\
+  -d, --display EXPR     display only transactions matching EXPR\n\
+  -y, --date-format STR  use STR as the date format (default: %Y/%m/%d)\n\
+  -F, --format STR       use STR as the format; for each report type, use:\n\
+      --balance-format      --register-format       --print-format\n\
+      --plot-amount-format  --plot-total-format     --equity-format\n\
+      --prices-format       --wide-register-format\n\n\
+Commodity reporting:\n\
+      --price-db FILE    sets the price database to FILE (def: ~/.pricedb)\n\
+  -L, --price-exp MINS   download quotes only if newer than MINS (def: 1440)\n\
+  -Q, --download         download price information when needed\n\
+  -O, --quantity         report commodity totals (this is the default)\n\
+  -B, --basis            report cost basis of commodities\n\
+  -V, --market           report last known market value\n\
+  -g, --performance      report gain/loss for each displayed transaction\n\
+  -G, --gain             report net gain/loss\n\n\
+Commands:\n\
+  balance  [REGEXP]...   show balance totals for matching accounts\n\
+  register [REGEXP]...   show register of matching transactions\n\
+  print    [REGEXP]...   print all matching entries\n\
+  xml      [REGEXP]...   print matching entries in XML format\n\
+  equity   [REGEXP]...   output equity entries for matching accounts\n\
+  prices   [REGEXP]...   display price history for matching commodities\n\
+  entry DATE PAYEE AMT   output a derived entry, based on the arguments\n";
 }
 
-config_t::config_t()
+void help(std::ostream& out)
 {
-  balance_format       = "%20T  %2_%-a\n";
-  register_format      = ("%D %-.20P %-.22A %12.67t %!12.80T\n%/"
-			  "%32|%-.22A %12.67t %!12.80T\n");
-  wide_register_format = ("%D  %-.35P %-.38A %22.108t %!22.132T\n%/"
-			  "%48|%-.38A %22.108t %!22.132T\n");
-  plot_amount_format   = "%D %(@S(@t))\n";
-  plot_total_format    = "%D %(@S(@T))\n";
-  print_format	       = "\n%d %Y%C%P\n    %-34W  %12o%n\n%/    %-34W  %12o%n\n";
-  write_hdr_format     = "%d %Y%C%P\n";
-  write_xact_format    = "    %-34W  %12o%n\n";
-  equity_format	       = "\n%D %Y%C%P\n%/    %-34W  %12t\n";
-  prices_format	       = "%[%Y/%m/%d %H:%M:%S %Z]   %-10A %12t %12T\n";
-  pricesdb_format      = "P %[%Y/%m/%d %H:%M:%S] %A %t\n";
+  out << "usage: ledger [options] COMMAND [ACCT REGEX]... [-- [PAYEE REGEX]...]\n\n\
+Use -H to see all the help text on one page, or:\n\
+      --help-calc        calculation options\n\
+      --help-disp        display options\n\
+      --help-comm        commodity options\n\n\
+Basic options:\n\
+  -h, --help             display this help text\n\
+  -v, --version          show version information\n\
+  -f, --file FILE        read ledger data from FILE\n\
+  -o, --output FILE      write output to FILE\n\
+  -i, --init-file FILE   initialize ledger using FILE (default: ~/.ledgerrc)\n\
+      --cache FILE       use FILE as a binary cache when --file is not used\n\
+      --no-cache         don't use a cache, even if it would be appropriate\n\
+  -a, --account NAME     use NAME for the default account (useful with QIF)\n\n\
+Commands:\n\
+  balance  [REGEXP]...   show balance totals for matching accounts\n\
+  register [REGEXP]...   show register of matching transactions\n\
+  print    [REGEXP]...   print all matching entries\n\
+  xml      [REGEXP]...   print matching entries in XML format\n\
+  equity   [REGEXP]...   output equity entries for matching accounts\n\
+  prices   [REGEXP]...   display price history for matching commodities\n\
+  entry DATE PAYEE AMT   output a derived entry, based on the arguments\n";
+}
 
-  pricing_leeway       = 24 * 3600;
+void calc_help(std::ostream& out)
+{
+  out << "Options to control how a report is calculated:\n\
+  -c, --current          show only current and past entries (not future)\n\
+  -b, --begin DATE       set report begin date\n\
+  -e, --end DATE         set report end date\n\
+  -p, --period STR       report using the given period\n\
+      --period-sort EXPR sort each report period's entries by EXPR\n\
+  -C, --cleared          consider only cleared transactions\n\
+  -U, --uncleared        consider only uncleared transactions\n\
+  -R, --real             consider only real (non-virtual) transactions\n\
+  -L, --actual           consider only actual (non-automated) transactions\n\
+  -r, --related          calculate report using related transactions\n\
+      --budget           generate budget entries based on FILE\n\
+      --add-budget       show all transactions plus the budget\n\
+      --unbudgeted       show only unbudgeted transactions\n\
+      --forecast EXPR    generate forecast entries while EXPR is true\n\
+  -l, --limit EXPR       calculate only transactions matching EXPR\n\
+  -t, --amount EXPR      use EXPR to calculate the displayed amount\n\
+  -T, --total EXPR       use EXPR to calculate the displayed total\n";
+}
 
-  download_quotes      = false;
-  use_cache	       = false;
-  cache_dirty	       = false;
-  debug_mode	       = false;
-  verbose_mode	       = false;
-  trace_mode	       = false;
+void disp_help(std::ostream& out)
+{
+  out << "Output to control how report results are displayed:\n\
+  -n, --collapse         register: collapse entries; balance: no grand total\n\
+  -s, --subtotal         balance: show sub-accounts; other: show subtotals\n\
+  -P, --by-payee         show summarized totals by payee\n\
+  -x, --comm-as-payee    set commodity name as the payee, for reporting\n\
+  -E, --empty            balance: show accounts with zero balance\n\
+  -W, --weekly           show weekly sub-totals\n\
+  -M, --monthly          show monthly sub-totals\n\
+  -Y, --yearly           show yearly sub-totals\n\
+      --dow              show a days-of-the-week report\n\
+  -S, --sort EXPR        sort report according to the value expression EXPR\n\
+  -w, --wide             for the default register report, use 132 columns\n\
+      --head COUNT       show only the first COUNT entries (negative inverts)\n\
+      --tail COUNT       show only the last COUNT entries (negative inverts)\n\
+      --pager PAGER      send all output through the given PAGER program\n\
+  -A, --average          report average transaction amount\n\
+  -D, --deviation        report deviation from the average\n\
+  -%, --percentage       report balance totals as a percentile of the parent\n\
+      --totals           in the \"xml\" report, include running total\n\
+  -j, --amount-data      print only raw amount data (useful for scripting)\n\
+  -J, --total-data       print only raw total data\n\
+  -d, --display EXPR     display only transactions matching EXPR\n\
+  -y, --date-format STR  use STR as the date format (default: %Y/%m/%d)\n\
+  -F, --format STR       use STR as the format; for each report type, use:\n\
+      --balance-format      --register-format       --print-format\n\
+      --plot-amount-format  --plot-total-format     --equity-format\n\
+      --prices-format       --wide-register-format\n";
+}
+
+void comm_help(std::ostream& out)
+{
+  out << "Options to control how commodity values are determined:\n\
+      --price-db FILE    sets the price database to FILE (def: ~/.pricedb)\n\
+  -Z, --price-exp MINS   download quotes only if newer than MINS (def: 1440)\n\
+  -Q, --download         download price information when needed\n\
+  -O, --quantity         report commodity totals (this is the default)\n\
+  -B, --basis            report cost basis of commodities\n\
+  -V, --market           report last known market value\n\
+  -g, --performance      report gain/loss for each displayed transaction\n\
+  -G, --gain             report net gain/loss\n";
 }
 
 //////////////////////////////////////////////////////////////////////
+//
+// Basic options
+//
 
-void trace(const std::string& cat, const std::string& str)
-{
-  char buf[32];
-  std::strftime(buf, 31, "%H:%M:%S", datetime_t::now.localtime());
-  std::cerr << buf << " " << cat << ": " << str << std::endl;
-}
+DEFR_OPTS(full_help, "full-help", 'H')
+  full_help(std::cout);
+  throw 0;
+END_DEFR()
 
-void trace_push(const std::string& cat, const std::string& str,
-		timing_t& timer)
-{
-  timer.start();
-  trace(cat, str);
-}
+DEFR_OPTS(help, "help", 'h')
+  help(std::cout);
+  throw 0;
+END_DEFR()
 
-void trace_pop(const std::string& cat, const std::string& str,
-	       timing_t& timer)
-{
-  timer.stop();
-  std::ostringstream out;
-  out << str << ": " << (double(timer.cumulative) / double(CLOCKS_PER_SEC)) << "s";
-  trace(cat, out.str());
-}
+DEFR_OPT(help_calc, "help-calc")
+  calc_help(std::cout);
+  throw 0;
+END_DEFR()
 
-} // namespace ledger
+DEFR_OPT(help_disp, "help-disp")
+  disp_help(std::cout);
+  throw 0;
+END_DEFR()
+
+DEFR_OPT(help_comm, "help-comm")
+  comm_help(std::cout);
+  throw 0;
+END_DEFR()
+
+DEFR_OPTS(version, "version", 'v')
+  show_version(std::cout);
+  throw 0;
+END_DEFR()
+
+DEFR_OPTS_(init_file, "init-file", 'i')
+  std::string path = resolve_path(optarg);
+  if (access(path.c_str(), R_OK) != -1)
+    report->session->init_file = path;
+  else
+    throw new error(std::string("The init file '") + path +
+		    "' does not exist or is not readable");
+END_DEFR()
+
+DEFR_OPTS_(file, "file", 'f')
+  if (std::string(optarg) == "-") {
+    report->session->data_file = optarg;
+  } else {
+    std::string path = resolve_path(optarg);
+    if (access(path.c_str(), R_OK) != -1)
+      report->session->data_file = path;
+    else
+      throw new error(std::string("The ledger file '") + path +
+		      "' does not exist or is not readable");
+  }
+END_DEFR()
+
+DEFR_OPT_(cache, "cache")
+  report->session->cache_file = resolve_path(optarg);
+END_DEFR()
+
+DEFR_OPT(no_cache, "no-cache")
+  report->session->cache_file = "<none>";
+END_DEFR()
+
+DEFR_OPTS_(output, "output", 'o')
+  if (std::string(optarg) != "-") {
+    std::string path = resolve_path(optarg);
+    report->output_file = path;
+  }
+END_DEFR()
+
+DEFR_OPTS_(account, "account", 'a')
+  report->account = optarg;
+END_DEFR()
+
+DEFR_OPT_(debug, "debug")
+  report->session->debug_mode = true;
+  ::setenv("DEBUG_CLASS", optarg, 1);
+END_DEFR()
+
+DEFR_OPT(verbose, "verbose")
+  report->session->verbose_mode = true;
+END_DEFR()
+
+DEFR_OPT(trace, "trace")
+  report->session->trace_mode = true;
+END_DEFR()
+
+//////////////////////////////////////////////////////////////////////
+//
+// Report filtering
+//
+
+DEFR_OPT(effective, "effective")
+  transaction_t::use_effective_date = true;
+END_DEFR()
+
+DEFR_OPTS_(begin, "begin", 'b')
+  char buf[128];
+  interval_t interval(optarg);
+  if (! interval.begin)
+    throw new error(std::string("Could not determine beginning of period '") +
+		    optarg + "'");
 
 #if 0
+  if (! report->predicate.empty())
+    report->predicate += "&";
+  report->predicate += "d>=[";
+  report->predicate += interval.begin.to_string();
+  report->predicate += "]";
+#endif
+END_DEFR()
+
+DEFR_OPTS_(end, "end", 'e')
+  char buf[128];
+  interval_t interval(optarg);
+  if (! interval.end)
+    throw new error(std::string("Could not determine end of period '") +
+		    optarg + "'");
+
+#if 0
+  if (! report->predicate.empty())
+    report->predicate += "&";
+  report->predicate += "d<[";
+  report->predicate += interval.end.to_string();
+  report->predicate += "]";
+#endif
+
+  terminus = interval.end;
+END_DEFR()
+
+DEFR_OPTS(current, "current", 'c')
+#if 0
+  if (! report->predicate.empty())
+    report->predicate += "&";
+  report->predicate += "d<=m";
+#endif
+END_DEFR()
+
+DEFR_OPTS(cleared, "cleared", 'C')
+#if 0
+  if (! report->predicate.empty())
+    report->predicate += "&";
+  report->predicate += "X";
+#endif
+END_DEFR()
+
+DEFR_OPTS(uncleared, "uncleared", 'U')
+#if 0
+  if (! report->predicate.empty())
+    report->predicate += "&";
+  report->predicate += "!X";
+#endif
+END_DEFR()
+
+DEFR_OPTS(real, "real", 'R')
+#if 0
+  if (! report->predicate.empty())
+    report->predicate += "&";
+  report->predicate += "R";
+#endif
+END_DEFR()
+
+DEFR_OPTS(actual, "actual", 'L')
+#if 0
+  if (! report->predicate.empty())
+    report->predicate += "&";
+  report->predicate += "L";
+#endif
+END_DEFR()
+
+DEFR_OPT(lots, "lots")
+  report->keep_price =
+  report->keep_date  =
+  report->keep_tag   = true;
+END_DEFR()
+
+DEFR_OPT(lot_prices, "lot-prices")
+  report->keep_price = true;
+END_DEFR()
+
+DEFR_OPT(lot_dates, "lot-dates")
+  report->keep_date = true;
+END_DEFR()
+
+DEFR_OPT(lot_tags, "lot-tags")
+  report->keep_tag = true;
+END_DEFR()
+
+//////////////////////////////////////////////////////////////////////
+//
+// Output customization
+//
+
+DEFR_OPTS_(format, "format", 'F')
+  report->format_string = optarg;
+END_DEFR()
+
+DEFR_OPTS_(date_format, "date-format", 'y')
+  report->date_output_format = optarg;
+END_DEFR()
+
+DEFR_OPT_(input_date_format, "input-date-format")
+  report->session->date_input_format = optarg;
+END_DEFR()
+
+DEFR_OPT_(balance_format, "balance-format")
+  report->session->balance_format = optarg;
+END_DEFR()
+
+DEFR_OPT_(register_format, "register-format")
+  report->session->register_format = optarg;
+END_DEFR()
+
+DEFR_OPT_(wide_register_format, "wide-register-format")
+  report->session->wide_register_format = optarg;
+END_DEFR()
+
+DEFR_OPT_(plot_amount_format, "plot-amount-format")
+  report->session->plot_amount_format = optarg;
+END_DEFR()
+
+DEFR_OPT_(plot_total_format, "plot-total-format")
+  report->session->plot_total_format = optarg;
+END_DEFR()
+
+DEFR_OPT_(print_format, "print-format")
+  report->session->print_format = optarg;
+END_DEFR()
+
+DEFR_OPT_(write_hdr_format, "write-hdr-format")
+  report->session->write_hdr_format = optarg;
+END_DEFR()
+
+DEFR_OPT_(write_xact_format, "write-xact-format")
+  report->session->write_xact_format = optarg;
+END_DEFR()
+
+DEFR_OPT_(equity_format, "equity-format")
+  report->session->equity_format = optarg;
+END_DEFR()
+
+DEFR_OPT_(prices_format, "prices-format")
+  report->session->prices_format = optarg;
+END_DEFR()
+
+DEFR_OPTS(wide, "wide", 'w')
+  report->session->register_format = report->session->wide_register_format;
+END_DEFR()
+
+DEFR_OPT_(head, "head")
+#if 0
+  report->head_entries = std::atoi(optarg);
+#endif
+END_DEFR()
+
+DEFR_OPT_(tail, "tail")
+#if 0
+  report->tail_entries = std::atoi(optarg);
+#endif
+END_DEFR()
+
+DEFR_OPT_(pager, "pager")
+  report->pager = optarg;
+END_DEFR()
+
+DEFR_OPT_(truncate, "truncate")
+  std::string style(optarg);
+  if (style == "leading")
+    format_t::elision_style = format_t::TRUNCATE_LEADING;
+  else if (style == "middle")
+    format_t::elision_style = format_t::TRUNCATE_MIDDLE;
+  else if (style == "trailing")
+    format_t::elision_style = format_t::TRUNCATE_TRAILING;
+  else if (style == "abbrev")
+    format_t::elision_style = format_t::ABBREVIATE;
+END_DEFR()
+
+DEFR_OPT_(abbrev_len, "abbrev-len")
+  format_t::abbrev_length = std::atoi(optarg);
+END_DEFR()
+
+DEFR_OPTS(empty, "empty", 'E')
+#if 0
+  report->show_empty = true;
+#endif
+END_DEFR()
+
+DEFR_OPTS(collapse, "collapse", 'n')
+#if 0
+  report->show_collapsed = true;
+#endif
+END_DEFR()
+
+DEFR_OPTS(subtotal, "subtotal", 's')
+#if 0
+  report->show_subtotal = true;
+#endif
+END_DEFR()
+
+DEFR_OPT(totals, "totals")
+  report->show_totals = true;
+END_DEFR()
+
+DEFR_OPTS_(sort, "sort", 'S')
+#if 0
+  report->sort_string = optarg;
+#endif
+END_DEFR()
+
+DEFR_OPT(sort_entries, "sort-entries")
+#if 0
+  report->sort_string = optarg;
+  report->entry_sort = true;
+#endif
+END_DEFR()
+
+DEFR_OPT(sort_all, "sort-all")
+#if 0
+  report->sort_string = optarg;
+  report->entry_sort = false;
+  report->sort_all   = true;
+#endif
+END_DEFR()
+
+DEFR_OPT_(period_sort, "period-sort")
+#if 0
+  report->sort_string = optarg;
+  report->entry_sort = true;
+#endif
+END_DEFR()
+
+DEFR_OPTS(related, "related", 'r')
+#if 0
+  report->show_related = true;
+#endif
+END_DEFR()
+
+DEFR_OPT(descend, "descend")
+#if 0
+  std::string arg(optarg);
+  std::string::size_type beg = 0;
+  report->descend_expr = "";
+  for (std::string::size_type pos = arg.find(';');
+       pos != std::string::npos;
+       beg = pos + 1, pos = arg.find(';', beg))
+    report->descend_expr += (std::string("t=={") +
+			     std::string(arg, beg, pos - beg) + "};");
+  report->descend_expr += (std::string("t=={") +
+			   std::string(arg, beg) + "}");
+#endif
+END_DEFR()
+
+DEFR_OPT(descend_if, "descend-if")
+#if 0
+  report->descend_expr = optarg;
+#endif
+END_DEFR()
+
+DEFR_OPTS_(period, "period", 'p')
+#if 0
+  if (report->report_period.empty()) {
+    report->report_period = optarg;
+  } else {
+    report->report_period += " ";
+    report->report_period += optarg;
+  }
+
+  // If the period gives a beginning and/or ending date, make sure to
+  // modify the calculation predicate (via the --begin and --end
+  // options) to take this into account.
+
+  interval_t interval(report->report_period);
+
+  if (interval.begin) {
+    if (! report->predicate.empty())
+      report->predicate += "&";
+    report->predicate += "d>=[";
+    report->predicate += interval.begin.to_string();
+    report->predicate += "]";
+  }
+
+  if (interval.end) {
+    if (! report->predicate.empty())
+      report->predicate += "&";
+    report->predicate += "d<[";
+    report->predicate += interval.end.to_string();
+    report->predicate += "]";
+
+    terminus = interval.end;
+  }
+#endif
+END_DEFR()
+
+DEFR_OPT(daily, "daily")
+#if 0
+  if (report->report_period.empty())
+    report->report_period = "daily";
+  else
+    report->report_period = std::string("daily ") + report->report_period;
+#endif
+END_DEFR()
+
+DEFR_OPTS(weekly, "weekly", 'W')
+#if 0
+  if (report->report_period.empty())
+    report->report_period = "weekly";
+  else
+    report->report_period = std::string("weekly ") + report->report_period;
+#endif
+END_DEFR()
+
+DEFR_OPTS(monthly, "monthly", 'M')
+#if 0
+  if (report->report_period.empty())
+    report->report_period = "monthly";
+  else
+    report->report_period = std::string("monthly ") + report->report_period;
+#endif
+END_DEFR()
+
+DEFR_OPT(quarterly, "quarterly")
+#if 0
+  if (report->report_period.empty())
+    report->report_period = "quarterly";
+  else
+    report->report_period = std::string("quarterly ") + report->report_period;
+#endif
+END_DEFR()
+
+DEFR_OPTS(yearly, "yearly", 'Y')
+#if 0
+  if (report->report_period.empty())
+    report->report_period = "yearly";
+  else
+    report->report_period = std::string("yearly ") + report->report_period;
+#endif
+END_DEFR()
+
+DEFR_OPT(dow, "dow")
+#if 0
+  report->days_of_the_week = true;
+#endif
+END_DEFR()
+
+DEFR_OPTS(by_payee, "by-payee", 'P')
+#if 0
+  report->by_payee = true;
+#endif
+END_DEFR()
+
+DEFR_OPTS(comm_as_payee, "comm-as-payee", 'x')
+#if 0
+  report->comm_as_payee = true;
+#endif
+END_DEFR()
+
+DEFR_OPT(code_as_payee, "code-as-payee")
+#if 0
+  report->code_as_payee = true;
+#endif
+END_DEFR()
+
+DEFR_OPT(budget, "budget")
+  report->budget_flags = BUDGET_BUDGETED;
+END_DEFR()
+
+DEFR_OPT(add_budget, "add-budget")
+  report->budget_flags = BUDGET_BUDGETED | BUDGET_UNBUDGETED;
+END_DEFR()
+
+DEFR_OPT(unbudgeted, "unbudgeted")
+  report->budget_flags = BUDGET_UNBUDGETED;
+END_DEFR()
+
+DEFR_OPT_(forecast, "forecast")
+#if 0
+  report->forecast_limit = optarg;
+#endif
+END_DEFR()
+
+DEFR_OPT_(reconcile, "reconcile")
+#if 0
+  report->reconcile_balance = optarg;
+#endif
+END_DEFR()
+
+DEFR_OPT_(reconcile_date, "reconcile-date")
+#if 0
+  report->reconcile_date = optarg;
+#endif
+END_DEFR()
+
+DEFR_OPTS_(limit, "limit", 'l')
+#if 0
+  if (! report->predicate.empty())
+    report->predicate += "&";
+  report->predicate += "(";
+  report->predicate += optarg;
+  report->predicate += ")";
+#endif
+END_DEFR()
+
+DEFR_OPT_(only, "only")
+#if 0
+  if (! report->secondary_predicate.empty())
+    report->secondary_predicate += "&";
+  report->secondary_predicate += "(";
+  report->secondary_predicate += optarg;
+  report->secondary_predicate += ")";
+#endif
+END_DEFR()
+
+DEFR_OPTS_(display, "display", 'd')
+#if 0
+  if (! report->display_predicate.empty())
+    report->display_predicate += "&";
+  report->display_predicate += "(";
+  report->display_predicate += optarg;
+  report->display_predicate += ")";
+#endif
+END_DEFR()
+
+DEFR_OPTS_(amount, "amount", 't')
+  ledger::amount_expr = optarg;
+END_DEFR()
+
+DEFR_OPTS_(total, "total", 'T')
+  ledger::total_expr = optarg;
+END_DEFR()
+
+DEFR_OPTS(amount_data, "amount-data", 'j')
+  report->format_string = report->session->plot_amount_format;
+END_DEFR()
+
+DEFR_OPTS(total_data, "total-data", 'J')
+  report->format_string = report->session->plot_total_format;
+END_DEFR()
+
+DEFR_OPT(ansi, "ansi")
+  format_t::ansi_codes  = true;
+  format_t::ansi_invert = false;
+END_DEFR()
+
+DEFR_OPT(ansi_invert, "ansi-invert")
+  format_t::ansi_codes  =
+  format_t::ansi_invert = true;
+END_DEFR()
+
+//////////////////////////////////////////////////////////////////////
+//
+// Commodity reporting
+//
+
+DEFR_OPT_(base, "base")
+  amount_t::keep_base = true;
+END_DEFR()
+
+DEFR_OPT_(price_db, "price-db")
+  report->session->price_db = optarg;
+END_DEFR()
+
+DEFR_OPTS_(price_exp, "price-exp", 'Z')
+  report->session->pricing_leeway = std::atol(optarg) * 60;
+END_DEFR()
+
+DEFR_OPTS(download, "download", 'Q')
+  report->session->download_quotes = true;
+END_DEFR()
+
+DEFR_OPTS(quantity, "quantity", 'O')
+  ledger::amount_expr = "@a";
+  ledger::total_expr  = "@O";
+END_DEFR()
+
+DEFR_OPTS(basis, "basis", 'B')
+  ledger::amount_expr = "@b";
+  ledger::total_expr  = "@B";
+END_DEFR()
+
+DEFR_OPTS(price, "price", 'I')
+  ledger::amount_expr = "@i";
+  ledger::total_expr  = "@I";
+END_DEFR()
+
+DEFR_OPTS(market, "market", 'V')
+#if 0
+  report->show_revalued = true;
+#endif
+
+  ledger::amount_expr = "@v";
+  ledger::total_expr  = "@V";
+END_DEFR()
+
+namespace {
+  void parse_price_setting(const char * optarg)
+  {
+    char * equals = std::strchr(optarg, '=');
+    if (! equals)
+      return;
+
+    while (std::isspace(*optarg))
+      optarg++;
+    while (equals > optarg && std::isspace(*(equals - 1)))
+      equals--;
+
+    std::string symbol(optarg, 0, equals - optarg);
+    amount_t price(equals + 1);
+
+    if (commodity_t * commodity = commodity_t::find_or_create(symbol)) {
+      commodity->add_price(datetime_t::now, price);
+      commodity->history()->bogus_time = datetime_t::now;
+    }
+  }
+}
+
+DEFR_OPT_(set_price, "set-price")
+  std::string arg(optarg);
+  std::string::size_type beg = 0;
+  for (std::string::size_type pos = arg.find(';');
+       pos != std::string::npos;
+       beg = pos + 1, pos = arg.find(';', beg))
+    parse_price_setting(std::string(arg, beg, pos - beg).c_str());
+  parse_price_setting(std::string(arg, beg).c_str());
+END_DEFR()
+
+DEFR_OPTS(performance, "performance", 'g')
+  ledger::amount_expr = "@P(@a,@m)-@b";
+  ledger::total_expr  = "@P(@O,@m)-@B";
+END_DEFR()
+
+DEFR_OPTS(gain, "gain", 'G')
+#if 0
+  report->show_revalued      =
+  report->show_revalued_only = true;
+#endif
+
+  ledger::amount_expr = "@a";
+  ledger::total_expr  = "@G";
+END_DEFR()
+
+static std::string expand_value_expr(const std::string& tmpl,
+				     const std::string& expr)
+{
+  std::string xp = tmpl;
+  for (std::string::size_type i = xp.find('#');
+       i != std::string::npos;
+       i = xp.find('#'))
+    xp = (std::string(xp, 0, i) + "(" + expr + ")" +
+	  std::string(xp, i + 1));
+  return xp;
+}
+
+DEFR_OPTS(average, "average", 'A')
+  ledger::total_expr = expand_value_expr("@A(#)", ledger::total_expr.expr);
+END_DEFR()
+
+DEFR_OPTS(deviation, "deviation", 'D')
+  ledger::total_expr = expand_value_expr("@t-@A(#)", ledger::total_expr.expr);
+END_DEFR()
+
+DEFR_OPTS(percentage, "percentage", '%')
+  ledger::total_expr = expand_value_expr("^#&{100.0%}*(#/^#)",
+					 ledger::total_expr.expr);
+END_DEFR()
+
+//////////////////////////////////////////////////////////////////////
+//
+// Transforms
+//
+
+DEFR_OPT(split, "split")
+  report->transforms.push_back(new split_transform);
+END_DEFR()
+
+//////////////////////////////////////////////////////////////////////
+//
+// Python support
+//
+
 #ifdef USE_BOOST_PYTHON
 
-#include <boost/python.hpp>
-#include <boost/python/detail/api_placeholder.hpp>
+DEF_OPT_(import, "import")
+  virtual bool check(option_source_t source) {
+    // Allow any number of modules to be imported, from any source
+    return true;
+  }
+  virtual void select(report_t * report, const char * optarg) {
+    python_import(optarg);
+  }
+END_DEF()
 
-using namespace boost::python;
-using namespace ledger;
+DEFR_OPT(import_stdin, "import-stdin")
+  python_eval(std::cin, PY_EVAL_MULTI);
+END_DEFR()
 
-void py_process_options(config_t& config, const std::string& command,
-			list args)
-{
-  strings_list strs;
-
-  int l = len(args);
-  for (int i = 0; i < l; i++)
-    strs.push_back(std::string(extract<char *>(args[i])));
-
-  config.process_options(command, strs.begin(), strs.end());
-}
-
-void add_other_option_handlers(const std::list<option_t>& other);
-
-void py_add_config_option_handlers()
-{
-  add_other_option_handlers(config_options);
-}
-
-BOOST_PYTHON_FUNCTION_OVERLOADS(parse_ledger_data_overloads,
-				parse_ledger_data, 1, 2)
-
-void py_option_help()
-{
-  help(std::cout);
-}
-
-void export_config()
-{
-  class_< config_t > ("Config")
-    .def_readwrite("init_file", &config_t::init_file)
-    .def_readwrite("data_file", &config_t::data_file)
-    .def_readwrite("cache_file", &config_t::cache_file)
-    .def_readwrite("price_db", &config_t::price_db)
-    .def_readwrite("output_file", &config_t::output_file)
-    .def_readwrite("account", &config_t::account)
-    .def_readwrite("predicate", &config_t::predicate)
-    .def_readwrite("display_predicate", &config_t::display_predicate)
-    .def_readwrite("report_period", &config_t::report_period)
-    .def_readwrite("report_period_sort", &config_t::report_period_sort)
-    .def_readwrite("format_string", &config_t::format_string)
-    .def_readwrite("balance_format", &config_t::balance_format)
-    .def_readwrite("register_format", &config_t::register_format)
-    .def_readwrite("wide_register_format", &config_t::wide_register_format)
-    .def_readwrite("plot_amount_format", &config_t::plot_amount_format)
-    .def_readwrite("plot_total_format", &config_t::plot_total_format)
-    .def_readwrite("print_format", &config_t::print_format)
-    .def_readwrite("write_hdr_format", &config_t::write_hdr_format)
-    .def_readwrite("write_xact_format", &config_t::write_xact_format)
-    .def_readwrite("equity_format", &config_t::equity_format)
-    .def_readwrite("prices_format", &config_t::prices_format)
-    .def_readwrite("pricesdb_format", &config_t::pricesdb_format)
-    .def_readwrite("date_format", &config_t::date_format)
-    .def_readwrite("sort_string", &config_t::sort_string)
-    .def_readwrite("amount_expr", &config_t::amount_expr)
-    .def_readwrite("total_expr", &config_t::total_expr)
-    .def_readwrite("total_expr_template", &config_t::total_expr_template)
-    .def_readwrite("forecast_limit", &config_t::forecast_limit)
-    .def_readwrite("reconcile_balance", &config_t::reconcile_balance)
-    .def_readwrite("reconcile_date", &config_t::reconcile_date)
-    .def_readwrite("budget_flags", &config_t::budget_flags)
-    .def_readwrite("pricing_leeway", &config_t::pricing_leeway)
-    .def_readwrite("show_collapsed", &config_t::show_collapsed)
-    .def_readwrite("show_subtotal", &config_t::show_subtotal)
-    .def_readwrite("show_totals", &config_t::show_totals)
-    .def_readwrite("show_related", &config_t::show_related)
-    .def_readwrite("show_all_related", &config_t::show_all_related)
-    .def_readwrite("show_inverted", &config_t::show_inverted)
-    .def_readwrite("show_empty", &config_t::show_empty)
-    .def_readwrite("head_entries", &config_t::head_entries)
-    .def_readwrite("tail_entries", &config_t::tail_entries)
-    .def_readwrite("pager", &config_t::pager)
-    .def_readwrite("days_of_the_week", &config_t::days_of_the_week)
-    .def_readwrite("by_payee", &config_t::by_payee)
-    .def_readwrite("comm_as_payee", &config_t::comm_as_payee)
-    .def_readwrite("show_revalued", &config_t::show_revalued)
-    .def_readwrite("show_revalued_only", &config_t::show_revalued_only)
-    .def_readwrite("download_quotes", &config_t::download_quotes)
-    .def_readwrite("use_cache", &config_t::use_cache)
-    .def_readwrite("cache_dirty", &config_t::cache_dirty)
-
-    .def("process_options", py_process_options)
-    ;
-
-  scope().attr("config") = ptr(&config);
-
-  def("option_help", py_option_help);
-  def("parse_ledger_data", parse_ledger_data, parse_ledger_data_overloads());
-  def("add_config_option_handlers", py_add_config_option_handlers);
-}
-
-#endif // USE_BOOST_PYTHON
 #endif
+
+//////////////////////////////////////////////////////////////////////
+
+static_option_t static_options[] =
+{
+  { "abbrev-len",	    '\0', new option_abbrev_len() },
+  { "account",		    'a',  new option_account() },
+  { "actual",		    'L',  new option_actual() },
+  { "add-budget",	    '\0', new option_add_budget() },
+  { "amount",		    't',  new option_amount() },
+  { "amount-data",	    'j',  new option_amount_data() },
+  { "ansi",		    '\0', new option_ansi() },
+  { "ansi-invert",	    '\0', new option_ansi_invert() },
+  { "average",		    'A',  new option_average() },
+  { "balance-format",	    '\0', new option_balance_format() },
+  { "base",		    '\0', new option_base() },
+  { "basis",		    'B',  new option_basis() },
+  { "begin",		    'b',  new option_begin() },
+  { "budget",		    '\0', new option_budget() },
+  { "by-payee",		    'P',  new option_by_payee() },
+  { "cache",		    '\0', new option_cache() },
+  { "cleared",		    'C',  new option_cleared() },
+  { "code-as-payee",	    '\0', new option_code_as_payee() },
+  { "collapse",		    'n',  new option_collapse() },
+  { "comm-as-payee",	    'x',  new option_comm_as_payee() },
+  { "cost",		    '\0', new option_basis() },
+  { "current",		    'c',  new option_current() },
+  { "daily",		    '\0', new option_daily() },
+  { "date-format",	    'y',  new option_date_format() },
+  { "debug",		    '\0', new option_debug() },
+  { "descend",		    '\0', new option_descend() },
+  { "descend-if",	    '\0', new option_descend_if() },
+  { "deviation",	    'D',  new option_deviation() },
+  { "display",		    'd',  new option_display() },
+  { "dow",		    '\0', new option_dow() },
+  { "download",		    'Q',  new option_download() },
+  { "effective",	    '\0', new option_effective() },
+  { "empty",		    'E',  new option_empty() },
+  { "end",		    'e',  new option_end() },
+  { "equity-format",	    '\0', new option_equity_format() },
+  { "file",		    'f',  new option_file() },
+  { "forecast",		    '\0', new option_forecast() },
+  { "format",		    'F',  new option_format() },
+  { "full-help",	    'H',  new option_full_help() },
+  { "gain",		    'G',  new option_gain() },
+  { "head",		    '\0', new option_head() },
+  { "help",		    'h',  new option_help() },
+  { "help-calc",	    '\0', new option_help_calc() },
+  { "help-comm",	    '\0', new option_help_comm() },
+  { "help-disp",	    '\0', new option_help_disp() },
+  { "import",		    '\0', new option_import() },
+  { "import-stdin",	    '\0', new option_import_stdin() },
+  { "init-file",	    'i',  new option_init_file() },
+  { "input-date-format",    '\0', new option_input_date_format() },
+  { "limit",		    'l',  new option_limit() },
+  { "lot-dates",	    '\0', new option_lot_dates() },
+  { "lot-prices",	    '\0', new option_lot_prices() },
+  { "lot-tags",		    '\0', new option_lot_tags() },
+  { "lots",		    '\0', new option_lots() },
+  { "market",		    'V',  new option_market() },
+  { "monthly",		    'M',  new option_monthly() },
+  { "no-cache",		    '\0', new option_no_cache() },
+  { "only",		    '\0', new option_only() },
+  { "output",		    'o',  new option_output() },
+  { "pager",		    '\0', new option_pager() },
+  { "percentage",	    '%',  new option_percentage() },
+  { "performance",	    'g',  new option_performance() },
+  { "period",		    'p',  new option_period() },
+  { "period-sort",	    '\0', new option_period_sort() },
+  { "plot-amount-format",   '\0', new option_plot_amount_format() },
+  { "plot-total-format",    '\0', new option_plot_total_format() },
+  { "price",		    'I',  new option_price() },
+  { "price-db",		    '\0', new option_price_db() },
+  { "price-exp",	    'Z',  new option_price_exp() },
+  { "prices-format",	    '\0', new option_prices_format() },
+  { "print-format",	    '\0', new option_print_format() },
+  { "quantity",		    'O',  new option_quantity() },
+  { "quarterly",	    '\0', new option_quarterly() },
+  { "real",		    'R',  new option_real() },
+  { "reconcile",	    '\0', new option_reconcile() },
+  { "reconcile-date",	    '\0', new option_reconcile_date() },
+  { "register-format",	    '\0', new option_register_format() },
+  { "related",		    'r',  new option_related() },
+  { "set-price",	    '\0', new option_set_price() },
+  { "sort",		    'S',  new option_sort() },
+  { "sort-all",		    '\0', new option_sort_all() },
+  { "sort-entries",	    '\0', new option_sort_entries() },
+  { "split",		    '\0', new option_split },
+  { "subtotal",		    's',  new option_subtotal() },
+  { "tail",		    '\0', new option_tail() },
+  { "total",		    'T',  new option_total() },
+  { "total-data",	    'J',  new option_total_data() },
+  { "totals",		    '\0', new option_totals() },
+  { "trace",		    '\0', new option_trace() },
+  { "truncate",		    '\0', new option_truncate() },
+  { "unbudgeted",	    '\0', new option_unbudgeted() },
+  { "uncleared",	    'U',  new option_uncleared() },
+  { "verbose",		    '\0', new option_verbose() },
+  { "version",		    'v',  new option_version() },
+  { "weekly",		    'W',  new option_weekly() },
+  { "wide",		    'w',  new option_wide() },
+  { "wide-register-format", '\0', new option_wide_register_format() },
+  { "write-hdr-format",	    '\0', new option_write_hdr_format() },
+  { "write-xact-format",    '\0', new option_write_xact_format() },
+  { "yearly",		    'Y',  new option_yearly() },
+};
+
+} // namespace ledger

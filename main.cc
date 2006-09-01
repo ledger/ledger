@@ -26,21 +26,9 @@
 
 using namespace ledger;
 
-struct option_foo : public option_handler_t {
-  option_foo(const std::string& long_opt,
-	     const char		short_opt,
-	     const bool		wants_arg)
-  : option_handler_t(long_opt, short_opt, wants_arg) {}
-
-  virtual void run(const char * optarg) {
-    help(std::cout);
-    throw 0;
-  }
-};
-
-int parse_and_report(config_t& config, report_t& report,
-		     int argc, char * argv[], char * envp[])
+int parse_and_report(report_t& report, int argc, char * argv[], char * envp[])
 {
+#if 0
   // Configure the terminus for value expressions
 
   ledger::terminus = datetime_t::now;
@@ -48,7 +36,8 @@ int parse_and_report(config_t& config, report_t& report,
   // Parse command-line arguments, and those set in the environment
 
   std::list<std::string> args;
-  process_arguments(ledger::options, argc - 1, argv + 1, false, args);
+  process_arguments(ledger::static_options, argc - 1, argv + 1, false,
+		    args, &report);
 
   if (args.empty()) {
     help(std::cerr);
@@ -64,20 +53,24 @@ int parse_and_report(config_t& config, report_t& report,
 
   TRACE(main, "Processing options and environment variables");
 
-  process_environment(ledger::options,
+  process_environment(&report, ledger::options,
 		      const_cast<const char **>(envp), "LEDGER_");
 
 #if 1
   // These are here for backwards compatability, but are deprecated.
 
   if (const char * p = std::getenv("LEDGER"))
-    process_option(options, option_handler_t::ENVIRONMENT, "file", p);
+    process_option(&report, options, option_handler_t::ENVIRONMENT,
+		   "file", p);
   if (const char * p = std::getenv("LEDGER_INIT"))
-    process_option(options, option_handler_t::ENVIRONMENT, "init-file", p);
+    process_option(&report, options, option_handler_t::ENVIRONMENT,
+		   "init-file", p);
   if (const char * p = std::getenv("PRICE_HIST"))
-    process_option(options, option_handler_t::ENVIRONMENT, "price-db", p);
+    process_option(&report, options, option_handler_t::ENVIRONMENT,
+		   "price-db", p);
   if (const char * p = std::getenv("PRICE_EXP"))
-    process_option(options, option_handler_t::ENVIRONMENT, "price-exp", p);
+    process_option(&report, options, option_handler_t::ENVIRONMENT,
+		   "price-exp", p);
 #endif
 
   const char * p    = std::getenv("HOME");
@@ -176,7 +169,65 @@ int parse_and_report(config_t& config, report_t& report,
 
   { TRACE_PUSH(parser, "Parsing journal file");
 
-    if (parse_ledger_data(config, journal.get()) == 0)
+    unsigned int entry_count = 0;
+
+    DEBUG_PRINT("ledger.config.cache",
+		"3. use_cache = " << config.use_cache);
+
+    if (config.use_cache && ! config.cache_file.empty() &&
+	! config.data_file.empty()) {
+      DEBUG_PRINT("ledger.config.cache",
+		  "using_cache " << config.cache_file);
+      config.cache_dirty = true;
+      if (access(config.cache_file.c_str(), R_OK) != -1) {
+	std::ifstream stream(config.cache_file.c_str());
+	if (cache_parser && cache_parser->test(stream)) {
+	  std::string price_db_orig = journal->price_db;
+	  journal->price_db = config.price_db;
+	  entry_count += cache_parser->parse(stream, config, journal,
+					     NULL, &config.data_file);
+	  if (entry_count > 0)
+	    config.cache_dirty = false;
+	  else
+	    journal->price_db = price_db_orig;
+	}
+      }
+    }
+
+    if (entry_count == 0 && ! config.data_file.empty()) {
+      account_t * acct = NULL;
+      if (! config.account.empty())
+	acct = journal->find_account(config.account);
+
+      journal->price_db = config.price_db;
+      if (! journal->price_db.empty() &&
+	  access(journal->price_db.c_str(), R_OK) != -1) {
+	if (parse_journal_file(journal->price_db, config, journal)) {
+	  throw new error("Entries not allowed in price history file");
+	} else {
+	  DEBUG_PRINT("ledger.config.cache",
+		      "read price database " << journal->price_db);
+	  journal->sources.pop_back();
+	}
+      }
+
+      DEBUG_PRINT("ledger.config.cache",
+		  "rejected cache, parsing " << config.data_file);
+      if (config.data_file == "-") {
+	config.use_cache = false;
+	journal->sources.push_back("<stdin>");
+	entry_count += parse_journal(std::cin, journal, acct);
+      }
+      else if (access(config.data_file.c_str(), R_OK) != -1) {
+	entry_count += parse_journal_file(config.data_file, journal, acct);
+	if (! journal->price_db.empty())
+	  journal->sources.push_back(journal->price_db);
+      }
+    }
+
+    VALIDATE(journal->valid());
+
+    if (entry_count == 0)
       throw new error("Please specify ledger file using -f"
 		      " or LEDGER_FILE environment variable.");
 
@@ -494,6 +545,7 @@ appending the output of this command to your Ledger file if you so choose."
   }
 #endif
 
+#endif
   return 0;
 }
 
@@ -503,12 +555,11 @@ int main(int argc, char * argv[], char * envp[])
 #if DEBUG_LEVEL < BETA
     ledger::do_cleanup = false;
 #endif
-    config_t config;
-    report_t report;
-    ledger::config = &config;
-    ledger::report = &report;
+    ledger::report_t * report = new ledger::report_t;
     TRACE_PUSH(main, "Ledger starting");
-    int status = parse_and_report(config, report, argc, argv, envp);
+    int status = parse_and_report(*report, argc, argv, envp);
+    if (ledger::do_cleanup)
+      delete report;
     TRACE_POP(main, "Ledger done");
     return status;
   }
