@@ -1,6 +1,6 @@
 #include "option.h"
-#include "report.h"
 #include "config.h"
+#include "report.h"
 #include "debug.h"
 #include "error.h"
 #ifdef USE_BOOST_PYTHON
@@ -17,6 +17,8 @@ static ledger::option_t * find_option(const std::string& name);
 #endif
 
 namespace ledger {
+
+extern static_option_t static_options[];
 
 void process_option(option_t * opt, option_t::option_source_t source,
 		    report_t * report, const char * arg)
@@ -36,7 +38,7 @@ void process_option(option_t * opt, option_t::option_source_t source,
   }
 }
 
-option_t * search_options(static_option_t * array, const char * name)
+option_t * search_options(const char * name)
 {
   int first = 0;
   int last  = OPTIONS_SIZE;
@@ -44,15 +46,15 @@ option_t * search_options(static_option_t * array, const char * name)
     int mid = (first + last) / 2; // compute mid point.
 
     int result;
-    if ((result = (int)name[0] - (int)array[mid].long_opt[0]) == 0)
-      result = std::strcmp(name, array[mid].long_opt);
+    if ((result = (int)name[0] - (int)static_options[mid].long_opt[0]) == 0)
+      result = std::strcmp(name, static_options[mid].long_opt);
 
     if (result > 0)
       first = mid + 1;		// repeat search in top half.
     else if (result < 0)
       last = mid - 1;		// repeat search in bottom half.
     else
-      return array[mid].handler;
+      return static_options[mid].handler;
   }
 
 #ifdef USE_BOOST_PYTHON
@@ -62,16 +64,16 @@ option_t * search_options(static_option_t * array, const char * name)
 #endif
 }
 
-inline option_t * search_options(static_option_t * array, const char letter)
+inline option_t * search_options(const char letter)
 {
   for (int i = 0; i < OPTIONS_SIZE; i++)
-    if (letter == array[i].short_opt)
-      return array[i].handler;
+    if (letter == static_options[i].short_opt)
+      return static_options[i].handler;
   return NULL;
 }
 
-void process_environment(static_option_t * static_options, const char ** envp,
-			 const std::string& tag, report_t * report)
+void process_environment(const char ** envp, const std::string& tag,
+			 report_t * report)
 {
   const char * tag_p   = tag.c_str();
   unsigned int tag_len = tag.length();
@@ -92,8 +94,7 @@ void process_environment(static_option_t * static_options, const char ** envp,
 
       if (*q == '=') {
 	try {
-	  process_option(static_options, option_t::ENVIRONMENT,
-			 buf, report, q + 1);
+	  process_option(option_t::ENVIRONMENT, buf, report, q + 1);
 	}
 	catch (error * err) {
 	  err->context.pop_back();
@@ -107,8 +108,7 @@ void process_environment(static_option_t * static_options, const char ** envp,
     }
 }
 
-void process_arguments(static_option_t * static_options,
-		       int argc, char ** argv, const bool anywhere,
+void process_arguments(int argc, char ** argv, const bool anywhere,
 		       report_t * report, std::list<std::string>& args)
 {
   int index = 0;
@@ -137,7 +137,7 @@ void process_arguments(static_option_t * static_options,
 	value = p;
       }
 
-      option_t * opt = search_options(static_options, name);
+      option_t * opt = search_options(name);
       if (! opt)
 	throw new option_error(std::string("illegal option --") + name);
 
@@ -157,7 +157,7 @@ void process_arguments(static_option_t * static_options,
 
       int x = 1;
       for (char c = (*i)[x]; c != '\0'; x++, c = (*i)[x]) {
-	option_t * opt = search_options(static_options, c);
+	option_t * opt = search_options(c);
 	if (! opt)
 	  throw new option_error(std::string("illegal option -") + c);
 	opt_queue.push_back(opt);

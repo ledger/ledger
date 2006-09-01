@@ -67,26 +67,23 @@ class option_error : public error {
 void process_option(option_t * opt, option_t::option_source_t source,
 		    report_t * report, const char * arg = NULL);
 
-option_t * search_options(static_option_t * array, const char * name);
+option_t * search_options(const char * name);
 
-inline bool process_option(static_option_t * static_options,
-			   option_t::option_source_t source,
+inline bool process_option(option_t::option_source_t source,
 			   const std::string& name, report_t * report,
 			   const char * arg = NULL)
 {
-  if (option_t * opt = search_options(static_options, name.c_str())) {
+  if (option_t * opt = search_options(name.c_str())) {
     process_option(opt, source, report, arg);
     return true;
   }
   return false;
 }
 
-void process_environment(static_option_t * static_options,
-			 const char ** envp, const std::string& tag,
+void process_environment(const char ** envp, const std::string& tag,
 			 report_t * report);
 
-void process_arguments(static_option_t * static_options,
-		       int argc, char ** argv, const bool anywhere,
+void process_arguments(int argc, char ** argv, const bool anywhere,
 		       report_t * report, std::list<std::string>& args);
 
 } // namespace ledger

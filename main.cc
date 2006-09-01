@@ -26,7 +26,8 @@
 
 using namespace ledger;
 
-int parse_and_report(report_t& report, int argc, char * argv[], char * envp[])
+static int parse_and_report(report_t * report, int argc, char * argv[],
+			    char * envp[])
 {
 #if 0
   // Configure the terminus for value expressions
@@ -555,12 +556,15 @@ int main(int argc, char * argv[], char * envp[])
 #if DEBUG_LEVEL < BETA
     ledger::do_cleanup = false;
 #endif
-    ledger::report_t * report = new ledger::report_t;
     TRACE_PUSH(main, "Ledger starting");
-    int status = parse_and_report(*report, argc, argv, envp);
+
+    ledger::report_t * report = new ledger::report_t;
+    int status = parse_and_report(report, argc, argv, envp);
+
     if (ledger::do_cleanup)
       delete report;
     TRACE_POP(main, "Ledger done");
+
     return status;
   }
   catch (error * err) {
