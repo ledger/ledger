@@ -86,13 +86,13 @@
 
     --only "a>100"
 
-      This flag happens much later than --limit, and corresponding
-      more directly to what one normally expects.  If --limit isn't
-      used, then ALL your dining expenses contribute to the report,
-      *but only those calculated transactions whose value is greater
-      than $100 are used*.  This becomes important when doing a
-      monthly costs report, for example, because it makes the
-      following command possible:
+      This flag happens much later than --limit, and corresponds more
+      directly with what one normally expects.  If --limit isn't used,
+      then ALL your dining expenses contribute to the report, *but
+      only those calculated transactions whose value is greater than
+      $100 are used*.  This becomes important when doing a monthly
+      costs report, for example, because it makes the following
+      command possible:
 
 	ledger -M --only "a>100" reg ^Expenses:Food
 
@@ -133,7 +133,7 @@
 
   For example, say you request a --monthtly expenses report:
 
-    $ ledger --monthly --descend "\$500.00" register ^Expenses
+    $ ledger --monthly register ^Expenses
 
   Now, in one of the reported months you see $500.00 spent on
   Expenses:Food.  You can ask Ledger to "descend" into, and show the
@@ -155,7 +155,7 @@
   The second command will load significantly faster (usually about six
   times on my machine).
 
-- There have a few changes to value expression syntax.  The most
+- There have been a few changes to value expression syntax.  The most
   significant incompatibilities being:
 
   * Equality is now ==, not =
@@ -180,7 +180,6 @@
      Old    New
      ---    ---
      m      now
-     a      amount
      a      amount
      b      cost
      i      price
@@ -218,8 +217,8 @@
   These commands can be used to test value expressions, or for doing
   calculation of commoditized amounts from a script.
 
-  A new "--debug" will also dump the resulting parse tree, useful for
-  submitting bug reports.
+  A new "--debug" option will also dump the resulting parse tree,
+  useful for submitting bug reports.
 
 - Added new min(x,y) and max(x,y) value expression functions.
 
