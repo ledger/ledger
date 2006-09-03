@@ -392,6 +392,7 @@ appending the output of this command to your Ledger file if you so choose."
 
   // DEBUG
 
+#if 0
   {
     std::auto_ptr<repitem_t> master(repitem_t::wrap_item(journal->master));
     master->populate_entries(journal->entries);
@@ -405,7 +406,6 @@ appending the output of this command to your Ledger file if you so choose."
     master->print_tree(std::cout);
   }
 
-#if 0
   {
     std::auto_ptr<repitem_t> master(repitem_t::wrap_item(journal->master));
     master->populate_accounts(journal->entries);
