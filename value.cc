@@ -35,13 +35,13 @@ void value_t::simplify()
     DEBUG_PRINT("amounts.values.simplify", "Reducing balance pair to balance");
     cast(BALANCE);
   }
-      
+
   if (type == BALANCE &&
       ((balance_t *) data)->amounts.size() == 1) {
     DEBUG_PRINT("amounts.values.simplify", "Reducing balance to amount");
     cast(AMOUNT);
-  }    
-      
+  }
+
   if (type == AMOUNT &&
       ! ((amount_t *) data)->commodity()) {
     DEBUG_PRINT("amounts.values.simplify", "Reducing amount to integer");
@@ -97,7 +97,7 @@ value_t& value_t::operator+=(const value_t& value)
     throw new value_error("Cannot add a boolean to a value");
   else if (value.type == DATETIME)
     throw new value_error("Cannot add a date/time to a value");
-    
+
   switch (type) {
   case BOOLEAN:
     throw new value_error("Cannot add a value to a boolean");
@@ -235,7 +235,7 @@ value_t& value_t::operator-=(const value_t& value)
     throw new value_error("Cannot subtract a boolean from a value");
   else if (value.type == DATETIME && type != DATETIME)
     throw new value_error("Cannot subtract a date/time from a value");
-    
+
   switch (type) {
   case BOOLEAN:
     throw new value_error("Cannot subtract a value from a boolean");
@@ -382,7 +382,7 @@ value_t& value_t::operator*=(const value_t& value)
     throw new value_error("Cannot multiply a boolean by a value");
   else if (value.type == DATETIME)
     throw new value_error("Cannot multiply a date/time by a value");
-    
+
   if (value.realzero()) {
     *this = 0L;
     return *this;
@@ -491,7 +491,7 @@ value_t& value_t::operator/=(const value_t& value)
     throw new value_error("Cannot divide a boolean by a value");
   else if (value.type == DATETIME)
     throw new value_error("Cannot divide a date/time by a value");
-    
+
   switch (type) {
   case BOOLEAN:
     throw new value_error("Cannot divide a value by a boolean");

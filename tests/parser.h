@@ -20,25 +20,27 @@ public:
 	TS_ASSERT_EQUALS(0, emptyStream.tellg());
     }
 
-#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
     void testEmptyFileIsNotXMLFile()
     {
+#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
 	stringstream emptyStream(stringstream::in);
 	xml_parser_t xmlParser;
 	TS_ASSERT(!xmlParser.test(emptyStream));
 	TS_ASSERT(emptyStream.good());
 	TS_ASSERT_EQUALS(0, emptyStream.tellg());
+#endif
     }
 
     void testEmptyFileIsNotGnuCashFile()
     {
+#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
 	stringstream emptyStream(stringstream::in);
 	gnucash_parser_t gnucashParser;
 	TS_ASSERT(!gnucashParser.test(emptyStream));
 	TS_ASSERT(emptyStream.good());
 	TS_ASSERT_EQUALS(0, emptyStream.tellg());
-    }
 #endif
+    }
 
     void testEmptyFileIsNotBinaryFile()
     {
