@@ -36,7 +36,7 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
   // Parse command-line arguments, and those set in the environment
 
   std::list<std::string> args;
-  process_arguments(argc - 1, argv + 1, false, args, report);
+  process_arguments(argc - 1, argv + 1, false, report, args);
 
   if (args.empty()) {
     help(std::cerr);

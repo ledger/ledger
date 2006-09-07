@@ -5,6 +5,8 @@
 
 namespace ledger {
 
+void help(std::ostream& out);
+
 #define OPTIONS_SIZE 100
 extern static_option_t static_options[OPTIONS_SIZE];
 

@@ -1,5 +1,5 @@
-#ifndef _CONFIG_H
-#define _CONFIG_H
+#ifndef _TRACE_H
+#define _TRACE_H
 
 #include "timing.h"
 
@@ -27,4 +27,4 @@ void trace_pop(const std::string& cat, const std::string& str,
 
 } // namespace ledger
 
-#endif // _CONFIG_H
+#endif // _TRACE_H
