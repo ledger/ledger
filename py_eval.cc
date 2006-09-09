@@ -1,10 +1,8 @@
 #include "py_eval.h"
-#include "journal.h"
 #include "error.h"
 #include "acconf.h"
 
-#include <sstream>
-#include <map>
+#include <istream>
 
 void export_amount();
 void export_balance();
@@ -182,6 +180,60 @@ object python_eval(const char * c_str, py_eval_mode_t mode)
 {
   std::string str(c_str);
   return python_eval(str, mode);
+}
+
+value_t python_functor_t::operator()(valexpr_t::scope_t * args)
+{
+  std::string func_name = "<Unknown>";
+
+  try {
+    if (args->arg_scope && args->args.size() > 0) {
+      list arglist;
+      for (std::vector<valexpr_t::node_t *>::iterator i = args->args.begin();
+	   i != args->args.end();
+	   i++)
+	arglist.append((*i)->value());
+
+      if (PyObject * val =
+	  PyObject_CallObject(func.ptr(), tuple(arglist).ptr())) {
+	return extract<value_t>(val)();
+	Py_DECREF(val);
+      }
+      else if (PyObject * err = PyErr_Occurred()) {
+	PyErr_Print();
+	throw new valexpr_t::calc_error
+	  (std::string("While calling Python function '") + func_name + "'");
+      } else {
+	assert(0);
+      }
+    } else {
+      return call<value_t>(func.ptr());
+    }
+  }
+  catch(const boost::python::error_already_set&) {
+    PyErr_Print();
+    throw new valexpr_t::calc_error
+      (std::string("While calling Python function '") + func_name + "'");
+  }
+}
+
+value_t python_lambda_t::operator()(valexpr_t::scope_t * args)
+{
+  try {
+    assert(args->arg_scope && args->args.size() == 1);
+    value_t item = args->args[0]->value();
+    assert(item.type == value_t::POINTER);
+#if 0
+    return call<value_t>(func.ptr(), (repitem_t *)*(void **)item.data);
+#else
+    return value_t();
+#endif
+  }
+  catch(const boost::python::error_already_set&) {
+    PyErr_Print();
+    throw new valexpr_t::calc_error
+      ("While evaluating Python lambda expression");
+  }
 }
 
 } // namespace ledger

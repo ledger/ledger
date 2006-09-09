@@ -920,7 +920,7 @@ format_equity::format_equity(std::ostream&      _output_stream,
 
   entry_t header_entry;
   header_entry.payee = "Opening Balances";
-  header_entry._date = datetime_t::now;
+  header_entry._date = ledger::terminus;
   first_line_format.format(output_stream, details_t(header_entry));
 }
 

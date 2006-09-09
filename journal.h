@@ -37,7 +37,7 @@ class transaction_t
   datetime_t	   _date_eff;
   account_t *	   account;
   amount_t	   amount;
-  value_expr       amount_expr;
+  valexpr_t        amount_expr;
   amount_t *	   cost;
   std::string      cost_expr;
   state_t	   state;

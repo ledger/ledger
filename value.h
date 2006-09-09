@@ -204,6 +204,8 @@ class value_t
     return *this;
   }
 
+  std::string get_string() const;
+
   value_t& operator+=(const value_t& value);
   value_t& operator-=(const value_t& value);
   value_t& operator*=(const value_t& value);

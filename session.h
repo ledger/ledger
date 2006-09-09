@@ -40,6 +40,22 @@ class session_t
 
   std::list<journal_t *> journals;
 
+  valexpr_t::scope_t globals;
+  datetime_t	     terminus;
+
+  struct session_callback_t : valexpr_t::functor_t
+  {
+    session_t * session;
+    value_t (session_t::*mptr)();
+
+    session_callback_t(session_t * _session, value_t (session_t::*_mptr)())
+      : session(_session), mptr(_mptr) {}
+
+    virtual value_t operator()(valexpr_t::scope_t * args) {
+      return (session->*mptr)();
+    }
+  };
+
   session_t() :
     balance_format("%20T  %2_%-a\n"),
     register_format("%D %-.20P %-.22A %12.67t %!12.80T\n%/"
@@ -62,13 +78,23 @@ class session_t
     cache_dirty(false),
     debug_mode(false),
     verbose_mode(false),
-    trace_mode(false) {}
+    trace_mode(false)
+  {
+    globals.define("now", new session_callback_t(this, &session_t::get_terminus));
+  }
 
+#if 0
   ~session_t() {
     for (std::list<journal_t *>::iterator i = journals.begin();
 	 i != journals.end();
 	 i++)
       delete *i;
+  }
+#endif
+
+  value_t get_terminus() {
+    return datetime_t::now;
+    //return terminus;
   }
 };
 

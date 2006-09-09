@@ -110,7 +110,9 @@ struct format_t
   static std::string truncate(const std::string& str, unsigned int width,
 			      const bool is_account = false);
 
+#if 0
   void format(std::ostream& out, const details_t& details) const;
+#endif
 };
 
 class format_transactions : public item_handler<transaction_t>

@@ -4,6 +4,14 @@
 
 namespace ledger {
 
+std::string value_t::get_string() const
+{
+  if (type == STRING)
+    return **(std::string **) data;
+  else
+    throw new value_error("Cannot get string value of non-string");
+}
+
 void value_t::destroy()
 {
   switch (type) {

@@ -59,6 +59,26 @@ inline char peek_next_nonws(std::istream& in) {
   *_p = '\0';								\
 }
 
+#define READ_INTO_(str, targ, size, var, idx, cond) {			\
+  char * _p = targ;							\
+  var = str.peek();							\
+  while (! str.eof() && var != '\n' && (cond) && _p - targ < size) {	\
+    str.get(var);							\
+    if (str.eof())							\
+      break;								\
+    idx++;								\
+    if (var == '\\') {							\
+      str.get(var);							\
+      if (in.eof())							\
+	break;								\
+      idx++;								\
+    }									\
+    *_p++ = var;							\
+    var = str.peek();							\
+  }									\
+  *_p = '\0';								\
+}
+
 std::string resolve_path(const std::string& path);
 
 #endif // _UTIL_H

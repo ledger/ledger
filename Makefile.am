@@ -6,6 +6,8 @@ libledger_la_SOURCES = \
 	balance.cc     \
 	datetime.cc    \
 	value.cc       \
+	valexpr.cc     \
+	mask.cc        \
                        \
 	binary.cc      \
 	config.cc      \
@@ -14,7 +16,6 @@ libledger_la_SOURCES = \
 	emacs.cc       \
 	format.cc      \
 	journal.cc     \
-	mask.cc        \
 	option.cc      \
 	parser.cc      \
 	qif.cc	       \
@@ -28,7 +29,6 @@ libledger_la_SOURCES = \
 	trace.cc       \
 	transform.cc   \
 	util.cc        \
-	valexpr.cc     \
 	walk.cc        \
 	xml.cc
 if HAVE_EXPAT
@@ -171,6 +171,11 @@ runtests: alltests
 
 verify: runtests
 	python tests/runtests.py
+
+VALEXPR_OBJS = amount.o balance.o datetime.o value.o mask.o debug.o py_eval.o
+valexpr: $(VALEXPR_OBJS) valexpr.cc valexpr.h session.h
+	$(CXXCOMPILE) -DTEST -DUSE_BOOST_PYTHON=1 -o $@ \
+		valexpr.cc $(VALEXPR_OBJS) $(LIBS)
 
 ######################################################################
 

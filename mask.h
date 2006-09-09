@@ -1,10 +1,10 @@
 #ifndef _MASK_H
 #define _MASK_H
 
+#include "error.h"
+
 #include <string>
 #include <exception>
-
-#include "error.h"
 
 class mask_t
 {

@@ -11,9 +11,9 @@ namespace ledger {
 
 static unsigned long binary_magic_number = 0xFFEED765;
 #ifdef DEBUG_ENABLED
-static unsigned long format_version      = 0x0002060b;
+static unsigned long format_version      = 0x0002060d;
 #else
-static unsigned long format_version      = 0x0002060a;
+static unsigned long format_version      = 0x0002060c;
 #endif
 
 static account_t **	   accounts;
@@ -332,53 +332,6 @@ inline void read_binary_mask(char *& data, mask_t *& mask)
   mask->exclude = exclude;
 }
 
-inline void read_binary_value_expr(char *& data, value_expr_t *& expr)
-{
-  if (! read_binary_bool(data)) {
-    expr = NULL;
-    return;
-  }
-
-  value_expr_t::kind_t kind;
-  read_binary_number(data, kind);
-
-  expr = new value_expr_t(kind);
-
-  if (kind > value_expr_t::TERMINALS) {
-    read_binary_value_expr(data, expr->left);
-    if (expr->left) expr->left->acquire();
-  }
-
-  switch (expr->kind) {
-  case value_expr_t::O_ARG:
-  case value_expr_t::INDEX:
-    read_binary_long(data, expr->arg_index);
-    break;
-  case value_expr_t::CONSTANT:
-    expr->value = new value_t;
-    read_binary_value(data, *expr->value);
-    break;
-
-  case value_expr_t::F_CODE_MASK:
-  case value_expr_t::F_PAYEE_MASK:
-  case value_expr_t::F_NOTE_MASK:
-  case value_expr_t::F_ACCOUNT_MASK:
-  case value_expr_t::F_SHORT_ACCOUNT_MASK:
-  case value_expr_t::F_COMMODITY_MASK:
-    if (read_binary_bool(data))
-      read_binary_mask(data, expr->mask);
-    break;
-
-  default:
-    if (kind > value_expr_t::TERMINALS) {
-      read_binary_value_expr(data, expr->right);
-      if (expr->right) expr->right->acquire();
-    }
-    break;
-  }
-}
-
-
 inline void read_binary_transaction(char *& data, transaction_t * xact)
 {
   read_binary_number(data, xact->_date);
@@ -390,15 +343,18 @@ inline void read_binary_transaction(char *& data, transaction_t * xact)
     read_binary_amount(data, xact->amount);
   }
   else if (flag == 1) {
-    read_binary_amount(data, xact->amount);
     read_binary_string(data, xact->amount_expr.expr);
-  }
-  else {
-    value_expr_t * ptr = NULL;
-    read_binary_value_expr(data, ptr);
-    assert(ptr);
-    xact->amount_expr.reset(ptr);
-    read_binary_string(data, xact->amount_expr.expr);
+
+    // jww (2006-09-08): Create some kind of parse-and-compute routine
+
+    value_expr expr(parse_value_expr(xact->amount_expr.expr, NULL,
+				     xact->amount_expr.flags)->acquire());
+
+    if (! compute_amount(expr, xact->amount, xact))
+      throw new parse_error("Amount expression failed to compute");
+
+    if (expr->kind == value_expr_t::CONSTANT)
+      expr = NULL;
   }
 
   if (read_binary_bool(data)) {
@@ -462,10 +418,8 @@ inline void read_binary_auto_entry(char *& data, auto_entry_t * entry,
 {
   bool ignore;
   read_binary_entry_base(data, entry, xact_pool, ignore);
-  value_expr_t * expr;
-  read_binary_value_expr(data, expr);
-  // the item_predicate constructor will acquire the reference
-  entry->predicate = new item_predicate<transaction_t>(expr);
+  read_binary_string(data, &entry->predicate_string);
+  entry->predicate = new item_predicate<transaction_t>(entry->predicate_string);
 }
 
 inline void read_binary_period_entry(char *& data, period_entry_t * entry,
@@ -952,49 +906,6 @@ void write_binary_mask(std::ostream& out, mask_t * mask)
   write_binary_string(out, mask->pattern);
 }
 
-void write_binary_value_expr(std::ostream& out, const value_expr_t * expr)
-{
-  if (! expr) {
-    write_binary_bool(out, false);
-    return;
-  }
-  write_binary_bool(out, true);
-  write_binary_number(out, expr->kind);
-
-  if (expr->kind > value_expr_t::TERMINALS)
-    write_binary_value_expr(out, expr->left);
-
-  switch (expr->kind) {
-  case value_expr_t::O_ARG:
-  case value_expr_t::INDEX:
-    write_binary_long(out, expr->arg_index);
-    break;
-  case value_expr_t::CONSTANT:
-    write_binary_value(out, *expr->value);
-    break;
-
-  case value_expr_t::F_CODE_MASK:
-  case value_expr_t::F_PAYEE_MASK:
-  case value_expr_t::F_NOTE_MASK:
-  case value_expr_t::F_ACCOUNT_MASK:
-  case value_expr_t::F_SHORT_ACCOUNT_MASK:
-  case value_expr_t::F_COMMODITY_MASK:
-    if (expr->mask) {
-      write_binary_bool(out, true);
-      write_binary_mask(out, expr->mask);
-    } else {
-      write_binary_bool(out, false);
-    }
-    break;
-
-  default:
-    if (expr->kind > value_expr_t::TERMINALS)
-      write_binary_value_expr(out, expr->right);
-    break;
-  }
-
-}
-
 void write_binary_transaction(std::ostream& out, transaction_t * xact,
 			      bool ignore_calculated)
 {
@@ -1006,14 +917,8 @@ void write_binary_transaction(std::ostream& out, transaction_t * xact,
     write_binary_number<unsigned char>(out, 0);
     write_binary_amount(out, amount_t());
   }
-  else if (xact->amount_expr) {
-    write_binary_number<unsigned char>(out, 2);
-    write_binary_value_expr(out, xact->amount_expr.get());
-    write_binary_string(out, xact->amount_expr.expr);
-  }
   else if (! xact->amount_expr.expr.empty()) {
     write_binary_number<unsigned char>(out, 1);
-    write_binary_amount(out, xact->amount);
     write_binary_string(out, xact->amount_expr.expr);
   }
   else {
@@ -1078,7 +983,7 @@ void write_binary_entry(std::ostream& out, entry_t * entry)
 void write_binary_auto_entry(std::ostream& out, auto_entry_t * entry)
 {
   write_binary_entry_base(out, entry);
-  write_binary_value_expr(out, entry->predicate->predicate);
+  write_binary_string(out, entry->predicate_string);
 }
 
 void write_binary_period_entry(std::ostream& out, period_entry_t * entry)
