@@ -21,6 +21,7 @@ class xml_parser_t : public parser_t
 
 #endif
 
+#if 0
 class format_xml_entries : public format_entries
 {
   bool show_totals;
@@ -39,6 +40,7 @@ class format_xml_entries : public format_entries
 
   virtual void format_last_entry();
 };
+#endif
 
 } // namespace ledger
 

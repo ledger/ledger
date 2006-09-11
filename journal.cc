@@ -330,17 +330,14 @@ bool entry_t::valid() const
 }
 
 auto_entry_t::auto_entry_t(const std::string& _predicate)
-  : predicate_string(_predicate)
+  : predicate(_predicate)
 {
   DEBUG_PRINT("ledger.memory.ctors", "ctor auto_entry_t");
-  predicate = new item_predicate<transaction_t>(predicate_string);
 }
 
 auto_entry_t::~auto_entry_t()
 {
   DEBUG_PRINT("ledger.memory.dtors", "dtor auto_entry_t");
-  if (predicate)
-    delete predicate;
 }
 
 void auto_entry_t::extend_entry(entry_base_t& entry, bool post)
@@ -351,7 +348,8 @@ void auto_entry_t::extend_entry(entry_base_t& entry, bool post)
   for (transactions_list::iterator i = initial_xacts.begin();
        i != initial_xacts.end();
        i++) {
-    if ((*predicate)(**i)) {
+    // jww (2006-09-10): Create a scope here based on entry
+    if (predicate.calc()) {
       for (transactions_list::iterator t = transactions.begin();
 	   t != transactions.end();
 	   t++) {
@@ -616,6 +614,42 @@ bool journal_t::valid() const
     }
 
   return true;
+}
+
+void print_entry(std::ostream& out, const entry_base_t& entry_base,
+		 const std::string& prefix)
+{
+  std::string print_format;
+
+  if (const entry_t * entry = dynamic_cast<const entry_t *>(&entry_base)) {
+    print_format = (prefix + "%D %X%C%P\n" +
+		    prefix + "    %-34A  %12o\n%/" +
+		    prefix + "    %-34A  %12o\n");
+  }
+  else if (const auto_entry_t * entry =
+	   dynamic_cast<const auto_entry_t *>(&entry_base)) {
+    out << "= " << entry->predicate.expr << '\n';
+    print_format = prefix + "    %-34A  %12o\n";
+  }
+  else if (const period_entry_t * entry =
+	   dynamic_cast<const period_entry_t *>(&entry_base)) {
+    out << "~ " << entry->period_string << '\n';
+    print_format = prefix + "    %-34A  %12o\n";
+  }
+  else {
+    assert(0);
+  }
+
+#if 0
+  format_entries formatter(out, print_format);
+  walk_transactions(const_cast<transactions_list&>(entry_base.transactions),
+		    formatter);
+  formatter.flush();
+
+  clear_transaction_xdata cleaner;
+  walk_transactions(const_cast<transactions_list&>(entry_base.transactions),
+		    cleaner);
+#endif
 }
 
 void entry_context::describe(std::ostream& out) const throw()

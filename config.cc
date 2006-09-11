@@ -333,7 +333,7 @@ DEFR_OPTS_(end, "end", 'e')
   report->predicate += "]";
 #endif
 
-  terminus = interval.end;
+  report->session->terminus = interval.end;
 END_DEFR()
 
 DEFR_OPTS(current, "current", 'c')
@@ -472,6 +472,7 @@ DEFR_OPT_(pager, "pager")
 END_DEFR()
 
 DEFR_OPT_(truncate, "truncate")
+#if 0
   std::string style(optarg);
   if (style == "leading")
     format_t::elision_style = format_t::TRUNCATE_LEADING;
@@ -481,10 +482,13 @@ DEFR_OPT_(truncate, "truncate")
     format_t::elision_style = format_t::TRUNCATE_TRAILING;
   else if (style == "abbrev")
     format_t::elision_style = format_t::ABBREVIATE;
+#endif
 END_DEFR()
 
 DEFR_OPT_(abbrev_len, "abbrev-len")
+#if 0
   format_t::abbrev_length = std::atoi(optarg);
+#endif
 END_DEFR()
 
 DEFR_OPTS(empty, "empty", 'E')
@@ -594,7 +598,7 @@ DEFR_OPTS_(period, "period", 'p')
     report->predicate += interval.end.to_string();
     report->predicate += "]";
 
-    terminus = interval.end;
+    report->session->terminus = interval.end;
   }
 #endif
 END_DEFR()
@@ -669,15 +673,21 @@ DEFR_OPT(code_as_payee, "code-as-payee")
 END_DEFR()
 
 DEFR_OPT(budget, "budget")
+#if 0
   report->budget_flags = BUDGET_BUDGETED;
+#endif
 END_DEFR()
 
 DEFR_OPT(add_budget, "add-budget")
+#if 0
   report->budget_flags = BUDGET_BUDGETED | BUDGET_UNBUDGETED;
+#endif
 END_DEFR()
 
 DEFR_OPT(unbudgeted, "unbudgeted")
+#if 0
   report->budget_flags = BUDGET_UNBUDGETED;
+#endif
 END_DEFR()
 
 DEFR_OPT_(forecast, "forecast")
@@ -729,11 +739,9 @@ DEFR_OPTS_(display, "display", 'd')
 END_DEFR()
 
 DEFR_OPTS_(amount, "amount", 't')
-  ledger::amount_expr = optarg;
 END_DEFR()
 
 DEFR_OPTS_(total, "total", 'T')
-  ledger::total_expr = optarg;
 END_DEFR()
 
 DEFR_OPTS(amount_data, "amount-data", 'j')
@@ -745,13 +753,17 @@ DEFR_OPTS(total_data, "total-data", 'J')
 END_DEFR()
 
 DEFR_OPT(ansi, "ansi")
+#if 0
   format_t::ansi_codes  = true;
   format_t::ansi_invert = false;
+#endif
 END_DEFR()
 
 DEFR_OPT(ansi_invert, "ansi-invert")
+#if 0
   format_t::ansi_codes  =
   format_t::ansi_invert = true;
+#endif
 END_DEFR()
 
 //////////////////////////////////////////////////////////////////////
@@ -776,27 +788,33 @@ DEFR_OPTS(download, "download", 'Q')
 END_DEFR()
 
 DEFR_OPTS(quantity, "quantity", 'O')
+#if 0
   ledger::amount_expr = "@a";
   ledger::total_expr  = "@O";
+#endif
 END_DEFR()
 
 DEFR_OPTS(basis, "basis", 'B')
+#if 0
   ledger::amount_expr = "@b";
   ledger::total_expr  = "@B";
+#endif
 END_DEFR()
 
 DEFR_OPTS(price, "price", 'I')
+#if 0
   ledger::amount_expr = "@i";
   ledger::total_expr  = "@I";
+#endif
 END_DEFR()
 
 DEFR_OPTS(market, "market", 'V')
 #if 0
   report->show_revalued = true;
-#endif
 
   ledger::amount_expr = "@v";
   ledger::total_expr  = "@V";
+#endif
 END_DEFR()
 
 namespace {
@@ -832,18 +850,20 @@ DEFR_OPT_(set_price, "set-price")
 END_DEFR()
 
 DEFR_OPTS(performance, "performance", 'g')
+#if 0
   ledger::amount_expr = "@P(@a,@m)-@b";
   ledger::total_expr  = "@P(@O,@m)-@B";
+#endif
 END_DEFR()
 
 DEFR_OPTS(gain, "gain", 'G')
 #if 0
   report->show_revalued      =
   report->show_revalued_only = true;
-#endif
 
   ledger::amount_expr = "@a";
   ledger::total_expr  = "@G";
+#endif
 END_DEFR()
 
 static std::string expand_value_expr(const std::string& tmpl,
@@ -859,16 +879,22 @@ static std::string expand_value_expr(const std::string& tmpl,
 }
 
 DEFR_OPTS(average, "average", 'A')
+#if 0
   ledger::total_expr = expand_value_expr("@A(#)", ledger::total_expr.expr);
+#endif
 END_DEFR()
 
 DEFR_OPTS(deviation, "deviation", 'D')
+#if 0
   ledger::total_expr = expand_value_expr("@t-@A(#)", ledger::total_expr.expr);
+#endif
 END_DEFR()
 
 DEFR_OPTS(percentage, "percentage", '%')
+#if 0
   ledger::total_expr = expand_value_expr("^#&{100.0%}*(#/^#)",
 					 ledger::total_expr.expr);
+#endif
 END_DEFR()
 
 //////////////////////////////////////////////////////////////////////

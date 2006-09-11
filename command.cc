@@ -1,3 +1,4 @@
+#if 0
 namespace {
   inline void mark_red(std::ostream& out, const element_t * elem) {
     out.setf(std::ios::left);
@@ -79,40 +80,6 @@ void format_entries::operator()(transaction_t& xact)
     format_last_entry();
 
   last_entry = xact.entry;
-}
-
-void print_entry(std::ostream& out, const entry_base_t& entry_base,
-		 const std::string& prefix)
-{
-  std::string print_format;
-
-  if (const entry_t * entry = dynamic_cast<const entry_t *>(&entry_base)) {
-    print_format = (prefix + "%D %X%C%P\n" +
-		    prefix + "    %-34A  %12o\n%/" +
-		    prefix + "    %-34A  %12o\n");
-  }
-  else if (const auto_entry_t * entry =
-	   dynamic_cast<const auto_entry_t *>(&entry_base)) {
-    out << "= " << entry->predicate_string << '\n';
-    print_format = prefix + "    %-34A  %12o\n";
-  }
-  else if (const period_entry_t * entry =
-	   dynamic_cast<const period_entry_t *>(&entry_base)) {
-    out << "~ " << entry->period_string << '\n';
-    print_format = prefix + "    %-34A  %12o\n";
-  }
-  else {
-    assert(0);
-  }
-
-  format_entries formatter(out, print_format);
-  walk_transactions(const_cast<transactions_list&>(entry_base.transactions),
-		    formatter);
-  formatter.flush();
-
-  clear_transaction_xdata cleaner;
-  walk_transactions(const_cast<transactions_list&>(entry_base.transactions),
-		    cleaner);
 }
 
 bool disp_subaccounts_p(const account_t&		 account,
@@ -353,3 +320,4 @@ void export_format()
 }
 
 #endif // USE_BOOST_PYTHON
+#endif

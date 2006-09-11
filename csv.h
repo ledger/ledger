@@ -6,6 +6,7 @@
 
 namespace ledger {
 
+#if 0
 class format_csv_transactions : public item_handler<transaction_t>
 {
  protected:
@@ -18,6 +19,7 @@ class format_csv_transactions : public item_handler<transaction_t>
   }
   virtual void operator()(transaction_t& xact);
 };
+#endif
 
 } // namespace ledger
 

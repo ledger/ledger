@@ -1,3 +1,4 @@
+#if 0
 #include "walk.h"
 #include "format.h"
 #include "textual.h"
@@ -36,20 +37,6 @@ transaction_xdata_t& transaction_xdata(const transaction_t& xact)
   if (! xact.data)
     xact.data = new transaction_xdata_t();
   return *((transaction_xdata_t *) xact.data);
-}
-
-void add_transaction_to(const transaction_t& xact, value_t& value)
-{
-  if (transaction_has_xdata(xact) &&
-      transaction_xdata_(xact).dflags & TRANSACTION_COMPOUND) {
-    value += transaction_xdata_(xact).value;
-  }
-  else if (xact.cost || ! value.realzero()) {
-    value.add(xact.amount, xact.cost);
-  }
-  else {
-    value = xact.amount;
-  }
 }
 
 void truncate_entries::flush()
@@ -938,4 +925,5 @@ struct item_handler_wrap : public item_handler<T>
   }
 };
 
+#endif
 #endif

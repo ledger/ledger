@@ -12,6 +12,7 @@ entry_t * derive_new_entry(journal_t& journal,
 			   strings_list::iterator i,
 			   strings_list::iterator end)
 {
+#if 0
   std::auto_ptr<entry_t> added(new entry_t);
 
   entry_t * matching = NULL;
@@ -171,6 +172,9 @@ entry_t * derive_new_entry(journal_t& journal,
     throw new error("Failed to finalize derived entry (check commodities)");
 
   return added.release();
+#else
+  return NULL;
+#endif
 }
 
 } // namespace ledger

@@ -67,12 +67,11 @@ inline char * next_element(char * buf, bool variable = false)
   return NULL;
 }
 
-static value_expr parse_amount_expr(std::istream& in, amount_t& amount,
-				    transaction_t * xact,
-				    unsigned short flags = 0)
+static void
+parse_amount_expr(std::istream& in, amount_t& amount,
+		  valexpr_t& valexpr, unsigned short flags = 0)
 {
-  value_expr expr(parse_value_expr(in, NULL, flags | PARSE_VALEXPR_RELAXED |
-				   PARSE_VALEXPR_PARTIAL)->acquire());
+  valexpr.parse(in, flags | PARSE_VALEXPR_RELAXED | PARSE_VALEXPR_PARTIAL);
 
   DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
 	      "Parsed an amount expression");
@@ -80,21 +79,17 @@ static value_expr parse_amount_expr(std::istream& in, amount_t& amount,
 #ifdef DEBUG_ENABLED
   DEBUG_IF("ledger.textual.parse") {
     if (_debug_stream) {
-      ledger::dump_value_expr(*_debug_stream, expr);
+      valexpr.dump(*_debug_stream);
       *_debug_stream << std::endl;
     }
   }
 #endif
 
-  if (! compute_amount(expr, amount, xact))
-    throw new parse_error("Amount expression failed to compute");
-
-  if (expr->kind == value_expr_t::CONSTANT)
-    expr = NULL;
+  // jww (2006-09-10): Put an error context around this
+  amount = valexpr.calc().get_amount();
 
   DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
-	      "The transaction amount is " << xact->amount);
-  return expr;
+	      "The transaction amount is " << amount);
 }
 
 transaction_t * parse_transaction(char * line, account_t * account,
@@ -182,11 +177,8 @@ transaction_t * parse_transaction(char * line, account_t * account,
 
     try {
       unsigned long beg = (long)in.tellg();
-
-      xact->amount_expr =
-	parse_amount_expr(in, xact->amount, xact.get(),
-			  PARSE_VALEXPR_NO_REDUCE);
-
+      parse_amount_expr(in, xact->amount, xact->amount_expr,
+			PARSE_VALEXPR_NO_REDUCE);
       unsigned long end = (long)in.tellg();
       xact->amount_expr.expr = std::string(line, beg, end - beg);
     }
@@ -218,8 +210,10 @@ transaction_t * parse_transaction(char * line, account_t * account,
 	try {
 	  unsigned long beg = (long)in.tellg();
 
-	  if (parse_amount_expr(in, *xact->cost, xact.get(),
-				PARSE_VALEXPR_NO_MIGRATE))
+	  valexpr_t valexpr;
+	  parse_amount_expr(in, *xact->cost, valexpr,
+			    PARSE_VALEXPR_NO_MIGRATE);
+	  if (valexpr)
 	    throw new parse_error
 	      ("A transaction's cost must evalute to a constant value");
 
@@ -835,11 +829,13 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	    assert(result.second);
 	  }
 	}
+#if 0
 	else if (word == "def") {
 	  if (! global_scope.get())
 	    init_value_expr();
 	  parse_value_definition(p);
 	}
+#endif
 	break;
       }
 
@@ -907,6 +903,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
   return count;
 }
 
+#if 0
 void write_textual_journal(journal_t& journal, std::string path,
 			   item_handler<transaction_t>& formatter,
 			   const std::string& write_hdr_format,
@@ -998,5 +995,6 @@ void write_textual_journal(journal_t& journal, std::string path,
     }
   }
 }
+#endif
 
 } // namespace ledger

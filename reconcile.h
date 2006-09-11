@@ -6,6 +6,7 @@
 
 namespace ledger {
 
+#if 0
 class reconcile_transactions : public item_handler<transaction_t>
 {
   value_t    balance;
@@ -27,6 +28,7 @@ class reconcile_transactions : public item_handler<transaction_t>
     xacts.push_back(&xact);
   }
 };
+#endif
 
 } // namespace ledger
 

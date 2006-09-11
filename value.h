@@ -208,7 +208,14 @@ class value_t
     return *this;
   }
 
+  bool get_boolean() const;
+  long get_integer() const;
+  datetime_t get_datetime() const;
+  amount_t get_amount() const;
+  balance_t get_balance() const;
+  balance_pair_t get_balance_pair() const;
   std::string get_string() const;
+  void * get_pointer() const;
 
   value_t& operator+=(const value_t& value);
   value_t& operator-=(const value_t& value);

@@ -4,6 +4,72 @@
 
 namespace ledger {
 
+bool value_t::get_boolean() const
+{
+  if (type == BOOLEAN) {
+    return *(bool *) data;
+  } else {
+    value_t temp(*this);
+    temp.cast(BOOLEAN);
+    return *(bool *) temp.data;
+  }
+}
+
+long value_t::get_integer() const
+{
+  if (type == INTEGER) {
+    return *(long *) data;
+  } else {
+    value_t temp(*this);
+    temp.cast(INTEGER);
+    return *(long *) temp.data;
+  }
+}
+
+datetime_t value_t::get_datetime() const
+{
+  if (type == DATETIME) {
+    return *(datetime_t *) data;
+  } else {
+    value_t temp(*this);
+    temp.cast(DATETIME);
+    return *(datetime_t *) temp.data;
+  }
+}
+
+amount_t value_t::get_amount() const
+{
+  if (type == AMOUNT) {
+    return *(amount_t *) data;
+  } else {
+    value_t temp(*this);
+    temp.cast(AMOUNT);
+    return *(amount_t *) temp.data;
+  }
+}
+
+balance_t value_t::get_balance() const
+{
+  if (type == BALANCE) {
+    return *(balance_t *) data;
+  } else {
+    value_t temp(*this);
+    temp.cast(BALANCE);
+    return *(balance_t *) temp.data;
+  }
+}
+
+balance_pair_t value_t::get_balance_pair() const
+{
+  if (type == BALANCE_PAIR) {
+    return *(balance_pair_t *) data;
+  } else {
+    value_t temp(*this);
+    temp.cast(BALANCE_PAIR);
+    return *(balance_pair_t *) temp.data;
+  }
+}
+
 std::string value_t::get_string() const
 {
   if (type == STRING) {
@@ -13,6 +79,10 @@ std::string value_t::get_string() const
     out << *this;
     return out.str();
   }
+}
+
+void * value_t::get_pointer() const
+{
 }
 
 void value_t::destroy()
@@ -1076,7 +1146,8 @@ void value_t::cast(type_t cast_type)
     case BALANCE_PAIR:
       throw new value_error("Cannot convert a boolean to a balance pair");
     case STRING:
-      throw new value_error("Cannot convert a boolean to a string");
+      *(std::string **) data = new std::string(*((bool *) data) ? "true" : "false");
+      break;
     case POINTER:
       throw new value_error("Cannot convert a boolean to a pointer");
 
@@ -1105,8 +1176,12 @@ void value_t::cast(type_t cast_type)
     case BALANCE_PAIR:
       new((balance_pair_t *)data) balance_pair_t(*((long *) data));
       break;
-    case STRING:
-      throw new value_error("Cannot convert an integer to a string");
+    case STRING: {
+      char buf[32];
+      std::sprintf(buf, "%ld", *(long *) data);
+      *(std::string **) data = new std::string(buf);
+      break;
+    }
     case POINTER:
       throw new value_error("Cannot convert an integer to a pointer");
 
@@ -1173,8 +1248,13 @@ void value_t::cast(type_t cast_type)
       new((balance_pair_t *)data) balance_pair_t(temp);
       break;
     }
-    case STRING:
-      throw new value_error("Cannot convert an amount to a string");
+    case STRING: {
+      std::ostringstream out;
+      out << *(amount_t *) data;
+      destroy();
+      *(std::string **) data = new std::string(out.str());
+      break;
+    }
     case POINTER:
       throw new value_error("Cannot convert an amount to a pointer");
 
@@ -1281,9 +1361,88 @@ void value_t::cast(type_t cast_type)
     break;
 
   case STRING:
-    throw new value_error("Cannot convert a string to a value");
+    switch (cast_type) {
+    case BOOLEAN: {
+      if (**(std::string **) data == "true") {
+	destroy();
+	*(bool *) data = true;
+      }
+      else if (**(std::string **) data == "false") {
+	destroy();
+	*(bool *) data = false;
+      }
+      else {
+	throw new value_error("Cannot convert string to an boolean");
+      }
+      break;
+    }
+    case INTEGER: {
+      int l = (*(std::string **) data)->length();
+      const char * p = (*(std::string **) data)->c_str();
+      bool alldigits = true;
+      for (int i = 0; i < l; i++)
+	if (! std::isdigit(p[i])) {
+	  alldigits = false;
+	  break;
+	}
+      if (alldigits) {
+	long temp = std::atol((*(std::string **) data)->c_str());
+	destroy();
+	*(long *) data = temp;
+      } else {
+	throw new value_error("Cannot convert string to an integer");
+      }
+      break;
+    }
+
+    case DATETIME:
+      throw new value_error("Cannot convert a string to a date/time");
+
+    case AMOUNT: {
+      amount_t temp = **(std::string **) data;
+      destroy();
+      new((amount_t *)data) amount_t(temp);
+      break;
+    }
+    case BALANCE:
+      throw new value_error("Cannot convert a string to a balance");
+    case BALANCE_PAIR:
+      throw new value_error("Cannot convert a string to a balance pair");
+    case STRING:
+      break;
+    case POINTER:
+      throw new value_error("Cannot convert a string to a pointer");
+
+    default:
+      assert(0);
+      break;
+    }
+    break;
+
   case POINTER:
-    throw new value_error("Cannot convert a pointer to a value");
+    switch (cast_type) {
+    case BOOLEAN:
+      throw new value_error("Cannot convert a pointer to a boolean");
+    case INTEGER:
+      throw new value_error("Cannot convert a pointer to an integer");
+    case DATETIME:
+      throw new value_error("Cannot convert a pointer to a date/time");
+    case AMOUNT:
+      throw new value_error("Cannot convert a pointer to an amount");
+    case BALANCE:
+      throw new value_error("Cannot convert a pointer to a balance");
+    case BALANCE_PAIR:
+      throw new value_error("Cannot convert a pointer to a balance pair");
+    case STRING:
+      throw new value_error("Cannot convert a pointer to a string");
+    case POINTER:
+      break;
+
+    default:
+      assert(0);
+      break;
+    }
+    break;
 
   default:
     assert(0);

@@ -366,6 +366,7 @@ void output_xml_string(std::ostream& out, const std::string& str)
   }
 }
 
+#if 0
 void format_xml_entries::format_last_entry()
 {
   output_stream << "  <entry>\n"
@@ -471,5 +472,6 @@ void format_xml_entries::format_last_entry()
 
   output_stream << "  </entry>\n";
 }
+#endif
 
 } // namespace ledger

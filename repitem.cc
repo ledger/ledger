@@ -32,7 +32,21 @@ void repitem_t::add_total(value_t& val) const
     ptr->add_total(val);
 }
 
-void add_transaction_to(const transaction_t& xact, value_t& value);
+void add_transaction_to(const transaction_t& xact, value_t& value)
+{
+#if 0
+  if (transaction_has_xdata(xact) &&
+      transaction_xdata_(xact).dflags & TRANSACTION_COMPOUND) {
+    value += transaction_xdata_(xact).value;
+  }
+  else if (xact.cost || ! value.realzero()) {
+    value.add(xact.amount, xact.cost);
+  }
+  else {
+    value = xact.amount;
+  }
+#endif
+}
 
 void repitem_t::add_value(value_t& val) const
 {
@@ -230,10 +244,8 @@ repitem_t * repitem_t::fake_entry(const datetime_t& date, const std::string& pay
 }
 
 void repitem_t::populate_entries(entries_list& entries,
-				 const value_expr_t * filter)
+				 const valexpr_t& filter)
 {
-  item_predicate<transaction_t> predicate(filter);
-
   for (entries_list::iterator i = entries.begin();
        i != entries.end();
        i++) {
@@ -241,7 +253,8 @@ void repitem_t::populate_entries(entries_list& entries,
     for (transactions_list::iterator j = (*i)->transactions.begin();
 	 j != (*i)->transactions.end();
 	 j++) {
-      if (predicate(**j)) {
+      // jww (2006-09-10): Make a scope based on **j
+      if (filter.calc().get_boolean()) {
 	if (entry == NULL)
 	  entry = repitem_t::wrap_item(*i);
 	entry->add_content(repitem_t::wrap_item(*j));
@@ -286,16 +299,16 @@ void repitem_t::populate_account(account_t& acct, repitem_t * item)
 }
 
 void repitem_t::populate_accounts(entries_list& entries,
-				  const value_expr_t * filter)
+				  const valexpr_t& filter)
 {
-  item_predicate<transaction_t> predicate(filter);
   for (entries_list::iterator i = entries.begin();
        i != entries.end();
        i++)
     for (transactions_list::iterator j = (*i)->transactions.begin();
 	 j != (*i)->transactions.end();
 	 j++)
-      if (predicate(**j))
+      // jww (2006-09-10): Make a scope based on **j
+      if (filter.calc().get_boolean())
 	populate_account(*(*j)->account, repitem_t::wrap_item(*j));
 }
 
@@ -776,6 +789,7 @@ void repitem_t::print_tree(std::ostream& out, int depth)
   }
 #endif
 
+#if 0
     case element_t::AMOUNT:
     case element_t::TOTAL:
     case element_t::VALUE_EXPR: {
@@ -1156,6 +1170,7 @@ void repitem_t::print_tree(std::ostream& out, int depth)
 	  out << " ";
 	}
       break;
+#endif
 
 } // namespace ledger
 

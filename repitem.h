@@ -2,8 +2,7 @@
 #define _REPITEM_H
 
 #include "journal.h"
-#include "datetime.h"
-#include "session.h"
+#include "valexpr.h"
 
 #include <iostream>
 #include <memory>
@@ -58,16 +57,18 @@ public:
   void add_sort_value(value_t& val) const;
   void add_total(value_t& val) const;
 
-  void set_value(value_t& result) {
+  value_t get_value() {
+    value_t result;
     add_value(result);
+    return result;
   }
 
   datetime_t date() const;
   datetime_t effective_date() const;
   datetime_t actual_date() const;
 
-  void set_date(value_t& result) {
-    result = date();
+  value_t get_date() {
+    return value_t(date());
   }
 
   account_t * account() const;
@@ -88,28 +89,41 @@ public:
 
   void populate_entries(entries_list& entries);
   void populate_entries(entries_list& entries,
-			const value_expr_t * filter);
+			const valexpr_t& filter);
 
   void populate_account(account_t& acct, repitem_t * item);
   void populate_accounts(entries_list& entries);
   void populate_accounts(entries_list& entries,
-			 const value_expr_t * filter);
+			 const valexpr_t& filter);
 
   void print_tree(std::ostream& out, int depth = 0);
 };
 
-class repitem_scope_t : public scope_t
+class repitem_scope_t : public valexpr_t::scope_t
 {
+  struct repitem_ref_callback_t : valexpr_t::functor_t
+  {
+    repitem_scope_t * scope;
+    value_t (repitem_t::*mptr)();
+
+    repitem_ref_callback_t(repitem_scope_t * _scope,
+			   value_t (repitem_t::*_mptr)())
+      : scope(_scope), mptr(_mptr) {}
+
+    virtual value_t operator()(valexpr_t::scope_t * context) {
+      assert(scope->repitem);
+      return (scope->repitem->*mptr)();
+    }
+  };
+
  public:
   repitem_t * repitem;
 
   repitem_scope_t(scope_t * parent = NULL)
     : scope_t(parent), repitem(NULL)
   {
-    define("value-0", value_expr_t::wrap_functor
-	   (new repitem_ref_callback_t(this, &repitem_t::set_value)));
-    define("date-0", value_expr_t::wrap_functor
-	   (new repitem_ref_callback_t(this, &repitem_t::set_date)));
+    define("value", new repitem_ref_callback_t(this, &repitem_t::get_value));
+    define("date",  new repitem_ref_callback_t(this, &repitem_t::get_date));
 #if 0
     // Item details
     AMOUNT,
@@ -164,24 +178,9 @@ class repitem_scope_t : public scope_t
   void set_repitem(repitem_t * _repitem) {
     repitem = _repitem;
   }
-
-  struct repitem_ref_callback_t : value_expr_t::functor_t
-  {
-    repitem_scope_t * scope;
-    void (repitem_t::*mptr)(value_t& result);
-
-    repitem_ref_callback_t(repitem_scope_t * _scope,
-			   void (repitem_t::*_mptr)(value_t& result))
-      : scope(_scope), mptr(_mptr) {}
-
-    virtual void operator()(value_t& result, value_expr_t * context) {
-      assert(scope->repitem);
-      (scope->repitem->*mptr)(result);
-    }
-  };
 };
 
-class repitem_ref_scope_t : public scope_t
+class repitem_ref_scope_t : public valexpr_t::scope_t
 {
   repitem_scope_t * base_scope;
 
@@ -198,16 +197,19 @@ class repitem_ref_scope_t : public scope_t
     base_scope->set_repitem(NULL);
   }
 
-  virtual void define(const std::string& name, value_expr_t * def) {
+#if 0
+  virtual void define(const std::string& name, valexpr_t * def) {
     assert(0);
   }
-  virtual value_expr_t * lookup(const std::string& name) {
+#endif
+  virtual valexpr_t::node_t * lookup(const std::string& name) const {
     return base_scope->lookup(name);
   }
 };
 
 //////////////////////////////////////////////////////////////////////
 
+#if 0
 class repitem_predicate
 {
  public:
@@ -223,6 +225,7 @@ class repitem_predicate
     return (! pred_expr || pred_expr.calc(NULL).strip_annotations());
   }
 };
+#endif
 
 } // namespace ledger
 

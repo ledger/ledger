@@ -2,6 +2,7 @@
 
 namespace ledger {
 
+#if 0
 void format_emacs_transactions::write_entry(entry_t& entry)
 {
   int idx = entry.src_idx;
@@ -76,5 +77,6 @@ void format_emacs_transactions::operator()(transaction_t& xact)
     transaction_xdata(xact).dflags |= TRANSACTION_DISPLAYED;
   }
 }
+#endif
 
 } // namespace ledger

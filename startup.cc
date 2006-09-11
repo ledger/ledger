@@ -1,4 +1,13 @@
-#include "ledger.h"
+#include "binary.h"
+#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
+#include "xml.h"
+#include "gnucash.h"
+#endif
+#ifdef HAVE_LIBOFX
+#include "ofx.h"
+#endif
+#include "qif.h"
+#include "textual.h"
 
 using namespace ledger;
 

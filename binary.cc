@@ -9,11 +9,11 @@
 
 namespace ledger {
 
-static unsigned long binary_magic_number = 0xFFEED765;
+static unsigned long       binary_magic_number = 0xFFEED765;
 #ifdef DEBUG_ENABLED
-static unsigned long format_version      = 0x0002060d;
+static unsigned long       format_version      = 0x00030000;
 #else
-static unsigned long format_version      = 0x0002060c;
+static unsigned long       format_version      = 0x00030000;
 #endif
 
 static account_t **	   accounts;
@@ -343,18 +343,11 @@ inline void read_binary_transaction(char *& data, transaction_t * xact)
     read_binary_amount(data, xact->amount);
   }
   else if (flag == 1) {
-    read_binary_string(data, xact->amount_expr.expr);
-
-    // jww (2006-09-08): Create some kind of parse-and-compute routine
-
-    value_expr expr(parse_value_expr(xact->amount_expr.expr, NULL,
-				     xact->amount_expr.flags)->acquire());
-
-    if (! compute_amount(expr, xact->amount, xact))
-      throw new parse_error("Amount expression failed to compute");
-
-    if (expr->kind == value_expr_t::CONSTANT)
-      expr = NULL;
+    std::string expr;
+    read_binary_string(data, expr);
+    xact->amount_expr = expr;
+    // jww (2006-09-10): Create a repitem scope here
+    xact->amount = xact->amount_expr.calc().get_amount();
   }
 
   if (read_binary_bool(data)) {
@@ -376,9 +369,6 @@ inline void read_binary_transaction(char *& data, transaction_t * xact)
   read_binary_long(data, xact->end_line);
 
   xact->data = NULL;
-
-  if (xact->amount_expr)
-    compute_amount(xact->amount_expr, xact->amount, xact);
 }
 
 inline void read_binary_entry_base(char *& data, entry_base_t * entry,
@@ -418,8 +408,10 @@ inline void read_binary_auto_entry(char *& data, auto_entry_t * entry,
 {
   bool ignore;
   read_binary_entry_base(data, entry, xact_pool, ignore);
-  read_binary_string(data, &entry->predicate_string);
-  entry->predicate = new item_predicate<transaction_t>(entry->predicate_string);
+
+  std::string pred_str;
+  read_binary_string(data, &pred_str);
+  entry->predicate.parse(pred_str);
 }
 
 inline void read_binary_period_entry(char *& data, period_entry_t * entry,
@@ -917,7 +909,7 @@ void write_binary_transaction(std::ostream& out, transaction_t * xact,
     write_binary_number<unsigned char>(out, 0);
     write_binary_amount(out, amount_t());
   }
-  else if (! xact->amount_expr.expr.empty()) {
+  else if (! xact->amount_expr) {
     write_binary_number<unsigned char>(out, 1);
     write_binary_string(out, xact->amount_expr.expr);
   }
@@ -983,7 +975,7 @@ void write_binary_entry(std::ostream& out, entry_t * entry)
 void write_binary_auto_entry(std::ostream& out, auto_entry_t * entry)
 {
   write_binary_entry_base(out, entry);
-  write_binary_string(out, entry->predicate_string);
+  write_binary_string(out, entry->predicate.expr);
 }
 
 void write_binary_period_entry(std::ostream& out, period_entry_t * entry)

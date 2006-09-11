@@ -78,7 +78,9 @@ class session_t
     cache_dirty(false),
     debug_mode(false),
     verbose_mode(false),
-    trace_mode(false)
+    trace_mode(false),
+
+    terminus(datetime_t::now)
   {
     globals.define("now", new session_callback_t(this, &session_t::get_terminus));
   }
@@ -93,8 +95,7 @@ class session_t
 #endif
 
   value_t get_terminus() {
-    return datetime_t::now;
-    //return terminus;
+    return terminus;
   }
 };
 

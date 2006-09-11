@@ -17,9 +17,9 @@ namespace ledger {
 
 class valexpr_t
 {
-  struct node_t;
-
  public:
+  class node_t;
+
   class parse_error : public error {
   public:
     parse_error(const std::string& reason,
@@ -85,7 +85,7 @@ class valexpr_t
 
     symbol_map symbols;
 
-  public:
+   public:
     typedef std::vector<node_t *> args_list;
 
     args_list args;
@@ -106,14 +106,13 @@ class valexpr_t
 	(*i)->release();
     }
 
-   private:
+   public:
     virtual void define(const std::string& name, node_t * def);
     virtual node_t * lookup(const std::string& name) const;
 
-    friend struct node_t;
-
-   public:
     void define(const std::string& name, functor_t * def);
+
+    friend struct node_t;
   };
 
 #define PARSE_VALEXPR_NORMAL	 0x00
@@ -192,13 +191,14 @@ class valexpr_t
       }
     }
 
-    void parse_ident(std::istream& in);
+    void	   parse_ident(std::istream& in);
     static token_t next(std::istream& in, unsigned short flags);
-    token_t token_t::rewind(std::istream& in);
-    void unexpected();
-    static void unexpected(char c, char wanted = '\0');
+    token_t	   rewind(std::istream& in);
+    void	   unexpected();
+    static void	   unexpected(char c, char wanted = '\0');
   };
 
+ public:
   struct node_t
   {
     enum kind_t {
@@ -327,9 +327,9 @@ class valexpr_t
     void dump(std::ostream& out, const int depth) const;
   };
 
+ private:
   node_t * ptr;
 
- private:
   valexpr_t(node_t * _ptr) : ptr(_ptr) {
     DEBUG_PRINT("ledger.memory.ctors", "ctor valexpr_t");
   }
@@ -477,6 +477,13 @@ class valexpr_t
     expr  = _expr;
     flags = _flags;
     reset(parse_expr(_expr, _flags)->acquire());
+  }
+
+  void parse(std::istream& in,
+	     unsigned short _flags = PARSE_VALEXPR_RELAXED) {
+    expr  = "";
+    flags = _flags;
+    reset(parse_expr(in, _flags)->acquire());
   }
 
   void compile(scope_t * scope = NULL) {

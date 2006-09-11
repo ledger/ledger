@@ -202,6 +202,9 @@ struct entry_finalizer_t {
   virtual bool operator()(entry_t& entry, bool post) = 0;
 };
 
+void print_entry(std::ostream& out, const entry_base_t& entry,
+		 const std::string& prefix = "");
+
 class entry_context : public error_context {
  public:
   const entry_base_t& entry;
@@ -222,16 +225,12 @@ class balance_error : public error {
 };
 
 
-template <typename T>
-class item_predicate;
-
 class auto_entry_t : public entry_base_t
 {
 public:
-  item_predicate<transaction_t> * predicate;
-  std::string predicate_string;
+  valexpr_t predicate;
 
-  auto_entry_t() : predicate(NULL) {
+  auto_entry_t() {
     DEBUG_PRINT("ledger.memory.ctors", "ctor auto_entry_t");
   }
   auto_entry_t(const std::string& _predicate);

@@ -3,6 +3,7 @@
 
 namespace ledger {
 
+#if 0
 #define xact_next(x)     ((transaction_t *)transaction_xdata(*x).ptr)
 #define xact_next_ptr(x) ((transaction_t **)&transaction_xdata(*x).ptr)
 
@@ -84,5 +85,6 @@ void reconcile_transactions::flush()
     throw new error("Could not reconcile account!");
   }
 }
+#endif
 
 } // namespace ledger

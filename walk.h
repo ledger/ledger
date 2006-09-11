@@ -1,6 +1,7 @@
 #ifndef _WALK_H
 #define _WALK_H
 
+#if 0
 #include "journal.h"
 #include "balance.h"
 #include "valexpr.h"
@@ -142,7 +143,6 @@ inline transaction_xdata_t& transaction_xdata_(const transaction_t& xact) {
 }
 
 transaction_xdata_t& transaction_xdata(const transaction_t& xact);
-void add_transaction_to(const transaction_t& xact, value_t& value);
 
 inline account_t * xact_account(transaction_t& xact) {
   account_t * account = transaction_xdata(xact).account;
@@ -745,5 +745,6 @@ inline void clear_journal_xdata(journal_t * journal) {
 }
 
 } // namespace ledger
+#endif
 
 #endif // _WALK_H

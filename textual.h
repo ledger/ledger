@@ -3,7 +3,6 @@
 
 #include "parser.h"
 #include "format.h"
-#include "walk.h"
 
 namespace ledger {
 
@@ -21,10 +20,12 @@ class textual_parser_t : public parser_t
 transaction_t * parse_transaction_text(char * line, account_t * account);
 transaction_t * parse_transaction(std::istream& in, account_t * account);
 
+#if 0
 void write_textual_journal(journal_t& journal, std::string path,
 			   item_handler<transaction_t>& formatter,
 			   const std::string& write_hdr_format,
 			   std::ostream& out);
+#endif
 
 class include_context : public file_context {
  public:

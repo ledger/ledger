@@ -1621,6 +1621,10 @@ void export_valexpr()
 }
 
 #endif // USE_BOOST_PYTHON
+#else
+void export_valexpr()
+{
+}
 #endif
 
 #ifdef TEST

@@ -34,9 +34,24 @@ class report_t
 
   session_t *   session;
   transform_t * last_transform;
+
   std::list<transform_t *> transforms;
 
-  report_t();
+  valexpr_t::scope_t locals;
+
+  report_t(session_t * _session)
+    : session(_session), last_transform(NULL),
+      locals(&_session->globals) {
+#if 0
+    ledger::amount_expr = "@a";
+    ledger::total_expr  = "@O";
+#endif
+
+    show_totals        = false;
+    keep_price         = false;
+    keep_date          = false;
+    keep_tag           = false;
+  }
   ~report_t();
 
   void apply_transforms(repitem_t * items);

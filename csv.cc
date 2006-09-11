@@ -17,6 +17,7 @@ namespace {
   }
 }
 
+#if 0
 void format_csv_transactions::operator()(transaction_t& xact)
 {
   if (! transaction_has_xdata(xact) ||
@@ -101,5 +102,6 @@ void format_csv_transactions::operator()(transaction_t& xact)
     transaction_xdata(xact).dflags |= TRANSACTION_DISPLAYED;
   }
 }
+#endif
 
 } // namespace ledger

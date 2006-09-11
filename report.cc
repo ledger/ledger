@@ -4,17 +4,6 @@
 
 namespace ledger {
 
-report_t::report_t()
-{
-  ledger::amount_expr = "@a";
-  ledger::total_expr  = "@O";
-
-  show_totals        = false;
-  keep_price         = false;
-  keep_date          = false;
-  keep_tag           = false;
-}
-
 report_t::~report_t()
 {
   for (std::list<transform_t *>::const_iterator i = transforms.begin();
@@ -423,6 +412,7 @@ using namespace ledger;
 
 void export_report()
 {
+#if 0
   class_< report_t > ("Report")
     .add_property("session",
 		  make_getter(&report_t::session,
@@ -430,6 +420,7 @@ void export_report()
 
     .def("apply_transforms", &report_t::apply_transforms)
     ;
+#endif
 }
 
 #endif // USE_BOOST_PYTHON
