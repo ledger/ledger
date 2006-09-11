@@ -372,7 +372,8 @@ void valexpr_t::scope_t::define(const std::string& name, node_t * def)
   def->acquire();
 }
 
-valexpr_t::node_t * valexpr_t::scope_t::lookup(const std::string& name) const
+valexpr_t::node_t *
+valexpr_t::scope_t::lookup(const std::string& name) const
 {
   symbol_map::const_iterator i = symbols.find(name);
   if (i != symbols.end())
@@ -439,7 +440,7 @@ value_t valexpr_t::node_t::value() const
 }
 
 valexpr_t::node_t *
-valexpr_t::parse_value_term(std::istream& in, unsigned short flags)
+valexpr_t::parse_value_term(std::istream& in, unsigned short flags) const
 {
   std::auto_ptr<node_t> node;
 
@@ -472,13 +473,17 @@ valexpr_t::parse_value_term(std::istream& in, unsigned short flags)
 	std::strcpy(buf, "lambda ");
 	READ_INTO(in, &buf[7], 4000, c, true);
 
-	node.reset(new node_t(node_t::O_EVAL));
-	node->set_left(new node_t(node_t::FUNCTOR));
-	node->left->functor = new python_functor_t(python_eval(buf));
-	node->set_right(new node_t(node_t::O_LOOKUP));
-	node->right->set_left(new node_t(node_t::VALUE));
-	node->right->left->valuep = new value_t;
-	node->right->left->valuep->set_string("__ptr");
+	node_t * eval = new node_t(node_t::O_EVAL);
+	node_t * lambda = new node_t(node_t::FUNCTOR);
+	lambda->functor = new python_functor_t(python_eval(buf));
+	eval->set_left(lambda);
+	node_t * val = new node_t(node_t::VALUE);
+	val->valuep = new value_t("__ptr", true);
+	node_t * look = new node_t(node_t::O_LOOKUP);
+	look->set_left(val);
+	eval->set_right(look);
+
+	node.reset(eval);
 
 	goto done;
       }
@@ -514,7 +519,7 @@ valexpr_t::parse_value_term(std::istream& in, unsigned short flags)
 }
 
 valexpr_t::node_t *
-valexpr_t::parse_unary_expr(std::istream& in, unsigned short flags)
+valexpr_t::parse_unary_expr(std::istream& in, unsigned short flags) const
 {
   std::auto_ptr<node_t> node;
 
@@ -571,7 +576,7 @@ valexpr_t::parse_unary_expr(std::istream& in, unsigned short flags)
 }
 
 valexpr_t::node_t *
-valexpr_t::parse_mul_expr(std::istream& in, unsigned short flags)
+valexpr_t::parse_mul_expr(std::istream& in, unsigned short flags) const
 {
   std::auto_ptr<node_t> node(parse_unary_expr(in, flags));
 
@@ -595,7 +600,7 @@ valexpr_t::parse_mul_expr(std::istream& in, unsigned short flags)
 }
 
 valexpr_t::node_t *
-valexpr_t::parse_add_expr(std::istream& in, unsigned short flags)
+valexpr_t::parse_add_expr(std::istream& in, unsigned short flags) const
 {
   std::auto_ptr<node_t> node(parse_mul_expr(in, flags));
 
@@ -619,7 +624,7 @@ valexpr_t::parse_add_expr(std::istream& in, unsigned short flags)
 }
 
 valexpr_t::node_t *
-valexpr_t::parse_logic_expr(std::istream& in, unsigned short flags)
+valexpr_t::parse_logic_expr(std::istream& in, unsigned short flags) const
 {
   std::auto_ptr<node_t> node(parse_add_expr(in, flags));
 
@@ -675,7 +680,7 @@ valexpr_t::parse_logic_expr(std::istream& in, unsigned short flags)
 }
 
 valexpr_t::node_t *
-valexpr_t::parse_boolean_expr(std::istream& in, unsigned short flags)
+valexpr_t::parse_boolean_expr(std::istream& in, unsigned short flags) const
 {
   std::auto_ptr<node_t> node(parse_logic_expr(in, flags));
 
@@ -722,7 +727,7 @@ valexpr_t::parse_boolean_expr(std::istream& in, unsigned short flags)
 }
 
 valexpr_t::node_t *
-valexpr_t::parse_value_expr(std::istream& in, unsigned short flags)
+valexpr_t::parse_value_expr(std::istream& in, unsigned short flags) const
 {
   std::auto_ptr<node_t> node(parse_boolean_expr(in, flags));
 
@@ -751,7 +756,7 @@ valexpr_t::parse_value_expr(std::istream& in, unsigned short flags)
 }
 
 valexpr_t::node_t *
-valexpr_t::parse_expr(std::istream& in, unsigned short flags)
+valexpr_t::parse_expr(std::istream& in, unsigned short flags) const
 {
   std::auto_ptr<node_t> node(parse_value_expr(in, flags));
 
@@ -785,7 +790,7 @@ valexpr_t::node_t::copy(node_t * left, node_t * right) const
   return node.release();
 }
 
-valexpr_t::node_t * valexpr_t::node_t::lookup(scope_t * scope)
+valexpr_t::node_t * valexpr_t::node_t::lookup(scope_t * scope) const
 {
   assert(kind == O_LOOKUP);
   assert(left->constant());
@@ -1127,7 +1132,7 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
   return NULL;
 }
 
-void valexpr_t::calc(scope_t * scope, value_t& result)
+void valexpr_t::calc(value_t& result, scope_t * scope) const
 {
   try {
     valexpr_t final(ptr->compile(scope));
@@ -1621,6 +1626,7 @@ void export_valexpr()
 #ifdef TEST
 
 #include "session.h"
+#include "format.h"
 
 void export_amount() {}
 void export_balance() {}
@@ -1658,6 +1664,15 @@ int main(int argc, char *argv[])
       std::cout << std::endl;
     } else {
       std::cerr << "Failed to parse value expression!" << std::endl;
+    }
+
+    {
+      ledger::session_t session;
+      std::auto_ptr<ledger::valexpr_t::scope_t>
+	locals(new ledger::valexpr_t::scope_t(&session.globals));
+
+      ledger::format_t fmt(std::string("%20|%40{") + argv[1] + "}\n");
+      fmt.format(std::cout, locals.get());
     }
   }
   catch (error * err) {

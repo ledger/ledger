@@ -31,7 +31,6 @@
 #include <reconcile.h>
 #include <error.h>
 #include <option.h>
-#include <trace.h>
 #include <util.h>
 
 #include <parser.h>

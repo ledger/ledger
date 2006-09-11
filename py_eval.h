@@ -2,6 +2,7 @@
 #define _PY_EVAL_H
 
 #include "valexpr.h"
+#include "pyfstream.h"
 
 #include <string>
 #include <iostream>

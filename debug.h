@@ -100,6 +100,8 @@ bool _debug_active(const char * const cls);
 #define VALIDATE(x)
 #endif
 
+#include "trace.h"
+
 void * operator new(std::size_t) throw (std::bad_alloc);
 void * operator new[](std::size_t) throw (std::bad_alloc);
 void   operator delete(void*) throw();
@@ -134,6 +136,8 @@ void   operator delete[](void*, const std::nothrow_t&) throw();
 #elif DEBUG_LEVEL >= RELEASE
 
 #define CONFIRM(x)
+
+#include "trace.h"
 
 #elif DEBUG_LEVEL >= BETA
 

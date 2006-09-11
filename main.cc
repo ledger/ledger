@@ -23,6 +23,7 @@
 #else
 #include "ledger.h"
 #endif
+#include "debug.h"
 
 using namespace ledger;
 

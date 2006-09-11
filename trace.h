@@ -25,6 +25,9 @@ void trace_pop(const std::string& cat, const std::string& str,
 #define TRACE_POP(cat, msg)					\
   if (trace_mode) trace_pop(#cat, msg, timer_ ## cat)
 
+#define TRACE_CTOR(cls)
+#define TRACE_DTOR(cls)
+
 } // namespace ledger
 
 #endif // _TRACE_H

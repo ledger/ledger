@@ -6,10 +6,13 @@ namespace ledger {
 
 std::string value_t::get_string() const
 {
-  if (type == STRING)
+  if (type == STRING) {
     return **(std::string **) data;
-  else
-    throw new value_error("Cannot get string value of non-string");
+  } else {
+    std::ostringstream out;
+    out << *this;
+    return out.str();
+  }
 }
 
 void value_t::destroy()
@@ -1652,7 +1655,7 @@ std::ostream& operator<<(std::ostream& out, const value_t& value)
     out << **(std::string **) value.data;
     break;
   case value_t::POINTER:
-    throw new value_error("Cannot output a pointer");
+    throw new value_error("Cannot output a pointer value");
 
   default:
     assert(0);

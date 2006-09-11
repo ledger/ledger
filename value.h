@@ -62,9 +62,13 @@ class value_t
     new((amount_t *) data) amount_t(value);
     type = AMOUNT;
   }
-  value_t(const std::string& value) {
-    new((amount_t *) data) amount_t(value);
-    type = AMOUNT;
+  value_t(const std::string& value, bool literal = false) {
+    if (literal) {
+      set_string(value);
+    } else {
+      new((amount_t *) data) amount_t(value);
+      type = AMOUNT;
+    }
   }
   value_t(const char * value) {
     new((amount_t *) data) amount_t(value);

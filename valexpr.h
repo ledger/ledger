@@ -249,7 +249,7 @@ class valexpr_t
 
     kind_t	  kind;
     mutable short refc;
-    node_t *	  left;
+    node_t *      left;
 
     union {
       value_t *	   valuep;	// used by constant VALUE
@@ -313,18 +313,10 @@ class valexpr_t
     static node_t * new_node(kind_t kind, node_t * left = NULL,
 			     node_t * right = NULL);
 
-    node_t * copy(node_t * left = NULL, node_t * right = NULL) const;
+    node_t * copy(node_t * left = NULL,
+		  node_t * right = NULL) const;
     node_t * compile(scope_t * scope);
-    node_t * lookup(scope_t * scope);
-
-    void calc(scope_t * scope, value_t& result) const;
-    value_t calc(scope_t * scope) const {
-      value_t temp;
-      calc(scope, temp);
-      return temp;
-    }
-
-    static node_t * find_arg(node_t * args, int goal);
+    node_t * lookup(scope_t * scope) const;
 
     bool write(std::ostream&   out,
 	       const bool      relaxed,
@@ -348,23 +340,28 @@ class valexpr_t
     return *this;
   }
 
-  operator node_t *() const throw() {
-    return ptr;
-  }
-
-  node_t& operator*() const throw() {
+  node_t& operator*() throw() {
     return *ptr;
   }
-  node_t * operator->() const throw() {
+  const node_t& operator*() const throw() {
+    return *ptr;
+  }
+  node_t * operator->() throw() {
+    return ptr;
+  }
+  const node_t * operator->() const throw() {
     return ptr;
   }
 
-  node_t * get() const throw() { return ptr; }
+  node_t * get() throw() { return ptr; }
+  const node_t * get() const throw() { return ptr; }
+
   node_t * release() throw() {
     node_t * tmp = ptr;
     ptr = 0;
     return tmp;
   }
+
   void reset(node_t * p = 0) throw() {
     if (p != ptr) {
       if (ptr)
@@ -373,9 +370,9 @@ class valexpr_t
     }
   }
 
-  std::list<token_t> token_stack;
+  mutable std::list<token_t> token_stack;
 
-  token_t next_token(std::istream& in, unsigned short flags) {
+  token_t next_token(std::istream& in, unsigned short flags) const {
     if (token_stack.size() > 0) {
       token_t tok = token_stack.back();
       token_stack.pop_back();
@@ -384,23 +381,23 @@ class valexpr_t
       return token_t::next(in, flags);
     }
   }
-  void push_token(const token_t& tok) {
+  void push_token(const token_t& tok) const {
     token_stack.push_back(tok);
   }
 
-  node_t * parse_value_term(std::istream& in, unsigned short flags);
-  node_t * parse_unary_expr(std::istream& in, unsigned short flags);
-  node_t * parse_mul_expr(std::istream& in, unsigned short flags);
-  node_t * parse_add_expr(std::istream& in, unsigned short flags);
-  node_t * parse_logic_expr(std::istream& in, unsigned short flags);
-  node_t * parse_boolean_expr(std::istream& in, unsigned short flags);
-  node_t * parse_value_expr(std::istream& in, unsigned short flags);
+  node_t * parse_value_term(std::istream& in, unsigned short flags) const;
+  node_t * parse_unary_expr(std::istream& in, unsigned short flags) const;
+  node_t * parse_mul_expr(std::istream& in, unsigned short flags) const;
+  node_t * parse_add_expr(std::istream& in, unsigned short flags) const;
+  node_t * parse_logic_expr(std::istream& in, unsigned short flags) const;
+  node_t * parse_boolean_expr(std::istream& in, unsigned short flags) const;
+  node_t * parse_value_expr(std::istream& in, unsigned short flags) const;
 
   node_t * parse_expr(std::istream& in,
-		      unsigned short flags = PARSE_VALEXPR_RELAXED);
+		      unsigned short flags = PARSE_VALEXPR_RELAXED) const;
 
   node_t * parse_expr(const std::string& str,
-		      unsigned short flags = PARSE_VALEXPR_RELAXED)
+		      unsigned short flags = PARSE_VALEXPR_RELAXED) const
   {
     std::istringstream stream(str);
     try {
@@ -415,7 +412,7 @@ class valexpr_t
   }
 
   node_t * parse_expr(const char * p,
-		      unsigned short flags = PARSE_VALEXPR_RELAXED) {
+		      unsigned short flags = PARSE_VALEXPR_RELAXED) const {
     return parse_expr(std::string(p), flags);
   }
 
@@ -454,14 +451,18 @@ class valexpr_t
   }
 
   valexpr_t& operator=(const std::string& _expr) {
-    parse(expr);
+    parse(_expr);
     return *this;
   }
-  valexpr_t& operator=(const valexpr_t& _expr) {
+  valexpr_t& operator=(valexpr_t& _expr) {
     expr  = _expr.expr;
     flags = _expr.flags;
     reset(_expr.get());
     return *this;
+  }
+
+  operator node_t *() throw() {
+    return ptr;
   }
 
   operator bool() const throw() {
@@ -487,14 +488,14 @@ class valexpr_t
     }
   }
 
-  virtual void calc(scope_t * scope, value_t& result);
-  virtual value_t calc(scope_t * scope) {
+  virtual void calc(value_t& result, scope_t * scope = NULL) const;
+  virtual value_t calc(scope_t * scope = NULL) const {
     value_t temp;
-    calc(scope, temp);
+    calc(temp, scope);
     return temp;
   }
 
-  void write(std::ostream& out) {
+  void write(std::ostream& out) const {
     write(out, true, NULL, NULL, NULL);
   }
   void dump(std::ostream& out) const {

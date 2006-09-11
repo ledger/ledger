@@ -776,6 +776,387 @@ void repitem_t::print_tree(std::ostream& out, int depth)
   }
 #endif
 
+    case element_t::AMOUNT:
+    case element_t::TOTAL:
+    case element_t::VALUE_EXPR: {
+      value_expr calc;
+      switch (elem->type) {
+      case element_t::AMOUNT:     calc = amount_expr; break;
+      case element_t::TOTAL:      calc = total_expr; break;
+      case element_t::VALUE_EXPR: calc = elem->val_expr; break;
+      default:
+	assert(0);
+	break;
+      }
+      if (! calc)
+	break;
+
+      value_t     value;
+      balance_t * bal = NULL;
+
+      calc->compute(value, details);
+
+      if (! amount_t::keep_price ||
+	  ! amount_t::keep_date ||
+	  ! amount_t::keep_tag) {
+	switch (value.type) {
+	case value_t::AMOUNT:
+	case value_t::BALANCE:
+	case value_t::BALANCE_PAIR:
+	  value = value.strip_annotations();
+	  break;
+	default:
+	  break;
+	}
+      }
+
+      bool highlighted = false;
+
+      switch (value.type) {
+      case value_t::BOOLEAN:
+	out << (*((bool *) value.data) ? "true" : "false");
+	break;
+
+      case value_t::INTEGER:
+	if (ansi_codes && elem->flags & ELEMENT_HIGHLIGHT) {
+	  if (ansi_invert) {
+	    if (*((long *) value.data) > 0) {
+	      mark_red(out, elem);
+	      highlighted = true;
+	    }
+	  } else {
+	    if (*((long *) value.data) < 0) {
+	      mark_red(out, elem);
+	      highlighted = true;
+	    }
+	  }
+	}
+	out << *((long *) value.data);
+	break;
+
+      case value_t::DATETIME:
+	out << *((datetime_t *) value.data);
+	break;
+
+      case value_t::AMOUNT:
+	if (ansi_codes && elem->flags & ELEMENT_HIGHLIGHT) {
+	  if (ansi_invert) {
+	    if (*((amount_t *) value.data) > 0) {
+	      mark_red(out, elem);
+	      highlighted = true;
+	    }
+	  } else {
+	    if (*((amount_t *) value.data) < 0) {
+	      mark_red(out, elem);
+	      highlighted = true;
+	    }
+	  }
+	}
+	out << *((amount_t *) value.data);
+	break;
+
+      case value_t::BALANCE:
+	bal = (balance_t *) value.data;
+	// fall through...
+
+      case value_t::BALANCE_PAIR:
+	if (! bal)
+	  bal = &((balance_pair_t *) value.data)->quantity;
+
+	if (ansi_codes && elem->flags & ELEMENT_HIGHLIGHT) {
+	  if (ansi_invert) {
+	    if (*bal > 0) {
+	      mark_red(out, elem);
+	      highlighted = true;
+	    }
+	  } else {
+	    if (*bal < 0) {
+	      mark_red(out, elem);
+	      highlighted = true;
+	    }
+	  }
+	}
+	bal->write(out, elem->min_width,
+		   (elem->max_width > 0 ?
+		    elem->max_width : elem->min_width));
+
+	ignore_max_width = true;
+	break;
+      default:
+	assert(0);
+	break;
+      }
+
+      if (highlighted)
+	mark_plain(out);
+      break;
+    }
+
+    case element_t::OPT_AMOUNT:
+      if (details.xact) {
+	std::string disp;
+	bool use_disp = false;
+
+	if (details.xact->cost && details.xact->amount) {
+	  std::ostringstream stream;
+	  if (! details.xact->amount_expr.expr.empty())
+	    stream << details.xact->amount_expr.expr;
+	  else
+	    stream << details.xact->amount.strip_annotations();
+
+	  if (! details.xact->cost_expr.empty())
+	    stream << details.xact->cost_expr;
+	  else
+	    stream << " @ " << amount_t(*details.xact->cost /
+					details.xact->amount).unround();
+	  disp = stream.str();
+	  use_disp = true;
+	}
+	else if (details.entry) {
+	  unsigned int    xacts_count = 0;
+	  transaction_t * first = NULL;
+	  transaction_t * last  = NULL;
+
+	  for (transactions_list::const_iterator i
+		 = details.entry->transactions.begin();
+	       i != details.entry->transactions.end();
+	       i++)
+	    if (transaction_has_xdata(**i) &&
+		transaction_xdata_(**i).dflags & TRANSACTION_TO_DISPLAY) {
+	      xacts_count++;
+	      if (! first)
+		first = *i;
+	      last = *i;
+	    }
+
+	  use_disp = (xacts_count == 2 && details.xact == last &&
+		      first->amount == - last->amount);
+	}
+
+	if (! use_disp) {
+	  if (! details.xact->amount_expr.expr.empty())
+	    out << details.xact->amount_expr.expr;
+	  else
+	    out << details.xact->amount.strip_annotations();
+	} else {
+	  out << disp;
+	}
+      }
+      break;
+
+    case element_t::SOURCE:
+      if (details.entry && details.entry->journal) {
+	int idx = details.entry->src_idx;
+	for (strings_list::iterator i = details.entry->journal->sources.begin();
+	     i != details.entry->journal->sources.end();
+	     i++)
+	  if (! idx--) {
+	    out << *i;
+	    break;
+	  }
+      }
+      break;
+
+    case element_t::ENTRY_BEG_POS:
+      if (details.entry)
+	out << (unsigned long)details.entry->beg_pos;
+      break;
+
+    case element_t::ENTRY_BEG_LINE:
+      if (details.entry)
+	out << details.entry->beg_line;
+      break;
+
+    case element_t::ENTRY_END_POS:
+      if (details.entry)
+	out << (unsigned long)details.entry->end_pos;
+      break;
+
+    case element_t::ENTRY_END_LINE:
+      if (details.entry)
+	out << details.entry->end_line;
+      break;
+
+    case element_t::XACT_BEG_POS:
+      if (details.xact)
+	out << (unsigned long)details.xact->beg_pos;
+      break;
+
+    case element_t::XACT_BEG_LINE:
+      if (details.xact)
+	out << details.xact->beg_line;
+      break;
+
+    case element_t::XACT_END_POS:
+      if (details.xact)
+	out << (unsigned long)details.xact->end_pos;
+      break;
+
+    case element_t::XACT_END_LINE:
+      if (details.xact)
+	out << details.xact->end_line;
+      break;
+
+    case element_t::DATE_STRING: {
+      datetime_t date;
+      if (details.xact)
+	date = details.xact->date();
+      else if (details.entry)
+	date = details.entry->date();
+
+      char buf[256];
+      std::strftime(buf, 255, elem->chars.c_str(), date.localtime());
+      out << (elem->max_width == 0 ? buf : truncate(buf, elem->max_width));
+      break;
+    }
+
+    case element_t::COMPLETE_DATE_STRING: {
+      datetime_t actual_date;
+      datetime_t effective_date;
+      if (details.xact) {
+	actual_date    = details.xact->actual_date();
+	effective_date = details.xact->effective_date();
+      }
+      else if (details.entry) {
+	actual_date    = details.entry->actual_date();
+	effective_date = details.entry->effective_date();
+      }
+
+      char abuf[256];
+      std::strftime(abuf, 255, elem->chars.c_str(), actual_date.localtime());
+
+      if (effective_date && effective_date != actual_date) {
+	char buf[512];
+	char ebuf[256];
+	std::strftime(ebuf, 255, elem->chars.c_str(),
+		      effective_date.localtime());
+
+	std::strcpy(buf, abuf);
+	std::strcat(buf, "=");
+	std::strcat(buf, ebuf);
+
+	out << (elem->max_width == 0 ? buf : truncate(buf, elem->max_width));
+      } else {
+	out << (elem->max_width == 0 ? abuf : truncate(abuf, elem->max_width));
+      }
+      break;
+    }
+
+    case element_t::CLEARED:
+      if (details.xact) {
+	switch (details.xact->state) {
+	case transaction_t::CLEARED:
+	  out << "* ";
+	  break;
+	case transaction_t::PENDING:
+	  out << "! ";
+	  break;
+	}
+      }
+      break;
+
+    case element_t::ENTRY_CLEARED:
+      if (details.entry) {
+	transaction_t::state_t state;
+	if (details.entry->get_state(&state))
+	  switch (state) {
+	  case transaction_t::CLEARED:
+	    out << "* ";
+	    break;
+	  case transaction_t::PENDING:
+	    out << "! ";
+	    break;
+	  }
+      }
+      break;
+
+    case element_t::CODE: {
+      std::string temp;
+      if (details.entry && ! details.entry->code.empty()) {
+	temp += "(";
+	temp += details.entry->code;
+	temp += ") ";
+      }
+      out << temp;
+      break;
+    }
+
+    case element_t::PAYEE:
+      if (details.entry)
+	out << (elem->max_width == 0 ?
+		details.entry->payee : truncate(details.entry->payee,
+						elem->max_width));
+      break;
+
+    case element_t::OPT_NOTE:
+      if (details.xact && ! details.xact->note.empty())
+	out << "  ; ";
+      // fall through...
+
+    case element_t::NOTE:
+      if (details.xact)
+	out << (elem->max_width == 0 ?
+		details.xact->note : truncate(details.xact->note,
+					      elem->max_width));
+      break;
+
+    case element_t::OPT_ACCOUNT:
+      if (details.entry && details.xact) {
+	transaction_t::state_t state;
+	if (! details.entry->get_state(&state))
+	  switch (details.xact->state) {
+	  case transaction_t::CLEARED:
+	    name = "* ";
+	    break;
+	  case transaction_t::PENDING:
+	    name = "! ";
+	    break;
+	  }
+      }
+      // fall through...
+
+    case element_t::ACCOUNT_NAME:
+    case element_t::ACCOUNT_FULLNAME:
+      if (details.account) {
+	name += (elem->type == element_t::ACCOUNT_FULLNAME ?
+		 details.account->fullname() :
+		 partial_account_name(*details.account));
+
+	if (details.xact && details.xact->flags & TRANSACTION_VIRTUAL) {
+	  if (elem->max_width > 2)
+	    name = truncate(name, elem->max_width - 2, true);
+
+	  if (details.xact->flags & TRANSACTION_BALANCE)
+	    name = "[" + name + "]";
+	  else
+	    name = "(" + name + ")";
+	}
+	else if (elem->max_width > 0)
+	  name = truncate(name, elem->max_width, true);
+
+	out << name;
+      } else {
+	out << " ";
+      }
+      break;
+
+    case element_t::SPACER:
+      out << " ";
+      break;
+
+    case element_t::DEPTH_SPACER:
+      for (const account_t * acct = details.account;
+	   acct;
+	   acct = acct->parent)
+	if (account_has_xdata(*acct) &&
+	    account_xdata_(*acct).dflags & ACCOUNT_DISPLAYED) {
+	  if (elem->min_width > 0 || elem->max_width > 0)
+	    out.width(elem->min_width > elem->max_width ?
+		      elem->min_width : elem->max_width);
+	  out << " ";
+	}
+      break;
+
 } // namespace ledger
 
 #ifdef USE_BOOST_PYTHON

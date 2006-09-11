@@ -8,7 +8,7 @@ libledger_la_SOURCES = \
 	value.cc       \
 	valexpr.cc     \
 	mask.cc        \
-                       \
+		       \
 	binary.cc      \
 	config.cc      \
 	csv.cc         \
@@ -172,8 +172,9 @@ runtests: alltests
 verify: runtests
 	python tests/runtests.py
 
-VALEXPR_OBJS = amount.o balance.o datetime.o value.o mask.o debug.o py_eval.o
-valexpr: $(VALEXPR_OBJS) valexpr.cc valexpr.h session.h
+VALEXPR_OBJS = amount.o balance.o datetime.o value.o mask.o format.o \
+	py_eval.o debug.o trace.o
+valexpr: $(VALEXPR_OBJS) valexpr.cc valexpr.h session.h timing.h
 	$(CXXCOMPILE) -DTEST -DUSE_BOOST_PYTHON=1 -o $@ \
 		valexpr.cc $(VALEXPR_OBJS) $(LIBS)
 
