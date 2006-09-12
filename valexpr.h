@@ -170,6 +170,7 @@ class valexpr_t
     }
 
     token_t(const token_t& other) {
+      assert(0);
       TRACE_CTOR("valexpr_t::token_t(copy)");
       *this = other;
     }
@@ -190,6 +191,20 @@ class valexpr_t
     }
 
     token_t& operator=(const token_t& other) {
+      if (&other == this)
+	return *this;
+
+      assert(0);
+
+      switch (kind) {
+      case REGEXP:
+      case IDENT:
+      case VALUE:
+	assert(value);
+	delete value;
+	break;
+      }
+
       kind   = other.kind;
       length = other.length;
       switch (kind) {
@@ -228,11 +243,33 @@ class valexpr_t
       DEBUG_PRINT("ledger.valexpr.token", "value is " << value);
     }
 
-    void	   parse_ident(std::istream& in);
-    static token_t next(std::istream& in, unsigned short flags);
-    void	   rewind(std::istream& in);
-    void	   unexpected();
-    static void	   unexpected(char c, char wanted = '\0');
+    void clear() {
+      switch (kind) {
+      case REGEXP:
+      case IDENT:
+      case VALUE:
+	assert(value);
+	DEBUG_PRINT("ledger.valexpr.token", "value is " << value);
+	delete value;
+	break;
+      default:
+	break;
+      }
+
+      kind   = UNKNOWN;
+      length = 0;
+
+      symbol[0] = '\0';
+      symbol[1] = '\0';
+      symbol[2] = '\0';
+    }
+
+    void parse_ident(std::istream& in);
+    void next(std::istream& in, unsigned short flags);
+    void rewind(std::istream& in);
+    void unexpected();
+
+    static void unexpected(char c, char wanted = '\0');
   };
 
  public:
@@ -366,7 +403,7 @@ class valexpr_t
  private:
   node_t * ptr;
 
-  valexpr_t(node_t * _ptr) : ptr(_ptr) {
+  valexpr_t(node_t * _ptr) : ptr(_ptr), use_lookahead(false) {
     TRACE_CTOR("valexpr_t(node_t *)");
   }
 
@@ -406,19 +443,19 @@ class valexpr_t
     }
   }
 
-  mutable std::list<token_t> token_stack;
+  static  token_t lookahead;
+  mutable bool    use_lookahead;
 
-  token_t next_token(std::istream& in, unsigned short flags) const {
-    if (token_stack.size() > 0) {
-      token_t tok = token_stack.back();
-      token_stack.pop_back();
-      return tok;
-    } else {
-      return token_t::next(in, flags);
-    }
+  token_t& next_token(std::istream& in, unsigned short flags) const {
+    if (use_lookahead)
+      use_lookahead = false;
+    else
+      lookahead.next(in, flags);
+    return lookahead;
   }
   void push_token(const token_t& tok) const {
-    token_stack.push_back(tok);
+    assert(&tok == &lookahead);
+    use_lookahead = true;
   }
 
   node_t * parse_value_term(std::istream& in, unsigned short flags) const;
@@ -464,27 +501,25 @@ class valexpr_t
   std::string    expr;
   unsigned short flags;		// flags used to parse `expr'
 
-  valexpr_t() : ptr(NULL) {
+  valexpr_t() : ptr(NULL), use_lookahead(false), flags(0) {
     TRACE_CTOR("valexpr_t");
   }
 
   valexpr_t(const std::string& _expr,
 	    unsigned short _flags = PARSE_VALEXPR_RELAXED)
-    : ptr(NULL) {
+    : ptr(NULL), use_lookahead(false), flags(0) {
     TRACE_CTOR("valexpr_t(const std::string&, unsigned short)");
     if (! _expr.empty())
       parse(_expr, _flags);
-    else
-      ptr = NULL;
   }
   valexpr_t(std::istream& in, unsigned short _flags = PARSE_VALEXPR_RELAXED)
-    : ptr(NULL) {
+    : ptr(NULL), use_lookahead(false), flags(0) {
     TRACE_CTOR("valexpr_t(std::istream&, unsigned short)");
     parse(in, _flags);
   }
   valexpr_t(const valexpr_t& other)
     : ptr(other.ptr ? other.ptr->acquire() : NULL),
-      expr(other.expr), flags(other.flags) {
+      use_lookahead(false), expr(other.expr), flags(other.flags) {
     TRACE_CTOR("valexpr_t(copy)");
   }
   virtual ~valexpr_t() {

@@ -195,8 +195,6 @@ value_t& value_t::operator=(const value_t& value)
     break;
 
   case STRING:
-    std::cerr << (*(std::string **) value.data) << std::endl;
-    std::cerr << (**(std::string **) value.data) << std::endl;
     *(std::string **) data = new std::string(**(std::string **) value.data);
     break;
 

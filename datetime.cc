@@ -66,12 +66,7 @@ void date_t::parse(std::istream& in)
 datetime_t::datetime_t(const std::string& _when)
 {
   std::istringstream datestr(_when);
-
   parse(datestr);		// parse both the date and optional time
-
-  if (! datestr.eof())
-    throw new datetime_error
-      (std::string("Invalid date/time string: ") + _when);
 }
 
 void datetime_t::parse(std::istream& in)
@@ -88,6 +83,8 @@ void datetime_t::parse(std::istream& in)
   // we use midnight of the given day.
   char buf[256];
   char c = peek_next_nonws(in);
+  if (! std::isdigit(c))
+    goto abort;
   READ_INTO(in, buf, 255, c, std::isdigit(c));
   if (buf[0] == '\0')
     goto abort;

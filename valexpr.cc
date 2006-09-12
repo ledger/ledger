@@ -7,6 +7,8 @@
 
 namespace ledger {
 
+valexpr_t::token_t valexpr_t::lookahead;
+
 void valexpr_t::token_t::parse_ident(std::istream& in)
 {
   if (in.eof()) {
@@ -38,68 +40,65 @@ void valexpr_t::token_t::parse_ident(std::istream& in)
   kind = IDENT;
 }
 
-valexpr_t::token_t
-valexpr_t::token_t::next(std::istream& in, unsigned short flags)
+void valexpr_t::token_t::next(std::istream& in, unsigned short flags)
 {
-  token_t tok;
-
   if (in.eof()) {
-    tok.kind = TOK_EOF;
-    return tok;
+    kind = TOK_EOF;
+    return;
   }
   assert(in.good());
 
   char c = peek_next_nonws(in);
 
   if (in.eof()) {
-    tok.kind = TOK_EOF;
-    return tok;
+    kind = TOK_EOF;
+    return;
   }
   assert(in.good());
 
-  tok.symbol[0] = c;
-  tok.symbol[1] = '\0';
+  symbol[0] = c;
+  symbol[1] = '\0';
 
-  tok.length = 1;
+  length = 1;
 
   if (c == '@' || (! (flags & PARSE_VALEXPR_RELAXED) &&
 		   (std::isalpha(c) || c == '_'))) {
-    tok.parse_ident(in);
-    return tok;
+    parse_ident(in);
+    return;
   }
 
   switch (c) {
   case '(':
     in.get(c);
-    tok.kind = LPAREN;
+    kind = LPAREN;
     break;
   case ')':
     in.get(c);
-    tok.kind = RPAREN;
+    kind = RPAREN;
     break;
 
   case '[': {
     in.get(c);
     char buf[256];
-    READ_INTO_(in, buf, 255, c, tok.length, c != ']');
+    READ_INTO_(in, buf, 255, c, length, c != ']');
     if (c != ']')
       unexpected(c, ']');
     in.get(c);
-    tok.length++;
+    length++;
     interval_t timespan(buf);
-    tok.set_value(timespan.first());
+    set_value(timespan.first());
     break;
   }
 
   case '"': {
     in.get(c);
     char buf[4096];
-    READ_INTO_(in, buf, 4095, c, tok.length, c != '"');
+    READ_INTO_(in, buf, 4095, c, length, c != '"');
     if (c != '"')
       unexpected(c, '"');
     in.get(c);
-    tok.length++;
-    tok.set_value(value_t(buf, true));
+    length++;
+    set_value(value_t(buf, true));
     break;
   }
 
@@ -110,8 +109,8 @@ valexpr_t::token_t::next(std::istream& in, unsigned short flags)
     in.get(c);
     if (c != '}')
       unexpected(c, '}');
-    tok.length++;
-    tok.set_value(temp);
+    length++;
+    set_value(temp);
     break;
   }
 
@@ -119,50 +118,50 @@ valexpr_t::token_t::next(std::istream& in, unsigned short flags)
     in.get(c);
     if (in.peek() == '=') {
       in.get(c);
-      tok.symbol[1] = c;
-      tok.symbol[2] = '\0';
-      tok.kind = NEQUAL;
-      tok.length = 2;
+      symbol[1] = c;
+      symbol[2] = '\0';
+      kind = NEQUAL;
+      length = 2;
       break;
     }
-    tok.kind = EXCLAM;
+    kind = EXCLAM;
     break;
 
   case '-':
     in.get(c);
-    tok.kind = MINUS;
+    kind = MINUS;
     break;
   case '+':
     in.get(c);
-    tok.kind = PLUS;
+    kind = PLUS;
     break;
 
   case '*':
     in.get(c);
     if (in.peek() == '*') {
       in.get(c);
-      tok.symbol[1] = c;
-      tok.symbol[2] = '\0';
-      tok.kind = POWER;
-      tok.length = 2;
+      symbol[1] = c;
+      symbol[2] = '\0';
+      kind = POWER;
+      length = 2;
       break;
     }
-    tok.kind = STAR;
+    kind = STAR;
     break;
 
   case '/':
     in.get(c);
     if (flags & PARSE_VALEXPR_REGEXP) {
       char buf[1024];
-      READ_INTO_(in, buf, 1023, c, tok.length, c != '/');
+      READ_INTO_(in, buf, 1023, c, length, c != '/');
       in.get(c);
       if (c != '/')
 	unexpected(c, '/');
-      tok.set_value(value_t(buf, true));
-      tok.kind = REGEXP;
+      set_value(value_t(buf, true));
+      kind = REGEXP;
       break;
     }
-    tok.kind = SLASH;
+    kind = SLASH;
     break;
 
   case '=':
@@ -170,76 +169,76 @@ valexpr_t::token_t::next(std::istream& in, unsigned short flags)
     c = in.peek();
     if (c == '=') {
       in.get(c);
-      tok.symbol[1] = c;
-      tok.symbol[2] = '\0';
-      tok.kind = EQUAL;
-      tok.length = 2;
+      symbol[1] = c;
+      symbol[2] = '\0';
+      kind = EQUAL;
+      length = 2;
       break;
     } else if (c == '~') {
       in.get(c);
-      tok.symbol[1] = c;
-      tok.symbol[2] = '\0';
-      tok.kind = MATCH;
-      tok.length = 2;
+      symbol[1] = c;
+      symbol[2] = '\0';
+      kind = MATCH;
+      length = 2;
       break;
     }
-    tok.kind = ASSIGN;
+    kind = ASSIGN;
     break;
 
   case '<':
     in.get(c);
     if (in.peek() == '=') {
       in.get(c);
-      tok.symbol[1] = c;
-      tok.symbol[2] = '\0';
-      tok.kind = LESSEQ;
-      tok.length = 2;
+      symbol[1] = c;
+      symbol[2] = '\0';
+      kind = LESSEQ;
+      length = 2;
       break;
     }
-    tok.kind = LESS;
+    kind = LESS;
     break;
 
   case '>':
     in.get(c);
     if (in.peek() == '=') {
       in.get(c);
-      tok.symbol[1] = c;
-      tok.symbol[2] = '\0';
-      tok.kind = GREATEREQ;
-      tok.length = 2;
+      symbol[1] = c;
+      symbol[2] = '\0';
+      kind = GREATEREQ;
+      length = 2;
       break;
     }
-    tok.kind = GREATER;
+    kind = GREATER;
     break;
 
   case '&':
     in.get(c);
-    tok.kind = AMPER;
+    kind = AMPER;
     break;
   case '|':
     in.get(c);
-    tok.kind = PIPE;
+    kind = PIPE;
     break;
   case '?':
     in.get(c);
-    tok.kind = QUESTION;
+    kind = QUESTION;
     break;
   case ':':
     in.get(c);
-    tok.kind = COLON;
+    kind = COLON;
     break;
   case ',':
     in.get(c);
-    tok.kind = COMMA;
+    kind = COMMA;
     break;
   case '%':
     in.get(c);
-    tok.kind = PERCENT;
+    kind = PERCENT;
     break;
 
   default:
     if (! (flags & PARSE_VALEXPR_RELAXED)) {
-      tok.kind = UNKNOWN;
+      kind = UNKNOWN;
     } else {
       amount_t temp;
       unsigned long pos = 0;
@@ -258,7 +257,7 @@ valexpr_t::token_t::next(std::istream& in, unsigned short flags)
 
 	temp.parse(in, parse_flags);
 
-	tok.set_value(temp);
+	set_value(temp);
       }
       catch (amount_error * err) {
 	// If the amount had no commodity, it must be an unambiguous
@@ -269,7 +268,7 @@ valexpr_t::token_t::next(std::istream& in, unsigned short flags)
 
 	  c = in.peek();
 	  assert(! (std::isdigit(c) || c == '.'));
-	  tok.parse_ident(in);
+	  parse_ident(in);
 	} else {
 	  throw err;
 	}
@@ -277,7 +276,6 @@ valexpr_t::token_t::next(std::istream& in, unsigned short flags)
     }
     break;
   }
-  return tok;
 }
 
 void valexpr_t::token_t::rewind(std::istream& in)
@@ -437,7 +435,7 @@ valexpr_t::parse_value_term(std::istream& in, unsigned short flags) const
 {
   std::auto_ptr<node_t> node;
 
-  token_t tok = next_token(in, flags | PARSE_VALEXPR_REGEXP);
+  token_t& tok = next_token(in, flags | PARSE_VALEXPR_REGEXP);
 
   switch (tok.kind) {
   case token_t::LPAREN:
@@ -523,7 +521,7 @@ valexpr_t::parse_unary_expr(std::istream& in, unsigned short flags) const
 {
   std::auto_ptr<node_t> node;
 
-  token_t tok = next_token(in, flags | PARSE_VALEXPR_REGEXP);
+  token_t& tok = next_token(in, flags | PARSE_VALEXPR_REGEXP);
 
   switch (tok.kind) {
   case token_t::EXCLAM: {
@@ -590,7 +588,7 @@ valexpr_t::parse_mul_expr(std::istream& in, unsigned short flags) const
   std::auto_ptr<node_t> node(parse_unary_expr(in, flags));
 
   if (node.get()) {
-    token_t tok = next_token(in, flags);
+    token_t& tok = next_token(in, flags);
     while (tok.kind == token_t::STAR ||
 	   tok.kind == token_t::SLASH) {
       std::auto_ptr<node_t> prev(node.release());
@@ -617,7 +615,7 @@ valexpr_t::parse_add_expr(std::istream& in, unsigned short flags) const
   std::auto_ptr<node_t> node(parse_mul_expr(in, flags));
 
   if (node.get()) {
-    token_t tok = next_token(in, flags);
+    token_t& tok = next_token(in, flags);
     while (tok.kind == token_t::PLUS ||
 	   tok.kind == token_t::MINUS) {
       std::auto_ptr<node_t> prev(node.release());
@@ -646,7 +644,7 @@ valexpr_t::parse_logic_expr(std::istream& in, unsigned short flags) const
   if (node.get()) {
     node_t::kind_t kind = node_t::LAST;
 
-    token_t tok = next_token(in, flags);
+    token_t& tok = next_token(in, flags);
     switch (tok.kind) {
     case token_t::ASSIGN:
       kind = node_t::O_DEFINE;
@@ -706,7 +704,7 @@ valexpr_t::parse_boolean_expr(std::istream& in, unsigned short flags) const
   std::auto_ptr<node_t> node(parse_logic_expr(in, flags));
 
   if (node.get()) {
-    token_t tok = next_token(in, flags);
+    token_t& tok = next_token(in, flags);
     while (tok.kind == token_t::AMPER ||
 	   tok.kind == token_t::PIPE ||
 	   tok.kind == token_t::QUESTION) {
@@ -765,7 +763,7 @@ valexpr_t::parse_value_expr(std::istream& in, unsigned short flags) const
   std::auto_ptr<node_t> node(parse_boolean_expr(in, flags));
 
   if (node.get()) {
-    token_t tok = next_token(in, flags);
+    token_t& tok = next_token(in, flags);
     while (tok.kind == token_t::COMMA) {
       std::auto_ptr<node_t> prev(node.release());
       node.reset(new node_t(node_t::O_COMMA));
@@ -796,11 +794,11 @@ valexpr_t::parse_expr(std::istream& in, unsigned short flags) const
 {
   std::auto_ptr<node_t> node(parse_value_expr(in, flags));
 
-  for (std::list<token_t>::reverse_iterator i = token_stack.rbegin();
-       i != token_stack.rend();
-       i++)
-    (*i).rewind(in);
-  token_stack.clear();
+  if (use_lookahead) {
+    use_lookahead = false;
+    lookahead.rewind(in);
+  }
+  lookahead.clear();
 
   return node.release();
 }

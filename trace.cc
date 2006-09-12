@@ -141,16 +141,18 @@ void report_memory(std::ostream& out)
     out << (*i).second << "  " << (*i).first << std::endl;
   }
 
-  if (live_objects.size() > 0)
-    out << "Live objects:" << std::endl;
+  DEBUG_IF("ledger.trace.verbose") {
+    if (live_objects.size() > 0)
+      out << "Live objects:" << std::endl;
 
-  for (live_objects_map::iterator i = live_objects.begin();
-       i != live_objects.end();
-       i++) {
-    out << "  ";
-    out << std::right;
-    out.width(5);
-    out << (*i).first << "  " << (*i).second << std::endl;
+    for (live_objects_map::iterator i = live_objects.begin();
+	 i != live_objects.end();
+	 i++) {
+      out << "  ";
+      out << std::right;
+      out.width(5);
+      out << (*i).first << "  " << (*i).second << std::endl;
+    }
   }
 
   if (object_count.size() > 0)
