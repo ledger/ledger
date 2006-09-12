@@ -85,6 +85,9 @@ class valexpr_t
 
     symbol_map symbols;
 
+    scope_t(const scope_t&);
+    scope_t& operator=(const scope_t&);
+
    public:
     typedef std::vector<node_t *> args_list;
 
@@ -92,9 +95,12 @@ class valexpr_t
     bool      arg_scope;
 
     scope_t(scope_t * _parent = NULL)
-      : parent(_parent), arg_scope(false) {}
+      : parent(_parent), arg_scope(false) {
+      TRACE_CTOR("valexpr_t::scope_t(scope *)");
+    }
 
     virtual ~scope_t() {
+      TRACE_DTOR("valexpr_t::scope_t");
       for (symbol_map::iterator i = symbols.begin();
 	   i != symbols.end();
 	   i++)
@@ -155,35 +161,27 @@ class valexpr_t
       UNKNOWN
     } kind;
 
-    union {
-      value_t * value;
-      char      symbol[3];
-    };
-
+    char	 symbol[3];
+    value_t *	 value;
     unsigned int length;
 
-    token_t() : kind(UNKNOWN), value(NULL), length(0) {}
+    token_t() : kind(UNKNOWN), value(NULL), length(0) {
+      TRACE_CTOR("valexpr_t::token_t()");
+    }
 
-    token_t(const token_t& other)
-      : kind(other.kind), length(other.length) {
-      switch (kind) {
-      case REGEXP:
-      case IDENT:
-      case VALUE:
-	value = new value_t(*other.value);
-	break;
-      default:
-	std::memcpy(symbol, other.symbol, 3);
-	break;
-      }
+    token_t(const token_t& other) {
+      TRACE_CTOR("valexpr_t::token_t(copy)");
+      *this = other;
     }
 
     ~token_t() {
+      TRACE_DTOR("valexpr_t::token_t");
       switch (kind) {
       case REGEXP:
       case IDENT:
       case VALUE:
 	assert(value);
+	DEBUG_PRINT("ledger.valexpr.token", "value is " << value);
 	delete value;
 	break;
       default:
@@ -191,9 +189,48 @@ class valexpr_t
       }
     }
 
+    token_t& operator=(const token_t& other) {
+      kind   = other.kind;
+      length = other.length;
+      switch (kind) {
+      case REGEXP:
+      case IDENT:
+      case VALUE:
+	DEBUG_PRINT("ledger.valexpr.token", "other.value is " << other.value);
+	assert(other.value);
+	value = new value_t(*other.value);
+	DEBUG_PRINT("ledger.valexpr.token", "value is " << value);
+	break;
+      default:
+	value = NULL;
+	symbol[0] = other.symbol[0];
+	symbol[1] = other.symbol[1];
+	symbol[2] = other.symbol[2];
+	break;
+      }
+    }
+
+    void set_value(const value_t& val) {
+      switch (kind) {
+      case REGEXP:
+      case IDENT:
+      case VALUE:
+	assert(value);
+	DEBUG_PRINT("ledger.valexpr.token", "old value is " << value);
+	delete value;
+	break;
+      default:
+	break;
+      }
+
+      kind  = VALUE;
+      value = new value_t(val);
+      DEBUG_PRINT("ledger.valexpr.token", "value is " << value);
+    }
+
     void	   parse_ident(std::istream& in);
     static token_t next(std::istream& in, unsigned short flags);
-    token_t	   rewind(std::istream& in);
+    void	   rewind(std::istream& in);
     void	   unexpected();
     static void	   unexpected(char c, char wanted = '\0');
   };
@@ -203,6 +240,7 @@ class valexpr_t
   {
     enum kind_t {
       VALUE,
+      SYMBOL,
       ARG_INDEX,
 
       CONSTANTS,		// constants end here
@@ -238,7 +276,6 @@ class valexpr_t
       O_MATCH,
 
       O_DEFINE,
-      O_LOOKUP,
       O_EVAL,
       O_ARG,
 
@@ -261,13 +298,12 @@ class valexpr_t
 
     node_t(const kind_t _kind)
       : kind(_kind), refc(0), left(NULL), right(NULL) {
-      DEBUG_PRINT("ledger.memory.ctors", "ctor node_t " << this);
+      TRACE_CTOR("valexpr_t::node_t(const kind_t)");
     }
-    node_t(const node_t&) {
-      DEBUG_PRINT("ledger.memory.ctors", "ctor node_t (copy) " << this);
-      assert(0);
-    }
+    node_t(const node_t&);
     ~node_t();
+
+    node_t& operator=(const node_t&);
 
     bool constant() const {
       return kind == VALUE;
@@ -319,10 +355,10 @@ class valexpr_t
     node_t * lookup(scope_t * scope) const;
 
     bool write(std::ostream&   out,
-	       const bool      relaxed,
-	       const node_t *  node_to_find,
-	       unsigned long * start_pos,
-	       unsigned long * end_pos) const;
+	       const bool      relaxed	    = true,
+	       const node_t *  node_to_find = NULL,
+	       unsigned long * start_pos    = NULL,
+	       unsigned long * end_pos	    = NULL) const;
 
     void dump(std::ostream& out, const int depth) const;
   };
@@ -331,7 +367,7 @@ class valexpr_t
   node_t * ptr;
 
   valexpr_t(node_t * _ptr) : ptr(_ptr) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor valexpr_t");
+    TRACE_CTOR("valexpr_t(node_t *)");
   }
 
   valexpr_t& operator=(node_t * _expr) {
@@ -428,24 +464,31 @@ class valexpr_t
   std::string    expr;
   unsigned short flags;		// flags used to parse `expr'
 
-  valexpr_t() : ptr(NULL) {}
+  valexpr_t() : ptr(NULL) {
+    TRACE_CTOR("valexpr_t");
+  }
 
   valexpr_t(const std::string& _expr,
 	    unsigned short _flags = PARSE_VALEXPR_RELAXED)
     : ptr(NULL) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor valexpr_t");
+    TRACE_CTOR("valexpr_t(const std::string&, unsigned short)");
     if (! _expr.empty())
       parse(_expr, _flags);
     else
       ptr = NULL;
   }
+  valexpr_t(std::istream& in, unsigned short _flags = PARSE_VALEXPR_RELAXED)
+    : ptr(NULL) {
+    TRACE_CTOR("valexpr_t(std::istream&, unsigned short)");
+    parse(in, _flags);
+  }
   valexpr_t(const valexpr_t& other)
     : ptr(other.ptr ? other.ptr->acquire() : NULL),
       expr(other.expr), flags(other.flags) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor valexpr_t");
+    TRACE_CTOR("valexpr_t(copy)");
   }
   virtual ~valexpr_t() {
-    DEBUG_PRINT("ledger.memory.dtors", "dtor valexpr_t");
+    TRACE_DTOR("valexpr_t");
     if (ptr)
       ptr->release();
   }
@@ -454,6 +497,7 @@ class valexpr_t
     parse(_expr);
     return *this;
   }
+  valexpr_t& operator=(const valexpr_t& _expr);
   valexpr_t& operator=(valexpr_t& _expr) {
     expr  = _expr.expr;
     flags = _expr.flags;

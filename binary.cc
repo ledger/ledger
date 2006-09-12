@@ -347,7 +347,7 @@ inline void read_binary_transaction(char *& data, transaction_t * xact)
     read_binary_string(data, expr);
     xact->amount_expr = expr;
     // jww (2006-09-10): Create a repitem scope here
-    xact->amount = xact->amount_expr.calc().get_amount();
+    xact->amount = valexpr_t(xact->amount_expr).calc().get_amount();
   }
 
   if (read_binary_bool(data)) {
@@ -909,9 +909,9 @@ void write_binary_transaction(std::ostream& out, transaction_t * xact,
     write_binary_number<unsigned char>(out, 0);
     write_binary_amount(out, amount_t());
   }
-  else if (! xact->amount_expr) {
+  else if (! xact->amount_expr.empty()) {
     write_binary_number<unsigned char>(out, 1);
-    write_binary_string(out, xact->amount_expr.expr);
+    write_binary_string(out, xact->amount_expr);
   }
   else {
     write_binary_number<unsigned char>(out, 0);
@@ -949,7 +949,7 @@ void write_binary_entry_base(std::ostream& out, entry_base_t * entry)
   for (transactions_list::const_iterator i = entry->transactions.begin();
        i != entry->transactions.end();
        i++)
-    if ((*i)->amount_expr) {
+    if (! (*i)->amount_expr.empty()) {
       ignore_calculated = true;
       break;
     }

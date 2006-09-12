@@ -35,34 +35,42 @@ class value_t
   } type;
 
   value_t() {
+    TRACE_CTOR("value_t()");
     *((long *) data) = 0;
     type = INTEGER;
   }
 
   value_t(const value_t& value) : type(INTEGER) {
+    TRACE_CTOR("value_t(copy)");
     *this = value;
   }
   value_t(const bool value) {
+    TRACE_CTOR("value_t(const bool)");
     *((bool *) data) = value;
     type = BOOLEAN;
   }
   value_t(const long value) {
+    TRACE_CTOR("value_t(const long)");
     *((long *) data) = value;
     type = INTEGER;
   }
   value_t(const datetime_t value) {
+    TRACE_CTOR("value_t(const datetime_t)");
     *((datetime_t *) data) = value;
     type = DATETIME;
   }
   value_t(const unsigned long value) {
+    TRACE_CTOR("value_t(const unsigned long)");
     new((amount_t *) data) amount_t(value);
     type = AMOUNT;
   }
   value_t(const double value) {
+    TRACE_CTOR("value_t(const double)");
     new((amount_t *) data) amount_t(value);
     type = AMOUNT;
   }
   value_t(const std::string& value, bool literal = false) {
+    TRACE_CTOR("value_t(const std::string&, bool)");
     if (literal) {
       set_string(value);
     } else {
@@ -71,24 +79,30 @@ class value_t
     }
   }
   value_t(const char * value) {
+    TRACE_CTOR("value_t(const char *)");
     new((amount_t *) data) amount_t(value);
     type = AMOUNT;
   }
   value_t(const amount_t& value) {
+    TRACE_CTOR("value_t(const amount_t&)");
     new((amount_t *)data) amount_t(value);
     type = AMOUNT;
   }
   value_t(const balance_t& value) : type(INTEGER) {
+    TRACE_CTOR("value_t(const balance_t&)");
     *this = value;
   }
   value_t(const balance_pair_t& value) : type(INTEGER) {
+    TRACE_CTOR("value_t(const balance_pair_t&)");
     *this = value;
   }
   value_t(void * item) : type(POINTER) {
+    TRACE_CTOR("value_t(void *)");
     *this = item;
   }
 
   ~value_t() {
+    TRACE_DTOR("value_t");
     destroy();
   }
 

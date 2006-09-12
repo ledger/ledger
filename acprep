@@ -17,13 +17,19 @@ else
 fi
 autoconf
 
-INCDIRS="-I/sw/include -I/sw/include/boost -I/usr/include/httpd/xml"
+INCDIRS="-I/sw/include"
+INCDIRS="$INCDIRS -I/usr/include/httpd/xml"
 #INCDIRS="$INCDIRS -I/sw/include/libofx"
-INCDIRS="$INCDIRS -I/usr/include/python2.3"
+INCDIRS="$INCDIRS -I/usr/include/python2.3 -I/sw/include/boost"
 INCDIRS="$INCDIRS -Wno-long-double"
+
 LIBDIRS="-L/sw/lib -L/usr/local/lib -L/usr/lib/python2.3/config"
 
 if [ "$1" = "--debug" ]; then
+    shift 1
+    ./configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" CXXFLAGS="-g" \
+	--enable-debug "$@"
+elif [ "$1" = "--python-debug" ]; then
     shift 1
     ./configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" CXXFLAGS="-g" \
 	--enable-debug --enable-python "$@"

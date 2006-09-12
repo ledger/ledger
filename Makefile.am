@@ -169,7 +169,12 @@ alltests: alltests.cc ledger
 		alltests.cc -L. -L.libs -lledger
 
 runtests: alltests
-	LD_LIBRARY_PATH=.libs ./alltests && tests/regress && tests/regtest
+	DYLD_INSERT_LIBRARIES=/usr/lib/libgmalloc.dylib \
+	LD_LIBRARY_PATH=.libs ./alltests && \
+	DYLD_INSERT_LIBRARIES=/usr/lib/libgmalloc.dylib \
+	LD_LIBRARY_PATH=.libs tests/regress && \
+	DYLD_INSERT_LIBRARIES=/usr/lib/libgmalloc.dylib \
+	LD_LIBRARY_PATH=.libs tests/regtest
 
 verify: runtests
 	python tests/runtests.py

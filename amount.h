@@ -53,17 +53,22 @@ class amount_t
 
  public:
   // constructors
-  amount_t() : quantity(NULL), commodity_(NULL) {}
+  amount_t() : quantity(NULL), commodity_(NULL) {
+    TRACE_CTOR("amount_t()");
+  }
   amount_t(const amount_t& amt) : quantity(NULL) {
+    TRACE_CTOR("amount_t(copy)");
     if (amt.quantity)
       _copy(amt);
     else
       commodity_ = NULL;
   }
   amount_t(const std::string& value) : quantity(NULL) {
+    TRACE_CTOR("amount_t(const std::string&)");
     parse(value);
   }
   amount_t(const char * value) : quantity(NULL) {
+    TRACE_CTOR("amount_t(const char *)");
     parse(value);
   }
   amount_t(const bool value);
@@ -73,6 +78,7 @@ class amount_t
 
   // destructor
   ~amount_t() {
+    TRACE_DTOR("amount_t");
     if (quantity)
       _release();
   }
@@ -384,15 +390,20 @@ class commodity_base_t
 
   commodity_base_t()
     : precision(0), flags(COMMODITY_STYLE_DEFAULTS),
-      smaller(NULL), larger(NULL), history(NULL) {}
+      smaller(NULL), larger(NULL), history(NULL) {
+    TRACE_CTOR("commodity_base_t()");
+  }
 
   commodity_base_t(const std::string& _symbol,
 		   unsigned int	_precision = 0,
 		   unsigned int _flags	   = COMMODITY_STYLE_DEFAULTS)
     : precision(_precision), flags(_flags),
-      smaller(NULL), larger(NULL), symbol(_symbol), history(NULL) {}
+      smaller(NULL), larger(NULL), symbol(_symbol), history(NULL) {
+    TRACE_CTOR("commodity_base_t(const std::string&, unsigned int, unsigned int)");
+  }
 
   ~commodity_base_t() {
+    TRACE_DTOR("commodity_base_t");
     if (history) delete history;
     if (smaller) delete smaller;
     if (larger)  delete larger;
@@ -463,8 +474,12 @@ class commodity_t
   bool		     annotated;
 
  public:
-  explicit commodity_t() : base(NULL), annotated(false) {}
-  virtual ~commodity_t() {}
+  explicit commodity_t() : base(NULL), annotated(false) {
+    TRACE_CTOR("commodity_t()");
+  }
+  virtual ~commodity_t() {
+    TRACE_DTOR("commodity_t");
+  }
 
   operator bool() const {
     return this != null_commodity;
@@ -568,6 +583,7 @@ class annotated_commodity_t : public commodity_t
   std::string tag;
 
   explicit annotated_commodity_t() {
+    TRACE_CTOR("annotated_commodity_t()");
     annotated = true;
   }
 

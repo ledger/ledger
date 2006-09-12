@@ -7,7 +7,11 @@ namespace ledger {
 
 void help(std::ostream& out);
 
+#ifdef USE_BOOST_PYTHON
 #define OPTIONS_SIZE 100
+#else
+#define OPTIONS_SIZE 98
+#endif
 extern static_option_t static_options[OPTIONS_SIZE];
 
 

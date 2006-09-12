@@ -34,9 +34,8 @@ void valexpr_t::token_t::parse_ident(std::istream& in)
   READ_INTO_(in, buf, 255, c, length,
 	     std::isalnum(c) || c == '_' || c == '.');
 
+  set_value(value_t(buf, true));
   kind = IDENT;
-  value = new value_t;
-  value->set_string(buf);
 }
 
 valexpr_t::token_t
@@ -68,16 +67,6 @@ valexpr_t::token_t::next(std::istream& in, unsigned short flags)
     tok.parse_ident(in);
     return tok;
   }
-  else if (std::isdigit(c) || c == '.') {
-    char buf[1024];
-    tok.length = 0;
-    READ_INTO_(in, buf, 1023, c, tok.length, std::isdigit(c) || c == '.');
-    tok.kind = VALUE;
-    amount_t temp;
-    temp.parse(buf, AMOUNT_PARSE_NO_MIGRATE);
-    tok.value = new value_t(temp);
-    return tok;
-  }
 
   switch (c) {
   case '(':
@@ -98,8 +87,7 @@ valexpr_t::token_t::next(std::istream& in, unsigned short flags)
     in.get(c);
     tok.length++;
     interval_t timespan(buf);
-    tok.kind = VALUE;
-    tok.value = new value_t(timespan.first());
+    tok.set_value(timespan.first());
     break;
   }
 
@@ -111,9 +99,7 @@ valexpr_t::token_t::next(std::istream& in, unsigned short flags)
       unexpected(c, '"');
     in.get(c);
     tok.length++;
-    tok.kind = VALUE;
-    tok.value = new value_t;
-    tok.value->set_string(buf);
+    tok.set_value(value_t(buf, true));
     break;
   }
 
@@ -125,8 +111,7 @@ valexpr_t::token_t::next(std::istream& in, unsigned short flags)
     if (c != '}')
       unexpected(c, '}');
     tok.length++;
-    tok.kind = VALUE;
-    tok.value = new value_t(temp);
+    tok.set_value(temp);
     break;
   }
 
@@ -170,11 +155,11 @@ valexpr_t::token_t::next(std::istream& in, unsigned short flags)
     if (flags & PARSE_VALEXPR_REGEXP) {
       char buf[1024];
       READ_INTO_(in, buf, 1023, c, tok.length, c != '/');
+      in.get(c);
       if (c != '/')
 	unexpected(c, '/');
+      tok.set_value(value_t(buf, true));
       tok.kind = REGEXP;
-      tok.value = new value_t;
-      tok.value->set_string(buf);
       break;
     }
     tok.kind = SLASH;
@@ -273,8 +258,7 @@ valexpr_t::token_t::next(std::istream& in, unsigned short flags)
 
 	temp.parse(in, parse_flags);
 
-	tok.kind  = VALUE;
-	tok.value = new value_t(temp);
+	tok.set_value(temp);
       }
       catch (amount_error * err) {
 	// If the amount had no commodity, it must be an unambiguous
@@ -282,6 +266,9 @@ valexpr_t::token_t::next(std::istream& in, unsigned short flags)
 	if (std::strcmp(err->what(), "No quantity specified for amount") == 0) {
 	  in.clear();
 	  in.seekg(pos, std::ios::beg);
+
+	  c = in.peek();
+	  assert(! (std::isdigit(c) || c == '.'));
 	  tok.parse_ident(in);
 	} else {
 	  throw err;
@@ -293,7 +280,7 @@ valexpr_t::token_t::next(std::istream& in, unsigned short flags)
   return tok;
 }
 
-valexpr_t::token_t valexpr_t::token_t::rewind(std::istream& in)
+void valexpr_t::token_t::rewind(std::istream& in)
 {
   for (int i = 0; i < length; i++)
     in.unget();
@@ -305,12 +292,14 @@ void valexpr_t::token_t::unexpected()
   switch (kind) {
   case TOK_EOF:
     throw new parse_error("Unexpected end of expression");
+  case IDENT:
+    throw new parse_error(std::string("Unexpected symbol '") +
+			  value->get_string() + "'");
   case VALUE:
     throw new parse_error(std::string("Unexpected value '") +
 			  value->get_string() + "'");
   default:
-    throw new parse_error(std::string("Unexpected symbol '") + symbol + "'");
-    break;
+    throw new parse_error(std::string("Unexpected operator '") + symbol + "'");
   }
 }
 
@@ -389,7 +378,7 @@ void valexpr_t::scope_t::define(const std::string& name, functor_t * def) {
 
 valexpr_t::node_t::~node_t()
 {
-  DEBUG_PRINT("ledger.memory.dtors", "dtor valexpr_t::node_t " << this);
+  TRACE_DTOR("valexpr_t::node_t");
 
   DEBUG_PRINT("ledger.valexpr.memory", "Destroying " << this);
   assert(refc == 0);
@@ -418,7 +407,6 @@ valexpr_t::node_t::~node_t()
 
   default:
     assert(kind < LAST);
-    assert(left);
     if (left)
       left->release();
     if (kind > TERMINALS && right)
@@ -434,8 +422,13 @@ value_t valexpr_t::node_t::value() const
     return *valuep;
   case ARG_INDEX:
     return (long)arg_index;
-  default:
-    throw new calc_error("Cannot take constant value of non-constant");
+  default: {
+    std::ostringstream buf;
+    write(buf);
+    throw new calc_error
+      (std::string("Cannot determine value of non-constant '") +
+       buf.str() + "'");
+  }
   }
 }
 
@@ -444,11 +437,14 @@ valexpr_t::parse_value_term(std::istream& in, unsigned short flags) const
 {
   std::auto_ptr<node_t> node;
 
-  token_t tok = next_token(in, flags);
+  token_t tok = next_token(in, flags | PARSE_VALEXPR_REGEXP);
 
   switch (tok.kind) {
   case token_t::LPAREN:
     node.reset(parse_value_expr(in, flags | PARSE_VALEXPR_PARTIAL));
+    if (! node.get())
+	throw new parse_error(std::string(tok.symbol) +
+			      " operator not followed by argument");
     tok = next_token(in, flags);
     if (tok.kind != token_t::RPAREN)
       tok.unexpected();		// jww (2006-09-09): wanted )
@@ -477,11 +473,9 @@ valexpr_t::parse_value_term(std::istream& in, unsigned short flags) const
 	node_t * lambda = new node_t(node_t::FUNCTOR);
 	lambda->functor = new python_functor_t(python_eval(buf));
 	eval->set_left(lambda);
-	node_t * val = new node_t(node_t::VALUE);
-	val->valuep = new value_t("__ptr", true);
-	node_t * look = new node_t(node_t::O_LOOKUP);
-	look->set_left(val);
-	eval->set_right(look);
+	node_t * sym = new node_t(node_t::SYMBOL);
+	sym->valuep = new value_t("__ptr", true);
+	eval->set_right(sym);
 
 	node.reset(eval);
 
@@ -492,9 +486,8 @@ valexpr_t::parse_value_term(std::istream& in, unsigned short flags) const
       }
 #endif
 
-    node.reset(new node_t(node_t::O_LOOKUP));
-    node->set_left(new node_t(node_t::VALUE));
-    node->left->valuep = new value_t(*tok.value);
+    node.reset(new node_t(node_t::SYMBOL));
+    node->valuep = new value_t(*tok.value);
 
     // An identifier followed by ( represents a function call
     tok = next_token(in, flags);
@@ -503,6 +496,9 @@ valexpr_t::parse_value_term(std::istream& in, unsigned short flags) const
       call_node.reset(new node_t(node_t::O_EVAL));
       call_node->set_left(node.release());
       call_node->set_right(parse_value_expr(in, flags | PARSE_VALEXPR_PARTIAL));
+      if (! call_node->right)
+	throw new parse_error(std::string(tok.symbol) +
+			      " operator not followed by argument");
       tok = next_token(in, flags);
       if (tok.kind != token_t::RPAREN)
 	tok.unexpected();		// jww (2006-09-09): wanted )
@@ -511,6 +507,10 @@ valexpr_t::parse_value_term(std::istream& in, unsigned short flags) const
     } else {
       push_token(tok);
     }
+    break;
+
+  default:
+    push_token(tok);
     break;
   }
 
@@ -523,11 +523,14 @@ valexpr_t::parse_unary_expr(std::istream& in, unsigned short flags) const
 {
   std::auto_ptr<node_t> node;
 
-  token_t tok = next_token(in, flags);
+  token_t tok = next_token(in, flags | PARSE_VALEXPR_REGEXP);
 
   switch (tok.kind) {
   case token_t::EXCLAM: {
     std::auto_ptr<node_t> expr(parse_value_term(in, flags));
+    if (! expr.get())
+      throw new parse_error(std::string(tok.symbol) +
+			    " operator not followed by argument");
     // A very quick optimization
     if (expr->kind == node_t::VALUE) {
       *expr->valuep = ! *expr->valuep;
@@ -541,6 +544,9 @@ valexpr_t::parse_unary_expr(std::istream& in, unsigned short flags) const
 
   case token_t::MINUS: {
     std::auto_ptr<node_t> expr(parse_value_term(in, flags));
+    if (! expr.get())
+      throw new parse_error(std::string(tok.symbol) +
+			    " operator not followed by argument");
     // A very quick optimization
     if (expr->kind == node_t::VALUE) {
       expr->valuep->negate();
@@ -554,6 +560,9 @@ valexpr_t::parse_unary_expr(std::istream& in, unsigned short flags) const
 
   case token_t::PERCENT: {
     std::auto_ptr<node_t> expr(parse_value_term(in, flags));
+    if (! expr.get())
+      throw new parse_error(std::string(tok.symbol) +
+			    " operator not followed by argument");
     // A very quick optimization
     if (expr->kind == node_t::VALUE) {
       static value_t perc("100.0%");
@@ -590,6 +599,9 @@ valexpr_t::parse_mul_expr(std::istream& in, unsigned short flags) const
 				       node_t::O_DIV));
       node->set_left(prev.release());
       node->set_right(parse_unary_expr(in, flags));
+      if (! node->right)
+	throw new parse_error(std::string(tok.symbol) +
+			      " operator not followed by argument");
 
       tok = next_token(in, flags);
     }
@@ -614,6 +626,9 @@ valexpr_t::parse_add_expr(std::istream& in, unsigned short flags) const
 				       node_t::O_SUB));
       node->set_left(prev.release());
       node->set_right(parse_mul_expr(in, flags));
+      if (! node->right)
+	throw new parse_error(std::string(tok.symbol) +
+			      " operator not followed by argument");
 
       tok = next_token(in, flags);
     }
@@ -631,9 +646,7 @@ valexpr_t::parse_logic_expr(std::istream& in, unsigned short flags) const
   if (node.get()) {
     node_t::kind_t kind = node_t::LAST;
 
-    unsigned short _flags = flags;
-
-    token_t tok = next_token(in, _flags);
+    token_t tok = next_token(in, flags);
     switch (tok.kind) {
     case token_t::ASSIGN:
       kind = node_t::O_DEFINE;
@@ -646,7 +659,6 @@ valexpr_t::parse_logic_expr(std::istream& in, unsigned short flags) const
       break;
     case token_t::MATCH:
       kind = node_t::O_MATCH;
-      _flags |= PARSE_VALEXPR_REGEXP;
       break;
     case token_t::LESS:
       kind = node_t::O_LT;
@@ -670,9 +682,18 @@ valexpr_t::parse_logic_expr(std::istream& in, unsigned short flags) const
       node.reset(new node_t(kind));
       node->set_left(prev.release());
       if (kind == node_t::O_DEFINE)
-	node->set_right(parse_boolean_expr(in, _flags));
+	node->set_right(parse_boolean_expr(in, flags));
       else
-	node->set_right(parse_add_expr(in, _flags));
+	node->set_right(parse_add_expr(in, flags));
+
+      if (! node->right) {
+	if (tok.kind == token_t::PLUS)
+	  throw new parse_error(std::string(tok.symbol) +
+				" operator not followed by argument");
+	else
+	  throw new parse_error(std::string(tok.symbol) +
+				" operator not followed by argument");
+      }
     }
   }
 
@@ -695,6 +716,9 @@ valexpr_t::parse_boolean_expr(std::istream& in, unsigned short flags) const
 	node.reset(new node_t(node_t::O_AND));
 	node->set_left(prev.release());
 	node->set_right(parse_logic_expr(in, flags));
+	if (! node->right)
+	  throw new parse_error(std::string(tok.symbol) +
+				" operator not followed by argument");
 	break;
       }
       case token_t::PIPE: {
@@ -702,6 +726,9 @@ valexpr_t::parse_boolean_expr(std::istream& in, unsigned short flags) const
 	node.reset(new node_t(node_t::O_OR));
 	node->set_left(prev.release());
 	node->set_right(parse_logic_expr(in, flags));
+	if (! node->right)
+	  throw new parse_error(std::string(tok.symbol) +
+				" operator not followed by argument");
 	break;
       }
 
@@ -711,10 +738,16 @@ valexpr_t::parse_boolean_expr(std::istream& in, unsigned short flags) const
 	node->set_left(prev.release());
 	node->set_right(new node_t(node_t::O_COLON));
 	node->right->set_left(parse_logic_expr(in, flags));
+	if (! node->right)
+	  throw new parse_error(std::string(tok.symbol) +
+				" operator not followed by argument");
 	tok = next_token(in, flags);
 	if (tok.kind != token_t::COLON)
 	  tok.unexpected();	// jww (2006-09-09): wanted :
 	node->right->set_right(parse_logic_expr(in, flags));
+	if (! node->right)
+	  throw new parse_error(std::string(tok.symbol) +
+				" operator not followed by argument");
 	break;
       }
       }
@@ -738,6 +771,9 @@ valexpr_t::parse_value_expr(std::istream& in, unsigned short flags) const
       node.reset(new node_t(node_t::O_COMMA));
       node->set_left(prev.release());
       node->set_right(parse_boolean_expr(in, flags));
+      if (! node->right)
+	throw new parse_error(std::string(tok.symbol) +
+			      " operator not followed by argument");
 
       tok = next_token(in, flags);
     }
@@ -764,6 +800,7 @@ valexpr_t::parse_expr(std::istream& in, unsigned short flags) const
        i != token_stack.rend();
        i++)
     (*i).rewind(in);
+  token_stack.clear();
 
   return node.release();
 }
@@ -792,10 +829,10 @@ valexpr_t::node_t::copy(node_t * left, node_t * right) const
 
 valexpr_t::node_t * valexpr_t::node_t::lookup(scope_t * scope) const
 {
-  assert(kind == O_LOOKUP);
-  assert(left->constant());
+  assert(kind == SYMBOL);
+  assert(constant());
   if (scope)
-    if (node_t * def = scope->lookup(left->valuep->get_string()))
+    if (node_t * def = scope->lookup(valuep->get_string()))
       return def->acquire();
   return NULL;
 }
@@ -1000,16 +1037,16 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
   case O_DEFINE:
     assert(left);
     assert(right);
-    if (left->kind == O_LOOKUP) {
-      assert(left->left->constant());
+    if (left->kind == SYMBOL) {
+      assert(left->constant());
       valexpr_t rexpr(right->compile(scope));
       if (scope)
-	scope->define(left->left->valuep->get_string(), rexpr);
+	scope->define(left->valuep->get_string(), rexpr);
       return rexpr->acquire();
     } else {
       assert(left->kind == O_EVAL);
-      assert(left->left->kind == O_LOOKUP);
-      assert(left->left->left->constant());
+      assert(left->left->kind == SYMBOL);
+      assert(left->left->constant());
 
       std::auto_ptr<scope_t> arg_scope(new scope_t(scope));
 
@@ -1030,8 +1067,8 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
 	ref->set_left(new valexpr_t::node_t(valexpr_t::node_t::ARG_INDEX));
 	ref->left->arg_index = index++;
 
-	assert(arg->kind == O_LOOKUP);
-	arg_scope->define(arg->left->valuep->get_string(), ref);
+	assert(arg->kind == SYMBOL);
+	arg_scope->define(arg->valuep->get_string(), ref);
       }
 
       valexpr_t rexpr(right->compile(arg_scope.get()));
@@ -1040,10 +1077,9 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
       return rexpr->acquire();
     }
 
-  case O_LOOKUP:
-    assert(left->constant());
+  case SYMBOL:
     if (scope)
-      if (node_t * def = scope->lookup(left->valuep->get_string())) {
+      if (node_t * def = scope->lookup(valuep->get_string())) {
 	if (def->kind == FUNCTOR)
 	  return wrap_value((*def->functor)(scope))->acquire();
 	else
@@ -1070,7 +1106,7 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
       call_args->args.push_back(arg->compile(scope));
     }
 
-    if (left->kind == O_LOOKUP) {
+    if (left->kind == SYMBOL) {
       valexpr_t func(left->lookup(scope)); // don't compile!
       if (func->kind == FUNCTOR)
 	return wrap_value((*func->functor)(call_args.get()))->acquire();
@@ -1183,7 +1219,9 @@ void valexpr_t::context::describe(std::ostream& out) const throw()
   unsigned long start = (long)out.tellp() - 1;
   unsigned long begin;
   unsigned long end;
-  bool found = valexpr.write(out, true, err_node, &begin, &end);
+  bool found = false;
+  if (valexpr)
+    valexpr.write(out, true, err_node, &begin, &end);
   out << std::endl;
   if (found) {
     out << "  ";
@@ -1244,6 +1282,11 @@ bool valexpr_t::node_t::write(std::ostream&   out,
     }
     break;
 
+  case SYMBOL:
+    assert(valuep->type == value_t::STRING);
+    out << *(valuep);
+    break;
+
   case FUNCTOR:
     out << functor->name();
     break;
@@ -1258,179 +1301,173 @@ bool valexpr_t::node_t::write(std::ostream&   out,
 
   case O_NOT:
     out << "!";
-    if (left->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (left && left->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     break;
   case O_NEG:
     out << "-";
-    if (left->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (left && left->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     break;
 
   case O_ADD:
     out << "(";
-    if (left->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (left && left->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << " + ";
-    if (right->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (right && right->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case O_SUB:
     out << "(";
-    if (left->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (left && left->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << " - ";
-    if (right->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (right && right->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case O_MUL:
     out << "(";
-    if (left->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (left && left->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << " * ";
-    if (right->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (right && right->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case O_DIV:
     out << "(";
-    if (left->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (left && left->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << " / ";
-    if (right->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (right && right->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
 
   case O_NEQ:
     out << "(";
-    if (left->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (left && left->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << " != ";
-    if (right->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (right && right->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case O_EQ:
     out << "(";
-    if (left->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (left && left->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << " == ";
-    if (right->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (right && right->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case O_LT:
     out << "(";
-    if (left->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (left && left->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << " < ";
-    if (right->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (right && right->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case O_LTE:
     out << "(";
-    if (left->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (left && left->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << " <= ";
-    if (right->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (right && right->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case O_GT:
     out << "(";
-    if (left->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (left && left->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << " > ";
-    if (right->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (right && right->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case O_GTE:
     out << "(";
-    if (left->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (left && left->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << " >= ";
-    if (right->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (right && right->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
 
   case O_AND:
     out << "(";
-    if (left->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (left && left->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << " & ";
-    if (right->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (right && right->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case O_OR:
     out << "(";
-    if (left->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (left && left->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << " | ";
-    if (right->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (right && right->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
 
   case O_QUES:
     out << "(";
-    if (left->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (left && left->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << " ? ";
-    if (right->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (right && right->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case O_COLON:
-    if (left->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (left && left->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << " : ";
-    if (right->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (right && right->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     break;
 
   case O_COMMA:
-    if (left->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (left && left->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << ", ";
-    if (right->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (right && right->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     break;
 
   case O_MATCH:
-    if (left->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (left && left->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << " =~ ";
-    if (right->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (right && right->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     break;
 
   case O_DEFINE:
-    if (left->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (left && left->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << '=';
-    if (right->write(out, relaxed, node_to_find, start_pos, end_pos))
-      found = true;
-    break;
-  case O_LOOKUP:
-    if (left->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (right && right->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     break;
   case O_EVAL:
-    if (left->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (left && left->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
-    if (right) {
-      out << "(";
-      if (right->write(out, relaxed, node_to_find, start_pos, end_pos))
-	found = true;
-      out << ")";
-    }
+    out << "(";
+    if (right && right->write(out, relaxed, node_to_find, start_pos, end_pos))
+      found = true;
+    out << ")";
     break;
   case O_ARG:
     out << "@arg" << arg_index;
@@ -1438,7 +1475,7 @@ bool valexpr_t::node_t::write(std::ostream&   out,
 
   case O_PERC:
     out << "%";
-    if (left->write(out, relaxed, node_to_find, start_pos, end_pos))
+    if (left && left->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     break;
 
@@ -1472,6 +1509,9 @@ void valexpr_t::node_t::dump(std::ostream& out, const int depth) const
   switch (kind) {
   case VALUE:
     out << "VALUE - " << *(valuep);
+    break;
+  case SYMBOL:
+    out << "SYMBOL - " << *(valuep);
     break;
   case ARG_INDEX:
     out << "ARG_INDEX - " << arg_index;
@@ -1510,7 +1550,6 @@ void valexpr_t::node_t::dump(std::ostream& out, const int depth) const
   case O_MATCH: out << "O_MATCH"; break;
 
   case O_DEFINE: out << "O_DEFINE"; break;
-  case O_LOOKUP: out << "O_LOOKUP"; break;
   case O_EVAL: out << "O_EVAL"; break;
   case O_ARG: out << "O_ARG"; break;
 

@@ -162,6 +162,10 @@ value_t& value_t::operator=(const value_t& value)
     *(balance_pair_t *) data = *(balance_pair_t *) value.data;
     return *this;
   }
+  else if (type == STRING && value.type == STRING) {
+    **(std::string **) data = **(std::string **) value.data;
+    return *this;
+  }
 
   destroy();
 
@@ -191,6 +195,8 @@ value_t& value_t::operator=(const value_t& value)
     break;
 
   case STRING:
+    std::cerr << (*(std::string **) value.data) << std::endl;
+    std::cerr << (**(std::string **) value.data) << std::endl;
     *(std::string **) data = new std::string(**(std::string **) value.data);
     break;
 

@@ -68,10 +68,9 @@ inline char * next_element(char * buf, bool variable = false)
 }
 
 static void
-parse_amount_expr(std::istream& in, amount_t& amount,
-		  valexpr_t& valexpr, unsigned short flags = 0)
+parse_amount_expr(std::istream& in, amount_t& amount, unsigned short flags = 0)
 {
-  valexpr.parse(in, flags | PARSE_VALEXPR_RELAXED | PARSE_VALEXPR_PARTIAL);
+  valexpr_t valexpr(in, flags | PARSE_VALEXPR_RELAXED | PARSE_VALEXPR_PARTIAL);
 
   DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
 	      "Parsed an amount expression");
@@ -177,10 +176,9 @@ transaction_t * parse_transaction(char * line, account_t * account,
 
     try {
       unsigned long beg = (long)in.tellg();
-      parse_amount_expr(in, xact->amount, xact->amount_expr,
-			PARSE_VALEXPR_NO_REDUCE);
+      parse_amount_expr(in, xact->amount, PARSE_VALEXPR_NO_REDUCE);
       unsigned long end = (long)in.tellg();
-      xact->amount_expr.expr = std::string(line, beg, end - beg);
+      xact->amount_expr = std::string(line, beg, end - beg);
     }
     catch (error * err) {
       err_desc = "While parsing transaction amount:";
@@ -210,12 +208,7 @@ transaction_t * parse_transaction(char * line, account_t * account,
 	try {
 	  unsigned long beg = (long)in.tellg();
 
-	  valexpr_t valexpr;
-	  parse_amount_expr(in, *xact->cost, valexpr,
-			    PARSE_VALEXPR_NO_MIGRATE);
-	  if (valexpr)
-	    throw new parse_error
-	      ("A transaction's cost must evalute to a constant value");
+	  parse_amount_expr(in, *xact->cost, PARSE_VALEXPR_NO_MIGRATE);
 
 	  unsigned long end = (long)in.tellg();
 

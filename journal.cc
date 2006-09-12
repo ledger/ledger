@@ -18,7 +18,7 @@ bool transaction_t::use_effective_date = false;
 
 transaction_t::~transaction_t()
 {
-  DEBUG_PRINT("ledger.memory.dtors", "dtor transaction_t");
+  TRACE_DTOR("transaction_t");
   if (cost) delete cost;
 }
 
@@ -276,8 +276,7 @@ entry_t::entry_t(const entry_t& e)
   : entry_base_t(e), _date(e._date), _date_eff(e._date_eff),
     code(e.code), payee(e.payee)
 {
-  DEBUG_PRINT("ledger.memory.ctors", "ctor entry_t");
-
+  TRACE_CTOR("entry_t(copy)");
   for (transactions_list::const_iterator i = transactions.begin();
        i != transactions.end();
        i++)
@@ -329,17 +328,6 @@ bool entry_t::valid() const
   return true;
 }
 
-auto_entry_t::auto_entry_t(const std::string& _predicate)
-  : predicate(_predicate)
-{
-  DEBUG_PRINT("ledger.memory.ctors", "ctor auto_entry_t");
-}
-
-auto_entry_t::~auto_entry_t()
-{
-  DEBUG_PRINT("ledger.memory.dtors", "dtor auto_entry_t");
-}
-
 void auto_entry_t::extend_entry(entry_base_t& entry, bool post)
 {
   transactions_list initial_xacts(entry.transactions.begin(),
@@ -380,11 +368,10 @@ void auto_entry_t::extend_entry(entry_base_t& entry, bool post)
 
 account_t::~account_t()
 {
-  DEBUG_PRINT("ledger.memory.dtors", "dtor account_t " << this);
+  TRACE_DTOR("acount_t");
 #if 0
   assert(! data);
 #endif
-
   for (accounts_map::iterator i = accounts.begin();
        i != accounts.end();
        i++)
@@ -510,7 +497,7 @@ bool account_t::valid() const
 
 journal_t::~journal_t()
 {
-  DEBUG_PRINT("ledger.memory.dtors", "dtor journal_t");
+  TRACE_DTOR("journal_t");
 
   assert(master);
   delete master;

@@ -282,7 +282,8 @@ END_DEFR()
 
 DEFR_OPT_(debug, "debug")
   report->session->debug_mode = true;
-  ::setenv("DEBUG_CLASS", optarg, 1);
+  std::string dbgcls = std::string("ledger.") + optarg;
+  ::setenv("DEBUG_CLASS", dbgcls.c_str(), 1);
 END_DEFR()
 
 DEFR_OPT(verbose, "verbose")
@@ -978,8 +979,10 @@ static_option_t static_options[] =
   { "help-calc",	    '\0', new option_help_calc() },
   { "help-comm",	    '\0', new option_help_comm() },
   { "help-disp",	    '\0', new option_help_disp() },
+#ifdef USE_BOOST_PYTHON
   { "import",		    '\0', new option_import() },
   { "import-stdin",	    '\0', new option_import_stdin() },
+#endif
   { "init-file",	    'i',  new option_init_file() },
   { "input-date-format",    '\0', new option_input_date_format() },
   { "limit",		    'l',  new option_limit() },

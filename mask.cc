@@ -8,6 +8,8 @@
 
 mask_t::mask_t(const std::string& pat) : exclude(false)
 {
+  TRACE_CTOR("mask_t(const std::string&)");
+
   const char * p = pat.c_str();
   if (*p == '-') {
     exclude = true;
@@ -33,6 +35,8 @@ mask_t::mask_t(const std::string& pat) : exclude(false)
 
 mask_t::mask_t(const mask_t& m) : exclude(m.exclude), pattern(m.pattern)
 {
+  TRACE_CTOR("mask_t(copy)");
+
   const char *error;
   int erroffset;
   regexp = pcre_compile(pattern.c_str(), PCRE_CASELESS,
@@ -41,6 +45,7 @@ mask_t::mask_t(const mask_t& m) : exclude(m.exclude), pattern(m.pattern)
 }
 
 mask_t::~mask_t() {
+  TRACE_DTOR("mask_t");
   pcre_free((pcre *)regexp);
 }
 

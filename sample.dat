@@ -1,5 +1,5 @@
-= /^Expenses:Books/
-  (Liabilities:Taxes)             -0.10
+;= acct =~ /^Expenses:Books/
+;  (Liabilities:Taxes)             -0.10
 
 ~ Monthly
   Assets:Bank:Checking          $500.00

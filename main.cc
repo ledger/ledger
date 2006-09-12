@@ -129,7 +129,7 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
       std::cout << "Value expression parsed was:" << std::endl;
       expr.write(std::cout);
       std::cout << std::endl << std::endl;
-      std::cout << "Result of computation: ";
+      std::cout << "Result of calculation: ";
     }
 
     value_t result = expr.calc(&report->locals);
@@ -356,7 +356,7 @@ appending the output of this command to your Ledger file if you so choose."
       std::cout << "Value expression parsed was:" << std::endl;
       expr.write(std::cout);
       std::cout << std::endl << std::endl;
-      std::cout << "Result of computation: ";
+      std::cout << "Result of calculation: ";
     }
 
     value_t result = expr.calc(&report->locals);
@@ -554,6 +554,8 @@ int main(int argc, char * argv[], char * envp[])
 #endif
     TRACE_PUSH(main, "Ledger starting");
 
+    ledger::tracing_active = true;
+
     ledger::session_t * session = new ledger::session_t;
     ledger::report_t *	report	= new ledger::report_t(session);
 
@@ -566,6 +568,12 @@ int main(int argc, char * argv[], char * envp[])
 
     TRACE_POP(main, "Ledger done");
 
+    DEBUG_IF("ledger.trace.memory") {
+      report_memory(std::cout);
+    }
+
+    ledger::tracing_active = false;
+
     return status;
   }
   catch (error * err) {
@@ -577,6 +585,7 @@ int main(int argc, char * argv[], char * envp[])
     err->reveal_context(std::cerr, "Error");
     std::cerr << err->what() << std::endl;
     delete err;
+    ledger::tracing_active = false;
     return 1;
   }
   catch (fatal * err) {
@@ -588,14 +597,17 @@ int main(int argc, char * argv[], char * envp[])
     err->reveal_context(std::cerr, "Fatal");
     std::cerr << err->what() << std::endl;
     delete err;
+    ledger::tracing_active = false;
     return 1;
   }
   catch (const std::exception& err) {
     std::cout.flush();
     std::cerr << "Error: " << err.what() << std::endl;
+    ledger::tracing_active = false;
     return 1;
   }
   catch (int status) {
+    ledger::tracing_active = false;
     return status;
   }
 }
