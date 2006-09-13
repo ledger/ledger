@@ -307,7 +307,7 @@ class account_t
 	    const std::string& _note   = "")
     : parent(_parent), name(_name), note(_note),
       depth(parent ? parent->depth + 1 : 0), data(NULL), ident(0) {
-    TRACE_CTOR("acount_t(account_t *, const std::string&, const std::string&)");
+    TRACE_CTOR("account_t(account_t *, const std::string&, const std::string&)");
   }
   ~account_t();
 

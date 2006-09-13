@@ -7,7 +7,9 @@
 
 namespace ledger {
 
+#ifndef THREADED
 valexpr_t::token_t valexpr_t::lookahead;
+#endif
 
 void valexpr_t::token_t::parse_ident(std::istream& in)
 {
@@ -36,8 +38,8 @@ void valexpr_t::token_t::parse_ident(std::istream& in)
   READ_INTO_(in, buf, 255, c, length,
 	     std::isalnum(c) || c == '_' || c == '.');
 
-  set_value(value_t(buf, true));
   kind = IDENT;
+  value.set_string(buf);
 }
 
 void valexpr_t::token_t::next(std::istream& in, unsigned short flags)
@@ -86,7 +88,8 @@ void valexpr_t::token_t::next(std::istream& in, unsigned short flags)
     in.get(c);
     length++;
     interval_t timespan(buf);
-    set_value(timespan.first());
+    kind = VALUE;
+    value = timespan.first();
     break;
   }
 
@@ -98,7 +101,8 @@ void valexpr_t::token_t::next(std::istream& in, unsigned short flags)
       unexpected(c, '"');
     in.get(c);
     length++;
-    set_value(value_t(buf, true));
+    kind = VALUE;
+    value.set_string(buf);
     break;
   }
 
@@ -110,7 +114,8 @@ void valexpr_t::token_t::next(std::istream& in, unsigned short flags)
     if (c != '}')
       unexpected(c, '}');
     length++;
-    set_value(temp);
+    kind = VALUE;
+    value = temp;
     break;
   }
 
@@ -157,8 +162,8 @@ void valexpr_t::token_t::next(std::istream& in, unsigned short flags)
       in.get(c);
       if (c != '/')
 	unexpected(c, '/');
-      set_value(value_t(buf, true));
       kind = REGEXP;
+      value.set_string(buf);
       break;
     }
     kind = SLASH;
@@ -257,7 +262,8 @@ void valexpr_t::token_t::next(std::istream& in, unsigned short flags)
 
 	temp.parse(in, parse_flags);
 
-	set_value(temp);
+	kind = VALUE;
+	value = temp;
       }
       catch (amount_error * err) {
 	// If the amount had no commodity, it must be an unambiguous
@@ -292,10 +298,10 @@ void valexpr_t::token_t::unexpected()
     throw new parse_error("Unexpected end of expression");
   case IDENT:
     throw new parse_error(std::string("Unexpected symbol '") +
-			  value->get_string() + "'");
+			  value.get_string() + "'");
   case VALUE:
     throw new parse_error(std::string("Unexpected value '") +
-			  value->get_string() + "'");
+			  value.get_string() + "'");
   default:
     throw new parse_error(std::string("Unexpected operator '") + symbol + "'");
   }
@@ -413,13 +419,15 @@ valexpr_t::node_t::~node_t()
   }
 }
 
-value_t valexpr_t::node_t::value() const
+void valexpr_t::node_t::get_value(value_t& result) const
 {
   switch (kind) {
   case VALUE:
-    return *valuep;
+    result = *valuep;
+    break;
   case ARG_INDEX:
-    return (long)arg_index;
+    result = (long)arg_index;
+    break;
   default: {
     std::ostringstream buf;
     write(buf);
@@ -450,12 +458,12 @@ valexpr_t::parse_value_term(std::istream& in, unsigned short flags) const
 
   case token_t::REGEXP:
     node.reset(new node_t(node_t::MASK));
-    node->mask = new mask_t(tok.value->get_string());
+    node->mask = new mask_t(tok.value.get_string());
     break;
 
   case token_t::VALUE:
     node.reset(new node_t(node_t::VALUE));
-    node->valuep = new value_t(*tok.value);
+    node->valuep = new value_t(tok.value);
     break;
 
   case token_t::IDENT:
@@ -485,7 +493,7 @@ valexpr_t::parse_value_term(std::istream& in, unsigned short flags) const
 #endif
 
     node.reset(new node_t(node_t::SYMBOL));
-    node->valuep = new value_t(*tok.value);
+    node->valuep = new value_t(tok.value);
 
     // An identifier followed by ( represents a function call
     tok = next_token(in, flags);
@@ -856,9 +864,11 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
     }
 
     if (expr->valuep->strip_annotations())
-      return wrap_value(false)->acquire();
+      *expr->valuep = false;
     else
-      return wrap_value(true)->acquire();
+      *expr->valuep = true;
+
+    return expr->acquire();
   }
 
   case O_NEG: {
@@ -870,7 +880,10 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
       else
 	return copy(expr)->acquire();
     }
-    return wrap_value(expr->valuep->negated())->acquire();
+
+    expr->valuep->negate();
+
+    return expr->acquire();
   }
 
   case O_ADD:
@@ -888,17 +901,15 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
 	return copy(lexpr, rexpr)->acquire();
     }
 
-    std::auto_ptr<node_t> node(new_node(VALUE));
-    node->valuep = new value_t(*lexpr->valuep);
     switch (kind) {
-    case O_ADD: *node->valuep += *rexpr->valuep; break;
-    case O_SUB: *node->valuep -= *rexpr->valuep; break;
-    case O_MUL: *node->valuep *= *rexpr->valuep; break;
-    case O_DIV: *node->valuep /= *rexpr->valuep; break;
+    case O_ADD: *lexpr->valuep += *rexpr->valuep; break;
+    case O_SUB: *lexpr->valuep -= *rexpr->valuep; break;
+    case O_MUL: *lexpr->valuep *= *rexpr->valuep; break;
+    case O_DIV: *lexpr->valuep /= *rexpr->valuep; break;
     default: assert(0); break;
     }
 
-    return node.release()->acquire();
+    return lexpr->acquire();
   }
 
   case O_NEQ:
@@ -918,27 +929,27 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
 	return copy(lexpr, rexpr)->acquire();
     }
 
-    std::auto_ptr<node_t> node(new_node(VALUE));
-    node->valuep = new value_t;
     switch (kind) {
-    case O_NEQ: *node->valuep = *lexpr->valuep != *rexpr->valuep; break;
-    case O_EQ:  *node->valuep = *lexpr->valuep == *rexpr->valuep; break;
-    case O_LT:  *node->valuep = *lexpr->valuep <  *rexpr->valuep; break;
-    case O_LTE: *node->valuep = *lexpr->valuep <= *rexpr->valuep; break;
-    case O_GT:  *node->valuep = *lexpr->valuep >  *rexpr->valuep; break;
-    case O_GTE: *node->valuep = *lexpr->valuep >= *rexpr->valuep; break;
+    case O_NEQ: *lexpr->valuep = *lexpr->valuep != *rexpr->valuep; break;
+    case O_EQ:  *lexpr->valuep = *lexpr->valuep == *rexpr->valuep; break;
+    case O_LT:  *lexpr->valuep = *lexpr->valuep <  *rexpr->valuep; break;
+    case O_LTE: *lexpr->valuep = *lexpr->valuep <= *rexpr->valuep; break;
+    case O_GT:  *lexpr->valuep = *lexpr->valuep >  *rexpr->valuep; break;
+    case O_GTE: *lexpr->valuep = *lexpr->valuep >= *rexpr->valuep; break;
     default: assert(0); break;
     }
 
-    return node.release()->acquire();
+    return lexpr->acquire();
   }
 
   case O_AND: {
     assert(left);
     assert(right);
     valexpr_t lexpr(left->compile(scope));
-    if (lexpr->constant() && ! lexpr->valuep->strip_annotations())
-      return wrap_value(false)->acquire();
+    if (lexpr->constant() && ! lexpr->valuep->strip_annotations()) {
+      *lexpr->valuep = false;
+      return lexpr->acquire();
+    }
 
     valexpr_t rexpr(right->compile(scope));
     if (! lexpr->constant() || ! rexpr->constant()) {
@@ -948,10 +959,12 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
 	return copy(lexpr, rexpr)->acquire();
     }
 
-    if (! rexpr->valuep->strip_annotations())
-      return wrap_value(false)->acquire();
-    else
+    if (! rexpr->valuep->strip_annotations()) {
+      *lexpr->valuep = false;
+      return lexpr->acquire();
+    } else {
       return rexpr->acquire();
+    }
   }
 
   case O_OR: {
@@ -969,10 +982,12 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
 	return copy(lexpr, rexpr)->acquire();
     }
 
-    if (rexpr->valuep->strip_annotations())
+    if (rexpr->valuep->strip_annotations()) {
       return rexpr->acquire();
-    else
-      return wrap_value(false)->acquire();
+    } else {
+      *lexpr->valuep = false;
+      return lexpr->acquire();
+    }
   }
 
   case O_QUES: {
@@ -980,8 +995,8 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
     assert(right);
     assert(right->kind == O_COLON);
     valexpr_t lexpr(left->compile(scope));
-    valexpr_t rexpr(right->compile(scope));
     if (! lexpr->constant()) {
+      valexpr_t rexpr(right->compile(scope));
       if (left == lexpr && right == rexpr)
 	return acquire();
       else
@@ -989,9 +1004,9 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
     }
 
     if (lexpr->valuep->strip_annotations())
-      return rexpr->left->acquire();
+      return right->left->compile(scope);
     else
-      return rexpr->right->acquire();
+      return right->right->compile(scope);
   }
 
   case O_COLON: {
@@ -1007,8 +1022,7 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
     assert(left);
     assert(right);
     valexpr_t lexpr(left->compile(scope)); // for side-effects
-    valexpr_t rexpr(right->compile(scope));
-    return rexpr->acquire();
+    return right->compile(scope);
   }
 
   case O_MATCH: {
@@ -1029,7 +1043,9 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
     if (lexpr->valuep->type != value_t::STRING)
       throw new calc_error("Left operand of mask operator is not a string");
 
-    return wrap_value(mask->match(lexpr->valuep->get_string()))->acquire();
+    *lexpr->valuep = mask->match(lexpr->valuep->get_string());
+
+    return lexpr->acquire();
   }
 
   case O_DEFINE:
@@ -1070,18 +1086,24 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
       }
 
       valexpr_t rexpr(right->compile(arg_scope.get()));
+
       if (scope)
 	scope->define(left->left->left->valuep->get_string(), rexpr);
+
       return rexpr->acquire();
     }
 
   case SYMBOL:
     if (scope)
       if (node_t * def = scope->lookup(valuep->get_string())) {
-	if (def->kind == FUNCTOR)
-	  return wrap_value((*def->functor)(scope))->acquire();
-	else
+	if (def->kind == FUNCTOR) {
+	  *valuep = 0L;
+	  (*def->functor)(*valuep, scope);
+	  kind = VALUE;
+	  return acquire();
+	} else {
 	  return def->compile(scope);
+	}
       }
     return acquire();
 
@@ -1106,15 +1128,21 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
 
     if (left->kind == SYMBOL) {
       valexpr_t func(left->lookup(scope)); // don't compile!
-      if (func->kind == FUNCTOR)
-	return wrap_value((*func->functor)(call_args.get()))->acquire();
-      else
+      if (func->kind == FUNCTOR) {
+	value_t temp;
+	(*func->functor)(temp, call_args.get());
+	return wrap_value(temp)->acquire();
+      } else {
 	return func->compile(call_args.get());
+      }
     } else {
-      if (left->kind == FUNCTOR)
-	return wrap_value((*left->functor)(call_args.get()))->acquire();
-      else
+      if (left->kind == FUNCTOR) {
+	value_t temp;
+	(*left->functor)(temp, call_args.get());
+	return wrap_value(temp)->acquire();
+      } else {
 	assert(0);
+      }
       break;
     }
   }
@@ -1172,7 +1200,7 @@ void valexpr_t::calc(value_t& result, scope_t * scope) const
     valexpr_t final(ptr->compile(scope));
     // jww (2006-09-09): Give a better error here if this is not
     // actually a value
-    result = final->value();
+    final->get_value(result);
   }
   catch (error * err) {
     if (err->context.empty() ||

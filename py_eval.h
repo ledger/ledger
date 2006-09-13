@@ -34,7 +34,7 @@ class python_functor_t : public valexpr_t::functor_t
  public:
   python_functor_t(object _func) : func(_func) {}
 
-  virtual value_t operator()(valexpr_t::scope_t * args);
+  virtual void operator()(value_t& result, valexpr_t::scope_t * args);
 };
 
 class python_lambda_t : public python_functor_t

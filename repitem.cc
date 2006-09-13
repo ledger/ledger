@@ -24,7 +24,7 @@ repitem_t::~repitem_t()
   if (next) delete next;
 }
 
-void repitem_t::add_total(value_t& val) const
+void repitem_t::add_total(value_t& val)
 {
   add_value(val);
 
@@ -48,7 +48,7 @@ void add_transaction_to(const transaction_t& xact, value_t& value)
 #endif
 }
 
-void repitem_t::add_value(value_t& val) const
+void repitem_t::add_value(value_t& val)
 {
   switch (kind) {
   case XACT:
@@ -63,7 +63,7 @@ void repitem_t::add_value(value_t& val) const
   }
 }
 
-void repitem_t::add_sort_value(value_t& val) const
+void repitem_t::add_sort_value(value_t& val)
 {
   assert(0);
 }

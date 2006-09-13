@@ -182,7 +182,7 @@ object python_eval(const char * c_str, py_eval_mode_t mode)
   return python_eval(str, mode);
 }
 
-value_t python_functor_t::operator()(valexpr_t::scope_t * args)
+void python_functor_t::operator()(value_t& result, valexpr_t::scope_t * args)
 {
   std::string func_name = "<Unknown>";
 
@@ -196,7 +196,7 @@ value_t python_functor_t::operator()(valexpr_t::scope_t * args)
 
       if (PyObject * val =
 	  PyObject_CallObject(func.ptr(), tuple(arglist).ptr())) {
-	return extract<value_t>(val)();
+	result = extract<value_t>(val)();
 	Py_DECREF(val);
       }
       else if (PyObject * err = PyErr_Occurred()) {
@@ -207,7 +207,7 @@ value_t python_functor_t::operator()(valexpr_t::scope_t * args)
 	assert(0);
       }
     } else {
-      return call<value_t>(func.ptr());
+      result = call<value_t>(func.ptr());
     }
   }
   catch(const boost::python::error_already_set&) {

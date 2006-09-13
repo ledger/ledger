@@ -63,7 +63,7 @@ class valexpr_t
   class functor_t {
   public:
     virtual ~functor_t() {}
-    virtual value_t operator()(scope_t * args) = 0;
+    virtual void operator()(value_t& result, scope_t * args) = 0;
 
     virtual std::string name() const {
       return "<func>";
@@ -162,10 +162,10 @@ class valexpr_t
     } kind;
 
     char	 symbol[3];
-    value_t *	 value;
+    value_t	 value;
     unsigned int length;
 
-    token_t() : kind(UNKNOWN), value(NULL), length(0) {
+    token_t() : kind(UNKNOWN), length(0) {
       TRACE_CTOR("valexpr_t::token_t()");
     }
 
@@ -177,85 +177,15 @@ class valexpr_t
 
     ~token_t() {
       TRACE_DTOR("valexpr_t::token_t");
-      switch (kind) {
-      case REGEXP:
-      case IDENT:
-      case VALUE:
-	assert(value);
-	DEBUG_PRINT("ledger.valexpr.token", "value is " << value);
-	delete value;
-	break;
-      default:
-	break;
-      }
     }
 
     token_t& operator=(const token_t& other) {
       if (&other == this)
 	return *this;
-
       assert(0);
-
-      switch (kind) {
-      case REGEXP:
-      case IDENT:
-      case VALUE:
-	assert(value);
-	delete value;
-	break;
-      }
-
-      kind   = other.kind;
-      length = other.length;
-      switch (kind) {
-      case REGEXP:
-      case IDENT:
-      case VALUE:
-	DEBUG_PRINT("ledger.valexpr.token", "other.value is " << other.value);
-	assert(other.value);
-	value = new value_t(*other.value);
-	DEBUG_PRINT("ledger.valexpr.token", "value is " << value);
-	break;
-      default:
-	value = NULL;
-	symbol[0] = other.symbol[0];
-	symbol[1] = other.symbol[1];
-	symbol[2] = other.symbol[2];
-	break;
-      }
-    }
-
-    void set_value(const value_t& val) {
-      switch (kind) {
-      case REGEXP:
-      case IDENT:
-      case VALUE:
-	assert(value);
-	DEBUG_PRINT("ledger.valexpr.token", "old value is " << value);
-	delete value;
-	break;
-      default:
-	break;
-      }
-
-      kind  = VALUE;
-      value = new value_t(val);
-      DEBUG_PRINT("ledger.valexpr.token", "value is " << value);
     }
 
     void clear() {
-      switch (kind) {
-      case REGEXP:
-      case IDENT:
-      case VALUE:
-	assert(value);
-	DEBUG_PRINT("ledger.valexpr.token", "value is " << value);
-	delete value;
-	break;
-      default:
-	break;
-      }
-
       kind   = UNKNOWN;
       length = 0;
 
@@ -345,7 +275,12 @@ class valexpr_t
     bool constant() const {
       return kind == VALUE;
     }
-    value_t value() const;
+    void get_value(value_t& result) const;
+    value_t value() const {
+      value_t temp;
+      get_value(temp);
+      return temp;
+    }
 
     void release() const {
       DEBUG_PRINT("ledger.valexpr.memory",
@@ -443,7 +378,11 @@ class valexpr_t
     }
   }
 
+#ifdef THREADED
+  mutable token_t lookahead;
+#else
   static  token_t lookahead;
+#endif
   mutable bool    use_lookahead;
 
   token_t& next_token(std::istream& in, unsigned short flags) const {

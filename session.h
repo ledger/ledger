@@ -46,13 +46,14 @@ class session_t
   struct session_callback_t : valexpr_t::functor_t
   {
     session_t * session;
-    value_t (session_t::*mptr)();
+    void (session_t::*mptr)(value_t& result);
 
-    session_callback_t(session_t * _session, value_t (session_t::*_mptr)())
+    session_callback_t(session_t * _session,
+		       void (session_t::*_mptr)(value_t& result))
       : session(_session), mptr(_mptr) {}
 
-    virtual value_t operator()(valexpr_t::scope_t * args) {
-      return (session->*mptr)();
+    virtual void operator()(value_t& result, valexpr_t::scope_t * args) {
+      (session->*mptr)(result);
     }
   };
 
@@ -94,8 +95,8 @@ class session_t
   }
 #endif
 
-  value_t get_terminus() {
-    return terminus;
+  void get_terminus(value_t& result) {
+    result = terminus;
   }
 };
 

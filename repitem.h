@@ -53,22 +53,16 @@ public:
 
   virtual ~repitem_t();
 
-  void add_value(value_t& val) const;
-  void add_sort_value(value_t& val) const;
-  void add_total(value_t& val) const;
-
-  value_t get_value() {
-    value_t result;
-    add_value(result);
-    return result;
-  }
+  void add_value(value_t& val);
+  void add_sort_value(value_t& val);
+  void add_total(value_t& val);
 
   datetime_t date() const;
   datetime_t effective_date() const;
   datetime_t actual_date() const;
 
-  value_t get_date() {
-    return value_t(date());
+  void get_date(value_t& result) {
+    result = date();
   }
 
   account_t * account() const;
@@ -104,15 +98,15 @@ class repitem_scope_t : public valexpr_t::scope_t
   struct repitem_ref_callback_t : valexpr_t::functor_t
   {
     repitem_scope_t * scope;
-    value_t (repitem_t::*mptr)();
+    void (repitem_t::*mptr)(value_t& result);
 
     repitem_ref_callback_t(repitem_scope_t * _scope,
-			   value_t (repitem_t::*_mptr)())
+			   void (repitem_t::*_mptr)(value_t& result))
       : scope(_scope), mptr(_mptr) {}
 
-    virtual value_t operator()(valexpr_t::scope_t * context) {
+    virtual void operator()(value_t& result, valexpr_t::scope_t * context) {
       assert(scope->repitem);
-      return (scope->repitem->*mptr)();
+      (scope->repitem->*mptr)(result);
     }
   };
 
@@ -122,7 +116,7 @@ class repitem_scope_t : public valexpr_t::scope_t
   repitem_scope_t(scope_t * parent = NULL)
     : scope_t(parent), repitem(NULL)
   {
-    define("value", new repitem_ref_callback_t(this, &repitem_t::get_value));
+    define("value", new repitem_ref_callback_t(this, &repitem_t::add_value));
     define("date",  new repitem_ref_callback_t(this, &repitem_t::get_date));
 #if 0
     // Item details
