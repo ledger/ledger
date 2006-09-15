@@ -404,13 +404,8 @@ entry_t * parse_entry(std::istream& in, char * line, journal_t * journal,
   // Create a report item for this entry, so the transaction below may
   // refer to it
 
-  if (! journal->data) {
-    repitem_t * item = repitem_t::wrap(journal);
-    item->valexpr_t::scope_t::parent = journal->session;
-    journal->data = item;
-  }
-  curr->data = repitem_t::wrap(curr.get(),
-			       static_cast<repitem_t *>(journal->data));
+  curr->data =
+    repitem_t::wrap(curr.get(), static_cast<repitem_t *>(journal->data));
 
   // Parse all of the transactions associated with this entry
 

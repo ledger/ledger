@@ -13,6 +13,8 @@ unsigned int session_t::read_journal(std::istream&       in,
   if (! master)
     master = journal->master;
 
+  journal->data = repitem_t::wrap(journal);
+
   for (std::list<parser_t *>::iterator i = parsers.begin();
        i != parsers.end();
        i++)
