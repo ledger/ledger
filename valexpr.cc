@@ -366,7 +366,7 @@ void valexpr_t::scope_t::define(const std::string& name, node_t * def)
 }
 
 valexpr_t::node_t *
-valexpr_t::scope_t::lookup(const std::string& name) const
+valexpr_t::scope_t::lookup(const std::string& name)
 {
   symbol_map::const_iterator i = symbols.find(name);
   if (i != symbols.end())

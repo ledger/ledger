@@ -2,7 +2,6 @@
 #define _TEXTUAL_H
 
 #include "parser.h"
-#include "format.h"
 
 namespace ledger {
 
@@ -16,9 +15,6 @@ class textual_parser_t : public parser_t
 			     account_t *	 master        = NULL,
 			     const std::string * original_file = NULL);
 };
-
-transaction_t * parse_transaction_text(char * line, account_t * account);
-transaction_t * parse_transaction(std::istream& in, account_t * account);
 
 #if 0
 void write_textual_journal(journal_t& journal, std::string path,

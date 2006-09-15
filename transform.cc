@@ -7,7 +7,7 @@ void split_transform::walk_items(repitem_t * items)
 {
   for (repitem_t * i = items; i; i = i->next) {
     if (i->contents && i->contents->next) {
-      repitem_t * j = new repitem_t;
+      repitem_t * j = new repitem_t(i->kind);
 
       j->parent = i->parent;
       j->prev = i;
@@ -15,7 +15,7 @@ void split_transform::walk_items(repitem_t * items)
       i->next = j;
 
       switch (i->kind) {
-      case repitem_t::XACT:
+      case repitem_t::TRANSACTION:
 	assert(0);
 	break;
       case repitem_t::ENTRY:

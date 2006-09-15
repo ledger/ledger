@@ -1,5 +1,4 @@
 #include "option.h"
-#include "config.h"
 #include "report.h"
 #include "debug.h"
 #include "error.h"
@@ -12,68 +11,87 @@
 
 #include "util.h"
 
+#if 0
 #ifdef USE_BOOST_PYTHON
 static ledger::option_t * find_option(const std::string& name);
+#endif
 #endif
 
 namespace ledger {
 
-extern static_option_t static_options[];
+namespace {
+  valexpr_t::functor_t * find_option(valexpr_t::scope_t * scope,
+				     const std::string& name)
+  {
+    char buf[128];
+    std::strcpy(buf, "opt_");
+    char * p = &buf[4];
+    for (const char * q = name.c_str(); *q; q++) {
+      if (*q == '-')
+	*p++ = '_';
+      else
+	*p++ = *q;
+    }
+    *p = '\0';
 
-void process_option(option_t * opt, option_t::option_source_t source,
-		    report_t * report, const char * arg)
-{
-  if (opt->check(source)) {
+    if (valexpr_t::node_t * def = scope->lookup(buf))
+      return def->functor_obj();
+    else
+      return NULL;
+  }
+
+  valexpr_t::functor_t * find_option(valexpr_t::scope_t * scope,
+				     const char letter)
+  {
+    char buf[6];
+    std::strcpy(buf, "opt_");
+    buf[4] = letter;
+    buf[5] = '\0';
+
+    if (valexpr_t::node_t * def = scope->lookup(buf))
+      return def->functor_obj();
+    else
+      return NULL;
+  }
+
+  void process_option(valexpr_t::functor_t * opt, valexpr_t::scope_t * scope,
+		      const char * arg)
+  {
     try {
-      opt->select(report, arg);
+      valexpr_t::scope_t * args = NULL;
+      if (arg) {
+	args = new valexpr_t::scope_t(scope, true);
+	args->args.push_back(valexpr_t::wrap_value(value_t(arg, true)));
+      }
+
+      value_t temp;
+      (*opt)(temp, args);
     }
     catch (error * err) {
+#if 0
       err->context.push_back
 	(new error_context
 	 (std::string("While parsing option '--") + opt->long_opt +
 	  "'" + (opt->short_opt != '\0' ?
 		 (std::string(" (-") + opt->short_opt + "):") : ":")));
+#endif
       throw err;
     }
   }
 }
 
-option_t * search_options(const char * name)
+bool process_option(const std::string& name, valexpr_t::scope_t * scope,
+		    const char * arg)
 {
-  int first = 0;
-  int last  = OPTIONS_SIZE;
-  while (first <= last) {
-    int mid = (first + last) / 2; // compute mid point.
-
-    int result;
-    if ((result = (int)name[0] - (int)static_options[mid].long_opt[0]) == 0)
-      result = std::strcmp(name, static_options[mid].long_opt);
-
-    if (result > 0)
-      first = mid + 1;		// repeat search in top half.
-    else if (result < 0)
-      last = mid - 1;		// repeat search in bottom half.
-    else
-      return static_options[mid].handler;
+  if (valexpr_t::functor_t * opt = find_option(scope, name)) {
+    process_option(opt, scope, arg);
+    return true;
   }
-
-#ifdef USE_BOOST_PYTHON
-  return find_option(name);
-#else
-  return NULL;
-#endif
-}
-
-inline option_t * search_options(const char letter)
-{
-  for (int i = 0; i < OPTIONS_SIZE; i++)
-    if (letter == static_options[i].short_opt)
-      return static_options[i].handler;
-  return NULL;
+  return false;
 }
 
 void process_environment(const char ** envp, const std::string& tag,
-			 report_t * report)
+			 valexpr_t::scope_t * scope)
 {
   const char * tag_p   = tag.c_str();
   unsigned int tag_len = tag.length();
@@ -94,7 +112,8 @@ void process_environment(const char ** envp, const std::string& tag,
 
       if (*q == '=') {
 	try {
-	  process_option(option_t::ENVIRONMENT, buf, report, q + 1);
+	  if (! process_option(buf, scope, q + 1))
+	    throw new option_error("unknown option");
 	}
 	catch (error * err) {
 	  err->context.pop_back();
@@ -109,7 +128,8 @@ void process_environment(const char ** envp, const std::string& tag,
 }
 
 void process_arguments(int argc, char ** argv, const bool anywhere,
-		       report_t * report, std::list<std::string>& args)
+		       valexpr_t::scope_t * scope,
+		       std::list<std::string>& args)
 {
   int index = 0;
   for (char ** i = argv; *i; i++) {
@@ -137,43 +157,47 @@ void process_arguments(int argc, char ** argv, const bool anywhere,
 	value = p;
       }
 
-      option_t * opt = search_options(name);
+      valexpr_t::functor_t * opt = find_option(scope, name);
       if (! opt)
 	throw new option_error(std::string("illegal option --") + name);
 
-      if (opt->wants_arg && value == NULL) {
+      if (opt->wants_args && value == NULL) {
 	value = *++i;
 	if (value == NULL)
 	  throw new option_error(std::string("missing option argument for --") +
 				 name);
       }
-      process_option(opt, option_t::COMMAND_LINE, report, value);
+      process_option(opt, scope, value);
     }
     else if ((*i)[1] == '\0') {
       throw new option_error(std::string("illegal option -"));
     }
     else {
-      std::list<option_t *> opt_queue;
+      std::list<valexpr_t::functor_t *> opt_queue;
 
       int x = 1;
       for (char c = (*i)[x]; c != '\0'; x++, c = (*i)[x]) {
-	option_t * opt = search_options(c);
+	valexpr_t::functor_t * opt = find_option(scope, c);
 	if (! opt)
 	  throw new option_error(std::string("illegal option -") + c);
 	opt_queue.push_back(opt);
       }
 
-      for (std::list<option_t *>::iterator o = opt_queue.begin();
+      for (std::list<valexpr_t::functor_t *>::iterator o = opt_queue.begin();
 	   o != opt_queue.end();
 	   o++) {
 	char * value = NULL;
-	if ((*o)->wants_arg) {
+	if ((*o)->wants_args) {
 	  value = *++i;
 	  if (value == NULL)
 	    throw new option_error(std::string("missing option argument for -") +
+#if 0
 				   (*o)->short_opt);
+#else
+	  '?');
+#endif
 	}
-	process_option(*o, option_t::COMMAND_LINE, report, value);
+	process_option(*o, scope, value);
       }
     }
 
@@ -184,6 +208,7 @@ void process_arguments(int argc, char ** argv, const bool anywhere,
 
 } // namespace ledger
 
+#if 0
 #ifdef USE_BOOST_PYTHON
 
 #include <boost/python.hpp>
@@ -265,3 +290,4 @@ void export_option()
 }
 
 #endif // USE_BOOST_PYTHON
+#endif

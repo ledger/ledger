@@ -401,6 +401,25 @@ void report_t::apply_transforms(repitem_t * items)
     (*i)->walk_items(items);
 }
 
+valexpr_t::node_t * report_t::lookup(const std::string& name)
+{
+  const char * p = name.c_str();
+  switch (*p) {
+  case 'o':
+    if (std::strncmp(p, "opt_", 4) == 0) {
+      p = p + 4;
+      switch (*p) {
+      case 'b':
+	return MAKE_FUNCTOR(report_t, opt_bar);
+      case 'f':
+	return MAKE_FUNCTOR(report_t, opt_foo);
+      }
+    }
+    break;
+  }
+  return parent ? parent->lookup(name) : NULL;
+}
+
 } // namespace ledger
 
 #ifdef USE_BOOST_PYTHON

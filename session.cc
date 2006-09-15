@@ -1,6 +1,57 @@
 #include "session.h"
+#include "repitem.h"
+
+#include <fstream>
 
 namespace ledger {
+
+unsigned int session_t::read_journal(std::istream&       in,
+				     journal_t *         journal,
+				     account_t *	 master,
+				     const std::string * original_file)
+{
+  if (! master)
+    master = journal->master;
+
+  for (std::list<parser_t *>::iterator i = parsers.begin();
+       i != parsers.end();
+       i++)
+    if ((*i)->test(in))
+      return (*i)->parse(in, journal, master, original_file);
+
+  return 0;
+}
+
+unsigned int session_t::read_journal(const std::string&  path,
+				     journal_t *         journal,
+				     account_t *	 master,
+				     const std::string * original_file)
+{
+  journal->sources.push_back(path);
+
+  if (access(path.c_str(), R_OK) == -1)
+    throw new error(std::string("Cannot read file '") + path + "'");
+
+  if (! original_file)
+    original_file = &path;
+
+  std::ifstream stream(path.c_str());
+  return read_journal(stream, journal, master, original_file);
+}
+
+valexpr_t::node_t * session_t::lookup(const std::string& name)
+{
+  const char * p = name.c_str();
+  switch (*p) {
+  case 'n':
+    switch (*++p) {
+    case 'o':
+      return MAKE_FUNCTOR(session_t, now);
+    }
+    break;
+  }
+  return parent ? parent->lookup(name) : NULL;
+}
 
 } // namespace ledger
 

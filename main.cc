@@ -38,7 +38,9 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
   process_arguments(argc - 1, argv + 1, false, report, args);
 
   if (args.empty()) {
+#if 0
     help(std::cerr);
+#endif
     return 1;
   }
   strings_list::iterator arg = args.begin();
@@ -57,13 +59,13 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
   // These are here for backwards compatability, but are deprecated.
 
   if (const char * p = std::getenv("LEDGER"))
-    process_option(option_t::ENVIRONMENT, "file", report, p);
+    process_option("file", report, p);
   if (const char * p = std::getenv("LEDGER_INIT"))
-    process_option(option_t::ENVIRONMENT, "init-file", report, p);
+    process_option("init-file", report, p);
   if (const char * p = std::getenv("PRICE_HIST"))
-    process_option(option_t::ENVIRONMENT, "price-db", report, p);
+    process_option("price-db", report, p);
   if (const char * p = std::getenv("PRICE_EXP"))
-    process_option(option_t::ENVIRONMENT, "price-exp", report, p);
+    process_option("price-exp", report, p);
 #endif
 
   const char * p = std::getenv("HOME");
@@ -132,8 +134,7 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
       std::cout << "Result of calculation: ";
     }
 
-    value_t result = expr.calc(&report->locals);
-    std::cout << result.strip_annotations() << std::endl;
+    std::cout << expr.calc(report).strip_annotations() << std::endl;
 
     return 0;
   }
@@ -152,13 +153,15 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
 		      session.init_file + "'");
 
     std::ifstream init(session.init_file.c_str());
+#if 0
     extern parser_t * ledger::textual_parser_ptr;
     textual_parser_ptr->parse(init, NULL, NULL, &session.init_file);
+#endif
   }
 
   // Parse ledger data, price database, etc.
 
-  std::auto_ptr<journal_t> journal(new journal_t);
+  journal_t * journal = session.new_journal();
 
   { TRACE_PUSH(parser, "Parsing journal file");
 
@@ -174,16 +177,15 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
       session.cache_dirty = true;
       if (access(session.cache_file.c_str(), R_OK) != -1) {
 	std::ifstream stream(session.cache_file.c_str());
-	if (binary_parser_ptr && binary_parser_ptr->test(stream)) {
-	  std::string price_db_orig = journal->price_db;
-	  journal->price_db = session.price_db;
-	  entry_count += binary_parser_ptr->parse
-	    (stream, journal.get(), NULL, &session.data_file);
-	  if (entry_count > 0)
-	    session.cache_dirty = false;
-	  else
-	    journal->price_db = price_db_orig;
-	}
+
+	std::string price_db_orig = journal->price_db;
+	journal->price_db = session.price_db;
+	entry_count += session.read_journal(stream, journal, NULL,
+					    &session.data_file);
+	if (entry_count > 0)
+	  session.cache_dirty = false;
+	else
+	  journal->price_db = price_db_orig;
       }
     }
 
@@ -195,7 +197,7 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
       journal->price_db = session.price_db;
       if (! journal->price_db.empty() &&
 	  access(journal->price_db.c_str(), R_OK) != -1) {
-	if (parse_journal_file(journal->price_db, journal.get())) {
+	if (session.read_journal(journal->price_db, journal)) {
 	  throw new error("Entries not allowed in price history file");
 	} else {
 	  DEBUG_PRINT("ledger.session.cache",
@@ -209,11 +211,10 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
       if (session.data_file == "-") {
 	session.use_cache = false;
 	journal->sources.push_back("<stdin>");
-	entry_count += parse_journal(std::cin, journal.get(), acct);
+	entry_count += session.read_journal(std::cin, journal, acct);
       }
       else if (access(session.data_file.c_str(), R_OK) != -1) {
-	entry_count += parse_journal_file(session.data_file,
-					  journal.get(), acct);
+	entry_count += session.read_journal(session.data_file, journal, acct);
 	if (! journal->price_db.empty())
 	  journal->sources.push_back(journal->price_db);
       }
@@ -359,8 +360,7 @@ appending the output of this command to your Ledger file if you so choose."
       std::cout << "Result of calculation: ";
     }
 
-    value_t result = expr.calc(&report->locals);
-    std::cout << result.strip_annotations() << std::endl;
+    std::cout << expr.calc(report).strip_annotations() << std::endl;
 
     return 0;
   }
@@ -438,13 +438,13 @@ appending the output of this command to your Ledger file if you so choose."
   else if (command == "W") {
     TRACE_PUSH(binary_writer, "Writing binary file");
     std::ofstream stream(report.output_file.c_str());
-    write_binary_journal(stream, journal.get());
+    write_binary_journal(stream, journal);
     TRACE_POP(binary_writer, "Finished writing");
   }
   else {
     TRACE_PUSH(main, "Walking journal entries");
 
-    formatter = report.chain_xact_handlers(command, formatter, journal.get(),
+    formatter = report.chain_xact_handlers(command, formatter, journal,
 					   journal->master, formatter_ptrs);
     if (command == "e")
       walk_transactions(new_entry->transactions, *formatter);
@@ -526,7 +526,7 @@ appending the output of this command to your Ledger file if you so choose."
     TRACE_PUSH(binary_cache, "Writing journal file");
 
     std::ofstream stream(session.cache_file.c_str());
-    write_binary_journal(stream, journal.get());
+    write_binary_journal(stream, journal);
 
     TRACE_POP(binary_cache, "Finished writing");
   }
@@ -549,15 +549,29 @@ appending the output of this command to your Ledger file if you so choose."
 int main(int argc, char * argv[], char * envp[])
 {
   try {
+    std::ios::sync_with_stdio(false);
+
+    ledger::tracing_active = true;
+
 #if DEBUG_LEVEL < BETA
     ledger::do_cleanup = false;
 #endif
     TRACE_PUSH(main, "Ledger starting");
 
-    ledger::tracing_active = true;
-
     ledger::session_t * session = new ledger::session_t;
-    ledger::report_t *	report	= new ledger::report_t(session);
+
+    session->register_parser(new binary_parser_t);
+#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
+    session->register_parser(new xml_parser_t);
+    session->register_parser(new gnucash_parser_t);
+#endif
+#ifdef HAVE_LIBOFX
+    session->register_parser(new ofx_parser_t);
+#endif
+    session->register_parser(new qif_parser_t);
+    session->register_parser(new textual_parser_t);
+
+    ledger::report_t * report = new ledger::report_t(session);
 
     int status = parse_and_report(report, argc, argv, envp);
 

@@ -47,7 +47,8 @@ class transaction_t
   unsigned long    beg_line;
   istream_pos_type end_pos;
   unsigned long    end_line;
-  mutable void *   data;
+
+  mutable void * data;
 
   static bool use_effective_date;
 
@@ -165,7 +166,9 @@ class entry_t : public entry_base_t
   std::string code;
   std::string payee;
 
-  entry_t() {
+  mutable void * data;
+
+  entry_t() : data(NULL) {
     TRACE_CTOR("entry_t()");
   }
   entry_t(const entry_t& e);
@@ -248,6 +251,7 @@ public:
 };
 
 class journal_t;
+
 struct auto_entry_finalizer_t : public entry_finalizer_t {
   journal_t * journal;
   auto_entry_finalizer_t(journal_t * _journal) : journal(_journal) {}
@@ -298,8 +302,8 @@ class account_t
   unsigned short depth;
   accounts_map	 accounts;
 
-  mutable void *  data;
-  mutable ident_t ident;
+  mutable void *      data;
+  mutable ident_t     ident;
   mutable std::string _fullname;
 
   account_t(account_t *        _parent = NULL,
@@ -383,9 +387,12 @@ typedef std::list<auto_entry_t *>   auto_entries_list;
 typedef std::list<period_entry_t *> period_entries_list;
 typedef std::list<std::string>	    strings_list;
 
+class session_t;
+
 class journal_t
 {
  public:
+  session_t *  session;
   account_t *  master;
   account_t *  basket;
   entries_list entries;
@@ -394,13 +401,17 @@ class journal_t
   char *       item_pool;
   char *       item_pool_end;
 
+  valexpr_t::scope_t defs;
+
   auto_entries_list    auto_entries;
   period_entries_list  period_entries;
+  mutable void *       data;
   mutable accounts_map accounts_cache;
 
   std::list<entry_finalizer_t *> entry_finalize_hooks;
 
-  journal_t() : basket(NULL) {
+  journal_t(session_t * _session)
+    : session(_session), basket(NULL) {
     TRACE_CTOR("journal_t()");
     master = new account_t(NULL, "");
     master->journal = this;

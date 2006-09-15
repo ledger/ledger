@@ -2,12 +2,13 @@
 #define _SESSION_H
 
 #include "journal.h"
+#include "parser.h"
 
 #include <list>
 
 namespace ledger {
 
-class session_t
+class session_t : public valexpr_t::scope_t
 {
  public:
   std::string init_file;
@@ -38,26 +39,14 @@ class session_t
   bool verbose_mode;
   bool trace_mode;
 
+  datetime_t now;
+
   std::list<journal_t *> journals;
+  std::list<parser_t *>  parsers;
 
-  valexpr_t::scope_t globals;
-  datetime_t	     terminus;
+  session_t(valexpr_t::scope_t * parent = NULL) :
+    valexpr_t::scope_t(parent),
 
-  struct session_callback_t : valexpr_t::functor_t
-  {
-    session_t * session;
-    void (session_t::*mptr)(value_t& result);
-
-    session_callback_t(session_t * _session,
-		       void (session_t::*_mptr)(value_t& result))
-      : session(_session), mptr(_mptr) {}
-
-    virtual void operator()(value_t& result, valexpr_t::scope_t * args) {
-      (session->*mptr)(result);
-    }
-  };
-
-  session_t() :
     balance_format("%20T  %2_%-a\n"),
     register_format("%D %-.20P %-.22A %12.67t %!12.80T\n%/"
 		    "%32|%-.22A %12.67t %!12.80T\n"),
@@ -81,23 +70,61 @@ class session_t
     verbose_mode(false),
     trace_mode(false),
 
-    terminus(datetime_t::now)
-  {
-    globals.define("now", new session_callback_t(this, &session_t::get_terminus));
-  }
+    now(datetime_t::now) {}
 
-#if 0
-  ~session_t() {
+  virtual ~session_t() {
     for (std::list<journal_t *>::iterator i = journals.begin();
 	 i != journals.end();
 	 i++)
       delete *i;
-  }
-#endif
 
-  void get_terminus(value_t& result) {
-    result = terminus;
+    for (std::list<parser_t *>::iterator i = parsers.begin();
+	 i != parsers.end();
+	 i++)
+      delete *i;
   }
+
+  journal_t * new_journal() {
+    journal_t * journal = new journal_t(this);
+    journals.push_back(journal);
+    return journal;
+  }
+  void close_journal(journal_t * journal) {
+    journals.remove(journal);
+    delete journal;
+  }
+
+  unsigned int read_journal(std::istream&       in,
+			    journal_t *         journal,
+			    account_t *		master        = NULL,
+			    const std::string * original_file = NULL);
+
+  unsigned int read_journal(const std::string&  path,
+			    journal_t *         journal,
+			    account_t *		master        = NULL,
+			    const std::string * original_file = NULL);
+
+  void register_parser(parser_t * parser) {
+    parsers.push_back(parser);
+  }
+  bool unregister_parser(parser_t * parser) {
+    std::list<parser_t *>::iterator i;
+    for (i = parsers.begin(); i != parsers.end(); i++)
+      if (*i == parser)
+	break;
+    if (i == parsers.end())
+      return false;
+
+    parsers.erase(i);
+
+    return true;
+  }
+
+  //
+  // Scope members
+  //
+
+  virtual valexpr_t::node_t * lookup(const std::string& name);
 };
 
 } // namespace ledger

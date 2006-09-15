@@ -4,9 +4,11 @@ namespace ledger {
 
 repitem_t::~repitem_t()
 {
+  TRACE_DTOR("repitem_t");
+
   if (istemp) {
     switch (kind) {
-    case XACT:
+    case TRANSACTION:
       delete xact;
       break;
     case ENTRY:
@@ -15,7 +17,8 @@ repitem_t::~repitem_t()
     case ACCOUNT:
       delete account_ptr;
       break;
-    case REPORT:
+    case JOURNAL:
+      assert(0);
       break;
     }
   }
@@ -51,7 +54,7 @@ void add_transaction_to(const transaction_t& xact, value_t& value)
 void repitem_t::add_value(value_t& val)
 {
   switch (kind) {
-  case XACT:
+  case TRANSACTION:
     add_transaction_to(*xact, val);
     break;
 
@@ -74,7 +77,7 @@ datetime_t repitem_t::date() const
     return reported_date;
 
   switch (kind) {
-  case XACT: return xact->date();
+  case TRANSACTION: return xact->date();
   case ENTRY: return entry->date();
 
   case ACCOUNT:
@@ -89,7 +92,7 @@ datetime_t repitem_t::effective_date() const
     return reported_date;
 
   switch (kind) {
-  case XACT:  return xact->effective_date();
+  case TRANSACTION:  return xact->effective_date();
   case ENTRY: return entry->effective_date();
 
   case ACCOUNT:
@@ -104,7 +107,7 @@ datetime_t repitem_t::actual_date() const
     return reported_date;
 
   switch (kind) {
-  case XACT: return xact->actual_date();
+  case TRANSACTION: return xact->actual_date();
   case ENTRY: return entry->actual_date();
 
   case ACCOUNT:
@@ -119,23 +122,12 @@ account_t * repitem_t::account() const
     return reported_account;
 
   switch (kind) {
-  case XACT:
+  case TRANSACTION:
     return xact->account;
   case ENTRY:
     return NULL;
   case ACCOUNT:
     return account_ptr;
-  }
-}
-
-report_t * repitem_t::report() const
-{
-  if (kind == REPORT) {
-    assert(! parent);
-    return report_ptr;
-  } else {
-    assert(parent);
-    return parent->report();
   }
 }
 
@@ -145,27 +137,66 @@ bool repitem_t::valid() const
   return false;
 }
 
-repitem_t * repitem_t::wrap_item(transaction_t * txact)
+repitem_t * repitem_t::wrap(transaction_t * txact, repitem_t * owner)
 {
-  repitem_t * temp = new repitem_t;
+  if (txact->data != NULL) {
+    repitem_t * temp = static_cast<repitem_t *>(txact->data);
+    txact->data = NULL;
+    return temp;
+  }
+
+  repitem_t * temp = new repitem_t(TRANSACTION, owner);
   temp->xact = txact;
-  temp->kind = XACT;
   return temp;
 }
 
-repitem_t * repitem_t::wrap_item(entry_t * tentry)
+repitem_t * repitem_t::wrap(entry_t * tentry, repitem_t * owner, bool deep)
 {
-  repitem_t * temp = new repitem_t;
+  if (tentry->data != NULL) {
+    repitem_t * temp = static_cast<repitem_t *>(tentry->data);
+    tentry->data = NULL;
+    return temp;
+  }
+
+  repitem_t * temp = new repitem_t(ENTRY, owner);
   temp->entry = tentry;
-  temp->kind = ENTRY;
+
+  if (deep) {
+    for (transactions_list::iterator i = tentry->transactions.begin();
+	 i != tentry->transactions.end();
+	 i++)
+      temp->add_content(wrap(*i, temp));
+  }
+
   return temp;
 }
 
-repitem_t * repitem_t::wrap_item(account_t * taccount)
+repitem_t * repitem_t::wrap(account_t * taccount, repitem_t * owner, bool deep)
 {
-  repitem_t * temp = new repitem_t;
+  repitem_t * temp = new repitem_t(ACCOUNT, owner);
   temp->account_ptr = taccount;
-  temp->kind = ACCOUNT;
+  assert(! deep);
+  return temp;
+}
+
+repitem_t * repitem_t::wrap(journal_t * tjournal, repitem_t * owner, bool deep)
+{
+  if (tjournal->data != NULL) {
+    repitem_t * temp = static_cast<repitem_t *>(tjournal->data);
+    tjournal->data = NULL;
+    return temp;
+  }
+
+  repitem_t * temp = new repitem_t(JOURNAL, owner);
+  temp->journal = tjournal;
+
+  if (deep) {
+    for (entries_list::iterator i = tjournal->entries.begin();
+	 i != tjournal->entries.end();
+	 i++)
+      temp->add_child(wrap(*i, temp, true));
+  }
+
   return temp;
 }
 
@@ -225,58 +256,23 @@ repitem_t * repitem_t::add_child(repitem_t * item)
 
 repitem_t * repitem_t::fake_transaction(account_t * taccount)
 {
-  repitem_t * temp = new repitem_t;
+  repitem_t * temp = new repitem_t(TRANSACTION);
   temp->xact = new transaction_t(taccount);
-  temp->kind = XACT;
   temp->istemp = true;
   return temp;
 }
 
-repitem_t * repitem_t::fake_entry(const datetime_t& date, const std::string& payee)
+repitem_t * repitem_t::fake_entry(const datetime_t& edate,
+				  const datetime_t& rdate,
+				  const std::string& payee)
 {
-  repitem_t * temp = new repitem_t;
+  repitem_t * temp = new repitem_t(ENTRY);
   temp->entry = new entry_t;
-  temp->entry->_date = date;
+  temp->entry->_date_eff = edate;
+  temp->entry->_date = rdate;
   temp->entry->payee = payee;
-  temp->kind = ENTRY;
   temp->istemp = true;
   return temp;
-}
-
-void repitem_t::populate_entries(entries_list& entries,
-				 const valexpr_t& filter)
-{
-  for (entries_list::iterator i = entries.begin();
-       i != entries.end();
-       i++) {
-    repitem_t * entry = NULL;
-    for (transactions_list::iterator j = (*i)->transactions.begin();
-	 j != (*i)->transactions.end();
-	 j++) {
-      // jww (2006-09-10): Make a scope based on **j
-      if (filter.calc().get_boolean()) {
-	if (entry == NULL)
-	  entry = repitem_t::wrap_item(*i);
-	entry->add_content(repitem_t::wrap_item(*j));
-      }
-    }
-    if (entry != NULL)
-      add_content(entry);
-  }
-}
-
-void repitem_t::populate_entries(entries_list& entries)
-{
-  for (entries_list::iterator i = entries.begin();
-       i != entries.end();
-       i++) {
-    repitem_t * entry = repitem_t::wrap_item(*i);
-    for (transactions_list::iterator j = (*i)->transactions.begin();
-	 j != (*i)->transactions.end();
-	 j++)
-      entry->add_content(repitem_t::wrap_item(*j));
-    add_content(entry);
-  }
 }
 
 void repitem_t::populate_account(account_t& acct, repitem_t * item)
@@ -285,7 +281,7 @@ void repitem_t::populate_account(account_t& acct, repitem_t * item)
   if (acct.parent == NULL)
     acct_item = this;
   else if (acct.data == NULL)
-    acct.data = acct_item = repitem_t::wrap_item(&acct);
+    acct.data = acct_item = repitem_t::wrap(&acct);
   else
     acct_item = (repitem_t *) acct.data;
 
@@ -309,7 +305,7 @@ void repitem_t::populate_accounts(entries_list& entries,
 	 j++)
       // jww (2006-09-10): Make a scope based on **j
       if (filter.calc().get_boolean())
-	populate_account(*(*j)->account, repitem_t::wrap_item(*j));
+	populate_account(*(*j)->account, repitem_t::wrap(*j));
 }
 
 void repitem_t::populate_accounts(entries_list& entries)
@@ -320,7 +316,7 @@ void repitem_t::populate_accounts(entries_list& entries)
     for (transactions_list::iterator j = (*i)->transactions.begin();
 	 j != (*i)->transactions.end();
 	 j++)
-      populate_account(*(*j)->account, repitem_t::wrap_item(*j));
+      populate_account(*(*j)->account, repitem_t::wrap(*j));
 }
 
 void repitem_t::print_tree(std::ostream& out, int depth)
@@ -329,7 +325,7 @@ void repitem_t::print_tree(std::ostream& out, int depth)
     out << "  ";
 
   switch (kind) {
-  case XACT: out << "XACT " << xact; break;
+  case TRANSACTION: out << "TRANSACTION " << xact; break;
   case ENTRY: out << "ENTRY " << entry; break;
   case ACCOUNT: out << "ACCOUNT " << account_ptr; break;
   }

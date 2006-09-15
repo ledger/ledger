@@ -14,12 +14,10 @@ libledger_la_SOURCES = \
 		       \
 	journal.cc     \
 	parser.cc      \
-	startup.cc     \
 	textual.cc     \
 	binary.cc      \
 	session.cc     \
 		       \
-	config.cc      \
 	csv.cc         \
 	derive.cc      \
 	emacs.cc       \
@@ -66,7 +64,6 @@ pkginclude_HEADERS = \
 	util.h	     \
 		     \
 	binary.h     \
-	config.h     \
 	csv.h        \
 	derive.h     \
 	emacs.h      \

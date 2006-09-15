@@ -559,10 +559,10 @@ account_t * read_binary_account(char *& data, journal_t * journal,
   return acct;
 }
 
-unsigned int read_binary_journal(std::istream&	    in,
-				 const std::string& file,
-				 journal_t *	    journal,
-				 account_t *	    master)
+unsigned int read_binary_journal(std::istream&	   in,
+				journal_t *	   journal,
+				account_t *	   master,
+				const std::string& original_file)
 {
   account_index	       =
   base_commodity_index =
@@ -571,7 +571,7 @@ unsigned int read_binary_journal(std::istream&	    in,
   // Read in the files that participated in this journal, so that they
   // can be checked for changes on reading.
 
-  if (! file.empty()) {
+  if (! original_file.empty()) {
     for (unsigned short i = 0,
 	   count = read_binary_number<unsigned short>(in);
 	 i < count;
@@ -771,13 +771,13 @@ bool binary_parser_t::test(std::istream& in) const
   return false;
 }
 
-unsigned int binary_parser_t::parse(std::istream&	in,
+unsigned int binary_parser_t::parse(std::istream&       in,
 				    journal_t *		journal,
 				    account_t *		master,
 				    const std::string * original_file)
 {
-  return read_binary_journal(in, original_file ? *original_file : "",
-			     journal, master);
+  return read_binary_journal(in, journal, master,
+			     original_file ? *original_file : "");
 }
 
 template <typename T>

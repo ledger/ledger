@@ -1,217 +1,156 @@
 #include "gnucash.h"
-#include "journal.h"
-#include "format.h"
-#include "error.h"
-#include "acconf.h"
-
-#include <iostream>
-#include <sstream>
-#include <cstring>
-
-extern "C" {
-#if defined(HAVE_EXPAT)
-#include <expat.h>           // expat XML parser
-#elif defined(HAVE_XMLPARSE)
-#include <xmlparse.h>        // expat XML parser
-#else
-#error "No XML parser library defined."
-#endif
-}
 
 namespace ledger {
 
-typedef std::map<const std::string, account_t *>  accounts_map;
-typedef std::pair<const std::string, account_t *> accounts_pair;
-
-typedef std::map<account_t *, commodity_t *>  account_comm_map;
-typedef std::pair<account_t *, commodity_t *> account_comm_pair;
-
-static journal_t *	curr_journal;
-static account_t *	master_account;
-static account_t *	curr_account;
-static std::string	curr_account_id;
-static entry_t *	curr_entry;
-static commodity_t *	entry_comm;
-static commodity_t *	curr_comm;
-static amount_t		curr_value;
-static amount_t		curr_quant;
-static XML_Parser	current_parser;
-static accounts_map	accounts_by_id;
-static account_comm_map	account_comms;
-static unsigned int	count;
-static std::string	have_error;
-
-static std::istream *   instreamp;
-static unsigned int     offset;
-static XML_Parser       parser;
-static std::string      path;
-static unsigned int     src_idx;
-static istream_pos_type beg_pos;
-static unsigned long    beg_line;
-
-static transaction_t::state_t curr_state;
-
-static enum action_t {
-  NO_ACTION,
-  ACCOUNT_NAME,
-  ACCOUNT_ID,
-  ACCOUNT_PARENT,
-  COMM_SYM,
-  COMM_NAME,
-  COMM_PREC,
-  ENTRY_NUM,
-  ALMOST_ENTRY_DATE,
-  ENTRY_DATE,
-  ENTRY_DESC,
-  XACT_STATE,
-  XACT_AMOUNT,
-  XACT_VALUE,
-  XACT_QUANTITY,
-  XACT_ACCOUNT,
-  XACT_NOTE
-} action;
-
-static void startElement(void *userData, const char *name, const char **atts)
+void startElement(void *userData, const char *name, const char **atts)
 {
+  gnucash_parser_t * parser = static_cast<gnucash_parser_t *>(userData);
+
   if (std::strcmp(name, "gnc:account") == 0) {
-    curr_account = new account_t(master_account);
+    parser->curr_account = new account_t(parser->master_account);
   }
   else if (std::strcmp(name, "act:name") == 0)
-    action = ACCOUNT_NAME;
+    parser->action = gnucash_parser_t::ACCOUNT_NAME;
   else if (std::strcmp(name, "act:id") == 0)
-    action = ACCOUNT_ID;
+    parser->action = gnucash_parser_t::ACCOUNT_ID;
   else if (std::strcmp(name, "act:parent") == 0)
-    action = ACCOUNT_PARENT;
+    parser->action = gnucash_parser_t::ACCOUNT_PARENT;
   else if (std::strcmp(name, "gnc:commodity") == 0) {
-    assert(! curr_comm);
+    assert(! parser->curr_comm);
 #if 0
     // jww (2006-03-02): !!!
-    curr_comm = new commodity_t("");
+    parser->curr_comm = new commodity_t("");
 #endif
   }
   else if (std::strcmp(name, "cmdty:id") == 0)
-    action = COMM_SYM;
+    parser->action = gnucash_parser_t::COMM_SYM;
   else if (std::strcmp(name, "cmdty:name") == 0)
-    action = COMM_NAME;
+    parser->action = gnucash_parser_t::COMM_NAME;
   else if (std::strcmp(name, "cmdty:fraction") == 0)
-    action = COMM_PREC;
+    parser->action = gnucash_parser_t::COMM_PREC;
   else if (std::strcmp(name, "gnc:transaction") == 0) {
-    assert(! curr_entry);
-    curr_entry = new entry_t;
+    assert(! parser->curr_entry);
+    parser->curr_entry = new entry_t;
   }
   else if (std::strcmp(name, "trn:num") == 0)
-    action = ENTRY_NUM;
+    parser->action = gnucash_parser_t::ENTRY_NUM;
   else if (std::strcmp(name, "trn:date-posted") == 0)
-    action = ALMOST_ENTRY_DATE;
-  else if (action == ALMOST_ENTRY_DATE && std::strcmp(name, "ts:date") == 0)
-    action = ENTRY_DATE;
+    parser->action = gnucash_parser_t::ALMOST_ENTRY_DATE;
+  else if (parser->action == gnucash_parser_t::ALMOST_ENTRY_DATE &&
+	   std::strcmp(name, "ts:date") == 0)
+    parser->action = gnucash_parser_t::ENTRY_DATE;
   else if (std::strcmp(name, "trn:description") == 0)
-    action = ENTRY_DESC;
+    parser->action = gnucash_parser_t::ENTRY_DESC;
   else if (std::strcmp(name, "trn:split") == 0) {
-    assert(curr_entry);
-    curr_entry->add_transaction(new transaction_t(curr_account));
+    assert(parser->curr_entry);
+    parser->curr_entry->add_transaction(new transaction_t(parser->curr_account));
   }
   else if (std::strcmp(name, "split:reconciled-state") == 0)
-    action = XACT_STATE;
+    parser->action = gnucash_parser_t::XACT_STATE;
   else if (std::strcmp(name, "split:amount") == 0)
-    action = XACT_AMOUNT;
+    parser->action = gnucash_parser_t::XACT_AMOUNT;
   else if (std::strcmp(name, "split:value") == 0)
-    action = XACT_VALUE;
+    parser->action = gnucash_parser_t::XACT_VALUE;
   else if (std::strcmp(name, "split:quantity") == 0)
-    action = XACT_QUANTITY;
+    parser->action = gnucash_parser_t::XACT_QUANTITY;
   else if (std::strcmp(name, "split:account") == 0)
-    action = XACT_ACCOUNT;
+    parser->action = gnucash_parser_t::XACT_ACCOUNT;
   else if (std::strcmp(name, "split:memo") == 0)
-    action = XACT_NOTE;
+    parser->action = gnucash_parser_t::XACT_NOTE;
 }
 
-static void endElement(void *userData, const char *name)
+void endElement(void *userData, const char *name)
 {
+  gnucash_parser_t * parser = static_cast<gnucash_parser_t *>(userData);
+
   if (std::strcmp(name, "gnc:account") == 0) {
-    assert(curr_account);
-    if (curr_account->parent == master_account)
-      curr_journal->add_account(curr_account);
-    accounts_by_id.insert(accounts_pair(curr_account_id, curr_account));
-    curr_account = NULL;
+    assert(parser->curr_account);
+    if (parser->curr_account->parent == parser->master_account)
+      parser->curr_journal->add_account(parser->curr_account);
+    parser->accounts_by_id.insert(accounts_pair(parser->curr_account_id,
+						parser->curr_account));
+    parser->curr_account = NULL;
   }
   else if (std::strcmp(name, "gnc:commodity") == 0) {
-    assert(curr_comm);
+    assert(parser->curr_comm);
 #if 0
     // jww (2006-03-02): !!!
-    commodity_t::add_commodity(curr_comm);
+    commodity_t::add_commodity(parser->curr_comm);
 #endif
-    curr_comm = NULL;
+    parser->curr_comm = NULL;
   }
   else if (std::strcmp(name, "gnc:transaction") == 0) {
-    assert(curr_entry);
+    assert(parser->curr_entry);
 
     // Add the new entry (what gnucash calls a 'transaction') to the
     // journal
-    if (! curr_journal->add_entry(curr_entry)) {
-      print_entry(std::cerr, *curr_entry);
-      have_error = "The above entry does not balance";
-      delete curr_entry;
+    if (! parser->curr_journal->add_entry(parser->curr_entry)) {
+      print_entry(std::cerr, *parser->curr_entry);
+      parser->have_error = "The above entry does not balance";
+      delete parser->curr_entry;
     } else {
-      curr_entry->src_idx  = src_idx;
-      curr_entry->beg_pos  = beg_pos;
-      curr_entry->beg_line = beg_line;
-      curr_entry->end_pos  = instreamp->tellg();
-      curr_entry->end_line = XML_GetCurrentLineNumber(parser) - offset;
-      count++;
+      parser->curr_entry->src_idx  = parser->src_idx;
+      parser->curr_entry->beg_pos  = parser->beg_pos;
+      parser->curr_entry->beg_line = parser->beg_line;
+      parser->curr_entry->end_pos  = parser->instreamp->tellg();
+      parser->curr_entry->end_line =
+	XML_GetCurrentLineNumber(parser->expat_parser) - parser->offset;
+      parser->count++;
     }
 
     // Clear the relevant variables for the next run
-    curr_entry = NULL;
-    entry_comm = NULL;
+    parser->curr_entry = NULL;
+    parser->entry_comm = NULL;
   }
   else if (std::strcmp(name, "trn:split") == 0) {
-    transaction_t * xact = curr_entry->transactions.back();
+    transaction_t * xact = parser->curr_entry->transactions.back();
 
     // Identify the commodity to use for the value of this
     // transaction.  The quantity indicates how many times that value
     // the transaction is worth.
     amount_t value;
     commodity_t * default_commodity = NULL;
-    if (entry_comm) {
-      default_commodity = entry_comm;
+    if (parser->entry_comm) {
+      default_commodity = parser->entry_comm;
     } else {
-      account_comm_map::iterator ac = account_comms.find(xact->account);
-      if (ac != account_comms.end())
+      gnucash_parser_t::account_comm_map::iterator ac =
+	parser->account_comms.find(xact->account);
+      if (ac != parser->account_comms.end())
 	default_commodity = (*ac).second;
     }
 
     if (default_commodity) {
-      curr_quant.set_commodity(*default_commodity);
-      value = curr_quant.round();
+      parser->curr_quant.set_commodity(*default_commodity);
+      value = parser->curr_quant.round();
 
-      if (curr_value.commodity() == *default_commodity)
-	curr_value = value;
+      if (parser->curr_value.commodity() == *default_commodity)
+	parser->curr_value = value;
     } else {
-      value = curr_quant;
+      value = parser->curr_quant;
     }
 
-    xact->state  = curr_state;
+    xact->state  = parser->curr_state;
     xact->amount = value;
-    if (value != curr_value)
-      xact->cost = new amount_t(curr_value);
+    if (value != parser->curr_value)
+      xact->cost = new amount_t(parser->curr_value);
 
-    xact->beg_pos  = beg_pos;
-    xact->beg_line = beg_line;
-    xact->end_pos  = instreamp->tellg();
-    xact->end_line = XML_GetCurrentLineNumber(parser) - offset;
+    xact->beg_pos  = parser->beg_pos;
+    xact->beg_line = parser->beg_line;
+    xact->end_pos  = parser->instreamp->tellg();
+    xact->end_line =
+      XML_GetCurrentLineNumber(parser->expat_parser) - parser->offset;
 
     // Clear the relevant variables for the next run
-    curr_state = transaction_t::UNCLEARED;
-    curr_value = amount_t();
-    curr_quant = amount_t();
+    parser->curr_state = transaction_t::UNCLEARED;
+    parser->curr_value = amount_t();
+    parser->curr_quant = amount_t();
   }
 
-  action = NO_ACTION;
+  parser->action = gnucash_parser_t::NO_ACTION;
 }
 
-
-static amount_t convert_number(const std::string& number,
-			       int * precision = NULL)
+amount_t gnucash_parser_t::convert_number(const std::string& number,
+					  int * precision)
 {
   const char * num = number.c_str();
 
@@ -236,116 +175,120 @@ static amount_t convert_number(const std::string& number,
   }
 }
 
-static void dataHandler(void *userData, const char *s, int len)
+void dataHandler(void *userData, const char *s, int len)
 {
-  switch (action) {
-  case ACCOUNT_NAME:
-    curr_account->name = std::string(s, len);
+  gnucash_parser_t * parser = static_cast<gnucash_parser_t *>(userData);
+
+  switch (parser->action) {
+  case gnucash_parser_t::ACCOUNT_NAME:
+    parser->curr_account->name = std::string(s, len);
     break;
 
-  case ACCOUNT_ID:
-    curr_account_id = std::string(s, len);
+  case gnucash_parser_t::ACCOUNT_ID:
+    parser->curr_account_id = std::string(s, len);
     break;
 
-  case ACCOUNT_PARENT: {
-    accounts_map::iterator i = accounts_by_id.find(std::string(s, len));
-    assert(i != accounts_by_id.end());
-    curr_account->parent = (*i).second;
-    curr_account->depth  = curr_account->parent->depth + 1;
-    (*i).second->add_account(curr_account);
+  case gnucash_parser_t::ACCOUNT_PARENT: {
+    accounts_map::iterator i = parser->accounts_by_id.find(std::string(s, len));
+    assert(i != parser->accounts_by_id.end());
+    parser->curr_account->parent = (*i).second;
+    parser->curr_account->depth  = parser->curr_account->parent->depth + 1;
+    (*i).second->add_account(parser->curr_account);
     break;
   }
 
-  case COMM_SYM:
-    if (curr_comm) {
+  case gnucash_parser_t::COMM_SYM:
+    if (parser->curr_comm) {
 #if 0
       // jww (2006-03-02): !!!
-      curr_comm->set_symbol(std::string(s, len));
+      parser->curr_comm->set_symbol(std::string(s, len));
 #endif
     }
-    else if (curr_account) {
+    else if (parser->curr_account) {
       std::string symbol(s, len);
       commodity_t * comm = commodity_t::find_or_create(symbol);
       assert(comm);
       if (symbol != "$" && symbol != "USD")
 	comm->add_flags(COMMODITY_STYLE_SEPARATED);
-      account_comms.insert(account_comm_pair(curr_account, comm));
+      parser->account_comms.insert
+	(gnucash_parser_t::account_comm_pair(parser->curr_account, comm));
     }
-    else if (curr_entry) {
+    else if (parser->curr_entry) {
       std::string symbol(s, len);
-      entry_comm = commodity_t::find_or_create(symbol);
-      assert(entry_comm);
+      parser->entry_comm = commodity_t::find_or_create(symbol);
+      assert(parser->entry_comm);
       if (symbol != "$" && symbol != "USD")
-	entry_comm->add_flags(COMMODITY_STYLE_SEPARATED);
+	parser->entry_comm->add_flags(COMMODITY_STYLE_SEPARATED);
     }
     break;
 
-  case COMM_NAME:
-    curr_comm->name() = std::string(s, len);
+  case gnucash_parser_t::COMM_NAME:
+    parser->curr_comm->name() = std::string(s, len);
     break;
 
-  case COMM_PREC:
-    curr_comm->set_precision(len - 1);
+  case gnucash_parser_t::COMM_PREC:
+    parser->curr_comm->set_precision(len - 1);
     break;
 
-  case ENTRY_NUM:
-    curr_entry->code = std::string(s, len);
+  case gnucash_parser_t::ENTRY_NUM:
+    parser->curr_entry->code = std::string(s, len);
     break;
 
-  case ENTRY_DATE:
-    curr_entry->_date = std::string(s, len);
+  case gnucash_parser_t::ENTRY_DATE:
+    parser->curr_entry->_date = std::string(s, len);
     break;
 
-  case ENTRY_DESC:
-    curr_entry->payee = std::string(s, len);
+  case gnucash_parser_t::ENTRY_DESC:
+    parser->curr_entry->payee = std::string(s, len);
     break;
 
-  case XACT_STATE:
+  case gnucash_parser_t::XACT_STATE:
     if (*s == 'y')
-      curr_state = transaction_t::CLEARED;
+      parser->curr_state = transaction_t::CLEARED;
     else if (*s == 'n')
-      curr_state = transaction_t::UNCLEARED;
+      parser->curr_state = transaction_t::UNCLEARED;
     else
-      curr_state = transaction_t::PENDING;
+      parser->curr_state = transaction_t::PENDING;
     break;
 
-  case XACT_VALUE: {
+  case gnucash_parser_t::XACT_VALUE: {
     int precision;
-    assert(entry_comm);
-    curr_value = convert_number(std::string(s, len), &precision);
-    curr_value.set_commodity(*entry_comm);
+    assert(parser->entry_comm);
+    parser->curr_value = parser->convert_number(std::string(s, len), &precision);
+    parser->curr_value.set_commodity(*parser->entry_comm);
 
-    if (precision > entry_comm->precision())
-      entry_comm->set_precision(precision);
+    if (precision > parser->entry_comm->precision())
+      parser->entry_comm->set_precision(precision);
     break;
   }
 
-  case XACT_QUANTITY:
-    curr_quant = convert_number(std::string(s, len));
+  case gnucash_parser_t::XACT_QUANTITY:
+    parser->curr_quant = parser->convert_number(std::string(s, len));
     break;
 
-  case XACT_ACCOUNT: {
-    transaction_t * xact = curr_entry->transactions.back();
+  case gnucash_parser_t::XACT_ACCOUNT: {
+    transaction_t * xact = parser->curr_entry->transactions.back();
 
-    accounts_map::iterator i = accounts_by_id.find(std::string(s, len));
-    if (i != accounts_by_id.end()) {
+    accounts_map::iterator i =
+      parser->accounts_by_id.find(std::string(s, len));
+    if (i != parser->accounts_by_id.end()) {
       xact->account = (*i).second;
     } else {
-      xact->account = curr_journal->find_account("<Unknown>");
+      xact->account = parser->curr_journal->find_account("<Unknown>");
 
-      have_error = (std::string("Could not find account ") +
-		    std::string(s, len));
+      parser->have_error = (std::string("Could not find account ") +
+			    std::string(s, len));
     }
     break;
   }
 
-  case XACT_NOTE:
-    curr_entry->transactions.back()->note = std::string(s, len);
+  case gnucash_parser_t::XACT_NOTE:
+    parser->curr_entry->transactions.back()->note = std::string(s, len);
     break;
 
-  case NO_ACTION:
-  case ALMOST_ENTRY_DATE:
-  case XACT_AMOUNT:
+  case gnucash_parser_t::NO_ACTION:
+  case gnucash_parser_t::ALMOST_ENTRY_DATE:
+  case gnucash_parser_t::XACT_AMOUNT:
     break;
 
   default:
@@ -373,6 +316,8 @@ unsigned int gnucash_parser_t::parse(std::istream&	 in,
 
   // This is the date format used by Gnucash, so override whatever the
   // user specified.
+  //
+  // jww (2006-09-13): Make this parser local somehow.
   date_t::input_format = "%Y-%m-%d %H:%M:%S %z";
 
   count		 = 0;
@@ -400,10 +345,11 @@ unsigned int gnucash_parser_t::parse(std::istream&	 in,
 #endif
 
   offset = 2;
-  parser = current_parser = XML_ParserCreate(NULL);
+  expat_parser = XML_ParserCreate(NULL);
 
   XML_SetElementHandler(parser, startElement, endElement);
   XML_SetCharacterDataHandler(parser, dataHandler);
+  XML_SetUserData(parser, this);
 
   while (in.good() && ! in.eof()) {
     beg_pos  = in.tellg();

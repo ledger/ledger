@@ -274,7 +274,7 @@ bool entry_base_t::finalize()
 
 entry_t::entry_t(const entry_t& e)
   : entry_base_t(e), _date(e._date), _date_eff(e._date_eff),
-    code(e.code), payee(e.payee)
+    code(e.code), payee(e.payee), data(NULL)
 {
   TRACE_CTOR("entry_t(copy)");
   for (transactions_list::const_iterator i = transactions.begin();

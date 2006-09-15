@@ -2,7 +2,9 @@
 #define _XOPEN_SOURCE
 #endif
 
+#include "session.h"
 #include "journal.h"
+#include "repitem.h"
 #include "textual.h"
 #include "datetime.h"
 #include "valexpr.h"
@@ -67,8 +69,9 @@ inline char * next_element(char * buf, bool variable = false)
   return NULL;
 }
 
-static void
-parse_amount_expr(std::istream& in, amount_t& amount, unsigned short flags = 0)
+static inline void
+parse_amount_expr(std::istream& in, transaction_t& xact, amount_t& amount,
+		  unsigned short flags = 0)
 {
   valexpr_t valexpr(in, flags | PARSE_VALEXPR_RELAXED | PARSE_VALEXPR_PARTIAL);
 
@@ -85,7 +88,10 @@ parse_amount_expr(std::istream& in, amount_t& amount, unsigned short flags = 0)
 #endif
 
   // jww (2006-09-10): Put an error context around this
-  amount = valexpr.calc().get_amount();
+  repitem_t * item =
+    repitem_t::wrap(&xact, static_cast<repitem_t *>(xact.entry->data));
+  xact.data = item;
+  amount = valexpr.calc(item).get_amount();
 
   DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
 	      "The transaction amount is " << amount);
@@ -176,7 +182,7 @@ transaction_t * parse_transaction(char * line, account_t * account,
 
     try {
       unsigned long beg = (long)in.tellg();
-      parse_amount_expr(in, xact->amount, PARSE_VALEXPR_NO_REDUCE);
+      parse_amount_expr(in, *xact, xact->amount, PARSE_VALEXPR_NO_REDUCE);
       unsigned long end = (long)in.tellg();
       xact->amount_expr = std::string(line, beg, end - beg);
     }
@@ -208,7 +214,7 @@ transaction_t * parse_transaction(char * line, account_t * account,
 	try {
 	  unsigned long beg = (long)in.tellg();
 
-	  parse_amount_expr(in, *xact->cost, PARSE_VALEXPR_NO_MIGRATE);
+	  parse_amount_expr(in, *xact, *xact->cost, PARSE_VALEXPR_NO_MIGRATE);
 
 	  unsigned long end = (long)in.tellg();
 
@@ -334,8 +340,9 @@ namespace {
   TIMER_DEF(entry_date,    "parsing entry date");
 }
 
-entry_t * parse_entry(std::istream& in, char * line, account_t * master,
-		      textual_parser_t& parser, unsigned long beg_pos)
+entry_t * parse_entry(std::istream& in, char * line, journal_t * journal,
+		      account_t * master, textual_parser_t& parser,
+		      unsigned long beg_pos)
 {
   std::auto_ptr<entry_t> curr(new entry_t);
 
@@ -391,6 +398,17 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
   curr->payee = buf[0] != '\0' ? buf : "<Unspecified payee>";
 
   TIMER_STOP(entry_details);
+
+  // Create a report item for this entry, so the transaction below may
+  // refer to it
+
+  if (! journal->data) {
+    repitem_t * item = repitem_t::wrap(journal);
+    item->valexpr_t::scope_t::parent = journal->session;
+    journal->data = item;
+  }
+  curr->data = repitem_t::wrap(curr.get(),
+			       static_cast<repitem_t *>(journal->data));
 
   // Parse all of the transactions associated with this entry
 
@@ -554,15 +572,16 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 				     account_t *	 master,
 				     const std::string * original_file)
 {
-  static bool   added_auto_entry_hook = false;
-  static char   line[MAX_LINE + 1];
-  char		c;
-  unsigned int  count = 0;
-  unsigned int  errors = 0;
+  static bool  added_auto_entry_hook = false;
+  static char  line[MAX_LINE + 1];
+  char	       c;
+  unsigned int count  = 0;
+  unsigned int errors = 0;
 
   TIMER_START(parsing_total);
 
   std::list<account_t *> account_stack;
+
   auto_entry_finalizer_t auto_entry_finalizer(journal);
 
   if (! master && journal)
@@ -697,7 +716,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	break;
       }
 
-      case 'Y':                   // set the current year
+      case 'Y':			// set current year
 	date_t::current_year = std::atoi(skip_ws(line + 1)) - 1900;
 	break;
 
@@ -705,25 +724,11 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
       case 'h':
       case 'b':
 #endif
-      case ';':                   // a comment line
+      case ';':			// comment
 	break;
 
-      case '-': {                 // option setting
-	char * p = next_element(line);
-	if (! p) {
-	  p = std::strchr(line, '=');
-	  if (p)
-	    *p++ = '\0';
-	}
-#if 0
-	// jww (2006-08-31): Need to pass the report pointer here, and
-	// find the pointer to static_options; does it need to be
-	// passed through at all?
-	process_option(static_options, journal ? option_t::DATA_FILE :
-		       option_t::INIT_FILE, line + 2, NULL, p);
-#endif
-	break;
-      }
+      case '-':			// option setting
+	throw new parse_error("Option settings are not allowed in journal files");
 
       case '=': {		// automated entry
 	if (! added_auto_entry_hook) {
@@ -792,7 +797,8 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
 	  include_stack.push_back(std::pair<std::string, int>
 				  (journal->sources.back(), linenum - 1));
-	  count += parse_journal_file(path, journal, account_stack.front());
+	  count += journal->session->read_journal(path, journal,
+						  account_stack.front());
 	  include_stack.pop_back();
 	}
 	else if (word == "account") {
@@ -822,21 +828,24 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	    assert(result.second);
 	  }
 	}
-#if 0
-	else if (word == "def") {
-	  if (! global_scope.get())
-	    init_value_expr();
-	  parse_value_definition(p);
+	else if (word == "def" || word == "eval") {
+	  // jww (2006-09-13): Read the string after and evaluate it.
+	  // But also keep a list of these value expressions, and a
+	  // way to know where they fall in the transaction sequence.
+	  // This will be necessary so that binary file reading can
+	  // re-evaluate them at the appopriate time.
+
+	  // compile(&journal->defs);
 	}
-#endif
 	break;
       }
 
       default: {
 	unsigned int first_line = linenum;
 	unsigned long pos = end_pos;
-	if (entry_t * entry =
-	    parse_entry(in, line, account_stack.front(), *this, pos)) {
+	if (entry_t * entry = parse_entry(in, line, journal,
+					  account_stack.front(),
+					  *this, pos)) {
 	  if (journal->add_entry(entry)) {
 	    entry->src_idx  = src_idx;
 	    entry->beg_pos  = beg_pos;

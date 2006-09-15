@@ -2,6 +2,7 @@
 #define _REPORT_H
 
 #include "session.h"
+#include "valexpr.h"
 
 #include <string>
 #include <list>
@@ -13,7 +14,7 @@ class repitem_t;
 
 typedef std::list<std::string> strings_list;
 
-class report_t
+class report_t : public valexpr_t::scope_t
 {
  public:
   std::string output_file;
@@ -37,22 +38,23 @@ class report_t
 
   std::list<transform_t *> transforms;
 
-  valexpr_t::scope_t locals;
-
   report_t(session_t * _session)
-    : session(_session), last_transform(NULL),
-      locals(&_session->globals) {
+    : valexpr_t::scope_t(_session),
+
+      show_totals(false),
+      keep_price(false),
+      keep_date(false),
+      keep_tag(false),
+
+      session(_session),
+
+      last_transform(NULL) {
 #if 0
     ledger::amount_expr = "@a";
     ledger::total_expr  = "@O";
 #endif
-
-    show_totals        = false;
-    keep_price         = false;
-    keep_date          = false;
-    keep_tag           = false;
   }
-  ~report_t();
+  virtual ~report_t();
 
   void apply_transforms(repitem_t * items);
 
@@ -75,6 +77,24 @@ class report_t
 		      account_t * master,
 		      std::list<item_handler<transaction_t> *>& ptrs);
 #endif
+
+  //
+  // Config options
+  //
+
+  void opt_foo(value_t& result) {
+    std::cout << "This is foo" << std::endl;
+  }
+  void opt_bar(value_t& result, valexpr_t::scope_t * args) {
+    std::cout << "This is bar: " << args->args[0]->value()
+	      << std::endl;
+  }
+
+  //
+  // Scope members
+  //
+
+  virtual valexpr_t::node_t * lookup(const std::string& name);
 };
 
 } // namespace ledger

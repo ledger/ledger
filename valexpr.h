@@ -18,7 +18,7 @@ namespace ledger {
 class valexpr_t
 {
  public:
-  class node_t;
+  struct node_t;
 
   class parse_error : public error {
   public:
@@ -61,25 +61,92 @@ class valexpr_t
   class scope_t;
 
   class functor_t {
+    std::string fname;
   public:
-    virtual ~functor_t() {}
-    virtual void operator()(value_t& result, scope_t * args) = 0;
+    bool wants_args;
 
-    virtual std::string name() const {
-      return "<func>";
+    functor_t(const std::string& _fname, bool _wants_args = false)
+      : fname(_fname), wants_args(_wants_args) {}
+    virtual ~functor_t() {}
+
+    virtual void operator()(value_t& result, scope_t * args) = 0;
+    virtual std::string name() const { return fname; }
+  };
+
+  template <typename T, typename U>
+  class member_functor_t : public functor_t {
+  public:
+    T * ptr;
+    U T::*dptr;
+
+    member_functor_t(const std::string& name, T * _ptr, U T::*_dptr)
+      : functor_t(name, false), ptr(_ptr), dptr(_dptr) {}
+
+    virtual void operator()(value_t& result, scope_t * args) {
+      result = ptr->*dptr;
     }
   };
 
- private:
+  template <typename T>
+  class memfun_functor_t : public functor_t {
+  public:
+    T * ptr;
+    void (T::*mptr)(value_t& result);
+
+    memfun_functor_t(const std::string& name, T * _ptr,
+		     void (T::*_mptr)(value_t& result))
+      : functor_t(name, false), ptr(_ptr), mptr(_mptr) {}
+
+    virtual void operator()(value_t& result, scope_t * args = NULL) {
+      (ptr->*mptr)(result);
+    }
+  };
+
+  template <typename T>
+  class memfun_args_functor_t : public functor_t {
+  public:
+    T * ptr;
+    void (T::*mptr)(value_t& result, scope_t * args);
+
+    memfun_args_functor_t(const std::string& name, T * _ptr,
+			  void (T::*_mptr)(value_t& result, scope_t * args))
+      : functor_t(name, true), ptr(_ptr), mptr(_mptr) {}
+
+    virtual void operator()(value_t& result, scope_t * args) {
+      (ptr->*mptr)(result, args);
+    }
+  };
+
   static node_t * wrap_value(const value_t& val);
   static node_t * wrap_functor(functor_t * fobj);
   static node_t * wrap_mask(const std::string& pattern);
 
+  template <typename T, typename U>
+  static node_t *
+  make_functor(const std::string& name = "<data>", T * ptr, U T::*mptr) {
+    return wrap_functor(new member_functor_t<T, U>(name, ptr, mptr));
+  }
+
+  template <typename T>
+  static node_t *
+  make_functor(const std::string& fname = "<func>", T * ptr,
+	       void (T::*mptr)(value_t& result)) {
+    return wrap_functor(new memfun_functor_t<T>(fname, ptr, mptr));
+  }
+
+  template <typename T>
+  static node_t *
+  make_functor(const std::string& fname = "<func>", T * ptr,
+	       void (T::*mptr)(value_t& result, scope_t * args)) {
+    return wrap_functor(new memfun_args_functor_t<T>(fname, ptr, mptr));
+  }
+
+#define MAKE_FUNCTOR(cls, name)				\
+  valexpr_t::make_functor(#name, this, &cls::name)
+
  public:
   class scope_t
   {
-    scope_t * parent;
-
     typedef std::map<const std::string, node_t *>  symbol_map;
     typedef std::pair<const std::string, node_t *> symbol_pair;
 
@@ -89,13 +156,15 @@ class valexpr_t
     scope_t& operator=(const scope_t&);
 
    public:
+    scope_t * parent;
+
     typedef std::vector<node_t *> args_list;
 
     args_list args;
     bool      arg_scope;
 
-    scope_t(scope_t * _parent = NULL)
-      : parent(_parent), arg_scope(false) {
+    scope_t(scope_t * _parent = NULL, bool _arg_scope = false)
+      : parent(_parent), arg_scope(_arg_scope) {
       TRACE_CTOR("valexpr_t::scope_t(scope *)");
     }
 
@@ -114,7 +183,7 @@ class valexpr_t
 
    public:
     virtual void define(const std::string& name, node_t * def);
-    virtual node_t * lookup(const std::string& name) const;
+    virtual node_t * lookup(const std::string& name);
 
     void define(const std::string& name, functor_t * def);
 
@@ -280,6 +349,13 @@ class valexpr_t
       value_t temp;
       get_value(temp);
       return temp;
+    }
+
+    functor_t * functor_obj() const {
+      if (kind == FUNCTOR)
+	return functor;
+      else
+	return NULL;
     }
 
     void release() const {

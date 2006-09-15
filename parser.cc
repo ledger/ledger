@@ -1,96 +1,4 @@
 #include "parser.h"
-#include "journal.h"
-
-#include <fstream>
-#ifdef WIN32
-#include <io.h>
-#else
-#include <unistd.h>
-#endif
-
-namespace ledger {
-
-typedef std::list<parser_t *> parsers_list;
-
-static parsers_list * parsers = NULL;
-
-void initialize_parser_support()
-{
-  parsers = new parsers_list;
-}
-
-void shutdown_parser_support()
-{
-  if (parsers) {
-    delete parsers;
-    parsers = NULL;
-  }
-}
-
-bool register_parser(parser_t * parser)
-{
-  parsers_list::iterator i;
-  for (i = parsers->begin(); i != parsers->end(); i++)
-    if (*i == parser)
-      break;
-  if (i != parsers->end())
-    return false;
-
-  parsers->push_back(parser);
-
-  return true;
-}
-
-bool unregister_parser(parser_t * parser)
-{
-  parsers_list::iterator i;
-  for (i = parsers->begin(); i != parsers->end(); i++)
-    if (*i == parser)
-      break;
-  if (i == parsers->end())
-    return false;
-
-  parsers->erase(i);
-
-  return true;
-}
-
-unsigned int parse_journal(std::istream&       in,
-			   journal_t *	       journal,
-			   account_t *	       master,
-			   const std::string * original_file)
-{
-  if (! master && journal)
-    master = journal->master;
-
-  for (parsers_list::iterator i = parsers->begin();
-       i != parsers->end();
-       i++)
-    if ((*i)->test(in))
-      return (*i)->parse(in, journal, master, original_file);
-
-  return 0;
-}
-
-unsigned int parse_journal_file(const std::string&  path,
-				journal_t *	    journal,
-				account_t *	    master,
-				const std::string * original_file)
-{
-  if (journal)
-    journal->sources.push_back(path);
-
-  if (access(path.c_str(), R_OK) == -1)
-    throw new error(std::string("Cannot read file '") + path + "'");
-
-  if (! original_file)
-    original_file = &path;
-
-  std::ifstream stream(path.c_str());
-  return parse_journal(stream, journal, master, original_file);
-}
-
-} // namespace ledger
 
 #ifdef USE_BOOST_PYTHON
 
@@ -109,10 +17,10 @@ struct py_parser_t : public parser_t
     return call_method<bool>(self, "test", in);
   }
 
-  virtual unsigned int parse(std::istream&	 in,
-			     journal_t *	 journal,
-			     account_t *	 master        = NULL,
-			     const std::string * original_file = NULL) {
+  virtual repitem_t * parse(std::istream&       in,
+			    journal_t *	        journal,
+			    account_t *	        master	      = NULL,
+			    const std::string * original_file = NULL) {
     return call_method<unsigned int>(self, "parse", in, journal, master,
 				     original_file);
   }
