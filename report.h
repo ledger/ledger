@@ -85,9 +85,8 @@ class report_t : public valexpr_t::scope_t
   void opt_foo(value_t& result) {
     std::cout << "This is foo" << std::endl;
   }
-  void opt_bar(value_t& result, valexpr_t::scope_t * args) {
-    std::cout << "This is bar: " << args->args[0]->value()
-	      << std::endl;
+  void opt_bar(value_t& result, valexpr_t::scope_t * locals) {
+    std::cout << "This is bar: " << locals->args[0] << std::endl;
   }
 
   //
@@ -95,6 +94,14 @@ class report_t : public valexpr_t::scope_t
   //
 
   virtual valexpr_t::node_t * lookup(const std::string& name);
+};
+
+class balance_command : public valexpr_t::functor_t
+{
+ public:
+  balance_command() : valexpr_t::functor_t("balance") {}
+
+  virtual void operator()(value_t& result, valexpr_t::scope_t * args) {}
 };
 
 } // namespace ledger

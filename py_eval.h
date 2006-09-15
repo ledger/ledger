@@ -15,48 +15,62 @@ namespace ledger {
 
 void shutdown_ledger_for_python();
 
-object python_import(const std::string& name);
-
-enum py_eval_mode_t {
-  PY_EVAL_EXPR,
-  PY_EVAL_STMT,
-  PY_EVAL_MULTI
-};
-
-object python_eval(std::istream& in,       py_eval_mode_t mode = PY_EVAL_EXPR);
-object python_eval(const std::string& str, py_eval_mode_t mode = PY_EVAL_EXPR);
-object python_eval(const char * c_str,     py_eval_mode_t mode = PY_EVAL_EXPR);
-
-class python_functor_t : public valexpr_t::functor_t
+class python_interpreter_t : public valexpr_t::scope_t
 {
- protected:
-  object func;
+  handle<> mmodule;
+  dict     nspace;
+
  public:
-  python_functor_t(object _func) : func(_func) {}
+  python_interpreter_t(valexpr_t::scope_t * parent);
 
-  virtual void operator()(value_t& result, valexpr_t::scope_t * args);
-};
-
-class python_lambda_t : public python_functor_t
-{
- public:
-  python_lambda_t(object code) : python_functor_t(code) {}
-
-  virtual value_t operator()(valexpr_t::scope_t * args);
-};
-
-#if 0
-class python_scope_t : public scope_t
-{
-  python_scope_t(scope_t * parent = NULL) : scope_t(parent) {}
-
-  virtual void define(const std::string& name, valexpr_t * def) {
-    assert(0);
+  virtual ~python_interpreter_t() {
+    Py_Finalize();
   }
 
-  virtual valexpr_t * lookup(const std::string& name);
-};
-#endif
+  object import(const std::string& name);
+
+  enum py_eval_mode_t {
+    PY_EVAL_EXPR,
+    PY_EVAL_STMT,
+    PY_EVAL_MULTI
+  };
+
+  object eval(std::istream& in,       py_eval_mode_t mode = PY_EVAL_EXPR);
+  object eval(const std::string& str, py_eval_mode_t mode = PY_EVAL_EXPR);
+  object eval(const char * c_str,     py_eval_mode_t mode = PY_EVAL_EXPR) {
+    std::string str(c_str);
+    return eval(str, mode);
+  }
+
+  class functor_t : public valexpr_t::functor_t {
+   protected:
+    object func;
+   public:
+    python_functor_t(const std::string& name, object _func)
+      : valexpr_t::functor_t(name), func(_func) {}
+
+    virtual void operator()(value_t& result, valexpr_t::scope_t * locals);
+  };
+
+  virtual void define(const std::string& name, valexpr_t::node_t * def) {
+    // Pass any definitions up to our parent
+    parent->define(name, def);
+  }
+
+  virtual node_t * lookup(const std::string& name) {
+    object func = eval(name);
+    if (! func)
+      return parent ? parent->lookup(name) : NULL;
+    return valexpr_t::wrap_functor(new python_functor_t(name, func));
+  }
+
+  class lambda_t : public functor_t {
+   public:
+    python_lambda_t(object code) : python_functor_t("<lambda>"> code) {}
+
+    virtual void operator()(value_t& result, valexpr_t::scope_t * locals);
+  };
+;
 
 } // namespace ledger
 

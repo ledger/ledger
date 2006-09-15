@@ -61,7 +61,7 @@ namespace {
       valexpr_t::scope_t * args = NULL;
       if (arg) {
 	args = new valexpr_t::scope_t(scope, true);
-	args->args.push_back(valexpr_t::wrap_value(value_t(arg, true)));
+	args->args.push_back(value_t(arg, true));
       }
 
       value_t temp;

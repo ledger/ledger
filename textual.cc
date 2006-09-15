@@ -181,6 +181,8 @@ transaction_t * parse_transaction(char * line, account_t * account,
       goto parse_note;
 
     try {
+      // jww (2006-09-15): Make sure it doesn't gobble up the upcoming @ symbol
+
       unsigned long beg = (long)in.tellg();
       parse_amount_expr(in, *xact, xact->amount, PARSE_VALEXPR_NO_REDUCE);
       unsigned long end = (long)in.tellg();

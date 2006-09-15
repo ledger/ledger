@@ -417,7 +417,7 @@ valexpr_t::node_t * report_t::lookup(const std::string& name)
     }
     break;
   }
-  return parent ? parent->lookup(name) : NULL;
+  return valexpr_t::scope_t::lookup(name);
 }
 
 } // namespace ledger

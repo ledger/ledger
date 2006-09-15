@@ -845,10 +845,12 @@ valexpr_t::node_t * valexpr_t::node_t::lookup(scope_t * scope) const
 
 valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
 {
+  // jww (2006-09-15): Don't optimize by overwriting the current node,
+  // since this eliminates reusability.
+
   try {
   switch (kind) {
   case VALUE:
-  case ARG_INDEX:
   case FUNCTOR:
   case MASK:
     return acquire();
@@ -1076,10 +1078,9 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
 	}
 
 	// Define the parameter so that on lookup the parser will find
-	// an O_ARG value.
-	node_t * ref = new valexpr_t::node_t(valexpr_t::node_t::O_ARG);
-	ref->set_left(new valexpr_t::node_t(valexpr_t::node_t::ARG_INDEX));
-	ref->left->arg_index = index++;
+	// an ARG_INDEX value.
+	node_t * ref = new valexpr_t::node_t(valexpr_t::node_t::ARG_INDEX);
+	ref->arg_index = index++;
 
 	assert(arg->kind == SYMBOL);
 	arg_scope->define(arg->valuep->get_string(), ref);
@@ -1123,6 +1124,8 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
       } else {
 	args = NULL;
       }
+      // jww (2006-09-15): Need to compile these, if there are
+      // undetermined arguments!
       call_args->args.push_back(arg->compile(scope));
     }
 
@@ -1147,12 +1150,10 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
     }
   }
 
-  case O_ARG:
-    assert(left);
-    assert(left->kind == ARG_INDEX);
+  case ARG_INDEX:
     if (scope && scope->arg_scope) {
-      if (left->arg_index < scope->args.size())
-	return scope->args[left->arg_index]->acquire();
+      if (arg_index < scope->args.size())
+	return wrap_value(scope->args[arg_index])->acquire();
       else
 	throw new calc_error("Reference to non-existing argument");
     } else {
@@ -1495,9 +1496,6 @@ bool valexpr_t::node_t::write(std::ostream&   out,
       found = true;
     out << ")";
     break;
-  case O_ARG:
-    out << "@arg" << arg_index;
-    break;
 
   case O_PERC:
     out << "%";
@@ -1577,7 +1575,6 @@ void valexpr_t::node_t::dump(std::ostream& out, const int depth) const
 
   case O_DEFINE: out << "O_DEFINE"; break;
   case O_EVAL: out << "O_EVAL"; break;
-  case O_ARG: out << "O_ARG"; break;
 
   case O_PERC: out << "O_PERC"; break;
 

@@ -7,7 +7,7 @@
 
 #include <map>
 #include <list>
-#include <vector>
+#include <deque>
 #include <string>
 #include <iostream>
 #include <sstream>
@@ -69,7 +69,7 @@ class valexpr_t
       : fname(_fname), wants_args(_wants_args) {}
     virtual ~functor_t() {}
 
-    virtual void operator()(value_t& result, scope_t * args) = 0;
+    virtual void operator()(value_t& result, scope_t * locals) = 0;
     virtual std::string name() const { return fname; }
   };
 
@@ -82,7 +82,7 @@ class valexpr_t
     member_functor_t(const std::string& name, T * _ptr, U T::*_dptr)
       : functor_t(name, false), ptr(_ptr), dptr(_dptr) {}
 
-    virtual void operator()(value_t& result, scope_t * args) {
+    virtual void operator()(value_t& result, scope_t * locals) {
       result = ptr->*dptr;
     }
   };
@@ -97,7 +97,7 @@ class valexpr_t
 		     void (T::*_mptr)(value_t& result))
       : functor_t(name, false), ptr(_ptr), mptr(_mptr) {}
 
-    virtual void operator()(value_t& result, scope_t * args = NULL) {
+    virtual void operator()(value_t& result, scope_t * locals = NULL) {
       (ptr->*mptr)(result);
     }
   };
@@ -106,14 +106,14 @@ class valexpr_t
   class memfun_args_functor_t : public functor_t {
   public:
     T * ptr;
-    void (T::*mptr)(value_t& result, scope_t * args);
+    void (T::*mptr)(value_t& result, scope_t * locals);
 
     memfun_args_functor_t(const std::string& name, T * _ptr,
-			  void (T::*_mptr)(value_t& result, scope_t * args))
+			  void (T::*_mptr)(value_t& result, scope_t * locals))
       : functor_t(name, true), ptr(_ptr), mptr(_mptr) {}
 
-    virtual void operator()(value_t& result, scope_t * args) {
-      (ptr->*mptr)(result, args);
+    virtual void operator()(value_t& result, scope_t * locals) {
+      (ptr->*mptr)(result, locals);
     }
   };
 
@@ -137,7 +137,7 @@ class valexpr_t
   template <typename T>
   static node_t *
   make_functor(const std::string& fname = "<func>", T * ptr,
-	       void (T::*mptr)(value_t& result, scope_t * args)) {
+	       void (T::*mptr)(value_t& result, scope_t * locals)) {
     return wrap_functor(new memfun_args_functor_t<T>(fname, ptr, mptr));
   }
 
@@ -158,7 +158,7 @@ class valexpr_t
    public:
     scope_t * parent;
 
-    typedef std::vector<node_t *> args_list;
+    typedef std::deque<value_t> args_list;
 
     args_list args;
     bool      arg_scope;
@@ -174,11 +174,6 @@ class valexpr_t
 	   i != symbols.end();
 	   i++)
 	(*i).second->release();
-
-      for (args_list::iterator i = args.begin();
-	   i != args.end();
-	   i++)
-	(*i)->release();
     }
 
    public:

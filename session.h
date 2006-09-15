@@ -104,6 +104,10 @@ class session_t : public valexpr_t::scope_t
 			    account_t *		master        = NULL,
 			    const std::string * original_file = NULL);
 
+  void read_init();
+
+  journal_t * read_data(const std::string& master_account = "");
+
   void register_parser(parser_t * parser) {
     parsers.push_back(parser);
   }
@@ -125,6 +129,19 @@ class session_t : public valexpr_t::scope_t
   //
 
   virtual valexpr_t::node_t * lookup(const std::string& name);
+
+  //
+  // Option handlers
+  //
+
+#ifdef USE_BOOST_PYTHON
+  void opt_import(value_t&) {
+    python_import(optarg);
+  }
+  void opt_import_stdin(value_t&) {
+    python_eval(std::cin, PY_EVAL_MULTI);
+  }
+#endif
 };
 
 } // namespace ledger
