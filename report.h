@@ -48,44 +48,20 @@ class report_t : public valexpr_t::scope_t
 
       session(_session),
 
-      last_transform(NULL) {
-#if 0
-    ledger::amount_expr = "@a";
-    ledger::total_expr  = "@O";
-#endif
-  }
+      last_transform(NULL) {}
+
   virtual ~report_t();
 
   void apply_transforms(repitem_t * items);
-
-  void regexps_to_predicate(const std::string& command,
-			    std::list<std::string>::const_iterator begin,
-			    std::list<std::string>::const_iterator end,
-			    const bool account_regexp	       = false,
-			    const bool add_account_short_masks = false,
-			    const bool logical_and             = true);
-
-  void process_options(const std::string&     command,
-		       strings_list::iterator arg,
-		       strings_list::iterator args_end);
-
-#if 0
-  item_handler<transaction_t> *
-  chain_xact_handlers(const std::string& command,
-		      item_handler<transaction_t> * base_formatter,
-		      journal_t * journal,
-		      account_t * master,
-		      std::list<item_handler<transaction_t> *>& ptrs);
-#endif
 
   //
   // Config options
   //
 
-  void opt_foo(value_t& result) {
+  void option_foo(value_t& result) {
     std::cout << "This is foo" << std::endl;
   }
-  void opt_bar(value_t& result, valexpr_t::scope_t * locals) {
+  void option_bar(value_t& result, valexpr_t::scope_t * locals) {
     std::cout << "This is bar: " << locals->args[0] << std::endl;
   }
 
@@ -94,14 +70,6 @@ class report_t : public valexpr_t::scope_t
   //
 
   virtual valexpr_t::node_t * lookup(const std::string& name);
-};
-
-class balance_command : public valexpr_t::functor_t
-{
- public:
-  balance_command() : valexpr_t::functor_t("balance") {}
-
-  virtual void operator()(value_t& result, valexpr_t::scope_t * args) {}
 };
 
 } // namespace ledger

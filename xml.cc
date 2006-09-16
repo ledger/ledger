@@ -1,3 +1,6 @@
+#ifdef USE_PCH
+#include "pch.h"
+#else
 #include "xml.h"
 #include "journal.h"
 #include "datetime.h"
@@ -14,6 +17,7 @@ extern "C" {
 #include <xmlparse.h>        // expat XML parser
 #endif
 }
+#endif
 
 namespace ledger {
 

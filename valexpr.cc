@@ -1,8 +1,12 @@
+#ifdef USE_PCH
+#include "pch.h"
+#else
 #include "valexpr.h"
 #include "debug.h"
 #include "util.h"
 #ifdef USE_BOOST_PYTHON
 #include "py_eval.h"
+#endif
 #endif
 
 namespace ledger {
@@ -1601,10 +1605,11 @@ void valexpr_t::node_t::dump(std::ostream& out, const int depth) const
 
 } // namespace ledger
 
-#if 0
 #ifdef USE_BOOST_PYTHON
 
+#ifndef USE_PCH
 #include <boost/python.hpp>
+#endif
 
 using namespace boost::python;
 using namespace ledger;
@@ -1683,31 +1688,11 @@ void export_valexpr()
 }
 
 #endif // USE_BOOST_PYTHON
-#else
-void export_valexpr()
-{
-}
-#endif
 
 #ifdef TEST
 
 #include "session.h"
 #include "format.h"
-
-void export_amount() {}
-void export_balance() {}
-void export_value() {}
-void export_datetime() {}
-
-void export_journal() {}
-void export_parser() {}
-void export_option() {}
-void export_walk() {}
-void export_report() {}
-void export_format() {}
-void export_valexpr() {}
-
-void shutdown_option() {}
 
 int main(int argc, char *argv[])
 {

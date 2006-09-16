@@ -25,29 +25,36 @@ INCDIRS="$INCDIRS -Wno-long-double"
 
 LIBDIRS="-L/sw/lib -L/usr/local/lib -L/usr/lib/python2.3/config"
 
+# Building Ledger as a shared library is a luxury, since there are no
+# clients except my GUI tool which use it (and that is built again
+# anyway by Xcode).
+SWITCHES="--enable-pch --disable-shared"
+
 if [ "$1" = "--debug" ]; then
     shift 1
     ./configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" CXXFLAGS="-g" \
-	--enable-debug "$@"
+	$SWITCHES --enable-debug "$@"
 elif [ "$1" = "--python-debug" ]; then
     shift 1
     ./configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" CXXFLAGS="-g" \
-	--enable-debug --enable-python "$@"
+	$SWITCHES --enable-debug --enable-python "$@"
 elif [ "$1" = "--opt" ]; then
     shift 1
     ./configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
-	CXXFLAGS="-fomit-frame-pointer -O3 -mcpu=7450 -fPIC" "$@"
+	CXXFLAGS="-fomit-frame-pointer -O3 -mcpu=7450 -fPIC" "$@" $SWITCHES
 elif [ "$1" = "--flat-opt" ]; then
     shift 1
     ./configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
-	CXXFLAGS="-fomit-frame-pointer -O3 -mcpu=7450" "$@"
+	CXXFLAGS="-fomit-frame-pointer -O3 -mcpu=7450" "$@" $SWITCHES
 elif [ "$1" = "--safe-opt" ]; then
     shift 1
     ./configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
-	CXXFLAGS="-fomit-frame-pointer -O3 -mcpu=7450 -fPIC -DDEBUG_LEVEL=1" "$@"
+	CXXFLAGS="-fomit-frame-pointer -O3 -mcpu=7450 -fPIC -DDEBUG_LEVEL=1" "$@" \
+	$SWITCHES
 elif [ "$1" = "--perf" ]; then
     shift 1
-    ./configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" CXXFLAGS="-g -pg" "$@"
+    ./configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" CXXFLAGS="-g -pg" "$@" \
+	$SWITCHES
 fi
 
 rm AUTHORS COPYING

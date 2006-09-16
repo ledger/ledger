@@ -134,11 +134,15 @@ class session_t : public valexpr_t::scope_t
   // Option handlers
   //
 
+  void option_file(value_t&, valexpr_t::scope_t * locals) {
+    data_file = locals->args[0].get_string();
+  }
+
 #ifdef USE_BOOST_PYTHON
-  void opt_import(value_t&) {
+  void option_import(value_t&) {
     python_import(optarg);
   }
-  void opt_import_stdin(value_t&) {
+  void option_import_stdin(value_t&) {
     python_eval(std::cin, PY_EVAL_MULTI);
   }
 #endif

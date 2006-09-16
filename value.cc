@@ -1,6 +1,10 @@
+#ifdef USE_PCH
+#include "pch.h"
+#else
 #include "value.h"
 #include "debug.h"
 #include "error.h"
+#endif
 
 namespace ledger {
 
@@ -83,6 +87,10 @@ std::string value_t::get_string() const
 
 void * value_t::get_pointer() const
 {
+  if (type == POINTER)
+    return *(void **) data;
+  else
+    throw new value_error("Value is not a pointer");
 }
 
 void value_t::destroy()
@@ -1880,7 +1888,9 @@ void value_context::describe(std::ostream& out) const throw()
 
 #ifdef USE_BOOST_PYTHON
 
+#ifndef USE_PCH
 #include <boost/python.hpp>
+#endif
 
 using namespace boost::python;
 using namespace ledger;

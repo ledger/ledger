@@ -59,7 +59,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @insertcopying
 @end ifnottex
 
-@chapter The Stucture of Ledger
+@chapter Anatomy of a Ledger file
+
+@chapter Using Ledger for reporting
+
+@chapter Mastering value expressions
+
+@chapter Extending Ledger with Python
+
+@chapter Ledger's Architecture
 
 @section Core Numerics
 

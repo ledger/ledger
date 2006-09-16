@@ -1,9 +1,13 @@
-#include "journal.h"
-#include "valexpr.h"
+#ifdef USE_PCH
+#include "pch.h"
+#else
 #include "binary.h"
+#include "valexpr.h"
+#include "repitem.h"
 
 #include <fstream>
 #include <sys/stat.h>
+#endif
 
 #define TIMELOG_SUPPORT 1
 
@@ -346,8 +350,12 @@ inline void read_binary_transaction(char *& data, transaction_t * xact)
     std::string expr;
     read_binary_string(data, expr);
     xact->amount_expr = expr;
-    // jww (2006-09-10): Create a repitem scope here
-    xact->amount = valexpr_t(xact->amount_expr).calc().get_amount();
+
+    repitem_t * item =
+      repitem_t::wrap(xact, static_cast<repitem_t *>(xact->entry->data));
+    xact->data = item;
+
+    xact->amount = valexpr_t(xact->amount_expr).calc(item).get_amount();
   }
 
   if (read_binary_bool(data)) {
@@ -386,6 +394,7 @@ inline void read_binary_entry_base(char *& data, entry_base_t * entry,
        i < count;
        i++) {
     new(xact_pool) transaction_t;
+    xact_pool->entry = static_cast<entry_t *>(entry);
     read_binary_transaction(data, xact_pool);
     if (ignore_calculated && xact_pool->flags & TRANSACTION_CALCULATED)
       finalize = true;
@@ -396,6 +405,9 @@ inline void read_binary_entry_base(char *& data, entry_base_t * entry,
 inline void read_binary_entry(char *& data, entry_t * entry,
 			      transaction_t *& xact_pool, bool& finalize)
 {
+  entry->data =
+    repitem_t::wrap(entry, static_cast<repitem_t *>(entry->journal->data));
+
   read_binary_entry_base(data, entry, xact_pool, finalize);
   read_binary_number(data, entry->_date);
   read_binary_number(data, entry->_date_eff);
@@ -725,8 +737,8 @@ unsigned int read_binary_journal(std::istream&	   in,
   for (unsigned long i = 0; i < count; i++) {
     new(entry_pool) entry_t;
     bool finalize = false;
-    read_binary_entry(data, entry_pool, xact_pool, finalize);
     entry_pool->journal = journal;
+    read_binary_entry(data, entry_pool, xact_pool, finalize);
     if (finalize && ! entry_pool->finalize())
       continue;
     journal->entries.push_back(entry_pool++);

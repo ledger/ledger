@@ -1,3 +1,6 @@
+#ifdef USE_PCH
+#include "pch.h"
+#else
 #include "quotes.h"
 #include "datetime.h"
 #include "error.h"
@@ -6,6 +9,7 @@
 #include <fstream>
 #include <cstdlib>
 #include <cstdio>
+#endif
 
 namespace ledger {
 

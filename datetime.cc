@@ -1,3 +1,6 @@
+#ifdef USE_PCH
+#include "pch.h"
+#else
 #if defined(__GNUG__) && __GNUG__ < 3
 #define _XOPEN_SOURCE
 #endif
@@ -7,6 +10,7 @@
 
 #include <ctime>
 #include <cctype>
+#endif
 
 date_t       date_t::now(std::time(NULL));
 int	     date_t::current_year = date_t::now.year();
@@ -445,10 +449,11 @@ namespace {
   }
 }
 
-#if 0
 #ifdef USE_BOOST_PYTHON
 
+#ifndef USE_PCH
 #include <boost/python.hpp>
+#endif
 
 using namespace boost::python;
 
@@ -564,4 +569,3 @@ void export_datetime()
 }
 
 #endif // USE_BOOST_PYTHON
-#endif

@@ -1,3 +1,6 @@
+#ifdef USE_PCH
+#include "pch.h"
+#else
 #if defined(__GNUG__) && __GNUG__ < 3
 #define _XOPEN_SOURCE
 #endif
@@ -20,6 +23,7 @@
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
+#endif
 
 #ifdef HAVE_REALPATH
 extern "C" char *realpath(const char *, char resolved_path[]);
@@ -70,7 +74,8 @@ inline char * next_element(char * buf, bool variable = false)
 }
 
 static inline void
-parse_amount_expr(std::istream& in, transaction_t& xact, amount_t& amount,
+parse_amount_expr(std::istream& in, journal_t * journal,
+		  transaction_t& xact, amount_t& amount,
 		  unsigned short flags = 0)
 {
   valexpr_t valexpr(in, flags | PARSE_VALEXPR_RELAXED | PARSE_VALEXPR_PARTIAL);
@@ -88,17 +93,24 @@ parse_amount_expr(std::istream& in, transaction_t& xact, amount_t& amount,
 #endif
 
   // jww (2006-09-10): Put an error context around this
-  repitem_t * item =
-    repitem_t::wrap(&xact, static_cast<repitem_t *>(xact.entry->data));
-  xact.data = item;
-  amount = valexpr.calc(item).get_amount();
+  std::auto_ptr<repitem_t> item
+    (repitem_t::wrap(&xact, xact.entry ?
+		     static_cast<repitem_t *>(xact.entry->data) :
+		     static_cast<repitem_t *>(journal->data)));
+
+  amount = valexpr.calc(item.get()).get_amount();
+
+  if (xact.entry)
+    xact.data = item.release();
 
   DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
 	      "The transaction amount is " << amount);
 }
 
-transaction_t * parse_transaction(char * line, account_t * account,
-				  entry_t * entry = NULL)
+transaction_t * parse_transaction(char *      line,
+				  journal_t * journal,
+				  account_t * account,
+				  entry_t *   entry = NULL)
 {
   std::istringstream in(line);
 
@@ -107,8 +119,8 @@ transaction_t * parse_transaction(char * line, account_t * account,
 
   // The account will be determined later...
   std::auto_ptr<transaction_t> xact(new transaction_t(NULL));
-  if (entry)
-    xact->entry = entry;
+
+  xact->entry = entry;		// this might be NULL
 
   // Parse the state flag
 
@@ -184,7 +196,8 @@ transaction_t * parse_transaction(char * line, account_t * account,
       // jww (2006-09-15): Make sure it doesn't gobble up the upcoming @ symbol
 
       unsigned long beg = (long)in.tellg();
-      parse_amount_expr(in, *xact, xact->amount, PARSE_VALEXPR_NO_REDUCE);
+      parse_amount_expr(in, journal, *xact, xact->amount,
+			PARSE_VALEXPR_NO_REDUCE);
       unsigned long end = (long)in.tellg();
       xact->amount_expr = std::string(line, beg, end - beg);
     }
@@ -216,7 +229,8 @@ transaction_t * parse_transaction(char * line, account_t * account,
 	try {
 	  unsigned long beg = (long)in.tellg();
 
-	  parse_amount_expr(in, *xact, *xact->cost, PARSE_VALEXPR_NO_MIGRATE);
+	  parse_amount_expr(in, journal, *xact, *xact->cost,
+			    PARSE_VALEXPR_NO_MIGRATE);
 
 	  unsigned long end = (long)in.tellg();
 
@@ -306,6 +320,7 @@ transaction_t * parse_transaction(char * line, account_t * account,
 }
 
 bool parse_transactions(std::istream&	   in,
+			journal_t *	   journal,
 			account_t *	   account,
 			entry_base_t&	   entry,
 			const std::string& kind,
@@ -326,7 +341,7 @@ bool parse_transactions(std::istream&	   in,
       if (! *p || *p == '\r')
 	break;
     }
-    if (transaction_t * xact = parse_transaction(line, account)) {
+    if (transaction_t * xact = parse_transaction(line, journal, account)) {
       entry.add_transaction(xact);
       added = true;
     }
@@ -428,7 +443,8 @@ entry_t * parse_entry(std::istream& in, char * line, journal_t * journal,
 	break;
     }
 
-    if (transaction_t * xact = parse_transaction(line, master, curr.get())) {
+    if (transaction_t * xact =
+	parse_transaction(line, journal, master, curr.get())) {
       if (state != transaction_t::UNCLEARED &&
 	  xact->state == transaction_t::UNCLEARED)
 	xact->state = state;
@@ -734,7 +750,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	}
 
 	auto_entry_t * ae = new auto_entry_t(skip_ws(line + 1));
-	if (parse_transactions(in, account_stack.front(), *ae,
+	if (parse_transactions(in, journal, account_stack.front(), *ae,
 			       "automated", end_pos)) {
 	  journal->auto_entries.push_back(ae);
 	  ae->src_idx  = src_idx;
@@ -751,7 +767,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	if (! pe->period)
 	  throw new parse_error(std::string("Parsing time period '") + line + "'");
 
-	if (parse_transactions(in, account_stack.front(), *pe,
+	if (parse_transactions(in, journal, account_stack.front(), *pe,
 			       "period", end_pos)) {
 	  if (pe->finalize()) {
 	    extend_entry_base(journal, *pe, true);
@@ -901,99 +917,5 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
   return count;
 }
-
-#if 0
-void write_textual_journal(journal_t& journal, std::string path,
-			   item_handler<transaction_t>& formatter,
-			   const std::string& write_hdr_format,
-			   std::ostream& out)
-{
-  unsigned long index = 0;
-  std::string   found;
-
-  if (path.empty()) {
-    if (! journal.sources.empty())
-      found = *journal.sources.begin();
-  } else {
-#ifdef HAVE_REALPATH
-    char buf1[PATH_MAX];
-    char buf2[PATH_MAX];
-
-    ::realpath(path.c_str(), buf1);
-
-    for (strings_list::iterator i = journal.sources.begin();
-	 i != journal.sources.end();
-	 i++) {
-      ::realpath((*i).c_str(), buf2);
-      if (std::strcmp(buf1, buf2) == 0) {
-	found = *i;
-	break;
-      }
-      index++;
-    }
-#else
-    for (strings_list::iterator i = journal.sources.begin();
-	 i != journal.sources.end();
-	 i++) {
-      if (path == *i) {
-	found = *i;
-	break;
-      }
-      index++;
-    }
-#endif
-  }
-
-  if (found.empty())
-    throw new error(std::string("Journal does not refer to file '") +
-		    path + "'");
-
-  entries_list::iterator	el = journal.entries.begin();
-  auto_entries_list::iterator	al = journal.auto_entries.begin();
-  period_entries_list::iterator pl = journal.period_entries.begin();
-
-  unsigned long pos = 0;
-
-  format_t hdr_fmt(write_hdr_format);
-  std::ifstream in(found.c_str());
-
-  while (! in.eof()) {
-    entry_base_t * base = NULL;
-    if (el != journal.entries.end() && pos == (*el)->beg_pos) {
-      hdr_fmt.format(out, details_t(**el));
-      base = *el++;
-    }
-    else if (al != journal.auto_entries.end() && pos == (*al)->beg_pos) {
-      out << "= " << (*al)->predicate_string << '\n';
-      base = *al++;
-    }
-    else if (pl != journal.period_entries.end() && pos == (*pl)->beg_pos) {
-      out << "~ " << (*pl)->period_string << '\n';
-      base = *pl++;
-    }
-
-    char c;
-    if (base) {
-      for (transactions_list::iterator x = base->transactions.begin();
-	   x != base->transactions.end();
-	   x++)
-	if (! ((*x)->flags & TRANSACTION_AUTO)) {
-	  transaction_xdata(**x).dflags |= TRANSACTION_TO_DISPLAY;
-	  formatter(**x);
-	}
-      formatter.flush();
-
-      while (pos < base->end_pos) {
-	in.get(c);
-	pos = in.tellg(); // pos++;
-      }
-    } else {
-      in.get(c);
-      pos = in.tellg(); // pos++;
-      out.put(c);
-    }
-  }
-}
-#endif
 
 } // namespace ledger

@@ -1,3 +1,6 @@
+#ifdef USE_PCH
+#include "pch.h"
+#else
 #include "amount.h"
 #include "util.h"
 
@@ -6,6 +9,7 @@
 #include <cstdlib>
 
 #include <gmp.h>
+#endif
 
 namespace ledger {
 
@@ -93,16 +97,6 @@ static struct _init_amounts {
 
     parse_conversion("1.0m", "60s");
     parse_conversion("1.0h", "60m");
-
-#if 0
-    commodity = commodity_t::create("b");
-    commodity->add_flags(COMMODITY_STYLE_NOMARKET | COMMODITY_STYLE_BUILTIN);
-
-    parse_conversion("1.00 Kb", "1024 b");
-    parse_conversion("1.00 Mb", "1024 Kb");
-    parse_conversion("1.00 Gb", "1024 Mb");
-    parse_conversion("1.00 Tb", "1024 Gb");
-#endif
   }
 
   ~_init_amounts() {
@@ -1843,8 +1837,10 @@ bool compare_amount_commodities::operator()(const amount_t * left,
 
 #ifdef USE_BOOST_PYTHON
 
+#ifndef USE_PCH
 #include <boost/python.hpp>
 #include <Python.h>
+#endif
 
 using namespace boost::python;
 using namespace ledger;
@@ -1973,7 +1969,6 @@ void export_amount()
   class_< commodity_t > ("Commodity")
     .add_property("symbol", &commodity_t::symbol)
 
-#if 0
     .add_property("name", &commodity_t::name, &commodity_t::set_name)
     .add_property("note", &commodity_t::note, &commodity_t::set_note)
     .add_property("precision", &commodity_t::precision,
@@ -1981,9 +1976,7 @@ void export_amount()
     .add_property("flags", &commodity_t::flags, &commodity_t::set_flags)
     .add_property("add_flags", &commodity_t::add_flags)
     .add_property("drop_flags", &commodity_t::drop_flags)
-#if 0
     .add_property("updater", &commodity_t::updater)
-#endif
 
     .add_property("smaller",
 		  make_getter(&commodity_t::smaller,
@@ -2001,7 +1994,6 @@ void export_amount()
     .def("find", py_find_commodity,
 	 return_value_policy<reference_existing_object>())
     .staticmethod("find")
-#endif
 
     .def("add_price", &commodity_t::add_price)
     .def("remove_price", &commodity_t::remove_price)

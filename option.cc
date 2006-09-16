@@ -1,3 +1,6 @@
+#ifdef USE_PCH
+#include "pch.h"
+#else
 #include "option.h"
 #include "report.h"
 #include "debug.h"
@@ -10,11 +13,10 @@
 #include <cstdarg>
 
 #include "util.h"
+#endif
 
-#if 0
 #ifdef USE_BOOST_PYTHON
 static ledger::option_t * find_option(const std::string& name);
-#endif
 #endif
 
 namespace ledger {
@@ -24,8 +26,8 @@ namespace {
 				     const std::string& name)
   {
     char buf[128];
-    std::strcpy(buf, "opt_");
-    char * p = &buf[4];
+    std::strcpy(buf, "option_");
+    char * p = &buf[7];
     for (const char * q = name.c_str(); *q; q++) {
       if (*q == '-')
 	*p++ = '_';
@@ -43,10 +45,10 @@ namespace {
   valexpr_t::functor_t * find_option(valexpr_t::scope_t * scope,
 				     const char letter)
   {
-    char buf[6];
-    std::strcpy(buf, "opt_");
-    buf[4] = letter;
-    buf[5] = '\0';
+    char buf[9];
+    std::strcpy(buf, "option_");
+    buf[7] = letter;
+    buf[8] = '\0';
 
     if (valexpr_t::node_t * def = scope->lookup(buf))
       return def->functor_obj();
@@ -173,18 +175,19 @@ void process_arguments(int argc, char ** argv, const bool anywhere,
       throw new option_error(std::string("illegal option -"));
     }
     else {
-      std::list<valexpr_t::functor_t *> opt_queue;
+      std::list<valexpr_t::functor_t *> option_queue;
 
       int x = 1;
       for (char c = (*i)[x]; c != '\0'; x++, c = (*i)[x]) {
 	valexpr_t::functor_t * opt = find_option(scope, c);
 	if (! opt)
 	  throw new option_error(std::string("illegal option -") + c);
-	opt_queue.push_back(opt);
+	option_queue.push_back(opt);
       }
 
-      for (std::list<valexpr_t::functor_t *>::iterator o = opt_queue.begin();
-	   o != opt_queue.end();
+      for (std::list<valexpr_t::functor_t *>::iterator
+	     o = option_queue.begin();
+	   o != option_queue.end();
 	   o++) {
 	char * value = NULL;
 	if ((*o)->wants_args) {
@@ -208,12 +211,13 @@ void process_arguments(int argc, char ** argv, const bool anywhere,
 
 } // namespace ledger
 
-#if 0
 #ifdef USE_BOOST_PYTHON
 
+#ifndef USE_PCH
 #include <boost/python.hpp>
 #include <boost/python/detail/api_placeholder.hpp>
 #include <boost/python/suite/indexing/map_indexing_suite.hpp>
+#endif
 
 using namespace boost::python;
 using namespace ledger;
@@ -290,4 +294,3 @@ void export_option()
 }
 
 #endif // USE_BOOST_PYTHON
-#endif

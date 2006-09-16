@@ -1,5 +1,9 @@
+#ifdef USE_PCH
+#include "pch.h"
+#else
 #include "transform.h"
 #include "repitem.h"
+#endif
 
 namespace ledger {
 
@@ -42,7 +46,9 @@ void split_transform::walk_items(repitem_t * items)
 
 #ifdef USE_BOOST_PYTHON
 
+#ifndef USE_PCH
 #include <boost/python.hpp>
+#endif
 
 using namespace boost::python;
 using namespace ledger;

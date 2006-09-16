@@ -1,3 +1,6 @@
+#ifdef USE_PCH
+#include "pch.h"
+#else
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -9,6 +12,7 @@
 #include <cstdlib>
 #include <cstring>
 
+#include "option.h"
 #include "acconf.h"
 
 #ifdef HAVE_UNIX_PIPES
@@ -24,6 +28,7 @@
 #include "ledger.h"
 #endif
 #include "debug.h"
+#endif
 
 using namespace ledger;
 
@@ -88,11 +93,13 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
 
   valexpr_t::functor_t * command = NULL;
 
-  if (verb == "balance" || verb == "bal" || verb == "b")
-    command = new balance_command;
-#if 0
+  if (verb == "dump")
+    command = new register_command;
   else if (verb == "register" || verb == "reg" || verb == "r")
     command = new register_command;
+#if 0
+  else if (verb == "balance" || verb == "bal" || verb == "b")
+    command = new balance_command;
   else if (verb == "print" || verb == "p")
     command = new print_command;
   else if (verb == "output")
@@ -135,7 +142,7 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
   }
   else {
     char buf[128];
-    std::strcpy(buf, "cmd_");
+    std::strcpy(buf, "command_");
     std::strcat(buf, verb.c_str());
     if (valexpr_t::node_t * def = report->lookup(buf))
       command = def->functor_obj();
@@ -421,7 +428,9 @@ appending the output of this command to your Ledger file if you so choose."
 
   valexpr_t::scope_t * locals = new valexpr_t::scope_t(report, true);
 
-  locals->args.push_back(journal->data);
+  std::auto_ptr<repitem_t> items(repitem_t::wrap(&session, true));
+
+  locals->args.push_back(items.get());
 
   if (command->wants_args)
     for (strings_list::iterator i = args.begin();

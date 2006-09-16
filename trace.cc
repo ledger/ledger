@@ -1,5 +1,9 @@
+#ifdef USE_PCH
+#include "pch.h"
+#else
 #include "trace.h"
 #include "acconf.h"
+#endif
 
 namespace ledger {
 

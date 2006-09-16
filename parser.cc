@@ -1,9 +1,15 @@
+#ifdef USE_PCH
+#include "pch.h"
+#else
 #include "parser.h"
+#endif
 
 #ifdef USE_BOOST_PYTHON
 
+#ifndef USE_PCH
 #include <boost/python.hpp>
 #include <Python.h>
+#endif
 
 using namespace boost::python;
 using namespace ledger;

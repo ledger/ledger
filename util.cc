@@ -1,3 +1,6 @@
+#ifdef USE_PCH
+#include "pch.h"
+#else
 #include "util.h"
 
 #include <cstdlib>
@@ -7,12 +10,13 @@
 #include <unistd.h>
 #endif
 
-#ifdef HAVE_REALPATH
-extern "C" char * realpath(const char *, char resolved_path[]);
-#endif
-
 #if defined(HAVE_GETPWUID) || defined(HAVE_GETPWNAM)
 #include <pwd.h>
+#endif
+#endif
+
+#ifdef HAVE_REALPATH
+extern "C" char * realpath(const char *, char resolved_path[]);
 #endif
 
 std::string expand_path(const std::string& path)

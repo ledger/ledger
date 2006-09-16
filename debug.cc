@@ -1,11 +1,17 @@
+#ifdef USE_PCH
+#include "pch.h"
+#else
 #include "debug.h"
+#endif
 
 #ifdef DEBUG_ENABLED
 
+#ifndef USE_PCH
 #include <map>
 #include <fstream>
 
 #include <unistd.h>		// for the `write' method
+#endif
 
 int offset = 0;
 
@@ -113,7 +119,9 @@ static struct init_streams {
 
 #if DEBUG_LEVEL >= BETA
 
+#ifndef USE_PCH
 #include <string>
+#endif
 
 void debug_assert(const std::string& reason,
 		  const std::string& file,

@@ -1,8 +1,12 @@
+#ifdef USE_PCH
+#include "pch.h"
+#else
 #include "py_eval.h"
 #include "error.h"
 #include "acconf.h"
 
 #include <istream>
+#endif
 
 void export_amount();
 void export_balance();
@@ -27,17 +31,13 @@ namespace {
     export_amount();
     export_balance();
     export_value();
-#if 0
     export_datetime();
-#endif
 
     export_journal();
     export_parser();
     export_option();
-#if 0
     export_walk();
     export_format();
-#endif
     export_report();
     export_valexpr();
   }

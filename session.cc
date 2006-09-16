@@ -1,7 +1,11 @@
+#ifdef USE_PCH
+#include "pch.h"
+#else
 #include "session.h"
 #include "repitem.h"
 
 #include <fstream>
+#endif
 
 namespace ledger {
 
@@ -119,7 +123,7 @@ journal_t * session_t::read_data(const std::string& master_account)
 
   if (entry_count == 0)
     throw new error("Failed to locate any journal entries; "
-		    "did you specify a valid file?");
+		    "did you specify a valid file with -f?");
 
   TRACE_POP(parser, "Finished parsing");
 
@@ -130,10 +134,24 @@ valexpr_t::node_t * session_t::lookup(const std::string& name)
 {
   const char * p = name.c_str();
   switch (*p) {
+  case 'o':
+    if (std::strncmp(p, "option_", 7) == 0) {
+      p = p + 7;
+      switch (*p) {
+      case 'f':
+	if (! *(p + 1) || std::strcmp(p, "file") == 0)
+	  return MAKE_FUNCTOR(session_t, option_file);
+	break;
+      }
+    }
+    break;
+
   case 'n':
     switch (*++p) {
     case 'o':
-      return MAKE_FUNCTOR(session_t, now);
+      if (name == "now")
+	return MAKE_FUNCTOR(session_t, now);
+      break;
     }
     break;
   }
@@ -144,7 +162,9 @@ valexpr_t::node_t * session_t::lookup(const std::string& name)
 
 #ifdef USE_BOOST_PYTHON
 
+#ifndef USE_PCH
 #include <boost/python.hpp>
+#endif
 
 using namespace boost::python;
 using namespace ledger;
@@ -180,9 +200,7 @@ void export_session()
     .def_readwrite("verbose_mode", &session_t::verbose_mode)
     .def_readwrite("trace_mode", &session_t::trace_mode)
 
-#if 0
     .def_readwrite("journals", &session_t::journals)
-#endif
     ;
 }
 

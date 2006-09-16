@@ -1,36 +1,47 @@
+if USE_PCH
+#BUILT_SOURCES = pchpic.h.gch pchnopic.h.gch
+BUILT_SOURCES = pchnopic.h.gch
+#CLEANFILES = pchpic.h.gch pchnopic.h.gch
+CLEANFILES = pchnopic.h.gch
+endif
+
 lib_LTLIBRARIES = libledger.la
 
 libledger_la_CXXFLAGS =
+if USE_PCH
+libledger_la_CXXFLAGS += -DUSE_PCH
+endif
 libledger_la_SOURCES = \
 	amount.cc      \
 	balance.cc     \
-	datetime.cc    \
 	value.cc       \
+	datetime.cc    \
 	valexpr.cc     \
-	mask.cc        \
 	format.cc      \
+	quotes.cc      \
+	mask.cc        \
+		       \
 	trace.cc       \
 	util.cc        \
 		       \
+	session.cc     \
 	journal.cc     \
 	parser.cc      \
 	textual.cc     \
 	binary.cc      \
-	session.cc     \
+	xml.cc	       \
+	qif.cc	       \
 		       \
+	report.cc      \
+	repitem.cc     \
+	transform.cc   \
+		       \
+	dump.cc        \
+	register.cc    \
 	csv.cc         \
 	derive.cc      \
 	emacs.cc       \
-	option.cc      \
-	qif.cc	       \
-	quotes.cc      \
-	reconcile.cc   \
-	repitem.cc     \
-	report.cc      \
-	transform.cc   \
-	command.cc     \
-	walk.cc        \
-	xml.cc
+	reconcile.cc
 if HAVE_EXPAT
 libledger_la_CXXFLAGS += -DHAVE_EXPAT=1
 libledger_la_SOURCES += gnucash.cc
@@ -55,46 +66,55 @@ libledger_la_LDFLAGS = -release 3.0
 
 pkginclude_HEADERS = \
 	acconf.h     \
-		     \
 	amount.h     \
 	balance.h    \
-	datetime.h   \
-	value.h      \
-	debug.h	     \
-	util.h	     \
-		     \
 	binary.h     \
-	csv.h        \
+	csv.h	     \
+	datetime.h   \
+	debug.h	     \
 	derive.h     \
-	emacs.h      \
-	error.h      \
+	dump.h	     \
+	emacs.h	     \
+	error.h	     \
 	format.h     \
 	gnucash.h    \
 	journal.h    \
 	ledger.h     \
-	mask.h       \
+	mask.h	     \
+	ofx.h	     \
 	option.h     \
 	parser.h     \
 	py_eval.h    \
+	pyfstream.h  \
+	pyledger.h   \
 	qif.h	     \
 	quotes.h     \
 	reconcile.h  \
+	register.h   \
 	repitem.h    \
 	report.h     \
 	session.h    \
+	testpch.h    \
 	textual.h    \
 	timing.h     \
-	trace.h      \
+	trace.h	     \
 	transform.h  \
+	util.h	     \
 	valexpr.h    \
-	walk.h       \
+	value.h	     \
 	xml.h
+
+pchpic.h.gch: pch.h pchdata.h $(pkginclude_HEADERS)
+	$(CXXCOMPILE) $(CXXFLAGS) -DPIC -o $@ pchdata.h
+
+pchnopic.h.gch: pch.h pchdata.h $(pkginclude_HEADERS)
+	$(CXXCOMPILE) $(CXXFLAGS) -o $@ pchdata.h
 
 ######################################################################
 
 bin_PROGRAMS = ledger
 ledger_CXXFLAGS =
-ledger_SOURCES = main.cc
+ledger_SOURCES = option.cc main.cc
 ledger_LDADD = $(LIBOBJS) libledger.la
 if HAVE_EXPAT
 ledger_CXXFLAGS += -DHAVE_EXPAT=1
@@ -186,4 +206,4 @@ all-clean: maintainer-clean
 		acconf.h.in aclocal.m4 autom4te config.guess config.sub \
 		configure depcomp install-sh libtool ltconfig ltmain.sh \
 		missing stamp texinfo.tex Makefile.in mkinstalldirs \
-		elisp-comp elc-stamp py-compile
+		elisp-comp elc-stamp py-compile *.gch

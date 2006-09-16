@@ -1,6 +1,7 @@
 #ifndef _REPITEM_H
 #define _REPITEM_H
 
+#include "session.h"
 #include "journal.h"
 #include "valexpr.h"
 
@@ -24,9 +25,10 @@ public:
     entry_t *	    entry;
     account_t *	    account_ptr;
     journal_t *	    journal;
+    session_t *	    session;
   };
 
-  enum kind_t { TRANSACTION, ENTRY, ACCOUNT, JOURNAL } kind;
+  enum kind_t { TRANSACTION, ENTRY, ACCOUNT, JOURNAL, SESSION } kind;
 
   bool istemp; // if item pointer is a temporary; assert that its
 	       // journal pointer is NULL
@@ -87,6 +89,7 @@ public:
 			  bool deep = true);
   static repitem_t * wrap(journal_t * tjournal, repitem_t * owner = NULL,
 			  bool deep = true);
+  static repitem_t * wrap(session_t * tsession, bool deep = true);
 
   repitem_t * add_content(repitem_t * item);
   repitem_t * add_child(repitem_t * item);
