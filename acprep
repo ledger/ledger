@@ -28,7 +28,7 @@ LIBDIRS="-L/sw/lib -L/usr/local/lib -L/usr/lib/python2.3/config"
 # Building Ledger as a shared library is a luxury, since there are no
 # clients except my GUI tool which use it (and that is built again
 # anyway by Xcode).
-SWITCHES="--enable-pch --disable-shared"
+SWITCHES="--disable-shared"
 
 if [ "$1" = "--debug" ]; then
     shift 1

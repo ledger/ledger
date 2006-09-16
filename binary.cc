@@ -355,7 +355,7 @@ inline void read_binary_transaction(char *& data, transaction_t * xact)
       repitem_t::wrap(xact, static_cast<repitem_t *>(xact->entry->data));
     xact->data = item;
 
-    xact->amount = valexpr_t(xact->amount_expr).calc(item).get_amount();
+    xact->amount = valexpr_t(xact->amount_expr).calc(item).to_amount();
   }
 
   if (read_binary_bool(data)) {

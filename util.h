@@ -81,4 +81,15 @@ inline char peek_next_nonws(std::istream& in) {
 
 std::string resolve_path(const std::string& path);
 
+enum elision_style_t {
+  TRUNCATE_TRAILING,
+  TRUNCATE_MIDDLE,
+  TRUNCATE_LEADING,
+  ABBREVIATE
+};
+
+std::string abbreviate(const std::string& str, unsigned int width,
+		       elision_style_t elision_style = TRUNCATE_TRAILING,
+		       const bool is_account = false, int abbrev_length = 2);
+
 #endif // _UTIL_H

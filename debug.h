@@ -137,11 +137,11 @@ void   operator delete[](void*, const std::nothrow_t&) throw();
 
 #define CONFIRM(x)
 
-#include "trace.h"
-
 #elif DEBUG_LEVEL >= BETA
 
 #define CONFIRM(x) assert(x)
+
+#include "trace.h"
 
 #endif
 

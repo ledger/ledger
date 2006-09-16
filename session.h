@@ -29,6 +29,7 @@ class session_t : public valexpr_t::scope_t
   std::string pricesdb_format;
 
   std::string date_input_format;
+  std::string date_format;
 
   unsigned long pricing_leeway;
 
@@ -41,25 +42,51 @@ class session_t : public valexpr_t::scope_t
 
   datetime_t now;
 
+  elision_style_t elision_style;
+
+  int abbrev_length;
+
+  bool ansi_codes;
+  bool ansi_invert;
+
   std::list<journal_t *> journals;
   std::list<parser_t *>  parsers;
 
   session_t(valexpr_t::scope_t * parent = NULL) :
     valexpr_t::scope_t(parent),
 
-    balance_format("%20T  %2_%-a\n"),
-    register_format("%D %-.20P %-.22A %12.67t %!12.80T\n%/"
-		    "%32|%-.22A %12.67t %!12.80T\n"),
-    wide_register_format("%D  %-.35P %-.38A %22.108t %!22.132T\n%/"
-			 "%48|%-.38A %22.108t %!22.132T\n"),
-    plot_amount_format("%D %(@S(@t))\n"),
-    plot_total_format("%D %(@S(@T))\n"),
-    print_format("\n%d %Y%C%P\n    %-34W  %12o%n\n%/    %-34W  %12o%n\n"),
-    write_hdr_format("%d %Y%C%P\n"),
-    write_xact_format("    %-34W  %12o%n\n"),
-    equity_format("\n%D %Y%C%P\n%/    %-34W  %12t\n"),
-    prices_format("%[%Y/%m/%d %H:%M:%S %Z]   %-10A %12t %12T\n"),
-    pricesdb_format("P %[%Y/%m/%d %H:%M:%S] %A %t\n"),
+    balance_format
+    ("%20T  %2_%-a\n"),
+#if 1
+    register_format
+    ("%{ftime(date)} %-.20{payee}%/"
+     "%32|%-22{abbrev(account, 22)} %12.67t %12.80T\n"),
+#else
+    register_format
+    ("%D %-.20P %-.22A %12.67t %!12.80T\n%/"
+     "%32|%-.22A %12.67t %!12.80T\n"),
+#endif
+    wide_register_format
+    ("%D  %-.35P %-.38A %22.108t %!22.132T\n%/"
+     "%48|%-.38A %22.108t %!22.132T\n"),
+    plot_amount_format
+    ("%D %(@S(@t))\n"),
+    plot_total_format
+    ("%D %(@S(@T))\n"),
+    print_format
+    ("\n%d %Y%C%P\n    %-34W  %12o%n\n%/    %-34W  %12o%n\n"),
+    write_hdr_format
+    ("%d %Y%C%P\n"),
+    write_xact_format
+    ("    %-34W  %12o%n\n"),
+    equity_format
+    ("\n%D %Y%C%P\n%/    %-34W  %12t\n"),
+    prices_format
+    ("%[%Y/%m/%d %H:%M:%S %Z]   %-10A %12t %12T\n"),
+    pricesdb_format
+    ("P %[%Y/%m/%d %H:%M:%S] %A %t\n"),
+
+    date_format("%Y/%m/%d"),
 
     pricing_leeway(24 * 3600),
 
@@ -70,7 +97,13 @@ class session_t : public valexpr_t::scope_t
     verbose_mode(false),
     trace_mode(false),
 
-    now(datetime_t::now) {}
+    now(datetime_t::now),
+
+    elision_style(ABBREVIATE),
+    abbrev_length(2),
+
+    ansi_codes(false),
+    ansi_invert(false) {}
 
   virtual ~session_t() {
     for (std::list<journal_t *>::iterator i = journals.begin();
@@ -135,7 +168,15 @@ class session_t : public valexpr_t::scope_t
   //
 
   void option_file(value_t&, valexpr_t::scope_t * locals) {
-    data_file = locals->args[0].get_string();
+    data_file = locals->args[0].to_string();
+  }
+
+  void option_eval(value_t&, valexpr_t::scope_t * locals) {
+    valexpr_t(locals->args[0].to_string()).compile(this);
+  }
+
+  void option_verbose(value_t&) {
+    verbose_mode = true;
   }
 
 #ifdef USE_BOOST_PYTHON

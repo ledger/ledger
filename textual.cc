@@ -98,7 +98,7 @@ parse_amount_expr(std::istream& in, journal_t * journal,
 		     static_cast<repitem_t *>(xact.entry->data) :
 		     static_cast<repitem_t *>(journal->data)));
 
-  amount = valexpr.calc(item.get()).get_amount();
+  amount = valexpr.calc(item.get()).to_amount();
 
   if (xact.entry)
     xact.data = item.release();

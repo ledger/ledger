@@ -55,6 +55,13 @@ class report_t : public valexpr_t::scope_t
   void apply_transforms(repitem_t * items);
 
   //
+  // Utility functions for value expressions
+  //
+
+  void ftime(value_t& result, valexpr_t::scope_t * locals);
+  void abbrev(value_t& result, valexpr_t::scope_t * locals);
+
+  //
   // Config options
   //
 
@@ -71,6 +78,9 @@ class report_t : public valexpr_t::scope_t
 
   virtual valexpr_t::node_t * lookup(const std::string& name);
 };
+
+std::string abbrev(const std::string& str, unsigned int width,
+		   const bool is_account);
 
 } // namespace ledger
 

@@ -9,7 +9,7 @@ lib_LTLIBRARIES = libledger.la
 
 libledger_la_CXXFLAGS =
 if USE_PCH
-libledger_la_CXXFLAGS += -DUSE_PCH
+libledger_la_CXXFLAGS += -DUSE_PCH -Winvalid-pch -fpch-deps
 endif
 libledger_la_SOURCES = \
 	amount.cc      \
@@ -94,7 +94,6 @@ pkginclude_HEADERS = \
 	repitem.h    \
 	report.h     \
 	session.h    \
-	testpch.h    \
 	textual.h    \
 	timing.h     \
 	trace.h	     \

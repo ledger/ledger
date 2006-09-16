@@ -72,6 +72,7 @@ class value_t
   value_t(const std::string& value, bool literal = false) {
     TRACE_CTOR("value_t(const std::string&, bool)");
     if (literal) {
+      type = INTEGER;
       set_string(value);
     } else {
       new((amount_t *) data) amount_t(value);
@@ -211,7 +212,7 @@ class value_t
     }
   }
 
-  value_t& set_string(const std::string& str) {
+  value_t& set_string(const std::string& str = "") {
     if (type != STRING) {
       destroy();
       *(std::string **) data = new std::string(str);
@@ -222,14 +223,14 @@ class value_t
     return *this;
   }
 
-  bool get_boolean() const;
-  long get_integer() const;
-  datetime_t get_datetime() const;
-  amount_t get_amount() const;
-  balance_t get_balance() const;
-  balance_pair_t get_balance_pair() const;
-  std::string get_string() const;
-  void * get_pointer() const;
+  bool		 to_boolean() const;
+  long		 to_integer() const;
+  datetime_t	 to_datetime() const;
+  amount_t	 to_amount() const;
+  balance_t	 to_balance() const;
+  balance_pair_t to_balance_pair() const;
+  std::string	 to_string() const;
+  void *	 to_pointer() const;
 
   value_t& operator+=(const value_t& value);
   value_t& operator-=(const value_t& value);
@@ -385,8 +386,11 @@ class value_t
     return temp;
   }
 
-  void     round();
-  value_t  unround() const;
+  void    round();
+  value_t unround() const;
+
+  void write(std::ostream& out, const int first_width,
+	     const int latter_width = -1) const;
 };
 
 #define DEF_VALUE_AUX_OP(OP)					\

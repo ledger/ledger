@@ -55,27 +55,19 @@ void repitem_t::add_total(value_t& val)
     ptr->add_total(val);
 }
 
-void add_transaction_to(const transaction_t& xact, value_t& value)
-{
-#if 0
-  if (transaction_has_xdata(xact) &&
-      transaction_xdata_(xact).dflags & TRANSACTION_COMPOUND) {
-    value += transaction_xdata_(xact).value;
-  }
-  else if (xact.cost || ! value.realzero()) {
-    value.add(xact.amount, xact.cost);
-  }
-  else {
-    value = xact.amount;
-  }
-#endif
-}
-
 void repitem_t::add_value(value_t& val)
 {
+  if (c_value) {
+    val += *c_value;
+    return;
+  }
+
   switch (kind) {
   case TRANSACTION:
-    add_transaction_to(*xact, val);
+    if (xact->cost || ! val.realzero())
+      val.add(xact->amount, xact->cost);
+    else
+      val = xact->amount;
     break;
 
   case ENTRY:
@@ -220,10 +212,13 @@ repitem_t * repitem_t::wrap(journal_t * tjournal, repitem_t * owner, bool deep)
   return temp;
 }
 
-repitem_t * repitem_t::wrap(session_t * tsession, bool deep)
+repitem_t * repitem_t::wrap(session_t * tsession, valexpr_t::scope_t * parent,
+			    bool deep)
 {
   repitem_t * temp = new repitem_t(SESSION);
   temp->session = tsession;
+
+  temp->valexpr_t::scope_t::parent = parent;
 
   if (deep) {
     for (std::list<journal_t *>::iterator i = tsession->journals.begin();
@@ -339,7 +334,7 @@ void repitem_t::populate_accounts(entries_list& entries,
 	 j != (*i)->transactions.end();
 	 j++)
       // jww (2006-09-10): Make a scope based on **j
-      if (filter.calc().get_boolean())
+      if (filter.calc().to_boolean())
 	populate_account(*(*j)->account, repitem_t::wrap(*j));
 }
 
@@ -391,6 +386,42 @@ void repitem_t::print_tree(std::ostream& out, int depth)
     for (repitem_t * ptr = children; ptr; ptr = ptr->next)
       ptr->print_tree(out, depth + 1);
   }
+}
+
+valexpr_t::node_t * repitem_t::lookup(const std::string& name)
+{
+  const char * p = name.c_str();
+  switch (*p) {
+  case 'a':
+    switch (*++p) {
+    case 'c':
+      if (name == "account")
+	return MAKE_FUNCTOR(repitem_t, account);
+      break;
+    case 'm':
+      if (name == "amount")
+	return MAKE_FUNCTOR(repitem_t, amount);
+      break;
+    }
+    break;
+
+  case 'd':
+    if (name == "date")
+      return MAKE_FUNCTOR(repitem_t, date);
+    break;
+
+  case 'p':
+    if (name == "payee")
+      return MAKE_FUNCTOR(repitem_t, payee);
+    break;
+  }
+
+  repitem_t * top = parent;
+  while (top->parent)
+    top = top->parent;
+
+  return (top->valexpr_t::scope_t::parent ?
+	  top->valexpr_t::scope_t::parent->lookup(name) : NULL);
 }
 
 } // namespace ledger

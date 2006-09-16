@@ -88,6 +88,20 @@ class valexpr_t
   };
 
   template <typename T>
+  class member_functor_t<T, std::string> : public functor_t {
+  public:
+    T * ptr;
+    std::string T::*dptr;
+
+    member_functor_t(const std::string& name, T * _ptr, std::string T::*_dptr)
+      : functor_t(name, false), ptr(_ptr), dptr(_dptr) {}
+
+    virtual void operator()(value_t& result, scope_t * locals) {
+      result.set_string(ptr->*dptr);
+    }
+  };
+
+  template <typename T>
   class memfun_functor_t : public functor_t {
   public:
     T * ptr;
@@ -394,7 +408,7 @@ class valexpr_t
 
     node_t * copy(node_t * left = NULL,
 		  node_t * right = NULL) const;
-    node_t * compile(scope_t * scope);
+    node_t * compile(scope_t * scope, bool make_calls = false);
     node_t * lookup(scope_t * scope) const;
 
     bool write(std::ostream&   out,
@@ -567,12 +581,22 @@ class valexpr_t
     flags = _flags;
     reset(parse_expr(_expr, _flags)->acquire());
   }
-
   void parse(std::istream& in,
 	     unsigned short _flags = PARSE_VALEXPR_RELAXED) {
     expr  = "";
     flags = _flags;
     reset(parse_expr(in, _flags)->acquire());
+  }
+
+  void compile(const std::string& _expr, scope_t * scope = NULL,
+	       unsigned short _flags = PARSE_VALEXPR_RELAXED) {
+    parse(_expr, _flags);
+    compile(scope);
+  }
+  void compile(std::istream& in, scope_t * scope = NULL,
+	       unsigned short _flags = PARSE_VALEXPR_RELAXED) {
+    parse(in, _flags);
+    compile(scope);
   }
 
   void compile(scope_t * scope = NULL) {
@@ -589,6 +613,11 @@ class valexpr_t
     value_t temp;
     calc(temp, scope);
     return temp;
+  }
+
+  static value_t eval(const std::string& _expr, scope_t * scope = NULL) {
+    valexpr_t temp(_expr);
+    return temp.calc(scope);
   }
 
   void write(std::ostream& out) const {

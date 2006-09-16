@@ -93,10 +93,8 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
 
   valexpr_t::functor_t * command = NULL;
 
-  if (verb == "dump")
-    command = new register_command;
-  else if (verb == "register" || verb == "reg" || verb == "r")
-    command = new register_command;
+  if (verb == "register" || verb == "reg" || verb == "r")
+    command = new register_command(report);
 #if 0
   else if (verb == "balance" || verb == "bal" || verb == "b")
     command = new balance_command;
@@ -428,8 +426,9 @@ appending the output of this command to your Ledger file if you so choose."
 
   valexpr_t::scope_t * locals = new valexpr_t::scope_t(report, true);
 
-  std::auto_ptr<repitem_t> items(repitem_t::wrap(&session, true));
+  std::auto_ptr<repitem_t> items(repitem_t::wrap(&session, report, true));
 
+  locals->args.push_back(out);
   locals->args.push_back(items.get());
 
   if (command->wants_args)

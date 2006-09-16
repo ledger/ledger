@@ -38,9 +38,8 @@ public:
   repitem_t * children;
   repitem_t * last_child;
 
-  mutable value_t _total;
-  mutable value_t _value;
-  mutable value_t _sort_value;
+  value_t * c_value;		// the calculated value
+  value_t * c_sort_value;	// and sort value
 
   unsigned short flags;
   unsigned int   parents_elided;
@@ -51,7 +50,8 @@ public:
     : valexpr_t::scope_t(owner), kind(_kind),
       parent(NULL), next(NULL), prev(NULL), istemp(false),
       contents(NULL), last_content(NULL),
-      children(NULL), last_child(NULL), flags(0),
+      children(NULL), last_child(NULL),
+      c_value(NULL), c_sort_value(NULL), flags(0),
       parents_elided(0), reported_account(NULL) {
     TRACE_CTOR("repitem_t(valexpr_t::scope_t *)");
     if (owner) {
@@ -68,17 +68,36 @@ public:
   void add_sort_value(value_t& val);
   void add_total(value_t& val);
 
-  void get_amount(value_t& result) { add_value(result); }
+  void amount(value_t& result) { add_value(result); }
+  void payee(value_t& result) {
+    switch (kind) {
+    case TRANSACTION:
+      if (xact->entry)
+	result.set_string(xact->entry->payee);
+      break;
+    case ENTRY:
+      result.set_string(entry->payee);
+      break;
+    default:
+      result.set_string();
+      break;
+    }
+  }
 
   datetime_t date() const;
   datetime_t effective_date() const;
   datetime_t actual_date() const;
 
-  void get_date(value_t& result) { result = date(); }
-  void get_edate(value_t& result) { result = effective_date(); }
-  void get_rdate(value_t& result) { result = actual_date(); }
+  void date(value_t& result) { result = date(); }
+  void edate(value_t& result) { result = effective_date(); }
+  void rdate(value_t& result) { result = actual_date(); }
 
   account_t * account() const;
+
+  void account(value_t& result) {
+    account_t * acct = account();
+    result.set_string(acct ? acct->fullname() : "");
+  }
 
   bool valid() const;
 
@@ -89,7 +108,9 @@ public:
 			  bool deep = true);
   static repitem_t * wrap(journal_t * tjournal, repitem_t * owner = NULL,
 			  bool deep = true);
-  static repitem_t * wrap(session_t * tsession, bool deep = true);
+  static repitem_t * wrap(session_t * tsession,
+			  valexpr_t::scope_t * parent = NULL,
+			  bool deep = true);
 
   repitem_t * add_content(repitem_t * item);
   repitem_t * add_child(repitem_t * item);
@@ -127,22 +148,16 @@ public:
   //
 
   virtual void define(const std::string& name, valexpr_t::node_t * def) {
-    // Pass any definitions up to our parent
-    parent->define(name, def);
+    repitem_t * top = parent;
+    while (top->parent)
+      top = top->parent;
+
+    // Pass any definitions up to our parent scope
+    if (top->valexpr_t::scope_t::parent)
+      top->valexpr_t::scope_t::parent->define(name, def);
   }
 
-  virtual valexpr_t::node_t * lookup(const std::string& name) {
-    const char * p = name.c_str();
-    switch (*p) {
-    case 'a':
-      switch (*++p) {
-      case 'm':
-	return MAKE_FUNCTOR(repitem_t, get_amount);
-      }
-      break;
-    }
-    return parent ? parent->lookup(name) : NULL;
-  }
+  virtual valexpr_t::node_t * lookup(const std::string& name);
 };
 
 } // namespace ledger

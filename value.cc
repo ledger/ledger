@@ -8,7 +8,7 @@
 
 namespace ledger {
 
-bool value_t::get_boolean() const
+bool value_t::to_boolean() const
 {
   if (type == BOOLEAN) {
     return *(bool *) data;
@@ -19,7 +19,7 @@ bool value_t::get_boolean() const
   }
 }
 
-long value_t::get_integer() const
+long value_t::to_integer() const
 {
   if (type == INTEGER) {
     return *(long *) data;
@@ -30,7 +30,7 @@ long value_t::get_integer() const
   }
 }
 
-datetime_t value_t::get_datetime() const
+datetime_t value_t::to_datetime() const
 {
   if (type == DATETIME) {
     return *(datetime_t *) data;
@@ -41,7 +41,7 @@ datetime_t value_t::get_datetime() const
   }
 }
 
-amount_t value_t::get_amount() const
+amount_t value_t::to_amount() const
 {
   if (type == AMOUNT) {
     return *(amount_t *) data;
@@ -52,7 +52,7 @@ amount_t value_t::get_amount() const
   }
 }
 
-balance_t value_t::get_balance() const
+balance_t value_t::to_balance() const
 {
   if (type == BALANCE) {
     return *(balance_t *) data;
@@ -63,7 +63,7 @@ balance_t value_t::get_balance() const
   }
 }
 
-balance_pair_t value_t::get_balance_pair() const
+balance_pair_t value_t::to_balance_pair() const
 {
   if (type == BALANCE_PAIR) {
     return *(balance_pair_t *) data;
@@ -74,7 +74,7 @@ balance_pair_t value_t::get_balance_pair() const
   }
 }
 
-std::string value_t::get_string() const
+std::string value_t::to_string() const
 {
   if (type == STRING) {
     return **(std::string **) data;
@@ -85,7 +85,7 @@ std::string value_t::get_string() const
   }
 }
 
-void * value_t::get_pointer() const
+void * value_t::to_pointer() const
 {
   if (type == POINTER)
     return *(void **) data;
@@ -1694,6 +1694,8 @@ value_t value_t::strip_annotations(const bool keep_price,
   case BOOLEAN:
   case INTEGER:
   case DATETIME:
+  case STRING:
+  case POINTER:
     return *this;
 
   case AMOUNT:
@@ -1705,11 +1707,6 @@ value_t value_t::strip_annotations(const bool keep_price,
   case BALANCE_PAIR:
     return ((balance_pair_t *) data)->quantity.strip_annotations
       (keep_price, keep_date, keep_tag);
-
-  case STRING:
-    throw new value_error("Cannot strip annotations from a string");
-  case POINTER:
-    throw new value_error("Cannot strip annotations from a pointer");
 
   default:
     assert(0);
@@ -1799,6 +1796,27 @@ value_t& value_t::add(const amount_t& amount, const amount_t * cost)
   }
 
   return *this;
+}
+
+void value_t::write(std::ostream& out, const int first_width,
+		    const int latter_width) const
+{
+  switch (type) {
+  case BOOLEAN:
+  case DATETIME:
+  case INTEGER:
+  case AMOUNT:
+  case STRING:
+  case POINTER:
+    out << *this;
+    break;
+  case BALANCE:
+    ((balance_t *) data)->write(out, first_width, latter_width);
+    break;
+  case BALANCE_PAIR:
+    ((balance_pair_t *) data)->write(out, first_width, latter_width);
+    break;
+  }
 }
 
 std::ostream& operator<<(std::ostream& out, const value_t& value)
@@ -2203,6 +2221,7 @@ void export_value()
     .def("round", &value_t::round)
     .def("negate", &value_t::negate)
     .def("negated", &value_t::negated)
+    .def("write", &value_t::write)
     ;
 
   enum_< value_t::type_t > ("ValueType")

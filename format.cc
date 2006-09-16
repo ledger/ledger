@@ -79,8 +79,8 @@ void format_t::parse(const std::string& fmt)
     }
 
     if (current->max_width != -1 && current->min_width != -1 &&
-	current->max_width > current->min_width)
-      throw new format_error("Maximum width is greater than minimum width");
+	current->max_width < current->min_width)
+      throw new format_error("Maximum width is less than the minimum width");
 
     switch (*p) {
     case '%':
@@ -125,8 +125,18 @@ void format_t::parse(const std::string& fmt)
   }
 }
 
-void format_t::format(std::ostream& out_str, valexpr_t::scope_t * scope,
-		      int column) const
+void format_t::compile(valexpr_t::scope_t * scope)
+{
+  for (std::list<element_t>::iterator i = elements.begin();
+       i != elements.end();
+       i++) {
+    if ((*i).valexpr)
+      (*i).valexpr.compile(scope);
+  }
+}
+
+int format_t::format(std::ostream& out_str, valexpr_t::scope_t * scope,
+		     int column) const
 {
   for (std::list<element_t>::const_iterator i = elements.begin();
        i != elements.end();
@@ -157,7 +167,8 @@ void format_t::format(std::ostream& out_str, valexpr_t::scope_t * scope,
       out.width(elem->min_width);
 
     if (elem->valexpr)
-      out << elem->valexpr.calc(scope).get_string();
+      elem->valexpr.calc(scope).write(out, elem->min_width,
+				      elem->max_width);
     else
       out << elem->chars;
 
@@ -165,9 +176,18 @@ void format_t::format(std::ostream& out_str, valexpr_t::scope_t * scope,
     if (elem->max_width > 0 && elem->max_width < temp.length())
       temp.erase(elem->max_width);
 
+    for (std::string::const_iterator i = temp.begin();
+	 i != temp.end();
+	 i++)
+      if (*i == '\n' || *i == '\r')
+	column = 0;
+      else
+	column++;
+
     out_str << temp;
-    column += temp.length();
   }
+
+  return column;
 }
 
 } // namespace ledger

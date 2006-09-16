@@ -302,10 +302,10 @@ void valexpr_t::token_t::unexpected()
     throw new parse_error("Unexpected end of expression");
   case IDENT:
     throw new parse_error(std::string("Unexpected symbol '") +
-			  value.get_string() + "'");
+			  value.to_string() + "'");
   case VALUE:
     throw new parse_error(std::string("Unexpected value '") +
-			  value.get_string() + "'");
+			  value.to_string() + "'");
   default:
     throw new parse_error(std::string("Unexpected operator '") + symbol + "'");
   }
@@ -436,7 +436,7 @@ void valexpr_t::node_t::get_value(value_t& result) const
     std::ostringstream buf;
     write(buf);
     throw new calc_error
-      (std::string("Cannot determine value of non-constant '") +
+      (std::string("Cannot determine value of expression symbol '") +
        buf.str() + "'");
   }
   }
@@ -462,7 +462,7 @@ valexpr_t::parse_value_term(std::istream& in, unsigned short flags) const
 
   case token_t::REGEXP:
     node.reset(new node_t(node_t::MASK));
-    node->mask = new mask_t(tok.value.get_string());
+    node->mask = new mask_t(tok.value.to_string());
     break;
 
   case token_t::VALUE:
@@ -472,7 +472,7 @@ valexpr_t::parse_value_term(std::istream& in, unsigned short flags) const
 
   case token_t::IDENT:
 #ifdef USE_BOOST_PYTHON
-    if (tok.value->get_string() == "lambda") // special
+    if (tok.value->to_string() == "lambda") // special
       try {
 	char c, buf[4096];
 
@@ -506,9 +506,7 @@ valexpr_t::parse_value_term(std::istream& in, unsigned short flags) const
       call_node.reset(new node_t(node_t::O_EVAL));
       call_node->set_left(node.release());
       call_node->set_right(parse_value_expr(in, flags | PARSE_VALEXPR_PARTIAL));
-      if (! call_node->right)
-	throw new parse_error(std::string(tok.symbol) +
-			      " operator not followed by argument");
+
       tok = next_token(in, flags);
       if (tok.kind != token_t::RPAREN)
 	tok.unexpected();		// jww (2006-09-09): wanted )
@@ -601,14 +599,14 @@ valexpr_t::parse_mul_expr(std::istream& in, unsigned short flags) const
 
   if (node.get()) {
     token_t& tok = next_token(in, flags);
-    while (tok.kind == token_t::STAR ||
-	   tok.kind == token_t::SLASH) {
+    if (tok.kind == token_t::STAR ||
+	tok.kind == token_t::SLASH) {
       std::auto_ptr<node_t> prev(node.release());
       node.reset(new node_t(tok.kind == token_t::STAR ?
 				       node_t::O_MUL :
 				       node_t::O_DIV));
       node->set_left(prev.release());
-      node->set_right(parse_unary_expr(in, flags));
+      node->set_right(parse_mul_expr(in, flags));
       if (! node->right)
 	throw new parse_error(std::string(tok.symbol) +
 			      " operator not followed by argument");
@@ -628,14 +626,14 @@ valexpr_t::parse_add_expr(std::istream& in, unsigned short flags) const
 
   if (node.get()) {
     token_t& tok = next_token(in, flags);
-    while (tok.kind == token_t::PLUS ||
-	   tok.kind == token_t::MINUS) {
+    if (tok.kind == token_t::PLUS ||
+	tok.kind == token_t::MINUS) {
       std::auto_ptr<node_t> prev(node.release());
       node.reset(new node_t(tok.kind == token_t::PLUS ?
 				       node_t::O_ADD :
 				       node_t::O_SUB));
       node->set_left(prev.release());
-      node->set_right(parse_mul_expr(in, flags));
+      node->set_right(parse_add_expr(in, flags));
       if (! node->right)
 	throw new parse_error(std::string(tok.symbol) +
 			      " operator not followed by argument");
@@ -717,15 +715,15 @@ valexpr_t::parse_boolean_expr(std::istream& in, unsigned short flags) const
 
   if (node.get()) {
     token_t& tok = next_token(in, flags);
-    while (tok.kind == token_t::AMPER ||
-	   tok.kind == token_t::PIPE ||
-	   tok.kind == token_t::QUESTION) {
+    if (tok.kind == token_t::AMPER ||
+	tok.kind == token_t::PIPE ||
+	tok.kind == token_t::QUESTION) {
       switch (tok.kind) {
       case token_t::AMPER: {
 	std::auto_ptr<node_t> prev(node.release());
 	node.reset(new node_t(node_t::O_AND));
 	node->set_left(prev.release());
-	node->set_right(parse_logic_expr(in, flags));
+	node->set_right(parse_boolean_expr(in, flags));
 	if (! node->right)
 	  throw new parse_error(std::string(tok.symbol) +
 				" operator not followed by argument");
@@ -735,7 +733,7 @@ valexpr_t::parse_boolean_expr(std::istream& in, unsigned short flags) const
 	std::auto_ptr<node_t> prev(node.release());
 	node.reset(new node_t(node_t::O_OR));
 	node->set_left(prev.release());
-	node->set_right(parse_logic_expr(in, flags));
+	node->set_right(parse_boolean_expr(in, flags));
 	if (! node->right)
 	  throw new parse_error(std::string(tok.symbol) +
 				" operator not followed by argument");
@@ -776,11 +774,11 @@ valexpr_t::parse_value_expr(std::istream& in, unsigned short flags) const
 
   if (node.get()) {
     token_t& tok = next_token(in, flags);
-    while (tok.kind == token_t::COMMA) {
+    if (tok.kind == token_t::COMMA) {
       std::auto_ptr<node_t> prev(node.release());
       node.reset(new node_t(node_t::O_COMMA));
       node->set_left(prev.release());
-      node->set_right(parse_boolean_expr(in, flags));
+      node->set_right(parse_value_expr(in, flags));
       if (! node->right)
 	throw new parse_error(std::string(tok.symbol) +
 			      " operator not followed by argument");
@@ -794,11 +792,12 @@ valexpr_t::parse_value_expr(std::istream& in, unsigned short flags) const
       else
 	tok.unexpected();
     }
-
-    return node.release();
-  } else {
+  }
+  else if (! (flags & PARSE_VALEXPR_PARTIAL)) {
     throw new parse_error(std::string("Failed to parse value expression"));
   }
+
+  return node.release();
 }
 
 valexpr_t::node_t *
@@ -837,17 +836,8 @@ valexpr_t::node_t::copy(node_t * left, node_t * right) const
   return node.release();
 }
 
-valexpr_t::node_t * valexpr_t::node_t::lookup(scope_t * scope) const
-{
-  assert(kind == SYMBOL);
-  assert(constant());
-  if (scope)
-    if (node_t * def = scope->lookup(valuep->get_string()))
-      return def->acquire();
-  return NULL;
-}
-
-valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
+valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope,
+					       bool make_calls)
 {
   // jww (2006-09-15): Don't optimize by overwriting the current node,
   // since this eliminates reusability.
@@ -855,13 +845,40 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
   try {
   switch (kind) {
   case VALUE:
+    return acquire();
+
+  case SYMBOL:
+    if (scope)
+      if (node_t * def = scope->lookup(valuep->to_string()))
+	return def->compile(scope, make_calls);
+    return acquire();
+
+  case ARG_INDEX:
+    if (scope && scope->arg_scope) {
+      if (arg_index < scope->args.size())
+	return wrap_value(scope->args[arg_index])->acquire();
+      else
+	throw new calc_error("Reference to non-existing argument");
+    } else {
+      return acquire();
+    }
+
   case FUNCTOR:
+    if (make_calls) {
+      value_t temp;
+      (*functor)(temp, scope);
+      return wrap_value(temp)->acquire();
+    } else {
+      return acquire();
+    }
+    break;
+
   case MASK:
     return acquire();
 
   case O_NOT: {
     assert(left);
-    valexpr_t expr(left->compile(scope));
+    valexpr_t expr(left->compile(scope, make_calls));
     if (! expr->constant()) {
       if (left == expr)
 	return acquire();
@@ -869,17 +886,24 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
 	return copy(expr)->acquire();
     }
 
-    if (expr->valuep->strip_annotations())
-      *expr->valuep = false;
-    else
-      *expr->valuep = true;
+    if (left == expr) {
+      if (expr->valuep->strip_annotations())
+	return wrap_value(false)->acquire();
+      else
+	return wrap_value(true)->acquire();
+    } else {
+      if (expr->valuep->strip_annotations())
+	*expr->valuep = false;
+      else
+	*expr->valuep = true;
 
-    return expr->acquire();
+      return expr->acquire();
+    }
   }
 
   case O_NEG: {
     assert(left);
-    valexpr_t expr(left->compile(scope));
+    valexpr_t expr(left->compile(scope, make_calls));
     if (! expr->constant()) {
       if (left == expr)
 	return acquire();
@@ -887,9 +911,12 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
 	return copy(expr)->acquire();
     }
 
-    expr->valuep->negate();
-
-    return expr->acquire();
+    if (left == expr) {
+      return wrap_value(expr->valuep->negated())->acquire();
+    } else {
+      expr->valuep->negate();
+      return expr->acquire();
+    }
   }
 
   case O_ADD:
@@ -898,8 +925,8 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
   case O_DIV: {
     assert(left);
     assert(right);
-    valexpr_t lexpr(left->compile(scope));
-    valexpr_t rexpr(right->compile(scope));
+    valexpr_t lexpr(left->compile(scope, make_calls));
+    valexpr_t rexpr(right->compile(scope, make_calls));
     if (! lexpr->constant() || ! rexpr->constant()) {
       if (left == lexpr && right == rexpr)
 	return acquire();
@@ -907,15 +934,26 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
 	return copy(lexpr, rexpr)->acquire();
     }
 
-    switch (kind) {
-    case O_ADD: *lexpr->valuep += *rexpr->valuep; break;
-    case O_SUB: *lexpr->valuep -= *rexpr->valuep; break;
-    case O_MUL: *lexpr->valuep *= *rexpr->valuep; break;
-    case O_DIV: *lexpr->valuep /= *rexpr->valuep; break;
-    default: assert(0); break;
+    if (left == lexpr) {
+      value_t temp(*lexpr->valuep);
+      switch (kind) {
+      case O_ADD: temp += *rexpr->valuep; break;
+      case O_SUB: temp -= *rexpr->valuep; break;
+      case O_MUL: temp *= *rexpr->valuep; break;
+      case O_DIV: temp /= *rexpr->valuep; break;
+      default: assert(0); break;
+      }
+      return wrap_value(temp)->acquire();
+    } else {
+      switch (kind) {
+      case O_ADD: *lexpr->valuep += *rexpr->valuep; break;
+      case O_SUB: *lexpr->valuep -= *rexpr->valuep; break;
+      case O_MUL: *lexpr->valuep *= *rexpr->valuep; break;
+      case O_DIV: *lexpr->valuep /= *rexpr->valuep; break;
+      default: assert(0); break;
+      }
+      return lexpr->acquire();
     }
-
-    return lexpr->acquire();
   }
 
   case O_NEQ:
@@ -926,8 +964,8 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
   case O_GTE: {
     assert(left);
     assert(right);
-    valexpr_t lexpr(left->compile(scope));
-    valexpr_t rexpr(right->compile(scope));
+    valexpr_t lexpr(left->compile(scope, make_calls));
+    valexpr_t rexpr(right->compile(scope, make_calls));
     if (! lexpr->constant() || ! rexpr->constant()) {
       if (left == lexpr && right == rexpr)
 	return acquire();
@@ -935,29 +973,52 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
 	return copy(lexpr, rexpr)->acquire();
     }
 
-    switch (kind) {
-    case O_NEQ: *lexpr->valuep = *lexpr->valuep != *rexpr->valuep; break;
-    case O_EQ:  *lexpr->valuep = *lexpr->valuep == *rexpr->valuep; break;
-    case O_LT:  *lexpr->valuep = *lexpr->valuep <  *rexpr->valuep; break;
-    case O_LTE: *lexpr->valuep = *lexpr->valuep <= *rexpr->valuep; break;
-    case O_GT:  *lexpr->valuep = *lexpr->valuep >  *rexpr->valuep; break;
-    case O_GTE: *lexpr->valuep = *lexpr->valuep >= *rexpr->valuep; break;
-    default: assert(0); break;
+    if (left == lexpr) {
+      switch (kind) {
+      case O_NEQ:
+	return wrap_value(*lexpr->valuep != *rexpr->valuep)->acquire();
+	break;
+      case O_EQ:
+	return wrap_value(*lexpr->valuep == *rexpr->valuep)->acquire();
+	break;
+      case O_LT:
+	return wrap_value(*lexpr->valuep <  *rexpr->valuep)->acquire();
+	break;
+      case O_LTE:
+	return wrap_value(*lexpr->valuep <= *rexpr->valuep)->acquire();
+	break;
+      case O_GT:
+	return wrap_value(*lexpr->valuep >  *rexpr->valuep)->acquire();
+	break;
+      case O_GTE:
+	return wrap_value(*lexpr->valuep >= *rexpr->valuep)->acquire();
+	break;
+      default: assert(0); break;
+      }
+    } else {
+      switch (kind) {
+      case O_NEQ: *lexpr->valuep = *lexpr->valuep != *rexpr->valuep; break;
+      case O_EQ:  *lexpr->valuep = *lexpr->valuep == *rexpr->valuep; break;
+      case O_LT:  *lexpr->valuep = *lexpr->valuep <  *rexpr->valuep; break;
+      case O_LTE: *lexpr->valuep = *lexpr->valuep <= *rexpr->valuep; break;
+      case O_GT:  *lexpr->valuep = *lexpr->valuep >  *rexpr->valuep; break;
+      case O_GTE: *lexpr->valuep = *lexpr->valuep >= *rexpr->valuep; break;
+      default: assert(0); break;
+      }
+      return lexpr->acquire();
     }
-
-    return lexpr->acquire();
   }
 
   case O_AND: {
     assert(left);
     assert(right);
-    valexpr_t lexpr(left->compile(scope));
+    valexpr_t lexpr(left->compile(scope, make_calls));
     if (lexpr->constant() && ! lexpr->valuep->strip_annotations()) {
       *lexpr->valuep = false;
       return lexpr->acquire();
     }
 
-    valexpr_t rexpr(right->compile(scope));
+    valexpr_t rexpr(right->compile(scope, make_calls));
     if (! lexpr->constant() || ! rexpr->constant()) {
       if (left == lexpr && right == rexpr)
 	return acquire();
@@ -966,8 +1027,12 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
     }
 
     if (! rexpr->valuep->strip_annotations()) {
-      *lexpr->valuep = false;
-      return lexpr->acquire();
+      if (left == lexpr) {
+	return wrap_value(false)->acquire();
+      } else {
+	*lexpr->valuep = false;
+	return lexpr->acquire();
+      }
     } else {
       return rexpr->acquire();
     }
@@ -976,11 +1041,11 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
   case O_OR: {
     assert(left);
     assert(right);
-    valexpr_t lexpr(left->compile(scope));
+    valexpr_t lexpr(left->compile(scope, make_calls));
     if (lexpr->constant() && lexpr->valuep->strip_annotations())
       return lexpr->acquire();
 
-    valexpr_t rexpr(right->compile(scope));
+    valexpr_t rexpr(right->compile(scope, make_calls));
     if (! lexpr->constant() || ! rexpr->constant()) {
       if (left == lexpr && right == rexpr)
 	return acquire();
@@ -991,8 +1056,12 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
     if (rexpr->valuep->strip_annotations()) {
       return rexpr->acquire();
     } else {
-      *lexpr->valuep = false;
-      return lexpr->acquire();
+      if (left == lexpr) {
+	return wrap_value(false)->acquire();
+      } else {
+	*lexpr->valuep = false;
+	return lexpr->acquire();
+      }
     }
   }
 
@@ -1000,9 +1069,9 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
     assert(left);
     assert(right);
     assert(right->kind == O_COLON);
-    valexpr_t lexpr(left->compile(scope));
+    valexpr_t lexpr(left->compile(scope, make_calls));
     if (! lexpr->constant()) {
-      valexpr_t rexpr(right->compile(scope));
+      valexpr_t rexpr(right->compile(scope, make_calls));
       if (left == lexpr && right == rexpr)
 	return acquire();
       else
@@ -1010,14 +1079,14 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
     }
 
     if (lexpr->valuep->strip_annotations())
-      return right->left->compile(scope);
+      return right->left->compile(scope, make_calls);
     else
-      return right->right->compile(scope);
+      return right->right->compile(scope, make_calls);
   }
 
   case O_COLON: {
-    valexpr_t lexpr(left->compile(scope));
-    valexpr_t rexpr(right->compile(scope));
+    valexpr_t lexpr(left->compile(scope, make_calls));
+    valexpr_t rexpr(right->compile(scope, make_calls));
     if (left == lexpr && right == rexpr)
       return acquire();
     else
@@ -1027,8 +1096,8 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
   case O_COMMA: {
     assert(left);
     assert(right);
-    valexpr_t lexpr(left->compile(scope)); // for side-effects
-    return right->compile(scope);
+    valexpr_t lexpr(left->compile(scope, make_calls)); // for side-effects
+    return right->compile(scope, make_calls);
   }
 
   case O_MATCH: {
@@ -1038,7 +1107,7 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
       throw new calc_error("Right operand of mask operator is not a mask");
     assert(right->mask);
 
-    valexpr_t lexpr(left->compile(scope));
+    valexpr_t lexpr(left->compile(scope, make_calls));
     if (! lexpr->constant()) {
       if (left == lexpr)
 	return acquire();
@@ -1049,24 +1118,25 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
     if (lexpr->valuep->type != value_t::STRING)
       throw new calc_error("Left operand of mask operator is not a string");
 
-    *lexpr->valuep = mask->match(lexpr->valuep->get_string());
-
-    return lexpr->acquire();
+    if (left == lexpr) {
+      return wrap_value(mask->match(lexpr->valuep->to_string()))->acquire();
+    } else {
+      *lexpr->valuep = mask->match(lexpr->valuep->to_string());
+      return lexpr->acquire();
+    }
   }
 
   case O_DEFINE:
     assert(left);
     assert(right);
     if (left->kind == SYMBOL) {
-      assert(left->constant());
-      valexpr_t rexpr(right->compile(scope));
+      valexpr_t rexpr(right->compile(scope, make_calls));
       if (scope)
-	scope->define(left->valuep->get_string(), rexpr);
+	scope->define(left->valuep->to_string(), rexpr);
       return rexpr->acquire();
     } else {
       assert(left->kind == O_EVAL);
       assert(left->left->kind == SYMBOL);
-      assert(left->left->constant());
 
       std::auto_ptr<scope_t> arg_scope(new scope_t(scope));
 
@@ -1087,30 +1157,18 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
 	ref->arg_index = index++;
 
 	assert(arg->kind == SYMBOL);
-	arg_scope->define(arg->valuep->get_string(), ref);
+	arg_scope->define(arg->valuep->to_string(), ref);
       }
 
-      valexpr_t rexpr(right->compile(arg_scope.get()));
+      // jww (2006-09-16): If I compile the definition of a function,
+      // I eliminate the possibility of future lookups
+      //valexpr_t rexpr(right->compile(arg_scope.get(), make_calls));
 
       if (scope)
-	scope->define(left->left->left->valuep->get_string(), rexpr);
+	scope->define(left->left->valuep->to_string(), right);
 
-      return rexpr->acquire();
+      return right->acquire();
     }
-
-  case SYMBOL:
-    if (scope)
-      if (node_t * def = scope->lookup(valuep->get_string())) {
-	if (def->kind == FUNCTOR) {
-	  *valuep = 0L;
-	  (*def->functor)(*valuep, scope);
-	  kind = VALUE;
-	  return acquire();
-	} else {
-	  return def->compile(scope);
-	}
-      }
-    return acquire();
 
   case O_EVAL: {
     assert(left);
@@ -1128,45 +1186,35 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
       } else {
 	args = NULL;
       }
-      // jww (2006-09-15): Need to compile these, if there are
-      // undetermined arguments!
-      call_args->args.push_back(arg->compile(scope));
+      // jww (2006-09-15): Need to return a reference to these, if
+      // there are undetermined arguments!
+      call_args->args.push_back(arg->compile(scope, make_calls)->value());
     }
 
     if (left->kind == SYMBOL) {
-      valexpr_t func(left->lookup(scope)); // don't compile!
+      valexpr_t func(left->compile(scope, false)); // don't resolve!
       if (func->kind == FUNCTOR) {
 	value_t temp;
 	(*func->functor)(temp, call_args.get());
 	return wrap_value(temp)->acquire();
       } else {
-	return func->compile(call_args.get());
+	return func->compile(call_args.get(), make_calls);
       }
-    } else {
-      if (left->kind == FUNCTOR) {
-	value_t temp;
-	(*left->functor)(temp, call_args.get());
-	return wrap_value(temp)->acquire();
-      } else {
-	assert(0);
-      }
-      break;
     }
+    else if (left->kind == FUNCTOR) {
+      value_t temp;
+      (*left->functor)(temp, call_args.get());
+      return wrap_value(temp)->acquire();
+    }
+    else {
+      assert(0);
+    }
+    break;
   }
-
-  case ARG_INDEX:
-    if (scope && scope->arg_scope) {
-      if (arg_index < scope->args.size())
-	return wrap_value(scope->args[arg_index])->acquire();
-      else
-	throw new calc_error("Reference to non-existing argument");
-    } else {
-      return acquire();
-    }
 
   case O_PERC: {
     assert(left);
-    valexpr_t expr(left->compile(scope));
+    valexpr_t expr(left->compile(scope, make_calls));
     if (! expr->constant()) {
       if (left == expr)
 	return acquire();
@@ -1202,7 +1250,7 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope)
 void valexpr_t::calc(value_t& result, scope_t * scope) const
 {
   try {
-    valexpr_t final(ptr->compile(scope));
+    valexpr_t final(ptr->compile(scope, true));
     // jww (2006-09-09): Give a better error here if this is not
     // actually a value
     final->get_value(result);

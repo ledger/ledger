@@ -134,16 +134,9 @@ valexpr_t::node_t * session_t::lookup(const std::string& name)
 {
   const char * p = name.c_str();
   switch (*p) {
-  case 'o':
-    if (std::strncmp(p, "option_", 7) == 0) {
-      p = p + 7;
-      switch (*p) {
-      case 'f':
-	if (! *(p + 1) || std::strcmp(p, "file") == 0)
-	  return MAKE_FUNCTOR(session_t, option_file);
-	break;
-      }
-    }
+  case 'd':
+    if (name == "date_format")
+	return MAKE_FUNCTOR(session_t, date_format);
     break;
 
   case 'n':
@@ -154,6 +147,32 @@ valexpr_t::node_t * session_t::lookup(const std::string& name)
       break;
     }
     break;
+
+  case 'o':
+    if (std::strncmp(p, "option_", 7) == 0) {
+      p = p + 7;
+      switch (*p) {
+      case 'e':
+	if (! *(p + 1) || std::strcmp(p, "eval") == 0)
+	  return MAKE_FUNCTOR(session_t, option_eval);
+	break;
+
+      case 'f':
+	if (! *(p + 1) || std::strcmp(p, "file") == 0)
+	  return MAKE_FUNCTOR(session_t, option_file);
+	break;
+
+      case 'v':
+	if (std::strcmp(p, "verbose") == 0)
+	  return MAKE_FUNCTOR(session_t, option_verbose);
+	break;
+      }
+    }
+    break;
+
+  case 'r':
+    if (name == "register_format")
+	return MAKE_FUNCTOR(session_t, register_format);
   }
   return valexpr_t::scope_t::lookup(name);
 }
