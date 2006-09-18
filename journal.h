@@ -411,11 +411,11 @@ class journal_t
   std::list<entry_finalizer_t *> entry_finalize_hooks;
 
   journal_t(session_t * _session)
-    : session(_session), basket(NULL) {
+    : session(_session), basket(NULL),
+      item_pool(NULL), item_pool_end(NULL), data(NULL) {
     TRACE_CTOR("journal_t()");
     master = new account_t(NULL, "");
     master->journal = this;
-    item_pool = item_pool_end = NULL;
   }
   ~journal_t();
 

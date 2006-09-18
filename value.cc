@@ -552,13 +552,13 @@ value_t& value_t::operator-=(const value_t& value)
 value_t& value_t::operator*=(const value_t& value)
 {
   if (value.type == BOOLEAN)
-    throw new value_error("Cannot multiply a boolean by a value");
+    throw new value_error("Cannot multiply a value by a boolean");
   else if (value.type == DATETIME)
-    throw new value_error("Cannot multiply a date/time by a value");
+    throw new value_error("Cannot multiply a value by a date/time");
   else if (value.type == STRING)
-    throw new value_error("Cannot multiply a string by a value");
+    throw new value_error("Cannot multiply a value by a string");
   else if (value.type == POINTER)
-    throw new value_error("Cannot multiply a pointer by a value");
+    throw new value_error("Cannot multiply a value by a pointer");
 
   if (value.realzero()) {
     *this = 0L;
@@ -656,9 +656,28 @@ value_t& value_t::operator*=(const value_t& value)
     break;
 
   case STRING:
-    throw new value_error("Cannot multiply a value from a string");
+    switch (value.type) {
+    case INTEGER: {
+      std::string temp;
+      for (long i = 0; i < *(long *) value.data; i++)
+	temp += **(std::string **) data;
+      **(std::string **) data = temp;
+      break;
+    }
+    case AMOUNT:
+      throw new value_error("Cannot multiply a string by an amount");
+    case BALANCE:
+      throw new value_error("Cannot multiply a string by a balance");
+    case BALANCE_PAIR:
+      throw new value_error("Cannot multiply a string by a balance pair");
+    default:
+      assert(0);
+      break;
+    }
+    break;
+
   case POINTER:
-    throw new value_error("Cannot multiply a value from a pointer");
+    throw new value_error("Cannot multiply a pointer by a value");
 
   default:
     assert(0);

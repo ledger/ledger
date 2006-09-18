@@ -176,9 +176,12 @@ class valexpr_t
 
     args_list args;
     bool      arg_scope;
+    bool      static_scope;
 
-    scope_t(scope_t * _parent = NULL, bool _arg_scope = false)
-      : parent(_parent), arg_scope(_arg_scope) {
+    scope_t(scope_t * _parent = NULL, bool _arg_scope = false,
+	    bool _static_scope = false)
+      : parent(_parent), arg_scope(_arg_scope),
+	static_scope(_static_scope) {
       TRACE_CTOR("valexpr_t::scope_t(scope *)");
     }
 
@@ -192,6 +195,12 @@ class valexpr_t
 
    public:
     virtual void define(const std::string& name, node_t * def);
+    virtual bool resolve(const std::string& name, value_t& result,
+			 scope_t * locals = NULL) {
+      if (parent)
+	return parent->resolve(name, result, locals);
+      return false;
+    }
     virtual node_t * lookup(const std::string& name);
 
     void define(const std::string& name, functor_t * def);
@@ -409,7 +418,6 @@ class valexpr_t
     node_t * copy(node_t * left = NULL,
 		  node_t * right = NULL) const;
     node_t * compile(scope_t * scope, bool make_calls = false);
-    node_t * lookup(scope_t * scope) const;
 
     bool write(std::ostream&   out,
 	       const bool      relaxed	    = true,

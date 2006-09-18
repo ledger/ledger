@@ -20,34 +20,49 @@ void format_t::parse(const std::string& fmt)
   char   buf[1024];
   char * q = buf;
 
+  if (elements.size() > 0)
+    clear_elements();
+  format_string = fmt;
+
   for (const char * p = fmt.c_str(); *p; p++) {
     if (*p != '%' && *p != '\\') {
       *q++ = *p;
       continue;
     }
-
-    elements.push_back(element_t());
-    current = &elements.back();
-
-    if (q != buf) {
-      current->chars = std::string(buf, q);
-      q = buf;
-
-      elements.push_back(element_t());
-      current = &elements.back();
-    }
-
-    if (*p == '\\') {
+    else if (*p == '\\') {
       p++;
       switch (*p) {
-      case 'b': current->chars = "\b"; break;
-      case 'f': current->chars = "\f"; break;
-      case 'n': current->chars = "\n"; break;
-      case 'r': current->chars = "\r"; break;
-      case 't': current->chars = "\t"; break;
-      case 'v': current->chars = "\v"; break;
+      case 'b': *q++ = '\b'; break;
+      case 'f': *q++ = '\f'; break;
+      case 'n': *q++ = '\n'; break;
+      case 'r': *q++ = '\r'; break;
+      case 't': *q++ = '\t'; break;
+      case 'v': *q++ = '\v'; break;
+      default:
+	*q++ = *p;
+	break;
       }
       continue;
+    }
+    else {
+      assert(*p == '%');
+      if (*(p + 1) == '%') {
+	p++;			// %% is the same as \%
+	*q++ = *p;
+	continue;
+      }
+    }
+
+    current = new element_t;
+    elements.push_back(current);
+
+    if (q != buf) {
+      current->kind  = element_t::TEXT;
+      current->chars = new std::string(buf, q);
+      q = buf;
+
+      current = new element_t;
+      elements.push_back(current);
     }
 
     ++p;
@@ -83,109 +98,145 @@ void format_t::parse(const std::string& fmt)
       throw new format_error("Maximum width is less than the minimum width");
 
     switch (*p) {
-    case '%':
-      current->chars = "%";
-      break;
-
     case '|':
-      current->column = true;
+      current->kind = element_t::COLUMN;
       break;
 
-    case '{': {
+    case '{':
+    case '(': {
+      char open  = *p;
+      char close = *p == '{' ? '}' : ')';
       ++p;
       const char * b = p;
       int depth = 1;
       while (*p) {
-	if (*p == '}' && --depth == 0)
+	if (*p == close && --depth == 0)
 	  break;
-	else if (*p == '{')
+	else if (*p == open)
 	  ++depth;
 	p++;
       }
-      if (*p != '}')
-	throw new format_error("Missing '}'");
+      if (*p != close)
+	throw new format_error(std::string("Missing '") + close + "'");
 
-      assert(! current->valexpr);
-      current->valexpr = std::string(b, p);
+      if (open == '{') {
+	assert(! current->valexpr);
+	current->kind    = element_t::VALEXPR;
+	current->valexpr = new valexpr_t(std::string(b, p));
+      } else {
+	assert(! current->format);
+	current->kind   = element_t::GROUP;
+	current->format = new format_t(std::string(b, p));
+      }
       break;
     }
 
     default:
       assert(! current->valexpr);
-      current->valexpr = std::string(p, p + 1);
+      current->kind    = element_t::VALEXPR;
+      current->valexpr = new valexpr_t(std::string(p, p + 1));
       break;
     }
   }
 
  END:
   if (q != buf) {
-    elements.push_back(element_t());
-    current = &elements.back();
-    current->chars = std::string(buf, q);
+    current = new element_t;
+    elements.push_back(current);
+
+    current->kind  = element_t::TEXT;
+    current->chars = new std::string(buf, q);
   }
 }
 
 void format_t::compile(valexpr_t::scope_t * scope)
 {
-  for (std::list<element_t>::iterator i = elements.begin();
+  for (std::list<element_t *>::iterator i = elements.begin();
        i != elements.end();
-       i++) {
-    if ((*i).valexpr)
-      (*i).valexpr.compile(scope);
+       i++)
+  switch ((*i)->kind) {
+  case element_t::VALEXPR:
+    assert((*i)->valexpr);
+    (*i)->valexpr->compile(scope);
+    break;
+  case element_t::GROUP:
+    assert((*i)->format);
+    (*i)->format->compile(scope);
+    break;
   }
 }
 
-int format_t::format(std::ostream& out_str, valexpr_t::scope_t * scope,
-		     int column) const
+int format_t::element_formatter_t::operator()
+  (std::ostream& out_str, element_t * elem,
+   valexpr_t::scope_t * scope, int column) const
 {
-  for (std::list<element_t>::const_iterator i = elements.begin();
-       i != elements.end();
-       i++) {
-    const element_t * elem = &(*i);
-
-    if (elem->column) {
-      if (elem->max_width != -1 && elem->max_width < column) {
-	out_str << '\n';
-	column = 0;
-      }
-
-      if (elem->min_width != -1 && elem->min_width > column) {
-	out_str << std::string(elem->min_width - column, ' ');
-	column = elem->min_width;
-      }
-      continue;
+  if (elem->kind == element_t::COLUMN) {
+    if (elem->max_width != -1 && elem->max_width < column) {
+      out_str << '\n';
+      column = 0;
     }
 
-    std::ostringstream out;
+    if (elem->min_width != -1 && elem->min_width > column) {
+      out_str << std::string(elem->min_width - column, ' ');
+      column = elem->min_width;
+    }
+    return column;
+  }
 
-    if (elem->align_left)
-      out << std::left;
+  std::ostringstream out;
+
+  if (elem->align_left)
+    out << std::left;
+  else
+    out << std::right;
+
+  if (elem->min_width > 0)
+    out.width(elem->min_width);
+
+  int start_column = column;
+
+  if (elem->kind == element_t::VALEXPR)
+    elem->valexpr->calc(scope).strip_annotations()
+      .write(out, elem->min_width, elem->max_width);
+  else if (elem->kind == element_t::GROUP)
+    column = elem->format->format(out, scope, column);
+  else if (elem->kind == element_t::TEXT)
+    out << *elem->chars;
+  else
+    assert(0);
+
+  std::string temp = out.str();
+  for (std::string::const_iterator i = temp.begin();
+       i != temp.end();
+       i++)
+    if (*i == '\n' || *i == '\r')
+      column = 0;
     else
-      out << std::right;
+      column++;
 
-    if (elem->min_width > 0)
-      out.width(elem->min_width);
+  int virtual_width = column - start_column;
 
-    if (elem->valexpr)
-      elem->valexpr.calc(scope).write(out, elem->min_width,
-				      elem->max_width);
-    else
-      out << elem->chars;
-
-    std::string temp = out.str();
-    if (elem->max_width > 0 && elem->max_width < temp.length())
-      temp.erase(elem->max_width);
-
-    for (std::string::const_iterator i = temp.begin();
-	 i != temp.end();
-	 i++)
-      if (*i == '\n' || *i == '\r')
-	column = 0;
-      else
-	column++;
-
+  if (elem->min_width != -1 && virtual_width < elem->min_width) {
+    out_str << temp << std::string(' ', elem->min_width - virtual_width);
+  }
+  else if (elem->max_width != -1 && virtual_width > elem->max_width) {
+    temp.erase(temp.length() - (virtual_width - elem->max_width));
     out_str << temp;
   }
+  else {
+    out_str << temp;
+  }
+
+  return column;
+}
+
+int format_t::format(std::ostream& out, valexpr_t::scope_t * scope,
+		     int column, const element_formatter_t& formatter) const
+{
+  for (std::list<element_t *>::const_iterator i = elements.begin();
+       i != elements.end();
+       i++)
+    column = formatter(out, *i, scope, column);
 
   return column;
 }

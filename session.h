@@ -16,20 +16,17 @@ class session_t : public valexpr_t::scope_t
   std::string cache_file;
   std::string price_db;
 
-  std::string balance_format;
   std::string register_format;
   std::string wide_register_format;
+  std::string print_format;
+  std::string balance_format;
+  std::string equity_format;
   std::string plot_amount_format;
   std::string plot_total_format;
-  std::string print_format;
   std::string write_hdr_format;
   std::string write_xact_format;
-  std::string equity_format;
   std::string prices_format;
   std::string pricesdb_format;
-
-  std::string date_input_format;
-  std::string date_format;
 
   unsigned long pricing_leeway;
 
@@ -55,38 +52,34 @@ class session_t : public valexpr_t::scope_t
   session_t(valexpr_t::scope_t * parent = NULL) :
     valexpr_t::scope_t(parent),
 
-    balance_format
-    ("%20T  %2_%-a\n"),
-#if 1
     register_format
-    ("%{ftime(date)} %-.20{payee}%/"
-     "%32|%-22{abbrev(account, 22)} %12.67t %12.80T\n"),
-#else
-    register_format
-    ("%D %-.20P %-.22A %12.67t %!12.80T\n%/"
-     "%32|%-.22A %12.67t %!12.80T\n"),
-#endif
+    ("%(/%(/%{date} %-.20{payee}"
+     "%(:%32|%-22{abbrev(account, 22)} %12.67t %12.80T\n)))"),
     wide_register_format
     ("%D  %-.35P %-.38A %22.108t %!22.132T\n%/"
      "%48|%-.38A %22.108t %!22.132T\n"),
+    print_format
+#if 1
+    ("%(/%(/%{date} %-.20{payee}\n%(:    %-34{account}  %12t\n)\n))"),
+#else
+    ("\n%d %Y%C%P\n    %-34W  %12o%n\n%/    %-34W  %12o%n\n"),
+#endif
+    balance_format
+    ("%(/%(//%20T  %2_%-a\n))"),
+    equity_format
+    ("\n%D %Y%C%P\n%/    %-34W  %12t\n"),
     plot_amount_format
     ("%D %(@S(@t))\n"),
     plot_total_format
     ("%D %(@S(@T))\n"),
-    print_format
-    ("\n%d %Y%C%P\n    %-34W  %12o%n\n%/    %-34W  %12o%n\n"),
     write_hdr_format
     ("%d %Y%C%P\n"),
     write_xact_format
     ("    %-34W  %12o%n\n"),
-    equity_format
-    ("\n%D %Y%C%P\n%/    %-34W  %12t\n"),
     prices_format
     ("%[%Y/%m/%d %H:%M:%S %Z]   %-10A %12t %12T\n"),
     pricesdb_format
     ("P %[%Y/%m/%d %H:%M:%S] %A %t\n"),
-
-    date_format("%Y/%m/%d"),
 
     pricing_leeway(24 * 3600),
 
@@ -161,6 +154,8 @@ class session_t : public valexpr_t::scope_t
   // Scope members
   //
 
+  virtual bool resolve(const std::string& name, value_t& result,
+		       scope_t * locals = NULL);
   virtual valexpr_t::node_t * lookup(const std::string& name);
 
   //
@@ -169,10 +164,6 @@ class session_t : public valexpr_t::scope_t
 
   void option_file(value_t&, valexpr_t::scope_t * locals) {
     data_file = locals->args[0].to_string();
-  }
-
-  void option_eval(value_t&, valexpr_t::scope_t * locals) {
-    valexpr_t(locals->args[0].to_string()).compile(this);
   }
 
   void option_verbose(value_t&) {

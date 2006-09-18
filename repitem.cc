@@ -14,10 +14,16 @@ repitem_t::~repitem_t()
     prev->next = next;
   }
   else if (parent) {
-    if (parent->contents == this)
+    if (parent->contents == this) {
       parent->contents = next;
-    else if (parent->children == this)
+      if (parent->last_content == this)
+	parent->last_content = NULL;
+    }
+    else if (parent->children == this) {
       parent->children = next;
+      if (parent->last_child == this)
+	parent->last_child = NULL;
+    }
   }
 
   if (next)
@@ -245,10 +251,13 @@ repitem_t * repitem_t::add_content(repitem_t * item)
   }
 
   item->parent = this;
+  item->valexpr_t::scope_t::parent = this;
+
   while (item->next) {
     repitem_t * next_item = item->next;
     next_item->prev   = item;
     next_item->parent = this;
+    next_item->valexpr_t::scope_t::parent = this;
     item = next_item;
   }
 
@@ -272,10 +281,12 @@ repitem_t * repitem_t::add_child(repitem_t * item)
   }
 
   item->parent = this;
+  item->valexpr_t::scope_t::parent = this;
   while (item->next) {
     repitem_t * next_item = item->next;
     next_item->prev   = item;
     next_item->parent = this;
+    next_item->valexpr_t::scope_t::parent = this;
     item = next_item;
   }
 
@@ -388,40 +399,145 @@ void repitem_t::print_tree(std::ostream& out, int depth)
   }
 }
 
-valexpr_t::node_t * repitem_t::lookup(const std::string& name)
+bool repitem_t::resolve(const std::string& name, value_t& result,
+			scope_t * locals)
 {
   const char * p = name.c_str();
   switch (*p) {
   case 'a':
     switch (*++p) {
     case 'c':
-      if (name == "account")
-	return MAKE_FUNCTOR(repitem_t, account);
+      if (name == "account") {
+	account(result);
+	return true;
+      }
       break;
     case 'm':
-      if (name == "amount")
-	return MAKE_FUNCTOR(repitem_t, amount);
+      if (name == "amount") {
+	add_value(result);
+	return true;
+      }
       break;
     }
     break;
 
   case 'd':
-    if (name == "date")
-      return MAKE_FUNCTOR(repitem_t, date);
+    if (name == "date") {
+      date(result);
+      return true;
+    }
     break;
 
   case 'p':
-    if (name == "payee")
-      return MAKE_FUNCTOR(repitem_t, payee);
+    if (name == "payee") {
+      payee(result);
+      return true;
+    }
+    break;
+
+  case 't':
+    if (name == "total") {
+      add_total(result);
+      return true;
+    }
+    break;
+
+  case 'v':
+    if (name == "value") {
+      add_value(result);
+      return true;
+    }
     break;
   }
 
-  repitem_t * top = parent;
-  while (top->parent)
-    top = top->parent;
+  return valexpr_t::scope_t::resolve(name, result, locals);
+}
 
-  return (top->valexpr_t::scope_t::parent ?
-	  top->valexpr_t::scope_t::parent->lookup(name) : NULL);
+int repitem_t::formatter_t::write_elements(std::ostream& out, format_t& format,
+					   repitem_t * item, bool recursive,
+					   bool children, int column) const
+{
+  for (repitem_t * ptr = children ? item->children : item->contents;
+       ptr;
+       ptr = ptr->next) {
+    column = format.format(out, ptr, column, *this);
+    if (recursive)
+      column = write_elements(out, format, item, recursive, children, column);
+  }
+  return column;
+}
+
+int repitem_t::formatter_t::operator()(std::ostream& out, element_t * element,
+				       valexpr_t::scope_t * scope,
+				       int column) const
+{
+  if (element->kind == element_t::GROUP) {
+    element_t * prefix = NULL;
+    if (element->format->elements.size() > 0)
+      prefix = element->format->elements.front();
+
+    assert(dynamic_cast<repitem_t *>(scope));
+    repitem_t * item = static_cast<repitem_t *>(scope);
+
+    if (prefix && prefix->kind == element_t::TEXT) {
+      bool children  = false;
+      bool recursive = false;
+      int  length = prefix->chars->length();
+      char initial;
+
+      if (length > 0) {
+	initial = (*prefix->chars)[0];
+	switch (initial) {
+	case '/':
+	  children = true;
+	  break;
+	case ':':
+	  break;
+	default:
+	  goto base_handler;
+	}
+      }
+
+      if (length > 1 && initial == (*prefix->chars)[1])
+	recursive = true;
+
+      std::string * prev_str = prefix->chars;
+      std::string   copy_str;
+
+      if (! recursive)
+	copy_str = std::string(*prev_str, 1);
+      else
+	copy_str = std::string(*prev_str, 2);
+
+      try {
+	prefix->chars = &copy_str;
+	column = write_elements(out, *element->format, item, recursive,
+				children, column);
+      }
+      catch (...) {
+	prefix->chars = prev_str;
+	throw;
+      }
+      prefix->chars = prev_str;
+
+      return column;
+    }
+  }
+
+ base_handler:
+  return element_formatter_t::operator()(out, element, scope, column);
+}
+
+void format_command::operator()(value_t& result, valexpr_t::scope_t * locals)
+{
+  std::ostream * out = static_cast<std::ostream *>(locals->args[0].to_pointer());
+  assert(out);
+  repitem_t * items = static_cast<repitem_t *>(locals->args[1].to_pointer());
+  assert(items);
+
+  assert(items->kind == repitem_t::SESSION);
+
+  formatter.format(*out, items, 0, repitem_t::formatter_t());
 }
 
 } // namespace ledger

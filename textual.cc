@@ -92,16 +92,7 @@ parse_amount_expr(std::istream& in, journal_t * journal,
   }
 #endif
 
-  // jww (2006-09-10): Put an error context around this
-  std::auto_ptr<repitem_t> item
-    (repitem_t::wrap(&xact, xact.entry ?
-		     static_cast<repitem_t *>(xact.entry->data) :
-		     static_cast<repitem_t *>(journal->data)));
-
-  amount = valexpr.calc(item.get()).to_amount();
-
-  if (xact.entry)
-    xact.data = item.release();
+  amount = valexpr.calc(static_cast<repitem_t *>(xact.data)).to_amount();
 
   DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
 	      "The transaction amount is " << amount);
@@ -112,16 +103,17 @@ transaction_t * parse_transaction(char *      line,
 				  account_t * account,
 				  entry_t *   entry = NULL)
 {
-  std::istringstream in(line);
-
-  std::string err_desc;
-  try {
-
   // The account will be determined later...
   std::auto_ptr<transaction_t> xact(new transaction_t(NULL));
 
-  xact->entry = entry;		// this might be NULL
+  std::istringstream in(line);
+  std::string err_desc;
+  try {
 
+  xact->entry = entry;		// this might be NULL
+  xact->data  = repitem_t::wrap(xact.get(), entry ?
+				static_cast<repitem_t *>(entry->data) :
+				static_cast<repitem_t *>(journal->data));
   // Parse the state flag
 
   char p = peek_next_nonws(in);
@@ -307,10 +299,17 @@ transaction_t * parse_transaction(char *      line,
   }
 
  finished:
+  if (! xact->entry) {
+    delete static_cast<repitem_t *>(xact->data);
+    xact->data = NULL;
+  }
   return xact.release();
 
   }
   catch (error * err) {
+    delete static_cast<repitem_t *>(xact->data);
+    xact->data = NULL;
+
     err->context.push_back
       (new line_context(line, (long)in.tellg() - 1,
 			! err_desc.empty() ?

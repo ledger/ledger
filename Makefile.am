@@ -37,7 +37,6 @@ libledger_la_SOURCES = \
 	transform.cc   \
 		       \
 	dump.cc        \
-	register.cc    \
 	csv.cc         \
 	derive.cc      \
 	emacs.cc       \
@@ -90,7 +89,6 @@ pkginclude_HEADERS = \
 	qif.h	     \
 	quotes.h     \
 	reconcile.h  \
-	register.h   \
 	repitem.h    \
 	report.h     \
 	session.h    \

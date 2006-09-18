@@ -4,6 +4,7 @@
 #include "session.h"
 #include "journal.h"
 #include "valexpr.h"
+#include "format.h"
 
 #include <iostream>
 #include <memory>
@@ -15,7 +16,9 @@ class report_t;
 
 class repitem_t : public valexpr_t::scope_t
 {
-public:
+  repitem_t(const repitem_t&);
+
+ public:
   repitem_t * parent;
   repitem_t * next;
   repitem_t * prev;
@@ -47,7 +50,7 @@ public:
   datetime_t	 reported_date;
 
   repitem_t(kind_t _kind, repitem_t * owner = NULL)
-    : valexpr_t::scope_t(owner), kind(_kind),
+    : valexpr_t::scope_t(owner, false, true), kind(_kind),
       parent(NULL), next(NULL), prev(NULL), istemp(false),
       contents(NULL), last_content(NULL),
       children(NULL), last_child(NULL),
@@ -68,7 +71,6 @@ public:
   void add_sort_value(value_t& val);
   void add_total(value_t& val);
 
-  void amount(value_t& result) { add_value(result); }
   void payee(value_t& result) {
     switch (kind) {
     case TRANSACTION:
@@ -147,17 +149,36 @@ public:
   // Scope members
   //
 
-  virtual void define(const std::string& name, valexpr_t::node_t * def) {
-    repitem_t * top = parent;
-    while (top->parent)
-      top = top->parent;
+  virtual bool resolve(const std::string& name, value_t& result,
+		       scope_t * locals = NULL);
 
-    // Pass any definitions up to our parent scope
-    if (top->valexpr_t::scope_t::parent)
-      top->valexpr_t::scope_t::parent->define(name, def);
-  }
+  //
+  // Report item formatter
+  //
 
-  virtual valexpr_t::node_t * lookup(const std::string& name);
+  struct formatter_t : public format_t::element_formatter_t
+  {
+    typedef format_t::element_t element_t;
+
+    int write_elements(std::ostream& out, format_t& format,
+		       repitem_t * items, bool recursive, bool children,
+		       int column) const;
+
+    virtual int operator()(std::ostream& out, element_t * elem,
+			   valexpr_t::scope_t * scope, int column) const;
+  };
+};
+
+class format_command : public valexpr_t::functor_t
+{
+  format_t formatter;
+
+ public:
+  format_command(const std::string& command_name,
+		 const std::string& format_string)
+    : valexpr_t::functor_t(command_name), formatter(format_string) {}
+
+  virtual void operator()(value_t& result, valexpr_t::scope_t * locals);
 };
 
 } // namespace ledger

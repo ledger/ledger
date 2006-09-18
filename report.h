@@ -29,9 +29,6 @@ class report_t : public valexpr_t::scope_t
   std::string pager;
 
   bool show_totals;
-  bool keep_price;
-  bool keep_date;
-  bool keep_tag;
 
   session_t *   session;
   transform_t * last_transform;
@@ -40,15 +37,12 @@ class report_t : public valexpr_t::scope_t
 
   report_t(session_t * _session)
     : valexpr_t::scope_t(_session),
-
       show_totals(false),
-      keep_price(false),
-      keep_date(false),
-      keep_tag(false),
-
       session(_session),
-
-      last_transform(NULL) {}
+      last_transform(NULL)
+  {
+    eval("t=total,TOT=0,T()=(TOT=TOT+t,TOT)");
+  }
 
   virtual ~report_t();
 
@@ -65,6 +59,24 @@ class report_t : public valexpr_t::scope_t
   // Config options
   //
 
+  void eval(const std::string& expr) {
+    valexpr_t(expr).compile(this);
+  }
+  void option_eval(value_t&, valexpr_t::scope_t * locals) {
+    eval(locals->args[0].to_string());
+  }
+
+  void option_amount(value_t&, valexpr_t::scope_t * locals) {
+    eval(std::string("t=") + locals->args[0].to_string());
+  }
+  void option_total(value_t&, valexpr_t::scope_t * locals) {
+    eval(std::string("T()=") + locals->args[0].to_string());
+  }
+
+  void option_format(value_t&, valexpr_t::scope_t * locals) {
+    format_string = locals->args[0].to_string();
+  }
+
   void option_foo(value_t& result) {
     std::cout << "This is foo" << std::endl;
   }
@@ -76,6 +88,8 @@ class report_t : public valexpr_t::scope_t
   // Scope members
   //
 
+  virtual bool resolve(const std::string& name, value_t& result,
+		       valexpr_t::scope_t * locals);
   virtual valexpr_t::node_t * lookup(const std::string& name);
 };
 

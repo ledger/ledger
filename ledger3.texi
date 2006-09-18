@@ -59,13 +59,66 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @insertcopying
 @end ifnottex
 
-@chapter Anatomy of a Ledger file
+@chapter Anatomy of a journal file
 
-@chapter Using Ledger for reporting
+Everything begins with a journal file---the anatomy of which is covered
+in detail in chapter one.  To review: a @emph{journal} contains one or
+more @emph{entries}, each of which refers to two or more
+@emph{transactions}.  A @emph{transaction} specifies that a given
+@emph{amount} is added to, or subtracted from, an @emph{account}.
+(@emph{Accounts} may be nested hierarchically by separating the elements
+using a colon).  Lastly, an @emph{amount} is a figure representing a
+given @emph{quantity} of a @emph{commodity}.  Here follows a review of
+these terms, which are all used extensively throughout this chapter:
+
+@table @emph
+@item journal
+A journal is a data file containing a series of entries.
+
+@item entry
+An entry relates a group of two or more transactions, with the absolute
+constraint that the total sum of an entry's transactions must equal
+zero.  That is, every entry in a journal must @emph{balance} to zero.
+
+@item transaction
+Transactions record how commodities are moved between accounts.  If you
+spent money on a movie ticket, for example, such an entry would have two
+transactions: One to show how the money was taken from your wallet, and
+another to show how it was applied to your movie expenses.
+
+@item account
+An account 
+
+@item amount
+
+@item quantity
+
+@item commodity
+@end table
+
+@chapter Example accounting practices
+
+@chapter Generating useful reports
+
+Once you have a journal file representing a recent history of your
+finances, the next step is to generate reports in order to give richer
+meaning to this data.  For example: Where do you spend your money?  Do
+you have enough to cover upcoming expenses?  Are you creating or losing
+net worth?  Are your investment performing well?  All of these questions
+can be answered easily with Ledger---if you know how to ask them.
+
+Preparing complex reports is not a simple task, but neither is it a
+difficult one.  All that's required is a proper understanding of how
+Ledger views your data, and how it prepares it for reporting.
+
+After Ledger reads a journal file, it creates an in-memory
+representation reflecting the order and composition of those entries.
 
 @chapter Mastering value expressions
 
-@chapter Extending Ledger with Python
+@chapter Mastering format strings
+
+@chapter Building extensions with Python
 
 @chapter Ledger's Architecture
 

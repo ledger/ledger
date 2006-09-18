@@ -80,7 +80,14 @@ object python_interpreter_t::import(const std::string& str)
       throw error(std::string("Failed to import Python module ") + str);
 
     object newmod(handle<>(borrowed(mod)));
+
+#if 1
+    // Import all top-level entries directly into the main namespace
+    dict m_nspace(handle<>(borrowed(PyModule_GetDict(mod))));
+    nspace.update(m_nspace);
+#else
     nspace[std::string(PyModule_GetName(mod))] = newmod;
+#endif
     return newmod;
   }
   catch (const error_already_set&) {

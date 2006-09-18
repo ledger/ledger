@@ -55,41 +55,80 @@ void report_t::ftime(value_t& result, valexpr_t::scope_t * locals)
   if (locals->args.size() == 2)
     date_format = locals->args[1].to_string();
   else
-    date_format = session->date_format;
+    date_format = datetime_t::output_format;
 
   result.set_string(date.to_string(date_format));
+}
+
+bool report_t::resolve(const std::string& name, value_t& result,
+		       valexpr_t::scope_t * locals)
+{
+  const char * p = name.c_str();
+  switch (*p) {
+  case 'a':
+    if (name == "abbrev") {
+      abbrev(result, locals);
+      return true;
+    }
+    break;
+
+  case 'f':
+    if (name == "ftime") {
+      ftime(result, locals);
+      return true;
+    }
+    break;
+  }
+
+  return valexpr_t::scope_t::resolve(name, result, locals);
 }
 
 valexpr_t::node_t * report_t::lookup(const std::string& name)
 {
   const char * p = name.c_str();
   switch (*p) {
-  case 'a':
-    if (name == "abbrev")
-      return MAKE_FUNCTOR(report_t, abbrev);
-    break;
-
-  case 'f':
-    if (name == "ftime")
-      return MAKE_FUNCTOR(report_t, ftime);
-    break;
-
   case 'o':
     if (std::strncmp(p, "option_", 7) == 0) {
       p = p + 7;
       switch (*p) {
+      case 'a':
+	if (std::strcmp(p, "amount") == 0)
+	  return MAKE_FUNCTOR(report_t, option_amount);
+	break;
+
       case 'b':
 	if (std::strcmp(p, "bar") == 0)
 	  return MAKE_FUNCTOR(report_t, option_bar);
 	break;
+
+      case 'e':
+	if (std::strcmp(p, "eval") == 0)
+	  return MAKE_FUNCTOR(report_t, option_eval);
+	break;
+
       case 'f':
 	if (std::strcmp(p, "foo") == 0)
 	  return MAKE_FUNCTOR(report_t, option_foo);
+	else if (std::strcmp(p, "format") == 0)
+	  return MAKE_FUNCTOR(report_t, option_format);
+	break;
+
+      case 't':
+	if (! *(p + 1))
+	  return MAKE_FUNCTOR(report_t, option_amount);
+	else if (std::strcmp(p, "total") == 0)
+	  return MAKE_FUNCTOR(report_t, option_total);
+	break;
+
+      case 'T':
+	if (! *(p + 1))
+	  return MAKE_FUNCTOR(report_t, option_total);
 	break;
       }
     }
     break;
   }
+
   return valexpr_t::scope_t::lookup(name);
 }
 

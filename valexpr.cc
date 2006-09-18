@@ -848,9 +848,15 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope,
     return acquire();
 
   case SYMBOL:
-    if (scope)
+    if (scope) {
+      if (make_calls) {
+	value_t temp;
+	if (scope->resolve(valuep->to_string(), temp))
+	  return wrap_value(temp)->acquire();
+      }
       if (node_t * def = scope->lookup(valuep->to_string()))
 	return def->compile(scope, make_calls);
+    }
     return acquire();
 
   case ARG_INDEX:
@@ -1192,7 +1198,15 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope,
     }
 
     if (left->kind == SYMBOL) {
-      valexpr_t func(left->compile(scope, false)); // don't resolve!
+      if (make_calls) {
+	value_t temp;
+	if (scope->resolve(left->valuep->to_string(), temp, call_args.get()))
+	  return wrap_value(temp)->acquire();
+      }
+
+      // Don't compile to the left, otherwise the function name may
+      // get resolved before we have a chance to call it
+      valexpr_t func(left->compile(scope, false));
       if (func->kind == FUNCTOR) {
 	value_t temp;
 	(*func->functor)(temp, call_args.get());

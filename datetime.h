@@ -254,14 +254,7 @@ inline datetime_t operator-(const datetime_t& left, const long seconds) {
   return temp;
 }
 
-inline std::ostream& operator<<(std::ostream& out,
-				const datetime_t& moment) {
-  char buf[64];
-  std::strftime(buf, 63, (date_t::output_format + " %H:%M:%S").c_str(),
-		moment.localtime());
-  out << buf;
-  return out;
-}
+std::ostream& operator<<(std::ostream& out, const datetime_t& moment);
 
 inline std::istream& operator>>(std::istream& in, datetime_t& moment) {
   moment.parse(in);

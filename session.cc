@@ -130,33 +130,48 @@ journal_t * session_t::read_data(const std::string& master_account)
   return journal;
 }
 
-valexpr_t::node_t * session_t::lookup(const std::string& name)
+bool session_t::resolve(const std::string& name, value_t& result,
+			valexpr_t::scope_t * locals)
 {
   const char * p = name.c_str();
   switch (*p) {
   case 'd':
-    if (name == "date_format")
-	return MAKE_FUNCTOR(session_t, date_format);
+    if (name == "date_format") {
+      result = datetime_t::output_format;
+      return true;
+    }
     break;
 
   case 'n':
     switch (*++p) {
     case 'o':
-      if (name == "now")
-	return MAKE_FUNCTOR(session_t, now);
+      if (name == "now") {
+	result = now;
+	return true;
+      }
       break;
     }
     break;
 
+  case 'r':
+    if (name == "register_format") {
+      result = register_format;
+      return true;
+    }
+    break;
+  }
+
+  return valexpr_t::scope_t::resolve(name, result, locals);
+}
+
+valexpr_t::node_t * session_t::lookup(const std::string& name)
+{
+  const char * p = name.c_str();
+  switch (*p) {
   case 'o':
     if (std::strncmp(p, "option_", 7) == 0) {
       p = p + 7;
       switch (*p) {
-      case 'e':
-	if (! *(p + 1) || std::strcmp(p, "eval") == 0)
-	  return MAKE_FUNCTOR(session_t, option_eval);
-	break;
-
       case 'f':
 	if (! *(p + 1) || std::strcmp(p, "file") == 0)
 	  return MAKE_FUNCTOR(session_t, option_file);
@@ -169,11 +184,8 @@ valexpr_t::node_t * session_t::lookup(const std::string& name)
       }
     }
     break;
-
-  case 'r':
-    if (name == "register_format")
-	return MAKE_FUNCTOR(session_t, register_format);
   }
+
   return valexpr_t::scope_t::lookup(name);
 }
 
@@ -207,8 +219,6 @@ void export_session()
     .def_readwrite("equity_format", &session_t::equity_format)
     .def_readwrite("prices_format", &session_t::prices_format)
     .def_readwrite("pricesdb_format", &session_t::pricesdb_format)
-
-    .def_readwrite("date_input_format", &session_t::date_input_format)
 
     .def_readwrite("pricing_leeway", &session_t::pricing_leeway)
 
