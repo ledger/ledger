@@ -82,6 +82,7 @@ class subtotal_transform : public transform_t {
 
 class select_transform : public transform_t
 {
+ protected:
   const repitem_t::path_t * path;
 
  public:
@@ -92,6 +93,15 @@ class select_transform : public transform_t
     if (path)
       delete path;
   }
+
+  virtual void execute(repitem_t * items);
+};
+
+class remove_transform : public select_transform
+{
+ public:
+  remove_transform(const std::string& selection_path)
+    : select_transform(selection_path) {}
 
   virtual void execute(repitem_t * items);
 };

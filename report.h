@@ -90,6 +90,19 @@ class report_t : public valexpr_t::scope_t
   void option_select(value_t&, valexpr_t::scope_t * locals) {
     transforms.push_back(new select_transform(locals->args[0].to_string()));
   }
+  void option_limit(value_t&, valexpr_t::scope_t * locals) {
+    std::string expr = (std::string("//xact[") +
+			locals->args[0].to_string() + "]");
+    transforms.push_back(new select_transform(expr));
+  }
+
+  void option_remove(value_t&, valexpr_t::scope_t * locals) {
+    transforms.push_back(new remove_transform(locals->args[0].to_string()));
+  }
+
+  void option_split(value_t&, valexpr_t::scope_t * locals) {
+    transforms.push_back(new split_transform);
+  }
 
   //
   // Scope members

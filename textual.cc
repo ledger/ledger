@@ -92,7 +92,7 @@ parse_amount_expr(std::istream& in, journal_t * journal,
   }
 #endif
 
-  amount = valexpr.calc(static_cast<repitem_t *>(xact.data)).to_amount();
+  amount = valexpr.calc(static_cast<xact_repitem_t *>(xact.data)).to_amount();
 
   DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
 	      "The transaction amount is " << amount);
@@ -112,7 +112,7 @@ transaction_t * parse_transaction(char *      line,
 
   xact->entry = entry;		// this might be NULL
   xact->data  = repitem_t::wrap(xact.get(), entry ?
-				static_cast<repitem_t *>(entry->data) :
+				static_cast<entry_repitem_t *>(entry->data) :
 				static_cast<repitem_t *>(journal->data));
   // Parse the state flag
 
@@ -300,14 +300,14 @@ transaction_t * parse_transaction(char *      line,
 
  finished:
   if (! xact->entry) {
-    delete static_cast<repitem_t *>(xact->data);
+    delete static_cast<xact_repitem_t *>(xact->data);
     xact->data = NULL;
   }
   return xact.release();
 
   }
   catch (error * err) {
-    delete static_cast<repitem_t *>(xact->data);
+    delete static_cast<xact_repitem_t *>(xact->data);
     xact->data = NULL;
 
     err->context.push_back

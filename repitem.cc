@@ -31,19 +31,10 @@ repitem_t::~repitem_t()
 
   if (istemp) {
     switch (kind) {
-    case TRANSACTION:
-      delete xact;
-      break;
-    case ENTRY:
-      delete entry;
-      break;
     case ACCOUNT:
       delete account_ptr;
       break;
-    case JOURNAL:
-      assert(0);
-      break;
-    case SESSION:
+    default:
       assert(0);
       break;
     }
@@ -54,25 +45,24 @@ repitem_t::~repitem_t()
 
 void repitem_t::clear()
 {
-  repitem_t * temp = contents;
-  contents = NULL;
-  for (repitem_t * content = temp; content; content = content->next) {
-    content->parent = NULL;
+  repitem_t * content = contents;
+  while (content) {
+    repitem_t * next = content->next;
     delete content;
+    content = next;
   }
 
-  temp = children;
-  children = NULL;
-  for (repitem_t * child = temp; child; child = child->next) {
-    child->parent = NULL;
+  repitem_t * child = children;
+  while (child) {
+    repitem_t * next = child->next;
     delete child;
+    child = next;
   }
 }
 
 void repitem_t::add_total(value_t& val)
 {
   add_value(val);
-
   for (repitem_t * ptr = children; ptr; ptr = ptr->next)
     ptr->add_total(val);
 }
@@ -81,17 +71,9 @@ void repitem_t::add_value(value_t& val)
 {
   if (c_value) {
     val += *c_value;
-    return;
-  }
-
-  if (kind == TRANSACTION) {
-    if (xact->cost || ! val.realzero())
-      val.add(xact->amount, xact->cost);
-    else
-      val = xact->amount;
   } else {
     for (repitem_t * ptr = contents; ptr; ptr = ptr->next)
-      ptr->add_total(val);
+      ptr->add_value(val);
   }
 }
 
@@ -106,9 +88,6 @@ datetime_t repitem_t::date() const
     return reported_date;
 
   switch (kind) {
-  case TRANSACTION: return xact->date();
-  case ENTRY: return entry->date();
-
   case ACCOUNT:
     assert(0);
     return datetime_t();
@@ -121,9 +100,6 @@ datetime_t repitem_t::effective_date() const
     return reported_date;
 
   switch (kind) {
-  case TRANSACTION:  return xact->effective_date();
-  case ENTRY: return entry->effective_date();
-
   case ACCOUNT:
     assert(0);
     return datetime_t();
@@ -136,27 +112,9 @@ datetime_t repitem_t::actual_date() const
     return reported_date;
 
   switch (kind) {
-  case TRANSACTION: return xact->actual_date();
-  case ENTRY: return entry->actual_date();
-
   case ACCOUNT:
     assert(0);
     return datetime_t();
-  }
-}
-
-account_t * repitem_t::account() const
-{
-  if (reported_account != NULL)
-    return reported_account;
-
-  switch (kind) {
-  case TRANSACTION:
-    return xact->account;
-  case ENTRY:
-    return NULL;
-  case ACCOUNT:
-    return account_ptr;
   }
 }
 
@@ -169,26 +127,22 @@ bool repitem_t::valid() const
 repitem_t * repitem_t::wrap(transaction_t * txact, repitem_t * owner)
 {
   if (txact->data != NULL) {
-    repitem_t * temp = static_cast<repitem_t *>(txact->data);
+    xact_repitem_t * temp = static_cast<xact_repitem_t *>(txact->data);
     txact->data = NULL;
     return temp;
   }
-
-  repitem_t * temp = new repitem_t(TRANSACTION, owner);
-  temp->xact = txact;
-  return temp;
+  return new xact_repitem_t(txact, owner);
 }
 
 repitem_t * repitem_t::wrap(entry_t * tentry, repitem_t * owner, bool deep)
 {
   if (tentry->data != NULL) {
-    repitem_t * temp = static_cast<repitem_t *>(tentry->data);
+    entry_repitem_t * temp = static_cast<entry_repitem_t *>(tentry->data);
     tentry->data = NULL;
     return temp;
   }
 
-  repitem_t * temp = new repitem_t(ENTRY, owner);
-  temp->entry = tentry;
+  entry_repitem_t * temp = new entry_repitem_t(tentry, owner);
 
   if (deep) {
     for (transactions_list::iterator i = tentry->transactions.begin();
@@ -308,8 +262,7 @@ repitem_t * repitem_t::add_child(repitem_t * item)
 
 repitem_t * repitem_t::fake_transaction(account_t * taccount)
 {
-  repitem_t * temp = new repitem_t(TRANSACTION);
-  temp->xact = new transaction_t(taccount);
+  xact_repitem_t * temp = new xact_repitem_t(new transaction_t(taccount));
   temp->istemp = true;
   return temp;
 }
@@ -318,8 +271,7 @@ repitem_t * repitem_t::fake_entry(const datetime_t& edate,
 				  const datetime_t& rdate,
 				  const std::string& payee)
 {
-  repitem_t * temp = new repitem_t(ENTRY);
-  temp->entry = new entry_t;
+  entry_repitem_t * temp = new entry_repitem_t(new entry_t);
   temp->entry->_date_eff = edate;
   temp->entry->_date = rdate;
   temp->entry->payee = payee;
@@ -378,16 +330,15 @@ void repitem_t::print_tree(std::ostream& out, int depth)
 
   switch (kind) {
   case TRANSACTION:
-    out << "TRANSACTION " << xact
-	<< " - line " << xact->beg_line; break;
+    out << "TRANSACTION"; break;
   case ENTRY:
-    out << "ENTRY " << entry; break;
+    out << "ENTRY"; break;
   case ACCOUNT:
-    out << "ACCOUNT " << account_ptr; break;
+    out << "ACCOUNT"; break;
   case JOURNAL:
-    out << "JOURNAL " << journal; break;
+    out << "JOURNAL"; break;
   case SESSION:
-    out << "SESSION " << session; break;
+    out << "SESSION"; break;
   }
   out << std::endl;
 
@@ -491,6 +442,16 @@ repitem_t::parse_subselector(const char *& b)
       current->valexpr = std::string(q, p);
       break;
     }
+
+    case '*':
+      if (have_nodename)
+	throw error("Error in report item path selector");
+
+      if (! current)
+	first = current = new path_element_t;
+
+      have_nodename = true;
+      break;
 
     case '.':
       if (have_nodename)
@@ -637,13 +598,21 @@ void repitem_t::select(const path_t * path, select_callback_t callback)
 
 void repitem_t::select_all(select_callback_t callback)
 {
+  repitem_t * content = contents;
+  while (content) {
+    repitem_t * next = content->next;
+    content->select_all(callback); // this may destroy `content'!
+    content = next;
+  }
+
+  repitem_t * child = children;
+  while (child) {
+    repitem_t * next = child->next;
+    child->select_all(callback); // this may destroy `child'!
+    child = next;
+  }
+
   callback(this);
-
-  for (repitem_t * content = contents; content; content = content->next)
-    content->select_all(callback);
-
-  for (repitem_t * child = children; child; child = child->next)
-    child->select_all(callback);
 }
 
 void repitem_t::traverse_selection(const path_element_t * path,
@@ -661,8 +630,20 @@ void repitem_t::traverse_selection(const path_element_t * path,
   if (path->kind != UNKNOWN && kind != path->kind)
     return;
 
-  if (path->valexpr && ! path->valexpr.calc(this))
-    return;
+  if (path->valexpr) {
+    value_t result;
+    path->valexpr.calc(result, this);
+    if (result.type == value_t::INTEGER ||
+	result.type == value_t::AMOUNT) {
+      value_t pos;
+      position(pos);
+      if (result != pos)
+	return;
+    }
+    else if (! result) {
+      return;
+    }
+  }
 
   if (! contents && ! children) {
     callback(this);
@@ -685,28 +666,66 @@ void repitem_t::traverse_selection(const path_element_t * path,
   }
 }
 
+void repitem_t::last(value_t& result)
+{
+  if (! parent) {
+    result = 1L;
+    return;
+  }
+
+  long count = 0;
+  bool found = false;
+  for (repitem_t * ptr = parent->contents; ptr; ptr = ptr->next) {
+    count++;
+    if (ptr == this)
+      found = true;
+  }
+
+  if (found) {
+    result = count;
+    return;
+  }
+
+  count = 0;
+  for (repitem_t * ptr = parent->children; ptr; ptr = ptr->next)
+    count++;
+
+  result = count;
+}
+
+void repitem_t::position(value_t& result)
+{
+  if (! parent) {
+    result = 1L;
+    return;
+  }
+
+  long count = 0;
+  for (repitem_t * ptr = parent->contents; ptr; ptr = ptr->next) {
+    count++;
+    if (ptr == this) {
+      result = count;
+      return;
+    }
+  }
+
+  count = 0;
+  for (repitem_t * ptr = parent->children; ptr; ptr = ptr->next) {
+    count++;
+    if (ptr == this) {
+      result = count;
+      return;
+    }
+  }
+
+  assert(0);
+}
+
 bool repitem_t::resolve(const std::string& name, value_t& result,
 			scope_t * locals)
 {
   const char * p = name.c_str();
   switch (*p) {
-  case 'a':
-    switch (*++p) {
-    case 'c':
-      if (name == "account") {
-	account(result);
-	return true;
-      }
-      break;
-    case 'm':
-      if (name == "amount") {
-	add_value(result);
-	return true;
-      }
-      break;
-    }
-    break;
-
   case 'd':
     if (name == "date") {
       date(result);
@@ -714,9 +733,16 @@ bool repitem_t::resolve(const std::string& name, value_t& result,
     }
     break;
 
+  case 'l':
+    if (name == "last") {
+      last(result);
+      return true;
+    }
+    break;
+
   case 'p':
-    if (name == "payee") {
-      payee(result);
+    if (name == "position") {
+      position(result);
       return true;
     }
     break;
@@ -737,6 +763,48 @@ bool repitem_t::resolve(const std::string& name, value_t& result,
   }
 
   return valexpr_t::scope_t::resolve(name, result, locals);
+}
+
+bool xact_repitem_t::resolve(const std::string& name, value_t& result,
+			     scope_t * locals)
+{
+  const char * p = name.c_str();
+  switch (*p) {
+  case 'a':
+    switch (*++p) {
+    case 'c':
+      if (name == "account") {
+	account(result);
+	return true;
+      }
+      break;
+    case 'm':
+      if (name == "amount") {
+	add_value(result);
+	return true;
+      }
+      break;
+    }
+    break;
+  }
+
+  return repitem_t::resolve(name, result, locals);
+}
+
+bool entry_repitem_t::resolve(const std::string& name, value_t& result,
+			     scope_t * locals)
+{
+  const char * p = name.c_str();
+  switch (*p) {
+  case 'p':
+    if (name == "payee") {
+      payee(result);
+      return true;
+    }
+    break;
+  }
+
+  return repitem_t::resolve(name, result, locals);
 }
 
 int repitem_t::formatter_t::write_elements(std::ostream& out, format_t& format,

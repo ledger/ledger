@@ -288,6 +288,33 @@ void valexpr_t::token_t::next(std::istream& in, unsigned short flags)
 	  c = in.peek();
 	  assert(! (std::isdigit(c) || c == '.'));
 	  parse_ident(in);
+
+	  switch ((**(std::string **) value.data)[0]) {
+	  case 'a':
+	    if (**(std::string **) value.data == "and")
+	      kind = AMPER;
+	    break;
+	  case 'd':
+	    if (**(std::string **) value.data == "div")
+	      kind = SLASH;
+	    break;
+	  case 'f':
+	    if (**(std::string **) value.data == "false") {
+	      kind = VALUE;
+	      value = false;
+	    }
+	    break;
+	  case 'o':
+	    if (**(std::string **) value.data == "or")
+	      kind = PIPE;
+	    break;
+	  case 't':
+	    if (**(std::string **) value.data == "true") {
+	      kind = VALUE;
+	      value = true;
+	    }
+	    break;
+	  }
 	} else {
 	  throw err;
 	}

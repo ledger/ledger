@@ -326,31 +326,25 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
 	regexps[base] += *i;
       }
 
-    std::string xpaths[2];
+    if (! regexps[3].empty())
+      report->transforms.push_front
+	(new remove_transform
+	 (std::string("//entry[payee =~ /(") + regexps[3] + ")/]"));
 
-    if (! regexps[0].empty() && ! regexps[1].empty())
-      xpaths[0] = (std::string("//xact[account =~ /(") + regexps[0] +
-		   ") & account !~ /(" + regexps[1] + ")/]");
-    else if (! regexps[0].empty())
-      xpaths[0] = std::string("//xact[account =~ /(") + regexps[0] + ")/]";
-    else if (! regexps[1].empty())
-      xpaths[0] = std::string("//xact[account !~ /(") + regexps[1] + ")/]";
+    if (! regexps[2].empty())
+      report->transforms.push_front
+	(new select_transform
+	 (std::string("//entry[payee =~ /(") + regexps[2] + ")/]"));
 
-    if (! regexps[2].empty() && ! regexps[3].empty())
-      xpaths[1] = (std::string("//entry[payee =~ /(") + regexps[2] +
-		   ") & payee !~ /(" + regexps[3] + ")/]");
-    else if (! regexps[2].empty())
-      xpaths[1] = std::string("//entry[payee =~ /(") + regexps[2] + ")/]";
-    else if (! regexps[3].empty())
-      xpaths[1] = std::string("//entry[payee !~ /(") + regexps[3] + ")/]";
+    if (! regexps[1].empty())
+      report->transforms.push_front
+	(new remove_transform
+	 (std::string("//xact[account =~ /(") + regexps[1] + ")/]"));
 
-    if (! xpaths[0].empty() && ! xpaths[1].empty())
-      report->transforms.push_front(new select_transform(xpaths[0] + " | " +
-							 xpaths[1]));
-    else if (! xpaths[0].empty())
-      report->transforms.push_front(new select_transform(xpaths[0]));
-    else if (! xpaths[1].empty())
-      report->transforms.push_front(new select_transform(xpaths[1]));
+    if (! regexps[0].empty())
+      report->transforms.push_front
+	(new select_transform
+	 (std::string("//xact[account =~ /(") + regexps[0] + ")/]"));
   }
 
   report->apply_transforms(items.get());
