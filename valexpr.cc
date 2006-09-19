@@ -133,6 +133,14 @@ void valexpr_t::token_t::next(std::istream& in, unsigned short flags)
       length = 2;
       break;
     }
+    else if (c == '~') {
+      in.get(c);
+      symbol[1] = c;
+      symbol[2] = '\0';
+      kind = NMATCH;
+      length = 2;
+      break;
+    }
     kind = EXCLAM;
     break;
 
@@ -183,7 +191,8 @@ void valexpr_t::token_t::next(std::istream& in, unsigned short flags)
       kind = EQUAL;
       length = 2;
       break;
-    } else if (c == '~') {
+    }
+    else if (c == '~') {
       in.get(c);
       symbol[1] = c;
       symbol[2] = '\0';
@@ -674,6 +683,9 @@ valexpr_t::parse_logic_expr(std::istream& in, unsigned short flags) const
     case token_t::MATCH:
       kind = node_t::O_MATCH;
       break;
+    case token_t::NMATCH:
+      kind = node_t::O_NMATCH;
+      break;
     case token_t::LESS:
       kind = node_t::O_LT;
       break;
@@ -1112,7 +1124,8 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope,
     return right->compile(scope, make_calls);
   }
 
-  case O_MATCH: {
+  case O_MATCH:
+  case O_NMATCH: {
     assert(left);
     assert(right);
     valexpr_t rexpr(right->compile(scope, make_calls));
@@ -1129,11 +1142,14 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope,
 
     assert(rexpr->mask);
 
+    bool result = rexpr->mask->match(lexpr->valuep->to_string());
+    if (kind == O_NMATCH)
+      result = ! result;
+
     if (left == lexpr) {
-      return wrap_value(rexpr->mask->match
-			(lexpr->valuep->to_string()))->acquire();
+      return wrap_value(result)->acquire();
     } else {
-      *lexpr->valuep = rexpr->mask->match(lexpr->valuep->to_string());
+      *lexpr->valuep = result;
       return lexpr->acquire();
     }
   }
@@ -1552,6 +1568,13 @@ bool valexpr_t::node_t::write(std::ostream&   out,
     if (right && right->write(out, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     break;
+  case O_NMATCH:
+    if (left && left->write(out, relaxed, node_to_find, start_pos, end_pos))
+      found = true;
+    out << " !~ ";
+    if (right && right->write(out, relaxed, node_to_find, start_pos, end_pos))
+      found = true;
+    break;
 
   case O_DEFINE:
     if (left && left->write(out, relaxed, node_to_find, start_pos, end_pos))
@@ -1644,6 +1667,7 @@ void valexpr_t::node_t::dump(std::ostream& out, const int depth) const
   case O_COMMA: out << "O_COMMA"; break;
 
   case O_MATCH: out << "O_MATCH"; break;
+  case O_NMATCH: out << "O_NMATCH"; break;
 
   case O_DEFINE: out << "O_DEFINE"; break;
   case O_EVAL: out << "O_EVAL"; break;

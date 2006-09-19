@@ -107,6 +107,8 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
 
   valexpr_t::functor_t * command = NULL;
 
+  if (verb == "tree")
+    command = new dump_command;
   if (verb == "register" || verb == "reg" || verb == "r") {
     command = new format_command
       ("register", either_or(report->format_string,
@@ -293,16 +295,65 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
 
   std::auto_ptr<repitem_t> items(repitem_t::wrap(&session, report, true));
 
-  report->apply_transforms(items.get());
-
   locals->args.push_back(out);
   locals->args.push_back(items.get());
 
-  if (command->wants_args)
+  if (command->wants_args) {
     for (strings_list::iterator i = args.begin();
 	 i != args.end();
 	 i++)
       locals->args.push_back(*i);
+  } else {
+    std::string regexps[4];
+
+    // Treat the remaining command-line arguments as regular
+    // expressions, used for refining report results.
+
+    int base = 0;
+    for (strings_list::iterator i = arg; i != args.end(); i++)
+      if ((*i)[0] == '-') {
+	if ((*i)[1] == '-') {
+	  if (base == 0)
+	    base += 2;
+	  continue;
+	}
+	if (! regexps[base + 1].empty())
+	  regexps[base + 1] += "|";
+	regexps[base + 1] += (*i).substr(1);
+      } else {
+	if (! regexps[base].empty())
+	  regexps[base] += "|";
+	regexps[base] += *i;
+      }
+
+    std::string xpaths[2];
+
+    if (! regexps[0].empty() && ! regexps[1].empty())
+      xpaths[0] = (std::string("//xact[account =~ /(") + regexps[0] +
+		   ") & account !~ /(" + regexps[1] + ")/]");
+    else if (! regexps[0].empty())
+      xpaths[0] = std::string("//xact[account =~ /(") + regexps[0] + ")/]";
+    else if (! regexps[1].empty())
+      xpaths[0] = std::string("//xact[account !~ /(") + regexps[1] + ")/]";
+
+    if (! regexps[2].empty() && ! regexps[3].empty())
+      xpaths[1] = (std::string("//entry[payee =~ /(") + regexps[2] +
+		   ") & payee !~ /(" + regexps[3] + ")/]");
+    else if (! regexps[2].empty())
+      xpaths[1] = std::string("//entry[payee =~ /(") + regexps[2] + ")/]";
+    else if (! regexps[3].empty())
+      xpaths[1] = std::string("//entry[payee !~ /(") + regexps[3] + ")/]";
+
+    if (! xpaths[0].empty() && ! xpaths[1].empty())
+      report->transforms.push_front(new select_transform(xpaths[0] + " | " +
+							 xpaths[1]));
+    else if (! xpaths[0].empty())
+      report->transforms.push_front(new select_transform(xpaths[0]));
+    else if (! xpaths[1].empty())
+      report->transforms.push_front(new select_transform(xpaths[1]));
+  }
+
+  report->apply_transforms(items.get());
 
   value_t temp;
   (*command)(temp, locals);

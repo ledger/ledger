@@ -252,6 +252,7 @@ class valexpr_t
       COLON,			// :
       COMMA,			// ,
       MATCH,			// =~
+      NMATCH,			// !~
       PERCENT,			// %
       TOK_EOF,
       UNKNOWN
@@ -337,6 +338,7 @@ class valexpr_t
       O_COMMA,
 
       O_MATCH,
+      O_NMATCH,
 
       O_DEFINE,
       O_EVAL,

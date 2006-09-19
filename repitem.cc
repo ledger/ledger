@@ -84,19 +84,14 @@ void repitem_t::add_value(value_t& val)
     return;
   }
 
-  switch (kind) {
-  case TRANSACTION:
+  if (kind == TRANSACTION) {
     if (xact->cost || ! val.realzero())
       val.add(xact->amount, xact->cost);
     else
       val = xact->amount;
-    break;
-
-  case ENTRY:
-  case ACCOUNT:
+  } else {
     for (repitem_t * ptr = contents; ptr; ptr = ptr->next)
       ptr->add_total(val);
-    break;
   }
 }
 
@@ -669,18 +664,25 @@ void repitem_t::traverse_selection(const path_element_t * path,
   if (path->valexpr && ! path->valexpr.calc(this))
     return;
 
-  if (kind == TRANSACTION) {
+  if (! contents && ! children) {
     callback(this);
-    return;
-  }
+  } else {
+    for (repitem_t * ptr = contents; ptr; ptr = ptr->next)
+      if (path->recurse && (! path->next || path->next->kind != ptr->kind))
+	ptr->traverse_selection(path, callback);
+      else if (path->next)
+	ptr->traverse_selection(path->next, callback);
+      else
+	callback(ptr);
 
-  for (repitem_t * child =
-	 (! path->next || path->next->kind == TRANSACTION) ?
-	 contents : children; child; child = child->next)
-    if (path->recurse && path->next->kind != child->kind)
-      child->traverse_selection(path, callback);
-    else
-      child->traverse_selection(path->next, callback);
+    for (repitem_t * ptr = children; ptr; ptr = ptr->next)
+      if (path->recurse && (! path->next || path->next->kind != ptr->kind))
+	ptr->traverse_selection(path, callback);
+      else if (path->next)
+	ptr->traverse_selection(path->next, callback);
+      else
+	callback(ptr);
+  }
 }
 
 bool repitem_t::resolve(const std::string& name, value_t& result,
