@@ -137,7 +137,7 @@ bool session_t::resolve(const std::string& name, value_t& result,
   switch (*p) {
   case 'd':
     if (name == "date_format") {
-      result = datetime_t::output_format;
+      result.set_string(datetime_t::output_format);
       return true;
     }
     break;

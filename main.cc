@@ -42,9 +42,11 @@ const std::string& either_or(const std::string& first,
     return first;
 }
 
-void print_addr(repitem_t * item) {
-  std::cout << item << std::endl;
-}
+class print_addr : public repitem_t::select_callback_t {
+  virtual void operator()(repitem_t * item) {
+    std::cout << item << std::endl;
+  }
+};
 
 static int parse_and_report(report_t * report, int argc, char * argv[],
 			    char * envp[])
@@ -124,7 +126,6 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
       ("balance", either_or(report->format_string,
 			     report->session->balance_format));
   }
-#if 0
   else if (verb == "print" || verb == "p") {
     if (! report->raw_mode)
       report->transforms.push_back(new optimize_transform);
@@ -133,14 +134,13 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
 			  report->session->print_format));
   }
   else if (verb == "equity") {
-    if (! report->raw_mode) {
+    if (! report->raw_mode)
       report->transforms.push_back(new accounts_transform);
-      report->transforms.push_back(new clean_transform);
-    }
     command = new format_command
       ("equity", either_or(report->format_string,
 			   report->session->equity_format));
   }
+#if 0
   else if (verb == "entry")
     command = new entry_command;
   else if (verb == "dump")
@@ -277,7 +277,8 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
     repitem_t::dump_path(std::cout, path.get());
 
     std::auto_ptr<repitem_t> items(repitem_t::wrap(&session, report, true));
-    items->select(path.get(), print_addr);
+    print_addr cb;
+    items->select(path.get(), cb);
     return 0;
   }
 

@@ -163,15 +163,17 @@ class repitem_t : public valexpr_t::scope_t
     path_t& operator=(const path_t&);
   };
 
-  typedef void (*select_callback_t)(repitem_t * item);
+  struct select_callback_t {
+    virtual void operator()(repitem_t * item) = 0;
+  };
 
-  void select(const std::string& expr, select_callback_t callback) {
+  void select(const std::string& expr, select_callback_t& callback) {
     std::auto_ptr<const path_t> path(parse_selector(expr));
     if (path.get())
       select(path.get(), callback);
   }
-  void select(const path_t * path, select_callback_t callback);
-  void select_all(select_callback_t callback);
+  void select(const path_t * path, select_callback_t& callback);
+  void select_all(select_callback_t& callback);
 
   void last(value_t& result);
   void position(value_t& result);
@@ -180,7 +182,7 @@ class repitem_t : public valexpr_t::scope_t
 
  private:
   void traverse_selection(const path_element_t * path,
-			  select_callback_t callback);
+			  select_callback_t& callback);
 
   static const path_element_t * parse_subselector(const char *& p);
 

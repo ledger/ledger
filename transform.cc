@@ -33,23 +33,26 @@ void populate_account(account_t& acct, repitem_t * item)
     acct_item->add_content(item);
 }
 
-void populate_accounts(repitem_t * item)
-{
-  if (item->kind == repitem_t::TRANSACTION) {
-    item->extract();
-    populate_account(*static_cast<xact_repitem_t *>(item)->account(), item);
+class populate_accounts : public repitem_t::select_callback_t {
+  virtual void operator()(repitem_t * item) {
+    if (item->kind == repitem_t::TRANSACTION) {
+      item->extract();
+      populate_account(*static_cast<xact_repitem_t *>(item)->account(), item);
+    }
   }
-}
+};
 
-void clear_account_data(repitem_t * item)
-{
-  if (item->kind == repitem_t::ACCOUNT)
-    static_cast<account_repitem_t *>(item)->account->data = NULL;
-}
+class clear_account_data : public repitem_t::select_callback_t {
+  virtual void operator()(repitem_t * item) {
+    if (item->kind == repitem_t::ACCOUNT)
+      static_cast<account_repitem_t *>(item)->account->data = NULL;
+  }
+};
 
 void accounts_transform::execute(repitem_t * items)
 {
-  items->select_all(populate_accounts);
+  populate_accounts cb1;
+  items->select_all(cb1);
 
   for (repitem_t * j = items->children; j; j = j->next) {
     assert(j->kind == repitem_t::JOURNAL);
@@ -65,7 +68,8 @@ void accounts_transform::execute(repitem_t * items)
     }
   }
 
-  items->select_all(clear_account_data);
+  clear_account_data cb2;
+  items->select_all(cb2);
 }
 
 void compact_transform::execute(repitem_t * items)
@@ -258,30 +262,40 @@ void merge_transform::execute(repitem_t * items)
 namespace {
 #define REPITEM_FLAGGED 0x1
 
-  void mark_selected(repitem_t * item) {
-    item->flags |= REPITEM_FLAGGED;
-  }
-
-  void mark_selected_and_ancestors(repitem_t * item) {
-    while (item->parent) {
+  class mark_selected : public repitem_t::select_callback_t {
+    virtual void operator()(repitem_t * item) {
       item->flags |= REPITEM_FLAGGED;
-      item = item->parent;
     }
-  }
+  };
 
-  void delete_unmarked(repitem_t * item) {
-    if (item->parent && ! (item->flags & REPITEM_FLAGGED))
-      delete item;
-  }
+  class mark_selected_and_ancestors : public repitem_t::select_callback_t {
+    virtual void operator()(repitem_t * item) {
+      while (item->parent) {
+	item->flags |= REPITEM_FLAGGED;
+	item = item->parent;
+      }
+    }
+  };
 
-  void delete_marked(repitem_t * item) {
-    if (item->flags & REPITEM_FLAGGED)
-      delete item;
-  }
+  class delete_unmarked : public repitem_t::select_callback_t {
+    virtual void operator()(repitem_t * item) {
+      if (item->parent && ! (item->flags & REPITEM_FLAGGED))
+	delete item;
+    }
+  };
 
-  void clear_flags(repitem_t * item) {
-    item->flags = 0;
-  }
+  class delete_marked : public repitem_t::select_callback_t {
+    virtual void operator()(repitem_t * item) {
+      if (item->flags & REPITEM_FLAGGED)
+	delete item;
+    }
+  };
+
+  class clear_flags : public repitem_t::select_callback_t {
+    virtual void operator()(repitem_t * item) {
+      item->flags = 0;
+    }
+  };
 }
 
 void select_transform::execute(repitem_t * items)
@@ -290,20 +304,26 @@ void select_transform::execute(repitem_t * items)
     items->clear();
     return;
   }
-  items->select(path, mark_selected_and_ancestors);
+  mark_selected_and_ancestors cb1;
+  items->select(path, cb1);
 
-  items->select_all(delete_unmarked);
-  items->select_all(clear_flags);
+  delete_unmarked cb2;
+  items->select_all(cb2);
+  clear_flags cb3;
+  items->select_all(cb3);
 }
 
 void remove_transform::execute(repitem_t * items)
 {
   if (! path)
     return;
-  items->select(path, mark_selected);
+  mark_selected cb1;
+  items->select(path, cb1);
 
-  items->select_all(delete_marked);
-  items->select_all(clear_flags);
+  delete_marked cb2;
+  items->select_all(cb2);
+  clear_flags cb3;
+  items->select_all(cb3);
 }
 
 } // namespace ledger

@@ -53,8 +53,8 @@ class session_t : public valexpr_t::scope_t
     valexpr_t::scope_t(parent),
 
     register_format
-    ("%(/%(/%{date} %-.20{payee}"
-     "%(:%32|%-22{abbrev(account, 22)} %12.67t %12.80T\n)))"),
+    ("%((//entry)%{date} %-.20{payee}"
+     "%((./xact)%32|%-22{abbrev(account, 22)} %12.67t %12.80T\n))"),
     wide_register_format
     ("%D  %-.35P %-.38A %22.108t %!22.132T\n%/"
      "%48|%-.38A %22.108t %!22.132T\n"),
@@ -67,7 +67,7 @@ class session_t : public valexpr_t::scope_t
     balance_format
     ("%(/%(//%20t  %{\"  \" * rdepth}%{rname}\n))--------------------\n%20t\n"),
     equity_format
-    ("\n%D %Y%C%P\n%/    %-34W  %12t\n"),
+    ("%((/)%{ftime(now, date_format)} %-.20{\"Opening Balance\"}\n%((.//account[value != 0])    %-34{fullname}  %12{value}\n)\n)"),
     plot_amount_format
     ("%D %(@S(@t))\n"),
     plot_total_format

@@ -17,26 +17,28 @@ void repitem_t::extract()
 {
   if (prev) {
     prev->next = next;
-    prev = NULL;
   }
   else if (parent) {
-    if (parent->contents == this) {
+    if (parent->contents == this)
       parent->contents = next;
-      if (parent->last_content == this)
-	parent->last_content = parent->contents;
-    }
-    else if (parent->children == this) {
+    if (parent->children == this)
       parent->children = next;
-      if (parent->last_child == this)
-	parent->last_child = parent->children;
-    }
+  }
+
+  if (parent) {
+    if (parent->last_content == this)
+      parent->last_content = prev;
+    if (parent->last_child == this)
+      parent->last_child = prev;
+
     set_parent(NULL);
   }
 
-  if (next) {
+  if (next)
     next->prev = prev;
-    next = NULL;
-  }
+
+  next = NULL;
+  prev = NULL;
 }
 
 void repitem_t::clear()
@@ -355,7 +357,10 @@ repitem_t::parse_subselector(const char *& b)
       const char * q = p;
       int depth = 1;
       while (*p) {
-	if (*p == ']' && --depth == 0)
+	if (*p == '\\') {
+	  p++; if (! *p) break;
+	}
+	else if (*p == ']' && --depth == 0)
 	  break;
 	else if (*p == '[')
 	  ++depth;
@@ -506,7 +511,7 @@ void repitem_t::dump_path(std::ostream& out, const path_t * path)
 }
 #endif
 
-void repitem_t::select(const path_t * path, select_callback_t callback)
+void repitem_t::select(const path_t * path, select_callback_t& callback)
 {
   for (std::list<const path_element_t *>::const_iterator
 	 i = path->paths.begin();
@@ -523,7 +528,7 @@ void repitem_t::select(const path_t * path, select_callback_t callback)
   }
 }
 
-void repitem_t::select_all(select_callback_t callback)
+void repitem_t::select_all(select_callback_t& callback)
 {
   repitem_t * content = contents;
   while (content) {
@@ -543,7 +548,7 @@ void repitem_t::select_all(select_callback_t callback)
 }
 
 void repitem_t::traverse_selection(const path_element_t * path,
-				   select_callback_t callback)
+				   select_callback_t& callback)
 {
   if (! path)
     return;
@@ -580,8 +585,10 @@ void repitem_t::traverse_selection(const path_element_t * path,
       content->traverse_selection(path, callback);
     else if (path->next)
       content->traverse_selection(path->next, callback);
+#if 0
     else
       callback(content);
+#endif
 
     content = next;
   }
@@ -812,19 +819,22 @@ bool account_repitem_t::resolve(const std::string& name, value_t& result,
   return repitem_t::resolve(name, result, locals);
 }
 
-int repitem_t::formatter_t::write_elements(std::ostream& out, format_t& format,
-					   repitem_t * item, bool recursive,
-					   bool children, int column) const
+struct formatter_callback_t : public repitem_t::select_callback_t
 {
-  for (repitem_t * ptr = children ? item->children : item->contents;
-       ptr;
-       ptr = ptr->next) {
-    column = format.format(out, ptr, column, *this);
-    if (recursive)
-      column = write_elements(out, format, ptr, recursive, children, column);
+  std::ostream&	  out;
+  const format_t& format;
+  int		  column;
+
+  const format_t::element_formatter_t& formatter;
+
+  formatter_callback_t(std::ostream& _out, const format_t& _format, int _column,
+		       const format_t::element_formatter_t& _formatter)
+    : out(_out), format(_format), column(_column), formatter(_formatter) {}
+
+  virtual void operator()(repitem_t * item) {
+    column = format.format(out, item, column, formatter);
   }
-  return column;
-}
+};
 
 int repitem_t::formatter_t::operator()(std::ostream& out, element_t * element,
 				       valexpr_t::scope_t * scope,
@@ -839,39 +849,38 @@ int repitem_t::formatter_t::operator()(std::ostream& out, element_t * element,
     repitem_t * item = static_cast<repitem_t *>(scope);
 
     if (prefix && prefix->kind == element_t::TEXT) {
-      bool children  = false;
-      bool recursive = false;
-      int  length = prefix->chars->length();
-      char initial;
-
-      if (length > 0) {
-	initial = (*prefix->chars)[0];
-	switch (initial) {
-	case '/':
-	  children = true;
-	  break;
-	case ':':
-	  break;
-	default:
-	  goto base_handler;
+      const char * p = prefix->chars->c_str();
+      int xpath_len = 0;
+      std::string xpath;
+      if (*p == '(') {
+	++p;
+	const char * q = p;
+	int depth = 1;
+	while (*p) {
+	  if (*p == '\\') {
+	    p++; if (! *p) break;
+	  }
+	  if (*p == ')' && --depth == 0)
+	    break;
+	  else if (*p == '(')
+	    ++depth;
+	  p++;
 	}
+	if (*p != ')')
+	  throw new error("Missing ')'");
+
+	xpath_len = (p - q) + 2;
+	xpath = std::string(q, p - q);
       }
 
-      if (length > 1 && initial == (*prefix->chars)[1])
-	recursive = true;
-
       std::string * prev_str = prefix->chars;
-      std::string   copy_str;
-
-      if (! recursive)
-	copy_str = std::string(*prev_str, 1);
-      else
-	copy_str = std::string(*prev_str, 2);
+      std::string   copy_str(*prev_str, xpath_len);
 
       try {
 	prefix->chars = &copy_str;
-	column = write_elements(out, *element->format, item, recursive,
-				children, column);
+	formatter_callback_t callback(out, *element->format, column, *this);
+	item->select(xpath, callback);
+	column = callback.column;
       }
       catch (...) {
 	prefix->chars = prev_str;
