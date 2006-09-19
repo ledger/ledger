@@ -109,26 +109,34 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
 
   if (verb == "tree")
     command = new dump_command;
-  if (verb == "register" || verb == "reg" || verb == "r") {
+  else if (verb == "register" || verb == "reg" || verb == "r") {
     command = new format_command
       ("register", either_or(report->format_string,
 			     report->session->register_format));
   }
-#if 0
-  else if (verb == "print" || verb == "p") {
-    report->transforms.push_back(new optimize_transform);
-    command = new format_command
-      ("print", either_or(report->format_string,
-			  report->session->print_format));
-  }
   else if (verb == "balance" || verb == "bal" || verb == "b") {
-    report->transforms.push_back(new accounts_transform);
+    if (! report->raw_mode) {
+      report->transforms.push_back(new accounts_transform);
+      report->transforms.push_back(new clean_transform);
+      report->transforms.push_back(new compact_transform);
+    }
     command = new format_command
       ("balance", either_or(report->format_string,
 			     report->session->balance_format));
   }
+#if 0
+  else if (verb == "print" || verb == "p") {
+    if (! report->raw_mode)
+      report->transforms.push_back(new optimize_transform);
+    command = new format_command
+      ("print", either_or(report->format_string,
+			  report->session->print_format));
+  }
   else if (verb == "equity") {
-    report->transforms.push_back(new accounts_transform);
+    if (! report->raw_mode) {
+      report->transforms.push_back(new accounts_transform);
+      report->transforms.push_back(new clean_transform);
+    }
     command = new format_command
       ("equity", either_or(report->format_string,
 			   report->session->equity_format));

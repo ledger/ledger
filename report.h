@@ -28,6 +28,7 @@ class report_t : public valexpr_t::scope_t
   std::string pager;
 
   bool show_totals;
+  bool raw_mode;
 
   session_t *   session;
   transform_t * last_transform;
@@ -37,6 +38,7 @@ class report_t : public valexpr_t::scope_t
   report_t(session_t * _session)
     : valexpr_t::scope_t(_session),
       show_totals(false),
+      raw_mode(false),
       session(_session),
       last_transform(NULL)
   {
@@ -76,6 +78,10 @@ class report_t : public valexpr_t::scope_t
     format_string = locals->args[0].to_string();
   }
 
+  void option_raw(value_t&) {
+    raw_mode = true;
+  }
+
   void option_foo(value_t&) {
     std::cout << "This is foo" << std::endl;
   }
@@ -98,6 +104,19 @@ class report_t : public valexpr_t::scope_t
 
   void option_remove(value_t&, valexpr_t::scope_t * locals) {
     transforms.push_back(new remove_transform(locals->args[0].to_string()));
+  }
+
+  void option_accounts(value_t&) {
+    transforms.push_back(new accounts_transform);
+  }
+  void option_compact(value_t&) {
+    transforms.push_back(new compact_transform);
+  }
+  void option_clean(value_t&) {
+    transforms.push_back(new clean_transform);
+  }
+  void option_entries(value_t&) {
+    transforms.push_back(new entries_transform);
   }
 
   void option_split(value_t&) {

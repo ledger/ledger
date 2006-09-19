@@ -24,7 +24,6 @@ class repitem_t : public valexpr_t::scope_t
   repitem_t * prev;
 
   union {
-    account_t *	account_ptr;
     journal_t *	journal;
     session_t *	session;
   };
@@ -43,7 +42,6 @@ class repitem_t : public valexpr_t::scope_t
   value_t * c_sort_value;	// and sort value
 
   unsigned short flags;
-  unsigned int   parents_elided;
   datetime_t	 reported_date;
 
   repitem_t(kind_t _kind, repitem_t * owner = NULL)
@@ -51,8 +49,7 @@ class repitem_t : public valexpr_t::scope_t
       parent(NULL), next(NULL), prev(NULL), istemp(false),
       contents(NULL), last_content(NULL),
       children(NULL), last_child(NULL),
-      c_value(NULL), c_sort_value(NULL), flags(0),
-      parents_elided(0) {
+      c_value(NULL), c_sort_value(NULL), flags(0) {
     TRACE_CTOR("repitem_t(kind_t, repitem_t *)");
     if (owner) {
       if (kind == TRANSACTION)
@@ -63,45 +60,37 @@ class repitem_t : public valexpr_t::scope_t
   }
   virtual ~repitem_t();
 
+  virtual void extract();
   virtual void clear();
 
   virtual void add_value(value_t& val);
   virtual void add_sort_value(value_t& val);
   virtual void add_total(value_t& val);
 
-  virtual datetime_t date() const;
-  virtual datetime_t effective_date() const;
-  virtual datetime_t actual_date() const;
-
-  void date(value_t& result) { result = date(); }
-  void edate(value_t& result) { result = effective_date(); }
-  void rdate(value_t& result) { result = actual_date(); }
-
   bool valid() const;
 
   static repitem_t * wrap(transaction_t * txact, repitem_t * owner = NULL);
   static repitem_t * wrap(entry_t * tentry, repitem_t * owner = NULL,
-			  bool deep = true);
+			  bool deep = false);
   static repitem_t * wrap(account_t * taccount, repitem_t * owner = NULL,
-			  bool deep = true);
+			  bool deep = false);
   static repitem_t * wrap(journal_t * tjournal, repitem_t * owner = NULL,
-			  bool deep = true);
+			  bool deep = false);
   static repitem_t * wrap(session_t * tsession,
 			  valexpr_t::scope_t * parent = NULL,
-			  bool deep = true);
+			  bool deep = false);
 
   repitem_t * add_content(repitem_t * item);
   repitem_t * add_child(repitem_t * item);
+
+  void set_parent(repitem_t * item) {
+    valexpr_t::scope_t::parent = parent = item;
+  }
 
   static repitem_t * fake_transaction(account_t * taccount);
   static repitem_t * fake_entry(const datetime_t& edate,
 				const datetime_t& rdate,
 				const std::string& payee);
-
-  void populate_account(account_t& acct, repitem_t * item);
-  void populate_accounts(entries_list& entries);
-  void populate_accounts(entries_list& entries,
-			 const valexpr_t& filter);
 
   void print_tree(std::ostream& out, int depth = 0);
 
@@ -262,16 +251,6 @@ class xact_repitem_t : public repitem_t
     }
   }
 
-  virtual datetime_t date() const {
-    return xact->date();
-  }
-  virtual datetime_t effective_date() const {
-    return xact->effective_date();
-  }
-  virtual datetime_t actual_date() const {
-    return xact->actual_date();
-  }
-
   virtual account_t * account() const {
     if (reported_account != NULL)
       return reported_account;
@@ -317,19 +296,42 @@ class entry_repitem_t : public repitem_t
     repitem_t::clear();
   }
 
-  virtual datetime_t date() const {
-    return entry->date();
+  virtual bool resolve(const std::string& name, value_t& result,
+		       scope_t * locals = NULL);
+};
+
+class account_repitem_t : public repitem_t
+{
+  account_repitem_t(const account_repitem_t&);
+  account_repitem_t& operator=(const account_repitem_t&);
+
+ public:
+  account_t * account;
+
+  unsigned int parents_elided;
+
+  account_repitem_t(account_t * _account, repitem_t * owner = NULL)
+    : repitem_t(ACCOUNT, owner), account(_account), parents_elided(0) {
+    TRACE_CTOR("account_repitem_t(account_t *, repitem_t *)");
+    assert(account);
   }
-  virtual datetime_t effective_date() const {
-    return entry->effective_date();
-  }
-  virtual datetime_t actual_date() const {
-    return entry->actual_date();
+  virtual ~account_repitem_t() {
+    TRACE_DTOR("account_repitem_t");
+    if (istemp)
+      delete account;
   }
 
-  void payee(value_t& result) {
-    result.set_string(entry->payee);
+#if 0
+  datetime_t date() const {
+    return entry->date();
   }
+  datetime_t effective_date() const {
+    return entry->effective_date();
+  }
+  datetime_t actual_date() const {
+    return entry->actual_date();
+  }
+#endif
 
   virtual bool resolve(const std::string& name, value_t& result,
 		       scope_t * locals = NULL);
@@ -342,6 +344,14 @@ inline T * get_ptr(valexpr_t::scope_t * locals, int idx) {
   assert(ptr);
   return ptr;
 }
+
+class dump_command : public valexpr_t::functor_t
+{
+ public:
+  dump_command() : valexpr_t::functor_t("dump") {}
+
+  virtual void operator()(value_t& result, valexpr_t::scope_t * locals);
+};
 
 class format_command : public valexpr_t::functor_t
 {

@@ -560,7 +560,7 @@ value_t& value_t::operator*=(const value_t& value)
   else if (value.type == POINTER)
     throw new value_error("Cannot multiply a value by a pointer");
 
-  if (value.realzero()) {
+  if (value.realzero() && type != STRING) {
     *this = 0L;
     return *this;
   }
@@ -664,8 +664,15 @@ value_t& value_t::operator*=(const value_t& value)
       **(std::string **) data = temp;
       break;
     }
-    case AMOUNT:
-      throw new value_error("Cannot multiply a string by an amount");
+    case AMOUNT: {
+      std::string temp;
+      value_t num(value);
+      num.cast(INTEGER);
+      for (long i = 0; i < *(long *) num.data; i++)
+	temp += **(std::string **) data;
+      **(std::string **) data = temp;
+      break;
+    }
     case BALANCE:
       throw new value_error("Cannot multiply a string by a balance");
     case BALANCE_PAIR:
@@ -813,6 +820,8 @@ value_t::operator bool() const
     return *(amount_t *) data;
   case BALANCE:
     return *(balance_t *) data;
+  case BALANCE_PAIR:
+    return *(balance_pair_t *) data;
   case STRING:
     return ! (**((std::string **) data)).empty();
   case POINTER:

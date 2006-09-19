@@ -65,7 +65,7 @@ class session_t : public valexpr_t::scope_t
     ("\n%d %Y%C%P\n    %-34W  %12o%n\n%/    %-34W  %12o%n\n"),
 #endif
     balance_format
-    ("%(/%(//%20T  %2_%-a\n))"),
+    ("%(/%(//%20t  %{\"  \" * rdepth}%{rname}\n))--------------------\n%20t\n"),
     equity_format
     ("\n%D %Y%C%P\n%/    %-34W  %12t\n"),
     plot_amount_format

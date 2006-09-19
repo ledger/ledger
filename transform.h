@@ -20,6 +20,31 @@ class check_transform : public transform_t {
   virtual void execute(repitem_t * items);
 };
 
+class accounts_transform : public transform_t {
+  // --accounts transforms the report tree into an account-wise view.
+ public:
+  virtual void execute(repitem_t * items);
+};
+
+class compact_transform : public transform_t {
+  // --compact compacts an account tree to remove accounts with only
+  // one child account.
+ public:
+  virtual void execute(repitem_t * items);
+};
+
+class clean_transform : public transform_t {
+  // --clean clears out entries and accounts that have no contents.
+ public:
+  virtual void execute(repitem_t * items);
+};
+
+class entries_transform : public transform_t {
+  // --entries transforms the report tree into an entries-wise view.
+ public:
+  virtual void execute(repitem_t * items);
+};
+
 class split_transform : public transform_t {
   // --split breaks entry with two or more transactions into what
   // seems like two entries each with one transaction -- even though

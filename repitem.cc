@@ -9,38 +9,34 @@ namespace ledger {
 repitem_t::~repitem_t()
 {
   TRACE_DTOR("repitem_t");
+  extract();
+  clear();
+}
 
+void repitem_t::extract()
+{
   if (prev) {
     prev->next = next;
+    prev = NULL;
   }
   else if (parent) {
     if (parent->contents == this) {
       parent->contents = next;
       if (parent->last_content == this)
-	parent->last_content = NULL;
+	parent->last_content = parent->contents;
     }
     else if (parent->children == this) {
       parent->children = next;
       if (parent->last_child == this)
-	parent->last_child = NULL;
+	parent->last_child = parent->children;
     }
+    set_parent(NULL);
   }
 
-  if (next)
+  if (next) {
     next->prev = prev;
-
-  if (istemp) {
-    switch (kind) {
-    case ACCOUNT:
-      delete account_ptr;
-      break;
-    default:
-      assert(0);
-      break;
-    }
+    next = NULL;
   }
-
-  clear();
 }
 
 void repitem_t::clear()
@@ -82,42 +78,6 @@ void repitem_t::add_sort_value(value_t& val)
   assert(0);
 }
 
-datetime_t repitem_t::date() const
-{
-  if (reported_date)
-    return reported_date;
-
-  switch (kind) {
-  case ACCOUNT:
-    assert(0);
-    return datetime_t();
-  }
-}
-
-datetime_t repitem_t::effective_date() const
-{
-  if (reported_date)
-    return reported_date;
-
-  switch (kind) {
-  case ACCOUNT:
-    assert(0);
-    return datetime_t();
-  }
-}
-
-datetime_t repitem_t::actual_date() const
-{
-  if (reported_date)
-    return reported_date;
-
-  switch (kind) {
-  case ACCOUNT:
-    assert(0);
-    return datetime_t();
-  }
-}
-
 bool repitem_t::valid() const
 {
   assert(0);
@@ -156,10 +116,14 @@ repitem_t * repitem_t::wrap(entry_t * tentry, repitem_t * owner, bool deep)
 
 repitem_t * repitem_t::wrap(account_t * taccount, repitem_t * owner, bool deep)
 {
-  repitem_t * temp = new repitem_t(ACCOUNT, owner);
-  temp->account_ptr = taccount;
+  if (taccount->data != NULL) {
+    account_repitem_t * temp = static_cast<account_repitem_t *>(taccount->data);
+    taccount->data = NULL;
+    return temp;
+  }
+
   assert(! deep);
-  return temp;
+  return new account_repitem_t(taccount, owner);
 }
 
 repitem_t * repitem_t::wrap(journal_t * tjournal, repitem_t * owner, bool deep)
@@ -215,14 +179,12 @@ repitem_t * repitem_t::add_content(repitem_t * item)
     item->prev = last_content;
   }
 
-  item->parent = this;
-  item->valexpr_t::scope_t::parent = this;
+  item->set_parent(this);
 
   while (item->next) {
     repitem_t * next_item = item->next;
     next_item->prev   = item;
-    next_item->parent = this;
-    next_item->valexpr_t::scope_t::parent = this;
+    next_item->set_parent(this);
     item = next_item;
   }
 
@@ -245,13 +207,11 @@ repitem_t * repitem_t::add_child(repitem_t * item)
     item->prev = last_child;
   }
 
-  item->parent = this;
-  item->valexpr_t::scope_t::parent = this;
+  item->set_parent(this);
   while (item->next) {
     repitem_t * next_item = item->next;
     next_item->prev   = item;
-    next_item->parent = this;
-    next_item->valexpr_t::scope_t::parent = this;
+    next_item->set_parent(this);
     item = next_item;
   }
 
@@ -279,64 +239,31 @@ repitem_t * repitem_t::fake_entry(const datetime_t& edate,
   return temp;
 }
 
-void repitem_t::populate_account(account_t& acct, repitem_t * item)
-{
-  repitem_t * acct_item;
-  if (acct.parent == NULL)
-    acct_item = this;
-  else if (acct.data == NULL)
-    acct.data = acct_item = repitem_t::wrap(&acct);
-  else
-    acct_item = (repitem_t *) acct.data;
-
-  if (item->kind == ACCOUNT)
-    acct_item->add_child(item);
-  else
-    acct_item->add_content(item);
-
-  if (acct.parent && acct.parent->data == NULL)
-    populate_account(*acct.parent, acct_item);
-}
-
-void repitem_t::populate_accounts(entries_list& entries,
-				  const valexpr_t& filter)
-{
-  for (entries_list::iterator i = entries.begin();
-       i != entries.end();
-       i++)
-    for (transactions_list::iterator j = (*i)->transactions.begin();
-	 j != (*i)->transactions.end();
-	 j++)
-      // jww (2006-09-10): Make a scope based on **j
-      if (filter.calc().to_boolean())
-	populate_account(*(*j)->account, repitem_t::wrap(*j));
-}
-
-void repitem_t::populate_accounts(entries_list& entries)
-{
-  for (entries_list::iterator i = entries.begin();
-       i != entries.end();
-       i++)
-    for (transactions_list::iterator j = (*i)->transactions.begin();
-	 j != (*i)->transactions.end();
-	 j++)
-      populate_account(*(*j)->account, repitem_t::wrap(*j));
-}
-
 void repitem_t::print_tree(std::ostream& out, int depth)
 {
   for (int i = 0; i < depth; i++)
     out << "  ";
 
   switch (kind) {
-  case TRANSACTION:
-    out << "TRANSACTION"; break;
-  case ENTRY:
-    out << "ENTRY"; break;
-  case ACCOUNT:
-    out << "ACCOUNT"; break;
+  case TRANSACTION: {
+    out << "XACT: "
+	<< static_cast<xact_repitem_t *>(this)->account()->fullname()
+	<< " " << static_cast<xact_repitem_t *>(this)->xact->amount;
+    break;
+  }
+  case ENTRY: {
+    out << "ENTRY: "
+	<< static_cast<entry_repitem_t *>(this)->entry->payee;
+    break;
+  }
+  case ACCOUNT: {
+    out << "ACCOUNT: "
+	<< static_cast<account_repitem_t *>(this)->account->fullname();
+    break;
+  }
   case JOURNAL:
-    out << "JOURNAL"; break;
+    out << "JOURNAL: " << journal->sources.front();
+    break;
   case SESSION:
     out << "SESSION"; break;
   }
@@ -735,13 +662,6 @@ bool repitem_t::resolve(const std::string& name, value_t& result,
 {
   const char * p = name.c_str();
   switch (*p) {
-  case 'd':
-    if (name == "date") {
-      date(result);
-      return true;
-    }
-    break;
-
   case 'l':
     if (name == "last") {
       last(result);
@@ -795,6 +715,13 @@ bool xact_repitem_t::resolve(const std::string& name, value_t& result,
       break;
     }
     break;
+
+  case 'd':
+    if (name == "date") {
+      result = xact->date();
+      return true;
+    }
+    break;
   }
 
   return repitem_t::resolve(name, result, locals);
@@ -805,9 +732,78 @@ bool entry_repitem_t::resolve(const std::string& name, value_t& result,
 {
   const char * p = name.c_str();
   switch (*p) {
+  case 'd':
+    if (name == "date") {
+      result = entry->date();
+      return true;
+    }
+    break;
+
   case 'p':
     if (name == "payee") {
-      payee(result);
+      result.set_string(entry->payee);
+      return true;
+    }
+    break;
+  }
+
+  return repitem_t::resolve(name, result, locals);
+}
+
+bool account_repitem_t::resolve(const std::string& name, value_t& result,
+				scope_t * locals)
+{
+  const char * p = name.c_str();
+  switch (*p) {
+  case 'd':
+    if (name == "depth") {
+      long count = 0;
+      for (account_t * acct = account->parent; acct; acct = acct->parent)
+	count++;
+      result = count;
+      return true;
+    }
+    break;
+
+  case 'f':
+    if (name == "fullname") {
+      result.set_string(account->fullname());
+      return true;
+    }
+    break;
+
+  case 'n':
+    if (name == "name") {
+      result.set_string(account->name);
+      return true;
+    }
+    else if (name == "note") {
+      result.set_string(account->note);
+      return true;
+    }
+    break;
+
+  case 'r':
+    if (name == "rdepth") {
+      long count = 0;
+      for (repitem_t * acct = parent; acct; acct = acct->parent) {
+	if (acct->kind != ACCOUNT)
+	  break;
+	count++;
+      }
+      result = count;
+      return true;
+    }
+    else if (name == "rname") {
+      if (parents_elided == 0) {
+	result.set_string(account->name);
+      } else {
+	std::string name = account->name;
+	account_t * parent = account->parent;
+	for (int i = 0; i < parents_elided; i++)
+	  name = parent->name + ":" + name;
+	result.set_string(name);
+      }
       return true;
     }
     break;
@@ -825,7 +821,7 @@ int repitem_t::formatter_t::write_elements(std::ostream& out, format_t& format,
        ptr = ptr->next) {
     column = format.format(out, ptr, column, *this);
     if (recursive)
-      column = write_elements(out, format, item, recursive, children, column);
+      column = write_elements(out, format, ptr, recursive, children, column);
   }
   return column;
 }
@@ -889,6 +885,13 @@ int repitem_t::formatter_t::operator()(std::ostream& out, element_t * element,
 
  base_handler:
   return element_formatter_t::operator()(out, element, scope, column);
+}
+
+void dump_command::operator()(value_t& result, valexpr_t::scope_t * locals)
+{
+  std::ostream * out   = get_ptr<std::ostream>(locals, 0);
+  repitem_t *	 items = get_ptr<repitem_t>(locals, 1);
+  items->print_tree(*out);
 }
 
 void format_command::operator()(value_t& result, valexpr_t::scope_t * locals)
