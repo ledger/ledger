@@ -645,25 +645,34 @@ void repitem_t::traverse_selection(const path_element_t * path,
     }
   }
 
-  if (! contents && ! children) {
-    callback(this);
-  } else {
-    for (repitem_t * ptr = contents; ptr; ptr = ptr->next)
-      if (path->recurse && (! path->next || path->next->kind != ptr->kind))
-	ptr->traverse_selection(path, callback);
-      else if (path->next)
-	ptr->traverse_selection(path->next, callback);
-      else
-	callback(ptr);
+  repitem_t * content = contents;
+  while (content) {
+    repitem_t * next = content->next;
 
-    for (repitem_t * ptr = children; ptr; ptr = ptr->next)
-      if (path->recurse && (! path->next || path->next->kind != ptr->kind))
-	ptr->traverse_selection(path, callback);
-      else if (path->next)
-	ptr->traverse_selection(path->next, callback);
-      else
-	callback(ptr);
+    if (path->recurse && (! path->next || path->next->kind != content->kind))
+      content->traverse_selection(path, callback);
+    else if (path->next)
+      content->traverse_selection(path->next, callback);
+    else
+      callback(content);
+
+    content = next;
   }
+
+  repitem_t * child = children;
+  while (child) {
+    repitem_t * next = child->next;
+
+    if (path->recurse && (! path->next || path->next->kind != child->kind))
+      child->traverse_selection(path, callback);
+    else if (path->next)
+      child->traverse_selection(path->next, callback);
+
+    child = next;
+  }
+
+  if (! path->next)
+    callback(this);
 }
 
 void repitem_t::last(value_t& result)
