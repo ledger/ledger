@@ -54,11 +54,19 @@ repitem_t::~repitem_t()
 
 void repitem_t::clear()
 {
-  for (repitem_t * content = contents; content; content = content->next)
+  repitem_t * temp = contents;
+  contents = NULL;
+  for (repitem_t * content = temp; content; content = content->next) {
+    content->parent = NULL;
     delete content;
+  }
 
-  for (repitem_t * child = children; child; child = child->next)
+  temp = children;
+  children = NULL;
+  for (repitem_t * child = temp; child; child = child->next) {
+    child->parent = NULL;
     delete child;
+  }
 }
 
 void repitem_t::add_total(value_t& val)
@@ -407,17 +415,39 @@ void repitem_t::print_tree(std::ostream& out, int depth)
   }
 }
 
-repitem_t::path_element_t *
+const repitem_t::path_t *
 repitem_t::parse_selector(const std::string& expr)
+{
+  path_t * path = new path_t;
+
+  const char * p = expr.c_str();
+  do {
+    const path_element_t * subpath = parse_subselector(p);
+    if (subpath)
+      path->paths.push_back(subpath);
+    if (*p == '|')
+      p++;
+    else if (*p)
+      throw error("Error in report item path selector");
+  } while (*p);
+
+  return path;
+}
+
+const repitem_t::path_element_t *
+repitem_t::parse_subselector(const char *& b)
 {
   path_element_t * first   = NULL;
   path_element_t * current = first;
 
   bool have_nodename = false;
 
-  const char * b = expr.c_str();
-  for (const char * p = b; *p; p++) {
+  const char * p;
+  for (p = b; *p; p++) {
     switch (*p) {
+    case ' ':
+      break;
+
     case '/':
       if (first && ! have_nodename)
 	throw error("Error in report item path selector");
@@ -481,6 +511,10 @@ repitem_t::parse_selector(const std::string& expr)
       have_nodename = true;
       break;
 
+    case '|':
+      b = p;
+      return first;
+
     default: {			// should be a node name here
       if (have_nodename || ! std::isalpha(*p))
 	throw error("Error in report item path selector");
@@ -535,62 +569,75 @@ repitem_t::parse_selector(const std::string& expr)
     }
   }
 
+  b = p;
   return first;
 }
 
 #ifdef DEBUG_ENABLED
-void repitem_t::dump_path(std::ostream& out, path_element_t * path)
+void repitem_t::dump_path(std::ostream& out, const path_t * path)
 {
-  for (path_element_t * p = path; p; p = p->next) {
-    switch (p->kind) {
-    case UNKNOWN:
-      out << "UNKNOWN ";
-      break;
-    case SESSION:
-      out << "SESSION ";
-      break;
-    case JOURNAL:
-      out << "JOURNAL ";
-      break;
-    case ACCOUNT:
-      out << "ACCOUNT ";
-      break;
-    case ENTRY:
-      out << "ENTRY ";
-      break;
-    case TRANSACTION:
-      out << "TRANSACTION ";
-      break;
-    }
+  for (std::list<const path_element_t *>::const_iterator
+	 i = path->paths.begin();
+       i != path->paths.end();
+       i++) {
+    for (const path_element_t * p = *i; p; p = p->next) {
+      switch (p->kind) {
+      case UNKNOWN:
+	out << "UNKNOWN ";
+	break;
+      case SESSION:
+	out << "SESSION ";
+	break;
+      case JOURNAL:
+	out << "JOURNAL ";
+	break;
+      case ACCOUNT:
+	out << "ACCOUNT ";
+	break;
+      case ENTRY:
+	out << "ENTRY ";
+	break;
+      case TRANSACTION:
+	out << "TRANSACTION ";
+	break;
+      }
 
-    if (p->valexpr) {
-      out << '[';
-      p->valexpr.write(out);
-      out << "] ";
-    }
+      if (p->valexpr) {
+	out << '[';
+	p->valexpr.write(out);
+	out << "] ";
+      }
 
-    if (p->root)
-      out << "/ ";
-    if (p->parent)
-      out << ".. ";
-    if (p->recurse)
-      out << "// ";
+      if (p->root)
+	out << "/ ";
+      if (p->parent)
+	out << ".. ";
+      if (p->recurse)
+	out << "// ";
+
+      out << std::endl;
+    }
 
     out << std::endl;
   }
 }
 #endif
 
-void repitem_t::select(path_element_t * path, select_callback_t callback)
+void repitem_t::select(const path_t * path, select_callback_t callback)
 {
-  if (path->root && parent) {
-    repitem_t * top = this;
-    while (top->parent)
-      top = top->parent;
-    top->traverse_selection(path, callback);
-    return;
+  for (std::list<const path_element_t *>::const_iterator
+	 i = path->paths.begin();
+       i != path->paths.end();
+       i++) {
+    if ((*i)->root && parent) {
+      repitem_t * top = this;
+      while (top->parent)
+	top = top->parent;
+      top->traverse_selection(*i, callback);
+    } else {
+      traverse_selection(*i, callback);
+    }
   }
-  traverse_selection(path, callback);
 }
 
 void repitem_t::select_all(select_callback_t callback)
@@ -604,14 +651,15 @@ void repitem_t::select_all(select_callback_t callback)
     child->select_all(callback);
 }
 
-void repitem_t::traverse_selection(path_element_t * path,
+void repitem_t::traverse_selection(const path_element_t * path,
 				   select_callback_t callback)
 {
   if (! path)
     return;
 
   if (path->parent) {
-    parent->traverse_selection(path->next, callback);
+    if (parent)
+      parent->traverse_selection(path->next, callback);
     return;
   }
 

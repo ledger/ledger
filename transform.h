@@ -82,7 +82,7 @@ class subtotal_transform : public transform_t {
 
 class select_transform : public transform_t
 {
-  repitem_t::path_element_t * path;
+  const repitem_t::path_t * path;
 
  public:
   select_transform(const std::string& selection_path) {

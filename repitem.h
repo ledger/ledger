@@ -164,29 +164,60 @@ class repitem_t : public valexpr_t::scope_t
 
     path_element_t()
       : next(NULL), kind(repitem_t::UNKNOWN),
-	root(false), parent(false), recurse(false) {}
+	root(false), parent(false), recurse(false) {
+      TRACE_CTOR("path_element_t()");
+    }
 
     ~path_element_t() {
+      TRACE_DTOR("path_element_t");
       if (next)
 	delete next;
     }
+
+   private:
+    path_element_t(const path_element_t&);
+    path_element_t& operator=(const path_element_t&);
+  };
+
+  struct path_t
+  {
+    std::list<const path_element_t *> paths;
+
+    path_t() {
+      TRACE_CTOR("path_t()");
+    }
+
+    ~path_t() {
+      TRACE_DTOR("path_t");
+      for (std::list<const path_element_t *>::const_iterator
+	     i = paths.begin();
+	   i != paths.end();
+	   i++)
+	delete *i;
+    }
+
+   private:
+    path_t(const path_t&);
+    path_t& operator=(const path_t&);
   };
 
   typedef void (*select_callback_t)(repitem_t * item);
 
   void select(const std::string& expr, select_callback_t callback) {
-    std::auto_ptr<path_element_t> path(parse_selector(expr));
+    std::auto_ptr<const path_t> path(parse_selector(expr));
     if (path.get())
       select(path.get(), callback);
   }
-  void select(path_element_t * path, select_callback_t callback);
-  void traverse_selection(path_element_t * path, select_callback_t callback);
+  void select(const path_t * path, select_callback_t callback);
+  void traverse_selection(const path_element_t * path,
+			  select_callback_t callback);
 
   void select_all(select_callback_t callback);
 
-  static path_element_t * parse_selector(const std::string& expr);
+  static const path_t * parse_selector(const std::string& expr);
+  static const path_element_t * parse_subselector(const char *& p);
 #ifdef DEBUG_ENABLED
-  static void dump_path(std::ostream& out, path_element_t * path);
+  static void dump_path(std::ostream& out, const path_t * path);
 #endif
 
   //

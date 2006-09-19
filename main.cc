@@ -262,7 +262,7 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
   }
   else if (verb == "path") {
     std::cout << "Report item selection path:" << std::endl;
-    std::auto_ptr<repitem_t::path_element_t>
+    std::auto_ptr<const repitem_t::path_t>
       path(repitem_t::parse_selector(*arg));
     repitem_t::dump_path(std::cout, path.get());
 
