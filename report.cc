@@ -125,6 +125,11 @@ valexpr_t::node_t * report_t::lookup(const std::string& name)
 	  return MAKE_FUNCTOR(report_t, option_limit);
 	break;
 
+      case 'm':
+	if (std::strcmp(p, "merge") == 0)
+	  return MAKE_FUNCTOR(report_t, option_merge);
+	break;
+
       case 'r':
 	if (std::strcmp(p, "remove") == 0)
 	  return MAKE_FUNCTOR(report_t, option_remove);

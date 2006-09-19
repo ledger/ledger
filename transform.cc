@@ -39,6 +39,57 @@ void split_transform::execute(repitem_t * items)
       j->contents->prev = NULL;
       j->contents->parent = j;
       i->contents->next = NULL;
+
+      j->last_content = i->last_content;
+      if (j->contents == i->last_content)
+	i->last_content = i->contents;
+    }
+
+    if (i->children)
+      execute(i->children);
+  }
+}
+
+void merge_transform::execute(repitem_t * items)
+{
+  for (repitem_t * i = items; i; i = i->next) {
+    if (i->next) {
+      assert(i->kind == i->next->kind);
+      bool merge = false;
+      switch (i->kind) {
+      case repitem_t::TRANSACTION:
+	assert(0);
+	break;
+      case repitem_t::ENTRY:
+	if (static_cast<entry_repitem_t *>(i)->entry ==
+	    static_cast<entry_repitem_t *>(i->next)->entry)
+	  merge = true;
+	break;
+      case repitem_t::ACCOUNT:
+	if (i->account_ptr == i->next->account_ptr)
+	  merge = true;
+	break;
+      default:
+	break;
+      }
+
+      if (merge) {
+	repitem_t * j = i->next;
+
+	i->next = i->next->next;
+	if (i->next)
+	  i->next->prev = i;
+
+	for (repitem_t * k = j->contents; k; k = k->next)
+	  k->parent = i;
+
+	i->last_content->next = j->contents;
+	i->last_content = j->last_content;
+
+	j->contents = NULL;
+	assert(! j->children);
+	delete j;
+      }
     }
 
     if (i->children)

@@ -14,13 +14,11 @@ class transform_t {
   virtual void execute(repitem_t * items) = 0;
 };
 
-typedef std::list<transform_t *> transform_queue_list;
-
-extern transform_queue_list pre_transform_queue;
-extern transform_queue_list transform_queue;
-extern transform_queue_list post_transform_queue;
-
-void apply_transform_queue(repitem_t * items);
+class check_transform : public transform_t {
+  // --check checks the validity of the item list.
+ public:
+  virtual void execute(repitem_t * items);
+};
 
 class split_transform : public transform_t {
   // --split breaks entry with two or more transactions into what
@@ -28,12 +26,6 @@ class split_transform : public transform_t {
   // it is the same entry being reported in both cases.  This is
   // useful before sorting, for exampel, in order to sort by
   // transaction instead of by entry.
- public:
-  virtual void execute(repitem_t * items);
-};
-
-class check_transform : public transform_t {
-  // --check checks the validity of the item list.
  public:
   virtual void execute(repitem_t * items);
 };

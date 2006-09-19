@@ -100,8 +100,11 @@ class report_t : public valexpr_t::scope_t
     transforms.push_back(new remove_transform(locals->args[0].to_string()));
   }
 
-  void option_split(value_t&, valexpr_t::scope_t * locals) {
+  void option_split(value_t&) {
     transforms.push_back(new split_transform);
+  }
+  void option_merge(value_t&) {
+    transforms.push_back(new merge_transform);
   }
 
   //
