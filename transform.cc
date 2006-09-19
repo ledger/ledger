@@ -142,6 +142,27 @@ void entries_transform::execute(repitem_t * items)
 {
 }
 
+void optimize_transform::execute(repitem_t * items)
+{
+  for (repitem_t * i = items; i; i = i->next) {
+    if (i->kind == repitem_t::ENTRY) {
+      if (i->contents &&
+	  i->contents->next &&
+	  ! i->contents->next->next) { // exactly two transactions
+	xact_repitem_t * first =
+	  static_cast<xact_repitem_t *>(i->contents);
+	xact_repitem_t * second =
+	  static_cast<xact_repitem_t *>(i->contents->next);
+	if (first->xact->amount == - second->xact->amount)
+	  ;
+      }
+    }
+
+    if (i->children)
+      execute(i->children);
+  }
+}
+
 void split_transform::execute(repitem_t * items)
 {
   for (repitem_t * i = items; i; i = i->next) {

@@ -45,6 +45,15 @@ class entries_transform : public transform_t {
   virtual void execute(repitem_t * items);
 };
 
+class optimize_transform : public transform_t {
+  // --optimize optimizes entries for display by the print command.
+  // What this means is that if an entry has two transactions of the
+  // commodity (one the negative of the other), the amount of the
+  // second transaction will be nulled out.
+ public:
+  virtual void execute(repitem_t * items);
+};
+
 class split_transform : public transform_t {
   // --split breaks entry with two or more transactions into what
   // seems like two entries each with one transaction -- even though
