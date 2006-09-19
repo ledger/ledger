@@ -48,9 +48,17 @@ repitem_t::~repitem_t()
       break;
     }
   }
-  if (contents) delete contents;
-  if (children) delete children;
-  if (next) delete next;
+
+  clear();
+}
+
+void repitem_t::clear()
+{
+  for (repitem_t * content = contents; content; content = content->next)
+    delete content;
+
+  for (repitem_t * child = children; child; child = child->next)
+    delete child;
 }
 
 void repitem_t::add_total(value_t& val)
@@ -399,6 +407,234 @@ void repitem_t::print_tree(std::ostream& out, int depth)
   }
 }
 
+repitem_t::path_element_t *
+repitem_t::parse_selector(const std::string& expr)
+{
+  path_element_t * first   = NULL;
+  path_element_t * current = first;
+
+  bool have_nodename = false;
+
+  const char * b = expr.c_str();
+  for (const char * p = b; *p; p++) {
+    switch (*p) {
+    case '/':
+      if (first && ! have_nodename)
+	throw error("Error in report item path selector");
+
+      if (! current) {
+	current = new path_element_t;
+      } else {
+	current->next = new path_element_t;
+	current = current->next;
+      }
+
+      if (! first) {
+	first = current;
+	first->root = true;
+      }
+
+      if (*(p + 1) == '/') {
+	p++;
+	current->recurse = true;
+	current->next = new path_element_t;
+	current = current->next;
+      }
+
+      have_nodename = false;
+      break;
+
+    case '[': {
+      if (! have_nodename)
+	throw error("Error in report item path selector");
+
+      ++p;
+      const char * q = p;
+      int depth = 1;
+      while (*p) {
+	if (*p == ']' && --depth == 0)
+	  break;
+	else if (*p == '[')
+	  ++depth;
+	p++;
+      }
+      if (*p != ']')
+	throw new error("Missing ']'");
+
+      if (! current)
+	first = current = new path_element_t;
+      current->valexpr = std::string(q, p);
+      break;
+    }
+
+    case '.':
+      if (have_nodename)
+	throw error("Error in report item path selector");
+
+      if (! current)
+	first = current = new path_element_t;
+      if (*(p + 1) == '.') {
+	p++;
+	current->parent = true;
+      }
+
+      have_nodename = true;
+      break;
+
+    default: {			// should be a node name here
+      if (have_nodename || ! std::isalpha(*p))
+	throw error("Error in report item path selector");
+
+      const char * q = p;
+      while (std::isalpha(*p++))
+	;
+      p--;
+
+      if (! current)
+	first = current = new path_element_t;
+
+      switch (*q) {
+      case 's':
+	if (std::strncmp(q, "session", p - q) == 0)
+	  current->kind = SESSION;
+	else
+	  throw error("Error in report item path selector");
+	break;
+      case 'j':
+	if (std::strncmp(q, "journal", p - q) == 0)
+	  current->kind = JOURNAL;
+	else
+	  throw error("Error in report item path selector");
+	break;
+      case 'a':
+	if (std::strncmp(q, "account", p - q) == 0)
+	  current->kind = ACCOUNT;
+	else
+	  throw error("Error in report item path selector");
+	break;
+      case 'e':
+	if (std::strncmp(q, "entry", p - q) == 0)
+	  current->kind = ENTRY;
+	else
+	  throw error("Error in report item path selector");
+	break;
+      case 'x':
+	if (std::strncmp(q, "xact", p - q) == 0)
+	  current->kind = TRANSACTION;
+	else
+	  throw error("Error in report item path selector");
+	break;
+      default:
+	throw error("Error in report item path selector");
+      }
+
+      have_nodename = true;
+      p--;
+      break;
+    }
+    }
+  }
+
+  return first;
+}
+
+#ifdef DEBUG_ENABLED
+void repitem_t::dump_path(std::ostream& out, path_element_t * path)
+{
+  for (path_element_t * p = path; p; p = p->next) {
+    switch (p->kind) {
+    case UNKNOWN:
+      out << "UNKNOWN ";
+      break;
+    case SESSION:
+      out << "SESSION ";
+      break;
+    case JOURNAL:
+      out << "JOURNAL ";
+      break;
+    case ACCOUNT:
+      out << "ACCOUNT ";
+      break;
+    case ENTRY:
+      out << "ENTRY ";
+      break;
+    case TRANSACTION:
+      out << "TRANSACTION ";
+      break;
+    }
+
+    if (p->valexpr) {
+      out << '[';
+      p->valexpr.write(out);
+      out << "] ";
+    }
+
+    if (p->root)
+      out << "/ ";
+    if (p->parent)
+      out << ".. ";
+    if (p->recurse)
+      out << "// ";
+
+    out << std::endl;
+  }
+}
+#endif
+
+void repitem_t::select(path_element_t * path, select_callback_t callback)
+{
+  if (path->root && parent) {
+    repitem_t * top = this;
+    while (top->parent)
+      top = top->parent;
+    top->traverse_selection(path, callback);
+    return;
+  }
+  traverse_selection(path, callback);
+}
+
+void repitem_t::select_all(select_callback_t callback)
+{
+  callback(this);
+
+  for (repitem_t * content = contents; content; content = content->next)
+    content->select_all(callback);
+
+  for (repitem_t * child = children; child; child = child->next)
+    child->select_all(callback);
+}
+
+void repitem_t::traverse_selection(path_element_t * path,
+				   select_callback_t callback)
+{
+  if (! path)
+    return;
+
+  if (path->parent) {
+    parent->traverse_selection(path->next, callback);
+    return;
+  }
+
+  if (path->kind != UNKNOWN && kind != path->kind)
+    return;
+
+  if (path->valexpr && ! path->valexpr.calc(this))
+    return;
+
+  if (kind == TRANSACTION) {
+    callback(this);
+    return;
+  }
+
+  for (repitem_t * child =
+	 (! path->next || path->next->kind == TRANSACTION) ?
+	 contents : children; child; child = child->next)
+    if (path->recurse && path->next->kind != child->kind)
+      child->traverse_selection(path, callback);
+    else
+      child->traverse_selection(path->next, callback);
+}
+
 bool repitem_t::resolve(const std::string& name, value_t& result,
 			scope_t * locals)
 {
@@ -530,12 +766,8 @@ int repitem_t::formatter_t::operator()(std::ostream& out, element_t * element,
 
 void format_command::operator()(value_t& result, valexpr_t::scope_t * locals)
 {
-  std::ostream * out = static_cast<std::ostream *>(locals->args[0].to_pointer());
-  assert(out);
-  repitem_t * items = static_cast<repitem_t *>(locals->args[1].to_pointer());
-  assert(items);
-
-  assert(items->kind == repitem_t::SESSION);
+  std::ostream * out   = get_ptr<std::ostream>(locals, 0);
+  repitem_t *	 items = get_ptr<repitem_t>(locals, 1);
 
   formatter.format(*out, items, 0, repitem_t::formatter_t());
 }

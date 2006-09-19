@@ -3,14 +3,13 @@
 
 #include "session.h"
 #include "valexpr.h"
+#include "repitem.h"
+#include "transform.h"
 
 #include <string>
 #include <list>
 
 namespace ledger {
-
-class transform_t;
-class repitem_t;
 
 typedef std::list<std::string> strings_list;
 
@@ -77,11 +76,19 @@ class report_t : public valexpr_t::scope_t
     format_string = locals->args[0].to_string();
   }
 
-  void option_foo(value_t& result) {
+  void option_foo(value_t&) {
     std::cout << "This is foo" << std::endl;
   }
-  void option_bar(value_t& result, valexpr_t::scope_t * locals) {
+  void option_bar(value_t&, valexpr_t::scope_t * locals) {
     std::cout << "This is bar: " << locals->args[0] << std::endl;
+  }
+
+  //
+  // Transform options
+  //
+
+  void option_select(value_t&, valexpr_t::scope_t * locals) {
+    transforms.push_back(new select_transform(locals->args[0].to_string()));
   }
 
   //

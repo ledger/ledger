@@ -461,8 +461,7 @@ valexpr_t::parse_value_term(std::istream& in, unsigned short flags) const
     break;
 
   case token_t::REGEXP:
-    node.reset(new node_t(node_t::MASK));
-    node->mask = new mask_t(tok.value.to_string());
+    node.reset(wrap_mask(tok.value.to_string()));
     break;
 
   case token_t::VALUE:
@@ -470,7 +469,7 @@ valexpr_t::parse_value_term(std::istream& in, unsigned short flags) const
     node->valuep = new value_t(tok.value);
     break;
 
-  case token_t::IDENT:
+  case token_t::IDENT: {
 #ifdef USE_BOOST_PYTHON
     if (tok.value->to_string() == "lambda") // special
       try {
@@ -496,8 +495,14 @@ valexpr_t::parse_value_term(std::istream& in, unsigned short flags) const
       }
 #endif
 
-    node.reset(new node_t(node_t::SYMBOL));
-    node->valuep = new value_t(tok.value);
+    std::string ident = tok.value.to_string();
+    if (std::isdigit(ident[0])) {
+      node.reset(new node_t(node_t::ARG_INDEX));
+      node->arg_index = std::atol(ident.c_str());
+    } else {
+      node.reset(new node_t(node_t::SYMBOL));
+      node->valuep = new value_t(ident, true);
+    }
 
     // An identifier followed by ( represents a function call
     tok = next_token(in, flags);
@@ -516,6 +521,7 @@ valexpr_t::parse_value_term(std::istream& in, unsigned short flags) const
       push_token(tok);
     }
     break;
+  }
 
   default:
     push_token(tok);
@@ -1109,25 +1115,25 @@ valexpr_t::node_t * valexpr_t::node_t::compile(scope_t * scope,
   case O_MATCH: {
     assert(left);
     assert(right);
-    if (right->kind != MASK)
-      throw new calc_error("Right operand of mask operator is not a mask");
-    assert(right->mask);
-
+    valexpr_t rexpr(right->compile(scope, make_calls));
     valexpr_t lexpr(left->compile(scope, make_calls));
-    if (! lexpr->constant()) {
+    if (! lexpr->constant() || rexpr->kind != MASK) {
       if (left == lexpr)
 	return acquire();
       else
-	return copy(lexpr, right)->acquire();
+	return copy(lexpr, rexpr)->acquire();
     }
 
     if (lexpr->valuep->type != value_t::STRING)
       throw new calc_error("Left operand of mask operator is not a string");
 
+    assert(rexpr->mask);
+
     if (left == lexpr) {
-      return wrap_value(mask->match(lexpr->valuep->to_string()))->acquire();
+      return wrap_value(rexpr->mask->match
+			(lexpr->valuep->to_string()))->acquire();
     } else {
-      *lexpr->valuep = mask->match(lexpr->valuep->to_string());
+      *lexpr->valuep = rexpr->mask->match(lexpr->valuep->to_string());
       return lexpr->acquire();
     }
   }

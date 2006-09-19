@@ -42,6 +42,10 @@ const std::string& either_or(const std::string& first,
     return first;
 }
 
+void print_addr(repitem_t * item) {
+  std::cout << item << std::endl;
+}
+
 static int parse_and_report(report_t * report, int argc, char * argv[],
 			    char * envp[])
 {
@@ -145,6 +149,8 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
     command = new emacs_command;
 #endif
   else if (verb == "expr")
+    ;
+  else if (verb == "path")
     ;
   else if (verb == "parse") {
     valexpr_t expr(*arg);
@@ -254,6 +260,16 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
 
     return 0;
   }
+  else if (verb == "path") {
+    std::cout << "Report item selection path:" << std::endl;
+    std::auto_ptr<repitem_t::path_element_t>
+      path(repitem_t::parse_selector(*arg));
+    repitem_t::dump_path(std::cout, path.get());
+
+    std::auto_ptr<repitem_t> items(repitem_t::wrap(&session, report, true));
+    items->select(path.get(), print_addr);
+    return 0;
+  }
 
   // Cleanup memory -- if this is a beta or development build.
 
@@ -276,6 +292,8 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
   valexpr_t::scope_t * locals = new valexpr_t::scope_t(report, true);
 
   std::auto_ptr<repitem_t> items(repitem_t::wrap(&session, report, true));
+
+  report->apply_transforms(items.get());
 
   locals->args.push_back(out);
   locals->args.push_back(items.get());

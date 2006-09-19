@@ -913,6 +913,35 @@ value_t::operator double() const
   return 0;
 }
 
+template <>
+value_t::operator std::string() const
+{
+  switch (type) {
+  case BOOLEAN:
+  case INTEGER:
+  case DATETIME:
+  case AMOUNT:
+  case BALANCE:
+  case BALANCE_PAIR: {
+    value_t temp(*this);
+    temp.cast(STRING);
+    return temp;
+  }
+
+  case STRING:
+    return **(std::string **) data;
+
+  case POINTER:
+    throw new value_error("Cannot convert a pointer to a string");
+
+  default:
+    assert(0);
+    break;
+  }
+  assert(0);
+  return 0;
+}
+
 #define DEF_VALUE_CMP_OP(OP)						\
 bool value_t::operator OP(const value_t& value)				\
 {									\

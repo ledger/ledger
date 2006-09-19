@@ -22,7 +22,7 @@ void report_t::apply_transforms(repitem_t * items)
   for (std::list<transform_t *>::const_iterator i = transforms.begin();
        i != transforms.end();
        i++)
-    (*i)->walk_items(items);
+    (*i)->execute(items);
 }
 
 void report_t::abbrev(value_t& result, valexpr_t::scope_t * locals)
@@ -111,6 +111,11 @@ valexpr_t::node_t * report_t::lookup(const std::string& name)
 	  return MAKE_FUNCTOR(report_t, option_foo);
 	else if (std::strcmp(p, "format") == 0)
 	  return MAKE_FUNCTOR(report_t, option_format);
+	break;
+
+      case 's':
+	if (std::strcmp(p, "select") == 0)
+	  return MAKE_FUNCTOR(report_t, option_select);
 	break;
 
       case 't':

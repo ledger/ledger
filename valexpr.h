@@ -61,8 +61,9 @@ class valexpr_t
   class scope_t;
 
   class functor_t {
+   protected:
     std::string fname;
-  public:
+   public:
     bool wants_args;
 
     functor_t(const std::string& _fname, bool _wants_args = false)
@@ -83,6 +84,8 @@ class valexpr_t
       : functor_t(name, false), ptr(_ptr), dptr(_dptr) {}
 
     virtual void operator()(value_t& result, scope_t * locals) {
+      assert(ptr);
+      assert(dptr);
       result = ptr->*dptr;
     }
   };
@@ -97,6 +100,8 @@ class valexpr_t
       : functor_t(name, false), ptr(_ptr), dptr(_dptr) {}
 
     virtual void operator()(value_t& result, scope_t * locals) {
+      assert(ptr);
+      assert(dptr);
       result.set_string(ptr->*dptr);
     }
   };
@@ -112,6 +117,8 @@ class valexpr_t
       : functor_t(name, false), ptr(_ptr), mptr(_mptr) {}
 
     virtual void operator()(value_t& result, scope_t * locals = NULL) {
+      assert(ptr);
+      assert(mptr);
       (ptr->*mptr)(result);
     }
   };
@@ -127,6 +134,8 @@ class valexpr_t
       : functor_t(name, true), ptr(_ptr), mptr(_mptr) {}
 
     virtual void operator()(value_t& result, scope_t * locals) {
+      assert(ptr);
+      assert(mptr);
       (ptr->*mptr)(result, locals);
     }
   };
@@ -428,12 +437,8 @@ class valexpr_t
     void dump(std::ostream& out, const int depth) const;
   };
 
- private:
+ public:
   node_t * ptr;
-
-  valexpr_t(node_t * _ptr) : ptr(_ptr), use_lookahead(false) {
-    TRACE_CTOR("valexpr_t(node_t *)");
-  }
 
   valexpr_t& operator=(node_t * _expr) {
     expr = "";
@@ -526,7 +531,8 @@ class valexpr_t
 	     const node_t *  node_to_find,
 	     unsigned long * start_pos,
 	     unsigned long * end_pos) const {
-    ptr->write(out, relaxed, node_to_find, start_pos, end_pos);
+    if (ptr)
+      ptr->write(out, relaxed, node_to_find, start_pos, end_pos);
   }
 
  public:
@@ -535,6 +541,9 @@ class valexpr_t
 
   valexpr_t() : ptr(NULL), use_lookahead(false), flags(0) {
     TRACE_CTOR("valexpr_t");
+  }
+  valexpr_t(node_t * _ptr) : ptr(_ptr), use_lookahead(false) {
+    TRACE_CTOR("valexpr_t(node_t *)");
   }
 
   valexpr_t(const std::string& _expr,
@@ -618,6 +627,8 @@ class valexpr_t
 
   virtual void calc(value_t& result, scope_t * scope = NULL) const;
   virtual value_t calc(scope_t * scope = NULL) const {
+    if (! ptr)
+      return 0L;
     value_t temp;
     calc(temp, scope);
     return temp;

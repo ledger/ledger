@@ -50,7 +50,8 @@ mask_t::mask_t(const mask_t& m) : exclude(m.exclude), pattern(m.pattern)
 
 mask_t::~mask_t() {
   TRACE_DTOR("mask_t");
-  pcre_free((pcre *)regexp);
+  if (regexp)
+    pcre_free((pcre *)regexp);
 }
 
 bool mask_t::match(const std::string& str) const

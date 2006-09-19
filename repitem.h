@@ -31,7 +31,8 @@ class repitem_t : public valexpr_t::scope_t
     session_t *	    session;
   };
 
-  enum kind_t { TRANSACTION, ENTRY, ACCOUNT, JOURNAL, SESSION } kind;
+  enum kind_t { UNKNOWN, TRANSACTION, ENTRY, ACCOUNT,
+		JOURNAL, SESSION } kind;
 
   bool istemp; // if item pointer is a temporary; assert that its
 	       // journal pointer is NULL
@@ -66,6 +67,8 @@ class repitem_t : public valexpr_t::scope_t
   }
 
   virtual ~repitem_t();
+
+  void clear();
 
   void add_value(value_t& val);
   void add_sort_value(value_t& val);
@@ -146,6 +149,47 @@ class repitem_t : public valexpr_t::scope_t
   }
 
   //
+  // Node selection
+  //
+
+  struct path_element_t
+  {
+    struct path_element_t * next;
+
+    repitem_t::kind_t kind;
+    valexpr_t         valexpr;
+    bool              root;
+    bool              parent;
+    bool              recurse;
+
+    path_element_t()
+      : next(NULL), kind(repitem_t::UNKNOWN),
+	root(false), parent(false), recurse(false) {}
+
+    ~path_element_t() {
+      if (next)
+	delete next;
+    }
+  };
+
+  typedef void (*select_callback_t)(repitem_t * item);
+
+  void select(const std::string& expr, select_callback_t callback) {
+    std::auto_ptr<path_element_t> path(parse_selector(expr));
+    if (path.get())
+      select(path.get(), callback);
+  }
+  void select(path_element_t * path, select_callback_t callback);
+  void traverse_selection(path_element_t * path, select_callback_t callback);
+
+  void select_all(select_callback_t callback);
+
+  static path_element_t * parse_selector(const std::string& expr);
+#ifdef DEBUG_ENABLED
+  static void dump_path(std::ostream& out, path_element_t * path);
+#endif
+
+  //
   // Scope members
   //
 
@@ -168,6 +212,14 @@ class repitem_t : public valexpr_t::scope_t
 			   valexpr_t::scope_t * scope, int column) const;
   };
 };
+
+template <typename T>
+inline T * get_ptr(valexpr_t::scope_t * locals, int idx) {
+  assert(locals->args.size() > idx);
+  T * ptr = static_cast<T *>(locals->args[idx].to_pointer());
+  assert(ptr);
+  return ptr;
+}
 
 class format_command : public valexpr_t::functor_t
 {

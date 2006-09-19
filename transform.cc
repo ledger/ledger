@@ -7,7 +7,7 @@
 
 namespace ledger {
 
-void split_transform::walk_items(repitem_t * items)
+void split_transform::execute(repitem_t * items)
 {
   for (repitem_t * i = items; i; i = i->next) {
     if (i->contents && i->contents->next) {
@@ -38,8 +38,38 @@ void split_transform::walk_items(repitem_t * items)
     }
 
     if (i->children)
-      walk_items(i->children);
+      execute(i->children);
   }
+}
+
+#define REPITEM_FLAGGED 0x1
+
+void mark_selected(repitem_t * item) {
+  while (item->parent) {
+    item->flags |= REPITEM_FLAGGED;
+    item = item->parent;
+  }
+}
+
+void delete_unmarked(repitem_t * item) {
+  if (item->parent && ! (item->flags & REPITEM_FLAGGED))
+    delete item;
+}
+
+void clear_flag(repitem_t * item) {
+  item->flags = 0;
+}
+
+void select_transform::execute(repitem_t * items)
+{
+  if (! path) {
+    items->clear();
+    return;
+  }
+  items->select(path, mark_selected);
+
+  items->select_all(delete_unmarked);
+  items->select_all(clear_flag);
 }
 
 } // namespace ledger

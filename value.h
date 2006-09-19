@@ -454,6 +454,7 @@ template <> value_t::operator bool() const;
 template <> value_t::operator long() const;
 template <> value_t::operator datetime_t() const;
 template <> value_t::operator double() const;
+template <> value_t::operator std::string() const;
 
 inline value_t abs(const value_t& value) {
   value_t temp(value);
