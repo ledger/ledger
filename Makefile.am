@@ -16,10 +16,11 @@ libledger_la_SOURCES = \
 	balance.cc     \
 	value.cc       \
 	datetime.cc    \
+	mask.cc        \
 	valexpr.cc     \
+	xpath.cc       \
 	format.cc      \
 	quotes.cc      \
-	mask.cc        \
 		       \
 	trace.cc       \
 	util.cc        \
@@ -99,7 +100,8 @@ pkginclude_HEADERS = \
 	util.h	     \
 	valexpr.h    \
 	value.h	     \
-	xml.h
+	xml.h        \
+	xpath.h
 
 pchpic.h.gch: pch.h pchdata.h $(pkginclude_HEADERS)
 	$(CXXCOMPILE) $(CXXFLAGS) -DPIC -o $@ pchdata.h

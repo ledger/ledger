@@ -93,6 +93,7 @@ class report_t : public valexpr_t::scope_t
   // Transform options
   //
 
+#if 0
   void option_select(value_t&, valexpr_t::scope_t * locals) {
     transforms.push_back(new select_transform(locals->args[0].to_string()));
   }
@@ -109,6 +110,7 @@ class report_t : public valexpr_t::scope_t
   void option_accounts(value_t&) {
     transforms.push_back(new accounts_transform);
   }
+#endif
   void option_compact(value_t&) {
     transforms.push_back(new compact_transform);
   }

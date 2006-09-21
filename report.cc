@@ -92,9 +92,12 @@ valexpr_t::node_t * report_t::lookup(const std::string& name)
       p = p + 7;
       switch (*p) {
       case 'a':
+#if 0
 	if (std::strcmp(p, "accounts") == 0)
 	  return MAKE_FUNCTOR(report_t, option_accounts);
-	else if (std::strcmp(p, "amount") == 0)
+	else
+#endif
+	  if (std::strcmp(p, "amount") == 0)
 	  return MAKE_FUNCTOR(report_t, option_amount);
 	break;
 
@@ -115,8 +118,10 @@ valexpr_t::node_t * report_t::lookup(const std::string& name)
 	  return MAKE_FUNCTOR(report_t, option_entries);
 	else if (std::strcmp(p, "eval") == 0)
 	  return MAKE_FUNCTOR(report_t, option_eval);
+#if 0
 	else if (std::strcmp(p, "exclude") == 0)
 	  return MAKE_FUNCTOR(report_t, option_remove);
+#endif
 	break;
 
       case 'f':
@@ -127,13 +132,17 @@ valexpr_t::node_t * report_t::lookup(const std::string& name)
 	break;
 
       case 'i':
+#if 0
 	if (std::strcmp(p, "include") == 0)
 	  return MAKE_FUNCTOR(report_t, option_select);
+#endif
 	break;
 
       case 'l':
+#if 0
 	if (! *(p + 1) || std::strcmp(p, "limit") == 0)
 	  return MAKE_FUNCTOR(report_t, option_limit);
+#endif
 	break;
 
       case 'm':
@@ -142,14 +151,19 @@ valexpr_t::node_t * report_t::lookup(const std::string& name)
 	break;
 
       case 'r':
+#if 0
 	if (std::strcmp(p, "remove") == 0)
 	  return MAKE_FUNCTOR(report_t, option_remove);
+#endif
 	break;
 
       case 's':
+#if 0
 	if (std::strcmp(p, "select") == 0)
 	  return MAKE_FUNCTOR(report_t, option_select);
-	else if (std::strcmp(p, "split") == 0)
+	else
+#endif
+	  if (std::strcmp(p, "split") == 0)
 	  return MAKE_FUNCTOR(report_t, option_split);
 	break;
 

@@ -15,6 +15,7 @@
 #include <value.h>
 #include <datetime.h>
 #include <valexpr.h>
+#include <xpath.h>
 #include <format.h>
 #include <quotes.h>
 

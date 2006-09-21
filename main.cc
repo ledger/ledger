@@ -42,11 +42,13 @@ const std::string& either_or(const std::string& first,
     return first;
 }
 
+#if 0
 class print_addr : public repitem_t::select_callback_t {
   virtual void operator()(repitem_t * item) {
     std::cout << item << std::endl;
   }
 };
+#endif
 
 static int parse_and_report(report_t * report, int argc, char * argv[],
 			    char * envp[])
@@ -117,11 +119,13 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
 			     report->session->register_format));
   }
   else if (verb == "balance" || verb == "bal" || verb == "b") {
+#if 0
     if (! report->raw_mode) {
       report->transforms.push_back(new accounts_transform);
       report->transforms.push_back(new clean_transform);
       report->transforms.push_back(new compact_transform);
     }
+#endif
     command = new format_command
       ("balance", either_or(report->format_string,
 			     report->session->balance_format));
@@ -134,8 +138,10 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
 			  report->session->print_format));
   }
   else if (verb == "equity") {
+#if 0
     if (! report->raw_mode)
       report->transforms.push_back(new accounts_transform);
+#endif
     command = new format_command
       ("equity", either_or(report->format_string,
 			   report->session->equity_format));
@@ -160,7 +166,7 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
 #endif
   else if (verb == "expr")
     ;
-  else if (verb == "path")
+  else if (verb == "xpath")
     ;
   else if (verb == "parse") {
     valexpr_t expr(*arg);
@@ -257,28 +263,30 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
     valexpr_t expr(*arg);
 
     if (session.verbose_mode) {
-      std::cout << "Value expression tree:" << std::endl;
-      expr.dump(std::cout);
-      std::cout << std::endl;
-      std::cout << "Value expression parsed was:" << std::endl;
-      expr.write(std::cout);
-      std::cout << std::endl << std::endl;
-      std::cout << "Result of calculation: ";
+      *out << "Value expression tree:" << std::endl;
+      expr.dump(*out);
+      *out << std::endl;
+      *out << "Value expression parsed was:" << std::endl;
+      expr.write(*out);
+      *out << std::endl << std::endl;
+      *out << "Result of calculation: ";
     }
 
-    std::cout << expr.calc(report).strip_annotations() << std::endl;
+    *out << expr.calc(report).strip_annotations() << std::endl;
 
     return 0;
   }
-  else if (verb == "path") {
-    std::cout << "Report item selection path:" << std::endl;
-    std::auto_ptr<const repitem_t::path_t>
-      path(repitem_t::parse_selector(*arg));
-    repitem_t::dump_path(std::cout, path.get());
+  else if (verb == "xpath") {
+    std::cout << "XPath parsed:" << std::endl;
+    xpath_t xpath(*arg);
+    xpath.write(*out);
+    *out << std::endl;
 
+#if 0
     std::auto_ptr<repitem_t> items(repitem_t::wrap(&session, report, true));
     print_addr cb;
     items->select(path.get(), cb);
+#endif
     return 0;
   }
 
@@ -308,10 +316,14 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
   locals->args.push_back(items.get());
 
   if (command->wants_args) {
+#if 1
+    locals->args.push_back(&args);
+#else
     for (strings_list::iterator i = args.begin();
 	 i != args.end();
 	 i++)
       locals->args.push_back(*i);
+#endif
   } else {
     std::string regexps[4];
 
@@ -335,6 +347,9 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
 	regexps[base] += *i;
       }
 
+#if 0
+    // jww (2006-09-21): Escape the \ in these strings!
+
     if (! regexps[3].empty())
       report->transforms.push_front
 	(new remove_transform
@@ -354,6 +369,7 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
       report->transforms.push_front
 	(new select_transform
 	 (std::string("//xact[account =~ /(") + regexps[0] + ")/]"));
+#endif
   }
 
   report->apply_transforms(items.get());

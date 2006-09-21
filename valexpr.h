@@ -223,6 +223,7 @@ class valexpr_t
 #define PARSE_VALEXPR_NO_MIGRATE 0x04
 #define PARSE_VALEXPR_NO_REDUCE  0x08
 #define PARSE_VALEXPR_REGEXP     0x10
+#define PARSE_VALEXPR_XPATH      0x20
 
  private:
   struct token_t
@@ -576,10 +577,11 @@ class valexpr_t
     return *this;
   }
   valexpr_t& operator=(const valexpr_t& _expr);
-  valexpr_t& operator=(valexpr_t& _expr) {
-    expr  = _expr.expr;
-    flags = _expr.flags;
-    reset(_expr.get());
+  valexpr_t& operator=(valexpr_t& _valexpr) {
+    ptr	  = _valexpr.ptr->acquire();
+    expr  = _valexpr.expr;
+    flags = _valexpr.flags;
+    use_lookahead = false;
     return *this;
   }
 

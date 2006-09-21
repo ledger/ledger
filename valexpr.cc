@@ -125,7 +125,8 @@ void valexpr_t::token_t::next(std::istream& in, unsigned short flags)
 
   case '!':
     in.get(c);
-    if (in.peek() == '=') {
+    c = in.peek();
+    if (c == '=') {
       in.get(c);
       symbol[1] = c;
       symbol[2] = '\0';
@@ -178,21 +179,15 @@ void valexpr_t::token_t::next(std::istream& in, unsigned short flags)
       value.set_string(buf);
       break;
     }
+    else if (flags & PARSE_VALEXPR_XPATH) {
+      break;
+    }
     kind = SLASH;
     break;
 
   case '=':
     in.get(c);
-    c = in.peek();
-    if (c == '=') {
-      in.get(c);
-      symbol[1] = c;
-      symbol[2] = '\0';
-      kind = EQUAL;
-      length = 2;
-      break;
-    }
-    else if (c == '~') {
+    if (in.peek() == '~') {
       in.get(c);
       symbol[1] = c;
       symbol[2] = '\0';
@@ -200,7 +195,7 @@ void valexpr_t::token_t::next(std::istream& in, unsigned short flags)
       length = 2;
       break;
     }
-    kind = ASSIGN;
+    kind = EQUAL;
     break;
 
   case '<':
@@ -243,6 +238,14 @@ void valexpr_t::token_t::next(std::istream& in, unsigned short flags)
     break;
   case ':':
     in.get(c);
+    if (in.peek() == '=') {
+      in.get(c);
+      symbol[1] = c;
+      symbol[2] = '\0';
+      kind = ASSIGN;
+      length = 2;
+      break;
+    }
     kind = COLON;
     break;
   case ',':
@@ -253,6 +256,24 @@ void valexpr_t::token_t::next(std::istream& in, unsigned short flags)
     in.get(c);
     kind = PERCENT;
     break;
+
+  case '.':
+    in.get(c);
+    c = in.peek();
+    if (c == '.') {
+      in.get(c);
+      length++;
+      kind = IDENT;
+      value.set_string("parent");
+      break;
+    }
+    else if (! std::isdigit(c)) {
+      kind = IDENT;
+      value.set_string("current");
+      break;
+    }
+    in.unget();			// put the first '.' back
+    // fall through...
 
   default:
     if (! (flags & PARSE_VALEXPR_RELAXED)) {
@@ -483,7 +504,7 @@ valexpr_t::parse_value_term(std::istream& in, unsigned short flags) const
 {
   std::auto_ptr<node_t> node;
 
-  token_t& tok = next_token(in, flags | PARSE_VALEXPR_REGEXP);
+  token_t& tok = next_token(in, flags | PARSE_VALEXPR_XPATH);
 
   switch (tok.kind) {
   case token_t::LPAREN:
@@ -573,7 +594,7 @@ valexpr_t::parse_unary_expr(std::istream& in, unsigned short flags) const
 {
   std::auto_ptr<node_t> node;
 
-  token_t& tok = next_token(in, flags | PARSE_VALEXPR_REGEXP);
+  token_t& tok = next_token(in, flags | PARSE_VALEXPR_XPATH);
 
   switch (tok.kind) {
   case token_t::EXCLAM: {
@@ -696,6 +717,8 @@ valexpr_t::parse_logic_expr(std::istream& in, unsigned short flags) const
   if (node.get()) {
     node_t::kind_t kind = node_t::LAST;
 
+    unsigned short _flags = flags;
+
     token_t& tok = next_token(in, flags);
     switch (tok.kind) {
     case token_t::ASSIGN:
@@ -709,9 +732,11 @@ valexpr_t::parse_logic_expr(std::istream& in, unsigned short flags) const
       break;
     case token_t::MATCH:
       kind = node_t::O_MATCH;
+      _flags |= PARSE_VALEXPR_REGEXP;
       break;
     case token_t::NMATCH:
       kind = node_t::O_NMATCH;
+      _flags |= PARSE_VALEXPR_REGEXP;
       break;
     case token_t::LESS:
       kind = node_t::O_LT;
@@ -737,7 +762,7 @@ valexpr_t::parse_logic_expr(std::istream& in, unsigned short flags) const
       if (kind == node_t::O_DEFINE)
 	node->set_right(parse_boolean_expr(in, flags));
       else
-	node->set_right(parse_add_expr(in, flags));
+	node->set_right(parse_add_expr(in, _flags));
 
       if (! node->right) {
 	if (tok.kind == token_t::PLUS)

@@ -7,6 +7,7 @@
 
 namespace ledger {
 
+#if 0
 void populate_account(account_t& acct, repitem_t * item)
 {
   if (! acct.parent)
@@ -71,6 +72,7 @@ void accounts_transform::execute(repitem_t * items)
   clear_account_data cb2;
   items->select_all(cb2);
 }
+#endif
 
 void compact_transform::execute(repitem_t * items)
 {
@@ -259,6 +261,7 @@ void merge_transform::execute(repitem_t * items)
   }
 }
 
+#if 0
 namespace {
 #define REPITEM_FLAGGED 0x1
 
@@ -325,6 +328,7 @@ void remove_transform::execute(repitem_t * items)
   clear_flags cb3;
   items->select_all(cb3);
 }
+#endif
 
 } // namespace ledger
 

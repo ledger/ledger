@@ -106,6 +106,7 @@ class subtotal_transform : public transform_t {
   virtual void execute(repitem_t * items);
 };
 
+#if 0
 class select_transform : public transform_t
 {
  protected:
@@ -131,6 +132,7 @@ class remove_transform : public select_transform
 
   virtual void execute(repitem_t * items);
 };
+#endif
 
 } // namespace ledger
 
