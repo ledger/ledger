@@ -6,8 +6,6 @@
 #include "error.h"
 #endif
 
-namespace ledger {
-
 bool value_t::to_boolean() const
 {
   if (type == BOOLEAN) {
@@ -85,12 +83,28 @@ std::string value_t::to_string() const
   }
 }
 
+xml::node_t * value_t::to_xml_node() const
+{
+  if (type == XML_NODE)
+    return *(xml::node_t **) data;
+  else
+    throw new value_error("Value is not an XML node");
+}
+
 void * value_t::to_pointer() const
 {
   if (type == POINTER)
     return *(void **) data;
   else
     throw new value_error("Value is not a pointer");
+}
+
+value_t::sequence_t * value_t::to_sequence() const
+{
+  if (type == SEQUENCE)
+    return *(sequence_t **) data;
+  else
+    throw new value_error("Value is not a sequence");
 }
 
 void value_t::destroy()
@@ -107,6 +121,9 @@ void value_t::destroy()
     break;
   case STRING:
     delete *(std::string **) data;
+    break;
+  case SEQUENCE:
+    delete *(sequence_t **) data;
     break;
   default:
     break;
@@ -1924,31 +1941,31 @@ void value_context::describe(std::ostream& out) const throw()
   if (! desc.empty())
     out << desc << std::endl;
 
-  ledger::balance_t * ptr = NULL;
+  balance_t * ptr = NULL;
 
   out << std::right;
   out.width(20);
 
   switch (bal->type) {
-  case ledger::value_t::BOOLEAN:
+  case value_t::BOOLEAN:
     out << (*((bool *) bal->data) ? "true" : "false");
     break;
-  case ledger::value_t::INTEGER:
+  case value_t::INTEGER:
     out << *((long *) bal->data);
     break;
-  case ledger::value_t::DATETIME:
+  case value_t::DATETIME:
     out << *((datetime_t *) bal->data);
     break;
-  case ledger::value_t::AMOUNT:
-    out << *((ledger::amount_t *) bal->data);
+  case value_t::AMOUNT:
+    out << *((amount_t *) bal->data);
     break;
-  case ledger::value_t::BALANCE:
-    ptr = (ledger::balance_t *) bal->data;
+  case value_t::BALANCE:
+    ptr = (balance_t *) bal->data;
     // fall through...
 
-  case ledger::value_t::BALANCE_PAIR:
+  case value_t::BALANCE_PAIR:
     if (! ptr)
-      ptr = &((ledger::balance_pair_t *) bal->data)->quantity;
+      ptr = &((balance_pair_t *) bal->data)->quantity;
 
     ptr->write(out, 20);
     break;
@@ -1958,8 +1975,6 @@ void value_context::describe(std::ostream& out) const throw()
   }
   out << std::endl;
 }
-
-} // namespace ledger
 
 #ifdef USE_BOOST_PYTHON
 

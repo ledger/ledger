@@ -14,8 +14,6 @@
 #include "debug.h"
 #include "error.h"
 
-namespace ledger {
-
 extern bool do_cleanup;
 
 class commodity_t;
@@ -639,7 +637,5 @@ class amount_error : public error {
 struct compare_amount_commodities {
   bool operator()(const amount_t * left, const amount_t * right) const;
 };
-
-} // namespace ledger
 
 #endif // _AMOUNT_H

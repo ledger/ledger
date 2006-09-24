@@ -5,9 +5,12 @@
 #include "balance.h"
 #include "error.h"
 
+#include <deque>
 #include <exception>
 
-namespace ledger {
+namespace xml {
+  class node_t;
+}
 
 // The following type is a polymorphous value type used solely for
 // performance reasons.  The alternative is to compute value
@@ -21,6 +24,8 @@ namespace ledger {
 class value_t
 {
  public:
+  typedef std::deque<value_t> sequence_t;
+
   char data[sizeof(balance_pair_t)];
 
   enum type_t {
@@ -31,7 +36,9 @@ class value_t
     BALANCE,
     BALANCE_PAIR,
     STRING,
-    POINTER
+    XML_NODE,
+    POINTER,
+    SEQUENCE
   } type;
 
   value_t() {
@@ -97,9 +104,17 @@ class value_t
     TRACE_CTOR("value_t(const balance_pair_t&)");
     *this = value;
   }
+  value_t(xml::node_t * xml_node) : type(XML_NODE) {
+    TRACE_CTOR("value_t(xml::node_t *)");
+    *this = xml_node;
+  }
   value_t(void * item) : type(POINTER) {
     TRACE_CTOR("value_t(void *)");
     *this = item;
+  }
+  value_t(sequence_t * seq) : type(SEQUENCE) {
+    TRACE_CTOR("value_t(sequence_t *)");
+    *this = seq;
   }
 
   ~value_t() {
@@ -197,6 +212,20 @@ class value_t
       return *this;
     }
   }
+  value_t& operator=(xml::node_t * xml_node) {
+    if (type == XML_NODE && *(xml::node_t **) data == xml_node)
+      return *this;
+
+    if (! xml_node) {
+      return *this = 0L;
+    }
+    else {
+      destroy();
+      *(xml::node_t **)data = xml_node;
+      type = XML_NODE;
+      return *this;
+    }
+  }
   value_t& operator=(void * item) {
     if (type == POINTER && *(void **) data == item)
       return *this;
@@ -208,6 +237,20 @@ class value_t
       destroy();
       *(void **)data = item;
       type = POINTER;
+      return *this;
+    }
+  }
+  value_t& operator=(sequence_t * seq) {
+    if (type == SEQUENCE && *(sequence_t **) data == seq)
+      return *this;
+
+    if (! seq) {
+      return *this = 0L;
+    }
+    else {
+      destroy();
+      *(sequence_t **)data = seq;
+      type = SEQUENCE;
       return *this;
     }
   }
@@ -230,7 +273,9 @@ class value_t
   balance_t	 to_balance() const;
   balance_pair_t to_balance_pair() const;
   std::string	 to_string() const;
+  xml::node_t *	 to_xml_node() const;
   void *	 to_pointer() const;
+  sequence_t *	 to_sequence() const;
 
   value_t& operator+=(const value_t& value);
   value_t& operator-=(const value_t& value);
@@ -355,7 +400,9 @@ class value_t
       return ((balance_pair_t *) data)->realzero();
     case STRING:
       return ((std::string *) data)->empty();
+    case XML_NODE:
     case POINTER:
+    case SEQUENCE:
       return *(void **) data == NULL;
 
     default:
@@ -439,8 +486,12 @@ value_t::operator T() const
     return *(balance_t *) data;
   case STRING:
     return **(std::string **) data;
+  case XML_NODE:
+    return *(xml::node_t **) data;
   case POINTER:
     return *(void **) data;
+  case SEQUENCE:
+    return *(sequence_t **) data;
 
   default:
     assert(0);
@@ -481,7 +532,5 @@ class value_error : public error {
     : error(reason, ctxt) {}
   virtual ~value_error() throw() {}
 };
-
-} // namespace ledger
 
 #endif // _VALUE_H

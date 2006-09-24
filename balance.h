@@ -6,8 +6,6 @@
 #include <map>
 #include <iostream>
 
-namespace ledger {
-
 typedef std::map<const commodity_t *, amount_t>  amounts_map;
 typedef std::pair<const commodity_t *, amount_t> amounts_pair;
 
@@ -954,7 +952,5 @@ inline std::ostream& operator<<(std::ostream& out,
   bal_pair.quantity.write(out, 12);
   return out;
 }
-
-} // namespace ledger
 
 #endif // _BALANCE_H

@@ -6,58 +6,6 @@
 
 namespace ledger {
 
-repitem_t::~repitem_t()
-{
-  TRACE_DTOR("repitem_t");
-  extract();
-  clear();
-}
-
-void repitem_t::extract()
-{
-  if (prev) {
-    prev->next = next;
-  }
-  else if (parent) {
-    if (parent->contents == this)
-      parent->contents = next;
-    if (parent->children == this)
-      parent->children = next;
-  }
-
-  if (parent) {
-    if (parent->last_content == this)
-      parent->last_content = prev;
-    if (parent->last_child == this)
-      parent->last_child = prev;
-
-    set_parent(NULL);
-  }
-
-  if (next)
-    next->prev = prev;
-
-  next = NULL;
-  prev = NULL;
-}
-
-void repitem_t::clear()
-{
-  repitem_t * content = contents;
-  while (content) {
-    repitem_t * next = content->next;
-    delete content;
-    content = next;
-  }
-
-  repitem_t * child = children;
-  while (child) {
-    repitem_t * next = child->next;
-    delete child;
-    child = next;
-  }
-}
-
 void repitem_t::add_total(value_t& val)
 {
   add_value(val);

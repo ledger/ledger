@@ -2,7 +2,9 @@
 #include "pch.h"
 #else
 #include "xml.h"
+#if 0
 #include "journal.h"
+#endif
 #include "datetime.h"
 #include "error.h"
 
@@ -19,8 +21,107 @@ extern "C" {
 }
 #endif
 
-namespace ledger {
+namespace xml {
 
+node_t::~node_t()
+{
+  TRACE_DTOR("node_t");
+  extract();
+  clear();
+}
+
+void node_t::extract()
+{
+  if (prev)
+    prev->next = next;
+
+  if (parent) {
+    if (parent->children == this)
+      parent->children = next;
+
+    if (parent->last_child == this)
+      parent->last_child = prev;
+
+    parent = NULL;
+  }
+
+  if (next)
+    next->prev = prev;
+
+  next = NULL;
+  prev = NULL;
+}
+
+void node_t::clear()
+{
+  node_t * child = children;
+  while (child) {
+    node_t * next = child->next;
+    delete child;
+    child = next;
+  }
+}
+
+void node_t::add_child(node_t * node)
+{
+  if (children == NULL) {
+    assert(last_child == NULL);
+    children = node;
+    node->prev = NULL;
+  } else {
+    assert(last_child != NULL);
+    last_child->next = node;
+    node->prev = last_child;
+  }
+
+  node->parent = this;
+  while (node->next) {
+    node_t * next_node = node->next;
+    next_node->prev = node;
+    next_node->parent = this;
+    node = next_node;
+  }
+
+  last_child = node;
+}
+
+int node_t::position()
+{
+  if (! parent) {
+    assert(! next);
+    return 1;
+  }
+
+  int index = 1;
+  bool found = false;
+  for (node_t * p = parent->children; p; p = p->next) {
+    if (p == this) {
+      found = true;
+      break;
+    }
+    index++;
+  }
+
+  assert(found);
+  return index;
+}
+
+int node_t::last()
+{
+  if (! parent) {
+    assert(! next);
+    return 1;
+  }
+
+  int count = 0;
+  for (node_t * p = parent->children; p; p = p->next)
+    count++;
+
+  assert(count > 0);
+  return count;
+}
+
+#if 0
 #if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
 
 static XML_Parser    current_parser;
@@ -477,5 +578,6 @@ void format_xml_entries::format_last_entry()
   output_stream << "  </entry>\n";
 }
 #endif
+#endif
 
-} // namespace ledger
+} // namespace xml

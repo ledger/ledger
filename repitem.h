@@ -60,9 +60,6 @@ class repitem_t : public valexpr_t::scope_t
   }
   virtual ~repitem_t();
 
-  virtual void extract();
-  virtual void clear();
-
   virtual void add_value(value_t& val);
   virtual void add_sort_value(value_t& val);
   virtual void add_total(value_t& val);

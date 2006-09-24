@@ -8,8 +8,6 @@
 #include <algorithm>
 #endif
 
-namespace ledger {
-
 amount_t balance_t::amount(const commodity_t& commodity) const
 {
   if (! commodity) {
@@ -129,7 +127,8 @@ void balance_t::write(std::ostream& out,
       if ((*i).second)
 	sorted.push_back(&(*i).second);
 
-    std::stable_sort(sorted.begin(), sorted.end(), compare_amount_commodities());
+    std::stable_sort(sorted.begin(), sorted.end(),
+		     compare_amount_commodities());
 
     for (amounts_deque::const_iterator i = sorted.begin();
 	 i != sorted.end();
@@ -320,8 +319,6 @@ balance_t::operator amount_t() const
     throw new amount_error(errmsg.str());
   }
 }
-
-} // namespace ledger
 
 #ifdef USE_BOOST_PYTHON
 

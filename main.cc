@@ -109,7 +109,7 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
 
   std::string verb = *arg++;
 
-  valexpr_t::functor_t * command = NULL;
+  xml::xpath_t::functor_t * command = NULL;
 
   if (verb == "tree")
     command = new dump_command;
@@ -169,7 +169,7 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
   else if (verb == "xpath")
     ;
   else if (verb == "parse") {
-    valexpr_t expr(*arg);
+    xml::xpath_t expr(*arg);
 
     if (session.verbose_mode) {
       std::cout << "Value expression tree:" << std::endl;
@@ -189,7 +189,7 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
     char buf[128];
     std::strcpy(buf, "command_");
     std::strcat(buf, verb.c_str());
-    if (valexpr_t::node_t * def = report->lookup(buf))
+    if (xml::xpath_t::node_t * def = report->lookup(buf))
       command = def->functor_obj();
 
     if (! command)
@@ -260,7 +260,7 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
   // Are we handling the expr commands?  Do so now.
 
   if (verb == "expr") {
-    valexpr_t expr(*arg);
+    xml::xpath_t expr(*arg);
 
     if (session.verbose_mode) {
       *out << "Value expression tree:" << std::endl;
@@ -308,7 +308,8 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
   // Create the an argument scope containing the report command's
   // arguments, and then invoke the command.
 
-  valexpr_t::scope_t * locals = new valexpr_t::scope_t(report, true);
+#if 0
+  xml::xpath_t::scope_t * locals = new xml::xpath_t::scope_t(report, true);
 
   std::auto_ptr<repitem_t> items(repitem_t::wrap(&session, report, true));
 
@@ -376,6 +377,7 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
 
   value_t temp;
   (*command)(temp, locals);
+#endif
 
   // Write out the binary cache, if need be
 

@@ -11,8 +11,6 @@
 #include <gmp.h>
 #endif
 
-namespace ledger {
-
 bool do_cleanup = true;
 
 bool amount_t::keep_price = false;
@@ -764,7 +762,7 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
     while (last.commodity().larger()) {
       last /= *last.commodity().larger();
       last.commodity_ = last.commodity().larger()->commodity_;
-      if (ledger::abs(last) < 1)
+      if (::abs(last) < 1)
 	break;
       base = last.round();
     }
@@ -1832,8 +1830,6 @@ bool compare_amount_commodities::operator()(const amount_t * left,
     return true;
   }
 }
-
-} // namespace ledger
 
 #ifdef USE_BOOST_PYTHON
 

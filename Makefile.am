@@ -5,134 +5,163 @@ BUILT_SOURCES = pchnopic.h.gch
 CLEANFILES = pchnopic.h.gch
 endif
 
-lib_LTLIBRARIES = libledger.la
+######################################################################
 
-libledger_la_CXXFLAGS =
-if USE_PCH
-libledger_la_CXXFLAGS += -DUSE_PCH -Winvalid-pch -fpch-deps
-endif
-libledger_la_SOURCES = \
+bin_PROGRAMS = xpath
+
+xpath_CXXFLAGS = -DTEST
+xpath_SOURCES = \
 	amount.cc      \
+	quotes.cc      \
 	balance.cc     \
 	value.cc       \
 	datetime.cc    \
-	mask.cc        \
-	valexpr.cc     \
+	xml.cc         \
 	xpath.cc       \
-	format.cc      \
-	quotes.cc      \
+	mask.cc        \
 		       \
 	trace.cc       \
-	util.cc        \
-		       \
-	session.cc     \
-	journal.cc     \
-	parser.cc      \
-	textual.cc     \
-	binary.cc      \
-	xml.cc	       \
-	qif.cc	       \
-		       \
-	report.cc      \
-	repitem.cc     \
-	transform.cc   \
-		       \
-	dump.cc        \
-	csv.cc         \
-	derive.cc      \
-	emacs.cc       \
-	reconcile.cc
+	util.cc
+xpath_LDADD = $(LIBOBJS)
 if HAVE_EXPAT
-libledger_la_CXXFLAGS += -DHAVE_EXPAT=1
-libledger_la_SOURCES += gnucash.cc
+xpath_CXXFLAGS += -DHAVE_EXPAT=1
 endif
 if HAVE_XMLPARSE
-libledger_la_CXXFLAGS += -DHAVE_XMLPARSE=1
-libledger_la_SOURCES += gnucash.cc
-endif
-if HAVE_LIBOFX
-libledger_la_CXXFLAGS += -DHAVE_LIBOFX=1
-libledger_la_SOURCES += ofx.cc
-endif
-if HAVE_BOOST_PYTHON
-libledger_la_CXXFLAGS += -DUSE_BOOST_PYTHON=1
-libledger_la_SOURCES += py_eval.cc
+xpath_CXXFLAGS += -DHAVE_XMLPARSE=1
 endif
 if DEBUG
-libledger_la_CXXFLAGS += -DDEBUG_LEVEL=4
-libledger_la_SOURCES  += debug.cc
+xpath_CXXFLAGS += -DDEBUG_LEVEL=4
+xpath_SOURCES  += debug.cc
 endif
-libledger_la_LDFLAGS = -release 3.0
-
-pkginclude_HEADERS = \
-	acconf.h     \
-	amount.h     \
-	balance.h    \
-	binary.h     \
-	csv.h	     \
-	datetime.h   \
-	debug.h	     \
-	derive.h     \
-	dump.h	     \
-	emacs.h	     \
-	error.h	     \
-	format.h     \
-	gnucash.h    \
-	journal.h    \
-	ledger.h     \
-	mask.h	     \
-	ofx.h	     \
-	option.h     \
-	parser.h     \
-	py_eval.h    \
-	pyfstream.h  \
-	pyledger.h   \
-	qif.h	     \
-	quotes.h     \
-	reconcile.h  \
-	repitem.h    \
-	report.h     \
-	session.h    \
-	textual.h    \
-	timing.h     \
-	trace.h	     \
-	transform.h  \
-	util.h	     \
-	valexpr.h    \
-	value.h	     \
-	xml.h        \
-	xpath.h
-
-pchpic.h.gch: pch.h pchdata.h $(pkginclude_HEADERS)
-	$(CXXCOMPILE) $(CXXFLAGS) -DPIC -o $@ pchdata.h
-
-pchnopic.h.gch: pch.h pchdata.h $(pkginclude_HEADERS)
-	$(CXXCOMPILE) $(CXXFLAGS) -o $@ pchdata.h
+xpath_LDFLAGS = -static	# for the sake of command-line speed
 
 ######################################################################
 
-bin_PROGRAMS = ledger
-ledger_CXXFLAGS =
-ledger_SOURCES = option.cc main.cc
-ledger_LDADD = $(LIBOBJS) libledger.la
-if HAVE_EXPAT
-ledger_CXXFLAGS += -DHAVE_EXPAT=1
-endif
-if HAVE_XMLPARSE
-ledger_CXXFLAGS += -DHAVE_XMLPARSE=1
-endif
-if HAVE_LIBOFX
-ledger_CXXFLAGS += -DHAVE_LIBOFX=1
-endif
-if HAVE_BOOST_PYTHON
-ledger_CXXFLAGS += -DUSE_BOOST_PYTHON=1
-endif
-if DEBUG
-ledger_CXXFLAGS += -DDEBUG_LEVEL=4
-endif
-ledger_LDFLAGS = -static	# for the sake of command-line speed
-
-info_TEXINFOS = ledger.texi
+#lib_LTLIBRARIES = libledger.la
+#
+#libledger_la_CXXFLAGS =
+#if USE_PCH
+#libledger_la_CXXFLAGS += -DUSE_PCH -Winvalid-pch -fpch-deps
+#endif
+#libledger_la_SOURCES = \
+#	amount.cc      \
+#	quotes.cc      \
+#	balance.cc     \
+#	value.cc       \
+#	datetime.cc    \
+#	xml.cc         \
+#	xpath.cc       \
+#	mask.cc        \
+#	format.cc      \
+#		       \
+#	trace.cc       \
+#	util.cc
+#		       \
+#	session.cc     \
+#	journal.cc     \
+#	parser.cc      \
+#	textual.cc     \
+#	binary.cc      \
+#	qif.cc	       \
+#		       \
+#	report.cc      \
+#	transform.cc   \
+#		       \
+#	dump.cc        \
+#	csv.cc         \
+#	derive.cc      \
+#	emacs.cc       \
+#	reconcile.cc
+#if HAVE_EXPAT
+#libledger_la_CXXFLAGS += -DHAVE_EXPAT=1
+#libledger_la_SOURCES += gnucash.cc
+#endif
+#if HAVE_XMLPARSE
+#libledger_la_CXXFLAGS += -DHAVE_XMLPARSE=1
+#libledger_la_SOURCES += gnucash.cc
+#endif
+#if HAVE_LIBOFX
+#libledger_la_CXXFLAGS += -DHAVE_LIBOFX=1
+#libledger_la_SOURCES += ofx.cc
+#endif
+#if HAVE_BOOST_PYTHON
+#libledger_la_CXXFLAGS += -DUSE_BOOST_PYTHON=1
+#libledger_la_SOURCES += py_eval.cc
+#endif
+#if DEBUG
+#libledger_la_CXXFLAGS += -DDEBUG_LEVEL=4
+#libledger_la_SOURCES  += debug.cc
+#endif
+#libledger_la_LDFLAGS = -release 3.0
+#
+#pkginclude_HEADERS = \
+#	acconf.h     \
+#	amount.h     \
+#	balance.h    \
+#	binary.h     \
+#	csv.h	     \
+#	datetime.h   \
+#	debug.h	     \
+#	derive.h     \
+#	dump.h	     \
+#	emacs.h	     \
+#	error.h	     \
+#	format.h     \
+#	gnucash.h    \
+#	journal.h    \
+#	ledger.h     \
+#	mask.h	     \
+#	ofx.h	     \
+#	option.h     \
+#	parser.h     \
+#	py_eval.h    \
+#	pyfstream.h  \
+#	pyledger.h   \
+#	qif.h	     \
+#	quotes.h     \
+#	reconcile.h  \
+#	report.h     \
+#	session.h    \
+#	textual.h    \
+#	timing.h     \
+#	trace.h	     \
+#	transform.h  \
+#	util.h	     \
+#	value.h	     \
+#	xml.h        \
+#	xpath.h
+#
+#pchpic.h.gch: pch.h pchdata.h $(pkginclude_HEADERS)
+#	$(CXXCOMPILE) $(CXXFLAGS) -DPIC -o $@ pchdata.h
+#
+#pchnopic.h.gch: pch.h pchdata.h $(pkginclude_HEADERS)
+#	$(CXXCOMPILE) $(CXXFLAGS) -o $@ pchdata.h
+#
+#######################################################################
+#
+#bin_PROGRAMS = ledger
+#
+#ledger_CXXFLAGS =
+#ledger_SOURCES = option.cc main.cc
+#ledger_LDADD = $(LIBOBJS) libledger.la
+#if HAVE_EXPAT
+#ledger_CXXFLAGS += -DHAVE_EXPAT=1
+#endif
+#if HAVE_XMLPARSE
+#ledger_CXXFLAGS += -DHAVE_XMLPARSE=1
+#endif
+#if HAVE_LIBOFX
+#ledger_CXXFLAGS += -DHAVE_LIBOFX=1
+#endif
+#if HAVE_BOOST_PYTHON
+#ledger_CXXFLAGS += -DUSE_BOOST_PYTHON=1
+#endif
+#if DEBUG
+#ledger_CXXFLAGS += -DDEBUG_LEVEL=4
+#endif
+#ledger_LDFLAGS = -static	# for the sake of command-line speed
+#
+#info_TEXINFOS = ledger.texi
 
 ######################################################################
 
