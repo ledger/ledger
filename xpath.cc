@@ -265,10 +265,12 @@ void xpath_t::token_t::next(std::istream& in, unsigned short flags)
     in.get(c);
     kind = COMMA;
     break;
+#if 0
   case '%':
     in.get(c);
     kind = PERCENT;
     break;
+#endif
 
   case '.':
     in.get(c);
@@ -739,6 +741,7 @@ xpath_t::parse_unary_expr(std::istream& in, unsigned short flags) const
     break;
   }
 
+#if 0
   case token_t::PERCENT: {
     std::auto_ptr<op_t> expr(parse_path_expr(in, flags));
     if (! expr.get())
@@ -755,6 +758,7 @@ xpath_t::parse_unary_expr(std::istream& in, unsigned short flags) const
     }
     break;
   }
+#endif
 
   default:
     push_token(tok);
@@ -1595,6 +1599,7 @@ xpath_t::op_t * xpath_t::op_t::compile(node_t * context, scope_t * scope,
     assert(0);
     break;
 
+#if 0
   case O_PERC: {
     assert(left);
     xpath_t expr(left->compile(context, scope, resolve));
@@ -1609,6 +1614,7 @@ xpath_t::op_t * xpath_t::op_t::compile(node_t * context, scope_t * scope,
     *expr->valuep = perc * *expr->valuep;
     return expr->acquire();
   }
+#endif
 
   case LAST:
   default:
@@ -1966,11 +1972,13 @@ bool xpath_t::op_t::write(std::ostream&   out,
     out << "]";
     break;
 
+#if 0
   case O_PERC:
     out << "%";
     if (left && left->write(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     break;
+#endif
 
   case LAST:
   default:
@@ -2060,7 +2068,9 @@ void xpath_t::op_t::dump(std::ostream& out, const int depth) const
   case O_RFIND: out << "O_RFIND"; break;
   case O_PRED: out << "O_PRED"; break;
 
+#if 0
   case O_PERC: out << "O_PERC"; break;
+#endif
 
   case LAST:
   default:

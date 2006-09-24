@@ -275,8 +275,8 @@ private:
 #if 0
       MATCH,			// =~
       NMATCH,			// !~
-#endif
       PERCENT,			// %
+#endif
       TOK_EOF,
       UNKNOWN
     } kind;
@@ -377,7 +377,9 @@ public:
       O_EVAL,
       O_ARG,
 
+#if 0
       O_PERC,
+#endif
 
       O_FIND,
       O_RFIND,
