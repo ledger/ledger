@@ -104,15 +104,15 @@ class value_t
     TRACE_CTOR("value_t(const balance_pair_t&)");
     *this = value;
   }
-  value_t(xml::node_t * xml_node) : type(XML_NODE) {
+  value_t(xml::node_t * xml_node) : type(INTEGER) { // gets set in =
     TRACE_CTOR("value_t(xml::node_t *)");
     *this = xml_node;
   }
-  value_t(void * item) : type(POINTER) {
+  value_t(void * item) : type(INTEGER) { // gets set in =
     TRACE_CTOR("value_t(void *)");
     *this = item;
   }
-  value_t(sequence_t * seq) : type(SEQUENCE) {
+  value_t(sequence_t * seq) : type(INTEGER) { // gets set in =
     TRACE_CTOR("value_t(sequence_t *)");
     *this = seq;
   }
@@ -217,6 +217,7 @@ class value_t
       return *this;
 
     if (! xml_node) {
+      type = XML_NODE;
       return *this = 0L;
     }
     else {
@@ -231,6 +232,7 @@ class value_t
       return *this;
 
     if (! item) {
+      type = POINTER;
       return *this = 0L;
     }
     else {
@@ -245,6 +247,7 @@ class value_t
       return *this;
 
     if (! seq) {
+      type = SEQUENCE;
       return *this = 0L;
     }
     else {

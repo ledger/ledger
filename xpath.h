@@ -666,36 +666,41 @@ public:
 	       unsigned short _flags = XPATH_PARSE_RELAXED) {
     parse(_expr, _flags);
     // jww (2006-09-24): fix
-    compile(NULL, scope);
+    compile((node_t *)NULL, scope);
   }
   void compile(std::istream& in, scope_t * scope = NULL,
 	       unsigned short _flags = XPATH_PARSE_RELAXED) {
     parse(in, _flags);
     // jww (2006-09-24): fix
-    compile(NULL, scope);
+    compile((node_t *)NULL, scope);
   }
 
-  void compile(node_t * context, scope_t * scope = NULL) {
+  void compile(document_t * document, scope_t * scope = NULL) {
+    compile(document->top, scope);
+  }
+  void compile(node_t * document, scope_t * scope = NULL) {
     if (ptr) {
-      op_t * compiled = ptr->compile(context, scope);
+      op_t * compiled = ptr->compile(document, scope);
       if (compiled == ptr)
 	compiled->release();
       reset(compiled);
     }
   }
 
-  virtual void calc(value_t& result, scope_t * scope = NULL) const;
-  virtual value_t calc(scope_t * scope = NULL) const {
+  virtual void calc(value_t& result, document_t * document,
+		    scope_t * scope = NULL) const;
+  virtual value_t calc(document_t * document, scope_t * scope = NULL) const {
     if (! ptr)
       return 0L;
     value_t temp;
-    calc(temp, scope);
+    calc(temp, document, scope);
     return temp;
   }
 
-  static value_t eval(const std::string& _expr, scope_t * scope = NULL) {
+  static value_t eval(const std::string& _expr, document_t * document,
+		      scope_t * scope = NULL) {
     xpath_t temp(_expr);
-    return temp.calc(scope);
+    return temp.calc(document, scope);
   }
 
   void write(std::ostream& out) const {

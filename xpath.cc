@@ -7,6 +7,7 @@
 #ifdef USE_BOOST_PYTHON
 #include "py_eval.h"
 #endif
+#include <fstream>
 #endif
 
 namespace xml {
@@ -612,19 +613,19 @@ xpath_t::parse_value_term(std::istream& in, unsigned short flags) const
 
   case token_t::DOT:
     node.reset(new op_t(op_t::NODE_NAME));
-    node->name_id = tree_t::CURRENT;
+    node->name_id = document_t::CURRENT;
     break;
   case token_t::DOTDOT:
     node.reset(new op_t(op_t::NODE_NAME));
-    node->name_id = tree_t::PARENT;
+    node->name_id = document_t::PARENT;
     break;
   case token_t::SLASH:
     node.reset(new op_t(op_t::NODE_NAME));
-    node->name_id = tree_t::ROOT;
+    node->name_id = document_t::ROOT;
     break;
   case token_t::STAR:
     node.reset(new op_t(op_t::NODE_NAME));
-    node->name_id = tree_t::ALL;
+    node->name_id = document_t::ALL;
     break;
 
   case token_t::LPAREN:
@@ -660,7 +661,7 @@ xpath_t::parse_path_expr(std::istream& in, unsigned short flags) const
   if (node.get()) {
     // If the beginning of the path was /, just put it back; this
     // makes parsing much simpler.
-    if (node->kind == op_t::NODE_NAME && node->name_id == tree_t::ROOT)
+    if (node->kind == op_t::NODE_NAME && node->name_id == document_t::ROOT)
       push_token();
 
     token_t& tok = next_token(in, flags);
@@ -1029,12 +1030,9 @@ bool xpath_t::op_t::find_xml_nodes(xml::node_t * context, scope_t * scope,
 {
   xpath_t expr(compile(context, scope, resolve));
 
-  bool all_constant = defer;
+  bool all_constant = true;
 
-  if (defer || ! expr->constant()) {
-    result_seq.push_back((void *)expr->acquire());
-    all_constant = false;
-  } else {
+  if (expr->kind == VALUE) {
     // Flatten out nested sequences, according to XPath 2.0
     if (expr->valuep->type == value_t::SEQUENCE) {
       value_t::sequence_t * subseq = expr->valuep->to_sequence();
@@ -1043,11 +1041,9 @@ bool xpath_t::op_t::find_xml_nodes(xml::node_t * context, scope_t * scope,
 	   j++) {
 	result_seq.push_back(*j);
       }
-    }
-    else if (expr->valuep->type == value_t::XML_NODE) {
+    } else {
       result_seq.push_back(*expr->valuep);
     }
-    all_constant = true;
   }
 
   if (recursive) {
@@ -1105,10 +1101,11 @@ xpath_t::op_t * xpath_t::op_t::compile(node_t * context, scope_t * scope,
     // First, look up the symbol as a node name within the current
     // context.  If any exist, then return the set of names.
 
-    xml::node_t *      first = NULL;
+    xml::node_t *	  first = NULL;
     value_t::sequence_t * nodes = NULL;
+
     for (xml::node_t * node = context->children; node; node = node->next) {
-      if (*name == node->name) {
+      if (std::strcmp(name->c_str(), node->name()) == 0) {
 	if (! first) {
 	  first = node;
 	}
@@ -1144,19 +1141,19 @@ xpath_t::op_t * xpath_t::op_t::compile(node_t * context, scope_t * scope,
 
   case NODE_NAME:
     switch (name_id) {
-    case tree_t::CURRENT:
+    case document_t::CURRENT:
       return wrap_value(context)->acquire();
 
-    case tree_t::PARENT:
+    case document_t::PARENT:
       if (context->parent)
 	return wrap_value(context->parent)->acquire();
       else
 	throw new compile_error("Reference to parent node from root node");
 
-    case tree_t::ROOT:
-      return wrap_value(context->tree->top)->acquire();
+    case document_t::ROOT:
+      return wrap_value(context->document->top)->acquire();
 
-    case tree_t::ALL: {
+    case document_t::ALL: {
       value_t::sequence_t * nodes = new value_t::sequence_t;
       for (xml::node_t * node = context->children; node; node = node->next)
 	nodes->push_back(node);
@@ -1514,7 +1511,9 @@ xpath_t::op_t * xpath_t::op_t::compile(node_t * context, scope_t * scope,
     if (left->kind == SYMBOL) {
       if (resolve) {
 	value_t temp;
-	if (scope->resolve(*left->name, temp, call_args.get()))
+	if (context && context->resolve(*left->name, temp))
+	  return wrap_value(temp)->acquire();
+	if (scope && scope->resolve(*left->name, temp, call_args.get()))
 	  return wrap_value(temp)->acquire();
       }
 
@@ -1525,8 +1524,13 @@ xpath_t::op_t * xpath_t::op_t::compile(node_t * context, scope_t * scope,
 	value_t temp;
 	(*func->functor)(temp, call_args.get());
 	return wrap_value(temp)->acquire();
-      } else {
+      }
+      else if (! resolve) {
 	return func->compile(context, call_args.get(), resolve);
+      }
+      else {
+	throw new calc_error(std::string("Unknown function name '") +
+			     *left->name + "'");
       }
     }
     else if (left->kind == FUNCTOR) {
@@ -1545,7 +1549,7 @@ xpath_t::op_t * xpath_t::op_t::compile(node_t * context, scope_t * scope,
     assert(left);
     assert(right);
     xpath_t lexpr(left->compile(context, scope, resolve));
-    if (! lexpr->constant()) {
+    if (! lexpr->constant() || ! resolve) {
       if (left == lexpr)
 	return acquire();
       else
@@ -1558,8 +1562,10 @@ xpath_t::op_t * xpath_t::op_t::compile(node_t * context, scope_t * scope,
     switch (lexpr->valuep->type) {
     case value_t::XML_NODE:
       if (! right->find_xml_nodes(lexpr->valuep->to_xml_node(), scope, resolve,
-			      false, *result_seq.get(), kind == O_RFIND))
+				  false, *result_seq.get(), kind == O_RFIND))
 	return defer_sequence(*result_seq.get());
+      else if (result_seq->size() == 1)
+	return wrap_value(result_seq->front())->acquire();
       else
 	return wrap_sequence(result_seq.release())->acquire();
 
@@ -1576,13 +1582,15 @@ xpath_t::op_t * xpath_t::op_t::compile(node_t * context, scope_t * scope,
 				  "to non-node(s)");
 
 	if (! right->find_xml_nodes((*i).to_xml_node(), scope, resolve,
-				    all_constant, *result_seq.get(),
+				    ! all_constant, *result_seq.get(),
 				    kind == O_RFIND))
 	  all_constant = false;
       }
 
       if (! all_constant)
 	return defer_sequence(*result_seq.get());
+      else if (result_seq->size() == 1)
+	return wrap_value(result_seq->front())->acquire();
       else
 	return wrap_sequence(result_seq.release())->acquire();
     }
@@ -1636,11 +1644,11 @@ xpath_t::op_t * xpath_t::op_t::compile(node_t * context, scope_t * scope,
   return NULL;
 }
 
-void xpath_t::calc(value_t& result, scope_t * scope) const
+void xpath_t::calc(value_t& result, document_t * document,
+		   scope_t * scope) const
 {
   try {
-    // jww (2006-09-24): Fix
-    xpath_t final(ptr->compile(NULL, scope, true));
+    xpath_t final(ptr->compile(document->top, scope, true));
     // jww (2006-09-09): Give a better error here if this is not
     // actually a value
     final->get_value(result);
@@ -2193,24 +2201,32 @@ void export_xpath()
 int main(int argc, char *argv[])
 {
   try {
-    xml::xpath_t expr(argv[1]);
+    xml::parser_t parser;
+    std::auto_ptr<xml::document_t> doc;
+
+    std::ifstream input(argv[1]);
+    if (parser.test(input)) {
+      doc.reset(parser.parse(input));
+      doc->write(std::cout);
+    } else {
+      std::cerr << "Could not parse XML file: " << argv[1] << std::endl;
+      return 1;
+    }
+
+    xml::xpath_t expr(argv[2]);
     if (expr) {
       std::cout << "Parsed:" << std::endl;
       expr.dump(std::cout);
+      std::cout << std::endl;
 
-#if 0
-      {
-	ledger::session_t session;
-	std::auto_ptr<xml::xpath_t::scope_t>
-	  locals(new xml::xpath_t::scope_t(&session.globals));
-	expr.compile(locals.get());
-      }
-
+      expr.compile(doc.get());
       std::cout << "Compiled:" << std::endl;
       expr.dump(std::cout);
-#endif
-
       std::cout << std::endl;
+
+      value_t temp;
+      expr.calc(temp, doc.get());
+      std::cout << "Calculated value: " << temp << std::endl;
     } else {
       std::cerr << "Failed to parse value expression!" << std::endl;
     }
