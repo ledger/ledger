@@ -2223,11 +2223,10 @@ std::ostream& operator<<(std::ostream& out, const value_t& value)
     out << **(std::string **) value.data;
     break;
   case value_t::XML_NODE:
-#if 1
-    out << (*(xml::node_t **) value.data)->text();
-#else
-    (*(xml::node_t **) value.data)->write(out);
-#endif
+    if ((*(xml::node_t **) value.data)->flags & XML_NODE_IS_PARENT)
+      out << '<' << (*(xml::node_t **) value.data)->name() << '>';
+    else
+      out << (*(xml::node_t **) value.data)->text();
     break;
 
   case value_t::POINTER:

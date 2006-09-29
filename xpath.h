@@ -285,6 +285,11 @@ private:
       NMATCH,			// !~
       PERCENT,			// %
 #endif
+      KW_AND,
+      KW_OR,
+      KW_DIV,
+      KW_MOD,
+      KW_UNION,
       TOK_EOF,
       UNKNOWN
     } kind;
@@ -355,6 +360,8 @@ public:
 
       O_NOT,
       O_NEG,
+
+      O_UNION,
 
       O_ADD,
       O_SUB,
@@ -486,6 +493,8 @@ public:
 		     value_t::sequence_t& result_seq, bool recursive);
     bool test_value(value_t * context, scope_t * scope, int index = 0);
 
+    void append_value(value_t& value, value_t::sequence_t& result_seq);
+
     static op_t * defer_sequence(value_t::sequence_t& result_seq);
 
     bool write(std::ostream&   out,
@@ -562,10 +571,13 @@ public:
   op_t * parse_predicate_expr(std::istream& in, unsigned short flags) const;
   op_t * parse_path_expr(std::istream& in, unsigned short flags) const;
   op_t * parse_unary_expr(std::istream& in, unsigned short flags) const;
+  op_t * parse_union_expr(std::istream& in, unsigned short flags) const;
   op_t * parse_mul_expr(std::istream& in, unsigned short flags) const;
   op_t * parse_add_expr(std::istream& in, unsigned short flags) const;
   op_t * parse_logic_expr(std::istream& in, unsigned short flags) const;
-  op_t * parse_boolean_expr(std::istream& in, unsigned short flags) const;
+  op_t * parse_and_expr(std::istream& in, unsigned short flags) const;
+  op_t * parse_or_expr(std::istream& in, unsigned short flags) const;
+  op_t * parse_querycolon_expr(std::istream& in, unsigned short flags) const;
   op_t * parse_value_expr(std::istream& in, unsigned short flags) const;
 
   op_t * parse_expr(std::istream& in,

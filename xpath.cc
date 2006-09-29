@@ -327,11 +327,15 @@ void xpath_t::token_t::next(std::istream& in, unsigned short flags)
 	  switch ((**(std::string **) value.data)[0]) {
 	  case 'a':
 	    if (**(std::string **) value.data == "and")
-	      kind = AMPER;
+	      kind = KW_AND;
 	    break;
 	  case 'd':
 	    if (**(std::string **) value.data == "div")
-	      kind = SLASH;
+	      kind = KW_DIV;
+	    break;
+	  case 'e':
+	    if (**(std::string **) value.data == "eq")
+	      kind = EQUAL;
 	    break;
 	  case 'f':
 	    if (**(std::string **) value.data == "false") {
@@ -339,15 +343,43 @@ void xpath_t::token_t::next(std::istream& in, unsigned short flags)
 	      value = false;
 	    }
 	    break;
+	  case 'g':
+	    if (**(std::string **) value.data == "gt")
+	      kind = GREATER;
+	    else if (**(std::string **) value.data == "ge")
+	      kind = GREATEREQ;
+	    break;
+	  case 'i':
+	    if (**(std::string **) value.data == "is")
+	      kind = EQUAL;
+	    break;
+	  case 'l':
+	    if (**(std::string **) value.data == "lt")
+	      kind = LESS;
+	    else if (**(std::string **) value.data == "le")
+	      kind = LESSEQ;
+	    break;
+	  case 'm':
+	    if (**(std::string **) value.data == "mod")
+	      kind = KW_MOD;
+	    break;
+	  case 'n':
+	    if (**(std::string **) value.data == "ne")
+	      kind = NEQUAL;
+	    break;
 	  case 'o':
 	    if (**(std::string **) value.data == "or")
-	      kind = PIPE;
+	      kind = KW_OR;
 	    break;
 	  case 't':
 	    if (**(std::string **) value.data == "true") {
 	      kind = VALUE;
 	      value = true;
 	    }
+	    break;
+	  case 'u':
+	    if (**(std::string **) value.data == "union")
+	      kind = KW_UNION;
 	    break;
 	  }
 	} else {
@@ -820,18 +852,38 @@ xpath_t::parse_unary_expr(std::istream& in, unsigned short flags) const
 }
 
 xpath_t::op_t *
-xpath_t::parse_mul_expr(std::istream& in, unsigned short flags) const
+xpath_t::parse_union_expr(std::istream& in, unsigned short flags) const
 {
   std::auto_ptr<op_t> node(parse_unary_expr(in, flags));
 
   if (node.get()) {
     token_t& tok = next_token(in, flags);
-    // jww (2006-09-24): Look for "div" operator here
-    if (tok.kind == token_t::STAR /*|| tok.kind == token_t::SLASH*/) {
+    if (tok.kind == token_t::PIPE || tok.kind == token_t::KW_UNION) {
+      std::auto_ptr<op_t> prev(node.release());
+      node.reset(new op_t(op_t::O_UNION));
+      node->set_left(prev.release());
+      node->set_right(parse_union_expr(in, flags));
+      if (! node->right)
+	throw new parse_error(std::string(tok.symbol) +
+			      " operator not followed by argument");
+    } else {
+      push_token(tok);
+    }
+  }
+  return node.release();
+}
+
+xpath_t::op_t *
+xpath_t::parse_mul_expr(std::istream& in, unsigned short flags) const
+{
+  std::auto_ptr<op_t> node(parse_union_expr(in, flags));
+
+  if (node.get()) {
+    token_t& tok = next_token(in, flags);
+    if (tok.kind == token_t::STAR || tok.kind == token_t::KW_DIV) {
       std::auto_ptr<op_t> prev(node.release());
       node.reset(new op_t(tok.kind == token_t::STAR ?
-				       op_t::O_MUL :
-				       op_t::O_DIV));
+			  op_t::O_MUL : op_t::O_DIV));
       node->set_left(prev.release());
       node->set_right(parse_mul_expr(in, flags));
       if (! node->right)
@@ -857,8 +909,7 @@ xpath_t::parse_add_expr(std::istream& in, unsigned short flags) const
 	tok.kind == token_t::MINUS) {
       std::auto_ptr<op_t> prev(node.release());
       node.reset(new op_t(tok.kind == token_t::PLUS ?
-				       op_t::O_ADD :
-				       op_t::O_SUB));
+			  op_t::O_ADD : op_t::O_SUB));
       node->set_left(prev.release());
       node->set_right(parse_add_expr(in, flags));
       if (! node->right)
@@ -926,7 +977,7 @@ xpath_t::parse_logic_expr(std::istream& in, unsigned short flags) const
       node.reset(new op_t(kind));
       node->set_left(prev.release());
       if (kind == op_t::O_DEFINE)
-	node->set_right(parse_boolean_expr(in, flags));
+	node->set_right(parse_querycolon_expr(in, flags));
       else
 	node->set_right(parse_add_expr(in, _flags));
 
@@ -945,68 +996,83 @@ xpath_t::parse_logic_expr(std::istream& in, unsigned short flags) const
 }
 
 xpath_t::op_t *
-xpath_t::parse_boolean_expr(std::istream& in, unsigned short flags) const
+xpath_t::parse_and_expr(std::istream& in, unsigned short flags) const
 {
   std::auto_ptr<op_t> node(parse_logic_expr(in, flags));
 
   if (node.get()) {
     token_t& tok = next_token(in, flags);
-    if (tok.kind == token_t::AMPER ||
-	tok.kind == token_t::PIPE ||
-	tok.kind == token_t::QUESTION) {
-      switch (tok.kind) {
-      case token_t::AMPER: {
-	std::auto_ptr<op_t> prev(node.release());
-	node.reset(new op_t(op_t::O_AND));
-	node->set_left(prev.release());
-	node->set_right(parse_boolean_expr(in, flags));
-	if (! node->right)
-	  throw new parse_error(std::string(tok.symbol) +
-				" operator not followed by argument");
-	break;
-      }
-      case token_t::PIPE: {
-	std::auto_ptr<op_t> prev(node.release());
-	node.reset(new op_t(op_t::O_OR));
-	node->set_left(prev.release());
-	node->set_right(parse_boolean_expr(in, flags));
-	if (! node->right)
-	  throw new parse_error(std::string(tok.symbol) +
-				" operator not followed by argument");
-	break;
-      }
-
-      case token_t::QUESTION: {
-	std::auto_ptr<op_t> prev(node.release());
-	node.reset(new op_t(op_t::O_QUES));
-	node->set_left(prev.release());
-	node->set_right(new op_t(op_t::O_COLON));
-	node->right->set_left(parse_logic_expr(in, flags));
-	if (! node->right)
-	  throw new parse_error(std::string(tok.symbol) +
-				" operator not followed by argument");
-	tok = next_token(in, flags);
-	if (tok.kind != token_t::COLON)
-	  tok.unexpected();	// jww (2006-09-09): wanted :
-	node->right->set_right(parse_logic_expr(in, flags));
-	if (! node->right)
-	  throw new parse_error(std::string(tok.symbol) +
-				" operator not followed by argument");
-	break;
-      }
-      }
-      tok = next_token(in, flags);
+    if (tok.kind == token_t::KW_AND) {
+      std::auto_ptr<op_t> prev(node.release());
+      node.reset(new op_t(op_t::O_AND));
+      node->set_left(prev.release());
+      node->set_right(parse_and_expr(in, flags));
+      if (! node->right)
+	throw new parse_error(std::string(tok.symbol) +
+			      " operator not followed by argument");
+    } else {
+      push_token(tok);
     }
-    push_token(tok);
   }
+  return node.release();
+}
 
+xpath_t::op_t *
+xpath_t::parse_or_expr(std::istream& in, unsigned short flags) const
+{
+  std::auto_ptr<op_t> node(parse_and_expr(in, flags));
+
+  if (node.get()) {
+    token_t& tok = next_token(in, flags);
+    if (tok.kind == token_t::KW_OR) {
+      std::auto_ptr<op_t> prev(node.release());
+      node.reset(new op_t(op_t::O_OR));
+      node->set_left(prev.release());
+      node->set_right(parse_or_expr(in, flags));
+      if (! node->right)
+	throw new parse_error(std::string(tok.symbol) +
+			      " operator not followed by argument");
+    } else {
+      push_token(tok);
+    }
+  }
+  return node.release();
+}
+
+xpath_t::op_t *
+xpath_t::parse_querycolon_expr(std::istream& in, unsigned short flags) const
+{
+  std::auto_ptr<op_t> node(parse_or_expr(in, flags));
+
+  if (node.get()) {
+    token_t& tok = next_token(in, flags);
+    if (tok.kind == token_t::QUESTION) {
+      std::auto_ptr<op_t> prev(node.release());
+      node.reset(new op_t(op_t::O_QUES));
+      node->set_left(prev.release());
+      node->set_right(new op_t(op_t::O_COLON));
+      node->right->set_left(parse_querycolon_expr(in, flags));
+      if (! node->right)
+	throw new parse_error(std::string(tok.symbol) +
+			      " operator not followed by argument");
+      tok = next_token(in, flags);
+      if (tok.kind != token_t::COLON)
+	tok.unexpected();	// jww (2006-09-09): wanted :
+      node->right->set_right(parse_querycolon_expr(in, flags));
+      if (! node->right)
+	throw new parse_error(std::string(tok.symbol) +
+			      " operator not followed by argument");
+    } else {
+      push_token(tok);
+    }
+  }
   return node.release();
 }
 
 xpath_t::op_t *
 xpath_t::parse_value_expr(std::istream& in, unsigned short flags) const
 {
-  std::auto_ptr<op_t> node(parse_boolean_expr(in, flags));
+  std::auto_ptr<op_t> node(parse_querycolon_expr(in, flags));
 
   if (node.get()) {
     token_t& tok = next_token(in, flags);
@@ -1018,7 +1084,6 @@ xpath_t::parse_value_expr(std::istream& in, unsigned short flags) const
       if (! node->right)
 	throw new parse_error(std::string(tok.symbol) +
 			      " operator not followed by argument");
-
       tok = next_token(in, flags);
     }
 
@@ -1078,19 +1143,8 @@ void xpath_t::op_t::find_values(value_t * context, scope_t * scope,
 {
   xpath_t expr(compile(context, scope, true));
 
-  if (expr->kind == VALUE) {
-    // Flatten out nested sequences, according to XPath 2.0
-    if (expr->valuep->type == value_t::SEQUENCE) {
-      value_t::sequence_t * subseq = expr->valuep->to_sequence();
-      for (value_t::sequence_t::iterator j = subseq->begin();
-	   j != subseq->end();
-	   j++) {
-	result_seq.push_back(*j);
-      }
-    } else {
-      result_seq.push_back(*expr->valuep);
-    }
-  }
+  if (expr->kind == VALUE)
+    append_value(*expr->valuep, result_seq);
 
   if (recursive) {
     if (context->type == value_t::XML_NODE) {
@@ -1160,6 +1214,20 @@ xpath_t::op_t * xpath_t::op_t::defer_sequence(value_t::sequence_t& result_seq)
   }
 
   return lit_seq.release();
+}
+
+void xpath_t::op_t::append_value(value_t& value,
+				 value_t::sequence_t& result_seq)
+{
+  if (value.type == value_t::SEQUENCE) {
+    value_t::sequence_t * subseq = value.to_sequence();
+    for (value_t::sequence_t::iterator i = subseq->begin();
+	 i != subseq->end();
+	 i++)
+      result_seq.push_back(*i);
+  } else {
+    result_seq.push_back(value);
+  }
 }
 
 xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
@@ -1326,6 +1394,30 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
       expr->valuep->negate();
       return expr->acquire();
     }
+  }
+
+  case O_UNION: {
+    assert(left);
+    assert(right);
+    xpath_t lexpr(left->compile(context, scope, resolve));
+    xpath_t rexpr(right->compile(context, scope, resolve));
+    if (! lexpr->constant() || ! rexpr->constant()) {
+      if (left == lexpr && right == rexpr)
+	return acquire();
+      else
+	return copy(lexpr, rexpr)->acquire();
+    }
+
+    std::auto_ptr<value_t::sequence_t> result_seq(new value_t::sequence_t);
+
+    append_value(*lexpr->valuep, *result_seq);
+    append_value(*rexpr->valuep, *result_seq);
+
+    if (result_seq->size() == 1)
+      return wrap_value(result_seq->front())->acquire();
+    else
+      return wrap_sequence(result_seq.release())->acquire();
+    break;
   }
 
   case O_ADD:
@@ -1505,6 +1597,7 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
   case O_COMMA: {
     assert(left);
     assert(right);
+    // jww (2006-09-29): This should act just like union
     xpath_t lexpr(left->compile(context, scope, resolve)); // for side-effects
     return right->compile(context, scope, resolve);
   }
@@ -1895,6 +1988,14 @@ bool xpath_t::op_t::write(std::ostream&   out,
       found = true;
     break;
 
+  case O_UNION:
+    if (left && left->write(out, relaxed, op_to_find, start_pos, end_pos))
+      found = true;
+    out << " | ";
+    if (right && right->write(out, relaxed, op_to_find, start_pos, end_pos))
+      found = true;
+    break;
+
   case O_ADD:
     out << "(";
     if (left && left->write(out, relaxed, op_to_find, start_pos, end_pos))
@@ -2150,6 +2251,8 @@ void xpath_t::op_t::dump(std::ostream& out, const int depth) const
 
   case O_NOT: out << "O_NOT"; break;
   case O_NEG: out << "O_NEG"; break;
+
+  case O_UNION: out << "O_UNION"; break;
 
   case O_ADD: out << "O_ADD"; break;
   case O_SUB: out << "O_SUB"; break;
