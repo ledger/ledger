@@ -23,6 +23,16 @@ void document_t::write(std::ostream& out) const
   }
 }
 
+node_t::node_t(document_t * _document, parent_node_t * _parent,
+	       unsigned int _flags)
+  : name_id(-1), document(_document), parent(_parent),
+    next(NULL), prev(NULL), flags(_flags), info(NULL), attrs(NULL)
+{
+  TRACE_CTOR("node_t(document_t *, node_t *)");
+  if (parent)
+    parent->add_child(this);
+}
+
 void node_t::extract()
 {
   if (prev)
@@ -45,7 +55,7 @@ void node_t::extract()
   prev = NULL;
 }
 
-void node_t::clear()
+void parent_node_t::clear()
 {
   node_t * child = children;
   while (child) {
@@ -55,7 +65,7 @@ void node_t::clear()
   }
 }
 
-void node_t::add_child(node_t * node)
+void parent_node_t::add_child(node_t * node)
 {
   if (children == NULL) {
     assert(last_child == NULL);
@@ -68,9 +78,10 @@ void node_t::add_child(node_t * node)
   }
 
   node->parent = this;
+
   while (node->next) {
     node_t * next_node = node->next;
-    next_node->prev = node;
+    assert(next_node->prev == node);
     next_node->parent = this;
     node = next_node;
   }
@@ -78,69 +89,47 @@ void node_t::add_child(node_t * node)
   last_child = node;
 }
 
-int node_t::position()
-{
-  if (! parent) {
-    assert(! next);
-    return 1;
-  }
-
-  int index = 1;
-  bool found = false;
-  for (node_t * p = parent->children; p; p = p->next) {
-    if (p == this) {
-      found = true;
-      break;
-    }
-    index++;
-  }
-
-  assert(found);
-  return index;
-}
-
-int node_t::last()
-{
-  if (! parent) {
-    assert(! next);
-    return 1;
-  }
-
-  int count = 0;
-  for (node_t * p = parent->children; p; p = p->next)
-    count++;
-
-  assert(count > 0);
-  return count;
-}
-
-void node_t::write(std::ostream& out, int depth) const
+void parent_node_t::write(std::ostream& out, int depth) const
 {
   for (int i = 0; i < depth; i++) out << "  ";
-  out << '<' << name() << ">";
-
-  if (! data.empty()) {
-    if (children) {
-      out << '\n';
-      for (int i = 0; i < depth + 1; i++) out << "  ";
-      out << text() << '\n';
-    } else {
-      out << text();
-    }
-  } else {
-    out << '\n';
-  }
+  out << '<' << name() << ">\n";
 
   for (node_t * child = children; child; child = child->next)
     child->write(out, depth + 1);
 
-  if (data.empty() || children)
-    for (int i = 0; i < depth; i++) out << "  ";
-
+  for (int i = 0; i < depth; i++) out << "  ";
   out << "</" << name() << ">\n";
 }
 
+void terminal_node_t::write(std::ostream& out, int depth) const
+{
+  for (int i = 0; i < depth; i++) out << "  ";
+
+  if (data.empty()) {
+    out << '<' << name() << " />\n";
+  } else {
+    out << '<' << name() << ">"
+	<< text()
+	<< "</" << name() << ">\n";
+  }
+}
+
 #if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
+
+template <typename T>
+inline T * create_node(parser_t * parser)
+{
+  T * node = new T(parser->document, parser->node_stack.empty() ?
+		   NULL : parser->node_stack.front());
+
+  node->set_name(parser->pending);
+  node->attrs = parser->pending_attrs;
+
+  parser->pending	= NULL;
+  parser->pending_attrs = NULL;
+
+  return node;
+}
 
 static void startElement(void *userData, const char *name, const char **attrs)
 {
@@ -148,14 +137,25 @@ static void startElement(void *userData, const char *name, const char **attrs)
 
   DEBUG_PRINT("xml.parse", "startElement(" << name << ")");
 
-  if (parser->node_stack.empty()) {
-    parser->node_stack.push_front(new node_t(parser->document));
-    parser->document->top = parser->node_stack.front();
-  } else {
-    parser->node_stack.push_front(new node_t(parser->document,
-					     parser->node_stack.front()));
+  if (parser->pending) {
+    parent_node_t * node = create_node<parent_node_t>(parser);
+    if (parser->node_stack.empty())
+      parser->document->top = node;
+    parser->node_stack.push_front(node);
   }
-  parser->node_stack.front()->set_name(name);
+
+  parser->pending = name;
+
+  if (attrs) {
+    for (const char ** p = attrs; *p; p += 2) {
+      if (! parser->pending_attrs)
+	parser->pending_attrs = new node_t::attrs_map;
+
+      std::pair<node_t::attrs_map::iterator, bool> result
+	= parser->pending_attrs->insert(node_t::attrs_pair(*p, *(p + 1)));
+      assert(result.second);
+    }
+  }
 }
 
 static void endElement(void *userData, const char *name)
@@ -164,7 +164,20 @@ static void endElement(void *userData, const char *name)
 
   DEBUG_PRINT("xml.parse", "endElement(" << name << ")");
 
-  parser->node_stack.pop_front();
+  if (parser->pending) {
+    terminal_node_t * node = create_node<terminal_node_t>(parser);
+    if (parser->node_stack.empty()) {
+      parser->document->top = node;
+      return;
+    }
+  }
+  else if (! parser->handled_data) {
+    assert(! parser->node_stack.empty());
+    parser->node_stack.pop_front();
+  }
+  else {
+    parser->handled_data = false;
+  }
 }
 
 static void dataHandler(void *userData, const char *s, int len)
@@ -181,8 +194,20 @@ static void dataHandler(void *userData, const char *s, int len)
     }
   }
 
-  if (! all_whitespace)
-    parser->node_stack.front()->data = std::string(s, len);
+  // jww (2006-09-28): I currently do not support text nodes within a
+  // node that has children.
+
+  if (! all_whitespace) {
+    terminal_node_t * node = create_node<terminal_node_t>(parser);
+
+    node->data = std::string(s, len);
+    parser->handled_data = true;
+
+    if (parser->node_stack.empty()) {
+      parser->document->top = node;
+      return;
+    }
+  }
 }
 
 bool parser_t::test(std::istream& in) const
@@ -204,8 +229,7 @@ bool parser_t::test(std::istream& in) const
 document_t * parser_t::parse(std::istream& in, const char ** builtins,
 			     const int builtins_size)
 {
-  std::auto_ptr<document_t>
-    doc(new document_t(builtins, builtins_size));
+  std::auto_ptr<document_t> doc(new document_t(builtins, builtins_size));
 
   document = doc.get();
 

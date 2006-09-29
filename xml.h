@@ -103,80 +103,123 @@ class document_t
   void write(std::ostream& out) const;
 };
 
+#define XML_NODE_IS_PARENT 0x1
+
+class parent_node_t;
+
 class node_t
 {
 public:
-  document_t * document;
+  int		  name_id;
+  document_t *	  document;
+  parent_node_t * parent;
+  node_t *	  next;
+  node_t *	  prev;
+  unsigned int	  flags;
+  void *	  info;
 
-  node_t * parent;
+  typedef std::map<std::string, std::string>  attrs_map;
+  typedef std::pair<std::string, std::string> attrs_pair;
 
-  node_t * next;
-  node_t * prev;
+  attrs_map * attrs;
 
-  node_t * children;
-  node_t * last_child;
+  node_t(document_t * _document, parent_node_t * _parent = NULL,
+	 unsigned int _flags = 0);
 
-  int name_id;
-
-  std::string data;
-
-  node_t(document_t * _document, node_t * _parent = NULL)
-    : document(_document),
-      parent(_parent),
-
-      next(NULL),
-      prev(NULL),
-
-      children(NULL),
-      last_child(NULL)
-  {
-    TRACE_CTOR("node_t(document_t *, node_t *)");
-    if (parent)
-      parent->add_child(this);
-  }
   virtual ~node_t() {
     TRACE_DTOR("node_t");
     if (parent) extract();
+    if (attrs) delete attrs;
+  }
+
+  void extract();
+
+  virtual const char * text() const {
+    assert(0);
+  }
+
+  const char * name() const {
+    return document->lookup_name(name_id);
+  }
+  int set_name(const char * _name) {
+    name_id = document->register_name(_name);
+    return name_id;
+  }
+  int set_name(int _name_id) {
+    name_id = _name_id;
+    return name_id;
+  }
+
+  void set_attr(const char * n, const char * v) {
+    if (! attrs)
+      attrs = new attrs_map;
+    std::pair<attrs_map::iterator, bool> result =
+      attrs->insert(attrs_pair(n, v));
+    assert(result.second);
+  }
+  const char * get_attr(const char * n) {
+    if (attrs) {
+      attrs_map::iterator i = attrs->find(n);
+      if (i != attrs->end())
+	return (*i).second.c_str();
+    }
+    return NULL;
+  }
+
+  virtual void write(std::ostream& out, int depth = 0) const = 0;
+
+private:
+  node_t(const node_t&);
+  node_t& operator=(const node_t&);
+};
+
+class parent_node_t : public node_t
+{
+public:
+  node_t * children;
+  node_t * last_child;
+
+  parent_node_t(document_t * _document, parent_node_t * _parent = NULL)
+    : node_t(_document, _parent, XML_NODE_IS_PARENT),
+      children(NULL), last_child(NULL)
+  {
+    TRACE_CTOR("parent_node_t(document_t *, node_t *)");
+  }
+  virtual ~parent_node_t() {
+    TRACE_DTOR("parent_node_t");
     if (children) clear();
   }
 
-  virtual void extract();
   virtual void clear();
-
   virtual void add_child(node_t * node);
+
+  void write(std::ostream& out, int depth = 0) const;
+
+private:
+  parent_node_t(const parent_node_t&);
+  parent_node_t& operator=(const parent_node_t&);
+};
+
+class terminal_node_t : public node_t
+{
+public:
+  std::string data;
+
+  terminal_node_t(document_t * _document, parent_node_t * _parent = NULL)
+    : node_t(_document, _parent)
+  {
+    TRACE_CTOR("terminal_node_t(document_t *, node_t *)");
+  }
 
   virtual const char * text() const {
     return data.c_str();
   }
 
-  virtual const char * name() const {
-    return document->lookup_name(name_id);
-  }
-  virtual int set_name(const char * _name) {
-    name_id = document->register_name(_name);
-    return name_id;
-  }
-  virtual int set_name(int _name_id) {
-    name_id = _name_id;
-    return name_id;
-  }
-
-  virtual int position();
-  virtual int last();
-
-  virtual bool resolve(const std::string& func, value_t& result) {
-    if (func == "text") {
-      result.set_string(text());
-      return true;
-    }
-    return false;
-  }
-
   void write(std::ostream& out, int depth = 0) const;
 
 private:
-  node_t(const node_t&);
-  node_t& operator=(const node_t&);
+  terminal_node_t(const node_t&);
+  terminal_node_t& operator=(const node_t&);
 };
 
 #if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
@@ -184,13 +227,17 @@ private:
 class parser_t
 {
  public:
-  document_t * document;
-  std::list<node_t *> node_stack;
+  document_t *	      document;
+  XML_Parser	      parser;
+  std::string	      have_error;
+  const char *	      pending;
+  node_t::attrs_map * pending_attrs;
+  bool                handled_data;
 
-  XML_Parser  parser;
-  std::string have_error;
+  std::list<parent_node_t *> node_stack;
 
-  parser_t() : document(NULL) {}
+  parser_t() : document(NULL), pending(NULL), pending_attrs(NULL),
+	       handled_data(false) {}
 
   virtual bool         test(std::istream& in) const;
   virtual document_t * parse(std::istream& in,

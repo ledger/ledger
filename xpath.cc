@@ -473,6 +473,41 @@ void xpath_t::scope_t::define(const std::string& name, functor_t * def) {
   define(name, wrap_functor(def));
 }
 
+bool xpath_t::function_scope_t::resolve(const std::string& name,
+					value_t&	   result,
+					scope_t *	   locals)
+{
+  switch (name[0]) {
+  case 'l':
+    if (name == "last") {
+      if (sequence)
+	result = (long)sequence->size();
+      else
+	result = 1L;
+      return true;
+    }
+    break;
+
+  case 'p':
+    if (name == "position") {
+      result = (long)index + 1;
+      return true;
+    }
+    break;
+
+  case 't':
+    if (name == "text") {
+      if (value->type == value_t::XML_NODE)
+	result.set_string(value->to_xml_node()->text());
+      else
+	throw new calc_error("Attempt to call text() on a non-node value");
+      return true;
+    }
+    break;
+  }
+  return scope_t::resolve(name, result, locals);
+}
+
 xpath_t::op_t::~op_t()
 {
   TRACE_DTOR("xpath_t::op_t");
@@ -654,9 +689,37 @@ xpath_t::parse_value_term(std::istream& in, unsigned short flags) const
 }
 
 xpath_t::op_t *
-xpath_t::parse_path_expr(std::istream& in, unsigned short flags) const
+xpath_t::parse_predicate_expr(std::istream& in, unsigned short flags) const
 {
   std::auto_ptr<op_t> node(parse_value_term(in, flags));
+
+  if (node.get()) {
+    token_t& tok = next_token(in, flags);
+    while (tok.kind == token_t::LBRACKET) {
+      std::auto_ptr<op_t> prev(node.release());
+      node.reset(new op_t(op_t::O_PRED));
+      node->set_left(prev.release());
+      node->set_right(parse_value_expr(in, flags | XPATH_PARSE_PARTIAL));
+      if (! node->right)
+	throw new parse_error("[ operator not followed by valid expression");
+
+      tok = next_token(in, flags);
+      if (tok.kind != token_t::RBRACKET)
+	tok.unexpected();		// jww (2006-09-09): wanted ]
+
+      tok = next_token(in, flags);
+    }
+
+    push_token(tok);
+  }
+
+  return node.release();
+}
+
+xpath_t::op_t *
+xpath_t::parse_path_expr(std::istream& in, unsigned short flags) const
+{
+  std::auto_ptr<op_t> node(parse_predicate_expr(in, flags));
 
   if (node.get()) {
     // If the beginning of the path was /, just put it back; this
@@ -675,25 +738,11 @@ xpath_t::parse_path_expr(std::istream& in, unsigned short flags) const
 	push_token(tok);
 
       node->set_left(prev.release());
-      node->set_right(parse_value_term(in, flags));
+      node->set_right(parse_predicate_expr(in, flags));
       if (! node->right)
 	throw new parse_error("/ operator not followed by a valid term");
 
       tok = next_token(in, flags);
-      while (tok.kind == token_t::LBRACKET) {
-	prev.reset(node.release());
-	node.reset(new op_t(op_t::O_PRED));
-	node->set_left(prev.release());
-	node->set_right(parse_value_expr(in, flags | XPATH_PARSE_PARTIAL));
-	if (! node->right)
-	  throw new parse_error("[ operator not followed by valid expression");
-
-	tok = next_token(in, flags);
-	if (tok.kind != token_t::RBRACKET)
-	  tok.unexpected();		// jww (2006-09-09): wanted ]
-
-	tok = next_token(in, flags);
-      }
     }
 
     push_token(tok);
@@ -1023,14 +1072,11 @@ xpath_t::op_t::copy(op_t * left, op_t * right) const
   return node.release();
 }
 
-bool xpath_t::op_t::find_xml_nodes(xml::node_t * context, scope_t * scope,
-				   bool resolve, bool defer,
-				   value_t::sequence_t& result_seq,
-				   bool recursive)
+void xpath_t::op_t::find_values(value_t * context, scope_t * scope,
+				value_t::sequence_t& result_seq,
+				bool recursive)
 {
-  xpath_t expr(compile(context, scope, resolve));
-
-  bool all_constant = true;
+  xpath_t expr(compile(context, scope, true));
 
   if (expr->kind == VALUE) {
     // Flatten out nested sequences, according to XPath 2.0
@@ -1047,12 +1093,39 @@ bool xpath_t::op_t::find_xml_nodes(xml::node_t * context, scope_t * scope,
   }
 
   if (recursive) {
-    for (xml::node_t * node = context->children; node; node = node->next)
-      if (! find_xml_nodes(node, scope, resolve, defer, result_seq, recursive))
-	all_constant = false;
+    if (context->type == value_t::XML_NODE) {
+      xml::node_t * ptr = context->to_xml_node();
+      if (ptr->flags & XML_NODE_IS_PARENT) {
+	xml::parent_node_t * parent = static_cast<xml::parent_node_t *>(ptr);
+	for (xml::node_t * node = parent->children;
+	     node;
+	     node = node->next) {
+	  value_t temp(node);
+	  find_values(&temp, scope, result_seq, recursive);
+	}
+      }
+    } else {
+      throw new calc_error("Recursive path selection on a non-node value");
+    }
   }
+}
 
-  return all_constant;
+bool xpath_t::op_t::test_value(value_t * context, scope_t * scope,
+			       int index)
+{
+  xpath_t expr(compile(context, scope, true));
+
+  if (expr->kind != VALUE)
+    throw new calc_error("Predicate expression does not yield a constant value");
+
+  switch (expr->valuep->type) {
+  case value_t::INTEGER:
+  case value_t::AMOUNT:
+    return *expr->valuep == (long)index + 1;
+
+  default:
+    return expr->valuep->to_boolean();
+  }
 }
 
 xpath_t::op_t * xpath_t::op_t::defer_sequence(value_t::sequence_t& result_seq)
@@ -1089,7 +1162,7 @@ xpath_t::op_t * xpath_t::op_t::defer_sequence(value_t::sequence_t& result_seq)
   return lit_seq.release();
 }
 
-xpath_t::op_t * xpath_t::op_t::compile(node_t * context, scope_t * scope,
+xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
 				       bool resolve)
 {
   try {
@@ -1098,31 +1171,40 @@ xpath_t::op_t * xpath_t::op_t::compile(node_t * context, scope_t * scope,
     return acquire();
 
   case SYMBOL: {
-    // First, look up the symbol as a node name within the current
-    // context.  If any exist, then return the set of names.
+    if (context->type == value_t::XML_NODE && resolve) {
+      // First, look up the symbol as a node name within the current
+      // context.  If any exist, then return the set of names.
 
-    xml::node_t *	  first = NULL;
-    value_t::sequence_t * nodes = NULL;
+      xml::node_t *	  first = NULL;
+      value_t::sequence_t * nodes = NULL;
 
-    for (xml::node_t * node = context->children; node; node = node->next) {
-      if (std::strcmp(name->c_str(), node->name()) == 0) {
-	if (! first) {
-	  first = node;
-	}
-	else if (! nodes) {
-	  nodes = new value_t::sequence_t;
-	  nodes->push_back(first);
+      xml::node_t * ptr = context->to_xml_node();
+      if (ptr->flags & XML_NODE_IS_PARENT) {
+	xml::parent_node_t * parent = static_cast<xml::parent_node_t *>(ptr);
+
+	for (xml::node_t * node = parent->children;
+	     node;
+	     node = node->next) {
+	  if (std::strcmp(name->c_str(), node->name()) == 0) {
+	    if (! first) {
+	      first = node;
+	    }
+	    else if (! nodes) {
+	      nodes = new value_t::sequence_t;
+	      nodes->push_back(first);
+	    }
+
+	    if (nodes)
+	      nodes->push_back(node);
+	  }
 	}
 
 	if (nodes)
-	  nodes->push_back(node);
+	  return wrap_value(nodes)->acquire();
+	else if (first)
+	  return wrap_value(first)->acquire();
       }
     }
-
-    if (nodes)
-      return wrap_value(nodes)->acquire();
-    else if (first)
-      return wrap_value(first)->acquire();
 
     // jww (2006-09-24): What happens if none are found?
 
@@ -1145,27 +1227,43 @@ xpath_t::op_t * xpath_t::op_t::compile(node_t * context, scope_t * scope,
       return wrap_value(context)->acquire();
 
     case document_t::PARENT:
-      if (context->parent)
-	return wrap_value(context->parent)->acquire();
+      if (context->type != value_t::XML_NODE)
+	throw new compile_error("Referencing parent node from a non-node value");
+      else if (context->to_xml_node()->parent)
+	return wrap_value(context->to_xml_node()->parent)->acquire();
       else
-	throw new compile_error("Reference to parent node from root node");
+	throw new compile_error("Referencing parent node from the root node");
 
     case document_t::ROOT:
-      return wrap_value(context->document->top)->acquire();
+      if (context->type != value_t::XML_NODE)
+	throw new compile_error("Referencing root node from a non-node value");
+      else
+	return wrap_value(context->to_xml_node()->document->top)->acquire();
 
     case document_t::ALL: {
+      if (context->type != value_t::XML_NODE)
+	throw new compile_error("Referencing child nodes from a non-node value");
+
+      xml::node_t * ptr = context->to_xml_node();
+      if (! (ptr->flags & XML_NODE_IS_PARENT))
+	throw new compile_error("Request for child nodes of a leaf node");
+
+      xml::parent_node_t * parent = static_cast<xml::parent_node_t *>(ptr);
+
       value_t::sequence_t * nodes = new value_t::sequence_t;
-      for (xml::node_t * node = context->children; node; node = node->next)
+      for (xml::node_t * node = parent->children; node; node = node->next)
 	nodes->push_back(node);
+
       return wrap_value(nodes)->acquire();
     }
     }
     break;
 
   case ARG_INDEX:
-    if (scope && scope->arg_scope) {
-      if (arg_index < scope->args.size())
-	return wrap_value(scope->args[arg_index])->acquire();
+    if (scope && scope->kind == scope_t::ARGUMENT) {
+      assert(scope->args.type == value_t::SEQUENCE);
+      if (arg_index < scope->args.to_sequence()->size())
+	return wrap_value((*scope->args.to_sequence())[arg_index])->acquire();
       else
 	throw new compile_error("Reference to non-existing argument");
     } else {
@@ -1491,7 +1589,9 @@ xpath_t::op_t * xpath_t::op_t::compile(node_t * context, scope_t * scope,
     assert(left);
 
     std::auto_ptr<scope_t> call_args(new scope_t(scope));
-    call_args->arg_scope = true;
+    call_args->kind = scope_t::ARGUMENT;
+
+    std::auto_ptr<value_t::sequence_t> call_seq;
 
     int index = 0;
     op_t * args = right;
@@ -1503,16 +1603,21 @@ xpath_t::op_t * xpath_t::op_t::compile(node_t * context, scope_t * scope,
       } else {
 	args = NULL;
       }
+
+      if (! call_seq.get())
+	call_seq.reset(new value_t::sequence_t);
+
       // jww (2006-09-15): Need to return a reference to these, if
       // there are undetermined arguments!
-      call_args->args.push_back(arg->compile(context, scope, resolve)->value());
+      call_seq->push_back(arg->compile(context, scope, resolve)->value());
     }
+
+    if (call_seq.get())
+      call_args->args = call_seq.release();
 
     if (left->kind == SYMBOL) {
       if (resolve) {
 	value_t temp;
-	if (context && context->resolve(*left->name, temp))
-	  return wrap_value(temp)->acquire();
 	if (scope && scope->resolve(*left->name, temp, call_args.get()))
 	  return wrap_value(temp)->acquire();
       }
@@ -1545,7 +1650,8 @@ xpath_t::op_t * xpath_t::op_t::compile(node_t * context, scope_t * scope,
   }
 
   case O_FIND:
-  case O_RFIND: {
+  case O_RFIND:
+  case O_PRED: {
     assert(left);
     assert(right);
     xpath_t lexpr(left->compile(context, scope, resolve));
@@ -1560,52 +1666,52 @@ xpath_t::op_t * xpath_t::op_t::compile(node_t * context, scope_t * scope,
 
     // jww (2006-09-24): What about when nothing is found?
     switch (lexpr->valuep->type) {
-    case value_t::XML_NODE:
-      if (! right->find_xml_nodes(lexpr->valuep->to_xml_node(), scope, resolve,
-				  false, *result_seq.get(), kind == O_RFIND))
-	return defer_sequence(*result_seq.get());
-      else if (result_seq->size() == 1)
-	return wrap_value(result_seq->front())->acquire();
-      else
-	return wrap_sequence(result_seq.release())->acquire();
+    case value_t::XML_NODE: {
+      function_scope_t xpath_fscope(NULL, lexpr->valuep, 0, scope);
+      if (kind == O_PRED) {
+	if (right->test_value(lexpr->valuep, &xpath_fscope))
+	  result_seq->push_back(*lexpr->valuep);
+      } else {
+	right->find_values(lexpr->valuep, &xpath_fscope, *result_seq.get(),
+			   kind == O_RFIND);
+      }
+      break;
+    }
 
     case value_t::SEQUENCE: {
       value_t::sequence_t * seq = lexpr->valuep->to_sequence();
 
-      bool all_constant = true;
+      int index = 0;
       for (value_t::sequence_t::iterator i = seq->begin();
 	   i != seq->end();
-	   i++) {
+	   i++, index++) {
 	assert((*i).type != value_t::SEQUENCE);
 	if ((*i).type != value_t::XML_NODE)
 	  throw new compile_error("Attempting to apply path selection "
 				  "to non-node(s)");
 
-	if (! right->find_xml_nodes((*i).to_xml_node(), scope, resolve,
-				    ! all_constant, *result_seq.get(),
-				    kind == O_RFIND))
-	  all_constant = false;
+	function_scope_t xpath_fscope(seq, &(*i), index, scope);
+	if (kind == O_PRED) {
+	  if (right->test_value(&(*i), &xpath_fscope, index))
+	    result_seq->push_back(*i);
+	} else {
+	  right->find_values(&(*i), &xpath_fscope, *result_seq.get(),
+			     kind == O_RFIND);
+	}
       }
-
-      if (! all_constant)
-	return defer_sequence(*result_seq.get());
-      else if (result_seq->size() == 1)
-	return wrap_value(result_seq->front())->acquire();
-      else
-	return wrap_sequence(result_seq.release())->acquire();
+      break;
     }
 
     default:
       throw new compile_error("Attempting to apply path selection "
 			      "to non-node(s)");
     }
-    break;
-  }
 
-  case O_PRED:
-    // jww (2006-09-24): Implement predicates/indexes!
-    assert(0);
-    break;
+    if (result_seq->size() == 1)
+      return wrap_value(result_seq->front())->acquire();
+    else
+      return wrap_sequence(result_seq.release())->acquire();
+  }
 
 #if 0
   case O_PERC: {
@@ -1648,7 +1754,8 @@ void xpath_t::calc(value_t& result, document_t * document,
 		   scope_t * scope) const
 {
   try {
-    xpath_t final(ptr->compile(document->top, scope, true));
+    value_t top_node(document->top);
+    xpath_t final(ptr->compile(&top_node, scope, true));
     // jww (2006-09-09): Give a better error here if this is not
     // actually a value
     final->get_value(result);
@@ -1751,10 +1858,10 @@ bool xpath_t::op_t::write(std::ostream&   out,
       assert(0);
       break;
     case value_t::DATETIME:
-      out << '[' << *(valuep) << ']';
+      out << '[' << *valuep << ']';
       break;
     case value_t::STRING:
-      out << '"' << *(valuep) << '"';
+      out << '"' << *valuep << '"';
       break;
     }
     break;
@@ -2017,7 +2124,7 @@ void xpath_t::op_t::dump(std::ostream& out, const int depth) const
 
   switch (kind) {
   case VALUE:
-    out << "VALUE - " << *(valuep);
+    out << "VALUE - " << *valuep;
     break;
 
   case SYMBOL:

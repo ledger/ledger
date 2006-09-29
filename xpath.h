@@ -186,21 +186,13 @@ public:
 
   public:
     scope_t * parent;
+    value_t   args;
 
-    // jww (2006-09-24): Make this a regular value_t, which is then
-    // either an argument or a sequence.
-    typedef std::deque<value_t> args_list;
-    args_list args;
+    enum kind_t { NORMAL, STATIC, ARGUMENT } kind;
 
-    // jww (2006-09-24): Make this a kind_t enumeration
-    bool      arg_scope;
-    bool      static_scope;
-
-    scope_t(scope_t * _parent = NULL, bool _arg_scope = false,
-	    bool _static_scope = false)
-      : parent(_parent), arg_scope(_arg_scope),
-	static_scope(_static_scope) {
-      TRACE_CTOR("xpath_t::scope_t(scope *)");
+    scope_t(scope_t * _parent = NULL, kind_t _kind = NORMAL)
+      : parent(_parent), kind(_kind) {
+      TRACE_CTOR("xpath_t::scope_t(scope *, kind_t)");
     }
 
     virtual ~scope_t() {
@@ -224,6 +216,22 @@ public:
     void define(const std::string& name, functor_t * def);
 
     friend struct op_t;
+  };
+
+  class function_scope_t : public scope_t
+  {
+    value_t::sequence_t * sequence;
+    value_t * value;
+    int index;
+
+  public:
+    function_scope_t(value_t::sequence_t * _sequence, value_t * _value,
+		     int _index, scope_t * parent = NULL)
+      : scope_t(parent, STATIC),
+	sequence(_sequence), value(_value), index(_index) {}
+
+    virtual bool resolve(const std::string& name, value_t& result,
+			 scope_t * locals = NULL);
   };
 
 #define XPATH_PARSE_NORMAL     0x00
@@ -471,12 +479,12 @@ public:
 
     op_t * copy(op_t * left = NULL,
 		op_t * right = NULL) const;
-    op_t * compile(node_t * context, scope_t * scope,
+    op_t * compile(value_t * context, scope_t * scope,
 		   bool resolve = false);
 
-    bool find_xml_nodes(xml::node_t * context, scope_t * scope, bool resolve,
-			bool defer, value_t::sequence_t& result_seq,
-			bool recursive);
+    void find_values(value_t * context, scope_t * scope,
+		     value_t::sequence_t& result_seq, bool recursive);
+    bool test_value(value_t * context, scope_t * scope, int index = 0);
 
     static op_t * defer_sequence(value_t::sequence_t& result_seq);
 
@@ -551,6 +559,7 @@ public:
   }
 
   op_t * parse_value_term(std::istream& in, unsigned short flags) const;
+  op_t * parse_predicate_expr(std::istream& in, unsigned short flags) const;
   op_t * parse_path_expr(std::istream& in, unsigned short flags) const;
   op_t * parse_unary_expr(std::istream& in, unsigned short flags) const;
   op_t * parse_mul_expr(std::istream& in, unsigned short flags) const;
@@ -680,7 +689,8 @@ public:
   }
   void compile(node_t * document, scope_t * scope = NULL) {
     if (ptr) {
-      op_t * compiled = ptr->compile(document, scope);
+      value_t noderef(document);
+      op_t * compiled = ptr->compile(&noderef, scope);
       if (compiled == ptr)
 	compiled->release();
       reset(compiled);
