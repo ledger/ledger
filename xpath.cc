@@ -440,8 +440,7 @@ xpath_t::op_t * xpath_t::wrap_value(const value_t& val)
 xpath_t::op_t * xpath_t::wrap_sequence(value_t::sequence_t * val)
 {
   if (val->size() == 0) {
-    // jww (2006-09-24): What is the "void" value?
-    assert(0);
+    return wrap_value(false);
   }
   else if (val->size() == 1) {
     return wrap_value(val->front());
