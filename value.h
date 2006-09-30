@@ -213,6 +213,7 @@ class value_t
     }
   }
   value_t& operator=(xml::node_t * xml_node) {
+    assert(xml_node);
     if (type == XML_NODE && *(xml::node_t **) data == xml_node)
       return *this;
 
@@ -228,6 +229,7 @@ class value_t
     }
   }
   value_t& operator=(void * item) {
+    assert(item);
     if (type == POINTER && *(void **) data == item)
       return *this;
 
@@ -243,6 +245,7 @@ class value_t
     }
   }
   value_t& operator=(sequence_t * seq) {
+    assert(seq);
     if (type == SEQUENCE && *(sequence_t **) data == seq)
       return *this;
 

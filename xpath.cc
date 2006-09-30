@@ -12,7 +12,7 @@
 
 namespace xml {
 
-#ifndef THREADED
+#ifndef THREADSAFE
 xpath_t::token_t xpath_t::lookahead;
 #endif
 
@@ -32,19 +32,74 @@ void xpath_t::token_t::parse_ident(std::istream& in)
   }
   assert(in.good());
 
-  if (c == '@') {
-    in.get(c);
-    length = 1;
-  } else {
-    length = 0;
-  }
+  kind = IDENT;
+  length = 0;
 
   char buf[256];
   READ_INTO_(in, buf, 255, c, length,
 	     std::isalnum(c) || c == '_' || c == '.');
 
-  kind = IDENT;
-  value.set_string(buf);
+  switch (buf[0]) {
+  case 'a':
+    if (std::strcmp(buf, "and") == 0)
+      kind = KW_AND;
+    break;
+  case 'd':
+    if (std::strcmp(buf, "div") == 0)
+      kind = KW_DIV;
+    break;
+  case 'e':
+    if (std::strcmp(buf, "eq") == 0)
+      kind = EQUAL;
+    break;
+  case 'f':
+    if (std::strcmp(buf, "false") == 0) {
+      kind = VALUE;
+      value = false;
+    }
+    break;
+  case 'g':
+    if (std::strcmp(buf, "gt") == 0)
+      kind = GREATER;
+    else if (std::strcmp(buf, "ge") == 0)
+      kind = GREATEREQ;
+    break;
+  case 'i':
+    if (std::strcmp(buf, "is") == 0)
+      kind = EQUAL;
+    break;
+  case 'l':
+    if (std::strcmp(buf, "lt") == 0)
+      kind = LESS;
+    else if (std::strcmp(buf, "le") == 0)
+      kind = LESSEQ;
+    break;
+  case 'm':
+    if (std::strcmp(buf, "mod") == 0)
+      kind = KW_MOD;
+    break;
+  case 'n':
+    if (std::strcmp(buf, "ne") == 0)
+      kind = NEQUAL;
+    break;
+  case 'o':
+    if (std::strcmp(buf, "or") == 0)
+      kind = KW_OR;
+    break;
+  case 't':
+    if (std::strcmp(buf, "true") == 0) {
+      kind = VALUE;
+      value = true;
+    }
+    break;
+  case 'u':
+    if (std::strcmp(buf, "union") == 0)
+      kind = KW_UNION;
+    break;
+  }
+
+  if (kind == IDENT)
+    value.set_string(buf);
 }
 
 void xpath_t::token_t::next(std::istream& in, unsigned short flags)
@@ -68,13 +123,22 @@ void xpath_t::token_t::next(std::istream& in, unsigned short flags)
 
   length = 1;
 
-  if (c == '@' || (! (flags & XPATH_PARSE_RELAXED) &&
-		   (std::isalpha(c) || c == '_'))) {
+  if (! (flags & XPATH_PARSE_RELAXED) &&
+      (std::isalpha(c) || c == '_')) {
     parse_ident(in);
     return;
   }
 
   switch (c) {
+  case '@':
+    in.get(c);
+    kind = AT_SYM;
+    break;
+  case '$':
+    in.get(c);
+    kind = DOLLAR;
+    break;
+
   case '(':
     in.get(c);
     kind = LPAREN;
@@ -323,65 +387,6 @@ void xpath_t::token_t::next(std::istream& in, unsigned short flags)
 	  c = in.peek();
 	  assert(! (std::isdigit(c) || c == '.'));
 	  parse_ident(in);
-
-	  switch ((**(std::string **) value.data)[0]) {
-	  case 'a':
-	    if (**(std::string **) value.data == "and")
-	      kind = KW_AND;
-	    break;
-	  case 'd':
-	    if (**(std::string **) value.data == "div")
-	      kind = KW_DIV;
-	    break;
-	  case 'e':
-	    if (**(std::string **) value.data == "eq")
-	      kind = EQUAL;
-	    break;
-	  case 'f':
-	    if (**(std::string **) value.data == "false") {
-	      kind = VALUE;
-	      value = false;
-	    }
-	    break;
-	  case 'g':
-	    if (**(std::string **) value.data == "gt")
-	      kind = GREATER;
-	    else if (**(std::string **) value.data == "ge")
-	      kind = GREATEREQ;
-	    break;
-	  case 'i':
-	    if (**(std::string **) value.data == "is")
-	      kind = EQUAL;
-	    break;
-	  case 'l':
-	    if (**(std::string **) value.data == "lt")
-	      kind = LESS;
-	    else if (**(std::string **) value.data == "le")
-	      kind = LESSEQ;
-	    break;
-	  case 'm':
-	    if (**(std::string **) value.data == "mod")
-	      kind = KW_MOD;
-	    break;
-	  case 'n':
-	    if (**(std::string **) value.data == "ne")
-	      kind = NEQUAL;
-	    break;
-	  case 'o':
-	    if (**(std::string **) value.data == "or")
-	      kind = KW_OR;
-	    break;
-	  case 't':
-	    if (**(std::string **) value.data == "true") {
-	      kind = VALUE;
-	      value = true;
-	    }
-	    break;
-	  case 'u':
-	    if (**(std::string **) value.data == "union")
-	      kind = KW_UNION;
-	    break;
-	  }
 	} else {
 	  throw err;
 	}
@@ -553,7 +558,10 @@ xpath_t::op_t::~op_t()
     delete valuep;
     break;
 
-  case SYMBOL:
+  case NODE_NAME:
+  case FUNC_NAME:
+  case ATTR_NAME:
+  case VAR_NAME:
     assert(! left);
     assert(name);
     delete name;
@@ -649,14 +657,15 @@ xpath_t::parse_value_term(std::istream& in, unsigned short flags) const
       node.reset(new op_t(op_t::ARG_INDEX));
       node->arg_index = std::atol(ident.c_str());
     } else {
-      //node.reset(new op_t(op_t::NODE_NAME));
-      node.reset(new op_t(op_t::SYMBOL));
+      node.reset(new op_t(op_t::NODE_NAME));
       node->name = new std::string(ident);
     }
 
     // An identifier followed by ( represents a function call
     tok = next_token(in, flags);
     if (tok.kind == token_t::LPAREN) {
+      node->kind = op_t::FUNC_NAME;
+
       std::auto_ptr<op_t> call_node;
       call_node.reset(new op_t(op_t::O_EVAL));
       call_node->set_left(node.release());
@@ -674,23 +683,37 @@ xpath_t::parse_value_term(std::istream& in, unsigned short flags) const
   }
 
   case token_t::AT_SYM:
+    tok = next_token(in, flags);
+    if (tok.kind != token_t::IDENT)
+      throw parse_error("@ symbol must be followed by attribute name");
+
+    node.reset(new op_t(op_t::ATTR_NAME));
+    node->name = new std::string(tok.value.to_string());
+    break;
+
   case token_t::DOLLAR:
+    tok = next_token(in, flags);
+    if (tok.kind != token_t::IDENT)
+      throw parse_error("$ symbol must be followed by variable name");
+
+    node.reset(new op_t(op_t::VAR_NAME));
+    node->name = new std::string(tok.value.to_string());
     break;
 
   case token_t::DOT:
-    node.reset(new op_t(op_t::NODE_NAME));
+    node.reset(new op_t(op_t::NODE_ID));
     node->name_id = document_t::CURRENT;
     break;
   case token_t::DOTDOT:
-    node.reset(new op_t(op_t::NODE_NAME));
+    node.reset(new op_t(op_t::NODE_ID));
     node->name_id = document_t::PARENT;
     break;
   case token_t::SLASH:
-    node.reset(new op_t(op_t::NODE_NAME));
+    node.reset(new op_t(op_t::NODE_ID));
     node->name_id = document_t::ROOT;
     break;
   case token_t::STAR:
-    node.reset(new op_t(op_t::NODE_NAME));
+    node.reset(new op_t(op_t::NODE_ID));
     node->name_id = document_t::ALL;
     break;
 
@@ -755,7 +778,7 @@ xpath_t::parse_path_expr(std::istream& in, unsigned short flags) const
   if (node.get()) {
     // If the beginning of the path was /, just put it back; this
     // makes parsing much simpler.
-    if (node->kind == op_t::NODE_NAME && node->name_id == document_t::ROOT)
+    if (node->kind == op_t::NODE_ID && node->name_id == document_t::ROOT)
       push_token();
 
     token_t& tok = next_token(in, flags);
@@ -1237,58 +1260,7 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
   case VALUE:
     return acquire();
 
-  case SYMBOL: {
-    if (context->type == value_t::XML_NODE && resolve) {
-      // First, look up the symbol as a node name within the current
-      // context.  If any exist, then return the set of names.
-
-      xml::node_t *	  first = NULL;
-      value_t::sequence_t * nodes = NULL;
-
-      xml::node_t * ptr = context->to_xml_node();
-      if (ptr->flags & XML_NODE_IS_PARENT) {
-	xml::parent_node_t * parent = static_cast<xml::parent_node_t *>(ptr);
-
-	for (xml::node_t * node = parent->children;
-	     node;
-	     node = node->next) {
-	  if (std::strcmp(name->c_str(), node->name()) == 0) {
-	    if (! first) {
-	      first = node;
-	    }
-	    else if (! nodes) {
-	      nodes = new value_t::sequence_t;
-	      nodes->push_back(first);
-	    }
-
-	    if (nodes)
-	      nodes->push_back(node);
-	  }
-	}
-
-	if (nodes)
-	  return wrap_value(nodes)->acquire();
-	else if (first)
-	  return wrap_value(first)->acquire();
-      }
-    }
-
-    // jww (2006-09-24): What happens if none are found?
-
-    // jww (2006-09-24): Symbol lookup will have to be for $symbol
-    if (scope) {
-      if (resolve) {
-	value_t temp;
-	if (scope->resolve(*name, temp))
-	  return wrap_value(temp)->acquire();
-      }
-      if (op_t * def = scope->lookup(*name))
-	return def->compile(context, scope, resolve);
-    }
-    return acquire();
-  }
-
-  case NODE_NAME:
+  case NODE_ID:
     switch (name_id) {
     case document_t::CURRENT:
       return wrap_value(context)->acquire();
@@ -1323,8 +1295,63 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
 
       return wrap_value(nodes)->acquire();
     }
+
+    default:
+      break;			// pass down to the NODE_NAME case
     }
-    break;
+    // fall through...
+
+  case NODE_NAME:
+    if (context->type == value_t::XML_NODE) {
+      xml::node_t * ptr = context->to_xml_node();
+      if (resolve) {
+	// First, look up the symbol as a node name within the current
+	// context.  If any exist, then return the set of names.
+
+	value_t::sequence_t * nodes = new value_t::sequence_t;
+
+	if (ptr->flags & XML_NODE_IS_PARENT) {
+	  xml::parent_node_t * parent = static_cast<xml::parent_node_t *>(ptr);
+	  for (xml::node_t * node = parent->children;
+	       node;
+	       node = node->next) {
+	    if ((kind == NODE_NAME &&
+		 std::strcmp(name->c_str(), node->name()) == 0) ||
+		(kind == NODE_ID && name_id == node->name_id))
+	      nodes->push_back(node);
+	  }
+	}
+	return wrap_value(nodes)->acquire();
+      } else {
+	assert(ptr);
+	int id = ptr->document->lookup_name_id(*name);
+	if (id != -1) {
+	  op_t * node = new_node(NODE_ID);
+	  node->name_id = id;
+	  return node->acquire();
+	}
+      }
+    }
+    return acquire();
+
+  case ATTR_NAME: {
+    // jww (2006-09-29): Attrs should map strings to values, not strings
+    const char * value = context->to_xml_node()->get_attr(name->c_str());
+    return wrap_value(value)->acquire();
+  }
+
+  case VAR_NAME:
+  case FUNC_NAME:
+    if (scope) {
+      if (resolve) {
+	value_t temp;
+	if (scope->resolve(*name, temp))
+	  return wrap_value(temp)->acquire();
+      }
+      if (op_t * def = scope->lookup(*name))
+	return def->compile(context, scope, resolve);
+    }
+    return acquire();
 
   case ARG_INDEX:
     if (scope && scope->kind == scope_t::ARGUMENT) {
@@ -1636,14 +1663,14 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
   case O_DEFINE:
     assert(left);
     assert(right);
-    if (left->kind == SYMBOL) {
+    if (left->kind == VAR_NAME || left->kind == FUNC_NAME) {
       xpath_t rexpr(right->compile(context, scope, resolve));
       if (scope)
 	scope->define(*left->name, rexpr);
       return rexpr->acquire();
     } else {
       assert(left->kind == O_EVAL);
-      assert(left->left->kind == SYMBOL);
+      assert(left->left->kind == FUNC_NAME);
 
       std::auto_ptr<scope_t> arg_scope(new scope_t(scope));
 
@@ -1663,7 +1690,7 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
 	std::auto_ptr<op_t> ref(new op_t(ARG_INDEX));
 	ref->arg_index = index++;
 
-	assert(arg->kind == SYMBOL);
+	assert(arg->kind == NODE_NAME);
 	arg_scope->define(*arg->name, ref.release());
       }
 
@@ -1707,7 +1734,7 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
     if (call_seq.get())
       call_args->args = call_seq.release();
 
-    if (left->kind == SYMBOL) {
+    if (left->kind == FUNC_NAME) {
       if (resolve) {
 	value_t temp;
 	if (scope && scope->resolve(*left->name, temp, call_args.get()))
@@ -1747,11 +1774,13 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
     assert(left);
     assert(right);
     xpath_t lexpr(left->compile(context, scope, resolve));
+    xpath_t rexpr(resolve ? right->acquire() :
+		  right->compile(context, scope, false));
     if (! lexpr->constant() || ! resolve) {
       if (left == lexpr)
 	return acquire();
       else
-	return copy(lexpr, right)->acquire();
+	return copy(lexpr, rexpr)->acquire();
     }
 
     std::auto_ptr<value_t::sequence_t> result_seq(new value_t::sequence_t);
@@ -1761,10 +1790,10 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
     case value_t::XML_NODE: {
       function_scope_t xpath_fscope(NULL, lexpr->valuep, 0, scope);
       if (kind == O_PRED) {
-	if (right->test_value(lexpr->valuep, &xpath_fscope))
+	if (rexpr->test_value(lexpr->valuep, &xpath_fscope))
 	  result_seq->push_back(*lexpr->valuep);
       } else {
-	right->find_values(lexpr->valuep, &xpath_fscope, *result_seq.get(),
+	rexpr->find_values(lexpr->valuep, &xpath_fscope, *result_seq.get(),
 			   kind == O_RFIND);
       }
       break;
@@ -1784,10 +1813,10 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
 
 	function_scope_t xpath_fscope(seq, &(*i), index, scope);
 	if (kind == O_PRED) {
-	  if (right->test_value(&(*i), &xpath_fscope, index))
+	  if (rexpr->test_value(&(*i), &xpath_fscope, index))
 	    result_seq->push_back(*i);
 	} else {
-	  right->find_values(&(*i), &xpath_fscope, *result_seq.get(),
+	  rexpr->find_values(&(*i), &xpath_fscope, *result_seq.get(),
 			     kind == O_RFIND);
 	}
       }
@@ -1958,8 +1987,25 @@ bool xpath_t::op_t::write(std::ostream&   out,
     }
     break;
 
-  case SYMBOL:
+  case NODE_ID:
+#ifdef THREADSAFE
+    out << '%' << name_id;
+#else
+    out << xml::node_t::document->lookup_name(name_id);
+#endif
+    break;
+
+  case NODE_NAME:
+  case FUNC_NAME:
     out << *name;
+    break;
+
+  case ATTR_NAME:
+    out << '@' << *name;
+    break;
+
+  case VAR_NAME:
+    out << '$' << *name;
     break;
 
   case FUNCTOR:
@@ -2227,12 +2273,28 @@ void xpath_t::op_t::dump(std::ostream& out, const int depth) const
     out << "VALUE - " << *valuep;
     break;
 
-  case SYMBOL:
-    out << "SYMBOL - " << *name;
+  case NODE_NAME:
+    out << "NODE_NAME - " << *name;
     break;
 
-  case NODE_NAME:
-    out << "NODE_NAME - " << name_id;
+  case NODE_ID:
+#ifdef THREADSAFE
+    out << "NODE_ID - " << name_id;
+#else
+    out << "NODE_ID - " << xml::node_t::document->lookup_name(name_id);
+#endif
+    break;
+
+  case ATTR_NAME:
+    out << "ATTR_NAME - " << *name;
+    break;
+
+  case FUNC_NAME:
+    out << "FUNC_NAME - " << *name;
+    break;
+
+  case VAR_NAME:
+    out << "VAR_NAME - " << *name;
     break;
 
   case ARG_INDEX:

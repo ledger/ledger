@@ -342,8 +342,9 @@ public:
       VOID,
       VALUE,
 
-      SYMBOL,
       NODE_NAME,
+      NODE_ID,
+      FUNC_NAME,
       ATTR_NAME,
       VAR_NAME,
 
@@ -545,7 +546,7 @@ public:
     }
   }
 
-#ifdef THREADED
+#ifdef THREADSAFE
   mutable token_t lookahead;
 #else
   static  token_t lookahead;

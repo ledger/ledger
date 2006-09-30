@@ -29,8 +29,8 @@ class document_t
 
   names_array names;
 
-  typedef std::map<const char *, int>  names_map;
-  typedef std::pair<const char *, int> names_pair;
+  typedef std::map<std::string, int>  names_map;
+  typedef std::pair<std::string, int> names_pair;
 
   names_map names_index;
 
@@ -49,21 +49,22 @@ class document_t
   }
 
   int register_name(const std::string& name) {
-    int index = lookup_name(name);
+    int index = lookup_name_id(name);
     if (index != -1)
       return index;
 
     names.push_back(name);
     index = names.size() - 1;
 
+    std::cerr << this << " Inserting name: " << names.back() << std::endl;
     std::pair<names_map::iterator, bool> result =
-      names_index.insert(names_pair(names.back().c_str(), index));
+      names_index.insert(names_pair(names.back(), index));
     assert(result.second);
 
     return index + 1000;
   }
 
-  int lookup_name(const std::string& name) const
+  int lookup_name_id(const std::string& name) const
   {
     if (builtins) {
       int first = 0;
@@ -84,9 +85,10 @@ class document_t
       }
     }
 
-    names_map::const_iterator i = names_index.find(name.c_str());
+    std::cerr << this << " Finding name: " << name << std::endl;
+    names_map::const_iterator i = names_index.find(name);
     if (i != names_index.end())
-      return (*i).second;
+      return (*i).second + 1000;
 
     return -1;
   }
@@ -111,7 +113,11 @@ class node_t
 {
 public:
   int		  name_id;
+#ifdef THREADSAFE
   document_t *	  document;
+#else
+  static document_t * document;
+#endif
   parent_node_t * parent;
   node_t *	  next;
   node_t *	  prev;

@@ -23,12 +23,25 @@ void document_t::write(std::ostream& out) const
   }
 }
 
+#ifndef THREADSAFE
+document_t * node_t::document;
+#endif
+
 node_t::node_t(document_t * _document, parent_node_t * _parent,
 	       unsigned int _flags)
-  : name_id(-1), document(_document), parent(_parent),
+  : name_id(-1),
+    parent(_parent),
     next(NULL), prev(NULL), flags(_flags), info(NULL), attrs(NULL)
 {
   TRACE_CTOR("node_t(document_t *, node_t *)");
+#ifdef THREADSAFE
+  document = _document;
+#else
+  if (! document)
+    document = _document;
+  else
+    assert(document == _document);
+#endif
   if (parent)
     parent->add_child(this);
 }
