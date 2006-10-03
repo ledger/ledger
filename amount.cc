@@ -2,6 +2,7 @@
 #include "pch.h"
 #else
 #include "amount.h"
+#include "binary.h"
 #include "util.h"
 
 #include <list>
@@ -10,6 +11,8 @@
 
 #include <gmp.h>
 #endif
+
+namespace ledger {
 
 bool do_cleanup = true;
 
@@ -21,7 +24,8 @@ bool amount_t::keep_base  = false;
 #define BIGINT_BULK_ALLOC 0x0001
 #define BIGINT_KEEP_PREC  0x0002
 
-class amount_t::bigint_t {
+class amount_t::bigint_t
+{
  public:
   mpz_t		val;
   unsigned char prec;
@@ -52,8 +56,10 @@ unsigned int sizeof_bigint_t() {
 
 #define MPZ(x) ((x)->val)
 
+#ifndef THREADSAFE
 static mpz_t temp;		// these are the global temp variables
 static mpz_t divisor;
+#endif
 
 static amount_t::bigint_t true_value;
 
@@ -63,16 +69,20 @@ inline amount_t::bigint_t::~bigint_t() {
   mpz_clear(val);
 }
 
+#ifndef THREADSAFE
 base_commodities_map commodity_base_t::commodities;
 
 commodity_base_t::updater_t * commodity_base_t::updater = NULL;
 
-commodities_map	commodity_t::commodities;
-bool		commodity_t::commodities_sorted = false;
-commodity_t *   commodity_t::null_commodity;
-commodity_t *   commodity_t::default_commodity = NULL;
+commodities_map	  commodity_t::commodities;
+commodities_array commodity_t::commodities_by_ident;
+bool		  commodity_t::commodities_sorted = false;
+commodity_t *	  commodity_t::null_commodity;
+commodity_t *	  commodity_t::default_commodity  = NULL;
+#endif
 
-static struct _init_amounts {
+static struct _init_amounts
+{
   _init_amounts() {
     mpz_init(temp);
     mpz_init(divisor);
@@ -115,6 +125,7 @@ static struct _init_amounts {
       delete (*i).second;
 
     commodity_t::commodities.clear();
+    commodity_t::commodities_by_ident.clear();
 
     true_value.ref--;
   }
@@ -657,12 +668,12 @@ amount_t amount_t::unround() const
   return temp;
 }
 
-std::string amount_t::quantity_string() const
+void amount_t::print_quantity(std::ostream& out) const
 {
-  if (! quantity)
-    return "0";
-
-  std::ostringstream out;
+  if (! quantity) {
+    out << "0";
+    return;
+  }
 
   mpz_t quotient;
   mpz_t rquotient;
@@ -717,8 +728,10 @@ std::string amount_t::quantity_string() const
   }
   mpz_set(rquotient, remainder);
 
-  if (mpz_sgn(quotient) == 0 && mpz_sgn(rquotient) == 0)
-    return "0";
+  if (mpz_sgn(quotient) == 0 && mpz_sgn(rquotient) == 0) {
+    out << "0";
+    return;
+  }
 
   if (negative)
     out << "-";
@@ -745,20 +758,18 @@ std::string amount_t::quantity_string() const
   mpz_clear(quotient);
   mpz_clear(rquotient);
   mpz_clear(remainder);
-
-  return out.str();
 }
 
-std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
+void amount_t::print(std::ostream& _out) const
 {
-  if (! amt.quantity) {
+  if (! quantity) {
     _out << "0";
-    return _out;
+    return;
   }
 
-  amount_t base(amt);
-  if (! amount_t::keep_base && amt.commodity().larger()) {
-    amount_t last(amt);
+  amount_t base(*this);
+  if (! amount_t::keep_base && commodity().larger()) {
+    amount_t last(*this);
     while (last.commodity().larger()) {
       last /= *last.commodity().larger();
       last.commodity_ = last.commodity().larger()->commodity_;
@@ -826,7 +837,7 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
 
   if (mpz_sgn(quotient) == 0 && mpz_sgn(rquotient) == 0) {
     _out << "0";
-    return _out;
+    return;
   }
 
   if (! (comm.flags() & COMMODITY_STYLE_SUFFIXED)) {
@@ -926,7 +937,7 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
 
   if (comm.annotated) {
     annotated_commodity_t& ann(static_cast<annotated_commodity_t&>(comm));
-    assert(&ann.price != &amt);
+    assert(&ann.price != this);
     ann.write_annotations(out);
   }
 
@@ -936,10 +947,10 @@ std::ostream& operator<<(std::ostream& _out, const amount_t& amt)
 
   _out << out.str();
 
-  return _out;
+  return;
 }
 
-void parse_quantity(std::istream& in, std::string& value)
+static void parse_quantity(std::istream& in, std::string& value)
 {
   char buf[256];
   char c = peek_next_nonws(in);
@@ -980,7 +991,7 @@ int invalid_chars[256] = {
 /* f0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 };
 
-void parse_commodity(std::istream& in, std::string& symbol)
+static void parse_commodity(std::istream& in, std::string& symbol)
 {
   char buf[256];
   char c = peek_next_nonws(in);
@@ -1214,12 +1225,6 @@ void amount_t::reduce()
   }
 }
 
-void amount_t::parse(const std::string& str, unsigned char flags)
-{
-  std::istringstream stream(str);
-  parse(stream, flags);
-}
-
 void parse_conversion(const std::string& larger_str,
 		      const std::string& smaller_str)
 {
@@ -1239,11 +1244,51 @@ void parse_conversion(const std::string& larger_str,
     smaller.commodity().set_larger(larger);
 }
 
+void amount_t::read(std::istream& in)
+{
+  commodity_t::ident_t ident;
+  read_binary_long(in, ident);
+  if (ident == 0xffffffff)
+    commodity_ = NULL;
+  else if (ident == 0)
+    commodity_ = commodity_t::null_commodity;
+  else
+    commodity_ = commodity_t::commodities_by_ident[ident - 1];
 
-char *	     bigints;
-char *	     bigints_next;
-unsigned int bigints_index;
-unsigned int bigints_count;
+  read_quantity(in);
+}
+
+void amount_t::read(char *& data)
+{
+  commodity_t::ident_t ident;
+  read_binary_long(data, ident);
+  if (ident == 0xffffffff)
+    commodity_ = NULL;
+  else if (ident == 0)
+    commodity_ = commodity_t::null_commodity;
+  else
+    commodity_ = commodity_t::commodities_by_ident[ident - 1];
+
+  read_quantity(data);
+}
+
+void amount_t::write(std::ostream& out) const
+{
+  if (commodity_)
+    write_binary_long(out, commodity_->ident);
+  else
+    write_binary_long<commodity_t::ident_t>(out, 0xffffffff);
+
+  write_quantity(out);
+}
+
+
+#ifndef THREADSAFE
+static char *	    bigints;
+static char *	    bigints_next;
+static unsigned int bigints_index;
+static unsigned int bigints_count;
+#endif
 
 void amount_t::read_quantity(char *& data)
 {
@@ -1282,7 +1327,9 @@ void amount_t::read_quantity(char *& data)
   }
 }
 
+#ifndef THREADSAFE
 static char buf[4096];
+#endif
 
 void amount_t::read_quantity(std::istream& in)
 {
@@ -1565,6 +1612,9 @@ commodity_t * commodity_t::create(const std::string& symbol)
   if (! result.second)
     return NULL;
 
+  commodity->ident = commodities_by_ident.size();
+  commodities_by_ident.push_back(commodity.get());
+
   // Start out the new commodity with the default commodity's flags
   // and precision, if one has been defined.
   if (default_commodity)
@@ -1712,6 +1762,9 @@ annotated_commodity_t::create(const commodity_t& comm,
   if (! result.second)
     return NULL;
 
+  commodity->ident = commodities_by_ident.size();
+  commodities_by_ident.push_back(commodity.get());
+
   return commodity.release();
 }
 
@@ -1831,6 +1884,8 @@ bool compare_amount_commodities::operator()(const amount_t * left,
   }
 }
 
+} // namespace ledger
+
 #ifdef USE_BOOST_PYTHON
 
 #ifndef USE_PCH
@@ -1843,8 +1898,9 @@ using namespace ledger;
 
 int py_amount_quantity(amount_t& amount)
 {
-  std::string quant = amount.quantity_string();
-  return std::atol(quant.c_str());
+  std::ostringstream quant;
+  amount.print_quantity(quant);
+  return std::atol(quant.str().c_str());
 }
 
 void py_parse_1(amount_t& amount, const std::string& str,

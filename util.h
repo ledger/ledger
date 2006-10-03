@@ -81,6 +81,10 @@ inline char peek_next_nonws(std::istream& in) {
 
 std::string resolve_path(const std::string& path);
 
+#ifdef HAVE_REALPATH
+extern "C" char *realpath(const char *, char resolved_path[]);
+#endif
+
 enum elision_style_t {
   TRUNCATE_TRAILING,
   TRUNCATE_MIDDLE,

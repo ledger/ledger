@@ -22,7 +22,7 @@ static ledger::option_t * find_option(const std::string& name);
 namespace ledger {
 
 namespace {
-  valexpr_t::functor_t * find_option(valexpr_t::scope_t * scope,
+  xml::xpath_t::functor_t * find_option(xml::xpath_t::scope_t * scope,
 				     const std::string& name)
   {
     char buf[128];
@@ -36,13 +36,13 @@ namespace {
     }
     *p = '\0';
 
-    if (valexpr_t::node_t * def = scope->lookup(buf))
+    if (xml::xpath_t::op_t * def = scope->lookup(buf))
       return def->functor_obj();
     else
       return NULL;
   }
 
-  valexpr_t::functor_t * find_option(valexpr_t::scope_t * scope,
+  xml::xpath_t::functor_t * find_option(xml::xpath_t::scope_t * scope,
 				     const char letter)
   {
     char buf[9];
@@ -50,20 +50,20 @@ namespace {
     buf[7] = letter;
     buf[8] = '\0';
 
-    if (valexpr_t::node_t * def = scope->lookup(buf))
+    if (xml::xpath_t::op_t * def = scope->lookup(buf))
       return def->functor_obj();
     else
       return NULL;
   }
 
-  void process_option(valexpr_t::functor_t * opt, valexpr_t::scope_t * scope,
+  void process_option(xml::xpath_t::functor_t * opt, xml::xpath_t::scope_t * scope,
 		      const char * arg)
   {
     try {
-      valexpr_t::scope_t * args = NULL;
+      xml::xpath_t::scope_t * args = NULL;
       if (arg) {
-	args = new valexpr_t::scope_t(scope, true);
-	args->args.push_back(value_t(arg, true));
+	args = new xml::xpath_t::scope_t(scope, xml::xpath_t::scope_t::ARGUMENT);
+	args->args.set_string(arg);
       }
 
       value_t temp;
@@ -82,10 +82,10 @@ namespace {
   }
 }
 
-bool process_option(const std::string& name, valexpr_t::scope_t * scope,
+bool process_option(const std::string& name, xml::xpath_t::scope_t * scope,
 		    const char * arg)
 {
-  if (valexpr_t::functor_t * opt = find_option(scope, name)) {
+  if (xml::xpath_t::functor_t * opt = find_option(scope, name)) {
     process_option(opt, scope, arg);
     return true;
   }
@@ -93,7 +93,7 @@ bool process_option(const std::string& name, valexpr_t::scope_t * scope,
 }
 
 void process_environment(const char ** envp, const std::string& tag,
-			 valexpr_t::scope_t * scope)
+			 xml::xpath_t::scope_t * scope)
 {
   const char * tag_p   = tag.c_str();
   unsigned int tag_len = tag.length();
@@ -130,7 +130,7 @@ void process_environment(const char ** envp, const std::string& tag,
 }
 
 void process_arguments(int argc, char ** argv, const bool anywhere,
-		       valexpr_t::scope_t * scope,
+		       xml::xpath_t::scope_t * scope,
 		       std::list<std::string>& args)
 {
   int index = 0;
@@ -159,7 +159,7 @@ void process_arguments(int argc, char ** argv, const bool anywhere,
 	value = p;
       }
 
-      valexpr_t::functor_t * opt = find_option(scope, name);
+      xml::xpath_t::functor_t * opt = find_option(scope, name);
       if (! opt)
 	throw new option_error(std::string("illegal option --") + name);
 
@@ -175,17 +175,17 @@ void process_arguments(int argc, char ** argv, const bool anywhere,
       throw new option_error(std::string("illegal option -"));
     }
     else {
-      std::list<valexpr_t::functor_t *> option_queue;
+      std::list<xml::xpath_t::functor_t *> option_queue;
 
       int x = 1;
       for (char c = (*i)[x]; c != '\0'; x++, c = (*i)[x]) {
-	valexpr_t::functor_t * opt = find_option(scope, c);
+	xml::xpath_t::functor_t * opt = find_option(scope, c);
 	if (! opt)
 	  throw new option_error(std::string("illegal option -") + c);
 	option_queue.push_back(opt);
       }
 
-      for (std::list<valexpr_t::functor_t *>::iterator
+      for (std::list<xml::xpath_t::functor_t *>::iterator
 	     o = option_queue.begin();
 	   o != option_queue.end();
 	   o++) {

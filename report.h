@@ -2,8 +2,6 @@
 #define _REPORT_H
 
 #include "session.h"
-#include "valexpr.h"
-#include "repitem.h"
 #include "transform.h"
 
 #include <string>
@@ -13,7 +11,7 @@ namespace ledger {
 
 typedef std::list<std::string> strings_list;
 
-class report_t : public valexpr_t::scope_t
+class report_t : public xml::xpath_t::scope_t
 {
  public:
   std::string output_file;
@@ -36,7 +34,7 @@ class report_t : public valexpr_t::scope_t
   std::list<transform_t *> transforms;
 
   report_t(session_t * _session)
-    : valexpr_t::scope_t(_session),
+    : xml::xpath_t::scope_t(_session),
       show_totals(false),
       raw_mode(false),
       session(_session),
@@ -47,34 +45,34 @@ class report_t : public valexpr_t::scope_t
 
   virtual ~report_t();
 
-  void apply_transforms(repitem_t * items);
+  void apply_transforms(xml::document_t * document);
 
   //
   // Utility functions for value expressions
   //
 
-  void ftime(value_t& result, valexpr_t::scope_t * locals);
-  void abbrev(value_t& result, valexpr_t::scope_t * locals);
+  void ftime(value_t& result, xml::xpath_t::scope_t * locals);
+  void abbrev(value_t& result, xml::xpath_t::scope_t * locals);
 
   //
   // Config options
   //
 
   void eval(const std::string& expr) {
-    valexpr_t(expr).compile(this);
+    xml::xpath_t(expr).compile((xml::document_t *)NULL, this);
   }
-  void option_eval(value_t&, valexpr_t::scope_t * locals) {
+  void option_eval(value_t&, xml::xpath_t::scope_t * locals) {
     eval(locals->args[0].to_string());
   }
 
-  void option_amount(value_t&, valexpr_t::scope_t * locals) {
+  void option_amount(value_t&, xml::xpath_t::scope_t * locals) {
     eval(std::string("t=") + locals->args[0].to_string());
   }
-  void option_total(value_t&, valexpr_t::scope_t * locals) {
+  void option_total(value_t&, xml::xpath_t::scope_t * locals) {
     eval(std::string("T()=") + locals->args[0].to_string());
   }
 
-  void option_format(value_t&, valexpr_t::scope_t * locals) {
+  void option_format(value_t&, xml::xpath_t::scope_t * locals) {
     format_string = locals->args[0].to_string();
   }
 
@@ -85,7 +83,7 @@ class report_t : public valexpr_t::scope_t
   void option_foo(value_t&) {
     std::cout << "This is foo" << std::endl;
   }
-  void option_bar(value_t&, valexpr_t::scope_t * locals) {
+  void option_bar(value_t&, xml::xpath_t::scope_t * locals) {
     std::cout << "This is bar: " << locals->args[0] << std::endl;
   }
 
@@ -94,16 +92,16 @@ class report_t : public valexpr_t::scope_t
   //
 
 #if 0
-  void option_select(value_t&, valexpr_t::scope_t * locals) {
+  void option_select(value_t&, xml::xpath_t::scope_t * locals) {
     transforms.push_back(new select_transform(locals->args[0].to_string()));
   }
-  void option_limit(value_t&, valexpr_t::scope_t * locals) {
+  void option_limit(value_t&, xml::xpath_t::scope_t * locals) {
     std::string expr = (std::string("//xact[") +
 			locals->args[0].to_string() + "]");
     transforms.push_back(new select_transform(expr));
   }
 
-  void option_remove(value_t&, valexpr_t::scope_t * locals) {
+  void option_remove(value_t&, xml::xpath_t::scope_t * locals) {
     transforms.push_back(new remove_transform(locals->args[0].to_string()));
   }
 
@@ -133,8 +131,8 @@ class report_t : public valexpr_t::scope_t
   //
 
   virtual bool resolve(const std::string& name, value_t& result,
-		       valexpr_t::scope_t * locals);
-  virtual valexpr_t::node_t * lookup(const std::string& name);
+		       xml::xpath_t::scope_t * locals);
+  virtual xml::xpath_t::op_t * lookup(const std::string& name);
 };
 
 std::string abbrev(const std::string& str, unsigned int width,

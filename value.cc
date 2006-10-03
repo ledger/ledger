@@ -7,6 +7,8 @@
 #include "error.h"
 #endif
 
+namespace ledger {
+
 bool value_t::to_boolean() const
 {
   if (type == BOOLEAN) {
@@ -2304,6 +2306,8 @@ void value_context::describe(std::ostream& out) const throw()
   }
   out << std::endl;
 }
+
+} // namespace ledger
 
 #ifdef USE_BOOST_PYTHON
 

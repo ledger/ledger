@@ -8,6 +8,8 @@
 #include <deque>
 #include <exception>
 
+namespace ledger {
+
 namespace xml {
   class node_t;
 }
@@ -283,6 +285,24 @@ class value_t
   void *	 to_pointer() const;
   sequence_t *	 to_sequence() const;
 
+  value_t& operator[](const int index) {
+    sequence_t * seq = to_sequence();
+    assert(seq);
+    return (*seq)[index];
+  }
+
+  void push_back(const value_t& value) {
+    sequence_t * seq = to_sequence();
+    assert(seq);
+    return seq->push_back(value);
+  }
+
+  std::size_t size() const {
+    sequence_t * seq = to_sequence();
+    assert(seq);
+    return seq->size();
+  }
+
   value_t& operator+=(const value_t& value);
   value_t& operator-=(const value_t& value);
   value_t& operator*=(const value_t& value);
@@ -538,5 +558,7 @@ class value_error : public error {
     : error(reason, ctxt) {}
   virtual ~value_error() throw() {}
 };
+
+} // namespace ledger
 
 #endif // _VALUE_H

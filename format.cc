@@ -120,9 +120,9 @@ void format_t::parse(const std::string& fmt)
 	throw new format_error(std::string("Missing '") + close + "'");
 
       if (open == '{') {
-	assert(! current->valexpr);
-	current->kind    = element_t::VALEXPR;
-	current->valexpr = new valexpr_t(std::string(b, p));
+	assert(! current->xpath);
+	current->kind   = element_t::XPATH;
+	current->xpath  = new xml::xpath_t(std::string(b, p));
       } else {
 	assert(! current->format);
 	current->kind   = element_t::GROUP;
@@ -132,9 +132,9 @@ void format_t::parse(const std::string& fmt)
     }
 
     default:
-      assert(! current->valexpr);
-      current->kind    = element_t::VALEXPR;
-      current->valexpr = new valexpr_t(std::string(p, p + 1));
+      assert(! current->xpath);
+      current->kind  = element_t::XPATH;
+      current->xpath = new xml::xpath_t(std::string(p, p + 1));
       break;
     }
   }
@@ -149,26 +149,26 @@ void format_t::parse(const std::string& fmt)
   }
 }
 
-void format_t::compile(valexpr_t::scope_t * scope)
+void format_t::compile(xml::node_t * context)
 {
   for (std::list<element_t *>::iterator i = elements.begin();
        i != elements.end();
        i++)
   switch ((*i)->kind) {
-  case element_t::VALEXPR:
-    assert((*i)->valexpr);
-    (*i)->valexpr->compile(scope);
+  case element_t::XPATH:
+    assert((*i)->xpath);
+    (*i)->xpath->compile(context);
     break;
   case element_t::GROUP:
     assert((*i)->format);
-    (*i)->format->compile(scope);
+    (*i)->format->compile(context);
     break;
   }
 }
 
 int format_t::element_formatter_t::operator()
-  (std::ostream& out_str, element_t * elem,
-   valexpr_t::scope_t * scope, int column) const
+  (std::ostream& out_str, element_t * elem, xml::node_t * context,
+   int column) const
 {
   if (elem->kind == element_t::COLUMN) {
     if (elem->max_width != -1 && elem->max_width < column) {
@@ -195,11 +195,11 @@ int format_t::element_formatter_t::operator()
 
   int start_column = column;
 
-  if (elem->kind == element_t::VALEXPR)
-    elem->valexpr->calc(scope).strip_annotations()
+  if (elem->kind == element_t::XPATH)
+    elem->xpath->calc(context).strip_annotations()
       .write(out, elem->min_width, elem->max_width);
   else if (elem->kind == element_t::GROUP)
-    column = elem->format->format(out, scope, column);
+    column = elem->format->format(out, context, column);
   else if (elem->kind == element_t::TEXT)
     out << *elem->chars;
   else
@@ -230,13 +230,13 @@ int format_t::element_formatter_t::operator()
   return column;
 }
 
-int format_t::format(std::ostream& out, valexpr_t::scope_t * scope,
+int format_t::format(std::ostream& out, xml::node_t * context,
 		     int column, const element_formatter_t& formatter) const
 {
   for (std::list<element_t *>::const_iterator i = elements.begin();
        i != elements.end();
        i++)
-    column = formatter(out, *i, scope, column);
+    column = formatter(out, *i, context, column);
 
   return column;
 }

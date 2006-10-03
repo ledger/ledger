@@ -19,10 +19,6 @@
 #endif
 #endif
 
-#ifdef HAVE_REALPATH
-extern "C" char * realpath(const char *, char resolved_path[]);
-#endif
-
 std::string expand_path(const std::string& path)
 {
   if (path.length() == 0 || path[0] != '~')

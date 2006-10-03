@@ -5,12 +5,12 @@
 
 namespace ledger {
 
-class derive_command : public valexpr_t::functor_t
+class derive_command : public xml::xpath_t::functor_t
 {
  public:
-  derive_command() : valexpr_t::functor_t("entry", true) {}
+  derive_command() : xml::xpath_t::functor_t("entry", true) {}
 
-  virtual void operator()(value_t& result, valexpr_t::scope_t * locals);
+  virtual void operator()(value_t& result, xml::xpath_t::scope_t * locals);
 };
 
 } // namespace ledger

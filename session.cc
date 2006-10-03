@@ -2,7 +2,6 @@
 #include "pch.h"
 #else
 #include "session.h"
-#include "repitem.h"
 
 #include <fstream>
 #endif
@@ -17,7 +16,9 @@ unsigned int session_t::read_journal(std::istream&       in,
   if (! master)
     master = journal->master;
 
+#if 0
   journal->data = repitem_t::wrap(journal);
+#endif
 
   for (std::list<parser_t *>::iterator i = parsers.begin();
        i != parsers.end();
@@ -131,7 +132,7 @@ journal_t * session_t::read_data(const std::string& master_account)
 }
 
 bool session_t::resolve(const std::string& name, value_t& result,
-			valexpr_t::scope_t * locals)
+			xml::xpath_t::scope_t * locals)
 {
   const char * p = name.c_str();
   switch (*p) {
@@ -161,10 +162,10 @@ bool session_t::resolve(const std::string& name, value_t& result,
     break;
   }
 
-  return valexpr_t::scope_t::resolve(name, result, locals);
+  return xml::xpath_t::scope_t::resolve(name, result, locals);
 }
 
-valexpr_t::node_t * session_t::lookup(const std::string& name)
+xml::xpath_t::op_t * session_t::lookup(const std::string& name)
 {
   const char * p = name.c_str();
   switch (*p) {
@@ -186,7 +187,7 @@ valexpr_t::node_t * session_t::lookup(const std::string& name)
     break;
   }
 
-  return valexpr_t::scope_t::lookup(name);
+  return xml::xpath_t::scope_t::lookup(name);
 }
 
 } // namespace ledger

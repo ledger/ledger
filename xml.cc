@@ -13,6 +13,7 @@
 #include <cstring>
 #endif
 
+namespace ledger {
 namespace xml {
 
 void document_t::write(std::ostream& out) const
@@ -311,3 +312,4 @@ void output_xml_string(std::ostream& out, const std::string& str)
 }
 
 } // namespace xml
+} // namespace ledger

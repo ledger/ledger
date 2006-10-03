@@ -50,7 +50,7 @@ class print_addr : public repitem_t::select_callback_t {
 };
 #endif
 
-static int parse_and_report(report_t * report, int argc, char * argv[],
+static int read_and_report(report_t * report, int argc, char * argv[],
 			    char * envp[])
 {
   session_t& session(*report->session);
@@ -111,21 +111,21 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
 
   xml::xpath_t::functor_t * command = NULL;
 
-  if (verb == "tree")
-    command = new dump_command;
-  else if (verb == "register" || verb == "reg" || verb == "r") {
+  if (false) {
+    ;
+  }
+#if 0
+  if (verb == "register" || verb == "reg" || verb == "r") {
     command = new format_command
       ("register", either_or(report->format_string,
 			     report->session->register_format));
   }
   else if (verb == "balance" || verb == "bal" || verb == "b") {
-#if 0
     if (! report->raw_mode) {
       report->transforms.push_back(new accounts_transform);
       report->transforms.push_back(new clean_transform);
       report->transforms.push_back(new compact_transform);
     }
-#endif
     command = new format_command
       ("balance", either_or(report->format_string,
 			     report->session->balance_format));
@@ -138,15 +138,12 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
 			  report->session->print_format));
   }
   else if (verb == "equity") {
-#if 0
     if (! report->raw_mode)
       report->transforms.push_back(new accounts_transform);
-#endif
     command = new format_command
       ("equity", either_or(report->format_string,
 			   report->session->equity_format));
   }
-#if 0
   else if (verb == "entry")
     command = new entry_command;
   else if (verb == "dump")
@@ -181,7 +178,8 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
       std::cout << "Result of calculation: ";
     }
 
-    std::cout << expr.calc(report).strip_annotations() << std::endl;
+    std::cout << expr.calc((xml::document_t *)NULL, report).
+      strip_annotations() << std::endl;
 
     return 0;
   }
@@ -189,7 +187,7 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
     char buf[128];
     std::strcpy(buf, "command_");
     std::strcat(buf, verb.c_str());
-    if (xml::xpath_t::node_t * def = report->lookup(buf))
+    if (xml::xpath_t::op_t * def = report->lookup(buf))
       command = def->functor_obj();
 
     if (! command)
@@ -272,13 +270,14 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
       *out << "Result of calculation: ";
     }
 
-    *out << expr.calc(report).strip_annotations() << std::endl;
+    *out << expr.calc((xml::document_t *)NULL, report).
+      strip_annotations() << std::endl;
 
     return 0;
   }
   else if (verb == "xpath") {
     std::cout << "XPath parsed:" << std::endl;
-    xpath_t xpath(*arg);
+    xml::xpath_t xpath(*arg);
     xpath.write(*out);
     *out << std::endl;
 
@@ -386,7 +385,9 @@ static int parse_and_report(report_t * report, int argc, char * argv[],
     TRACE_PUSH(binary_cache, "Writing journal file");
 
     std::ofstream stream(session.cache_file.c_str());
+#if 0
     write_binary_journal(stream, journal);
+#endif
 
     TRACE_POP(binary_cache, "Finished writing");
   }
@@ -420,9 +421,11 @@ int main(int argc, char * argv[], char * envp[])
 #endif
     TRACE_PUSH(main, "Ledger starting");
 
-    ledger::session_t * session = new ledger::session_t;
+    std::auto_ptr<ledger::session_t> session(new ledger::session_t);
 
+#if 0
     session->register_parser(new binary_parser_t);
+#endif
 #if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
     session->register_parser(new xml_parser_t);
     session->register_parser(new gnucash_parser_t);
@@ -433,13 +436,13 @@ int main(int argc, char * argv[], char * envp[])
     session->register_parser(new qif_parser_t);
     session->register_parser(new textual_parser_t);
 
-    ledger::report_t * report = new ledger::report_t(session);
+    std::auto_ptr<ledger::report_t> report(new ledger::report_t(session.get()));
 
-    int status = parse_and_report(report, argc, argv, envp);
+    int status = read_and_report(report.get(), argc, argv, envp);
 
-    if (ledger::do_cleanup) {
-      delete report;
-      delete session;
+    if (! ledger::do_cleanup) {
+      report.release();
+      session.release();
     }
 
     TRACE_POP(main, "Ledger done");

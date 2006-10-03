@@ -2,13 +2,12 @@
 #include "pch.h"
 #else
 #include "transform.h"
-#include "repitem.h"
 #endif
 
 namespace ledger {
 
 #if 0
-void populate_account(account_t& acct, repitem_t * item)
+void populate_account(account_t& acct, xml::document_t * document)
 {
   if (! acct.parent)
     return;
@@ -35,7 +34,7 @@ void populate_account(account_t& acct, repitem_t * item)
 }
 
 class populate_accounts : public repitem_t::select_callback_t {
-  virtual void operator()(repitem_t * item) {
+  virtual void operator()(xml::document_t * document) {
     if (item->kind == repitem_t::TRANSACTION) {
       item->extract();
       populate_account(*static_cast<xact_repitem_t *>(item)->account(), item);
@@ -44,13 +43,13 @@ class populate_accounts : public repitem_t::select_callback_t {
 };
 
 class clear_account_data : public repitem_t::select_callback_t {
-  virtual void operator()(repitem_t * item) {
+  virtual void operator()(xml::document_t * document) {
     if (item->kind == repitem_t::ACCOUNT)
       static_cast<account_repitem_t *>(item)->account->data = NULL;
   }
 };
 
-void accounts_transform::execute(repitem_t * items)
+void accounts_transform::execute(xml::document_t * document)
 {
   populate_accounts cb1;
   items->select_all(cb1);
@@ -72,9 +71,8 @@ void accounts_transform::execute(repitem_t * items)
   clear_account_data cb2;
   items->select_all(cb2);
 }
-#endif
 
-void compact_transform::execute(repitem_t * items)
+void compact_transform::execute(xml::document_t * document)
 {
   for (repitem_t * i = items; i; i = i->next) {
     if (i->kind == repitem_t::ACCOUNT) {
@@ -113,7 +111,7 @@ void compact_transform::execute(repitem_t * items)
   }
 }
 
-void clean_transform::execute(repitem_t * items)
+void clean_transform::execute(xml::document_t * document)
 {
   repitem_t * i = items;
   while (i) {
@@ -144,11 +142,11 @@ void clean_transform::execute(repitem_t * items)
   }
 }
 
-void entries_transform::execute(repitem_t * items)
+void entries_transform::execute(xml::document_t * document)
 {
 }
 
-void optimize_transform::execute(repitem_t * items)
+void optimize_transform::execute(xml::document_t * document)
 {
   for (repitem_t * i = items; i; i = i->next) {
     if (i->kind == repitem_t::ENTRY) {
@@ -169,7 +167,7 @@ void optimize_transform::execute(repitem_t * items)
   }
 }
 
-void split_transform::execute(repitem_t * items)
+void split_transform::execute(xml::document_t * document)
 {
   for (repitem_t * i = items; i; i = i->next) {
     if (i->contents && i->contents->next) {
@@ -211,7 +209,7 @@ void split_transform::execute(repitem_t * items)
   }
 }
 
-void merge_transform::execute(repitem_t * items)
+void merge_transform::execute(xml::document_t * document)
 {
   for (repitem_t * i = items; i; i = i->next) {
     if (i->next) {
@@ -261,18 +259,17 @@ void merge_transform::execute(repitem_t * items)
   }
 }
 
-#if 0
 namespace {
 #define REPITEM_FLAGGED 0x1
 
   class mark_selected : public repitem_t::select_callback_t {
-    virtual void operator()(repitem_t * item) {
+    virtual void operator()(xml::document_t * document) {
       item->flags |= REPITEM_FLAGGED;
     }
   };
 
   class mark_selected_and_ancestors : public repitem_t::select_callback_t {
-    virtual void operator()(repitem_t * item) {
+    virtual void operator()(xml::document_t * document) {
       while (item->parent) {
 	item->flags |= REPITEM_FLAGGED;
 	item = item->parent;
@@ -281,27 +278,27 @@ namespace {
   };
 
   class delete_unmarked : public repitem_t::select_callback_t {
-    virtual void operator()(repitem_t * item) {
+    virtual void operator()(xml::document_t * document) {
       if (item->parent && ! (item->flags & REPITEM_FLAGGED))
 	delete item;
     }
   };
 
   class delete_marked : public repitem_t::select_callback_t {
-    virtual void operator()(repitem_t * item) {
+    virtual void operator()(xml::document_t * document) {
       if (item->flags & REPITEM_FLAGGED)
 	delete item;
     }
   };
 
   class clear_flags : public repitem_t::select_callback_t {
-    virtual void operator()(repitem_t * item) {
+    virtual void operator()(xml::document_t * document) {
       item->flags = 0;
     }
   };
 }
 
-void select_transform::execute(repitem_t * items)
+void select_transform::execute(xml::document_t * document)
 {
   if (! path) {
     items->clear();
@@ -316,7 +313,7 @@ void select_transform::execute(repitem_t * items)
   items->select_all(cb3);
 }
 
-void remove_transform::execute(repitem_t * items)
+void remove_transform::execute(xml::document_t * document)
 {
   if (! path)
     return;

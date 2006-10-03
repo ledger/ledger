@@ -10,7 +10,6 @@ namespace ledger {
 
 class account_t;
 class journal_t;
-class repitem_t;
 
 class parser_t
 {

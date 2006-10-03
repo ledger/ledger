@@ -1,7 +1,7 @@
 #ifndef _FORMAT_H
 #define _FORMAT_H
 
-#include "valexpr.h"
+#include "xpath.h"
 #include "error.h"
 #include "debug.h"
 
@@ -18,11 +18,11 @@ class format_t
     short	min_width;
     short	max_width;
 
-    enum kind_t { UNKNOWN, TEXT, COLUMN, VALEXPR, GROUP } kind;
+    enum kind_t { UNKNOWN, TEXT, COLUMN, XPATH, GROUP } kind;
     union {
-      std::string * chars;
-      valexpr_t *   valexpr;
-      format_t *    format;
+      std::string *  chars;
+      xml::xpath_t * xpath;
+      format_t *     format;
     };
 
     element_t()
@@ -38,8 +38,8 @@ class format_t
       case TEXT:
 	delete chars;
 	break;
-      case VALEXPR:
-	delete valexpr;
+      case XPATH:
+	delete xpath;
 	break;
       case GROUP:
 	delete format;
@@ -57,8 +57,7 @@ class format_t
   struct element_formatter_t {
     virtual ~element_formatter_t() {}
     virtual int operator()(std::ostream& out, element_t * element,
-			   valexpr_t::scope_t * details,
-			   int column) const;
+			   xml::node_t * context, int column) const;
   };
 
   std::string		 format_string;
@@ -91,13 +90,13 @@ class format_t
 
   void parse(const std::string& fmt);
 
-  void compile(const std::string& fmt, valexpr_t::scope_t * scope = NULL) {
+  void compile(const std::string& fmt, xml::node_t * context = NULL) {
     parse(fmt);
-    compile(scope);
+    compile(context);
   }
-  void compile(valexpr_t::scope_t * scope = NULL);
+  void compile(xml::node_t * context = NULL);
 
-  int format(std::ostream& out, valexpr_t::scope_t * scope = NULL,
+  int format(std::ostream& out, xml::node_t * context = NULL,
 	     int column = 0, const element_formatter_t& formatter =
 	     element_formatter_t()) const;
 

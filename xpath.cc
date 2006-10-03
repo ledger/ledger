@@ -10,6 +10,7 @@
 #include <fstream>
 #endif
 
+namespace ledger {
 namespace xml {
 
 #ifndef THREADSAFE
@@ -416,22 +417,6 @@ void xpath_t::token_t::unexpected()
 			  value.to_string() + "'");
   default:
     throw new parse_error(std::string("Unexpected operator '") + symbol + "'");
-  }
-}
-
-void xpath_t::token_t::unexpected(char c, char wanted)
-{
-  if ((unsigned char) c == 0xff) {
-    if (wanted)
-      throw new parse_error(std::string("Missing '") + wanted + "'");
-    else
-      throw new parse_error("Unexpected end");
-  } else {
-    if (wanted)
-      throw new parse_error(std::string("Invalid char '") + c +
-			    "' (wanted '" + wanted + "')");
-    else
-      throw new parse_error(std::string("Invalid char '") + c + "'");
   }
 }
 
@@ -1871,12 +1856,11 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
   return NULL;
 }
 
-void xpath_t::calc(value_t& result, document_t * document,
-		   scope_t * scope) const
+void xpath_t::calc(value_t& result, node_t * node, scope_t * scope) const
 {
   try {
-    value_t top_node(document->top);
-    xpath_t final(ptr->compile(&top_node, scope, true));
+    value_t context_node(node);
+    xpath_t final(ptr->compile(&context_node, scope, true));
     // jww (2006-09-09): Give a better error here if this is not
     // actually a value
     final->get_value(result);
@@ -2373,6 +2357,7 @@ void xpath_t::op_t::dump(std::ostream& out, const int depth) const
 }
 
 } // namespace xml
+} // namespace ledger
 
 #ifdef USE_BOOST_PYTHON
 

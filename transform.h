@@ -1,8 +1,7 @@
 #ifndef _TRANSFORM_H
 #define _TRANSFORM_H
 
-#include "valexpr.h"
-#include "repitem.h"
+#include "xpath.h"
 
 #include <list>
 #include <deque>
@@ -11,38 +10,38 @@ namespace ledger {
 
 class transform_t {
  public:
-  virtual void execute(repitem_t * items) = 0;
+  virtual void execute(xml::document_t * document) = 0;
 };
 
 class check_transform : public transform_t {
   // --check checks the validity of the item list.
  public:
-  virtual void execute(repitem_t * items);
+  virtual void execute(xml::document_t * document);
 };
 
 class accounts_transform : public transform_t {
   // --accounts transforms the report tree into an account-wise view.
  public:
-  virtual void execute(repitem_t * items);
+  virtual void execute(xml::document_t * document);
 };
 
 class compact_transform : public transform_t {
   // --compact compacts an account tree to remove accounts with only
   // one child account.
  public:
-  virtual void execute(repitem_t * items);
+  virtual void execute(xml::document_t * document);
 };
 
 class clean_transform : public transform_t {
   // --clean clears out entries and accounts that have no contents.
  public:
-  virtual void execute(repitem_t * items);
+  virtual void execute(xml::document_t * document);
 };
 
 class entries_transform : public transform_t {
   // --entries transforms the report tree into an entries-wise view.
  public:
-  virtual void execute(repitem_t * items);
+  virtual void execute(xml::document_t * document);
 };
 
 class optimize_transform : public transform_t {
@@ -51,7 +50,7 @@ class optimize_transform : public transform_t {
   // commodity (one the negative of the other), the amount of the
   // second transaction will be nulled out.
  public:
-  virtual void execute(repitem_t * items);
+  virtual void execute(xml::document_t * document);
 };
 
 class split_transform : public transform_t {
@@ -61,7 +60,7 @@ class split_transform : public transform_t {
   // useful before sorting, for exampel, in order to sort by
   // transaction instead of by entry.
  public:
-  virtual void execute(repitem_t * items);
+  virtual void execute(xml::document_t * document);
 };
 
 class merge_transform : public transform_t {
@@ -69,7 +68,7 @@ class merge_transform : public transform_t {
   // which share the same entry will be merged into a group of
   // transactions under one reported entry.
  public:
-  virtual void execute(repitem_t * items);
+  virtual void execute(xml::document_t * document);
 };
 
 class combine_transform : public transform_t {
@@ -79,14 +78,14 @@ class combine_transform : public transform_t {
   // will show the terminating date or a label that is characteristic
   // of the set).
  public:
-  virtual void execute(repitem_t * items);
+  virtual void execute(xml::document_t * document);
 };
 
 class group_transform : public transform_t {
   // --group groups all transactions that affect the same account
   // within an entry, so that they appear as a single transaction.
  public:
-  virtual void execute(repitem_t * items);
+  virtual void execute(xml::document_t * document);
 };
 
 class collapse_transform : public transform_t {
@@ -95,7 +94,7 @@ class collapse_transform : public transform_t {
   // fictitous account "<total>" is used to represent the final sum,
   // if multiple accounts are involved.
  public:
-  virtual void execute(repitem_t * items);
+  virtual void execute(xml::document_t * document);
 };
 
 class subtotal_transform : public transform_t {
@@ -103,25 +102,25 @@ class subtotal_transform : public transform_t {
   // one giant entry.  When used in conjunction with --group, the
   // affect is very similar to a regular balance report.
  public:
-  virtual void execute(repitem_t * items);
+  virtual void execute(xml::document_t * document);
 };
 
 #if 0
 class select_transform : public transform_t
 {
  protected:
-  const repitem_t::path_t * path;
+  xml::xpath_t xpath;
 
  public:
   select_transform(const std::string& selection_path) {
-    path = repitem_t::parse_selector(selection_path);
+    xpath.parse(selection_path);
   }
   virtual ~select_transform() {
     if (path)
       delete path;
   }
 
-  virtual void execute(repitem_t * items);
+  virtual void execute(xml::document_t * document);
 };
 
 class remove_transform : public select_transform
@@ -130,7 +129,7 @@ class remove_transform : public select_transform
   remove_transform(const std::string& selection_path)
     : select_transform(selection_path) {}
 
-  virtual void execute(repitem_t * items);
+  virtual void execute(xml::document_t * document);
 };
 #endif
 

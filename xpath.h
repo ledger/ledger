@@ -2,20 +2,15 @@
 #define _XPATH_H
 
 #include "xml.h"
-#include "value.h"
 #include "error.h"
 #if 0
 #include "mask.h"
 #endif
 
-#include <map>
 #include <list>
-#include <deque>
-#include <string>
-#include <iostream>
-#include <sstream>
 #include <memory>
 
+namespace ledger {
 namespace xml {
 
 class xpath_t
@@ -171,7 +166,7 @@ public:
   }
 
 #define MAKE_FUNCTOR(cls, name)				\
-  xpath_t::make_functor(#name, this, &cls::name)
+  xml::xpath_t::make_functor(#name, this, &cls::name)
 
 public:
   class scope_t
@@ -706,17 +701,26 @@ public:
       op_t * compiled = ptr->compile(&noderef, scope);
       if (compiled == ptr)
 	compiled->release();
-      reset(compiled);
+      else
+	reset(compiled);
     }
   }
 
-  virtual void calc(value_t& result, document_t * document,
+  virtual void calc(value_t& result, node_t * node,
 		    scope_t * scope = NULL) const;
+
   virtual value_t calc(document_t * document, scope_t * scope = NULL) const {
     if (! ptr)
       return 0L;
     value_t temp;
-    calc(temp, document, scope);
+    calc(temp, document->top, scope);
+    return temp;
+  }
+  virtual value_t calc(node_t * context, scope_t * scope = NULL) const {
+    if (! ptr)
+      return 0L;
+    value_t temp;
+    calc(temp, context, scope);
     return temp;
   }
 
@@ -737,6 +741,7 @@ public:
   friend class scope_t;
 };
 
+} // namespace xml
 } // namespace ledger
 
 #endif // _XPATH_H

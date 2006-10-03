@@ -1,17 +1,7 @@
 #ifndef _JOURNAL_H
 #define _JOURNAL_H
 
-#include <map>
-#include <list>
-#include <string>
-#include <iostream>
-
-#include "amount.h"
-#include "datetime.h"
-#include "value.h"
-#include "valexpr.h"
-#include "error.h"
-#include "debug.h"
+#include "xpath.h"
 #include "util.h"
 
 namespace ledger {
@@ -230,7 +220,7 @@ class balance_error : public error {
 class auto_entry_t : public entry_base_t
 {
 public:
-  valexpr_t predicate;
+  xml::xpath_t predicate;
 
   auto_entry_t() {
     TRACE_CTOR("auto_entry_t()");
@@ -400,8 +390,6 @@ class journal_t
   std::string  price_db;
   char *       item_pool;
   char *       item_pool_end;
-
-  valexpr_t::scope_t defs;
 
   auto_entries_list    auto_entries;
   period_entries_list  period_entries;

@@ -7,7 +7,8 @@
 
 namespace ledger {
 
-void derive_command::operator()(value_t& result, valexpr_t::scope_t * locals)
+void derive_command::operator()(value_t& result,
+				xml::xpath_t::scope_t * locals)
 {
 #if 0
   std::ostream& out   = *get_ptr<std::ostream>(locals, 0);

@@ -8,7 +8,7 @@
 
 namespace ledger {
 
-class session_t : public valexpr_t::scope_t
+class session_t : public xml::xpath_t::scope_t
 {
  public:
   std::string init_file;
@@ -49,8 +49,8 @@ class session_t : public valexpr_t::scope_t
   std::list<journal_t *> journals;
   std::list<parser_t *>  parsers;
 
-  session_t(valexpr_t::scope_t * parent = NULL) :
-    valexpr_t::scope_t(parent),
+  session_t(xml::xpath_t::scope_t * parent = NULL) :
+    xml::xpath_t::scope_t(parent),
 
     register_format
     ("%((//entry)%{date} %-.20{payee}"
@@ -155,14 +155,14 @@ class session_t : public valexpr_t::scope_t
   //
 
   virtual bool resolve(const std::string& name, value_t& result,
-		       scope_t * locals = NULL);
-  virtual valexpr_t::node_t * lookup(const std::string& name);
+		       xml::xpath_t::scope_t * locals = NULL);
+  virtual xml::xpath_t::op_t * lookup(const std::string& name);
 
   //
   // Option handlers
   //
 
-  void option_file(value_t&, valexpr_t::scope_t * locals) {
+  void option_file(value_t&, xml::xpath_t::scope_t * locals) {
     data_file = locals->args[0].to_string();
   }
 

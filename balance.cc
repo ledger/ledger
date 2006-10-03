@@ -8,6 +8,8 @@
 #include <algorithm>
 #endif
 
+namespace ledger {
+
 amount_t balance_t::amount(const commodity_t& commodity) const
 {
   if (! commodity) {
@@ -319,6 +321,8 @@ balance_t::operator amount_t() const
     throw new amount_error(errmsg.str());
   }
 }
+
+} // namespace ledger
 
 #ifdef USE_BOOST_PYTHON
 

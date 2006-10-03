@@ -1,21 +1,14 @@
 #ifdef USE_PCH
 #include "pch.h"
 #else
+#include "textual.h"
+#include "session.h"
+#include "util.h"
+#include "acconf.h"
+
 #if defined(__GNUG__) && __GNUG__ < 3
 #define _XOPEN_SOURCE
 #endif
-
-#include "session.h"
-#include "journal.h"
-#include "repitem.h"
-#include "textual.h"
-#include "datetime.h"
-#include "valexpr.h"
-#include "error.h"
-#include "option.h"
-#include "timing.h"
-#include "util.h"
-#include "acconf.h"
 
 #include <fstream>
 #include <sstream>
@@ -23,10 +16,6 @@
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
-#endif
-
-#ifdef HAVE_REALPATH
-extern "C" char *realpath(const char *, char resolved_path[]);
 #endif
 
 #define TIMELOG_SUPPORT 1
@@ -78,7 +67,7 @@ parse_amount_expr(std::istream& in, journal_t * journal,
 		  transaction_t& xact, amount_t& amount,
 		  unsigned short flags = 0)
 {
-  valexpr_t valexpr(in, flags | PARSE_VALEXPR_RELAXED | PARSE_VALEXPR_PARTIAL);
+  xml::xpath_t xpath(in, flags | XPATH_PARSE_RELAXED | XPATH_PARSE_PARTIAL);
 
   DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
 	      "Parsed an amount expression");
@@ -86,13 +75,13 @@ parse_amount_expr(std::istream& in, journal_t * journal,
 #ifdef DEBUG_ENABLED
   DEBUG_IF("ledger.textual.parse") {
     if (_debug_stream) {
-      valexpr.dump(*_debug_stream);
+      xpath.dump(*_debug_stream);
       *_debug_stream << std::endl;
     }
   }
 #endif
 
-  amount = valexpr.calc(static_cast<xact_repitem_t *>(xact.data)).to_amount();
+  amount = xpath.calc(static_cast<xml::node_t *>(xact.data)).to_amount();
 
   DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
 	      "The transaction amount is " << amount);
@@ -111,9 +100,11 @@ transaction_t * parse_transaction(char *      line,
   try {
 
   xact->entry = entry;		// this might be NULL
+#if 0
   xact->data  = repitem_t::wrap(xact.get(), entry ?
 				static_cast<entry_repitem_t *>(entry->data) :
 				static_cast<repitem_t *>(journal->data));
+#endif
   // Parse the state flag
 
   char p = peek_next_nonws(in);
@@ -189,7 +180,7 @@ transaction_t * parse_transaction(char *      line,
 
       unsigned long beg = (long)in.tellg();
       parse_amount_expr(in, journal, *xact, xact->amount,
-			PARSE_VALEXPR_NO_REDUCE);
+			XPATH_PARSE_NO_REDUCE);
       unsigned long end = (long)in.tellg();
       xact->amount_expr = std::string(line, beg, end - beg);
     }
@@ -222,7 +213,7 @@ transaction_t * parse_transaction(char *      line,
 	  unsigned long beg = (long)in.tellg();
 
 	  parse_amount_expr(in, journal, *xact, *xact->cost,
-			    PARSE_VALEXPR_NO_MIGRATE);
+			    XPATH_PARSE_NO_MIGRATE);
 
 	  unsigned long end = (long)in.tellg();
 
@@ -300,14 +291,18 @@ transaction_t * parse_transaction(char *      line,
 
  finished:
   if (! xact->entry) {
+#if 0
     delete static_cast<xact_repitem_t *>(xact->data);
+#endif
     xact->data = NULL;
   }
   return xact.release();
 
   }
   catch (error * err) {
+#if 0
     delete static_cast<xact_repitem_t *>(xact->data);
+#endif
     xact->data = NULL;
 
     err->context.push_back
@@ -418,8 +413,10 @@ entry_t * parse_entry(std::istream& in, char * line, journal_t * journal,
   // Create a report item for this entry, so the transaction below may
   // refer to it
 
+#if 0
   curr->data =
     repitem_t::wrap(curr.get(), static_cast<repitem_t *>(journal->data));
+#endif
 
   // Parse all of the transactions associated with this entry
 

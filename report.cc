@@ -2,7 +2,6 @@
 #include "pch.h"
 #else
 #include "report.h"
-#include "repitem.h"
 #include "transform.h"
 #include "util.h"
 #endif
@@ -17,15 +16,15 @@ report_t::~report_t()
     delete *i;
 }
 
-void report_t::apply_transforms(repitem_t * items)
+void report_t::apply_transforms(xml::document_t * document)
 {
   for (std::list<transform_t *>::const_iterator i = transforms.begin();
        i != transforms.end();
        i++)
-    (*i)->execute(items);
+    (*i)->execute(document);
 }
 
-void report_t::abbrev(value_t& result, valexpr_t::scope_t * locals)
+void report_t::abbrev(value_t& result, xml::xpath_t::scope_t * locals)
 {
   if (locals->args.size() < 2)
     throw new error("usage: abbrev(STRING, WIDTH [, STYLE, ABBREV_LEN])");
@@ -44,7 +43,7 @@ void report_t::abbrev(value_t& result, valexpr_t::scope_t * locals)
   result.set_string(abbreviate(str, wid, style, true, (int)abbrev_len));
 }
 
-void report_t::ftime(value_t& result, valexpr_t::scope_t * locals)
+void report_t::ftime(value_t& result, xml::xpath_t::scope_t * locals)
 {
   if (locals->args.size() < 1)
     throw new error("usage: ftime(DATE [, DATE_FORMAT])");
@@ -61,7 +60,7 @@ void report_t::ftime(value_t& result, valexpr_t::scope_t * locals)
 }
 
 bool report_t::resolve(const std::string& name, value_t& result,
-		       valexpr_t::scope_t * locals)
+		       xml::xpath_t::scope_t * locals)
 {
   const char * p = name.c_str();
   switch (*p) {
@@ -80,10 +79,10 @@ bool report_t::resolve(const std::string& name, value_t& result,
     break;
   }
 
-  return valexpr_t::scope_t::resolve(name, result, locals);
+  return xml::xpath_t::scope_t::resolve(name, result, locals);
 }
 
-valexpr_t::node_t * report_t::lookup(const std::string& name)
+xml::xpath_t::op_t * report_t::lookup(const std::string& name)
 {
   const char * p = name.c_str();
   switch (*p) {
@@ -183,7 +182,7 @@ valexpr_t::node_t * report_t::lookup(const std::string& name)
     break;
   }
 
-  return valexpr_t::scope_t::lookup(name);
+  return xml::xpath_t::scope_t::lookup(name);
 }
 
 } // namespace ledger

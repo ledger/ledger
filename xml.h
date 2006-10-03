@@ -4,10 +4,6 @@
 #include "value.h"
 #include "debug.h"
 
-#include <map>
-#include <deque>
-#include <string>
-
 extern "C" {
 #if defined(HAVE_EXPAT)
 #include <expat.h>           // expat XML parser
@@ -16,6 +12,7 @@ extern "C" {
 #endif
 }
 
+namespace ledger {
 namespace xml {
 
 class node_t;
@@ -260,27 +257,7 @@ class parse_error : public error {
 
 #endif
 
-#if 0
-class format_xml_entries : public format_entries
-{
-  bool show_totals;
- public:
-  format_xml_entries(std::ostream& output_stream,
-		     const bool _show_totals = false)
-    : format_entries(output_stream, ""), show_totals(_show_totals) {
-    output_stream << "<?xml version=\"1.0\"?>\n"
-		  << "<ledger version=\"2.5\">\n";
-  }
-
-  virtual void flush() {
-    format_entries::flush();
-    output_stream << "</ledger>" << std::endl;
-  }
-
-  virtual void format_last_entry();
-};
-#endif
-
 } // namespace xml
+} // namespace ledger
 
 #endif // _XML_H

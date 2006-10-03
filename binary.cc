@@ -2,17 +2,14 @@
 #include "pch.h"
 #else
 #include "binary.h"
-#include "valexpr.h"
-#include "repitem.h"
 
 #include <fstream>
 #include <sys/stat.h>
 #endif
 
-#define TIMELOG_SUPPORT 1
-
 namespace ledger {
 
+#if 0
 static unsigned long       binary_magic_number = 0xFFEED765;
 #ifdef DEBUG_ENABLED
 static unsigned long       format_version      = 0x00030000;
@@ -36,51 +33,10 @@ extern char *		   bigints;
 extern char *		   bigints_next;
 extern unsigned int	   bigints_index;
 extern unsigned int	   bigints_count;
-
-template <typename T>
-inline void read_binary_number_nocheck(std::istream& in, T& num) {
-  in.read((char *)&num, sizeof(num));
-}
-
-template <typename T>
-inline T read_binary_number_nocheck(std::istream& in) {
-  T num;
-  read_binary_number_nocheck(in, num);
-  return num;
-}
-
-template <typename T>
-inline void read_binary_number_nocheck(char *& data, T& num) {
-  num = *((T *) data);
-  data += sizeof(T);
-}
-
-template <typename T>
-inline T read_binary_number_nocheck(char *& data) {
-  T num;
-  read_binary_number_nocheck(data, num);
-  return num;
-}
-
-#if DEBUG_LEVEL >= ALPHA
-static void assert_failed() {
-  assert(0);
-}
-#define read_binary_guard(in, id)				\
-  if (read_binary_number_nocheck<unsigned short>(in) != id)	\
-      assert_failed();
-#else
-#define read_binary_guard(in, id)
 #endif
 
-template <typename T>
-inline void read_binary_number(std::istream& in, T& num) {
-  read_binary_guard(in, 0x2003);
-  in.read((char *)&num, sizeof(num));
-  read_binary_guard(in, 0x2004);
-}
-
-inline void read_binary_bool(std::istream& in, bool& num) {
+void read_binary_bool(std::istream& in, bool& num)
+{
   read_binary_guard(in, 0x2005);
   unsigned char val;
   in.read((char *)&val, sizeof(val));
@@ -88,55 +44,16 @@ inline void read_binary_bool(std::istream& in, bool& num) {
   read_binary_guard(in, 0x2006);
 }
 
-template <typename T>
-inline void read_binary_long(std::istream& in, T& num) {
-  read_binary_guard(in, 0x2001);
-
-  unsigned char len;
-  read_binary_number_nocheck(in, len);
-
-  num = 0;
-  unsigned char temp;
-  if (len > 3) {
-    read_binary_number_nocheck(in, temp);
-    num |= ((unsigned long)temp) << 24;
-  }
-  if (len > 2) {
-    read_binary_number_nocheck(in, temp);
-    num |= ((unsigned long)temp) << 16;
-  }
-  if (len > 1) {
-    read_binary_number_nocheck(in, temp);
-    num |= ((unsigned long)temp) << 8;
-  }
-
-  read_binary_number_nocheck(in, temp);
-  num |= ((unsigned long)temp);
-
-  read_binary_guard(in, 0x2002);
+void read_binary_bool(char *& data, bool& num)
+{
+  read_binary_guard(data, 0x2005);
+  unsigned char val = *((unsigned char *) data);
+  data += sizeof(unsigned char);
+  num = val == 1;
+  read_binary_guard(data, 0x2006);
 }
 
-template <typename T>
-inline T read_binary_number(std::istream& in) {
-  T num;
-  read_binary_number(in, num);
-  return num;
-}
-
-inline bool read_binary_bool(std::istream& in) {
-  bool num;
-  read_binary_bool(in, num);
-  return num;
-}
-
-template <typename T>
-inline T read_binary_long(std::istream& in) {
-  T num;
-  read_binary_long(in, num);
-  return num;
-}
-
-inline void read_binary_string(std::istream& in, std::string& str)
+void read_binary_string(std::istream& in, std::string& str)
 {
   read_binary_guard(in, 0x3001);
 
@@ -163,77 +80,7 @@ inline void read_binary_string(std::istream& in, std::string& str)
   read_binary_guard(in, 0x3002);
 }
 
-inline std::string read_binary_string(std::istream& in) {
-  std::string temp;
-  read_binary_string(in, temp);
-  return temp;
-}
-
-template <typename T>
-inline void read_binary_number(char *& data, T& num) {
-  read_binary_guard(data, 0x2003);
-  num = *((T *) data);
-  data += sizeof(T);
-  read_binary_guard(data, 0x2004);
-}
-
-inline void read_binary_bool(char *& data, bool& num) {
-  read_binary_guard(data, 0x2005);
-  unsigned char val = *((unsigned char *) data);
-  data += sizeof(unsigned char);
-  num = val == 1;
-  read_binary_guard(data, 0x2006);
-}
-
-template <typename T>
-inline void read_binary_long(char *& data, T& num) {
-  read_binary_guard(data, 0x2001);
-
-  unsigned char len;
-  read_binary_number_nocheck(data, len);
-
-  num = 0;
-  unsigned char temp;
-  if (len > 3) {
-    read_binary_number_nocheck(data, temp);
-    num |= ((unsigned long)temp) << 24;
-  }
-  if (len > 2) {
-    read_binary_number_nocheck(data, temp);
-    num |= ((unsigned long)temp) << 16;
-  }
-  if (len > 1) {
-    read_binary_number_nocheck(data, temp);
-    num |= ((unsigned long)temp) << 8;
-  }
-
-  read_binary_number_nocheck(data, temp);
-  num |= ((unsigned long)temp);
-
-  read_binary_guard(data, 0x2002);
-}
-
-template <typename T>
-inline T read_binary_number(char *& data) {
-  T num;
-  read_binary_number(data, num);
-  return num;
-}
-
-inline bool read_binary_bool(char *& data) {
-  bool num;
-  read_binary_bool(data, num);
-  return num;
-}
-
-template <typename T>
-inline T read_binary_long(char *& data) {
-  T num;
-  read_binary_long(data, num);
-  return num;
-}
-
-inline void read_binary_string(char *& data, std::string& str)
+void read_binary_string(char *& data, std::string& str)
 {
   read_binary_guard(data, 0x3001);
 
@@ -256,14 +103,7 @@ inline void read_binary_string(char *& data, std::string& str)
   read_binary_guard(data, 0x3002);
 }
 
-inline std::string read_binary_string(char *& data)
-{
-  std::string temp;
-  read_binary_string(data, temp);
-  return temp;
-}
-
-inline void read_binary_string(char *& data, std::string * str)
+void read_binary_string(char *& data, std::string * str)
 {
   read_binary_guard(data, 0x3001);
 
@@ -286,20 +126,7 @@ inline void read_binary_string(char *& data, std::string * str)
   read_binary_guard(data, 0x3002);
 }
 
-inline void read_binary_amount(char *& data, amount_t& amt)
-{
-  commodity_t::ident_t ident;
-  read_binary_long(data, ident);
-  if (ident == 0xffffffff)
-    amt.commodity_ = NULL;
-  else if (ident == 0)
-    amt.commodity_ = commodity_t::null_commodity;
-  else
-    amt.commodity_ = commodities[ident - 1];
-
-  amt.read_quantity(data);
-}
-
+#if 0
 inline void read_binary_value(char *& data, value_t& val)
 {
   val.type = static_cast<value_t::type_t>(read_binary_long<int>(data));
@@ -771,7 +598,9 @@ unsigned int read_binary_journal(std::istream&	   in,
 
   return count;
 }
+#endif
 
+#if 0
 bool binary_parser_t::test(std::istream& in) const
 {
   if (read_binary_number_nocheck<unsigned long>(in) == binary_magic_number &&
@@ -788,70 +617,23 @@ unsigned int binary_parser_t::parse(std::istream&       in,
 				    account_t *		master,
 				    const std::string * original_file)
 {
+#if 0
   return read_binary_journal(in, journal, master,
 			     original_file ? *original_file : "");
+#endif
 }
-
-template <typename T>
-inline void write_binary_number_nocheck(std::ostream& out, T num) {
-  out.write((char *)&num, sizeof(num));
-}
-
-#if DEBUG_LEVEL >= ALPHA
-#define write_binary_guard(out, id)			\
-  write_binary_number_nocheck<unsigned short>(out, id)
-#else
-#define write_binary_guard(in, id)
 #endif
 
-template <typename T>
-inline void write_binary_number(std::ostream& out, T num) {
-  write_binary_guard(out, 0x2003);
-  out.write((char *)&num, sizeof(num));
-  write_binary_guard(out, 0x2004);
-}
 
-inline void write_binary_bool(std::ostream& out, bool num) {
+void write_binary_bool(std::ostream& out, bool num)
+{
   write_binary_guard(out, 0x2005);
   unsigned char val = num ? 1 : 0;
   out.write((char *)&val, sizeof(val));
   write_binary_guard(out, 0x2006);
 }
 
-template <typename T>
-inline void write_binary_long(std::ostream& out, T num) {
-  write_binary_guard(out, 0x2001);
-
-  unsigned char len = 4;
-  if (((unsigned long)num) < 0x00000100UL)
-    len = 1;
-  else if (((unsigned long)num) < 0x00010000UL)
-    len = 2;
-  else if (((unsigned long)num) < 0x01000000UL)
-    len = 3;
-  write_binary_number_nocheck<unsigned char>(out, len);
-
-  unsigned char temp;
-  if (len > 3) {
-    temp = (((unsigned long)num) & 0xFF000000UL) >> 24;
-    write_binary_number_nocheck(out, temp);
-  }
-  if (len > 2) {
-    temp = (((unsigned long)num) & 0x00FF0000UL) >> 16;
-    write_binary_number_nocheck(out, temp);
-  }
-  if (len > 1) {
-    temp = (((unsigned long)num) & 0x0000FF00UL) >> 8;
-    write_binary_number_nocheck(out, temp);
-  }
-
-  temp = (((unsigned long)num) & 0x000000FFUL);
-  write_binary_number_nocheck(out, temp);
-
-  write_binary_guard(out, 0x2002);
-}
-
-inline void write_binary_string(std::ostream& out, const std::string& str)
+void write_binary_string(std::ostream& out, const std::string& str)
 {
   write_binary_guard(out, 0x3001);
 
@@ -870,16 +652,7 @@ inline void write_binary_string(std::ostream& out, const std::string& str)
   write_binary_guard(out, 0x3002);
 }
 
-void write_binary_amount(std::ostream& out, const amount_t& amt)
-{
-  if (amt.commodity_)
-    write_binary_long(out, amt.commodity_->ident);
-  else
-    write_binary_long<commodity_t::ident_t>(out, 0xffffffff);
-
-  amt.write_quantity(out);
-}
-
+#if 0
 void write_binary_value(std::ostream& out, const value_t& val)
 {
   write_binary_long(out, (int)val.type);
@@ -1242,5 +1015,6 @@ void write_binary_journal(std::ostream& out, journal_t * journal)
   out.seekp(bigints_val);
   write_binary_number<unsigned long>(out, bigints_count);
 }
+#endif
 
 } // namespace ledger

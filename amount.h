@@ -2,6 +2,7 @@
 #define _AMOUNT_H
 
 #include <map>
+#include <deque>
 #include <stack>
 #include <string>
 #include <cctype>
@@ -13,6 +14,8 @@
 #include "datetime.h"
 #include "debug.h"
 #include "error.h"
+
+namespace ledger {
 
 extern bool do_cleanup;
 
@@ -264,34 +267,14 @@ class amount_t
       negate();
   }
 
-#define AMOUNT_PARSE_NO_MIGRATE 0x01
-#define AMOUNT_PARSE_NO_REDUCE  0x02
-
-  void parse(std::istream& in, unsigned char flags = 0);
-  void parse(const std::string& str, unsigned char flags = 0);
   void reduce();
-
   amount_t reduced() const {
     amount_t temp(*this);
     temp.reduce();
     return temp;
   }
 
-  void read_quantity(char *& data);
-  void read_quantity(std::istream& in);
-  void write_quantity(std::ostream& out) const;
-
   bool valid() const;
-
-  // Classes that are friends, and help to implement this class
-
-  friend std::ostream& operator<<(std::ostream& out, const amount_t& amt);
-  friend std::istream& operator>>(std::istream& in, amount_t& amt);
-
-  friend unsigned int sizeof_bigint_t();
-
-  friend void read_binary_amount(char *& data, amount_t& amt);
-  friend void write_binary_amount(std::ostream& out, const amount_t& amt);
 
   // This function is special, and exists only to support a custom
   // optimization in binary.cc (which offers a significant enough gain
@@ -302,52 +285,45 @@ class amount_t
 
   friend void parse_annotations(std::istream& in, amount_t& price,
 				datetime_t& date, std::string& tag);
-};
 
-unsigned int sizeof_bigint_t();
+  // Streaming interface
 
-void parse_quantity(std::istream& in, std::string& value);
-void parse_commodity(std::istream& in, std::string& symbol);
-void parse_annotations(std::istream& in, const std::string& symbol,
-		       std::string& name, std::string& price,
-		       std::string& date, std::string& tag);
-void parse_conversion(const std::string& larger,
-		      const std::string& smaller);
-
-inline bool is_quote_or_paren(char * p) {
-  return *p == '"' || *p == '{' || *p == '[' || *p == '(';
-}
-
-inline char * scan_past_quotes_and_parens(char * expr)
-{
-  std::stack<char> paren_stack;
-
-  char * p;
-  for (p = expr; *p; p++) {
-    if (*p == '"' ||
-	((*p == '(' || ((*p == '{' || *p == '[') &&
-			paren_stack.top() != '(')) &&
-	 paren_stack.top() != '"')) {
-      paren_stack.push(*p);
-    }
-    else if ((*p == ')' && paren_stack.top() == '(') ||
-	     (*p == '}' && paren_stack.top() == '{') ||
-	     (*p == ']' && paren_stack.top() == '[') ||
-	     (*p == '"' && paren_stack.top() == '"')) {
-      paren_stack.pop();
-      if (paren_stack.size() == 0)
-	break;
-    }
+  void dump(std::ostream& out) const {
+    out << "AMOUNT(";
+    print(out);
+    out << ")";
   }
-  return p;
-}
+
+#define AMOUNT_PARSE_NO_MIGRATE 0x01
+#define AMOUNT_PARSE_NO_REDUCE  0x02
+
+  void print(std::ostream& out) const;
+  void parse(std::istream& in, unsigned char flags = 0);
+  void parse(const std::string& str, unsigned char flags = 0) {
+    std::istringstream stream(str);
+    parse(stream, flags);
+  }
+
+  void print_quantity(std::ostream& out) const;
+  void parse_quantity(std::istream& in, std::string& value) const;
+
+  void write(std::ostream& out) const;
+  void read(std::istream& in);
+  void read(char *& data);
+
+  void write_quantity(std::ostream& out) const;
+  void read_quantity(std::istream& in);
+  void read_quantity(char *& data);
+};
 
 inline amount_t abs(const amount_t& amt) {
   return amt < 0 ? amt.negated() : amt;
 }
 
-std::ostream& operator<<(std::ostream& out, const amount_t& amt);
-
+inline std::ostream& operator<<(std::ostream& out, const amount_t& amt) {
+  amt.print(out);
+  return out;
+}
 inline std::istream& operator>>(std::istream& in, amount_t& amt) {
   amt.parse(in);
   return in;
@@ -388,20 +364,15 @@ class commodity_base_t
 
   commodity_base_t()
     : precision(0), flags(COMMODITY_STYLE_DEFAULTS),
-      smaller(NULL), larger(NULL), history(NULL) {
-    TRACE_CTOR("commodity_base_t()");
-  }
+      smaller(NULL), larger(NULL), history(NULL) {}
 
   commodity_base_t(const std::string& _symbol,
 		   unsigned int	_precision = 0,
 		   unsigned int _flags	   = COMMODITY_STYLE_DEFAULTS)
     : precision(_precision), flags(_flags),
-      smaller(NULL), larger(NULL), symbol(_symbol), history(NULL) {
-    TRACE_CTOR("commodity_base_t(const std::string&, unsigned int, unsigned int)");
-  }
+      smaller(NULL), larger(NULL), symbol(_symbol), history(NULL) {}
 
   ~commodity_base_t() {
-    TRACE_DTOR("commodity_base_t");
     if (history) delete history;
     if (smaller) delete smaller;
     if (larger)  delete larger;
@@ -441,6 +412,8 @@ class commodity_base_t
 typedef std::map<const std::string, commodity_t *>  commodities_map;
 typedef std::pair<const std::string, commodity_t *> commodities_pair;
 
+typedef std::deque<commodity_t *> commodities_array;
+
 class commodity_t
 {
   friend class annotated_commodity_t;
@@ -448,10 +421,11 @@ class commodity_t
  public:
   // This map remembers all commodities that have been defined.
 
-  static commodities_map commodities;
-  static bool            commodities_sorted;
-  static commodity_t *   null_commodity;
-  static commodity_t *   default_commodity;
+  static commodities_map   commodities;
+  static commodities_array commodities_by_ident;
+  static bool		   commodities_sorted;
+  static commodity_t *	   null_commodity;
+  static commodity_t *	   default_commodity;
 
   static commodity_t * create(const std::string& symbol);
   static commodity_t * find(const std::string& name);
@@ -611,8 +585,7 @@ class annotated_commodity_t : public commodity_t
   friend class amount_t;
 };
 
-inline std::ostream& operator<<(std::ostream& out,
-				const commodity_t& comm) {
+inline std::ostream& operator<<(std::ostream& out, const commodity_t& comm) {
   out << comm.symbol();
   return out;
 }
@@ -628,6 +601,11 @@ inline commodity_t& amount_t::commodity() const {
     return *commodity_;
 }
 
+
+void parse_conversion(const std::string& larger_str,
+		      const std::string& smaller_str);
+
+
 class amount_error : public error {
  public:
   amount_error(const std::string& reason) throw() : error(reason) {}
@@ -637,5 +615,7 @@ class amount_error : public error {
 struct compare_amount_commodities {
   bool operator()(const amount_t * left, const amount_t * right) const;
 };
+
+} // namespace ledger
 
 #endif // _AMOUNT_H

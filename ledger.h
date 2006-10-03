@@ -14,7 +14,7 @@
 #include <balance.h>
 #include <value.h>
 #include <datetime.h>
-#include <valexpr.h>
+#include <xml.h>
 #include <xpath.h>
 #include <format.h>
 #include <quotes.h>
@@ -27,13 +27,12 @@
 #include <parser.h>
 #include <textual.h>
 #include <binary.h>
-#include <xml.h>
+#include <xmlparse.h>
 #include <gnucash.h>
 #include <qif.h>
 #include <ofx.h>
 
 #include <report.h>
-#include <repitem.h>
 #include <transform.h>
 
 #include <dump.h>

@@ -3,7 +3,6 @@
 #else
 #include "journal.h"
 #include "datetime.h"
-#include "valexpr.h"
 #include "mask.h"
 #include "format.h"
 #ifdef USE_BOOST_PYTHON
@@ -341,7 +340,7 @@ void auto_entry_t::extend_entry(entry_base_t& entry, bool post)
        i != initial_xacts.end();
        i++) {
     // jww (2006-09-10): Create a scope here based on entry
-    if (predicate.calc()) {
+    if (predicate.calc((xml::node_t *) NULL)) {
       for (transactions_list::iterator t = transactions.begin();
 	   t != transactions.end();
 	   t++) {
