@@ -338,7 +338,7 @@
 							<real>186</real>
 						</array>
 						<key>RubberWindowFrame</key>
-						<string>416 450 690 397 0 0 1440 938 </string>
+						<string>416 401 690 397 0 0 1440 878 </string>
 					</dict>
 					<key>Module</key>
 					<string>PBXSmartGroupTreeModule</string>
@@ -375,7 +375,7 @@
 								<key>Frame</key>
 								<string>{{0, 0}, {482, 0}}</string>
 								<key>RubberWindowFrame</key>
-								<string>416 450 690 397 0 0 1440 938 </string>
+								<string>416 401 690 397 0 0 1440 878 </string>
 							</dict>
 							<key>Module</key>
 							<string>PBXNavigatorGroup</string>
@@ -395,7 +395,7 @@
 								<key>Frame</key>
 								<string>{{0, 5}, {482, 351}}</string>
 								<key>RubberWindowFrame</key>
-								<string>416 450 690 397 0 0 1440 938 </string>
+								<string>416 401 690 397 0 0 1440 878 </string>
 							</dict>
 							<key>Module</key>
 							<string>XCDetailModule</string>
@@ -419,9 +419,9 @@
 			</array>
 			<key>TableOfContents</key>
 			<array>
-				<string>33A5AA020A98029E005DDACF</string>
+				<string>332C89810B7368A20096BEAF</string>
 				<string>1CE0B1FE06471DED0097A5F4</string>
-				<string>33A5AA030A98029E005DDACF</string>
+				<string>332C89820B7368A20096BEAF</string>
 				<string>1CE0B20306471E060097A5F4</string>
 				<string>1CE0B20506471E060097A5F4</string>
 			</array>
@@ -540,7 +540,7 @@
 	<key>StatusbarIsVisible</key>
 	<true/>
 	<key>TimeStamp</key>
-	<real>177739051.54481399</real>
+	<real>192112795.06863001</real>
 	<key>ToolbarDisplayMode</key>
 	<integer>1</integer>
 	<key>ToolbarIsVisible</key>
@@ -555,14 +555,11 @@
 	<integer>5</integer>
 	<key>WindowOrderList</key>
 	<array>
-		<string>33C0B29308E52EAD00E6C8AA</string>
-		<string>1CD10A99069EF8BA00B06720</string>
-		<string>33A5AA0A0A98029E005DDACF</string>
-		<string>/Users/johnw/src/MoneyWise/MoneyWise.xcodeproj</string>
 		<string>1C0AD2B3069F1EA900FABCE6</string>
+		<string>/Volumes/Users/johnw/Projects/MoneyWise/MoneyWise.xcodeproj</string>
 	</array>
 	<key>WindowString</key>
-	<string>416 450 690 397 0 0 1440 938 </string>
+	<string>416 401 690 397 0 0 1440 878 </string>
 	<key>WindowTools</key>
 	<array>
 		<dict>
@@ -988,7 +985,7 @@
 								<key>Frame</key>
 								<string>{{0, 0}, {614, 614}}</string>
 								<key>RubberWindowFrame</key>
-								<string>441 143 614 655 0 0 1440 938 </string>
+								<string>441 120 614 655 0 0 1440 878 </string>
 							</dict>
 							<key>Module</key>
 							<string>PBXRunSessionModule</string>
@@ -1011,14 +1008,14 @@
 			<key>TableOfContents</key>
 			<array>
 				<string>1C0AD2B3069F1EA900FABCE6</string>
-				<string>33A5AA0B0A98029E005DDACF</string>
+				<string>332C89830B7368A20096BEAF</string>
 				<string>1CD0528B0623707200166675</string>
-				<string>33A5AA0C0A98029E005DDACF</string>
+				<string>332C89840B7368A20096BEAF</string>
 			</array>
 			<key>ToolbarConfiguration</key>
 			<string>xcode.toolbar.config.run</string>
 			<key>WindowString</key>
-			<string>441 143 614 655 0 0 1440 938 </string>
+			<string>441 120 614 655 0 0 1440 878 </string>
 			<key>WindowToolGUID</key>
 			<string>1C0AD2B3069F1EA900FABCE6</string>
 			<key>WindowToolIsVisible</key>
