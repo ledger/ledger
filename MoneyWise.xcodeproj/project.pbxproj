@@ -1,0 +1,469 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 42;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		3325A64B087E291D00DDC078 /* LedgerInterface.cc in Sources */ = {isa = PBXBuildFile; fileRef = 3325A649087E291D00DDC078 /* LedgerInterface.cc */; };
+		3325A64C087E291D00DDC078 /* LedgerInterface.h in Headers */ = {isa = PBXBuildFile; fileRef = 3325A64A087E291D00DDC078 /* LedgerInterface.h */; };
+		3325A65B087E2AB800DDC078 /* LedgerFunctors.h in Headers */ = {isa = PBXBuildFile; fileRef = 3325A659087E2AB800DDC078 /* LedgerFunctors.h */; };
+		3325A677087E2C6A00DDC078 /* LedgerFunctors.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3325A676087E2C6A00DDC078 /* LedgerFunctors.mm */; };
+		3325A694087E345F00DDC078 /* GraphView.h in Headers */ = {isa = PBXBuildFile; fileRef = 3325A692087E345F00DDC078 /* GraphView.h */; };
+		3325A695087E345F00DDC078 /* GraphView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3325A693087E345F00DDC078 /* GraphView.mm */; };
+		335FBAD1087A16A900F4EF67 /* libledger.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 335FBAD0087A16A900F4EF67 /* libledger.dylib */; };
+		336269CE088079FC00835060 /* NSLogStream.h in Headers */ = {isa = PBXBuildFile; fileRef = 336269CD088079FC00835060 /* NSLogStream.h */; };
+		33A5AA660A981480005DDACF /* libamounts.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 33A5AA650A981480005DDACF /* libamounts.dylib */; };
+		33BC70330878A8BF00197981 /* JournalController.h in Headers */ = {isa = PBXBuildFile; fileRef = 33BC70310878A8BF00197981 /* JournalController.h */; };
+		33BC70340878A8BF00197981 /* JournalController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 33BC70320878A8BF00197981 /* JournalController.mm */; };
+		33C0B28B08E52EA000E6C8AA /* libexpat.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 33C0B28A08E52EA000E6C8AA /* libexpat.dylib */; };
+		33D62809087E039000D91B9A /* MWApplication.h in Headers */ = {isa = PBXBuildFile; fileRef = 33D62807087E039000D91B9A /* MWApplication.h */; };
+		33D6280A087E039000D91B9A /* MWApplication.m in Sources */ = {isa = PBXBuildFile; fileRef = 33D62808087E039000D91B9A /* MWApplication.m */; };
+		33D62827087E060300D91B9A /* AboutPanel.nib in Resources */ = {isa = PBXBuildFile; fileRef = 33D62826087E060300D91B9A /* AboutPanel.nib */; };
+		8D15AC290486D014006FF6A4 /* MoneyWise_Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 32DBCF750370BD2300C91783 /* MoneyWise_Prefix.pch */; };
+		8D15AC2A0486D014006FF6A4 /* JournalDocument.h in Headers */ = {isa = PBXBuildFile; fileRef = 2A37F4AEFDCFA73011CA2CEA /* JournalDocument.h */; };
+		8D15AC2C0486D014006FF6A4 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 2A37F4B9FDCFA73011CA2CEA /* Credits.rtf */; };
+		8D15AC2D0486D014006FF6A4 /* MainMenu.nib in Resources */ = {isa = PBXBuildFile; fileRef = 2A37F4B6FDCFA73011CA2CEA /* MainMenu.nib */; };
+		8D15AC2E0486D014006FF6A4 /* JournalWindow.nib in Resources */ = {isa = PBXBuildFile; fileRef = 2A37F4B4FDCFA73011CA2CEA /* JournalWindow.nib */; };
+		8D15AC2F0486D014006FF6A4 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165FFE840EACC02AAC07 /* InfoPlist.strings */; };
+		8D15AC310486D014006FF6A4 /* JournalDocument.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2A37F4ACFDCFA73011CA2CEA /* JournalDocument.mm */; settings = {ATTRIBUTES = (); }; };
+		8D15AC320486D014006FF6A4 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A37F4B0FDCFA73011CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
+		8D15AC340486D014006FF6A4 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A7FEA54F5311CA2CBB /* Cocoa.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		089C1660FE840EACC02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		1058C7A7FEA54F5311CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
+		2A37F4ACFDCFA73011CA2CEA /* JournalDocument.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 30; path = JournalDocument.mm; sourceTree = "<group>"; };
+		2A37F4AEFDCFA73011CA2CEA /* JournalDocument.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 30; path = JournalDocument.h; sourceTree = "<group>"; };
+		2A37F4B0FDCFA73011CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		2A37F4B5FDCFA73011CA2CEA /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = English.lproj/JournalWindow.nib; sourceTree = "<group>"; };
+		2A37F4B7FDCFA73011CA2CEA /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = English.lproj/MainMenu.nib; sourceTree = "<group>"; };
+		2A37F4BAFDCFA73011CA2CEA /* English */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = English; path = English.lproj/Credits.rtf; sourceTree = "<group>"; };
+		2A37F4C4FDCFA73011CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
+		2A37F4C5FDCFA73011CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
+		32DBCF750370BD2300C91783 /* MoneyWise_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MoneyWise_Prefix.pch; sourceTree = "<group>"; };
+		3325A649087E291D00DDC078 /* LedgerInterface.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = LedgerInterface.cc; sourceTree = "<group>"; };
+		3325A64A087E291D00DDC078 /* LedgerInterface.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 30; path = LedgerInterface.h; sourceTree = "<group>"; };
+		3325A659087E2AB800DDC078 /* LedgerFunctors.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 30; path = LedgerFunctors.h; sourceTree = "<group>"; };
+		3325A676087E2C6A00DDC078 /* LedgerFunctors.mm */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.objcpp; path = LedgerFunctors.mm; sourceTree = "<group>"; };
+		3325A692087E345F00DDC078 /* GraphView.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = GraphView.h; sourceTree = "<group>"; };
+		3325A693087E345F00DDC078 /* GraphView.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 30; path = GraphView.mm; sourceTree = "<group>"; };
+		335FBAD0087A16A900F4EF67 /* libledger.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libledger.dylib; sourceTree = "<group>"; };
+		336269CD088079FC00835060 /* NSLogStream.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = NSLogStream.h; sourceTree = "<group>"; };
+		33A5AA650A981480005DDACF /* libamounts.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libamounts.dylib; path = ../ledger/.libs/libamounts.dylib; sourceTree = SOURCE_ROOT; };
+		33BC70310878A8BF00197981 /* JournalController.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = JournalController.h; sourceTree = "<group>"; };
+		33BC70320878A8BF00197981 /* JournalController.mm */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.objcpp; path = JournalController.mm; sourceTree = "<group>"; };
+		33C0B28A08E52EA000E6C8AA /* libexpat.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libexpat.dylib; sourceTree = "<group>"; };
+		33D62807087E039000D91B9A /* MWApplication.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = MWApplication.h; sourceTree = "<group>"; };
+		33D62808087E039000D91B9A /* MWApplication.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; path = MWApplication.m; sourceTree = "<group>"; };
+		33D62812087E041F00D91B9A /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = English.lproj/AboutPanel.nib; sourceTree = "<group>"; };
+		8D15AC360486D014006FF6A4 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		8D15AC370486D014006FF6A4 /* MoneyWise.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MoneyWise.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		8D15AC330486D014006FF6A4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8D15AC340486D014006FF6A4 /* Cocoa.framework in Frameworks */,
+				335FBAD1087A16A900F4EF67 /* libledger.dylib in Frameworks */,
+				33A5AA660A981480005DDACF /* libamounts.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		1058C7A6FEA54F5311CA2CBB /* Linked Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				1058C7A7FEA54F5311CA2CBB /* Cocoa.framework */,
+			);
+			name = "Linked Frameworks";
+			sourceTree = "<group>";
+		};
+		1058C7A8FEA54F5311CA2CBB /* Other Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				2A37F4C5FDCFA73011CA2CEA /* Foundation.framework */,
+				2A37F4C4FDCFA73011CA2CEA /* AppKit.framework */,
+			);
+			name = "Other Frameworks";
+			sourceTree = "<group>";
+		};
+		19C28FB0FE9D524F11CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				33A5AA650A981480005DDACF /* libamounts.dylib */,
+				335FBAD0087A16A900F4EF67 /* libledger.dylib */,
+				33C0B28A08E52EA000E6C8AA /* libexpat.dylib */,
+				8D15AC370486D014006FF6A4 /* MoneyWise.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		2A37F4AAFDCFA73011CA2CEA /* MoneyWise */ = {
+			isa = PBXGroup;
+			children = (
+				2A37F4ABFDCFA73011CA2CEA /* Classes */,
+				2A37F4AFFDCFA73011CA2CEA /* Other Sources */,
+				2A37F4B8FDCFA73011CA2CEA /* Resources */,
+				2A37F4C3FDCFA73011CA2CEA /* Frameworks */,
+				19C28FB0FE9D524F11CA2CBB /* Products */,
+			);
+			name = MoneyWise;
+			sourceTree = "<group>";
+		};
+		2A37F4ABFDCFA73011CA2CEA /* Classes */ = {
+			isa = PBXGroup;
+			children = (
+				33BC70310878A8BF00197981 /* JournalController.h */,
+				33BC70320878A8BF00197981 /* JournalController.mm */,
+				2A37F4AEFDCFA73011CA2CEA /* JournalDocument.h */,
+				2A37F4ACFDCFA73011CA2CEA /* JournalDocument.mm */,
+				33D62807087E039000D91B9A /* MWApplication.h */,
+				33D62808087E039000D91B9A /* MWApplication.m */,
+				3325A649087E291D00DDC078 /* LedgerInterface.cc */,
+				3325A64A087E291D00DDC078 /* LedgerInterface.h */,
+				3325A676087E2C6A00DDC078 /* LedgerFunctors.mm */,
+				3325A659087E2AB800DDC078 /* LedgerFunctors.h */,
+				3325A692087E345F00DDC078 /* GraphView.h */,
+				3325A693087E345F00DDC078 /* GraphView.mm */,
+				336269CD088079FC00835060 /* NSLogStream.h */,
+			);
+			name = Classes;
+			sourceTree = "<group>";
+		};
+		2A37F4AFFDCFA73011CA2CEA /* Other Sources */ = {
+			isa = PBXGroup;
+			children = (
+				32DBCF750370BD2300C91783 /* MoneyWise_Prefix.pch */,
+				2A37F4B0FDCFA73011CA2CEA /* main.m */,
+			);
+			name = "Other Sources";
+			sourceTree = "<group>";
+		};
+		2A37F4B8FDCFA73011CA2CEA /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				2A37F4B9FDCFA73011CA2CEA /* Credits.rtf */,
+				33D62826087E060300D91B9A /* AboutPanel.nib */,
+				2A37F4B6FDCFA73011CA2CEA /* MainMenu.nib */,
+				2A37F4B4FDCFA73011CA2CEA /* JournalWindow.nib */,
+				8D15AC360486D014006FF6A4 /* Info.plist */,
+				089C165FFE840EACC02AAC07 /* InfoPlist.strings */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		2A37F4C3FDCFA73011CA2CEA /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				1058C7A6FEA54F5311CA2CBB /* Linked Frameworks */,
+				1058C7A8FEA54F5311CA2CBB /* Other Frameworks */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		8D15AC280486D014006FF6A4 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8D15AC290486D014006FF6A4 /* MoneyWise_Prefix.pch in Headers */,
+				8D15AC2A0486D014006FF6A4 /* JournalDocument.h in Headers */,
+				33BC70330878A8BF00197981 /* JournalController.h in Headers */,
+				33D62809087E039000D91B9A /* MWApplication.h in Headers */,
+				3325A64C087E291D00DDC078 /* LedgerInterface.h in Headers */,
+				3325A65B087E2AB800DDC078 /* LedgerFunctors.h in Headers */,
+				3325A694087E345F00DDC078 /* GraphView.h in Headers */,
+				336269CE088079FC00835060 /* NSLogStream.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		8D15AC270486D014006FF6A4 /* MoneyWise */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 338E976C090FEBA40042557D /* Build configuration list for PBXNativeTarget "MoneyWise" */;
+			buildPhases = (
+				8D15AC280486D014006FF6A4 /* Headers */,
+				8D15AC2B0486D014006FF6A4 /* Resources */,
+				8D15AC300486D014006FF6A4 /* Sources */,
+				8D15AC330486D014006FF6A4 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MoneyWise;
+			productInstallPath = "$(HOME)/Applications";
+			productName = MoneyWise;
+			productReference = 8D15AC370486D014006FF6A4 /* MoneyWise.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		2A37F4A9FDCFA73011CA2CEA /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 338E9770090FEBA40042557D /* Build configuration list for PBXProject "MoneyWise" */;
+			hasScannedForEncodings = 1;
+			mainGroup = 2A37F4AAFDCFA73011CA2CEA /* MoneyWise */;
+			projectDirPath = "";
+			targets = (
+				8D15AC270486D014006FF6A4 /* MoneyWise */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		8D15AC2B0486D014006FF6A4 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8D15AC2C0486D014006FF6A4 /* Credits.rtf in Resources */,
+				8D15AC2D0486D014006FF6A4 /* MainMenu.nib in Resources */,
+				8D15AC2E0486D014006FF6A4 /* JournalWindow.nib in Resources */,
+				8D15AC2F0486D014006FF6A4 /* InfoPlist.strings in Resources */,
+				33D62827087E060300D91B9A /* AboutPanel.nib in Resources */,
+				33C0B28B08E52EA000E6C8AA /* libexpat.dylib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		8D15AC300486D014006FF6A4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8D15AC310486D014006FF6A4 /* JournalDocument.mm in Sources */,
+				8D15AC320486D014006FF6A4 /* main.m in Sources */,
+				33BC70340878A8BF00197981 /* JournalController.mm in Sources */,
+				33D6280A087E039000D91B9A /* MWApplication.m in Sources */,
+				3325A64B087E291D00DDC078 /* LedgerInterface.cc in Sources */,
+				3325A677087E2C6A00DDC078 /* LedgerFunctors.mm in Sources */,
+				3325A695087E345F00DDC078 /* GraphView.mm in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		089C165FFE840EACC02AAC07 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				089C1660FE840EACC02AAC07 /* English */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		2A37F4B4FDCFA73011CA2CEA /* JournalWindow.nib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				2A37F4B5FDCFA73011CA2CEA /* English */,
+			);
+			name = JournalWindow.nib;
+			sourceTree = "<group>";
+		};
+		2A37F4B6FDCFA73011CA2CEA /* MainMenu.nib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				2A37F4B7FDCFA73011CA2CEA /* English */,
+			);
+			name = MainMenu.nib;
+			sourceTree = "<group>";
+		};
+		2A37F4B9FDCFA73011CA2CEA /* Credits.rtf */ = {
+			isa = PBXVariantGroup;
+			children = (
+				2A37F4BAFDCFA73011CA2CEA /* English */,
+			);
+			name = Credits.rtf;
+			sourceTree = "<group>";
+		};
+		33D62826087E060300D91B9A /* AboutPanel.nib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				33D62812087E041F00D91B9A /* English */,
+			);
+			name = AboutPanel.nib;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		338E976D090FEBA40042557D /* Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				DEBUGGING_SYMBOLS = YES;
+				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_ENABLE_TRIGRAPHS = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = MoneyWise_Prefix.pch;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = NO;
+				GCC_WARN_FOUR_CHARACTER_CONSTANTS = NO;
+				GCC_WARN_UNKNOWN_PRAGMAS = NO;
+				HEADER_SEARCH_PATHS = (
+					/home/johnw/src/ledger,
+					/sw/lib,
+				);
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "$(HOME)/Applications";
+				LIBRARY_SEARCH_PATHS = (
+					/home/johnw/src/ledger/.libs,
+					/Users/johnw/src/MoneyWise,
+					/sw/lib,
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_1)",
+				);
+				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../ledger/.libs\"";
+				OPTIMIZATION_CFLAGS = "-O0";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = MoneyWise;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+				WRAPPER_EXTENSION = app;
+				ZERO_LINK = YES;
+			};
+			name = Development;
+		};
+		338E976E090FEBA40042557D /* Deployment */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_ENABLE_TRIGRAPHS = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = MoneyWise_Prefix.pch;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = NO;
+				GCC_WARN_FOUR_CHARACTER_CONSTANTS = NO;
+				GCC_WARN_UNKNOWN_PRAGMAS = NO;
+				HEADER_SEARCH_PATHS = (
+					/home/johnw/src/ledger,
+					/sw/lib,
+				);
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "$(HOME)/Applications";
+				LIBRARY_SEARCH_PATHS = (
+					/home/johnw/src/ledger/.libs,
+					/Users/johnw/src/MoneyWise,
+					/sw/lib,
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_1)",
+				);
+				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../ledger/.libs\"";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = MoneyWise;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+				WRAPPER_EXTENSION = app;
+				ZERO_LINK = NO;
+			};
+			name = Deployment;
+		};
+		338E976F090FEBA40042557D /* Default */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_ENABLE_TRIGRAPHS = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = MoneyWise_Prefix.pch;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = NO;
+				GCC_WARN_FOUR_CHARACTER_CONSTANTS = NO;
+				GCC_WARN_UNKNOWN_PRAGMAS = NO;
+				HEADER_SEARCH_PATHS = (
+					/home/johnw/src/ledger,
+					/sw/lib,
+				);
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "$(HOME)/Applications";
+				LIBRARY_SEARCH_PATHS = (
+					/home/johnw/src/ledger/.libs,
+					/Users/johnw/src/MoneyWise,
+					/sw/lib,
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_1)",
+				);
+				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../ledger/.libs\"";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = MoneyWise;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+				WRAPPER_EXTENSION = app;
+			};
+			name = Default;
+		};
+		338E9771090FEBA40042557D /* Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Development;
+		};
+		338E9772090FEBA40042557D /* Deployment */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Deployment;
+		};
+		338E9773090FEBA40042557D /* Default */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Default;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		338E976C090FEBA40042557D /* Build configuration list for PBXNativeTarget "MoneyWise" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				338E976D090FEBA40042557D /* Development */,
+				338E976E090FEBA40042557D /* Deployment */,
+				338E976F090FEBA40042557D /* Default */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Default;
+		};
+		338E9770090FEBA40042557D /* Build configuration list for PBXProject "MoneyWise" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				338E9771090FEBA40042557D /* Development */,
+				338E9772090FEBA40042557D /* Deployment */,
+				338E9773090FEBA40042557D /* Default */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Default;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 2A37F4A9FDCFA73011CA2CEA /* Project object */;
+}
