@@ -108,7 +108,6 @@ class report_t : public xml::xpath_t::scope_t
   void option_accounts(value_t&) {
     transforms.push_back(new accounts_transform);
   }
-#endif
   void option_compact(value_t&) {
     transforms.push_back(new compact_transform);
   }
@@ -125,6 +124,7 @@ class report_t : public xml::xpath_t::scope_t
   void option_merge(value_t&) {
     transforms.push_back(new merge_transform);
   }
+#endif
 
   //
   // Scope members

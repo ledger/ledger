@@ -105,19 +105,21 @@ xml::xpath_t::op_t * report_t::lookup(const std::string& name)
 	  return MAKE_FUNCTOR(report_t, option_bar);
 	break;
 
+#if 0
       case 'c':
 	if (std::strcmp(p, "clean") == 0)
 	  return MAKE_FUNCTOR(report_t, option_clean);
 	else if (std::strcmp(p, "compact") == 0)
 	  return MAKE_FUNCTOR(report_t, option_compact);
 	break;
+#endif
 
       case 'e':
+#if 0
 	if (std::strcmp(p, "entries") == 0)
 	  return MAKE_FUNCTOR(report_t, option_entries);
 	else if (std::strcmp(p, "eval") == 0)
 	  return MAKE_FUNCTOR(report_t, option_eval);
-#if 0
 	else if (std::strcmp(p, "exclude") == 0)
 	  return MAKE_FUNCTOR(report_t, option_remove);
 #endif
@@ -144,10 +146,12 @@ xml::xpath_t::op_t * report_t::lookup(const std::string& name)
 #endif
 	break;
 
+#if 0
       case 'm':
 	if (std::strcmp(p, "merge") == 0)
 	  return MAKE_FUNCTOR(report_t, option_merge);
 	break;
+#endif
 
       case 'r':
 #if 0
@@ -156,15 +160,14 @@ xml::xpath_t::op_t * report_t::lookup(const std::string& name)
 #endif
 	break;
 
-      case 's':
 #if 0
+      case 's':
 	if (std::strcmp(p, "select") == 0)
 	  return MAKE_FUNCTOR(report_t, option_select);
-	else
-#endif
-	  if (std::strcmp(p, "split") == 0)
+	else if (std::strcmp(p, "split") == 0)
 	  return MAKE_FUNCTOR(report_t, option_split);
 	break;
+#endif
 
       case 't':
 	if (! *(p + 1))
