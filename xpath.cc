@@ -420,6 +420,22 @@ void xpath_t::token_t::unexpected()
   }
 }
 
+void xpath_t::token_t::unexpected(char c, char wanted)
+{
+  if ((unsigned char) c == 0xff) {
+    if (wanted)
+      throw new parse_error(std::string("Missing '") + wanted + "'");
+    else
+      throw new parse_error("Unexpected end");
+  } else {
+    if (wanted)
+      throw new parse_error(std::string("Invalid char '") + c +
+			    "' (wanted '" + wanted + "')");
+    else
+      throw new parse_error(std::string("Invalid char '") + c + "'");
+  }
+}
+
 xpath_t::op_t * xpath_t::wrap_value(const value_t& val)
 {
   xpath_t::op_t * temp = new xpath_t::op_t(xpath_t::op_t::VALUE);
@@ -1155,10 +1171,10 @@ void xpath_t::op_t::find_values(value_t * context, scope_t * scope,
 
   if (recursive) {
     if (context->type == value_t::XML_NODE) {
-      xml::node_t * ptr = context->to_xml_node();
+      node_t * ptr = context->to_xml_node();
       if (ptr->flags & XML_NODE_IS_PARENT) {
-	xml::parent_node_t * parent = static_cast<xml::parent_node_t *>(ptr);
-	for (xml::node_t * node = parent->children;
+	parent_node_t * parent = static_cast<parent_node_t *>(ptr);
+	for (node_t * node = parent->children;
 	     node;
 	     node = node->next) {
 	  value_t temp(node);
@@ -1268,14 +1284,14 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
       if (context->type != value_t::XML_NODE)
 	throw new compile_error("Referencing child nodes from a non-node value");
 
-      xml::node_t * ptr = context->to_xml_node();
+      node_t * ptr = context->to_xml_node();
       if (! (ptr->flags & XML_NODE_IS_PARENT))
 	throw new compile_error("Request for child nodes of a leaf node");
 
-      xml::parent_node_t * parent = static_cast<xml::parent_node_t *>(ptr);
+      parent_node_t * parent = static_cast<parent_node_t *>(ptr);
 
       value_t::sequence_t * nodes = new value_t::sequence_t;
-      for (xml::node_t * node = parent->children; node; node = node->next)
+      for (node_t * node = parent->children; node; node = node->next)
 	nodes->push_back(node);
 
       return wrap_value(nodes)->acquire();
@@ -1288,7 +1304,7 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
 
   case NODE_NAME:
     if (context->type == value_t::XML_NODE) {
-      xml::node_t * ptr = context->to_xml_node();
+      node_t * ptr = context->to_xml_node();
       if (resolve) {
 	// First, look up the symbol as a node name within the current
 	// context.  If any exist, then return the set of names.
@@ -1296,8 +1312,8 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
 	value_t::sequence_t * nodes = new value_t::sequence_t;
 
 	if (ptr->flags & XML_NODE_IS_PARENT) {
-	  xml::parent_node_t * parent = static_cast<xml::parent_node_t *>(ptr);
-	  for (xml::node_t * node = parent->children;
+	  parent_node_t * parent = static_cast<parent_node_t *>(ptr);
+	  for (node_t * node = parent->children;
 	       node;
 	       node = node->next) {
 	    if ((kind == NODE_NAME &&
@@ -1975,7 +1991,7 @@ bool xpath_t::op_t::write(std::ostream&   out,
 #ifdef THREADSAFE
     out << '%' << name_id;
 #else
-    out << xml::node_t::document->lookup_name(name_id);
+    out << node_t::document->lookup_name(name_id);
 #endif
     break;
 
@@ -2265,7 +2281,7 @@ void xpath_t::op_t::dump(std::ostream& out, const int depth) const
 #ifdef THREADSAFE
     out << "NODE_ID - " << name_id;
 #else
-    out << "NODE_ID - " << xml::node_t::document->lookup_name(name_id);
+    out << "NODE_ID - " << node_t::document->lookup_name(name_id);
 #endif
     break;
 
@@ -2449,6 +2465,10 @@ void export_xpath()
 
 #ifdef TEST
 
+#if ! defined(HAVE_EXPAT) && ! defined(HAVE_XMLPARSE)
+#error No XML parser library was found during configure
+#endif
+
 #if 0
 #include "session.h"
 #include "format.h"
@@ -2456,9 +2476,12 @@ void export_xpath()
 
 int main(int argc, char *argv[])
 {
+  using namespace ledger;
+  using namespace ledger::xml;
+
   try {
-    xml::parser_t parser;
-    std::auto_ptr<xml::document_t> doc;
+    parser_t parser;
+    std::auto_ptr<document_t> doc;
 
     std::ifstream input(argv[1]);
     if (parser.test(input)) {
@@ -2469,7 +2492,7 @@ int main(int argc, char *argv[])
       return 1;
     }
 
-    xml::xpath_t expr(argv[2]);
+    xpath_t expr(argv[2]);
     if (expr) {
       std::cout << "Parsed:" << std::endl;
       expr.dump(std::cout);
@@ -2481,7 +2504,7 @@ int main(int argc, char *argv[])
       std::cout << std::endl;
 
       value_t temp;
-      expr.calc(temp, doc.get());
+      expr.calc(temp, doc->top);
       std::cout << "Calculated value: " << temp << std::endl;
     } else {
       std::cerr << "Failed to parse value expression!" << std::endl;
@@ -2490,8 +2513,8 @@ int main(int argc, char *argv[])
 #if 0
     {
       ledger::session_t session;
-      std::auto_ptr<xml::xpath_t::scope_t>
-	locals(new xml::xpath_t::scope_t(&session.globals));
+      std::auto_ptr<xpath_t::scope_t>
+	locals(new xpath_t::scope_t(&session.globals));
 
       ledger::format_t fmt(std::string("%20|%40{") + argv[1] + "}\n");
       fmt.format(std::cout, locals.get());
