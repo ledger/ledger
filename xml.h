@@ -45,64 +45,12 @@ class document_t
   // Ids 0-9 are reserved.  10-999 are for "builtin" names.  1000+ are
   // for dynamically registered names.
 
-  document_t(journal_t * _journal, const char ** _builtins = NULL,
-	     const int _builtins_size = 0)
-    : builtins(_builtins), builtins_size(_builtins_size),
-      journal(_journal), top(NULL) {}
+  document_t(journal_t * _journal = NULL, const char ** _builtins = NULL,
+	     const int _builtins_size = 0);
 
-  int register_name(const std::string& name) {
-    int index = lookup_name_id(name);
-    if (index != -1)
-      return index;
-
-    names.push_back(name);
-    index = names.size() - 1;
-
-    std::cerr << this << " Inserting name: " << names.back() << std::endl;
-    std::pair<names_map::iterator, bool> result =
-      names_index.insert(names_pair(names.back(), index));
-    assert(result.second);
-
-    return index + 1000;
-  }
-
-  int lookup_name_id(const std::string& name) const
-  {
-    if (builtins) {
-      int first = 0;
-      int last  = builtins_size;
-      while (first <= last) {
-	int mid = (first + last) / 2; // compute mid point.
-
-	int result;
-	if ((result = (int)name[0] - (int)builtins[mid][0]) == 0)
-	  result = std::strcmp(name.c_str(), builtins[mid]);
-
-	if (result > 0)
-	  first = mid + 1;		// repeat search in top half.
-	else if (result < 0)
-	  last = mid - 1;		// repeat search in bottom half.
-	else
-	  return mid;
-      }
-    }
-
-    std::cerr << this << " Finding name: " << name << std::endl;
-    names_map::const_iterator i = names_index.find(name);
-    if (i != names_index.end())
-      return (*i).second + 1000;
-
-    return -1;
-  }
-
-  const char * lookup_name(int id) const {
-    if (id < 1000 && builtins) {
-      assert(id >= 10);
-      return builtins[id - 10];
-    } else {
-      return names[id - 1000].c_str();
-    }
-  }
+  int register_name(const std::string& name);
+  int lookup_name_id(const std::string& name) const;
+  const char * lookup_name(int id) const;
 
   void write(std::ostream& out) const;
 };

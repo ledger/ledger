@@ -12,14 +12,13 @@ endif
 #xpath_CXXFLAGS = -DTEST
 #xpath_SOURCES = \
 #	amount.cc      \
+#	datetime.cc    \
 #	quotes.cc      \
 #	balance.cc     \
 #	value.cc       \
-#	datetime.cc    \
+#	mask.cc        \
 #	xml.cc         \
 #	xpath.cc       \
-#	mask.cc        \
-#		       \
 #	trace.cc       \
 #	util.cc
 #xpath_LDADD = $(LIBOBJS)

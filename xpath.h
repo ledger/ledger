@@ -693,11 +693,13 @@ public:
   }
 
   void compile(document_t * document, scope_t * scope = NULL) {
+    if (! document)
+      document = new xml::document_t;
     compile(document->top, scope);
   }
-  void compile(node_t * document, scope_t * scope = NULL) {
+  void compile(node_t * top_node, scope_t * scope = NULL) {
     if (ptr) {
-      value_t noderef(document);
+      value_t noderef(top_node);
       op_t * compiled = ptr->compile(&noderef, scope);
       if (compiled == ptr)
 	compiled->release();
@@ -706,14 +708,13 @@ public:
     }
   }
 
-  virtual void calc(value_t& result, node_t * node,
-		    scope_t * scope = NULL) const;
+  virtual void calc(value_t& result, node_t * node, scope_t * scope = NULL) const;
 
   virtual value_t calc(document_t * document, scope_t * scope = NULL) const {
     if (! ptr)
       return 0L;
     value_t temp;
-    calc(temp, document->top, scope);
+    calc(temp, document ? document->top : NULL, scope);
     return temp;
   }
   virtual value_t calc(node_t * context, scope_t * scope = NULL) const {
