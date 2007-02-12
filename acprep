@@ -17,43 +17,75 @@ else
 fi
 autoconf
 
-INCDIRS="-I/sw/include"
+INCDIRS="-I/usr/local/include"
+INCDIRS="$INCDIRS -I/sw/include"
+INCDIRS="$INCDIRS -I/usr/X11R6/include"
 INCDIRS="$INCDIRS -I/usr/include/httpd/xml"
 #INCDIRS="$INCDIRS -I/sw/include/libofx"
-INCDIRS="$INCDIRS -I/usr/include/python2.3 -I/sw/include/boost"
-INCDIRS="$INCDIRS -Wno-long-double"
+INCDIRS="$INCDIRS -I/usr/include/python2.3"
+INCDIRS="$INCDIRS -I/sw/include/boost"
 
-LIBDIRS="-L/sw/lib -L/usr/local/lib -L/usr/lib/python2.3/config"
+LIBDIRS="-L/usr/local/lib"
+LIBDIRS="$LIBDIRS -L/sw/lib"
+LIBDIRS="$LIBDIRS -L/usr/X11R6/lib"
+LIBDIRS="$LIBDIRS -L/usr/lib/python2.3/config"
 
-# Building Ledger as a shared library is a luxury, since there are no
-# clients except my GUI tool which use it (and that is built again
-# anyway by Xcode).
+SYSTEM=`uname -s`
+if [ $SYSTEM = Linux ]; then
+    CXXFLAGS="-pthread"
+elif [ $SYSTEM = Solaris ]; then
+    CXXFLAGS="-pthreads"
+elif [ $SYSTEM = Darwin ]; then
+    CXXFLAGS="-Wno-long-double"
+else
+    CXXFLAGS=""
+fi
+
+# Building the command-line tool as a shared library is a luxury,
+# since there are no clients except a GUI tool which might use it (and
+# that is built again anyway by Xcode).
 SWITCHES="--disable-shared"
+
+HERE="$PWD"
+
+if [ -d "$HOME/Products" ]; then
+    projdir="$HOME/Products/$(basename $HERE)"
+    if [ ! -d "$projdir" ]; then
+	mkdir -p "$projdir"
+    fi
+    cd "$projdir" || (echo "Cannot change to $projdir"; exit 1)
+fi
 
 if [ "$1" = "--debug" ]; then
     shift 1
-    ./configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" CXXFLAGS="-g" \
-	$SWITCHES --enable-debug "$@"
+    "$HERE/configure" --srcdir="$HERE" \
+	CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" CXXFLAGS="-g" $SWITCHES \
+	--enable-debug "$@"
 elif [ "$1" = "--python-debug" ]; then
     shift 1
-    ./configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" CXXFLAGS="-g" \
-	$SWITCHES --enable-debug --enable-python "$@"
+    "$HERE/configure" --srcdir="$HERE" \
+	CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" CXXFLAGS="-g" $SWITCHES \
+	--enable-debug --enable-python "$@"
 elif [ "$1" = "--opt" ]; then
     shift 1
-    ./configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
+    "$HERE/configure" --srcdir="$HERE" \
+	CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
 	CXXFLAGS="-fomit-frame-pointer -O3 -mcpu=7450 -fPIC" "$@" $SWITCHES
 elif [ "$1" = "--flat-opt" ]; then
     shift 1
-    ./configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
+    "$HERE/configure" --srcdir="$HERE" \
+	CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
 	CXXFLAGS="-fomit-frame-pointer -O3 -mcpu=7450" "$@" $SWITCHES
 elif [ "$1" = "--safe-opt" ]; then
     shift 1
-    ./configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
+    "$HERE/configure" --srcdir="$HERE" \
+	CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
 	CXXFLAGS="-fomit-frame-pointer -O3 -mcpu=7450 -fPIC -DDEBUG_LEVEL=1" "$@" \
 	$SWITCHES
 elif [ "$1" = "--perf" ]; then
     shift 1
-    ./configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" CXXFLAGS="-g -pg" "$@" \
+    "$HERE/configure" --srcdir="$HERE" \
+	CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" CXXFLAGS="-g -pg" "$@" \
 	$SWITCHES
 fi
 
