@@ -2,9 +2,6 @@
 #include "pch.h"
 #else
 #include "xml.h"
-#if 0
-#include "journal.h"
-#endif
 #include "datetime.h"
 #include "error.h"
 
@@ -243,7 +240,7 @@ bool parser_t::test(std::istream& in) const
 document_t * parser_t::parse(std::istream& in, const char ** builtins,
 			     const int builtins_size)
 {
-  std::auto_ptr<document_t> doc(new document_t(builtins, builtins_size));
+  std::auto_ptr<document_t> doc(new document_t(NULL, builtins, builtins_size));
 
   document = doc.get();
 
