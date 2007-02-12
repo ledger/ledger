@@ -305,7 +305,6 @@ class amount_t
   }
 
   void print_quantity(std::ostream& out) const;
-  void parse_quantity(std::istream& in, std::string& value) const;
 
   void write(std::ostream& out) const;
   void read(std::istream& in);
