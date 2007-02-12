@@ -329,6 +329,7 @@ void remove_transform::execute(xml::document_t * document)
 
 } // namespace ledger
 
+#if 0
 #ifdef USE_BOOST_PYTHON
 
 #ifndef USE_PCH
@@ -345,3 +346,4 @@ void export_transform()
 }
 
 #endif // USE_BOOST_PYTHON
+#endif
