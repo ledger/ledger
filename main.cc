@@ -122,24 +122,30 @@ static int read_and_report(report_t * report, int argc, char * argv[],
   }
   else if (verb == "balance" || verb == "bal" || verb == "b") {
     if (! report->raw_mode) {
+#if 0
       report->transforms.push_back(new accounts_transform);
       report->transforms.push_back(new clean_transform);
       report->transforms.push_back(new compact_transform);
+#endif
     }
     command = new format_command
       ("balance", either_or(report->format_string,
 			     report->session->balance_format));
   }
   else if (verb == "print" || verb == "p") {
+#if 0
     if (! report->raw_mode)
       report->transforms.push_back(new optimize_transform);
+#endif
     command = new format_command
       ("print", either_or(report->format_string,
 			  report->session->print_format));
   }
   else if (verb == "equity") {
+#if 0
     if (! report->raw_mode)
       report->transforms.push_back(new accounts_transform);
+#endif
     command = new format_command
       ("equity", either_or(report->format_string,
 			   report->session->equity_format));
