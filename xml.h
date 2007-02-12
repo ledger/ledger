@@ -13,6 +13,9 @@ extern "C" {
 }
 
 namespace ledger {
+
+class journal_t;
+
 namespace xml {
 
 class node_t;
@@ -32,6 +35,7 @@ class document_t
   names_map names_index;
 
  public:
+  journal_t * journal;
   node_t * top;
 
   enum special_names_t {
@@ -41,9 +45,10 @@ class document_t
   // Ids 0-9 are reserved.  10-999 are for "builtin" names.  1000+ are
   // for dynamically registered names.
 
-  document_t(const char ** _builtins = NULL, const int _builtins_size = 0)
-    : builtins(_builtins), builtins_size(_builtins_size), top(NULL) {
-  }
+  document_t(journal_t * _journal, const char ** _builtins = NULL,
+	     const int _builtins_size = 0)
+    : builtins(_builtins), builtins_size(_builtins_size),
+      journal(_journal), top(NULL) {}
 
   int register_name(const std::string& name) {
     int index = lookup_name_id(name);
