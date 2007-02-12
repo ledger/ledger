@@ -2,6 +2,7 @@
 #include "pch.h"
 #else
 #include "xml.h"
+#include "journal.h"
 #include "datetime.h"
 #include "error.h"
 
@@ -13,15 +14,10 @@
 namespace ledger {
 namespace xml {
 
-document_t::document_t(journal_t *   _journal,
-		       const char ** _builtins,
-		       const int     _builtins_size)
+document_t::document_t(node_t * _top, const char ** _builtins,
+		       const int _builtins_size)
   : builtins(_builtins), builtins_size(_builtins_size),
-    journal(_journal), top(NULL)
-{
-  if (! journal)
-    top = new terminal_node_t(this);
-}
+    top(new terminal_node_t(this)) {}
 
 int document_t::register_name(const std::string& name)
 {
@@ -32,7 +28,8 @@ int document_t::register_name(const std::string& name)
   names.push_back(name);
   index = names.size() - 1;
 
-  std::cerr << this << " Inserting name: " << names.back() << std::endl;
+  DEBUG_PRINT("xml.lookup", this << " Inserting name: " << names.back());
+
   std::pair<names_map::iterator, bool> result =
     names_index.insert(names_pair(names.back(), index));
   assert(result.second);
@@ -61,7 +58,8 @@ int document_t::lookup_name_id(const std::string& name) const
     }
   }
 
-  std::cerr << this << " Finding name: " << name << std::endl;
+  DEBUG_PRINT("xml.lookup", this << " Finding name: " << name);
+
   names_map::const_iterator i = names_index.find(name);
   if (i != names_index.end())
     return (*i).second + 1000;
@@ -115,8 +113,10 @@ node_t::node_t(document_t * _document, parent_node_t * _parent,
 #else
   if (! document)
     document = _document;
+#if 0
   else
     assert(document == _document);
+#endif
 #endif
   if (parent)
     parent->add_child(this);
@@ -128,11 +128,11 @@ void node_t::extract()
     prev->next = next;
 
   if (parent) {
-    if (parent->children == this)
-      parent->children = next;
+    if (parent->_children == this)
+      parent->_children = next;
 
-    if (parent->last_child == this)
-      parent->last_child = prev;
+    if (parent->_last_child == this)
+      parent->_last_child = prev;
 
     parent = NULL;
   }
@@ -146,7 +146,7 @@ void node_t::extract()
 
 void parent_node_t::clear()
 {
-  node_t * child = children;
+  node_t * child = _children;
   while (child) {
     node_t * next = child->next;
     delete child;
@@ -156,14 +156,16 @@ void parent_node_t::clear()
 
 void parent_node_t::add_child(node_t * node)
 {
-  if (children == NULL) {
-    assert(last_child == NULL);
-    children = node;
+  // Calling children() here causes the child list to get populated if
+  // it hasn't been already.
+  if (children() == NULL) {
+    assert(_last_child == NULL);
+    _children = node;
     node->prev = NULL;
   } else {
-    assert(last_child != NULL);
-    last_child->next = node;
-    node->prev = last_child;
+    assert(_last_child != NULL);
+    _last_child->next = node;
+    node->prev = _last_child;
   }
 
   node->parent = this;
@@ -175,7 +177,7 @@ void parent_node_t::add_child(node_t * node)
     node = next_node;
   }
 
-  last_child = node;
+  _last_child = node;
 }
 
 void parent_node_t::write(std::ostream& out, int depth) const
@@ -183,7 +185,7 @@ void parent_node_t::write(std::ostream& out, int depth) const
   for (int i = 0; i < depth; i++) out << "  ";
   out << '<' << name() << ">\n";
 
-  for (node_t * child = children; child; child = child->next)
+  for (node_t * child = children(); child; child = child->next)
     child->write(out, depth + 1);
 
   for (int i = 0; i < depth; i++) out << "  ";
@@ -289,7 +291,7 @@ static void dataHandler(void *userData, const char *s, int len)
   if (! all_whitespace) {
     terminal_node_t * node = create_node<terminal_node_t>(parser);
 
-    node->data = std::string(s, len);
+    node->set_text(std::string(s, len));
     parser->handled_data = true;
 
     if (parser->node_stack.empty()) {
@@ -362,6 +364,88 @@ document_t * parser_t::parse(std::istream& in, const char ** builtins,
 
   document = NULL;
   return doc.release();
+}
+
+node_t * transaction_node_t::children()
+{
+  if (! _children) {
+    terminal_node_t * account_node = new terminal_node_t(document, this);
+    account_node->set_name("account");
+    account_node->set_text(transaction->account->fullname());
+    add_child(account_node);
+  }
+  return parent_node_t::children();
+}
+
+node_t * entry_node_t::children()
+{
+  if (! _children) {
+    if (! entry->code.empty()) {
+      terminal_node_t * code_node = new terminal_node_t(document, this);
+      code_node->set_name("code");
+      code_node->set_text(entry->code);
+      add_child(code_node);
+    }
+
+    if (! entry->payee.empty()) {
+      terminal_node_t * payee_node = new terminal_node_t(document, this);
+      payee_node->set_name("payee");
+      payee_node->set_text(entry->payee);
+      add_child(payee_node);
+    }
+
+    for (transactions_list::iterator i = entry->transactions.begin();
+	 i != entry->transactions.end();
+	 i++)
+      add_child(new transaction_node_t(document, *i, this));
+  }
+  return parent_node_t::children();
+}
+
+node_t * account_node_t::children()
+{
+  if (! _children) {
+    if (! account->name.empty()) {
+      terminal_node_t * name_node = new terminal_node_t(document, this);
+      name_node->set_name("name");
+      name_node->set_text(account->name);
+      add_child(name_node);
+    }
+
+    if (! account->note.empty()) {
+      terminal_node_t * note_node = new terminal_node_t(document, this);
+      note_node->set_name("note");
+      note_node->set_text(account->note);
+      add_child(note_node);
+    }
+
+    for (accounts_map::iterator i = account->accounts.begin();
+	 i != account->accounts.end();
+	 i++)
+      add_child(new account_node_t(document, (*i).second, this));
+  }
+  return parent_node_t::children();
+}
+
+node_t * journal_node_t::children()
+{
+  if (! _children) {
+    account_node_t * master_account =
+      new account_node_t(document, journal->master, this);
+    add_child(master_account);
+
+    parent_node_t * entries = new parent_node_t(document, this);
+    entries->set_name("entries");
+    add_child(entries);
+
+    for (entries_list::iterator i = journal->entries.begin();
+	 i != journal->entries.end();
+	 i++) {
+      entry_node_t * entry = new entry_node_t(document, *i, this);
+      entries->add_child(entry);
+    }
+  }
+  return parent_node_t::children();
 }
 
 #endif // defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)

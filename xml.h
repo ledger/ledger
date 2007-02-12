@@ -14,6 +14,9 @@ extern "C" {
 
 namespace ledger {
 
+class transaction_t;
+class entry_t;
+class account_t;
 class journal_t;
 
 namespace xml {
@@ -35,17 +38,15 @@ class document_t
   names_map names_index;
 
  public:
-  journal_t * journal;
   node_t * top;
 
+  // Ids 0-9 are reserved.  10-999 are for "builtin" names.  1000+ are
+  // for dynamically registered names.
   enum special_names_t {
     CURRENT, PARENT, ROOT, ALL
   };
 
-  // Ids 0-9 are reserved.  10-999 are for "builtin" names.  1000+ are
-  // for dynamically registered names.
-
-  document_t(journal_t * _journal = NULL, const char ** _builtins = NULL,
+  document_t(node_t * _top = NULL, const char ** _builtins = NULL,
 	     const int _builtins_size = 0);
 
   int register_name(const std::string& name);
@@ -88,7 +89,7 @@ public:
     if (attrs) delete attrs;
   }
 
-  void extract();
+  void extract();		// extract this node from its parent's child list
 
   virtual const char * text() const {
     assert(0);
@@ -132,22 +133,30 @@ private:
 class parent_node_t : public node_t
 {
 public:
-  node_t * children;
-  node_t * last_child;
+  mutable node_t * _children;
+  mutable node_t * _last_child;
 
   parent_node_t(document_t * _document, parent_node_t * _parent = NULL)
     : node_t(_document, _parent, XML_NODE_IS_PARENT),
-      children(NULL), last_child(NULL)
+      _children(NULL), _last_child(NULL)
   {
-    TRACE_CTOR("parent_node_t(document_t *, node_t *)");
+    TRACE_CTOR("parent_node_t(document_t *, parent_node_t *)");
   }
   virtual ~parent_node_t() {
     TRACE_DTOR("parent_node_t");
-    if (children) clear();
+    if (_children) clear();
   }
 
-  virtual void clear();
-  virtual void add_child(node_t * node);
+  virtual void	   clear();	// clear out all child nodes
+  virtual node_t * children() const {
+    return _children;
+  }
+  virtual node_t * last_child() {
+    if (! _children)
+      children();
+    return _last_child;
+  }
+  virtual void	   add_child(node_t * node);
 
   void write(std::ostream& out, int depth = 0) const;
 
@@ -158,17 +167,23 @@ private:
 
 class terminal_node_t : public node_t
 {
-public:
   std::string data;
 
+public:
   terminal_node_t(document_t * _document, parent_node_t * _parent = NULL)
     : node_t(_document, _parent)
   {
-    TRACE_CTOR("terminal_node_t(document_t *, node_t *)");
+    TRACE_CTOR("terminal_node_t(document_t *, parent_node_t *)");
   }
 
   virtual const char * text() const {
     return data.c_str();
+  }
+  virtual void set_text(const char * _data) {
+    data = _data;
+  }
+  virtual void set_text(const std::string& _data) {
+    data = _data;
   }
 
   void write(std::ostream& out, int depth = 0) const;
@@ -209,6 +224,103 @@ class parse_error : public error {
 };
 
 #endif
+
+class transaction_node_t : public parent_node_t
+{
+  transaction_t * transaction;
+
+public:
+  transaction_node_t(document_t * document, transaction_t * _transaction,
+		     parent_node_t * parent = NULL)
+    : parent_node_t(document, parent), transaction(_transaction) {
+    TRACE_CTOR("transaction_node_t(document_t *, transaction_t *, parent_node_t *)");
+    set_name("transaction");
+  }
+  virtual ~transaction_node_t() {
+    TRACE_DTOR("transaction_node_t");
+  }
+
+  virtual node_t * children();
+};
+
+class entry_node_t : public parent_node_t
+{
+  entry_t * entry;
+
+public:
+  entry_node_t(document_t * document, entry_t * _entry,
+	       parent_node_t * parent = NULL)
+    : parent_node_t(document, parent), entry(_entry) {
+    TRACE_CTOR("entry_node_t(document_t *, entry_t *, parent_node_t *)");
+    set_name("entry");
+  }
+  virtual ~entry_node_t() {
+    TRACE_DTOR("entry_node_t");
+  }
+
+  virtual node_t * children();
+};
+
+class account_node_t : public parent_node_t
+{
+  account_t * account;
+
+public:
+  account_node_t(document_t * document, account_t * _account,
+		 parent_node_t * parent = NULL)
+    : parent_node_t(document, parent), account(_account) {
+    TRACE_CTOR("account_node_t(document_t *, account_t *, parent_node_t *)");
+    set_name("account");
+  }
+  virtual ~account_node_t() {
+    TRACE_DTOR("account_node_t");
+  }
+
+  virtual node_t * children();
+};
+
+class journal_node_t : public parent_node_t
+{
+  journal_t * journal;
+
+public:
+  journal_node_t(document_t * document, journal_t * _journal,
+		 parent_node_t * parent = NULL)
+    : parent_node_t(document, parent), journal(_journal) {
+    TRACE_CTOR("journal_node_t(document_t *, journal_t *, parent_node_t *)");
+    set_name("journal");
+  }
+  virtual ~journal_node_t() {
+    TRACE_DTOR("journal_node_t");
+  }
+
+  virtual node_t * children();
+};
+
+template <typename T>
+inline void * wrap_node(T * item, void * parent_node) {
+  assert(0);
+}
+
+template <>
+inline void * wrap_node(transaction_t * xact, void * parent_node) {
+  return new transaction_node_t(NULL, xact, (parent_node_t *)parent_node);
+}
+
+template <>
+inline void * wrap_node(entry_t * entry, void * parent_node) {
+  return new entry_node_t(NULL, entry, (parent_node_t *)parent_node);
+}
+
+template <>
+inline void * wrap_node(account_t * account, void * parent_node) {
+  return new account_node_t(NULL, account, (parent_node_t *)parent_node);
+}
+
+template <>
+inline void * wrap_node(journal_t * journal, void * parent_node) {
+  return new journal_node_t(NULL, journal, (parent_node_t *)parent_node);
+}
 
 } // namespace xml
 } // namespace ledger

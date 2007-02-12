@@ -81,7 +81,7 @@ parse_amount_expr(std::istream& in, journal_t * journal,
   }
 #endif
 
-  amount = xpath.calc(static_cast<xml::node_t *>(xact.data)).to_amount();
+  amount = xpath.calc(static_cast<xml::transaction_node_t *>(xact.data)).to_amount();
 
   DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
 	      "The transaction amount is " << amount);
@@ -100,11 +100,9 @@ transaction_t * parse_transaction(char *      line,
   try {
 
   xact->entry = entry;		// this might be NULL
-#if 0
-  xact->data  = repitem_t::wrap(xact.get(), entry ?
-				static_cast<entry_repitem_t *>(entry->data) :
-				static_cast<repitem_t *>(journal->data));
-#endif
+  if (xact->entry)
+    xact->data = xml::wrap_node(xact.get(), xact->entry->data);
+
   // Parse the state flag
 
   char p = peek_next_nonws(in);
@@ -290,21 +288,10 @@ transaction_t * parse_transaction(char *      line,
   }
 
  finished:
-  if (! xact->entry) {
-#if 0
-    delete static_cast<xact_repitem_t *>(xact->data);
-#endif
-    xact->data = NULL;
-  }
   return xact.release();
 
   }
   catch (error * err) {
-#if 0
-    delete static_cast<xact_repitem_t *>(xact->data);
-#endif
-    xact->data = NULL;
-
     err->context.push_back
       (new line_context(line, (long)in.tellg() - 1,
 			! err_desc.empty() ?
@@ -413,10 +400,7 @@ entry_t * parse_entry(std::istream& in, char * line, journal_t * journal,
   // Create a report item for this entry, so the transaction below may
   // refer to it
 
-#if 0
-  curr->data =
-    repitem_t::wrap(curr.get(), static_cast<repitem_t *>(journal->data));
-#endif
+  curr->data = xml::wrap_node(curr.get(), journal->data);
 
   // Parse all of the transactions associated with this entry
 

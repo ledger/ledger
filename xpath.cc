@@ -135,10 +135,12 @@ void xpath_t::token_t::next(std::istream& in, unsigned short flags)
     in.get(c);
     kind = AT_SYM;
     break;
+#if 0
   case '$':
     in.get(c);
     kind = DOLLAR;
     break;
+#endif
 
   case '(':
     in.get(c);
@@ -1176,7 +1178,7 @@ void xpath_t::op_t::find_values(value_t * context, scope_t * scope,
       node_t * ptr = context->to_xml_node();
       if (ptr->flags & XML_NODE_IS_PARENT) {
 	parent_node_t * parent = static_cast<parent_node_t *>(ptr);
-	for (node_t * node = parent->children;
+	for (node_t * node = parent->children();
 	     node;
 	     node = node->next) {
 	  value_t temp(node);
@@ -1293,7 +1295,7 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
       parent_node_t * parent = static_cast<parent_node_t *>(ptr);
 
       value_t::sequence_t * nodes = new value_t::sequence_t;
-      for (node_t * node = parent->children; node; node = node->next)
+      for (node_t * node = parent->children(); node; node = node->next)
 	nodes->push_back(node);
 
       return wrap_value(nodes)->acquire();
@@ -1315,7 +1317,7 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
 
 	if (ptr->flags & XML_NODE_IS_PARENT) {
 	  parent_node_t * parent = static_cast<parent_node_t *>(ptr);
-	  for (node_t * node = parent->children;
+	  for (node_t * node = parent->children();
 	       node;
 	       node = node->next) {
 	    if ((kind == NODE_NAME &&
@@ -1877,11 +1879,18 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
 void xpath_t::calc(value_t& result, node_t * node, scope_t * scope) const
 {
   try {
-    value_t context_node(node);
-    xpath_t final(ptr->compile(&context_node, scope, true));
-    // jww (2006-09-09): Give a better error here if this is not
-    // actually a value
-    final->get_value(result);
+    if (node) {
+      value_t context_node(node);
+      xpath_t final(ptr->compile(&context_node, scope, true));
+      // jww (2006-09-09): Give a better error here if this is not
+      // actually a value
+      final->get_value(result);
+    } else {
+      std::auto_ptr<terminal_node_t> fake_node(new terminal_node_t(NULL));
+      value_t context_node(fake_node.get());
+      xpath_t final(ptr->compile(&context_node, scope, true));
+      final->get_value(result);
+    }
   }
   catch (error * err) {
     if (err->context.empty() ||
