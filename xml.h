@@ -240,7 +240,7 @@ public:
     TRACE_DTOR("transaction_node_t");
   }
 
-  virtual node_t * children();
+  virtual node_t * children() const;
 };
 
 class entry_node_t : public parent_node_t
@@ -258,7 +258,7 @@ public:
     TRACE_DTOR("entry_node_t");
   }
 
-  virtual node_t * children();
+  virtual node_t * children() const;
 };
 
 class account_node_t : public parent_node_t
@@ -276,7 +276,7 @@ public:
     TRACE_DTOR("account_node_t");
   }
 
-  virtual node_t * children();
+  virtual node_t * children() const;
 };
 
 class journal_node_t : public parent_node_t
@@ -294,32 +294,37 @@ public:
     TRACE_DTOR("journal_node_t");
   }
 
-  virtual node_t * children();
+  virtual node_t * children() const;
 };
 
 template <typename T>
-inline void * wrap_node(T * item, void * parent_node) {
+inline parent_node_t * wrap_node(document_t * doc, T * item,
+				 void * parent_node = NULL) {
   assert(0);
 }
 
 template <>
-inline void * wrap_node(transaction_t * xact, void * parent_node) {
-  return new transaction_node_t(NULL, xact, (parent_node_t *)parent_node);
+inline parent_node_t * wrap_node(document_t * doc, transaction_t * xact,
+				 void * parent_node) {
+  return new transaction_node_t(doc, xact, (parent_node_t *)parent_node);
 }
 
 template <>
-inline void * wrap_node(entry_t * entry, void * parent_node) {
-  return new entry_node_t(NULL, entry, (parent_node_t *)parent_node);
+inline parent_node_t * wrap_node(document_t * doc, entry_t * entry,
+				 void * parent_node) {
+  return new entry_node_t(doc, entry, (parent_node_t *)parent_node);
 }
 
 template <>
-inline void * wrap_node(account_t * account, void * parent_node) {
-  return new account_node_t(NULL, account, (parent_node_t *)parent_node);
+inline parent_node_t * wrap_node(document_t * doc, account_t * account,
+				 void * parent_node) {
+  return new account_node_t(doc, account, (parent_node_t *)parent_node);
 }
 
 template <>
-inline void * wrap_node(journal_t * journal, void * parent_node) {
-  return new journal_node_t(NULL, journal, (parent_node_t *)parent_node);
+inline parent_node_t * wrap_node(document_t * doc, journal_t * journal,
+				 void * parent_node) {
+  return new journal_node_t(doc, journal, (parent_node_t *)parent_node);
 }
 
 } // namespace xml

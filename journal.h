@@ -391,6 +391,13 @@ class journal_t
   char *       item_pool;
   char *       item_pool_end;
 
+  // This is used for dynamically representing the journal data as an
+  // XML tree, to facilitate transformations without modifying any of
+  // the underlying structures (the transformers modify the XML tree
+  // -- perhaps even adding, changing or deleting nodes -- but they do
+  // not affect the basic data parsed from the journal file).
+  xml::document_t * document;
+
   auto_entries_list    auto_entries;
   period_entries_list  period_entries;
   mutable void *       data;
@@ -400,7 +407,8 @@ class journal_t
 
   journal_t(session_t * _session)
     : session(_session), basket(NULL),
-      item_pool(NULL), item_pool_end(NULL), data(NULL) {
+      item_pool(NULL), item_pool_end(NULL),
+      document(NULL), data(NULL) {
     TRACE_CTOR("journal_t()");
     master = new account_t(NULL, "");
     master->journal = this;

@@ -156,9 +156,9 @@ void parent_node_t::clear()
 
 void parent_node_t::add_child(node_t * node)
 {
-  // Calling children() here causes the child list to get populated if
-  // it hasn't been already.
-  if (children() == NULL) {
+  // It is important that this node is not called before children(),
+  // otherwise, this node will not get auto-populated.
+  if (_children == NULL) {
     assert(_last_child == NULL);
     _children = node;
     node->prev = NULL;
@@ -366,84 +366,81 @@ document_t * parser_t::parse(std::istream& in, const char ** builtins,
   return doc.release();
 }
 
-node_t * transaction_node_t::children()
+node_t * transaction_node_t::children() const
 {
   if (! _children) {
-    terminal_node_t * account_node = new terminal_node_t(document, this);
+    terminal_node_t * account_node =
+      new terminal_node_t(document, const_cast<transaction_node_t *>(this));
     account_node->set_name("account");
     account_node->set_text(transaction->account->fullname());
-    add_child(account_node);
   }
   return parent_node_t::children();
 }
 
-node_t * entry_node_t::children()
+node_t * entry_node_t::children() const
 {
   if (! _children) {
     if (! entry->code.empty()) {
-      terminal_node_t * code_node = new terminal_node_t(document, this);
+      terminal_node_t * code_node =
+	new terminal_node_t(document, const_cast<entry_node_t *>(this));
       code_node->set_name("code");
       code_node->set_text(entry->code);
-      add_child(code_node);
     }
 
     if (! entry->payee.empty()) {
-      terminal_node_t * payee_node = new terminal_node_t(document, this);
+      terminal_node_t * payee_node =
+	new terminal_node_t(document, const_cast<entry_node_t *>(this));
       payee_node->set_name("payee");
       payee_node->set_text(entry->payee);
-      add_child(payee_node);
     }
 
     for (transactions_list::iterator i = entry->transactions.begin();
 	 i != entry->transactions.end();
 	 i++)
-      add_child(new transaction_node_t(document, *i, this));
+      new transaction_node_t(document, *i, const_cast<entry_node_t *>(this));
   }
   return parent_node_t::children();
 }
 
-node_t * account_node_t::children()
+node_t * account_node_t::children() const
 {
   if (! _children) {
     if (! account->name.empty()) {
-      terminal_node_t * name_node = new terminal_node_t(document, this);
+      terminal_node_t * name_node =
+	new terminal_node_t(document, const_cast<account_node_t *>(this));
       name_node->set_name("name");
       name_node->set_text(account->name);
-      add_child(name_node);
     }
 
     if (! account->note.empty()) {
-      terminal_node_t * note_node = new terminal_node_t(document, this);
+      terminal_node_t * note_node =
+	new terminal_node_t(document, const_cast<account_node_t *>(this));
       note_node->set_name("note");
       note_node->set_text(account->note);
-      add_child(note_node);
     }
 
     for (accounts_map::iterator i = account->accounts.begin();
 	 i != account->accounts.end();
 	 i++)
-      add_child(new account_node_t(document, (*i).second, this));
+      new account_node_t(document, (*i).second, const_cast<account_node_t *>(this));
   }
   return parent_node_t::children();
 }
 
-node_t * journal_node_t::children()
+node_t * journal_node_t::children() const
 {
   if (! _children) {
     account_node_t * master_account =
-      new account_node_t(document, journal->master, this);
-    add_child(master_account);
+      new account_node_t(document, journal->master, const_cast<journal_node_t *>(this));
 
-    parent_node_t * entries = new parent_node_t(document, this);
+    parent_node_t * entries =
+      new parent_node_t(document, const_cast<journal_node_t *>(this));
     entries->set_name("entries");
-    add_child(entries);
 
     for (entries_list::iterator i = journal->entries.begin();
 	 i != journal->entries.end();
-	 i++) {
-      entry_node_t * entry = new entry_node_t(document, *i, this);
-      entries->add_child(entry);
-    }
+	 i++)
+      new entry_node_t(document, *i, const_cast<journal_node_t *>(this));
   }
   return parent_node_t::children();
 }

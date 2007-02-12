@@ -101,7 +101,7 @@ transaction_t * parse_transaction(char *      line,
 
   xact->entry = entry;		// this might be NULL
   if (xact->entry)
-    xact->data = xml::wrap_node(xact.get(), xact->entry->data);
+    xact->data = xml::wrap_node(journal->document, xact.get(), xact->entry->data);
 
   // Parse the state flag
 
@@ -400,7 +400,7 @@ entry_t * parse_entry(std::istream& in, char * line, journal_t * journal,
   // Create a report item for this entry, so the transaction below may
   // refer to it
 
-  curr->data = xml::wrap_node(curr.get(), journal->data);
+  curr->data = xml::wrap_node(journal->document, curr.get(), journal->data);
 
   // Parse all of the transactions associated with this entry
 

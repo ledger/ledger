@@ -122,30 +122,24 @@ static int read_and_report(report_t * report, int argc, char * argv[],
   }
   else if (verb == "balance" || verb == "bal" || verb == "b") {
     if (! report->raw_mode) {
-#if 0
       report->transforms.push_back(new accounts_transform);
       report->transforms.push_back(new clean_transform);
       report->transforms.push_back(new compact_transform);
-#endif
     }
     command = new format_command
       ("balance", either_or(report->format_string,
 			     report->session->balance_format));
   }
   else if (verb == "print" || verb == "p") {
-#if 0
     if (! report->raw_mode)
       report->transforms.push_back(new optimize_transform);
-#endif
     command = new format_command
       ("print", either_or(report->format_string,
 			  report->session->print_format));
   }
   else if (verb == "equity") {
-#if 0
     if (! report->raw_mode)
       report->transforms.push_back(new accounts_transform);
-#endif
     command = new format_command
       ("equity", either_or(report->format_string,
 			   report->session->equity_format));
@@ -313,13 +307,12 @@ static int read_and_report(report_t * report, int argc, char * argv[],
   // Create the an argument scope containing the report command's
   // arguments, and then invoke the command.
 
-#if 0
-  xml::xpath_t::scope_t * locals = new xml::xpath_t::scope_t(report, true);
+  xml::xpath_t::scope_t * locals =
+    new xml::xpath_t::scope_t(report, xml::xpath_t::scope_t::ARGUMENT);
 
-  std::auto_ptr<repitem_t> items(repitem_t::wrap(&session, report, true));
-
+  locals->args = new value_t::sequence_t;
   locals->args.push_back(out);
-  locals->args.push_back(items.get());
+  locals->args.push_back(journal->document);
 
   if (command->wants_args) {
 #if 1
@@ -378,11 +371,12 @@ static int read_and_report(report_t * report, int argc, char * argv[],
 #endif
   }
 
+#if 0
   report->apply_transforms(items.get());
+#endif
 
   value_t temp;
   (*command)(temp, locals);
-#endif
 
   // Write out the binary cache, if need be
 

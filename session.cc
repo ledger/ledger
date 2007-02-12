@@ -64,6 +64,8 @@ journal_t * session_t::read_data(const std::string& master_account)
   TRACE_PUSH(parser, "Parsing journal file");
 
   journal_t * journal = new_journal();
+  journal->document = new xml::document_t;
+  journal->document->top = xml::wrap_node(journal->document, journal);
 
   unsigned int entry_count = 0;
 
