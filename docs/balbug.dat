@@ -1,0 +1,13 @@
+2000/07/13 * BUY LMS
+    Assets:Investments:Scottrade SEP:LMS  190 LMS @ $16.8125
+    Assets:Investments:Scottrade SEP:LMS         $7.00  ; commission
+    Assets:Investments:Scottrade SEP
+
+2000/10/11 * SELL LMS
+    Assets:Investments:Scottrade SEP:LMS  -190 LMS @ $16.812
+    Assets:Investments:Scottrade SEP:LMS  190 LMS @ $10.625
+    Assets:Investments:Scottrade SEP:LMS  -190 LMS @ $10.625
+    Assets:Investments:Scottrade SEP:LMS        $-7.00  ; buy commission
+    Income:Capital Gains:NT                    $7.07  ; sell commission
+    Assets:Investments:Scottrade SEP       $2,011.68
+    Income:Capital Gains:NT

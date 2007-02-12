@@ -1,0 +1,519 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE outline PUBLIC "-//omnigroup.com//DTD OUTLINE 3.0//EN" "http://www.omnigroup.com/namespace/OmniOutliner/xmloutline-v3.dtd">
+<outline xmlns="http://www.omnigroup.com/namespace/OmniOutliner/v3">
+  <style-attribute-registry>
+    <style-attribute version="0" key="font-family" group="font" name="family" class="string">Helvetica</style-attribute>
+    <style-attribute version="1" key="font-fill" group="font" name="fill color" class="color">
+      <color w="0"/>
+    </style-attribute>
+    <style-attribute version="0" key="font-italic" group="font" name="italic" class="bool">no</style-attribute>
+    <style-attribute version="0" key="font-size" group="font" name="size" class="number">12</style-attribute>
+    <style-attribute version="0" key="font-weight" group="font" name="weight" class="number">5</style-attribute>
+    <style-attribute version="0" key="text-background-color" group="text" name="background color" class="color">
+      <color w="0" a="0"/>
+    </style-attribute>
+    <style-attribute version="1" key="underline-color" group="underline" name="color" class="color">
+      <color w="0"/>
+    </style-attribute>
+    <style-attribute version="1" key="underline-style" group="underline" name="style" class="enum">
+      <enum-name-table default-value="0">
+        <enum-name-table-element value="0" name="none"/>
+        <enum-name-table-element value="1" name="single"/>
+        <enum-name-table-element value="2" name="thick"/>
+        <enum-name-table-element value="9" name="double"/>
+      </enum-name-table>
+    </style-attribute>
+  </style-attribute-registry>
+  <named-styles>
+    <named-style id="krWZGwpPsLP" name="Highlight" display-order="0">
+      <style>
+        <value key="text-background-color">
+          <color r="1" g="1" b="0.4"/>
+        </value>
+      </style>
+    </named-style>
+    <named-style id="mjaHaBrEy-f" name="Citation" display-order="1">
+      <style>
+        <value key="underline-color">
+          <color r="0" g="0" b="1"/>
+        </value>
+        <value key="underline-style">thick</value>
+      </style>
+    </named-style>
+    <named-style id="n06pFlchboV" name="Emphasis" display-order="2">
+      <style>
+        <value key="font-italic">yes</value>
+      </style>
+    </named-style>
+    <named-style id="oToGo5mz8ZU" name="Completed" display-order="3">
+      <style>
+        <value key="font-fill">
+          <color w="0.5"/>
+        </value>
+      </style>
+    </named-style>
+  </named-styles>
+  <settings>
+    <base-style>
+      <style>
+        <value key="font-family">Book Antiqua</value>
+        <value key="font-size">18</value>
+        <value key="font-weight">4</value>
+      </style>
+    </base-style>
+    <page-adornment>
+      <first-page-headers is-active="yes">
+        <header location="center">
+          <text>
+            <p>
+              <run>
+                <lit><cell variable="OOSectionTitleVariableIdentifier"/></lit>
+              </run>
+            </p>
+          </text>
+        </header>
+      </first-page-headers>
+    </page-adornment>
+    <print-info>
+      <print-info-key name="OOScaleDocumentToFitPageWidth" type="boolean">true</print-info-key>
+    </print-info>
+  </settings>
+  <editor content-size="{893, 783}" column-titles-display-mode="auto">
+    <drawer display="sections" palette-height="251"/>
+    <note-split-view height="315"/>
+    <hoisted-rows ids="chQLEsp4R0C"/>
+    <selected-rows ids="mXCHKKYRSBg"/>
+    <selected-columns ids="dTpN3JwYpBn"/>
+    <selected-characters range="{323, 0}"/>
+  </editor>
+  <columns>
+    <column id="dTpN3JwYpBn" type="text" width="18" minimum-width="18" maximum-width="18" text-export-width="1" is-note-column="yes">
+      <style>
+        <value key="font-size">16</value>
+      </style>
+      <title>
+        <text>
+          <p/>
+        </text>
+      </title>
+    </column>
+    <column id="jFqHUGd_Dg1" type="text" width="857" minimum-width="13" maximum-width="1000000" text-export-width="72" is-outline-column="yes">
+      <title>
+        <text>
+          <p>
+            <run>
+              <lit>Items</lit>
+            </run>
+          </p>
+        </text>
+      </title>
+    </column>
+  </columns>
+  <root>
+    <style>
+      <value key="font-weight">9</value>
+    </style>
+    <style>
+      <value key="font-weight">9</value>
+    </style>
+    <style/>
+    <style>
+      <value key="font-size">16</value>
+    </style>
+    <style>
+      <value key="font-size">14</value>
+    </style>
+    <item id="chQLEsp4R0C" expanded="yes">
+      <values>
+        <text>
+          <p>
+            <run>
+              <lit>Introduction</lit>
+            </run>
+          </p>
+        </text>
+      </values>
+      <children>
+        <item id="mXCHKKYRSBg">
+          <values>
+            <text>
+              <p>
+                <run>
+                  <lit>Notes</lit>
+                </run>
+              </p>
+            </text>
+          </values>
+          <note expanded="yes">
+            <text>
+              <p>
+                <run>
+                  <lit>Any transform which takes a value expression causes that expression to be applied to all children and contents from the journal level downward.  The &quot;session&quot; report item is always present in every report, and cannot be modified in any way.  Therefore, it is not included as part of the matching algorithms, or sorts, etc.</lit>
+                </run>
+              </p>
+              <p/>
+              <p>
+                <run>
+                  <lit>So, if the user enters &quot;--select 1, (0, payee =~ /John/), 1&quot;, the meaning here is that every journal is considered; within those journals, entries whose payee matches /John/ are included (and all of their transactions).</lit>
+                </run>
+              </p>
+              <p/>
+              <p>
+                <run>
+                  <lit>The syntax for a &quot;selection value expression&quot; is as follows:</lit>
+                </run>
+              </p>
+              <p/>
+              <p>
+                <run>
+                  <lit>-	If a single value expression occurs, it applies to both the contents and the children, recursively.</lit>
+                </run>
+              </p>
+              <p>
+                <run>
+                  <lit>-	If a series is given, such as &quot;A, B, C&quot;, then A applies to the contents/children of the session item; B to the contents/children of that item&apos;s children; C to the contents/children of that item&apos;s children; and C to all of the children of C, recursively.</lit>
+                </run>
+              </p>
+              <p>
+                <run>
+                  <lit>-	If an element in a series is a parenthized list, it may contain two expressions separated by a comma operator.  The first expression is applied to all contents of the item at that position; and the second expression is applied to all children of that item.</lit>
+                </run>
+              </p>
+              <p>
+                <run>
+                  <lit>-	The last expression or pair of expressions in the series is applied recursively to all children of the final item.  Thus, use &quot;0&quot; at the end to terminate the recursion.</lit>
+                </run>
+              </p>
+              <p/>
+              <p>
+                <run>
+                  <lit>Because of the complexity involved with the select transform, there are other transforms that simple provide a convenient interface to certain common selections:</lit>
+                </run>
+              </p>
+              <p/>
+              <p>
+                <run>
+                  <lit>	--find EXPR		==		--select (EXPR, 1)</lit>
+                </run>
+              </p>
+              <p>
+                <run>
+                  <lit>	--find-all EXPR		==		--select 1, (1, EXPR), 1</lit>
+                </run>
+              </p>
+              <p/>
+              <p>
+                <run>
+                  <lit>Examples:</lit>
+                </run>
+              </p>
+              <p/>
+              <p>
+                <run>
+                  <lit>	1, (1, EXPR)		Finds all accounts that match EXPR and include all member transactions</lit>
+                </run>
+              </p>
+              <p>
+                <run>
+                  <lit>						Finds accounts that match EXPR, and include all transactions, their</lit>
+                </run>
+              </p>
+              <p>
+                <run>
+                  <lit>							children and their transactions</lit>
+                </run>
+              </p>
+              <p>
+                <run>
+                  <lit>						Finds accounts that match EXPR, include their transactions, but search no</lit>
+                </run>
+              </p>
+              <p>
+                <run>
+                  <lit>							further</lit>
+                </run>
+              </p>
+            </text>
+          </note>
+        </item>
+      </children>
+    </item>
+    <item id="h7hpi3w-GUY" expanded="yes">
+      <values>
+        <text>
+          <p>
+            <run>
+              <lit>Movement</lit>
+            </run>
+          </p>
+        </text>
+      </values>
+      <children>
+        <item id="dRuWIiDp10E">
+          <values>
+            <text>
+              <p>
+                <run>
+                  <lit>group</lit>
+                </run>
+              </p>
+            </text>
+          </values>
+          <note expanded="yes">
+            <text>
+              <p>
+                <run>
+                  <lit>Causes transactions and entries that match the value expression to be merged into combined entries.</lit>
+                </run>
+              </p>
+            </text>
+          </note>
+        </item>
+        <item id="eIjoFEJHJ7c">
+          <values>
+            <text>
+              <p>
+                <run>
+                  <lit>merge</lit>
+                </run>
+              </p>
+            </text>
+          </values>
+        </item>
+        <item id="oBChoFC_BHB">
+          <values>
+            <text>
+              <p>
+                <run>
+                  <lit>split</lit>
+                </run>
+              </p>
+            </text>
+          </values>
+        </item>
+      </children>
+    </item>
+    <item id="nag9DMDor8p">
+      <values>
+        <text>
+          <p>
+            <run>
+              <lit>Organization</lit>
+            </run>
+          </p>
+        </text>
+      </values>
+    </item>
+    <item id="exbBifQ-lp1" expanded="yes">
+      <values>
+        <text>
+          <p>
+            <run>
+              <lit>Ordering</lit>
+            </run>
+          </p>
+        </text>
+      </values>
+      <children>
+        <item id="bmV-cucEliH">
+          <values>
+            <text>
+              <p>
+                <run>
+                  <lit>invert</lit>
+                </run>
+              </p>
+            </text>
+          </values>
+        </item>
+        <item id="bLTtAbsEGHC">
+          <values>
+            <text>
+              <p>
+                <run>
+                  <lit>sort</lit>
+                </run>
+              </p>
+            </text>
+          </values>
+        </item>
+      </children>
+    </item>
+    <item id="motbLy7ygqd" expanded="yes">
+      <values>
+        <text>
+          <p>
+            <run>
+              <lit>Selection</lit>
+            </run>
+          </p>
+        </text>
+      </values>
+      <children>
+        <item id="pxN1J5fDv58">
+          <values>
+            <text>
+              <p>
+                <run>
+                  <lit>select</lit>
+                </run>
+              </p>
+            </text>
+          </values>
+          <note expanded="yes">
+            <text>
+              <p>
+                <run>
+                  <lit>Selects items from the report tree based on a value expression traversal.  This is the same as global-select, except that the traversal &quot;0, 1, 0&quot; is implied at the beginning.</lit>
+                </run>
+              </p>
+            </text>
+          </note>
+        </item>
+        <item id="nxi2df_om8D">
+          <values>
+            <text>
+              <p>
+                <run>
+                  <lit>global-select</lit>
+                </run>
+              </p>
+            </text>
+          </values>
+        </item>
+        <item id="hn2ZnnK6nuM">
+          <values>
+            <text>
+              <p>
+                <run>
+                  <lit>filter (exclude)</lit>
+                </run>
+              </p>
+            </text>
+          </values>
+        </item>
+        <item id="bJcUaCMPltC">
+          <values>
+            <text>
+              <p>
+                <run>
+                  <lit>filter-all (exclude-all)</lit>
+                </run>
+              </p>
+            </text>
+          </values>
+        </item>
+        <item id="il6edJ27J-G">
+          <values>
+            <text>
+              <p>
+                <run>
+                  <lit>find (include)</lit>
+                </run>
+              </p>
+            </text>
+          </values>
+        </item>
+        <item id="h9aZyvjh5_w">
+          <values>
+            <text>
+              <p>
+                <run>
+                  <lit>find-all (include-all)</lit>
+                </run>
+              </p>
+            </text>
+          </values>
+        </item>
+        <item id="ifHal8YqwJv">
+          <values>
+            <text>
+              <p>
+                <run>
+                  <lit>head (top, first)</lit>
+                </run>
+              </p>
+            </text>
+          </values>
+        </item>
+        <item id="js4kZYrev4F">
+          <values>
+            <text>
+              <p>
+                <run>
+                  <lit>tail (bottom, last)</lit>
+                </run>
+              </p>
+            </text>
+          </values>
+        </item>
+        <item id="l4aDxEV3cEi">
+          <values>
+            <text>
+              <p>
+                <run>
+                  <lit>xpath</lit>
+                </run>
+              </p>
+            </text>
+          </values>
+          <note expanded="yes">
+            <text>
+              <p>
+                <run>
+                  <lit>This uses an XPath selector to locate the items which are to be output.</lit>
+                </run>
+              </p>
+            </text>
+          </note>
+        </item>
+      </children>
+    </item>
+    <item id="nvSD31OE3VV">
+      <values>
+        <text>
+          <p>
+            <run>
+              <lit>Alteration</lit>
+            </run>
+          </p>
+        </text>
+      </values>
+    </item>
+    <item id="ckKF9TODMCe" expanded="yes">
+      <values>
+        <text>
+          <p>
+            <run>
+              <lit>Utility</lit>
+            </run>
+          </p>
+        </text>
+      </values>
+      <children>
+        <item id="duvQIm9ejtS">
+          <values>
+            <text>
+              <p>
+                <run>
+                  <lit>target</lit>
+                </run>
+              </p>
+            </text>
+          </values>
+        </item>
+        <item id="nyY87uThCq3">
+          <values>
+            <text>
+              <p>
+                <run>
+                  <lit>apply</lit>
+                </run>
+              </p>
+            </text>
+          </values>
+        </item>
+      </children>
+    </item>
+  </root>
+</outline>

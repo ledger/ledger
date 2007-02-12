@@ -1,0 +1,89 @@
+/* The whole body of the popup frame */
+.wowitem, .wowitemt, .wowitemname {
+    background-color: #000000;
+    color: #FFFFFF;
+    text-align: left;
+    width: 385px;
+    border-top: 1px;
+    border-right: 1px;
+    border-bottom: 1px;
+    border-left: 1px;
+    border-color: #B08617;
+    border-style: ridge;
+    font-size: 11px;
+	font-family: 'Lucida Grande', Tahoma;
+    position: relative;
+    padding: 5px;
+}
+
+/* Default link colors for the whole frame */
+.wowitemt a:link, .wowitemt a:visited, .wowitemt a:active { color: #FFB019; text-decoration: none; font-weight: normal }
+.wowitemt a:hover { color: #FFB019; text-decoration: underline; font-weight: normal }
+
+.wowitemt td, .wowitem th {
+	font-family: 'Lucida Grande', Tahoma;
+	font-size: 11px;
+	color: #FFFFFF;
+}
+.wowrttxt {
+    display: compact;
+    position: absolute;
+    text-align: right;
+    right: 3px;
+    top: inherit;
+    color: #FFFFFF;
+}
+
+/* Item icon stuff */
+.itemicon { width: 40px; height: 40px; }
+.smallitemicon { width: 20px; height: 20px; }
+
+/* To make Item links stand out */
+.redname, .orangename, .purplename, .bluename, .greenname, .whitename, .greyname, .quality6, .quality5, .quality4, .quality3, .quality2, .quality1 {text-shadow: black 0px 1px 2px;}
+
+/* Item colors */
+.redname,    .quality6 { color: #ffcc9d; font-weight: bold; }
+.orangename, .quality5 { color: #ff9d00; font-weight: bold; }
+.purplename, .quality4 { color: #a335ee; font-weight: bold; }
+.bluename,   .quality3 { color: #0070dd; font-weight: bold; }
+.greenname,  .quality2 { color: #1eff00; font-weight: bold; }
+.whitename,  .quality1 { color: #ffffff; font-weight: bold; }
+.greyname              { color: #9d9d9d; font-weight: bold; }
+.goldtext              { color: #FFD700; font-weight: bold; }
+
+/* Item link (Name of items on ViewItem page) */
+a:link.itemlink, a:visited.itemlink, a:active.itemlink { text-decoration: none; }
+a:hover.itemlink { text-decoration: none; }
+
+/* Forum link */
+a:link.forumitemlink, a:visited.forumitemlink, a:active.forumitemlink { text-decoration: none; font-weight: normal }
+a:hover.forumitemlink { text-decoration: none; font-weight: normal }
+
+/* Armor set info link */
+.setbonus { color: #1EFF00; font-weight: normal; }
+a:link.setbonus, a:visited.setbonus, a:active.setbonus { text-decoration: none; font-weight: normal; color: #1EFF00; }
+a:hover.setbonus { text-decoration: underline; font-weight: normal; color: #1EFF00; }
+a:link.set, a:visited.set, a:active.set { text-decoration: none; font-weight: normal; color: #FFA500; }
+a:hover.set { text-decoration: underline; font-weight: normal; color: #FFA500; }
+
+/* Item effects */
+.itemeffectlink { color: #FFFFFF; font-weight: normal; }
+a:link.itemeffectlink, a:visited.itemeffectlink, a:active.itemeffectlink { text-decoration: none; font-weight: normal; color: #1EFF00; }
+a:hover.itemeffectlink { text-decoration: underline; font-weight: normal; color: #1EFF00; }
+
+/* Refresh link */
+a:link.itemrefresh, a:visited.itemrefresh, a:active.itemrefresh { text-decoration: none; font-weight: normal; font-size: x-small }
+a:hover.itemrefresh { text-decoration: none; font-weight: normal; font-size: x-small }
+
+/* Item Create link, used for certain recipes */
+.itemeffectlink { color: #FFFFFF; font-weight: normal; }
+a:link.itemcreatelink, a:visited.itemcreatelink, a:active.itemcreatelink { text-decoration: none; font-weight: normal; color: #1EFF00; }
+a:hover.itemcreatelink { text-decoration: underline; font-weight: normal; color: #1EFF00; }
+
+/* Item Description Text */
+.itemdesc { color: #FFD200; }
+
+/* Allakhazam credits stuff */
+.akznotice a:link, .akznotice a:visited, .akznotice a:active { text-decoration: underline; font-weight: normal; color: #FFFFFF; }
+.akznotice a:hover { text-decoration: underline; font-weight: normal }
+.akznotice {  display: none;  color: #FFFFFF; font-size: smaller; text-align: center; background-color: #0B0B0B; }

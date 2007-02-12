@@ -1,0 +1,45 @@
+- Numerics
+  amount.cc
+  datetime.cc
+  balance.cc
+  value.cc
+  quotes.cc
+  valexpr.cc
+  format.cc
+  mask.cc
+
+- Utility
+  debug.cc
+  trace.cc
+  util.cc
+
+- Journal representation
+  session.cc
+  journal.cc
+  - Parsing
+    parser.cc
+    binary.cc
+    gnucash.cc
+    ofx.cc
+    qif.cc
+    textual.cc
+    xml.cc
+
+- Reporting
+  report.cc
+  repitem.cc
+  transform.cc
+<<<
+  derive.cc
+  emacs.cc
+  csv.cc
+  reconcile.cc
+>>>
+
+- Python integration
+  py_eval.cc
+  pyledger.cc
+
+- Command-line driver
+  option.cc
+  main.cc
