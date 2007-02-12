@@ -692,6 +692,7 @@ xpath_t::parse_value_term(std::istream& in, unsigned short flags) const
     node->name = new std::string(tok.value.to_string());
     break;
 
+#if 0
   case token_t::DOLLAR:
     tok = next_token(in, flags);
     if (tok.kind != token_t::IDENT)
@@ -700,6 +701,7 @@ xpath_t::parse_value_term(std::istream& in, unsigned short flags) const
     node.reset(new op_t(op_t::VAR_NAME));
     node->name = new std::string(tok.value.to_string());
     break;
+#endif
 
   case token_t::DOT:
     node.reset(new op_t(op_t::NODE_ID));

@@ -160,13 +160,13 @@ static int read_and_report(report_t * report, int argc, char * argv[],
     command = new prices_command;
   else if (verb == "pricesdb")
     command = new pricesdb_command;
-  else if (verb == "xml")
-    command = new xml_command;
   else if (verb == "csv")
     command = new csv_command;
   else if (verb == "emacs" || verb == "lisp")
     command = new emacs_command;
 #endif
+  else if (verb == "xml")
+    command = new xml_command;
   else if (verb == "expr")
     ;
   else if (verb == "xpath")

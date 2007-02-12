@@ -115,10 +115,9 @@ void process_environment(const char ** envp, const std::string& tag,
       if (*q == '=') {
 	try {
 	  if (! process_option(buf, scope, q + 1))
-	    throw new option_error("unknown option");
+	    /*throw new option_error("unknown option")*/;
 	}
 	catch (error * err) {
-	  err->context.pop_back();
 	  err->context.push_back
 	    (new error_context
 	     (std::string("While parsing environment variable option '") +

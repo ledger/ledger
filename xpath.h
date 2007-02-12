@@ -666,17 +666,19 @@ public:
     return expr;
   }
 
-  void parse(const std::string& _expr,
-	     unsigned short _flags = XPATH_PARSE_RELAXED) {
+  void parse(const std::string& _expr, unsigned short _flags = XPATH_PARSE_RELAXED) {
     expr  = _expr;
     flags = _flags;
-    reset(parse_expr(_expr, _flags)->acquire());
+    op_t * tmp = parse_expr(_expr, _flags);
+    assert(tmp);
+    reset(tmp ? tmp->acquire() : NULL);
   }
-  void parse(std::istream& in,
-	     unsigned short _flags = XPATH_PARSE_RELAXED) {
+  void parse(std::istream& in, unsigned short _flags = XPATH_PARSE_RELAXED) {
     expr  = "";
     flags = _flags;
-    reset(parse_expr(in, _flags)->acquire());
+    op_t * tmp = parse_expr(in, _flags);
+    assert(tmp);
+    reset(tmp ? tmp->acquire() : NULL);
   }
 
   void compile(const std::string& _expr, scope_t * scope = NULL,
@@ -743,6 +745,29 @@ public:
 };
 
 } // namespace xml
+
+template <typename T>
+inline T * get_ptr(xml::xpath_t::scope_t * locals, int idx) {
+  assert(locals->args.size() > idx);
+  T * ptr = static_cast<T *>(locals->args[idx].to_pointer());
+  assert(ptr);
+  return ptr;
+}
+
+class xml_command : public xml::xpath_t::functor_t
+{
+ public:
+  xml_command() : xml::xpath_t::functor_t("xml") {}
+
+  virtual void operator()(value_t& result, xml::xpath_t::scope_t * locals) {
+    std::ostream *    out = get_ptr<std::ostream>(locals, 0);
+    xml::document_t * doc = get_ptr<xml::document_t>(locals, 1);
+
+    doc->write(*out);
+  }
+
+};
+
 } // namespace ledger
 
 #endif // _XPATH_H

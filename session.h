@@ -163,7 +163,7 @@ class session_t : public xml::xpath_t::scope_t
   //
 
   void option_file(value_t&, xml::xpath_t::scope_t * locals) {
-    data_file = locals->args[0].to_string();
+    data_file = locals->args.to_string();
   }
 
   void option_verbose(value_t&) {
