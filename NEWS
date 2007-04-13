@@ -1,6 +1,6 @@
 			     Ledger NEWS
 
-* 3.0
+* 2.6
 
 - The style for eliding long account names (for example, in the
   register report) has been changed.  Previously Ledger would elide
