@@ -67,7 +67,6 @@ libledger_la_SOURCES = \
 	report.cc      \
 	transform.cc   \
 		       \
-	dump.cc        \
 	csv.cc         \
 	derive.cc      \
 	emacs.cc       \
@@ -103,7 +102,6 @@ pkginclude_HEADERS = \
 	datetime.h   \
 	debug.h	     \
 	derive.h     \
-	dump.h	     \
 	emacs.h	     \
 	error.h	     \
 	format.h     \
