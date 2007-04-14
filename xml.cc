@@ -320,7 +320,6 @@ document_t * parser_t::parse(std::istream& in, const char ** builtins,
 
   document = doc.get();
 
-  unsigned int offset = 2;
   parser = XML_ParserCreate(NULL);
 
   XML_SetElementHandler(parser, startElement, endElement);
@@ -336,20 +335,20 @@ document_t * parser_t::parse(std::istream& in, const char ** builtins,
       result = XML_Parse(parser, buf, std::strlen(buf), in.eof());
     }
     catch (const std::exception& err) {
-      unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
+      //unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
       XML_ParserFree(parser);
       throw new parse_error(err.what());
     }
 
     if (! have_error.empty()) {
-      unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
+      //unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
       parse_error err(have_error);
       std::cerr << "Error: " << err.what() << std::endl;
       have_error = "";
     }
 
     if (! result) {
-      unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
+      //unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
       const char *  err  = XML_ErrorString(XML_GetErrorCode(parser));
       XML_ParserFree(parser);
       throw new parse_error(err);
@@ -426,8 +425,10 @@ node_t * account_node_t::children() const
 node_t * journal_node_t::children() const
 {
   if (! _children) {
+#if 0
     account_node_t * master_account =
       new account_node_t(document, journal->master, const_cast<journal_node_t *>(this));
+#endif
 
     parent_node_t * entries =
       new parent_node_t(document, const_cast<journal_node_t *>(this));

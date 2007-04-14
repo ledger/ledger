@@ -128,7 +128,6 @@ void process_arguments(int argc, char ** argv, const bool anywhere,
 		       xml::xpath_t::scope_t * scope,
 		       std::list<std::string>& args)
 {
-  int index = 0;
   for (char ** i = argv; *i; i++) {
     if ((*i)[0] != '-') {
       if (anywhere) {

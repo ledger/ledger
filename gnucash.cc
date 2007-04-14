@@ -358,14 +358,14 @@ unsigned int gnucash_parser_t::parse(std::istream&	 in,
     in.getline(buf, BUFSIZ - 1);
     std::strcat(buf, "\n");
     if (! XML_Parse(parser, buf, std::strlen(buf), in.eof())) {
-      unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
+      //unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
       const char *  msg  = XML_ErrorString(XML_GetErrorCode(parser));
       XML_ParserFree(parser);
       throw new parse_error(msg);
     }
 
     if (! have_error.empty()) {
-      unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
+      //unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
       parse_error err(have_error);
       std::cerr << "Error: " << err.what() << std::endl;
       have_error = "";

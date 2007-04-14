@@ -1713,7 +1713,6 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
 
     std::auto_ptr<value_t::sequence_t> call_seq;
 
-    int index = 0;
     op_t * args = right;
     while (args) {
       op_t * arg = args;
@@ -1955,7 +1954,6 @@ bool xpath_t::op_t::write(std::ostream&   out,
 {
   int arg_index = 0;
   bool found = false;
-  op_t * expr;
 
   if (start_pos && this == op_to_find) {
     *start_pos = (long)out.tellp() - 1;

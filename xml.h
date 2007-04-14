@@ -93,6 +93,7 @@ public:
 
   virtual const char * text() const {
     assert(0);
+    return NULL;
   }
 
   const char * name() const {
@@ -301,6 +302,7 @@ template <typename T>
 inline parent_node_t * wrap_node(document_t * doc, T * item,
 				 void * parent_node = NULL) {
   assert(0);
+  return NULL;
 }
 
 template <>

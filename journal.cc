@@ -605,7 +605,7 @@ void print_entry(std::ostream& out, const entry_base_t& entry_base,
 {
   std::string print_format;
 
-  if (const entry_t * entry = dynamic_cast<const entry_t *>(&entry_base)) {
+  if (dynamic_cast<const entry_t *>(&entry_base)) {
     print_format = (prefix + "%D %X%C%P\n" +
 		    prefix + "    %-34A  %12o\n%/" +
 		    prefix + "    %-34A  %12o\n");

@@ -311,6 +311,7 @@ private:
       if (&other == this)
 	return *this;
       assert(0);
+      return *this;
     }
 
     void clear() {
@@ -606,6 +607,7 @@ public:
 	     unsigned long * end_pos) const {
     if (ptr)
       ptr->write(out, relaxed, op_to_find, start_pos, end_pos);
+    return true;
   }
 
 public:

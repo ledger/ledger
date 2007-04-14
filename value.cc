@@ -1879,6 +1879,9 @@ value_t value_t::value(const datetime_t& moment) const
     throw new value_error("Cannot find the value of a pointer");
   case SEQUENCE:
     throw new value_error("Cannot find the value of a sequence");
+  default:
+    assert(0);
+    return value_t();
   }
 }
 

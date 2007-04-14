@@ -563,7 +563,6 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 {
   static bool  added_auto_entry_hook = false;
   static char  line[MAX_LINE + 1];
-  char	       c;
   unsigned int count  = 0;
   unsigned int errors = 0;
 
@@ -830,7 +829,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
       }
 
       default: {
-	unsigned int first_line = linenum;
+	//unsigned int first_line = linenum;
 	unsigned long pos = end_pos;
 	if (entry_t * entry = parse_entry(in, line, journal,
 					  account_stack.front(),

@@ -31,8 +31,10 @@ const char * date_t::formats[] = {
 datetime_t datetime_t::now(std::time(NULL));
 
 namespace {
+#if 0
   static std::time_t base = -1;
   static int base_year = -1;
+#endif
 
   static const int month_days[12] = {
     31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
