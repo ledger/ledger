@@ -1,6 +1,3 @@
-#ifdef USE_PCH
-#include "pch.h"
-#else
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -28,7 +25,6 @@
 #include "ledger.h"
 #endif
 #include "debug.h"
-#endif
 
 using namespace ledger;
 

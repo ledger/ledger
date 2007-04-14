@@ -1,6 +1,3 @@
-#ifdef USE_PCH
-#include "pch.h"
-#else
 #include "xpath.h"
 #include "debug.h"
 #include "util.h"
@@ -8,7 +5,6 @@
 #include "py_eval.h"
 #endif
 #include <fstream>
-#endif
 
 namespace ledger {
 namespace xml {
@@ -2388,9 +2384,7 @@ void xpath_t::op_t::dump(std::ostream& out, const int depth) const
 
 #ifdef USE_BOOST_PYTHON
 
-#ifndef USE_PCH
 #include <boost/python.hpp>
-#endif
 
 using namespace boost::python;
 using namespace ledger;

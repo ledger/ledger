@@ -1,47 +1,6 @@
-if USE_PCH
-#BUILT_SOURCES = pchpic.h.gch pchnopic.h.gch
-BUILT_SOURCES = pchnopic.h.gch
-#CLEANFILES = pchpic.h.gch pchnopic.h.gch
-CLEANFILES = pchnopic.h.gch
-endif
-
-######################################################################
-
-#bin_PROGRAMS = xpath
-#
-#xpath_CXXFLAGS = -DTEST
-#xpath_SOURCES = \
-#	amount.cc      \
-#	datetime.cc    \
-#	quotes.cc      \
-#	balance.cc     \
-#	value.cc       \
-#	mask.cc        \
-#	xml.cc         \
-#	xpath.cc       \
-#	trace.cc       \
-#	util.cc
-#xpath_LDADD = $(LIBOBJS)
-#if HAVE_EXPAT
-#xpath_CXXFLAGS += -DHAVE_EXPAT=1
-#endif
-#if HAVE_XMLPARSE
-#xpath_CXXFLAGS += -DHAVE_XMLPARSE=1
-#endif
-#if DEBUG
-#xpath_CXXFLAGS += -DDEBUG_LEVEL=4
-#xpath_SOURCES  += debug.cc
-#endif
-#xpath_LDFLAGS = -static	# for the sake of command-line speed
-
-######################################################################
-
 lib_LTLIBRARIES = libledger.la
 
 libledger_la_CXXFLAGS =
-if USE_PCH
-libledger_la_CXXFLAGS += -DUSE_PCH -Winvalid-pch -fpch-deps
-endif
 libledger_la_SOURCES = \
 	amount.cc      \
 	quotes.cc      \
@@ -128,12 +87,6 @@ pkginclude_HEADERS = \
 	value.h	     \
 	xml.h        \
 	xpath.h
-
-pchpic.h.gch: pch.h pchdata.h $(pkginclude_HEADERS)
-	$(CXXCOMPILE) $(CXXFLAGS) -DPIC -o $@ pchdata.h
-
-pchnopic.h.gch: pch.h pchdata.h $(pkginclude_HEADERS)
-	$(CXXCOMPILE) $(CXXFLAGS) -o $@ pchdata.h
 
 ######################################################################
 

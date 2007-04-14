@@ -1,6 +1,3 @@
-#ifdef USE_PCH
-#include "pch.h"
-#else
 #include "textual.h"
 #include "session.h"
 #include "util.h"
@@ -16,7 +13,6 @@
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
-#endif
 
 #define TIMELOG_SUPPORT 1
 

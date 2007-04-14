@@ -1,6 +1,3 @@
-#ifdef USE_PCH
-#include "pch.h"
-#else
 #include "amount.h"
 #include "binary.h"
 #include "util.h"
@@ -10,7 +7,6 @@
 #include <cstdlib>
 
 #include <gmp.h>
-#endif
 
 namespace ledger {
 
@@ -1927,10 +1923,8 @@ bool compare_amount_commodities::operator()(const amount_t * left,
 
 #ifdef USE_BOOST_PYTHON
 
-#ifndef USE_PCH
 #include <boost/python.hpp>
 #include <Python.h>
-#endif
 
 using namespace boost::python;
 using namespace ledger;

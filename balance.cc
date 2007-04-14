@@ -1,12 +1,8 @@
-#ifdef USE_PCH
-#include "pch.h"
-#else
 #include "balance.h"
 #include "util.h"
 
 #include <deque>
 #include <algorithm>
-#endif
 
 namespace ledger {
 
@@ -326,9 +322,7 @@ balance_t::operator amount_t() const
 
 #ifdef USE_BOOST_PYTHON
 
-#ifndef USE_PCH
 #include <boost/python.hpp>
-#endif
 
 using namespace boost::python;
 using namespace ledger;

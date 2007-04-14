@@ -1,6 +1,3 @@
-#ifdef USE_PCH
-#include "pch.h"
-#else
 #include "xml.h"
 #include "journal.h"
 #include "datetime.h"
@@ -9,7 +6,6 @@
 #include <iostream>
 #include <sstream>
 #include <cstring>
-#endif
 
 namespace ledger {
 namespace xml {

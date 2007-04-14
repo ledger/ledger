@@ -1,10 +1,6 @@
-#ifdef USE_PCH
-#include "pch.h"
-#else
 #include "session.h"
 
 #include <fstream>
-#endif
 
 namespace ledger {
 
@@ -196,9 +192,7 @@ xml::xpath_t::op_t * session_t::lookup(const std::string& name)
 
 #ifdef USE_BOOST_PYTHON
 
-#ifndef USE_PCH
 #include <boost/python.hpp>
-#endif
 
 using namespace boost::python;
 using namespace ledger;

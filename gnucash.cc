@@ -1,8 +1,4 @@
-#ifdef USE_PCH
-#include "pch.h"
-#else
 #include "gnucash.h"
-#endif
 
 namespace ledger {
 

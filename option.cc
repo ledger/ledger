@@ -1,6 +1,3 @@
-#ifdef USE_PCH
-#include "pch.h"
-#else
 #include "option.h"
 #include "report.h"
 #include "debug.h"
@@ -13,7 +10,6 @@
 #include <cstdarg>
 
 #include "util.h"
-#endif
 
 #ifdef USE_BOOST_PYTHON
 static ledger::option_t * find_option(const std::string& name);
@@ -212,11 +208,9 @@ void process_arguments(int argc, char ** argv, const bool anywhere,
 
 #ifdef USE_BOOST_PYTHON
 
-#ifndef USE_PCH
 #include <boost/python.hpp>
 #include <boost/python/detail/api_placeholder.hpp>
 #include <boost/python/suite/indexing/map_indexing_suite.hpp>
-#endif
 
 using namespace boost::python;
 using namespace ledger;

@@ -1,8 +1,4 @@
-#ifdef USE_PCH
-#include "pch.h"
-#else
 #include "transform.h"
-#endif
 
 namespace ledger {
 
@@ -332,9 +328,7 @@ void remove_transform::execute(xml::document_t * document)
 #if 0
 #ifdef USE_BOOST_PYTHON
 
-#ifndef USE_PCH
 #include <boost/python.hpp>
-#endif
 
 using namespace boost::python;
 using namespace ledger;

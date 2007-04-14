@@ -1,12 +1,8 @@
-#ifdef USE_PCH
-#include "pch.h"
-#else
 #include "py_eval.h"
 #include "error.h"
 #include "acconf.h"
 
 #include <istream>
-#endif
 
 void export_amount();
 void export_balance();

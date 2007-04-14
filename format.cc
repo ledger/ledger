@@ -1,6 +1,3 @@
-#ifdef USE_PCH
-#include "pch.h"
-#else
 #include "format.h"
 #include "error.h"
 #include "util.h"
@@ -9,7 +6,6 @@
 #endif
 
 #include <cstdlib>
-#endif
 
 namespace ledger {
 
@@ -245,9 +241,7 @@ int format_t::format(std::ostream& out, xml::node_t * context,
 
 #ifdef USE_BOOST_PYTHON
 
-#ifndef USE_PCH
 #include <boost/python.hpp>
-#endif
 
 using namespace boost::python;
 using namespace ledger;

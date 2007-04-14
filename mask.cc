@@ -1,6 +1,3 @@
-#ifdef USE_PCH
-#include "pch.h"
-#else
 #include "mask.h"
 #include "debug.h"
 #include "util.h"
@@ -8,7 +5,6 @@
 #include <cstdlib>
 
 #include <pcre.h>
-#endif
 
 mask_t::mask_t(const std::string& pat) : exclude(false)
 {

@@ -1,6 +1,3 @@
-#ifdef USE_PCH
-#include "pch.h"
-#else
 #include "util.h"
 
 #include <list>
@@ -16,7 +13,6 @@
 
 #if defined(HAVE_GETPWUID) || defined(HAVE_GETPWNAM)
 #include <pwd.h>
-#endif
 #endif
 
 std::string expand_path(const std::string& path)

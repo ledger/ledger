@@ -1,10 +1,6 @@
-#ifdef USE_PCH
-#include "pch.h"
-#else
 #include "report.h"
 #include "transform.h"
 #include "util.h"
-#endif
 
 namespace ledger {
 
@@ -192,9 +188,7 @@ xml::xpath_t::op_t * report_t::lookup(const std::string& name)
 
 #ifdef USE_BOOST_PYTHON
 
-#ifndef USE_PCH
 #include <boost/python.hpp>
-#endif
 
 using namespace boost::python;
 using namespace ledger;

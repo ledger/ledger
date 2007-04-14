@@ -1,11 +1,7 @@
-#ifdef USE_PCH
-#include "pch.h"
-#else
 #include "value.h"
 #include "xml.h"
 #include "debug.h"
 #include "error.h"
-#endif
 
 namespace ledger {
 
@@ -2311,9 +2307,7 @@ void value_context::describe(std::ostream& out) const throw()
 
 #ifdef USE_BOOST_PYTHON
 
-#ifndef USE_PCH
 #include <boost/python.hpp>
-#endif
 
 using namespace boost::python;
 using namespace ledger;

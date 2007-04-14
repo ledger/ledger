@@ -252,16 +252,6 @@ else
   AM_CONDITIONAL(HAVE_BOOST_PYTHON, false)
 fi
 
-# check for Precompiled headers (gcc4-style)
-AC_ARG_ENABLE(pch,
-  [  --enable-pch            Enable support for pre-compiled headers],
-  [case "${enableval}" in
-    yes) pch=true ;;
-    no)  pch=false ;;
-    *) AC_MSG_ERROR(bad value ${enableval} for --enable-pch) ;;
-  esac],[pch=false])
-AM_CONDITIONAL(USE_PCH, test x$pch = xtrue)
-
 # Check for options
 AC_ARG_ENABLE(debug,
   [  --enable-debug          Turn on debugging],

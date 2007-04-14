@@ -1,11 +1,7 @@
-#ifdef USE_PCH
-#include "pch.h"
-#else
 #include "binary.h"
 
 #include <fstream>
 #include <sys/stat.h>
-#endif
 
 namespace ledger {
 

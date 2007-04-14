@@ -1,6 +1,3 @@
-#ifdef USE_PCH
-#include "pch.h"
-#else
 #include "journal.h"
 #include "ofx.h"
 #include "format.h"
@@ -10,7 +7,6 @@
 #include "util.h"
 
 #include <libofx.h>
-#endif
 
 namespace ledger {
 

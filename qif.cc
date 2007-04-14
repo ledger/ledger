@@ -1,6 +1,3 @@
-#ifdef USE_PCH
-#include "pch.h"
-#else
 #include "journal.h"
 #include "qif.h"
 #include "datetime.h"
@@ -9,7 +6,6 @@
 
 #include <cstring>
 #include <memory>
-#endif
 
 namespace ledger {
 

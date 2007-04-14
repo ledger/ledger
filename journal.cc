@@ -1,6 +1,3 @@
-#ifdef USE_PCH
-#include "pch.h"
-#else
 #include "journal.h"
 #include "datetime.h"
 #include "mask.h"
@@ -11,7 +8,6 @@
 #include "acconf.h"
 
 #include <fstream>
-#endif
 
 namespace ledger {
 
@@ -668,10 +664,8 @@ xact_context::xact_context(const ledger::transaction_t& _xact,
 
 #ifdef USE_BOOST_PYTHON
 
-#ifndef USE_PCH
 #include <boost/python.hpp>
 #include <boost/python/exception_translator.hpp>
-#endif
 
 using namespace boost::python;
 using namespace ledger;
