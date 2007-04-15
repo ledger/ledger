@@ -31,7 +31,9 @@ if [ $SYSTEM = Linux ]; then
 elif [ $SYSTEM = Solaris ]; then
     CXXFLAGS="-pthreads"
 elif [ $SYSTEM = Darwin ]; then
-    CXXFLAGS="-Wno-long-double"
+    #CXXFLAGS="-arch i386 -arch ppc -isysroot /Developer/SDKs/MacOSX10.4u.sdk"
+    CXXFLAGS="$CXXFLAGS -Wno-long-double"
+    #LIBDIRS="$LIBDIRS -arch i386 -arch ppc -isysroot /Developer/SDKs/MacOSX10.4u.sdk"
 else
     CXXFLAGS=""
 fi

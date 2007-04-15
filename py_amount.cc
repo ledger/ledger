@@ -41,8 +41,8 @@ commodity_t * py_find_commodity(const std::string& symbol)
 }
 
 #define EXC_TRANSLATOR(type)				\
-  void exc_translate_ ## type(const type& err) {	\
-    PyErr_SetString(PyExc_RuntimeError, err.what());	\
+  void exc_translate_ ## type(const type * const err) {	\
+    PyErr_SetString(PyExc_ArithmeticError, err->what());	\
   }
 
 EXC_TRANSLATOR(amount_error)
@@ -59,48 +59,34 @@ void export_amount()
     .def(init<char *>())
     .def(init<bool>())
     .def(init<long>())
-    .def(init<unsigned long>())
-    .def(init<double>())
 
     .def(self += self)
     .def(self += long())
-    .def(self += double())
 
     .def(self	  + self)
     .def(self	  + long())
     .def(long()	  + self)
-    .def(self	  + double())
-    .def(double() + self)
 
     .def(self -= self)
     .def(self -= long())
-    .def(self -= double())
 
     .def(self	  - self)
     .def(self	  - long())
     .def(long()	  - self)
-    .def(self	  - double())
-    .def(double() - self)
 
     .def(self *= self)
     .def(self *= long())
-    .def(self *= double())
 
     .def(self	  * self)
     .def(self	  * long())
     .def(long()	  * self)
-    .def(self	  * double())
-    .def(double() * self)
 
     .def(self /= self)
     .def(self /= long())
-    .def(self /= double())
 
     .def(self	  /  self)
     .def(self	  /  long())
     .def(long()	  / self)
-    .def(self	  /  double())
-    .def(double() / self)
 
     .def(- self)
 
@@ -135,7 +121,8 @@ void export_amount()
     .def(self_ns::str(self))
     .def(abs(self))
 
-#if 0
+    .def("__repr__", &amount_t::to_string)
+
     .def("has_commodity", &amount_t::has_commodity)
 
     .add_property("commodity",
@@ -165,7 +152,6 @@ void export_amount()
     .def("value", &amount_t::value)
 
     .def("valid", &amount_t::valid)
-#endif
     ;
 
   class_< commodity_base_t::updater_t, commodity_updater_wrap,
@@ -220,7 +206,7 @@ void export_amount()
     ;
 
 #define EXC_TRANSLATE(type)					\
-  register_exception_translator<type>(&exc_translate_ ## type);
+  register_exception_translator<type *>(&exc_translate_ ## type);
 
   EXC_TRANSLATE(amount_error);
 }

@@ -95,7 +95,8 @@ class amount_t
     return ! quantity && ! has_commodity();
   }
 
-  std::string quantity_string() const;
+  std::string to_string() const;
+  std::string quantity_string() const {}
 
   // assignment operator
   amount_t& operator=(const amount_t& amt);
@@ -305,6 +306,12 @@ class amount_t
   void read_quantity(std::istream& in);
   void read_quantity(char *& data);
 };
+
+inline std::string amount_t::to_string() const {
+  std::ostringstream bufstream;
+  print(bufstream);
+  return bufstream.str();
+}
 
 inline amount_t abs(const amount_t& amt) {
   return amt < 0 ? amt.negated() : amt;

@@ -216,13 +216,33 @@ namespace {
     mpf_init_set_d(temp, val);
 
     mp_exp_t exp;
-    char * buf = mpf_get_str(NULL, &exp, 10, 10, temp);
+    char * buf = mpf_get_str(NULL, &exp, 10, 1000, temp);
 
     int len = std::strlen(buf);
     if (len > 0 && buf[0] == '-')
       exp++;
 
-    exp = len - exp;
+    if (exp <= len) {
+      exp = len - exp;
+    } else {
+      // There were trailing zeros, which we have to put back on in
+      // order to convert this buffer into an integer.
+
+      int zeroes = exp - len;
+
+      char * newbuf = (char *)std::malloc(len + zeroes);
+      std::strcpy(newbuf, buf);
+
+      int i;
+      for (i = 0; i < zeroes; i++)
+	newbuf[len + i] = '0';
+      newbuf[len + i] = '\0';
+
+      free(buf);
+      buf = newbuf;
+
+      exp = (len - exp) + zeroes;
+    }
 
     mpz_set_str(dest, buf, 10);
     free(buf);

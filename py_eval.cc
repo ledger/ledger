@@ -23,24 +23,22 @@ void shutdown_option();
 
 namespace ledger {
 
-namespace {
-  void initialize_ledger_for_python()
-  {
-    export_amount();
+void initialize_ledger_for_python()
+{
+  export_amount();
 #if 0
-    export_balance();
-    export_value();
-    export_datetime();
+  export_balance();
+  export_value();
+  export_datetime();
 
-    export_journal();
-    export_parser();
-    export_option();
-    export_walk();
-    export_format();
-    export_report();
-    export_valexpr();
+  export_journal();
+  export_parser();
+  export_option();
+  export_walk();
+  export_format();
+  export_report();
+  export_valexpr();
 #endif
-  }
 }
 
 void shutdown_ledger_for_python()

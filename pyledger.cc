@@ -1,10 +1,10 @@
 #include <boost/python.hpp>
 
-using namespace boost::python;
+#include "py_eval.h"
 
-void initialize_ledger_for_python();
+using namespace boost::python;
 
 BOOST_PYTHON_MODULE(ledger)
 {
-  initialize_ledger_for_python();
+  ledger::initialize_ledger_for_python();
 }

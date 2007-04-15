@@ -13,6 +13,7 @@ using namespace boost::python;
 
 namespace ledger {
 
+void initialize_ledger_for_python();
 void shutdown_ledger_for_python();
 
 class python_interpreter_t : public xml::xpath_t::scope_t

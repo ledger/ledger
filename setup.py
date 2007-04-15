@@ -4,7 +4,11 @@ from distutils.core import setup, Extension
 
 import os
 
-libs = ["ledger", "pyledger", "boost_python", "gmp", "pcre"]
+defines = [('PYTHON_MODULE', 1)]
+
+defines.extend ([('DEBUG_LEVEL', 4)])
+
+libs = ["pyledger", "ledger", "boost_python", "gmp", "pcre"]
 
 if os.environ.has_key ("HAVE_EXPAT") and\
    os.environ["HAVE_EXPAT"] == "true":
@@ -26,5 +30,4 @@ setup(name         = "Ledger",
       url          = "http://johnwiegley.com/",
       ext_modules  = [
     Extension("ledger", ["pyledger.cc"],
-	      define_macros = [('PYTHON_MODULE', 1)],
-	      libraries     = libs)])
+	      define_macros = defines, libraries = libs)])

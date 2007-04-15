@@ -143,6 +143,8 @@ if HAVE_BOOST_PYTHON
 
 noinst_PROGRAMS = ledger.so
 
+# jww (2007-04-14): This is not passing HAVE_EXPAT!
+
 ledger.so: pyledger.cc libledger.la libpyledger.la
 	CFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS) -L. -L.libs" \
 	    python setup.py build --build-lib=.
@@ -156,6 +158,9 @@ endif
 ######################################################################
 
 TESTS = UnitTests
+if HAVE_BOOST_PYTHON
+TESTS += PyUnitTests
+endif
 
 check_PROGRAMS = $(TESTS)
 
@@ -179,6 +184,9 @@ endif
 if DEBUG
 UnitTests_CXXFLAGS += -DDEBUG_LEVEL=4
 endif
+
+PyUnitTests:
+	python tests/python/UnitTests.py
 
 ######################################################################
 
