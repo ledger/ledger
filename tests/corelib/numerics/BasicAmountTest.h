@@ -3,9 +3,9 @@
 
 #include "UnitTests.h"
 
-class BasicAmountTest : public CPPUNIT_NS::TestCase
+class BasicAmountTestCase : public CPPUNIT_NS::TestCase
 {
-  CPPUNIT_TEST_SUITE(BasicAmountTest);
+  CPPUNIT_TEST_SUITE(BasicAmountTestCase);
 
   CPPUNIT_TEST(testConstructors);
   CPPUNIT_TEST(testNegation);
@@ -23,8 +23,8 @@ class BasicAmountTest : public CPPUNIT_NS::TestCase
   CPPUNIT_TEST_SUITE_END();
 
 public:
-  BasicAmountTest() {}
-  virtual ~BasicAmountTest() {}
+  BasicAmountTestCase() {}
+  virtual ~BasicAmountTestCase() {}
 
   virtual void setUp();
   virtual void tearDown();
@@ -43,8 +43,8 @@ public:
   void testFractionalDivision();
 
 private:
-  BasicAmountTest(const BasicAmountTest &copy);
-  void operator=(const BasicAmountTest &copy);
+  BasicAmountTestCase(const BasicAmountTestCase &copy);
+  void operator=(const BasicAmountTestCase &copy);
 };
 
 #endif /* _BASICAMOUNTTEST_H */
