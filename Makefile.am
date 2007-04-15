@@ -1,11 +1,16 @@
 SUBDIRS = gdtoa
 
+EXTRA_DIST = docs tests
+
+dist-hook:
+	rm -fr `find $(distdir) -name .svn`
+
 lib_LTLIBRARIES = libledger.la
 if HAVE_BOOST_PYTHON
 lib_LTLIBRARIES += libpyledger.la
 endif
 
-libledger_la_CXXFLAGS = $(WARNFLAGS)
+libledger_la_CXXFLAGS = $(WARNFLAGS) -I$(includedir)
 libledger_la_SOURCES = \
 	amount.cc      \
 	quotes.cc      \
@@ -16,8 +21,6 @@ libledger_la_SOURCES = \
 	xpath.cc       \
 	mask.cc        \
 	format.cc      \
-		       \
-	trace.cc       \
 	util.cc        \
 		       \
 	session.cc     \
@@ -50,7 +53,7 @@ libledger_la_SOURCES += ofx.cc
 endif
 if DEBUG
 libledger_la_CXXFLAGS += -DDEBUG_LEVEL=4
-libledger_la_SOURCES  += debug.cc
+libledger_la_SOURCES  += debug.cc trace.cc
 endif
 if HAVE_BOOST_PYTHON
 libledger_la_CXXFLAGS += -DUSE_BOOST_PYTHON=1
@@ -72,7 +75,6 @@ libpyledger_la_LDFLAGS = -release 3.0
 
 
 pkginclude_HEADERS = \
-	acconf.h     \
 	amount.h     \
 	balance.h    \
 	binary.h     \
@@ -82,6 +84,7 @@ pkginclude_HEADERS = \
 	derive.h     \
 	emacs.h	     \
 	error.h	     \
+	fdstream.hpp \
 	format.h     \
 	gnucash.h    \
 	journal.h    \
@@ -105,6 +108,7 @@ pkginclude_HEADERS = \
 	util.h	     \
 	value.h	     \
 	xml.h        \
+	xmlparse.h   \
 	xpath.h
 
 ######################################################################
@@ -144,6 +148,8 @@ info_TEXINFOS = ledger.texi
 if HAVE_BOOST_PYTHON
 
 noinst_PROGRAMS = ledger.so
+
+ledger_so_SOURCES = pyledger.cc
 
 PYLIBS = pyledger ledger gdtoa boost_python gmp pcre
 
@@ -195,7 +201,7 @@ UnitTests_SOURCES = tests/UnitTests.cc \
 UnitTests_LDADD   = $(lib_LTLIBRARIES) gdtoa/libgdtoa.la -lcppunit
 UnitTests_LDFLAGS = $(LIBADD_DL)
 
-UnitTests_CXXFLAGS = -I. -Itests
+UnitTests_CXXFLAGS = -I. -I$(srcdir)/tests
 if HAVE_EXPAT
 UnitTests_CXXFLAGS += -DHAVE_EXPAT=1
 endif
@@ -208,6 +214,8 @@ endif
 if DEBUG
 UnitTests_CXXFLAGS += -DDEBUG_LEVEL=4
 endif
+
+PyUnitTests_SOURCES =
 
 PyUnitTests: PyUnitTests.py
 	cp PyUnitTests.py PyUnitTests

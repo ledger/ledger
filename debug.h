@@ -135,9 +135,21 @@ void   operator delete[](void*, const std::nothrow_t&) throw();
 #define assert(x)
 #define CONFIRM(x)
 
-#elif DEBUG_LEVEL >= RELEASE
+#define TRACE_CTOR(cls)
+#define TRACE_DTOR(cls)
+#define TRACE(cat, msg)
+#define TRACE_PUSH(cat, msg)
+#define TRACE_POP(cat, msg)
+
+#elif DEBUG_LEVEL == RELEASE
 
 #define CONFIRM(x)
+
+#define TRACE_CTOR(cls)
+#define TRACE_DTOR(cls)
+#define TRACE(cat, msg)
+#define TRACE_PUSH(cat, msg)
+#define TRACE_POP(cat, msg)
 
 #elif DEBUG_LEVEL >= BETA
 

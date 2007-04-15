@@ -38,12 +38,12 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 DIST_COMMON = README $(am__configure_deps) $(pkginclude_HEADERS) \
-	$(srcdir)/../config.guess $(srcdir)/../config.sub \
-	$(srcdir)/../depcomp $(srcdir)/../install-sh \
-	$(srcdir)/../ltmain.sh $(srcdir)/../missing \
-	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(srcdir)/acconf.h.in $(top_srcdir)/configure AUTHORS COPYING \
-	ChangeLog INSTALL NEWS
+	$(srcdir)/../compile $(srcdir)/../config.guess \
+	$(srcdir)/../config.sub $(srcdir)/../depcomp \
+	$(srcdir)/../install-sh $(srcdir)/../ltmain.sh \
+	$(srcdir)/../missing $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in $(srcdir)/acconf.h.in \
+	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.in
@@ -64,14 +64,26 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgincludedir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libgdtoa_la_LIBADD =
-am_libgdtoa_la_OBJECTS = dmisc.lo dtoa.lo g_Qfmt.lo g__fmt.lo \
-	g_ddfmt.lo g_dfmt.lo g_ffmt.lo g_xLfmt.lo g_xfmt.lo gdtoa.lo \
-	gethex.lo gmisc.lo hd_init.lo hexnan.lo misc.lo smisc.lo \
-	strtoIQ.lo strtoId.lo strtoIdd.lo strtoIf.lo strtoIg.lo \
-	strtoIx.lo strtoIxL.lo strtod.lo strtodI.lo strtodg.lo \
-	strtof.lo strtopQ.lo strtopd.lo strtopdd.lo strtopf.lo \
-	strtopx.lo strtopxL.lo strtorQ.lo strtord.lo strtordd.lo \
-	strtorf.lo strtorx.lo strtorxL.lo sum.lo ulp.lo
+am_libgdtoa_la_OBJECTS = libgdtoa_la-dmisc.lo libgdtoa_la-dtoa.lo \
+	libgdtoa_la-g_Qfmt.lo libgdtoa_la-g__fmt.lo \
+	libgdtoa_la-g_ddfmt.lo libgdtoa_la-g_dfmt.lo \
+	libgdtoa_la-g_ffmt.lo libgdtoa_la-g_xLfmt.lo \
+	libgdtoa_la-g_xfmt.lo libgdtoa_la-gdtoa.lo \
+	libgdtoa_la-gethex.lo libgdtoa_la-gmisc.lo \
+	libgdtoa_la-hd_init.lo libgdtoa_la-hexnan.lo \
+	libgdtoa_la-misc.lo libgdtoa_la-smisc.lo \
+	libgdtoa_la-strtoIQ.lo libgdtoa_la-strtoId.lo \
+	libgdtoa_la-strtoIdd.lo libgdtoa_la-strtoIf.lo \
+	libgdtoa_la-strtoIg.lo libgdtoa_la-strtoIx.lo \
+	libgdtoa_la-strtoIxL.lo libgdtoa_la-strtod.lo \
+	libgdtoa_la-strtodI.lo libgdtoa_la-strtodg.lo \
+	libgdtoa_la-strtof.lo libgdtoa_la-strtopQ.lo \
+	libgdtoa_la-strtopd.lo libgdtoa_la-strtopdd.lo \
+	libgdtoa_la-strtopf.lo libgdtoa_la-strtopx.lo \
+	libgdtoa_la-strtopxL.lo libgdtoa_la-strtorQ.lo \
+	libgdtoa_la-strtord.lo libgdtoa_la-strtordd.lo \
+	libgdtoa_la-strtorf.lo libgdtoa_la-strtorx.lo \
+	libgdtoa_la-strtorxL.lo libgdtoa_la-sum.lo libgdtoa_la-ulp.lo
 libgdtoa_la_OBJECTS = $(am_libgdtoa_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I.
 depcomp = $(SHELL) $(top_srcdir)/../depcomp
@@ -84,8 +96,8 @@ LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(libgdtoa_la_SOURCES)
-DIST_SOURCES = $(libgdtoa_la_SOURCES)
+SOURCES = $(libgdtoa_la_SOURCES) $(EXTRA_libgdtoa_la_SOURCES)
+DIST_SOURCES = $(libgdtoa_la_SOURCES) $(EXTRA_libgdtoa_la_SOURCES)
 pkgincludeHEADERS_INSTALL = $(INSTALL_HEADER)
 HEADERS = $(pkginclude_HEADERS)
 ETAGS = etags
@@ -203,6 +215,7 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 lib_LTLIBRARIES = libgdtoa.la
+libgdtoa_la_CPPFLAGS = -I$(includedir)
 libgdtoa_la_SOURCES = \
 	dmisc.c dtoa.c g_Qfmt.c g__fmt.c g_ddfmt.c g_dfmt.c g_ffmt.c \
 	g_xLfmt.c g_xfmt.c gdtoa.c gethex.c gmisc.c hd_init.c hexnan.c \
@@ -211,9 +224,11 @@ libgdtoa_la_SOURCES = \
 	strtopd.c strtopdd.c strtopf.c strtopx.c strtopxL.c strtorQ.c \
 	strtord.c strtordd.c strtorf.c strtorx.c strtorxL.c sum.c ulp.c
 
+EXTRA_libgdtoa_la_SOURCES = arithchk.c qnan.c
 libgdtoa_la_LDFLAGS = -release 1.0
-pkginclude_HEADERS = gdtoa.h
+pkginclude_HEADERS = gdtoa.h gdtoaimp.h
 CLEANFILES = arithchk qnan
+DISTCLEANFILES = arithchk arith.h qnan qnan.h
 all: acconf.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -305,47 +320,49 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmisc.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dtoa.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/g_Qfmt.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/g__fmt.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/g_ddfmt.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/g_dfmt.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/g_ffmt.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/g_xLfmt.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/g_xfmt.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gdtoa.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gethex.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gmisc.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hd_init.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hexnan.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/misc.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smisc.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strtoIQ.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strtoId.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strtoIdd.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strtoIf.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strtoIg.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strtoIx.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strtoIxL.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strtod.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strtodI.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strtodg.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strtof.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strtopQ.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strtopd.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strtopdd.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strtopf.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strtopx.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strtopxL.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strtorQ.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strtord.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strtordd.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strtorf.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strtorx.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strtorxL.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sum.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ulp.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-arithchk.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-dmisc.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-dtoa.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-g_Qfmt.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-g__fmt.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-g_ddfmt.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-g_dfmt.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-g_ffmt.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-g_xLfmt.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-g_xfmt.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-gdtoa.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-gethex.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-gmisc.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-hd_init.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-hexnan.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-misc.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-qnan.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-smisc.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-strtoIQ.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-strtoId.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-strtoIdd.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-strtoIf.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-strtoIg.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-strtoIx.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-strtoIxL.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-strtod.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-strtodI.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-strtodg.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-strtof.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-strtopQ.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-strtopd.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-strtopdd.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-strtopf.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-strtopx.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-strtopxL.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-strtorQ.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-strtord.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-strtordd.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-strtorf.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-strtorx.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-strtorxL.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-sum.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgdtoa_la-ulp.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -367,6 +384,307 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
+
+libgdtoa_la-dmisc.lo: dmisc.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-dmisc.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-dmisc.Tpo" -c -o libgdtoa_la-dmisc.lo `test -f 'dmisc.c' || echo '$(srcdir)/'`dmisc.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-dmisc.Tpo" "$(DEPDIR)/libgdtoa_la-dmisc.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-dmisc.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmisc.c' object='libgdtoa_la-dmisc.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-dmisc.lo `test -f 'dmisc.c' || echo '$(srcdir)/'`dmisc.c
+
+libgdtoa_la-dtoa.lo: dtoa.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-dtoa.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-dtoa.Tpo" -c -o libgdtoa_la-dtoa.lo `test -f 'dtoa.c' || echo '$(srcdir)/'`dtoa.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-dtoa.Tpo" "$(DEPDIR)/libgdtoa_la-dtoa.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-dtoa.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dtoa.c' object='libgdtoa_la-dtoa.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-dtoa.lo `test -f 'dtoa.c' || echo '$(srcdir)/'`dtoa.c
+
+libgdtoa_la-g_Qfmt.lo: g_Qfmt.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-g_Qfmt.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-g_Qfmt.Tpo" -c -o libgdtoa_la-g_Qfmt.lo `test -f 'g_Qfmt.c' || echo '$(srcdir)/'`g_Qfmt.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-g_Qfmt.Tpo" "$(DEPDIR)/libgdtoa_la-g_Qfmt.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-g_Qfmt.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='g_Qfmt.c' object='libgdtoa_la-g_Qfmt.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-g_Qfmt.lo `test -f 'g_Qfmt.c' || echo '$(srcdir)/'`g_Qfmt.c
+
+libgdtoa_la-g__fmt.lo: g__fmt.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-g__fmt.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-g__fmt.Tpo" -c -o libgdtoa_la-g__fmt.lo `test -f 'g__fmt.c' || echo '$(srcdir)/'`g__fmt.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-g__fmt.Tpo" "$(DEPDIR)/libgdtoa_la-g__fmt.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-g__fmt.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='g__fmt.c' object='libgdtoa_la-g__fmt.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-g__fmt.lo `test -f 'g__fmt.c' || echo '$(srcdir)/'`g__fmt.c
+
+libgdtoa_la-g_ddfmt.lo: g_ddfmt.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-g_ddfmt.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-g_ddfmt.Tpo" -c -o libgdtoa_la-g_ddfmt.lo `test -f 'g_ddfmt.c' || echo '$(srcdir)/'`g_ddfmt.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-g_ddfmt.Tpo" "$(DEPDIR)/libgdtoa_la-g_ddfmt.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-g_ddfmt.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='g_ddfmt.c' object='libgdtoa_la-g_ddfmt.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-g_ddfmt.lo `test -f 'g_ddfmt.c' || echo '$(srcdir)/'`g_ddfmt.c
+
+libgdtoa_la-g_dfmt.lo: g_dfmt.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-g_dfmt.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-g_dfmt.Tpo" -c -o libgdtoa_la-g_dfmt.lo `test -f 'g_dfmt.c' || echo '$(srcdir)/'`g_dfmt.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-g_dfmt.Tpo" "$(DEPDIR)/libgdtoa_la-g_dfmt.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-g_dfmt.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='g_dfmt.c' object='libgdtoa_la-g_dfmt.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-g_dfmt.lo `test -f 'g_dfmt.c' || echo '$(srcdir)/'`g_dfmt.c
+
+libgdtoa_la-g_ffmt.lo: g_ffmt.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-g_ffmt.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-g_ffmt.Tpo" -c -o libgdtoa_la-g_ffmt.lo `test -f 'g_ffmt.c' || echo '$(srcdir)/'`g_ffmt.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-g_ffmt.Tpo" "$(DEPDIR)/libgdtoa_la-g_ffmt.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-g_ffmt.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='g_ffmt.c' object='libgdtoa_la-g_ffmt.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-g_ffmt.lo `test -f 'g_ffmt.c' || echo '$(srcdir)/'`g_ffmt.c
+
+libgdtoa_la-g_xLfmt.lo: g_xLfmt.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-g_xLfmt.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-g_xLfmt.Tpo" -c -o libgdtoa_la-g_xLfmt.lo `test -f 'g_xLfmt.c' || echo '$(srcdir)/'`g_xLfmt.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-g_xLfmt.Tpo" "$(DEPDIR)/libgdtoa_la-g_xLfmt.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-g_xLfmt.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='g_xLfmt.c' object='libgdtoa_la-g_xLfmt.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-g_xLfmt.lo `test -f 'g_xLfmt.c' || echo '$(srcdir)/'`g_xLfmt.c
+
+libgdtoa_la-g_xfmt.lo: g_xfmt.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-g_xfmt.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-g_xfmt.Tpo" -c -o libgdtoa_la-g_xfmt.lo `test -f 'g_xfmt.c' || echo '$(srcdir)/'`g_xfmt.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-g_xfmt.Tpo" "$(DEPDIR)/libgdtoa_la-g_xfmt.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-g_xfmt.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='g_xfmt.c' object='libgdtoa_la-g_xfmt.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-g_xfmt.lo `test -f 'g_xfmt.c' || echo '$(srcdir)/'`g_xfmt.c
+
+libgdtoa_la-gdtoa.lo: gdtoa.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-gdtoa.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-gdtoa.Tpo" -c -o libgdtoa_la-gdtoa.lo `test -f 'gdtoa.c' || echo '$(srcdir)/'`gdtoa.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-gdtoa.Tpo" "$(DEPDIR)/libgdtoa_la-gdtoa.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-gdtoa.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='gdtoa.c' object='libgdtoa_la-gdtoa.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-gdtoa.lo `test -f 'gdtoa.c' || echo '$(srcdir)/'`gdtoa.c
+
+libgdtoa_la-gethex.lo: gethex.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-gethex.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-gethex.Tpo" -c -o libgdtoa_la-gethex.lo `test -f 'gethex.c' || echo '$(srcdir)/'`gethex.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-gethex.Tpo" "$(DEPDIR)/libgdtoa_la-gethex.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-gethex.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='gethex.c' object='libgdtoa_la-gethex.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-gethex.lo `test -f 'gethex.c' || echo '$(srcdir)/'`gethex.c
+
+libgdtoa_la-gmisc.lo: gmisc.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-gmisc.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-gmisc.Tpo" -c -o libgdtoa_la-gmisc.lo `test -f 'gmisc.c' || echo '$(srcdir)/'`gmisc.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-gmisc.Tpo" "$(DEPDIR)/libgdtoa_la-gmisc.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-gmisc.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='gmisc.c' object='libgdtoa_la-gmisc.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-gmisc.lo `test -f 'gmisc.c' || echo '$(srcdir)/'`gmisc.c
+
+libgdtoa_la-hd_init.lo: hd_init.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-hd_init.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-hd_init.Tpo" -c -o libgdtoa_la-hd_init.lo `test -f 'hd_init.c' || echo '$(srcdir)/'`hd_init.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-hd_init.Tpo" "$(DEPDIR)/libgdtoa_la-hd_init.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-hd_init.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='hd_init.c' object='libgdtoa_la-hd_init.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-hd_init.lo `test -f 'hd_init.c' || echo '$(srcdir)/'`hd_init.c
+
+libgdtoa_la-hexnan.lo: hexnan.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-hexnan.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-hexnan.Tpo" -c -o libgdtoa_la-hexnan.lo `test -f 'hexnan.c' || echo '$(srcdir)/'`hexnan.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-hexnan.Tpo" "$(DEPDIR)/libgdtoa_la-hexnan.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-hexnan.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='hexnan.c' object='libgdtoa_la-hexnan.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-hexnan.lo `test -f 'hexnan.c' || echo '$(srcdir)/'`hexnan.c
+
+libgdtoa_la-misc.lo: misc.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-misc.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-misc.Tpo" -c -o libgdtoa_la-misc.lo `test -f 'misc.c' || echo '$(srcdir)/'`misc.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-misc.Tpo" "$(DEPDIR)/libgdtoa_la-misc.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-misc.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='misc.c' object='libgdtoa_la-misc.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-misc.lo `test -f 'misc.c' || echo '$(srcdir)/'`misc.c
+
+libgdtoa_la-smisc.lo: smisc.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-smisc.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-smisc.Tpo" -c -o libgdtoa_la-smisc.lo `test -f 'smisc.c' || echo '$(srcdir)/'`smisc.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-smisc.Tpo" "$(DEPDIR)/libgdtoa_la-smisc.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-smisc.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='smisc.c' object='libgdtoa_la-smisc.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-smisc.lo `test -f 'smisc.c' || echo '$(srcdir)/'`smisc.c
+
+libgdtoa_la-strtoIQ.lo: strtoIQ.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-strtoIQ.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-strtoIQ.Tpo" -c -o libgdtoa_la-strtoIQ.lo `test -f 'strtoIQ.c' || echo '$(srcdir)/'`strtoIQ.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-strtoIQ.Tpo" "$(DEPDIR)/libgdtoa_la-strtoIQ.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-strtoIQ.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='strtoIQ.c' object='libgdtoa_la-strtoIQ.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-strtoIQ.lo `test -f 'strtoIQ.c' || echo '$(srcdir)/'`strtoIQ.c
+
+libgdtoa_la-strtoId.lo: strtoId.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-strtoId.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-strtoId.Tpo" -c -o libgdtoa_la-strtoId.lo `test -f 'strtoId.c' || echo '$(srcdir)/'`strtoId.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-strtoId.Tpo" "$(DEPDIR)/libgdtoa_la-strtoId.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-strtoId.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='strtoId.c' object='libgdtoa_la-strtoId.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-strtoId.lo `test -f 'strtoId.c' || echo '$(srcdir)/'`strtoId.c
+
+libgdtoa_la-strtoIdd.lo: strtoIdd.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-strtoIdd.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-strtoIdd.Tpo" -c -o libgdtoa_la-strtoIdd.lo `test -f 'strtoIdd.c' || echo '$(srcdir)/'`strtoIdd.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-strtoIdd.Tpo" "$(DEPDIR)/libgdtoa_la-strtoIdd.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-strtoIdd.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='strtoIdd.c' object='libgdtoa_la-strtoIdd.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-strtoIdd.lo `test -f 'strtoIdd.c' || echo '$(srcdir)/'`strtoIdd.c
+
+libgdtoa_la-strtoIf.lo: strtoIf.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-strtoIf.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-strtoIf.Tpo" -c -o libgdtoa_la-strtoIf.lo `test -f 'strtoIf.c' || echo '$(srcdir)/'`strtoIf.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-strtoIf.Tpo" "$(DEPDIR)/libgdtoa_la-strtoIf.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-strtoIf.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='strtoIf.c' object='libgdtoa_la-strtoIf.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-strtoIf.lo `test -f 'strtoIf.c' || echo '$(srcdir)/'`strtoIf.c
+
+libgdtoa_la-strtoIg.lo: strtoIg.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-strtoIg.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-strtoIg.Tpo" -c -o libgdtoa_la-strtoIg.lo `test -f 'strtoIg.c' || echo '$(srcdir)/'`strtoIg.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-strtoIg.Tpo" "$(DEPDIR)/libgdtoa_la-strtoIg.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-strtoIg.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='strtoIg.c' object='libgdtoa_la-strtoIg.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-strtoIg.lo `test -f 'strtoIg.c' || echo '$(srcdir)/'`strtoIg.c
+
+libgdtoa_la-strtoIx.lo: strtoIx.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-strtoIx.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-strtoIx.Tpo" -c -o libgdtoa_la-strtoIx.lo `test -f 'strtoIx.c' || echo '$(srcdir)/'`strtoIx.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-strtoIx.Tpo" "$(DEPDIR)/libgdtoa_la-strtoIx.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-strtoIx.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='strtoIx.c' object='libgdtoa_la-strtoIx.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-strtoIx.lo `test -f 'strtoIx.c' || echo '$(srcdir)/'`strtoIx.c
+
+libgdtoa_la-strtoIxL.lo: strtoIxL.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-strtoIxL.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-strtoIxL.Tpo" -c -o libgdtoa_la-strtoIxL.lo `test -f 'strtoIxL.c' || echo '$(srcdir)/'`strtoIxL.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-strtoIxL.Tpo" "$(DEPDIR)/libgdtoa_la-strtoIxL.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-strtoIxL.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='strtoIxL.c' object='libgdtoa_la-strtoIxL.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-strtoIxL.lo `test -f 'strtoIxL.c' || echo '$(srcdir)/'`strtoIxL.c
+
+libgdtoa_la-strtod.lo: strtod.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-strtod.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-strtod.Tpo" -c -o libgdtoa_la-strtod.lo `test -f 'strtod.c' || echo '$(srcdir)/'`strtod.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-strtod.Tpo" "$(DEPDIR)/libgdtoa_la-strtod.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-strtod.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='strtod.c' object='libgdtoa_la-strtod.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-strtod.lo `test -f 'strtod.c' || echo '$(srcdir)/'`strtod.c
+
+libgdtoa_la-strtodI.lo: strtodI.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-strtodI.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-strtodI.Tpo" -c -o libgdtoa_la-strtodI.lo `test -f 'strtodI.c' || echo '$(srcdir)/'`strtodI.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-strtodI.Tpo" "$(DEPDIR)/libgdtoa_la-strtodI.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-strtodI.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='strtodI.c' object='libgdtoa_la-strtodI.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-strtodI.lo `test -f 'strtodI.c' || echo '$(srcdir)/'`strtodI.c
+
+libgdtoa_la-strtodg.lo: strtodg.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-strtodg.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-strtodg.Tpo" -c -o libgdtoa_la-strtodg.lo `test -f 'strtodg.c' || echo '$(srcdir)/'`strtodg.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-strtodg.Tpo" "$(DEPDIR)/libgdtoa_la-strtodg.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-strtodg.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='strtodg.c' object='libgdtoa_la-strtodg.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-strtodg.lo `test -f 'strtodg.c' || echo '$(srcdir)/'`strtodg.c
+
+libgdtoa_la-strtof.lo: strtof.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-strtof.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-strtof.Tpo" -c -o libgdtoa_la-strtof.lo `test -f 'strtof.c' || echo '$(srcdir)/'`strtof.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-strtof.Tpo" "$(DEPDIR)/libgdtoa_la-strtof.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-strtof.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='strtof.c' object='libgdtoa_la-strtof.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-strtof.lo `test -f 'strtof.c' || echo '$(srcdir)/'`strtof.c
+
+libgdtoa_la-strtopQ.lo: strtopQ.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-strtopQ.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-strtopQ.Tpo" -c -o libgdtoa_la-strtopQ.lo `test -f 'strtopQ.c' || echo '$(srcdir)/'`strtopQ.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-strtopQ.Tpo" "$(DEPDIR)/libgdtoa_la-strtopQ.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-strtopQ.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='strtopQ.c' object='libgdtoa_la-strtopQ.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-strtopQ.lo `test -f 'strtopQ.c' || echo '$(srcdir)/'`strtopQ.c
+
+libgdtoa_la-strtopd.lo: strtopd.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-strtopd.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-strtopd.Tpo" -c -o libgdtoa_la-strtopd.lo `test -f 'strtopd.c' || echo '$(srcdir)/'`strtopd.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-strtopd.Tpo" "$(DEPDIR)/libgdtoa_la-strtopd.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-strtopd.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='strtopd.c' object='libgdtoa_la-strtopd.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-strtopd.lo `test -f 'strtopd.c' || echo '$(srcdir)/'`strtopd.c
+
+libgdtoa_la-strtopdd.lo: strtopdd.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-strtopdd.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-strtopdd.Tpo" -c -o libgdtoa_la-strtopdd.lo `test -f 'strtopdd.c' || echo '$(srcdir)/'`strtopdd.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-strtopdd.Tpo" "$(DEPDIR)/libgdtoa_la-strtopdd.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-strtopdd.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='strtopdd.c' object='libgdtoa_la-strtopdd.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-strtopdd.lo `test -f 'strtopdd.c' || echo '$(srcdir)/'`strtopdd.c
+
+libgdtoa_la-strtopf.lo: strtopf.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-strtopf.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-strtopf.Tpo" -c -o libgdtoa_la-strtopf.lo `test -f 'strtopf.c' || echo '$(srcdir)/'`strtopf.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-strtopf.Tpo" "$(DEPDIR)/libgdtoa_la-strtopf.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-strtopf.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='strtopf.c' object='libgdtoa_la-strtopf.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-strtopf.lo `test -f 'strtopf.c' || echo '$(srcdir)/'`strtopf.c
+
+libgdtoa_la-strtopx.lo: strtopx.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-strtopx.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-strtopx.Tpo" -c -o libgdtoa_la-strtopx.lo `test -f 'strtopx.c' || echo '$(srcdir)/'`strtopx.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-strtopx.Tpo" "$(DEPDIR)/libgdtoa_la-strtopx.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-strtopx.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='strtopx.c' object='libgdtoa_la-strtopx.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-strtopx.lo `test -f 'strtopx.c' || echo '$(srcdir)/'`strtopx.c
+
+libgdtoa_la-strtopxL.lo: strtopxL.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-strtopxL.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-strtopxL.Tpo" -c -o libgdtoa_la-strtopxL.lo `test -f 'strtopxL.c' || echo '$(srcdir)/'`strtopxL.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-strtopxL.Tpo" "$(DEPDIR)/libgdtoa_la-strtopxL.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-strtopxL.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='strtopxL.c' object='libgdtoa_la-strtopxL.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-strtopxL.lo `test -f 'strtopxL.c' || echo '$(srcdir)/'`strtopxL.c
+
+libgdtoa_la-strtorQ.lo: strtorQ.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-strtorQ.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-strtorQ.Tpo" -c -o libgdtoa_la-strtorQ.lo `test -f 'strtorQ.c' || echo '$(srcdir)/'`strtorQ.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-strtorQ.Tpo" "$(DEPDIR)/libgdtoa_la-strtorQ.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-strtorQ.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='strtorQ.c' object='libgdtoa_la-strtorQ.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-strtorQ.lo `test -f 'strtorQ.c' || echo '$(srcdir)/'`strtorQ.c
+
+libgdtoa_la-strtord.lo: strtord.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-strtord.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-strtord.Tpo" -c -o libgdtoa_la-strtord.lo `test -f 'strtord.c' || echo '$(srcdir)/'`strtord.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-strtord.Tpo" "$(DEPDIR)/libgdtoa_la-strtord.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-strtord.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='strtord.c' object='libgdtoa_la-strtord.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-strtord.lo `test -f 'strtord.c' || echo '$(srcdir)/'`strtord.c
+
+libgdtoa_la-strtordd.lo: strtordd.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-strtordd.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-strtordd.Tpo" -c -o libgdtoa_la-strtordd.lo `test -f 'strtordd.c' || echo '$(srcdir)/'`strtordd.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-strtordd.Tpo" "$(DEPDIR)/libgdtoa_la-strtordd.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-strtordd.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='strtordd.c' object='libgdtoa_la-strtordd.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-strtordd.lo `test -f 'strtordd.c' || echo '$(srcdir)/'`strtordd.c
+
+libgdtoa_la-strtorf.lo: strtorf.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-strtorf.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-strtorf.Tpo" -c -o libgdtoa_la-strtorf.lo `test -f 'strtorf.c' || echo '$(srcdir)/'`strtorf.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-strtorf.Tpo" "$(DEPDIR)/libgdtoa_la-strtorf.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-strtorf.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='strtorf.c' object='libgdtoa_la-strtorf.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-strtorf.lo `test -f 'strtorf.c' || echo '$(srcdir)/'`strtorf.c
+
+libgdtoa_la-strtorx.lo: strtorx.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-strtorx.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-strtorx.Tpo" -c -o libgdtoa_la-strtorx.lo `test -f 'strtorx.c' || echo '$(srcdir)/'`strtorx.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-strtorx.Tpo" "$(DEPDIR)/libgdtoa_la-strtorx.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-strtorx.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='strtorx.c' object='libgdtoa_la-strtorx.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-strtorx.lo `test -f 'strtorx.c' || echo '$(srcdir)/'`strtorx.c
+
+libgdtoa_la-strtorxL.lo: strtorxL.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-strtorxL.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-strtorxL.Tpo" -c -o libgdtoa_la-strtorxL.lo `test -f 'strtorxL.c' || echo '$(srcdir)/'`strtorxL.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-strtorxL.Tpo" "$(DEPDIR)/libgdtoa_la-strtorxL.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-strtorxL.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='strtorxL.c' object='libgdtoa_la-strtorxL.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-strtorxL.lo `test -f 'strtorxL.c' || echo '$(srcdir)/'`strtorxL.c
+
+libgdtoa_la-sum.lo: sum.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-sum.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-sum.Tpo" -c -o libgdtoa_la-sum.lo `test -f 'sum.c' || echo '$(srcdir)/'`sum.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-sum.Tpo" "$(DEPDIR)/libgdtoa_la-sum.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-sum.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sum.c' object='libgdtoa_la-sum.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-sum.lo `test -f 'sum.c' || echo '$(srcdir)/'`sum.c
+
+libgdtoa_la-ulp.lo: ulp.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-ulp.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-ulp.Tpo" -c -o libgdtoa_la-ulp.lo `test -f 'ulp.c' || echo '$(srcdir)/'`ulp.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-ulp.Tpo" "$(DEPDIR)/libgdtoa_la-ulp.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-ulp.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ulp.c' object='libgdtoa_la-ulp.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-ulp.lo `test -f 'ulp.c' || echo '$(srcdir)/'`ulp.c
+
+libgdtoa_la-arithchk.lo: arithchk.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-arithchk.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-arithchk.Tpo" -c -o libgdtoa_la-arithchk.lo `test -f 'arithchk.c' || echo '$(srcdir)/'`arithchk.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-arithchk.Tpo" "$(DEPDIR)/libgdtoa_la-arithchk.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-arithchk.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='arithchk.c' object='libgdtoa_la-arithchk.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-arithchk.lo `test -f 'arithchk.c' || echo '$(srcdir)/'`arithchk.c
+
+libgdtoa_la-qnan.lo: qnan.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libgdtoa_la-qnan.lo -MD -MP -MF "$(DEPDIR)/libgdtoa_la-qnan.Tpo" -c -o libgdtoa_la-qnan.lo `test -f 'qnan.c' || echo '$(srcdir)/'`qnan.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgdtoa_la-qnan.Tpo" "$(DEPDIR)/libgdtoa_la-qnan.Plo"; else rm -f "$(DEPDIR)/libgdtoa_la-qnan.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='qnan.c' object='libgdtoa_la-qnan.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgdtoa_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libgdtoa_la-qnan.lo `test -f 'qnan.c' || echo '$(srcdir)/'`qnan.c
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -598,6 +916,7 @@ clean-generic:
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
+	-test -z "$(DISTCLEANFILES)" || rm -f $(DISTCLEANFILES)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
@@ -677,13 +996,16 @@ uninstall-am: uninstall-info-am uninstall-libLTLIBRARIES \
 $(libgdtoa_la_SOURCES): arith.h gd_qnan.h
 
 arith.h: arithchk.c
-	$(CC) $(CFLAGS) -o arithchk arithchk.c || \
-	$(CC) -DNO_LONG_LONG $(CFLAGS) -o arithchk arithchk.c
-	./arithchk > arith.h
+	mkdir -p $(includedir)
+	$(CC) $(CFLAGS) -o $(prefix)/arithchk $< || \
+	$(CC) -DNO_LONG_LONG $(CFLAGS) -o $(prefix)/arithchk $<
+	$(prefix)/arithchk > $(includedir)/$@
+	rm -f $(prefix)/arithchk
 
-gd_qnan.h: arith.h qnan.c
-	$(CC) $(CFLAGS) -o qnan qnan.c
-	./qnan >gd_qnan.h
+gd_qnan.h: qnan.c arith.h
+	$(CC) $(CFLAGS) -o $(prefix)/qnan -I$(includedir) $<
+	$(prefix)/qnan > $(includedir)/$@
+	rm -f $(prefix)/qnan
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

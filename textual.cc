@@ -1,5 +1,6 @@
 #include "textual.h"
 #include "session.h"
+#include "timing.h"
 #include "util.h"
 #include "acconf.h"
 

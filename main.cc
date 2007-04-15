@@ -410,10 +410,10 @@ int main(int argc, char * argv[], char * envp[])
   try {
     std::ios::sync_with_stdio(false);
 
-    ledger::tracing_active = true;
-
 #if DEBUG_LEVEL < BETA
     ledger::do_cleanup = false;
+#else
+    ledger::tracing_active = true;
 #endif
     TRACE_PUSH(main, "Ledger starting");
 
@@ -443,11 +443,12 @@ int main(int argc, char * argv[], char * envp[])
 
     TRACE_POP(main, "Ledger done");
 
+#if DEBUG_LEVEL >= BETA
     DEBUG_IF("ledger.trace.memory") {
       report_memory(std::cout);
     }
-
     ledger::tracing_active = false;
+#endif
 
     return status;
   }
@@ -460,7 +461,9 @@ int main(int argc, char * argv[], char * envp[])
     err->reveal_context(std::cerr, "Error");
     std::cerr << err->what() << std::endl;
     delete err;
+#if DEBUG_LEVEL >= BETA
     ledger::tracing_active = false;
+#endif
     return 1;
   }
   catch (fatal * err) {
@@ -472,17 +475,23 @@ int main(int argc, char * argv[], char * envp[])
     err->reveal_context(std::cerr, "Fatal");
     std::cerr << err->what() << std::endl;
     delete err;
+#if DEBUG_LEVEL >= BETA
     ledger::tracing_active = false;
+#endif
     return 1;
   }
   catch (const std::exception& err) {
     std::cout.flush();
     std::cerr << "Error: " << err.what() << std::endl;
+#if DEBUG_LEVEL >= BETA
     ledger::tracing_active = false;
+#endif
     return 1;
   }
   catch (int status) {
+#if DEBUG_LEVEL >= BETA
     ledger::tracing_active = false;
+#endif
     return status;
   }
 }
