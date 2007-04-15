@@ -1,7 +1,5 @@
 #!/bin/sh
 
-touch AUTHORS
-
 if which glibtoolize > /dev/null 2>&1; then
     glibtoolize --automake -f -c
 else
@@ -91,5 +89,3 @@ elif [ "$1" = "--perf" ]; then
 	CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
 	CXXFLAGS="$CXXFLAGS -ggdb3 -pg" "$@" $SWITCHES
 fi
-
-rm AUTHORS COPYING
