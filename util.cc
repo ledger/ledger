@@ -73,7 +73,7 @@ std::string abbreviate(const std::string& str, unsigned int width,
 		       elision_style_t elision_style, const bool is_account,
 		       int abbrev_length)
 {
-  const int len = str.length();
+  const unsigned int len = str.length();
   if (len <= width)
     return str;
 
@@ -110,7 +110,7 @@ std::string abbreviate(const std::string& str, unsigned int width,
       parts.push_back(std::string(str, beg));
 
       std::string result;
-      int newlen = len;
+      unsigned int newlen = len;
       for (std::list<std::string>::iterator i = parts.begin();
 	   i != parts.end();
 	   i++) {

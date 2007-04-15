@@ -39,9 +39,9 @@ class balance_t
       amounts.insert(amounts_pair(&amt.commodity(), amt));
   }
   template <typename T>
-  balance_t(T value) {
+  balance_t(T val) {
     TRACE_CTOR("balance_t(T)");
-    amount_t amt(value);
+    amount_t amt(val);
     if (! amt.realzero())
       amounts.insert(amounts_pair(&amt.commodity(), amt));
   }
@@ -63,9 +63,9 @@ class balance_t
     return *this;
   }
   template <typename T>
-  balance_t& operator=(T value) {
+  balance_t& operator=(T val) {
     amounts.clear();
-    *this += value;
+    *this += val;
     return *this;
   }
 
@@ -517,7 +517,7 @@ class balance_pair_t
     TRACE_CTOR("balance_pair_t(const amount_t&)");
   }
   template <typename T>
-  balance_pair_t(T value) : quantity(value), cost(NULL) {
+  balance_pair_t(T val) : quantity(val), cost(NULL) {
     TRACE_CTOR("balance_pair_t(T)");
   }
 
@@ -557,12 +557,12 @@ class balance_pair_t
     return *this;
   }
   template <typename T>
-  balance_pair_t& operator=(T value) {
+  balance_pair_t& operator=(T val) {
     if (cost) {
       delete cost;
       cost = NULL;
     }
-    quantity = value;
+    quantity = val;
     return *this;
   }
 
@@ -902,13 +902,13 @@ class balance_pair_t
     quantity.write(out, first_width, latter_width);
   }
 
-  balance_pair_t& add(const amount_t&  amount,
+  balance_pair_t& add(const amount_t&  amt,
 		      const amount_t * a_cost = NULL) {
     if (a_cost && ! cost)
       cost = new balance_t(quantity);
-    quantity += amount;
+    quantity += amt;
     if (cost)
-      *cost += a_cost ? *a_cost : amount;
+      *cost += a_cost ? *a_cost : amt;
     return *this;
   }
 
@@ -941,7 +941,7 @@ class balance_pair_t
 };
 
 inline balance_pair_t abs(const balance_pair_t& bal_pair) {
-  balance_pair_t temp;
+  balance_pair_t temp(bal_pair);
   temp.abs();
   return temp;
 }

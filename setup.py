@@ -4,7 +4,7 @@ from distutils.core import setup, Extension
 
 import os
 
-libs = ["ledger", "boost_python", "gmp", "pcre"]
+libs = ["ledger", "pyledger", "boost_python", "gmp", "pcre"]
 
 if os.environ.has_key ("HAVE_EXPAT") and\
    os.environ["HAVE_EXPAT"] == "true":

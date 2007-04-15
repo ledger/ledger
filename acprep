@@ -23,7 +23,7 @@ INCDIRS="$INCDIRS -I/usr/include/httpd/xml"
 INCDIRS="$INCDIRS -I/Library/Frameworks/Python.framework/Versions/2.5/include/python2.5"
 
 LIBDIRS="-L/usr/local/lib"
-LIBDIRS="$LIBDIRS -L/Library/Frameworks/Python.framework/Versions/2.5/lib/python2.5"
+LIBDIRS="$LIBDIRS -L/Library/Frameworks/Python.framework/Versions/2.5/lib/python2.5/config"
 
 SYSTEM=`uname -s`
 if [ $SYSTEM = Linux ]; then
@@ -35,6 +35,12 @@ elif [ $SYSTEM = Darwin ]; then
 else
     CXXFLAGS=""
 fi
+
+WARNFLAGS="-Wall -Wextra -Wfloat-equal -Wno-endif-labels -Wshadow"
+WARNFLAGS="$WARNFLAGS -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion"
+WARNFLAGS="$WARNFLAGS -Wconversion -Wshorten-64-to-32 -Wsign-compare"
+WARNFLAGS="$WARNFLAGS -Wmissing-field-initializers -Wmissing-noreturn"
+WARNFLAGS="$WARNFLAGS -pedantic-errors"
 
 # Building the command-line tool as a shared library is a luxury,
 # since there are no clients except a GUI tool which might use it (and
@@ -54,34 +60,34 @@ HERE="$PWD"
 if [ "$1" = "--debug" ]; then
     shift 1
     "$HERE/configure" --srcdir="$HERE" \
-	CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" CXXFLAGS="-g" $SWITCHES \
-	--enable-debug "$@"
-elif [ "$1" = "--python-debug" ]; then
+	CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" CXXFLAGS="$CXXFLAGS -ggdb3" \
+	WARNFLAGS="$WARNFLAGS" $SWITCHES --enable-debug "$@"
+elif [ "$1" = "--python-debug" -o "$1" = "--debug-python" ]; then
     shift 1
     "$HERE/configure" --srcdir="$HERE" \
-	CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" CXXFLAGS="-g" $SWITCHES \
-	--enable-debug --enable-python "$@"
+	CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" CXXFLAGS="$CXXFLAGS -ggdb3" \
+	WARNFLAGS="$WARNFLAGS" $SWITCHES --enable-debug --enable-python "$@"
 elif [ "$1" = "--opt" ]; then
     shift 1
     "$HERE/configure" --srcdir="$HERE" \
-	CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
-	CXXFLAGS="-fomit-frame-pointer -O3 -mcpu=7450 -fPIC" "$@" $SWITCHES
+	CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" WARNFLAGS="$WARNFLAGS" \
+	CXXFLAGS="$CXXFLAGS -fomit-frame-pointer -O3 -fPIC" "$@" $SWITCHES
 elif [ "$1" = "--flat-opt" ]; then
     shift 1
     "$HERE/configure" --srcdir="$HERE" \
-	CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
-	CXXFLAGS="-fomit-frame-pointer -O3 -mcpu=7450" "$@" $SWITCHES
+	CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" WARNFLAGS="$WARNFLAGS" \
+	CXXFLAGS="$CXXFLAGS -fomit-frame-pointer -O3" "$@" $SWITCHES
 elif [ "$1" = "--safe-opt" ]; then
     shift 1
     "$HERE/configure" --srcdir="$HERE" \
-	CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
-	CXXFLAGS="-fomit-frame-pointer -O3 -mcpu=7450 -fPIC -DDEBUG_LEVEL=1" "$@" \
+	CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" WARNFLAGS="$WARNFLAGS" \
+	CXXFLAGS="$CXXFLAGS -fomit-frame-pointer -O3 -fPIC -DDEBUG_LEVEL=1" "$@" \
 	$SWITCHES
 elif [ "$1" = "--perf" ]; then
     shift 1
-    "$HERE/configure" --srcdir="$HERE" \
-	CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" CXXFLAGS="-g -pg" "$@" \
-	$SWITCHES
+    "$HERE/configure" --srcdir="$HERE" WARNFLAGS="$WARNFLAGS" \
+	CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
+	CXXFLAGS="$CXXFLAGS -ggdb3 -pg" "$@" $SWITCHES
 fi
 
 rm AUTHORS COPYING

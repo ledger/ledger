@@ -102,6 +102,7 @@ bool _debug_active(const char * const cls);
 
 #include "trace.h"
 
+#if 0
 void * operator new(std::size_t) throw (std::bad_alloc);
 void * operator new[](std::size_t) throw (std::bad_alloc);
 void   operator delete(void*) throw();
@@ -110,6 +111,7 @@ void * operator new(std::size_t, const std::nothrow_t&) throw();
 void * operator new[](std::size_t, const std::nothrow_t&) throw();
 void   operator delete(void*, const std::nothrow_t&) throw();
 void   operator delete[](void*, const std::nothrow_t&) throw();
+#endif
 
 #else // DEBUG_LEVEL
 

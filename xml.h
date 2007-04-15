@@ -63,7 +63,7 @@ class parent_node_t;
 class node_t
 {
 public:
-  int		  name_id;
+  unsigned int	  name_id;
 #ifdef THREADSAFE
   document_t *	  document;
 #else
@@ -210,6 +210,7 @@ class parser_t
 
   parser_t() : document(NULL), pending(NULL), pending_attrs(NULL),
 	       handled_data(false) {}
+  virtual ~parser_t() {}
 
   virtual bool         test(std::istream& in) const;
   virtual document_t * parse(std::istream& in,
@@ -219,8 +220,9 @@ class parser_t
 
 class parse_error : public error {
  public:
-  parse_error(const std::string& reason, error_context * ctxt = NULL) throw()
-    : error(reason, ctxt) {}
+  parse_error(const std::string& _reason,
+	      error_context * _ctxt = NULL) throw()
+    : error(_reason, _ctxt) {}
   virtual ~parse_error() throw() {}
 };
 
@@ -231,9 +233,10 @@ class transaction_node_t : public parent_node_t
   transaction_t * transaction;
 
 public:
-  transaction_node_t(document_t * document, transaction_t * _transaction,
-		     parent_node_t * parent = NULL)
-    : parent_node_t(document, parent), transaction(_transaction) {
+  transaction_node_t(document_t *    _document,
+		     transaction_t * _transaction,
+		     parent_node_t * _parent = NULL)
+    : parent_node_t(_document, _parent), transaction(_transaction) {
     TRACE_CTOR("transaction_node_t(document_t *, transaction_t *, parent_node_t *)");
     set_name("transaction");
   }
@@ -249,9 +252,9 @@ class entry_node_t : public parent_node_t
   entry_t * entry;
 
 public:
-  entry_node_t(document_t * document, entry_t * _entry,
-	       parent_node_t * parent = NULL)
-    : parent_node_t(document, parent), entry(_entry) {
+  entry_node_t(document_t * _document, entry_t * _entry,
+	       parent_node_t * _parent = NULL)
+    : parent_node_t(_document, _parent), entry(_entry) {
     TRACE_CTOR("entry_node_t(document_t *, entry_t *, parent_node_t *)");
     set_name("entry");
   }
@@ -267,9 +270,9 @@ class account_node_t : public parent_node_t
   account_t * account;
 
 public:
-  account_node_t(document_t * document, account_t * _account,
-		 parent_node_t * parent = NULL)
-    : parent_node_t(document, parent), account(_account) {
+  account_node_t(document_t * _document, account_t * _account,
+		 parent_node_t * _parent = NULL)
+    : parent_node_t(_document, _parent), account(_account) {
     TRACE_CTOR("account_node_t(document_t *, account_t *, parent_node_t *)");
     set_name("account");
   }
@@ -285,9 +288,9 @@ class journal_node_t : public parent_node_t
   journal_t * journal;
 
 public:
-  journal_node_t(document_t * document, journal_t * _journal,
-		 parent_node_t * parent = NULL)
-    : parent_node_t(document, parent), journal(_journal) {
+  journal_node_t(document_t * _document, journal_t * _journal,
+		 parent_node_t * _parent = NULL)
+    : parent_node_t(_document, _parent), journal(_journal) {
     TRACE_CTOR("journal_node_t(document_t *, journal_t *, parent_node_t *)");
     set_name("journal");
   }

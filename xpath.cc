@@ -397,7 +397,7 @@ void xpath_t::token_t::next(std::istream& in, unsigned short flags)
 
 void xpath_t::token_t::rewind(std::istream& in)
 {
-  for (int i = 0; i < length; i++)
+  for (unsigned int i = 0; i < length; i++)
     in.unget();
 }
 
@@ -484,9 +484,9 @@ void xpath_t::scope_t::define(const std::string& name, op_t * def)
     (*i).second->release();
     symbols.erase(i);
 
-    std::pair<symbol_map::iterator, bool> result
+    std::pair<symbol_map::iterator, bool> result2
       = symbols.insert(symbol_pair(name, def));
-    if (! result.second)
+    if (! result2.second)
       throw new compile_error(std::string("Redefinition of '") +
 			      name + "' in same scope");
   }
@@ -613,11 +613,11 @@ void xpath_t::op_t::get_value(value_t& result) const
 }
 
 xpath_t::op_t *
-xpath_t::parse_value_term(std::istream& in, unsigned short flags) const
+xpath_t::parse_value_term(std::istream& in, unsigned short tflags) const
 {
   std::auto_ptr<op_t> node;
 
-  token_t& tok = next_token(in, flags);
+  token_t& tok = next_token(in, tflags);
 
   switch (tok.kind) {
   case token_t::VALUE:
@@ -626,6 +626,7 @@ xpath_t::parse_value_term(std::istream& in, unsigned short flags) const
     break;
 
   case token_t::IDENT: {
+#if 0
 #ifdef USE_BOOST_PYTHON
     if (tok.value->to_string() == "lambda") // special
       try {
@@ -649,6 +650,7 @@ xpath_t::parse_value_term(std::istream& in, unsigned short flags) const
       catch(const boost::python::error_already_set&) {
 	throw new parse_error("Error parsing lambda expression");
       }
+#endif /* USE_BOOST_PYTHON */
 #endif
 
     std::string ident = tok.value.to_string();
@@ -661,16 +663,16 @@ xpath_t::parse_value_term(std::istream& in, unsigned short flags) const
     }
 
     // An identifier followed by ( represents a function call
-    tok = next_token(in, flags);
+    tok = next_token(in, tflags);
     if (tok.kind == token_t::LPAREN) {
       node->kind = op_t::FUNC_NAME;
 
       std::auto_ptr<op_t> call_node;
       call_node.reset(new op_t(op_t::O_EVAL));
       call_node->set_left(node.release());
-      call_node->set_right(parse_value_expr(in, flags | XPATH_PARSE_PARTIAL));
+      call_node->set_right(parse_value_expr(in, tflags | XPATH_PARSE_PARTIAL));
 
-      tok = next_token(in, flags);
+      tok = next_token(in, tflags);
       if (tok.kind != token_t::RPAREN)
 	tok.unexpected();		// jww (2006-09-09): wanted )
 
@@ -682,7 +684,7 @@ xpath_t::parse_value_term(std::istream& in, unsigned short flags) const
   }
 
   case token_t::AT_SYM:
-    tok = next_token(in, flags);
+    tok = next_token(in, tflags);
     if (tok.kind != token_t::IDENT)
       throw parse_error("@ symbol must be followed by attribute name");
 
@@ -692,7 +694,7 @@ xpath_t::parse_value_term(std::istream& in, unsigned short flags) const
 
 #if 0
   case token_t::DOLLAR:
-    tok = next_token(in, flags);
+    tok = next_token(in, tflags);
     if (tok.kind != token_t::IDENT)
       throw parse_error("$ symbol must be followed by variable name");
 
@@ -719,11 +721,11 @@ xpath_t::parse_value_term(std::istream& in, unsigned short flags) const
     break;
 
   case token_t::LPAREN:
-    node.reset(parse_value_expr(in, flags | XPATH_PARSE_PARTIAL));
+    node.reset(parse_value_expr(in, tflags | XPATH_PARSE_PARTIAL));
     if (! node.get())
 	throw new parse_error(std::string(tok.symbol) +
 			      " operator not followed by argument");
-    tok = next_token(in, flags);
+    tok = next_token(in, tflags);
     if (tok.kind != token_t::RPAREN)
       tok.unexpected();		// jww (2006-09-09): wanted )
     break;
@@ -739,30 +741,34 @@ xpath_t::parse_value_term(std::istream& in, unsigned short flags) const
     break;
   }
 
+#if 0
+#ifdef USE_BOOST_PYTHON
  done:
+#endif
+#endif
   return node.release();
 }
 
 xpath_t::op_t *
-xpath_t::parse_predicate_expr(std::istream& in, unsigned short flags) const
+xpath_t::parse_predicate_expr(std::istream& in, unsigned short tflags) const
 {
-  std::auto_ptr<op_t> node(parse_value_term(in, flags));
+  std::auto_ptr<op_t> node(parse_value_term(in, tflags));
 
   if (node.get()) {
-    token_t& tok = next_token(in, flags);
+    token_t& tok = next_token(in, tflags);
     while (tok.kind == token_t::LBRACKET) {
       std::auto_ptr<op_t> prev(node.release());
       node.reset(new op_t(op_t::O_PRED));
       node->set_left(prev.release());
-      node->set_right(parse_value_expr(in, flags | XPATH_PARSE_PARTIAL));
+      node->set_right(parse_value_expr(in, tflags | XPATH_PARSE_PARTIAL));
       if (! node->right)
 	throw new parse_error("[ operator not followed by valid expression");
 
-      tok = next_token(in, flags);
+      tok = next_token(in, tflags);
       if (tok.kind != token_t::RBRACKET)
 	tok.unexpected();		// jww (2006-09-09): wanted ]
 
-      tok = next_token(in, flags);
+      tok = next_token(in, tflags);
     }
 
     push_token(tok);
@@ -772,9 +778,9 @@ xpath_t::parse_predicate_expr(std::istream& in, unsigned short flags) const
 }
 
 xpath_t::op_t *
-xpath_t::parse_path_expr(std::istream& in, unsigned short flags) const
+xpath_t::parse_path_expr(std::istream& in, unsigned short tflags) const
 {
-  std::auto_ptr<op_t> node(parse_predicate_expr(in, flags));
+  std::auto_ptr<op_t> node(parse_predicate_expr(in, tflags));
 
   if (node.get()) {
     // If the beginning of the path was /, just put it back; this
@@ -782,22 +788,22 @@ xpath_t::parse_path_expr(std::istream& in, unsigned short flags) const
     if (node->kind == op_t::NODE_ID && node->name_id == document_t::ROOT)
       push_token();
 
-    token_t& tok = next_token(in, flags);
+    token_t& tok = next_token(in, tflags);
     while (tok.kind == token_t::SLASH) {
       std::auto_ptr<op_t> prev(node.release());
 
-      tok = next_token(in, flags);
+      tok = next_token(in, tflags);
       node.reset(new op_t(tok.kind == token_t::SLASH ?
 			  op_t::O_RFIND : op_t::O_FIND));
       if (tok.kind != token_t::SLASH)
 	push_token(tok);
 
       node->set_left(prev.release());
-      node->set_right(parse_predicate_expr(in, flags));
+      node->set_right(parse_predicate_expr(in, tflags));
       if (! node->right)
 	throw new parse_error("/ operator not followed by a valid term");
 
-      tok = next_token(in, flags);
+      tok = next_token(in, tflags);
     }
 
     push_token(tok);
@@ -807,59 +813,59 @@ xpath_t::parse_path_expr(std::istream& in, unsigned short flags) const
 }
 
 xpath_t::op_t *
-xpath_t::parse_unary_expr(std::istream& in, unsigned short flags) const
+xpath_t::parse_unary_expr(std::istream& in, unsigned short tflags) const
 {
   std::auto_ptr<op_t> node;
 
-  token_t& tok = next_token(in, flags);
+  token_t& tok = next_token(in, tflags);
 
   switch (tok.kind) {
   case token_t::EXCLAM: {
-    std::auto_ptr<op_t> expr(parse_path_expr(in, flags));
-    if (! expr.get())
+    std::auto_ptr<op_t> texpr(parse_path_expr(in, tflags));
+    if (! texpr.get())
       throw new parse_error(std::string(tok.symbol) +
 			    " operator not followed by argument");
     // A very quick optimization
-    if (expr->kind == op_t::VALUE) {
-      *expr->valuep = ! *expr->valuep;
-      node.reset(expr.release());
+    if (texpr->kind == op_t::VALUE) {
+      *texpr->valuep = ! *texpr->valuep;
+      node.reset(texpr.release());
     } else {
       node.reset(new op_t(op_t::O_NOT));
-      node->set_left(expr.release());
+      node->set_left(texpr.release());
     }
     break;
   }
 
   case token_t::MINUS: {
-    std::auto_ptr<op_t> expr(parse_path_expr(in, flags));
-    if (! expr.get())
+    std::auto_ptr<op_t> texpr(parse_path_expr(in, tflags));
+    if (! texpr.get())
       throw new parse_error(std::string(tok.symbol) +
 			    " operator not followed by argument");
     // A very quick optimization
-    if (expr->kind == op_t::VALUE) {
-      expr->valuep->negate();
-      node.reset(expr.release());
+    if (texpr->kind == op_t::VALUE) {
+      texpr->valuep->negate();
+      node.reset(texpr.release());
     } else {
       node.reset(new op_t(op_t::O_NEG));
-      node->set_left(expr.release());
+      node->set_left(texpr.release());
     }
     break;
   }
 
 #if 0
   case token_t::PERCENT: {
-    std::auto_ptr<op_t> expr(parse_path_expr(in, flags));
-    if (! expr.get())
+    std::auto_ptr<op_t> texpr(parse_path_expr(in, tflags));
+    if (! texpr.get())
       throw new parse_error(std::string(tok.symbol) +
 			    " operator not followed by argument");
     // A very quick optimization
-    if (expr->kind == op_t::VALUE) {
+    if (texpr->kind == op_t::VALUE) {
       static value_t perc("100.0%");
-      *expr->valuep = perc * *expr->valuep;
-      node.reset(expr.release());
+      *texpr->valuep = perc * *texpr->valuep;
+      node.reset(texpr.release());
     } else {
       node.reset(new op_t(op_t::O_PERC));
-      node->set_left(expr.release());
+      node->set_left(texpr.release());
     }
     break;
   }
@@ -867,7 +873,7 @@ xpath_t::parse_unary_expr(std::istream& in, unsigned short flags) const
 
   default:
     push_token(tok);
-    node.reset(parse_path_expr(in, flags));
+    node.reset(parse_path_expr(in, tflags));
     break;
   }
 
@@ -875,17 +881,17 @@ xpath_t::parse_unary_expr(std::istream& in, unsigned short flags) const
 }
 
 xpath_t::op_t *
-xpath_t::parse_union_expr(std::istream& in, unsigned short flags) const
+xpath_t::parse_union_expr(std::istream& in, unsigned short tflags) const
 {
-  std::auto_ptr<op_t> node(parse_unary_expr(in, flags));
+  std::auto_ptr<op_t> node(parse_unary_expr(in, tflags));
 
   if (node.get()) {
-    token_t& tok = next_token(in, flags);
+    token_t& tok = next_token(in, tflags);
     if (tok.kind == token_t::PIPE || tok.kind == token_t::KW_UNION) {
       std::auto_ptr<op_t> prev(node.release());
       node.reset(new op_t(op_t::O_UNION));
       node->set_left(prev.release());
-      node->set_right(parse_union_expr(in, flags));
+      node->set_right(parse_union_expr(in, tflags));
       if (! node->right)
 	throw new parse_error(std::string(tok.symbol) +
 			      " operator not followed by argument");
@@ -897,23 +903,23 @@ xpath_t::parse_union_expr(std::istream& in, unsigned short flags) const
 }
 
 xpath_t::op_t *
-xpath_t::parse_mul_expr(std::istream& in, unsigned short flags) const
+xpath_t::parse_mul_expr(std::istream& in, unsigned short tflags) const
 {
-  std::auto_ptr<op_t> node(parse_union_expr(in, flags));
+  std::auto_ptr<op_t> node(parse_union_expr(in, tflags));
 
   if (node.get()) {
-    token_t& tok = next_token(in, flags);
+    token_t& tok = next_token(in, tflags);
     if (tok.kind == token_t::STAR || tok.kind == token_t::KW_DIV) {
       std::auto_ptr<op_t> prev(node.release());
       node.reset(new op_t(tok.kind == token_t::STAR ?
 			  op_t::O_MUL : op_t::O_DIV));
       node->set_left(prev.release());
-      node->set_right(parse_mul_expr(in, flags));
+      node->set_right(parse_mul_expr(in, tflags));
       if (! node->right)
 	throw new parse_error(std::string(tok.symbol) +
 			      " operator not followed by argument");
 
-      tok = next_token(in, flags);
+      tok = next_token(in, tflags);
     }
     push_token(tok);
   }
@@ -922,24 +928,24 @@ xpath_t::parse_mul_expr(std::istream& in, unsigned short flags) const
 }
 
 xpath_t::op_t *
-xpath_t::parse_add_expr(std::istream& in, unsigned short flags) const
+xpath_t::parse_add_expr(std::istream& in, unsigned short tflags) const
 {
-  std::auto_ptr<op_t> node(parse_mul_expr(in, flags));
+  std::auto_ptr<op_t> node(parse_mul_expr(in, tflags));
 
   if (node.get()) {
-    token_t& tok = next_token(in, flags);
+    token_t& tok = next_token(in, tflags);
     if (tok.kind == token_t::PLUS ||
 	tok.kind == token_t::MINUS) {
       std::auto_ptr<op_t> prev(node.release());
       node.reset(new op_t(tok.kind == token_t::PLUS ?
 			  op_t::O_ADD : op_t::O_SUB));
       node->set_left(prev.release());
-      node->set_right(parse_add_expr(in, flags));
+      node->set_right(parse_add_expr(in, tflags));
       if (! node->right)
 	throw new parse_error(std::string(tok.symbol) +
 			      " operator not followed by argument");
 
-      tok = next_token(in, flags);
+      tok = next_token(in, tflags);
     }
     push_token(tok);
   }
@@ -948,16 +954,16 @@ xpath_t::parse_add_expr(std::istream& in, unsigned short flags) const
 }
 
 xpath_t::op_t *
-xpath_t::parse_logic_expr(std::istream& in, unsigned short flags) const
+xpath_t::parse_logic_expr(std::istream& in, unsigned short tflags) const
 {
-  std::auto_ptr<op_t> node(parse_add_expr(in, flags));
+  std::auto_ptr<op_t> node(parse_add_expr(in, tflags));
 
   if (node.get()) {
     op_t::kind_t kind = op_t::LAST;
 
-    unsigned short _flags = flags;
+    unsigned short _flags = tflags;
 
-    token_t& tok = next_token(in, flags);
+    token_t& tok = next_token(in, tflags);
     switch (tok.kind) {
     case token_t::ASSIGN:
       kind = op_t::O_DEFINE;
@@ -1000,7 +1006,7 @@ xpath_t::parse_logic_expr(std::istream& in, unsigned short flags) const
       node.reset(new op_t(kind));
       node->set_left(prev.release());
       if (kind == op_t::O_DEFINE)
-	node->set_right(parse_querycolon_expr(in, flags));
+	node->set_right(parse_querycolon_expr(in, tflags));
       else
 	node->set_right(parse_add_expr(in, _flags));
 
@@ -1019,17 +1025,17 @@ xpath_t::parse_logic_expr(std::istream& in, unsigned short flags) const
 }
 
 xpath_t::op_t *
-xpath_t::parse_and_expr(std::istream& in, unsigned short flags) const
+xpath_t::parse_and_expr(std::istream& in, unsigned short tflags) const
 {
-  std::auto_ptr<op_t> node(parse_logic_expr(in, flags));
+  std::auto_ptr<op_t> node(parse_logic_expr(in, tflags));
 
   if (node.get()) {
-    token_t& tok = next_token(in, flags);
+    token_t& tok = next_token(in, tflags);
     if (tok.kind == token_t::KW_AND) {
       std::auto_ptr<op_t> prev(node.release());
       node.reset(new op_t(op_t::O_AND));
       node->set_left(prev.release());
-      node->set_right(parse_and_expr(in, flags));
+      node->set_right(parse_and_expr(in, tflags));
       if (! node->right)
 	throw new parse_error(std::string(tok.symbol) +
 			      " operator not followed by argument");
@@ -1041,17 +1047,17 @@ xpath_t::parse_and_expr(std::istream& in, unsigned short flags) const
 }
 
 xpath_t::op_t *
-xpath_t::parse_or_expr(std::istream& in, unsigned short flags) const
+xpath_t::parse_or_expr(std::istream& in, unsigned short tflags) const
 {
-  std::auto_ptr<op_t> node(parse_and_expr(in, flags));
+  std::auto_ptr<op_t> node(parse_and_expr(in, tflags));
 
   if (node.get()) {
-    token_t& tok = next_token(in, flags);
+    token_t& tok = next_token(in, tflags);
     if (tok.kind == token_t::KW_OR) {
       std::auto_ptr<op_t> prev(node.release());
       node.reset(new op_t(op_t::O_OR));
       node->set_left(prev.release());
-      node->set_right(parse_or_expr(in, flags));
+      node->set_right(parse_or_expr(in, tflags));
       if (! node->right)
 	throw new parse_error(std::string(tok.symbol) +
 			      " operator not followed by argument");
@@ -1063,25 +1069,25 @@ xpath_t::parse_or_expr(std::istream& in, unsigned short flags) const
 }
 
 xpath_t::op_t *
-xpath_t::parse_querycolon_expr(std::istream& in, unsigned short flags) const
+xpath_t::parse_querycolon_expr(std::istream& in, unsigned short tflags) const
 {
-  std::auto_ptr<op_t> node(parse_or_expr(in, flags));
+  std::auto_ptr<op_t> node(parse_or_expr(in, tflags));
 
   if (node.get()) {
-    token_t& tok = next_token(in, flags);
+    token_t& tok = next_token(in, tflags);
     if (tok.kind == token_t::QUESTION) {
       std::auto_ptr<op_t> prev(node.release());
       node.reset(new op_t(op_t::O_QUES));
       node->set_left(prev.release());
       node->set_right(new op_t(op_t::O_COLON));
-      node->right->set_left(parse_querycolon_expr(in, flags));
+      node->right->set_left(parse_querycolon_expr(in, tflags));
       if (! node->right)
 	throw new parse_error(std::string(tok.symbol) +
 			      " operator not followed by argument");
-      tok = next_token(in, flags);
+      tok = next_token(in, tflags);
       if (tok.kind != token_t::COLON)
 	tok.unexpected();	// jww (2006-09-09): wanted :
-      node->right->set_right(parse_querycolon_expr(in, flags));
+      node->right->set_right(parse_querycolon_expr(in, tflags));
       if (! node->right)
 	throw new parse_error(std::string(tok.symbol) +
 			      " operator not followed by argument");
@@ -1093,31 +1099,31 @@ xpath_t::parse_querycolon_expr(std::istream& in, unsigned short flags) const
 }
 
 xpath_t::op_t *
-xpath_t::parse_value_expr(std::istream& in, unsigned short flags) const
+xpath_t::parse_value_expr(std::istream& in, unsigned short tflags) const
 {
-  std::auto_ptr<op_t> node(parse_querycolon_expr(in, flags));
+  std::auto_ptr<op_t> node(parse_querycolon_expr(in, tflags));
 
   if (node.get()) {
-    token_t& tok = next_token(in, flags);
+    token_t& tok = next_token(in, tflags);
     if (tok.kind == token_t::COMMA) {
       std::auto_ptr<op_t> prev(node.release());
       node.reset(new op_t(op_t::O_COMMA));
       node->set_left(prev.release());
-      node->set_right(parse_value_expr(in, flags));
+      node->set_right(parse_value_expr(in, tflags));
       if (! node->right)
 	throw new parse_error(std::string(tok.symbol) +
 			      " operator not followed by argument");
-      tok = next_token(in, flags);
+      tok = next_token(in, tflags);
     }
 
     if (tok.kind != token_t::TOK_EOF) {
-      if (flags & XPATH_PARSE_PARTIAL)
+      if (tflags & XPATH_PARSE_PARTIAL)
 	push_token(tok);
       else
 	tok.unexpected();
     }
   }
-  else if (! (flags & XPATH_PARSE_PARTIAL)) {
+  else if (! (tflags & XPATH_PARSE_PARTIAL)) {
     throw new parse_error(std::string("Failed to parse value expression"));
   }
 
@@ -1125,9 +1131,9 @@ xpath_t::parse_value_expr(std::istream& in, unsigned short flags) const
 }
 
 xpath_t::op_t *
-xpath_t::parse_expr(std::istream& in, unsigned short flags) const
+xpath_t::parse_expr(std::istream& in, unsigned short tflags) const
 {
-  std::auto_ptr<op_t> node(parse_value_expr(in, flags));
+  std::auto_ptr<op_t> node(parse_value_expr(in, tflags));
 
   if (use_lookahead) {
     use_lookahead = false;
@@ -1150,13 +1156,13 @@ xpath_t::op_t::new_node(kind_t kind, op_t * left, op_t * right)
 }
 
 xpath_t::op_t *
-xpath_t::op_t::copy(op_t * left, op_t * right) const
+xpath_t::op_t::copy(op_t * tleft, op_t * tright) const
 {
   std::auto_ptr<op_t> node(new op_t(kind));
-  if (left)
-    node->set_left(left);
-  if (right)
-    node->set_right(right);
+  if (tleft)
+    node->set_left(tleft);
+  if (tright)
+    node->set_right(tright);
   return node.release();
 }
 
@@ -1239,17 +1245,17 @@ xpath_t::op_t * xpath_t::op_t::defer_sequence(value_t::sequence_t& result_seq)
   return lit_seq.release();
 }
 
-void xpath_t::op_t::append_value(value_t& value,
+void xpath_t::op_t::append_value(value_t& val,
 				 value_t::sequence_t& result_seq)
 {
-  if (value.type == value_t::SEQUENCE) {
-    value_t::sequence_t * subseq = value.to_sequence();
+  if (val.type == value_t::SEQUENCE) {
+    value_t::sequence_t * subseq = val.to_sequence();
     for (value_t::sequence_t::iterator i = subseq->begin();
 	 i != subseq->end();
 	 i++)
       result_seq.push_back(*i);
   } else {
-    result_seq.push_back(value);
+    result_seq.push_back(val);
   }
 }
 
@@ -2380,6 +2386,7 @@ void xpath_t::op_t::dump(std::ostream& out, const int depth) const
 } // namespace xml
 } // namespace ledger
 
+#if 0
 #ifdef USE_BOOST_PYTHON
 
 #include <boost/python.hpp>
@@ -2465,88 +2472,4 @@ void export_xpath()
 }
 
 #endif // USE_BOOST_PYTHON
-
-#ifdef TEST
-
-#if ! defined(HAVE_EXPAT) && ! defined(HAVE_XMLPARSE)
-#error No XML parser library was found during configure
 #endif
-
-#if 0
-#include "session.h"
-#include "format.h"
-#endif
-
-int main(int argc, char *argv[])
-{
-  using namespace ledger;
-  using namespace ledger::xml;
-
-  try {
-    parser_t parser;
-    std::auto_ptr<document_t> doc;
-
-    std::ifstream input(argv[1]);
-    if (parser.test(input)) {
-      doc.reset(parser.parse(input));
-      doc->write(std::cout);
-    } else {
-      std::cerr << "Could not parse XML file: " << argv[1] << std::endl;
-      return 1;
-    }
-
-    xpath_t expr(argv[2]);
-    if (expr) {
-      std::cout << "Parsed:" << std::endl;
-      expr.dump(std::cout);
-      std::cout << std::endl;
-
-      expr.compile(doc.get());
-      std::cout << "Compiled:" << std::endl;
-      expr.dump(std::cout);
-      std::cout << std::endl;
-
-      value_t temp;
-      expr.calc(temp, doc->top);
-      std::cout << "Calculated value: " << temp << std::endl;
-    } else {
-      std::cerr << "Failed to parse value expression!" << std::endl;
-    }
-
-#if 0
-    {
-      ledger::session_t session;
-      std::auto_ptr<xpath_t::scope_t>
-	locals(new xpath_t::scope_t(&session.globals));
-
-      ledger::format_t fmt(std::string("%20|%40{") + argv[1] + "}\n");
-      fmt.format(std::cout, locals.get());
-    }
-#endif
-  }
-  catch (error * err) {
-    std::cout.flush();
-    if (err->context.empty())
-      err->context.push_front(new error_context(""));
-    err->reveal_context(std::cerr, "Error");
-    std::cerr << err->what() << std::endl;
-    delete err;
-    return 1;
-  }
-  catch (fatal * err) {
-    std::cout.flush();
-    if (err->context.empty())
-      err->context.push_front(new error_context(""));
-    err->reveal_context(std::cerr, "Fatal");
-    std::cerr << err->what() << std::endl;
-    delete err;
-    return 1;
-  }
-  catch (const std::exception& err) {
-    std::cout.flush();
-    std::cerr << "Error: " << err.what() << std::endl;
-    return 1;
-  }
-}
-
-#endif // TEST

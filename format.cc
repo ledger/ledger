@@ -1,8 +1,10 @@
 #include "format.h"
 #include "error.h"
 #include "util.h"
+#if 0
 #ifdef USE_BOOST_PYTHON
 #include "py_eval.h"
+#endif
 #endif
 
 #include <cstdlib>
@@ -239,6 +241,7 @@ int format_t::format(std::ostream& out, xml::node_t * context,
 
 } // namespace ledger
 
+#if 0
 #ifdef USE_BOOST_PYTHON
 
 #include <boost/python.hpp>
@@ -256,3 +259,4 @@ void export_format()
 }
 
 #endif // USE_BOOST_PYTHON
+#endif

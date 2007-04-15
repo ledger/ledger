@@ -27,8 +27,8 @@ class file_context : public error_context
   unsigned long line;
  public:
   file_context(const std::string& _file, unsigned long _line,
-	       const std::string& desc = "") throw()
-    : error_context(desc), file(_file), line(_line) {}
+	       const std::string& _desc = "") throw()
+    : error_context(_desc), file(_file), line(_line) {}
   virtual ~file_context() throw() {}
 
   virtual void describe(std::ostream& out) const throw() {
@@ -45,8 +45,8 @@ class line_context : public error_context {
   long	      pos;
 
   line_context(const std::string& _line, long _pos,
-	       const std::string& desc = "") throw()
-    : error_context(desc), line(_line), pos(_pos) {}
+	       const std::string& _desc = "") throw()
+    : error_context(_desc), line(_line), pos(_pos) {}
   virtual ~line_context() throw() {}
 
   virtual void describe(std::ostream& out) const throw() {
@@ -103,22 +103,22 @@ class str_exception : public std::exception {
 
 class error : public str_exception {
  public:
-  error(const std::string& reason, error_context * ctxt = NULL) throw()
-    : str_exception(reason, ctxt) {}
+  error(const std::string& _reason, error_context * _ctxt = NULL) throw()
+    : str_exception(_reason, _ctxt) {}
   virtual ~error() throw() {}
 };
 
 class fatal : public str_exception {
  public:
-  fatal(const std::string& reason, error_context * ctxt = NULL) throw()
-    : str_exception(reason, ctxt) {}
+  fatal(const std::string& _reason, error_context * _ctxt = NULL) throw()
+    : str_exception(_reason, _ctxt) {}
   virtual ~fatal() throw() {}
 };
 
 class fatal_assert : public fatal {
  public:
-  fatal_assert(const std::string& reason, error_context * ctxt = NULL) throw()
-    : fatal(std::string("assertion failed '") + reason + "'", ctxt) {}
+  fatal_assert(const std::string& _reason, error_context * _ctxt = NULL) throw()
+    : fatal(std::string("assertion failed '") + _reason + "'", _ctxt) {}
   virtual ~fatal_assert() throw() {}
 };
 

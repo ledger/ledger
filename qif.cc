@@ -38,10 +38,10 @@ bool qif_parser_t::test(std::istream& in) const
 	  std::strcmp(magic, "\r\n!T") == 0);
 }
 
-unsigned int qif_parser_t::parse(std::istream&	     in,
-				 journal_t *	     journal,
-				 account_t *	     master,
-				 const std::string * original_file)
+unsigned int qif_parser_t::parse(std::istream& in,
+				 journal_t *   journal,
+				 account_t *   master,
+				 const std::string *)
 {
   std::auto_ptr<entry_t>  entry;
   std::auto_ptr<amount_t> amount;

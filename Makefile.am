@@ -1,6 +1,9 @@
 lib_LTLIBRARIES = libledger.la
+if HAVE_BOOST_PYTHON
+lib_LTLIBRARIES += libpyledger.la
+endif
 
-libledger_la_CXXFLAGS =
+libledger_la_CXXFLAGS = $(WARNFLAGS)
 libledger_la_SOURCES = \
 	amount.cc      \
 	quotes.cc      \
@@ -30,6 +33,7 @@ libledger_la_SOURCES = \
 	derive.cc      \
 	emacs.cc       \
 	reconcile.cc
+
 if HAVE_EXPAT
 libledger_la_CXXFLAGS += -DHAVE_EXPAT=1
 libledger_la_SOURCES += gnucash.cc
@@ -42,15 +46,28 @@ if HAVE_LIBOFX
 libledger_la_CXXFLAGS += -DHAVE_LIBOFX=1
 libledger_la_SOURCES += ofx.cc
 endif
-if HAVE_BOOST_PYTHON
-libledger_la_CXXFLAGS += -DUSE_BOOST_PYTHON=1
-libledger_la_SOURCES += py_eval.cc
-endif
 if DEBUG
 libledger_la_CXXFLAGS += -DDEBUG_LEVEL=4
 libledger_la_SOURCES  += debug.cc
 endif
+if HAVE_BOOST_PYTHON
+libledger_la_CXXFLAGS += -DUSE_BOOST_PYTHON=1
+endif
+
 libledger_la_LDFLAGS = -release 3.0
+
+
+libpyledger_la_CXXFLAGS = -DUSE_BOOST_PYTHON=1
+libpyledger_la_SOURCES = \
+	py_eval.cc       \
+	py_amount.cc
+
+if DEBUG
+libpyledger_la_CXXFLAGS += -DDEBUG_LEVEL=4
+endif
+
+libpyledger_la_LDFLAGS = -release 3.0
+
 
 pkginclude_HEADERS = \
 	acconf.h     \
@@ -106,6 +123,7 @@ ledger_CXXFLAGS += -DHAVE_LIBOFX=1
 endif
 if HAVE_BOOST_PYTHON
 ledger_CXXFLAGS += -DUSE_BOOST_PYTHON=1
+ledger_LDADD += libpyledger.la
 endif
 if DEBUG
 ledger_CXXFLAGS += -DDEBUG_LEVEL=4
@@ -125,7 +143,7 @@ if HAVE_BOOST_PYTHON
 
 noinst_PROGRAMS = ledger.so
 
-ledger.so: pyledger.cc libledger.la
+ledger.so: pyledger.cc libledger.la libpyledger.la
 	CFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS) -L. -L.libs" \
 	    python setup.py build --build-lib=.
 
@@ -142,12 +160,13 @@ TESTS = UnitTests
 check_PROGRAMS = $(TESTS)
 
 UnitTests_SOURCES = tests/UnitTests.cc \
+	\
 	tests/corelib/numerics/BasicAmountTest.cc
 
 UnitTests_LDADD   = $(lib_LTLIBRARIES) -lcppunit
 UnitTests_LDFLAGS = $(LIBADD_DL)
 
-UnitTests_CXXFLAGS = -Itests
+UnitTests_CXXFLAGS = -I. -Itests
 if HAVE_EXPAT
 UnitTests_CXXFLAGS += -DHAVE_EXPAT=1
 endif
@@ -164,6 +183,10 @@ endif
 ######################################################################
 
 all: check
+
+check-syntax:
+	g++ -I. -Itests $(CPPFLAGS) $(UnitTests_CXXFLAGS) \
+		-o /dev/null -S $(CHK_SOURCES)
 
 all-clean: maintainer-clean
 	rm -fr	*~ .*~ .\#* *.html *.info *.pdf *.a *.so *.o *.lo *.la \

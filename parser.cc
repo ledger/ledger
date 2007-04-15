@@ -1,5 +1,6 @@
 #include "parser.h"
 
+#if 0
 #ifdef USE_BOOST_PYTHON
 
 #include <boost/python.hpp>
@@ -47,3 +48,4 @@ void export_parser() {
 }
 
 #endif // USE_BOOST_PYTHON
+#endif

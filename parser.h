@@ -26,8 +26,9 @@ class parser_t
 
 class parse_error : public error {
  public:
-  parse_error(const std::string& reason, error_context * ctxt = NULL) throw()
-    : error(reason, ctxt) {}
+  parse_error(const std::string& _reason,
+	      error_context * _ctxt = NULL) throw()
+    : error(_reason, _ctxt) {}
   virtual ~parse_error() throw() {}
 };
 

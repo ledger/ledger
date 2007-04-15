@@ -49,8 +49,8 @@ class session_t : public xml::xpath_t::scope_t
   std::list<journal_t *> journals;
   std::list<parser_t *>  parsers;
 
-  session_t(xml::xpath_t::scope_t * parent = NULL) :
-    xml::xpath_t::scope_t(parent),
+  session_t(xml::xpath_t::scope_t * _parent = NULL) :
+    xml::xpath_t::scope_t(_parent),
 
     register_format
     ("%((//entry)%{date} %-.20{payee}"
@@ -170,6 +170,7 @@ class session_t : public xml::xpath_t::scope_t
     verbose_mode = true;
   }
 
+#if 0
 #ifdef USE_BOOST_PYTHON
   void option_import(value_t&) {
     python_import(optarg);
@@ -177,6 +178,7 @@ class session_t : public xml::xpath_t::scope_t
   void option_import_stdin(value_t&) {
     python_eval(std::cin, PY_EVAL_MULTI);
   }
+#endif
 #endif
 };
 

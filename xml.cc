@@ -10,7 +10,7 @@
 namespace ledger {
 namespace xml {
 
-document_t::document_t(node_t * _top, const char ** _builtins,
+document_t::document_t(node_t *, const char ** _builtins,
 		       const int _builtins_size)
   : builtins(_builtins), builtins_size(_builtins_size),
     top(new terminal_node_t(this)) {}
@@ -99,9 +99,8 @@ document_t * node_t::document;
 
 node_t::node_t(document_t * _document, parent_node_t * _parent,
 	       unsigned int _flags)
-  : name_id(-1),
-    parent(_parent),
-    next(NULL), prev(NULL), flags(_flags), info(NULL), attrs(NULL)
+  : name_id(0), parent(_parent), next(NULL), prev(NULL),
+    flags(_flags), info(NULL), attrs(NULL)
 {
   TRACE_CTOR("node_t(document_t *, node_t *)");
 #ifdef THREADSAFE
@@ -144,9 +143,9 @@ void parent_node_t::clear()
 {
   node_t * child = _children;
   while (child) {
-    node_t * next = child->next;
+    node_t * tnext = child->next;
     delete child;
-    child = next;
+    child = tnext;
   }
 }
 

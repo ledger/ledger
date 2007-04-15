@@ -186,6 +186,7 @@ xml::xpath_t::op_t * report_t::lookup(const std::string& name)
 
 } // namespace ledger
 
+#if 0
 #ifdef USE_BOOST_PYTHON
 
 #include <boost/python.hpp>
@@ -205,3 +206,4 @@ void export_report()
 }
 
 #endif // USE_BOOST_PYTHON
+#endif

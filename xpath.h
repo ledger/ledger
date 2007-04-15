@@ -20,25 +20,25 @@ public:
 
   class parse_error : public error {
   public:
-    parse_error(const std::string& reason,
-		error_context * ctxt = NULL) throw()
-      : error(reason, ctxt) {}
+    parse_error(const std::string& _reason,
+		error_context * _ctxt = NULL) throw()
+      : error(_reason, _ctxt) {}
     virtual ~parse_error() throw() {}
   };
 
   class compile_error : public error {
   public:
-    compile_error(const std::string& reason,
-		  error_context * ctxt = NULL) throw()
-      : error(reason, ctxt) {}
+    compile_error(const std::string& _reason,
+		  error_context * _ctxt = NULL) throw()
+      : error(_reason, _ctxt) {}
     virtual ~compile_error() throw() {}
   };
 
   class calc_error : public error {
   public:
-    calc_error(const std::string& reason,
-	       error_context * ctxt = NULL) throw()
-      : error(reason, ctxt) {}
+    calc_error(const std::string& _reason,
+	       error_context * _ctxt = NULL) throw()
+      : error(_reason, _ctxt) {}
     virtual ~calc_error() throw() {}
   };
 
@@ -78,8 +78,8 @@ public:
     T * ptr;
     U T::*dptr;
 
-    member_functor_t(const std::string& name, T * _ptr, U T::*_dptr)
-      : functor_t(name, false), ptr(_ptr), dptr(_dptr) {}
+    member_functor_t(const std::string& _name, T * _ptr, U T::*_dptr)
+      : functor_t(_name, false), ptr(_ptr), dptr(_dptr) {}
 
     virtual void operator()(value_t& result, scope_t * locals) {
       assert(ptr);
@@ -94,8 +94,8 @@ public:
     T * ptr;
     std::string T::*dptr;
 
-    member_functor_t(const std::string& name, T * _ptr, std::string T::*_dptr)
-      : functor_t(name, false), ptr(_ptr), dptr(_dptr) {}
+    member_functor_t(const std::string& _name, T * _ptr, std::string T::*_dptr)
+      : functor_t(_name, false), ptr(_ptr), dptr(_dptr) {}
 
     virtual void operator()(value_t& result, scope_t * locals) {
       assert(ptr);
@@ -110,13 +110,15 @@ public:
     T * ptr;
     void (T::*mptr)(value_t& result);
 
-    memfun_functor_t(const std::string& name, T * _ptr,
+    memfun_functor_t(const std::string& _name, T * _ptr,
 		     void (T::*_mptr)(value_t& result))
-      : functor_t(name, false), ptr(_ptr), mptr(_mptr) {}
+      : functor_t(_name, false), ptr(_ptr), mptr(_mptr) {}
 
-    virtual void operator()(value_t& result, scope_t * locals = NULL) {
+    virtual void operator()(value_t& result,
+			    scope_t * locals = NULL) {
       assert(ptr);
       assert(mptr);
+      assert(locals || locals == NULL);
       (ptr->*mptr)(result);
     }
   };
@@ -127,9 +129,9 @@ public:
     T * ptr;
     void (T::*mptr)(value_t& result, scope_t * locals);
 
-    memfun_args_functor_t(const std::string& name, T * _ptr,
+    memfun_args_functor_t(const std::string& _name, T * _ptr,
 			  void (T::*_mptr)(value_t& result, scope_t * locals))
-      : functor_t(name, true), ptr(_ptr), mptr(_mptr) {}
+      : functor_t(_name, true), ptr(_ptr), mptr(_mptr) {}
 
     virtual void operator()(value_t& result, scope_t * locals) {
       assert(ptr);
@@ -221,8 +223,8 @@ public:
 
   public:
     function_scope_t(value_t::sequence_t * _sequence, value_t * _value,
-		     int _index, scope_t * parent = NULL)
-      : scope_t(parent, STATIC),
+		     int _index, scope_t * _parent = NULL)
+      : scope_t(_parent, STATIC),
 	sequence(_sequence), value(_value), index(_index) {}
 
     virtual bool resolve(const std::string& name, value_t& result,
@@ -549,11 +551,11 @@ public:
 #endif
   mutable bool    use_lookahead;
 
-  token_t& next_token(std::istream& in, unsigned short flags) const {
+  token_t& next_token(std::istream& in, unsigned short tflags) const {
     if (use_lookahead)
       use_lookahead = false;
     else
-      lookahead.next(in, flags);
+      lookahead.next(in, tflags);
     return lookahead;
   }
   void push_token(const token_t& tok) const {
@@ -581,11 +583,11 @@ public:
 		    unsigned short flags = XPATH_PARSE_RELAXED) const;
 
   op_t * parse_expr(const std::string& str,
-		    unsigned short flags = XPATH_PARSE_RELAXED) const
+		    unsigned short tflags = XPATH_PARSE_RELAXED) const
   {
     std::istringstream stream(str);
     try {
-      return parse_expr(stream, flags);
+      return parse_expr(stream, tflags);
     }
     catch (error * err) {
       err->context.push_back
@@ -596,8 +598,8 @@ public:
   }
 
   op_t * parse_expr(const char * p,
-		    unsigned short flags = XPATH_PARSE_RELAXED) const {
-    return parse_expr(std::string(p), flags);
+		    unsigned short tflags = XPATH_PARSE_RELAXED) const {
+    return parse_expr(std::string(p), tflags);
   }
 
   bool write(std::ostream&   out,
@@ -721,11 +723,11 @@ public:
     calc(temp, document ? document->top : NULL, scope);
     return temp;
   }
-  virtual value_t calc(node_t * context, scope_t * scope = NULL) const {
+  virtual value_t calc(node_t * tcontext, scope_t * scope = NULL) const {
     if (! ptr)
       return 0L;
     value_t temp;
-    calc(temp, context, scope);
+    calc(temp, tcontext, scope);
     return temp;
   }
 
@@ -749,7 +751,7 @@ public:
 } // namespace xml
 
 template <typename T>
-inline T * get_ptr(xml::xpath_t::scope_t * locals, int idx) {
+inline T * get_ptr(xml::xpath_t::scope_t * locals, unsigned int idx) {
   assert(locals->args.size() > idx);
   T * ptr = static_cast<T *>(locals->args[idx].to_pointer());
   assert(ptr);
@@ -761,7 +763,7 @@ class xml_command : public xml::xpath_t::functor_t
  public:
   xml_command() : xml::xpath_t::functor_t("xml") {}
 
-  virtual void operator()(value_t& result, xml::xpath_t::scope_t * locals) {
+  virtual void operator()(value_t&, xml::xpath_t::scope_t * locals) {
     std::ostream *    out = get_ptr<std::ostream>(locals, 0);
     xml::document_t * doc = get_ptr<xml::document_t>(locals, 1);
 

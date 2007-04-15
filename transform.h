@@ -10,6 +10,7 @@ namespace ledger {
 
 class transform_t {
  public:
+  virtual ~transform_t() {}
   virtual void execute(xml::document_t * document) = 0;
 };
 

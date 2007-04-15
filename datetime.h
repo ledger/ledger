@@ -8,7 +8,7 @@
 
 class date_error : public error {
  public:
-  date_error(const std::string& reason) throw() : error(reason) {}
+  date_error(const std::string& _reason) throw() : error(_reason) {}
   virtual ~date_error() throw() {}
 };
 
@@ -71,12 +71,11 @@ class date_t
 
   virtual date_t& operator+=(const long days) {
     // jww (2006-03-26): This is not accurate enough when DST is in effect!
-    assert(0);
     when += days * 86400;
     return *this;
   }
   virtual date_t& operator-=(const long days) {
-    assert(0);
+    // jww (2006-03-26): This is not accurate enough when DST is in effect!
     when -= days * 86400;
     return *this;
   }
@@ -167,7 +166,7 @@ inline std::istream& operator>>(std::istream& in, date_t& moment) {
 
 class datetime_error : public error {
  public:
-  datetime_error(const std::string& reason) throw() : error(reason) {}
+  datetime_error(const std::string& _reason) throw() : error(_reason) {}
   virtual ~datetime_error() throw() {}
 };
 
@@ -176,7 +175,7 @@ class datetime_t : public date_t
  public:
   static datetime_t now;
 
-  datetime_t() : date_t() {}
+  datetime_t() : date_t(now.when) {}
   datetime_t(const datetime_t& _when) : date_t(_when.when) {}
   datetime_t(const date_t& _when) : date_t(_when) {}
 

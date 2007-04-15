@@ -190,6 +190,7 @@ xml::xpath_t::op_t * session_t::lookup(const std::string& name)
 
 } // namespace ledger
 
+#if 0
 #ifdef USE_BOOST_PYTHON
 
 #include <boost/python.hpp>
@@ -231,3 +232,4 @@ void export_session()
 }
 
 #endif // USE_BOOST_PYTHON
+#endif

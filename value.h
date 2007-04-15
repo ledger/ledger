@@ -49,62 +49,62 @@ class value_t
     type = INTEGER;
   }
 
-  value_t(const value_t& value) : type(INTEGER) {
+  value_t(const value_t& val) : type(INTEGER) {
     TRACE_CTOR("value_t(copy)");
-    *this = value;
+    *this = val;
   }
-  value_t(const bool value) {
+  value_t(const bool val) {
     TRACE_CTOR("value_t(const bool)");
-    *((bool *) data) = value;
+    *((bool *) data) = val;
     type = BOOLEAN;
   }
-  value_t(const long value) {
+  value_t(const long val) {
     TRACE_CTOR("value_t(const long)");
-    *((long *) data) = value;
+    *((long *) data) = val;
     type = INTEGER;
   }
-  value_t(const datetime_t value) {
+  value_t(const datetime_t val) {
     TRACE_CTOR("value_t(const datetime_t)");
-    *((datetime_t *) data) = value;
+    *((datetime_t *) data) = val;
     type = DATETIME;
   }
-  value_t(const unsigned long value) {
+  value_t(const unsigned long val) {
     TRACE_CTOR("value_t(const unsigned long)");
-    new((amount_t *) data) amount_t(value);
+    new((amount_t *) data) amount_t(val);
     type = AMOUNT;
   }
-  value_t(const double value) {
+  value_t(const double val) {
     TRACE_CTOR("value_t(const double)");
-    new((amount_t *) data) amount_t(value);
+    new((amount_t *) data) amount_t(val);
     type = AMOUNT;
   }
-  value_t(const std::string& value, bool literal = false) {
+  value_t(const std::string& val, bool literal = false) {
     TRACE_CTOR("value_t(const std::string&, bool)");
     if (literal) {
       type = INTEGER;
-      set_string(value);
+      set_string(val);
     } else {
-      new((amount_t *) data) amount_t(value);
+      new((amount_t *) data) amount_t(val);
       type = AMOUNT;
     }
   }
-  value_t(const char * value) {
+  value_t(const char * val) {
     TRACE_CTOR("value_t(const char *)");
-    new((amount_t *) data) amount_t(value);
+    new((amount_t *) data) amount_t(val);
     type = AMOUNT;
   }
-  value_t(const amount_t& value) {
+  value_t(const amount_t& val) {
     TRACE_CTOR("value_t(const amount_t&)");
-    new((amount_t *)data) amount_t(value);
+    new((amount_t *)data) amount_t(val);
     type = AMOUNT;
   }
-  value_t(const balance_t& value) : type(INTEGER) {
+  value_t(const balance_t& val) : type(INTEGER) {
     TRACE_CTOR("value_t(const balance_t&)");
-    *this = value;
+    *this = val;
   }
-  value_t(const balance_pair_t& value) : type(INTEGER) {
+  value_t(const balance_pair_t& val) : type(INTEGER) {
     TRACE_CTOR("value_t(const balance_pair_t&)");
-    *this = value;
+    *this = val;
   }
   value_t(xml::node_t * xml_node) : type(INTEGER) { // gets set in =
     TRACE_CTOR("value_t(xml::node_t *)");
@@ -127,89 +127,89 @@ class value_t
   void destroy();
   void simplify();
 
-  value_t& operator=(const value_t& value);
-  value_t& operator=(const bool value) {
-    if ((bool *) data != &value) {
+  value_t& operator=(const value_t& val);
+  value_t& operator=(const bool val) {
+    if ((bool *) data != &val) {
       destroy();
-      *((bool *) data) = value;
+      *((bool *) data) = val;
       type = BOOLEAN;
     }
     return *this;
   }
-  value_t& operator=(const long value) {
-    if ((long *) data != &value) {
+  value_t& operator=(const long val) {
+    if ((long *) data != &val) {
       destroy();
-      *((long *) data) = value;
+      *((long *) data) = val;
       type = INTEGER;
     }
     return *this;
   }
-  value_t& operator=(const datetime_t value) {
-    if ((datetime_t *) data != &value) {
+  value_t& operator=(const datetime_t val) {
+    if ((datetime_t *) data != &val) {
       destroy();
-      *((datetime_t *) data) = value;
+      *((datetime_t *) data) = val;
       type = DATETIME;
     }
     return *this;
   }
-  value_t& operator=(const unsigned long value) {
-    return *this = amount_t(value);
+  value_t& operator=(const unsigned long val) {
+    return *this = amount_t(val);
   }
-  value_t& operator=(const double value) {
-    return *this = amount_t(value);
+  value_t& operator=(const double val) {
+    return *this = amount_t(val);
   }
-  value_t& operator=(const std::string& value) {
-    return *this = amount_t(value);
+  value_t& operator=(const std::string& val) {
+    return *this = amount_t(val);
   }
-  value_t& operator=(const char * value) {
-    return *this = amount_t(value);
+  value_t& operator=(const char * val) {
+    return *this = amount_t(val);
   }
-  value_t& operator=(const amount_t& value) {
+  value_t& operator=(const amount_t& val) {
     if (type == AMOUNT &&
-	(amount_t *) data == &value)
+	(amount_t *) data == &val)
       return *this;
 
-    if (value.realzero()) {
+    if (val.realzero()) {
       return *this = 0L;
     } else {
       destroy();
-      new((amount_t *)data) amount_t(value);
+      new((amount_t *)data) amount_t(val);
       type = AMOUNT;
     }
     return *this;
   }
-  value_t& operator=(const balance_t& value) {
+  value_t& operator=(const balance_t& val) {
     if (type == BALANCE &&
-	(balance_t *) data == &value)
+	(balance_t *) data == &val)
       return *this;
 
-    if (value.realzero()) {
+    if (val.realzero()) {
       return *this = 0L;
     }
-    else if (value.amounts.size() == 1) {
-      return *this = (*value.amounts.begin()).second;
+    else if (val.amounts.size() == 1) {
+      return *this = (*val.amounts.begin()).second;
     }
     else {
       destroy();
-      new((balance_t *)data) balance_t(value);
+      new((balance_t *)data) balance_t(val);
       type = BALANCE;
       return *this;
     }
   }
-  value_t& operator=(const balance_pair_t& value) {
+  value_t& operator=(const balance_pair_t& val) {
     if (type == BALANCE_PAIR &&
-	(balance_pair_t *) data == &value)
+	(balance_pair_t *) data == &val)
       return *this;
 
-    if (value.realzero()) {
+    if (val.realzero()) {
       return *this = 0L;
     }
-    else if (! value.cost) {
-      return *this = value.quantity;
+    else if (! val.cost) {
+      return *this = val.quantity;
     }
     else {
       destroy();
-      new((balance_pair_t *)data) balance_pair_t(value);
+      new((balance_pair_t *)data) balance_pair_t(val);
       type = BALANCE_PAIR;
       return *this;
     }
@@ -291,10 +291,10 @@ class value_t
     return (*seq)[index];
   }
 
-  void push_back(const value_t& value) {
+  void push_back(const value_t& val) {
     sequence_t * seq = to_sequence();
     assert(seq);
-    return seq->push_back(value);
+    return seq->push_back(val);
   }
 
   std::size_t size() const {
@@ -303,98 +303,98 @@ class value_t
     return seq->size();
   }
 
-  value_t& operator+=(const value_t& value);
-  value_t& operator-=(const value_t& value);
-  value_t& operator*=(const value_t& value);
-  value_t& operator/=(const value_t& value);
+  value_t& operator+=(const value_t& val);
+  value_t& operator-=(const value_t& val);
+  value_t& operator*=(const value_t& val);
+  value_t& operator/=(const value_t& val);
 
   template <typename T>
-  value_t& operator+=(const T& value) {
-    return *this += value_t(value);
+  value_t& operator+=(const T& val) {
+    return *this += value_t(val);
   }
   template <typename T>
-  value_t& operator-=(const T& value) {
-    return *this -= value_t(value);
+  value_t& operator-=(const T& val) {
+    return *this -= value_t(val);
   }
   template <typename T>
-  value_t& operator*=(const T& value) {
-    return *this *= value_t(value);
+  value_t& operator*=(const T& val) {
+    return *this *= value_t(val);
   }
   template <typename T>
-  value_t& operator/=(const T& value) {
-    return *this /= value_t(value);
+  value_t& operator/=(const T& val) {
+    return *this /= value_t(val);
   }
 
-  value_t operator+(const value_t& value) {
+  value_t operator+(const value_t& val) {
     value_t temp(*this);
-    temp += value;
+    temp += val;
     return temp;
   }
-  value_t operator-(const value_t& value) {
+  value_t operator-(const value_t& val) {
     value_t temp(*this);
-    temp -= value;
+    temp -= val;
     return temp;
   }
-  value_t operator*(const value_t& value) {
+  value_t operator*(const value_t& val) {
     value_t temp(*this);
-    temp *= value;
+    temp *= val;
     return temp;
   }
-  value_t operator/(const value_t& value) {
+  value_t operator/(const value_t& val) {
     value_t temp(*this);
-    temp /= value;
+    temp /= val;
     return temp;
   }
 
   template <typename T>
-  value_t operator+(const T& value) {
-    return *this + value_t(value);
+  value_t operator+(const T& val) {
+    return *this + value_t(val);
   }
   template <typename T>
-  value_t operator-(const T& value) {
-    return *this - value_t(value);
+  value_t operator-(const T& val) {
+    return *this - value_t(val);
   }
   template <typename T>
-  value_t operator*(const T& value) {
-    return *this * value_t(value);
+  value_t operator*(const T& val) {
+    return *this * value_t(val);
   }
   template <typename T>
-  value_t operator/(const T& value) {
-    return *this / value_t(value);
+  value_t operator/(const T& val) {
+    return *this / value_t(val);
   }
 
-  bool operator<(const value_t& value);
-  bool operator<=(const value_t& value);
-  bool operator>(const value_t& value);
-  bool operator>=(const value_t& value);
-  bool operator==(const value_t& value);
-  bool operator!=(const value_t& value) {
-    return ! (*this == value);
+  bool operator<(const value_t& val);
+  bool operator<=(const value_t& val);
+  bool operator>(const value_t& val);
+  bool operator>=(const value_t& val);
+  bool operator==(const value_t& val);
+  bool operator!=(const value_t& val) {
+    return ! (*this == val);
   }
 
   template <typename T>
-  bool operator<(const T& value) {
-    return *this < value_t(value);
+  bool operator<(const T& val) {
+    return *this < value_t(val);
   }
   template <typename T>
-  bool operator<=(const T& value) {
-    return *this <= value_t(value);
+  bool operator<=(const T& val) {
+    return *this <= value_t(val);
   }
   template <typename T>
-  bool operator>(const T& value) {
-    return *this > value_t(value);
+  bool operator>(const T& val) {
+    return *this > value_t(val);
   }
   template <typename T>
-  bool operator>=(const T& value) {
-    return *this >= value_t(value);
+  bool operator>=(const T& val) {
+    return *this >= value_t(val);
   }
   template <typename T>
-  bool operator==(const T& value) {
-    return *this == value_t(value);
+  bool operator==(const T& val) {
+    return *this == value_t(val);
   }
   template <typename T>
-  bool operator!=(const T& value) {
-    return ! (*this == value);
+  bool operator!=(const T& val) {
+    return ! (*this == val);
   }
 
   template <typename T>
@@ -467,21 +467,21 @@ class value_t
 };
 
 #define DEF_VALUE_AUX_OP(OP)					\
-  inline value_t operator OP(const balance_pair_t& value,	\
+  inline value_t operator OP(const balance_pair_t& val,	\
 			     const value_t& obj) {		\
-    return value_t(value) OP obj;				\
+    return value_t(val) OP obj;				\
   }								\
-  inline value_t operator OP(const balance_t& value,		\
+  inline value_t operator OP(const balance_t& val,		\
 			     const value_t& obj) {		\
-    return value_t(value) OP obj;				\
+    return value_t(val) OP obj;				\
   }								\
-  inline value_t operator OP(const amount_t& value,		\
+  inline value_t operator OP(const amount_t& val,		\
 			     const value_t& obj) {		\
-    return value_t(value) OP obj;				\
+    return value_t(val) OP obj;				\
   }								\
   template <typename T>						\
-  inline value_t operator OP(T value, const value_t& obj) {	\
-    return value_t(value) OP obj;				\
+  inline value_t operator OP(T val, const value_t& obj) {	\
+    return value_t(val) OP obj;				\
   }
 
 DEF_VALUE_AUX_OP(+)
@@ -533,13 +533,13 @@ template <> value_t::operator datetime_t() const;
 template <> value_t::operator double() const;
 template <> value_t::operator std::string() const;
 
-inline value_t abs(const value_t& value) {
-  value_t temp(value);
+inline value_t abs(const value_t& val) {
+  value_t temp(val);
   temp.abs();
   return temp;
 }
 
-std::ostream& operator<<(std::ostream& out, const value_t& value);
+std::ostream& operator<<(std::ostream& out, const value_t& val);
 
 class value_context : public error_context
 {
@@ -554,8 +554,9 @@ class value_context : public error_context
 
 class value_error : public error {
  public:
-  value_error(const std::string& reason, error_context * ctxt = NULL) throw()
-    : error(reason, ctxt) {}
+  value_error(const std::string& _reason,
+	      error_context * _ctxt = NULL) throw()
+    : error(_reason, _ctxt) {}
   virtual ~value_error() throw() {}
 };
 

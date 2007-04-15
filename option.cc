@@ -2,8 +2,10 @@
 #include "report.h"
 #include "debug.h"
 #include "error.h"
+#if 0
 #ifdef USE_BOOST_PYTHON
 #include "py_eval.h"
+#endif
 #endif
 
 #include <iostream>
@@ -11,8 +13,10 @@
 
 #include "util.h"
 
+#if 0
 #ifdef USE_BOOST_PYTHON
 static ledger::option_t * find_option(const std::string& name);
+#endif
 #endif
 
 namespace ledger {
@@ -205,6 +209,7 @@ void process_arguments(int argc, char ** argv, const bool anywhere,
 
 } // namespace ledger
 
+#if 0
 #ifdef USE_BOOST_PYTHON
 
 #include <boost/python.hpp>
@@ -286,3 +291,4 @@ void export_option()
 }
 
 #endif // USE_BOOST_PYTHON
+#endif

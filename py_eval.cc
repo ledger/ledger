@@ -5,6 +5,7 @@
 #include <istream>
 
 void export_amount();
+#if 0
 void export_balance();
 void export_value();
 void export_datetime();
@@ -18,6 +19,7 @@ void export_format();
 void export_valexpr();
 
 void shutdown_option();
+#endif
 
 namespace ledger {
 
@@ -25,6 +27,7 @@ namespace {
   void initialize_ledger_for_python()
   {
     export_amount();
+#if 0
     export_balance();
     export_value();
     export_datetime();
@@ -36,12 +39,15 @@ namespace {
     export_format();
     export_report();
     export_valexpr();
+#endif
   }
 }
 
 void shutdown_ledger_for_python()
 {
+#if 0
   shutdown_option();
+#endif
 }
 
 struct python_run
@@ -57,8 +63,8 @@ struct python_run
   }
 };
 
-python_interpreter_t::python_interpreter_t(valexpr_t::scope_t * parent)
-  : valexpr_t::scope_t(parent),
+python_interpreter_t::python_interpreter_t(xml::xpath_t::scope_t * parent)
+  : xml::xpath_t::scope_t(parent),
     mmodule(borrowed(PyImport_AddModule("__main__"))),
     nspace(handle<>(borrowed(PyModule_GetDict(mmodule.get()))))
 {
@@ -145,16 +151,18 @@ object python_interpreter_t::eval(const std::string& str, py_eval_mode_t mode)
 }
 
 void python_interpreter_t::functor_t::operator()(value_t& result,
-						 valexpr_t::scope_t * locals)
+						 xml::xpath_t::scope_t * locals)
 {
   try {
     if (! PyCallable_Check(func.ptr())) {
-      result = extract<value_t>(func.ptr());
+      result = static_cast<const value_t&>(extract<value_t>(func.ptr()));
     } else {
-      if (locals->arg_scope && locals->args.size() > 0) {
+      assert(locals->args.type == value_t::SEQUENCE);
+      if (locals->args.to_sequence()->size() > 0) {
 	list arglist;
-	for (valexpr_t::scope_t::args_list::iterator i = locals->args.begin();
-	     i != locals->args.end();
+	for (value_t::sequence_t::iterator
+	       i = locals->args.to_sequence()->begin();
+	     i != locals->args.to_sequence()->end();
 	     i++)
 	  arglist.append(*i);
 
@@ -165,7 +173,7 @@ void python_interpreter_t::functor_t::operator()(value_t& result,
 	}
 	else if (PyObject * err = PyErr_Occurred()) {
 	  PyErr_Print();
-	  throw new valexpr_t::calc_error
+	  throw new xml::xpath_t::calc_error
 	    (std::string("While calling Python function '") + name() + "'");
 	} else {
 	  assert(0);
@@ -177,24 +185,24 @@ void python_interpreter_t::functor_t::operator()(value_t& result,
   }
   catch (const error_already_set&) {
     PyErr_Print();
-    throw new valexpr_t::calc_error
+    throw new xml::xpath_t::calc_error
       (std::string("While calling Python function '") + name() + "'");
   }
 }
 
 void python_interpreter_t::lambda_t::operator()(value_t& result,
-						valexpr_t::scope_t * locals)
+						xml::xpath_t::scope_t * locals)
 {
   try {
-    assert(locals->arg_scope && locals->args.size() == 1);
+    assert(locals->args.type == value_t::SEQUENCE);
+    assert(locals->args.to_sequence()->size() == 1);
     value_t item = locals->args[0];
     assert(item.type == value_t::POINTER);
-    result = call<value_t>(func.ptr(), (repitem_t *)*(void **)item.data);
+    result = call<value_t>(func.ptr(), (xml::node_t *)*(void **)item.data);
   }
   catch (const error_already_set&) {
     PyErr_Print();
-    throw new valexpr_t::calc_error
-      ("While evaluating Python lambda expression");
+    throw new xml::xpath_t::calc_error("While evaluating Python lambda expression");
   }
 }
 

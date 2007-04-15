@@ -173,10 +173,10 @@ static void mpz_round(mpz_t out, mpz_t value, int value_prec, int round_prec)
   mpz_tdiv_q(out, out, divisor);
 }
 
-amount_t::amount_t(const bool value)
+amount_t::amount_t(const bool val)
 {
   TRACE_CTOR("amount_t(const bool)");
-  if (value) {
+  if (val) {
     quantity = &true_value;
     quantity->ref++;
   } else {
@@ -185,24 +185,24 @@ amount_t::amount_t(const bool value)
   commodity_ = NULL;
 }
 
-amount_t::amount_t(const long value)
+amount_t::amount_t(const long val)
 {
   TRACE_CTOR("amount_t(const long)");
-  if (value != 0) {
+  if (val != 0) {
     quantity = new bigint_t;
-    mpz_set_si(MPZ(quantity), value);
+    mpz_set_si(MPZ(quantity), val);
   } else {
     quantity = NULL;
   }
   commodity_ = NULL;
 }
 
-amount_t::amount_t(const unsigned long value)
+amount_t::amount_t(const unsigned long val)
 {
   TRACE_CTOR("amount_t(const unsigned long)");
-  if (value != 0) {
+  if (val != 0) {
     quantity = new bigint_t;
-    mpz_set_ui(MPZ(quantity), value);
+    mpz_set_ui(MPZ(quantity), val);
   } else {
     quantity = NULL;
   }
@@ -210,10 +210,10 @@ amount_t::amount_t(const unsigned long value)
 }
 
 namespace {
-  unsigned char convert_double(mpz_t dest, double value)
+  unsigned char convert_double(mpz_t dest, double val)
   {
     mpf_t temp;
-    mpf_init_set_d(temp, value);
+    mpf_init_set_d(temp, val);
 
     mp_exp_t exp;
     char * buf = mpf_get_str(NULL, &exp, 10, 10, temp);
@@ -231,15 +231,11 @@ namespace {
   }
 }
 
-amount_t::amount_t(const double value)
+amount_t::amount_t(const double val)
 {
   TRACE_CTOR("amount_t(const double)");
-  if (value != 0.0) {
-    quantity = new bigint_t;
-    quantity->prec = convert_double(MPZ(quantity), value);
-  } else {
-    quantity = NULL;
-  }
+  quantity = new bigint_t;
+  quantity->prec = convert_double(MPZ(quantity), val);
   commodity_ = NULL;
 }
 
@@ -295,16 +291,16 @@ void amount_t::_copy(const amount_t& amt)
   commodity_ = amt.commodity_;
 }
 
-amount_t& amount_t::operator=(const std::string& value)
+amount_t& amount_t::operator=(const std::string& val)
 {
-  std::istringstream str(value);
+  std::istringstream str(val);
   parse(str);
   return *this;
 }
 
-amount_t& amount_t::operator=(const char * value)
+amount_t& amount_t::operator=(const char * val)
 {
-  std::string valstr(value);
+  std::string valstr(val);
   std::istringstream str(valstr);
   parse(str);
   return *this;
@@ -322,9 +318,9 @@ amount_t& amount_t::operator=(const amount_t& amt)
   return *this;
 }
 
-amount_t& amount_t::operator=(const bool value)
+amount_t& amount_t::operator=(const bool val)
 {
-  if (! value) {
+  if (! val) {
     if (quantity)
       _clear();
   } else {
@@ -337,42 +333,37 @@ amount_t& amount_t::operator=(const bool value)
   return *this;
 }
 
-amount_t& amount_t::operator=(const long value)
+amount_t& amount_t::operator=(const long val)
 {
-  if (value == 0) {
+  if (val == 0) {
     if (quantity)
       _clear();
   } else {
     commodity_ = NULL;
     _init();
-    mpz_set_si(MPZ(quantity), value);
+    mpz_set_si(MPZ(quantity), val);
   }
   return *this;
 }
 
-amount_t& amount_t::operator=(const unsigned long value)
+amount_t& amount_t::operator=(const unsigned long val)
 {
-  if (value == 0) {
+  if (val == 0) {
     if (quantity)
       _clear();
   } else {
     commodity_ = NULL;
     _init();
-    mpz_set_ui(MPZ(quantity), value);
+    mpz_set_ui(MPZ(quantity), val);
   }
   return *this;
 }
 
-amount_t& amount_t::operator=(const double value)
+amount_t& amount_t::operator=(const double val)
 {
-  if (value == 0.0) {
-    if (quantity)
-      _clear();
-  } else {
-    commodity_ = NULL;
-    _init();
-    quantity->prec = convert_double(MPZ(quantity), value);
-  }
+  commodity_ = NULL;
+  _init();
+  quantity->prec = convert_double(MPZ(quantity), val);
   return *this;
 }
 
@@ -436,9 +427,9 @@ amount_t& amount_t::operator+=(const amount_t& amt)
     mpz_add(MPZ(quantity), MPZ(quantity), MPZ(amt.quantity));
   }
   else {
-    amount_t temp = amt;
-    temp._resize(quantity->prec);
-    mpz_add(MPZ(quantity), MPZ(quantity), MPZ(temp.quantity));
+    amount_t t = amt;
+    t._resize(quantity->prec);
+    mpz_add(MPZ(quantity), MPZ(quantity), MPZ(t.quantity));
   }
 
   return *this;
@@ -472,9 +463,9 @@ amount_t& amount_t::operator-=(const amount_t& amt)
     mpz_sub(MPZ(quantity), MPZ(quantity), MPZ(amt.quantity));
   }
   else {
-    amount_t temp = amt;
-    temp._resize(quantity->prec);
-    mpz_sub(MPZ(quantity), MPZ(quantity), MPZ(temp.quantity));
+    amount_t t = amt;
+    t._resize(quantity->prec);
+    mpz_sub(MPZ(quantity), MPZ(quantity), MPZ(t.quantity));
   }
 
   return *this;
@@ -563,14 +554,14 @@ int amount_t::compare(const amount_t& amt) const
     return mpz_cmp(MPZ(quantity), MPZ(amt.quantity));
   }
   else if (quantity->prec < amt.quantity->prec) {
-    amount_t temp = *this;
-    temp._resize(amt.quantity->prec);
-    return mpz_cmp(MPZ(temp.quantity), MPZ(amt.quantity));
+    amount_t t = *this;
+    t._resize(amt.quantity->prec);
+    return mpz_cmp(MPZ(t.quantity), MPZ(amt.quantity));
   }
   else {
-    amount_t temp = amt;
-    temp._resize(quantity->prec);
-    return mpz_cmp(MPZ(quantity), MPZ(temp.quantity));
+    amount_t t = amt;
+    t._resize(quantity->prec);
+    return mpz_cmp(MPZ(quantity), MPZ(t.quantity));
   }
 }
 
@@ -663,43 +654,43 @@ amount_t amount_t::value(const datetime_t& moment) const
 
 amount_t amount_t::round(unsigned int prec) const
 {
-  amount_t temp = *this;
+  amount_t t = *this;
 
   if (! quantity || quantity->prec <= prec) {
     if (quantity && quantity->flags & BIGINT_KEEP_PREC) {
-      temp._dup();
-      temp.quantity->flags &= ~BIGINT_KEEP_PREC;
+      t._dup();
+      t.quantity->flags &= ~BIGINT_KEEP_PREC;
     }
-    return temp;
+    return t;
   }
 
-  temp._dup();
+  t._dup();
 
-  mpz_round(MPZ(temp.quantity), MPZ(temp.quantity), temp.quantity->prec, prec);
+  mpz_round(MPZ(t.quantity), MPZ(t.quantity), t.quantity->prec, prec);
 
-  temp.quantity->prec = prec;
-  temp.quantity->flags &= ~BIGINT_KEEP_PREC;
+  t.quantity->prec = prec;
+  t.quantity->flags &= ~BIGINT_KEEP_PREC;
 
-  return temp;
+  return t;
 }
 
 amount_t amount_t::unround() const
 {
   if (! quantity) {
-    amount_t temp(0L);
-    assert(temp.quantity);
-    temp.quantity->flags |= BIGINT_KEEP_PREC;
-    return temp;
+    amount_t t(0L);
+    assert(t.quantity);
+    t.quantity->flags |= BIGINT_KEEP_PREC;
+    return t;
   }
   else if (quantity->flags & BIGINT_KEEP_PREC) {
     return *this;
   }
 
-  amount_t temp = *this;
-  temp._dup();
-  temp.quantity->flags |= BIGINT_KEEP_PREC;
+  amount_t t = *this;
+  t._dup();
+  t.quantity->flags |= BIGINT_KEEP_PREC;
 
-  return temp;
+  return t;
 }
 
 void amount_t::print_quantity(std::ostream& out) const
@@ -1117,8 +1108,8 @@ void amount_t::parse(std::istream& in, unsigned char flags)
 
   std::string  symbol;
   std::string  quant;
-  amount_t     price;
-  datetime_t   date;
+  amount_t     tprice;
+  datetime_t   tdate;
   std::string  tag;
   unsigned int comm_flags = COMMODITY_STYLE_DEFAULTS;
   bool         negative = false;
@@ -1144,7 +1135,7 @@ void amount_t::parse(std::istream& in, unsigned char flags)
 	comm_flags |= COMMODITY_STYLE_SUFFIXED;
 
       if (! in.eof() && ((n = in.peek()) != '\n'))
-	parse_annotations(in, price, date, tag);
+	parse_annotations(in, tprice, tdate, tag);
     }
   } else {
     parse_commodity(in, symbol);
@@ -1156,7 +1147,7 @@ void amount_t::parse(std::istream& in, unsigned char flags)
       parse_quantity(in, quant);
 
       if (! quant.empty() && ! in.eof() && ((n = in.peek()) != '\n'))
-	parse_annotations(in, price, date, tag);
+	parse_annotations(in, tprice, tdate, tag);
     }
   }
 
@@ -1180,9 +1171,9 @@ void amount_t::parse(std::istream& in, unsigned char flags)
     }
     assert(commodity_);
 
-    if (! price.realzero() || date || ! tag.empty())
+    if (! tprice.realzero() || tdate || ! tag.empty())
       commodity_ =
-	annotated_commodity_t::find_or_create(*commodity_, price, date, tag);
+	annotated_commodity_t::find_or_create(*commodity_, tprice, tdate, tag);
   }
 
   // Determine the precision of the amount, based on the usage of
@@ -1456,8 +1447,8 @@ bool amount_t::valid() const
   return true;
 }
 
-void amount_t::annotate_commodity(const amount_t&    price,
-				  const datetime_t&  date,
+void amount_t::annotate_commodity(const amount_t&    tprice,
+				  const datetime_t&  tdate,
 				  const std::string& tag)
 {
   const commodity_t *	  this_base;
@@ -1473,14 +1464,14 @@ void amount_t::annotate_commodity(const amount_t&    price,
 
   DEBUG_PRINT("amounts.commodities", "Annotating commodity for amount "
 	      << *this << std::endl
-	      << "  price " << price << " "
-	      << "  date " << date << " "
+	      << "  price " << tprice << " "
+	      << "  date " << tdate << " "
 	      << "  tag " << tag);
 
   commodity_t * ann_comm =
     annotated_commodity_t::find_or_create
-      (*this_base, ! price && this_ann ? this_ann->price : price,
-       ! date && this_ann ? this_ann->date : date,
+      (*this_base, ! tprice && this_ann ? this_ann->price : tprice,
+       ! tdate && this_ann ? this_ann->date : tdate,
        tag.empty() && this_ann ? this_ann->tag : tag);
   if (ann_comm)
     set_commodity(*ann_comm);
@@ -1521,22 +1512,21 @@ amount_t amount_t::strip_annotations(const bool _keep_price,
   }
   assert(new_comm);
 
-  amount_t temp(*this);
-  temp.set_commodity(*new_comm);
+  amount_t t(*this);
+  t.set_commodity(*new_comm);
+  DEBUG_PRINT("amounts.commodities", "  Reduced amount is " << t);
 
-  DEBUG_PRINT("amounts.commodities", "  Reduced amount is " << temp);
-
-  return temp;
+  return t;
 }
 
 amount_t amount_t::price() const
 {
   if (commodity_ && commodity_->annotated) {
-    amount_t temp(((annotated_commodity_t *)commodity_)->price);
-    temp *= *this;
+    amount_t t(((annotated_commodity_t *)commodity_)->price);
+    t *= *this;
     DEBUG_PRINT("amounts.commodities",
-		"Returning price of " << *this << " = " << temp);
-    return temp;
+		"Returning price of " << *this << " = " << t);
+    return t;
   }
   return *this;
 }
@@ -1920,177 +1910,3 @@ bool compare_amount_commodities::operator()(const amount_t * left,
 }
 
 } // namespace ledger
-
-#ifdef USE_BOOST_PYTHON
-
-#include <boost/python.hpp>
-#include <Python.h>
-
-using namespace boost::python;
-using namespace ledger;
-
-int py_amount_quantity(amount_t& amount)
-{
-  std::ostringstream quant;
-  amount.print_quantity(quant);
-  return std::atol(quant.str().c_str());
-}
-
-void py_parse_1(amount_t& amount, const std::string& str,
-		unsigned char flags) {
-  amount.parse(str, flags);
-}
-void py_parse_2(amount_t& amount, const std::string& str) {
-  amount.parse(str);
-}
-
-struct commodity_updater_wrap : public commodity_base_t::updater_t
-{
-  PyObject * self;
-  commodity_updater_wrap(PyObject * self_) : self(self_) {}
-
-  virtual void operator()(commodity_base_t& commodity,
-			  const datetime_t& moment,
-			  const datetime_t& date,
-			  const datetime_t& last,
-			  amount_t&         price) {
-    call_method<void>(self, "__call__", commodity, moment, date, last, price);
-  }
-};
-
-commodity_t * py_find_commodity(const std::string& symbol)
-{
-  return commodity_t::find(symbol);
-}
-
-#define EXC_TRANSLATOR(type)				\
-  void exc_translate_ ## type(const type& err) {	\
-    PyErr_SetString(PyExc_RuntimeError, err.what());	\
-  }
-
-EXC_TRANSLATOR(amount_error)
-
-void export_amount()
-{
-  scope().attr("AMOUNT_PARSE_NO_MIGRATE") = AMOUNT_PARSE_NO_MIGRATE;
-  scope().attr("AMOUNT_PARSE_NO_REDUCE")  = AMOUNT_PARSE_NO_REDUCE;
-
-  class_< amount_t > ("Amount")
-    .def(init<amount_t>())
-    .def(init<std::string>())
-    .def(init<char *>())
-    .def(init<bool>())
-    .def(init<long>())
-    .def(init<unsigned long>())
-    .def(init<double>())
-
-    .def(self += self)
-    .def(self += long())
-    .def(self +  self)
-    .def(self +  long())
-    .def(self -= self)
-    .def(self -= long())
-    .def(self -  self)
-    .def(self -  long())
-    .def(self *= self)
-    .def(self *= long())
-    .def(self *  self)
-    .def(self *  long())
-    .def(self /= self)
-    .def(self /= long())
-    .def(self /  self)
-    .def(self /  long())
-    .def(- self)
-
-    .def(self <  self)
-    .def(self <  long())
-    .def(self <= self)
-    .def(self <= long())
-    .def(self >  self)
-    .def(self >  long())
-    .def(self >= self)
-    .def(self >= long())
-    .def(self == self)
-    .def(self == long())
-    .def(self != self)
-    .def(self != long())
-    .def(! self)
-
-    .def(self_ns::int_(self))
-    .def(self_ns::float_(self))
-    .def(self_ns::str(self))
-    .def(abs(self))
-
-    .add_property("commodity",
-		  make_function(&amount_t::commodity,
-				return_value_policy<reference_existing_object>()),
-		  make_function(&amount_t::set_commodity,
-				with_custodian_and_ward<1, 2>()))
-
-    .def("strip_annotations", &amount_t::strip_annotations)
-
-    .def("negate", &amount_t::negate)
-    .def("negated", &amount_t::negated)
-    .def("parse", py_parse_1)
-    .def("parse", py_parse_2)
-    .def("reduce", &amount_t::reduce)
-
-    .def("valid", &amount_t::valid)
-    ;
-
-  class_< commodity_base_t::updater_t, commodity_updater_wrap,
-	  boost::noncopyable >
-    ("Updater")
-    ;
-
-  scope().attr("COMMODITY_STYLE_DEFAULTS")  = COMMODITY_STYLE_DEFAULTS;
-  scope().attr("COMMODITY_STYLE_SUFFIXED")  = COMMODITY_STYLE_SUFFIXED;
-  scope().attr("COMMODITY_STYLE_SEPARATED") = COMMODITY_STYLE_SEPARATED;
-  scope().attr("COMMODITY_STYLE_EUROPEAN")  = COMMODITY_STYLE_EUROPEAN;
-  scope().attr("COMMODITY_STYLE_THOUSANDS") = COMMODITY_STYLE_THOUSANDS;
-  scope().attr("COMMODITY_STYLE_NOMARKET")  = COMMODITY_STYLE_NOMARKET;
-  scope().attr("COMMODITY_STYLE_BUILTIN")   = COMMODITY_STYLE_BUILTIN;
-
-  class_< commodity_t > ("Commodity")
-    .add_property("symbol", &commodity_t::symbol)
-
-    .add_property("name", &commodity_t::name, &commodity_t::set_name)
-    .add_property("note", &commodity_t::note, &commodity_t::set_note)
-    .add_property("precision", &commodity_t::precision,
-		  &commodity_t::set_precision)
-    .add_property("flags", &commodity_t::flags, &commodity_t::set_flags)
-    .add_property("add_flags", &commodity_t::add_flags)
-    .add_property("drop_flags", &commodity_t::drop_flags)
-    .add_property("updater", &commodity_t::updater)
-
-    .add_property("smaller",
-		  make_getter(&commodity_t::smaller,
-			      return_value_policy<reference_existing_object>()),
-		  make_setter(&commodity_t::smaller,
-			      return_value_policy<reference_existing_object>()))
-    .add_property("larger",
-		  make_getter(&commodity_t::larger,
-			      return_value_policy<reference_existing_object>()),
-		  make_setter(&commodity_t::larger,
-			      return_value_policy<reference_existing_object>()))
-
-    .def(self_ns::str(self))
-
-    .def("find", py_find_commodity,
-	 return_value_policy<reference_existing_object>())
-    .staticmethod("find")
-
-    .def("add_price", &commodity_t::add_price)
-    .def("remove_price", &commodity_t::remove_price)
-    .def("value", &commodity_t::value)
-
-    .def("valid", &commodity_t::valid)
-    ;
-
-#define EXC_TRANSLATE(type)					\
-  register_exception_translator<type>(&exc_translate_ ## type);
-
-  EXC_TRANSLATE(amount_error);
-}
-
-#endif // USE_BOOST_PYTHON

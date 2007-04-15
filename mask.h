@@ -22,7 +22,7 @@ class mask_t
 
 class mask_error : public error {
  public:
-  mask_error(const std::string& reason) throw() : error(reason) {}
+  mask_error(const std::string& _reason) throw() : error(_reason) {}
   virtual ~mask_error() throw() {}
 };
 

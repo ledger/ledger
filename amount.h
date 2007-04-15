@@ -54,18 +54,18 @@ class amount_t
     else
       commodity_ = NULL;
   }
-  amount_t(const std::string& value) : quantity(NULL) {
+  amount_t(const std::string& val) : quantity(NULL) {
     TRACE_CTOR("amount_t(const std::string&)");
-    parse(value);
+    parse(val);
   }
-  amount_t(const char * value) : quantity(NULL) {
+  amount_t(const char * val) : quantity(NULL) {
     TRACE_CTOR("amount_t(const char *)");
-    parse(value);
+    parse(val);
   }
-  amount_t(const bool value);
-  amount_t(const long value);
-  amount_t(const unsigned long value);
-  amount_t(const double value);
+  amount_t(const bool val);
+  amount_t(const long val);
+  amount_t(const unsigned long val);
+  amount_t(const double val);
 
   // destructor
   ~amount_t() {
@@ -92,19 +92,19 @@ class amount_t
   datetime_t date() const;
 
   bool null() const {
-    return ! quantity && ! commodity_;
+    return ! quantity && ! has_commodity();
   }
 
   std::string quantity_string() const;
 
   // assignment operator
   amount_t& operator=(const amount_t& amt);
-  amount_t& operator=(const std::string& value);
-  amount_t& operator=(const char * value);
-  amount_t& operator=(const bool value);
-  amount_t& operator=(const long value);
-  amount_t& operator=(const unsigned long value);
-  amount_t& operator=(const double value);
+  amount_t& operator=(const std::string& val);
+  amount_t& operator=(const char * val);
+  amount_t& operator=(const bool val);
+  amount_t& operator=(const long val);
+  amount_t& operator=(const unsigned long val);
+  amount_t& operator=(const double val);
 
   // general methods
   amount_t round(unsigned int prec) const;
@@ -118,20 +118,20 @@ class amount_t
   amount_t& operator/=(const amount_t& amt);
 
   template <typename T>
-  amount_t& operator+=(T value) {
-    return *this += amount_t(value);
+  amount_t& operator+=(T val) {
+    return *this += amount_t(val);
   }
   template <typename T>
-  amount_t& operator-=(T value) {
-    return *this -= amount_t(value);
+  amount_t& operator-=(T val) {
+    return *this -= amount_t(val);
   }
   template <typename T>
-  amount_t& operator*=(T value) {
-    return *this *= amount_t(value);
+  amount_t& operator*=(T val) {
+    return *this *= amount_t(val);
   }
   template <typename T>
-  amount_t& operator/=(T value) {
-    return *this /= amount_t(value);
+  amount_t& operator/=(T val) {
+    return *this /= amount_t(val);
   }
 
   // simple arithmetic
@@ -157,27 +157,27 @@ class amount_t
   }
 
   template <typename T>
-  amount_t operator+(T value) const {
+  amount_t operator+(T val) const {
     amount_t temp = *this;
-    temp += value;
+    temp += val;
     return temp;
   }
   template <typename T>
-  amount_t operator-(T value) const {
+  amount_t operator-(T val) const {
     amount_t temp = *this;
-    temp -= value;
+    temp -= val;
     return temp;
   }
   template <typename T>
-  amount_t operator*(T value) const {
+  amount_t operator*(T val) const {
     amount_t temp = *this;
-    temp *= value;
+    temp *= val;
     return temp;
   }
   template <typename T>
-  amount_t operator/(T value) const {
+  amount_t operator/(T val) const {
     amount_t temp = *this;
-    temp /= value;
+    temp /= val;
     return temp;
   }
 
@@ -308,6 +308,64 @@ class amount_t
 
 inline amount_t abs(const amount_t& amt) {
   return amt < 0 ? amt.negated() : amt;
+}
+
+template <typename T>
+inline amount_t operator+(const T val, const amount_t& amt) {
+  amount_t temp(val);
+  temp += amt;
+  return temp;
+}
+
+template <typename T>
+inline amount_t operator-(const T val, const amount_t& amt) {
+  amount_t temp(val);
+  temp -= amt;
+  return temp;
+}
+
+template <typename T>
+inline amount_t operator*(const T val, const amount_t& amt) {
+  amount_t temp(val);
+  temp *= amt;
+  return temp;
+}
+
+template <typename T>
+inline amount_t operator/(const T val, const amount_t& amt) {
+  amount_t temp(val);
+  temp /= amt;
+  return temp;
+}
+
+template <typename T>
+inline bool operator<(const T val, const amount_t& amt) {
+  return amount_t(val) < amt;
+}
+
+template <typename T>
+inline bool operator<=(const T val, const amount_t& amt) {
+  return amount_t(val) <= amt;
+}
+
+template <typename T>
+inline bool operator>(const T val, const amount_t& amt) {
+  return amount_t(val) > amt;
+}
+
+template <typename T>
+inline bool operator>=(const T val, const amount_t& amt) {
+  return amount_t(val) >= amt;
+}
+
+template <typename T>
+inline bool operator==(const T val, const amount_t& amt) {
+  return amount_t(val) == amt;
+}
+
+template <typename T>
+inline bool operator!=(const T val, const amount_t& amt) {
+  return amount_t(val) != amt;
 }
 
 inline std::ostream& operator<<(std::ostream& out, const amount_t& amt) {
@@ -602,7 +660,7 @@ void parse_conversion(const std::string& larger_str,
 
 class amount_error : public error {
  public:
-  amount_error(const std::string& reason) throw() : error(reason) {}
+  amount_error(const std::string& _reason) throw() : error(_reason) {}
   virtual ~amount_error() throw() {}
 };
 

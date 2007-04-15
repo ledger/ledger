@@ -27,9 +27,9 @@ void quotes_by_script::operator()(commodity_base_t& commodity,
   DEBUG_PRINT_("pricing_leeway is " << pricing_leeway);
 
   if ((commodity.history &&
-       (datetime_t::now - commodity.history->last_lookup) < pricing_leeway) ||
-      (datetime_t::now - last) < pricing_leeway ||
-      (price && moment > date && (moment - date) <= pricing_leeway))
+       (datetime_t::now - commodity.history->last_lookup) < (long)pricing_leeway) ||
+      (datetime_t::now - last) < (long)pricing_leeway ||
+      (price && moment > date && (moment - date) <= (long)pricing_leeway))
     return;
 
   using namespace std;

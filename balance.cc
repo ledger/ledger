@@ -64,10 +64,10 @@ datetime_t balance_t::date() const
   for (amounts_map::const_iterator i = amounts.begin();
        i != amounts.end();
        i++) {
-    datetime_t date = (*i).second.date();
-    if (! temp && date)
-      temp = date;
-    else if (temp != date)
+    datetime_t tdate = (*i).second.date();
+    if (! temp && tdate)
+      temp = tdate;
+    else if (temp != tdate)
       return datetime_t();
   }
 
@@ -320,6 +320,7 @@ balance_t::operator amount_t() const
 
 } // namespace ledger
 
+#if 0
 #ifdef USE_BOOST_PYTHON
 
 #include <boost/python.hpp>
@@ -528,3 +529,4 @@ void export_balance()
 }
 
 #endif // USE_BOOST_PYTHON
+#endif

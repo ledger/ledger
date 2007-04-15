@@ -202,8 +202,8 @@ class entry_context : public error_context {
   const entry_base_t& entry;
 
   entry_context(const entry_base_t& _entry,
-		const std::string& desc = "") throw()
-    : error_context(desc), entry(_entry) {}
+		const std::string& _desc = "") throw()
+    : error_context(_desc), entry(_entry) {}
   virtual ~entry_context() throw() {}
 
   virtual void describe(std::ostream& out) const throw();
@@ -211,8 +211,9 @@ class entry_context : public error_context {
 
 class balance_error : public error {
  public:
-  balance_error(const std::string& reason, error_context * ctxt = NULL) throw()
-    : error(reason, ctxt) {}
+  balance_error(const std::string& _reason,
+		error_context * _ctxt = NULL) throw()
+    : error(_reason, _ctxt) {}
   virtual ~balance_error() throw() {}
 };
 
@@ -342,7 +343,8 @@ struct func_finalizer_t : public entry_finalizer_t {
   typedef bool (*func_t)(entry_t& entry, bool post);
   func_t func;
   func_finalizer_t(func_t _func) : func(_func) {}
-  func_finalizer_t(const func_finalizer_t& other) : func(other.func) {}
+  func_finalizer_t(const func_finalizer_t& other) :
+    entry_finalizer_t(), func(other.func) {}
   virtual bool operator()(entry_t& entry, bool post) {
     return func(entry, post);
   }

@@ -117,9 +117,9 @@ void datetime_t::parse(std::istream& in)
 
   istream_pos_type beg_pos = in.tellg();
 
-  int hour = 0;
-  int min  = 0;
-  int sec  = 0;
+  int thour = 0;
+  int tmin  = 0;
+  int tsec  = 0;
 
   // Now look for the (optional) time specifier.  If no time is given,
   // we use midnight of the given day.
@@ -131,8 +131,8 @@ void datetime_t::parse(std::istream& in)
   if (buf[0] == '\0')
     goto abort;
 
-  hour = std::atoi(buf);
-  if (hour > 23)
+  thour = std::atoi(buf);
+  if (thour > 23)
     goto abort;
 
   if (in.peek() == ':') {
@@ -141,8 +141,8 @@ void datetime_t::parse(std::istream& in)
     if (buf[0] == '\0')
       goto abort;
 
-    min = std::atoi(buf);
-    if (min > 59)
+    tmin = std::atoi(buf);
+    if (tmin > 59)
       goto abort;
 
     if (in.peek() == ':') {
@@ -151,24 +151,24 @@ void datetime_t::parse(std::istream& in)
       if (buf[0] == '\0')
 	goto abort;
 
-      sec = std::atoi(buf);
-      if (sec > 59)
+      tsec = std::atoi(buf);
+      if (tsec > 59)
 	goto abort;
     }
   }
 
   c = peek_next_nonws(in);
   if (c == 'a' || c == 'p' || c == 'A' || c == 'P') {
-    if (hour > 12)
+    if (thour > 12)
       goto abort;
     in.get(c);
 
     if (c == 'p' || c == 'P') {
-      if (hour != 12)
-	hour += 12;
+      if (thour != 12)
+	thour += 12;
     } else {
-      if (hour == 12)
-	hour = 0;
+      if (thour == 12)
+	thour = 0;
     }
 
     c = in.peek();
@@ -178,9 +178,9 @@ void datetime_t::parse(std::istream& in)
 
   struct std::tm * desc = std::localtime(&when);
 
-  desc->tm_hour  = hour;
-  desc->tm_min   = min;
-  desc->tm_sec   = sec;
+  desc->tm_hour  = thour;
+  desc->tm_min   = tmin;
+  desc->tm_sec   = tsec;
   desc->tm_isdst = -1;
 
   when = std::mktime(desc);
@@ -453,6 +453,7 @@ void interval_t::parse(std::istream& in)
   }
 }
 
+#if 0
 #ifdef USE_BOOST_PYTHON
 
 #include <boost/python.hpp>
@@ -571,3 +572,4 @@ void export_datetime()
 }
 
 #endif // USE_BOOST_PYTHON
+#endif
