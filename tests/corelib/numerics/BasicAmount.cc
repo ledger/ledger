@@ -1,4 +1,4 @@
-#include "BasicAmountTestCase.h"
+#include "BasicAmount.h"
 #include "ledger.h"
 
 using namespace ledger;
