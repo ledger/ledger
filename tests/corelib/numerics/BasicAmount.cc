@@ -13,11 +13,13 @@ void BasicAmountTestCase::testConstructors()
   amount_t x0;
   amount_t x1(123456L);
   amount_t x2(123456UL);
+  amount_t x3(123.456);
   amount_t x4(true);
   amount_t x5("123456");
   amount_t x6("123.456");
   amount_t x7(std::string("123456"));
   amount_t x8(std::string("123.456"));
+  amount_t x9(x3);
   amount_t x10(x6);
   amount_t x11(x8);
 
@@ -25,33 +27,36 @@ void BasicAmountTestCase::testConstructors()
   assertEqual(x2, x1);
   assertEqual(x5, x1);
   assertEqual(x7, x1);
-  assertEqual(x6, x8);
-  assertEqual(x10, x6);
-  assertEqual(x11, x10);
+  assertEqual(x6, x3);
+  assertEqual(x8, x3);
+  assertEqual(x10, x3);
   assertEqual(amount_t(1L), x4);
+  assertEqual(x10, x9);
 }
 
 void BasicAmountTestCase::testNegation()
 {
   amount_t x0;
   amount_t x1(-123456L);
+  amount_t x3(-123.456);
   amount_t x5("-123456");
   amount_t x6("-123.456");
   amount_t x7(std::string("-123456"));
   amount_t x8(std::string("-123.456"));
-  amount_t x9(- x6);
+  amount_t x9(- x3);
 
   assertEqual(amount_t(0L), x0);
   assertEqual(x5, x1);
   assertEqual(x7, x1);
-  assertEqual(x6, x8);
+  assertEqual(x6, x3);
+  assertEqual(x8, x3);
   assertEqual(- x6, x9);
-  assertEqual(x6.negated(), x9);
+  assertEqual(x3.negated(), x9);
 
   amount_t x10(x9);
   x10.negate();
 
-  assertEqual(x6, x10);
+  assertEqual(x3, x10);
 }
 
 void BasicAmountTestCase::testAssignment()
@@ -59,40 +64,44 @@ void BasicAmountTestCase::testAssignment()
   amount_t x0;
   amount_t x1  = 123456L;
   amount_t x2  = 123456UL;
+  amount_t x3  = 123.456;
   amount_t x4  = true;
   amount_t x5  = "123456";
   amount_t x6  = "123.456";
   amount_t x7  = std::string("123456");
   amount_t x8  = std::string("123.456");
-  amount_t x9  = x6;
+  amount_t x9  = x3;
   amount_t x10 = amount_t(x6);
 
   assertEqual(amount_t(0L), x0);
   assertEqual(x2, x1);
   assertEqual(x5, x1);
   assertEqual(x7, x1);
-  assertEqual(x8, x6);
-  assertEqual(x10, x6);
+  assertEqual(x6, x3);
+  assertEqual(x8, x3);
+  assertEqual(x10, x3);
   assertEqual(amount_t(1L), x4);
   assertEqual(x10, x9);
 
   x0  = amount_t();
   x1  = 123456L;
   x2  = 123456UL;
+  x3  = 123.456;
   x4  = true;
   x5  = "123456";
   x6  = "123.456";
   x7  = std::string("123456");
   x8  = std::string("123.456");
-  x9  = x6;
+  x9  = x3;
   x10 = amount_t(x6);
 
   assertEqual(amount_t(0L), x0);
   assertEqual(x2, x1);
   assertEqual(x5, x1);
   assertEqual(x7, x1);
-  assertEqual(x8, x6);
-  assertEqual(x10, x6);
+  assertEqual(x6, x3);
+  assertEqual(x8, x3);
+  assertEqual(x10, x3);
   assertEqual(amount_t(1L), x4);
   assertEqual(x10, x9);
 }
@@ -102,12 +111,16 @@ void BasicAmountTestCase::testEquality()
   amount_t x1(123456L);
   amount_t x2(456789L);
   amount_t x3(333333L);
+  amount_t x4(123456.0);
   amount_t x5("123456.0");
+  amount_t x6(123456.0F);
 
   CPPUNIT_ASSERT(x1 == 123456L);
   CPPUNIT_ASSERT(x1 != x2);
   CPPUNIT_ASSERT(x1 == (x2 - x3));
-  CPPUNIT_ASSERT(x1 == x5);
+  CPPUNIT_ASSERT(x1 == x4);
+  CPPUNIT_ASSERT(x4 == x5);
+  CPPUNIT_ASSERT(x4 == x6);
 }
 
 void BasicAmountTestCase::testIntegerAddition()
@@ -137,19 +150,19 @@ void BasicAmountTestCase::testIntegerAddition()
 
 void BasicAmountTestCase::testFractionalAddition()
 {
-  amount_t x1("123.123");
-  amount_t y1("456.456");
+  amount_t x1(123.123);
+  amount_t y1(456.456);
 
-  assertEqual(amount_t("579.579"), x1 + y1);
-  assertEqual(amount_t("579.579"), x1 + amount_t("456.456"));
-  assertEqual(amount_t("579.579"), amount_t("456.456") + x1);
+  assertEqual(amount_t(579.579), x1 + y1);
+  assertEqual(amount_t(579.579), x1 + 456.456);
+  assertEqual(amount_t(579.579), 456.456 + x1);
 
-  x1 += amount_t("456.456");
-  assertEqual(amount_t("579.579"), x1);
-  x1 += amount_t("456.456");
-  assertEqual(amount_t("1036.035"), x1);
+  x1 += amount_t(456.456);
+  assertEqual(amount_t(579.579), x1);
+  x1 += 456.456;
+  assertEqual(amount_t(1036.035), x1);
   x1 += 456L;
-  assertEqual(amount_t("1492.035"), x1);
+  assertEqual(amount_t(1492.035), x1);
 
   amount_t x2("123456789123456789.123456789123456789");
 
@@ -185,18 +198,18 @@ void BasicAmountTestCase::testIntegerSubtraction()
 
 void BasicAmountTestCase::testFractionalSubtraction()
 {
-  amount_t x1("123.123");
-  amount_t y1("456.456");
+  amount_t x1(123.123);
+  amount_t y1(456.456);
 
-  assertEqual(amount_t("-333.333"), x1 - y1);
-  assertEqual(amount_t("333.333"), y1 - x1);
+  assertEqual(amount_t(-333.333), x1 - y1);
+  assertEqual(amount_t(333.333), y1 - x1);
 
-  x1 -= amount_t("456.456");
-  assertEqual(amount_t("-333.333"), x1);
-  x1 -= amount_t("456.456");
-  assertEqual(amount_t("-789.789"), x1);
+  x1 -= amount_t(456.456);
+  assertEqual(amount_t(-333.333), x1);
+  x1 -= 456.456;
+  assertEqual(amount_t(-789.789), x1);
   x1 -= 456L;
-  assertEqual(amount_t("-1245.789"), x1);
+  assertEqual(amount_t(-1245.789), x1);
 
   amount_t x2("123456789123456789.123456789123456789");
   amount_t y2("9872345982459.248974239578");
@@ -243,8 +256,8 @@ void BasicAmountTestCase::testIntegerMultiplication()
 
 void BasicAmountTestCase::testFractionalMultiplication()
 {
-  amount_t x1("123.123");
-  amount_t y1("456.456");
+  amount_t x1(123.123);
+  amount_t y1(456.456);
 
   assertEqual(amount_t(0L), x1 * 0L);
   assertEqual(amount_t(0L), amount_t(0L) * x1);
@@ -257,12 +270,13 @@ void BasicAmountTestCase::testFractionalMultiplication()
   assertEqual(- x1, -1L * x1);
   assertEqual(amount_t("56200.232088"), x1 * y1);
   assertEqual(amount_t("56200.232088"), y1 * x1);
-  assertEqual(amount_t("56200.232088"), x1 * amount_t("456.456"));
-  assertEqual(amount_t("56200.232088"), amount_t("456.456") * x1);
+  assertEqual(amount_t("56200.232088"), x1 * 456.456);
+  assertEqual(amount_t("56200.232088"), amount_t(456.456) * x1);
+  assertEqual(amount_t("56200.232088"), 456.456 * x1);
 
-  x1 *= amount_t("123.123");
+  x1 *= amount_t(123.123);
   assertEqual(amount_t("15159.273129"), x1);
-  x1 *= amount_t("123.123");
+  x1 *= 123.123;
   assertEqual(amount_t("1866455.185461867"), x1);
   x1 *= 123L;
   assertEqual(amount_t("229573987.811809641"), x1);
@@ -307,23 +321,27 @@ void BasicAmountTestCase::testIntegerDivision()
 
 void BasicAmountTestCase::testFractionalDivision()
 {
-  amount_t x1("123.123");
-  amount_t y1("456.456");
+  amount_t x1(123.123);
+  amount_t y1(456.456);
 
   assertThrow(x1 / 0L, amount_error *);
-  assertEqual(amount_t("0.00812195"), amount_t("1.0") / x1);
-  assertEqual(x1, x1 / amount_t("1.0"));
-  assertEqual(amount_t("0.00812195"), amount_t("1.0") / x1);
-  assertEqual(- x1, x1 / amount_t("-1.0"));
-  assertEqual(- amount_t("0.00812195"), amount_t("-1.0") / x1);
+  assertEqual(amount_t("0.008121"), amount_t(1.0) / x1);
+  assertEqual(amount_t("0.008121"), 1.0 / x1);
+  assertEqual(x1, x1 / 1.0);
+  assertEqual(amount_t("0.008121"), amount_t(1.0) / x1);
+  assertEqual(amount_t("0.008121"), 1.0 / x1);
+  assertEqual(- x1, x1 / -1.0);
+  assertEqual(- amount_t("0.008121"), amount_t(-1.0) / x1);
+  assertEqual(- amount_t("0.008121"), -1.0 / x1);
   assertEqual(amount_t("0.269736842105"), x1 / y1);
   assertEqual(amount_t("3.707317073170"), y1 / x1);
-  assertEqual(amount_t("0.269736842105"), x1 / amount_t("456.456"));
-  assertEqual(amount_t("3.707317073170"), amount_t("456.456") / x1);
+  assertEqual(amount_t("0.269736842105"), x1 / 456.456);
+  assertEqual(amount_t("3.707317073170"), amount_t(456.456) / x1);
+  assertEqual(amount_t("3.707317073170"), 456.456 / x1);
 
-  x1 /= amount_t("456.456");
+  x1 /= amount_t(456.456);
   assertEqual(amount_t("0.269736842105"), x1);
-  x1 /= amount_t("456.456");
+  x1 /= 456.456;
   assertEqual(amount_t("0.0005909372252856792330476541"), x1);
   x1 /= 456L;
   assertEqual(amount_t("0.00000129591496773175270405187302631578947368421052631578947368421"), x1);
@@ -331,7 +349,7 @@ void BasicAmountTestCase::testFractionalDivision()
   amount_t x4("1234567891234567.89123456789");
   amount_t y4("56.789");
 
-  assertEqual(amount_t("1.0"), x4 / x4);
+  assertEqual(amount_t(1.0), x4 / x4);
   assertEqual(amount_t("21739560323910.7554497273748437197344556164"),
 	      x4 / y4);
 }

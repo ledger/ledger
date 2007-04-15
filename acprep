@@ -1,6 +1,6 @@
 #!/bin/sh
 
-touch AUTHORS COPYING
+touch AUTHORS
 
 if which glibtoolize > /dev/null 2>&1; then
     glibtoolize --automake -f -c

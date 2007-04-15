@@ -1,4 +1,4 @@
-#                                               -*- Autoconf -*-
+# -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
@@ -6,6 +6,7 @@ AC_INIT(ledger, 3.0, johnw@newartisans.com)
 AM_INIT_AUTOMAKE(ledger, 3.0)
 AC_CONFIG_SRCDIR([main.cc])
 AC_CONFIG_HEADER([acconf.h])
+AC_CONFIG_SUBDIRS([gdtoa])
 
 # Checks for programs.
 AC_PROG_CXX

@@ -1,0 +1,9 @@
+This software may be copied freely, so long as the terms of the
+license -- described in the file LICENSE -- are observed.
+
+Further, the license terms described in gdtoa/LICENSE must also be
+observed, or else edit amount.cc and comment out the definition of
+HAVE_GDTOA.  If this is done, I recommend avoiding all conversions
+from double to ledger::amount, as they will acquire an unexpected
+degree of precision (i.e., 123.123 is likely to be rendered as
+123.12300000002 or something similar).

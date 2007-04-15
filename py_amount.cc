@@ -59,34 +59,47 @@ void export_amount()
     .def(init<char *>())
     .def(init<bool>())
     .def(init<long>())
+    .def(init<double>())
 
     .def(self += self)
     .def(self += long())
+    .def(self += double())
 
     .def(self	  + self)
     .def(self	  + long())
     .def(long()	  + self)
+    .def(self	  + double())
+    .def(double() + self)
 
     .def(self -= self)
     .def(self -= long())
+    .def(self -= double())
 
     .def(self	  - self)
     .def(self	  - long())
     .def(long()	  - self)
+    .def(self	  - double())
+    .def(double() - self)
 
     .def(self *= self)
     .def(self *= long())
+    .def(self *= double())
 
     .def(self	  * self)
     .def(self	  * long())
     .def(long()	  * self)
+    .def(self	  * double())
+    .def(double() * self)
 
     .def(self /= self)
     .def(self /= long())
+    .def(self /= double())
 
     .def(self	  /  self)
     .def(self	  /  long())
     .def(long()	  / self)
+    .def(self	  /  double())
+    .def(double() / self)
 
     .def(- self)
 

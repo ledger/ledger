@@ -2,6 +2,11 @@
 #include "binary.h"
 #include "util.h"
 
+#define HAVE_GDTOA 1
+#ifdef HAVE_GDTOA
+#include "gdtoa/gdtoa.h"
+#endif
+
 #include <list>
 #include <sstream>
 #include <cstdlib>
@@ -212,6 +217,9 @@ amount_t::amount_t(const unsigned long val)
 namespace {
   unsigned char convert_double(mpz_t dest, double val)
   {
+#ifndef HAVE_GDTOA
+    // This code is far too imprecise to be worthwhile.
+
     mpf_t temp;
     mpf_init_set_d(temp, val);
 
@@ -248,6 +256,47 @@ namespace {
     free(buf);
 
     return (unsigned char)exp;
+#else
+    int decpt, sign;
+    char * buf = dtoa(val, 0, 0, &decpt, &sign, NULL);
+    char * result;
+    int len = std::strlen(buf);
+
+    if (decpt <= len) {
+      decpt  = len - decpt;
+      result = NULL;
+    } else {
+      // There were trailing zeros, which we have to put back on in
+      // order to convert this buffer into an integer.
+
+      int zeroes = decpt - len;
+      result = new char[len + zeroes];
+
+      std::strcpy(result, buf);
+      int i;
+      for (i = 0; i < zeroes; i++)
+	result[len + i] = '0';
+      result[len + i] = '\0';
+
+      decpt = (len - decpt) + zeroes;
+    }
+
+    if (sign) {
+      char * newbuf = new char[std::strlen(result ? result : buf) + 1];
+      newbuf[0] = '-';
+      std::strcpy(&newbuf[1], result ? result : buf);
+      mpz_set_str(dest, newbuf, 10);
+      delete[] newbuf;
+    } else {
+      mpz_set_str(dest, result ? result : buf, 10);
+    }
+
+    if (result)
+      delete[] result;
+    freedtoa(buf);
+
+    return decpt;
+#endif
   }
 }
 
