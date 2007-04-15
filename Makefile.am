@@ -209,6 +209,7 @@ endif
 
 PyUnitTests: PyUnitTests.py
 	cp PyUnitTests.py PyUnitTests
+	chmod 755 PyUnitTests
 
 ######################################################################
 
