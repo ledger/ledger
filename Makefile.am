@@ -143,14 +143,36 @@ if HAVE_BOOST_PYTHON
 
 noinst_PROGRAMS = ledger.so
 
-# jww (2007-04-14): This is not passing HAVE_EXPAT!
+PYLIBS = pyledger ledger boost_python gmp pcre
+
+if HAVE_EXPAT
+PYLIBS += expat
+endif
+if HAVE_XMLPARSE
+PYLIBS += xmlparse xmltok
+endif
+if HAVE_LIBOFX
+PYLIBS += ofx
+endif
+
+if DEBUG
+DEBUG_LEVEL = 4
+else
+DEBUG_LEVEL = 0
+endif
 
 ledger.so: pyledger.cc libledger.la libpyledger.la
-	CFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS) -L. -L.libs" \
+	CFLAGS="$(CPPFLAGS)" \
+	LDFLAGS="$(LDFLAGS) -L. -L.libs" \
+	PYLIBS="$(PYLIBS)" \
+	DEBUG_LEVEL="$(DEBUG_LEVEL)" \
 	    python setup.py build --build-lib=.
 
 install-exec-hook:
-	CFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS) -L. -L.libs" \
+	CFLAGS="$(CPPFLAGS)" \
+	LDFLAGS="$(LDFLAGS) -L. -L.libs" \
+	PYLIBS="$(PYLIBS)" \
+	DEBUG_LEVEL="$(DEBUG_LEVEL)" \
 	    python setup.py install --prefix=$(prefix)
 
 endif
@@ -166,7 +188,7 @@ check_PROGRAMS = $(TESTS)
 
 UnitTests_SOURCES = tests/UnitTests.cc \
 	\
-	tests/corelib/numerics/BasicAmountTestCase.cc
+	tests/corelib/numerics/BasicAmount.cc
 
 UnitTests_LDADD   = $(lib_LTLIBRARIES) -lcppunit
 UnitTests_LDFLAGS = $(LIBADD_DL)
@@ -185,8 +207,8 @@ if DEBUG
 UnitTests_CXXFLAGS += -DDEBUG_LEVEL=4
 endif
 
-PyUnitTests:
-	python tests/python/UnitTests.py
+PyUnitTests: PyUnitTests.py
+	cp PyUnitTests.py PyUnitTests
 
 ######################################################################
 
