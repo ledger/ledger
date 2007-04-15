@@ -213,6 +213,7 @@ libgdtoa_la_SOURCES = \
 
 libgdtoa_la_LDFLAGS = -release 1.0
 pkginclude_HEADERS = gdtoa.h
+CLEANFILES = arithchk qnan
 all: acconf.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -593,6 +594,7 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
