@@ -1,2 +1,2 @@
 #!/bin/sh
-python tests/python/UnitTests.py
+PYTHONPATH=$PWD:$PYTHONPATH python tests/python/UnitTests.py

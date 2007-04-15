@@ -227,4 +227,4 @@ all-clean: maintainer-clean
 		acconf.h.in aclocal.m4 autom4te config.guess config.sub \
 		configure depcomp install-sh libtool ltconfig ltmain.sh \
 		missing stamp texinfo.tex Makefile.in mkinstalldirs \
-		elisp-comp elc-stamp py-compile *.gch UnitTests
+		elisp-comp elc-stamp elc-temp py-compile
