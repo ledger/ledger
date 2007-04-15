@@ -161,7 +161,7 @@ check_PROGRAMS = $(TESTS)
 
 UnitTests_SOURCES = tests/UnitTests.cc \
 	\
-	tests/corelib/numerics/BasicAmountTest.cc
+	tests/corelib/numerics/BasicAmountTestCase.cc
 
 UnitTests_LDADD   = $(lib_LTLIBRARIES) -lcppunit
 UnitTests_LDFLAGS = $(LIBADD_DL)

@@ -46,8 +46,8 @@ public:
   virtual void tearDown() {}
 
   void testInitialization() {
-    assertEquals(std::string("Hello, world!"),
-		 std::string("Hello, world!"));
+    assertEqual(std::string("Hello, world!"),
+		std::string("Hello, world!"));
   }
 
 private:
