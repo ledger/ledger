@@ -21,6 +21,13 @@ void py_parse_2(amount_t& amount, const std::string& str) {
   amount.parse(str);
 }
 
+amount_t py_round_1(amount_t& amount, unsigned int prec) {
+  return amount.round(prec);
+}
+amount_t py_round_2(amount_t& amount) {
+  return amount.round();
+}
+
 struct commodity_updater_wrap : public commodity_base_t::updater_t
 {
   PyObject * self;
@@ -148,6 +155,7 @@ void export_amount()
     .def("strip_annotations", &amount_t::strip_annotations)
     .def("clear_commodity", &amount_t::clear_commodity)
 
+    .def("to_string", &amount_t::to_string)
     .def("quantity_string", &amount_t::quantity_string)
 
     .def("abs", &amount_t::abs)
@@ -159,10 +167,15 @@ void export_amount()
     .def("parse", py_parse_1)
     .def("parse", py_parse_2)
     .def("price", &amount_t::price)
+    .def("realzero", &amount_t::realzero)
     .def("reduce", &amount_t::reduce)
     .def("reduced", &amount_t::reduced)
+    .def("round", py_round_1)
+    .def("round", py_round_2)
     .def("sign", &amount_t::sign)
+    .def("unround", &amount_t::unround)
     .def("value", &amount_t::value)
+    .def("zero", &amount_t::zero)
 
     .def("valid", &amount_t::valid)
     ;

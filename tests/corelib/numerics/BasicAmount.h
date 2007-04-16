@@ -19,6 +19,15 @@ class BasicAmountTestCase : public CPPUNIT_NS::TestCase
   CPPUNIT_TEST(testFractionalMultiplication);
   CPPUNIT_TEST(testIntegerDivision);
   CPPUNIT_TEST(testFractionalDivision);
+  CPPUNIT_TEST(testIntegerConversion);
+  CPPUNIT_TEST(testFractionalConversion);
+  CPPUNIT_TEST(testFractionalRound);
+  CPPUNIT_TEST(testTruth);
+  CPPUNIT_TEST(testForZero);
+  CPPUNIT_TEST(testComparisons);
+  CPPUNIT_TEST(testSign);
+  CPPUNIT_TEST(testAbs);
+  CPPUNIT_TEST(testPrinting);
 
   CPPUNIT_TEST_SUITE_END();
 
@@ -41,6 +50,15 @@ public:
   void testFractionalMultiplication();
   void testIntegerDivision();
   void testFractionalDivision();
+  void testIntegerConversion();
+  void testFractionalConversion();
+  void testFractionalRound();
+  void testTruth();
+  void testForZero();
+  void testComparisons();
+  void testSign();
+  void testAbs();
+  void testPrinting();
 
 private:
   BasicAmountTestCase(const BasicAmountTestCase &copy);

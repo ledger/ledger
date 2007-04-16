@@ -128,9 +128,6 @@ class amount_t
     return ! quantity && ! has_commodity();
   }
 
-  std::string to_string() const;
-  std::string quantity_string() const {}
-
   // assignment operator
   amount_t& operator=(const amount_t& amt);
   amount_t& operator=(const std::string& val);
@@ -226,12 +223,21 @@ class amount_t
     return negated();
   }
 
-  // test for non-zero (use ! for zero)
-  operator bool() const;
+  // test for zero and non-zero
+  int sign() const;
+  bool zero() const;
+  bool realzero() const {
+    return sign() == 0;
+  }
+  operator bool() const {
+    return ! zero();
+  }
+
   operator long() const;
   operator double() const;
 
-  bool realzero() const;
+  std::string to_string() const;
+  std::string quantity_string() const;
 
   // comparisons between amounts
   int compare(const amount_t& amt) const;
@@ -258,8 +264,6 @@ class amount_t
     std::istringstream in(temp.str());
     parse(in);
   }
-
-  int sign() const;
 
   // POD comparisons
 #define AMOUNT_CMP_INT(OP)			\
@@ -322,7 +326,7 @@ class amount_t
 #define AMOUNT_PARSE_NO_MIGRATE 0x01
 #define AMOUNT_PARSE_NO_REDUCE  0x02
 
-  void print(std::ostream& out) const;
+  void print(std::ostream& out, bool omit_commodity = false) const;
   void parse(std::istream& in, unsigned char flags = 0);
   void parse(const std::string& str, unsigned char flags = 0) {
     std::istringstream stream(str);
@@ -343,6 +347,12 @@ class amount_t
 inline std::string amount_t::to_string() const {
   std::ostringstream bufstream;
   print(bufstream);
+  return bufstream.str();
+}
+
+inline std::string amount_t::quantity_string() const {
+  std::ostringstream bufstream;
+  print(bufstream, true);
   return bufstream.str();
 }
 

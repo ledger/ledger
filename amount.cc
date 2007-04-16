@@ -681,23 +681,18 @@ bool amount_t::operator!=(const amount_t& amt) const
   return compare(amt) != 0;
 }
 
-amount_t::operator bool() const
+bool amount_t::zero() const
 {
   if (! quantity)
-    return false;
+    return true;
 
-  if (has_commodity() && quantity->prec <= commodity().precision()) {
-    return mpz_sgn(MPZ(quantity)) != 0;
-  } else {
-    mpz_set(temp, MPZ(quantity));
-    if (quantity->flags & BIGINT_KEEP_PREC || ! has_commodity())
-      mpz_ui_pow_ui(divisor, 10, quantity->prec);
+  if (has_commodity()) {
+    if (quantity->prec <= commodity().precision())
+      return realzero();
     else
-      mpz_ui_pow_ui(divisor, 10, quantity->prec - commodity().precision());
-    mpz_tdiv_q(temp, temp, divisor);
-    bool zero = mpz_sgn(temp) == 0;
-    return ! zero;
+      return round(commodity().precision()).sign() == 0;
   }
+  return realzero();
 }
 
 amount_t::operator long() const
@@ -735,13 +730,6 @@ amount_t::operator double() const
   mpz_clear(remainder);
 
   return std::atof(num.str().c_str());
-}
-
-bool amount_t::realzero() const
-{
-  if (! quantity)
-    return true;
-  return mpz_sgn(MPZ(quantity)) == 0;
 }
 
 amount_t amount_t::value(const datetime_t& moment) const
@@ -887,7 +875,7 @@ void amount_t::print_quantity(std::ostream& out) const
   mpz_clear(remainder);
 }
 
-void amount_t::print(std::ostream& _out) const
+void amount_t::print(std::ostream& _out, bool omit_commodity) const
 {
   if (! quantity) {
     _out << "0";
@@ -967,7 +955,7 @@ void amount_t::print(std::ostream& _out) const
     return;
   }
 
-  if (! (comm.flags() & COMMODITY_STYLE_SUFFIXED)) {
+  if (! omit_commodity && ! (comm.flags() & COMMODITY_STYLE_SUFFIXED)) {
     comm.write(out);
 
     if (comm.flags() & COMMODITY_STYLE_SEPARATED)
@@ -1048,7 +1036,7 @@ void amount_t::print(std::ostream& _out) const
     }
   }
 
-  if (comm.flags() & COMMODITY_STYLE_SUFFIXED) {
+  if (! omit_commodity && comm.flags() & COMMODITY_STYLE_SUFFIXED) {
     if (comm.flags() & COMMODITY_STYLE_SEPARATED)
       out << " ";
 
@@ -1062,7 +1050,7 @@ void amount_t::print(std::ostream& _out) const
   // If there are any annotations associated with this commodity,
   // output them now.
 
-  if (comm.annotated) {
+  if (! omit_commodity && comm.annotated) {
     annotated_commodity_t& ann(static_cast<annotated_commodity_t&>(comm));
     assert(&ann.price != this);
     ann.write_annotations(out);
