@@ -371,7 +371,7 @@
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>333106140BD0A8DE00A43EF0</string>
+										<string>3357D0A80BD4A44C004B3223</string>
 										<key>history</key>
 										<array>
 											<string>333230340B802B2C00C403F5</string>
@@ -394,7 +394,7 @@
 											<string>33B8460B0BD0A5CC00472F4E</string>
 											<string>33B846130BD0A63200472F4E</string>
 											<string>33B846400BD0A6EB00472F4E</string>
-											<string>33B846570BD0A77800472F4E</string>
+											<string>333106140BD0A8DE00A43EF0</string>
 										</array>
 										<key>prevStack</key>
 										<array>
@@ -476,9 +476,9 @@
 			</array>
 			<key>TableOfContents</key>
 			<array>
-				<string>333106120BD0A83600A43EF0</string>
+				<string>3357D0950BD4A3DB004B3223</string>
 				<string>1CE0B1FE06471DED0097A5F4</string>
-				<string>333106130BD0A83600A43EF0</string>
+				<string>3357D0960BD4A3DB004B3223</string>
 				<string>1CE0B20306471E060097A5F4</string>
 				<string>1CE0B20506471E060097A5F4</string>
 			</array>
@@ -597,7 +597,7 @@
 	<key>StatusbarIsVisible</key>
 	<true/>
 	<key>TimeStamp</key>
-	<real>198224094.835704</real>
+	<real>198485068.55365801</real>
 	<key>ToolbarDisplayMode</key>
 	<integer>1</integer>
 	<key>ToolbarIsVisible</key>
@@ -612,8 +612,8 @@
 	<integer>5</integer>
 	<key>WindowOrderList</key>
 	<array>
+		<string>/Volumes/Users/johnw/Projects/local/ledger/trunk/ledger.xcodeproj</string>
 		<string>33AD83730B8027C500CF4200</string>
-		<string>/Volumes/Users/johnw/Projects/sf.ledger/trunk/ledger.xcodeproj</string>
 	</array>
 	<key>WindowString</key>
 	<string>206 55 1041 823 0 0 1440 878 </string>
@@ -637,7 +637,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>1CD0528F0623707200166675</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>xmlparse.cc</string>
+								<string></string>
 								<key>StatusBarVisibility</key>
 								<true/>
 							</dict>
@@ -695,7 +695,7 @@
 			<key>TableOfContents</key>
 			<array>
 				<string>33AD83730B8027C500CF4200</string>
-				<string>333105EB0BD0A79900A43EF0</string>
+				<string>3357D0990BD4A3E5004B3223</string>
 				<string>1CD0528F0623707200166675</string>
 				<string>XCMainBuildResultsModuleGUID</string>
 			</array>
@@ -706,7 +706,7 @@
 			<key>WindowToolGUID</key>
 			<string>33AD83730B8027C500CF4200</string>
 			<key>WindowToolIsVisible</key>
-			<false/>
+			<true/>
 		</dict>
 		<dict>
 			<key>FirstTimeWindowDisplayed</key>

@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		3356EA010B80299700EC228D /* main.cc in Sources */ = {isa = PBXBuildFile; fileRef = 3356EA000B80299700EC228D /* main.cc */; };
 		3356EA0A0B8029FA00EC228D /* option.cc in Sources */ = {isa = PBXBuildFile; fileRef = 3356EA090B8029FA00EC228D /* option.cc */; };
+		3357D09C0BD4A3FD004B3223 /* libgmp.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3357D09B0BD4A3FD004B3223 /* libgmp.dylib */; };
+		3357D09E0BD4A40E004B3223 /* libexpat.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3357D09D0BD4A40E004B3223 /* libexpat.dylib */; };
 		33AD831E0B80269C00CF4200 /* amount.cc in Sources */ = {isa = PBXBuildFile; fileRef = 33AD82DC0B80269C00CF4200 /* amount.cc */; };
 		33AD831F0B80269C00CF4200 /* amount.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 33AD82DD0B80269C00CF4200 /* amount.h */; };
 		33AD83200B80269C00CF4200 /* balance.cc in Sources */ = {isa = PBXBuildFile; fileRef = 33AD82DE0B80269C00CF4200 /* balance.cc */; };
@@ -67,8 +69,6 @@
 		33AD835E0B80269C00CF4200 /* xpath.cc in Sources */ = {isa = PBXBuildFile; fileRef = 33AD831C0B80269C00CF4200 /* xpath.cc */; };
 		33AD835F0B80269C00CF4200 /* xpath.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 33AD831D0B80269C00CF4200 /* xpath.h */; };
 		33AD83760B80280B00CF4200 /* acconf.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 33AD83750B80280B00CF4200 /* acconf.h */; };
-		33B846040BD0A59100472F4E /* libxml2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 33B846030BD0A59100472F4E /* libxml2.dylib */; };
-		33B846070BD0A5B200472F4E /* libgmp.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 33B846050BD0A5B200472F4E /* libgmp.dylib */; };
 		33B846080BD0A5B200472F4E /* libpcre.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 33B846060BD0A5B200472F4E /* libpcre.dylib */; };
 		8DD76F6A0486A84900D96B5E /* ledger.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = C6859E8B029090EE04C91782 /* ledger.1 */; };
 /* End PBXBuildFile section */
@@ -121,6 +121,8 @@
 /* Begin PBXFileReference section */
 		3356EA000B80299700EC228D /* main.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cc; sourceTree = "<group>"; };
 		3356EA090B8029FA00EC228D /* option.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = option.cc; sourceTree = "<group>"; };
+		3357D09B0BD4A3FD004B3223 /* libgmp.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgmp.dylib; path = /sw/lib/libgmp.dylib; sourceTree = "<absolute>"; };
+		3357D09D0BD4A40E004B3223 /* libexpat.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libexpat.dylib; path = /usr/local/lib/libexpat.dylib; sourceTree = "<absolute>"; };
 		33AD82DC0B80269C00CF4200 /* amount.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = amount.cc; sourceTree = "<group>"; };
 		33AD82DD0B80269C00CF4200 /* amount.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = amount.h; sourceTree = "<group>"; };
 		33AD82DE0B80269C00CF4200 /* balance.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = balance.cc; sourceTree = "<group>"; };
@@ -179,10 +181,8 @@
 		33AD831C0B80269C00CF4200 /* xpath.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xpath.cc; sourceTree = "<group>"; };
 		33AD831D0B80269C00CF4200 /* xpath.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = xpath.h; sourceTree = "<group>"; };
 		33AD83750B80280B00CF4200 /* acconf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = acconf.h; sourceTree = "<group>"; };
-		33B846030BD0A59100472F4E /* libxml2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libxml2.dylib; path = /usr/local/lib/libxml2.dylib; sourceTree = "<absolute>"; };
-		33B846050BD0A5B200472F4E /* libgmp.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgmp.dylib; path = /usr/local/lib/libgmp.dylib; sourceTree = "<absolute>"; };
 		33B846060BD0A5B200472F4E /* libpcre.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpcre.dylib; path = /usr/local/lib/libpcre.dylib; sourceTree = "<absolute>"; };
-		8DD76F6C0486A84900D96B5E /* ledger */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ledger; sourceTree = BUILT_PRODUCTS_DIR; };
+		8DD76F6C0486A84900D96B5E /* ledger */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "compiled.mach-o.executable"; path = ledger; sourceTree = BUILT_PRODUCTS_DIR; };
 		C6859E8B029090EE04C91782 /* ledger.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = ledger.1; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -191,9 +191,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				33B846040BD0A59100472F4E /* libxml2.dylib in Frameworks */,
-				33B846070BD0A5B200472F4E /* libgmp.dylib in Frameworks */,
 				33B846080BD0A5B200472F4E /* libpcre.dylib in Frameworks */,
+				3357D09C0BD4A3FD004B3223 /* libgmp.dylib in Frameworks */,
+				3357D09E0BD4A40E004B3223 /* libexpat.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -385,9 +385,9 @@
 		33B8460F0BD0A60100472F4E /* Dependencies */ = {
 			isa = PBXGroup;
 			children = (
-				33B846050BD0A5B200472F4E /* libgmp.dylib */,
+				3357D09D0BD4A40E004B3223 /* libexpat.dylib */,
+				3357D09B0BD4A3FD004B3223 /* libgmp.dylib */,
 				33B846060BD0A5B200472F4E /* libpcre.dylib */,
-				33B846030BD0A59100472F4E /* libxml2.dylib */,
 			);
 			name = Dependencies;
 			sourceTree = "<group>";
@@ -493,6 +493,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/usr/local/lib,
+					/sw/lib,
 				);
 				PRODUCT_NAME = ledger;
 				ZERO_LINK = YES;
@@ -514,6 +515,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/usr/local/lib,
+					/sw/lib,
 				);
 				PRODUCT_NAME = ledger;
 			};
@@ -524,6 +526,14 @@
 			buildSettings = {
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					/usr/local/include,
+					/sw/include,
+				);
+				LIBRARY_SEARCH_PATHS = (
+					/usr/local/lib,
+					/sw/lib,
+				);
 				PREBINDING = NO;
 				SDKROOT = "";
 			};
@@ -534,6 +544,14 @@
 			buildSettings = {
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					/usr/local/include,
+					/sw/include,
+				);
+				LIBRARY_SEARCH_PATHS = (
+					/usr/local/lib,
+					/sw/lib,
+				);
 				PREBINDING = NO;
 				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
 			};

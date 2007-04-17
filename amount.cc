@@ -1163,6 +1163,8 @@ static void parse_commodity(std::istream& in, std::string& symbol)
 bool parse_annotations(std::istream& in, amount_t& price,
 		       datetime_t& date, std::string& tag)
 {
+  bool has_date = false;
+  
   do {
     char buf[256];
     char c = peek_next_nonws(in);
@@ -1200,6 +1202,7 @@ bool parse_annotations(std::istream& in, amount_t& price,
 	throw new amount_error("Commodity date lacks closing bracket");
 
       date = buf;
+      has_date = true;
     }
     else if (c == '(') {
       if (! tag.empty())
@@ -1224,6 +1227,8 @@ bool parse_annotations(std::istream& in, amount_t& price,
 	      << "  price " << price << " "
 	      << "  date " << date << " "
 	      << "  tag " << tag);
+
+  return has_date;
 }
 
 void amount_t::parse(std::istream& in, unsigned char flags)
