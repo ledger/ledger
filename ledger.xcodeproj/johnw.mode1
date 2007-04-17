@@ -359,7 +359,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>1CE0B20306471E060097A5F4</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>datetime.cc</string>
+								<string>amount.cc</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -367,11 +367,11 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>1CE0B20406471E060097A5F4</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>datetime.cc</string>
+										<string>amount.cc</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>3357D0A80BD4A44C004B3223</string>
+										<string>3357D0BB0BD4A651004B3223</string>
 										<key>history</key>
 										<array>
 											<string>333230340B802B2C00C403F5</string>
@@ -381,7 +381,6 @@
 											<string>333230960B802C9A00C403F5</string>
 											<string>333230A30B802D4000C403F5</string>
 											<string>333230A40B802D4000C403F5</string>
-											<string>333230A60B802D4000C403F5</string>
 											<string>333230A70B802D4000C403F5</string>
 											<string>333230A80B802D4000C403F5</string>
 											<string>333230A90B802D4000C403F5</string>
@@ -394,7 +393,8 @@
 											<string>33B8460B0BD0A5CC00472F4E</string>
 											<string>33B846130BD0A63200472F4E</string>
 											<string>33B846400BD0A6EB00472F4E</string>
-											<string>333106140BD0A8DE00A43EF0</string>
+											<string>3357D0B80BD4A651004B3223</string>
+											<string>3357D0B90BD4A651004B3223</string>
 										</array>
 										<key>prevStack</key>
 										<array>
@@ -419,6 +419,7 @@
 											<string>333230C00B802D4000C403F5</string>
 											<string>333230C20B802D4000C403F5</string>
 											<string>33B8460D0BD0A5CC00472F4E</string>
+											<string>3357D0BA0BD4A651004B3223</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -597,7 +598,7 @@
 	<key>StatusbarIsVisible</key>
 	<true/>
 	<key>TimeStamp</key>
-	<real>198485068.55365801</real>
+	<real>198485585.74654299</real>
 	<key>ToolbarDisplayMode</key>
 	<integer>1</integer>
 	<key>ToolbarIsVisible</key>
@@ -637,7 +638,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>1CD0528F0623707200166675</string>
 								<key>PBXProjectModuleLabel</key>
-								<string></string>
+								<string>amount.cc</string>
 								<key>StatusBarVisibility</key>
 								<true/>
 							</dict>
@@ -658,6 +659,8 @@
 							<true/>
 							<key>ContentConfiguration</key>
 							<dict>
+								<key>PBXBuildLogShowsTranscriptDefaultKey</key>
+								<string>{{0, 93}, {730, 143}}</string>
 								<key>PBXProjectModuleGUID</key>
 								<string>XCMainBuildResultsModuleGUID</string>
 								<key>PBXProjectModuleLabel</key>

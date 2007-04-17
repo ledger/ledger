@@ -337,9 +337,9 @@ top_srcdir = @top_srcdir@
 SUBDIRS = gdtoa
 EXTRA_DIST = docs tests
 lib_LTLIBRARIES = libledger.la $(am__append_1)
-libledger_la_CXXFLAGS = $(WARNFLAGS) -I$(includedir) $(am__append_2) \
-	$(am__append_4) $(am__append_6) $(am__append_8) \
-	$(am__append_10)
+libledger_la_CXXFLAGS = $(WARNFLAGS) -I$(top_builddir)/gdtoa \
+	$(am__append_2) $(am__append_4) $(am__append_6) \
+	$(am__append_8) $(am__append_10)
 libledger_la_SOURCES = amount.cc quotes.cc balance.cc value.cc \
 	datetime.cc xml.cc xpath.cc mask.cc format.cc util.cc \
 	session.cc journal.cc parser.cc textual.cc binary.cc \

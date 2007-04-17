@@ -10,7 +10,7 @@ if HAVE_BOOST_PYTHON
 lib_LTLIBRARIES += libpyledger.la
 endif
 
-libledger_la_CXXFLAGS = $(WARNFLAGS) -I$(includedir)
+libledger_la_CXXFLAGS = $(WARNFLAGS) -I$(top_builddir)/gdtoa
 libledger_la_SOURCES = \
 	amount.cc      \
 	quotes.cc      \
