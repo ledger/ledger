@@ -3,7 +3,7 @@
 
 AC_PREREQ(2.59)
 
-AC_INIT(ledger, 3.0-svn-700, johnw@newartisans.com)
+AC_INIT(ledger, 3.0-svn-733, johnw@newartisans.com)
 AC_CONFIG_SRCDIR(ledger)
 AM_INIT_AUTOMAKE
 
