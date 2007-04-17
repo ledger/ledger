@@ -220,6 +220,7 @@ class amount_t
   }
 
   // unary negation
+  // jww (2007-04-17): change the name here
   void negate();
   amount_t negated() const {
     amount_t temp = *this;
@@ -302,11 +303,13 @@ class amount_t
 
   amount_t value(const datetime_t& moment) const;
 
+  // jww (2007-04-17): change the name here
   void abs() {
     if (*this < 0)
       negate();
   }
 
+  // jww (2007-04-17): change the name here
   void reduce();
   amount_t reduced() const {
     amount_t temp(*this);

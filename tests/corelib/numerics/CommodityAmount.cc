@@ -91,6 +91,10 @@ void CommodityAmountTestCase::testNegation()
   assertEqual(amount_t("-123.45€"), - x9);
   assertEqual(amount_t("123.45€"), - x10);
 
+  assertEqual(amount_t("$-123.45"), x1.negated());
+  assertEqual(amount_t("$123.45"), x2.negated());
+  assertEqual(amount_t("$123.45"), x3.negated());
+
   assertEqual(std::string("$-123.45"), (- x1).to_string());
   assertEqual(std::string("$123.45"), (- x2).to_string());
   assertEqual(std::string("$123.45"), (- x3).to_string());
@@ -101,6 +105,14 @@ void CommodityAmountTestCase::testNegation()
   assertEqual(std::string("123.45 euro"), (- x8).to_string());
   assertEqual(std::string("-123.45€"), (- x9).to_string());
   assertEqual(std::string("123.45€"), (- x10).to_string());
+
+  x1.negate();
+  x2.negate();
+  x3.negate();
+
+  assertEqual(amount_t("$-123.45"), x1);
+  assertEqual(amount_t("$123.45"), x2);
+  assertEqual(amount_t("$123.45"), x3);
 
   assertValid(x1);
   assertValid(x2);
@@ -163,6 +175,7 @@ void CommodityAmountTestCase::testAssignment()
 
 void CommodityAmountTestCase::testEquality()
 {
+  amount_t x0;
   amount_t x1  = "$123.45";
   amount_t x2  = "-$123.45";
   amount_t x3  = "$-123.45";
@@ -174,6 +187,14 @@ void CommodityAmountTestCase::testEquality()
   amount_t x9  = "123.45€";
   amount_t x10 = "-123.45€";
 
+  assertTrue(x0.null());
+  assertTrue(x0.zero());
+  assertTrue(x0.realzero());
+  assertTrue(x0.sign() == 0);
+  assertTrue(x0.compare(x1) < 0);
+  assertTrue(x0.compare(x2) > 0);
+  assertTrue(x0.compare(x0) == 0);
+
   assertTrue(x1 != x2);
   assertTrue(x1 != x4);
   assertTrue(x1 != x7);
@@ -184,6 +205,7 @@ void CommodityAmountTestCase::testEquality()
   assertTrue(x7 == - x8);
   assertTrue(x9 == - x10);
 
+  assertValid(x0);
   assertValid(x1);
   assertValid(x2);
   assertValid(x3);
@@ -497,10 +519,20 @@ void CommodityAmountTestCase::testRound()
   assertEqual(amount_t("$-9876.5"), x4.round(1));
   assertEqual(amount_t("$-9877"), x4.round(0));
 
+  amount_t x5("$123.45");
+
+  x5 *= 100.12;
+
+  assertEqual(internalAmount("$12359.814"), x5);
+  assertEqual(std::string("$12359.81"), x5.to_string());
+  assertEqual(std::string("$12359.814"), x5.to_fullstring());
+  assertEqual(std::string("$12359.814"), x5.unround().to_string());
+
   assertValid(x1);
   assertValid(x2);
   assertValid(x3);
   assertValid(x4);
+  assertValid(x5);
 }
 
 void CommodityAmountTestCase::testDisplayRound()
@@ -633,6 +665,26 @@ void CommodityAmountTestCase::testAbs()
   assertValid(x2);
 }
 
+void CommodityAmountTestCase::testPriceHistory()
+{
+  // jww (2007-04-17): tbd
+}
+
+void CommodityAmountTestCase::testLots()
+{
+  // jww (2007-04-17): tbd
+}
+
+void CommodityAmountTestCase::testScalingBase()
+{
+  // jww (2007-04-17): tbd
+}
+
+void CommodityAmountTestCase::testReduction()
+{
+  // jww (2007-04-17): tbd
+}
+
 void CommodityAmountTestCase::testPrinting()
 {
   amount_t x0;
@@ -673,3 +725,4 @@ void CommodityAmountTestCase::testPrinting()
   assertValid(x1);
   assertValid(x2);
 }
+

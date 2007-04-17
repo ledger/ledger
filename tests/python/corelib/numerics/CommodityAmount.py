@@ -90,6 +90,10 @@ class CommodityAmountTestCase(unittest.TestCase):
         self.assertEqual(amount("-123.45€"), - x9)
         self.assertEqual(amount("123.45€"), - x10)
 
+        self.assertEqual(amount("$-123.45"), x1.negated())
+        self.assertEqual(amount("$123.45"), x2.negated())
+        self.assertEqual(amount("$123.45"), x3.negated())
+
         self.assertEqual("$-123.45", (- x1).to_string())
         self.assertEqual("$123.45", (- x2).to_string())
         self.assertEqual("$123.45", (- x3).to_string())
@@ -100,6 +104,14 @@ class CommodityAmountTestCase(unittest.TestCase):
         self.assertEqual("123.45 euro", (- x8).to_string())
         self.assertEqual("-123.45€", (- x9).to_string())
         self.assertEqual("123.45€", (- x10).to_string())
+
+        x1.negate()
+        x2.negate()
+        x3.negate()
+
+        self.assertEqual(amount("$-123.45"), x1)
+        self.assertEqual(amount("$123.45"), x2)
+        self.assertEqual(amount("$123.45"), x3)
 
         self.assertValid(x1)
         self.assertValid(x2)
@@ -158,6 +170,7 @@ class CommodityAmountTestCase(unittest.TestCase):
         self.assertValid(x10)
 
     def testEquality(self):
+        x0 = amount()
         x1 = amount("$123.45")
         x2 = amount("-$123.45")
         x3 = amount("$-123.45")
@@ -169,6 +182,14 @@ class CommodityAmountTestCase(unittest.TestCase):
         x9 = amount("123.45€")
         x10 = amount("-123.45€")
 
+        self.assertTrue(x0.null())
+        self.assertTrue(x0.zero())
+        self.assertTrue(x0.realzero())
+        self.assertTrue(x0.sign() == 0)
+        self.assertTrue(x0.compare(x1) < 0)
+        self.assertTrue(x0.compare(x2) > 0)
+        self.assertTrue(x0.compare(x0) == 0)
+
         self.assertTrue(x1 != x2)
         self.assertTrue(x1 != x4)
         self.assertTrue(x1 != x7)
@@ -179,6 +200,7 @@ class CommodityAmountTestCase(unittest.TestCase):
         self.assertTrue(x7 == - x8)
         self.assertTrue(x9 == - x10)
 
+        self.assertValid(x0)
         self.assertValid(x1)
         self.assertValid(x2)
         self.assertValid(x3)
