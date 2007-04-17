@@ -196,7 +196,8 @@ check_PROGRAMS = $(TESTS)
 
 UnitTests_SOURCES = tests/UnitTests.cc \
 	\
-	tests/corelib/numerics/BasicAmount.cc
+	tests/corelib/numerics/BasicAmount.cc \
+	tests/corelib/numerics/CommodityAmount.cc
 
 UnitTests_LDADD   = $(lib_LTLIBRARIES) gdtoa/libgdtoa.la -lcppunit
 UnitTests_LDFLAGS = $(LIBADD_DL)

@@ -17,10 +17,12 @@ autoconf
 
 INCDIRS="-I/usr/local/include"
 INCDIRS="$INCDIRS -I/usr/local/include/boost"
+INCDIRS="$INCDIRS -I/sw/include"
 INCDIRS="$INCDIRS -I/usr/include/httpd/xml"
 INCDIRS="$INCDIRS -I/Library/Frameworks/Python.framework/Versions/2.5/include/python2.5"
 
 LIBDIRS="-L/usr/local/lib"
+LIBDIRS="$LIBDIRS -L/sw/lib"
 LIBDIRS="$LIBDIRS -L/Library/Frameworks/Python.framework/Versions/2.5/lib/python2.5/config"
 
 SYSTEM=`uname -s`

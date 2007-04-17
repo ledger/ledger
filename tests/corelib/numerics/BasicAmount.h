@@ -1,5 +1,5 @@
-#ifndef _BASICAMOUNTTEST_H
-#define _BASICAMOUNTTEST_H
+#ifndef _BASICAMOUNT_H
+#define _BASICAMOUNT_H
 
 #include "UnitTests.h"
 
@@ -65,4 +65,4 @@ private:
   void operator=(const BasicAmountTestCase &copy);
 };
 
-#endif /* _BASICAMOUNTTEST_H */
+#endif /* _BASICAMOUNT_H */

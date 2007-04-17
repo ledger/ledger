@@ -312,7 +312,7 @@ class amount_t
   friend void clean_commodity_history(char * item_pool,
 				      char * item_pool_end);
 
-  friend void parse_annotations(std::istream& in, amount_t& price,
+  friend bool parse_annotations(std::istream& in, amount_t& price,
 				datetime_t& date, std::string& tag);
 
   // Streaming interface

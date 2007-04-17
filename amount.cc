@@ -1123,7 +1123,7 @@ static void parse_commodity(std::istream& in, std::string& symbol)
   symbol = buf;
 }
 
-void parse_annotations(std::istream& in, amount_t& price,
+bool parse_annotations(std::istream& in, amount_t& price,
 		       datetime_t& date, std::string& tag)
 {
   do {
@@ -1200,6 +1200,7 @@ void amount_t::parse(std::istream& in, unsigned char flags)
   std::string  quant;
   amount_t     tprice;
   datetime_t   tdate;
+  bool         had_date = false;
   std::string  tag;
   unsigned int comm_flags = COMMODITY_STYLE_DEFAULTS;
   bool         negative = false;
@@ -1225,7 +1226,7 @@ void amount_t::parse(std::istream& in, unsigned char flags)
 	comm_flags |= COMMODITY_STYLE_SUFFIXED;
 
       if (! in.eof() && ((n = in.peek()) != '\n'))
-	parse_annotations(in, tprice, tdate, tag);
+	had_date = parse_annotations(in, tprice, tdate, tag);
     }
   } else {
     parse_commodity(in, symbol);
@@ -1237,7 +1238,7 @@ void amount_t::parse(std::istream& in, unsigned char flags)
       parse_quantity(in, quant);
 
       if (! quant.empty() && ! in.eof() && ((n = in.peek()) != '\n'))
-	parse_annotations(in, tprice, tdate, tag);
+	had_date = parse_annotations(in, tprice, tdate, tag);
     }
   }
 
@@ -1261,7 +1262,7 @@ void amount_t::parse(std::istream& in, unsigned char flags)
     }
     assert(commodity_);
 
-    if (! tprice.realzero() || tdate || ! tag.empty())
+    if (! tprice.realzero() || had_date || ! tag.empty())
       commodity_ =
 	annotated_commodity_t::find_or_create(*commodity_, tprice, tdate, tag);
   }

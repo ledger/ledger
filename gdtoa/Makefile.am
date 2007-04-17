@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libgdtoa.la
 
-libgdtoa_la_CPPFLAGS = -I$(includedir)
+libgdtoa_la_CPPFLAGS = -I$(srcdir)
 libgdtoa_la_SOURCES = \
 	dmisc.c dtoa.c g_Qfmt.c g__fmt.c g_ddfmt.c g_dfmt.c g_ffmt.c \
 	g_xLfmt.c g_xfmt.c gdtoa.c gethex.c gmisc.c hd_init.c hexnan.c \
@@ -14,16 +14,15 @@ EXTRA_libgdtoa_la_SOURCES = arithchk.c qnan.c
 $(libgdtoa_la_SOURCES): arith.h gd_qnan.h
 
 arith.h: arithchk.c
-	mkdir -p $(includedir)
-	$(CC) $(CFLAGS) -o $(prefix)/arithchk $< || \
-	$(CC) -DNO_LONG_LONG $(CFLAGS) -o $(prefix)/arithchk $<
-	$(prefix)/arithchk > $(includedir)/$@
-	rm -f $(prefix)/arithchk
+	$(CC) $(CFLAGS) -o $(srcdir)/arithchk $< || \
+	$(CC) -DNO_LONG_LONG $(CFLAGS) -o $(srcdir)/arithchk $<
+	$(srcdir)/arithchk > $(srcdir)/$@
+	rm -f $(srcdir)/arithchk
 
 gd_qnan.h: qnan.c arith.h
-	$(CC) $(CFLAGS) -o $(prefix)/qnan -I$(includedir) $<
-	$(prefix)/qnan > $(includedir)/$@
-	rm -f $(prefix)/qnan
+	$(CC) $(CFLAGS) -o $(srcdir)/qnan -I$(srcdir) $<
+	$(srcdir)/qnan > $(srcdir)/$@
+	rm -f $(srcdir)/qnan
 
 libgdtoa_la_LDFLAGS = -release 1.0
 
