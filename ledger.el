@@ -371,6 +371,7 @@ dropped."
 
 (defvar ledger-mode-abbrev-table)
 
+;;;###autoload
 (define-derived-mode ledger-mode text-mode "Ledger"
   "A mode for editing ledger data files."
   (set (make-local-variable 'comment-start) ";")
@@ -1236,6 +1237,8 @@ the default."
       (setq ledger-month (read-string "Month: " (ledger-current-month)))
     (setq ledger-month (format "%02d" newmonth))))
 
+(defvar ledger-master-file nil)
+
 (defun ledger-master-file ()
   "Return the master file for a ledger file.
 
@@ -1243,7 +1246,7 @@ The master file is either the file for the current ledger buffer or the
 file specified by the buffer-local variable ledger-master-file.  Typically
 this variable would be set in a file local variable comment block at the
 end of a ledger file which is included in some other file."
-  (if (boundp 'ledger-master-file)
+  (if ledger-master-file
       (expand-file-name ledger-master-file)
     (buffer-file-name)))
 
