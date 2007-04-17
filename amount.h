@@ -107,6 +107,12 @@ class amount_t
       _release();
   }
 
+  amount_t number() const {
+    amount_t temp(*this);
+    temp.clear_commodity();
+    return temp;
+  }
+
   bool has_commodity() const;
   commodity_t& commodity() const;
   void set_commodity(commodity_t& comm) {

@@ -11,7 +11,13 @@ inline amount_t internalAmount(const std::string& value) {
   return temp;
 }
 
-void CommodityAmountTestCase::setUp() {}
+void CommodityAmountTestCase::setUp()
+{
+  // Cause the display precision for dollars to be initialized to 2.
+  amount_t x1("$1.00");
+  assertTrue(x1);
+}
+
 void CommodityAmountTestCase::tearDown() {}
 
 void CommodityAmountTestCase::testConstructors()
@@ -49,16 +55,16 @@ void CommodityAmountTestCase::testConstructors()
   assertEqual(std::string("123.45€"), x9.to_string());
   assertEqual(std::string("-123.45€"), x10.to_string());
 
-  CPPUNIT_ASSERT(x1.valid());
-  CPPUNIT_ASSERT(x2.valid());
-  CPPUNIT_ASSERT(x3.valid());
-  CPPUNIT_ASSERT(x4.valid());
-  CPPUNIT_ASSERT(x5.valid());
-  CPPUNIT_ASSERT(x6.valid());
-  CPPUNIT_ASSERT(x7.valid());
-  CPPUNIT_ASSERT(x8.valid());
-  CPPUNIT_ASSERT(x9.valid());
-  CPPUNIT_ASSERT(x10.valid());
+  assertValid(x1);
+  assertValid(x2);
+  assertValid(x3);
+  assertValid(x4);
+  assertValid(x5);
+  assertValid(x6);
+  assertValid(x7);
+  assertValid(x8);
+  assertValid(x9);
+  assertValid(x10);
 }
 
 void CommodityAmountTestCase::testNegation()
@@ -96,16 +102,16 @@ void CommodityAmountTestCase::testNegation()
   assertEqual(std::string("-123.45€"), (- x9).to_string());
   assertEqual(std::string("123.45€"), (- x10).to_string());
 
-  CPPUNIT_ASSERT(x1.valid());
-  CPPUNIT_ASSERT(x2.valid());
-  CPPUNIT_ASSERT(x3.valid());
-  CPPUNIT_ASSERT(x4.valid());
-  CPPUNIT_ASSERT(x5.valid());
-  CPPUNIT_ASSERT(x6.valid());
-  CPPUNIT_ASSERT(x7.valid());
-  CPPUNIT_ASSERT(x8.valid());
-  CPPUNIT_ASSERT(x9.valid());
-  CPPUNIT_ASSERT(x10.valid());
+  assertValid(x1);
+  assertValid(x2);
+  assertValid(x3);
+  assertValid(x4);
+  assertValid(x5);
+  assertValid(x6);
+  assertValid(x7);
+  assertValid(x8);
+  assertValid(x9);
+  assertValid(x10);
 }
 
 void CommodityAmountTestCase::testAssignment()
@@ -143,16 +149,16 @@ void CommodityAmountTestCase::testAssignment()
   assertEqual(std::string("123.45€"), x9.to_string());
   assertEqual(std::string("-123.45€"), x10.to_string());
 
-  CPPUNIT_ASSERT(x1.valid());
-  CPPUNIT_ASSERT(x2.valid());
-  CPPUNIT_ASSERT(x3.valid());
-  CPPUNIT_ASSERT(x4.valid());
-  CPPUNIT_ASSERT(x5.valid());
-  CPPUNIT_ASSERT(x6.valid());
-  CPPUNIT_ASSERT(x7.valid());
-  CPPUNIT_ASSERT(x8.valid());
-  CPPUNIT_ASSERT(x9.valid());
-  CPPUNIT_ASSERT(x10.valid());
+  assertValid(x1);
+  assertValid(x2);
+  assertValid(x3);
+  assertValid(x4);
+  assertValid(x5);
+  assertValid(x6);
+  assertValid(x7);
+  assertValid(x8);
+  assertValid(x9);
+  assertValid(x10);
 }
 
 void CommodityAmountTestCase::testEquality()
@@ -168,80 +174,159 @@ void CommodityAmountTestCase::testEquality()
   amount_t x9  = "123.45€";
   amount_t x10 = "-123.45€";
 
-  CPPUNIT_ASSERT(x1 != x2);
-  CPPUNIT_ASSERT(x1 != x4);
-  CPPUNIT_ASSERT(x1 != x7);
-  CPPUNIT_ASSERT(x1 != x9);
-  CPPUNIT_ASSERT(x2 == x3);
-  CPPUNIT_ASSERT(x4 != x5);
-  CPPUNIT_ASSERT(x5 == x6);
-  CPPUNIT_ASSERT(x7 == - x8);
-  CPPUNIT_ASSERT(x9 == - x10);
+  assertTrue(x1 != x2);
+  assertTrue(x1 != x4);
+  assertTrue(x1 != x7);
+  assertTrue(x1 != x9);
+  assertTrue(x2 == x3);
+  assertTrue(x4 != x5);
+  assertTrue(x5 == x6);
+  assertTrue(x7 == - x8);
+  assertTrue(x9 == - x10);
 
-  CPPUNIT_ASSERT(x1.valid());
-  CPPUNIT_ASSERT(x2.valid());
-  CPPUNIT_ASSERT(x3.valid());
-  CPPUNIT_ASSERT(x4.valid());
-  CPPUNIT_ASSERT(x5.valid());
-  CPPUNIT_ASSERT(x6.valid());
-  CPPUNIT_ASSERT(x7.valid());
-  CPPUNIT_ASSERT(x8.valid());
-  CPPUNIT_ASSERT(x9.valid());
-  CPPUNIT_ASSERT(x10.valid());
+  assertValid(x1);
+  assertValid(x2);
+  assertValid(x3);
+  assertValid(x4);
+  assertValid(x5);
+  assertValid(x6);
+  assertValid(x7);
+  assertValid(x8);
+  assertValid(x9);
+  assertValid(x10);
 }
 
 void CommodityAmountTestCase::testAddition()
 {
-  // jww (2007-04-16): tbd
-  amount_t x1(123.123);
-  amount_t y1(456.456);
+  amount_t x0;
+  amount_t x1("$123.45");
+  amount_t x2(internalAmount("$123.456789"));
+  amount_t x3("DM 123.45");
+  amount_t x4("123.45 euro");
+  amount_t x5("123.45€");
+  amount_t x6("123.45");
 
-  assertEqual(amount_t(579.579), x1 + y1);
-  assertEqual(amount_t(579.579), x1 + 456.456);
-  assertEqual(amount_t(579.579), 456.456 + x1);
+  assertEqual(amount_t("$246.90"), x1 + x1);
+  assertNotEqual(amount_t("$246.91"), x1 + x2);
+  assertEqual(internalAmount("$246.906789"), x1 + x2);
 
-  x1 += amount_t(456.456);
-  assertEqual(amount_t(579.579), x1);
-  x1 += 456.456;
-  assertEqual(amount_t(1036.035), x1);
-  x1 += 456L;
-  assertEqual(amount_t(1492.035), x1);
+  // Converting to string drops internal precision
+  assertEqual(std::string("$246.90"), (x1 + x1).to_string());
+  assertEqual(std::string("$246.91"), (x1 + x2).to_string());
 
-  amount_t x2("123456789123456789.123456789123456789");
+  assertThrow(x1 + x0, amount_error *);
+  assertThrow(x1 + x3, amount_error *);
+  assertThrow(x1 + x4, amount_error *);
+  assertThrow(x1 + x5, amount_error *);
+  assertThrow(x1 + x6, amount_error *);
+  assertThrow(x1 + 123.45, amount_error *);
+  assertThrow(x1 + 123L, amount_error *);
 
-  assertEqual(amount_t("246913578246913578.246913578246913578"), x2 + x2);
+  assertEqual(amount_t("DM 246.90"), x3 + x3);
+  assertEqual(amount_t("246.90 euro"), x4 + x4);
+  assertEqual(amount_t("246.90€"), x5 + x5);
 
-  CPPUNIT_ASSERT(x1.valid());
-  CPPUNIT_ASSERT(y1.valid());
-  CPPUNIT_ASSERT(x2.valid());
+  assertEqual(std::string("DM 246.90"), (x3 + x3).to_string());
+  assertEqual(std::string("246.90 euro"), (x4 + x4).to_string());
+  assertEqual(std::string("246.90€"), (x5 + x5).to_string());
+
+  x1 += amount_t("$456.45");
+  assertEqual(amount_t("$579.90"), x1);
+  x1 += amount_t("$456.45");
+  assertEqual(amount_t("$1036.35"), x1);
+  x1 += amount_t("$456");
+  assertEqual(amount_t("$1492.35"), x1);
+
+  amount_t x7(internalAmount("$123456789123456789.123456789123456789"));
+
+  assertEqual(internalAmount("$246913578246913578.246913578246913578"), x7 + x7);
+
+  assertValid(x1);
+  assertValid(x2);
+  assertValid(x3);
+  assertValid(x4);
+  assertValid(x5);
+  assertValid(x6);
+  assertValid(x7);
 }
 
 void CommodityAmountTestCase::testSubtraction()
 {
-  // jww (2007-04-16): tbd
-  amount_t x1(123.123);
-  amount_t y1(456.456);
+  amount_t x0;
+  amount_t x1("$123.45");
+  amount_t x2(internalAmount("$123.456789"));
+  amount_t x3("DM 123.45");
+  amount_t x4("123.45 euro");
+  amount_t x5("123.45€");
+  amount_t x6("123.45");
 
-  assertEqual(amount_t(-333.333), x1 - y1);
-  assertEqual(amount_t(333.333), y1 - x1);
+  assertNotEqual(amount_t(), x1 - x1);
+  assertEqual(amount_t("$0"), x1 - x1);
+  assertEqual(amount_t("$23.45"), x1 - amount_t("$100.00"));
+  assertEqual(amount_t("$-23.45"), amount_t("$100.00") - x1);
+  assertNotEqual(amount_t("$-0.01"), x1 - x2);
+  assertEqual(internalAmount("$-0.006789"), x1 - x2);
 
-  x1 -= amount_t(456.456);
-  assertEqual(amount_t(-333.333), x1);
-  x1 -= 456.456;
-  assertEqual(amount_t(-789.789), x1);
-  x1 -= 456L;
-  assertEqual(amount_t(-1245.789), x1);
+  // Converting to string drops internal precision.  If an amount is
+  // zero, it drops the commodity as well.
+  assertEqual(std::string("$0.00"), (x1 - x1).to_string());
+  assertEqual(std::string("$-0.01"), (x1 - x2).to_string());
 
-  amount_t x2("123456789123456789.123456789123456789");
-  amount_t y2("9872345982459.248974239578");
+  assertThrow(x1 - x0, amount_error *);
+  assertThrow(x1 - x3, amount_error *);
+  assertThrow(x1 - x4, amount_error *);
+  assertThrow(x1 - x5, amount_error *);
+  assertThrow(x1 - x6, amount_error *);
+  assertThrow(x1 - 123.45, amount_error *);
+  assertThrow(x1 - 123L, amount_error *);
 
-  assertEqual(amount_t("123446916777474329.874482549545456789"), x2 - y2);
-  assertEqual(amount_t("-123446916777474329.874482549545456789"), y2 - x2);
+  assertEqual(amount_t("DM 0.00"), x3 - x3);
+  assertEqual(amount_t("DM 23.45"), x3 - amount_t("DM 100.00"));
+  assertEqual(amount_t("DM -23.45"), amount_t("DM 100.00") - x3);
+  assertEqual(amount_t("0.00 euro"), x4 - x4);
+  assertEqual(amount_t("23.45 euro"), x4 - amount_t("100.00 euro"));
+  assertEqual(amount_t("-23.45 euro"), amount_t("100.00 euro") - x4);
+  assertEqual(amount_t("0.00€"), x5 - x5);
+  assertEqual(amount_t("23.45€"), x5 - amount_t("100.00€"));
+  assertEqual(amount_t("-23.45€"), amount_t("100.00€") - x5);
 
-  CPPUNIT_ASSERT(x1.valid());
-  CPPUNIT_ASSERT(y1.valid());
-  CPPUNIT_ASSERT(x2.valid());
-  CPPUNIT_ASSERT(y2.valid());
+  assertEqual(std::string("DM 0.00"), (x3 - x3).to_string());
+  assertEqual(std::string("DM 23.45"), (x3 - amount_t("DM 100.00")).to_string());
+  assertEqual(std::string("DM -23.45"), (amount_t("DM 100.00") - x3).to_string());
+  assertEqual(std::string("0.00 euro"), (x4 - x4).to_string());
+  assertEqual(std::string("23.45 euro"), (x4 - amount_t("100.00 euro")).to_string());
+  assertEqual(std::string("-23.45 euro"), (amount_t("100.00 euro") - x4).to_string());
+  assertEqual(std::string("0.00€"), (x5 - x5).to_string());
+  assertEqual(std::string("23.45€"), (x5 - amount_t("100.00€")).to_string());
+  assertEqual(std::string("-23.45€"), (amount_t("100.00€") - x5).to_string());
+
+  x1 -= amount_t("$456.45");
+  assertEqual(amount_t("$-333.00"), x1);
+  x1 -= amount_t("$456.45");
+  assertEqual(amount_t("$-789.45"), x1);
+  x1 -= amount_t("$456");
+  assertEqual(amount_t("$-1245.45"), x1);
+
+  amount_t x7(internalAmount("$123456789123456789.123456789123456789"));
+  amount_t x8(internalAmount("$2354974984698.98459845984598"));
+
+  assertEqual(internalAmount("$123454434148472090.138858329277476789"), x7 - x8);
+  assertEqual(std::string("$123454434148472090.138858329277476789"), (x7 - x8).to_string());
+  assertEqual(std::string("$123454434148472090.14"),
+	      (amount_t("$1.00") * (x7 - x8)).to_string());
+  assertEqual(internalAmount("$-123454434148472090.138858329277476789"), x8 - x7);
+  assertEqual(std::string("$-123454434148472090.138858329277476789"), (x8 - x7).to_string());
+  assertEqual(std::string("$-123454434148472090.14"),
+	      (amount_t("$1.00") * (x8 - x7)).to_string());
+
+  assertValid(x1);
+  assertValid(x2);
+  assertValid(x3);
+  assertValid(x4);
+  assertValid(x5);
+  assertValid(x6);
+  assertValid(x7);
+  assertValid(x8);
 }
 
 void CommodityAmountTestCase::testMultiplication()
@@ -277,9 +362,9 @@ void CommodityAmountTestCase::testMultiplication()
   assertEqual(amount_t("15241578780673678546105778311537878.046486820281054720515622620750190521"),
 	      x2 * x2);
 
-  CPPUNIT_ASSERT(x1.valid());
-  CPPUNIT_ASSERT(y1.valid());
-  CPPUNIT_ASSERT(x2.valid());
+  assertValid(x1);
+  assertValid(y1);
+  assertValid(x2);
 }
 
 void CommodityAmountTestCase::testDivision()
@@ -317,103 +402,99 @@ void CommodityAmountTestCase::testDivision()
   assertEqual(amount_t("21739560323910.7554497273748437197344556164"),
 	      x4 / y4);
 
-  CPPUNIT_ASSERT(x1.valid());
-  CPPUNIT_ASSERT(y1.valid());
-  CPPUNIT_ASSERT(x4.valid());
-  CPPUNIT_ASSERT(y4.valid());
+  assertValid(x1);
+  assertValid(y1);
+  assertValid(x4);
+  assertValid(y4);
 }
 
 void CommodityAmountTestCase::testConversion()
 {
-  // jww (2007-04-16): tbd
-  amount_t x1(1234.56);
+  amount_t x1("$1234.56");
 
   assertEqual(true, bool(x1));
   assertEqual(1234L, long(x1));
   assertEqual(1234.56, double(x1));
-  assertEqual(std::string("1234.56"), x1.to_string());
+  assertEqual(std::string("$1234.56"), x1.to_string());
   assertEqual(std::string("1234.56"), x1.quantity_string());
 
-  CPPUNIT_ASSERT(x1.valid());
+  assertValid(x1);
 }
 
 void CommodityAmountTestCase::testRound()
 {
-  // jww (2007-04-16): tbd
-  amount_t x1("1234.567890");
+  amount_t x1(internalAmount("$1234.567890"));
 
-  assertEqual(amount_t("1234.56789"), x1.round(6));
-  assertEqual(amount_t("1234.56789"), x1.round(5));
-  assertEqual(amount_t("1234.5679"), x1.round(4));
-  assertEqual(amount_t("1234.568"), x1.round(3));
-  assertEqual(amount_t("1234.57"), x1.round(2));
-  assertEqual(amount_t("1234.6"), x1.round(1));
-  assertEqual(amount_t("1235"), x1.round(0));
+  assertEqual(internalAmount("$1234.56789"), x1.round(6));
+  assertEqual(internalAmount("$1234.56789"), x1.round(5));
+  assertEqual(internalAmount("$1234.5679"), x1.round(4));
+  assertEqual(internalAmount("$1234.568"), x1.round(3));
+  assertEqual(amount_t("$1234.57"), x1.round(2));
+  assertEqual(amount_t("$1234.6"), x1.round(1));
+  assertEqual(amount_t("$1235"), x1.round(0));
 
-  amount_t x2("9876.543210");
+  amount_t x2(internalAmount("$9876.543210"));
 
-  assertEqual(amount_t("9876.543210"), x2.round(6));
-  assertEqual(amount_t("9876.54321"), x2.round(5));
-  assertEqual(amount_t("9876.5432"), x2.round(4));
-  assertEqual(amount_t("9876.543"), x2.round(3));
-  assertEqual(amount_t("9876.54"), x2.round(2));
-  assertEqual(amount_t("9876.5"), x2.round(1));
-  assertEqual(amount_t("9877"), x2.round(0));
+  assertEqual(internalAmount("$9876.543210"), x2.round(6));
+  assertEqual(internalAmount("$9876.54321"), x2.round(5));
+  assertEqual(internalAmount("$9876.5432"), x2.round(4));
+  assertEqual(internalAmount("$9876.543"), x2.round(3));
+  assertEqual(amount_t("$9876.54"), x2.round(2));
+  assertEqual(amount_t("$9876.5"), x2.round(1));
+  assertEqual(amount_t("$9877"), x2.round(0));
 
-  amount_t x3("-1234.567890");
+  amount_t x3(internalAmount("$-1234.567890"));
 
-  assertEqual(amount_t("-1234.56789"), x3.round(6));
-  assertEqual(amount_t("-1234.56789"), x3.round(5));
-  assertEqual(amount_t("-1234.5679"), x3.round(4));
-  assertEqual(amount_t("-1234.568"), x3.round(3));
-  assertEqual(amount_t("-1234.57"), x3.round(2));
-  assertEqual(amount_t("-1234.6"), x3.round(1));
-  assertEqual(amount_t("-1235"), x3.round(0));
+  assertEqual(internalAmount("$-1234.56789"), x3.round(6));
+  assertEqual(internalAmount("$-1234.56789"), x3.round(5));
+  assertEqual(internalAmount("$-1234.5679"), x3.round(4));
+  assertEqual(internalAmount("$-1234.568"), x3.round(3));
+  assertEqual(amount_t("$-1234.57"), x3.round(2));
+  assertEqual(amount_t("$-1234.6"), x3.round(1));
+  assertEqual(amount_t("$-1235"), x3.round(0));
 
-  amount_t x4("-9876.543210");
+  amount_t x4(internalAmount("$-9876.543210"));
 
-  assertEqual(amount_t("-9876.543210"), x4.round(6));
-  assertEqual(amount_t("-9876.54321"), x4.round(5));
-  assertEqual(amount_t("-9876.5432"), x4.round(4));
-  assertEqual(amount_t("-9876.543"), x4.round(3));
-  assertEqual(amount_t("-9876.54"), x4.round(2));
-  assertEqual(amount_t("-9876.5"), x4.round(1));
-  assertEqual(amount_t("-9877"), x4.round(0));
+  assertEqual(internalAmount("$-9876.543210"), x4.round(6));
+  assertEqual(internalAmount("$-9876.54321"), x4.round(5));
+  assertEqual(internalAmount("$-9876.5432"), x4.round(4));
+  assertEqual(internalAmount("$-9876.543"), x4.round(3));
+  assertEqual(amount_t("$-9876.54"), x4.round(2));
+  assertEqual(amount_t("$-9876.5"), x4.round(1));
+  assertEqual(amount_t("$-9877"), x4.round(0));
 
-  CPPUNIT_ASSERT(x1.valid());
-  CPPUNIT_ASSERT(x2.valid());
-  CPPUNIT_ASSERT(x3.valid());
-  CPPUNIT_ASSERT(x4.valid());
+  assertValid(x1);
+  assertValid(x2);
+  assertValid(x3);
+  assertValid(x4);
 }
 
 void CommodityAmountTestCase::testDisplayRound()
 {
   amount_t x1("$0.85");
+  amount_t x2("$0.1");
 
   x1 *= 0.19;
 
-  CPPUNIT_ASSERT(amount_t("$0.16") != x1);
+  assertNotEqual(amount_t("$0.16"), x1);
   assertEqual(internalAmount("$0.1615"), x1);
   assertEqual(std::string("$0.16"), x1.to_string());
 
+  assertEqual(amount_t("$0.10"), x2);
+  assertNotEqual(internalAmount("$0.101"), x2);
+  assertEqual(std::string("$0.10"), x2.to_string());
+
   x1 *= 7L;
 
-  CPPUNIT_ASSERT(amount_t("$1.13") != x1);
+  assertNotEqual(amount_t("$1.13"), x1);
   assertEqual(internalAmount("$1.1305"), x1);
   assertEqual(std::string("$1.13"), x1.to_string());
 }
 
 void CommodityAmountTestCase::testTruth()
 {
-  // jww (2007-04-16): tbd
-  amount_t x0;
-  amount_t x1("1234");
-  amount_t x2("1234.56");
-
-  if (x0)
-    CPPUNIT_ASSERT(false);
-  else
-    CPPUNIT_ASSERT(true);
+  amount_t x1("$1234");
+  amount_t x2("$1234.56");
 
   if (x1)
     CPPUNIT_ASSERT(true);
@@ -425,112 +506,104 @@ void CommodityAmountTestCase::testTruth()
   else
     CPPUNIT_ASSERT(false);
 
-  CPPUNIT_ASSERT(x0.valid());
-  CPPUNIT_ASSERT(x1.valid());
-  CPPUNIT_ASSERT(x2.valid());
+  assertValid(x1);
+  assertValid(x2);
 }
 
 void CommodityAmountTestCase::testForZero()
 {
-  // jww (2007-04-16): tbd
-  amount_t x0;
-  amount_t x1("0.000000000000000000001");
+  amount_t x1(internalAmount("$0.000000000000000000001"));
 
-  CPPUNIT_ASSERT(! x0);
-  CPPUNIT_ASSERT(x1);
-  CPPUNIT_ASSERT(x0.zero());
-  CPPUNIT_ASSERT(x0.realzero());
-  CPPUNIT_ASSERT(! x1.zero());
-  CPPUNIT_ASSERT(! x1.realzero());
+  assertFalse(x1);
+  assertTrue(x1.zero());
+  assertFalse(x1.realzero());
 
-  CPPUNIT_ASSERT(x0.valid());
-  CPPUNIT_ASSERT(x1.valid());
+  assertValid(x1);
 }
 
 void CommodityAmountTestCase::testComparisons()
 {
-  // jww (2007-04-16): tbd
   amount_t x0;
-  amount_t x1(-123L);
-  amount_t x2(123L);
-  amount_t x3(-123.45);
-  amount_t x4(123.45);
-  amount_t x5("-123.45");
-  amount_t x6("123.45");
+  amount_t x1("$-123");
+  amount_t x2("$123.00");
+  amount_t x3(internalAmount("$-123.4544"));
+  amount_t x4(internalAmount("$123.4544"));
+  amount_t x5("$-123.45");
+  amount_t x6("$123.45");
 
-  CPPUNIT_ASSERT(x0 > x1);
-  CPPUNIT_ASSERT(x0 < x2);
-  CPPUNIT_ASSERT(x0 > x3);
-  CPPUNIT_ASSERT(x0 < x4);
-  CPPUNIT_ASSERT(x0 > x5);
-  CPPUNIT_ASSERT(x0 < x6);
+  assertTrue(x0 > x1);
+  assertTrue(x0 < x2);
+  assertTrue(x0 > x3);
+  assertTrue(x0 < x4);
+  assertTrue(x0 > x5);
+  assertTrue(x0 < x6);
 
-  CPPUNIT_ASSERT(x1 > x3);
-  CPPUNIT_ASSERT(x3 <= x5);
-  CPPUNIT_ASSERT(x3 >= x5);
-  CPPUNIT_ASSERT(x3 < x1);
-  CPPUNIT_ASSERT(x3 < x4);
+  assertTrue(x1 > x3);
+  assertTrue(x3 <= x5);
+  assertTrue(x3 < x5);
+  assertTrue(x3 <= x5);
+  assertFalse(x3 == x5);
+  assertTrue(x3 < x1);
+  assertTrue(x3 < x4);
 
-  CPPUNIT_ASSERT(x0.valid());
-  CPPUNIT_ASSERT(x1.valid());
-  CPPUNIT_ASSERT(x2.valid());
-  CPPUNIT_ASSERT(x3.valid());
-  CPPUNIT_ASSERT(x4.valid());
-  CPPUNIT_ASSERT(x5.valid());
-  CPPUNIT_ASSERT(x6.valid());
+  assertValid(x0);
+  assertValid(x1);
+  assertValid(x2);
+  assertValid(x3);
+  assertValid(x4);
+  assertValid(x5);
+  assertValid(x6);
 }
 
 void CommodityAmountTestCase::testSign()
 {
-  // jww (2007-04-16): tbd
   amount_t x0;
-  amount_t x1("0.0000000000000000000000000000000000001");
-  amount_t x2("-0.0000000000000000000000000000000000001");
-  amount_t x3("1");
-  amount_t x4("-1");
+  amount_t x1(internalAmount("$0.0000000000000000000000000000000000001"));
+  amount_t x2(internalAmount("$-0.0000000000000000000000000000000000001"));
+  amount_t x3("$1");
+  amount_t x4("$-1");
 
-  CPPUNIT_ASSERT(! x0.sign());
-  CPPUNIT_ASSERT(x1.sign() > 0);
-  CPPUNIT_ASSERT(x2.sign() < 0);
-  CPPUNIT_ASSERT(x3.sign() > 0);
-  CPPUNIT_ASSERT(x4.sign() < 0);
+  assertFalse(x0.sign());
+  assertTrue(x1.sign() != 0);
+  assertTrue(x2.sign() != 0);
+  assertTrue(x3.sign() > 0);
+  assertTrue(x4.sign() < 0);
 
-  CPPUNIT_ASSERT(x0.valid());
-  CPPUNIT_ASSERT(x1.valid());
-  CPPUNIT_ASSERT(x2.valid());
-  CPPUNIT_ASSERT(x3.valid());
-  CPPUNIT_ASSERT(x4.valid());
+  assertValid(x0);
+  assertValid(x1);
+  assertValid(x2);
+  assertValid(x3);
+  assertValid(x4);
 }
 
 void CommodityAmountTestCase::testAbs()
 {
-  // jww (2007-04-16): tbd
   amount_t x0;
-  amount_t x1(-1234L);
-  amount_t x2(1234L);
+  amount_t x1("$-1234.56");
+  amount_t x2("$1234.56");
 
   assertEqual(amount_t(), abs(x0));
-  assertEqual(amount_t(1234L), abs(x1));
-  assertEqual(amount_t(1234L), abs(x2));
+  assertEqual(amount_t("$1234.56"), abs(x1));
+  assertEqual(amount_t("$1234.56"), abs(x2));
 
   x0.abs();
   x1.abs();
   x2.abs();
 
   assertEqual(amount_t(), x0);
-  assertEqual(amount_t(1234L), x1);
-  assertEqual(amount_t(1234L), x2);
+  assertEqual(amount_t("$1234.56"), x1);
+  assertEqual(amount_t("$1234.56"), x2);
 
-  CPPUNIT_ASSERT(x0.valid());
-  CPPUNIT_ASSERT(x1.valid());
-  CPPUNIT_ASSERT(x2.valid());
+  assertValid(x0);
+  assertValid(x1);
+  assertValid(x2);
 }
 
 void CommodityAmountTestCase::testPrinting()
 {
-  // jww (2007-04-16): tbd
   amount_t x0;
-  amount_t x1("982340823.380238098235098235098235098");
+  amount_t x1(internalAmount("$982340823.386238098235098235098235098"));
+  amount_t x2("$982340823.38");
 
   {
     std::ostringstream bufstr;
@@ -543,10 +616,26 @@ void CommodityAmountTestCase::testPrinting()
     std::ostringstream bufstr;
     bufstr << x1;
 
-    assertEqual(std::string("982340823.380238098235098235098235098"),
+    assertEqual(std::string("$982340823.386238098235098235098235098"),
 		bufstr.str());
   }
 
-  CPPUNIT_ASSERT(x0.valid());
-  CPPUNIT_ASSERT(x1.valid());
+  {
+    std::ostringstream bufstr;
+    bufstr << (x1 * x2);
+
+    assertEqual(std::string("$964993493285024293.18099172508158508135413499124"),
+		bufstr.str());
+  }
+
+  {
+    std::ostringstream bufstr;
+    bufstr << (x2 * x1);
+
+    assertEqual(std::string("$964993493285024293.18"), bufstr.str());
+  }
+
+  assertValid(x0);
+  assertValid(x1);
+  assertValid(x2);
 }

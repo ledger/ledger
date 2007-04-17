@@ -4,7 +4,7 @@ import exceptions
 from ledger import amount
 
 
-class BasicAmountTestCase(unittest.TestCase):
+class CommodityAmountTestCase(unittest.TestCase):
     def testConstructors(self):
         x0 = amount()
         x1 = amount(123456)
@@ -457,7 +457,7 @@ class BasicAmountTestCase(unittest.TestCase):
 
 
 def suite():
-    return unittest.TestLoader().loadTestsFromTestCase(BasicAmountTestCase)
+    return unittest.TestLoader().loadTestsFromTestCase(CommodityAmountTestCase)
 
 if __name__ == '__main__':
     unittest.main()
