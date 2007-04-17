@@ -634,6 +634,13 @@ amount_t& amount_t::operator/=(const amount_t& amt)
     goto finish;
   }
 
+  if (has_commodity() && amt.has_commodity() &&
+      commodity() != amt.commodity())
+    throw new amount_error
+      (std::string("Dividing amounts with different commodities: ") +
+       (has_commodity() ? commodity_->qualified_symbol : "NONE") + " != " +
+       (amt.has_commodity() ? amt.commodity_->qualified_symbol : "NONE"));
+
   _dup();
 
   // Increase the value's precision, to capture fractional parts after
