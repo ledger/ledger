@@ -50,10 +50,11 @@ namespace ledger {
 
 bool do_cleanup = true;
 
-bool amount_t::keep_price = false;
-bool amount_t::keep_date  = false;
-bool amount_t::keep_tag   = false;
-bool amount_t::keep_base  = false;
+bool amount_t::keep_price   = false;
+bool amount_t::keep_date    = false;
+bool amount_t::keep_tag	    = false;
+bool amount_t::keep_base    = false;
+bool amount_t::full_strings = false;
 
 #define BIGINT_BULK_ALLOC 0x0001
 #define BIGINT_KEEP_PREC  0x0002
@@ -505,11 +506,12 @@ void amount_t::_clear()
 
 amount_t& amount_t::operator+=(const amount_t& amt)
 {
-  if (commodity() != amt.commodity())
+  if (commodity() != amt.commodity()) {
     throw new amount_error
       (std::string("Adding amounts with different commodities: ") +
        (has_commodity() ? commodity_->qualified_symbol : "NONE") + " != " +
        (amt.has_commodity() ? amt.commodity_->qualified_symbol : "NONE"));
+  }
 
   if (! amt.quantity)
     return *this;
@@ -575,22 +577,32 @@ amount_t& amount_t::operator-=(const amount_t& amt)
 
 amount_t& amount_t::operator*=(const amount_t& amt)
 {
-  if (! amt.quantity)
-    return (*this = amt);
-  else if (! quantity)
-    return *this;
-
   if (has_commodity() && amt.has_commodity() &&
-      commodity() != amt.commodity())
+      commodity() != amt.commodity()) {
     throw new amount_error
       (std::string("Multiplying amounts with different commodities: ") +
        (has_commodity() ? commodity_->qualified_symbol : "NONE") + " != " +
        (amt.has_commodity() ? amt.commodity_->qualified_symbol : "NONE"));
+  }
+
+  if (! amt.quantity) {
+    *this = *this - *this;	// preserve our commodity
+    goto finish;
+  }
+  else if (! quantity) {
+    *this = amt;
+    *this = *this - *this;	// preserve the foreign commodity
+    goto finish;
+  }
 
   _dup();
 
   mpz_mul(MPZ(quantity), MPZ(quantity), MPZ(amt.quantity));
   quantity->prec += amt.quantity->prec;
+
+ finish:
+  if (! has_commodity())
+    commodity_ = amt.commodity_;
 
   if (has_commodity() && ! (quantity->flags & BIGINT_KEEP_PREC)) {
     unsigned int comm_prec = commodity().precision();
@@ -605,26 +617,44 @@ amount_t& amount_t::operator*=(const amount_t& amt)
 
 amount_t& amount_t::operator/=(const amount_t& amt)
 {
-  if (! amt.quantity || ! amt)
-    throw new amount_error("Divide by zero");
-  else if (! quantity)
-    return *this;
-
   if (has_commodity() && amt.has_commodity() &&
-      commodity() != amt.commodity())
+      commodity() != amt.commodity()) {
     throw new amount_error
       (std::string("Dividing amounts with different commodities: ") +
        (has_commodity() ? commodity_->qualified_symbol : "NONE") + " != " +
        (amt.has_commodity() ? amt.commodity_->qualified_symbol : "NONE"));
+  }
+
+  if (! amt.quantity || ! amt) {
+    throw new amount_error("Divide by zero");
+  }
+  else if (! quantity) {
+    *this = amt;
+    *this = *this - *this;	// preserve the foreign commodity
+    goto finish;
+  }
 
   _dup();
 
   // Increase the value's precision, to capture fractional parts after
-  // the divide.
-  mpz_ui_pow_ui(divisor, 10, amt.quantity->prec + quantity->prec + 6U);
+  // the divide.  Round up in the last position.
+
+  mpz_ui_pow_ui(divisor, 10, (2 * amt.quantity->prec) + quantity->prec + 7U);
   mpz_mul(MPZ(quantity), MPZ(quantity), divisor);
   mpz_tdiv_q(MPZ(quantity), MPZ(quantity), MPZ(amt.quantity));
-  quantity->prec += quantity->prec + 6U;
+  quantity->prec += amt.quantity->prec + quantity->prec + 7U;
+
+  mpz_round(MPZ(quantity), MPZ(quantity), quantity->prec, quantity->prec - 1);
+  quantity->prec -= 1;
+
+ finish:
+  if (! has_commodity())
+    commodity_ = amt.commodity_;
+
+  // If this amount has a commodity, and we're not dealing with plain
+  // numbers, or internal numbers (which keep full precision at all
+  // times), then round the number to within the commodity's precision
+  // plus six places.
 
   if (has_commodity() && ! (quantity->flags & BIGINT_KEEP_PREC)) {
     unsigned int comm_prec = commodity().precision();
@@ -889,7 +919,8 @@ void amount_t::print_quantity(std::ostream& out) const
   mpz_clear(remainder);
 }
 
-void amount_t::print(std::ostream& _out, bool omit_commodity) const
+void amount_t::print(std::ostream& _out, bool omit_commodity,
+		     bool full_precision) const
 {
   amount_t base(*this);
   if (! amount_t::keep_base && commodity().larger()) {
@@ -922,7 +953,7 @@ void amount_t::print(std::ostream& _out, bool omit_commodity) const
   unsigned char precision = 0;
 
   if (quantity) {
-    if (! comm || base.quantity->flags & BIGINT_KEEP_PREC) {
+    if (! comm || full_precision || base.quantity->flags & BIGINT_KEEP_PREC) {
       mpz_ui_pow_ui(divisor, 10, base.quantity->prec);
       mpz_tdiv_qr(quotient, remainder, MPZ(base.quantity), divisor);
       precision = base.quantity->prec;

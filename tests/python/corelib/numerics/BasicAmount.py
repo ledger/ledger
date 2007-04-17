@@ -326,16 +326,16 @@ class BasicAmountTestCase(unittest.TestCase):
         self.assertEqual(- x1, x1 / -1)
         self.assertEqual(- amount("0.008130"), amount(-1) / x1)
         self.assertEqual(- amount("0.008130"), -1 / x1)
-        self.assertEqual(amount("0.269736"), x1 / y1)
+        self.assertEqual(amount("0.269737"), x1 / y1)
         self.assertEqual(amount("3.707317"), y1 / x1)
-        self.assertEqual(amount("0.269736"), x1 / 456)
+        self.assertEqual(amount("0.269737"), x1 / 456)
         self.assertEqual(amount("3.707317"), amount(456) / x1)
         self.assertEqual(amount("3.707317"), 456 / x1)
 
         x1 /= amount(456)
-        self.assertEqual(amount("0.269736"), x1)
+        self.assertEqual(amount("0.269737"), x1)
         x1 /= 456
-        self.assertEqual(amount("0.000591526315789473"), x1)
+        self.assertEqual(amount("0.00059152850877193"), x1)
 
         x4 = amount("123456789123456789123456789")
         y4 = amount("56")
@@ -353,32 +353,32 @@ class BasicAmountTestCase(unittest.TestCase):
         y1 = amount(456.456)
 
         self.assertRaises(exceptions.ArithmeticError, self.divideByZero, x1)
-        self.assertEqual(amount("0.008121"), amount(1.0) / x1)
-        self.assertEqual(amount("0.008121"), 1.0 / x1)
+        self.assertEqual(amount("0.008121959"), amount(1.0) / x1)
+        self.assertEqual(amount("0.008121959"), 1.0 / x1)
         self.assertEqual(x1, x1 / 1.0)
-        self.assertEqual(amount("0.008121"), amount(1.0) / x1)
-        self.assertEqual(amount("0.008121"), 1.0 / x1)
+        self.assertEqual(amount("0.008121959"), amount(1.0) / x1)
+        self.assertEqual(amount("0.008121959"), 1.0 / x1)
         self.assertEqual(- x1, x1 / -1.0)
-        self.assertEqual(- amount("0.008121"), amount(-1.0) / x1)
-        self.assertEqual(- amount("0.008121"), -1.0 / x1)
-        self.assertEqual(amount("0.269736842105"), x1 / y1)
-        self.assertEqual(amount("3.707317073170"), y1 / x1)
-        self.assertEqual(amount("0.269736842105"), x1 / 456.456)
-        self.assertEqual(amount("3.707317073170"), amount(456.456) / x1)
-        self.assertEqual(amount("3.707317073170"), 456.456 / x1)
+        self.assertEqual(- amount("0.008121959"), amount(-1.0) / x1)
+        self.assertEqual(- amount("0.008121959"), -1.0 / x1)
+        self.assertEqual(amount("0.269736842105263"), x1 / y1)
+        self.assertEqual(amount("3.707317073170732"), y1 / x1)
+        self.assertEqual(amount("0.269736842105263"), x1 / 456.456)
+        self.assertEqual(amount("3.707317073170732"), amount(456.456) / x1)
+        self.assertEqual(amount("3.707317073170732"), 456.456 / x1)
 
         x1 /= amount(456.456)
-        self.assertEqual(amount("0.269736842105"), x1)
+        self.assertEqual(amount("0.269736842105263"), x1)
         x1 /= 456.456
-        self.assertEqual(amount("0.0005909372252856792330476541"), x1)
+        self.assertEqual(amount("0.000590937225286255411255411255411255411"), x1)
         x1 /= 456
-        self.assertEqual(amount("0.00000129591496773175270405187302631578947368421052631578947368421"), x1)
+        self.assertEqual(amount("0.000001295914967733016252753094858358016252192982456140350877192982456140350877192982"), x1)
 
         x4 = amount("1234567891234567.89123456789")
         y4 = amount("56.789")
 
         self.assertEqual(amount(1.0), x4 / x4)
-        self.assertEqual(amount("21739560323910.7554497273748437197344556164"),
+        self.assertEqual(amount("21739560323910.7554497273748437197344556164046"),
                          x4 / y4)
 
         self.assertTrue(x1.valid())

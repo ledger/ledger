@@ -378,16 +378,16 @@ void BasicAmountTestCase::testIntegerDivision()
   assertEqual(- x1, x1 / -1L);
   assertEqual(- amount_t("0.008130"), amount_t(-1L) / x1);
   assertEqual(- amount_t("0.008130"), -1L / x1);
-  assertEqual(amount_t("0.269736"), x1 / y1);
+  assertEqual(amount_t("0.269737"), x1 / y1);
   assertEqual(amount_t("3.707317"), y1 / x1);
-  assertEqual(amount_t("0.269736"), x1 / 456L);
+  assertEqual(amount_t("0.269737"), x1 / 456L);
   assertEqual(amount_t("3.707317"), amount_t(456L) / x1);
   assertEqual(amount_t("3.707317"), 456L / x1);
 
   x1 /= amount_t(456L);
-  assertEqual(amount_t("0.269736"), x1);
+  assertEqual(amount_t("0.269737"), x1);
   x1 /= 456L;
-  assertEqual(amount_t("0.000591526315789473"), x1);
+  assertEqual(amount_t("0.00059152850877193"), x1);
 
   amount_t x4("123456789123456789123456789");
   amount_t y4("56");
@@ -407,33 +407,32 @@ void BasicAmountTestCase::testFractionalDivision()
   amount_t y1(456.456);
 
   assertThrow(x1 / 0L, amount_error *);
-  assertEqual(amount_t("0.008121"), amount_t(1.0) / x1);
-  assertEqual(amount_t("0.008121"), 1.0 / x1);
+  assertEqual(amount_t("0.008121959"), amount_t(1.0) / x1);
+  assertEqual(amount_t("0.008121959"), 1.0 / x1);
   assertEqual(x1, x1 / 1.0);
-  assertEqual(amount_t("0.008121"), amount_t(1.0) / x1);
-  assertEqual(amount_t("0.008121"), 1.0 / x1);
+  assertEqual(amount_t("0.008121959"), amount_t(1.0) / x1);
+  assertEqual(amount_t("0.008121959"), 1.0 / x1);
   assertEqual(- x1, x1 / -1.0);
-  assertEqual(- amount_t("0.008121"), amount_t(-1.0) / x1);
-  assertEqual(- amount_t("0.008121"), -1.0 / x1);
-  assertEqual(amount_t("0.269736842105"), x1 / y1);
-  assertEqual(amount_t("3.707317073170"), y1 / x1);
-  assertEqual(amount_t("0.269736842105"), x1 / 456.456);
-  assertEqual(amount_t("3.707317073170"), amount_t(456.456) / x1);
-  assertEqual(amount_t("3.707317073170"), 456.456 / x1);
+  assertEqual(- amount_t("0.008121959"), amount_t(-1.0) / x1);
+  assertEqual(- amount_t("0.008121959"), -1.0 / x1);
+  assertEqual(amount_t("0.269736842105263"), x1 / y1);
+  assertEqual(amount_t("3.707317073170732"), y1 / x1);
+  assertEqual(amount_t("0.269736842105263"), x1 / 456.456);
+  assertEqual(amount_t("3.707317073170732"), amount_t(456.456) / x1);
+  assertEqual(amount_t("3.707317073170732"), 456.456 / x1);
 
   x1 /= amount_t(456.456);
-  assertEqual(amount_t("0.269736842105"), x1);
+  assertEqual(amount_t("0.269736842105263"), x1);
   x1 /= 456.456;
-  assertEqual(amount_t("0.0005909372252856792330476541"), x1);
+  assertEqual(amount_t("0.000590937225286255411255411255411255411"), x1);
   x1 /= 456L;
-  assertEqual(amount_t("0.00000129591496773175270405187302631578947368421052631578947368421"), x1);
+  assertEqual(amount_t("0.000001295914967733016252753094858358016252192982456140350877192982456140350877192982"), x1);
 
   amount_t x4("1234567891234567.89123456789");
   amount_t y4("56.789");
 
   assertEqual(amount_t(1.0), x4 / x4);
-  assertEqual(amount_t("21739560323910.7554497273748437197344556164"),
-	      x4 / y4);
+  assertEqual(amount_t("21739560323910.7554497273748437197344556164046"), x4 / y4);
 
   CPPUNIT_ASSERT(x1.valid());
   CPPUNIT_ASSERT(y1.valid());

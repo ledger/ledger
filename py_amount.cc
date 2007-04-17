@@ -138,10 +138,10 @@ void export_amount()
 
     .def(self_ns::int_(self))
     .def(self_ns::float_(self))
-    .def(self_ns::str(self))
     .def(abs(self))
 
-    .def("__repr__", &amount_t::to_string)
+    .def("__str__", &amount_t::to_string)
+    .def("__repr__", &amount_t::to_fullstring)
 
     .def("has_commodity", &amount_t::has_commodity)
 
@@ -155,8 +155,14 @@ void export_amount()
     .def("strip_annotations", &amount_t::strip_annotations)
     .def("clear_commodity", &amount_t::clear_commodity)
 
+    //.add_static_property("full_strings", &amount_t::full_strings)
+
     .def("to_string", &amount_t::to_string)
+    .def("to_fullstring", &amount_t::to_fullstring)
     .def("quantity_string", &amount_t::quantity_string)
+
+    .def("exact", &amount_t::exact)
+    .staticmethod("exact")
 
     .def("abs", &amount_t::abs)
     .def("compare", &amount_t::compare)

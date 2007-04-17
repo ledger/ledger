@@ -3,22 +3,22 @@
 
 using namespace ledger;
 
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(CommodityAmountTestCase, "numerics");
+#define internalAmount(x) amount_t::exact(x)
 
-inline amount_t internalAmount(const std::string& value) {
-  amount_t temp;
-  temp.parse(value, AMOUNT_PARSE_NO_MIGRATE);
-  return temp;
-}
+CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(CommodityAmountTestCase, "numerics");
 
 void CommodityAmountTestCase::setUp()
 {
   // Cause the display precision for dollars to be initialized to 2.
   amount_t x1("$1.00");
   assertTrue(x1);
+  amount_t::full_strings = true; // makes error reports from UnitTests accurate
 }
 
-void CommodityAmountTestCase::tearDown() {}
+void CommodityAmountTestCase::tearDown()
+{
+  amount_t::full_strings = false;
+}
 
 void CommodityAmountTestCase::testConstructors()
 {
@@ -331,81 +331,115 @@ void CommodityAmountTestCase::testSubtraction()
 
 void CommodityAmountTestCase::testMultiplication()
 {
-  // jww (2007-04-16): tbd
-  amount_t x1(123.123);
-  amount_t y1(456.456);
+  amount_t x1("$123.12");
+  amount_t y1("$456.45");
+  amount_t x2(internalAmount("$123.456789"));
+  amount_t x3("DM 123.45");
+  amount_t x4("123.45 euro");
+  amount_t x5("123.45€");
 
-  assertEqual(amount_t(0L), x1 * 0L);
-  assertEqual(amount_t(0L), amount_t(0L) * x1);
-  assertEqual(amount_t(0L), 0L * x1);
+  assertEqual(amount_t("$0.00"), x1 * 0L);
+  assertEqual(amount_t("$0.00"), 0L * x1);
   assertEqual(x1, x1 * 1L);
-  assertEqual(x1, amount_t(1L) * x1);
   assertEqual(x1, 1L * x1);
   assertEqual(- x1, x1 * -1L);
-  assertEqual(- x1, amount_t(-1L) * x1);
   assertEqual(- x1, -1L * x1);
-  assertEqual(amount_t("56200.232088"), x1 * y1);
-  assertEqual(amount_t("56200.232088"), y1 * x1);
-  assertEqual(amount_t("56200.232088"), x1 * 456.456);
-  assertEqual(amount_t("56200.232088"), amount_t(456.456) * x1);
-  assertEqual(amount_t("56200.232088"), 456.456 * x1);
+  assertEqual(internalAmount("$56198.124"), x1 * y1);
+  assertEqual(std::string("$56198.12"), (x1 * y1).to_string());
+  assertEqual(internalAmount("$56198.124"), y1 * x1);
+  assertEqual(std::string("$56198.12"), (y1 * x1).to_string());
 
-  x1 *= amount_t(123.123);
-  assertEqual(amount_t("15159.273129"), x1);
-  x1 *= 123.123;
-  assertEqual(amount_t("1866455.185461867"), x1);
+  // Internal amounts retain their precision, even when being
+  // converted to strings
+  assertEqual(internalAmount("$15199.99986168"), x1 * x2);
+  assertEqual(internalAmount("$15199.99986168"), x2 * x1);
+  assertEqual(std::string("$15200.00"), (x1 * x2).to_string());
+  assertEqual(std::string("$15199.99986168"), (x2 * x1).to_string());
+
+  assertThrow(x1 * x3, amount_error *);
+  assertThrow(x1 * x4, amount_error *);
+  assertThrow(x1 * x5, amount_error *);
+
+  x1 *= amount_t("123.12");
+  assertEqual(internalAmount("$15158.5344"), x1);
+  assertEqual(std::string("$15158.53"), x1.to_string());
+  x1 *= 123.12;
+  assertEqual(internalAmount("$1866318.755328"), x1);
+  assertEqual(std::string("$1866318.76"), x1.to_string());
   x1 *= 123L;
-  assertEqual(amount_t("229573987.811809641"), x1);
+  assertEqual(internalAmount("$229557206.905344"), x1);
+  assertEqual(std::string("$229557206.91"), x1.to_string());
 
-  amount_t x2("123456789123456789.123456789123456789");
+  amount_t x7(internalAmount("$123456789123456789.123456789123456789"));
 
-  assertEqual(amount_t("15241578780673678546105778311537878.046486820281054720515622620750190521"),
-	      x2 * x2);
+  assertEqual(internalAmount("$15241578780673678546105778311537878.046486820281054720515622620750190521"),
+	      x7 * x7);
 
   assertValid(x1);
-  assertValid(y1);
   assertValid(x2);
+  assertValid(x3);
+  assertValid(x4);
+  assertValid(x5);
+  assertValid(x7);
 }
 
 void CommodityAmountTestCase::testDivision()
 {
-  // jww (2007-04-16): tbd
-  amount_t x1(123.123);
-  amount_t y1(456.456);
+  amount_t x1("$123.12");
+  amount_t y1("$456.45");
+  amount_t x2(internalAmount("$123.456789"));
+  amount_t x3("DM 123.45");
+  amount_t x4("123.45 euro");
+  amount_t x5("123.45€");
 
   assertThrow(x1 / 0L, amount_error *);
-  assertEqual(amount_t("0.008121"), amount_t(1.0) / x1);
-  assertEqual(amount_t("0.008121"), 1.0 / x1);
-  assertEqual(x1, x1 / 1.0);
-  assertEqual(amount_t("0.008121"), amount_t(1.0) / x1);
-  assertEqual(amount_t("0.008121"), 1.0 / x1);
-  assertEqual(- x1, x1 / -1.0);
-  assertEqual(- amount_t("0.008121"), amount_t(-1.0) / x1);
-  assertEqual(- amount_t("0.008121"), -1.0 / x1);
-  assertEqual(amount_t("0.269736842105"), x1 / y1);
-  assertEqual(amount_t("3.707317073170"), y1 / x1);
-  assertEqual(amount_t("0.269736842105"), x1 / 456.456);
-  assertEqual(amount_t("3.707317073170"), amount_t(456.456) / x1);
-  assertEqual(amount_t("3.707317073170"), 456.456 / x1);
+  assertEqual(amount_t("$0.00"), 0L / x1);
+  assertEqual(x1, x1 / 1L);
+  assertEqual(internalAmount("$0.00812216"), 1L / x1);
+  assertEqual(- x1, x1 / -1L);
+  assertEqual(internalAmount("$-0.00812216"), -1L / x1);
+  assertEqual(internalAmount("$0.26973382"), x1 / y1);
+  assertEqual(std::string("$0.27"), (x1 / y1).to_string());
+  assertEqual(internalAmount("$3.70735867"), y1 / x1);
+  assertEqual(std::string("$3.71"), (y1 / x1).to_string());
 
-  x1 /= amount_t(456.456);
-  assertEqual(amount_t("0.269736842105"), x1);
-  x1 /= 456.456;
-  assertEqual(amount_t("0.0005909372252856792330476541"), x1);
-  x1 /= 456L;
-  assertEqual(amount_t("0.00000129591496773175270405187302631578947368421052631578947368421"), x1);
+  // Internal amounts retain their precision, even when being
+  // converted to strings
+  assertEqual(internalAmount("$0.99727201"), x1 / x2);
+  assertEqual(internalAmount("$1.00273545321637426901"), x2 / x1);
+  assertEqual(std::string("$1.00"), (x1 / x2).to_string());
+  assertEqual(std::string("$1.00273545321637426901"), (x2 / x1).to_string());
 
-  amount_t x4("1234567891234567.89123456789");
-  amount_t y4("56.789");
+  assertThrow(x1 / x3, amount_error *);
+  assertThrow(x1 / x4, amount_error *);
+  assertThrow(x1 / x5, amount_error *);
 
-  assertEqual(amount_t(1.0), x4 / x4);
-  assertEqual(amount_t("21739560323910.7554497273748437197344556164"),
-	      x4 / y4);
+  x1 /= amount_t("123.12");
+  assertEqual(internalAmount("$1.00"), x1);
+  assertEqual(std::string("$1.00"), x1.to_string());
+  x1 /= 123.12;
+  assertEqual(internalAmount("$0.00812216"), x1);
+  assertEqual(std::string("$0.01"), x1.to_string());
+  x1 /= 123L;
+  assertEqual(internalAmount("$0.00006603"), x1);
+  assertEqual(std::string("$0.00"), x1.to_string());
+
+  amount_t x6(internalAmount("$237235987235987.98723987235978"));
+  amount_t x7(internalAmount("$123456789123456789.123456789123456789"));
+
+  assertEqual(amount_t("$1"), x7 / x7);
+  assertEqual(internalAmount("$0.0019216115121765559608381226612019501046413574469262"),
+	      x6 / x7);
+  assertEqual(internalAmount("$520.39654928343335571379527154924040947271699678158689736256"),
+	      x7 / x6);
 
   assertValid(x1);
-  assertValid(y1);
+  assertValid(x2);
+  assertValid(x3);
   assertValid(x4);
-  assertValid(y4);
+  assertValid(x5);
+  assertValid(x6);
+  assertValid(x7);
 }
 
 void CommodityAmountTestCase::testConversion()
@@ -622,7 +656,7 @@ void CommodityAmountTestCase::testPrinting()
 
   {
     std::ostringstream bufstr;
-    bufstr << (x1 * x2);
+    bufstr << (x1 * x2).to_string();
 
     assertEqual(std::string("$964993493285024293.18099172508158508135413499124"),
 		bufstr.str());
@@ -630,7 +664,7 @@ void CommodityAmountTestCase::testPrinting()
 
   {
     std::ostringstream bufstr;
-    bufstr << (x2 * x1);
+    bufstr << (x2 * x1).to_string();
 
     assertEqual(std::string("$964993493285024293.18"), bufstr.str());
   }

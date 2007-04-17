@@ -1,413 +1,544 @@
+# -*- coding: utf-8 -*-
+
 import unittest
 import exceptions
+import operator
 
 from ledger import amount
 
+internalAmount = amount.exact
+
 
 class CommodityAmountTestCase(unittest.TestCase):
+    def setUp(self):
+        # Cause the display precision for dollars to be initialized to 2.
+        x1 = amount("$1.00")
+        self.assertTrue(x1)
+        amount.full_strings = True # makes error reports from UnitTests accurate
+
+    def tearDown(self):
+        amount.full_strings = False
+
+    def assertValid(self, amt):
+        self.assertTrue(amt.valid())
+
     def testConstructors(self):
-        x0 = amount()
-        x1 = amount(123456)
-        x2 = amount(123456L)
-        x3 = amount(123.456)
-        x4 = amount(True)
-        x5 = amount("123456")
-        x6 = amount("123.456")
-        x9 = amount(x3)
-        x10 = amount(x6)
+        x1  = amount("$123.45")
+        x2  = amount("-$123.45")
+        x3  = amount("$-123.45")
+        x4  = amount("DM 123.45")
+        x5  = amount("-DM 123.45")
+        x6  = amount("DM -123.45")
+        x7  = amount("123.45 euro")
+        x8  = amount("-123.45 euro")
+        x9  = amount("123.45€")
+        x10 = amount("-123.45€")
 
-        self.assertEqual(amount(0), x0)
-        self.assertEqual(x2, x1)
-        self.assertEqual(x5, x1)
-        self.assertEqual(x6, x3)
-        self.assertEqual(x10, x3)
-        self.assertEqual(amount(1), x4)
-        self.assertEqual(x10, x9)
+        self.assertEqual(amount("$123.45"), x1)
+        self.assertEqual(amount("-$123.45"), x2)
+        self.assertEqual(amount("$-123.45"), x3)
+        self.assertEqual(amount("DM 123.45"), x4)
+        self.assertEqual(amount("-DM 123.45"), x5)
+        self.assertEqual(amount("DM -123.45"), x6)
+        self.assertEqual(amount("123.45 euro"), x7)
+        self.assertEqual(amount("-123.45 euro"), x8)
+        self.assertEqual(amount("123.45€"), x9)
+        self.assertEqual(amount("-123.45€"), x10)
 
-        self.assertTrue(x0.valid())
-        self.assertTrue(x1.valid())
-        self.assertTrue(x2.valid())
-        self.assertTrue(x3.valid())
-        self.assertTrue(x4.valid())
-        self.assertTrue(x5.valid())
-        self.assertTrue(x6.valid())
-        self.assertTrue(x9.valid())
-        self.assertTrue(x10.valid())
+        self.assertEqual("$123.45", x1.to_string())
+        self.assertEqual("$-123.45", x2.to_string())
+        self.assertEqual("$-123.45", x3.to_string())
+        self.assertEqual("DM 123.45", x4.to_string())
+        self.assertEqual("DM -123.45", x5.to_string())
+        self.assertEqual("DM -123.45", x6.to_string())
+        self.assertEqual("123.45 euro", x7.to_string())
+        self.assertEqual("-123.45 euro", x8.to_string())
+        self.assertEqual("123.45€", x9.to_string())
+        self.assertEqual("-123.45€", x10.to_string())
+
+        self.assertValid(x1)
+        self.assertValid(x2)
+        self.assertValid(x3)
+        self.assertValid(x4)
+        self.assertValid(x5)
+        self.assertValid(x6)
+        self.assertValid(x7)
+        self.assertValid(x8)
+        self.assertValid(x9)
+        self.assertValid(x10)
 
     def testNegation(self):
-        x0 = amount()
-        x1 = amount(-123456)
-        x3 = amount(-123.456)
-        x5 = amount("-123456")
-        x6 = amount("-123.456")
-        x9 = amount(- x3)
+        x1 = amount("$123.45")
+        x2 = amount("-$123.45")
+        x3 = amount("$-123.45")
+        x4 = amount("DM 123.45")
+        x5 = amount("-DM 123.45")
+        x6 = amount("DM -123.45")
+        x7 = amount("123.45 euro")
+        x8 = amount("-123.45 euro")
+        x9 = amount("123.45€")
+        x10 = amount("-123.45€")
 
-        self.assertEqual(amount(0), x0)
-        self.assertEqual(x5, x1)
-        self.assertEqual(x6, x3)
-        self.assertEqual(- x6, x9)
-        self.assertEqual(x3.negated(), x9)
+        self.assertEqual(amount("$-123.45"), - x1)
+        self.assertEqual(amount("$123.45"), - x2)
+        self.assertEqual(amount("$123.45"), - x3)
+        self.assertEqual(amount("DM -123.45"), - x4)
+        self.assertEqual(amount("DM 123.45"), - x5)
+        self.assertEqual(amount("DM 123.45"), - x6)
+        self.assertEqual(amount("-123.45 euro"), - x7)
+        self.assertEqual(amount("123.45 euro"), - x8)
+        self.assertEqual(amount("-123.45€"), - x9)
+        self.assertEqual(amount("123.45€"), - x10)
 
-        x10 = amount(x9)
-        x10.negate()
+        self.assertEqual("$-123.45", (- x1).to_string())
+        self.assertEqual("$123.45", (- x2).to_string())
+        self.assertEqual("$123.45", (- x3).to_string())
+        self.assertEqual("DM -123.45", (- x4).to_string())
+        self.assertEqual("DM 123.45", (- x5).to_string())
+        self.assertEqual("DM 123.45", (- x6).to_string())
+        self.assertEqual("-123.45 euro", (- x7).to_string())
+        self.assertEqual("123.45 euro", (- x8).to_string())
+        self.assertEqual("-123.45€", (- x9).to_string())
+        self.assertEqual("123.45€", (- x10).to_string())
 
-        self.assertEqual(x3, x10)
+        self.assertValid(x1)
+        self.assertValid(x2)
+        self.assertValid(x3)
+        self.assertValid(x4)
+        self.assertValid(x5)
+        self.assertValid(x6)
+        self.assertValid(x7)
+        self.assertValid(x8)
+        self.assertValid(x9)
+        self.assertValid(x10)
 
     def testAssignment(self):
-        x0 = amount()
-        x1  = amount(123456)
-        x2  = amount(123456L)
-        x3  = amount(123.456)
-        x4  = amount(True)
-        x5  = amount("123456")
-        x6  = amount("123.456")
-        x9  = x3
-        x10 = amount(x6)
+        x1 = amount("$123.45")
+        x2 = amount("-$123.45")
+        x3 = amount("$-123.45")
+        x4 = amount("DM 123.45")
+        x5 = amount("-DM 123.45")
+        x6 = amount("DM -123.45")
+        x7 = amount("123.45 euro")
+        x8 = amount("-123.45 euro")
+        x9 = amount("123.45€")
+        x10 = amount("-123.45€")
 
-        self.assertEqual(amount(0), x0)
-        self.assertEqual(x2, x1)
-        self.assertEqual(x5, x1)
-        self.assertEqual(x6, x3)
-        self.assertEqual(x10, x3)
-        self.assertEqual(amount(1), x4)
-        self.assertEqual(x10, x9)
+        self.assertEqual(amount("$123.45"), x1)
+        self.assertEqual(amount("-$123.45"), x2)
+        self.assertEqual(amount("$-123.45"), x3)
+        self.assertEqual(amount("DM 123.45"), x4)
+        self.assertEqual(amount("-DM 123.45"), x5)
+        self.assertEqual(amount("DM -123.45"), x6)
+        self.assertEqual(amount("123.45 euro"), x7)
+        self.assertEqual(amount("-123.45 euro"), x8)
+        self.assertEqual(amount("123.45€"), x9)
+        self.assertEqual(amount("-123.45€"), x10)
 
-        x0  = amount()
-        x1  = amount(123456)
-        x2  = amount(123456L)
-        x3  = amount(123.456)
-        x4  = amount(True)
-        x5  = amount("123456")
-        x6  = amount("123.456")
-        x9  = x3
-        x10 = amount(x6)
+        self.assertEqual("$123.45", x1.to_string())
+        self.assertEqual("$-123.45", x2.to_string())
+        self.assertEqual("$-123.45", x3.to_string())
+        self.assertEqual("DM 123.45", x4.to_string())
+        self.assertEqual("DM -123.45", x5.to_string())
+        self.assertEqual("DM -123.45", x6.to_string())
+        self.assertEqual("123.45 euro", x7.to_string())
+        self.assertEqual("-123.45 euro", x8.to_string())
+        self.assertEqual("123.45€", x9.to_string())
+        self.assertEqual("-123.45€", x10.to_string())
 
-        self.assertEqual(amount(0), x0)
-        self.assertEqual(x2, x1)
-        self.assertEqual(x5, x1)
-        self.assertEqual(x6, x3)
-        self.assertEqual(x10, x3)
-        self.assertEqual(amount(1), x4)
-        self.assertEqual(x10, x9)
+        self.assertValid(x1)
+        self.assertValid(x2)
+        self.assertValid(x3)
+        self.assertValid(x4)
+        self.assertValid(x5)
+        self.assertValid(x6)
+        self.assertValid(x7)
+        self.assertValid(x8)
+        self.assertValid(x9)
+        self.assertValid(x10)
 
     def testEquality(self):
-        x1 = amount(123456)
-        x2 = amount(456789)
-        x3 = amount(333333)
-        x4 = amount(123456.0)
-        x5 = amount("123456.0")
+        x1 = amount("$123.45")
+        x2 = amount("-$123.45")
+        x3 = amount("$-123.45")
+        x4 = amount("DM 123.45")
+        x5 = amount("-DM 123.45")
+        x6 = amount("DM -123.45")
+        x7 = amount("123.45 euro")
+        x8 = amount("-123.45 euro")
+        x9 = amount("123.45€")
+        x10 = amount("-123.45€")
 
-        self.assertTrue(x1 == 123456)
         self.assertTrue(x1 != x2)
-        self.assertTrue(x1 == (x2 - x3))
-        self.assertTrue(x1 == x4)
-        self.assertTrue(x4 == x5)
+        self.assertTrue(x1 != x4)
+        self.assertTrue(x1 != x7)
+        self.assertTrue(x1 != x9)
+        self.assertTrue(x2 == x3)
+        self.assertTrue(x4 != x5)
+        self.assertTrue(x5 == x6)
+        self.assertTrue(x7 == - x8)
+        self.assertTrue(x9 == - x10)
 
-    def testIntegerAddition(self):
-        x1 = amount(123)
-        y1 = amount(456)
+        self.assertValid(x1)
+        self.assertValid(x2)
+        self.assertValid(x3)
+        self.assertValid(x4)
+        self.assertValid(x5)
+        self.assertValid(x6)
+        self.assertValid(x7)
+        self.assertValid(x8)
+        self.assertValid(x9)
+        self.assertValid(x10)
 
-        self.assertEqual(amount(579), x1 + y1)
-        self.assertEqual(amount(579), x1 + 456)
-        self.assertEqual(amount(579), 456 + x1)
+    def testAddition(self):
+        x0 = amount()
+        x1 = amount("$123.45")
+        x2 = amount(internalAmount("$123.456789"))
+        x3 = amount("DM 123.45")
+        x4 = amount("123.45 euro")
+        x5 = amount("123.45€")
+        x6 = amount("123.45")
 
-        x1 += amount(456)
-        self.assertEqual(amount(579), x1)
-        x1 += 456
-        self.assertEqual(amount(1035), x1)
+        self.assertEqual(amount("$246.90"), x1 + x1)
+        self.assertNotEqual(amount("$246.91"), x1 + x2)
+        self.assertEqual(internalAmount("$246.906789"), x1 + x2)
 
-        x3 = amount(True)
-        y3 = amount(True)
+        # Converting to string drops internal precision
+        self.assertEqual("$246.90", (x1 + x1).to_string())
+        self.assertEqual("$246.91", (x1 + x2).to_string())
 
-        self.assertEqual(amount(2), x3 + y3)
-        self.assertEqual(amount(2), x3 + True)
+        self.assertRaises(exceptions.ArithmeticError, operator.add, x1, x0)
+        self.assertRaises(exceptions.ArithmeticError, operator.add, x1, x3)
+        self.assertRaises(exceptions.ArithmeticError, operator.add, x1, x4)
+        self.assertRaises(exceptions.ArithmeticError, operator.add, x1, x5)
+        self.assertRaises(exceptions.ArithmeticError, operator.add, x1, x6)
+        self.assertRaises(exceptions.ArithmeticError, operator.add, x1, 123.45)
+        self.assertRaises(exceptions.ArithmeticError, operator.add, x1, 123)
 
-        x4 = amount("123456789123456789123456789")
+        self.assertEqual(amount("DM 246.90"), x3 + x3)
+        self.assertEqual(amount("246.90 euro"), x4 + x4)
+        self.assertEqual(amount("246.90€"), x5 + x5)
 
-        self.assertEqual(amount("246913578246913578246913578"), x4 + x4)
+        self.assertEqual("DM 246.90", (x3 + x3).to_string())
+        self.assertEqual("246.90 euro", (x4 + x4).to_string())
+        self.assertEqual("246.90€", (x5 + x5).to_string())
 
-    def testFractionalAddition(self):
-        x1 = amount(123.123)
-        y1 = amount(456.456)
+        x1 += amount("$456.45")
+        self.assertEqual(amount("$579.90"), x1)
+        x1 += amount("$456.45")
+        self.assertEqual(amount("$1036.35"), x1)
+        x1 += amount("$456")
+        self.assertEqual(amount("$1492.35"), x1)
 
-        self.assertEqual(amount(579.579), x1 + y1)
-        self.assertEqual(amount(579.579), x1 + 456.456)
-        self.assertEqual(amount(579.579), 456.456 + x1)
+        x7 = amount(internalAmount("$123456789123456789.123456789123456789"))
 
-        x1 += amount(456.456)
-        self.assertEqual(amount(579.579), x1)
-        x1 += 456.456
-        self.assertEqual(amount(1036.035), x1)
-        x1 += 456
-        self.assertEqual(amount(1492.035), x1)
+        self.assertEqual(internalAmount("$246913578246913578.246913578246913578"), x7 + x7)
 
-        x2 = amount("123456789123456789.123456789123456789")
+        self.assertValid(x1)
+        self.assertValid(x2)
+        self.assertValid(x3)
+        self.assertValid(x4)
+        self.assertValid(x5)
+        self.assertValid(x6)
+        self.assertValid(x7)
 
-        self.assertEqual(amount("246913578246913578.246913578246913578"), x2 + x2)
+    def testSubtraction(self):
+        x0 = amount()
+        x1 = amount("$123.45")
+        x2 = amount(internalAmount("$123.456789"))
+        x3 = amount("DM 123.45")
+        x4 = amount("123.45 euro")
+        x5 = amount("123.45€")
+        x6 = amount("123.45")
 
-    def testIntegerSubtraction(self):
-        x1 = amount(123)
-        y1 = amount(456)
+        self.assertNotEqual(amount(), x1 - x1)
+        self.assertEqual(amount("$0"), x1 - x1)
+        self.assertEqual(amount("$23.45"), x1 - amount("$100.00"))
+        self.assertEqual(amount("$-23.45"), amount("$100.00") - x1)
+        self.assertNotEqual(amount("$-0.01"), x1 - x2)
+        self.assertEqual(internalAmount("$-0.006789"), x1 - x2)
 
-        self.assertEqual(amount(333), y1 - x1)
-        self.assertEqual(amount(-333), x1 - y1)
-        self.assertEqual(amount(23), x1 - 100)
-        self.assertEqual(amount(-23), 100 - x1)
+        # Converting to string drops internal precision.  If an amount is
+        # zero, it drops the commodity as well.
+        self.assertEqual("$0.00", (x1 - x1).to_string())
+        self.assertEqual("$-0.01", (x1 - x2).to_string())
 
-        x1 -= amount(456)
-        self.assertEqual(amount(-333), x1)
-        x1 -= 456
-        self.assertEqual(amount(-789), x1)
+        self.assertRaises(exceptions.ArithmeticError, operator.sub, x1, x0)
+        self.assertRaises(exceptions.ArithmeticError, operator.sub, x1, x3)
+        self.assertRaises(exceptions.ArithmeticError, operator.sub, x1, x4)
+        self.assertRaises(exceptions.ArithmeticError, operator.sub, x1, x5)
+        self.assertRaises(exceptions.ArithmeticError, operator.sub, x1, x6)
+        self.assertRaises(exceptions.ArithmeticError, operator.sub, x1, 123.45)
+        self.assertRaises(exceptions.ArithmeticError, operator.sub, x1, 123)
 
-        x3 = amount(True)
-        y3 = amount(True)
+        self.assertEqual(amount("DM 0.00"), x3 - x3)
+        self.assertEqual(amount("DM 23.45"), x3 - amount("DM 100.00"))
+        self.assertEqual(amount("DM -23.45"), amount("DM 100.00") - x3)
+        self.assertEqual(amount("0.00 euro"), x4 - x4)
+        self.assertEqual(amount("23.45 euro"), x4 - amount("100.00 euro"))
+        self.assertEqual(amount("-23.45 euro"), amount("100.00 euro") - x4)
+        self.assertEqual(amount("0.00€"), x5 - x5)
+        self.assertEqual(amount("23.45€"), x5 - amount("100.00€"))
+        self.assertEqual(amount("-23.45€"), amount("100.00€") - x5)
 
-        self.assertEqual(amount(False), x3 - y3)
+        self.assertEqual("DM 0.00", (x3 - x3).to_string())
+        self.assertEqual("DM 23.45", (x3 - amount("DM 100.00")).to_string())
+        self.assertEqual("DM -23.45", (amount("DM 100.00") - x3).to_string())
+        self.assertEqual("0.00 euro", (x4 - x4).to_string())
+        self.assertEqual("23.45 euro", (x4 - amount("100.00 euro")).to_string())
+        self.assertEqual("-23.45 euro", (amount("100.00 euro") - x4).to_string())
+        self.assertEqual("0.00€", (x5 - x5).to_string())
+        self.assertEqual("23.45€", (x5 - amount("100.00€")).to_string())
+        self.assertEqual("-23.45€", (amount("100.00€") - x5).to_string())
 
-        x4 = amount("123456789123456789123456789")
-        y4 = amount("8238725986235986")
+        x1 -= amount("$456.45")
+        self.assertEqual(amount("$-333.00"), x1)
+        x1 -= amount("$456.45")
+        self.assertEqual(amount("$-789.45"), x1)
+        x1 -= amount("$456")
+        self.assertEqual(amount("$-1245.45"), x1)
 
-        self.assertEqual(amount("123456789115218063137220803"), x4 - y4)
-        self.assertEqual(amount("-123456789115218063137220803"), y4 - x4)
+        x7 = amount(internalAmount("$123456789123456789.123456789123456789"))
+        x8 = amount(internalAmount("$2354974984698.98459845984598"))
 
-    def testFractionalSubtraction(self):
-        x1 = amount(123.123)
-        y1 = amount(456.456)
+        self.assertEqual(internalAmount("$123454434148472090.138858329277476789"), x7 - x8)
+        self.assertEqual("$123454434148472090.138858329277476789", (x7 - x8).to_string())
+        self.assertEqual("$123454434148472090.14",
+	      (amount("$1.00") * (x7 - x8)).to_string())
+        self.assertEqual(internalAmount("$-123454434148472090.138858329277476789"), x8 - x7)
+        self.assertEqual("$-123454434148472090.138858329277476789", (x8 - x7).to_string())
+        self.assertEqual("$-123454434148472090.14",
+	      (amount("$1.00") * (x8 - x7)).to_string())
 
-        self.assertEqual(amount(-333.333), x1 - y1)
-        self.assertEqual(amount(333.333), y1 - x1)
+        self.assertValid(x1)
+        self.assertValid(x2)
+        self.assertValid(x3)
+        self.assertValid(x4)
+        self.assertValid(x5)
+        self.assertValid(x6)
+        self.assertValid(x7)
+        self.assertValid(x8)
 
-        x1 -= amount(456.456)
-        self.assertEqual(amount(-333.333), x1)
-        x1 -= 456.456
-        self.assertEqual(amount(-789.789), x1)
-        x1 -= 456
-        self.assertEqual(amount(-1245.789), x1)
+    def testMultiplication(self):
+        x1 = amount("$123.12")
+        y1 = amount("$456.45")
+        x2 = amount(internalAmount("$123.456789"))
+        x3 = amount("DM 123.45")
+        x4 = amount("123.45 euro")
+        x5 = amount("123.45€")
 
-        x2 = amount("123456789123456789.123456789123456789")
-        y2 = amount("9872345982459.248974239578")
-
-        self.assertEqual(amount("123446916777474329.874482549545456789"), x2 - y2)
-        self.assertEqual(amount("-123446916777474329.874482549545456789"), y2 - x2)
-
-    def testIntegerMultiplication(self):
-        x1 = amount(123)
-        y1 = amount(456)
-
-        self.assertEqual(amount(0), x1 * 0)
-        self.assertEqual(amount(0), amount(0) * x1)
-        self.assertEqual(amount(0), 0 * x1)
+        self.assertEqual(amount("$0.00"), x1 * 0)
+        self.assertEqual(amount("$0.00"), 0 * x1)
         self.assertEqual(x1, x1 * 1)
-        self.assertEqual(x1, amount(1) * x1)
         self.assertEqual(x1, 1 * x1)
         self.assertEqual(- x1, x1 * -1)
-        self.assertEqual(- x1, amount(-1) * x1)
         self.assertEqual(- x1, -1 * x1)
-        self.assertEqual(amount(56088), x1 * y1)
-        self.assertEqual(amount(56088), y1 * x1)
-        self.assertEqual(amount(56088), x1 * 456)
-        self.assertEqual(amount(56088), amount(456) * x1)
-        self.assertEqual(amount(56088), 456 * x1)
+        self.assertEqual(internalAmount("$56198.124"), x1 * y1)
+        self.assertEqual("$56198.12", (x1 * y1).to_string())
+        self.assertEqual(internalAmount("$56198.124"), y1 * x1)
+        self.assertEqual("$56198.12", (y1 * x1).to_string())
 
-        x1 *= amount(123)
-        self.assertEqual(amount(15129), x1)
+        # Internal amounts retain their precision, even when being
+        # converted to strings
+        self.assertEqual(internalAmount("$15199.99986168"), x1 * x2)
+        self.assertEqual(internalAmount("$15199.99986168"), x2 * x1)
+        self.assertEqual("$15200.00", (x1 * x2).to_string())
+        self.assertEqual("$15199.99986168", (x2 * x1).to_string())
+
+        self.assertRaises(exceptions.ArithmeticError, operator.mul, x1, x3)
+        self.assertRaises(exceptions.ArithmeticError, operator.mul, x1, x4)
+        self.assertRaises(exceptions.ArithmeticError, operator.mul, x1, x5)
+
+        x1 *= amount("123.12")
+        self.assertEqual(internalAmount("$15158.5344"), x1)
+        self.assertEqual("$15158.53", x1.to_string())
+        x1 *= 123.12
+        self.assertEqual(internalAmount("$1866318.755328"), x1)
+        self.assertEqual("$1866318.76", x1.to_string())
         x1 *= 123
-        self.assertEqual(amount(1860867), x1)
+        self.assertEqual(internalAmount("$229557206.905344"), x1)
+        self.assertEqual("$229557206.91", x1.to_string())
 
-        x3 = amount(True)
-        y3 = amount(True)
+        x7 = amount(internalAmount("$123456789123456789.123456789123456789"))
 
-        self.assertEqual(amount(True), x3 * y3)
+        self.assertEqual(internalAmount("$15241578780673678546105778311537878.046486820281054720515622620750190521"),
+	      x7 * x7)
 
-        x4 = amount("123456789123456789123456789")
+        self.assertValid(x1)
+        self.assertValid(x2)
+        self.assertValid(x3)
+        self.assertValid(x4)
+        self.assertValid(x5)
+        self.assertValid(x7)
 
-        self.assertEqual(amount("15241578780673678546105778281054720515622620750190521"),
-                    x4 * x4)
+    def testDivision(self):
+        x1 = amount("$123.12")
+        y1 = amount("$456.45")
+        x2 = amount(internalAmount("$123.456789"))
+        x3 = amount("DM 123.45")
+        x4 = amount("123.45 euro")
+        x5 = amount("123.45€")
 
-    def testFractionalMultiplication(self):
-        x1 = amount(123.123)
-        y1 = amount(456.456)
-
-        self.assertEqual(amount(0), x1 * 0)
-        self.assertEqual(amount(0), amount(0) * x1)
-        self.assertEqual(amount(0), 0 * x1)
-        self.assertEqual(x1, x1 * 1)
-        self.assertEqual(x1, amount(1) * x1)
-        self.assertEqual(x1, 1 * x1)
-        self.assertEqual(- x1, x1 * -1)
-        self.assertEqual(- x1, amount(-1) * x1)
-        self.assertEqual(- x1, -1 * x1)
-        self.assertEqual(amount("56200.232088"), x1 * y1)
-        self.assertEqual(amount("56200.232088"), y1 * x1)
-        self.assertEqual(amount("56200.232088"), x1 * 456.456)
-        self.assertEqual(amount("56200.232088"), amount(456.456) * x1)
-        self.assertEqual(amount("56200.232088"), 456.456 * x1)
-
-        x1 *= amount(123.123)
-        self.assertEqual(amount("15159.273129"), x1)
-        x1 *= 123.123
-        self.assertEqual(amount("1866455.185461867"), x1)
-        x1 *= 123
-        self.assertEqual(amount("229573987.811809641"), x1)
-
-        x2 = amount("123456789123456789.123456789123456789")
-
-        self.assertEqual(amount("15241578780673678546105778311537878.046486820281054720515622620750190521"),
-                    x2 * x2)
-
-    def divideByZero(self, amt):
-        return amt / 0
-
-    def testIntegerDivision(self):
-        x1 = amount(123)
-        y1 = amount(456)
-
-        self.assertRaises(exceptions.ArithmeticError, self.divideByZero, x1)
-        self.assertEqual(amount(0), amount(0) / x1)
-        self.assertEqual(amount(0), 0 / x1)
+        self.assertRaises(exceptions.ArithmeticError, operator.div, x1, 0)
+        self.assertEqual(amount("$0.00"), 0 / x1)
         self.assertEqual(x1, x1 / 1)
-        self.assertEqual(amount("0.008130"), amount(1) / x1)
-        self.assertEqual(amount("0.008130"), 1 / x1)
+        self.assertEqual(internalAmount("$0.00812216"), 1 / x1)
         self.assertEqual(- x1, x1 / -1)
-        self.assertEqual(- amount("0.008130"), amount(-1) / x1)
-        self.assertEqual(- amount("0.008130"), -1 / x1)
-        self.assertEqual(amount("0.269736"), x1 / y1)
-        self.assertEqual(amount("3.707317"), y1 / x1)
-        self.assertEqual(amount("0.269736"), x1 / 456)
-        self.assertEqual(amount("3.707317"), amount(456) / x1)
-        self.assertEqual(amount("3.707317"), 456 / x1)
+        self.assertEqual(internalAmount("$-0.00812216"), -1 / x1)
+        self.assertEqual(internalAmount("$0.26973382"), x1 / y1)
+        self.assertEqual("$0.27", (x1 / y1).to_string())
+        self.assertEqual(internalAmount("$3.70735867"), y1 / x1)
+        self.assertEqual("$3.71", (y1 / x1).to_string())
 
-        x1 /= amount(456)
-        self.assertEqual(amount("0.269736"), x1)
-        x1 /= 456
-        self.assertEqual(amount("0.000591526315789473"), x1)
+        # Internal amounts retain their precision, even when being
+        # converted to strings
+        self.assertEqual(internalAmount("$0.99727201"), x1 / x2)
+        self.assertEqual(internalAmount("$1.00273545321637426901"), x2 / x1)
+        self.assertEqual("$1.00", (x1 / x2).to_string())
+        self.assertEqual("$1.00273545321637426901", (x2 / x1).to_string())
 
-        x4 = amount("123456789123456789123456789")
-        y4 = amount("56")
+        self.assertRaises(exceptions.ArithmeticError, operator.div, x1, x3)
+        self.assertRaises(exceptions.ArithmeticError, operator.div, x1, x4)
+        self.assertRaises(exceptions.ArithmeticError, operator.div, x1, x5)
 
-        self.assertEqual(amount(1), x4 / x4)
-        self.assertEqual(amount("2204585520061728377204585.517857"), x4 / y4)
+        x1 /= amount("123.12")
+        self.assertEqual(internalAmount("$1.00"), x1)
+        self.assertEqual("$1.00", x1.to_string())
+        x1 /= 123.12
+        self.assertEqual(internalAmount("$0.00812216"), x1)
+        self.assertEqual("$0.01", x1.to_string())
+        x1 /= 123
+        self.assertEqual(internalAmount("$0.00006603"), x1)
+        self.assertEqual("$0.00", x1.to_string())
 
-    def testFractionalDivision(self):
-        x1 = amount(123.123)
-        y1 = amount(456.456)
+        x6 = amount(internalAmount("$237235987235987.98723987235978"))
+        x7 = amount(internalAmount("$123456789123456789.123456789123456789"))
 
-        self.assertRaises(exceptions.ArithmeticError, self.divideByZero, x1)
-        self.assertEqual(amount("0.008121"), amount(1.0) / x1)
-        self.assertEqual(amount("0.008121"), 1.0 / x1)
-        self.assertEqual(x1, x1 / 1.0)
-        self.assertEqual(amount("0.008121"), amount(1.0) / x1)
-        self.assertEqual(amount("0.008121"), 1.0 / x1)
-        self.assertEqual(- x1, x1 / -1.0)
-        self.assertEqual(- amount("0.008121"), amount(-1.0) / x1)
-        self.assertEqual(- amount("0.008121"), -1.0 / x1)
-        self.assertEqual(amount("0.269736842105"), x1 / y1)
-        self.assertEqual(amount("3.707317073170"), y1 / x1)
-        self.assertEqual(amount("0.269736842105"), x1 / 456.456)
-        self.assertEqual(amount("3.707317073170"), amount(456.456) / x1)
-        self.assertEqual(amount("3.707317073170"), 456.456 / x1)
+        self.assertEqual(amount("$1"), x7 / x7)
+        self.assertEqual(internalAmount("$0.0019216115121765559608381226612019501046413574469262"),
+	      x6 / x7)
+        self.assertEqual(internalAmount("$520.39654928343335571379527154924040947271699678158689736256"),
+	      x7 / x6)
 
-        x1 /= amount(456.456)
-        self.assertEqual(amount("0.269736842105"), x1)
-        x1 /= 456.456
-        self.assertEqual(amount("0.0005909372252856792330476541"), x1)
-        x1 /= 456
-        self.assertEqual(amount("0.00000129591496773175270405187302631578947368421052631578947368421"), x1)
+        self.assertValid(x1)
+        self.assertValid(x2)
+        self.assertValid(x3)
+        self.assertValid(x4)
+        self.assertValid(x5)
+        self.assertValid(x6)
+        self.assertValid(x7)
 
-        x4 = amount("1234567891234567.89123456789")
-        y4 = amount("56.789")
-
-        self.assertEqual(amount(1.0), x4 / x4)
-        self.assertEqual(amount("21739560323910.7554497273748437197344556164"),
-                         x4 / y4)
-
-    def testIntegerConversion(self):
-        x1 = amount(123456)
+    def testConversion(self):
+        x1 = amount("$1234.56")
 
         self.assertEqual(True, bool(x1))
-        self.assertEqual(123456, int(x1))
-        self.assertEqual(123456.0, float(x1))
-        self.assertEqual("123456", x1.to_string())
-        self.assertEqual("123456", x1.quantity_string())
-
-    def testFractionalConversion(self):
-        x1 = amount(1234.56)
-
-        self.assertEqual(True, not (not x1))
         self.assertEqual(1234, int(x1))
         self.assertEqual(1234.56, float(x1))
-        self.assertEqual("1234.56", x1.to_string())
+        self.assertEqual("$1234.56", x1.to_string())
         self.assertEqual("1234.56", x1.quantity_string())
 
-    def testFractionalRound(self):
-        x1 = amount("1234.567890")
+        self.assertValid(x1)
 
-        self.assertEqual(amount("1234.56789"), x1.round(6))
-        self.assertEqual(amount("1234.56789"), x1.round(5))
-        self.assertEqual(amount("1234.5679"), x1.round(4))
-        self.assertEqual(amount("1234.568"), x1.round(3))
-        self.assertEqual(amount("1234.57"), x1.round(2))
-        self.assertEqual(amount("1234.6"), x1.round(1))
-        self.assertEqual(amount("1235"), x1.round(0))
+    def testRound(self):
+        x1 = amount(internalAmount("$1234.567890"))
 
-        x2 = amount("9876.543210")
+        self.assertEqual(internalAmount("$1234.56789"), x1.round(6))
+        self.assertEqual(internalAmount("$1234.56789"), x1.round(5))
+        self.assertEqual(internalAmount("$1234.5679"), x1.round(4))
+        self.assertEqual(internalAmount("$1234.568"), x1.round(3))
+        self.assertEqual(amount("$1234.57"), x1.round(2))
+        self.assertEqual(amount("$1234.6"), x1.round(1))
+        self.assertEqual(amount("$1235"), x1.round(0))
 
-        self.assertEqual(amount("9876.543210"), x2.round(6))
-        self.assertEqual(amount("9876.54321"), x2.round(5))
-        self.assertEqual(amount("9876.5432"), x2.round(4))
-        self.assertEqual(amount("9876.543"), x2.round(3))
-        self.assertEqual(amount("9876.54"), x2.round(2))
-        self.assertEqual(amount("9876.5"), x2.round(1))
-        self.assertEqual(amount("9877"), x2.round(0))
+        x2 = amount(internalAmount("$9876.543210"))
 
-        x3 = amount("-1234.567890")
+        self.assertEqual(internalAmount("$9876.543210"), x2.round(6))
+        self.assertEqual(internalAmount("$9876.54321"), x2.round(5))
+        self.assertEqual(internalAmount("$9876.5432"), x2.round(4))
+        self.assertEqual(internalAmount("$9876.543"), x2.round(3))
+        self.assertEqual(amount("$9876.54"), x2.round(2))
+        self.assertEqual(amount("$9876.5"), x2.round(1))
+        self.assertEqual(amount("$9877"), x2.round(0))
 
-        self.assertEqual(amount("-1234.56789"), x3.round(6))
-        self.assertEqual(amount("-1234.56789"), x3.round(5))
-        self.assertEqual(amount("-1234.5679"), x3.round(4))
-        self.assertEqual(amount("-1234.568"), x3.round(3))
-        self.assertEqual(amount("-1234.57"), x3.round(2))
-        self.assertEqual(amount("-1234.6"), x3.round(1))
-        self.assertEqual(amount("-1235"), x3.round(0))
+        x3 = amount(internalAmount("$-1234.567890"))
 
-        x4 = amount("-9876.543210")
+        self.assertEqual(internalAmount("$-1234.56789"), x3.round(6))
+        self.assertEqual(internalAmount("$-1234.56789"), x3.round(5))
+        self.assertEqual(internalAmount("$-1234.5679"), x3.round(4))
+        self.assertEqual(internalAmount("$-1234.568"), x3.round(3))
+        self.assertEqual(amount("$-1234.57"), x3.round(2))
+        self.assertEqual(amount("$-1234.6"), x3.round(1))
+        self.assertEqual(amount("$-1235"), x3.round(0))
 
-        self.assertEqual(amount("-9876.543210"), x4.round(6))
-        self.assertEqual(amount("-9876.54321"), x4.round(5))
-        self.assertEqual(amount("-9876.5432"), x4.round(4))
-        self.assertEqual(amount("-9876.543"), x4.round(3))
-        self.assertEqual(amount("-9876.54"), x4.round(2))
-        self.assertEqual(amount("-9876.5"), x4.round(1))
-        self.assertEqual(amount("-9877"), x4.round(0))
+        x4 = amount(internalAmount("$-9876.543210"))
+
+        self.assertEqual(internalAmount("$-9876.543210"), x4.round(6))
+        self.assertEqual(internalAmount("$-9876.54321"), x4.round(5))
+        self.assertEqual(internalAmount("$-9876.5432"), x4.round(4))
+        self.assertEqual(internalAmount("$-9876.543"), x4.round(3))
+        self.assertEqual(amount("$-9876.54"), x4.round(2))
+        self.assertEqual(amount("$-9876.5"), x4.round(1))
+        self.assertEqual(amount("$-9877"), x4.round(0))
+
+        self.assertValid(x1)
+        self.assertValid(x2)
+        self.assertValid(x3)
+        self.assertValid(x4)
+
+    def testDisplayRound(self):
+        x1 = amount("$0.85")
+        x2 = amount("$0.1")
+
+        x1 *= 0.19
+
+        self.assertNotEqual(amount("$0.16"), x1)
+        self.assertEqual(internalAmount("$0.1615"), x1)
+        self.assertEqual("$0.16", x1.to_string())
+
+        self.assertEqual(amount("$0.10"), x2)
+        self.assertNotEqual(internalAmount("$0.101"), x2)
+        self.assertEqual("$0.10", x2.to_string())
+
+        x1 *= 7
+
+        self.assertNotEqual(amount("$1.13"), x1)
+        self.assertEqual(internalAmount("$1.1305"), x1)
+        self.assertEqual("$1.13", x1.to_string())
 
     def testTruth(self):
-        x0 = amount()
-        x1 = amount("1234")
-        x2 = amount("1234.56")
+        x1 = amount("$1234")
+        x2 = amount("$1234.56")
 
-        self.assertTrue(not x0)
-        self.assertTrue(x1 )
-        self.assertTrue(x2)
+        if x1:
+            self.assertTrue(True)
+        else:
+            self.assertTrue(False)
+
+        if x2:
+            self.assertTrue(True)
+        else:
+            self.assertTrue(False)
+
+        self.assertValid(x1)
+        self.assertValid(x2)
 
     def testForZero(self):
-        x0 = amount()
-        x1 = amount("0.000000000000000000001")
+        x1 = amount(internalAmount("$0.000000000000000000001"))
 
-        self.assertTrue(not x0)
-        self.assertTrue(x1)
-        self.assertTrue(x0.zero())
-        self.assertTrue(x0.realzero())
-        self.assertTrue(not x1.zero())
-        self.assertTrue(not x1.realzero())
+        self.assertFalse(x1)
+        self.assertTrue(x1.zero())
+        self.assertFalse(x1.realzero())
+
+        self.assertValid(x1)
 
     def testComparisons(self):
         x0 = amount()
-        x1 = amount(-123)
-        x2 = amount(123)
-        x3 = amount(-123.45)
-        x4 = amount(123.45)
-        x5 = amount("-123.45")
-        x6 = amount("123.45")
+        x1 = amount("$-123")
+        x2 = amount("$123.00")
+        x3 = amount(internalAmount("$-123.4544"))
+        x4 = amount(internalAmount("$123.4544"))
+        x5 = amount("$-123.45")
+        x6 = amount("$123.45")
 
         self.assertTrue(x0 > x1)
         self.assertTrue(x0 < x2)
@@ -418,39 +549,59 @@ class CommodityAmountTestCase(unittest.TestCase):
 
         self.assertTrue(x1 > x3)
         self.assertTrue(x3 <= x5)
-        self.assertTrue(x3 >= x5)
+        self.assertTrue(x3 < x5)
+        self.assertTrue(x3 <= x5)
+        self.assertFalse(x3 == x5)
         self.assertTrue(x3 < x1)
         self.assertTrue(x3 < x4)
 
+        self.assertValid(x0)
+        self.assertValid(x1)
+        self.assertValid(x2)
+        self.assertValid(x3)
+        self.assertValid(x4)
+        self.assertValid(x5)
+        self.assertValid(x6)
+
     def testSign(self):
         x0 = amount()
-        x1 = amount("0.0000000000000000000000000000000000001")
-        x2 = amount("-0.0000000000000000000000000000000000001")
-        x3 = amount("1")
-        x4 = amount("-1")
+        x1 = amount(internalAmount("$0.0000000000000000000000000000000000001"))
+        x2 = amount(internalAmount("$-0.0000000000000000000000000000000000001"))
+        x3 = amount("$1")
+        x4 = amount("$-1")
 
-        self.assertTrue(not x0.sign())
-        self.assertTrue(x1.sign() > 0)
-        self.assertTrue(x2.sign() < 0)
+        self.assertFalse(x0.sign())
+        self.assertTrue(x1.sign() != 0)
+        self.assertTrue(x2.sign() != 0)
         self.assertTrue(x3.sign() > 0)
         self.assertTrue(x4.sign() < 0)
 
+        self.assertValid(x0)
+        self.assertValid(x1)
+        self.assertValid(x2)
+        self.assertValid(x3)
+        self.assertValid(x4)
+
     def testAbs(self):
         x0 = amount()
-        x1 = amount(-1234)
-        x2 = amount(1234)
+        x1 = amount("$-1234.56")
+        x2 = amount("$1234.56")
 
         self.assertEqual(amount(), abs(x0))
-        self.assertEqual(amount(1234), abs(x1))
-        self.assertEqual(amount(1234), abs(x2))
+        self.assertEqual(amount("$1234.56"), abs(x1))
+        self.assertEqual(amount("$1234.56"), abs(x2))
 
         x0.abs()
         x1.abs()
         x2.abs()
 
         self.assertEqual(amount(), x0)
-        self.assertEqual(amount(1234), x1)
-        self.assertEqual(amount(1234), x2)
+        self.assertEqual(amount("$1234.56"), x1)
+        self.assertEqual(amount("$1234.56"), x2)
+
+        self.assertValid(x0)
+        self.assertValid(x1)
+        self.assertValid(x2)
 
     def testPrinting(self):
         pass

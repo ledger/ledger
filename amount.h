@@ -63,6 +63,7 @@ class amount_t
   static bool keep_date;
   static bool keep_tag;
   static bool keep_base;
+  static bool full_strings;
 
  protected:
   void _init();
@@ -238,11 +239,15 @@ class amount_t
   operator bool() const {
     return ! zero();
   }
+  operator std::string() const {
+    return to_string();
+  }
 
   operator long() const;
   operator double() const;
 
   std::string to_string() const;
+  std::string to_fullstring() const;
   std::string quantity_string() const;
 
   // comparisons between amounts
@@ -311,6 +316,8 @@ class amount_t
 
   bool valid() const;
 
+  static amount_t exact(const std::string& value);
+
   // This function is special, and exists only to support a custom
   // optimization in binary.cc (which offers a significant enough gain
   // to be worth the trouble).
@@ -332,7 +339,8 @@ class amount_t
 #define AMOUNT_PARSE_NO_MIGRATE 0x01
 #define AMOUNT_PARSE_NO_REDUCE  0x02
 
-  void print(std::ostream& out, bool omit_commodity = false) const;
+  void print(std::ostream& out, bool omit_commodity = false,
+	     bool full_precision = false) const;
   void parse(std::istream& in, unsigned char flags = 0);
   void parse(const std::string& str, unsigned char flags = 0) {
     std::istringstream stream(str);
@@ -350,9 +358,21 @@ class amount_t
   void read_quantity(char *& data);
 };
 
+inline amount_t amount_t::exact(const std::string& value) {
+  amount_t temp;
+  temp.parse(value, AMOUNT_PARSE_NO_MIGRATE);
+  return temp;
+}
+
 inline std::string amount_t::to_string() const {
   std::ostringstream bufstream;
   print(bufstream);
+  return bufstream.str();
+}
+
+inline std::string amount_t::to_fullstring() const {
+  std::ostringstream bufstream;
+  print(bufstream, false, true);
   return bufstream.str();
 }
 
@@ -425,7 +445,7 @@ inline bool operator!=(const T val, const amount_t& amt) {
 }
 
 inline std::ostream& operator<<(std::ostream& out, const amount_t& amt) {
-  amt.print(out);
+  amt.print(out, false, amount_t::full_strings);
   return out;
 }
 inline std::istream& operator>>(std::istream& in, amount_t& amt) {
