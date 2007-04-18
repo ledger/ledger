@@ -77,7 +77,6 @@ AC_CACHE_CHECK(
    LIBS=$libgmp_save_libs])
 
 if [test x$libgmp_avail = xtrue ]; then
-  AM_CONDITIONAL(HAVE_GMP, true)
   LIBS="-lgmp $LIBS"
 else
   AC_MSG_FAILURE("Could not find gmp library (set CPPFLAGS and LDFLAGS?)")
@@ -99,10 +98,48 @@ AC_CACHE_CHECK(
    LIBS=$libpcre_save_libs])
 
 if [test x$libpcre_avail = xtrue ]; then
-  AM_CONDITIONAL(HAVE_PCRE, true)
   LIBS="-lpcre $LIBS"
 else
   AC_MSG_FAILURE("Could not find pcre library (set CPPFLAGS and LDFLAGS?)")
+fi
+
+# check for Boost date_time
+AC_CACHE_CHECK(
+  [if boost_date_time is available],
+  [boost_date_time_cpplib_avail],
+  [boost_date_time_save_libs=$LIBS
+   LIBS="-lboost_date_time $LIBS"
+   AC_LANG_PUSH(C++)
+   AC_TRY_LINK(
+     [#include <boost/date_time/posix_time/posix_time.hpp>
+      #include <boost/date_time/gregorian/gregorian.hpp>
+      #include <boost/date_time/local_time_adjustor.hpp>
+      #include <boost/date_time/time_duration.hpp>
+      
+      using namespace boost::posix_time;
+      using namespace boost::date_time;
+      
+      #include <ctime>
+
+      inline ptime time_to_system_local(const ptime& when) {
+        struct std::tm tm_gmt = to_tm(when);
+        return from_time_t(mktime(&tm_gmt));
+      }],
+     [ptime t10 = ptime(boost::gregorian::from_string("2007-01-15"),
+                        ptime::time_duration_type());
+      
+      ptime t12 = time_to_system_local(t10);
+      
+      return t10 != t12;],
+     [boost_date_time_cpplib_avail=true],
+     [boost_date_time_cpplib_avail=false])
+   AC_LANG_POP
+   LIBS=$boost_date_time_save_libs])
+
+if [test x$boost_date_time_cpplib_avail = xtrue ]; then
+  LIBS="-lboost_date_time $LIBS"
+else
+  AC_MSG_FAILURE("Could not find boost_date_time library (set CPPFLAGS and LDFLAGS?)")
 fi
 
 # check for expat or xmlparse
@@ -113,6 +150,7 @@ AC_ARG_ENABLE(xml,
     no)  xml=false ;;
     *) AC_MSG_ERROR(bad value ${enableval} for --enable-xml) ;;
   esac],[xml=true])
+
 AM_CONDITIONAL(USE_XML, test x$xml = xtrue)
 
 if [test x$xml = xtrue ]; then
@@ -185,6 +223,7 @@ AC_ARG_ENABLE(ofx,
     no)  ofx=false ;;
     *) AC_MSG_ERROR(bad value ${enableval} for --enable-ofx) ;;
   esac],[ofx=true])
+
 AM_CONDITIONAL(USE_OFX, test x$ofx = xtrue)
 
 if [test x$ofx = xtrue ]; then
@@ -220,6 +259,7 @@ AC_ARG_ENABLE(python,
     no)  python=false ;;
     *) AC_MSG_ERROR(bad value ${enableval} for --enable-python) ;;
   esac],[python=false])
+
 AM_CONDITIONAL(USE_PYTHON, test x$python = xtrue)
 
 if [test x$python = xtrue ]; then
@@ -243,6 +283,7 @@ if [test x$python = xtrue ]; then
 	 [boost_python_cpplib_avail=false])
        AC_LANG_POP
        LIBS=$boost_python_save_libs])
+
     if [test x$boost_python_cpplib_avail = xtrue ]; then
       AM_CONDITIONAL(HAVE_BOOST_PYTHON, true)
       LIBS="-lboost_python -lpython$PYTHON_VERSION $LIBS"
@@ -264,6 +305,7 @@ AC_ARG_ENABLE(debug,
     no)  debug=false ;;
     *) AC_MSG_ERROR(bad value ${enableval} for --enable-debug) ;;
   esac],[debug=false])
+
 AM_CONDITIONAL(DEBUG, test x$debug = xtrue)
 
 # Checks for header files.
@@ -278,7 +320,7 @@ AC_STRUCT_TM
 # Checks for library functions.
 #AC_FUNC_ERROR_AT_LINE
 AC_HEADER_STDC
-AC_CHECK_FUNCS([access mktime realpath strftime strptime getpwuid getpwnam])
+AC_CHECK_FUNCS([access mktime realpath getpwuid getpwnam])
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

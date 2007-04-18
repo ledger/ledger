@@ -1,5 +1,4 @@
 #include "journal.h"
-#include "datetime.h"
 #include "mask.h"
 #include "format.h"
 #if 0
@@ -23,14 +22,14 @@ transaction_t::~transaction_t()
   if (cost) delete cost;
 }
 
-datetime_t transaction_t::actual_date() const
+ptime transaction_t::actual_date() const
 {
   if (! _date && entry)
     return entry->actual_date();
   return _date;
 }
 
-datetime_t transaction_t::effective_date() const
+ptime transaction_t::effective_date() const
 {
   if (! _date_eff && entry)
     return entry->effective_date();
@@ -182,7 +181,7 @@ bool entry_base_t::finalize()
 	  ! (*x)->amount.commodity().annotated)
 	(*x)->amount.annotate_commodity
 	  (abs(per_unit_cost),
-	   entry ? entry->actual_date() : datetime_t(),
+	   entry ? entry->actual_date() : ptime(),
 	   entry ? entry->code : "");
 
       (*x)->cost = new amount_t(- (per_unit_cost * (*x)->amount));

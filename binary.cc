@@ -135,7 +135,7 @@ inline void read_binary_value(char *& data, value_t& val)
     read_binary_long(data, *((long *) val.data));
     break;
   case value_t::DATETIME:
-    read_binary_number(data, *((datetime_t *) val.data));
+    read_binary_number(data, *((ptime *) val.data));
     break;
   case value_t::AMOUNT:
     read_binary_amount(data, *((amount_t *) val.data));
@@ -281,7 +281,7 @@ inline void read_binary_commodity_base_extra(char *& data,
   for (unsigned long i = 0, count = read_binary_long<unsigned long>(data);
        i < count;
        i++) {
-    datetime_t when;
+    ptime when;
     read_binary_number(data, when);
     amount_t amt;
     read_binary_amount(data, amt);
@@ -661,7 +661,7 @@ void write_binary_value(std::ostream& out, const value_t& val)
     write_binary_long(out, *((long *) val.data));
     break;
   case value_t::DATETIME:
-    write_binary_number(out, *((datetime_t *) val.data));
+    write_binary_number(out, *((ptime *) val.data));
     break;
   case value_t::AMOUNT:
     write_binary_amount(out, *((amount_t *) val.data));

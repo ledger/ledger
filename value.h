@@ -63,9 +63,9 @@ class value_t
     *((long *) data) = val;
     type = INTEGER;
   }
-  value_t(const datetime_t val) {
-    TRACE_CTOR("value_t(const datetime_t)");
-    *((datetime_t *) data) = val;
+  value_t(const ptime val) {
+    TRACE_CTOR("value_t(const ptime)");
+    *((ptime *) data) = val;
     type = DATETIME;
   }
   value_t(const unsigned long val) {
@@ -144,10 +144,10 @@ class value_t
     }
     return *this;
   }
-  value_t& operator=(const datetime_t val) {
-    if ((datetime_t *) data != &val) {
+  value_t& operator=(const ptime val) {
+    if ((ptime *) data != &val) {
       destroy();
-      *((datetime_t *) data) = val;
+      *((ptime *) data) = val;
       type = DATETIME;
     }
     return *this;
@@ -276,7 +276,7 @@ class value_t
 
   bool		 to_boolean() const;
   long		 to_integer() const;
-  datetime_t	 to_datetime() const;
+  ptime          to_datetime() const;
   amount_t	 to_amount() const;
   balance_t	 to_balance() const;
   balance_pair_t to_balance_pair() const;
@@ -417,7 +417,7 @@ class value_t
     case INTEGER:
       return *((long *) data) == 0;
     case DATETIME:
-      return ! *((datetime_t *) data);
+      return ((ptime *) data)->is_not_a_date_time();
     case AMOUNT:
       return ((amount_t *) data)->realzero();
     case BALANCE:
@@ -450,7 +450,7 @@ class value_t
 			    const bool keep_tag   = amount_t::keep_tag) const;
 
   value_t& add(const amount_t&  amount, const amount_t * cost = NULL);
-  value_t  value(const datetime_t& moment) const;
+  value_t  value(const ptime& moment) const;
   void     reduce();
 
   value_t reduced() const {
@@ -466,35 +466,57 @@ class value_t
 	     const int latter_width = -1) const;
 };
 
-#define DEF_VALUE_AUX_OP(OP)					\
-  inline value_t operator OP(const balance_pair_t& val,	\
-			     const value_t& obj) {		\
-    return value_t(val) OP obj;				\
-  }								\
-  inline value_t operator OP(const balance_t& val,		\
-			     const value_t& obj) {		\
-    return value_t(val) OP obj;				\
-  }								\
-  inline value_t operator OP(const amount_t& val,		\
-			     const value_t& obj) {		\
-    return value_t(val) OP obj;				\
-  }								\
-  template <typename T>						\
-  inline value_t operator OP(T val, const value_t& obj) {	\
-    return value_t(val) OP obj;				\
-  }
+#define DEFINE_VALUE_OPERATORS(T, OP)				\
+inline value_t operator OP(const T& val, const value_t& obj) {	\
+  return value_t(val) OP obj;					\
+}
 
-DEF_VALUE_AUX_OP(+)
-DEF_VALUE_AUX_OP(-)
-DEF_VALUE_AUX_OP(*)
-DEF_VALUE_AUX_OP(/)
+DEFINE_VALUE_OPERATORS(bool, ==)
+DEFINE_VALUE_OPERATORS(bool, !=)
 
-DEF_VALUE_AUX_OP(<)
-DEF_VALUE_AUX_OP(<=)
-DEF_VALUE_AUX_OP(>)
-DEF_VALUE_AUX_OP(>=)
-DEF_VALUE_AUX_OP(==)
-DEF_VALUE_AUX_OP(!=)
+DEFINE_VALUE_OPERATORS(long, +)
+DEFINE_VALUE_OPERATORS(long, -)
+DEFINE_VALUE_OPERATORS(long, *)
+DEFINE_VALUE_OPERATORS(long, /)
+DEFINE_VALUE_OPERATORS(long, <)
+DEFINE_VALUE_OPERATORS(long, <=)
+DEFINE_VALUE_OPERATORS(long, >)
+DEFINE_VALUE_OPERATORS(long, >=)
+DEFINE_VALUE_OPERATORS(long, ==)
+DEFINE_VALUE_OPERATORS(long, !=)
+
+DEFINE_VALUE_OPERATORS(amount_t, +)
+DEFINE_VALUE_OPERATORS(amount_t, -)
+DEFINE_VALUE_OPERATORS(amount_t, *)
+DEFINE_VALUE_OPERATORS(amount_t, /)
+DEFINE_VALUE_OPERATORS(amount_t, <)
+DEFINE_VALUE_OPERATORS(amount_t, <=)
+DEFINE_VALUE_OPERATORS(amount_t, >)
+DEFINE_VALUE_OPERATORS(amount_t, >=)
+DEFINE_VALUE_OPERATORS(amount_t, ==)
+DEFINE_VALUE_OPERATORS(amount_t, !=)
+
+DEFINE_VALUE_OPERATORS(balance_t, +)
+DEFINE_VALUE_OPERATORS(balance_t, -)
+DEFINE_VALUE_OPERATORS(balance_t, *)
+DEFINE_VALUE_OPERATORS(balance_t, /)
+DEFINE_VALUE_OPERATORS(balance_t, <)
+DEFINE_VALUE_OPERATORS(balance_t, <=)
+DEFINE_VALUE_OPERATORS(balance_t, >)
+DEFINE_VALUE_OPERATORS(balance_t, >=)
+DEFINE_VALUE_OPERATORS(balance_t, ==)
+DEFINE_VALUE_OPERATORS(balance_t, !=)
+
+DEFINE_VALUE_OPERATORS(balance_pair_t, +)
+DEFINE_VALUE_OPERATORS(balance_pair_t, -)
+DEFINE_VALUE_OPERATORS(balance_pair_t, *)
+DEFINE_VALUE_OPERATORS(balance_pair_t, /)
+DEFINE_VALUE_OPERATORS(balance_pair_t, <)
+DEFINE_VALUE_OPERATORS(balance_pair_t, <=)
+DEFINE_VALUE_OPERATORS(balance_pair_t, >)
+DEFINE_VALUE_OPERATORS(balance_pair_t, >=)
+DEFINE_VALUE_OPERATORS(balance_pair_t, ==)
+DEFINE_VALUE_OPERATORS(balance_pair_t, !=)
 
 template <typename T>
 value_t::operator T() const
@@ -505,7 +527,7 @@ value_t::operator T() const
   case INTEGER:
     return *(long *) data;
   case DATETIME:
-    return *(datetime_t *) data;
+    return *(ptime *) data;
   case AMOUNT:
     return *(amount_t *) data;
   case BALANCE:
@@ -529,7 +551,7 @@ value_t::operator T() const
 
 template <> value_t::operator bool() const;
 template <> value_t::operator long() const;
-template <> value_t::operator datetime_t() const;
+template <> value_t::operator ptime() const;
 template <> value_t::operator double() const;
 template <> value_t::operator std::string() const;
 

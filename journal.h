@@ -23,8 +23,8 @@ class transaction_t
   enum state_t { UNCLEARED, CLEARED, PENDING };
 
   entry_t *	   entry;
-  datetime_t	   _date;
-  datetime_t	   _date_eff;
+  ptime	   _date;
+  ptime	   _date_eff;
   account_t *	   account;
   amount_t	   amount;
   std::string      amount_expr;
@@ -67,9 +67,9 @@ class transaction_t
   }
   ~transaction_t();
 
-  datetime_t actual_date() const;
-  datetime_t effective_date() const;
-  datetime_t date() const {
+  ptime actual_date() const;
+  ptime effective_date() const;
+  ptime date() const {
     if (use_effective_date)
       return effective_date();
     else
@@ -151,8 +151,8 @@ class entry_base_t
 class entry_t : public entry_base_t
 {
  public:
-  datetime_t  _date;
-  datetime_t  _date_eff;
+  ptime  _date;
+  ptime  _date_eff;
   std::string code;
   std::string payee;
 
@@ -167,15 +167,15 @@ class entry_t : public entry_base_t
     TRACE_DTOR("entry_t");
   }
 
-  datetime_t actual_date() const {
+  ptime actual_date() const {
     return _date;
   }
-  datetime_t effective_date() const {
-    if (! _date_eff)
+  ptime effective_date() const {
+    if (_date_eff.is_not_a_date_time())
       return _date;
     return _date_eff;
   }
-  datetime_t date() const {
+  ptime date() const {
     if (transaction_t::use_effective_date)
       return effective_date();
     else

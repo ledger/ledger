@@ -210,18 +210,6 @@ static void mpz_round(mpz_t out, mpz_t value, int value_prec, int round_prec)
   mpz_tdiv_q(out, out, divisor);
 }
 
-amount_t::amount_t(const bool val)
-{
-  TRACE_CTOR("amount_t(const bool)");
-  if (val) {
-    quantity = &true_value;
-    quantity->ref++;
-  } else {
-    quantity = NULL;
-  }
-  commodity_ = NULL;
-}
-
 amount_t::amount_t(const long val)
 {
   TRACE_CTOR("amount_t(const long)");
@@ -415,21 +403,6 @@ amount_t& amount_t::operator=(const amount_t& amt)
       _copy(amt);
     else if (quantity)
       _clear();
-  }
-  return *this;
-}
-
-amount_t& amount_t::operator=(const bool val)
-{
-  if (! val) {
-    if (quantity)
-      _clear();
-  } else {
-    commodity_ = NULL;
-    if (quantity)
-      _release();
-    quantity = &true_value;
-    quantity->ref++;
   }
   return *this;
 }
@@ -774,12 +747,12 @@ amount_t::operator double() const
   return std::atof(num.str().c_str());
 }
 
-amount_t amount_t::value(const datetime_t& moment) const
+amount_t amount_t::value(const ptime& moment) const
 {
   if (quantity) {
     amount_t amt(commodity().value(moment));
     if (! amt.realzero())
-      return (amt * *this).round();
+      return (amt * number()).round();
   }
   return *this;
 }
@@ -1159,7 +1132,7 @@ static void parse_commodity(std::istream& in, std::string& symbol)
 }
 
 bool parse_annotations(std::istream& in, amount_t& price,
-		       datetime_t& date, std::string& tag)
+		       ptime& date, std::string& tag)
 {
   bool has_date = false;
   
@@ -1189,7 +1162,7 @@ bool parse_annotations(std::istream& in, amount_t& price,
 	price = price.round();	// no need to retain individual precision
     }
     else if (c == '[') {
-      if (date)
+      if (date.is_not_a_date_time())
 	throw new amount_error("Commodity specifies more than one date");
 
       in.get(c);
@@ -1199,7 +1172,7 @@ bool parse_annotations(std::istream& in, amount_t& price,
       else
 	throw new amount_error("Commodity date lacks closing bracket");
 
-      date = buf;
+      date = ptime_from_local_date_string(buf);
       has_date = true;
     }
     else if (c == '(') {
@@ -1239,7 +1212,7 @@ void amount_t::parse(std::istream& in, unsigned char flags)
   std::string  symbol;
   std::string  quant;
   amount_t     tprice;
-  datetime_t   tdate;
+  ptime   tdate;
   bool         had_date = false;
   std::string  tag;
   unsigned int comm_flags = COMMODITY_STYLE_DEFAULTS;
@@ -1579,7 +1552,7 @@ bool amount_t::valid() const
 }
 
 void amount_t::annotate_commodity(const amount_t&    tprice,
-				  const datetime_t&  tdate,
+				  const ptime&  tdate,
 				  const std::string& tag)
 {
   const commodity_t *	  this_base;
@@ -1602,7 +1575,7 @@ void amount_t::annotate_commodity(const amount_t&    tprice,
   commodity_t * ann_comm =
     annotated_commodity_t::find_or_create
       (*this_base, ! tprice && this_ann ? this_ann->price : tprice,
-       ! tdate && this_ann ? this_ann->date : tdate,
+       tdate.is_not_a_date_time() && this_ann ? this_ann->date : tdate,
        tag.empty() && this_ann ? this_ann->tag : tag);
   if (ann_comm)
     set_commodity(*ann_comm);
@@ -1631,12 +1604,12 @@ amount_t amount_t::strip_annotations(const bool _keep_price,
   commodity_t * new_comm;
 
   if ((_keep_price && ann_comm.price) ||
-      (_keep_date && ann_comm.date) ||
-      (_keep_tag && ! ann_comm.tag.empty()))
+      (_keep_date  && ! ann_comm.date.is_not_a_date_time()) ||
+      (_keep_tag   && ! ann_comm.tag.empty()))
   {
     new_comm = annotated_commodity_t::find_or_create
       (*ann_comm.ptr, _keep_price ? ann_comm.price : amount_t(),
-       _keep_date ? ann_comm.date : datetime_t(),
+       _keep_date ? ann_comm.date : ptime(),
        _keep_tag ? ann_comm.tag : "");
   } else {
     new_comm = commodity_t::find_or_create(ann_comm.base_symbol());
@@ -1662,7 +1635,7 @@ amount_t amount_t::price() const
   return *this;
 }
 
-datetime_t amount_t::date() const
+ptime amount_t::date() const
 {
   if (commodity_ && commodity_->annotated) {
     DEBUG_PRINT("amounts.commodities",
@@ -1670,11 +1643,11 @@ datetime_t amount_t::date() const
 		<< ((annotated_commodity_t *)commodity_)->date);
     return ((annotated_commodity_t *)commodity_)->date;
   }
-  return 0L;
+  return ptime();
 }
 
 
-void commodity_base_t::add_price(const datetime_t& date,
+void commodity_base_t::add_price(const ptime& date,
 				 const amount_t&   price)
 {
   if (! history)
@@ -1690,7 +1663,7 @@ void commodity_base_t::add_price(const datetime_t& date,
   }
 }
 
-bool commodity_base_t::remove_price(const datetime_t& date)
+bool commodity_base_t::remove_price(const ptime& date)
 {
   if (history) {
     history_map::size_type n = history->prices.erase(date);
@@ -1800,15 +1773,15 @@ commodity_t * commodity_t::find(const std::string& symbol)
   return NULL;
 }
 
-amount_t commodity_base_t::value(const datetime_t& moment)
+amount_t commodity_base_t::value(const ptime& moment)
 {
-  datetime_t age;
+  ptime age;
   amount_t   price;
 
   if (history) {
     assert(history->prices.size() > 0);
 
-    if (! moment) {
+    if (moment.is_not_a_date_time()) {
       history_map::reverse_iterator r = history->prices.rbegin();
       age   = (*r).first;
       price = (*r).second;
@@ -1826,7 +1799,7 @@ amount_t commodity_base_t::value(const datetime_t& moment)
 	    age	  = (*i).first;
 	    price = (*i).second;
 	  } else {
-	    age = 0;
+	    age   = ptime();
 	  }
 	} else {
 	  price = (*i).second;
@@ -1838,7 +1811,7 @@ amount_t commodity_base_t::value(const datetime_t& moment)
   if (updater && ! (flags & COMMODITY_STYLE_NOMARKET))
     (*updater)(*this, moment, age,
 	       (history && history->prices.size() > 0 ?
-		(*history->prices.rbegin()).first : datetime_t()), price);
+		(*history->prices.rbegin()).first : ptime()), price);
 
   return price;
 }
@@ -1854,7 +1827,7 @@ bool annotated_commodity_t::operator==(const commodity_t& comm) const
        price != static_cast<const annotated_commodity_t&>(comm).price))
     return false;
 
-  if (date &&
+  if (! date.is_not_a_date_time() &&
       (! comm.annotated ||
        date != static_cast<const annotated_commodity_t&>(comm).date))
     return false;
@@ -1870,13 +1843,13 @@ bool annotated_commodity_t::operator==(const commodity_t& comm) const
 void
 annotated_commodity_t::write_annotations(std::ostream&      out,
 					 const amount_t&    price,
-					 const datetime_t&  date,
+					 const ptime&  date,
 					 const std::string& tag)
 {
   if (price)
     out << " {" << price << '}';
 
-  if (date)
+  if (! date.is_not_a_date_time())
     out << " [" << date << ']';
 
   if (! tag.empty())
@@ -1886,7 +1859,7 @@ annotated_commodity_t::write_annotations(std::ostream&      out,
 commodity_t *
 annotated_commodity_t::create(const commodity_t& comm,
 			      const amount_t&    price,
-			      const datetime_t&  date,
+			      const ptime&  date,
 			      const std::string& tag,
 			      const std::string& mapping_key)
 {
@@ -1927,7 +1900,7 @@ annotated_commodity_t::create(const commodity_t& comm,
 namespace {
   std::string make_qualified_name(const commodity_t& comm,
 				  const amount_t&    price,
-				  const datetime_t&  date,
+				  const ptime&  date,
 				  const std::string& tag)
   {
     if (price < 0)
@@ -1953,7 +1926,7 @@ namespace {
 commodity_t *
 annotated_commodity_t::find_or_create(const commodity_t& comm,
 				      const amount_t&    price,
-				      const datetime_t&  date,
+				      const ptime&  date,
 				      const std::string& tag)
 {
   std::string name = make_qualified_name(comm, price, date, tag);
@@ -2016,15 +1989,17 @@ bool compare_amount_commodities::operator()(const amount_t * left,
       }
     }
 
-    if (! aleftcomm.date && arightcomm.date)
+    if (aleftcomm.date.is_not_a_date_time() &&
+	! arightcomm.date.is_not_a_date_time())
       return true;
-    if (aleftcomm.date && ! arightcomm.date)
+    if (! aleftcomm.date.is_not_a_date_time() &&
+	arightcomm.date.is_not_a_date_time())
       return false;
 
-    if (aleftcomm.date && arightcomm.date) {
-      int diff = aleftcomm.date - arightcomm.date;
-      if (diff)
-	return diff < 0;
+    if (! aleftcomm.date.is_not_a_date_time() &&
+	! arightcomm.date.is_not_a_date_time()) {
+      time_duration diff = aleftcomm.date - arightcomm.date;
+      return diff.is_negative();
     }
 
     if (aleftcomm.tag.empty() && ! arightcomm.tag.empty())

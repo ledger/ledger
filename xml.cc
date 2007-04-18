@@ -1,6 +1,5 @@
 #include "xml.h"
 #include "journal.h"
-#include "datetime.h"
 #include "error.h"
 
 #include <iostream>

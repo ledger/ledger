@@ -30,7 +30,7 @@ static std::list<std::pair<std::string, int> > include_stack;
 
 #ifdef TIMELOG_SUPPORT
 struct time_entry_t {
-  datetime_t  checkin;
+  ptime  checkin;
   account_t * account;
   std::string desc;
 };
@@ -491,7 +491,7 @@ bool textual_parser_t::test(std::istream& in) const
   return true;
 }
 
-static void clock_out_from_timelog(const datetime_t& when,
+static void clock_out_from_timelog(const ptime& when,
 				   account_t *	     account,
 				   const char *	     desc,
 				   journal_t *	     journal)
@@ -674,16 +674,17 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	if (! time_field_ptr) break;
 	std::string date_field = date_field_ptr;
 
-	char *     symbol_and_price;
-	datetime_t datetime;
+	char * symbol_and_price;
+	ptime  datetime;
 
 	if (std::isdigit(time_field_ptr[0])) {
 	  symbol_and_price = next_element(time_field_ptr);
 	  if (! symbol_and_price) break;
-	  datetime = date_field + " " + time_field_ptr;
+	  datetime = ptime_from_local_time_string(date_field + " " +
+						  time_field_ptr);
 	} else {
 	  symbol_and_price = time_field_ptr;
-	  datetime = date_t(date_field);
+	  datetime = ptime_from_local_date_string(date_field);
 	}
 
 	std::string symbol;
@@ -706,7 +707,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
       }
 
       case 'Y':			// set current year
-	date_t::current_year = std::atoi(skip_ws(line + 1)) - 1900;
+	date_t::current_year = std::atoi(skip_ws(line + 1));
 	break;
 
 #ifdef TIMELOG_SUPPORT
@@ -879,7 +880,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
     for (std::list<time_entry_t>::iterator i = time_entries.begin();
 	 i != time_entries.end();
 	 i++)
-      clock_out_from_timelog(datetime_t::now, (*i).account, NULL, journal);
+      clock_out_from_timelog(now, (*i).account, NULL, journal);
     time_entries.clear();
   }
 

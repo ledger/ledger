@@ -13,10 +13,10 @@ endif
 libledger_la_CXXFLAGS = $(WARNFLAGS) -I$(top_builddir)/gdtoa
 libledger_la_SOURCES = \
 	amount.cc      \
+	times.cc       \
 	quotes.cc      \
 	balance.cc     \
 	value.cc       \
-	datetime.cc    \
 	xml.cc         \
 	xpath.cc       \
 	mask.cc        \
@@ -76,10 +76,10 @@ libpyledger_la_LDFLAGS = -release 3.0
 
 pkginclude_HEADERS = \
 	amount.h     \
+	times.h      \
 	balance.h    \
 	binary.h     \
 	csv.h	     \
-	datetime.h   \
 	debug.h	     \
 	derive.h     \
 	emacs.h	     \
@@ -151,7 +151,7 @@ noinst_PROGRAMS = ledger.so
 
 ledger_so_SOURCES = pyledger.cc
 
-PYLIBS = pyledger ledger gdtoa boost_python gmp pcre
+PYLIBS = pyledger ledger gdtoa boost_date_time boost_python gmp pcre
 
 if HAVE_EXPAT
 PYLIBS += expat

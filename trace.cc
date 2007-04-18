@@ -8,8 +8,8 @@ bool trace_mode;
 void trace(const std::string& cat, const std::string& str)
 {
   char buf[32];
-  std::strftime(buf, 31, "%H:%M:%S", datetime_t::now.localtime());
-  std::cerr << buf << " " << cat << ": " << str << std::endl;
+  std::cerr << now.to_short_string() << " " << cat << ": " << str
+	    << std::endl;
 }
 
 void trace_push(const std::string& cat, const std::string& str,

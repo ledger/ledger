@@ -318,7 +318,7 @@ unsigned int gnucash_parser_t::parse(std::istream&	 in,
   // user specified.
   //
   // jww (2006-09-13): Make this parser local somehow.
-  date_t::input_format = "%Y-%m-%d %H:%M:%S %z";
+  //date_t::input_format = "%Y-%m-%d %H:%M:%S %z";
 
   count		 = 0;
   action	 = NO_ACTION;

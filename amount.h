@@ -42,13 +42,13 @@
 #include <cassert>
 #include <exception>
 
-#include "datetime.h"
+#include "times.h"
 #include "debug.h"
 #include "error.h"
 
 namespace ledger {
 
-extern bool do_cleanup;
+extern bool  do_cleanup;
 
 class commodity_t;
 
@@ -94,7 +94,6 @@ class amount_t
     TRACE_CTOR("amount_t(const char *)");
     parse(val);
   }
-  amount_t(const bool val);
   amount_t(const long val);
   amount_t(const unsigned long val);
   amount_t(const double val);
@@ -118,7 +117,7 @@ class amount_t
     commodity_ = &comm;
   }
   void annotate_commodity(const amount_t&    price,
-			  const datetime_t&  date = datetime_t(),
+			  const ptime&	     date = ptime(),
 			  const std::string& tag  = "");
   amount_t strip_annotations(const bool _keep_price = keep_price,
 			     const bool _keep_date  = keep_date,
@@ -127,7 +126,7 @@ class amount_t
     commodity_ = NULL;
   }
   amount_t price() const;
-  datetime_t date() const;
+  ptime date() const;
 
   bool null() const {
     return ! quantity && ! has_commodity();
@@ -137,7 +136,6 @@ class amount_t
   amount_t& operator=(const amount_t& amt);
   amount_t& operator=(const std::string& val);
   amount_t& operator=(const char * val);
-  amount_t& operator=(const bool val);
   amount_t& operator=(const long val);
   amount_t& operator=(const unsigned long val);
   amount_t& operator=(const double val);
@@ -299,7 +297,7 @@ class amount_t
     return ! (*this == num);
   }
 
-  amount_t value(const datetime_t& moment) const;
+  amount_t value(const ptime& moment) const;
 
   // jww (2007-04-17): change the name here
   void abs() {
@@ -327,7 +325,7 @@ class amount_t
 				      char * item_pool_end);
 
   friend bool parse_annotations(std::istream& in, amount_t& price,
-				datetime_t& date, std::string& tag);
+				ptime& date, std::string& tag);
 
   // Streaming interface
 
@@ -387,63 +385,50 @@ inline amount_t abs(const amount_t& amt) {
   return amt < 0 ? amt.negated() : amt;
 }
 
-template <typename T>
-inline amount_t operator+(const T val, const amount_t& amt) {
-  amount_t temp(val);
-  temp += amt;
-  return temp;
+#define DEFINE_AMOUNT_OPERATORS(T)				\
+inline amount_t operator+(const T val, const amount_t& amt) {	\
+  amount_t temp(val);						\
+  temp += amt;							\
+  return temp;							\
+}								\
+inline amount_t operator-(const T val, const amount_t& amt) {	\
+  amount_t temp(val);						\
+  temp -= amt;							\
+  return temp;							\
+}								\
+inline amount_t operator*(const T val, const amount_t& amt) {	\
+  amount_t temp(val);						\
+  temp *= amt;							\
+  return temp;							\
+}								\
+inline amount_t operator/(const T val, const amount_t& amt) {	\
+  amount_t temp(val);						\
+  temp /= amt;							\
+  return temp;							\
+}								\
+								\
+inline bool operator<(const T val, const amount_t& amt) {	\
+  return amount_t(val) < amt;					\
+}								\
+inline bool operator<=(const T val, const amount_t& amt) {	\
+  return amount_t(val) <= amt;					\
+}								\
+inline bool operator>(const T val, const amount_t& amt) {	\
+  return amount_t(val) > amt;					\
+}								\
+inline bool operator>=(const T val, const amount_t& amt) {	\
+  return amount_t(val) >= amt;					\
+}								\
+inline bool operator==(const T val, const amount_t& amt) {	\
+  return amount_t(val) == amt;					\
+}								\
+inline bool operator!=(const T val, const amount_t& amt) {	\
+  return amount_t(val) != amt;					\
 }
 
-template <typename T>
-inline amount_t operator-(const T val, const amount_t& amt) {
-  amount_t temp(val);
-  temp -= amt;
-  return temp;
-}
-
-template <typename T>
-inline amount_t operator*(const T val, const amount_t& amt) {
-  amount_t temp(val);
-  temp *= amt;
-  return temp;
-}
-
-template <typename T>
-inline amount_t operator/(const T val, const amount_t& amt) {
-  amount_t temp(val);
-  temp /= amt;
-  return temp;
-}
-
-template <typename T>
-inline bool operator<(const T val, const amount_t& amt) {
-  return amount_t(val) < amt;
-}
-
-template <typename T>
-inline bool operator<=(const T val, const amount_t& amt) {
-  return amount_t(val) <= amt;
-}
-
-template <typename T>
-inline bool operator>(const T val, const amount_t& amt) {
-  return amount_t(val) > amt;
-}
-
-template <typename T>
-inline bool operator>=(const T val, const amount_t& amt) {
-  return amount_t(val) >= amt;
-}
-
-template <typename T>
-inline bool operator==(const T val, const amount_t& amt) {
-  return amount_t(val) == amt;
-}
-
-template <typename T>
-inline bool operator!=(const T val, const amount_t& amt) {
-  return amount_t(val) != amt;
-}
+DEFINE_AMOUNT_OPERATORS(long)
+DEFINE_AMOUNT_OPERATORS(unsigned long)
+DEFINE_AMOUNT_OPERATORS(double)
 
 inline std::ostream& operator<<(std::ostream& out, const amount_t& amt) {
   amt.print(out, false, amount_t::full_strings);
@@ -463,8 +448,8 @@ inline std::istream& operator>>(std::istream& in, amount_t& amt) {
 #define COMMODITY_STYLE_NOMARKET   0x0010
 #define COMMODITY_STYLE_BUILTIN    0x0020
 
-typedef std::map<const datetime_t, amount_t>  history_map;
-typedef std::pair<const datetime_t, amount_t> history_pair;
+typedef std::map<const ptime, amount_t>  history_map;
+typedef std::pair<const ptime, amount_t> history_pair;
 
 class commodity_base_t;
 
@@ -510,23 +495,24 @@ class commodity_base_t
 
   struct history_t {
     history_map	prices;
-    datetime_t	last_lookup;
-    datetime_t	bogus_time;
-    history_t() : last_lookup(0), bogus_time(0) {}
+    ptime	last_lookup;
+    // jww (2007-04-18): What is bogus_time?
+    ptime	bogus_time;
+    history_t() : last_lookup(), bogus_time() {}
   };
   history_t * history;
 
-  void	   add_price(const datetime_t& date, const amount_t& price);
-  bool	   remove_price(const datetime_t& date);
-  amount_t value(const datetime_t& moment = datetime_t::now);
+  void	   add_price(const ptime& date, const amount_t& price);
+  bool	   remove_price(const ptime& date);
+  amount_t value(const ptime& moment = now);
 
   class updater_t {
    public:
     virtual ~updater_t() {}
     virtual void operator()(commodity_base_t& commodity,
-			    const datetime_t& moment,
-			    const datetime_t& date,
-			    const datetime_t& last,
+			    const ptime& moment,
+			    const ptime& date,
+			    const ptime& last,
 			    amount_t& price) = 0;
   };
   friend class updater_t;
@@ -657,13 +643,13 @@ class commodity_t
     return base->history;
   }
 
-  void add_price(const datetime_t& date, const amount_t& price) {
+  void add_price(const ptime& date, const amount_t& price) {
     return base->add_price(date, price);
   }
-  bool remove_price(const datetime_t& date) {
+  bool remove_price(const ptime& date) {
     return base->remove_price(date);
   }
-  amount_t value(const datetime_t& moment = datetime_t::now) const {
+  amount_t value(const ptime& moment = now) const {
     return base->value(moment);
   }
 
@@ -676,7 +662,7 @@ class annotated_commodity_t : public commodity_t
   const commodity_t * ptr;
 
   amount_t    price;
-  datetime_t  date;
+  ptime  date;
   std::string tag;
 
   explicit annotated_commodity_t() {
@@ -692,19 +678,19 @@ class annotated_commodity_t : public commodity_t
 
   static void write_annotations(std::ostream&      out,
 				const amount_t&    price,
-				const datetime_t&  date,
+				const ptime&  date,
 				const std::string& tag);
 
  private:
   static commodity_t * create(const commodity_t& comm,
 			      const amount_t&    price,
-			      const datetime_t&  date,
+			      const ptime&  date,
 			      const std::string& tag,
 			      const std::string& mapping_key);
 
   static commodity_t * find_or_create(const commodity_t& comm,
 				      const amount_t&    price,
-				      const datetime_t&  date,
+				      const ptime&  date,
 				      const std::string& tag);
 
   friend class amount_t;

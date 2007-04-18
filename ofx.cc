@@ -1,7 +1,6 @@
 #include "journal.h"
 #include "ofx.h"
 #include "format.h"
-#include "datetime.h"
 #include "error.h"
 #include "debug.h"
 #include "util.h"

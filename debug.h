@@ -63,8 +63,6 @@ void debug_assert(const std::string& reason,
 #include <iostream>
 #include <cstdlib>
 
-#include "datetime.h"
-
 #define DEBUG_ENABLED
 
 extern std::ostream * _debug_stream;

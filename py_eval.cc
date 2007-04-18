@@ -8,7 +8,6 @@ void export_amount();
 #if 0
 void export_balance();
 void export_value();
-void export_datetime();
 
 void export_journal();
 void export_parser();
@@ -29,7 +28,6 @@ void initialize_ledger_for_python()
 #if 0
   export_balance();
   export_value();
-  export_datetime();
 
   export_journal();
   export_parser();

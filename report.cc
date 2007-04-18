@@ -44,13 +44,13 @@ void report_t::ftime(value_t& result, xml::xpath_t::scope_t * locals)
   if (locals->args.size() < 1)
     throw new error("usage: ftime(DATE [, DATE_FORMAT])");
 
-  datetime_t date = locals->args[0].to_datetime();
+  ptime date = locals->args[0].to_datetime();
 
   std::string date_format;
   if (locals->args.size() == 2)
     date_format = locals->args[1].to_string();
   else
-    date_format = datetime_t::output_format;
+    date_format = ptime::output_format;
 
   result.set_string(date.to_string(date_format));
 }

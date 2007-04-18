@@ -1,6 +1,5 @@
 #include "journal.h"
 #include "qif.h"
-#include "datetime.h"
 #include "error.h"
 #include "util.h"
 

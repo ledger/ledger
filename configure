@@ -875,10 +875,6 @@ LIBTOOL
 EMACS
 EMACSLOADPATH
 lispdir
-HAVE_GMP_TRUE
-HAVE_GMP_FALSE
-HAVE_PCRE_TRUE
-HAVE_PCRE_FALSE
 USE_XML_TRUE
 USE_XML_FALSE
 HAVE_EXPAT_TRUE
@@ -4852,7 +4848,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 4855 "configure"' > conftest.$ac_ext
+  echo '#line 4851 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -7111,11 +7107,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7114: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7110: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7118: \$? = $ac_status" >&5
+   echo "$as_me:7114: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -7379,11 +7375,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7382: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7378: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7386: \$? = $ac_status" >&5
+   echo "$as_me:7382: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -7483,11 +7479,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7486: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7482: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:7490: \$? = $ac_status" >&5
+   echo "$as_me:7486: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -9791,7 +9787,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9794 "configure"
+#line 9790 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -9891,7 +9887,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9894 "configure"
+#line 9890 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -12227,11 +12223,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12230: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12226: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:12234: \$? = $ac_status" >&5
+   echo "$as_me:12230: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -12331,11 +12327,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12334: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12330: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:12338: \$? = $ac_status" >&5
+   echo "$as_me:12334: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -13901,11 +13897,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13904: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13900: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:13908: \$? = $ac_status" >&5
+   echo "$as_me:13904: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -14005,11 +14001,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14008: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14004: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:14012: \$? = $ac_status" >&5
+   echo "$as_me:14008: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -16203,11 +16199,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16206: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16202: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16210: \$? = $ac_status" >&5
+   echo "$as_me:16206: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -16471,11 +16467,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16474: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16470: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16478: \$? = $ac_status" >&5
+   echo "$as_me:16474: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -16575,11 +16571,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16578: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16574: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:16582: \$? = $ac_status" >&5
+   echo "$as_me:16578: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -19503,14 +19499,6 @@ fi
 echo "${ECHO_T}$libgmp_avail" >&6; }
 
 if test x$libgmp_avail = xtrue ; then
-   if true; then
-  HAVE_GMP_TRUE=
-  HAVE_GMP_FALSE='#'
-else
-  HAVE_GMP_TRUE='#'
-  HAVE_GMP_FALSE=
-fi
-
   LIBS="-lgmp $LIBS"
 else
   { { echo "$as_me:$LINENO: error: \"Could not find gmp library (set CPPFLAGS and LDFLAGS?)\"
@@ -19589,19 +19577,107 @@ fi
 echo "${ECHO_T}$libpcre_avail" >&6; }
 
 if test x$libpcre_avail = xtrue ; then
-   if true; then
-  HAVE_PCRE_TRUE=
-  HAVE_PCRE_FALSE='#'
-else
-  HAVE_PCRE_TRUE='#'
-  HAVE_PCRE_FALSE=
-fi
-
   LIBS="-lpcre $LIBS"
 else
   { { echo "$as_me:$LINENO: error: \"Could not find pcre library (set CPPFLAGS and LDFLAGS?)\"
 See \`config.log' for more details." >&5
 echo "$as_me: error: \"Could not find pcre library (set CPPFLAGS and LDFLAGS?)\"
+See \`config.log' for more details." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+# check for Boost date_time
+{ echo "$as_me:$LINENO: checking if boost_date_time is available" >&5
+echo $ECHO_N "checking if boost_date_time is available... $ECHO_C" >&6; }
+if test "${boost_date_time_cpplib_avail+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  boost_date_time_save_libs=$LIBS
+   LIBS="-lboost_date_time $LIBS"
+   ac_ext=cpp
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
+   cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <boost/date_time/posix_time/posix_time.hpp>
+      #include <boost/date_time/gregorian/gregorian.hpp>
+      #include <boost/date_time/local_time_adjustor.hpp>
+      #include <boost/date_time/time_duration.hpp>
+
+      using namespace boost::posix_time;
+      using namespace boost::date_time;
+
+      #include <ctime>
+
+      inline ptime time_to_system_local(const ptime& when) {
+        struct std::tm tm_gmt = to_tm(when);
+        return from_time_t(mktime(&tm_gmt));
+      }
+int
+main ()
+{
+ptime t10 = ptime(boost::gregorian::from_string("2007-01-15"),
+                        ptime::time_duration_type());
+
+      ptime t12 = time_to_system_local(t10);
+
+      return t10 != t12;
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (ac_try="$ac_link"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_link") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_cxx_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest$ac_exeext &&
+       $as_test_x conftest$ac_exeext; then
+  boost_date_time_cpplib_avail=true
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	boost_date_time_cpplib_avail=false
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
+      conftest$ac_exeext conftest.$ac_ext
+   ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+   LIBS=$boost_date_time_save_libs
+fi
+{ echo "$as_me:$LINENO: result: $boost_date_time_cpplib_avail" >&5
+echo "${ECHO_T}$boost_date_time_cpplib_avail" >&6; }
+
+if test x$boost_date_time_cpplib_avail = xtrue ; then
+  LIBS="-lboost_date_time $LIBS"
+else
+  { { echo "$as_me:$LINENO: error: \"Could not find boost_date_time library (set CPPFLAGS and LDFLAGS?)\"
+See \`config.log' for more details." >&5
+echo "$as_me: error: \"Could not find boost_date_time library (set CPPFLAGS and LDFLAGS?)\"
 See \`config.log' for more details." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -19619,6 +19695,7 @@ echo "$as_me: error: bad value ${enableval} for --enable-xml" >&2;}
 else
   xml=true
 fi
+
 
  if test x$xml = xtrue; then
   USE_XML_TRUE=
@@ -19860,6 +19937,7 @@ else
   ofx=true
 fi
 
+
  if test x$ofx = xtrue; then
   USE_OFX_TRUE=
   USE_OFX_FALSE='#'
@@ -19981,6 +20059,7 @@ echo "$as_me: error: bad value ${enableval} for --enable-python" >&2;}
 else
   python=false
 fi
+
 
  if test x$python = xtrue; then
   USE_PYTHON_TRUE=
@@ -20248,6 +20327,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 fi
 { echo "$as_me:$LINENO: result: $boost_python_cpplib_avail" >&5
 echo "${ECHO_T}$boost_python_cpplib_avail" >&6; }
+
     if test x$boost_python_cpplib_avail = xtrue ; then
        if true; then
   HAVE_BOOST_PYTHON_TRUE=
@@ -20302,6 +20382,7 @@ echo "$as_me: error: bad value ${enableval} for --enable-debug" >&2;}
 else
   debug=false
 fi
+
 
  if test x$debug = xtrue; then
   DEBUG_TRUE=
@@ -21126,9 +21207,7 @@ fi
 
 
 
-
-
-for ac_func in access mktime realpath strftime strptime getpwuid getpwnam
+for ac_func in access mktime realpath getpwuid getpwnam
 do
 as_ac_var=`echo "ac_cv_func_$ac_func" | $as_tr_sh`
 { echo "$as_me:$LINENO: checking for $ac_func" >&5
@@ -21338,20 +21417,6 @@ if test -z "${am__fastdepCC_TRUE}" && test -z "${am__fastdepCC_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"am__fastdepCC\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
 echo "$as_me: error: conditional \"am__fastdepCC\" was never defined.
-Usually this means the macro was only invoked conditionally." >&2;}
-   { (exit 1); exit 1; }; }
-fi
-if test -z "${HAVE_GMP_TRUE}" && test -z "${HAVE_GMP_FALSE}"; then
-  { { echo "$as_me:$LINENO: error: conditional \"HAVE_GMP\" was never defined.
-Usually this means the macro was only invoked conditionally." >&5
-echo "$as_me: error: conditional \"HAVE_GMP\" was never defined.
-Usually this means the macro was only invoked conditionally." >&2;}
-   { (exit 1); exit 1; }; }
-fi
-if test -z "${HAVE_PCRE_TRUE}" && test -z "${HAVE_PCRE_FALSE}"; then
-  { { echo "$as_me:$LINENO: error: conditional \"HAVE_PCRE\" was never defined.
-Usually this means the macro was only invoked conditionally." >&5
-echo "$as_me: error: conditional \"HAVE_PCRE\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -22159,10 +22224,6 @@ LIBTOOL!$LIBTOOL$ac_delim
 EMACS!$EMACS$ac_delim
 EMACSLOADPATH!$EMACSLOADPATH$ac_delim
 lispdir!$lispdir$ac_delim
-HAVE_GMP_TRUE!$HAVE_GMP_TRUE$ac_delim
-HAVE_GMP_FALSE!$HAVE_GMP_FALSE$ac_delim
-HAVE_PCRE_TRUE!$HAVE_PCRE_TRUE$ac_delim
-HAVE_PCRE_FALSE!$HAVE_PCRE_FALSE$ac_delim
 USE_XML_TRUE!$USE_XML_TRUE$ac_delim
 USE_XML_FALSE!$USE_XML_FALSE$ac_delim
 HAVE_EXPAT_TRUE!$HAVE_EXPAT_TRUE$ac_delim
@@ -22192,7 +22253,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 39; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 35; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

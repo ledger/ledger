@@ -1,5 +1,4 @@
 #include "quotes.h"
-#include "datetime.h"
 #include "error.h"
 #include "debug.h"
 
@@ -10,15 +9,15 @@
 namespace ledger {
 
 void quotes_by_script::operator()(commodity_base_t& commodity,
-				  const datetime_t& moment,
-				  const datetime_t& date,
-				  const datetime_t& last,
+				  const ptime& moment,
+				  const ptime& date,
+				  const ptime& last,
 				  amount_t&	    price)
 {
   DEBUG_CLASS("ledger.quotes.download");
 
   DEBUG_PRINT_("commodity: " << commodity.symbol);
-  DEBUG_PRINT_TIME_(datetime_t::now);
+  DEBUG_PRINT_TIME_(now);
   DEBUG_PRINT_TIME_(moment);
   DEBUG_PRINT_TIME_(date);
   DEBUG_PRINT_TIME_(last);
@@ -27,9 +26,9 @@ void quotes_by_script::operator()(commodity_base_t& commodity,
   DEBUG_PRINT_("pricing_leeway is " << pricing_leeway);
 
   if ((commodity.history &&
-       (datetime_t::now - commodity.history->last_lookup) < (long)pricing_leeway) ||
-      (datetime_t::now - last) < (long)pricing_leeway ||
-      (price && moment > date && (moment - date) <= (long)pricing_leeway))
+       (now - commodity.history->last_lookup) < pricing_leeway) ||
+      (now - last) < pricing_leeway ||
+      (price && moment > date && (moment - date) <= pricing_leeway))
     return;
 
   using namespace std;
@@ -58,9 +57,9 @@ void quotes_by_script::operator()(commodity_base_t& commodity,
     DEBUG_PRINT_("downloaded quote: " << buf);
 
     price.parse(buf);
-    commodity.add_price(datetime_t::now, price);
+    commodity.add_price(now, price);
 
-    commodity.history->last_lookup = datetime_t::now;
+    commodity.history->last_lookup = now;
     cache_dirty = true;
 
     if (price && ! price_db.empty()) {
@@ -69,8 +68,12 @@ void quotes_by_script::operator()(commodity_base_t& commodity,
 #else
       ofstream database(price_db.c_str(), ios_base::out | ios_base::app);
 #endif
-      database << "P " << datetime_t::now.to_string("%Y/%m/%d %H:%M:%S")
+#if 0
+      // jww (2007-04-18): Need to convert to local time and print
+      // here, print with UTC timezone specifier
+      database << "P " << now.to_string("%Y/%m/%d %H:%M:%S")
 	       << " " << commodity.symbol << " " << price << endl;
+#endif
     }
   } else {
     throw new error(std::string("Failed to download price for '") +
