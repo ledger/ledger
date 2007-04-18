@@ -24,10 +24,6 @@ class CommodityAmountTestCase : public CPPUNIT_NS::TestCase
   CPPUNIT_TEST(testSign);
   CPPUNIT_TEST(testAbs);
   CPPUNIT_TEST(testPrinting);
-  CPPUNIT_TEST(testPriceHistory);
-  CPPUNIT_TEST(testLots);
-  CPPUNIT_TEST(testScalingBase);
-  CPPUNIT_TEST(testReduction);
 
   CPPUNIT_TEST_SUITE_END();
 
@@ -55,10 +51,6 @@ public:
   void testSign();
   void testAbs();
   void testPrinting();
-  void testPriceHistory();
-  void testLots();
-  void testScalingBase();
-  void testReduction();
 
 private:
   CommodityAmountTestCase(const CommodityAmountTestCase &copy);

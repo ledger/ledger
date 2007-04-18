@@ -134,7 +134,8 @@ PyUnitTests_OBJECTS = $(am_PyUnitTests_OBJECTS)
 PyUnitTests_LDADD = $(LDADD)
 am_UnitTests_OBJECTS = UnitTests-UnitTests.$(OBJEXT) \
 	UnitTests-BasicAmount.$(OBJEXT) \
-	UnitTests-CommodityAmount.$(OBJEXT)
+	UnitTests-CommodityAmount.$(OBJEXT) \
+	UnitTests-Commodity.$(OBJEXT)
 UnitTests_OBJECTS = $(am_UnitTests_OBJECTS)
 UnitTests_DEPENDENCIES = $(lib_LTLIBRARIES) gdtoa/libgdtoa.la
 UnitTests_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
@@ -406,7 +407,8 @@ info_TEXINFOS = ledger.texi
 UnitTests_SOURCES = tests/UnitTests.cc \
 	\
 	tests/corelib/numerics/BasicAmount.cc \
-	tests/corelib/numerics/CommodityAmount.cc
+	tests/corelib/numerics/CommodityAmount.cc \
+	tests/corelib/numerics/Commodity.cc
 
 UnitTests_LDADD = $(lib_LTLIBRARIES) gdtoa/libgdtoa.la -lcppunit
 UnitTests_LDFLAGS = $(LIBADD_DL)
@@ -558,6 +560,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/UnitTests-BasicAmount.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/UnitTests-Commodity.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/UnitTests-CommodityAmount.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/UnitTests-UnitTests.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ledger-main.Po@am__quote@
@@ -858,6 +861,20 @@ UnitTests-CommodityAmount.obj: tests/corelib/numerics/CommodityAmount.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='tests/corelib/numerics/CommodityAmount.cc' object='UnitTests-CommodityAmount.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(UnitTests_CXXFLAGS) $(CXXFLAGS) -c -o UnitTests-CommodityAmount.obj `if test -f 'tests/corelib/numerics/CommodityAmount.cc'; then $(CYGPATH_W) 'tests/corelib/numerics/CommodityAmount.cc'; else $(CYGPATH_W) '$(srcdir)/tests/corelib/numerics/CommodityAmount.cc'; fi`
+
+UnitTests-Commodity.o: tests/corelib/numerics/Commodity.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(UnitTests_CXXFLAGS) $(CXXFLAGS) -MT UnitTests-Commodity.o -MD -MP -MF $(DEPDIR)/UnitTests-Commodity.Tpo -c -o UnitTests-Commodity.o `test -f 'tests/corelib/numerics/Commodity.cc' || echo '$(srcdir)/'`tests/corelib/numerics/Commodity.cc
+@am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/UnitTests-Commodity.Tpo $(DEPDIR)/UnitTests-Commodity.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='tests/corelib/numerics/Commodity.cc' object='UnitTests-Commodity.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(UnitTests_CXXFLAGS) $(CXXFLAGS) -c -o UnitTests-Commodity.o `test -f 'tests/corelib/numerics/Commodity.cc' || echo '$(srcdir)/'`tests/corelib/numerics/Commodity.cc
+
+UnitTests-Commodity.obj: tests/corelib/numerics/Commodity.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(UnitTests_CXXFLAGS) $(CXXFLAGS) -MT UnitTests-Commodity.obj -MD -MP -MF $(DEPDIR)/UnitTests-Commodity.Tpo -c -o UnitTests-Commodity.obj `if test -f 'tests/corelib/numerics/Commodity.cc'; then $(CYGPATH_W) 'tests/corelib/numerics/Commodity.cc'; else $(CYGPATH_W) '$(srcdir)/tests/corelib/numerics/Commodity.cc'; fi`
+@am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/UnitTests-Commodity.Tpo $(DEPDIR)/UnitTests-Commodity.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='tests/corelib/numerics/Commodity.cc' object='UnitTests-Commodity.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(UnitTests_CXXFLAGS) $(CXXFLAGS) -c -o UnitTests-Commodity.obj `if test -f 'tests/corelib/numerics/Commodity.cc'; then $(CYGPATH_W) 'tests/corelib/numerics/Commodity.cc'; else $(CYGPATH_W) '$(srcdir)/tests/corelib/numerics/Commodity.cc'; fi`
 
 ledger-option.o: option.cc
 @am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ledger_CXXFLAGS) $(CXXFLAGS) -MT ledger-option.o -MD -MP -MF $(DEPDIR)/ledger-option.Tpo -c -o ledger-option.o `test -f 'option.cc' || echo '$(srcdir)/'`option.cc

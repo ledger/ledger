@@ -665,26 +665,6 @@ void CommodityAmountTestCase::testAbs()
   assertValid(x2);
 }
 
-void CommodityAmountTestCase::testPriceHistory()
-{
-  // jww (2007-04-17): tbd
-}
-
-void CommodityAmountTestCase::testLots()
-{
-  // jww (2007-04-17): tbd
-}
-
-void CommodityAmountTestCase::testScalingBase()
-{
-  // jww (2007-04-17): tbd
-}
-
-void CommodityAmountTestCase::testReduction()
-{
-  // jww (2007-04-17): tbd
-}
-
 void CommodityAmountTestCase::testPrinting()
 {
   amount_t x0;
