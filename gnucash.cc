@@ -198,14 +198,15 @@ void dataHandler(void *userData, const char *s, int len)
       parser->curr_comm->add_flags(COMMODITY_STYLE_SEPARATED);
 
     if (parser->curr_account)
-      parser->account_comms.insert(account_comm_pair(parser->curr_account,
-						     parser->curr_comm));
+      parser->account_comms.insert
+	(gnucash_parser_t::account_comm_pair(parser->curr_account,
+					     parser->curr_comm));
     else if (parser->curr_entry)
       parser->entry_comm = parser->curr_comm;
     break;
   }
 
-  case COMM_NAME:
+  case gnucash_parser_t::COMM_NAME:
     parser->curr_comm->set_name(std::string(s, len));
     break;
 
