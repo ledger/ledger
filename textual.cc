@@ -276,10 +276,10 @@ transaction_t * parse_transaction(char *      line,
 
 	  if (char * p = std::strchr(buf, '=')) {
 	    *p++ = '\0';
-	    xact->_date_eff = ptime_from_local_date_string(p);
+	    xact->_date_eff = parse_datetime(p);
 	  }
 	  if (buf[0])
-	    xact->_date = ptime_from_local_date_string(buf);
+	    xact->_date = parse_datetime(buf);
 	}
     }
   }
@@ -623,7 +623,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
 	time_entry_t event;
 	event.desc    = n ? n : "";
-	event.checkin = ptime_from_local_time_string(date);
+	event.checkin = parse_datetime(date);
 	event.account = account_stack.front()->find_account(p);
 
 	if (! time_entries.empty())
@@ -649,7 +649,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	  char * n = next_element(p, true);
 
 	  clock_out_from_timelog
-	    (ptime_from_local_time_string(date),
+	    (parse_datetime(date),
 	     p ? account_stack.front()->find_account(p) : NULL, n, journal);
 	  count++;
 	}
@@ -686,11 +686,10 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	if (std::isdigit(time_field_ptr[0])) {
 	  symbol_and_price = next_element(time_field_ptr);
 	  if (! symbol_and_price) break;
-	  datetime = ptime_from_local_time_string(date_field + " " +
-						  time_field_ptr);
+	  datetime = parse_datetime(date_field + " " + time_field_ptr);
 	} else {
 	  symbol_and_price = time_field_ptr;
-	  datetime = ptime_from_local_date_string(date_field);
+	  datetime = parse_datetime(date_field);
 	}
 
 	std::string symbol;

@@ -1172,7 +1172,7 @@ bool parse_annotations(std::istream& in, amount_t& price,
       else
 	throw new amount_error("Commodity date lacks closing bracket");
 
-      date = ptime_from_local_date_string(buf);
+      date = parse_datetime(buf);
       has_date = true;
     }
     else if (c == '(') {

@@ -17,10 +17,15 @@ if HAVE_BOOST_PYTHON
 lib_LTLIBRARIES += libpyledger.la
 endif
 
+AM_YFLAGS = -d
+AM_LFLAGS = -o $(LEX_OUTPUT_ROOT).c
+
 libledger_la_CXXFLAGS = $(WARNFLAGS) -I$(top_builddir)/gdtoa
 libledger_la_SOURCES = \
 	amount.cc      \
 	times.cc       \
+	parsetime.yy   \
+	scantime.ll    \
 	quotes.cc      \
 	balance.cc     \
 	value.cc       \
@@ -84,6 +89,7 @@ libpyledger_la_LDFLAGS = -release 3.0
 pkginclude_HEADERS = \
 	amount.h     \
 	times.h      \
+	parsetime.h  \
 	balance.h    \
 	binary.h     \
 	csv.h	     \
@@ -124,7 +130,8 @@ bin_PROGRAMS = ledger
 
 ledger_CXXFLAGS =
 ledger_SOURCES = option.cc main.cc
-ledger_LDADD = $(LIBOBJS) libledger.la gdtoa/libgdtoa.la
+ledger_LDADD = $(LIBOBJS) libledger.la gdtoa/libgdtoa.la $(LEXLIB)
+
 if HAVE_EXPAT
 ledger_CXXFLAGS += -DHAVE_EXPAT=1
 endif
@@ -206,6 +213,7 @@ UnitTests_SOURCES = tests/UnitTests.cc \
 	\
 	tests/corelib/numerics/BasicAmount.cc \
 	tests/corelib/numerics/CommodityAmount.cc \
+	tests/corelib/numerics/DateTime.cc \
 	tests/corelib/numerics/Commodity.cc
 
 UnitTests_LDADD   = $(lib_LTLIBRARIES) gdtoa/libgdtoa.la -lcppunit

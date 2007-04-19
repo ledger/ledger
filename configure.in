@@ -17,6 +17,15 @@ AC_PROG_MAKE_SET
 AC_PROG_LIBTOOL
 AM_PROG_LIBTOOL
 
+AC_PROG_YACC
+
+AC_PROG_LEX
+if test "$LEX" != flex; then
+  LEX="$SHELL $missing_dir/missing flex"
+  AC_SUBST(LEX_OUTPUT_ROOT, lex.yy)
+  AC_SUBST(LEXLIB, '')
+fi
+
 # Checks for emacs lisp path
 AM_PATH_LISPDIR
 
