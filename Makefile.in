@@ -347,7 +347,7 @@ SUBDIRS = gdtoa
 ESC_srcdir = `echo "$(srcdir)" | sed 's/\//\\\\\//g'`
 ESC_builddir = `echo "$(top_builddir)" | sed 's/\//\\\\\//g'`
 ESC_distdir = `echo "$(distdir)" | sed 's/\//\\\\\//g'`
-EXTRA_DIST = docs tests
+EXTRA_DIST = docs tests ledger.pdf ledger.info
 lib_LTLIBRARIES = libledger.la $(am__append_1)
 libledger_la_CXXFLAGS = $(WARNFLAGS) -I$(top_builddir)/gdtoa \
 	$(am__append_2) $(am__append_4) $(am__append_6) \
@@ -1697,7 +1697,8 @@ uninstall-am: uninstall-binPROGRAMS uninstall-dvi-am uninstall-html-am \
 	uninstall-pkgincludeHEADERS uninstall-ps-am
 
 
-dist-hook: doxygen-docs
+#(cd $(distdir)/docs; zip -r doxygen-html.zip html; rm -fr html)
+dist-hook:
 	rm -fr `find $(distdir) -name .svn`
 
 @HAVE_BOOST_PYTHON_TRUE@ledger.so: pyledger.cc libledger.la gdtoa/libgdtoa.la libpyledger.la

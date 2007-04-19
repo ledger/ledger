@@ -5,9 +5,10 @@ ESC_srcdir=`echo "$(srcdir)" | sed 's/\//\\\\\//g'`
 ESC_builddir=`echo "$(top_builddir)" | sed 's/\//\\\\\//g'`
 ESC_distdir=`echo "$(distdir)" | sed 's/\//\\\\\//g'`
 
-EXTRA_DIST = docs tests
+EXTRA_DIST = docs tests ledger.pdf ledger.info
 
-dist-hook: doxygen-docs
+#(cd $(distdir)/docs; zip -r doxygen-html.zip html; rm -fr html)
+dist-hook:
 	rm -fr `find $(distdir) -name .svn`
 
 
