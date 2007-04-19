@@ -7,11 +7,8 @@ ESC_distdir=`echo "$(distdir)" | sed 's/\//\\\\\//g'`
 
 EXTRA_DIST = docs tests
 
-dist-hook:
+dist-hook: doxygen-docs
 	rm -fr `find $(distdir) -name .svn`
-	cat $(srcdir)/Doxyfile | sed "s/%srcdir%/$(ESC_srcdir)/g" \
-	    | sed "s/%distdir%/$(ESC_distdir)/g" > $(distdir)/Doxyfile
-	doxygen $(distdir)/Doxyfile
 
 
 lib_LTLIBRARIES = libledger.la
@@ -150,7 +147,6 @@ info_TEXINFOS = ledger.texi
 ######################################################################
 
 lisp_LISP = ledger.el timeclock.el
-dist_lisp_LISP = ledger.el timeclock.el
 
 ######################################################################
 
@@ -237,10 +233,18 @@ PyUnitTests: PyUnitTests.py
 
 ######################################################################
 
-all: check
+alldocs: ledger.info ledger.pdf doxygen-docs
 
-docs: ledger.info ledger.pdf
-	doxygen
+$(top_builddir)/Doxyfile.gen: $(srcdir)/Doxyfile
+	cat $(srcdir)/Doxyfile | sed "s/%srcdir%/$(ESC_srcdir)/g" \
+	    | sed "s/%builddir%/$(ESC_builddir)/g" > $@
+
+doxygen-docs: $(top_builddir)/Doxyfile.gen
+	doxygen $(top_builddir)/Doxyfile.gen
+
+######################################################################
+
+all: check
 
 check-syntax:
 	g++ -I. -Itests $(CPPFLAGS) $(UnitTests_CXXFLAGS) \

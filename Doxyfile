@@ -5,7 +5,7 @@
 #---------------------------------------------------------------------------
 PROJECT_NAME           = Ledger
 PROJECT_NUMBER         = 3.0
-OUTPUT_DIRECTORY       = %distdir%/docs
+OUTPUT_DIRECTORY       = %builddir%/docs
 CREATE_SUBDIRS         = NO
 OUTPUT_LANGUAGE        = English
 USE_WINDOWS_ENCODING   = NO
@@ -260,7 +260,7 @@ CALLER_GRAPH           = NO
 GRAPHICAL_HIERARCHY    = YES
 DIRECTORY_GRAPH        = YES
 DOT_IMAGE_FORMAT       = png
-DOT_PATH               = /Applications/Copied/Doxygen.app/Contents/Resources/
+DOT_PATH               = /Applications/Copied/Doxygen.app/Contents/Resources/dot
 DOTFILE_DIRS           = 
 MAX_DOT_GRAPH_WIDTH    = 1024
 MAX_DOT_GRAPH_HEIGHT   = 1024

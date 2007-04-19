@@ -97,6 +97,7 @@ if [ -d "$HOME/Products" ]; then
     cd "$projdir" || (echo "Cannot change to $projdir"; exit 1)
 fi
 
-"$HERE/configure" --srcdir="$HERE" CPPFLAGS="$INCDIRS" \
-    CXXFLAGS="$CXXFLAGS $local_cxxflags" WARNFLAGS="$WARNFLAGS" \
-    LDFLAGS="$LIBDIRS" $SWITCHES "$@"
+"$HERE/configure" --srcdir="$HERE" \
+    EMACS="$HOME/bin/emacs" EMACSLOADPATH="$EMACSLOADPATH" \
+    CPPFLAGS="$INCDIRS" CXXFLAGS="$CXXFLAGS $local_cxxflags" \
+    WARNFLAGS="$WARNFLAGS" LDFLAGS="$LIBDIRS" $SWITCHES "$@"

@@ -65,12 +65,11 @@ check_PROGRAMS = $(am__EXEEXT_2)
 @HAVE_LIBOFX_TRUE@am__append_24 = -DHAVE_LIBOFX=1
 @DEBUG_TRUE@am__append_25 = -DDEBUG_LEVEL=4
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(dist_lisp_LISP) \
-	$(pkginclude_HEADERS) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in $(srcdir)/acconf.h.in \
-	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
-	compile config.guess config.sub depcomp elisp-comp install-sh \
-	ltmain.sh missing texinfo.tex
+DIST_COMMON = README $(am__configure_deps) $(pkginclude_HEADERS) \
+	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
+	$(srcdir)/acconf.h.in $(top_srcdir)/configure AUTHORS COPYING \
+	ChangeLog INSTALL NEWS compile config.guess config.sub depcomp \
+	elisp-comp install-sh ltmain.sh missing texinfo.tex
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -88,7 +87,7 @@ am__vpath_adj = case $$p in \
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" \
 	"$(DESTDIR)$(infodir)" "$(DESTDIR)$(lispdir)" \
-	"$(DESTDIR)$(lispdir)" "$(DESTDIR)$(pkgincludedir)"
+	"$(DESTDIR)$(pkgincludedir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libledger_la_LIBADD =
@@ -202,9 +201,8 @@ RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	install-pdf-recursive install-ps-recursive install-recursive \
 	installcheck-recursive installdirs-recursive pdf-recursive \
 	ps-recursive uninstall-recursive
-dist_lispLISP_INSTALL = $(INSTALL_DATA)
 lispLISP_INSTALL = $(INSTALL_DATA)
-LISP = $(dist_lisp_LISP) $(lisp_LISP)
+LISP = $(lisp_LISP)
 am__ELFILES = ledger.el timeclock.el
 am__ELCFILES = $(am__ELFILES:.el=.elc)
 ELCFILES = $(LISP:.el=.elc)
@@ -346,6 +344,9 @@ target_alias = @target_alias@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = gdtoa
+ESC_srcdir = `echo "$(srcdir)" | sed 's/\//\\\\\//g'`
+ESC_builddir = `echo "$(top_builddir)" | sed 's/\//\\\\\//g'`
+ESC_distdir = `echo "$(distdir)" | sed 's/\//\\\\\//g'`
 EXTRA_DIST = docs tests
 lib_LTLIBRARIES = libledger.la $(am__append_1)
 libledger_la_CXXFLAGS = $(WARNFLAGS) -I$(top_builddir)/gdtoa \
@@ -411,7 +412,6 @@ info_TEXINFOS = ledger.texi
 
 ######################################################################
 lisp_LISP = ledger.el timeclock.el
-dist_lisp_LISP = ledger.el timeclock.el
 @HAVE_BOOST_PYTHON_TRUE@ledger_so_SOURCES = pyledger.cc
 @HAVE_BOOST_PYTHON_TRUE@PYLIBS = pyledger ledger gdtoa boost_date_time \
 @HAVE_BOOST_PYTHON_TRUE@	boost_python gmp pcre $(am__append_18) \
@@ -429,8 +429,6 @@ UnitTests_LDFLAGS = $(LIBADD_DL)
 UnitTests_CXXFLAGS = -I. -I$(srcdir)/tests $(am__append_22) \
 	$(am__append_23) $(am__append_24) $(am__append_25)
 PyUnitTests_SOURCES = 
-ESC_srcdir = `echo "$(srcdir)" | sed 's/\//\\\\\//g'`
-ESC_builddir = `echo "$(top_builddir)" | sed 's/\//\\\\\//g'`
 all: acconf.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
@@ -1093,34 +1091,6 @@ $(am__ELCFILES): elc-stamp
 	    test -f elc-stamp; exit $$?; \
 	  fi; \
 	else : ; fi
-install-dist_lispLISP: $(dist_lisp_LISP) $(ELCFILES)
-	@$(NORMAL_INSTALL)
-	@if test "$(EMACS)" != no; then \
-	  test -z "$(lispdir)" || $(MKDIR_P) "$(DESTDIR)$(lispdir)"; \
-	  list='$(dist_lisp_LISP)'; for p in $$list; do \
-	    if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	    f=$(am__strip_dir) \
-	    echo " $(dist_lispLISP_INSTALL) '$$d$$p' '$(DESTDIR)$(lispdir)/$$f'"; \
-	    $(dist_lispLISP_INSTALL) "$$d$$p" "$(DESTDIR)$(lispdir)/$$f"; \
-	    if test -f $${p}c; then \
-	      echo " $(dist_lispLISP_INSTALL) '$${p}c' '$(DESTDIR)$(lispdir)/$${f}c'"; \
-	      $(dist_lispLISP_INSTALL) "$${p}c" "$(DESTDIR)$(lispdir)/$${f}c"; \
-	    else : ; fi; \
-	  done; \
-	else : ; fi
-
-uninstall-dist_lispLISP:
-	@$(NORMAL_UNINSTALL)
-	@if test "$(EMACS)" != no; then \
-	  list='$(dist_lisp_LISP)'; for p in $$list; do \
-	    f=$(am__strip_dir) \
-	    echo " rm -f '$(DESTDIR)$(lispdir)/$$f' '$(DESTDIR)$(lispdir)/$${f}c'"; \
-	    rm -f "$(DESTDIR)$(lispdir)/$$f" "$(DESTDIR)$(lispdir)/$${f}c"; \
-	  done; \
-	else : ; fi
-
-clean-lisp:
-	-rm -f elc-stamp $(ELCFILES)
 install-lispLISP: $(lisp_LISP) $(ELCFILES)
 	@$(NORMAL_INSTALL)
 	@if test "$(EMACS)" != no; then \
@@ -1146,6 +1116,9 @@ uninstall-lispLISP:
 	    rm -f "$(DESTDIR)$(lispdir)/$$f" "$(DESTDIR)$(lispdir)/$${f}c"; \
 	  done; \
 	else : ; fi
+
+clean-lisp:
+	-rm -f elc-stamp $(ELCFILES)
 install-pkgincludeHEADERS: $(pkginclude_HEADERS)
 	@$(NORMAL_INSTALL)
 	test -z "$(pkgincludedir)" || $(MKDIR_P) "$(DESTDIR)$(pkgincludedir)"
@@ -1523,7 +1496,7 @@ install-binPROGRAMS: install-libLTLIBRARIES
 
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(infodir)" "$(DESTDIR)$(lispdir)" "$(DESTDIR)$(lispdir)" "$(DESTDIR)$(pkgincludedir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(infodir)" "$(DESTDIR)$(lispdir)" "$(DESTDIR)$(pkgincludedir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-recursive
@@ -1576,8 +1549,8 @@ info: info-recursive
 
 info-am: $(INFO_DEPS)
 
-install-data-am: install-dist_lispLISP install-info-am \
-	install-lispLISP install-pkgincludeHEADERS
+install-data-am: install-info-am install-lispLISP \
+	install-pkgincludeHEADERS
 
 install-dvi: install-dvi-recursive
 
@@ -1691,10 +1664,9 @@ ps: ps-recursive
 
 ps-am: $(PSS)
 
-uninstall-am: uninstall-binPROGRAMS uninstall-dist_lispLISP \
-	uninstall-dvi-am uninstall-html-am uninstall-info-am \
-	uninstall-libLTLIBRARIES uninstall-lispLISP uninstall-pdf-am \
-	uninstall-pkgincludeHEADERS uninstall-ps-am
+uninstall-am: uninstall-binPROGRAMS uninstall-dvi-am uninstall-html-am \
+	uninstall-info-am uninstall-libLTLIBRARIES uninstall-lispLISP \
+	uninstall-pdf-am uninstall-pkgincludeHEADERS uninstall-ps-am
 
 .MAKE: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) install-am \
 	install-exec-am install-strip
@@ -1709,24 +1681,23 @@ uninstall-am: uninstall-binPROGRAMS uninstall-dist_lispLISP \
 	distclean-generic distclean-hdr distclean-libtool \
 	distclean-tags distcleancheck distdir distuninstallcheck dvi \
 	dvi-am html html-am info info-am install install-am \
-	install-binPROGRAMS install-data install-data-am \
-	install-dist_lispLISP install-dvi install-dvi-am install-exec \
-	install-exec-am install-exec-hook install-html install-html-am \
-	install-info install-info-am install-libLTLIBRARIES \
-	install-lispLISP install-man install-pdf install-pdf-am \
-	install-pkgincludeHEADERS install-ps install-ps-am \
-	install-strip installcheck installcheck-am installdirs \
-	installdirs-am maintainer-clean maintainer-clean-aminfo \
-	maintainer-clean-generic mostlyclean mostlyclean-aminfo \
-	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
-	pdf pdf-am ps ps-am tags tags-recursive uninstall uninstall-am \
-	uninstall-binPROGRAMS uninstall-dist_lispLISP uninstall-dvi-am \
+	install-binPROGRAMS install-data install-data-am install-dvi \
+	install-dvi-am install-exec install-exec-am install-exec-hook \
+	install-html install-html-am install-info install-info-am \
+	install-libLTLIBRARIES install-lispLISP install-man \
+	install-pdf install-pdf-am install-pkgincludeHEADERS \
+	install-ps install-ps-am install-strip installcheck \
+	installcheck-am installdirs installdirs-am maintainer-clean \
+	maintainer-clean-aminfo maintainer-clean-generic mostlyclean \
+	mostlyclean-aminfo mostlyclean-compile mostlyclean-generic \
+	mostlyclean-libtool pdf pdf-am ps ps-am tags tags-recursive \
+	uninstall uninstall-am uninstall-binPROGRAMS uninstall-dvi-am \
 	uninstall-html-am uninstall-info-am uninstall-libLTLIBRARIES \
 	uninstall-lispLISP uninstall-pdf-am \
 	uninstall-pkgincludeHEADERS uninstall-ps-am
 
 
-dist-hook:
+dist-hook: doxygen-docs
 	rm -fr `find $(distdir) -name .svn`
 
 @HAVE_BOOST_PYTHON_TRUE@ledger.so: pyledger.cc libledger.la gdtoa/libgdtoa.la libpyledger.la
@@ -1752,10 +1723,18 @@ PyUnitTests: PyUnitTests.py
 
 ######################################################################
 
-all: check
+alldocs: ledger.info ledger.pdf doxygen-docs
 
-docs: ledger.info ledger.pdf
-	doxygen
+$(top_builddir)/Doxyfile.gen: $(srcdir)/Doxyfile
+	cat $(srcdir)/Doxyfile | sed "s/%srcdir%/$(ESC_srcdir)/g" \
+	    | sed "s/%builddir%/$(ESC_builddir)/g" > $@
+
+doxygen-docs: $(top_builddir)/Doxyfile.gen
+	doxygen $(top_builddir)/Doxyfile.gen
+
+######################################################################
+
+all: check
 
 check-syntax:
 	g++ -I. -Itests $(CPPFLAGS) $(UnitTests_CXXFLAGS) \
