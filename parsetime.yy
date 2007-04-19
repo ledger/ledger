@@ -9,6 +9,8 @@ static struct std::tm * timeval;
 namespace {
   boost::posix_time::ptime moment;
 
+  struct time_to_leave : std::exception {};
+
   yyFlexLexer * lexer;
 
   inline void yyerror(const char *str) {
@@ -23,21 +25,21 @@ namespace {
   {
     switch (std::toupper(name[0])) {
     case 'J':
-      if (name[1] == std::tolower('a'))
+      if (std::tolower(name[1]) == 'a')
 	return 1;
-      else if (name[2] == std::tolower('n'))
+      else if (std::tolower(name[2]) == 'n')
 	return 6;
       else
 	return 7;
     case 'F':
       return 2;
     case 'M':
-      if (name[2] == std::tolower('r'))
+      if (std::tolower(name[2]) == 'r')
 	return 3;
       else
 	return 5;
     case 'A':
-      if (name[1] == std::tolower('p'))
+      if (std::tolower(name[1]) == 'p')
 	return 4;
       else
 	return 8;
@@ -76,6 +78,30 @@ namespace {
 			  (year.ival < 70 ? year.ival + 100 : year.ival) :
 			  year.ival - 1900);
   }
+
+  void set_hms(const ledger::intorchar& ampm,
+	       const ledger::intorchar& hour,
+	       const ledger::intorchar& min = ledger::intorchar(),
+	       const ledger::intorchar& sec = ledger::intorchar())
+  {
+    if (ampm.sval && std::tolower(ampm.sval[0]) == 'a' && hour.ival == 12)
+      timeval->tm_hour = 0;
+    else if (ampm.sval && std::tolower(ampm.sval[0]) == 'p' && hour.ival == 12)
+      timeval->tm_hour = 12;
+    else if (hour.ival < 0 || (! ampm.sval && hour.ival > 23) ||
+	     (ampm.sval && hour.ival > 12))
+      throw ledger::datetime_error("Hour out of range");
+    else
+      timeval->tm_hour += hour.ival;
+
+    if (min.ival < -1 || min.ival > 59)
+      throw ledger::datetime_error("Minute out of range");
+    if (sec.ival < -1 || sec.ival > 59)
+      throw ledger::datetime_error("Seconds out of range");
+
+    timeval->tm_min  = min.ival == -1 ? 0 : min.ival;
+    timeval->tm_sec  = sec.ival == -1 ? 0 : sec.ival;
+  }
 }
 
 %}
@@ -84,6 +110,7 @@ namespace {
 %token TOK_TWONUM
 %token TOK_ONENUM
 %token TOK_MONTH
+%token TOK_AMPM
 
 %token TOK_SPACE
 
@@ -91,12 +118,12 @@ namespace {
 
 %%
 
-input: date optspace ;
+input: date
+{
+  throw time_to_leave();
+};
 
-optspace: /* epsilon */ | TOK_SPACE ;
-
-date:
-  absdate opttime
+date: absdate opttime
 {
   if (timeval->tm_gmtoff != -1) {
     boost::posix_time::ptime::time_duration_type offset;
@@ -195,13 +222,39 @@ absdate:
   }
 ;
 
-opttime: /* epsilon */ |
-  TOK_SPACE TOK_TWONUM ':' TOK_TWONUM ':' TOK_TWONUM
-{
-  timeval->tm_hour = $2.ival;
-  timeval->tm_min  = $4.ival;
-  timeval->tm_sec  = $6.ival;
-};
+opttime:  /* epsilon */ | TOK_SPACE time ;
+
+time:
+  onetwo optspace TOK_AMPM {
+    if (std::tolower($3.sval[0]) == 'p')
+      timeval->tm_hour = 12;
+    else
+      timeval->tm_hour = 0;
+
+    set_hms($3, $1);
+  }
+|
+  onetwo ':' TOK_TWONUM optampm {
+    set_hms($4, $1, $3);
+  }
+|
+  onetwo ':' TOK_TWONUM ':' TOK_TWONUM optampm {
+    set_hms($6, $1, $3, $5);
+  }
+;
+
+onetwo: TOK_ONENUM { $$ = $1; } | TOK_TWONUM { $$ = $1; } ;
+
+optspace: /* epsilon */ | TOK_SPACE ;
+
+optampm: /* epsilon */ |
+  optspace TOK_AMPM {
+    if (std::tolower($2.sval[0]) == 'p')
+      timeval->tm_hour = 12;
+    else
+      timeval->tm_hour = 0;
+    $$ = $2;
+  };
 
 isodate:
   year TOK_FOURNUM optisotime
@@ -250,13 +303,15 @@ boost::posix_time::ptime parse_abs_datetime(std::istream& input)
   temp.tm_gmtoff = -1;
 
   timeval = &temp;
-  //yydebug = 1;
 
   // jww (2007-04-19): Catch any boost errors thrown from here and
   // push them onto the new error stack scheme.
   try {
     if (yyparse() == 0)
       return moment;
+  }
+  catch (const time_to_leave&) {
+    return moment;
   }
   catch (ledger::datetime_error *) {
     throw;
@@ -275,6 +330,7 @@ namespace ledger {
 
 int main()
 {
+  yydebug = 1;
   std::cout << parse_abs_datetime(std::cin) << std::endl;
   return 0;
 }

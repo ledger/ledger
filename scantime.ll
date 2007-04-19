@@ -13,6 +13,7 @@ extern YYSTYPE yylval;
 
 shortmon (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)
 longmon  (January|February|March|April|May|June|July|August|September|October|November|December)
+ampm     (AM|PM|am|pm|A.M.|P.M.|a.m.|p.m.|[AP]|[ap])
 
 %%
 
@@ -25,5 +26,7 @@ longmon  (January|February|March|April|May|June|July|August|September|October|No
 
 {shortmon} yylval = ledger::intorchar(yytext); return TOK_MONTH;
 {longmon}  yylval = ledger::intorchar(yytext); return TOK_MONTH;
+
+{ampm}	   yylval = ledger::intorchar(yytext); return TOK_AMPM;
 
 .  return (int) yytext[0];
