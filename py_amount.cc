@@ -60,7 +60,6 @@ void export_amount()
   scope().attr("AMOUNT_PARSE_NO_REDUCE")  = AMOUNT_PARSE_NO_REDUCE;
 
   class_< amount_t > ("amount")
-    //.def(init<>())
     .def(init<amount_t>())
     .def(init<std::string>())
     .def(init<char *>())
