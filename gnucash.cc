@@ -15,13 +15,8 @@ void startElement(void *userData, const char *name, const char **atts)
     parser->action = gnucash_parser_t::ACCOUNT_ID;
   else if (std::strcmp(name, "act:parent") == 0)
     parser->action = gnucash_parser_t::ACCOUNT_PARENT;
-  else if (std::strcmp(name, "gnc:commodity") == 0) {
-    assert(! parser->curr_comm);
-#if 0
-    // jww (2006-03-02): !!!
-    parser->curr_comm = new commodity_t("");
-#endif
-  }
+  else if (std::strcmp(name, "gnc:commodity") == 0)
+    parser->curr_comm = NULL;
   else if (std::strcmp(name, "cmdty:id") == 0)
     parser->action = gnucash_parser_t::COMM_SYM;
   else if (std::strcmp(name, "cmdty:name") == 0)
@@ -72,11 +67,6 @@ void endElement(void *userData, const char *name)
     parser->curr_account = NULL;
   }
   else if (std::strcmp(name, "gnc:commodity") == 0) {
-    assert(parser->curr_comm);
-#if 0
-    // jww (2006-03-02): !!!
-    commodity_t::add_commodity(parser->curr_comm);
-#endif
     parser->curr_comm = NULL;
   }
   else if (std::strcmp(name, "gnc:transaction") == 0) {
@@ -197,33 +187,26 @@ void dataHandler(void *userData, const char *s, int len)
     break;
   }
 
-  case gnucash_parser_t::COMM_SYM:
-    if (parser->curr_comm) {
-#if 0
-      // jww (2006-03-02): !!!
-      parser->curr_comm->set_symbol(std::string(s, len));
-#endif
-    }
-    else if (parser->curr_account) {
-      std::string symbol(s, len);
-      commodity_t * comm = commodity_t::find_or_create(symbol);
-      assert(comm);
-      if (symbol != "$" && symbol != "USD")
-	comm->add_flags(COMMODITY_STYLE_SEPARATED);
-      parser->account_comms.insert
-	(gnucash_parser_t::account_comm_pair(parser->curr_account, comm));
-    }
-    else if (parser->curr_entry) {
-      std::string symbol(s, len);
-      parser->entry_comm = commodity_t::find_or_create(symbol);
-      assert(parser->entry_comm);
-      if (symbol != "$" && symbol != "USD")
-	parser->entry_comm->add_flags(COMMODITY_STYLE_SEPARATED);
-    }
-    break;
+  case gnucash_parser_t::COMM_SYM: {
+    std::string symbol(s, len);
+    if (symbol == "USD") symbol = "$";
 
-  case gnucash_parser_t::COMM_NAME:
-    parser->curr_comm->name() = std::string(s, len);
+    parser->curr_comm = commodity_t::find_or_create(symbol);
+    assert(parser->curr_comm);
+
+    if (symbol != "$")
+      parser->curr_comm->add_flags(COMMODITY_STYLE_SEPARATED);
+
+    if (parser->curr_account)
+      parser->account_comms.insert(account_comm_pair(parser->curr_account,
+						     parser->curr_comm));
+    else if (parser->curr_entry)
+      parser->entry_comm = parser->curr_comm;
+    break;
+  }
+
+  case COMM_NAME:
+    parser->curr_comm->set_name(std::string(s, len));
     break;
 
   case gnucash_parser_t::COMM_PREC:
@@ -339,10 +322,6 @@ unsigned int gnucash_parser_t::parse(std::istream&	 in,
   commodity_t * usd = commodity_t::find_or_create("$");
   usd->set_precision(2);
   usd->add_flags(COMMODITY_STYLE_THOUSANDS);
-#if 0
-  //jww (2006-03-02): !!! make an alias here
-  commodity_t::add_commodity(usd, "USD");
-#endif
 
   offset = 2;
   expat_parser = XML_ParserCreate(NULL);
