@@ -52,6 +52,19 @@ extern bool  do_cleanup;
 
 class commodity_t;
 
+/** @class amount_t
+
+    @brief Encapsulates infinite precision commoditized amounts.
+
+    The amount_t class can be used for commoditized infinite precision
+    math, and also for uncommoditized math.  In the commoditized case,
+    commodities will keep track of how they are used, so that they
+    always display back to the user in the same fashion as their use.
+    However, in all cases precision is kept to an excessive degree
+    internally.  For uncommoditized numbers, no display truncation is
+    ever done.
+*/
+
 class amount_t
 {
  public:

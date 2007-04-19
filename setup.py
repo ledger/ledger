@@ -18,5 +18,5 @@ setup(name         = "Ledger",
       author_email = "johnw@newartisans.com",
       url          = "http://johnwiegley.com/",
       ext_modules  = [
-	Extension("ledger", ["pyledger.cc"],
+	Extension("ledger", [os.path.join(os.environ['SRCDIR'], "pyledger.cc")],
 		  define_macros = defines, libraries = libs)])

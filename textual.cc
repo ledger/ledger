@@ -276,10 +276,10 @@ transaction_t * parse_transaction(char *      line,
 
 	  if (char * p = std::strchr(buf, '=')) {
 	    *p++ = '\0';
-	    xact->_date_eff = p;
+	    xact->_date_eff = ptime_from_local_date_string(p);
 	  }
 	  if (buf[0])
-	    xact->_date = buf;
+	    xact->_date = ptime_from_local_date_string(buf);
 	}
     }
   }
@@ -348,11 +348,17 @@ entry_t * parse_entry(std::istream& in, char * line, journal_t * journal,
 
   TIMER_START(entry_date);
 
+#if 0
+  // jww (2007-04-18): Need to write a full date parser
   curr->_date.parse(line_in);
+#endif
 
   if (peek_next_nonws(line_in) == '=') {
     line_in.get(c);
+#if 0
+    // jww (2007-04-18): Need to write a full date parser
     curr->_date_eff.parse(line_in);
+#endif
   }
 
   TIMER_STOP(entry_date);
@@ -492,9 +498,9 @@ bool textual_parser_t::test(std::istream& in) const
 }
 
 static void clock_out_from_timelog(const ptime& when,
-				   account_t *	     account,
-				   const char *	     desc,
-				   journal_t *	     journal)
+				   account_t *	account,
+				   const char *	desc,
+				   journal_t *	journal)
 {
   time_entry_t event;
 
@@ -542,7 +548,7 @@ static void clock_out_from_timelog(const ptime& when,
       ("Timelog check-out date less than corresponding check-in");
 
   char buf[32];
-  std::sprintf(buf, "%lds", curr->_date - event.checkin);
+  std::sprintf(buf, "%lds", (curr->_date - event.checkin).total_seconds());
   amount_t amt;
   amt.parse(buf);
 
@@ -617,7 +623,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
 	time_entry_t event;
 	event.desc    = n ? n : "";
-	event.checkin = date;
+	event.checkin = ptime_from_local_time_string(date);
 	event.account = account_stack.front()->find_account(p);
 
 	if (! time_entries.empty())
@@ -643,8 +649,8 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	  char * n = next_element(p, true);
 
 	  clock_out_from_timelog
-	    (date, p ? account_stack.front()->find_account(p) : NULL, n,
-	     journal);
+	    (ptime_from_local_time_string(date),
+	     p ? account_stack.front()->find_account(p) : NULL, n, journal);
 	  count++;
 	}
 	break;
@@ -707,7 +713,10 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
       }
 
       case 'Y':			// set current year
+#if 0
+	// jww (2007-04-18): Need to set this up again
 	date_t::current_year = std::atoi(skip_ws(line + 1));
+#endif
 	break;
 
 #ifdef TIMELOG_SUPPORT

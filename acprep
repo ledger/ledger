@@ -1,31 +1,38 @@
 #!/bin/sh
 
+PYTHON_HOME="/Library/Frameworks/Python.framework/Versions/2.5"
+
+# acprep, version 3.0
+#
+# This script configures my ledger source tree on my Mac OS/X machine.
+# This is not necessary, however, since I keep all the files necessary
+# for building checked in to the source tree.  Users can just type
+# './configure && make'.  This script simply sets up the compiler and
+# linker flags for all the various build permutations I use for
+# testing and profiling.
+
 if which glibtoolize > /dev/null 2>&1; then
     glibtoolize --automake -f -c
 else
     libtoolize --automake -f -c
 fi
+
 aclocal
 autoheader
-if [ "$1" = "--dist" ]; then
-    shift 1
-    automake -a -c -f -i
-else
-    automake -a -c -f
-fi
+automake -a -c -f
 autoconf
+
 
 INCDIRS="-I/usr/local/include"
 INCDIRS="$INCDIRS -I/usr/local/include/boost"
 INCDIRS="$INCDIRS -I/sw/include"
 INCDIRS="$INCDIRS -I/usr/include/httpd/xml"
-INCDIRS="$INCDIRS -I/Library/Frameworks/Python.framework/Versions/2.5/include/python2.5"
 
 LIBDIRS="-L/usr/local/lib"
 LIBDIRS="$LIBDIRS -L/sw/lib"
-LIBDIRS="$LIBDIRS -L/Library/Frameworks/Python.framework/Versions/2.5/lib/python2.5/config"
 
 SYSTEM=`uname -s`
+
 if [ $SYSTEM = Linux ]; then
     CXXFLAGS="-pthread"
 elif [ $SYSTEM = Solaris ]; then
@@ -49,45 +56,47 @@ WARNFLAGS="$WARNFLAGS -pedantic-errors"
 # that is built again anyway by Xcode).
 SWITCHES="--disable-shared"
 
+
+while [ -n "$1" ]; do
+  case "$1" in
+    --debug)
+	SWITCHES="$SWITCHES --enable-debug"
+	CXXFLAGS="$CXXFLAGS -ggdb3" ;;
+
+    --prof | --perf)
+        CXXFLAGS="$CXXFLAGS -g -pg" ;;
+
+    --python)
+	if [ -d "$PYTHON_HOME" ]; then
+	    SWITCHES="$SWITCHES --enable-python"
+	    INCDIRS="$INCDIRS -I$PYTHON_HOME/include/python2.5"
+	    LIBDIRS="$LIBDIRS -L$PYTHON_HOME/lib/python2.5/config"
+	fi ;;
+
+    --opt)
+	CXXFLAGS="$CXXFLAGS -fomit-frame-pointer -O3 -fPIC" ;;
+    --flat-opt)
+	CXXFLAGS="$CXXFLAGS -fomit-frame-pointer -O3" ;;
+    --safe-opt)
+	CXXFLAGS="$CXXFLAGS -fomit-frame-pointer -O3 -fPIC -DDEBUG_LEVEL=1" ;;
+
+    *)
+	break ;;
+  esac
+  shift 1
+done
+
+
 HERE="$PWD"
 
-#if [ -d "$HOME/Products" ]; then
-#    projdir="$HOME/Products/$(basename $HERE)"
-#    if [ ! -d "$projdir" ]; then
-#	mkdir -p "$projdir"
-#    fi
-#    cd "$projdir" || (echo "Cannot change to $projdir"; exit 1)
-#fi
-
-if [ "$1" = "--debug" ]; then
-    shift 1
-    "$HERE/configure" --srcdir="$HERE" \
-	CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" CXXFLAGS="$CXXFLAGS -ggdb3" \
-	WARNFLAGS="$WARNFLAGS" $SWITCHES --enable-debug "$@"
-elif [ "$1" = "--python-debug" -o "$1" = "--debug-python" ]; then
-    shift 1
-    "$HERE/configure" --srcdir="$HERE" \
-	CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" CXXFLAGS="$CXXFLAGS -ggdb3" \
-	WARNFLAGS="$WARNFLAGS" $SWITCHES --enable-debug --enable-python "$@"
-elif [ "$1" = "--opt" ]; then
-    shift 1
-    "$HERE/configure" --srcdir="$HERE" \
-	CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" WARNFLAGS="$WARNFLAGS" \
-	CXXFLAGS="$CXXFLAGS -fomit-frame-pointer -O3 -fPIC" "$@" $SWITCHES
-elif [ "$1" = "--flat-opt" ]; then
-    shift 1
-    "$HERE/configure" --srcdir="$HERE" \
-	CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" WARNFLAGS="$WARNFLAGS" \
-	CXXFLAGS="$CXXFLAGS -fomit-frame-pointer -O3" "$@" $SWITCHES
-elif [ "$1" = "--safe-opt" ]; then
-    shift 1
-    "$HERE/configure" --srcdir="$HERE" \
-	CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" WARNFLAGS="$WARNFLAGS" \
-	CXXFLAGS="$CXXFLAGS -fomit-frame-pointer -O3 -fPIC -DDEBUG_LEVEL=1" "$@" \
-	$SWITCHES
-elif [ "$1" = "--perf" ]; then
-    shift 1
-    "$HERE/configure" --srcdir="$HERE" WARNFLAGS="$WARNFLAGS" \
-	CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
-	CXXFLAGS="$CXXFLAGS -ggdb3 -pg" "$@" $SWITCHES
+if [ -d "$HOME/Products" ]; then
+    projdir="$HOME/Products/$(basename $HERE)"
+    if [ ! -d "$projdir" ]; then
+	mkdir -p "$projdir"
+    fi
+    cd "$projdir" || (echo "Cannot change to $projdir"; exit 1)
 fi
+
+"$HERE/configure" --srcdir="$HERE" CPPFLAGS="$INCDIRS" \
+    CXXFLAGS="$CXXFLAGS $local_cxxflags" WARNFLAGS="$WARNFLAGS" \
+    LDFLAGS="$LIBDIRS" $SWITCHES "$@"

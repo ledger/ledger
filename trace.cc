@@ -1,4 +1,5 @@
 #include "trace.h"
+#include "times.h"
 #include "acconf.h"
 
 namespace ledger {
@@ -8,8 +9,8 @@ bool trace_mode;
 void trace(const std::string& cat, const std::string& str)
 {
   char buf[32];
-  std::cerr << now.to_short_string() << " " << cat << ": " << str
-	    << std::endl;
+  std::cerr << boost::posix_time::to_simple_string(now) << " "
+	    << cat << ": " << str << std::endl;
 }
 
 void trace_push(const std::string& cat, const std::string& str,

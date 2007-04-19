@@ -158,7 +158,7 @@ void xpath_t::token_t::next(std::istream& in, unsigned short flags)
       length++;
       interval_t timespan(buf);
       kind = VALUE;
-      value = timespan.first();
+      value = timespan.next();
     } else {
       kind = LBRACKET;
     }

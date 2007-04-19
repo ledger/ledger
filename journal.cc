@@ -24,14 +24,14 @@ transaction_t::~transaction_t()
 
 ptime transaction_t::actual_date() const
 {
-  if (! _date && entry)
+  if (_date.is_not_a_date_time() && entry)
     return entry->actual_date();
   return _date;
 }
 
 ptime transaction_t::effective_date() const
 {
-  if (! _date_eff && entry)
+  if (_date_eff.is_not_a_date_time() && entry)
     return entry->effective_date();
   return _date_eff;
 }
@@ -312,7 +312,7 @@ void entry_t::add_transaction(transaction_t * xact)
 
 bool entry_t::valid() const
 {
-  if (! _date || ! journal) {
+  if (_date.is_not_a_date_time() || ! journal) {
     DEBUG_PRINT("ledger.validate", "entry_t: ! _date || ! journal");
     return false;
   }

@@ -14,7 +14,6 @@ void BasicAmountTestCase::testConstructors()
   amount_t x1(123456L);
   amount_t x2(123456UL);
   amount_t x3(123.456);
-  amount_t x4(true);
   amount_t x5("123456");
   amount_t x6("123.456");
   amount_t x7(std::string("123456"));
@@ -33,14 +32,12 @@ void BasicAmountTestCase::testConstructors()
   assertEqual(x6, x3);
   assertEqual(x8, x3);
   assertEqual(x10, x3);
-  assertEqual(amount_t(1L), x4);
   assertEqual(x10, x9);
 
   CPPUNIT_ASSERT(x0.valid());
   CPPUNIT_ASSERT(x1.valid());
   CPPUNIT_ASSERT(x2.valid());
   CPPUNIT_ASSERT(x3.valid());
-  CPPUNIT_ASSERT(x4.valid());
   CPPUNIT_ASSERT(x5.valid());
   CPPUNIT_ASSERT(x6.valid());
   CPPUNIT_ASSERT(x7.valid());
@@ -91,7 +88,6 @@ void BasicAmountTestCase::testAssignment()
   amount_t x1  = 123456L;
   amount_t x2  = 123456UL;
   amount_t x3  = 123.456;
-  amount_t x4  = true;
   amount_t x5  = "123456";
   amount_t x6  = "123.456";
   amount_t x7  = std::string("123456");
@@ -106,14 +102,12 @@ void BasicAmountTestCase::testAssignment()
   assertEqual(x6, x3);
   assertEqual(x8, x3);
   assertEqual(x10, x3);
-  assertEqual(amount_t(1L), x4);
   assertEqual(x10, x9);
 
   x0  = amount_t();
   x1  = 123456L;
   x2  = 123456UL;
   x3  = 123.456;
-  x4  = true;
   x5  = "123456";
   x6  = "123.456";
   x7  = std::string("123456");
@@ -128,14 +122,12 @@ void BasicAmountTestCase::testAssignment()
   assertEqual(x6, x3);
   assertEqual(x8, x3);
   assertEqual(x10, x3);
-  assertEqual(amount_t(1L), x4);
   assertEqual(x10, x9);
 
   CPPUNIT_ASSERT(x0.valid());
   CPPUNIT_ASSERT(x1.valid());
   CPPUNIT_ASSERT(x2.valid());
   CPPUNIT_ASSERT(x3.valid());
-  CPPUNIT_ASSERT(x4.valid());
   CPPUNIT_ASSERT(x5.valid());
   CPPUNIT_ASSERT(x6.valid());
   CPPUNIT_ASSERT(x7.valid());
@@ -182,20 +174,12 @@ void BasicAmountTestCase::testIntegerAddition()
   x1 += 456L;
   assertEqual(amount_t(1035L), x1);
 
-  amount_t x3(true);
-  amount_t y3(true);
-
-  assertEqual(amount_t(2L), x3 + y3);
-  assertEqual(amount_t(2L), x3 + true);
-
   amount_t x4("123456789123456789123456789");
 
   assertEqual(amount_t("246913578246913578246913578"), x4 + x4);
 
   CPPUNIT_ASSERT(x1.valid());
   CPPUNIT_ASSERT(y1.valid());
-  CPPUNIT_ASSERT(x3.valid());
-  CPPUNIT_ASSERT(y3.valid());
   CPPUNIT_ASSERT(x4.valid());
 }
 
@@ -239,11 +223,6 @@ void BasicAmountTestCase::testIntegerSubtraction()
   x1 -= 456L;
   assertEqual(amount_t(-789L), x1);
 
-  amount_t x3(true);
-  amount_t y3(true);
-
-  assertEqual(amount_t(false), x3 - y3);
-
   amount_t x4("123456789123456789123456789");
   amount_t y4("8238725986235986");
 
@@ -252,8 +231,6 @@ void BasicAmountTestCase::testIntegerSubtraction()
 
   CPPUNIT_ASSERT(x1.valid());
   CPPUNIT_ASSERT(y1.valid());
-  CPPUNIT_ASSERT(x3.valid());
-  CPPUNIT_ASSERT(y3.valid());
   CPPUNIT_ASSERT(x4.valid());
   CPPUNIT_ASSERT(y4.valid());
 }
@@ -310,11 +287,6 @@ void BasicAmountTestCase::testIntegerMultiplication()
   x1 *= 123L;
   assertEqual(amount_t(1860867L), x1);
 
-  amount_t x3(true);
-  amount_t y3(true);
-
-  assertEqual(amount_t(true), x3 * y3);
-
   amount_t x4("123456789123456789123456789");
 
   assertEqual(amount_t("15241578780673678546105778281054720515622620750190521"),
@@ -322,8 +294,6 @@ void BasicAmountTestCase::testIntegerMultiplication()
 
   CPPUNIT_ASSERT(x1.valid());
   CPPUNIT_ASSERT(y1.valid());
-  CPPUNIT_ASSERT(x3.valid());
-  CPPUNIT_ASSERT(y3.valid());
   CPPUNIT_ASSERT(x4.valid());
 }
 

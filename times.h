@@ -11,16 +11,29 @@
 
 namespace ledger {
 
-using namespace boost::posix_time;
-using namespace boost::date_time;
+typedef boost::posix_time::ptime   ptime;
+typedef boost::posix_time::seconds seconds;
+typedef ptime::time_duration_type  time_duration;
 
-typedef ptime::time_duration_type time_duration;
+class interval_t
+{
+public:
+  interval_t() {}
+  interval_t(const std::string& desc) {}
 
-class interval_t {};
+  operator bool() const {
+    return false;
+  }
+
+  void start(const ptime& moment) {}
+  ptime next() const {}
+
+  void parse(std::istream& in) {}
+};
 
 inline ptime ptime_local_to_utc(const ptime& when) {
   struct std::tm tm_gmt = to_tm(when);
-  return from_time_t(std::mktime(&tm_gmt));
+  return boost::posix_time::from_time_t(std::mktime(&tm_gmt));
 }
 
 // jww (2007-04-18): I need to make a general parsing function
@@ -31,7 +44,7 @@ inline ptime ptime_from_local_date_string(const std::string& date_string) {
 }
 
 inline ptime ptime_from_local_time_string(const std::string& time_string) {
-  return ptime_local_to_utc(time_from_string(time_string));
+  return ptime_local_to_utc(boost::posix_time::time_from_string(time_string));
 }
 
 extern ptime now;

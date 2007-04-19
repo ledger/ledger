@@ -1,3 +1,4 @@
 #!/bin/sh
 
-PYTHONPATH=$PWD:$PYTHONPATH python tests/python/UnitTests.py
+PYTHONPATH="%builddir%":"%srcdir%":$PYTHONPATH \
+    python "%srcdir%"/tests/python/UnitTests.py

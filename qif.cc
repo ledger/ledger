@@ -102,7 +102,7 @@ unsigned int qif_parser_t::parse(std::istream& in,
     case 'D':
       SET_BEG_POS_AND_LINE();
       get_line(in);
-      entry->_date = line;
+      entry->_date = ptime_from_local_date_string(line);
       break;
 
     case 'T':

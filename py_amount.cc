@@ -64,7 +64,6 @@ void export_amount()
     .def(init<amount_t>())
     .def(init<std::string>())
     .def(init<char *>())
-    .def(init<bool>())
     .def(init<long>())
     .def(init<double>())
 

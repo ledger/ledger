@@ -49,10 +49,13 @@ void report_t::ftime(value_t& result, xml::xpath_t::scope_t * locals)
   std::string date_format;
   if (locals->args.size() == 2)
     date_format = locals->args[1].to_string();
+#if 0
+  // jww (2007-04-18): Need to setup an output facet here
   else
     date_format = ptime::output_format;
 
   result.set_string(date.to_string(date_format));
+#endif
 }
 
 bool report_t::resolve(const std::string& name, value_t& result,

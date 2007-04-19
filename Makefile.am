@@ -1,9 +1,18 @@
 SUBDIRS = gdtoa
 
+
+ESC_srcdir=`echo "$(srcdir)" | sed 's/\//\\\\\//g'`
+ESC_builddir=`echo "$(top_builddir)" | sed 's/\//\\\\\//g'`
+ESC_distdir=`echo "$(distdir)" | sed 's/\//\\\\\//g'`
+
 EXTRA_DIST = docs tests
 
 dist-hook:
 	rm -fr `find $(distdir) -name .svn`
+	cat $(srcdir)/Doxyfile | sed "s/%srcdir%/$(ESC_srcdir)/g" \
+	    | sed "s/%distdir%/$(ESC_distdir)/g" > $(distdir)/Doxyfile
+	doxygen $(distdir)/Doxyfile
+
 
 lib_LTLIBRARIES = libledger.la
 if HAVE_BOOST_PYTHON
@@ -140,8 +149,8 @@ info_TEXINFOS = ledger.texi
 
 ######################################################################
 
-#lisp_LISP = ledger.el timeclock.el
-#dist_lisp_LISP = ledger.el timeclock.el
+lisp_LISP = ledger.el timeclock.el
+dist_lisp_LISP = ledger.el timeclock.el
 
 ######################################################################
 
@@ -170,18 +179,20 @@ DEBUG_LEVEL = 0
 endif
 
 ledger.so: pyledger.cc libledger.la gdtoa/libgdtoa.la libpyledger.la
+	SRCDIR="$(srcdir)" \
 	CFLAGS="$(CPPFLAGS)" \
 	LDFLAGS="$(LDFLAGS) -L. -L.libs -Lgdtoa -Lgdtoa/.libs" \
 	PYLIBS="$(PYLIBS)" \
 	DEBUG_LEVEL="$(DEBUG_LEVEL)" \
-	    python setup.py build --build-lib=.
+	    python $(srcdir)/setup.py build --build-lib=.
 
 install-exec-hook:
+	SRCDIR="$(srcdir)" \
 	CFLAGS="$(CPPFLAGS)" \
 	LDFLAGS="$(LDFLAGS) -L. -L.libs -Lgdtoa -Lgdtoa/.libs" \
 	PYLIBS="$(PYLIBS)" \
 	DEBUG_LEVEL="$(DEBUG_LEVEL)" \
-	    python setup.py install --prefix=$(prefix)
+	    python $(srcdir)/setup.py install --prefix=$(prefix)
 
 endif
 
@@ -220,12 +231,16 @@ endif
 PyUnitTests_SOURCES =
 
 PyUnitTests: PyUnitTests.py
-	cp PyUnitTests.py PyUnitTests
+	cat $(srcdir)/PyUnitTests.py | sed "s/%srcdir%/$(ESC_srcdir)/g" \
+	    | sed "s/%builddir%/$(ESC_builddir)/g" > PyUnitTests
 	chmod 755 PyUnitTests
 
 ######################################################################
 
 all: check
+
+docs: ledger.info ledger.pdf
+	doxygen
 
 check-syntax:
 	g++ -I. -Itests $(CPPFLAGS) $(UnitTests_CXXFLAGS) \

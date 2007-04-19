@@ -235,7 +235,7 @@ void dataHandler(void *userData, const char *s, int len)
     break;
 
   case gnucash_parser_t::ENTRY_DATE:
-    parser->curr_entry->_date = std::string(s, len);
+    parser->curr_entry->_date = ptime_from_local_date_string(std::string(s, len));
     break;
 
   case gnucash_parser_t::ENTRY_DESC:
