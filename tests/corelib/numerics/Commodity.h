@@ -7,7 +7,6 @@ class CommodityTestCase : public CPPUNIT_NS::TestCase
 {
   CPPUNIT_TEST_SUITE(CommodityTestCase);
 
-  CPPUNIT_TEST(testConstructors);
   CPPUNIT_TEST(testPriceHistory);
   CPPUNIT_TEST(testLots);
   CPPUNIT_TEST(testScalingBase);
@@ -22,7 +21,6 @@ public:
   virtual void setUp();
   virtual void tearDown();
 
-  void testConstructors();
   void testPriceHistory();
   void testLots();
   void testScalingBase();

@@ -95,7 +95,9 @@ input: date optspace ;
 
 optspace: /* epsilon */ | TOK_SPACE ;
 
-date: absdate {
+date:
+  absdate opttime
+{
   if (timeval->tm_gmtoff != -1) {
     boost::posix_time::ptime::time_duration_type offset;
     offset = boost::posix_time::seconds(timeval->tm_gmtoff);
@@ -193,23 +195,31 @@ absdate:
   }
 ;
 
+opttime: /* epsilon */ |
+  TOK_SPACE TOK_TWONUM ':' TOK_TWONUM ':' TOK_TWONUM
+{
+  timeval->tm_hour = $2.ival;
+  timeval->tm_min  = $4.ival;
+  timeval->tm_sec  = $6.ival;
+};
+
 isodate:
-  year TOK_FOURNUM opttime
+  year TOK_FOURNUM optisotime
 {
   timeval->tm_year = $1.ival - 1900;
   timeval->tm_mon  = $2.ival / 100 - 1;
   timeval->tm_mday = $3.ival % 100;
 };
 
-opttime: /* epsilon */ |
-  'T' TOK_FOURNUM TOK_TWONUM optzone
+optisotime: /* epsilon */ |
+  'T' TOK_FOURNUM TOK_TWONUM optisozone
 {
   timeval->tm_hour = $2.ival / 100;
   timeval->tm_min  = $2.ival % 100;
   timeval->tm_sec  = $3.ival;
 };
 
-optzone: /* epsilon */ |
+optisozone: /* epsilon */ |
   '-' TOK_FOURNUM {
     timeval->tm_gmtoff = - (($2.ival / 100) * 3600 + ($2.ival % 100) * 60);
   }
