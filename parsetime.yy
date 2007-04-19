@@ -135,91 +135,28 @@ date: absdate opttime
 };
 
 absdate:
-  year '/' morday '/' morday {
-    set_mdy($3, $5, $1);
-  }
-|
-  year '-' morday '-' morday {
-    set_mdy($3, $5, $1);
-  }
-|
-  year '.' morday '.' morday {
-    set_mdy($3, $5, $1);
-  }
-|
-  morday '/' morday '/' year {
-    set_mdy($1, $3, $5);
-  }
-|
-  morday '-' morday '-' year {
-    set_mdy($1, $3, $5);
-  }
-|
-  morday '.' morday '.' year {
-    set_mdy($1, $3, $5);
-  }
-|
-  morday '.' morday {
-    set_mdy($1, $3);
-  }
-|
-  morday '/' morday {
-    set_mdy($1, $3);
-  }
-|
-  morday '-' morday {
-    set_mdy($1, $3);
-  }
-|
-  morday '/' morday '/' TOK_TWONUM {
-    set_mdy($1, $3, $5, true);
-  }
-|
-  morday '-' morday '-' TOK_TWONUM {
-    set_mdy($1, $3, $5, true);
-  }
-|
-  morday '.' morday '.' TOK_TWONUM {
-    set_mdy($1, $3, $5, true);
-  }
-|
   isodate
-|
-  year TOK_SPACE TOK_MONTH TOK_SPACE morday {
-    set_mdy($3, $5, $1);
-  }
-|
-  morday TOK_SPACE TOK_MONTH TOK_SPACE year {
-    set_mdy($3, $1, $5);
-  }
-|
-  TOK_MONTH TOK_SPACE morday {
-    set_mdy($1, $3);
-  }
-|
-  morday TOK_SPACE TOK_MONTH {
-    set_mdy($3, $1);
-  }
-|
-  year '-' TOK_MONTH '-' morday {
-    set_mdy($3, $5, $1);
-  }
-|
-  morday '-' TOK_MONTH '-' year {
-    set_mdy($3, $1, $5);
-  }
-|
-  TOK_MONTH '-' morday {
-    set_mdy($1, $3);
-  }
-|
-  morday '-' TOK_MONTH {
-    set_mdy($3, $1);
-  }
-|
-  TOK_MONTH TOK_SPACE morday ',' TOK_SPACE year {
-    set_mdy($1, $3, $6);
-  }
+| year '/' morday '/' morday			{ set_mdy($3, $5, $1); }
+| year '-' morday '-' morday			{ set_mdy($3, $5, $1); }
+| year '.' morday '.' morday			{ set_mdy($3, $5, $1); }
+| morday '/' morday '/' year			{ set_mdy($1, $3, $5); }
+| morday '-' morday '-' year			{ set_mdy($1, $3, $5); }
+| morday '.' morday '.' year			{ set_mdy($1, $3, $5); }
+| morday '.' morday				{ set_mdy($1, $3); }
+| morday '/' morday				{ set_mdy($1, $3); }
+| morday '-' morday				{ set_mdy($1, $3); }
+| morday '/' morday '/' TOK_TWONUM		{ set_mdy($1, $3, $5, true); }
+| morday '-' morday '-' TOK_TWONUM		{ set_mdy($1, $3, $5, true); }
+| morday '.' morday '.' TOK_TWONUM		{ set_mdy($1, $3, $5, true); }
+| year TOK_SPACE TOK_MONTH TOK_SPACE morday	{ set_mdy($3, $5, $1); }
+| morday TOK_SPACE TOK_MONTH TOK_SPACE year	{ set_mdy($3, $1, $5); }
+| TOK_MONTH TOK_SPACE morday			{ set_mdy($1, $3); }
+| morday TOK_SPACE TOK_MONTH			{ set_mdy($3, $1); }
+| year '-' TOK_MONTH '-' morday			{ set_mdy($3, $5, $1); }
+| morday '-' TOK_MONTH '-' year			{ set_mdy($3, $1, $5); }
+| TOK_MONTH '-' morday				{ set_mdy($1, $3); }
+| morday '-' TOK_MONTH				{ set_mdy($3, $1); }
+| TOK_MONTH TOK_SPACE morday ',' TOK_SPACE year { set_mdy($1, $3, $6); }
 ;
 
 opttime:  /* epsilon */ | TOK_SPACE time ;

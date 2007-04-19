@@ -414,9 +414,9 @@ void export_balance()
     .def(self != long())
     .def(! self)
 
-    .def(abs(self))
     .def(self_ns::str(self))
 
+    .def("__abs__", &balance_t::abs)
     .def("__len__", balance_len)
     .def("__getitem__", balance_getitem)
 
@@ -502,9 +502,9 @@ void export_balance()
     .def(self != long())
     .def(! self)
 
-    .def(abs(self))
     .def(self_ns::str(self))
 
+    .def("__abs__", &balance_pair_t::abs)
     .def("__len__", balance_pair_len)
     .def("__getitem__", balance_pair_getitem)
 

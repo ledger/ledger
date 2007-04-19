@@ -11,7 +11,7 @@ bool value_t::to_boolean() const
     return *(bool *) data;
   } else {
     value_t temp(*this);
-    temp.cast(BOOLEAN);
+    temp.in_place_cast(BOOLEAN);
     return *(bool *) temp.data;
   }
 }
@@ -22,7 +22,7 @@ long value_t::to_integer() const
     return *(long *) data;
   } else {
     value_t temp(*this);
-    temp.cast(INTEGER);
+    temp.in_place_cast(INTEGER);
     return *(long *) temp.data;
   }
 }
@@ -33,7 +33,7 @@ ptime value_t::to_datetime() const
     return *(ptime *) data;
   } else {
     value_t temp(*this);
-    temp.cast(DATETIME);
+    temp.in_place_cast(DATETIME);
     return *(ptime *) temp.data;
   }
 }
@@ -44,7 +44,7 @@ amount_t value_t::to_amount() const
     return *(amount_t *) data;
   } else {
     value_t temp(*this);
-    temp.cast(AMOUNT);
+    temp.in_place_cast(AMOUNT);
     return *(amount_t *) temp.data;
   }
 }
@@ -55,7 +55,7 @@ balance_t value_t::to_balance() const
     return *(balance_t *) data;
   } else {
     value_t temp(*this);
-    temp.cast(BALANCE);
+    temp.in_place_cast(BALANCE);
     return *(balance_t *) temp.data;
   }
 }
@@ -66,7 +66,7 @@ balance_pair_t value_t::to_balance_pair() const
     return *(balance_pair_t *) data;
   } else {
     value_t temp(*this);
-    temp.cast(BALANCE_PAIR);
+    temp.in_place_cast(BALANCE_PAIR);
     return *(balance_pair_t *) temp.data;
   }
 }
@@ -141,19 +141,19 @@ void value_t::simplify()
       (! ((balance_pair_t *) data)->cost ||
        ((balance_pair_t *) data)->cost->realzero())) {
     DEBUG_PRINT("amounts.values.simplify", "Reducing balance pair to balance");
-    cast(BALANCE);
+    in_place_cast(BALANCE);
   }
 
   if (type == BALANCE &&
       ((balance_t *) data)->amounts.size() == 1) {
     DEBUG_PRINT("amounts.values.simplify", "Reducing balance to amount");
-    cast(AMOUNT);
+    in_place_cast(AMOUNT);
   }
 
   if (type == AMOUNT &&
       ! ((amount_t *) data)->commodity()) {
     DEBUG_PRINT("amounts.values.simplify", "Reducing amount to integer");
-    cast(INTEGER);
+    in_place_cast(INTEGER);
   }
 }
 
@@ -254,12 +254,12 @@ value_t& value_t::operator+=(const value_t& val)
     throw new value_error("Cannot add a boolean to a value");
   else if (val.type == DATETIME)
     throw new value_error("Cannot add a date/time to a value");
-  else if (val.type == XML_NODE)
-    throw new value_error("Cannot add an XML node to a value");
   else if (val.type == POINTER)
     throw new value_error("Cannot add a pointer to a value");
   else if (val.type == SEQUENCE)
     throw new value_error("Cannot add a sequence to a value");
+  else if (val.type == XML_NODE) // recurse
+    return *this += (*(xml::node_t **) val.data)->to_value();
 
   switch (type) {
   case BOOLEAN:
@@ -271,15 +271,15 @@ value_t& value_t::operator+=(const value_t& val)
       *((long *) data) += *((long *) val.data);
       break;
     case AMOUNT:
-      cast(AMOUNT);
+      in_place_cast(AMOUNT);
       *((amount_t *) data) += *((amount_t *) val.data);
       break;
     case BALANCE:
-      cast(BALANCE);
+      in_place_cast(BALANCE);
       *((balance_t *) data) += *((balance_t *) val.data);
       break;
     case BALANCE_PAIR:
-      cast(BALANCE_PAIR);
+      in_place_cast(BALANCE_PAIR);
       *((balance_pair_t *) data) += *((balance_pair_t *) val.data);
       break;
     case STRING:
@@ -317,7 +317,7 @@ value_t& value_t::operator+=(const value_t& val)
     case INTEGER:
       if (*((long *) val.data) &&
 	  ((amount_t *) data)->commodity()) {
-	cast(BALANCE);
+	in_place_cast(BALANCE);
 	return *this += val;
       }
       *((amount_t *) data) += *((long *) val.data);
@@ -326,19 +326,19 @@ value_t& value_t::operator+=(const value_t& val)
     case AMOUNT:
       if (((amount_t *) data)->commodity() !=
 	  ((amount_t *) val.data)->commodity()) {
-	cast(BALANCE);
+	in_place_cast(BALANCE);
 	return *this += val;
       }
       *((amount_t *) data) += *((amount_t *) val.data);
       break;
 
     case BALANCE:
-      cast(BALANCE);
+      in_place_cast(BALANCE);
       *((balance_t *) data) += *((balance_t *) val.data);
       break;
 
     case BALANCE_PAIR:
-      cast(BALANCE_PAIR);
+      in_place_cast(BALANCE_PAIR);
       *((balance_pair_t *) data) += *((balance_pair_t *) val.data);
       break;
 
@@ -363,7 +363,7 @@ value_t& value_t::operator+=(const value_t& val)
       *((balance_t *) data) += *((balance_t *) val.data);
       break;
     case BALANCE_PAIR:
-      cast(BALANCE_PAIR);
+      in_place_cast(BALANCE_PAIR);
       *((balance_pair_t *) data) += *((balance_pair_t *) val.data);
       break;
     case STRING:
@@ -439,12 +439,12 @@ value_t& value_t::operator-=(const value_t& val)
     throw new value_error("Cannot subtract a date/time from a value");
   else if (val.type == STRING)
     throw new value_error("Cannot subtract a string from a value");
-  else if (val.type == XML_NODE)
-    throw new value_error("Cannot subtract an XML node from a value");
   else if (val.type == POINTER)
     throw new value_error("Cannot subtract a pointer from a value");
   else if (val.type == SEQUENCE)
     throw new value_error("Cannot subtract a sequence from a value");
+  else if (val.type == XML_NODE) // recurse
+    return *this -= (*(xml::node_t **) val.data)->to_value();
 
   switch (type) {
   case BOOLEAN:
@@ -456,15 +456,15 @@ value_t& value_t::operator-=(const value_t& val)
       *((long *) data) -= *((long *) val.data);
       break;
     case AMOUNT:
-      cast(AMOUNT);
+      in_place_cast(AMOUNT);
       *((amount_t *) data) -= *((amount_t *) val.data);
       break;
     case BALANCE:
-      cast(BALANCE);
+      in_place_cast(BALANCE);
       *((balance_t *) data) -= *((balance_t *) val.data);
       break;
     case BALANCE_PAIR:
-      cast(BALANCE_PAIR);
+      in_place_cast(BALANCE_PAIR);
       *((balance_pair_t *) data) -= *((balance_pair_t *) val.data);
       break;
     default:
@@ -480,7 +480,7 @@ value_t& value_t::operator-=(const value_t& val)
       break;
     case DATETIME: {
       time_duration tval = ((ptime *) data)->operator-(*((ptime *) val.data));
-      cast(INTEGER);
+      in_place_cast(INTEGER);
       *((long *) data) = tval.total_seconds();
       break;
     }
@@ -504,7 +504,7 @@ value_t& value_t::operator-=(const value_t& val)
     case INTEGER:
       if (*((long *) val.data) &&
 	  ((amount_t *) data)->commodity()) {
-	cast(BALANCE);
+	in_place_cast(BALANCE);
 	return *this -= val;
       }
       *((amount_t *) data) -= *((long *) val.data);
@@ -513,19 +513,19 @@ value_t& value_t::operator-=(const value_t& val)
     case AMOUNT:
       if (((amount_t *) data)->commodity() !=
 	  ((amount_t *) val.data)->commodity()) {
-	cast(BALANCE);
+	in_place_cast(BALANCE);
 	return *this -= val;
       }
       *((amount_t *) data) -= *((amount_t *) val.data);
       break;
 
     case BALANCE:
-      cast(BALANCE);
+      in_place_cast(BALANCE);
       *((balance_t *) data) -= *((balance_t *) val.data);
       break;
 
     case BALANCE_PAIR:
-      cast(BALANCE_PAIR);
+      in_place_cast(BALANCE_PAIR);
       *((balance_pair_t *) data) -= *((balance_pair_t *) val.data);
       break;
 
@@ -547,7 +547,7 @@ value_t& value_t::operator-=(const value_t& val)
       *((balance_t *) data) -= *((balance_t *) val.data);
       break;
     case BALANCE_PAIR:
-      cast(BALANCE_PAIR);
+      in_place_cast(BALANCE_PAIR);
       *((balance_pair_t *) data) -= *((balance_pair_t *) val.data);
       break;
     default:
@@ -603,12 +603,12 @@ value_t& value_t::operator*=(const value_t& val)
     throw new value_error("Cannot multiply a value by a date/time");
   else if (val.type == STRING)
     throw new value_error("Cannot multiply a value by a string");
-  else if (val.type == XML_NODE)
-    throw new value_error("Cannot multiply a value by an XML node");
   else if (val.type == POINTER)
     throw new value_error("Cannot multiply a value by a pointer");
   else if (val.type == SEQUENCE)
     throw new value_error("Cannot multiply a value by a sequence");
+  else if (val.type == XML_NODE) // recurse
+    return *this *= (*(xml::node_t **) val.data)->to_value();
 
   if (val.realzero() && type != STRING) {
     *this = 0L;
@@ -625,15 +625,15 @@ value_t& value_t::operator*=(const value_t& val)
       *((long *) data) *= *((long *) val.data);
       break;
     case AMOUNT:
-      cast(AMOUNT);
+      in_place_cast(AMOUNT);
       *((amount_t *) data) *= *((amount_t *) val.data);
       break;
     case BALANCE:
-      cast(BALANCE);
+      in_place_cast(BALANCE);
       *((balance_t *) data) *= *((balance_t *) val.data);
       break;
     case BALANCE_PAIR:
-      cast(BALANCE_PAIR);
+      in_place_cast(BALANCE_PAIR);
       *((balance_pair_t *) data) *= *((balance_pair_t *) val.data);
       break;
     default:
@@ -651,11 +651,11 @@ value_t& value_t::operator*=(const value_t& val)
       *((amount_t *) data) *= *((amount_t *) val.data);
       break;
     case BALANCE:
-      cast(BALANCE);
+      in_place_cast(BALANCE);
       *((balance_t *) data) *= *((balance_t *) val.data);
       break;
     case BALANCE_PAIR:
-      cast(BALANCE_PAIR);
+      in_place_cast(BALANCE_PAIR);
       *((balance_pair_t *) data) *= *((balance_pair_t *) val.data);
       break;
     default:
@@ -676,7 +676,7 @@ value_t& value_t::operator*=(const value_t& val)
       *((balance_t *) data) *= *((balance_t *) val.data);
       break;
     case BALANCE_PAIR:
-      cast(BALANCE_PAIR);
+      in_place_cast(BALANCE_PAIR);
       *((balance_pair_t *) data) *= *((balance_pair_t *) val.data);
       break;
     default:
@@ -717,7 +717,7 @@ value_t& value_t::operator*=(const value_t& val)
     case AMOUNT: {
       std::string temp;
       value_t num(val);
-      num.cast(INTEGER);
+      num.in_place_cast(INTEGER);
       for (long i = 0; i < *(long *) num.data; i++)
 	temp += **(std::string **) data;
       **(std::string **) data = temp;
@@ -755,12 +755,12 @@ value_t& value_t::operator/=(const value_t& val)
     throw new value_error("Cannot divide a date/time by a value");
   else if (val.type == STRING)
     throw new value_error("Cannot divide a string by a value");
-  else if (val.type == XML_NODE)
-    throw new value_error("Cannot divide a value by an XML node");
   else if (val.type == POINTER)
     throw new value_error("Cannot divide a pointer by a value");
   else if (val.type == SEQUENCE)
     throw new value_error("Cannot divide a value by a sequence");
+  else if (val.type == XML_NODE) // recurse
+    return *this /= (*(xml::node_t **) val.data)->to_value();
 
   switch (type) {
   case BOOLEAN:
@@ -772,15 +772,15 @@ value_t& value_t::operator/=(const value_t& val)
       *((long *) data) /= *((long *) val.data);
       break;
     case AMOUNT:
-      cast(AMOUNT);
+      in_place_cast(AMOUNT);
       *((amount_t *) data) /= *((amount_t *) val.data);
       break;
     case BALANCE:
-      cast(BALANCE);
+      in_place_cast(BALANCE);
       *((balance_t *) data) /= *((balance_t *) val.data);
       break;
     case BALANCE_PAIR:
-      cast(BALANCE_PAIR);
+      in_place_cast(BALANCE_PAIR);
       *((balance_pair_t *) data) /= *((balance_pair_t *) val.data);
       break;
     default:
@@ -798,11 +798,11 @@ value_t& value_t::operator/=(const value_t& val)
       *((amount_t *) data) /= *((amount_t *) val.data);
       break;
     case BALANCE:
-      cast(BALANCE);
+      in_place_cast(BALANCE);
       *((balance_t *) data) /= *((balance_t *) val.data);
       break;
     case BALANCE_PAIR:
-      cast(BALANCE_PAIR);
+      in_place_cast(BALANCE_PAIR);
       *((balance_pair_t *) data) /= *((balance_pair_t *) val.data);
       break;
     default:
@@ -823,7 +823,7 @@ value_t& value_t::operator/=(const value_t& val)
       *((balance_t *) data) /= *((balance_t *) val.data);
       break;
     case BALANCE_PAIR:
-      cast(BALANCE_PAIR);
+      in_place_cast(BALANCE_PAIR);
       *((balance_pair_t *) data) /= *((balance_pair_t *) val.data);
       break;
     default:
@@ -887,7 +887,7 @@ value_t::operator bool() const
   case STRING:
     return ! (**((std::string **) data)).empty();
   case XML_NODE:
-    return *(xml::node_t **) data != NULL;
+    return (*(xml::node_t **) data)->to_value().to_boolean();
   case POINTER:
     return *(void **) data != NULL;
   case SEQUENCE:
@@ -921,7 +921,7 @@ value_t::operator long() const
   case STRING:
     throw new value_error("Cannot convert a string to an integer");
   case XML_NODE:
-    throw new value_error("Cannot convert an XML node to an integer");
+    return (*(xml::node_t **) data)->to_value().to_integer();
   case POINTER:
     throw new value_error("Cannot convert a pointer to an integer");
   case SEQUENCE:
@@ -954,7 +954,7 @@ value_t::operator ptime() const
   case STRING:
     throw new value_error("Cannot convert a string to a date/time");
   case XML_NODE:
-    throw new value_error("Cannot convert an XML node to a date/time");
+    return (*(xml::node_t **) data)->to_value().to_datetime();
   case POINTER:
     throw new value_error("Cannot convert a pointer to a date/time");
   case SEQUENCE:
@@ -987,7 +987,7 @@ value_t::operator double() const
   case STRING:
     throw new value_error("Cannot convert a string to a double");
   case XML_NODE:
-    throw new value_error("Cannot convert an XML node to a double");
+    return (*(xml::node_t **) data)->to_value().to_amount().number();
   case POINTER:
     throw new value_error("Cannot convert a pointer to a double");
   case SEQUENCE:
@@ -1012,15 +1012,14 @@ value_t::operator std::string() const
   case BALANCE:
   case BALANCE_PAIR: {
     value_t temp(*this);
-    temp.cast(STRING);
+    temp.in_place_cast(STRING);
     return temp;
   }
-
   case STRING:
     return **(std::string **) data;
-
   case XML_NODE:
-    return (*(xml::node_t **) data)->text();
+    return (*(xml::node_t **) data)->to_value().to_string();
+
   case POINTER:
     throw new value_error("Cannot convert a pointer to a string");
   case SEQUENCE:
@@ -1060,8 +1059,10 @@ bool value_t::operator OP(const value_t& val)				\
 									\
     case STRING:							\
       throw new value_error("Cannot compare a boolean to a string");	\
+									\
     case XML_NODE:							\
-      throw new value_error("Cannot compare a boolean to an XML node"); \
+      return *this OP (*(xml::node_t **) data)->to_value();		\
+									\
     case POINTER:							\
       throw new value_error("Cannot compare a boolean to a pointer");	\
     case SEQUENCE:							\
@@ -1099,12 +1100,14 @@ bool value_t::operator OP(const value_t& val)				\
 									\
     case STRING:							\
       throw new value_error("Cannot compare an integer to a string");	\
+									\
     case XML_NODE:							\
-      throw new value_error("Cannot compare an integer to an XML node"); \
+      return *this OP (*(xml::node_t **) data)->to_value();		\
+									\
     case POINTER:							\
       throw new value_error("Cannot compare an integer to a pointer");	\
     case SEQUENCE:							\
-      throw new value_error("Cannot compare an integer to a sequence"); \
+      throw new value_error("Cannot compare an integer to a sequence");	\
 									\
     default:								\
       assert(0);							\
@@ -1131,10 +1134,12 @@ bool value_t::operator OP(const value_t& val)				\
       throw new value_error("Cannot compare a date/time to a balance pair"); \
     case STRING:							\
       throw new value_error("Cannot compare a date/time to a string");	\
+									\
     case XML_NODE:							\
-      throw new value_error("Cannot compare a date/time to an XML node"); \
+      return *this OP (*(xml::node_t **) data)->to_value();		\
+									\
     case POINTER:							\
-      throw new value_error("Cannot compare a date/time to a pointer"); \
+      throw new value_error("Cannot compare a date/time to a pointer");	\
     case SEQUENCE:							\
       throw new value_error("Cannot compare a date/time to a sequence"); \
 									\
@@ -1169,8 +1174,10 @@ bool value_t::operator OP(const value_t& val)				\
 									\
     case STRING:							\
       throw new value_error("Cannot compare an amount to a string");	\
+									\
     case XML_NODE:							\
-      throw new value_error("Cannot compare an amount to an XML node"); \
+      return *this OP (*(xml::node_t **) data)->to_value();		\
+									\
     case POINTER:							\
       throw new value_error("Cannot compare an amount to a pointer");	\
     case SEQUENCE:							\
@@ -1205,8 +1212,10 @@ bool value_t::operator OP(const value_t& val)				\
 									\
     case STRING:							\
       throw new value_error("Cannot compare a balance to a string");	\
+									\
     case XML_NODE:							\
-      throw new value_error("Cannot compare a balance to an XML node"); \
+      return *this OP (*(xml::node_t **) data)->to_value();		\
+									\
     case POINTER:							\
       throw new value_error("Cannot compare a balance to a pointer");	\
     case SEQUENCE:							\
@@ -1244,8 +1253,10 @@ bool value_t::operator OP(const value_t& val)				\
 									\
     case STRING:							\
       throw new value_error("Cannot compare a balance pair to a string"); \
+									\
     case XML_NODE:							\
-      throw new value_error("Cannot compare a balance pair to an XML node"); \
+      return *this OP (*(xml::node_t **) data)->to_value();		\
+									\
     case POINTER:							\
       throw new value_error("Cannot compare a balance pair to a pointer"); \
     case SEQUENCE:							\
@@ -1277,8 +1288,7 @@ bool value_t::operator OP(const value_t& val)				\
 	      **((std::string **) val.data));				\
 									\
     case XML_NODE:							\
-      return (**((std::string **) data) OP				\
-	      (*(xml::node_t **) val.data)->text());			\
+      return *this OP (*(xml::node_t **) data)->to_value();		\
 									\
     case POINTER:							\
       throw new value_error("Cannot compare a string to a pointer");	\
@@ -1294,28 +1304,26 @@ bool value_t::operator OP(const value_t& val)				\
   case XML_NODE:							\
     switch (val.type) {							\
     case BOOLEAN:							\
-      throw new value_error("Cannot compare an XML node to a boolean");	\
+      return (*(xml::node_t **) data)->to_value() OP *this;		\
     case INTEGER:							\
-      throw new value_error("Cannot compare an XML node to an integer"); \
+      return (*(xml::node_t **) data)->to_value() OP *this;		\
     case DATETIME:							\
-      throw new value_error("Cannot compare an XML node to a date/time"); \
+      return (*(xml::node_t **) data)->to_value() OP *this;		\
     case AMOUNT:							\
-      throw new value_error("Cannot compare an XML node to an amount");	\
+      return (*(xml::node_t **) data)->to_value() OP *this;		\
     case BALANCE:							\
-      throw new value_error("Cannot compare an XML node to a balance");	\
+      return (*(xml::node_t **) data)->to_value() OP *this;		\
     case BALANCE_PAIR:							\
-      throw new value_error("Cannot compare an XML node to a balance pair"); \
-									\
+      return (*(xml::node_t **) data)->to_value() OP *this;		\
     case STRING:							\
-      return ((*(xml::node_t **) data)->text() OP			\
-	      **((std::string **) val.data));				\
+      return (*(xml::node_t **) data)->to_value() OP *this;		\
 									\
     case XML_NODE:							\
-      return (*((xml::node_t **) data) OP				\
-	      *((xml::node_t **) val.data));				\
+      return ((*(xml::node_t **) data)->to_value() OP			\
+	      (*(xml::node_t **) val.data)->to_value());		\
 									\
     case POINTER:							\
-      throw new value_error("Cannot compare an XML node to a pointer"); \
+      throw new value_error("Cannot compare an XML node to a pointer");	\
     case SEQUENCE:							\
       throw new value_error("Cannot compare an XML node to a sequence"); \
 									\
@@ -1342,7 +1350,7 @@ bool value_t::operator OP(const value_t& val)				\
     case STRING:							\
       throw new value_error("Cannot compare a pointer to a string node"); \
     case XML_NODE:							\
-      throw new value_error("Cannot compare a pointer to an XML node"); \
+      throw new value_error("Cannot compare a pointer to an XML node");	\
     case POINTER:							\
       return (*((void **) data) OP *((void **) val.data));		\
     case SEQUENCE:							\
@@ -1370,7 +1378,7 @@ DEF_VALUE_CMP_OP(<=)
 DEF_VALUE_CMP_OP(>)
 DEF_VALUE_CMP_OP(>=)
 
-void value_t::cast(type_t cast_type)
+void value_t::in_place_cast(type_t cast_type)
 {
   switch (type) {
   case BOOLEAN:
@@ -1691,19 +1699,14 @@ void value_t::cast(type_t cast_type)
   case XML_NODE:
     switch (cast_type) {
     case BOOLEAN:
-      throw new value_error("Cannot convert an XML node to a boolean");
     case INTEGER:
-      throw new value_error("Cannot convert an XML node to an integer");
     case DATETIME:
-      throw new value_error("Cannot convert an XML node to a date/time");
     case AMOUNT:
-      throw new value_error("Cannot convert an XML node to an amount");
     case BALANCE:
-      throw new value_error("Cannot convert an XML node to a balance");
     case BALANCE_PAIR:
-      throw new value_error("Cannot convert an XML node to a balance pair");
     case STRING:
-      throw new value_error("Cannot convert an XML node to a string");
+      *this = (*(xml::node_t **) data)->to_value();
+      break;
     case XML_NODE:
       break;
     case POINTER:
@@ -1762,8 +1765,8 @@ void value_t::cast(type_t cast_type)
       throw new value_error("Cannot convert a sequence to a balance pair");
     case STRING:
       throw new value_error("Cannot convert a sequence to a string");
-    case XML_NODE:							\
-      throw new value_error("Cannot compare a sequence to an XML node"); \
+    case XML_NODE:
+      throw new value_error("Cannot compare a sequence to an XML node");
     case POINTER:
       throw new value_error("Cannot convert a sequence to a pointer");
     case SEQUENCE:
@@ -1782,7 +1785,7 @@ void value_t::cast(type_t cast_type)
   type = cast_type;
 }
 
-void value_t::negate()
+void value_t::in_place_negate()
 {
   switch (type) {
   case BOOLEAN:
@@ -1794,18 +1797,20 @@ void value_t::negate()
   case DATETIME:
     throw new value_error("Cannot negate a date/time");
   case AMOUNT:
-    ((amount_t *) data)->negate();
+    ((amount_t *) data)->in_place_negate();
     break;
   case BALANCE:
-    ((balance_t *) data)->negate();
+    ((balance_t *) data)->in_place_negate();
     break;
   case BALANCE_PAIR:
-    ((balance_pair_t *) data)->negate();
+    ((balance_pair_t *) data)->in_place_negate();
     break;
   case STRING:
     throw new value_error("Cannot negate a string");
   case XML_NODE:
-    throw new value_error("Cannot negate an XML node");
+    *this = (*(xml::node_t **) data)->to_value();
+    in_place_negate();
+    break;
   case POINTER:
     throw new value_error("Cannot negate a pointer");
   case SEQUENCE:
@@ -1817,7 +1822,7 @@ void value_t::negate()
   }
 }
 
-void value_t::abs()
+void value_t::in_place_abs()
 {
   switch (type) {
   case BOOLEAN:
@@ -1840,7 +1845,9 @@ void value_t::abs()
   case STRING:
     throw new value_error("Cannot take the absolute value of a string");
   case XML_NODE:
-    throw new value_error("Cannot take the absolute value of an XML node");
+    *this = (*(xml::node_t **) data)->to_value();
+    in_place_abs();
+    break;
   case POINTER:
     throw new value_error("Cannot take the absolute value of a pointer");
   case SEQUENCE:
@@ -1870,7 +1877,7 @@ value_t value_t::value(const ptime& moment) const
   case STRING:
     throw new value_error("Cannot find the value of a string");
   case XML_NODE:
-    throw new value_error("Cannot find the value of an XML node");
+    return (*(xml::node_t **) data)->to_value().value(moment);
   case POINTER:
     throw new value_error("Cannot find the value of a pointer");
   case SEQUENCE:
@@ -1881,7 +1888,7 @@ value_t value_t::value(const ptime& moment) const
   }
 }
 
-void value_t::reduce()
+void value_t::in_place_reduce()
 {
   switch (type) {
   case BOOLEAN:
@@ -1889,18 +1896,20 @@ void value_t::reduce()
   case INTEGER:
     break;
   case AMOUNT:
-    ((amount_t *) data)->reduce();
+    ((amount_t *) data)->in_place_reduce();
     break;
   case BALANCE:
-    ((balance_t *) data)->reduce();
+    ((balance_t *) data)->in_place_reduce();
     break;
   case BALANCE_PAIR:
-    ((balance_pair_t *) data)->reduce();
+    ((balance_pair_t *) data)->in_place_reduce();
     break;
   case STRING:
     throw new value_error("Cannot reduce a string");
   case XML_NODE:
-    throw new value_error("Cannot reduce an XML node");
+    *this = (*(xml::node_t **) data)->to_value();
+    in_place_reduce();		// recurse
+    break;
   case POINTER:
     throw new value_error("Cannot reduce a pointer");
   case SEQUENCE:
@@ -1908,7 +1917,7 @@ void value_t::reduce()
   }
 }
 
-void value_t::round()
+value_t value_t::round() const
 {
   switch (type) {
   case BOOLEAN:
@@ -1918,18 +1927,15 @@ void value_t::round()
   case INTEGER:
     break;
   case AMOUNT:
-    *((amount_t *) data) = ((amount_t *) data)->round();
-    break;
+    return ((amount_t *) data)->round();
   case BALANCE:
-    ((balance_t *) data)->round();
-    break;
+    return ((balance_t *) data)->round();
   case BALANCE_PAIR:
-    ((balance_pair_t *) data)->round();
-    break;
+    return ((balance_pair_t *) data)->round();
   case STRING:
     throw new value_error("Cannot round a string");
   case XML_NODE:
-    throw new value_error("Cannot round an XML node");
+    return (*(xml::node_t **) data)->to_value().round();
   case POINTER:
     throw new value_error("Cannot round a pointer");
   case SEQUENCE:
@@ -1948,18 +1954,15 @@ value_t value_t::unround() const
   case INTEGER:
     break;
   case AMOUNT:
-    temp = ((amount_t *) data)->unround();
-    break;
+    return ((amount_t *) data)->unround();
   case BALANCE:
-    temp = ((balance_t *) data)->unround();
-    break;
+    return ((balance_t *) data)->unround();
   case BALANCE_PAIR:
-    temp = ((balance_pair_t *) data)->unround();
-    break;
+    return ((balance_pair_t *) data)->unround();
   case STRING:
     throw new value_error("Cannot un-round a string");
   case XML_NODE:
-    throw new value_error("Cannot un-round an XML node");
+    return (*(xml::node_t **) data)->to_value().unround();
   case POINTER:
     throw new value_error("Cannot un-round a pointer");
   case SEQUENCE:
@@ -1980,17 +1983,17 @@ value_t value_t::price() const
 
   case AMOUNT:
     return ((amount_t *) data)->price();
-
   case BALANCE:
     return ((balance_t *) data)->price();
-
   case BALANCE_PAIR:
     return ((balance_pair_t *) data)->quantity.price();
 
   case STRING:
     throw new value_error("Cannot find the price of a string");
+
   case XML_NODE:
-    throw new value_error("Cannot find the price of an XML node");
+    return (*(xml::node_t **) data)->to_value().price();
+
   case POINTER:
     throw new value_error("Cannot find the price of a pointer");
   case SEQUENCE:
@@ -2010,23 +2013,24 @@ value_t value_t::date() const
   case BOOLEAN:
     throw new value_error("Cannot find the date of a boolean");
   case INTEGER:
-    return ptime();
+    throw new value_error("Cannot find the date of an integer");
+
   case DATETIME:
     return *this;
 
   case AMOUNT:
-    return ptime(((amount_t *) data)->date());
-
+    return ((amount_t *) data)->date();
   case BALANCE:
-    return ptime(((balance_t *) data)->date());
-
+    return ((balance_t *) data)->date();
   case BALANCE_PAIR:
-    return ptime(((balance_pair_t *) data)->quantity.date());
+    return ((balance_pair_t *) data)->quantity.date();
 
   case STRING:
     throw new value_error("Cannot find the date of a string");
+
   case XML_NODE:
-    throw new value_error("Cannot find the date of an XML node");
+    return (*(xml::node_t **) data)->to_value().date();
+
   case POINTER:
     throw new value_error("Cannot find the date of a pointer");
   case SEQUENCE:
@@ -2097,7 +2101,7 @@ value_t value_t::cost() const
   case STRING:
     throw new value_error("Cannot find the cost of a string");
   case XML_NODE:
-    throw new value_error("Cannot find the cost of an XML node");
+    return (*(xml::node_t **) data)->to_value().cost();
   case POINTER:
     throw new value_error("Cannot find the cost of a pointer");
   case SEQUENCE:
@@ -2121,24 +2125,24 @@ value_t& value_t::add(const amount_t& amount, const amount_t * tcost)
   case INTEGER:
   case AMOUNT:
     if (tcost) {
-      cast(BALANCE_PAIR);
+      in_place_cast(BALANCE_PAIR);
       return add(amount, tcost);
     }
     else if ((type == AMOUNT &&
 	      ((amount_t *) data)->commodity() != amount.commodity()) ||
 	     (type != AMOUNT && amount.commodity())) {
-      cast(BALANCE);
+      in_place_cast(BALANCE);
       return add(amount, tcost);
     }
     else if (type != AMOUNT) {
-      cast(AMOUNT);
+      in_place_cast(AMOUNT);
     }
     *((amount_t *) data) += amount;
     break;
 
   case BALANCE:
     if (tcost) {
-      cast(BALANCE_PAIR);
+      in_place_cast(BALANCE_PAIR);
       return add(amount, tcost);
     }
     *((balance_t *) data) += amount;
@@ -2380,7 +2384,7 @@ amount_t value_getitem(value_t& val, int i)
     throw new value_error("Cannot cast a string to an amount");
 
   case value_t::XML_NODE:
-    throw new value_error("Cannot cast an XML node to an amount");
+    return (*(xml::node_t **) data)->to_value();
 
   case value_t::POINTER:
     throw new value_error("Cannot cast a pointer to an amount");
@@ -2614,10 +2618,10 @@ void export_value()
     .def(self_ns::int_(self))
     .def(self_ns::float_(self))
     .def(self_ns::str(self))
-    .def(abs(self))
 
     .def_readonly("type", &value_t::type)
 
+    .def("__abs__", &value_t::abs)
     .def("__len__", value_len)
     .def("__getitem__", value_getitem)
 
@@ -2630,7 +2634,6 @@ void export_value()
     .def("value", &value_t::value)
     .def("round", &value_t::round)
     .def("negate", &value_t::negate)
-    .def("negated", &value_t::negated)
     .def("write", &value_t::write)
     ;
 

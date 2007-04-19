@@ -71,6 +71,7 @@
 
 (require 'esh-util)
 (require 'esh-arg)
+(require 'pcomplete)
 
 (defvar ledger-version "1.2"
   "The version of ledger.el currently loaded")

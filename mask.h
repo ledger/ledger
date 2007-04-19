@@ -6,18 +6,20 @@
 #include <string>
 #include <exception>
 
+#include <boost/regex.hpp>
+
 class mask_t
 {
  public:
-  bool        exclude;
-  std::string pattern;
-  void *      regexp;
+  bool	       exclude;
+  boost::regex expr;
 
   explicit mask_t(const std::string& pattern);
-  mask_t(const mask_t&);
-  ~mask_t();
+  mask_t(const mask_t& m) : exclude(m.exclude), expr(m.expr) {}
 
-  bool match(const std::string& str) const;
+  bool match(const std::string& str) const {
+    return boost::regex_match(str, expr) && ! exclude;
+  }
 };
 
 class mask_error : public error {

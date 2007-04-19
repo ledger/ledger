@@ -49,6 +49,8 @@ class document_t
   document_t(node_t * _top = NULL, const char ** _builtins = NULL,
 	     const int _builtins_size = 0);
 
+  void set_top(node_t * _top);
+
   int register_name(const std::string& name);
   int lookup_name_id(const std::string& name) const;
   const char * lookup_name(int id) const;
@@ -57,6 +59,14 @@ class document_t
 };
 
 #define XML_NODE_IS_PARENT 0x1
+
+class conversion_error : public error {
+ public:
+  conversion_error(const std::string& _reason,
+	      error_context * _ctxt = NULL) throw()
+    : error(_reason, _ctxt) {}
+  virtual ~conversion_error() throw() {}
+};
 
 class parent_node_t;
 
@@ -124,6 +134,22 @@ public:
     return NULL;
   }
 
+  node_t * lookup_child(const char * _name) {
+    int id = document->lookup_name_id(_name);
+    return lookup_child(id);
+  }
+  node_t * lookup_child(const std::string& _name) {
+    int id = document->lookup_name_id(_name);
+    return lookup_child(id);
+  }
+  virtual node_t * lookup_child(int _name_id) {
+    return NULL;
+  }
+
+  virtual value_t to_value() const {
+    throw new conversion_error("Cannot convert node to a value");
+  }
+
   virtual void write(std::ostream& out, int depth = 0) const = 0;
 
 private:
@@ -187,6 +213,10 @@ public:
     data = _data;
   }
 
+  virtual value_t to_value() const {
+    return text();
+  }
+
   void write(std::ostream& out, int depth = 0) const;
 
 private:
@@ -228,23 +258,74 @@ class parse_error : public error {
 
 #endif
 
-class transaction_node_t : public parent_node_t
+class commodity_node_t : public parent_node_t
 {
-  transaction_t * transaction;
-
 public:
-  transaction_node_t(document_t *    _document,
-		     transaction_t * _transaction,
-		     parent_node_t * _parent = NULL)
-    : parent_node_t(_document, _parent), transaction(_transaction) {
-    TRACE_CTOR("transaction_node_t(document_t *, transaction_t *, parent_node_t *)");
-    set_name("transaction");
+  commodity_t * commodity;
+
+  commodity_node_t(document_t *    _document,
+		   commodity_t *   _commodity,
+		   parent_node_t * _parent = NULL)
+    : parent_node_t(_document, _parent), commodity(_commodity) {
+    TRACE_CTOR("commodity_node_t(document_t *, commodity_t *, parent_node_t *)");
+    set_name("commodity");
   }
-  virtual ~transaction_node_t() {
-    TRACE_DTOR("transaction_node_t");
+  virtual ~commodity_node_t() {
+    TRACE_DTOR("commodity_node_t");
   }
 
   virtual node_t * children() const;
+};
+
+class amount_node_t : public parent_node_t
+{
+public:
+  amount_t * amount;
+
+  amount_node_t(document_t *    _document,
+		amount_t *      _amount,
+		parent_node_t * _parent = NULL)
+    : parent_node_t(_document, _parent), amount(_amount) {
+    TRACE_CTOR("amount_node_t(document_t *, amount_t *, parent_node_t *)");
+    set_name("amount");
+  }
+  virtual ~amount_node_t() {
+    TRACE_DTOR("amount_node_t");
+  }
+
+  virtual node_t * children() const;
+
+  virtual value_t to_value() const {
+    return *amount;
+  }
+};
+
+class transaction_node_t : public parent_node_t
+{
+  int		    payee_id;
+  terminal_node_t * payee_virtual_node;
+
+public:
+  transaction_t * transaction;
+
+  transaction_node_t(document_t *    _document,
+		     transaction_t * _transaction,
+		     parent_node_t * _parent = NULL)
+    : parent_node_t(_document, _parent), transaction(_transaction),
+      payee_virtual_node(NULL) {
+    TRACE_CTOR("transaction_node_t(document_t *, transaction_t *, parent_node_t *)");
+    set_name("transaction");
+    payee_id = document->register_name("payee");
+  }
+  virtual ~transaction_node_t() {
+    TRACE_DTOR("transaction_node_t");
+    if (payee_virtual_node)
+      delete payee_virtual_node;
+  }
+
+  virtual node_t * children() const;
+  virtual node_t * lookup_child(int _name_id);
+  virtual value_t  to_value() const;
 };
 
 class entry_node_t : public parent_node_t

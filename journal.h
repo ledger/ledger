@@ -23,8 +23,8 @@ class transaction_t
   enum state_t { UNCLEARED, CLEARED, PENDING };
 
   entry_t *	   entry;
-  ptime	   _date;
-  ptime	   _date_eff;
+  ptime		   _date;
+  ptime		   _date_eff;
   account_t *	   account;
   amount_t	   amount;
   std::string      amount_expr;
@@ -151,8 +151,8 @@ class entry_base_t
 class entry_t : public entry_base_t
 {
  public:
-  ptime  _date;
-  ptime  _date_eff;
+  ptime	      _date;
+  ptime	      _date_eff;
   std::string code;
   std::string payee;
 

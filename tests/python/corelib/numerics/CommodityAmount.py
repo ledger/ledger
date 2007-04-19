@@ -90,9 +90,9 @@ class CommodityAmountTestCase(unittest.TestCase):
         self.assertEqual(amount("-123.45€"), - x9)
         self.assertEqual(amount("123.45€"), - x10)
 
-        self.assertEqual(amount("$-123.45"), x1.negated())
-        self.assertEqual(amount("$123.45"), x2.negated())
-        self.assertEqual(amount("$123.45"), x3.negated())
+        self.assertEqual(amount("$-123.45"), x1.negate())
+        self.assertEqual(amount("$123.45"), x2.negate())
+        self.assertEqual(amount("$123.45"), x3.negate())
 
         self.assertEqual("$-123.45", (- x1).to_string())
         self.assertEqual("$123.45", (- x2).to_string())
@@ -105,13 +105,9 @@ class CommodityAmountTestCase(unittest.TestCase):
         self.assertEqual("-123.45€", (- x9).to_string())
         self.assertEqual("123.45€", (- x10).to_string())
 
-        x1.negate()
-        x2.negate()
-        x3.negate()
-
-        self.assertEqual(amount("$-123.45"), x1)
-        self.assertEqual(amount("$123.45"), x2)
-        self.assertEqual(amount("$123.45"), x3)
+        self.assertEqual(amount("$-123.45"), x1.negate())
+        self.assertEqual(amount("$123.45"), x2.negate())
+        self.assertEqual(amount("$123.45"), x3.negate())
 
         self.assertValid(x1)
         self.assertValid(x2)
@@ -612,14 +608,6 @@ class CommodityAmountTestCase(unittest.TestCase):
         self.assertEqual(amount(), abs(x0))
         self.assertEqual(amount("$1234.56"), abs(x1))
         self.assertEqual(amount("$1234.56"), abs(x2))
-
-        x0.abs()
-        x1.abs()
-        x2.abs()
-
-        self.assertEqual(amount(), x0)
-        self.assertEqual(amount("$1234.56"), x1)
-        self.assertEqual(amount("$1234.56"), x2)
 
         self.assertValid(x0)
         self.assertValid(x1)

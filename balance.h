@@ -391,19 +391,19 @@ class balance_t
   }
 
   // unary negation
-  void negate() {
+  void in_place_negate() {
     for (amounts_map::iterator i = amounts.begin();
 	 i != amounts.end();
 	 i++)
-      (*i).second.negate();
+      (*i).second = (*i).second.negate();
   }
-  balance_t negated() const {
+  balance_t negate() const {
     balance_t temp = *this;
-    temp.negate();
+    temp.in_place_negate();
     return temp;
   }
   balance_t operator-() const {
-    return negated();
+    return negate();
   }
 
   // conversion operators
@@ -428,11 +428,11 @@ class balance_t
     return true;
   }
 
-  amount_t   amount(const commodity_t& commodity =
-		    *commodity_t::null_commodity) const;
-  balance_t  value(const ptime& moment = now) const;
-  balance_t  price() const;
-  ptime date() const;
+  amount_t  amount(const commodity_t& commodity = 
+		   *commodity_t::null_commodity) const;
+  balance_t value(const ptime& moment = now) const;
+  balance_t price() const;
+  ptime     date() const;
 
   balance_t
   strip_annotations(const bool keep_price = amount_t::keep_price,
@@ -442,32 +442,40 @@ class balance_t
   void write(std::ostream& out, const int first_width,
 	     const int latter_width = -1) const;
 
-  void abs() {
+  void in_place_abs() {
     for (amounts_map::iterator i = amounts.begin();
 	 i != amounts.end();
 	 i++)
-      (*i).second.abs();
+      (*i).second = (*i).second.abs();
   }
-
-  void reduce() {
-    for (amounts_map::iterator i = amounts.begin();
-	 i != amounts.end();
-	 i++)
-      (*i).second.reduce();
-  }
-
-  balance_t reduced() const {
-    balance_t temp(*this);
-    temp.reduce();
+  balance_t abs() const {
+    balance_t temp = *this;
+    temp.in_place_abs();
     return temp;
   }
 
-  void round() {
+  void in_place_reduce() {
     for (amounts_map::iterator i = amounts.begin();
 	 i != amounts.end();
 	 i++)
-      if ((*i).second.commodity())
-	(*i).second = (*i).second.round();
+      (*i).second.in_place_reduce();
+  }
+  balance_t reduce() const {
+    balance_t temp(*this);
+    temp.in_place_reduce();
+    return temp;
+  }
+
+  void in_place_round() {
+    for (amounts_map::iterator i = amounts.begin();
+	 i != amounts.end();
+	 i++)
+      (*i).second = (*i).second.round();
+  }
+  balance_t round() const {
+    balance_t temp(*this);
+    temp.in_place_round();
+    return temp;
   }
 
   balance_t unround() const {
@@ -480,12 +488,6 @@ class balance_t
     return temp;
   }
 };
-
-inline balance_t abs(const balance_t& bal) {
-  balance_t temp = bal;
-  temp.abs();
-  return temp;
-}
 
 inline std::ostream& operator<<(std::ostream& out, const balance_t& bal) {
   bal.write(out, 12);
@@ -843,17 +845,18 @@ class balance_pair_t
   }
 
   // unary negation
-  void negate() {
-    quantity.negate();
-    if (cost) cost->negate();
+  void in_place_negate() {
+    quantity = quantity.negate();
+    if (cost)
+      *cost = cost->negate();
   }
-  balance_pair_t negated() const {
+  balance_pair_t negate() const {
     balance_pair_t temp = *this;
-    temp.negate();
+    temp.in_place_negate();
     return temp;
   }
   balance_pair_t operator-() const {
-    return negated();
+    return negate();
   }
 
   // test for non-zero (use ! for zero)
@@ -871,9 +874,15 @@ class balance_pair_t
     return ((! cost || cost->realzero()) && quantity.realzero());
   }
 
-  void abs() {
-    quantity.abs();
-    if (cost) cost->abs();
+  balance_pair_t in_place_abs() {
+    quantity = quantity.abs();
+    if (cost)
+      *cost = cost->abs();
+  }
+  balance_pair_t abs() const {
+    balance_pair_t temp = *this;
+    temp.in_place_abs();
+    return temp;
   }
 
   amount_t  amount(const commodity_t& commodity =
@@ -886,7 +895,7 @@ class balance_pair_t
   balance_t price() const {
     return quantity.price();
   }
-  ptime date() const {
+  ptime     date() const {
     return quantity.date();
   }
 
@@ -916,20 +925,25 @@ class balance_pair_t
     return quantity.valid() && (! cost || cost->valid());
   }
 
-  void reduce() {
-    quantity.reduce();
-    if (cost) cost->reduce();
+  void in_place_reduce() {
+    quantity.in_place_reduce();
+    if (cost) cost->in_place_reduce();
   }
-
-  balance_pair_t reduced() const {
+  balance_pair_t reduce() const {
     balance_pair_t temp(*this);
-    temp.reduce();
+    temp.in_place_reduce();
     return temp;
   }
 
-  void round() {
-    quantity.round();
-    if (cost) cost->round();
+  void in_place_round() {
+    quantity = quantity.round();
+    if (cost)
+      *cost = cost->round();
+  }
+  balance_pair_t round() const {
+    balance_pair_t temp(*this);
+    temp.in_place_round();
+    return temp;
   }
 
   balance_pair_t unround() {
@@ -939,12 +953,6 @@ class balance_pair_t
     return temp;
   }
 };
-
-inline balance_pair_t abs(const balance_pair_t& bal_pair) {
-  balance_pair_t temp(bal_pair);
-  temp.abs();
-  return temp;
-}
 
 inline std::ostream& operator<<(std::ostream& out,
 				const balance_pair_t& bal_pair) {

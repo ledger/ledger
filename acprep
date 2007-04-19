@@ -61,7 +61,7 @@ while [ -n "$1" ]; do
   case "$1" in
     --debug)
 	SWITCHES="$SWITCHES --enable-debug"
-	CXXFLAGS="$CXXFLAGS -ggdb3" ;;
+	CXXFLAGS="$CXXFLAGS -g" ;;
 
     --prof | --perf)
         CXXFLAGS="$CXXFLAGS -g -pg" ;;

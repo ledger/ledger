@@ -639,7 +639,7 @@ amount_t& amount_t::operator/=(const amount_t& amt)
 }
 
 // unary negation
-void amount_t::negate()
+void amount_t::in_place_negate()
 {
   if (quantity) {
     _dup();
@@ -899,7 +899,7 @@ void amount_t::print(std::ostream& _out, bool omit_commodity,
     while (last.commodity().larger()) {
       last /= last.commodity().larger()->number();
       last.commodity_ = last.commodity().larger()->commodity_;
-      if (::abs(last) < 1)
+      if (last.abs() < 1)
 	break;
       base = last.round();
     }
@@ -1151,7 +1151,7 @@ bool parse_annotations(std::istream& in, amount_t& price,
 	throw new amount_error("Commodity price lacks closing brace");
 
       price.parse(buf, AMOUNT_PARSE_NO_MIGRATE);
-      price.reduce();
+      price.in_place_reduce();
 
       // Since this price will maintain its own precision, make sure
       // it is at least as large as the base commodity, since the user
@@ -1162,7 +1162,7 @@ bool parse_annotations(std::istream& in, amount_t& price,
 	price = price.round();	// no need to retain individual precision
     }
     else if (c == '[') {
-      if (date.is_not_a_date_time())
+      if (! date.is_not_a_date_time())
 	throw new amount_error("Commodity specifies more than one date");
 
       in.get(c);
@@ -1341,13 +1341,13 @@ void amount_t::parse(std::istream& in, unsigned char flags)
   }
 
   if (negative)
-    negate();
+    in_place_negate();
 
   if (! (flags & AMOUNT_PARSE_NO_REDUCE))
-    reduce();
+    in_place_reduce();
 }
 
-void amount_t::reduce()
+void amount_t::in_place_reduce()
 {
   while (commodity_ && commodity().smaller()) {
     *this *= commodity().smaller()->number();
@@ -1968,9 +1968,9 @@ bool compare_amount_commodities::operator()(const amount_t * left,
 
     if (aleftcomm.price && arightcomm.price) {
       amount_t leftprice(aleftcomm.price);
-      leftprice.reduce();
+      leftprice.in_place_reduce();
       amount_t rightprice(arightcomm.price);
-      rightprice.reduce();
+      rightprice.in_place_reduce();
 
       if (leftprice.commodity() == rightprice.commodity()) {
 	amount_t val = leftprice - rightprice;

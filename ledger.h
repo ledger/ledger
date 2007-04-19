@@ -34,6 +34,8 @@
 #include <report.h>
 #include <transform.h>
 
+#include <register.h>
+
 #if 0
 #include <emacs.h>
 #include <csv.h>

@@ -28,16 +28,6 @@
 
 using namespace ledger;
 
-static inline
-const std::string& either_or(const std::string& first,
-			     const std::string& second)
-{
-  if (first.empty())
-    return second;
-  else
-    return first;
-}
-
 #if 0
 class print_addr : public repitem_t::select_callback_t {
   virtual void operator()(repitem_t * item) {
@@ -107,15 +97,16 @@ static int read_and_report(report_t * report, int argc, char * argv[],
 
   xml::xpath_t::functor_t * command = NULL;
 
-  if (false) {
-    ;
-  }
-#if 0
   if (verb == "register" || verb == "reg" || verb == "r") {
+#if 1
+    command = new register_command;
+#else
     command = new format_command
       ("register", either_or(report->format_string,
 			     report->session->register_format));
+#endif
   }
+#if 0
   else if (verb == "balance" || verb == "bal" || verb == "b") {
     if (! report->raw_mode) {
       report->transforms.push_back(new accounts_transform);
@@ -311,14 +302,10 @@ static int read_and_report(report_t * report, int argc, char * argv[],
   locals->args.push_back(journal->document);
 
   if (command->wants_args) {
-#if 1
-    locals->args.push_back(&args);
-#else
     for (strings_list::iterator i = args.begin();
 	 i != args.end();
 	 i++)
       locals->args.push_back(*i);
-#endif
   } else {
     std::string regexps[4];
 
@@ -367,9 +354,16 @@ static int read_and_report(report_t * report, int argc, char * argv[],
 #endif
   }
 
-#if 0
-  report->apply_transforms(items.get());
-#endif
+  xml::document_t *	xml_doc	     = new xml::document_t;
+  xml::journal_node_t * journal_node = new xml::journal_node_t(xml_doc, journal);
+
+  xml_doc->set_top(journal_node);
+
+  assert(xml_doc->top == journal_node);
+  assert(journal_node->document == xml_doc);
+  assert(journal_node->document->top == journal_node);
+
+  report->apply_transforms(xml_doc);
 
   value_t temp;
   (*command)(temp, locals);

@@ -124,7 +124,7 @@ bool entry_base_t::finalize()
 	    ann_comm(static_cast<annotated_commodity_t&>
 		     ((*x)->amount.commodity()));
 	  if (ann_comm.price)
-	    balance += ann_comm.price * (*x)->amount - *((*x)->cost);
+	    balance += ann_comm.price * (*x)->amount.number() - *((*x)->cost);
 	}
       } else {
 	saw_null = true;
@@ -165,7 +165,7 @@ bool entry_base_t::finalize()
       other_bal++;
 
     amount_t per_unit_cost =
-      amount_t((*other_bal).second / (*this_bal).second).unround();
+      amount_t((*other_bal).second / (*this_bal).second.number()).unround();
 
     for (; x != transactions.end(); x++) {
       if ((*x)->cost || ((*x)->flags & TRANSACTION_VIRTUAL) ||
@@ -180,11 +180,11 @@ bool entry_base_t::finalize()
       if ((*x)->amount.commodity() &&
 	  ! (*x)->amount.commodity().annotated)
 	(*x)->amount.annotate_commodity
-	  (abs(per_unit_cost),
+	  (per_unit_cost.abs(),
 	   entry ? entry->actual_date() : ptime(),
 	   entry ? entry->code : "");
 
-      (*x)->cost = new amount_t(- (per_unit_cost * (*x)->amount));
+      (*x)->cost = new amount_t(- (per_unit_cost * (*x)->amount.number()));
       balance += *(*x)->cost;
     }
   }
@@ -228,8 +228,7 @@ bool entry_base_t::finalize()
 	for (amounts_map::const_iterator i = bal->amounts.begin();
 	     i != bal->amounts.end();
 	     i++) {
-	  amount_t amt = (*i).second;
-	  amt.negate();
+	  amount_t amt = (*i).second.negate();
 
 	  if (first) {
 	    (*x)->amount = amt;
@@ -248,8 +247,7 @@ bool entry_base_t::finalize()
       // fall through...
 
     case value_t::AMOUNT:
-      (*x)->amount = *((amount_t *) balance.data);
-      (*x)->amount.negate();
+      (*x)->amount = ((amount_t *) balance.data)->negate();
       (*x)->flags |= TRANSACTION_CALCULATED;
 
       balance += (*x)->amount;
@@ -552,7 +550,7 @@ bool journal_t::add_entry(entry_t * entry)
        i++)
     if ((*i)->cost && (*i)->amount)
       (*i)->amount.commodity().add_price(entry->date(),
-					 *(*i)->cost / (*i)->amount);
+					 *(*i)->cost / (*i)->amount.number());
 
   return true;
 }

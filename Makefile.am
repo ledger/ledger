@@ -46,6 +46,8 @@ libledger_la_SOURCES = \
 	report.cc      \
 	transform.cc   \
 		       \
+	register.cc    \
+		       \
 	csv.cc         \
 	derive.cc      \
 	emacs.cc       \
@@ -164,7 +166,7 @@ noinst_PROGRAMS = ledger.so
 
 ledger_so_SOURCES = pyledger.cc
 
-PYLIBS = pyledger ledger gdtoa boost_date_time boost_python gmp pcre
+PYLIBS = pyledger ledger gdtoa boost_date_time boost_regex boost_python gmp
 
 if HAVE_EXPAT
 PYLIBS += expat

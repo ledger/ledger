@@ -42,10 +42,9 @@ class BasicAmountTestCase(unittest.TestCase):
         self.assertEqual(x5, x1)
         self.assertEqual(x6, x3)
         self.assertEqual(- x6, x9)
-        self.assertEqual(x3.negated(), x9)
+        self.assertEqual(x3.negate(), x9)
 
-        x10 = amount(x9)
-        x10.negate()
+        x10 = amount(x9.negate())
 
         self.assertEqual(x3, x10)
 
@@ -508,14 +507,6 @@ class BasicAmountTestCase(unittest.TestCase):
         self.assertEqual(amount(), abs(x0))
         self.assertEqual(amount(1234), abs(x1))
         self.assertEqual(amount(1234), abs(x2))
-
-        x0.abs()
-        x1.abs()
-        x2.abs()
-
-        self.assertEqual(amount(), x0)
-        self.assertEqual(amount(1234), x1)
-        self.assertEqual(amount(1234), x2)
 
         self.assertTrue(x0.valid())
         self.assertTrue(x1.valid())

@@ -68,51 +68,28 @@ if [test x$pipes_avail = xtrue ]; then
   AC_DEFINE([HAVE_UNIX_PIPES], [1], [Whether UNIX pipes are available])
 fi
 
-# check for gmp
+# check for boost_regex
 AC_CACHE_CHECK(
-  [if libgmp is available],
-  [libgmp_avail],
-  [libgmp_save_libs=$LIBS
-   LIBS="-lgmp $LIBS"
+  [if boost_regex is available],
+  [boost_regex_avail],
+  [boost_regex_save_libs=$LIBS
+   LIBS="-lboost_regex $LIBS"
    AC_LANG_PUSH(C++)
    AC_TRY_LINK(
-     [#include <gmp.h>],
-     [mpz_t bar;
-      mpz_init(bar);
-      mpz_clear(bar);],
-     [libgmp_avail=true],
-     [libgmp_avail=false])
+     [#include <boost/regex.hpp>],
+     [boost::regex foo_regexp("Hello, world!");],
+     [boost_regex_avail=true],
+     [boost_regex_avail=false])
    AC_LANG_POP
-   LIBS=$libgmp_save_libs])
+   LIBS=$boost_regex_save_libs])
 
-if [test x$libgmp_avail = xtrue ]; then
-  LIBS="-lgmp $LIBS"
+if [test x$boost_regex_avail = xtrue ]; then
+  LIBS="-lboost_regex $LIBS"
 else
-  AC_MSG_FAILURE("Could not find gmp library (set CPPFLAGS and LDFLAGS?)")
+  AC_MSG_FAILURE("Could not find boost_regex library (set CPPFLAGS and LDFLAGS?)")
 fi
 
-# check for pcre
-AC_CACHE_CHECK(
-  [if libpcre is available],
-  [libpcre_avail],
-  [libpcre_save_libs=$LIBS
-   LIBS="-lpcre $LIBS"
-   AC_LANG_PUSH(C++)
-   AC_TRY_LINK(
-     [#include <pcre.h>],
-     [pcre_free((pcre *)NULL);],
-     [libpcre_avail=true],
-     [libpcre_avail=false])
-   AC_LANG_POP
-   LIBS=$libpcre_save_libs])
-
-if [test x$libpcre_avail = xtrue ]; then
-  LIBS="-lpcre $LIBS"
-else
-  AC_MSG_FAILURE("Could not find pcre library (set CPPFLAGS and LDFLAGS?)")
-fi
-
-# check for Boost date_time
+# check for boost_date_time
 AC_CACHE_CHECK(
   [if boost_date_time is available],
   [boost_date_time_cpplib_avail],
@@ -149,6 +126,29 @@ if [test x$boost_date_time_cpplib_avail = xtrue ]; then
   LIBS="-lboost_date_time $LIBS"
 else
   AC_MSG_FAILURE("Could not find boost_date_time library (set CPPFLAGS and LDFLAGS?)")
+fi
+
+# check for gmp
+AC_CACHE_CHECK(
+  [if libgmp is available],
+  [libgmp_avail],
+  [libgmp_save_libs=$LIBS
+   LIBS="-lgmp $LIBS"
+   AC_LANG_PUSH(C++)
+   AC_TRY_LINK(
+     [#include <gmp.h>],
+     [mpz_t bar;
+      mpz_init(bar);
+      mpz_clear(bar);],
+     [libgmp_avail=true],
+     [libgmp_avail=false])
+   AC_LANG_POP
+   LIBS=$libgmp_save_libs])
+
+if [test x$libgmp_avail = xtrue ]; then
+  LIBS="-lgmp $LIBS"
+else
+  AC_MSG_FAILURE("Could not find gmp library (set CPPFLAGS and LDFLAGS?)")
 fi
 
 # check for expat or xmlparse
@@ -319,7 +319,7 @@ AM_CONDITIONAL(DEBUG, test x$debug = xtrue)
 
 # Checks for header files.
 AC_STDC_HEADERS
-AC_HAVE_HEADERS(sys/stat.h)
+AC_HAVE_HEADERS(sys/stat.h langinfo.h)
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
@@ -329,7 +329,7 @@ AC_STRUCT_TM
 # Checks for library functions.
 #AC_FUNC_ERROR_AT_LINE
 AC_HEADER_STDC
-AC_CHECK_FUNCS([access mktime realpath getpwuid getpwnam])
+AC_CHECK_FUNCS([access mktime realpath getpwuid getpwnam nl_langinfo])
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

@@ -91,9 +91,9 @@ void CommodityAmountTestCase::testNegation()
   assertEqual(amount_t("-123.45€"), - x9);
   assertEqual(amount_t("123.45€"), - x10);
 
-  assertEqual(amount_t("$-123.45"), x1.negated());
-  assertEqual(amount_t("$123.45"), x2.negated());
-  assertEqual(amount_t("$123.45"), x3.negated());
+  assertEqual(amount_t("$-123.45"), x1.negate());
+  assertEqual(amount_t("$123.45"), x2.negate());
+  assertEqual(amount_t("$123.45"), x3.negate());
 
   assertEqual(std::string("$-123.45"), (- x1).to_string());
   assertEqual(std::string("$123.45"), (- x2).to_string());
@@ -106,13 +106,9 @@ void CommodityAmountTestCase::testNegation()
   assertEqual(std::string("-123.45€"), (- x9).to_string());
   assertEqual(std::string("123.45€"), (- x10).to_string());
 
-  x1.negate();
-  x2.negate();
-  x3.negate();
-
-  assertEqual(amount_t("$-123.45"), x1);
-  assertEqual(amount_t("$123.45"), x2);
-  assertEqual(amount_t("$123.45"), x3);
+  assertEqual(amount_t("$-123.45"), x1.negate());
+  assertEqual(amount_t("$123.45"), x2.negate());
+  assertEqual(amount_t("$123.45"), x3.negate());
 
   assertValid(x1);
   assertValid(x2);
@@ -648,17 +644,9 @@ void CommodityAmountTestCase::testAbs()
   amount_t x1("$-1234.56");
   amount_t x2("$1234.56");
 
-  assertEqual(amount_t(), abs(x0));
-  assertEqual(amount_t("$1234.56"), abs(x1));
-  assertEqual(amount_t("$1234.56"), abs(x2));
-
-  x0.abs();
-  x1.abs();
-  x2.abs();
-
-  assertEqual(amount_t(), x0);
-  assertEqual(amount_t("$1234.56"), x1);
-  assertEqual(amount_t("$1234.56"), x2);
+  assertEqual(amount_t(), x0.abs());
+  assertEqual(amount_t("$1234.56"), x1.abs());
+  assertEqual(amount_t("$1234.56"), x2.abs());
 
   assertValid(x0);
   assertValid(x1);

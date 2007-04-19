@@ -9,10 +9,17 @@
 namespace ledger {
 namespace xml {
 
-document_t::document_t(node_t *, const char ** _builtins,
+document_t::document_t(node_t * _top, const char ** _builtins,
 		       const int _builtins_size)
   : builtins(_builtins), builtins_size(_builtins_size),
     top(new terminal_node_t(this)) {}
+
+void document_t::set_top(node_t * _top)
+{
+  if (top)
+    delete top;
+  top = _top;
+}
 
 int document_t::register_name(const std::string& name)
 {
@@ -102,16 +109,9 @@ node_t::node_t(document_t * _document, parent_node_t * _parent,
     flags(_flags), info(NULL), attrs(NULL)
 {
   TRACE_CTOR("node_t(document_t *, node_t *)");
-#ifdef THREADSAFE
   document = _document;
-#else
-  if (! document)
-    document = _document;
-#if 0
-  else
-    assert(document == _document);
-#endif
-#endif
+  if (! document->top)
+    document->set_top(this);
   if (parent)
     parent->add_child(this);
 }
@@ -359,6 +359,18 @@ document_t * parser_t::parse(std::istream& in, const char ** builtins,
   return doc.release();
 }
 
+node_t * commodity_node_t::children() const
+{
+  // jww (2007-04-19): Need to report the commodity and its details
+  return NULL;
+}
+
+node_t * amount_node_t::children() const
+{
+  // jww (2007-04-19): Need to report the quantity and commodity
+  return NULL;
+}
+
 node_t * transaction_node_t::children() const
 {
   if (! _children) {
@@ -368,6 +380,20 @@ node_t * transaction_node_t::children() const
     account_node->set_text(transaction->account->fullname());
   }
   return parent_node_t::children();
+}
+
+node_t * transaction_node_t::lookup_child(int _name_id)
+{
+  if (_name_id == payee_id) {
+    payee_virtual_node = new terminal_node_t(document);
+    payee_virtual_node->set_text(transaction->entry->payee);
+    return payee_virtual_node;
+  }
+}
+
+value_t transaction_node_t::to_value() const
+{
+  return transaction->amount;
 }
 
 node_t * entry_node_t::children() const

@@ -714,6 +714,7 @@ xpath_t::parse_value_term(std::istream& in, unsigned short tflags) const
   case token_t::SLASH:
     node.reset(new op_t(op_t::NODE_ID));
     node->name_id = document_t::ROOT;
+    push_token();
     break;
   case token_t::STAR:
     node.reset(new op_t(op_t::NODE_ID));
@@ -783,11 +784,6 @@ xpath_t::parse_path_expr(std::istream& in, unsigned short tflags) const
   std::auto_ptr<op_t> node(parse_predicate_expr(in, tflags));
 
   if (node.get()) {
-    // If the beginning of the path was /, just put it back; this
-    // makes parsing much simpler.
-    if (node->kind == op_t::NODE_ID && node->name_id == document_t::ROOT)
-      push_token();
-
     token_t& tok = next_token(in, tflags);
     while (tok.kind == token_t::SLASH) {
       std::auto_ptr<op_t> prev(node.release());
@@ -843,7 +839,7 @@ xpath_t::parse_unary_expr(std::istream& in, unsigned short tflags) const
 			    " operator not followed by argument");
     // A very quick optimization
     if (texpr->kind == op_t::VALUE) {
-      texpr->valuep->negate();
+      texpr->valuep->in_place_negate();
       node.reset(texpr.release());
     } else {
       node.reset(new op_t(op_t::O_NEG));
@@ -1422,9 +1418,9 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
     }
 
     if (left == expr) {
-      return wrap_value(expr->valuep->negated())->acquire();
+      return wrap_value(expr->valuep->negate())->acquire();
     } else {
-      expr->valuep->negate();
+      expr->valuep->in_place_negate();
       return expr->acquire();
     }
   }
@@ -1782,6 +1778,7 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
     xpath_t lexpr(left->compile(context, scope, resolve));
     xpath_t rexpr(resolve ? right->acquire() :
 		  right->compile(context, scope, false));
+
     if (! lexpr->constant() || ! resolve) {
       if (left == lexpr)
 	return acquire();
@@ -1952,9 +1949,9 @@ void xpath_t::context::describe(std::ostream& out) const throw()
   }
 }
 
-bool xpath_t::op_t::write(std::ostream&   out,
+bool xpath_t::op_t::write(std::ostream&	      out,
 			      const bool      relaxed,
-			      const op_t *  op_to_find,
+			      const op_t *    op_to_find,
 			      unsigned long * start_pos,
 			      unsigned long * end_pos) const
 {

@@ -96,8 +96,8 @@ am__libledger_la_SOURCES_DIST = amount.cc times.cc parsetime.yy \
 	scantime.ll quotes.cc balance.cc value.cc xml.cc xpath.cc \
 	mask.cc format.cc util.cc session.cc journal.cc parser.cc \
 	textual.cc binary.cc xmlparse.cc qif.cc report.cc transform.cc \
-	csv.cc derive.cc emacs.cc reconcile.cc gnucash.cc ofx.cc \
-	debug.cc trace.cc
+	register.cc csv.cc derive.cc emacs.cc reconcile.cc gnucash.cc \
+	ofx.cc debug.cc trace.cc
 @HAVE_EXPAT_TRUE@am__objects_1 = libledger_la-gnucash.lo
 @HAVE_XMLPARSE_TRUE@am__objects_2 = libledger_la-gnucash.lo
 @HAVE_LIBOFX_TRUE@am__objects_3 = libledger_la-ofx.lo
@@ -113,10 +113,11 @@ am_libledger_la_OBJECTS = libledger_la-amount.lo libledger_la-times.lo \
 	libledger_la-parser.lo libledger_la-textual.lo \
 	libledger_la-binary.lo libledger_la-xmlparse.lo \
 	libledger_la-qif.lo libledger_la-report.lo \
-	libledger_la-transform.lo libledger_la-csv.lo \
-	libledger_la-derive.lo libledger_la-emacs.lo \
-	libledger_la-reconcile.lo $(am__objects_1) $(am__objects_2) \
-	$(am__objects_3) $(am__objects_4)
+	libledger_la-transform.lo libledger_la-register.lo \
+	libledger_la-csv.lo libledger_la-derive.lo \
+	libledger_la-emacs.lo libledger_la-reconcile.lo \
+	$(am__objects_1) $(am__objects_2) $(am__objects_3) \
+	$(am__objects_4)
 libledger_la_OBJECTS = $(am_libledger_la_OBJECTS)
 libledger_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(libledger_la_CXXFLAGS) \
@@ -373,9 +374,10 @@ libledger_la_CXXFLAGS = $(WARNFLAGS) -I$(top_builddir)/gdtoa \
 libledger_la_SOURCES = amount.cc times.cc parsetime.yy scantime.ll \
 	quotes.cc balance.cc value.cc xml.cc xpath.cc mask.cc \
 	format.cc util.cc session.cc journal.cc parser.cc textual.cc \
-	binary.cc xmlparse.cc qif.cc report.cc transform.cc csv.cc \
-	derive.cc emacs.cc reconcile.cc $(am__append_3) \
-	$(am__append_5) $(am__append_7) $(am__append_9)
+	binary.cc xmlparse.cc qif.cc report.cc transform.cc \
+	register.cc csv.cc derive.cc emacs.cc reconcile.cc \
+	$(am__append_3) $(am__append_5) $(am__append_7) \
+	$(am__append_9)
 libledger_la_LDFLAGS = -release 3.0
 libpyledger_la_CXXFLAGS = -DUSE_BOOST_PYTHON=1 $(am__append_11)
 libpyledger_la_SOURCES = \
@@ -433,8 +435,9 @@ info_TEXINFOS = ledger.texi
 lisp_LISP = ledger.el timeclock.el
 @HAVE_BOOST_PYTHON_TRUE@ledger_so_SOURCES = pyledger.cc
 @HAVE_BOOST_PYTHON_TRUE@PYLIBS = pyledger ledger gdtoa boost_date_time \
-@HAVE_BOOST_PYTHON_TRUE@	boost_python gmp pcre $(am__append_18) \
-@HAVE_BOOST_PYTHON_TRUE@	$(am__append_19) $(am__append_20)
+@HAVE_BOOST_PYTHON_TRUE@	boost_regex boost_python gmp \
+@HAVE_BOOST_PYTHON_TRUE@	$(am__append_18) $(am__append_19) \
+@HAVE_BOOST_PYTHON_TRUE@	$(am__append_20)
 @DEBUG_FALSE@@HAVE_BOOST_PYTHON_TRUE@DEBUG_LEVEL = 0
 @DEBUG_TRUE@@HAVE_BOOST_PYTHON_TRUE@DEBUG_LEVEL = 4
 UnitTests_SOURCES = tests/UnitTests.cc \
@@ -622,6 +625,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libledger_la-qif.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libledger_la-quotes.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libledger_la-reconcile.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libledger_la-register.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libledger_la-report.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libledger_la-scantime.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libledger_la-session.Plo@am__quote@
@@ -805,6 +809,13 @@ libledger_la-transform.lo: transform.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='transform.cc' object='libledger_la-transform.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-transform.lo `test -f 'transform.cc' || echo '$(srcdir)/'`transform.cc
+
+libledger_la-register.lo: register.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-register.lo -MD -MP -MF $(DEPDIR)/libledger_la-register.Tpo -c -o libledger_la-register.lo `test -f 'register.cc' || echo '$(srcdir)/'`register.cc
+@am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libledger_la-register.Tpo $(DEPDIR)/libledger_la-register.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='register.cc' object='libledger_la-register.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-register.lo `test -f 'register.cc' || echo '$(srcdir)/'`register.cc
 
 libledger_la-csv.lo: csv.cc
 @am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-csv.lo -MD -MP -MF $(DEPDIR)/libledger_la-csv.Tpo -c -o libledger_la-csv.lo `test -f 'csv.cc' || echo '$(srcdir)/'`csv.cc

@@ -244,15 +244,14 @@ class amount_t
   }
 
   // unary negation
-  // jww (2007-04-17): change the name here
-  void negate();
-  amount_t negated() const {
+  void in_place_negate();
+  amount_t negate() const {
     amount_t temp = *this;
-    temp.negate();
+    temp.in_place_negate();
     return temp;
   }
   amount_t operator-() const {
-    return negated();
+    return negate();
   }
 
   // test for zero and non-zero
@@ -327,17 +326,16 @@ class amount_t
 
   amount_t value(const ptime& moment) const;
 
-  // jww (2007-04-17): change the name here
-  void abs() {
+  amount_t abs() const {
     if (*this < 0)
-      negate();
+      return negate();
+    return *this;
   }
 
-  // jww (2007-04-17): change the name here
-  void reduce();
-  amount_t reduced() const {
+  void in_place_reduce();
+  amount_t reduce() const {
     amount_t temp(*this);
-    temp.reduce();
+    temp.in_place_reduce();
     return temp;
   }
 
@@ -407,10 +405,6 @@ inline std::string amount_t::quantity_string() const {
   std::ostringstream bufstream;
   print(bufstream, true);
   return bufstream.str();
-}
-
-inline amount_t abs(const amount_t& amt) {
-  return amt < 0 ? amt.negated() : amt;
 }
 
 #define DEFINE_AMOUNT_OPERATORS(T)				\

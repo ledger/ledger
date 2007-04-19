@@ -57,11 +57,12 @@ void debug_assert(const std::string& reason,
 
 #if DEBUG_LEVEL >= ALPHA
 
-#include <pcre.h>
 #include <cstring>
 #include <new>
 #include <iostream>
 #include <cstdlib>
+
+#include <boost/regex.hpp>
 
 #define DEBUG_ENABLED
 

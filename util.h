@@ -96,4 +96,13 @@ std::string abbreviate(const std::string& str, unsigned int width,
 		       elision_style_t elision_style = TRUNCATE_TRAILING,
 		       const bool is_account = false, int abbrev_length = 2);
 
+static inline const
+std::string& either_or(const std::string& first, const std::string& second)
+{
+  if (first.empty())
+    return second;
+  else
+    return first;
+}
+
 #endif // _UTIL_H

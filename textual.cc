@@ -229,9 +229,9 @@ transaction_t * parse_transaction(char *      line,
 
 	amount_t per_unit_cost(*xact->cost);
 	if (per_unit)
-	  *xact->cost *= xact->amount;
+	  *xact->cost *= xact->amount.number();
 	else
-	  per_unit_cost /= xact->amount;
+	  per_unit_cost /= xact->amount.number();
 
 	if (xact->amount.commodity() &&
 	    ! xact->amount.commodity().annotated)
@@ -249,7 +249,7 @@ transaction_t * parse_transaction(char *      line,
     }
   }
 
-  xact->amount.reduce();
+  xact->amount.in_place_reduce();
   DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
 	      "Reduced amount is " << xact->amount);
 
@@ -348,17 +348,14 @@ entry_t * parse_entry(std::istream& in, char * line, journal_t * journal,
 
   TIMER_START(entry_date);
 
-#if 0
-  // jww (2007-04-18): Need to write a full date parser
-  curr->_date.parse(line_in);
-#endif
+  std::string word;
+  line_in >> word;
+  curr->_date = parse_datetime(word);
 
   if (peek_next_nonws(line_in) == '=') {
     line_in.get(c);
-#if 0
-    // jww (2007-04-18): Need to write a full date parser
-    curr->_date_eff.parse(line_in);
-#endif
+    line_in >> word;
+    curr->_date_eff = parse_datetime(word);
   }
 
   TIMER_STOP(entry_date);
@@ -750,7 +747,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
       case '~': {		// period entry
 	period_entry_t * pe = new period_entry_t(skip_ws(line + 1));
 	if (! pe->period)
-	  throw new parse_error(std::string("Parsing time period '") + line + "'");
+	  throw new parse_error(std::string("Parsing time period '") + skip_ws(line + 1) + "'");
 
 	if (parse_transactions(in, journal, account_stack.front(), *pe,
 			       "period", end_pos)) {

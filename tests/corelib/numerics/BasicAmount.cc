@@ -64,10 +64,9 @@ void BasicAmountTestCase::testNegation()
   assertEqual(x6, x3);
   assertEqual(x8, x3);
   assertEqual(- x6, x9);
-  assertEqual(x3.negated(), x9);
+  assertEqual(x3.negate(), x9);
 
-  amount_t x10(x9);
-  x10.negate();
+  amount_t x10(x9.negate());
 
   assertEqual(x3, x10);
 
@@ -591,17 +590,9 @@ void BasicAmountTestCase::testAbs()
   amount_t x1(-1234L);
   amount_t x2(1234L);
 
-  assertEqual(amount_t(), abs(x0));
-  assertEqual(amount_t(1234L), abs(x1));
-  assertEqual(amount_t(1234L), abs(x2));
-
-  x0.abs();
-  x1.abs();
-  x2.abs();
-
-  assertEqual(amount_t(), x0);
-  assertEqual(amount_t(1234L), x1);
-  assertEqual(amount_t(1234L), x2);
+  assertEqual(amount_t(), x0.abs());
+  assertEqual(amount_t(1234L), x1.abs());
+  assertEqual(amount_t(1234L), x2.abs());
 
   CPPUNIT_ASSERT(x0.valid());
   CPPUNIT_ASSERT(x1.valid());

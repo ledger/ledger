@@ -126,7 +126,7 @@ unsigned int qif_parser_t::parse(std::istream& in,
 
       if (c == '$') {
 	saw_splits = true;
-	xact->amount.negate();
+	xact->amount.in_place_negate();
       } else {
 	total = xact;
       }
@@ -202,7 +202,7 @@ unsigned int qif_parser_t::parse(std::istream& in,
 
       if (total && saw_category) {
 	if (! saw_splits)
-	  total->amount.negate(); // negate, to show correct flow
+	  total->amount.in_place_negate(); // negate, to show correct flow
 	else
 	  total->account = other;
       }

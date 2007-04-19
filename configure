@@ -19696,14 +19696,14 @@ _ACEOF
 
 fi
 
-# check for gmp
-{ echo "$as_me:$LINENO: checking if libgmp is available" >&5
-echo $ECHO_N "checking if libgmp is available... $ECHO_C" >&6; }
-if test "${libgmp_avail+set}" = set; then
+# check for boost_regex
+{ echo "$as_me:$LINENO: checking if boost_regex is available" >&5
+echo $ECHO_N "checking if boost_regex is available... $ECHO_C" >&6; }
+if test "${boost_regex_avail+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
-  libgmp_save_libs=$LIBS
-   LIBS="-lgmp $LIBS"
+  boost_regex_save_libs=$LIBS
+   LIBS="-lboost_regex $LIBS"
    ac_ext=cpp
 ac_cpp='$CXXCPP $CPPFLAGS'
 ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -19716,13 +19716,11 @@ _ACEOF
 cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
-#include <gmp.h>
+#include <boost/regex.hpp>
 int
 main ()
 {
-mpz_t bar;
-      mpz_init(bar);
-      mpz_clear(bar);
+boost::regex foo_regexp("Hello, world!");
   ;
   return 0;
 }
@@ -19745,12 +19743,12 @@ eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
 	 test ! -s conftest.err
        } && test -s conftest$ac_exeext &&
        $as_test_x conftest$ac_exeext; then
-  libgmp_avail=true
+  boost_regex_avail=true
 else
   echo "$as_me: failed program was:" >&5
 sed 's/^/| /' conftest.$ac_ext >&5
 
-	libgmp_avail=false
+	boost_regex_avail=false
 fi
 
 rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
@@ -19761,100 +19759,22 @@ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
-   LIBS=$libgmp_save_libs
+   LIBS=$boost_regex_save_libs
 fi
-{ echo "$as_me:$LINENO: result: $libgmp_avail" >&5
-echo "${ECHO_T}$libgmp_avail" >&6; }
+{ echo "$as_me:$LINENO: result: $boost_regex_avail" >&5
+echo "${ECHO_T}$boost_regex_avail" >&6; }
 
-if test x$libgmp_avail = xtrue ; then
-  LIBS="-lgmp $LIBS"
+if test x$boost_regex_avail = xtrue ; then
+  LIBS="-lboost_regex $LIBS"
 else
-  { { echo "$as_me:$LINENO: error: \"Could not find gmp library (set CPPFLAGS and LDFLAGS?)\"
+  { { echo "$as_me:$LINENO: error: \"Could not find boost_regex library (set CPPFLAGS and LDFLAGS?)\"
 See \`config.log' for more details." >&5
-echo "$as_me: error: \"Could not find gmp library (set CPPFLAGS and LDFLAGS?)\"
+echo "$as_me: error: \"Could not find boost_regex library (set CPPFLAGS and LDFLAGS?)\"
 See \`config.log' for more details." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
-# check for pcre
-{ echo "$as_me:$LINENO: checking if libpcre is available" >&5
-echo $ECHO_N "checking if libpcre is available... $ECHO_C" >&6; }
-if test "${libpcre_avail+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  libpcre_save_libs=$LIBS
-   LIBS="-lpcre $LIBS"
-   ac_ext=cpp
-ac_cpp='$CXXCPP $CPPFLAGS'
-ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
-
-   cat >conftest.$ac_ext <<_ACEOF
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-#include <pcre.h>
-int
-main ()
-{
-pcre_free((pcre *)NULL);
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_cxx_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  libpcre_avail=true
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	libpcre_avail=false
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-   ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
-
-   LIBS=$libpcre_save_libs
-fi
-{ echo "$as_me:$LINENO: result: $libpcre_avail" >&5
-echo "${ECHO_T}$libpcre_avail" >&6; }
-
-if test x$libpcre_avail = xtrue ; then
-  LIBS="-lpcre $LIBS"
-else
-  { { echo "$as_me:$LINENO: error: \"Could not find pcre library (set CPPFLAGS and LDFLAGS?)\"
-See \`config.log' for more details." >&5
-echo "$as_me: error: \"Could not find pcre library (set CPPFLAGS and LDFLAGS?)\"
-See \`config.log' for more details." >&2;}
-   { (exit 1); exit 1; }; }
-fi
-
-# check for Boost date_time
+# check for boost_date_time
 { echo "$as_me:$LINENO: checking if boost_date_time is available" >&5
 echo $ECHO_N "checking if boost_date_time is available... $ECHO_C" >&6; }
 if test "${boost_date_time_cpplib_avail+set}" = set; then
@@ -19946,6 +19866,86 @@ else
   { { echo "$as_me:$LINENO: error: \"Could not find boost_date_time library (set CPPFLAGS and LDFLAGS?)\"
 See \`config.log' for more details." >&5
 echo "$as_me: error: \"Could not find boost_date_time library (set CPPFLAGS and LDFLAGS?)\"
+See \`config.log' for more details." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+# check for gmp
+{ echo "$as_me:$LINENO: checking if libgmp is available" >&5
+echo $ECHO_N "checking if libgmp is available... $ECHO_C" >&6; }
+if test "${libgmp_avail+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  libgmp_save_libs=$LIBS
+   LIBS="-lgmp $LIBS"
+   ac_ext=cpp
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
+   cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <gmp.h>
+int
+main ()
+{
+mpz_t bar;
+      mpz_init(bar);
+      mpz_clear(bar);
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (ac_try="$ac_link"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_link") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_cxx_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest$ac_exeext &&
+       $as_test_x conftest$ac_exeext; then
+  libgmp_avail=true
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	libgmp_avail=false
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
+      conftest$ac_exeext conftest.$ac_ext
+   ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+   LIBS=$libgmp_save_libs
+fi
+{ echo "$as_me:$LINENO: result: $libgmp_avail" >&5
+echo "${ECHO_T}$libgmp_avail" >&6; }
+
+if test x$libgmp_avail = xtrue ; then
+  LIBS="-lgmp $LIBS"
+else
+  { { echo "$as_me:$LINENO: error: \"Could not find gmp library (set CPPFLAGS and LDFLAGS?)\"
+See \`config.log' for more details." >&5
+echo "$as_me: error: \"Could not find gmp library (set CPPFLAGS and LDFLAGS?)\"
 See \`config.log' for more details." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -20837,7 +20837,8 @@ _ACEOF
 fi
 
 
-for ac_header in sys/stat.h
+
+for ac_header in sys/stat.h langinfo.h
 do
 as_ac_Header=`echo "ac_cv_header_$ac_header" | $as_tr_sh`
 if { as_var=$as_ac_Header; eval "test \"\${$as_var+set}\" = set"; }; then
@@ -21475,7 +21476,8 @@ fi
 
 
 
-for ac_func in access mktime realpath getpwuid getpwnam
+
+for ac_func in access mktime realpath getpwuid getpwnam nl_langinfo
 do
 as_ac_var=`echo "ac_cv_func_$ac_func" | $as_tr_sh`
 { echo "$as_me:$LINENO: checking for $ac_func" >&5

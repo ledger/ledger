@@ -400,14 +400,14 @@ class value_t
   template <typename T>
   operator T() const;
 
-  void negate();
-  value_t negated() const {
+  void in_place_negate();
+  value_t negate() const {
     value_t temp = *this;
-    temp.negate();
+    temp.in_place_negate();
     return temp;
   }
   value_t operator-() const {
-    return negated();
+    return negate();
   }
 
   bool realzero() const {
@@ -439,11 +439,18 @@ class value_t
     return 0;
   }
 
-  void    abs();
-  void    cast(type_t cast_type);
+  void    in_place_abs();
+  value_t abs() const;
+  void    in_place_cast(type_t cast_type);
   value_t cost() const;
   value_t price() const;
   value_t date() const;
+
+  value_t cast(type_t cast_type) const {
+    value_t temp(*this);
+    temp.in_place_cast(cast_type);
+    return temp;
+  }
 
   value_t strip_annotations(const bool keep_price = amount_t::keep_price,
 			    const bool keep_date  = amount_t::keep_date,
@@ -451,15 +458,15 @@ class value_t
 
   value_t& add(const amount_t&  amount, const amount_t * cost = NULL);
   value_t  value(const ptime& moment) const;
-  void     reduce();
+  void     in_place_reduce();
 
-  value_t reduced() const {
+  value_t reduce() const {
     value_t temp(*this);
-    temp.reduce();
+    temp.in_place_reduce();
     return temp;
   }
 
-  void    round();
+  value_t round() const;
   value_t unround() const;
 
   void write(std::ostream& out, const int first_width,
@@ -554,12 +561,6 @@ template <> value_t::operator long() const;
 template <> value_t::operator ptime() const;
 template <> value_t::operator double() const;
 template <> value_t::operator std::string() const;
-
-inline value_t abs(const value_t& val) {
-  value_t temp(val);
-  temp.abs();
-  return temp;
-}
 
 std::ostream& operator<<(std::ostream& out, const value_t& val);
 

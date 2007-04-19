@@ -30,10 +30,10 @@ Building
 ========
 
 To build Ledger, you will need a fairly modern C++ compiler (gcc 2.95
-will not work), and at least these two libraries installed:
+will not work), and at least these libraries installed:
 
     gmp        GNU multi-precision library
-    pcre       Perl regular expression library
+    boost      Boost C++ library
 
 (On some GNU/Linux systems, the packages you need to install are
 called "gmp-dev" and "pcre-dev").
