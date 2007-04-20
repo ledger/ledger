@@ -11,19 +11,19 @@
 
 namespace ledger {
 
-bool process_option(const std::string& name, xml::xpath_t::scope_t * scope,
+bool process_option(const string& name, xml::xpath_t::scope_t * scope,
 		    const char * arg = NULL);
 
-void process_environment(const char ** envp, const std::string& tag,
+void process_environment(const char ** envp, const string& tag,
 			 xml::xpath_t::scope_t * scope);
 
 void process_arguments(int argc, char ** argv, const bool anywhere,
 		       xml::xpath_t::scope_t * scope,
-		       std::list<std::string>& args);
+		       std::list<string>& args);
 
 class option_error : public error {
  public:
-  option_error(const std::string& reason) throw() : error(reason) {}
+  option_error(const string& reason) throw() : error(reason) {}
   virtual ~option_error() throw() {}
 };
 

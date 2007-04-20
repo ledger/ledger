@@ -11,7 +11,7 @@ namespace ledger {
 #define MAX_LINE 1024
 
 static char         line[MAX_LINE + 1];
-static std::string  path;
+static string  path;
 static unsigned int src_idx;
 static unsigned int linenum;
 
@@ -40,7 +40,7 @@ bool qif_parser_t::test(std::istream& in) const
 unsigned int qif_parser_t::parse(std::istream& in,
 				 journal_t *   journal,
 				 account_t *   master,
-				 const std::string *)
+				 const string *)
 {
   std::auto_ptr<entry_t>  entry;
   std::auto_ptr<amount_t> amount;
@@ -95,7 +95,7 @@ unsigned int qif_parser_t::parse(std::istream& in,
 	  std::strcmp(line, "Type:Cat") == 0 ||
 	  std::strcmp(line, "Type:Class") == 0 ||
 	  std::strcmp(line, "Type:Memorized") == 0)
-	throw new parse_error(std::string("QIF files of type ") + line +
+	throw new parse_error(string("QIF files of type ") + line +
 			      " are not supported.");
       break;
 

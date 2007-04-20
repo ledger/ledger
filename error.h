@@ -7,12 +7,16 @@
 #include <sstream>
 #include <list>
 
+#include "debug.h"
+
+namespace ledger {
+
 class error_context
 {
  public:
-  std::string desc;
+  string desc;
 
-  error_context(const std::string& _desc) throw() : desc(_desc) {}
+  error_context(const string& _desc) throw() : desc(_desc) {}
   virtual ~error_context() throw() {}
   virtual void describe(std::ostream& out) const throw() {
     if (! desc.empty())
@@ -23,11 +27,11 @@ class error_context
 class file_context : public error_context
 {
  protected:
-  std::string   file;
+  string   file;
   unsigned long line;
  public:
-  file_context(const std::string& _file, unsigned long _line,
-	       const std::string& _desc = "") throw()
+  file_context(const string& _file, unsigned long _line,
+	       const string& _desc = "") throw()
     : error_context(_desc), file(_file), line(_line) {}
   virtual ~file_context() throw() {}
 
@@ -41,11 +45,11 @@ class file_context : public error_context
 
 class line_context : public error_context {
  public:
-  std::string line;
+  string line;
   long	      pos;
 
-  line_context(const std::string& _line, long _pos,
-	       const std::string& _desc = "") throw()
+  line_context(const string& _line, long _pos,
+	       const string& _desc = "") throw()
     : error_context(_desc), line(_line), pos(_pos) {}
   virtual ~line_context() throw() {}
 
@@ -65,11 +69,11 @@ class line_context : public error_context {
 
 class str_exception : public std::exception {
  protected:
-  std::string reason;
+  string reason;
  public:
   std::list<error_context *> context;
 
-  str_exception(const std::string& _reason,
+  str_exception(const string& _reason,
 		error_context * ctxt = NULL) throw()
     : reason(_reason) {
     if (ctxt)
@@ -84,7 +88,7 @@ class str_exception : public std::exception {
   }
 
   virtual void reveal_context(std::ostream& out,
-			      const std::string& kind) const throw() {
+			      const string& kind) const throw() {
     for (std::list<error_context *>::const_reverse_iterator i =
 	   context.rbegin();
 	 i != context.rend();
@@ -103,22 +107,22 @@ class str_exception : public std::exception {
 
 class error : public str_exception {
  public:
-  error(const std::string& _reason, error_context * _ctxt = NULL) throw()
+  error(const string& _reason, error_context * _ctxt = NULL) throw()
     : str_exception(_reason, _ctxt) {}
   virtual ~error() throw() {}
 };
 
 class fatal : public str_exception {
  public:
-  fatal(const std::string& _reason, error_context * _ctxt = NULL) throw()
+  fatal(const string& _reason, error_context * _ctxt = NULL) throw()
     : str_exception(_reason, _ctxt) {}
   virtual ~fatal() throw() {}
 };
 
 class fatal_assert : public fatal {
  public:
-  fatal_assert(const std::string& _reason, error_context * _ctxt = NULL) throw()
-    : fatal(std::string("assertion failed '") + _reason + "'", _ctxt) {}
+  fatal_assert(const string& _reason, error_context * _ctxt = NULL) throw()
+    : fatal(string("assertion failed '") + _reason + "'", _ctxt) {}
   virtual ~fatal_assert() throw() {}
 };
 
@@ -126,16 +130,18 @@ inline void unexpected(char c, char wanted)
 {
   if ((unsigned char) c == 0xff) {
     if (wanted)
-      throw new error(std::string("Missing '") + wanted + "'");
+      throw new error(string("Missing '") + wanted + "'");
     else
       throw new error("Unexpected end of input");
   } else {
     if (wanted)
-      throw new error(std::string("Invalid char '") + c +
+      throw new error(string("Invalid char '") + c +
 		      "' (wanted '" + wanted + "')");
     else
-      throw new error(std::string("Invalid char '") + c + "'");
+      throw new error(string("Invalid char '") + c + "'");
   }
 }
+
+} // namespace ledger
 
 #endif // _ERROR_H

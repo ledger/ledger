@@ -78,8 +78,8 @@ class value_t
     new((amount_t *) data) amount_t(val);
     type = AMOUNT;
   }
-  value_t(const std::string& val, bool literal = false) {
-    TRACE_CTOR("value_t(const std::string&, bool)");
+  value_t(const string& val, bool literal = false) {
+    TRACE_CTOR("value_t(const string&, bool)");
     if (literal) {
       type = INTEGER;
       set_string(val);
@@ -158,7 +158,7 @@ class value_t
   value_t& operator=(const double val) {
     return *this = amount_t(val);
   }
-  value_t& operator=(const std::string& val) {
+  value_t& operator=(const string& val) {
     return *this = amount_t(val);
   }
   value_t& operator=(const char * val) {
@@ -263,13 +263,13 @@ class value_t
     }
   }
 
-  value_t& set_string(const std::string& str = "") {
+  value_t& set_string(const string& str = "") {
     if (type != STRING) {
       destroy();
-      *(std::string **) data = new std::string(str);
+      *(string **) data = new string(str);
       type = STRING;
     } else {
-      **(std::string **) data = str;
+      **(string **) data = str;
     }
     return *this;
   }
@@ -280,7 +280,7 @@ class value_t
   amount_t	 to_amount() const;
   balance_t	 to_balance() const;
   balance_pair_t to_balance_pair() const;
-  std::string	 to_string() const;
+  string	 to_string() const;
   xml::node_t *	 to_xml_node() const;
   void *	 to_pointer() const;
   sequence_t *	 to_sequence() const;
@@ -425,7 +425,7 @@ class value_t
     case BALANCE_PAIR:
       return ((balance_pair_t *) data)->realzero();
     case STRING:
-      return ((std::string *) data)->empty();
+      return ((string *) data)->empty();
     case XML_NODE:
     case POINTER:
     case SEQUENCE:
@@ -540,7 +540,7 @@ value_t::operator T() const
   case BALANCE:
     return *(balance_t *) data;
   case STRING:
-    return **(std::string **) data;
+    return **(string **) data;
   case XML_NODE:
     return *(xml::node_t **) data;
   case POINTER:
@@ -560,7 +560,7 @@ template <> value_t::operator bool() const;
 template <> value_t::operator long() const;
 template <> value_t::operator moment_t() const;
 template <> value_t::operator double() const;
-template <> value_t::operator std::string() const;
+template <> value_t::operator string() const;
 
 std::ostream& operator<<(std::ostream& out, const value_t& val);
 
@@ -569,7 +569,7 @@ class value_context : public error_context
   value_t * bal;
  public:
   value_context(const value_t& _bal,
-		const std::string& desc = "") throw();
+		const string& desc = "") throw();
   virtual ~value_context() throw();
 
   virtual void describe(std::ostream& out) const throw();
@@ -577,7 +577,7 @@ class value_context : public error_context
 
 class value_error : public error {
  public:
-  value_error(const std::string& _reason,
+  value_error(const string& _reason,
 	      error_context * _ctxt = NULL) throw()
     : error(_reason, _ctxt) {}
   virtual ~value_error() throw() {}

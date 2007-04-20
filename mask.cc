@@ -4,7 +4,9 @@
 
 #include <cstdlib>
 
-mask_t::mask_t(const std::string& pat) : exclude(false)
+namespace ledger {
+
+mask_t::mask_t(const string& pat) : exclude(false)
 {
   const char * p = pat.c_str();
 
@@ -22,3 +24,5 @@ mask_t::mask_t(const std::string& pat) : exclude(false)
 
   expr.assign(p);
 }
+
+} // namespace ledger

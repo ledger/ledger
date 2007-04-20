@@ -49,7 +49,7 @@ void read_binary_bool(char *& data, bool& num)
   read_binary_guard(data, 0x2006);
 }
 
-void read_binary_string(std::istream& in, std::string& str)
+void read_binary_string(std::istream& in, string& str)
 {
   read_binary_guard(in, 0x3001);
 
@@ -76,7 +76,7 @@ void read_binary_string(std::istream& in, std::string& str)
   read_binary_guard(in, 0x3002);
 }
 
-void read_binary_string(char *& data, std::string& str)
+void read_binary_string(char *& data, string& str)
 {
   read_binary_guard(data, 0x3001);
 
@@ -85,11 +85,11 @@ void read_binary_string(char *& data, std::string& str)
   if (len == 0xff) {
     unsigned short slen;
     read_binary_number_nocheck(data, slen);
-    str = std::string(data, slen);
+    str = string(data, slen);
     data += slen;
   }
   else if (len) {
-    str = std::string(data, len);
+    str = string(data, len);
     data += len;
   }
   else {
@@ -99,7 +99,7 @@ void read_binary_string(char *& data, std::string& str)
   read_binary_guard(data, 0x3002);
 }
 
-void read_binary_string(char *& data, std::string * str)
+void read_binary_string(char *& data, string * str)
 {
   read_binary_guard(data, 0x3001);
 
@@ -108,15 +108,15 @@ void read_binary_string(char *& data, std::string * str)
   if (len == 0xff) {
     unsigned short slen;
     read_binary_number_nocheck(data, slen);
-    new(str) std::string(data, slen);
+    new(str) string(data, slen);
     data += slen;
   }
   else if (len) {
-    new(str) std::string(data, len);
+    new(str) string(data, len);
     data += len;
   }
   else {
-    new(str) std::string("");
+    new(str) string("");
   }
 
   read_binary_guard(data, 0x3002);
@@ -152,7 +152,7 @@ inline void read_binary_mask(char *& data, mask_t *& mask)
 {
   bool exclude;
   read_binary_number(data, exclude);
-  std::string pattern;
+  string pattern;
   read_binary_string(data, pattern);
 
   mask = new mask_t(pattern);
@@ -170,7 +170,7 @@ inline void read_binary_transaction(char *& data, transaction_t * xact)
     read_binary_amount(data, xact->amount);
   }
   else if (flag == 1) {
-    std::string expr;
+    string expr;
     read_binary_string(data, expr);
     xact->amount_expr = expr;
 
@@ -244,7 +244,7 @@ inline void read_binary_auto_entry(char *& data, auto_entry_t * entry,
   bool ignore;
   read_binary_entry_base(data, entry, xact_pool, ignore);
 
-  std::string pred_str;
+  string pred_str;
   read_binary_string(data, &pred_str);
   entry->predicate.parse(pred_str);
 }
@@ -397,7 +397,7 @@ account_t * read_binary_account(char *& data, journal_t * journal,
 unsigned int read_binary_journal(std::istream&	   in,
 				journal_t *	   journal,
 				account_t *	   master,
-				const std::string& original_file)
+				const string& original_file)
 {
   account_index	       =
   base_commodity_index =
@@ -411,7 +411,7 @@ unsigned int read_binary_journal(std::istream&	   in,
 	   count = read_binary_number<unsigned short>(in);
 	 i < count;
 	 i++) {
-      std::string path = read_binary_string(in);
+      string path = read_binary_string(in);
       std::time_t old_mtime;
       read_binary_number(in, old_mtime);
       struct stat info;
@@ -496,7 +496,7 @@ unsigned int read_binary_journal(std::istream&	   in,
       // expression passed to an option, we'll just override the
       // flags, but keep the commodity pointer intact.
       if (c == commodity_base_t::commodities.end())
-	throw new error(std::string("Failed to read base commodity from cache: ") +
+	throw new error(string("Failed to read base commodity from cache: ") +
 			commodity->symbol);
 
       (*c).second->name	     = commodity->name;
@@ -520,7 +520,7 @@ unsigned int read_binary_journal(std::istream&	   in,
 
   for (commodity_t::ident_t i = 0; i < c_count; i++) {
     commodity_t * commodity;
-    std::string   mapping_key;
+    string   mapping_key;
 
     if (! read_binary_bool(data)) {
       commodity	  = read_binary_commodity(data);
@@ -537,7 +537,7 @@ unsigned int read_binary_journal(std::istream&	   in,
       commodities_map::iterator c =
 	commodity_t::commodities.find(mapping_key);
       if (c == commodity_t::commodities.end())
-	throw new error(std::string("Failed to read commodity from cache: ") +
+	throw new error(string("Failed to read commodity from cache: ") +
 			commodity->symbol());
 
       *(commodities_next - 1) = (*c).second;
@@ -611,7 +611,7 @@ bool binary_parser_t::test(std::istream& in) const
 unsigned int binary_parser_t::parse(std::istream&       in,
 				    journal_t *		journal,
 				    account_t *		master,
-				    const std::string * original_file)
+				    const string * original_file)
 {
 #if 0
   return read_binary_journal(in, journal, master,
@@ -629,7 +629,7 @@ void write_binary_bool(std::ostream& out, bool num)
   write_binary_guard(out, 0x2006);
 }
 
-void write_binary_string(std::ostream& out, const std::string& str)
+void write_binary_string(std::ostream& out, const string& str)
 {
   write_binary_guard(out, 0x3001);
 

@@ -11,22 +11,22 @@ namespace ledger {
 class session_t : public xml::xpath_t::scope_t
 {
  public:
-  std::string init_file;
-  std::string data_file;
-  std::string cache_file;
-  std::string price_db;
+  string init_file;
+  string data_file;
+  string cache_file;
+  string price_db;
 
-  std::string register_format;
-  std::string wide_register_format;
-  std::string print_format;
-  std::string balance_format;
-  std::string equity_format;
-  std::string plot_amount_format;
-  std::string plot_total_format;
-  std::string write_hdr_format;
-  std::string write_xact_format;
-  std::string prices_format;
-  std::string pricesdb_format;
+  string register_format;
+  string wide_register_format;
+  string print_format;
+  string balance_format;
+  string equity_format;
+  string plot_amount_format;
+  string plot_total_format;
+  string write_hdr_format;
+  string write_xact_format;
+  string prices_format;
+  string pricesdb_format;
 
   unsigned long pricing_leeway;
 
@@ -67,6 +67,7 @@ class session_t : public xml::xpath_t::scope_t
     balance_format
     ("%(/%(//%20t  %{\"  \" * rdepth}%{rname}\n))--------------------\n%20t\n"),
     equity_format
+
     ("%((/)%{ftime(now, date_format)} %-.20{\"Opening Balance\"}\n%((.//account[value != 0])    %-34{fullname}  %12{value}\n)\n)"),
     plot_amount_format
     ("%D %(@S(@t))\n"),
@@ -96,9 +97,13 @@ class session_t : public xml::xpath_t::scope_t
     abbrev_length(2),
 
     ansi_codes(false),
-    ansi_invert(false) {}
+    ansi_invert(false) {
+    TRACE_CTOR("session_t(xml::xpath_t::scope_t *)");
+  }
 
   virtual ~session_t() {
+    TRACE_DTOR("session_t");
+
     for (std::list<journal_t *>::iterator i = journals.begin();
 	 i != journals.end();
 	 i++)
@@ -123,16 +128,16 @@ class session_t : public xml::xpath_t::scope_t
   unsigned int read_journal(std::istream&       in,
 			    journal_t *         journal,
 			    account_t *		master        = NULL,
-			    const std::string * original_file = NULL);
+			    const string * original_file = NULL);
 
-  unsigned int read_journal(const std::string&  path,
+  unsigned int read_journal(const string&  path,
 			    journal_t *         journal,
 			    account_t *		master        = NULL,
-			    const std::string * original_file = NULL);
+			    const string * original_file = NULL);
 
   void read_init();
 
-  journal_t * read_data(const std::string& master_account = "");
+  journal_t * read_data(const string& master_account = "");
 
   void register_parser(parser_t * parser) {
     parsers.push_back(parser);
@@ -154,9 +159,9 @@ class session_t : public xml::xpath_t::scope_t
   // Scope members
   //
 
-  virtual bool resolve(const std::string& name, value_t& result,
+  virtual bool resolve(const string& name, value_t& result,
 		       xml::xpath_t::scope_t * locals = NULL);
-  virtual xml::xpath_t::op_t * lookup(const std::string& name);
+  virtual xml::xpath_t::op_t * lookup(const string& name);
 
   //
   // Option handlers

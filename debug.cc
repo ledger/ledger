@@ -1,4 +1,5 @@
 #include "debug.h"
+#include "error.h"
 
 #ifdef DEBUG_ENABLED
 
@@ -94,12 +95,15 @@ void   operator delete[](void * ptr, const std::nothrow_t&) throw() {
 
 std::ostream * _debug_stream	  = &std::cerr;
 bool	       _free_debug_stream = false;
+boost::regex   _debug_regex;
+bool           _set_debug_regex   = false;
 
 bool _debug_active(const char * const cls) {
-  if (char * debug = std::getenv("DEBUG_CLASS")) {
-    return boost::regex_match(cls, boost::regex(debug));
+  if (! _set_debug_regex) {
+    _debug_regex = std::getenv("DEBUG_CLASS");
+    _set_debug_regex = true;
   }
-  return false;
+  return boost::regex_match(cls, _debug_regex);
 }
 
 static struct init_streams {
@@ -125,11 +129,11 @@ static struct init_streams {
 
 #include <string>
 
-void debug_assert(const std::string& reason,
-		  const std::string& file,
-		  unsigned long      line)
+void debug_assert(const ledger::string& reason,
+		  const ledger::string& file,
+		  unsigned long		line)
 {
-  throw new fatal_assert(reason, new file_context(file, line));
+  throw new ledger::fatal_assert(reason, new ledger::file_context(file, line));
 }
 
 #endif

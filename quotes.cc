@@ -32,8 +32,6 @@ void quotes_by_script::operator()(commodity_base_t& commodity,
       (price && moment > date && (moment - date) <= pricing_leeway))
     return;
 
-  using namespace std;
-
   DEBUG_PRINT_("downloading quote for symbol " << commodity.symbol);
 
   char buf[256];
@@ -65,9 +63,10 @@ void quotes_by_script::operator()(commodity_base_t& commodity,
 
     if (price && ! price_db.empty()) {
 #if defined(__GNUG__) && __GNUG__ < 3
-      ofstream database(price_db.c_str(), ios::out | ios::app);
+      std::ofstream database(price_db.c_str(), ios::out | ios::app);
 #else
-      ofstream database(price_db.c_str(), ios_base::out | ios_base::app);
+      std::ofstream database(price_db.c_str(),
+			     std::ios_base::out | std::ios_base::app);
 #endif
 #if 0
       // jww (2007-04-18): Need to convert to local time and print
@@ -77,7 +76,7 @@ void quotes_by_script::operator()(commodity_base_t& commodity,
 #endif
     }
   } else {
-    throw new error(std::string("Failed to download price for '") +
+    throw new error(string("Failed to download price for '") +
 		    commodity.symbol + "' (command: \"getquote " +
 		    commodity.symbol + "\")");
   }

@@ -71,10 +71,10 @@ balance_pair_t value_t::to_balance_pair() const
   }
 }
 
-std::string value_t::to_string() const
+string value_t::to_string() const
 {
   if (type == STRING) {
-    return **(std::string **) data;
+    return **(string **) data;
   } else {
     std::ostringstream out;
     out << *this;
@@ -119,7 +119,7 @@ void value_t::destroy()
     ((balance_pair_t *)data)->~balance_pair_t();
     break;
   case STRING:
-    delete *(std::string **) data;
+    delete *(string **) data;
     break;
   case SEQUENCE:
     delete *(sequence_t **) data;
@@ -187,7 +187,7 @@ value_t& value_t::operator=(const value_t& val)
     return *this;
   }
   else if (type == STRING && val.type == STRING) {
-    **(std::string **) data = **(std::string **) val.data;
+    **(string **) data = **(string **) val.data;
     return *this;
   }
   else if (type == SEQUENCE && val.type == SEQUENCE) {
@@ -223,7 +223,7 @@ value_t& value_t::operator=(const value_t& val)
     break;
 
   case STRING:
-    *(std::string **) data = new std::string(**(std::string **) val.data);
+    *(string **) data = new string(**(string **) val.data);
     break;
 
   case XML_NODE:
@@ -407,7 +407,7 @@ value_t& value_t::operator+=(const value_t& val)
     case BALANCE_PAIR:
       throw new value_error("Cannot add a balance pair to a string");
     case STRING:
-      **(std::string **) data += **(std::string **) val.data;
+      **(string **) data += **(string **) val.data;
       break;
     default:
       assert(0);
@@ -708,19 +708,19 @@ value_t& value_t::operator*=(const value_t& val)
   case STRING:
     switch (val.type) {
     case INTEGER: {
-      std::string temp;
+      string temp;
       for (long i = 0; i < *(long *) val.data; i++)
-	temp += **(std::string **) data;
-      **(std::string **) data = temp;
+	temp += **(string **) data;
+      **(string **) data = temp;
       break;
     }
     case AMOUNT: {
-      std::string temp;
+      string temp;
       value_t num(val);
       num.in_place_cast(INTEGER);
       for (long i = 0; i < *(long *) num.data; i++)
-	temp += **(std::string **) data;
-      **(std::string **) data = temp;
+	temp += **(string **) data;
+      **(string **) data = temp;
       break;
     }
     case BALANCE:
@@ -885,7 +885,7 @@ value_t::operator bool() const
   case BALANCE_PAIR:
     return *(balance_pair_t *) data;
   case STRING:
-    return ! (**((std::string **) data)).empty();
+    return ! (**((string **) data)).empty();
   case XML_NODE:
     return (*(xml::node_t **) data)->to_value().to_boolean();
   case POINTER:
@@ -1002,7 +1002,7 @@ value_t::operator double() const
 }
 
 template <>
-value_t::operator std::string() const
+value_t::operator string() const
 {
   switch (type) {
   case BOOLEAN:
@@ -1016,7 +1016,7 @@ value_t::operator std::string() const
     return temp;
   }
   case STRING:
-    return **(std::string **) data;
+    return **(string **) data;
   case XML_NODE:
     return (*(xml::node_t **) data)->to_value().to_string();
 
@@ -1284,8 +1284,8 @@ bool value_t::operator OP(const value_t& val)				\
       throw new value_error("Cannot compare a string to a balance pair"); \
 									\
     case STRING:							\
-      return (**((std::string **) data) OP				\
-	      **((std::string **) val.data));				\
+      return (**((string **) data) OP				\
+	      **((string **) val.data));				\
 									\
     case XML_NODE:							\
       return *this OP (*(xml::node_t **) data)->to_value();		\
@@ -1396,7 +1396,7 @@ void value_t::in_place_cast(type_t cast_type)
     case BALANCE_PAIR:
       throw new value_error("Cannot convert a boolean to a balance pair");
     case STRING:
-      *(std::string **) data = new std::string(*((bool *) data) ? "true" : "false");
+      *(string **) data = new string(*((bool *) data) ? "true" : "false");
       break;
     case XML_NODE:
       throw new value_error("Cannot convert a boolean to an XML node");
@@ -1433,7 +1433,7 @@ void value_t::in_place_cast(type_t cast_type)
     case STRING: {
       char buf[32];
       std::sprintf(buf, "%ld", *(long *) data);
-      *(std::string **) data = new std::string(buf);
+      *(string **) data = new string(buf);
       break;
     }
     case XML_NODE:
@@ -1513,7 +1513,7 @@ void value_t::in_place_cast(type_t cast_type)
       std::ostringstream out;
       out << *(amount_t *) data;
       destroy();
-      *(std::string **) data = new std::string(out.str());
+      *(string **) data = new string(out.str());
       break;
     }
     case XML_NODE:
@@ -1636,11 +1636,11 @@ void value_t::in_place_cast(type_t cast_type)
   case STRING:
     switch (cast_type) {
     case BOOLEAN: {
-      if (**(std::string **) data == "true") {
+      if (**(string **) data == "true") {
 	destroy();
 	*(bool *) data = true;
       }
-      else if (**(std::string **) data == "false") {
+      else if (**(string **) data == "false") {
 	destroy();
 	*(bool *) data = false;
       }
@@ -1650,8 +1650,8 @@ void value_t::in_place_cast(type_t cast_type)
       break;
     }
     case INTEGER: {
-      int l = (*(std::string **) data)->length();
-      const char * p = (*(std::string **) data)->c_str();
+      int l = (*(string **) data)->length();
+      const char * p = (*(string **) data)->c_str();
       bool alldigits = true;
       for (int i = 0; i < l; i++)
 	if (! std::isdigit(p[i])) {
@@ -1659,7 +1659,7 @@ void value_t::in_place_cast(type_t cast_type)
 	  break;
 	}
       if (alldigits) {
-	long temp = std::atol((*(std::string **) data)->c_str());
+	long temp = std::atol((*(string **) data)->c_str());
 	destroy();
 	*(long *) data = temp;
       } else {
@@ -1672,7 +1672,7 @@ void value_t::in_place_cast(type_t cast_type)
       throw new value_error("Cannot convert a string to a date/time");
 
     case AMOUNT: {
-      amount_t temp = **(std::string **) data;
+      amount_t temp = **(string **) data;
       destroy();
       new((amount_t *)data) amount_t(temp);
       break;
@@ -1925,7 +1925,7 @@ value_t value_t::round() const
   case DATETIME:
     throw new value_error("Cannot round a date/time");
   case INTEGER:
-    break;
+    return *this;
   case AMOUNT:
     return ((amount_t *) data)->round();
   case BALANCE:
@@ -1941,18 +1941,19 @@ value_t value_t::round() const
   case SEQUENCE:
     throw new value_error("Cannot round a sequence");
   }
+  assert(0);
+  return value_t();
 }
 
 value_t value_t::unround() const
 {
-  value_t temp;
   switch (type) {
   case BOOLEAN:
     throw new value_error("Cannot un-round a boolean");
   case DATETIME:
     throw new value_error("Cannot un-round a date/time");
   case INTEGER:
-    break;
+    return *this;
   case AMOUNT:
     return ((amount_t *) data)->unround();
   case BALANCE:
@@ -1968,7 +1969,8 @@ value_t value_t::unround() const
   case SEQUENCE:
     throw new value_error("Cannot un-round a sequence");
   }
-  return temp;
+  assert(0);
+  return value_t();
 }
 
 value_t value_t::price() const
@@ -2221,7 +2223,7 @@ std::ostream& operator<<(std::ostream& out, const value_t& val)
     out << *(balance_pair_t *) val.data;
     break;
   case value_t::STRING:
-    out << **(std::string **) val.data;
+    out << **(string **) val.data;
     break;
   case value_t::XML_NODE:
     if ((*(xml::node_t **) val.data)->flags & XML_NODE_IS_PARENT)
@@ -2258,7 +2260,7 @@ std::ostream& operator<<(std::ostream& out, const value_t& val)
 }
 
 value_context::value_context(const value_t& _bal,
-			     const std::string& _desc) throw()
+			     const string& _desc) throw()
   : error_context(_desc), bal(new value_t(_bal)) {}
 
 value_context::~value_context() throw()
@@ -2412,20 +2414,20 @@ void export_value()
     .def(init<balance_pair_t>())
     .def(init<balance_t>())
     .def(init<amount_t>())
-    .def(init<std::string>())
+    .def(init<string>())
     .def(init<double>())
     .def(init<long>())
     .def(initmoment_t())
 
     .def(self + self)
-    .def(self + other<std::string>())
+    .def(self + other<string>())
     .def(self + other<balance_pair_t>())
     .def(self + other<balance_t>())
     .def(self + other<amount_t>())
     .def(self + long())
     .def(self + double())
 
-    .def(other<std::string>() + self)
+    .def(other<string>() + self)
     .def(other<balance_pair_t>() + self)
     .def(other<balance_t>() + self)
     .def(other<amount_t>() + self)
@@ -2433,14 +2435,14 @@ void export_value()
     .def(double() + self)
 
     .def(self - self)
-    .def(self - other<std::string>())
+    .def(self - other<string>())
     .def(self - other<balance_pair_t>())
     .def(self - other<balance_t>())
     .def(self - other<amount_t>())
     .def(self - long())
     .def(self - double())
 
-    .def(other<std::string>() - self)
+    .def(other<string>() - self)
     .def(other<balance_pair_t>() - self)
     .def(other<balance_t>() - self)
     .def(other<amount_t>() - self)
@@ -2448,14 +2450,14 @@ void export_value()
     .def(double() - self)
 
     .def(self * self)
-    .def(self * other<std::string>())
+    .def(self * other<string>())
     .def(self * other<balance_pair_t>())
     .def(self * other<balance_t>())
     .def(self * other<amount_t>())
     .def(self * long())
     .def(self * double())
 
-    .def(other<std::string>() * self)
+    .def(other<string>() * self)
     .def(other<balance_pair_t>() * self)
     .def(other<balance_t>() * self)
     .def(other<amount_t>() * self)
@@ -2463,14 +2465,14 @@ void export_value()
     .def(double() * self)
 
     .def(self / self)
-    .def(self / other<std::string>())
+    .def(self / other<string>())
     .def(self / other<balance_pair_t>())
     .def(self / other<balance_t>())
     .def(self / other<amount_t>())
     .def(self / long())
     .def(self / double())
 
-    .def(other<std::string>() / self)
+    .def(other<string>() / self)
     .def(other<balance_pair_t>() / self)
     .def(other<balance_t>() / self)
     .def(other<amount_t>() / self)
@@ -2480,7 +2482,7 @@ void export_value()
     .def(- self)
 
     .def(self += self)
-    .def(self += other<std::string>())
+    .def(self += other<string>())
     .def(self += other<balance_pair_t>())
     .def(self += other<balance_t>())
     .def(self += other<amount_t>())
@@ -2488,7 +2490,7 @@ void export_value()
     .def(self += double())
 
     .def(self -= self)
-    .def(self -= other<std::string>())
+    .def(self -= other<string>())
     .def(self -= other<balance_pair_t>())
     .def(self -= other<balance_t>())
     .def(self -= other<amount_t>())
@@ -2496,7 +2498,7 @@ void export_value()
     .def(self -= double())
 
     .def(self *= self)
-    .def(self *= other<std::string>())
+    .def(self *= other<string>())
     .def(self *= other<balance_pair_t>())
     .def(self *= other<balance_t>())
     .def(self *= other<amount_t>())
@@ -2504,7 +2506,7 @@ void export_value()
     .def(self *= double())
 
     .def(self /= self)
-    .def(self /= other<std::string>())
+    .def(self /= other<string>())
     .def(self /= other<balance_pair_t>())
     .def(self /= other<balance_t>())
     .def(self /= other<amount_t>())
@@ -2512,7 +2514,7 @@ void export_value()
     .def(self /= double())
 
     .def(self <  self)
-    .def(self < other<std::string>())
+    .def(self < other<string>())
     .def(self < other<balance_pair_t>())
     .def(self < other<balance_t>())
     .def(self < other<amount_t>())
@@ -2520,7 +2522,7 @@ void export_value()
     .def(self < othermoment_t())
     .def(self < double())
 
-    .def(other<std::string>() < self)
+    .def(other<string>() < self)
     .def(other<balance_pair_t>() < self)
     .def(other<balance_t>() < self)
     .def(other<amount_t>() < self)
@@ -2529,7 +2531,7 @@ void export_value()
     .def(double() < self)
 
     .def(self <= self)
-    .def(self <= other<std::string>())
+    .def(self <= other<string>())
     .def(self <= other<balance_pair_t>())
     .def(self <= other<balance_t>())
     .def(self <= other<amount_t>())
@@ -2537,7 +2539,7 @@ void export_value()
     .def(self <= othermoment_t())
     .def(self <= double())
 
-    .def(other<std::string>() <= self)
+    .def(other<string>() <= self)
     .def(other<balance_pair_t>() <= self)
     .def(other<balance_t>() <= self)
     .def(other<amount_t>() <= self)
@@ -2546,7 +2548,7 @@ void export_value()
     .def(double() <= self)
 
     .def(self > self)
-    .def(self > other<std::string>())
+    .def(self > other<string>())
     .def(self > other<balance_pair_t>())
     .def(self > other<balance_t>())
     .def(self > other<amount_t>())
@@ -2554,7 +2556,7 @@ void export_value()
     .def(self > othermoment_t())
     .def(self > double())
 
-    .def(other<std::string>() > self)
+    .def(other<string>() > self)
     .def(other<balance_pair_t>() > self)
     .def(other<balance_t>() > self)
     .def(other<amount_t>() > self)
@@ -2563,7 +2565,7 @@ void export_value()
     .def(double() > self)
 
     .def(self >= self)
-    .def(self >= other<std::string>())
+    .def(self >= other<string>())
     .def(self >= other<balance_pair_t>())
     .def(self >= other<balance_t>())
     .def(self >= other<amount_t>())
@@ -2571,7 +2573,7 @@ void export_value()
     .def(self >= othermoment_t())
     .def(self >= double())
 
-    .def(other<std::string>() >= self)
+    .def(other<string>() >= self)
     .def(other<balance_pair_t>() >= self)
     .def(other<balance_t>() >= self)
     .def(other<amount_t>() >= self)
@@ -2580,7 +2582,7 @@ void export_value()
     .def(double() >= self)
 
     .def(self == self)
-    .def(self == other<std::string>())
+    .def(self == other<string>())
     .def(self == other<balance_pair_t>())
     .def(self == other<balance_t>())
     .def(self == other<amount_t>())
@@ -2588,7 +2590,7 @@ void export_value()
     .def(self == othermoment_t())
     .def(self == double())
 
-    .def(other<std::string>() == self)
+    .def(other<string>() == self)
     .def(other<balance_pair_t>() == self)
     .def(other<balance_t>() == self)
     .def(other<amount_t>() == self)
@@ -2597,7 +2599,7 @@ void export_value()
     .def(double() == self)
 
     .def(self != self)
-    .def(self != other<std::string>())
+    .def(self != other<string>())
     .def(self != other<balance_pair_t>())
     .def(self != other<balance_t>())
     .def(self != other<amount_t>())
@@ -2605,7 +2607,7 @@ void export_value()
     .def(self != othermoment_t())
     .def(self != double())
 
-    .def(other<std::string>() != self)
+    .def(other<string>() != self)
     .def(other<balance_pair_t>() != self)
     .def(other<balance_t>() != self)
     .def(other<amount_t>() != self)

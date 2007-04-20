@@ -50,7 +50,7 @@ struct python_run
 {
   object result;
   python_run(python_interpreter_t * intepreter,
-	     const std::string& str, int input_mode)
+	     const string& str, int input_mode)
     : result(handle<>(borrowed(PyRun_String(str.c_str(), input_mode,
 					    intepreter->nspace.ptr(),
 					    intepreter->nspace.ptr())))) {}
@@ -68,14 +68,14 @@ python_interpreter_t::python_interpreter_t(xml::xpath_t::scope_t * parent)
   detail::init_module("ledger", &initialize_ledger_for_python);
 }
 
-object python_interpreter_t::import(const std::string& str)
+object python_interpreter_t::import(const string& str)
 {
   assert(Py_IsInitialized());
 
   try {
     PyObject * mod = PyImport_Import(PyString_FromString(str.c_str()));
     if (! mod)
-      throw error(std::string("Failed to import Python module ") + str);
+      throw error(string("Failed to import Python module ") + str);
 
     object newmod(handle<>(borrowed(mod)));
 
@@ -84,20 +84,20 @@ object python_interpreter_t::import(const std::string& str)
     dict m_nspace(handle<>(borrowed(PyModule_GetDict(mod))));
     nspace.update(m_nspace);
 #else
-    nspace[std::string(PyModule_GetName(mod))] = newmod;
+    nspace[string(PyModule_GetName(mod))] = newmod;
 #endif
     return newmod;
   }
   catch (const error_already_set&) {
     PyErr_Print();
-    throw error(std::string("Importing Python module ") + str);
+    throw error(string("Importing Python module ") + str);
   }
 }
 
 object python_interpreter_t::eval(std::istream& in, py_eval_mode_t mode)
 {
   bool	      first = true;
-  std::string buffer;
+  string buffer;
   buffer.reserve(4096);
 
   while (! in.eof()) {
@@ -128,7 +128,7 @@ object python_interpreter_t::eval(std::istream& in, py_eval_mode_t mode)
   }
 }
 
-object python_interpreter_t::eval(const std::string& str, py_eval_mode_t mode)
+object python_interpreter_t::eval(const string& str, py_eval_mode_t mode)
 {
   try {
     int input_mode;
@@ -170,7 +170,7 @@ void python_interpreter_t::functor_t::operator()(value_t& result,
 	else if (PyObject * err = PyErr_Occurred()) {
 	  PyErr_Print();
 	  throw new xml::xpath_t::calc_error
-	    (std::string("While calling Python function '") + name() + "'");
+	    (string("While calling Python function '") + name() + "'");
 	} else {
 	  assert(0);
 	}
@@ -182,7 +182,7 @@ void python_interpreter_t::functor_t::operator()(value_t& result,
   catch (const error_already_set&) {
     PyErr_Print();
     throw new xml::xpath_t::calc_error
-      (std::string("While calling Python function '") + name() + "'");
+      (string("While calling Python function '") + name() + "'");
   }
 }
 

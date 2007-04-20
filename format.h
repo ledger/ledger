@@ -20,7 +20,7 @@ class format_t
 
     enum kind_t { UNKNOWN, TEXT, COLUMN, XPATH, GROUP } kind;
     union {
-      std::string *  chars;
+      string *  chars;
       xml::xpath_t * xpath;
       format_t *     format;
     };
@@ -60,7 +60,7 @@ class format_t
 			   xml::node_t * context, int column) const;
   };
 
-  std::string		 format_string;
+  string		 format_string;
   std::list<element_t *> elements;
 
  private:
@@ -70,8 +70,8 @@ class format_t
   format_t() {
     TRACE_CTOR("format_t()");
   }
-  format_t(const std::string& fmt) {
-    TRACE_CTOR("format_t(const std::string&)");
+  format_t(const string& fmt) {
+    TRACE_CTOR("format_t(const string&)");
     parse(fmt);
   }
 
@@ -88,9 +88,9 @@ class format_t
     clear_elements();
   }
 
-  void parse(const std::string& fmt);
+  void parse(const string& fmt);
 
-  void compile(const std::string& fmt, xml::node_t * context = NULL) {
+  void compile(const string& fmt, xml::node_t * context = NULL) {
     parse(fmt);
     compile(context);
   }
@@ -107,7 +107,7 @@ class format_t
 
 class format_error : public error {
  public:
-  format_error(const std::string& reason, error_context * ctxt = NULL) throw()
+  format_error(const string& reason, error_context * ctxt = NULL) throw()
     : error(reason, ctxt) {}
   virtual ~format_error() throw() {}
 };

@@ -31,7 +31,7 @@ moment_t parse_datetime(std::istream& in)
 #if 0
   return parse_abs_datetime(in);
 #else
-  std::string word;
+  string word;
 
   if (! in.good() || in.eof())
     return moment_t();

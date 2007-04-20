@@ -10,6 +10,7 @@
 #include <cstring>
 
 #include "option.h"
+#include "timing.h"
 #include "acconf.h"
 
 #ifdef HAVE_UNIX_PIPES
@@ -43,7 +44,7 @@ static int read_and_report(report_t * report, int argc, char * argv[],
 
   // Handle the command-line arguments
 
-  std::list<std::string> args;
+  std::list<string> args;
   process_arguments(argc - 1, argv + 1, false, report, args);
 
   if (args.empty()) {
@@ -68,7 +69,7 @@ static int read_and_report(report_t * report, int argc, char * argv[],
   process_environment(const_cast<const char **>(envp), "LEDGER_", report);
 
   const char * p = std::getenv("HOME");
-  std::string home = p ? p : "";
+  string home = p ? p : "";
 
   if (session.init_file.empty())
     session.init_file  = home + "/.ledgerrc";
@@ -83,23 +84,23 @@ static int read_and_report(report_t * report, int argc, char * argv[],
 
   DEBUG_PRINT("ledger.session.cache", "2. use_cache = " << session.use_cache);
 
-  TRACE(main, std::string("Initialization file is ") + session.init_file);
-  TRACE(main, std::string("Price database is ") + session.price_db);
-  TRACE(main, std::string("Binary cache is ") + session.cache_file);
-  TRACE(main, std::string("Main journal is ") + session.data_file);
+  TRACE(main, string("Initialization file is ") + session.init_file);
+  TRACE(main, string("Price database is ") + session.price_db);
+  TRACE(main, string("Binary cache is ") + session.cache_file);
+  TRACE(main, string("Main journal is ") + session.data_file);
 
-  TRACE(main, std::string("Based on option settings, binary cache ") +
+  TRACE(main, string("Based on option settings, binary cache ") +
 	(session.use_cache ? "WILL " : "will NOT ") + "be used");
 
   // Read the command word and create a command object based on it
 
-  std::string verb = *arg++;
+  string verb = *arg++;
 
-  xml::xpath_t::functor_t * command = NULL;
+  std::auto_ptr<xml::xpath_t::functor_t> command;
 
   if (verb == "register" || verb == "reg" || verb == "r") {
 #if 1
-    command = new register_command;
+    command.reset(new register_command);
 #else
     command = new format_command
       ("register", either_or(report->format_string,
@@ -147,7 +148,7 @@ static int read_and_report(report_t * report, int argc, char * argv[],
     command = new emacs_command;
 #endif
   else if (verb == "xml")
-    command = new xml_command;
+    command.reset(new xml_command);
   else if (verb == "expr")
     ;
   else if (verb == "xpath")
@@ -174,11 +175,14 @@ static int read_and_report(report_t * report, int argc, char * argv[],
     char buf[128];
     std::strcpy(buf, "command_");
     std::strcat(buf, verb.c_str());
-    if (xml::xpath_t::op_t * def = report->lookup(buf))
-      command = def->functor_obj();
 
-    if (! command)
-      throw new error(std::string("Unrecognized command '") + verb + "'");
+    // jww (2007-04-19): This is an error, since command is an
+    // auto_ptr!
+    if (xml::xpath_t::op_t * def = report->lookup(buf))
+      command.reset(def->functor_obj());
+
+    if (! command.get())
+      throw new error(string("Unrecognized command '") + verb + "'");
   }
 
   // Parse the initialization file, which can only be textual; then
@@ -278,26 +282,11 @@ static int read_and_report(report_t * report, int argc, char * argv[],
     return 0;
   }
 
-  // Cleanup memory -- if this is a beta or development build.
-
-#if DEBUG_LEVEL >= BETA
-  { TRACE_PUSH(cleanup, "Cleaning up allocated memory");
-
-#ifdef USE_BOOST_PYTHON
-    shutdown_ledger_for_python();
-#endif
-
-    if (! report->output_file.empty())
-      delete out;
-
-    TRACE_POP(cleanup, "Finished cleaning"); }
-#endif
-
   // Create the an argument scope containing the report command's
   // arguments, and then invoke the command.
 
-  xml::xpath_t::scope_t * locals =
-    new xml::xpath_t::scope_t(report, xml::xpath_t::scope_t::ARGUMENT);
+  std::auto_ptr<xml::xpath_t::scope_t> locals
+    (new xml::xpath_t::scope_t(report, xml::xpath_t::scope_t::ARGUMENT));
 
   locals->args = new value_t::sequence_t;
   locals->args.push_back(out);
@@ -309,7 +298,7 @@ static int read_and_report(report_t * report, int argc, char * argv[],
 	 i++)
       locals->args.push_back(*i);
   } else {
-    std::string regexps[4];
+    string regexps[4];
 
     // Treat the remaining command-line arguments as regular
     // expressions, used for refining report results.
@@ -337,38 +326,29 @@ static int read_and_report(report_t * report, int argc, char * argv[],
     if (! regexps[3].empty())
       report->transforms.push_front
 	(new remove_transform
-	 (std::string("//entry[payee =~ /(") + regexps[3] + ")/]"));
+	 (string("//entry[payee =~ /(") + regexps[3] + ")/]"));
 
     if (! regexps[2].empty())
       report->transforms.push_front
 	(new select_transform
-	 (std::string("//entry[payee =~ /(") + regexps[2] + ")/]"));
+	 (string("//entry[payee =~ /(") + regexps[2] + ")/]"));
 
     if (! regexps[1].empty())
       report->transforms.push_front
 	(new remove_transform
-	 (std::string("//xact[account =~ /(") + regexps[1] + ")/]"));
+	 (string("//xact[account =~ /(") + regexps[1] + ")/]"));
 
     if (! regexps[0].empty())
       report->transforms.push_front
 	(new select_transform
-	 (std::string("//xact[account =~ /(") + regexps[0] + ")/]"));
+	 (string("//xact[account =~ /(") + regexps[0] + ")/]"));
 #endif
   }
 
-  xml::document_t *	xml_doc	     = new xml::document_t;
-  xml::journal_node_t * journal_node = new xml::journal_node_t(xml_doc, journal);
-
-  xml_doc->set_top(journal_node);
-
-  assert(xml_doc->top == journal_node);
-  assert(journal_node->document == xml_doc);
-  assert(journal_node->document->top == journal_node);
-
-  report->apply_transforms(xml_doc);
+  report->apply_transforms(journal->document);
 
   value_t temp;
-  (*command)(temp, locals);
+  (*command)(temp, locals.get());
 
   // Write out the binary cache, if need be
 
@@ -383,6 +363,21 @@ static int read_and_report(report_t * report, int argc, char * argv[],
 
     TRACE_POP(binary_cache, "Finished writing");
   }
+
+  // Cleanup memory -- if this is a beta or development build.
+
+#if DEBUG_LEVEL >= BETA
+  { TRACE_PUSH(cleanup, "Cleaning up allocated memory");
+
+#ifdef USE_BOOST_PYTHON
+    shutdown_ledger_for_python();
+#endif
+
+    if (! report->output_file.empty())
+      delete out;
+
+    TRACE_POP(cleanup, "Finished cleaning"); }
+#endif
 
   // If the user specified a pager, wait for it to exit now
 
@@ -403,6 +398,8 @@ static int read_and_report(report_t * report, int argc, char * argv[],
 
 int main(int argc, char * argv[], char * envp[])
 {
+  int status = 1;
+
   try {
     std::ios::sync_with_stdio(false);
 
@@ -412,6 +409,8 @@ int main(int argc, char * argv[], char * envp[])
     ledger::tracing_active = true;
 #endif
     TRACE_PUSH(main, "Ledger starting");
+
+    ledger::amount_t::initialize();
 
     std::auto_ptr<ledger::session_t> session(new ledger::session_t);
 
@@ -428,25 +427,25 @@ int main(int argc, char * argv[], char * envp[])
     session->register_parser(new qif_parser_t);
     session->register_parser(new textual_parser_t);
 
+#if DEBUG_LEVEL >= BETA
+    DEBUG_IF("ledger.trace.memory") {
+      ledger::trace_mode = true;
+    }
+#endif
+
     std::auto_ptr<ledger::report_t> report(new ledger::report_t(session.get()));
 
-    int status = read_and_report(report.get(), argc, argv, envp);
+    status = read_and_report(report.get(), argc, argv, envp);
 
     if (! ledger::do_cleanup) {
       report.release();
       session.release();
+      ledger::xml::xpath_t::lookahead.clear();
+    } else {
+      ledger::amount_t::shutdown();
     }
 
     TRACE_POP(main, "Ledger done");
-
-#if DEBUG_LEVEL >= BETA
-    DEBUG_IF("ledger.trace.memory") {
-      report_memory(std::cout);
-    }
-    ledger::tracing_active = false;
-#endif
-
-    return status;
   }
   catch (error * err) {
     std::cout.flush();
@@ -460,7 +459,6 @@ int main(int argc, char * argv[], char * envp[])
 #if DEBUG_LEVEL >= BETA
     ledger::tracing_active = false;
 #endif
-    return 1;
   }
   catch (fatal * err) {
     std::cout.flush();
@@ -474,7 +472,6 @@ int main(int argc, char * argv[], char * envp[])
 #if DEBUG_LEVEL >= BETA
     ledger::tracing_active = false;
 #endif
-    return 1;
   }
   catch (const std::exception& err) {
     std::cout.flush();
@@ -482,14 +479,22 @@ int main(int argc, char * argv[], char * envp[])
 #if DEBUG_LEVEL >= BETA
     ledger::tracing_active = false;
 #endif
-    return 1;
   }
-  catch (int status) {
+  catch (int _status) {
 #if DEBUG_LEVEL >= BETA
     ledger::tracing_active = false;
 #endif
-    return status;
+    status = _status;
   }
+
+#if DEBUG_LEVEL >= BETA
+  DEBUG_IF("ledger.trace.memory") {
+    report_memory(std::cerr);
+  }
+  ledger::tracing_active = false;
+#endif
+
+  return status;
 }
 
 // main.cc ends here.

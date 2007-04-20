@@ -21,18 +21,18 @@ namespace ledger {
 
 #define MAX_LINE 1024
 
-static std::string  path;
+static string  path;
 static unsigned int linenum;
 static unsigned int src_idx;
 static accounts_map account_aliases;
 
-static std::list<std::pair<std::string, int> > include_stack;
+static std::list<std::pair<string, int> > include_stack;
 
 #ifdef TIMELOG_SUPPORT
 struct time_entry_t {
   moment_t  checkin;
   account_t * account;
-  std::string desc;
+  string desc;
 };
 std::list<time_entry_t> time_entries;
 #endif
@@ -60,7 +60,7 @@ inline char * next_element(char * buf, bool variable = false)
 }
 
 static inline void
-parse_amount_expr(std::istream& in, journal_t * journal,
+parse_amount_expr(std::istream& in, journal_t *,
 		  transaction_t& xact, amount_t& amount,
 		  unsigned short flags = 0)
 {
@@ -93,12 +93,10 @@ transaction_t * parse_transaction(char *      line,
   std::auto_ptr<transaction_t> xact(new transaction_t(NULL));
 
   std::istringstream in(line);
-  std::string err_desc;
+  string err_desc;
   try {
 
   xact->entry = entry;		// this might be NULL
-  if (xact->entry)
-    xact->data = xml::wrap_node(journal->document, xact.get(), xact->entry->data);
 
   // Parse the state flag
 
@@ -150,7 +148,7 @@ transaction_t * parse_transaction(char *      line,
     b++; e--;
   }
 
-  std::string name(b, e - b);
+  string name(b, e - b);
   DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
 	      "Parsed account name " << name);
   if (account_aliases.size() > 0) {
@@ -174,10 +172,37 @@ transaction_t * parse_transaction(char *      line,
       // jww (2006-09-15): Make sure it doesn't gobble up the upcoming @ symbol
 
       unsigned long beg = (long)in.tellg();
-      parse_amount_expr(in, journal, *xact, xact->amount,
-			XPATH_PARSE_NO_REDUCE);
-      unsigned long end = (long)in.tellg();
-      xact->amount_expr = std::string(line, beg, end - beg);
+
+      xact->amount.parse(in, AMOUNT_PARSE_NO_REDUCE);
+
+      if (! in.eof() && (p = peek_next_nonws(in)) != '@' &&
+	  p != ';' && ! in.eof()) {
+	in.seekg(beg, std::ios::beg);
+
+	if (xact->entry) {
+	  // Create a report item for this entry, so the transaction
+	  // below may refer to it
+
+	  if (! xact->entry->data)
+	    xact->entry->data = xml::wrap_node(journal->document, xact->entry,
+					       journal->document->top);
+
+	  xact->data = xml::wrap_node(journal->document, xact.get(),
+				      xact->entry->data);
+	}
+
+	parse_amount_expr(in, journal, *xact, xact->amount,
+			  XPATH_PARSE_NO_REDUCE);
+
+	if (xact->entry) {
+	  delete static_cast<xml::transaction_node_t *>(xact->data);
+	  xact->data = NULL;
+	}
+
+	unsigned long end = (long)in.tellg();
+
+	xact->amount_expr = string(line, beg, end - beg);
+      }
     }
     catch (error * err) {
       err_desc = "While parsing transaction amount:";
@@ -207,17 +232,16 @@ transaction_t * parse_transaction(char *      line,
 	try {
 	  unsigned long beg = (long)in.tellg();
 
-	  parse_amount_expr(in, journal, *xact, *xact->cost,
-			    XPATH_PARSE_NO_MIGRATE);
+	  xact->cost->parse(in);
 
 	  unsigned long end = (long)in.tellg();
 
 	  if (per_unit)
-	    xact->cost_expr = (std::string("@") +
-			       std::string(line, beg, end - beg));
+	    xact->cost_expr = (string("@") +
+			       string(line, beg, end - beg));
 	  else
-	    xact->cost_expr = (std::string("@@") +
-			       std::string(line, beg, end - beg));
+	    xact->cost_expr = (string("@@") +
+			       string(line, beg, end - beg));
 	}
 	catch (error * err) {
 	  err_desc = "While parsing transaction cost:";
@@ -245,11 +269,14 @@ transaction_t * parse_transaction(char *      line,
 		    "Per-unit cost is " << per_unit_cost);
 	DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
 		    "Annotated amount is " << xact->amount);
+	DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+		    "Bare amount is " << xact->amount.number());
       }
     }
   }
 
   xact->amount.in_place_reduce();
+
   DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
 	      "Reduced amount is " << xact->amount);
 
@@ -297,12 +324,12 @@ transaction_t * parse_transaction(char *      line,
   }
 }
 
-bool parse_transactions(std::istream&	   in,
-			journal_t *	   journal,
-			account_t *	   account,
-			entry_base_t&	   entry,
-			const std::string& kind,
-			unsigned long      beg_pos)
+bool parse_transactions(std::istream& in,
+			journal_t *   journal,
+			account_t *   account,
+			entry_base_t& entry,
+			const string& /* kind */,
+			unsigned long beg_pos)
 {
   static char line[MAX_LINE + 1];
   bool	      added = false;
@@ -329,14 +356,14 @@ bool parse_transactions(std::istream&	   in,
 }
 
 namespace {
-  TIMER_DEF(parsing_total, "total parsing time");
-  TIMER_DEF(entry_xacts,   "parsing transactions");
-  TIMER_DEF(entry_details, "parsing entry details");
-  TIMER_DEF(entry_date,    "parsing entry date");
+  TIMER_DEF(parsing_total, "total parsing time")
+  TIMER_DEF(entry_xacts,   "parsing transactions")
+  TIMER_DEF(entry_details, "parsing entry details")
+  TIMER_DEF(entry_date,    "parsing entry date")
 }
 
 entry_t * parse_entry(std::istream& in, char * line, journal_t * journal,
-		      account_t * master, textual_parser_t& parser,
+		      account_t * master, textual_parser_t& /* parser */,
 		      unsigned long beg_pos)
 {
   std::auto_ptr<entry_t> curr(new entry_t);
@@ -348,7 +375,7 @@ entry_t * parse_entry(std::istream& in, char * line, journal_t * journal,
 
   TIMER_START(entry_date);
 
-  std::string word;
+  string word;
   line_in >> word;
   curr->_date = parse_datetime(word);
 
@@ -397,11 +424,6 @@ entry_t * parse_entry(std::istream& in, char * line, journal_t * journal,
 
   TIMER_STOP(entry_details);
 
-  // Create a report item for this entry, so the transaction below may
-  // refer to it
-
-  curr->data = xml::wrap_node(journal->document, curr.get(), journal->data);
-
   // Parse all of the transactions associated with this entry
 
   TIMER_START(entry_xacts);
@@ -442,6 +464,11 @@ entry_t * parse_entry(std::istream& in, char * line, journal_t * journal,
       break;
   }
 
+  if (curr->data) {
+    delete static_cast<xml::entry_node_t *>(curr->data);
+    curr->data = NULL;
+  }
+
   TIMER_STOP(entry_xacts);
 
   return curr.release();
@@ -455,13 +482,13 @@ struct push_var {
   ~push_var() { var = prev; }
 };
 
-static inline void parse_symbol(char *& p, std::string& symbol)
+static inline void parse_symbol(char *& p, string& symbol)
 {
   if (*p == '"') {
     char * q = std::strchr(p + 1, '"');
     if (! q)
       throw new parse_error("Quoted commodity symbol lacks closing quote");
-    symbol = std::string(p + 1, 0, q - p - 1);
+    symbol = string(p + 1, 0, q - p - 1);
     p = q + 2;
   } else {
     char * q = next_element(p);
@@ -545,7 +572,7 @@ static void clock_out_from_timelog(const moment_t& when,
       ("Timelog check-out date less than corresponding check-in");
 
   char buf[32];
-  std::sprintf(buf, "%lds", (curr->_date - event.checkin).total_seconds());
+  std::sprintf(buf, "%lds", (long)(curr->_date - event.checkin).total_seconds());
   amount_t amt;
   amt.parse(buf);
 
@@ -563,7 +590,7 @@ static void clock_out_from_timelog(const moment_t& when,
 unsigned int textual_parser_t::parse(std::istream&	 in,
 				     journal_t *	 journal,
 				     account_t *	 master,
-				     const std::string * original_file)
+				     const string * original_file)
 {
   static bool  added_auto_entry_hook = false;
   static char  line[MAX_LINE + 1];
@@ -613,7 +640,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 #ifdef TIMELOG_SUPPORT
       case 'i':
       case 'I': {
-	std::string date(line, 2, 19);
+	string date(line, 2, 19);
 
 	char * p = skip_ws(line + 22);
 	char * n = next_element(p, true);
@@ -640,7 +667,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	if (time_entries.empty()) {
 	  throw new parse_error("Timelog check-out event without a check-in");
 	} else {
-	  std::string date(line, 2, 19);
+	  string date(line, 2, 19);
 
 	  char * p = skip_ws(line + 22);
 	  char * n = next_element(p, true);
@@ -675,7 +702,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	char * date_field_ptr = skip_ws(line + 1);
 	char * time_field_ptr = next_element(date_field_ptr);
 	if (! time_field_ptr) break;
-	std::string date_field = date_field_ptr;
+	string date_field = date_field_ptr;
 
 	char * symbol_and_price;
 	moment_t  datetime;
@@ -689,7 +716,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	  datetime = parse_datetime(date_field);
 	}
 
-	std::string symbol;
+	string symbol;
 	parse_symbol(symbol_and_price, symbol);
 	amount_t price(symbol_and_price);
 
@@ -700,7 +727,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
       case 'N': {			// don't download prices
 	char * p = skip_ws(line + 1);
-	std::string symbol;
+	string symbol;
 	parse_symbol(p, symbol);
 
 	if (commodity_t * commodity = commodity_t::find_or_create(symbol))
@@ -747,7 +774,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
       case '~': {		// period entry
 	period_entry_t * pe = new period_entry_t(skip_ws(line + 1));
 	if (! pe->period)
-	  throw new parse_error(std::string("Parsing time period '") + skip_ws(line + 1) + "'");
+	  throw new parse_error(string("Parsing time period '") + skip_ws(line + 1) + "'");
 
 	if (parse_transactions(in, journal, account_stack.front(), *pe,
 			       "period", end_pos)) {
@@ -769,9 +796,9 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
       case '@':
       case '!': {                 // directive
 	char * p = next_element(line);
-	std::string word(line + 1);
+	string word(line + 1);
 	if (word == "include") {
-	  push_var<std::string>	  save_path(path);
+	  push_var<string>	  save_path(path);
 	  push_var<unsigned int>  save_src_idx(src_idx);
 	  push_var<unsigned long> save_beg_pos(beg_pos);
 	  push_var<unsigned long> save_end_pos(end_pos);
@@ -779,18 +806,18 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
 	  path = p;
 	  if (path[0] != '/' && path[0] != '\\' && path[0] != '~') {
-	    std::string::size_type pos = save_path.prev.rfind('/');
-	    if (pos == std::string::npos)
+	    string::size_type pos = save_path.prev.rfind('/');
+	    if (pos == string::npos)
 	      pos = save_path.prev.rfind('\\');
-	    if (pos != std::string::npos)
-	      path = std::string(save_path.prev, 0, pos + 1) + path;
+	    if (pos != string::npos)
+	      path = string(save_path.prev, 0, pos + 1) + path;
 	  }
 	  path = resolve_path(path);
 
 	  DEBUG_PRINT("ledger.textual.include", "line " << linenum << ": " <<
 		      "Including path '" << path << "'");
 
-	  include_stack.push_back(std::pair<std::string, int>
+	  include_stack.push_back(std::pair<string, int>
 				  (journal->sources.back(), linenum - 1));
 	  count += journal->session->read_journal(path, journal,
 						  account_stack.front());
@@ -861,7 +888,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
       }
     }
     catch (error * err) {
-      for (std::list<std::pair<std::string, int> >::reverse_iterator i =
+      for (std::list<std::pair<string, int> >::reverse_iterator i =
 	     include_stack.rbegin();
 	   i != include_stack.rend();
 	   i++)
@@ -880,7 +907,6 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
     beg_pos = end_pos;
   }
 
- done:
   if (! time_entries.empty()) {
     for (std::list<time_entry_t>::iterator i = time_entries.begin();
 	 i != time_entries.end();

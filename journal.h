@@ -23,16 +23,16 @@ class transaction_t
   enum state_t { UNCLEARED, CLEARED, PENDING };
 
   entry_t *	   entry;
-  moment_t		   _date;
-  moment_t		   _date_eff;
+  moment_t	   _date;
+  moment_t	   _date_eff;
   account_t *	   account;
   amount_t	   amount;
-  std::string      amount_expr;
+  string	   amount_expr;
   amount_t *	   cost;
-  std::string      cost_expr;
+  string	   cost_expr;
   state_t	   state;
   unsigned short   flags;
-  std::string	   note;
+  string	   note;
   istream_pos_type beg_pos;
   unsigned long    beg_line;
   istream_pos_type end_pos;
@@ -51,12 +51,12 @@ class transaction_t
   transaction_t(account_t *	   _account,
 		const amount_t&    _amount,
 		unsigned int	   _flags = TRANSACTION_NORMAL,
-		const std::string& _note  = "")
+		const string& _note  = "")
     : entry(NULL), account(_account), amount(_amount), cost(NULL),
       state(UNCLEARED), flags(_flags),
       note(_note), beg_pos(0), beg_line(0), end_pos(0), end_line(0),
       data(NULL) {
-    TRACE_CTOR("transaction_t(account_t *, const amount_t&, unsigned int, const std::string&)");
+    TRACE_CTOR("transaction_t(account_t *, const amount_t&, unsigned int, const string&)");
   }
   transaction_t(const transaction_t& xact)
     : entry(xact.entry), account(xact.account), amount(xact.amount),
@@ -91,7 +91,7 @@ class xact_context : public file_context {
   const transaction_t& xact;
 
   xact_context(const transaction_t& _xact,
-	       const std::string& desc = "") throw();
+	       const string& desc = "") throw();
   virtual ~xact_context() throw() {}
 };
 
@@ -151,10 +151,10 @@ class entry_base_t
 class entry_t : public entry_base_t
 {
  public:
-  moment_t	      _date;
-  moment_t	      _date_eff;
-  std::string code;
-  std::string payee;
+  moment_t _date;
+  moment_t _date_eff;
+  string   code;
+  string   payee;
 
   mutable void * data;
 
@@ -195,14 +195,14 @@ struct entry_finalizer_t {
 };
 
 void print_entry(std::ostream& out, const entry_base_t& entry,
-		 const std::string& prefix = "");
+		 const string& prefix = "");
 
 class entry_context : public error_context {
  public:
   const entry_base_t& entry;
 
   entry_context(const entry_base_t& _entry,
-		const std::string& _desc = "") throw()
+		const string& _desc = "") throw()
     : error_context(_desc), entry(_entry) {}
   virtual ~entry_context() throw() {}
 
@@ -211,7 +211,7 @@ class entry_context : public error_context {
 
 class balance_error : public error {
  public:
-  balance_error(const std::string& _reason,
+  balance_error(const string& _reason,
 		error_context * _ctxt = NULL) throw()
     : error(_reason, _ctxt) {}
   virtual ~balance_error() throw() {}
@@ -226,9 +226,9 @@ public:
   auto_entry_t() {
     TRACE_CTOR("auto_entry_t()");
   }
-  auto_entry_t(const std::string& _predicate)
+  auto_entry_t(const string& _predicate)
     : predicate(_predicate) {
-    TRACE_CTOR("auto_entry_t(const std::string&)");
+    TRACE_CTOR("auto_entry_t(const string&)");
   }
 
   virtual ~auto_entry_t() {
@@ -241,8 +241,6 @@ public:
   }
 };
 
-class journal_t;
-
 struct auto_entry_finalizer_t : public entry_finalizer_t {
   journal_t * journal;
   auto_entry_finalizer_t(journal_t * _journal) : journal(_journal) {}
@@ -254,14 +252,14 @@ class period_entry_t : public entry_base_t
 {
  public:
   interval_t  period;
-  std::string period_string;
+  string period_string;
 
   period_entry_t() {
     TRACE_CTOR("period_entry_t()");
   }
-  period_entry_t(const std::string& _period)
+  period_entry_t(const string& _period)
     : period(_period), period_string(_period) {
-    TRACE_CTOR("period_entry_t(const std::string&)");
+    TRACE_CTOR("period_entry_t(const string&)");
   }
   period_entry_t(const period_entry_t& e)
     : entry_base_t(e), period(e.period), period_string(e.period_string) {
@@ -278,8 +276,8 @@ class period_entry_t : public entry_base_t
 };
 
 
-typedef std::map<const std::string, account_t *> accounts_map;
-typedef std::pair<const std::string, account_t *> accounts_pair;
+typedef std::map<const string, account_t *> accounts_map;
+typedef std::pair<const string, account_t *> accounts_pair;
 
 class account_t
 {
@@ -288,21 +286,21 @@ class account_t
 
   journal_t *    journal;
   account_t *	 parent;
-  std::string	 name;
-  std::string	 note;
+  string	 name;
+  string	 note;
   unsigned short depth;
   accounts_map	 accounts;
 
-  mutable void *      data;
-  mutable ident_t     ident;
-  mutable std::string _fullname;
+  mutable void *  data;
+  mutable ident_t ident;
+  mutable string  _fullname;
 
-  account_t(account_t *        _parent = NULL,
-	    const std::string& _name   = "",
-	    const std::string& _note   = "")
+  account_t(account_t *   _parent = NULL,
+	    const string& _name   = "",
+	    const string& _note   = "")
     : parent(_parent), name(_name), note(_note),
       depth(parent ? parent->depth + 1 : 0), data(NULL), ident(0) {
-    TRACE_CTOR("account_t(account_t *, const std::string&, const std::string&)");
+    TRACE_CTOR("account_t(account_t *, const string&, const string&)");
   }
   ~account_t();
 
@@ -313,7 +311,7 @@ class account_t
     return ! (*this == account);
   }
 
-  std::string fullname() const;
+  string fullname() const;
 
   void add_account(account_t * acct) {
     accounts.insert(accounts_pair(acct->name, acct));
@@ -325,9 +323,9 @@ class account_t
     return n > 0;
   }
 
-  account_t * find_account(const std::string& name, bool auto_create = true);
+  account_t * find_account(const string& name, bool auto_create = true);
 
-  operator std::string() const {
+  operator string() const {
     return fullname();
   }
 
@@ -377,7 +375,7 @@ bool run_hooks(std::list<T>& list, Data& item, bool post) {
 typedef std::list<entry_t *>	    entries_list;
 typedef std::list<auto_entry_t *>   auto_entries_list;
 typedef std::list<period_entry_t *> period_entries_list;
-typedef std::list<std::string>	    strings_list;
+typedef std::list<string>	    strings_list;
 
 class session_t;
 
@@ -389,7 +387,7 @@ class journal_t
   account_t *  basket;
   entries_list entries;
   strings_list sources;
-  std::string  price_db;
+  string       price_db;
   char *       item_pool;
   char *       item_pool_end;
 
@@ -402,15 +400,13 @@ class journal_t
 
   auto_entries_list    auto_entries;
   period_entries_list  period_entries;
-  mutable void *       data;
   mutable accounts_map accounts_cache;
 
   std::list<entry_finalizer_t *> entry_finalize_hooks;
 
   journal_t(session_t * _session)
     : session(_session), basket(NULL),
-      item_pool(NULL), item_pool_end(NULL),
-      document(NULL), data(NULL) {
+      item_pool(NULL), item_pool_end(NULL), document(NULL) {
     TRACE_CTOR("journal_t()");
     master = new account_t(NULL, "");
     master->journal = this;
@@ -433,7 +429,7 @@ class journal_t
     acct->journal = NULL;
   }
 
-  account_t * find_account(const std::string& name, bool auto_create = true) {
+  account_t * find_account(const string& name, bool auto_create = true) {
     accounts_map::iterator c = accounts_cache.find(name);
     if (c != accounts_cache.end())
       return (*c).second;
@@ -443,7 +439,7 @@ class journal_t
     account->journal = this;
     return account;
   }
-  account_t * find_account_re(const std::string& regexp);
+  account_t * find_account_re(const string& regexp);
 
   bool add_entry(entry_t * entry);
   bool remove_entry(entry_t * entry);
@@ -471,7 +467,7 @@ inline bool auto_entry_finalizer_t::operator()(entry_t& entry, bool post) {
   return true;
 }
 
-extern const std::string version;
+extern const string version;
 
 } // namespace ledger
 

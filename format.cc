@@ -11,7 +11,7 @@
 
 namespace ledger {
 
-void format_t::parse(const std::string& fmt)
+void format_t::parse(const string& fmt)
 {
   element_t * current = NULL;
 
@@ -56,7 +56,7 @@ void format_t::parse(const std::string& fmt)
 
     if (q != buf) {
       current->kind  = element_t::TEXT;
-      current->chars = new std::string(buf, q);
+      current->chars = new string(buf, q);
       q = buf;
 
       current = new element_t;
@@ -115,16 +115,16 @@ void format_t::parse(const std::string& fmt)
 	p++;
       }
       if (*p != close)
-	throw new format_error(std::string("Missing '") + close + "'");
+	throw new format_error(string("Missing '") + close + "'");
 
       if (open == '{') {
 	assert(! current->xpath);
 	current->kind   = element_t::XPATH;
-	current->xpath  = new xml::xpath_t(std::string(b, p));
+	current->xpath  = new xml::xpath_t(string(b, p));
       } else {
 	assert(! current->format);
 	current->kind   = element_t::GROUP;
-	current->format = new format_t(std::string(b, p));
+	current->format = new format_t(string(b, p));
       }
       break;
     }
@@ -132,18 +132,17 @@ void format_t::parse(const std::string& fmt)
     default:
       assert(! current->xpath);
       current->kind  = element_t::XPATH;
-      current->xpath = new xml::xpath_t(std::string(p, p + 1));
+      current->xpath = new xml::xpath_t(string(p, p + 1));
       break;
     }
   }
 
- END:
   if (q != buf) {
     current = new element_t;
     elements.push_back(current);
 
     current->kind  = element_t::TEXT;
-    current->chars = new std::string(buf, q);
+    current->chars = new string(buf, q);
   }
 }
 
@@ -161,6 +160,8 @@ void format_t::compile(xml::node_t * context)
     assert((*i)->format);
     (*i)->format->compile(context);
     break;
+  default:
+    break;
   }
 }
 
@@ -175,7 +176,7 @@ int format_t::element_formatter_t::operator()
     }
 
     if (elem->min_width != -1 && elem->min_width > column) {
-      out_str << std::string(elem->min_width - column, ' ');
+      out_str << string(elem->min_width - column, ' ');
       column = elem->min_width;
     }
     return column;
@@ -203,8 +204,8 @@ int format_t::element_formatter_t::operator()
   else
     assert(0);
 
-  std::string temp = out.str();
-  for (std::string::const_iterator i = temp.begin();
+  string temp = out.str();
+  for (string::const_iterator i = temp.begin();
        i != temp.end();
        i++)
     if (*i == '\n' || *i == '\r')
@@ -215,7 +216,7 @@ int format_t::element_formatter_t::operator()
   int virtual_width = column - start_column;
 
   if (elem->min_width != -1 && virtual_width < elem->min_width) {
-    out_str << temp << std::string(' ', elem->min_width - virtual_width);
+    out_str << temp << string(' ', elem->min_width - virtual_width);
   }
   else if (elem->max_width != -1 && virtual_width > elem->max_width) {
     temp.erase(temp.length() - (virtual_width - elem->max_width));
@@ -252,7 +253,7 @@ using namespace ledger;
 void export_format()
 {
   class_< format_t > ("Format")
-    .def(init<std::string>())
+    .def(init<string>())
     .def("parse", &format_t::parse)
     .def("format", &format_t::format)
     ;

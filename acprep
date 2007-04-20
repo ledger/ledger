@@ -45,12 +45,6 @@ else
     CXXFLAGS=""
 fi
 
-WARNFLAGS="-Wall -Wextra -Wfloat-equal -Wno-endif-labels -Wshadow"
-WARNFLAGS="$WARNFLAGS -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion"
-WARNFLAGS="$WARNFLAGS -Wconversion -Wshorten-64-to-32 -Wsign-compare"
-WARNFLAGS="$WARNFLAGS -Wmissing-field-initializers -Wmissing-noreturn"
-WARNFLAGS="$WARNFLAGS -pedantic-errors"
-
 # Building the command-line tool as a shared library is a luxury,
 # since there are no clients except a GUI tool which might use it (and
 # that is built again anyway by Xcode).
@@ -100,4 +94,4 @@ fi
 "$HERE/configure" --srcdir="$HERE" \
     EMACS="$HOME/bin/emacs" EMACSLOADPATH="$EMACSLOADPATH" \
     CPPFLAGS="$INCDIRS" CXXFLAGS="$CXXFLAGS $local_cxxflags" \
-    WARNFLAGS="$WARNFLAGS" LDFLAGS="$LIBDIRS" $SWITCHES "$@"
+    LDFLAGS="$LIBDIRS" $SWITCHES "$@"

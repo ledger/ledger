@@ -58,7 +58,6 @@
 #include <exception>
 
 #include "times.h"
-#include "debug.h"
 #include "error.h"
 
 namespace ledger {
@@ -84,6 +83,9 @@ class amount_t
 {
  public:
   class bigint_t;
+
+  static void initialize();
+  static void shutdown();
 
   static bool keep_price;
   static bool keep_date;
@@ -114,8 +116,8 @@ class amount_t
     else
       commodity_ = NULL;
   }
-  amount_t(const std::string& val) : quantity(NULL) {
-    TRACE_CTOR("amount_t(const std::string&)");
+  amount_t(const string& val) : quantity(NULL) {
+    TRACE_CTOR("amount_t(const string&)");
     parse(val);
   }
   amount_t(const char * val) : quantity(NULL) {
@@ -146,7 +148,7 @@ class amount_t
   }
   void annotate_commodity(const amount_t&    price,
 			  const moment_t&	     date = moment_t(),
-			  const std::string& tag  = "");
+			  const string& tag  = "");
   amount_t strip_annotations(const bool _keep_price = keep_price,
 			     const bool _keep_date  = keep_date,
 			     const bool _keep_tag   = keep_tag) const;
@@ -162,7 +164,7 @@ class amount_t
 
   // assignment operator
   amount_t& operator=(const amount_t& amt);
-  amount_t& operator=(const std::string& val);
+  amount_t& operator=(const string& val);
   amount_t& operator=(const char * val);
   amount_t& operator=(const long val);
   amount_t& operator=(const unsigned long val);
@@ -263,16 +265,16 @@ class amount_t
   operator bool() const {
     return ! zero();
   }
-  operator std::string() const {
+  operator string() const {
     return to_string();
   }
 
   operator long() const;
   operator double() const;
 
-  std::string to_string() const;
-  std::string to_fullstring() const;
-  std::string quantity_string() const;
+  string to_string() const;
+  string to_fullstring() const;
+  string quantity_string() const;
 
   // comparisons between amounts
   int compare(const amount_t& amt) const;
@@ -341,7 +343,7 @@ class amount_t
 
   bool valid() const;
 
-  static amount_t exact(const std::string& value);
+  static amount_t exact(const string& value);
 
   // This function is special, and exists only to support a custom
   // optimization in binary.cc (which offers a significant enough gain
@@ -351,7 +353,7 @@ class amount_t
 				      char * item_pool_end);
 
   friend bool parse_annotations(std::istream& in, amount_t& price,
-				moment_t& date, std::string& tag);
+				moment_t& date, string& tag);
 
   // Streaming interface
 
@@ -367,7 +369,7 @@ class amount_t
   void print(std::ostream& out, bool omit_commodity = false,
 	     bool full_precision = false) const;
   void parse(std::istream& in, unsigned char flags = 0);
-  void parse(const std::string& str, unsigned char flags = 0) {
+  void parse(const string& str, unsigned char flags = 0) {
     std::istringstream stream(str);
     parse(stream, flags);
   }
@@ -383,25 +385,25 @@ class amount_t
   void read_quantity(char *& data);
 };
 
-inline amount_t amount_t::exact(const std::string& value) {
+inline amount_t amount_t::exact(const string& value) {
   amount_t temp;
   temp.parse(value, AMOUNT_PARSE_NO_MIGRATE);
   return temp;
 }
 
-inline std::string amount_t::to_string() const {
+inline string amount_t::to_string() const {
   std::ostringstream bufstream;
   print(bufstream);
   return bufstream.str();
 }
 
-inline std::string amount_t::to_fullstring() const {
+inline string amount_t::to_fullstring() const {
   std::ostringstream bufstream;
   print(bufstream, false, true);
   return bufstream.str();
 }
 
-inline std::string amount_t::quantity_string() const {
+inline string amount_t::quantity_string() const {
   std::ostringstream bufstream;
   print(bufstream, true);
   return bufstream.str();
@@ -475,8 +477,8 @@ typedef std::pair<const moment_t, amount_t> history_pair;
 
 class commodity_base_t;
 
-typedef std::map<const std::string, commodity_base_t *>  base_commodities_map;
-typedef std::pair<const std::string, commodity_base_t *> base_commodities_pair;
+typedef std::map<const string, commodity_base_t *>  base_commodities_map;
+typedef std::pair<const string, commodity_base_t *> base_commodities_pair;
 
 class commodity_base_t
 {
@@ -487,8 +489,8 @@ class commodity_base_t
   typedef unsigned long ident_t;
 
   ident_t	ident;
-  std::string	name;
-  std::string	note;
+  string	name;
+  string	note;
   unsigned char precision;
   unsigned char flags;
   amount_t *	smaller;
@@ -496,24 +498,34 @@ class commodity_base_t
 
   commodity_base_t()
     : precision(0), flags(COMMODITY_STYLE_DEFAULTS),
-      smaller(NULL), larger(NULL), history(NULL) {}
+      smaller(NULL), larger(NULL), history(NULL) {
+    TRACE_CTOR("commodity_base_t()");
+  }
 
-  commodity_base_t(const std::string& _symbol,
+  commodity_base_t(const commodity_base_t&) {
+    TRACE_CTOR("commodity_base_t(copy)");
+    assert(0);
+  }
+
+  commodity_base_t(const string& _symbol,
 		   unsigned int	_precision = 0,
 		   unsigned int _flags	   = COMMODITY_STYLE_DEFAULTS)
     : precision(_precision), flags(_flags),
-      smaller(NULL), larger(NULL), symbol(_symbol), history(NULL) {}
+      smaller(NULL), larger(NULL), symbol(_symbol), history(NULL) {
+    TRACE_CTOR("commodity_base_t(const string&, unsigned int, unsigned int)");
+  }
 
   ~commodity_base_t() {
+    TRACE_DTOR("commodity_base_t");
     if (history) delete history;
     if (smaller) delete smaller;
     if (larger)  delete larger;
   }
 
   static base_commodities_map commodities;
-  static commodity_base_t * create(const std::string& symbol);
+  static commodity_base_t * create(const string& symbol);
 
-  std::string symbol;
+  string symbol;
 
   struct history_t {
     history_map	prices;
@@ -540,8 +552,8 @@ class commodity_base_t
   static updater_t * updater;
 };
 
-typedef std::map<const std::string, commodity_t *>  commodities_map;
-typedef std::pair<const std::string, commodity_t *> commodities_pair;
+typedef std::map<const string, commodity_t *>  commodities_map;
+typedef std::pair<const string, commodity_t *> commodities_pair;
 
 typedef std::deque<commodity_t *> commodities_array;
 
@@ -558,13 +570,13 @@ class commodity_t
   static commodity_t *	   null_commodity;
   static commodity_t *	   default_commodity;
 
-  static commodity_t * create(const std::string& symbol);
-  static commodity_t * find(const std::string& name);
-  static commodity_t * find_or_create(const std::string& symbol);
+  static commodity_t * create(const string& symbol);
+  static commodity_t * find(const string& name);
+  static commodity_t * find_or_create(const string& symbol);
 
-  static bool needs_quotes(const std::string& symbol);
+  static bool needs_quotes(const string& symbol);
 
-  static void make_alias(const std::string& symbol,
+  static void make_alias(const string& symbol,
 			 commodity_t * commodity);
 
   // These are specific to each commodity reference
@@ -573,12 +585,17 @@ class commodity_t
 
   ident_t	     ident;
   commodity_base_t * base;
-  std::string	     qualified_symbol;
+  string	     qualified_symbol;
   bool		     annotated;
 
  public:
   explicit commodity_t() : base(NULL), annotated(false) {
     TRACE_CTOR("commodity_t()");
+  }
+  commodity_t(const commodity_t& o)
+    : ident(o.ident), base(o.base),
+      qualified_symbol(o.qualified_symbol), annotated(o.annotated) {
+    TRACE_CTOR("commodity_t(copy)");
   }
   virtual ~commodity_t() {
     TRACE_DTOR("commodity_t");
@@ -596,10 +613,10 @@ class commodity_t
     return ! (*this == comm);
   }
 
-  std::string base_symbol() const {
+  string base_symbol() const {
     return base->symbol;
   }
-  std::string symbol() const {
+  string symbol() const {
     return qualified_symbol;
   }
 
@@ -607,17 +624,17 @@ class commodity_t
     out << symbol();
   }
 
-  std::string name() const {
+  string name() const {
     return base->name;
   }
-  void set_name(const std::string& arg) {
+  void set_name(const string& arg) {
     base->name = arg;
   }
 
-  std::string note() const {
+  string note() const {
     return base->note;
   }
-  void set_note(const std::string& arg) {
+  void set_note(const string& arg) {
     base->note = arg;
   }
 
@@ -683,11 +700,14 @@ class annotated_commodity_t : public commodity_t
 
   amount_t    price;
   moment_t  date;
-  std::string tag;
+  string tag;
 
   explicit annotated_commodity_t() {
     TRACE_CTOR("annotated_commodity_t()");
     annotated = true;
+  }
+  virtual ~annotated_commodity_t() {
+    TRACE_DTOR("annotated_commodity_t");
   }
 
   virtual bool operator==(const commodity_t& comm) const;
@@ -699,19 +719,19 @@ class annotated_commodity_t : public commodity_t
   static void write_annotations(std::ostream&      out,
 				const amount_t&    price,
 				const moment_t&  date,
-				const std::string& tag);
+				const string& tag);
 
  private:
   static commodity_t * create(const commodity_t& comm,
 			      const amount_t&    price,
 			      const moment_t&  date,
-			      const std::string& tag,
-			      const std::string& mapping_key);
+			      const string& tag,
+			      const string& mapping_key);
 
   static commodity_t * find_or_create(const commodity_t& comm,
 				      const amount_t&    price,
 				      const moment_t&  date,
-				      const std::string& tag);
+				      const string& tag);
 
   friend class amount_t;
 };
@@ -737,13 +757,13 @@ inline commodity_t& amount_t::commodity() const {
 }
 
 
-void parse_conversion(const std::string& larger_str,
-		      const std::string& smaller_str);
+void parse_conversion(const string& larger_str,
+		      const string& smaller_str);
 
 
 class amount_error : public error {
  public:
-  amount_error(const std::string& _reason) throw() : error(_reason) {}
+  amount_error(const string& _reason) throw() : error(_reason) {}
   virtual ~amount_error() throw() {}
 };
 

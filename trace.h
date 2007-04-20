@@ -1,21 +1,28 @@
 #ifndef _TRACE_H
 #define _TRACE_H
 
-#include "timing.h"
-
 #include <string>
 #include <map>
 
 namespace ledger {
 
+class timing_t;
+
 extern bool trace_mode;
 
-void trace(const std::string& cat, const std::string& str);
-void trace_push(const std::string& cat, const std::string& str,
+#if DEBUG_LEVEL >= 4
+class string;
+#else
+typedef std::string string;
+#endif
+
+void trace(const string& cat, const string& str);
+void trace_push(const string& cat, const string& str,
 		timing_t& timer);
-void trace_pop(const std::string& cat, const std::string& str,
+void trace_pop(const string& cat, const string& str,
 	       timing_t& timer);
 
+#ifndef TRACE
 #define TRACE(cat, msg)  if (trace_mode) trace(#cat, msg)
 #define TRACE_(cat, msg) if (trace_mode) trace(#cat, msg)
 
@@ -25,9 +32,10 @@ void trace_pop(const std::string& cat, const std::string& str,
 
 #define TRACE_POP(cat, msg)					\
   if (trace_mode) trace_pop(#cat, msg, timer_ ## cat)
+#endif
 
 typedef std::multimap<void *, std::string> live_objects_map;
-typedef std::pair<void *, std::string>	   live_objects_pair;
+typedef std::pair<void *, std::string>     live_objects_pair;
 typedef std::map<std::string, int>	   object_count_map;
 typedef std::pair<std::string, int>	   object_count_pair;
 
@@ -38,13 +46,79 @@ extern object_count_map	live_count;
 
 extern bool tracing_active;
 
-bool trace_ctor(void * ptr, const std::string& name);
-bool trace_dtor(void * ptr, const std::string& name);
+bool trace_ctor(void * ptr, const char * name);
+bool trace_dtor(void * ptr, const char * name);
 
 void report_memory(std::ostream& out);
 
+#ifndef TRACE_CTOR
 #define TRACE_CTOR(cls) CONFIRM(ledger::trace_ctor(this, cls))
 #define TRACE_DTOR(cls) CONFIRM(ledger::trace_dtor(this, cls))
+#endif
+
+#if DEBUG_LEVEL >= 4
+
+class string : public std::string
+{
+public:
+  string();
+  string(const string& str);
+  string(const std::string& str);
+  string(const int len, char x);
+  string(const char * str);
+  string(const char * str, const char * end);
+  string(const string& str, int x);
+  string(const string& str, int x, int y);
+  string(const char * str, int x);
+  string(const char * str, int x, int y);
+  ~string();
+};
+
+inline string operator+(const string& __lhs, const string& __rhs)
+{
+  string __str(__lhs);
+  __str.append(__rhs);
+  return __str;
+}
+
+string operator+(const char* __lhs, const string& __rhs);
+string operator+(char __lhs, const string& __rhs); 
+
+inline string operator+(const string& __lhs, const char* __rhs)
+{
+  string __str(__lhs);
+  __str.append(__rhs);
+  return __str;
+}
+
+inline string operator+(const string& __lhs, char __rhs)
+{
+  typedef string		__string_type;
+  typedef string::size_type	__size_type;
+  __string_type __str(__lhs);
+  __str.append(__size_type(1), __rhs);
+  return __str;
+}
+
+inline bool operator==(const string& __lhs, const string& __rhs)
+{ return __lhs.compare(__rhs) == 0; }
+
+inline bool operator==(const char* __lhs, const string& __rhs)
+{ return __rhs.compare(__lhs) == 0; }
+
+inline bool operator==(const string& __lhs, const char* __rhs)
+{ return __lhs.compare(__rhs) == 0; }
+
+inline bool operator!=(const string& __lhs, const string& __rhs)
+{ return __rhs.compare(__lhs) != 0; }
+
+inline bool operator!=(const char* __lhs, const string& __rhs)
+{ return __rhs.compare(__lhs) != 0; }
+
+inline bool operator!=(const string& __lhs, const char* __rhs)
+{ return __lhs.compare(__rhs) != 0; }
+
+#endif
 
 } // namespace ledger
 

@@ -13,11 +13,11 @@ int py_amount_quantity(amount_t& amount)
   return std::atol(quant.str().c_str());
 }
 
-void py_parse_1(amount_t& amount, const std::string& str,
+void py_parse_1(amount_t& amount, const string& str,
 		unsigned char flags) {
   amount.parse(str, flags);
 }
-void py_parse_2(amount_t& amount, const std::string& str) {
+void py_parse_2(amount_t& amount, const string& str) {
   amount.parse(str);
 }
 
@@ -42,7 +42,7 @@ struct commodity_updater_wrap : public commodity_base_t::updater_t
   }
 };
 
-commodity_t * py_find_commodity(const std::string& symbol)
+commodity_t * py_find_commodity(const string& symbol)
 {
   return commodity_t::find(symbol);
 }

@@ -2,7 +2,7 @@
 
 namespace ledger {
 
-void startElement(void *userData, const char *name, const char **atts)
+void startElement(void *userData, const char *name, const char ** /* attrs */)
 {
   gnucash_parser_t * parser = static_cast<gnucash_parser_t *>(userData);
 
@@ -139,14 +139,14 @@ void endElement(void *userData, const char *name)
   parser->action = gnucash_parser_t::NO_ACTION;
 }
 
-amount_t gnucash_parser_t::convert_number(const std::string& number,
+amount_t gnucash_parser_t::convert_number(const string& number,
 					  int * precision)
 {
   const char * num = number.c_str();
 
   if (char * p = std::strchr(num, '/')) {
-    std::string numer_str(num, p - num);
-    std::string denom_str(p + 1);
+    string numer_str(num, p - num);
+    string denom_str(p + 1);
 
     amount_t amt(numer_str);
     amount_t den(denom_str);
@@ -171,15 +171,15 @@ void dataHandler(void *userData, const char *s, int len)
 
   switch (parser->action) {
   case gnucash_parser_t::ACCOUNT_NAME:
-    parser->curr_account->name = std::string(s, len);
+    parser->curr_account->name = string(s, len);
     break;
 
   case gnucash_parser_t::ACCOUNT_ID:
-    parser->curr_account_id = std::string(s, len);
+    parser->curr_account_id = string(s, len);
     break;
 
   case gnucash_parser_t::ACCOUNT_PARENT: {
-    accounts_map::iterator i = parser->accounts_by_id.find(std::string(s, len));
+    accounts_map::iterator i = parser->accounts_by_id.find(string(s, len));
     assert(i != parser->accounts_by_id.end());
     parser->curr_account->parent = (*i).second;
     parser->curr_account->depth  = parser->curr_account->parent->depth + 1;
@@ -188,7 +188,7 @@ void dataHandler(void *userData, const char *s, int len)
   }
 
   case gnucash_parser_t::COMM_SYM: {
-    std::string symbol(s, len);
+    string symbol(s, len);
     if (symbol == "USD") symbol = "$";
 
     parser->curr_comm = commodity_t::find_or_create(symbol);
@@ -207,7 +207,7 @@ void dataHandler(void *userData, const char *s, int len)
   }
 
   case gnucash_parser_t::COMM_NAME:
-    parser->curr_comm->set_name(std::string(s, len));
+    parser->curr_comm->set_name(string(s, len));
     break;
 
   case gnucash_parser_t::COMM_PREC:
@@ -215,15 +215,15 @@ void dataHandler(void *userData, const char *s, int len)
     break;
 
   case gnucash_parser_t::ENTRY_NUM:
-    parser->curr_entry->code = std::string(s, len);
+    parser->curr_entry->code = string(s, len);
     break;
 
   case gnucash_parser_t::ENTRY_DATE:
-    parser->curr_entry->_date = parse_datetime(std::string(s, len));
+    parser->curr_entry->_date = parse_datetime(string(s, len));
     break;
 
   case gnucash_parser_t::ENTRY_DESC:
-    parser->curr_entry->payee = std::string(s, len);
+    parser->curr_entry->payee = string(s, len);
     break;
 
   case gnucash_parser_t::XACT_STATE:
@@ -238,7 +238,7 @@ void dataHandler(void *userData, const char *s, int len)
   case gnucash_parser_t::XACT_VALUE: {
     int precision;
     assert(parser->entry_comm);
-    parser->curr_value = parser->convert_number(std::string(s, len), &precision);
+    parser->curr_value = parser->convert_number(string(s, len), &precision);
     parser->curr_value.set_commodity(*parser->entry_comm);
 
     if (precision > parser->entry_comm->precision())
@@ -247,27 +247,27 @@ void dataHandler(void *userData, const char *s, int len)
   }
 
   case gnucash_parser_t::XACT_QUANTITY:
-    parser->curr_quant = parser->convert_number(std::string(s, len));
+    parser->curr_quant = parser->convert_number(string(s, len));
     break;
 
   case gnucash_parser_t::XACT_ACCOUNT: {
     transaction_t * xact = parser->curr_entry->transactions.back();
 
     accounts_map::iterator i =
-      parser->accounts_by_id.find(std::string(s, len));
+      parser->accounts_by_id.find(string(s, len));
     if (i != parser->accounts_by_id.end()) {
       xact->account = (*i).second;
     } else {
       xact->account = parser->curr_journal->find_account("<Unknown>");
 
-      parser->have_error = (std::string("Could not find account ") +
-			    std::string(s, len));
+      parser->have_error = (string("Could not find account ") +
+			    string(s, len));
     }
     break;
   }
 
   case gnucash_parser_t::XACT_NOTE:
-    parser->curr_entry->transactions.back()->note = std::string(s, len);
+    parser->curr_entry->transactions.back()->note = string(s, len);
     break;
 
   case gnucash_parser_t::NO_ACTION:
@@ -294,7 +294,7 @@ bool gnucash_parser_t::test(std::istream& in) const
 unsigned int gnucash_parser_t::parse(std::istream&	 in,
 				     journal_t *	 journal,
 				     account_t *	 master,
-				     const std::string * original_file)
+				     const string * original_file)
 {
   char buf[BUFSIZ];
 

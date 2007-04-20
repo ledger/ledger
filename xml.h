@@ -28,12 +28,12 @@ class document_t
   const char ** builtins;
   const int	builtins_size;
 
-  typedef std::deque<std::string> names_array;
+  typedef std::deque<string> names_array;
 
   names_array names;
 
-  typedef std::map<std::string, int>  names_map;
-  typedef std::pair<std::string, int> names_pair;
+  typedef std::map<string, int>  names_map;
+  typedef std::pair<string, int> names_pair;
 
   names_map names_index;
 
@@ -48,11 +48,12 @@ class document_t
 
   document_t(node_t * _top = NULL, const char ** _builtins = NULL,
 	     const int _builtins_size = 0);
+  ~document_t();
 
   void set_top(node_t * _top);
 
-  int register_name(const std::string& name);
-  int lookup_name_id(const std::string& name) const;
+  int register_name(const string& name);
+  int lookup_name_id(const string& name) const;
   const char * lookup_name(int id) const;
 
   void write(std::ostream& out) const;
@@ -62,7 +63,7 @@ class document_t
 
 class conversion_error : public error {
  public:
-  conversion_error(const std::string& _reason,
+  conversion_error(const string& _reason,
 	      error_context * _ctxt = NULL) throw()
     : error(_reason, _ctxt) {}
   virtual ~conversion_error() throw() {}
@@ -85,8 +86,8 @@ public:
   unsigned int	  flags;
   void *	  info;
 
-  typedef std::map<std::string, std::string>  attrs_map;
-  typedef std::pair<std::string, std::string> attrs_pair;
+  typedef std::map<string, string>  attrs_map;
+  typedef std::pair<string, string> attrs_pair;
 
   attrs_map * attrs;
 
@@ -138,11 +139,11 @@ public:
     int id = document->lookup_name_id(_name);
     return lookup_child(id);
   }
-  node_t * lookup_child(const std::string& _name) {
+  node_t * lookup_child(const string& _name) {
     int id = document->lookup_name_id(_name);
     return lookup_child(id);
   }
-  virtual node_t * lookup_child(int _name_id) {
+  virtual node_t * lookup_child(int /* _name_id */) {
     return NULL;
   }
 
@@ -194,13 +195,16 @@ private:
 
 class terminal_node_t : public node_t
 {
-  std::string data;
+  string data;
 
 public:
   terminal_node_t(document_t * _document, parent_node_t * _parent = NULL)
     : node_t(_document, _parent)
   {
     TRACE_CTOR("terminal_node_t(document_t *, parent_node_t *)");
+  }
+  virtual ~terminal_node_t() {
+    TRACE_DTOR("terminal_node_t");
   }
 
   virtual const char * text() const {
@@ -209,7 +213,7 @@ public:
   virtual void set_text(const char * _data) {
     data = _data;
   }
-  virtual void set_text(const std::string& _data) {
+  virtual void set_text(const string& _data) {
     data = _data;
   }
 
@@ -231,7 +235,7 @@ class parser_t
  public:
   document_t *	      document;
   XML_Parser	      parser;
-  std::string	      have_error;
+  string	      have_error;
   const char *	      pending;
   node_t::attrs_map * pending_attrs;
   bool                handled_data;
@@ -250,7 +254,7 @@ class parser_t
 
 class parse_error : public error {
  public:
-  parse_error(const std::string& _reason,
+  parse_error(const string& _reason,
 	      error_context * _ctxt = NULL) throw()
     : error(_reason, _ctxt) {}
   virtual ~parse_error() throw() {}
@@ -311,8 +315,8 @@ public:
   transaction_node_t(document_t *    _document,
 		     transaction_t * _transaction,
 		     parent_node_t * _parent = NULL)
-    : parent_node_t(_document, _parent), transaction(_transaction),
-      payee_virtual_node(NULL) {
+    : parent_node_t(_document, _parent), payee_virtual_node(NULL),
+      transaction(_transaction) {
     TRACE_CTOR("transaction_node_t(document_t *, transaction_t *, parent_node_t *)");
     set_name("transaction");
     payee_id = document->register_name("payee");

@@ -12,7 +12,7 @@
 
 namespace ledger {
 
-const std::string version = PACKAGE_VERSION;
+const string version = PACKAGE_VERSION;
 
 bool transaction_t::use_effective_date = false;
 
@@ -351,7 +351,7 @@ void auto_entry_t::extend_entry(entry_base_t& entry, bool post)
 	}
 
 	account_t * account  = (*t)->account;
-	std::string fullname = account->fullname();
+	string fullname = account->fullname();
 	assert(! fullname.empty());
 	if (fullname == "$account" || fullname == "@account")
 	  account = (*i)->account;
@@ -374,7 +374,7 @@ account_t::~account_t()
     delete (*i).second;
 }
 
-account_t * account_t::find_account(const std::string& name,
+account_t * account_t::find_account(const string& name,
 				    const bool	       auto_create)
 {
   accounts_map::const_iterator i = accounts.find(name);
@@ -383,11 +383,11 @@ account_t * account_t::find_account(const std::string& name,
 
   char buf[256];
 
-  std::string::size_type sep = name.find(':');
-  assert(sep < 256|| sep == std::string::npos);
+  string::size_type sep = name.find(':');
+  assert(sep < 256|| sep == string::npos);
 
   const char * first, * rest;
-  if (sep == std::string::npos) {
+  if (sep == string::npos) {
     first = name.c_str();
     rest  = NULL;
   } else {
@@ -436,18 +436,18 @@ account_t * find_account_re_(account_t * account, const mask_t& regexp)
   return NULL;
 }
 
-account_t * journal_t::find_account_re(const std::string& regexp)
+account_t * journal_t::find_account_re(const string& regexp)
 {
   return find_account_re_(master, mask_t(regexp));
 }
 
-std::string account_t::fullname() const
+string account_t::fullname() const
 {
   if (! _fullname.empty()) {
     return _fullname;
   } else {
     const account_t *	first	 = this;
-    std::string		fullname = name;
+    string		fullname = name;
 
     while (first->parent) {
       first = first->parent;
@@ -497,6 +497,9 @@ journal_t::~journal_t()
 
   assert(master);
   delete master;
+
+  if (document)
+    delete document;
 
   // Don't bother unhooking each entry's transactions from the
   // accounts they refer to, because all accounts are about to
@@ -600,9 +603,9 @@ bool journal_t::valid() const
 }
 
 void print_entry(std::ostream& out, const entry_base_t& entry_base,
-		 const std::string& prefix)
+		 const string& prefix)
 {
-  std::string print_format;
+  string print_format;
 
   if (dynamic_cast<const entry_t *>(&entry_base)) {
     print_format = (prefix + "%D %X%C%P\n" +
@@ -644,11 +647,11 @@ void entry_context::describe(std::ostream& out) const throw()
 }
 
 xact_context::xact_context(const ledger::transaction_t& _xact,
-			   const std::string& desc) throw()
-  : xact(_xact), file_context("", 0, desc)
+			   const string& desc) throw()
+  : file_context("", 0, desc), xact(_xact)
 {
   const ledger::strings_list& sources(xact.entry->journal->sources);
-  int x = 0;
+  unsigned int x = 0;
   for (ledger::strings_list::const_iterator i = sources.begin();
        i != sources.end();
        i++, x++)
@@ -787,12 +790,12 @@ void py_account_set_data(account_t& account, PyObject * obj)
   account.data = obj;
 }
 
-account_t * py_find_account_1(journal_t& journal, const std::string& name)
+account_t * py_find_account_1(journal_t& journal, const string& name)
 {
   return journal.find_account(name);
 }
 
-account_t * py_find_account_2(journal_t& journal, const std::string& name,
+account_t * py_find_account_2(journal_t& journal, const string& name,
 			      const bool auto_create)
 {
   return journal.find_account(name, auto_create);
@@ -891,7 +894,7 @@ void export_journal()
 
   class_< transaction_t > ("Transaction")
     .def(init<optional<account_t *> >())
-    .def(init<account_t *, amount_t, optional<unsigned int, const std::string&> >())
+    .def(init<account_t *, amount_t, optional<unsigned int, const string&> >())
 
     .def(self == self)
     .def(self != self)
@@ -930,7 +933,7 @@ void export_journal()
 
   class_< account_t >
     ("Account",
-     init<optional<account_t *, std::string, std::string> >()
+     init<optional<account_t *, string, string> >()
      [with_custodian_and_ward<1, 2>()])
     .def(self == self)
     .def(self != self)

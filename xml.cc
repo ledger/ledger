@@ -12,7 +12,16 @@ namespace xml {
 document_t::document_t(node_t * _top, const char ** _builtins,
 		       const int _builtins_size)
   : builtins(_builtins), builtins_size(_builtins_size),
-    top(new terminal_node_t(this)) {}
+    top(_top ? _top : new terminal_node_t(this)) {
+  TRACE_CTOR("xml::document_t(node_t *, const char **, const int)");
+}
+
+document_t::~document_t()
+{
+  TRACE_DTOR("xml::document_t");
+  if (top)
+    delete top;
+}
 
 void document_t::set_top(node_t * _top)
 {
@@ -21,7 +30,7 @@ void document_t::set_top(node_t * _top)
   top = _top;
 }
 
-int document_t::register_name(const std::string& name)
+int document_t::register_name(const string& name)
 {
   int index = lookup_name_id(name);
   if (index != -1)
@@ -39,7 +48,7 @@ int document_t::register_name(const std::string& name)
   return index + 1000;
 }
 
-int document_t::lookup_name_id(const std::string& name) const
+int document_t::lookup_name_id(const string& name) const
 {
   if (builtins) {
     int first = 0;
@@ -110,7 +119,7 @@ node_t::node_t(document_t * _document, parent_node_t * _parent,
 {
   TRACE_CTOR("node_t(document_t *, node_t *)");
   document = _document;
-  if (! document->top)
+  if (document && ! document->top)
     document->set_top(this);
   if (parent)
     parent->add_child(this);
@@ -269,7 +278,7 @@ static void dataHandler(void *userData, const char *s, int len)
 {
   parser_t * parser = static_cast<parser_t *>(userData);
 
-  DEBUG_PRINT("xml.parse", "dataHandler(" << std::string(s, len) << ")");
+  DEBUG_PRINT("xml.parse", "dataHandler(" << string(s, len) << ")");
 
   bool all_whitespace = true;
   for (int i = 0; i < len; i++) {
@@ -285,7 +294,7 @@ static void dataHandler(void *userData, const char *s, int len)
   if (! all_whitespace) {
     terminal_node_t * node = create_node<terminal_node_t>(parser);
 
-    node->set_text(std::string(s, len));
+    node->set_text(string(s, len));
     parser->handled_data = true;
 
     if (parser->node_stack.empty()) {
@@ -389,6 +398,7 @@ node_t * transaction_node_t::lookup_child(int _name_id)
     payee_virtual_node->set_text(transaction->entry->payee);
     return payee_virtual_node;
   }
+  return NULL;
 }
 
 value_t transaction_node_t::to_value() const
@@ -468,7 +478,7 @@ node_t * journal_node_t::children() const
 
 #endif // defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
 
-void output_xml_string(std::ostream& out, const std::string& str)
+void output_xml_string(std::ostream& out, const string& str)
 {
   for (const char * s = str.c_str(); *s; s++) {
     switch (*s) {

@@ -21,12 +21,12 @@ class parser_t
   virtual unsigned int parse(std::istream&	 in,
 			     journal_t *	 journal,
 			     account_t *	 master        = NULL,
-			     const std::string * original_file = NULL) = 0;
+			     const string * original_file = NULL) = 0;
 };
 
 class parse_error : public error {
  public:
-  parse_error(const std::string& _reason,
+  parse_error(const string& _reason,
 	      error_context * _ctxt = NULL) throw()
     : error(_reason, _ctxt) {}
   virtual ~parse_error() throw() {}

@@ -15,13 +15,15 @@
 #include <pwd.h>
 #endif
 
-std::string expand_path(const std::string& path)
+namespace ledger {
+
+string expand_path(const string& path)
 {
   if (path.length() == 0 || path[0] != '~')
     return path;
 
   const char * pfx = NULL;
-  std::string::size_type pos = path.find_first_of('/');
+  string::size_type pos = path.find_first_of('/');
 
   if (path.length() == 1 || pos == 1) {
     pfx = std::getenv("HOME");
@@ -36,8 +38,8 @@ std::string expand_path(const std::string& path)
   }
 #ifdef HAVE_GETPWNAM
   else {
-    std::string user(path, 1, pos == std::string::npos ?
-		     std::string::npos : pos - 1);
+    string user(path, 1, pos == string::npos ?
+		     string::npos : pos - 1);
     struct passwd * pw = getpwnam(user.c_str());
     if (pw)
       pfx = pw->pw_dir;
@@ -49,9 +51,9 @@ std::string expand_path(const std::string& path)
   if (! pfx)
     return path;
 
-  std::string result(pfx);
+  string result(pfx);
 
-  if (pos == std::string::npos)
+  if (pos == string::npos)
     return result;
 
   if (result.length() == 0 || result[result.length() - 1] != '/')
@@ -62,14 +64,14 @@ std::string expand_path(const std::string& path)
   return result;
 }
 
-std::string resolve_path(const std::string& path)
+string resolve_path(const string& path)
 {
   if (path[0] == '~')
     return expand_path(path);
   return path;
 }
 
-std::string abbreviate(const std::string& str, unsigned int width,
+string abbreviate(const string& str, unsigned int width,
 		       elision_style_t elision_style, const bool is_account,
 		       int abbrev_length)
 {
@@ -101,28 +103,28 @@ std::string abbreviate(const std::string& str, unsigned int width,
 
   case ABBREVIATE:
     if (is_account) {
-      std::list<std::string> parts;
-      std::string::size_type beg = 0;
-      for (std::string::size_type pos = str.find(':');
-	   pos != std::string::npos;
+      std::list<string> parts;
+      string::size_type beg = 0;
+      for (string::size_type pos = str.find(':');
+	   pos != string::npos;
 	   beg = pos + 1, pos = str.find(':', beg))
-	parts.push_back(std::string(str, beg, pos - beg));
-      parts.push_back(std::string(str, beg));
+	parts.push_back(string(str, beg, pos - beg));
+      parts.push_back(string(str, beg));
 
-      std::string result;
+      string result;
       unsigned int newlen = len;
-      for (std::list<std::string>::iterator i = parts.begin();
+      for (std::list<string>::iterator i = parts.begin();
 	   i != parts.end();
 	   i++) {
 	// Don't contract the last element
-	std::list<std::string>::iterator x = i;
+	std::list<string>::iterator x = i;
 	if (++x == parts.end()) {
 	  result += *i;
 	  break;
 	}
 
 	if (newlen > width) {
-	  result += std::string(*i, 0, abbrev_length);
+	  result += string(*i, 0, abbrev_length);
 	  result += ":";
 	  newlen -= (*i).length() - abbrev_length;
 	} else {
@@ -155,3 +157,5 @@ std::string abbreviate(const std::string& str, unsigned int width,
 
   return buf;
 }
+
+} // namespace ledger

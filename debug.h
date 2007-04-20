@@ -11,29 +11,38 @@
 #define DEBUG_LEVEL NO_SEATBELT
 #endif
 
+#include "trace.h"
+
 #if DEBUG_LEVEL >= RELEASE
-#include "error.h"
 
 #ifdef assert
 #undef assert
 #endif
+
 #if DEBUG_LEVEL >= BETA
-void debug_assert(const std::string& reason,
-		  const std::string& file,
-		  unsigned long      line);
+
+void debug_assert(const ledger::string& reason,
+		  const ledger::string& file,
+		  unsigned long		line);
+
 #define assert(x)							\
   if (! (x))								\
     debug_assert(#x, __FILE__, __LINE__)
+
 #else
+
 #define assert(x)							\
   if (! (x))								\
     throw new fatal_assert(#x, new file_context(__FILE__, __LINE__))
 #endif
+
 #else
+
 #ifdef assert
 #undef assert
 #endif
 #define assert(x)
+
 #endif
 
 //////////////////////////////////////////////////////////////////////
@@ -99,8 +108,6 @@ bool _debug_active(const char * const cls);
 #define VALIDATE(x)
 #endif
 
-#include "trace.h"
-
 #if 0
 void * operator new(std::size_t) throw (std::bad_alloc);
 void * operator new[](std::size_t) throw (std::bad_alloc);
@@ -134,21 +141,25 @@ void   operator delete[](void*, const std::nothrow_t&) throw();
 #define assert(x)
 #define CONFIRM(x)
 
+#ifndef TRACE_CTOR
 #define TRACE_CTOR(cls)
 #define TRACE_DTOR(cls)
 #define TRACE(cat, msg)
 #define TRACE_PUSH(cat, msg)
 #define TRACE_POP(cat, msg)
+#endif
 
 #elif DEBUG_LEVEL == RELEASE
 
 #define CONFIRM(x)
 
+#ifndef TRACE_CTOR
 #define TRACE_CTOR(cls)
 #define TRACE_DTOR(cls)
 #define TRACE(cat, msg)
 #define TRACE_PUSH(cat, msg)
 #define TRACE_POP(cat, msg)
+#endif
 
 #elif DEBUG_LEVEL >= BETA
 

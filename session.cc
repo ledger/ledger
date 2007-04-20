@@ -1,4 +1,6 @@
 #include "session.h"
+#include "debug.h"
+#include "timing.h"
 
 #include <fstream>
 
@@ -7,14 +9,10 @@ namespace ledger {
 unsigned int session_t::read_journal(std::istream&       in,
 				     journal_t *         journal,
 				     account_t *	 master,
-				     const std::string * original_file)
+				     const string * original_file)
 {
   if (! master)
     master = journal->master;
-
-#if 0
-  journal->data = repitem_t::wrap(journal);
-#endif
 
   for (std::list<parser_t *>::iterator i = parsers.begin();
        i != parsers.end();
@@ -25,15 +23,15 @@ unsigned int session_t::read_journal(std::istream&       in,
   return 0;
 }
 
-unsigned int session_t::read_journal(const std::string&  path,
+unsigned int session_t::read_journal(const string&  path,
 				     journal_t *         journal,
 				     account_t *	 master,
-				     const std::string * original_file)
+				     const string * original_file)
 {
   journal->sources.push_back(path);
 
   if (access(path.c_str(), R_OK) == -1)
-    throw new error(std::string("Cannot read file '") + path + "'");
+    throw new error(string("Cannot read file '") + path + "'");
 
   if (! original_file)
     original_file = &path;
@@ -48,20 +46,20 @@ void session_t::read_init()
     return;
 
   if (access(init_file.c_str(), R_OK) == -1)
-    throw new error(std::string("Cannot read init file '") + init_file + "'");
+    throw new error(string("Cannot read init file '") + init_file + "'");
 
   std::ifstream init(init_file.c_str());
 
   // jww (2006-09-15): Read initialization options here!
 }
 
-journal_t * session_t::read_data(const std::string& master_account)
+journal_t * session_t::read_data(const string& master_account)
 {
   TRACE_PUSH(parser, "Parsing journal file");
 
   journal_t * journal = new_journal();
   journal->document = new xml::document_t;
-  journal->document->top = xml::wrap_node(journal->document, journal);
+  journal->document->set_top(xml::wrap_node(journal->document, journal));
 
   unsigned int entry_count = 0;
 
@@ -76,7 +74,7 @@ journal_t * session_t::read_data(const std::string& master_account)
     if (access(cache_file.c_str(), R_OK) != -1) {
       std::ifstream stream(cache_file.c_str());
 
-      std::string price_db_orig = journal->price_db;
+      string price_db_orig = journal->price_db;
       journal->price_db = price_db;
       entry_count += read_journal(stream, journal, NULL,
 					  &data_file);
@@ -129,7 +127,7 @@ journal_t * session_t::read_data(const std::string& master_account)
   return journal;
 }
 
-bool session_t::resolve(const std::string& name, value_t& result,
+bool session_t::resolve(const string& name, value_t& result,
 			xml::xpath_t::scope_t * locals)
 {
   const char * p = name.c_str();
@@ -166,7 +164,7 @@ bool session_t::resolve(const std::string& name, value_t& result,
   return xml::xpath_t::scope_t::resolve(name, result, locals);
 }
 
-xml::xpath_t::op_t * session_t::lookup(const std::string& name)
+xml::xpath_t::op_t * session_t::lookup(const string& name)
 {
   const char * p = name.c_str();
   switch (*p) {

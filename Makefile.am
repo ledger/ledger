@@ -20,6 +20,11 @@ endif
 AM_YFLAGS = -d
 AM_LFLAGS = -o $(LEX_OUTPUT_ROOT).c
 
+WARNFLAGS = -Wall -Wextra -Wfloat-equal -Wno-endif-labels
+WARNFLAGS += -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion
+WARNFLAGS += -Wconversion -Wshorten-64-to-32 -Wsign-compare
+WARNFLAGS += -Wmissing-field-initializers -pedantic-errors
+
 libledger_la_CXXFLAGS = $(WARNFLAGS) -I$(top_builddir)/gdtoa
 libledger_la_SOURCES = \
 	amount.cc      \
@@ -34,6 +39,7 @@ libledger_la_SOURCES = \
 	mask.cc        \
 	format.cc      \
 	util.cc        \
+	trace.cc       \
 		       \
 	session.cc     \
 	journal.cc     \
@@ -67,7 +73,7 @@ libledger_la_SOURCES += ofx.cc
 endif
 if DEBUG
 libledger_la_CXXFLAGS += -DDEBUG_LEVEL=4
-libledger_la_SOURCES  += debug.cc trace.cc
+libledger_la_SOURCES  += debug.cc
 endif
 if HAVE_BOOST_PYTHON
 libledger_la_CXXFLAGS += -DUSE_BOOST_PYTHON=1

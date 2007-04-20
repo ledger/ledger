@@ -20,7 +20,7 @@ public:
 
   class parse_error : public error {
   public:
-    parse_error(const std::string& _reason,
+    parse_error(const string& _reason,
 		error_context * _ctxt = NULL) throw()
       : error(_reason, _ctxt) {}
     virtual ~parse_error() throw() {}
@@ -28,7 +28,7 @@ public:
 
   class compile_error : public error {
   public:
-    compile_error(const std::string& _reason,
+    compile_error(const string& _reason,
 		  error_context * _ctxt = NULL) throw()
       : error(_reason, _ctxt) {}
     virtual ~compile_error() throw() {}
@@ -36,7 +36,7 @@ public:
 
   class calc_error : public error {
   public:
-    calc_error(const std::string& _reason,
+    calc_error(const string& _reason,
 	       error_context * _ctxt = NULL) throw()
       : error(_reason, _ctxt) {}
     virtual ~calc_error() throw() {}
@@ -49,7 +49,7 @@ public:
 
     context(const xpath_t& _xpath,
 	    const op_t *   _err_node,
-	    const std::string& desc = "") throw();
+	    const string& desc = "") throw();
     virtual ~context() throw();
 
     virtual void describe(std::ostream& out) const throw();
@@ -60,16 +60,16 @@ public:
 
   class functor_t {
   protected:
-    std::string fname;
+    string fname;
   public:
     bool wants_args;
 
-    functor_t(const std::string& _fname, bool _wants_args = false)
+    functor_t(const string& _fname, bool _wants_args = false)
       : fname(_fname), wants_args(_wants_args) {}
     virtual ~functor_t() {}
 
     virtual void operator()(value_t& result, scope_t * locals) = 0;
-    virtual std::string name() const { return fname; }
+    virtual string name() const { return fname; }
   };
 
   template <typename T, typename U>
@@ -78,7 +78,7 @@ public:
     T * ptr;
     U T::*dptr;
 
-    member_functor_t(const std::string& _name, T * _ptr, U T::*_dptr)
+    member_functor_t(const string& _name, T * _ptr, U T::*_dptr)
       : functor_t(_name, false), ptr(_ptr), dptr(_dptr) {}
 
     virtual void operator()(value_t& result, scope_t * locals) {
@@ -89,12 +89,12 @@ public:
   };
 
   template <typename T>
-  class member_functor_t<T, std::string> : public functor_t {
+  class member_functor_t<T, string> : public functor_t {
   public:
     T * ptr;
-    std::string T::*dptr;
+    string T::*dptr;
 
-    member_functor_t(const std::string& _name, T * _ptr, std::string T::*_dptr)
+    member_functor_t(const string& _name, T * _ptr, string T::*_dptr)
       : functor_t(_name, false), ptr(_ptr), dptr(_dptr) {}
 
     virtual void operator()(value_t& result, scope_t * locals) {
@@ -110,7 +110,7 @@ public:
     T * ptr;
     void (T::*mptr)(value_t& result);
 
-    memfun_functor_t(const std::string& _name, T * _ptr,
+    memfun_functor_t(const string& _name, T * _ptr,
 		     void (T::*_mptr)(value_t& result))
       : functor_t(_name, false), ptr(_ptr), mptr(_mptr) {}
 
@@ -129,7 +129,7 @@ public:
     T * ptr;
     void (T::*mptr)(value_t& result, scope_t * locals);
 
-    memfun_args_functor_t(const std::string& _name, T * _ptr,
+    memfun_args_functor_t(const string& _name, T * _ptr,
 			  void (T::*_mptr)(value_t& result, scope_t * locals))
       : functor_t(_name, true), ptr(_ptr), mptr(_mptr) {}
 
@@ -144,25 +144,25 @@ public:
   static op_t * wrap_sequence(value_t::sequence_t * val);
   static op_t * wrap_functor(functor_t * fobj);
 #if 0
-  static op_t * wrap_mask(const std::string& pattern);
+  static op_t * wrap_mask(const string& pattern);
 #endif
 
   template <typename T, typename U>
   static op_t *
-  make_functor(const std::string& name = "<data>", T * ptr, U T::*mptr) {
+  make_functor(const string& name = "<data>", T * ptr, U T::*mptr) {
     return wrap_functor(new member_functor_t<T, U>(name, ptr, mptr));
   }
 
   template <typename T>
   static op_t *
-  make_functor(const std::string& fname = "<func>", T * ptr,
+  make_functor(const string& fname = "<func>", T * ptr,
 	       void (T::*mptr)(value_t& result)) {
     return wrap_functor(new memfun_functor_t<T>(fname, ptr, mptr));
   }
 
   template <typename T>
   static op_t *
-  make_functor(const std::string& fname = "<func>", T * ptr,
+  make_functor(const string& fname = "<func>", T * ptr,
 	       void (T::*mptr)(value_t& result, scope_t * locals)) {
     return wrap_functor(new memfun_args_functor_t<T>(fname, ptr, mptr));
   }
@@ -173,8 +173,8 @@ public:
 public:
   class scope_t
   {
-    typedef std::map<const std::string, op_t *>  symbol_map;
-    typedef std::pair<const std::string, op_t *> symbol_pair;
+    typedef std::map<const string, op_t *>  symbol_map;
+    typedef std::pair<const string, op_t *> symbol_pair;
 
     symbol_map symbols;
 
@@ -201,16 +201,16 @@ public:
     }
 
   public:
-    virtual void define(const std::string& name, op_t * def);
-    virtual bool resolve(const std::string& name, value_t& result,
+    virtual void define(const string& name, op_t * def);
+    virtual bool resolve(const string& name, value_t& result,
 			 scope_t * locals = NULL) {
       if (parent)
 	return parent->resolve(name, result, locals);
       return false;
     }
-    virtual op_t * lookup(const std::string& name);
+    virtual op_t * lookup(const string& name);
 
-    void define(const std::string& name, functor_t * def);
+    void define(const string& name, functor_t * def);
 
     friend struct op_t;
   };
@@ -227,7 +227,7 @@ public:
       : scope_t(_parent, STATIC),
 	sequence(_sequence), value(_value), index(_index) {}
 
-    virtual bool resolve(const std::string& name, value_t& result,
+    virtual bool resolve(const string& name, value_t& result,
 			 scope_t * locals = NULL);
   };
 
@@ -319,6 +319,7 @@ private:
     void clear() {
       kind   = UNKNOWN;
       length = 0;
+      value  = 0L;
 
       symbol[0] = '\0';
       symbol[1] = '\0';
@@ -408,7 +409,7 @@ public:
 
     union {
       value_t *	    valuep;	// used by constant VALUE
-      std::string * name;	// used by constant SYMBOL
+      string * name;	// used by constant SYMBOL
       unsigned int  arg_index;	// used by ARG_INDEX and O_ARG
       functor_t *   functor;	// used by terminal FUNCTOR
       unsigned int  name_id;	// used by NODE_NAME and ATTR_NAME
@@ -582,7 +583,7 @@ public:
   op_t * parse_expr(std::istream& in,
 		    unsigned short flags = XPATH_PARSE_RELAXED) const;
 
-  op_t * parse_expr(const std::string& str,
+  op_t * parse_expr(const string& str,
 		    unsigned short tflags = XPATH_PARSE_RELAXED) const
   {
     std::istringstream stream(str);
@@ -599,7 +600,7 @@ public:
 
   op_t * parse_expr(const char * p,
 		    unsigned short tflags = XPATH_PARSE_RELAXED) const {
-    return parse_expr(std::string(p), tflags);
+    return parse_expr(string(p), tflags);
   }
 
   bool write(std::ostream&   out,
@@ -613,7 +614,7 @@ public:
   }
 
 public:
-  std::string    expr;
+  string    expr;
   unsigned short flags;		// flags used to parse `expr'
 
   xpath_t() : ptr(NULL), use_lookahead(false), flags(0) {
@@ -623,10 +624,10 @@ public:
     TRACE_CTOR("xpath_t(op_t *)");
   }
 
-  xpath_t(const std::string& _expr,
+  xpath_t(const string& _expr,
 	  unsigned short _flags = XPATH_PARSE_RELAXED)
     : ptr(NULL), use_lookahead(false), flags(0) {
-    TRACE_CTOR("xpath_t(const std::string&, unsigned short)");
+    TRACE_CTOR("xpath_t(const string&, unsigned short)");
     if (! _expr.empty())
       parse(_expr, _flags);
   }
@@ -642,11 +643,10 @@ public:
   }
   virtual ~xpath_t() {
     TRACE_DTOR("xpath_t");
-    if (ptr)
-      ptr->release();
+    reset(NULL);
   }
 
-  xpath_t& operator=(const std::string& _expr) {
+  xpath_t& operator=(const string& _expr) {
     parse(_expr);
     return *this;
   }
@@ -666,11 +666,11 @@ public:
   operator bool() const throw() {
     return ptr != NULL;
   }
-  operator std::string() const throw() {
+  operator string() const throw() {
     return expr;
   }
 
-  void parse(const std::string& _expr, unsigned short _flags = XPATH_PARSE_RELAXED) {
+  void parse(const string& _expr, unsigned short _flags = XPATH_PARSE_RELAXED) {
     expr  = _expr;
     flags = _flags;
     op_t * tmp = parse_expr(_expr, _flags);
@@ -685,7 +685,7 @@ public:
     reset(tmp ? tmp->acquire() : NULL);
   }
 
-  void compile(const std::string& _expr, scope_t * scope = NULL,
+  void compile(const string& _expr, scope_t * scope = NULL,
 	       unsigned short _flags = XPATH_PARSE_RELAXED) {
     parse(_expr, _flags);
     // jww (2006-09-24): fix
@@ -699,9 +699,12 @@ public:
   }
 
   void compile(document_t * document, scope_t * scope = NULL) {
-    if (! document)
-      document = new xml::document_t;
-    compile(document->top, scope);
+    if (! document) {
+      std::auto_ptr<document_t> tdoc(new xml::document_t);
+      compile(tdoc->top, scope);
+    } else {
+      compile(document->top, scope);
+    }
   }
   void compile(node_t * top_node, scope_t * scope = NULL) {
     if (ptr) {
@@ -731,7 +734,7 @@ public:
     return temp;
   }
 
-  static value_t eval(const std::string& _expr, document_t * document,
+  static value_t eval(const string& _expr, document_t * document,
 		      scope_t * scope = NULL) {
     xpath_t temp(_expr);
     return temp.calc(document, scope);

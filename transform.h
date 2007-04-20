@@ -113,7 +113,7 @@ class select_transform : public transform_t
   xml::xpath_t xpath;
 
  public:
-  select_transform(const std::string& selection_path) {
+  select_transform(const string& selection_path) {
     xpath.parse(selection_path);
   }
   virtual ~select_transform() {
@@ -127,7 +127,7 @@ class select_transform : public transform_t
 class remove_transform : public select_transform
 {
  public:
-  remove_transform(const std::string& selection_path)
+  remove_transform(const string& selection_path)
     : select_transform(selection_path) {}
 
   virtual void execute(xml::document_t * document);

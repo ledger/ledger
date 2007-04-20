@@ -1,4 +1,6 @@
 #include "trace.h"
+#include "debug.h"
+#include "timing.h"
 #include "times.h"
 #include "acconf.h"
 
@@ -6,21 +8,20 @@ namespace ledger {
 
 bool trace_mode;
 
-void trace(const std::string& cat, const std::string& str)
+void trace(const string& cat, const string& str)
 {
-  char buf[32];
   std::cerr << boost::posix_time::to_simple_string(now) << " "
 	    << cat << ": " << str << std::endl;
 }
 
-void trace_push(const std::string& cat, const std::string& str,
+void trace_push(const string& cat, const string& str,
 		timing_t& timer)
 {
   timer.start();
   trace(cat, str);
 }
 
-void trace_pop(const std::string& cat, const std::string& str,
+void trace_pop(const string& cat, const string& str,
 	       timing_t& timer)
 {
   timer.stop();
@@ -36,15 +37,17 @@ object_count_map live_count;
 
 bool tracing_active = false;
 
-bool trace_ctor(void * ptr, const std::string& name)
+bool trace_ctor(void * ptr, const char * name)
 {
   if (! tracing_active)
     return true;
 
   DEBUG_PRINT("ledger.trace.debug", "trace_ctor " << ptr << " " << name);
 
-  std::string::size_type pos = name.find_first_of('(');
-  std::string cls_name(name, 0, pos);
+  const char * pos = std::strchr(name, '(');
+  static char cls_name[1024];
+  std::strncpy(cls_name, name, pos - name);
+  cls_name[pos - name] = '\0';
 
   live_objects.insert(live_objects_pair(ptr, cls_name));
 
@@ -87,7 +90,7 @@ bool trace_ctor(void * ptr, const std::string& name)
   return true;
 }
 
-bool trace_dtor(void * ptr, const std::string& name)
+bool trace_dtor(void * ptr, const char * name)
 {
   if (! tracing_active)
     return true;
@@ -102,8 +105,7 @@ bool trace_dtor(void * ptr, const std::string& name)
     return false;
   }
 
-  std::string::size_type pos = name.find_first_of('(');
-  std::string cls_name(name, 0, pos);
+  const char * cls_name = name;
 
   int ptr_count = live_objects.count(ptr);
   for (int x = 0; x < ptr_count; x++) {
@@ -138,7 +140,7 @@ void report_memory(std::ostream& out)
        i++) {
     out << "  ";
     out << std::right;
-    out.width(5);
+    out.width(7);
     out << (*i).second << "  " << (*i).first << std::endl;
   }
 
@@ -151,7 +153,7 @@ void report_memory(std::ostream& out)
 	 i++) {
       out << "  ";
       out << std::right;
-      out.width(5);
+      out.width(7);
       out << (*i).first << "  " << (*i).second << std::endl;
     }
   }
@@ -164,7 +166,7 @@ void report_memory(std::ostream& out)
        i++) {
     out << "  ";
     out << std::right;
-    out.width(5);
+    out.width(7);
     out << (*i).second << "  " << (*i).first << std::endl;
   }
 
@@ -176,9 +178,47 @@ void report_memory(std::ostream& out)
        i++) {
     out << "  ";
     out << std::right;
-    out.width(5);
+    out.width(7);
     out << (*i).second << "  " << (*i).first << std::endl;
   }
 }
+
+#if DEBUG_LEVEL >= 4
+
+string::string() : std::string() {
+  TRACE_CTOR("string()");
+}
+string::string(const string& str) : std::string(str) {
+  TRACE_CTOR("string(const string&)");
+}
+string::string(const std::string& str) : std::string(str) {
+  TRACE_CTOR("string(const std::string&)");
+}
+string::string(const int len, char x) : std::string(len, x) {
+  TRACE_CTOR("string(const int, char)");
+}
+string::string(const char * str) : std::string(str) {
+  TRACE_CTOR("string(const char *)");
+}
+string::string(const char * str, const char * end) : std::string(str, end) {
+  TRACE_CTOR("string(const char *, const char *)");
+}
+string::string(const string& str, int x) : std::string(str, x) {
+  TRACE_CTOR("string(const string&, int)");
+}
+string::string(const string& str, int x, int y) : std::string(str, x, y) {
+  TRACE_CTOR("string(const string&, int, int)");
+}
+string::string(const char * str, int x) : std::string(str, x) {
+  TRACE_CTOR("string(const char *, int)");
+}
+string::string(const char * str, int x, int y) : std::string(str, x, y) {
+  TRACE_CTOR("string(const char *, int, int)");
+}
+string::~string() {
+  TRACE_DTOR("string");
+}
+
+#endif
 
 } // namespace ledger

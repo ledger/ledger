@@ -5,8 +5,13 @@ using namespace ledger;
 
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(BasicAmountTestCase, "numerics");
 
-void BasicAmountTestCase::setUp() {}
-void BasicAmountTestCase::tearDown() {}
+void BasicAmountTestCase::setUp() {
+  amount_t::initialize();
+}
+void BasicAmountTestCase::tearDown() {
+  amount_t::shutdown();
+  assert(live_count.size() == 0);
+}
 
 void BasicAmountTestCase::testConstructors()
 {
@@ -89,8 +94,8 @@ void BasicAmountTestCase::testAssignment()
   amount_t x3  = 123.456;
   amount_t x5  = "123456";
   amount_t x6  = "123.456";
-  amount_t x7  = std::string("123456");
-  amount_t x8  = std::string("123.456");
+  amount_t x7  = string("123456");
+  amount_t x8  = string("123.456");
   amount_t x9  = x3;
   amount_t x10 = amount_t(x6);
 
@@ -416,8 +421,8 @@ void BasicAmountTestCase::testIntegerConversion()
   assertEqual(true, bool(x1));
   assertEqual(123456L, long(x1));
   assertEqual(123456.0, double(x1));
-  assertEqual(std::string("123456"), x1.to_string());
-  assertEqual(std::string("123456"), x1.quantity_string());
+  assertEqual(string("123456"), x1.to_string());
+  assertEqual(string("123456"), x1.quantity_string());
 
   CPPUNIT_ASSERT(x1.valid());
 }
@@ -429,8 +434,8 @@ void BasicAmountTestCase::testFractionalConversion()
   assertEqual(true, bool(x1));
   assertEqual(1234L, long(x1));
   assertEqual(1234.56, double(x1));
-  assertEqual(std::string("1234.56"), x1.to_string());
-  assertEqual(std::string("1234.56"), x1.quantity_string());
+  assertEqual(string("1234.56"), x1.to_string());
+  assertEqual(string("1234.56"), x1.quantity_string());
 
   CPPUNIT_ASSERT(x1.valid());
 }

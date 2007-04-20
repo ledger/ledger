@@ -9,11 +9,11 @@
 
 namespace ledger {
 
-typedef std::map<const std::string, account_t *>  accounts_map;
-typedef std::pair<const std::string, account_t *> accounts_pair;
+typedef std::map<const string, account_t *>  accounts_map;
+typedef std::pair<const string, account_t *> accounts_pair;
 
-typedef std::map<const std::string, commodity_t *>  commodities_map;
-typedef std::pair<const std::string, commodity_t *> commodities_pair;
+typedef std::map<const string, commodity_t *>  commodities_map;
+typedef std::pair<const string, commodity_t *> commodities_pair;
 
 journal_t *	curr_journal;
 accounts_map	ofx_accounts;
@@ -130,7 +130,7 @@ int ofx_proc_security_cb(struct OfxSecurityData data, void * security_data)
   if (! data.unique_id_valid)
     return -1;
 
-  std::string symbol;
+  string symbol;
   if (data.ticker_valid)
     symbol = data.ticker;
   else if (data.currency_valid)
@@ -198,7 +198,7 @@ bool ofx_parser_t::test(std::istream& in) const
 unsigned int ofx_parser_t::parse(std::istream&	     in,
 				 journal_t *	     journal,
 				 account_t *	     master,
-				 const std::string * original_file)
+				 const string * original_file)
 {
   if (! original_file)
     return 0;

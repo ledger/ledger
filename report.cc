@@ -6,6 +6,7 @@ namespace ledger {
 
 report_t::~report_t()
 {
+  TRACE_DTOR("report_t");
   for (std::list<transform_t *>::const_iterator i = transforms.begin();
        i != transforms.end();
        i++)
@@ -25,7 +26,7 @@ void report_t::abbrev(value_t& result, xml::xpath_t::scope_t * locals)
   if (locals->args.size() < 2)
     throw new error("usage: abbrev(STRING, WIDTH [, STYLE, ABBREV_LEN])");
 
-  std::string str = locals->args[0].to_string();
+  string str = locals->args[0].to_string();
   long	      wid = locals->args[1];
 
   elision_style_t style = session->elision_style;
@@ -39,14 +40,14 @@ void report_t::abbrev(value_t& result, xml::xpath_t::scope_t * locals)
   result.set_string(abbreviate(str, wid, style, true, (int)abbrev_len));
 }
 
-void report_t::ftime(value_t& result, xml::xpath_t::scope_t * locals)
+void report_t::ftime(value_t&, xml::xpath_t::scope_t * locals)
 {
   if (locals->args.size() < 1)
     throw new error("usage: ftime(DATE [, DATE_FORMAT])");
 
   moment_t date = locals->args[0].to_datetime();
 
-  std::string date_format;
+  string date_format;
   if (locals->args.size() == 2)
     date_format = locals->args[1].to_string();
 #if 0
@@ -58,7 +59,7 @@ void report_t::ftime(value_t& result, xml::xpath_t::scope_t * locals)
 #endif
 }
 
-bool report_t::resolve(const std::string& name, value_t& result,
+bool report_t::resolve(const string& name, value_t& result,
 		       xml::xpath_t::scope_t * locals)
 {
   const char * p = name.c_str();
@@ -81,7 +82,7 @@ bool report_t::resolve(const std::string& name, value_t& result,
   return xml::xpath_t::scope_t::resolve(name, result, locals);
 }
 
-xml::xpath_t::op_t * report_t::lookup(const std::string& name)
+xml::xpath_t::op_t * report_t::lookup(const string& name)
 {
   const char * p = name.c_str();
   switch (*p) {

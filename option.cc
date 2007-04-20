@@ -15,15 +15,15 @@
 
 #if 0
 #ifdef USE_BOOST_PYTHON
-static ledger::option_t * find_option(const std::string& name);
+static ledger::option_t * find_option(const string& name);
 #endif
 #endif
 
 namespace ledger {
 
 namespace {
-  xml::xpath_t::functor_t * find_option(xml::xpath_t::scope_t * scope,
-				     const std::string& name)
+  xml::xpath_t::op_t * find_option(xml::xpath_t::scope_t * scope,
+				   const string& name)
   {
     char buf[128];
     std::strcpy(buf, "option_");
@@ -36,13 +36,10 @@ namespace {
     }
     *p = '\0';
 
-    if (xml::xpath_t::op_t * def = scope->lookup(buf))
-      return def->functor_obj();
-    else
-      return NULL;
+    return scope->lookup(buf);
   }
 
-  xml::xpath_t::functor_t * find_option(xml::xpath_t::scope_t * scope,
+  xml::xpath_t::op_t * find_option(xml::xpath_t::scope_t * scope,
 				     const char letter)
   {
     char buf[9];
@@ -50,49 +47,50 @@ namespace {
     buf[7] = letter;
     buf[8] = '\0';
 
-    if (xml::xpath_t::op_t * def = scope->lookup(buf))
-      return def->functor_obj();
-    else
-      return NULL;
+    return scope->lookup(buf);
   }
 
   void process_option(xml::xpath_t::functor_t * opt, xml::xpath_t::scope_t * scope,
 		      const char * arg)
   {
     try {
-      xml::xpath_t::scope_t * args = NULL;
+      std::auto_ptr<xml::xpath_t::scope_t> args;
       if (arg) {
-	args = new xml::xpath_t::scope_t(scope, xml::xpath_t::scope_t::ARGUMENT);
+	args.reset(new xml::xpath_t::scope_t(scope, xml::xpath_t::scope_t::ARGUMENT));
 	args->args.set_string(arg);
       }
 
       value_t temp;
-      (*opt)(temp, args);
+      (*opt)(temp, args.get());
     }
     catch (error * err) {
 #if 0
       err->context.push_back
 	(new error_context
-	 (std::string("While parsing option '--") + opt->long_opt +
+	 (string("While parsing option '--") + opt->long_opt +
 	  "'" + (opt->short_opt != '\0' ?
-		 (std::string(" (-") + opt->short_opt + "):") : ":")));
+		 (string(" (-") + opt->short_opt + "):") : ":")));
 #endif
       throw err;
     }
   }
 }
 
-bool process_option(const std::string& name, xml::xpath_t::scope_t * scope,
+bool process_option(const string& name, xml::xpath_t::scope_t * scope,
 		    const char * arg)
 {
-  if (xml::xpath_t::functor_t * opt = find_option(scope, name)) {
-    process_option(opt, scope, arg);
-    return true;
+  std::auto_ptr<xml::xpath_t::op_t> opt(find_option(scope, name));
+  if (opt.get()) {
+    xml::xpath_t::functor_t * def = opt->functor_obj();
+    if (def) {
+      process_option(def, scope, arg);
+      return true;
+    }
   }
   return false;
 }
 
-void process_environment(const char ** envp, const std::string& tag,
+void process_environment(const char ** envp, const string& tag,
 			 xml::xpath_t::scope_t * scope)
 {
   const char * tag_p   = tag.c_str();
@@ -120,7 +118,7 @@ void process_environment(const char ** envp, const std::string& tag,
 	catch (error * err) {
 	  err->context.push_back
 	    (new error_context
-	     (std::string("While parsing environment variable option '") +
+	     (string("While parsing environment variable option '") +
 	      *p + "':"));
 	  throw err;
 	}
@@ -130,7 +128,7 @@ void process_environment(const char ** envp, const std::string& tag,
 
 void process_arguments(int argc, char ** argv, const bool anywhere,
 		       xml::xpath_t::scope_t * scope,
-		       std::list<std::string>& args)
+		       std::list<string>& args)
 {
   for (char ** i = argv; *i; i++) {
     if ((*i)[0] != '-') {
@@ -157,48 +155,63 @@ void process_arguments(int argc, char ** argv, const bool anywhere,
 	value = p;
       }
 
-      xml::xpath_t::functor_t * opt = find_option(scope, name);
-      if (! opt)
-	throw new option_error(std::string("illegal option --") + name);
+      std::auto_ptr<xml::xpath_t::op_t> opt(find_option(scope, name));
+      if (! opt.get())
+	throw new option_error(string("illegal option --") + name);
 
-      if (opt->wants_args && value == NULL) {
+      xml::xpath_t::functor_t * def = opt->functor_obj();
+      if (! def)
+	throw new option_error(string("illegal option --") + name);
+
+      if (def->wants_args && value == NULL) {
 	value = *++i;
 	if (value == NULL)
-	  throw new option_error(std::string("missing option argument for --") +
+	  throw new option_error(string("missing option argument for --") +
 				 name);
       }
-      process_option(opt, scope, value);
+      process_option(def, scope, value);
     }
     else if ((*i)[1] == '\0') {
-      throw new option_error(std::string("illegal option -"));
+      throw new option_error(string("illegal option -"));
     }
     else {
-      std::list<xml::xpath_t::functor_t *> option_queue;
+      std::list<xml::xpath_t::op_t *> option_queue;
 
       int x = 1;
       for (char c = (*i)[x]; c != '\0'; x++, c = (*i)[x]) {
-	xml::xpath_t::functor_t * opt = find_option(scope, c);
+	xml::xpath_t::op_t * opt = find_option(scope, c);
 	if (! opt)
-	  throw new option_error(std::string("illegal option -") + c);
+	  throw new option_error(string("illegal option -") + c);
+
+	xml::xpath_t::functor_t * def = opt->functor_obj();
+	if (! def)
+	  throw new option_error(string("illegal option -") + c);
+
 	option_queue.push_back(opt);
       }
 
-      for (std::list<xml::xpath_t::functor_t *>::iterator
+      for (std::list<xml::xpath_t::op_t *>::iterator
 	     o = option_queue.begin();
 	   o != option_queue.end();
 	   o++) {
 	char * value = NULL;
-	if ((*o)->wants_args) {
+
+	xml::xpath_t::functor_t * def = (*o)->functor_obj();
+	assert(def);
+
+	if (def->wants_args) {
 	  value = *++i;
 	  if (value == NULL)
-	    throw new option_error(std::string("missing option argument for -") +
+	    throw new option_error(string("missing option argument for -") +
 #if 0
-				   (*o)->short_opt);
+				   def->short_opt);
 #else
 	  '?');
 #endif
 	}
-	process_option(*o, scope, value);
+	process_option(def, scope, value);
+
+	delete *o;
       }
     }
 
@@ -224,7 +237,7 @@ struct py_option_t : public option_t
   PyObject * self;
 
   py_option_t(PyObject * self_,
-		      const std::string& long_opt,
+		      const string& long_opt,
 		      const bool wants_arg)
     : self(self_), option_t(long_opt, wants_arg) {}
 
@@ -245,12 +258,12 @@ struct py_option_t : public option_t
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(option_select_overloads,
 				       py_option_t::select, 1, 2)
 
-typedef std::map<const std::string, object>  options_map;
-typedef std::pair<const std::string, object> options_pair;
+typedef std::map<const string, object>  options_map;
+typedef std::pair<const string, object> options_pair;
 
 options_map options;
 
-static option_t * find_option(const std::string& name)
+static option_t * find_option(const string& name)
 {
   options_map::const_iterator i = options.find(name);
   if (i != options.end())
@@ -267,7 +280,7 @@ void shutdown_option()
 void export_option()
 {
   class_< option_t, py_option_t, boost::noncopyable >
-    ("Option", init<const std::string&, bool>())
+    ("Option", init<const string&, bool>())
     .def_readonly("long_opt", &py_option_t::long_opt)
     .def_readonly("short_opt", &py_option_t::short_opt)
     .def_readonly("wants_arg", &py_option_t::wants_arg)

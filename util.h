@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+#include "trace.h"
+
 #if defined __FreeBSD__ && __FreeBSD__ <=4
 // FreeBSD has a broken isspace macro, so dont use it
 #undef isspace(c)
@@ -25,6 +27,8 @@ typedef unsigned long ostream_pos_type;
 typedef std::istream::pos_type istream_pos_type;
 typedef std::ostream::pos_type ostream_pos_type;
 #endif
+
+namespace ledger {
 
 inline char * skip_ws(char * ptr) {
   while (*ptr == ' ' || *ptr == '\t' || *ptr == '\n')
@@ -79,7 +83,7 @@ inline char peek_next_nonws(std::istream& in) {
   *_p = '\0';								\
 }
 
-std::string resolve_path(const std::string& path);
+ledger::string resolve_path(const ledger::string& path);
 
 #ifdef HAVE_REALPATH
 extern "C" char *realpath(const char *, char resolved_path[]);
@@ -92,17 +96,20 @@ enum elision_style_t {
   ABBREVIATE
 };
 
-std::string abbreviate(const std::string& str, unsigned int width,
-		       elision_style_t elision_style = TRUNCATE_TRAILING,
-		       const bool is_account = false, int abbrev_length = 2);
+ledger::string abbreviate(const ledger::string& str, unsigned int width,
+			  elision_style_t elision_style = TRUNCATE_TRAILING,
+			  const bool is_account = false, int abbrev_length = 2);
 
 static inline const
-std::string& either_or(const std::string& first, const std::string& second)
+ledger::string& either_or(const ledger::string& first,
+			  const ledger::string& second)
 {
   if (first.empty())
     return second;
   else
     return first;
 }
+
+} // namespace ledger
 
 #endif // _UTIL_H

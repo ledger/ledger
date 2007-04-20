@@ -5,8 +5,12 @@ using namespace ledger;
 
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(CommodityTestCase, "numerics");
 
-void CommodityTestCase::setUp() {}
-void CommodityTestCase::tearDown() {}
+void CommodityTestCase::setUp() {
+  amount_t::initialize();
+}
+void CommodityTestCase::tearDown() {
+  amount_t::shutdown();
+}
 
 void CommodityTestCase::testPriceHistory()
 {

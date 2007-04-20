@@ -21,13 +21,13 @@ static unsigned int  count;
 static journal_t *   curr_journal;
 static entry_t *     curr_entry;
 static commodity_t * curr_comm;
-static std::string   comm_flags;
+static string   comm_flags;
 
 static transaction_t::state_t curr_state;
 
-static std::string   data;
+static string   data;
 static bool          ignore;
-static std::string   have_error;
+static string   have_error;
 
 static void startElement(void *userData, const char *name, const char **attrs)
 {
@@ -46,7 +46,7 @@ static void startElement(void *userData, const char *name, const char **attrs)
       curr_entry->transactions.back()->state = curr_state;
   }
   else if (std::strcmp(name, "commodity") == 0) {
-    if (std::string(attrs[0]) == "flags")
+    if (string(attrs[0]) == "flags")
       comm_flags = attrs[1];
   }
   else if (std::strcmp(name, "total") == 0) {
@@ -117,7 +117,7 @@ static void endElement(void *userData, const char *name)
     assert(curr_comm);
     curr_comm->add_flags(COMMODITY_STYLE_SUFFIXED);
     if (! comm_flags.empty()) {
-      for (std::string::size_type i = 0, l = comm_flags.length(); i < l; i++) {
+      for (string::size_type i = 0, l = comm_flags.length(); i < l; i++) {
 	switch (comm_flags[i]) {
 	case 'P': curr_comm->drop_flags(COMMODITY_STYLE_SUFFIXED); break;
 	case 'S': curr_comm->add_flags(COMMODITY_STYLE_SEPARATED); break;
@@ -144,8 +144,8 @@ static void endElement(void *userData, const char *name)
   else if (std::strcmp(name, "quantity") == 0) {
     curr_entry->transactions.back()->amount.parse(data);
     if (curr_comm) {
-      std::string::size_type i = data.find('.');
-      if (i != std::string::npos) {
+      string::size_type i = data.find('.');
+      if (i != string::npos) {
 	int precision = data.length() - i - 1;
 	if (precision > curr_comm->precision())
 	  curr_comm->set_precision(precision);
@@ -162,7 +162,7 @@ static void endElement(void *userData, const char *name)
 static void dataHandler(void *userData, const char *s, int len)
 {
   if (! ignore)
-    data = std::string(s, len);
+    data = string(s, len);
 }
 
 bool xml_parser_t::test(std::istream& in) const
@@ -191,7 +191,7 @@ bool xml_parser_t::test(std::istream& in) const
 unsigned int xml_parser_t::parse(std::istream&	     in,
 				 journal_t *	     journal,
 				 account_t *	     master,
-				 const std::string * original_file)
+				 const string * original_file)
 {
   char buf[BUFSIZ];
 
@@ -342,7 +342,7 @@ void xml_write_value(std::ostream& out, const value_t& value,
   out << "</value>\n";
 }
 
-void output_xml_string(std::ostream& out, const std::string& str)
+void output_xml_string(std::ostream& out, const string& str)
 {
   for (const char * s = str.c_str(); *s; s++) {
     switch (*s) {
@@ -419,7 +419,7 @@ void format_xml_entries::format_last_entry()
 	output_stream << "        <tr:generated/>\n";
 
       if ((*i)->account) {
-	std::string name = (*i)->account->fullname();
+	string name = (*i)->account->fullname();
 	if (name == "<Total>")
 	  name = "[TOTAL]";
 	else if (name == "<Unknown>")

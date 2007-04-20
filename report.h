@@ -9,21 +9,21 @@
 
 namespace ledger {
 
-typedef std::list<std::string> strings_list;
+typedef std::list<string> strings_list;
 
 class report_t : public xml::xpath_t::scope_t
 {
  public:
-  std::string output_file;
-  std::string format_string;
-  std::string amount_expr;
-  std::string total_expr;
-  std::string date_output_format;
+  string output_file;
+  string format_string;
+  string amount_expr;
+  string total_expr;
+  string date_output_format;
 
   unsigned long budget_flags;
 
-  std::string account;
-  std::string pager;
+  string account;
+  string pager;
 
   bool show_totals;
   bool raw_mode;
@@ -40,6 +40,7 @@ class report_t : public xml::xpath_t::scope_t
       session(_session),
       last_transform(NULL)
   {
+    TRACE_CTOR("report_t(session_t *)");
     eval("t=total,TOT=0,T()=(TOT=TOT+t,TOT)");
   }
 
@@ -58,7 +59,7 @@ class report_t : public xml::xpath_t::scope_t
   // Config options
   //
 
-  void eval(const std::string& expr) {
+  void eval(const string& expr) {
     xml::xpath_t(expr).compile((xml::document_t *)NULL, this);
   }
   void option_eval(value_t&, xml::xpath_t::scope_t * locals) {
@@ -66,10 +67,10 @@ class report_t : public xml::xpath_t::scope_t
   }
 
   void option_amount(value_t&, xml::xpath_t::scope_t * locals) {
-    eval(std::string("t=") + locals->args[0].to_string());
+    eval(string("t=") + locals->args[0].to_string());
   }
   void option_total(value_t&, xml::xpath_t::scope_t * locals) {
-    eval(std::string("T()=") + locals->args[0].to_string());
+    eval(string("T()=") + locals->args[0].to_string());
   }
 
   void option_format(value_t&, xml::xpath_t::scope_t * locals) {
@@ -96,7 +97,7 @@ class report_t : public xml::xpath_t::scope_t
     transforms.push_back(new select_transform(locals->args[0].to_string()));
   }
   void option_limit(value_t&, xml::xpath_t::scope_t * locals) {
-    std::string expr = (std::string("//xact[") +
+    string expr = (string("//xact[") +
 			locals->args[0].to_string() + "]");
     transforms.push_back(new select_transform(expr));
   }
@@ -130,12 +131,12 @@ class report_t : public xml::xpath_t::scope_t
   // Scope members
   //
 
-  virtual bool resolve(const std::string& name, value_t& result,
+  virtual bool resolve(const string& name, value_t& result,
 		       xml::xpath_t::scope_t * locals);
-  virtual xml::xpath_t::op_t * lookup(const std::string& name);
+  virtual xml::xpath_t::op_t * lookup(const string& name);
 };
 
-std::string abbrev(const std::string& str, unsigned int width,
+string abbrev(const string& str, unsigned int width,
 		   const bool is_account);
 
 } // namespace ledger

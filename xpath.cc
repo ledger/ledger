@@ -1,8 +1,10 @@
 #include "xpath.h"
 #include "debug.h"
 #include "util.h"
+#if 0
 #ifdef USE_BOOST_PYTHON
 #include "py_eval.h"
+#endif
 #endif
 #include <fstream>
 
@@ -379,7 +381,11 @@ void xpath_t::token_t::next(std::istream& in, unsigned short flags)
       catch (amount_error * err) {
 	// If the amount had no commodity, it must be an unambiguous
 	// variable reference
+
+	// jww (2007-04-19): There must be a more efficient way to do this!
 	if (std::strcmp(err->what(), "No quantity specified for amount") == 0) {
+	  delete err;
+
 	  in.clear();
 	  in.seekg(pos, std::ios::beg);
 
@@ -408,13 +414,13 @@ void xpath_t::token_t::unexpected()
   case TOK_EOF:
     throw new parse_error("Unexpected end of expression");
   case IDENT:
-    throw new parse_error(std::string("Unexpected symbol '") +
+    throw new parse_error(string("Unexpected symbol '") +
 			  value.to_string() + "'");
   case VALUE:
-    throw new parse_error(std::string("Unexpected value '") +
+    throw new parse_error(string("Unexpected value '") +
 			  value.to_string() + "'");
   default:
-    throw new parse_error(std::string("Unexpected operator '") + symbol + "'");
+    throw new parse_error(string("Unexpected operator '") + symbol + "'");
   }
 }
 
@@ -422,15 +428,15 @@ void xpath_t::token_t::unexpected(char c, char wanted)
 {
   if ((unsigned char) c == 0xff) {
     if (wanted)
-      throw new parse_error(std::string("Missing '") + wanted + "'");
+      throw new parse_error(string("Missing '") + wanted + "'");
     else
       throw new parse_error("Unexpected end");
   } else {
     if (wanted)
-      throw new parse_error(std::string("Invalid char '") + c +
+      throw new parse_error(string("Invalid char '") + c +
 			    "' (wanted '" + wanted + "')");
     else
-      throw new parse_error(std::string("Invalid char '") + c + "'");
+      throw new parse_error(string("Invalid char '") + c + "'");
   }
 }
 
@@ -443,17 +449,12 @@ xpath_t::op_t * xpath_t::wrap_value(const value_t& val)
 
 xpath_t::op_t * xpath_t::wrap_sequence(value_t::sequence_t * val)
 {
-  if (val->size() == 0) {
+  if (val->size() == 0)
     return wrap_value(false);
-  }
-  else if (val->size() == 1) {
+  else if (val->size() == 1)
     return wrap_value(val->front());
-  }
-  else {
-    xpath_t::op_t * temp = new xpath_t::op_t(xpath_t::op_t::VALUE);
-    temp->valuep = new value_t(val);
-    return temp;
-  }
+  else
+    return wrap_value(val);
 }
 
 xpath_t::op_t * xpath_t::wrap_functor(functor_t * fobj)
@@ -464,7 +465,7 @@ xpath_t::op_t * xpath_t::wrap_functor(functor_t * fobj)
 }
 
 #if 0
-xpath_t::op_t * xpath_t::wrap_mask(const std::string& pattern)
+xpath_t::op_t * xpath_t::wrap_mask(const string& pattern)
 {
   xpath_t::op_t * temp = new xpath_t::op_t(xpath_t::op_t::MASK);
   temp->mask = new mask_t(pattern);
@@ -472,7 +473,7 @@ xpath_t::op_t * xpath_t::wrap_mask(const std::string& pattern)
 }
 #endif
 
-void xpath_t::scope_t::define(const std::string& name, op_t * def)
+void xpath_t::scope_t::define(const string& name, op_t * def)
 {
   DEBUG_PRINT("ledger.xpath.syms", "Defining '" << name << "' = " << def);
 
@@ -487,14 +488,14 @@ void xpath_t::scope_t::define(const std::string& name, op_t * def)
     std::pair<symbol_map::iterator, bool> result2
       = symbols.insert(symbol_pair(name, def));
     if (! result2.second)
-      throw new compile_error(std::string("Redefinition of '") +
+      throw new compile_error(string("Redefinition of '") +
 			      name + "' in same scope");
   }
   def->acquire();
 }
 
 xpath_t::op_t *
-xpath_t::scope_t::lookup(const std::string& name)
+xpath_t::scope_t::lookup(const string& name)
 {
   symbol_map::const_iterator i = symbols.find(name);
   if (i != symbols.end())
@@ -504,11 +505,11 @@ xpath_t::scope_t::lookup(const std::string& name)
   return NULL;
 }
 
-void xpath_t::scope_t::define(const std::string& name, functor_t * def) {
+void xpath_t::scope_t::define(const string& name, functor_t * def) {
   define(name, wrap_functor(def));
 }
 
-bool xpath_t::function_scope_t::resolve(const std::string& name,
+bool xpath_t::function_scope_t::resolve(const string& name,
 					value_t&	   result,
 					scope_t *	   locals)
 {
@@ -606,8 +607,8 @@ void xpath_t::op_t::get_value(value_t& result) const
     std::ostringstream buf;
     write(buf);
     throw new calc_error
-      (std::string("Cannot determine value of expression symbol '") +
-       buf.str() + "'");
+      (string("Cannot determine value of expression symbol '") +
+       string(buf.str()) + "'");
   }
   }
 }
@@ -640,7 +641,7 @@ xpath_t::parse_value_term(std::istream& in, unsigned short tflags) const
 	lambda->functor = new python_functor_t(python_eval(buf));
 	eval->set_left(lambda);
 	op_t * sym = new op_t(op_t::SYMBOL);
-	sym->name = new std::string("__ptr");
+	sym->name = new string("__ptr");
 	eval->set_right(sym);
 
 	node.reset(eval);
@@ -653,13 +654,13 @@ xpath_t::parse_value_term(std::istream& in, unsigned short tflags) const
 #endif /* USE_BOOST_PYTHON */
 #endif
 
-    std::string ident = tok.value.to_string();
+    string ident = tok.value.to_string();
     if (std::isdigit(ident[0])) {
       node.reset(new op_t(op_t::ARG_INDEX));
       node->arg_index = std::atol(ident.c_str());
     } else {
       node.reset(new op_t(op_t::NODE_NAME));
-      node->name = new std::string(ident);
+      node->name = new string(ident);
     }
 
     // An identifier followed by ( represents a function call
@@ -689,7 +690,7 @@ xpath_t::parse_value_term(std::istream& in, unsigned short tflags) const
       throw parse_error("@ symbol must be followed by attribute name");
 
     node.reset(new op_t(op_t::ATTR_NAME));
-    node->name = new std::string(tok.value.to_string());
+    node->name = new string(tok.value.to_string());
     break;
 
 #if 0
@@ -699,7 +700,7 @@ xpath_t::parse_value_term(std::istream& in, unsigned short tflags) const
       throw parse_error("$ symbol must be followed by variable name");
 
     node.reset(new op_t(op_t::VAR_NAME));
-    node->name = new std::string(tok.value.to_string());
+    node->name = new string(tok.value.to_string());
     break;
 #endif
 
@@ -724,7 +725,7 @@ xpath_t::parse_value_term(std::istream& in, unsigned short tflags) const
   case token_t::LPAREN:
     node.reset(parse_value_expr(in, tflags | XPATH_PARSE_PARTIAL));
     if (! node.get())
-	throw new parse_error(std::string(tok.symbol) +
+	throw new parse_error(string(tok.symbol) +
 			      " operator not followed by argument");
     tok = next_token(in, tflags);
     if (tok.kind != token_t::RPAREN)
@@ -819,7 +820,7 @@ xpath_t::parse_unary_expr(std::istream& in, unsigned short tflags) const
   case token_t::EXCLAM: {
     std::auto_ptr<op_t> texpr(parse_path_expr(in, tflags));
     if (! texpr.get())
-      throw new parse_error(std::string(tok.symbol) +
+      throw new parse_error(string(tok.symbol) +
 			    " operator not followed by argument");
     // A very quick optimization
     if (texpr->kind == op_t::VALUE) {
@@ -835,7 +836,7 @@ xpath_t::parse_unary_expr(std::istream& in, unsigned short tflags) const
   case token_t::MINUS: {
     std::auto_ptr<op_t> texpr(parse_path_expr(in, tflags));
     if (! texpr.get())
-      throw new parse_error(std::string(tok.symbol) +
+      throw new parse_error(string(tok.symbol) +
 			    " operator not followed by argument");
     // A very quick optimization
     if (texpr->kind == op_t::VALUE) {
@@ -852,7 +853,7 @@ xpath_t::parse_unary_expr(std::istream& in, unsigned short tflags) const
   case token_t::PERCENT: {
     std::auto_ptr<op_t> texpr(parse_path_expr(in, tflags));
     if (! texpr.get())
-      throw new parse_error(std::string(tok.symbol) +
+      throw new parse_error(string(tok.symbol) +
 			    " operator not followed by argument");
     // A very quick optimization
     if (texpr->kind == op_t::VALUE) {
@@ -889,7 +890,7 @@ xpath_t::parse_union_expr(std::istream& in, unsigned short tflags) const
       node->set_left(prev.release());
       node->set_right(parse_union_expr(in, tflags));
       if (! node->right)
-	throw new parse_error(std::string(tok.symbol) +
+	throw new parse_error(string(tok.symbol) +
 			      " operator not followed by argument");
     } else {
       push_token(tok);
@@ -912,7 +913,7 @@ xpath_t::parse_mul_expr(std::istream& in, unsigned short tflags) const
       node->set_left(prev.release());
       node->set_right(parse_mul_expr(in, tflags));
       if (! node->right)
-	throw new parse_error(std::string(tok.symbol) +
+	throw new parse_error(string(tok.symbol) +
 			      " operator not followed by argument");
 
       tok = next_token(in, tflags);
@@ -938,7 +939,7 @@ xpath_t::parse_add_expr(std::istream& in, unsigned short tflags) const
       node->set_left(prev.release());
       node->set_right(parse_add_expr(in, tflags));
       if (! node->right)
-	throw new parse_error(std::string(tok.symbol) +
+	throw new parse_error(string(tok.symbol) +
 			      " operator not followed by argument");
 
       tok = next_token(in, tflags);
@@ -1008,10 +1009,10 @@ xpath_t::parse_logic_expr(std::istream& in, unsigned short tflags) const
 
       if (! node->right) {
 	if (tok.kind == token_t::PLUS)
-	  throw new parse_error(std::string(tok.symbol) +
+	  throw new parse_error(string(tok.symbol) +
 				" operator not followed by argument");
 	else
-	  throw new parse_error(std::string(tok.symbol) +
+	  throw new parse_error(string(tok.symbol) +
 				" operator not followed by argument");
       }
     }
@@ -1033,7 +1034,7 @@ xpath_t::parse_and_expr(std::istream& in, unsigned short tflags) const
       node->set_left(prev.release());
       node->set_right(parse_and_expr(in, tflags));
       if (! node->right)
-	throw new parse_error(std::string(tok.symbol) +
+	throw new parse_error(string(tok.symbol) +
 			      " operator not followed by argument");
     } else {
       push_token(tok);
@@ -1055,7 +1056,7 @@ xpath_t::parse_or_expr(std::istream& in, unsigned short tflags) const
       node->set_left(prev.release());
       node->set_right(parse_or_expr(in, tflags));
       if (! node->right)
-	throw new parse_error(std::string(tok.symbol) +
+	throw new parse_error(string(tok.symbol) +
 			      " operator not followed by argument");
     } else {
       push_token(tok);
@@ -1078,14 +1079,14 @@ xpath_t::parse_querycolon_expr(std::istream& in, unsigned short tflags) const
       node->set_right(new op_t(op_t::O_COLON));
       node->right->set_left(parse_querycolon_expr(in, tflags));
       if (! node->right)
-	throw new parse_error(std::string(tok.symbol) +
+	throw new parse_error(string(tok.symbol) +
 			      " operator not followed by argument");
       tok = next_token(in, tflags);
       if (tok.kind != token_t::COLON)
 	tok.unexpected();	// jww (2006-09-09): wanted :
       node->right->set_right(parse_querycolon_expr(in, tflags));
       if (! node->right)
-	throw new parse_error(std::string(tok.symbol) +
+	throw new parse_error(string(tok.symbol) +
 			      " operator not followed by argument");
     } else {
       push_token(tok);
@@ -1107,7 +1108,7 @@ xpath_t::parse_value_expr(std::istream& in, unsigned short tflags) const
       node->set_left(prev.release());
       node->set_right(parse_value_expr(in, tflags));
       if (! node->right)
-	throw new parse_error(std::string(tok.symbol) +
+	throw new parse_error(string(tok.symbol) +
 			      " operator not followed by argument");
       tok = next_token(in, tflags);
     }
@@ -1120,7 +1121,7 @@ xpath_t::parse_value_expr(std::istream& in, unsigned short tflags) const
     }
   }
   else if (! (tflags & XPATH_PARSE_PARTIAL)) {
-    throw new parse_error(std::string("Failed to parse value expression"));
+    throw new parse_error(string("Failed to parse value expression"));
   }
 
   return node.release();
@@ -1755,7 +1756,7 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
 	return func->compile(context, call_args.get(), resolve);
       }
       else {
-	throw new calc_error(std::string("Unknown function name '") +
+	throw new calc_error(string("Unknown function name '") +
 			     *left->name + "'");
       }
     }
@@ -1906,10 +1907,10 @@ void xpath_t::calc(value_t& result, node_t * node, scope_t * scope) const
   }
 }
 
-xpath_t::context::context(const xpath_t&     _xpath,
-			  const op_t *       _err_node,
-			  const std::string& desc) throw()
-  : xpath(_xpath), err_node(_err_node), error_context(desc)
+xpath_t::context::context(const xpath_t& _xpath,
+			  const op_t *   _err_node,
+			  const string&  desc) throw()
+  : error_context(desc), xpath(_xpath), err_node(_err_node)
 {
   _err_node->acquire();
 }
@@ -1939,7 +1940,7 @@ void xpath_t::context::describe(std::ostream& out) const throw()
   out << std::endl;
   if (found) {
     out << "  ";
-    for (int i = 0; i < end - start; i++) {
+    for (unsigned int i = 0; i < end - start; i++) {
       if (i >= begin - start)
 	out << "^";
       else
@@ -1963,7 +1964,7 @@ bool xpath_t::op_t::write(std::ostream&	      out,
     found = true;
   }
 
-  std::string symbol;
+  string symbol;
 
   switch (kind) {
   case VALUE:
@@ -1991,6 +1992,16 @@ bool xpath_t::op_t::write(std::ostream&	      out,
       break;
     case value_t::STRING:
       out << '"' << *valuep << '"';
+      break;
+
+    case value_t::XML_NODE:
+      out << '<' << valuep << '>';
+      break;
+    case value_t::POINTER:
+      out << '&' << valuep;
+      break;
+    case value_t::SEQUENCE:
+      out << '~' << valuep << '~';
       break;
     }
     break;
@@ -2406,7 +2417,7 @@ value_t py_calc(xpath_t::op_t& xpath_t, const T& item)
   return result;
 }
 
-xpath_t::op_t * py_parse_xpath_t_1(const std::string& str)
+xpath_t::op_t * py_parse_xpath_t_1(const string& str)
 {
   return parse_xpath_t(str);
 }
@@ -2449,12 +2460,12 @@ void export_xpath()
       return_value_policy<manage_new_object>());
 
   class_< item_predicate<transaction_t> >
-    ("TransactionPredicate", init<std::string>())
+    ("TransactionPredicate", init<string>())
     .def("__call__", &item_predicate<transaction_t>::operator())
     ;
 
   class_< item_predicate<account_t> >
-    ("AccountPredicate", init<std::string>())
+    ("AccountPredicate", init<string>())
     .def("__call__", &item_predicate<account_t>::operator())
     ;
 

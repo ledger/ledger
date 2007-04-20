@@ -6,6 +6,8 @@
 #include "parser.h"
 #endif
 
+#include "util.h"
+
 #include <string>
 #include <iostream>
 
@@ -20,7 +22,7 @@ class binary_parser_t : public parser_t
   virtual unsigned int parse(std::istream&	 in,
 			     journal_t *	 journal,
 			     account_t *	 master        = NULL,
-			     const std::string * original_file = NULL);
+			     const string * original_file = NULL);
 };
 #endif
 
@@ -173,18 +175,18 @@ inline T read_binary_long(char *& data) {
   return num;
 }
 
-void read_binary_string(std::istream& in, std::string& str);
-void read_binary_string(char *& data, std::string& str);
-void read_binary_string(char *& data, std::string * str);
+void read_binary_string(std::istream& in, string& str);
+void read_binary_string(char *& data, string& str);
+void read_binary_string(char *& data, string * str);
 
-inline std::string read_binary_string(std::istream& in) {
-  std::string temp;
+inline string read_binary_string(std::istream& in) {
+  string temp;
   read_binary_string(in, temp);
   return temp;
 }
 
-inline std::string read_binary_string(char *& data) {
-  std::string temp;
+inline string read_binary_string(char *& data) {
+  string temp;
   read_binary_string(data, temp);
   return temp;
 }
@@ -245,7 +247,7 @@ void write_binary_long(std::ostream& out, T num)
   write_binary_guard(out, 0x2002);
 }
 
-void write_binary_string(std::ostream& out, const std::string& str);
+void write_binary_string(std::ostream& out, const string& str);
 
 
 

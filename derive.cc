@@ -6,8 +6,8 @@
 
 namespace ledger {
 
-void derive_command::operator()(value_t& result,
-				xml::xpath_t::scope_t * locals)
+void derive_command::operator()
+  (value_t& result, xml::xpath_t::scope_t * locals)
 {
 #if 0
   std::ostream& out   = *get_ptr<std::ostream>(locals, 0);
@@ -118,7 +118,7 @@ void derive_command::operator()(value_t& result,
   }
   else {
     while (i != args.end()) {
-      std::string& re_pat(*i++);
+      string& re_pat(*i++);
       account_t *  acct = NULL;
       amount_t *   amt  = NULL;
 

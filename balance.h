@@ -874,7 +874,7 @@ class balance_pair_t
     return ((! cost || cost->realzero()) && quantity.realzero());
   }
 
-  balance_pair_t in_place_abs() {
+  void in_place_abs() {
     quantity = quantity.abs();
     if (cost)
       *cost = cost->abs();

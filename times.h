@@ -45,7 +45,7 @@ extern moment_t& now;
 
 class datetime_error : public error {
  public:
-  datetime_error(const std::string& _reason) throw() : error(_reason) {}
+  datetime_error(const string& _reason) throw() : error(_reason) {}
   virtual ~datetime_error() throw() {}
 };
 
@@ -53,16 +53,16 @@ class interval_t
 {
 public:
   interval_t() {}
-  interval_t(const std::string& desc) {}
+  interval_t(const string&) {}
 
   operator bool() const {
     return false;
   }
 
-  void start(const moment_t& moment) {}
-  moment_t next() const {}
+  void start(const moment_t&) {}
+  moment_t next() const { return moment_t(); }
 
-  void parse(std::istream& in) {}
+  void parse(std::istream&) {}
 };
 
 #if 0
@@ -73,19 +73,19 @@ inline moment_t ptime_local_to_utc(const moment_t& when) {
 
 // jww (2007-04-18): I need to make a general parsing function
 // instead, and then make these into private methods.
-inline moment_t ptime_from_local_date_string(const std::string& date_string) {
+inline moment_t ptime_from_local_date_string(const string& date_string) {
   return ptime_local_to_utc(moment_t(boost::gregorian::from_string(date_string),
 				  time_duration()));
 }
 
-inline moment_t ptime_from_local_time_string(const std::string& time_string) {
+inline moment_t ptime_from_local_time_string(const string& time_string) {
   return ptime_local_to_utc(boost::posix_time::time_from_string(time_string));
 }
 #endif
 
 moment_t parse_datetime(std::istream& in);
 
-inline moment_t parse_datetime(const std::string& str) {
+inline moment_t parse_datetime(const string& str) {
   std::istringstream instr(str);
   return parse_datetime(instr);
 }
@@ -97,11 +97,11 @@ extern bool  day_before_month;
 struct intorchar
 {
   int	      ival;
-  std::string sval;
+  string sval;
 
   intorchar() : ival(-1) {}
   intorchar(int val) : ival(val) {}
-  intorchar(const std::string& val) : ival(-1), sval(val) {}
+  intorchar(const string& val) : ival(-1), sval(val) {}
   intorchar(const intorchar& o) : ival(o.ival), sval(o.sval) {}
 };
 
