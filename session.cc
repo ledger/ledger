@@ -138,7 +138,7 @@ bool session_t::resolve(const std::string& name, value_t& result,
     if (name == "date_format") {
       // jww (2007-04-18): What to do here?
 #if 0
-      result.set_string(ptime::output_format);
+      result.set_string(moment_t::output_format);
 #endif
       return true;
     }

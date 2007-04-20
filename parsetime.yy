@@ -7,7 +7,7 @@
 static struct std::tm * timeval;
 
 namespace {
-  boost::posix_time::ptime moment;
+  ledger::moment_t moment;
 
   struct time_to_leave : std::exception {};
 
@@ -21,7 +21,7 @@ namespace {
     return lexer->yylex();
   }
 
-  int month_to_int(char * name)
+  int month_to_int(const std::string& name)
   {
     switch (std::toupper(name[0])) {
     case 'J':
@@ -84,12 +84,14 @@ namespace {
 	       const ledger::intorchar& min = ledger::intorchar(),
 	       const ledger::intorchar& sec = ledger::intorchar())
   {
-    if (ampm.sval && std::tolower(ampm.sval[0]) == 'a' && hour.ival == 12)
+    if (! ampm.sval.empty() &&
+	std::tolower(ampm.sval[0]) == 'a' && hour.ival == 12)
       timeval->tm_hour = 0;
-    else if (ampm.sval && std::tolower(ampm.sval[0]) == 'p' && hour.ival == 12)
+    else if (! ampm.sval.empty() &&
+	     std::tolower(ampm.sval[0]) == 'p' && hour.ival == 12)
       timeval->tm_hour = 12;
-    else if (hour.ival < 0 || (! ampm.sval && hour.ival > 23) ||
-	     (ampm.sval && hour.ival > 12))
+    else if (hour.ival < 0 || (ampm.sval.empty() && hour.ival > 23) ||
+	     (! ampm.sval.empty() && hour.ival > 12))
       throw ledger::datetime_error("Hour out of range");
     else
       timeval->tm_hour += hour.ival;
@@ -230,7 +232,7 @@ int yywrap()
   return 1;
 }
 
-boost::posix_time::ptime parse_abs_datetime(std::istream& input)
+ledger::moment_t parse_abs_datetime(std::istream& input)
 {
   lexer = new yyFlexLexer(&input);
 
@@ -244,18 +246,24 @@ boost::posix_time::ptime parse_abs_datetime(std::istream& input)
   // jww (2007-04-19): Catch any boost errors thrown from here and
   // push them onto the new error stack scheme.
   try {
-    if (yyparse() == 0)
+    if (yyparse() == 0) {
+      delete lexer;
       return moment;
+    }
   }
   catch (const time_to_leave&) {
+    delete lexer;
     return moment;
   }
   catch (ledger::datetime_error *) {
+    delete lexer;
     throw;
   }
   catch (...) {
+    delete lexer;
     throw new ledger::datetime_error("Failed to parse date/time");
   }
+  delete lexer;
   throw new ledger::datetime_error("Failed to parse date/time");
 } 
 

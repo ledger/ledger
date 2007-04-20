@@ -27,14 +27,14 @@ long value_t::to_integer() const
   }
 }
 
-ptime value_t::to_datetime() const
+moment_t value_t::to_datetime() const
 {
   if (type == DATETIME) {
-    return *(ptime *) data;
+    return *(moment_t *) data;
   } else {
     value_t temp(*this);
     temp.in_place_cast(DATETIME);
-    return *(ptime *) temp.data;
+    return *(moment_t *) temp.data;
   }
 }
 
@@ -171,7 +171,7 @@ value_t& value_t::operator=(const value_t& val)
     return *this;
   }
   else if (type == DATETIME && val.type == DATETIME) {
-    *((ptime *) data) = *((ptime *) val.data);
+    *((moment_t *) data) = *((moment_t *) val.data);
     return *this;
   }
   else if (type == AMOUNT && val.type == AMOUNT) {
@@ -207,7 +207,7 @@ value_t& value_t::operator=(const value_t& val)
     break;
 
   case DATETIME:
-    *((ptime *) data) = *((ptime *) val.data);
+    *((moment_t *) data) = *((moment_t *) val.data);
     break;
 
   case AMOUNT:
@@ -293,16 +293,16 @@ value_t& value_t::operator+=(const value_t& val)
   case DATETIME:
     switch (val.type) {
     case INTEGER:
-      *((ptime *) data) += seconds(*((long *) val.data));
+      *((moment_t *) data) += date_duration(*((long *) val.data));
       break;
     case AMOUNT:
-      *((ptime *) data) += seconds(long(*((amount_t *) val.data)));
+      *((moment_t *) data) += date_duration(long(*((amount_t *) val.data)));
       break;
     case BALANCE:
-      *((ptime *) data) += seconds(long(*((balance_t *) val.data)));
+      *((moment_t *) data) += date_duration(long(*((balance_t *) val.data)));
       break;
     case BALANCE_PAIR:
-      *((ptime *) data) += seconds(long(*((balance_pair_t *) val.data)));
+      *((moment_t *) data) += date_duration(long(*((balance_pair_t *) val.data)));
       break;
     case STRING:
       throw new value_error("Cannot add a string to an date/time");
@@ -476,22 +476,22 @@ value_t& value_t::operator-=(const value_t& val)
   case DATETIME:
     switch (val.type) {
     case INTEGER:
-      *((ptime *) data) -= seconds(*((long *) val.data));
+      *((moment_t *) data) -= date_duration(*((long *) val.data));
       break;
     case DATETIME: {
-      time_duration tval = ((ptime *) data)->operator-(*((ptime *) val.data));
+      duration_t tval = ((moment_t *) data)->operator-(*((moment_t *) val.data));
       in_place_cast(INTEGER);
-      *((long *) data) = tval.total_seconds();
+      *((long *) data) = tval.total_seconds() / 86400L;
       break;
     }
     case AMOUNT:
-      *((ptime *) data) -= seconds(long(*((amount_t *) val.data)));
+      *((moment_t *) data) -= date_duration(long(*((amount_t *) val.data)));
       break;
     case BALANCE:
-      *((ptime *) data) -= seconds(long(*((balance_t *) val.data)));
+      *((moment_t *) data) -= date_duration(long(*((balance_t *) val.data)));
       break;
     case BALANCE_PAIR:
-      *((ptime *) data) -= seconds(long(*((balance_pair_t *) val.data)));
+      *((moment_t *) data) -= date_duration(long(*((balance_pair_t *) val.data)));
       break;
     default:
       assert(0);
@@ -877,7 +877,7 @@ value_t::operator bool() const
   case INTEGER:
     return *(long *) data;
   case DATETIME:
-    return ! ((ptime *) data)->is_not_a_date_time();
+    return is_valid_moment(*((moment_t *) data));
   case AMOUNT:
     return *(amount_t *) data;
   case BALANCE:
@@ -936,7 +936,7 @@ value_t::operator long() const
 }
 
 template <>
-value_t::operator ptime() const
+value_t::operator moment_t() const
 {
   switch (type) {
   case BOOLEAN:
@@ -944,7 +944,7 @@ value_t::operator ptime() const
   case INTEGER:
     throw new value_error("Cannot convert an integer to a date/time");
   case DATETIME:
-    return *((ptime *) data);
+    return *((moment_t *) data);
   case AMOUNT:
     throw new value_error("Cannot convert an amount to a date/time");
   case BALANCE:
@@ -965,7 +965,7 @@ value_t::operator ptime() const
     break;
   }
   assert(0);
-  return ptime();
+  return moment_t();
 }
 
 template <>
@@ -1124,7 +1124,7 @@ bool value_t::operator OP(const value_t& val)				\
       throw new value_error("Cannot compare a date/time to an integer"); \
 									\
     case DATETIME:							\
-      return *((ptime *) data) OP *((ptime *) val.data);		\
+      return *((moment_t *) data) OP *((moment_t *) val.data);		\
 									\
     case AMOUNT:							\
       throw new value_error("Cannot compare a date/time to an amount");	\
@@ -1452,7 +1452,7 @@ void value_t::in_place_cast(type_t cast_type)
   case DATETIME:
     switch (cast_type) {
     case BOOLEAN:
-      *((bool *) data) = ! ((ptime *) data)->is_not_a_date_time();
+      *((bool *) data) = is_valid_moment(*((moment_t *) data));
       break;
     case INTEGER:
       throw new value_error("Cannot convert a date/time to an integer");
@@ -1859,7 +1859,7 @@ void value_t::in_place_abs()
   }
 }
 
-value_t value_t::value(const ptime& moment) const
+value_t value_t::value(const moment_t& moment) const
 {
   switch (type) {
   case BOOLEAN:
@@ -2209,7 +2209,7 @@ std::ostream& operator<<(std::ostream& out, const value_t& val)
     out << *(long *) val.data;
     break;
   case value_t::DATETIME:
-    out << *(ptime *) val.data;
+    out << *(moment_t *) val.data;
     break;
   case value_t::AMOUNT:
     out << *(amount_t *) val.data;
@@ -2284,7 +2284,7 @@ void value_context::describe(std::ostream& out) const throw()
     out << *((long *) bal->data);
     break;
   case value_t::DATETIME:
-    out << *((ptime *) bal->data);
+    out << *((moment_t *) bal->data);
     break;
   case value_t::AMOUNT:
     out << *((amount_t *) bal->data);
@@ -2415,7 +2415,7 @@ void export_value()
     .def(init<std::string>())
     .def(init<double>())
     .def(init<long>())
-    .def(init<ptime>())
+    .def(initmoment_t())
 
     .def(self + self)
     .def(self + other<std::string>())
@@ -2517,7 +2517,7 @@ void export_value()
     .def(self < other<balance_t>())
     .def(self < other<amount_t>())
     .def(self < long())
-    .def(self < other<ptime>())
+    .def(self < othermoment_t())
     .def(self < double())
 
     .def(other<std::string>() < self)
@@ -2525,7 +2525,7 @@ void export_value()
     .def(other<balance_t>() < self)
     .def(other<amount_t>() < self)
     .def(long() < self)
-    .def(other<ptime>() < self)
+    .def(othermoment_t() < self)
     .def(double() < self)
 
     .def(self <= self)
@@ -2534,7 +2534,7 @@ void export_value()
     .def(self <= other<balance_t>())
     .def(self <= other<amount_t>())
     .def(self <= long())
-    .def(self <= other<ptime>())
+    .def(self <= othermoment_t())
     .def(self <= double())
 
     .def(other<std::string>() <= self)
@@ -2542,7 +2542,7 @@ void export_value()
     .def(other<balance_t>() <= self)
     .def(other<amount_t>() <= self)
     .def(long() <= self)
-    .def(other<ptime>() <= self)
+    .def(othermoment_t() <= self)
     .def(double() <= self)
 
     .def(self > self)
@@ -2551,7 +2551,7 @@ void export_value()
     .def(self > other<balance_t>())
     .def(self > other<amount_t>())
     .def(self > long())
-    .def(self > other<ptime>())
+    .def(self > othermoment_t())
     .def(self > double())
 
     .def(other<std::string>() > self)
@@ -2559,7 +2559,7 @@ void export_value()
     .def(other<balance_t>() > self)
     .def(other<amount_t>() > self)
     .def(long() > self)
-    .def(other<ptime>() > self)
+    .def(othermoment_t() > self)
     .def(double() > self)
 
     .def(self >= self)
@@ -2568,7 +2568,7 @@ void export_value()
     .def(self >= other<balance_t>())
     .def(self >= other<amount_t>())
     .def(self >= long())
-    .def(self >= other<ptime>())
+    .def(self >= othermoment_t())
     .def(self >= double())
 
     .def(other<std::string>() >= self)
@@ -2576,7 +2576,7 @@ void export_value()
     .def(other<balance_t>() >= self)
     .def(other<amount_t>() >= self)
     .def(long() >= self)
-    .def(other<ptime>() >= self)
+    .def(othermoment_t() >= self)
     .def(double() >= self)
 
     .def(self == self)
@@ -2585,7 +2585,7 @@ void export_value()
     .def(self == other<balance_t>())
     .def(self == other<amount_t>())
     .def(self == long())
-    .def(self == other<ptime>())
+    .def(self == othermoment_t())
     .def(self == double())
 
     .def(other<std::string>() == self)
@@ -2593,7 +2593,7 @@ void export_value()
     .def(other<balance_t>() == self)
     .def(other<amount_t>() == self)
     .def(long() == self)
-    .def(other<ptime>() == self)
+    .def(othermoment_t() == self)
     .def(double() == self)
 
     .def(self != self)
@@ -2602,7 +2602,7 @@ void export_value()
     .def(self != other<balance_t>())
     .def(self != other<amount_t>())
     .def(self != long())
-    .def(self != other<ptime>())
+    .def(self != othermoment_t())
     .def(self != double())
 
     .def(other<std::string>() != self)
@@ -2610,7 +2610,7 @@ void export_value()
     .def(other<balance_t>() != self)
     .def(other<amount_t>() != self)
     .def(long() != self)
-    .def(other<ptime>() != self)
+    .def(othermoment_t() != self)
     .def(double() != self)
 
     .def(! self)

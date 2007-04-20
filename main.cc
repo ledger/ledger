@@ -186,7 +186,9 @@ static int read_and_report(report_t * report, int argc, char * argv[],
 
   session.read_init();
 
+  std::cout << "Reading journal ..." << std::endl;
   journal_t * journal = session.read_data(report->account);
+  std::cout << "Generating report ..." << std::endl;
 
   // Configure the output stream
 

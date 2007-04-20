@@ -22,16 +22,16 @@ transaction_t::~transaction_t()
   if (cost) delete cost;
 }
 
-ptime transaction_t::actual_date() const
+moment_t transaction_t::actual_date() const
 {
-  if (_date.is_not_a_date_time() && entry)
+  if (! is_valid_moment(_date) && entry)
     return entry->actual_date();
   return _date;
 }
 
-ptime transaction_t::effective_date() const
+moment_t transaction_t::effective_date() const
 {
-  if (_date_eff.is_not_a_date_time() && entry)
+  if (! is_valid_moment(_date_eff) && entry)
     return entry->effective_date();
   return _date_eff;
 }
@@ -181,7 +181,7 @@ bool entry_base_t::finalize()
 	  ! (*x)->amount.commodity().annotated)
 	(*x)->amount.annotate_commodity
 	  (per_unit_cost.abs(),
-	   entry ? entry->actual_date() : ptime(),
+	   entry ? entry->actual_date() : moment_t(),
 	   entry ? entry->code : "");
 
       (*x)->cost = new amount_t(- (per_unit_cost * (*x)->amount.number()));
@@ -310,7 +310,7 @@ void entry_t::add_transaction(transaction_t * xact)
 
 bool entry_t::valid() const
 {
-  if (_date.is_not_a_date_time() || ! journal) {
+  if (! is_valid_moment(_date) || ! journal) {
     DEBUG_PRINT("ledger.validate", "entry_t: ! _date || ! journal");
     return false;
   }

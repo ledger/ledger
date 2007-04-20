@@ -9,9 +9,9 @@
 namespace ledger {
 
 void quotes_by_script::operator()(commodity_base_t& commodity,
-				  const ptime& moment,
-				  const ptime& date,
-				  const ptime& last,
+				  const ptime&      moment,
+				  const ptime&      date,
+				  const ptime&      last,
 				  amount_t&	    price)
 {
   DEBUG_CLASS("ledger.quotes.download");
@@ -21,13 +21,14 @@ void quotes_by_script::operator()(commodity_base_t& commodity,
   DEBUG_PRINT_TIME_(moment);
   DEBUG_PRINT_TIME_(date);
   DEBUG_PRINT_TIME_(last);
+
   if (commodity.history)
     DEBUG_PRINT_TIME_(commodity.history->last_lookup);
   DEBUG_PRINT_("pricing_leeway is " << pricing_leeway);
 
   if ((commodity.history &&
-       (now - commodity.history->last_lookup) < pricing_leeway) ||
-      (now - last) < pricing_leeway ||
+       (time_now - commodity.history->last_lookup) < pricing_leeway) ||
+      (time_now - last) < pricing_leeway ||
       (price && moment > date && (moment - date) <= pricing_leeway))
     return;
 
@@ -59,7 +60,7 @@ void quotes_by_script::operator()(commodity_base_t& commodity,
     price.parse(buf);
     commodity.add_price(now, price);
 
-    commodity.history->last_lookup = now;
+    commodity.history->last_lookup = time_now;
     cache_dirty = true;
 
     if (price && ! price_db.empty()) {

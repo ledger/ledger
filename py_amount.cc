@@ -34,9 +34,9 @@ struct commodity_updater_wrap : public commodity_base_t::updater_t
   commodity_updater_wrap(PyObject * self_) : self(self_) {}
 
   virtual void operator()(commodity_base_t& commodity,
-			  const ptime& moment,
-			  const ptime& date,
-			  const ptime& last,
+			  const moment_t& moment,
+			  const moment_t& date,
+			  const moment_t& last,
 			  amount_t&         price) {
     call_method<void>(self, "__call__", commodity, moment, date, last, price);
   }

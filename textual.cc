@@ -30,7 +30,7 @@ static std::list<std::pair<std::string, int> > include_stack;
 
 #ifdef TIMELOG_SUPPORT
 struct time_entry_t {
-  ptime  checkin;
+  moment_t  checkin;
   account_t * account;
   std::string desc;
 };
@@ -494,7 +494,7 @@ bool textual_parser_t::test(std::istream& in) const
   return true;
 }
 
-static void clock_out_from_timelog(const ptime& when,
+static void clock_out_from_timelog(const moment_t& when,
 				   account_t *	account,
 				   const char *	desc,
 				   journal_t *	journal)
@@ -678,7 +678,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	std::string date_field = date_field_ptr;
 
 	char * symbol_and_price;
-	ptime  datetime;
+	moment_t  datetime;
 
 	if (std::isdigit(time_field_ptr[0])) {
 	  symbol_and_price = next_element(time_field_ptr);

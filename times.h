@@ -14,9 +14,34 @@
 
 namespace ledger {
 
-typedef boost::posix_time::ptime   ptime;
-typedef boost::posix_time::seconds seconds;
-typedef ptime::time_duration_type  time_duration;
+typedef boost::posix_time::ptime	ptime;
+typedef ptime::time_duration_type	time_duration;
+typedef boost::gregorian::date		date;
+typedef boost::gregorian::date_duration date_duration;
+typedef boost::posix_time::seconds	seconds;
+
+#define SUPPORT_DATE_AND_TIME 1
+#ifdef SUPPORT_DATE_AND_TIME
+
+typedef boost::posix_time::ptime	moment_t;
+typedef moment_t::time_duration_type	duration_t;
+
+inline bool is_valid_moment(const moment_t& moment) {
+  return ! moment.is_not_a_date_time();
+}
+
+#else // SUPPORT_DATE_AND_TIME
+
+typedef boost::gregorian::date          moment_t;
+typedef boost::gregorian::date_duration duration_t;
+
+inline bool is_valid_moment(const moment_t& moment) {
+  return ! moment.is_not_a_date();
+}
+
+#endif // SUPPORT_DATE_AND_TIME
+
+extern moment_t& now;
 
 class datetime_error : public error {
  public:
@@ -34,85 +59,54 @@ public:
     return false;
   }
 
-  void start(const ptime& moment) {}
-  ptime next() const {}
+  void start(const moment_t& moment) {}
+  moment_t next() const {}
 
   void parse(std::istream& in) {}
 };
 
 #if 0
-inline ptime ptime_local_to_utc(const ptime& when) {
+inline moment_t ptime_local_to_utc(const moment_t& when) {
   struct std::tm tm_gmt = to_tm(when);
   return boost::posix_time::from_time_t(std::mktime(&tm_gmt));
 }
 
 // jww (2007-04-18): I need to make a general parsing function
 // instead, and then make these into private methods.
-inline ptime ptime_from_local_date_string(const std::string& date_string) {
-  return ptime_local_to_utc(ptime(boost::gregorian::from_string(date_string),
+inline moment_t ptime_from_local_date_string(const std::string& date_string) {
+  return ptime_local_to_utc(moment_t(boost::gregorian::from_string(date_string),
 				  time_duration()));
 }
 
-inline ptime ptime_from_local_time_string(const std::string& time_string) {
+inline moment_t ptime_from_local_time_string(const std::string& time_string) {
   return ptime_local_to_utc(boost::posix_time::time_from_string(time_string));
 }
 #endif
 
-ptime parse_datetime(std::istream& in);
+moment_t parse_datetime(std::istream& in);
 
-inline ptime parse_datetime(const std::string& str) {
+inline moment_t parse_datetime(const std::string& str) {
   std::istringstream instr(str);
   return parse_datetime(instr);
 }
 
-extern ptime now;
+extern ptime time_now;
+extern date  date_now;
 extern bool  day_before_month;
 
 struct intorchar
 {
-  int	 ival;
-  char * sval;
+  int	      ival;
+  std::string sval;
 
-  intorchar() : ival(-1), sval(NULL) {}
-  intorchar(int val) : ival(val), sval(NULL) {}
-  intorchar(char * val) : ival(-1), sval(NULL) {
-    set_sval(val);
-  }
-  intorchar(const intorchar& o) : ival(o.ival), sval(NULL) {
-    set_sval(o.sval);
-  }
-
-  ~intorchar() {
-    clear_sval();
-  }
-
-  intorchar& operator=(const intorchar& o) {
-    if (&o == this)
-      return *this;
-
-    ival = o.ival;
-    set_sval(o.sval);
-  }
-
-private:
-  void clear_sval() {
-    if (sval) {
-      delete[] sval;
-      sval = NULL;
-    }
-  }
-
-  void set_sval(char * val) {
-    clear_sval();
-    if (val) {
-      sval = new char[std::strlen(val) + 1];
-      std::strcpy(sval, val);
-    }
-  }
+  intorchar() : ival(-1) {}
+  intorchar(int val) : ival(val) {}
+  intorchar(const std::string& val) : ival(-1), sval(val) {}
+  intorchar(const intorchar& o) : ival(o.ival), sval(o.sval) {}
 };
 
 }
 
-boost::posix_time::ptime parse_abs_datetime(std::istream& input);
+ledger::moment_t parse_abs_datetime(std::istream& input);
 
 #endif /* _TIMES_H */

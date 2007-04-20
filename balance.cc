@@ -33,7 +33,7 @@ amount_t balance_t::amount(const commodity_t& commodity) const
   return amount_t();
 }
 
-balance_t balance_t::value(const ptime& moment) const
+balance_t balance_t::value(const moment_t& moment) const
 {
   balance_t temp;
 
@@ -57,18 +57,18 @@ balance_t balance_t::price() const
   return temp;
 }
 
-ptime balance_t::date() const
+moment_t balance_t::date() const
 {
-  ptime temp;
+  moment_t temp;
 
   for (amounts_map::const_iterator i = amounts.begin();
        i != amounts.end();
        i++) {
-    ptime tdate = (*i).second.date();
-    if (temp.is_not_a_date_time() && ! tdate.is_not_a_date_time())
+    moment_t tdate = (*i).second.date();
+    if (! is_valid_moment(temp) && is_valid_moment(tdate))
       temp = tdate;
     else if (temp != tdate)
-      return ptime();
+      return moment_t();
   }
   return temp;
 }

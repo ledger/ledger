@@ -37,7 +37,7 @@ class session_t : public xml::xpath_t::scope_t
   bool verbose_mode;
   bool trace_mode;
 
-  ptime now;
+  moment_t now;
 
   elision_style_t elision_style;
 

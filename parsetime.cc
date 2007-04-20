@@ -94,7 +94,7 @@
 static struct std::tm * timeval;
 
 namespace {
-  boost::posix_time::ptime moment;
+  boost::posix_time::moment_t moment;
 
   yyFlexLexer * lexer;
 
@@ -1444,7 +1444,7 @@ yyreduce:
 #line 98 "parsetime.yy"
     {
   if (timeval->tm_gmtoff != -1) {
-    boost::posix_time::ptime::time_duration_type offset;
+    boost::posix_time::moment_t::time_duration_type offset;
     offset = boost::posix_time::seconds(timeval->tm_gmtoff);
     moment = boost::posix_time::from_time_t(timegm(timeval)) - offset;
   } else {
@@ -1871,7 +1871,7 @@ int yywrap()
   return 1;
 }
 
-boost::posix_time::ptime parse_abs_datetime(std::istream& input)
+boost::posix_time::moment_t parse_abs_datetime(std::istream& input)
 {
   lexer = new yyFlexLexer(&input);
 

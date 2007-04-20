@@ -433,6 +433,7 @@ info_TEXINFOS = ledger.texi
 
 ######################################################################
 lisp_LISP = ledger.el timeclock.el
+@HAVE_BOOST_PYTHON_TRUE@CLEANFILES = ledger.so
 @HAVE_BOOST_PYTHON_TRUE@ledger_so_SOURCES = pyledger.cc
 @HAVE_BOOST_PYTHON_TRUE@PYLIBS = pyledger ledger gdtoa boost_date_time \
 @HAVE_BOOST_PYTHON_TRUE@	boost_regex boost_python gmp \
@@ -1589,6 +1590,7 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
@@ -1599,11 +1601,12 @@ maintainer-clean-generic:
 	-rm -f parsetime.cc
 	-rm -f parsetime.h
 	-rm -f scantime.cc
+@HAVE_BOOST_PYTHON_FALSE@clean-local:
 @HAVE_BOOST_PYTHON_FALSE@install-exec-hook:
 clean: clean-recursive
 
 clean-am: clean-binPROGRAMS clean-checkPROGRAMS clean-generic \
-	clean-libLTLIBRARIES clean-libtool clean-lisp \
+	clean-libLTLIBRARIES clean-libtool clean-lisp clean-local \
 	clean-noinstPROGRAMS mostlyclean-am
 
 distclean: distclean-recursive
@@ -1750,7 +1753,7 @@ uninstall-am: uninstall-binPROGRAMS uninstall-dvi-am uninstall-html-am \
 .PHONY: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) CTAGS GTAGS \
 	all all-am am--refresh check check-TESTS check-am clean \
 	clean-binPROGRAMS clean-checkPROGRAMS clean-generic \
-	clean-libLTLIBRARIES clean-libtool clean-lisp \
+	clean-libLTLIBRARIES clean-libtool clean-lisp clean-local \
 	clean-noinstPROGRAMS ctags ctags-recursive dist dist-all \
 	dist-bzip2 dist-gzip dist-hook dist-info dist-shar dist-tarZ \
 	dist-zip distcheck distclean distclean-compile \
@@ -1776,6 +1779,9 @@ uninstall-am: uninstall-binPROGRAMS uninstall-dvi-am uninstall-html-am \
 #(cd $(distdir)/docs; zip -r doxygen-html.zip html; rm -fr html)
 dist-hook:
 	rm -fr `find $(distdir) -name .svn`
+
+@HAVE_BOOST_PYTHON_TRUE@clean-local:
+@HAVE_BOOST_PYTHON_TRUE@	rm -fr build
 
 @HAVE_BOOST_PYTHON_TRUE@ledger.so: pyledger.cc libledger.la gdtoa/libgdtoa.la libpyledger.la
 @HAVE_BOOST_PYTHON_TRUE@	SRCDIR="$(srcdir)" \

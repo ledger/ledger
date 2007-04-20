@@ -24,7 +24,15 @@ void register_command::print_document(std::ostream&	out,
     transaction_t * xact = xact_node->transaction;
     assert(xact);
 
-    std::cout << xact->account->fullname() << std::endl;
+    std::cout << xact->entry->date() << ' '
+	      << std::setw(21) << std::left
+	      << abbreviate(xact->entry->payee, 21) << ' '
+	      << std::setw(21) << std::left
+	      << abbreviate(xact->account->fullname(), 21,
+			    ABBREVIATE, true) << ' '
+	      << std::setw(12) << std::right
+	      << xact->amount
+	      << std::endl;
   }
 }
 

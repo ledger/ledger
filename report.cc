@@ -44,7 +44,7 @@ void report_t::ftime(value_t& result, xml::xpath_t::scope_t * locals)
   if (locals->args.size() < 1)
     throw new error("usage: ftime(DATE [, DATE_FORMAT])");
 
-  ptime date = locals->args[0].to_datetime();
+  moment_t date = locals->args[0].to_datetime();
 
   std::string date_format;
   if (locals->args.size() == 2)
@@ -52,7 +52,7 @@ void report_t::ftime(value_t& result, xml::xpath_t::scope_t * locals)
 #if 0
   // jww (2007-04-18): Need to setup an output facet here
   else
-    date_format = ptime::output_format;
+    date_format = moment_t::output_format;
 
   result.set_string(date.to_string(date_format));
 #endif

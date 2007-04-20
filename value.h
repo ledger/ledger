@@ -63,9 +63,9 @@ class value_t
     *((long *) data) = val;
     type = INTEGER;
   }
-  value_t(const ptime val) {
-    TRACE_CTOR("value_t(const ptime)");
-    *((ptime *) data) = val;
+  value_t(const moment_t val) {
+    TRACE_CTOR("value_t(const moment_t)");
+    *((moment_t *) data) = val;
     type = DATETIME;
   }
   value_t(const unsigned long val) {
@@ -144,10 +144,10 @@ class value_t
     }
     return *this;
   }
-  value_t& operator=(const ptime val) {
-    if ((ptime *) data != &val) {
+  value_t& operator=(const moment_t val) {
+    if ((moment_t *) data != &val) {
       destroy();
-      *((ptime *) data) = val;
+      *((moment_t *) data) = val;
       type = DATETIME;
     }
     return *this;
@@ -276,7 +276,7 @@ class value_t
 
   bool		 to_boolean() const;
   long		 to_integer() const;
-  ptime          to_datetime() const;
+  moment_t          to_datetime() const;
   amount_t	 to_amount() const;
   balance_t	 to_balance() const;
   balance_pair_t to_balance_pair() const;
@@ -417,7 +417,7 @@ class value_t
     case INTEGER:
       return *((long *) data) == 0;
     case DATETIME:
-      return ((ptime *) data)->is_not_a_date_time();
+      return ! is_valid_moment(*((moment_t *) data));
     case AMOUNT:
       return ((amount_t *) data)->realzero();
     case BALANCE:
@@ -457,7 +457,7 @@ class value_t
 			    const bool keep_tag   = amount_t::keep_tag) const;
 
   value_t& add(const amount_t&  amount, const amount_t * cost = NULL);
-  value_t  value(const ptime& moment) const;
+  value_t  value(const moment_t& moment) const;
   void     in_place_reduce();
 
   value_t reduce() const {
@@ -534,7 +534,7 @@ value_t::operator T() const
   case INTEGER:
     return *(long *) data;
   case DATETIME:
-    return *(ptime *) data;
+    return *(moment_t *) data;
   case AMOUNT:
     return *(amount_t *) data;
   case BALANCE:
@@ -558,7 +558,7 @@ value_t::operator T() const
 
 template <> value_t::operator bool() const;
 template <> value_t::operator long() const;
-template <> value_t::operator ptime() const;
+template <> value_t::operator moment_t() const;
 template <> value_t::operator double() const;
 template <> value_t::operator std::string() const;
 

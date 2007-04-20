@@ -164,6 +164,11 @@ if HAVE_BOOST_PYTHON
 
 noinst_PROGRAMS = ledger.so
 
+CLEANFILES = ledger.so
+
+clean-local:
+	rm -fr build
+
 ledger_so_SOURCES = pyledger.cc
 
 PYLIBS = pyledger ledger gdtoa boost_date_time boost_regex boost_python gmp

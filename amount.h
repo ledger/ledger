@@ -145,7 +145,7 @@ class amount_t
     commodity_ = &comm;
   }
   void annotate_commodity(const amount_t&    price,
-			  const ptime&	     date = ptime(),
+			  const moment_t&	     date = moment_t(),
 			  const std::string& tag  = "");
   amount_t strip_annotations(const bool _keep_price = keep_price,
 			     const bool _keep_date  = keep_date,
@@ -154,7 +154,7 @@ class amount_t
     commodity_ = NULL;
   }
   amount_t price() const;
-  ptime date() const;
+  moment_t date() const;
 
   bool null() const {
     return ! quantity && ! has_commodity();
@@ -324,7 +324,7 @@ class amount_t
     return ! (*this == num);
   }
 
-  amount_t value(const ptime& moment) const;
+  amount_t value(const moment_t& moment) const;
 
   amount_t abs() const {
     if (*this < 0)
@@ -351,7 +351,7 @@ class amount_t
 				      char * item_pool_end);
 
   friend bool parse_annotations(std::istream& in, amount_t& price,
-				ptime& date, std::string& tag);
+				moment_t& date, std::string& tag);
 
   // Streaming interface
 
@@ -470,8 +470,8 @@ inline std::istream& operator>>(std::istream& in, amount_t& amt) {
 #define COMMODITY_STYLE_NOMARKET   0x0010
 #define COMMODITY_STYLE_BUILTIN    0x0020
 
-typedef std::map<const ptime, amount_t>  history_map;
-typedef std::pair<const ptime, amount_t> history_pair;
+typedef std::map<const moment_t, amount_t>  history_map;
+typedef std::pair<const moment_t, amount_t> history_pair;
 
 class commodity_base_t;
 
@@ -518,23 +518,21 @@ class commodity_base_t
   struct history_t {
     history_map	prices;
     ptime	last_lookup;
-    // jww (2007-04-18): What is bogus_time?
-    ptime	bogus_time;
-    history_t() : last_lookup(), bogus_time() {}
+    history_t() : last_lookup() {}
   };
   history_t * history;
 
-  void	   add_price(const ptime& date, const amount_t& price);
-  bool	   remove_price(const ptime& date);
-  amount_t value(const ptime& moment = now);
+  void	   add_price(const moment_t& date, const amount_t& price);
+  bool	   remove_price(const moment_t& date);
+  amount_t value(const moment_t& moment = now);
 
   class updater_t {
    public:
     virtual ~updater_t() {}
     virtual void operator()(commodity_base_t& commodity,
-			    const ptime& moment,
-			    const ptime& date,
-			    const ptime& last,
+			    const moment_t& moment,
+			    const moment_t& date,
+			    const moment_t& last,
 			    amount_t& price) = 0;
   };
   friend class updater_t;
@@ -665,13 +663,13 @@ class commodity_t
     return base->history;
   }
 
-  void add_price(const ptime& date, const amount_t& price) {
+  void add_price(const moment_t& date, const amount_t& price) {
     return base->add_price(date, price);
   }
-  bool remove_price(const ptime& date) {
+  bool remove_price(const moment_t& date) {
     return base->remove_price(date);
   }
-  amount_t value(const ptime& moment = now) const {
+  amount_t value(const moment_t& moment = now) const {
     return base->value(moment);
   }
 
@@ -684,7 +682,7 @@ class annotated_commodity_t : public commodity_t
   const commodity_t * ptr;
 
   amount_t    price;
-  ptime  date;
+  moment_t  date;
   std::string tag;
 
   explicit annotated_commodity_t() {
@@ -700,19 +698,19 @@ class annotated_commodity_t : public commodity_t
 
   static void write_annotations(std::ostream&      out,
 				const amount_t&    price,
-				const ptime&  date,
+				const moment_t&  date,
 				const std::string& tag);
 
  private:
   static commodity_t * create(const commodity_t& comm,
 			      const amount_t&    price,
-			      const ptime&  date,
+			      const moment_t&  date,
 			      const std::string& tag,
 			      const std::string& mapping_key);
 
   static commodity_t * find_or_create(const commodity_t& comm,
 				      const amount_t&    price,
-				      const ptime&  date,
+				      const moment_t&  date,
 				      const std::string& tag);
 
   friend class amount_t;

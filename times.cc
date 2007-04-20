@@ -6,12 +6,19 @@
 
 namespace ledger {
 
-ptime now = boost::posix_time::second_clock::universal_time();
+ptime time_now = boost::posix_time::second_clock::universal_time();
+date  date_now = boost::gregorian::day_clock::universal_day();
+
+#ifdef SUPPORT_DATE_AND_TIME
+moment_t& now(time_now);
+#else
+moment_t& now(date_now);
+#endif
 
 bool day_before_month = false;
 static bool  day_before_month_initialized = false;
 
-ptime parse_datetime(std::istream& in)
+moment_t parse_datetime(std::istream& in)
 {
   if (! day_before_month_initialized) {
 #ifdef HAVE_NL_LANGINFO
@@ -21,86 +28,32 @@ ptime parse_datetime(std::istream& in)
     day_before_month_initialized = true;
 #endif
   }
-#if 1
+#if 0
   return parse_abs_datetime(in);
 #else
   std::string word;
 
   if (! in.good() || in.eof())
-    return ptime();
+    return moment_t();
 
   in >> word;
 
-  // Grammar
-  //
-  // datetime:      absdate [time]
-  //              | reldate
-  //              | datetime preposition
-  //
-  // reldate:       NOW | TODAY | YESTERDAY | TOMORROW
-  //              | skip_or_quantity specifier
-  //
-  // skip_or_quantity: skip | quantity
-  //
-  // skip:          LAST | NEXT
-  //
-  // quantity:      INTEGER | CARDINAL
-  //
-  // specifier:     DAY | WEEK | MONTH | QUARTER | YEAR | DECADE
-  //
-  // preposition:   AGO | BACK
-  //              | BEFORE reldate
-  //              | SINCE/FROM reldate
-  //              | UNTIL reldate
-  //              | AFTER reldate
+  int year = ((word[0] - '0') * 1000 +
+	      (word[1] - '0') * 100 +
+	      (word[2] - '0') * 10 +
+	      (word[3] - '0'));
 
-  if (std::isdigit(word[0])) {
-    // This could be any of a variety of formats:
-    //
-    //   20070702 [TIME]
-    //   22072007T171940
-    //   22072007T171940-0700
-    //   2007-07-02 [TIME]
-    //   2007/07/02 [TIME]
-    //   2007.07.02 [TIME]
-    //   2007-Jul-22 [TIME]
-    //   07-22-2007 [TIME]
-    //   07-22-07 [TIME]
-    //   07/22/2007 [TIME]
-    //   07/22/2007 [TIME]
-    //   07.22.2007 [TIME]
-    //   07.22.07 [TIME]
-    //   22-07-2007 [TIME]
-    //   22-07-07 [TIME]
-    //   22/07/2007 [TIME]
-    //   22/07/07 [TIME]
-    //   22.07.2007 [TIME]
-    //   22.07.07 [TIME]
-    //   22 Jul 2007 [TIME]
-    //   22 July 2007 [TIME]
-    //
-    //   (NUMBER) (SPECIFIER)
+  int mon = ((word[5] - '0') * 10 +
+	     (word[6] - '0'));
 
-  } else {
-    // If there is no starting digit, then it could be any of these:
-    //
-    //   now
-    //   today
-    //   yesterday
-    //   tomorrow
-    //   (last|next) (week|month|quarter|year|decade)
-    //   (one|two|three|four|five|six|seven|eight|nine|ten) SPECIFIER
-    //   PREPOSITION DATE
-    //
-    // PREPOSITION = (from|after|before|since|until)
-    // SPECIFIER   = (weeks?|months?|quarters?|years?|decades?) (ago|back)
-    //
-    // 
-  }
+  int day = ((word[8] - '0') * 10 +
+	     (word[9] - '0'));
+
+  return moment_t(boost::gregorian::date(year, mon, day));
 #endif
 }
 
-ptime datetime_range_from_stream(std::istream& in)
+moment_t datetime_range_from_stream(std::istream& in)
 {
 }
 
