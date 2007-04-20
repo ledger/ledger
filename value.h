@@ -5,8 +5,6 @@
 #include "balance.h"
 #include "error.h"
 
-#include "linked_list.h"	// code by Donovan Rebbechi
-
 #include <vector>
 #include <exception>
 

@@ -93,9 +93,9 @@ public:
     return NULL;
   }
 
-  node_t * lookup_child(const char * _name);
-  node_t * lookup_child(const string& _name);
-  virtual node_t * lookup_child(int /* _name_id */) {
+  node_t * lookup_child(const char * _name) const;
+  node_t * lookup_child(const string& _name) const;
+  virtual node_t * lookup_child(int /* _name_id */) const {
     return NULL;
   }
 
@@ -296,8 +296,7 @@ public:
 
 class transaction_node_t : public parent_node_t
 {
-  int		    payee_id;
-  terminal_node_t * payee_virtual_node;
+  mutable terminal_node_t * payee_virtual_node;
 
 public:
   transaction_t * transaction;
@@ -309,7 +308,6 @@ public:
       transaction(_transaction) {
     TRACE_CTOR(transaction_node_t, "document_t *, transaction_t *, parent_node_t *");
     set_name("transaction");
-    payee_id = document->register_name("payee");
   }
   virtual ~transaction_node_t() {
     TRACE_DTOR(transaction_node_t);
@@ -318,13 +316,15 @@ public:
   }
 
   virtual node_t * children() const;
-  virtual node_t * lookup_child(int _name_id);
+  virtual node_t * lookup_child(int _name_id) const;
   virtual value_t  to_value() const;
 };
 
 class entry_node_t : public parent_node_t
 {
-  entry_t * entry;
+  static int code_id;
+  static int payee_id;
+  entry_t *  entry;
 
 public:
   entry_node_t(document_t * _document, entry_t * _entry,
@@ -332,12 +332,19 @@ public:
     : parent_node_t(_document, _parent), entry(_entry) {
     TRACE_CTOR(entry_node_t, "document_t *, entry_t *, parent_node_t *");
     set_name("entry");
+    if (code_id == -1)
+      payee_id = document->register_name("code");
+    if (payee_id == -1)
+      payee_id = document->register_name("payee");
   }
   virtual ~entry_node_t() {
     TRACE_DTOR(entry_node_t);
   }
 
   virtual node_t * children() const;
+  virtual node_t * lookup_child(int _name_id) const;
+
+  friend class transaction_node_t;
 };
 
 class account_node_t : public parent_node_t
@@ -360,6 +367,7 @@ public:
 
 class journal_node_t : public parent_node_t
 {
+  static int  account_id;
   journal_t * journal;
 
 public:
@@ -368,12 +376,16 @@ public:
     : parent_node_t(_document, _parent), journal(_journal) {
     TRACE_CTOR(journal_node_t, "document_t *, journal_t *, parent_node_t *");
     set_name("journal");
+    if (account_id == -1)
+      account_id = document->register_name("account");
   }
   virtual ~journal_node_t() {
     TRACE_DTOR(journal_node_t);
   }
 
   virtual node_t * children() const;
+
+  friend class transaction_node_t;
 };
 
 template <typename T>

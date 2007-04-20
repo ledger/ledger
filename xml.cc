@@ -158,13 +158,13 @@ int node_t::set_name(const char * _name)
   return name_id;
 }
 
-node_t * node_t::lookup_child(const char * _name)
+node_t * node_t::lookup_child(const char * _name) const
 {
   int id = document->lookup_name_id(_name);
   return lookup_child(id);
 }
 
-node_t * node_t::lookup_child(const string& _name)
+node_t * node_t::lookup_child(const string& _name) const
 {
   int id = document->lookup_name_id(_name);
   return lookup_child(id);
@@ -405,21 +405,19 @@ node_t * amount_node_t::children() const
 
 node_t * transaction_node_t::children() const
 {
-  if (! _children) {
-    terminal_node_t * account_node =
-      new terminal_node_t(document, const_cast<transaction_node_t *>(this));
-    account_node->set_name("account");
-    account_node->set_text(transaction->account->fullname());
-  }
   return parent_node_t::children();
 }
 
-node_t * transaction_node_t::lookup_child(int _name_id)
+node_t * transaction_node_t::lookup_child(int _name_id) const
 {
-  if (_name_id == payee_id) {
+  if (_name_id == entry_node_t::payee_id) {
     payee_virtual_node = new terminal_node_t(document);
     payee_virtual_node->set_text(transaction->entry->payee);
     return payee_virtual_node;
+  }
+  else if (_name_id == journal_node_t::account_id) {
+    return new account_node_t(document, transaction->account,
+			      const_cast<transaction_node_t *>(this));
   }
   return NULL;
 }
@@ -429,29 +427,39 @@ value_t transaction_node_t::to_value() const
   return transaction->amount;
 }
 
+int entry_node_t::code_id = -1;
+int entry_node_t::payee_id = -1;
+
 node_t * entry_node_t::children() const
 {
-  if (! _children) {
-    if (! entry->code.empty()) {
-      terminal_node_t * code_node =
-	new terminal_node_t(document, const_cast<entry_node_t *>(this));
-      code_node->set_name("code");
-      code_node->set_text(entry->code);
-    }
-
-    if (! entry->payee.empty()) {
-      terminal_node_t * payee_node =
-	new terminal_node_t(document, const_cast<entry_node_t *>(this));
-      payee_node->set_name("payee");
-      payee_node->set_text(entry->payee);
-    }
-
+  if (! _children)
     for (transactions_list::iterator i = entry->transactions.begin();
 	 i != entry->transactions.end();
 	 i++)
       new transaction_node_t(document, *i, const_cast<entry_node_t *>(this));
-  }
+
   return parent_node_t::children();
+}
+
+node_t * entry_node_t::lookup_child(int _name_id) const
+{
+  if (_name_id == entry_node_t::code_id) {
+    // jww (2007-04-20): I have to save this and then delete it later
+    terminal_node_t * code_node =
+      new terminal_node_t(document, const_cast<entry_node_t *>(this));
+    code_node->set_name("code");
+    code_node->set_text(entry->code);
+    return code_node;
+  }
+  else if (_name_id == entry_node_t::payee_id) {
+    // jww (2007-04-20): I have to save this and then delete it later
+    terminal_node_t * payee_node =
+      new terminal_node_t(document, const_cast<entry_node_t *>(this));
+    payee_node->set_name("payee");
+    payee_node->set_text(entry->payee);
+    return payee_node;
+  }
+  return NULL;
 }
 
 node_t * account_node_t::children() const
@@ -478,6 +486,8 @@ node_t * account_node_t::children() const
   }
   return parent_node_t::children();
 }
+
+int journal_node_t::account_id = -1;
 
 node_t * journal_node_t::children() const
 {
