@@ -6,7 +6,7 @@ namespace ledger {
 
 report_t::~report_t()
 {
-  TRACE_DTOR("report_t");
+  TRACE_DTOR(report_t);
   for (std::list<transform_t *>::const_iterator i = transforms.begin();
        i != transforms.end();
        i++)

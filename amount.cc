@@ -67,17 +67,17 @@ class amount_t::bigint_t
   unsigned int	index;
 
   bigint_t() : prec(0), flags(0), ref(1), index(0) {
-    TRACE_CTOR("bigint_t()");
+    TRACE_CTOR(bigint_t, "");
     mpz_init(val);
   }
   bigint_t(mpz_t _val) : prec(0), flags(0), ref(1), index(0) {
-    TRACE_CTOR("bigint_t(mpz_t)");
+    TRACE_CTOR(bigint_t, "mpz_t");
     mpz_init_set(val, _val);
   }
   bigint_t(const bigint_t& other)
     : prec(other.prec), flags(other.flags & BIGINT_KEEP_PREC),
       ref(1), index(0) {
-    TRACE_CTOR("bigint_t(copy)");
+    TRACE_CTOR(bigint_t, "copy");
     mpz_init_set(val, other.val);
   }
   ~bigint_t();
@@ -97,7 +97,7 @@ static mpz_t divisor;
 static amount_t::bigint_t * true_value = NULL;
 
 inline amount_t::bigint_t::~bigint_t() {
-  TRACE_DTOR("bigint_t");
+  TRACE_DTOR(bigint_t);
   assert(ref == 0 || (! do_cleanup && this == true_value));
   mpz_clear(val);
 }
@@ -219,7 +219,7 @@ static void mpz_round(mpz_t out, mpz_t value, int value_prec, int round_prec)
 
 amount_t::amount_t(const long val)
 {
-  TRACE_CTOR("amount_t(const long)");
+  TRACE_CTOR(amount_t, "const long");
   if (val != 0) {
     quantity = new bigint_t;
     mpz_set_si(MPZ(quantity), val);
@@ -231,7 +231,7 @@ amount_t::amount_t(const long val)
 
 amount_t::amount_t(const unsigned long val)
 {
-  TRACE_CTOR("amount_t(const unsigned long)");
+  TRACE_CTOR(amount_t, "const unsigned long");
   if (val != 0) {
     quantity = new bigint_t;
     mpz_set_ui(MPZ(quantity), val);
@@ -329,7 +329,7 @@ namespace {
 
 amount_t::amount_t(const double val)
 {
-  TRACE_CTOR("amount_t(const double)");
+  TRACE_CTOR(amount_t, "const double");
   quantity = new bigint_t;
   quantity->prec = convert_double(MPZ(quantity), val);
   commodity_ = NULL;

@@ -28,11 +28,11 @@ class format_t
     element_t()
       : align_left(false), min_width(-1), max_width(-1),
 	kind(UNKNOWN), chars(NULL) {
-      TRACE_CTOR("element_t()");
+      TRACE_CTOR(element_t, "");
     }
 
     ~element_t() {
-      TRACE_DTOR("element_t");
+      TRACE_DTOR(element_t);
 
       switch (kind) {
       case TEXT:
@@ -68,10 +68,10 @@ class format_t
 
  public:
   format_t() {
-    TRACE_CTOR("format_t()");
+    TRACE_CTOR(format_t, "");
   }
   format_t(const string& fmt) {
-    TRACE_CTOR("format_t(const string&)");
+    TRACE_CTOR(format_t, "const string&");
     parse(fmt);
   }
 
@@ -84,7 +84,7 @@ class format_t
   }
 
   virtual ~format_t() {
-    TRACE_DTOR("format_t");
+    TRACE_DTOR(format_t);
     clear_elements();
   }
 

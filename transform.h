@@ -4,7 +4,7 @@
 #include "xpath.h"
 
 #include <list>
-#include <deque>
+#include <vector>
 
 namespace ledger {
 

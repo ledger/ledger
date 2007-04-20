@@ -546,7 +546,7 @@ bool xpath_t::function_scope_t::resolve(const string& name,
 
 xpath_t::op_t::~op_t()
 {
-  TRACE_DTOR("xpath_t::op_t");
+  TRACE_DTOR(xpath_t::op_t);
 
   DEBUG_PRINT("ledger.xpath.memory", "Destroying " << this);
   assert(refc == 0);

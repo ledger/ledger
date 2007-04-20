@@ -5,7 +5,9 @@
 #include "balance.h"
 #include "error.h"
 
-#include <deque>
+#include "linked_list.h"	// code by Donovan Rebbechi
+
+#include <vector>
 #include <exception>
 
 namespace ledger {
@@ -26,7 +28,7 @@ namespace xml {
 class value_t
 {
  public:
-  typedef std::deque<value_t> sequence_t;
+  typedef std::vector<value_t> sequence_t;
 
   char data[sizeof(balance_pair_t)];
 
@@ -44,42 +46,42 @@ class value_t
   } type;
 
   value_t() {
-    TRACE_CTOR("value_t()");
+    TRACE_CTOR(value_t, "");
     *((long *) data) = 0;
     type = INTEGER;
   }
 
   value_t(const value_t& val) : type(INTEGER) {
-    TRACE_CTOR("value_t(copy)");
+    TRACE_CTOR(value_t, "copy");
     *this = val;
   }
   value_t(const bool val) {
-    TRACE_CTOR("value_t(const bool)");
+    TRACE_CTOR(value_t, "const bool");
     *((bool *) data) = val;
     type = BOOLEAN;
   }
   value_t(const long val) {
-    TRACE_CTOR("value_t(const long)");
+    TRACE_CTOR(value_t, "const long");
     *((long *) data) = val;
     type = INTEGER;
   }
   value_t(const moment_t val) {
-    TRACE_CTOR("value_t(const moment_t)");
+    TRACE_CTOR(value_t, "const moment_t");
     *((moment_t *) data) = val;
     type = DATETIME;
   }
   value_t(const unsigned long val) {
-    TRACE_CTOR("value_t(const unsigned long)");
+    TRACE_CTOR(value_t, "const unsigned long");
     new((amount_t *) data) amount_t(val);
     type = AMOUNT;
   }
   value_t(const double val) {
-    TRACE_CTOR("value_t(const double)");
+    TRACE_CTOR(value_t, "const double");
     new((amount_t *) data) amount_t(val);
     type = AMOUNT;
   }
   value_t(const string& val, bool literal = false) {
-    TRACE_CTOR("value_t(const string&, bool)");
+    TRACE_CTOR(value_t, "const string&, bool");
     if (literal) {
       type = INTEGER;
       set_string(val);
@@ -89,38 +91,38 @@ class value_t
     }
   }
   value_t(const char * val) {
-    TRACE_CTOR("value_t(const char *)");
+    TRACE_CTOR(value_t, "const char *");
     new((amount_t *) data) amount_t(val);
     type = AMOUNT;
   }
   value_t(const amount_t& val) {
-    TRACE_CTOR("value_t(const amount_t&)");
+    TRACE_CTOR(value_t, "const amount_t&");
     new((amount_t *)data) amount_t(val);
     type = AMOUNT;
   }
   value_t(const balance_t& val) : type(INTEGER) {
-    TRACE_CTOR("value_t(const balance_t&)");
+    TRACE_CTOR(value_t, "const balance_t&");
     *this = val;
   }
   value_t(const balance_pair_t& val) : type(INTEGER) {
-    TRACE_CTOR("value_t(const balance_pair_t&)");
+    TRACE_CTOR(value_t, "const balance_pair_t&");
     *this = val;
   }
   value_t(xml::node_t * xml_node) : type(INTEGER) { // gets set in =
-    TRACE_CTOR("value_t(xml::node_t *)");
+    TRACE_CTOR(value_t, "xml::node_t *");
     *this = xml_node;
   }
   value_t(void * item) : type(INTEGER) { // gets set in =
-    TRACE_CTOR("value_t(void *)");
+    TRACE_CTOR(value_t, "void *");
     *this = item;
   }
   value_t(sequence_t * seq) : type(INTEGER) { // gets set in =
-    TRACE_CTOR("value_t(sequence_t *)");
+    TRACE_CTOR(value_t, "sequence_t *");
     *this = seq;
   }
 
   ~value_t() {
-    TRACE_DTOR("value_t");
+    TRACE_DTOR(value_t);
     destroy();
   }
 
@@ -276,7 +278,7 @@ class value_t
 
   bool		 to_boolean() const;
   long		 to_integer() const;
-  moment_t          to_datetime() const;
+  moment_t       to_datetime() const;
   amount_t	 to_amount() const;
   balance_t	 to_balance() const;
   balance_pair_t to_balance_pair() const;

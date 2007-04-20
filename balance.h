@@ -24,23 +24,23 @@ class balance_t
 
   // constructors
   balance_t() {
-    TRACE_CTOR("balance_t()");
+    TRACE_CTOR(balance_t, "");
   }
   balance_t(const balance_t& bal) {
-    TRACE_CTOR("balance_t(copy)");
+    TRACE_CTOR(balance_t, "copy");
     for (amounts_map::const_iterator i = bal.amounts.begin();
 	 i != bal.amounts.end();
 	 i++)
       *this += (*i).second;
   }
   balance_t(const amount_t& amt) {
-    TRACE_CTOR("balance_t(const amount_t&)");
+    TRACE_CTOR(balance_t, "const amount_t&");
     if (! amt.realzero())
       amounts.insert(amounts_pair(&amt.commodity(), amt));
   }
   template <typename T>
   balance_t(T val) {
-    TRACE_CTOR("balance_t(T)");
+    TRACE_CTOR(balance_t, "T");
     amount_t amt(val);
     if (! amt.realzero())
       amounts.insert(amounts_pair(&amt.commodity(), amt));
@@ -502,30 +502,30 @@ class balance_pair_t
 
   // constructors
   balance_pair_t() : cost(NULL) {
-    TRACE_CTOR("balance_pair_t()");
+    TRACE_CTOR(balance_pair_t, "");
   }
   balance_pair_t(const balance_pair_t& bal_pair)
     : quantity(bal_pair.quantity), cost(NULL) {
-    TRACE_CTOR("balance_pair_t(copy)");
+    TRACE_CTOR(balance_pair_t, "copy");
     if (bal_pair.cost)
       cost = new balance_t(*bal_pair.cost);
   }
   balance_pair_t(const balance_t& _quantity)
     : quantity(_quantity), cost(NULL) {
-    TRACE_CTOR("balance_pair_t(const balance_t&)");
+    TRACE_CTOR(balance_pair_t, "const balance_t&");
   }
   balance_pair_t(const amount_t& _quantity)
     : quantity(_quantity), cost(NULL) {
-    TRACE_CTOR("balance_pair_t(const amount_t&)");
+    TRACE_CTOR(balance_pair_t, "const amount_t&");
   }
   template <typename T>
   balance_pair_t(T val) : quantity(val), cost(NULL) {
-    TRACE_CTOR("balance_pair_t(T)");
+    TRACE_CTOR(balance_pair_t, "T");
   }
 
   // destructor
   ~balance_pair_t() {
-    TRACE_DTOR("balance_pair_t");
+    TRACE_DTOR(balance_pair_t);
     if (cost) delete cost;
   }
 

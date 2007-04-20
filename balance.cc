@@ -1,7 +1,7 @@
 #include "balance.h"
 #include "util.h"
 
-#include <deque>
+#include <vector>
 #include <algorithm>
 
 namespace ledger {
@@ -115,8 +115,8 @@ void balance_t::write(std::ostream& out,
       out << std::right << (*i).second;
     }
   } else {
-    typedef std::deque<const amount_t *> amounts_deque;
-    amounts_deque sorted;
+    typedef std::vector<const amount_t *> amounts_array;
+    amounts_array sorted;
 
     for (amounts_map::const_iterator i = amounts.begin();
 	 i != amounts.end();
@@ -127,7 +127,7 @@ void balance_t::write(std::ostream& out,
     std::stable_sort(sorted.begin(), sorted.end(),
 		     compare_amount_commodities());
 
-    for (amounts_deque::const_iterator i = sorted.begin();
+    for (amounts_array::const_iterator i = sorted.begin();
 	 i != sorted.end();
 	 i++) {
       int width;

@@ -48,7 +48,7 @@
 #define _AMOUNT_H
 
 #include <map>
-#include <deque>
+#include <vector>
 #include <stack>
 #include <string>
 #include <cctype>
@@ -107,21 +107,21 @@ class amount_t
  public:
   // constructors
   amount_t() : quantity(NULL), commodity_(NULL) {
-    TRACE_CTOR("amount_t()");
+    TRACE_CTOR(amount_t, "");
   }
   amount_t(const amount_t& amt) : quantity(NULL) {
-    TRACE_CTOR("amount_t(copy)");
+    TRACE_CTOR(amount_t, "copy");
     if (amt.quantity)
       _copy(amt);
     else
       commodity_ = NULL;
   }
   amount_t(const string& val) : quantity(NULL) {
-    TRACE_CTOR("amount_t(const string&)");
+    TRACE_CTOR(amount_t, "const string&");
     parse(val);
   }
   amount_t(const char * val) : quantity(NULL) {
-    TRACE_CTOR("amount_t(const char *)");
+    TRACE_CTOR(amount_t, "const char *");
     parse(val);
   }
   amount_t(const long val);
@@ -130,7 +130,7 @@ class amount_t
 
   // destructor
   ~amount_t() {
-    TRACE_DTOR("amount_t");
+    TRACE_DTOR(amount_t);
     if (quantity)
       _release();
   }
@@ -499,11 +499,11 @@ class commodity_base_t
   commodity_base_t()
     : precision(0), flags(COMMODITY_STYLE_DEFAULTS),
       smaller(NULL), larger(NULL), history(NULL) {
-    TRACE_CTOR("commodity_base_t()");
+    TRACE_CTOR(commodity_base_t, "");
   }
 
   commodity_base_t(const commodity_base_t&) {
-    TRACE_CTOR("commodity_base_t(copy)");
+    TRACE_CTOR(commodity_base_t, "copy");
     assert(0);
   }
 
@@ -512,11 +512,11 @@ class commodity_base_t
 		   unsigned int _flags	   = COMMODITY_STYLE_DEFAULTS)
     : precision(_precision), flags(_flags),
       smaller(NULL), larger(NULL), symbol(_symbol), history(NULL) {
-    TRACE_CTOR("commodity_base_t(const string&, unsigned int, unsigned int)");
+    TRACE_CTOR(commodity_base_t, "const string&, unsigned int, unsigned int");
   }
 
   ~commodity_base_t() {
-    TRACE_DTOR("commodity_base_t");
+    TRACE_DTOR(commodity_base_t);
     if (history) delete history;
     if (smaller) delete smaller;
     if (larger)  delete larger;
@@ -555,7 +555,7 @@ class commodity_base_t
 typedef std::map<const string, commodity_t *>  commodities_map;
 typedef std::pair<const string, commodity_t *> commodities_pair;
 
-typedef std::deque<commodity_t *> commodities_array;
+typedef std::vector<commodity_t *> commodities_array;
 
 class commodity_t
 {
@@ -590,15 +590,15 @@ class commodity_t
 
  public:
   explicit commodity_t() : base(NULL), annotated(false) {
-    TRACE_CTOR("commodity_t()");
+    TRACE_CTOR(commodity_t, "");
   }
   commodity_t(const commodity_t& o)
     : ident(o.ident), base(o.base),
       qualified_symbol(o.qualified_symbol), annotated(o.annotated) {
-    TRACE_CTOR("commodity_t(copy)");
+    TRACE_CTOR(commodity_t, "copy");
   }
   virtual ~commodity_t() {
-    TRACE_DTOR("commodity_t");
+    TRACE_DTOR(commodity_t);
   }
 
   operator bool() const {
@@ -703,11 +703,11 @@ class annotated_commodity_t : public commodity_t
   string tag;
 
   explicit annotated_commodity_t() {
-    TRACE_CTOR("annotated_commodity_t()");
+    TRACE_CTOR(annotated_commodity_t, "");
     annotated = true;
   }
   virtual ~annotated_commodity_t() {
-    TRACE_DTOR("annotated_commodity_t");
+    TRACE_DTOR(annotated_commodity_t);
   }
 
   virtual bool operator==(const commodity_t& comm) const;

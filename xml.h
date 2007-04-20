@@ -21,44 +21,6 @@ class journal_t;
 
 namespace xml {
 
-class node_t;
-
-class document_t
-{
-  const char ** builtins;
-  const int	builtins_size;
-
-  typedef std::deque<string> names_array;
-
-  names_array names;
-
-  typedef std::map<string, int>  names_map;
-  typedef std::pair<string, int> names_pair;
-
-  names_map names_index;
-
- public:
-  node_t * top;
-
-  // Ids 0-9 are reserved.  10-999 are for "builtin" names.  1000+ are
-  // for dynamically registered names.
-  enum special_names_t {
-    CURRENT, PARENT, ROOT, ALL
-  };
-
-  document_t(node_t * _top = NULL, const char ** _builtins = NULL,
-	     const int _builtins_size = 0);
-  ~document_t();
-
-  void set_top(node_t * _top);
-
-  int register_name(const string& name);
-  int lookup_name_id(const string& name) const;
-  const char * lookup_name(int id) const;
-
-  void write(std::ostream& out) const;
-};
-
 #define XML_NODE_IS_PARENT 0x1
 
 class conversion_error : public error {
@@ -70,6 +32,7 @@ class conversion_error : public error {
 };
 
 class parent_node_t;
+class document_t;
 
 class node_t
 {
@@ -95,7 +58,7 @@ public:
 	 unsigned int _flags = 0);
 
   virtual ~node_t() {
-    TRACE_DTOR("node_t");
+    TRACE_DTOR(node_t);
     if (parent) extract();
     if (attrs) delete attrs;
   }
@@ -107,13 +70,8 @@ public:
     return NULL;
   }
 
-  const char * name() const {
-    return document->lookup_name(name_id);
-  }
-  int set_name(const char * _name) {
-    name_id = document->register_name(_name);
-    return name_id;
-  }
+  const char * name() const;
+  int set_name(const char * _name);
   int set_name(int _name_id) {
     name_id = _name_id;
     return name_id;
@@ -135,14 +93,8 @@ public:
     return NULL;
   }
 
-  node_t * lookup_child(const char * _name) {
-    int id = document->lookup_name_id(_name);
-    return lookup_child(id);
-  }
-  node_t * lookup_child(const string& _name) {
-    int id = document->lookup_name_id(_name);
-    return lookup_child(id);
-  }
+  node_t * lookup_child(const char * _name);
+  node_t * lookup_child(const string& _name);
   virtual node_t * lookup_child(int /* _name_id */) {
     return NULL;
   }
@@ -168,10 +120,10 @@ public:
     : node_t(_document, _parent, XML_NODE_IS_PARENT),
       _children(NULL), _last_child(NULL)
   {
-    TRACE_CTOR("parent_node_t(document_t *, parent_node_t *)");
+    TRACE_CTOR(parent_node_t, "document_t *, parent_node_t *");
   }
   virtual ~parent_node_t() {
-    TRACE_DTOR("parent_node_t");
+    TRACE_DTOR(parent_node_t);
     if (_children) clear();
   }
 
@@ -201,10 +153,10 @@ public:
   terminal_node_t(document_t * _document, parent_node_t * _parent = NULL)
     : node_t(_document, _parent)
   {
-    TRACE_CTOR("terminal_node_t(document_t *, parent_node_t *)");
+    TRACE_CTOR(terminal_node_t, "document_t *, parent_node_t *");
   }
   virtual ~terminal_node_t() {
-    TRACE_DTOR("terminal_node_t");
+    TRACE_DTOR(terminal_node_t);
   }
 
   virtual const char * text() const {
@@ -226,6 +178,44 @@ public:
 private:
   terminal_node_t(const node_t&);
   terminal_node_t& operator=(const node_t&);
+};
+
+class document_t
+{
+  const char ** builtins;
+  const int	builtins_size;
+
+  typedef std::vector<string> names_array;
+
+  names_array names;
+
+  typedef std::map<string, int>  names_map;
+  typedef std::pair<string, int> names_pair;
+
+  names_map names_index;
+
+  terminal_node_t stub;
+
+ public:
+  node_t * top;
+
+  // Ids 0-9 are reserved.  10-999 are for "builtin" names.  1000+ are
+  // for dynamically registered names.
+  enum special_names_t {
+    CURRENT, PARENT, ROOT, ALL
+  };
+
+  document_t(node_t * _top = NULL, const char ** _builtins = NULL,
+	     const int _builtins_size = 0);
+  ~document_t();
+
+  void set_top(node_t * _top);
+
+  int register_name(const string& name);
+  int lookup_name_id(const string& name) const;
+  const char * lookup_name(int id) const;
+
+  void write(std::ostream& out) const;
 };
 
 #if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
@@ -271,11 +261,11 @@ public:
 		   commodity_t *   _commodity,
 		   parent_node_t * _parent = NULL)
     : parent_node_t(_document, _parent), commodity(_commodity) {
-    TRACE_CTOR("commodity_node_t(document_t *, commodity_t *, parent_node_t *)");
+    TRACE_CTOR(commodity_node_t, "document_t *, commodity_t *, parent_node_t *");
     set_name("commodity");
   }
   virtual ~commodity_node_t() {
-    TRACE_DTOR("commodity_node_t");
+    TRACE_DTOR(commodity_node_t);
   }
 
   virtual node_t * children() const;
@@ -290,11 +280,11 @@ public:
 		amount_t *      _amount,
 		parent_node_t * _parent = NULL)
     : parent_node_t(_document, _parent), amount(_amount) {
-    TRACE_CTOR("amount_node_t(document_t *, amount_t *, parent_node_t *)");
+    TRACE_CTOR(amount_node_t, "document_t *, amount_t *, parent_node_t *");
     set_name("amount");
   }
   virtual ~amount_node_t() {
-    TRACE_DTOR("amount_node_t");
+    TRACE_DTOR(amount_node_t);
   }
 
   virtual node_t * children() const;
@@ -317,12 +307,12 @@ public:
 		     parent_node_t * _parent = NULL)
     : parent_node_t(_document, _parent), payee_virtual_node(NULL),
       transaction(_transaction) {
-    TRACE_CTOR("transaction_node_t(document_t *, transaction_t *, parent_node_t *)");
+    TRACE_CTOR(transaction_node_t, "document_t *, transaction_t *, parent_node_t *");
     set_name("transaction");
     payee_id = document->register_name("payee");
   }
   virtual ~transaction_node_t() {
-    TRACE_DTOR("transaction_node_t");
+    TRACE_DTOR(transaction_node_t);
     if (payee_virtual_node)
       delete payee_virtual_node;
   }
@@ -340,11 +330,11 @@ public:
   entry_node_t(document_t * _document, entry_t * _entry,
 	       parent_node_t * _parent = NULL)
     : parent_node_t(_document, _parent), entry(_entry) {
-    TRACE_CTOR("entry_node_t(document_t *, entry_t *, parent_node_t *)");
+    TRACE_CTOR(entry_node_t, "document_t *, entry_t *, parent_node_t *");
     set_name("entry");
   }
   virtual ~entry_node_t() {
-    TRACE_DTOR("entry_node_t");
+    TRACE_DTOR(entry_node_t);
   }
 
   virtual node_t * children() const;
@@ -358,11 +348,11 @@ public:
   account_node_t(document_t * _document, account_t * _account,
 		 parent_node_t * _parent = NULL)
     : parent_node_t(_document, _parent), account(_account) {
-    TRACE_CTOR("account_node_t(document_t *, account_t *, parent_node_t *)");
+    TRACE_CTOR(account_node_t, "document_t *, account_t *, parent_node_t *");
     set_name("account");
   }
   virtual ~account_node_t() {
-    TRACE_DTOR("account_node_t");
+    TRACE_DTOR(account_node_t);
   }
 
   virtual node_t * children() const;
@@ -376,11 +366,11 @@ public:
   journal_node_t(document_t * _document, journal_t * _journal,
 		 parent_node_t * _parent = NULL)
     : parent_node_t(_document, _parent), journal(_journal) {
-    TRACE_CTOR("journal_node_t(document_t *, journal_t *, parent_node_t *)");
+    TRACE_CTOR(journal_node_t, "document_t *, journal_t *, parent_node_t *");
     set_name("journal");
   }
   virtual ~journal_node_t() {
-    TRACE_DTOR("journal_node_t");
+    TRACE_DTOR(journal_node_t);
   }
 
   virtual node_t * children() const;

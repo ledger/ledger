@@ -46,7 +46,7 @@ class transaction_t
     : entry(NULL), account(_account), cost(NULL),
       state(UNCLEARED), flags(TRANSACTION_NORMAL),
       beg_pos(0), beg_line(0), end_pos(0), end_line(0), data(NULL) {
-    TRACE_CTOR("transaction_t(account_t *)");
+    TRACE_CTOR(transaction_t, "account_t *");
   }
   transaction_t(account_t *	   _account,
 		const amount_t&    _amount,
@@ -56,14 +56,14 @@ class transaction_t
       state(UNCLEARED), flags(_flags),
       note(_note), beg_pos(0), beg_line(0), end_pos(0), end_line(0),
       data(NULL) {
-    TRACE_CTOR("transaction_t(account_t *, const amount_t&, unsigned int, const string&)");
+    TRACE_CTOR(transaction_t, "account_t *, const amount_t&, unsigned int, const string&");
   }
   transaction_t(const transaction_t& xact)
     : entry(xact.entry), account(xact.account), amount(xact.amount),
       cost(xact.cost ? new amount_t(*xact.cost) : NULL),
       state(xact.state), flags(xact.flags), note(xact.note),
       beg_pos(0), beg_line(0), end_pos(0), end_line(0), data(NULL) {
-    TRACE_CTOR("transaction_t(copy)");
+    TRACE_CTOR(transaction_t, "copy");
   }
   ~transaction_t();
 
@@ -112,19 +112,19 @@ class entry_base_t
 
   entry_base_t() : journal(NULL),
     beg_pos(0), beg_line(0), end_pos(0), end_line(0) {
-    TRACE_CTOR("entry_base_t()");
+    TRACE_CTOR(entry_base_t, "");
   }
   entry_base_t(const entry_base_t& e) : journal(NULL),
     beg_pos(0), beg_line(0), end_pos(0), end_line(0)
   {
-    TRACE_CTOR("entry_base_t(copy)");
+    TRACE_CTOR(entry_base_t, "copy");
     for (transactions_list::const_iterator i = e.transactions.begin();
 	 i != e.transactions.end();
 	 i++)
       transactions.push_back(new transaction_t(**i));
   }
   virtual ~entry_base_t() {
-    TRACE_DTOR("entry_base_t");
+    TRACE_DTOR(entry_base_t);
     for (transactions_list::iterator i = transactions.begin();
 	 i != transactions.end();
 	 i++)
@@ -159,12 +159,12 @@ class entry_t : public entry_base_t
   mutable void * data;
 
   entry_t() : data(NULL) {
-    TRACE_CTOR("entry_t()");
+    TRACE_CTOR(entry_t, "");
   }
   entry_t(const entry_t& e);
 
   virtual ~entry_t() {
-    TRACE_DTOR("entry_t");
+    TRACE_DTOR(entry_t);
   }
 
   moment_t actual_date() const {
@@ -224,15 +224,15 @@ public:
   xml::xpath_t predicate;
 
   auto_entry_t() {
-    TRACE_CTOR("auto_entry_t()");
+    TRACE_CTOR(auto_entry_t, "");
   }
   auto_entry_t(const string& _predicate)
     : predicate(_predicate) {
-    TRACE_CTOR("auto_entry_t(const string&)");
+    TRACE_CTOR(auto_entry_t, "const string&");
   }
 
   virtual ~auto_entry_t() {
-    TRACE_DTOR("auto_entry_t");
+    TRACE_DTOR(auto_entry_t);
   }
 
   virtual void extend_entry(entry_base_t& entry, bool post);
@@ -255,19 +255,19 @@ class period_entry_t : public entry_base_t
   string period_string;
 
   period_entry_t() {
-    TRACE_CTOR("period_entry_t()");
+    TRACE_CTOR(period_entry_t, "");
   }
   period_entry_t(const string& _period)
     : period(_period), period_string(_period) {
-    TRACE_CTOR("period_entry_t(const string&)");
+    TRACE_CTOR(period_entry_t, "const string&");
   }
   period_entry_t(const period_entry_t& e)
     : entry_base_t(e), period(e.period), period_string(e.period_string) {
-    TRACE_CTOR("period_entry_t(copy)");
+    TRACE_CTOR(period_entry_t, "copy");
   }
 
   virtual ~period_entry_t() {
-    TRACE_DTOR("period_entry_t");
+    TRACE_DTOR(period_entry_t);
   }
 
   virtual bool valid() const {
@@ -300,7 +300,7 @@ class account_t
 	    const string& _note   = "")
     : parent(_parent), name(_name), note(_note),
       depth(parent ? parent->depth + 1 : 0), data(NULL), ident(0) {
-    TRACE_CTOR("account_t(account_t *, const string&, const string&)");
+    TRACE_CTOR(account_t, "account_t *, const string&, const string&");
   }
   ~account_t();
 
@@ -407,7 +407,7 @@ class journal_t
   journal_t(session_t * _session)
     : session(_session), basket(NULL),
       item_pool(NULL), item_pool_end(NULL), document(NULL) {
-    TRACE_CTOR("journal_t()");
+    TRACE_CTOR(journal_t, "");
     master = new account_t(NULL, "");
     master->journal = this;
   }

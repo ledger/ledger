@@ -142,7 +142,7 @@ void   operator delete[](void*, const std::nothrow_t&) throw();
 #define CONFIRM(x)
 
 #ifndef TRACE_CTOR
-#define TRACE_CTOR(cls)
+#define TRACE_CTOR(cls, args)
 #define TRACE_DTOR(cls)
 #define TRACE(cat, msg)
 #define TRACE_PUSH(cat, msg)
@@ -154,7 +154,7 @@ void   operator delete[](void*, const std::nothrow_t&) throw();
 #define CONFIRM(x)
 
 #ifndef TRACE_CTOR
-#define TRACE_CTOR(cls)
+#define TRACE_CTOR(cls, args)
 #define TRACE_DTOR(cls)
 #define TRACE(cat, msg)
 #define TRACE_PUSH(cat, msg)

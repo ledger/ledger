@@ -396,6 +396,11 @@ static int read_and_report(report_t * report, int argc, char * argv[],
   return 0;
 }
 
+#ifdef DEBUG_ENABLED
+extern int new_calls;
+extern int new_size;
+#endif
+
 int main(int argc, char * argv[], char * envp[])
 {
   int status = 1;
@@ -429,7 +434,7 @@ int main(int argc, char * argv[], char * envp[])
 
 #if DEBUG_LEVEL >= BETA
     DEBUG_IF("ledger.trace.memory") {
-      ledger::trace_mode = true;
+      ledger::trace_class_mode = true;
     }
 #endif
 
@@ -490,6 +495,8 @@ int main(int argc, char * argv[], char * envp[])
 #if DEBUG_LEVEL >= BETA
   DEBUG_IF("ledger.trace.memory") {
     report_memory(std::cerr);
+    std::cerr << "Total calls to new: " << new_calls << std::endl
+	      << "Total memory new'd: " << new_size << std::endl;
   }
   ledger::tracing_active = false;
 #endif

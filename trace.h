@@ -8,7 +8,8 @@ namespace ledger {
 
 class timing_t;
 
-extern bool trace_mode;
+extern bool trace_alloc_mode;
+extern bool trace_class_mode;
 
 #if DEBUG_LEVEL >= 4
 class string;
@@ -17,43 +18,50 @@ typedef std::string string;
 #endif
 
 void trace(const string& cat, const string& str);
-void trace_push(const string& cat, const string& str,
-		timing_t& timer);
-void trace_pop(const string& cat, const string& str,
-	       timing_t& timer);
+void trace_push(const string& cat, const string& str, timing_t& timer);
+void trace_pop(const string& cat, const string& str, timing_t& timer);
 
 #ifndef TRACE
-#define TRACE(cat, msg)  if (trace_mode) trace(#cat, msg)
-#define TRACE_(cat, msg) if (trace_mode) trace(#cat, msg)
+#define TRACE(cat, msg)  if (trace_class_mode) trace(#cat, msg)
+#define TRACE_(cat, msg) if (trace_class_mode) trace(#cat, msg)
 
 #define TRACE_PUSH(cat, msg)					\
   timing_t timer_ ## cat(#cat);					\
-  if (trace_mode) trace_push(#cat, msg, timer_ ## cat)
+  if (trace_class_mode) trace_push(#cat, msg, timer_ ## cat)
 
 #define TRACE_POP(cat, msg)					\
-  if (trace_mode) trace_pop(#cat, msg, timer_ ## cat)
+  if (trace_class_mode) trace_pop(#cat, msg, timer_ ## cat)
 #endif
 
-typedef std::multimap<void *, std::string> live_objects_map;
-typedef std::pair<void *, std::string>     live_objects_pair;
-typedef std::map<std::string, int>	   object_count_map;
-typedef std::pair<std::string, int>	   object_count_pair;
+typedef std::multimap<void *, std::string>      live_objects_map;
+typedef std::pair<void *, std::string>          live_objects_pair;
+typedef std::pair<unsigned int, std::size_t>    count_size_pair;
+typedef std::map<std::string, count_size_pair>  object_count_map;
+typedef std::pair<std::string, count_size_pair> object_count_pair;
 
 extern live_objects_map live_objects;
+extern object_count_map	live_count;
 extern object_count_map	ctor_count;
 extern object_count_map	object_count;
-extern object_count_map	live_count;
 
 extern bool tracing_active;
 
-bool trace_ctor(void * ptr, const char * name);
-bool trace_dtor(void * ptr, const char * name);
+bool trace_ctor(void * ptr, const char * cls_name, const char * args,
+		std::size_t cls_size);
+bool trace_dtor(void * ptr, const char * cls_name, std::size_t cls_size);
 
 void report_memory(std::ostream& out);
 
+#if 0
 #ifndef TRACE_CTOR
-#define TRACE_CTOR(cls) CONFIRM(ledger::trace_ctor(this, cls))
-#define TRACE_DTOR(cls) CONFIRM(ledger::trace_dtor(this, cls))
+#define TRACE_CTOR(cls, args) \
+  CONFIRM(ledger::trace_ctor(this, #cls, args, sizeof(cls)))
+#define TRACE_DTOR(cls) \
+  CONFIRM(ledger::trace_dtor(this, #cls, sizeof(cls)))
+#endif
+#else
+#define TRACE_CTOR(cls, args)
+#define TRACE_DTOR(cls)
 #endif
 
 #if DEBUG_LEVEL >= 4

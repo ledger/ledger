@@ -35,7 +35,8 @@ class session_t : public xml::xpath_t::scope_t
   bool cache_dirty;
   bool debug_mode;
   bool verbose_mode;
-  bool trace_mode;
+  bool trace_alloc_mode;
+  bool trace_class_mode;
 
   moment_t now;
 
@@ -89,7 +90,8 @@ class session_t : public xml::xpath_t::scope_t
     cache_dirty(false),
     debug_mode(false),
     verbose_mode(false),
-    trace_mode(false),
+    trace_alloc_mode(false),
+    trace_class_mode(false),
 
     now(now),
 
@@ -98,11 +100,11 @@ class session_t : public xml::xpath_t::scope_t
 
     ansi_codes(false),
     ansi_invert(false) {
-    TRACE_CTOR("session_t(xml::xpath_t::scope_t *)");
+    TRACE_CTOR(session_t, "xml::xpath_t::scope_t *");
   }
 
   virtual ~session_t() {
-    TRACE_DTOR("session_t");
+    TRACE_DTOR(session_t);
 
     for (std::list<journal_t *>::iterator i = journals.begin();
 	 i != journals.end();

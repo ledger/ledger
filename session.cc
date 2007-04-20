@@ -226,7 +226,8 @@ void export_session()
     .def_readwrite("cache_dirty", &session_t::cache_dirty)
     .def_readwrite("debug_mode", &session_t::debug_mode)
     .def_readwrite("verbose_mode", &session_t::verbose_mode)
-    .def_readwrite("trace_mode", &session_t::trace_mode)
+    .def_readwrite("trace_alloc_mode", &session_t::trace_alloc_mode)
+    .def_readwrite("trace_class_mode", &session_t::trace_class_mode)
 
     .def_readwrite("journals", &session_t::journals)
     ;

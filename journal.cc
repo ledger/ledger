@@ -18,7 +18,7 @@ bool transaction_t::use_effective_date = false;
 
 transaction_t::~transaction_t()
 {
-  TRACE_DTOR("transaction_t");
+  TRACE_DTOR(transaction_t);
   if (cost) delete cost;
 }
 
@@ -274,7 +274,7 @@ entry_t::entry_t(const entry_t& e)
   : entry_base_t(e), _date(e._date), _date_eff(e._date_eff),
     code(e.code), payee(e.payee), data(NULL)
 {
-  TRACE_CTOR("entry_t(copy)");
+  TRACE_CTOR(entry_t, "copy");
   for (transactions_list::const_iterator i = transactions.begin();
        i != transactions.end();
        i++)
@@ -366,7 +366,7 @@ void auto_entry_t::extend_entry(entry_base_t& entry, bool post)
 
 account_t::~account_t()
 {
-  TRACE_DTOR("account_t");
+  TRACE_DTOR(account_t);
 
   for (accounts_map::iterator i = accounts.begin();
        i != accounts.end();
@@ -493,7 +493,7 @@ bool account_t::valid() const
 
 journal_t::~journal_t()
 {
-  TRACE_DTOR("journal_t");
+  TRACE_DTOR(journal_t);
 
   assert(master);
   delete master;

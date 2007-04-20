@@ -11,21 +11,21 @@ namespace xml {
 
 document_t::document_t(node_t * _top, const char ** _builtins,
 		       const int _builtins_size)
-  : builtins(_builtins), builtins_size(_builtins_size),
-    top(_top ? _top : new terminal_node_t(this)) {
-  TRACE_CTOR("xml::document_t(node_t *, const char **, const int)");
+  : builtins(_builtins), builtins_size(_builtins_size), stub(this),
+    top(_top ? _top : &stub) {
+  TRACE_CTOR(xml::document_t, "node_t *, const char **, const int");
 }
 
 document_t::~document_t()
 {
-  TRACE_DTOR("xml::document_t");
-  if (top)
+  TRACE_DTOR(xml::document_t);
+  if (top && top != &stub)
     delete top;
 }
 
 void document_t::set_top(node_t * _top)
 {
-  if (top)
+  if (top && top != &stub)
     delete top;
   top = _top;
 }
@@ -117,7 +117,7 @@ node_t::node_t(document_t * _document, parent_node_t * _parent,
   : name_id(0), parent(_parent), next(NULL), prev(NULL),
     flags(_flags), info(NULL), attrs(NULL)
 {
-  TRACE_CTOR("node_t(document_t *, node_t *)");
+  TRACE_CTOR(node_t, "document_t *, node_t *");
   document = _document;
   if (document && ! document->top)
     document->set_top(this);
@@ -145,6 +145,29 @@ void node_t::extract()
 
   next = NULL;
   prev = NULL;
+}
+
+const char * node_t::name() const
+{
+  return document->lookup_name(name_id);
+}
+
+int node_t::set_name(const char * _name)
+{
+  name_id = document->register_name(_name);
+  return name_id;
+}
+
+node_t * node_t::lookup_child(const char * _name)
+{
+  int id = document->lookup_name_id(_name);
+  return lookup_child(id);
+}
+
+node_t * node_t::lookup_child(const string& _name)
+{
+  int id = document->lookup_name_id(_name);
+  return lookup_child(id);
 }
 
 void parent_node_t::clear()

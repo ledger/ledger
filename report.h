@@ -40,7 +40,7 @@ class report_t : public xml::xpath_t::scope_t
       session(_session),
       last_transform(NULL)
   {
-    TRACE_CTOR("report_t(session_t *)");
+    TRACE_CTOR(report_t, "session_t *");
     eval("t=total,TOT=0,T()=(TOT=TOT+t,TOT)");
   }
 

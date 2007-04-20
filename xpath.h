@@ -189,11 +189,11 @@ public:
 
     scope_t(scope_t * _parent = NULL, kind_t _kind = NORMAL)
       : parent(_parent), kind(_kind) {
-      TRACE_CTOR("xpath_t::scope_t(scope *, kind_t)");
+      TRACE_CTOR(xpath_t::scope_t, "scope *, kind_t");
     }
 
     virtual ~scope_t() {
-      TRACE_DTOR("xpath_t::scope_t");
+      TRACE_DTOR(xpath_t::scope_t);
       for (symbol_map::iterator i = symbols.begin();
 	   i != symbols.end();
 	   i++)
@@ -296,17 +296,17 @@ private:
     unsigned int length;
 
     token_t() : kind(UNKNOWN), length(0) {
-      TRACE_CTOR("xpath_t::token_t()");
+      TRACE_CTOR(xpath_t::token_t, "");
     }
 
     token_t(const token_t& other) {
       assert(0);
-      TRACE_CTOR("xpath_t::token_t(copy)");
+      TRACE_CTOR(xpath_t::token_t, "copy");
       *this = other;
     }
 
     ~token_t() {
-      TRACE_DTOR("xpath_t::token_t");
+      TRACE_DTOR(xpath_t::token_t);
     }
 
     token_t& operator=(const token_t& other) {
@@ -421,7 +421,7 @@ public:
 
     op_t(const kind_t _kind)
       : kind(_kind), refc(0), left(NULL), right(NULL) {
-      TRACE_CTOR("xpath_t::op_t(const kind_t)");
+      TRACE_CTOR(xpath_t::op_t, "const kind_t");
     }
     op_t(const op_t&);
     ~op_t();
@@ -618,31 +618,31 @@ public:
   unsigned short flags;		// flags used to parse `expr'
 
   xpath_t() : ptr(NULL), use_lookahead(false), flags(0) {
-    TRACE_CTOR("xpath_t");
+    TRACE_CTOR(xpath_t, "");
   }
   xpath_t(op_t * _ptr) : ptr(_ptr), use_lookahead(false) {
-    TRACE_CTOR("xpath_t(op_t *)");
+    TRACE_CTOR(xpath_t, "op_t *");
   }
 
   xpath_t(const string& _expr,
 	  unsigned short _flags = XPATH_PARSE_RELAXED)
     : ptr(NULL), use_lookahead(false), flags(0) {
-    TRACE_CTOR("xpath_t(const string&, unsigned short)");
+    TRACE_CTOR(xpath_t, "const string&, unsigned short");
     if (! _expr.empty())
       parse(_expr, _flags);
   }
   xpath_t(std::istream& in, unsigned short _flags = XPATH_PARSE_RELAXED)
     : ptr(NULL), use_lookahead(false), flags(0) {
-    TRACE_CTOR("xpath_t(std::istream&, unsigned short)");
+    TRACE_CTOR(xpath_t, "std::istream&, unsigned short");
     parse(in, _flags);
   }
   xpath_t(const xpath_t& other)
     : ptr(other.ptr ? other.ptr->acquire() : NULL),
       use_lookahead(false), expr(other.expr), flags(other.flags) {
-    TRACE_CTOR("xpath_t(copy)");
+    TRACE_CTOR(xpath_t, "copy");
   }
   virtual ~xpath_t() {
-    TRACE_DTOR("xpath_t");
+    TRACE_DTOR(xpath_t);
     reset(NULL);
   }
 
@@ -700,8 +700,8 @@ public:
 
   void compile(document_t * document, scope_t * scope = NULL) {
     if (! document) {
-      std::auto_ptr<document_t> tdoc(new xml::document_t);
-      compile(tdoc->top, scope);
+      document_t tdoc;
+      compile(tdoc.top, scope);
     } else {
       compile(document->top, scope);
     }
