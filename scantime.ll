@@ -1,6 +1,8 @@
 %option c++ 8bit
 
 %{
+/* This code is decommissioned for the time being. */
+
 #define YYSTYPE struct ledger::intorchar
 
 extern int yywrap();
