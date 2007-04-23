@@ -52,7 +52,7 @@ bool trace_dtor(void * ptr, const char * cls_name, std::size_t cls_size);
 
 void report_memory(std::ostream& out);
 
-#if 0
+#if 1
 #ifndef TRACE_CTOR
 #define TRACE_CTOR(cls, args) \
   CONFIRM(ledger::trace_ctor(this, #cls, args, sizeof(cls)))
