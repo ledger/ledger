@@ -46,6 +46,10 @@ class balance_t
       amounts.insert(amounts_pair(&amt.commodity(), amt));
   }
 
+  ~balance_t() {
+    TRACE_DTOR(balance_t);
+  }
+
   // assignment operator
   balance_t& operator=(const balance_t& bal) {
     if (this != &bal) {
