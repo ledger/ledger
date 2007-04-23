@@ -21,7 +21,7 @@ namespace ledger {
 
 #define MAX_LINE 1024
 
-static string  path;
+static string	    path;
 static unsigned int linenum;
 static unsigned int src_idx;
 static accounts_map account_aliases;
@@ -92,7 +92,39 @@ transaction_t * parse_transaction(char *      line,
   // The account will be determined later...
   std::auto_ptr<transaction_t> xact(new transaction_t(NULL));
 
-  std::istringstream in(line);
+  // First cut up the input line into its various parts.
+
+  char * state	      = NULL;
+  char * account_path = NULL;
+  char * amount	      = NULL;
+  char * note	      = NULL;
+
+  char * p = line;
+
+  if (*p == '*' || *p == '!')
+    state = p++;
+
+  account_path = skip_ws(p);
+
+  amount = next_element(account_path, true);
+  if (amount) {
+    char * p = amount;
+    while (*p && *p != ';')
+      p++;
+
+    if (*p == ';') {
+      *p++ = '\0';
+      note = skip_ws(p);
+    }
+
+    p = amount + (std::strlen(amount) - 1);
+    while (p > amount && std::isspace(*p))
+      p--;
+
+    if (std::isspace(*(p + 1)))
+      *++p = '\0';
+  }
+
   string err_desc;
   try {
 
@@ -100,43 +132,26 @@ transaction_t * parse_transaction(char *      line,
 
   // Parse the state flag
 
-  char p = peek_next_nonws(in);
-  switch (p) {
-  case '*':
-    xact->state = transaction_t::CLEARED;
-    in.get(p);
-    p = peek_next_nonws(in);
-    DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
-		"Parsed the CLEARED flag");
-    break;
-  case '!':
-    xact->state = transaction_t::PENDING;
-    in.get(p);
-    p = peek_next_nonws(in);
-    DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
-		"Parsed the PENDING flag");
-    break;
-  }
+  if (state)
+    switch (*state) {
+    case '*':
+      xact->state = transaction_t::CLEARED;
+      DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+		  "Parsed the CLEARED flag");
+      break;
+    case '!':
+      xact->state = transaction_t::PENDING;
+      DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+		  "Parsed the PENDING flag");
+      break;
+    }
 
   // Parse the account name
 
-  unsigned long account_beg = in.tellg();
-  unsigned long account_end = account_beg;
-  while (! in.eof()) {
-    in.get(p);
-    if (in.eof() || (std::isspace(p) &&
-		     (p == '\t' || std::isspace(in.peek()))))
-      break;
-    account_end++;
-  }
-
-  if (account_beg == account_end)
-    throw new parse_error("No account was specified");
-
-  char * b = &line[account_beg];
-  char * e = &line[account_end];
-  if ((*b == '[' && *(e - 1) == ']') ||
-      (*b == '(' && *(e - 1) == ')')) {
+  char * b = &account_path[0];
+  char * e = &account_path[std::strlen(account_path) - 1];
+  if ((*b == '[' && *e == ']') ||
+      (*b == '(' && *e == ')')) {
     xact->flags |= TRANSACTION_VIRTUAL;
     DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
 		"Parsed a virtual account name");
@@ -145,28 +160,24 @@ transaction_t * parse_transaction(char *      line,
       DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
 		  "Parsed a balanced virtual account name");
     }
-    b++; e--;
+    *account_path++ = '\0';
+    *e = '\0';
   }
 
-  string name(b, e - b);
   DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
-	      "Parsed account name " << name);
+	      "Parsed account name " << account_path);
   if (account_aliases.size() > 0) {
-    accounts_map::const_iterator i = account_aliases.find(name);
+    accounts_map::const_iterator i = account_aliases.find(account_path);
     if (i != account_aliases.end())
       xact->account = (*i).second;
   }
   if (! xact->account)
-    xact->account = account->find_account(name);
+    xact->account = account->find_account(account_path);
 
   // Parse the optional amount
 
-  if (in.good() && ! in.eof()) {
-    p = peek_next_nonws(in);
-    if (in.eof())
-      goto finished;
-    if (p == ';')
-      goto parse_note;
+  if (amount && *amount) {
+    std::istringstream in(amount);
 
     try {
       // jww (2006-09-15): Make sure it doesn't gobble up the upcoming @ symbol
@@ -175,8 +186,9 @@ transaction_t * parse_transaction(char *      line,
 
       xact->amount.parse(in, AMOUNT_PARSE_NO_REDUCE);
 
-      if (! in.eof() && (p = peek_next_nonws(in)) != '@' &&
-	  p != ';' && ! in.eof()) {
+      char c;
+      if (! in.eof() && (c = peek_next_nonws(in)) != '@' &&
+	  c != ';' && ! in.eof()) {
 	in.seekg(beg, std::ios::beg);
 
 	if (xact->entry) {
@@ -208,117 +220,109 @@ transaction_t * parse_transaction(char *      line,
       err_desc = "While parsing transaction amount:";
       throw err;
     }
-  }
 
-  // Parse the optional cost (@ PER-UNIT-COST, @@ TOTAL-COST)
+    // Parse the optional cost (@ PER-UNIT-COST, @@ TOTAL-COST)
 
-  if (in.good() && ! in.eof()) {
-    p = peek_next_nonws(in);
-    if (p == '@') {
-      DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
-		  "Found a price indicator");
-      bool per_unit = true;
-      in.get(p);
-      if (in.peek() == '@') {
-	in.get(p);
-	per_unit = false;
+    if (in.good() && ! in.eof()) {
+      char c = peek_next_nonws(in);
+      if (c == '@') {
 	DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
-		    "And it's for a total price");
-      }
+		    "Found a price indicator");
+	bool per_unit = true;
+	in.get(c);
+	if (in.peek() == '@') {
+	  in.get(c);
+	  per_unit = false;
+	  DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+		      "And it's for a total price");
+	}
 
-      if (in.good() && ! in.eof()) {
-	xact->cost = new amount_t;
+	if (in.good() && ! in.eof()) {
+	  xact->cost = new amount_t;
 
-	try {
-	  unsigned long beg = (long)in.tellg();
+	  try {
+	    unsigned long beg = (long)in.tellg();
 
-	  xact->cost->parse(in);
+	    xact->cost->parse(in);
 
-	  unsigned long end = (long)in.tellg();
+	    unsigned long end = (long)in.tellg();
 
+	    if (per_unit)
+	      xact->cost_expr = (string("@") +
+				 string(amount, beg, end - beg));
+	    else
+	      xact->cost_expr = (string("@@") +
+				 string(amount, beg, end - beg));
+	  }
+	  catch (error * err) {
+	    err_desc = "While parsing transaction cost:";
+	    throw err;
+	  }
+
+	  if (*xact->cost < 0)
+	    throw new parse_error("A transaction's cost may not be negative");
+
+	  amount_t per_unit_cost(*xact->cost);
 	  if (per_unit)
-	    xact->cost_expr = (string("@") +
-			       string(line, beg, end - beg));
+	    *xact->cost *= xact->amount.number();
 	  else
-	    xact->cost_expr = (string("@@") +
-			       string(line, beg, end - beg));
+	    per_unit_cost /= xact->amount.number();
+
+	  if (xact->amount.commodity() &&
+	      ! xact->amount.commodity().annotated)
+	    xact->amount.annotate_commodity(per_unit_cost,
+					    xact->entry->actual_date(),
+					    xact->entry->code);
+
+	  DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+		      "Total cost is " << *xact->cost);
+	  DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+		      "Per-unit cost is " << per_unit_cost);
+	  DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+		      "Annotated amount is " << xact->amount);
+	  DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+		      "Bare amount is " << xact->amount.number());
 	}
-	catch (error * err) {
-	  err_desc = "While parsing transaction cost:";
-	  throw err;
-	}
-
-	if (*xact->cost < 0)
-	  throw new parse_error("A transaction's cost may not be negative");
-
-	amount_t per_unit_cost(*xact->cost);
-	if (per_unit)
-	  *xact->cost *= xact->amount.number();
-	else
-	  per_unit_cost /= xact->amount.number();
-
-	if (xact->amount.commodity() &&
-	    ! xact->amount.commodity().annotated)
-	  xact->amount.annotate_commodity(per_unit_cost,
-					  xact->entry->actual_date(),
-					  xact->entry->code);
-
-	DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
-		    "Total cost is " << *xact->cost);
-	DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
-		    "Per-unit cost is " << per_unit_cost);
-	DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
-		    "Annotated amount is " << xact->amount);
-	DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
-		    "Bare amount is " << xact->amount.number());
       }
     }
+
+    xact->amount.in_place_reduce();
+
+    DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+		"Reduced amount is " << xact->amount);
   }
-
-  xact->amount.in_place_reduce();
-
-  DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
-	      "Reduced amount is " << xact->amount);
 
   // Parse the optional note
 
- parse_note:
-  if (in.good() && ! in.eof()) {
-    p = peek_next_nonws(in);
-    if (p == ';') {
-      in.get(p);
-      p = peek_next_nonws(in);
-      xact->note = &line[in.tellg()];
-      DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
-		  "Parsed a note '" << xact->note << "'");
+  if (note) {
+    xact->note = note;
+    DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+		"Parsed a note '" << xact->note << "'");
 
-      if (char * b = std::strchr(xact->note.c_str(), '['))
-	if (char * e = std::strchr(xact->note.c_str(), ']')) {
-	  char buf[256];
-	  std::strncpy(buf, b + 1, e - b - 1);
-	  buf[e - b - 1] = '\0';
+    if (char * b = std::strchr(xact->note.c_str(), '['))
+      if (char * e = std::strchr(xact->note.c_str(), ']')) {
+	char buf[256];
+	std::strncpy(buf, b + 1, e - b - 1);
+	buf[e - b - 1] = '\0';
 
-	  DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
-		      "Parsed a transaction date " << buf);
+	DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+		    "Parsed a transaction date " << buf);
 
-	  if (char * p = std::strchr(buf, '=')) {
-	    *p++ = '\0';
-	    xact->_date_eff = parse_datetime(p);
-	  }
-	  if (buf[0])
-	    xact->_date = parse_datetime(buf);
+	if (char * p = std::strchr(buf, '=')) {
+	  *p++ = '\0';
+	  xact->_date_eff = parse_datetime(p);
 	}
-    }
+	if (buf[0])
+	  xact->_date = parse_datetime(buf);
+      }
   }
 
- finished:
   return xact.release();
 
   }
   catch (error * err) {
     err->context.push_back
-      (new line_context(line, (long)in.tellg() - 1,
-			! err_desc.empty() ?
+      (new line_context(line, -1, ! err_desc.empty() ?
 			err_desc : "While parsing transaction:"));
     throw err;
   }
@@ -338,15 +342,15 @@ bool parse_transactions(std::istream& in,
     in.getline(line, MAX_LINE);
     if (in.eof())
       break;
+
     beg_pos += std::strlen(line) + 1;
     linenum++;
 
-    if (line[0] == ' ' || line[0] == '\t' || line[0] == '\r') {
-      char * p = skip_ws(line);
-      if (! *p || *p == '\r')
-	break;
-    }
-    if (transaction_t * xact = parse_transaction(line, journal, account)) {
+    char * p = skip_ws(line);
+    if (! *p || *p == '\r' || *p == '\n')
+      break;
+
+    if (transaction_t * xact = parse_transaction(p, journal, account)) {
       entry.add_transaction(xact);
       added = true;
     }
@@ -368,22 +372,69 @@ entry_t * parse_entry(std::istream& in, char * line, journal_t * journal,
 {
   std::auto_ptr<entry_t> curr(new entry_t);
 
-  std::istringstream line_in(line);
-  char c;
+  // First cut up the input line into its various parts.
+
+  char * date	  = NULL;
+  char * date_eff = NULL;
+  char * statep   = NULL;
+  char * code	  = NULL;
+  char * payee	  = NULL;
+
+  date = line;
+
+  char * p = line;
+  
+  while (*p && (std::isdigit(*p) || *p == '/' || *p == '.' || *p == '-'))
+    p++;
+  assert(*p);
+
+  if (*p == '=') {
+    *p++ = '\0';
+    date_eff = p;
+
+    while (*p && (std::isdigit(*p) || *p == '/' || *p == '.' || *p == '-'))
+      p++;
+    assert(*p);
+  } else {
+    *p++ = '\0';
+  }
+
+  p = skip_ws(p);
+
+  if (*p == '*' || *p == '!') {
+    statep = p;
+    p++; *p++ = '\0';
+
+    p = skip_ws(p);
+  }
+
+  if (*p == '(') {
+    code = ++p;
+    while (*p && *p != ')')
+      p++;
+    assert(*p);
+    *p++ = '\0';
+
+    p = skip_ws(p);
+  }
+
+  payee = p;
+
+  p = payee + (std::strlen(payee) - 1);
+  while (p > payee && std::isspace(*p))
+    p--;
+
+  if (std::isspace(*(p + 1)))
+    *++p = '\0';
 
   // Parse the date
 
   TIMER_START(entry_date);
 
-  string word;
-  line_in >> word;
-  curr->_date = parse_datetime(word);
+  curr->_date = parse_datetime(date);
 
-  if (peek_next_nonws(line_in) == '=') {
-    line_in.get(c);
-    line_in >> word;
-    curr->_date_eff = parse_datetime(word);
-  }
+  if (date_eff)
+    curr->_date_eff = parse_datetime(date_eff);
 
   TIMER_STOP(entry_date);
 
@@ -392,35 +443,26 @@ entry_t * parse_entry(std::istream& in, char * line, journal_t * journal,
   TIMER_START(entry_details);
 
   transaction_t::state_t state = transaction_t::UNCLEARED;
-  switch (peek_next_nonws(line_in)) {
-  case '*':
-    state = transaction_t::CLEARED;
-    line_in.get(c);
-    break;
-  case '!':
-    state = transaction_t::PENDING;
-    line_in.get(c);
-    break;
+  if (statep) {
+    switch (*statep) {
+    case '*':
+      state = transaction_t::CLEARED;
+      break;
+    case '!':
+      state = transaction_t::PENDING;
+      break;
+    }
   }
 
   // Parse the optional code: (TEXT)
 
-  char buf[256];
-
-  if (peek_next_nonws(line_in) == '(') {
-    line_in.get(c);
-    READ_INTO(line_in, buf, 255, c, c != ')');
-    curr->code = buf;
-    if (c == ')')
-      line_in.get(c);
-    peek_next_nonws(line_in);
-  }
+  if (code)
+    curr->code = code;
 
   // Parse the payee/description text
 
-  std::memset(buf, 0, 255);
-  line_in.read(buf, 255);
-  curr->payee = buf[0] != '\0' ? buf : "<Unspecified payee>";
+  assert(payee);
+  curr->payee = *payee != '\0' ? payee : "<Unspecified payee>";
 
   TIMER_STOP(entry_details);
 
@@ -434,19 +476,17 @@ entry_t * parse_entry(std::istream& in, char * line, journal_t * journal,
   while (! in.eof() && (in.peek() == ' ' || in.peek() == '\t')) {
     line[0] = '\0';
     in.getline(line, MAX_LINE);
-    if (in.eof() && line[0] == '\0')
+    if (in.eof() || line[0] == '\0')
       break;
     end_pos = beg_pos + std::strlen(line) + 1;
     linenum++;
 
-    if (line[0] == ' ' || line[0] == '\t' || line[0] == '\r') {
-      char * p = skip_ws(line);
-      if (! *p || *p == '\r')
-	break;
-    }
+    char * p = skip_ws(line);
+    if (! *p || *p == '\r' || *p == '\n')
+      break;
 
-    if (transaction_t * xact =
-	parse_transaction(line, journal, master, curr.get())) {
+    if (transaction_t * xact = parse_transaction(p, journal, master,
+						 curr.get())) {
       if (state != transaction_t::UNCLEARED &&
 	  xact->state == transaction_t::UNCLEARED)
 	xact->state = state;

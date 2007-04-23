@@ -18,7 +18,7 @@ moment_t& now(date_now);
 bool day_before_month = false;
 static bool  day_before_month_initialized = false;
 
-moment_t parse_datetime(std::istream& in)
+moment_t parse_datetime(const char * str)
 {
   if (! day_before_month_initialized) {
 #ifdef HAVE_NL_LANGINFO
@@ -31,23 +31,16 @@ moment_t parse_datetime(std::istream& in)
 #if 0
   return parse_abs_datetime(in);
 #else
-  string word;
+  int year = ((str[0] - '0') * 1000 +
+	      (str[1] - '0') * 100 +
+	      (str[2] - '0') * 10 +
+	      (str[3] - '0'));
 
-  if (! in.good() || in.eof())
-    return moment_t();
+  int mon = ((str[5] - '0') * 10 +
+	     (str[6] - '0'));
 
-  in >> word;
-
-  int year = ((word[0] - '0') * 1000 +
-	      (word[1] - '0') * 100 +
-	      (word[2] - '0') * 10 +
-	      (word[3] - '0'));
-
-  int mon = ((word[5] - '0') * 10 +
-	     (word[6] - '0'));
-
-  int day = ((word[8] - '0') * 10 +
-	     (word[9] - '0'));
+  int day = ((str[8] - '0') * 10 +
+	     (str[9] - '0'));
 
   return moment_t(boost::gregorian::date(year, mon, day));
 #endif

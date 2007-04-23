@@ -9,7 +9,7 @@
 #include <unistd.h>		// for the `write' method
 
 int new_calls = 0;
-int new_size = 0;
+long long new_size = 0;
 
 void * operator new(std::size_t size) throw (std::bad_alloc) {
   void * ptr = std::malloc(size);

@@ -165,7 +165,7 @@ void report_memory(std::ostream& out)
   }
 }
 
-#if DEBUG_LEVEL >= 4
+#if 0 && DEBUG_LEVEL >= 4 && ! defined(USE_BOOST_PYTHON)
 
 string::string() : std::string() {
   TRACE_CTOR(string, "");

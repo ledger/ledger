@@ -179,6 +179,11 @@ void export_amount()
     .def("zero", &amount_t::zero)
 
     .def("valid", &amount_t::valid)
+
+    .def("initialize", &amount_t::initialize)
+    .staticmethod("initialize")
+    .def("shutdown", &amount_t::shutdown)
+    .staticmethod("shutdown")
     ;
 
   class_< commodity_base_t::updater_t, commodity_updater_wrap,

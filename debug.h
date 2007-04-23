@@ -110,7 +110,7 @@ bool _debug_active(const char * const cls);
 #endif
 
 extern int new_calls;
-extern int new_size;
+extern long long new_size;
 
 #if 0
 void * operator new(std::size_t) throw (std::bad_alloc);

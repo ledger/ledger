@@ -59,6 +59,7 @@
 
 #include "times.h"
 #include "error.h"
+#include "debug.h"
 
 namespace ledger {
 

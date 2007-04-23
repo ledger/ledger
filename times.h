@@ -83,11 +83,10 @@ inline moment_t ptime_from_local_time_string(const string& time_string) {
 }
 #endif
 
-moment_t parse_datetime(std::istream& in);
+moment_t parse_datetime(const char * str);
 
 inline moment_t parse_datetime(const string& str) {
-  std::istringstream instr(str);
-  return parse_datetime(instr);
+  return parse_datetime(str.c_str());
 }
 
 extern ptime time_now;

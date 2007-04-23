@@ -22,21 +22,21 @@ class transaction_t
  public:
   enum state_t { UNCLEARED, CLEARED, PENDING };
 
-  entry_t *	   entry;
-  moment_t	   _date;
-  moment_t	   _date_eff;
-  account_t *	   account;
-  amount_t	   amount;
-  string	   amount_expr;
-  amount_t *	   cost;
-  string	   cost_expr;
-  state_t	   state;
-  unsigned short   flags;
-  string	   note;
-  istream_pos_type beg_pos;
-  unsigned long    beg_line;
-  istream_pos_type end_pos;
-  unsigned long    end_line;
+  entry_t *	 entry;
+  moment_t	 _date;
+  moment_t	 _date_eff;
+  account_t *	 account;
+  amount_t	 amount;
+  string	 amount_expr;
+  amount_t *	 cost;
+  string	 cost_expr;
+  state_t	 state;
+  unsigned short flags;
+  string	 note;
+  unsigned long  beg_pos;
+  unsigned long  beg_line;
+  unsigned long  end_pos;
+  unsigned long  end_line;
 
   mutable void * data;
 
@@ -104,9 +104,9 @@ class entry_base_t
  public:
   journal_t *       journal;
   unsigned long     src_idx;
-  istream_pos_type  beg_pos;
+  unsigned long	    beg_pos;
   unsigned long     beg_line;
-  istream_pos_type  end_pos;
+  unsigned long	    end_pos;
   unsigned long     end_line;
   transactions_list transactions;
 

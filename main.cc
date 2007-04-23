@@ -398,7 +398,7 @@ static int read_and_report(report_t * report, int argc, char * argv[],
 
 #ifdef DEBUG_ENABLED
 extern int new_calls;
-extern int new_size;
+extern long long new_size;
 #endif
 
 int main(int argc, char * argv[], char * envp[])

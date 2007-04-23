@@ -980,7 +980,7 @@ void amount_t::print(std::ostream& _out, bool omit_commodity,
   if (negative)
     out << "-";
 
-  if (mpz_sgn(quotient) == 0) {
+  if (! quantity || mpz_sgn(quotient) == 0) {
     out << '0';
   }
   else if (! (comm.flags() & COMMODITY_STYLE_THOUSANDS)) {
@@ -1022,7 +1022,7 @@ void amount_t::print(std::ostream& _out, bool omit_commodity,
     }
   }
 
-  if (precision) {
+  if (quantity && precision) {
     std::ostringstream final;
     final.width(precision);
     final.fill('0');

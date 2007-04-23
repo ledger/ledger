@@ -48,7 +48,7 @@ class timing_t
   }
 };
 
-#if DEBUG_LEVEL >= 4
+#if 0 && DEBUG_LEVEL >= 4
 #define TIMER_DEF(sym, cat) static timing_t sym(#sym, cat);
 #define TIMER_DEF_(sym) static timing_t sym(#sym, #sym);
 #define TIMER_START(sym) sym.start(__FILE__, __LINE__);

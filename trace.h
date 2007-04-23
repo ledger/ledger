@@ -11,7 +11,7 @@ class timing_t;
 extern bool trace_alloc_mode;
 extern bool trace_class_mode;
 
-#if DEBUG_LEVEL >= 4
+#if 0 && DEBUG_LEVEL >= 4 && ! defined(USE_BOOST_PYTHON)
 class string;
 #else
 typedef std::string string;
@@ -64,7 +64,7 @@ void report_memory(std::ostream& out);
 #define TRACE_DTOR(cls)
 #endif
 
-#if DEBUG_LEVEL >= 4
+#if 0 && DEBUG_LEVEL >= 4 && ! defined(USE_BOOST_PYTHON)
 
 class string : public std::string
 {

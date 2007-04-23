@@ -22,15 +22,14 @@ static void scan_for_transactions(std::ostream& out, const xml::node_t * node)
       const transaction_t * xact = xact_node->transaction;
       assert(xact);
 
-      std::cout << xact->entry->date() << ' '
-		<< std::setw(21) << std::left
-		<< abbreviate(xact->entry->payee, 21) << ' '
-		<< std::setw(21) << std::left
-		<< abbreviate(xact->account->fullname(), 21,
-			      ABBREVIATE, true) << ' '
-		<< std::setw(12) << std::right
-		<< xact->amount
-		<< std::endl;
+      out << xact->entry->date() << ' '
+	  << std::setw(21) << std::left
+	  << abbreviate(xact->entry->payee, 21) << ' '
+	  << std::setw(21) << std::left
+	  << abbreviate(xact->account->fullname(), 21,
+			ABBREVIATE, true) << ' '
+	  << std::setw(12) << std::right
+	  << xact->amount << '\n';
     } else {
       scan_for_transactions(out, child);
     }
@@ -40,11 +39,12 @@ void register_command::print_document(std::ostream&	out,
 				      xml::document_t * doc)
 {
 #if DEBUG_LEVEL >= BETA
-  std::size_t old_new_size = new_size;
+  long long old_new_size = new_size;
 #endif
 
 #if 1
   scan_for_transactions(out, doc->top);
+  out.flush();
 #else
   value_t nodelist;
   xml::xpath_t::eval(nodelist, "//transaction", doc);
