@@ -149,20 +149,20 @@ public:
 
   template <typename T, typename U>
   static op_t *
-  make_functor(const string& name = "<data>", T * ptr, U T::*mptr) {
+  make_functor(const string& name, T * ptr, U T::*mptr) {
     return wrap_functor(new member_functor_t<T, U>(name, ptr, mptr));
   }
 
   template <typename T>
   static op_t *
-  make_functor(const string& fname = "<func>", T * ptr,
+  make_functor(const string& fname, T * ptr,
 	       void (T::*mptr)(value_t& result)) {
     return wrap_functor(new memfun_functor_t<T>(fname, ptr, mptr));
   }
 
   template <typename T>
   static op_t *
-  make_functor(const string& fname = "<func>", T * ptr,
+  make_functor(const string& fname, T * ptr,
 	       void (T::*mptr)(value_t& result, scope_t * locals)) {
     return wrap_functor(new memfun_args_functor_t<T>(fname, ptr, mptr));
   }
