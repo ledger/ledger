@@ -72,16 +72,16 @@ string resolve_path(const string& path)
 }
 
 string abbreviate(const string& str, unsigned int width,
-		       elision_style_t elision_style, const bool is_account,
-		       int abbrev_length)
+		  elision_style_t elision_style, const bool is_account,
+		  int abbrev_length)
 {
   const unsigned int len = str.length();
   if (len <= width)
     return str;
 
-  //assert(width < 4095);
+  assert(width < 4095);
 
-  char buf[4096];
+  static char buf[4096];
 
   switch (elision_style) {
   case TRUNCATE_LEADING:

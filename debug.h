@@ -70,6 +70,7 @@ void debug_assert(const ledger::string& reason,
 #include <new>
 #include <iostream>
 #include <cstdlib>
+#include <cassert>
 
 #include <boost/regex.hpp>
 
@@ -107,6 +108,9 @@ bool _debug_active(const char * const cls);
 #else
 #define VALIDATE(x)
 #endif
+
+extern int new_calls;
+extern int new_size;
 
 #if 0
 void * operator new(std::size_t) throw (std::bad_alloc);

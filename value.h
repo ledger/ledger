@@ -8,6 +8,8 @@
 #include <vector>
 #include <exception>
 
+#include <boost/shared_ptr.hpp>
+
 namespace ledger {
 
 namespace xml {

@@ -9,10 +9,24 @@
 namespace ledger {
 namespace xml {
 
-document_t::document_t(node_t * _top, const char ** _builtins,
-		       const int _builtins_size)
-  : builtins(_builtins), builtins_size(_builtins_size), stub(this),
-    top(_top ? _top : &stub) {
+const std::size_t document_t::ledger_builtins_size = 12;
+const char *      document_t::ledger_builtins[] = {
+  "account",
+  "account-path",
+  "amount",
+  "code",
+  "commodity",
+  "entries",
+  "entry",
+  "journal",
+  "name",
+  "note",
+  "payee",
+  "transaction"
+};
+
+document_t::document_t(node_t * _top)
+  : stub(this), top(_top ? _top : &stub) {
   TRACE_CTOR(xml::document_t, "node_t *, const char **, const int");
 }
 
@@ -50,30 +64,38 @@ int document_t::register_name(const string& name)
 
 int document_t::lookup_name_id(const string& name) const
 {
-  if (builtins) {
-    int first = 0;
-    int last  = builtins_size;
-    while (first <= last) {
-      int mid = (first + last) / 2; // compute mid point.
-
-      int result;
-      if ((result = (int)name[0] - (int)builtins[mid][0]) == 0)
-	result = std::strcmp(name.c_str(), builtins[mid]);
-
-      if (result > 0)
-	first = mid + 1;		// repeat search in top half.
-      else if (result < 0)
-	last = mid - 1;		// repeat search in bottom half.
-      else
-	return mid;
-    }
-  }
+  int id;
+  if ((id = lookup_builtin_id(name)) != -1)
+    return id;
 
   DEBUG_PRINT("xml.lookup", this << " Finding name: " << name);
 
   names_map::const_iterator i = names_index.find(name);
   if (i != names_index.end())
     return (*i).second + 1000;
+
+  return -1;
+}
+
+int document_t::lookup_builtin_id(const string& name)
+{
+  int first = 0;
+  int last  = (int)ledger_builtins_size;
+
+  while (first <= last) {
+    int mid = (first + last) / 2; // compute mid point.
+
+    int result;
+    if ((result = (int)name[0] - (int)ledger_builtins[mid][0]) == 0)
+      result = std::strcmp(name.c_str(), ledger_builtins[mid]);
+
+    if (result > 0)
+      first = mid + 1;		// repeat search in top half.
+    else if (result < 0)
+      last = mid - 1;		// repeat search in bottom half.
+    else
+      return mid + 10;
+  }
 
   return -1;
 }
@@ -92,8 +114,7 @@ const char * document_t::lookup_name(int id) const
       return "ALL";
     default:
       assert(id >= 10);
-      assert(builtins);
-      return builtins[id - 10];
+      return ledger_builtins[id - 10];
     }
   } else {
     return names[id - 1000].c_str();
@@ -343,10 +364,9 @@ bool parser_t::test(std::istream& in) const
   return true;
 }
 
-document_t * parser_t::parse(std::istream& in, const char ** builtins,
-			     const int builtins_size)
+document_t * parser_t::parse(std::istream& in)
 {
-  std::auto_ptr<document_t> doc(new document_t(NULL, builtins, builtins_size));
+  std::auto_ptr<document_t> doc(new document_t);
 
   document = doc.get();
 
@@ -410,12 +430,13 @@ node_t * transaction_node_t::children() const
 
 node_t * transaction_node_t::lookup_child(int _name_id) const
 {
-  if (_name_id == entry_node_t::payee_id) {
+  switch (_name_id) {
+  case document_t::PAYEE:
     payee_virtual_node = new terminal_node_t(document);
     payee_virtual_node->set_text(transaction->entry->payee);
     return payee_virtual_node;
-  }
-  else if (_name_id == journal_node_t::account_id) {
+
+  case document_t::ACCOUNT:
     return new account_node_t(document, transaction->account,
 			      const_cast<transaction_node_t *>(this));
   }
@@ -426,9 +447,6 @@ value_t transaction_node_t::to_value() const
 {
   return transaction->amount;
 }
-
-int entry_node_t::code_id = -1;
-int entry_node_t::payee_id = -1;
 
 node_t * entry_node_t::children() const
 {
@@ -443,19 +461,20 @@ node_t * entry_node_t::children() const
 
 node_t * entry_node_t::lookup_child(int _name_id) const
 {
-  if (_name_id == entry_node_t::code_id) {
+  switch (_name_id) {
+  case document_t::CODE:
     // jww (2007-04-20): I have to save this and then delete it later
     terminal_node_t * code_node =
       new terminal_node_t(document, const_cast<entry_node_t *>(this));
-    code_node->set_name("code");
+    code_node->set_name(document_t::CODE);
     code_node->set_text(entry->code);
     return code_node;
-  }
-  else if (_name_id == entry_node_t::payee_id) {
+
+  case document_t::PAYEE:
     // jww (2007-04-20): I have to save this and then delete it later
     terminal_node_t * payee_node =
       new terminal_node_t(document, const_cast<entry_node_t *>(this));
-    payee_node->set_name("payee");
+    payee_node->set_name(document_t::PAYEE);
     payee_node->set_text(entry->payee);
     return payee_node;
   }
@@ -468,14 +487,14 @@ node_t * account_node_t::children() const
     if (! account->name.empty()) {
       terminal_node_t * name_node =
 	new terminal_node_t(document, const_cast<account_node_t *>(this));
-      name_node->set_name("name");
+      name_node->set_name(document_t::NAME);
       name_node->set_text(account->name);
     }
 
     if (! account->note.empty()) {
       terminal_node_t * note_node =
 	new terminal_node_t(document, const_cast<account_node_t *>(this));
-      note_node->set_name("note");
+      note_node->set_name(document_t::NOTE);
       note_node->set_text(account->note);
     }
 
@@ -487,8 +506,6 @@ node_t * account_node_t::children() const
   return parent_node_t::children();
 }
 
-int journal_node_t::account_id = -1;
-
 node_t * journal_node_t::children() const
 {
   if (! _children) {
@@ -499,7 +516,7 @@ node_t * journal_node_t::children() const
 
     parent_node_t * entries =
       new parent_node_t(document, const_cast<journal_node_t *>(this));
-    entries->set_name("entries");
+    entries->set_name(document_t::ENTRIES);
 
     for (entries_list::iterator i = journal->entries.begin();
 	 i != journal->entries.end();

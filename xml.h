@@ -182,9 +182,26 @@ private:
 
 class document_t
 {
-  const char ** builtins;
-  const int	builtins_size;
+  static const char * 	   ledger_builtins[];
+  static const std::size_t ledger_builtins_size;
 
+public:
+  enum ledger_builtins_t {
+    ACCOUNT = 10,
+    ACCOUNT_PATH,
+    AMOUNT,
+    CODE,
+    COMMODITY,
+    ENTRIES,
+    ENTRY,
+    JOURNAL,
+    NAME,
+    NOTE,
+    PAYEE,
+    TRANSACTION
+  };
+
+private:
   typedef std::vector<string> names_array;
 
   names_array names;
@@ -205,14 +222,14 @@ class document_t
     CURRENT, PARENT, ROOT, ALL
   };
 
-  document_t(node_t * _top = NULL, const char ** _builtins = NULL,
-	     const int _builtins_size = 0);
+  document_t(node_t * _top = NULL);
   ~document_t();
 
   void set_top(node_t * _top);
 
   int register_name(const string& name);
   int lookup_name_id(const string& name) const;
+  static int lookup_builtin_id(const string& name);
   const char * lookup_name(int id) const;
 
   void write(std::ostream& out) const;
@@ -237,9 +254,7 @@ class parser_t
   virtual ~parser_t() {}
 
   virtual bool         test(std::istream& in) const;
-  virtual document_t * parse(std::istream& in,
-			     const char ** builtins = NULL,
-			     const int builtins_size = 0);
+  virtual document_t * parse(std::istream& in);
 };
 
 class parse_error : public error {
@@ -262,7 +277,7 @@ public:
 		   parent_node_t * _parent = NULL)
     : parent_node_t(_document, _parent), commodity(_commodity) {
     TRACE_CTOR(commodity_node_t, "document_t *, commodity_t *, parent_node_t *");
-    set_name("commodity");
+    set_name(document_t::COMMODITY);
   }
   virtual ~commodity_node_t() {
     TRACE_DTOR(commodity_node_t);
@@ -281,7 +296,7 @@ public:
 		parent_node_t * _parent = NULL)
     : parent_node_t(_document, _parent), amount(_amount) {
     TRACE_CTOR(amount_node_t, "document_t *, amount_t *, parent_node_t *");
-    set_name("amount");
+    set_name(document_t::AMOUNT);
   }
   virtual ~amount_node_t() {
     TRACE_DTOR(amount_node_t);
@@ -307,7 +322,7 @@ public:
     : parent_node_t(_document, _parent), payee_virtual_node(NULL),
       transaction(_transaction) {
     TRACE_CTOR(transaction_node_t, "document_t *, transaction_t *, parent_node_t *");
-    set_name("transaction");
+    set_name(document_t::TRANSACTION);
   }
   virtual ~transaction_node_t() {
     TRACE_DTOR(transaction_node_t);
@@ -322,8 +337,6 @@ public:
 
 class entry_node_t : public parent_node_t
 {
-  static int code_id;
-  static int payee_id;
   entry_t *  entry;
 
 public:
@@ -331,11 +344,7 @@ public:
 	       parent_node_t * _parent = NULL)
     : parent_node_t(_document, _parent), entry(_entry) {
     TRACE_CTOR(entry_node_t, "document_t *, entry_t *, parent_node_t *");
-    set_name("entry");
-    if (code_id == -1)
-      payee_id = document->register_name("code");
-    if (payee_id == -1)
-      payee_id = document->register_name("payee");
+    set_name(document_t::ENTRY);
   }
   virtual ~entry_node_t() {
     TRACE_DTOR(entry_node_t);
@@ -356,7 +365,7 @@ public:
 		 parent_node_t * _parent = NULL)
     : parent_node_t(_document, _parent), account(_account) {
     TRACE_CTOR(account_node_t, "document_t *, account_t *, parent_node_t *");
-    set_name("account");
+    set_name(document_t::ACCOUNT);
   }
   virtual ~account_node_t() {
     TRACE_DTOR(account_node_t);
@@ -367,7 +376,6 @@ public:
 
 class journal_node_t : public parent_node_t
 {
-  static int  account_id;
   journal_t * journal;
 
 public:
@@ -375,9 +383,7 @@ public:
 		 parent_node_t * _parent = NULL)
     : parent_node_t(_document, _parent), journal(_journal) {
     TRACE_CTOR(journal_node_t, "document_t *, journal_t *, parent_node_t *");
-    set_name("journal");
-    if (account_id == -1)
-      account_id = document->register_name("account");
+    set_name(document_t::JOURNAL);
   }
   virtual ~journal_node_t() {
     TRACE_DTOR(journal_node_t);

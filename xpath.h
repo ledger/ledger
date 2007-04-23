@@ -734,6 +734,11 @@ public:
     return temp;
   }
 
+  static void eval(value_t& result, const string& _expr,
+		   document_t * document, scope_t * scope = NULL) {
+    xpath_t temp(_expr);
+    temp.calc(result, document->top, scope);
+  }
   static value_t eval(const string& _expr, document_t * document,
 		      scope_t * scope = NULL) {
     xpath_t temp(_expr);

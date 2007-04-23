@@ -655,10 +655,16 @@ xpath_t::parse_value_term(std::istream& in, unsigned short tflags) const
 #endif
 
     string ident = tok.value.to_string();
+    int id = -1;
     if (std::isdigit(ident[0])) {
       node.reset(new op_t(op_t::ARG_INDEX));
       node->arg_index = std::atol(ident.c_str());
-    } else {
+    }
+    else if ((id = document_t::lookup_builtin_id(ident)) != -1) {
+      node.reset(new op_t(op_t::NODE_ID));
+      node->name_id = id;
+    }
+    else {
       node.reset(new op_t(op_t::NODE_NAME));
       node->name = new string(ident);
     }
@@ -1312,7 +1318,7 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
 	// First, look up the symbol as a node name within the current
 	// context.  If any exist, then return the set of names.
 
-	value_t::sequence_t * nodes = new value_t::sequence_t;
+	std::auto_ptr<value_t::sequence_t> nodes(new value_t::sequence_t);
 
 	if (ptr->flags & XML_NODE_IS_PARENT) {
 	  parent_node_t * parent = static_cast<parent_node_t *>(ptr);
@@ -1325,7 +1331,7 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
 	      nodes->push_back(node);
 	  }
 	}
-	return wrap_value(nodes)->acquire();
+	return wrap_value(nodes.release())->acquire();
       } else {
 	assert(ptr);
 	int id = ptr->document->lookup_name_id(*name);
