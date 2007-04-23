@@ -20,17 +20,15 @@ endif
 AM_YFLAGS = -d
 AM_LFLAGS = -o $(LEX_OUTPUT_ROOT).c
 
-WARNFLAGS = -Wall -Wextra -Wfloat-equal -Wno-endif-labels
-WARNFLAGS += -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion
-WARNFLAGS += -Wconversion -Wshorten-64-to-32 -Wsign-compare
-WARNFLAGS += -Wmissing-field-initializers -pedantic-errors
+#WARNFLAGS = -Wall -Wextra -Wfloat-equal -Wno-endif-labels
+#WARNFLAGS += -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion
+#WARNFLAGS += -Wconversion -Wshorten-64-to-32 -Wsign-compare
+#WARNFLAGS += -Wmissing-field-initializers -pedantic-errors
 
 libledger_la_CXXFLAGS = $(WARNFLAGS) -I$(top_builddir)/gdtoa
 libledger_la_SOURCES = \
 	amount.cc      \
 	times.cc       \
-	parsetime.yy   \
-	scantime.ll    \
 	quotes.cc      \
 	balance.cc     \
 	value.cc       \
