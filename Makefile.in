@@ -69,8 +69,8 @@ DIST_COMMON = README $(am__configure_deps) $(pkginclude_HEADERS) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/acconf.h.in $(top_srcdir)/configure AUTHORS COPYING \
 	ChangeLog INSTALL NEWS TODO compile config.guess config.sub \
-	depcomp elisp-comp install-sh ltmain.sh missing parsetime.cc \
-	parsetime.h scantime.cc texinfo.tex ylwrap
+	depcomp elisp-comp install-sh ltmain.sh missing texinfo.tex \
+	ylwrap
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -92,18 +92,16 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" \
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libledger_la_LIBADD =
-am__libledger_la_SOURCES_DIST = amount.cc times.cc parsetime.yy \
-	scantime.ll quotes.cc balance.cc value.cc xml.cc xpath.cc \
-	mask.cc format.cc util.cc trace.cc session.cc journal.cc \
-	parser.cc textual.cc binary.cc xmlparse.cc qif.cc report.cc \
-	transform.cc register.cc csv.cc derive.cc emacs.cc \
-	reconcile.cc gnucash.cc ofx.cc debug.cc
+am__libledger_la_SOURCES_DIST = amount.cc times.cc quotes.cc \
+	balance.cc value.cc xml.cc xpath.cc mask.cc format.cc util.cc \
+	trace.cc session.cc journal.cc parser.cc textual.cc binary.cc \
+	xmlparse.cc qif.cc report.cc transform.cc register.cc csv.cc \
+	derive.cc emacs.cc reconcile.cc gnucash.cc ofx.cc debug.cc
 @HAVE_EXPAT_TRUE@am__objects_1 = libledger_la-gnucash.lo
 @HAVE_XMLPARSE_TRUE@am__objects_2 = libledger_la-gnucash.lo
 @HAVE_LIBOFX_TRUE@am__objects_3 = libledger_la-ofx.lo
 @DEBUG_TRUE@am__objects_4 = libledger_la-debug.lo
 am_libledger_la_OBJECTS = libledger_la-amount.lo libledger_la-times.lo \
-	libledger_la-parsetime.lo libledger_la-scantime.lo \
 	libledger_la-quotes.lo libledger_la-balance.lo \
 	libledger_la-value.lo libledger_la-xml.lo \
 	libledger_la-xpath.lo libledger_la-mask.lo \
@@ -170,13 +168,6 @@ CXXLD = $(CXX)
 CXXLINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-LEXCOMPILE = $(LEX) $(LFLAGS) $(AM_LFLAGS)
-LTLEXCOMPILE = $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
-	--mode=compile $(LEX) $(LFLAGS) $(AM_LFLAGS)
-YLWRAP = $(top_srcdir)/ylwrap
-YACCCOMPILE = $(YACC) $(YFLAGS) $(AM_YFLAGS)
-LTYACCCOMPILE = $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
-	--mode=compile $(YACC) $(YFLAGS) $(AM_YFLAGS)
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
@@ -367,20 +358,20 @@ EXTRA_DIST = docs tests ledger.pdf ledger.info
 lib_LTLIBRARIES = libledger.la $(am__append_1)
 AM_YFLAGS = -d
 AM_LFLAGS = -o $(LEX_OUTPUT_ROOT).c
-WARNFLAGS = -Wall -Wextra -Wfloat-equal -Wno-endif-labels -Wcast-qual \
-	-Wcast-align -Wwrite-strings -Wconversion -Wconversion \
-	-Wshorten-64-to-32 -Wsign-compare -Wmissing-field-initializers \
-	-pedantic-errors
+
+#WARNFLAGS = -Wall -Wextra -Wfloat-equal -Wno-endif-labels
+#WARNFLAGS += -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion
+#WARNFLAGS += -Wconversion -Wshorten-64-to-32 -Wsign-compare
+#WARNFLAGS += -Wmissing-field-initializers -pedantic-errors
 libledger_la_CXXFLAGS = $(WARNFLAGS) -I$(top_builddir)/gdtoa \
 	$(am__append_2) $(am__append_4) $(am__append_6) \
 	$(am__append_8) $(am__append_10)
-libledger_la_SOURCES = amount.cc times.cc parsetime.yy scantime.ll \
-	quotes.cc balance.cc value.cc xml.cc xpath.cc mask.cc \
-	format.cc util.cc trace.cc session.cc journal.cc parser.cc \
-	textual.cc binary.cc xmlparse.cc qif.cc report.cc transform.cc \
-	register.cc csv.cc derive.cc emacs.cc reconcile.cc \
-	$(am__append_3) $(am__append_5) $(am__append_7) \
-	$(am__append_9)
+libledger_la_SOURCES = amount.cc times.cc quotes.cc balance.cc \
+	value.cc xml.cc xpath.cc mask.cc format.cc util.cc trace.cc \
+	session.cc journal.cc parser.cc textual.cc binary.cc \
+	xmlparse.cc qif.cc report.cc transform.cc register.cc csv.cc \
+	derive.cc emacs.cc reconcile.cc $(am__append_3) \
+	$(am__append_5) $(am__append_7) $(am__append_9)
 libledger_la_LDFLAGS = -release 3.0
 libpyledger_la_CXXFLAGS = -DUSE_BOOST_PYTHON=1 $(am__append_11)
 libpyledger_la_SOURCES = \
@@ -460,7 +451,7 @@ all: acconf.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
 .SUFFIXES:
-.SUFFIXES: .cc .dvi .html .info .ll .lo .o .obj .pdf .ps .texi .yy
+.SUFFIXES: .cc .dvi .html .info .lo .o .obj .pdf .ps .texi
 am--refresh:
 	@:
 $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
@@ -538,11 +529,6 @@ clean-libLTLIBRARIES:
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
-parsetime.h: parsetime.cc
-	@if test ! -f $@; then \
-	  rm -f parsetime.cc; \
-	  $(MAKE) $(AM_MAKEFLAGS) parsetime.cc; \
-	else :; fi
 libledger.la: $(libledger_la_OBJECTS) $(libledger_la_DEPENDENCIES) 
 	$(libledger_la_LINK) -rpath $(libdir) $(libledger_la_OBJECTS) $(libledger_la_LIBADD) $(LIBS)
 libpyledger.la: $(libpyledger_la_OBJECTS) $(libpyledger_la_DEPENDENCIES) 
@@ -625,13 +611,11 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libledger_la-mask.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libledger_la-ofx.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libledger_la-parser.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libledger_la-parsetime.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libledger_la-qif.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libledger_la-quotes.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libledger_la-reconcile.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libledger_la-register.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libledger_la-report.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libledger_la-scantime.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libledger_la-session.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libledger_la-textual.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libledger_la-times.Plo@am__quote@
@@ -680,20 +664,6 @@ libledger_la-times.lo: times.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='times.cc' object='libledger_la-times.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-times.lo `test -f 'times.cc' || echo '$(srcdir)/'`times.cc
-
-libledger_la-parsetime.lo: parsetime.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-parsetime.lo -MD -MP -MF $(DEPDIR)/libledger_la-parsetime.Tpo -c -o libledger_la-parsetime.lo `test -f 'parsetime.cc' || echo '$(srcdir)/'`parsetime.cc
-@am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libledger_la-parsetime.Tpo $(DEPDIR)/libledger_la-parsetime.Plo
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='parsetime.cc' object='libledger_la-parsetime.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-parsetime.lo `test -f 'parsetime.cc' || echo '$(srcdir)/'`parsetime.cc
-
-libledger_la-scantime.lo: scantime.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-scantime.lo -MD -MP -MF $(DEPDIR)/libledger_la-scantime.Tpo -c -o libledger_la-scantime.lo `test -f 'scantime.cc' || echo '$(srcdir)/'`scantime.cc
-@am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libledger_la-scantime.Tpo $(DEPDIR)/libledger_la-scantime.Plo
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='scantime.cc' object='libledger_la-scantime.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-scantime.lo `test -f 'scantime.cc' || echo '$(srcdir)/'`scantime.cc
 
 libledger_la-quotes.lo: quotes.cc
 @am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-quotes.lo -MD -MP -MF $(DEPDIR)/libledger_la-quotes.Tpo -c -o libledger_la-quotes.lo `test -f 'quotes.cc' || echo '$(srcdir)/'`quotes.cc
@@ -988,12 +958,6 @@ ledger-main.obj: main.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='main.cc' object='ledger-main.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ledger_CXXFLAGS) $(CXXFLAGS) -c -o ledger-main.obj `if test -f 'main.cc'; then $(CYGPATH_W) 'main.cc'; else $(CYGPATH_W) '$(srcdir)/main.cc'; fi`
-
-.ll.cc:
-	$(am__skiplex) $(SHELL) $(YLWRAP) $< $(LEX_OUTPUT_ROOT).c $@ -- $(LEXCOMPILE)
-
-.yy.cc:
-	$(am__skipyacc) $(SHELL) $(YLWRAP) $< y.tab.c $@ y.tab.h $*.h y.output $*.output -- $(YACCCOMPILE)
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -1601,9 +1565,6 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-	-rm -f parsetime.cc
-	-rm -f parsetime.h
-	-rm -f scantime.cc
 @HAVE_BOOST_PYTHON_FALSE@clean-local:
 @HAVE_BOOST_PYTHON_FALSE@install-exec-hook:
 clean: clean-recursive
