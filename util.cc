@@ -79,7 +79,7 @@ string abbreviate(const string& str, unsigned int width,
   if (len <= width)
     return str;
 
-  assert(width < 4095);
+  //assert(width < 4095);
 
   char buf[4096];
 
