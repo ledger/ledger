@@ -1,10 +1,6 @@
 #ifndef _UTIL_H
 #define _UTIL_H
 
-#include <iostream>
-
-#include "trace.h"
-
 #if defined __FreeBSD__ && __FreeBSD__ <=4
 // FreeBSD has a broken isspace macro, so dont use it
 #undef isspace(c)

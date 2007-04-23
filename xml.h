@@ -2,15 +2,6 @@
 #define _XML_H
 
 #include "value.h"
-#include "debug.h"
-
-extern "C" {
-#if defined(HAVE_EXPAT)
-#include <expat.h>           // expat XML parser
-#elif defined(HAVE_XMLPARSE)
-#include <xmlparse.h>        // expat XML parser
-#endif
-}
 
 namespace ledger {
 

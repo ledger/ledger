@@ -1,8 +1,5 @@
 #include "binary.h"
 
-#include <fstream>
-#include <sys/stat.h>
-
 namespace ledger {
 
 #if 0

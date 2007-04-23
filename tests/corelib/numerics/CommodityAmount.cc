@@ -1,7 +1,4 @@
 #include "CommodityAmount.h"
-#include "ledger.h"
-
-using namespace ledger;
 
 #define internalAmount(x) amount_t::exact(x)
 

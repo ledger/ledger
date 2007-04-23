@@ -39,7 +39,7 @@ void register_command::print_document(std::ostream&	out,
 				      xml::document_t * doc)
 {
 #if DEBUG_LEVEL >= BETA
-  long long old_new_size = new_size;
+  unsigned long old_new_size = new_size;
 #endif
 
 #if 1

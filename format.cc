@@ -1,13 +1,9 @@
 #include "format.h"
-#include "error.h"
-#include "util.h"
 #if 0
 #ifdef USE_BOOST_PYTHON
 #include "py_eval.h"
 #endif
 #endif
-
-#include <cstdlib>
 
 namespace ledger {
 
@@ -244,8 +240,6 @@ int format_t::format(std::ostream& out, xml::node_t * context,
 
 #if 0
 #ifdef USE_BOOST_PYTHON
-
-#include <boost/python.hpp>
 
 using namespace boost::python;
 using namespace ledger;

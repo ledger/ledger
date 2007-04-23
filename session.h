@@ -4,8 +4,6 @@
 #include "journal.h"
 #include "parser.h"
 
-#include <list>
-
 namespace ledger {
 
 class session_t : public xml::xpath_t::scope_t
@@ -188,6 +186,9 @@ class session_t : public xml::xpath_t::scope_t
 #endif
 #endif
 };
+
+void initialize();
+void shutdown();
 
 } // namespace ledger
 

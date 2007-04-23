@@ -232,7 +232,7 @@ EXTRA_libgdtoa_la_SOURCES = arithchk.c qnan.c
 libgdtoa_la_LDFLAGS = -release 1.0
 pkginclude_HEADERS = gdtoa.h gdtoaimp.h
 CLEANFILES = arithchk qnan
-DISTCLEANFILES = arithchk arith.h qnan qnan.h
+DISTCLEANFILES = arithchk arith.h qnan gd_qnan.h
 all: acconf.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 

@@ -1,16 +1,12 @@
 #include "BasicAmount.h"
-#include "ledger.h"
-
-using namespace ledger;
 
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(BasicAmountTestCase, "numerics");
 
 void BasicAmountTestCase::setUp() {
-  amount_t::initialize();
+  ledger::initialize();
 }
 void BasicAmountTestCase::tearDown() {
-  amount_t::shutdown();
-  assert(live_count.size() == 0);
+  ledger::shutdown();
 }
 
 void BasicAmountTestCase::testConstructors()

@@ -1,6 +1,4 @@
 #include "report.h"
-#include "transform.h"
-#include "util.h"
 
 namespace ledger {
 
@@ -192,8 +190,6 @@ xml::xpath_t::op_t * report_t::lookup(const string& name)
 
 #if 0
 #ifdef USE_BOOST_PYTHON
-
-#include <boost/python.hpp>
 
 using namespace boost::python;
 using namespace ledger;

@@ -1,8 +1,4 @@
 #include "py_eval.h"
-#include "error.h"
-#include "acconf.h"
-
-#include <istream>
 
 void export_amount();
 #if 0

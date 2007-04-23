@@ -2,10 +2,6 @@
 #define _FORMAT_H
 
 #include "xpath.h"
-#include "error.h"
-#include "debug.h"
-
-#include <list>
 
 namespace ledger {
 

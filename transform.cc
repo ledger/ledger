@@ -328,8 +328,6 @@ void remove_transform::execute(xml::document_t * document)
 #if 0
 #ifdef USE_BOOST_PYTHON
 
-#include <boost/python.hpp>
-
 using namespace boost::python;
 using namespace ledger;
 

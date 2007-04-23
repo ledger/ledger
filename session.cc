@@ -1,8 +1,4 @@
 #include "session.h"
-#include "debug.h"
-#include "timing.h"
-
-#include <fstream>
 
 namespace ledger {
 
@@ -189,12 +185,21 @@ xml::xpath_t::op_t * session_t::lookup(const string& name)
   return xml::xpath_t::scope_t::lookup(name);
 }
 
+void initialize()
+{
+  amount_t::initialize();
+}
+
+void shutdown()
+{
+  amount_t::shutdown();
+  assert(live_count.size() == 0);
+}
+
 } // namespace ledger
 
 #if 0
 #ifdef USE_BOOST_PYTHON
-
-#include <boost/python.hpp>
 
 using namespace boost::python;
 using namespace ledger;

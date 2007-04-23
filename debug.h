@@ -11,8 +11,6 @@
 #define DEBUG_LEVEL NO_SEATBELT
 #endif
 
-#include "trace.h"
-
 #if DEBUG_LEVEL >= RELEASE
 
 #ifdef assert
@@ -66,14 +64,6 @@ void debug_assert(const ledger::string& reason,
 
 #if DEBUG_LEVEL >= ALPHA
 
-#include <cstring>
-#include <new>
-#include <iostream>
-#include <cstdlib>
-#include <cassert>
-
-#include <boost/regex.hpp>
-
 #define DEBUG_ENABLED
 
 extern std::ostream * _debug_stream;
@@ -110,7 +100,7 @@ bool _debug_active(const char * const cls);
 #endif
 
 extern int new_calls;
-extern long long new_size;
+extern unsigned long new_size;
 
 #if 0
 void * operator new(std::size_t) throw (std::bad_alloc);
@@ -168,8 +158,6 @@ void   operator delete[](void*, const std::nothrow_t&) throw();
 #elif DEBUG_LEVEL >= BETA
 
 #define CONFIRM(x) assert(x)
-
-#include "trace.h"
 
 #endif
 

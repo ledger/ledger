@@ -1,14 +1,6 @@
 #ifndef _ERROR_H
 #define _ERROR_H
 
-#include <exception>
-#include <string>
-#include <cstring>
-#include <sstream>
-#include <list>
-
-#include "debug.h"
-
 namespace ledger {
 
 class error_context

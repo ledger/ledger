@@ -1,10 +1,7 @@
 #ifndef _PARSER_H
 #define _PARSER_H
 
-#include "error.h"
-
-#include <string>
-#include <istream>
+#include "utils.h"
 
 namespace ledger {
 

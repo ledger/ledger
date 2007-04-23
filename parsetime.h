@@ -1,6 +1,0 @@
-#define TOK_FOURNUM 257
-#define TOK_TWONUM 258
-#define TOK_ONENUM 259
-#define TOK_MONTH 260
-#define TOK_AMPM 261
-#define TOK_SPACE 262

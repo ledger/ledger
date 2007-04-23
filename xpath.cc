@@ -1,12 +1,9 @@
 #include "xpath.h"
-#include "debug.h"
-#include "util.h"
 #if 0
 #ifdef USE_BOOST_PYTHON
 #include "py_eval.h"
 #endif
 #endif
-#include <fstream>
 
 namespace ledger {
 namespace xml {
@@ -2402,8 +2399,6 @@ void xpath_t::op_t::dump(std::ostream& out, const int depth) const
 
 #if 0
 #ifdef USE_BOOST_PYTHON
-
-#include <boost/python.hpp>
 
 using namespace boost::python;
 using namespace ledger;

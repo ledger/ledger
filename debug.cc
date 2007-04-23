@@ -1,15 +1,11 @@
-#include "debug.h"
-#include "error.h"
+#include "utils.h"
+
+#include <boost/regex.hpp>
 
 #ifdef DEBUG_ENABLED
 
-#include <map>
-#include <fstream>
-
-#include <unistd.h>		// for the `write' method
-
 int new_calls = 0;
-long long new_size = 0;
+unsigned long new_size = 0;
 
 void * operator new(std::size_t size) throw (std::bad_alloc) {
   void * ptr = std::malloc(size);
@@ -88,8 +84,6 @@ static struct init_streams {
 #endif // DEBUG_ENABLED
 
 #if DEBUG_LEVEL >= BETA
-
-#include <string>
 
 void debug_assert(const ledger::string& reason,
 		  const ledger::string& file,

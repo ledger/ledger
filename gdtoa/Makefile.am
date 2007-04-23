@@ -29,4 +29,4 @@ libgdtoa_la_LDFLAGS = -release 1.0
 pkginclude_HEADERS = gdtoa.h gdtoaimp.h
 
 CLEANFILES = arithchk qnan
-DISTCLEANFILES = arithchk arith.h qnan qnan.h
+DISTCLEANFILES = arithchk arith.h qnan gd_qnan.h

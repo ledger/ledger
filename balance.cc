@@ -1,8 +1,4 @@
 #include "balance.h"
-#include "util.h"
-
-#include <vector>
-#include <algorithm>
 
 namespace ledger {
 
@@ -321,8 +317,6 @@ balance_t::operator amount_t() const
 
 #if 0
 #ifdef USE_BOOST_PYTHON
-
-#include <boost/python.hpp>
 
 using namespace boost::python;
 using namespace ledger;

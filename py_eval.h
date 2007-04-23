@@ -2,12 +2,15 @@
 #define _PY_EVAL_H
 
 #include "xpath.h"
-#include "pyfstream.h"
-
-#include <string>
-#include <iostream>
 
 #include <boost/python.hpp>
+#include <boost/python/detail/api_placeholder.hpp>
+#include <boost/python/exception_translator.hpp>
+#include <boost/python/suite/indexing/map_indexing_suite.hpp>
+
+#include <Python.h>
+
+#include "pyfstream.h"
 
 using namespace boost::python;
 

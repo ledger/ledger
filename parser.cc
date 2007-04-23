@@ -3,9 +3,6 @@
 #if 0
 #ifdef USE_BOOST_PYTHON
 
-#include <boost/python.hpp>
-#include <Python.h>
-
 using namespace boost::python;
 using namespace ledger;
 

@@ -1,6 +1,10 @@
 #ifndef _UNITTESTS_H
 #define _UNITTESTS_H
 
+#include "ledger.h"
+
+using namespace ledger;
+
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/Exception.h>
 #include <cppunit/Portability.h>

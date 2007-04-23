@@ -18,10 +18,6 @@
 #include <format.h>
 #include <quotes.h>
 
-#include <error.h>
-#include <util.h>
-#include <debug.h>
-
 #include <session.h>
 #include <journal.h>
 #include <parser.h>

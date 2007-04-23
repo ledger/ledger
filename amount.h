@@ -47,19 +47,8 @@
 #ifndef _AMOUNT_H
 #define _AMOUNT_H
 
-#include <map>
-#include <vector>
-#include <stack>
-#include <string>
-#include <cctype>
-#include <iostream>
-#include <sstream>
-#include <cassert>
-#include <exception>
-
+#include "utils.h"
 #include "times.h"
-#include "error.h"
-#include "debug.h"
 
 namespace ledger {
 

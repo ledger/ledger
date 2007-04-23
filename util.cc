@@ -1,19 +1,4 @@
-#include "util.h"
-
-#include <list>
-#include <string>
-#include <cstring>
-
-#include <cstdlib>
-#ifdef WIN32
-#include <io.h>
-#else
-#include <unistd.h>
-#endif
-
-#if defined(HAVE_GETPWUID) || defined(HAVE_GETPWNAM)
-#include <pwd.h>
-#endif
+#include "utils.h"
 
 namespace ledger {
 

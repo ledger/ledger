@@ -45,25 +45,18 @@ host_triplet = @host@
 @DEBUG_TRUE@am__append_8 = -DDEBUG_LEVEL=4
 @DEBUG_TRUE@am__append_9 = debug.cc
 @HAVE_BOOST_PYTHON_TRUE@am__append_10 = -DUSE_BOOST_PYTHON=1
-@DEBUG_TRUE@am__append_11 = -DDEBUG_LEVEL=4
+@USE_PCH_TRUE@am__append_11 = system.hh.gch
+@USE_PCH_TRUE@am__append_12 = system.hh.gch system.hh
 bin_PROGRAMS = ledger$(EXEEXT)
-@HAVE_EXPAT_TRUE@am__append_12 = -DHAVE_EXPAT=1
-@HAVE_XMLPARSE_TRUE@am__append_13 = -DHAVE_XMLPARSE=1
-@HAVE_LIBOFX_TRUE@am__append_14 = -DHAVE_LIBOFX=1
-@HAVE_BOOST_PYTHON_TRUE@am__append_15 = -DUSE_BOOST_PYTHON=1
-@HAVE_BOOST_PYTHON_TRUE@am__append_16 = libpyledger.la
-@DEBUG_TRUE@am__append_17 = -DDEBUG_LEVEL=4
+@HAVE_BOOST_PYTHON_TRUE@am__append_13 = libpyledger.la
 @HAVE_BOOST_PYTHON_TRUE@noinst_PROGRAMS = ledger.so$(EXEEXT)
-@HAVE_BOOST_PYTHON_TRUE@@HAVE_EXPAT_TRUE@am__append_18 = expat
-@HAVE_BOOST_PYTHON_TRUE@@HAVE_XMLPARSE_TRUE@am__append_19 = xmlparse xmltok
-@HAVE_BOOST_PYTHON_TRUE@@HAVE_LIBOFX_TRUE@am__append_20 = ofx
+@HAVE_BOOST_PYTHON_TRUE@am__append_14 = ledger.so
+@HAVE_BOOST_PYTHON_TRUE@@HAVE_EXPAT_TRUE@am__append_15 = expat
+@HAVE_BOOST_PYTHON_TRUE@@HAVE_XMLPARSE_TRUE@am__append_16 = xmlparse xmltok
+@HAVE_BOOST_PYTHON_TRUE@@HAVE_LIBOFX_TRUE@am__append_17 = ofx
 TESTS = UnitTests$(EXEEXT) $(am__EXEEXT_1)
-@HAVE_BOOST_PYTHON_TRUE@am__append_21 = PyUnitTests
+@HAVE_BOOST_PYTHON_TRUE@am__append_18 = PyUnitTests
 check_PROGRAMS = $(am__EXEEXT_2)
-@HAVE_EXPAT_TRUE@am__append_22 = -DHAVE_EXPAT=1
-@HAVE_XMLPARSE_TRUE@am__append_23 = -DHAVE_XMLPARSE=1
-@HAVE_LIBOFX_TRUE@am__append_24 = -DHAVE_LIBOFX=1
-@DEBUG_TRUE@am__append_25 = -DDEBUG_LEVEL=4
 subdir = .
 DIST_COMMON = README $(am__configure_deps) $(pkginclude_HEADERS) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
@@ -115,7 +108,9 @@ am_libledger_la_OBJECTS = libledger_la-amount.lo libledger_la-times.lo \
 	libledger_la-derive.lo libledger_la-emacs.lo \
 	libledger_la-reconcile.lo $(am__objects_1) $(am__objects_2) \
 	$(am__objects_3) $(am__objects_4)
-libledger_la_OBJECTS = $(am_libledger_la_OBJECTS)
+nodist_libledger_la_OBJECTS =
+libledger_la_OBJECTS = $(am_libledger_la_OBJECTS) \
+	$(nodist_libledger_la_OBJECTS)
 libledger_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(libledger_la_CXXFLAGS) \
 	$(CXXFLAGS) $(libledger_la_LDFLAGS) $(LDFLAGS) -o $@
@@ -124,9 +119,8 @@ am_libpyledger_la_OBJECTS = libpyledger_la-py_eval.lo \
 	libpyledger_la-py_amount.lo
 libpyledger_la_OBJECTS = $(am_libpyledger_la_OBJECTS)
 libpyledger_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CXXLD) \
-	$(libpyledger_la_CXXFLAGS) $(CXXFLAGS) \
-	$(libpyledger_la_LDFLAGS) $(LDFLAGS) -o $@
+	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
+	$(CXXFLAGS) $(libpyledger_la_LDFLAGS) $(LDFLAGS) -o $@
 @HAVE_BOOST_PYTHON_TRUE@am_libpyledger_la_rpath = -rpath $(libdir)
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 @HAVE_BOOST_PYTHON_TRUE@am__EXEEXT_1 = PyUnitTests$(EXEEXT)
@@ -142,13 +136,12 @@ am_UnitTests_OBJECTS = UnitTests-UnitTests.$(OBJEXT) \
 UnitTests_OBJECTS = $(am_UnitTests_OBJECTS)
 UnitTests_DEPENDENCIES = $(lib_LTLIBRARIES) gdtoa/libgdtoa.la
 UnitTests_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(UnitTests_CXXFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
 	$(CXXFLAGS) $(UnitTests_LDFLAGS) $(LDFLAGS) -o $@
 am_ledger_OBJECTS = ledger-option.$(OBJEXT) ledger-main.$(OBJEXT)
 ledger_OBJECTS = $(am_ledger_OBJECTS)
-am__DEPENDENCIES_1 =
 ledger_DEPENDENCIES = $(LIBOBJS) libledger.la gdtoa/libgdtoa.la \
-	$(am__DEPENDENCIES_1) $(am__append_16)
+	$(am__append_13)
 ledger_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CXXLD) $(ledger_CXXFLAGS) $(CXXFLAGS) \
 	$(ledger_LDFLAGS) $(LDFLAGS) -o $@
@@ -177,9 +170,9 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(libledger_la_SOURCES) $(libpyledger_la_SOURCES) \
-	$(PyUnitTests_SOURCES) $(UnitTests_SOURCES) $(ledger_SOURCES) \
-	$(ledger_so_SOURCES)
+SOURCES = $(libledger_la_SOURCES) $(nodist_libledger_la_SOURCES) \
+	$(libpyledger_la_SOURCES) $(PyUnitTests_SOURCES) \
+	$(UnitTests_SOURCES) $(ledger_SOURCES) $(ledger_so_SOURCES)
 DIST_SOURCES = $(am__libledger_la_SOURCES_DIST) \
 	$(libpyledger_la_SOURCES) $(PyUnitTests_SOURCES) \
 	$(UnitTests_SOURCES) $(ledger_SOURCES) \
@@ -263,9 +256,6 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LDFLAGS = @LDFLAGS@
-LEX = @LEX@
-LEXLIB = @LEXLIB@
-LEX_OUTPUT_ROOT = @LEX_OUTPUT_ROOT@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
@@ -291,8 +281,6 @@ SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
-YACC = @YACC@
-YFLAGS = @YFLAGS@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
@@ -351,6 +339,8 @@ target_alias = @target_alias@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = gdtoa
+BUILT_SOURCES = $(am__append_11)
+CLEANFILES = $(am__append_12) $(am__append_14)
 ESC_srcdir = `echo "$(srcdir)" | sed 's/\//\\\\\//g'`
 ESC_builddir = `echo "$(top_builddir)" | sed 's/\//\\\\\//g'`
 ESC_distdir = `echo "$(distdir)" | sed 's/\//\\\\\//g'`
@@ -359,30 +349,31 @@ lib_LTLIBRARIES = libledger.la $(am__append_1)
 AM_YFLAGS = -d
 AM_LFLAGS = -o $(LEX_OUTPUT_ROOT).c
 
-#WARNFLAGS = -Wall -Wextra -Wfloat-equal -Wno-endif-labels
+#WARNFLAGS  = -H -Wall -Wextra -Wfloat-equal -Wno-endif-labels
 #WARNFLAGS += -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion
 #WARNFLAGS += -Wconversion -Wshorten-64-to-32 -Wsign-compare
 #WARNFLAGS += -Wmissing-field-initializers -pedantic-errors
-libledger_la_CXXFLAGS = $(WARNFLAGS) -I$(top_builddir)/gdtoa \
-	$(am__append_2) $(am__append_4) $(am__append_6) \
-	$(am__append_8) $(am__append_10)
+libledger_la_CPPFLAGS = -I$(top_builddir)/gdtoa $(am__append_2) \
+	$(am__append_4) $(am__append_6) $(am__append_8) \
+	$(am__append_10)
+libledger_la_LDFLAGS = -release 3.0
 libledger_la_SOURCES = amount.cc times.cc quotes.cc balance.cc \
 	value.cc xml.cc xpath.cc mask.cc format.cc util.cc trace.cc \
 	session.cc journal.cc parser.cc textual.cc binary.cc \
 	xmlparse.cc qif.cc report.cc transform.cc register.cc csv.cc \
 	derive.cc emacs.cc reconcile.cc $(am__append_3) \
 	$(am__append_5) $(am__append_7) $(am__append_9)
-libledger_la_LDFLAGS = -release 3.0
-libpyledger_la_CXXFLAGS = -DUSE_BOOST_PYTHON=1 $(am__append_11)
+@USE_PCH_TRUE@libledger_la_CXXFLAGS = $(WARNFLAGS)
+@USE_PCH_TRUE@nodist_libledger_la_SOURCES = system.hh.gch
+libpyledger_la_CPPFLAGS = $(libledger_la_CPPFLAGS)
+libpyledger_la_LDFLAGS = -release 3.0
 libpyledger_la_SOURCES = \
 	py_eval.cc       \
 	py_amount.cc
 
-libpyledger_la_LDFLAGS = -release 3.0
 pkginclude_HEADERS = \
 	amount.h     \
 	times.h      \
-	parsetime.h  \
 	balance.h    \
 	binary.h     \
 	csv.h	     \
@@ -407,6 +398,7 @@ pkginclude_HEADERS = \
 	reconcile.h  \
 	report.h     \
 	session.h    \
+	system.hh    \
 	textual.h    \
 	timing.h     \
 	trace.h	     \
@@ -417,22 +409,22 @@ pkginclude_HEADERS = \
 	xmlparse.h   \
 	xpath.h
 
-ledger_CXXFLAGS = $(am__append_12) $(am__append_13) $(am__append_14) \
-	$(am__append_15) $(am__append_17)
+ledger_CPPFLAGS = $(libledger_la_CPPFLAGS)
+ledger_CXXFLAGS = $(WARNFLAGS)
 ledger_SOURCES = option.cc main.cc
 ledger_LDADD = $(LIBOBJS) libledger.la gdtoa/libgdtoa.la $(LEXLIB) \
-	$(am__append_16)
+	$(am__append_13)
 ledger_LDFLAGS = -static	# for the sake of command-line speed
 info_TEXINFOS = ledger.texi
 
 ######################################################################
 lisp_LISP = ledger.el timeclock.el
-@HAVE_BOOST_PYTHON_TRUE@CLEANFILES = ledger.so
 @HAVE_BOOST_PYTHON_TRUE@ledger_so_SOURCES = pyledger.cc
+@HAVE_BOOST_PYTHON_TRUE@ledger_so_DEPENDENCIES = libledger.la gdtoa/libgdtoa.la libpyledger.la
 @HAVE_BOOST_PYTHON_TRUE@PYLIBS = pyledger ledger gdtoa boost_date_time \
 @HAVE_BOOST_PYTHON_TRUE@	boost_regex boost_python gmp \
-@HAVE_BOOST_PYTHON_TRUE@	$(am__append_18) $(am__append_19) \
-@HAVE_BOOST_PYTHON_TRUE@	$(am__append_20)
+@HAVE_BOOST_PYTHON_TRUE@	$(am__append_15) $(am__append_16) \
+@HAVE_BOOST_PYTHON_TRUE@	$(am__append_17)
 @DEBUG_FALSE@@HAVE_BOOST_PYTHON_TRUE@DEBUG_LEVEL = 0
 @DEBUG_TRUE@@HAVE_BOOST_PYTHON_TRUE@DEBUG_LEVEL = 4
 UnitTests_SOURCES = tests/UnitTests.cc \
@@ -442,12 +434,14 @@ UnitTests_SOURCES = tests/UnitTests.cc \
 	tests/corelib/numerics/DateTime.cc \
 	tests/corelib/numerics/Commodity.cc
 
-UnitTests_LDADD = $(lib_LTLIBRARIES) gdtoa/libgdtoa.la -lcppunit
+UnitTests_CPPFLAGS = -I$(srcdir)/tests $(libledger_la_CPPFLAGS)
 UnitTests_LDFLAGS = $(LIBADD_DL)
-UnitTests_CXXFLAGS = -I. -I$(srcdir)/tests $(am__append_22) \
-	$(am__append_23) $(am__append_24) $(am__append_25)
-PyUnitTests_SOURCES = 
-all: acconf.h
+UnitTests_LDADD = $(lib_LTLIBRARIES) gdtoa/libgdtoa.la -lcppunit
+PyUnitTests_SOURCES = PyUnitTest.py
+
+######################################################################
+DISTCLEANFILES = Doxyfile.gen
+all: $(BUILT_SOURCES) acconf.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
 .SUFFIXES:
@@ -652,312 +646,312 @@ distclean-compile:
 @am__fastdepCXX_FALSE@	$(LTCXXCOMPILE) -c -o $@ $<
 
 libledger_la-amount.lo: amount.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-amount.lo -MD -MP -MF $(DEPDIR)/libledger_la-amount.Tpo -c -o libledger_la-amount.lo `test -f 'amount.cc' || echo '$(srcdir)/'`amount.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-amount.lo -MD -MP -MF $(DEPDIR)/libledger_la-amount.Tpo -c -o libledger_la-amount.lo `test -f 'amount.cc' || echo '$(srcdir)/'`amount.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libledger_la-amount.Tpo $(DEPDIR)/libledger_la-amount.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='amount.cc' object='libledger_la-amount.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-amount.lo `test -f 'amount.cc' || echo '$(srcdir)/'`amount.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-amount.lo `test -f 'amount.cc' || echo '$(srcdir)/'`amount.cc
 
 libledger_la-times.lo: times.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-times.lo -MD -MP -MF $(DEPDIR)/libledger_la-times.Tpo -c -o libledger_la-times.lo `test -f 'times.cc' || echo '$(srcdir)/'`times.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-times.lo -MD -MP -MF $(DEPDIR)/libledger_la-times.Tpo -c -o libledger_la-times.lo `test -f 'times.cc' || echo '$(srcdir)/'`times.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libledger_la-times.Tpo $(DEPDIR)/libledger_la-times.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='times.cc' object='libledger_la-times.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-times.lo `test -f 'times.cc' || echo '$(srcdir)/'`times.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-times.lo `test -f 'times.cc' || echo '$(srcdir)/'`times.cc
 
 libledger_la-quotes.lo: quotes.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-quotes.lo -MD -MP -MF $(DEPDIR)/libledger_la-quotes.Tpo -c -o libledger_la-quotes.lo `test -f 'quotes.cc' || echo '$(srcdir)/'`quotes.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-quotes.lo -MD -MP -MF $(DEPDIR)/libledger_la-quotes.Tpo -c -o libledger_la-quotes.lo `test -f 'quotes.cc' || echo '$(srcdir)/'`quotes.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libledger_la-quotes.Tpo $(DEPDIR)/libledger_la-quotes.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='quotes.cc' object='libledger_la-quotes.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-quotes.lo `test -f 'quotes.cc' || echo '$(srcdir)/'`quotes.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-quotes.lo `test -f 'quotes.cc' || echo '$(srcdir)/'`quotes.cc
 
 libledger_la-balance.lo: balance.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-balance.lo -MD -MP -MF $(DEPDIR)/libledger_la-balance.Tpo -c -o libledger_la-balance.lo `test -f 'balance.cc' || echo '$(srcdir)/'`balance.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-balance.lo -MD -MP -MF $(DEPDIR)/libledger_la-balance.Tpo -c -o libledger_la-balance.lo `test -f 'balance.cc' || echo '$(srcdir)/'`balance.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libledger_la-balance.Tpo $(DEPDIR)/libledger_la-balance.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='balance.cc' object='libledger_la-balance.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-balance.lo `test -f 'balance.cc' || echo '$(srcdir)/'`balance.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-balance.lo `test -f 'balance.cc' || echo '$(srcdir)/'`balance.cc
 
 libledger_la-value.lo: value.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-value.lo -MD -MP -MF $(DEPDIR)/libledger_la-value.Tpo -c -o libledger_la-value.lo `test -f 'value.cc' || echo '$(srcdir)/'`value.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-value.lo -MD -MP -MF $(DEPDIR)/libledger_la-value.Tpo -c -o libledger_la-value.lo `test -f 'value.cc' || echo '$(srcdir)/'`value.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libledger_la-value.Tpo $(DEPDIR)/libledger_la-value.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='value.cc' object='libledger_la-value.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-value.lo `test -f 'value.cc' || echo '$(srcdir)/'`value.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-value.lo `test -f 'value.cc' || echo '$(srcdir)/'`value.cc
 
 libledger_la-xml.lo: xml.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-xml.lo -MD -MP -MF $(DEPDIR)/libledger_la-xml.Tpo -c -o libledger_la-xml.lo `test -f 'xml.cc' || echo '$(srcdir)/'`xml.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-xml.lo -MD -MP -MF $(DEPDIR)/libledger_la-xml.Tpo -c -o libledger_la-xml.lo `test -f 'xml.cc' || echo '$(srcdir)/'`xml.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libledger_la-xml.Tpo $(DEPDIR)/libledger_la-xml.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='xml.cc' object='libledger_la-xml.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-xml.lo `test -f 'xml.cc' || echo '$(srcdir)/'`xml.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-xml.lo `test -f 'xml.cc' || echo '$(srcdir)/'`xml.cc
 
 libledger_la-xpath.lo: xpath.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-xpath.lo -MD -MP -MF $(DEPDIR)/libledger_la-xpath.Tpo -c -o libledger_la-xpath.lo `test -f 'xpath.cc' || echo '$(srcdir)/'`xpath.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-xpath.lo -MD -MP -MF $(DEPDIR)/libledger_la-xpath.Tpo -c -o libledger_la-xpath.lo `test -f 'xpath.cc' || echo '$(srcdir)/'`xpath.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libledger_la-xpath.Tpo $(DEPDIR)/libledger_la-xpath.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='xpath.cc' object='libledger_la-xpath.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-xpath.lo `test -f 'xpath.cc' || echo '$(srcdir)/'`xpath.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-xpath.lo `test -f 'xpath.cc' || echo '$(srcdir)/'`xpath.cc
 
 libledger_la-mask.lo: mask.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-mask.lo -MD -MP -MF $(DEPDIR)/libledger_la-mask.Tpo -c -o libledger_la-mask.lo `test -f 'mask.cc' || echo '$(srcdir)/'`mask.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-mask.lo -MD -MP -MF $(DEPDIR)/libledger_la-mask.Tpo -c -o libledger_la-mask.lo `test -f 'mask.cc' || echo '$(srcdir)/'`mask.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libledger_la-mask.Tpo $(DEPDIR)/libledger_la-mask.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='mask.cc' object='libledger_la-mask.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-mask.lo `test -f 'mask.cc' || echo '$(srcdir)/'`mask.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-mask.lo `test -f 'mask.cc' || echo '$(srcdir)/'`mask.cc
 
 libledger_la-format.lo: format.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-format.lo -MD -MP -MF $(DEPDIR)/libledger_la-format.Tpo -c -o libledger_la-format.lo `test -f 'format.cc' || echo '$(srcdir)/'`format.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-format.lo -MD -MP -MF $(DEPDIR)/libledger_la-format.Tpo -c -o libledger_la-format.lo `test -f 'format.cc' || echo '$(srcdir)/'`format.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libledger_la-format.Tpo $(DEPDIR)/libledger_la-format.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='format.cc' object='libledger_la-format.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-format.lo `test -f 'format.cc' || echo '$(srcdir)/'`format.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-format.lo `test -f 'format.cc' || echo '$(srcdir)/'`format.cc
 
 libledger_la-util.lo: util.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-util.lo -MD -MP -MF $(DEPDIR)/libledger_la-util.Tpo -c -o libledger_la-util.lo `test -f 'util.cc' || echo '$(srcdir)/'`util.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-util.lo -MD -MP -MF $(DEPDIR)/libledger_la-util.Tpo -c -o libledger_la-util.lo `test -f 'util.cc' || echo '$(srcdir)/'`util.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libledger_la-util.Tpo $(DEPDIR)/libledger_la-util.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='util.cc' object='libledger_la-util.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-util.lo `test -f 'util.cc' || echo '$(srcdir)/'`util.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-util.lo `test -f 'util.cc' || echo '$(srcdir)/'`util.cc
 
 libledger_la-trace.lo: trace.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-trace.lo -MD -MP -MF $(DEPDIR)/libledger_la-trace.Tpo -c -o libledger_la-trace.lo `test -f 'trace.cc' || echo '$(srcdir)/'`trace.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-trace.lo -MD -MP -MF $(DEPDIR)/libledger_la-trace.Tpo -c -o libledger_la-trace.lo `test -f 'trace.cc' || echo '$(srcdir)/'`trace.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libledger_la-trace.Tpo $(DEPDIR)/libledger_la-trace.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='trace.cc' object='libledger_la-trace.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-trace.lo `test -f 'trace.cc' || echo '$(srcdir)/'`trace.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-trace.lo `test -f 'trace.cc' || echo '$(srcdir)/'`trace.cc
 
 libledger_la-session.lo: session.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-session.lo -MD -MP -MF $(DEPDIR)/libledger_la-session.Tpo -c -o libledger_la-session.lo `test -f 'session.cc' || echo '$(srcdir)/'`session.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-session.lo -MD -MP -MF $(DEPDIR)/libledger_la-session.Tpo -c -o libledger_la-session.lo `test -f 'session.cc' || echo '$(srcdir)/'`session.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libledger_la-session.Tpo $(DEPDIR)/libledger_la-session.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='session.cc' object='libledger_la-session.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-session.lo `test -f 'session.cc' || echo '$(srcdir)/'`session.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-session.lo `test -f 'session.cc' || echo '$(srcdir)/'`session.cc
 
 libledger_la-journal.lo: journal.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-journal.lo -MD -MP -MF $(DEPDIR)/libledger_la-journal.Tpo -c -o libledger_la-journal.lo `test -f 'journal.cc' || echo '$(srcdir)/'`journal.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-journal.lo -MD -MP -MF $(DEPDIR)/libledger_la-journal.Tpo -c -o libledger_la-journal.lo `test -f 'journal.cc' || echo '$(srcdir)/'`journal.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libledger_la-journal.Tpo $(DEPDIR)/libledger_la-journal.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='journal.cc' object='libledger_la-journal.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-journal.lo `test -f 'journal.cc' || echo '$(srcdir)/'`journal.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-journal.lo `test -f 'journal.cc' || echo '$(srcdir)/'`journal.cc
 
 libledger_la-parser.lo: parser.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-parser.lo -MD -MP -MF $(DEPDIR)/libledger_la-parser.Tpo -c -o libledger_la-parser.lo `test -f 'parser.cc' || echo '$(srcdir)/'`parser.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-parser.lo -MD -MP -MF $(DEPDIR)/libledger_la-parser.Tpo -c -o libledger_la-parser.lo `test -f 'parser.cc' || echo '$(srcdir)/'`parser.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libledger_la-parser.Tpo $(DEPDIR)/libledger_la-parser.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='parser.cc' object='libledger_la-parser.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-parser.lo `test -f 'parser.cc' || echo '$(srcdir)/'`parser.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-parser.lo `test -f 'parser.cc' || echo '$(srcdir)/'`parser.cc
 
 libledger_la-textual.lo: textual.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-textual.lo -MD -MP -MF $(DEPDIR)/libledger_la-textual.Tpo -c -o libledger_la-textual.lo `test -f 'textual.cc' || echo '$(srcdir)/'`textual.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-textual.lo -MD -MP -MF $(DEPDIR)/libledger_la-textual.Tpo -c -o libledger_la-textual.lo `test -f 'textual.cc' || echo '$(srcdir)/'`textual.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libledger_la-textual.Tpo $(DEPDIR)/libledger_la-textual.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='textual.cc' object='libledger_la-textual.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-textual.lo `test -f 'textual.cc' || echo '$(srcdir)/'`textual.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-textual.lo `test -f 'textual.cc' || echo '$(srcdir)/'`textual.cc
 
 libledger_la-binary.lo: binary.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-binary.lo -MD -MP -MF $(DEPDIR)/libledger_la-binary.Tpo -c -o libledger_la-binary.lo `test -f 'binary.cc' || echo '$(srcdir)/'`binary.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-binary.lo -MD -MP -MF $(DEPDIR)/libledger_la-binary.Tpo -c -o libledger_la-binary.lo `test -f 'binary.cc' || echo '$(srcdir)/'`binary.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libledger_la-binary.Tpo $(DEPDIR)/libledger_la-binary.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='binary.cc' object='libledger_la-binary.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-binary.lo `test -f 'binary.cc' || echo '$(srcdir)/'`binary.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-binary.lo `test -f 'binary.cc' || echo '$(srcdir)/'`binary.cc
 
 libledger_la-xmlparse.lo: xmlparse.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-xmlparse.lo -MD -MP -MF $(DEPDIR)/libledger_la-xmlparse.Tpo -c -o libledger_la-xmlparse.lo `test -f 'xmlparse.cc' || echo '$(srcdir)/'`xmlparse.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-xmlparse.lo -MD -MP -MF $(DEPDIR)/libledger_la-xmlparse.Tpo -c -o libledger_la-xmlparse.lo `test -f 'xmlparse.cc' || echo '$(srcdir)/'`xmlparse.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libledger_la-xmlparse.Tpo $(DEPDIR)/libledger_la-xmlparse.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='xmlparse.cc' object='libledger_la-xmlparse.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-xmlparse.lo `test -f 'xmlparse.cc' || echo '$(srcdir)/'`xmlparse.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-xmlparse.lo `test -f 'xmlparse.cc' || echo '$(srcdir)/'`xmlparse.cc
 
 libledger_la-qif.lo: qif.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-qif.lo -MD -MP -MF $(DEPDIR)/libledger_la-qif.Tpo -c -o libledger_la-qif.lo `test -f 'qif.cc' || echo '$(srcdir)/'`qif.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-qif.lo -MD -MP -MF $(DEPDIR)/libledger_la-qif.Tpo -c -o libledger_la-qif.lo `test -f 'qif.cc' || echo '$(srcdir)/'`qif.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libledger_la-qif.Tpo $(DEPDIR)/libledger_la-qif.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='qif.cc' object='libledger_la-qif.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-qif.lo `test -f 'qif.cc' || echo '$(srcdir)/'`qif.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-qif.lo `test -f 'qif.cc' || echo '$(srcdir)/'`qif.cc
 
 libledger_la-report.lo: report.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-report.lo -MD -MP -MF $(DEPDIR)/libledger_la-report.Tpo -c -o libledger_la-report.lo `test -f 'report.cc' || echo '$(srcdir)/'`report.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-report.lo -MD -MP -MF $(DEPDIR)/libledger_la-report.Tpo -c -o libledger_la-report.lo `test -f 'report.cc' || echo '$(srcdir)/'`report.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libledger_la-report.Tpo $(DEPDIR)/libledger_la-report.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='report.cc' object='libledger_la-report.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-report.lo `test -f 'report.cc' || echo '$(srcdir)/'`report.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-report.lo `test -f 'report.cc' || echo '$(srcdir)/'`report.cc
 
 libledger_la-transform.lo: transform.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-transform.lo -MD -MP -MF $(DEPDIR)/libledger_la-transform.Tpo -c -o libledger_la-transform.lo `test -f 'transform.cc' || echo '$(srcdir)/'`transform.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-transform.lo -MD -MP -MF $(DEPDIR)/libledger_la-transform.Tpo -c -o libledger_la-transform.lo `test -f 'transform.cc' || echo '$(srcdir)/'`transform.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libledger_la-transform.Tpo $(DEPDIR)/libledger_la-transform.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='transform.cc' object='libledger_la-transform.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-transform.lo `test -f 'transform.cc' || echo '$(srcdir)/'`transform.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-transform.lo `test -f 'transform.cc' || echo '$(srcdir)/'`transform.cc
 
 libledger_la-register.lo: register.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-register.lo -MD -MP -MF $(DEPDIR)/libledger_la-register.Tpo -c -o libledger_la-register.lo `test -f 'register.cc' || echo '$(srcdir)/'`register.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-register.lo -MD -MP -MF $(DEPDIR)/libledger_la-register.Tpo -c -o libledger_la-register.lo `test -f 'register.cc' || echo '$(srcdir)/'`register.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libledger_la-register.Tpo $(DEPDIR)/libledger_la-register.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='register.cc' object='libledger_la-register.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-register.lo `test -f 'register.cc' || echo '$(srcdir)/'`register.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-register.lo `test -f 'register.cc' || echo '$(srcdir)/'`register.cc
 
 libledger_la-csv.lo: csv.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-csv.lo -MD -MP -MF $(DEPDIR)/libledger_la-csv.Tpo -c -o libledger_la-csv.lo `test -f 'csv.cc' || echo '$(srcdir)/'`csv.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-csv.lo -MD -MP -MF $(DEPDIR)/libledger_la-csv.Tpo -c -o libledger_la-csv.lo `test -f 'csv.cc' || echo '$(srcdir)/'`csv.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libledger_la-csv.Tpo $(DEPDIR)/libledger_la-csv.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='csv.cc' object='libledger_la-csv.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-csv.lo `test -f 'csv.cc' || echo '$(srcdir)/'`csv.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-csv.lo `test -f 'csv.cc' || echo '$(srcdir)/'`csv.cc
 
 libledger_la-derive.lo: derive.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-derive.lo -MD -MP -MF $(DEPDIR)/libledger_la-derive.Tpo -c -o libledger_la-derive.lo `test -f 'derive.cc' || echo '$(srcdir)/'`derive.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-derive.lo -MD -MP -MF $(DEPDIR)/libledger_la-derive.Tpo -c -o libledger_la-derive.lo `test -f 'derive.cc' || echo '$(srcdir)/'`derive.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libledger_la-derive.Tpo $(DEPDIR)/libledger_la-derive.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='derive.cc' object='libledger_la-derive.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-derive.lo `test -f 'derive.cc' || echo '$(srcdir)/'`derive.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-derive.lo `test -f 'derive.cc' || echo '$(srcdir)/'`derive.cc
 
 libledger_la-emacs.lo: emacs.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-emacs.lo -MD -MP -MF $(DEPDIR)/libledger_la-emacs.Tpo -c -o libledger_la-emacs.lo `test -f 'emacs.cc' || echo '$(srcdir)/'`emacs.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-emacs.lo -MD -MP -MF $(DEPDIR)/libledger_la-emacs.Tpo -c -o libledger_la-emacs.lo `test -f 'emacs.cc' || echo '$(srcdir)/'`emacs.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libledger_la-emacs.Tpo $(DEPDIR)/libledger_la-emacs.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='emacs.cc' object='libledger_la-emacs.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-emacs.lo `test -f 'emacs.cc' || echo '$(srcdir)/'`emacs.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-emacs.lo `test -f 'emacs.cc' || echo '$(srcdir)/'`emacs.cc
 
 libledger_la-reconcile.lo: reconcile.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-reconcile.lo -MD -MP -MF $(DEPDIR)/libledger_la-reconcile.Tpo -c -o libledger_la-reconcile.lo `test -f 'reconcile.cc' || echo '$(srcdir)/'`reconcile.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-reconcile.lo -MD -MP -MF $(DEPDIR)/libledger_la-reconcile.Tpo -c -o libledger_la-reconcile.lo `test -f 'reconcile.cc' || echo '$(srcdir)/'`reconcile.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libledger_la-reconcile.Tpo $(DEPDIR)/libledger_la-reconcile.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='reconcile.cc' object='libledger_la-reconcile.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-reconcile.lo `test -f 'reconcile.cc' || echo '$(srcdir)/'`reconcile.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-reconcile.lo `test -f 'reconcile.cc' || echo '$(srcdir)/'`reconcile.cc
 
 libledger_la-gnucash.lo: gnucash.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-gnucash.lo -MD -MP -MF $(DEPDIR)/libledger_la-gnucash.Tpo -c -o libledger_la-gnucash.lo `test -f 'gnucash.cc' || echo '$(srcdir)/'`gnucash.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-gnucash.lo -MD -MP -MF $(DEPDIR)/libledger_la-gnucash.Tpo -c -o libledger_la-gnucash.lo `test -f 'gnucash.cc' || echo '$(srcdir)/'`gnucash.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libledger_la-gnucash.Tpo $(DEPDIR)/libledger_la-gnucash.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='gnucash.cc' object='libledger_la-gnucash.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-gnucash.lo `test -f 'gnucash.cc' || echo '$(srcdir)/'`gnucash.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-gnucash.lo `test -f 'gnucash.cc' || echo '$(srcdir)/'`gnucash.cc
 
 libledger_la-ofx.lo: ofx.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-ofx.lo -MD -MP -MF $(DEPDIR)/libledger_la-ofx.Tpo -c -o libledger_la-ofx.lo `test -f 'ofx.cc' || echo '$(srcdir)/'`ofx.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-ofx.lo -MD -MP -MF $(DEPDIR)/libledger_la-ofx.Tpo -c -o libledger_la-ofx.lo `test -f 'ofx.cc' || echo '$(srcdir)/'`ofx.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libledger_la-ofx.Tpo $(DEPDIR)/libledger_la-ofx.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='ofx.cc' object='libledger_la-ofx.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-ofx.lo `test -f 'ofx.cc' || echo '$(srcdir)/'`ofx.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-ofx.lo `test -f 'ofx.cc' || echo '$(srcdir)/'`ofx.cc
 
 libledger_la-debug.lo: debug.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-debug.lo -MD -MP -MF $(DEPDIR)/libledger_la-debug.Tpo -c -o libledger_la-debug.lo `test -f 'debug.cc' || echo '$(srcdir)/'`debug.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-debug.lo -MD -MP -MF $(DEPDIR)/libledger_la-debug.Tpo -c -o libledger_la-debug.lo `test -f 'debug.cc' || echo '$(srcdir)/'`debug.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libledger_la-debug.Tpo $(DEPDIR)/libledger_la-debug.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='debug.cc' object='libledger_la-debug.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-debug.lo `test -f 'debug.cc' || echo '$(srcdir)/'`debug.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(libledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-debug.lo `test -f 'debug.cc' || echo '$(srcdir)/'`debug.cc
 
 libpyledger_la-py_eval.lo: py_eval.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpyledger_la_CXXFLAGS) $(CXXFLAGS) -MT libpyledger_la-py_eval.lo -MD -MP -MF $(DEPDIR)/libpyledger_la-py_eval.Tpo -c -o libpyledger_la-py_eval.lo `test -f 'py_eval.cc' || echo '$(srcdir)/'`py_eval.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpyledger_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libpyledger_la-py_eval.lo -MD -MP -MF $(DEPDIR)/libpyledger_la-py_eval.Tpo -c -o libpyledger_la-py_eval.lo `test -f 'py_eval.cc' || echo '$(srcdir)/'`py_eval.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libpyledger_la-py_eval.Tpo $(DEPDIR)/libpyledger_la-py_eval.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='py_eval.cc' object='libpyledger_la-py_eval.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpyledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libpyledger_la-py_eval.lo `test -f 'py_eval.cc' || echo '$(srcdir)/'`py_eval.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpyledger_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libpyledger_la-py_eval.lo `test -f 'py_eval.cc' || echo '$(srcdir)/'`py_eval.cc
 
 libpyledger_la-py_amount.lo: py_amount.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpyledger_la_CXXFLAGS) $(CXXFLAGS) -MT libpyledger_la-py_amount.lo -MD -MP -MF $(DEPDIR)/libpyledger_la-py_amount.Tpo -c -o libpyledger_la-py_amount.lo `test -f 'py_amount.cc' || echo '$(srcdir)/'`py_amount.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpyledger_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libpyledger_la-py_amount.lo -MD -MP -MF $(DEPDIR)/libpyledger_la-py_amount.Tpo -c -o libpyledger_la-py_amount.lo `test -f 'py_amount.cc' || echo '$(srcdir)/'`py_amount.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libpyledger_la-py_amount.Tpo $(DEPDIR)/libpyledger_la-py_amount.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='py_amount.cc' object='libpyledger_la-py_amount.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpyledger_la_CXXFLAGS) $(CXXFLAGS) -c -o libpyledger_la-py_amount.lo `test -f 'py_amount.cc' || echo '$(srcdir)/'`py_amount.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpyledger_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libpyledger_la-py_amount.lo `test -f 'py_amount.cc' || echo '$(srcdir)/'`py_amount.cc
 
 UnitTests-UnitTests.o: tests/UnitTests.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(UnitTests_CXXFLAGS) $(CXXFLAGS) -MT UnitTests-UnitTests.o -MD -MP -MF $(DEPDIR)/UnitTests-UnitTests.Tpo -c -o UnitTests-UnitTests.o `test -f 'tests/UnitTests.cc' || echo '$(srcdir)/'`tests/UnitTests.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT UnitTests-UnitTests.o -MD -MP -MF $(DEPDIR)/UnitTests-UnitTests.Tpo -c -o UnitTests-UnitTests.o `test -f 'tests/UnitTests.cc' || echo '$(srcdir)/'`tests/UnitTests.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/UnitTests-UnitTests.Tpo $(DEPDIR)/UnitTests-UnitTests.Po
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='tests/UnitTests.cc' object='UnitTests-UnitTests.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(UnitTests_CXXFLAGS) $(CXXFLAGS) -c -o UnitTests-UnitTests.o `test -f 'tests/UnitTests.cc' || echo '$(srcdir)/'`tests/UnitTests.cc
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o UnitTests-UnitTests.o `test -f 'tests/UnitTests.cc' || echo '$(srcdir)/'`tests/UnitTests.cc
 
 UnitTests-UnitTests.obj: tests/UnitTests.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(UnitTests_CXXFLAGS) $(CXXFLAGS) -MT UnitTests-UnitTests.obj -MD -MP -MF $(DEPDIR)/UnitTests-UnitTests.Tpo -c -o UnitTests-UnitTests.obj `if test -f 'tests/UnitTests.cc'; then $(CYGPATH_W) 'tests/UnitTests.cc'; else $(CYGPATH_W) '$(srcdir)/tests/UnitTests.cc'; fi`
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT UnitTests-UnitTests.obj -MD -MP -MF $(DEPDIR)/UnitTests-UnitTests.Tpo -c -o UnitTests-UnitTests.obj `if test -f 'tests/UnitTests.cc'; then $(CYGPATH_W) 'tests/UnitTests.cc'; else $(CYGPATH_W) '$(srcdir)/tests/UnitTests.cc'; fi`
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/UnitTests-UnitTests.Tpo $(DEPDIR)/UnitTests-UnitTests.Po
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='tests/UnitTests.cc' object='UnitTests-UnitTests.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(UnitTests_CXXFLAGS) $(CXXFLAGS) -c -o UnitTests-UnitTests.obj `if test -f 'tests/UnitTests.cc'; then $(CYGPATH_W) 'tests/UnitTests.cc'; else $(CYGPATH_W) '$(srcdir)/tests/UnitTests.cc'; fi`
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o UnitTests-UnitTests.obj `if test -f 'tests/UnitTests.cc'; then $(CYGPATH_W) 'tests/UnitTests.cc'; else $(CYGPATH_W) '$(srcdir)/tests/UnitTests.cc'; fi`
 
 UnitTests-BasicAmount.o: tests/corelib/numerics/BasicAmount.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(UnitTests_CXXFLAGS) $(CXXFLAGS) -MT UnitTests-BasicAmount.o -MD -MP -MF $(DEPDIR)/UnitTests-BasicAmount.Tpo -c -o UnitTests-BasicAmount.o `test -f 'tests/corelib/numerics/BasicAmount.cc' || echo '$(srcdir)/'`tests/corelib/numerics/BasicAmount.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT UnitTests-BasicAmount.o -MD -MP -MF $(DEPDIR)/UnitTests-BasicAmount.Tpo -c -o UnitTests-BasicAmount.o `test -f 'tests/corelib/numerics/BasicAmount.cc' || echo '$(srcdir)/'`tests/corelib/numerics/BasicAmount.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/UnitTests-BasicAmount.Tpo $(DEPDIR)/UnitTests-BasicAmount.Po
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='tests/corelib/numerics/BasicAmount.cc' object='UnitTests-BasicAmount.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(UnitTests_CXXFLAGS) $(CXXFLAGS) -c -o UnitTests-BasicAmount.o `test -f 'tests/corelib/numerics/BasicAmount.cc' || echo '$(srcdir)/'`tests/corelib/numerics/BasicAmount.cc
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o UnitTests-BasicAmount.o `test -f 'tests/corelib/numerics/BasicAmount.cc' || echo '$(srcdir)/'`tests/corelib/numerics/BasicAmount.cc
 
 UnitTests-BasicAmount.obj: tests/corelib/numerics/BasicAmount.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(UnitTests_CXXFLAGS) $(CXXFLAGS) -MT UnitTests-BasicAmount.obj -MD -MP -MF $(DEPDIR)/UnitTests-BasicAmount.Tpo -c -o UnitTests-BasicAmount.obj `if test -f 'tests/corelib/numerics/BasicAmount.cc'; then $(CYGPATH_W) 'tests/corelib/numerics/BasicAmount.cc'; else $(CYGPATH_W) '$(srcdir)/tests/corelib/numerics/BasicAmount.cc'; fi`
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT UnitTests-BasicAmount.obj -MD -MP -MF $(DEPDIR)/UnitTests-BasicAmount.Tpo -c -o UnitTests-BasicAmount.obj `if test -f 'tests/corelib/numerics/BasicAmount.cc'; then $(CYGPATH_W) 'tests/corelib/numerics/BasicAmount.cc'; else $(CYGPATH_W) '$(srcdir)/tests/corelib/numerics/BasicAmount.cc'; fi`
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/UnitTests-BasicAmount.Tpo $(DEPDIR)/UnitTests-BasicAmount.Po
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='tests/corelib/numerics/BasicAmount.cc' object='UnitTests-BasicAmount.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(UnitTests_CXXFLAGS) $(CXXFLAGS) -c -o UnitTests-BasicAmount.obj `if test -f 'tests/corelib/numerics/BasicAmount.cc'; then $(CYGPATH_W) 'tests/corelib/numerics/BasicAmount.cc'; else $(CYGPATH_W) '$(srcdir)/tests/corelib/numerics/BasicAmount.cc'; fi`
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o UnitTests-BasicAmount.obj `if test -f 'tests/corelib/numerics/BasicAmount.cc'; then $(CYGPATH_W) 'tests/corelib/numerics/BasicAmount.cc'; else $(CYGPATH_W) '$(srcdir)/tests/corelib/numerics/BasicAmount.cc'; fi`
 
 UnitTests-CommodityAmount.o: tests/corelib/numerics/CommodityAmount.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(UnitTests_CXXFLAGS) $(CXXFLAGS) -MT UnitTests-CommodityAmount.o -MD -MP -MF $(DEPDIR)/UnitTests-CommodityAmount.Tpo -c -o UnitTests-CommodityAmount.o `test -f 'tests/corelib/numerics/CommodityAmount.cc' || echo '$(srcdir)/'`tests/corelib/numerics/CommodityAmount.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT UnitTests-CommodityAmount.o -MD -MP -MF $(DEPDIR)/UnitTests-CommodityAmount.Tpo -c -o UnitTests-CommodityAmount.o `test -f 'tests/corelib/numerics/CommodityAmount.cc' || echo '$(srcdir)/'`tests/corelib/numerics/CommodityAmount.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/UnitTests-CommodityAmount.Tpo $(DEPDIR)/UnitTests-CommodityAmount.Po
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='tests/corelib/numerics/CommodityAmount.cc' object='UnitTests-CommodityAmount.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(UnitTests_CXXFLAGS) $(CXXFLAGS) -c -o UnitTests-CommodityAmount.o `test -f 'tests/corelib/numerics/CommodityAmount.cc' || echo '$(srcdir)/'`tests/corelib/numerics/CommodityAmount.cc
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o UnitTests-CommodityAmount.o `test -f 'tests/corelib/numerics/CommodityAmount.cc' || echo '$(srcdir)/'`tests/corelib/numerics/CommodityAmount.cc
 
 UnitTests-CommodityAmount.obj: tests/corelib/numerics/CommodityAmount.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(UnitTests_CXXFLAGS) $(CXXFLAGS) -MT UnitTests-CommodityAmount.obj -MD -MP -MF $(DEPDIR)/UnitTests-CommodityAmount.Tpo -c -o UnitTests-CommodityAmount.obj `if test -f 'tests/corelib/numerics/CommodityAmount.cc'; then $(CYGPATH_W) 'tests/corelib/numerics/CommodityAmount.cc'; else $(CYGPATH_W) '$(srcdir)/tests/corelib/numerics/CommodityAmount.cc'; fi`
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT UnitTests-CommodityAmount.obj -MD -MP -MF $(DEPDIR)/UnitTests-CommodityAmount.Tpo -c -o UnitTests-CommodityAmount.obj `if test -f 'tests/corelib/numerics/CommodityAmount.cc'; then $(CYGPATH_W) 'tests/corelib/numerics/CommodityAmount.cc'; else $(CYGPATH_W) '$(srcdir)/tests/corelib/numerics/CommodityAmount.cc'; fi`
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/UnitTests-CommodityAmount.Tpo $(DEPDIR)/UnitTests-CommodityAmount.Po
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='tests/corelib/numerics/CommodityAmount.cc' object='UnitTests-CommodityAmount.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(UnitTests_CXXFLAGS) $(CXXFLAGS) -c -o UnitTests-CommodityAmount.obj `if test -f 'tests/corelib/numerics/CommodityAmount.cc'; then $(CYGPATH_W) 'tests/corelib/numerics/CommodityAmount.cc'; else $(CYGPATH_W) '$(srcdir)/tests/corelib/numerics/CommodityAmount.cc'; fi`
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o UnitTests-CommodityAmount.obj `if test -f 'tests/corelib/numerics/CommodityAmount.cc'; then $(CYGPATH_W) 'tests/corelib/numerics/CommodityAmount.cc'; else $(CYGPATH_W) '$(srcdir)/tests/corelib/numerics/CommodityAmount.cc'; fi`
 
 UnitTests-DateTime.o: tests/corelib/numerics/DateTime.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(UnitTests_CXXFLAGS) $(CXXFLAGS) -MT UnitTests-DateTime.o -MD -MP -MF $(DEPDIR)/UnitTests-DateTime.Tpo -c -o UnitTests-DateTime.o `test -f 'tests/corelib/numerics/DateTime.cc' || echo '$(srcdir)/'`tests/corelib/numerics/DateTime.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT UnitTests-DateTime.o -MD -MP -MF $(DEPDIR)/UnitTests-DateTime.Tpo -c -o UnitTests-DateTime.o `test -f 'tests/corelib/numerics/DateTime.cc' || echo '$(srcdir)/'`tests/corelib/numerics/DateTime.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/UnitTests-DateTime.Tpo $(DEPDIR)/UnitTests-DateTime.Po
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='tests/corelib/numerics/DateTime.cc' object='UnitTests-DateTime.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(UnitTests_CXXFLAGS) $(CXXFLAGS) -c -o UnitTests-DateTime.o `test -f 'tests/corelib/numerics/DateTime.cc' || echo '$(srcdir)/'`tests/corelib/numerics/DateTime.cc
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o UnitTests-DateTime.o `test -f 'tests/corelib/numerics/DateTime.cc' || echo '$(srcdir)/'`tests/corelib/numerics/DateTime.cc
 
 UnitTests-DateTime.obj: tests/corelib/numerics/DateTime.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(UnitTests_CXXFLAGS) $(CXXFLAGS) -MT UnitTests-DateTime.obj -MD -MP -MF $(DEPDIR)/UnitTests-DateTime.Tpo -c -o UnitTests-DateTime.obj `if test -f 'tests/corelib/numerics/DateTime.cc'; then $(CYGPATH_W) 'tests/corelib/numerics/DateTime.cc'; else $(CYGPATH_W) '$(srcdir)/tests/corelib/numerics/DateTime.cc'; fi`
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT UnitTests-DateTime.obj -MD -MP -MF $(DEPDIR)/UnitTests-DateTime.Tpo -c -o UnitTests-DateTime.obj `if test -f 'tests/corelib/numerics/DateTime.cc'; then $(CYGPATH_W) 'tests/corelib/numerics/DateTime.cc'; else $(CYGPATH_W) '$(srcdir)/tests/corelib/numerics/DateTime.cc'; fi`
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/UnitTests-DateTime.Tpo $(DEPDIR)/UnitTests-DateTime.Po
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='tests/corelib/numerics/DateTime.cc' object='UnitTests-DateTime.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(UnitTests_CXXFLAGS) $(CXXFLAGS) -c -o UnitTests-DateTime.obj `if test -f 'tests/corelib/numerics/DateTime.cc'; then $(CYGPATH_W) 'tests/corelib/numerics/DateTime.cc'; else $(CYGPATH_W) '$(srcdir)/tests/corelib/numerics/DateTime.cc'; fi`
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o UnitTests-DateTime.obj `if test -f 'tests/corelib/numerics/DateTime.cc'; then $(CYGPATH_W) 'tests/corelib/numerics/DateTime.cc'; else $(CYGPATH_W) '$(srcdir)/tests/corelib/numerics/DateTime.cc'; fi`
 
 UnitTests-Commodity.o: tests/corelib/numerics/Commodity.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(UnitTests_CXXFLAGS) $(CXXFLAGS) -MT UnitTests-Commodity.o -MD -MP -MF $(DEPDIR)/UnitTests-Commodity.Tpo -c -o UnitTests-Commodity.o `test -f 'tests/corelib/numerics/Commodity.cc' || echo '$(srcdir)/'`tests/corelib/numerics/Commodity.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT UnitTests-Commodity.o -MD -MP -MF $(DEPDIR)/UnitTests-Commodity.Tpo -c -o UnitTests-Commodity.o `test -f 'tests/corelib/numerics/Commodity.cc' || echo '$(srcdir)/'`tests/corelib/numerics/Commodity.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/UnitTests-Commodity.Tpo $(DEPDIR)/UnitTests-Commodity.Po
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='tests/corelib/numerics/Commodity.cc' object='UnitTests-Commodity.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(UnitTests_CXXFLAGS) $(CXXFLAGS) -c -o UnitTests-Commodity.o `test -f 'tests/corelib/numerics/Commodity.cc' || echo '$(srcdir)/'`tests/corelib/numerics/Commodity.cc
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o UnitTests-Commodity.o `test -f 'tests/corelib/numerics/Commodity.cc' || echo '$(srcdir)/'`tests/corelib/numerics/Commodity.cc
 
 UnitTests-Commodity.obj: tests/corelib/numerics/Commodity.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(UnitTests_CXXFLAGS) $(CXXFLAGS) -MT UnitTests-Commodity.obj -MD -MP -MF $(DEPDIR)/UnitTests-Commodity.Tpo -c -o UnitTests-Commodity.obj `if test -f 'tests/corelib/numerics/Commodity.cc'; then $(CYGPATH_W) 'tests/corelib/numerics/Commodity.cc'; else $(CYGPATH_W) '$(srcdir)/tests/corelib/numerics/Commodity.cc'; fi`
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT UnitTests-Commodity.obj -MD -MP -MF $(DEPDIR)/UnitTests-Commodity.Tpo -c -o UnitTests-Commodity.obj `if test -f 'tests/corelib/numerics/Commodity.cc'; then $(CYGPATH_W) 'tests/corelib/numerics/Commodity.cc'; else $(CYGPATH_W) '$(srcdir)/tests/corelib/numerics/Commodity.cc'; fi`
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/UnitTests-Commodity.Tpo $(DEPDIR)/UnitTests-Commodity.Po
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='tests/corelib/numerics/Commodity.cc' object='UnitTests-Commodity.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(UnitTests_CXXFLAGS) $(CXXFLAGS) -c -o UnitTests-Commodity.obj `if test -f 'tests/corelib/numerics/Commodity.cc'; then $(CYGPATH_W) 'tests/corelib/numerics/Commodity.cc'; else $(CYGPATH_W) '$(srcdir)/tests/corelib/numerics/Commodity.cc'; fi`
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o UnitTests-Commodity.obj `if test -f 'tests/corelib/numerics/Commodity.cc'; then $(CYGPATH_W) 'tests/corelib/numerics/Commodity.cc'; else $(CYGPATH_W) '$(srcdir)/tests/corelib/numerics/Commodity.cc'; fi`
 
 ledger-option.o: option.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ledger_CXXFLAGS) $(CXXFLAGS) -MT ledger-option.o -MD -MP -MF $(DEPDIR)/ledger-option.Tpo -c -o ledger-option.o `test -f 'option.cc' || echo '$(srcdir)/'`option.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ledger_CPPFLAGS) $(CPPFLAGS) $(ledger_CXXFLAGS) $(CXXFLAGS) -MT ledger-option.o -MD -MP -MF $(DEPDIR)/ledger-option.Tpo -c -o ledger-option.o `test -f 'option.cc' || echo '$(srcdir)/'`option.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/ledger-option.Tpo $(DEPDIR)/ledger-option.Po
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='option.cc' object='ledger-option.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ledger_CXXFLAGS) $(CXXFLAGS) -c -o ledger-option.o `test -f 'option.cc' || echo '$(srcdir)/'`option.cc
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ledger_CPPFLAGS) $(CPPFLAGS) $(ledger_CXXFLAGS) $(CXXFLAGS) -c -o ledger-option.o `test -f 'option.cc' || echo '$(srcdir)/'`option.cc
 
 ledger-option.obj: option.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ledger_CXXFLAGS) $(CXXFLAGS) -MT ledger-option.obj -MD -MP -MF $(DEPDIR)/ledger-option.Tpo -c -o ledger-option.obj `if test -f 'option.cc'; then $(CYGPATH_W) 'option.cc'; else $(CYGPATH_W) '$(srcdir)/option.cc'; fi`
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ledger_CPPFLAGS) $(CPPFLAGS) $(ledger_CXXFLAGS) $(CXXFLAGS) -MT ledger-option.obj -MD -MP -MF $(DEPDIR)/ledger-option.Tpo -c -o ledger-option.obj `if test -f 'option.cc'; then $(CYGPATH_W) 'option.cc'; else $(CYGPATH_W) '$(srcdir)/option.cc'; fi`
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/ledger-option.Tpo $(DEPDIR)/ledger-option.Po
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='option.cc' object='ledger-option.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ledger_CXXFLAGS) $(CXXFLAGS) -c -o ledger-option.obj `if test -f 'option.cc'; then $(CYGPATH_W) 'option.cc'; else $(CYGPATH_W) '$(srcdir)/option.cc'; fi`
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ledger_CPPFLAGS) $(CPPFLAGS) $(ledger_CXXFLAGS) $(CXXFLAGS) -c -o ledger-option.obj `if test -f 'option.cc'; then $(CYGPATH_W) 'option.cc'; else $(CYGPATH_W) '$(srcdir)/option.cc'; fi`
 
 ledger-main.o: main.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ledger_CXXFLAGS) $(CXXFLAGS) -MT ledger-main.o -MD -MP -MF $(DEPDIR)/ledger-main.Tpo -c -o ledger-main.o `test -f 'main.cc' || echo '$(srcdir)/'`main.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ledger_CPPFLAGS) $(CPPFLAGS) $(ledger_CXXFLAGS) $(CXXFLAGS) -MT ledger-main.o -MD -MP -MF $(DEPDIR)/ledger-main.Tpo -c -o ledger-main.o `test -f 'main.cc' || echo '$(srcdir)/'`main.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/ledger-main.Tpo $(DEPDIR)/ledger-main.Po
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='main.cc' object='ledger-main.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ledger_CXXFLAGS) $(CXXFLAGS) -c -o ledger-main.o `test -f 'main.cc' || echo '$(srcdir)/'`main.cc
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ledger_CPPFLAGS) $(CPPFLAGS) $(ledger_CXXFLAGS) $(CXXFLAGS) -c -o ledger-main.o `test -f 'main.cc' || echo '$(srcdir)/'`main.cc
 
 ledger-main.obj: main.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ledger_CXXFLAGS) $(CXXFLAGS) -MT ledger-main.obj -MD -MP -MF $(DEPDIR)/ledger-main.Tpo -c -o ledger-main.obj `if test -f 'main.cc'; then $(CYGPATH_W) 'main.cc'; else $(CYGPATH_W) '$(srcdir)/main.cc'; fi`
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ledger_CPPFLAGS) $(CPPFLAGS) $(ledger_CXXFLAGS) $(CXXFLAGS) -MT ledger-main.obj -MD -MP -MF $(DEPDIR)/ledger-main.Tpo -c -o ledger-main.obj `if test -f 'main.cc'; then $(CYGPATH_W) 'main.cc'; else $(CYGPATH_W) '$(srcdir)/main.cc'; fi`
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/ledger-main.Tpo $(DEPDIR)/ledger-main.Po
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='main.cc' object='ledger-main.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ledger_CXXFLAGS) $(CXXFLAGS) -c -o ledger-main.obj `if test -f 'main.cc'; then $(CYGPATH_W) 'main.cc'; else $(CYGPATH_W) '$(srcdir)/main.cc'; fi`
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ledger_CPPFLAGS) $(CPPFLAGS) $(ledger_CXXFLAGS) $(CXXFLAGS) -c -o ledger-main.obj `if test -f 'main.cc'; then $(CYGPATH_W) 'main.cc'; else $(CYGPATH_W) '$(srcdir)/main.cc'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -1530,7 +1524,8 @@ distcleancheck: distclean
 check-am: all-am
 	$(MAKE) $(AM_MAKEFLAGS) $(check_PROGRAMS)
 	$(MAKE) $(AM_MAKEFLAGS) check-TESTS
-check: check-recursive
+check: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) check-recursive
 all-am: Makefile $(INFO_DEPS) $(LTLIBRARIES) $(PROGRAMS) $(LISP) \
 		$(ELCFILES) $(HEADERS) acconf.h
 install-binPROGRAMS: install-libLTLIBRARIES
@@ -1540,7 +1535,8 @@ installdirs-am:
 	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(infodir)" "$(DESTDIR)$(lispdir)" "$(DESTDIR)$(pkgincludedir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
-install: install-recursive
+install: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) install-recursive
 install-exec: install-exec-recursive
 install-data: install-data-recursive
 uninstall: uninstall-recursive
@@ -1561,10 +1557,12 @@ clean-generic:
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
+	-test -z "$(DISTCLEANFILES)" || rm -f $(DISTCLEANFILES)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 @HAVE_BOOST_PYTHON_FALSE@clean-local:
 @HAVE_BOOST_PYTHON_FALSE@install-exec-hook:
 clean: clean-recursive
@@ -1744,12 +1742,16 @@ uninstall-am: uninstall-binPROGRAMS uninstall-dvi-am uninstall-html-am \
 dist-hook:
 	rm -fr `find $(distdir) -name .svn`
 
+@USE_PCH_TRUE@$(top_builddir)/system.hh.gch: $(srcdir)/system.hh acconf.h $(srcdir)/fdstream.hpp
+@USE_PCH_TRUE@	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(libledger_la_CPPFLAGS) \
+@USE_PCH_TRUE@		-o $@ $(srcdir)/system.hh
+
 @HAVE_BOOST_PYTHON_TRUE@clean-local:
 @HAVE_BOOST_PYTHON_TRUE@	rm -fr build
 
 @HAVE_BOOST_PYTHON_TRUE@ledger.so: pyledger.cc libledger.la gdtoa/libgdtoa.la libpyledger.la
 @HAVE_BOOST_PYTHON_TRUE@	SRCDIR="$(srcdir)" \
-@HAVE_BOOST_PYTHON_TRUE@	CFLAGS="$(CPPFLAGS)" \
+@HAVE_BOOST_PYTHON_TRUE@	CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libledger_la_CPPFLAGS)" \
 @HAVE_BOOST_PYTHON_TRUE@	LDFLAGS="$(LDFLAGS) -L. -L.libs -Lgdtoa -Lgdtoa/.libs" \
 @HAVE_BOOST_PYTHON_TRUE@	PYLIBS="$(PYLIBS)" \
 @HAVE_BOOST_PYTHON_TRUE@	DEBUG_LEVEL="$(DEBUG_LEVEL)" \
@@ -1757,7 +1759,7 @@ dist-hook:
 
 @HAVE_BOOST_PYTHON_TRUE@install-exec-hook:
 @HAVE_BOOST_PYTHON_TRUE@	SRCDIR="$(srcdir)" \
-@HAVE_BOOST_PYTHON_TRUE@	CFLAGS="$(CPPFLAGS)" \
+@HAVE_BOOST_PYTHON_TRUE@	CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libledger_la_CPPFLAGS)" \
 @HAVE_BOOST_PYTHON_TRUE@	LDFLAGS="$(LDFLAGS) -L. -L.libs -Lgdtoa -Lgdtoa/.libs" \
 @HAVE_BOOST_PYTHON_TRUE@	PYLIBS="$(PYLIBS)" \
 @HAVE_BOOST_PYTHON_TRUE@	DEBUG_LEVEL="$(DEBUG_LEVEL)" \
@@ -1767,8 +1769,6 @@ PyUnitTests: PyUnitTests.py
 	cat $(srcdir)/PyUnitTests.py | sed "s/%srcdir%/$(ESC_srcdir)/g" \
 	    | sed "s/%builddir%/$(ESC_builddir)/g" > PyUnitTests
 	chmod 755 PyUnitTests
-
-######################################################################
 
 alldocs: ledger.info ledger.pdf doxygen-docs
 

@@ -1,31 +1,9 @@
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <algorithm>
-#include <exception>
-#include <iterator>
-#include <string>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-
-#include "option.h"
-#include "timing.h"
-#include "acconf.h"
-
-#ifdef HAVE_UNIX_PIPES
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <unistd.h>
-#include "fdstream.hpp"
-#endif
-
-#ifdef USE_BOOST_PYTHON
-#include "pyledger.h"
+#if defined(USE_BOOST_PYTHON)
+#include <pyledger.h>
 #else
-#include "ledger.h"
+#include <ledger.h>
 #endif
-#include "debug.h"
+#include <option.h>
 
 using namespace ledger;
 
@@ -38,7 +16,7 @@ class print_addr : public repitem_t::select_callback_t {
 #endif
 
 static int read_and_report(report_t * report, int argc, char * argv[],
-			    char * envp[])
+			   char * envp[])
 {
   session_t& session(*report->session);
 
@@ -398,7 +376,7 @@ static int read_and_report(report_t * report, int argc, char * argv[],
 
 #ifdef DEBUG_ENABLED
 extern int new_calls;
-extern long long new_size;
+extern unsigned long new_size;
 #endif
 
 int main(int argc, char * argv[], char * envp[])

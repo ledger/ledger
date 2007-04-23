@@ -1,6 +1,4 @@
-#include <boost/python.hpp>
-#include <Python.h>
-
+#include "py_eval.h"
 #include "amount.h"
 
 using namespace boost::python;

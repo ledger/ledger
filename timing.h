@@ -1,10 +1,6 @@
 #ifndef _TIMING_H
 #define _TIMING_H
 
-#include <ctime>
-
-#include "trace.h"
-
 namespace ledger {
 
 class timing_t

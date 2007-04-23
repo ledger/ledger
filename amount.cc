@@ -31,18 +31,6 @@
 
 #include "amount.h"
 #include "binary.h"
-#include "util.h"
-
-#define HAVE_GDTOA 1
-#ifdef HAVE_GDTOA
-#include "gdtoa/gdtoa.h"
-#endif
-
-#include <list>
-#include <sstream>
-#include <cstdlib>
-
-#include <gmp.h>
 
 namespace ledger {
 

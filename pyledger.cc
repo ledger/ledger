@@ -1,5 +1,3 @@
-#include <boost/python.hpp>
-
 #include "py_eval.h"
 
 using namespace boost::python;

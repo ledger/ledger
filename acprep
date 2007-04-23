@@ -48,7 +48,7 @@ fi
 # Building the command-line tool as a shared library is a luxury,
 # since there are no clients except a GUI tool which might use it (and
 # that is built again anyway by Xcode).
-SWITCHES="--disable-shared"
+SWITCHES="--disable-shared --enable-pch"
 
 
 while [ -n "$1" ]; do

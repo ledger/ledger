@@ -1,19 +1,5 @@
 #include "textual.h"
 #include "session.h"
-#include "timing.h"
-#include "util.h"
-#include "acconf.h"
-
-#if defined(__GNUG__) && __GNUG__ < 3
-#define _XOPEN_SOURCE
-#endif
-
-#include <fstream>
-#include <sstream>
-#include <cstring>
-#include <cctype>
-#include <cstdio>
-#include <cstdlib>
 
 #define TIMELOG_SUPPORT 1
 

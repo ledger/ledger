@@ -1,10 +1,4 @@
 #include "quotes.h"
-#include "error.h"
-#include "debug.h"
-
-#include <fstream>
-#include <cstdlib>
-#include <cstdio>
 
 namespace ledger {
 

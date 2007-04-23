@@ -4,9 +4,6 @@
 #include "session.h"
 #include "transform.h"
 
-#include <string>
-#include <list>
-
 namespace ledger {
 
 typedef std::list<string> strings_list;

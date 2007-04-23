@@ -1,16 +1,6 @@
 #include "xmlparse.h"
 #include "journal.h"
 
-#include <cstring>
-
-extern "C" {
-#if defined(HAVE_EXPAT)
-#include <expat.h>           // expat XML parser
-#elif defined(HAVE_XMLPARSE)
-#include <xmlparse.h>        // expat XML parser
-#endif
-}
-
 namespace ledger {
 
 #if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)

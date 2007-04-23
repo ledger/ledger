@@ -1,13 +1,7 @@
 #ifndef _OPTION_H
 #define _OPTION_H
 
-#include <list>
-#include <map>
-#include <string>
-#include <exception>
-
 #include "xpath.h"
-#include "error.h"
 
 namespace ledger {
 

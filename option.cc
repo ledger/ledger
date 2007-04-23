@@ -1,17 +1,9 @@
 #include "option.h"
-#include "report.h"
-#include "debug.h"
-#include "error.h"
 #if 0
 #ifdef USE_BOOST_PYTHON
 #include "py_eval.h"
 #endif
 #endif
-
-#include <iostream>
-#include <cstdarg>
-
-#include "util.h"
 
 #if 0
 #ifdef USE_BOOST_PYTHON
@@ -224,10 +216,6 @@ void process_arguments(int argc, char ** argv, const bool anywhere,
 
 #if 0
 #ifdef USE_BOOST_PYTHON
-
-#include <boost/python.hpp>
-#include <boost/python/detail/api_placeholder.hpp>
-#include <boost/python/suite/indexing/map_indexing_suite.hpp>
 
 using namespace boost::python;
 using namespace ledger;

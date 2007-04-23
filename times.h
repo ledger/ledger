@@ -1,16 +1,9 @@
 #ifndef _TIMES_H
 #define _TIMES_H
 
+#include "utils.h"
+
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/date_time/posix_time/posix_time_duration.hpp>
-#include <boost/date_time/posix_time/posix_time_config.hpp>
-#include <boost/date_time/local_time_adjustor.hpp>
-
-#include <ctime>
-#include <string>
-#include <iostream>
-
-#include "error.h"
 
 namespace ledger {
 
@@ -75,7 +68,7 @@ inline moment_t ptime_local_to_utc(const moment_t& when) {
 // instead, and then make these into private methods.
 inline moment_t ptime_from_local_date_string(const string& date_string) {
   return ptime_local_to_utc(moment_t(boost::gregorian::from_string(date_string),
-				  time_duration()));
+				     time_duration()));
 }
 
 inline moment_t ptime_from_local_time_string(const string& time_string) {

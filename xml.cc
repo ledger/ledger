@@ -1,10 +1,5 @@
 #include "xml.h"
 #include "journal.h"
-#include "error.h"
-
-#include <iostream>
-#include <sstream>
-#include <cstring>
 
 namespace ledger {
 namespace xml {

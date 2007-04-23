@@ -1,11 +1,4 @@
-#include "journal.h"
 #include "ofx.h"
-#include "format.h"
-#include "error.h"
-#include "debug.h"
-#include "util.h"
-
-#include <libofx.h>
 
 namespace ledger {
 

@@ -1,10 +1,4 @@
 #include "DateTimeTest.h"
-#include "ledger.h"
-#include "acconf.h"
-
-#include <ctime>
-
-using namespace ledger;
 
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(DateTimeTestCase, "numerics");
 

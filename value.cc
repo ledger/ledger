@@ -1,7 +1,5 @@
 #include "value.h"
 #include "xml.h"
-#include "debug.h"
-#include "error.h"
 
 namespace ledger {
 
@@ -2312,8 +2310,6 @@ void value_context::describe(std::ostream& out) const throw()
 
 #if 0
 #ifdef USE_BOOST_PYTHON
-
-#include <boost/python.hpp>
 
 using namespace boost::python;
 using namespace ledger;

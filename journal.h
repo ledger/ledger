@@ -2,7 +2,6 @@
 #define _JOURNAL_H
 
 #include "xpath.h"
-#include "util.h"
 
 namespace ledger {
 

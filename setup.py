@@ -6,10 +6,7 @@ import os
 import string
 
 defines = [('PYTHON_MODULE', 1)]
-if os.environ.has_key("DEBUG_LEVEL"):
-    defines.extend ([('DEBUG_LEVEL', os.environ["DEBUG_LEVEL"])])
-
-libs = os.environ["PYLIBS"].split()
+libs    = os.environ["PYLIBS"].split()
 
 setup(name         = "Ledger",
       version      = "3.0",

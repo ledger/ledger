@@ -1,10 +1,7 @@
 #ifndef _MASK_H
 #define _MASK_H
 
-#include "error.h"
-
-#include <string>
-#include <exception>
+#include "utils.h"
 
 #include <boost/regex.hpp>
 

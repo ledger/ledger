@@ -1,14 +1,10 @@
 #include "journal.h"
 #include "mask.h"
-#include "format.h"
 #if 0
 #ifdef USE_BOOST_PYTHON
 #include "py_eval.h"
 #endif
 #endif
-#include "acconf.h"
-
-#include <fstream>
 
 namespace ledger {
 
@@ -666,9 +662,6 @@ xact_context::xact_context(const ledger::transaction_t& _xact,
 
 #if 0
 #ifdef USE_BOOST_PYTHON
-
-#include <boost/python.hpp>
-#include <boost/python/exception_translator.hpp>
 
 using namespace boost::python;
 using namespace ledger;

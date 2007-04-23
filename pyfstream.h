@@ -1,14 +1,6 @@
 #ifndef _PYFSTREAM_H
 #define _PYFSTREAM_H
 
-#include <istream>
-#include <ostream>
-#include <streambuf>
-#include <cstdio>
-#include <cstring>
-
-#include "Python.h"
-
 // pyofstream
 // - a stream that writes on a Python file object
 

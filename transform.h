@@ -3,9 +3,6 @@
 
 #include "xpath.h"
 
-#include <list>
-#include <vector>
-
 namespace ledger {
 
 class transform_t {

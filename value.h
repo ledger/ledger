@@ -3,12 +3,6 @@
 
 #include "amount.h"
 #include "balance.h"
-#include "error.h"
-
-#include <vector>
-#include <exception>
-
-#include <boost/shared_ptr.hpp>
 
 namespace ledger {
 

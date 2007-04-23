@@ -1,4 +1,6 @@
 SUBDIRS = gdtoa
+BUILT_SOURCES =
+CLEANFILES =
 
 
 ESC_srcdir=`echo "$(srcdir)" | sed 's/\//\\\\\//g'`
@@ -20,12 +22,14 @@ endif
 AM_YFLAGS = -d
 AM_LFLAGS = -o $(LEX_OUTPUT_ROOT).c
 
-#WARNFLAGS = -Wall -Wextra -Wfloat-equal -Wno-endif-labels
+#WARNFLAGS  = -H -Wall -Wextra -Wfloat-equal -Wno-endif-labels
 #WARNFLAGS += -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion
 #WARNFLAGS += -Wconversion -Wshorten-64-to-32 -Wsign-compare
 #WARNFLAGS += -Wmissing-field-initializers -pedantic-errors
 
-libledger_la_CXXFLAGS = $(WARNFLAGS) -I$(top_builddir)/gdtoa
+libledger_la_CPPFLAGS = -I$(top_builddir)/gdtoa
+libledger_la_LDFLAGS  = -release 3.0
+
 libledger_la_SOURCES = \
 	amount.cc      \
 	times.cc       \
@@ -58,44 +62,49 @@ libledger_la_SOURCES = \
 	reconcile.cc
 
 if HAVE_EXPAT
-libledger_la_CXXFLAGS += -DHAVE_EXPAT=1
+libledger_la_CPPFLAGS += -DHAVE_EXPAT=1
 libledger_la_SOURCES += gnucash.cc
 endif
 if HAVE_XMLPARSE
-libledger_la_CXXFLAGS += -DHAVE_XMLPARSE=1
+libledger_la_CPPFLAGS += -DHAVE_XMLPARSE=1
 libledger_la_SOURCES += gnucash.cc
 endif
 if HAVE_LIBOFX
-libledger_la_CXXFLAGS += -DHAVE_LIBOFX=1
+libledger_la_CPPFLAGS += -DHAVE_LIBOFX=1
 libledger_la_SOURCES += ofx.cc
 endif
 if DEBUG
-libledger_la_CXXFLAGS += -DDEBUG_LEVEL=4
+libledger_la_CPPFLAGS += -DDEBUG_LEVEL=4
 libledger_la_SOURCES  += debug.cc
 endif
 if HAVE_BOOST_PYTHON
-libledger_la_CXXFLAGS += -DUSE_BOOST_PYTHON=1
+libledger_la_CPPFLAGS += -DUSE_BOOST_PYTHON=1
 endif
 
-libledger_la_LDFLAGS = -release 3.0
+if USE_PCH
+libledger_la_CXXFLAGS = $(WARNFLAGS)
+nodist_libledger_la_SOURCES = system.hh.gch
+
+BUILT_SOURCES += system.hh.gch
+CLEANFILES += system.hh.gch system.hh
+
+$(top_builddir)/system.hh.gch: $(srcdir)/system.hh acconf.h $(srcdir)/fdstream.hpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(libledger_la_CPPFLAGS) \
+		-o $@ $(srcdir)/system.hh
+endif
 
 
-libpyledger_la_CXXFLAGS = -DUSE_BOOST_PYTHON=1
+libpyledger_la_CPPFLAGS = $(libledger_la_CPPFLAGS)
+libpyledger_la_LDFLAGS = -release 3.0
+
 libpyledger_la_SOURCES = \
 	py_eval.cc       \
 	py_amount.cc
-
-if DEBUG
-libpyledger_la_CXXFLAGS += -DDEBUG_LEVEL=4
-endif
-
-libpyledger_la_LDFLAGS = -release 3.0
 
 
 pkginclude_HEADERS = \
 	amount.h     \
 	times.h      \
-	parsetime.h  \
 	balance.h    \
 	binary.h     \
 	csv.h	     \
@@ -120,6 +129,7 @@ pkginclude_HEADERS = \
 	reconcile.h  \
 	report.h     \
 	session.h    \
+	system.hh    \
 	textual.h    \
 	timing.h     \
 	trace.h	     \
@@ -134,27 +144,15 @@ pkginclude_HEADERS = \
 
 bin_PROGRAMS = ledger
 
-ledger_CXXFLAGS =
+ledger_CPPFLAGS = $(libledger_la_CPPFLAGS)
+ledger_CXXFLAGS = $(WARNFLAGS)
 ledger_SOURCES = option.cc main.cc
 ledger_LDADD = $(LIBOBJS) libledger.la gdtoa/libgdtoa.la $(LEXLIB)
+ledger_LDFLAGS = -static	# for the sake of command-line speed
 
-if HAVE_EXPAT
-ledger_CXXFLAGS += -DHAVE_EXPAT=1
-endif
-if HAVE_XMLPARSE
-ledger_CXXFLAGS += -DHAVE_XMLPARSE=1
-endif
-if HAVE_LIBOFX
-ledger_CXXFLAGS += -DHAVE_LIBOFX=1
-endif
 if HAVE_BOOST_PYTHON
-ledger_CXXFLAGS += -DUSE_BOOST_PYTHON=1
 ledger_LDADD += libpyledger.la
 endif
-if DEBUG
-ledger_CXXFLAGS += -DDEBUG_LEVEL=4
-endif
-ledger_LDFLAGS = -static	# for the sake of command-line speed
 
 info_TEXINFOS = ledger.texi
 
@@ -168,12 +166,13 @@ if HAVE_BOOST_PYTHON
 
 noinst_PROGRAMS = ledger.so
 
-CLEANFILES = ledger.so
+CLEANFILES += ledger.so
 
 clean-local:
 	rm -fr build
 
 ledger_so_SOURCES = pyledger.cc
+ledger_so_DEPENDENCIES = libledger.la gdtoa/libgdtoa.la libpyledger.la
 
 PYLIBS = pyledger ledger gdtoa boost_date_time boost_regex boost_python gmp
 
@@ -195,7 +194,7 @@ endif
 
 ledger.so: pyledger.cc libledger.la gdtoa/libgdtoa.la libpyledger.la
 	SRCDIR="$(srcdir)" \
-	CFLAGS="$(CPPFLAGS)" \
+	CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libledger_la_CPPFLAGS)" \
 	LDFLAGS="$(LDFLAGS) -L. -L.libs -Lgdtoa -Lgdtoa/.libs" \
 	PYLIBS="$(PYLIBS)" \
 	DEBUG_LEVEL="$(DEBUG_LEVEL)" \
@@ -203,7 +202,7 @@ ledger.so: pyledger.cc libledger.la gdtoa/libgdtoa.la libpyledger.la
 
 install-exec-hook:
 	SRCDIR="$(srcdir)" \
-	CFLAGS="$(CPPFLAGS)" \
+	CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libledger_la_CPPFLAGS)" \
 	LDFLAGS="$(LDFLAGS) -L. -L.libs -Lgdtoa -Lgdtoa/.libs" \
 	PYLIBS="$(PYLIBS)" \
 	DEBUG_LEVEL="$(DEBUG_LEVEL)" \
@@ -227,24 +226,11 @@ UnitTests_SOURCES = tests/UnitTests.cc \
 	tests/corelib/numerics/DateTime.cc \
 	tests/corelib/numerics/Commodity.cc
 
-UnitTests_LDADD   = $(lib_LTLIBRARIES) gdtoa/libgdtoa.la -lcppunit
-UnitTests_LDFLAGS = $(LIBADD_DL)
+UnitTests_CPPFLAGS = -I$(srcdir)/tests $(libledger_la_CPPFLAGS)
+UnitTests_LDFLAGS  = $(LIBADD_DL)
+UnitTests_LDADD    = $(lib_LTLIBRARIES) gdtoa/libgdtoa.la -lcppunit
 
-UnitTests_CXXFLAGS = -I. -I$(srcdir)/tests
-if HAVE_EXPAT
-UnitTests_CXXFLAGS += -DHAVE_EXPAT=1
-endif
-if HAVE_XMLPARSE
-UnitTests_CXXFLAGS += -DHAVE_XMLPARSE=1
-endif
-if HAVE_LIBOFX
-UnitTests_CXXFLAGS += -DHAVE_LIBOFX=1
-endif
-if DEBUG
-UnitTests_CXXFLAGS += -DDEBUG_LEVEL=4
-endif
-
-PyUnitTests_SOURCES =
+PyUnitTests_SOURCES = PyUnitTest.py
 
 PyUnitTests: PyUnitTests.py
 	cat $(srcdir)/PyUnitTests.py | sed "s/%srcdir%/$(ESC_srcdir)/g" \
@@ -252,6 +238,8 @@ PyUnitTests: PyUnitTests.py
 	chmod 755 PyUnitTests
 
 ######################################################################
+
+DISTCLEANFILES = Doxyfile.gen
 
 alldocs: ledger.info ledger.pdf doxygen-docs
 

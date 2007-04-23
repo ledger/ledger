@@ -1,15 +1,7 @@
 #ifndef _BINARY_H
 #define _BINARY_H
 
-#if 0
-#include "journal.h"
 #include "parser.h"
-#endif
-
-#include "util.h"
-
-#include <string>
-#include <iostream>
 
 namespace ledger {
 

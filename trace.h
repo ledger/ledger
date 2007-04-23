@@ -1,9 +1,6 @@
 #ifndef _TRACE_H
 #define _TRACE_H
 
-#include <string>
-#include <map>
-
 namespace ledger {
 
 class timing_t;

@@ -1,7 +1,4 @@
 #include "Commodity.h"
-#include "ledger.h"
-
-using namespace ledger;
 
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(CommodityTestCase, "numerics");
 

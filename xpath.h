@@ -2,13 +2,6 @@
 #define _XPATH_H
 
 #include "xml.h"
-#include "error.h"
-#if 0
-#include "mask.h"
-#endif
-
-#include <list>
-#include <memory>
 
 namespace ledger {
 namespace xml {
