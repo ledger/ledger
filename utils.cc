@@ -1,39 +1,66 @@
 #include "utils.h"
 #include "times.h"
 
-namespace ledger {
+namespace ledger
 
-bool trace_alloc_mode;
-bool trace_class_mode;
+#if defined(ASSERTS_ON)
 
-void trace(const string& cat, const string& str)
+void debug_assert(const ledger::string& reason,
+		  const ledger::string& func,
+		  const ledger::string& file,
+		  unsigned long		line)
 {
-  std::cerr << boost::posix_time::to_simple_string(now) << " "
-	    << cat << ": " << str << std::endl;
+  throw fatal(reason, context());
 }
 
-void trace_push(const string& cat, const string& str,
-		timing_t& timer)
-{
-  timer.start();
-  trace(cat, str);
-}
+#endif
 
-void trace_pop(const string& cat, const string& str,
-	       timing_t& timer)
-{
-  timer.stop();
-  std::ostringstream out;
-  out << str << ": " << (double(timer.cumulative) / double(CLOCKS_PER_SEC)) << "s";
-  trace(cat, out.str());
+#if defined(VERIFY_ON)
+
+int		 new_calls = 0;
+unsigned long	 new_size  = 0;
+
+void * operator new(std::size_t size) throw (std::bad_alloc) {
+  void * ptr = std::malloc(size);
+  new_calls++;
+  new_size += size;
+  return ptr;
+}
+void * operator new[](std::size_t size) throw (std::bad_alloc) {
+  void * ptr = std::malloc(size);
+  new_calls++;
+  new_size += size;
+  return ptr;
+}
+void * operator new(std::size_t size, const std::nothrow_t&) throw() {
+  void * ptr = std::malloc(size);
+  new_calls++;
+  new_size += size;
+  return ptr;
+}
+void * operator new[](std::size_t size, const std::nothrow_t&) throw() {
+  void * ptr = std::malloc(size);
+  new_calls++;
+  new_size += size;
+  return ptr;
+}
+void   operator delete(void * ptr) throw() {
+  std::free(ptr);
+}
+void   operator delete[](void * ptr) throw() {
+  std::free(ptr);
+}
+void   operator delete(void * ptr, const std::nothrow_t&) throw() {
+  std::free(ptr);
+}
+void   operator delete[](void * ptr, const std::nothrow_t&) throw() {
+  std::free(ptr);
 }
 
 live_objects_map live_objects;
 object_count_map ctor_count;
 object_count_map object_count;
 object_count_map live_count;
-
-bool tracing_active = false;
 
 inline void add_to_count_map(object_count_map& the_map,
 			     const char * name, std::size_t size)
@@ -63,9 +90,6 @@ inline void report_count_map(std::ostream& out, object_count_map& the_map)
 bool trace_ctor(void * ptr, const char * cls_name, const char * args,
 		std::size_t cls_size)
 {
-  if (! tracing_active)
-    return true;
-
   if (trace_class_mode && cls_name[0] == '_')
     return true;
   if (trace_alloc_mode && cls_name[0] != '_')
@@ -92,9 +116,6 @@ bool trace_ctor(void * ptr, const char * cls_name, const char * args,
 
 bool trace_dtor(void * ptr, const char * cls_name, std::size_t cls_size)
 {
-  if (! tracing_active)
-    return true;
-
   if (trace_class_mode && cls_name[0] == '_')
     return true;
   if (trace_alloc_mode && cls_name[0] != '_')
@@ -162,42 +183,106 @@ void report_memory(std::ostream& out)
   }
 }
 
-#if 0 && DEBUG_LEVEL >= 4 && ! defined(USE_BOOST_PYTHON)
+#if ! defined(USE_BOOST_PYTHON)
 
 string::string() : std::string() {
-  TRACE_CTOR(string, "");
+  trace_ctor(string, "");
 }
 string::string(const string& str) : std::string(str) {
-  TRACE_CTOR(string, "const string&");
+  trace_ctor(string, "const string&");
 }
 string::string(const std::string& str) : std::string(str) {
-  TRACE_CTOR(string, "const std::string&");
+  trace_ctor(string, "const std::string&");
 }
 string::string(const int len, char x) : std::string(len, x) {
-  TRACE_CTOR(string, "const int, char");
+  trace_ctor(string, "const int, char");
 }
 string::string(const char * str) : std::string(str) {
-  TRACE_CTOR(string, "const char *");
+  trace_ctor(string, "const char *");
 }
 string::string(const char * str, const char * end) : std::string(str, end) {
-  TRACE_CTOR(string, "const char *, const char *");
+  trace_ctor(string, "const char *, const char *");
 }
 string::string(const string& str, int x) : std::string(str, x) {
-  TRACE_CTOR(string, "const string&, int");
+  trace_ctor(string, "const string&, int");
 }
 string::string(const string& str, int x, int y) : std::string(str, x, y) {
-  TRACE_CTOR(string, "const string&, int, int");
+  trace_ctor(string, "const string&, int, int");
 }
 string::string(const char * str, int x) : std::string(str, x) {
-  TRACE_CTOR(string, "const char *, int");
+  trace_ctor(string, "const char *, int");
 }
 string::string(const char * str, int x, int y) : std::string(str, x, y) {
-  TRACE_CTOR(string, "const char *, int, int");
+  trace_ctor(string, "const char *, int, int");
 }
 string::~string() {
-  TRACE_DTOR(string);
+  trace_dtor(string);
 }
 
 #endif
+
+#endif // VERIFY_ON
+
+#if defined(TIMERS_ON)
+
+void start_timer(const char * name)
+{
+  begin = std::clock();
+}
+
+void stop_timer(const char * name)
+{
+  cumulative += std::clock() - begin;
+}
+
+void finish_timer(const char * name)
+{
+  DEBUG_PRINT(cls.c_str(), file << ":" << line << ": "
+	      << category << " = "
+	      << (double(cumulative) / double(CLOCKS_PER_SEC)) << "s");
+}
+
+#endif // TIMERS_ON
+
+#if defined(LOGGING_ON) && defined(DEBUG_ON)
+
+std::ostream * _debug_stream	  = &std::cerr;
+bool	       _free_debug_stream = false;
+boost::regex   _debug_regex;
+bool           _set_debug_regex   = false;
+bool           _debug_regex_on    = false;
+
+bool _debug_active(const char * const cls) {
+  if (! _set_debug_regex) {
+    const char * user_class = std::getenv("DEBUG_CLASS");
+    if (user_class) {
+      _debug_regex = user_class;
+      _debug_regex_on = true;
+    }
+    _set_debug_regex = true;
+  }
+  if (_debug_regex_on)
+    return boost::regex_match(cls, _debug_regex);
+  return false;
+}
+
+static struct init_streams {
+  init_streams() {
+    // If debugging is enabled and DEBUG_FILE is set, all debugging
+    // output goes to that file.
+    if (const char * p = std::getenv("DEBUG_FILE")) {
+      _debug_stream      = new std::ofstream(p);
+      _free_debug_stream = true;
+    }
+  }
+  ~init_streams() {
+    if (_free_debug_stream && _debug_stream) {
+      delete _debug_stream;
+      _debug_stream = NULL;
+    }
+  }
+} _debug_init;
+
+#endif // LOGGING_ON && DEBUG_ON
 
 } // namespace ledger

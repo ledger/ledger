@@ -1,7 +1,42 @@
 #ifndef _ERROR_H
 #define _ERROR_H
 
+#import "context.h"
+
 namespace ledger {
+
+class exception : public std::exception
+{
+protected:
+  string reason;
+
+public:
+  std::list<context> context_stack;
+
+  exception(const string&  _reason,
+	    const context& immediate_ctxt) throw()
+    : reason(_reason) {
+    push(immediate_ctxt);
+  }
+
+  void push(const context& intermediate_ctxt) throw() {
+    context_stack.push_front(intermediate_ctxt);
+  }
+
+  void write(std::ostream& out) const throw() {
+    for (std::list<context>::const_iterator
+	   i = context.begin();
+	 i != context.end();
+	 i++)
+      (*i).write(out);
+  }
+
+  const char * what() const throw() {
+    return reason.c_str();
+  }
+};
+
+#if 0
 
 class error_context
 {
@@ -57,46 +92,6 @@ class line_context : public error_context {
   }
 };
 
-//////////////////////////////////////////////////////////////////////
-
-class str_exception : public std::exception {
- protected:
-  string reason;
- public:
-  std::list<error_context *> context;
-
-  str_exception(const string& _reason,
-		error_context * ctxt = NULL) throw()
-    : reason(_reason) {
-    if (ctxt)
-      context.push_back(ctxt);
-  }
-
-  virtual ~str_exception() throw() {
-    for (std::list<error_context *>::iterator i = context.begin();
-	 i != context.end();
-	 i++)
-      delete *i;
-  }
-
-  virtual void reveal_context(std::ostream& out,
-			      const string& kind) const throw() {
-    for (std::list<error_context *>::const_reverse_iterator i =
-	   context.rbegin();
-	 i != context.rend();
-	 i++) {
-      std::list<error_context *>::const_reverse_iterator x = i;
-      if (++x == context.rend())
-	out << kind << ": ";
-      (*i)->describe(out);
-    }
-  }
-
-  virtual const char* what() const throw() {
-    return reason.c_str();
-  }
-};
-
 class error : public str_exception {
  public:
   error(const string& _reason, error_context * _ctxt = NULL) throw()
@@ -117,6 +112,8 @@ class fatal_assert : public fatal {
     : fatal(string("assertion failed '") + _reason + "'", _ctxt) {}
   virtual ~fatal_assert() throw() {}
 };
+
+#endif // 0
 
 inline void unexpected(char c, char wanted)
 {

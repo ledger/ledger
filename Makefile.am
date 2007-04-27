@@ -31,8 +31,9 @@ libledger_la_CPPFLAGS = -I$(top_builddir)/gdtoa
 libledger_la_LDFLAGS  = -release 3.0
 
 libledger_la_SOURCES = \
-	amount.cc      \
+	utils.cc       \
 	times.cc       \
+	amount.cc      \
 	quotes.cc      \
 	balance.cc     \
 	value.cc       \
@@ -40,8 +41,6 @@ libledger_la_SOURCES = \
 	xpath.cc       \
 	mask.cc        \
 	format.cc      \
-	util.cc        \
-	trace.cc       \
 		       \
 	session.cc     \
 	journal.cc     \
@@ -55,7 +54,6 @@ libledger_la_SOURCES = \
 	transform.cc   \
 		       \
 	register.cc    \
-		       \
 	csv.cc         \
 	derive.cc      \
 	emacs.cc       \
@@ -74,8 +72,7 @@ libledger_la_CPPFLAGS += -DHAVE_LIBOFX=1
 libledger_la_SOURCES += ofx.cc
 endif
 if DEBUG
-libledger_la_CPPFLAGS += -DDEBUG_LEVEL=4
-libledger_la_SOURCES  += debug.cc
+libledger_la_CPPFLAGS += -DFULL_DEBUG
 endif
 if HAVE_BOOST_PYTHON
 libledger_la_CPPFLAGS += -DUSE_BOOST_PYTHON=1
@@ -107,8 +104,8 @@ pkginclude_HEADERS = \
 	times.h      \
 	balance.h    \
 	binary.h     \
+	context.h    \
 	csv.h	     \
-	debug.h	     \
 	derive.h     \
 	emacs.h	     \
 	error.h	     \
@@ -131,10 +128,8 @@ pkginclude_HEADERS = \
 	session.h    \
 	system.hh    \
 	textual.h    \
-	timing.h     \
-	trace.h	     \
 	transform.h  \
-	util.h	     \
+	utils.h	     \
 	value.h	     \
 	xml.h        \
 	xmlparse.h   \

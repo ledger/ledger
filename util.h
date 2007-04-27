@@ -1,29 +1,6 @@
 #ifndef _UTIL_H
 #define _UTIL_H
 
-#if defined __FreeBSD__ && __FreeBSD__ <=4
-// FreeBSD has a broken isspace macro, so dont use it
-#undef isspace(c)
-#endif
-
-#if defined(__GNUG__) && __GNUG__ < 3
-namespace std {
-  inline ostream & right (ostream & i) {
-    i.setf(i.right, i.adjustfield);
-    return i;
-  }
-  inline ostream & left (ostream & i) {
-    i.setf(i.left, i.adjustfield);
-    return i;
-  }
-}
-typedef unsigned long istream_pos_type;
-typedef unsigned long ostream_pos_type;
-#else
-typedef std::istream::pos_type istream_pos_type;
-typedef std::ostream::pos_type ostream_pos_type;
-#endif
-
 namespace ledger {
 
 inline char * skip_ws(char * ptr) {
