@@ -216,8 +216,10 @@ void shutdown()
   amount_t::shutdown();
 
   IF_VERIFY() {
-    INFO("Ledger shutdown (Boost and libstdc++ may hold memory)");
+    INFO("Ledger has shutdown (Boost and libstdc++ may hold memory)");
     shutdown_memory_tracing();
+  } else {
+    INFO("Ledger has shutdown");
   }
 }
 
