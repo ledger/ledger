@@ -21,13 +21,7 @@ class parser_t
 			     const string * original_file = NULL) = 0;
 };
 
-class parse_error : public error {
- public:
-  parse_error(const string& _reason,
-	      error_context * _ctxt = NULL) throw()
-    : error(_reason, _ctxt) {}
-  virtual ~parse_error() throw() {}
-};
+DEFINE_EXCEPTION(parse_exception)
 
 } // namespace ledger
 

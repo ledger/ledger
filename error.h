@@ -36,6 +36,14 @@ public:
   }
 };
 
+#define DEFINE_EXCEPTION(name)			\
+  class name : public exception {		\
+  public:					\
+    name(const string& _reason,			\
+	 const context& immediate_ctxt) throw()	\
+      : exception(_reason, immediate_ctxt) {}	\
+  };
+
 #if 0
 
 class error_context

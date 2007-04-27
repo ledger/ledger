@@ -5,12 +5,15 @@ namespace ledger
 
 #if defined(ASSERTS_ON)
 
-void debug_assert(const ledger::string& reason,
-		  const ledger::string& func,
-		  const ledger::string& file,
-		  unsigned long		line)
+void debug_assert(const string& reason,
+		  const string& func,
+		  const string& file,
+		  unsigned long	line)
 {
-  throw fatal(reason, context());
+  std::ostringstream buf;
+  buf << "Assertion failed in \"" << file << "\", line " << line
+      << ": " << reason;
+  throw exception(buf.str(), context());
 }
 
 #endif
@@ -87,14 +90,9 @@ inline void report_count_map(std::ostream& out, object_count_map& the_map)
 	<< std::endl;
 }
 
-bool trace_ctor(void * ptr, const char * cls_name, const char * args,
-		std::size_t cls_size)
+bool trace_ctor_func(void * ptr, const char * cls_name, const char * args,
+		     std::size_t cls_size)
 {
-  if (trace_class_mode && cls_name[0] == '_')
-    return true;
-  if (trace_alloc_mode && cls_name[0] != '_')
-    return true;
-  
   static char name[1024];
   std::strcpy(name, cls_name);
   std::strcat(name, "(");
@@ -114,13 +112,8 @@ bool trace_ctor(void * ptr, const char * cls_name, const char * args,
   return true;
 }
 
-bool trace_dtor(void * ptr, const char * cls_name, std::size_t cls_size)
+bool trace_dtor_func(void * ptr, const char * cls_name, std::size_t cls_size)
 {
-  if (trace_class_mode && cls_name[0] == '_')
-    return true;
-  if (trace_alloc_mode && cls_name[0] != '_')
-    return true;
-  
   DEBUG_PRINT("ledger.trace.debug", "trace_dtor " << ptr << " " << cls_name);
 
   live_objects_map::iterator i = live_objects.find(ptr);

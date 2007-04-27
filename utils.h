@@ -3,39 +3,7 @@
 
 #include <system.hh>
 
-#if defined __FreeBSD__ && __FreeBSD__ <=4
-// FreeBSD has a broken isspace macro, so don't use it
-#undef isspace(c)
-#endif
-
-#if defined(__GNUG__) && __GNUG__ < 3
-namespace std {
-  inline ostream & right (ostream & i) {
-    i.setf(i.right, i.adjustfield);
-    return i;
-  }
-  inline ostream & left (ostream & i) {
-    i.setf(i.left, i.adjustfield);
-    return i;
-  }
-}
-#endif
-
 namespace ledger {
-
-// jww (2007-04-23): Need to clean up the following include files.  I
-// want to following services:
-//
-//   error reporting via exceptions
-//   error context stack and display (copy-by-value)
-//   logging (always on, but with user-settable levels)
-//   assert (always on, unless the users asks for them off)
-//   timing of critical areas (and warning on variance from expectation)
-//   debugging (optionally on)
-//   verification (optionally on, like debugging but silent)
-//   memory tracing and debugging (and watching for threshholds)
-
-#import "error.h"
 
 /**********************************************************************
  *
@@ -51,7 +19,7 @@ namespace ledger {
 #define NO_ASSERTS 1
 #define NO_LOGGING 1
 #else
-#define TIMERS_ON  1
+#define TIMERS_ON  1		// jww (2007-04-25): is this correct?
 #endif
 
 /**********************************************************************
@@ -115,14 +83,14 @@ extern object_count_map	live_count;
 extern object_count_map	ctor_count;
 extern object_count_map	object_count;
 
-bool trace_ctor(void * ptr, const char * cls_name, const char * args,
-		std::size_t cls_size);
-bool trace_dtor(void * ptr, const char * cls_name, std::size_t cls_size);
+bool trace_ctor_func(void * ptr, const char * cls_name, const char * args,
+		     std::size_t cls_size);
+bool trace_dtor_func(void * ptr, const char * cls_name, std::size_t cls_size);
 
 #define trace_ctor(cls, args) \
-  verify(trace_ctor(this, #cls, args, sizeof(cls)))
+  verify(trace_ctor_func(this, #cls, args, sizeof(cls)))
 #define trace_dtor(cls) \
-  verify(trace_dtor(this, #cls, sizeof(cls)))
+  verify(trace_dtor_func(this, #cls, sizeof(cls)))
 
 void report_memory(std::ostream& out);
 
@@ -256,6 +224,9 @@ bool logger(log_level_t level);
 #define debug(msg)
 #endif
    
+#define exception_occurred(msg) \
+  log_macro(LOG_EXCEPT, msg)
+
 #define info_(cat, msg)					\
   (_log_level >= LOG_INFO &&				\
    (_log_category == cat ||				\
@@ -284,6 +255,8 @@ bool logger(log_level_t level);
 #define error(msg)
 #define fatal(msg)
 #define critical(msg)
+
+#endif // LOGGING_ON
 
 /**********************************************************************
  *
@@ -371,6 +344,13 @@ void finish_timer(const char * name);
 #define if_debug(cat) if (false)
 
 #endif // DEBUG_ON
+
+/**********************************************************************
+ *
+ * Exception handling
+ */
+
+#import "error.h"
 
 // } namespace ledger
 

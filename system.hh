@@ -9,8 +9,8 @@
  * @brief  All system headers needed by Ledger.
  *
  * These are collected here so that a pre-compiled header can be made.
- * Unless configure is rerun with different options, it should never
- * need to be regenerated afterwards.
+ * None of these header files (with the exception of acconf.h, when
+ * configure is re-run) are expected to change.
  */
 
 #include "acconf.h"
@@ -34,6 +34,19 @@
 #include <string>
 #include <vector>
 
+#if defined(__GNUG__) && __GNUG__ < 3
+namespace std {
+  inline ostream & right (ostream & i) {
+    i.setf(i.right, i.adjustfield);
+    return i;
+  }
+  inline ostream & left (ostream & i) {
+    i.setf(i.left, i.adjustfield);
+    return i;
+  }
+}
+#endif
+
 #include <cassert>
 #include <cctype>
 #include <cstdarg>
@@ -41,6 +54,11 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+
+#if defined __FreeBSD__ && __FreeBSD__ <= 4
+// FreeBSD has a broken isspace macro, so don't use it
+#undef isspace(c)
+#endif
 
 #include <sys/stat.h>
 
