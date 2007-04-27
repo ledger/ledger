@@ -57,12 +57,12 @@ TESTS = UnitTests$(EXEEXT) $(am__EXEEXT_1)
 @HAVE_BOOST_PYTHON_TRUE@am__append_17 = PyUnitTests
 check_PROGRAMS = $(am__EXEEXT_2)
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(pkginclude_HEADERS) \
-	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(srcdir)/acconf.h.in $(top_srcdir)/configure AUTHORS COPYING \
-	ChangeLog INSTALL NEWS TODO compile config.guess config.sub \
-	depcomp elisp-comp install-sh ltmain.sh missing texinfo.tex \
-	ylwrap
+DIST_COMMON = README $(am__configure_deps) $(dist_lisp_LISP) \
+	$(pkginclude_HEADERS) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in $(srcdir)/acconf.h.in \
+	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
+	TODO compile config.guess config.sub depcomp elisp-comp \
+	install-sh ltmain.sh missing texinfo.tex ylwrap
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -125,11 +125,11 @@ PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
 am_PyUnitTests_OBJECTS =
 PyUnitTests_OBJECTS = $(am_PyUnitTests_OBJECTS)
 PyUnitTests_LDADD = $(LDADD)
-am_UnitTests_OBJECTS = UnitTests-UnitTests.$(OBJEXT) \
+nodist_UnitTests_OBJECTS = UnitTests-UnitTests.$(OBJEXT) \
 	UnitTests-BasicAmount.$(OBJEXT) \
 	UnitTests-CommodityAmount.$(OBJEXT) \
 	UnitTests-DateTime.$(OBJEXT) UnitTests-Commodity.$(OBJEXT)
-UnitTests_OBJECTS = $(am_UnitTests_OBJECTS)
+UnitTests_OBJECTS = $(nodist_UnitTests_OBJECTS)
 UnitTests_DEPENDENCIES = $(lib_LTLIBRARIES) gdtoa/libgdtoa.la
 UnitTests_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
@@ -168,11 +168,11 @@ LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	$(LDFLAGS) -o $@
 SOURCES = $(libledger_la_SOURCES) $(nodist_libledger_la_SOURCES) \
 	$(libpyledger_la_SOURCES) $(PyUnitTests_SOURCES) \
-	$(UnitTests_SOURCES) $(ledger_SOURCES) $(ledger_so_SOURCES)
+	$(nodist_UnitTests_SOURCES) $(ledger_SOURCES) \
+	$(ledger_so_SOURCES)
 DIST_SOURCES = $(am__libledger_la_SOURCES_DIST) \
 	$(libpyledger_la_SOURCES) $(PyUnitTests_SOURCES) \
-	$(UnitTests_SOURCES) $(ledger_SOURCES) \
-	$(am__ledger_so_SOURCES_DIST)
+	$(ledger_SOURCES) $(am__ledger_so_SOURCES_DIST)
 INFO_DEPS = $(srcdir)/ledger.info
 am__TEXINFO_TEX_DIR = $(srcdir)
 DVIS = ledger.dvi
@@ -192,8 +192,8 @@ RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	install-pdf-recursive install-ps-recursive install-recursive \
 	installcheck-recursive installdirs-recursive pdf-recursive \
 	ps-recursive uninstall-recursive
-lispLISP_INSTALL = $(INSTALL_DATA)
-LISP = $(lisp_LISP)
+dist_lispLISP_INSTALL = $(INSTALL_DATA)
+LISP = $(dist_lisp_LISP)
 am__ELFILES = ledger.el timeclock.el
 am__ELCFILES = $(am__ELFILES:.el=.elc)
 ELCFILES = $(LISP:.el=.elc)
@@ -391,6 +391,7 @@ pkginclude_HEADERS = \
 	qif.h	     \
 	quotes.h     \
 	reconcile.h  \
+	register.h   \
 	report.h     \
 	session.h    \
 	system.hh    \
@@ -411,14 +412,14 @@ ledger_LDFLAGS = -static	# for the sake of command-line speed
 info_TEXINFOS = ledger.texi
 
 ######################################################################
-lisp_LISP = ledger.el timeclock.el
+dist_lisp_LISP = ledger.el timeclock.el
 @HAVE_BOOST_PYTHON_TRUE@ledger_so_SOURCES = pyledger.cc
 @HAVE_BOOST_PYTHON_TRUE@ledger_so_DEPENDENCIES = libledger.la gdtoa/libgdtoa.la libpyledger.la
 @HAVE_BOOST_PYTHON_TRUE@PYLIBS = pyledger ledger gdtoa boost_date_time \
 @HAVE_BOOST_PYTHON_TRUE@	boost_regex boost_python gmp \
 @HAVE_BOOST_PYTHON_TRUE@	$(am__append_14) $(am__append_15) \
 @HAVE_BOOST_PYTHON_TRUE@	$(am__append_16)
-UnitTests_SOURCES = tests/UnitTests.cc \
+nodist_UnitTests_SOURCES = tests/UnitTests.cc \
 	\
 	tests/corelib/numerics/BasicAmount.cc \
 	tests/corelib/numerics/CommodityAmount.cc \
@@ -428,7 +429,7 @@ UnitTests_SOURCES = tests/UnitTests.cc \
 UnitTests_CPPFLAGS = -I$(srcdir)/tests $(libledger_la_CPPFLAGS)
 UnitTests_LDFLAGS = $(LIBADD_DL)
 UnitTests_LDADD = $(lib_LTLIBRARIES) gdtoa/libgdtoa.la -lcppunit
-PyUnitTests_SOURCES = PyUnitTest.py
+PyUnitTests_SOURCES = PyUnitTests.py
 
 ######################################################################
 DISTCLEANFILES = Doxyfile.gen
@@ -1093,26 +1094,26 @@ $(am__ELCFILES): elc-stamp
 	    test -f elc-stamp; exit $$?; \
 	  fi; \
 	else : ; fi
-install-lispLISP: $(lisp_LISP) $(ELCFILES)
+install-dist_lispLISP: $(dist_lisp_LISP) $(ELCFILES)
 	@$(NORMAL_INSTALL)
 	@if test "$(EMACS)" != no; then \
 	  test -z "$(lispdir)" || $(MKDIR_P) "$(DESTDIR)$(lispdir)"; \
-	  list='$(lisp_LISP)'; for p in $$list; do \
+	  list='$(dist_lisp_LISP)'; for p in $$list; do \
 	    if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
 	    f=$(am__strip_dir) \
-	    echo " $(lispLISP_INSTALL) '$$d$$p' '$(DESTDIR)$(lispdir)/$$f'"; \
-	    $(lispLISP_INSTALL) "$$d$$p" "$(DESTDIR)$(lispdir)/$$f"; \
+	    echo " $(dist_lispLISP_INSTALL) '$$d$$p' '$(DESTDIR)$(lispdir)/$$f'"; \
+	    $(dist_lispLISP_INSTALL) "$$d$$p" "$(DESTDIR)$(lispdir)/$$f"; \
 	    if test -f $${p}c; then \
-	      echo " $(lispLISP_INSTALL) '$${p}c' '$(DESTDIR)$(lispdir)/$${f}c'"; \
-	      $(lispLISP_INSTALL) "$${p}c" "$(DESTDIR)$(lispdir)/$${f}c"; \
+	      echo " $(dist_lispLISP_INSTALL) '$${p}c' '$(DESTDIR)$(lispdir)/$${f}c'"; \
+	      $(dist_lispLISP_INSTALL) "$${p}c" "$(DESTDIR)$(lispdir)/$${f}c"; \
 	    else : ; fi; \
 	  done; \
 	else : ; fi
 
-uninstall-lispLISP:
+uninstall-dist_lispLISP:
 	@$(NORMAL_UNINSTALL)
 	@if test "$(EMACS)" != no; then \
-	  list='$(lisp_LISP)'; for p in $$list; do \
+	  list='$(dist_lisp_LISP)'; for p in $$list; do \
 	    f=$(am__strip_dir) \
 	    echo " rm -f '$(DESTDIR)$(lispdir)/$$f' '$(DESTDIR)$(lispdir)/$${f}c'"; \
 	    rm -f "$(DESTDIR)$(lispdir)/$$f" "$(DESTDIR)$(lispdir)/$${f}c"; \
@@ -1557,7 +1558,7 @@ info: info-recursive
 
 info-am: $(INFO_DEPS)
 
-install-data-am: install-info-am install-lispLISP \
+install-data-am: install-dist_lispLISP install-info-am \
 	install-pkgincludeHEADERS
 
 install-dvi: install-dvi-recursive
@@ -1672,9 +1673,10 @@ ps: ps-recursive
 
 ps-am: $(PSS)
 
-uninstall-am: uninstall-binPROGRAMS uninstall-dvi-am uninstall-html-am \
-	uninstall-info-am uninstall-libLTLIBRARIES uninstall-lispLISP \
-	uninstall-pdf-am uninstall-pkgincludeHEADERS uninstall-ps-am
+uninstall-am: uninstall-binPROGRAMS uninstall-dist_lispLISP \
+	uninstall-dvi-am uninstall-html-am uninstall-info-am \
+	uninstall-libLTLIBRARIES uninstall-pdf-am \
+	uninstall-pkgincludeHEADERS uninstall-ps-am
 
 .MAKE: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) install-am \
 	install-exec-am install-strip
@@ -1689,20 +1691,20 @@ uninstall-am: uninstall-binPROGRAMS uninstall-dvi-am uninstall-html-am \
 	distclean-generic distclean-hdr distclean-libtool \
 	distclean-tags distcleancheck distdir distuninstallcheck dvi \
 	dvi-am html html-am info info-am install install-am \
-	install-binPROGRAMS install-data install-data-am install-dvi \
-	install-dvi-am install-exec install-exec-am install-exec-hook \
-	install-html install-html-am install-info install-info-am \
-	install-libLTLIBRARIES install-lispLISP install-man \
-	install-pdf install-pdf-am install-pkgincludeHEADERS \
-	install-ps install-ps-am install-strip installcheck \
-	installcheck-am installdirs installdirs-am maintainer-clean \
-	maintainer-clean-aminfo maintainer-clean-generic mostlyclean \
-	mostlyclean-aminfo mostlyclean-compile mostlyclean-generic \
-	mostlyclean-libtool pdf pdf-am ps ps-am tags tags-recursive \
-	uninstall uninstall-am uninstall-binPROGRAMS uninstall-dvi-am \
+	install-binPROGRAMS install-data install-data-am \
+	install-dist_lispLISP install-dvi install-dvi-am install-exec \
+	install-exec-am install-exec-hook install-html install-html-am \
+	install-info install-info-am install-libLTLIBRARIES \
+	install-man install-pdf install-pdf-am \
+	install-pkgincludeHEADERS install-ps install-ps-am \
+	install-strip installcheck installcheck-am installdirs \
+	installdirs-am maintainer-clean maintainer-clean-aminfo \
+	maintainer-clean-generic mostlyclean mostlyclean-aminfo \
+	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
+	pdf pdf-am ps ps-am tags tags-recursive uninstall uninstall-am \
+	uninstall-binPROGRAMS uninstall-dist_lispLISP uninstall-dvi-am \
 	uninstall-html-am uninstall-info-am uninstall-libLTLIBRARIES \
-	uninstall-lispLISP uninstall-pdf-am \
-	uninstall-pkgincludeHEADERS uninstall-ps-am
+	uninstall-pdf-am uninstall-pkgincludeHEADERS uninstall-ps-am
 
 
 #(cd $(distdir)/docs; zip -r doxygen-html.zip html; rm -fr html)

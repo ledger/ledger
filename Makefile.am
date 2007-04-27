@@ -206,7 +206,7 @@ endif
 
 check_PROGRAMS = $(TESTS)
 
-UnitTests_SOURCES = tests/UnitTests.cc \
+nodist_UnitTests_SOURCES = tests/UnitTests.cc \
 	\
 	tests/corelib/numerics/BasicAmount.cc \
 	tests/corelib/numerics/CommodityAmount.cc \
