@@ -32,6 +32,7 @@ namespace ledger {
 #define NO_LOGGING  1
 #else
 #define VERIFY_ON   1		// compiled in, use --verify to enable
+#define TRACING_ON  1		// use --trace X to enable
 #define TIMERS_ON   1		// jww (2007-04-25): is this correct?
 #endif
 
