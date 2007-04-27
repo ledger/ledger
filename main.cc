@@ -347,10 +347,6 @@ static int read_and_report(report_t * report, int argc, char * argv[],
 
   TRACE_START(cleanup, 1, "Cleaning up allocated memory");
 
-#ifdef USE_BOOST_PYTHON
-  shutdown_ledger_for_python();
-#endif
-
   if (! report->output_file.empty())
     delete out;
 

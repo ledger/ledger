@@ -209,7 +209,7 @@ extern std::ostringstream _log_buffer;
 
 bool logger_func(log_level_t level);
 
-#define logger(cat) \
+#define LOGGER(cat) \
     static const char * const _this_category = cat
 
 #define SHOW_TRACE(lvl) \
@@ -266,7 +266,7 @@ bool logger_func(log_level_t level);
 
 #else // ! LOGGING_ON
 
-#define logger(cat)
+#define LOGGER(cat)
 
 #define SHOW_TRACE(lvl)  false
 #define SHOW_DEBUG_(cat) false

@@ -44,7 +44,6 @@ libledger_la_SOURCES = \
 		       \
 	session.cc     \
 	journal.cc     \
-	parser.cc      \
 	textual.cc     \
 	binary.cc      \
 	xmlparse.cc    \

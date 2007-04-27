@@ -8,7 +8,7 @@ void quotes_by_script::operator()(commodity_base_t& commodity,
 				  const ptime&      last,
 				  amount_t&	    price)
 {
-  logger("quotes.download");
+  LOGGER("quotes.download");
 
   DEBUG("commodity: " << commodity.symbol);
   DEBUG("      now: " << now);

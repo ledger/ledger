@@ -4,12 +4,6 @@ import exceptions
 from ledger import amount
 
 class BasicAmountTestCase(unittest.TestCase):
-    def setUp(self):
-        amount.initialize()
-        
-    def tearDown(self):
-        amount.shutdown()
-        
     def testConstructors(self):
         x0 = amount()
         x1 = amount(123456)

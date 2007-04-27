@@ -177,7 +177,7 @@ class session_t : public xml::xpath_t::scope_t
   }
 
 #if 0
-#ifdef USE_BOOST_PYTHON
+#if defined(USE_BOOST_PYTHON)
   void option_import(value_t&) {
     python_import(optarg);
   }

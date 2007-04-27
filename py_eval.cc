@@ -18,7 +18,7 @@ void shutdown_option();
 
 namespace ledger {
 
-void initialize_ledger_for_python()
+void initialize_for_python()
 {
   export_amount();
 #if 0
@@ -35,7 +35,7 @@ void initialize_ledger_for_python()
 #endif
 }
 
-void shutdown_ledger_for_python()
+void shutdown_for_python()
 {
 #if 0
   shutdown_option();
@@ -61,7 +61,7 @@ python_interpreter_t::python_interpreter_t(xml::xpath_t::scope_t * parent)
     nspace(handle<>(borrowed(PyModule_GetDict(mmodule.get()))))
 {
   Py_Initialize();
-  detail::init_module("ledger", &initialize_ledger_for_python);
+  detail::init_module("ledger", &initialize_for_python);
 }
 
 object python_interpreter_t::import(const string& str)

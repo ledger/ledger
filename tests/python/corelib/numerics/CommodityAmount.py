@@ -10,8 +10,6 @@ internalAmount = amount.exact
 
 class CommodityAmountTestCase(unittest.TestCase):
     def setUp(self):
-        amount.initialize()
-
         # Cause the display precision for dollars to be initialized to 2.
         x1 = amount("$1.00")
         self.assertTrue(x1)
@@ -19,7 +17,6 @@ class CommodityAmountTestCase(unittest.TestCase):
         
     def tearDown(self):
         amount.full_strings = False
-        amount.shutdown()
 
     def assertValid(self, amt):
         self.assertTrue(amt.valid())

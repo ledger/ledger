@@ -324,18 +324,3 @@ void remove_transform::execute(xml::document_t * document)
 #endif
 
 } // namespace ledger
-
-#if 0
-#ifdef USE_BOOST_PYTHON
-
-using namespace boost::python;
-using namespace ledger;
-
-void export_transform()
-{
-  class_< repitem_t > ("Transform")
-    ;
-}
-
-#endif // USE_BOOST_PYTHON
-#endif

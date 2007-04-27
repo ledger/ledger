@@ -187,23 +187,3 @@ xml::xpath_t::op_t * report_t::lookup(const string& name)
 }
 
 } // namespace ledger
-
-#if 0
-#ifdef USE_BOOST_PYTHON
-
-using namespace boost::python;
-using namespace ledger;
-
-void export_report()
-{
-  class_< report_t > ("Report")
-    .add_property("session",
-		  make_getter(&report_t::session,
-			      return_value_policy<reference_existing_object>()))
-
-    .def("apply_transforms", &report_t::apply_transforms)
-    ;
-}
-
-#endif // USE_BOOST_PYTHON
-#endif
