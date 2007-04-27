@@ -123,6 +123,7 @@ pkginclude_HEADERS = \
 	qif.h	     \
 	quotes.h     \
 	reconcile.h  \
+	register.h   \
 	report.h     \
 	session.h    \
 	system.hh    \
@@ -152,7 +153,7 @@ info_TEXINFOS = ledger.texi
 
 ######################################################################
 
-lisp_LISP = ledger.el timeclock.el
+dist_lisp_LISP = ledger.el timeclock.el
 
 ######################################################################
 
@@ -216,7 +217,7 @@ UnitTests_CPPFLAGS = -I$(srcdir)/tests $(libledger_la_CPPFLAGS)
 UnitTests_LDFLAGS  = $(LIBADD_DL)
 UnitTests_LDADD    = $(lib_LTLIBRARIES) gdtoa/libgdtoa.la -lcppunit
 
-PyUnitTests_SOURCES = PyUnitTest.py
+PyUnitTests_SOURCES = PyUnitTests.py
 
 PyUnitTests: PyUnitTests.py
 	cat $(srcdir)/PyUnitTests.py | sed "s/%srcdir%/$(ESC_srcdir)/g" \

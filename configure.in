@@ -322,7 +322,7 @@ AC_ARG_ENABLE(pch,
     yes) pch=true ;;
     no)  pch=false ;;
     *) AC_MSG_ERROR(bad value ${enableval} for --enable-pch) ;;
-  esac],[pch=true])
+  esac],[pch=false])
 
 AM_CONDITIONAL(USE_PCH, test x$pch = xtrue)
 
