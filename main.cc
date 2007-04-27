@@ -67,8 +67,8 @@ static int read_and_report(report_t * report, int argc, char * argv[],
   TRACE(1, "Binary cache is " << session.cache_file);
   TRACE(1, "Main journal is " << session.data_file);
 
-  TRACE(1, "Based on option settings, binary cache " <<
-	(session.use_cache ? "WILL " : "will NOT ") << "be used");
+  if (! session.use_cache)
+    INFO("The binary cache mechanism will not be used");
 
   // Read the command word and create a command object based on it
 
@@ -134,7 +134,7 @@ static int read_and_report(report_t * report, int argc, char * argv[],
   else if (verb == "parse") {
     xml::xpath_t expr(*arg);
 
-    if (session.verbose_mode) {
+    IF_INFO() {
       std::cout << "Value expression tree:" << std::endl;
       expr.dump(std::cout);
       std::cout << std::endl;
@@ -231,7 +231,7 @@ static int read_and_report(report_t * report, int argc, char * argv[],
   if (verb == "expr") {
     xml::xpath_t expr(*arg);
 
-    if (session.verbose_mode) {
+    IF_INFO() {
       *out << "Value expression tree:" << std::endl;
       expr.dump(*out);
       *out << std::endl;
@@ -370,24 +370,45 @@ static int read_and_report(report_t * report, int argc, char * argv[],
   return 0;
 }
 
-#ifdef DEBUG_ENABLED
-extern int new_calls;
-extern unsigned long new_size;
-#endif
-
 int main(int argc, char * argv[], char * envp[])
 {
   int status = 1;
 
+#if defined(FULL_DEBUG)
+  ledger::verify_enabled = true;
+#endif
+
+  for (int i = 1; i < argc; i++)
+    if (argv[i][0] == '-' && argv[i][1] == '-') {
+#if defined(VERIFY_ON)
+      if (std::strcmp(argv[i], "--verify") == 0)
+	ledger::verify_enabled = true;
+#endif
+#if defined(DEBUG_ON)
+      if (i + 1 < argc && std::strcmp(argv[i], "--debug") == 0) {
+	ledger::_log_level    = LOG_DEBUG;
+	ledger::_log_category = argv[i + 1];
+	i++;
+      }
+#endif
+#if defined(TRACING_ON)
+      if (i + 1 < argc && std::strcmp(argv[i], "--trace") == 0) {
+	ledger::_log_level   = LOG_TRACE;
+	ledger::_trace_level = std::atoi(argv[i + 1]);
+	i++;
+      }
+#endif
+    }
+
   try {
     std::ios::sync_with_stdio(false);
 
-#if DEBUG_LEVEL < BETA
+    ledger::initialize();
+
+#if ! defined(FULL_DEBUG)
     ledger::do_cleanup = false;
 #endif
     TRACE(1, "Ledger starting");
-
-    ledger::amount_t::initialize();
 
     std::auto_ptr<ledger::session_t> session(new ledger::session_t);
 
@@ -411,9 +432,6 @@ int main(int argc, char * argv[], char * envp[])
     if (! ledger::do_cleanup) {
       report.release();
       session.release();
-      ledger::xml::xpath_t::lookahead.clear();
-    } else {
-      ledger::amount_t::shutdown();
     }
   }
 #if 0
@@ -446,11 +464,8 @@ int main(int argc, char * argv[], char * envp[])
     status = _status;
   }
 
-  IF_DEBUG_("ledger.trace.memory") {
-    report_memory(std::cerr);
-    std::cerr << "Total calls to new: " << new_calls << std::endl
-	      << "Total memory new'd: " << new_size << std::endl;
-  }
+  if (ledger::do_cleanup)
+    ledger::shutdown();
 
   return status;
 }

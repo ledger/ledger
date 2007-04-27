@@ -180,18 +180,11 @@ if HAVE_LIBOFX
 PYLIBS += ofx
 endif
 
-if DEBUG
-DEBUG_LEVEL = 4
-else
-DEBUG_LEVEL = 0
-endif
-
 ledger.so: pyledger.cc libledger.la gdtoa/libgdtoa.la libpyledger.la
 	SRCDIR="$(srcdir)" \
 	CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libledger_la_CPPFLAGS)" \
 	LDFLAGS="$(LDFLAGS) -L. -L.libs -Lgdtoa -Lgdtoa/.libs" \
 	PYLIBS="$(PYLIBS)" \
-	DEBUG_LEVEL="$(DEBUG_LEVEL)" \
 	    python $(srcdir)/setup.py build --build-lib=.
 
 install-exec-hook:
@@ -199,7 +192,6 @@ install-exec-hook:
 	CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libledger_la_CPPFLAGS)" \
 	LDFLAGS="$(LDFLAGS) -L. -L.libs -Lgdtoa -Lgdtoa/.libs" \
 	PYLIBS="$(PYLIBS)" \
-	DEBUG_LEVEL="$(DEBUG_LEVEL)" \
 	    python $(srcdir)/setup.py install --prefix=$(prefix)
 
 endif

@@ -106,11 +106,11 @@ base_commodities_map commodity_base_t::commodities;
 
 commodity_base_t::updater_t * commodity_base_t::updater = NULL;
 
-commodities_map	  commodity_t::commodities;
-commodities_array commodity_t::commodities_by_ident;
-bool		  commodity_t::commodities_sorted = false;
-commodity_t *	  commodity_t::null_commodity;
-commodity_t *	  commodity_t::default_commodity  = NULL;
+commodities_map	    commodity_t::commodities;
+commodities_array * commodity_t::commodities_by_ident;
+bool		    commodity_t::commodities_sorted = false;
+commodity_t *	    commodity_t::null_commodity;
+commodity_t *	    commodity_t::default_commodity  = NULL;
 #endif
 
 void amount_t::initialize()
@@ -122,6 +122,8 @@ void amount_t::initialize()
   mpz_set_ui(true_value->val, 1);
 
   commodity_base_t::updater = NULL;
+
+  commodity_t::commodities_by_ident = new commodities_array;
 
   commodity_t::default_commodity = NULL;
   commodity_t::null_commodity    = commodity_t::create("");
@@ -159,7 +161,9 @@ void amount_t::shutdown()
 
   commodity_base_t::commodities.clear();
   commodity_t::commodities.clear();
-  commodity_t::commodities_by_ident.clear();
+
+  delete commodity_t::commodities_by_ident;
+  commodity_t::commodities_by_ident = NULL;
 
   commodity_t::null_commodity    = NULL;
   commodity_t::default_commodity = NULL;
@@ -337,7 +341,7 @@ amount_t::amount_t(const double val)
 void amount_t::_release()
 {
   DEBUG_("amounts.refs",
-	      quantity << " ref--, now " << (quantity->ref - 1));
+	 quantity << " ref--, now " << (quantity->ref - 1));
   if (--quantity->ref == 0) {
     if (! (quantity->flags & BIGINT_BULK_ALLOC))
       delete quantity;
@@ -379,7 +383,7 @@ void amount_t::_copy(const amount_t& amt)
     } else {
       quantity = amt.quantity;
       DEBUG_("amounts.refs",
-		  quantity << " ref++, now " << (quantity->ref + 1));
+	     quantity << " ref++, now " << (quantity->ref + 1));
       quantity->ref++;
     }
   }
@@ -1211,10 +1215,10 @@ bool parse_annotations(std::istream& in, amount_t& price,
   } while (true);
 
   DEBUG_("amounts.commodities",
-	      "Parsed commodity annotations: "
-	      << "  price " << price << " "
-	      << "  date " << date << " "
-	      << "  tag " << tag);
+	 "Parsed commodity annotations: "
+	 << "  price " << price << " "
+	 << "  date " << date << " "
+	 << "  tag " << tag);
 
   return has_date;
 }
@@ -1401,7 +1405,7 @@ void amount_t::read(std::istream& in)
   else if (ident == 0)
     commodity_ = commodity_t::null_commodity;
   else
-    commodity_ = commodity_t::commodities_by_ident[ident - 1];
+    commodity_ = (*commodity_t::commodities_by_ident)[ident - 1];
 
   read_quantity(in);
 }
@@ -1415,7 +1419,7 @@ void amount_t::read(char *& data)
   else if (ident == 0)
     commodity_ = commodity_t::null_commodity;
   else
-    commodity_ = commodity_t::commodities_by_ident[ident - 1];
+    commodity_ = (*commodity_t::commodities_by_ident)[ident - 1];
 
   read_quantity(data);
 }
@@ -1470,7 +1474,7 @@ void amount_t::read_quantity(char *& data)
 
     quantity = (bigint_t *) (bigints + (index - 1) * sizeof(bigint_t));
     DEBUG_("amounts.refs",
-		quantity << " ref++, now " << (quantity->ref + 1));
+	   quantity << " ref++, now " << (quantity->ref + 1));
     quantity->ref++;
   }
 }
@@ -1585,10 +1589,10 @@ void amount_t::annotate_commodity(const amount_t&    tprice,
   assert(this_base);
 
   DEBUG_("amounts.commodities", "Annotating commodity for amount "
-	      << *this << std::endl
-	      << "  price " << tprice << " "
-	      << "  date " << tdate << " "
-	      << "  tag " << tag);
+	 << *this << std::endl
+	 << "  price " << tprice << " "
+	 << "  date " << tdate << " "
+	 << "  tag " << tag);
 
   commodity_t * ann_comm =
     annotated_commodity_t::find_or_create
@@ -1610,10 +1614,10 @@ amount_t amount_t::strip_annotations(const bool _keep_price,
     return *this;
 
   DEBUG_("amounts.commodities", "Reducing commodity for amount "
-	      << *this << std::endl
-	      << "  keep price " << _keep_price << " "
-	      << "  keep date " << _keep_date << " "
-	      << "  keep tag " << _keep_tag);
+	 << *this << std::endl
+	 << "  keep price " << _keep_price << " "
+	 << "  keep date " << _keep_date << " "
+	 << "  keep tag " << _keep_tag);
 
   annotated_commodity_t&
     ann_comm(static_cast<annotated_commodity_t&>(commodity()));
@@ -1647,7 +1651,7 @@ amount_t amount_t::price() const
     amount_t t(((annotated_commodity_t *)commodity_)->price);
     t *= number();
     DEBUG_("amounts.commodities",
-		"Returning price of " << *this << " = " << t);
+	   "Returning price of " << *this << " = " << t);
     return t;
   }
   return *this;
@@ -1657,8 +1661,8 @@ moment_t amount_t::date() const
 {
   if (commodity_ && commodity_->annotated) {
     DEBUG_("amounts.commodities",
-		"Returning date of " << *this << " = "
-		<< ((annotated_commodity_t *)commodity_)->date);
+	   "Returning date of " << *this << " = "
+	   << ((annotated_commodity_t *)commodity_)->date);
     return ((annotated_commodity_t *)commodity_)->date;
   }
   return moment_t();
@@ -1720,7 +1724,7 @@ bool commodity_t::valid() const
 {
   if (symbol().empty() && this != null_commodity) {
     DEBUG_("ledger.validate",
-		"commodity_t: symbol().empty() && this != null_commodity");
+	   "commodity_t: symbol().empty() && this != null_commodity");
     return false;
   }
 
@@ -1752,15 +1756,15 @@ commodity_t * commodity_t::create(const string& symbol)
   }
 
   DEBUG_("amounts.commodities",
-	      "Creating commodity " << commodity->qualified_symbol);
+	 "Creating commodity " << commodity->qualified_symbol);
 
   std::pair<commodities_map::iterator, bool> result
     = commodities.insert(commodities_pair(symbol, commodity.get()));
   if (! result.second)
     return NULL;
 
-  commodity->ident = commodities_by_ident.size();
-  commodities_by_ident.push_back(commodity.get());
+  commodity->ident = commodities_by_ident->size();
+  commodities_by_ident->push_back(commodity.get());
 
   // Start out the new commodity with the default commodity's flags
   // and precision, if one has been defined.
@@ -1896,11 +1900,11 @@ annotated_commodity_t::create(const commodity_t& comm,
   commodity->qualified_symbol = comm.symbol();
 
   DEBUG_("amounts.commodities", "Creating annotated commodity "
-	      << "symbol " << commodity->symbol()
-	      << " key " << mapping_key << std::endl
-	      << "  price " << price << " "
-	      << "  date " << date << " "
-	      << "  tag " << tag);
+	 << "symbol " << commodity->symbol()
+	 << " key " << mapping_key << std::endl
+	 << "  price " << price << " "
+	 << "  date " << date << " "
+	 << "  tag " << tag);
 
   // Add the fully annotated name to the map, so that this symbol may
   // quickly be found again.
@@ -1909,8 +1913,8 @@ annotated_commodity_t::create(const commodity_t& comm,
   if (! result.second)
     return NULL;
 
-  commodity->ident = commodities_by_ident.size();
-  commodities_by_ident.push_back(commodity.get());
+  commodity->ident = commodities_by_ident->size();
+  commodities_by_ident->push_back(commodity.get());
 
   return commodity.release();
 }
@@ -1931,10 +1935,10 @@ namespace {
     annotated_commodity_t::write_annotations(name, price, date, tag);
 
     DEBUG_("amounts.commodities", "make_qualified_name for "
-		<< comm.qualified_symbol << std::endl
-		<< "  price " << price << " "
-		<< "  date " << date << " "
-		<< "  tag " << tag);
+	   << comm.qualified_symbol << std::endl
+	   << "  price " << price << " "
+	   << "  date " << date << " "
+	   << "  tag " << tag);
 
     DEBUG_("amounts.commodities", "qualified_name is " << name.str());
 

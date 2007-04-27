@@ -76,12 +76,11 @@ int ofx_proc_transaction_cb(struct OfxTransactionData data,
 
   if (data.unitprice_valid && data.unitprice != 1.0) {
     std::ostringstream cstream;
-    stream << - data.unitprice;
-    xact->cost = new amount_t(stream.str() + " " + default_commodity->base_symbol());
+    stream << - data.unitprice << " " << default_commodity->base_symbol();
+    xact->cost = new amount_t(stream.str());
   }
 
-  DEBUG_("ledger.ofx.parse", "xact " << xact->amount
-	      << " from " << *xact->account);
+  DEBUG_("ofx.parse", "xact " << xact->amount << " from " << *xact->account);
 
   if (data.date_initiated_valid)
     entry->_date = data.date_initiated;

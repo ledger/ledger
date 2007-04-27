@@ -73,32 +73,26 @@ namespace ledger {
 
 extern bool verify_enabled;
 
-#define VERIFY(x) (verify_enabled ? assert(x) : ((void)0))
+#define VERIFY(x)   (ledger::verify_enabled ? assert(x) : ((void)0))
+#define DO_VERIFY() ledger::verify_enabled
+#define IF_VERIFY() if (DO_VERIFY())
 
-extern int	     new_calls;
-extern unsigned long new_size;
+void initialize_memory_tracing();
+void shutdown_memory_tracing();
 
-typedef std::multimap<void *, std::string>      live_objects_map;
-typedef std::pair<void *, std::string>          live_objects_pair;
-typedef std::pair<unsigned int, std::size_t>    count_size_pair;
-typedef std::map<std::string, count_size_pair>  object_count_map;
-typedef std::pair<std::string, count_size_pair> object_count_pair;
+std::size_t current_memory_size();
+std::size_t current_objects_size();
 
-extern live_objects_map live_objects;
-extern object_count_map	live_count;
-extern object_count_map	ctor_count;
-extern object_count_map	object_count;
-
-bool trace_ctor_func(void * ptr, const char * cls_name, const char * args,
+void trace_ctor_func(void * ptr, const char * cls_name, const char * args,
 		     std::size_t cls_size);
-bool trace_dtor_func(void * ptr, const char * cls_name, std::size_t cls_size);
+void trace_dtor_func(void * ptr, const char * cls_name, std::size_t cls_size);
 
 #define TRACE_CTOR(cls, args) \
-  VERIFY(trace_ctor_func(this, #cls, args, sizeof(cls)))
+  (DO_VERIFY() ? trace_ctor_func(this, #cls, args, sizeof(cls)) : ((void)0))
 #define TRACE_DTOR(cls) \
-  VERIFY(trace_dtor_func(this, #cls, sizeof(cls)))
+  (DO_VERIFY() ? trace_dtor_func(this, #cls, sizeof(cls)) : ((void)0))
 
-void report_memory(std::ostream& out);
+void report_memory(std::ostream& out, bool report_all = false);
 
 #if ! defined(USE_BOOST_PYTHON)
 
@@ -213,20 +207,21 @@ bool logger_func(log_level_t level);
     static const char * const _this_category = cat
 
 #define SHOW_TRACE(lvl) \
-  (_log_level >= LOG_TRACE && lvl >= _trace_level)
+  (_log_level >= LOG_TRACE && lvl <= _trace_level)
 
-#define SHOW_DEBUG_(cat)				\
-  (_log_level >= LOG_DEBUG &&			\
-   (_log_category == cat ||			\
-    _log_category.find(string(cat) + ".") == 0))
+inline bool category_matches(const char * cat) {
+  return (_log_category == cat ||
+	  (std::strlen(cat) > _log_category.size() + 1 &&
+	   std::strncmp(cat, _log_category.c_str(),
+			_log_category.size()) == 0 &&
+	   cat[_log_category.size()] == '.'));
+}
+
+#define SHOW_DEBUG_(cat) \
+  (_log_level >= LOG_DEBUG && category_matches(cat))
 #define SHOW_DEBUG() SHOW_DEBUG_(_this_category)
 
-#define SHOW_INFO_(cat)				\
-  (_log_level >= LOG_INFO &&			\
-   (_log_category == cat ||			\
-    _log_category.find(string(cat) + ".") == 0))
-#define SHOW_INFO() SHOW_INFO_(_this_category)
-
+#define SHOW_INFO()     (_log_level >= LOG_INFO)
 #define SHOW_WARN()     (_log_level >= LOG_WARN)
 #define SHOW_ERROR()    (_log_level >= LOG_ERROR)
 #define SHOW_FATAL()    (_log_level >= LOG_FATAL)
@@ -248,14 +243,11 @@ bool logger_func(log_level_t level);
 #define DEBUG(msg)
 #endif
    
-#define INFO_(cat, msg) \
-  (SHOW_INFO(cat) ? ((_log_buffer << msg), logger_func(LOG_INFO)) : false)
-#define INFO(msg) INFO_(_this_category, msg)
-
 #define LOG_MACRO(level, msg)				\
   (_log_level >= level ?				\
    ((_log_buffer << msg), logger_func(level)) : false)
 
+#define INFO(msg)      LOG_MACRO(LOG_INFO, msg)
 #define WARN(msg)      LOG_MACRO(LOG_WARN, msg)
 #define ERROR(msg)     LOG_MACRO(LOG_ERROR, msg)
 #define FATAL(msg)     LOG_MACRO(LOG_FATAL, msg)
@@ -271,7 +263,6 @@ bool logger_func(log_level_t level);
 #define SHOW_TRACE(lvl)  false
 #define SHOW_DEBUG_(cat) false
 #define SHOW_DEBUG()     false
-#define SHOW_INFO_(cat)  false
 #define SHOW_INFO()      false
 #define SHOW_WARN()      false
 #define SHOW_ERROR()     false
@@ -282,7 +273,6 @@ bool logger_func(log_level_t level);
 #define DEBUG(msg)
 #define DEBUG_(cat, msg)
 #define INFO(msg)
-#define INFO_(cat, msg)
 #define WARN(msg)
 #define ERROR(msg)
 #define FATAL(msg)
@@ -293,7 +283,6 @@ bool logger_func(log_level_t level);
 #define IF_TRACE(lvl)  if (SHOW_TRACE(lvl))
 #define IF_DEBUG_(cat) if (SHOW_DEBUG_(cat))
 #define IF_DEBUG()     if (SHOW_DEBUG())
-#define IF_INFO_(cat)  if (SHOW_INFO_(cat))
 #define IF_INFO()      if (SHOW_INFO())
 #define IF_WARN()      if (SHOW_WARN())
 #define IF_ERROR()     if (SHOW_ERROR())
@@ -354,18 +343,12 @@ void finish_timer(const char * name);
 #define DEBUG_FINISH(name)
 #endif
 
-#define info_start_(name, cat, msg) \
-  (info_(cat, msg) && start_timer(#name))
-#define info_start(name, msg) \
-  info_start_(name, _this_category, msg)
-#define info_stop_(name, cat) \
-  (show_info_(cat) ? stop_timer(#name) : ((void)0))
-#define info_stop(name) \
-  info_stop_(name, _this_category)
-#define info_finish_(name, cat) \
-  (show_info_(cat) ? finish_timer(#name) : ((void)0))
-#define info_finish(name) \
-  info_finish_(name, _this_category)
+#define INFO_START(name, msg) \
+  (INFO(msg) && start_timer(#name))
+#define INFO_STOP(name) \
+  (SHOW_INFO() ? stop_timer(#name) : ((void)0))
+#define INFO_FINISH(name) \
+  (SHOW_INFO() ? finish_timer(#name) : ((void)0))
 
 } // namespace ledger
 
@@ -380,10 +363,10 @@ void finish_timer(const char * name);
 #define DEBUG_STOP(name)
 #define DEBUG_FINISH(name)
 
-#define info_start(name, msg)
-#define info_start_(name, cat, msg)
-#define info_stop(name)
-#define info_finish(name)
+#define INFO_START(name, msg)
+#define INFO_START_(name, cat, msg)
+#define INFO_STOP(name)
+#define INFO_FINISH(name)
 
 #endif // TIMERS_ON
 

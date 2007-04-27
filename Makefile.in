@@ -418,8 +418,6 @@ lisp_LISP = ledger.el timeclock.el
 @HAVE_BOOST_PYTHON_TRUE@	boost_regex boost_python gmp \
 @HAVE_BOOST_PYTHON_TRUE@	$(am__append_14) $(am__append_15) \
 @HAVE_BOOST_PYTHON_TRUE@	$(am__append_16)
-@DEBUG_FALSE@@HAVE_BOOST_PYTHON_TRUE@DEBUG_LEVEL = 0
-@DEBUG_TRUE@@HAVE_BOOST_PYTHON_TRUE@DEBUG_LEVEL = 4
 UnitTests_SOURCES = tests/UnitTests.cc \
 	\
 	tests/corelib/numerics/BasicAmount.cc \
@@ -1723,7 +1721,6 @@ dist-hook:
 @HAVE_BOOST_PYTHON_TRUE@	CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libledger_la_CPPFLAGS)" \
 @HAVE_BOOST_PYTHON_TRUE@	LDFLAGS="$(LDFLAGS) -L. -L.libs -Lgdtoa -Lgdtoa/.libs" \
 @HAVE_BOOST_PYTHON_TRUE@	PYLIBS="$(PYLIBS)" \
-@HAVE_BOOST_PYTHON_TRUE@	DEBUG_LEVEL="$(DEBUG_LEVEL)" \
 @HAVE_BOOST_PYTHON_TRUE@	    python $(srcdir)/setup.py build --build-lib=.
 
 @HAVE_BOOST_PYTHON_TRUE@install-exec-hook:
@@ -1731,7 +1728,6 @@ dist-hook:
 @HAVE_BOOST_PYTHON_TRUE@	CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libledger_la_CPPFLAGS)" \
 @HAVE_BOOST_PYTHON_TRUE@	LDFLAGS="$(LDFLAGS) -L. -L.libs -Lgdtoa -Lgdtoa/.libs" \
 @HAVE_BOOST_PYTHON_TRUE@	PYLIBS="$(PYLIBS)" \
-@HAVE_BOOST_PYTHON_TRUE@	DEBUG_LEVEL="$(DEBUG_LEVEL)" \
 @HAVE_BOOST_PYTHON_TRUE@	    python $(srcdir)/setup.py install --prefix=$(prefix)
 
 PyUnitTests: PyUnitTests.py

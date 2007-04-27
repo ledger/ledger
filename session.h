@@ -32,10 +32,6 @@ class session_t : public xml::xpath_t::scope_t
   bool download_quotes;
   bool use_cache;
   bool cache_dirty;
-  bool debug_mode;
-  bool verbose_mode;
-  bool trace_alloc_mode;
-  bool trace_class_mode;
 
   moment_t now;
 
@@ -87,10 +83,6 @@ class session_t : public xml::xpath_t::scope_t
     download_quotes(false),
     use_cache(false),
     cache_dirty(false),
-    debug_mode(false),
-    verbose_mode(false),
-    trace_alloc_mode(false),
-    trace_class_mode(false),
 
     now(now),
 
@@ -165,15 +157,23 @@ class session_t : public xml::xpath_t::scope_t
   virtual xml::xpath_t::op_t * lookup(const string& name);
 
   //
+  // Debug options
+  //
+
+  void option_verify(value_t&) {}
+  void option_trace(value_t&, xml::xpath_t::scope_t * locals) {}
+  void option_debug(value_t&, xml::xpath_t::scope_t * locals) {}
+
+  void option_verbose(value_t&) {
+    _log_level = LOG_INFO;
+  }
+
+  //
   // Option handlers
   //
 
   void option_file(value_t&, xml::xpath_t::scope_t * locals) {
     data_file = locals->args.to_string();
-  }
-
-  void option_verbose(value_t&) {
-    verbose_mode = true;
   }
 
 #if 0

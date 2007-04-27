@@ -11,6 +11,9 @@ class xpath_t
 public:
   struct op_t;
 
+  static void initialize();
+  static void shutdown();
+
   DECLARE_EXCEPTION(parse_exception);
   DECLARE_EXCEPTION(compile_exception);
   DECLARE_EXCEPTION(calc_exception);
@@ -422,21 +425,21 @@ public:
 
     void release() const {
       DEBUG_("ledger.xpath.memory",
-		  "Releasing " << this << ", refc now " << refc - 1);
+	     "Releasing " << this << ", refc now " << refc - 1);
       assert(refc > 0);
       if (--refc == 0)
 	delete this;
     }
     op_t * acquire() {
       DEBUG_("ledger.xpath.memory",
-		  "Acquiring " << this << ", refc now " << refc + 1);
+	     "Acquiring " << this << ", refc now " << refc + 1);
       assert(refc >= 0);
       refc++;
       return this;
     }
     const op_t * acquire() const {
       DEBUG_("ledger.xpath.memory",
-		  "Acquiring " << this << ", refc now " << refc + 1);
+	     "Acquiring " << this << ", refc now " << refc + 1);
       assert(refc >= 0);
       refc++;
       return this;
@@ -521,21 +524,33 @@ public:
   }
 
 #ifdef THREADSAFE
-  mutable token_t lookahead;
+  mutable token_t   lookahead;
 #else
-  static  token_t lookahead;
+  static  token_t * lookahead;
 #endif
-  mutable bool    use_lookahead;
+  mutable bool	    use_lookahead;
 
   token_t& next_token(std::istream& in, unsigned short tflags) const {
     if (use_lookahead)
       use_lookahead = false;
     else
+#ifdef THREADSAFE
       lookahead.next(in, tflags);
+#else
+      lookahead->next(in, tflags);
+#endif
+#ifdef THREADSAFE
     return lookahead;
+#else
+    return *lookahead;
+#endif
   }
   void push_token(const token_t& tok) const {
+#ifdef THREADSAFE
     assert(&tok == &lookahead);
+#else
+    assert(&tok == lookahead);
+#endif
     use_lookahead = true;
   }
   void push_token() const {

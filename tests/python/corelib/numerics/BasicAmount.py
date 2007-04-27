@@ -1,3 +1,7 @@
+import sys
+sys.path.append("/home/johnw/src/ledger")
+sys.path.append("/home/johnw/Products/ledger")
+
 import unittest
 import exceptions
 

@@ -127,22 +127,12 @@ static void scan_for_transactions(std::ostream& out, const xml::node_t * node)
 void register_command::print_document(std::ostream&	out,
 				      xml::document_t * doc)
 {
-#if DEBUG_LEVEL >= BETA
-  unsigned long old_new_size = new_size;
-#endif
-
 #if 1
   scan_for_transactions(out, doc->top);
   out.flush();
 #else
   value_t nodelist;
   xml::xpath_t::eval(nodelist, "//transaction", doc);
-
-#if DEBUG_LEVEL >= BETA
-  std::cerr << "Memory requested preparing report: "
-	    << (new_size - old_new_size) << std::endl;
-  old_new_size = new_size;
-#endif
 
   const value_t::sequence_t * xact_list = nodelist.to_sequence();
   assert(xact_list);
@@ -170,12 +160,6 @@ void register_command::print_document(std::ostream&	out,
 	      << xact->amount
 	      << std::endl;
   }
-
-#if DEBUG_LEVEL >= BETA
-  std::cerr << "Memory requested generating report: "
-	    << (new_size - old_new_size) << std::endl;
-  old_new_size = new_size;
-#endif
 #endif
 }
 

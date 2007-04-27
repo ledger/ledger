@@ -10,8 +10,19 @@ namespace ledger {
 namespace xml {
 
 #ifndef THREADSAFE
-xpath_t::token_t xpath_t::lookahead;
+xpath_t::token_t * xpath_t::lookahead = NULL;
 #endif
+
+void xpath_t::initialize()
+{
+  lookahead = new xpath_t::token_t;
+}
+
+void xpath_t::shutdown()
+{
+  delete lookahead;
+  lookahead = NULL;
+}
 
 void xpath_t::token_t::parse_ident(std::istream& in)
 {
@@ -1130,9 +1141,17 @@ xpath_t::parse_expr(std::istream& in, unsigned short tflags) const
 
   if (use_lookahead) {
     use_lookahead = false;
+#ifdef THREADSAFE
     lookahead.rewind(in);
+#else
+    lookahead->rewind(in);
+#endif
   }
+#ifdef THREADSAFE
   lookahead.clear();
+#else
+  lookahead->clear();
+#endif
 
   return node.release();
 }

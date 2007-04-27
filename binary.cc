@@ -4,7 +4,7 @@ namespace ledger {
 
 #if 0
 static unsigned long       binary_magic_number = 0xFFEED765;
-#ifdef DEBUG_ENABLED
+#if defined(DEBUG_ON)
 static unsigned long       format_version      = 0x00030000;
 #else
 static unsigned long       format_version      = 0x00030000;

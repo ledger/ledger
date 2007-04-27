@@ -62,13 +62,11 @@ journal_t * session_t::read_data(const string& master_account)
 
   unsigned int entry_count = 0;
 
-  DEBUG_("ledger.cache",
-	      "3. use_cache = " << use_cache);
+  DEBUG_("ledger.cache", "3. use_cache = " << use_cache);
 
   if (use_cache && ! cache_file.empty() &&
       ! data_file.empty()) {
-    DEBUG_("ledger.cache",
-		"using_cache " << cache_file);
+    DEBUG_("ledger.cache", "using_cache " << cache_file);
     cache_dirty = true;
     if (access(cache_file.c_str(), R_OK) != -1) {
       std::ifstream stream(cache_file.c_str());
@@ -95,14 +93,12 @@ journal_t * session_t::read_data(const string& master_account)
       if (read_journal(journal->price_db, journal)) {
 	throw_(exception, "Entries not allowed in price history file");
       } else {
-	DEBUG_("ledger.cache",
-		    "read price database " << journal->price_db);
+	DEBUG_("ledger.cache", "read price database " << journal->price_db);
 	journal->sources.pop_back();
       }
     }
 
-    DEBUG_("ledger.cache",
-		"rejected cache, parsing " << data_file);
+    DEBUG_("ledger.cache", "rejected cache, parsing " << data_file);
     if (data_file == "-") {
       use_cache = false;
       journal->sources.push_back("<stdin>");
@@ -171,14 +167,26 @@ xml::xpath_t::op_t * session_t::lookup(const string& name)
     if (std::strncmp(p, "option_", 7) == 0) {
       p = p + 7;
       switch (*p) {
+      case 'd':
+	if (std::strcmp(p, "debug") == 0)
+	  return MAKE_FUNCTOR(session_t, option_debug);
+	break;
+
       case 'f':
 	if (! *(p + 1) || std::strcmp(p, "file") == 0)
 	  return MAKE_FUNCTOR(session_t, option_file);
 	break;
 
+      case 't':
+	if (std::strcmp(p, "trace") == 0)
+	  return MAKE_FUNCTOR(session_t, option_trace);
+	break;
+
       case 'v':
-	if (std::strcmp(p, "verbose") == 0)
+	if (! *(p + 1) || std::strcmp(p, "verbose") == 0)
 	  return MAKE_FUNCTOR(session_t, option_verbose);
+	else if (std::strcmp(p, "verify") == 0)
+	  return MAKE_FUNCTOR(session_t, option_verify);
 	break;
       }
     }
@@ -192,7 +200,11 @@ xml::xpath_t::op_t * session_t::lookup(const string& name)
 // session_t object
 void initialize()
 {
+  IF_VERIFY()
+    initialize_memory_tracing();
+
   amount_t::initialize();
+  xml::xpath_t::initialize();
 }
 
 void shutdown()
@@ -200,7 +212,13 @@ void shutdown()
 #if defined(USE_BOOST_PYTHON)
   shutdown_for_python();
 #endif
+  xml::xpath_t::shutdown();
   amount_t::shutdown();
+
+  IF_VERIFY() {
+    TRACE(1, "Shutting down memory trace");
+    shutdown_memory_tracing();
+  }
 }
 
 } // namespace ledger

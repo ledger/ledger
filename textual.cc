@@ -53,10 +53,10 @@ parse_amount_expr(std::istream& in, journal_t *,
   xml::xpath_t xpath(in, flags | XPATH_PARSE_RELAXED | XPATH_PARSE_PARTIAL);
 
   DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
-	      "Parsed an amount expression");
+	 "Parsed an amount expression");
 
-#ifdef DEBUG_ENABLED
-  DEBUG_IF("ledger.textual.parse") {
+#if 0
+  IF_DEBUG_("ledger.textual.parse") {
     if (_debug_stream) {
       xpath.dump(*_debug_stream);
       *_debug_stream << std::endl;
@@ -67,7 +67,7 @@ parse_amount_expr(std::istream& in, journal_t *,
   amount = xpath.calc(static_cast<xml::transaction_node_t *>(xact.data)).to_amount();
 
   DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
-	      "The transaction amount is " << amount);
+	 "The transaction amount is " << amount);
 }
 
 transaction_t * parse_transaction(char *      line,
@@ -125,12 +125,12 @@ transaction_t * parse_transaction(char *      line,
     case '*':
       xact->state = transaction_t::CLEARED;
       DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
-		  "Parsed the CLEARED flag");
+	     "Parsed the CLEARED flag");
       break;
     case '!':
       xact->state = transaction_t::PENDING;
       DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
-		  "Parsed the PENDING flag");
+	     "Parsed the PENDING flag");
       break;
     }
 
@@ -142,18 +142,18 @@ transaction_t * parse_transaction(char *      line,
       (*b == '(' && *e == ')')) {
     xact->flags |= TRANSACTION_VIRTUAL;
     DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
-		"Parsed a virtual account name");
+	   "Parsed a virtual account name");
     if (*b == '[') {
       xact->flags |= TRANSACTION_BALANCE;
       DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
-		  "Parsed a balanced virtual account name");
+	     "Parsed a balanced virtual account name");
     }
     *account_path++ = '\0';
     *e = '\0';
   }
 
   DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
-	      "Parsed account name " << account_path);
+	 "Parsed account name " << account_path);
   if (account_aliases.size() > 0) {
     accounts_map::const_iterator i = account_aliases.find(account_path);
     if (i != account_aliases.end())
@@ -215,14 +215,14 @@ transaction_t * parse_transaction(char *      line,
       char c = peek_next_nonws(in);
       if (c == '@') {
 	DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
-		    "Found a price indicator");
+	       "Found a price indicator");
 	bool per_unit = true;
 	in.get(c);
 	if (in.peek() == '@') {
 	  in.get(c);
 	  per_unit = false;
 	  DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
-		      "And it's for a total price");
+		 "And it's for a total price");
 	}
 
 	if (in.good() && ! in.eof()) {
@@ -263,13 +263,13 @@ transaction_t * parse_transaction(char *      line,
 					    xact->entry->code);
 
 	  DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
-		      "Total cost is " << *xact->cost);
+		 "Total cost is " << *xact->cost);
 	  DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
-		      "Per-unit cost is " << per_unit_cost);
+		 "Per-unit cost is " << per_unit_cost);
 	  DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
-		      "Annotated amount is " << xact->amount);
+		 "Annotated amount is " << xact->amount);
 	  DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
-		      "Bare amount is " << xact->amount.number());
+		 "Bare amount is " << xact->amount.number());
 	}
       }
     }
@@ -277,7 +277,7 @@ transaction_t * parse_transaction(char *      line,
     xact->amount.in_place_reduce();
 
     DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
-		"Reduced amount is " << xact->amount);
+	   "Reduced amount is " << xact->amount);
   }
 
   // Parse the optional note
@@ -285,7 +285,7 @@ transaction_t * parse_transaction(char *      line,
   if (note) {
     xact->note = note;
     DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
-		"Parsed a note '" << xact->note << "'");
+	   "Parsed a note '" << xact->note << "'");
 
     if (char * b = std::strchr(xact->note.c_str(), '['))
       if (char * e = std::strchr(xact->note.c_str(), ']')) {
@@ -294,7 +294,7 @@ transaction_t * parse_transaction(char *      line,
 	buf[e - b - 1] = '\0';
 
 	DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
-		    "Parsed a transaction date " << buf);
+	       "Parsed a transaction date " << buf);
 
 	if (char * p = std::strchr(buf, '=')) {
 	  *p++ = '\0';
@@ -840,7 +840,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	  path = resolve_path(path);
 
 	  DEBUG_("ledger.textual.include", "line " << linenum << ": " <<
-		      "Including path '" << path << "'");
+		 "Including path '" << path << "'");
 
 	  include_stack.push_back(std::pair<string, int>
 				  (journal->sources.back(), linenum - 1));

@@ -554,11 +554,11 @@ class commodity_t
  public:
   // This map remembers all commodities that have been defined.
 
-  static commodities_map   commodities;
-  static commodities_array commodities_by_ident;
-  static bool		   commodities_sorted;
-  static commodity_t *	   null_commodity;
-  static commodity_t *	   default_commodity;
+  static commodities_map     commodities;
+  static commodities_array * commodities_by_ident;
+  static bool		     commodities_sorted;
+  static commodity_t *	     null_commodity;
+  static commodity_t *	     default_commodity;
 
   static commodity_t * create(const string& symbol);
   static commodity_t * find(const string& name);
