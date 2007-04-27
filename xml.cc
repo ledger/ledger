@@ -48,7 +48,7 @@ int document_t::register_name(const string& name)
   names.push_back(name);
   index = names.size() - 1;
 
-  DEBUG_PRINT("xml.lookup", this << " Inserting name: " << names.back());
+  DEBUG_("xml.lookup", this << " Inserting name: " << names.back());
 
   std::pair<names_map::iterator, bool> result =
     names_index.insert(names_pair(names.back(), index));
@@ -63,7 +63,7 @@ int document_t::lookup_name_id(const string& name) const
   if ((id = lookup_builtin_id(name)) != -1)
     return id;
 
-  DEBUG_PRINT("xml.lookup", this << " Finding name: " << name);
+  DEBUG_("xml.lookup", this << " Finding name: " << name);
 
   names_map::const_iterator i = names_index.find(name);
   if (i != names_index.end())
@@ -131,7 +131,7 @@ document_t * node_t::document;
 node_t::node_t(document_t * _document, parent_node_t * _parent,
 	       unsigned int _flags)
   : name_id(0), parent(_parent), next(NULL), prev(NULL),
-    flags(_flags), info(NULL), attrs(NULL)
+    flags(_flags), attrs(NULL)
 {
   TRACE_CTOR(node_t, "document_t *, node_t *");
   document = _document;
@@ -268,7 +268,7 @@ static void startElement(void *userData, const char *name, const char **attrs)
 {
   parser_t * parser = static_cast<parser_t *>(userData);
 
-  DEBUG_PRINT("xml.parse", "startElement(" << name << ")");
+  DEBUG_("xml.parse", "startElement(" << name << ")");
 
   if (parser->pending) {
     parent_node_t * node = create_node<parent_node_t>(parser);
@@ -295,7 +295,7 @@ static void endElement(void *userData, const char *name)
 {
   parser_t * parser = static_cast<parser_t *>(userData);
 
-  DEBUG_PRINT("xml.parse", "endElement(" << name << ")");
+  DEBUG_("xml.parse", "endElement(" << name << ")");
 
   if (parser->pending) {
     terminal_node_t * node = create_node<terminal_node_t>(parser);
@@ -317,7 +317,7 @@ static void dataHandler(void *userData, const char *s, int len)
 {
   parser_t * parser = static_cast<parser_t *>(userData);
 
-  DEBUG_PRINT("xml.parse", "dataHandler(" << string(s, len) << ")");
+  DEBUG_("xml.parse", "dataHandler(" << string(s, len) << ")");
 
   bool all_whitespace = true;
   for (int i = 0; i < len; i++) {
@@ -382,21 +382,24 @@ document_t * parser_t::parse(std::istream& in)
     catch (const std::exception& err) {
       //unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
       XML_ParserFree(parser);
-      throw new parse_error(err.what());
+      throw_(parse_exception, err.what());
     }
 
     if (! have_error.empty()) {
       //unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
-      parse_error err(have_error);
+#if 0
+      // jww (2007-04-26): What is this doing??
+      parse_exception err(have_error);
       std::cerr << "Error: " << err.what() << std::endl;
+#endif
       have_error = "";
     }
 
     if (! result) {
       //unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
-      const char *  err  = XML_ErrorString(XML_GetErrorCode(parser));
+      const char * err = XML_ErrorString(XML_GetErrorCode(parser));
       XML_ParserFree(parser);
-      throw new parse_error(err);
+      throw_(parse_exception, err);
     }
   }
 

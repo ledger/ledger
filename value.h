@@ -560,6 +560,7 @@ template <> value_t::operator string() const;
 
 std::ostream& operator<<(std::ostream& out, const value_t& val);
 
+#if 0
 class value_context : public error_context
 {
   value_t * bal;
@@ -570,14 +571,9 @@ class value_context : public error_context
 
   virtual void describe(std::ostream& out) const throw();
 };
+#endif
 
-class value_error : public error {
- public:
-  value_error(const string& _reason,
-	      error_context * _ctxt = NULL) throw()
-    : error(_reason, _ctxt) {}
-  virtual ~value_error() throw() {}
-};
+DECLARE_EXCEPTION(value_exception);
 
 } // namespace ledger
 

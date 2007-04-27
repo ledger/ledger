@@ -14,13 +14,7 @@ namespace xml {
 
 #define XML_NODE_IS_PARENT 0x1
 
-class conversion_error : public error {
- public:
-  conversion_error(const string& _reason,
-	      error_context * _ctxt = NULL) throw()
-    : error(_reason, _ctxt) {}
-  virtual ~conversion_error() throw() {}
-};
+DECLARE_EXCEPTION(conversion_exception);
 
 class parent_node_t;
 class document_t;
@@ -38,7 +32,6 @@ public:
   node_t *	  next;
   node_t *	  prev;
   unsigned int	  flags;
-  void *	  info;
 
   typedef std::map<string, string>  attrs_map;
   typedef std::pair<string, string> attrs_pair;
@@ -91,7 +84,7 @@ public:
   }
 
   virtual value_t to_value() const {
-    throw new conversion_error("Cannot convert node to a value");
+    throw_(conversion_exception, "Cannot convert node to a value");
   }
 
   virtual void write(std::ostream& out, int depth = 0) const = 0;
@@ -248,13 +241,7 @@ class parser_t
   virtual document_t * parse(std::istream& in);
 };
 
-class parse_error : public error {
- public:
-  parse_error(const string& _reason,
-	      error_context * _ctxt = NULL) throw()
-    : error(_reason, _ctxt) {}
-  virtual ~parse_error() throw() {}
-};
+DECLARE_EXCEPTION(parse_exception);
 
 #endif
 

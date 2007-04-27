@@ -35,12 +35,12 @@ moment_t transaction_t::effective_date() const
 bool transaction_t::valid() const
 {
   if (! entry) {
-    DEBUG_PRINT("ledger.validate", "transaction_t: ! entry");
+    DEBUG_("ledger.validate", "transaction_t: ! entry");
     return false;
   }
 
   if (state != UNCLEARED && state != CLEARED && state != PENDING) {
-    DEBUG_PRINT("ledger.validate", "transaction_t: state is bad");
+    DEBUG_("ledger.validate", "transaction_t: state is bad");
     return false;
   }
 
@@ -53,27 +53,27 @@ bool transaction_t::valid() const
       break;
     }
   if (! found) {
-    DEBUG_PRINT("ledger.validate", "transaction_t: ! found");
+    DEBUG_("ledger.validate", "transaction_t: ! found");
     return false;
   }
 
   if (! account) {
-    DEBUG_PRINT("ledger.validate", "transaction_t: ! account");
+    DEBUG_("ledger.validate", "transaction_t: ! account");
     return false;
   }
 
   if (! amount.valid()) {
-    DEBUG_PRINT("ledger.validate", "transaction_t: ! amount.valid()");
+    DEBUG_("ledger.validate", "transaction_t: ! amount.valid()");
     return false;
   }
 
   if (cost && ! cost->valid()) {
-    DEBUG_PRINT("ledger.validate", "transaction_t: cost && ! cost->valid()");
+    DEBUG_("ledger.validate", "transaction_t: cost && ! cost->valid()");
     return false;
   }
 
   if (flags & ~0x003f) {
-    DEBUG_PRINT("ledger.validate", "transaction_t: flags are bad");
+    DEBUG_("ledger.validate", "transaction_t: flags are bad");
     return false;
   }
 
@@ -199,7 +199,7 @@ bool entry_base_t::finalize()
       continue;
 
     if (! empty_allowed)
-      throw new error("Only one transaction with null amount allowed per entry");
+      throw_(exception, "Only one transaction with null amount allowed per entry");
     empty_allowed = false;
 
     // If one transaction gives no value at all, its value will become
@@ -255,12 +255,16 @@ bool entry_base_t::finalize()
   }
 
   if (balance) {
+#if 1
+    throw_(balance_exception, "Entry does not balance");
+#else
     error * err =
       new balance_error("Entry does not balance",
 			new entry_context(*this, "While balancing entry:"));
     err->context.push_front
       (new value_context(balance, "Unbalanced remainder is:"));
     throw err;
+#endif
   }
 
   return true;
@@ -307,7 +311,7 @@ void entry_t::add_transaction(transaction_t * xact)
 bool entry_t::valid() const
 {
   if (! is_valid_moment(_date) || ! journal) {
-    DEBUG_PRINT("ledger.validate", "entry_t: ! _date || ! journal");
+    DEBUG_("ledger.validate", "entry_t: ! _date || ! journal");
     return false;
   }
 
@@ -315,7 +319,7 @@ bool entry_t::valid() const
        i != transactions.end();
        i++)
     if ((*i)->entry != this || ! (*i)->valid()) {
-      DEBUG_PRINT("ledger.validate", "entry_t: transaction not valid");
+      DEBUG_("ledger.validate", "entry_t: transaction not valid");
       return false;
     }
 
@@ -466,7 +470,7 @@ std::ostream& operator<<(std::ostream& out, const account_t& account)
 bool account_t::valid() const
 {
   if (depth > 256 || ! journal) {
-    DEBUG_PRINT("ledger.validate", "account_t: depth > 256 || ! journal");
+    DEBUG_("ledger.validate", "account_t: depth > 256 || ! journal");
     return false;
   }
 
@@ -474,12 +478,12 @@ bool account_t::valid() const
        i != accounts.end();
        i++) {
     if (this == (*i).second) {
-      DEBUG_PRINT("ledger.validate", "account_t: parent refers to itself!");
+      DEBUG_("ledger.validate", "account_t: parent refers to itself!");
       return false;
     }
 
     if (! (*i).second->valid()) {
-      DEBUG_PRINT("ledger.validate", "account_t: child not valid");
+      DEBUG_("ledger.validate", "account_t: child not valid");
       return false;
     }
   }
@@ -575,7 +579,7 @@ bool journal_t::remove_entry(entry_t * entry)
 bool journal_t::valid() const
 {
   if (! master->valid()) {
-    DEBUG_PRINT("ledger.validate", "journal_t: master not valid");
+    DEBUG_("ledger.validate", "journal_t: master not valid");
     return false;
   }
 
@@ -583,7 +587,7 @@ bool journal_t::valid() const
        i != entries.end();
        i++)
     if (! (*i)->valid()) {
-      DEBUG_PRINT("ledger.validate", "journal_t: entry not valid");
+      DEBUG_("ledger.validate", "journal_t: entry not valid");
       return false;
     }
 
@@ -591,7 +595,7 @@ bool journal_t::valid() const
        i != commodity_t::commodities.end();
        i++)
     if (! (*i).second->valid()) {
-      DEBUG_PRINT("ledger.validate", "journal_t: commodity not valid");
+      DEBUG_("ledger.validate", "journal_t: commodity not valid");
       return false;
     }
 
@@ -634,6 +638,7 @@ void print_entry(std::ostream& out, const entry_base_t& entry_base,
 #endif
 }
 
+#if 0
 void entry_context::describe(std::ostream& out) const throw()
 {
   if (! desc.empty())
@@ -657,6 +662,7 @@ xact_context::xact_context(const ledger::transaction_t& _xact,
     }
   line = xact.beg_line;
 }
+#endif
 
 } // namespace ledger
 

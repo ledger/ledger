@@ -11,30 +11,11 @@ class xpath_t
 public:
   struct op_t;
 
-  class parse_error : public error {
-  public:
-    parse_error(const string& _reason,
-		error_context * _ctxt = NULL) throw()
-      : error(_reason, _ctxt) {}
-    virtual ~parse_error() throw() {}
-  };
+  DECLARE_EXCEPTION(parse_exception);
+  DECLARE_EXCEPTION(compile_exception);
+  DECLARE_EXCEPTION(calc_exception);
 
-  class compile_error : public error {
-  public:
-    compile_error(const string& _reason,
-		  error_context * _ctxt = NULL) throw()
-      : error(_reason, _ctxt) {}
-    virtual ~compile_error() throw() {}
-  };
-
-  class calc_error : public error {
-  public:
-    calc_error(const string& _reason,
-	       error_context * _ctxt = NULL) throw()
-      : error(_reason, _ctxt) {}
-    virtual ~calc_error() throw() {}
-  };
-
+#if 0
   class context : public error_context {
   public:
     const xpath_t& xpath;
@@ -47,6 +28,7 @@ public:
 
     virtual void describe(std::ostream& out) const throw();
   };
+#endif
 
 public:
   class scope_t;
@@ -439,21 +421,21 @@ public:
     }
 
     void release() const {
-      DEBUG_PRINT("ledger.xpath.memory",
+      DEBUG_("ledger.xpath.memory",
 		  "Releasing " << this << ", refc now " << refc - 1);
       assert(refc > 0);
       if (--refc == 0)
 	delete this;
     }
     op_t * acquire() {
-      DEBUG_PRINT("ledger.xpath.memory",
+      DEBUG_("ledger.xpath.memory",
 		  "Acquiring " << this << ", refc now " << refc + 1);
       assert(refc >= 0);
       refc++;
       return this;
     }
     const op_t * acquire() const {
-      DEBUG_PRINT("ledger.xpath.memory",
+      DEBUG_("ledger.xpath.memory",
 		  "Acquiring " << this << ", refc now " << refc + 1);
       assert(refc >= 0);
       refc++;
@@ -580,8 +562,11 @@ public:
 		    unsigned short tflags = XPATH_PARSE_RELAXED) const
   {
     std::istringstream stream(str);
+#if 0
     try {
+#endif
       return parse_expr(stream, tflags);
+#if 0
     }
     catch (error * err) {
       err->context.push_back
@@ -589,6 +574,7 @@ public:
 			  "While parsing value expression:"));
       throw err;
     }
+#endif
   }
 
   op_t * parse_expr(const char * p,
@@ -749,6 +735,11 @@ public:
   friend class scope_t;
 };
 
+inline std::ostream& operator<<(std::ostream& out, const xpath_t::op_t& op) {
+  op.write(out);
+  return out;
+};
+
 } // namespace xml
 
 template <typename T>
@@ -770,7 +761,6 @@ class xml_command : public xml::xpath_t::functor_t
 
     doc->write(*out);
   }
-
 };
 
 } // namespace ledger

@@ -3,6 +3,7 @@
 
 #include "journal.h"
 #include "parser.h"
+#include "register.h"
 
 namespace ledger {
 

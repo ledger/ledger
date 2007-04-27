@@ -15,11 +15,7 @@ void process_arguments(int argc, char ** argv, const bool anywhere,
 		       xml::xpath_t::scope_t * scope,
 		       std::list<string>& args);
 
-class option_error : public error {
- public:
-  option_error(const string& reason) throw() : error(reason) {}
-  virtual ~option_error() throw() {}
-};
+DECLARE_EXCEPTION(option_exception);
 
 } // namespace ledger
 

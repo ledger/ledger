@@ -101,12 +101,7 @@ class format_t
   }
 };
 
-class format_error : public error {
- public:
-  format_error(const string& reason, error_context * ctxt = NULL) throw()
-    : error(reason, ctxt) {}
-  virtual ~format_error() throw() {}
-};
+DECLARE_EXCEPTION(format_exception);
 
 } // namespace ledger
 

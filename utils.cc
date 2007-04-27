@@ -1,9 +1,13 @@
 #include "utils.h"
-#include "times.h"
 
-namespace ledger
+/**********************************************************************
+ *
+ * Assertions
+ */
 
 #if defined(ASSERTS_ON)
+
+namespace ledger {
 
 void debug_assert(const string& reason,
 		  const string& func,
@@ -16,35 +20,50 @@ void debug_assert(const string& reason,
   throw exception(buf.str(), context());
 }
 
+} // namespace ledger
+
 #endif
+
+/**********************************************************************
+ *
+ * Verification (basically, very slow asserts)
+ */
 
 #if defined(VERIFY_ON)
 
-int		 new_calls = 0;
-unsigned long	 new_size  = 0;
+namespace ledger {
+#if defined(FULL_DEBUG)
+  bool verify_enabled = true;
+#else
+  bool verify_enabled = false;
+#endif
+
+  int		new_calls = 0;
+  unsigned long	new_size  = 0;
+}
 
 void * operator new(std::size_t size) throw (std::bad_alloc) {
   void * ptr = std::malloc(size);
-  new_calls++;
-  new_size += size;
+  ledger::new_calls++;
+  ledger::new_size += size;
   return ptr;
 }
 void * operator new[](std::size_t size) throw (std::bad_alloc) {
   void * ptr = std::malloc(size);
-  new_calls++;
-  new_size += size;
+  ledger::new_calls++;
+  ledger::new_size += size;
   return ptr;
 }
 void * operator new(std::size_t size, const std::nothrow_t&) throw() {
   void * ptr = std::malloc(size);
-  new_calls++;
-  new_size += size;
+  ledger::new_calls++;
+  ledger::new_size += size;
   return ptr;
 }
 void * operator new[](std::size_t size, const std::nothrow_t&) throw() {
   void * ptr = std::malloc(size);
-  new_calls++;
-  new_size += size;
+  ledger::new_calls++;
+  ledger::new_size += size;
   return ptr;
 }
 void   operator delete(void * ptr) throw() {
@@ -59,6 +78,8 @@ void   operator delete(void * ptr, const std::nothrow_t&) throw() {
 void   operator delete[](void * ptr, const std::nothrow_t&) throw() {
   std::free(ptr);
 }
+
+namespace ledger {
 
 live_objects_map live_objects;
 object_count_map ctor_count;
@@ -99,8 +120,7 @@ bool trace_ctor_func(void * ptr, const char * cls_name, const char * args,
   std::strcat(name, args);
   std::strcat(name, ")");
 
-  DEBUG_PRINT("ledger.trace.debug",
-	      "trace_ctor " << ptr << " " << name);
+  DEBUG_("ledger.trace.debug", "TRACE_CTOR " << ptr << " " << name);
 
   live_objects.insert(live_objects_pair(ptr, cls_name));
 
@@ -114,7 +134,7 @@ bool trace_ctor_func(void * ptr, const char * cls_name, const char * args,
 
 bool trace_dtor_func(void * ptr, const char * cls_name, std::size_t cls_size)
 {
-  DEBUG_PRINT("ledger.trace.debug", "trace_dtor " << ptr << " " << cls_name);
+  DEBUG_("ledger.trace.debug", "TRACE_DTOR " << ptr << " " << cls_name);
 
   live_objects_map::iterator i = live_objects.find(ptr);
   if (i == live_objects.end()) {
@@ -179,103 +199,177 @@ void report_memory(std::ostream& out)
 #if ! defined(USE_BOOST_PYTHON)
 
 string::string() : std::string() {
-  trace_ctor(string, "");
+  TRACE_CTOR(string, "");
 }
 string::string(const string& str) : std::string(str) {
-  trace_ctor(string, "const string&");
+  TRACE_CTOR(string, "const string&");
 }
 string::string(const std::string& str) : std::string(str) {
-  trace_ctor(string, "const std::string&");
+  TRACE_CTOR(string, "const std::string&");
 }
 string::string(const int len, char x) : std::string(len, x) {
-  trace_ctor(string, "const int, char");
+  TRACE_CTOR(string, "const int, char");
 }
 string::string(const char * str) : std::string(str) {
-  trace_ctor(string, "const char *");
+  TRACE_CTOR(string, "const char *");
 }
 string::string(const char * str, const char * end) : std::string(str, end) {
-  trace_ctor(string, "const char *, const char *");
+  TRACE_CTOR(string, "const char *, const char *");
 }
 string::string(const string& str, int x) : std::string(str, x) {
-  trace_ctor(string, "const string&, int");
+  TRACE_CTOR(string, "const string&, int");
 }
 string::string(const string& str, int x, int y) : std::string(str, x, y) {
-  trace_ctor(string, "const string&, int, int");
+  TRACE_CTOR(string, "const string&, int, int");
 }
 string::string(const char * str, int x) : std::string(str, x) {
-  trace_ctor(string, "const char *, int");
+  TRACE_CTOR(string, "const char *, int");
 }
 string::string(const char * str, int x, int y) : std::string(str, x, y) {
-  trace_ctor(string, "const char *, int, int");
+  TRACE_CTOR(string, "const char *, int, int");
 }
 string::~string() {
-  trace_dtor(string);
+  TRACE_DTOR(string);
 }
 
 #endif
 
+} // namespace ledger
+
 #endif // VERIFY_ON
 
-#if defined(TIMERS_ON)
+/**********************************************************************
+ *
+ * Logging
+ */
+
+#if defined(LOGGING_ON) && defined(DEBUG_ON)
+
+#include <boost/regex.hpp>
+
+namespace ledger {
+
+log_level_t	   _log_level;
+unsigned int	   _trace_level;
+std::string	   _log_category;
+std::ostream *	   _log_stream = &std::cerr;
+std::ostringstream _log_buffer;
+
+bool logger_func(log_level_t level)
+{
+  _log_buffer.str("");
+}
+
+} // namespace ledger
+
+#endif // LOGGING_ON && DEBUG_ON
+
+/**********************************************************************
+ *
+ * Timers (allows log entries to specify cumulative time spent)
+ */
+
+#if defined(LOGGING_ON) && defined(TIMERS_ON)
+
+namespace ledger {
 
 void start_timer(const char * name)
 {
+#if 0
   begin = std::clock();
+#endif
 }
 
 void stop_timer(const char * name)
 {
+#if 0
   cumulative += std::clock() - begin;
+#endif
 }
 
 void finish_timer(const char * name)
 {
-  DEBUG_PRINT(cls.c_str(), file << ":" << line << ": "
-	      << category << " = "
-	      << (double(cumulative) / double(CLOCKS_PER_SEC)) << "s");
+#if 0
+  DEBUG_(cls.c_str(), file << ":" << line << ": "
+	 << category << " = "
+	 << (double(cumulative) / double(CLOCKS_PER_SEC)) << "s");
+#endif
 }
 
-#endif // TIMERS_ON
+} // namespace ledger
 
-#if defined(LOGGING_ON) && defined(DEBUG_ON)
+#endif // LOGGING_ON && TIMERS_ON
 
-std::ostream * _debug_stream	  = &std::cerr;
-bool	       _free_debug_stream = false;
-boost::regex   _debug_regex;
-bool           _set_debug_regex   = false;
-bool           _debug_regex_on    = false;
+/**********************************************************************
+ *
+ * Exception handling
+ */
 
-bool _debug_active(const char * const cls) {
-  if (! _set_debug_regex) {
-    const char * user_class = std::getenv("DEBUG_CLASS");
-    if (user_class) {
-      _debug_regex = user_class;
-      _debug_regex_on = true;
+namespace ledger {
+
+std::ostringstream _exc_buffer;
+
+} // namespace ledger
+
+/**********************************************************************
+ *
+ * General utility functions
+ */
+
+namespace ledger {
+
+string expand_path(const string& path)
+{
+  if (path.length() == 0 || path[0] != '~')
+    return path;
+
+  const char * pfx = NULL;
+  string::size_type pos = path.find_first_of('/');
+
+  if (path.length() == 1 || pos == 1) {
+    pfx = std::getenv("HOME");
+#ifdef HAVE_GETPWUID
+    if (! pfx) {
+      // Punt. We're trying to expand ~/, but HOME isn't set
+      struct passwd * pw = getpwuid(getuid());
+      if (pw)
+	pfx = pw->pw_dir;
     }
-    _set_debug_regex = true;
+#endif
   }
-  if (_debug_regex_on)
-    return boost::regex_match(cls, _debug_regex);
-  return false;
+#ifdef HAVE_GETPWNAM
+  else {
+    string user(path, 1, pos == string::npos ?
+		     string::npos : pos - 1);
+    struct passwd * pw = getpwnam(user.c_str());
+    if (pw)
+      pfx = pw->pw_dir;
+  }
+#endif
+
+  // if we failed to find an expansion, return the path unchanged.
+
+  if (! pfx)
+    return path;
+
+  string result(pfx);
+
+  if (pos == string::npos)
+    return result;
+
+  if (result.length() == 0 || result[result.length() - 1] != '/')
+    result += '/';
+
+  result += path.substr(pos + 1);
+
+  return result;
 }
 
-static struct init_streams {
-  init_streams() {
-    // If debugging is enabled and DEBUG_FILE is set, all debugging
-    // output goes to that file.
-    if (const char * p = std::getenv("DEBUG_FILE")) {
-      _debug_stream      = new std::ofstream(p);
-      _free_debug_stream = true;
-    }
-  }
-  ~init_streams() {
-    if (_free_debug_stream && _debug_stream) {
-      delete _debug_stream;
-      _debug_stream = NULL;
-    }
-  }
-} _debug_init;
-
-#endif // LOGGING_ON && DEBUG_ON
+string resolve_path(const string& path)
+{
+  if (path[0] == '~')
+    return expand_path(path);
+  return path;
+}
 
 } // namespace ledger

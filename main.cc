@@ -38,11 +38,11 @@ static int read_and_report(report_t * report, int argc, char * argv[],
   else
     session.use_cache = session.data_file.empty() && session.price_db.empty();
 
-  DEBUG_PRINT("ledger.session.cache", "1. use_cache = " << session.use_cache);
+  DEBUG_("ledger.session.cache", "1. use_cache = " << session.use_cache);
 
   // Process the environment settings
 
-  TRACE(main, "Processing options and environment settings");
+  TRACE(1, "Processing options and environment settings");
 
   process_environment(const_cast<const char **>(envp), "LEDGER_", report);
 
@@ -60,15 +60,15 @@ static int read_and_report(report_t * report, int argc, char * argv[],
   if (session.data_file == session.cache_file)
     session.use_cache = false;
 
-  DEBUG_PRINT("ledger.session.cache", "2. use_cache = " << session.use_cache);
+  DEBUG_("ledger.session.cache", "2. use_cache = " << session.use_cache);
 
-  TRACE(main, string("Initialization file is ") + session.init_file);
-  TRACE(main, string("Price database is ") + session.price_db);
-  TRACE(main, string("Binary cache is ") + session.cache_file);
-  TRACE(main, string("Main journal is ") + session.data_file);
+  TRACE(1, "Initialization file is " << session.init_file);
+  TRACE(1, "Price database is " << session.price_db);
+  TRACE(1, "Binary cache is " << session.cache_file);
+  TRACE(1, "Main journal is " << session.data_file);
 
-  TRACE(main, string("Based on option settings, binary cache ") +
-	(session.use_cache ? "WILL " : "will NOT ") + "be used");
+  TRACE(1, "Based on option settings, binary cache " <<
+	(session.use_cache ? "WILL " : "will NOT ") << "be used");
 
   // Read the command word and create a command object based on it
 
@@ -160,7 +160,7 @@ static int read_and_report(report_t * report, int argc, char * argv[],
       command.reset(def->functor_obj());
 
     if (! command.get())
-      throw new error(string("Unrecognized command '") + verb + "'");
+      throw_(exception, string("Unrecognized command '") + verb + "'");
   }
 
   // Parse the initialization file, which can only be textual; then
@@ -186,11 +186,11 @@ static int read_and_report(report_t * report, int argc, char * argv[],
   else if (! report->pager.empty()) {
     status = pipe(pfd);
     if (status == -1)
-      throw new error("Failed to create pipe");
+      throw_(exception, "Failed to create pipe");
 
     status = fork();
     if (status < 0) {
-      throw new error("Failed to fork child process");
+      throw_(exception, "Failed to fork child process");
     }
     else if (status == 0) {	// child
       const char *arg0;
@@ -332,29 +332,29 @@ static int read_and_report(report_t * report, int argc, char * argv[],
 
   if (session.use_cache && session.cache_dirty &&
       ! session.cache_file.empty()) {
-    TRACE_PUSH(binary_cache, "Writing journal file");
+    TRACE_START(binary_cache, 1, "Writing journal file");
 
     std::ofstream stream(session.cache_file.c_str());
 #if 0
     write_binary_journal(stream, journal);
 #endif
 
-    TRACE_POP(binary_cache, "Finished writing");
+    TRACE_FINISH(binary_cache, 1);
   }
 
+#if defined(FREE_MEMORY)
   // Cleanup memory -- if this is a beta or development build.
 
-#if DEBUG_LEVEL >= BETA
-  { TRACE_PUSH(cleanup, "Cleaning up allocated memory");
+  TRACE_START(cleanup, 1, "Cleaning up allocated memory");
 
 #ifdef USE_BOOST_PYTHON
-    shutdown_ledger_for_python();
+  shutdown_ledger_for_python();
 #endif
 
-    if (! report->output_file.empty())
-      delete out;
+  if (! report->output_file.empty())
+    delete out;
 
-    TRACE_POP(cleanup, "Finished cleaning"); }
+  TRACE_STOP(cleanup, 1);
 #endif
 
   // If the user specified a pager, wait for it to exit now
@@ -367,7 +367,7 @@ static int read_and_report(report_t * report, int argc, char * argv[],
     // Wait for child to finish
     wait(&status);
     if (status & 0xffff != 0)
-      throw new error("Something went wrong in the pager");
+      throw_(exception, "Something went wrong in the pager");
   }
 #endif
 
@@ -388,10 +388,8 @@ int main(int argc, char * argv[], char * envp[])
 
 #if DEBUG_LEVEL < BETA
     ledger::do_cleanup = false;
-#else
-    ledger::tracing_active = true;
 #endif
-    TRACE_PUSH(main, "Ledger starting");
+    TRACE(1, "Ledger starting");
 
     ledger::amount_t::initialize();
 
@@ -410,12 +408,6 @@ int main(int argc, char * argv[], char * envp[])
     session->register_parser(new qif_parser_t);
     session->register_parser(new textual_parser_t);
 
-#if DEBUG_LEVEL >= BETA
-    DEBUG_IF("ledger.trace.memory") {
-      ledger::trace_class_mode = true;
-    }
-#endif
-
     std::auto_ptr<ledger::report_t> report(new ledger::report_t(session.get()));
 
     status = read_and_report(report.get(), argc, argv, envp);
@@ -427,9 +419,8 @@ int main(int argc, char * argv[], char * envp[])
     } else {
       ledger::amount_t::shutdown();
     }
-
-    TRACE_POP(main, "Ledger done");
   }
+#if 0
   catch (error * err) {
     std::cout.flush();
     // Push a null here since there's no file context
@@ -439,9 +430,6 @@ int main(int argc, char * argv[], char * envp[])
     err->reveal_context(std::cerr, "Error");
     std::cerr << err->what() << std::endl;
     delete err;
-#if DEBUG_LEVEL >= BETA
-    ledger::tracing_active = false;
-#endif
   }
   catch (fatal * err) {
     std::cout.flush();
@@ -452,32 +440,21 @@ int main(int argc, char * argv[], char * envp[])
     err->reveal_context(std::cerr, "Fatal");
     std::cerr << err->what() << std::endl;
     delete err;
-#if DEBUG_LEVEL >= BETA
-    ledger::tracing_active = false;
-#endif
   }
+#endif
   catch (const std::exception& err) {
     std::cout.flush();
     std::cerr << "Error: " << err.what() << std::endl;
-#if DEBUG_LEVEL >= BETA
-    ledger::tracing_active = false;
-#endif
   }
   catch (int _status) {
-#if DEBUG_LEVEL >= BETA
-    ledger::tracing_active = false;
-#endif
     status = _status;
   }
 
-#if DEBUG_LEVEL >= BETA
-  DEBUG_IF("ledger.trace.memory") {
+  IF_DEBUG_("ledger.trace.memory") {
     report_memory(std::cerr);
     std::cerr << "Total calls to new: " << new_calls << std::endl
 	      << "Total memory new'd: " << new_size << std::endl;
   }
-  ledger::tracing_active = false;
-#endif
 
   return status;
 }

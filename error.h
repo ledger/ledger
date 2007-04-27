@@ -16,19 +16,24 @@ public:
   exception(const string&  _reason,
 	    const context& immediate_ctxt) throw()
     : reason(_reason) {
+    EXCEPTION(reason);
     push(immediate_ctxt);
   }
+
+  virtual ~exception() throw() {}
 
   void push(const context& intermediate_ctxt) throw() {
     context_stack.push_front(intermediate_ctxt);
   }
 
   void write(std::ostream& out) const throw() {
+#if 0
     for (std::list<context>::const_iterator
-	   i = context.begin();
-	 i != context.end();
+	   i = context_stack.begin();
+	 i != context_stack.end();
 	 i++)
       (*i).write(out);
+#endif
   }
 
   const char * what() const throw() {
@@ -36,13 +41,13 @@ public:
   }
 };
 
-#define DEFINE_EXCEPTION(name)			\
+#define DECLARE_EXCEPTION(name)			\
   class name : public exception {		\
   public:					\
     name(const string& _reason,			\
 	 const context& immediate_ctxt) throw()	\
       : exception(_reason, immediate_ctxt) {}	\
-  };
+  }
 
 #if 0
 
@@ -125,6 +130,7 @@ class fatal_assert : public fatal {
 
 inline void unexpected(char c, char wanted)
 {
+#if 0
   if ((unsigned char) c == 0xff) {
     if (wanted)
       throw new error(string("Missing '") + wanted + "'");
@@ -137,6 +143,7 @@ inline void unexpected(char c, char wanted)
     else
       throw new error(string("Invalid char '") + c + "'");
   }
+#endif
 }
 
 } // namespace ledger

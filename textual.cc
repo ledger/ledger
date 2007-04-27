@@ -52,7 +52,7 @@ parse_amount_expr(std::istream& in, journal_t *,
 {
   xml::xpath_t xpath(in, flags | XPATH_PARSE_RELAXED | XPATH_PARSE_PARTIAL);
 
-  DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+  DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
 	      "Parsed an amount expression");
 
 #ifdef DEBUG_ENABLED
@@ -66,7 +66,7 @@ parse_amount_expr(std::istream& in, journal_t *,
 
   amount = xpath.calc(static_cast<xml::transaction_node_t *>(xact.data)).to_amount();
 
-  DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+  DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
 	      "The transaction amount is " << amount);
 }
 
@@ -112,7 +112,9 @@ transaction_t * parse_transaction(char *      line,
   }
 
   string err_desc;
+#if 0
   try {
+#endif
 
   xact->entry = entry;		// this might be NULL
 
@@ -122,12 +124,12 @@ transaction_t * parse_transaction(char *      line,
     switch (*state) {
     case '*':
       xact->state = transaction_t::CLEARED;
-      DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+      DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
 		  "Parsed the CLEARED flag");
       break;
     case '!':
       xact->state = transaction_t::PENDING;
-      DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+      DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
 		  "Parsed the PENDING flag");
       break;
     }
@@ -139,18 +141,18 @@ transaction_t * parse_transaction(char *      line,
   if ((*b == '[' && *e == ']') ||
       (*b == '(' && *e == ')')) {
     xact->flags |= TRANSACTION_VIRTUAL;
-    DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+    DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
 		"Parsed a virtual account name");
     if (*b == '[') {
       xact->flags |= TRANSACTION_BALANCE;
-      DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+      DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
 		  "Parsed a balanced virtual account name");
     }
     *account_path++ = '\0';
     *e = '\0';
   }
 
-  DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+  DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
 	      "Parsed account name " << account_path);
   if (account_aliases.size() > 0) {
     accounts_map::const_iterator i = account_aliases.find(account_path);
@@ -202,9 +204,9 @@ transaction_t * parse_transaction(char *      line,
 	xact->amount_expr = string(line, beg, end - beg);
       }
     }
-    catch (error * err) {
+    catch (exception& err) {
       err_desc = "While parsing transaction amount:";
-      throw err;
+      throw;
     }
 
     // Parse the optional cost (@ PER-UNIT-COST, @@ TOTAL-COST)
@@ -212,14 +214,14 @@ transaction_t * parse_transaction(char *      line,
     if (in.good() && ! in.eof()) {
       char c = peek_next_nonws(in);
       if (c == '@') {
-	DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+	DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
 		    "Found a price indicator");
 	bool per_unit = true;
 	in.get(c);
 	if (in.peek() == '@') {
 	  in.get(c);
 	  per_unit = false;
-	  DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+	  DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
 		      "And it's for a total price");
 	}
 
@@ -240,13 +242,13 @@ transaction_t * parse_transaction(char *      line,
 	      xact->cost_expr = (string("@@") +
 				 string(amount, beg, end - beg));
 	  }
-	  catch (error * err) {
+	  catch (exception& err) {
 	    err_desc = "While parsing transaction cost:";
-	    throw err;
+	    throw;
 	  }
 
 	  if (*xact->cost < 0)
-	    throw new parse_error("A transaction's cost may not be negative");
+	    throw_(parse_exception, "A transaction's cost may not be negative");
 
 	  amount_t per_unit_cost(*xact->cost);
 	  if (per_unit)
@@ -260,13 +262,13 @@ transaction_t * parse_transaction(char *      line,
 					    xact->entry->actual_date(),
 					    xact->entry->code);
 
-	  DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+	  DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
 		      "Total cost is " << *xact->cost);
-	  DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+	  DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
 		      "Per-unit cost is " << per_unit_cost);
-	  DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+	  DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
 		      "Annotated amount is " << xact->amount);
-	  DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+	  DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
 		      "Bare amount is " << xact->amount.number());
 	}
       }
@@ -274,7 +276,7 @@ transaction_t * parse_transaction(char *      line,
 
     xact->amount.in_place_reduce();
 
-    DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+    DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
 		"Reduced amount is " << xact->amount);
   }
 
@@ -282,7 +284,7 @@ transaction_t * parse_transaction(char *      line,
 
   if (note) {
     xact->note = note;
-    DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+    DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
 		"Parsed a note '" << xact->note << "'");
 
     if (char * b = std::strchr(xact->note.c_str(), '['))
@@ -291,7 +293,7 @@ transaction_t * parse_transaction(char *      line,
 	std::strncpy(buf, b + 1, e - b - 1);
 	buf[e - b - 1] = '\0';
 
-	DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
+	DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
 		    "Parsed a transaction date " << buf);
 
 	if (char * p = std::strchr(buf, '=')) {
@@ -305,6 +307,7 @@ transaction_t * parse_transaction(char *      line,
 
   return xact.release();
 
+#if 0
   }
   catch (error * err) {
     err->context.push_back
@@ -312,6 +315,7 @@ transaction_t * parse_transaction(char *      line,
 			err_desc : "While parsing transaction:"));
     throw err;
   }
+#endif
 }
 
 bool parse_transactions(std::istream& in,
@@ -343,13 +347,6 @@ bool parse_transactions(std::istream& in,
   }
 
   return added;
-}
-
-namespace {
-  TIMER_DEF(parsing_total, "total parsing time")
-  TIMER_DEF(entry_xacts,   "parsing transactions")
-  TIMER_DEF(entry_details, "parsing entry details")
-  TIMER_DEF(entry_date,    "parsing entry date")
 }
 
 entry_t * parse_entry(std::istream& in, char * line, journal_t * journal,
@@ -415,18 +412,18 @@ entry_t * parse_entry(std::istream& in, char * line, journal_t * journal,
 
   // Parse the date
 
-  TIMER_START(entry_date);
+  TRACE_START(entry_date, 2, "Parsing entry date");
 
   curr->_date = parse_datetime(date);
 
   if (date_eff)
     curr->_date_eff = parse_datetime(date_eff);
 
-  TIMER_STOP(entry_date);
+  TRACE_STOP(entry_date, 2);
 
   // Parse the optional cleared flag: *
 
-  TIMER_START(entry_details);
+  TRACE_START(entry_details, 2, "Parsing entry details");
 
   transaction_t::state_t state = transaction_t::UNCLEARED;
   if (statep) {
@@ -450,11 +447,11 @@ entry_t * parse_entry(std::istream& in, char * line, journal_t * journal,
   assert(payee);
   curr->payee = *payee != '\0' ? payee : "<Unspecified payee>";
 
-  TIMER_STOP(entry_details);
+  TRACE_STOP(entry_details, 2);
 
   // Parse all of the transactions associated with this entry
 
-  TIMER_START(entry_xacts);
+  TRACE_START(entry_xacts, 2, "Parsing entry transactions");
 
   unsigned long end_pos;
   unsigned long beg_line = linenum;
@@ -495,7 +492,7 @@ entry_t * parse_entry(std::istream& in, char * line, journal_t * journal,
     curr->data = NULL;
   }
 
-  TIMER_STOP(entry_xacts);
+  TRACE_STOP(entry_xacts, 2);
 
   return curr.release();
 }
@@ -513,7 +510,7 @@ static inline void parse_symbol(char *& p, string& symbol)
   if (*p == '"') {
     char * q = std::strchr(p + 1, '"');
     if (! q)
-      throw new parse_error("Quoted commodity symbol lacks closing quote");
+      throw_(parse_exception, "Quoted commodity symbol lacks closing quote");
     symbol = string(p + 1, 0, q - p - 1);
     p = q + 2;
   } else {
@@ -525,7 +522,7 @@ static inline void parse_symbol(char *& p, string& symbol)
       p += symbol.length();
   }
   if (symbol.empty())
-    throw new parse_error("Failed to parse commodity");
+    throw_(parse_exception, "Failed to parse commodity");
 }
 
 bool textual_parser_t::test(std::istream& in) const
@@ -535,9 +532,9 @@ bool textual_parser_t::test(std::istream& in) const
   in.read(buf, 5);
   if (std::strncmp(buf, "<?xml", 5) == 0) {
 #if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
-    throw new parse_error("Ledger file contains XML data, but format was not recognized");
+    throw_(parse_exception, "Ledger file contains XML data, but format was not recognized");
 #else
-    throw new parse_error("Ledger file contains XML data, but no XML support present");
+    throw_(parse_exception, "Ledger file contains XML data, but no XML support present");
 #endif
   }
 
@@ -559,11 +556,11 @@ static void clock_out_from_timelog(const moment_t& when,
     time_entries.clear();
   }
   else if (time_entries.empty()) {
-    throw new parse_error("Timelog check-out event without a check-in");
+    throw_(parse_exception, "Timelog check-out event without a check-in");
   }
   else if (! account) {
-    throw new parse_error
-      ("When multiple check-ins are active, checking out requires an account");
+    throw_(parse_exception,
+	   "When multiple check-ins are active, checking out requires an account");
   }
   else {
     bool found = false;
@@ -579,8 +576,8 @@ static void clock_out_from_timelog(const moment_t& when,
       }
 
     if (! found)
-      throw new parse_error
-	("Timelog check-out event does not match any current check-ins");
+      throw_(parse_exception,
+	     "Timelog check-out event does not match any current check-ins");
   }
 
   if (desc && event.desc.empty()) {
@@ -594,8 +591,8 @@ static void clock_out_from_timelog(const moment_t& when,
   curr->payee = event.desc;
 
   if (curr->_date < event.checkin)
-    throw new parse_error
-      ("Timelog check-out date less than corresponding check-in");
+    throw_(parse_exception,
+	   "Timelog check-out date less than corresponding check-in");
 
   char buf[32];
   std::sprintf(buf, "%lds", (long)(curr->_date - event.checkin).total_seconds());
@@ -608,7 +605,7 @@ static void clock_out_from_timelog(const moment_t& when,
   curr->add_transaction(xact);
 
   if (! journal->add_entry(curr.get()))
-    throw new parse_error("Failed to record 'out' timelog entry");
+    throw_(parse_exception, "Failed to record 'out' timelog entry");
   else
     curr.release();
 }
@@ -623,7 +620,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
   unsigned int count  = 0;
   unsigned int errors = 0;
 
-  TIMER_START(parsing_total);
+  TRACE_START(parsing_total, 2, "Parsing textual file");
 
   std::list<account_t *> account_stack;
 
@@ -643,7 +640,9 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
   unsigned long beg_line = linenum;
 
   while (in.good() && ! in.eof()) {
+#if 0
     try {
+#endif
       in.getline(line, MAX_LINE);
       if (in.eof())
 	break;
@@ -659,7 +658,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
       case '\t': {
 	char * p = skip_ws(line);
 	if (*p && *p != '\r')
-	  throw new parse_error("Line begins with whitespace");
+	  throw_(parse_exception, "Line begins with whitespace");
 	break;
       }
 
@@ -681,8 +680,8 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	       i != time_entries.end();
 	       i++)
 	    if (event.account == (*i).account)
-	      throw new parse_error
-		("Cannot double check-in to the same account");
+	      throw_(parse_exception,
+		     "Cannot double check-in to the same account");
 
 	time_entries.push_back(event);
 	break;
@@ -691,7 +690,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
       case 'o':
       case 'O':
 	if (time_entries.empty()) {
-	  throw new parse_error("Timelog check-out event without a check-in");
+	  throw_(parse_exception, "Timelog check-out event without a check-in");
 	} else {
 	  string date(line, 2, 19);
 
@@ -776,7 +775,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	break;
 
       case '-':			// option setting
-	throw new parse_error("Option settings are not allowed in journal files");
+	throw_(parse_exception, "Option settings are not allowed in journal files");
 
       case '=': {		// automated entry
 	if (! added_auto_entry_hook) {
@@ -800,7 +799,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
       case '~': {		// period entry
 	period_entry_t * pe = new period_entry_t(skip_ws(line + 1));
 	if (! pe->period)
-	  throw new parse_error(string("Parsing time period '") + skip_ws(line + 1) + "'");
+	  throw_(parse_exception, string("Parsing time period '") + skip_ws(line + 1) + "'");
 
 	if (parse_transactions(in, journal, account_stack.front(), *pe,
 			       "period", end_pos)) {
@@ -813,7 +812,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	    pe->end_pos	 = end_pos;
 	    pe->end_line = linenum;
 	  } else {
-	    throw new parse_error("Period entry failed to balance");
+	    throw_(parse_exception, "Period entry failed to balance");
 	  }
 	}
 	break;
@@ -840,7 +839,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	  }
 	  path = resolve_path(path);
 
-	  DEBUG_PRINT("ledger.textual.include", "line " << linenum << ": " <<
+	  DEBUG_("ledger.textual.include", "line " << linenum << ": " <<
 		      "Including path '" << path << "'");
 
 	  include_stack.push_back(std::pair<string, int>
@@ -903,15 +902,16 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	    count++;
 	  } else {
 	    delete entry;
-	    throw new parse_error("Entry does not balance");
+	    throw_(parse_exception, "Entry does not balance");
 	  }
 	} else {
-	  throw new parse_error("Failed to parse entry");
+	  throw_(parse_exception, "Failed to parse entry");
 	}
 	end_pos = pos;
 	break;
       }
       }
+#if 0
     }
     catch (error * err) {
       for (std::list<std::pair<string, int> >::reverse_iterator i =
@@ -930,6 +930,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
       delete err;
       errors++;
     }
+#endif
     beg_pos = end_pos;
   }
 
@@ -947,7 +948,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
   if (errors > 0)
     throw (int)errors;
 
-  TIMER_STOP(parsing_total);
+  TRACE_STOP(parsing_total, 2);
 
   return count;
 }

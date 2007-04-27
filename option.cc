@@ -45,7 +45,9 @@ namespace {
   void process_option(xml::xpath_t::functor_t * opt, xml::xpath_t::scope_t * scope,
 		      const char * arg)
   {
+#if 0
     try {
+#endif
       std::auto_ptr<xml::xpath_t::scope_t> args;
       if (arg) {
 	args.reset(new xml::xpath_t::scope_t(scope, xml::xpath_t::scope_t::ARGUMENT));
@@ -54,17 +56,17 @@ namespace {
 
       value_t temp;
       (*opt)(temp, args.get());
+#if 0
     }
     catch (error * err) {
-#if 0
       err->context.push_back
 	(new error_context
 	 (string("While parsing option '--") + opt->long_opt +
 	  "'" + (opt->short_opt != '\0' ?
 		 (string(" (-") + opt->short_opt + "):") : ":")));
-#endif
       throw err;
     }
+#endif
   }
 }
 
@@ -103,9 +105,15 @@ void process_environment(const char ** envp, const string& tag,
       *r = '\0';
 
       if (*q == '=') {
+#if 0
 	try {
+#endif
 	  if (! process_option(buf, scope, q + 1))
-	    /*throw new option_error("unknown option")*/;
+#if 0
+	    throw new option_error("unknown option")
+#endif
+	      ;
+#if 0
 	}
 	catch (error * err) {
 	  err->context.push_back
@@ -114,6 +122,7 @@ void process_environment(const char ** envp, const string& tag,
 	      *p + "':"));
 	  throw err;
 	}
+#endif
       }
     }
 }
@@ -149,22 +158,21 @@ void process_arguments(int argc, char ** argv, const bool anywhere,
 
       std::auto_ptr<xml::xpath_t::op_t> opt(find_option(scope, name));
       if (! opt.get())
-	throw new option_error(string("illegal option --") + name);
+	throw_(option_exception, "illegal option --" << name);
 
       xml::xpath_t::functor_t * def = opt->functor_obj();
       if (! def)
-	throw new option_error(string("illegal option --") + name);
+	throw_(option_exception, "illegal option --" << name);
 
       if (def->wants_args && value == NULL) {
 	value = *++i;
 	if (value == NULL)
-	  throw new option_error(string("missing option argument for --") +
-				 name);
+	  throw_(option_exception, "missing option argument for --" << name);
       }
       process_option(def, scope, value);
     }
     else if ((*i)[1] == '\0') {
-      throw new option_error(string("illegal option -"));
+      throw_(option_exception, "illegal option -");
     }
     else {
       std::list<xml::xpath_t::op_t *> option_queue;
@@ -173,11 +181,11 @@ void process_arguments(int argc, char ** argv, const bool anywhere,
       for (char c = (*i)[x]; c != '\0'; x++, c = (*i)[x]) {
 	xml::xpath_t::op_t * opt = find_option(scope, c);
 	if (! opt)
-	  throw new option_error(string("illegal option -") + c);
+	  throw_(option_exception, "illegal option -" << c);
 
 	xml::xpath_t::functor_t * def = opt->functor_obj();
 	if (! def)
-	  throw new option_error(string("illegal option -") + c);
+	  throw_(option_exception, "illegal option -" << c);
 
 	option_queue.push_back(opt);
       }
@@ -194,12 +202,13 @@ void process_arguments(int argc, char ** argv, const bool anywhere,
 	if (def->wants_args) {
 	  value = *++i;
 	  if (value == NULL)
-	    throw new option_error(string("missing option argument for -") +
+	    throw_(option_exception, "missing option argument for -" <<
 #if 0
-				   def->short_opt);
+		   def->short_opt
 #else
-	  '?');
+		   '?'
 #endif
+		   );
 	}
 	process_option(def, scope, value);
 

@@ -207,13 +207,16 @@ unsigned int xml_parser_t::parse(std::istream&	     in,
     catch (const std::exception& err) {
       //unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
       XML_ParserFree(parser);
-      throw new parse_error(err.what());
+      throw_(parse_exception, err.what());
     }
 
     if (! have_error.empty()) {
       //unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
+#if 0
+      // jww (2007-04-26): What is this code doing?
       parse_error err(have_error);
       std::cerr << "Error: " << err.what() << std::endl;
+#endif
       have_error = "";
     }
 
@@ -221,7 +224,7 @@ unsigned int xml_parser_t::parse(std::istream&	     in,
       //unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
       const char *  err  = XML_ErrorString(XML_GetErrorCode(parser));
       XML_ParserFree(parser);
-      throw new parse_error(err);
+      throw_(parse_exception, err);
     }
   }
 

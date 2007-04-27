@@ -71,7 +71,7 @@ object python_interpreter_t::import(const string& str)
   try {
     PyObject * mod = PyImport_Import(PyString_FromString(str.c_str()));
     if (! mod)
-      throw error(string("Failed to import Python module ") + str);
+      throw_(exception, "Failed to import Python module " << str);
 
     object newmod(handle<>(borrowed(mod)));
 
@@ -86,7 +86,7 @@ object python_interpreter_t::import(const string& str)
   }
   catch (const error_already_set&) {
     PyErr_Print();
-    throw error(string("Importing Python module ") + str);
+    throw_(exception, "Importing Python module " << str);
   }
 }
 
@@ -120,7 +120,7 @@ object python_interpreter_t::eval(std::istream& in, py_eval_mode_t mode)
   }
   catch (const error_already_set&) {
     PyErr_Print();
-    throw error("Evaluating Python code");
+    throw_(exception, "Evaluating Python code");
   }
 }
 
@@ -138,7 +138,7 @@ object python_interpreter_t::eval(const string& str, py_eval_mode_t mode)
   }
   catch (const error_already_set&) {
     PyErr_Print();
-    throw error("Evaluating Python code");
+    throw_(exception, "Evaluating Python code");
   }
 }
 
@@ -165,8 +165,8 @@ void python_interpreter_t::functor_t::operator()(value_t& result,
 	}
 	else if (PyObject * err = PyErr_Occurred()) {
 	  PyErr_Print();
-	  throw new xml::xpath_t::calc_error
-	    (string("While calling Python function '") + name() + "'");
+	  throw_(xml::xpath_t::calc_exception,
+		 "While calling Python function '" << name() << "'");
 	} else {
 	  assert(0);
 	}
@@ -177,8 +177,8 @@ void python_interpreter_t::functor_t::operator()(value_t& result,
   }
   catch (const error_already_set&) {
     PyErr_Print();
-    throw new xml::xpath_t::calc_error
-      (string("While calling Python function '") + name() + "'");
+    throw_(xml::xpath_t::calc_exception,
+	   "While calling Python function '" << name() << "'");
   }
 }
 
@@ -194,7 +194,8 @@ void python_interpreter_t::lambda_t::operator()(value_t& result,
   }
   catch (const error_already_set&) {
     PyErr_Print();
-    throw new xml::xpath_t::calc_error("While evaluating Python lambda expression");
+    throw_(xml::xpath_t::calc_exception,
+	   "While evaluating Python lambda expression");
   }
 }
 

@@ -27,7 +27,7 @@ unsigned int session_t::read_journal(const string&  path,
   journal->sources.push_back(path);
 
   if (access(path.c_str(), R_OK) == -1)
-    throw new error(string("Cannot read file '") + path + "'");
+    throw_(exception, "Cannot read file '" << path << "'");
 
   if (! original_file)
     original_file = &path;
@@ -42,7 +42,7 @@ void session_t::read_init()
     return;
 
   if (access(init_file.c_str(), R_OK) == -1)
-    throw new error(string("Cannot read init file '") + init_file + "'");
+    throw_(exception, "Cannot read init file '" << init_file << "'");
 
   std::ifstream init(init_file.c_str());
 
@@ -51,7 +51,7 @@ void session_t::read_init()
 
 journal_t * session_t::read_data(const string& master_account)
 {
-  TRACE_PUSH(parser, "Parsing journal file");
+  TRACE_START(parser, 1, "Parsing journal file");
 
   journal_t * journal = new_journal();
   journal->document = new xml::document_t;
@@ -59,12 +59,12 @@ journal_t * session_t::read_data(const string& master_account)
 
   unsigned int entry_count = 0;
 
-  DEBUG_PRINT("ledger.cache",
+  DEBUG_("ledger.cache",
 	      "3. use_cache = " << use_cache);
 
   if (use_cache && ! cache_file.empty() &&
       ! data_file.empty()) {
-    DEBUG_PRINT("ledger.cache",
+    DEBUG_("ledger.cache",
 		"using_cache " << cache_file);
     cache_dirty = true;
     if (access(cache_file.c_str(), R_OK) != -1) {
@@ -90,15 +90,15 @@ journal_t * session_t::read_data(const string& master_account)
     if (! journal->price_db.empty() &&
 	access(journal->price_db.c_str(), R_OK) != -1) {
       if (read_journal(journal->price_db, journal)) {
-	throw new error("Entries not allowed in price history file");
+	throw_(exception, "Entries not allowed in price history file");
       } else {
-	DEBUG_PRINT("ledger.cache",
+	DEBUG_("ledger.cache",
 		    "read price database " << journal->price_db);
 	journal->sources.pop_back();
       }
     }
 
-    DEBUG_PRINT("ledger.cache",
+    DEBUG_("ledger.cache",
 		"rejected cache, parsing " << data_file);
     if (data_file == "-") {
       use_cache = false;
@@ -112,13 +112,13 @@ journal_t * session_t::read_data(const string& master_account)
     }
   }
 
-  VALIDATE(journal->valid());
+  VERIFY(journal->valid());
 
   if (entry_count == 0)
-    throw new error("Failed to locate any journal entries; "
-		    "did you specify a valid file with -f?");
+    throw_(exception, "Failed to locate any journal entries; "
+	   "did you specify a valid file with -f?");
 
-  TRACE_POP(parser, "Finished parsing");
+  TRACE_STOP(parser, 1);
 
   return journal;
 }
@@ -185,6 +185,8 @@ xml::xpath_t::op_t * session_t::lookup(const string& name)
   return xml::xpath_t::scope_t::lookup(name);
 }
 
+// jww (2007-04-26): All of Ledger should be accessed through a
+// session_t object
 void initialize()
 {
   amount_t::initialize();
@@ -193,7 +195,6 @@ void initialize()
 void shutdown()
 {
   amount_t::shutdown();
-  assert(live_count.size() == 0);
 }
 
 } // namespace ledger

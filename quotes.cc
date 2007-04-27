@@ -8,17 +8,17 @@ void quotes_by_script::operator()(commodity_base_t& commodity,
 				  const ptime&      last,
 				  amount_t&	    price)
 {
-  DEBUG_CLASS("ledger.quotes.download");
+  logger("quotes.download");
 
-  DEBUG_PRINT_("commodity: " << commodity.symbol);
-  DEBUG_PRINT_TIME_(now);
-  DEBUG_PRINT_TIME_(moment);
-  DEBUG_PRINT_TIME_(date);
-  DEBUG_PRINT_TIME_(last);
+  DEBUG("commodity: " << commodity.symbol);
+  DEBUG("      now: " << now);
+  DEBUG("   moment: " << moment);
+  DEBUG("     date: " << date);
+  DEBUG("     last: " << last);
 
-  if (commodity.history)
-    DEBUG_PRINT_TIME_(commodity.history->last_lookup);
-  DEBUG_PRINT_("pricing_leeway is " << pricing_leeway);
+  if (SHOW_DEBUG() && commodity.history)
+    DEBUG("last_lookup: " << commodity.history->last_lookup);
+  DEBUG("pricing_leeway is " << pricing_leeway);
 
   if ((commodity.history &&
        (time_now - commodity.history->last_lookup) < pricing_leeway) ||
@@ -26,7 +26,7 @@ void quotes_by_script::operator()(commodity_base_t& commodity,
       (price && moment > date && (moment - date) <= pricing_leeway))
     return;
 
-  DEBUG_PRINT_("downloading quote for symbol " << commodity.symbol);
+  DEBUG("downloading quote for symbol " << commodity.symbol);
 
   char buf[256];
   buf[0] = '\0';
@@ -47,7 +47,7 @@ void quotes_by_script::operator()(commodity_base_t& commodity,
     char * p = strchr(buf, '\n');
     if (p) *p = '\0';
 
-    DEBUG_PRINT_("downloaded quote: " << buf);
+    DEBUG("downloaded quote: " << buf);
 
     price.parse(buf);
     commodity.add_price(now, price);
@@ -70,9 +70,10 @@ void quotes_by_script::operator()(commodity_base_t& commodity,
 #endif
     }
   } else {
-    throw new error(string("Failed to download price for '") +
+    throw exception(string("Failed to download price for '") +
 		    commodity.symbol + "' (command: \"getquote " +
-		    commodity.symbol + "\")");
+		    commodity.symbol + "\")",
+		    context());
   }
 }
 

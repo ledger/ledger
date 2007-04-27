@@ -36,11 +36,7 @@ inline bool is_valid_moment(const moment_t& moment) {
 
 extern moment_t& now;
 
-class datetime_error : public error {
- public:
-  datetime_error(const string& _reason) throw() : error(_reason) {}
-  virtual ~datetime_error() throw() {}
-};
+DECLARE_EXCEPTION(datetime_exception);
 
 class interval_t
 {
@@ -86,6 +82,7 @@ extern ptime time_now;
 extern date  date_now;
 extern bool  day_before_month;
 
+#if 0
 struct intorchar
 {
   int	      ival;
@@ -97,8 +94,9 @@ struct intorchar
   intorchar(const intorchar& o) : ival(o.ival), sval(o.sval) {}
 };
 
-}
-
 ledger::moment_t parse_abs_datetime(std::istream& input);
+#endif
 
-#endif /* _TIMES_H */
+} // namespace ledger
+
+#endif // _TIMES_H

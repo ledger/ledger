@@ -3,10 +3,10 @@
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(CommodityTestCase, "numerics");
 
 void CommodityTestCase::setUp() {
-  amount_t::initialize();
+  ledger::initialize();
 }
 void CommodityTestCase::tearDown() {
-  amount_t::shutdown();
+  ledger::shutdown();
 }
 
 void CommodityTestCase::testPriceHistory()

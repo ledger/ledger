@@ -1,33 +1,44 @@
-// amount.cc
+/**
+ * @file   amount.cc
+ * @author John Wiegley
+ * @date   Thu Apr 26 15:19:46 2007
+ * 
+ * @brief  Types for handling commoditized math.
+ * 
+ * This file defines member functions for amount_t and the various
+ * flavors of commodity_t.
+ */
 
-// Copyright (c) 2003-2007, John Wiegley.  All rights reserved.
-//
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
-//
-// - Redistributions of source code must retain the above copyright
-//   notice, this list of conditions and the following disclaimer.
-//
-// - Redistributions in binary form must reproduce the above copyright
-//   notice, this list of conditions and the following disclaimer in the
-//   documentation and/or other materials provided with the distribution.
-//
-// - Neither the name of New Artisans LLC nor the names of its
-//   contributors may be used to endorse or promote products derived from
-//   this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+/*
+ * Copyright (c) 2003-2007, John Wiegley.  All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ * - Redistributions of source code must retain the above copyright
+ *   notice, this list of conditions and the following disclaimer.
+ *
+ * - Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in the
+ *   documentation and/or other materials provided with the distribution.
+ *
+ * - Neither the name of New Artisans LLC nor the names of its
+ *   contributors may be used to endorse or promote products derived from
+ *   this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 #include "amount.h"
 #include "binary.h"
@@ -325,7 +336,7 @@ amount_t::amount_t(const double val)
 
 void amount_t::_release()
 {
-  DEBUG_PRINT("amounts.refs",
+  DEBUG_("amounts.refs",
 	      quantity << " ref--, now " << (quantity->ref - 1));
   if (--quantity->ref == 0) {
     if (! (quantity->flags & BIGINT_BULK_ALLOC))
@@ -367,7 +378,7 @@ void amount_t::_copy(const amount_t& amt)
       quantity = new bigint_t(*amt.quantity);
     } else {
       quantity = amt.quantity;
-      DEBUG_PRINT("amounts.refs",
+      DEBUG_("amounts.refs",
 		  quantity << " ref++, now " << (quantity->ref + 1));
       quantity->ref++;
     }
@@ -473,10 +484,11 @@ void amount_t::_clear()
 amount_t& amount_t::operator+=(const amount_t& amt)
 {
   if (commodity() != amt.commodity()) {
-    throw new amount_error
+    throw amount_exception
       (string("Adding amounts with different commodities: ") +
        (has_commodity() ? commodity_->qualified_symbol : "NONE") + " != " +
-       (amt.has_commodity() ? amt.commodity_->qualified_symbol : "NONE"));
+       (amt.has_commodity() ? amt.commodity_->qualified_symbol : "NONE"),
+       context());
   }
 
   if (! amt.quantity)
@@ -508,10 +520,11 @@ amount_t& amount_t::operator+=(const amount_t& amt)
 amount_t& amount_t::operator-=(const amount_t& amt)
 {
   if (commodity() != amt.commodity())
-    throw new amount_error
+    throw amount_exception
       (string("Subtracting amounts with different commodities: ") +
        (has_commodity() ? commodity_->qualified_symbol : "NONE") + " != " +
-       (amt.has_commodity() ? amt.commodity_->qualified_symbol : "NONE"));
+       (amt.has_commodity() ? amt.commodity_->qualified_symbol : "NONE"),
+       context());
 
   if (! amt.quantity)
     return *this;
@@ -545,10 +558,11 @@ amount_t& amount_t::operator*=(const amount_t& amt)
 {
   if (has_commodity() && amt.has_commodity() &&
       commodity() != amt.commodity()) {
-    throw new amount_error
+    throw amount_exception
       (string("Multiplying amounts with different commodities: ") +
        (has_commodity() ? commodity_->qualified_symbol : "NONE") + " != " +
-       (amt.has_commodity() ? amt.commodity_->qualified_symbol : "NONE"));
+       (amt.has_commodity() ? amt.commodity_->qualified_symbol : "NONE"),
+       context());
   }
 
   if (! amt.quantity) {
@@ -585,14 +599,15 @@ amount_t& amount_t::operator/=(const amount_t& amt)
 {
   if (has_commodity() && amt.has_commodity() &&
       commodity() != amt.commodity()) {
-    throw new amount_error
+    throw amount_exception
       (string("Dividing amounts with different commodities: ") +
        (has_commodity() ? commodity_->qualified_symbol : "NONE") + " != " +
-       (amt.has_commodity() ? amt.commodity_->qualified_symbol : "NONE"));
+       (amt.has_commodity() ? amt.commodity_->qualified_symbol : "NONE"),
+       context());
   }
 
   if (! amt.quantity || ! amt) {
-    throw new amount_error("Divide by zero");
+    throw amount_exception("Divide by zero", context());
   }
   else if (! quantity) {
     *this = amt;
@@ -658,9 +673,10 @@ int amount_t::compare(const amount_t& amt) const
     return sign();
 
   if (has_commodity() && amt.commodity() && commodity() != amt.commodity())
-    throw new amount_error
+    throw amount_exception
       (string("Cannot compare amounts with different commodities: ") +
-       commodity().symbol() + " and " + amt.commodity().symbol());
+       commodity().symbol() + " and " + amt.commodity().symbol(),
+       context());
 
   if (quantity->prec == amt.quantity->prec) {
     return mpz_cmp(MPZ(quantity), MPZ(amt.quantity));
@@ -1119,7 +1135,8 @@ static void parse_commodity(std::istream& in, string& symbol)
     if (c == '"')
       in.get(c);
     else
-      throw new amount_error("Quoted commodity symbol lacks closing quote");
+      throw amount_exception("Quoted commodity symbol lacks closing quote",
+			     context());
   } else {
     READ_INTO(in, buf, 255, c, ! invalid_chars[(unsigned char)c]);
   }
@@ -1136,14 +1153,15 @@ bool parse_annotations(std::istream& in, amount_t& price,
     char c = peek_next_nonws(in);
     if (c == '{') {
       if (price)
-	throw new amount_error("Commodity specifies more than one price");
+	throw amount_exception("Commodity specifies more than one price",
+			       context());
 
       in.get(c);
       READ_INTO(in, buf, 255, c, c != '}');
       if (c == '}')
 	in.get(c);
       else
-	throw new amount_error("Commodity price lacks closing brace");
+	throw amount_exception("Commodity price lacks closing brace", context());
 
       price.parse(buf, AMOUNT_PARSE_NO_MIGRATE);
       price.in_place_reduce();
@@ -1158,28 +1176,32 @@ bool parse_annotations(std::istream& in, amount_t& price,
     }
     else if (c == '[') {
       if (is_valid_moment(date))
-	throw new amount_error("Commodity specifies more than one date");
+	throw amount_exception("Commodity specifies more than one date",
+			       context());
 
       in.get(c);
       READ_INTO(in, buf, 255, c, c != ']');
       if (c == ']')
 	in.get(c);
       else
-	throw new amount_error("Commodity date lacks closing bracket");
+	throw amount_exception("Commodity date lacks closing bracket",
+			       context());
 
       date = parse_datetime(buf);
       has_date = true;
     }
     else if (c == '(') {
       if (! tag.empty())
-	throw new amount_error("Commodity specifies more than one tag");
+	throw amount_exception("Commodity specifies more than one tag",
+			       context());
 
       in.get(c);
       READ_INTO(in, buf, 255, c, c != ')');
       if (c == ')')
 	in.get(c);
       else
-	throw new amount_error("Commodity tag lacks closing parenthesis");
+	throw amount_exception("Commodity tag lacks closing parenthesis",
+			       context());
 
       tag = buf;
     }
@@ -1188,7 +1210,7 @@ bool parse_annotations(std::istream& in, amount_t& price,
     }
   } while (true);
 
-  DEBUG_PRINT("amounts.commodities",
+  DEBUG_("amounts.commodities",
 	      "Parsed commodity annotations: "
 	      << "  price " << price << " "
 	      << "  date " << date << " "
@@ -1251,7 +1273,8 @@ void amount_t::parse(std::istream& in, unsigned char flags)
   }
 
   if (quant.empty())
-    throw new amount_error("No quantity specified for amount");
+    throw amount_exception("No quantity specified for amount",
+			   context());
 
   _init();
 
@@ -1446,7 +1469,7 @@ void amount_t::read_quantity(char *& data)
     data += sizeof(unsigned int);
 
     quantity = (bigint_t *) (bigints + (index - 1) * sizeof(bigint_t));
-    DEBUG_PRINT("amounts.refs",
+    DEBUG_("amounts.refs",
 		quantity << " ref++, now " << (quantity->ref + 1));
     quantity->ref++;
   }
@@ -1535,12 +1558,12 @@ bool amount_t::valid() const
 {
   if (quantity) {
     if (quantity->ref == 0) {
-      DEBUG_PRINT("ledger.validate", "amount_t: quantity->ref == 0");
+      DEBUG_("ledger.validate", "amount_t: quantity->ref == 0");
       return false;
     }
   }
   else if (commodity_) {
-    DEBUG_PRINT("ledger.validate", "amount_t: commodity_ != NULL");
+    DEBUG_("ledger.validate", "amount_t: commodity_ != NULL");
     return false;
   }
   return true;
@@ -1561,7 +1584,7 @@ void amount_t::annotate_commodity(const amount_t&    tprice,
   }
   assert(this_base);
 
-  DEBUG_PRINT("amounts.commodities", "Annotating commodity for amount "
+  DEBUG_("amounts.commodities", "Annotating commodity for amount "
 	      << *this << std::endl
 	      << "  price " << tprice << " "
 	      << "  date " << tdate << " "
@@ -1575,7 +1598,7 @@ void amount_t::annotate_commodity(const amount_t&    tprice,
   if (ann_comm)
     set_commodity(*ann_comm);
 
-  DEBUG_PRINT("amounts.commodities", "  Annotated amount is " << *this);
+  DEBUG_("amounts.commodities", "  Annotated amount is " << *this);
 }
 
 amount_t amount_t::strip_annotations(const bool _keep_price,
@@ -1586,7 +1609,7 @@ amount_t amount_t::strip_annotations(const bool _keep_price,
       (_keep_price && _keep_date && _keep_tag))
     return *this;
 
-  DEBUG_PRINT("amounts.commodities", "Reducing commodity for amount "
+  DEBUG_("amounts.commodities", "Reducing commodity for amount "
 	      << *this << std::endl
 	      << "  keep price " << _keep_price << " "
 	      << "  keep date " << _keep_date << " "
@@ -1613,7 +1636,7 @@ amount_t amount_t::strip_annotations(const bool _keep_price,
 
   amount_t t(*this);
   t.set_commodity(*new_comm);
-  DEBUG_PRINT("amounts.commodities", "  Reduced amount is " << t);
+  DEBUG_("amounts.commodities", "  Reduced amount is " << t);
 
   return t;
 }
@@ -1623,7 +1646,7 @@ amount_t amount_t::price() const
   if (commodity_ && commodity_->annotated) {
     amount_t t(((annotated_commodity_t *)commodity_)->price);
     t *= number();
-    DEBUG_PRINT("amounts.commodities",
+    DEBUG_("amounts.commodities",
 		"Returning price of " << *this << " = " << t);
     return t;
   }
@@ -1633,7 +1656,7 @@ amount_t amount_t::price() const
 moment_t amount_t::date() const
 {
   if (commodity_ && commodity_->annotated) {
-    DEBUG_PRINT("amounts.commodities",
+    DEBUG_("amounts.commodities",
 		"Returning date of " << *this << " = "
 		<< ((annotated_commodity_t *)commodity_)->date);
     return ((annotated_commodity_t *)commodity_)->date;
@@ -1675,7 +1698,7 @@ commodity_base_t * commodity_base_t::create(const string& symbol)
 {
   commodity_base_t * commodity = new commodity_base_t(symbol);
 
-  DEBUG_PRINT("amounts.commodities", "Creating base commodity " << symbol);
+  DEBUG_("amounts.commodities", "Creating base commodity " << symbol);
 
   std::pair<base_commodities_map::iterator, bool> result
     = commodities.insert(base_commodities_pair(symbol, commodity));
@@ -1696,18 +1719,18 @@ bool commodity_t::needs_quotes(const string& symbol)
 bool commodity_t::valid() const
 {
   if (symbol().empty() && this != null_commodity) {
-    DEBUG_PRINT("ledger.validate",
+    DEBUG_("ledger.validate",
 		"commodity_t: symbol().empty() && this != null_commodity");
     return false;
   }
 
   if (annotated && ! base) {
-    DEBUG_PRINT("ledger.validate", "commodity_t: annotated && ! base");
+    DEBUG_("ledger.validate", "commodity_t: annotated && ! base");
     return false;
   }
 
   if (precision() > 16) {
-    DEBUG_PRINT("ledger.validate", "commodity_t: precision() > 16");
+    DEBUG_("ledger.validate", "commodity_t: precision() > 16");
     return false;
   }
 
@@ -1728,7 +1751,7 @@ commodity_t * commodity_t::create(const string& symbol)
     commodity->qualified_symbol = symbol;
   }
 
-  DEBUG_PRINT("amounts.commodities",
+  DEBUG_("amounts.commodities",
 	      "Creating commodity " << commodity->qualified_symbol);
 
   std::pair<commodities_map::iterator, bool> result
@@ -1750,7 +1773,7 @@ commodity_t * commodity_t::create(const string& symbol)
 
 commodity_t * commodity_t::find_or_create(const string& symbol)
 {
-  DEBUG_PRINT("amounts.commodities", "Find-or-create commodity " << symbol);
+  DEBUG_("amounts.commodities", "Find-or-create commodity " << symbol);
 
   commodity_t * commodity = find(symbol);
   if (commodity)
@@ -1760,7 +1783,7 @@ commodity_t * commodity_t::find_or_create(const string& symbol)
 
 commodity_t * commodity_t::find(const string& symbol)
 {
-  DEBUG_PRINT("amounts.commodities", "Find commodity " << symbol);
+  DEBUG_("amounts.commodities", "Find commodity " << symbol);
 
   commodities_map::const_iterator i = commodities.find(symbol);
   if (i != commodities.end())
@@ -1872,7 +1895,7 @@ annotated_commodity_t::create(const commodity_t& comm,
 
   commodity->qualified_symbol = comm.symbol();
 
-  DEBUG_PRINT("amounts.commodities", "Creating annotated commodity "
+  DEBUG_("amounts.commodities", "Creating annotated commodity "
 	      << "symbol " << commodity->symbol()
 	      << " key " << mapping_key << std::endl
 	      << "  price " << price << " "
@@ -1899,20 +1922,21 @@ namespace {
 				  const string& tag)
   {
     if (price < 0)
-      throw new amount_error("A commodity's price may not be negative");
+      throw amount_exception("A commodity's price may not be negative",
+			     context());
 
     std::ostringstream name;
 
     comm.write(name);
     annotated_commodity_t::write_annotations(name, price, date, tag);
 
-    DEBUG_PRINT("amounts.commodities", "make_qualified_name for "
+    DEBUG_("amounts.commodities", "make_qualified_name for "
 		<< comm.qualified_symbol << std::endl
 		<< "  price " << price << " "
 		<< "  date " << date << " "
 		<< "  tag " << tag);
 
-    DEBUG_PRINT("amounts.commodities", "qualified_name is " << name.str());
+    DEBUG_("amounts.commodities", "qualified_name is " << name.str());
 
     return name.str();
   }

@@ -341,13 +341,16 @@ unsigned int gnucash_parser_t::parse(std::istream&	 in,
       //unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
       const char *  msg  = XML_ErrorString(XML_GetErrorCode(parser));
       XML_ParserFree(parser);
-      throw new parse_error(msg);
+      throw_(parse_exception, msg);
     }
 
     if (! have_error.empty()) {
       //unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
+#if 0
+      // jww (2007-04-26): What is this doing?
       parse_error err(have_error);
       std::cerr << "Error: " << err.what() << std::endl;
+#endif
       have_error = "";
     }
   }

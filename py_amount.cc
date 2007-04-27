@@ -46,11 +46,11 @@ commodity_t * py_find_commodity(const string& symbol)
 }
 
 #define EXC_TRANSLATOR(type)				\
-  void exc_translate_ ## type(const type * const err) {	\
-    PyErr_SetString(PyExc_ArithmeticError, err->what());	\
+  void exc_translate_ ## type(const type& err) {	\
+    PyErr_SetString(PyExc_ArithmeticError, err.what());	\
   }
 
-EXC_TRANSLATOR(amount_error)
+EXC_TRANSLATOR(amount_exception)
 
 void export_amount()
 {
@@ -236,7 +236,7 @@ void export_amount()
     ;
 
 #define EXC_TRANSLATE(type)					\
-  register_exception_translator<type *>(&exc_translate_ ## type);
+  register_exception_translator<type>(&exc_translate_ ## type);
 
-  EXC_TRANSLATE(amount_error);
+  EXC_TRANSLATE(amount_exception);
 }

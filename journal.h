@@ -85,6 +85,7 @@ class transaction_t
   bool valid() const;
 };
 
+#if 0
 class xact_context : public file_context {
  public:
   const transaction_t& xact;
@@ -93,6 +94,7 @@ class xact_context : public file_context {
 	       const string& desc = "") throw();
   virtual ~xact_context() throw() {}
 };
+#endif
 
 class journal_t;
 
@@ -196,6 +198,7 @@ struct entry_finalizer_t {
 void print_entry(std::ostream& out, const entry_base_t& entry,
 		 const string& prefix = "");
 
+#if 0
 class entry_context : public error_context {
  public:
   const entry_base_t& entry;
@@ -207,14 +210,9 @@ class entry_context : public error_context {
 
   virtual void describe(std::ostream& out) const throw();
 };
+#endif
 
-class balance_error : public error {
- public:
-  balance_error(const string& _reason,
-		error_context * _ctxt = NULL) throw()
-    : error(_reason, _ctxt) {}
-  virtual ~balance_error() throw() {}
-};
+DECLARE_EXCEPTION(balance_exception);
 
 
 class auto_entry_t : public entry_base_t

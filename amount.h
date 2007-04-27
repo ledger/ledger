@@ -746,16 +746,10 @@ inline commodity_t& amount_t::commodity() const {
     return *commodity_;
 }
 
-
 void parse_conversion(const string& larger_str,
 		      const string& smaller_str);
 
-
-class amount_error : public error {
- public:
-  amount_error(const string& _reason) throw() : error(_reason) {}
-  virtual ~amount_error() throw() {}
-};
+DECLARE_EXCEPTION(amount_exception);
 
 struct compare_amount_commodities {
   bool operator()(const amount_t * left, const amount_t * right) const;

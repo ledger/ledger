@@ -20,6 +20,19 @@ class register_command : public xml::xpath_t::functor_t
   virtual void print_document(std::ostream& out, xml::document_t * doc);
 };
 
+enum elision_style_t {
+  TRUNCATE_TRAILING,
+  TRUNCATE_MIDDLE,
+  TRUNCATE_LEADING,
+  ABBREVIATE
+};
+
+string abbreviate(const string&	  str,
+		  unsigned int	  width,
+		  elision_style_t elision_style = TRUNCATE_TRAILING,
+		  const bool	  is_account	= false,
+		  int		  abbrev_length = 2);
+
 } // namespace ledger
 
 #endif // _REGISTER_H

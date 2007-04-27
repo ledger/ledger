@@ -32,9 +32,9 @@ struct gnucash_parser_t : public parser_t
   std::istream *   instreamp;
   unsigned int     offset;
   XML_Parser       parser;
-  string      path;
+  string	   path;
   unsigned int     src_idx;
-  istream_pos_type beg_pos;
+  unsigned long	   beg_pos;
   unsigned long    beg_line;
 
   transaction_t::state_t curr_state;

@@ -1,4 +1,5 @@
 #include "xpath.h"
+#include "parser.h"
 #if 0
 #ifdef USE_BOOST_PYTHON
 #include "py_eval.h"
@@ -375,14 +376,12 @@ void xpath_t::token_t::next(std::istream& in, unsigned short flags)
 	kind = VALUE;
 	value = temp;
       }
-      catch (amount_error * err) {
+      catch (amount_exception& err) {
 	// If the amount had no commodity, it must be an unambiguous
 	// variable reference
 
 	// jww (2007-04-19): There must be a more efficient way to do this!
-	if (std::strcmp(err->what(), "No quantity specified for amount") == 0) {
-	  delete err;
-
+	if (std::strcmp(err.what(), "No quantity specified for amount") == 0) {
 	  in.clear();
 	  in.seekg(pos, std::ios::beg);
 
@@ -390,7 +389,7 @@ void xpath_t::token_t::next(std::istream& in, unsigned short flags)
 	  assert(! (std::isdigit(c) || c == '.'));
 	  parse_ident(in);
 	} else {
-	  throw err;
+	  throw;
 	}
       }
     }
@@ -409,15 +408,13 @@ void xpath_t::token_t::unexpected()
 {
   switch (kind) {
   case TOK_EOF:
-    throw new parse_error("Unexpected end of expression");
+    throw_(parse_exception, "Unexpected end of expression");
   case IDENT:
-    throw new parse_error(string("Unexpected symbol '") +
-			  value.to_string() + "'");
+    throw_(parse_exception, "Unexpected symbol '" << value << "'");
   case VALUE:
-    throw new parse_error(string("Unexpected value '") +
-			  value.to_string() + "'");
+    throw_(parse_exception, "Unexpected value '" << value << "'");
   default:
-    throw new parse_error(string("Unexpected operator '") + symbol + "'");
+    throw_(parse_exception, "Unexpected operator '" << symbol << "'");
   }
 }
 
@@ -425,15 +422,15 @@ void xpath_t::token_t::unexpected(char c, char wanted)
 {
   if ((unsigned char) c == 0xff) {
     if (wanted)
-      throw new parse_error(string("Missing '") + wanted + "'");
+      throw_(parse_exception, "Missing '" << wanted << "'");
     else
-      throw new parse_error("Unexpected end");
+      throw_(parse_exception, "Unexpected end");
   } else {
     if (wanted)
-      throw new parse_error(string("Invalid char '") + c +
-			    "' (wanted '" + wanted + "')");
+      throw_(parse_exception, "Invalid char '" << c <<
+	     "' (wanted '" << wanted << "')");
     else
-      throw new parse_error(string("Invalid char '") + c + "'");
+      throw_(parse_exception, "Invalid char '" << c << "'");
   }
 }
 
@@ -472,7 +469,7 @@ xpath_t::op_t * xpath_t::wrap_mask(const string& pattern)
 
 void xpath_t::scope_t::define(const string& name, op_t * def)
 {
-  DEBUG_PRINT("ledger.xpath.syms", "Defining '" << name << "' = " << def);
+  DEBUG_("ledger.xpath.syms", "Defining '" << name << "' = " << def);
 
   std::pair<symbol_map::iterator, bool> result
     = symbols.insert(symbol_pair(name, def));
@@ -485,8 +482,8 @@ void xpath_t::scope_t::define(const string& name, op_t * def)
     std::pair<symbol_map::iterator, bool> result2
       = symbols.insert(symbol_pair(name, def));
     if (! result2.second)
-      throw new compile_error(string("Redefinition of '") +
-			      name + "' in same scope");
+      throw_(compile_exception,
+	     "Redefinition of '" << name << "' in same scope");
   }
   def->acquire();
 }
@@ -533,7 +530,7 @@ bool xpath_t::function_scope_t::resolve(const string& name,
       if (value->type == value_t::XML_NODE)
 	result.set_string(value->to_xml_node()->text());
       else
-	throw new calc_error("Attempt to call text() on a non-node value");
+	throw_(calc_exception, "Attempt to call text() on a non-node value");
       return true;
     }
     break;
@@ -545,7 +542,7 @@ xpath_t::op_t::~op_t()
 {
   TRACE_DTOR(xpath_t::op_t);
 
-  DEBUG_PRINT("ledger.xpath.memory", "Destroying " << this);
+  DEBUG_("ledger.xpath.memory", "Destroying " << this);
   assert(refc == 0);
 
   switch (kind) {
@@ -600,13 +597,9 @@ void xpath_t::op_t::get_value(value_t& result) const
   case ARG_INDEX:
     result = (long)arg_index;
     break;
-  default: {
-    std::ostringstream buf;
-    write(buf);
-    throw new calc_error
-      (string("Cannot determine value of expression symbol '") +
-       string(buf.str()) + "'");
-  }
+  default:
+    throw_(calc_exception,
+	   "Cannot determine value of expression symbol '" << *this << "'");
   }
 }
 
@@ -646,7 +639,7 @@ xpath_t::parse_value_term(std::istream& in, unsigned short tflags) const
 	goto done;
       }
       catch(const boost::python::error_already_set&) {
-	throw new parse_error("Error parsing lambda expression");
+	throw_(parse_exception, "Error parsing lambda expression");
       }
 #endif /* USE_BOOST_PYTHON */
 #endif
@@ -690,7 +683,7 @@ xpath_t::parse_value_term(std::istream& in, unsigned short tflags) const
   case token_t::AT_SYM:
     tok = next_token(in, tflags);
     if (tok.kind != token_t::IDENT)
-      throw parse_error("@ symbol must be followed by attribute name");
+      throw_(parse_exception, "@ symbol must be followed by attribute name");
 
     node.reset(new op_t(op_t::ATTR_NAME));
     node->name = new string(tok.value.to_string());
@@ -728,8 +721,8 @@ xpath_t::parse_value_term(std::istream& in, unsigned short tflags) const
   case token_t::LPAREN:
     node.reset(parse_value_expr(in, tflags | XPATH_PARSE_PARTIAL));
     if (! node.get())
-	throw new parse_error(string(tok.symbol) +
-			      " operator not followed by argument");
+      throw_(parse_exception,
+	     tok.symbol << " operator not followed by argument");
     tok = next_token(in, tflags);
     if (tok.kind != token_t::RPAREN)
       tok.unexpected();		// jww (2006-09-09): wanted )
@@ -767,7 +760,7 @@ xpath_t::parse_predicate_expr(std::istream& in, unsigned short tflags) const
       node->set_left(prev.release());
       node->set_right(parse_value_expr(in, tflags | XPATH_PARSE_PARTIAL));
       if (! node->right)
-	throw new parse_error("[ operator not followed by valid expression");
+	throw_(parse_exception, "[ operator not followed by valid expression");
 
       tok = next_token(in, tflags);
       if (tok.kind != token_t::RBRACKET)
@@ -801,7 +794,7 @@ xpath_t::parse_path_expr(std::istream& in, unsigned short tflags) const
       node->set_left(prev.release());
       node->set_right(parse_predicate_expr(in, tflags));
       if (! node->right)
-	throw new parse_error("/ operator not followed by a valid term");
+	throw_(parse_exception, "/ operator not followed by a valid term");
 
       tok = next_token(in, tflags);
     }
@@ -823,8 +816,8 @@ xpath_t::parse_unary_expr(std::istream& in, unsigned short tflags) const
   case token_t::EXCLAM: {
     std::auto_ptr<op_t> texpr(parse_path_expr(in, tflags));
     if (! texpr.get())
-      throw new parse_error(string(tok.symbol) +
-			    " operator not followed by argument");
+      throw_(parse_exception,
+	     tok.symbol << " operator not followed by argument");
     // A very quick optimization
     if (texpr->kind == op_t::VALUE) {
       *texpr->valuep = ! *texpr->valuep;
@@ -839,8 +832,8 @@ xpath_t::parse_unary_expr(std::istream& in, unsigned short tflags) const
   case token_t::MINUS: {
     std::auto_ptr<op_t> texpr(parse_path_expr(in, tflags));
     if (! texpr.get())
-      throw new parse_error(string(tok.symbol) +
-			    " operator not followed by argument");
+      throw_(parse_exception,
+	     tok.symbol << " operator not followed by argument");
     // A very quick optimization
     if (texpr->kind == op_t::VALUE) {
       texpr->valuep->in_place_negate();
@@ -856,8 +849,8 @@ xpath_t::parse_unary_expr(std::istream& in, unsigned short tflags) const
   case token_t::PERCENT: {
     std::auto_ptr<op_t> texpr(parse_path_expr(in, tflags));
     if (! texpr.get())
-      throw new parse_error(string(tok.symbol) +
-			    " operator not followed by argument");
+      throw_(parse_exception,
+	     tok.symbol << " operator not followed by argument");
     // A very quick optimization
     if (texpr->kind == op_t::VALUE) {
       static value_t perc("100.0%");
@@ -893,8 +886,8 @@ xpath_t::parse_union_expr(std::istream& in, unsigned short tflags) const
       node->set_left(prev.release());
       node->set_right(parse_union_expr(in, tflags));
       if (! node->right)
-	throw new parse_error(string(tok.symbol) +
-			      " operator not followed by argument");
+	throw_(parse_exception,
+	       tok.symbol << " operator not followed by argument");
     } else {
       push_token(tok);
     }
@@ -916,8 +909,8 @@ xpath_t::parse_mul_expr(std::istream& in, unsigned short tflags) const
       node->set_left(prev.release());
       node->set_right(parse_mul_expr(in, tflags));
       if (! node->right)
-	throw new parse_error(string(tok.symbol) +
-			      " operator not followed by argument");
+	throw_(parse_exception,
+	       tok.symbol << " operator not followed by argument");
 
       tok = next_token(in, tflags);
     }
@@ -942,8 +935,8 @@ xpath_t::parse_add_expr(std::istream& in, unsigned short tflags) const
       node->set_left(prev.release());
       node->set_right(parse_add_expr(in, tflags));
       if (! node->right)
-	throw new parse_error(string(tok.symbol) +
-			      " operator not followed by argument");
+	throw_(parse_exception,
+	       tok.symbol << " operator not followed by argument");
 
       tok = next_token(in, tflags);
     }
@@ -1012,11 +1005,11 @@ xpath_t::parse_logic_expr(std::istream& in, unsigned short tflags) const
 
       if (! node->right) {
 	if (tok.kind == token_t::PLUS)
-	  throw new parse_error(string(tok.symbol) +
-				" operator not followed by argument");
+	  throw_(parse_exception,
+		 tok.symbol << " operator not followed by argument");
 	else
-	  throw new parse_error(string(tok.symbol) +
-				" operator not followed by argument");
+	  throw_(parse_exception,
+		 tok.symbol << " operator not followed by argument");
       }
     }
   }
@@ -1037,8 +1030,8 @@ xpath_t::parse_and_expr(std::istream& in, unsigned short tflags) const
       node->set_left(prev.release());
       node->set_right(parse_and_expr(in, tflags));
       if (! node->right)
-	throw new parse_error(string(tok.symbol) +
-			      " operator not followed by argument");
+	throw_(parse_exception,
+	       tok.symbol << " operator not followed by argument");
     } else {
       push_token(tok);
     }
@@ -1059,8 +1052,8 @@ xpath_t::parse_or_expr(std::istream& in, unsigned short tflags) const
       node->set_left(prev.release());
       node->set_right(parse_or_expr(in, tflags));
       if (! node->right)
-	throw new parse_error(string(tok.symbol) +
-			      " operator not followed by argument");
+	throw_(parse_exception,
+	       tok.symbol << " operator not followed by argument");
     } else {
       push_token(tok);
     }
@@ -1082,15 +1075,15 @@ xpath_t::parse_querycolon_expr(std::istream& in, unsigned short tflags) const
       node->set_right(new op_t(op_t::O_COLON));
       node->right->set_left(parse_querycolon_expr(in, tflags));
       if (! node->right)
-	throw new parse_error(string(tok.symbol) +
-			      " operator not followed by argument");
+	throw_(parse_exception,
+	       tok.symbol << " operator not followed by argument");
       tok = next_token(in, tflags);
       if (tok.kind != token_t::COLON)
 	tok.unexpected();	// jww (2006-09-09): wanted :
       node->right->set_right(parse_querycolon_expr(in, tflags));
       if (! node->right)
-	throw new parse_error(string(tok.symbol) +
-			      " operator not followed by argument");
+	throw_(parse_exception,
+	       tok.symbol << " operator not followed by argument");
     } else {
       push_token(tok);
     }
@@ -1111,8 +1104,8 @@ xpath_t::parse_value_expr(std::istream& in, unsigned short tflags) const
       node->set_left(prev.release());
       node->set_right(parse_value_expr(in, tflags));
       if (! node->right)
-	throw new parse_error(string(tok.symbol) +
-			      " operator not followed by argument");
+	throw_(parse_exception,
+	       tok.symbol << " operator not followed by argument");
       tok = next_token(in, tflags);
     }
 
@@ -1124,7 +1117,7 @@ xpath_t::parse_value_expr(std::istream& in, unsigned short tflags) const
     }
   }
   else if (! (tflags & XPATH_PARSE_PARTIAL)) {
-    throw new parse_error(string("Failed to parse value expression"));
+    throw_(parse_exception, "Failed to parse value expression");
   }
 
   return node.release();
@@ -1188,7 +1181,7 @@ void xpath_t::op_t::find_values(value_t * context, scope_t * scope,
 	}
       }
     } else {
-      throw new calc_error("Recursive path selection on a non-node value");
+      throw_(calc_exception, "Recursive path selection on a non-node value");
     }
   }
 }
@@ -1199,7 +1192,7 @@ bool xpath_t::op_t::test_value(value_t * context, scope_t * scope,
   xpath_t expr(compile(context, scope, true));
 
   if (expr->kind != VALUE)
-    throw new calc_error("Predicate expression does not yield a constant value");
+    throw_(calc_exception, "Predicate expression does not yield a constant value");
 
   switch (expr->valuep->type) {
   case value_t::INTEGER:
@@ -1262,7 +1255,9 @@ void xpath_t::op_t::append_value(value_t& val,
 xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
 				       bool resolve)
 {
+#if 0
   try {
+#endif
   switch (kind) {
   case VALUE:
     return acquire();
@@ -1274,25 +1269,25 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
 
     case document_t::PARENT:
       if (context->type != value_t::XML_NODE)
-	throw new compile_error("Referencing parent node from a non-node value");
+	throw_(compile_exception, "Referencing parent node from a non-node value");
       else if (context->to_xml_node()->parent)
 	return wrap_value(context->to_xml_node()->parent)->acquire();
       else
-	throw new compile_error("Referencing parent node from the root node");
+	throw_(compile_exception, "Referencing parent node from the root node");
 
     case document_t::ROOT:
       if (context->type != value_t::XML_NODE)
-	throw new compile_error("Referencing root node from a non-node value");
+	throw_(compile_exception, "Referencing root node from a non-node value");
       else
 	return wrap_value(context->to_xml_node()->document->top)->acquire();
 
     case document_t::ALL: {
       if (context->type != value_t::XML_NODE)
-	throw new compile_error("Referencing child nodes from a non-node value");
+	throw_(compile_exception, "Referencing child nodes from a non-node value");
 
       node_t * ptr = context->to_xml_node();
       if (! (ptr->flags & XML_NODE_IS_PARENT))
-	throw new compile_error("Request for child nodes of a leaf node");
+	throw_(compile_exception, "Request for child nodes of a leaf node");
 
       parent_node_t * parent = static_cast<parent_node_t *>(ptr);
 
@@ -1366,7 +1361,7 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
       if (arg_index < scope->args.to_sequence()->size())
 	return wrap_value((*scope->args.to_sequence())[arg_index])->acquire();
       else
-	throw new compile_error("Reference to non-existing argument");
+	throw_(compile_exception, "Reference to non-existing argument");
     } else {
       return acquire();
     }
@@ -1650,7 +1645,7 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
     }
 
     if (lexpr->valuep->type != value_t::STRING)
-      throw new compile_error("Left operand of mask operator is not a string");
+      throw_(compile_exception, "Left operand of mask operator is not a string");
 
     assert(rexpr->mask);
 
@@ -1759,8 +1754,7 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
 	return func->compile(context, call_args.get(), resolve);
       }
       else {
-	throw new calc_error(string("Unknown function name '") +
-			     *left->name + "'");
+	throw_(calc_exception, "Unknown function name '" << *left->name << "'");
       }
     }
     else if (left->kind == FUNCTOR) {
@@ -1815,7 +1809,7 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
 	   i++, index++) {
 	assert((*i).type != value_t::SEQUENCE);
 	if ((*i).type != value_t::XML_NODE)
-	  throw new compile_error("Attempting to apply path selection "
+	  throw_(compile_exception, "Attempting to apply path selection "
 				  "to non-node(s)");
 
 	function_scope_t xpath_fscope(seq, &(*i), index, scope);
@@ -1831,8 +1825,8 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
     }
 
     default:
-      throw new compile_error("Attempting to apply path selection "
-			      "to non-node(s)");
+      throw_(compile_exception, "Attempting to apply path selection "
+	     "to non-node(s)");
     }
 
     if (result_seq->size() == 1)
@@ -1863,6 +1857,7 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
     assert(0);
     break;
   }
+#if 0
   }
   catch (error * err) {
 #if 0
@@ -1873,6 +1868,7 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
 #endif
     throw err;
   }
+#endif
 
   assert(0);
   return NULL;
@@ -1880,7 +1876,9 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
 
 void xpath_t::calc(value_t& result, node_t * node, scope_t * scope) const
 {
+#if 0
   try {
+#endif
     if (node) {
       value_t context_node(node);
       xpath_t final(ptr->compile(&context_node, scope, true));
@@ -1893,6 +1891,7 @@ void xpath_t::calc(value_t& result, node_t * node, scope_t * scope) const
       xpath_t final(ptr->compile(&context_node, scope, true));
       final->get_value(result);
     }
+#if 0
   }
   catch (error * err) {
     if (err->context.empty() ||
@@ -1908,8 +1907,10 @@ void xpath_t::calc(value_t& result, node_t * node, scope_t * scope) const
 #endif
     throw err;
   }
+#endif
 }
 
+#if 0
 xpath_t::context::context(const xpath_t& _xpath,
 			  const op_t *   _err_node,
 			  const string&  desc) throw()
@@ -1952,6 +1953,7 @@ void xpath_t::context::describe(std::ostream& out) const throw()
     out << std::endl;
   }
 }
+#endif
 
 bool xpath_t::op_t::write(std::ostream&	      out,
 			      const bool      relaxed,

@@ -3,7 +3,18 @@
 
 #include <system.hh>
 
+/**********************************************************************
+ *
+ * Forward declarations
+ */
+
 namespace ledger {
+#if ! defined(USE_BOOST_PYTHON)
+  class string;
+#else
+  typedef std::string string;
+#endif
+}
 
 /**********************************************************************
  *
@@ -11,15 +22,17 @@ namespace ledger {
  */
 
 #if defined(FULL_DEBUG)
-#define VERIFY_ON  1
-#define TRACING_ON 1
-#define DEBUG_ON   1
-#define TIMERS_ON  1
+#define VERIFY_ON   1
+#define TRACING_ON  1
+#define DEBUG_ON    1
+#define TIMERS_ON   1
+#define FREE_MEMORY 1
 #elif defined(NO_DEBUG)
-#define NO_ASSERTS 1
-#define NO_LOGGING 1
+#define NO_ASSERTS  1
+#define NO_LOGGING  1
 #else
-#define TIMERS_ON  1		// jww (2007-04-25): is this correct?
+#define VERIFY_ON   1		// compiled in, use --verify to enable
+#define TIMERS_ON   1		// jww (2007-04-25): is this correct?
 #endif
 
 /**********************************************************************
@@ -38,14 +51,14 @@ namespace ledger {
 
 #include <boost/current_function.hpp>
 
-void debug_assert(const ledger::string& reason,
-		  const ledger::string& func,
-		  const ledger::string& file,
-		  unsigned long		line);
+namespace ledger {
+  void debug_assert(const string& reason, const string& func,
+		    const string& file, unsigned long line);
+}
 
 #define assert(x)						\
   ((x) ? ((void)0) : debug_assert(#x, BOOST_CURRENT_FUNCTION,	\
-				  __FILE__, __LINE__)
+				  __FILE__, __LINE__))
 
 #endif // ASSERTS_ON
 
@@ -56,21 +69,14 @@ void debug_assert(const ledger::string& reason,
 
 #if defined(VERIFY_ON)
 
+namespace ledger {
+
 extern bool verify_enabled;
 
-#define verify(x) (verify_enabled ? assert(x) : ((void)0))
+#define VERIFY(x) (verify_enabled ? assert(x) : ((void)0))
 
 extern int	     new_calls;
 extern unsigned long new_size;
-
-void * operator new(std::size_t) throw(std::bad_alloc);
-void * operator new[](std::size_t) throw(std::bad_alloc);
-void   operator delete(void*) throw();
-void   operator delete[](void*) throw();
-void * operator new(std::size_t, const std::nothrow_t&) throw();
-void * operator new[](std::size_t, const std::nothrow_t&) throw();
-void   operator delete(void*, const std::nothrow_t&) throw();
-void   operator delete[](void*, const std::nothrow_t&) throw();
 
 typedef std::multimap<void *, std::string>      live_objects_map;
 typedef std::pair<void *, std::string>          live_objects_pair;
@@ -87,10 +93,10 @@ bool trace_ctor_func(void * ptr, const char * cls_name, const char * args,
 		     std::size_t cls_size);
 bool trace_dtor_func(void * ptr, const char * cls_name, std::size_t cls_size);
 
-#define trace_ctor(cls, args) \
-  verify(trace_ctor_func(this, #cls, args, sizeof(cls)))
-#define trace_dtor(cls) \
-  verify(trace_dtor_func(this, #cls, sizeof(cls)))
+#define TRACE_CTOR(cls, args) \
+  VERIFY(trace_ctor_func(this, #cls, args, sizeof(cls)))
+#define TRACE_DTOR(cls) \
+  VERIFY(trace_dtor_func(this, #cls, sizeof(cls)))
 
 void report_memory(std::ostream& out);
 
@@ -158,11 +164,13 @@ inline bool operator!=(const string& __lhs, const char* __rhs)
 
 #endif
 
+} // namespace ledger
+
 #else // ! VERIFY_ON
 
-#define verify(x)
-#define trace_ctor(cls, args)
-#define trace_dtor(cls)
+#define VERIFY(x)
+#define TRACE_CTOR(cls, args)
+#define TRACE_DTOR(cls)
 
 #endif // VERIFY_ON
 
@@ -176,7 +184,7 @@ inline bool operator!=(const string& __lhs, const char* __rhs)
 #endif
 #if defined(LOGGING_ON)
 
-// Logging
+namespace ledger {
 
 enum log_level_t {
   LOG_OFF = 0,
@@ -199,64 +207,98 @@ extern std::string	  _log_category;
 extern std::ostream *	  _log_stream;
 extern std::ostringstream _log_buffer;
 
-#define category(cat)					\
-    static const char * const _this_category = (cat)
+bool logger_func(log_level_t level);
 
-bool logger(log_level_t level);
+#define logger(cat) \
+    static const char * const _this_category = cat
+
+#define SHOW_TRACE(lvl) \
+  (_log_level >= LOG_TRACE && lvl >= _trace_level)
+
+#define SHOW_DEBUG_(cat)				\
+  (_log_level >= LOG_DEBUG &&			\
+   (_log_category == cat ||			\
+    _log_category.find(string(cat) + ".") == 0))
+#define SHOW_DEBUG() SHOW_DEBUG_(_this_category)
+
+#define SHOW_INFO_(cat)				\
+  (_log_level >= LOG_INFO &&			\
+   (_log_category == cat ||			\
+    _log_category.find(string(cat) + ".") == 0))
+#define SHOW_INFO() SHOW_INFO_(_this_category)
+
+#define SHOW_WARN()     (_log_level >= LOG_WARN)
+#define SHOW_ERROR()    (_log_level >= LOG_ERROR)
+#define SHOW_FATAL()    (_log_level >= LOG_FATAL)
+#define SHOW_CRITICAL() (_log_level >= LOG_CRIT)
 
 #if defined(TRACING_ON)
-#define trace(lvl, msg)					\
-  (_log_level >= LOG_TRACE && lvl >= _trace_level ?	\
-   ((_log_buffer << msg), logger(LOG_TRACE)) : false)
+#define TRACE(lvl, msg) \
+  (SHOW_TRACE(lvl) ? ((_log_buffer << msg), logger_func(LOG_TRACE)) : false)
 #else
-#define trace(lvl, msg)
+#define TRACE(lvl, msg)
 #endif
 
 #if defined(DEBUG_ON)
-#define debug_(cat, msg)				\
-  (_log_level >= LOG_DEBUG &&				\
-   (_log_category == cat ||				\
-    _log_category.find(cat ".") == 0) ?			\
-   ((_log_buffer << msg), logger(LOG_DEBUG)) : false)
-#define debug(msg) debug_(_this_category, msg)
+#define DEBUG_(cat, msg) \
+  (SHOW_DEBUG_(cat) ? ((_log_buffer << msg), logger_func(LOG_DEBUG)) : false)
+#define DEBUG(msg) DEBUG_(_this_category, msg)
 #else
-#define debug_(cat, msg)
-#define debug(msg)
+#define DEBUG_(cat, msg)
+#define DEBUG(msg)
 #endif
    
-#define exception_occurred(msg) \
-  log_macro(LOG_EXCEPT, msg)
+#define INFO_(cat, msg) \
+  (SHOW_INFO(cat) ? ((_log_buffer << msg), logger_func(LOG_INFO)) : false)
+#define INFO(msg) INFO_(_this_category, msg)
 
-#define info_(cat, msg)					\
-  (_log_level >= LOG_INFO &&				\
-   (_log_category == cat ||				\
-    _log_category.find(cat ".") == 0) ?			\
-   ((_log_buffer << msg), logger(LOG_INFO)) : false)
-#define info(msg) info_(_this_category, msg)
-
-#define log_macro(level, msg)				\
+#define LOG_MACRO(level, msg)				\
   (_log_level >= level ?				\
-   ((_log_buffer << msg), logger(level)) : false)
+   ((_log_buffer << msg), logger_func(level)) : false)
 
-#define warn(msg)     log_macro(LOG_WARN, msg)
-#define error(msg)    log_macro(LOG_ERROR, msg)
-#define fatal(msg)    log_macro(LOG_FATAL, msg)
-#define critical(msg) log_macro(LOG_CRIT, msg)
+#define WARN(msg)      LOG_MACRO(LOG_WARN, msg)
+#define ERROR(msg)     LOG_MACRO(LOG_ERROR, msg)
+#define FATAL(msg)     LOG_MACRO(LOG_FATAL, msg)
+#define CRITICAL(msg)  LOG_MACRO(LOG_CRIT, msg)
+#define EXCEPTION(msg) LOG_MACRO(LOG_EXCEPT, msg)
+
+} // namespace ledger
 
 #else // ! LOGGING_ON
 
-#define category(cat)
-#define trace(lvl, msg)
-#define debug(msg)
-#define debug_(cat, msg)
-#define info(msg)
-#define info_(cat, msg)
-#define warn(msg)
-#define error(msg)
-#define fatal(msg)
-#define critical(msg)
+#define logger(cat)
+
+#define SHOW_TRACE(lvl)  false
+#define SHOW_DEBUG_(cat) false
+#define SHOW_DEBUG()     false
+#define SHOW_INFO_(cat)  false
+#define SHOW_INFO()      false
+#define SHOW_WARN()      false
+#define SHOW_ERROR()     false
+#define SHOW_FATAL()     false
+#define SHOW_CRITICAL()  false
+
+#define TRACE(lvl, msg)
+#define DEBUG(msg)
+#define DEBUG_(cat, msg)
+#define INFO(msg)
+#define INFO_(cat, msg)
+#define WARN(msg)
+#define ERROR(msg)
+#define FATAL(msg)
+#define CRITICAL(msg)
 
 #endif // LOGGING_ON
+
+#define IF_TRACE(lvl)  if (SHOW_TRACE(lvl))
+#define IF_DEBUG_(cat) if (SHOW_DEBUG_(cat))
+#define IF_DEBUG()     if (SHOW_DEBUG())
+#define IF_INFO_(cat)  if (SHOW_INFO_(cat))
+#define IF_INFO()      if (SHOW_INFO())
+#define IF_WARN()      if (SHOW_WARN())
+#define IF_ERROR()     if (SHOW_ERROR())
+#define IF_FATAL()     if (SHOW_FATAL())
+#define IF_CRITICAL()  if (SHOW_CRITICAL())
 
 /**********************************************************************
  *
@@ -264,6 +306,8 @@ bool logger(log_level_t level);
  */
 
 #if defined(LOGGING_ON) && defined(TIMERS_ON)
+
+namespace ledger {
 
 struct timer_t {
   std::clock_t count;
@@ -278,46 +322,63 @@ void stop_timer(const char * name);
 void finish_timer(const char * name);
 
 #if defined(TRACING_ON)
-#define trace_start(name, lvl, msg)		\
-  (trace(lvl, msg) && start_timer(name))
-#define trace_stop(name)   stop_timer(name)
-#define trace_finish(name) finish_timer(name)
+#define TRACE_START(name, lvl, msg) \
+  (TRACE(lvl, msg) ? start_timer(#name) : ((void)0))
+#define TRACE_STOP(name, lvl) \
+  (SHOW_TRACE(lvl) ? stop_timer(#name) : ((void)0))
+#define TRACE_FINISH(name, lvl) \
+  (SHOW_TRACE(lvl) ? finish_timer(#name) : ((void)0))
 #else
-#define trace_start(name, lvl, msg)
-#define trace_stop(name)
-#define trace_finish(name)
+#define TRACE_START(name, lvl, msg)
+#define TRACE_STOP(name)
+#define TRACE_FINISH(name)
 #endif
 
 #if defined(DEBUG_ON)
-#define debug_start(name, msg)			\
-  (debug(msg) && start_timer(name))
-#define debug_start_(name, cat, msg)		\
-  (debug_(cat, msg) && start_timer(name))
-#define debug_stop(name)   stop_timer(name)
-#define debug_finish(name) finish_timer(name)
+#define DEBUG_START_(name, cat, msg) \
+  (DEBUG_(cat, msg) ? start_timer(#name) : ((void)0))
+#define DEBUG_START(name, msg) \
+  DEBUG_START_(name, _this_category, msg)
+#define DEBUG_STOP_(name, cat) \
+  (SHOW_DEBUG_(cat) ? stop_timer(#name) : ((void)0))
+#define DEBUG_STOP(name) \
+  DEBUG_STOP_(name, _this_category)
+#define DEBUG_FINISH_(name, cat) \
+  (SHOW_DEBUG_(cat) ? finish_timer(#name) : ((void)0))
+#define DEBUG_FINISH(name) \
+  DEBUG_FINISH_(name, _this_category)
 #else
-#define debug_start(name, msg)
-#define debug_start_(name, cat, msg)
-#define debug_stop(name)
-#define debug_finish(name)
+#define DEBUG_START(name, msg)
+#define DEBUG_START_(name, cat, msg)
+#define DEBUG_STOP(name)
+#define DEBUG_FINISH(name)
 #endif
 
-#define info_start(name, msg)			\
-  (info(msg) && start_timer(name))
-#define info_start_(name, cat, msg)
-#define info_stop(name)   stop_timer(name)
-#define info_finish(name) finish_timer(name)
+#define info_start_(name, cat, msg) \
+  (info_(cat, msg) && start_timer(#name))
+#define info_start(name, msg) \
+  info_start_(name, _this_category, msg)
+#define info_stop_(name, cat) \
+  (show_info_(cat) ? stop_timer(#name) : ((void)0))
+#define info_stop(name) \
+  info_stop_(name, _this_category)
+#define info_finish_(name, cat) \
+  (show_info_(cat) ? finish_timer(#name) : ((void)0))
+#define info_finish(name) \
+  info_finish_(name, _this_category)
+
+} // namespace ledger
 
 #else // ! (LOGGING_ON && TIMERS_ON)
 
-#define trace_start(lvl, msg, name)
-#define trace_stop(name)
-#define trace_finish(name)
+#define TRACE_START(lvl, msg, name)
+#define TRACE_STOP(name)
+#define TRACE_FINISH(name)
 
-#define debug_start(name, msg)
-#define debug_start_(name, cat, msg)
-#define debug_stop(name)
-#define debug_finish(name)
+#define DEBUG_START(name, msg)
+#define DEBUG_START_(name, cat, msg)
+#define DEBUG_STOP(name)
+#define DEBUG_FINISH(name)
 
 #define info_start(name, msg)
 #define info_start_(name, cat, msg)
@@ -328,30 +389,44 @@ void finish_timer(const char * name);
 
 /**********************************************************************
  *
- * Debug macros
- */
-
-#if defined(DEBUG_ON)
-
-#define if_debug_(cat)				\
-  if (_log_level >= LOG_DEBUG &&		\
-      (_log_category == cat ||			\
-       _log_category.find(cat ".") == 0))
-#define if_debug() if_debug_(_this_category)
-  
-#else // ! DEBUG_ON
-
-#define if_debug(cat) if (false)
-
-#endif // DEBUG_ON
-
-/**********************************************************************
- *
  * Exception handling
  */
 
-#import "error.h"
+#include "error.h"
 
-// } namespace ledger
+namespace ledger {
+
+extern std::ostringstream _exc_buffer;
+
+template <typename T>
+inline void throw_func(const std::string& message) {
+  _exc_buffer.str("");
+  throw T(message, context());
+}
+
+#define throw_(cls, msg) \
+  ((_exc_buffer << msg), throw_func<cls>(_exc_buffer.str()))
+
+} // namespace ledger
+
+/**********************************************************************
+ *
+ * General utility functions
+ */
+
+namespace ledger {
+
+string resolve_path(const string& path);
+
+#ifdef HAVE_REALPATH
+extern "C" char * realpath(const char *, char resolved_path[]);
+#endif
+
+inline const string& either_or(const string& first,
+			       const string& second) {
+  return first.empty() ? second : first;
+}
+
+} // namespace ledger
 
 #endif // _UTILS_H

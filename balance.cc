@@ -15,10 +15,8 @@ amount_t balance_t::amount(const commodity_t& commodity) const
       if (temp.amounts.size() == 1)
 	return temp.amount(commodity);
 
-      std::ostringstream errmsg;
-      errmsg << "Requested amount of a balance with multiple commodities: "
-	     << temp;
-      throw new amount_error(errmsg.str());
+      throw_(amount_exception,
+	     "Requested amount of a balance with multiple commodities: " << temp);
     }
   }
   else if (amounts.size() > 0) {
@@ -176,7 +174,7 @@ balance_t& balance_t::operator*=(const balance_t& bal)
 
     std::ostringstream errmsg;
     errmsg << "Cannot multiply two balances: " << temp << " * " << bal;
-    throw new amount_error(errmsg.str());
+    throw amount_exception(errmsg.str(), context());
   }
 }
 
@@ -215,7 +213,7 @@ balance_t& balance_t::operator*=(const amount_t& amt)
       errmsg << "Attempt to multiply balance by a commodity"
 	     << " not found in that balance: "
 	     << temp << " * " << amt;
-      throw new amount_error(errmsg.str());
+      throw amount_exception(errmsg.str(), context());
     }
   }
   return *this;
@@ -226,7 +224,7 @@ balance_t& balance_t::operator/=(const balance_t& bal)
   if (bal.realzero()) {
     std::ostringstream errmsg;
     errmsg << "Attempt to divide by zero: " << *this << " / " << bal;
-    throw new amount_error(errmsg.str());
+    throw amount_exception(errmsg.str(), context());
   }
   else if (realzero()) {
     return *this = 0L;
@@ -245,7 +243,7 @@ balance_t& balance_t::operator/=(const balance_t& bal)
 
     std::ostringstream errmsg;
     errmsg << "Cannot divide between two balances: " << temp << " / " << bal;
-    throw new amount_error(errmsg.str());
+    throw amount_exception(errmsg.str(), context());
   }
 }
 
@@ -254,7 +252,7 @@ balance_t& balance_t::operator/=(const amount_t& amt)
   if (amt.realzero()) {
     std::ostringstream errmsg;
     errmsg << "Attempt to divide by zero: " << *this << " / " << amt;
-    throw new amount_error(errmsg.str());
+    throw amount_exception(errmsg.str(), context());
   }
   else if (realzero()) {
     return *this = 0L;
@@ -286,7 +284,7 @@ balance_t& balance_t::operator/=(const amount_t& amt)
       errmsg << "Attempt to divide balance by a commodity"
 	     << " not found in that balance: "
 	     << temp << " * " << amt;
-      throw new amount_error(errmsg.str());
+      throw amount_exception(errmsg.str(), context());
     }
   }
   return *this;
@@ -306,10 +304,9 @@ balance_t::operator amount_t() const
     if (temp.amounts.size() == 1)
       return (*temp.amounts.begin()).second;
 
-    std::ostringstream errmsg;
-    errmsg << "Cannot convert a balance with "
-	   << "multiple commodities to an amount: " << temp;
-    throw new amount_error(errmsg.str());
+    throw_(amount_exception,
+	   "Cannot convert a balance with " <<
+	   "multiple commodities to an amount: " << temp);
   }
 }
 

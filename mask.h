@@ -21,12 +21,6 @@ class mask_t
   }
 };
 
-class mask_error : public error {
- public:
-  mask_error(const string& _reason) throw() : error(_reason) {}
-  virtual ~mask_error() throw() {}
-};
-
 } // namespace ledger
 
 #endif // _MASK_H

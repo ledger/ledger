@@ -23,6 +23,7 @@ void write_textual_journal(journal_t& journal, string path,
 			   std::ostream& out);
 #endif
 
+#if 0
 class include_context : public file_context {
  public:
   include_context(const string& file, unsigned long line,
@@ -36,6 +37,7 @@ class include_context : public file_context {
     out << "\"" << file << "\", line " << line << ":" << std::endl;
   }
 };
+#endif
 
 } // namespace ledger
 

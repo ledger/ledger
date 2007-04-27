@@ -46,4 +46,4 @@ moment_t datetime_range_from_stream(std::istream& in)
 {
 }
 
-}
+} // namespace ledger
