@@ -42,9 +42,9 @@ static int read_and_report(report_t * report, int argc, char * argv[],
 
   // Process the environment settings
 
-  TRACE(1, "Processing options and environment settings");
-
+  TRACE_START(environment, 1, "Processed environment variables");
   process_environment(const_cast<const char **>(envp), "LEDGER_", report);
+  TRACE_FINISH(environment, 1);
 
   const char * p = std::getenv("HOME");
   string home = p ? p : "";
@@ -68,7 +68,7 @@ static int read_and_report(report_t * report, int argc, char * argv[],
   TRACE(1, "Main journal is " << session.data_file);
 
   if (! session.use_cache)
-    INFO("The binary cache mechanism will not be used");
+    INFO("Binary cache mechanism will not be used");
 
   // Read the command word and create a command object based on it
 
@@ -168,9 +168,14 @@ static int read_and_report(report_t * report, int argc, char * argv[],
 
   session.read_init();
 
-  std::cout << "Reading journal ..." << std::endl;
+  INFO_START(journal, "Read journal file");
   journal_t * journal = session.read_data(report->account);
-  std::cout << "Generating report ..." << std::endl;
+  INFO_FINISH(journal);
+
+  TRACE_FINISH(entry_date, 2);
+  TRACE_FINISH(entry_details, 2);
+  TRACE_FINISH(entry_xacts, 2);
+  TRACE_FINISH(parsing_total, 2);
 
   // Configure the output stream
 
@@ -323,16 +328,20 @@ static int read_and_report(report_t * report, int argc, char * argv[],
 #endif
   }
 
+  INFO_START(transforms, "Applied transforms");
   report->apply_transforms(journal->document);
+  INFO_FINISH(transforms);
 
+  INFO_START(command, "Did user command '" << verb << "'");
   value_t temp;
   (*command)(temp, locals.get());
+  INFO_FINISH(command);
 
   // Write out the binary cache, if need be
 
   if (session.use_cache && session.cache_dirty &&
       ! session.cache_file.empty()) {
-    TRACE_START(binary_cache, 1, "Writing journal file");
+    TRACE_START(binary_cache, 1, "Wrote binary journal file");
 
     std::ofstream stream(session.cache_file.c_str());
 #if 0
@@ -345,12 +354,8 @@ static int read_and_report(report_t * report, int argc, char * argv[],
 #if defined(FREE_MEMORY)
   // Cleanup memory -- if this is a beta or development build.
 
-  TRACE_START(cleanup, 1, "Cleaning up allocated memory");
-
   if (! report->output_file.empty())
     delete out;
-
-  TRACE_STOP(cleanup, 1);
 #endif
 
   // If the user specified a pager, wait for it to exit now
@@ -374,12 +379,8 @@ int main(int argc, char * argv[], char * envp[])
 {
   int status = 1;
 
-#if defined(FULL_DEBUG)
-  ledger::verify_enabled = true;
-#endif
-
   for (int i = 1; i < argc; i++)
-    if (argv[i][0] == '-' && argv[i][1] == '-') {
+    if (argv[i][0] == '-') {
 #if defined(VERIFY_ON)
       if (std::strcmp(argv[i], "--verify") == 0)
 	ledger::verify_enabled = true;

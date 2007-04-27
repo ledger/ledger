@@ -216,7 +216,7 @@ void shutdown()
   amount_t::shutdown();
 
   IF_VERIFY() {
-    TRACE(1, "Shutting down memory trace");
+    INFO("Ledger shutdown (Boost and libstdc++ may hold memory)");
     shutdown_memory_tracing();
   }
 }

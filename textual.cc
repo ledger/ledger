@@ -412,7 +412,7 @@ entry_t * parse_entry(std::istream& in, char * line, journal_t * journal,
 
   // Parse the date
 
-  TRACE_START(entry_date, 2, "Parsing entry date");
+  TRACE_START(entry_date, 2, "Time spent parsing entry dates:");
 
   curr->_date = parse_datetime(date);
 
@@ -423,7 +423,7 @@ entry_t * parse_entry(std::istream& in, char * line, journal_t * journal,
 
   // Parse the optional cleared flag: *
 
-  TRACE_START(entry_details, 2, "Parsing entry details");
+  TRACE_START(entry_details, 2, "Time spent parsing entry details:");
 
   transaction_t::state_t state = transaction_t::UNCLEARED;
   if (statep) {
@@ -451,7 +451,7 @@ entry_t * parse_entry(std::istream& in, char * line, journal_t * journal,
 
   // Parse all of the transactions associated with this entry
 
-  TRACE_START(entry_xacts, 2, "Parsing entry transactions");
+  TRACE_START(entry_xacts, 2, "Time spent parsing transactions:");
 
   unsigned long end_pos;
   unsigned long beg_line = linenum;
@@ -620,7 +620,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
   unsigned int count  = 0;
   unsigned int errors = 0;
 
-  TRACE_START(parsing_total, 2, "Parsing textual file");
+  TRACE_START(parsing_total, 2, "Total time spent parsing text:");
 
   std::list<account_t *> account_stack;
 

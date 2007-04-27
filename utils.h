@@ -298,21 +298,14 @@ inline bool category_matches(const char * cat) {
 
 namespace ledger {
 
-struct timer_t {
-  std::clock_t count;
-  std::string  message;
-};
-
-typedef std::map<std::string, timer_t> timing_map;
-typedef timing_map::value_type         timing_pair;
-
-void start_timer(const char * name);
+void start_timer(const char * name, log_level_t lvl);
 void stop_timer(const char * name);
 void finish_timer(const char * name);
 
 #if defined(TRACING_ON)
-#define TRACE_START(name, lvl, msg) \
-  (TRACE(lvl, msg) ? start_timer(#name) : ((void)0))
+#define TRACE_START(name, lvl, msg)					\
+  (SHOW_TRACE(lvl) ?							\
+   ((_log_buffer << msg), start_timer(#name, LOG_TRACE)) : ((void)0))
 #define TRACE_STOP(name, lvl) \
   (SHOW_TRACE(lvl) ? stop_timer(#name) : ((void)0))
 #define TRACE_FINISH(name, lvl) \
@@ -324,8 +317,9 @@ void finish_timer(const char * name);
 #endif
 
 #if defined(DEBUG_ON)
-#define DEBUG_START_(name, cat, msg) \
-  (DEBUG_(cat, msg) ? start_timer(#name) : ((void)0))
+#define DEBUG_START_(name, cat, msg)					\
+  (SHOW_DEBUG_(cat) ?							\
+   ((_log_buffer << msg), start_timer(#name, LOG_DEBUG)) : ((void)0))
 #define DEBUG_START(name, msg) \
   DEBUG_START_(name, _this_category, msg)
 #define DEBUG_STOP_(name, cat) \
@@ -343,8 +337,9 @@ void finish_timer(const char * name);
 #define DEBUG_FINISH(name)
 #endif
 
-#define INFO_START(name, msg) \
-  (INFO(msg) && start_timer(#name))
+#define INFO_START(name, msg)						\
+  (SHOW_INFO() ?							\
+   ((_log_buffer << msg), start_timer(#name, LOG_INFO)) : ((void)0))
 #define INFO_STOP(name) \
   (SHOW_INFO() ? stop_timer(#name) : ((void)0))
 #define INFO_FINISH(name) \
@@ -364,7 +359,6 @@ void finish_timer(const char * name);
 #define DEBUG_FINISH(name)
 
 #define INFO_START(name, msg)
-#define INFO_START_(name, cat, msg)
 #define INFO_STOP(name)
 #define INFO_FINISH(name)
 

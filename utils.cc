@@ -33,11 +33,7 @@ void debug_assert(const string& reason,
 
 namespace ledger {
 
-#if defined(FULL_DEBUG)
-bool verify_enabled = true;
-#else
 bool verify_enabled = false;
-#endif
 
 typedef std::pair<std::string, std::size_t>     allocation_pair;
 typedef std::map<void *, allocation_pair>       live_memory_map;
@@ -79,11 +75,15 @@ void shutdown_memory_tracing()
 {
   memory_tracing_active = false;
 
-  IF_DEBUG_("memory.counts")
-    report_memory(std::cerr, true);
-  else
-    IF_DEBUG_("memory.counts.live")
+  if (live_objects) {
+    IF_DEBUG_("memory.counts")
+      report_memory(std::cerr, true);
+    else
+      IF_DEBUG_("memory.counts.live")
+	report_memory(std::cerr);
+    else if (live_objects->size() > 0)
       report_memory(std::cerr);
+  }
 
   delete live_memory;        live_memory	= NULL;
   delete live_memory_count;  live_memory_count	= NULL;
@@ -431,9 +431,7 @@ bool logger_func(log_level_t level)
   if (! logger_has_run) {
     logger_has_run = true;
     IF_VERIFY()
-      *_log_stream << "  TIME  OBJSZ  MEMSZ  LEVEL  MESSAGE" << std::endl;
-    else
-      *_log_stream << "  TIME  LEVEL  MESSAGE" << std::endl;
+      *_log_stream << "  TIME  OBJSZ  MEMSZ" << std::endl;
   }
 
   *_log_stream << std::right << std::setw(6)
@@ -469,6 +467,8 @@ bool logger_func(log_level_t level)
   *_log_stream << ' ' << _log_buffer.str() << std::endl;
 
   _log_buffer.str("");
+
+  return true;
 }
 
 } // namespace ledger
@@ -484,26 +484,86 @@ bool logger_func(log_level_t level)
 
 namespace ledger {
 
-void start_timer(const char * name)
+struct timer_t {
+  log_level_t  level;
+  std::clock_t begin;
+  std::clock_t spent;
+  std::string  description;
+  bool	       active;
+
+  timer_t(log_level_t _level, std::string _description)
+    : level(_level), begin(std::clock()), spent(0),
+      description(_description), active(true) {}
+};
+
+typedef std::map<std::string, timer_t>  timer_map;
+typedef std::pair<std::string, timer_t> timer_pair;
+
+static timer_map timers;
+
+void start_timer(const char * name, log_level_t lvl)
 {
-#if 0
-  begin = std::clock();
+#if defined(VERIFY_ON)
+  memory_tracing_active = false;
+#endif
+
+  timer_map::iterator i = timers.find(name);
+  if (i == timers.end()) {
+    timers.insert(timer_pair(name, timer_t(lvl, _log_buffer.str())));
+  } else {
+    assert((*i).second.description == _log_buffer.str());
+    (*i).second.begin  = std::clock();
+    (*i).second.active = true;
+  }
+  _log_buffer.str("");
+
+#if defined(VERIFY_ON)
+  memory_tracing_active = true;
 #endif
 }
 
 void stop_timer(const char * name)
 {
-#if 0
-  cumulative += std::clock() - begin;
+#if defined(VERIFY_ON)
+  memory_tracing_active = false;
+#endif
+
+  timer_map::iterator i = timers.find(name);
+  assert(i != timers.end());
+
+  (*i).second.spent += std::clock() - (*i).second.begin;
+  (*i).second.active = false;
+
+#if defined(VERIFY_ON)
+  memory_tracing_active = true;
 #endif
 }
 
 void finish_timer(const char * name)
 {
-#if 0
-  DEBUG_(cls.c_str(), file << ":" << line << ": "
-	 << category << " = "
-	 << (double(cumulative) / double(CLOCKS_PER_SEC)) << "s");
+#if defined(VERIFY_ON)
+  memory_tracing_active = false;
+#endif
+
+  timer_map::iterator i = timers.find(name);
+  if (i == timers.end())
+    return;
+
+  std::clock_t spent = (*i).second.spent;
+  if ((*i).second.active) {
+    spent = std::clock() - (*i).second.begin;
+    (*i).second.active = false;
+  }
+
+  _log_buffer << (*i).second.description << " ("
+	      << (double(spent) / double(CLOCKS_PER_SEC)) << "s"
+	      << ')';
+  logger_func((*i).second.level);
+
+  timers.erase(i);
+
+#if defined(VERIFY_ON)
+  memory_tracing_active = true;
 #endif
 }
 
