@@ -2,13 +2,17 @@
 
 namespace ledger {
 
-ptime time_now = boost::posix_time::second_clock::universal_time();
-date  date_now = boost::gregorian::day_clock::universal_day();
+#ifdef BOOST_DATE_TIME_HAS_HIGH_PRECISION_CLOCK
+const ptime time_now = boost::posix_time::microsec_clock::universal_time();
+#else
+const ptime time_now = boost::posix_time::second_clock::universal_time();
+#endif
+const date  date_now = boost::gregorian::day_clock::universal_day();
 
 #ifdef SUPPORT_DATE_AND_TIME
-moment_t& now(time_now);
+const moment_t& now(time_now);
 #else
-moment_t& now(date_now);
+const moment_t& now(date_now);
 #endif
 
 bool day_before_month = false;

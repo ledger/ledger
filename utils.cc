@@ -1,4 +1,5 @@
 #include "utils.h"
+#include "times.h"
 
 /**********************************************************************
  *
@@ -398,17 +399,23 @@ string::~string() {
  * Logging
  */
 
-#if defined(LOGGING_ON) && defined(DEBUG_ON)
-
-#include <boost/regex.hpp>
+#if defined(LOGGING_ON)
 
 namespace ledger {
 
 log_level_t	   _log_level;
-unsigned int	   _trace_level;
-std::string	   _log_category;
 std::ostream *	   _log_stream = &std::cerr;
 std::ostringstream _log_buffer;
+
+#if defined(TRACING_ON)
+unsigned int	   _trace_level;
+#endif
+
+#ifdef BOOST_DATE_TIME_HAS_HIGH_PRECISION_CLOCK
+#define CURRENT_TIME() boost::posix_time::microsec_clock::universal_time()
+#else
+#define CURRENT_TIME() boost::posix_time::second_clock::universal_time()
+#endif
 
 static inline void stream_memory_size(std::ostream& out, std::size_t size)
 {
@@ -424,18 +431,25 @@ static inline void stream_memory_size(std::ostream& out, std::size_t size)
     assert(false);
 }
 
-static bool logger_has_run = false;
+static bool  logger_has_run = false;
+static ptime logger_start;
 
 bool logger_func(log_level_t level)
 {
+  unsigned long appender = 0;
+
   if (! logger_has_run) {
     logger_has_run = true;
+    logger_start   = CURRENT_TIME();
+
     IF_VERIFY()
-      *_log_stream << "  TIME  OBJSZ  MEMSZ" << std::endl;
+      *_log_stream << " TIME  OBJSZ  MEMSZ" << std::endl;
+
+    appender = (logger_start - now).total_milliseconds();
   }
 
-  *_log_stream << std::right << std::setw(6)
-	       << (double(std::clock()) / double(CLOCKS_PER_SEC));
+  *_log_stream << std::right << std::setw(5)
+	       << (CURRENT_TIME() - logger_start).total_milliseconds();
 
   IF_VERIFY() {
     *_log_stream << std::right << std::setw(6) << std::setprecision(3);
@@ -464,7 +478,12 @@ bool logger_func(log_level_t level)
     break;
   }
 
-  *_log_stream << ' ' << _log_buffer.str() << std::endl;
+  *_log_stream << ' ' << _log_buffer.str();
+
+  if (appender)
+    *_log_stream << " (" << appender << "ms startup)";
+
+  *_log_stream << std::endl;
 
   _log_buffer.str("");
 
@@ -473,7 +492,18 @@ bool logger_func(log_level_t level)
 
 } // namespace ledger
 
-#endif // LOGGING_ON && DEBUG_ON
+#if defined(DEBUG_ON)
+
+#include <boost/regex.hpp>
+
+namespace ledger {
+
+std::string _log_category;
+
+} // namespace ledger
+
+#endif // DEBUG_ON
+#endif // LOGGING_ON
 
 /**********************************************************************
  *
@@ -485,14 +515,15 @@ bool logger_func(log_level_t level)
 namespace ledger {
 
 struct timer_t {
-  log_level_t  level;
-  std::clock_t begin;
-  std::clock_t spent;
-  std::string  description;
-  bool	       active;
+  log_level_t	level;
+  ptime		begin;
+  time_duration	spent;
+  std::string	description;
+  bool		active;
 
   timer_t(log_level_t _level, std::string _description)
-    : level(_level), begin(std::clock()), spent(0),
+    : level(_level), begin(CURRENT_TIME()),
+      spent(time_duration(0, 0, 0, 0)),
       description(_description), active(true) {}
 };
 
@@ -512,7 +543,7 @@ void start_timer(const char * name, log_level_t lvl)
     timers.insert(timer_pair(name, timer_t(lvl, _log_buffer.str())));
   } else {
     assert((*i).second.description == _log_buffer.str());
-    (*i).second.begin  = std::clock();
+    (*i).second.begin  = CURRENT_TIME();
     (*i).second.active = true;
   }
   _log_buffer.str("");
@@ -531,7 +562,7 @@ void stop_timer(const char * name)
   timer_map::iterator i = timers.find(name);
   assert(i != timers.end());
 
-  (*i).second.spent += std::clock() - (*i).second.begin;
+  (*i).second.spent += CURRENT_TIME() - (*i).second.begin;
   (*i).second.active = false;
 
 #if defined(VERIFY_ON)
@@ -549,15 +580,25 @@ void finish_timer(const char * name)
   if (i == timers.end())
     return;
 
-  std::clock_t spent = (*i).second.spent;
+  time_duration spent = (*i).second.spent;
   if ((*i).second.active) {
-    spent = std::clock() - (*i).second.begin;
+    spent = CURRENT_TIME() - (*i).second.begin;
     (*i).second.active = false;
   }
 
-  _log_buffer << (*i).second.description << " ("
-	      << (double(spent) / double(CLOCKS_PER_SEC)) << "s"
-	      << ')';
+  _log_buffer << (*i).second.description << ' ';
+
+  bool need_paren =
+    (*i).second.description[(*i).second.description.size() - 1] != ':';
+
+  if (need_paren)
+    _log_buffer << '(';
+  
+  _log_buffer << spent.total_milliseconds() << "ms";
+
+  if (need_paren)
+    _log_buffer << ')';
+
   logger_func((*i).second.level);
 
   timers.erase(i);

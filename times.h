@@ -34,7 +34,7 @@ inline bool is_valid_moment(const moment_t& moment) {
 
 #endif // SUPPORT_DATE_AND_TIME
 
-extern moment_t& now;
+extern const moment_t& now;
 
 DECLARE_EXCEPTION(datetime_exception);
 
@@ -78,9 +78,9 @@ inline moment_t parse_datetime(const string& str) {
   return parse_datetime(str.c_str());
 }
 
-extern ptime time_now;
-extern date  date_now;
-extern bool  day_before_month;
+extern const ptime time_now;
+extern const date  date_now;
+extern bool        day_before_month;
 
 #if 0
 struct intorchar

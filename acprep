@@ -84,7 +84,11 @@ done
 HERE="$PWD"
 
 if [ -d "$HOME/Products" ]; then
-    projdir="$HOME/Products/$(basename $HERE)"
+    version=""
+    if [ -x pending/version ]; then
+	version="-$(pending/version)"
+    fi
+    projdir="$HOME/Products/$(basename $HERE)$version"
     if [ ! -d "$projdir" ]; then
 	mkdir -p "$projdir"
     fi

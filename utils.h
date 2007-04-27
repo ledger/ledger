@@ -197,8 +197,6 @@ enum log_level_t {
 };
 
 extern log_level_t	  _log_level;
-extern unsigned int	  _trace_level;
-extern std::string	  _log_category;
 extern std::ostream *	  _log_stream;
 extern std::ostringstream _log_buffer;
 
@@ -207,8 +205,25 @@ bool logger_func(log_level_t level);
 #define LOGGER(cat) \
     static const char * const _this_category = cat
 
+#if defined(TRACING_ON)
+
+extern unsigned int _trace_level;
+
 #define SHOW_TRACE(lvl) \
   (_log_level >= LOG_TRACE && lvl <= _trace_level)
+#define TRACE(lvl, msg) \
+  (SHOW_TRACE(lvl) ? ((_log_buffer << msg), logger_func(LOG_TRACE)) : false)
+
+#else // TRACING_ON
+
+#define SHOW_TRACE(lvl) false
+#define TRACE(lvl, msg)
+
+#endif // TRACING_ON
+
+#if defined(DEBUG_ON)
+
+extern std::string _log_category;
 
 inline bool category_matches(const char * cat) {
   return (_log_category == cat ||
@@ -222,31 +237,28 @@ inline bool category_matches(const char * cat) {
   (_log_level >= LOG_DEBUG && category_matches(cat))
 #define SHOW_DEBUG() SHOW_DEBUG_(_this_category)
 
+#define DEBUG_(cat, msg) \
+  (SHOW_DEBUG_(cat) ? ((_log_buffer << msg), logger_func(LOG_DEBUG)) : false)
+#define DEBUG(msg) DEBUG_(_this_category, msg)
+
+#else // DEBUG_ON
+
+#define SHOW_DEBUG_(cat) false
+#define SHOW_DEBUG()     false
+#define DEBUG_(cat, msg)
+#define DEBUG(msg)
+
+#endif // DEBUG_ON
+   
+#define LOG_MACRO(level, msg)				\
+  (_log_level >= level ?				\
+   ((_log_buffer << msg), logger_func(level)) : false)
+
 #define SHOW_INFO()     (_log_level >= LOG_INFO)
 #define SHOW_WARN()     (_log_level >= LOG_WARN)
 #define SHOW_ERROR()    (_log_level >= LOG_ERROR)
 #define SHOW_FATAL()    (_log_level >= LOG_FATAL)
 #define SHOW_CRITICAL() (_log_level >= LOG_CRIT)
-
-#if defined(TRACING_ON)
-#define TRACE(lvl, msg) \
-  (SHOW_TRACE(lvl) ? ((_log_buffer << msg), logger_func(LOG_TRACE)) : false)
-#else
-#define TRACE(lvl, msg)
-#endif
-
-#if defined(DEBUG_ON)
-#define DEBUG_(cat, msg) \
-  (SHOW_DEBUG_(cat) ? ((_log_buffer << msg), logger_func(LOG_DEBUG)) : false)
-#define DEBUG(msg) DEBUG_(_this_category, msg)
-#else
-#define DEBUG_(cat, msg)
-#define DEBUG(msg)
-#endif
-   
-#define LOG_MACRO(level, msg)				\
-  (_log_level >= level ?				\
-   ((_log_buffer << msg), logger_func(level)) : false)
 
 #define INFO(msg)      LOG_MACRO(LOG_INFO, msg)
 #define WARN(msg)      LOG_MACRO(LOG_WARN, msg)

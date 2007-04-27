@@ -62,10 +62,10 @@ static int read_and_report(report_t * report, int argc, char * argv[],
 
   DEBUG_("ledger.session.cache", "2. use_cache = " << session.use_cache);
 
-  TRACE(1, "Initialization file is " << session.init_file);
-  TRACE(1, "Price database is " << session.price_db);
-  TRACE(1, "Binary cache is " << session.cache_file);
-  TRACE(1, "Main journal is " << session.data_file);
+  INFO("Initialization file is " << session.init_file);
+  INFO("Price database is " << session.price_db);
+  INFO("Binary cache is " << session.cache_file);
+  INFO("Journal file is " << session.data_file);
 
   if (! session.use_cache)
     INFO("Binary cache mechanism will not be used");
@@ -172,10 +172,12 @@ static int read_and_report(report_t * report, int argc, char * argv[],
   journal_t * journal = session.read_data(report->account);
   INFO_FINISH(journal);
 
-  TRACE_FINISH(entry_date, 2);
-  TRACE_FINISH(entry_details, 2);
-  TRACE_FINISH(entry_xacts, 2);
-  TRACE_FINISH(parsing_total, 2);
+  TRACE_FINISH(entry_text, 1);
+  TRACE_FINISH(entry_date, 1);
+  TRACE_FINISH(entry_details, 1);
+  TRACE_FINISH(entry_xacts, 1);
+  TRACE_FINISH(entries, 1);
+  TRACE_FINISH(parsing_total, 1);
 
   // Configure the output stream
 
@@ -409,7 +411,7 @@ int main(int argc, char * argv[], char * envp[])
 #if ! defined(FULL_DEBUG)
     ledger::do_cleanup = false;
 #endif
-    TRACE(1, "Ledger starting");
+    INFO("Ledger starting");
 
     std::auto_ptr<ledger::session_t> session(new ledger::session_t);
 
