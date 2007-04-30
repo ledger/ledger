@@ -77,10 +77,10 @@ void shutdown_memory_tracing()
   memory_tracing_active = false;
 
   if (live_objects) {
-    IF_DEBUG_("memory.counts")
+    IF_DEBUG("memory.counts")
       report_memory(std::cerr, true);
     else
-      IF_DEBUG_("memory.counts.live")
+      IF_DEBUG("memory.counts.live")
 	report_memory(std::cerr);
     else if (live_objects->size() > 0)
       report_memory(std::cerr);
@@ -253,7 +253,7 @@ void trace_ctor_func(void * ptr, const char * cls_name, const char * args,
   std::strcat(name, args);
   std::strcat(name, ")");
 
-  DEBUG_("verify.memory", "TRACE_CTOR " << ptr << " " << name);
+  DEBUG("verify.memory", "TRACE_CTOR " << ptr << " " << name);
 
   live_objects->insert(live_objects_pair(ptr, allocation_pair(cls_name, cls_size)));
 
@@ -271,7 +271,7 @@ void trace_dtor_func(void * ptr, const char * cls_name, std::size_t cls_size)
 
   if (! live_objects) return;
 
-  DEBUG_("ledger.trace.debug", "TRACE_DTOR " << ptr << " " << cls_name);
+  DEBUG("ledger.trace.debug", "TRACE_DTOR " << ptr << " " << cls_name);
 
   live_objects_map::iterator i = live_objects->find(ptr);
   VERIFY(i != live_objects->end());
@@ -493,8 +493,6 @@ bool logger_func(log_level_t level)
 } // namespace ledger
 
 #if defined(DEBUG_ON)
-
-#include <boost/regex.hpp>
 
 namespace ledger {
 

@@ -6,7 +6,7 @@ namespace ledger {
 #define MAX_LINE 1024
 
 static char         line[MAX_LINE + 1];
-static string  path;
+static string	    pathname;
 static unsigned int src_idx;
 static unsigned int linenum;
 
@@ -52,9 +52,9 @@ unsigned int qif_parser_t::parse(std::istream& in,
   xact = new transaction_t(master);
   entry->add_transaction(xact);
 
-  path	  = journal->sources.back();
-  src_idx = journal->sources.size() - 1;
-  linenum = 1;
+  pathname = journal->sources.back();
+  src_idx  = journal->sources.size() - 1;
+  linenum  = 1;
 
   unsigned long beg_pos  = 0;
   unsigned long beg_line = 0;

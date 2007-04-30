@@ -7,7 +7,7 @@ namespace ledger {
 
 #define MAX_LINE 1024
 
-static string	    path;
+static string	    pathname;
 static unsigned int linenum;
 static unsigned int src_idx;
 static accounts_map account_aliases;
@@ -52,11 +52,11 @@ parse_amount_expr(std::istream& in, journal_t *,
 {
   xml::xpath_t xpath(in, flags | XPATH_PARSE_RELAXED | XPATH_PARSE_PARTIAL);
 
-  DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
+  DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 	 "Parsed an amount expression");
 
 #if 0
-  IF_DEBUG_("ledger.textual.parse") {
+  IF_DEBUG("ledger.textual.parse") {
     if (_debug_stream) {
       xpath.dump(*_debug_stream);
       *_debug_stream << std::endl;
@@ -66,7 +66,7 @@ parse_amount_expr(std::istream& in, journal_t *,
 
   amount = xpath.calc(static_cast<xml::transaction_node_t *>(xact.data)).to_amount();
 
-  DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
+  DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 	 "The transaction amount is " << amount);
 }
 
@@ -124,12 +124,12 @@ transaction_t * parse_transaction(char *      line,
     switch (*state) {
     case '*':
       xact->state = transaction_t::CLEARED;
-      DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
+      DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 	     "Parsed the CLEARED flag");
       break;
     case '!':
       xact->state = transaction_t::PENDING;
-      DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
+      DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 	     "Parsed the PENDING flag");
       break;
     }
@@ -141,18 +141,18 @@ transaction_t * parse_transaction(char *      line,
   if ((*b == '[' && *e == ']') ||
       (*b == '(' && *e == ')')) {
     xact->flags |= TRANSACTION_VIRTUAL;
-    DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
+    DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 	   "Parsed a virtual account name");
     if (*b == '[') {
       xact->flags |= TRANSACTION_BALANCE;
-      DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
+      DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 	     "Parsed a balanced virtual account name");
     }
     *account_path++ = '\0';
     *e = '\0';
   }
 
-  DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
+  DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 	 "Parsed account name " << account_path);
   if (account_aliases.size() > 0) {
     accounts_map::const_iterator i = account_aliases.find(account_path);
@@ -214,14 +214,14 @@ transaction_t * parse_transaction(char *      line,
     if (in.good() && ! in.eof()) {
       char c = peek_next_nonws(in);
       if (c == '@') {
-	DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
+	DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 	       "Found a price indicator");
 	bool per_unit = true;
 	in.get(c);
 	if (in.peek() == '@') {
 	  in.get(c);
 	  per_unit = false;
-	  DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
+	  DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 		 "And it's for a total price");
 	}
 
@@ -262,13 +262,13 @@ transaction_t * parse_transaction(char *      line,
 					    xact->entry->actual_date(),
 					    xact->entry->code);
 
-	  DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
+	  DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 		 "Total cost is " << *xact->cost);
-	  DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
+	  DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 		 "Per-unit cost is " << per_unit_cost);
-	  DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
+	  DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 		 "Annotated amount is " << xact->amount);
-	  DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
+	  DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 		 "Bare amount is " << xact->amount.number());
 	}
       }
@@ -276,7 +276,7 @@ transaction_t * parse_transaction(char *      line,
 
     xact->amount.in_place_reduce();
 
-    DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
+    DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 	   "Reduced amount is " << xact->amount);
   }
 
@@ -284,7 +284,7 @@ transaction_t * parse_transaction(char *      line,
 
   if (note) {
     xact->note = note;
-    DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
+    DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 	   "Parsed a note '" << xact->note << "'");
 
     if (char * b = std::strchr(xact->note.c_str(), '['))
@@ -293,7 +293,7 @@ transaction_t * parse_transaction(char *      line,
 	std::strncpy(buf, b + 1, e - b - 1);
 	buf[e - b - 1] = '\0';
 
-	DEBUG_("ledger.textual.parse", "line " << linenum << ": " <<
+	DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 	       "Parsed a transaction date " << buf);
 
 	if (char * p = std::strchr(buf, '=')) {
@@ -635,11 +635,11 @@ unsigned int textual_parser_t::parse(std::istream&  in,
 
   account_stack.push_front(master);
 
-  path	  = journal ? journal->sources.back() : *original_file;
-  src_idx = journal ? journal->sources.size() - 1 : 0;
-  linenum = 1;
+  pathname = journal ? journal->sources.back() : *original_file;
+  src_idx  = journal ? journal->sources.size() - 1 : 0;
+  linenum  = 1;
 
-  INFO("Parsing file '" << path << "'");
+  INFO("Parsing file '" << pathname << "'");
 
   unsigned long beg_pos = in.tellg();
   unsigned long end_pos;
@@ -829,28 +829,29 @@ unsigned int textual_parser_t::parse(std::istream&  in,
 	char * p = next_element(line);
 	string word(line + 1);
 	if (word == "include") {
-	  push_var<string>	  save_path(path);
+	  push_var<string>	  save_path(pathname);
 	  push_var<unsigned int>  save_src_idx(src_idx);
 	  push_var<unsigned long> save_beg_pos(beg_pos);
 	  push_var<unsigned long> save_end_pos(end_pos);
 	  push_var<unsigned int>  save_linenum(linenum);
 
-	  path = p;
-	  if (path[0] != '/' && path[0] != '\\' && path[0] != '~') {
+	  pathname = p;
+	  if (pathname[0] != '/' && pathname[0] != '\\' &&
+	      pathname[0] != '~') {
 	    string::size_type pos = save_path.prev.rfind('/');
 	    if (pos == string::npos)
 	      pos = save_path.prev.rfind('\\');
 	    if (pos != string::npos)
-	      path = string(save_path.prev, 0, pos + 1) + path;
+	      pathname = string(save_path.prev, 0, pos + 1) + pathname;
 	  }
-	  path = resolve_path(path);
+	  pathname = resolve_path(pathname);
 
-	  DEBUG_("ledger.textual.include", "line " << linenum << ": " <<
-		 "Including path '" << path << "'");
+	  DEBUG("ledger.textual.include", "line " << linenum << ": " <<
+		 "Including path '" << pathname << "'");
 
 	  include_stack.push_back(std::pair<string, int>
 				  (journal->sources.back(), linenum - 1));
-	  count += journal->session->read_journal(path, journal,
+	  count += journal->session->read_journal(pathname, journal,
 						  account_stack.front());
 	  include_stack.pop_back();
 	}
@@ -929,8 +930,8 @@ unsigned int textual_parser_t::parse(std::istream&  in,
 	   i != include_stack.rend();
 	   i++)
 	err->context.push_back(new include_context((*i).first, (*i).second,
-						    "In file included from"));
-      err->context.push_front(new file_context(path, linenum - 1));
+						   "In file included from"));
+      err->context.push_front(new file_context(pathname, linenum - 1));
 
       std::cout.flush();
       if (errors > 0 && err->context.size() > 1)

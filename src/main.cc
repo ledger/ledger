@@ -46,7 +46,7 @@ static int read_and_report(report_t * report, int argc, char * argv[],
   else
     session.use_cache = session.data_file.empty() && session.price_db.empty();
 
-  DEBUG_("ledger.session.cache", "1. use_cache = " << session.use_cache);
+  DEBUG("ledger.session.cache", "1. use_cache = " << session.use_cache);
 
   // Process the environment settings
 
@@ -68,7 +68,7 @@ static int read_and_report(report_t * report, int argc, char * argv[],
   if (session.data_file == session.cache_file)
     session.use_cache = false;
 
-  DEBUG_("ledger.session.cache", "2. use_cache = " << session.use_cache);
+  DEBUG("ledger.session.cache", "2. use_cache = " << session.use_cache);
 
   INFO("Initialization file is " << session.init_file);
   INFO("Price database is " << session.price_db);

@@ -48,7 +48,7 @@ int document_t::register_name(const string& name)
   names.push_back(name);
   index = names.size() - 1;
 
-  DEBUG_("xml.lookup", this << " Inserting name: " << names.back());
+  DEBUG("xml.lookup", this << " Inserting name: " << names.back());
 
   std::pair<names_map::iterator, bool> result =
     names_index.insert(names_pair(names.back(), index));
@@ -63,7 +63,7 @@ int document_t::lookup_name_id(const string& name) const
   if ((id = lookup_builtin_id(name)) != -1)
     return id;
 
-  DEBUG_("xml.lookup", this << " Finding name: " << name);
+  DEBUG("xml.lookup", this << " Finding name: " << name);
 
   names_map::const_iterator i = names_index.find(name);
   if (i != names_index.end())
@@ -268,7 +268,7 @@ static void startElement(void *userData, const char *name, const char **attrs)
 {
   document_t::parser_t * parser = static_cast<document_t::parser_t *>(userData);
 
-  DEBUG_("xml.parse", "startElement(" << name << ")");
+  DEBUG("xml.parse", "startElement(" << name << ")");
 
   if (parser->pending) {
     parent_node_t * node = create_node<parent_node_t>(parser);
@@ -295,7 +295,7 @@ static void endElement(void *userData, const char *name)
 {
   document_t::parser_t * parser = static_cast<document_t::parser_t *>(userData);
 
-  DEBUG_("xml.parse", "endElement(" << name << ")");
+  DEBUG("xml.parse", "endElement(" << name << ")");
 
   if (parser->pending) {
     terminal_node_t * node = create_node<terminal_node_t>(parser);
@@ -317,7 +317,7 @@ static void dataHandler(void *userData, const char *s, int len)
 {
   document_t::parser_t * parser = static_cast<document_t::parser_t *>(userData);
 
-  DEBUG_("xml.parse", "dataHandler(" << string(s, len) << ")");
+  DEBUG("xml.parse", "dataHandler(" << string(s, len) << ")");
 
   bool all_whitespace = true;
   for (int i = 0; i < len; i++) {

@@ -1,10 +1,14 @@
 #include "pyinterp.h"
 
+#include <boost/python/module_init.hpp>
+#include <boost/python/exception_translator.hpp>
+
 namespace ledger {
 
 struct python_run
 {
   object result;
+
   python_run(python_interpreter_t * intepreter,
 	     const string& str, int input_mode)
     : result(handle<>(borrowed(PyRun_String(str.c_str(), input_mode,
@@ -23,7 +27,7 @@ python_interpreter_t::python_interpreter_t(xml::xpath_t::scope_t * parent)
     nspace(handle<>(borrowed(PyModule_GetDict(mmodule.get()))))
 {
   Py_Initialize();
-  detail::init_module("ledger", &initialize_for_python);
+  boost::python::detail::init_module("ledger", &initialize_for_python);
 }
 
 object python_interpreter_t::import(const string& str)
@@ -121,7 +125,8 @@ void python_interpreter_t::functor_t::operator()(value_t& result,
 	  arglist.append(*i);
 
 	if (PyObject * val =
-	    PyObject_CallObject(func.ptr(), tuple(arglist).ptr())) {
+	    PyObject_CallObject(func.ptr(),
+				boost::python::tuple(arglist).ptr())) {
 	  result = extract<value_t>(val)();
 	  Py_DECREF(val);
 	}

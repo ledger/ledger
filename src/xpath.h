@@ -424,21 +424,21 @@ public:
     }
 
     void release() const {
-      DEBUG_("ledger.xpath.memory",
+      DEBUG("ledger.xpath.memory",
 	     "Releasing " << this << ", refc now " << refc - 1);
       assert(refc > 0);
       if (--refc == 0)
 	delete this;
     }
     op_t * acquire() {
-      DEBUG_("ledger.xpath.memory",
+      DEBUG("ledger.xpath.memory",
 	     "Acquiring " << this << ", refc now " << refc + 1);
       assert(refc >= 0);
       refc++;
       return this;
     }
     const op_t * acquire() const {
-      DEBUG_("ledger.xpath.memory",
+      DEBUG("ledger.xpath.memory",
 	     "Acquiring " << this << ", refc now " << refc + 1);
       assert(refc >= 0);
       refc++;

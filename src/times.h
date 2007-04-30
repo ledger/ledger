@@ -3,15 +3,7 @@
 
 #include "utils.h"
 
-#include <boost/date_time/posix_time/posix_time.hpp>
-
 namespace ledger {
-
-typedef boost::posix_time::ptime	ptime;
-typedef ptime::time_duration_type	time_duration;
-typedef boost::gregorian::date		date;
-typedef boost::gregorian::date_duration date_duration;
-typedef boost::posix_time::seconds	seconds;
 
 #define SUPPORT_DATE_AND_TIME 1
 #ifdef SUPPORT_DATE_AND_TIME

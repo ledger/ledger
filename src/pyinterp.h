@@ -6,17 +6,13 @@
 #if defined(USE_BOOST_PYTHON)
 
 #include <boost/python.hpp>
-#include <boost/python/detail/api_placeholder.hpp>
-#include <boost/python/exception_translator.hpp>
-#include <boost/python/suite/indexing/map_indexing_suite.hpp>
-
 #include <Python.h>
 
 #include "pyfstream.h"
 
-using namespace boost::python;
-
 namespace ledger {
+
+using namespace boost::python;
 
 class python_interpreter_t : public xml::xpath_t::scope_t
 {

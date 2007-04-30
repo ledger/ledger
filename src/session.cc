@@ -59,11 +59,11 @@ journal_t * session_t::read_data(const string& master_account)
 
   unsigned int entry_count = 0;
 
-  DEBUG_("ledger.cache", "3. use_cache = " << use_cache);
+  DEBUG("ledger.cache", "3. use_cache = " << use_cache);
 
   if (use_cache && ! cache_file.empty() &&
       ! data_file.empty()) {
-    DEBUG_("ledger.cache", "using_cache " << cache_file);
+    DEBUG("ledger.cache", "using_cache " << cache_file);
     cache_dirty = true;
     if (access(cache_file.c_str(), R_OK) != -1) {
       std::ifstream stream(cache_file.c_str());
@@ -90,12 +90,12 @@ journal_t * session_t::read_data(const string& master_account)
       if (read_journal(journal->price_db, journal)) {
 	throw_(exception, "Entries not allowed in price history file");
       } else {
-	DEBUG_("ledger.cache", "read price database " << journal->price_db);
+	DEBUG("ledger.cache", "read price database " << journal->price_db);
 	journal->sources.pop_back();
       }
     }
 
-    DEBUG_("ledger.cache", "rejected cache, parsing " << data_file);
+    DEBUG("ledger.cache", "rejected cache, parsing " << data_file);
     if (data_file == "-") {
       use_cache = false;
       journal->sources.push_back("<stdin>");

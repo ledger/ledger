@@ -130,7 +130,7 @@ void value_t::destroy()
 void value_t::simplify()
 {
   if (realzero()) {
-    DEBUG_("amounts.values.simplify", "Zeroing type " << type);
+    DEBUG("amounts.values.simplify", "Zeroing type " << type);
     *this = 0L;
     return;
   }
@@ -138,19 +138,19 @@ void value_t::simplify()
   if (type == BALANCE_PAIR &&
       (! ((balance_pair_t *) data)->cost ||
        ((balance_pair_t *) data)->cost->realzero())) {
-    DEBUG_("amounts.values.simplify", "Reducing balance pair to balance");
+    DEBUG("amounts.values.simplify", "Reducing balance pair to balance");
     in_place_cast(BALANCE);
   }
 
   if (type == BALANCE &&
       ((balance_t *) data)->amounts.size() == 1) {
-    DEBUG_("amounts.values.simplify", "Reducing balance to amount");
+    DEBUG("amounts.values.simplify", "Reducing balance to amount");
     in_place_cast(AMOUNT);
   }
 
   if (type == AMOUNT &&
       ! ((amount_t *) data)->commodity()) {
-    DEBUG_("amounts.values.simplify", "Reducing amount to integer");
+    DEBUG("amounts.values.simplify", "Reducing amount to integer");
     in_place_cast(INTEGER);
   }
 }

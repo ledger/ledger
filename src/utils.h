@@ -16,6 +16,27 @@ namespace ledger {
 #endif
 }
 
+// jww (2007-04-30): These Boost includes can go into system.hh as
+// soon as GCC fixes it's problem with pre-compiled headers and global
+// variables defined in unnamed namespaces.
+
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/optional.hpp>
+#include <boost/regex.hpp>
+
+namespace ledger {
+  using namespace boost;
+
+  typedef posix_time::ptime	    ptime;
+  typedef ptime::time_duration_type time_duration;
+  typedef gregorian::date	    date;
+  typedef gregorian::date_duration  date_duration;
+  typedef posix_time::seconds	    seconds;
+
+  typedef filesystem::path path;
+}
+
 /**********************************************************************
  *
  * Default values
@@ -233,20 +254,20 @@ inline bool category_matches(const char * cat) {
 	   cat[_log_category.size()] == '.'));
 }
 
-#define SHOW_DEBUG_(cat) \
+#define SHOW_DEBUG(cat) \
   (_log_level >= LOG_DEBUG && category_matches(cat))
-#define SHOW_DEBUG() SHOW_DEBUG_(_this_category)
+#define SHOW_DEBUG_() SHOW_DEBUG(_this_category)
 
-#define DEBUG_(cat, msg) \
-  (SHOW_DEBUG_(cat) ? ((_log_buffer << msg), logger_func(LOG_DEBUG)) : false)
-#define DEBUG(msg) DEBUG_(_this_category, msg)
+#define DEBUG(cat, msg) \
+  (SHOW_DEBUG(cat) ? ((_log_buffer << msg), logger_func(LOG_DEBUG)) : false)
+#define DEBUG_(msg) DEBUG(_this_category, msg)
 
 #else // DEBUG_ON
 
-#define SHOW_DEBUG_(cat) false
-#define SHOW_DEBUG()     false
-#define DEBUG_(cat, msg)
-#define DEBUG(msg)
+#define SHOW_DEBUG(cat) false
+#define SHOW_DEBUG_()   false
+#define DEBUG(cat, msg)
+#define DEBUG_(msg)
 
 #endif // DEBUG_ON
    
@@ -273,18 +294,18 @@ inline bool category_matches(const char * cat) {
 
 #define LOGGER(cat)
 
-#define SHOW_TRACE(lvl)  false
-#define SHOW_DEBUG_(cat) false
-#define SHOW_DEBUG()     false
-#define SHOW_INFO()      false
-#define SHOW_WARN()      false
-#define SHOW_ERROR()     false
-#define SHOW_FATAL()     false
-#define SHOW_CRITICAL()  false
+#define SHOW_TRACE(lvl) false
+#define SHOW_DEBUG(cat) false
+#define SHOW_DEBUG_()   false
+#define SHOW_INFO()     false
+#define SHOW_WARN()     false
+#define SHOW_ERROR()    false
+#define SHOW_FATAL()    false
+#define SHOW_CRITICAL() false
 
 #define TRACE(lvl, msg)
-#define DEBUG(msg)
-#define DEBUG_(cat, msg)
+#define DEBUG(cat, msg)
+#define DEBUG_(msg)
 #define INFO(msg)
 #define WARN(msg)
 #define ERROR(msg)
@@ -293,14 +314,14 @@ inline bool category_matches(const char * cat) {
 
 #endif // LOGGING_ON
 
-#define IF_TRACE(lvl)  if (SHOW_TRACE(lvl))
-#define IF_DEBUG_(cat) if (SHOW_DEBUG_(cat))
-#define IF_DEBUG()     if (SHOW_DEBUG())
-#define IF_INFO()      if (SHOW_INFO())
-#define IF_WARN()      if (SHOW_WARN())
-#define IF_ERROR()     if (SHOW_ERROR())
-#define IF_FATAL()     if (SHOW_FATAL())
-#define IF_CRITICAL()  if (SHOW_CRITICAL())
+#define IF_TRACE(lvl) if (SHOW_TRACE(lvl))
+#define IF_DEBUG(cat) if (SHOW_DEBUG(cat))
+#define IF_DEBUG_()   if (SHOW_DEBUG_())
+#define IF_INFO()     if (SHOW_INFO())
+#define IF_WARN()     if (SHOW_WARN())
+#define IF_ERROR()    if (SHOW_ERROR())
+#define IF_FATAL()    if (SHOW_FATAL())
+#define IF_CRITICAL() if (SHOW_CRITICAL())
 
 /**********************************************************************
  *
@@ -330,22 +351,22 @@ void finish_timer(const char * name);
 #endif
 
 #if defined(DEBUG_ON)
-#define DEBUG_START_(name, cat, msg)					\
-  (SHOW_DEBUG_(cat) ?							\
+#define DEBUG_START(name, cat, msg)					\
+  (SHOW_DEBUG(cat) ?							\
    ((_log_buffer << msg), start_timer(#name, LOG_DEBUG)) : ((void)0))
-#define DEBUG_START(name, msg) \
+#define DEBUG_START_(name, msg) \
   DEBUG_START_(name, _this_category, msg)
-#define DEBUG_STOP_(name, cat) \
-  (SHOW_DEBUG_(cat) ? stop_timer(#name) : ((void)0))
-#define DEBUG_STOP(name) \
+#define DEBUG_STOP(name, cat) \
+  (SHOW_DEBUG(cat) ? stop_timer(#name) : ((void)0))
+#define DEBUG_STOP_(name) \
   DEBUG_STOP_(name, _this_category)
-#define DEBUG_FINISH_(name, cat) \
-  (SHOW_DEBUG_(cat) ? finish_timer(#name) : ((void)0))
-#define DEBUG_FINISH(name) \
+#define DEBUG_FINISH(name, cat) \
+  (SHOW_DEBUG(cat) ? finish_timer(#name) : ((void)0))
+#define DEBUG_FINISH_(name) \
   DEBUG_FINISH_(name, _this_category)
 #else
-#define DEBUG_START(name, msg)
-#define DEBUG_START_(name, cat, msg)
+#define DEBUG_START(name, cat, msg)
+#define DEBUG_START_(name, msg)
 #define DEBUG_STOP(name)
 #define DEBUG_FINISH(name)
 #endif

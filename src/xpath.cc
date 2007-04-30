@@ -475,7 +475,7 @@ xpath_t::op_t * xpath_t::wrap_mask(const string& pattern)
 
 void xpath_t::scope_t::define(const string& name, op_t * def)
 {
-  DEBUG_("ledger.xpath.syms", "Defining '" << name << "' = " << def);
+  DEBUG("ledger.xpath.syms", "Defining '" << name << "' = " << def);
 
   std::pair<symbol_map::iterator, bool> result
     = symbols.insert(symbol_pair(name, def));
@@ -548,7 +548,7 @@ xpath_t::op_t::~op_t()
 {
   TRACE_DTOR(xpath_t::op_t);
 
-  DEBUG_("ledger.xpath.memory", "Destroying " << this);
+  DEBUG("ledger.xpath.memory", "Destroying " << this);
   assert(refc == 0);
 
   switch (kind) {

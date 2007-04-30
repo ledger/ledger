@@ -3,8 +3,6 @@
 
 #include "utils.h"
 
-#include <boost/regex.hpp>
-
 namespace ledger {
 
 class mask_t
