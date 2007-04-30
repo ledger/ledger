@@ -82,7 +82,7 @@ namespace std {
 
 #define HAVE_GDTOA 1
 #ifdef HAVE_GDTOA
-#include <gdtoa/gdtoa.h>
+#include "gdtoa.h"
 #endif
 
 extern "C" {

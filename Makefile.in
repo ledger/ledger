@@ -355,7 +355,7 @@ AM_LFLAGS = -o $(LEX_OUTPUT_ROOT).c
 #WARNFLAGS += -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion
 #WARNFLAGS += -Wconversion -Wshorten-64-to-32 -Wsign-compare
 #WARNFLAGS += -Wmissing-field-initializers -pedantic-errors
-libledger_la_CPPFLAGS = -I$(top_builddir)/gdtoa -I$(srcdir) \
+libledger_la_CPPFLAGS = -I$(top_builddir)/gdtoa -I$(srcdir)/gdtoa \
 	-I$(srcdir)/src $(am__append_2) $(am__append_4) \
 	$(am__append_6) $(am__append_8) $(am__append_9)
 libledger_la_LDFLAGS = -release 3.0

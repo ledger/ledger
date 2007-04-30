@@ -441,6 +441,7 @@ class value_t
   value_t cost() const;
   value_t price() const;
   value_t date() const;
+  value_t tag() const;
 
   value_t cast(type_t cast_type) const {
     value_t temp(*this);

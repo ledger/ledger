@@ -27,7 +27,8 @@ AM_LFLAGS = -o $(LEX_OUTPUT_ROOT).c
 #WARNFLAGS += -Wconversion -Wshorten-64-to-32 -Wsign-compare
 #WARNFLAGS += -Wmissing-field-initializers -pedantic-errors
 
-libledger_la_CPPFLAGS = -I$(top_builddir)/gdtoa -I$(srcdir) -I$(srcdir)/src
+libledger_la_CPPFLAGS = -I$(top_builddir)/gdtoa -I$(srcdir)/gdtoa \
+			-I$(srcdir)/src
 libledger_la_LDFLAGS  = -release 3.0
 
 libledger_la_SOURCES = \

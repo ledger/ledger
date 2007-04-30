@@ -48,7 +48,6 @@
 #define _AMOUNT_H
 
 #include "utils.h"
-#include "times.h"
 
 namespace ledger {
 
@@ -126,27 +125,34 @@ class amount_t
   }
 
   amount_t number() const {
+    if (! has_commodity())
+      return *this;
     amount_t temp(*this);
     temp.clear_commodity();
     return temp;
   }
 
   bool has_commodity() const;
-  commodity_t& commodity() const;
   void set_commodity(commodity_t& comm) {
     commodity_ = &comm;
   }
-  void annotate_commodity(const amount_t&    price,
-			  const moment_t&	     date = moment_t(),
-			  const string& tag  = "");
-  amount_t strip_annotations(const bool _keep_price = keep_price,
-			     const bool _keep_date  = keep_date,
-			     const bool _keep_tag   = keep_tag) const;
   void clear_commodity() {
     commodity_ = NULL;
   }
-  amount_t price() const;
-  moment_t date() const;
+
+  commodity_t& commodity() const;
+
+  void annotate_commodity(const amount_t& price,
+			  const moment_t& date = moment_t(),
+			  const string&	  tag  = "");
+
+  amount_t strip_annotations(const bool _keep_price = keep_price,
+			     const bool _keep_date  = keep_date,
+			     const bool _keep_tag   = keep_tag) const;
+
+  optional<amount_t> price() const;
+  optional<moment_t> date() const;
+  optional<string>   tag() const;
 
   bool null() const {
     return ! quantity && ! has_commodity();
@@ -247,7 +253,7 @@ class amount_t
   }
 
   // test for zero and non-zero
-  int sign() const;
+  int  sign() const;
   bool zero() const;
   bool realzero() const {
     return sign() == 0;
@@ -688,9 +694,9 @@ class annotated_commodity_t : public commodity_t
  public:
   const commodity_t * ptr;
 
-  amount_t    price;
-  moment_t  date;
-  string tag;
+  amount_t price;
+  moment_t date;
+  string   tag;
 
   explicit annotated_commodity_t() {
     TRACE_CTOR(annotated_commodity_t, "");
@@ -732,6 +738,8 @@ inline std::ostream& operator<<(std::ostream& out, const commodity_t& comm) {
 }
 
 inline amount_t amount_t::round() const {
+  if (! has_commodity())
+    return *this;
   return round(commodity().precision());
 }
 
@@ -740,10 +748,7 @@ inline bool amount_t::has_commodity() const {
 }
 
 inline commodity_t& amount_t::commodity() const {
-  if (! commodity_)
-    return *commodity_t::null_commodity;
-  else
-    return *commodity_;
+  return has_commodity() ? *commodity_ : *commodity_t::null_commodity;
 }
 
 void parse_conversion(const string& larger_str,

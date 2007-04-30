@@ -435,8 +435,10 @@ class balance_t
   amount_t  amount(const commodity_t& commodity = 
 		   *commodity_t::null_commodity) const;
   balance_t value(const moment_t& moment = now) const;
-  balance_t price() const;
-  moment_t     date() const;
+
+  optional<balance_t> price() const;
+  optional<moment_t>  date() const;
+  optional<string>    tag() const;
 
   balance_t
   strip_annotations(const bool keep_price = amount_t::keep_price,
@@ -896,11 +898,15 @@ class balance_pair_t
   balance_t value(const moment_t& moment = now) const {
     return quantity.value(moment);
   }
-  balance_t price() const {
+
+  optional<balance_t> price() const {
     return quantity.price();
   }
-  moment_t     date() const {
+  optional<moment_t>  date() const {
     return quantity.date();
+  }
+  optional<string>    tag() const {
+    return quantity.tag();
   }
 
   balance_t

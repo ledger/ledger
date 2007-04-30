@@ -219,6 +219,7 @@ target_alias = @target_alias@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = libgdtoa.la
+libgdtoa_la_LDFLAGS = -release 1.0
 libgdtoa_la_CPPFLAGS = -I$(top_builddir)
 libgdtoa_la_SOURCES = \
 	dmisc.c dtoa.c g_Qfmt.c g__fmt.c g_ddfmt.c g_dfmt.c g_ffmt.c \
@@ -229,11 +230,10 @@ libgdtoa_la_SOURCES = \
 	strtord.c strtordd.c strtorf.c strtorx.c strtorxL.c sum.c ulp.c
 
 EXTRA_libgdtoa_la_SOURCES = arithchk.c qnan.c
-libgdtoa_la_LDFLAGS = -release 1.0
-pkginclude_HEADERS = gdtoa.h gdtoaimp.h
-CLEANFILES = arithchk qnan
-DISTCLEANFILES = arithchk arith.h qnan gd_qnan.h
-all: acconf.h
+BUILT_SOURCES = arith.h gd_qnan.h
+CLEANFILES = arith.h gd_qnan.h arithchk qnan
+pkginclude_HEADERS = gdtoa.h gdtoaimp.h arith.h gd_qnan.h
+all: $(BUILT_SOURCES) acconf.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
 .SUFFIXES:
@@ -890,13 +890,15 @@ distcleancheck: distclean
 	       $(distcleancheck_listfiles) ; \
 	       exit 1; } >&2
 check-am: all-am
-check: check-am
+check: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) check-am
 all-am: Makefile $(LTLIBRARIES) $(HEADERS) acconf.h
 installdirs:
 	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgincludedir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
-install: install-am
+install: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) install-am
 install-exec: install-exec-am
 install-data: install-data-am
 uninstall: uninstall-am
@@ -917,11 +919,11 @@ clean-generic:
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
-	-test -z "$(DISTCLEANFILES)" || rm -f $(DISTCLEANFILES)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 clean: clean-am
 
 clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
@@ -1003,8 +1005,6 @@ uninstall-am: uninstall-libLTLIBRARIES uninstall-pkgincludeHEADERS
 	pdf pdf-am ps ps-am tags uninstall uninstall-am \
 	uninstall-libLTLIBRARIES uninstall-pkgincludeHEADERS
 
-
-$(libgdtoa_la_SOURCES): arith.h gd_qnan.h
 
 arith.h: arithchk.c
 	$(CC) $(CFLAGS) -o $(top_builddir)/arithchk $< || \

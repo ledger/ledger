@@ -1,5 +1,6 @@
 lib_LTLIBRARIES = libgdtoa.la
 
+libgdtoa_la_LDFLAGS = -release 1.0
 libgdtoa_la_CPPFLAGS = -I$(top_builddir)
 libgdtoa_la_SOURCES = \
 	dmisc.c dtoa.c g_Qfmt.c g__fmt.c g_ddfmt.c g_dfmt.c g_ffmt.c \
@@ -11,7 +12,8 @@ libgdtoa_la_SOURCES = \
 
 EXTRA_libgdtoa_la_SOURCES = arithchk.c qnan.c
 
-$(libgdtoa_la_SOURCES): arith.h gd_qnan.h
+BUILT_SOURCES = arith.h gd_qnan.h
+CLEANFILES = arith.h gd_qnan.h arithchk qnan
 
 arith.h: arithchk.c
 	$(CC) $(CFLAGS) -o $(top_builddir)/arithchk $< || \
@@ -24,9 +26,4 @@ gd_qnan.h: qnan.c arith.h
 	$(top_builddir)/qnan > $(top_builddir)/$@
 	rm -f $(top_builddir)/qnan
 
-libgdtoa_la_LDFLAGS = -release 1.0
-
-pkginclude_HEADERS = gdtoa.h gdtoaimp.h
-
-CLEANFILES = arithchk qnan
-DISTCLEANFILES = arithchk arith.h qnan gd_qnan.h
+pkginclude_HEADERS = gdtoa.h gdtoaimp.h arith.h gd_qnan.h

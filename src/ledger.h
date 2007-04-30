@@ -23,9 +23,6 @@
 #include <parser.h>
 #include <textual.h>
 #include <binary.h>
-#include <gnucash.h>
-#include <qif.h>
-#include <ofx.h>
 
 #include <report.h>
 #include <transform.h>

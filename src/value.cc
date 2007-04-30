@@ -1981,12 +1981,24 @@ value_t value_t::price() const
   case DATETIME:
     throw_(value_error, "Cannot find the price of a date/time");
 
-  case AMOUNT:
-    return ((amount_t *) data)->price();
-  case BALANCE:
-    return ((balance_t *) data)->price();
-  case BALANCE_PAIR:
-    return ((balance_pair_t *) data)->quantity.price();
+  case AMOUNT: {
+    optional<amount_t> temp = ((amount_t *) data)->price();
+    if (! temp)
+      return false;
+    return *temp;
+  }
+  case BALANCE: {
+    optional<balance_t> temp = ((balance_t *) data)->price();
+    if (! temp)
+      return false;
+    return *temp;
+  }
+  case BALANCE_PAIR: {
+    optional<balance_t> temp = ((balance_pair_t *) data)->price();
+    if (! temp)
+      return false;
+    return *temp;
+  }
 
   case STRING:
     throw_(value_error, "Cannot find the price of a string");
@@ -2018,12 +2030,73 @@ value_t value_t::date() const
   case DATETIME:
     return *this;
 
-  case AMOUNT:
-    return ((amount_t *) data)->date();
-  case BALANCE:
-    return ((balance_t *) data)->date();
-  case BALANCE_PAIR:
-    return ((balance_pair_t *) data)->quantity.date();
+  case AMOUNT: {
+    optional<moment_t> temp = ((amount_t *) data)->date();
+    if (! temp)
+      return false;
+    return *temp;
+  }
+  case BALANCE: {
+    optional<moment_t> temp = ((balance_t *) data)->date();
+    if (! temp)
+      return false;
+    return *temp;
+  }
+  case BALANCE_PAIR: {
+    optional<moment_t> temp = ((balance_pair_t *) data)->date();
+    if (! temp)
+      return false;
+    return *temp;
+  }
+
+  case STRING:
+    throw_(value_error, "Cannot find the date of a string");
+
+  case XML_NODE:
+    return (*(xml::node_t **) data)->to_value().date();
+
+  case POINTER:
+    throw_(value_error, "Cannot find the date of a pointer");
+  case SEQUENCE:
+    throw_(value_error, "Cannot find the date of a sequence");
+
+  default:
+    assert(0);
+    break;
+  }
+  assert(0);
+  return value_t();
+}
+
+value_t value_t::tag() const
+{
+  switch (type) {
+  case BOOLEAN:
+    throw_(value_error, "Cannot find the date of a boolean");
+  case INTEGER:
+    throw_(value_error, "Cannot find the date of an integer");
+
+  case DATETIME:
+    return *this;
+
+  case AMOUNT: {
+    optional<string> temp = ((amount_t *) data)->tag();
+    if (! temp)
+      return false;
+    return *temp;
+  }
+  case BALANCE: {
+    optional<string> temp = ((balance_t *) data)->tag();
+    if (! temp)
+      return false;
+    return *temp;
+  }
+  case BALANCE_PAIR: {
+    optional<string> temp = ((balance_pair_t *) data)->tag();
+    if (! temp)
+      return false;
+    return *temp;
+  }
 
   case STRING:
     throw_(value_error, "Cannot find the date of a string");

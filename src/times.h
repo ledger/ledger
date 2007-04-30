@@ -1,8 +1,6 @@
 #ifndef _TIMES_H
 #define _TIMES_H
 
-#include "utils.h"
-
 namespace ledger {
 
 #define SUPPORT_DATE_AND_TIME 1

@@ -39,30 +39,51 @@ balance_t balance_t::value(const moment_t& moment) const
   return temp;
 }
 
-balance_t balance_t::price() const
+optional<balance_t> balance_t::price() const
 {
-  balance_t temp;
-
-  for (amounts_map::const_iterator i = amounts.begin();
-       i != amounts.end();
-       i++)
-    temp += (*i).second.price();
-
-  return temp;
-}
-
-moment_t balance_t::date() const
-{
-  moment_t temp;
+  optional<balance_t> temp;
 
   for (amounts_map::const_iterator i = amounts.begin();
        i != amounts.end();
        i++) {
-    moment_t tdate = (*i).second.date();
-    if (! is_valid_moment(temp) && is_valid_moment(tdate))
-      temp = tdate;
-    else if (temp != tdate)
-      return moment_t();
+    optional<amount_t> i_price = (*i).second.price();
+    if (i_price) {
+      if (! temp)
+	temp = balance_t();
+      *temp += *i_price;
+    }
+  }
+  return temp;
+}
+
+optional<moment_t> balance_t::date() const
+{
+  optional<moment_t> temp;
+
+  for (amounts_map::const_iterator i = amounts.begin();
+       i != amounts.end();
+       i++) {
+    optional<moment_t> tdate = (*i).second.date();
+    if (! temp && tdate)
+      temp = *tdate;
+    else if (temp && tdate && temp != tdate)
+      return optional<moment_t>();
+  }
+  return temp;
+}
+
+optional<string> balance_t::tag() const
+{
+  optional<string> temp;
+
+  for (amounts_map::const_iterator i = amounts.begin();
+       i != amounts.end();
+       i++) {
+    optional<string> ttag = (*i).second.tag();
+    if (! temp && ttag)
+      temp = *ttag;
+    else if (temp && ttag && temp != ttag)
+      return optional<string>();
   }
   return temp;
 }

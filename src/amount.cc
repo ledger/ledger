@@ -59,11 +59,13 @@ bool amount_t::full_strings = false;
 class amount_t::bigint_t
 {
  public:
-  mpz_t		val;
-  unsigned char prec;
-  unsigned char flags;
-  unsigned int	ref;
-  unsigned int	index;
+  typedef uint8_t precision_t;
+
+  mpz_t		 val;
+  precision_t	 prec;
+  uint8_t	 flags;
+  uint_least16_t ref;
+  uint_fast32_t	 index;
 
   bigint_t() : prec(0), flags(0), ref(1), index(0) {
     TRACE_CTOR(bigint_t, "");
@@ -245,7 +247,7 @@ amount_t::amount_t(const unsigned long val)
 }
 
 namespace {
-  unsigned char convert_double(mpz_t dest, double val)
+  amount_t::bigint_t::precision_t convert_double(mpz_t dest, double val)
   {
 #ifndef HAVE_GDTOA
     // This code is far too imprecise to be worthwhile.
@@ -285,7 +287,7 @@ namespace {
     mpz_set_str(dest, buf, 10);
     free(buf);
 
-    return (unsigned char)exp;
+    return amount_t::bigint_t::precision_t(exp);
 #else
     int decpt, sign;
     char * buf = dtoa(val, 0, 0, &decpt, &sign, NULL);
@@ -830,7 +832,7 @@ void amount_t::print_quantity(std::ostream& out) const
   // outputting it.  NOTE: `rquotient' is used here as a temp variable!
 
   commodity_t&  comm(commodity());
-  unsigned char precision;
+  bigint_t::precision_t precision;
 
   if (! comm || quantity->flags & BIGINT_KEEP_PREC) {
     mpz_ui_pow_ui(divisor, 10, quantity->prec);
@@ -932,7 +934,7 @@ void amount_t::print(std::ostream& _out, bool omit_commodity,
   // outputting it.  NOTE: `rquotient' is used here as a temp variable!
 
   commodity_t&	comm(base.commodity());
-  unsigned char precision = 0;
+  bigint_t::precision_t precision = 0;
 
   if (quantity) {
     if (! comm || full_precision || base.quantity->flags & BIGINT_KEEP_PREC) {
@@ -1213,7 +1215,7 @@ bool parse_annotations(std::istream& in, amount_t& price,
   return has_date;
 }
 
-void amount_t::parse(std::istream& in, unsigned char flags)
+void amount_t::parse(std::istream& in, uint8_t flags)
 {
   // The possible syntax for an amount is:
   //
@@ -1425,10 +1427,10 @@ void amount_t::write(std::ostream& out) const
 
 
 #ifndef THREADSAFE
-static char *	    bigints;
-static char *	    bigints_next;
-static unsigned int bigints_index;
-static unsigned int bigints_count;
+static char *	     bigints;
+static char *	     bigints_next;
+static uint_fast32_t bigints_index;
+static uint_fast32_t bigints_count;
 #endif
 
 void amount_t::read_quantity(char *& data)
@@ -1452,14 +1454,14 @@ void amount_t::read_quantity(char *& data)
     if (negative)
       mpz_neg(MPZ(quantity), MPZ(quantity));
 
-    quantity->prec = *((unsigned char *) data);
-    data += sizeof(unsigned char);
-    quantity->flags = *((unsigned char *) data);
-    data += sizeof(unsigned char);
+    quantity->prec = *((bigint_t::precision_t *) data);
+    data += sizeof(bigint_t::precision_t);
+    quantity->flags = *((uint8_t *) data);
+    data += sizeof(uint8_t);
     quantity->flags |= BIGINT_BULK_ALLOC;
   } else {
-    unsigned int index = *((unsigned int *) data);
-    data += sizeof(unsigned int);
+    uint_fast32_t index = *((uint_fast32_t *) data);
+    data += sizeof(uint_fast32_t);
 
     quantity = (bigint_t *) (bigints + (index - 1) * sizeof(bigint_t));
     DEBUG("amounts.refs",
@@ -1533,7 +1535,7 @@ void amount_t::write_quantity(std::ostream& out) const
     out.write(&byte, sizeof(byte));
 
     out.write((char *)&quantity->prec, sizeof(quantity->prec));
-    unsigned char flags = quantity->flags & ~BIGINT_BULK_ALLOC;
+    uint8_t flags = quantity->flags & ~BIGINT_BULK_ALLOC;
     assert(sizeof(flags) == sizeof(quantity->flags));
     out.write((char *)&flags, sizeof(flags));
   } else {
@@ -1634,7 +1636,7 @@ amount_t amount_t::strip_annotations(const bool _keep_price,
   return t;
 }
 
-amount_t amount_t::price() const
+optional<amount_t> amount_t::price() const
 {
   if (commodity_ && commodity_->annotated) {
     amount_t t(((annotated_commodity_t *)commodity_)->price);
@@ -1643,10 +1645,10 @@ amount_t amount_t::price() const
 	   "Returning price of " << *this << " = " << t);
     return t;
   }
-  return *this;
+  return optional<amount_t>();
 }
 
-moment_t amount_t::date() const
+optional<moment_t> amount_t::date() const
 {
   if (commodity_ && commodity_->annotated) {
     DEBUG("amounts.commodities",
@@ -1654,7 +1656,18 @@ moment_t amount_t::date() const
 	   << ((annotated_commodity_t *)commodity_)->date);
     return ((annotated_commodity_t *)commodity_)->date;
   }
-  return moment_t();
+  return optional<moment_t>();
+}
+
+optional<string> amount_t::tag() const
+{
+  if (commodity_ && commodity_->annotated) {
+    DEBUG("amounts.commodities",
+	   "Returning tag of " << *this << " = "
+	   << ((annotated_commodity_t *)commodity_)->tag);
+    return ((annotated_commodity_t *)commodity_)->tag;
+  }
+  return optional<string>();
 }
 
 

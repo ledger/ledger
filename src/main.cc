@@ -3,9 +3,12 @@
 #else
 #include <ledger.h>
 #endif
-#include <option.h>
 
 #include "acconf.h"
+#include "option.h"
+#include "gnucash.h"
+#include "qif.h"
+#include "ofx.h"
 
 #ifdef HAVE_UNIX_PIPES
 #include <sys/types.h>

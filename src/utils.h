@@ -5,6 +5,26 @@
 
 /**********************************************************************
  *
+ * Default values
+ */
+
+#if defined(FULL_DEBUG)
+#define VERIFY_ON   1
+#define TRACING_ON  1
+#define DEBUG_ON    1
+#define TIMERS_ON   1
+#define FREE_MEMORY 1
+#elif defined(NO_DEBUG)
+#define NO_ASSERTS  1
+#define NO_LOGGING  1
+#else
+#define VERIFY_ON   1		// compiled in, use --verify to enable
+#define TRACING_ON  1		// use --trace X to enable
+#define TIMERS_ON   1
+#endif
+
+/**********************************************************************
+ *
  * Forward declarations
  */
 
@@ -31,26 +51,6 @@ namespace ledger {
 
 /**********************************************************************
  *
- * Default values
- */
-
-#if defined(FULL_DEBUG)
-#define VERIFY_ON   1
-#define TRACING_ON  1
-#define DEBUG_ON    1
-#define TIMERS_ON   1
-#define FREE_MEMORY 1
-#elif defined(NO_DEBUG)
-#define NO_ASSERTS  1
-#define NO_LOGGING  1
-#else
-#define VERIFY_ON   1		// compiled in, use --verify to enable
-#define TRACING_ON  1		// use --trace X to enable
-#define TIMERS_ON   1		// jww (2007-04-25): is this correct?
-#endif
-
-/**********************************************************************
- *
  * Assertions
  */
 
@@ -71,6 +71,10 @@ namespace ledger {
 #define assert(x)						\
   ((x) ? ((void)0) : debug_assert(#x, BOOST_CURRENT_FUNCTION,	\
 				  __FILE__, __LINE__))
+
+#else // ! ASSERTS_ON
+
+#define assert(x)
 
 #endif // ASSERTS_ON
 
@@ -428,6 +432,13 @@ inline void throw_unexpected_error(char c, char wanted) {
 }
 
 } // namespace ledger
+
+/**********************************************************************
+ *
+ * Date/time support classes
+ */
+
+#include "times.h"
 
 /**********************************************************************
  *
