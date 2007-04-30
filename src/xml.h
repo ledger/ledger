@@ -2,6 +2,7 @@
 #define _XML_H
 
 #include "value.h"
+#include "parser.h"
 
 namespace ledger {
 
@@ -217,28 +218,41 @@ private:
   const char * lookup_name(int id) const;
 
   void write(std::ostream& out) const;
+
+#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
+  class parser_t
+  {
+  public:
+    document_t *	document;
+    XML_Parser		parser;
+    string		have_error;
+    const char *	pending;
+    node_t::attrs_map * pending_attrs;
+    bool                handled_data;
+
+    std::list<parent_node_t *> node_stack;
+
+    parser_t() : document(NULL), pending(NULL), pending_attrs(NULL),
+		 handled_data(false) {}
+    virtual ~parser_t() {}
+
+    virtual bool         test(std::istream& in) const;
+    virtual document_t * parse(std::istream& in);
+  };
+#endif
 };
 
 #if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
 
-class parser_t
+class xml_parser_t : public parser_t
 {
  public:
-  document_t *	      document;
-  XML_Parser	      parser;
-  string	      have_error;
-  const char *	      pending;
-  node_t::attrs_map * pending_attrs;
-  bool                handled_data;
+  virtual bool test(std::istream& in) const;
 
-  std::list<parent_node_t *> node_stack;
-
-  parser_t() : document(NULL), pending(NULL), pending_attrs(NULL),
-	       handled_data(false) {}
-  virtual ~parser_t() {}
-
-  virtual bool         test(std::istream& in) const;
-  virtual document_t * parse(std::istream& in);
+  virtual unsigned int parse(std::istream&  in,
+			     journal_t *    journal,
+			     account_t *    master        = NULL,
+			     const string * original_file = NULL);
 };
 
 DECLARE_EXCEPTION(parse_exception);

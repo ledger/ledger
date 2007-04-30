@@ -1,9 +1,4 @@
 #include "option.h"
-#if 0
-#ifdef USE_BOOST_PYTHON
-#include "py_eval.h"
-#endif
-#endif
 
 #if 0
 #ifdef USE_BOOST_PYTHON

@@ -1,8 +1,9 @@
-#include "py_eval.h"
+#include "pyinterp.h"
 #include "amount.h"
 
 using namespace boost::python;
-using namespace ledger;
+
+namespace ledger {
 
 int py_amount_quantity(amount_t& amount)
 {
@@ -240,3 +241,5 @@ void export_amount()
 
   EXC_TRANSLATE(amount_exception);
 }
+
+} // namespace ledger

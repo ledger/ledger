@@ -23,7 +23,6 @@
 #include <parser.h>
 #include <textual.h>
 #include <binary.h>
-#include <xmlparse.h>
 #include <gnucash.h>
 #include <qif.h>
 #include <ofx.h>

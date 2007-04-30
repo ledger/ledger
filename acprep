@@ -96,6 +96,5 @@ if [ -d "$HOME/Products" ]; then
 fi
 
 "$HERE/configure" --srcdir="$HERE" \
-    EMACS="$HOME/bin/emacs" EMACSLOADPATH="$EMACSLOADPATH" \
     CPPFLAGS="$INCDIRS" CXXFLAGS="$CXXFLAGS $local_cxxflags" \
     LDFLAGS="$LIBDIRS" $SWITCHES "$@"

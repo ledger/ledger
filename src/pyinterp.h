@@ -3,6 +3,8 @@
 
 #include "xpath.h"
 
+#if defined(USE_BOOST_PYTHON)
+
 #include <boost/python.hpp>
 #include <boost/python/detail/api_placeholder.hpp>
 #include <boost/python/exception_translator.hpp>
@@ -15,9 +17,6 @@
 using namespace boost::python;
 
 namespace ledger {
-
-void initialize_for_python();
-void shutdown_for_python();
 
 class python_interpreter_t : public xml::xpath_t::scope_t
 {
@@ -78,5 +77,7 @@ class python_interpreter_t : public xml::xpath_t::scope_t
 };
 
 } // namespace ledger
+
+#endif // USE_BOOST_PYTHON
 
 #endif // _PY_EVAL_H

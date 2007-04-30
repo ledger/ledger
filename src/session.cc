@@ -1,7 +1,4 @@
 #include "session.h"
-#if defined(USE_BOOST_PYTHON)
-#include "py_eval.h"
-#endif
 
 namespace ledger {
 
@@ -209,9 +206,6 @@ void initialize()
 
 void shutdown()
 {
-#if defined(USE_BOOST_PYTHON)
-  shutdown_for_python();
-#endif
   xml::xpath_t::shutdown();
   amount_t::shutdown();
 

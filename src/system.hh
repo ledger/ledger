@@ -63,12 +63,6 @@ namespace std {
 
 #include <sys/stat.h>
 
-#ifdef HAVE_UNIX_PIPES
-#include <sys/types.h>
-#include <sys/wait.h>
-#include "fdstream.hpp"
-#endif
-
 #ifdef WIN32
 #include <io.h>
 #else
@@ -87,7 +81,7 @@ namespace std {
 
 #define HAVE_GDTOA 1
 #ifdef HAVE_GDTOA
-#include "gdtoa/gdtoa.h"
+#include <gdtoa/gdtoa.h>
 #endif
 
 extern "C" {

@@ -27,54 +27,52 @@ AM_LFLAGS = -o $(LEX_OUTPUT_ROOT).c
 #WARNFLAGS += -Wconversion -Wshorten-64-to-32 -Wsign-compare
 #WARNFLAGS += -Wmissing-field-initializers -pedantic-errors
 
-libledger_la_CPPFLAGS = -I$(top_builddir)/gdtoa
+libledger_la_CPPFLAGS = -I$(top_builddir)/gdtoa -I$(srcdir) -I$(srcdir)/src
 libledger_la_LDFLAGS  = -release 3.0
 
 libledger_la_SOURCES = \
-	utils.cc       \
-	times.cc       \
-	amount.cc      \
-	quotes.cc      \
-	balance.cc     \
-	value.cc       \
-	xml.cc         \
-	xpath.cc       \
-	mask.cc        \
-	format.cc      \
-		       \
-	session.cc     \
-	journal.cc     \
-	textual.cc     \
-	binary.cc      \
-	xmlparse.cc    \
-	qif.cc	       \
-		       \
-	report.cc      \
-	transform.cc   \
-		       \
-	register.cc    \
-	csv.cc         \
-	derive.cc      \
-	emacs.cc       \
-	reconcile.cc
+	src/session.cc	 \
+	src/journal.cc	 \
+	src/amount.cc    \
+	src/balance.cc   \
+	src/value.cc     \
+	src/binary.cc	 \
+	src/qif.cc	 \
+	src/textual.cc	 \
+	src/quotes.cc	 \
+	src/csv.cc	 \
+	src/derive.cc	 \
+	src/emacs.cc	 \
+	src/format.cc	 \
+	src/reconcile.cc \
+	src/register.cc	 \
+	src/report.cc	 \
+	src/transform.cc \
+	src/mask.cc	 \
+	src/times.cc	 \
+	src/utils.cc	 \
+	src/xml.cc	 \
+	src/xmlparse.cc	 \
+	src/xpath.cc
 
 if HAVE_EXPAT
 libledger_la_CPPFLAGS += -DHAVE_EXPAT=1
-libledger_la_SOURCES += gnucash.cc
+libledger_la_SOURCES += src/gnucash.cc
 endif
 if HAVE_XMLPARSE
 libledger_la_CPPFLAGS += -DHAVE_XMLPARSE=1
-libledger_la_SOURCES += gnucash.cc
+libledger_la_SOURCES += src/gnucash.cc
 endif
 if HAVE_LIBOFX
 libledger_la_CPPFLAGS += -DHAVE_LIBOFX=1
-libledger_la_SOURCES += ofx.cc
+libledger_la_SOURCES += src/ofx.cc
 endif
 if DEBUG
 libledger_la_CPPFLAGS += -DFULL_DEBUG
 endif
 if HAVE_BOOST_PYTHON
 libledger_la_CPPFLAGS += -DUSE_BOOST_PYTHON=1
+libledger_la_SOURCES += src/pyinterp.cc
 endif
 
 if USE_PCH
@@ -82,11 +80,11 @@ libledger_la_CXXFLAGS = $(WARNFLAGS)
 nodist_libledger_la_SOURCES = system.hh.gch
 
 BUILT_SOURCES += system.hh.gch
-CLEANFILES += system.hh.gch system.hh
+CLEANFILES += system.hh.gch
 
-$(top_builddir)/system.hh.gch: $(srcdir)/system.hh acconf.h $(srcdir)/fdstream.hpp
+$(top_builddir)/system.hh.gch: $(srcdir)/src/system.hh acconf.h
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(libledger_la_CPPFLAGS) \
-		-o $@ $(srcdir)/system.hh
+		-o $@ $(srcdir)/src/system.hh
 endif
 
 
@@ -94,46 +92,44 @@ libpyledger_la_CPPFLAGS = $(libledger_la_CPPFLAGS)
 libpyledger_la_LDFLAGS = -release 3.0
 
 libpyledger_la_SOURCES = \
-	py_eval.cc       \
-	py_amount.cc
+	src/py_amount.cc
 
 
 pkginclude_HEADERS = \
-	amount.h     \
-	times.h      \
-	balance.h    \
-	binary.h     \
-	context.h    \
-	csv.h	     \
-	derive.h     \
-	emacs.h	     \
-	error.h	     \
-	fdstream.hpp \
-	format.h     \
-	gnucash.h    \
-	journal.h    \
-	ledger.h     \
-	mask.h	     \
-	ofx.h	     \
-	option.h     \
-	parser.h     \
-	py_eval.h    \
-	pyfstream.h  \
-	pyledger.h   \
-	qif.h	     \
-	quotes.h     \
-	reconcile.h  \
-	register.h   \
-	report.h     \
-	session.h    \
-	system.hh    \
-	textual.h    \
-	transform.h  \
-	utils.h	     \
-	value.h	     \
-	xml.h        \
-	xmlparse.h   \
-	xpath.h
+	src/amount.h     \
+	src/balance.h    \
+	src/binary.h     \
+	src/context.h    \
+	src/csv.h	 \
+	src/derive.h     \
+	src/emacs.h	 \
+	src/error.h	 \
+	src/fdstream.hpp \
+	src/format.h     \
+	src/gnucash.h    \
+	src/journal.h    \
+	src/ledger.h     \
+	src/mask.h	 \
+	src/ofx.h	 \
+	src/option.h     \
+	src/parser.h     \
+	src/pyinterp.h   \
+	src/pyfstream.h  \
+	src/pyledger.h   \
+	src/qif.h	 \
+	src/quotes.h     \
+	src/reconcile.h  \
+	src/register.h   \
+	src/report.h     \
+	src/session.h    \
+	src/system.hh    \
+	src/textual.h    \
+	src/times.h      \
+	src/transform.h  \
+	src/utils.h	 \
+	src/value.h	 \
+	src/xml.h        \
+	src/xpath.h
 
 ######################################################################
 
@@ -141,19 +137,22 @@ bin_PROGRAMS = ledger
 
 ledger_CPPFLAGS = $(libledger_la_CPPFLAGS)
 ledger_CXXFLAGS = $(WARNFLAGS)
-ledger_SOURCES = option.cc main.cc
 ledger_LDADD = $(LIBOBJS) libledger.la gdtoa/libgdtoa.la $(LEXLIB)
 ledger_LDFLAGS = -static	# for the sake of command-line speed
+
+ledger_SOURCES = \
+	src/option.cc \
+	src/main.cc
 
 if HAVE_BOOST_PYTHON
 ledger_LDADD += libpyledger.la
 endif
 
-info_TEXINFOS = ledger.texi
+info_TEXINFOS = docs/ledger.texi
 
 ######################################################################
 
-dist_lisp_LISP = ledger.el timeclock.el
+dist_lisp_LISP = lisp/ledger.el lisp/timeclock.el
 
 ######################################################################
 
@@ -166,7 +165,7 @@ CLEANFILES += ledger.so
 clean-local:
 	rm -fr build
 
-ledger_so_SOURCES = pyledger.cc
+ledger_so_SOURCES = src/pyledger.cc
 ledger_so_DEPENDENCIES = libledger.la gdtoa/libgdtoa.la libpyledger.la
 
 PYLIBS = pyledger ledger gdtoa boost_date_time boost_regex boost_python gmp
@@ -181,7 +180,8 @@ if HAVE_LIBOFX
 PYLIBS += ofx
 endif
 
-ledger.so: pyledger.cc libledger.la gdtoa/libgdtoa.la libpyledger.la
+ledger.so: src/pyledger.cc \
+	   libledger.la gdtoa/libgdtoa.la libpyledger.la
 	SRCDIR="$(srcdir)" \
 	CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libledger_la_CPPFLAGS)" \
 	LDFLAGS="$(LDFLAGS) -L. -L.libs -Lgdtoa -Lgdtoa/.libs" \
@@ -208,30 +208,32 @@ check_PROGRAMS = $(TESTS)
 
 nodist_UnitTests_SOURCES = tests/UnitTests.cc \
 	\
-	tests/corelib/numerics/BasicAmount.cc \
-	tests/corelib/numerics/CommodityAmount.cc \
-	tests/corelib/numerics/DateTime.cc \
-	tests/corelib/numerics/Commodity.cc
+	tests/numerics/BasicAmount.cc \
+	tests/numerics/CommodityAmount.cc \
+	tests/numerics/DateTime.cc \
+	tests/numerics/Commodity.cc
 
 UnitTests_CPPFLAGS = -I$(srcdir)/tests $(libledger_la_CPPFLAGS)
 UnitTests_LDFLAGS  = $(LIBADD_DL)
 UnitTests_LDADD    = $(lib_LTLIBRARIES) gdtoa/libgdtoa.la -lcppunit
 
-PyUnitTests_SOURCES = PyUnitTests.py
+PyUnitTests_SOURCES = tests/python/PyUnitTests.py
 
-PyUnitTests: PyUnitTests.py
-	cat $(srcdir)/PyUnitTests.py | sed "s/%srcdir%/$(ESC_srcdir)/g" \
-	    | sed "s/%builddir%/$(ESC_builddir)/g" > PyUnitTests
-	chmod 755 PyUnitTests
+PyUnitTests: $(srcdir)/tests/python/PyUnitTests.py
+	cat $(srcdir)/tests/python/PyUnitTests.py \
+	    | sed "s/%srcdir%/$(ESC_srcdir)/g" \
+	    | sed "s/%builddir%/$(ESC_builddir)/g" > $@
+	chmod 755 $@
 
 ######################################################################
 
 DISTCLEANFILES = Doxyfile.gen
 
-alldocs: ledger.info ledger.pdf doxygen-docs
+alldocs: docs/ledger.info docs/ledger.pdf doxygen-docs
 
-$(top_builddir)/Doxyfile.gen: $(srcdir)/Doxyfile
-	cat $(srcdir)/Doxyfile | sed "s/%srcdir%/$(ESC_srcdir)/g" \
+$(top_builddir)/Doxyfile.gen: $(srcdir)/docs/Doxyfile
+	cat $(srcdir)/docs/Doxyfile \
+	    | sed "s/%srcdir%/$(ESC_srcdir)/g" \
 	    | sed "s/%builddir%/$(ESC_builddir)/g" > $@
 
 doxygen-docs: $(top_builddir)/Doxyfile.gen
@@ -253,4 +255,4 @@ all-clean: maintainer-clean
 	       autom4te config.guess config.sub configure depcomp install-sh \
 	       libtool ltconfig ltmain.sh missing stamp texinfo.tex	     \
 	       Makefile.in mkinstalldirs elisp-comp elc-stamp elc-temp	     \
-	       py-compile
+	       py-compile ylwrap compile

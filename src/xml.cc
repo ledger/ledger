@@ -250,7 +250,7 @@ void terminal_node_t::write(std::ostream& out, int depth) const
 #if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
 
 template <typename T>
-inline T * create_node(parser_t * parser)
+inline T * create_node(document_t::parser_t * parser)
 {
   T * node = new T(parser->document, parser->node_stack.empty() ?
 		   NULL : parser->node_stack.front());
@@ -266,7 +266,7 @@ inline T * create_node(parser_t * parser)
 
 static void startElement(void *userData, const char *name, const char **attrs)
 {
-  parser_t * parser = static_cast<parser_t *>(userData);
+  document_t::parser_t * parser = static_cast<document_t::parser_t *>(userData);
 
   DEBUG_("xml.parse", "startElement(" << name << ")");
 
@@ -293,7 +293,7 @@ static void startElement(void *userData, const char *name, const char **attrs)
 
 static void endElement(void *userData, const char *name)
 {
-  parser_t * parser = static_cast<parser_t *>(userData);
+  document_t::parser_t * parser = static_cast<document_t::parser_t *>(userData);
 
   DEBUG_("xml.parse", "endElement(" << name << ")");
 
@@ -315,7 +315,7 @@ static void endElement(void *userData, const char *name)
 
 static void dataHandler(void *userData, const char *s, int len)
 {
-  parser_t * parser = static_cast<parser_t *>(userData);
+  document_t::parser_t * parser = static_cast<document_t::parser_t *>(userData);
 
   DEBUG_("xml.parse", "dataHandler(" << string(s, len) << ")");
 
@@ -343,7 +343,7 @@ static void dataHandler(void *userData, const char *s, int len)
   }
 }
 
-bool parser_t::test(std::istream& in) const
+bool document_t::parser_t::test(std::istream& in) const
 {
   char buf[80];
 
@@ -359,7 +359,7 @@ bool parser_t::test(std::istream& in) const
   return true;
 }
 
-document_t * parser_t::parse(std::istream& in)
+document_t * document_t::parser_t::parse(std::istream& in)
 {
   std::auto_ptr<document_t> doc(new document_t);
 

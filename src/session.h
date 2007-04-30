@@ -124,8 +124,8 @@ class session_t : public xml::xpath_t::scope_t
 			    const string * original_file = NULL);
 
   unsigned int read_journal(const string&  path,
-			    journal_t *         journal,
-			    account_t *		master        = NULL,
+			    journal_t *    journal,
+			    account_t *	   master        = NULL,
 			    const string * original_file = NULL);
 
   void read_init();

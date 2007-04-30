@@ -2,7 +2,7 @@
 #include "mask.h"
 #if 0
 #ifdef USE_BOOST_PYTHON
-#include "py_eval.h"
+#include "pyinterp.h"
 #endif
 #endif
 

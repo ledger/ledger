@@ -3,7 +3,6 @@
 from distutils.core import setup, Extension
 
 import os
-import string
 
 defines = [('PYTHON_MODULE', 1)]
 libs    = os.environ["PYLIBS"].split()
@@ -15,5 +14,6 @@ setup(name         = "Ledger",
       author_email = "johnw@newartisans.com",
       url          = "http://johnwiegley.com/",
       ext_modules  = [
-	Extension("ledger", [os.path.join(os.environ['SRCDIR'], "pyledger.cc")],
+	Extension("ledger",
+                  [os.path.join(os.environ['SRCDIR'], "src", "pyledger.cc")],
 		  define_macros = defines, libraries = libs)])

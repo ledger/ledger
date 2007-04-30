@@ -1,9 +1,5 @@
 #include "format.h"
-#if 0
-#ifdef USE_BOOST_PYTHON
-#include "py_eval.h"
-#endif
-#endif
+#include "pyinterp.h"
 
 namespace ledger {
 

@@ -733,7 +733,7 @@ PACKAGE_STRING='ledger 3.0-git'
 PACKAGE_BUGREPORT='johnw@newartisans.com'
 
 ac_unique_file="ledger"
-ac_unique_file="main.cc"
+ac_unique_file="src/main.cc"
 # Factoring default headers for most tests.
 ac_includes_default="\
 #include <stdio.h>

@@ -1,5 +1,5 @@
-This is /Users/johnw/src/ledger/ledger.info, produced by makeinfo
-version 4.7 from /Users/johnw/src/ledger/ledger.texi.
+This is /Users/johnw/src/ledger/docs/ledger.info, produced by makeinfo
+version 4.7 from /Users/johnw/src/ledger/docs/ledger.texi.
 
 INFO-DIR-SECTION User Applications
    Copyright (c) 2003-2006, John Wiegley.  All rights reserved.
@@ -3599,42 +3599,42 @@ data as long as the `expat' library was available when Ledger was built.
 
 
 Tag Table:
-Node: Top1752
-Node: Introduction3430
-Ref: Introduction-Footnote-19370
-Node: Building the program9447
-Node: Getting help9994
-Node: Running Ledger10404
-Node: Usage overview11924
-Ref: Usage overview-Footnote-145394
-Ref: Usage overview-Footnote-245512
-Node: Commands45617
-Node: Options50846
-Node: Basic options51707
-Node: Report filtering53892
-Node: Output customization57772
-Node: Commodity reporting62677
-Node: Environment variables64775
-Node: Format strings65423
-Node: Value expressions70795
-Node: Period expressions77126
-Node: File format78714
-Node: Some typical queries83582
-Node: Budgeting and forecasting87304
-Node: Keeping a ledger90044
-Node: Stating where money goes92753
-Node: Assets and Liabilities95406
-Node: Commodities and Currencies103551
-Node: Accounts and Inventories109712
-Node: Understanding Equity111307
-Node: Dealing with Petty Cash113214
-Node: Working with multiple funds and accounts114311
-Node: Archiving previous years119027
-Node: Virtual transactions121551
-Node: Automated transactions123227
-Node: Using Emacs to Keep Your Ledger126247
-Node: Using GnuCash to Keep Your Ledger129318
-Node: Using timeclock to record billable time130227
-Node: Using XML132987
+Node: Top1762
+Node: Introduction3440
+Ref: Introduction-Footnote-19380
+Node: Building the program9457
+Node: Getting help10004
+Node: Running Ledger10414
+Node: Usage overview11934
+Ref: Usage overview-Footnote-145404
+Ref: Usage overview-Footnote-245522
+Node: Commands45627
+Node: Options50856
+Node: Basic options51717
+Node: Report filtering53902
+Node: Output customization57782
+Node: Commodity reporting62687
+Node: Environment variables64785
+Node: Format strings65433
+Node: Value expressions70805
+Node: Period expressions77136
+Node: File format78724
+Node: Some typical queries83592
+Node: Budgeting and forecasting87314
+Node: Keeping a ledger90054
+Node: Stating where money goes92763
+Node: Assets and Liabilities95416
+Node: Commodities and Currencies103561
+Node: Accounts and Inventories109722
+Node: Understanding Equity111317
+Node: Dealing with Petty Cash113224
+Node: Working with multiple funds and accounts114321
+Node: Archiving previous years119037
+Node: Virtual transactions121561
+Node: Automated transactions123237
+Node: Using Emacs to Keep Your Ledger126257
+Node: Using GnuCash to Keep Your Ledger129328
+Node: Using timeclock to record billable time130237
+Node: Using XML132997
 
 End Tag Table

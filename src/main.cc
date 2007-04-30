@@ -5,6 +5,14 @@
 #endif
 #include <option.h>
 
+#include "acconf.h"
+
+#ifdef HAVE_UNIX_PIPES
+#include <sys/types.h>
+#include <sys/wait.h>
+#include "fdstream.hpp"
+#endif
+
 using namespace ledger;
 
 #if 0
@@ -419,7 +427,7 @@ int main(int argc, char * argv[], char * envp[])
     session->register_parser(new binary_parser_t);
 #endif
 #if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
-    session->register_parser(new xml_parser_t);
+    session->register_parser(new xml::xml_parser_t);
     session->register_parser(new gnucash_parser_t);
 #endif
 #ifdef HAVE_LIBOFX

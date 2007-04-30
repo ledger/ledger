@@ -1,10 +1,5 @@
 #include "xpath.h"
 #include "parser.h"
-#if 0
-#ifdef USE_BOOST_PYTHON
-#include "py_eval.h"
-#endif
-#endif
 
 namespace ledger {
 namespace xml {
