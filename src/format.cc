@@ -1,5 +1,7 @@
 #include "format.h"
+#if 0
 #include "pyinterp.h"
+#endif
 
 namespace ledger {
 
@@ -85,7 +87,7 @@ void format_t::parse(const string& fmt)
 
     if (current->max_width != -1 && current->min_width != -1 &&
 	current->max_width < current->min_width)
-      throw_(format_exception, "Maximum width is less than the minimum width");
+      throw_(format_error, "Maximum width is less than the minimum width");
 
     switch (*p) {
     case '|':
@@ -107,7 +109,7 @@ void format_t::parse(const string& fmt)
 	p++;
       }
       if (*p != close)
-	throw_(format_exception, "Missing '" << close << "'");
+	throw_(format_error, "Missing '" << close << "'");
 
       if (open == '{') {
 	assert(! current->xpath);

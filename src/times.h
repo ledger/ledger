@@ -28,7 +28,7 @@ inline bool is_valid_moment(const moment_t& moment) {
 
 extern const moment_t& now;
 
-DECLARE_EXCEPTION(datetime_exception);
+DECLARE_EXCEPTION(datetime_error);
 
 class interval_t
 {

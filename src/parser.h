@@ -21,7 +21,7 @@ class parser_t
 			     const string * original_file = NULL) = 0;
 };
 
-DECLARE_EXCEPTION(parse_exception);
+DECLARE_EXCEPTION(parse_error);
 
 /************************************************************************
  *

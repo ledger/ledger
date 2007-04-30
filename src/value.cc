@@ -85,7 +85,7 @@ xml::node_t * value_t::to_xml_node() const
   if (type == XML_NODE)
     return *(xml::node_t **) data;
   else
-    throw_(value_exception, "Value is not an XML node");
+    throw_(value_error, "Value is not an XML node");
 }
 
 void * value_t::to_pointer() const
@@ -93,7 +93,7 @@ void * value_t::to_pointer() const
   if (type == POINTER)
     return *(void **) data;
   else
-    throw_(value_exception, "Value is not a pointer");
+    throw_(value_error, "Value is not a pointer");
 }
 
 value_t::sequence_t * value_t::to_sequence() const
@@ -101,7 +101,7 @@ value_t::sequence_t * value_t::to_sequence() const
   if (type == SEQUENCE)
     return *(sequence_t **) data;
   else
-    throw_(value_exception, "Value is not a sequence");
+    throw_(value_error, "Value is not a sequence");
 }
 
 void value_t::destroy()
@@ -249,19 +249,19 @@ value_t& value_t::operator=(const value_t& val)
 value_t& value_t::operator+=(const value_t& val)
 {
   if (val.type == BOOLEAN)
-    throw_(value_exception, "Cannot add a boolean to a value");
+    throw_(value_error, "Cannot add a boolean to a value");
   else if (val.type == DATETIME)
-    throw_(value_exception, "Cannot add a date/time to a value");
+    throw_(value_error, "Cannot add a date/time to a value");
   else if (val.type == POINTER)
-    throw_(value_exception, "Cannot add a pointer to a value");
+    throw_(value_error, "Cannot add a pointer to a value");
   else if (val.type == SEQUENCE)
-    throw_(value_exception, "Cannot add a sequence to a value");
+    throw_(value_error, "Cannot add a sequence to a value");
   else if (val.type == XML_NODE) // recurse
     return *this += (*(xml::node_t **) val.data)->to_value();
 
   switch (type) {
   case BOOLEAN:
-    throw_(value_exception, "Cannot add a value to a boolean");
+    throw_(value_error, "Cannot add a value to a boolean");
 
   case INTEGER:
     switch (val.type) {
@@ -281,7 +281,7 @@ value_t& value_t::operator+=(const value_t& val)
       *((balance_pair_t *) data) += *((balance_pair_t *) val.data);
       break;
     case STRING:
-      throw_(value_exception, "Cannot add a string to an integer");
+      throw_(value_error, "Cannot add a string to an integer");
     default:
       assert(0);
       break;
@@ -303,7 +303,7 @@ value_t& value_t::operator+=(const value_t& val)
       *((moment_t *) data) += date_duration(long(*((balance_pair_t *) val.data)));
       break;
     case STRING:
-      throw_(value_exception, "Cannot add a string to an date/time");
+      throw_(value_error, "Cannot add a string to an date/time");
     default:
       assert(0);
       break;
@@ -341,7 +341,7 @@ value_t& value_t::operator+=(const value_t& val)
       break;
 
     case STRING:
-      throw_(value_exception, "Cannot add a string to an amount");
+      throw_(value_error, "Cannot add a string to an amount");
 
     default:
       assert(0);
@@ -365,7 +365,7 @@ value_t& value_t::operator+=(const value_t& val)
       *((balance_pair_t *) data) += *((balance_pair_t *) val.data);
       break;
     case STRING:
-      throw_(value_exception, "Cannot add a string to an balance");
+      throw_(value_error, "Cannot add a string to an balance");
     default:
       assert(0);
       break;
@@ -387,7 +387,7 @@ value_t& value_t::operator+=(const value_t& val)
       *((balance_pair_t *) data) += *((balance_pair_t *) val.data);
       break;
     case STRING:
-      throw_(value_exception, "Cannot add a string to an balance pair");
+      throw_(value_error, "Cannot add a string to an balance pair");
     default:
       assert(0);
       break;
@@ -397,13 +397,13 @@ value_t& value_t::operator+=(const value_t& val)
   case STRING:
     switch (val.type) {
     case INTEGER:
-      throw_(value_exception, "Cannot add an integer to a string");
+      throw_(value_error, "Cannot add an integer to a string");
     case AMOUNT:
-      throw_(value_exception, "Cannot add an amount to a string");
+      throw_(value_error, "Cannot add an amount to a string");
     case BALANCE:
-      throw_(value_exception, "Cannot add a balance to a string");
+      throw_(value_error, "Cannot add a balance to a string");
     case BALANCE_PAIR:
-      throw_(value_exception, "Cannot add a balance pair to a string");
+      throw_(value_error, "Cannot add a balance pair to a string");
     case STRING:
       **(string **) data += **(string **) val.data;
       break;
@@ -414,13 +414,13 @@ value_t& value_t::operator+=(const value_t& val)
     break;
 
   case XML_NODE:
-    throw_(value_exception, "Cannot add a value to an XML node");
+    throw_(value_error, "Cannot add a value to an XML node");
 
   case POINTER:
-    throw_(value_exception, "Cannot add a value to a pointer");
+    throw_(value_error, "Cannot add a value to a pointer");
 
   case SEQUENCE:
-    throw_(value_exception, "Cannot add a value to a sequence");
+    throw_(value_error, "Cannot add a value to a sequence");
 
   default:
     assert(0);
@@ -432,21 +432,21 @@ value_t& value_t::operator+=(const value_t& val)
 value_t& value_t::operator-=(const value_t& val)
 {
   if (val.type == BOOLEAN)
-    throw_(value_exception, "Cannot subtract a boolean from a value");
+    throw_(value_error, "Cannot subtract a boolean from a value");
   else if (val.type == DATETIME && type != DATETIME)
-    throw_(value_exception, "Cannot subtract a date/time from a value");
+    throw_(value_error, "Cannot subtract a date/time from a value");
   else if (val.type == STRING)
-    throw_(value_exception, "Cannot subtract a string from a value");
+    throw_(value_error, "Cannot subtract a string from a value");
   else if (val.type == POINTER)
-    throw_(value_exception, "Cannot subtract a pointer from a value");
+    throw_(value_error, "Cannot subtract a pointer from a value");
   else if (val.type == SEQUENCE)
-    throw_(value_exception, "Cannot subtract a sequence from a value");
+    throw_(value_error, "Cannot subtract a sequence from a value");
   else if (val.type == XML_NODE) // recurse
     return *this -= (*(xml::node_t **) val.data)->to_value();
 
   switch (type) {
   case BOOLEAN:
-    throw_(value_exception, "Cannot subtract a value from a boolean");
+    throw_(value_error, "Cannot subtract a value from a boolean");
 
   case INTEGER:
     switch (val.type) {
@@ -575,13 +575,13 @@ value_t& value_t::operator-=(const value_t& val)
     break;
 
   case STRING:
-    throw_(value_exception, "Cannot subtract a value from a string");
+    throw_(value_error, "Cannot subtract a value from a string");
   case XML_NODE:
-    throw_(value_exception, "Cannot subtract a value from an XML node");
+    throw_(value_error, "Cannot subtract a value from an XML node");
   case POINTER:
-    throw_(value_exception, "Cannot subtract a value from a pointer");
+    throw_(value_error, "Cannot subtract a value from a pointer");
   case SEQUENCE:
-    throw_(value_exception, "Cannot subtract a value from a sequence");
+    throw_(value_error, "Cannot subtract a value from a sequence");
 
   default:
     assert(0);
@@ -596,15 +596,15 @@ value_t& value_t::operator-=(const value_t& val)
 value_t& value_t::operator*=(const value_t& val)
 {
   if (val.type == BOOLEAN)
-    throw_(value_exception, "Cannot multiply a value by a boolean");
+    throw_(value_error, "Cannot multiply a value by a boolean");
   else if (val.type == DATETIME)
-    throw_(value_exception, "Cannot multiply a value by a date/time");
+    throw_(value_error, "Cannot multiply a value by a date/time");
   else if (val.type == STRING)
-    throw_(value_exception, "Cannot multiply a value by a string");
+    throw_(value_error, "Cannot multiply a value by a string");
   else if (val.type == POINTER)
-    throw_(value_exception, "Cannot multiply a value by a pointer");
+    throw_(value_error, "Cannot multiply a value by a pointer");
   else if (val.type == SEQUENCE)
-    throw_(value_exception, "Cannot multiply a value by a sequence");
+    throw_(value_error, "Cannot multiply a value by a sequence");
   else if (val.type == XML_NODE) // recurse
     return *this *= (*(xml::node_t **) val.data)->to_value();
 
@@ -615,7 +615,7 @@ value_t& value_t::operator*=(const value_t& val)
 
   switch (type) {
   case BOOLEAN:
-    throw_(value_exception, "Cannot multiply a value by a boolean");
+    throw_(value_error, "Cannot multiply a value by a boolean");
 
   case INTEGER:
     switch (val.type) {
@@ -722,9 +722,9 @@ value_t& value_t::operator*=(const value_t& val)
       break;
     }
     case BALANCE:
-      throw_(value_exception, "Cannot multiply a string by a balance");
+      throw_(value_error, "Cannot multiply a string by a balance");
     case BALANCE_PAIR:
-      throw_(value_exception, "Cannot multiply a string by a balance pair");
+      throw_(value_error, "Cannot multiply a string by a balance pair");
     default:
       assert(0);
       break;
@@ -732,11 +732,11 @@ value_t& value_t::operator*=(const value_t& val)
     break;
 
   case XML_NODE:
-    throw_(value_exception, "Cannot multiply an XML node by a value");
+    throw_(value_error, "Cannot multiply an XML node by a value");
   case POINTER:
-    throw_(value_exception, "Cannot multiply a pointer by a value");
+    throw_(value_error, "Cannot multiply a pointer by a value");
   case SEQUENCE:
-    throw_(value_exception, "Cannot multiply a sequence by a value");
+    throw_(value_error, "Cannot multiply a sequence by a value");
 
   default:
     assert(0);
@@ -748,21 +748,21 @@ value_t& value_t::operator*=(const value_t& val)
 value_t& value_t::operator/=(const value_t& val)
 {
   if (val.type == BOOLEAN)
-    throw_(value_exception, "Cannot divide a boolean by a value");
+    throw_(value_error, "Cannot divide a boolean by a value");
   else if (val.type == DATETIME)
-    throw_(value_exception, "Cannot divide a date/time by a value");
+    throw_(value_error, "Cannot divide a date/time by a value");
   else if (val.type == STRING)
-    throw_(value_exception, "Cannot divide a string by a value");
+    throw_(value_error, "Cannot divide a string by a value");
   else if (val.type == POINTER)
-    throw_(value_exception, "Cannot divide a pointer by a value");
+    throw_(value_error, "Cannot divide a pointer by a value");
   else if (val.type == SEQUENCE)
-    throw_(value_exception, "Cannot divide a value by a sequence");
+    throw_(value_error, "Cannot divide a value by a sequence");
   else if (val.type == XML_NODE) // recurse
     return *this /= (*(xml::node_t **) val.data)->to_value();
 
   switch (type) {
   case BOOLEAN:
-    throw_(value_exception, "Cannot divide a value by a boolean");
+    throw_(value_error, "Cannot divide a value by a boolean");
 
   case INTEGER:
     switch (val.type) {
@@ -851,13 +851,13 @@ value_t& value_t::operator/=(const value_t& val)
     break;
 
   case STRING:
-    throw_(value_exception, "Cannot divide a value from a string");
+    throw_(value_error, "Cannot divide a value from a string");
   case XML_NODE:
-    throw_(value_exception, "Cannot divide a value from an XML node");
+    throw_(value_error, "Cannot divide a value from an XML node");
   case POINTER:
-    throw_(value_exception, "Cannot divide a value from a pointer");
+    throw_(value_error, "Cannot divide a value from a pointer");
   case SEQUENCE:
-    throw_(value_exception, "Cannot divide a value from a sequence");
+    throw_(value_error, "Cannot divide a value from a sequence");
 
   default:
     assert(0);
@@ -905,25 +905,25 @@ value_t::operator long() const
 {
   switch (type) {
   case BOOLEAN:
-    throw_(value_exception, "Cannot convert a boolean to an integer");
+    throw_(value_error, "Cannot convert a boolean to an integer");
   case INTEGER:
     return *((long *) data);
   case DATETIME:
-    throw_(value_exception, "Cannot convert a date/time to an integer");
+    throw_(value_error, "Cannot convert a date/time to an integer");
   case AMOUNT:
     return *((amount_t *) data);
   case BALANCE:
-    throw_(value_exception, "Cannot convert a balance to an integer");
+    throw_(value_error, "Cannot convert a balance to an integer");
   case BALANCE_PAIR:
-    throw_(value_exception, "Cannot convert a balance pair to an integer");
+    throw_(value_error, "Cannot convert a balance pair to an integer");
   case STRING:
-    throw_(value_exception, "Cannot convert a string to an integer");
+    throw_(value_error, "Cannot convert a string to an integer");
   case XML_NODE:
     return (*(xml::node_t **) data)->to_value().to_integer();
   case POINTER:
-    throw_(value_exception, "Cannot convert a pointer to an integer");
+    throw_(value_error, "Cannot convert a pointer to an integer");
   case SEQUENCE:
-    throw_(value_exception, "Cannot convert a sequence to an integer");
+    throw_(value_error, "Cannot convert a sequence to an integer");
 
   default:
     assert(0);
@@ -938,25 +938,25 @@ value_t::operator moment_t() const
 {
   switch (type) {
   case BOOLEAN:
-    throw_(value_exception, "Cannot convert a boolean to a date/time");
+    throw_(value_error, "Cannot convert a boolean to a date/time");
   case INTEGER:
-    throw_(value_exception, "Cannot convert an integer to a date/time");
+    throw_(value_error, "Cannot convert an integer to a date/time");
   case DATETIME:
     return *((moment_t *) data);
   case AMOUNT:
-    throw_(value_exception, "Cannot convert an amount to a date/time");
+    throw_(value_error, "Cannot convert an amount to a date/time");
   case BALANCE:
-    throw_(value_exception, "Cannot convert a balance to a date/time");
+    throw_(value_error, "Cannot convert a balance to a date/time");
   case BALANCE_PAIR:
-    throw_(value_exception, "Cannot convert a balance pair to a date/time");
+    throw_(value_error, "Cannot convert a balance pair to a date/time");
   case STRING:
-    throw_(value_exception, "Cannot convert a string to a date/time");
+    throw_(value_error, "Cannot convert a string to a date/time");
   case XML_NODE:
     return (*(xml::node_t **) data)->to_value().to_datetime();
   case POINTER:
-    throw_(value_exception, "Cannot convert a pointer to a date/time");
+    throw_(value_error, "Cannot convert a pointer to a date/time");
   case SEQUENCE:
-    throw_(value_exception, "Cannot convert a sequence to a date/time");
+    throw_(value_error, "Cannot convert a sequence to a date/time");
 
   default:
     assert(0);
@@ -971,25 +971,25 @@ value_t::operator double() const
 {
   switch (type) {
   case BOOLEAN:
-    throw_(value_exception, "Cannot convert a boolean to a double");
+    throw_(value_error, "Cannot convert a boolean to a double");
   case INTEGER:
     return *((long *) data);
   case DATETIME:
-    throw_(value_exception, "Cannot convert a date/time to a double");
+    throw_(value_error, "Cannot convert a date/time to a double");
   case AMOUNT:
     return *((amount_t *) data);
   case BALANCE:
-    throw_(value_exception, "Cannot convert a balance to a double");
+    throw_(value_error, "Cannot convert a balance to a double");
   case BALANCE_PAIR:
-    throw_(value_exception, "Cannot convert a balance pair to a double");
+    throw_(value_error, "Cannot convert a balance pair to a double");
   case STRING:
-    throw_(value_exception, "Cannot convert a string to a double");
+    throw_(value_error, "Cannot convert a string to a double");
   case XML_NODE:
     return (*(xml::node_t **) data)->to_value().to_amount().number();
   case POINTER:
-    throw_(value_exception, "Cannot convert a pointer to a double");
+    throw_(value_error, "Cannot convert a pointer to a double");
   case SEQUENCE:
-    throw_(value_exception, "Cannot convert a sequence to a double");
+    throw_(value_error, "Cannot convert a sequence to a double");
 
   default:
     assert(0);
@@ -1019,9 +1019,9 @@ value_t::operator string() const
     return (*(xml::node_t **) data)->to_value().to_string();
 
   case POINTER:
-    throw_(value_exception, "Cannot convert a pointer to a string");
+    throw_(value_error, "Cannot convert a pointer to a string");
   case SEQUENCE:
-    throw_(value_exception, "Cannot convert a sequence to a string");
+    throw_(value_error, "Cannot convert a sequence to a string");
 
   default:
     assert(0);
@@ -1044,7 +1044,7 @@ bool value_t::operator OP(const value_t& val)				\
       return *((bool *) data) OP bool(*((long *) val.data));		\
 									\
     case DATETIME:							\
-      throw_(value_exception, "Cannot compare a boolean to a date/time");	\
+      throw_(value_error, "Cannot compare a boolean to a date/time");	\
 									\
     case AMOUNT:							\
       return *((bool *) data) OP bool(*((amount_t *) val.data));	\
@@ -1056,15 +1056,15 @@ bool value_t::operator OP(const value_t& val)				\
       return *((bool *) data) OP bool(*((balance_pair_t *) val.data));	\
 									\
     case STRING:							\
-      throw_(value_exception, "Cannot compare a boolean to a string");	\
+      throw_(value_error, "Cannot compare a boolean to a string");	\
 									\
     case XML_NODE:							\
       return *this OP (*(xml::node_t **) data)->to_value();		\
 									\
     case POINTER:							\
-      throw_(value_exception, "Cannot compare a boolean to a pointer");	\
+      throw_(value_error, "Cannot compare a boolean to a pointer");	\
     case SEQUENCE:							\
-      throw_(value_exception, "Cannot compare a boolean to a sequence");	\
+      throw_(value_error, "Cannot compare a boolean to a sequence");	\
 									\
     default:								\
       assert(0);							\
@@ -1082,7 +1082,7 @@ bool value_t::operator OP(const value_t& val)				\
       return (*((long *) data) OP *((long *) val.data));		\
 									\
     case DATETIME:							\
-      throw_(value_exception, "Cannot compare an integer to a date/time"); \
+      throw_(value_error, "Cannot compare an integer to a date/time"); \
 									\
     case AMOUNT:							\
       return (amount_t(*((long *) data)) OP				\
@@ -1097,15 +1097,15 @@ bool value_t::operator OP(const value_t& val)				\
 	      *((balance_pair_t *) val.data));				\
 									\
     case STRING:							\
-      throw_(value_exception, "Cannot compare an integer to a string");	\
+      throw_(value_error, "Cannot compare an integer to a string");	\
 									\
     case XML_NODE:							\
       return *this OP (*(xml::node_t **) data)->to_value();		\
 									\
     case POINTER:							\
-      throw_(value_exception, "Cannot compare an integer to a pointer");	\
+      throw_(value_error, "Cannot compare an integer to a pointer");	\
     case SEQUENCE:							\
-      throw_(value_exception, "Cannot compare an integer to a sequence");	\
+      throw_(value_error, "Cannot compare an integer to a sequence");	\
 									\
     default:								\
       assert(0);							\
@@ -1116,30 +1116,30 @@ bool value_t::operator OP(const value_t& val)				\
   case DATETIME:							\
     switch (val.type) {							\
     case BOOLEAN:							\
-      throw_(value_exception, "Cannot compare a date/time to a boolean");	\
+      throw_(value_error, "Cannot compare a date/time to a boolean");	\
 									\
     case INTEGER:							\
-      throw_(value_exception, "Cannot compare a date/time to an integer"); \
+      throw_(value_error, "Cannot compare a date/time to an integer"); \
 									\
     case DATETIME:							\
       return *((moment_t *) data) OP *((moment_t *) val.data);		\
 									\
     case AMOUNT:							\
-      throw_(value_exception, "Cannot compare a date/time to an amount");	\
+      throw_(value_error, "Cannot compare a date/time to an amount");	\
     case BALANCE:							\
-      throw_(value_exception, "Cannot compare a date/time to a balance");	\
+      throw_(value_error, "Cannot compare a date/time to a balance");	\
     case BALANCE_PAIR:							\
-      throw_(value_exception, "Cannot compare a date/time to a balance pair"); \
+      throw_(value_error, "Cannot compare a date/time to a balance pair"); \
     case STRING:							\
-      throw_(value_exception, "Cannot compare a date/time to a string");	\
+      throw_(value_error, "Cannot compare a date/time to a string");	\
 									\
     case XML_NODE:							\
       return *this OP (*(xml::node_t **) data)->to_value();		\
 									\
     case POINTER:							\
-      throw_(value_exception, "Cannot compare a date/time to a pointer");	\
+      throw_(value_error, "Cannot compare a date/time to a pointer");	\
     case SEQUENCE:							\
-      throw_(value_exception, "Cannot compare a date/time to a sequence"); \
+      throw_(value_error, "Cannot compare a date/time to a sequence"); \
 									\
     default:								\
       assert(0);							\
@@ -1150,14 +1150,14 @@ bool value_t::operator OP(const value_t& val)				\
   case AMOUNT:								\
     switch (val.type) {							\
     case BOOLEAN:							\
-      throw_(value_exception, "Cannot compare an amount to a boolean");	\
+      throw_(value_error, "Cannot compare an amount to a boolean");	\
 									\
     case INTEGER:							\
       return (*((amount_t *) data) OP					\
 	      amount_t(*((long *) val.data)));				\
 									\
     case DATETIME:							\
-      throw_(value_exception, "Cannot compare an amount to a date/time");	\
+      throw_(value_error, "Cannot compare an amount to a date/time");	\
 									\
     case AMOUNT:							\
       return *((amount_t *) data) OP *((amount_t *) val.data);		\
@@ -1171,15 +1171,15 @@ bool value_t::operator OP(const value_t& val)				\
 	      *((balance_pair_t *) val.data));				\
 									\
     case STRING:							\
-      throw_(value_exception, "Cannot compare an amount to a string");	\
+      throw_(value_error, "Cannot compare an amount to a string");	\
 									\
     case XML_NODE:							\
       return *this OP (*(xml::node_t **) data)->to_value();		\
 									\
     case POINTER:							\
-      throw_(value_exception, "Cannot compare an amount to a pointer");	\
+      throw_(value_error, "Cannot compare an amount to a pointer");	\
     case SEQUENCE:							\
-      throw_(value_exception, "Cannot compare an amount to a sequence");	\
+      throw_(value_error, "Cannot compare an amount to a sequence");	\
 									\
     default:								\
       assert(0);							\
@@ -1190,13 +1190,13 @@ bool value_t::operator OP(const value_t& val)				\
   case BALANCE:								\
     switch (val.type) {							\
     case BOOLEAN:							\
-      throw_(value_exception, "Cannot compare a balance to a boolean");	\
+      throw_(value_error, "Cannot compare a balance to a boolean");	\
 									\
     case INTEGER:							\
       return *((balance_t *) data) OP *((long *) val.data);		\
 									\
     case DATETIME:							\
-      throw_(value_exception, "Cannot compare a balance to a date/time");	\
+      throw_(value_error, "Cannot compare a balance to a date/time");	\
 									\
     case AMOUNT:							\
       return *((balance_t *) data) OP *((amount_t *) val.data);		\
@@ -1209,15 +1209,15 @@ bool value_t::operator OP(const value_t& val)				\
 	      ((balance_pair_t *) val.data)->quantity);			\
 									\
     case STRING:							\
-      throw_(value_exception, "Cannot compare a balance to a string");	\
+      throw_(value_error, "Cannot compare a balance to a string");	\
 									\
     case XML_NODE:							\
       return *this OP (*(xml::node_t **) data)->to_value();		\
 									\
     case POINTER:							\
-      throw_(value_exception, "Cannot compare a balance to a pointer");	\
+      throw_(value_error, "Cannot compare a balance to a pointer");	\
     case SEQUENCE:							\
-      throw_(value_exception, "Cannot compare a balance to a sequence");	\
+      throw_(value_error, "Cannot compare a balance to a sequence");	\
 									\
     default:								\
       assert(0);							\
@@ -1228,14 +1228,14 @@ bool value_t::operator OP(const value_t& val)				\
   case BALANCE_PAIR:							\
     switch (val.type) {							\
     case BOOLEAN:							\
-      throw_(value_exception, "Cannot compare a balance pair to a boolean"); \
+      throw_(value_error, "Cannot compare a balance pair to a boolean"); \
 									\
     case INTEGER:							\
       return (((balance_pair_t *) data)->quantity OP			\
 	      *((long *) val.data));					\
 									\
     case DATETIME:							\
-      throw_(value_exception, "Cannot compare a balance pair to a date/time"); \
+      throw_(value_error, "Cannot compare a balance pair to a date/time"); \
 									\
     case AMOUNT:							\
       return (((balance_pair_t *) data)->quantity OP			\
@@ -1250,15 +1250,15 @@ bool value_t::operator OP(const value_t& val)				\
 	      *((balance_pair_t *) val.data));				\
 									\
     case STRING:							\
-      throw_(value_exception, "Cannot compare a balance pair to a string"); \
+      throw_(value_error, "Cannot compare a balance pair to a string"); \
 									\
     case XML_NODE:							\
       return *this OP (*(xml::node_t **) data)->to_value();		\
 									\
     case POINTER:							\
-      throw_(value_exception, "Cannot compare a balance pair to a pointer"); \
+      throw_(value_error, "Cannot compare a balance pair to a pointer"); \
     case SEQUENCE:							\
-      throw_(value_exception, "Cannot compare a balance pair to a sequence"); \
+      throw_(value_error, "Cannot compare a balance pair to a sequence"); \
 									\
     default:								\
       assert(0);							\
@@ -1269,17 +1269,17 @@ bool value_t::operator OP(const value_t& val)				\
   case STRING:								\
     switch (val.type) {							\
     case BOOLEAN:							\
-      throw_(value_exception, "Cannot compare a string to a boolean");	\
+      throw_(value_error, "Cannot compare a string to a boolean");	\
     case INTEGER:							\
-      throw_(value_exception, "Cannot compare a string to an integer");	\
+      throw_(value_error, "Cannot compare a string to an integer");	\
     case DATETIME:							\
-      throw_(value_exception, "Cannot compare a string to a date/time");	\
+      throw_(value_error, "Cannot compare a string to a date/time");	\
     case AMOUNT:							\
-      throw_(value_exception, "Cannot compare a string to an amount");	\
+      throw_(value_error, "Cannot compare a string to an amount");	\
     case BALANCE:							\
-      throw_(value_exception, "Cannot compare a string to a balance");	\
+      throw_(value_error, "Cannot compare a string to a balance");	\
     case BALANCE_PAIR:							\
-      throw_(value_exception, "Cannot compare a string to a balance pair"); \
+      throw_(value_error, "Cannot compare a string to a balance pair"); \
 									\
     case STRING:							\
       return (**((string **) data) OP				\
@@ -1289,9 +1289,9 @@ bool value_t::operator OP(const value_t& val)				\
       return *this OP (*(xml::node_t **) data)->to_value();		\
 									\
     case POINTER:							\
-      throw_(value_exception, "Cannot compare a string to a pointer");	\
+      throw_(value_error, "Cannot compare a string to a pointer");	\
     case SEQUENCE:							\
-      throw_(value_exception, "Cannot compare a string to a sequence");	\
+      throw_(value_error, "Cannot compare a string to a sequence");	\
 									\
     default:								\
       assert(0);							\
@@ -1321,9 +1321,9 @@ bool value_t::operator OP(const value_t& val)				\
 	      (*(xml::node_t **) val.data)->to_value());		\
 									\
     case POINTER:							\
-      throw_(value_exception, "Cannot compare an XML node to a pointer");	\
+      throw_(value_error, "Cannot compare an XML node to a pointer");	\
     case SEQUENCE:							\
-      throw_(value_exception, "Cannot compare an XML node to a sequence"); \
+      throw_(value_error, "Cannot compare an XML node to a sequence"); \
 									\
     default:								\
       assert(0);							\
@@ -1334,25 +1334,25 @@ bool value_t::operator OP(const value_t& val)				\
   case POINTER:								\
     switch (val.type) {							\
     case BOOLEAN:							\
-      throw_(value_exception, "Cannot compare a pointer to a boolean");	\
+      throw_(value_error, "Cannot compare a pointer to a boolean");	\
     case INTEGER:							\
-      throw_(value_exception, "Cannot compare a pointer to an integer");	\
+      throw_(value_error, "Cannot compare a pointer to an integer");	\
     case DATETIME:							\
-      throw_(value_exception, "Cannot compare a pointer to a date/time");	\
+      throw_(value_error, "Cannot compare a pointer to a date/time");	\
     case AMOUNT:							\
-      throw_(value_exception, "Cannot compare a pointer to an amount");	\
+      throw_(value_error, "Cannot compare a pointer to an amount");	\
     case BALANCE:							\
-      throw_(value_exception, "Cannot compare a pointer to a balance");	\
+      throw_(value_error, "Cannot compare a pointer to a balance");	\
     case BALANCE_PAIR:							\
-      throw_(value_exception, "Cannot compare a pointer to a balance pair"); \
+      throw_(value_error, "Cannot compare a pointer to a balance pair"); \
     case STRING:							\
-      throw_(value_exception, "Cannot compare a pointer to a string node"); \
+      throw_(value_error, "Cannot compare a pointer to a string node"); \
     case XML_NODE:							\
-      throw_(value_exception, "Cannot compare a pointer to an XML node");	\
+      throw_(value_error, "Cannot compare a pointer to an XML node");	\
     case POINTER:							\
       return (*((void **) data) OP *((void **) val.data));		\
     case SEQUENCE:							\
-      throw_(value_exception, "Cannot compare a pointer to a sequence");	\
+      throw_(value_error, "Cannot compare a pointer to a sequence");	\
 									\
     default:								\
       assert(0);							\
@@ -1361,7 +1361,7 @@ bool value_t::operator OP(const value_t& val)				\
     break;								\
 									\
   case SEQUENCE:							\
-    throw_(value_exception, "Cannot compare a value to a sequence");	\
+    throw_(value_error, "Cannot compare a value to a sequence");	\
 									\
   default:								\
     assert(0);								\
@@ -1384,24 +1384,24 @@ void value_t::in_place_cast(type_t cast_type)
     case BOOLEAN:
       break;
     case INTEGER:
-      throw_(value_exception, "Cannot convert a boolean to an integer");
+      throw_(value_error, "Cannot convert a boolean to an integer");
     case DATETIME:
-      throw_(value_exception, "Cannot convert a boolean to a date/time");
+      throw_(value_error, "Cannot convert a boolean to a date/time");
     case AMOUNT:
-      throw_(value_exception, "Cannot convert a boolean to an amount");
+      throw_(value_error, "Cannot convert a boolean to an amount");
     case BALANCE:
-      throw_(value_exception, "Cannot convert a boolean to a balance");
+      throw_(value_error, "Cannot convert a boolean to a balance");
     case BALANCE_PAIR:
-      throw_(value_exception, "Cannot convert a boolean to a balance pair");
+      throw_(value_error, "Cannot convert a boolean to a balance pair");
     case STRING:
       *(string **) data = new string(*((bool *) data) ? "true" : "false");
       break;
     case XML_NODE:
-      throw_(value_exception, "Cannot convert a boolean to an XML node");
+      throw_(value_error, "Cannot convert a boolean to an XML node");
     case POINTER:
-      throw_(value_exception, "Cannot convert a boolean to a pointer");
+      throw_(value_error, "Cannot convert a boolean to a pointer");
     case SEQUENCE:
-      throw_(value_exception, "Cannot convert a boolean to a sequence");
+      throw_(value_error, "Cannot convert a boolean to a sequence");
 
     default:
       assert(0);
@@ -1417,7 +1417,7 @@ void value_t::in_place_cast(type_t cast_type)
     case INTEGER:
       break;
     case DATETIME:
-      throw_(value_exception, "Cannot convert an integer to a date/time");
+      throw_(value_error, "Cannot convert an integer to a date/time");
 
     case AMOUNT:
       new((amount_t *)data) amount_t(*((long *) data));
@@ -1435,11 +1435,11 @@ void value_t::in_place_cast(type_t cast_type)
       break;
     }
     case XML_NODE:
-      throw_(value_exception, "Cannot convert an integer to an XML node");
+      throw_(value_error, "Cannot convert an integer to an XML node");
     case POINTER:
-      throw_(value_exception, "Cannot convert an integer to a pointer");
+      throw_(value_error, "Cannot convert an integer to a pointer");
     case SEQUENCE:
-      throw_(value_exception, "Cannot convert an integer to a sequence");
+      throw_(value_error, "Cannot convert an integer to a sequence");
 
     default:
       assert(0);
@@ -1453,23 +1453,23 @@ void value_t::in_place_cast(type_t cast_type)
       *((bool *) data) = is_valid_moment(*((moment_t *) data));
       break;
     case INTEGER:
-      throw_(value_exception, "Cannot convert a date/time to an integer");
+      throw_(value_error, "Cannot convert a date/time to an integer");
     case DATETIME:
       break;
     case AMOUNT:
-      throw_(value_exception, "Cannot convert a date/time to an amount");
+      throw_(value_error, "Cannot convert a date/time to an amount");
     case BALANCE:
-      throw_(value_exception, "Cannot convert a date/time to a balance");
+      throw_(value_error, "Cannot convert a date/time to a balance");
     case BALANCE_PAIR:
-      throw_(value_exception, "Cannot convert a date/time to a balance pair");
+      throw_(value_error, "Cannot convert a date/time to a balance pair");
     case STRING:
-      throw_(value_exception, "Cannot convert a date/time to a string");
+      throw_(value_error, "Cannot convert a date/time to a string");
     case XML_NODE:
-      throw_(value_exception, "Cannot convert a date/time to an XML node");
+      throw_(value_error, "Cannot convert a date/time to an XML node");
     case POINTER:
-      throw_(value_exception, "Cannot convert a date/time to a pointer");
+      throw_(value_error, "Cannot convert a date/time to a pointer");
     case SEQUENCE:
-      throw_(value_exception, "Cannot convert a date/time to a sequence");
+      throw_(value_error, "Cannot convert a date/time to a sequence");
 
     default:
       assert(0);
@@ -1492,7 +1492,7 @@ void value_t::in_place_cast(type_t cast_type)
       break;
     }
     case DATETIME:
-      throw_(value_exception, "Cannot convert an amount to a date/time");
+      throw_(value_error, "Cannot convert an amount to a date/time");
     case AMOUNT:
       break;
     case BALANCE: {
@@ -1515,11 +1515,11 @@ void value_t::in_place_cast(type_t cast_type)
       break;
     }
     case XML_NODE:
-      throw_(value_exception, "Cannot convert an amount to an XML node");
+      throw_(value_error, "Cannot convert an amount to an XML node");
     case POINTER:
-      throw_(value_exception, "Cannot convert an amount to a pointer");
+      throw_(value_error, "Cannot convert an amount to a pointer");
     case SEQUENCE:
-      throw_(value_exception, "Cannot convert an amount to a sequence");
+      throw_(value_error, "Cannot convert an amount to a sequence");
 
     default:
       assert(0);
@@ -1536,9 +1536,9 @@ void value_t::in_place_cast(type_t cast_type)
       break;
     }
     case INTEGER:
-      throw_(value_exception, "Cannot convert a balance to an integer");
+      throw_(value_error, "Cannot convert a balance to an integer");
     case DATETIME:
-      throw_(value_exception, "Cannot convert a balance to a date/time");
+      throw_(value_error, "Cannot convert a balance to a date/time");
 
     case AMOUNT: {
       balance_t * temp = (balance_t *) data;
@@ -1551,7 +1551,7 @@ void value_t::in_place_cast(type_t cast_type)
 	new((amount_t *)data) amount_t();
       }
       else {
-	throw_(value_exception, "Cannot convert a balance with "
+	throw_(value_error, "Cannot convert a balance with "
 			      "multiple commodities to an amount");
       }
       break;
@@ -1565,13 +1565,13 @@ void value_t::in_place_cast(type_t cast_type)
       break;
     }
     case STRING:
-      throw_(value_exception, "Cannot convert a balance to a string");
+      throw_(value_error, "Cannot convert a balance to a string");
     case XML_NODE:
-      throw_(value_exception, "Cannot convert a balance to an XML node");
+      throw_(value_error, "Cannot convert a balance to an XML node");
     case POINTER:
-      throw_(value_exception, "Cannot convert a balance to a pointer");
+      throw_(value_error, "Cannot convert a balance to a pointer");
     case SEQUENCE:
-      throw_(value_exception, "Cannot convert a balance to a sequence");
+      throw_(value_error, "Cannot convert a balance to a sequence");
 
     default:
       assert(0);
@@ -1588,9 +1588,9 @@ void value_t::in_place_cast(type_t cast_type)
       break;
     }
     case INTEGER:
-      throw_(value_exception, "Cannot convert a balance pair to an integer");
+      throw_(value_error, "Cannot convert a balance pair to an integer");
     case DATETIME:
-      throw_(value_exception, "Cannot convert a balance pair to a date/time");
+      throw_(value_error, "Cannot convert a balance pair to a date/time");
 
     case AMOUNT: {
       balance_t * temp = &((balance_pair_t *) data)->quantity;
@@ -1603,7 +1603,7 @@ void value_t::in_place_cast(type_t cast_type)
 	new((amount_t *)data) amount_t();
       }
       else {
-	throw_(value_exception, "Cannot convert a balance pair with "
+	throw_(value_error, "Cannot convert a balance pair with "
 			      "multiple commodities to an amount");
       }
       break;
@@ -1617,13 +1617,13 @@ void value_t::in_place_cast(type_t cast_type)
     case BALANCE_PAIR:
       break;
     case STRING:
-      throw_(value_exception, "Cannot convert a balance pair to a string");
+      throw_(value_error, "Cannot convert a balance pair to a string");
     case XML_NODE:
-      throw_(value_exception, "Cannot convert a balance pair to an XML node");
+      throw_(value_error, "Cannot convert a balance pair to an XML node");
     case POINTER:
-      throw_(value_exception, "Cannot convert a balance pair to a pointer");
+      throw_(value_error, "Cannot convert a balance pair to a pointer");
     case SEQUENCE:
-      throw_(value_exception, "Cannot convert a balance pair to a sequence");
+      throw_(value_error, "Cannot convert a balance pair to a sequence");
 
     default:
       assert(0);
@@ -1643,7 +1643,7 @@ void value_t::in_place_cast(type_t cast_type)
 	*(bool *) data = false;
       }
       else {
-	throw_(value_exception, "Cannot convert string to an boolean");
+	throw_(value_error, "Cannot convert string to an boolean");
       }
       break;
     }
@@ -1661,13 +1661,13 @@ void value_t::in_place_cast(type_t cast_type)
 	destroy();
 	*(long *) data = temp;
       } else {
-	throw_(value_exception, "Cannot convert string to an integer");
+	throw_(value_error, "Cannot convert string to an integer");
       }
       break;
     }
 
     case DATETIME:
-      throw_(value_exception, "Cannot convert a string to a date/time");
+      throw_(value_error, "Cannot convert a string to a date/time");
 
     case AMOUNT: {
       amount_t temp = **(string **) data;
@@ -1676,17 +1676,17 @@ void value_t::in_place_cast(type_t cast_type)
       break;
     }
     case BALANCE:
-      throw_(value_exception, "Cannot convert a string to a balance");
+      throw_(value_error, "Cannot convert a string to a balance");
     case BALANCE_PAIR:
-      throw_(value_exception, "Cannot convert a string to a balance pair");
+      throw_(value_error, "Cannot convert a string to a balance pair");
     case STRING:
       break;
     case XML_NODE:
-      throw_(value_exception, "Cannot convert a string to an XML node");
+      throw_(value_error, "Cannot convert a string to an XML node");
     case POINTER:
-      throw_(value_exception, "Cannot convert a string to a pointer");
+      throw_(value_error, "Cannot convert a string to a pointer");
     case SEQUENCE:
-      throw_(value_exception, "Cannot convert a string to a sequence");
+      throw_(value_error, "Cannot convert a string to a sequence");
 
     default:
       assert(0);
@@ -1708,9 +1708,9 @@ void value_t::in_place_cast(type_t cast_type)
     case XML_NODE:
       break;
     case POINTER:
-      throw_(value_exception, "Cannot convert an XML node to a pointer");
+      throw_(value_error, "Cannot convert an XML node to a pointer");
     case SEQUENCE:
-      throw_(value_exception, "Cannot convert an XML node to a sequence");
+      throw_(value_error, "Cannot convert an XML node to a sequence");
 
     default:
       assert(0);
@@ -1721,25 +1721,25 @@ void value_t::in_place_cast(type_t cast_type)
   case POINTER:
     switch (cast_type) {
     case BOOLEAN:
-      throw_(value_exception, "Cannot convert a pointer to a boolean");
+      throw_(value_error, "Cannot convert a pointer to a boolean");
     case INTEGER:
-      throw_(value_exception, "Cannot convert a pointer to an integer");
+      throw_(value_error, "Cannot convert a pointer to an integer");
     case DATETIME:
-      throw_(value_exception, "Cannot convert a pointer to a date/time");
+      throw_(value_error, "Cannot convert a pointer to a date/time");
     case AMOUNT:
-      throw_(value_exception, "Cannot convert a pointer to an amount");
+      throw_(value_error, "Cannot convert a pointer to an amount");
     case BALANCE:
-      throw_(value_exception, "Cannot convert a pointer to a balance");
+      throw_(value_error, "Cannot convert a pointer to a balance");
     case BALANCE_PAIR:
-      throw_(value_exception, "Cannot convert a pointer to a balance pair");
+      throw_(value_error, "Cannot convert a pointer to a balance pair");
     case STRING:
-      throw_(value_exception, "Cannot convert a pointer to a string");
+      throw_(value_error, "Cannot convert a pointer to a string");
     case XML_NODE:
-      throw_(value_exception, "Cannot convert a pointer to an XML node");
+      throw_(value_error, "Cannot convert a pointer to an XML node");
     case POINTER:
       break;
     case SEQUENCE:
-      throw_(value_exception, "Cannot convert a pointer to a sequence");
+      throw_(value_error, "Cannot convert a pointer to a sequence");
 
     default:
       assert(0);
@@ -1750,23 +1750,23 @@ void value_t::in_place_cast(type_t cast_type)
   case SEQUENCE:
     switch (cast_type) {
     case BOOLEAN:
-      throw_(value_exception, "Cannot convert a sequence to a boolean");
+      throw_(value_error, "Cannot convert a sequence to a boolean");
     case INTEGER:
-      throw_(value_exception, "Cannot convert a sequence to an integer");
+      throw_(value_error, "Cannot convert a sequence to an integer");
     case DATETIME:
-      throw_(value_exception, "Cannot convert a sequence to a date/time");
+      throw_(value_error, "Cannot convert a sequence to a date/time");
     case AMOUNT:
-      throw_(value_exception, "Cannot convert a sequence to an amount");
+      throw_(value_error, "Cannot convert a sequence to an amount");
     case BALANCE:
-      throw_(value_exception, "Cannot convert a sequence to a balance");
+      throw_(value_error, "Cannot convert a sequence to a balance");
     case BALANCE_PAIR:
-      throw_(value_exception, "Cannot convert a sequence to a balance pair");
+      throw_(value_error, "Cannot convert a sequence to a balance pair");
     case STRING:
-      throw_(value_exception, "Cannot convert a sequence to a string");
+      throw_(value_error, "Cannot convert a sequence to a string");
     case XML_NODE:
-      throw_(value_exception, "Cannot compare a sequence to an XML node");
+      throw_(value_error, "Cannot compare a sequence to an XML node");
     case POINTER:
-      throw_(value_exception, "Cannot convert a sequence to a pointer");
+      throw_(value_error, "Cannot convert a sequence to a pointer");
     case SEQUENCE:
       break;
 
@@ -1793,7 +1793,7 @@ void value_t::in_place_negate()
     *((long *) data) = - *((long *) data);
     break;
   case DATETIME:
-    throw_(value_exception, "Cannot negate a date/time");
+    throw_(value_error, "Cannot negate a date/time");
   case AMOUNT:
     ((amount_t *) data)->in_place_negate();
     break;
@@ -1804,15 +1804,15 @@ void value_t::in_place_negate()
     ((balance_pair_t *) data)->in_place_negate();
     break;
   case STRING:
-    throw_(value_exception, "Cannot negate a string");
+    throw_(value_error, "Cannot negate a string");
   case XML_NODE:
     *this = (*(xml::node_t **) data)->to_value();
     in_place_negate();
     break;
   case POINTER:
-    throw_(value_exception, "Cannot negate a pointer");
+    throw_(value_error, "Cannot negate a pointer");
   case SEQUENCE:
-    throw_(value_exception, "Cannot negate a sequence");
+    throw_(value_error, "Cannot negate a sequence");
 
   default:
     assert(0);
@@ -1841,15 +1841,15 @@ void value_t::in_place_abs()
     ((balance_pair_t *) data)->abs();
     break;
   case STRING:
-    throw_(value_exception, "Cannot take the absolute value of a string");
+    throw_(value_error, "Cannot take the absolute value of a string");
   case XML_NODE:
     *this = (*(xml::node_t **) data)->to_value();
     in_place_abs();
     break;
   case POINTER:
-    throw_(value_exception, "Cannot take the absolute value of a pointer");
+    throw_(value_error, "Cannot take the absolute value of a pointer");
   case SEQUENCE:
-    throw_(value_exception, "Cannot take the absolute value of a sequence");
+    throw_(value_error, "Cannot take the absolute value of a sequence");
 
   default:
     assert(0);
@@ -1861,9 +1861,9 @@ value_t value_t::value(const moment_t& moment) const
 {
   switch (type) {
   case BOOLEAN:
-    throw_(value_exception, "Cannot find the value of a boolean");
+    throw_(value_error, "Cannot find the value of a boolean");
   case DATETIME:
-    throw_(value_exception, "Cannot find the value of a date/time");
+    throw_(value_error, "Cannot find the value of a date/time");
   case INTEGER:
     return *this;
   case AMOUNT:
@@ -1873,13 +1873,13 @@ value_t value_t::value(const moment_t& moment) const
   case BALANCE_PAIR:
     return ((balance_pair_t *) data)->quantity.value(moment);
   case STRING:
-    throw_(value_exception, "Cannot find the value of a string");
+    throw_(value_error, "Cannot find the value of a string");
   case XML_NODE:
     return (*(xml::node_t **) data)->to_value().value(moment);
   case POINTER:
-    throw_(value_exception, "Cannot find the value of a pointer");
+    throw_(value_error, "Cannot find the value of a pointer");
   case SEQUENCE:
-    throw_(value_exception, "Cannot find the value of a sequence");
+    throw_(value_error, "Cannot find the value of a sequence");
   default:
     assert(0);
     return value_t();
@@ -1903,15 +1903,15 @@ void value_t::in_place_reduce()
     ((balance_pair_t *) data)->in_place_reduce();
     break;
   case STRING:
-    throw_(value_exception, "Cannot reduce a string");
+    throw_(value_error, "Cannot reduce a string");
   case XML_NODE:
     *this = (*(xml::node_t **) data)->to_value();
     in_place_reduce();		// recurse
     break;
   case POINTER:
-    throw_(value_exception, "Cannot reduce a pointer");
+    throw_(value_error, "Cannot reduce a pointer");
   case SEQUENCE:
-    throw_(value_exception, "Cannot reduce a sequence");
+    throw_(value_error, "Cannot reduce a sequence");
   }
 }
 
@@ -1919,9 +1919,9 @@ value_t value_t::round() const
 {
   switch (type) {
   case BOOLEAN:
-    throw_(value_exception, "Cannot round a boolean");
+    throw_(value_error, "Cannot round a boolean");
   case DATETIME:
-    throw_(value_exception, "Cannot round a date/time");
+    throw_(value_error, "Cannot round a date/time");
   case INTEGER:
     return *this;
   case AMOUNT:
@@ -1931,13 +1931,13 @@ value_t value_t::round() const
   case BALANCE_PAIR:
     return ((balance_pair_t *) data)->round();
   case STRING:
-    throw_(value_exception, "Cannot round a string");
+    throw_(value_error, "Cannot round a string");
   case XML_NODE:
     return (*(xml::node_t **) data)->to_value().round();
   case POINTER:
-    throw_(value_exception, "Cannot round a pointer");
+    throw_(value_error, "Cannot round a pointer");
   case SEQUENCE:
-    throw_(value_exception, "Cannot round a sequence");
+    throw_(value_error, "Cannot round a sequence");
   }
   assert(0);
   return value_t();
@@ -1947,9 +1947,9 @@ value_t value_t::unround() const
 {
   switch (type) {
   case BOOLEAN:
-    throw_(value_exception, "Cannot un-round a boolean");
+    throw_(value_error, "Cannot un-round a boolean");
   case DATETIME:
-    throw_(value_exception, "Cannot un-round a date/time");
+    throw_(value_error, "Cannot un-round a date/time");
   case INTEGER:
     return *this;
   case AMOUNT:
@@ -1959,13 +1959,13 @@ value_t value_t::unround() const
   case BALANCE_PAIR:
     return ((balance_pair_t *) data)->unround();
   case STRING:
-    throw_(value_exception, "Cannot un-round a string");
+    throw_(value_error, "Cannot un-round a string");
   case XML_NODE:
     return (*(xml::node_t **) data)->to_value().unround();
   case POINTER:
-    throw_(value_exception, "Cannot un-round a pointer");
+    throw_(value_error, "Cannot un-round a pointer");
   case SEQUENCE:
-    throw_(value_exception, "Cannot un-round a sequence");
+    throw_(value_error, "Cannot un-round a sequence");
   }
   assert(0);
   return value_t();
@@ -1975,11 +1975,11 @@ value_t value_t::price() const
 {
   switch (type) {
   case BOOLEAN:
-    throw_(value_exception, "Cannot find the price of a boolean");
+    throw_(value_error, "Cannot find the price of a boolean");
   case INTEGER:
     return *this;
   case DATETIME:
-    throw_(value_exception, "Cannot find the price of a date/time");
+    throw_(value_error, "Cannot find the price of a date/time");
 
   case AMOUNT:
     return ((amount_t *) data)->price();
@@ -1989,15 +1989,15 @@ value_t value_t::price() const
     return ((balance_pair_t *) data)->quantity.price();
 
   case STRING:
-    throw_(value_exception, "Cannot find the price of a string");
+    throw_(value_error, "Cannot find the price of a string");
 
   case XML_NODE:
     return (*(xml::node_t **) data)->to_value().price();
 
   case POINTER:
-    throw_(value_exception, "Cannot find the price of a pointer");
+    throw_(value_error, "Cannot find the price of a pointer");
   case SEQUENCE:
-    throw_(value_exception, "Cannot find the price of a sequence");
+    throw_(value_error, "Cannot find the price of a sequence");
 
   default:
     assert(0);
@@ -2011,9 +2011,9 @@ value_t value_t::date() const
 {
   switch (type) {
   case BOOLEAN:
-    throw_(value_exception, "Cannot find the date of a boolean");
+    throw_(value_error, "Cannot find the date of a boolean");
   case INTEGER:
-    throw_(value_exception, "Cannot find the date of an integer");
+    throw_(value_error, "Cannot find the date of an integer");
 
   case DATETIME:
     return *this;
@@ -2026,15 +2026,15 @@ value_t value_t::date() const
     return ((balance_pair_t *) data)->quantity.date();
 
   case STRING:
-    throw_(value_exception, "Cannot find the date of a string");
+    throw_(value_error, "Cannot find the date of a string");
 
   case XML_NODE:
     return (*(xml::node_t **) data)->to_value().date();
 
   case POINTER:
-    throw_(value_exception, "Cannot find the date of a pointer");
+    throw_(value_error, "Cannot find the date of a pointer");
   case SEQUENCE:
-    throw_(value_exception, "Cannot find the date of a sequence");
+    throw_(value_error, "Cannot find the date of a sequence");
 
   default:
     assert(0);
@@ -2083,13 +2083,13 @@ value_t value_t::cost() const
 {
   switch (type) {
   case BOOLEAN:
-    throw_(value_exception, "Cannot find the cost of a boolean");
+    throw_(value_error, "Cannot find the cost of a boolean");
   case INTEGER:
   case AMOUNT:
   case BALANCE:
     return *this;
   case DATETIME:
-    throw_(value_exception, "Cannot find the cost of a date/time");
+    throw_(value_error, "Cannot find the cost of a date/time");
 
   case BALANCE_PAIR:
     assert(((balance_pair_t *) data)->cost);
@@ -2099,13 +2099,13 @@ value_t value_t::cost() const
       return ((balance_pair_t *) data)->quantity;
 
   case STRING:
-    throw_(value_exception, "Cannot find the cost of a string");
+    throw_(value_error, "Cannot find the cost of a string");
   case XML_NODE:
     return (*(xml::node_t **) data)->to_value().cost();
   case POINTER:
-    throw_(value_exception, "Cannot find the cost of a pointer");
+    throw_(value_error, "Cannot find the cost of a pointer");
   case SEQUENCE:
-    throw_(value_exception, "Cannot find the cost of a sequence");
+    throw_(value_error, "Cannot find the cost of a sequence");
 
   default:
     assert(0);
@@ -2119,9 +2119,9 @@ value_t& value_t::add(const amount_t& amount, const amount_t * tcost)
 {
   switch (type) {
   case BOOLEAN:
-    throw_(value_exception, "Cannot add an amount to a boolean");
+    throw_(value_error, "Cannot add an amount to a boolean");
   case DATETIME:
-    throw_(value_exception, "Cannot add an amount to a date/time");
+    throw_(value_error, "Cannot add an amount to a date/time");
   case INTEGER:
   case AMOUNT:
     if (tcost) {
@@ -2153,13 +2153,13 @@ value_t& value_t::add(const amount_t& amount, const amount_t * tcost)
     break;
 
   case STRING:
-    throw_(value_exception, "Cannot add an amount to a string");
+    throw_(value_error, "Cannot add an amount to a string");
   case XML_NODE:
-    throw_(value_exception, "Cannot add an amount to an XML node");
+    throw_(value_error, "Cannot add an amount to an XML node");
   case POINTER:
-    throw_(value_exception, "Cannot add an amount to a pointer");
+    throw_(value_error, "Cannot add an amount to a pointer");
   case SEQUENCE:
-    throw_(value_exception, "Cannot add an amount to a sequence");
+    throw_(value_error, "Cannot add an amount to a sequence");
 
   default:
     assert(0);
@@ -2188,7 +2188,7 @@ void value_t::write(std::ostream& out, const int first_width,
 
   case SEQUENCE:
     assert(0);			// jww (2006-09-28): write them all out!
-    throw_(value_exception, "Cannot write out a sequence");
+    throw_(value_error, "Cannot write out a sequence");
 
   case BALANCE:
     ((balance_t *) data)->write(out, first_width, latter_width);
@@ -2231,7 +2231,7 @@ std::ostream& operator<<(std::ostream& out, const value_t& val)
     break;
 
   case value_t::POINTER:
-    throw_(value_exception, "Cannot output a pointer value");
+    throw_(value_error, "Cannot output a pointer value");
 
   case value_t::SEQUENCE: {
     out << '(';

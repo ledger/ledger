@@ -101,7 +101,7 @@ class format_t
   }
 };
 
-DECLARE_EXCEPTION(format_exception);
+DECLARE_EXCEPTION(format_error);
 
 } // namespace ledger
 

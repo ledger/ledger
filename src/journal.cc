@@ -199,7 +199,7 @@ bool entry_base_t::finalize()
       continue;
 
     if (! empty_allowed)
-      throw_(exception, "Only one transaction with null amount allowed per entry");
+      throw_(std::logic_error, "Only one transaction with null amount allowed per entry");
     empty_allowed = false;
 
     // If one transaction gives no value at all, its value will become
@@ -256,7 +256,7 @@ bool entry_base_t::finalize()
 
   if (balance) {
 #if 1
-    throw_(balance_exception, "Entry does not balance");
+    throw_(balance_error, "Entry does not balance");
 #else
     error * err =
       new balance_error("Entry does not balance",

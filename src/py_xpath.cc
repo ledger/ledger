@@ -69,7 +69,7 @@ void export_xpath()
     ;
 
 #define EXC_TRANSLATE(type)					\
-  register_exception_translator<type>(&exc_translate_ ## type);
+  register_error_translator<type>(&exc_translate_ ## type);
 
   EXC_TRANSLATE(xpath_t_error);
   EXC_TRANSLATE(calc_error);

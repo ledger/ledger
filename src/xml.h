@@ -15,7 +15,7 @@ namespace xml {
 
 #define XML_NODE_IS_PARENT 0x1
 
-DECLARE_EXCEPTION(conversion_exception);
+DECLARE_EXCEPTION(conversion_error);
 
 class parent_node_t;
 class document_t;
@@ -85,7 +85,7 @@ public:
   }
 
   virtual value_t to_value() const {
-    throw_(conversion_exception, "Cannot convert node to a value");
+    throw_(conversion_error, "Cannot convert node to a value");
   }
 
   virtual void write(std::ostream& out, int depth = 0) const = 0;
@@ -255,7 +255,7 @@ class xml_parser_t : public parser_t
 			     const string * original_file = NULL);
 };
 
-DECLARE_EXCEPTION(parse_exception);
+DECLARE_EXCEPTION(parse_error);
 
 #endif
 

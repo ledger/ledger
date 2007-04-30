@@ -22,7 +22,7 @@ void report_t::apply_transforms(xml::document_t * document)
 void report_t::abbrev(value_t& result, xml::xpath_t::scope_t * locals)
 {
   if (locals->args.size() < 2)
-    throw_(exception, "usage: abbrev(STRING, WIDTH [, STYLE, ABBREV_LEN])");
+    throw_(std::logic_error, "usage: abbrev(STRING, WIDTH [, STYLE, ABBREV_LEN])");
 
   string str = locals->args[0].to_string();
   long	      wid = locals->args[1];
@@ -41,7 +41,7 @@ void report_t::abbrev(value_t& result, xml::xpath_t::scope_t * locals)
 void report_t::ftime(value_t&, xml::xpath_t::scope_t * locals)
 {
   if (locals->args.size() < 1)
-    throw_(exception, "usage: ftime(DATE [, DATE_FORMAT])");
+    throw_(std::logic_error, "usage: ftime(DATE [, DATE_FORMAT])");
 
   moment_t date = locals->args[0].to_datetime();
 

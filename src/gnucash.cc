@@ -341,7 +341,7 @@ unsigned int gnucash_parser_t::parse(std::istream&	 in,
       //unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
       const char *  msg  = XML_ErrorString(XML_GetErrorCode(parser));
       XML_ParserFree(parser);
-      throw_(parse_exception, msg);
+      throw_(parse_error, msg);
     }
 
     if (! have_error.empty()) {

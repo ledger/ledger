@@ -573,7 +573,7 @@ class value_context : public error_context
 };
 #endif
 
-DECLARE_EXCEPTION(value_exception);
+DECLARE_EXCEPTION(value_error);
 
 } // namespace ledger
 

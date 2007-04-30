@@ -48,13 +48,13 @@ amount_t value_getitem(value_t& val, int i)
 
   switch (val.type) {
   case value_t::BOOLEAN:
-    throw_(value_exception, "Cannot cast a boolean to an amount");
+    throw_(value_error, "Cannot cast a boolean to an amount");
 
   case value_t::INTEGER:
     return long(val);
 
   case value_t::DATETIME:
-    throw_(value_exception, "Cannot cast a date/time to an amount");
+    throw_(value_error, "Cannot cast a date/time to an amount");
 
   case value_t::AMOUNT:
     return *((amount_t *) val.data);
@@ -66,13 +66,13 @@ amount_t value_getitem(value_t& val, int i)
     return balance_pair_getitem(*((balance_pair_t *) val.data), i);
 
   case value_t::STRING:
-    throw_(value_exception, "Cannot cast a string to an amount");
+    throw_(value_error, "Cannot cast a string to an amount");
 
   case value_t::XML_NODE:
     return (*(xml::node_t **) data)->to_value();
 
   case value_t::POINTER:
-    throw_(value_exception, "Cannot cast a pointer to an amount");
+    throw_(value_error, "Cannot cast a pointer to an amount");
 
   case value_t::SEQUENCE:
     return (*(value_t::sequence_t **) val.data)[i];

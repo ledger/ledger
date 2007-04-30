@@ -365,7 +365,7 @@ void export_journal()
     ;
 
 #define EXC_TRANSLATE(type)					\
-  register_exception_translator<type>(&exc_translate_ ## type);
+  register_error_translator<type>(&exc_translate_ ## type);
 
   EXC_TRANSLATE(balance_error);
   EXC_TRANSLATE(interval_expr_error);

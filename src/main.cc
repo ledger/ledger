@@ -168,7 +168,7 @@ static int read_and_report(report_t * report, int argc, char * argv[],
       command.reset(def->functor_obj());
 
     if (! command.get())
-      throw_(exception, string("Unrecognized command '") + verb + "'");
+      throw_(std::logic_error, string("Unrecognized command '") + verb + "'");
   }
 
   // Parse the initialization file, which can only be textual; then
@@ -201,11 +201,11 @@ static int read_and_report(report_t * report, int argc, char * argv[],
   else if (! report->pager.empty()) {
     status = pipe(pfd);
     if (status == -1)
-      throw_(exception, "Failed to create pipe");
+      throw_(std::logic_error, "Failed to create pipe");
 
     status = fork();
     if (status < 0) {
-      throw_(exception, "Failed to fork child process");
+      throw_(std::logic_error, "Failed to fork child process");
     }
     else if (status == 0) {	// child
       const char *arg0;
@@ -378,7 +378,7 @@ static int read_and_report(report_t * report, int argc, char * argv[],
     // Wait for child to finish
     wait(&status);
     if (status & 0xffff != 0)
-      throw_(exception, "Something went wrong in the pager");
+      throw_(std::logic_error, "Something went wrong in the pager");
   }
 #endif
 

@@ -19,20 +19,21 @@ unsigned int session_t::read_journal(std::istream&       in,
   return 0;
 }
 
-unsigned int session_t::read_journal(const string&  path,
-				     journal_t *         journal,
-				     account_t *	 master,
+unsigned int session_t::read_journal(const string&  pathname,
+				     journal_t *    journal,
+				     account_t *    master,
 				     const string * original_file)
 {
-  journal->sources.push_back(path);
+  journal->sources.push_back(pathname);
 
-  if (access(path.c_str(), R_OK) == -1)
-    throw_(exception, "Cannot read file '" << path << "'");
+  if (access(pathname.c_str(), R_OK) == -1)
+    throw filesystem_error(BOOST_CURRENT_FUNCTION, pathname,
+			   "Cannot read file");
 
   if (! original_file)
-    original_file = &path;
+    original_file = &pathname;
 
-  std::ifstream stream(path.c_str());
+  std::ifstream stream(pathname.c_str());
   return read_journal(stream, journal, master, original_file);
 }
 
@@ -42,7 +43,8 @@ void session_t::read_init()
     return;
 
   if (access(init_file.c_str(), R_OK) == -1)
-    throw_(exception, "Cannot read init file '" << init_file << "'");
+    throw filesystem_error(BOOST_CURRENT_FUNCTION, init_file,
+			   "Cannot read init file");
 
   std::ifstream init(init_file.c_str());
 
@@ -88,7 +90,7 @@ journal_t * session_t::read_data(const string& master_account)
     if (! journal->price_db.empty() &&
 	access(journal->price_db.c_str(), R_OK) != -1) {
       if (read_journal(journal->price_db, journal)) {
-	throw_(exception, "Entries not allowed in price history file");
+	throw_(parse_error, "Entries not allowed in price history file");
       } else {
 	DEBUG("ledger.cache", "read price database " << journal->price_db);
 	journal->sources.pop_back();
@@ -111,7 +113,7 @@ journal_t * session_t::read_data(const string& master_account)
   VERIFY(journal->valid());
 
   if (entry_count == 0)
-    throw_(exception, "Failed to locate any journal entries; "
+    throw_(parse_error, "Failed to locate any journal entries; "
 	   "did you specify a valid file with -f?");
 
   TRACE_STOP(parser, 1);

@@ -232,13 +232,13 @@ void CommodityAmountTestCase::testAddition()
   assertEqual(string("$246.90"), (x1 + x1).to_string());
   assertEqual(string("$246.91"), (x1 + x2).to_string());
 
-  assertThrow(x1 + x0, amount_exception);
-  assertThrow(x1 + x3, amount_exception);
-  assertThrow(x1 + x4, amount_exception);
-  assertThrow(x1 + x5, amount_exception);
-  assertThrow(x1 + x6, amount_exception);
-  assertThrow(x1 + 123.45, amount_exception);
-  assertThrow(x1 + 123L, amount_exception);
+  assertThrow(x1 + x0, amount_error);
+  assertThrow(x1 + x3, amount_error);
+  assertThrow(x1 + x4, amount_error);
+  assertThrow(x1 + x5, amount_error);
+  assertThrow(x1 + x6, amount_error);
+  assertThrow(x1 + 123.45, amount_error);
+  assertThrow(x1 + 123L, amount_error);
 
   assertEqual(amount_t("DM 246.90"), x3 + x3);
   assertEqual(amount_t("246.90 euro"), x4 + x4);
@@ -290,13 +290,13 @@ void CommodityAmountTestCase::testSubtraction()
   assertEqual(string("$0.00"), (x1 - x1).to_string());
   assertEqual(string("$-0.01"), (x1 - x2).to_string());
 
-  assertThrow(x1 - x0, amount_exception);
-  assertThrow(x1 - x3, amount_exception);
-  assertThrow(x1 - x4, amount_exception);
-  assertThrow(x1 - x5, amount_exception);
-  assertThrow(x1 - x6, amount_exception);
-  assertThrow(x1 - 123.45, amount_exception);
-  assertThrow(x1 - 123L, amount_exception);
+  assertThrow(x1 - x0, amount_error);
+  assertThrow(x1 - x3, amount_error);
+  assertThrow(x1 - x4, amount_error);
+  assertThrow(x1 - x5, amount_error);
+  assertThrow(x1 - x6, amount_error);
+  assertThrow(x1 - 123.45, amount_error);
+  assertThrow(x1 - 123L, amount_error);
 
   assertEqual(amount_t("DM 0.00"), x3 - x3);
   assertEqual(amount_t("DM 23.45"), x3 - amount_t("DM 100.00"));
@@ -374,9 +374,9 @@ void CommodityAmountTestCase::testMultiplication()
   assertEqual(string("$15200.00"), (x1 * x2).to_string());
   assertEqual(string("$15199.99986168"), (x2 * x1).to_string());
 
-  assertThrow(x1 * x3, amount_exception);
-  assertThrow(x1 * x4, amount_exception);
-  assertThrow(x1 * x5, amount_exception);
+  assertThrow(x1 * x3, amount_error);
+  assertThrow(x1 * x4, amount_error);
+  assertThrow(x1 * x5, amount_error);
 
   x1 *= amount_t("123.12");
   assertEqual(internalAmount("$15158.5344"), x1);
@@ -410,7 +410,7 @@ void CommodityAmountTestCase::testDivision()
   amount_t x4("123.45 euro");
   amount_t x5("123.45€");
 
-  assertThrow(x1 / 0L, amount_exception);
+  assertThrow(x1 / 0L, amount_error);
   assertEqual(amount_t("$0.00"), 0L / x1);
   assertEqual(x1, x1 / 1L);
   assertEqual(internalAmount("$0.00812216"), 1L / x1);
@@ -428,9 +428,9 @@ void CommodityAmountTestCase::testDivision()
   assertEqual(string("$1.00"), (x1 / x2).to_string());
   assertEqual(string("$1.00273545321637426901"), (x2 / x1).to_string());
 
-  assertThrow(x1 / x3, amount_exception);
-  assertThrow(x1 / x4, amount_exception);
-  assertThrow(x1 / x5, amount_exception);
+  assertThrow(x1 / x3, amount_error);
+  assertThrow(x1 / x4, amount_error);
+  assertThrow(x1 / x5, amount_error);
 
   x1 /= amount_t("123.12");
   assertEqual(internalAmount("$1.00"), x1);

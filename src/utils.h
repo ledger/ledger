@@ -9,24 +9,13 @@
  */
 
 namespace ledger {
-#if ! defined(USE_BOOST_PYTHON)
+  using namespace boost;
+
+#if defined(VERIFY_ON) && ! defined(USE_BOOST_PYTHON)
   class string;
 #else
   typedef std::string string;
 #endif
-}
-
-// jww (2007-04-30): These Boost includes can go into system.hh as
-// soon as GCC fixes it's problem with pre-compiled headers and global
-// variables defined in unnamed namespaces.
-
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/filesystem/path.hpp>
-#include <boost/optional.hpp>
-#include <boost/regex.hpp>
-
-namespace ledger {
-  using namespace boost;
 
   typedef posix_time::ptime	    ptime;
   typedef ptime::time_duration_type time_duration;
@@ -35,6 +24,9 @@ namespace ledger {
   typedef posix_time::seconds	    seconds;
 
   typedef filesystem::path path;
+  typedef boost::filesystem::ifstream ifstream;
+  typedef boost::filesystem::ofstream ofstream;
+  typedef boost::filesystem::filesystem_error filesystem_error;
 }
 
 /**********************************************************************
@@ -70,8 +62,6 @@ namespace ledger {
 #define ASSERTS_ON 1
 #endif
 #if defined(ASSERTS_ON)
-
-#include <boost/current_function.hpp>
 
 namespace ledger {
   void debug_assert(const string& reason, const string& func,
@@ -247,11 +237,7 @@ extern unsigned int _trace_level;
 extern std::string _log_category;
 
 inline bool category_matches(const char * cat) {
-  return (_log_category == cat ||
-	  (std::strlen(cat) > _log_category.size() + 1 &&
-	   std::strncmp(cat, _log_category.c_str(),
-			_log_category.size()) == 0 &&
-	   cat[_log_category.size()] == '.'));
+  return starts_with(_log_category, cat);
 }
 
 #define SHOW_DEBUG(cat) \
@@ -403,20 +389,43 @@ void finish_timer(const char * name);
  * Exception handling
  */
 
-#include "error.h"
+#include "context.h"
 
 namespace ledger {
+
+#define DECLARE_EXCEPTION(name)					\
+  class name : public std::logic_error {			\
+  public:							\
+    name(const string& why) throw() : std::logic_error(why) {}	\
+  }
 
 extern std::ostringstream _exc_buffer;
 
 template <typename T>
 inline void throw_func(const std::string& message) {
   _exc_buffer.str("");
-  throw T(message, context());
+  throw T(message);
 }
 
 #define throw_(cls, msg) \
   ((_exc_buffer << msg), throw_func<cls>(_exc_buffer.str()))
+
+inline void throw_unexpected_error(char c, char wanted) {
+#if 0
+  if (c == -1) {
+    if (wanted)
+      throw new error(string("Missing '") + wanted + "'");
+    else
+      throw new error("Unexpected end of input");
+  } else {
+    if (wanted)
+      throw new error(string("Invalid char '") + c +
+		      "' (wanted '" + wanted + "')");
+    else
+      throw new error(string("Invalid char '") + c + "'");
+  }
+#endif
+}
 
 } // namespace ledger
 

@@ -1,9 +1,11 @@
 #include "pyinterp.h"
 #include "amount.h"
 
-using namespace boost::python;
+#include <boost/python/exception_translator.hpp>
 
 namespace ledger {
+
+using namespace boost::python;
 
 int py_amount_quantity(amount_t& amount)
 {
@@ -51,7 +53,7 @@ commodity_t * py_find_commodity(const string& symbol)
     PyErr_SetString(PyExc_ArithmeticError, err.what());	\
   }
 
-EXC_TRANSLATOR(amount_exception)
+EXC_TRANSLATOR(amount_error)
 
 void export_amount()
 {
@@ -236,10 +238,10 @@ void export_amount()
 #endif
     ;
 
-#define EXC_TRANSLATE(type)					\
+#define EXC_TRANSLATE(type) \
   register_exception_translator<type>(&exc_translate_ ## type);
 
-  EXC_TRANSLATE(amount_exception);
+  EXC_TRANSLATE(amount_error);
 }
 
 } // namespace ledger

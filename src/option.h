@@ -15,7 +15,7 @@ void process_arguments(int argc, char ** argv, const bool anywhere,
 		       xml::xpath_t::scope_t * scope,
 		       std::list<string>& args);
 
-DECLARE_EXCEPTION(option_exception);
+DECLARE_EXCEPTION(option_error);
 
 } // namespace ledger
 

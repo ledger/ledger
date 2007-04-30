@@ -487,13 +487,12 @@ void amount_t::_clear()
 
 amount_t& amount_t::operator+=(const amount_t& amt)
 {
-  if (commodity() != amt.commodity()) {
-    throw amount_exception
-      (string("Adding amounts with different commodities: ") +
-       (has_commodity() ? commodity_->qualified_symbol : "NONE") + " != " +
-       (amt.has_commodity() ? amt.commodity_->qualified_symbol : "NONE"),
-       context());
-  }
+  if (commodity() != amt.commodity())
+    throw_(amount_error,
+	   "Adding amounts with different commodities: " <<
+	   (has_commodity() ? commodity_->qualified_symbol : "NONE") <<
+	   " != " <<
+	   (amt.has_commodity() ? amt.commodity_->qualified_symbol : "NONE"));
 
   if (! amt.quantity)
     return *this;
@@ -524,11 +523,11 @@ amount_t& amount_t::operator+=(const amount_t& amt)
 amount_t& amount_t::operator-=(const amount_t& amt)
 {
   if (commodity() != amt.commodity())
-    throw amount_exception
-      (string("Subtracting amounts with different commodities: ") +
-       (has_commodity() ? commodity_->qualified_symbol : "NONE") + " != " +
-       (amt.has_commodity() ? amt.commodity_->qualified_symbol : "NONE"),
-       context());
+    throw_(amount_error,
+	   "Subtracting amounts with different commodities: " <<
+	   (has_commodity() ? commodity_->qualified_symbol : "NONE") <<
+	   " != " <<
+	   (amt.has_commodity() ? amt.commodity_->qualified_symbol : "NONE"));
 
   if (! amt.quantity)
     return *this;
@@ -561,13 +560,12 @@ amount_t& amount_t::operator-=(const amount_t& amt)
 amount_t& amount_t::operator*=(const amount_t& amt)
 {
   if (has_commodity() && amt.has_commodity() &&
-      commodity() != amt.commodity()) {
-    throw amount_exception
-      (string("Multiplying amounts with different commodities: ") +
-       (has_commodity() ? commodity_->qualified_symbol : "NONE") + " != " +
-       (amt.has_commodity() ? amt.commodity_->qualified_symbol : "NONE"),
-       context());
-  }
+      commodity() != amt.commodity())
+    throw_(amount_error,
+	   "Multiplying amounts with different commodities: " <<
+	   (has_commodity() ? commodity_->qualified_symbol : "NONE") <<
+	   " != " <<
+	   (amt.has_commodity() ? amt.commodity_->qualified_symbol : "NONE"));
 
   if (! amt.quantity) {
     *this = *this - *this;	// preserve our commodity
@@ -602,16 +600,15 @@ amount_t& amount_t::operator*=(const amount_t& amt)
 amount_t& amount_t::operator/=(const amount_t& amt)
 {
   if (has_commodity() && amt.has_commodity() &&
-      commodity() != amt.commodity()) {
-    throw amount_exception
-      (string("Dividing amounts with different commodities: ") +
-       (has_commodity() ? commodity_->qualified_symbol : "NONE") + " != " +
-       (amt.has_commodity() ? amt.commodity_->qualified_symbol : "NONE"),
-       context());
-  }
+      commodity() != amt.commodity())
+    throw_(amount_error,
+	   "Dividing amounts with different commodities: " <<
+	   (has_commodity() ? commodity_->qualified_symbol : "NONE") <<
+	   " != " <<
+	   (amt.has_commodity() ? amt.commodity_->qualified_symbol : "NONE"));
 
   if (! amt.quantity || ! amt) {
-    throw amount_exception("Divide by zero", context());
+    throw_(amount_error, "Divide by zero");
   }
   else if (! quantity) {
     *this = amt;
@@ -677,10 +674,9 @@ int amount_t::compare(const amount_t& amt) const
     return sign();
 
   if (has_commodity() && amt.commodity() && commodity() != amt.commodity())
-    throw amount_exception
-      (string("Cannot compare amounts with different commodities: ") +
-       commodity().symbol() + " and " + amt.commodity().symbol(),
-       context());
+    throw_(amount_error,
+	   "Cannot compare amounts with different commodities: " <<
+	   commodity().symbol() << " and " << amt.commodity().symbol());
 
   if (quantity->prec == amt.quantity->prec) {
     return mpz_cmp(MPZ(quantity), MPZ(amt.quantity));
@@ -1139,8 +1135,7 @@ static void parse_commodity(std::istream& in, string& symbol)
     if (c == '"')
       in.get(c);
     else
-      throw amount_exception("Quoted commodity symbol lacks closing quote",
-			     context());
+      throw_(amount_error, "Quoted commodity symbol lacks closing quote");
   } else {
     READ_INTO(in, buf, 255, c, ! invalid_chars[(unsigned char)c]);
   }
@@ -1157,15 +1152,14 @@ bool parse_annotations(std::istream& in, amount_t& price,
     char c = peek_next_nonws(in);
     if (c == '{') {
       if (price)
-	throw amount_exception("Commodity specifies more than one price",
-			       context());
+	throw_(amount_error, "Commodity specifies more than one price");
 
       in.get(c);
       READ_INTO(in, buf, 255, c, c != '}');
       if (c == '}')
 	in.get(c);
       else
-	throw amount_exception("Commodity price lacks closing brace", context());
+	throw_(amount_error, "Commodity price lacks closing brace");
 
       price.parse(buf, AMOUNT_PARSE_NO_MIGRATE);
       price.in_place_reduce();
@@ -1180,32 +1174,28 @@ bool parse_annotations(std::istream& in, amount_t& price,
     }
     else if (c == '[') {
       if (is_valid_moment(date))
-	throw amount_exception("Commodity specifies more than one date",
-			       context());
+	throw_(amount_error, "Commodity specifies more than one date");
 
       in.get(c);
       READ_INTO(in, buf, 255, c, c != ']');
       if (c == ']')
 	in.get(c);
       else
-	throw amount_exception("Commodity date lacks closing bracket",
-			       context());
+	throw_(amount_error, "Commodity date lacks closing bracket");
 
       date = parse_datetime(buf);
       has_date = true;
     }
     else if (c == '(') {
       if (! tag.empty())
-	throw amount_exception("Commodity specifies more than one tag",
-			       context());
+	throw_(amount_error, "Commodity specifies more than one tag");
 
       in.get(c);
       READ_INTO(in, buf, 255, c, c != ')');
       if (c == ')')
 	in.get(c);
       else
-	throw amount_exception("Commodity tag lacks closing parenthesis",
-			       context());
+	throw_(amount_error, "Commodity tag lacks closing parenthesis");
 
       tag = buf;
     }
@@ -1277,8 +1267,7 @@ void amount_t::parse(std::istream& in, unsigned char flags)
   }
 
   if (quant.empty())
-    throw amount_exception("No quantity specified for amount",
-			   context());
+    throw_(amount_error, "No quantity specified for amount");
 
   _init();
 
@@ -1926,8 +1915,7 @@ namespace {
 				  const string& tag)
   {
     if (price < 0)
-      throw amount_exception("A commodity's price may not be negative",
-			     context());
+      throw_(amount_error, "A commodity's price may not be negative");
 
     std::ostringstream name;
 
@@ -1935,10 +1923,10 @@ namespace {
     annotated_commodity_t::write_annotations(name, price, date, tag);
 
     DEBUG("amounts.commodities", "make_qualified_name for "
-	   << comm.qualified_symbol << std::endl
-	   << "  price " << price << " "
-	   << "  date " << date << " "
-	   << "  tag " << tag);
+	  << comm.qualified_symbol << std::endl
+	  << "  price " << price << " "
+	  << "  date " << date << " "
+	  << "  tag " << tag);
 
     DEBUG("amounts.commodities", "qualified_name is " << name.str());
 

@@ -79,10 +79,11 @@ if USE_PCH
 libledger_la_CXXFLAGS = $(WARNFLAGS)
 nodist_libledger_la_SOURCES = system.hh.gch
 
-BUILT_SOURCES += system.hh.gch
-CLEANFILES += system.hh.gch
+BUILT_SOURCES += system.hh.gch system.hh
+CLEANFILES += system.hh.gch system.hh
 
 $(top_builddir)/system.hh.gch: $(srcdir)/src/system.hh acconf.h
+	echo "#include \"src/system.hh\"" > $(top_builddir)/system.hh
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(libledger_la_CPPFLAGS) \
 		-o $@ $(srcdir)/src/system.hh
 endif
@@ -103,7 +104,6 @@ pkginclude_HEADERS = \
 	src/csv.h	 \
 	src/derive.h     \
 	src/emacs.h	 \
-	src/error.h	 \
 	src/fdstream.hpp \
 	src/format.h     \
 	src/gnucash.h    \
@@ -168,7 +168,8 @@ clean-local:
 ledger_so_SOURCES = src/pyledger.cc
 ledger_so_DEPENDENCIES = libledger.la gdtoa/libgdtoa.la libpyledger.la
 
-PYLIBS = pyledger ledger gdtoa boost_date_time boost_regex boost_python gmp
+PYLIBS = pyledger ledger gdtoa gmp boost_date_time \
+	 boost_filesystem boost_regex boost_python
 
 if HAVE_EXPAT
 PYLIBS += expat

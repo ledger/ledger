@@ -55,12 +55,13 @@ void quotes_by_script::operator()(commodity_base_t& commodity,
     commodity.history->last_lookup = time_now;
     cache_dirty = true;
 
-    if (price && ! price_db.empty()) {
+    if (price) {
+      assert(! price_db.empty());
+
 #if defined(__GNUG__) && __GNUG__ < 3
-      std::ofstream database(price_db.c_str(), ios::out | ios::app);
+      ofstream database(price_db, ios::out | ios::app);
 #else
-      std::ofstream database(price_db.c_str(),
-			     std::ios_base::out | std::ios_base::app);
+      ofstream database(price_db, std::ios_base::out | std::ios_base::app);
 #endif
 #if 0
       // jww (2007-04-18): Need to convert to local time and print
@@ -70,10 +71,9 @@ void quotes_by_script::operator()(commodity_base_t& commodity,
 #endif
     }
   } else {
-    throw exception(string("Failed to download price for '") +
-		    commodity.symbol + "' (command: \"getquote " +
-		    commodity.symbol + "\")",
-		    context());
+    throw_(download_error,
+	   "Failed to download price for '" << commodity.symbol <<
+	   "' (command: \"getquote " << commodity.symbol << "\")");
   }
 }
 

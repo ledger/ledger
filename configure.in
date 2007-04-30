@@ -127,6 +127,27 @@ else
   AC_MSG_FAILURE("Could not find boost_date_time library (set CPPFLAGS and LDFLAGS?)")
 fi
 
+# check for boost_filesystem
+AC_CACHE_CHECK(
+  [if boost_filesystem is available],
+  [boost_filesystem_cpplib_avail],
+  [boost_filesystem_save_libs=$LIBS
+   LIBS="-lboost_filesystem $LIBS"
+   AC_LANG_PUSH(C++)
+   AC_TRY_LINK(
+     [#include <boost/filesystem/path.hpp>],
+     [boost::filesystem::path this_path("Hello");],
+     [boost_filesystem_cpplib_avail=true],
+     [boost_filesystem_cpplib_avail=false])
+   AC_LANG_POP
+   LIBS=$boost_filesystem_save_libs])
+
+if [test x$boost_filesystem_cpplib_avail = xtrue ]; then
+  LIBS="-lboost_filesystem $LIBS"
+else
+  AC_MSG_FAILURE("Could not find boost_filesystem library (set CPPFLAGS and LDFLAGS?)")
+fi
+
 # check for gmp
 AC_CACHE_CHECK(
   [if libgmp is available],

@@ -749,7 +749,7 @@ inline commodity_t& amount_t::commodity() const {
 void parse_conversion(const string& larger_str,
 		      const string& smaller_str);
 
-DECLARE_EXCEPTION(amount_exception);
+DECLARE_EXCEPTION(amount_error);
 
 struct compare_amount_commodities {
   bool operator()(const amount_t * left, const amount_t * right) const;

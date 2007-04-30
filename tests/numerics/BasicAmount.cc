@@ -339,7 +339,7 @@ void BasicAmountTestCase::testIntegerDivision()
   amount_t x1(123L);
   amount_t y1(456L);
 
-  assertThrow(x1 / 0L, amount_exception);
+  assertThrow(x1 / 0L, amount_error);
   assertEqual(amount_t(0L), amount_t(0L) / x1);
   assertEqual(amount_t(0L), 0L / x1);
   assertEqual(x1, x1 / 1L);
@@ -376,7 +376,7 @@ void BasicAmountTestCase::testFractionalDivision()
   amount_t x1(123.123);
   amount_t y1(456.456);
 
-  assertThrow(x1 / 0L, amount_exception);
+  assertThrow(x1 / 0L, amount_error);
   assertEqual(amount_t("0.008121959"), amount_t(1.0) / x1);
   assertEqual(amount_t("0.008121959"), 1.0 / x1);
   assertEqual(x1, x1 / 1.0);

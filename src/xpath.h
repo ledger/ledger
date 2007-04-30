@@ -14,9 +14,9 @@ public:
   static void initialize();
   static void shutdown();
 
-  DECLARE_EXCEPTION(parse_exception);
-  DECLARE_EXCEPTION(compile_exception);
-  DECLARE_EXCEPTION(calc_exception);
+  DECLARE_EXCEPTION(parse_error);
+  DECLARE_EXCEPTION(compile_error);
+  DECLARE_EXCEPTION(calc_error);
 
 #if 0
   class context : public error_context {

@@ -382,14 +382,14 @@ document_t * document_t::parser_t::parse(std::istream& in)
     catch (const std::exception& err) {
       //unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
       XML_ParserFree(parser);
-      throw_(parse_exception, err.what());
+      throw_(parse_error, err.what());
     }
 
     if (! have_error.empty()) {
       //unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
 #if 0
       // jww (2007-04-26): What is this doing??
-      parse_exception err(have_error);
+      parse_error err(have_error);
       std::cerr << "Error: " << err.what() << std::endl;
 #endif
       have_error = "";
@@ -399,7 +399,7 @@ document_t * document_t::parser_t::parse(std::istream& in)
       //unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
       const char * err = XML_ErrorString(XML_GetErrorCode(parser));
       XML_ParserFree(parser);
-      throw_(parse_exception, err);
+      throw_(parse_error, err);
     }
   }
 

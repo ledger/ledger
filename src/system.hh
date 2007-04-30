@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <exception>
+#include <stdexcept>
 #include <iostream>
 #include <streambuf>
 #include <iomanip>
@@ -95,5 +96,17 @@ extern "C" {
 #if defined(HAVE_LIBOFX)
 #include <libofx.h>
 #endif
+
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/any.hpp>
+#include <boost/current_function.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/filesystem/exception.hpp>
+#include <boost/filesystem/fstream.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/optional.hpp>
+#include <boost/ptr_container/ptr_list.hpp>
+#include <boost/ptr_container/ptr_vector.hpp>
+#include <boost/regex.hpp>
 
 #endif // _SYSTEM_HH

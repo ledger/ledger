@@ -1,7 +1,6 @@
 #include "pyinterp.h"
 
 #include <boost/python/module_init.hpp>
-#include <boost/python/exception_translator.hpp>
 
 namespace ledger {
 
@@ -37,7 +36,7 @@ object python_interpreter_t::import(const string& str)
   try {
     PyObject * mod = PyImport_Import(PyString_FromString(str.c_str()));
     if (! mod)
-      throw_(exception, "Failed to import Python module " << str);
+      throw_(std::logic_error, "Failed to import Python module " << str);
 
     object newmod(handle<>(borrowed(mod)));
 
@@ -52,7 +51,7 @@ object python_interpreter_t::import(const string& str)
   }
   catch (const error_already_set&) {
     PyErr_Print();
-    throw_(exception, "Importing Python module " << str);
+    throw_(std::logic_error, "Importing Python module " << str);
   }
 }
 
@@ -86,7 +85,7 @@ object python_interpreter_t::eval(std::istream& in, py_eval_mode_t mode)
   }
   catch (const error_already_set&) {
     PyErr_Print();
-    throw_(exception, "Evaluating Python code");
+    throw_(std::logic_error, "Evaluating Python code");
   }
 }
 
@@ -104,7 +103,7 @@ object python_interpreter_t::eval(const string& str, py_eval_mode_t mode)
   }
   catch (const error_already_set&) {
     PyErr_Print();
-    throw_(exception, "Evaluating Python code");
+    throw_(std::logic_error, "Evaluating Python code");
   }
 }
 
@@ -132,7 +131,7 @@ void python_interpreter_t::functor_t::operator()(value_t& result,
 	}
 	else if (PyObject * err = PyErr_Occurred()) {
 	  PyErr_Print();
-	  throw_(xml::xpath_t::calc_exception,
+	  throw_(xml::xpath_t::calc_error,
 		 "While calling Python function '" << name() << "'");
 	} else {
 	  assert(0);
@@ -144,7 +143,7 @@ void python_interpreter_t::functor_t::operator()(value_t& result,
   }
   catch (const error_already_set&) {
     PyErr_Print();
-    throw_(xml::xpath_t::calc_exception,
+    throw_(xml::xpath_t::calc_error,
 	   "While calling Python function '" << name() << "'");
   }
 }
@@ -161,7 +160,7 @@ void python_interpreter_t::lambda_t::operator()(value_t& result,
   }
   catch (const error_already_set&) {
     PyErr_Print();
-    throw_(xml::xpath_t::calc_exception,
+    throw_(xml::xpath_t::calc_error,
 	   "While evaluating Python lambda expression");
   }
 }

@@ -10,6 +10,8 @@
 
 namespace ledger {
 
+DECLARE_EXCEPTION(assertion_failed);
+
 void debug_assert(const string& reason,
 		  const string& func,
 		  const string& file,
@@ -18,7 +20,7 @@ void debug_assert(const string& reason,
   std::ostringstream buf;
   buf << "Assertion failed in \"" << file << "\", line " << line
       << ": " << reason;
-  throw exception(buf.str(), context());
+  throw assertion_failed(buf.str());
 }
 
 } // namespace ledger
@@ -618,6 +620,7 @@ void finish_timer(const char * name)
 namespace ledger {
 
 std::ostringstream _exc_buffer;
+ptr_list<context>  context_stack;
 
 } // namespace ledger
 

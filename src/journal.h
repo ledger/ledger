@@ -212,7 +212,7 @@ class entry_context : public error_context {
 };
 #endif
 
-DECLARE_EXCEPTION(balance_exception);
+DECLARE_EXCEPTION(balance_error);
 
 
 class auto_entry_t : public entry_base_t
