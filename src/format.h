@@ -32,13 +32,13 @@ class format_t
 
       switch (kind) {
       case TEXT:
-	delete chars;
+	checked_delete(chars);
 	break;
       case XPATH:
-	delete xpath;
+	checked_delete(xpath);
 	break;
       case GROUP:
-	delete format;
+	checked_delete(format);
 	break;
       default:
 	assert(! chars);
@@ -75,7 +75,7 @@ class format_t
     for (std::list<element_t *>::iterator i = elements.begin();
 	 i != elements.end();
 	 i++)
-      delete *i;
+      checked_delete(*i);
     elements.clear();
   }
 

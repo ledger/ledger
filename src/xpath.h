@@ -428,7 +428,7 @@ public:
 	     "Releasing " << this << ", refc now " << refc - 1);
       assert(refc > 0);
       if (--refc == 0)
-	delete this;
+	checked_delete(this);
     }
     op_t * acquire() {
       DEBUG("ledger.xpath.memory",

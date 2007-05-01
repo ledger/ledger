@@ -1,6 +1,7 @@
 #ifndef _XML_H
 #define _XML_H
 
+#include "journal.h"
 #include "value.h"
 #include "parser.h"
 
@@ -45,7 +46,7 @@ public:
   virtual ~node_t() {
     TRACE_DTOR(node_t);
     if (parent) extract();
-    if (attrs) delete attrs;
+    if (attrs) checked_delete(attrs);
   }
 
   void extract();		// extract this node from its parent's child list
@@ -249,10 +250,10 @@ class xml_parser_t : public parser_t
  public:
   virtual bool test(std::istream& in) const;
 
-  virtual unsigned int parse(std::istream&  in,
-			     journal_t *    journal,
-			     account_t *    master        = NULL,
-			     const string * original_file = NULL);
+  virtual unsigned int parse(std::istream&	   in,
+			     journal_t *	   journal,
+			     account_t *	   master   = NULL,
+			     const optional<path>& original = optional<path>());
 };
 
 DECLARE_EXCEPTION(parse_error);
@@ -319,7 +320,7 @@ public:
   virtual ~transaction_node_t() {
     TRACE_DTOR(transaction_node_t);
     if (payee_virtual_node)
-      delete payee_virtual_node;
+      checked_delete(payee_virtual_node);
   }
 
   virtual node_t * children() const;
@@ -387,33 +388,33 @@ public:
 };
 
 template <typename T>
-inline parent_node_t * wrap_node(document_t * doc, T * item,
-				 void * parent_node = NULL) {
-  assert(0);
+inline typename T::node_type *
+wrap_node(document_t * doc, T * item, void * parent_node = NULL) {
+  assert(false);
   return NULL;
 }
 
 template <>
-inline parent_node_t * wrap_node(document_t * doc, transaction_t * xact,
-				 void * parent_node) {
+inline transaction_t::node_type *
+wrap_node(document_t * doc, transaction_t * xact, void * parent_node) {
   return new transaction_node_t(doc, xact, (parent_node_t *)parent_node);
 }
 
 template <>
-inline parent_node_t * wrap_node(document_t * doc, entry_t * entry,
-				 void * parent_node) {
+inline entry_t::node_type *
+wrap_node(document_t * doc, entry_t * entry, void * parent_node) {
   return new entry_node_t(doc, entry, (parent_node_t *)parent_node);
 }
 
 template <>
-inline parent_node_t * wrap_node(document_t * doc, account_t * account,
-				 void * parent_node) {
+inline account_t::node_type *
+wrap_node(document_t * doc, account_t * account, void * parent_node) {
   return new account_node_t(doc, account, (parent_node_t *)parent_node);
 }
 
 template <>
-inline parent_node_t * wrap_node(document_t * doc, journal_t * journal,
-				 void * parent_node) {
+inline journal_t::node_type *
+wrap_node(document_t * doc, journal_t * journal, void * parent_node) {
   return new journal_node_t(doc, journal, (parent_node_t *)parent_node);
 }
 

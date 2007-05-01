@@ -10,10 +10,10 @@ namespace ledger {
 class session_t : public xml::xpath_t::scope_t
 {
  public:
-  string init_file;
-  string data_file;
-  string cache_file;
-  string price_db;
+  path		 data_file;
+  optional<path> init_file;
+  optional<path> cache_file;
+  optional<path> price_db;
 
   string register_format;
   string wide_register_format;
@@ -42,8 +42,8 @@ class session_t : public xml::xpath_t::scope_t
   bool ansi_codes;
   bool ansi_invert;
 
-  std::list<journal_t *> journals;
-  std::list<parser_t *>  parsers;
+  ptr_list<journal_t> journals;
+  ptr_list<parser_t>  parsers;
 
   session_t(xml::xpath_t::scope_t * _parent = NULL) :
     xml::xpath_t::scope_t(_parent),
@@ -96,16 +96,6 @@ class session_t : public xml::xpath_t::scope_t
 
   virtual ~session_t() {
     TRACE_DTOR(session_t);
-
-    for (std::list<journal_t *>::iterator i = journals.begin();
-	 i != journals.end();
-	 i++)
-      delete *i;
-
-    for (std::list<parser_t *>::iterator i = parsers.begin();
-	 i != parsers.end();
-	 i++)
-      delete *i;
   }
 
   journal_t * new_journal() {
@@ -114,19 +104,26 @@ class session_t : public xml::xpath_t::scope_t
     return journal;
   }
   void close_journal(journal_t * journal) {
-    journals.remove(journal);
-    delete journal;
+    for (ptr_list<journal_t>::iterator i = journals.begin();
+	 i != journals.end();
+	 i++)
+      if (&*i == journal) {
+	journals.erase(i);
+	return;
+      }
+    assert(false);
+    checked_delete(journal);
   }
 
-  unsigned int read_journal(std::istream&       in,
-			    journal_t *         journal,
-			    account_t *		master        = NULL,
-			    const string * original_file = NULL);
+  unsigned int read_journal(std::istream&	  in,
+			    journal_t *		  journal,
+			    account_t *		  master   = NULL,
+			    const optional<path>& original = optional<path>());
 
-  unsigned int read_journal(const string&  path,
-			    journal_t *    journal,
-			    account_t *	   master        = NULL,
-			    const string * original_file = NULL);
+  unsigned int read_journal(const path&		  path,
+			    journal_t *		  journal,
+			    account_t *		  master   = NULL,
+			    const optional<path>& original = optional<path>());
 
   void read_init();
 
@@ -135,17 +132,16 @@ class session_t : public xml::xpath_t::scope_t
   void register_parser(parser_t * parser) {
     parsers.push_back(parser);
   }
-  bool unregister_parser(parser_t * parser) {
-    std::list<parser_t *>::iterator i;
-    for (i = parsers.begin(); i != parsers.end(); i++)
-      if (*i == parser)
-	break;
-    if (i == parsers.end())
-      return false;
-
-    parsers.erase(i);
-
-    return true;
+  void unregister_parser(parser_t * parser) {
+    for (ptr_list<parser_t>::iterator i = parsers.begin();
+	 i != parsers.end();
+	 i++)
+      if (&*i == parser) {
+	parsers.erase(i);
+	return;
+      }
+    assert(false);
+    checked_delete(parser);
   }
 
   //

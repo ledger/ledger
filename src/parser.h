@@ -15,10 +15,10 @@ class parser_t
 
   virtual bool test(std::istream& in) const = 0;
 
-  virtual unsigned int parse(std::istream&	 in,
-			     journal_t *	 journal,
-			     account_t *	 master        = NULL,
-			     const string * original_file = NULL) = 0;
+  virtual unsigned int parse(std::istream&	   in,
+			     journal_t *	   journal,
+			     account_t *	   master   = NULL,
+			     const optional<path>& original = optional<path>()) = 0;
 };
 
 DECLARE_EXCEPTION(parse_error);

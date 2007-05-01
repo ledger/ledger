@@ -147,24 +147,24 @@ void amount_t::shutdown()
   mpz_clear(divisor);
 
   if (commodity_base_t::updater) {
-    delete commodity_base_t::updater;
+    checked_delete(commodity_base_t::updater);
     commodity_base_t::updater = NULL;
   }
 
   for (base_commodities_map::iterator i = commodity_base_t::commodities.begin();
        i != commodity_base_t::commodities.end();
        i++)
-    delete (*i).second;
+    checked_delete((*i).second);
 
   for (commodities_map::iterator i = commodity_t::commodities.begin();
        i != commodity_t::commodities.end();
        i++)
-    delete (*i).second;
+    checked_delete((*i).second);
 
   commodity_base_t::commodities.clear();
   commodity_t::commodities.clear();
 
-  delete commodity_t::commodities_by_ident;
+  checked_delete(commodity_t::commodities_by_ident);
   commodity_t::commodities_by_ident = NULL;
 
   commodity_t::null_commodity    = NULL;
@@ -172,7 +172,7 @@ void amount_t::shutdown()
 
   true_value->ref--;
   assert(true_value->ref == 0);
-  delete true_value;
+  checked_delete(true_value);
   true_value = NULL;
 }
 
@@ -318,13 +318,13 @@ namespace {
       newbuf[0] = '-';
       std::strcpy(&newbuf[1], result ? result : buf);
       mpz_set_str(dest, newbuf, 10);
-      delete[] newbuf;
+      checked_array_delete(newbuf);
     } else {
       mpz_set_str(dest, result ? result : buf, 10);
     }
 
     if (result)
-      delete[] result;
+      checked_array_delete(result);
     freedtoa(buf);
 
     return decpt;
@@ -346,7 +346,7 @@ void amount_t::_release()
 
   if (--quantity->ref == 0) {
     if (! (quantity->flags & BIGINT_BULK_ALLOC))
-      delete quantity;
+      checked_delete(quantity);
     else
       quantity->~bigint_t();
   }
@@ -1073,7 +1073,7 @@ void amount_t::print(std::ostream& _out, bool omit_commodity,
 
   if (! omit_commodity && comm.annotated) {
     annotated_commodity_t& ann(static_cast<annotated_commodity_t&>(comm));
-    assert(&ann.price != this);
+    assert(&*ann.price != this);
     ann.write_annotations(out);
   }
 
@@ -1144,11 +1144,11 @@ static void parse_commodity(std::istream& in, string& symbol)
   symbol = buf;
 }
 
-bool parse_annotations(std::istream& in, amount_t& price,
-		       moment_t& date, string& tag)
+void parse_annotations(std::istream&	   in,
+		       optional<amount_t>& price,
+		       optional<moment_t>& date,
+		       optional<string>&   tag)
 {
-  bool has_date = false;
-  
   do {
     char buf[256];
     char c = peek_next_nonws(in);
@@ -1163,19 +1163,22 @@ bool parse_annotations(std::istream& in, amount_t& price,
       else
 	throw_(amount_error, "Commodity price lacks closing brace");
 
-      price.parse(buf, AMOUNT_PARSE_NO_MIGRATE);
-      price.in_place_reduce();
+      amount_t temp;
+      temp.parse(buf, AMOUNT_PARSE_NO_MIGRATE);
+      temp.in_place_reduce();
 
       // Since this price will maintain its own precision, make sure
       // it is at least as large as the base commodity, since the user
       // may have only specified {$1} or something similar.
 
-      if (price.has_commodity() &&
-	  price.quantity->prec < price.commodity().precision())
-	price = price.round();	// no need to retain individual precision
+      if (temp.has_commodity() &&
+	  temp.quantity->prec < temp.commodity().precision())
+	temp = temp.round();	// no need to retain individual precision
+
+      price = temp;
     }
     else if (c == '[') {
-      if (is_valid_moment(date))
+      if (date)
 	throw_(amount_error, "Commodity specifies more than one date");
 
       in.get(c);
@@ -1186,10 +1189,9 @@ bool parse_annotations(std::istream& in, amount_t& price,
 	throw_(amount_error, "Commodity date lacks closing bracket");
 
       date = parse_datetime(buf);
-      has_date = true;
     }
     else if (c == '(') {
-      if (! tag.empty())
+      if (tag)
 	throw_(amount_error, "Commodity specifies more than one tag");
 
       in.get(c);
@@ -1207,12 +1209,10 @@ bool parse_annotations(std::istream& in, amount_t& price,
   } while (true);
 
   DEBUG("amounts.commodities",
-	 "Parsed commodity annotations: "
-	 << "  price " << price << " "
-	 << "  date " << date << " "
-	 << "  tag " << tag);
-
-  return has_date;
+	"Parsed commodity annotations: "
+	<< "  price " << (price ? price->to_string() : "NONE") << " "
+	<< "  date "  << (date ? *date : moment_t()) << " "
+	<< "  tag "   << (tag ? *tag : "NONE"));
 }
 
 void amount_t::parse(std::istream& in, uint8_t flags)
@@ -1222,14 +1222,13 @@ void amount_t::parse(std::istream& in, uint8_t flags)
   //   [-]NUM[ ]SYM [@ AMOUNT]
   //   SYM[ ][-]NUM [@ AMOUNT]
 
-  string  symbol;
-  string  quant;
-  amount_t     tprice;
-  moment_t   tdate;
-  bool         had_date = false;
-  string  tag;
-  unsigned int comm_flags = COMMODITY_STYLE_DEFAULTS;
-  bool         negative = false;
+  string	     symbol;
+  string	     quant;
+  optional<amount_t> tprice;
+  optional<moment_t> tdate;
+  optional<string>   ttag;
+  unsigned int	     comm_flags = COMMODITY_STYLE_DEFAULTS;
+  bool		     negative	= false;
 
   char c = peek_next_nonws(in);
   if (c == '-') {
@@ -1252,7 +1251,7 @@ void amount_t::parse(std::istream& in, uint8_t flags)
 	comm_flags |= COMMODITY_STYLE_SUFFIXED;
 
       if (! in.eof() && ((n = in.peek()) != '\n'))
-	had_date = parse_annotations(in, tprice, tdate, tag);
+	parse_annotations(in, tprice, tdate, ttag);
     }
   } else {
     parse_commodity(in, symbol);
@@ -1264,7 +1263,7 @@ void amount_t::parse(std::istream& in, uint8_t flags)
       parse_quantity(in, quant);
 
       if (! quant.empty() && ! in.eof() && ((n = in.peek()) != '\n'))
-	had_date = parse_annotations(in, tprice, tdate, tag);
+	parse_annotations(in, tprice, tdate, ttag);
     }
   }
 
@@ -1288,9 +1287,9 @@ void amount_t::parse(std::istream& in, uint8_t flags)
     }
     assert(commodity_);
 
-    if (! tprice.realzero() || had_date || ! tag.empty())
-      commodity_ =
-	annotated_commodity_t::find_or_create(*commodity_, tprice, tdate, tag);
+    if (tprice || tdate || ttag)
+      commodity_ = annotated_commodity_t::find_or_create
+	(*commodity_, tprice, tdate, ttag);
   }
 
   // Determine the precision of the amount, based on the usage of
@@ -1348,7 +1347,7 @@ void amount_t::parse(std::istream& in, uint8_t flags)
     *t = '\0';
 
     mpz_set_str(MPZ(quantity), buf, 10);
-    delete[] buf;
+    checked_array_delete(buf);
   } else {
     mpz_set_str(MPZ(quantity), quant.c_str(), 10);
   }
@@ -1564,9 +1563,9 @@ bool amount_t::valid() const
   return true;
 }
 
-void amount_t::annotate_commodity(const amount_t&    tprice,
-				  const moment_t&  tdate,
-				  const string& tag)
+void amount_t::annotate_commodity(const optional<amount_t>& tprice,
+				  const optional<moment_t>& tdate,
+				  const optional<string>&   ttag)
 {
   const commodity_t *	  this_base;
   annotated_commodity_t * this_ann = NULL;
@@ -1580,17 +1579,17 @@ void amount_t::annotate_commodity(const amount_t&    tprice,
   assert(this_base);
 
   DEBUG("amounts.commodities", "Annotating commodity for amount "
-	 << *this << std::endl
-	 << "  price " << tprice << " "
-	 << "  date " << tdate << " "
-	 << "  tag " << tag);
+	<< *this << std::endl
+	<< "  price " << (tprice ? tprice->to_string() : "NONE") << " "
+	<< "  date "  << (tdate ? *tdate : moment_t()) << " "
+	<< "  ttag "  << (ttag ? *ttag : "NONE"));
 
-  commodity_t * ann_comm =
-    annotated_commodity_t::find_or_create
-      (*this_base, ! tprice && this_ann ? this_ann->price : tprice,
-       ! is_valid_moment(tdate) && this_ann ? this_ann->date : tdate,
-       tag.empty() && this_ann ? this_ann->tag : tag);
-  if (ann_comm)
+  if (commodity_t * ann_comm =
+      annotated_commodity_t::find_or_create
+        (*this_base,
+	 ! tprice && this_ann ? this_ann->price : tprice,
+	 ! tdate  && this_ann ? this_ann->date  : tdate,
+	 ! ttag   && this_ann ? this_ann->tag   : ttag))
     set_commodity(*ann_comm);
 
   DEBUG("amounts.commodities", "  Annotated amount is " << *this);
@@ -1607,8 +1606,8 @@ amount_t amount_t::strip_annotations(const bool _keep_price,
   DEBUG("amounts.commodities", "Reducing commodity for amount "
 	 << *this << std::endl
 	 << "  keep price " << _keep_price << " "
-	 << "  keep date " << _keep_date << " "
-	 << "  keep tag " << _keep_tag);
+	 << "  keep date "  << _keep_date << " "
+	 << "  keep tag "   << _keep_tag);
 
   annotated_commodity_t&
     ann_comm(static_cast<annotated_commodity_t&>(commodity()));
@@ -1617,13 +1616,14 @@ amount_t amount_t::strip_annotations(const bool _keep_price,
   commodity_t * new_comm;
 
   if ((_keep_price && ann_comm.price) ||
-      (_keep_date  && is_valid_moment(ann_comm.date)) ||
-      (_keep_tag   && ! ann_comm.tag.empty()))
+      (_keep_date  && ann_comm.date) ||
+      (_keep_tag   && ann_comm.tag))
   {
     new_comm = annotated_commodity_t::find_or_create
-      (*ann_comm.ptr, _keep_price ? ann_comm.price : amount_t(),
-       _keep_date ? ann_comm.date : moment_t(),
-       _keep_tag ? ann_comm.tag : "");
+      (*ann_comm.ptr,
+       _keep_price ? ann_comm.price : optional<amount_t>(),
+       _keep_date  ? ann_comm.date  : optional<moment_t>(),
+       _keep_tag   ? ann_comm.tag   : optional<string>());
   } else {
     new_comm = commodity_t::find_or_create(ann_comm.base_symbol());
   }
@@ -1638,8 +1638,9 @@ amount_t amount_t::strip_annotations(const bool _keep_price,
 
 optional<amount_t> amount_t::price() const
 {
-  if (commodity_ && commodity_->annotated) {
-    amount_t t(((annotated_commodity_t *)commodity_)->price);
+  if (commodity_ && commodity_->annotated &&
+      ((annotated_commodity_t *)commodity_)->price) {
+    amount_t t(*((annotated_commodity_t *)commodity_)->price);
     t *= number();
     DEBUG("amounts.commodities",
 	   "Returning price of " << *this << " = " << t);
@@ -1800,7 +1801,7 @@ commodity_t * commodity_t::find(const string& symbol)
 amount_t commodity_base_t::value(const moment_t& moment)
 {
   moment_t age;
-  amount_t   price;
+  amount_t price;
 
   if (history) {
     assert(history->prices.size() > 0);
@@ -1851,12 +1852,12 @@ bool annotated_commodity_t::operator==(const commodity_t& comm) const
        price != static_cast<const annotated_commodity_t&>(comm).price))
     return false;
 
-  if (is_valid_moment(date) &&
+  if (date &&
       (! comm.annotated ||
        date != static_cast<const annotated_commodity_t&>(comm).date))
     return false;
 
-  if (! tag.empty() &&
+  if (tag &&
       (! comm.annotated ||
        tag != static_cast<const annotated_commodity_t&>(comm).tag))
     return false;
@@ -1865,27 +1866,27 @@ bool annotated_commodity_t::operator==(const commodity_t& comm) const
 }
 
 void
-annotated_commodity_t::write_annotations(std::ostream&      out,
-					 const amount_t&    price,
-					 const moment_t&  date,
-					 const string& tag)
+annotated_commodity_t::write_annotations(std::ostream&		   out,
+					 const optional<amount_t>& price,
+					 const optional<moment_t>& date,
+					 const optional<string>&   tag)
 {
   if (price)
-    out << " {" << price << '}';
+    out << " {" << *price << '}';
 
-  if (is_valid_moment(date))
-    out << " [" << date << ']';
+  if (date)
+    out << " [" << *date << ']';
 
-  if (! tag.empty())
-    out << " (" << tag << ')';
+  if (tag)
+    out << " (" << *tag << ')';
 }
 
 commodity_t *
-annotated_commodity_t::create(const commodity_t& comm,
-			      const amount_t&    price,
-			      const moment_t&  date,
-			      const string& tag,
-			      const string& mapping_key)
+annotated_commodity_t::create(const commodity_t&	comm,
+			      const optional<amount_t>& price,
+			      const optional<moment_t>&	date,
+			      const optional<string>&	tag,
+			      const string&		mapping_key)
 {
   std::auto_ptr<annotated_commodity_t> commodity(new annotated_commodity_t);
 
@@ -1902,11 +1903,11 @@ annotated_commodity_t::create(const commodity_t& comm,
   commodity->qualified_symbol = comm.symbol();
 
   DEBUG("amounts.commodities", "Creating annotated commodity "
-	 << "symbol " << commodity->symbol()
-	 << " key " << mapping_key << std::endl
-	 << "  price " << price << " "
-	 << "  date " << date << " "
-	 << "  tag " << tag);
+	<< "symbol " << commodity->symbol()
+	<< " key "   << mapping_key << std::endl
+	<< "  price " << (price ? price->to_string() : "NONE") << " "
+	<< "  date "  << (date  ? *date : moment_t()) << " "
+	<< "  tag "   << (tag   ? *tag  : "NONE"));
 
   // Add the fully annotated name to the map, so that this symbol may
   // quickly be found again.
@@ -1922,12 +1923,12 @@ annotated_commodity_t::create(const commodity_t& comm,
 }
 
 namespace {
-  string make_qualified_name(const commodity_t& comm,
-				  const amount_t&    price,
-				  const moment_t&  date,
-				  const string& tag)
+  string make_qualified_name(const commodity_t&	       comm,
+			     const optional<amount_t>& price,
+			     const optional<moment_t>& date,
+			     const optional<string>&   tag)
   {
-    if (price < 0)
+    if (price && *price < 0)
       throw_(amount_error, "A commodity's price may not be negative");
 
     std::ostringstream name;
@@ -1937,9 +1938,9 @@ namespace {
 
     DEBUG("amounts.commodities", "make_qualified_name for "
 	  << comm.qualified_symbol << std::endl
-	  << "  price " << price << " "
-	  << "  date " << date << " "
-	  << "  tag " << tag);
+	  << "  price " << (price ? price->to_string() : "NONE") << " "
+	  << "  date "  << (date  ? *date : moment_t()) << " "
+	  << "  tag "   << (tag   ? *tag  : "NONE"));
 
     DEBUG("amounts.commodities", "qualified_name is " << name.str());
 
@@ -1948,10 +1949,10 @@ namespace {
 }
 
 commodity_t *
-annotated_commodity_t::find_or_create(const commodity_t& comm,
-				      const amount_t&    price,
-				      const moment_t&  date,
-				      const string& tag)
+annotated_commodity_t::find_or_create(const commodity_t&	comm,
+				      const optional<amount_t>& price,
+				      const optional<moment_t>& date,
+				      const optional<string>&	tag)
 {
   string name = make_qualified_name(comm, price, date, tag);
 
@@ -1991,9 +1992,9 @@ bool compare_amount_commodities::operator()(const amount_t * left,
       return false;
 
     if (aleftcomm.price && arightcomm.price) {
-      amount_t leftprice(aleftcomm.price);
+      amount_t leftprice(*aleftcomm.price);
       leftprice.in_place_reduce();
-      amount_t rightprice(arightcomm.price);
+      amount_t rightprice(*arightcomm.price);
       rightprice.in_place_reduce();
 
       if (leftprice.commodity() == rightprice.commodity()) {
@@ -2013,28 +2014,25 @@ bool compare_amount_commodities::operator()(const amount_t * left,
       }
     }
 
-    if (! is_valid_moment(aleftcomm.date) &&
-	is_valid_moment(arightcomm.date))
+    if (! aleftcomm.date && arightcomm.date)
       return true;
-    if (is_valid_moment(aleftcomm.date) &&
-	! is_valid_moment(arightcomm.date))
+    if (aleftcomm.date && ! arightcomm.date)
       return false;
 
-    if (is_valid_moment(aleftcomm.date) &&
-	is_valid_moment(arightcomm.date)) {
-      duration_t diff = aleftcomm.date - arightcomm.date;
+    if (aleftcomm.date && arightcomm.date) {
+      duration_t diff = *aleftcomm.date - *arightcomm.date;
       return diff.is_negative();
     }
 
-    if (aleftcomm.tag.empty() && ! arightcomm.tag.empty())
+    if (! aleftcomm.tag && arightcomm.tag)
       return true;
-    if (! aleftcomm.tag.empty() && arightcomm.tag.empty())
+    if (aleftcomm.tag && ! arightcomm.tag)
       return false;
 
-    if (! aleftcomm.tag.empty() && ! arightcomm.tag.empty())
-      return aleftcomm.tag < arightcomm.tag;
+    if (aleftcomm.tag && arightcomm.tag)
+      return *aleftcomm.tag < *arightcomm.tag;
 
-    assert(0);
+    assert(false);
     return true;
   }
 }

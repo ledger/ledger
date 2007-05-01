@@ -87,14 +87,14 @@ void shutdown_memory_tracing()
       report_memory(std::cerr);
   }
 
-  delete live_memory;        live_memory	= NULL;
-  delete live_memory_count;  live_memory_count	= NULL;
-  delete total_memory_count; total_memory_count = NULL;
+  checked_delete(live_memory);        live_memory	= NULL;
+  checked_delete(live_memory_count);  live_memory_count	= NULL;
+  checked_delete(total_memory_count); total_memory_count = NULL;
 
-  delete live_objects;       live_objects	= NULL;
-  delete live_object_count;  live_object_count	= NULL;
-  delete total_object_count; total_object_count = NULL;
-  delete total_ctor_count;   total_ctor_count	= NULL;
+  checked_delete(live_objects);       live_objects	= NULL;
+  checked_delete(live_object_count);  live_object_count	= NULL;
+  checked_delete(total_object_count); total_object_count = NULL;
+  checked_delete(total_ctor_count);   total_ctor_count	= NULL;
 }
 
 inline void add_to_count_map(object_count_map& the_map,
@@ -630,15 +630,20 @@ ptr_list<context>  context_stack;
 
 namespace ledger {
 
-string expand_path(const string& path)
+path expand_path(const path& pathname)
 {
-  if (path.length() == 0 || path[0] != '~')
-    return path;
+  if (pathname.empty())
+    return pathname;
 
-  const char * pfx = NULL;
-  string::size_type pos = path.find_first_of('/');
+#if 1
+  return pathname;
+#else
+  // jww (2007-04-30): I need to port this code to use
+  // boost::filesystem::path
+  const char *	    pfx = NULL;
+  string::size_type pos = pathname.find_first_of('/');
 
-  if (path.length() == 1 || pos == 1) {
+  if (pathname.length() == 1 || pos == 1) {
     pfx = std::getenv("HOME");
 #ifdef HAVE_GETPWUID
     if (! pfx) {
@@ -651,7 +656,7 @@ string expand_path(const string& path)
   }
 #ifdef HAVE_GETPWNAM
   else {
-    string user(path, 1, pos == string::npos ?
+    string user(pathname, 1, pos == string::npos ?
 		     string::npos : pos - 1);
     struct passwd * pw = getpwnam(user.c_str());
     if (pw)
@@ -662,7 +667,7 @@ string expand_path(const string& path)
   // if we failed to find an expansion, return the path unchanged.
 
   if (! pfx)
-    return path;
+    return pathname;
 
   string result(pfx);
 
@@ -672,16 +677,19 @@ string expand_path(const string& path)
   if (result.length() == 0 || result[result.length() - 1] != '/')
     result += '/';
 
-  result += path.substr(pos + 1);
+  result += pathname.substr(pos + 1);
 
   return result;
+#endif
 }
 
-string resolve_path(const string& path)
+path resolve_path(const path& pathname)
 {
-  if (path[0] == '~')
-    return expand_path(path);
-  return path;
+  path temp = pathname;
+  if (temp.string()[0] == '~')
+    temp = expand_path(temp);
+  temp.normalize();
+  return temp;
 }
 
 } // namespace ledger

@@ -7,12 +7,12 @@ namespace ledger {
 
 #define MAX_LINE 1024
 
-static string	    pathname;
+static path	    pathname;
 static unsigned int linenum;
 static unsigned int src_idx;
 static accounts_map account_aliases;
 
-static std::list<std::pair<string, int> > include_stack;
+static std::list<std::pair<path, int> > include_stack;
 
 #ifdef TIMELOG_SUPPORT
 struct time_entry_t {
@@ -173,7 +173,9 @@ transaction_t * parse_transaction(char *      line,
 
     unsigned long beg = (long)in.tellg();
 
-    xact->amount.parse(in, AMOUNT_PARSE_NO_REDUCE);
+    amount_t temp;
+    temp.parse(in, AMOUNT_PARSE_NO_REDUCE);
+    xact->amount = temp;
 
     char c;
     if (! in.eof() && (c = peek_next_nonws(in)) != '@' &&
@@ -192,11 +194,12 @@ transaction_t * parse_transaction(char *      line,
 				    xact->entry->data);
       }
 
-      parse_amount_expr(in, journal, *xact, xact->amount,
+      assert(xact->amount);
+      parse_amount_expr(in, journal, *xact, *xact->amount,
 			XPATH_PARSE_NO_REDUCE);
 
       if (xact->entry) {
-	delete static_cast<xml::transaction_node_t *>(xact->data);
+	checked_delete(xact->data);
 	xact->data = NULL;
       }
 
@@ -226,13 +229,13 @@ transaction_t * parse_transaction(char *      line,
 	}
 
 	if (in.good() && ! in.eof()) {
-	  xact->cost = new amount_t;
-
 	  PUSH_CONTEXT();
 
 	  unsigned long beg = (long)in.tellg();
 
-	  xact->cost->parse(in);
+	  amount_t temp;
+	  temp.parse(in);
+	  xact->cost = temp;
 
 	  unsigned long end = (long)in.tellg();
 
@@ -248,15 +251,17 @@ transaction_t * parse_transaction(char *      line,
 	  if (*xact->cost < 0)
 	    throw_(parse_error, "A transaction's cost may not be negative");
 
+	  assert(xact->amount);
+
 	  amount_t per_unit_cost(*xact->cost);
 	  if (per_unit)
-	    *xact->cost *= xact->amount.number();
+	    *xact->cost *= xact->amount->number();
 	  else
-	    per_unit_cost /= xact->amount.number();
+	    per_unit_cost /= xact->amount->number();
 
-	  if (xact->amount.commodity() &&
-	      ! xact->amount.commodity().annotated)
-	    xact->amount.annotate_commodity(per_unit_cost,
+	  if (xact->amount->commodity() &&
+	      ! xact->amount->commodity().annotated)
+	    xact->amount->annotate_commodity(per_unit_cost,
 					    xact->entry->actual_date(),
 					    xact->entry->code);
 
@@ -265,17 +270,19 @@ transaction_t * parse_transaction(char *      line,
 	  DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 		 "Per-unit cost is " << per_unit_cost);
 	  DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
-		 "Annotated amount is " << xact->amount);
+		 "Annotated amount is " << *xact->amount);
 	  DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
-		 "Bare amount is " << xact->amount.number());
+		 "Bare amount is " << xact->amount->number());
 	}
       }
     }
 
-    xact->amount.in_place_reduce();
+    if (xact->amount) {
+      xact->amount->in_place_reduce();
 
-    DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
-	   "Reduced amount is " << xact->amount);
+      DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
+	    "Reduced amount is " << *xact->amount);
+    }
   }
 
   // Parse the optional note
@@ -283,10 +290,10 @@ transaction_t * parse_transaction(char *      line,
   if (note) {
     xact->note = note;
     DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
-	   "Parsed a note '" << xact->note << "'");
+	   "Parsed a note '" << *xact->note << "'");
 
-    if (char * b = std::strchr(xact->note.c_str(), '['))
-      if (char * e = std::strchr(xact->note.c_str(), ']')) {
+    if (char * b = std::strchr(xact->note->c_str(), '['))
+      if (char * e = std::strchr(xact->note->c_str(), ']')) {
 	char buf[256];
 	std::strncpy(buf, b + 1, e - b - 1);
 	buf[e - b - 1] = '\0';
@@ -490,7 +497,7 @@ entry_t * parse_entry(std::istream& in, char * line, journal_t * journal,
   }
 
   if (curr->data) {
-    delete static_cast<xml::entry_node_t *>(curr->data);
+    checked_delete(curr->data);
     curr->data = NULL;
   }
 
@@ -612,10 +619,10 @@ static void clock_out_from_timelog(const moment_t& when,
     curr.release();
 }
 
-unsigned int textual_parser_t::parse(std::istream&  in,
-				     journal_t *    journal,
-				     account_t *    master,
-				     const string * original_file)
+unsigned int textual_parser_t::parse(std::istream&	   in,
+				     journal_t *	   journal,
+				     account_t *	   master,
+				     const optional<path>& original)
 {
   static bool  added_auto_entry_hook = false;
   static char  line[MAX_LINE + 1];
@@ -632,11 +639,12 @@ unsigned int textual_parser_t::parse(std::istream&  in,
 
   account_stack.push_front(master);
 
-  pathname = journal ? journal->sources.back() : *original_file;
+  pathname = (journal ? journal->sources.back() :
+	      (assert(original), *original));
   src_idx  = journal ? journal->sources.size() - 1 : 0;
   linenum  = 1;
 
-  INFO("Parsing file '" << pathname << "'");
+  INFO("Parsing file '" << pathname.string() << "'");
 
   unsigned long beg_pos = in.tellg();
   unsigned long end_pos;
@@ -825,31 +833,29 @@ unsigned int textual_parser_t::parse(std::istream&  in,
       char * p = next_element(line);
       string word(line + 1);
       if (word == "include") {
-	push_var<string>	save_path(pathname);
+	push_var<path>		save_path(pathname);
 	push_var<unsigned int>  save_src_idx(src_idx);
 	push_var<unsigned long> save_beg_pos(beg_pos);
 	push_var<unsigned long> save_end_pos(end_pos);
 	push_var<unsigned int>  save_linenum(linenum);
 
-	pathname = p;
-	if (pathname[0] != '/' && pathname[0] != '\\' &&
-	    pathname[0] != '~') {
-	  string::size_type pos = save_path.prev.rfind('/');
-	  if (pos == string::npos)
-	    pos = save_path.prev.rfind('\\');
-	  if (pos != string::npos)
-	    pathname = string(save_path.prev, 0, pos + 1) + pathname;
-	}
 	pathname = resolve_path(pathname);
 
 	DEBUG("ledger.textual.include", "line " << linenum << ": " <<
-	      "Including path '" << pathname << "'");
+	      "Including path '" << pathname.string() << "'");
 
-	include_stack.push_back(std::pair<string, int>
-				(journal->sources.back(), linenum - 1));
-	count += journal->session->read_journal(pathname, journal,
-						account_stack.front());
-	include_stack.pop_back();
+	include_stack.push_back
+	  (std::pair<path, int>(journal->sources.back(), linenum - 1));
+
+	try {
+	  count += journal->session->read_journal(pathname, journal,
+						  account_stack.front());
+	  include_stack.pop_back();
+	}
+	catch (...) {
+	  include_stack.pop_back();
+	  throw;
+	}
       }
       else if (word == "account") {
 	if (account_t * acct = account_stack.front()->find_account(p))

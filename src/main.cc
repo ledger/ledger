@@ -1,14 +1,14 @@
+#include "utils.h"
+#include "option.h"
+#include "gnucash.h"
+#include "qif.h"
+#include "ofx.h"
+
 #if defined(USE_BOOST_PYTHON)
 #include <pyledger.h>
 #else
 #include <ledger.h>
 #endif
-
-#include "acconf.h"
-#include "option.h"
-#include "gnucash.h"
-#include "qif.h"
-#include "ofx.h"
 
 #ifdef HAVE_UNIX_PIPES
 #include <sys/types.h>
@@ -33,7 +33,7 @@ static int read_and_report(report_t * report, int argc, char * argv[],
 
   // Handle the command-line arguments
 
-  std::list<string> args;
+  strings_list args;
   process_arguments(argc - 1, argv + 1, false, report, args);
 
   if (args.empty()) {
@@ -44,10 +44,10 @@ static int read_and_report(report_t * report, int argc, char * argv[],
   }
   strings_list::iterator arg = args.begin();
 
-  if (session.cache_file == "<none>")
+  if (! session.cache_file)
     session.use_cache = false;
   else
-    session.use_cache = session.data_file.empty() && session.price_db.empty();
+    session.use_cache = ! session.data_file.empty() && session.price_db;
 
   DEBUG("ledger.session.cache", "1. use_cache = " << session.use_cache);
 
@@ -58,25 +58,25 @@ static int read_and_report(report_t * report, int argc, char * argv[],
   TRACE_FINISH(environment, 1);
 
   const char * p = std::getenv("HOME");
-  string home = p ? p : "";
+  path home = p ? p : "";
 
-  if (session.init_file.empty())
-    session.init_file  = home + "/.ledgerrc";
-  if (session.price_db.empty())
-    session.price_db   = home + "/.pricedb";
+  if (! session.init_file)
+    session.init_file  = home / ".ledgerrc";
+  if (! session.price_db)
+    session.price_db   = home / ".pricedb";
 
-  if (session.cache_file.empty())
-    session.cache_file = home + "/.ledger-cache";
+  if (! session.cache_file)
+    session.cache_file = home / ".ledger-cache";
 
-  if (session.data_file == session.cache_file)
+  if (session.data_file == *session.cache_file)
     session.use_cache = false;
 
   DEBUG("ledger.session.cache", "2. use_cache = " << session.use_cache);
 
-  INFO("Initialization file is " << session.init_file);
-  INFO("Price database is " << session.price_db);
-  INFO("Binary cache is " << session.cache_file);
-  INFO("Journal file is " << session.data_file);
+  INFO("Initialization file is " << session.init_file->string());
+  INFO("Price database is " << session.price_db->string());
+  INFO("Binary cache is " << session.cache_file->string());
+  INFO("Journal file is " << session.data_file.string());
 
   if (! session.use_cache)
     INFO("Binary cache mechanism will not be used");
@@ -197,11 +197,11 @@ static int read_and_report(report_t * report, int argc, char * argv[],
 #endif
   std::ostream * out = &std::cout;
 
-  if (! report->output_file.empty()) {
-    out = new std::ofstream(report->output_file.c_str());
+  if (report->output_file) {
+    out = new ofstream(*report->output_file);
   }
 #ifdef HAVE_UNIX_PIPES
-  else if (! report->pager.empty()) {
+  else if (report->pager) {
     status = pipe(pfd);
     if (status == -1)
       throw_(std::logic_error, "Failed to create pipe");
@@ -227,13 +227,8 @@ static int read_and_report(report_t * report, int argc, char * argv[],
       // Find command name: its the substring starting right of the
       // rightmost '/' character in the pager pathname.  See manpage
       // for strrchr.
-      arg0 = std::strrchr(report->pager.c_str(), '/');
-      if (arg0)
-	arg0++;
-      else
-	arg0 = report->pager.c_str(); // No slashes in pager.
-
-      execlp(report->pager.c_str(), arg0, (char *)0);
+      execlp(report->pager->native_file_string().c_str(),
+	     basename(*report->pager).c_str(), (char *)0);
       perror("execl");
       exit(1);
     }
@@ -352,11 +347,10 @@ static int read_and_report(report_t * report, int argc, char * argv[],
 
   // Write out the binary cache, if need be
 
-  if (session.use_cache && session.cache_dirty &&
-      ! session.cache_file.empty()) {
+  if (session.use_cache && session.cache_dirty && session.cache_file) {
     TRACE_START(binary_cache, 1, "Wrote binary journal file");
 
-    std::ofstream stream(session.cache_file.c_str());
+    ofstream stream(*session.cache_file);
 #if 0
     write_binary_journal(stream, journal);
 #endif
@@ -367,15 +361,15 @@ static int read_and_report(report_t * report, int argc, char * argv[],
 #if defined(FREE_MEMORY)
   // Cleanup memory -- if this is a beta or development build.
 
-  if (! report->output_file.empty())
-    delete out;
+  if (report->output_file)
+    checked_delete(out);
 #endif
 
   // If the user specified a pager, wait for it to exit now
 
 #ifdef HAVE_UNIX_PIPES
-  if (report->output_file.empty() && ! report->pager.empty()) {
-    delete out;
+  if (! report->output_file && report->pager) {
+    checked_delete(out);
     close(pfd[1]);
 
     // Wait for child to finish
@@ -457,7 +451,7 @@ int main(int argc, char * argv[], char * envp[])
       err->context.push_front(new error_context(""));
     err->reveal_context(std::cerr, "Error");
     std::cerr << err->what() << std::endl;
-    delete err;
+    checked_delete(err);
   }
   catch (fatal * err) {
     std::cout.flush();
@@ -467,7 +461,7 @@ int main(int argc, char * argv[], char * envp[])
       err->context.push_front(new error_context(""));
     err->reveal_context(std::cerr, "Fatal");
     std::cerr << err->what() << std::endl;
-    delete err;
+    checked_delete(err);
   }
 #endif
   catch (const std::exception& err) {

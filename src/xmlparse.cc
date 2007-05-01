@@ -63,7 +63,7 @@ static void endElement(void *userData, const char *name)
       if (curr_journal->add_entry(curr_entry)) {
 	count++;
       } else {
-	delete curr_entry;
+	checked_delete(curr_entry);
 	have_error = "Entry cannot be balanced";
       }
     }
@@ -133,7 +133,10 @@ static void endElement(void *userData, const char *name)
   }
 #endif
   else if (std::strcmp(name, "quantity") == 0) {
-    curr_entry->transactions.back()->amount.parse(data);
+    amount_t temp;
+    temp.parse(data);
+    curr_entry->transactions.back()->amount = temp;
+
     if (curr_comm) {
       string::size_type i = data.find('.');
       if (i != string::npos) {
@@ -141,7 +144,7 @@ static void endElement(void *userData, const char *name)
 	if (precision > curr_comm->precision())
 	  curr_comm->set_precision(precision);
       }
-      curr_entry->transactions.back()->amount.set_commodity(*curr_comm);
+      curr_entry->transactions.back()->amount->set_commodity(*curr_comm);
       curr_comm = NULL;
     }
   }
@@ -179,10 +182,10 @@ bool xml_parser_t::test(std::istream& in) const
   return true;
 }
 
-unsigned int xml_parser_t::parse(std::istream&  in,
-				 journal_t *    journal,
-				 account_t *    master,
-				 const string * original_file)
+unsigned int xml_parser_t::parse(std::istream&	       in,
+				 journal_t *	       journal,
+				 account_t *	       master,
+				 const optional<path>& original)
 {
   char buf[BUFSIZ];
 

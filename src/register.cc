@@ -117,8 +117,10 @@ static void scan_for_transactions(std::ostream& out, const xml::node_t * node)
 	  << std::setw(21) << std::left
 	  << abbreviate(xact->account->fullname(), 21,
 			ABBREVIATE, true) << ' '
-	  << std::setw(12) << std::right
-	  << xact->amount << '\n';
+	  << std::setw(12) << std::right;
+      if (xact->amount)
+	out << *xact->amount;
+      out << '\n';
     } else {
       scan_for_transactions(out, child);
     }

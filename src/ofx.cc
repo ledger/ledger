@@ -111,7 +111,7 @@ int ofx_proc_transaction_cb(struct OfxTransactionData data,
     // jww (2005-02-09): uncomment
     have_error = "The above entry does not balance";
 #endif
-    delete entry;
+    checked_delete(entry);
     return -1;
   }
   return 0;

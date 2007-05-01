@@ -207,7 +207,7 @@ void process_arguments(int argc, char ** argv, const bool anywhere,
 	}
 	process_option(def, scope, value);
 
-	delete *o;
+	checked_delete(*o);
       }
     }
 

@@ -1,4 +1,5 @@
 #include "journal.h"
+#include "xpath.h"
 #include "mask.h"
 #if 0
 #ifdef USE_BOOST_PYTHON
@@ -15,21 +16,20 @@ bool transaction_t::use_effective_date = false;
 transaction_t::~transaction_t()
 {
   TRACE_DTOR(transaction_t);
-  if (cost) delete cost;
 }
 
 moment_t transaction_t::actual_date() const
 {
-  if (! is_valid_moment(_date) && entry)
+  if (! _date && entry)
     return entry->actual_date();
-  return _date;
+  return *_date;
 }
 
 moment_t transaction_t::effective_date() const
 {
-  if (! is_valid_moment(_date_eff) && entry)
+  if (! _date_eff && entry)
     return entry->effective_date();
-  return _date_eff;
+  return *_date_eff;
 }
 
 bool transaction_t::valid() const
@@ -44,15 +44,10 @@ bool transaction_t::valid() const
     return false;
   }
 
-  bool found = false;
-  for (transactions_list::const_iterator i = entry->transactions.begin();
-       i != entry->transactions.end();
-       i++)
-    if (*i == this) {
-      found = true;
-      break;
-    }
-  if (! found) {
+  transactions_list::const_iterator i =
+    std::find(entry->transactions.begin(),
+	      entry->transactions.end(), this);
+  if (i == entry->transactions.end()) {
     DEBUG("ledger.validate", "transaction_t: ! found");
     return false;
   }
@@ -62,7 +57,7 @@ bool transaction_t::valid() const
     return false;
   }
 
-  if (! amount.valid()) {
+  if (amount && ! amount->valid()) {
     DEBUG("ledger.validate", "transaction_t: ! amount.valid()");
     return false;
   }
@@ -98,16 +93,16 @@ bool entry_base_t::finalize()
   // and the per-unit price of unpriced commodities.
 
   value_t balance;
+  bool	  no_amounts = true;
+  bool	  saw_null   = false;
 
-  bool no_amounts = true;
-  bool saw_null   = false;
   for (transactions_list::const_iterator x = transactions.begin();
        x != transactions.end();
        x++)
     if (! ((*x)->flags & TRANSACTION_VIRTUAL) ||
 	((*x)->flags & TRANSACTION_BALANCE)) {
-      amount_t * p = (*x)->cost ? (*x)->cost : &(*x)->amount;
-      if (*p) {
+      optional<amount_t>& p((*x)->cost ? (*x)->cost : (*x)->amount);
+      if (p) {
 	if (no_amounts) {
 	  balance = *p;
 	  no_amounts = false;
@@ -115,12 +110,13 @@ bool entry_base_t::finalize()
 	  balance += *p;
 	}
 
-	if ((*x)->cost && (*x)->amount.commodity().annotated) {
+	assert((*x)->amount);
+	if ((*x)->cost && (*x)->amount->commodity().annotated) {
 	  annotated_commodity_t&
 	    ann_comm(static_cast<annotated_commodity_t&>
-		     ((*x)->amount.commodity()));
+		     ((*x)->amount->commodity()));
 	  if (ann_comm.price)
-	    balance += ann_comm.price * (*x)->amount.number() - *((*x)->cost);
+	    balance += *ann_comm.price * (*x)->amount->number() - *((*x)->cost);
 	}
       } else {
 	saw_null = true;
@@ -151,7 +147,8 @@ bool entry_base_t::finalize()
   if (! saw_null && balance && balance.type == value_t::BALANCE &&
       ((balance_t *) balance.data)->amounts.size() == 2) {
     transactions_list::const_iterator x = transactions.begin();
-    commodity_t& this_comm = (*x)->amount.commodity();
+    assert((*x)->amount);
+    commodity_t& this_comm = (*x)->amount->commodity();
 
     amounts_map::const_iterator this_bal =
       ((balance_t *) balance.data)->amounts.find(&this_comm);
@@ -165,22 +162,22 @@ bool entry_base_t::finalize()
 
     for (; x != transactions.end(); x++) {
       if ((*x)->cost || ((*x)->flags & TRANSACTION_VIRTUAL) ||
-	  ! (*x)->amount || (*x)->amount.commodity() != this_comm)
+	  ! (*x)->amount || (*x)->amount->commodity() != this_comm)
 	continue;
 
       assert((*x)->amount);
-      balance -= (*x)->amount;
+      balance -= *(*x)->amount;
 
       entry_t * entry = dynamic_cast<entry_t *>(this);
 
-      if ((*x)->amount.commodity() &&
-	  ! (*x)->amount.commodity().annotated)
-	(*x)->amount.annotate_commodity
+      if ((*x)->amount->commodity() &&
+	  ! (*x)->amount->commodity().annotated)
+	(*x)->amount->annotate_commodity
 	  (per_unit_cost.abs(),
-	   entry ? entry->actual_date() : moment_t(),
-	   entry ? entry->code : "");
+	   entry ? entry->actual_date() : optional<moment_t>(),
+	   entry ? entry->code : optional<string>());
 
-      (*x)->cost = new amount_t(- (per_unit_cost * (*x)->amount.number()));
+      (*x)->cost = - (per_unit_cost * (*x)->amount->number());
       balance += *(*x)->cost;
     }
   }
@@ -193,7 +190,7 @@ bool entry_base_t::finalize()
   for (transactions_list::const_iterator x = transactions.begin();
        x != transactions.end();
        x++) {
-    if (! (*x)->amount.null() ||
+    if ((*x)->amount ||
 	(((*x)->flags & TRANSACTION_VIRTUAL) &&
 	 ! ((*x)->flags & TRANSACTION_BALANCE)))
       continue;
@@ -246,7 +243,7 @@ bool entry_base_t::finalize()
       (*x)->amount = ((amount_t *) balance.data)->negate();
       (*x)->flags |= TRANSACTION_CALCULATED;
 
-      balance += (*x)->amount;
+      balance += *(*x)->amount;
       break;
 
     default:
@@ -326,6 +323,21 @@ bool entry_t::valid() const
   return true;
 }
 
+auto_entry_t::auto_entry_t()
+{
+  TRACE_CTOR(auto_entry_t, "");
+}
+
+auto_entry_t::auto_entry_t(const string& _predicate)
+  : predicate(new xml::xpath_t(_predicate))
+{
+  TRACE_CTOR(auto_entry_t, "const string&");
+}
+
+auto_entry_t::~auto_entry_t() {
+  TRACE_DTOR(auto_entry_t);
+}
+
 void auto_entry_t::extend_entry(entry_base_t& entry, bool post)
 {
   transactions_list initial_xacts(entry.transactions.begin(),
@@ -335,19 +347,21 @@ void auto_entry_t::extend_entry(entry_base_t& entry, bool post)
        i != initial_xacts.end();
        i++) {
     // jww (2006-09-10): Create a scope here based on entry
-    if (predicate.calc((xml::node_t *) NULL)) {
+    if (predicate->calc((xml::node_t *) NULL)) {
       for (transactions_list::iterator t = transactions.begin();
 	   t != transactions.end();
 	   t++) {
 	amount_t amt;
-	if (! (*t)->amount.commodity()) {
+	assert((*t)->amount);
+	if (! (*t)->amount->commodity()) {
 	  if (! post)
 	    continue;
-	  amt = (*i)->amount * (*t)->amount;
+	  assert((*i)->amount);
+	  amt = *(*i)->amount * *(*t)->amount;
 	} else {
 	  if (post)
 	    continue;
-	  amt = (*t)->amount;
+	  amt = *(*t)->amount;
 	}
 
 	account_t * account  = (*t)->account;
@@ -371,7 +385,7 @@ account_t::~account_t()
   for (accounts_map::iterator i = accounts.begin();
        i != accounts.end();
        i++)
-    delete (*i).second;
+    checked_delete((*i).second);
 }
 
 account_t * account_t::find_account(const string& name,
@@ -496,10 +510,10 @@ journal_t::~journal_t()
   TRACE_DTOR(journal_t);
 
   assert(master);
-  delete master;
+  checked_delete(master);
 
   if (document)
-    delete document;
+    checked_delete(document);
 
   // Don't bother unhooking each entry's transactions from the
   // accounts they refer to, because all accounts are about to
@@ -509,7 +523,7 @@ journal_t::~journal_t()
        i++)
     if (! item_pool ||
 	((char *) *i) < item_pool || ((char *) *i) >= item_pool_end)
-      delete *i;
+      checked_delete(*i);
     else
       (*i)->~entry_t();
 
@@ -518,7 +532,7 @@ journal_t::~journal_t()
        i++)
     if (! item_pool ||
 	((char *) *i) < item_pool || ((char *) *i) >= item_pool_end)
-      delete *i;
+      checked_delete(*i);
     else
       (*i)->~auto_entry_t();
 
@@ -527,12 +541,12 @@ journal_t::~journal_t()
        i++)
     if (! item_pool ||
 	((char *) *i) < item_pool || ((char *) *i) >= item_pool_end)
-      delete *i;
+      checked_delete(*i);
     else
       (*i)->~period_entry_t();
 
   if (item_pool)
-    delete[] item_pool;
+    checked_array_delete(item_pool);
 }
 
 bool journal_t::add_entry(entry_t * entry)
@@ -551,9 +565,12 @@ bool journal_t::add_entry(entry_t * entry)
   for (transactions_list::const_iterator i = entry->transactions.begin();
        i != entry->transactions.end();
        i++)
-    if ((*i)->cost && (*i)->amount)
-      (*i)->amount.commodity().add_price(entry->date(),
-					 *(*i)->cost / (*i)->amount.number());
+    if ((*i)->cost) {
+      assert((*i)->amount);
+      assert(*(*i)->amount);
+      (*i)->amount->commodity().add_price(entry->date(),
+					  *(*i)->cost / (*i)->amount->number());
+    }
 
   return true;
 }
@@ -614,7 +631,7 @@ void print_entry(std::ostream& out, const entry_base_t& entry_base,
   }
   else if (const auto_entry_t * entry =
 	   dynamic_cast<const auto_entry_t *>(&entry_base)) {
-    out << "= " << entry->predicate.expr << '\n';
+    out << "= " << entry->predicate->expr << '\n';
     print_format = prefix + "    %-34A  %12o\n";
   }
   else if (const period_entry_t * entry =

@@ -117,10 +117,10 @@ void value_t::destroy()
     ((balance_pair_t *)data)->~balance_pair_t();
     break;
   case STRING:
-    delete *(string **) data;
+    checked_delete(*(string **) data);
     break;
   case SEQUENCE:
-    delete *(sequence_t **) data;
+    checked_delete(*(sequence_t **) data);
     break;
   default:
     break;
@@ -1820,43 +1820,6 @@ void value_t::in_place_negate()
   }
 }
 
-void value_t::in_place_abs()
-{
-  switch (type) {
-  case BOOLEAN:
-    break;
-  case INTEGER:
-    if (*((long *) data) < 0)
-      *((long *) data) = - *((long *) data);
-    break;
-  case DATETIME:
-    break;
-  case AMOUNT:
-    ((amount_t *) data)->abs();
-    break;
-  case BALANCE:
-    ((balance_t *) data)->abs();
-    break;
-  case BALANCE_PAIR:
-    ((balance_pair_t *) data)->abs();
-    break;
-  case STRING:
-    throw_(value_error, "Cannot take the absolute value of a string");
-  case XML_NODE:
-    *this = (*(xml::node_t **) data)->to_value();
-    in_place_abs();
-    break;
-  case POINTER:
-    throw_(value_error, "Cannot take the absolute value of a pointer");
-  case SEQUENCE:
-    throw_(value_error, "Cannot take the absolute value of a sequence");
-
-  default:
-    assert(0);
-    break;
-  }
-}
-
 value_t value_t::value(const moment_t& moment) const
 {
   switch (type) {
@@ -2188,7 +2151,7 @@ value_t value_t::cost() const
   return value_t();
 }
 
-value_t& value_t::add(const amount_t& amount, const amount_t * tcost)
+value_t& value_t::add(const amount_t& amount, const optional<amount_t>& tcost)
 {
   switch (type) {
   case BOOLEAN:
@@ -2337,7 +2300,7 @@ value_context::value_context(const value_t& _bal,
 
 value_context::~value_context() throw()
 {
-  delete bal;
+  checked_delete(bal);
 }
 
 void value_context::describe(std::ostream& out) const throw()

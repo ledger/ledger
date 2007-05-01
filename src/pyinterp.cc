@@ -4,6 +4,8 @@
 
 namespace ledger {
 
+using namespace boost::python;
+
 struct python_run
 {
   object result;

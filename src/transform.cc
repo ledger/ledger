@@ -98,7 +98,7 @@ void compact_transform::execute(xml::document_t * document)
 	account_repitem_t * acct = static_cast<account_repitem_t *>(i);
 	acct->parents_elided = p->parents_elided + 1;
 
-	delete p;
+	checked_delete(p);
       }
     }
 
@@ -116,7 +116,7 @@ void clean_transform::execute(xml::document_t * document)
       i->add_total(temp);
       if (! temp) {
 	repitem_t * next = i->next;
-	delete i;
+	checked_delete(i);
 	i = next;
 	continue;
       }
@@ -125,7 +125,7 @@ void clean_transform::execute(xml::document_t * document)
     else if (i->kind == repitem_t::ENTRY && ! i->contents) {
       assert(! i->children);
       repitem_t * next = i->next;
-      delete i;
+      checked_delete(i);
       i = next;
       continue;
     }
@@ -246,7 +246,7 @@ void merge_transform::execute(xml::document_t * document)
 
 	j->contents = NULL;
 	assert(! j->children);
-	delete j;
+	checked_delete(j);
       }
     }
 
@@ -276,14 +276,14 @@ namespace {
   class delete_unmarked : public repitem_t::select_callback_t {
     virtual void operator()(xml::document_t * document) {
       if (item->parent && ! (item->flags & REPITEM_FLAGGED))
-	delete item;
+	checked_delete(item);
     }
   };
 
   class delete_marked : public repitem_t::select_callback_t {
     virtual void operator()(xml::document_t * document) {
       if (item->flags & REPITEM_FLAGGED)
-	delete item;
+	checked_delete(item);
     }
   };
 

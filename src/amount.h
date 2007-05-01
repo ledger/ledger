@@ -142,9 +142,9 @@ class amount_t
 
   commodity_t& commodity() const;
 
-  void annotate_commodity(const amount_t& price,
-			  const moment_t& date = moment_t(),
-			  const string&	  tag  = "");
+  void annotate_commodity(const optional<amount_t>& tprice,
+			  const optional<moment_t>& tdate = optional<moment_t>(),
+			  const optional<string>&   ttag  = optional<string>());
 
   amount_t strip_annotations(const bool _keep_price = keep_price,
 			     const bool _keep_date  = keep_date,
@@ -348,8 +348,10 @@ class amount_t
   friend void clean_commodity_history(char * item_pool,
 				      char * item_pool_end);
 
-  friend bool parse_annotations(std::istream& in, amount_t& price,
-				moment_t& date, string& tag);
+  friend void parse_annotations(std::istream&	    in,
+				optional<amount_t>& price,
+				optional<moment_t>& date,
+				optional<string>&   tag);
 
   // Streaming interface
 
@@ -513,9 +515,9 @@ class commodity_base_t
 
   ~commodity_base_t() {
     TRACE_DTOR(commodity_base_t);
-    if (history) delete history;
-    if (smaller) delete smaller;
-    if (larger)  delete larger;
+    if (history) checked_delete(history);
+    if (smaller) checked_delete(smaller);
+    if (larger)  checked_delete(larger);
   }
 
   static base_commodities_map commodities;
@@ -538,10 +540,10 @@ class commodity_base_t
    public:
     virtual ~updater_t() {}
     virtual void operator()(commodity_base_t& commodity,
-			    const moment_t& moment,
-			    const moment_t& date,
-			    const moment_t& last,
-			    amount_t& price) = 0;
+			    const moment_t&   moment,
+			    const moment_t&   date,
+			    const moment_t&   last,
+			    amount_t&         price) = 0;
   };
   friend class updater_t;
 
@@ -659,7 +661,7 @@ class commodity_t
   }
   void set_smaller(const amount_t& arg) {
     if (base->smaller)
-      delete base->smaller;
+      checked_delete(base->smaller);
     base->smaller = new amount_t(arg);
   }
 
@@ -668,7 +670,7 @@ class commodity_t
   }
   void set_larger(const amount_t& arg) {
     if (base->larger)
-      delete base->larger;
+      checked_delete(base->larger);
     base->larger = new amount_t(arg);
   }
 
@@ -694,9 +696,9 @@ class annotated_commodity_t : public commodity_t
  public:
   const commodity_t * ptr;
 
-  amount_t price;
-  moment_t date;
-  string   tag;
+  optional<amount_t> price;
+  optional<moment_t> date;
+  optional<string>   tag;
 
   explicit annotated_commodity_t() {
     TRACE_CTOR(annotated_commodity_t, "");
@@ -712,22 +714,22 @@ class annotated_commodity_t : public commodity_t
     annotated_commodity_t::write_annotations(out, price, date, tag);
   }
 
-  static void write_annotations(std::ostream&      out,
-				const amount_t&    price,
-				const moment_t&  date,
-				const string& tag);
+  static void write_annotations(std::ostream&		  out,
+				const optional<amount_t>& price,
+				const optional<moment_t>& date,
+				const optional<string>&	  tag);
 
  private:
-  static commodity_t * create(const commodity_t& comm,
-			      const amount_t&    price,
-			      const moment_t&  date,
-			      const string& tag,
-			      const string& mapping_key);
+  static commodity_t * create(const commodity_t&	comm,
+			      const optional<amount_t>& price,
+			      const optional<moment_t>&	date,
+			      const optional<string>&	tag,
+			      const string&		mapping_key);
 
-  static commodity_t * find_or_create(const commodity_t& comm,
-				      const amount_t&    price,
-				      const moment_t&  date,
-				      const string& tag);
+  static commodity_t * find_or_create(const commodity_t&	comm,
+				      const optional<amount_t>& price,
+				      const optional<moment_t>&	date,
+				      const optional<string>&	tag);
 
   friend class amount_t;
 };

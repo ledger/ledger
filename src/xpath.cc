@@ -15,7 +15,7 @@ void xpath_t::initialize()
 
 void xpath_t::shutdown()
 {
-  delete lookahead;
+  checked_delete(lookahead);
   lookahead = NULL;
 }
 
@@ -555,7 +555,7 @@ xpath_t::op_t::~op_t()
   case VALUE:
     assert(! left);
     assert(valuep);
-    delete valuep;
+    checked_delete(valuep);
     break;
 
   case NODE_NAME:
@@ -564,7 +564,7 @@ xpath_t::op_t::~op_t()
   case VAR_NAME:
     assert(! left);
     assert(name);
-    delete name;
+    checked_delete(name);
     break;
 
   case ARG_INDEX:
@@ -573,14 +573,14 @@ xpath_t::op_t::~op_t()
   case FUNCTOR:
     assert(! left);
     assert(functor);
-    delete functor;
+    checked_delete(functor);
     break;
 
 #if 0
   case MASK:
     assert(! left);
     assert(mask);
-    delete mask;
+    checked_delete(mask);
     break;
 #endif
 

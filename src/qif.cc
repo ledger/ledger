@@ -6,7 +6,7 @@ namespace ledger {
 #define MAX_LINE 1024
 
 static char         line[MAX_LINE + 1];
-static string	    pathname;
+static path	    pathname;
 static unsigned int src_idx;
 static unsigned int linenum;
 
@@ -35,7 +35,7 @@ bool qif_parser_t::test(std::istream& in) const
 unsigned int qif_parser_t::parse(std::istream& in,
 				 journal_t *   journal,
 				 account_t *   master,
-				 const string *)
+				 const optional<path>&)
 {
   std::auto_ptr<entry_t>  entry;
   std::auto_ptr<amount_t> amount;
@@ -104,16 +104,16 @@ unsigned int qif_parser_t::parse(std::istream& in,
     case '$': {
       SET_BEG_POS_AND_LINE();
       get_line(in);
-      xact->amount.parse(line);
+      xact->amount = amount_t(line);
 
-      unsigned char flags = xact->amount.commodity().flags();
-      unsigned char prec  = xact->amount.commodity().precision();
+      unsigned char flags = xact->amount->commodity().flags();
+      unsigned char prec  = xact->amount->commodity().precision();
 
       if (! def_commodity) {
 	def_commodity = commodity_t::find_or_create("$");
 	assert(def_commodity);
       }
-      xact->amount.set_commodity(*def_commodity);
+      xact->amount->set_commodity(*def_commodity);
 
       def_commodity->add_flags(flags);
       if (prec > def_commodity->precision())
@@ -121,7 +121,7 @@ unsigned int qif_parser_t::parse(std::istream& in,
 
       if (c == '$') {
 	saw_splits = true;
-	xact->amount.in_place_negate();
+	xact->amount->in_place_negate();
       } else {
 	total = xact;
       }
@@ -197,7 +197,7 @@ unsigned int qif_parser_t::parse(std::istream& in,
 
       if (total && saw_category) {
 	if (! saw_splits)
-	  total->amount.in_place_negate(); // negate, to show correct flow
+	  total->amount->in_place_negate(); // negate, to show correct flow
 	else
 	  total->account = other;
       }

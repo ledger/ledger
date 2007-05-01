@@ -2,57 +2,58 @@
 
 namespace ledger {
 
-unsigned int session_t::read_journal(std::istream&       in,
-				     journal_t *         journal,
-				     account_t *	 master,
-				     const string * original_file)
+unsigned int session_t::read_journal(std::istream&	   in,
+				     journal_t *	   journal,
+				     account_t *	   master,
+				     const optional<path>& original)
 {
   if (! master)
     master = journal->master;
 
-  for (std::list<parser_t *>::iterator i = parsers.begin();
+  for (ptr_list<parser_t>::iterator i = parsers.begin();
        i != parsers.end();
        i++)
-    if ((*i)->test(in))
-      return (*i)->parse(in, journal, master, original_file);
+    if (i->test(in))
+      return i->parse(in, journal, master, original);
 
   return 0;
 }
 
-unsigned int session_t::read_journal(const string&  pathname,
-				     journal_t *    journal,
-				     account_t *    master,
-				     const string * original_file)
+unsigned int session_t::read_journal(const path&	   pathname,
+				     journal_t *	   journal,
+				     account_t *	   master,
+				     const optional<path>& original)
 {
   journal->sources.push_back(pathname);
 
-  if (access(pathname.c_str(), R_OK) == -1)
+  if (! exists(pathname))
     throw filesystem_error(BOOST_CURRENT_FUNCTION, pathname,
 			   "Cannot read file");
 
-  if (! original_file)
-    original_file = &pathname;
-
-  std::ifstream stream(pathname.c_str());
-  return read_journal(stream, journal, master, original_file);
+  ifstream stream(pathname);
+  return read_journal(stream, journal, master,
+		      original ? original : pathname);
 }
 
 void session_t::read_init()
 {
-  if (init_file.empty())
+  if (! init_file)
     return;
 
-  if (access(init_file.c_str(), R_OK) == -1)
-    throw filesystem_error(BOOST_CURRENT_FUNCTION, init_file,
+  if (! exists(*init_file))
+    throw filesystem_error(BOOST_CURRENT_FUNCTION, *init_file,
 			   "Cannot read init file");
 
-  std::ifstream init(init_file.c_str());
+  ifstream init(*init_file);
 
   // jww (2006-09-15): Read initialization options here!
 }
 
 journal_t * session_t::read_data(const string& master_account)
 {
+  if (data_file.empty())
+    throw_(parse_error, "No journal file was specified (please use -f)");
+
   TRACE_START(parser, 1, "Parsing journal file");
 
   journal_t * journal = new_journal();
@@ -63,50 +64,55 @@ journal_t * session_t::read_data(const string& master_account)
 
   DEBUG("ledger.cache", "3. use_cache = " << use_cache);
 
-  if (use_cache && ! cache_file.empty() &&
-      ! data_file.empty()) {
-    DEBUG("ledger.cache", "using_cache " << cache_file);
+  if (use_cache && cache_file) {
+    DEBUG("ledger.cache", "using_cache " << cache_file->string());
     cache_dirty = true;
-    if (access(cache_file.c_str(), R_OK) != -1) {
-      std::ifstream stream(cache_file.c_str());
+    if (exists(*cache_file)) {
+      ifstream stream(*cache_file);
 
-      string price_db_orig = journal->price_db;
-      journal->price_db = price_db;
-      entry_count += read_journal(stream, journal, NULL,
-					  &data_file);
-      if (entry_count > 0)
-	cache_dirty = false;
-      else
+      optional<path> price_db_orig = journal->price_db;
+      try {
+	journal->price_db = price_db;
+
+	entry_count += read_journal(stream, journal, NULL, data_file);
+	if (entry_count > 0)
+	  cache_dirty = false;
+
 	journal->price_db = price_db_orig;
+      }
+      catch (...) {
+	journal->price_db = price_db_orig;
+	throw;
+      }
     }
   }
 
-  if (entry_count == 0 && ! data_file.empty()) {
+  if (entry_count == 0) {
     account_t * acct = NULL;
     if (! master_account.empty())
       acct = journal->find_account(master_account);
 
     journal->price_db = price_db;
-    if (! journal->price_db.empty() &&
-	access(journal->price_db.c_str(), R_OK) != -1) {
-      if (read_journal(journal->price_db, journal)) {
+    if (journal->price_db && exists(*journal->price_db)) {
+      if (read_journal(*journal->price_db, journal)) {
 	throw_(parse_error, "Entries not allowed in price history file");
       } else {
-	DEBUG("ledger.cache", "read price database " << journal->price_db);
+	DEBUG("ledger.cache",
+	      "read price database " << journal->price_db->string());
 	journal->sources.pop_back();
       }
     }
 
-    DEBUG("ledger.cache", "rejected cache, parsing " << data_file);
+    DEBUG("ledger.cache", "rejected cache, parsing " << data_file.string());
     if (data_file == "-") {
       use_cache = false;
       journal->sources.push_back("<stdin>");
       entry_count += read_journal(std::cin, journal, acct);
     }
-    else if (access(data_file.c_str(), R_OK) != -1) {
+    else if (exists(data_file)) {
       entry_count += read_journal(data_file, journal, acct);
-      if (! journal->price_db.empty())
-	journal->sources.push_back(journal->price_db);
+      if (journal->price_db)
+	journal->sources.push_back(*journal->price_db);
     }
   }
 

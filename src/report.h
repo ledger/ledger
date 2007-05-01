@@ -11,16 +11,16 @@ typedef std::list<string> strings_list;
 class report_t : public xml::xpath_t::scope_t
 {
  public:
-  string output_file;
-  string format_string;
-  string amount_expr;
-  string total_expr;
-  string date_output_format;
+  optional<path> output_file;
+  string	 format_string;
+  string	 amount_expr;
+  string	 total_expr;
+  string	 date_output_format;
 
   unsigned long budget_flags;
 
   string account;
-  string pager;
+  optional<path> pager;
 
   bool show_totals;
   bool raw_mode;
@@ -28,7 +28,7 @@ class report_t : public xml::xpath_t::scope_t
   session_t *   session;
   transform_t * last_transform;
 
-  std::list<transform_t *> transforms;
+  ptr_list<transform_t> transforms;
 
   report_t(session_t * _session)
     : xml::xpath_t::scope_t(_session),

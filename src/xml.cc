@@ -29,13 +29,13 @@ document_t::~document_t()
 {
   TRACE_DTOR(xml::document_t);
   if (top && top != &stub)
-    delete top;
+    checked_delete(top);
 }
 
 void document_t::set_top(node_t * _top)
 {
   if (top && top != &stub)
-    delete top;
+    checked_delete(top);
   top = _top;
 }
 
@@ -191,7 +191,7 @@ void parent_node_t::clear()
   node_t * child = _children;
   while (child) {
     node_t * tnext = child->next;
-    delete child;
+    checked_delete(child);
     child = tnext;
   }
 }
@@ -443,7 +443,10 @@ node_t * transaction_node_t::lookup_child(int _name_id) const
 
 value_t transaction_node_t::to_value() const
 {
-  return transaction->amount;
+  if (transaction->amount)
+    return *transaction->amount;
+  else
+    return value_t();
 }
 
 node_t * entry_node_t::children() const
@@ -461,11 +464,14 @@ node_t * entry_node_t::lookup_child(int _name_id) const
 {
   switch (_name_id) {
   case document_t::CODE:
+    if (! entry->code)
+      return NULL;
+
     // jww (2007-04-20): I have to save this and then delete it later
     terminal_node_t * code_node =
       new terminal_node_t(document, const_cast<entry_node_t *>(this));
     code_node->set_name(document_t::CODE);
-    code_node->set_text(entry->code);
+    code_node->set_text(*entry->code);
     return code_node;
 
   case document_t::PAYEE:
@@ -489,11 +495,11 @@ node_t * account_node_t::children() const
       name_node->set_text(account->name);
     }
 
-    if (! account->note.empty()) {
+    if (account->note) {
       terminal_node_t * note_node =
 	new terminal_node_t(document, const_cast<account_node_t *>(this));
       note_node->set_name(document_t::NOTE);
-      note_node->set_text(account->note);
+      note_node->set_text(*account->note);
     }
 
     for (accounts_map::iterator i = account->accounts.begin();

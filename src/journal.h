@@ -1,9 +1,19 @@
 #ifndef _JOURNAL_H
 #define _JOURNAL_H
 
-#include "xpath.h"
+#include "amount.h"
 
 namespace ledger {
+
+namespace xml {
+  class document_t;
+  class xpath_t;
+
+  class transaction_node_t;
+  class entry_node_t;
+  class account_node_t;
+  class journal_node_t;
+};
 
 // These flags persist with the object
 #define TRANSACTION_NORMAL     0x0000
@@ -21,47 +31,48 @@ class transaction_t
  public:
   enum state_t { UNCLEARED, CLEARED, PENDING };
 
-  entry_t *	 entry;
-  moment_t	 _date;
-  moment_t	 _date_eff;
-  account_t *	 account;
-  amount_t	 amount;
-  string	 amount_expr;
-  amount_t *	 cost;
-  string	 cost_expr;
-  state_t	 state;
-  unsigned short flags;
-  string	 note;
-  unsigned long  beg_pos;
-  unsigned long  beg_line;
-  unsigned long  end_pos;
-  unsigned long  end_line;
+  entry_t *	     entry;
+  optional<moment_t> _date;
+  optional<moment_t> _date_eff;
+  account_t *	     account;
+  optional<amount_t> amount;
+  optional<string>   amount_expr;
+  optional<amount_t> cost;
+  optional<string>   cost_expr;
+  state_t	     state;
+  unsigned short     flags;
+  optional<string>   note;
+  unsigned long	     beg_pos;
+  unsigned long	     beg_line;
+  unsigned long	     end_pos;
+  unsigned long	     end_line;
 
-  mutable void * data;
+  typedef xml::transaction_node_t node_type;
+  mutable node_type * data;
 
   static bool use_effective_date;
 
-  transaction_t(account_t * _account = NULL)
-    : entry(NULL), account(_account), cost(NULL),
-      state(UNCLEARED), flags(TRANSACTION_NORMAL),
-      beg_pos(0), beg_line(0), end_pos(0), end_line(0), data(NULL) {
+  explicit transaction_t(account_t * _account = NULL)
+    : entry(NULL), account(_account), state(UNCLEARED),
+      flags(TRANSACTION_NORMAL), beg_pos(0), beg_line(0),
+      end_pos(0), end_line(0), data(NULL) {
     TRACE_CTOR(transaction_t, "account_t *");
   }
-  transaction_t(account_t *	   _account,
-		const amount_t&    _amount,
-		unsigned int	   _flags = TRANSACTION_NORMAL,
-		const string& _note  = "")
-    : entry(NULL), account(_account), amount(_amount), cost(NULL),
-      state(UNCLEARED), flags(_flags),
-      note(_note), beg_pos(0), beg_line(0), end_pos(0), end_line(0),
-      data(NULL) {
-    TRACE_CTOR(transaction_t, "account_t *, const amount_t&, unsigned int, const string&");
-  }
-  transaction_t(const transaction_t& xact)
-    : entry(xact.entry), account(xact.account), amount(xact.amount),
-      cost(xact.cost ? new amount_t(*xact.cost) : NULL),
-      state(xact.state), flags(xact.flags), note(xact.note),
+  explicit transaction_t(account_t *	_account,
+			 const amount_t& _amount,
+			 unsigned int    _flags = TRANSACTION_NORMAL,
+			 const optional<string> _note = optional<string>())
+    : entry(NULL), account(_account), amount(_amount),
+      state(UNCLEARED), flags(_flags), note(_note),
       beg_pos(0), beg_line(0), end_pos(0), end_line(0), data(NULL) {
+    TRACE_CTOR(transaction_t,
+	       "account_t *, const amount_t&, unsigned int, const string&");
+  }
+  explicit transaction_t(const transaction_t& xact)
+    : entry(xact.entry), account(xact.account), amount(xact.amount),
+      cost(xact.cost), state(xact.state), flags(xact.flags), note(xact.note),
+      beg_pos(xact.beg_pos), beg_line(xact.beg_line),
+      end_pos(xact.end_pos), end_line(xact.end_line), data(NULL) {
     TRACE_CTOR(transaction_t, "copy");
   }
   ~transaction_t();
@@ -73,13 +84,6 @@ class transaction_t
       return effective_date();
     else
       return actual_date();
-  }
-
-  bool operator==(const transaction_t& xact) {
-    return this == &xact;
-  }
-  bool operator!=(const transaction_t& xact) {
-    return ! (*this == xact);
   }
 
   bool valid() const;
@@ -130,7 +134,7 @@ class entry_base_t
 	 i != transactions.end();
 	 i++)
       if (! ((*i)->flags & TRANSACTION_BULK_ALLOC))
-	delete *i;
+	checked_delete(*i);
       else
 	(*i)->~transaction_t();
   }
@@ -152,12 +156,13 @@ class entry_base_t
 class entry_t : public entry_base_t
 {
  public:
-  moment_t _date;
-  moment_t _date_eff;
-  string   code;
-  string   payee;
+  moment_t	     _date;
+  optional<moment_t> _date_eff;
+  optional<string>   code;
+  string	     payee;
 
-  mutable void * data;
+  typedef xml::entry_node_t node_type;
+  mutable node_type * data;
 
   entry_t() : data(NULL) {
     TRACE_CTOR(entry_t, "");
@@ -172,9 +177,7 @@ class entry_t : public entry_base_t
     return _date;
   }
   moment_t effective_date() const {
-    if (! is_valid_moment(_date_eff))
-      return _date;
-    return _date_eff;
+    return _date_eff ? *_date_eff : _date;
   }
   moment_t date() const {
     if (transaction_t::use_effective_date)
@@ -184,7 +187,6 @@ class entry_t : public entry_base_t
   }
 
   virtual void add_transaction(transaction_t * xact);
-
   virtual bool valid() const;
 
   bool get_state(transaction_t::state_t * state) const;
@@ -218,19 +220,11 @@ DECLARE_EXCEPTION(balance_error);
 class auto_entry_t : public entry_base_t
 {
 public:
-  xml::xpath_t predicate;
+  scoped_ptr<xml::xpath_t> predicate;
 
-  auto_entry_t() {
-    TRACE_CTOR(auto_entry_t, "");
-  }
-  auto_entry_t(const string& _predicate)
-    : predicate(_predicate) {
-    TRACE_CTOR(auto_entry_t, "const string&");
-  }
-
-  virtual ~auto_entry_t() {
-    TRACE_DTOR(auto_entry_t);
-  }
+  auto_entry_t();
+  auto_entry_t(const string& _predicate);
+  virtual ~auto_entry_t();
 
   virtual void extend_entry(entry_base_t& entry, bool post);
   virtual bool valid() const {
@@ -248,8 +242,8 @@ struct auto_entry_finalizer_t : public entry_finalizer_t {
 class period_entry_t : public entry_base_t
 {
  public:
-  interval_t  period;
-  string period_string;
+  interval_t period;
+  string     period_string;
 
   period_entry_t() {
     TRACE_CTOR(period_entry_t, "");
@@ -281,33 +275,31 @@ class account_t
  public:
   typedef unsigned long ident_t;
 
-  journal_t *    journal;
-  account_t *	 parent;
-  string	 name;
-  string	 note;
-  unsigned short depth;
-  accounts_map	 accounts;
+  journal_t *	   journal;
+  account_t *	   parent;
+  string	   name;
+  optional<string> note;
+  unsigned short   depth;
+  accounts_map	   accounts;
 
-  mutable void *  data;
+  typedef xml::account_node_t node_type;
+  mutable node_type * data;
+
   mutable ident_t ident;
   mutable string  _fullname;
 
   account_t(account_t *   _parent = NULL,
 	    const string& _name   = "",
-	    const string& _note   = "")
+	    const optional<string> _note = optional<string>())
     : parent(_parent), name(_name), note(_note),
       depth(parent ? parent->depth + 1 : 0), data(NULL), ident(0) {
     TRACE_CTOR(account_t, "account_t *, const string&, const string&");
   }
   ~account_t();
 
-  bool operator==(const account_t& account) {
-    return this == &account;
+  operator string() const {
+    return fullname();
   }
-  bool operator!=(const account_t& account) {
-    return ! (*this == account);
-  }
-
   string fullname() const;
 
   void add_account(account_t * acct) {
@@ -321,10 +313,6 @@ class account_t
   }
 
   account_t * find_account(const string& name, bool auto_create = true);
-
-  operator string() const {
-    return fullname();
-  }
 
   bool valid() const;
 
@@ -372,6 +360,7 @@ bool run_hooks(std::list<T>& list, Data& item, bool post) {
 typedef std::list<entry_t *>	    entries_list;
 typedef std::list<auto_entry_t *>   auto_entries_list;
 typedef std::list<period_entry_t *> period_entries_list;
+typedef std::list<path>	    	    path_list;
 typedef std::list<string>	    strings_list;
 
 class session_t;
@@ -379,21 +368,24 @@ class session_t;
 class journal_t
 {
  public:
-  session_t *  session;
-  account_t *  master;
-  account_t *  basket;
-  entries_list entries;
-  strings_list sources;
-  string       price_db;
-  char *       item_pool;
-  char *       item_pool_end;
+  session_t *	 session;
+  account_t *	 master;
+  account_t *	 basket;
+  entries_list	 entries;
+  path_list	 sources;
+  optional<path> price_db;
+  char *	 item_pool;
+  char *	 item_pool_end;
 
   // This is used for dynamically representing the journal data as an
   // XML tree, to facilitate transformations without modifying any of
   // the underlying structures (the transformers modify the XML tree
   // -- perhaps even adding, changing or deleting nodes -- but they do
   // not affect the basic data parsed from the journal file).
-  xml::document_t * document;
+  mutable xml::document_t * document;
+
+  typedef xml::journal_node_t node_type;
+  mutable node_type * data;
 
   auto_entries_list    auto_entries;
   period_entries_list  period_entries;
@@ -409,13 +401,6 @@ class journal_t
     master->journal = this;
   }
   ~journal_t();
-
-  bool operator==(const journal_t& journal) {
-    return this == &journal;
-  }
-  bool operator!=(const journal_t& journal) {
-    return ! (*this == journal);
-  }
 
   void add_account(account_t * acct) {
     master->add_account(acct);

@@ -435,7 +435,6 @@ class value_t
     return 0;
   }
 
-  void    in_place_abs();
   value_t abs() const;
   void    in_place_cast(type_t cast_type);
   value_t cost() const;
@@ -453,10 +452,11 @@ class value_t
 			    const bool keep_date  = amount_t::keep_date,
 			    const bool keep_tag   = amount_t::keep_tag) const;
 
-  value_t& add(const amount_t&  amount, const amount_t * cost = NULL);
+  value_t& add(const amount_t& amount,
+	       const optional<amount_t>& cost = optional<amount_t>());
   value_t  value(const moment_t& moment) const;
-  void     in_place_reduce();
 
+  void    in_place_reduce();
   value_t reduce() const {
     value_t temp(*this);
     temp.in_place_reduce();

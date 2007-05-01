@@ -5,18 +5,14 @@ namespace ledger {
 report_t::~report_t()
 {
   TRACE_DTOR(report_t);
-  for (std::list<transform_t *>::const_iterator i = transforms.begin();
-       i != transforms.end();
-       i++)
-    delete *i;
 }
 
 void report_t::apply_transforms(xml::document_t * document)
 {
-  for (std::list<transform_t *>::const_iterator i = transforms.begin();
+  for (ptr_list<transform_t>::iterator i = transforms.begin();
        i != transforms.end();
        i++)
-    (*i)->execute(document);
+    i->execute(document);
 }
 
 void report_t::abbrev(value_t& result, xml::xpath_t::scope_t * locals)

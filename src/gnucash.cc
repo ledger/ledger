@@ -77,7 +77,7 @@ void endElement(void *userData, const char *name)
     if (! parser->curr_journal->add_entry(parser->curr_entry)) {
       print_entry(std::cerr, *parser->curr_entry);
       parser->have_error = "The above entry does not balance";
-      delete parser->curr_entry;
+      checked_delete(parser->curr_entry);
     } else {
       parser->curr_entry->src_idx  = parser->src_idx;
       parser->curr_entry->beg_pos  = parser->beg_pos;
@@ -122,7 +122,7 @@ void endElement(void *userData, const char *name)
     xact->state  = parser->curr_state;
     xact->amount = value;
     if (value != parser->curr_value)
-      xact->cost = new amount_t(parser->curr_value);
+      xact->cost = amount_t(parser->curr_value);
 
     xact->beg_pos  = parser->beg_pos;
     xact->beg_line = parser->beg_line;
@@ -291,10 +291,10 @@ bool gnucash_parser_t::test(std::istream& in) const
   return std::strncmp(buf, "<?xml", 5) == 0;
 }
 
-unsigned int gnucash_parser_t::parse(std::istream&	 in,
-				     journal_t *	 journal,
-				     account_t *	 master,
-				     const string * original_file)
+unsigned int gnucash_parser_t::parse(std::istream&	   in,
+				     journal_t *	   journal,
+				     account_t *	   master,
+				     const optional<path>& original_file)
 {
   char buf[BUFSIZ];
 
@@ -315,7 +315,7 @@ unsigned int gnucash_parser_t::parse(std::istream&	 in,
   curr_state	 = transaction_t::UNCLEARED;
 
   instreamp = &in;
-  path	    = original_file ? *original_file : "<gnucash>";
+  pathname  = original_file ? *original_file : "<gnucash>";
   src_idx   = journal->sources.size() - 1;
 
   // GnuCash uses the USD commodity without defining it, which really

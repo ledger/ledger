@@ -447,7 +447,7 @@ inline void throw_unexpected_error(char c, char wanted) {
 
 namespace ledger {
 
-string resolve_path(const string& path);
+path resolve_path(const path& pathname);
 
 #ifdef HAVE_REALPATH
 extern "C" char * realpath(const char *, char resolved_path[]);

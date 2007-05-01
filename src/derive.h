@@ -1,7 +1,7 @@
 #ifndef _DERIVE_H
 #define _DERIVE_H
 
-#include "journal.h"
+#include "xpath.h"
 
 namespace ledger {
 
