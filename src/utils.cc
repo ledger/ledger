@@ -404,7 +404,7 @@ string::~string() {
 
 namespace ledger {
 
-log_level_t	   _log_level;
+log_level_t	   _log_level  = LOG_WARN;
 std::ostream *	   _log_stream = &std::cerr;
 std::ostringstream _log_buffer;
 
@@ -497,7 +497,7 @@ bool logger_func(log_level_t level)
 
 namespace ledger {
 
-std::string _log_category;
+optional<std::string> _log_category;
 
 } // namespace ledger
 

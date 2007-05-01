@@ -238,10 +238,10 @@ extern unsigned int _trace_level;
 
 #if defined(DEBUG_ON)
 
-extern std::string _log_category;
+extern optional<std::string> _log_category;
 
 inline bool category_matches(const char * cat) {
-  return starts_with(_log_category, cat);
+  return _log_category && starts_with(cat, *_log_category);
 }
 
 #define SHOW_DEBUG(cat) \

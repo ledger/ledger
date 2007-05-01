@@ -57,16 +57,17 @@ static int read_and_report(report_t * report, int argc, char * argv[],
   process_environment(const_cast<const char **>(envp), "LEDGER_", report);
   TRACE_FINISH(environment, 1);
 
-  const char * p = std::getenv("HOME");
-  path home = p ? p : "";
+  optional<path> home;
+  if (const char * home_var = std::getenv("HOME"))
+    home = home_var;
 
   if (! session.init_file)
-    session.init_file  = home / ".ledgerrc";
+    session.init_file  = home ? *home / ".ledgerrc" : "./.ledgerrc";
   if (! session.price_db)
-    session.price_db   = home / ".pricedb";
+    session.price_db   = home ? *home / ".pricedb" : "./.pricedb";
 
   if (! session.cache_file)
-    session.cache_file = home / ".ledger-cache";
+    session.cache_file = home ? *home / ".ledger-cache" : "./.ledger-cache";
 
   if (session.data_file == *session.cache_file)
     session.use_cache = false;
@@ -392,6 +393,11 @@ int main(int argc, char * argv[], char * envp[])
       if (std::strcmp(argv[i], "--verify") == 0)
 	ledger::verify_enabled = true;
 #endif
+#if defined(LOGGING_ON)
+      if (std::strcmp(argv[i], "--verbose") == 0 ||
+	  std::strcmp(argv[i], "-v") == 0)
+	ledger::_log_level    = LOG_INFO;
+#endif
 #if defined(DEBUG_ON)
       if (i + 1 < argc && std::strcmp(argv[i], "--debug") == 0) {
 	ledger::_log_level    = LOG_DEBUG;
@@ -410,6 +416,8 @@ int main(int argc, char * argv[], char * envp[])
 
   try {
     std::ios::sync_with_stdio(false);
+    boost::filesystem::path::default_name_check
+      (boost::filesystem::portable_posix_name);
 
     ledger::initialize();
 

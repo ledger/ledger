@@ -690,8 +690,7 @@ unsigned int textual_parser_t::parse(std::istream&	   in,
 	     i != time_entries.end();
 	     i++)
 	  if (event.account == (*i).account)
-	    throw_(parse_error,
-		   "Cannot double check-in to the same account");
+	    throw_(parse_error, "Cannot double check-in to the same account");
 
       time_entries.push_back(event);
       break;
@@ -839,9 +838,12 @@ unsigned int textual_parser_t::parse(std::istream&	   in,
 	push_var<unsigned long> save_end_pos(end_pos);
 	push_var<unsigned int>  save_linenum(linenum);
 
-	pathname = resolve_path(pathname);
+	if (*p != '~' && *p != '/')
+	  pathname = (pathname.branch_path() / path(p)).normalize();
+	else
+	  pathname = resolve_path(p);
 
-	DEBUG("ledger.textual.include", "line " << linenum << ": " <<
+	DEBUG("ledger.textual.include", "Line " << linenum << ": " <<
 	      "Including path '" << pathname.string() << "'");
 
 	include_stack.push_back
