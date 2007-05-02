@@ -19,12 +19,19 @@ namespace xml {
 // fact that logic chains only need boolean values to continue, no
 // memory allocations need to take place at all.
 
-class value_t : public ordered_field_operators<value_t>
+class value_t
+  : public ordered_field_operators<value_t,
+           ordered_field_operators<value_t, balance_pair_t,
+           ordered_field_operators<value_t, balance_t,
+           ordered_field_operators<value_t, amount_t,
+           ordered_field_operators<value_t, double,
+           ordered_field_operators<value_t, unsigned long,
+           ordered_field_operators<value_t, long> > > > > > >
 {
+  char data[sizeof(balance_pair_t)];
+
  public:
   typedef std::vector<value_t> sequence_t;
-
-  char data[sizeof(balance_pair_t)];
 
   enum type_t {
     BOOLEAN,
@@ -124,6 +131,7 @@ class value_t : public ordered_field_operators<value_t>
   void simplify();
 
   value_t& operator=(const value_t& val);
+#if 0
   value_t& operator=(const bool val) {
     if ((bool *) data != &val) {
       destroy();
@@ -258,6 +266,7 @@ class value_t : public ordered_field_operators<value_t>
       return *this;
     }
   }
+#endif
 
   value_t& set_string(const string& str = "") {
     if (type != STRING) {
@@ -270,31 +279,31 @@ class value_t : public ordered_field_operators<value_t>
     return *this;
   }
 
-  bool		 to_boolean() const;
-  long		 to_integer() const;
-  moment_t       to_datetime() const;
-  amount_t	 to_amount() const;
-  balance_t	 to_balance() const;
-  balance_pair_t to_balance_pair() const;
-  string	 to_string() const;
-  xml::node_t *	 to_xml_node() const;
-  void *	 to_pointer() const;
-  sequence_t *	 to_sequence() const;
+  bool&		  boolean();
+  long&		  integer();
+  moment_t&       datetime();
+  amount_t&	  amount();
+  balance_t&	  balance();
+  balance_pair_t& balance_pair();
+  string&	  string_value();
+  xml::node_t *&  xml_node();
+  void *&	  pointer();
+  sequence_t *&	  sequence();
 
   value_t& operator[](const int index) {
-    sequence_t * seq = to_sequence();
+    sequence_t * seq = sequence();
     assert(seq);
     return (*seq)[index];
   }
 
   void push_back(const value_t& val) {
-    sequence_t * seq = to_sequence();
+    sequence_t * seq = sequence();
     assert(seq);
     return seq->push_back(val);
   }
 
   std::size_t size() const {
-    sequence_t * seq = to_sequence();
+    sequence_t * seq = const_cast<value_t&>(*this).sequence();
     assert(seq);
     return seq->size();
   }
@@ -309,18 +318,22 @@ class value_t : public ordered_field_operators<value_t>
   bool operator==(const value_t& val) const {
     return compare(val) == 0;
   }
+#if 0
   template <typename T>
   bool operator==(const T& val) const {
     return *this == value_t(val);
   }
+#endif
 
   bool operator<(const value_t& val) const {
     return compare(val) < 0;
   }
+#if 0
   template <typename T>
   bool operator<(const T& val) const {
     return *this < value_t(val);
   }
+#endif
 
   operator bool() const;
 
@@ -336,15 +349,15 @@ class value_t : public ordered_field_operators<value_t>
   operator balance_pair_t() const;
 #endif
 
-  void in_place_negate();
+  value_t operator-() const {
+    return negate();
+  }
   value_t negate() const {
     value_t temp = *this;
     temp.in_place_negate();
     return temp;
   }
-  value_t operator-() const {
-    return negate();
-  }
+  void in_place_negate();
 
   bool    realzero() const;
   value_t abs() const;
@@ -380,6 +393,8 @@ class value_t : public ordered_field_operators<value_t>
 
   void write(std::ostream& out, const int first_width,
 	     const int latter_width = -1) const;
+
+  friend std::ostream& operator<<(std::ostream& out, const value_t& val);
 };
 
 #if 0

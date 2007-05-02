@@ -20,16 +20,16 @@ void report_t::abbrev(value_t& result, xml::xpath_t::scope_t * locals)
   if (locals->args.size() < 2)
     throw_(std::logic_error, "usage: abbrev(STRING, WIDTH [, STYLE, ABBREV_LEN])");
 
-  string str = locals->args[0].to_string();
+  string str = locals->args[0].string_value();
   long	      wid = locals->args[1];
 
   elision_style_t style = session->elision_style;
   if (locals->args.size() == 3)
-    style = (elision_style_t)locals->args[2].to_integer();
+    style = (elision_style_t)locals->args[2].integer();
 
   long abbrev_len = session->abbrev_length;
   if (locals->args.size() == 4)
-    abbrev_len = locals->args[3].to_integer();
+    abbrev_len = locals->args[3].integer();
 
   result.set_string(abbreviate(str, wid, style, true, (int)abbrev_len));
 }
@@ -39,11 +39,11 @@ void report_t::ftime(value_t&, xml::xpath_t::scope_t * locals)
   if (locals->args.size() < 1)
     throw_(std::logic_error, "usage: ftime(DATE [, DATE_FORMAT])");
 
-  moment_t date = locals->args[0].to_datetime();
+  moment_t date = locals->args[0].datetime();
 
   string date_format;
   if (locals->args.size() == 2)
-    date_format = locals->args[1].to_string();
+    date_format = locals->args[1].string_value();
 #if 0
   // jww (2007-04-18): Need to setup an output facet here
   else

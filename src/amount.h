@@ -69,9 +69,13 @@ DECLARE_EXCEPTION(amount_error);
  * uncommoditized numbers, no display truncation is ever done.
  * Internally, precision is always kept to an excessive degree.
  */
-class amount_t : public ordered_field_operators<amount_t>
+  class amount_t
+    : public ordered_field_operators<amount_t,
+	     ordered_field_operators<amount_t, long,
+	     ordered_field_operators<amount_t, unsigned long,
+	     ordered_field_operators<amount_t, double > > > >
 {
- public:
+public:
   class bigint_t;
 
   static void initialize();
@@ -83,7 +87,7 @@ class amount_t : public ordered_field_operators<amount_t>
   static bool keep_base;
   static bool full_strings;
 
- protected:
+protected:
   void _init();
   void _copy(const amount_t& amt);
   void _release();
@@ -94,7 +98,7 @@ class amount_t : public ordered_field_operators<amount_t>
   bigint_t *	quantity;
   commodity_t *	commodity_;
 
- public:
+public:
   // constructors
   amount_t() : quantity(NULL), commodity_(NULL) {
     TRACE_CTOR(amount_t, "");
@@ -125,15 +129,10 @@ class amount_t : public ordered_field_operators<amount_t>
       _release();
   }
 
+  static amount_t exact(const string& value);
+
   // assignment operator
   amount_t& operator=(const amount_t& amt);
-#if 0
-  amount_t& operator=(const double val);
-  amount_t& operator=(const unsigned long val);
-  amount_t& operator=(const long val);
-  amount_t& operator=(const string& val);
-  amount_t& operator=(const char * val);
-#endif
 
   // comparisons between amounts
   int compare(const amount_t& amt) const;
@@ -149,28 +148,33 @@ class amount_t : public ordered_field_operators<amount_t>
   amount_t& operator/=(const amount_t& amt);
 
   // unary negation
-  void in_place_negate();
+  amount_t operator-() const {
+    return negate();
+  }
   amount_t negate() const {
     amount_t temp = *this;
     temp.in_place_negate();
     return temp;
   }
-  amount_t operator-() const {
-    return negate();
+  void in_place_negate();
+
+  // test for truth, zero and non-zero
+  operator bool() const {
+    return ! zero();
   }
 
-  // test for zero and non-zero
   int  sign() const;
   bool zero() const;
   bool realzero() const {
     return sign() == 0;
   }
-  operator bool() const {
-    return ! zero();
-  }
 
-  // Methods relating to this amount's commodity
+  // conversion methods
+  string to_string() const;
+  string to_fullstring() const;
+  string quantity_string() const;
 
+  // methods relating to the commodity
   bool is_null() const {
     return ! quantity && ! has_commodity();
   }
@@ -205,40 +209,26 @@ class amount_t : public ordered_field_operators<amount_t>
   optional<moment_t> date() const;
   optional<string>   tag() const;
 
-#if 0
-  // string and numeric conversions
-  operator string() const {
-    return to_string();
-  }
-  operator long() const;
-  operator double() const;
-#endif
-
-  string to_string() const;
-  string to_fullstring() const;
-  string quantity_string() const;
-
   // general methods
   amount_t round(unsigned int prec) const;
   amount_t round() const;
   amount_t unround() const;
   amount_t value(const moment_t& moment) const;
+
   amount_t abs() const {
     if (sign() < 0)
       return negate();
     return *this;
   }
+
   amount_t reduce() const {
     amount_t temp(*this);
     temp.in_place_reduce();
     return temp;
   }
-
-  bool valid() const;
-
   void in_place_reduce();
 
-  static amount_t exact(const string& value);
+  bool valid() const;
 
   // This function is special, and exists only to support a custom
   // optimization in binary.cc (which offers a significant enough gain

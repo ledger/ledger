@@ -66,7 +66,7 @@ parse_amount_expr(std::istream& in, journal_t *,
   }
 #endif
 
-  amount = xpath.calc(static_cast<xml::transaction_node_t *>(xact.data)).to_amount();
+  amount = xpath.calc(static_cast<xml::transaction_node_t *>(xact.data)).amount();
 
   DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 	 "The transaction amount is " << amount);

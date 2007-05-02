@@ -410,58 +410,6 @@ amount_t& amount_t::operator=(const amount_t& amt)
   return *this;
 }
 
-#if 0
-amount_t& amount_t::operator=(const long val)
-{
-  if (val == 0) {
-    if (quantity)
-      _clear();
-  } else {
-    commodity_ = NULL;
-    _init();
-    mpz_set_si(MPZ(quantity), val);
-  }
-  return *this;
-}
-
-amount_t& amount_t::operator=(const unsigned long val)
-{
-  if (val == 0) {
-    if (quantity)
-      _clear();
-  } else {
-    commodity_ = NULL;
-    _init();
-    mpz_set_ui(MPZ(quantity), val);
-  }
-  return *this;
-}
-
-amount_t& amount_t::operator=(const double val)
-{
-  commodity_ = NULL;
-  _init();
-  quantity->prec = convert_double(MPZ(quantity), val);
-  return *this;
-}
-
-amount_t& amount_t::operator=(const string& val)
-{
-  std::istringstream str(val);
-  parse(str);
-  return *this;
-}
-
-amount_t& amount_t::operator=(const char * val)
-{
-  string valstr(val);
-  std::istringstream str(valstr);
-  parse(str);
-  return *this;
-}
-#endif
-
-
 amount_t& amount_t::operator+=(const amount_t& amt)
 {
   if (commodity() != amt.commodity())
@@ -701,45 +649,6 @@ bool amount_t::zero() const
   }
   return realzero();
 }
-
-#if 0
-amount_t::operator long() const
-{
-  if (! quantity)
-    return 0;
-
-  mpz_set(temp, MPZ(quantity));
-  mpz_ui_pow_ui(divisor, 10, quantity->prec);
-  mpz_tdiv_q(temp, temp, divisor);
-  return mpz_get_si(temp);
-}
-
-amount_t::operator double() const
-{
-  if (! quantity)
-    return 0.0;
-
-  mpz_t remainder;
-  mpz_init(remainder);
-
-  mpz_set(temp, MPZ(quantity));
-  mpz_ui_pow_ui(divisor, 10, quantity->prec);
-  mpz_tdiv_qr(temp, remainder, temp, divisor);
-
-  char * quotient_s  = mpz_get_str(NULL, 10, temp);
-  char * remainder_s = mpz_get_str(NULL, 10, remainder);
-
-  std::ostringstream num;
-  num << quotient_s << '.' << remainder_s;
-
-  std::free(quotient_s);
-  std::free(remainder_s);
-
-  mpz_clear(remainder);
-
-  return std::atof(num.str().c_str());
-}
-#endif
 
 amount_t amount_t::value(const moment_t& moment) const
 {

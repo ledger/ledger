@@ -3,84 +3,93 @@
 
 namespace ledger {
 
-bool value_t::to_boolean() const
+bool& value_t::boolean()
 {
   if (type == BOOLEAN) {
     return *(bool *) data;
   } else {
+    throw_(value_error, "Value is not a boolean");
     value_t temp(*this);
     temp.in_place_cast(BOOLEAN);
     return *(bool *) temp.data;
   }
 }
 
-long value_t::to_integer() const
+long& value_t::integer()
 {
   if (type == INTEGER) {
     return *(long *) data;
   } else {
+    throw_(value_error, "Value is not an integer");
     value_t temp(*this);
     temp.in_place_cast(INTEGER);
     return *(long *) temp.data;
   }
 }
 
-moment_t value_t::to_datetime() const
+moment_t& value_t::datetime()
 {
   if (type == DATETIME) {
     return *(moment_t *) data;
   } else {
+    throw_(value_error, "Value is not a date/time");
     value_t temp(*this);
     temp.in_place_cast(DATETIME);
     return *(moment_t *) temp.data;
   }
 }
 
-amount_t value_t::to_amount() const
+amount_t& value_t::amount()
 {
   if (type == AMOUNT) {
     return *(amount_t *) data;
   } else {
+    throw_(value_error, "Value is not an amount");
     value_t temp(*this);
     temp.in_place_cast(AMOUNT);
     return *(amount_t *) temp.data;
   }
 }
 
-balance_t value_t::to_balance() const
+balance_t& value_t::balance()
 {
   if (type == BALANCE) {
     return *(balance_t *) data;
   } else {
+    throw_(value_error, "Value is not a balance");
     value_t temp(*this);
     temp.in_place_cast(BALANCE);
     return *(balance_t *) temp.data;
   }
 }
 
-balance_pair_t value_t::to_balance_pair() const
+balance_pair_t& value_t::balance_pair()
 {
   if (type == BALANCE_PAIR) {
     return *(balance_pair_t *) data;
   } else {
+    throw_(value_error, "Value is not a balance pair");
     value_t temp(*this);
     temp.in_place_cast(BALANCE_PAIR);
     return *(balance_pair_t *) temp.data;
   }
 }
 
-string value_t::to_string() const
+string& value_t::string_value()
 {
   if (type == STRING) {
     return **(string **) data;
   } else {
+    throw_(value_error, "Value is not a string");
+#if 0
     std::ostringstream out;
     out << *this;
     return out.str();
+#endif
   }
 }
 
-xml::node_t * value_t::to_xml_node() const
+xml::node_t *& value_t::xml_node()
 {
   if (type == XML_NODE)
     return *(xml::node_t **) data;
@@ -88,7 +97,7 @@ xml::node_t * value_t::to_xml_node() const
     throw_(value_error, "Value is not an XML node");
 }
 
-void * value_t::to_pointer() const
+void *& value_t::pointer()
 {
   if (type == POINTER)
     return *(void **) data;
@@ -96,7 +105,7 @@ void * value_t::to_pointer() const
     throw_(value_error, "Value is not a pointer");
 }
 
-value_t::sequence_t * value_t::to_sequence() const
+value_t::sequence_t *& value_t::sequence()
 {
   if (type == SEQUENCE)
     return *(sequence_t **) data;
@@ -352,7 +361,7 @@ value_t& value_t::operator+=(const value_t& val)
   case BALANCE:
     switch (val.type) {
     case INTEGER:
-      *((balance_t *) data) += *((long *) val.data);
+      *((balance_t *) data) += amount_t(*((long *) val.data));
       break;
     case AMOUNT:
       *((balance_t *) data) += *((amount_t *) val.data);
@@ -375,7 +384,7 @@ value_t& value_t::operator+=(const value_t& val)
   case BALANCE_PAIR:
     switch (val.type) {
     case INTEGER:
-      *((balance_pair_t *) data) += *((long *) val.data);
+      *((balance_pair_t *) data) += amount_t(*((long *) val.data));
       break;
     case AMOUNT:
       *((balance_pair_t *) data) += *((amount_t *) val.data);
@@ -536,7 +545,7 @@ value_t& value_t::operator-=(const value_t& val)
   case BALANCE:
     switch (val.type) {
     case INTEGER:
-      *((balance_t *) data) -= *((long *) val.data);
+      *((balance_t *) data) -= amount_t(*((long *) val.data));
       break;
     case AMOUNT:
       *((balance_t *) data) -= *((amount_t *) val.data);
@@ -557,7 +566,7 @@ value_t& value_t::operator-=(const value_t& val)
   case BALANCE_PAIR:
     switch (val.type) {
     case INTEGER:
-      *((balance_pair_t *) data) -= *((long *) val.data);
+      *((balance_pair_t *) data) -= amount_t(*((long *) val.data));
       break;
     case AMOUNT:
       *((balance_pair_t *) data) -= *((amount_t *) val.data);
@@ -686,7 +695,7 @@ value_t& value_t::operator*=(const value_t& val)
   case BALANCE_PAIR:
     switch (val.type) {
     case INTEGER:
-      *((balance_pair_t *) data) *= *((long *) val.data);
+      *((balance_pair_t *) data) *= amount_t(*((long *) val.data));
       break;
     case AMOUNT:
       *((balance_pair_t *) data) *= *((amount_t *) val.data);
@@ -833,7 +842,7 @@ value_t& value_t::operator/=(const value_t& val)
   case BALANCE_PAIR:
     switch (val.type) {
     case INTEGER:
-      *((balance_pair_t *) data) /= *((long *) val.data);
+      *((balance_pair_t *) data) /= amount_t(*((long *) val.data));
       break;
     case AMOUNT:
       *((balance_pair_t *) data) /= *((amount_t *) val.data);
@@ -884,7 +893,7 @@ value_t::operator bool() const
   case STRING:
     return ! (**((string **) data)).empty();
   case XML_NODE:
-    return (*(xml::node_t **) data)->to_value().to_boolean();
+    return (*(xml::node_t **) data)->to_value().boolean();
   case POINTER:
     return *(void **) data != NULL;
   case SEQUENCE:
@@ -1032,8 +1041,16 @@ value_t::operator string() const
 }
 #endif
 
-inline int compare_bool(const bool left, const bool right) {
+template <typename T>
+inline int compare_bool(const T& left, const T& right) {
   return (! left && right ? -1 : (left && ! right ? 1 : 0));
+}
+
+// jww (2007-05-01): This is going to be slow as hell for two
+// balance_t objects
+template <typename T>
+inline int compare_equality(const T& left, const T& right) {
+  return (left < right ? -1 : (left > right ? 1 : 0));
 }
 
 int value_t::compare(const value_t& val) const
@@ -1090,10 +1107,12 @@ int value_t::compare(const value_t& val) const
       return amount_t(*((long *) data)).compare(*((amount_t *) val.data));
 
     case BALANCE:
-      return balance_t(*((long *) data)).compare(*((balance_t *) val.data));
+      return compare_equality(balance_t(*((long *) data)),
+			      *((balance_t *) val.data));
 
     case BALANCE_PAIR:
-      return balance_pair_t(*((long *) data)).compare(*((balance_pair_t *) val.data));
+      return compare_equality(balance_pair_t(*((long *) data)),
+			      *((balance_pair_t *) val.data));
 
     case STRING:
       throw_(value_error, "Cannot compare an integer to a string");
@@ -1116,8 +1135,7 @@ int value_t::compare(const value_t& val) const
       throw_(value_error, "Cannot compare a date/time to an integer");
 
     case DATETIME:
-      return (*((moment_t *) data) < *((moment_t *) val.data) ? -1 :
-	      (*((moment_t *) data) > *((moment_t *) val.data) ? 1 : 0));
+      return compare_equality(*((moment_t *) data), *((moment_t *) val.data));
 
     case AMOUNT:
       throw_(value_error, "Cannot compare a date/time to an amount");
@@ -1153,10 +1171,12 @@ int value_t::compare(const value_t& val) const
       return ((amount_t *) data)->compare(*((amount_t *) val.data));
 
     case BALANCE:
-      return balance_t(*((amount_t *) data)).compare(*((balance_t *) val.data));
+      return compare_equality(balance_t(*((amount_t *) data)),
+			      *((balance_t *) val.data));
 
     case BALANCE_PAIR:
-      return balance_pair_t(*((amount_t *) data)).compare(*((balance_pair_t *) val.data));
+      return compare_equality(balance_pair_t(*((amount_t *) data)),
+			      *((balance_pair_t *) val.data));
 
     case STRING:
       throw_(value_error, "Cannot compare an amount to a string");
@@ -1177,20 +1197,22 @@ int value_t::compare(const value_t& val) const
       throw_(value_error, "Cannot compare a balance to a boolean");
 
     case INTEGER:
-      return ((balance_t *) data)->compare(amount_t(*((long *) val.data)));
+      return compare_equality(*(balance_t *) data,
+			      balance_t(*((long *) val.data)));
 
     case DATETIME:
       throw_(value_error, "Cannot compare a balance to a date/time");
 
     case AMOUNT:
-      return ((balance_t *) data)->compare(*((amount_t *) val.data));
+      return compare_equality(*(balance_t *) data,
+			      balance_t(*((amount_t *) val.data)));
 
     case BALANCE:
-      return ((balance_t *) data)->compare(*((balance_t *) val.data));
+      return compare_equality(*(balance_t *) data, *((balance_t *) val.data));
 
     case BALANCE_PAIR:
-      return balance_pair_t(*((balance_t *) data)).
-	compare(((balance_pair_t *) val.data)->quantity);
+      return compare_equality(balance_pair_t(*((balance_t *) data)),
+			      *(balance_pair_t *) val.data);
 
     case STRING:
       throw_(value_error, "Cannot compare a balance to a string");
@@ -1211,19 +1233,23 @@ int value_t::compare(const value_t& val) const
       throw_(value_error, "Cannot compare a balance pair to a boolean");
 
     case INTEGER:
-      return ((balance_pair_t *) data)->compare(amount_t(*((long *) val.data)));
+      return compare_equality(*(balance_pair_t *) data,
+			      balance_pair_t(amount_t(*((long *) val.data))));
 
     case DATETIME:
       throw_(value_error, "Cannot compare a balance pair to a date/time");
 
     case AMOUNT:
-      return ((balance_pair_t *) data)->compare(*((amount_t *) val.data));
+      return compare_equality(*(balance_pair_t *) data,
+			      balance_pair_t(*((amount_t *) val.data)));
 
     case BALANCE:
-      return ((balance_pair_t *) data)->compare(*((balance_t *) val.data));
+      return compare_equality(*(balance_pair_t *) data,
+			      balance_pair_t(*((balance_t *) val.data)));
 
     case BALANCE_PAIR:
-      return ((balance_pair_t *) data)->compare(*((balance_pair_t *) val.data));
+      return compare_equality(*(balance_pair_t *) data,
+			      *((balance_pair_t *) val.data));
 
     case STRING:
       throw_(value_error, "Cannot compare a balance pair to a string");

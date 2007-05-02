@@ -2,6 +2,137 @@
 
 namespace ledger {
 
+balance_t& balance_t::operator*=(const balance_t& bal)
+{
+  if (realzero() || bal.realzero()) {
+    return *this = amount_t();
+  }
+  else if (bal.amounts.size() == 1) {
+    return *this *= (*bal.amounts.begin()).second;
+  }
+  else if (amounts.size() == 1) {
+    return *this = bal * *this;
+  }
+  else {
+    // Since we would fail with an error at this point otherwise, try
+    // stripping annotations to see if we can come up with a
+    // reasonable result.  The user will not notice any annotations
+    // missing (since they are viewing a stripped report anyway), only
+    // that some of their value expression may not see any pricing or
+    // date data because of this operation.
+
+    balance_t temp(bal.strip_annotations());
+    if (temp.amounts.size() == 1)
+      return *this *= temp;
+    temp = strip_annotations();
+    if (temp.amounts.size() == 1)
+      return *this = bal * temp;
+
+    throw_(amount_error, "Cannot multiply two balances: " << temp << " * " << bal);
+  }
+}
+
+balance_t& balance_t::operator*=(const amount_t& amt)
+{
+  if (realzero() || amt.realzero()) {
+    return *this = amount_t();
+  }
+  else if (! amt.commodity()) {
+    // Multiplying by the null commodity causes all amounts to be
+    // increased by the same factor.
+    for (amounts_map::iterator i = amounts.begin();
+	 i != amounts.end();
+	 i++)
+      (*i).second *= amt;
+  }
+  else if (amounts.size() == 1) {
+    *this = (*amounts.begin()).second * amt;
+  }
+  else {
+    amounts_map::iterator i = amounts.find(&amt.commodity());
+    if (i != amounts.end()) {
+      (*i).second *= amt;
+    } else {
+      // Try stripping annotations before giving an error.
+      balance_t temp(strip_annotations());
+      if (temp.amounts.size() == 1) {
+	return *this = (*temp.amounts.begin()).second * amt;
+      } else {
+	i = temp.amounts.find(&amt.commodity());
+	if (i != temp.amounts.end())
+	  return *this = temp * amt;
+      }
+
+      throw_(amount_error, "Attempt to multiply balance by a commodity" <<
+	     " not found in that balance: " << temp << " * " << amt);
+    }
+  }
+  return *this;
+}
+
+balance_t& balance_t::operator/=(const balance_t& bal)
+{
+  if (bal.realzero()) {
+    throw_(amount_error, "Divide by zero: " << *this << " / " << bal);
+  }
+  else if (realzero()) {
+    return *this = amount_t();
+  }
+  else if (bal.amounts.size() == 1) {
+    return *this /= (*bal.amounts.begin()).second;
+  }
+  else if (*this == bal) {
+    return *this = amount_t(1L);
+  }
+  else {
+    // Try stripping annotations before giving an error.
+    balance_t temp(bal.strip_annotations());
+    if (temp.amounts.size() == 1)
+      return *this /= temp;
+
+    throw_(amount_error,
+	   "Cannot divide two balances: " << temp << " / " << bal);
+  }
+}
+
+balance_t& balance_t::operator/=(const amount_t& amt)
+{
+  if (amt.realzero()) {
+    throw_(amount_error, "Divide by zero: " << *this << " / " << amt);
+  }
+  else if (realzero()) {
+    return *this = amount_t();
+  }
+  else if (! amt.commodity()) {
+    // Dividing by the null commodity causes all amounts to be
+    // decreased by the same factor.
+    for (amounts_map::iterator i = amounts.begin();
+	 i != amounts.end();
+	 i++)
+      (*i).second /= amt;
+  }
+  else if (amounts.size() == 1 &&
+	   (*amounts.begin()).first == &amt.commodity()) {
+    (*amounts.begin()).second /= amt;
+  }
+  else {
+    amounts_map::iterator i = amounts.find(&amt.commodity());
+    if (i != amounts.end()) {
+      (*i).second /= amt;
+    } else {
+      // Try stripping annotations before giving an error.
+      balance_t temp(strip_annotations());
+      if (temp.amounts.size() == 1 &&
+	  (*temp.amounts.begin()).first == &amt.commodity())
+	return *this = temp / amt;
+
+      throw_(amount_error, "Attempt to divide balance by a commodity" <<
+	     " not found in that balance: " << temp << " * " << amt);
+    }
+  }
+  return *this;
+}
+
 amount_t balance_t::amount(const commodity_t& commodity) const
 {
   if (! commodity) {
@@ -165,137 +296,6 @@ void balance_t::write(std::ostream& out,
     out.fill(' ');
     out << std::right << "0";
   }
-}
-
-balance_t& balance_t::operator*=(const balance_t& bal)
-{
-  if (realzero() || bal.realzero()) {
-    return *this = 0L;
-  }
-  else if (bal.amounts.size() == 1) {
-    return *this *= (*bal.amounts.begin()).second;
-  }
-  else if (amounts.size() == 1) {
-    return *this = bal * *this;
-  }
-  else {
-    // Since we would fail with an error at this point otherwise, try
-    // stripping annotations to see if we can come up with a
-    // reasonable result.  The user will not notice any annotations
-    // missing (since they are viewing a stripped report anyway), only
-    // that some of their value expression may not see any pricing or
-    // date data because of this operation.
-
-    balance_t temp(bal.strip_annotations());
-    if (temp.amounts.size() == 1)
-      return *this *= temp;
-    temp = strip_annotations();
-    if (temp.amounts.size() == 1)
-      return *this = bal * temp;
-
-    throw_(amount_error, "Cannot multiply two balances: " << temp << " * " << bal);
-  }
-}
-
-balance_t& balance_t::operator*=(const amount_t& amt)
-{
-  if (realzero() || amt.realzero()) {
-    return *this = 0L;
-  }
-  else if (! amt.commodity()) {
-    // Multiplying by the null commodity causes all amounts to be
-    // increased by the same factor.
-    for (amounts_map::iterator i = amounts.begin();
-	 i != amounts.end();
-	 i++)
-      (*i).second *= amt;
-  }
-  else if (amounts.size() == 1) {
-    *this = (*amounts.begin()).second * amt;
-  }
-  else {
-    amounts_map::iterator i = amounts.find(&amt.commodity());
-    if (i != amounts.end()) {
-      (*i).second *= amt;
-    } else {
-      // Try stripping annotations before giving an error.
-      balance_t temp(strip_annotations());
-      if (temp.amounts.size() == 1) {
-	return *this = (*temp.amounts.begin()).second * amt;
-      } else {
-	i = temp.amounts.find(&amt.commodity());
-	if (i != temp.amounts.end())
-	  return *this = temp * amt;
-      }
-
-      throw_(amount_error, "Attempt to multiply balance by a commodity" <<
-	     " not found in that balance: " << temp << " * " << amt);
-    }
-  }
-  return *this;
-}
-
-balance_t& balance_t::operator/=(const balance_t& bal)
-{
-  if (bal.realzero()) {
-    throw_(amount_error, "Divide by zero: " << *this << " / " << bal);
-  }
-  else if (realzero()) {
-    return *this = 0L;
-  }
-  else if (bal.amounts.size() == 1) {
-    return *this /= (*bal.amounts.begin()).second;
-  }
-  else if (*this == bal) {
-    return *this = 1L;
-  }
-  else {
-    // Try stripping annotations before giving an error.
-    balance_t temp(bal.strip_annotations());
-    if (temp.amounts.size() == 1)
-      return *this /= temp;
-
-    throw_(amount_error,
-	   "Cannot divide two balances: " << temp << " / " << bal);
-  }
-}
-
-balance_t& balance_t::operator/=(const amount_t& amt)
-{
-  if (amt.realzero()) {
-    throw_(amount_error, "Divide by zero: " << *this << " / " << amt);
-  }
-  else if (realzero()) {
-    return *this = 0L;
-  }
-  else if (! amt.commodity()) {
-    // Dividing by the null commodity causes all amounts to be
-    // decreased by the same factor.
-    for (amounts_map::iterator i = amounts.begin();
-	 i != amounts.end();
-	 i++)
-      (*i).second /= amt;
-  }
-  else if (amounts.size() == 1 &&
-	   (*amounts.begin()).first == &amt.commodity()) {
-    (*amounts.begin()).second /= amt;
-  }
-  else {
-    amounts_map::iterator i = amounts.find(&amt.commodity());
-    if (i != amounts.end()) {
-      (*i).second /= amt;
-    } else {
-      // Try stripping annotations before giving an error.
-      balance_t temp(strip_annotations());
-      if (temp.amounts.size() == 1 &&
-	  (*temp.amounts.begin()).first == &amt.commodity())
-	return *this = temp / amt;
-
-      throw_(amount_error, "Attempt to divide balance by a commodity" <<
-	     " not found in that balance: " << temp << " * " << amt);
-    }
-  }
-  return *this;
 }
 
 #if 0

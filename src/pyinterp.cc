@@ -117,11 +117,11 @@ void python_interpreter_t::functor_t::operator()(value_t& result,
       result = static_cast<const value_t&>(extract<value_t>(func.ptr()));
     } else {
       assert(locals->args.type == value_t::SEQUENCE);
-      if (locals->args.to_sequence()->size() > 0) {
+      if (locals->args.sequence()->size() > 0) {
 	list arglist;
 	for (value_t::sequence_t::iterator
-	       i = locals->args.to_sequence()->begin();
-	     i != locals->args.to_sequence()->end();
+	       i = locals->args.sequence()->begin();
+	     i != locals->args.sequence()->end();
 	     i++)
 	  arglist.append(*i);
 
@@ -155,10 +155,10 @@ void python_interpreter_t::lambda_t::operator()(value_t& result,
 {
   try {
     assert(locals->args.type == value_t::SEQUENCE);
-    assert(locals->args.to_sequence()->size() == 1);
+    assert(locals->args.sequence()->size() == 1);
     value_t item = locals->args[0];
     assert(item.type == value_t::POINTER);
-    result = call<value_t>(func.ptr(), (xml::node_t *)*(void **)item.data);
+    result = call<value_t>(func.ptr(), item.xml_node());
   }
   catch (const error_already_set&) {
     PyErr_Print();

@@ -760,7 +760,7 @@ inline std::ostream& operator<<(std::ostream& out, const xpath_t::op_t& op) {
 template <typename T>
 inline T * get_ptr(xml::xpath_t::scope_t * locals, unsigned int idx) {
   assert(locals->args.size() > idx);
-  T * ptr = static_cast<T *>(locals->args[idx].to_pointer());
+  T * ptr = static_cast<T *>(locals->args[idx].pointer());
   assert(ptr);
   return ptr;
 }

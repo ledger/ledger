@@ -87,12 +87,10 @@ void export_amount()
     .def(self += double())
 
     .def(self	  + self)
-#if 0
     .def(self	  + long())
     .def(long()	  + self)
     .def(self	  + double())
     .def(double() + self)
-#endif
 
     .def(self -= self)
     .def(self -= long())
