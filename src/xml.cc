@@ -463,9 +463,9 @@ node_t * entry_node_t::children() const
 node_t * entry_node_t::lookup_child(int _name_id) const
 {
   switch (_name_id) {
-  case document_t::CODE:
+  case document_t::CODE: {
     if (! entry->code)
-      return NULL;
+      break;
 
     // jww (2007-04-20): I have to save this and then delete it later
     terminal_node_t * code_node =
@@ -473,14 +473,16 @@ node_t * entry_node_t::lookup_child(int _name_id) const
     code_node->set_name(document_t::CODE);
     code_node->set_text(*entry->code);
     return code_node;
+  }
 
-  case document_t::PAYEE:
+  case document_t::PAYEE: {
     // jww (2007-04-20): I have to save this and then delete it later
     terminal_node_t * payee_node =
       new terminal_node_t(document, const_cast<entry_node_t *>(this));
     payee_node->set_name(document_t::PAYEE);
     payee_node->set_text(entry->payee);
     return payee_node;
+  }
   }
   return NULL;
 }
