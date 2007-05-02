@@ -321,10 +321,15 @@ void xml_write_value(std::ostream& out, const value_t& value,
     for (int i = 0; i < depth + 2; i++) out << ' ';
     out << "<balance>\n";
 
-    for (amounts_map::const_iterator i = bal->amounts.begin();
+#if 0
+    // jww (2007-04-30): Change this so that types know how to stream
+    // themselves to XML on their own.
+    
+    for (balance_t::amounts_map::const_iterator i = bal->amounts.begin();
 	 i != bal->amounts.end();
 	 i++)
       xml_write_amount(out, (*i).second, depth + 4);
+#endif
 
     for (int i = 0; i < depth + 2; i++) out << ' ';
     out << "</balance>\n";

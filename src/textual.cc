@@ -1,8 +1,6 @@
 #include "textual.h"
 #include "session.h"
 
-#define TIMELOG_SUPPORT 1
-
 namespace ledger {
 
 #define MAX_LINE 1024
@@ -14,14 +12,18 @@ static accounts_map account_aliases;
 
 static std::list<std::pair<path, int> > include_stack;
 
+#define TIMELOG_SUPPORT 1
 #ifdef TIMELOG_SUPPORT
+
 struct time_entry_t {
-  moment_t  checkin;
+  moment_t    checkin;
   account_t * account;
   string desc;
 };
+
 std::list<time_entry_t> time_entries;
-#endif
+
+#endif // TIMELOG_SUPPORT
 
 inline char * next_element(char * buf, bool variable = false)
 {
@@ -248,7 +250,7 @@ transaction_t * parse_transaction(char *      line,
 
 	  POP_CONTEXT(context("While parsing transaction cost"));
 
-	  if (*xact->cost < 0)
+	  if (xact->cost->sign() < 0)
 	    throw_(parse_error, "A transaction's cost may not be negative");
 
 	  assert(xact->amount);

@@ -16,7 +16,7 @@ amount_t balance_getitem(balance_t& bal, int i)
   }
 
   int x = i < 0 ? len + i : i;
-  amounts_map::iterator elem = bal.amounts.begin();
+  balance_t::amounts_map::iterator elem = bal.amounts.begin();
   while (--x >= 0)
     elem++;
 

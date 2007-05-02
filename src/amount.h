@@ -55,6 +55,8 @@ extern bool do_cleanup;
 
 class commodity_t;
 
+DECLARE_EXCEPTION(amount_error);
+
 /**
  * @class amount_t
  *
@@ -67,8 +69,7 @@ class commodity_t;
  * uncommoditized numbers, no display truncation is ever done.
  * Internally, precision is always kept to an excessive degree.
  */
-
-class amount_t
+class amount_t : public ordered_field_operators<amount_t>
 {
  public:
   class bigint_t;
@@ -105,6 +106,10 @@ class amount_t
     else
       commodity_ = NULL;
   }
+  amount_t(const long val);
+  amount_t(const unsigned long val);
+  amount_t(const double val);
+
   amount_t(const string& val) : quantity(NULL) {
     TRACE_CTOR(amount_t, "const string&");
     parse(val);
@@ -113,15 +118,61 @@ class amount_t
     TRACE_CTOR(amount_t, "const char *");
     parse(val);
   }
-  amount_t(const long val);
-  amount_t(const unsigned long val);
-  amount_t(const double val);
 
-  // destructor
   ~amount_t() {
     TRACE_DTOR(amount_t);
     if (quantity)
       _release();
+  }
+
+  // assignment operator
+  amount_t& operator=(const amount_t& amt);
+#if 0
+  amount_t& operator=(const double val);
+  amount_t& operator=(const unsigned long val);
+  amount_t& operator=(const long val);
+  amount_t& operator=(const string& val);
+  amount_t& operator=(const char * val);
+#endif
+
+  // comparisons between amounts
+  int compare(const amount_t& amt) const;
+  bool operator==(const amount_t& amt) const;
+  bool operator<(const amount_t& amt) const {
+    return compare(amt) < 0;
+  }
+
+  // in-place arithmetic
+  amount_t& operator+=(const amount_t& amt);
+  amount_t& operator-=(const amount_t& amt);
+  amount_t& operator*=(const amount_t& amt);
+  amount_t& operator/=(const amount_t& amt);
+
+  // unary negation
+  void in_place_negate();
+  amount_t negate() const {
+    amount_t temp = *this;
+    temp.in_place_negate();
+    return temp;
+  }
+  amount_t operator-() const {
+    return negate();
+  }
+
+  // test for zero and non-zero
+  int  sign() const;
+  bool zero() const;
+  bool realzero() const {
+    return sign() == 0;
+  }
+  operator bool() const {
+    return ! zero();
+  }
+
+  // Methods relating to this amount's commodity
+
+  bool is_null() const {
+    return ! quantity && ! has_commodity();
   }
 
   amount_t number() const {
@@ -154,183 +205,29 @@ class amount_t
   optional<moment_t> date() const;
   optional<string>   tag() const;
 
-  bool null() const {
-    return ! quantity && ! has_commodity();
-  }
-
-  // assignment operator
-  amount_t& operator=(const amount_t& amt);
-  amount_t& operator=(const string& val);
-  amount_t& operator=(const char * val);
-  amount_t& operator=(const long val);
-  amount_t& operator=(const unsigned long val);
-  amount_t& operator=(const double val);
-
-  // general methods
-  amount_t round(unsigned int prec) const;
-  amount_t round() const;
-  amount_t unround() const;
-
-  // in-place arithmetic
-  amount_t& operator+=(const amount_t& amt);
-  amount_t& operator-=(const amount_t& amt);
-  amount_t& operator*=(const amount_t& amt);
-  amount_t& operator/=(const amount_t& amt);
-
-  template <typename T>
-  amount_t& operator+=(T val) {
-    return *this += amount_t(val);
-  }
-  template <typename T>
-  amount_t& operator-=(T val) {
-    return *this -= amount_t(val);
-  }
-  template <typename T>
-  amount_t& operator*=(T val) {
-    return *this *= amount_t(val);
-  }
-  template <typename T>
-  amount_t& operator/=(T val) {
-    return *this /= amount_t(val);
-  }
-
-  // simple arithmetic
-  amount_t operator+(const amount_t& amt) const {
-    amount_t temp = *this;
-    temp += amt;
-    return temp;
-  }
-  amount_t operator-(const amount_t& amt) const {
-    amount_t temp = *this;
-    temp -= amt;
-    return temp;
-  }
-  amount_t operator*(const amount_t& amt) const {
-    amount_t temp = *this;
-    temp *= amt;
-    return temp;
-  }
-  amount_t operator/(const amount_t& amt) const {
-    amount_t temp = *this;
-    temp /= amt;
-    return temp;
-  }
-
-  template <typename T>
-  amount_t operator+(T val) const {
-    amount_t temp = *this;
-    temp += val;
-    return temp;
-  }
-  template <typename T>
-  amount_t operator-(T val) const {
-    amount_t temp = *this;
-    temp -= val;
-    return temp;
-  }
-  template <typename T>
-  amount_t operator*(T val) const {
-    amount_t temp = *this;
-    temp *= val;
-    return temp;
-  }
-  template <typename T>
-  amount_t operator/(T val) const {
-    amount_t temp = *this;
-    temp /= val;
-    return temp;
-  }
-
-  // unary negation
-  void in_place_negate();
-  amount_t negate() const {
-    amount_t temp = *this;
-    temp.in_place_negate();
-    return temp;
-  }
-  amount_t operator-() const {
-    return negate();
-  }
-
-  // test for zero and non-zero
-  int  sign() const;
-  bool zero() const;
-  bool realzero() const {
-    return sign() == 0;
-  }
-  operator bool() const {
-    return ! zero();
-  }
+#if 0
+  // string and numeric conversions
   operator string() const {
     return to_string();
   }
-
   operator long() const;
   operator double() const;
+#endif
 
   string to_string() const;
   string to_fullstring() const;
   string quantity_string() const;
 
-  // comparisons between amounts
-  int compare(const amount_t& amt) const;
-
-  bool operator<(const amount_t& amt) const {
-    return compare(amt) < 0;
-  }
-  bool operator<=(const amount_t& amt) const {
-    return compare(amt) <= 0;
-  }
-  bool operator>(const amount_t& amt) const {
-    return compare(amt) > 0;
-  }
-  bool operator>=(const amount_t& amt) const {
-    return compare(amt) >= 0;
-  }
-  bool operator==(const amount_t& amt) const;
-  bool operator!=(const amount_t& amt) const;
-
-  template <typename T>
-  void parse_num(T num) {
-    std::ostringstream temp;
-    temp << num;
-    std::istringstream in(temp.str());
-    parse(in);
-  }
-
-  // POD comparisons
-#define AMOUNT_CMP_INT(OP)			\
-  template <typename T>				\
-  bool operator OP (T num) const {		\
-    if (num == 0) {				\
-      return sign() OP 0;			\
-    } else {					\
-      amount_t amt;				\
-      amt.parse_num(num);			\
-      return *this OP amt;			\
-    }						\
-  }
-
-  AMOUNT_CMP_INT(<)
-  AMOUNT_CMP_INT(<=)
-  AMOUNT_CMP_INT(>)
-  AMOUNT_CMP_INT(>=)
-  AMOUNT_CMP_INT(==)
-
-  template <typename T>
-  bool operator!=(T num) const {
-    return ! (*this == num);
-  }
-
+  // general methods
+  amount_t round(unsigned int prec) const;
+  amount_t round() const;
+  amount_t unround() const;
   amount_t value(const moment_t& moment) const;
-
   amount_t abs() const {
-    if (*this < 0)
+    if (sign() < 0)
       return negate();
     return *this;
   }
-
-  void in_place_reduce();
   amount_t reduce() const {
     amount_t temp(*this);
     temp.in_place_reduce();
@@ -338,6 +235,8 @@ class amount_t
   }
 
   bool valid() const;
+
+  void in_place_reduce();
 
   static amount_t exact(const string& value);
 
@@ -407,51 +306,6 @@ inline string amount_t::quantity_string() const {
   return bufstream.str();
 }
 
-#define DEFINE_AMOUNT_OPERATORS(T)				\
-inline amount_t operator+(const T val, const amount_t& amt) {	\
-  amount_t temp(val);						\
-  temp += amt;							\
-  return temp;							\
-}								\
-inline amount_t operator-(const T val, const amount_t& amt) {	\
-  amount_t temp(val);						\
-  temp -= amt;							\
-  return temp;							\
-}								\
-inline amount_t operator*(const T val, const amount_t& amt) {	\
-  amount_t temp(val);						\
-  temp *= amt;							\
-  return temp;							\
-}								\
-inline amount_t operator/(const T val, const amount_t& amt) {	\
-  amount_t temp(val);						\
-  temp /= amt;							\
-  return temp;							\
-}								\
-								\
-inline bool operator<(const T val, const amount_t& amt) {	\
-  return amount_t(val) < amt;					\
-}								\
-inline bool operator<=(const T val, const amount_t& amt) {	\
-  return amount_t(val) <= amt;					\
-}								\
-inline bool operator>(const T val, const amount_t& amt) {	\
-  return amount_t(val) > amt;					\
-}								\
-inline bool operator>=(const T val, const amount_t& amt) {	\
-  return amount_t(val) >= amt;					\
-}								\
-inline bool operator==(const T val, const amount_t& amt) {	\
-  return amount_t(val) == amt;					\
-}								\
-inline bool operator!=(const T val, const amount_t& amt) {	\
-  return amount_t(val) != amt;					\
-}
-
-DEFINE_AMOUNT_OPERATORS(long)
-DEFINE_AMOUNT_OPERATORS(unsigned long)
-DEFINE_AMOUNT_OPERATORS(double)
-
 inline std::ostream& operator<<(std::ostream& out, const amount_t& amt) {
   amt.print(out, false, amount_t::full_strings);
   return out;
@@ -461,282 +315,16 @@ inline std::istream& operator>>(std::istream& in, amount_t& amt) {
   return in;
 }
 
+} // namespace ledger
 
-#define COMMODITY_STYLE_DEFAULTS   0x0000
-#define COMMODITY_STYLE_SUFFIXED   0x0001
-#define COMMODITY_STYLE_SEPARATED  0x0002
-#define COMMODITY_STYLE_EUROPEAN   0x0004
-#define COMMODITY_STYLE_THOUSANDS  0x0008
-#define COMMODITY_STYLE_NOMARKET   0x0010
-#define COMMODITY_STYLE_BUILTIN    0x0020
+#include "commodity.h"
 
-typedef std::map<const moment_t, amount_t>  history_map;
-typedef std::pair<const moment_t, amount_t> history_pair;
+namespace ledger {
 
-class commodity_base_t;
-
-typedef std::map<const string, commodity_base_t *>  base_commodities_map;
-typedef std::pair<const string, commodity_base_t *> base_commodities_pair;
-
-class commodity_base_t
-{
- public:
-  friend class commodity_t;
-  friend class annotated_commodity_t;
-
-  typedef unsigned long ident_t;
-
-  ident_t	ident;
-  string	name;
-  string	note;
-  unsigned char precision;
-  unsigned char flags;
-  amount_t *	smaller;
-  amount_t *	larger;
-
-  commodity_base_t()
-    : precision(0), flags(COMMODITY_STYLE_DEFAULTS),
-      smaller(NULL), larger(NULL), history(NULL) {
-    TRACE_CTOR(commodity_base_t, "");
-  }
-
-  commodity_base_t(const commodity_base_t&) {
-    TRACE_CTOR(commodity_base_t, "copy");
-    assert(0);
-  }
-
-  commodity_base_t(const string& _symbol,
-		   unsigned int	_precision = 0,
-		   unsigned int _flags	   = COMMODITY_STYLE_DEFAULTS)
-    : precision(_precision), flags(_flags),
-      smaller(NULL), larger(NULL), symbol(_symbol), history(NULL) {
-    TRACE_CTOR(commodity_base_t, "const string&, unsigned int, unsigned int");
-  }
-
-  ~commodity_base_t() {
-    TRACE_DTOR(commodity_base_t);
-    if (history) checked_delete(history);
-    if (smaller) checked_delete(smaller);
-    if (larger)  checked_delete(larger);
-  }
-
-  static base_commodities_map commodities;
-  static commodity_base_t * create(const string& symbol);
-
-  string symbol;
-
-  struct history_t {
-    history_map	prices;
-    ptime	last_lookup;
-    history_t() : last_lookup() {}
-  };
-  history_t * history;
-
-  void	   add_price(const moment_t& date, const amount_t& price);
-  bool	   remove_price(const moment_t& date);
-  amount_t value(const moment_t& moment = now);
-
-  class updater_t {
-   public:
-    virtual ~updater_t() {}
-    virtual void operator()(commodity_base_t& commodity,
-			    const moment_t&   moment,
-			    const moment_t&   date,
-			    const moment_t&   last,
-			    amount_t&         price) = 0;
-  };
-  friend class updater_t;
-
-  static updater_t * updater;
-};
-
-typedef std::map<const string, commodity_t *>  commodities_map;
-typedef std::pair<const string, commodity_t *> commodities_pair;
-
-typedef std::vector<commodity_t *> commodities_array;
-
-class commodity_t
-{
-  friend class annotated_commodity_t;
-
- public:
-  // This map remembers all commodities that have been defined.
-
-  static commodities_map     commodities;
-  static commodities_array * commodities_by_ident;
-  static bool		     commodities_sorted;
-  static commodity_t *	     null_commodity;
-  static commodity_t *	     default_commodity;
-
-  static commodity_t * create(const string& symbol);
-  static commodity_t * find(const string& name);
-  static commodity_t * find_or_create(const string& symbol);
-
-  static bool needs_quotes(const string& symbol);
-
-  static void make_alias(const string& symbol,
-			 commodity_t * commodity);
-
-  // These are specific to each commodity reference
-
-  typedef unsigned long ident_t;
-
-  ident_t	     ident;
-  commodity_base_t * base;
-  string	     qualified_symbol;
-  bool		     annotated;
-
- public:
-  explicit commodity_t() : base(NULL), annotated(false) {
-    TRACE_CTOR(commodity_t, "");
-  }
-  commodity_t(const commodity_t& o)
-    : ident(o.ident), base(o.base),
-      qualified_symbol(o.qualified_symbol), annotated(o.annotated) {
-    TRACE_CTOR(commodity_t, "copy");
-  }
-  virtual ~commodity_t() {
-    TRACE_DTOR(commodity_t);
-  }
-
-  operator bool() const {
-    return this != null_commodity;
-  }
-  virtual bool operator==(const commodity_t& comm) const {
-    if (comm.annotated)
-      return comm == *this;
-    return base == comm.base;
-  }
-  bool operator!=(const commodity_t& comm) const {
-    return ! (*this == comm);
-  }
-
-  string base_symbol() const {
-    return base->symbol;
-  }
-  string symbol() const {
-    return qualified_symbol;
-  }
-
-  void write(std::ostream& out) const {
-    out << symbol();
-  }
-
-  string name() const {
-    return base->name;
-  }
-  void set_name(const string& arg) {
-    base->name = arg;
-  }
-
-  string note() const {
-    return base->note;
-  }
-  void set_note(const string& arg) {
-    base->note = arg;
-  }
-
-  unsigned char precision() const {
-    return base->precision;
-  }
-  void set_precision(unsigned char arg) {
-    base->precision = arg;
-  }
-
-  unsigned char flags() const {
-    return base->flags;
-  }
-  void set_flags(unsigned char arg) {
-    base->flags = arg;
-  }
-  void add_flags(unsigned char arg) {
-    base->flags |= arg;
-  }
-  void drop_flags(unsigned char arg) {
-    base->flags &= ~arg;
-  }
-
-  amount_t * smaller() const {
-    return base->smaller;
-  }
-  void set_smaller(const amount_t& arg) {
-    if (base->smaller)
-      checked_delete(base->smaller);
-    base->smaller = new amount_t(arg);
-  }
-
-  amount_t * larger() const {
-    return base->larger;
-  }
-  void set_larger(const amount_t& arg) {
-    if (base->larger)
-      checked_delete(base->larger);
-    base->larger = new amount_t(arg);
-  }
-
-  commodity_base_t::history_t * history() const {
-    return base->history;
-  }
-
-  void add_price(const moment_t& date, const amount_t& price) {
-    return base->add_price(date, price);
-  }
-  bool remove_price(const moment_t& date) {
-    return base->remove_price(date);
-  }
-  amount_t value(const moment_t& moment = now) const {
-    return base->value(moment);
-  }
-
-  bool valid() const;
-};
-
-class annotated_commodity_t : public commodity_t
-{
- public:
-  const commodity_t * ptr;
-
-  optional<amount_t> price;
-  optional<moment_t> date;
-  optional<string>   tag;
-
-  explicit annotated_commodity_t() {
-    TRACE_CTOR(annotated_commodity_t, "");
-    annotated = true;
-  }
-  virtual ~annotated_commodity_t() {
-    TRACE_DTOR(annotated_commodity_t);
-  }
-
-  virtual bool operator==(const commodity_t& comm) const;
-
-  void write_annotations(std::ostream& out) const {
-    annotated_commodity_t::write_annotations(out, price, date, tag);
-  }
-
-  static void write_annotations(std::ostream&		  out,
-				const optional<amount_t>& price,
-				const optional<moment_t>& date,
-				const optional<string>&	  tag);
-
- private:
-  static commodity_t * create(const commodity_t&	comm,
-			      const optional<amount_t>& price,
-			      const optional<moment_t>&	date,
-			      const optional<string>&	tag,
-			      const string&		mapping_key);
-
-  static commodity_t * find_or_create(const commodity_t&	comm,
-				      const optional<amount_t>& price,
-				      const optional<moment_t>&	date,
-				      const optional<string>&	tag);
-
-  friend class amount_t;
-};
-
-inline std::ostream& operator<<(std::ostream& out, const commodity_t& comm) {
-  out << comm.symbol();
-  return out;
+inline bool amount_t::operator==(const amount_t& amt) const {
+  if (commodity() != amt.commodity())
+    return false;
+  return compare(amt) == 0;
 }
 
 inline amount_t amount_t::round() const {
@@ -755,12 +343,6 @@ inline commodity_t& amount_t::commodity() const {
 
 void parse_conversion(const string& larger_str,
 		      const string& smaller_str);
-
-DECLARE_EXCEPTION(amount_error);
-
-struct compare_amount_commodities {
-  bool operator()(const amount_t * left, const amount_t * right) const;
-};
 
 } // namespace ledger
 

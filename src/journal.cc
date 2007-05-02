@@ -150,9 +150,9 @@ bool entry_base_t::finalize()
     assert((*x)->amount);
     commodity_t& this_comm = (*x)->amount->commodity();
 
-    amounts_map::const_iterator this_bal =
+    balance_t::amounts_map::const_iterator this_bal =
       ((balance_t *) balance.data)->amounts.find(&this_comm);
-    amounts_map::const_iterator other_bal =
+    balance_t::amounts_map::const_iterator other_bal =
       ((balance_t *) balance.data)->amounts.begin();
     if (this_bal == other_bal)
       other_bal++;
@@ -218,7 +218,8 @@ bool entry_base_t::finalize()
 	balance.cast(value_t::AMOUNT);
       } else {
 	bool first = true;
-	for (amounts_map::const_iterator i = bal->amounts.begin();
+	for (balance_t::amounts_map::const_iterator
+	       i = bal->amounts.begin();
 	     i != bal->amounts.end();
 	     i++) {
 	  amount_t amt = (*i).second.negate();

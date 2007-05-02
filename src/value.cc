@@ -866,7 +866,6 @@ value_t& value_t::operator/=(const value_t& val)
   return *this;
 }
 
-template <>
 value_t::operator bool() const
 {
   switch (type) {
@@ -900,6 +899,7 @@ value_t::operator bool() const
   return 0;
 }
 
+#if 0
 template <>
 value_t::operator long() const
 {
@@ -1030,351 +1030,315 @@ value_t::operator string() const
   assert(0);
   return 0;
 }
+#endif
 
-#define DEF_VALUE_CMP_OP(OP)						\
-bool value_t::operator OP(const value_t& val)				\
-{									\
-  switch (type) {							\
-  case BOOLEAN:								\
-    switch (val.type) {							\
-    case BOOLEAN:							\
-      return *((bool *) data) OP *((bool *) val.data);			\
-									\
-    case INTEGER:							\
-      return *((bool *) data) OP bool(*((long *) val.data));		\
-									\
-    case DATETIME:							\
-      throw_(value_error, "Cannot compare a boolean to a date/time");	\
-									\
-    case AMOUNT:							\
-      return *((bool *) data) OP bool(*((amount_t *) val.data));	\
-									\
-    case BALANCE:							\
-      return *((bool *) data) OP bool(*((balance_t *) val.data));	\
-									\
-    case BALANCE_PAIR:							\
-      return *((bool *) data) OP bool(*((balance_pair_t *) val.data));	\
-									\
-    case STRING:							\
-      throw_(value_error, "Cannot compare a boolean to a string");	\
-									\
-    case XML_NODE:							\
-      return *this OP (*(xml::node_t **) data)->to_value();		\
-									\
-    case POINTER:							\
-      throw_(value_error, "Cannot compare a boolean to a pointer");	\
-    case SEQUENCE:							\
-      throw_(value_error, "Cannot compare a boolean to a sequence");	\
-									\
-    default:								\
-      assert(0);							\
-      break;								\
-    }									\
-    break;								\
-									\
-  case INTEGER:								\
-    switch (val.type) {							\
-    case BOOLEAN:							\
-      return (*((long *) data) OP					\
-	      ((long) *((bool *) val.data)));				\
-									\
-    case INTEGER:							\
-      return (*((long *) data) OP *((long *) val.data));		\
-									\
-    case DATETIME:							\
-      throw_(value_error, "Cannot compare an integer to a date/time"); \
-									\
-    case AMOUNT:							\
-      return (amount_t(*((long *) data)) OP				\
-	      *((amount_t *) val.data));				\
-									\
-    case BALANCE:							\
-      return (balance_t(*((long *) data)) OP				\
-	      *((balance_t *) val.data));				\
-									\
-    case BALANCE_PAIR:							\
-      return (balance_pair_t(*((long *) data)) OP			\
-	      *((balance_pair_t *) val.data));				\
-									\
-    case STRING:							\
-      throw_(value_error, "Cannot compare an integer to a string");	\
-									\
-    case XML_NODE:							\
-      return *this OP (*(xml::node_t **) data)->to_value();		\
-									\
-    case POINTER:							\
-      throw_(value_error, "Cannot compare an integer to a pointer");	\
-    case SEQUENCE:							\
-      throw_(value_error, "Cannot compare an integer to a sequence");	\
-									\
-    default:								\
-      assert(0);							\
-      break;								\
-    }									\
-    break;								\
-									\
-  case DATETIME:							\
-    switch (val.type) {							\
-    case BOOLEAN:							\
-      throw_(value_error, "Cannot compare a date/time to a boolean");	\
-									\
-    case INTEGER:							\
-      throw_(value_error, "Cannot compare a date/time to an integer"); \
-									\
-    case DATETIME:							\
-      return *((moment_t *) data) OP *((moment_t *) val.data);		\
-									\
-    case AMOUNT:							\
-      throw_(value_error, "Cannot compare a date/time to an amount");	\
-    case BALANCE:							\
-      throw_(value_error, "Cannot compare a date/time to a balance");	\
-    case BALANCE_PAIR:							\
-      throw_(value_error, "Cannot compare a date/time to a balance pair"); \
-    case STRING:							\
-      throw_(value_error, "Cannot compare a date/time to a string");	\
-									\
-    case XML_NODE:							\
-      return *this OP (*(xml::node_t **) data)->to_value();		\
-									\
-    case POINTER:							\
-      throw_(value_error, "Cannot compare a date/time to a pointer");	\
-    case SEQUENCE:							\
-      throw_(value_error, "Cannot compare a date/time to a sequence"); \
-									\
-    default:								\
-      assert(0);							\
-      break;								\
-    }									\
-    break;								\
-									\
-  case AMOUNT:								\
-    switch (val.type) {							\
-    case BOOLEAN:							\
-      throw_(value_error, "Cannot compare an amount to a boolean");	\
-									\
-    case INTEGER:							\
-      return (*((amount_t *) data) OP					\
-	      amount_t(*((long *) val.data)));				\
-									\
-    case DATETIME:							\
-      throw_(value_error, "Cannot compare an amount to a date/time");	\
-									\
-    case AMOUNT:							\
-      return *((amount_t *) data) OP *((amount_t *) val.data);		\
-									\
-    case BALANCE:							\
-      return (balance_t(*((amount_t *) data)) OP			\
-	      *((balance_t *) val.data));				\
-									\
-    case BALANCE_PAIR:							\
-      return (balance_t(*((amount_t *) data)) OP			\
-	      *((balance_pair_t *) val.data));				\
-									\
-    case STRING:							\
-      throw_(value_error, "Cannot compare an amount to a string");	\
-									\
-    case XML_NODE:							\
-      return *this OP (*(xml::node_t **) data)->to_value();		\
-									\
-    case POINTER:							\
-      throw_(value_error, "Cannot compare an amount to a pointer");	\
-    case SEQUENCE:							\
-      throw_(value_error, "Cannot compare an amount to a sequence");	\
-									\
-    default:								\
-      assert(0);							\
-      break;								\
-    }									\
-    break;								\
-									\
-  case BALANCE:								\
-    switch (val.type) {							\
-    case BOOLEAN:							\
-      throw_(value_error, "Cannot compare a balance to a boolean");	\
-									\
-    case INTEGER:							\
-      return *((balance_t *) data) OP *((long *) val.data);		\
-									\
-    case DATETIME:							\
-      throw_(value_error, "Cannot compare a balance to a date/time");	\
-									\
-    case AMOUNT:							\
-      return *((balance_t *) data) OP *((amount_t *) val.data);		\
-									\
-    case BALANCE:							\
-      return *((balance_t *) data) OP *((balance_t *) val.data);	\
-									\
-    case BALANCE_PAIR:							\
-      return (*((balance_t *) data) OP					\
-	      ((balance_pair_t *) val.data)->quantity);			\
-									\
-    case STRING:							\
-      throw_(value_error, "Cannot compare a balance to a string");	\
-									\
-    case XML_NODE:							\
-      return *this OP (*(xml::node_t **) data)->to_value();		\
-									\
-    case POINTER:							\
-      throw_(value_error, "Cannot compare a balance to a pointer");	\
-    case SEQUENCE:							\
-      throw_(value_error, "Cannot compare a balance to a sequence");	\
-									\
-    default:								\
-      assert(0);							\
-      break;								\
-    }									\
-    break;								\
-									\
-  case BALANCE_PAIR:							\
-    switch (val.type) {							\
-    case BOOLEAN:							\
-      throw_(value_error, "Cannot compare a balance pair to a boolean"); \
-									\
-    case INTEGER:							\
-      return (((balance_pair_t *) data)->quantity OP			\
-	      *((long *) val.data));					\
-									\
-    case DATETIME:							\
-      throw_(value_error, "Cannot compare a balance pair to a date/time"); \
-									\
-    case AMOUNT:							\
-      return (((balance_pair_t *) data)->quantity OP			\
-	      *((amount_t *) val.data));				\
-									\
-    case BALANCE:							\
-      return (((balance_pair_t *) data)->quantity OP			\
-	      *((balance_t *) val.data));				\
-									\
-    case BALANCE_PAIR:							\
-      return (*((balance_pair_t *) data) OP				\
-	      *((balance_pair_t *) val.data));				\
-									\
-    case STRING:							\
-      throw_(value_error, "Cannot compare a balance pair to a string"); \
-									\
-    case XML_NODE:							\
-      return *this OP (*(xml::node_t **) data)->to_value();		\
-									\
-    case POINTER:							\
-      throw_(value_error, "Cannot compare a balance pair to a pointer"); \
-    case SEQUENCE:							\
-      throw_(value_error, "Cannot compare a balance pair to a sequence"); \
-									\
-    default:								\
-      assert(0);							\
-      break;								\
-    }									\
-    break;								\
-									\
-  case STRING:								\
-    switch (val.type) {							\
-    case BOOLEAN:							\
-      throw_(value_error, "Cannot compare a string to a boolean");	\
-    case INTEGER:							\
-      throw_(value_error, "Cannot compare a string to an integer");	\
-    case DATETIME:							\
-      throw_(value_error, "Cannot compare a string to a date/time");	\
-    case AMOUNT:							\
-      throw_(value_error, "Cannot compare a string to an amount");	\
-    case BALANCE:							\
-      throw_(value_error, "Cannot compare a string to a balance");	\
-    case BALANCE_PAIR:							\
-      throw_(value_error, "Cannot compare a string to a balance pair"); \
-									\
-    case STRING:							\
-      return (**((string **) data) OP				\
-	      **((string **) val.data));				\
-									\
-    case XML_NODE:							\
-      return *this OP (*(xml::node_t **) data)->to_value();		\
-									\
-    case POINTER:							\
-      throw_(value_error, "Cannot compare a string to a pointer");	\
-    case SEQUENCE:							\
-      throw_(value_error, "Cannot compare a string to a sequence");	\
-									\
-    default:								\
-      assert(0);							\
-      break;								\
-    }									\
-    break;								\
-									\
-  case XML_NODE:							\
-    switch (val.type) {							\
-    case BOOLEAN:							\
-      return (*(xml::node_t **) data)->to_value() OP *this;		\
-    case INTEGER:							\
-      return (*(xml::node_t **) data)->to_value() OP *this;		\
-    case DATETIME:							\
-      return (*(xml::node_t **) data)->to_value() OP *this;		\
-    case AMOUNT:							\
-      return (*(xml::node_t **) data)->to_value() OP *this;		\
-    case BALANCE:							\
-      return (*(xml::node_t **) data)->to_value() OP *this;		\
-    case BALANCE_PAIR:							\
-      return (*(xml::node_t **) data)->to_value() OP *this;		\
-    case STRING:							\
-      return (*(xml::node_t **) data)->to_value() OP *this;		\
-									\
-    case XML_NODE:							\
-      return ((*(xml::node_t **) data)->to_value() OP			\
-	      (*(xml::node_t **) val.data)->to_value());		\
-									\
-    case POINTER:							\
-      throw_(value_error, "Cannot compare an XML node to a pointer");	\
-    case SEQUENCE:							\
-      throw_(value_error, "Cannot compare an XML node to a sequence"); \
-									\
-    default:								\
-      assert(0);							\
-      break;								\
-    }									\
-    break;								\
-									\
-  case POINTER:								\
-    switch (val.type) {							\
-    case BOOLEAN:							\
-      throw_(value_error, "Cannot compare a pointer to a boolean");	\
-    case INTEGER:							\
-      throw_(value_error, "Cannot compare a pointer to an integer");	\
-    case DATETIME:							\
-      throw_(value_error, "Cannot compare a pointer to a date/time");	\
-    case AMOUNT:							\
-      throw_(value_error, "Cannot compare a pointer to an amount");	\
-    case BALANCE:							\
-      throw_(value_error, "Cannot compare a pointer to a balance");	\
-    case BALANCE_PAIR:							\
-      throw_(value_error, "Cannot compare a pointer to a balance pair"); \
-    case STRING:							\
-      throw_(value_error, "Cannot compare a pointer to a string node"); \
-    case XML_NODE:							\
-      throw_(value_error, "Cannot compare a pointer to an XML node");	\
-    case POINTER:							\
-      return (*((void **) data) OP *((void **) val.data));		\
-    case SEQUENCE:							\
-      throw_(value_error, "Cannot compare a pointer to a sequence");	\
-									\
-    default:								\
-      assert(0);							\
-      break;								\
-    }									\
-    break;								\
-									\
-  case SEQUENCE:							\
-    throw_(value_error, "Cannot compare a value to a sequence");	\
-									\
-  default:								\
-    assert(0);								\
-    break;								\
-  }									\
-  return *this;								\
+inline int compare_bool(const bool left, const bool right) {
+  return (! left && right ? -1 : (left && ! right ? 1 : 0));
 }
 
+int value_t::compare(const value_t& val) const
+{
+  if (val.type == XML_NODE)
+    return compare((*(xml::node_t **) data)->to_value());
+
+  switch (type) {
+  case BOOLEAN:
+    switch (val.type) {
+    case BOOLEAN:
+      return compare_bool(*((bool *) data), *((bool *) val.data));
+
+    case INTEGER:
+      return compare_bool(*((bool *) data), bool(*((long *) val.data)));
+
+    case DATETIME:
+      throw_(value_error, "Cannot compare a boolean to a date/time");
+
+    case AMOUNT:
+      return compare_bool(*((bool *) data), bool(*((amount_t *) val.data)));
+
+    case BALANCE:
+      return compare_bool(*((bool *) data), bool(*((balance_t *) val.data)));
+
+    case BALANCE_PAIR:
+      return compare_bool(*((bool *) data), bool(*((balance_pair_t *) val.data)));
+
+    case STRING:
+      throw_(value_error, "Cannot compare a boolean to a string");
+    case POINTER:
+      throw_(value_error, "Cannot compare a boolean to a pointer");
+    case SEQUENCE:
+      throw_(value_error, "Cannot compare a boolean to a sequence");
+
+    default:
+      assert(0);
+      break;
+    }
+    break;
+
+  case INTEGER:
+    switch (val.type) {
+    case BOOLEAN:
+      return *((long *) data) - ((long) *((bool *) val.data));
+
+    case INTEGER:
+      return *((long *) data) - *((long *) val.data);
+
+    case DATETIME:
+      throw_(value_error, "Cannot compare an integer to a date/time");
+
+    case AMOUNT:
+      return amount_t(*((long *) data)).compare(*((amount_t *) val.data));
+
+    case BALANCE:
+      return balance_t(*((long *) data)).compare(*((balance_t *) val.data));
+
+    case BALANCE_PAIR:
+      return balance_pair_t(*((long *) data)).compare(*((balance_pair_t *) val.data));
+
+    case STRING:
+      throw_(value_error, "Cannot compare an integer to a string");
+    case POINTER:
+      throw_(value_error, "Cannot compare an integer to a pointer");
+    case SEQUENCE:
+      throw_(value_error, "Cannot compare an integer to a sequence");
+
+    default:
+      assert(0);
+      break;
+    }
+    break;
+
+  case DATETIME:
+    switch (val.type) {
+    case BOOLEAN:
+      throw_(value_error, "Cannot compare a date/time to a boolean");
+    case INTEGER:
+      throw_(value_error, "Cannot compare a date/time to an integer");
+
+    case DATETIME:
+      return (*((moment_t *) data) < *((moment_t *) val.data) ? -1 :
+	      (*((moment_t *) data) > *((moment_t *) val.data) ? 1 : 0));
+
+    case AMOUNT:
+      throw_(value_error, "Cannot compare a date/time to an amount");
+    case BALANCE:
+      throw_(value_error, "Cannot compare a date/time to a balance");
+    case BALANCE_PAIR:
+      throw_(value_error, "Cannot compare a date/time to a balance pair");
+    case STRING:
+      throw_(value_error, "Cannot compare a date/time to a string");
+    case POINTER:
+      throw_(value_error, "Cannot compare a date/time to a pointer");
+    case SEQUENCE:
+      throw_(value_error, "Cannot compare a date/time to a sequence");
+
+    default:
+      assert(0);
+      break;
+    }
+    break;
+
+  case AMOUNT:
+    switch (val.type) {
+    case BOOLEAN:
+      throw_(value_error, "Cannot compare an amount to a boolean");
+
+    case INTEGER:
+      return ((amount_t *) data)->compare(*((long *) val.data));
+
+    case DATETIME:
+      throw_(value_error, "Cannot compare an amount to a date/time");
+
+    case AMOUNT:
+      return ((amount_t *) data)->compare(*((amount_t *) val.data));
+
+    case BALANCE:
+      return balance_t(*((amount_t *) data)).compare(*((balance_t *) val.data));
+
+    case BALANCE_PAIR:
+      return balance_pair_t(*((amount_t *) data)).compare(*((balance_pair_t *) val.data));
+
+    case STRING:
+      throw_(value_error, "Cannot compare an amount to a string");
+    case POINTER:
+      throw_(value_error, "Cannot compare an amount to a pointer");
+    case SEQUENCE:
+      throw_(value_error, "Cannot compare an amount to a sequence");
+
+    default:
+      assert(0);
+      break;
+    }
+    break;
+
+  case BALANCE:
+    switch (val.type) {
+    case BOOLEAN:
+      throw_(value_error, "Cannot compare a balance to a boolean");
+
+    case INTEGER:
+      return ((balance_t *) data)->compare(amount_t(*((long *) val.data)));
+
+    case DATETIME:
+      throw_(value_error, "Cannot compare a balance to a date/time");
+
+    case AMOUNT:
+      return ((balance_t *) data)->compare(*((amount_t *) val.data));
+
+    case BALANCE:
+      return ((balance_t *) data)->compare(*((balance_t *) val.data));
+
+    case BALANCE_PAIR:
+      return balance_pair_t(*((balance_t *) data)).
+	compare(((balance_pair_t *) val.data)->quantity);
+
+    case STRING:
+      throw_(value_error, "Cannot compare a balance to a string");
+    case POINTER:
+      throw_(value_error, "Cannot compare a balance to a pointer");
+    case SEQUENCE:
+      throw_(value_error, "Cannot compare a balance to a sequence");
+
+    default:
+      assert(0);
+      break;
+    }
+    break;
+
+  case BALANCE_PAIR:
+    switch (val.type) {
+    case BOOLEAN:
+      throw_(value_error, "Cannot compare a balance pair to a boolean");
+
+    case INTEGER:
+      return ((balance_pair_t *) data)->compare(amount_t(*((long *) val.data)));
+
+    case DATETIME:
+      throw_(value_error, "Cannot compare a balance pair to a date/time");
+
+    case AMOUNT:
+      return ((balance_pair_t *) data)->compare(*((amount_t *) val.data));
+
+    case BALANCE:
+      return ((balance_pair_t *) data)->compare(*((balance_t *) val.data));
+
+    case BALANCE_PAIR:
+      return ((balance_pair_t *) data)->compare(*((balance_pair_t *) val.data));
+
+    case STRING:
+      throw_(value_error, "Cannot compare a balance pair to a string");
+    case POINTER:
+      throw_(value_error, "Cannot compare a balance pair to a pointer");
+    case SEQUENCE:
+      throw_(value_error, "Cannot compare a balance pair to a sequence");
+
+    default:
+      assert(0);
+      break;
+    }
+    break;
+
+  case STRING:
+    switch (val.type) {
+    case BOOLEAN:
+      throw_(value_error, "Cannot compare a string to a boolean");
+    case INTEGER:
+      throw_(value_error, "Cannot compare a string to an integer");
+    case DATETIME:
+      throw_(value_error, "Cannot compare a string to a date/time");
+    case AMOUNT:
+      throw_(value_error, "Cannot compare a string to an amount");
+    case BALANCE:
+      throw_(value_error, "Cannot compare a string to a balance");
+    case BALANCE_PAIR:
+      throw_(value_error, "Cannot compare a string to a balance pair");
+
+    case STRING:
+      return (**((string **) data)).compare(**((string **) val.data));
+
+    case POINTER:
+      throw_(value_error, "Cannot compare a string to a pointer");
+    case SEQUENCE:
+      throw_(value_error, "Cannot compare a string to a sequence");
+
+    default:
+      assert(0);
+      break;
+    }
+    break;
+
+  case XML_NODE:
+    switch (val.type) {
+    case BOOLEAN:
+      return (*(xml::node_t **) data)->to_value().compare(*this);
+    case INTEGER:
+      return (*(xml::node_t **) data)->to_value().compare(*this);
+    case DATETIME:
+      return (*(xml::node_t **) data)->to_value().compare(*this);
+    case AMOUNT:
+      return (*(xml::node_t **) data)->to_value().compare(*this);
+    case BALANCE:
+      return (*(xml::node_t **) data)->to_value().compare(*this);
+    case BALANCE_PAIR:
+      return (*(xml::node_t **) data)->to_value().compare(*this);
+    case STRING:
+      return (*(xml::node_t **) data)->to_value().compare(*this);
+
+    case POINTER:
+      throw_(value_error, "Cannot compare an XML node to a pointer");
+    case SEQUENCE:
+      throw_(value_error, "Cannot compare an XML node to a sequence");
+
+    default:
+      assert(0);
+      break;
+    }
+    break;
+
+  case POINTER:
+    switch (val.type) {
+    case BOOLEAN:
+      throw_(value_error, "Cannot compare a pointer to a boolean");
+    case INTEGER:
+      throw_(value_error, "Cannot compare a pointer to an integer");
+    case DATETIME:
+      throw_(value_error, "Cannot compare a pointer to a date/time");
+    case AMOUNT:
+      throw_(value_error, "Cannot compare a pointer to an amount");
+    case BALANCE:
+      throw_(value_error, "Cannot compare a pointer to a balance");
+    case BALANCE_PAIR:
+      throw_(value_error, "Cannot compare a pointer to a balance pair");
+    case STRING:
+      throw_(value_error, "Cannot compare a pointer to a string node");
+    case POINTER:
+      throw_(value_error, "Cannot compare two pointers");
+    case SEQUENCE:
+      throw_(value_error, "Cannot compare a pointer to a sequence");
+
+    default:
+      assert(0);
+      break;
+    }
+    break;
+
+  case SEQUENCE:
+    throw_(value_error, "Cannot compare a value to a sequence");
+
+  default:
+    assert(0);
+    break;
+  }
+  return *this;
+}
+
+#if 0
 DEF_VALUE_CMP_OP(==)
 DEF_VALUE_CMP_OP(<)
 DEF_VALUE_CMP_OP(<=)
 DEF_VALUE_CMP_OP(>)
 DEF_VALUE_CMP_OP(>=)
+#endif
 
 void value_t::in_place_cast(type_t cast_type)
 {
@@ -1818,6 +1782,36 @@ void value_t::in_place_negate()
     assert(0);
     break;
   }
+}
+
+bool value_t::realzero() const
+{
+  switch (type) {
+  case BOOLEAN:
+    return ! *((bool *) data);
+  case INTEGER:
+    return *((long *) data) == 0;
+  case DATETIME:
+    return ! is_valid_moment(*((moment_t *) data));
+  case AMOUNT:
+    return ((amount_t *) data)->realzero();
+  case BALANCE:
+    return ((balance_t *) data)->realzero();
+  case BALANCE_PAIR:
+    return ((balance_pair_t *) data)->realzero();
+  case STRING:
+    return ((string *) data)->empty();
+  case XML_NODE:
+  case POINTER:
+  case SEQUENCE:
+    return *(void **) data == NULL;
+
+  default:
+    assert(0);
+    break;
+  }
+  assert(0);
+  return 0;
 }
 
 value_t value_t::value(const moment_t& moment) const

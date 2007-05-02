@@ -298,6 +298,7 @@ balance_t& balance_t::operator/=(const amount_t& amt)
   return *this;
 }
 
+#if 0
 balance_t::operator amount_t() const
 {
   if (amounts.size() == 1) {
@@ -317,5 +318,6 @@ balance_t::operator amount_t() const
 	   "multiple commodities to an amount: " << temp);
   }
 }
+#endif
 
 } // namespace ledger

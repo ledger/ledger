@@ -19,7 +19,7 @@ namespace xml {
 // fact that logic chains only need boolean values to continue, no
 // memory allocations need to take place at all.
 
-class value_t
+class value_t : public ordered_field_operators<value_t>
 {
  public:
   typedef std::vector<value_t> sequence_t;
@@ -304,97 +304,37 @@ class value_t
   value_t& operator*=(const value_t& val);
   value_t& operator/=(const value_t& val);
 
-  template <typename T>
-  value_t& operator+=(const T& val) {
-    return *this += value_t(val);
-  }
-  template <typename T>
-  value_t& operator-=(const T& val) {
-    return *this -= value_t(val);
-  }
-  template <typename T>
-  value_t& operator*=(const T& val) {
-    return *this *= value_t(val);
-  }
-  template <typename T>
-  value_t& operator/=(const T& val) {
-    return *this /= value_t(val);
-  }
+  int compare(const value_t& val) const;
 
-  value_t operator+(const value_t& val) {
-    value_t temp(*this);
-    temp += val;
-    return temp;
-  }
-  value_t operator-(const value_t& val) {
-    value_t temp(*this);
-    temp -= val;
-    return temp;
-  }
-  value_t operator*(const value_t& val) {
-    value_t temp(*this);
-    temp *= val;
-    return temp;
-  }
-  value_t operator/(const value_t& val) {
-    value_t temp(*this);
-    temp /= val;
-    return temp;
-  }
-
-  template <typename T>
-  value_t operator+(const T& val) {
-    return *this + value_t(val);
+  bool operator==(const value_t& val) const {
+    return compare(val) == 0;
   }
   template <typename T>
-  value_t operator-(const T& val) {
-    return *this - value_t(val);
-  }
-  template <typename T>
-  value_t operator*(const T& val) {
-    return *this * value_t(val);
-  }
-  template <typename T>
-  value_t operator/(const T& val) {
-    return *this / value_t(val);
-  }
-
-  bool operator<(const value_t& val);
-  bool operator<=(const value_t& val);
-  bool operator>(const value_t& val);
-  bool operator>=(const value_t& val);
-  bool operator==(const value_t& val);
-  bool operator!=(const value_t& val) {
-    return ! (*this == val);
-  }
-
-  template <typename T>
-  bool operator<(const T& val) {
-    return *this < value_t(val);
-  }
-  template <typename T>
-  bool operator<=(const T& val) {
-    return *this <= value_t(val);
-  }
-  template <typename T>
-  bool operator>(const T& val) {
-    return *this > value_t(val);
-  }
-  template <typename T>
-  bool operator>=(const T& val) {
-    return *this >= value_t(val);
-  }
-  template <typename T>
-  bool operator==(const T& val) {
+  bool operator==(const T& val) const {
     return *this == value_t(val);
   }
+
+  bool operator<(const value_t& val) const {
+    return compare(val) < 0;
+  }
   template <typename T>
-  bool operator!=(const T& val) {
-    return ! (*this == val);
+  bool operator<(const T& val) const {
+    return *this < value_t(val);
   }
 
-  template <typename T>
-  operator T() const;
+  operator bool() const;
+
+#if 0
+  operator long() const;
+  operator unsigned long() const;
+  operator double() const;
+  operator moment_t() const;
+  operator string() const;
+  operator char *() const;
+  operator amount_t() const;
+  operator balance_t() const;
+  operator balance_pair_t() const;
+#endif
 
   void in_place_negate();
   value_t negate() const {
@@ -406,35 +346,7 @@ class value_t
     return negate();
   }
 
-  bool realzero() const {
-    switch (type) {
-    case BOOLEAN:
-      return ! *((bool *) data);
-    case INTEGER:
-      return *((long *) data) == 0;
-    case DATETIME:
-      return ! is_valid_moment(*((moment_t *) data));
-    case AMOUNT:
-      return ((amount_t *) data)->realzero();
-    case BALANCE:
-      return ((balance_t *) data)->realzero();
-    case BALANCE_PAIR:
-      return ((balance_pair_t *) data)->realzero();
-    case STRING:
-      return ((string *) data)->empty();
-    case XML_NODE:
-    case POINTER:
-    case SEQUENCE:
-      return *(void **) data == NULL;
-
-    default:
-      assert(0);
-      break;
-    }
-    assert(0);
-    return 0;
-  }
-
+  bool    realzero() const;
   value_t abs() const;
   void    in_place_cast(type_t cast_type);
   value_t cost() const;
@@ -470,58 +382,7 @@ class value_t
 	     const int latter_width = -1) const;
 };
 
-#define DEFINE_VALUE_OPERATORS(T, OP)				\
-inline value_t operator OP(const T& val, const value_t& obj) {	\
-  return value_t(val) OP obj;					\
-}
-
-DEFINE_VALUE_OPERATORS(bool, ==)
-DEFINE_VALUE_OPERATORS(bool, !=)
-
-DEFINE_VALUE_OPERATORS(long, +)
-DEFINE_VALUE_OPERATORS(long, -)
-DEFINE_VALUE_OPERATORS(long, *)
-DEFINE_VALUE_OPERATORS(long, /)
-DEFINE_VALUE_OPERATORS(long, <)
-DEFINE_VALUE_OPERATORS(long, <=)
-DEFINE_VALUE_OPERATORS(long, >)
-DEFINE_VALUE_OPERATORS(long, >=)
-DEFINE_VALUE_OPERATORS(long, ==)
-DEFINE_VALUE_OPERATORS(long, !=)
-
-DEFINE_VALUE_OPERATORS(amount_t, +)
-DEFINE_VALUE_OPERATORS(amount_t, -)
-DEFINE_VALUE_OPERATORS(amount_t, *)
-DEFINE_VALUE_OPERATORS(amount_t, /)
-DEFINE_VALUE_OPERATORS(amount_t, <)
-DEFINE_VALUE_OPERATORS(amount_t, <=)
-DEFINE_VALUE_OPERATORS(amount_t, >)
-DEFINE_VALUE_OPERATORS(amount_t, >=)
-DEFINE_VALUE_OPERATORS(amount_t, ==)
-DEFINE_VALUE_OPERATORS(amount_t, !=)
-
-DEFINE_VALUE_OPERATORS(balance_t, +)
-DEFINE_VALUE_OPERATORS(balance_t, -)
-DEFINE_VALUE_OPERATORS(balance_t, *)
-DEFINE_VALUE_OPERATORS(balance_t, /)
-DEFINE_VALUE_OPERATORS(balance_t, <)
-DEFINE_VALUE_OPERATORS(balance_t, <=)
-DEFINE_VALUE_OPERATORS(balance_t, >)
-DEFINE_VALUE_OPERATORS(balance_t, >=)
-DEFINE_VALUE_OPERATORS(balance_t, ==)
-DEFINE_VALUE_OPERATORS(balance_t, !=)
-
-DEFINE_VALUE_OPERATORS(balance_pair_t, +)
-DEFINE_VALUE_OPERATORS(balance_pair_t, -)
-DEFINE_VALUE_OPERATORS(balance_pair_t, *)
-DEFINE_VALUE_OPERATORS(balance_pair_t, /)
-DEFINE_VALUE_OPERATORS(balance_pair_t, <)
-DEFINE_VALUE_OPERATORS(balance_pair_t, <=)
-DEFINE_VALUE_OPERATORS(balance_pair_t, >)
-DEFINE_VALUE_OPERATORS(balance_pair_t, >=)
-DEFINE_VALUE_OPERATORS(balance_pair_t, ==)
-DEFINE_VALUE_OPERATORS(balance_pair_t, !=)
-
+#if 0
 template <typename T>
 value_t::operator T() const
 {
@@ -558,6 +419,7 @@ template <> value_t::operator long() const;
 template <> value_t::operator moment_t() const;
 template <> value_t::operator double() const;
 template <> value_t::operator string() const;
+#endif
 
 std::ostream& operator<<(std::ostream& out, const value_t& val);
 

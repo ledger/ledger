@@ -36,6 +36,7 @@ libledger_la_SOURCES = \
 	src/journal.cc	 \
 	src/amount.cc    \
 	src/balance.cc   \
+	src/commodity.cc \
 	src/value.cc     \
 	src/binary.cc	 \
 	src/qif.cc	 \
@@ -100,6 +101,7 @@ libpyledger_la_SOURCES = \
 pkginclude_HEADERS = \
 	src/amount.h     \
 	src/balance.h    \
+	src/commodity.h  \
 	src/binary.h     \
 	src/context.h    \
 	src/csv.h	 \

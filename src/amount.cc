@@ -103,18 +103,6 @@ inline amount_t::bigint_t::~bigint_t() {
   mpz_clear(val);
 }
 
-#ifndef THREADSAFE
-base_commodities_map commodity_base_t::commodities;
-
-commodity_base_t::updater_t * commodity_base_t::updater = NULL;
-
-commodities_map	    commodity_t::commodities;
-commodities_array * commodity_t::commodities_by_ident;
-bool		    commodity_t::commodities_sorted = false;
-commodity_t *	    commodity_t::null_commodity;
-commodity_t *	    commodity_t::default_commodity  = NULL;
-#endif
-
 void amount_t::initialize()
 {
   mpz_init(temp);
@@ -176,51 +164,89 @@ void amount_t::shutdown()
   true_value = NULL;
 }
 
-static void mpz_round(mpz_t out, mpz_t value, int value_prec, int round_prec)
+void amount_t::_release()
 {
-  // Round `value', with an encoding precision of `value_prec', to a
-  // rounded value with precision `round_prec'.  Result is stored in
-  // `out'.
+  DEBUG("amounts.refs", quantity << " ref--, now " << (quantity->ref - 1));
 
-  assert(value_prec > round_prec);
+  if (--quantity->ref == 0) {
+    if (! (quantity->flags & BIGINT_BULK_ALLOC))
+      checked_delete(quantity);
+    else
+      quantity->~bigint_t();
+  }
+}
 
-  mpz_t quotient;
-  mpz_t remainder;
+void amount_t::_init()
+{
+  if (! quantity) {
+    quantity = new bigint_t;
+  }
+  else if (quantity->ref > 1) {
+    _release();
+    quantity = new bigint_t;
+  }
+}
 
-  mpz_init(quotient);
-  mpz_init(remainder);
+void amount_t::_dup()
+{
+  if (quantity->ref > 1) {
+    bigint_t * q = new bigint_t(*quantity);
+    _release();
+    quantity = q;
+  }
+}
 
-  mpz_ui_pow_ui(divisor, 10, value_prec - round_prec);
-  mpz_tdiv_qr(quotient, remainder, value, divisor);
-  mpz_divexact_ui(divisor, divisor, 10);
-  mpz_mul_ui(divisor, divisor, 5);
+void amount_t::_copy(const amount_t& amt)
+{
+  if (quantity != amt.quantity) {
+    if (quantity)
+      _release();
 
-  if (mpz_sgn(remainder) < 0) {
-    mpz_neg(divisor, divisor);
-    if (mpz_cmp(remainder, divisor) < 0) {
-      mpz_ui_pow_ui(divisor, 10, value_prec - round_prec);
-      mpz_add(remainder, divisor, remainder);
-      mpz_ui_sub(remainder, 0, remainder);
-      mpz_add(out, value, remainder);
+    // Never maintain a pointer into a bulk allocation pool; such
+    // pointers are not guaranteed to remain.
+    if (amt.quantity->flags & BIGINT_BULK_ALLOC) {
+      quantity = new bigint_t(*amt.quantity);
     } else {
-      mpz_sub(out, value, remainder);
-    }
-  } else {
-    if (mpz_cmp(remainder, divisor) >= 0) {
-      mpz_ui_pow_ui(divisor, 10, value_prec - round_prec);
-      mpz_sub(remainder, divisor, remainder);
-      mpz_add(out, value, remainder);
-    } else {
-      mpz_sub(out, value, remainder);
+      quantity = amt.quantity;
+      DEBUG("amounts.refs",
+	     quantity << " ref++, now " << (quantity->ref + 1));
+      quantity->ref++;
     }
   }
-  mpz_clear(quotient);
-  mpz_clear(remainder);
-
-  // chop off the rounded bits
-  mpz_ui_pow_ui(divisor, 10, value_prec - round_prec);
-  mpz_tdiv_q(out, out, divisor);
+  commodity_ = amt.commodity_;
 }
+
+void amount_t::_resize(unsigned int prec)
+{
+  assert(prec < 256);
+
+  if (! quantity || prec == quantity->prec)
+    return;
+
+  _dup();
+
+  if (prec < quantity->prec) {
+    mpz_ui_pow_ui(divisor, 10, quantity->prec - prec);
+    mpz_tdiv_q(MPZ(quantity), MPZ(quantity), divisor);
+  } else {
+    mpz_ui_pow_ui(divisor, 10, prec - quantity->prec);
+    mpz_mul(MPZ(quantity), MPZ(quantity), divisor);
+  }
+
+  quantity->prec = prec;
+}
+
+void amount_t::_clear()
+{
+  if (quantity) {
+    _release();
+    quantity   = NULL;
+    commodity_ = NULL;
+  } else {
+    assert(! commodity_);
+  }
+}
+
 
 amount_t::amount_t(const long val)
 {
@@ -340,72 +366,37 @@ amount_t::amount_t(const double val)
   commodity_ = NULL;
 }
 
-void amount_t::_release()
-{
-  DEBUG("amounts.refs", quantity << " ref--, now " << (quantity->ref - 1));
 
-  if (--quantity->ref == 0) {
-    if (! (quantity->flags & BIGINT_BULK_ALLOC))
-      checked_delete(quantity);
-    else
-      quantity->~bigint_t();
-  }
-}
-
-void amount_t::_init()
+int amount_t::compare(const amount_t& amt) const
 {
   if (! quantity) {
-    quantity = new bigint_t;
+    if (! amt.quantity)
+      return 0;
+    return - amt.sign();
   }
-  else if (quantity->ref > 1) {
-    _release();
-    quantity = new bigint_t;
+  if (! amt.quantity)
+    return sign();
+
+  if (has_commodity() && amt.commodity() && commodity() != amt.commodity())
+    throw_(amount_error,
+	   "Cannot compare amounts with different commodities: " <<
+	   commodity().symbol() << " and " << amt.commodity().symbol());
+
+  if (quantity->prec == amt.quantity->prec) {
+    return mpz_cmp(MPZ(quantity), MPZ(amt.quantity));
+  }
+  else if (quantity->prec < amt.quantity->prec) {
+    amount_t t = *this;
+    t._resize(amt.quantity->prec);
+    return mpz_cmp(MPZ(t.quantity), MPZ(amt.quantity));
+  }
+  else {
+    amount_t t = amt;
+    t._resize(quantity->prec);
+    return mpz_cmp(MPZ(quantity), MPZ(t.quantity));
   }
 }
 
-void amount_t::_dup()
-{
-  if (quantity->ref > 1) {
-    bigint_t * q = new bigint_t(*quantity);
-    _release();
-    quantity = q;
-  }
-}
-
-void amount_t::_copy(const amount_t& amt)
-{
-  if (quantity != amt.quantity) {
-    if (quantity)
-      _release();
-
-    // Never maintain a pointer into a bulk allocation pool; such
-    // pointers are not guaranteed to remain.
-    if (amt.quantity->flags & BIGINT_BULK_ALLOC) {
-      quantity = new bigint_t(*amt.quantity);
-    } else {
-      quantity = amt.quantity;
-      DEBUG("amounts.refs",
-	     quantity << " ref++, now " << (quantity->ref + 1));
-      quantity->ref++;
-    }
-  }
-  commodity_ = amt.commodity_;
-}
-
-amount_t& amount_t::operator=(const string& val)
-{
-  std::istringstream str(val);
-  parse(str);
-  return *this;
-}
-
-amount_t& amount_t::operator=(const char * val)
-{
-  string valstr(val);
-  std::istringstream str(valstr);
-  parse(str);
-  return *this;
-}
 
 // assignment operator
 amount_t& amount_t::operator=(const amount_t& amt)
@@ -419,6 +410,7 @@ amount_t& amount_t::operator=(const amount_t& amt)
   return *this;
 }
 
+#if 0
 amount_t& amount_t::operator=(const long val)
 {
   if (val == 0) {
@@ -453,38 +445,21 @@ amount_t& amount_t::operator=(const double val)
   return *this;
 }
 
-
-void amount_t::_resize(unsigned int prec)
+amount_t& amount_t::operator=(const string& val)
 {
-  assert(prec < 256);
-
-  if (! quantity || prec == quantity->prec)
-    return;
-
-  _dup();
-
-  if (prec < quantity->prec) {
-    mpz_ui_pow_ui(divisor, 10, quantity->prec - prec);
-    mpz_tdiv_q(MPZ(quantity), MPZ(quantity), divisor);
-  } else {
-    mpz_ui_pow_ui(divisor, 10, prec - quantity->prec);
-    mpz_mul(MPZ(quantity), MPZ(quantity), divisor);
-  }
-
-  quantity->prec = prec;
+  std::istringstream str(val);
+  parse(str);
+  return *this;
 }
 
-
-void amount_t::_clear()
+amount_t& amount_t::operator=(const char * val)
 {
-  if (quantity) {
-    _release();
-    quantity   = NULL;
-    commodity_ = NULL;
-  } else {
-    assert(! commodity_);
-  }
+  string valstr(val);
+  std::istringstream str(valstr);
+  parse(str);
+  return *this;
 }
+#endif
 
 
 amount_t& amount_t::operator+=(const amount_t& amt)
@@ -557,6 +532,54 @@ amount_t& amount_t::operator-=(const amount_t& amt)
   }
 
   return *this;
+}
+
+namespace {
+  void mpz_round(mpz_t out, mpz_t value, int value_prec, int round_prec)
+  {
+    // Round `value', with an encoding precision of `value_prec', to a
+    // rounded value with precision `round_prec'.  Result is stored in
+    // `out'.
+
+    assert(value_prec > round_prec);
+
+    mpz_t quotient;
+    mpz_t remainder;
+
+    mpz_init(quotient);
+    mpz_init(remainder);
+
+    mpz_ui_pow_ui(divisor, 10, value_prec - round_prec);
+    mpz_tdiv_qr(quotient, remainder, value, divisor);
+    mpz_divexact_ui(divisor, divisor, 10);
+    mpz_mul_ui(divisor, divisor, 5);
+
+    if (mpz_sgn(remainder) < 0) {
+      mpz_neg(divisor, divisor);
+      if (mpz_cmp(remainder, divisor) < 0) {
+	mpz_ui_pow_ui(divisor, 10, value_prec - round_prec);
+	mpz_add(remainder, divisor, remainder);
+	mpz_ui_sub(remainder, 0, remainder);
+	mpz_add(out, value, remainder);
+      } else {
+	mpz_sub(out, value, remainder);
+      }
+    } else {
+      if (mpz_cmp(remainder, divisor) >= 0) {
+	mpz_ui_pow_ui(divisor, 10, value_prec - round_prec);
+	mpz_sub(remainder, divisor, remainder);
+	mpz_add(out, value, remainder);
+      } else {
+	mpz_sub(out, value, remainder);
+      }
+    }
+    mpz_clear(quotient);
+    mpz_clear(remainder);
+
+    // chop off the rounded bits
+    mpz_ui_pow_ui(divisor, 10, value_prec - round_prec);
+    mpz_tdiv_q(out, out, divisor);
+  }
 }
 
 amount_t& amount_t::operator*=(const amount_t& amt)
@@ -665,50 +688,6 @@ int amount_t::sign() const
   return quantity ? mpz_sgn(MPZ(quantity)) : 0;
 }
 
-int amount_t::compare(const amount_t& amt) const
-{
-  if (! quantity) {
-    if (! amt.quantity)
-      return 0;
-    return - amt.sign();
-  }
-  if (! amt.quantity)
-    return sign();
-
-  if (has_commodity() && amt.commodity() && commodity() != amt.commodity())
-    throw_(amount_error,
-	   "Cannot compare amounts with different commodities: " <<
-	   commodity().symbol() << " and " << amt.commodity().symbol());
-
-  if (quantity->prec == amt.quantity->prec) {
-    return mpz_cmp(MPZ(quantity), MPZ(amt.quantity));
-  }
-  else if (quantity->prec < amt.quantity->prec) {
-    amount_t t = *this;
-    t._resize(amt.quantity->prec);
-    return mpz_cmp(MPZ(t.quantity), MPZ(amt.quantity));
-  }
-  else {
-    amount_t t = amt;
-    t._resize(quantity->prec);
-    return mpz_cmp(MPZ(quantity), MPZ(t.quantity));
-  }
-}
-
-bool amount_t::operator==(const amount_t& amt) const
-{
-  if (commodity() != amt.commodity())
-    return false;
-  return compare(amt) == 0;
-}
-
-bool amount_t::operator!=(const amount_t& amt) const
-{
-  if (commodity() != amt.commodity())
-    return true;
-  return compare(amt) != 0;
-}
-
 bool amount_t::zero() const
 {
   if (! quantity)
@@ -723,6 +702,7 @@ bool amount_t::zero() const
   return realzero();
 }
 
+#if 0
 amount_t::operator long() const
 {
   if (! quantity)
@@ -759,6 +739,7 @@ amount_t::operator double() const
 
   return std::atof(num.str().c_str());
 }
+#endif
 
 amount_t amount_t::value(const moment_t& moment) const
 {
@@ -912,7 +893,7 @@ void amount_t::print(std::ostream& _out, bool omit_commodity,
     while (last.commodity().larger()) {
       last /= last.commodity().larger()->number();
       last.commodity_ = last.commodity().larger()->commodity_;
-      if (last.abs() < 1)
+      if (last.abs() < amount_t(1.0))
 	break;
       base = last.round();
     }
@@ -1669,372 +1650,6 @@ optional<string> amount_t::tag() const
     return ((annotated_commodity_t *)commodity_)->tag;
   }
   return optional<string>();
-}
-
-
-void commodity_base_t::add_price(const moment_t& date,
-				 const amount_t& price)
-{
-  if (! history)
-    history = new history_t;
-
-  history_map::iterator i = history->prices.find(date);
-  if (i != history->prices.end()) {
-    (*i).second = price;
-  } else {
-    std::pair<history_map::iterator, bool> result
-      = history->prices.insert(history_pair(date, price));
-    assert(result.second);
-  }
-}
-
-bool commodity_base_t::remove_price(const moment_t& date)
-{
-  if (history) {
-    history_map::size_type n = history->prices.erase(date);
-    if (n > 0) {
-      if (history->prices.empty())
-	history = NULL;
-      return true;
-    }
-  }
-  return false;
-}
-
-commodity_base_t * commodity_base_t::create(const string& symbol)
-{
-  commodity_base_t * commodity = new commodity_base_t(symbol);
-
-  DEBUG("amounts.commodities", "Creating base commodity " << symbol);
-
-  std::pair<base_commodities_map::iterator, bool> result
-    = commodities.insert(base_commodities_pair(symbol, commodity));
-  assert(result.second);
-
-  return commodity;
-}
-
-bool commodity_t::needs_quotes(const string& symbol)
-{
-  for (const char * p = symbol.c_str(); *p; p++)
-    if (std::isspace(*p) || std::isdigit(*p) || *p == '-' || *p == '.')
-      return true;
-
-  return false;
-}
-
-bool commodity_t::valid() const
-{
-  if (symbol().empty() && this != null_commodity) {
-    DEBUG("ledger.validate",
-	   "commodity_t: symbol().empty() && this != null_commodity");
-    return false;
-  }
-
-  if (annotated && ! base) {
-    DEBUG("ledger.validate", "commodity_t: annotated && ! base");
-    return false;
-  }
-
-  if (precision() > 16) {
-    DEBUG("ledger.validate", "commodity_t: precision() > 16");
-    return false;
-  }
-
-  return true;
-}
-
-commodity_t * commodity_t::create(const string& symbol)
-{
-  std::auto_ptr<commodity_t> commodity(new commodity_t);
-
-  commodity->base = commodity_base_t::create(symbol);
-
-  if (needs_quotes(symbol)) {
-    commodity->qualified_symbol = "\"";
-    commodity->qualified_symbol += symbol;
-    commodity->qualified_symbol += "\"";
-  } else {
-    commodity->qualified_symbol = symbol;
-  }
-
-  DEBUG("amounts.commodities",
-	 "Creating commodity " << commodity->qualified_symbol);
-
-  std::pair<commodities_map::iterator, bool> result
-    = commodities.insert(commodities_pair(symbol, commodity.get()));
-  if (! result.second)
-    return NULL;
-
-  commodity->ident = commodities_by_ident->size();
-  commodities_by_ident->push_back(commodity.get());
-
-  // Start out the new commodity with the default commodity's flags
-  // and precision, if one has been defined.
-  if (default_commodity)
-    commodity->drop_flags(COMMODITY_STYLE_THOUSANDS |
-			  COMMODITY_STYLE_NOMARKET);
-
-  return commodity.release();
-}
-
-commodity_t * commodity_t::find_or_create(const string& symbol)
-{
-  DEBUG("amounts.commodities", "Find-or-create commodity " << symbol);
-
-  commodity_t * commodity = find(symbol);
-  if (commodity)
-    return commodity;
-  return create(symbol);
-}
-
-commodity_t * commodity_t::find(const string& symbol)
-{
-  DEBUG("amounts.commodities", "Find commodity " << symbol);
-
-  commodities_map::const_iterator i = commodities.find(symbol);
-  if (i != commodities.end())
-    return (*i).second;
-  return NULL;
-}
-
-amount_t commodity_base_t::value(const moment_t& moment)
-{
-  moment_t age;
-  amount_t price;
-
-  if (history) {
-    assert(history->prices.size() > 0);
-
-    if (! is_valid_moment(moment)) {
-      history_map::reverse_iterator r = history->prices.rbegin();
-      age   = (*r).first;
-      price = (*r).second;
-    } else {
-      history_map::iterator i = history->prices.lower_bound(moment);
-      if (i == history->prices.end()) {
-	history_map::reverse_iterator r = history->prices.rbegin();
-	age   = (*r).first;
-	price = (*r).second;
-      } else {
-	age = (*i).first;
-	if (moment != age) {
-	  if (i != history->prices.begin()) {
-	    --i;
-	    age	  = (*i).first;
-	    price = (*i).second;
-	  } else {
-	    age   = moment_t();
-	  }
-	} else {
-	  price = (*i).second;
-	}
-      }
-    }
-  }
-
-  if (updater && ! (flags & COMMODITY_STYLE_NOMARKET))
-    (*updater)(*this, moment, age,
-	       (history && history->prices.size() > 0 ?
-		(*history->prices.rbegin()).first : moment_t()), price);
-
-  return price;
-}
-
-bool annotated_commodity_t::operator==(const commodity_t& comm) const
-{
-  // If the base commodities don't match, the game's up.
-  if (base != comm.base)
-    return false;
-
-  if (price &&
-      (! comm.annotated ||
-       price != static_cast<const annotated_commodity_t&>(comm).price))
-    return false;
-
-  if (date &&
-      (! comm.annotated ||
-       date != static_cast<const annotated_commodity_t&>(comm).date))
-    return false;
-
-  if (tag &&
-      (! comm.annotated ||
-       tag != static_cast<const annotated_commodity_t&>(comm).tag))
-    return false;
-
-  return true;
-}
-
-void
-annotated_commodity_t::write_annotations(std::ostream&		   out,
-					 const optional<amount_t>& price,
-					 const optional<moment_t>& date,
-					 const optional<string>&   tag)
-{
-  if (price)
-    out << " {" << *price << '}';
-
-  if (date)
-    out << " [" << *date << ']';
-
-  if (tag)
-    out << " (" << *tag << ')';
-}
-
-commodity_t *
-annotated_commodity_t::create(const commodity_t&	comm,
-			      const optional<amount_t>& price,
-			      const optional<moment_t>&	date,
-			      const optional<string>&	tag,
-			      const string&		mapping_key)
-{
-  std::auto_ptr<annotated_commodity_t> commodity(new annotated_commodity_t);
-
-  // Set the annotated bits
-  commodity->price = price;
-  commodity->date  = date;
-  commodity->tag   = tag;
-
-  commodity->ptr = &comm;
-  assert(commodity->ptr);
-  commodity->base = comm.base;
-  assert(commodity->base);
-
-  commodity->qualified_symbol = comm.symbol();
-
-  DEBUG("amounts.commodities", "Creating annotated commodity "
-	<< "symbol " << commodity->symbol()
-	<< " key "   << mapping_key << std::endl
-	<< "  price " << (price ? price->to_string() : "NONE") << " "
-	<< "  date "  << (date  ? *date : moment_t()) << " "
-	<< "  tag "   << (tag   ? *tag  : "NONE"));
-
-  // Add the fully annotated name to the map, so that this symbol may
-  // quickly be found again.
-  std::pair<commodities_map::iterator, bool> result
-    = commodities.insert(commodities_pair(mapping_key, commodity.get()));
-  if (! result.second)
-    return NULL;
-
-  commodity->ident = commodities_by_ident->size();
-  commodities_by_ident->push_back(commodity.get());
-
-  return commodity.release();
-}
-
-namespace {
-  string make_qualified_name(const commodity_t&	       comm,
-			     const optional<amount_t>& price,
-			     const optional<moment_t>& date,
-			     const optional<string>&   tag)
-  {
-    if (price && *price < 0)
-      throw_(amount_error, "A commodity's price may not be negative");
-
-    std::ostringstream name;
-
-    comm.write(name);
-    annotated_commodity_t::write_annotations(name, price, date, tag);
-
-    DEBUG("amounts.commodities", "make_qualified_name for "
-	  << comm.qualified_symbol << std::endl
-	  << "  price " << (price ? price->to_string() : "NONE") << " "
-	  << "  date "  << (date  ? *date : moment_t()) << " "
-	  << "  tag "   << (tag   ? *tag  : "NONE"));
-
-    DEBUG("amounts.commodities", "qualified_name is " << name.str());
-
-    return name.str();
-  }
-}
-
-commodity_t *
-annotated_commodity_t::find_or_create(const commodity_t&	comm,
-				      const optional<amount_t>& price,
-				      const optional<moment_t>& date,
-				      const optional<string>&	tag)
-{
-  string name = make_qualified_name(comm, price, date, tag);
-
-  commodity_t * ann_comm = commodity_t::find(name);
-  if (ann_comm) {
-    assert(ann_comm->annotated);
-    return ann_comm;
-  }
-  return create(comm, price, date, tag, name);
-}
-
-bool compare_amount_commodities::operator()(const amount_t * left,
-					    const amount_t * right) const
-{
-  commodity_t& leftcomm(left->commodity());
-  commodity_t& rightcomm(right->commodity());
-
-  int cmp = leftcomm.base_symbol().compare(rightcomm.base_symbol());
-  if (cmp != 0)
-    return cmp < 0;
-
-  if (! leftcomm.annotated) {
-    assert(rightcomm.annotated);
-    return true;
-  }
-  else if (! rightcomm.annotated) {
-    assert(leftcomm.annotated);
-    return false;
-  }
-  else {
-    annotated_commodity_t& aleftcomm(static_cast<annotated_commodity_t&>(leftcomm));
-    annotated_commodity_t& arightcomm(static_cast<annotated_commodity_t&>(rightcomm));
-
-    if (! aleftcomm.price && arightcomm.price)
-      return true;
-    if (aleftcomm.price && ! arightcomm.price)
-      return false;
-
-    if (aleftcomm.price && arightcomm.price) {
-      amount_t leftprice(*aleftcomm.price);
-      leftprice.in_place_reduce();
-      amount_t rightprice(*arightcomm.price);
-      rightprice.in_place_reduce();
-
-      if (leftprice.commodity() == rightprice.commodity()) {
-	amount_t val = leftprice - rightprice;
-	if (val)
-	  return val < 0;
-      } else {
-	// Since we have two different amounts, there's really no way
-	// to establish a true sorting order; we'll just do it based
-	// on the numerical values.
-	leftprice.clear_commodity();
-	rightprice.clear_commodity();
-
-	amount_t val = leftprice - rightprice;
-	if (val)
-	  return val < 0;
-      }
-    }
-
-    if (! aleftcomm.date && arightcomm.date)
-      return true;
-    if (aleftcomm.date && ! arightcomm.date)
-      return false;
-
-    if (aleftcomm.date && arightcomm.date) {
-      duration_t diff = *aleftcomm.date - *arightcomm.date;
-      return diff.is_negative();
-    }
-
-    if (! aleftcomm.tag && arightcomm.tag)
-      return true;
-    if (aleftcomm.tag && ! arightcomm.tag)
-      return false;
-
-    if (aleftcomm.tag && arightcomm.tag)
-      return *aleftcomm.tag < *arightcomm.tag;
-
-    assert(false);
-    return true;
-  }
 }
 
 } // namespace ledger

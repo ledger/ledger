@@ -155,7 +155,7 @@ class entry_base_t
 
 class entry_t : public entry_base_t
 {
- public:
+public:
   moment_t	     _date;
   optional<moment_t> _date_eff;
   optional<string>   code;
