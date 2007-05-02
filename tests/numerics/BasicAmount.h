@@ -27,6 +27,7 @@ class BasicAmountTestCase : public CPPUNIT_NS::TestCase
   CPPUNIT_TEST(testComparisons);
   CPPUNIT_TEST(testSign);
   CPPUNIT_TEST(testAbs);
+  CPPUNIT_TEST(testReduction);
   CPPUNIT_TEST(testPrinting);
 
   CPPUNIT_TEST_SUITE_END();
@@ -58,6 +59,7 @@ public:
   void testComparisons();
   void testSign();
   void testAbs();
+  void testReduction();
   void testPrinting();
 
 private:

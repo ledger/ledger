@@ -730,7 +730,7 @@ unsigned int textual_parser_t::parse(std::istream&	   in,
     case 'C':			// a set of conversions
       if (char * p = std::strchr(line + 1, '=')) {
 	*p++ = '\0';
-	parse_conversion(line + 1, p);
+	amount_t::parse_conversion(line + 1, p);
       }
       break;
 

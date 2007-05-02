@@ -600,6 +600,26 @@ void BasicAmountTestCase::testAbs()
   CPPUNIT_ASSERT(x2.valid());
 }
 
+void BasicAmountTestCase::testReduction()
+{
+  amount_t x1("60s");
+  amount_t x2("600s");
+  amount_t x3("6000s");
+  amount_t x4("360000s");
+  amount_t x5("10m");		// 600s
+  amount_t x6("100m");		// 6000s
+  amount_t x7("1000m");		// 60000s
+  amount_t x8("10000m");	// 600000s
+  amount_t x9("10h");		// 36000s
+  amount_t x10("100h");		// 360000s
+  amount_t x11("1000h");	// 3600000s
+  amount_t x12("10000h");	// 36000000s
+
+  assertEqual(x2, x5);
+  assertEqual(x3, x6);
+  assertEqual(x4, x10);
+}
+
 void BasicAmountTestCase::testPrinting()
 {
   amount_t x0;

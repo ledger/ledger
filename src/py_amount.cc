@@ -7,13 +7,6 @@ namespace ledger {
 
 using namespace boost::python;
 
-int py_amount_quantity(amount_t& amount)
-{
-  std::ostringstream quant;
-  amount.print_quantity(quant);
-  return std::atol(quant.str().c_str());
-}
-
 void py_parse_1(amount_t& amount, const string& str,
 		unsigned char flags) {
   amount.parse(str, flags);
