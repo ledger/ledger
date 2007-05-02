@@ -445,7 +445,7 @@ int main(int argc, char * argv[], char * envp[])
 
     status = read_and_report(report.get(), argc, argv, envp);
 
-    if (! ledger::do_cleanup) {
+    IF_VERIFY() {
       report.release();
       session.release();
     }
@@ -480,7 +480,7 @@ int main(int argc, char * argv[], char * envp[])
     status = _status;
   }
 
-  if (ledger::do_cleanup)
+  IF_VERIFY()
     ledger::shutdown();
 
   return status;

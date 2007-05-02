@@ -48,40 +48,6 @@ void BasicAmountTestCase::testConstructors()
   CPPUNIT_ASSERT(x11.valid());
 }
 
-void BasicAmountTestCase::testNegation()
-{
-  amount_t x0;
-  amount_t x1(-123456L);
-  amount_t x3(-123.456);
-  amount_t x5("-123456");
-  amount_t x6("-123.456");
-  amount_t x7(std::string("-123456"));
-  amount_t x8(std::string("-123.456"));
-  amount_t x9(- x3);
-
-  assertEqual(amount_t(0L), x0);
-  assertEqual(x5, x1);
-  assertEqual(x7, x1);
-  assertEqual(x6, x3);
-  assertEqual(x8, x3);
-  assertEqual(- x6, x9);
-  assertEqual(x3.negate(), x9);
-
-  amount_t x10(x9.negate());
-
-  assertEqual(x3, x10);
-
-  CPPUNIT_ASSERT(x0.valid());
-  CPPUNIT_ASSERT(x1.valid());
-  CPPUNIT_ASSERT(x3.valid());
-  CPPUNIT_ASSERT(x5.valid());
-  CPPUNIT_ASSERT(x6.valid());
-  CPPUNIT_ASSERT(x7.valid());
-  CPPUNIT_ASSERT(x8.valid());
-  CPPUNIT_ASSERT(x9.valid());
-  CPPUNIT_ASSERT(x10.valid());
-}
-
 void BasicAmountTestCase::testAssignment()
 {
   amount_t x0;
@@ -152,6 +118,38 @@ void BasicAmountTestCase::testEquality()
   CPPUNIT_ASSERT(x4 == x5);
   CPPUNIT_ASSERT(x4 == x6);
 
+  CPPUNIT_ASSERT(x1.valid());
+  CPPUNIT_ASSERT(x2.valid());
+  CPPUNIT_ASSERT(x3.valid());
+  CPPUNIT_ASSERT(x4.valid());
+  CPPUNIT_ASSERT(x5.valid());
+  CPPUNIT_ASSERT(x6.valid());
+}
+
+void BasicAmountTestCase::testComparisons()
+{
+  amount_t x0;
+  amount_t x1(-123L);
+  amount_t x2(123L);
+  amount_t x3(-123.45);
+  amount_t x4(123.45);
+  amount_t x5("-123.45");
+  amount_t x6("123.45");
+
+  CPPUNIT_ASSERT(x0 > x1);
+  CPPUNIT_ASSERT(x0 < x2);
+  CPPUNIT_ASSERT(x0 > x3);
+  CPPUNIT_ASSERT(x0 < x4);
+  CPPUNIT_ASSERT(x0 > x5);
+  CPPUNIT_ASSERT(x0 < x6);
+
+  CPPUNIT_ASSERT(x1 > x3);
+  CPPUNIT_ASSERT(x3 <= x5);
+  CPPUNIT_ASSERT(x3 >= x5);
+  CPPUNIT_ASSERT(x3 < x1);
+  CPPUNIT_ASSERT(x3 < x4);
+
+  CPPUNIT_ASSERT(x0.valid());
   CPPUNIT_ASSERT(x1.valid());
   CPPUNIT_ASSERT(x2.valid());
   CPPUNIT_ASSERT(x3.valid());
@@ -410,30 +408,53 @@ void BasicAmountTestCase::testFractionalDivision()
   CPPUNIT_ASSERT(y4.valid());
 }
 
-void BasicAmountTestCase::testIntegerConversion()
+void BasicAmountTestCase::testNegation()
 {
-  amount_t x1(123456L);
+  amount_t x0;
+  amount_t x1(-123456L);
+  amount_t x3(-123.456);
+  amount_t x5("-123456");
+  amount_t x6("-123.456");
+  amount_t x7(std::string("-123456"));
+  amount_t x8(std::string("-123.456"));
+  amount_t x9(- x3);
 
-  assertEqual(true, bool(x1));
-  assertEqual(123456L, x1.to_long());
-  assertEqual(123456.0, x1.to_double());
-  assertEqual(string("123456"), x1.to_string());
-  assertEqual(string("123456"), x1.quantity_string());
+  assertEqual(amount_t(0L), x0);
+  assertEqual(x5, x1);
+  assertEqual(x7, x1);
+  assertEqual(x6, x3);
+  assertEqual(x8, x3);
+  assertEqual(- x6, x9);
+  assertEqual(x3.negate(), x9);
 
+  amount_t x10(x9.negate());
+
+  assertEqual(x3, x10);
+
+  CPPUNIT_ASSERT(x0.valid());
   CPPUNIT_ASSERT(x1.valid());
+  CPPUNIT_ASSERT(x3.valid());
+  CPPUNIT_ASSERT(x5.valid());
+  CPPUNIT_ASSERT(x6.valid());
+  CPPUNIT_ASSERT(x7.valid());
+  CPPUNIT_ASSERT(x8.valid());
+  CPPUNIT_ASSERT(x9.valid());
+  CPPUNIT_ASSERT(x10.valid());
 }
 
-void BasicAmountTestCase::testFractionalConversion()
+void BasicAmountTestCase::testAbs()
 {
-  amount_t x1(1234.56);
+  amount_t x0;
+  amount_t x1(-1234L);
+  amount_t x2(1234L);
 
-  assertEqual(true, bool(x1));
-  assertEqual(1234L, x1.to_long());
-  assertEqual(1234.56, x1.to_double());
-  assertEqual(string("1234.56"), x1.to_string());
-  assertEqual(string("1234.56"), x1.quantity_string());
+  assertEqual(amount_t(), x0.abs());
+  assertEqual(amount_t(1234L), x1.abs());
+  assertEqual(amount_t(1234L), x2.abs());
 
+  CPPUNIT_ASSERT(x0.valid());
   CPPUNIT_ASSERT(x1.valid());
+  CPPUNIT_ASSERT(x2.valid());
 }
 
 void BasicAmountTestCase::testFractionalRound()
@@ -490,6 +511,47 @@ void BasicAmountTestCase::testFractionalRound()
   CPPUNIT_ASSERT(x4.valid());
 }
 
+void BasicAmountTestCase::testReduction()
+{
+  amount_t x1("60s");
+  amount_t x2("600s");
+  amount_t x3("6000s");
+  amount_t x4("360000s");
+  amount_t x5("10m");		// 600s
+  amount_t x6("100m");		// 6000s
+  amount_t x7("1000m");		// 60000s
+  amount_t x8("10000m");	// 600000s
+  amount_t x9("10h");		// 36000s
+  amount_t x10("100h");		// 360000s
+  amount_t x11("1000h");	// 3600000s
+  amount_t x12("10000h");	// 36000000s
+
+  assertEqual(x2, x5);
+  assertEqual(x3, x6);
+  assertEqual(x4, x10);
+}
+
+void BasicAmountTestCase::testSign()
+{
+  amount_t x0;
+  amount_t x1("0.0000000000000000000000000000000000001");
+  amount_t x2("-0.0000000000000000000000000000000000001");
+  amount_t x3("1");
+  amount_t x4("-1");
+
+  CPPUNIT_ASSERT(! x0.sign());
+  CPPUNIT_ASSERT(x1.sign() > 0);
+  CPPUNIT_ASSERT(x2.sign() < 0);
+  CPPUNIT_ASSERT(x3.sign() > 0);
+  CPPUNIT_ASSERT(x4.sign() < 0);
+
+  CPPUNIT_ASSERT(x0.valid());
+  CPPUNIT_ASSERT(x1.valid());
+  CPPUNIT_ASSERT(x2.valid());
+  CPPUNIT_ASSERT(x3.valid());
+  CPPUNIT_ASSERT(x4.valid());
+}
+
 void BasicAmountTestCase::testTruth()
 {
   amount_t x0;
@@ -532,92 +594,30 @@ void BasicAmountTestCase::testForZero()
   CPPUNIT_ASSERT(x1.valid());
 }
 
-void BasicAmountTestCase::testComparisons()
+void BasicAmountTestCase::testIntegerConversion()
 {
-  amount_t x0;
-  amount_t x1(-123L);
-  amount_t x2(123L);
-  amount_t x3(-123.45);
-  amount_t x4(123.45);
-  amount_t x5("-123.45");
-  amount_t x6("123.45");
+  amount_t x1(123456L);
 
-  CPPUNIT_ASSERT(x0 > x1);
-  CPPUNIT_ASSERT(x0 < x2);
-  CPPUNIT_ASSERT(x0 > x3);
-  CPPUNIT_ASSERT(x0 < x4);
-  CPPUNIT_ASSERT(x0 > x5);
-  CPPUNIT_ASSERT(x0 < x6);
+  assertEqual(true, bool(x1));
+  assertEqual(123456L, x1.to_long());
+  assertEqual(123456.0, x1.to_double());
+  assertEqual(string("123456"), x1.to_string());
+  assertEqual(string("123456"), x1.quantity_string());
 
-  CPPUNIT_ASSERT(x1 > x3);
-  CPPUNIT_ASSERT(x3 <= x5);
-  CPPUNIT_ASSERT(x3 >= x5);
-  CPPUNIT_ASSERT(x3 < x1);
-  CPPUNIT_ASSERT(x3 < x4);
-
-  CPPUNIT_ASSERT(x0.valid());
   CPPUNIT_ASSERT(x1.valid());
-  CPPUNIT_ASSERT(x2.valid());
-  CPPUNIT_ASSERT(x3.valid());
-  CPPUNIT_ASSERT(x4.valid());
-  CPPUNIT_ASSERT(x5.valid());
-  CPPUNIT_ASSERT(x6.valid());
 }
 
-void BasicAmountTestCase::testSign()
+void BasicAmountTestCase::testFractionalConversion()
 {
-  amount_t x0;
-  amount_t x1("0.0000000000000000000000000000000000001");
-  amount_t x2("-0.0000000000000000000000000000000000001");
-  amount_t x3("1");
-  amount_t x4("-1");
+  amount_t x1(1234.56);
 
-  CPPUNIT_ASSERT(! x0.sign());
-  CPPUNIT_ASSERT(x1.sign() > 0);
-  CPPUNIT_ASSERT(x2.sign() < 0);
-  CPPUNIT_ASSERT(x3.sign() > 0);
-  CPPUNIT_ASSERT(x4.sign() < 0);
+  assertEqual(true, bool(x1));
+  assertEqual(1234L, x1.to_long());
+  assertEqual(1234.56, x1.to_double());
+  assertEqual(string("1234.56"), x1.to_string());
+  assertEqual(string("1234.56"), x1.quantity_string());
 
-  CPPUNIT_ASSERT(x0.valid());
   CPPUNIT_ASSERT(x1.valid());
-  CPPUNIT_ASSERT(x2.valid());
-  CPPUNIT_ASSERT(x3.valid());
-  CPPUNIT_ASSERT(x4.valid());
-}
-
-void BasicAmountTestCase::testAbs()
-{
-  amount_t x0;
-  amount_t x1(-1234L);
-  amount_t x2(1234L);
-
-  assertEqual(amount_t(), x0.abs());
-  assertEqual(amount_t(1234L), x1.abs());
-  assertEqual(amount_t(1234L), x2.abs());
-
-  CPPUNIT_ASSERT(x0.valid());
-  CPPUNIT_ASSERT(x1.valid());
-  CPPUNIT_ASSERT(x2.valid());
-}
-
-void BasicAmountTestCase::testReduction()
-{
-  amount_t x1("60s");
-  amount_t x2("600s");
-  amount_t x3("6000s");
-  amount_t x4("360000s");
-  amount_t x5("10m");		// 600s
-  amount_t x6("100m");		// 6000s
-  amount_t x7("1000m");		// 60000s
-  amount_t x8("10000m");	// 600000s
-  amount_t x9("10h");		// 36000s
-  amount_t x10("100h");		// 360000s
-  amount_t x11("1000h");	// 3600000s
-  amount_t x12("10000h");	// 36000000s
-
-  assertEqual(x2, x5);
-  assertEqual(x3, x6);
-  assertEqual(x4, x10);
 }
 
 void BasicAmountTestCase::testPrinting()
