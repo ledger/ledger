@@ -147,9 +147,9 @@ void export_amount()
 
     .def(! self)
 
-    .def(self_ns::int_(self))
-    .def(self_ns::float_(self))
-
+    .def("__int__", &amount_t::to_long)
+    .def("__float__", &amount_t::to_double)
+    .def("__nonzero__", &amount_t::nonzero)
     .def("__abs__", &amount_t::abs)
     .def("__str__", &amount_t::to_string)
     .def("__repr__", &amount_t::to_fullstring)

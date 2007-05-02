@@ -138,7 +138,7 @@ typedef std::pair<const string, commodity_t *> commodities_pair;
 
 typedef std::vector<commodity_t *> commodities_array;
 
-class commodity_t
+class commodity_t : public equality_comparable<commodity_t>
 {
   friend class annotated_commodity_t;
 

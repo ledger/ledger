@@ -177,7 +177,7 @@ class CommodityAmountTestCase(unittest.TestCase):
         x9 = amount("123.45€")
         x10 = amount("-123.45€")
 
-        self.assertTrue(x0.null())
+        self.assertTrue(x0.is_null())
         self.assertTrue(x0.zero())
         self.assertTrue(x0.realzero())
         self.assertTrue(x0.sign() == 0)

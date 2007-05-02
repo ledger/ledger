@@ -465,8 +465,8 @@ void CommodityAmountTestCase::testConversion()
   amount_t x1("$1234.56");
 
   assertEqual(true, bool(x1));
-  assertEqual(1234L, long(x1));
-  assertEqual(1234.56, double(x1));
+  assertEqual(1234L, x1.to_long());
+  assertEqual(1234.56, x1.to_double());
   assertEqual(string("$1234.56"), x1.to_string());
   assertEqual(string("1234.56"), x1.quantity_string());
 

@@ -66,17 +66,22 @@ DECLARE_EXCEPTION(amount_error);
  * math, and also for uncommoditized math.  In the commoditized case,
  * commodities keep track of how they are used, and will always
  * display back to the user after the same fashion.  For
- * uncommoditized numbers, no display truncation is ever done.
- * Internally, precision is always kept to an excessive degree.
+ * uncommoditized numbers, no display truncation is ever done.  In
+ * both cases, internal precision is always kept to an excessive
+ * degree.
  */
-  class amount_t
-    : public ordered_field_operators<amount_t,
-	     ordered_field_operators<amount_t, long,
-	     ordered_field_operators<amount_t, unsigned long,
-	     ordered_field_operators<amount_t, double> > > >
+class amount_t
+  : public ordered_field_operators<amount_t,
+	   ordered_field_operators<amount_t, long,
+	   ordered_field_operators<amount_t, unsigned long,
+	   ordered_field_operators<amount_t, double> > > >
 {
 public:
   class bigint_t;
+
+  // jww (2007-05-01): Change my uses of unsigned int to use this type
+  // for precision values.  Or perhaps just std::size_t?
+  typedef uint_least16_t precision_t;
 
   static void initialize();
   static void shutdown();
@@ -92,7 +97,7 @@ protected:
   void _copy(const amount_t& amt);
   void _release();
   void _dup();
-  void _resize(unsigned int prec);
+  void _resize(precision_t prec);
   void _clear();
 
   bigint_t *	quantity;
@@ -170,6 +175,9 @@ public:
 
   // test for truth, zero and non-zero
   operator bool() const {
+    return nonzero();
+  }
+  bool nonzero() const {
     return ! zero();
   }
 
@@ -180,6 +188,8 @@ public:
   }
 
   // conversion methods
+  long   to_long() const;
+  double to_double() const;
   string to_string() const;
   string to_fullstring() const;
   string quantity_string() const;
@@ -220,7 +230,7 @@ public:
   optional<string>   tag() const;
 
   // general methods
-  amount_t round(unsigned int prec) const;
+  amount_t round(precision_t prec) const;
   amount_t round() const;
   amount_t unround() const;
   amount_t value(const moment_t& moment) const;

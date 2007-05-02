@@ -84,7 +84,7 @@ class amount_t::bigint_t
   ~bigint_t();
 };
 
-unsigned int sizeof_bigint_t() {
+std::size_t sizeof_bigint_t() {
   return sizeof(amount_t::bigint_t);
 }
 
@@ -216,7 +216,7 @@ void amount_t::_copy(const amount_t& amt)
   commodity_ = amt.commodity_;
 }
 
-void amount_t::_resize(unsigned int prec)
+void amount_t::_resize(precision_t prec)
 {
   assert(prec < 256);
 
@@ -560,7 +560,7 @@ amount_t& amount_t::operator*=(const amount_t& amt)
     commodity_ = amt.commodity_;
 
   if (has_commodity() && ! (quantity->flags & BIGINT_KEEP_PREC)) {
-    unsigned int comm_prec = commodity().precision();
+    precision_t comm_prec = commodity().precision();
     if (quantity->prec > comm_prec + 6U) {
       mpz_round(MPZ(quantity), MPZ(quantity), quantity->prec, comm_prec + 6U);
       quantity->prec = comm_prec + 6U;
@@ -612,7 +612,7 @@ amount_t& amount_t::operator/=(const amount_t& amt)
   // plus six places.
 
   if (has_commodity() && ! (quantity->flags & BIGINT_KEEP_PREC)) {
-    unsigned int comm_prec = commodity().precision();
+    precision_t comm_prec = commodity().precision();
     if (quantity->prec > comm_prec + 6U) {
       mpz_round(MPZ(quantity), MPZ(quantity), quantity->prec, comm_prec + 6U);
       quantity->prec = comm_prec + 6U;
@@ -650,6 +650,44 @@ bool amount_t::zero() const
   return realzero();
 }
 
+long amount_t::to_long() const
+{
+  if (! quantity)
+    return 0;
+
+  mpz_set(temp, MPZ(quantity));
+  mpz_ui_pow_ui(divisor, 10, quantity->prec);
+  mpz_tdiv_q(temp, temp, divisor);
+
+  return mpz_get_si(temp);
+}
+
+double amount_t::to_double() const
+{
+  if (! quantity)
+    return 0.0;
+
+  mpz_t remainder;
+  mpz_init(remainder);
+
+  mpz_set(temp, MPZ(quantity));
+  mpz_ui_pow_ui(divisor, 10, quantity->prec);
+  mpz_tdiv_qr(temp, remainder, temp, divisor);
+
+  char * quotient_s  = mpz_get_str(NULL, 10, temp);
+  char * remainder_s = mpz_get_str(NULL, 10, remainder);
+
+  std::ostringstream num;
+  num << quotient_s << '.' << remainder_s;
+
+  std::free(quotient_s);
+  std::free(remainder_s);
+
+  mpz_clear(remainder);
+
+  return lexical_cast<double>(num.str());
+}
+
 amount_t amount_t::value(const moment_t& moment) const
 {
   if (quantity) {
@@ -660,7 +698,7 @@ amount_t amount_t::value(const moment_t& moment) const
   return *this;
 }
 
-amount_t amount_t::round(unsigned int prec) const
+amount_t amount_t::round(precision_t prec) const
 {
   amount_t t = *this;
 
