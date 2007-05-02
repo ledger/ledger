@@ -55,21 +55,6 @@ commodity_t * py_find_commodity(const string& symbol)
 
 EXC_TRANSLATOR(amount_error)
 
-namespace {
-  template <typename T>
-  amount_t operator+(const amount_t& amt, const T val) {
-    amount_t temp(amt);
-    temp += amount_t(val);
-    return temp;
-  }
-  template <typename T>
-  amount_t operator+(const T val, const amount_t& amt) {
-    amount_t temp(val);
-    temp += amt;
-    return temp;
-  }
-}
-
 void export_amount()
 {
   scope().attr("AMOUNT_PARSE_NO_MIGRATE") = AMOUNT_PARSE_NO_MIGRATE;
@@ -97,80 +82,75 @@ void export_amount()
     .def(self -= double())
 
     .def(self	  - self)
-#if 0
     .def(self	  - long())
     .def(long()	  - self)
     .def(self	  - double())
     .def(double() - self)
-#endif
 
     .def(self *= self)
     .def(self *= long())
     .def(self *= double())
 
     .def(self	  * self)
-#if 0
     .def(self	  * long())
     .def(long()	  * self)
     .def(self	  * double())
     .def(double() * self)
-#endif
 
     .def(self /= self)
     .def(self /= long())
     .def(self /= double())
 
     .def(self	  /  self)
-#if 0
     .def(self	  /  long())
     .def(long()	  / self)
     .def(self	  /  double())
     .def(double() / self)
-#endif
 
     .def(- self)
 
     .def(self <  self)
-#if 0
     .def(self <  long())
     .def(long() < self)
-#endif
+    .def(self <  double())
+    .def(double() < self)
 
     .def(self <= self)
-#if 0
     .def(self <= long())
     .def(long() <= self)
-#endif
+    .def(self <= double())
+    .def(double() <= self)
 
     .def(self >  self)
-#if 0
     .def(self >  long())
     .def(long() > self)
-#endif
+    .def(self >  double())
+    .def(double() > self)
 
     .def(self >= self)
-#if 0
     .def(self >= long())
     .def(long() >= self)
-#endif
+    .def(self >= double())
+    .def(double() >= self)
 
     .def(self == self)
-#if 0
     .def(self == long())
     .def(long() == self)
-#endif
+    .def(self == double())
+    .def(double() == self)
 
     .def(self != self)
-#if 0
     .def(self != long())
     .def(long() != self)
-#endif
+    .def(self != double())
+    .def(double() != self)
 
     .def(! self)
 
     .def(self_ns::int_(self))
     .def(self_ns::float_(self))
 
+    .def("__abs__", &amount_t::abs)
     .def("__str__", &amount_t::to_string)
     .def("__repr__", &amount_t::to_fullstring)
 
@@ -195,7 +175,6 @@ void export_amount()
     .def("exact", &amount_t::exact)
     .staticmethod("exact")
 
-    .def("__abs__", &amount_t::abs)
     .def("compare", &amount_t::compare)
     .def("date", &amount_t::date)
     .def("negate", &amount_t::negate)

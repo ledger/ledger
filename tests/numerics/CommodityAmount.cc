@@ -183,7 +183,7 @@ void CommodityAmountTestCase::testEquality()
   amount_t x9  = "123.45€";
   amount_t x10 = "-123.45€";
 
-  assertTrue(x0.null());
+  assertTrue(x0.is_null());
   assertTrue(x0.zero());
   assertTrue(x0.realzero());
   assertTrue(x0.sign() == 0);

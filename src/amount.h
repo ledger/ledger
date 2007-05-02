@@ -73,7 +73,7 @@ DECLARE_EXCEPTION(amount_error);
     : public ordered_field_operators<amount_t,
 	     ordered_field_operators<amount_t, long,
 	     ordered_field_operators<amount_t, unsigned long,
-	     ordered_field_operators<amount_t, double > > > >
+	     ordered_field_operators<amount_t, double> > > >
 {
 public:
   class bigint_t;
@@ -137,8 +137,18 @@ public:
   // comparisons between amounts
   int compare(const amount_t& amt) const;
   bool operator==(const amount_t& amt) const;
-  bool operator<(const amount_t& amt) const {
+
+  template <typename T>
+  bool operator==(const T& val) const {
+    return compare(val) == 0;
+  }
+  template <typename T>
+  bool operator<(const T& amt) const {
     return compare(amt) < 0;
+  }
+  template <typename T>
+  bool operator>(const T& amt) const {
+    return compare(amt) > 0;
   }
 
   // in-place arithmetic
