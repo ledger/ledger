@@ -59,7 +59,7 @@ void commodity_base_t::add_price(const moment_t& date,
 				 const amount_t& price)
 {
   if (! history)
-    history = new history_t;
+    history = history_t();
 
   history_map::iterator i = history->prices.find(date);
   if (i != history->prices.end()) {
@@ -77,7 +77,7 @@ bool commodity_base_t::remove_price(const moment_t& date)
     history_map::size_type n = history->prices.erase(date);
     if (n > 0) {
       if (history->prices.empty())
-	history = NULL;
+	history.reset();
       return true;
     }
   }

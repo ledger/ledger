@@ -6,7 +6,7 @@
  * @brief  Types for handling commodities.
  * 
  * This file contains one of the most basic types in Ledger:
- * commodity_t, and its derived cousin, annotated_commodity_t.
+ * commodity_t, and its annotated cousin, annotated_commodity_t.
  */
 
 /*
@@ -61,25 +61,28 @@ class commodity_base_t;
 typedef std::map<const string, commodity_base_t *>  base_commodities_map;
 typedef std::pair<const string, commodity_base_t *> base_commodities_pair;
 
-class commodity_base_t
+class commodity_base_t : public noncopyable
 {
- public:
+public:
   friend class commodity_t;
   friend class annotated_commodity_t;
 
-  typedef unsigned long ident_t;
+  friend void amount_t::initialize();
+  friend void amount_t::shutdown();
 
-  ident_t	ident;
-  string	name;
-  string	note;
-  unsigned char precision;
-  unsigned char flags;
-  amount_t *	smaller;
-  amount_t *	larger;
+  friend void checked_delete<commodity_base_t>(commodity_base_t *);
 
-  commodity_base_t()
-    : precision(0), flags(COMMODITY_STYLE_DEFAULTS),
-      smaller(NULL), larger(NULL), history(NULL) {
+  typedef uint_least32_t ident_t;
+
+  ident_t		ident;
+  string		name;
+  string		note;
+  amount_t::precision_t	precision;
+  unsigned char		flags;
+  optional<amount_t>	smaller;
+  optional<amount_t>	larger;
+
+  commodity_base_t() : precision(0), flags(COMMODITY_STYLE_DEFAULTS) {
     TRACE_CTOR(commodity_base_t, "");
   }
 
@@ -91,19 +94,16 @@ class commodity_base_t
   commodity_base_t(const string& _symbol,
 		   unsigned int	_precision = 0,
 		   unsigned int _flags	   = COMMODITY_STYLE_DEFAULTS)
-    : precision(_precision), flags(_flags),
-      smaller(NULL), larger(NULL), symbol(_symbol), history(NULL) {
+    : precision(_precision), flags(_flags), symbol(_symbol) {
     TRACE_CTOR(commodity_base_t, "const string&, unsigned int, unsigned int");
   }
 
   ~commodity_base_t() {
     TRACE_DTOR(commodity_base_t);
-    if (history) checked_delete(history);
-    if (smaller) checked_delete(smaller);
-    if (larger)  checked_delete(larger);
   }
 
   static base_commodities_map commodities;
+
   static commodity_base_t * create(const string& symbol);
 
   string symbol;
@@ -113,14 +113,15 @@ class commodity_base_t
     ptime	last_lookup;
     history_t() : last_lookup() {}
   };
-  history_t * history;
+  optional<history_t> history;
 
   void	   add_price(const moment_t& date, const amount_t& price);
   bool	   remove_price(const moment_t& date);
   amount_t value(const moment_t& moment = now);
 
+public:
   class updater_t {
-   public:
+  public:
     virtual ~updater_t() {}
     virtual void operator()(commodity_base_t& commodity,
 			    const moment_t&   moment,
@@ -138,11 +139,12 @@ typedef std::pair<const string, commodity_t *> commodities_pair;
 
 typedef std::vector<commodity_t *> commodities_array;
 
-class commodity_t : public equality_comparable<commodity_t>
+class commodity_t
+  : public equality_comparable<commodity_t, noncopyable>
 {
   friend class annotated_commodity_t;
 
- public:
+public:
   // This map remembers all commodities that have been defined.
 
   static commodities_map     commodities;
@@ -169,7 +171,7 @@ class commodity_t : public equality_comparable<commodity_t>
   string	     qualified_symbol;
   bool		     annotated;
 
- public:
+public:
   explicit commodity_t() : base(NULL), annotated(false) {
     TRACE_CTOR(commodity_t, "");
   }
@@ -236,25 +238,21 @@ class commodity_t : public equality_comparable<commodity_t>
     base->flags &= ~arg;
   }
 
-  amount_t * smaller() const {
+  optional<amount_t> smaller() const {
     return base->smaller;
   }
   void set_smaller(const amount_t& arg) {
-    if (base->smaller)
-      checked_delete(base->smaller);
-    base->smaller = new amount_t(arg);
+    base->smaller = arg;
   }
 
-  amount_t * larger() const {
+  optional<amount_t> larger() const {
     return base->larger;
   }
   void set_larger(const amount_t& arg) {
-    if (base->larger)
-      checked_delete(base->larger);
-    base->larger = new amount_t(arg);
+    base->larger = arg;
   }
 
-  commodity_base_t::history_t * history() const {
+  optional<commodity_base_t::history_t> history() const {
     return base->history;
   }
 

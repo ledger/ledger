@@ -5,8 +5,9 @@
  * 
  * @brief  Types for handling commoditized math.
  * 
- * This file defines member functions for amount_t and the various
- * flavors of commodity_t.
+ * This file defines member functions for amount_t, and also defines a
+ * helper class, bigint_t, which is used as a refcounted wrapper
+ * around libgmp's mpz_t type.
  */
 
 /*
@@ -1142,8 +1143,8 @@ void amount_t::parse_conversion(const string& larger_str,
 {
   amount_t larger, smaller;
 
-  larger.parse(larger_str.c_str(), AMOUNT_PARSE_NO_REDUCE);
-  smaller.parse(smaller_str.c_str(), AMOUNT_PARSE_NO_REDUCE);
+  larger.parse(larger_str, AMOUNT_PARSE_NO_REDUCE);
+  smaller.parse(smaller_str, AMOUNT_PARSE_NO_REDUCE);
 
   larger *= smaller.number();
 

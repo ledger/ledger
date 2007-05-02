@@ -32,15 +32,15 @@ class transaction_t
   enum state_t { UNCLEARED, CLEARED, PENDING };
 
   entry_t *	     entry;
+  unsigned short     flags;
+  state_t	     state;
+  account_t *	     account;
   optional<moment_t> _date;
   optional<moment_t> _date_eff;
-  account_t *	     account;
   optional<amount_t> amount;
   optional<string>   amount_expr;
   optional<amount_t> cost;
   optional<string>   cost_expr;
-  state_t	     state;
-  unsigned short     flags;
   optional<string>   note;
   unsigned long	     beg_pos;
   unsigned long	     beg_line;
