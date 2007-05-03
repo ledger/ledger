@@ -774,7 +774,7 @@ unsigned int textual_parser_t::parse(std::istream&	   in,
     case 'Y':			// set current year
 #if 0
       // jww (2007-04-18): Need to set this up again
-      date_t::current_year = std::atoi(skip_ws(line + 1));
+      date_t::current_year = lexical_cast<int>(skip_ws(line + 1));
 #endif
       break;
 

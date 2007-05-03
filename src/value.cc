@@ -1647,7 +1647,7 @@ void value_t::in_place_cast(type_t cast_type)
 	  break;
 	}
       if (alldigits) {
-	long temp = std::atol((*(string **) data)->c_str());
+	long temp = lexical_cast<long>((*(string **) data)->c_str());
 	destroy();
 	*(long *) data = temp;
       } else {

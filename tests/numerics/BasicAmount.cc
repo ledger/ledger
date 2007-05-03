@@ -17,8 +17,8 @@ void BasicAmountTestCase::testConstructors()
   amount_t x3(123.456);
   amount_t x5("123456");
   amount_t x6("123.456");
-  amount_t x7(std::string("123456"));
-  amount_t x8(std::string("123.456"));
+  amount_t x7(string("123456"));
+  amount_t x8(string("123.456"));
   amount_t x9(x3);
   amount_t x10(x6);
   amount_t x11(x8);
@@ -76,8 +76,8 @@ void BasicAmountTestCase::testAssignment()
   x3  = 123.456;
   x5  = "123456";
   x6  = "123.456";
-  x7  = std::string("123456");
-  x8  = std::string("123.456");
+  x7  = string("123456");
+  x8  = string("123.456");
   x9  = x3;
   x10 = amount_t(x6);
 
@@ -415,8 +415,8 @@ void BasicAmountTestCase::testNegation()
   amount_t x3(-123.456);
   amount_t x5("-123456");
   amount_t x6("-123.456");
-  amount_t x7(std::string("-123456"));
-  amount_t x8(std::string("-123.456"));
+  amount_t x7(string("-123456"));
+  amount_t x8(string("-123.456"));
   amount_t x9(- x3);
 
   assertEqual(amount_t(0L), x0);
