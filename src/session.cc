@@ -2,6 +2,41 @@
 
 namespace ledger {
 
+session_t * session_t::current = NULL;
+
+#if 0
+boost::mutex session_t::session_mutex;
+#endif
+
+static void initialize();
+static void shutdown();
+
+void set_session_context(session_t * session)
+{
+#if 0
+  session_t::session_mutex.lock();
+#endif
+
+  if (session && ! session_t::current) {
+    initialize();
+  }
+  else if (! session && session_t::current) {
+    shutdown();
+#if 0
+    session_t::session_mutex.unlock();
+#endif
+  }
+
+  session_t::current = session;
+}
+
+void release_session_context()
+{
+#if 0
+  session_t::session_mutex.unlock();
+#endif
+}
+
 unsigned int session_t::read_journal(std::istream&	   in,
 				     journal_t *	   journal,
 				     account_t *	   master,
@@ -203,26 +238,16 @@ xml::xpath_t::op_t * session_t::lookup(const string& name)
 
 // jww (2007-04-26): All of Ledger should be accessed through a
 // session_t object
-void initialize()
+static void initialize()
 {
-  IF_VERIFY()
-    initialize_memory_tracing();
-
   amount_t::initialize();
   xml::xpath_t::initialize();
 }
 
-void shutdown()
+static void shutdown()
 {
   xml::xpath_t::shutdown();
   amount_t::shutdown();
-
-  IF_VERIFY() {
-    INFO("Ledger ended (Boost/libstdc++ may still hold memory)");
-    shutdown_memory_tracing();
-  } else {
-    INFO("Ledger ended");
-  }
 }
 
 } // namespace ledger

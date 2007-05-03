@@ -33,6 +33,8 @@ class BasicAmountTestCase : public CPPUNIT_NS::TestCase
   CPPUNIT_TEST_SUITE_END();
 
 public:
+  ledger::session_t session;
+
   BasicAmountTestCase() {}
   virtual ~BasicAmountTestCase() {}
 

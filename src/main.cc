@@ -408,25 +408,25 @@ int main(int argc, char * argv[], char * envp[])
 #if defined(TRACING_ON)
       if (i + 1 < argc && std::strcmp(argv[i], "--trace") == 0) {
 	ledger::_log_level   = LOG_TRACE;
-	ledger::_trace_level = lexical_cast<int>(argv[i + 1]);
+	ledger::_trace_level = std::atoi(argv[i + 1]);
 	i++;
       }
 #endif
     }
+
+  IF_VERIFY()
+    initialize_memory_tracing();
 
   try {
     std::ios::sync_with_stdio(false);
     boost::filesystem::path::default_name_check
       (boost::filesystem::portable_posix_name);
 
-    ledger::initialize();
-
-#if ! defined(FULL_DEBUG)
-    ledger::do_cleanup = false;
-#endif
     INFO("Ledger starting");
 
     std::auto_ptr<ledger::session_t> session(new ledger::session_t);
+
+    ledger::set_session_context(session.get());
 
 #if 0
     session->register_parser(new binary_parser_t);
@@ -445,9 +445,11 @@ int main(int argc, char * argv[], char * envp[])
 
     status = read_and_report(report.get(), argc, argv, envp);
 
-    IF_VERIFY() {
+    if (! DO_VERIFY()) {
       report.release();
       session.release();
+    } else {
+      ledger::set_session_context();
     }
   }
 #if 0
@@ -480,8 +482,12 @@ int main(int argc, char * argv[], char * envp[])
     status = _status;
   }
 
-  IF_VERIFY()
-    ledger::shutdown();
+  IF_VERIFY() {
+    INFO("Ledger ended (Boost/libstdc++ may still hold memory)");
+    shutdown_memory_tracing();
+  } else {
+    INFO("Ledger ended");
+  }
 
   return status;
 }

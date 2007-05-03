@@ -427,10 +427,10 @@ dist_lisp_LISP = lisp/ledger.el lisp/timeclock.el
 @HAVE_BOOST_PYTHON_TRUE@ledger_so_SOURCES = src/pyledger.cc
 @HAVE_BOOST_PYTHON_TRUE@ledger_so_DEPENDENCIES = libledger.la gdtoa/libgdtoa.la libpyledger.la
 @HAVE_BOOST_PYTHON_TRUE@PYLIBS = pyledger ledger gdtoa gmp \
-@HAVE_BOOST_PYTHON_TRUE@	boost_date_time boost_filesystem \
-@HAVE_BOOST_PYTHON_TRUE@	boost_regex boost_python \
-@HAVE_BOOST_PYTHON_TRUE@	$(am__append_15) $(am__append_16) \
-@HAVE_BOOST_PYTHON_TRUE@	$(am__append_17)
+@HAVE_BOOST_PYTHON_TRUE@	boost_date_time boost_signals \
+@HAVE_BOOST_PYTHON_TRUE@	boost_filesystem boost_regex \
+@HAVE_BOOST_PYTHON_TRUE@	boost_python $(am__append_15) \
+@HAVE_BOOST_PYTHON_TRUE@	$(am__append_16) $(am__append_17)
 nodist_UnitTests_SOURCES = tests/UnitTests.cc \
 	\
 	tests/numerics/BasicAmount.cc \

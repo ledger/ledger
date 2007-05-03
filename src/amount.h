@@ -52,6 +52,8 @@
 namespace ledger {
 
 class commodity_t;
+class annotation_t;
+class commodity_pool_t;
 
 DECLARE_EXCEPTION(amount_error);
 
@@ -86,6 +88,12 @@ public:
    */
   static void initialize();
   static void shutdown();
+
+  /**
+   * The default_pool is a static variable indicating which commodity
+   * pool should be used when none is specified.
+   */
+  static commodity_pool_t * default_pool;
 
   /**
    * The `keep_base' member determines whether scalable commodities
@@ -291,11 +299,12 @@ public:
    * compact form greater than 1.0.  That is, 3599s will unreduce to
    * 59.98m, while 3601 unreduces to 1h.
    *
-   * value(moment_t) returns the history value of an amount, based on
-   * the price history of its commodity.  For example, if the amount
-   * were 10 AAPL, and on Apr 10, 2000 each share of AAPL was worth
-   * $10, then call value() for that moment in time would yield the
-   * amount $100.00.
+   * value(optional<moment_t>) returns the historical value for an
+   * amount -- the default moment returns the most recently known
+   * price -- based on the price history of its commodity.  For
+   * example, if the amount were 10 AAPL, and on Apr 10, 2000 each
+   * share of AAPL was worth $10, then call value() for that moment in
+   * time would yield the amount $100.00.
    *
    * Further, for the sake of efficiency and avoiding temporary
    * objects, the following methods support "in-place" variants that
@@ -341,7 +350,8 @@ public:
   }
   amount_t& in_place_unreduce();
 
-  amount_t value(const moment_t& moment) const;
+  optional<amount_t> value(const optional<moment_t>& moment =
+			   optional<moment_t>()) const;
 
   /**
    * Truth tests.  An amount may be truth test in several ways:
@@ -466,38 +476,26 @@ public:
    * the price argument is required, although it can be passed as
    * `optional<amount_t>()' if no price is desired.
    *
+   * commodity_annotated() returns true if an amount's commodity has
+   * any annotation details associated with it.
+   *
+   * annotation_details() returns all of the details of an annotated
+   * commodity's annotations.  The structure returns will evaluate as
+   * boolean false if there are no details.
+   *
    * strip_annotations([keep_price, keep_date, keep_tag]) returns an
    * amount whose commodity's annotations have been stripped.  The
    * three `keep_' arguments determine which annotation detailed are
    * kept, meaning that the default is to follow whatever
    * amount_t::keep_price, amount_t::keep_date and amount_t::keep_tag
    * have been set to (which all default to false).
-   *
-   * price() returns an amount's annotated commodity's price.  This
-   * return value is of type `optional<amount_t>', so it must be
-   * tested for boolean truth to determine if an annotated price even
-   * existed.
-   *
-   * date() returns an amount's annotated commodity's date.  This
-   * return value is of type `optional<moment_t>'.
-   *
-   * tag() returns an amount's annotated commodity's tag.  This return
-   * value is of type `optional<string>'.
    */
-  void annotate_commodity(const optional<amount_t>& tprice,
-			  const optional<moment_t>& tdate = optional<moment_t>(),
-			  const optional<string>&   ttag  = optional<string>());
-
-  amount_t strip_annotations(const bool _keep_price = keep_price,
-			     const bool _keep_date  = keep_date,
-			     const bool _keep_tag   = keep_tag) const;
-
-  optional<amount_t> price() const;
-  optional<moment_t> date() const;
-  optional<string>   tag() const;
-
-#define AMOUNT_PARSE_NO_MIGRATE 0x01
-#define AMOUNT_PARSE_NO_REDUCE  0x02
+  void         annotate_commodity(const annotation_t& details);
+  bool         commodity_annotated() const;
+  annotation_t annotation_details() const;
+  amount_t     strip_annotations(const bool _keep_price = keep_price,
+				 const bool _keep_date  = keep_date,
+				 const bool _keep_tag   = keep_tag) const;
 
   /**
    * Parsing methods.  The method `parse' is used to parse an amount
@@ -505,11 +503,18 @@ public:
    * defined which simply calls parse on the input stream.  The
    * `parse' method has two forms:
    *
-   * parse(istream, unsigned char flags) parses an amount from the
-   * given input stream.
+   * parse(commodity_pool_t, istream, flags_t) parses an
+   * amount from the given input stream, registering commodity details
+   * according to the commodity pool which is passed in as the first
+   * parameter.
    *
-   * parse(string, unsigned char flags) parses an amount from the
-   * given string.
+   * parse(istream, flags_t) is the same as the preceding function,
+   * only it uses `amount_t::default_pool' as the commodity pool.
+   *
+   * parse(commodity_pool_t, string, flags_t) parses an amount from
+   * the given string.
+   *
+   * parse(string, flags_t) also parses an amount from a string.
    *
    * The `flags' argument of both parsing may be one or more of the
    * following:
@@ -538,14 +543,35 @@ public:
    *   amount_t::parse_conversion("1.0m", "60s"); // a minute is 60 seconds
    *   amount_t::parse_conversion("1.0h", "60m"); // an hour is 60 minutes
    */
-  void parse(std::istream& in, unsigned char flags = 0);
-  void parse(const string& str, unsigned char flags = 0) {
+#define AMOUNT_PARSE_NO_MIGRATE 0x01
+#define AMOUNT_PARSE_NO_REDUCE  0x02
+
+  typedef uint_least8_t flags_t;
+
+  void parse(commodity_pool_t& parent, std::istream& in, flags_t flags = 0);
+  void parse(commodity_pool_t& parent, const string& str, flags_t flags = 0) {
     std::istringstream stream(str);
-    parse(stream, flags);
+    parse(parent, stream, flags);
   }
 
-  static void parse_conversion(const string& larger_str,
+  void parse(std::istream& in, flags_t flags = 0) {
+    assert(default_pool);
+    parse(*default_pool, in, flags);
+  }
+  void parse(const string& str, flags_t flags = 0) {
+    assert(default_pool);
+    parse(*default_pool, str, flags);
+  }
+
+  static void parse_conversion(commodity_pool_t& parent,
+			       const string& larger_str,
 			       const string& smaller_str);
+
+  static void parse_conversion(const string& larger_str,
+			       const string& smaller_str) {
+    assert(default_pool);
+    parse_conversion(*default_pool, larger_str, smaller_str);
+  }
 
   /**
    * Printing methods.  An amount may be output to a stream using the
@@ -571,18 +597,40 @@ public:
    * input stream or a character pointer, and it may be serialized to
    * an output stream.  The methods used are:
    *
-   * read(istream) reads an amount from the given input stream.  It
-   * must have been put there using `write(ostream)'.
+   * read(commodity_pool_t, istream) reads an amount from the given
+   * input stream.  It must have been put there using
+   * `write(ostream)'.  Also, the given pool must be exactly what it
+   * was at the time the amount was `written'.  Thus, the required
+   * flow of logic is:
+   *   amount.write(out)
+   *   pool.write(out)
+   *   pool.read(in)
+   *   amount.read(pool, in)
    *
-   * read(char *&) reads an amount from data which has been read from
-   * an input stream into a buffer.  it advances the pointer passed in
-   * to the end of the deserialized amount.
+   * read(istream) does the same as read, only it relies on
+   * `amount_t::default_pool' to specify the pool.
+   *
+   * read(commodity_pool_t, char *&) reads an amount from data which
+   * has been read from an input stream into a buffer.  it advances
+   * the pointer passed in to the end of the deserialized amount.
+   *
+   * read(char *&) does the same as read, only it relies on
+   * `amount_t::default_pool' to specify the pool.
    *
    * write(ostream) writes an amount to an output stream in a compact
    * binary format.
    */
-  void read(std::istream& in);
-  void read(char *& data);
+  void read(commodity_pool_t& parent, std::istream& in);
+  void read(commodity_pool_t& parent, char *& data);
+
+  void read(std::istream& in) {
+    assert(default_pool);
+    read(*default_pool, in);
+  }
+  void read(char *& data) {
+    assert(default_pool);
+    read(*default_pool, data);
+  }
 
   void write(std::ostream& out) const;
 
@@ -614,10 +662,9 @@ public:
   bool valid() const;
 
 private:
-  friend void parse_annotations(std::istream&	    in,
-				optional<amount_t>& price,
-				optional<moment_t>& date,
-				optional<string>&   tag);
+  friend bool parse_annotations(commodity_pool_t& parent,
+				std::istream&	  in,
+				annotation_t&	  details);
 };
 
 inline amount_t amount_t::exact(const string& value) {
@@ -672,11 +719,12 @@ inline amount_t amount_t::round() const {
 }
 
 inline bool amount_t::has_commodity() const {
-  return commodity_ && commodity_ != commodity_t::null_commodity;
+  return commodity_ && commodity_ != commodity_->parent().null_commodity;
 }
 
 inline commodity_t& amount_t::commodity() const {
-  return has_commodity() ? *commodity_ : *commodity_t::null_commodity;
+  // jww (2007-05-02): Should be a way to access null_commodity better
+  return has_commodity() ? *commodity_ : *default_pool->null_commodity;
 }
 
 } // namespace ledger

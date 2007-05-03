@@ -5,7 +5,7 @@
 
 namespace ledger {
 
-class quotes_by_script : public commodity_base_t::updater_t
+class quotes_by_script
 {
   path		price_db;
   time_duration pricing_leeway;
@@ -18,11 +18,11 @@ class quotes_by_script : public commodity_base_t::updater_t
     : price_db(_price_db), pricing_leeway(_pricing_leeway),
       cache_dirty(_cache_dirty) {}
 
-  virtual void operator()(commodity_base_t& commodity,
-			  const ptime&      moment,
-			  const ptime&      date,
-			  const ptime&      last,
-			  amount_t&	    price);
+  virtual optional<amount_t>
+    operator()(commodity_t&		 commodity,
+	       const optional<moment_t>& date,
+	       const optional<moment_t>& moment,
+	       const optional<moment_t>& last);
 };
 
 DECLARE_EXCEPTION(download_error);

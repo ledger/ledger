@@ -133,7 +133,8 @@ balance_t& balance_t::operator/=(const amount_t& amt)
   return *this;
 }
 
-amount_t balance_t::amount(const commodity_t& commodity) const
+optional<amount_t>
+balance_t::amount(const optional<const commodity_t&>& commodity) const
 {
   if (! commodity) {
     if (amounts.size() == 1) {
@@ -151,71 +152,27 @@ amount_t balance_t::amount(const commodity_t& commodity) const
     }
   }
   else if (amounts.size() > 0) {
-    amounts_map::const_iterator i = amounts.find(&commodity);
+    amounts_map::const_iterator i = amounts.find(&*commodity);
     if (i != amounts.end())
       return (*i).second;
   }
-  return amount_t();
+  return optional<amount_t>();
 }
 
-balance_t balance_t::value(const moment_t& moment) const
-{
-  balance_t temp;
-
-  for (amounts_map::const_iterator i = amounts.begin();
-       i != amounts.end();
-       i++)
-    temp += (*i).second.value(moment);
-
-  return temp;
-}
-
-optional<balance_t> balance_t::price() const
+optional<balance_t>
+balance_t::value(const optional<moment_t>& moment) const
 {
   optional<balance_t> temp;
 
   for (amounts_map::const_iterator i = amounts.begin();
        i != amounts.end();
-       i++) {
-    optional<amount_t> i_price = (*i).second.price();
-    if (i_price) {
+       i++)
+    if (optional<amount_t> val = (*i).second.value(moment)) {
       if (! temp)
 	temp = balance_t();
-      *temp += *i_price;
+      *temp += *val;
     }
-  }
-  return temp;
-}
 
-optional<moment_t> balance_t::date() const
-{
-  optional<moment_t> temp;
-
-  for (amounts_map::const_iterator i = amounts.begin();
-       i != amounts.end();
-       i++) {
-    optional<moment_t> tdate = (*i).second.date();
-    if (! temp && tdate)
-      temp = *tdate;
-    else if (temp && tdate && temp != tdate)
-      return optional<moment_t>();
-  }
-  return temp;
-}
-
-optional<string> balance_t::tag() const
-{
-  optional<string> temp;
-
-  for (amounts_map::const_iterator i = amounts.begin();
-       i != amounts.end();
-       i++) {
-    optional<string> ttag = (*i).second.tag();
-    if (! temp && ttag)
-      temp = *ttag;
-    else if (temp && ttag && temp != ttag)
-      return optional<string>();
-  }
   return temp;
 }
 
@@ -243,52 +200,33 @@ void balance_t::write(std::ostream& out,
   if (lwidth == -1)
     lwidth = first_width;
 
-  if (commodity_t::commodities_sorted) {
-    for (amounts_map::const_iterator i = amounts.begin();
-	 i != amounts.end();
-	 i++) {
-      int width;
-      if (! first) {
-	out << std::endl;
-	width = lwidth;
-      } else {
-	first = false;
-	width = first_width;
-      }
+  typedef std::vector<const amount_t *> amounts_array;
+  amounts_array sorted;
 
-      out.width(width);
-      out.fill(' ');
-      out << std::right << (*i).second;
+  for (amounts_map::const_iterator i = amounts.begin();
+       i != amounts.end();
+       i++)
+    if ((*i).second)
+      sorted.push_back(&(*i).second);
+
+  std::stable_sort(sorted.begin(), sorted.end(),
+		   compare_amount_commodities());
+
+  for (amounts_array::const_iterator i = sorted.begin();
+       i != sorted.end();
+       i++) {
+    int width;
+    if (! first) {
+      out << std::endl;
+      width = lwidth;
+    } else {
+      first = false;
+      width = first_width;
     }
-  } else {
-    typedef std::vector<const amount_t *> amounts_array;
-    amounts_array sorted;
 
-    for (amounts_map::const_iterator i = amounts.begin();
-	 i != amounts.end();
-	 i++)
-      if ((*i).second)
-	sorted.push_back(&(*i).second);
-
-    std::stable_sort(sorted.begin(), sorted.end(),
-		     compare_amount_commodities());
-
-    for (amounts_array::const_iterator i = sorted.begin();
-	 i != sorted.end();
-	 i++) {
-      int width;
-      if (! first) {
-	out << std::endl;
-	width = lwidth;
-      } else {
-	first = false;
-	width = first_width;
-      }
-
-      out.width(width);
-      out.fill(' ');
-      out << std::right << **i;
-    }
+    out.width(width);
+    out.fill(' ');
+    out << std::right << **i;
   }
 
   if (first) {

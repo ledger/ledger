@@ -98,7 +98,7 @@ extern "C" {
 #endif
 
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/any.hpp>
+#include <boost/cast.hpp>
 #include <boost/current_function.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/filesystem/convenience.hpp>
@@ -106,11 +106,16 @@ extern "C" {
 #include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
-#include <boost/lexical_cast.hpp>
+#include <boost/function.hpp>
+#include <boost/multi_index_container.hpp>
+#include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/key_extractors.hpp>
+#include <boost/multi_index/ordered_index.hpp>
 #include <boost/operators.hpp>
 #include <boost/optional.hpp>
 #include <boost/ptr_container/ptr_list.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/regex.hpp>
+#include <boost/signal.hpp>
 
 #endif // _SYSTEM_HH

@@ -172,7 +172,7 @@ ledger_so_SOURCES = src/pyledger.cc
 ledger_so_DEPENDENCIES = libledger.la gdtoa/libgdtoa.la libpyledger.la
 
 PYLIBS = pyledger ledger gdtoa gmp boost_date_time \
-	 boost_filesystem boost_regex boost_python
+	 boost_signals boost_filesystem boost_regex boost_python
 
 if HAVE_EXPAT
 PYLIBS += expat

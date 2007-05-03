@@ -3,10 +3,10 @@
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(CommodityTestCase, "numerics");
 
 void CommodityTestCase::setUp() {
-  ledger::initialize();
+  ledger::set_session_context(&session);
 }
 void CommodityTestCase::tearDown() {
-  ledger::shutdown();
+  ledger::set_session_context();
 }
 
 void CommodityTestCase::testPriceHistory()
@@ -32,8 +32,13 @@ void CommodityTestCase::testPriceHistory()
   aapl.add_price(mar01_07, amount_t("$19.50"));
   aapl.add_price(apr15_07, amount_t("$21.22"));
 
-  assertEqual(amount_t("$1831.83"), x1.value(feb28_07sbm));
-  assertEqual(amount_t("$2124.12"), x1.value(now));
+  optional<amount_t> amt1 = x1.value(feb28_07sbm);
+  assertTrue(amt1);
+  assertEqual(amount_t("$1831.83"), *amt1);
+
+  optional<amount_t> amt2 = x1.value(now);
+  assertTrue(amt2);
+  assertEqual(amount_t("$2124.12"), *amt2);
 
   assertValid(x1);
 }

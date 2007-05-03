@@ -104,7 +104,7 @@ static void endElement(void *userData, const char *name)
   }
   else if (std::strcmp(name, "symbol") == 0) {
     assert(! curr_comm);
-    curr_comm = commodity_t::find_or_create(data);
+    curr_comm = amount_t::default_pool->find_or_create(data);
     assert(curr_comm);
     curr_comm->add_flags(COMMODITY_STYLE_SUFFIXED);
     if (! comm_flags.empty()) {

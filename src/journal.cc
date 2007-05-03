@@ -115,8 +115,9 @@ bool entry_base_t::finalize()
 	  annotated_commodity_t&
 	    ann_comm(static_cast<annotated_commodity_t&>
 		     ((*x)->amount->commodity()));
-	  if (ann_comm.price)
-	    balance += *ann_comm.price * (*x)->amount->number() - *((*x)->cost);
+	  if (ann_comm.details.price)
+	    balance += (*ann_comm.details.price * (*x)->amount->number() -
+			*((*x)->cost));
 	}
       } else {
 	saw_null = true;
@@ -173,9 +174,9 @@ bool entry_base_t::finalize()
       if ((*x)->amount->commodity() &&
 	  ! (*x)->amount->commodity().annotated)
 	(*x)->amount->annotate_commodity
-	  (per_unit_cost.abs(),
-	   entry ? entry->actual_date() : optional<moment_t>(),
-	   entry ? entry->code : optional<string>());
+	  (annotation_t(per_unit_cost.abs(),
+			entry ? entry->actual_date() : optional<moment_t>(),
+			entry ? entry->code          : optional<string>()));
 
       (*x)->cost = - (per_unit_cost * (*x)->amount->number());
       balance += *(*x)->cost;
@@ -607,14 +608,6 @@ bool journal_t::valid() const
        i++)
     if (! (*i)->valid()) {
       DEBUG("ledger.validate", "journal_t: entry not valid");
-      return false;
-    }
-
-  for (commodities_map::const_iterator i = commodity_t::commodities.begin();
-       i != commodity_t::commodities.end();
-       i++)
-    if (! (*i).second->valid()) {
-      DEBUG("ledger.validate", "journal_t: commodity not valid");
       return false;
     }
 

@@ -93,15 +93,19 @@ public:
   bool operator<(const balance_t& bal) const {
     for (amounts_map::const_iterator i = bal.amounts.begin();
 	 i != bal.amounts.end();
-	 i++)
-      if (! (amount(*(*i).first) < (*i).second))
+	 i++) {
+      optional<amount_t> amt = amount(*(*i).first);
+      if (amt && ! (*amt < (*i).second))
 	return false;
+    }
 
     for (amounts_map::const_iterator i = amounts.begin();
 	 i != amounts.end();
-	 i++)
-      if (! ((*i).second < bal.amount(*(*i).first)))
+	 i++) {
+      optional<amount_t> amt = bal.amount(*(*i).first);
+      if (amt && ! ((*i).second < *amt))
 	return false;
+    }
 
     if (bal.amounts.size() == 0 && amounts.size() == 0)
       return false;
@@ -146,13 +150,10 @@ public:
     return true;
   }
 
-  amount_t  amount(const commodity_t& commodity = 
-		   *commodity_t::null_commodity) const;
-  balance_t value(const moment_t& moment = now) const;
-
-  optional<balance_t> price() const;
-  optional<moment_t>  date() const;
-  optional<string>    tag() const;
+  optional<amount_t>  amount(const optional<const commodity_t&>& commodity =
+			     optional<const commodity_t&>()) const;
+  optional<balance_t> value(const optional<moment_t>& moment =
+			    optional<moment_t>()) const;
 
   balance_t
   strip_annotations(const bool keep_price = amount_t::keep_price,
@@ -335,22 +336,13 @@ public:
     return temp;
   }
 
-  amount_t  amount(const commodity_t& commodity =
-		   *commodity_t::null_commodity) const {
+  optional<amount_t>  amount(const optional<const commodity_t&>& commodity =
+			     optional<const commodity_t&>()) const {
     return quantity.amount(commodity);
   }
-  balance_t value(const moment_t& moment = now) const {
+  optional<balance_t> value(const optional<moment_t>& moment =
+			    optional<moment_t>()) const {
     return quantity.value(moment);
-  }
-
-  optional<balance_t> price() const {
-    return quantity.price();
-  }
-  optional<moment_t>  date() const {
-    return quantity.date();
-  }
-  optional<string>    tag() const {
-    return quantity.tag();
   }
 
   balance_t

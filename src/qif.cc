@@ -110,7 +110,7 @@ unsigned int qif_parser_t::parse(std::istream& in,
       unsigned char prec  = xact->amount->commodity().precision();
 
       if (! def_commodity) {
-	def_commodity = commodity_t::find_or_create("$");
+	def_commodity = amount_t::default_pool->find_or_create("$");
 	assert(def_commodity);
       }
       xact->amount->set_commodity(*def_commodity);

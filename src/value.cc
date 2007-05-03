@@ -1647,7 +1647,7 @@ void value_t::in_place_cast(type_t cast_type)
 	  break;
 	}
       if (alldigits) {
-	long temp = lexical_cast<long>((*(string **) data)->c_str());
+	long temp = std::atol((*(string **) data)->c_str());
 	destroy();
 	*(long *) data = temp;
       } else {
@@ -1840,7 +1840,7 @@ bool value_t::realzero() const
   return 0;
 }
 
-value_t value_t::value(const moment_t& moment) const
+value_t value_t::value(const optional<moment_t>& moment) const
 {
   switch (type) {
   case BOOLEAN:
@@ -1849,16 +1849,30 @@ value_t value_t::value(const moment_t& moment) const
     throw_(value_error, "Cannot find the value of a date/time");
   case INTEGER:
     return *this;
-  case AMOUNT:
-    return ((amount_t *) data)->value(moment);
-  case BALANCE:
-    return ((balance_t *) data)->value(moment);
-  case BALANCE_PAIR:
-    return ((balance_pair_t *) data)->quantity.value(moment);
+
+  case AMOUNT: {
+    if (optional<amount_t> val = ((amount_t *) data)->value(moment))
+      return *val;
+    return false;
+  }
+  case BALANCE: {
+    if (optional<balance_t> bal = ((balance_t *) data)->value(moment))
+      return *bal;
+    return false;
+  }
+  case BALANCE_PAIR: {
+    if (optional<balance_t> bal =
+	((balance_pair_t *) data)->quantity.value(moment))
+      return *bal;
+    return false;
+  }
+
   case STRING:
     throw_(value_error, "Cannot find the value of a string");
+
   case XML_NODE:
     return (*(xml::node_t **) data)->to_value().value(moment);
+
   case POINTER:
     throw_(value_error, "Cannot find the value of a pointer");
   case SEQUENCE:
@@ -1954,45 +1968,37 @@ value_t value_t::unround() const
   return value_t();
 }
 
-value_t value_t::price() const
+value_t value_t::annotated_price() const
 {
   switch (type) {
   case BOOLEAN:
-    throw_(value_error, "Cannot find the price of a boolean");
+    throw_(value_error, "Cannot find the annotated price of a boolean");
   case INTEGER:
     return *this;
   case DATETIME:
-    throw_(value_error, "Cannot find the price of a date/time");
+    throw_(value_error, "Cannot find the annotated price of a date/time");
 
   case AMOUNT: {
-    optional<amount_t> temp = ((amount_t *) data)->price();
-    if (! temp)
-      return false;
-    return *temp;
-  }
-  case BALANCE: {
-    optional<balance_t> temp = ((balance_t *) data)->price();
-    if (! temp)
-      return false;
-    return *temp;
-  }
-  case BALANCE_PAIR: {
-    optional<balance_t> temp = ((balance_pair_t *) data)->price();
+    optional<amount_t> temp = ((amount_t *) data)->annotation_details().price;
     if (! temp)
       return false;
     return *temp;
   }
 
+  case BALANCE:
+    throw_(value_error, "Cannot find the annotated price of a balance");
+  case BALANCE_PAIR:
+    throw_(value_error, "Cannot find the annotated price of a balance pair");
   case STRING:
-    throw_(value_error, "Cannot find the price of a string");
+    throw_(value_error, "Cannot find the annotated price of a string");
 
   case XML_NODE:
-    return (*(xml::node_t **) data)->to_value().price();
+    return (*(xml::node_t **) data)->to_value().annotated_price();
 
   case POINTER:
-    throw_(value_error, "Cannot find the price of a pointer");
+    throw_(value_error, "Cannot find the annotated price of a pointer");
   case SEQUENCE:
-    throw_(value_error, "Cannot find the price of a sequence");
+    throw_(value_error, "Cannot find the annotated price of a sequence");
 
   default:
     assert(0);
@@ -2002,46 +2008,38 @@ value_t value_t::price() const
   return value_t();
 }
 
-value_t value_t::date() const
+value_t value_t::annotated_date() const
 {
   switch (type) {
   case BOOLEAN:
-    throw_(value_error, "Cannot find the date of a boolean");
+    throw_(value_error, "Cannot find the annotated date of a boolean");
   case INTEGER:
-    throw_(value_error, "Cannot find the date of an integer");
+    throw_(value_error, "Cannot find the annotated date of an integer");
 
   case DATETIME:
     return *this;
 
   case AMOUNT: {
-    optional<moment_t> temp = ((amount_t *) data)->date();
-    if (! temp)
-      return false;
-    return *temp;
-  }
-  case BALANCE: {
-    optional<moment_t> temp = ((balance_t *) data)->date();
-    if (! temp)
-      return false;
-    return *temp;
-  }
-  case BALANCE_PAIR: {
-    optional<moment_t> temp = ((balance_pair_t *) data)->date();
+    optional<moment_t> temp = ((amount_t *) data)->annotation_details().date;
     if (! temp)
       return false;
     return *temp;
   }
 
+  case BALANCE:
+    throw_(value_error, "Cannot find the annotated date of a balance");
+  case BALANCE_PAIR:
+    throw_(value_error, "Cannot find the annotated date of a balance pair");
   case STRING:
-    throw_(value_error, "Cannot find the date of a string");
+    throw_(value_error, "Cannot find the annotated date of a string");
 
   case XML_NODE:
-    return (*(xml::node_t **) data)->to_value().date();
+    return (*(xml::node_t **) data)->to_value().annotated_date();
 
   case POINTER:
-    throw_(value_error, "Cannot find the date of a pointer");
+    throw_(value_error, "Cannot find the annotated date of a pointer");
   case SEQUENCE:
-    throw_(value_error, "Cannot find the date of a sequence");
+    throw_(value_error, "Cannot find the annotated date of a sequence");
 
   default:
     assert(0);
@@ -2051,46 +2049,38 @@ value_t value_t::date() const
   return value_t();
 }
 
-value_t value_t::tag() const
+value_t value_t::annotated_tag() const
 {
   switch (type) {
   case BOOLEAN:
-    throw_(value_error, "Cannot find the date of a boolean");
+    throw_(value_error, "Cannot find the annotated tag of a boolean");
   case INTEGER:
-    throw_(value_error, "Cannot find the date of an integer");
+    throw_(value_error, "Cannot find the annotated tag of an integer");
 
   case DATETIME:
     return *this;
 
   case AMOUNT: {
-    optional<string> temp = ((amount_t *) data)->tag();
-    if (! temp)
-      return false;
-    return *temp;
-  }
-  case BALANCE: {
-    optional<string> temp = ((balance_t *) data)->tag();
-    if (! temp)
-      return false;
-    return *temp;
-  }
-  case BALANCE_PAIR: {
-    optional<string> temp = ((balance_pair_t *) data)->tag();
+    optional<string> temp = ((amount_t *) data)->annotation_details().tag;
     if (! temp)
       return false;
     return *temp;
   }
 
+  case BALANCE:
+    throw_(value_error, "Cannot find the annotated tag of a balance");
+  case BALANCE_PAIR:
+    throw_(value_error, "Cannot find the annotated tag of a balance pair");
   case STRING:
-    throw_(value_error, "Cannot find the date of a string");
+    throw_(value_error, "Cannot find the annotated tag of a string");
 
   case XML_NODE:
-    return (*(xml::node_t **) data)->to_value().date();
+    return (*(xml::node_t **) data)->to_value().annotated_tag();
 
   case POINTER:
-    throw_(value_error, "Cannot find the date of a pointer");
+    throw_(value_error, "Cannot find the annotated tag of a pointer");
   case SEQUENCE:
-    throw_(value_error, "Cannot find the date of a sequence");
+    throw_(value_error, "Cannot find the annotated tag of a sequence");
 
   default:
     assert(0);

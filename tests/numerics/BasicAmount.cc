@@ -3,10 +3,10 @@
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(BasicAmountTestCase, "numerics");
 
 void BasicAmountTestCase::setUp() {
-  ledger::initialize();
+  ledger::set_session_context(&session);
 }
 void BasicAmountTestCase::tearDown() {
-  ledger::shutdown();
+  ledger::set_session_context();
 }
 
 void BasicAmountTestCase::testConstructors()
@@ -17,8 +17,8 @@ void BasicAmountTestCase::testConstructors()
   amount_t x3(123.456);
   amount_t x5("123456");
   amount_t x6("123.456");
-  amount_t x7(string("123456"));
-  amount_t x8(string("123.456"));
+  amount_t x7(std::string("123456"));
+  amount_t x8(std::string("123.456"));
   amount_t x9(x3);
   amount_t x10(x6);
   amount_t x11(x8);

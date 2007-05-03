@@ -263,9 +263,9 @@ transaction_t * parse_transaction(char *      line,
 
 	  if (xact->amount->commodity() &&
 	      ! xact->amount->commodity().annotated)
-	    xact->amount->annotate_commodity(per_unit_cost,
-					    xact->entry->actual_date(),
-					    xact->entry->code);
+	    xact->amount->annotate_commodity(annotation_t(per_unit_cost,
+							  xact->entry->actual_date(),
+							  xact->entry->code));
 
 	  DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 		 "Total cost is " << *xact->cost);
@@ -718,7 +718,7 @@ unsigned int textual_parser_t::parse(std::istream&	   in,
 
     case 'D':	{		// a default commodity for "entry"
       amount_t amt(skip_ws(line + 1));
-      commodity_t::default_commodity = &amt.commodity();
+      amount_t::default_pool->default_commodity = &amt.commodity();
       break;
     }
 
@@ -756,7 +756,8 @@ unsigned int textual_parser_t::parse(std::istream&	   in,
       parse_symbol(symbol_and_price, symbol);
       amount_t price(symbol_and_price);
 
-      if (commodity_t * commodity = commodity_t::find_or_create(symbol))
+      if (commodity_t * commodity =
+	  amount_t::default_pool->find_or_create(symbol))
 	commodity->add_price(datetime, price);
       break;
     }
@@ -766,7 +767,8 @@ unsigned int textual_parser_t::parse(std::istream&	   in,
       string symbol;
       parse_symbol(p, symbol);
 
-      if (commodity_t * commodity = commodity_t::find_or_create(symbol))
+      if (commodity_t * commodity =
+	  amount_t::default_pool->find_or_create(symbol))
 	commodity->add_flags(COMMODITY_STYLE_NOMARKET);
       break;
     }
@@ -774,7 +776,7 @@ unsigned int textual_parser_t::parse(std::istream&	   in,
     case 'Y':			// set current year
 #if 0
       // jww (2007-04-18): Need to set this up again
-      date_t::current_year = lexical_cast<int>(skip_ws(line + 1));
+      date_t::current_year = std::atoi(skip_ws(line + 1));
 #endif
       break;
 

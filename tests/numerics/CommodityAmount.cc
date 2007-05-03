@@ -6,7 +6,7 @@ CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(CommodityAmountTestCase, "numerics");
 
 void CommodityAmountTestCase::setUp()
 {
-  ledger::initialize();
+  ledger::set_session_context(&session);
 
   // Cause the display precision for dollars to be initialized to 2.
   amount_t x1("$1.00");
@@ -17,7 +17,8 @@ void CommodityAmountTestCase::setUp()
 void CommodityAmountTestCase::tearDown()
 {
   amount_t::full_strings = false;
-  ledger::shutdown();
+
+  ledger::set_session_context();
 }
 
 void CommodityAmountTestCase::testConstructors()

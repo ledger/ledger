@@ -10,6 +10,8 @@ namespace ledger {
 class session_t : public xml::xpath_t::scope_t
 {
  public:
+  static session_t * current;
+
   path		 data_file;
   optional<path> init_file;
   optional<path> cache_file;
@@ -185,8 +187,16 @@ class session_t : public xml::xpath_t::scope_t
 #endif
 };
 
-void initialize();
-void shutdown();
+/**
+ * This sets the current session context, transferring all static
+ * globals to point at the data structures related to this session.
+ * Although Ledger itself is not thread-safe, by locking, switching
+ * session context, then unlocking after the operation is done,
+ * multiple threads can sequentially make use of the library.  Thus, a
+ * session_t maintains all of the information relating to a single
+ * usage of the Ledger library.
+ */
+void set_session_context(session_t * session = NULL);
 
 } // namespace ledger
 

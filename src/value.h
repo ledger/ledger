@@ -363,9 +363,9 @@ class value_t
   value_t abs() const;
   void    in_place_cast(type_t cast_type);
   value_t cost() const;
-  value_t price() const;
-  value_t date() const;
-  value_t tag() const;
+  value_t annotated_price() const;
+  value_t annotated_date() const;
+  value_t annotated_tag() const;
 
   value_t cast(type_t cast_type) const {
     value_t temp(*this);
@@ -379,7 +379,8 @@ class value_t
 
   value_t& add(const amount_t& amount,
 	       const optional<amount_t>& cost = optional<amount_t>());
-  value_t  value(const moment_t& moment) const;
+  value_t  value(const optional<moment_t>& moment =
+		 optional<moment_t>()) const;
 
   void    in_place_reduce();
   value_t reduce() const {
