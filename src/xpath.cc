@@ -654,7 +654,7 @@ xpath_t::parse_value_term(std::istream& in, unsigned short tflags) const
     int id = -1;
     if (std::isdigit(ident[0])) {
       node.reset(new op_t(op_t::ARG_INDEX));
-      node->arg_index = std::atol(ident.c_str());
+      node->arg_index = lexical_cast<unsigned int>(ident.c_str());
     }
     else if ((id = document_t::lookup_builtin_id(ident)) != -1) {
       node.reset(new op_t(op_t::NODE_ID));

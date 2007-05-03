@@ -408,7 +408,7 @@ int main(int argc, char * argv[], char * envp[])
 #if defined(TRACING_ON)
       if (i + 1 < argc && std::strcmp(argv[i], "--trace") == 0) {
 	ledger::_log_level   = LOG_TRACE;
-	ledger::_trace_level = std::atoi(argv[i + 1]);
+	ledger::_trace_level = lexical_cast<int>(argv[i + 1]);
 	i++;
       }
 #endif
