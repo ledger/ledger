@@ -1,7 +1,9 @@
 #include "pyinterp.h"
+#include "pyutils.h"
 #include "amount.h"
 
 #include <boost/python/exception_translator.hpp>
+#include <boost/python/implicit.hpp>
 
 namespace ledger {
 
@@ -19,6 +21,14 @@ amount_t py_round_1(const amount_t& amount, amount_t::precision_t prec) {
 }
 amount_t py_round_2(const amount_t& amount) {
   return amount.round();
+}
+
+boost::optional<amount_t> py_value_1(const amount_t& amount,
+				     const boost::optional<moment_t>& moment) {
+  return amount.value(moment);
+}
+boost::optional<amount_t> py_value_2(const amount_t& amount) {
+  return amount.value();
 }
 
 #define EXC_TRANSLATOR(type)				\
@@ -161,7 +171,8 @@ void export_amount()
     .def("in_place_unreduce", &amount_t::in_place_unreduce,
 	 return_value_policy<reference_existing_object>())
 
-    .def("value", &amount_t::value)
+    .def("value", py_value_1)
+    .def("value", py_value_2)
 
     .def("sign", &amount_t::sign)
     .def("__nonzero__", &amount_t::nonzero)
@@ -212,6 +223,12 @@ void export_amount()
 
     .def("valid", &amount_t::valid)
     ;
+
+  python_optional<amount_t>();
+
+  implicitly_convertible<double, amount_t>();
+  implicitly_convertible<long, amount_t>();
+  implicitly_convertible<string, amount_t>();
 
 #define EXC_TRANSLATE(type) \
   register_exception_translator<type>(&exc_translate_ ## type);

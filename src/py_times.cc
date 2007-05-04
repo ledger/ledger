@@ -9,6 +9,8 @@
 #include <Python.h>
 #include <datetime.h>
 
+// jww (2007-05-04): Convert time duration objects to PyDelta
+
 namespace ledger {
 
 using namespace boost::python;
@@ -29,7 +31,7 @@ struct date_from_python
   static void* convertible(PyObject* obj_ptr)
   {
     PyDateTime_IMPORT;
-    if(PyDate_Check(obj_ptr) || PyDateTime_Check(obj_ptr)) return obj_ptr;
+    if (PyDate_Check(obj_ptr)) return obj_ptr;
     return 0;
   }
 
@@ -48,15 +50,13 @@ typedef register_python_conversion<date, date_to_python, date_from_python>
   date_python_conversion;
 
 
-typedef boost::posix_time::ptime datetime;
-
 struct datetime_to_python
 {
-  static PyObject* convert(const datetime& moment)
+  static PyObject* convert(const moment_t& moment)
   {
     PyDateTime_IMPORT;
     date dte = moment.date();
-    datetime::time_duration_type tod = moment.time_of_day();
+    moment_t::time_duration_type tod = moment.time_of_day();
     return PyDateTime_FromDateAndTime(dte.year(), dte.month(), dte.day(),
 				      tod.hours(), tod.minutes(), tod.seconds(),
 				      tod.total_microseconds() % 1000000);
@@ -81,19 +81,21 @@ struct datetime_from_python
     int h = PyDateTime_DATE_GET_HOUR(obj_ptr);
     int min = PyDateTime_DATE_GET_MINUTE(obj_ptr);
     int s = PyDateTime_DATE_GET_SECOND(obj_ptr);
-    datetime* moment = new datetime(date(y,m,d),
-				    datetime::time_duration_type(h, min, s));
+    moment_t* moment = new moment_t(date(y,m,d),
+				    moment_t::time_duration_type(h, min, s));
     data->convertible = (void*)moment;
   }
 };
 
-typedef register_python_conversion<datetime, datetime_to_python, datetime_from_python>
+typedef register_python_conversion<moment_t, datetime_to_python, datetime_from_python>
   datetime_python_conversion;
 
 void export_times()
 {
   date_python_conversion();
   datetime_python_conversion();
+
+  python_optional<moment_t>();
 }
 
 } // namespace ledger
