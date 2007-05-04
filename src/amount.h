@@ -76,11 +76,9 @@ class amount_t
 	   ordered_field_operators<amount_t, unsigned long,
 	   ordered_field_operators<amount_t, double> > > >
 {
+  // jww (2007-05-03): Make this private, and then make
+  // ledger::initialize into a member function of session_t.
 public:
-  class bigint_t;
-
-  typedef uint_least16_t precision_t;
-
   /** 
    * The initialize and shutdown methods ready the amount subsystem
    * for use.  Normally they are called by `ledger::initialize' and
@@ -88,6 +86,11 @@ public:
    */
   static void initialize();
   static void shutdown();
+
+public:
+  class bigint_t;
+
+  typedef uint_least16_t precision_t;
 
   /**
    * The default_pool is a static variable indicating which commodity

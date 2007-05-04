@@ -45,15 +45,16 @@
 
 namespace ledger {
 
+class annotated_commodity_t;
+
 class commodity_t
   : public equality_comparable1<commodity_t, noncopyable>
 {
+  friend class commodity_pool_t;
+
   class base_t : public noncopyable
   {
-  private:
-    friend class commodity_pool_t;
-    friend class commodity_t;
-
+  public:
     typedef std::map<const moment_t, amount_t>  history_map;
     typedef std::pair<const moment_t, amount_t> history_pair;
 
@@ -285,7 +286,7 @@ public:
 
   virtual bool operator==(const commodity_t& comm) const;
   virtual bool operator==(const annotated_commodity_t& comm) const {
-    return *this == static_cast<commodity_t&>(comm);
+    return *this == static_cast<const commodity_t&>(comm);
   }
 
   commodity_t& referent() {

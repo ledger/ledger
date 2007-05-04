@@ -1,6 +1,4 @@
 import sys
-sys.path.append("/home/johnw/src/ledger")
-sys.path.append("/home/johnw/Products/ledger")
 
 import unittest
 import exceptions
@@ -362,7 +360,7 @@ class BasicAmountTestCase(unittest.TestCase):
     def testIntegerConversion(self):
         x1 = amount(123456)
 
-        self.assertEqual(True, bool(x1))
+        self.assertTrue(x1)
         self.assertEqual(123456, int(x1))
         self.assertEqual(123456.0, float(x1))
         self.assertEqual("123456", x1.to_string())
@@ -373,7 +371,7 @@ class BasicAmountTestCase(unittest.TestCase):
     def testFractionalConversion(self):
         x1 = amount(1234.56)
 
-        self.assertEqual(True, not (not x1))
+        self.assertTrue(x1)
         self.assertEqual(1234, int(x1))
         self.assertEqual(1234.56, float(x1))
         self.assertEqual("1234.56", x1.to_string())
@@ -432,8 +430,8 @@ class BasicAmountTestCase(unittest.TestCase):
         x1 = amount("1234")
         x2 = amount("1234.56")
 
-        self.assertTrue(not x0)
-        self.assertTrue(x1 )
+        self.assertFalse(x0)
+        self.assertTrue(x1)
         self.assertTrue(x2)
 
         self.assertTrue(x0.valid())
@@ -444,12 +442,12 @@ class BasicAmountTestCase(unittest.TestCase):
         x0 = amount()
         x1 = amount("0.000000000000000000001")
 
-        self.assertTrue(not x0)
+        self.assertFalse(x0)
         self.assertTrue(x1)
         self.assertTrue(x0.zero())
         self.assertTrue(x0.realzero())
-        self.assertTrue(not x1.zero())
-        self.assertTrue(not x1.realzero())
+        self.assertFalse(x1.zero())
+        self.assertFalse(x1.realzero())
 
         self.assertTrue(x0.valid())
         self.assertTrue(x1.valid())
@@ -491,7 +489,7 @@ class BasicAmountTestCase(unittest.TestCase):
         x3 = amount("1")
         x4 = amount("-1")
 
-        self.assertTrue(not x0.sign())
+        self.assertEqual(x0.sign(), 0)
         self.assertTrue(x1.sign() > 0)
         self.assertTrue(x2.sign() < 0)
         self.assertTrue(x3.sign() > 0)
