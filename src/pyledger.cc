@@ -46,8 +46,9 @@ void shutdown_for_python()
 
 }
 
+ledger::session_t python_session;
+
 BOOST_PYTHON_MODULE(ledger)
 {
-  ledger::initialize();
-  ledger::initialize_for_python();
+  ledger::set_session_context(&python_session);
 }

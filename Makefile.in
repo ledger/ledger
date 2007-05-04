@@ -45,7 +45,7 @@ host_triplet = @host@
 @DEBUG_TRUE@am__append_8 = -DFULL_DEBUG
 @HAVE_BOOST_PYTHON_TRUE@am__append_9 = -DUSE_BOOST_PYTHON=1
 @HAVE_BOOST_PYTHON_TRUE@am__append_10 = src/pyinterp.cc
-@USE_PCH_TRUE@am__append_11 = system.hh.gch system.hh
+@USE_PCH_TRUE@am__append_11 = system.hh.gch
 @USE_PCH_TRUE@am__append_12 = system.hh.gch system.hh
 bin_PROGRAMS = ledger$(EXEEXT)
 @HAVE_BOOST_PYTHON_TRUE@am__append_13 = libpyledger.la
@@ -1786,8 +1786,6 @@ doxygen-docs: $(top_builddir)/Doxyfile.gen
 	doxygen $(top_builddir)/Doxyfile.gen
 
 ######################################################################
-
-all: check
 
 check-syntax:
 	g++ -I. -Itests $(CPPFLAGS) $(UnitTests_CXXFLAGS) \

@@ -81,7 +81,7 @@ if USE_PCH
 libledger_la_CXXFLAGS = $(WARNFLAGS)
 nodist_libledger_la_SOURCES = system.hh.gch
 
-BUILT_SOURCES += system.hh.gch system.hh
+BUILT_SOURCES += system.hh.gch
 CLEANFILES += system.hh.gch system.hh
 
 $(top_builddir)/system.hh.gch: $(srcdir)/src/system.hh acconf.h
@@ -244,8 +244,6 @@ doxygen-docs: $(top_builddir)/Doxyfile.gen
 	doxygen $(top_builddir)/Doxyfile.gen
 
 ######################################################################
-
-all: check
 
 check-syntax:
 	g++ -I. -Itests $(CPPFLAGS) $(UnitTests_CXXFLAGS) \

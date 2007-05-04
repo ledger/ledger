@@ -347,6 +347,35 @@ else
   AM_CONDITIONAL(HAVE_BOOST_PYTHON, false)
 fi
 
+# check for CppUnit
+AC_CACHE_CHECK(
+  [if cppunit is available],
+  [cppunit_avail],
+  [cppunit_save_libs=$LIBS
+   LIBS="-lcppunit $LIBS"
+   AC_LANG_PUSH(C++)
+   AC_TRY_LINK(
+     [#include <cppunit/CompilerOutputter.h>
+      #include <cppunit/TestResult.h>
+      #include <cppunit/TestResultCollector.h>
+      #include <cppunit/TestRunner.h>
+      #include <cppunit/TextTestProgressListener.h>
+      #include <cppunit/BriefTestProgressListener.h>
+      #include <cppunit/XmlOutputter.h>
+      #include <cppunit/extensions/TestFactoryRegistry.h>],
+     [CPPUNIT_NS::TestResult controller;
+      CPPUNIT_NS::TestResultCollector result;],
+     [cppunit_avail=true],
+     [cppunit_avail=false])
+   AC_LANG_POP
+   LIBS=$cppunit_save_libs])
+
+if [test x$cppunit_avail = xtrue ]; then
+  AM_CONDITIONAL(HAVE_CPPUNIT, true)
+else
+  AM_CONDITIONAL(HAVE_CPPUNIT, false)
+fi
+
 # Check for options
 AC_ARG_ENABLE(debug,
   [  --enable-debug          Turn on debugging],

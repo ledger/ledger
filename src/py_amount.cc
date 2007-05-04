@@ -22,6 +22,7 @@ amount_t py_round_2(amount_t& amount) {
   return amount.round();
 }
 
+#if 0
 struct commodity_updater_wrap : public commodity_base_t::updater_t
 {
   PyObject * self;
@@ -40,6 +41,7 @@ commodity_t * py_find_commodity(const string& symbol)
 {
   return commodity_t::find(symbol);
 }
+#endif
 
 #define EXC_TRANSLATOR(type)				\
   void exc_translate_ ## type(const type& err) {	\
@@ -211,23 +213,29 @@ void export_amount()
     .def("annotate_commodity", &amount_t::annotate_commodity)
     .def("strip_annotations", &amount_t::strip_annotations)
 
+#if 0
     .def("price", &amount_t::price)
     .def("date", &amount_t::date)
     .def("tag", &amount_t::tag)
+#endif
 
     .def("parse", py_parse_1)
     .def("parse", py_parse_2)
 
+#if 0
     .def("parse_conversion", &amount_t::parse_conversion)
     .staticmethod("parse_conversion")
+#endif
 
     .def("valid", &amount_t::valid)
     ;
 
+#if 0
   class_< commodity_base_t::updater_t, commodity_updater_wrap,
 	  boost::noncopyable >
     ("updater")
     ;
+#endif
 
   scope().attr("COMMODITY_STYLE_DEFAULTS")  = COMMODITY_STYLE_DEFAULTS;
   scope().attr("COMMODITY_STYLE_SUFFIXED")  = COMMODITY_STYLE_SUFFIXED;
@@ -237,8 +245,8 @@ void export_amount()
   scope().attr("COMMODITY_STYLE_NOMARKET")  = COMMODITY_STYLE_NOMARKET;
   scope().attr("COMMODITY_STYLE_BUILTIN")   = COMMODITY_STYLE_BUILTIN;
 
-  class_< commodity_t > ("commodity")
 #if 0
+  class_< commodity_t > ("commodity")
     .add_property("symbol", &commodity_t::symbol)
 
     .add_property("name", &commodity_t::name, &commodity_t::set_name)
@@ -272,8 +280,8 @@ void export_amount()
     .def("value", &commodity_t::value)
 
     .def("valid", &commodity_t::valid)
-#endif
     ;
+#endif
 
 #define EXC_TRANSLATE(type) \
   register_exception_translator<type>(&exc_translate_ ## type);
