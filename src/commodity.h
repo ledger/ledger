@@ -45,73 +45,70 @@
 
 namespace ledger {
 
-#define COMMODITY_STYLE_DEFAULTS   0x0000
-#define COMMODITY_STYLE_SUFFIXED   0x0001
-#define COMMODITY_STYLE_SEPARATED  0x0002
-#define COMMODITY_STYLE_EUROPEAN   0x0004
-#define COMMODITY_STYLE_THOUSANDS  0x0008
-#define COMMODITY_STYLE_NOMARKET   0x0010
-#define COMMODITY_STYLE_BUILTIN    0x0020
-
-class commodity_base_t : public noncopyable
-{
-private:
-  friend class commodity_pool_t;
-  friend class commodity_t;
-  friend class annotated_commodity_t;
-
-  typedef std::map<const moment_t, amount_t>  history_map;
-  typedef std::pair<const moment_t, amount_t> history_pair;
-
-  struct history_t {
-    history_map	prices;
-    ptime	last_lookup;
-  };
-
-  typedef uint_least8_t flags_t;
-
-  flags_t		flags;
-  string		symbol;
-  amount_t::precision_t	precision;
-  optional<string>	name;
-  optional<string>	note;
-  optional<history_t>	history;
-  optional<amount_t>	smaller;
-  optional<amount_t>	larger;
-
-public:
-  explicit commodity_base_t()
-    : flags(COMMODITY_STYLE_DEFAULTS), precision(0) {
-    TRACE_CTOR(commodity_base_t, "");
-  }
-  explicit commodity_base_t
-    (const string&	   _symbol,
-     amount_t::precision_t _precision = 0,
-     unsigned int          _flags     = COMMODITY_STYLE_DEFAULTS)
-    : flags(_flags), symbol(_symbol), precision(_precision) {
-    TRACE_CTOR(commodity_base_t,
-	       "const string&, amount_t::precision_t, unsigned int");
-  }
-  ~commodity_base_t() {
-    TRACE_DTOR(commodity_base_t);
-  }
-};
-
-class annotated_commodity_t;
-
 class commodity_t
   : public equality_comparable1<commodity_t, noncopyable>
 {
+  class base_t : public noncopyable
+  {
+  private:
+    friend class commodity_pool_t;
+    friend class commodity_t;
+
+    typedef std::map<const moment_t, amount_t>  history_map;
+    typedef std::pair<const moment_t, amount_t> history_pair;
+
+    struct history_t {
+      history_map	prices;
+      ptime	last_lookup;
+    };
+
+    typedef uint_least8_t flags_t;
+
+#define COMMODITY_STYLE_DEFAULTS   0x00
+#define COMMODITY_STYLE_SUFFIXED   0x01
+#define COMMODITY_STYLE_SEPARATED  0x02
+#define COMMODITY_STYLE_EUROPEAN   0x04
+#define COMMODITY_STYLE_THOUSANDS  0x08
+#define COMMODITY_STYLE_NOMARKET   0x10
+#define COMMODITY_STYLE_BUILTIN    0x20
+
+    flags_t		flags;
+    string		symbol;
+    amount_t::precision_t	precision;
+    optional<string>	name;
+    optional<string>	note;
+    optional<history_t>	history;
+    optional<amount_t>	smaller;
+    optional<amount_t>	larger;
+
+  public:
+    explicit base_t()
+      : flags(COMMODITY_STYLE_DEFAULTS), precision(0) {
+      TRACE_CTOR(base_t, "");
+    }
+    explicit base_t
+    (const string&	   _symbol,
+     amount_t::precision_t _precision = 0,
+     unsigned int          _flags     = COMMODITY_STYLE_DEFAULTS)
+      : flags(_flags), symbol(_symbol), precision(_precision) {
+      TRACE_CTOR(base_t,
+		 "const string&, amount_t::precision_t, unsigned int");
+    }
+    ~base_t() {
+      TRACE_DTOR(base_t);
+    }
+  };
+
 public:
   static bool symbol_needs_quotes(const string& symbol);
 
-  typedef commodity_base_t::flags_t	 flags_t;
-  typedef commodity_base_t::history_t	 history_t;
-  typedef commodity_base_t::history_map  history_map;
-  typedef commodity_base_t::history_pair history_pair;
+  typedef base_t::flags_t	 flags_t;
+  typedef base_t::history_t	 history_t;
+  typedef base_t::history_map  history_map;
+  typedef base_t::history_pair history_pair;
   typedef uint_least32_t		 ident_t;
 
-  shared_ptr<commodity_base_t> base;
+  shared_ptr<base_t> base;
 
   commodity_pool_t * parent_;
   ident_t	     ident;
@@ -121,7 +118,7 @@ public:
 
 public:
   explicit commodity_t(commodity_pool_t * _parent,
-		       const shared_ptr<commodity_base_t>& _base)
+		       const shared_ptr<base_t>& _base)
     : base(_base), parent_(_parent), annotated(false) {
     TRACE_CTOR(commodity_t, "");
   }
@@ -234,9 +231,10 @@ struct annotation_t : public equality_comparable<annotation_t>
   optional<moment_t>  date;
   optional<string>    tag;
 
-  explicit annotation_t(const optional<amount_t>& _price = optional<amount_t>(),
-			const optional<moment_t>& _date  = optional<moment_t>(),
-			const optional<string>&   _tag   = optional<string>())
+  explicit annotation_t
+    (const optional<amount_t>& _price = optional<amount_t>(),
+     const optional<moment_t>& _date  = optional<moment_t>(),
+     const optional<string>&   _tag   = optional<string>())
     : price(_price), date(_date), tag(_tag) {}
 
   operator bool() const {
@@ -267,7 +265,9 @@ inline std::ostream& operator<<(std::ostream& out, const annotation_t& details) 
 
 class annotated_commodity_t
   : public commodity_t,
-           equality_comparable1<annotated_commodity_t, noncopyable>
+           equality_comparable<annotated_commodity_t,
+           equality_comparable2<annotated_commodity_t, commodity_t,
+				noncopyable> >
 {
 public:
   commodity_t * ptr;
@@ -284,6 +284,9 @@ public:
   }
 
   virtual bool operator==(const commodity_t& comm) const;
+  virtual bool operator==(const annotated_commodity_t& comm) const {
+    return *this == static_cast<commodity_t&>(comm);
+  }
 
   commodity_t& referent() {
     return *ptr;
@@ -306,7 +309,6 @@ struct compare_amount_commodities {
 
 class commodity_pool_t : public noncopyable
 {
-public:
   /**
    * The commodities collection in commodity_pool_t maintains pointers
    * to all the commodities which have ever been created by the user,
@@ -332,6 +334,8 @@ public:
   > commodities_t;
 
   commodities_t commodities;
+
+public:
   commodity_t *	null_commodity;
   commodity_t *	default_commodity;
 

@@ -42,7 +42,7 @@ host_triplet = @host@
 @HAVE_XMLPARSE_TRUE@am__append_5 = src/gnucash.cc
 @HAVE_LIBOFX_TRUE@am__append_6 = -DHAVE_LIBOFX=1
 @HAVE_LIBOFX_TRUE@am__append_7 = src/ofx.cc
-@DEBUG_TRUE@am__append_8 = -DFULL_DEBUG
+@DEBUG_TRUE@am__append_8 = -DDEBUG_MODE
 @HAVE_BOOST_PYTHON_TRUE@am__append_9 = -DUSE_BOOST_PYTHON=1
 @HAVE_BOOST_PYTHON_TRUE@am__append_10 = src/pyinterp.cc
 @USE_PCH_TRUE@am__append_11 = system.hh.gch

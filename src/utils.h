@@ -1,7 +1,7 @@
 #ifndef _UTILS_H
 #define _UTILS_H
 
-#if defined(FULL_DEBUG)
+#if defined(DEBUG_MODE)
 #define BOOST_MULTI_INDEX_ENABLE_SAFE_MODE 1
 #define BOOST_MULTI_INDEX_ENABLE_INVARIANT_CHECKING 1
 #endif
@@ -13,13 +13,13 @@
  * Default values
  */
 
-#if defined(FULL_DEBUG)
+#if defined(DEBUG_MODE)
 #define VERIFY_ON   1
 #define TRACING_ON  1
 #define DEBUG_ON    1
 #define TIMERS_ON   1
 #define FREE_MEMORY 1
-#elif defined(NO_DEBUG)
+#elif defined(NDEBUG)
 #define NO_ASSERTS  1
 #define NO_LOGGING  1
 #else

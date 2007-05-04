@@ -49,12 +49,18 @@ fi
 # since there are no clients except a GUI tool which might use it (and
 # that is built again anyway by Xcode).
 SWITCHES="--disable-shared --enable-pch"
+CPPFLAGS="$INCDIRS"
+LDFLAGS="$LIBDIRS"
 
 
 while [ -n "$1" ]; do
   case "$1" in
     --debug)
 	SWITCHES="$SWITCHES --enable-debug"
+	if [ -f /usr/local/lib/libstlportstlg.a ]; then
+	    CPPFLAGS="-I/usr/local/include/stlport -D_STLP_DEBUG $CPPFLAGS"
+	    #LDFLAGS="-lstlportstlg $LDFLAGS"
+	fi
 	CXXFLAGS="$CXXFLAGS -g" ;;
 
     --prof | --perf)
@@ -96,5 +102,5 @@ if [ -d "$HOME/Products" ]; then
 fi
 
 "$HERE/configure" --srcdir="$HERE" \
-    CPPFLAGS="$INCDIRS" CXXFLAGS="$CXXFLAGS $local_cxxflags" \
-    LDFLAGS="$LIBDIRS" $SWITCHES "$@"
+    CPPFLAGS="$CPPFLAGS" CXXFLAGS="$CXXFLAGS $local_cxxflags" \
+    LDFLAGS="$LDFLAGS" $SWITCHES "$@"

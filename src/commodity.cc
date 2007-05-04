@@ -279,8 +279,9 @@ commodity_pool_t::commodity_pool_t() : default_commodity(NULL)
 
 commodity_t * commodity_pool_t::create(const string& symbol)
 {
-  shared_ptr<commodity_base_t> base_commodity(new commodity_base_t(symbol));
-  std::auto_ptr<commodity_t>   commodity(new commodity_t(this, base_commodity));
+  shared_ptr<commodity_t::base_t>
+    base_commodity(new commodity_t::base_t(symbol));
+  std::auto_ptr<commodity_t> commodity(new commodity_t(this, base_commodity));
 
   DEBUG("amounts.commodities", "Creating base commodity " << symbol);
 

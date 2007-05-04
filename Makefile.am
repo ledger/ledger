@@ -70,7 +70,7 @@ libledger_la_CPPFLAGS += -DHAVE_LIBOFX=1
 libledger_la_SOURCES += src/ofx.cc
 endif
 if DEBUG
-libledger_la_CPPFLAGS += -DFULL_DEBUG
+libledger_la_CPPFLAGS += -DDEBUG_MODE
 endif
 if HAVE_BOOST_PYTHON
 libledger_la_CPPFLAGS += -DUSE_BOOST_PYTHON=1
