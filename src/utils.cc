@@ -353,7 +353,6 @@ void report_memory(std::ostream& out, bool report_all)
   }
 }
 
-#if ! defined(USE_BOOST_PYTHON)
 
 string::string() : std::string() {
   TRACE_CTOR(string, "");
@@ -388,8 +387,6 @@ string::string(const char * str, int x, int y) : std::string(str, x, y) {
 string::~string() {
   TRACE_DTOR(string);
 }
-
-#endif
 
 } // namespace ledger
 

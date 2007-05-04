@@ -57,10 +57,12 @@ while [ -n "$1" ]; do
   case "$1" in
     --debug)
 	SWITCHES="$SWITCHES --enable-debug"
-	if [ -f /usr/local/lib/libstlportstlg.a ]; then
-	    CPPFLAGS="-I/usr/local/include/stlport -D_STLP_DEBUG $CPPFLAGS"
-	    #LDFLAGS="-lstlportstlg $LDFLAGS"
-	fi
+	#if [ -f /usr/local/lib/libstlportstlg.a ]; then
+	#    SWITCHES="$SWITCHES --enable-stlportg"
+	#    CPPFLAGS="-D_STLP_DEBUG $CPPFLAGS"
+	#    CPPFLAGS="-I/usr/local/include/stlport $CPPFLAGS"
+	#    LIBS="$LIBS -lstlportstlg"
+	#fi
 	CXXFLAGS="$CXXFLAGS -g" ;;
 
     --prof | --perf)
@@ -69,8 +71,8 @@ while [ -n "$1" ]; do
     --python)
 	if [ -d "$PYTHON_HOME" ]; then
 	    SWITCHES="$SWITCHES --enable-python"
-	    INCDIRS="$INCDIRS -I$PYTHON_HOME/include/python2.5"
-	    LIBDIRS="$LIBDIRS -L$PYTHON_HOME/lib/python2.5/config"
+	    CPPFLAGS="$CPPFLAGS -I$PYTHON_HOME/include/python2.5"
+	    LDFLAGS="$LDFLAGS -L$PYTHON_HOME/lib/python2.5/config"
 	fi ;;
 
     --opt)
@@ -103,4 +105,4 @@ fi
 
 "$HERE/configure" --srcdir="$HERE" \
     CPPFLAGS="$CPPFLAGS" CXXFLAGS="$CXXFLAGS $local_cxxflags" \
-    LDFLAGS="$LDFLAGS" $SWITCHES "$@"
+    LDFLAGS="$LDFLAGS" LIBS="$LIBS" $SWITCHES "$@"

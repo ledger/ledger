@@ -4,6 +4,8 @@ using namespace boost::python;
 
 namespace ledger {
 
+void export_utils();
+void export_times();
 void export_amount();
 #if 0
 void export_balance();
@@ -19,6 +21,8 @@ void export_valexpr();
 
 void initialize_for_python()
 {
+  export_utils();
+  export_times();
   export_amount();
 #if 0
   export_balance();

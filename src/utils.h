@@ -36,7 +36,7 @@
 namespace ledger {
   using namespace boost;
 
-#if defined(VERIFY_ON) && ! defined(USE_BOOST_PYTHON)
+#if defined(VERIFY_ON)
   class string;
 #else
   typedef std::string string;
@@ -115,8 +115,10 @@ void trace_dtor_func(void * ptr, const char * cls_name, std::size_t cls_size);
 
 void report_memory(std::ostream& out, bool report_all = false);
 
-#if ! defined(USE_BOOST_PYTHON)
-
+/**
+ * This string type is a wrapper around std::string that allows us to
+ * trace constructor and destructor calls.
+ */
 class string : public std::string
 {
 public:
@@ -176,8 +178,6 @@ inline bool operator!=(const char* __lhs, const string& __rhs)
 
 inline bool operator!=(const string& __lhs, const char* __rhs)
 { return __lhs.compare(__rhs) != 0; }
-
-#endif
 
 } // namespace ledger
 

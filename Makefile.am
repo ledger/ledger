@@ -95,6 +95,8 @@ libpyledger_la_CPPFLAGS = $(libledger_la_CPPFLAGS)
 libpyledger_la_LDFLAGS = -release 3.0
 
 libpyledger_la_SOURCES = \
+	src/py_utils.cc \
+	src/py_times.cc \
 	src/py_amount.cc
 
 
@@ -168,7 +170,11 @@ CLEANFILES += ledger.so
 clean-local:
 	rm -fr build
 
-ledger_so_SOURCES = src/pyledger.cc src/py_amount.cc
+ledger_so_SOURCES = \
+	src/pyledger.cc \
+	src/py_utils.cc \
+	src/py_times.cc \
+	src/py_amount.cc
 ledger_so_DEPENDENCIES = libledger.la gdtoa/libgdtoa.la libpyledger.la
 
 PYLIBS = pyledger ledger gdtoa gmp boost_date_time \
@@ -183,9 +189,6 @@ endif
 if HAVE_LIBOFX
 PYLIBS += ofx
 endif
-
-PYLEDGER_SRC = src/pyledger.cc \
-	   src/py_amount.cc
 
 ledger.so: $(ledger_so_SOURCES) $(ledger_so_DEPENDENCIES)
 	CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libledger_la_CPPFLAGS)" \
