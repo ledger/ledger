@@ -168,7 +168,7 @@ CLEANFILES += ledger.so
 clean-local:
 	rm -fr build
 
-ledger_so_SOURCES = src/pyledger.cc
+ledger_so_SOURCES = src/pyledger.cc src/py_amount.cc
 ledger_so_DEPENDENCIES = libledger.la gdtoa/libgdtoa.la libpyledger.la
 
 PYLIBS = pyledger ledger gdtoa gmp boost_date_time \
@@ -184,19 +184,19 @@ if HAVE_LIBOFX
 PYLIBS += ofx
 endif
 
-ledger.so: src/pyledger.cc \
-	   libledger.la gdtoa/libgdtoa.la libpyledger.la
-	SRCDIR="$(srcdir)" \
+PYLEDGER_SRC = src/pyledger.cc \
+	   src/py_amount.cc
+
+ledger.so: $(ledger_so_SOURCES) $(ledger_so_DEPENDENCIES)
 	CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libledger_la_CPPFLAGS)" \
 	LDFLAGS="$(LDFLAGS) -L. -L.libs -Lgdtoa -Lgdtoa/.libs" \
-	PYLIBS="$(PYLIBS)" \
+	PYLIBS="$(PYLIBS)" SRCDIR="$(srcdir)" \
 	    python $(srcdir)/setup.py build --build-lib=.
 
 install-exec-hook:
-	SRCDIR="$(srcdir)" \
 	CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libledger_la_CPPFLAGS)" \
 	LDFLAGS="$(LDFLAGS) -L. -L.libs -Lgdtoa -Lgdtoa/.libs" \
-	PYLIBS="$(PYLIBS)" \
+	PYLIBS="$(PYLIBS)" SRCDIR="$(srcdir)" \
 	    python $(srcdir)/setup.py install --prefix=$(prefix)
 
 endif

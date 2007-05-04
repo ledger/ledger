@@ -34,11 +34,14 @@ void export_amount()
   scope().attr("AMOUNT_PARSE_NO_REDUCE")  = AMOUNT_PARSE_NO_REDUCE;
 
   class_< amount_t > ("amount")
+#if 0
     .def("initialize", &amount_t::initialize)
     .staticmethod("initialize")
     .def("shutdown", &amount_t::shutdown)
     .staticmethod("shutdown")
+#endif
 
+#if 0
     .add_static_property("keep_base", &amount_t::keep_base)
 
     .add_static_property("keep_price", &amount_t::keep_price)
@@ -46,6 +49,7 @@ void export_amount()
     .add_static_property("keep_tag", &amount_t::keep_tag)
 
     .add_static_property("full_strings", &amount_t::full_strings)
+#endif
 
     .def(init<double>())
     .def(init<long>())

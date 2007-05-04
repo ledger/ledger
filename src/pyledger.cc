@@ -37,8 +37,12 @@ void initialize_for_python()
 
 ledger::session_t python_session;
 
+void hello() {
+  std::cout << "Hello, world!" << std::endl;
+}
+
 BOOST_PYTHON_MODULE(ledger)
 {
-  ledger::initialize_for_python();
   ledger::set_session_context(&python_session);
+  ledger::initialize_for_python();
 }

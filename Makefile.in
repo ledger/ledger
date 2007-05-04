@@ -147,8 +147,9 @@ ledger_DEPENDENCIES = $(LIBOBJS) libledger.la gdtoa/libgdtoa.la \
 ledger_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CXXLD) $(ledger_CXXFLAGS) $(CXXFLAGS) \
 	$(ledger_LDFLAGS) $(LDFLAGS) -o $@
-am__ledger_so_SOURCES_DIST = src/pyledger.cc
-@HAVE_BOOST_PYTHON_TRUE@am_ledger_so_OBJECTS = pyledger.$(OBJEXT)
+am__ledger_so_SOURCES_DIST = src/pyledger.cc src/py_amount.cc
+@HAVE_BOOST_PYTHON_TRUE@am_ledger_so_OBJECTS = pyledger.$(OBJEXT) \
+@HAVE_BOOST_PYTHON_TRUE@	py_amount.$(OBJEXT)
 ledger_so_OBJECTS = $(am_ledger_so_OBJECTS)
 ledger_so_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I.@am__isrc@
@@ -424,13 +425,16 @@ info_TEXINFOS = docs/ledger.texi
 
 ######################################################################
 dist_lisp_LISP = lisp/ledger.el lisp/timeclock.el
-@HAVE_BOOST_PYTHON_TRUE@ledger_so_SOURCES = src/pyledger.cc
+@HAVE_BOOST_PYTHON_TRUE@ledger_so_SOURCES = src/pyledger.cc src/py_amount.cc
 @HAVE_BOOST_PYTHON_TRUE@ledger_so_DEPENDENCIES = libledger.la gdtoa/libgdtoa.la libpyledger.la
 @HAVE_BOOST_PYTHON_TRUE@PYLIBS = pyledger ledger gdtoa gmp \
 @HAVE_BOOST_PYTHON_TRUE@	boost_date_time boost_signals \
 @HAVE_BOOST_PYTHON_TRUE@	boost_filesystem boost_regex \
 @HAVE_BOOST_PYTHON_TRUE@	boost_python $(am__append_15) \
 @HAVE_BOOST_PYTHON_TRUE@	$(am__append_16) $(am__append_17)
+@HAVE_BOOST_PYTHON_TRUE@PYLEDGER_SRC = src/pyledger.cc \
+@HAVE_BOOST_PYTHON_TRUE@	   src/py_amount.cc
+
 nodist_UnitTests_SOURCES = tests/UnitTests.cc \
 	\
 	tests/numerics/BasicAmount.cc \
@@ -624,6 +628,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libledger_la-xmlparse.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libledger_la-xpath.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpyledger_la-py_amount.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/py_amount.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pyledger.Po@am__quote@
 
 .cc.o:
@@ -954,6 +959,20 @@ pyledger.obj: src/pyledger.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/pyledger.cc' object='pyledger.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o pyledger.obj `if test -f 'src/pyledger.cc'; then $(CYGPATH_W) 'src/pyledger.cc'; else $(CYGPATH_W) '$(srcdir)/src/pyledger.cc'; fi`
+
+py_amount.o: src/py_amount.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT py_amount.o -MD -MP -MF $(DEPDIR)/py_amount.Tpo -c -o py_amount.o `test -f 'src/py_amount.cc' || echo '$(srcdir)/'`src/py_amount.cc
+@am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/py_amount.Tpo $(DEPDIR)/py_amount.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/py_amount.cc' object='py_amount.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o py_amount.o `test -f 'src/py_amount.cc' || echo '$(srcdir)/'`src/py_amount.cc
+
+py_amount.obj: src/py_amount.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT py_amount.obj -MD -MP -MF $(DEPDIR)/py_amount.Tpo -c -o py_amount.obj `if test -f 'src/py_amount.cc'; then $(CYGPATH_W) 'src/py_amount.cc'; else $(CYGPATH_W) '$(srcdir)/src/py_amount.cc'; fi`
+@am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/py_amount.Tpo $(DEPDIR)/py_amount.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/py_amount.cc' object='py_amount.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o py_amount.obj `if test -f 'src/py_amount.cc'; then $(CYGPATH_W) 'src/py_amount.cc'; else $(CYGPATH_W) '$(srcdir)/src/py_amount.cc'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -1754,19 +1773,16 @@ dist-hook:
 @HAVE_BOOST_PYTHON_TRUE@clean-local:
 @HAVE_BOOST_PYTHON_TRUE@	rm -fr build
 
-@HAVE_BOOST_PYTHON_TRUE@ledger.so: src/pyledger.cc \
-@HAVE_BOOST_PYTHON_TRUE@	   libledger.la gdtoa/libgdtoa.la libpyledger.la
-@HAVE_BOOST_PYTHON_TRUE@	SRCDIR="$(srcdir)" \
+@HAVE_BOOST_PYTHON_TRUE@ledger.so: $(ledger_so_SOURCES) $(ledger_so_DEPENDENCIES)
 @HAVE_BOOST_PYTHON_TRUE@	CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libledger_la_CPPFLAGS)" \
 @HAVE_BOOST_PYTHON_TRUE@	LDFLAGS="$(LDFLAGS) -L. -L.libs -Lgdtoa -Lgdtoa/.libs" \
-@HAVE_BOOST_PYTHON_TRUE@	PYLIBS="$(PYLIBS)" \
+@HAVE_BOOST_PYTHON_TRUE@	PYLIBS="$(PYLIBS)" SRCDIR="$(srcdir)" \
 @HAVE_BOOST_PYTHON_TRUE@	    python $(srcdir)/setup.py build --build-lib=.
 
 @HAVE_BOOST_PYTHON_TRUE@install-exec-hook:
-@HAVE_BOOST_PYTHON_TRUE@	SRCDIR="$(srcdir)" \
 @HAVE_BOOST_PYTHON_TRUE@	CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libledger_la_CPPFLAGS)" \
 @HAVE_BOOST_PYTHON_TRUE@	LDFLAGS="$(LDFLAGS) -L. -L.libs -Lgdtoa -Lgdtoa/.libs" \
-@HAVE_BOOST_PYTHON_TRUE@	PYLIBS="$(PYLIBS)" \
+@HAVE_BOOST_PYTHON_TRUE@	PYLIBS="$(PYLIBS)" SRCDIR="$(srcdir)" \
 @HAVE_BOOST_PYTHON_TRUE@	    python $(srcdir)/setup.py install --prefix=$(prefix)
 
 PyUnitTests: $(srcdir)/tests/python/PyUnitTests.py
