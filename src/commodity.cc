@@ -267,14 +267,6 @@ commodity_pool_t::commodity_pool_t() : default_commodity(NULL)
   null_commodity = create("");
   null_commodity->add_flags(COMMODITY_STYLE_NOMARKET |
 			    COMMODITY_STYLE_BUILTIN);
-
-  // Add time commodity conversions, so that timelog's may be parsed
-  // in terms of seconds, but reported as minutes or hours.
-  commodity_t * commodity = create("s");
-  commodity->add_flags(COMMODITY_STYLE_NOMARKET | COMMODITY_STYLE_BUILTIN);
-
-  amount_t::parse_conversion(*this, "1.0m", "60s");
-  amount_t::parse_conversion(*this, "1.0h", "60m");
 }
 
 commodity_t * commodity_pool_t::create(const string& symbol)

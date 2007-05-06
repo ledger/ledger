@@ -88,8 +88,6 @@ public:
   static void shutdown();
 
 public:
-  class bigint_t;
-
   typedef uint_least16_t precision_t;
 
   /**
@@ -150,6 +148,8 @@ protected:
   void _clear();
   void _release();
 
+  class bigint_t;
+
   bigint_t *	quantity;
   commodity_t *	commodity_;
 
@@ -201,7 +201,7 @@ public:
 
   /**
    * Destructor.  Releases the reference count held for the underlying
-   * bigint_t object.
+   * bigint_t object pointed to be `quantity'.
    */
   ~amount_t() {
     TRACE_DTOR(amount_t);
@@ -506,16 +506,10 @@ public:
    * defined which simply calls parse on the input stream.  The
    * `parse' method has two forms:
    *
-   * parse(commodity_pool_t, istream, flags_t) parses an
-   * amount from the given input stream, registering commodity details
-   * according to the commodity pool which is passed in as the first
-   * parameter.
+   * parse(istream, flags_t) parses an amount from the given input
+   * stream.
    *
-   * parse(istream, flags_t) is the same as the preceding function,
-   * only it uses `amount_t::default_pool' as the commodity pool.
-   *
-   * parse(commodity_pool_t, string, flags_t) parses an amount from
-   * the given string.
+   * parse(string, flags_t) parses an amount from the given string.
    *
    * parse(string, flags_t) also parses an amount from a string.
    *
@@ -551,30 +545,14 @@ public:
 
   typedef uint_least8_t flags_t;
 
-  void parse(commodity_pool_t& parent, std::istream& in, flags_t flags = 0);
-  void parse(commodity_pool_t& parent, const string& str, flags_t flags = 0) {
-    std::istringstream stream(str);
-    parse(parent, stream, flags);
-  }
-
-  void parse(std::istream& in, flags_t flags = 0) {
-    assert(default_pool);
-    parse(*default_pool, in, flags);
-  }
+  void parse(std::istream& in, flags_t flags = 0);
   void parse(const string& str, flags_t flags = 0) {
-    assert(default_pool);
-    parse(*default_pool, str, flags);
+    std::istringstream stream(str);
+    parse(stream, flags);
   }
-
-  static void parse_conversion(commodity_pool_t& parent,
-			       const string& larger_str,
-			       const string& smaller_str);
 
   static void parse_conversion(const string& larger_str,
-			       const string& smaller_str) {
-    assert(default_pool);
-    parse_conversion(*default_pool, larger_str, smaller_str);
-  }
+			       const string& smaller_str);
 
   /**
    * Printing methods.  An amount may be output to a stream using the
@@ -600,40 +578,23 @@ public:
    * input stream or a character pointer, and it may be serialized to
    * an output stream.  The methods used are:
    *
-   * read(commodity_pool_t, istream) reads an amount from the given
-   * input stream.  It must have been put there using
-   * `write(ostream)'.  Also, the given pool must be exactly what it
-   * was at the time the amount was `written'.  Thus, the required
+   * read(istream) reads an amount from the given input stream.  It
+   * must have been put there using `write(ostream)'.  The required
    * flow of logic is:
-   *   amount.write(out)
-   *   pool.write(out)
-   *   pool.read(in)
-   *   amount.read(pool, in)
+   *   amount_t::default_pool->write(out)
+   *   amount.write(out)	// write out all amounts
+   *   amount_t::default_pool->read(in)
+   *   amount.read(in)
    *
-   * read(istream) does the same as read, only it relies on
-   * `amount_t::default_pool' to specify the pool.
-   *
-   * read(commodity_pool_t, char *&) reads an amount from data which
-   * has been read from an input stream into a buffer.  it advances
-   * the pointer passed in to the end of the deserialized amount.
-   *
-   * read(char *&) does the same as read, only it relies on
-   * `amount_t::default_pool' to specify the pool.
+   * read(char *&) reads an amount from data which has been read from
+   * an input stream into a buffer.  It advances the pointer passed in
+   * to the end of the deserialized amount.
    *
    * write(ostream) writes an amount to an output stream in a compact
    * binary format.
    */
-  void read(commodity_pool_t& parent, std::istream& in);
-  void read(commodity_pool_t& parent, char *& data);
-
-  void read(std::istream& in) {
-    assert(default_pool);
-    read(*default_pool, in);
-  }
-  void read(char *& data) {
-    assert(default_pool);
-    read(*default_pool, data);
-  }
+  void read(std::istream& in);
+  void read(char *& data);
 
   void write(std::ostream& out) const;
 
@@ -665,9 +626,7 @@ public:
   bool valid() const;
 
 private:
-  friend bool parse_annotations(commodity_pool_t& parent,
-				std::istream&	  in,
-				annotation_t&	  details);
+  friend bool parse_annotations(std::istream& in, annotation_t& details);
 };
 
 inline amount_t amount_t::exact(const string& value) {

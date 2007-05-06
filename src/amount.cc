@@ -56,17 +56,15 @@ bool amount_t::keep_tag	    = false;
 
 bool amount_t::full_strings = false;
 
-#define BIGINT_BULK_ALLOC 0x0001
-#define BIGINT_KEEP_PREC  0x0002
+#define BIGINT_BULK_ALLOC 0x01
+#define BIGINT_KEEP_PREC  0x02
 
 class amount_t::bigint_t
 {
  public:
-  typedef uint8_t precision_t;
-
   mpz_t		 val;
   precision_t	 prec;
-  uint8_t	 flags;
+  flags_t	 flags;
   uint_least16_t ref;
   uint_fast32_t	 index;
 
@@ -87,10 +85,6 @@ class amount_t::bigint_t
   ~bigint_t();
 };
 
-std::size_t sizeof_bigint_t() {
-  return sizeof(amount_t::bigint_t);
-}
-
 #define MPZ(x) ((x)->val)
 
 #ifndef THREADSAFE
@@ -98,11 +92,9 @@ static mpz_t temp;		// these are the global temp variables
 static mpz_t divisor;
 #endif
 
-static amount_t::bigint_t * true_value = NULL;
-
 inline amount_t::bigint_t::~bigint_t() {
   TRACE_DTOR(bigint_t);
-  assert(ref == 0 || this == true_value);
+  assert(ref == 0);
   mpz_clear(val);
 }
 
@@ -115,8 +107,16 @@ void amount_t::initialize()
   if (! default_pool)
     default_pool = new commodity_pool_t;
 
-  true_value = new amount_t::bigint_t;
-  mpz_set_ui(true_value->val, 1);
+  // Add time commodity conversions, so that timelog's may be parsed
+  // in terms of seconds, but reported as minutes or hours.
+  if (commodity_t * commodity = default_pool->create("s")) {
+    commodity->add_flags(COMMODITY_STYLE_NOMARKET | COMMODITY_STYLE_BUILTIN);
+
+    parse_conversion("1.0m", "60s");
+    parse_conversion("1.0h", "60m");
+  } else {
+    assert(false);
+  }
 }
 
 void amount_t::shutdown()
@@ -129,11 +129,6 @@ void amount_t::shutdown()
     checked_delete(default_pool);
     default_pool = NULL;
   }
-
-  true_value->ref--;
-  assert(true_value->ref == 0);
-  checked_delete(true_value);
-  true_value = NULL;
 }
 
 void amount_t::_init()
@@ -221,7 +216,7 @@ void amount_t::_release()
 
 
 namespace {
-  amount_t::bigint_t::precision_t convert_double(mpz_t dest, double val)
+  amount_t::precision_t convert_double(mpz_t dest, double val)
   {
 #ifndef HAVE_GDTOA
     // This code is far too imprecise to be worthwhile.
@@ -261,7 +256,7 @@ namespace {
     mpz_set_str(dest, buf, 10);
     free(buf);
 
-    return amount_t::bigint_t::precision_t(exp);
+    return amount_t::precision_t(exp);
 #else
     int decpt, sign;
     char * buf = dtoa(val, 0, 0, &decpt, &sign, NULL);
@@ -868,9 +863,7 @@ static void parse_commodity(std::istream& in, string& symbol)
   symbol = buf;
 }
 
-bool parse_annotations(commodity_pool_t& parent,
-		       std::istream&	 in,
-		       annotation_t&	 details)
+bool parse_annotations(std::istream& in, annotation_t& details)
 {
   do {
     char buf[256];
@@ -887,7 +880,7 @@ bool parse_annotations(commodity_pool_t& parent,
 	throw_(amount_error, "Commodity price lacks closing brace");
 
       amount_t temp;
-      temp.parse(parent, buf, AMOUNT_PARSE_NO_MIGRATE);
+      temp.parse(buf, AMOUNT_PARSE_NO_MIGRATE);
       temp.in_place_reduce();
 
       // Since this price will maintain its own precision, make sure
@@ -943,7 +936,7 @@ bool parse_annotations(commodity_pool_t& parent,
   return details;
 }
 
-void amount_t::parse(commodity_pool_t& parent, std::istream& in, uint8_t flags)
+void amount_t::parse(std::istream& in, flags_t flags)
 {
   // The possible syntax for an amount is:
   //
@@ -977,7 +970,7 @@ void amount_t::parse(commodity_pool_t& parent, std::istream& in, uint8_t flags)
 	comm_flags |= COMMODITY_STYLE_SUFFIXED;
 
       if (! in.eof() && ((n = in.peek()) != '\n'))
-	parse_annotations(parent, in, details);
+	parse_annotations(in, details);
     }
   } else {
     parse_commodity(in, symbol);
@@ -989,7 +982,7 @@ void amount_t::parse(commodity_pool_t& parent, std::istream& in, uint8_t flags)
       parse_quantity(in, quant);
 
       if (! quant.empty() && ! in.eof() && ((n = in.peek()) != '\n'))
-	parse_annotations(parent, in, details);
+	parse_annotations(in, details);
     }
   }
 
@@ -1006,15 +999,15 @@ void amount_t::parse(commodity_pool_t& parent, std::istream& in, uint8_t flags)
   if (symbol.empty()) {
     commodity_ = NULL;
   } else {
-    commodity_ = parent.find(symbol);
+    commodity_ = default_pool->find(symbol);
     if (! commodity_) {
-      commodity_ = parent.create(symbol);
+      commodity_ = default_pool->create(symbol);
       newly_created = true;
     }
     assert(commodity_);
 
     if (details)
-      commodity_ = parent.find_or_create(*commodity_, details);
+      commodity_ = default_pool->find_or_create(*commodity_, details);
   }
 
   // Determine the precision of the amount, based on the usage of
@@ -1085,14 +1078,13 @@ void amount_t::parse(commodity_pool_t& parent, std::istream& in, uint8_t flags)
     in_place_reduce();
 }
 
-void amount_t::parse_conversion(commodity_pool_t& parent,
-				const string& larger_str,
+void amount_t::parse_conversion(const string& larger_str,
 				const string& smaller_str)
 {
   amount_t larger, smaller;
 
-  larger.parse(parent, larger_str, AMOUNT_PARSE_NO_REDUCE);
-  smaller.parse(parent, smaller_str, AMOUNT_PARSE_NO_REDUCE);
+  larger.parse(larger_str, AMOUNT_PARSE_NO_REDUCE);
+  smaller.parse(smaller_str, AMOUNT_PARSE_NO_REDUCE);
 
   larger *= smaller.number();
 
@@ -1128,8 +1120,8 @@ void amount_t::print(std::ostream& _out, bool omit_commodity,
   // Ensure the value is rounded to the commodity's precision before
   // outputting it.  NOTE: `rquotient' is used here as a temp variable!
 
-  commodity_t&	comm(base.commodity());
-  bigint_t::precision_t precision = 0;
+  commodity_t& comm(base.commodity());
+  precision_t  precision = 0;
 
   if (quantity) {
     if (! comm || full_precision || base.quantity->flags & BIGINT_KEEP_PREC) {
@@ -1285,32 +1277,32 @@ void amount_t::print(std::ostream& _out, bool omit_commodity,
 }
 
 
-void amount_t::read(commodity_pool_t& parent, std::istream& in)
+void amount_t::read(std::istream& in)
 {
   commodity_t::ident_t ident;
   read_binary_long(in, ident);
   if (ident == 0xffffffff)
     commodity_ = NULL;
   else if (ident == 0)
-    commodity_ = parent.null_commodity;
+    commodity_ = default_pool->null_commodity;
   else {
-    commodity_ = parent.find(ident - 1);
+    commodity_ = default_pool->find(ident - 1);
     assert(commodity_);
   }
 
   read_quantity(in);
 }
 
-void amount_t::read(commodity_pool_t& parent, char *& data)
+void amount_t::read(char *& data)
 {
   commodity_t::ident_t ident;
   read_binary_long(data, ident);
   if (ident == 0xffffffff)
     commodity_ = NULL;
   else if (ident == 0)
-    commodity_ = parent.null_commodity;
+    commodity_ = default_pool->null_commodity;
   else {
-    commodity_ = parent.find(ident - 1);
+    commodity_ = default_pool->find(ident - 1);
     assert(commodity_);
   }
 
@@ -1355,10 +1347,10 @@ void amount_t::read_quantity(char *& data)
     if (negative)
       mpz_neg(MPZ(quantity), MPZ(quantity));
 
-    quantity->prec = *((bigint_t::precision_t *) data);
-    data += sizeof(bigint_t::precision_t);
-    quantity->flags = *((uint8_t *) data);
-    data += sizeof(uint8_t);
+    quantity->prec = *((precision_t *) data);
+    data += sizeof(precision_t);
+    quantity->flags = *((flags_t *) data);
+    data += sizeof(flags_t);
     quantity->flags |= BIGINT_BULK_ALLOC;
   } else {
     uint_fast32_t index = *((uint_fast32_t *) data);
@@ -1436,7 +1428,7 @@ void amount_t::write_quantity(std::ostream& out) const
     out.write(&byte, sizeof(byte));
 
     out.write((char *)&quantity->prec, sizeof(quantity->prec));
-    uint8_t flags = quantity->flags & ~BIGINT_BULK_ALLOC;
+    flags_t flags = quantity->flags & ~BIGINT_BULK_ALLOC;
     assert(sizeof(flags) == sizeof(quantity->flags));
     out.write((char *)&flags, sizeof(flags));
   } else {

@@ -393,26 +393,6 @@ public:
 
   commodity_t * find_or_create(commodity_t&	   comm,
 			       const annotation_t& details);
-
-  void parse_amount(amount_t& amount, std::istream& in,
-		    amount_t::flags_t flags = 0) {
-    amount.parse(*this, in, flags);
-  }
-  void parse_amount(amount_t& amount, const string& str,
-		    amount_t::flags_t flags = 0) {
-    amount.parse(*this, str, flags);
-  }
-
-  amount_t parse_amount(std::istream& in, amount_t::flags_t flags = 0) {
-    amount_t temp;
-    parse_amount(temp, in, flags);
-    return temp;
-  }
-  amount_t parse_amount(const string& str, amount_t::flags_t flags = 0) {
-    amount_t temp;
-    parse_amount(temp, str, flags);
-    return temp;
-  }
 };
 
 } // namespace ledger
