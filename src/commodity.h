@@ -73,14 +73,14 @@ class commodity_t
 #define COMMODITY_STYLE_NOMARKET   0x10
 #define COMMODITY_STYLE_BUILTIN    0x20
 
-    flags_t		flags;
-    string		symbol;
-    amount_t::precision_t	precision;
-    optional<string>	name;
-    optional<string>	note;
-    optional<history_t>	history;
-    optional<amount_t>	smaller;
-    optional<amount_t>	larger;
+    flags_t		  flags;
+    string		  symbol;
+    amount_t::precision_t precision;
+    optional<string>	  name;
+    optional<string>	  note;
+    optional<history_t>	  history;
+    optional<amount_t>	  smaller;
+    optional<amount_t>	  larger;
 
   public:
     explicit base_t()

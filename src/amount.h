@@ -148,7 +148,7 @@ protected:
   void _clear();
   void _release();
 
-  class bigint_t;
+  struct bigint_t;
 
   bigint_t *	quantity;
   commodity_t *	commodity_;
@@ -278,6 +278,11 @@ public:
    * Unary arithmetic operators.  There are several unary methods
    * support on amounts:
    *
+   * precision() return an amount's current, internal precision.  To
+   * find the precision it will be displayed at -- assuming it was not
+   * created using the static method `amount_t::exact' -- refer to
+   * commodity().precision.
+   *
    * negate(), also unary minus (- x), returns the negated value of an
    * amount.
    *
@@ -318,6 +323,8 @@ public:
    * in_place_reduce()
    * in_place_unreduce()
    */
+  precision_t precision() const;
+
   amount_t negate() const {
     amount_t temp = *this;
     temp.in_place_negate();
@@ -624,9 +631,6 @@ public:
   }
 
   bool valid() const;
-
-private:
-  friend bool parse_annotations(std::istream& in, annotation_t& details);
 };
 
 inline amount_t amount_t::exact(const string& value) {

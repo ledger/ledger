@@ -56,17 +56,27 @@ bool amount_t::keep_tag	    = false;
 
 bool amount_t::full_strings = false;
 
+#ifndef THREADSAFE
+/**
+ * These global temporaries are pre-initialized for the sake of
+ * efficiency, and reused over and over again.
+ */
+static mpz_t temp;
+static mpz_t divisor;
+#endif
+
+struct amount_t::bigint_t
+{
 #define BIGINT_BULK_ALLOC 0x01
 #define BIGINT_KEEP_PREC  0x02
 
-class amount_t::bigint_t
-{
- public:
   mpz_t		 val;
   precision_t	 prec;
   flags_t	 flags;
   uint_least16_t ref;
   uint_fast32_t	 index;
+
+#define MPZ(bigint) ((bigint)->val)
 
   bigint_t() : prec(0), flags(0), ref(1), index(0) {
     TRACE_CTOR(bigint_t, "");
@@ -82,21 +92,12 @@ class amount_t::bigint_t
     TRACE_CTOR(bigint_t, "copy");
     mpz_init_set(val, other.val);
   }
-  ~bigint_t();
+  ~bigint_t() {
+    TRACE_DTOR(bigint_t);
+    assert(ref == 0);
+    mpz_clear(val);
+  }
 };
-
-#define MPZ(x) ((x)->val)
-
-#ifndef THREADSAFE
-static mpz_t temp;		// these are the global temp variables
-static mpz_t divisor;
-#endif
-
-inline amount_t::bigint_t::~bigint_t() {
-  TRACE_DTOR(bigint_t);
-  assert(ref == 0);
-  mpz_clear(val);
-}
 
 void amount_t::initialize()
 {
@@ -582,6 +583,11 @@ amount_t& amount_t::operator/=(const amount_t& amt)
 }
 
 
+amount_t::precision_t amount_t::precision() const
+{
+  return quantity->prec;
+}
+
 amount_t& amount_t::in_place_negate()
 {
   if (quantity) {
@@ -805,135 +811,137 @@ annotation_t amount_t::annotation_details() const
   return annotation_t();
 }
 
-static void parse_quantity(std::istream& in, string& value)
-{
-  char buf[256];
-  char c = peek_next_nonws(in);
-  READ_INTO(in, buf, 255, c,
-	    std::isdigit(c) || c == '-' || c == '.' || c == ',');
-
-  int len = std::strlen(buf);
-  while (len > 0 && ! std::isdigit(buf[len - 1])) {
-    buf[--len] = '\0';
-    in.unget();
-  }
-
-  value = buf;
-}
-
-// Invalid commodity characters:
-//   SPACE, TAB, NEWLINE, RETURN
-//   0-9 . , ; - + * / ^ ? : & | ! =
-//   < > { } [ ] ( ) @
-
-int invalid_chars[256] = {
-      /* 0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f */
-/* 00 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0,
-/* 10 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-/* 20 */ 1, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1,
-/* 30 */ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-/* 40 */ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-/* 50 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0,
-/* 60 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-/* 70 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0,
-/* 80 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-/* 90 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-/* a0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-/* b0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-/* c0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-/* d0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-/* e0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-/* f0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-};
-
-static void parse_commodity(std::istream& in, string& symbol)
-{
-  char buf[256];
-  char c = peek_next_nonws(in);
-  if (c == '"') {
-    in.get(c);
-    READ_INTO(in, buf, 255, c, c != '"');
-    if (c == '"')
-      in.get(c);
-    else
-      throw_(amount_error, "Quoted commodity symbol lacks closing quote");
-  } else {
-    READ_INTO(in, buf, 255, c, ! invalid_chars[(unsigned char)c]);
-  }
-  symbol = buf;
-}
-
-bool parse_annotations(std::istream& in, annotation_t& details)
-{
-  do {
+namespace {
+  void parse_quantity(std::istream& in, string& value)
+  {
     char buf[256];
     char c = peek_next_nonws(in);
-    if (c == '{') {
-      if (details.price)
-	throw_(amount_error, "Commodity specifies more than one price");
+    READ_INTO(in, buf, 255, c,
+	      std::isdigit(c) || c == '-' || c == '.' || c == ',');
 
+    int len = std::strlen(buf);
+    while (len > 0 && ! std::isdigit(buf[len - 1])) {
+      buf[--len] = '\0';
+      in.unget();
+    }
+
+    value = buf;
+  }
+
+  // Invalid commodity characters:
+  //   SPACE, TAB, NEWLINE, RETURN
+  //   0-9 . , ; - + * / ^ ? : & | ! =
+  //   < > { } [ ] ( ) @
+
+  int invalid_chars[256] = {
+    /* 0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f */
+    /* 00 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0,
+    /* 10 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* 20 */ 1, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1,
+    /* 30 */ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    /* 40 */ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* 50 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0,
+    /* 60 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* 70 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0,
+    /* 80 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* 90 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* a0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* b0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* c0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* d0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* e0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* f0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  };
+
+  static void parse_commodity(std::istream& in, string& symbol)
+  {
+    char buf[256];
+    char c = peek_next_nonws(in);
+    if (c == '"') {
       in.get(c);
-      READ_INTO(in, buf, 255, c, c != '}');
-      if (c == '}')
+      READ_INTO(in, buf, 255, c, c != '"');
+      if (c == '"')
 	in.get(c);
       else
-	throw_(amount_error, "Commodity price lacks closing brace");
-
-      amount_t temp;
-      temp.parse(buf, AMOUNT_PARSE_NO_MIGRATE);
-      temp.in_place_reduce();
-
-      // Since this price will maintain its own precision, make sure
-      // it is at least as large as the base commodity, since the user
-      // may have only specified {$1} or something similar.
-
-      if (temp.has_commodity() &&
-	  temp.quantity->prec < temp.commodity().precision())
-	temp = temp.round();	// no need to retain individual precision
-
-      details.price = temp;
+	throw_(amount_error, "Quoted commodity symbol lacks closing quote");
+    } else {
+      READ_INTO(in, buf, 255, c, ! invalid_chars[(unsigned char)c]);
     }
-    else if (c == '[') {
-      if (details.date)
-	throw_(amount_error, "Commodity specifies more than one date");
+    symbol = buf;
+  }
 
-      in.get(c);
-      READ_INTO(in, buf, 255, c, c != ']');
-      if (c == ']')
+  bool parse_annotations(std::istream& in, annotation_t& details)
+  {
+    do {
+      char buf[256];
+      char c = peek_next_nonws(in);
+      if (c == '{') {
+	if (details.price)
+	  throw_(amount_error, "Commodity specifies more than one price");
+
 	in.get(c);
-      else
-	throw_(amount_error, "Commodity date lacks closing bracket");
+	READ_INTO(in, buf, 255, c, c != '}');
+	if (c == '}')
+	  in.get(c);
+	else
+	  throw_(amount_error, "Commodity price lacks closing brace");
 
-      details.date = parse_datetime(buf);
-    }
-    else if (c == '(') {
-      if (details.tag)
-	throw_(amount_error, "Commodity specifies more than one tag");
+	amount_t temp;
+	temp.parse(buf, AMOUNT_PARSE_NO_MIGRATE);
+	temp.in_place_reduce();
 
-      in.get(c);
-      READ_INTO(in, buf, 255, c, c != ')');
-      if (c == ')')
+	// Since this price will maintain its own precision, make sure
+	// it is at least as large as the base commodity, since the user
+	// may have only specified {$1} or something similar.
+
+	if (temp.has_commodity() &&
+	    temp.precision() < temp.commodity().precision())
+	  temp = temp.round();	// no need to retain individual precision
+
+	details.price = temp;
+      }
+      else if (c == '[') {
+	if (details.date)
+	  throw_(amount_error, "Commodity specifies more than one date");
+
 	in.get(c);
-      else
-	throw_(amount_error, "Commodity tag lacks closing parenthesis");
+	READ_INTO(in, buf, 255, c, c != ']');
+	if (c == ']')
+	  in.get(c);
+	else
+	  throw_(amount_error, "Commodity date lacks closing bracket");
 
-      details.tag = buf;
-    }
-    else {
-      break;
-    }
-  } while (true);
+	details.date = parse_datetime(buf);
+      }
+      else if (c == '(') {
+	if (details.tag)
+	  throw_(amount_error, "Commodity specifies more than one tag");
 
-  DEBUG("amounts.commodities",
-	"Parsed commodity annotations: "
-	<< "  price "
-	<< (details.price ? details.price->to_string() : "NONE") << " "
-	<< "  date "
-	<< (details.date ? *details.date : moment_t()) << " "
-	<< "  tag "
-	<< (details.tag ? *details.tag : "NONE"));
+	in.get(c);
+	READ_INTO(in, buf, 255, c, c != ')');
+	if (c == ')')
+	  in.get(c);
+	else
+	  throw_(amount_error, "Commodity tag lacks closing parenthesis");
 
-  return details;
+	details.tag = buf;
+      }
+      else {
+	break;
+      }
+    } while (true);
+
+    DEBUG("amounts.commodities",
+	  "Parsed commodity annotations: "
+	  << "  price "
+	  << (details.price ? details.price->to_string() : "NONE") << " "
+	  << "  date "
+	  << (details.date ? *details.date : moment_t()) << " "
+	  << "  tag "
+	  << (details.tag ? *details.tag : "NONE"));
+
+    return details;
+  }
 }
 
 void amount_t::parse(std::istream& in, flags_t flags)
