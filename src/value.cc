@@ -2215,7 +2215,7 @@ value_t& value_t::add(const amount_t& amount, const optional<amount_t>& tcost)
   return *this;
 }
 
-void value_t::write(std::ostream& out, const int first_width,
+void value_t::print(std::ostream& out, const int first_width,
 		    const int latter_width) const
 {
   switch (type) {
@@ -2229,7 +2229,7 @@ void value_t::write(std::ostream& out, const int first_width,
     break;
 
   case XML_NODE:
-    (*(xml::node_t **) data)->write(out);
+    (*(xml::node_t **) data)->print(out);
     break;
 
   case SEQUENCE:
@@ -2237,10 +2237,10 @@ void value_t::write(std::ostream& out, const int first_width,
     throw_(value_error, "Cannot write out a sequence");
 
   case BALANCE:
-    ((balance_t *) data)->write(out, first_width, latter_width);
+    ((balance_t *) data)->print(out, first_width, latter_width);
     break;
   case BALANCE_PAIR:
-    ((balance_pair_t *) data)->write(out, first_width, latter_width);
+    ((balance_pair_t *) data)->print(out, first_width, latter_width);
     break;
   }
 }
@@ -2344,7 +2344,7 @@ void value_context::describe(std::ostream& out) const throw()
     if (! ptr)
       ptr = &((balance_pair_t *) bal->data)->quantity;
 
-    ptr->write(out, 20);
+    ptr->print(out, 20);
     break;
   default:
     assert(0);

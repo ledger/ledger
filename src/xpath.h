@@ -475,7 +475,7 @@ public:
 
     static op_t * defer_sequence(value_t::sequence_t& result_seq);
 
-    bool write(std::ostream&   out,
+    bool print(std::ostream&   out,
 	       const bool      relaxed	  = true,
 	       const op_t *    op_to_find = NULL,
 	       unsigned long * start_pos  = NULL,
@@ -597,13 +597,13 @@ public:
     return parse_expr(string(p), tflags);
   }
 
-  bool write(std::ostream&   out,
+  bool print(std::ostream&   out,
 	     const bool      relaxed,
 	     const op_t *  op_to_find,
 	     unsigned long * start_pos,
 	     unsigned long * end_pos) const {
     if (ptr)
-      ptr->write(out, relaxed, op_to_find, start_pos, end_pos);
+      ptr->print(out, relaxed, op_to_find, start_pos, end_pos);
     return true;
   }
 
@@ -739,8 +739,8 @@ public:
     return temp.calc(document, scope);
   }
 
-  void write(std::ostream& out) const {
-    write(out, true, NULL, NULL, NULL);
+  void print(std::ostream& out) const {
+    print(out, true, NULL, NULL, NULL);
   }
   void dump(std::ostream& out) const {
     if (ptr)
@@ -751,7 +751,7 @@ public:
 };
 
 inline std::ostream& operator<<(std::ostream& out, const xpath_t::op_t& op) {
-  op.write(out);
+  op.print(out);
   return out;
 };
 
@@ -774,7 +774,7 @@ class xml_command : public xml::xpath_t::functor_t
     std::ostream *    out = get_ptr<std::ostream>(locals, 0);
     xml::document_t * doc = get_ptr<xml::document_t>(locals, 1);
 
-    doc->write(*out);
+    doc->print(*out);
   }
 };
 

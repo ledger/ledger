@@ -190,7 +190,7 @@ int format_t::element_formatter_t::operator()
 
   if (elem->kind == element_t::XPATH)
     elem->xpath->calc(context).strip_annotations()
-      .write(out, elem->min_width, elem->max_width);
+      .print(out, elem->min_width, elem->max_width);
   else if (elem->kind == element_t::GROUP)
     column = elem->format->format(out, context, column);
   else if (elem->kind == element_t::TEXT)

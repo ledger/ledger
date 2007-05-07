@@ -371,7 +371,7 @@ namespace {
       throw_(amount_error, "A commodity's price may not be negative");
 
     std::ostringstream name;
-    comm.write(name);
+    comm.print(name);
     annotated_commodity_t::write_annotations(name, details);
 
     DEBUG("amounts.commodities", "make_qualified_name for "

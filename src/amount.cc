@@ -1176,8 +1176,7 @@ void amount_t::print(std::ostream& _out, bool omit_commodity,
   }
 
   if (! omit_commodity && ! comm.has_flags(COMMODITY_STYLE_SUFFIXED)) {
-    comm.write(out);
-
+    comm.print(out);
     if (comm.has_flags(COMMODITY_STYLE_SEPARATED))
       out << " ";
   }
@@ -1262,8 +1261,7 @@ void amount_t::print(std::ostream& _out, bool omit_commodity,
   if (! omit_commodity && comm.has_flags(COMMODITY_STYLE_SUFFIXED)) {
     if (comm.has_flags(COMMODITY_STYLE_SEPARATED))
       out << " ";
-
-    comm.write(out);
+    comm.print(out);
   }
 
   mpz_clear(quotient);

@@ -159,7 +159,7 @@ public:
 		    const bool keep_date  = amount_t::keep_date,
 		    const bool keep_tag   = amount_t::keep_tag) const;
 
-  void write(std::ostream& out, const int first_width,
+  void print(std::ostream& out, const int first_width,
 	     const int latter_width = -1) const;
 
   balance_t abs() const {
@@ -216,7 +216,7 @@ public:
 };
 
 inline std::ostream& operator<<(std::ostream& out, const balance_t& bal) {
-  bal.write(out, 12);
+  bal.print(out, 12);
   return out;
 }
 
@@ -351,9 +351,9 @@ public:
     return quantity.strip_annotations(keep_price, keep_date, keep_tag);
   }
 
-  void write(std::ostream& out, const int first_width,
+  void print(std::ostream& out, const int first_width,
 	     const int latter_width = -1) const {
-    quantity.write(out, first_width, latter_width);
+    quantity.print(out, first_width, latter_width);
   }
 
   balance_pair_t& add(const amount_t&  amt,
@@ -404,7 +404,7 @@ public:
 
 inline std::ostream& operator<<(std::ostream& out,
 				const balance_pair_t& bal_pair) {
-  bal_pair.quantity.write(out, 12);
+  bal_pair.quantity.print(out, 12);
   return out;
 }
 

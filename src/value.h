@@ -392,7 +392,7 @@ class value_t
   value_t round() const;
   value_t unround() const;
 
-  void write(std::ostream& out, const int first_width,
+  void print(std::ostream& out, const int first_width,
 	     const int latter_width = -1) const;
 
   friend std::ostream& operator<<(std::ostream& out, const value_t& val);

@@ -89,7 +89,7 @@ public:
     throw_(conversion_error, "Cannot convert node to a value");
   }
 
-  virtual void write(std::ostream& out, int depth = 0) const = 0;
+  virtual void print(std::ostream& out, int depth = 0) const = 0;
 
 private:
   node_t(const node_t&);
@@ -124,7 +124,7 @@ public:
   }
   virtual void	   add_child(node_t * node);
 
-  void write(std::ostream& out, int depth = 0) const;
+  void print(std::ostream& out, int depth = 0) const;
 
 private:
   parent_node_t(const parent_node_t&);
@@ -159,7 +159,7 @@ public:
     return text();
   }
 
-  void write(std::ostream& out, int depth = 0) const;
+  void print(std::ostream& out, int depth = 0) const;
 
 private:
   terminal_node_t(const node_t&);
@@ -218,7 +218,7 @@ private:
   static int lookup_builtin_id(const string& name);
   const char * lookup_name(int id) const;
 
-  void write(std::ostream& out) const;
+  void print(std::ostream& out) const;
 
 #if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
   class parser_t

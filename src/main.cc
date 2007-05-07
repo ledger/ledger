@@ -151,7 +151,7 @@ static int read_and_report(report_t * report, int argc, char * argv[],
       expr.dump(std::cout);
       std::cout << std::endl;
       std::cout << "Value expression parsed was:" << std::endl;
-      expr.write(std::cout);
+      expr.print(std::cout);
       std::cout << std::endl << std::endl;
       std::cout << "Result of calculation: ";
     }
@@ -250,7 +250,7 @@ static int read_and_report(report_t * report, int argc, char * argv[],
       expr.dump(*out);
       *out << std::endl;
       *out << "Value expression parsed was:" << std::endl;
-      expr.write(*out);
+      expr.print(*out);
       *out << std::endl << std::endl;
       *out << "Result of calculation: ";
     }
@@ -263,7 +263,7 @@ static int read_and_report(report_t * report, int argc, char * argv[],
   else if (verb == "xpath") {
     std::cout << "XPath parsed:" << std::endl;
     xml::xpath_t xpath(*arg);
-    xpath.write(*out);
+    xpath.print(*out);
     *out << std::endl;
 
 #if 0

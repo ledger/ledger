@@ -116,11 +116,11 @@ const char * document_t::lookup_name(int id) const
   }
 }
 
-void document_t::write(std::ostream& out) const
+void document_t::print(std::ostream& out) const
 {
   if (top) {
     out << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-    top->write(out);
+    top->print(out);
   }
 }
 
@@ -222,19 +222,19 @@ void parent_node_t::add_child(node_t * node)
   _last_child = node;
 }
 
-void parent_node_t::write(std::ostream& out, int depth) const
+void parent_node_t::print(std::ostream& out, int depth) const
 {
   for (int i = 0; i < depth; i++) out << "  ";
   out << '<' << name() << ">\n";
 
   for (node_t * child = children(); child; child = child->next)
-    child->write(out, depth + 1);
+    child->print(out, depth + 1);
 
   for (int i = 0; i < depth; i++) out << "  ";
   out << "</" << name() << ">\n";
 }
 
-void terminal_node_t::write(std::ostream& out, int depth) const
+void terminal_node_t::print(std::ostream& out, int depth) const
 {
   for (int i = 0; i < depth; i++) out << "  ";
 

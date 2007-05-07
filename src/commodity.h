@@ -192,7 +192,7 @@ public:
   optional<amount_t> value(const optional<moment_t>& moment =
 			   optional<moment_t>());
 
-  void write(std::ostream& out) const {
+  void print(std::ostream& out) const {
     out << symbol();
   }
 
@@ -200,7 +200,7 @@ public:
 };
 
 inline std::ostream& operator<<(std::ostream& out, const commodity_t& comm) {
-  comm.write(out);
+  comm.print(out);
   return out;
 }
 
@@ -226,7 +226,7 @@ struct annotation_t : public equality_comparable<annotation_t>
 	    tag   == rhs.tag);
   }
 
-  void write(std::ostream& out) const {
+  void print(std::ostream& out) const {
     out << "price " << (price ? price->to_string() : "NONE") << " "
 	<< "date "  << (date  ? *date : moment_t()) << " "
 	<< "tag "   << (tag   ? *tag  : "NONE");
@@ -238,7 +238,7 @@ struct annotation_t : public equality_comparable<annotation_t>
 };
 
 inline std::ostream& operator<<(std::ostream& out, const annotation_t& details) {
-  details.write(out);
+  details.print(out);
   return out;
 }
 

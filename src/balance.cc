@@ -196,7 +196,7 @@ balance_t balance_t::strip_annotations(const bool keep_price,
   return temp;
 }
 
-void balance_t::write(std::ostream& out,
+void balance_t::print(std::ostream& out,
 		      const int     first_width,
 		      const int     latter_width) const
 {
