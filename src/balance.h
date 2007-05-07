@@ -41,7 +41,9 @@ class balance_t
            equality_comparable<balance_t, amount_t,
            additive<balance_t,
            additive<balance_t, amount_t,
-           multiplicative<balance_t, amount_t> > > > >
+           multiplicative<balance_t, amount_t,
+           multiplicative<balance_t, unsigned long,
+           multiplicative<balance_t, long> > > > > > >
 {
 public:
   typedef std::map<const commodity_t *, amount_t> amounts_map;
@@ -235,7 +237,9 @@ class balance_pair_t
            additive<balance_pair_t,
            additive<balance_pair_t, balance_t,
            additive<balance_pair_t, amount_t,
-           multiplicative<balance_pair_t, amount_t> > > > > > >
+           multiplicative<balance_pair_t, unsigned long,
+           multiplicative<balance_pair_t, long,
+	   multiplicative<balance_pair_t, amount_t> > > > > > > > >
 {
   balance_t quantity;
   optional<balance_t> cost;
@@ -297,6 +301,9 @@ public:
   }
   bool operator==(const balance_t& bal) const {
     return quantity == bal;
+  }
+  bool operator==(const amount_t& amt) const {
+    return quantity == amt;
   }
 
   balance_pair_t& operator*=(const amount_t& amt) {

@@ -598,7 +598,7 @@ value_t& value_t::operator*=(const value_t& val)
   case BALANCE:
     switch (val.type) {
     case INTEGER:
-      as_balance() *= val.to_amount();
+      as_balance() *= val.as_long();
       return *this;
     case AMOUNT:
       if (! val.as_amount().has_commodity()) {
@@ -612,7 +612,7 @@ value_t& value_t::operator*=(const value_t& val)
   case BALANCE_PAIR:
     switch (val.type) {
     case INTEGER:
-      as_balance_pair() *= val.to_amount();
+      as_balance_pair() *= val.as_long();
       return *this;
     case AMOUNT:
       if (! val.as_amount().has_commodity()) {
@@ -667,7 +667,7 @@ value_t& value_t::operator/=(const value_t& val)
   case BALANCE:
     switch (val.type) {
     case INTEGER:
-      as_balance() /= val.to_amount();
+      as_balance() /= val.as_long();
       return *this;
     case AMOUNT:
       if (! val.as_amount().has_commodity()) {
@@ -681,7 +681,7 @@ value_t& value_t::operator/=(const value_t& val)
   case BALANCE_PAIR:
     switch (val.type) {
     case INTEGER:
-      as_balance_pair() /= val.to_amount();
+      as_balance_pair() /= val.as_long();
       return *this;
     case AMOUNT:
       if (! val.as_amount().has_commodity()) {
@@ -727,7 +727,7 @@ bool value_t::operator==(const value_t& val) const
     case BALANCE:
       return val.as_balance() == to_amount();
     case BALANCE_PAIR:
-      return val.as_balance_pair() == to_balance();
+      return val.as_balance_pair() == to_amount();
     default:
       break;
     }
@@ -742,7 +742,7 @@ bool value_t::operator==(const value_t& val) const
     case BALANCE:
       return val.as_balance() == as_amount();
     case BALANCE_PAIR:
-      return val.as_balance_pair() == to_balance();
+      return val.as_balance_pair() == as_amount();
     default:
       break;
     }
@@ -766,9 +766,9 @@ bool value_t::operator==(const value_t& val) const
   case BALANCE_PAIR:
     switch (val.type) {
     case INTEGER:
-      return as_balance_pair() == val.to_balance();
+      return as_balance_pair() == val.to_amount();
     case AMOUNT:
-      return as_balance_pair() == val.to_balance();
+      return as_balance_pair() == val.as_amount();
     case BALANCE:
       return as_balance_pair() == val.as_balance();
     case BALANCE_PAIR:

@@ -475,6 +475,11 @@ class BasicAmountTestCase(unittest.TestCase):
         self.assertTrue(x3 < x1)
         self.assertTrue(x3 < x4)
 
+        self.assertTrue(x1 < 100)
+        self.assertTrue(x1 < 100.0)
+        self.assertTrue(100 > x1)
+        self.assertTrue(100.0 > x1)
+
         self.assertTrue(x0.valid())
         self.assertTrue(x1.valid())
         self.assertTrue(x2.valid())

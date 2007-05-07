@@ -149,6 +149,13 @@ void BasicAmountTestCase::testComparisons()
   CPPUNIT_ASSERT(x3 < x1);
   CPPUNIT_ASSERT(x3 < x4);
 
+  CPPUNIT_ASSERT(x1 < 100L);
+  CPPUNIT_ASSERT(x1 < 100UL);
+  CPPUNIT_ASSERT(x1 < 100.0);
+  CPPUNIT_ASSERT(100L > x1);
+  CPPUNIT_ASSERT(100UL > x1);
+  CPPUNIT_ASSERT(100.0 > x1);
+
   CPPUNIT_ASSERT(x0.valid());
   CPPUNIT_ASSERT(x1.valid());
   CPPUNIT_ASSERT(x2.valid());
