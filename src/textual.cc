@@ -10,7 +10,8 @@ static unsigned int linenum;
 static unsigned int src_idx;
 static accounts_map account_aliases;
 
-static std::list<std::pair<path, int> > include_stack;
+typedef std::list<std::pair<path, int> > include_stack_t;
+static include_stack_t include_stack;
 
 #define TIMELOG_SUPPORT 1
 #ifdef TIMELOG_SUPPORT
@@ -508,14 +509,6 @@ entry_t * parse_entry(std::istream& in, char * line, journal_t * journal,
   return curr.release();
 }
 
-template <typename T>
-struct push_var {
-  T& var;
-  T prev;
-  push_var(T& _var) : var(_var), prev(var) {}
-  ~push_var() { var = prev; }
-};
-
 static inline void parse_symbol(char *& p, string& symbol)
 {
   if (*p == '"') {
@@ -836,11 +829,11 @@ unsigned int textual_parser_t::parse(std::istream&	   in,
       char * p = next_element(line);
       string word(line + 1);
       if (word == "include") {
-	push_var<path>		save_path(pathname);
-	push_var<unsigned int>  save_src_idx(src_idx);
-	push_var<unsigned long> save_beg_pos(beg_pos);
-	push_var<unsigned long> save_end_pos(end_pos);
-	push_var<unsigned int>  save_linenum(linenum);
+	scoped_variable<path>	       save_path(pathname);
+	scoped_variable<unsigned int>  save_src_idx(src_idx);
+	scoped_variable<unsigned long> save_beg_pos(beg_pos);
+	scoped_variable<unsigned long> save_end_pos(end_pos);
+	scoped_variable<unsigned int>  save_linenum(linenum);
 
 	if (*p != '~' && *p != '/')
 	  pathname = (pathname.branch_path() / path(p)).normalize();
@@ -850,18 +843,14 @@ unsigned int textual_parser_t::parse(std::istream&	   in,
 	DEBUG("ledger.textual.include", "Line " << linenum << ": " <<
 	      "Including path '" << pathname.string() << "'");
 
+	scoped_execute<void>
+	  pop_include_stack(boost::bind(&include_stack_t::pop_back,
+					boost::ref(include_stack)));
 	include_stack.push_back
 	  (std::pair<path, int>(journal->sources.back(), linenum - 1));
 
-	try {
-	  count += journal->session->read_journal(pathname, journal,
-						  account_stack.front());
-	  include_stack.pop_back();
-	}
-	catch (...) {
-	  include_stack.pop_back();
-	  throw;
-	}
+	count += journal->session->read_journal(pathname, journal,
+						account_stack.front());
       }
       else if (word == "account") {
 	if (account_t * acct = account_stack.front()->find_account(p))

@@ -441,16 +441,13 @@ inline void throw_unexpected_error(char c, char wanted) {
 /**********************************************************************
  *
  * Date/time support classes
+ * General support for objects with "flags"
+ * Support for scoped execution and variable restoration
  */
 
 #include "times.h"
-
-/**********************************************************************
- *
- * General support for objects with "flags"
- */
-
 #include "flags.h"
+#include "scoped_execute.h"
 
 /**********************************************************************
  *

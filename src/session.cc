@@ -103,22 +103,13 @@ journal_t * session_t::read_data(const string& master_account)
     DEBUG("ledger.cache", "using_cache " << cache_file->string());
     cache_dirty = true;
     if (exists(*cache_file)) {
+      scoped_variable<optional<path> >
+	save_price_db(journal->price_db, price_db);
+
       ifstream stream(*cache_file);
-
-      optional<path> price_db_orig = journal->price_db;
-      try {
-	journal->price_db = price_db;
-
-	entry_count += read_journal(stream, journal, NULL, data_file);
-	if (entry_count > 0)
-	  cache_dirty = false;
-
-	journal->price_db = price_db_orig;
-      }
-      catch (...) {
-	journal->price_db = price_db_orig;
-	throw;
-      }
+      entry_count += read_journal(stream, journal, NULL, data_file);
+      if (entry_count > 0)
+	cache_dirty = false;
     }
   }
 
