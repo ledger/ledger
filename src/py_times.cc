@@ -95,7 +95,7 @@ void export_times()
   date_python_conversion();
   datetime_python_conversion();
 
-  python_optional<moment_t>();
+  register_optional_to_python<moment_t>();
 }
 
 } // namespace ledger

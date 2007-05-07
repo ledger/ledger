@@ -444,10 +444,10 @@ class BasicAmountTestCase(unittest.TestCase):
 
         self.assertFalse(x0)
         self.assertTrue(x1)
-        self.assertTrue(x0.zero())
-        self.assertTrue(x0.realzero())
-        self.assertFalse(x1.zero())
-        self.assertFalse(x1.realzero())
+        self.assertTrue(x0.is_zero())
+        self.assertTrue(x0.is_realzero())
+        self.assertFalse(x1.is_zero())
+        self.assertFalse(x1.is_realzero())
 
         self.assertTrue(x0.valid())
         self.assertTrue(x1.valid())

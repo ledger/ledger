@@ -368,22 +368,24 @@ public:
    * Truth tests.  An amount may be truth test in several ways:
    *
    * sign() returns an integer less than, greater than, or equal to
-   * zero depending on whether an amount is negative, zero, or greater
-   * than zero.  Note that this function tests the actual value of the
-   * amount -- using its internal precision -- and not the display
-   * value.  To test its display value, use: `round().sign()'.
+   * zero depending on whether the amount is negative, zero, or
+   * greater than zero.  Note that this function tests the actual
+   * value of the amount -- using its internal precision -- and not
+   * the display value.  To test its display value, use:
+   * `round().sign()'.
    *
    * is_nonzero(), or operator bool, returns true if an amount's
    * display value is not zero.
    *
    * is_zero() returns true if an amount's display value is zero.
-   * Thus, $0.0001 is considered zero().
+   * Thus, $0.0001 is considered zero if the current display precision
+   * for dollars is two decimal places.
    *
    * is_realzero() returns true if an amount's actual value is zero.
-   * $0.0001 is not considered is_realzero().
+   * Thus, $0.0001 is never considered realzero.
    *
    * is_null() returns true if an amount has no value and no
-   * commodity.  This occurs only if an unitialized amount has never
+   * commodity.  This only occurs if an uninitialized amount has never
    * been assigned a value.
    */
   int sign() const;
@@ -401,7 +403,11 @@ public:
   }
 
   bool is_null() const {
-    return ! quantity && ! has_commodity();
+    if (! quantity) {
+      assert(! has_commodity());
+      return true;
+    }
+    return false;
   }
 
   /**
@@ -440,11 +446,10 @@ public:
    * Commodity-related methods.  The following methods relate to an
    * amount's commodity:
    *
-   * has_commodity() returns true if the amount has a commodity.
-   *
    * commodity() returns an amount's commodity.  If the amount has no
-   * commodity, then the value returned will be equal to
-   * `commodity_t::null_commodity'.
+   * commodity, the value returned is `current_pool->null_commodity'.
+   *
+   * has_commodity() returns true if the amount has a commodity.
    *
    * set_commodity(commodity_t) sets an amount's commodity to the
    * given value.  Note that this merely sets the current amount to
@@ -458,9 +463,9 @@ public:
    * number() returns a commodity-less version of an amount.  This is
    * useful for accessing just the numeric portion of an amount.
    */
-  bool has_commodity() const;
   commodity_t& commodity() const;
 
+  bool has_commodity() const;
   void set_commodity(commodity_t& comm) {
     commodity_ = &comm;
   }
@@ -683,13 +688,13 @@ inline amount_t amount_t::round() const {
   return round(commodity().precision());
 }
 
-inline bool amount_t::has_commodity() const {
-  return commodity_ && commodity_ != commodity_->parent().null_commodity;
-}
-
 inline commodity_t& amount_t::commodity() const {
   // jww (2007-05-02): Should be a way to access null_commodity better
   return has_commodity() ? *commodity_ : *current_pool->null_commodity;
+}
+
+inline bool amount_t::has_commodity() const {
+  return commodity_ && commodity_ != commodity_->parent().null_commodity;
 }
 
 } // namespace ledger

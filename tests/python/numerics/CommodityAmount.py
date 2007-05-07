@@ -178,8 +178,8 @@ class CommodityAmountTestCase(unittest.TestCase):
         x10 = amount("-123.45€")
 
         self.assertTrue(x0.is_null())
-        self.assertTrue(x0.zero())
-        self.assertTrue(x0.realzero())
+        self.assertTrue(x0.is_zero())
+        self.assertTrue(x0.is_realzero())
         self.assertTrue(x0.sign() == 0)
         self.assertTrue(x0.compare(x1) < 0)
         self.assertTrue(x0.compare(x2) > 0)
@@ -543,8 +543,8 @@ class CommodityAmountTestCase(unittest.TestCase):
         x1 = amount(internalAmount("$0.000000000000000000001"))
 
         self.assertFalse(x1)
-        self.assertTrue(x1.zero())
-        self.assertFalse(x1.realzero())
+        self.assertTrue(x1.is_zero())
+        self.assertFalse(x1.is_realzero())
 
         self.assertValid(x1)
 

@@ -21,7 +21,7 @@ struct register_python_conversion
 };
 
 template <typename T>
-struct python_optional : public boost::noncopyable
+struct register_optional_to_python : public boost::noncopyable
 {
   struct optional_to_python
   {
@@ -67,7 +67,7 @@ struct python_optional : public boost::noncopyable
     }
   };
 
-  explicit python_optional() {
+  explicit register_optional_to_python() {
     register_python_conversion<boost::optional<T>,
       optional_to_python, optional_from_python>();
   }

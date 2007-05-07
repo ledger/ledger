@@ -51,6 +51,10 @@ void export_amount()
     .staticmethod("shutdown")
 #endif
 
+    .add_static_property("current_pool",
+			 make_getter(&amount_t::current_pool,
+				     return_value_policy<reference_existing_object>()))
+
 #if 0
     .add_static_property("keep_base", &amount_t::keep_base)
 
@@ -58,13 +62,12 @@ void export_amount()
     .add_static_property("keep_date", &amount_t::keep_date)
     .add_static_property("keep_tag", &amount_t::keep_tag)
 
-    .add_static_property("full_strings", &amount_t::full_strings)
+    .add_static_property("stream_fullstrings", &amount_t::stream_fullstrings)
 #endif
 
     .def(init<double>())
     .def(init<long>())
     .def(init<std::string>())
-    .def(init<char *>())
 
     .def("exact", &amount_t::exact)
     .staticmethod("exact")
@@ -151,6 +154,8 @@ void export_amount()
     .def(self	  /  double())
     .def(double() / self)
 
+    .def("precision", &amount_t::precision)
+
     .def("negate", &amount_t::negate)
     .def("in_place_negate", &amount_t::in_place_negate,
 	 return_value_policy<reference_existing_object>())
@@ -176,9 +181,9 @@ void export_amount()
 
     .def("sign", &amount_t::sign)
     .def("__nonzero__", &amount_t::is_nonzero)
-    .def("nonzero", &amount_t::is_nonzero)
-    .def("zero", &amount_t::is_zero)
-    .def("realzero", &amount_t::is_realzero)
+    .def("is_nonzero", &amount_t::is_nonzero)
+    .def("is_zero", &amount_t::is_zero)
+    .def("is_realzero", &amount_t::is_realzero)
     .def("is_null", &amount_t::is_null)
 
     .def("to_double", &amount_t::to_double)
@@ -192,39 +197,31 @@ void export_amount()
 
     .def("quantity_string", &amount_t::quantity_string)
 
-    .def("has_commodity", &amount_t::has_commodity)
-
     .add_property("commodity",
 		  make_function(&amount_t::commodity,
 				return_value_policy<reference_existing_object>()),
 		  make_function(&amount_t::set_commodity,
 				with_custodian_and_ward<1, 2>()))
 
+    .def("has_commodity", &amount_t::has_commodity)
     .def("clear_commodity", &amount_t::clear_commodity)
     .def("number", &amount_t::number)
 
     .def("annotate_commodity", &amount_t::annotate_commodity)
+    .def("commodity_annotated", &amount_t::commodity_annotated)
+    .def("annotation_details", &amount_t::annotation_details)
     .def("strip_annotations", &amount_t::strip_annotations)
 
-#if 0
-    // jww (2007-05-03): This method depends on annotation_t
-    .def("annotation_details", &amount_t::annotation_details)
-#endif
-
-    // jww (2007-05-03): There are four versions of this method now
     .def("parse", py_parse_1)
     .def("parse", py_parse_2)
 
-#if 0
-    // jww (2007-05-03): This method has two forms
     .def("parse_conversion", &amount_t::parse_conversion)
     .staticmethod("parse_conversion")
-#endif
 
     .def("valid", &amount_t::valid)
     ;
 
-  python_optional<amount_t>();
+  register_optional_to_python<amount_t>();
 
   implicitly_convertible<double, amount_t>();
   implicitly_convertible<long, amount_t>();

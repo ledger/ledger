@@ -32,12 +32,16 @@ libledger_la_CPPFLAGS = -I$(top_builddir)/gdtoa -I$(srcdir)/gdtoa \
 libledger_la_LDFLAGS  = -release 3.0
 
 libledger_la_SOURCES = \
-	src/session.cc	 \
-	src/journal.cc	 \
+	src/utils.cc	 \
+	src/times.cc	 \
+	src/mask.cc	 \
+	src/commodity.cc \
 	src/amount.cc    \
 	src/balance.cc   \
-	src/commodity.cc \
 	src/value.cc     \
+			 \
+	src/session.cc	 \
+	src/journal.cc	 \
 	src/binary.cc	 \
 	src/qif.cc	 \
 	src/textual.cc	 \
@@ -50,9 +54,6 @@ libledger_la_SOURCES = \
 	src/register.cc	 \
 	src/report.cc	 \
 	src/transform.cc \
-	src/mask.cc	 \
-	src/times.cc	 \
-	src/utils.cc	 \
 	src/xml.cc	 \
 	src/xmlparse.cc	 \
 	src/xpath.cc
