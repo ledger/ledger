@@ -48,22 +48,21 @@ namespace ledger {
 class annotated_commodity_t;
 
 class commodity_t
-  : public equality_comparable1<commodity_t, noncopyable>
+  : public delegates_flags<>,
+           equality_comparable1<commodity_t, noncopyable>
 {
   friend class commodity_pool_t;
 
-  class base_t : public noncopyable
+  class base_t : public noncopyable, public supports_flags<>
   {
   public:
     typedef std::map<const moment_t, amount_t>  history_map;
     typedef std::pair<const moment_t, amount_t> history_pair;
 
     struct history_t {
-      history_map	prices;
-      ptime	last_lookup;
+      history_map prices;
+      ptime	  last_lookup;
     };
-
-    typedef uint_least8_t flags_t;
 
 #define COMMODITY_STYLE_DEFAULTS   0x00
 #define COMMODITY_STYLE_SUFFIXED   0x01
@@ -73,7 +72,6 @@ class commodity_t
 #define COMMODITY_STYLE_NOMARKET   0x10
 #define COMMODITY_STYLE_BUILTIN    0x20
 
-    flags_t		  flags;
     string		  symbol;
     amount_t::precision_t precision;
     optional<string>	  name;
@@ -83,17 +81,10 @@ class commodity_t
     optional<amount_t>	  larger;
 
   public:
-    explicit base_t()
-      : flags(COMMODITY_STYLE_DEFAULTS), precision(0) {
-      TRACE_CTOR(base_t, "");
-    }
-    explicit base_t
-    (const string&	   _symbol,
-     amount_t::precision_t _precision = 0,
-     unsigned int          _flags     = COMMODITY_STYLE_DEFAULTS)
-      : flags(_flags), symbol(_symbol), precision(_precision) {
-      TRACE_CTOR(base_t,
-		 "const string&, amount_t::precision_t, unsigned int");
+    explicit base_t(const string& _symbol)
+      : supports_flags<>(COMMODITY_STYLE_DEFAULTS),
+	symbol(_symbol), precision(0) {
+      TRACE_CTOR(base_t, "const string&");
     }
     ~base_t() {
       TRACE_DTOR(base_t);
@@ -103,11 +94,10 @@ class commodity_t
 public:
   static bool symbol_needs_quotes(const string& symbol);
 
-  typedef base_t::flags_t	 flags_t;
-  typedef base_t::history_t	 history_t;
+  typedef base_t::history_t    history_t;
   typedef base_t::history_map  history_map;
   typedef base_t::history_pair history_pair;
-  typedef uint_least32_t		 ident_t;
+  typedef uint_least32_t       ident_t;
 
   shared_ptr<base_t> base;
 
@@ -118,9 +108,10 @@ public:
   bool		     annotated;
 
 public:
-  explicit commodity_t(commodity_pool_t * _parent,
+  explicit commodity_t(commodity_pool_t *	 _parent,
 		       const shared_ptr<base_t>& _base)
-    : base(_base), parent_(_parent), annotated(false) {
+    : delegates_flags<>(*_base.get()), base(_base),
+      parent_(_parent), annotated(false) {
     TRACE_CTOR(commodity_t, "");
   }
   virtual ~commodity_t() {
@@ -175,22 +166,6 @@ public:
   }
   void set_precision(amount_t::precision_t arg) {
     base->precision = arg;
-  }
-
-  flags_t flags() const {
-    return base->flags;
-  }
-  void set_flags(flags_t arg) {
-    base->flags = arg;
-  }
-  bool has_flags(flags_t arg) {
-    return base->flags & arg;
-  }
-  void add_flags(flags_t arg) {
-    base->flags |= arg;
-  }
-  void drop_flags(flags_t arg) {
-    base->flags &= ~arg;
   }
 
   optional<amount_t> smaller() const {
