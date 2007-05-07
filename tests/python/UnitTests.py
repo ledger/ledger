@@ -1,11 +1,9 @@
 from unittest import TextTestRunner, TestSuite
 
-import tests.python.numerics.BasicAmount as BasicAmount
-import tests.python.numerics.CommodityAmount as CommodityAmount
+import tests.python.numerics.t_amount as t_amount
 
 suites = [
-    BasicAmount.suite(),
-    CommodityAmount.suite(),
+    t_amount.suite(),
 ]
 
 TextTestRunner().run(TestSuite(suites))

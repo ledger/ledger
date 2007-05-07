@@ -1,4 +1,4 @@
-#include "Commodity.h"
+#include "t_commodity.h"
 
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(CommodityTestCase, "numerics");
 

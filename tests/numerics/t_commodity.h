@@ -1,5 +1,5 @@
-#ifndef _COMMMODITY_H
-#define _COMMMODITY_H
+#ifndef _T_COMMMODITY_H
+#define _T_COMMMODITY_H
 
 #include "UnitTests.h"
 
@@ -33,4 +33,4 @@ private:
   void operator=(const CommodityTestCase &copy);
 };
 
-#endif /* _COMMMODITY_H */
+#endif // _T_COMMMODITY_H

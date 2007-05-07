@@ -214,10 +214,9 @@ check_PROGRAMS = $(TESTS)
 
 nodist_UnitTests_SOURCES = tests/UnitTests.cc \
 	\
-	tests/numerics/BasicAmount.cc \
-	tests/numerics/CommodityAmount.cc \
-	tests/numerics/DateTime.cc \
-	tests/numerics/Commodity.cc
+	tests/numerics/t_times.cc \
+	tests/numerics/t_commodity.cc \
+	tests/numerics/t_amount.cc
 
 UnitTests_CPPFLAGS = -I$(srcdir)/tests $(libledger_la_CPPFLAGS)
 UnitTests_LDFLAGS  = $(LIBADD_DL)

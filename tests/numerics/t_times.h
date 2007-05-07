@@ -1,5 +1,5 @@
-#ifndef _DATETIMETEST_H
-#define _DATETIMETEST_H
+#ifndef _T_TIMES_H
+#define _T_TIMES_H
 
 #include "UnitTests.h"
 
@@ -25,4 +25,4 @@ private:
   void operator=(const DateTimeTestCase &copy);
 };
 
-#endif /* _DATETIMETEST_H */
+#endif /* _T_TIMES_H */
