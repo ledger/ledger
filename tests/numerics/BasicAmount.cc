@@ -585,10 +585,10 @@ void BasicAmountTestCase::testForZero()
 
   CPPUNIT_ASSERT(! x0);
   CPPUNIT_ASSERT(x1);
-  CPPUNIT_ASSERT(x0.zero());
-  CPPUNIT_ASSERT(x0.realzero());
-  CPPUNIT_ASSERT(! x1.zero());
-  CPPUNIT_ASSERT(! x1.realzero());
+  CPPUNIT_ASSERT(x0.is_zero());
+  CPPUNIT_ASSERT(x0.is_realzero());
+  CPPUNIT_ASSERT(! x1.is_zero());
+  CPPUNIT_ASSERT(! x1.is_realzero());
 
   CPPUNIT_ASSERT(x0.valid());
   CPPUNIT_ASSERT(x1.valid());

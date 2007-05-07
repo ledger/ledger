@@ -71,7 +71,8 @@ DECLARE_EXCEPTION(amount_error);
  * degree.
  */
 class amount_t
-  : public ordered_field_operators<amount_t,
+  : public supports_flags<>,
+           ordered_field_operators<amount_t,
 	   ordered_field_operators<amount_t, long,
 	   ordered_field_operators<amount_t, unsigned long,
 	   ordered_field_operators<amount_t, double> > > >
@@ -91,10 +92,10 @@ public:
   typedef uint_least16_t precision_t;
 
   /**
-   * The default_pool is a static variable indicating which commodity
-   * pool should be used when none is specified.
+   * The current_pool is a static variable indicating which commodity
+   * pool should be used.
    */
-  static commodity_pool_t * default_pool;
+  static commodity_pool_t * current_pool;
 
   /**
    * The `keep_base' member determines whether scalable commodities
@@ -130,15 +131,15 @@ public:
   static bool keep_tag;
 
   /**
-   * The `full-strings' static member is currently only used by the
-   * unit testing code.  It causes amounts written to streams to use
-   * the `to_fullstring' method rather than the `to_string' method, so
-   * that complete precision is always displayed, no matter what the
-   * precision of an individual commodity might be.
+   * The `stream_fullstrings' static member is currently only used by
+   * the unit testing code.  It causes amounts written to streams to
+   * use the `to_fullstring' method rather than the `to_string'
+   * method, so that complete precision is always displayed, no matter
+   * what the precision of an individual commodity might be.
    * @see to_string
    * @see to_fullstring
    */
-  static bool full_strings;
+  static bool stream_fullstrings;
 
 protected:
   void _init();
@@ -372,14 +373,14 @@ public:
    * amount -- using its internal precision -- and not the display
    * value.  To test its display value, use: `round().sign()'.
    *
-   * nonzero(), or operator bool, returns true if an amount's display
-   * value is not zero.
+   * is_nonzero(), or operator bool, returns true if an amount's
+   * display value is not zero.
    *
-   * zero() returns true if an amount's display value is zero.  Thus,
-   * $0.0001 is considered zero().
+   * is_zero() returns true if an amount's display value is zero.
+   * Thus, $0.0001 is considered zero().
    *
-   * realzero() returns true if an amount's actual value is zero.
-   * $0.0001 is not considered realzero().
+   * is_realzero() returns true if an amount's actual value is zero.
+   * $0.0001 is not considered is_realzero().
    *
    * is_null() returns true if an amount has no value and no
    * commodity.  This occurs only if an unitialized amount has never
@@ -388,14 +389,14 @@ public:
   int sign() const;
 
   operator bool() const {
-    return nonzero();
+    return is_nonzero();
   }
-  bool nonzero() const {
-    return ! zero();
+  bool is_nonzero() const {
+    return ! is_zero();
   }
 
-  bool zero() const;
-  bool realzero() const {
+  bool is_zero() const;
+  bool is_realzero() const {
     return sign() == 0;
   }
 
@@ -550,12 +551,10 @@ public:
 #define AMOUNT_PARSE_NO_MIGRATE 0x01
 #define AMOUNT_PARSE_NO_REDUCE  0x02
 
-  typedef uint_least8_t flags_t;
-
-  void parse(std::istream& in, flags_t flags = 0);
-  void parse(const string& str, flags_t flags = 0) {
+  void parse(std::istream& in, flags_t bits = 0);
+  void parse(const string& str, flags_t bits = 0) {
     std::istringstream stream(str);
-    parse(stream, flags);
+    parse(stream, bits);
   }
 
   static void parse_conversion(const string& larger_str,
@@ -588,9 +587,9 @@ public:
    * read(istream) reads an amount from the given input stream.  It
    * must have been put there using `write(ostream)'.  The required
    * flow of logic is:
-   *   amount_t::default_pool->write(out)
+   *   amount_t::current_pool->write(out)
    *   amount.write(out)	// write out all amounts
-   *   amount_t::default_pool->read(in)
+   *   amount_t::current_pool->read(in)
    *   amount.read(in)
    *
    * read(char *&) reads an amount from data which has been read from
@@ -658,7 +657,7 @@ inline string amount_t::quantity_string() const {
 }
 
 inline std::ostream& operator<<(std::ostream& out, const amount_t& amt) {
-  amt.print(out, false, amount_t::full_strings);
+  amt.print(out, false, amount_t::stream_fullstrings);
   return out;
 }
 inline std::istream& operator>>(std::istream& in, amount_t& amt) {
@@ -690,7 +689,7 @@ inline bool amount_t::has_commodity() const {
 
 inline commodity_t& amount_t::commodity() const {
   // jww (2007-05-02): Should be a way to access null_commodity better
-  return has_commodity() ? *commodity_ : *default_pool->null_commodity;
+  return has_commodity() ? *commodity_ : *current_pool->null_commodity;
 }
 
 } // namespace ledger

@@ -191,7 +191,7 @@ void dataHandler(void *userData, const char *s, int len)
     string symbol(s, len);
     if (symbol == "USD") symbol = "$";
 
-    parser->curr_comm = amount_t::default_pool->find_or_create(symbol);
+    parser->curr_comm = amount_t::current_pool->find_or_create(symbol);
     assert(parser->curr_comm);
 
     if (symbol != "$")
@@ -320,7 +320,7 @@ unsigned int gnucash_parser_t::parse(std::istream&	   in,
 
   // GnuCash uses the USD commodity without defining it, which really
   // means $.
-  commodity_t * usd = amount_t::default_pool->find_or_create("$");
+  commodity_t * usd = amount_t::current_pool->find_or_create("$");
   usd->set_precision(2);
   usd->add_flags(COMMODITY_STYLE_THOUSANDS);
 

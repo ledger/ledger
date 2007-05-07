@@ -3,7 +3,7 @@
 
 namespace ledger {
 
-bool& value_t::boolean()
+bool& value_t::to_boolean()
 {
   if (type == BOOLEAN) {
     return *(bool *) data;
@@ -15,7 +15,7 @@ bool& value_t::boolean()
   }
 }
 
-long& value_t::integer()
+long& value_t::to_long()
 {
   if (type == INTEGER) {
     return *(long *) data;
@@ -27,7 +27,7 @@ long& value_t::integer()
   }
 }
 
-moment_t& value_t::datetime()
+moment_t& value_t::to_datetime()
 {
   if (type == DATETIME) {
     return *(moment_t *) data;
@@ -39,7 +39,7 @@ moment_t& value_t::datetime()
   }
 }
 
-amount_t& value_t::amount()
+amount_t& value_t::to_amount()
 {
   if (type == AMOUNT) {
     return *(amount_t *) data;
@@ -51,7 +51,7 @@ amount_t& value_t::amount()
   }
 }
 
-balance_t& value_t::balance()
+balance_t& value_t::to_balance()
 {
   if (type == BALANCE) {
     return *(balance_t *) data;
@@ -63,7 +63,7 @@ balance_t& value_t::balance()
   }
 }
 
-balance_pair_t& value_t::balance_pair()
+balance_pair_t& value_t::to_balance_pair()
 {
   if (type == BALANCE_PAIR) {
     return *(balance_pair_t *) data;
@@ -75,7 +75,7 @@ balance_pair_t& value_t::balance_pair()
   }
 }
 
-string& value_t::string_value()
+string& value_t::to_string()
 {
   if (type == STRING) {
     return **(string **) data;
@@ -89,7 +89,7 @@ string& value_t::string_value()
   }
 }
 
-xml::node_t *& value_t::xml_node()
+xml::node_t *& value_t::to_xml_node()
 {
   if (type == XML_NODE)
     return *(xml::node_t **) data;
@@ -97,7 +97,7 @@ xml::node_t *& value_t::xml_node()
     throw_(value_error, "Value is not an XML node");
 }
 
-void *& value_t::pointer()
+void *& value_t::to_pointer()
 {
   if (type == POINTER)
     return *(void **) data;
@@ -105,7 +105,7 @@ void *& value_t::pointer()
     throw_(value_error, "Value is not a pointer");
 }
 
-value_t::sequence_t *& value_t::sequence()
+value_t::sequence_t *& value_t::to_sequence()
 {
   if (type == SEQUENCE)
     return *(sequence_t **) data;
@@ -138,7 +138,7 @@ void value_t::destroy()
 
 void value_t::simplify()
 {
-  if (realzero()) {
+  if (is_realzero()) {
     DEBUG("amounts.values.simplify", "Zeroing type " << type);
     *this = 0L;
     return;
@@ -146,7 +146,7 @@ void value_t::simplify()
 
   if (type == BALANCE_PAIR &&
       (! ((balance_pair_t *) data)->cost ||
-       ((balance_pair_t *) data)->cost->realzero())) {
+       ((balance_pair_t *) data)->cost->is_realzero())) {
     DEBUG("amounts.values.simplify", "Reducing balance pair to balance");
     in_place_cast(BALANCE);
   }
@@ -617,7 +617,7 @@ value_t& value_t::operator*=(const value_t& val)
   else if (val.type == XML_NODE) // recurse
     return *this *= (*(xml::node_t **) val.data)->to_value();
 
-  if (val.realzero() && type != STRING) {
+  if (val.is_realzero() && type != STRING) {
     *this = 0L;
     return *this;
   }
@@ -893,7 +893,7 @@ value_t::operator bool() const
   case STRING:
     return ! (**((string **) data)).empty();
   case XML_NODE:
-    return (*(xml::node_t **) data)->to_value().boolean();
+    return (*(xml::node_t **) data)->to_value().to_boolean();
   case POINTER:
     return *(void **) data != NULL;
   case SEQUENCE:
@@ -1810,7 +1810,7 @@ void value_t::in_place_negate()
   }
 }
 
-bool value_t::realzero() const
+bool value_t::is_realzero() const
 {
   switch (type) {
   case BOOLEAN:
@@ -1820,11 +1820,11 @@ bool value_t::realzero() const
   case DATETIME:
     return ! is_valid_moment(*((moment_t *) data));
   case AMOUNT:
-    return ((amount_t *) data)->realzero();
+    return ((amount_t *) data)->is_realzero();
   case BALANCE:
-    return ((balance_t *) data)->realzero();
+    return ((balance_t *) data)->is_realzero();
   case BALANCE_PAIR:
-    return ((balance_pair_t *) data)->realzero();
+    return ((balance_pair_t *) data)->is_realzero();
   case STRING:
     return ((string *) data)->empty();
   case XML_NODE:

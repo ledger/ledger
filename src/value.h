@@ -279,31 +279,31 @@ class value_t
     return *this;
   }
 
-  bool&		  boolean();
-  long&		  integer();
-  moment_t&       datetime();
-  amount_t&	  amount();
-  balance_t&	  balance();
-  balance_pair_t& balance_pair();
-  string&	  string_value();
-  xml::node_t *&  xml_node();
-  void *&	  pointer();
-  sequence_t *&	  sequence();
+  bool&		  to_boolean();
+  long&		  to_long();
+  moment_t&       to_datetime();
+  amount_t&	  to_amount();
+  balance_t&	  to_balance();
+  balance_pair_t& to_balance_pair();
+  string&	  to_string();
+  xml::node_t *&  to_xml_node();
+  void *&	  to_pointer();
+  sequence_t *&	  to_sequence();
 
   value_t& operator[](const int index) {
-    sequence_t * seq = sequence();
+    sequence_t * seq = to_sequence();
     assert(seq);
     return (*seq)[index];
   }
 
   void push_back(const value_t& val) {
-    sequence_t * seq = sequence();
+    sequence_t * seq = to_sequence();
     assert(seq);
     return seq->push_back(val);
   }
 
   std::size_t size() const {
-    sequence_t * seq = const_cast<value_t&>(*this).sequence();
+    sequence_t * seq = const_cast<value_t&>(*this).to_sequence();
     assert(seq);
     return seq->size();
   }
@@ -359,7 +359,7 @@ class value_t
   }
   void in_place_negate();
 
-  bool    realzero() const;
+  bool    is_realzero() const;
   value_t abs() const;
   void    in_place_cast(type_t cast_type);
   value_t cost() const;

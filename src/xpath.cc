@@ -534,7 +534,7 @@ bool xpath_t::function_scope_t::resolve(const string& name,
   case 't':
     if (name == "text") {
       if (value->type == value_t::XML_NODE)
-	result.set_string(value->xml_node()->text());
+	result.set_string(value->to_xml_node()->text());
       else
 	throw_(calc_error, "Attempt to call text() on a non-node value");
       return true;
@@ -650,7 +650,7 @@ xpath_t::parse_value_term(std::istream& in, unsigned short tflags) const
 #endif /* USE_BOOST_PYTHON */
 #endif
 
-    string ident = tok.value.string_value();
+    string ident = tok.value.to_string();
     int id = -1;
     if (std::isdigit(ident[0])) {
       node.reset(new op_t(op_t::ARG_INDEX));
@@ -692,7 +692,7 @@ xpath_t::parse_value_term(std::istream& in, unsigned short tflags) const
       throw_(parse_error, "@ symbol must be followed by attribute name");
 
     node.reset(new op_t(op_t::ATTR_NAME));
-    node->name = new string(tok.value.string_value());
+    node->name = new string(tok.value.to_string());
     break;
 
 #if 0
@@ -1184,7 +1184,7 @@ void xpath_t::op_t::find_values(value_t * context, scope_t * scope,
 
   if (recursive) {
     if (context->type == value_t::XML_NODE) {
-      node_t * ptr = context->xml_node();
+      node_t * ptr = context->to_xml_node();
       if (ptr->flags & XML_NODE_IS_PARENT) {
 	parent_node_t * parent = static_cast<parent_node_t *>(ptr);
 	for (node_t * node = parent->children();
@@ -1214,7 +1214,7 @@ bool xpath_t::op_t::test_value(value_t * context, scope_t * scope,
     return *expr->valuep == value_t((long)index + 1);
 
   default:
-    return expr->valuep->boolean();
+    return expr->valuep->to_boolean();
   }
 }
 
@@ -1246,7 +1246,7 @@ xpath_t::op_t * xpath_t::op_t::defer_sequence(value_t::sequence_t& result_seq)
     if ((*i).type != value_t::POINTER)
       *opp = wrap_value(*i)->acquire();
     else
-      *opp = static_cast<op_t *>((*i).pointer());
+      *opp = static_cast<op_t *>((*i).to_pointer());
   }
 
   return lit_seq.release();
@@ -1256,7 +1256,7 @@ void xpath_t::op_t::append_value(value_t& val,
 				 value_t::sequence_t& result_seq)
 {
   if (val.type == value_t::SEQUENCE) {
-    value_t::sequence_t * subseq = val.sequence();
+    value_t::sequence_t * subseq = val.to_sequence();
     for (value_t::sequence_t::iterator i = subseq->begin();
 	 i != subseq->end();
 	 i++)
@@ -1284,8 +1284,8 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
     case document_t::PARENT:
       if (context->type != value_t::XML_NODE)
 	throw_(compile_error, "Referencing parent node from a non-node value");
-      else if (context->xml_node()->parent)
-	return wrap_value(context->xml_node()->parent)->acquire();
+      else if (context->to_xml_node()->parent)
+	return wrap_value(context->to_xml_node()->parent)->acquire();
       else
 	throw_(compile_error, "Referencing parent node from the root node");
 
@@ -1293,13 +1293,13 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
       if (context->type != value_t::XML_NODE)
 	throw_(compile_error, "Referencing root node from a non-node value");
       else
-	return wrap_value(context->xml_node()->document->top)->acquire();
+	return wrap_value(context->to_xml_node()->document->top)->acquire();
 
     case document_t::ALL: {
       if (context->type != value_t::XML_NODE)
 	throw_(compile_error, "Referencing child nodes from a non-node value");
 
-      node_t * ptr = context->xml_node();
+      node_t * ptr = context->to_xml_node();
       if (! (ptr->flags & XML_NODE_IS_PARENT))
 	throw_(compile_error, "Request for child nodes of a leaf node");
 
@@ -1319,7 +1319,7 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
 
   case NODE_NAME:
     if (context->type == value_t::XML_NODE) {
-      node_t * ptr = context->xml_node();
+      node_t * ptr = context->to_xml_node();
       if (resolve) {
 	// First, look up the symbol as a node name within the current
 	// context.  If any exist, then return the set of names.
@@ -1352,7 +1352,7 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
 
   case ATTR_NAME: {
     // jww (2006-09-29): Attrs should map strings to values, not strings
-    const char * value = context->xml_node()->get_attr(name->c_str());
+    const char * value = context->to_xml_node()->get_attr(name->c_str());
     return wrap_value(value)->acquire();
   }
 
@@ -1372,8 +1372,8 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
   case ARG_INDEX:
     if (scope && scope->kind == scope_t::ARGUMENT) {
       assert(scope->args.type == value_t::SEQUENCE);
-      if (arg_index < scope->args.sequence()->size())
-	return wrap_value((*scope->args.sequence())[arg_index])->acquire();
+      if (arg_index < scope->args.to_sequence()->size())
+	return wrap_value((*scope->args.to_sequence())[arg_index])->acquire();
       else
 	throw_(compile_error, "Reference to non-existing argument");
     } else {
@@ -1815,7 +1815,7 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
     }
 
     case value_t::SEQUENCE: {
-      value_t::sequence_t * seq = lexpr->valuep->sequence();
+      value_t::sequence_t * seq = lexpr->valuep->to_sequence();
 
       int index = 0;
       for (value_t::sequence_t::iterator i = seq->begin();
@@ -2286,7 +2286,7 @@ bool xpath_t::op_t::write(std::ostream&	      out,
   }
 
   if (! symbol.empty()) {
-    if (amount_t::default_pool->find(symbol))
+    if (amount_t::current_pool->find(symbol))
       out << '@';
     out << symbol;
   }

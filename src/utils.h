@@ -447,6 +447,13 @@ inline void throw_unexpected_error(char c, char wanted) {
 
 /**********************************************************************
  *
+ * General support for objects with "flags"
+ */
+
+#include "flags.h"
+
+/**********************************************************************
+ *
  * General utility functions
  */
 

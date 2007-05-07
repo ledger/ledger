@@ -183,6 +183,9 @@ public:
   void set_flags(flags_t arg) {
     base->flags = arg;
   }
+  bool has_flags(flags_t arg) {
+    return base->flags & arg;
+  }
   void add_flags(flags_t arg) {
     base->flags |= arg;
   }

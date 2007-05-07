@@ -46,15 +46,15 @@
 
 namespace ledger {
 
-commodity_pool_t * amount_t::default_pool = NULL;
+commodity_pool_t * amount_t::current_pool = NULL;
 
-bool amount_t::keep_base    = false;
+bool amount_t::keep_base = false;
 
-bool amount_t::keep_price   = false;
-bool amount_t::keep_date    = false;
-bool amount_t::keep_tag	    = false;
+bool amount_t::keep_price = false;
+bool amount_t::keep_date  = false;
+bool amount_t::keep_tag	  = false;
 
-bool amount_t::full_strings = false;
+bool amount_t::stream_fullstrings = false;
 
 #ifndef THREADSAFE
 /**
@@ -65,30 +65,29 @@ static mpz_t temp;
 static mpz_t divisor;
 #endif
 
-struct amount_t::bigint_t
+struct amount_t::bigint_t : public supports_flags<>
 {
 #define BIGINT_BULK_ALLOC 0x01
 #define BIGINT_KEEP_PREC  0x02
 
   mpz_t		 val;
   precision_t	 prec;
-  flags_t	 flags;
   uint_least16_t ref;
   uint_fast32_t	 index;
 
 #define MPZ(bigint) ((bigint)->val)
 
-  bigint_t() : prec(0), flags(0), ref(1), index(0) {
+  bigint_t() : prec(0), ref(1), index(0) {
     TRACE_CTOR(bigint_t, "");
     mpz_init(val);
   }
-  bigint_t(mpz_t _val) : prec(0), flags(0), ref(1), index(0) {
+  bigint_t(mpz_t _val) : prec(0), ref(1), index(0) {
     TRACE_CTOR(bigint_t, "mpz_t");
     mpz_init_set(val, _val);
   }
   bigint_t(const bigint_t& other)
-    : prec(other.prec), flags(other.flags & BIGINT_KEEP_PREC),
-      ref(1), index(0) {
+    : supports_flags<>(other.flags() & BIGINT_KEEP_PREC),
+      prec(other.prec), ref(1), index(0) {
     TRACE_CTOR(bigint_t, "copy");
     mpz_init_set(val, other.val);
   }
@@ -105,12 +104,12 @@ void amount_t::initialize()
   mpz_init(divisor);
 
   // jww (2007-05-02): Be very careful here!
-  if (! default_pool)
-    default_pool = new commodity_pool_t;
+  if (! current_pool)
+    current_pool = new commodity_pool_t;
 
   // Add time commodity conversions, so that timelog's may be parsed
   // in terms of seconds, but reported as minutes or hours.
-  if (commodity_t * commodity = default_pool->create("s")) {
+  if (commodity_t * commodity = current_pool->create("s")) {
     commodity->add_flags(COMMODITY_STYLE_NOMARKET | COMMODITY_STYLE_BUILTIN);
 
     parse_conversion("1.0m", "60s");
@@ -126,9 +125,9 @@ void amount_t::shutdown()
   mpz_clear(divisor);
 
   // jww (2007-05-02): Be very careful here!
-  if (default_pool) {
-    checked_delete(default_pool);
-    default_pool = NULL;
+  if (current_pool) {
+    checked_delete(current_pool);
+    current_pool = NULL;
   }
 }
 
@@ -151,7 +150,7 @@ void amount_t::_copy(const amount_t& amt)
 
     // Never maintain a pointer into a bulk allocation pool; such
     // pointers are not guaranteed to remain.
-    if (amt.quantity->flags & BIGINT_BULK_ALLOC) {
+    if (amt.quantity->has_flags(BIGINT_BULK_ALLOC)) {
       quantity = new bigint_t(*amt.quantity);
     } else {
       quantity = amt.quantity;
@@ -208,7 +207,7 @@ void amount_t::_release()
   DEBUG("amounts.refs", quantity << " ref--, now " << (quantity->ref - 1));
 
   if (--quantity->ref == 0) {
-    if (! (quantity->flags & BIGINT_BULK_ALLOC))
+    if (! (quantity->has_flags(BIGINT_BULK_ALLOC)))
       checked_delete(quantity);
     else
       quantity->~bigint_t();
@@ -519,7 +518,7 @@ amount_t& amount_t::operator*=(const amount_t& amt)
   if (! has_commodity())
     commodity_ = amt.commodity_;
 
-  if (has_commodity() && ! (quantity->flags & BIGINT_KEEP_PREC)) {
+  if (has_commodity() && ! (quantity->has_flags(BIGINT_KEEP_PREC))) {
     precision_t comm_prec = commodity().precision();
     if (quantity->prec > comm_prec + 6U) {
       mpz_round(MPZ(quantity), MPZ(quantity), quantity->prec, comm_prec + 6U);
@@ -571,7 +570,7 @@ amount_t& amount_t::operator/=(const amount_t& amt)
   // times), then round the number to within the commodity's precision
   // plus six places.
 
-  if (has_commodity() && ! (quantity->flags & BIGINT_KEEP_PREC)) {
+  if (has_commodity() && ! (quantity->has_flags(BIGINT_KEEP_PREC))) {
     precision_t comm_prec = commodity().precision();
     if (quantity->prec > comm_prec + 6U) {
       mpz_round(MPZ(quantity), MPZ(quantity), quantity->prec, comm_prec + 6U);
@@ -602,9 +601,9 @@ amount_t amount_t::round(precision_t prec) const
   amount_t t = *this;
 
   if (! quantity || quantity->prec <= prec) {
-    if (quantity && quantity->flags & BIGINT_KEEP_PREC) {
+    if (quantity && quantity->has_flags(BIGINT_KEEP_PREC)) {
       t._dup();
-      t.quantity->flags &= ~BIGINT_KEEP_PREC;
+      t.quantity->drop_flags(BIGINT_KEEP_PREC);
     }
     return t;
   }
@@ -614,7 +613,7 @@ amount_t amount_t::round(precision_t prec) const
   mpz_round(MPZ(t.quantity), MPZ(t.quantity), t.quantity->prec, prec);
 
   t.quantity->prec = prec;
-  t.quantity->flags &= ~BIGINT_KEEP_PREC;
+  t.quantity->drop_flags(BIGINT_KEEP_PREC);
 
   return t;
 }
@@ -624,16 +623,16 @@ amount_t amount_t::unround() const
   if (! quantity) {
     amount_t t(0L);
     assert(t.quantity);
-    t.quantity->flags |= BIGINT_KEEP_PREC;
+    t.quantity->add_flags(BIGINT_KEEP_PREC);
     return t;
   }
-  else if (quantity->flags & BIGINT_KEEP_PREC) {
+  else if (quantity->has_flags(BIGINT_KEEP_PREC)) {
     return *this;
   }
 
   amount_t t = *this;
   t._dup();
-  t.quantity->flags |= BIGINT_KEEP_PREC;
+  t.quantity->add_flags(BIGINT_KEEP_PREC);
 
   return t;
 }
@@ -674,18 +673,18 @@ int amount_t::sign() const
   return quantity ? mpz_sgn(MPZ(quantity)) : 0;
 }
 
-bool amount_t::zero() const
+bool amount_t::is_zero() const
 {
   if (! quantity)
     return true;
 
   if (has_commodity()) {
     if (quantity->prec <= commodity().precision())
-      return realzero();
+      return is_realzero();
     else
       return round(commodity().precision()).sign() == 0;
   }
-  return realzero();
+  return is_realzero();
 }
 
 
@@ -944,7 +943,7 @@ namespace {
   }
 }
 
-void amount_t::parse(std::istream& in, flags_t flags)
+void amount_t::parse(std::istream& in, flags_t tflags)
 {
   // The possible syntax for an amount is:
   //
@@ -954,8 +953,9 @@ void amount_t::parse(std::istream& in, flags_t flags)
   string       symbol;
   string       quant;
   annotation_t details;
-  unsigned int comm_flags = COMMODITY_STYLE_DEFAULTS;
   bool	       negative	  = false;
+
+  commodity_t::flags_t comm_flags = COMMODITY_STYLE_DEFAULTS;
 
   char c = peek_next_nonws(in);
   if (c == '-') {
@@ -1007,15 +1007,15 @@ void amount_t::parse(std::istream& in, flags_t flags)
   if (symbol.empty()) {
     commodity_ = NULL;
   } else {
-    commodity_ = default_pool->find(symbol);
+    commodity_ = current_pool->find(symbol);
     if (! commodity_) {
-      commodity_ = default_pool->create(symbol);
+      commodity_ = current_pool->create(symbol);
       newly_created = true;
     }
     assert(commodity_);
 
     if (details)
-      commodity_ = default_pool->find_or_create(*commodity_, details);
+      commodity_ = current_pool->find_or_create(*commodity_, details);
   }
 
   // Determine the precision of the amount, based on the usage of
@@ -1034,11 +1034,11 @@ void amount_t::parse(std::istream& in, flags_t flags)
     }
   }
   else if (last_comma != string::npos &&
-	   commodity().flags() & COMMODITY_STYLE_EUROPEAN) {
+	   commodity().has_flags(COMMODITY_STYLE_EUROPEAN)) {
     quantity->prec = quant.length() - last_comma - 1;
   }
   else if (last_period != string::npos &&
-	   ! (commodity().flags() & COMMODITY_STYLE_EUROPEAN)) {
+	   ! (commodity().has_flags(COMMODITY_STYLE_EUROPEAN))) {
     quantity->prec = quant.length() - last_period - 1;
   }
   else {
@@ -1048,14 +1048,18 @@ void amount_t::parse(std::istream& in, flags_t flags)
   // Set the commodity's flags and precision accordingly
 
   if (commodity_ &&
-      (newly_created || ! (flags & AMOUNT_PARSE_NO_MIGRATE))) {
+      (newly_created || ! (tflags & AMOUNT_PARSE_NO_MIGRATE))) {
     commodity().add_flags(comm_flags);
     if (quantity->prec > commodity().precision())
       commodity().set_precision(quantity->prec);
   }
 
-  if (flags & AMOUNT_PARSE_NO_MIGRATE)
-    quantity->flags |= BIGINT_KEEP_PREC;
+  // Setup the amount's own flags
+
+  set_flags(tflags);
+
+  if (has_flags(AMOUNT_PARSE_NO_MIGRATE))
+    quantity->add_flags(BIGINT_KEEP_PREC);
 
   // Now we have the final number.  Remove commas and periods, if
   // necessary.
@@ -1082,7 +1086,7 @@ void amount_t::parse(std::istream& in, flags_t flags)
   if (negative)
     in_place_negate();
 
-  if (! (flags & AMOUNT_PARSE_NO_REDUCE))
+  if (! has_flags(AMOUNT_PARSE_NO_REDUCE))
     in_place_reduce();
 }
 
@@ -1132,7 +1136,7 @@ void amount_t::print(std::ostream& _out, bool omit_commodity,
   precision_t  precision = 0;
 
   if (quantity) {
-    if (! comm || full_precision || base.quantity->flags & BIGINT_KEEP_PREC) {
+    if (! comm || full_precision || base.quantity->has_flags(BIGINT_KEEP_PREC)) {
       mpz_ui_pow_ui(divisor, 10, base.quantity->prec);
       mpz_tdiv_qr(quotient, remainder, MPZ(base.quantity), divisor);
       precision = base.quantity->prec;
@@ -1171,10 +1175,10 @@ void amount_t::print(std::ostream& _out, bool omit_commodity,
     mpz_set(rquotient, remainder);
   }
 
-  if (! omit_commodity && ! (comm.flags() & COMMODITY_STYLE_SUFFIXED)) {
+  if (! omit_commodity && ! comm.has_flags(COMMODITY_STYLE_SUFFIXED)) {
     comm.write(out);
 
-    if (comm.flags() & COMMODITY_STYLE_SEPARATED)
+    if (comm.has_flags(COMMODITY_STYLE_SEPARATED))
       out << " ";
   }
 
@@ -1184,7 +1188,7 @@ void amount_t::print(std::ostream& _out, bool omit_commodity,
   if (! quantity || mpz_sgn(quotient) == 0) {
     out << '0';
   }
-  else if (omit_commodity || ! (comm.flags() & COMMODITY_STYLE_THOUSANDS)) {
+  else if (omit_commodity || ! comm.has_flags(COMMODITY_STYLE_THOUSANDS)) {
     char * p = mpz_get_str(NULL, 10, quotient);
     out << p;
     std::free(p);
@@ -1213,7 +1217,7 @@ void amount_t::print(std::ostream& _out, bool omit_commodity,
 	 i != strs.rend();
 	 i++) {
       if (printed) {
-	out << (comm.flags() & COMMODITY_STYLE_EUROPEAN ? '.' : ',');
+	out << (comm.has_flags(COMMODITY_STYLE_EUROPEAN) ? '.' : ',');
 	out.width(3);
 	out.fill('0');
       }
@@ -1250,13 +1254,13 @@ void amount_t::print(std::ostream& _out, bool omit_commodity,
       if (omit_commodity)
 	out << '.';
       else
-	out << ((comm.flags() & COMMODITY_STYLE_EUROPEAN) ? ',' : '.');
+	out << (comm.has_flags(COMMODITY_STYLE_EUROPEAN) ? ',' : '.');
       out << ender;
     }
   }
 
-  if (! omit_commodity && comm.flags() & COMMODITY_STYLE_SUFFIXED) {
-    if (comm.flags() & COMMODITY_STYLE_SEPARATED)
+  if (! omit_commodity && comm.has_flags(COMMODITY_STYLE_SUFFIXED)) {
+    if (comm.has_flags(COMMODITY_STYLE_SEPARATED))
       out << " ";
 
     comm.write(out);
@@ -1292,9 +1296,9 @@ void amount_t::read(std::istream& in)
   if (ident == 0xffffffff)
     commodity_ = NULL;
   else if (ident == 0)
-    commodity_ = default_pool->null_commodity;
+    commodity_ = current_pool->null_commodity;
   else {
-    commodity_ = default_pool->find(ident - 1);
+    commodity_ = current_pool->find(ident - 1);
     assert(commodity_);
   }
 
@@ -1308,9 +1312,9 @@ void amount_t::read(char *& data)
   if (ident == 0xffffffff)
     commodity_ = NULL;
   else if (ident == 0)
-    commodity_ = default_pool->null_commodity;
+    commodity_ = current_pool->null_commodity;
   else {
-    commodity_ = default_pool->find(ident - 1);
+    commodity_ = current_pool->find(ident - 1);
     assert(commodity_);
   }
 
@@ -1357,9 +1361,9 @@ void amount_t::read_quantity(char *& data)
 
     quantity->prec = *((precision_t *) data);
     data += sizeof(precision_t);
-    quantity->flags = *((flags_t *) data);
+    quantity->set_flags(*((flags_t *) data));
     data += sizeof(flags_t);
-    quantity->flags |= BIGINT_BULK_ALLOC;
+    quantity->add_flags(BIGINT_BULK_ALLOC);
   } else {
     uint_fast32_t index = *((uint_fast32_t *) data);
     data += sizeof(uint_fast32_t);
@@ -1399,7 +1403,10 @@ void amount_t::read_quantity(std::istream& in)
       mpz_neg(MPZ(quantity), MPZ(quantity));
 
     in.read((char *)&quantity->prec, sizeof(quantity->prec));
-    in.read((char *)&quantity->flags, sizeof(quantity->flags));
+
+    bigint_t::flags_t tflags;
+    in.read((char *)&tflags, sizeof(tflags));
+    quantity->set_flags(tflags);
   }
   else {
     assert(0);
@@ -1436,9 +1443,9 @@ void amount_t::write_quantity(std::ostream& out) const
     out.write(&byte, sizeof(byte));
 
     out.write((char *)&quantity->prec, sizeof(quantity->prec));
-    flags_t flags = quantity->flags & ~BIGINT_BULK_ALLOC;
-    assert(sizeof(flags) == sizeof(quantity->flags));
-    out.write((char *)&flags, sizeof(flags));
+    bigint_t::flags_t tflags = quantity->flags() & ~BIGINT_BULK_ALLOC;
+    assert(sizeof(tflags) == sizeof(bigint_t::flags_t));
+    out.write((char *)&tflags, sizeof(tflags));
   } else {
     assert(quantity->ref > 1);
 

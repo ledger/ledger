@@ -11,12 +11,12 @@ void CommodityAmountTestCase::setUp()
   // Cause the display precision for dollars to be initialized to 2.
   amount_t x1("$1.00");
   assertTrue(x1);
-  amount_t::full_strings = true; // makes error reports from UnitTests accurate
+  amount_t::stream_fullstrings = true; // makes error reports from UnitTests accurate
 }
 
 void CommodityAmountTestCase::tearDown()
 {
-  amount_t::full_strings = false;
+  amount_t::stream_fullstrings = false;
 
   ledger::set_session_context();
 }
@@ -185,8 +185,8 @@ void CommodityAmountTestCase::testEquality()
   amount_t x10 = "-123.45€";
 
   assertTrue(x0.is_null());
-  assertTrue(x0.zero());
-  assertTrue(x0.realzero());
+  assertTrue(x0.is_zero());
+  assertTrue(x0.is_realzero());
   assertTrue(x0.sign() == 0);
   assertTrue(x0.compare(x1) < 0);
   assertTrue(x0.compare(x2) > 0);
@@ -578,8 +578,8 @@ void CommodityAmountTestCase::testForZero()
   amount_t x1(internalAmount("$0.000000000000000000001"));
 
   assertFalse(x1);
-  assertTrue(x1.zero());
-  assertFalse(x1.realzero());
+  assertTrue(x1.is_zero());
+  assertFalse(x1.is_realzero());
 
   assertValid(x1);
 }

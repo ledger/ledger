@@ -4,8 +4,11 @@ namespace ledger {
 
 balance_t& balance_t::operator*=(const balance_t& bal)
 {
-  if (realzero() || bal.realzero()) {
-    return *this = amount_t();
+  if (is_realzero()) {
+    return *this;
+  }
+  else if (bal.is_realzero()) {
+    return *this = bal;
   }
   else if (bal.amounts.size() == 1) {
     return *this *= (*bal.amounts.begin()).second;
@@ -34,8 +37,11 @@ balance_t& balance_t::operator*=(const balance_t& bal)
 
 balance_t& balance_t::operator*=(const amount_t& amt)
 {
-  if (realzero() || amt.realzero()) {
-    return *this = amount_t();
+  if (is_realzero()) {
+    return *this;
+  }
+  else if (amt.is_realzero()) {
+    return *this = amt;
   }
   else if (! amt.commodity()) {
     // Multiplying by the null commodity causes all amounts to be
@@ -72,11 +78,11 @@ balance_t& balance_t::operator*=(const amount_t& amt)
 
 balance_t& balance_t::operator/=(const balance_t& bal)
 {
-  if (bal.realzero()) {
+  if (bal.is_realzero()) {
     throw_(amount_error, "Divide by zero: " << *this << " / " << bal);
   }
-  else if (realzero()) {
-    return *this = amount_t();
+  else if (is_realzero()) {
+    return *this;
   }
   else if (bal.amounts.size() == 1) {
     return *this /= (*bal.amounts.begin()).second;
@@ -97,11 +103,11 @@ balance_t& balance_t::operator/=(const balance_t& bal)
 
 balance_t& balance_t::operator/=(const amount_t& amt)
 {
-  if (amt.realzero()) {
+  if (amt.is_realzero()) {
     throw_(amount_error, "Divide by zero: " << *this << " / " << amt);
   }
-  else if (realzero()) {
-    return *this = amount_t();
+  else if (is_realzero()) {
+    return *this;
   }
   else if (! amt.commodity()) {
     // Dividing by the null commodity causes all amounts to be

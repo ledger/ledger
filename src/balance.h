@@ -36,8 +36,7 @@ public:
   }
   balance_t(const amount_t& amt) {
     TRACE_CTOR(balance_t, "const amount_t&");
-    if (! amt.realzero())
-      amounts.insert(amounts_pair(&amt.commodity(), amt));
+    amounts.insert(amounts_pair(&amt.commodity(), amt));
   }
   ~balance_t() {
     TRACE_DTOR(balance_t);
@@ -139,13 +138,13 @@ public:
     return false;
   }
 
-  bool realzero() const {
+  bool is_realzero() const {
     if (amounts.size() == 0)
       return true;
     for (amounts_map::const_iterator i = amounts.begin();
 	 i != amounts.end();
 	 i++)
-      if (! (*i).second.realzero())
+      if (! (*i).second.is_realzero())
 	return false;
     return true;
   }
@@ -324,8 +323,8 @@ public:
     return quantity;
   }
 
-  bool realzero() const {
-    return ((! cost || cost->realzero()) && quantity.realzero());
+  bool is_realzero() const {
+    return ((! cost || cost->is_realzero()) && quantity.is_realzero());
   }
 
   balance_pair_t abs() const {

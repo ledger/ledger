@@ -146,15 +146,15 @@ bool entry_base_t::finalize()
   // the balance.  This is done for the last eligible commodity.
 
   if (! saw_null && balance && balance.type == value_t::BALANCE &&
-      balance.balance().amounts.size() == 2) {
+      balance.to_balance().amounts.size() == 2) {
     transactions_list::const_iterator x = transactions.begin();
     assert((*x)->amount);
     commodity_t& this_comm = (*x)->amount->commodity();
 
     balance_t::amounts_map::const_iterator this_bal =
-      balance.balance().amounts.find(&this_comm);
+      balance.to_balance().amounts.find(&this_comm);
     balance_t::amounts_map::const_iterator other_bal =
-      balance.balance().amounts.begin();
+      balance.to_balance().amounts.begin();
     if (this_bal == other_bal)
       other_bal++;
 
@@ -209,12 +209,12 @@ bool entry_base_t::finalize()
     balance_t * bal = NULL;
     switch (balance.type) {
     case value_t::BALANCE_PAIR:
-      bal = &balance.balance_pair().quantity;
+      bal = &balance.to_balance_pair().quantity;
       // fall through...
 
     case value_t::BALANCE:
       if (! bal)
-	bal = &balance.balance();
+	bal = &balance.to_balance();
 
       if (bal->amounts.size() < 2) {
 	balance.cast(value_t::AMOUNT);
@@ -243,7 +243,7 @@ bool entry_base_t::finalize()
       // fall through...
 
     case value_t::AMOUNT:
-      (*x)->amount = balance.amount().negate();
+      (*x)->amount = balance.to_amount().negate();
       (*x)->flags |= TRANSACTION_CALCULATED;
 
       balance += *(*x)->amount;

@@ -66,7 +66,7 @@ parse_amount_expr(std::istream& in, journal_t *,
   }
 #endif
 
-  amount = xpath.calc(static_cast<xml::transaction_node_t *>(xact.data)).amount();
+  amount = xpath.calc(xact.data).to_amount();
 
   DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 	 "The transaction amount is " << amount);
@@ -718,7 +718,7 @@ unsigned int textual_parser_t::parse(std::istream&	   in,
 
     case 'D':	{		// a default commodity for "entry"
       amount_t amt(skip_ws(line + 1));
-      amount_t::default_pool->default_commodity = &amt.commodity();
+      amount_t::current_pool->default_commodity = &amt.commodity();
       break;
     }
 
@@ -757,7 +757,7 @@ unsigned int textual_parser_t::parse(std::istream&	   in,
       amount_t price(symbol_and_price);
 
       if (commodity_t * commodity =
-	  amount_t::default_pool->find_or_create(symbol))
+	  amount_t::current_pool->find_or_create(symbol))
 	commodity->add_price(datetime, price);
       break;
     }
@@ -768,7 +768,7 @@ unsigned int textual_parser_t::parse(std::istream&	   in,
       parse_symbol(p, symbol);
 
       if (commodity_t * commodity =
-	  amount_t::default_pool->find_or_create(symbol))
+	  amount_t::current_pool->find_or_create(symbol))
 	commodity->add_flags(COMMODITY_STYLE_NOMARKET);
       break;
     }
