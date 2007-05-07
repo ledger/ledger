@@ -32,8 +32,7 @@
 #ifndef _VALUE_H
 #define _VALUE_H
 
-#include "amount.h"
-#include "balance.h"
+#include "balpair.h"		// pulls in balance.h and amount.h
 
 namespace ledger {
 

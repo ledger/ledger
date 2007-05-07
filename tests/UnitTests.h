@@ -19,4 +19,6 @@ using namespace ledger;
 #define assertMessage(x,y)	    CPPUNIT_ASSERT_MESSAGE(x,y)
 #define assertThrow(x,y)	    CPPUNIT_ASSERT_THROW(x,y)
 
+#define internalAmount(x) amount_t::exact(x)
+
 #endif /* _UNITTESTS_H */

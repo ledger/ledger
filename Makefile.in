@@ -132,8 +132,9 @@ am_PyUnitTests_OBJECTS =
 PyUnitTests_OBJECTS = $(am_PyUnitTests_OBJECTS)
 PyUnitTests_LDADD = $(LDADD)
 nodist_UnitTests_OBJECTS = UnitTests-UnitTests.$(OBJEXT) \
-	UnitTests-t_times.$(OBJEXT) UnitTests-t_commodity.$(OBJEXT) \
-	UnitTests-t_amount.$(OBJEXT)
+	UnitTests-t_utils.$(OBJEXT) UnitTests-t_times.$(OBJEXT) \
+	UnitTests-t_commodity.$(OBJEXT) UnitTests-t_amount.$(OBJEXT) \
+	UnitTests-t_balance.$(OBJEXT)
 UnitTests_OBJECTS = $(nodist_UnitTests_OBJECTS)
 UnitTests_DEPENDENCIES = $(lib_LTLIBRARIES) gdtoa/libgdtoa.la
 UnitTests_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
@@ -373,44 +374,46 @@ libledger_la_SOURCES = src/utils.cc src/times.cc src/mask.cc \
 libpyledger_la_CPPFLAGS = $(libledger_la_CPPFLAGS)
 libpyledger_la_LDFLAGS = -release $(PACKAGE_VERSION)
 libpyledger_la_SOURCES = \
-	src/py_utils.cc \
-	src/py_times.cc \
+	src/py_utils.cc  \
+	src/py_times.cc  \
 	src/py_amount.cc
 
 pkginclude_HEADERS = \
-	src/amount.h     \
-	src/balance.h    \
-	src/commodity.h  \
-	src/binary.h     \
-	src/context.h    \
-	src/csv.h	 \
-	src/derive.h     \
-	src/emacs.h	 \
-	src/fdstream.hpp \
-	src/format.h     \
-	src/gnucash.h    \
-	src/journal.h    \
-	src/ledger.h     \
-	src/mask.h	 \
-	src/ofx.h	 \
-	src/option.h     \
-	src/parser.h     \
-	src/pyinterp.h   \
-	src/pyfstream.h  \
-	src/pyledger.h   \
-	src/qif.h	 \
-	src/quotes.h     \
-	src/reconcile.h  \
-	src/register.h   \
-	src/report.h     \
-	src/session.h    \
-	src/system.hh    \
-	src/textual.h    \
-	src/times.h      \
-	src/transform.h  \
-	src/utils.h	 \
-	src/value.h	 \
-	src/xml.h        \
+	src/amount.h	     \
+	src/balpair.h	     \
+	src/balance.h	     \
+	src/binary.h	     \
+	src/commodity.h	     \
+	src/context.h	     \
+	src/csv.h	     \
+	src/derive.h	     \
+	src/emacs.h	     \
+	src/flags.h	     \
+	src/format.h	     \
+	src/gnucash.h	     \
+	src/journal.h	     \
+	src/ledger.h	     \
+	src/mask.h	     \
+	src/ofx.h	     \
+	src/option.h	     \
+	src/parser.h	     \
+	src/pyfstream.h	     \
+	src/pyinterp.h	     \
+	src/pyledger.h	     \
+	src/pyutils.h	     \
+	src/qif.h	     \
+	src/quotes.h	     \
+	src/reconcile.h	     \
+	src/register.h	     \
+	src/report.h	     \
+	src/scoped_execute.h \
+	src/session.h	     \
+	src/textual.h	     \
+	src/times.h	     \
+	src/transform.h	     \
+	src/utils.h	     \
+	src/value.h	     \
+	src/xml.h	     \
 	src/xpath.h
 
 ledger_CPPFLAGS = $(libledger_la_CPPFLAGS)
@@ -439,9 +442,11 @@ dist_lisp_LISP = lisp/ledger.el lisp/timeclock.el
 @HAVE_BOOST_PYTHON_TRUE@	$(am__append_16) $(am__append_17)
 nodist_UnitTests_SOURCES = tests/UnitTests.cc \
 	\
-	tests/numerics/t_times.cc \
+	tests/utility/t_utils.cc      \
+	tests/utility/t_times.cc      \
 	tests/numerics/t_commodity.cc \
-	tests/numerics/t_amount.cc
+	tests/numerics/t_amount.cc    \
+	tests/numerics/t_balance.cc
 
 UnitTests_CPPFLAGS = -I$(srcdir)/tests $(libledger_la_CPPFLAGS)
 UnitTests_LDFLAGS = $(LIBADD_DL)
@@ -596,8 +601,10 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/UnitTests-UnitTests.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/UnitTests-t_amount.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/UnitTests-t_balance.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/UnitTests-t_commodity.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/UnitTests-t_times.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/UnitTests-t_utils.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ledger-main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ledger-option.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libledger_la-amount.Plo@am__quote@
@@ -880,19 +887,33 @@ UnitTests-UnitTests.obj: tests/UnitTests.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o UnitTests-UnitTests.obj `if test -f 'tests/UnitTests.cc'; then $(CYGPATH_W) 'tests/UnitTests.cc'; else $(CYGPATH_W) '$(srcdir)/tests/UnitTests.cc'; fi`
 
-UnitTests-t_times.o: tests/numerics/t_times.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT UnitTests-t_times.o -MD -MP -MF $(DEPDIR)/UnitTests-t_times.Tpo -c -o UnitTests-t_times.o `test -f 'tests/numerics/t_times.cc' || echo '$(srcdir)/'`tests/numerics/t_times.cc
-@am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/UnitTests-t_times.Tpo $(DEPDIR)/UnitTests-t_times.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='tests/numerics/t_times.cc' object='UnitTests-t_times.o' libtool=no @AMDEPBACKSLASH@
+UnitTests-t_utils.o: tests/utility/t_utils.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT UnitTests-t_utils.o -MD -MP -MF $(DEPDIR)/UnitTests-t_utils.Tpo -c -o UnitTests-t_utils.o `test -f 'tests/utility/t_utils.cc' || echo '$(srcdir)/'`tests/utility/t_utils.cc
+@am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/UnitTests-t_utils.Tpo $(DEPDIR)/UnitTests-t_utils.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='tests/utility/t_utils.cc' object='UnitTests-t_utils.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o UnitTests-t_times.o `test -f 'tests/numerics/t_times.cc' || echo '$(srcdir)/'`tests/numerics/t_times.cc
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o UnitTests-t_utils.o `test -f 'tests/utility/t_utils.cc' || echo '$(srcdir)/'`tests/utility/t_utils.cc
 
-UnitTests-t_times.obj: tests/numerics/t_times.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT UnitTests-t_times.obj -MD -MP -MF $(DEPDIR)/UnitTests-t_times.Tpo -c -o UnitTests-t_times.obj `if test -f 'tests/numerics/t_times.cc'; then $(CYGPATH_W) 'tests/numerics/t_times.cc'; else $(CYGPATH_W) '$(srcdir)/tests/numerics/t_times.cc'; fi`
-@am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/UnitTests-t_times.Tpo $(DEPDIR)/UnitTests-t_times.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='tests/numerics/t_times.cc' object='UnitTests-t_times.obj' libtool=no @AMDEPBACKSLASH@
+UnitTests-t_utils.obj: tests/utility/t_utils.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT UnitTests-t_utils.obj -MD -MP -MF $(DEPDIR)/UnitTests-t_utils.Tpo -c -o UnitTests-t_utils.obj `if test -f 'tests/utility/t_utils.cc'; then $(CYGPATH_W) 'tests/utility/t_utils.cc'; else $(CYGPATH_W) '$(srcdir)/tests/utility/t_utils.cc'; fi`
+@am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/UnitTests-t_utils.Tpo $(DEPDIR)/UnitTests-t_utils.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='tests/utility/t_utils.cc' object='UnitTests-t_utils.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o UnitTests-t_times.obj `if test -f 'tests/numerics/t_times.cc'; then $(CYGPATH_W) 'tests/numerics/t_times.cc'; else $(CYGPATH_W) '$(srcdir)/tests/numerics/t_times.cc'; fi`
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o UnitTests-t_utils.obj `if test -f 'tests/utility/t_utils.cc'; then $(CYGPATH_W) 'tests/utility/t_utils.cc'; else $(CYGPATH_W) '$(srcdir)/tests/utility/t_utils.cc'; fi`
+
+UnitTests-t_times.o: tests/utility/t_times.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT UnitTests-t_times.o -MD -MP -MF $(DEPDIR)/UnitTests-t_times.Tpo -c -o UnitTests-t_times.o `test -f 'tests/utility/t_times.cc' || echo '$(srcdir)/'`tests/utility/t_times.cc
+@am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/UnitTests-t_times.Tpo $(DEPDIR)/UnitTests-t_times.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='tests/utility/t_times.cc' object='UnitTests-t_times.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o UnitTests-t_times.o `test -f 'tests/utility/t_times.cc' || echo '$(srcdir)/'`tests/utility/t_times.cc
+
+UnitTests-t_times.obj: tests/utility/t_times.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT UnitTests-t_times.obj -MD -MP -MF $(DEPDIR)/UnitTests-t_times.Tpo -c -o UnitTests-t_times.obj `if test -f 'tests/utility/t_times.cc'; then $(CYGPATH_W) 'tests/utility/t_times.cc'; else $(CYGPATH_W) '$(srcdir)/tests/utility/t_times.cc'; fi`
+@am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/UnitTests-t_times.Tpo $(DEPDIR)/UnitTests-t_times.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='tests/utility/t_times.cc' object='UnitTests-t_times.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o UnitTests-t_times.obj `if test -f 'tests/utility/t_times.cc'; then $(CYGPATH_W) 'tests/utility/t_times.cc'; else $(CYGPATH_W) '$(srcdir)/tests/utility/t_times.cc'; fi`
 
 UnitTests-t_commodity.o: tests/numerics/t_commodity.cc
 @am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT UnitTests-t_commodity.o -MD -MP -MF $(DEPDIR)/UnitTests-t_commodity.Tpo -c -o UnitTests-t_commodity.o `test -f 'tests/numerics/t_commodity.cc' || echo '$(srcdir)/'`tests/numerics/t_commodity.cc
@@ -921,6 +942,20 @@ UnitTests-t_amount.obj: tests/numerics/t_amount.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='tests/numerics/t_amount.cc' object='UnitTests-t_amount.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o UnitTests-t_amount.obj `if test -f 'tests/numerics/t_amount.cc'; then $(CYGPATH_W) 'tests/numerics/t_amount.cc'; else $(CYGPATH_W) '$(srcdir)/tests/numerics/t_amount.cc'; fi`
+
+UnitTests-t_balance.o: tests/numerics/t_balance.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT UnitTests-t_balance.o -MD -MP -MF $(DEPDIR)/UnitTests-t_balance.Tpo -c -o UnitTests-t_balance.o `test -f 'tests/numerics/t_balance.cc' || echo '$(srcdir)/'`tests/numerics/t_balance.cc
+@am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/UnitTests-t_balance.Tpo $(DEPDIR)/UnitTests-t_balance.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='tests/numerics/t_balance.cc' object='UnitTests-t_balance.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o UnitTests-t_balance.o `test -f 'tests/numerics/t_balance.cc' || echo '$(srcdir)/'`tests/numerics/t_balance.cc
+
+UnitTests-t_balance.obj: tests/numerics/t_balance.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT UnitTests-t_balance.obj -MD -MP -MF $(DEPDIR)/UnitTests-t_balance.Tpo -c -o UnitTests-t_balance.obj `if test -f 'tests/numerics/t_balance.cc'; then $(CYGPATH_W) 'tests/numerics/t_balance.cc'; else $(CYGPATH_W) '$(srcdir)/tests/numerics/t_balance.cc'; fi`
+@am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/UnitTests-t_balance.Tpo $(DEPDIR)/UnitTests-t_balance.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='tests/numerics/t_balance.cc' object='UnitTests-t_balance.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(UnitTests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o UnitTests-t_balance.obj `if test -f 'tests/numerics/t_balance.cc'; then $(CYGPATH_W) 'tests/numerics/t_balance.cc'; else $(CYGPATH_W) '$(srcdir)/tests/numerics/t_balance.cc'; fi`
 
 ledger-option.o: src/option.cc
 @am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ledger_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT ledger-option.o -MD -MP -MF $(DEPDIR)/ledger-option.Tpo -c -o ledger-option.o `test -f 'src/option.cc' || echo '$(srcdir)/'`src/option.cc

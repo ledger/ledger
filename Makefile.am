@@ -92,48 +92,50 @@ endif
 
 
 libpyledger_la_CPPFLAGS = $(libledger_la_CPPFLAGS)
-libpyledger_la_LDFLAGS = -release $(PACKAGE_VERSION)
+libpyledger_la_LDFLAGS  = -release $(PACKAGE_VERSION)
 
 libpyledger_la_SOURCES = \
-	src/py_utils.cc \
-	src/py_times.cc \
+	src/py_utils.cc  \
+	src/py_times.cc  \
 	src/py_amount.cc
 
 
 pkginclude_HEADERS = \
-	src/amount.h     \
-	src/balance.h    \
-	src/commodity.h  \
-	src/binary.h     \
-	src/context.h    \
-	src/csv.h	 \
-	src/derive.h     \
-	src/emacs.h	 \
-	src/fdstream.hpp \
-	src/format.h     \
-	src/gnucash.h    \
-	src/journal.h    \
-	src/ledger.h     \
-	src/mask.h	 \
-	src/ofx.h	 \
-	src/option.h     \
-	src/parser.h     \
-	src/pyinterp.h   \
-	src/pyfstream.h  \
-	src/pyledger.h   \
-	src/qif.h	 \
-	src/quotes.h     \
-	src/reconcile.h  \
-	src/register.h   \
-	src/report.h     \
-	src/session.h    \
-	src/system.hh    \
-	src/textual.h    \
-	src/times.h      \
-	src/transform.h  \
-	src/utils.h	 \
-	src/value.h	 \
-	src/xml.h        \
+	src/amount.h	     \
+	src/balpair.h	     \
+	src/balance.h	     \
+	src/binary.h	     \
+	src/commodity.h	     \
+	src/context.h	     \
+	src/csv.h	     \
+	src/derive.h	     \
+	src/emacs.h	     \
+	src/flags.h	     \
+	src/format.h	     \
+	src/gnucash.h	     \
+	src/journal.h	     \
+	src/ledger.h	     \
+	src/mask.h	     \
+	src/ofx.h	     \
+	src/option.h	     \
+	src/parser.h	     \
+	src/pyfstream.h	     \
+	src/pyinterp.h	     \
+	src/pyledger.h	     \
+	src/pyutils.h	     \
+	src/qif.h	     \
+	src/quotes.h	     \
+	src/reconcile.h	     \
+	src/register.h	     \
+	src/report.h	     \
+	src/scoped_execute.h \
+	src/session.h	     \
+	src/textual.h	     \
+	src/times.h	     \
+	src/transform.h	     \
+	src/utils.h	     \
+	src/value.h	     \
+	src/xml.h	     \
 	src/xpath.h
 
 ######################################################################
@@ -214,9 +216,11 @@ check_PROGRAMS = $(TESTS)
 
 nodist_UnitTests_SOURCES = tests/UnitTests.cc \
 	\
-	tests/numerics/t_times.cc \
+	tests/utility/t_utils.cc      \
+	tests/utility/t_times.cc      \
 	tests/numerics/t_commodity.cc \
-	tests/numerics/t_amount.cc
+	tests/numerics/t_amount.cc    \
+	tests/numerics/t_balance.cc
 
 UnitTests_CPPFLAGS = -I$(srcdir)/tests $(libledger_la_CPPFLAGS)
 UnitTests_LDFLAGS  = $(LIBADD_DL)

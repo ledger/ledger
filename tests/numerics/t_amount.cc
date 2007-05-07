@@ -1,7 +1,5 @@
 #include "t_amount.h"
 
-#define internalAmount(x) amount_t::exact(x)
-
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(AmountTestCase, "numerics");
 
 void AmountTestCase::setUp()
@@ -11,7 +9,8 @@ void AmountTestCase::setUp()
   // Cause the display precision for dollars to be initialized to 2.
   amount_t x1("$1.00");
   assertTrue(x1);
-  amount_t::stream_fullstrings = true; // makes error reports from UnitTests accurate
+
+  amount_t::stream_fullstrings = true; // make reports from UnitTests accurate
 }
 
 void AmountTestCase::tearDown()

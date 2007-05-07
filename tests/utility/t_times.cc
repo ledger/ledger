@@ -1,6 +1,6 @@
 #include "t_times.h"
 
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(DateTimeTestCase, "numerics");
+CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(DateTimeTestCase, "utility");
 
 void DateTimeTestCase::setUp() {}
 void DateTimeTestCase::tearDown() {}
