@@ -55,7 +55,6 @@ void export_amount()
 			 make_getter(&amount_t::current_pool,
 				     return_value_policy<reference_existing_object>()))
 
-#if 0
     .add_static_property("keep_base", &amount_t::keep_base)
 
     .add_static_property("keep_price", &amount_t::keep_price)
@@ -63,7 +62,6 @@ void export_amount()
     .add_static_property("keep_tag", &amount_t::keep_tag)
 
     .add_static_property("stream_fullstrings", &amount_t::stream_fullstrings)
-#endif
 
     .def(init<double>())
     .def(init<long>())

@@ -27,8 +27,9 @@ struct register_optional_to_python : public boost::noncopyable
   {
     static PyObject * convert(const boost::optional<T>& value)
     {
-      return (value ? boost::python::to_python_value<T>()(*value) :
-	              boost::python::detail::none());
+      return boost::python::incref
+	(value ? boost::python::to_python_value<T>()(*value) :
+	         boost::python::detail::none());
     }
   };
    
