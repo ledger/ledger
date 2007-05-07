@@ -1,18 +1,3 @@
-/**
- * @file   amount.h
- * @author John Wiegley
- * @date   Wed Apr 18 22:05:53 2007
- * 
- * @brief  Basic type for handling commoditized math: amount_t.
- * 
- * This file contains the most basic numerical type in Ledger:
- * amount_t, which relies upon commodity.h (commodity_t) for handling
- * commoditized amounts.  This class allows Ledger to handle
- * mathematical expressions involving differing commodities, as well
- * as math using no commodities at all (such as increasing a dollar
- * amount by a multiplier).
- */
-
 /*
  * Copyright (c) 2003-2007, John Wiegley.  All rights reserved.
  *
@@ -42,6 +27,21 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @file   amount.h
+ * @author John Wiegley
+ * @date   Wed Apr 18 22:05:53 2007
+ * 
+ * @brief  Basic type for handling commoditized math: amount_t.
+ * 
+ * This file contains the most basic numerical type in Ledger:
+ * amount_t, which relies upon commodity.h (commodity_t) for handling
+ * commoditized amounts.  This class allows Ledger to handle
+ * mathematical expressions involving differing commodities, as well
+ * as math using no commodities at all (such as increasing a dollar
+ * amount by a multiplier).
  */
 
 #ifndef _AMOUNT_H

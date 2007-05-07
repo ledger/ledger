@@ -1,15 +1,3 @@
-/**
- * @file   amount.cc
- * @author John Wiegley
- * @date   Thu Apr 26 15:19:46 2007
- * 
- * @brief  Types for handling commoditized math.
- * 
- * This file defines member functions for amount_t, and also defines a
- * helper class, bigint_t, which is used as a refcounted wrapper
- * around libgmp's mpz_t type.
- */
-
 /*
  * Copyright (c) 2003-2007, John Wiegley.  All rights reserved.
  *
@@ -39,6 +27,18 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @file   amount.cc
+ * @author John Wiegley
+ * @date   Thu Apr 26 15:19:46 2007
+ * 
+ * @brief  Types for handling commoditized math.
+ * 
+ * This file defines member functions for amount_t, and also defines a
+ * helper class, bigint_t, which is used as a refcounted wrapper
+ * around libgmp's mpz_t type.
  */
 
 #include "amount.h"

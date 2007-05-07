@@ -1,14 +1,3 @@
-/**
- * @file   commodity.h
- * @author John Wiegley
- * @date   Wed Apr 18 22:05:53 2007
- * 
- * @brief  Types for handling commodities.
- * 
- * This file contains one of the most basic types in Ledger:
- * commodity_t, and its annotated cousin, annotated_commodity_t.
- */
-
 /*
  * Copyright (c) 2003-2007, John Wiegley.  All rights reserved.
  *
@@ -38,6 +27,17 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @file   commodity.h
+ * @author John Wiegley
+ * @date   Wed Apr 18 22:05:53 2007
+ * 
+ * @brief  Types for handling commodities.
+ * 
+ * This file contains one of the most basic types in Ledger:
+ * commodity_t, and its annotated cousin, annotated_commodity_t.
  */
 
 #ifndef _COMMODITY_H
