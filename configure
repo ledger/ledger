@@ -19693,83 +19693,26 @@ See \`config.log' for more details." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
-# check for boost_signals
-{ echo "$as_me:$LINENO: checking if boost_signals is available" >&5
-echo $ECHO_N "checking if boost_signals is available... $ECHO_C" >&6; }
-if test "${boost_signals_cpplib_avail+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  boost_signals_save_libs=$LIBS
-   LIBS="-lboost_signals $LIBS"
-   ac_ext=cpp
-ac_cpp='$CXXCPP $CPPFLAGS'
-ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
-
-   cat >conftest.$ac_ext <<_ACEOF
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-#include <boost/signal.hpp>
-int
-main ()
-{
-boost::signal<void (void)> this_signal;
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_cxx_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  boost_signals_cpplib_avail=true
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	boost_signals_cpplib_avail=false
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-   ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
-
-   LIBS=$boost_signals_save_libs
-fi
-{ echo "$as_me:$LINENO: result: $boost_signals_cpplib_avail" >&5
-echo "${ECHO_T}$boost_signals_cpplib_avail" >&6; }
-
-if test x$boost_signals_cpplib_avail = xtrue ; then
-  LIBS="-lboost_signals $LIBS"
-else
-  { { echo "$as_me:$LINENO: error: \"Could not find boost_signals library (set CPPFLAGS and LDFLAGS?)\"
-See \`config.log' for more details." >&5
-echo "$as_me: error: \"Could not find boost_signals library (set CPPFLAGS and LDFLAGS?)\"
-See \`config.log' for more details." >&2;}
-   { (exit 1); exit 1; }; }
-fi
+## check for boost_signals
+#AC_CACHE_CHECK(
+#  [if boost_signals is available],
+#  [boost_signals_cpplib_avail],
+#  [boost_signals_save_libs=$LIBS
+#   LIBS="-lboost_signals $LIBS"
+#   AC_LANG_PUSH(C++)
+#   AC_TRY_LINK(
+#     [#include <boost/signal.hpp>],
+#     [boost::signal<void (void)> this_signal;],
+#     [boost_signals_cpplib_avail=true],
+#     [boost_signals_cpplib_avail=false])
+#   AC_LANG_POP
+#   LIBS=$boost_signals_save_libs])
+#
+#if [test x$boost_signals_cpplib_avail = xtrue ]; then
+#  LIBS="-lboost_signals $LIBS"
+#else
+#  AC_MSG_FAILURE("Could not find boost_signals library (set CPPFLAGS and LDFLAGS?)")
+#fi
 
 # check for gmp
 { echo "$as_me:$LINENO: checking if libgmp is available" >&5

@@ -40,26 +40,40 @@ namespace ledger {
 
 using namespace boost::python;
 
-void py_parse_1(amount_t& amount, const string& str, unsigned char flags) {
-  amount.parse(str, flags);
+double py_to_double_0(amount_t& amount) {
+  return amount.to_double();
 }
-void py_parse_2(amount_t& amount, const string& str) {
-  amount.parse(str);
+double py_to_double_1(amount_t& amount, bool no_check) {
+  return amount.to_double(no_check);
 }
 
+long py_to_long_0(amount_t& amount) {
+  return amount.to_long();
+}
+long py_to_long_1(amount_t& amount, bool no_check) {
+  return amount.to_long(no_check);
+}
+
+void py_parse_1(amount_t& amount, const string& str) {
+  amount.parse(str);
+}
+void py_parse_2(amount_t& amount, const string& str, unsigned char flags) {
+  amount.parse(str, flags);
+}
+
+amount_t py_round_0(const amount_t& amount) {
+  return amount.round();
+}
 amount_t py_round_1(const amount_t& amount, amount_t::precision_t prec) {
   return amount.round(prec);
 }
-amount_t py_round_2(const amount_t& amount) {
-  return amount.round();
-}
 
+boost::optional<amount_t> py_value_0(const amount_t& amount) {
+  return amount.value();
+}
 boost::optional<amount_t> py_value_1(const amount_t& amount,
 				     const boost::optional<moment_t>& moment) {
   return amount.value(moment);
-}
-boost::optional<amount_t> py_value_2(const amount_t& amount) {
-  return amount.value();
 }
 
 #define EXC_TRANSLATOR(type)				\
@@ -193,8 +207,8 @@ void export_amount()
     .def("abs", &amount_t::abs)
     .def("__abs__", &amount_t::abs)
 
+    .def("round", py_round_0)
     .def("round", py_round_1)
-    .def("round", py_round_2)
     .def("unround", &amount_t::unround)
 
     .def("reduce", &amount_t::reduce)
@@ -205,8 +219,8 @@ void export_amount()
     .def("in_place_unreduce", &amount_t::in_place_unreduce,
 	 return_value_policy<reference_existing_object>())
 
+    .def("value", py_value_0)
     .def("value", py_value_1)
-    .def("value", py_value_2)
 
     .def("sign", &amount_t::sign)
     .def("__nonzero__", &amount_t::is_nonzero)
@@ -215,14 +229,19 @@ void export_amount()
     .def("is_realzero", &amount_t::is_realzero)
     .def("is_null", &amount_t::is_null)
 
-    .def("to_double", &amount_t::to_double)
-    .def("__float__", &amount_t::to_double)
-    .def("to_long", &amount_t::to_long)
-    .def("__int__", &amount_t::to_long)
+    .def("to_double", py_to_double_0)
+    .def("to_double", py_to_double_1)
+    .def("__float__", py_to_double_0)
+    .def("to_long", py_to_long_0)
+    .def("to_long", py_to_long_1)
+    .def("__int__", py_to_long_0)
     .def("to_string", &amount_t::to_string)
     .def("__str__", &amount_t::to_string)
     .def("to_fullstring", &amount_t::to_fullstring)
     .def("__repr__", &amount_t::to_fullstring)
+
+    .def("fits_in_double", &amount_t::fits_in_double)
+    .def("fits_in_long", &amount_t::fits_in_long)
 
     .def("quantity_string", &amount_t::quantity_string)
 

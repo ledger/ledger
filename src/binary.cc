@@ -171,7 +171,7 @@ inline void read_binary_value(char *& data, value_t& val)
 
   case value_t::BALANCE:
   case value_t::BALANCE_PAIR:
-    assert(0);
+    assert(false);
     break;
   }
 }

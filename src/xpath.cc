@@ -478,12 +478,12 @@ xpath_t::op_t * xpath_t::wrap_value(const value_t& val)
   return temp;
 }
 
-xpath_t::op_t * xpath_t::wrap_sequence(value_t::sequence_t * val)
+xpath_t::op_t * xpath_t::wrap_sequence(const value_t::sequence_t& val)
 {
-  if (val->size() == 0)
+  if (val.size() == 0)
     return wrap_value(false);
-  else if (val->size() == 1)
-    return wrap_value(val->front());
+  else if (val.size() == 1)
+    return wrap_value(val.front());
   else
     return wrap_value(val);
 }
@@ -509,7 +509,7 @@ void xpath_t::scope_t::define(const string& name, op_t * def)
   DEBUG("ledger.xpath.syms", "Defining '" << name << "' = " << def);
 
   std::pair<symbol_map::iterator, bool> result
-    = symbols.insert(symbol_pair(name, def));
+    = symbols.insert(symbol_map::value_type(name, def));
   if (! result.second) {
     symbol_map::iterator i = symbols.find(name);
     assert(i != symbols.end());
@@ -517,7 +517,7 @@ void xpath_t::scope_t::define(const string& name, op_t * def)
     symbols.erase(i);
 
     std::pair<symbol_map::iterator, bool> result2
-      = symbols.insert(symbol_pair(name, def));
+      = symbols.insert(symbol_map::value_type(name, def));
     if (! result2.second)
       throw_(compile_error,
 	     "Redefinition of '" << name << "' in same scope");
@@ -541,16 +541,13 @@ void xpath_t::scope_t::define(const string& name, functor_t * def) {
 }
 
 bool xpath_t::function_scope_t::resolve(const string& name,
-					value_t&	   result,
-					scope_t *	   locals)
+					value_t&      result,
+					scope_t *     locals)
 {
   switch (name[0]) {
   case 'l':
     if (name == "last") {
-      if (sequence)
-	result = (long)sequence->size();
-      else
-	result = 1L;
+      result = (long)sequence.size();
       return true;
     }
     break;
@@ -565,7 +562,7 @@ bool xpath_t::function_scope_t::resolve(const string& name,
   case 't':
     if (name == "text") {
       if (value->type == value_t::XML_NODE)
-	result.set_string(value->to_xml_node()->text());
+	result.set_string(value->as_xml_node()->text());
       else
 	throw_(calc_error, "Attempt to call text() on a non-node value");
       return true;
@@ -656,7 +653,7 @@ xpath_t::parse_value_term(std::istream& in, unsigned short tflags) const
   case token_t::IDENT: {
 #if 0
 #ifdef USE_BOOST_PYTHON
-    if (tok.value->to_string() == "lambda") // special
+    if (tok.value->as_string() == "lambda") // special
       try {
 	char c, buf[4096];
 
@@ -681,7 +678,7 @@ xpath_t::parse_value_term(std::istream& in, unsigned short tflags) const
 #endif /* USE_BOOST_PYTHON */
 #endif
 
-    string ident = tok.value.to_string();
+    string ident = tok.value.as_string();
     int id = -1;
     if (std::isdigit(ident[0])) {
       node.reset(new op_t(op_t::ARG_INDEX));
@@ -723,7 +720,7 @@ xpath_t::parse_value_term(std::istream& in, unsigned short tflags) const
       throw_(parse_error, "@ symbol must be followed by attribute name");
 
     node.reset(new op_t(op_t::ATTR_NAME));
-    node->name = new string(tok.value.to_string());
+    node->name = new string(tok.value.as_string());
     break;
 
 #if 0
@@ -733,7 +730,7 @@ xpath_t::parse_value_term(std::istream& in, unsigned short tflags) const
       throw parse_error("$ symbol must be followed by variable name");
 
     node.reset(new op_t(op_t::VAR_NAME));
-    node->name = new string(tok.value.to_string());
+    node->name = new string(tok.value.as_string());
     break;
 #endif
 
@@ -767,7 +764,7 @@ xpath_t::parse_value_term(std::istream& in, unsigned short tflags) const
 
 #if 0
   case token_t::REGEXP:
-    node.reset(wrap_mask(tok.value.to_string()));
+    node.reset(wrap_mask(tok.value.as_string()));
     break;
 #endif
 
@@ -1215,8 +1212,8 @@ void xpath_t::op_t::find_values(value_t * context, scope_t * scope,
 
   if (recursive) {
     if (context->type == value_t::XML_NODE) {
-      node_t * ptr = context->to_xml_node();
-      if (ptr->flags & XML_NODE_IS_PARENT) {
+      node_t * ptr = context->as_xml_node();
+      if (ptr->has_flags(XML_NODE_IS_PARENT)) {
 	parent_node_t * parent = static_cast<parent_node_t *>(ptr);
 	for (node_t * node = parent->children();
 	     node;
@@ -1245,7 +1242,7 @@ bool xpath_t::op_t::test_value(value_t * context, scope_t * scope,
     return *expr->valuep == value_t((long)index + 1);
 
   default:
-    return expr->valuep->to_boolean();
+    return expr->valuep->as_boolean();
   }
 }
 
@@ -1277,7 +1274,7 @@ xpath_t::op_t * xpath_t::op_t::defer_sequence(value_t::sequence_t& result_seq)
     if ((*i).type != value_t::POINTER)
       *opp = wrap_value(*i)->acquire();
     else
-      *opp = static_cast<op_t *>((*i).to_pointer());
+      *opp = static_cast<op_t *>((*i).as_pointer());
   }
 
   return lit_seq.release();
@@ -1286,15 +1283,11 @@ xpath_t::op_t * xpath_t::op_t::defer_sequence(value_t::sequence_t& result_seq)
 void xpath_t::op_t::append_value(value_t& val,
 				 value_t::sequence_t& result_seq)
 {
-  if (val.type == value_t::SEQUENCE) {
-    value_t::sequence_t * subseq = val.to_sequence();
-    for (value_t::sequence_t::iterator i = subseq->begin();
-	 i != subseq->end();
-	 i++)
-      result_seq.push_back(*i);
-  } else {
+  if (val.type == value_t::SEQUENCE)
+    std::for_each(val.as_sequence().begin(), val.as_sequence().end(),
+		  bind(&value_t::sequence_t::push_back, ref(result_seq), _1));
+  else
     result_seq.push_back(val);
-  }
 }
 
 xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
@@ -1315,8 +1308,8 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
     case document_t::PARENT:
       if (context->type != value_t::XML_NODE)
 	throw_(compile_error, "Referencing parent node from a non-node value");
-      else if (context->to_xml_node()->parent)
-	return wrap_value(context->to_xml_node()->parent)->acquire();
+      else if (context->as_xml_node()->parent)
+	return wrap_value(context->as_xml_node()->parent)->acquire();
       else
 	throw_(compile_error, "Referencing parent node from the root node");
 
@@ -1324,21 +1317,16 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
       if (context->type != value_t::XML_NODE)
 	throw_(compile_error, "Referencing root node from a non-node value");
       else
-	return wrap_value(context->to_xml_node()->document->top)->acquire();
+	return wrap_value(context->as_xml_node()->document->top)->acquire();
 
     case document_t::ALL: {
       if (context->type != value_t::XML_NODE)
 	throw_(compile_error, "Referencing child nodes from a non-node value");
 
-      node_t * ptr = context->to_xml_node();
-      if (! (ptr->flags & XML_NODE_IS_PARENT))
-	throw_(compile_error, "Request for child nodes of a leaf node");
-
-      parent_node_t * parent = static_cast<parent_node_t *>(ptr);
-
-      value_t::sequence_t * nodes = new value_t::sequence_t;
+      parent_node_t *	  parent = context->as_xml_node()->as_parent_node();
+      value_t::sequence_t nodes;
       for (node_t * node = parent->children(); node; node = node->next)
-	nodes->push_back(node);
+	nodes.push_back(node);
 
       return wrap_value(nodes)->acquire();
     }
@@ -1350,14 +1338,14 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
 
   case NODE_NAME:
     if (context->type == value_t::XML_NODE) {
-      node_t * ptr = context->to_xml_node();
+      node_t * ptr = context->as_xml_node();
       if (resolve) {
 	// First, look up the symbol as a node name within the current
 	// context.  If any exist, then return the set of names.
 
 	std::auto_ptr<value_t::sequence_t> nodes(new value_t::sequence_t);
 
-	if (ptr->flags & XML_NODE_IS_PARENT) {
+	if (ptr->has_flags(XML_NODE_IS_PARENT)) {
 	  parent_node_t * parent = static_cast<parent_node_t *>(ptr);
 	  for (node_t * node = parent->children();
 	       node;
@@ -1383,7 +1371,7 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
 
   case ATTR_NAME: {
     // jww (2006-09-29): Attrs should map strings to values, not strings
-    const char * value = context->to_xml_node()->get_attr(name->c_str());
+    const char * value = context->as_xml_node()->get_attr(name->c_str());
     return wrap_value(value)->acquire();
   }
 
@@ -1403,8 +1391,8 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
   case ARG_INDEX:
     if (scope && scope->kind == scope_t::ARGUMENT) {
       assert(scope->args.type == value_t::SEQUENCE);
-      if (arg_index < scope->args.to_sequence()->size())
-	return wrap_value((*scope->args.to_sequence())[arg_index])->acquire();
+      if (arg_index < scope->args.as_sequence().size())
+	return wrap_value(scope->args.as_sequence()[arg_index])->acquire();
       else
 	throw_(compile_error, "Reference to non-existing argument");
     } else {
@@ -1481,15 +1469,15 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
 	return copy(lexpr, rexpr)->acquire();
     }
 
-    std::auto_ptr<value_t::sequence_t> result_seq(new value_t::sequence_t);
+    value_t::sequence_t result_seq;
 
-    append_value(*lexpr->valuep, *result_seq);
-    append_value(*rexpr->valuep, *result_seq);
+    append_value(*lexpr->valuep, result_seq);
+    append_value(*rexpr->valuep, result_seq);
 
-    if (result_seq->size() == 1)
-      return wrap_value(result_seq->front())->acquire();
+    if (result_seq.size() == 1)
+      return wrap_value(result_seq.front())->acquire();
     else
-      return wrap_sequence(result_seq.release())->acquire();
+      return wrap_sequence(result_seq)->acquire();
     break;
   }
 
@@ -1515,7 +1503,7 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
       case O_SUB: temp -= *rexpr->valuep; break;
       case O_MUL: temp *= *rexpr->valuep; break;
       case O_DIV: temp /= *rexpr->valuep; break;
-      default: assert(0); break;
+      default: assert(false); break;
       }
       return wrap_value(temp)->acquire();
     } else {
@@ -1524,7 +1512,7 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
       case O_SUB: *lexpr->valuep -= *rexpr->valuep; break;
       case O_MUL: *lexpr->valuep *= *rexpr->valuep; break;
       case O_DIV: *lexpr->valuep /= *rexpr->valuep; break;
-      default: assert(0); break;
+      default: assert(false); break;
       }
       return lexpr->acquire();
     }
@@ -1567,7 +1555,7 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
       case O_GTE:
 	return wrap_value(*lexpr->valuep >= *rexpr->valuep)->acquire();
 	break;
-      default: assert(0); break;
+      default: assert(false); break;
       }
     } else {
       switch (kind) {
@@ -1577,7 +1565,7 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
       case O_LTE: *lexpr->valuep = *lexpr->valuep <= *rexpr->valuep; break;
       case O_GT:  *lexpr->valuep = *lexpr->valuep >  *rexpr->valuep; break;
       case O_GTE: *lexpr->valuep = *lexpr->valuep >= *rexpr->valuep; break;
-      default: assert(0); break;
+      default: assert(false); break;
       }
       return lexpr->acquire();
     }
@@ -1694,7 +1682,7 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
 
     assert(rexpr->mask);
 
-    bool result = rexpr->mask->match(lexpr->valuep->to_string());
+    bool result = rexpr->mask->match(lexpr->valuep->as_string());
     if (kind == O_NMATCH)
       result = ! result;
 
@@ -1808,7 +1796,7 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
       return wrap_value(temp)->acquire();
     }
     else {
-      assert(0);
+      assert(false);
     }
     break;
   }
@@ -1829,28 +1817,28 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
 	return copy(lexpr, rexpr)->acquire();
     }
 
-    std::auto_ptr<value_t::sequence_t> result_seq(new value_t::sequence_t);
+    value_t::sequence_t result_seq;
 
     // jww (2006-09-24): What about when nothing is found?
     switch (lexpr->valuep->type) {
     case value_t::XML_NODE: {
-      function_scope_t xpath_fscope(NULL, lexpr->valuep, 0, scope);
+      function_scope_t xpath_fscope(lexpr->valuep, 0, scope);
       if (kind == O_PRED) {
 	if (rexpr->test_value(lexpr->valuep, &xpath_fscope))
-	  result_seq->push_back(*lexpr->valuep);
+	  result_seq.push_back(*lexpr->valuep);
       } else {
-	rexpr->find_values(lexpr->valuep, &xpath_fscope, *result_seq.get(),
+	rexpr->find_values(lexpr->valuep, &xpath_fscope, result_seq,
 			   kind == O_RFIND);
       }
       break;
     }
 
     case value_t::SEQUENCE: {
-      value_t::sequence_t * seq = lexpr->valuep->to_sequence();
+      value_t::sequence_t& seq(lexpr->valuep->as_sequence());
 
       int index = 0;
-      for (value_t::sequence_t::iterator i = seq->begin();
-	   i != seq->end();
+      for (value_t::sequence_t::iterator i = seq.begin();
+	   i != seq.end();
 	   i++, index++) {
 	assert((*i).type != value_t::SEQUENCE);
 	if ((*i).type != value_t::XML_NODE)
@@ -1860,9 +1848,9 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
 	function_scope_t xpath_fscope(seq, &(*i), index, scope);
 	if (kind == O_PRED) {
 	  if (rexpr->test_value(&(*i), &xpath_fscope, index))
-	    result_seq->push_back(*i);
+	    result_seq.push_back(*i);
 	} else {
-	  rexpr->find_values(&(*i), &xpath_fscope, *result_seq.get(),
+	  rexpr->find_values(&(*i), &xpath_fscope, result_seq,
 			     kind == O_RFIND);
 	}
       }
@@ -1874,10 +1862,10 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
 	     "to non-node(s)");
     }
 
-    if (result_seq->size() == 1)
-      return wrap_value(result_seq->front())->acquire();
+    if (result_seq.size() == 1)
+      return wrap_value(result_seq.front())->acquire();
     else
-      return wrap_sequence(result_seq.release())->acquire();
+      return wrap_sequence(result_seq)->acquire();
   }
 
 #if 0
@@ -1899,7 +1887,7 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
 
   case LAST:
   default:
-    assert(0);
+    assert(false);
     break;
   }
 #if 0
@@ -1915,7 +1903,7 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
   }
 #endif
 
-  assert(0);
+  assert(false);
   return NULL;
 }
 
@@ -2035,7 +2023,7 @@ bool xpath_t::op_t::print(std::ostream&	  out,
       break;
     case value_t::BALANCE:
     case value_t::BALANCE_PAIR:
-      assert(0);
+      assert(false);
       break;
     case value_t::DATETIME:
       out << '[' << *valuep << ']';
@@ -2312,7 +2300,7 @@ bool xpath_t::op_t::print(std::ostream&	  out,
 
   case LAST:
   default:
-    assert(0);
+    assert(false);
     break;
   }
 
@@ -2422,7 +2410,7 @@ void xpath_t::op_t::dump(std::ostream& out, const int depth) const
 
   case LAST:
   default:
-    assert(0);
+    assert(false);
     break;
   }
 

@@ -473,8 +473,8 @@ inline void throw_func(const std::string& message) {
 #define throw_(cls, msg) \
   ((_exc_buffer << msg), throw_func<cls>(_exc_buffer.str()))
 
-inline void throw_unexpected_error(char c, char wanted) {
 #if 0
+inline void throw_unexpected_error(char c, char wanted) {
   if (c == -1) {
     if (wanted)
       throw new error(string("Missing '") + wanted + "'");
@@ -487,8 +487,11 @@ inline void throw_unexpected_error(char c, char wanted) {
     else
       throw new error(string("Invalid char '") + c + "'");
   }
-#endif
 }
+#else
+inline void throw_unexpected_error(char, char) {
+}
+#endif
 
 } // namespace ledger
 

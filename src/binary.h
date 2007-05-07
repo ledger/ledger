@@ -77,7 +77,7 @@ inline T read_binary_number_nocheck(char *& data) {
 #if DEBUG_LEVEL >= ALPHA
 #define read_binary_guard(in, id)				\
   if (read_binary_number_nocheck<unsigned short>(in) != id)	\
-      assert(0);
+      assert(false);
 #else
 #define read_binary_guard(in, id)
 #endif

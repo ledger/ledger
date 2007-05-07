@@ -56,8 +56,7 @@ class commodity_t
   class base_t : public noncopyable, public supports_flags<>
   {
   public:
-    typedef std::map<const moment_t, amount_t>  history_map;
-    typedef std::pair<const moment_t, amount_t> history_pair;
+    typedef std::map<const moment_t, amount_t> history_map;
 
     struct history_t {
       history_map prices;
@@ -94,10 +93,9 @@ class commodity_t
 public:
   static bool symbol_needs_quotes(const string& symbol);
 
-  typedef base_t::history_t    history_t;
-  typedef base_t::history_map  history_map;
-  typedef base_t::history_pair history_pair;
-  typedef uint_least32_t       ident_t;
+  typedef base_t::history_t   history_t;
+  typedef base_t::history_map history_map;
+  typedef uint_least32_t      ident_t;
 
   shared_ptr<base_t> base;
 
@@ -234,6 +232,7 @@ struct annotation_t : public equality_comparable<annotation_t>
 
   bool valid() const {
     assert(*this);
+    return true;
   }
 };
 
@@ -335,12 +334,12 @@ private:
   };
 
 public:
-  boost::signal<optional<amount_t>
-		(commodity_t&		   commodity,
-		 const optional<moment_t>& date,
-		 const optional<moment_t>& moment,
-		 const optional<moment_t>& last),
-		first_initialized<optional<amount_t> > > get_quote;
+  boost::function<optional<amount_t>
+		  (commodity_t&		     commodity,
+		   const optional<moment_t>& date,
+		   const optional<moment_t>& moment,
+		   const optional<moment_t>& last),
+		  first_initialized<optional<amount_t> > > get_quote;
 
   explicit commodity_pool_t();
 

@@ -82,7 +82,7 @@ int document_t::register_name(const string& name)
   DEBUG("xml.lookup", this << " Inserting name: " << names.back());
 
   std::pair<names_map::iterator, bool> result =
-    names_index.insert(names_pair(names.back(), index));
+    names_index.insert(names_map::value_type(names.back(), index));
   assert(result.second);
 
   return index + 1000;
@@ -160,9 +160,9 @@ document_t * node_t::document;
 #endif
 
 node_t::node_t(document_t * _document, parent_node_t * _parent,
-	       unsigned int _flags)
-  : name_id(0), parent(_parent), next(NULL), prev(NULL),
-    flags(_flags), attrs(NULL)
+	       flags_t _flags)
+  : supports_flags<>(_flags),
+    name_id(0), parent(_parent), next(NULL), prev(NULL), attrs(NULL)
 {
   TRACE_CTOR(node_t, "document_t *, node_t *");
   document = _document;
@@ -316,7 +316,8 @@ static void startElement(void *userData, const char *name, const char **attrs)
 	parser->pending_attrs = new node_t::attrs_map;
 
       std::pair<node_t::attrs_map::iterator, bool> result
-	= parser->pending_attrs->insert(node_t::attrs_pair(*p, *(p + 1)));
+	= parser->pending_attrs->insert
+	    (node_t::attrs_map::value_type(*p, *(p + 1)));
       assert(result.second);
     }
   }

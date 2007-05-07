@@ -128,6 +128,7 @@ extern "C" {
 #include <libofx.h>
 #endif
 
+#include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/cast.hpp>
 #include <boost/current_function.hpp>
@@ -138,6 +139,8 @@ extern "C" {
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/function.hpp>
+#include <boost/lambda/bind.hpp>
+#include <boost/lambda/lambda.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/multi_index/hashed_index.hpp>
 #include <boost/multi_index/key_extractors.hpp>
@@ -148,6 +151,5 @@ extern "C" {
 #include <boost/ptr_container/ptr_list.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/regex.hpp>
-#include <boost/signal.hpp>
 
 #endif // _SYSTEM_HH

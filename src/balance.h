@@ -36,16 +36,15 @@
 
 namespace ledger {
 
-// jww (2007-05-01): What really should be the operational semantics
-// of a balance?
-
 class balance_t
-  : public ordered_field_operators<balance_t,
-           ordered_field_operators<balance_t, amount_t> >
+  : public equality_comparable<balance_t,
+           equality_comparable<balance_t, amount_t,
+           additive<balance_t,
+           additive<balance_t, amount_t,
+           multiplicative<balance_t, amount_t> > > > >
 {
 public:
-  typedef std::map<const commodity_t *, amount_t>  amounts_map;
-  typedef std::pair<const commodity_t *, amount_t> amounts_pair;
+  typedef std::map<const commodity_t *, amount_t> amounts_map;
 
 protected:
   amounts_map amounts;
@@ -67,7 +66,7 @@ public:
   }
   balance_t(const amount_t& amt) {
     TRACE_CTOR(balance_t, "const amount_t&");
-    amounts.insert(amounts_pair(&amt.commodity(), amt));
+    amounts.insert(amounts_map::value_type(&amt.commodity(), amt));
   }
   ~balance_t() {
     TRACE_DTOR(balance_t);
@@ -98,6 +97,9 @@ public:
     }
     return i == amounts.end() && j == bal.amounts.end();
   }
+  bool operator==(const amount_t& amt) const {
+    return amounts.size() == 1 && amounts.begin()->second == amt;
+  }
 
   // in-place arithmetic
   balance_t& operator+=(const balance_t& bal) {
@@ -114,34 +116,9 @@ public:
       *this -= (*i).second;
     return *this;
   }
-  balance_t& operator*=(const balance_t& bal);
-  balance_t& operator*=(const amount_t& amt); // special
-  balance_t& operator/=(const balance_t& bal);
-  balance_t& operator/=(const amount_t& amt); // special
 
-  // comparison
-  bool operator<(const balance_t& bal) const {
-    for (amounts_map::const_iterator i = bal.amounts.begin();
-	 i != bal.amounts.end();
-	 i++) {
-      optional<amount_t> amt = amount(*(*i).first);
-      if (amt && ! (*amt < (*i).second))
-	return false;
-    }
-
-    for (amounts_map::const_iterator i = amounts.begin();
-	 i != amounts.end();
-	 i++) {
-      optional<amount_t> amt = bal.amount(*(*i).first);
-      if (amt && ! ((*i).second < *amt))
-	return false;
-    }
-
-    if (bal.amounts.size() == 0 && amounts.size() == 0)
-      return false;
-
-    return true;
-  }
+  balance_t& operator*=(const amount_t& amt);
+  balance_t& operator/=(const amount_t& amt);
 
   // unary negation
   void in_place_negate() {
@@ -252,9 +229,13 @@ inline std::ostream& operator<<(std::ostream& out, const balance_t& bal) {
 }
 
 class balance_pair_t
-  : public ordered_field_operators<balance_pair_t,
-           ordered_field_operators<balance_pair_t, balance_t,
-           ordered_field_operators<balance_pair_t, amount_t> > >
+  : public equality_comparable<balance_pair_t,
+           equality_comparable<balance_pair_t, balance_t,
+           equality_comparable<balance_pair_t, amount_t,
+           additive<balance_pair_t,
+           additive<balance_pair_t, balance_t,
+           additive<balance_pair_t, amount_t,
+           multiplicative<balance_pair_t, amount_t> > > > > > >
 {
   balance_t quantity;
   optional<balance_t> cost;
@@ -309,29 +290,26 @@ public:
       *cost -= bal_pair.cost ? *bal_pair.cost : bal_pair.quantity;
     return *this;
   }
-  balance_pair_t& operator*=(const balance_pair_t& bal_pair) {
-    if (bal_pair.cost && ! cost)
-      cost = quantity;
-    quantity *= bal_pair.quantity;
-    if (cost)
-      *cost *= bal_pair.cost ? *bal_pair.cost : bal_pair.quantity;
-    return *this;
-  }
-  balance_pair_t& operator/=(const balance_pair_t& bal_pair) {
-    if (bal_pair.cost && ! cost)
-      cost = quantity;
-    quantity /= bal_pair.quantity;
-    if (cost)
-      *cost /= bal_pair.cost ? *bal_pair.cost : bal_pair.quantity;
-    return *this;
-  }
 
   // comparison
   bool operator==(const balance_pair_t& bal_pair) const {
     return quantity == bal_pair.quantity;
   }
-  bool operator<(const balance_pair_t& bal_pair) const {
-    return quantity < bal_pair.quantity;
+  bool operator==(const balance_t& bal) const {
+    return quantity == bal;
+  }
+
+  balance_pair_t& operator*=(const amount_t& amt) {
+    quantity *= amt;
+    if (cost)
+      *cost *= amt;
+    return *this;
+  }
+  balance_pair_t& operator/=(const amount_t& amt) {
+    quantity /= amt;
+    if (cost)
+      *cost /= amt;
+    return *this;
   }
 
   // unary negation
@@ -422,7 +400,7 @@ public:
     return temp;
   }
 
-  balance_pair_t unround() {
+  balance_pair_t unround() const {
     balance_pair_t temp(quantity.unround());
     if (cost)
       temp.cost = cost->unround();

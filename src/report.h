@@ -91,18 +91,18 @@ class report_t : public xml::xpath_t::scope_t
     xml::xpath_t(expr).compile((xml::document_t *)NULL, this);
   }
   void option_eval(value_t&, xml::xpath_t::scope_t * locals) {
-    eval(locals->args[0].to_string());
+    eval(locals->args[0].as_string());
   }
 
   void option_amount(value_t&, xml::xpath_t::scope_t * locals) {
-    eval(string("t=") + locals->args[0].to_string());
+    eval(string("t=") + locals->args[0].as_string());
   }
   void option_total(value_t&, xml::xpath_t::scope_t * locals) {
-    eval(string("T()=") + locals->args[0].to_string());
+    eval(string("T()=") + locals->args[0].as_string());
   }
 
   void option_format(value_t&, xml::xpath_t::scope_t * locals) {
-    format_string = locals->args[0].to_string();
+    format_string = locals->args[0].as_string();
   }
 
   void option_raw(value_t&) {
@@ -122,16 +122,16 @@ class report_t : public xml::xpath_t::scope_t
 
 #if 0
   void option_select(value_t&, xml::xpath_t::scope_t * locals) {
-    transforms.push_back(new select_transform(locals->args[0].to_string()));
+    transforms.push_back(new select_transform(locals->args[0].as_string()));
   }
   void option_limit(value_t&, xml::xpath_t::scope_t * locals) {
     string expr = (string("//xact[") +
-			locals->args[0].to_string() + "]");
+			locals->args[0].as_string() + "]");
     transforms.push_back(new select_transform(expr));
   }
 
   void option_remove(value_t&, xml::xpath_t::scope_t * locals) {
-    transforms.push_back(new remove_transform(locals->args[0].to_string()));
+    transforms.push_back(new remove_transform(locals->args[0].as_string()));
   }
 
   void option_accounts(value_t&) {

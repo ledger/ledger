@@ -61,10 +61,10 @@ long value_len(value_t& val)
     return (*(value_t::sequence_t **) val.data)->size();
 
   default:
-    assert(0);
+    assert(false);
     break;
   }
-  assert(0);
+  assert(false);
   return 0;
 }
 
@@ -109,10 +109,10 @@ amount_t value_getitem(value_t& val, int i)
     return (*(value_t::sequence_t **) val.data)[i];
 
   default:
-    assert(0);
+    assert(false);
     break;
   }
-  assert(0);
+  assert(false);
   return 0L;
 }
 

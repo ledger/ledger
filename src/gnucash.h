@@ -40,10 +40,7 @@ namespace ledger {
 struct gnucash_parser_t : public parser_t
 {
   typedef std::map<const string, account_t *>  accounts_map;
-  typedef std::pair<const string, account_t *> accounts_pair;
-
-  typedef std::map<account_t *, commodity_t *>  account_comm_map;
-  typedef std::pair<account_t *, commodity_t *> account_comm_pair;
+  typedef std::map<account_t *, commodity_t *> account_comm_map;
 
   journal_t *	   curr_journal;
   account_t *	   master_account;

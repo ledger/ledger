@@ -688,7 +688,7 @@ bool amount_t::is_zero() const
 }
 
 
-double amount_t::to_double() const
+double amount_t::to_double(bool no_check) const
 {
   if (! quantity)
     return 0.0;
@@ -711,10 +711,15 @@ double amount_t::to_double() const
 
   mpz_clear(remainder);
 
-  return lexical_cast<double>(num.str());
+  double value = lexical_cast<double>(num.str());
+
+  if (! no_check && *this != value)
+    throw_(amount_error, "Conversion of amount to_double loses precision");
+
+  return value;
 }
 
-long amount_t::to_long() const
+long amount_t::to_long(bool no_check) const
 {
   if (! quantity)
     return 0;
@@ -723,7 +728,24 @@ long amount_t::to_long() const
   mpz_ui_pow_ui(divisor, 10, quantity->prec);
   mpz_tdiv_q(temp, temp, divisor);
 
-  return mpz_get_si(temp);
+  long value = mpz_get_si(temp);
+
+  if (! no_check && *this != value)
+    throw_(amount_error, "Conversion of amount to_long loses precision");
+
+  return value;
+}
+
+bool amount_t::fits_in_double() const
+{
+  double value = to_double(true);
+  return *this == amount_t(value);
+}
+
+bool amount_t::fits_in_long() const
+{
+  long value = to_long(true);
+  return *this == amount_t(value);
 }
 
 
@@ -943,7 +965,7 @@ namespace {
   }
 }
 
-void amount_t::parse(std::istream& in, flags_t tflags)
+void amount_t::parse(std::istream& in, flags_t flags)
 {
   // The possible syntax for an amount is:
   //
@@ -1048,7 +1070,7 @@ void amount_t::parse(std::istream& in, flags_t tflags)
   // Set the commodity's flags and precision accordingly
 
   if (commodity_ &&
-      (newly_created || ! (tflags & AMOUNT_PARSE_NO_MIGRATE))) {
+      (newly_created || ! (flags & AMOUNT_PARSE_NO_MIGRATE))) {
     commodity().add_flags(comm_flags);
     if (quantity->prec > commodity().precision())
       commodity().set_precision(quantity->prec);
@@ -1056,9 +1078,7 @@ void amount_t::parse(std::istream& in, flags_t tflags)
 
   // Setup the amount's own flags
 
-  set_flags(tflags);
-
-  if (has_flags(AMOUNT_PARSE_NO_MIGRATE))
+  if (flags & AMOUNT_PARSE_NO_MIGRATE)
     quantity->add_flags(BIGINT_KEEP_PREC);
 
   // Now we have the final number.  Remove commas and periods, if
@@ -1086,7 +1106,7 @@ void amount_t::parse(std::istream& in, flags_t tflags)
   if (negative)
     in_place_negate();
 
-  if (! has_flags(AMOUNT_PARSE_NO_REDUCE))
+  if (! (flags & AMOUNT_PARSE_NO_REDUCE))
     in_place_reduce();
 }
 
@@ -1407,7 +1427,7 @@ void amount_t::read_quantity(std::istream& in)
     quantity->set_flags(tflags);
   }
   else {
-    assert(0);
+    assert(false);
   }
 }
 

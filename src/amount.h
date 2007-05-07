@@ -71,8 +71,7 @@ DECLARE_EXCEPTION(amount_error);
  * degree.
  */
 class amount_t
-  : public supports_flags<>,
-           ordered_field_operators<amount_t,
+  : public ordered_field_operators<amount_t,
 	   ordered_field_operators<amount_t, long,
 	   ordered_field_operators<amount_t, unsigned long,
 	   ordered_field_operators<amount_t, double> > > >
@@ -417,11 +416,19 @@ public:
    * are in Python), rather the following conversion methods must be
    * called explicitly:
    *
-   * to_double() returns an amount as a double.  Note: precision is
-   * very likely to be lost in this conversion!
+   * to_double([bool]) returns an amount as a double.  If the optional
+   * boolean argument is true (the default), an exception is thrown if
+   * the conversion would lose information.
    *
-   * to_long() returns an amount as a long integer.  This is only
-   * useful if the amount is know to be of a small, integral value.
+   * to_long([bool]) returns an amount as a long integer.  If the
+   * optional boolean argument is true (the default), an exception is
+   * thrown if the conversion would lose information.
+   *
+   * fits_in_double() returns true if to_double() would not lose
+   * precision.
+   *
+   * fits_in_long() returns true if to_long() would not lose
+   * precision.
    *
    * to_string() returns an amount'ss "display value" as a string --
    * after rounding the value according to the commodity's default
@@ -436,11 +443,14 @@ public:
    * been stripped and the full, internal precision of the amount
    * would be displayed.
    */
-  double to_double() const;
-  long   to_long() const;
+  double to_double(bool no_check = false) const;
+  long   to_long(bool no_check = false) const;
   string to_string() const;
   string to_fullstring() const;
   string quantity_string() const;
+
+  bool fits_in_double() const;
+  bool fits_in_long() const;
 
   /**
    * Commodity-related methods.  The following methods relate to an
@@ -556,10 +566,12 @@ public:
 #define AMOUNT_PARSE_NO_MIGRATE 0x01
 #define AMOUNT_PARSE_NO_REDUCE  0x02
 
-  void parse(std::istream& in, flags_t bits = 0);
-  void parse(const string& str, flags_t bits = 0) {
+  typedef uint_least8_t flags_t;
+
+  void parse(std::istream& in, flags_t flags = 0);
+  void parse(const string& str, flags_t flags = 0) {
     std::istringstream stream(str);
-    parse(stream, bits);
+    parse(stream, flags);
   }
 
   static void parse_conversion(const string& larger_str,

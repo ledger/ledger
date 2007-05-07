@@ -42,6 +42,7 @@ static unsigned int src_idx;
 static accounts_map account_aliases;
 
 typedef std::list<std::pair<path, int> > include_stack_t;
+
 static include_stack_t include_stack;
 
 #define TIMELOG_SUPPORT 1
@@ -98,7 +99,7 @@ parse_amount_expr(std::istream& in, journal_t *,
   }
 #endif
 
-  amount = xpath.calc(xact.data).to_amount();
+  amount = xpath.calc(xact.data).as_amount();
 
   DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 	 "The transaction amount is " << amount);
@@ -174,11 +175,11 @@ transaction_t * parse_transaction(char *      line,
   char * e = &account_path[std::strlen(account_path) - 1];
   if ((*b == '[' && *e == ']') ||
       (*b == '(' && *e == ')')) {
-    xact->flags |= TRANSACTION_VIRTUAL;
+    xact->add_flags(TRANSACTION_VIRTUAL);
     DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 	   "Parsed a virtual account name");
     if (*b == '[') {
-      xact->flags |= TRANSACTION_BALANCE;
+      xact->add_flags(TRANSACTION_BALANCE);
       DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 	     "Parsed a balanced virtual account name");
     }
@@ -907,7 +908,7 @@ unsigned int textual_parser_t::parse(std::istream&	   in,
 	  // parser to resolve alias references.
 	  if (account_t * acct = account_stack.front()->find_account(e)) {
 	    std::pair<accounts_map::iterator, bool> result
-	      = account_aliases.insert(accounts_pair(b, acct));
+	      = account_aliases.insert(accounts_map::value_type(b, acct));
 	    assert(result.second);
 	  } else {
 	    ; // jww (2007-04-30): throw an error here

@@ -54,7 +54,7 @@ void commodity_t::add_price(const moment_t& date,
     (*i).second = price;
   } else {
     std::pair<history_map::iterator, bool> result
-      = base->history->prices.insert(history_pair(date, price));
+      = base->history->prices.insert(history_map::value_type(date, price));
     assert(result.second);
   }
 }
@@ -107,7 +107,7 @@ optional<amount_t> commodity_t::value(const optional<moment_t>& moment)
     }
   }
 
-  if (! (flags() & COMMODITY_STYLE_NOMARKET)) {
+  if (! has_flags(COMMODITY_STYLE_NOMARKET) && parent().get_quote) {
     if (optional<amount_t> quote = parent().get_quote
 	(*this, age, moment,
 	 (base->history && base->history->prices.size() > 0 ?

@@ -227,7 +227,7 @@ int format_t::element_formatter_t::operator()
   else if (elem->kind == element_t::TEXT)
     out << *elem->chars;
   else
-    assert(0);
+    assert(false);
 
   string temp = out.str();
   for (string::const_iterator i = temp.begin();

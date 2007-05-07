@@ -128,10 +128,10 @@ static void endElement(void *userData, const char *name)
     curr_entry->transactions.back()->state = transaction_t::PENDING;
   }
   else if (std::strcmp(name, "tr:virtual") == 0) {
-    curr_entry->transactions.back()->flags |= TRANSACTION_VIRTUAL;
+    curr_entry->transactions.back()->add_flags(TRANSACTION_VIRTUAL);
   }
   else if (std::strcmp(name, "tr:generated") == 0) {
-    curr_entry->transactions.back()->flags |= TRANSACTION_AUTO;
+    curr_entry->transactions.back()->add_flags(TRANSACTION_AUTO);
   }
   else if (std::strcmp(name, "symbol") == 0) {
     assert(! curr_comm);
@@ -367,7 +367,7 @@ void xml_write_value(std::ostream& out, const value_t& value,
     break;
 
   default:
-    assert(0);
+    assert(false);
     break;
   }
 

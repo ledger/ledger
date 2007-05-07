@@ -93,8 +93,8 @@ void endElement(void *userData, const char *name)
     assert(parser->curr_account);
     if (parser->curr_account->parent == parser->master_account)
       parser->curr_journal->add_account(parser->curr_account);
-    parser->accounts_by_id.insert(accounts_pair(parser->curr_account_id,
-						parser->curr_account));
+    parser->accounts_by_id.insert
+      (accounts_map::value_type(parser->curr_account_id, parser->curr_account));
     parser->curr_account = NULL;
   }
   else if (std::strcmp(name, "gnc:commodity") == 0) {
@@ -230,8 +230,8 @@ void dataHandler(void *userData, const char *s, int len)
 
     if (parser->curr_account)
       parser->account_comms.insert
-	(gnucash_parser_t::account_comm_pair(parser->curr_account,
-					     parser->curr_comm));
+	(gnucash_parser_t::account_comm_map::value_type
+	 (parser->curr_account, parser->curr_comm));
     else if (parser->curr_entry)
       parser->entry_comm = parser->curr_comm;
     break;
@@ -307,7 +307,7 @@ void dataHandler(void *userData, const char *s, int len)
     break;
 
   default:
-    assert(0);
+    assert(false);
     break;
   }
 }

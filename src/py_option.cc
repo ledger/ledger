@@ -58,8 +58,7 @@ struct py_option_t : public option_t
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(option_select_overloads,
 				       py_option_t::select, 1, 2)
 
-typedef std::map<const string, object>  options_map;
-typedef std::pair<const string, object> options_pair;
+typedef std::map<const string, object> options_map;
 
 options_map options;
 

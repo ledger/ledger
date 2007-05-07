@@ -125,11 +125,10 @@ string abbreviate(const string&	  str,
 
 static void scan_for_transactions(std::ostream& out, const xml::node_t * node)
 {
-  if (! (node->flags & XML_NODE_IS_PARENT))
+  if (! node->has_flags(XML_NODE_IS_PARENT))
     return;
   
-  const xml::parent_node_t * parent =
-    static_cast<const xml::parent_node_t *>(node);
+  const xml::parent_node_t * parent = node->as_parent_node();
 
   for (const xml::node_t * child = parent->children();
        child;
@@ -167,13 +166,13 @@ void register_command::print_document(std::ostream&	out,
   value_t nodelist;
   xml::xpath_t::eval(nodelist, "//transaction", doc);
 
-  const value_t::sequence_t * xact_list = nodelist.to_sequence();
+  value_t::sequence_t& xact_list(nodelist.as_sequence());
   assert(xact_list);
 
   for (value_t::sequence_t::const_iterator i = xact_list->begin();
        i != xact_list->end();
        i++) {
-    const xml::node_t * node = (*i).to_xml_node();
+    const xml::node_t * node = (*i).as_xml_node();
     assert(node);
 
     const xml::transaction_node_t * xact_node =

@@ -49,7 +49,7 @@ void debug_assert(const string& reason,
 {
   std::ostringstream buf;
   buf << "Assertion failed in \"" << file << "\", line " << line
-      << ": " << reason;
+      << ": " << func << ": " << reason;
   throw assertion_failed(buf.str());
 }
 
@@ -70,12 +70,10 @@ bool verify_enabled = false;
 
 typedef std::pair<std::string, std::size_t>     allocation_pair;
 typedef std::map<void *, allocation_pair>       live_memory_map;
-typedef std::pair<void *, allocation_pair>      live_memory_pair;
 typedef std::multimap<void *, allocation_pair>  live_objects_map;
-typedef std::pair<void *, allocation_pair>      live_objects_pair;
+
 typedef std::pair<unsigned int, std::size_t>    count_size_pair;
 typedef std::map<std::string, count_size_pair>  object_count_map;
-typedef std::pair<std::string, count_size_pair> object_count_pair;
 
 static live_memory_map  * live_memory	     = NULL;
 static object_count_map * live_memory_count  = NULL;
@@ -137,7 +135,7 @@ inline void add_to_count_map(object_count_map& the_map,
     (*k).second.second += size;
   } else {
     std::pair<object_count_map::iterator, bool> result =
-      the_map.insert(object_count_pair(name, count_size_pair(1, size)));
+      the_map.insert(object_count_map::value_type(name, count_size_pair(1, size)));
     VERIFY(result.second);
   }
 }
@@ -160,7 +158,8 @@ static void trace_new_func(void * ptr, const char * which, std::size_t size)
 
   if (! live_memory) return;
 
-  live_memory->insert(live_memory_pair(ptr, allocation_pair(which, size)));
+  live_memory->insert
+    (live_memory_map::value_type(ptr, allocation_pair(which, size)));
 
   add_to_count_map(*live_memory_count, which, size);
   add_to_count_map(*total_memory_count, which, size);
@@ -287,7 +286,8 @@ void trace_ctor_func(void * ptr, const char * cls_name, const char * args,
 
   DEBUG("verify.memory", "TRACE_CTOR " << ptr << " " << name);
 
-  live_objects->insert(live_objects_pair(ptr, allocation_pair(cls_name, cls_size)));
+  live_objects->insert
+    (live_objects_map::value_type(ptr, allocation_pair(cls_name, cls_size)));
 
   add_to_count_map(*live_object_count, cls_name, cls_size);
   add_to_count_map(*total_object_count, cls_name, cls_size);
@@ -554,8 +554,7 @@ struct timer_t {
       description(_description), active(true) {}
 };
 
-typedef std::map<std::string, timer_t>  timer_map;
-typedef std::pair<std::string, timer_t> timer_pair;
+typedef std::map<std::string, timer_t> timer_map;
 
 static timer_map timers;
 
@@ -567,7 +566,7 @@ void start_timer(const char * name, log_level_t lvl)
 
   timer_map::iterator i = timers.find(name);
   if (i == timers.end()) {
-    timers.insert(timer_pair(name, timer_t(lvl, _log_buffer.str())));
+    timers.insert(timer_map::value_type(name, timer_t(lvl, _log_buffer.str())));
   } else {
     assert((*i).second.description == _log_buffer.str());
     (*i).second.begin  = CURRENT_TIME();

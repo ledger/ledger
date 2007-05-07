@@ -33,39 +33,6 @@
 
 namespace ledger {
 
-balance_t& balance_t::operator*=(const balance_t& bal)
-{
-  if (is_realzero()) {
-    return *this;
-  }
-  else if (bal.is_realzero()) {
-    return *this = bal;
-  }
-  else if (bal.amounts.size() == 1) {
-    return *this *= (*bal.amounts.begin()).second;
-  }
-  else if (amounts.size() == 1) {
-    return *this = bal * *this;
-  }
-  else {
-    // Since we would fail with an error at this point otherwise, try
-    // stripping annotations to see if we can come up with a
-    // reasonable result.  The user will not notice any annotations
-    // missing (since they are viewing a stripped report anyway), only
-    // that some of their value expression may not see any pricing or
-    // date data because of this operation.
-
-    balance_t temp(bal.strip_annotations());
-    if (temp.amounts.size() == 1)
-      return *this *= temp;
-    temp = strip_annotations();
-    if (temp.amounts.size() == 1)
-      return *this = bal * temp;
-
-    throw_(amount_error, "Cannot multiply two balances: " << temp << " * " << bal);
-  }
-}
-
 balance_t& balance_t::operator*=(const amount_t& amt)
 {
   if (is_realzero()) {
@@ -105,31 +72,6 @@ balance_t& balance_t::operator*=(const amount_t& amt)
     }
   }
   return *this;
-}
-
-balance_t& balance_t::operator/=(const balance_t& bal)
-{
-  if (bal.is_realzero()) {
-    throw_(amount_error, "Divide by zero: " << *this << " / " << bal);
-  }
-  else if (is_realzero()) {
-    return *this;
-  }
-  else if (bal.amounts.size() == 1) {
-    return *this /= (*bal.amounts.begin()).second;
-  }
-  else if (*this == bal) {
-    return *this = amount_t(1L);
-  }
-  else {
-    // Try stripping annotations before giving an error.
-    balance_t temp(bal.strip_annotations());
-    if (temp.amounts.size() == 1)
-      return *this /= temp;
-
-    throw_(amount_error,
-	   "Cannot divide two balances: " << temp << " / " << bal);
-  }
 }
 
 balance_t& balance_t::operator/=(const amount_t& amt)

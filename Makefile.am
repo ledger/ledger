@@ -1,6 +1,6 @@
-SUBDIRS = gdtoa
+SUBDIRS	      = gdtoa
 BUILT_SOURCES =
-CLEANFILES =
+CLEANFILES    =
 
 
 ESC_srcdir=`echo "$(srcdir)" | sed 's/\//\\\\\//g'`
@@ -22,14 +22,14 @@ endif
 AM_YFLAGS = -d
 AM_LFLAGS = -o $(LEX_OUTPUT_ROOT).c
 
-#WARNFLAGS  = -H -Wall -Wextra -Wfloat-equal -Wno-endif-labels
-#WARNFLAGS += -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion
-#WARNFLAGS += -Wconversion -Wshorten-64-to-32 -Wsign-compare
-#WARNFLAGS += -Wmissing-field-initializers -pedantic-errors
+WARNFLAGS  = -Wall -Wextra -Wfloat-equal -Wno-endif-labels
+WARNFLAGS += -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion
+WARNFLAGS += -Wconversion -Wshorten-64-to-32 -Wsign-compare
+WARNFLAGS += -Wmissing-field-initializers -pedantic-errors
 
 libledger_la_CPPFLAGS = -I$(top_builddir)/gdtoa -I$(srcdir)/gdtoa \
-			-I$(srcdir)/src
-libledger_la_LDFLAGS  = -release 3.0
+			-I$(srcdir)/src #$(WARNFLAGS)
+libledger_la_LDFLAGS  = -release $(PACKAGE_VERSION)
 
 libledger_la_SOURCES = \
 	src/utils.cc	 \
@@ -79,7 +79,6 @@ libledger_la_SOURCES += src/pyinterp.cc
 endif
 
 if USE_PCH
-libledger_la_CXXFLAGS = $(WARNFLAGS)
 nodist_libledger_la_SOURCES = system.hh.gch
 
 BUILT_SOURCES += system.hh.gch
@@ -93,7 +92,7 @@ endif
 
 
 libpyledger_la_CPPFLAGS = $(libledger_la_CPPFLAGS)
-libpyledger_la_LDFLAGS = -release 3.0
+libpyledger_la_LDFLAGS = -release $(PACKAGE_VERSION)
 
 libpyledger_la_SOURCES = \
 	src/py_utils.cc \
@@ -142,11 +141,10 @@ pkginclude_HEADERS = \
 bin_PROGRAMS = ledger
 
 ledger_CPPFLAGS = $(libledger_la_CPPFLAGS)
-ledger_CXXFLAGS = $(WARNFLAGS)
-ledger_LDADD = $(LIBOBJS) libledger.la gdtoa/libgdtoa.la $(LEXLIB)
-ledger_LDFLAGS = -static	# for the sake of command-line speed
+ledger_LDADD	= $(LIBOBJS) libledger.la gdtoa/libgdtoa.la $(LEXLIB)
+ledger_LDFLAGS	= -static	# for the sake of command-line speed
 
-ledger_SOURCES = \
+ledger_SOURCES  = \
 	src/option.cc \
 	src/main.cc
 

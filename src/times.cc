@@ -77,8 +77,4 @@ moment_t parse_datetime(const char * str)
 #endif
 }
 
-moment_t datetime_range_from_stream(std::istream& in)
-{
-}
-
 } // namespace ledger

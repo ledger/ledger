@@ -52,27 +52,25 @@ DECLARE_EXCEPTION(conversion_error);
 class parent_node_t;
 class document_t;
 
-class node_t
+class node_t : public supports_flags<>
 {
 public:
-  unsigned int	  name_id;
+  unsigned int	      name_id;
 #ifdef THREADSAFE
-  document_t *	  document;
+  document_t *	      document;
 #else
   static document_t * document;
 #endif
-  parent_node_t * parent;
-  node_t *	  next;
-  node_t *	  prev;
-  unsigned int	  flags;
+  parent_node_t *     parent;
+  node_t *	      next;
+  node_t *	      prev;
 
-  typedef std::map<string, string>  attrs_map;
-  typedef std::pair<string, string> attrs_pair;
+  typedef std::map<string, string> attrs_map;
 
   attrs_map * attrs;
 
   node_t(document_t * _document, parent_node_t * _parent = NULL,
-	 unsigned int _flags = 0);
+	 flags_t _flags = 0);
 
   virtual ~node_t() {
     TRACE_DTOR(node_t);
@@ -80,10 +78,21 @@ public:
     if (attrs) checked_delete(attrs);
   }
 
+  parent_node_t * as_parent_node() {
+    if (! has_flags(XML_NODE_IS_PARENT))
+      throw_(std::logic_error, "Request to cast leaf node to a parent node");
+    return polymorphic_downcast<parent_node_t *>(this);
+  }    
+  const parent_node_t * as_parent_node() const {
+    if (! has_flags(XML_NODE_IS_PARENT))
+      throw_(std::logic_error, "Request to cast leaf node to a parent node");
+    return polymorphic_downcast<const parent_node_t *>(this);
+  }    
+
   void extract();		// extract this node from its parent's child list
 
   virtual const char * text() const {
-    assert(0);
+    assert(false);
     return NULL;
   }
 
@@ -98,7 +107,7 @@ public:
     if (! attrs)
       attrs = new attrs_map;
     std::pair<attrs_map::iterator, bool> result =
-      attrs->insert(attrs_pair(n, v));
+      attrs->insert(attrs_map::value_type(n, v));
     assert(result.second);
   }
   const char * get_attr(const char * n) {
@@ -223,8 +232,7 @@ private:
 
   names_array names;
 
-  typedef std::map<string, int>  names_map;
-  typedef std::pair<string, int> names_pair;
+  typedef std::map<string, int> names_map;
 
   names_map names_index;
 

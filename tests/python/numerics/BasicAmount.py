@@ -372,7 +372,8 @@ class BasicAmountTestCase(unittest.TestCase):
         x1 = amount(1234.56)
 
         self.assertTrue(x1)
-        self.assertEqual(1234, int(x1))
+        self.assertRaises(exceptions.ArithmeticError, amount.to_long, x1)
+        self.assertEqual(1234, x1.to_long(True))
         self.assertEqual(1234.56, float(x1))
         self.assertEqual("1234.56", x1.to_string())
         self.assertEqual("1234.56", x1.quantity_string())

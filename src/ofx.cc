@@ -33,11 +33,8 @@
 
 namespace ledger {
 
-typedef std::map<const string, account_t *>  accounts_map;
-typedef std::pair<const string, account_t *> accounts_pair;
-
-typedef std::map<const string, commodity_t *>  commodities_map;
-typedef std::pair<const string, commodity_t *> commodities_pair;
+typedef std::map<const string, account_t *>   accounts_map;
+typedef std::map<const string, commodity_t *> commodities_map;
 
 journal_t *	curr_journal;
 accounts_map	ofx_accounts;

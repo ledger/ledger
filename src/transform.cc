@@ -202,7 +202,7 @@ void split_transform::execute(xml::document_t * document)
 
       switch (i->kind) {
       case repitem_t::TRANSACTION:
-	assert(0);
+	assert(false);
 	j = new xact_repitem_t(static_cast<xact_repitem_t *>(i)->xact);
 	break;
       case repitem_t::ENTRY:
@@ -244,7 +244,7 @@ void merge_transform::execute(xml::document_t * document)
       bool merge = false;
       switch (i->kind) {
       case repitem_t::TRANSACTION:
-	assert(0);
+	assert(false);
 	break;
       case repitem_t::ENTRY:
 	if (static_cast<entry_repitem_t *>(i)->entry ==

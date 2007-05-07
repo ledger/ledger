@@ -98,11 +98,6 @@ bool transaction_t::valid() const
     return false;
   }
 
-  if (flags & ~0x003f) {
-    DEBUG("ledger.validate", "transaction_t: flags are bad");
-    return false;
-  }
-
   return true;
 }
 
@@ -130,8 +125,8 @@ bool entry_base_t::finalize()
   for (transactions_list::const_iterator x = transactions.begin();
        x != transactions.end();
        x++)
-    if (! ((*x)->flags & TRANSACTION_VIRTUAL) ||
-	((*x)->flags & TRANSACTION_BALANCE)) {
+    if (! (*x)->has_flags(TRANSACTION_VIRTUAL) ||
+	(*x)->has_flags(TRANSACTION_BALANCE)) {
       optional<amount_t>& p((*x)->cost ? (*x)->cost : (*x)->amount);
       if (p) {
 	if (no_amounts) {
@@ -168,7 +163,7 @@ bool entry_base_t::finalize()
     // The amount doesn't need to be set because the code below will
     // balance this transaction against the other.
     add_transaction(nxact);
-    nxact->flags |= TRANSACTION_CALCULATED;
+    nxact->add_flags(TRANSACTION_CALCULATED);
   }
 
   // If the first transaction of a two-transaction entry is of a
@@ -177,15 +172,15 @@ bool entry_base_t::finalize()
   // the balance.  This is done for the last eligible commodity.
 
   if (! saw_null && balance && balance.type == value_t::BALANCE &&
-      balance.to_balance().amounts.size() == 2) {
+      balance.as_balance().amounts.size() == 2) {
     transactions_list::const_iterator x = transactions.begin();
     assert((*x)->amount);
     commodity_t& this_comm = (*x)->amount->commodity();
 
     balance_t::amounts_map::const_iterator this_bal =
-      balance.to_balance().amounts.find(&this_comm);
+      balance.as_balance().amounts.find(&this_comm);
     balance_t::amounts_map::const_iterator other_bal =
-      balance.to_balance().amounts.begin();
+      balance.as_balance().amounts.begin();
     if (this_bal == other_bal)
       other_bal++;
 
@@ -193,7 +188,7 @@ bool entry_base_t::finalize()
       amount_t((*other_bal).second / (*this_bal).second.number()).unround();
 
     for (; x != transactions.end(); x++) {
-      if ((*x)->cost || ((*x)->flags & TRANSACTION_VIRTUAL) ||
+      if ((*x)->cost || (*x)->has_flags(TRANSACTION_VIRTUAL) ||
 	  ! (*x)->amount || (*x)->amount->commodity() != this_comm)
 	continue;
 
@@ -223,8 +218,8 @@ bool entry_base_t::finalize()
        x != transactions.end();
        x++) {
     if ((*x)->amount ||
-	(((*x)->flags & TRANSACTION_VIRTUAL) &&
-	 ! ((*x)->flags & TRANSACTION_BALANCE)))
+	((*x)->has_flags(TRANSACTION_VIRTUAL) &&
+	 ! (*x)->has_flags(TRANSACTION_BALANCE)))
       continue;
 
     if (! empty_allowed)
@@ -240,12 +235,12 @@ bool entry_base_t::finalize()
     balance_t * bal = NULL;
     switch (balance.type) {
     case value_t::BALANCE_PAIR:
-      bal = &balance.to_balance_pair().quantity;
+      bal = &balance.as_balance_pair().quantity;
       // fall through...
 
     case value_t::BALANCE:
       if (! bal)
-	bal = &balance.to_balance();
+	bal = &balance.as_balance();
 
       if (bal->amounts.size() < 2) {
 	balance.cast(value_t::AMOUNT);
@@ -263,7 +258,7 @@ bool entry_base_t::finalize()
 	  } else {
 	    transaction_t * nxact = new transaction_t((*x)->account);
 	    add_transaction(nxact);
-	    nxact->flags |= TRANSACTION_CALCULATED;
+	    nxact->add_flags(TRANSACTION_CALCULATED);
 	    nxact->amount = amt;
 	  }
 
@@ -274,8 +269,8 @@ bool entry_base_t::finalize()
       // fall through...
 
     case value_t::AMOUNT:
-      (*x)->amount = balance.to_amount().negate();
-      (*x)->flags |= TRANSACTION_CALCULATED;
+      (*x)->amount = balance.as_amount().negate();
+      (*x)->add_flags(TRANSACTION_CALCULATED);
 
       balance += *(*x)->amount;
       break;
@@ -405,7 +400,7 @@ void auto_entry_t::extend_entry(entry_base_t& entry, bool post)
 	  account = (*i)->account;
 
 	transaction_t * xact
-	  = new transaction_t(account, amt, (*t)->flags | TRANSACTION_AUTO);
+	  = new transaction_t(account, amt, (*t)->flags() | TRANSACTION_AUTO);
 	entry.add_transaction(xact);
       }
     }
@@ -457,7 +452,7 @@ account_t * account_t::find_account(const string& name,
     account->journal = journal;
 
     std::pair<accounts_map::iterator, bool> result
-      = accounts.insert(accounts_pair(first, account));
+      = accounts.insert(accounts_map::value_type(first, account));
     assert(result.second);
   } else {
     account = (*i).second;
@@ -666,7 +661,7 @@ void print_entry(std::ostream& out, const entry_base_t& entry_base,
     print_format = prefix + "    %-34A  %12o\n";
   }
   else {
-    assert(0);
+    assert(false);
   }
 
 #if 0

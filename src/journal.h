@@ -44,7 +44,7 @@ namespace xml {
   class entry_node_t;
   class account_node_t;
   class journal_node_t;
-};
+}
 
 // These flags persist with the object
 #define TRANSACTION_NORMAL     0x0000
@@ -57,13 +57,12 @@ namespace xml {
 class entry_t;
 class account_t;
 
-class transaction_t
+class transaction_t : public supports_flags<>
 {
  public:
   enum state_t { UNCLEARED, CLEARED, PENDING };
 
   entry_t *	     entry;
-  unsigned short     flags;
   state_t	     state;
   account_t *	     account;
   optional<moment_t> _date;
@@ -84,26 +83,52 @@ class transaction_t
   static bool use_effective_date;
 
   explicit transaction_t(account_t * _account = NULL)
-    : entry(NULL), account(_account), state(UNCLEARED),
-      flags(TRANSACTION_NORMAL), beg_pos(0), beg_line(0),
-      end_pos(0), end_line(0), data(NULL) {
+    : supports_flags<>(TRANSACTION_NORMAL),
+      entry(NULL),
+      state(UNCLEARED),
+      account(_account),
+      beg_pos(0),
+      beg_line(0),
+      end_pos(0),
+      end_line(0),
+      data(NULL) {
     TRACE_CTOR(transaction_t, "account_t *");
   }
-  explicit transaction_t(account_t *	_account,
+  explicit transaction_t(account_t *	 _account,
 			 const amount_t& _amount,
 			 unsigned int    _flags = TRANSACTION_NORMAL,
 			 const optional<string> _note = optional<string>())
-    : entry(NULL), account(_account), amount(_amount),
-      state(UNCLEARED), flags(_flags), note(_note),
-      beg_pos(0), beg_line(0), end_pos(0), end_line(0), data(NULL) {
+    : supports_flags<>(_flags),
+      entry(NULL),
+      state(UNCLEARED),
+      account(_account),
+      amount(_amount),
+      note(_note),
+      beg_pos(0),
+      beg_line(0),
+      end_pos(0),
+      end_line(0),
+      data(NULL) {
     TRACE_CTOR(transaction_t,
 	       "account_t *, const amount_t&, unsigned int, const string&");
   }
   explicit transaction_t(const transaction_t& xact)
-    : entry(xact.entry), account(xact.account), amount(xact.amount),
-      cost(xact.cost), state(xact.state), flags(xact.flags), note(xact.note),
-      beg_pos(xact.beg_pos), beg_line(xact.beg_line),
-      end_pos(xact.end_pos), end_line(xact.end_line), data(NULL) {
+    : supports_flags<>(xact),
+      entry(xact.entry),
+      state(xact.state),
+      account(xact.account),
+      _date(xact._date),
+      _date_eff(xact._date_eff),
+      amount(xact.amount),
+      amount_expr(xact.amount_expr),
+      cost(xact.cost),
+      cost_expr(xact.cost_expr),
+      note(xact.note),
+      beg_pos(xact.beg_pos),
+      beg_line(xact.beg_line),
+      end_pos(xact.end_pos),
+      end_line(xact.end_line),
+      data(xact.data) {
     TRACE_CTOR(transaction_t, "copy");
   }
   ~transaction_t();
@@ -164,7 +189,7 @@ class entry_base_t
     for (transactions_list::iterator i = transactions.begin();
 	 i != transactions.end();
 	 i++)
-      if (! ((*i)->flags & TRANSACTION_BULK_ALLOC))
+      if (! (*i)->has_flags(TRANSACTION_BULK_ALLOC))
 	checked_delete(*i);
       else
 	(*i)->~transaction_t();
@@ -299,7 +324,6 @@ class period_entry_t : public entry_base_t
 
 
 typedef std::map<const string, account_t *> accounts_map;
-typedef std::pair<const string, account_t *> accounts_pair;
 
 class account_t
 {
@@ -334,7 +358,7 @@ class account_t
   string fullname() const;
 
   void add_account(account_t * acct) {
-    accounts.insert(accounts_pair(acct->name, acct));
+    accounts.insert(accounts_map::value_type(acct->name, acct));
     acct->journal = journal;
   }
   bool remove_account(account_t * acct) {
@@ -448,7 +472,7 @@ class journal_t
       return (*c).second;
 
     account_t * account = master->find_account(name, auto_create);
-    accounts_cache.insert(accounts_pair(name, account));
+    accounts_cache.insert(accounts_map::value_type(name, account));
     account->journal = this;
     return account;
   }

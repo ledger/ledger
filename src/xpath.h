@@ -150,7 +150,7 @@ public:
   };
 
   static op_t * wrap_value(const value_t& val);
-  static op_t * wrap_sequence(value_t::sequence_t * val);
+  static op_t * wrap_sequence(const value_t::sequence_t& val);
   static op_t * wrap_functor(functor_t * fobj);
 #if 0
   static op_t * wrap_mask(const string& pattern);
@@ -182,8 +182,7 @@ public:
 public:
   class scope_t
   {
-    typedef std::map<const string, op_t *>  symbol_map;
-    typedef std::pair<const string, op_t *> symbol_pair;
+    typedef std::map<const string, op_t *> symbol_map;
 
     symbol_map symbols;
 
@@ -226,15 +225,17 @@ public:
 
   class function_scope_t : public scope_t
   {
-    value_t::sequence_t * sequence;
-    value_t * value;
-    int index;
+    value_t::sequence_t sequence;
+    value_t *		value;
+    int			index;
 
   public:
-    function_scope_t(value_t::sequence_t * _sequence, value_t * _value,
-		     int _index, scope_t * _parent = NULL)
+    function_scope_t(const value_t::sequence_t& _sequence,
+		     value_t * _value, int _index, scope_t * _parent = NULL)
       : scope_t(_parent, STATIC),
 	sequence(_sequence), value(_value), index(_index) {}
+    function_scope_t(value_t * _value, int _index, scope_t * _parent = NULL)
+      : scope_t(_parent, STATIC), value(_value), index(_index) {}
 
     virtual bool resolve(const string& name, value_t& result,
 			 scope_t * locals = NULL);
@@ -309,7 +310,7 @@ private:
     }
 
     token_t(const token_t& other) {
-      assert(0);
+      assert(false);
       TRACE_CTOR(xpath_t::token_t, "copy");
       *this = other;
     }
@@ -321,7 +322,7 @@ private:
     token_t& operator=(const token_t& other) {
       if (&other == this)
 	return *this;
-      assert(0);
+      assert(false);
       return *this;
     }
 
@@ -416,17 +417,26 @@ public:
     mutable short refc;
     op_t *	  left;
 
-    union {
-      value_t *	    valuep;	// used by constant VALUE
-      string * name;	// used by constant SYMBOL
-      unsigned int  arg_index;	// used by ARG_INDEX and O_ARG
-      functor_t *   functor;	// used by terminal FUNCTOR
-      unsigned int  name_id;	// used by NODE_NAME and ATTR_NAME
 #if 0
-      mask_t *	    mask;	// used by terminal MASK
+    optional<variant<value_t,
+		     string,
+		     unsigned int,
+		     functor_t,
+		     mask_t,
+		     op_t> > data;
+#else
+    union {
+      value_t *	   valuep;	// used by constant VALUE
+      string *	   name;	// used by constant SYMBOL
+      unsigned int arg_index;	// used by ARG_INDEX and O_ARG
+      functor_t *  functor;	// used by terminal FUNCTOR
+      unsigned int name_id;	// used by NODE_NAME and ATTR_NAME
+#if 0
+      mask_t *	   mask;	// used by terminal MASK
 #endif
-      op_t *	    right;	// used by all operators
+      op_t *	   right;	// used by all operators
     };
+#endif
 
     op_t(const kind_t _kind)
       : kind(_kind), refc(0), left(NULL), right(NULL) {
@@ -784,14 +794,14 @@ public:
 inline std::ostream& operator<<(std::ostream& out, const xpath_t::op_t& op) {
   op.print(out);
   return out;
-};
+}
 
 } // namespace xml
 
 template <typename T>
 inline T * get_ptr(xml::xpath_t::scope_t * locals, unsigned int idx) {
   assert(locals->args.size() > idx);
-  T * ptr = static_cast<T *>(locals->args[idx].to_pointer());
+  T * ptr = static_cast<T *>(locals->args[idx].as_pointer());
   assert(ptr);
   return ptr;
 }
