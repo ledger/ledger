@@ -403,7 +403,7 @@ public:
 
   bool is_null() const {
     if (! quantity) {
-      assert(! has_commodity());
+      assert(! commodity_);
       return true;
     }
     return false;
@@ -477,6 +477,8 @@ public:
 
   bool has_commodity() const;
   void set_commodity(commodity_t& comm) {
+    if (! quantity)
+      *this = 0L;
     commodity_ = &comm;
   }
   void clear_commodity() {
@@ -486,6 +488,7 @@ public:
   amount_t number() const {
     if (! has_commodity())
       return *this;
+
     amount_t temp(*this);
     temp.clear_commodity();
     return temp;

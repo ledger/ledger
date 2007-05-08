@@ -33,10 +33,10 @@ class AmountTestCase(unittest.TestCase):
         x9 = amount(x3)
         x10 = amount(x6)
 
-        self.assertEqual(amount(0), x0)
-        self.assertEqual(amount(), x0)
-        self.assertEqual(amount("0"), x0)
-        self.assertEqual(amount("0.0"), x0)
+        self.assertRaises(exceptions.ArithmeticError, operator.eq, amount(0), x0)
+        self.assertRaises(exceptions.ArithmeticError, operator.eq, amount(), x0)
+        self.assertRaises(exceptions.ArithmeticError, operator.eq, amount("0"), x0)
+        self.assertRaises(exceptions.ArithmeticError, operator.eq, amount("0.0"), x0)
         self.assertEqual(x2, x1)
         self.assertEqual(x5, x1)
         self.assertEqual(x6, x3)
@@ -98,7 +98,6 @@ class AmountTestCase(unittest.TestCase):
         self.assertValid(x10)
 
     def testAssignment(self):
-        x0 = amount()
         x1  = amount(123456)
         x2  = amount(123456L)
         x3  = amount(123.456)
@@ -107,14 +106,12 @@ class AmountTestCase(unittest.TestCase):
         x9  = x3
         x10 = amount(x6)
 
-        self.assertEqual(amount(0), x0)
         self.assertEqual(x2, x1)
         self.assertEqual(x5, x1)
         self.assertEqual(x6, x3)
         self.assertEqual(x10, x3)
         self.assertEqual(x10, x9)
 
-        x0  = amount()
         x1  = amount(123456)
         x2  = amount(123456L)
         x3  = amount(123.456)
@@ -123,14 +120,12 @@ class AmountTestCase(unittest.TestCase):
         x9  = x3
         x10 = amount(x6)
 
-        self.assertEqual(amount(0), x0)
         self.assertEqual(x2, x1)
         self.assertEqual(x5, x1)
         self.assertEqual(x6, x3)
         self.assertEqual(x10, x3)
         self.assertEqual(x10, x9)
 
-        self.assertValid(x0)
         self.assertValid(x1)
         self.assertValid(x2)
         self.assertValid(x3)
@@ -217,12 +212,10 @@ class AmountTestCase(unittest.TestCase):
         x10 = amount("-123.45€")
 
         self.assertTrue(x0.is_null())
-        self.assertTrue(x0.is_zero())
-        self.assertTrue(x0.is_realzero())
-        self.assertTrue(x0.sign() == 0)
-        self.assertTrue(x0.compare(x1) < 0)
-        self.assertTrue(x0.compare(x2) > 0)
-        self.assertTrue(x0.compare(x0) == 0)
+        self.assertRaises(exceptions.ArithmeticError, amount.is_zero, x0)
+        self.assertRaises(exceptions.ArithmeticError, amount.is_realzero, x0)
+        self.assertRaises(exceptions.ArithmeticError, amount.sign, x0)
+        self.assertRaises(exceptions.ArithmeticError, amount.compare, x0, 0)
 
         self.assertTrue(x1 != x2)
         self.assertTrue(x1 != x4)
@@ -255,12 +248,12 @@ class AmountTestCase(unittest.TestCase):
         x5 = amount("-123.45")
         x6 = amount("123.45")
 
-        self.assertTrue(x0 > x1)
-        self.assertTrue(x0 < x2)
-        self.assertTrue(x0 > x3)
-        self.assertTrue(x0 < x4)
-        self.assertTrue(x0 > x5)
-        self.assertTrue(x0 < x6)
+        self.assertRaises(exceptions.ArithmeticError, operator.gt, x0, x1)
+        self.assertRaises(exceptions.ArithmeticError, operator.lt, x0, x2)
+        self.assertRaises(exceptions.ArithmeticError, operator.gt, x0, x3)
+        self.assertRaises(exceptions.ArithmeticError, operator.lt, x0, x4)
+        self.assertRaises(exceptions.ArithmeticError, operator.gt, x0, x5)
+        self.assertRaises(exceptions.ArithmeticError, operator.lt, x0, x6)
 
         self.assertTrue(x1 > x3)
         self.assertTrue(x3 <= x5)
@@ -284,20 +277,12 @@ class AmountTestCase(unittest.TestCase):
         self.assertValid(x6)
 
     def testCommodityComparisons(self):
-        x0 = amount()
         x1 = amount("$-123")
         x2 = amount("$123.00")
         x3 = amount(internalAmount("$-123.4544"))
         x4 = amount(internalAmount("$123.4544"))
         x5 = amount("$-123.45")
         x6 = amount("$123.45")
-
-        self.assertTrue(x0 > x1)
-        self.assertTrue(x0 < x2)
-        self.assertTrue(x0 > x3)
-        self.assertTrue(x0 < x4)
-        self.assertTrue(x0 > x5)
-        self.assertTrue(x0 < x6)
 
         self.assertTrue(x1 > x3)
         self.assertTrue(x3 <= x5)
@@ -307,7 +292,6 @@ class AmountTestCase(unittest.TestCase):
         self.assertTrue(x3 < x1)
         self.assertTrue(x3 < x4)
 
-        self.assertValid(x0)
         self.assertValid(x1)
         self.assertValid(x2)
         self.assertValid(x3)
@@ -792,14 +776,12 @@ class AmountTestCase(unittest.TestCase):
         self.assertValid(x7)
 
     def testNegation(self):
-        x0 = amount()
         x1 = amount(-123456)
         x3 = amount(-123.456)
         x5 = amount("-123456")
         x6 = amount("-123.456")
         x9 = amount(- x3)
 
-        self.assertEqual(amount(0), x0)
         self.assertEqual(x5, x1)
         self.assertEqual(x6, x3)
         self.assertEqual(- x6, x9)
@@ -809,7 +791,6 @@ class AmountTestCase(unittest.TestCase):
 
         self.assertEqual(x3, x10)
 
-        self.assertValid(x0)
         self.assertValid(x1)
         self.assertValid(x3)
         self.assertValid(x5)
@@ -875,7 +856,7 @@ class AmountTestCase(unittest.TestCase):
         x1 = amount(-1234)
         x2 = amount(1234)
 
-        self.assertEqual(amount(), abs(x0))
+        self.assertRaises(exceptions.ArithmeticError, amount.abs, x0)
         self.assertEqual(amount(1234), abs(x1))
         self.assertEqual(amount(1234), abs(x2))
 
@@ -884,15 +865,12 @@ class AmountTestCase(unittest.TestCase):
         self.assertValid(x2)
 
     def testCommodityAbs(self):
-        x0 = amount()
         x1 = amount("$-1234.56")
         x2 = amount("$1234.56")
 
-        self.assertEqual(amount(), abs(x0))
         self.assertEqual(amount("$1234.56"), abs(x1))
         self.assertEqual(amount("$1234.56"), abs(x2))
 
-        self.assertValid(x0)
         self.assertValid(x1)
         self.assertValid(x2)
 
@@ -941,7 +919,7 @@ class AmountTestCase(unittest.TestCase):
 
         self.assertEqual(amount("0.0000000000000000000000000000000000001"),
                          x5.round(37))
-        self.assertEqual(amount(), x5.round(36))
+        self.assertEqual(amount(0), x5.round(36))
 
         self.assertValid(x1)
         self.assertValid(x2)
@@ -1050,7 +1028,7 @@ class AmountTestCase(unittest.TestCase):
         x3 = amount("1")
         x4 = amount("-1")
 
-        self.assertEqual(x0.sign(), 0)
+        self.assertRaises(exceptions.ArithmeticError, amount.sign, x0)
         self.assertTrue(x1.sign() > 0)
         self.assertTrue(x2.sign() < 0)
         self.assertTrue(x3.sign() > 0)
@@ -1063,19 +1041,16 @@ class AmountTestCase(unittest.TestCase):
         self.assertValid(x4)
 
     def testCommoditySign(self):
-        x0 = amount()
         x1 = amount(internalAmount("$0.0000000000000000000000000000000000001"))
         x2 = amount(internalAmount("$-0.0000000000000000000000000000000000001"))
         x3 = amount("$1")
         x4 = amount("$-1")
 
-        self.assertFalse(x0.sign())
         self.assertTrue(x1.sign() != 0)
         self.assertTrue(x2.sign() != 0)
         self.assertTrue(x3.sign() > 0)
         self.assertTrue(x4.sign() < 0)
 
-        self.assertValid(x0)
         self.assertValid(x1)
         self.assertValid(x2)
         self.assertValid(x3)
@@ -1086,7 +1061,7 @@ class AmountTestCase(unittest.TestCase):
         x1 = amount("1234")
         x2 = amount("1234.56")
 
-        self.assertFalse(x0)
+        self.assertRaises(exceptions.ArithmeticError, operator.truth, x0)
         self.assertTrue(x1)
         self.assertTrue(x2)
 
@@ -1115,10 +1090,9 @@ class AmountTestCase(unittest.TestCase):
         x0 = amount()
         x1 = amount("0.000000000000000000001")
 
-        self.assertFalse(x0)
         self.assertTrue(x1)
-        self.assertTrue(x0.is_zero())
-        self.assertTrue(x0.is_realzero())
+        self.assertRaises(exceptions.ArithmeticError, amount.is_zero, x0)
+        self.assertRaises(exceptions.ArithmeticError, amount.is_realzero, x0)
         self.assertFalse(x1.is_zero())
         self.assertFalse(x1.is_realzero())
 
