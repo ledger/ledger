@@ -210,10 +210,10 @@ void amount_t::_release()
   DEBUG("amounts.refs", quantity << " ref--, now " << (quantity->ref - 1));
 
   if (--quantity->ref == 0) {
-    if (! (quantity->has_flags(BIGINT_BULK_ALLOC)))
-      checked_delete(quantity);
-    else
+    if (quantity->has_flags(BIGINT_BULK_ALLOC))
       quantity->~bigint_t();
+    else
+      checked_delete(quantity);
   }
 }
 

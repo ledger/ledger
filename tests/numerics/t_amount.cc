@@ -20,6 +20,71 @@ void AmountTestCase::tearDown()
   ledger::set_session_context();
 }
 
+void AmountTestCase::testParser()
+{
+  amount_t x0;
+  amount_t x1;
+  amount_t x2;
+  amount_t x3;
+  amount_t x4(123.456);
+  amount_t x5(x4);
+  amount_t x6(x4);
+  amount_t x7(x4);
+  amount_t x8("$123.456");
+  amount_t x9(x8);
+  amount_t x10(x8);
+  amount_t x11(x8);
+  amount_t x12("$100");
+
+  assertEqual(amount_t::precision_t(3), x12.commodity().precision());
+
+  x1.parse("$100.0000", AMOUNT_PARSE_NO_MIGRATE);
+  assertEqual(amount_t::precision_t(3), x12.commodity().precision());
+  assertEqual(x1.commodity(), x12.commodity());
+  assertEqual(x1, x12);
+
+  x0.parse("$100.0000");
+  assertEqual(amount_t::precision_t(4), x12.commodity().precision());
+  assertEqual(x0.commodity(), x12.commodity());
+  assertEqual(x0, x12);
+
+  x2.parse("$100.00", AMOUNT_PARSE_NO_REDUCE);
+  assertEqual(x2, x12);
+  x3.parse("$100.00", AMOUNT_PARSE_NO_MIGRATE | AMOUNT_PARSE_NO_REDUCE);
+  assertEqual(x3, x12);
+
+  x4.parse("$100.00");
+  assertEqual(x4, x12);
+  x5.parse("$100.00", AMOUNT_PARSE_NO_MIGRATE);
+  assertEqual(x5, x12);
+  x6.parse("$100.00", AMOUNT_PARSE_NO_REDUCE);
+  assertEqual(x6, x12);
+  x7.parse("$100.00", AMOUNT_PARSE_NO_MIGRATE | AMOUNT_PARSE_NO_REDUCE);
+  assertEqual(x7, x12);
+
+  x8.parse("$100.00");
+  assertEqual(x8, x12);
+  x9.parse("$100.00", AMOUNT_PARSE_NO_MIGRATE);
+  assertEqual(x9, x12);
+  x10.parse("$100.00", AMOUNT_PARSE_NO_REDUCE);
+  assertEqual(x10, x12);
+  x11.parse("$100.00", AMOUNT_PARSE_NO_MIGRATE | AMOUNT_PARSE_NO_REDUCE);
+  assertEqual(x11, x12);
+
+  assertTrue(x0.valid());
+  assertTrue(x1.valid());
+  assertTrue(x2.valid());
+  assertTrue(x3.valid());
+  assertTrue(x5.valid());
+  assertTrue(x6.valid());
+  assertTrue(x7.valid());
+  assertTrue(x8.valid());
+  assertTrue(x9.valid());
+  assertTrue(x10.valid());
+  assertTrue(x11.valid());
+  assertTrue(x12.valid());
+}
+
 void AmountTestCase::testConstructors()
 {
   amount_t x0;
@@ -108,6 +173,7 @@ void AmountTestCase::testCommodityConstructors()
 
 void AmountTestCase::testAssignment()
 {
+  amount_t x0;
   amount_t x1  = 123456L;
   amount_t x2  = 123456UL;
   amount_t x3  = 123.456;
@@ -144,6 +210,12 @@ void AmountTestCase::testAssignment()
   assertEqual(x10, x3);
   assertEqual(x10, x9);
 
+  assertFalse(x1.is_null());
+  x1 = x0;			// sets x1 back to uninitialized state
+  assertTrue(x0.is_null());
+  assertTrue(x1.is_null());
+
+  assertTrue(x0.valid());
   assertTrue(x1.valid());
   assertTrue(x2.valid());
   assertTrue(x3.valid());

@@ -23,6 +23,69 @@ class AmountTestCase(unittest.TestCase):
     def assertValid(self, amt):
         self.assertTrue(amt.valid())
 
+    def testParser(self):
+        x0 = amount()
+        x1 = amount()
+        x2 = amount()
+        x3 = amount()
+        x4 = amount(123.456)
+        x5 = amount(x4)
+        x6 = amount(x4)
+        x7 = amount(x4)
+        x8 = amount("$123.456")
+        x9 = amount(x8)
+        x10 = amount(x8)
+        x11 = amount(x8)
+        x12 = amount("$100")
+        
+        self.assertEqual(3, x12.commodity().precision())
+        
+        x1.parse("$100.0000", AMOUNT_PARSE_NO_MIGRATE)
+        self.assertEqual(3, x12.commodity().precision())
+        self.assertEqual(x1.commodity(), x12.commodity())
+        self.assertEqual(x1, x12)
+        
+        x0.parse("$100.0000")
+        self.assertEqual(4, x12.commodity().precision())
+        self.assertEqual(x0.commodity(), x12.commodity())
+        self.assertEqual(x0, x12)
+        
+        x2.parse("$100.00", AMOUNT_PARSE_NO_REDUCE)
+        self.assertEqual(x2, x12)
+        x3.parse("$100.00", AMOUNT_PARSE_NO_MIGRATE | AMOUNT_PARSE_NO_REDUCE)
+        self.assertEqual(x3, x12)
+        
+        x4.parse("$100.00")
+        self.assertEqual(x4, x12)
+        x5.parse("$100.00", AMOUNT_PARSE_NO_MIGRATE)
+        self.assertEqual(x5, x12)
+        x6.parse("$100.00", AMOUNT_PARSE_NO_REDUCE)
+        self.assertEqual(x6, x12)
+        x7.parse("$100.00", AMOUNT_PARSE_NO_MIGRATE | AMOUNT_PARSE_NO_REDUCE)
+        self.assertEqual(x7, x12)
+        
+        x8.parse("$100.00")
+        self.assertEqual(x8, x12)
+        x9.parse("$100.00", AMOUNT_PARSE_NO_MIGRATE)
+        self.assertEqual(x9, x12)
+        x10.parse("$100.00", AMOUNT_PARSE_NO_REDUCE)
+        self.assertEqual(x10, x12)
+        x11.parse("$100.00", AMOUNT_PARSE_NO_MIGRATE | AMOUNT_PARSE_NO_REDUCE)
+        self.assertEqual(x11, x12)
+        
+        self.assertValid(x0)
+        self.assertValid(x1)
+        self.assertValid(x2)
+        self.assertValid(x3)
+        self.assertValid(x5)
+        self.assertValid(x6)
+        self.assertValid(x7)
+        self.assertValid(x8)
+        self.assertValid(x9)
+        self.assertValid(x10)
+        self.assertValid(x11)
+        self.assertValid(x12)
+
     def testConstructors(self):
         x0 = amount()
         x1 = amount(123456)
@@ -98,6 +161,7 @@ class AmountTestCase(unittest.TestCase):
         self.assertValid(x10)
 
     def testAssignment(self):
+        x0  = amount()
         x1  = amount(123456)
         x2  = amount(123456L)
         x3  = amount(123.456)
@@ -126,6 +190,12 @@ class AmountTestCase(unittest.TestCase):
         self.assertEqual(x10, x3)
         self.assertEqual(x10, x9)
 
+        self.assertFalse(x1.is_null())
+        x1 = x0			# sets x1 back to uninitialized state
+        self.assertTrue(x0.is_null())
+        self.assertTrue(x1.is_null())
+
+        self.assertValid(x0)
         self.assertValid(x1)
         self.assertValid(x2)
         self.assertValid(x3)

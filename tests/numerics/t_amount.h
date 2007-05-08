@@ -9,6 +9,7 @@ class AmountTestCase : public CPPUNIT_NS::TestCase
 
   CPPUNIT_TEST(testConstructors);
   CPPUNIT_TEST(testCommodityConstructors);
+  CPPUNIT_TEST(testParser);
   CPPUNIT_TEST(testAssignment);
   CPPUNIT_TEST(testCommodityAssignment);
   CPPUNIT_TEST(testEquality);
@@ -60,6 +61,7 @@ public:
 
   void testConstructors();
   void testCommodityConstructors();
+  void testParser();
   void testAssignment();
   void testCommodityAssignment();
   void testEquality();
