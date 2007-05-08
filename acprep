@@ -76,8 +76,6 @@ while [ -n "$1" ]; do
 	CXXFLAGS="$CXXFLAGS -fomit-frame-pointer -O3 -fPIC" ;;
     --flat-opt)
 	CXXFLAGS="$CXXFLAGS -fomit-frame-pointer -O3" ;;
-    --safe-opt)
-	CXXFLAGS="$CXXFLAGS -fomit-frame-pointer -O3 -fPIC -DDEBUG_LEVEL=1" ;;
 
     *)
 	break ;;
