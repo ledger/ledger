@@ -178,8 +178,12 @@ ledger_so_SOURCES = \
 	src/py_amount.cc
 ledger_so_DEPENDENCIES = libledger.la gdtoa/libgdtoa.la libpyledger.la
 
-PYLIBS = pyledger ledger gdtoa gmp boost_date_time \
-	 boost_signals boost_filesystem boost_regex boost_python
+PYLIBS = pyledger ledger gdtoa gmp
+if USE_BOOST_SD
+PYLIBS += boost_date_time-sd boost_filesystem-sd boost_regex-sd boost_python-sd
+else
+PYLIBS += boost_date_time boost_filesystem boost_regex boost_python
+endif
 
 if HAVE_EXPAT
 PYLIBS += expat
@@ -234,7 +238,7 @@ PyUnitTests: $(srcdir)/tests/python/PyUnitTests.py
 	    | sed "s/%builddir%/$(ESC_builddir)/g" > $@
 	chmod 755 $@
 
-fullcheck: UnitTests
+fullcheck: check
 	MallocGuardEdges=1 \
 	MallocScribble=1 \
 	MallocPreScribble=1 \

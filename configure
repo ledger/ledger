@@ -875,6 +875,12 @@ LIBTOOL
 EMACS
 EMACSLOADPATH
 lispdir
+DEBUG_TRUE
+DEBUG_FALSE
+USE_BOOST_SD_TRUE
+USE_BOOST_SD_FALSE
+USE_PCH_TRUE
+USE_PCH_FALSE
 USE_XML_TRUE
 USE_XML_FALSE
 HAVE_EXPAT_TRUE
@@ -900,10 +906,6 @@ HAVE_BOOST_PYTHON_TRUE
 HAVE_BOOST_PYTHON_FALSE
 HAVE_CPPUNIT_TRUE
 HAVE_CPPUNIT_FALSE
-DEBUG_TRUE
-DEBUG_FALSE
-USE_PCH_TRUE
-USE_PCH_FALSE
 LIBOBJS
 LTLIBOBJS'
 ac_subst_files=''
@@ -1510,11 +1512,12 @@ Optional Features:
   --enable-fast-install[=PKGS]
                           optimize for fast installation [default=yes]
   --disable-libtool-lock  avoid locking (might break parallel builds)
+  --enable-debug          Turn on debugging
+  --enable-boost-sd       Use static/debug Boost libraries
+  --enable-pch            Use GCC 4.x pre-compiled headers
   --enable-xml            Turn on support for XML parsing
   --enable-ofx            Turn on support for OFX/OCF parsing
   --enable-python         Build the amounts library as a Python module
-  --enable-debug          Turn on debugging
-  --enable-pch            Use GCC 4.x pre-compiled headers
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -4853,7 +4856,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 4856 "configure"' > conftest.$ac_ext
+  echo '#line 4859 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -7112,11 +7115,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7115: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7118: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7119: \$? = $ac_status" >&5
+   echo "$as_me:7122: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -7380,11 +7383,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7383: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7386: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7387: \$? = $ac_status" >&5
+   echo "$as_me:7390: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -7484,11 +7487,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7487: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7490: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:7491: \$? = $ac_status" >&5
+   echo "$as_me:7494: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -9792,7 +9795,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9795 "configure"
+#line 9798 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -9892,7 +9895,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9895 "configure"
+#line 9898 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -12228,11 +12231,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12231: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12234: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:12235: \$? = $ac_status" >&5
+   echo "$as_me:12238: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -12332,11 +12335,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12335: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12338: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:12339: \$? = $ac_status" >&5
+   echo "$as_me:12342: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -13902,11 +13905,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13905: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13908: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:13909: \$? = $ac_status" >&5
+   echo "$as_me:13912: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -14006,11 +14009,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14009: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14012: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:14013: \$? = $ac_status" >&5
+   echo "$as_me:14016: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -16204,11 +16207,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16207: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16210: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16211: \$? = $ac_status" >&5
+   echo "$as_me:16214: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -16472,11 +16475,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16475: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16478: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16479: \$? = $ac_status" >&5
+   echo "$as_me:16482: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -16576,11 +16579,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16579: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16582: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:16583: \$? = $ac_status" >&5
+   echo "$as_me:16586: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -19345,6 +19348,81 @@ fi
 
 
 
+# Check for options
+# Check whether --enable-debug was given.
+if test "${enable_debug+set}" = set; then
+  enableval=$enable_debug; case "${enableval}" in
+    yes) debug=true ;;
+    no)  debug=false ;;
+    *) { { echo "$as_me:$LINENO: error: bad value ${enableval} for --enable-debug" >&5
+echo "$as_me: error: bad value ${enableval} for --enable-debug" >&2;}
+   { (exit 1); exit 1; }; } ;;
+  esac
+else
+  debug=false
+fi
+
+
+ if test x$debug = xtrue; then
+  DEBUG_TRUE=
+  DEBUG_FALSE='#'
+else
+  DEBUG_TRUE='#'
+  DEBUG_FALSE=
+fi
+
+
+# Check whether --enable-boost-sd was given.
+if test "${enable_boost_sd+set}" = set; then
+  enableval=$enable_boost_sd; case "${enableval}" in
+    yes) boost_sd=true ;;
+    no)  boost_sd=false ;;
+    *) { { echo "$as_me:$LINENO: error: bad value ${enableval} for --enable-boost-sd" >&5
+echo "$as_me: error: bad value ${enableval} for --enable-boost-sd" >&2;}
+   { (exit 1); exit 1; }; } ;;
+  esac
+else
+  boost_sd=false
+fi
+
+
+if test x$boost_sd = xtrue; then
+   BOOST_SUFFIX="-sd"
+else
+   BOOST_SUFFIX=""
+fi
+ if test x$boost_sd = xtrue; then
+  USE_BOOST_SD_TRUE=
+  USE_BOOST_SD_FALSE='#'
+else
+  USE_BOOST_SD_TRUE='#'
+  USE_BOOST_SD_FALSE=
+fi
+
+
+# Check whether --enable-pch was given.
+if test "${enable_pch+set}" = set; then
+  enableval=$enable_pch; case "${enableval}" in
+    yes) pch=true ;;
+    no)  pch=false ;;
+    *) { { echo "$as_me:$LINENO: error: bad value ${enableval} for --enable-pch" >&5
+echo "$as_me: error: bad value ${enableval} for --enable-pch" >&2;}
+   { (exit 1); exit 1; }; } ;;
+  esac
+else
+  pch=false
+fi
+
+
+ if test x$pch = xtrue; then
+  USE_PCH_TRUE=
+  USE_PCH_FALSE='#'
+else
+  USE_PCH_TRUE='#'
+  USE_PCH_FALSE=
+fi
+
+
 # check if UNIX pipes are available
 { echo "$as_me:$LINENO: checking if pipes can be used" >&5
 echo $ECHO_N "checking if pipes can be used... $ECHO_C" >&6; }
@@ -19448,7 +19526,7 @@ if test "${boost_regex_avail+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
   boost_regex_save_libs=$LIBS
-   LIBS="-lboost_regex $LIBS"
+   LIBS="-lboost_regex$BOOST_SUFFIX $LIBS"
    ac_ext=cpp
 ac_cpp='$CXXCPP $CPPFLAGS'
 ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -19510,7 +19588,7 @@ fi
 echo "${ECHO_T}$boost_regex_avail" >&6; }
 
 if test x$boost_regex_avail = xtrue ; then
-  LIBS="-lboost_regex $LIBS"
+  LIBS="-lboost_regex$BOOST_SUFFIX $LIBS"
 else
   { { echo "$as_me:$LINENO: error: \"Could not find boost_regex library (set CPPFLAGS and LDFLAGS?)\"
 See \`config.log' for more details." >&5
@@ -19526,7 +19604,7 @@ if test "${boost_date_time_cpplib_avail+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
   boost_date_time_save_libs=$LIBS
-   LIBS="-lboost_date_time $LIBS"
+   LIBS="-lboost_date_time$BOOST_SUFFIX $LIBS"
    ac_ext=cpp
 ac_cpp='$CXXCPP $CPPFLAGS'
 ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -19606,7 +19684,7 @@ fi
 echo "${ECHO_T}$boost_date_time_cpplib_avail" >&6; }
 
 if test x$boost_date_time_cpplib_avail = xtrue ; then
-  LIBS="-lboost_date_time $LIBS"
+  LIBS="-lboost_date_time$BOOST_SUFFIX $LIBS"
 else
   { { echo "$as_me:$LINENO: error: \"Could not find boost_date_time library (set CPPFLAGS and LDFLAGS?)\"
 See \`config.log' for more details." >&5
@@ -19622,7 +19700,7 @@ if test "${boost_filesystem_cpplib_avail+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
   boost_filesystem_save_libs=$LIBS
-   LIBS="-lboost_filesystem $LIBS"
+   LIBS="-lboost_filesystem$BOOST_SUFFIX $LIBS"
    ac_ext=cpp
 ac_cpp='$CXXCPP $CPPFLAGS'
 ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -19684,7 +19762,7 @@ fi
 echo "${ECHO_T}$boost_filesystem_cpplib_avail" >&6; }
 
 if test x$boost_filesystem_cpplib_avail = xtrue ; then
-  LIBS="-lboost_filesystem $LIBS"
+  LIBS="-lboost_filesystem$BOOST_SUFFIX $LIBS"
 else
   { { echo "$as_me:$LINENO: error: \"Could not find boost_filesystem library (set CPPFLAGS and LDFLAGS?)\"
 See \`config.log' for more details." >&5
@@ -19698,7 +19776,7 @@ fi
 #  [if boost_signals is available],
 #  [boost_signals_cpplib_avail],
 #  [boost_signals_save_libs=$LIBS
-#   LIBS="-lboost_signals $LIBS"
+#   LIBS="-lboost_signals$BOOST_SUFFIX $LIBS"
 #   AC_LANG_PUSH(C++)
 #   AC_TRY_LINK(
 #     [#include <boost/signal.hpp>],
@@ -19709,7 +19787,7 @@ fi
 #   LIBS=$boost_signals_save_libs])
 #
 #if [test x$boost_signals_cpplib_avail = xtrue ]; then
-#  LIBS="-lboost_signals $LIBS"
+#  LIBS="-lboost_signals$BOOST_SUFFIX $LIBS"
 #else
 #  AC_MSG_FAILURE("Could not find boost_signals library (set CPPFLAGS and LDFLAGS?)")
 #fi
@@ -20374,7 +20452,7 @@ if test "${boost_python_cpplib_avail+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
   boost_python_save_libs=$LIBS
-       LIBS="-lboost_python -lpython$PYTHON_VERSION $LIBS"
+       LIBS="-lboost_python$BOOST_SUFFIX -lpython$PYTHON_VERSION $LIBS"
        ac_ext=cpp
 ac_cpp='$CXXCPP $CPPFLAGS'
 ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -20449,7 +20527,7 @@ else
   HAVE_BOOST_PYTHON_FALSE=
 fi
 
-      LIBS="-lboost_python -lpython$PYTHON_VERSION $LIBS"
+      LIBS="-lboost_python$BOOST_SUFFIX -lpython$PYTHON_VERSION $LIBS"
     else
        if false; then
   HAVE_BOOST_PYTHON_TRUE=
@@ -20576,53 +20654,6 @@ else
 fi
 
 fi
-
-# Check for options
-# Check whether --enable-debug was given.
-if test "${enable_debug+set}" = set; then
-  enableval=$enable_debug; case "${enableval}" in
-    yes) debug=true ;;
-    no)  debug=false ;;
-    *) { { echo "$as_me:$LINENO: error: bad value ${enableval} for --enable-debug" >&5
-echo "$as_me: error: bad value ${enableval} for --enable-debug" >&2;}
-   { (exit 1); exit 1; }; } ;;
-  esac
-else
-  debug=false
-fi
-
-
- if test x$debug = xtrue; then
-  DEBUG_TRUE=
-  DEBUG_FALSE='#'
-else
-  DEBUG_TRUE='#'
-  DEBUG_FALSE=
-fi
-
-
-# Check whether --enable-pch was given.
-if test "${enable_pch+set}" = set; then
-  enableval=$enable_pch; case "${enableval}" in
-    yes) pch=true ;;
-    no)  pch=false ;;
-    *) { { echo "$as_me:$LINENO: error: bad value ${enableval} for --enable-pch" >&5
-echo "$as_me: error: bad value ${enableval} for --enable-pch" >&2;}
-   { (exit 1); exit 1; }; } ;;
-  esac
-else
-  pch=false
-fi
-
-
- if test x$pch = xtrue; then
-  USE_PCH_TRUE=
-  USE_PCH_FALSE='#'
-else
-  USE_PCH_TRUE='#'
-  USE_PCH_FALSE=
-fi
-
 
 # Checks for header files.
 { echo "$as_me:$LINENO: checking for ANSI C header files" >&5
@@ -21653,6 +21684,27 @@ echo "$as_me: error: conditional \"am__fastdepCC\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
+if test -z "${DEBUG_TRUE}" && test -z "${DEBUG_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"DEBUG\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"DEBUG\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${USE_BOOST_SD_TRUE}" && test -z "${USE_BOOST_SD_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"USE_BOOST_SD\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"USE_BOOST_SD\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${USE_PCH_TRUE}" && test -z "${USE_PCH_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"USE_PCH\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"USE_PCH\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
 if test -z "${USE_XML_TRUE}" && test -z "${USE_XML_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"USE_XML\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
@@ -21783,20 +21835,6 @@ if test -z "${HAVE_CPPUNIT_TRUE}" && test -z "${HAVE_CPPUNIT_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"HAVE_CPPUNIT\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
 echo "$as_me: error: conditional \"HAVE_CPPUNIT\" was never defined.
-Usually this means the macro was only invoked conditionally." >&2;}
-   { (exit 1); exit 1; }; }
-fi
-if test -z "${DEBUG_TRUE}" && test -z "${DEBUG_FALSE}"; then
-  { { echo "$as_me:$LINENO: error: conditional \"DEBUG\" was never defined.
-Usually this means the macro was only invoked conditionally." >&5
-echo "$as_me: error: conditional \"DEBUG\" was never defined.
-Usually this means the macro was only invoked conditionally." >&2;}
-   { (exit 1); exit 1; }; }
-fi
-if test -z "${USE_PCH_TRUE}" && test -z "${USE_PCH_FALSE}"; then
-  { { echo "$as_me:$LINENO: error: conditional \"USE_PCH\" was never defined.
-Usually this means the macro was only invoked conditionally." >&5
-echo "$as_me: error: conditional \"USE_PCH\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -22478,6 +22516,12 @@ LIBTOOL!$LIBTOOL$ac_delim
 EMACS!$EMACS$ac_delim
 EMACSLOADPATH!$EMACSLOADPATH$ac_delim
 lispdir!$lispdir$ac_delim
+DEBUG_TRUE!$DEBUG_TRUE$ac_delim
+DEBUG_FALSE!$DEBUG_FALSE$ac_delim
+USE_BOOST_SD_TRUE!$USE_BOOST_SD_TRUE$ac_delim
+USE_BOOST_SD_FALSE!$USE_BOOST_SD_FALSE$ac_delim
+USE_PCH_TRUE!$USE_PCH_TRUE$ac_delim
+USE_PCH_FALSE!$USE_PCH_FALSE$ac_delim
 USE_XML_TRUE!$USE_XML_TRUE$ac_delim
 USE_XML_FALSE!$USE_XML_FALSE$ac_delim
 HAVE_EXPAT_TRUE!$HAVE_EXPAT_TRUE$ac_delim
@@ -22503,15 +22547,11 @@ HAVE_BOOST_PYTHON_TRUE!$HAVE_BOOST_PYTHON_TRUE$ac_delim
 HAVE_BOOST_PYTHON_FALSE!$HAVE_BOOST_PYTHON_FALSE$ac_delim
 HAVE_CPPUNIT_TRUE!$HAVE_CPPUNIT_TRUE$ac_delim
 HAVE_CPPUNIT_FALSE!$HAVE_CPPUNIT_FALSE$ac_delim
-DEBUG_TRUE!$DEBUG_TRUE$ac_delim
-DEBUG_FALSE!$DEBUG_FALSE$ac_delim
-USE_PCH_TRUE!$USE_PCH_TRUE$ac_delim
-USE_PCH_FALSE!$USE_PCH_FALSE$ac_delim
 LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 39; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 41; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

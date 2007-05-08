@@ -151,7 +151,7 @@ void document_t::print(std::ostream& out) const
 }
 
 #ifndef THREADSAFE
-document_t * node_t::document;
+document_t * node_t::document = NULL;
 #endif
 
 node_t::node_t(document_t * _document, parent_node_t * _parent, flags_t _flags)

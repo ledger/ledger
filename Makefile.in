@@ -51,11 +51,13 @@ bin_PROGRAMS = ledger$(EXEEXT)
 @HAVE_BOOST_PYTHON_TRUE@am__append_13 = libpyledger.la
 @HAVE_BOOST_PYTHON_TRUE@noinst_PROGRAMS = ledger.so$(EXEEXT)
 @HAVE_BOOST_PYTHON_TRUE@am__append_14 = ledger.so
-@HAVE_BOOST_PYTHON_TRUE@@HAVE_EXPAT_TRUE@am__append_15 = expat
-@HAVE_BOOST_PYTHON_TRUE@@HAVE_XMLPARSE_TRUE@am__append_16 = xmlparse xmltok
-@HAVE_BOOST_PYTHON_TRUE@@HAVE_LIBOFX_TRUE@am__append_17 = ofx
+@HAVE_BOOST_PYTHON_TRUE@@USE_BOOST_SD_TRUE@am__append_15 = boost_date_time-sd boost_filesystem-sd boost_regex-sd boost_python-sd
+@HAVE_BOOST_PYTHON_TRUE@@USE_BOOST_SD_FALSE@am__append_16 = boost_date_time boost_filesystem boost_regex boost_python
+@HAVE_BOOST_PYTHON_TRUE@@HAVE_EXPAT_TRUE@am__append_17 = expat
+@HAVE_BOOST_PYTHON_TRUE@@HAVE_XMLPARSE_TRUE@am__append_18 = xmlparse xmltok
+@HAVE_BOOST_PYTHON_TRUE@@HAVE_LIBOFX_TRUE@am__append_19 = ofx
 TESTS = UnitTests$(EXEEXT) $(am__EXEEXT_1)
-@HAVE_BOOST_PYTHON_TRUE@am__append_18 = PyUnitTests
+@HAVE_BOOST_PYTHON_TRUE@am__append_20 = PyUnitTests
 check_PROGRAMS = $(am__EXEEXT_2)
 subdir = .
 DIST_COMMON = README $(am__configure_deps) $(dist_lisp_LISP) \
@@ -436,10 +438,9 @@ dist_lisp_LISP = lisp/ledger.el lisp/timeclock.el
 
 @HAVE_BOOST_PYTHON_TRUE@ledger_so_DEPENDENCIES = libledger.la gdtoa/libgdtoa.la libpyledger.la
 @HAVE_BOOST_PYTHON_TRUE@PYLIBS = pyledger ledger gdtoa gmp \
-@HAVE_BOOST_PYTHON_TRUE@	boost_date_time boost_signals \
-@HAVE_BOOST_PYTHON_TRUE@	boost_filesystem boost_regex \
-@HAVE_BOOST_PYTHON_TRUE@	boost_python $(am__append_15) \
-@HAVE_BOOST_PYTHON_TRUE@	$(am__append_16) $(am__append_17)
+@HAVE_BOOST_PYTHON_TRUE@	$(am__append_15) $(am__append_16) \
+@HAVE_BOOST_PYTHON_TRUE@	$(am__append_17) $(am__append_18) \
+@HAVE_BOOST_PYTHON_TRUE@	$(am__append_19)
 nodist_UnitTests_SOURCES = tests/UnitTests.cc \
 	\
 	tests/utility/t_utils.cc      \
@@ -1858,7 +1859,7 @@ PyUnitTests: $(srcdir)/tests/python/PyUnitTests.py
 	    | sed "s/%builddir%/$(ESC_builddir)/g" > $@
 	chmod 755 $@
 
-fullcheck: UnitTests
+fullcheck: check
 	MallocGuardEdges=1 \
 	MallocScribble=1 \
 	MallocPreScribble=1 \

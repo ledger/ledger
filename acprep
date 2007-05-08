@@ -58,7 +58,7 @@ LDFLAGS="$LIBDIRS"
 while [ -n "$1" ]; do
   case "$1" in
     --debug)
-	SWITCHES="$SWITCHES --enable-debug"
+	SWITCHES="$SWITCHES --enable-debug --enable-boost-sd"
 	#if [ -f /usr/local/lib/libstlportstlg.a ]; then
 	#    SWITCHES="$SWITCHES --enable-stlportg"
 	#    CPPFLAGS="-D_STLP_DEBUG $CPPFLAGS"
