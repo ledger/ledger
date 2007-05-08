@@ -58,11 +58,17 @@ LDFLAGS="$LIBDIRS"
 while [ -n "$1" ]; do
   case "$1" in
     --debug)
-	SWITCHES="$SWITCHES --enable-debug --enable-boost-sd"
-	CPPFLAGS="$CPPFLAGS -D_GLIBCXX_DEBUG=1"
+	SWITCHES="$SWITCHES --enable-debug"
 	CXXFLAGS="$CXXFLAGS -g" ;;
 
-    --prof | --perf)
+    --boost-sd)
+	SWITCHES="$SWITCHES --enable-boost-sd"
+	CPPFLAGS="$CPPFLAGS -D_GLIBCXX_DEBUG=1" ;;
+
+    --gcov)
+	CXXFLAGS="$CXXFLAGS -fprofile-arcs -ftest-coverage" ;;
+
+    --gprof)
         CXXFLAGS="$CXXFLAGS -g -pg" ;;
 
     --python)
@@ -72,9 +78,10 @@ while [ -n "$1" ]; do
 	    LDFLAGS="$LDFLAGS -L$PYTHON_HOME/lib/python2.5/config"
 	fi ;;
 
+    --pic)
+	CXXFLAGS="$CXXFLAGS -fPIC" ;;
+
     --opt)
-	CXXFLAGS="$CXXFLAGS -fomit-frame-pointer -O3 -fPIC" ;;
-    --flat-opt)
 	CXXFLAGS="$CXXFLAGS -fomit-frame-pointer -O3" ;;
 
     *)
