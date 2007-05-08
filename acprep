@@ -11,8 +11,10 @@ PYTHON_HOME="/Library/Frameworks/Python.framework/Versions/2.5"
 # linker flags for all the various build permutations I use for
 # testing and profiling.
 
-if which glibtoolize > /dev/null 2>&1; then
-    glibtoolize --automake -f -c
+LIBTOOLIZE=$(which glibtoolize 2>&1)
+
+if [ -x "$LIBTOOLIZE" ]; then
+    "$LIBTOOLIZE" --automake -f -c
 else
     libtoolize --automake -f -c
 fi
@@ -63,7 +65,7 @@ while [ -n "$1" ]; do
 	#    CPPFLAGS="-I/usr/local/include/stlport $CPPFLAGS"
 	#    LIBS="$LIBS -lstlportstlg"
 	#fi
-	CPPFLAGS="$CPPFLAGS -D_GLIBCXX_DEBUG=1" ;;
+	CPPFLAGS="$CPPFLAGS -D_GLIBCXX_DEBUG=1"
 	CXXFLAGS="$CXXFLAGS -g" ;;
 
     --prof | --perf)

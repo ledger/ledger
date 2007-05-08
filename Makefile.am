@@ -238,8 +238,10 @@ fullcheck: UnitTests
 	MallocGuardEdges=1 \
 	MallocScribble=1 \
 	MallocPreScribble=1 \
+	MallocCheckHeapStart=100 \
+	MallocCheckHeapEach=100 \
 	DYLD_INSERT_LIBRARIES=/usr/lib/libgmalloc.dylib \
-	$(top_builddir)/UnitTests --verify
+	$(srcdir)/valgrind.sh $(top_builddir)/UnitTests --verify
 
 ######################################################################
 
