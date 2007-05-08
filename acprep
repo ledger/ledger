@@ -65,6 +65,10 @@ while [ -n "$1" ]; do
 	SWITCHES="$SWITCHES --enable-boost-sd"
 	CPPFLAGS="$CPPFLAGS -D_GLIBCXX_DEBUG=1" ;;
 
+    --boost-d)
+	SWITCHES="$SWITCHES --enable-boost-d"
+	CPPFLAGS="$CPPFLAGS -D_GLIBCXX_DEBUG=1" ;;
+
     --gcov)
 	CXXFLAGS="$CXXFLAGS -fprofile-arcs -ftest-coverage" ;;
 

@@ -879,6 +879,8 @@ DEBUG_TRUE
 DEBUG_FALSE
 USE_BOOST_SD_TRUE
 USE_BOOST_SD_FALSE
+USE_BOOST_D_TRUE
+USE_BOOST_D_FALSE
 USE_PCH_TRUE
 USE_PCH_FALSE
 USE_XML_TRUE
@@ -1514,6 +1516,7 @@ Optional Features:
   --disable-libtool-lock  avoid locking (might break parallel builds)
   --enable-debug          Turn on debugging
   --enable-boost-sd       Use static/debug Boost libraries
+  --enable-boost-d        Use dynamic/debug Boost libraries
   --enable-pch            Use GCC 4.x pre-compiled headers
   --enable-xml            Turn on support for XML parsing
   --enable-ofx            Turn on support for OFX/OCF parsing
@@ -4856,7 +4859,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 4859 "configure"' > conftest.$ac_ext
+  echo '#line 4862 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -7115,11 +7118,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7118: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7121: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7122: \$? = $ac_status" >&5
+   echo "$as_me:7125: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -7383,11 +7386,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7386: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7389: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7390: \$? = $ac_status" >&5
+   echo "$as_me:7393: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -7487,11 +7490,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7490: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7493: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:7494: \$? = $ac_status" >&5
+   echo "$as_me:7497: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -9795,7 +9798,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9798 "configure"
+#line 9801 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -9895,7 +9898,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9898 "configure"
+#line 9901 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -12231,11 +12234,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12234: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12237: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:12238: \$? = $ac_status" >&5
+   echo "$as_me:12241: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -12335,11 +12338,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12338: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12341: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:12342: \$? = $ac_status" >&5
+   echo "$as_me:12345: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -13905,11 +13908,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13908: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13911: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:13912: \$? = $ac_status" >&5
+   echo "$as_me:13915: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -14009,11 +14012,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14012: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14015: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:14016: \$? = $ac_status" >&5
+   echo "$as_me:14019: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -16207,11 +16210,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16210: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16213: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16214: \$? = $ac_status" >&5
+   echo "$as_me:16217: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -16475,11 +16478,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16478: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16481: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16482: \$? = $ac_status" >&5
+   echo "$as_me:16485: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -16579,11 +16582,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16582: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16585: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:16586: \$? = $ac_status" >&5
+   echo "$as_me:16589: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -19386,11 +19389,6 @@ else
 fi
 
 
-if test x$boost_sd = xtrue; then
-   BOOST_SUFFIX="-sd"
-else
-   BOOST_SUFFIX=""
-fi
  if test x$boost_sd = xtrue; then
   USE_BOOST_SD_TRUE=
   USE_BOOST_SD_FALSE='#'
@@ -19399,6 +19397,37 @@ else
   USE_BOOST_SD_FALSE=
 fi
 
+
+# Check whether --enable-boost-d was given.
+if test "${enable_boost_d+set}" = set; then
+  enableval=$enable_boost_d; case "${enableval}" in
+    yes) boost_d=true ;;
+    no)  boost_d=false ;;
+    *) { { echo "$as_me:$LINENO: error: bad value ${enableval} for --enable-boost-d" >&5
+echo "$as_me: error: bad value ${enableval} for --enable-boost-d" >&2;}
+   { (exit 1); exit 1; }; } ;;
+  esac
+else
+  boost_d=false
+fi
+
+
+ if test x$boost_d = xtrue; then
+  USE_BOOST_D_TRUE=
+  USE_BOOST_D_FALSE='#'
+else
+  USE_BOOST_D_TRUE='#'
+  USE_BOOST_D_FALSE=
+fi
+
+
+if test x$boost_sd = xtrue; then
+   BOOST_SUFFIX="-sd"
+elif test x$boost_d = xtrue; then
+   BOOST_SUFFIX="-d"
+else
+   BOOST_SUFFIX=""
+fi
 
 # Check whether --enable-pch was given.
 if test "${enable_pch+set}" = set; then
@@ -21698,6 +21727,13 @@ echo "$as_me: error: conditional \"USE_BOOST_SD\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
+if test -z "${USE_BOOST_D_TRUE}" && test -z "${USE_BOOST_D_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"USE_BOOST_D\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"USE_BOOST_D\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
 if test -z "${USE_PCH_TRUE}" && test -z "${USE_PCH_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"USE_PCH\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
@@ -22520,6 +22556,8 @@ DEBUG_TRUE!$DEBUG_TRUE$ac_delim
 DEBUG_FALSE!$DEBUG_FALSE$ac_delim
 USE_BOOST_SD_TRUE!$USE_BOOST_SD_TRUE$ac_delim
 USE_BOOST_SD_FALSE!$USE_BOOST_SD_FALSE$ac_delim
+USE_BOOST_D_TRUE!$USE_BOOST_D_TRUE$ac_delim
+USE_BOOST_D_FALSE!$USE_BOOST_D_FALSE$ac_delim
 USE_PCH_TRUE!$USE_PCH_TRUE$ac_delim
 USE_PCH_FALSE!$USE_PCH_FALSE$ac_delim
 USE_XML_TRUE!$USE_XML_TRUE$ac_delim
@@ -22551,7 +22589,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 41; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 43; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5
