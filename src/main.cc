@@ -311,7 +311,7 @@ static int read_and_report(report_t * report, int argc, char * argv[],
   std::auto_ptr<xml::xpath_t::scope_t> locals
     (new xml::xpath_t::scope_t(report, xml::xpath_t::scope_t::ARGUMENT));
 
-  locals->args = new value_t::sequence_t;
+  locals->args = value_t::sequence_t();
   locals->args.push_back(out);
   locals->args.push_back(journal->document);
 

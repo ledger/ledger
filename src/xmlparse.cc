@@ -329,25 +329,25 @@ void xml_write_value(std::ostream& out, const value_t& value,
   switch (value.type) {
   case value_t::BOOLEAN:
     for (int i = 0; i < depth + 2; i++) out << ' ';
-    out << "<boolean>" << *((bool *) value.data) << "</boolean>\n";
+    out << "<boolean>" << value.as_boolean() << "</boolean>\n";
     break;
 
   case value_t::INTEGER:
     for (int i = 0; i < depth + 2; i++) out << ' ';
-    out << "<integer>" << *((long *) value.data) << "</integer>\n";
+    out << "<integer>" << value.as_long() << "</integer>\n";
     break;
 
   case value_t::AMOUNT:
-    xml_write_amount(out, *((amount_t *) value.data), depth + 2);
+    xml_write_amount(out, value.as_amount(), depth + 2);
     break;
 
   case value_t::BALANCE:
-    bal = (balance_t *) value.data;
+    bal = &value.as_balance();
     // fall through...
 
   case value_t::BALANCE_PAIR:
     if (! bal)
-      bal = &((balance_pair_t *) value.data)->quantity;
+      bal = &value.as_balance_pair()->quantity;
 
     for (int i = 0; i < depth + 2; i++) out << ' ';
     out << "<balance>\n";

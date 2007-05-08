@@ -1343,7 +1343,7 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
 	// First, look up the symbol as a node name within the current
 	// context.  If any exist, then return the set of names.
 
-	std::auto_ptr<value_t::sequence_t> nodes(new value_t::sequence_t);
+	value_t::sequence_t nodes;
 
 	if (ptr->has_flags(XML_NODE_IS_PARENT)) {
 	  parent_node_t * parent = static_cast<parent_node_t *>(ptr);
@@ -1353,10 +1353,10 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
 	    if ((kind == NODE_NAME &&
 		 std::strcmp(name->c_str(), node->name()) == 0) ||
 		(kind == NODE_ID && name_id == node->name_id))
-	      nodes->push_back(node);
+	      nodes.push_back(node);
 	  }
 	}
-	return wrap_value(nodes.release())->acquire();
+	return wrap_value(nodes)->acquire();
       } else {
 	assert(ptr);
 	int id = ptr->document->lookup_name_id(*name);
@@ -1745,7 +1745,7 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
     std::auto_ptr<scope_t> call_args(new scope_t(scope));
     call_args->kind = scope_t::ARGUMENT;
 
-    std::auto_ptr<value_t::sequence_t> call_seq;
+    value_t::sequence_t call_seq;
 
     op_t * args = right;
     while (args) {
@@ -1757,16 +1757,12 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
 	args = NULL;
       }
 
-      if (! call_seq.get())
-	call_seq.reset(new value_t::sequence_t);
-
       // jww (2006-09-15): Need to return a reference to these, if
       // there are undetermined arguments!
-      call_seq->push_back(arg->compile(context, scope, resolve)->value());
+      call_seq.push_back(arg->compile(context, scope, resolve)->value());
     }
 
-    if (call_seq.get())
-      call_args->args = call_seq.release();
+    call_args->args = call_seq;
 
     if (left->kind == FUNC_NAME) {
       if (resolve) {

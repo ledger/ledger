@@ -180,8 +180,10 @@ class value_t
     if (type != STRING) {
       destroy();
       type = STRING;
+      new((string *) data) string(str);
+    } else {
+      as_string() = str;
     }
-    as_string() = str;
     return *this;
   }
 

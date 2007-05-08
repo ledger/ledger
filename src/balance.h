@@ -111,11 +111,31 @@ public:
       *this += (*i).second;
     return *this;
   }
+  balance_t& operator+=(const amount_t& amt) {
+    amounts_map::iterator i = amounts.find(&amt.commodity());
+    if (i != amounts.end())
+      (*i).second += amt;
+    else if (! amt.is_realzero())
+      amounts.insert(amounts_map::value_type(&amt.commodity(), amt));
+    return *this;
+  }
   balance_t& operator-=(const balance_t& bal) {
     for (amounts_map::const_iterator i = bal.amounts.begin();
 	 i != bal.amounts.end();
 	 i++)
       *this -= (*i).second;
+    return *this;
+  }
+  balance_t& operator-=(const amount_t& amt) {
+    amounts_map::iterator i = amounts.find(&amt.commodity());
+    if (i != amounts.end()) {
+      (*i).second -= amt;
+      if ((*i).second.is_realzero())
+	amounts.erase(i);
+    }
+    else if (! amt.is_realzero()) {
+      amounts.insert(amounts_map::value_type(&amt.commodity(), - amt));
+    }
     return *this;
   }
 
