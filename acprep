@@ -63,6 +63,7 @@ while [ -n "$1" ]; do
 	#    CPPFLAGS="-I/usr/local/include/stlport $CPPFLAGS"
 	#    LIBS="$LIBS -lstlportstlg"
 	#fi
+	CPPFLAGS="$CPPFLAGS -D_GLIBCXX_DEBUG=1" ;;
 	CXXFLAGS="$CXXFLAGS -g" ;;
 
     --prof | --perf)

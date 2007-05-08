@@ -17,17 +17,7 @@
 
 CPPUNIT_REGISTRY_ADD_TO_DEFAULT("Framework");
 
-CPPUNIT_REGISTRY_ADD_TO_DEFAULT("corelib");
-
-CPPUNIT_REGISTRY_ADD("numerics", "corelib");
-CPPUNIT_REGISTRY_ADD("balances", "corelib");
-CPPUNIT_REGISTRY_ADD("values", "corelib");
-
-CPPUNIT_REGISTRY_ADD_TO_DEFAULT("driver");
-CPPUNIT_REGISTRY_ADD_TO_DEFAULT("journal");
-CPPUNIT_REGISTRY_ADD_TO_DEFAULT("reports");
-CPPUNIT_REGISTRY_ADD_TO_DEFAULT("transforms");
-
+CPPUNIT_REGISTRY_ADD_TO_DEFAULT("numerics");
 
 // Create a sample test, which acts both as a template, and a
 // verification that the basic framework is functioning.
@@ -62,9 +52,17 @@ CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(UnitTests, "framework");
 
 int main(int argc, char* argv[])
 {
+  int index = 1;
+
+  if (argc > index && std::string(argv[index]) == "--verify") {
+    ledger::verify_enabled = true;
+    index++;
+  }
+
   // Retreive test path from command line first argument. Default to
   // "" which resolves to the top level suite.
-  std::string testPath = (argc > 1) ? std::string(argv[1]) : std::string("");
+  std::string testPath = ((argc > index) ? std::string(argv[index]) :
+			  std::string(""));
 
   // Create the event manager and test controller
   CPPUNIT_NS::TestResult controller;
@@ -85,7 +83,13 @@ int main(int argc, char* argv[])
   CPPUNIT_NS::TestRunner runner;
   runner.addTest(CPPUNIT_NS::TestFactoryRegistry::getRegistry().makeTest());
   try {
+    IF_VERIFY()
+      initialize_memory_tracing();
+
     runner.run(controller, testPath);
+
+    IF_VERIFY()
+      shutdown_memory_tracing();
 
     // Print test in a compiler compatible format.
     CPPUNIT_NS::CompilerOutputter outputter(&result, CPPUNIT_NS::stdCOut());

@@ -234,6 +234,13 @@ PyUnitTests: $(srcdir)/tests/python/PyUnitTests.py
 	    | sed "s/%builddir%/$(ESC_builddir)/g" > $@
 	chmod 755 $@
 
+fullcheck: UnitTests
+	MallocGuardEdges=1 \
+	MallocScribble=1 \
+	MallocPreScribble=1 \
+	DYLD_INSERT_LIBRARIES=/usr/lib/libgmalloc.dylib \
+	$(top_builddir)/UnitTests --verify
+
 ######################################################################
 
 DISTCLEANFILES = Doxyfile.gen

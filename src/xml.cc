@@ -51,11 +51,6 @@ const char *      document_t::ledger_builtins[] = {
   "transaction"
 };
 
-document_t::document_t(node_t * _top)
-  : stub(this), top(_top ? _top : &stub) {
-  TRACE_CTOR(xml::document_t, "node_t *, const char **, const int");
-}
-
 document_t::~document_t()
 {
   TRACE_DTOR(xml::document_t);
@@ -159,10 +154,9 @@ void document_t::print(std::ostream& out) const
 document_t * node_t::document;
 #endif
 
-node_t::node_t(document_t * _document, parent_node_t * _parent,
-	       flags_t _flags)
-  : supports_flags<>(_flags),
-    name_id(0), parent(_parent), next(NULL), prev(NULL), attrs(NULL)
+node_t::node_t(document_t * _document, parent_node_t * _parent, flags_t _flags)
+  : supports_flags<>(_flags), name_id(0), parent(_parent),
+    next(NULL), prev(NULL), attrs(NULL)
 {
   TRACE_CTOR(node_t, "document_t *, node_t *");
   document = _document;

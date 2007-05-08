@@ -236,18 +236,23 @@ private:
 
   names_map names_index;
 
-  terminal_node_t stub;
-
- public:
+public:
   node_t * top;
 
+private:
+  terminal_node_t stub;
+
+public:
   // Ids 0-9 are reserved.  10-999 are for "builtin" names.  1000+ are
   // for dynamically registered names.
   enum special_names_t {
     CURRENT, PARENT, ROOT, ALL
   };
 
-  document_t(node_t * _top = NULL);
+  document_t(node_t * _top = NULL)
+    : top(_top ? _top : &stub), stub(this) {
+    TRACE_CTOR(xml::document_t, "node_t *, const char **, const int");
+  }
   ~document_t();
 
   void set_top(node_t * _top);
