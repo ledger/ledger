@@ -178,16 +178,11 @@ ledger_so_SOURCES = \
 	src/py_amount.cc
 ledger_so_DEPENDENCIES = libledger.la gdtoa/libgdtoa.la libpyledger.la
 
-PYLIBS = pyledger ledger gdtoa gmp
-if USE_BOOST_SD
-PYLIBS += boost_date_time-sd boost_filesystem-sd boost_regex-sd boost_python-sd
-else
-if USE_BOOST_D
-PYLIBS += boost_date_time-d boost_filesystem-d boost_regex-d boost_python-d
-else
-PYLIBS += boost_date_time boost_filesystem boost_regex boost_python
-endif
-endif
+PYLIBS  = pyledger ledger gdtoa gmp
+PYLIBS += boost_date_time$(BOOST_SUFFIX)  \
+          boost_filesystem$(BOOST_SUFFIX) \
+          boost_regex$(BOOST_SUFFIX)	  \
+          boost_python$(BOOST_SUFFIX)
 
 if HAVE_EXPAT
 PYLIBS += expat

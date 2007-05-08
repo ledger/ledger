@@ -61,12 +61,9 @@ while [ -n "$1" ]; do
 	SWITCHES="$SWITCHES --enable-debug"
 	CXXFLAGS="$CXXFLAGS -g" ;;
 
-    --boost-sd)
-	SWITCHES="$SWITCHES --enable-boost-sd"
-	CPPFLAGS="$CPPFLAGS -D_GLIBCXX_DEBUG=1" ;;
-
-    --boost-d)
-	SWITCHES="$SWITCHES --enable-boost-d"
+    --boost)
+	shift 1
+	SWITCHES="$SWITCHES --with-boost-suffix=$1"
 	CPPFLAGS="$CPPFLAGS -D_GLIBCXX_DEBUG=1" ;;
 
     --gcov)

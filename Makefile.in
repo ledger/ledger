@@ -51,14 +51,11 @@ bin_PROGRAMS = ledger$(EXEEXT)
 @HAVE_BOOST_PYTHON_TRUE@am__append_13 = libpyledger.la
 @HAVE_BOOST_PYTHON_TRUE@noinst_PROGRAMS = ledger.so$(EXEEXT)
 @HAVE_BOOST_PYTHON_TRUE@am__append_14 = ledger.so
-@HAVE_BOOST_PYTHON_TRUE@@USE_BOOST_SD_TRUE@am__append_15 = boost_date_time-sd boost_filesystem-sd boost_regex-sd boost_python-sd
-@HAVE_BOOST_PYTHON_TRUE@@USE_BOOST_D_TRUE@@USE_BOOST_SD_FALSE@am__append_16 = boost_date_time-d boost_filesystem-d boost_regex-d boost_python-d
-@HAVE_BOOST_PYTHON_TRUE@@USE_BOOST_D_FALSE@@USE_BOOST_SD_FALSE@am__append_17 = boost_date_time boost_filesystem boost_regex boost_python
-@HAVE_BOOST_PYTHON_TRUE@@HAVE_EXPAT_TRUE@am__append_18 = expat
-@HAVE_BOOST_PYTHON_TRUE@@HAVE_XMLPARSE_TRUE@am__append_19 = xmlparse xmltok
-@HAVE_BOOST_PYTHON_TRUE@@HAVE_LIBOFX_TRUE@am__append_20 = ofx
+@HAVE_BOOST_PYTHON_TRUE@@HAVE_EXPAT_TRUE@am__append_15 = expat
+@HAVE_BOOST_PYTHON_TRUE@@HAVE_XMLPARSE_TRUE@am__append_16 = xmlparse xmltok
+@HAVE_BOOST_PYTHON_TRUE@@HAVE_LIBOFX_TRUE@am__append_17 = ofx
 TESTS = UnitTests$(EXEEXT) $(am__EXEEXT_1)
-@HAVE_BOOST_PYTHON_TRUE@am__append_21 = PyUnitTests
+@HAVE_BOOST_PYTHON_TRUE@am__append_18 = PyUnitTests
 check_PROGRAMS = $(am__EXEEXT_2)
 subdir = .
 DIST_COMMON = README $(am__configure_deps) $(dist_lisp_LISP) \
@@ -236,6 +233,7 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BOOST_SUFFIX = @BOOST_SUFFIX@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
@@ -439,9 +437,12 @@ dist_lisp_LISP = lisp/ledger.el lisp/timeclock.el
 
 @HAVE_BOOST_PYTHON_TRUE@ledger_so_DEPENDENCIES = libledger.la gdtoa/libgdtoa.la libpyledger.la
 @HAVE_BOOST_PYTHON_TRUE@PYLIBS = pyledger ledger gdtoa gmp \
+@HAVE_BOOST_PYTHON_TRUE@	boost_date_time$(BOOST_SUFFIX) \
+@HAVE_BOOST_PYTHON_TRUE@	boost_filesystem$(BOOST_SUFFIX) \
+@HAVE_BOOST_PYTHON_TRUE@	boost_regex$(BOOST_SUFFIX) \
+@HAVE_BOOST_PYTHON_TRUE@	boost_python$(BOOST_SUFFIX) \
 @HAVE_BOOST_PYTHON_TRUE@	$(am__append_15) $(am__append_16) \
-@HAVE_BOOST_PYTHON_TRUE@	$(am__append_17) $(am__append_18) \
-@HAVE_BOOST_PYTHON_TRUE@	$(am__append_19) $(am__append_20)
+@HAVE_BOOST_PYTHON_TRUE@	$(am__append_17)
 nodist_UnitTests_SOURCES = tests/UnitTests.cc \
 	\
 	tests/utility/t_utils.cc      \

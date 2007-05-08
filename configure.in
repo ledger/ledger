@@ -39,34 +39,6 @@ AC_ARG_ENABLE(debug,
 
 AM_CONDITIONAL(DEBUG, test x$debug = xtrue)
 
-AC_ARG_ENABLE(boost-sd,
-  [  --enable-boost-sd       Use static/debug Boost libraries],
-  [case "${enableval}" in
-    yes) boost_sd=true ;;
-    no)  boost_sd=false ;;
-    *) AC_MSG_ERROR(bad value ${enableval} for --enable-boost-sd) ;;
-  esac],[boost_sd=false])
-
-AM_CONDITIONAL(USE_BOOST_SD, test x$boost_sd = xtrue)
-
-AC_ARG_ENABLE(boost-d,
-  [  --enable-boost-d        Use dynamic/debug Boost libraries],
-  [case "${enableval}" in
-    yes) boost_d=true ;;
-    no)  boost_d=false ;;
-    *) AC_MSG_ERROR(bad value ${enableval} for --enable-boost-d) ;;
-  esac],[boost_d=false])
-
-AM_CONDITIONAL(USE_BOOST_D, test x$boost_d = xtrue)
-
-if test x$boost_sd = xtrue; then
-   BOOST_SUFFIX="-sd"
-elif test x$boost_d = xtrue; then
-   BOOST_SUFFIX="-d"
-else
-   BOOST_SUFFIX=""
-fi
-
 AC_ARG_ENABLE(pch,
   [  --enable-pch            Use GCC 4.x pre-compiled headers],
   [case "${enableval}" in
@@ -76,6 +48,13 @@ AC_ARG_ENABLE(pch,
   esac],[pch=false])
 
 AM_CONDITIONAL(USE_PCH, test x$pch = xtrue)
+
+AC_ARG_WITH(boost-suffix,
+  [  --with-boost-suffix=X   Append X to the Boost library names],
+  [BOOST_SUFFIX="-${withval}"],
+  [BOOST_SUFFIX=""])
+
+AC_SUBST([BOOST_SUFFIX], $BOOST_SUFFIX)
 
 # check if UNIX pipes are available
 AC_CACHE_CHECK(
