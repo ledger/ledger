@@ -621,15 +621,8 @@ public:
    */
   void read(std::istream& in);
   void read(char *& data);
-
   void write(std::ostream& out) const;
 
-private:
-  void read_quantity(std::istream& in);
-  void read_quantity(char *& data);
-  void write_quantity(std::ostream& out) const;
-
-public:
   /**
    * Debugging methods.  There are two methods defined to help with
    * debugging:

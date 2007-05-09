@@ -40,6 +40,7 @@
  */
 
 #include "amount.h"
+#include "parser.h"		// for parsing utility functions
 
 namespace ledger {
 
@@ -143,6 +144,48 @@ bool commodity_t::symbol_needs_quotes(const string& symbol)
   return false;
 }
 
+void commodity_t::parse_symbol(std::istream& in, string& symbol)
+{
+  // Invalid commodity characters:
+  //   SPACE, TAB, NEWLINE, RETURN
+  //   0-9 . , ; - + * / ^ ? : & | ! =
+  //   < > { } [ ] ( ) @
+
+  static int invalid_chars[256] = {
+    /* 0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f */
+    /* 00 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0,
+    /* 10 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* 20 */ 1, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1,
+    /* 30 */ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    /* 40 */ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* 50 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0,
+    /* 60 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* 70 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0,
+    /* 80 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* 90 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* a0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* b0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* c0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* d0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* e0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* f0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  };
+
+  char buf[256];
+  char c = peek_next_nonws(in);
+  if (c == '"') {
+    in.get(c);
+    READ_INTO(in, buf, 255, c, c != '"');
+    if (c == '"')
+      in.get(c);
+    else
+      throw_(amount_error, "Quoted commodity symbol lacks closing quote");
+  } else {
+    READ_INTO(in, buf, 255, c, ! invalid_chars[(unsigned char)c]);
+  }
+  symbol = buf;
+}
+
 bool commodity_t::valid() const
 {
   if (symbol().empty() && this != parent().null_commodity) {
@@ -164,6 +207,71 @@ bool commodity_t::valid() const
   return true;
 }
 
+void annotation_t::parse(std::istream& in)
+{
+  do {
+    char buf[256];
+    char c = peek_next_nonws(in);
+    if (c == '{') {
+      if (price)
+	throw_(amount_error, "Commodity specifies more than one price");
+
+      in.get(c);
+      READ_INTO(in, buf, 255, c, c != '}');
+      if (c == '}')
+	in.get(c);
+      else
+	throw_(amount_error, "Commodity price lacks closing brace");
+
+      amount_t temp;
+      temp.parse(buf, AMOUNT_PARSE_NO_MIGRATE);
+      temp.in_place_reduce();
+
+      // Since this price will maintain its own precision, make sure
+      // it is at least as large as the base commodity, since the user
+      // may have only specified {$1} or something similar.
+
+      if (temp.has_commodity() &&
+	  temp.precision() < temp.commodity().precision())
+	temp = temp.round();	// no need to retain individual precision
+
+      price = temp;
+    }
+    else if (c == '[') {
+      if (date)
+	throw_(amount_error, "Commodity specifies more than one date");
+
+      in.get(c);
+      READ_INTO(in, buf, 255, c, c != ']');
+      if (c == ']')
+	in.get(c);
+      else
+	throw_(amount_error, "Commodity date lacks closing bracket");
+
+      date = parse_datetime(buf);
+    }
+    else if (c == '(') {
+      if (tag)
+	throw_(amount_error, "Commodity specifies more than one tag");
+
+      in.get(c);
+      READ_INTO(in, buf, 255, c, c != ')');
+      if (c == ')')
+	in.get(c);
+      else
+	throw_(amount_error, "Commodity tag lacks closing parenthesis");
+
+      tag = buf;
+    }
+    else {
+      break;
+    }
+  } while (true);
+
+  DEBUG("amounts.commodities",
+	"Parsed commodity annotations: " << std::endl << *this);
+}
+
 bool annotated_commodity_t::operator==(const commodity_t& comm) const
 {
   // If the base commodities don't match, the game's up.
@@ -180,9 +288,38 @@ bool annotated_commodity_t::operator==(const commodity_t& comm) const
   return true;
 }
 
-void
-annotated_commodity_t::write_annotations(std::ostream&       out,
-					 const annotation_t& info)
+commodity_t&
+annotated_commodity_t::strip_annotations(const bool _keep_price,
+					 const bool _keep_date,
+					 const bool _keep_tag)
+{
+  DEBUG("commodity.annotated.strip",
+	"Reducing commodity " << *this << std::endl
+	 << "  keep price " << _keep_price << " "
+	 << "  keep date "  << _keep_date << " "
+	 << "  keep tag "   << _keep_tag);
+
+  commodity_t * new_comm;
+
+  if ((_keep_price && details.price) ||
+      (_keep_date  && details.date) ||
+      (_keep_tag   && details.tag))
+  {
+    new_comm = parent().find_or_create
+      (referent(),
+       annotation_t(_keep_price ? details.price : optional<amount_t>(),
+		    _keep_date  ? details.date  : optional<moment_t>(),
+		    _keep_tag   ? details.tag   : optional<string>()));
+  } else {
+    new_comm = parent().find_or_create(base_symbol());
+  }
+
+  assert(new_comm);
+  return *new_comm;
+}
+
+void annotated_commodity_t::write_annotations(std::ostream&       out,
+					      const annotation_t& info)
 {
   if (info.price)
     out << " {" << *info.price << '}';

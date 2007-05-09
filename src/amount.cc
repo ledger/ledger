@@ -799,49 +799,6 @@ void amount_t::annotate_commodity(const annotation_t& details)
   DEBUG("amounts.commodities", "  Annotated amount is " << *this);
 }
 
-amount_t amount_t::strip_annotations(const bool _keep_price,
-				     const bool _keep_date,
-				     const bool _keep_tag) const
-{
-  if (! quantity)
-    throw_(amount_error,
-	   "Cannot strip commodity annotations from an uninitialized amount");
-
-  if (! commodity().annotated ||
-      (_keep_price && _keep_date && _keep_tag))
-    return *this;
-
-  DEBUG("amounts.commodities", "Reducing commodity for amount "
-	 << *this << std::endl
-	 << "  keep price " << _keep_price << " "
-	 << "  keep date "  << _keep_date << " "
-	 << "  keep tag "   << _keep_tag);
-
-  annotated_commodity_t& ann_comm(commodity().as_annotated());
-  commodity_t *		 new_comm;
-
-  if ((_keep_price && ann_comm.details.price) ||
-      (_keep_date  && ann_comm.details.date) ||
-      (_keep_tag   && ann_comm.details.tag))
-  {
-    new_comm = ann_comm.parent().find_or_create
-      (ann_comm.referent(),
-       annotation_t(_keep_price ? ann_comm.details.price : optional<amount_t>(),
-		    _keep_date  ? ann_comm.details.date  : optional<moment_t>(),
-		    _keep_tag   ? ann_comm.details.tag   : optional<string>()));
-  } else {
-    new_comm = ann_comm.parent().find_or_create(ann_comm.base_symbol());
-  }
-  assert(new_comm);
-
-  amount_t t(*this);
-  t.set_commodity(*new_comm);
-
-  DEBUG("amounts.commodities", "  Stripped amount is " << t);
-
-  return t;
-}
-
 bool amount_t::commodity_annotated() const
 {
   if (! quantity)
@@ -867,6 +824,25 @@ annotation_t amount_t::annotation_details() const
   return annotation_t();
 }
 
+amount_t amount_t::strip_annotations(const bool _keep_price,
+				     const bool _keep_date,
+				     const bool _keep_tag) const
+{
+  if (! quantity)
+    throw_(amount_error,
+	   "Cannot strip commodity annotations from an uninitialized amount");
+
+  if (! commodity().annotated ||
+      (_keep_price && _keep_date && _keep_tag))
+    return *this;
+
+  amount_t t(*this);
+  t.set_commodity(commodity().as_annotated().
+		  strip_annotations(_keep_price, _keep_date, _keep_tag));
+  return t;
+}
+
+
 namespace {
   void parse_quantity(std::istream& in, string& value)
   {
@@ -882,121 +858,6 @@ namespace {
     }
 
     value = buf;
-  }
-
-  // Invalid commodity characters:
-  //   SPACE, TAB, NEWLINE, RETURN
-  //   0-9 . , ; - + * / ^ ? : & | ! =
-  //   < > { } [ ] ( ) @
-
-  int invalid_chars[256] = {
-    /* 0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f */
-    /* 00 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0,
-    /* 10 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    /* 20 */ 1, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1,
-    /* 30 */ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    /* 40 */ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    /* 50 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0,
-    /* 60 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    /* 70 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0,
-    /* 80 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    /* 90 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    /* a0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    /* b0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    /* c0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    /* d0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    /* e0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    /* f0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  };
-
-  static void parse_commodity(std::istream& in, string& symbol)
-  {
-    char buf[256];
-    char c = peek_next_nonws(in);
-    if (c == '"') {
-      in.get(c);
-      READ_INTO(in, buf, 255, c, c != '"');
-      if (c == '"')
-	in.get(c);
-      else
-	throw_(amount_error, "Quoted commodity symbol lacks closing quote");
-    } else {
-      READ_INTO(in, buf, 255, c, ! invalid_chars[(unsigned char)c]);
-    }
-    symbol = buf;
-  }
-
-  bool parse_annotations(std::istream& in, annotation_t& details)
-  {
-    do {
-      char buf[256];
-      char c = peek_next_nonws(in);
-      if (c == '{') {
-	if (details.price)
-	  throw_(amount_error, "Commodity specifies more than one price");
-
-	in.get(c);
-	READ_INTO(in, buf, 255, c, c != '}');
-	if (c == '}')
-	  in.get(c);
-	else
-	  throw_(amount_error, "Commodity price lacks closing brace");
-
-	amount_t temp;
-	temp.parse(buf, AMOUNT_PARSE_NO_MIGRATE);
-	temp.in_place_reduce();
-
-	// Since this price will maintain its own precision, make sure
-	// it is at least as large as the base commodity, since the user
-	// may have only specified {$1} or something similar.
-
-	if (temp.has_commodity() &&
-	    temp.precision() < temp.commodity().precision())
-	  temp = temp.round();	// no need to retain individual precision
-
-	details.price = temp;
-      }
-      else if (c == '[') {
-	if (details.date)
-	  throw_(amount_error, "Commodity specifies more than one date");
-
-	in.get(c);
-	READ_INTO(in, buf, 255, c, c != ']');
-	if (c == ']')
-	  in.get(c);
-	else
-	  throw_(amount_error, "Commodity date lacks closing bracket");
-
-	details.date = parse_datetime(buf);
-      }
-      else if (c == '(') {
-	if (details.tag)
-	  throw_(amount_error, "Commodity specifies more than one tag");
-
-	in.get(c);
-	READ_INTO(in, buf, 255, c, c != ')');
-	if (c == ')')
-	  in.get(c);
-	else
-	  throw_(amount_error, "Commodity tag lacks closing parenthesis");
-
-	details.tag = buf;
-      }
-      else {
-	break;
-      }
-    } while (true);
-
-    DEBUG("amounts.commodities",
-	  "Parsed commodity annotations: "
-	  << "  price "
-	  << (details.price ? details.price->to_string() : "NONE") << " "
-	  << "  date "
-	  << (details.date ? *details.date : moment_t()) << " "
-	  << "  tag "
-	  << (details.tag ? *details.tag : "NONE"));
-
-    return details;
   }
 }
 
@@ -1029,16 +890,16 @@ void amount_t::parse(std::istream& in, flags_t flags)
       if (std::isspace(n))
 	comm_flags |= COMMODITY_STYLE_SEPARATED;
 
-      parse_commodity(in, symbol);
+      commodity_t::parse_symbol(in, symbol);
 
       if (! symbol.empty())
 	comm_flags |= COMMODITY_STYLE_SUFFIXED;
 
       if (! in.eof() && ((n = in.peek()) != '\n'))
-	parse_annotations(in, details);
+	details.parse(in);
     }
   } else {
-    parse_commodity(in, symbol);
+    commodity_t::parse_symbol(in, symbol);
 
     if (! in.eof() && ((n = in.peek()) != '\n')) {
       if (std::isspace(in.peek()))
@@ -1047,7 +908,7 @@ void amount_t::parse(std::istream& in, flags_t flags)
       parse_quantity(in, quant);
 
       if (! quant.empty() && ! in.eof() && ((n = in.peek()) != '\n'))
-	parse_annotations(in, details);
+	details.parse(in);
     }
   }
 
@@ -1345,8 +1206,18 @@ void amount_t::print(std::ostream& _out, bool omit_commodity,
 }
 
 
+namespace {
+  char *	bigints;
+  char *	bigints_next;
+  uint_fast32_t bigints_index;
+  uint_fast32_t bigints_count;
+  char		buf[4096];
+}
+
 void amount_t::read(std::istream& in)
 {
+  // Read in the commodity for this amount
+  
   commodity_t::ident_t ident;
   read_binary_long(in, ident);
   if (ident == 0xffffffff)
@@ -1358,11 +1229,44 @@ void amount_t::read(std::istream& in)
     assert(commodity_);
   }
 
-  read_quantity(in);
+  // Read in the quantity
+
+  char byte;
+  in.read(&byte, sizeof(byte));
+
+  if (byte == 0) {
+    quantity = NULL;
+  }
+  else if (byte == 1) {
+    quantity = new bigint_t;
+
+    unsigned short len;
+    in.read((char *)&len, sizeof(len));
+    assert(len < 4096);
+    in.read(buf, len);
+    mpz_import(MPZ(quantity), len / sizeof(short), 1, sizeof(short),
+	       0, 0, buf);
+
+    char negative;
+    in.read(&negative, sizeof(negative));
+    if (negative)
+      mpz_neg(MPZ(quantity), MPZ(quantity));
+
+    in.read((char *)&quantity->prec, sizeof(quantity->prec));
+
+    bigint_t::flags_t tflags;
+    in.read((char *)&tflags, sizeof(tflags));
+    quantity->set_flags(tflags);
+  }
+  else {
+    assert(false);
+  }
 }
 
 void amount_t::read(char *& data)
 {
+  // Read in the commodity for this amount
+  
   commodity_t::ident_t ident;
   read_binary_long(data, ident);
   if (ident == 0xffffffff)
@@ -1374,31 +1278,8 @@ void amount_t::read(char *& data)
     assert(commodity_);
   }
 
-  read_quantity(data);
-}
+  // Read in the quantity
 
-void amount_t::write(std::ostream& out) const
-{
-  if (! quantity)
-    throw_(amount_error, "Cannot serialize an uninitialized amount");
-
-  if (commodity_)
-    write_binary_long(out, commodity_->ident);
-  else
-    write_binary_long<commodity_t::ident_t>(out, 0xffffffff);
-
-  write_quantity(out);
-}
-
-#ifndef THREADSAFE
-static char *	     bigints;
-static char *	     bigints_next;
-static uint_fast32_t bigints_index;
-static uint_fast32_t bigints_count;
-#endif
-
-void amount_t::read_quantity(char *& data)
-{
   char byte = *data++;;
 
   if (byte == 0) {
@@ -1434,49 +1315,21 @@ void amount_t::read_quantity(char *& data)
   }
 }
 
-#ifndef THREADSAFE
-static char buf[4096];
-#endif
-
-void amount_t::read_quantity(std::istream& in)
+void amount_t::write(std::ostream& out) const
 {
+  // Write out the commodity for this amount
+  
+  if (! quantity)
+    throw_(amount_error, "Cannot serialize an uninitialized amount");
+
+  if (commodity_)
+    write_binary_long(out, commodity_->ident);
+  else
+    write_binary_long<commodity_t::ident_t>(out, 0xffffffff);
+
+  // Write out the quantity
+
   char byte;
-  in.read(&byte, sizeof(byte));
-
-  if (byte == 0) {
-    quantity = NULL;
-  }
-  else if (byte == 1) {
-    quantity = new bigint_t;
-
-    unsigned short len;
-    in.read((char *)&len, sizeof(len));
-    assert(len < 4096);
-    in.read(buf, len);
-    mpz_import(MPZ(quantity), len / sizeof(short), 1, sizeof(short),
-	       0, 0, buf);
-
-    char negative;
-    in.read(&negative, sizeof(negative));
-    if (negative)
-      mpz_neg(MPZ(quantity), MPZ(quantity));
-
-    in.read((char *)&quantity->prec, sizeof(quantity->prec));
-
-    bigint_t::flags_t tflags;
-    in.read((char *)&tflags, sizeof(tflags));
-    quantity->set_flags(tflags);
-  }
-  else {
-    assert(false);
-  }
-}
-
-void amount_t::write_quantity(std::ostream& out) const
-{
-  char byte;
-
-  assert(quantity);
 
   if (quantity->index == 0) {
     quantity->index = ++bigints_index;

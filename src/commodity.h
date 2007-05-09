@@ -190,9 +190,20 @@ public:
   optional<amount_t> value(const optional<moment_t>& moment =
 			   optional<moment_t>());
 
+  static void parse_symbol(std::istream& in, string& symbol);
+  static string parse_symbol(std::istream& in) {
+    string temp;
+    parse_symbol(in, temp);
+    return temp;
+  }
+
   void print(std::ostream& out) const {
     out << symbol();
   }
+
+  void read(std::istream& in);
+  void read(char *& data);
+  void write(std::ostream& out) const;
 
   bool valid() const;
 };
@@ -224,6 +235,7 @@ struct annotation_t : public equality_comparable<annotation_t>
 	    tag   == rhs.tag);
   }
 
+  void parse(std::istream& in);
   void print(std::ostream& out) const {
     out << "price " << (price ? price->to_string() : "NONE") << " "
 	<< "date "  << (date  ? *date : moment_t()) << " "
@@ -272,6 +284,10 @@ public:
   const commodity_t& referent() const {
     return *ptr;
   }
+
+  commodity_t& strip_annotations(const bool _keep_price,
+				 const bool _keep_date,
+				 const bool _keep_tag);
 
   void write_annotations(std::ostream& out) const {
     annotated_commodity_t::write_annotations(out, details);
