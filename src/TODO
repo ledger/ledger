@@ -1,3 +1,8 @@
 - Add tracing code for functions that records call count and total
   time spent, as well as average time per call.  This would implement
   selective profiling.
+
+- Make sure that if any constructors cause memory to be allocated,
+  that the memory is held by an auto_ptr until the constructor is
+  done; otherwise, an exception raised from within the constructor
+  will not call the destructor to free the memory.

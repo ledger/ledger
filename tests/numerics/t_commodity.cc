@@ -19,7 +19,11 @@ void CommodityTestCase::testPriceHistory()
   ptime apr15_07    = parse_datetime("2007/04/15 13:00:00");
 
   // jww (2007-04-17): tbd
+  amount_t x0;
   amount_t x1("100.10 AAPL");
+
+  assertThrow(x0.value(), amount_error);
+  assertFalse(x1.value());
 
   // Commodities cannot be constructed by themselves, since a great
   // deal of their state depends on how they were seen to be used.

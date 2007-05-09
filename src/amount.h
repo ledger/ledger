@@ -141,7 +141,6 @@ public:
   static bool stream_fullstrings;
 
 protected:
-  void _init();
   void _copy(const amount_t& amt);
   void _dup();
   void _resize(precision_t prec);
@@ -326,7 +325,7 @@ public:
   precision_t precision() const;
 
   amount_t negate() const {
-    amount_t temp = *this;
+    amount_t temp(*this);
     temp.in_place_negate();
     return temp;
   }
@@ -575,6 +574,7 @@ public:
   void parse(const string& str, flags_t flags = 0) {
     std::istringstream stream(str);
     parse(stream, flags);
+    assert(stream.eof());
   }
 
   static void parse_conversion(const string& larger_str,
@@ -616,12 +616,17 @@ public:
    * an input stream into a buffer.  It advances the pointer passed in
    * to the end of the deserialized amount.
    *
-   * write(ostream) writes an amount to an output stream in a compact
-   * binary format.
+   * write(ostream, [bool]) writes an amount to an output stream in a
+   * compact binary format.  If the second parameter is true,
+   * quantities with multiple reference counts will be written in an
+   * optimized fashion.  NOTE: This form of usage is valid only for
+   * the binary journal writer, it should not be used otherwise, as it
+   * has strict requirements for reading that only the binary reader
+   * knows about.
    */
   void read(std::istream& in);
-  void read(char *& data);
-  void write(std::ostream& out) const;
+  void read(const char *& data);
+  void write(std::ostream& out, bool optimize = false) const;
 
   /**
    * Debugging methods.  There are two methods defined to help with
@@ -691,6 +696,8 @@ inline bool amount_t::operator==(const amount_t& amt) const {
 }
 
 inline amount_t amount_t::round() const {
+  if (! quantity)
+    throw_(amount_error, "Cannot round an uninitialized amount");
   if (! has_commodity())
     return *this;
   return round(commodity().precision());

@@ -131,20 +131,6 @@ void amount_t::shutdown()
   }
 }
 
-void amount_t::_init()
-{
-  // This is only called on an initialized amount by amount_t::parse.
-
-  if (! quantity) {
-    quantity = new bigint_t;
-  }
-  else if (quantity->ref > 1) {
-    _release();
-    quantity = new bigint_t;
-  }
-  commodity_ = NULL;
-}
-
 void amount_t::_copy(const amount_t& amt)
 {
   if (quantity != amt.quantity) {
@@ -183,13 +169,9 @@ void amount_t::_resize(precision_t prec)
 
   _dup();
 
-  if (prec < quantity->prec) {
-    mpz_ui_pow_ui(divisor, 10, quantity->prec - prec);
-    mpz_tdiv_q(MPZ(quantity), MPZ(quantity), divisor);
-  } else {
-    mpz_ui_pow_ui(divisor, 10, prec - quantity->prec);
-    mpz_mul(MPZ(quantity), MPZ(quantity), divisor);
-  }
+  assert(prec > quantity->prec);
+  mpz_ui_pow_ui(divisor, 10, prec - quantity->prec);
+  mpz_mul(MPZ(quantity), MPZ(quantity), divisor);
 
   quantity->prec = prec;
 }
@@ -359,7 +341,7 @@ int amount_t::compare(const amount_t& amt) const
     return mpz_cmp(MPZ(quantity), MPZ(amt.quantity));
   }
   else if (quantity->prec < amt.quantity->prec) {
-    amount_t t = *this;
+    amount_t t(*this);
     t._resize(amt.quantity->prec);
     return mpz_cmp(MPZ(t.quantity), MPZ(amt.quantity));
   }
@@ -607,10 +589,10 @@ amount_t& amount_t::in_place_negate()
 
 amount_t amount_t::round(precision_t prec) const
 {
-  amount_t t = *this;
-
   if (! quantity)
     throw_(amount_error, "Cannot round an uninitialized amount");
+
+  amount_t t(*this);
 
   if (quantity->prec <= prec) {
     if (quantity && quantity->has_flags(BIGINT_KEEP_PREC)) {
@@ -637,7 +619,7 @@ amount_t amount_t::unround() const
   else if (quantity->has_flags(BIGINT_KEEP_PREC))
     return *this;
 
-  amount_t t = *this;
+  amount_t t(*this);
   t._dup();
   t.quantity->add_flags(BIGINT_KEEP_PREC);
 
@@ -915,7 +897,23 @@ void amount_t::parse(std::istream& in, flags_t flags)
   if (quant.empty())
     throw_(amount_error, "No quantity specified for amount");
 
-  _init();			// this will reuse a current value
+  // Allocate memory for the amount's quantity value.  We have to
+  // monitor the allocation in an auto_ptr because this function gets
+  // called sometimes from amount_t's constructor; and if there is an
+  // exeception thrown by any of the function calls after this point,
+  // the destructor will never be called and the memory never freed.
+
+  std::auto_ptr<bigint_t> safe_holder;
+
+  if (! quantity) {
+    quantity = new bigint_t;
+    safe_holder.reset(quantity);
+  }
+  else if (quantity->ref > 1) {
+    _release();
+    quantity = new bigint_t;
+    safe_holder.reset(quantity);
+  }
 
   // Create the commodity if has not already been seen, and update the
   // precision if something greater was used for the quantity.
@@ -965,9 +963,9 @@ void amount_t::parse(std::istream& in, flags_t flags)
 
   // Set the commodity's flags and precision accordingly
 
-  if (commodity_ &&
-      (newly_created || ! (flags & AMOUNT_PARSE_NO_MIGRATE))) {
+  if (commodity_ && (newly_created || ! (flags & AMOUNT_PARSE_NO_MIGRATE))) {
     commodity().add_flags(comm_flags);
+
     if (quantity->prec > commodity().precision())
       commodity().set_precision(quantity->prec);
   }
@@ -1004,6 +1002,8 @@ void amount_t::parse(std::istream& in, flags_t flags)
 
   if (! (flags & AMOUNT_PARSE_NO_REDUCE))
     in_place_reduce();
+
+  safe_holder.release();	// `this->quantity' owns the pointer
 }
 
 void amount_t::parse_conversion(const string& larger_str,
@@ -1201,8 +1201,6 @@ void amount_t::print(std::ostream& _out, bool omit_commodity,
   // entire amount string, and not just the first part.
 
   _out << out.str();
-
-  return;
 }
 
 
@@ -1225,7 +1223,7 @@ void amount_t::read(std::istream& in)
   else if (ident == 0)
     commodity_ = current_pool->null_commodity;
   else {
-    commodity_ = current_pool->find(ident - 1);
+    commodity_ = current_pool->find(ident);
     assert(commodity_);
   }
 
@@ -1234,10 +1232,7 @@ void amount_t::read(std::istream& in)
   char byte;
   in.read(&byte, sizeof(byte));
 
-  if (byte == 0) {
-    quantity = NULL;
-  }
-  else if (byte == 1) {
+  if (byte < 3) {
     quantity = new bigint_t;
 
     unsigned short len;
@@ -1263,7 +1258,7 @@ void amount_t::read(std::istream& in)
   }
 }
 
-void amount_t::read(char *& data)
+void amount_t::read(const char *& data)
 {
   // Read in the commodity for this amount
   
@@ -1274,7 +1269,7 @@ void amount_t::read(char *& data)
   else if (ident == 0)
     commodity_ = current_pool->null_commodity;
   else {
-    commodity_ = current_pool->find(ident - 1);
+    commodity_ = current_pool->find(ident);
     assert(commodity_);
   }
 
@@ -1282,12 +1277,13 @@ void amount_t::read(char *& data)
 
   char byte = *data++;;
 
-  if (byte == 0) {
-    quantity = NULL;
-  }
-  else if (byte == 1) {
-    quantity = new((bigint_t *)bigints_next) bigint_t;
-    bigints_next += sizeof(bigint_t);
+  if (byte < 3) {
+    if (byte == 2) {
+      quantity = new((bigint_t *)bigints_next) bigint_t;
+      bigints_next += sizeof(bigint_t);
+    } else {
+      quantity = new bigint_t;
+    }
 
     unsigned short len = *((unsigned short *) data);
     data += sizeof(unsigned short);
@@ -1303,7 +1299,9 @@ void amount_t::read(char *& data)
     data += sizeof(precision_t);
     quantity->set_flags(*((flags_t *) data));
     data += sizeof(flags_t);
-    quantity->add_flags(BIGINT_BULK_ALLOC);
+
+    if (byte == 2)
+      quantity->add_flags(BIGINT_BULK_ALLOC);
   } else {
     uint_fast32_t index = *((uint_fast32_t *) data);
     data += sizeof(uint_fast32_t);
@@ -1315,7 +1313,7 @@ void amount_t::read(char *& data)
   }
 }
 
-void amount_t::write(std::ostream& out) const
+void amount_t::write(std::ostream& out, bool optimized) const
 {
   // Write out the commodity for this amount
   
@@ -1331,11 +1329,14 @@ void amount_t::write(std::ostream& out) const
 
   char byte;
 
-  if (quantity->index == 0) {
-    quantity->index = ++bigints_index;
-    bigints_count++;
-
-    byte = 1;
+  if (! optimized || quantity->index == 0) {
+    if (optimized) {
+      quantity->index = ++bigints_index; // if !optimized, this is garbage
+      bigints_count++;
+      byte = 2;
+    } else {
+      byte = 1;
+    }
     out.write(&byte, sizeof(byte));
 
     std::size_t size;
@@ -1359,7 +1360,7 @@ void amount_t::write(std::ostream& out) const
 
     // Since this value has already been written, we simply write
     // out a reference to which one it was.
-    byte = 2;
+    byte = 3;
     out.write(&byte, sizeof(byte));
     out.write((char *)&quantity->index, sizeof(quantity->index));
   }

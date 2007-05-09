@@ -55,7 +55,7 @@ inline void read_binary_number_nocheck(std::istream& in, T& num) {
 }
 
 template <typename T>
-inline void read_binary_number_nocheck(char *& data, T& num) {
+inline void read_binary_number_nocheck(const char *& data, T& num) {
   num = *((T *) data);
   data += sizeof(T);
 }
@@ -68,7 +68,7 @@ inline T read_binary_number_nocheck(std::istream& in) {
 }
 
 template <typename T>
-inline T read_binary_number_nocheck(char *& data) {
+inline T read_binary_number_nocheck(const char *& data) {
   T num;
   read_binary_number_nocheck(data, num);
   return num;
@@ -90,7 +90,7 @@ inline void read_binary_number(std::istream& in, T& num) {
 }
 
 template <typename T>
-inline void read_binary_number(char *& data, T& num) {
+inline void read_binary_number(const char *& data, T& num) {
   read_binary_guard(data, 0x2003);
   num = *((T *) data);
   data += sizeof(T);
@@ -105,14 +105,14 @@ inline T read_binary_number(std::istream& in) {
 }
 
 template <typename T>
-inline T read_binary_number(char *& data) {
+inline T read_binary_number(const char *& data) {
   T num;
   read_binary_number(data, num);
   return num;
 }
 
 void read_binary_bool(std::istream& in, bool& num);
-void read_binary_bool(char *& data, bool& num);
+void read_binary_bool(const char *& data, bool& num);
 
 inline bool read_binary_bool(std::istream& in) {
   bool num;
@@ -120,7 +120,7 @@ inline bool read_binary_bool(std::istream& in) {
   return num;
 }
 
-inline bool read_binary_bool(char *& data) {
+inline bool read_binary_bool(const char *& data) {
   bool num;
   read_binary_bool(data, num);
   return num;
@@ -156,7 +156,7 @@ void read_binary_long(std::istream& in, T& num)
 }
 
 template <typename T>
-void read_binary_long(char *& data, T& num)
+void read_binary_long(const char *& data, T& num)
 {
   read_binary_guard(data, 0x2001);
 
@@ -192,15 +192,15 @@ inline T read_binary_long(std::istream& in) {
 }
 
 template <typename T>
-inline T read_binary_long(char *& data) {
+inline T read_binary_long(const char *& data) {
   T num;
   read_binary_long(data, num);
   return num;
 }
 
 void read_binary_string(std::istream& in, string& str);
-void read_binary_string(char *& data, string& str);
-void read_binary_string(char *& data, string * str);
+void read_binary_string(const char *& data, string& str);
+void read_binary_string(const char *& data, string * str);
 
 inline string read_binary_string(std::istream& in) {
   string temp;
@@ -208,7 +208,7 @@ inline string read_binary_string(std::istream& in) {
   return temp;
 }
 
-inline string read_binary_string(char *& data) {
+inline string read_binary_string(const char *& data) {
   string temp;
   read_binary_string(data, temp);
   return temp;

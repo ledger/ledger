@@ -68,7 +68,7 @@ void read_binary_bool(std::istream& in, bool& num)
   read_binary_guard(in, 0x2006);
 }
 
-void read_binary_bool(char *& data, bool& num)
+void read_binary_bool(const char *& data, bool& num)
 {
   read_binary_guard(data, 0x2005);
   unsigned char val = *((unsigned char *) data);
@@ -104,7 +104,7 @@ void read_binary_string(std::istream& in, string& str)
   read_binary_guard(in, 0x3002);
 }
 
-void read_binary_string(char *& data, string& str)
+void read_binary_string(const char *& data, string& str)
 {
   read_binary_guard(data, 0x3001);
 
@@ -127,7 +127,7 @@ void read_binary_string(char *& data, string& str)
   read_binary_guard(data, 0x3002);
 }
 
-void read_binary_string(char *& data, string * str)
+void read_binary_string(const char *& data, string * str)
 {
   read_binary_guard(data, 0x3001);
 
@@ -151,7 +151,7 @@ void read_binary_string(char *& data, string * str)
 }
 
 #if 0
-inline void read_binary_value(char *& data, value_t& val)
+inline void read_binary_value(const char *& data, value_t& val)
 {
   val.type = static_cast<value_t::type_t>(read_binary_long<int>(data));
 
@@ -176,7 +176,7 @@ inline void read_binary_value(char *& data, value_t& val)
   }
 }
 
-inline void read_binary_mask(char *& data, mask_t *& mask)
+inline void read_binary_mask(const char *& data, mask_t *& mask)
 {
   bool exclude;
   read_binary_number(data, exclude);
@@ -187,7 +187,7 @@ inline void read_binary_mask(char *& data, mask_t *& mask)
   mask->exclude = exclude;
 }
 
-inline void read_binary_transaction(char *& data, transaction_t * xact)
+inline void read_binary_transaction(const char *& data, transaction_t * xact)
 {
   read_binary_number(data, xact->_date);
   read_binary_number(data, xact->_date_eff);
@@ -230,7 +230,7 @@ inline void read_binary_transaction(char *& data, transaction_t * xact)
   xact->data = NULL;
 }
 
-inline void read_binary_entry_base(char *& data, entry_base_t * entry,
+inline void read_binary_entry_base(const char *& data, entry_base_t * entry,
 				   transaction_t *& xact_pool, bool& finalize)
 {
   read_binary_long(data, entry->src_idx);
@@ -253,7 +253,7 @@ inline void read_binary_entry_base(char *& data, entry_base_t * entry,
   }
 }
 
-inline void read_binary_entry(char *& data, entry_t * entry,
+inline void read_binary_entry(const char *& data, entry_t * entry,
 			      transaction_t *& xact_pool, bool& finalize)
 {
   entry->data =
@@ -266,7 +266,7 @@ inline void read_binary_entry(char *& data, entry_t * entry,
   read_binary_string(data, &entry->payee);
 }
 
-inline void read_binary_auto_entry(char *& data, auto_entry_t * entry,
+inline void read_binary_auto_entry(const char *& data, auto_entry_t * entry,
 				   transaction_t *& xact_pool)
 {
   bool ignore;
@@ -277,7 +277,7 @@ inline void read_binary_auto_entry(char *& data, auto_entry_t * entry,
   entry->predicate.parse(pred_str);
 }
 
-inline void read_binary_period_entry(char *& data, period_entry_t * entry,
+inline void read_binary_period_entry(const char *& data, period_entry_t * entry,
 				     transaction_t *& xact_pool, bool& finalize)
 {
   read_binary_entry_base(data, entry, xact_pool, finalize);
@@ -286,7 +286,7 @@ inline void read_binary_period_entry(char *& data, period_entry_t * entry,
   entry->period.parse(stream);
 }
 
-inline commodity_base_t * read_binary_commodity_base(char *& data)
+inline commodity_base_t * read_binary_commodity_base(const char *& data)
 {
   commodity_base_t * commodity = new commodity_base_t;
   *base_commodities_next++ = commodity;
@@ -300,7 +300,7 @@ inline commodity_base_t * read_binary_commodity_base(char *& data)
   return commodity;
 }
 
-inline void read_binary_commodity_base_extra(char *& data,
+inline void read_binary_commodity_base_extra(const char *& data,
 					     commodity_t::ident_t ident)
 {
   commodity_base_t * commodity = base_commodities[ident];
@@ -339,7 +339,7 @@ inline void read_binary_commodity_base_extra(char *& data,
   }
 }
 
-inline commodity_t * read_binary_commodity(char *& data)
+inline commodity_t * read_binary_commodity(const char *& data)
 {
   commodity_t * commodity = new commodity_t;
   *commodities_next++ = commodity;
@@ -353,7 +353,7 @@ inline commodity_t * read_binary_commodity(char *& data)
   return commodity;
 }
 
-inline commodity_t * read_binary_commodity_annotated(char *& data)
+inline commodity_t * read_binary_commodity_annotated(const char *& data)
 {
   annotated_commodity_t * commodity = new annotated_commodity_t;
   *commodities_next++ = commodity;
@@ -381,7 +381,7 @@ inline commodity_t * read_binary_commodity_annotated(char *& data)
 }
 
 inline
-account_t * read_binary_account(char *& data, journal_t * journal,
+account_t * read_binary_account(const char *& data, journal_t * journal,
 				account_t * master = NULL)
 {
   account_t * acct = new account_t(NULL);

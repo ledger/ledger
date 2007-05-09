@@ -47,6 +47,7 @@ class AmountTestCase : public CPPUNIT_NS::TestCase
   CPPUNIT_TEST(testCommodityConversion);
   CPPUNIT_TEST(testPrinting);
   CPPUNIT_TEST(testCommodityPrinting);
+  CPPUNIT_TEST(testSerialization);
 
   CPPUNIT_TEST_SUITE_END();
 
@@ -99,6 +100,7 @@ public:
   void testCommodityConversion();
   void testPrinting();
   void testCommodityPrinting();
+  void testSerialization();
 
 private:
   AmountTestCase(const AmountTestCase &copy);

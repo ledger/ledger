@@ -30,16 +30,51 @@ void AmountTestCase::testParser()
   amount_t x5(x4);
   amount_t x6(x4);
   amount_t x7(x4);
-  amount_t x8("$123.456");
+  amount_t x8("$123.45");
   amount_t x9(x8);
   amount_t x10(x8);
   amount_t x11(x8);
   amount_t x12("$100");
 
-  assertEqual(amount_t::precision_t(3), x12.commodity().precision());
+  assertEqual(amount_t::precision_t(2), x12.commodity().precision());
+
+  string buf("$100...");
+  std::istringstream input(buf);
+  amount_t x13;
+  x13.parse(input);
+  assertEqual(x12, x13);
+
+  amount_t x14;
+  assertThrow(x14.parse("DM"), amount_error);
+
+  amount_t x15("$1.000.000,00"); // parsing this switches us to European
+
+  amount_t x16("$2000");
+  assertEqual(string("$2.000,00"), x16.to_string());
+  x16.parse("$2000,00");
+  assertEqual(string("$2.000,00"), x16.to_string());
+
+  // Since European-ness is an additive quality, we must switch back
+  // to American-ness manually
+  x15.commodity().drop_flags(COMMODITY_STYLE_EUROPEAN);
+
+  amount_t x17("$1,000,000.00"); // parsing this switches back to American
+
+  amount_t x18("$2000");
+  assertEqual(string("$2,000.00"), x18.to_string());
+  x18.parse("$2,000");
+  assertEqual(string("$2,000.00"), x18.to_string());
+
+  assertEqual(x15, x17);
+
+  amount_t x19("EUR 1000");
+  amount_t x20("EUR 1000");
+
+  assertEqual(string("EUR 1000"), x19.to_string());
+  assertEqual(string("EUR 1000"), x20.to_string());
 
   x1.parse("$100.0000", AMOUNT_PARSE_NO_MIGRATE);
-  assertEqual(amount_t::precision_t(3), x12.commodity().precision());
+  assertEqual(amount_t::precision_t(2), x12.commodity().precision());
   assertEqual(x1.commodity(), x12.commodity());
   assertEqual(x1, x12);
 
@@ -71,18 +106,18 @@ void AmountTestCase::testParser()
   x11.parse("$100.00", AMOUNT_PARSE_NO_MIGRATE | AMOUNT_PARSE_NO_REDUCE);
   assertEqual(x11, x12);
 
-  assertTrue(x0.valid());
-  assertTrue(x1.valid());
-  assertTrue(x2.valid());
-  assertTrue(x3.valid());
-  assertTrue(x5.valid());
-  assertTrue(x6.valid());
-  assertTrue(x7.valid());
-  assertTrue(x8.valid());
-  assertTrue(x9.valid());
-  assertTrue(x10.valid());
-  assertTrue(x11.valid());
-  assertTrue(x12.valid());
+  assertValid(x0);
+  assertValid(x1);
+  assertValid(x2);
+  assertValid(x3);
+  assertValid(x5);
+  assertValid(x6);
+  assertValid(x7);
+  assertValid(x8);
+  assertValid(x9);
+  assertValid(x10);
+  assertValid(x11);
+  assertValid(x12);
 }
 
 void AmountTestCase::testConstructors()
@@ -111,17 +146,17 @@ void AmountTestCase::testConstructors()
   assertEqual(x10, x3);
   assertEqual(x10, x9);
 
-  assertTrue(x0.valid());
-  assertTrue(x1.valid());
-  assertTrue(x2.valid());
-  assertTrue(x3.valid());
-  assertTrue(x5.valid());
-  assertTrue(x6.valid());
-  assertTrue(x7.valid());
-  assertTrue(x8.valid());
-  assertTrue(x9.valid());
-  assertTrue(x10.valid());
-  assertTrue(x11.valid());
+  assertValid(x0);
+  assertValid(x1);
+  assertValid(x2);
+  assertValid(x3);
+  assertValid(x5);
+  assertValid(x6);
+  assertValid(x7);
+  assertValid(x8);
+  assertValid(x9);
+  assertValid(x10);
+  assertValid(x11);
 }
 
 void AmountTestCase::testCommodityConstructors()
@@ -215,16 +250,16 @@ void AmountTestCase::testAssignment()
   assertTrue(x0.is_null());
   assertTrue(x1.is_null());
 
-  assertTrue(x0.valid());
-  assertTrue(x1.valid());
-  assertTrue(x2.valid());
-  assertTrue(x3.valid());
-  assertTrue(x5.valid());
-  assertTrue(x6.valid());
-  assertTrue(x7.valid());
-  assertTrue(x8.valid());
-  assertTrue(x9.valid());
-  assertTrue(x10.valid());
+  assertValid(x0);
+  assertValid(x1);
+  assertValid(x2);
+  assertValid(x3);
+  assertValid(x5);
+  assertValid(x6);
+  assertValid(x7);
+  assertValid(x8);
+  assertValid(x9);
+  assertValid(x10);
 }
 
 void AmountTestCase::testCommodityAssignment()
@@ -290,12 +325,19 @@ void AmountTestCase::testEquality()
   assertTrue(x4 == x5);
   assertTrue(x4 == x6);
 
-  assertTrue(x1.valid());
-  assertTrue(x2.valid());
-  assertTrue(x3.valid());
-  assertTrue(x4.valid());
-  assertTrue(x5.valid());
-  assertTrue(x6.valid());
+  assertTrue(x1 == 123456L);
+  assertTrue(123456L == x1);
+  assertTrue(x1 == 123456UL);
+  assertTrue(123456UL == x1);
+  assertTrue(x1 == 123456.0);
+  assertTrue(123456.0 == x1);
+
+  assertValid(x1);
+  assertValid(x2);
+  assertValid(x3);
+  assertValid(x4);
+  assertValid(x5);
+  assertValid(x6);
 }
 
 void AmountTestCase::testCommodityEquality()
@@ -367,19 +409,19 @@ void AmountTestCase::testComparisons()
   assertTrue(x3 < x4);
 
   assertTrue(x1 < 100L);
-  assertTrue(x1 < 100UL);
-  assertTrue(x1 < 100.0);
   assertTrue(100L > x1);
+  assertTrue(x1 < 100UL);
   assertTrue(100UL > x1);
+  assertTrue(x1 < 100.0);
   assertTrue(100.0 > x1);
 
-  assertTrue(x0.valid());
-  assertTrue(x1.valid());
-  assertTrue(x2.valid());
-  assertTrue(x3.valid());
-  assertTrue(x4.valid());
-  assertTrue(x5.valid());
-  assertTrue(x6.valid());
+  assertValid(x0);
+  assertValid(x1);
+  assertValid(x2);
+  assertValid(x3);
+  assertValid(x4);
+  assertValid(x5);
+  assertValid(x6);
 }
 
 void AmountTestCase::testCommodityComparisons()
@@ -390,6 +432,7 @@ void AmountTestCase::testCommodityComparisons()
   amount_t x4(internalAmount("$123.4544"));
   amount_t x5("$-123.45");
   amount_t x6("$123.45");
+  amount_t x7("DM 123.45");
 
   assertTrue(x1 > x3);
   assertTrue(x3 <= x5);
@@ -398,6 +441,8 @@ void AmountTestCase::testCommodityComparisons()
   assertFalse(x3 == x5);
   assertTrue(x3 < x1);
   assertTrue(x3 < x4);
+  assertFalse(x6 == x7);
+  assertThrow(x6 < x7, amount_error);
 
   assertValid(x1);
   assertValid(x2);
@@ -409,6 +454,7 @@ void AmountTestCase::testCommodityComparisons()
 
 void AmountTestCase::testIntegerAddition()
 {
+  amount_t x0;
   amount_t x1(123L);
   amount_t y1(456L);
 
@@ -425,9 +471,10 @@ void AmountTestCase::testIntegerAddition()
 
   assertEqual(amount_t("246913578246913578246913578"), x4 + x4);
 
-  assertTrue(x1.valid());
-  assertTrue(y1.valid());
-  assertTrue(x4.valid());
+  assertValid(x0);
+  assertValid(x1);
+  assertValid(y1);
+  assertValid(x4);
 }
 
 void AmountTestCase::testFractionalAddition()
@@ -450,9 +497,9 @@ void AmountTestCase::testFractionalAddition()
 
   assertEqual(amount_t("246913578246913578.246913578246913578"), x2 + x2);
 
-  assertTrue(x1.valid());
-  assertTrue(y1.valid());
-  assertTrue(x2.valid());
+  assertValid(x1);
+  assertValid(y1);
+  assertValid(x2);
 }
 
 void AmountTestCase::testCommodityAddition()
@@ -474,6 +521,8 @@ void AmountTestCase::testCommodityAddition()
   assertEqual(string("$246.91"), (x1 + x2).to_string());
 
   assertThrow(x1 + x0, amount_error);
+  assertThrow(x0 + x1, amount_error);
+  assertThrow(x0 + x0, amount_error);
   assertThrow(x1 + x3, amount_error);
   assertThrow(x1 + x4, amount_error);
   assertThrow(x1 + x5, amount_error);
@@ -530,10 +579,10 @@ void AmountTestCase::testIntegerSubtraction()
   assertEqual(amount_t("123456789115218063137220803"), x4 - y4);
   assertEqual(amount_t("-123456789115218063137220803"), y4 - x4);
 
-  assertTrue(x1.valid());
-  assertTrue(y1.valid());
-  assertTrue(x4.valid());
-  assertTrue(y4.valid());
+  assertValid(x1);
+  assertValid(y1);
+  assertValid(x4);
+  assertValid(y4);
 }
 
 void AmountTestCase::testFractionalSubtraction()
@@ -557,10 +606,10 @@ void AmountTestCase::testFractionalSubtraction()
   assertEqual(amount_t("123446916777474329.874482549545456789"), x2 - y2);
   assertEqual(amount_t("-123446916777474329.874482549545456789"), y2 - x2);
 
-  assertTrue(x1.valid());
-  assertTrue(y1.valid());
-  assertTrue(x2.valid());
-  assertTrue(y2.valid());
+  assertValid(x1);
+  assertValid(y1);
+  assertValid(x2);
+  assertValid(y2);
 }
 
 void AmountTestCase::testCommoditySubtraction()
@@ -586,6 +635,8 @@ void AmountTestCase::testCommoditySubtraction()
   assertEqual(string("$-0.01"), (x1 - x2).to_string());
 
   assertThrow(x1 - x0, amount_error);
+  assertThrow(x0 - x1, amount_error);
+  assertThrow(x0 - x0, amount_error);
   assertThrow(x1 - x3, amount_error);
   assertThrow(x1 - x4, amount_error);
   assertThrow(x1 - x5, amount_error);
@@ -672,9 +723,9 @@ void AmountTestCase::testIntegerMultiplication()
   assertEqual(amount_t("15241578780673678546105778281054720515622620750190521"),
 	      x4 * x4);
 
-  assertTrue(x1.valid());
-  assertTrue(y1.valid());
-  assertTrue(x4.valid());
+  assertValid(x1);
+  assertValid(y1);
+  assertValid(x4);
 }
 
 void AmountTestCase::testFractionalMultiplication()
@@ -709,13 +760,14 @@ void AmountTestCase::testFractionalMultiplication()
   assertEqual(amount_t("15241578780673678546105778311537878.046486820281054720515622620750190521"),
 	      x2 * x2);
 
-  assertTrue(x1.valid());
-  assertTrue(y1.valid());
-  assertTrue(x2.valid());
+  assertValid(x1);
+  assertValid(y1);
+  assertValid(x2);
 }
 
 void AmountTestCase::testCommodityMultiplication()
 {
+  amount_t x0;
   amount_t x1("$123.12");
   amount_t y1("$456.45");
   amount_t x2(internalAmount("$123.456789"));
@@ -741,6 +793,9 @@ void AmountTestCase::testCommodityMultiplication()
   assertEqual(string("$15200.00"), (x1 * x2).to_string());
   assertEqual(string("$15199.99986168"), (x2 * x1).to_string());
 
+  assertThrow(x1 * x0, amount_error);
+  assertThrow(x0 * x1, amount_error);
+  assertThrow(x0 * x0, amount_error);
   assertThrow(x1 * x3, amount_error);
   assertThrow(x1 * x4, amount_error);
   assertThrow(x1 * x5, amount_error);
@@ -799,10 +854,10 @@ void AmountTestCase::testIntegerDivision()
   assertEqual(amount_t(1L), x4 / x4);
   assertEqual(amount_t("2204585520061728377204585.517857"), x4 / y4);
 
-  assertTrue(x1.valid());
-  assertTrue(y1.valid());
-  assertTrue(x4.valid());
-  assertTrue(y4.valid());
+  assertValid(x1);
+  assertValid(y1);
+  assertValid(x4);
+  assertValid(y4);
 }
 
 void AmountTestCase::testFractionalDivision()
@@ -838,14 +893,15 @@ void AmountTestCase::testFractionalDivision()
   assertEqual(amount_t(1.0), x4 / x4);
   assertEqual(amount_t("21739560323910.7554497273748437197344556164046"), x4 / y4);
 
-  assertTrue(x1.valid());
-  assertTrue(y1.valid());
-  assertTrue(x4.valid());
-  assertTrue(y4.valid());
+  assertValid(x1);
+  assertValid(y1);
+  assertValid(x4);
+  assertValid(y4);
 }
 
 void AmountTestCase::testCommodityDivision()
 {
+  amount_t x0;
   amount_t x1("$123.12");
   amount_t y1("$456.45");
   amount_t x2(internalAmount("$123.456789"));
@@ -871,6 +927,9 @@ void AmountTestCase::testCommodityDivision()
   assertEqual(string("$1.00"), (x1 / x2).to_string());
   assertEqual(string("$1.00273545321637426901"), (x2 / x1).to_string());
 
+  assertThrow(x1 / x0, amount_error);
+  assertThrow(x0 / x1, amount_error);
+  assertThrow(x0 / x0, amount_error);
   assertThrow(x1 / x3, amount_error);
   assertThrow(x1 / x4, amount_error);
   assertThrow(x1 / x5, amount_error);
@@ -905,6 +964,7 @@ void AmountTestCase::testCommodityDivision()
 
 void AmountTestCase::testNegation()
 {
+  amount_t x0;
   amount_t x1(-123456L);
   amount_t x3(-123.456);
   amount_t x5("-123456");
@@ -913,6 +973,7 @@ void AmountTestCase::testNegation()
   amount_t x8(string("-123.456"));
   amount_t x9(- x3);
 
+  assertThrow(x0.negate(), amount_error);
   assertEqual(x5, x1);
   assertEqual(x7, x1);
   assertEqual(x6, x3);
@@ -924,14 +985,14 @@ void AmountTestCase::testNegation()
 
   assertEqual(x3, x10);
 
-  assertTrue(x1.valid());
-  assertTrue(x3.valid());
-  assertTrue(x5.valid());
-  assertTrue(x6.valid());
-  assertTrue(x7.valid());
-  assertTrue(x8.valid());
-  assertTrue(x9.valid());
-  assertTrue(x10.valid());
+  assertValid(x1);
+  assertValid(x3);
+  assertValid(x5);
+  assertValid(x6);
+  assertValid(x7);
+  assertValid(x8);
+  assertValid(x9);
+  assertValid(x10);
 }
 
 void AmountTestCase::testCommodityNegation()
@@ -999,9 +1060,9 @@ void AmountTestCase::testAbs()
   assertEqual(amount_t(1234L), x1.abs());
   assertEqual(amount_t(1234L), x2.abs());
 
-  assertTrue(x0.valid());
-  assertTrue(x1.valid());
-  assertTrue(x2.valid());
+  assertValid(x0);
+  assertValid(x1);
+  assertValid(x2);
 }
 
 void AmountTestCase::testCommodityAbs()
@@ -1018,15 +1079,45 @@ void AmountTestCase::testCommodityAbs()
 
 void AmountTestCase::testFractionalRound()
 {
+  amount_t x0;
   amount_t x1("1234.567890");
 
-  assertEqual(amount_t("1234.56789"), x1.round(6));
-  assertEqual(amount_t("1234.56789"), x1.round(5));
-  assertEqual(amount_t("1234.5679"), x1.round(4));
-  assertEqual(amount_t("1234.568"), x1.round(3));
-  assertEqual(amount_t("1234.57"), x1.round(2));
-  assertEqual(amount_t("1234.6"), x1.round(1));
-  assertEqual(amount_t("1235"), x1.round(0));
+  assertThrow(x0.precision(), amount_error);
+  assertThrow(x0.round(), amount_error);
+  assertThrow(x0.round(2), amount_error);
+  assertThrow(x0.unround(), amount_error);
+  assertEqual(amount_t::precision_t(6), x1.precision());
+
+  amount_t x1b(x1.unround());
+
+  assertEqual(x1b.precision(), x1b.unround().precision());
+
+  amount_t y7(x1.round(7));
+  amount_t y6(x1.round(6));
+  amount_t y5(x1.round(5));
+  amount_t y4(x1.round(4));
+  amount_t y3(x1.round(3));
+  amount_t y2(x1.round(2));
+  amount_t y1(x1.round(1));
+  amount_t y0(x1.round(0));
+
+  assertEqual(amount_t::precision_t(6), y7.precision());
+  assertEqual(amount_t::precision_t(6), y6.precision());
+  assertEqual(amount_t::precision_t(5), y5.precision());
+  assertEqual(amount_t::precision_t(4), y4.precision());
+  assertEqual(amount_t::precision_t(3), y3.precision());
+  assertEqual(amount_t::precision_t(2), y2.precision());
+  assertEqual(amount_t::precision_t(1), y1.precision());
+  assertEqual(amount_t::precision_t(0), y0.precision());
+
+  assertEqual(amount_t("1234.56789"), y7);
+  assertEqual(amount_t("1234.56789"), y6);
+  assertEqual(amount_t("1234.56789"), y5);
+  assertEqual(amount_t("1234.5679"), y4);
+  assertEqual(amount_t("1234.568"), y3);
+  assertEqual(amount_t("1234.57"), y2);
+  assertEqual(amount_t("1234.6"), y1);
+  assertEqual(amount_t("1235"), y0);
 
   amount_t x2("9876.543210");
 
@@ -1064,11 +1155,11 @@ void AmountTestCase::testFractionalRound()
 	      x5.round(37));
   assertEqual(amount_t(0L), x5.round(36));
 
-  assertTrue(x1.valid());
-  assertTrue(x2.valid());
-  assertTrue(x3.valid());
-  assertTrue(x4.valid());
-  assertTrue(x5.valid());
+  assertValid(x1);
+  assertValid(x2);
+  assertValid(x3);
+  assertValid(x4);
+  assertValid(x5);
 }
 
 void AmountTestCase::testCommodityRound()
@@ -1153,6 +1244,7 @@ void AmountTestCase::testCommodityDisplayRound()
 
 void AmountTestCase::testReduction()
 {
+  amount_t x0;
   amount_t x1("60s");
   amount_t x2("600s");
   amount_t x3("6000s");
@@ -1166,9 +1258,12 @@ void AmountTestCase::testReduction()
   amount_t x11("1000h");	// 3600000s
   amount_t x12("10000h");	// 36000000s
 
+  assertThrow(x0.reduce(), amount_error);
+  assertThrow(x0.unreduce(), amount_error);
   assertEqual(x2, x5);
   assertEqual(x3, x6);
   assertEqual(x4, x10);
+  assertEqual(string("100.0h"), x4.unreduce().to_string());
 }
 
 void AmountTestCase::testSign()
@@ -1185,11 +1280,11 @@ void AmountTestCase::testSign()
   assertTrue(x3.sign() > 0);
   assertTrue(x4.sign() < 0);
 
-  assertTrue(x0.valid());
-  assertTrue(x1.valid());
-  assertTrue(x2.valid());
-  assertTrue(x3.valid());
-  assertTrue(x4.valid());
+  assertValid(x0);
+  assertValid(x1);
+  assertValid(x2);
+  assertValid(x3);
+  assertValid(x4);
 }
 
 void AmountTestCase::testCommoditySign()
@@ -1221,9 +1316,9 @@ void AmountTestCase::testTruth()
   assertTrue(x1);
   assertTrue(x2);
 
-  assertTrue(x0.valid());
-  assertTrue(x1.valid());
-  assertTrue(x2.valid());
+  assertValid(x0);
+  assertValid(x1);
+  assertValid(x2);
 }
 
 void AmountTestCase::testCommodityTruth()
@@ -1256,8 +1351,8 @@ void AmountTestCase::testForZero()
   assertFalse(x1.is_zero());
   assertFalse(x1.is_realzero());
 
-  assertTrue(x0.valid());
-  assertTrue(x1.valid());
+  assertValid(x0);
+  assertValid(x1);
 }
 
 void AmountTestCase::testCommodityForZero()
@@ -1273,27 +1368,35 @@ void AmountTestCase::testCommodityForZero()
 
 void AmountTestCase::testIntegerConversion()
 {
+  amount_t x0;
   amount_t x1(123456L);
+  amount_t x2("12345682348723487324");
 
+  assertThrow(x0.to_long(), amount_error);
+  assertThrow(x0.to_double(), amount_error);
+  assertFalse(x2.fits_in_long());
   assertEqual(123456L, x1.to_long());
   assertEqual(123456.0, x1.to_double());
   assertEqual(string("123456"), x1.to_string());
   assertEqual(string("123456"), x1.quantity_string());
 
-  assertTrue(x1.valid());
+  assertValid(x1);
 }
 
 void AmountTestCase::testFractionalConversion()
 {
   amount_t x1(1234.56);
+  amount_t x2("1234.5683787634678348734");
 
   assertThrow(x1.to_long(), amount_error); // loses precision
+  assertThrow(x2.to_double(), amount_error); // loses precision
+  assertFalse(x2.fits_in_double());
   assertEqual(1234L, x1.to_long(true));
   assertEqual(1234.56, x1.to_double());
   assertEqual(string("1234.56"), x1.to_string());
   assertEqual(string("1234.56"), x1.quantity_string());
 
-  assertTrue(x1.valid());
+  assertValid(x1);
 }
 
 void AmountTestCase::testCommodityConversion()
@@ -1327,8 +1430,8 @@ void AmountTestCase::testPrinting()
 		bufstr.str());
   }
 
-  assertTrue(x0.valid());
-  assertTrue(x1.valid());
+  assertValid(x0);
+  assertValid(x1);
 }
 
 void AmountTestCase::testCommodityPrinting()
@@ -1361,4 +1464,81 @@ void AmountTestCase::testCommodityPrinting()
 
   assertValid(x1);
   assertValid(x2);
+}
+
+void AmountTestCase::testSerialization()
+{
+  amount_t x0;
+  amount_t x1("$8,192.34");
+  amount_t x2("8192.34");
+  amount_t x3("8192.34");
+  amount_t x4("-8192.34");
+  amount_t x5(x4);
+
+  // Force x3's pointer to actually be set to null_commodity
+  x3.set_commodity(*x3.current_pool->null_commodity);
+
+  std::string buf;
+  {
+    std::ostringstream storage;
+    assertThrow(x0.write(storage), amount_error);
+    x1.write(storage);
+    x2.write(storage);
+    x3.write(storage);
+    x4.write(storage);
+    x5.write(storage);
+    buf = storage.str();
+  }
+
+  amount_t x1b;
+  amount_t x2b;
+  amount_t x3b;
+  amount_t x4b;
+  amount_t x5b;
+  {
+    std::istringstream storage(buf);
+    x1b.read(storage);
+    x2b.read(storage);
+    x3b.read(storage);
+    x4b.read(storage);
+    x5b.read(storage);
+  }
+
+  assertEqual(x1, x1b);
+  assertEqual(x2, x2b);
+  assertEqual(x3, x3b);
+  assertEqual(x4, x4b);
+
+  const char * ptr = buf.c_str();
+
+  amount_t x1c;
+  amount_t x2c;
+  amount_t x3c;
+  amount_t x4c;
+  amount_t x5c;
+  {
+    x1c.read(ptr);
+    x2c.read(ptr);
+    x3c.read(ptr);
+    x4c.read(ptr);
+    x5c.read(ptr);
+  }
+
+  assertEqual(x1, x1b);
+  assertEqual(x2, x2b);
+  assertEqual(x3, x3b);
+  assertEqual(x4, x4b);
+
+  assertValid(x1);
+  assertValid(x2);
+  assertValid(x3);
+  assertValid(x4);
+  assertValid(x1b);
+  assertValid(x2b);
+  assertValid(x3b);
+  assertValid(x4b);
+  assertValid(x1c);
+  assertValid(x2c);
+  assertValid(x3c);
+  assertValid(x4c);
 }
