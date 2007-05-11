@@ -232,7 +232,8 @@ libgdtoa_la_SOURCES = \
 EXTRA_libgdtoa_la_SOURCES = arithchk.c qnan.c
 BUILT_SOURCES = arith.h gd_qnan.h
 CLEANFILES = arith.h gd_qnan.h arithchk qnan
-pkginclude_HEADERS = gdtoa.h gdtoaimp.h arith.h gd_qnan.h
+EXTRA_DIST = LICENSE	strtodnrp.c
+pkginclude_HEADERS = gdtoa.h gdtoaimp.h
 all: $(BUILT_SOURCES) acconf.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
