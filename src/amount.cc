@@ -243,10 +243,10 @@ namespace {
 
     return amount_t::precision_t(exp);
 #else
-    int decpt, sign;
+    int	   decpt, sign;
     char * buf = dtoa(val, 0, 0, &decpt, &sign, NULL);
     char * result;
-    int len = std::strlen(buf);
+    int	   len = std::strlen(buf);
 
     if (decpt <= len) {
       decpt  = len - decpt;
@@ -256,7 +256,7 @@ namespace {
       // order to convert this buffer into an integer.
 
       int zeroes = decpt - len;
-      result = new char[len + zeroes];
+      result = new char[len + zeroes + 1];
 
       std::strcpy(result, buf);
       int i;
@@ -268,7 +268,7 @@ namespace {
     }
 
     if (sign) {
-      char * newbuf = new char[std::strlen(result ? result : buf) + 4];
+      char * newbuf = new char[std::strlen(result ? result : buf) + 2];
       newbuf[0] = '-';
       std::strcpy(&newbuf[1], result ? result : buf);
       mpz_set_str(dest, newbuf, 10);
