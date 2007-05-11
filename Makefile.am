@@ -252,7 +252,7 @@ fullcheck: check
 	MallocCheckHeapStart=100 \
 	MallocCheckHeapEach=100	 \
 	DYLD_INSERT_LIBRARIES=/usr/lib/libgmalloc.dylib \
-	$(srcdir)/valgrind.sh $(top_builddir)/UnitTests --verify
+	$(srcdir)/valgrind.sh $(top_builddir)/UnitTests$(EXEEXT) --verify
 
 ######################################################################
 
