@@ -50,13 +50,18 @@ fi
 # Building the command-line tool as a shared library is a luxury,
 # since there are no clients except a GUI tool which might use it (and
 # that is built again anyway by Xcode).
-SWITCHES="--disable-shared --enable-pch"
+SWITCHES=""
 CPPFLAGS="$INCDIRS"
 LDFLAGS="$LIBDIRS"
+LOCAL=false
 
 
 while [ -n "$1" ]; do
   case "$1" in
+    --devel)
+	SWITCHES="$SWITCHES --disable-shared --enable-pch"
+	;;
+
     --debug)
 	SWITCHES="$SWITCHES --enable-debug"
 	CXXFLAGS="$CXXFLAGS -g" ;;
@@ -85,6 +90,9 @@ while [ -n "$1" ]; do
     --opt)
 	CXXFLAGS="$CXXFLAGS -fomit-frame-pointer -O3" ;;
 
+    --local)
+	LOCAL=true ;;
+
     *)
 	break ;;
   esac
@@ -94,7 +102,7 @@ done
 
 HERE="$PWD"
 
-if [ -d "$HOME/Products" ]; then
+if [ "$LOCAL" = "false" -a -d "$HOME/Products" ]; then
     version=""
     if [ -x pending/version ]; then
 	version="-$(pending/version)"
