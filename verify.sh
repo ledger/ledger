@@ -47,7 +47,7 @@ fi
 if [ "$USING_GIT" = "true" ]; then
     git clone -l $LEDGER_GIT local_git || exit 1
 else
-    svn checkout $LEDGER_SVN local_svn
+    svn checkout $LEDGER_SVN/trunk local_svn
 fi
 
 function dup_working_tree() {
