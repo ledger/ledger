@@ -75,10 +75,6 @@ endif
 if DEBUG
 libledger_la_CPPFLAGS += -DDEBUG_MODE
 endif
-if HAVE_BOOST_PYTHON
-libledger_la_CPPFLAGS += -DUSE_BOOST_PYTHON=1
-libledger_la_SOURCES += src/pyinterp.cc
-endif
 
 if USE_PCH
 nodist_libledger_la_SOURCES = system.hh.gch
@@ -96,9 +92,10 @@ endif
 libpyledger_la_CPPFLAGS = $(libledger_la_CPPFLAGS)
 libpyledger_la_LDFLAGS  = -release $(PACKAGE_VERSION)
 
-libpyledger_la_SOURCES = \
-	src/py_utils.cc  \
-	src/py_times.cc  \
+libpyledger_la_SOURCES =    \
+	src/pyinterp.cc	    \
+	src/py_utils.cc	    \
+	src/py_times.cc	    \
 	src/py_commodity.cc \
 	src/py_amount.cc
 

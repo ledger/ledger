@@ -32,11 +32,6 @@
 #include "journal.h"
 #include "xpath.h"
 #include "mask.h"
-#if 0
-#ifdef USE_BOOST_PYTHON
-#include "pyinterp.h"
-#endif
-#endif
 
 namespace ledger {
 

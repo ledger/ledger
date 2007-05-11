@@ -37,11 +37,7 @@
 #include "qif.h"
 #include "ofx.h"
 
-#if defined(USE_BOOST_PYTHON)
-#include <pyledger.h>
-#else
 #include <ledger.h>
-#endif
 
 #ifdef HAVE_UNIX_PIPES
 #include <sys/types.h>

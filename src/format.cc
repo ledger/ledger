@@ -30,9 +30,6 @@
  */
 
 #include "format.h"
-#if 0
-#include "pyinterp.h"
-#endif
 
 namespace ledger {
 
