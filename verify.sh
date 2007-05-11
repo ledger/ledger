@@ -29,7 +29,7 @@ USING_GIT=true
 cmd=$(which git 2>&1)
 if [ ! -x "$cmd" ]; then
     USING_GIT=false
-    SVN_REPO=https://ledger.svn.sourceforge.net/svnroot/ledger
+    LEDGER_SVN=https://ledger.svn.sourceforge.net/svnroot/ledger
 elif [ -d $HOME/src/ledger/.git ]; then
     LEDGER_GIT=$HOME/src/ledger
 else
@@ -45,7 +45,7 @@ fi
 if [ "$USING_GIT" = "true" ]; then
     git clone $LEDGER_GIT local_git || exit 1
 else
-    svn checkout $SVN_REPO local_svn
+    svn checkout $LEDGER_SVN local_svn
 fi
 
 function dup_working_tree() {
