@@ -2,7 +2,7 @@ SUBDIRS	      = gdtoa
 BUILT_SOURCES =
 CLEANFILES    =
 EXTRA_DIST    = LICENSE docs tests contrib scripts setup.py \
-		verify.sh run_verify.sh valgrind.sh \
+		acprep verify.sh run_verify.sh valgrind.sh \
 		src/TODO src/gnucash.cc 
 
 ESC_srcdir=`echo "$(srcdir)" | sed 's/\//\\\\\//g'`
