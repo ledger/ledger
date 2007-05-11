@@ -170,7 +170,6 @@ void process_arguments(int argc, char ** argv, const bool anywhere,
     }
 
     // --long-option or -s
-   again:
     if ((*i)[1] == '-') {
       if ((*i)[2] == '\0')
 	break;
@@ -241,9 +240,6 @@ void process_arguments(int argc, char ** argv, const bool anywhere,
 	checked_delete(*o);
       }
     }
-
-   next:
-    ;
   }
 }
 

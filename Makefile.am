@@ -26,6 +26,8 @@ WARNFLAGS  = -Wall -Wextra -Wfloat-equal -Wno-endif-labels
 WARNFLAGS += -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion
 WARNFLAGS += -Wconversion -Wshorten-64-to-32 -Wsign-compare
 WARNFLAGS += -Wmissing-field-initializers -pedantic-errors
+WARNFLAGS += -Weffc++ -Wstrict-null-sentinel -Wold-style-cast
+WARNFLAGS += -Woverloaded-virtual -Wsign-promo
 
 libledger_la_CPPFLAGS = -I$(top_builddir)/gdtoa -I$(srcdir)/gdtoa \
 			-I$(srcdir)/src #$(WARNFLAGS)

@@ -102,9 +102,9 @@ namespace ledger {
   typedef gregorian::date_duration  date_duration;
   typedef posix_time::seconds	    seconds;
 
-  typedef filesystem::path path;
-  typedef boost::filesystem::ifstream ifstream;
-  typedef boost::filesystem::ofstream ofstream;
+  typedef boost::filesystem::path	      path;
+  typedef boost::filesystem::ifstream	      ifstream;
+  typedef boost::filesystem::ofstream	      ofstream;
   typedef boost::filesystem::filesystem_error filesystem_error;
 }
 

@@ -153,7 +153,7 @@ class session_t : public xml::xpath_t::scope_t
 			    account_t *		  master   = NULL,
 			    const optional<path>& original = optional<path>());
 
-  unsigned int read_journal(const path&		  path,
+  unsigned int read_journal(const path&		  pathname,
 			    journal_t *		  journal,
 			    account_t *		  master   = NULL,
 			    const optional<path>& original = optional<path>());

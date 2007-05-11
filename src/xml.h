@@ -127,6 +127,7 @@ public:
 
   virtual value_t to_value() const {
     throw_(conversion_error, "Cannot convert node to a value");
+    return value_t();
   }
 
   virtual void print(std::ostream& out, int depth = 0) const = 0;

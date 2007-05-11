@@ -497,7 +497,6 @@ amount_t& amount_t::operator*=(const amount_t& amt)
   mpz_mul(MPZ(quantity), MPZ(quantity), MPZ(amt.quantity));
   quantity->prec += amt.quantity->prec;
 
- finish:
   if (! has_commodity())
     commodity_ = amt.commodity_;
 
@@ -547,7 +546,6 @@ amount_t& amount_t::operator/=(const amount_t& amt)
   mpz_round(MPZ(quantity), MPZ(quantity), quantity->prec, quantity->prec - 1);
   quantity->prec -= 1;
 
- finish:
   if (! has_commodity())
     commodity_ = amt.commodity_;
 

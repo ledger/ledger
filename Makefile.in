@@ -358,7 +358,8 @@ AM_LFLAGS = -o $(LEX_OUTPUT_ROOT).c
 WARNFLAGS = -Wall -Wextra -Wfloat-equal -Wno-endif-labels -Wcast-qual \
 	-Wcast-align -Wwrite-strings -Wconversion -Wconversion \
 	-Wshorten-64-to-32 -Wsign-compare -Wmissing-field-initializers \
-	-pedantic-errors
+	-pedantic-errors -Weffc++ -Wstrict-null-sentinel \
+	-Wold-style-cast -Woverloaded-virtual -Wsign-promo
 libledger_la_CPPFLAGS = -I$(top_builddir)/gdtoa -I$(srcdir)/gdtoa \
 	-I$(srcdir)/src $(am__append_2) $(am__append_4) \
 	$(am__append_6) $(am__append_8) $(am__append_9)

@@ -327,6 +327,8 @@ class value_t
       assert(false);
       break;
     }
+    assert(false);
+    return "<invalid>";
   }
   
   operator bool() const;

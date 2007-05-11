@@ -392,6 +392,7 @@ value_t& value_t::operator+=(const value_t& val)
 
   throw_(value_error,
 	 "Cannot add " << label() << " to " << val.label());
+  return *this;
 }
 
 value_t& value_t::operator-=(const value_t& val)
@@ -541,6 +542,7 @@ value_t& value_t::operator-=(const value_t& val)
 
   throw_(value_error,
 	 "Cannot subtract " << label() << " from " << val.label());
+  return *this;
 }
 
 value_t& value_t::operator*=(const value_t& val)
@@ -626,6 +628,7 @@ value_t& value_t::operator*=(const value_t& val)
 
   throw_(value_error,
 	 "Cannot multiply " << label() << " with " << val.label());
+  return *this;
 }
 
 value_t& value_t::operator/=(const value_t& val)
@@ -695,6 +698,7 @@ value_t& value_t::operator/=(const value_t& val)
 
   throw_(value_error,
 	 "Cannot divide " << label() << " by " << val.label());
+  return *this;
 }
 
 
@@ -1228,6 +1232,7 @@ value_t value_t::value(const optional<moment_t>& moment) const
   }
 
   throw_(value_error, "Cannot find the value of " << label());
+  return value_t();
 }
 
 void value_t::in_place_reduce()
@@ -1269,6 +1274,7 @@ value_t value_t::round() const
   }
 
   throw_(value_error, "Cannot round " << label());
+  return value_t();
 }
 
 value_t value_t::unround() const

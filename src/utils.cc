@@ -454,10 +454,8 @@ static inline void stream_memory_size(std::ostream& out, std::size_t size)
     out << (double(size) / 1024.0) << 'K';
   else if (size < (1024 * 1024 * 1024))
     out << (double(size) / (1024.0 * 1024.0)) << 'M';
-  else if (size < (1024 * 1024 * 1024 * 1024))
-    out << (double(size) / (1024.0 * 1024.0 * 1024.0)) << 'G';
   else
-    assert(false);
+    out << (double(size) / (1024.0 * 1024.0 * 1024.0)) << 'G';
 }
 
 static bool  logger_has_run = false;

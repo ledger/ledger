@@ -111,6 +111,7 @@ quotes_by_script::operator()(commodity_t&	       commodity,
 	   "Failed to download price for '" << commodity.symbol() <<
 	   "' (command: \"getquote " << commodity.base_symbol() << "\")");
   }
+  return optional<amount_t>();
 }
 
 } // namespace ledger
