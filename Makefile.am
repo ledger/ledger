@@ -143,7 +143,7 @@ pkginclude_HEADERS = \
 	src/xml.h	     \
 	src/xpath.h
 
-######################################################################
+###############################################################################
 
 bin_PROGRAMS = ledger
 
@@ -161,13 +161,13 @@ endif
 
 nodist_info_TEXINFOS = docs/ledger.texi
 
-######################################################################
+###############################################################################
 
 dist_lisp_LISP = lisp/ledger.el lisp/timeclock.el
 
 DISTCLEANFILES = ledger.elc timeclock.elc
 
-######################################################################
+###############################################################################
 
 if HAVE_BOOST_PYTHON
 
@@ -216,7 +216,7 @@ install-exec-hook:
 
 endif
 
-######################################################################
+###############################################################################
 
 TESTS = UnitTests
 if HAVE_BOOST_PYTHON
@@ -256,7 +256,7 @@ fullcheck: check
 	DYLD_INSERT_LIBRARIES=/usr/lib/libgmalloc.dylib \
 	$(srcdir)/valgrind.sh $(top_builddir)/UnitTests$(EXEEXT) --verify
 
-######################################################################
+###############################################################################
 
 DISTCLEANFILES += Doxyfile.gen
 
@@ -270,7 +270,7 @@ $(top_builddir)/Doxyfile.gen: $(srcdir)/docs/Doxyfile
 doxygen-docs: $(top_builddir)/Doxyfile.gen
 	doxygen $(top_builddir)/Doxyfile.gen
 
-######################################################################
+###############################################################################
 
 check-syntax:
 	g++ -I. -Itests $(CPPFLAGS) $(UnitTests_CXXFLAGS) \
