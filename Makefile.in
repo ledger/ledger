@@ -36,26 +36,36 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 @HAVE_BOOST_PYTHON_TRUE@am__append_1 = libpyledger.la
-@HAVE_EXPAT_TRUE@am__append_2 = -DHAVE_EXPAT=1
-@HAVE_EXPAT_TRUE@am__append_3 = src/gnucash.cc
-@HAVE_XMLPARSE_TRUE@am__append_4 = -DHAVE_XMLPARSE=1
-@HAVE_XMLPARSE_TRUE@am__append_5 = src/gnucash.cc
-@HAVE_LIBOFX_TRUE@am__append_6 = -DHAVE_LIBOFX=1
-@HAVE_LIBOFX_TRUE@am__append_7 = src/ofx.cc
-@DEBUG_TRUE@am__append_8 = -DDEBUG_MODE
-@HAVE_BOOST_PYTHON_TRUE@am__append_9 = -DUSE_BOOST_PYTHON=1
-@HAVE_BOOST_PYTHON_TRUE@am__append_10 = src/pyinterp.cc
-@USE_PCH_TRUE@am__append_11 = system.hh.gch
-@USE_PCH_TRUE@am__append_12 = system.hh.gch system.hh
+
+#if HAVE_EXPAT
+#libledger_la_CPPFLAGS += -DHAVE_EXPAT=1
+#libledger_la_SOURCES += src/gnucash.cc
+#endif
+#if HAVE_XMLPARSE
+#libledger_la_CPPFLAGS += -DHAVE_XMLPARSE=1
+#libledger_la_SOURCES += src/gnucash.cc
+#endif
+@HAVE_LIBOFX_TRUE@am__append_2 = -DHAVE_LIBOFX=1
+@HAVE_LIBOFX_TRUE@am__append_3 = src/ofx.cc
+@DEBUG_TRUE@am__append_4 = -DDEBUG_MODE
+@HAVE_BOOST_PYTHON_TRUE@am__append_5 = -DUSE_BOOST_PYTHON=1
+@HAVE_BOOST_PYTHON_TRUE@am__append_6 = src/pyinterp.cc
+@USE_PCH_TRUE@am__append_7 = system.hh.gch
+@USE_PCH_TRUE@am__append_8 = system.hh.gch system.hh
 bin_PROGRAMS = ledger$(EXEEXT)
-@HAVE_BOOST_PYTHON_TRUE@am__append_13 = libpyledger.la
+@HAVE_BOOST_PYTHON_TRUE@am__append_9 = libpyledger.la
 @HAVE_BOOST_PYTHON_TRUE@noinst_PROGRAMS = ledger.so$(EXEEXT)
-@HAVE_BOOST_PYTHON_TRUE@am__append_14 = ledger.so
-@HAVE_BOOST_PYTHON_TRUE@@HAVE_EXPAT_TRUE@am__append_15 = expat
-@HAVE_BOOST_PYTHON_TRUE@@HAVE_XMLPARSE_TRUE@am__append_16 = xmlparse xmltok
-@HAVE_BOOST_PYTHON_TRUE@@HAVE_LIBOFX_TRUE@am__append_17 = ofx
+@HAVE_BOOST_PYTHON_TRUE@am__append_10 = ledger.so
+
+#if HAVE_EXPAT
+#PYLIBS += expat
+#endif
+#if HAVE_XMLPARSE
+#PYLIBS += xmlparse xmltok
+#endif
+@HAVE_BOOST_PYTHON_TRUE@@HAVE_LIBOFX_TRUE@am__append_11 = ofx
 TESTS = UnitTests$(EXEEXT) $(am__EXEEXT_1)
-@HAVE_BOOST_PYTHON_TRUE@am__append_18 = PyUnitTests
+@HAVE_BOOST_PYTHON_TRUE@am__append_12 = PyUnitTests
 check_PROGRAMS = $(am__EXEEXT_2)
 subdir = .
 DIST_COMMON = README $(am__configure_deps) $(dist_lisp_LISP) \
@@ -80,8 +90,7 @@ am__vpath_adj = case $$p in \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" \
-	"$(DESTDIR)$(infodir)" "$(DESTDIR)$(lispdir)" \
-	"$(DESTDIR)$(pkgincludedir)"
+	"$(DESTDIR)$(lispdir)" "$(DESTDIR)$(pkgincludedir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libledger_la_LIBADD =
@@ -91,11 +100,9 @@ am__libledger_la_SOURCES_DIST = src/utils.cc src/times.cc src/mask.cc \
 	src/textual.cc src/quotes.cc src/csv.cc src/derive.cc \
 	src/emacs.cc src/format.cc src/reconcile.cc src/register.cc \
 	src/report.cc src/transform.cc src/xml.cc src/xmlparse.cc \
-	src/xpath.cc src/gnucash.cc src/ofx.cc src/pyinterp.cc
-@HAVE_EXPAT_TRUE@am__objects_1 = libledger_la-gnucash.lo
-@HAVE_XMLPARSE_TRUE@am__objects_2 = libledger_la-gnucash.lo
-@HAVE_LIBOFX_TRUE@am__objects_3 = libledger_la-ofx.lo
-@HAVE_BOOST_PYTHON_TRUE@am__objects_4 = libledger_la-pyinterp.lo
+	src/xpath.cc src/ofx.cc src/pyinterp.cc
+@HAVE_LIBOFX_TRUE@am__objects_1 = libledger_la-ofx.lo
+@HAVE_BOOST_PYTHON_TRUE@am__objects_2 = libledger_la-pyinterp.lo
 am_libledger_la_OBJECTS = libledger_la-utils.lo libledger_la-times.lo \
 	libledger_la-mask.lo libledger_la-commodity.lo \
 	libledger_la-amount.lo libledger_la-balance.lo \
@@ -108,8 +115,7 @@ am_libledger_la_OBJECTS = libledger_la-utils.lo libledger_la-times.lo \
 	libledger_la-register.lo libledger_la-report.lo \
 	libledger_la-transform.lo libledger_la-xml.lo \
 	libledger_la-xmlparse.lo libledger_la-xpath.lo \
-	$(am__objects_1) $(am__objects_2) $(am__objects_3) \
-	$(am__objects_4)
+	$(am__objects_1) $(am__objects_2)
 nodist_libledger_la_OBJECTS =
 libledger_la_OBJECTS = $(am_libledger_la_OBJECTS) \
 	$(nodist_libledger_la_OBJECTS)
@@ -129,8 +135,8 @@ binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 @HAVE_BOOST_PYTHON_TRUE@am__EXEEXT_1 = PyUnitTests$(EXEEXT)
 am__EXEEXT_2 = UnitTests$(EXEEXT) $(am__EXEEXT_1)
 PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
-am_PyUnitTests_OBJECTS =
-PyUnitTests_OBJECTS = $(am_PyUnitTests_OBJECTS)
+nodist_PyUnitTests_OBJECTS =
+PyUnitTests_OBJECTS = $(nodist_PyUnitTests_OBJECTS)
 PyUnitTests_LDADD = $(LDADD)
 nodist_UnitTests_OBJECTS = UnitTests-UnitTests.$(OBJEXT) \
 	UnitTests-t_utils.$(OBJEXT) UnitTests-t_times.$(OBJEXT) \
@@ -144,7 +150,7 @@ UnitTests_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 am_ledger_OBJECTS = ledger-option.$(OBJEXT) ledger-main.$(OBJEXT)
 ledger_OBJECTS = $(am_ledger_OBJECTS)
 ledger_DEPENDENCIES = $(LIBOBJS) libledger.la gdtoa/libgdtoa.la \
-	$(am__append_13)
+	$(am__append_9)
 ledger_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) \
 	$(ledger_LDFLAGS) $(LDFLAGS) -o $@
@@ -178,25 +184,12 @@ LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
 SOURCES = $(libledger_la_SOURCES) $(nodist_libledger_la_SOURCES) \
-	$(libpyledger_la_SOURCES) $(PyUnitTests_SOURCES) \
+	$(libpyledger_la_SOURCES) $(nodist_PyUnitTests_SOURCES) \
 	$(nodist_UnitTests_SOURCES) $(ledger_SOURCES) \
 	$(ledger_so_SOURCES)
 DIST_SOURCES = $(am__libledger_la_SOURCES_DIST) \
-	$(libpyledger_la_SOURCES) $(PyUnitTests_SOURCES) \
-	$(ledger_SOURCES) $(am__ledger_so_SOURCES_DIST)
-am__dirstamp = $(am__leading_dot)dirstamp
-INFO_DEPS = $(srcdir)/docs/ledger.info
-am__TEXINFO_TEX_DIR = $(srcdir)
-DVIS = docs/ledger.dvi
-PDFS = docs/ledger.pdf
-PSS = docs/ledger.ps
-HTMLS = docs/ledger.html
-TEXINFOS = docs/ledger.texi
-TEXI2DVI = texi2dvi
-TEXI2PDF = $(TEXI2DVI) --pdf --batch
-MAKEINFOHTML = $(MAKEINFO) --html
-AM_MAKEINFOHTMLFLAGS = $(AM_MAKEINFOFLAGS)
-DVIPS = dvips
+	$(libpyledger_la_SOURCES) $(ledger_SOURCES) \
+	$(am__ledger_so_SOURCES_DIST)
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	html-recursive info-recursive install-data-recursive \
 	install-dvi-recursive install-exec-recursive \
@@ -224,7 +217,7 @@ am__remove_distdir = \
   { test ! -d $(distdir) \
     || { find $(distdir) -type d ! -perm -200 -exec chmod u+w {} ';' \
          && rm -fr $(distdir); }; }
-DIST_ARCHIVES = $(distdir).tar.gz
+DIST_ARCHIVES = $(distdir).tar.gz $(distdir).tar.bz2
 GZIP_ENV = --best
 distuninstallcheck_listfiles = find . -type f -print
 distcleancheck_listfiles = find . -type f -print
@@ -348,12 +341,12 @@ target_alias = @target_alias@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = gdtoa
-BUILT_SOURCES = $(am__append_11)
-CLEANFILES = $(am__append_12) $(am__append_14)
+BUILT_SOURCES = $(am__append_7)
+CLEANFILES = $(am__append_8) $(am__append_10)
 ESC_srcdir = `echo "$(srcdir)" | sed 's/\//\\\\\//g'`
 ESC_builddir = `echo "$(top_builddir)" | sed 's/\//\\\\\//g'`
 ESC_distdir = `echo "$(distdir)" | sed 's/\//\\\\\//g'`
-EXTRA_DIST = docs docs/ledger.pdf tests
+EXTRA_DIST = docs tests
 lib_LTLIBRARIES = libledger.la $(am__append_1)
 AM_YFLAGS = -d
 AM_LFLAGS = -o $(LEX_OUTPUT_ROOT).c
@@ -364,7 +357,7 @@ WARNFLAGS = -Wall -Wextra -Wfloat-equal -Wno-endif-labels -Wcast-qual \
 	-Wold-style-cast -Woverloaded-virtual -Wsign-promo
 libledger_la_CPPFLAGS = -I$(top_builddir)/gdtoa -I$(srcdir)/gdtoa \
 	-I$(srcdir)/src $(am__append_2) $(am__append_4) \
-	$(am__append_6) $(am__append_8) $(am__append_9)
+	$(am__append_5)
 libledger_la_LDFLAGS = -release $(PACKAGE_VERSION)
 libledger_la_SOURCES = src/utils.cc src/times.cc src/mask.cc \
 	src/commodity.cc src/amount.cc src/balance.cc src/value.cc \
@@ -372,8 +365,7 @@ libledger_la_SOURCES = src/utils.cc src/times.cc src/mask.cc \
 	src/textual.cc src/quotes.cc src/csv.cc src/derive.cc \
 	src/emacs.cc src/format.cc src/reconcile.cc src/register.cc \
 	src/report.cc src/transform.cc src/xml.cc src/xmlparse.cc \
-	src/xpath.cc $(am__append_3) $(am__append_5) $(am__append_7) \
-	$(am__append_10)
+	src/xpath.cc $(am__append_3) $(am__append_6)
 @USE_PCH_TRUE@nodist_libledger_la_SOURCES = system.hh.gch
 libpyledger_la_CPPFLAGS = $(libledger_la_CPPFLAGS)
 libpyledger_la_LDFLAGS = -release $(PACKAGE_VERSION)
@@ -425,16 +417,19 @@ pkginclude_HEADERS = \
 
 ledger_CPPFLAGS = $(libledger_la_CPPFLAGS)
 ledger_LDADD = $(LIBOBJS) libledger.la gdtoa/libgdtoa.la $(LEXLIB) \
-	$(am__append_13)
+	$(am__append_9)
 ledger_LDFLAGS = -static	# for the sake of command-line speed
 ledger_SOURCES = \
 	src/option.cc \
 	src/main.cc
 
-info_TEXINFOS = docs/ledger.texi
+nodist_info_TEXINFOS = docs/ledger.texi
 
-######################################################################
+###############################################################################
 dist_lisp_LISP = lisp/ledger.el lisp/timeclock.el
+
+###############################################################################
+DISTCLEANFILES = ledger.elc timeclock.elc Doxyfile.gen
 @HAVE_BOOST_PYTHON_TRUE@ledger_so_SOURCES = \
 @HAVE_BOOST_PYTHON_TRUE@	src/pyledger.cc \
 @HAVE_BOOST_PYTHON_TRUE@	src/py_utils.cc \
@@ -448,8 +443,7 @@ dist_lisp_LISP = lisp/ledger.el lisp/timeclock.el
 @HAVE_BOOST_PYTHON_TRUE@	boost_filesystem$(BOOST_SUFFIX) \
 @HAVE_BOOST_PYTHON_TRUE@	boost_regex$(BOOST_SUFFIX) \
 @HAVE_BOOST_PYTHON_TRUE@	boost_python$(BOOST_SUFFIX) \
-@HAVE_BOOST_PYTHON_TRUE@	$(am__append_15) $(am__append_16) \
-@HAVE_BOOST_PYTHON_TRUE@	$(am__append_17)
+@HAVE_BOOST_PYTHON_TRUE@	$(am__append_11)
 nodist_UnitTests_SOURCES = tests/UnitTests.cc \
 	\
 	tests/utility/t_utils.cc      \
@@ -461,15 +455,12 @@ nodist_UnitTests_SOURCES = tests/UnitTests.cc \
 UnitTests_CPPFLAGS = -I$(srcdir)/tests $(libledger_la_CPPFLAGS)
 UnitTests_LDFLAGS = $(LIBADD_DL)
 UnitTests_LDADD = $(lib_LTLIBRARIES) gdtoa/libgdtoa.la -lcppunit
-PyUnitTests_SOURCES = tests/python/PyUnitTests.py
-
-######################################################################
-DISTCLEANFILES = Doxyfile.gen
+nodist_PyUnitTests_SOURCES = tests/python/PyUnitTests.py
 all: $(BUILT_SOURCES) acconf.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
 .SUFFIXES:
-.SUFFIXES: .cc .dvi .lo .o .obj .ps
+.SUFFIXES: .cc .lo .o .obj
 am--refresh:
 	@:
 $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
@@ -593,9 +584,6 @@ clean-noinstPROGRAMS:
 	  echo " rm -f $$p $$f"; \
 	  rm -f $$p $$f ; \
 	done
-PyUnitTests$(EXEEXT): $(PyUnitTests_OBJECTS) $(PyUnitTests_DEPENDENCIES) 
-	@rm -f PyUnitTests$(EXEEXT)
-	$(LINK) $(PyUnitTests_OBJECTS) $(PyUnitTests_LDADD) $(LIBS)
 UnitTests$(EXEEXT): $(UnitTests_OBJECTS) $(UnitTests_DEPENDENCIES) 
 	@rm -f UnitTests$(EXEEXT)
 	$(UnitTests_LINK) $(UnitTests_OBJECTS) $(UnitTests_LDADD) $(LIBS)
@@ -628,7 +616,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libledger_la-derive.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libledger_la-emacs.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libledger_la-format.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libledger_la-gnucash.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libledger_la-journal.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libledger_la-mask.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libledger_la-ofx.Plo@am__quote@
@@ -845,13 +832,6 @@ libledger_la-xpath.lo: src/xpath.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/xpath.cc' object='libledger_la-xpath.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-xpath.lo `test -f 'src/xpath.cc' || echo '$(srcdir)/'`src/xpath.cc
-
-libledger_la-gnucash.lo: src/gnucash.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-gnucash.lo -MD -MP -MF $(DEPDIR)/libledger_la-gnucash.Tpo -c -o libledger_la-gnucash.lo `test -f 'src/gnucash.cc' || echo '$(srcdir)/'`src/gnucash.cc
-@am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libledger_la-gnucash.Tpo $(DEPDIR)/libledger_la-gnucash.Plo
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/gnucash.cc' object='libledger_la-gnucash.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libledger_la-gnucash.lo `test -f 'src/gnucash.cc' || echo '$(srcdir)/'`src/gnucash.cc
 
 libledger_la-ofx.lo: src/ofx.cc
 @am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libledger_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libledger_la-ofx.lo -MD -MP -MF $(DEPDIR)/libledger_la-ofx.Tpo -c -o libledger_la-ofx.lo `test -f 'src/ofx.cc' || echo '$(srcdir)/'`src/ofx.cc
@@ -1085,145 +1065,6 @@ clean-libtool:
 
 distclean-libtool:
 	-rm -f libtool
-docs/$(am__dirstamp):
-	@$(MKDIR_P) docs
-	@: > docs/$(am__dirstamp)
-
-$(srcdir)/docs/ledger.info: docs/ledger.texi 
-	restore=: && backupdir="$(am__leading_dot)am$$$$" && \
-	am__cwd=`pwd` && cd $(srcdir) && \
-	rm -rf $$backupdir && mkdir $$backupdir && \
-	if ($(MAKEINFO) --version) >/dev/null 2>&1; then \
-	  for f in $@ $@-[0-9] $@-[0-9][0-9] $(@:.info=).i[0-9] $(@:.info=).i[0-9][0-9]; do \
-	    if test -f $$f; then mv $$f $$backupdir; restore=mv; else :; fi; \
-	  done; \
-	else :; fi && \
-	cd "$$am__cwd"; \
-	if $(MAKEINFO) $(AM_MAKEINFOFLAGS) $(MAKEINFOFLAGS) -I docs -I $(srcdir)/docs \
-	 -o $@ $(srcdir)/docs/ledger.texi; \
-	then \
-	  rc=0; \
-	  cd $(srcdir); \
-	else \
-	  rc=$$?; \
-	  cd $(srcdir) && \
-	  $$restore $$backupdir/* `echo "./$@" | sed 's|[^/]*$$||'`; \
-	fi; \
-	rm -rf $$backupdir; exit $$rc
-
-docs/ledger.dvi: docs/ledger.texi  docs/$(am__dirstamp)
-	TEXINPUTS="$(am__TEXINFO_TEX_DIR)$(PATH_SEPARATOR)$$TEXINPUTS" \
-	MAKEINFO='$(MAKEINFO) $(AM_MAKEINFOFLAGS) $(MAKEINFOFLAGS) -I docs -I $(srcdir)/docs' \
-	$(TEXI2DVI) -o $@ `test -f 'docs/ledger.texi' || echo '$(srcdir)/'`docs/ledger.texi
-
-docs/ledger.pdf: docs/ledger.texi  docs/$(am__dirstamp)
-	TEXINPUTS="$(am__TEXINFO_TEX_DIR)$(PATH_SEPARATOR)$$TEXINPUTS" \
-	MAKEINFO='$(MAKEINFO) $(AM_MAKEINFOFLAGS) $(MAKEINFOFLAGS) -I docs -I $(srcdir)/docs' \
-	$(TEXI2PDF) -o $@ `test -f 'docs/ledger.texi' || echo '$(srcdir)/'`docs/ledger.texi
-
-docs/ledger.html: docs/ledger.texi  docs/$(am__dirstamp)
-	rm -rf $(@:.html=.htp)
-	if $(MAKEINFOHTML) $(AM_MAKEINFOHTMLFLAGS) $(MAKEINFOFLAGS) -I docs -I $(srcdir)/docs \
-	 -o $(@:.html=.htp) `test -f 'docs/ledger.texi' || echo '$(srcdir)/'`docs/ledger.texi; \
-	then \
-	  rm -rf $@; \
-	  if test ! -d $(@:.html=.htp) && test -d $(@:.html=); then \
-	    mv $(@:.html=) $@; else mv $(@:.html=.htp) $@; fi; \
-	else \
-	  if test ! -d $(@:.html=.htp) && test -d $(@:.html=); then \
-	    rm -rf $(@:.html=); else rm -Rf $(@:.html=.htp) $@; fi; \
-	  exit 1; \
-	fi
-.dvi.ps:
-	TEXINPUTS="$(am__TEXINFO_TEX_DIR)$(PATH_SEPARATOR)$$TEXINPUTS" \
-	$(DVIPS) -o $@ $<
-
-uninstall-dvi-am:
-	@$(NORMAL_UNINSTALL)
-	@list='$(DVIS)'; for p in $$list; do \
-	  f=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(dvidir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(dvidir)/$$f"; \
-	done
-
-uninstall-html-am:
-	@$(NORMAL_UNINSTALL)
-	@list='$(HTMLS)'; for p in $$list; do \
-	  f=$(am__strip_dir) \
-	  echo " rm -rf '$(DESTDIR)$(htmldir)/$$f'"; \
-	  rm -rf "$(DESTDIR)$(htmldir)/$$f"; \
-	done
-
-uninstall-info-am:
-	@$(PRE_UNINSTALL)
-	@if test -d '$(DESTDIR)$(infodir)' && \
-	    (install-info --version && \
-	     install-info --version 2>&1 | sed 1q | grep -i -v debian) >/dev/null 2>&1; then \
-	  list='$(INFO_DEPS)'; \
-	  for file in $$list; do \
-	    relfile=`echo "$$file" | sed 's|^.*/||'`; \
-	    echo " install-info --info-dir='$(DESTDIR)$(infodir)' --remove '$(DESTDIR)$(infodir)/$$relfile'"; \
-	    install-info --info-dir="$(DESTDIR)$(infodir)" --remove "$(DESTDIR)$(infodir)/$$relfile"; \
-	  done; \
-	else :; fi
-	@$(NORMAL_UNINSTALL)
-	@list='$(INFO_DEPS)'; \
-	for file in $$list; do \
-	  relfile=`echo "$$file" | sed 's|^.*/||'`; \
-	  relfile_i=`echo "$$relfile" | sed 's|\.info$$||;s|$$|.i|'`; \
-	  (if test -d "$(DESTDIR)$(infodir)" && cd "$(DESTDIR)$(infodir)"; then \
-	     echo " cd '$(DESTDIR)$(infodir)' && rm -f $$relfile $$relfile-[0-9] $$relfile-[0-9][0-9] $$relfile_i[0-9] $$relfile_i[0-9][0-9]"; \
-	     rm -f $$relfile $$relfile-[0-9] $$relfile-[0-9][0-9] $$relfile_i[0-9] $$relfile_i[0-9][0-9]; \
-	   else :; fi); \
-	done
-
-uninstall-pdf-am:
-	@$(NORMAL_UNINSTALL)
-	@list='$(PDFS)'; for p in $$list; do \
-	  f=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(pdfdir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(pdfdir)/$$f"; \
-	done
-
-uninstall-ps-am:
-	@$(NORMAL_UNINSTALL)
-	@list='$(PSS)'; for p in $$list; do \
-	  f=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(psdir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(psdir)/$$f"; \
-	done
-
-dist-info: $(INFO_DEPS)
-	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
-	list='$(INFO_DEPS)'; \
-	for base in $$list; do \
-	  case $$base in \
-	    $(srcdir)/*) base=`echo "$$base" | sed "s|^$$srcdirstrip/||"`;; \
-	  esac; \
-	  if test -f $$base; then d=.; else d=$(srcdir); fi; \
-	  base_i=`echo "$$base" | sed 's|\.info$$||;s|$$|.i|'`; \
-	  for file in $$d/$$base $$d/$$base-[0-9] $$d/$$base-[0-9][0-9] $$d/$$base_i[0-9] $$d/$$base_i[0-9][0-9]; do \
-	    if test -f $$file; then \
-	      relfile=`expr "$$file" : "$$d/\(.*\)"`; \
-	      test -f $(distdir)/$$relfile || \
-		cp -p $$file $(distdir)/$$relfile; \
-	    else :; fi; \
-	  done; \
-	done
-
-mostlyclean-aminfo:
-	-rm -rf ledger.aux ledger.cp ledger.cps ledger.fn ledger.fns ledger.ky \
-	  ledger.kys ledger.log ledger.pg ledger.pgs ledger.tmp \
-	  ledger.toc ledger.tp ledger.tps ledger.vr ledger.vrs \
-	  docs/ledger.dvi docs/ledger.pdf docs/ledger.ps \
-	  docs/ledger.html
-
-maintainer-clean-aminfo:
-	@list='$(INFO_DEPS)'; for i in $$list; do \
-	  i_i=`echo "$$i" | sed 's|\.info$$||;s|$$|.i|'`; \
-	  echo " rm -f $$i $$i-[0-9] $$i-[0-9][0-9] $$i_i[0-9] $$i_i[0-9][0-9]"; \
-	  rm -f $$i $$i-[0-9] $$i-[0-9][0-9] $$i_i[0-9] $$i_i[0-9][0-9]; \
-	done
 
 elc-stamp: $(LISP)
 	@echo 'WARNING: Warnings can be ignored. :-)'
@@ -1547,7 +1388,7 @@ distdir: $(DISTFILES)
 	done
 	$(MAKE) $(AM_MAKEFLAGS) \
 	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
-	  dist-info dist-hook
+	  dist-hook
 	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
 	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
@@ -1556,7 +1397,6 @@ distdir: $(DISTFILES)
 dist-gzip: distdir
 	tardir=$(distdir) && $(am__tar) | GZIP=$(GZIP_ENV) gzip -c >$(distdir).tar.gz
 	$(am__remove_distdir)
-
 dist-bzip2: distdir
 	tardir=$(distdir) && $(am__tar) | bzip2 -9 -c >$(distdir).tar.bz2
 	$(am__remove_distdir)
@@ -1576,6 +1416,7 @@ dist-zip: distdir
 
 dist dist-all: distdir
 	tardir=$(distdir) && $(am__tar) | GZIP=$(GZIP_ENV) gzip -c >$(distdir).tar.gz
+	tardir=$(distdir) && $(am__tar) | bzip2 -9 -c >$(distdir).tar.bz2
 	$(am__remove_distdir)
 
 # This target untars the dist file and tries a VPATH configuration.  Then
@@ -1650,13 +1491,13 @@ check-am: all-am
 	$(MAKE) $(AM_MAKEFLAGS) check-TESTS
 check: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) check-recursive
-all-am: Makefile $(INFO_DEPS) $(LTLIBRARIES) $(PROGRAMS) $(LISP) \
-		$(ELCFILES) $(HEADERS) acconf.h
+all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(LISP) $(ELCFILES) \
+		$(HEADERS) acconf.h
 install-binPROGRAMS: install-libLTLIBRARIES
 
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(infodir)" "$(DESTDIR)$(lispdir)" "$(DESTDIR)$(pkgincludedir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(lispdir)" "$(DESTDIR)$(pkgincludedir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: $(BUILT_SOURCES)
@@ -1681,7 +1522,6 @@ clean-generic:
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
-	-rm -f docs/$(am__dirstamp)
 	-test -z "$(DISTCLEANFILES)" || rm -f $(DISTCLEANFILES)
 
 maintainer-clean-generic:
@@ -1705,108 +1545,32 @@ distclean-am: clean-am distclean-compile distclean-generic \
 
 dvi: dvi-recursive
 
-dvi-am: $(DVIS)
+dvi-am:
 
 html: html-recursive
 
-html-am: $(HTMLS)
-
 info: info-recursive
 
-info-am: $(INFO_DEPS)
+info-am:
 
-install-data-am: install-dist_lispLISP install-info-am \
-	install-pkgincludeHEADERS
+install-data-am: install-dist_lispLISP install-pkgincludeHEADERS
 
 install-dvi: install-dvi-recursive
 
-install-dvi-am: $(DVIS)
-	@$(NORMAL_INSTALL)
-	test -z "$(dvidir)" || $(MKDIR_P) "$(DESTDIR)$(dvidir)"
-	@list='$(DVIS)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f=$(am__strip_dir) \
-	  echo " $(INSTALL_DATA) '$$d$$p' '$(DESTDIR)$(dvidir)/$$f'"; \
-	  $(INSTALL_DATA) "$$d$$p" "$(DESTDIR)$(dvidir)/$$f"; \
-	done
 install-exec-am: install-binPROGRAMS install-libLTLIBRARIES
 	@$(NORMAL_INSTALL)
 	$(MAKE) $(AM_MAKEFLAGS) install-exec-hook
 
 install-html: install-html-recursive
 
-install-html-am: $(HTMLS)
-	@$(NORMAL_INSTALL)
-	test -z "$(htmldir)" || $(MKDIR_P) "$(DESTDIR)$(htmldir)"
-	@list='$(HTMLS)'; for p in $$list; do \
-	  if test -f "$$p" || test -d "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f=$(am__strip_dir) \
-	  if test -d "$$d$$p"; then \
-	    echo " $(MKDIR_P) '$(DESTDIR)$(htmldir)/$$f'"; \
-	    $(MKDIR_P) "$(DESTDIR)$(htmldir)/$$f" || exit 1; \
-	    echo " $(INSTALL_DATA) '$$d$$p'/* '$(DESTDIR)$(htmldir)/$$f'"; \
-	    $(INSTALL_DATA) "$$d$$p"/* "$(DESTDIR)$(htmldir)/$$f"; \
-	  else \
-	    echo " $(INSTALL_DATA) '$$d$$p' '$(DESTDIR)$(htmldir)/$$f'"; \
-	    $(INSTALL_DATA) "$$d$$p" "$(DESTDIR)$(htmldir)/$$f"; \
-	  fi; \
-	done
 install-info: install-info-recursive
 
-install-info-am: $(INFO_DEPS)
-	@$(NORMAL_INSTALL)
-	test -z "$(infodir)" || $(MKDIR_P) "$(DESTDIR)$(infodir)"
-	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
-	list='$(INFO_DEPS)'; \
-	for file in $$list; do \
-	  case $$file in \
-	    $(srcdir)/*) file=`echo "$$file" | sed "s|^$$srcdirstrip/||"`;; \
-	  esac; \
-	  if test -f $$file; then d=.; else d=$(srcdir); fi; \
-	  file_i=`echo "$$file" | sed 's|\.info$$||;s|$$|.i|'`; \
-	  for ifile in $$d/$$file $$d/$$file-[0-9] $$d/$$file-[0-9][0-9] \
-                       $$d/$$file_i[0-9] $$d/$$file_i[0-9][0-9] ; do \
-	    if test -f $$ifile; then \
-	      relfile=`echo "$$ifile" | sed 's|^.*/||'`; \
-	      echo " $(INSTALL_DATA) '$$ifile' '$(DESTDIR)$(infodir)/$$relfile'"; \
-	      $(INSTALL_DATA) "$$ifile" "$(DESTDIR)$(infodir)/$$relfile"; \
-	    else : ; fi; \
-	  done; \
-	done
-	@$(POST_INSTALL)
-	@if (install-info --version && \
-	     install-info --version 2>&1 | sed 1q | grep -i -v debian) >/dev/null 2>&1; then \
-	  list='$(INFO_DEPS)'; \
-	  for file in $$list; do \
-	    relfile=`echo "$$file" | sed 's|^.*/||'`; \
-	    echo " install-info --info-dir='$(DESTDIR)$(infodir)' '$(DESTDIR)$(infodir)/$$relfile'";\
-	    install-info --info-dir="$(DESTDIR)$(infodir)" "$(DESTDIR)$(infodir)/$$relfile" || :;\
-	  done; \
-	else : ; fi
 install-man:
 
 install-pdf: install-pdf-recursive
 
-install-pdf-am: $(PDFS)
-	@$(NORMAL_INSTALL)
-	test -z "$(pdfdir)" || $(MKDIR_P) "$(DESTDIR)$(pdfdir)"
-	@list='$(PDFS)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f=$(am__strip_dir) \
-	  echo " $(INSTALL_DATA) '$$d$$p' '$(DESTDIR)$(pdfdir)/$$f'"; \
-	  $(INSTALL_DATA) "$$d$$p" "$(DESTDIR)$(pdfdir)/$$f"; \
-	done
 install-ps: install-ps-recursive
 
-install-ps-am: $(PSS)
-	@$(NORMAL_INSTALL)
-	test -z "$(psdir)" || $(MKDIR_P) "$(DESTDIR)$(psdir)"
-	@list='$(PSS)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f=$(am__strip_dir) \
-	  echo " $(INSTALL_DATA) '$$d$$p' '$(DESTDIR)$(psdir)/$$f'"; \
-	  $(INSTALL_DATA) "$$d$$p" "$(DESTDIR)$(psdir)/$$f"; \
-	done
 installcheck-am:
 
 maintainer-clean: maintainer-clean-recursive
@@ -1814,26 +1578,23 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -rf $(top_srcdir)/autom4te.cache
 	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
-maintainer-clean-am: distclean-am maintainer-clean-aminfo \
-	maintainer-clean-generic
+maintainer-clean-am: distclean-am maintainer-clean-generic
 
 mostlyclean: mostlyclean-recursive
 
-mostlyclean-am: mostlyclean-aminfo mostlyclean-compile \
-	mostlyclean-generic mostlyclean-libtool
+mostlyclean-am: mostlyclean-compile mostlyclean-generic \
+	mostlyclean-libtool
 
 pdf: pdf-recursive
 
-pdf-am: $(PDFS)
+pdf-am:
 
 ps: ps-recursive
 
-ps-am: $(PSS)
+ps-am:
 
 uninstall-am: uninstall-binPROGRAMS uninstall-dist_lispLISP \
-	uninstall-dvi-am uninstall-html-am uninstall-info-am \
-	uninstall-libLTLIBRARIES uninstall-pdf-am \
-	uninstall-pkgincludeHEADERS uninstall-ps-am
+	uninstall-libLTLIBRARIES uninstall-pkgincludeHEADERS
 
 .MAKE: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) install-am \
 	install-exec-am install-strip
@@ -1843,25 +1604,23 @@ uninstall-am: uninstall-binPROGRAMS uninstall-dist_lispLISP \
 	clean-binPROGRAMS clean-checkPROGRAMS clean-generic \
 	clean-libLTLIBRARIES clean-libtool clean-lisp clean-local \
 	clean-noinstPROGRAMS ctags ctags-recursive dist dist-all \
-	dist-bzip2 dist-gzip dist-hook dist-info dist-shar dist-tarZ \
-	dist-zip distcheck distclean distclean-compile \
-	distclean-generic distclean-hdr distclean-libtool \
-	distclean-tags distcleancheck distdir distuninstallcheck dvi \
-	dvi-am html html-am info info-am install install-am \
-	install-binPROGRAMS install-data install-data-am \
-	install-dist_lispLISP install-dvi install-dvi-am install-exec \
-	install-exec-am install-exec-hook install-html install-html-am \
-	install-info install-info-am install-libLTLIBRARIES \
-	install-man install-pdf install-pdf-am \
+	dist-bzip2 dist-gzip dist-hook dist-shar dist-tarZ dist-zip \
+	distcheck distclean distclean-compile distclean-generic \
+	distclean-hdr distclean-libtool distclean-tags distcleancheck \
+	distdir distuninstallcheck dvi dvi-am html html-am info \
+	info-am install install-am install-binPROGRAMS install-data \
+	install-data-am install-dist_lispLISP install-dvi \
+	install-dvi-am install-exec install-exec-am install-exec-hook \
+	install-html install-html-am install-info install-info-am \
+	install-libLTLIBRARIES install-man install-pdf install-pdf-am \
 	install-pkgincludeHEADERS install-ps install-ps-am \
 	install-strip installcheck installcheck-am installdirs \
-	installdirs-am maintainer-clean maintainer-clean-aminfo \
-	maintainer-clean-generic mostlyclean mostlyclean-aminfo \
-	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
-	pdf pdf-am ps ps-am tags tags-recursive uninstall uninstall-am \
-	uninstall-binPROGRAMS uninstall-dist_lispLISP uninstall-dvi-am \
-	uninstall-html-am uninstall-info-am uninstall-libLTLIBRARIES \
-	uninstall-pdf-am uninstall-pkgincludeHEADERS uninstall-ps-am
+	installdirs-am maintainer-clean maintainer-clean-generic \
+	mostlyclean mostlyclean-compile mostlyclean-generic \
+	mostlyclean-libtool pdf pdf-am ps ps-am tags tags-recursive \
+	uninstall uninstall-am uninstall-binPROGRAMS \
+	uninstall-dist_lispLISP uninstall-libLTLIBRARIES \
+	uninstall-pkgincludeHEADERS
 
 
 #(cd $(distdir)/docs; zip -r doxygen-html.zip html; rm -fr html)
@@ -1888,7 +1647,9 @@ dist-hook:
 @HAVE_BOOST_PYTHON_TRUE@	PYLIBS="$(PYLIBS)" SRCDIR="$(srcdir)" \
 @HAVE_BOOST_PYTHON_TRUE@	    python $(srcdir)/setup.py install --prefix=$(prefix)
 
-PyUnitTests): $(srcdir)/tests/python/PyUnitTests.py
+# jww (2007-05-10): This rule will not be triggered on systems that
+# define an EXEEXT.
+PyUnitTests: $(srcdir)/tests/python/PyUnitTests.py
 	cat $(srcdir)/tests/python/PyUnitTests.py \
 	    | sed "s/%srcdir%/$(ESC_srcdir)/g" \
 	    | sed "s/%builddir%/$(ESC_builddir)/g" > $@
@@ -1901,7 +1662,7 @@ fullcheck: check
 	MallocCheckHeapStart=100 \
 	MallocCheckHeapEach=100	 \
 	DYLD_INSERT_LIBRARIES=/usr/lib/libgmalloc.dylib \
-	$(srcdir)/valgrind.sh $(top_builddir)/UnitTests --verify
+	$(srcdir)/valgrind.sh $(top_builddir)/UnitTests$(EXEEXT) --verify
 
 alldocs: docs/ledger.info docs/ledger.pdf doxygen-docs
 
@@ -1913,7 +1674,7 @@ $(top_builddir)/Doxyfile.gen: $(srcdir)/docs/Doxyfile
 doxygen-docs: $(top_builddir)/Doxyfile.gen
 	doxygen $(top_builddir)/Doxyfile.gen
 
-######################################################################
+###############################################################################
 
 check-syntax:
 	g++ -I. -Itests $(CPPFLAGS) $(UnitTests_CXXFLAGS) \

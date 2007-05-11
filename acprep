@@ -15,7 +15,7 @@ cmd=$(which glibtoolize 2>&1)
 if [ -x "$cmd" ]; then
     export LIBTOOLIZE="$cmd"
 fi
-autoreconf --install
+autoreconf --force --install
 
 
 INCDIRS="-I/usr/local/include"
