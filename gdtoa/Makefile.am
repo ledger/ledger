@@ -8,14 +8,13 @@ libgdtoa_la_SOURCES = \
 	misc.c smisc.c strtoIQ.c strtoId.c strtoIdd.c strtoIf.c strtoIg.c \
 	strtoIx.c strtoIxL.c strtod.c strtodI.c strtodg.c strtof.c strtopQ.c \
 	strtopd.c strtopdd.c strtopf.c strtopx.c strtopxL.c strtorQ.c \
-	strtord.c strtordd.c strtorf.c strtorx.c strtorxL.c sum.c ulp.c \
-	strtodnrp.c
+	strtord.c strtordd.c strtorf.c strtorx.c strtorxL.c sum.c ulp.c
 
 EXTRA_libgdtoa_la_SOURCES = arithchk.c qnan.c
 
 BUILT_SOURCES = arith.h gd_qnan.h
 CLEANFILES    = arith.h gd_qnan.h arithchk qnan
-EXTRA_DIST    = LICENSE
+EXTRA_DIST    = LICENSE	strtodnrp.c
 
 arith.h: arithchk.c
 	$(CC) $(CFLAGS) -o $(top_builddir)/arithchk $< || \
