@@ -435,6 +435,8 @@ document_t * document_t::parser_t::parse(std::istream& in)
   return doc.release();
 }
 
+#endif // HAVE_EXPAT || HAVE_XMLPARSE
+
 node_t * commodity_node_t::children() const
 {
   // jww (2007-04-19): Need to report the commodity and its details
@@ -558,8 +560,6 @@ node_t * journal_node_t::children() const
   return parent_node_t::children();
 }
 
-#endif // defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
-
 void output_xml_string(std::ostream& out, const string& str)
 {
   for (const char * s = str.c_str(); *s; s++) {
@@ -568,7 +568,7 @@ void output_xml_string(std::ostream& out, const string& str)
       out << "&lt;";
       break;
     case '>':
-      out << "&rt;";
+      out << "&gt;";
       break;
     case '&':
       out << "&amp;";

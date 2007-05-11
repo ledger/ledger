@@ -44,17 +44,17 @@ function build_ledger() {
     make fullcheck || exit 1
 }
 
-#build_distcheck
+build_distcheck || exit 1
 
-build_ledger normal
-build_ledger devel --devel
-build_ledger python --python
+build_ledger normal || exit 1
+build_ledger devel --devel || exit 1
+build_ledger python --python || exit 1
 
-build_ledger debug --debug
-#build_ledger boost_debug --debug --boost d
-build_ledger debug_python --debug --python
+build_ledger debug --debug || exit 1
+#build_ledger boost_debug --debug --boost d || exit 1
+build_ledger debug_python --debug --python || exit 1
 
-build_ledger optimized --opt
-build_ledger opt_python --opt --python
+build_ledger optimized --opt || exit 1
+build_ledger opt_python --opt --python || exit 1
 
 exit 0

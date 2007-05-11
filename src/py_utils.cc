@@ -31,7 +31,6 @@
 
 #include "pyinterp.h"
 #include "pyutils.h"
-#include "pyfstream.h"
 
 #include <boost/python/module.hpp>
 #include <boost/python/def.hpp>

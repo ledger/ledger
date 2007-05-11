@@ -31,7 +31,9 @@
 
 #include "utils.h"
 #include "option.h"
+#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
 #include "gnucash.h"
+#endif
 #include "qif.h"
 #include "ofx.h"
 

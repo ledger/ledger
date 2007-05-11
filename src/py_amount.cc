@@ -35,6 +35,7 @@
 
 #include <boost/python/exception_translator.hpp>
 #include <boost/python/implicit.hpp>
+#include <boost/python/args.hpp>
 
 namespace ledger {
 
@@ -139,7 +140,7 @@ void export_amount()
     .def(init<long>())
     .def(init<std::string>())
 
-    .def("exact", &amount_t::exact, arg("value"),
+    .def("exact", &amount_t::exact, boost::python::arg("value"),
 	 "Construct an amount object whose display precision is always equal to its\n\
 internal precision.")
     .staticmethod("exact")

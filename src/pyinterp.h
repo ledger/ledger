@@ -39,8 +39,6 @@
 #include <boost/python.hpp>
 #include <Python.h>
 
-#include "pyfstream.h"
-
 namespace ledger {
 
 class python_interpreter_t : public xml::xpath_t::scope_t
