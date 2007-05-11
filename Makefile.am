@@ -237,7 +237,9 @@ UnitTests_LDADD    = $(lib_LTLIBRARIES) gdtoa/libgdtoa.la -lcppunit
 
 PyUnitTests_SOURCES = tests/python/PyUnitTests.py
 
-PyUnitTests): $(srcdir)/tests/python/PyUnitTests.py
+# jww (2007-05-10): This rule will not be triggered on systems that
+# define an EXEEXT.
+PyUnitTests: $(srcdir)/tests/python/PyUnitTests.py
 	cat $(srcdir)/tests/python/PyUnitTests.py \
 	    | sed "s/%srcdir%/$(ESC_srcdir)/g" \
 	    | sed "s/%builddir%/$(ESC_builddir)/g" > $@
