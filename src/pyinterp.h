@@ -34,8 +34,6 @@
 
 #include "xpath.h"
 
-#if defined(USE_BOOST_PYTHON)
-
 #include <boost/python.hpp>
 #include <Python.h>
 
@@ -102,7 +100,5 @@ class python_interpreter_t : public xml::xpath_t::scope_t
 };
 
 } // namespace ledger
-
-#endif // USE_BOOST_PYTHON
 
 #endif // _PY_EVAL_H
