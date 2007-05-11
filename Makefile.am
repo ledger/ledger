@@ -7,7 +7,7 @@ ESC_srcdir=`echo "$(srcdir)" | sed 's/\//\\\\\//g'`
 ESC_builddir=`echo "$(top_builddir)" | sed 's/\//\\\\\//g'`
 ESC_distdir=`echo "$(distdir)" | sed 's/\//\\\\\//g'`
 
-EXTRA_DIST = docs tests ledger.pdf ledger.info
+EXTRA_DIST = docs tests
 
 #(cd $(distdir)/docs; zip -r doxygen-html.zip html; rm -fr html)
 dist-hook:
