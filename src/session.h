@@ -194,8 +194,10 @@ class session_t : public xml::xpath_t::scope_t
   void option_debug(value_t&, xml::xpath_t::scope_t * locals) {}
 
   void option_verbose(value_t&) {
+#if defined(LOGGING_ON)
     if (_log_level < LOG_INFO)
       _log_level = LOG_INFO;
+#endif
   }
 
   //
