@@ -184,6 +184,7 @@ ledger_so_SOURCES = \
 	src/py_times.cc \
 	src/py_commodity.cc \
 	src/py_amount.cc
+
 ledger_so_DEPENDENCIES = libledger.la gdtoa/libgdtoa.la libpyledger.la
 
 PYLIBS  = pyledger ledger gdtoa gmp
