@@ -1,13 +1,13 @@
 SUBDIRS	      = gdtoa
 BUILT_SOURCES =
 CLEANFILES    =
-
+EXTRA_DIST    = LICENSE docs tests contrib scripts setup.py \
+		verify.sh run_verify.sh valgrind.sh \
+		src/TODO src/gnucash.cc 
 
 ESC_srcdir=`echo "$(srcdir)" | sed 's/\//\\\\\//g'`
 ESC_builddir=`echo "$(top_builddir)" | sed 's/\//\\\\\//g'`
 ESC_distdir=`echo "$(distdir)" | sed 's/\//\\\\\//g'`
-
-EXTRA_DIST = docs tests
 
 #(cd $(distdir)/docs; zip -r doxygen-html.zip html; rm -fr html)
 dist-hook:
@@ -105,9 +105,10 @@ libpyledger_la_SOURCES = \
 
 pkginclude_HEADERS = \
 	src/amount.h	     \
-	src/balpair.h	     \
 	src/balance.h	     \
+	src/balpair.h	     \
 	src/binary.h	     \
+	src/builder.h	     \
 	src/commodity.h	     \
 	src/context.h	     \
 	src/csv.h	     \
@@ -138,6 +139,7 @@ pkginclude_HEADERS = \
 	src/textual.h	     \
 	src/times.h	     \
 	src/transform.h	     \
+	src/tuples.hpp	     \
 	src/utils.h	     \
 	src/value.h	     \
 	src/xml.h	     \

@@ -6,3 +6,6 @@
   that the memory is held by an auto_ptr until the constructor is
   done; otherwise, an exception raised from within the constructor
   will not call the destructor to free the memory.
+
+- Using mmap for the binary reader; or determine if the performance is
+  even worth the maintenance headaches of that code altogether.
