@@ -7,9 +7,11 @@
 #
 #   0 0 * * * $HOME/src/ledger/run_verify.sh /tmp
 #
-# Note that this script should be run as root!  Also, whether on
-# success or failure the build log and build products are left in the
-# temporary directory for later examination if desired.
+# Note that this script should be run as root, otherwise it will be
+# unable to clean up after itself (since make distcheck creates files
+# owned by a different user).  Also, whether on success or failure the
+# build log and build products are left in the temporary directory for
+# later examination if desired.
 
 SRCDIR=$(dirname $0)
 
@@ -26,3 +28,5 @@ cp -p "$SRCDIR"/verify.sh . || exit 1
 (./verify.sh > verify.out 2>&1 || (cat verify.out; exit 1))
 
 rm -f verify.sh
+
+exit 0

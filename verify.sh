@@ -75,7 +75,7 @@ function build_distcheck_from_distrib() {
     dup_working_tree distcheck_distrib || exit 1
     cd distcheck_distrib || exit 1
     ./configure CPPFLAGS="$MY_CPPFLAGS" LDFLAGS="$MY_LDFLAGS" || exit 1
-    make distcheck || exit 1
+    make CPPFLAGS="$MY_CPPFLAGS" LDFLAGS="$MY_LDFLAGS" distcheck || exit 1
 }
 
 # Finally, we have the ordinary `build_ledger' function, which builds
