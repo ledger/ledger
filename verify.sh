@@ -3,7 +3,7 @@
 TMPDIR=$HOME/tmp
 
 if [ -d $TMPDIR/ledger ]; then
-    rm -fr $TMPDIR/ledger || exit 1
+    sudo rm -fr $TMPDIR/ledger || exit 1
 fi
 
 if [ -d $HOME/src/ledger/.git ]; then
@@ -50,7 +50,5 @@ build_ledger(debug_python, --debug, --python)
 
 build_ledger(optimized, --opt)
 build_ledger(opt_python, --opt, --python)
-
-rm -fr $TMPDIR/ledger || exit 1
 
 exit 0
