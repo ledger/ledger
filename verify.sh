@@ -1,12 +1,20 @@
 #!/bin/bash
 
+# This script can be from cron to regularly verify that Ledger is
+# sane.  Such a cron entry might look like this, assuming you keep a
+# recent working tree in ~/src/ledger.
+#
+#   0 0 * * * $HOME/src/ledger/run_verify.sh /tmp
+
 MY_CPPFLAGS="-I/usr/local/include -I/usr/local/include/boost -I/sw/include"
 MY_LDFLAGS="-L/usr/local/lib -L/sw/lib"
 
 # Setup the temporary directory where all these copies are ledger are
 # going to be built.  Remove it if it's already there.
 
-if [ -d $HOME/tmp ]; then
+if [ -n "$1" -a -d "$1" ]; then
+    TMPDIR="$1"
+elif [ -d $HOME/tmp ]; then
     TMPDIR=$HOME/tmp
 else
     TMPDIR=/tmp
@@ -61,6 +69,7 @@ function dup_working_tree() {
 # is maintained in the repository.
 
 function build_distcheck_from_scratch() {
+    cd $TMPDIR/ledger || exit 1
     dup_working_tree distcheck_scratch || exit 1
     cd distcheck_scratch || exit 1
     ./acprep --local || exit 1
@@ -68,6 +77,7 @@ function build_distcheck_from_scratch() {
 }
 
 function build_distcheck_from_distrib() {
+    cd $TMPDIR/ledger || exit 1
     dup_working_tree distcheck_distrib || exit 1
     cd distcheck_distrib || exit 1
     ./configure CPPFLAGS="$MY_CPPFLAGS" LDFLAGS="$MY_LDFLAGS" || exit 1
