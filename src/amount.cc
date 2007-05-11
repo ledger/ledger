@@ -268,7 +268,7 @@ namespace {
     }
 
     if (sign) {
-      char * newbuf = new char[std::strlen(result ? result : buf) + 2];
+      char * newbuf = new char[std::strlen(result ? result : buf) + 4];
       newbuf[0] = '-';
       std::strcpy(&newbuf[1], result ? result : buf);
       mpz_set_str(dest, newbuf, 10);
