@@ -235,7 +235,7 @@ UnitTests_CPPFLAGS = -I$(srcdir)/tests $(libledger_la_CPPFLAGS)
 UnitTests_LDFLAGS  = $(LIBADD_DL)
 UnitTests_LDADD    = $(lib_LTLIBRARIES) gdtoa/libgdtoa.la -lcppunit
 
-PyUnitTests_SOURCES = tests/python/PyUnitTests.py
+nodist_PyUnitTests_SOURCES = tests/python/PyUnitTests.py
 
 # jww (2007-05-10): This rule will not be triggered on systems that
 # define an EXEEXT.
