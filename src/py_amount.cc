@@ -140,7 +140,7 @@ void export_amount()
     .def(init<long>())
     .def(init<std::string>())
 
-    .def("exact", &amount_t::exact, boost::python::arg("value"),
+    .def("exact", &amount_t::exact, args("value"),
 	 "Construct an amount object whose display precision is always equal to its\n\
 internal precision.")
     .staticmethod("exact")
