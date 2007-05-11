@@ -7,7 +7,7 @@ ESC_srcdir=`echo "$(srcdir)" | sed 's/\//\\\\\//g'`
 ESC_builddir=`echo "$(top_builddir)" | sed 's/\//\\\\\//g'`
 ESC_distdir=`echo "$(distdir)" | sed 's/\//\\\\\//g'`
 
-EXTRA_DIST = docs docs/ledger.pdf tests
+EXTRA_DIST = docs tests
 
 #(cd $(distdir)/docs; zip -r doxygen-html.zip html; rm -fr html)
 dist-hook:
@@ -159,7 +159,7 @@ if HAVE_BOOST_PYTHON
 ledger_LDADD += libpyledger.la
 endif
 
-info_TEXINFOS = docs/ledger.texi
+nodist_info_TEXINFOS = docs/ledger.texi
 
 ######################################################################
 

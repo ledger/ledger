@@ -5,7 +5,7 @@ AC_PREREQ(2.61)
 
 AC_INIT([ledger],[3.0-git],[johnw@newartisans.com])
 AC_CONFIG_SRCDIR(ledger)
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([dist-bzip2])
 
 AC_CONFIG_SRCDIR([src/main.cc])
 AC_CONFIG_HEADER([acconf.h])
