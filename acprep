@@ -11,18 +11,11 @@ PYTHON_HOME="/Library/Frameworks/Python.framework/Versions/2.5"
 # linker flags for all the various build permutations I use for
 # testing and profiling.
 
-LIBTOOLIZE=$(which glibtoolize 2>&1)
-
-if [ -x "$LIBTOOLIZE" ]; then
-    "$LIBTOOLIZE" --automake -f -c
-else
-    libtoolize --automake -f -c
+cmd=$(which glibtoolize 2>&1)
+if [ -x "$cmd" ]; then
+    export LIBTOOLIZE="$cmd"
 fi
-
-aclocal
-autoheader
-automake -a -c -f
-autoconf
+autoreconf --install
 
 
 INCDIRS="-I/usr/local/include"

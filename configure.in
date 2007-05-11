@@ -1,9 +1,9 @@
 # -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ(2.59)
+AC_PREREQ(2.61)
 
-AC_INIT(ledger, 3.0-git, johnw@newartisans.com)
+AC_INIT([ledger],[3.0-git],[johnw@newartisans.com])
 AC_CONFIG_SRCDIR(ledger)
 AM_INIT_AUTOMAKE
 
@@ -61,14 +61,12 @@ AC_CACHE_CHECK(
   [if pipes can be used],
   [pipes_avail],
   [AC_LANG_PUSH(C++)
-   AC_TRY_LINK(
-     [#include <sys/types.h>
+   AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
       #include <sys/wait.h>
       #include <unistd.h>
       #include <stdlib.h>
       #include <string.h>
-      #include <stdio.h>],
-     [int status, pfd[2];
+      #include <stdio.h>]], [[int status, pfd[2];
       status = pipe(pfd);
       status = fork();
       if (status < 0) {
@@ -86,9 +84,7 @@ AC_CACHE_CHECK(
 	exit(1);
       } else {
 	close(pfd[0]);
-      }],
-     [pipes_avail=true],
-     [pipes_avail=false])
+      }]])],[pipes_avail=true],[pipes_avail=false])
    AC_LANG_POP])
 
 if [test x$pipes_avail = xtrue ]; then
@@ -102,11 +98,7 @@ AC_CACHE_CHECK(
   [boost_regex_save_libs=$LIBS
    LIBS="-lboost_regex$BOOST_SUFFIX $LIBS"
    AC_LANG_PUSH(C++)
-   AC_TRY_LINK(
-     [#include <boost/regex.hpp>],
-     [boost::regex foo_regexp("Hello, world!");],
-     [boost_regex_avail=true],
-     [boost_regex_avail=false])
+   AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <boost/regex.hpp>]], [[boost::regex foo_regexp("Hello, world!");]])],[boost_regex_avail=true],[boost_regex_avail=false])
    AC_LANG_POP
    LIBS=$boost_regex_save_libs])
 
@@ -123,8 +115,7 @@ AC_CACHE_CHECK(
   [boost_date_time_save_libs=$LIBS
    LIBS="-lboost_date_time$BOOST_SUFFIX $LIBS"
    AC_LANG_PUSH(C++)
-   AC_TRY_LINK(
-     [#include <boost/date_time/posix_time/posix_time.hpp>
+   AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <boost/date_time/posix_time/posix_time.hpp>
       #include <boost/date_time/gregorian/gregorian.hpp>
       #include <boost/date_time/local_time_adjustor.hpp>
       #include <boost/date_time/time_duration.hpp>
@@ -137,15 +128,12 @@ AC_CACHE_CHECK(
       inline ptime time_to_system_local(const ptime& when) {
         struct std::tm tm_gmt = to_tm(when);
         return from_time_t(mktime(&tm_gmt));
-      }],
-     [ptime t10 = ptime(boost::gregorian::from_string("2007-01-15"),
+      }]], [[ptime t10 = ptime(boost::gregorian::from_string("2007-01-15"),
                         ptime::time_duration_type());
       
       ptime t12 = time_to_system_local(t10);
       
-      return t10 != t12;],
-     [boost_date_time_cpplib_avail=true],
-     [boost_date_time_cpplib_avail=false])
+      return t10 != t12;]])],[boost_date_time_cpplib_avail=true],[boost_date_time_cpplib_avail=false])
    AC_LANG_POP
    LIBS=$boost_date_time_save_libs])
 
@@ -162,11 +150,7 @@ AC_CACHE_CHECK(
   [boost_filesystem_save_libs=$LIBS
    LIBS="-lboost_filesystem$BOOST_SUFFIX $LIBS"
    AC_LANG_PUSH(C++)
-   AC_TRY_LINK(
-     [#include <boost/filesystem/path.hpp>],
-     [boost::filesystem::path this_path("Hello");],
-     [boost_filesystem_cpplib_avail=true],
-     [boost_filesystem_cpplib_avail=false])
+   AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <boost/filesystem/path.hpp>]], [[boost::filesystem::path this_path("Hello");]])],[boost_filesystem_cpplib_avail=true],[boost_filesystem_cpplib_avail=false])
    AC_LANG_POP
    LIBS=$boost_filesystem_save_libs])
 
@@ -183,11 +167,7 @@ fi
 #  [boost_signals_save_libs=$LIBS
 #   LIBS="-lboost_signals$BOOST_SUFFIX $LIBS"
 #   AC_LANG_PUSH(C++)
-#   AC_TRY_LINK(
-#     [#include <boost/signal.hpp>],
-#     [boost::signal<void (void)> this_signal;],
-#     [boost_signals_cpplib_avail=true],
-#     [boost_signals_cpplib_avail=false])
+#   AC_LINK_IFELSE([AC_LANG_PROGRAM([[#     #include <boost/signal.hpp>]], [[#     boost::signal<void (void)> this_signal;]])],[#     boost_signals_cpplib_avail=true],[#     boost_signals_cpplib_avail=false])
 #   AC_LANG_POP
 #   LIBS=$boost_signals_save_libs])
 #
@@ -204,13 +184,9 @@ AC_CACHE_CHECK(
   [libgmp_save_libs=$LIBS
    LIBS="-lgmp $LIBS"
    AC_LANG_PUSH(C++)
-   AC_TRY_LINK(
-     [#include <gmp.h>],
-     [mpz_t bar;
+   AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <gmp.h>]], [[mpz_t bar;
       mpz_init(bar);
-      mpz_clear(bar);],
-     [libgmp_avail=true],
-     [libgmp_avail=false])
+      mpz_clear(bar);]])],[libgmp_avail=true],[libgmp_avail=false])
    AC_LANG_POP
    LIBS=$libgmp_save_libs])
 
@@ -238,15 +214,11 @@ if [test x$xml = xtrue ]; then
     [libexpat_save_libs=$LIBS
      LIBS="-lexpat $LIBS"
      AC_LANG_PUSH(C++)
-     AC_TRY_LINK(
-       [#include <stdio.h>
+     AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <stdio.h>
 	extern "C" {
 	#include <expat.h>           // expat XML parser
-	}],
-       [XML_Parser parser = XML_ParserCreate(NULL);
-	return parser != NULL;],
-       [libexpat_avail=true],
-       [libexpat_avail=false])
+	}]], [[XML_Parser parser = XML_ParserCreate(NULL);
+	return parser != NULL;]])],[libexpat_avail=true],[libexpat_avail=false])
      AC_LANG_POP
      LIBS=$libexpat_save_libs])
 
@@ -268,15 +240,11 @@ if [test x$xml = xtrue ]; then
       [libxmlparse_save_libs=$LIBS
        LIBS="-lxmlparse -lxmltok $LIBS"
        AC_LANG_PUSH(C++)
-       AC_TRY_LINK(
-	 [#include <stdio.h>
+       AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <stdio.h>
 	extern "C" {
 	#include <xmlparse.h>           // expat XML parser
-	}],
-	 [XML_Parser parser = XML_ParserCreate(NULL);
-	return parser != NULL;],
-	 [libxmlparse_avail=true],
-	 [libxmlparse_avail=false])
+	}]], [[XML_Parser parser = XML_ParserCreate(NULL);
+	return parser != NULL;]])],[libxmlparse_avail=true],[libxmlparse_avail=false])
        AC_LANG_POP
        LIBS=$libxmlparse_save_libs])
 
@@ -311,11 +279,7 @@ if [test x$ofx = xtrue ]; then
     [libofx_save_libs=$LIBS
      LIBS="-lofx $LIBS"
      AC_LANG_PUSH(C++)
-     AC_TRY_LINK(
-       [#include <libofx.h>],
-       [  LibofxContextPtr libofx_context = libofx_get_new_context();],
-       [libofx_avail=true],
-       [libofx_avail=false])
+     AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <libofx.h>]], [[  LibofxContextPtr libofx_context = libofx_get_new_context();]])],[libofx_avail=true],[libofx_avail=false])
      AC_LANG_POP
      LIBS=$libofx_save_libs])
 
@@ -349,16 +313,12 @@ if [test x$python = xtrue ]; then
       [boost_python_save_libs=$LIBS
        LIBS="-lboost_python$BOOST_SUFFIX -lpython$PYTHON_VERSION $LIBS"
        AC_LANG_PUSH(C++)
-       AC_TRY_LINK(
-	 [#include <boost/python.hpp>
+       AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <boost/python.hpp>
 	  using namespace boost::python;
 	  class foo {};
 	  BOOST_PYTHON_MODULE(samp) {
 	    class_< foo > ("foo") ;
-	  }],
-	 [return 0],
-	 [boost_python_cpplib_avail=true],
-	 [boost_python_cpplib_avail=false])
+	  }]], [[return 0]])],[boost_python_cpplib_avail=true],[boost_python_cpplib_avail=false])
        AC_LANG_POP
        LIBS=$boost_python_save_libs])
 
@@ -382,19 +342,15 @@ AC_CACHE_CHECK(
   [cppunit_save_libs=$LIBS
    LIBS="-lcppunit $LIBS"
    AC_LANG_PUSH(C++)
-   AC_TRY_LINK(
-     [#include <cppunit/CompilerOutputter.h>
+   AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <cppunit/CompilerOutputter.h>
       #include <cppunit/TestResult.h>
       #include <cppunit/TestResultCollector.h>
       #include <cppunit/TestRunner.h>
       #include <cppunit/TextTestProgressListener.h>
       #include <cppunit/BriefTestProgressListener.h>
       #include <cppunit/XmlOutputter.h>
-      #include <cppunit/extensions/TestFactoryRegistry.h>],
-     [CPPUNIT_NS::TestResult controller;
-      CPPUNIT_NS::TestResultCollector result;],
-     [cppunit_avail=true],
-     [cppunit_avail=false])
+      #include <cppunit/extensions/TestFactoryRegistry.h>]], [[CPPUNIT_NS::TestResult controller;
+      CPPUNIT_NS::TestResultCollector result;]])],[cppunit_avail=true],[cppunit_avail=false])
    AC_LANG_POP
    LIBS=$cppunit_save_libs])
 
@@ -405,8 +361,8 @@ else
 fi
 
 # Checks for header files.
-AC_STDC_HEADERS
-AC_HAVE_HEADERS(sys/stat.h langinfo.h)
+AC_HEADER_STDC
+AC_CHECK_HEADERS([sys/stat.h langinfo.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL

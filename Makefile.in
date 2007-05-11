@@ -55,7 +55,7 @@ bin_PROGRAMS = ledger$(EXEEXT)
 @HAVE_BOOST_PYTHON_TRUE@@HAVE_XMLPARSE_TRUE@am__append_16 = xmlparse xmltok
 @HAVE_BOOST_PYTHON_TRUE@@HAVE_LIBOFX_TRUE@am__append_17 = ofx
 TESTS = UnitTests$(EXEEXT) $(am__EXEEXT_1)
-@HAVE_BOOST_PYTHON_TRUE@am__append_18 = PyUnitTests
+@HAVE_BOOST_PYTHON_TRUE@am__append_18 = PyUnitTests.py
 check_PROGRAMS = $(am__EXEEXT_2)
 subdir = .
 DIST_COMMON = README $(am__configure_deps) $(dist_lisp_LISP) \
@@ -126,12 +126,12 @@ libpyledger_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(CXXFLAGS) $(libpyledger_la_LDFLAGS) $(LDFLAGS) -o $@
 @HAVE_BOOST_PYTHON_TRUE@am_libpyledger_la_rpath = -rpath $(libdir)
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
-@HAVE_BOOST_PYTHON_TRUE@am__EXEEXT_1 = PyUnitTests$(EXEEXT)
+@HAVE_BOOST_PYTHON_TRUE@am__EXEEXT_1 = PyUnitTests.py$(EXEEXT)
 am__EXEEXT_2 = UnitTests$(EXEEXT) $(am__EXEEXT_1)
 PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
-am_PyUnitTests_OBJECTS =
-PyUnitTests_OBJECTS = $(am_PyUnitTests_OBJECTS)
-PyUnitTests_LDADD = $(LDADD)
+PyUnitTests_py_SOURCES = PyUnitTests.c
+PyUnitTests_py_OBJECTS = PyUnitTests.$(OBJEXT)
+PyUnitTests_py_LDADD = $(LDADD)
 nodist_UnitTests_OBJECTS = UnitTests-UnitTests.$(OBJEXT) \
 	UnitTests-t_utils.$(OBJEXT) UnitTests-t_times.$(OBJEXT) \
 	UnitTests-t_commodity.$(OBJEXT) UnitTests-t_amount.$(OBJEXT) \
@@ -159,15 +159,6 @@ ledger_so_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I.@am__isrc@
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
-CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
-LTCXXCOMPILE = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
-	--mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
-CXXLD = $(CXX)
-CXXLINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
-	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
-	$(LDFLAGS) -o $@
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
@@ -177,13 +168,22 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
+CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+LTCXXCOMPILE = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
+	--mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+CXXLD = $(CXX)
+CXXLINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
+	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 SOURCES = $(libledger_la_SOURCES) $(nodist_libledger_la_SOURCES) \
-	$(libpyledger_la_SOURCES) $(PyUnitTests_SOURCES) \
+	$(libpyledger_la_SOURCES) PyUnitTests.c \
 	$(nodist_UnitTests_SOURCES) $(ledger_SOURCES) \
 	$(ledger_so_SOURCES)
 DIST_SOURCES = $(am__libledger_la_SOURCES_DIST) \
-	$(libpyledger_la_SOURCES) $(PyUnitTests_SOURCES) \
-	$(ledger_SOURCES) $(am__ledger_so_SOURCES_DIST)
+	$(libpyledger_la_SOURCES) PyUnitTests.c $(ledger_SOURCES) \
+	$(am__ledger_so_SOURCES_DIST)
 am__dirstamp = $(am__leading_dot)dirstamp
 INFO_DEPS = $(srcdir)/docs/ledger.info
 am__TEXINFO_TEX_DIR = $(srcdir)
@@ -469,7 +469,7 @@ all: $(BUILT_SOURCES) acconf.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
 .SUFFIXES:
-.SUFFIXES: .cc .dvi .lo .o .obj .ps
+.SUFFIXES: .c .cc .dvi .lo .o .obj .ps
 am--refresh:
 	@:
 $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
@@ -609,6 +609,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/PyUnitTests.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/UnitTests-UnitTests.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/UnitTests-t_amount.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/UnitTests-t_balance.Po@am__quote@
@@ -653,6 +654,27 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/py_times.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/py_utils.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pyledger.Po@am__quote@
+
+.c.o:
+@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(COMPILE) -c $<
+
+.c.obj:
+@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
+
+.c.lo:
+@am__fastdepCC_TRUE@	$(LTCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
 
 .cc.o:
 @am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -1885,18 +1907,18 @@ dist-hook:
 @HAVE_BOOST_PYTHON_TRUE@	PYLIBS="$(PYLIBS)" SRCDIR="$(srcdir)" \
 @HAVE_BOOST_PYTHON_TRUE@	    python $(srcdir)/setup.py install --prefix=$(prefix)
 
-PyUnitTests: $(srcdir)/tests/python/PyUnitTests.py
+PyUnitTests.py: $(srcdir)/tests/python/PyUnitTests.py
 	cat $(srcdir)/tests/python/PyUnitTests.py \
 	    | sed "s/%srcdir%/$(ESC_srcdir)/g" \
 	    | sed "s/%builddir%/$(ESC_builddir)/g" > $@
 	chmod 755 $@
 
 fullcheck: check
-	MallocGuardEdges=1 \
-	MallocScribble=1 \
-	MallocPreScribble=1 \
+	MallocGuardEdges=1	 \
+	MallocScribble=1	 \
+	MallocPreScribble=1	 \
 	MallocCheckHeapStart=100 \
-	MallocCheckHeapEach=100 \
+	MallocCheckHeapEach=100	 \
 	DYLD_INSERT_LIBRARIES=/usr/lib/libgmalloc.dylib \
 	$(srcdir)/valgrind.sh $(top_builddir)/UnitTests --verify
 

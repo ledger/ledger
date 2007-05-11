@@ -1,6 +1,10 @@
 #!/bin/bash
 
-TMPDIR=$HOME/tmp
+if [ -d $HOME/tmp ]; then
+    TMPDIR=$HOME/tmp
+else
+    TMPDIR=/tmp
+fi
 
 if [ -d $TMPDIR/ledger ]; then
     sudo rm -fr $TMPDIR/ledger || exit 1
@@ -12,11 +16,9 @@ else
     LEDGER_GIT=http://newartisans.com/ledger.git
 fi
 
-cd $TMPDIR
-
+cd $TMPDIR || exit 1
 mkdir ledger || exit 1
-
-cd ledger
+cd ledger || exit 1
 git clone $LEDGER_GIT local_git || exit 1
 
 git clone -l local_git distcheck || exit 1

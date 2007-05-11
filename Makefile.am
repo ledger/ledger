@@ -7,7 +7,7 @@ ESC_srcdir=`echo "$(srcdir)" | sed 's/\//\\\\\//g'`
 ESC_builddir=`echo "$(top_builddir)" | sed 's/\//\\\\\//g'`
 ESC_distdir=`echo "$(distdir)" | sed 's/\//\\\\\//g'`
 
-EXTRA_DIST = docs tests
+EXTRA_DIST = docs docs/ledger.pdf tests
 
 #(cd $(distdir)/docs; zip -r doxygen-html.zip html; rm -fr html)
 dist-hook:
@@ -237,18 +237,18 @@ UnitTests_LDADD    = $(lib_LTLIBRARIES) gdtoa/libgdtoa.la -lcppunit
 
 PyUnitTests_SOURCES = tests/python/PyUnitTests.py
 
-PyUnitTests: $(srcdir)/tests/python/PyUnitTests.py
+PyUnitTests): $(srcdir)/tests/python/PyUnitTests.py
 	cat $(srcdir)/tests/python/PyUnitTests.py \
 	    | sed "s/%srcdir%/$(ESC_srcdir)/g" \
 	    | sed "s/%builddir%/$(ESC_builddir)/g" > $@
 	chmod 755 $@
 
 fullcheck: check
-	MallocGuardEdges=1 \
-	MallocScribble=1 \
-	MallocPreScribble=1 \
+	MallocGuardEdges=1	 \
+	MallocScribble=1	 \
+	MallocPreScribble=1	 \
 	MallocCheckHeapStart=100 \
-	MallocCheckHeapEach=100 \
+	MallocCheckHeapEach=100	 \
 	DYLD_INSERT_LIBRARIES=/usr/lib/libgmalloc.dylib \
 	$(srcdir)/valgrind.sh $(top_builddir)/UnitTests --verify
 

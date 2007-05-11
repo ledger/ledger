@@ -7,6 +7,7 @@
 *.lo
 *.o
 .gdb_history
+/configure.in~
 Makefile
 UnitTests
 acconf.h
@@ -15,8 +16,8 @@ autom4te.cache
 config.log
 config.status
 elc-stamp
+ledger
 libtool
 pending
 stamp-h1
 utils
-ledger

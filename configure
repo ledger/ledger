@@ -19761,11 +19761,7 @@ fi
 #  [boost_signals_save_libs=$LIBS
 #   LIBS="-lboost_signals$BOOST_SUFFIX $LIBS"
 #   AC_LANG_PUSH(C++)
-#   AC_TRY_LINK(
-#     [#include <boost/signal.hpp>],
-#     [boost::signal<void (void)> this_signal;],
-#     [boost_signals_cpplib_avail=true],
-#     [boost_signals_cpplib_avail=false])
+#   AC_LINK_IFELSE([AC_LANG_PROGRAM([[#     #include <boost/signal.hpp>]], [[#     boost::signal<void (void)> this_signal;]])],[#     boost_signals_cpplib_avail=true],[#     boost_signals_cpplib_avail=false])
 #   AC_LANG_POP
 #   LIBS=$boost_signals_save_libs])
 #
