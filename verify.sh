@@ -2,6 +2,10 @@
 
 TMPDIR=$HOME/tmp
 
+if [ -d $TMPDIR/ledger ]; then
+    rm -fr $TMPDIR/ledger || exit 1
+fi
+
 if [ -d $HOME/src/ledger/.git ]; then
     LEDGER_GIT=$HOME/src/ledger
 else
@@ -18,7 +22,8 @@ git clone $LEDGER_GIT local_git || exit 1
 git clone -l local_git distcheck || exit 1
 cd distcheck || exit 1
 ./acprep --local || exit 1
-make distcheck || exit 1
+make CPPFLAGS="-I/usr/local/include -I/usr/local/include/boost -I/sw/include" \
+     LDFLAGS="-L/usr/local/lib -L/sw/lib" distcheck || exit 1
 
 function build_ledger() {
     name=$1
