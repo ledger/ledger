@@ -103,8 +103,9 @@ function build_ledger() {
 }
 
 # With all of that defined, now build ledger in all its various
-# flavors, do a "fullcheck" for each one (which uses valgrind on
-# Linux, and gmalloc on OS/X).  Note that this will take a long while!
+# flavors, do a "fullcheck" for each non-optimized one (which uses
+# valgrind on Linux, and gmalloc on OS/X), and a "check" for each
+# optimized one.  Note that this will take a long while!
 
 build_distcheck_from_scratch || exit 1
 build_distcheck_from_distrib || exit 1
