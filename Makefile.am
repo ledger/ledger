@@ -179,6 +179,7 @@ clean-local:
 
 ledger_so_SOURCES = \
 	src/pyledger.cc \
+	src/pyinterp.cc \
 	src/py_utils.cc \
 	src/py_times.cc \
 	src/py_commodity.cc \
