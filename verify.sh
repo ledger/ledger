@@ -105,12 +105,11 @@ build_distcheck_from_scratch || exit 1
 build_distcheck_from_distrib || exit 1
 
 build_ledger normal || exit 1
-build_ledger devel --devel || exit 1
 build_ledger python --python || exit 1
 
 build_ledger debug --debug || exit 1
-#build_ledger boost_debug --debug --boost d || exit 1
 build_ledger debug_python --debug --python || exit 1
+#build_ledger boost_debug --debug --boost d || exit 1
 
 build_ledger optimized --opt || exit 1
 build_ledger opt_python --opt --python || exit 1
