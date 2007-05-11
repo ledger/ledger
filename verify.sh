@@ -1,11 +1,5 @@
 #!/bin/bash
 
-# This script can be from cron to regularly verify that Ledger is
-# sane.  Such a cron entry might look like this, assuming you keep a
-# recent working tree in ~/src/ledger.
-#
-#   0 0 * * * $HOME/src/ledger/run_verify.sh /tmp
-
 MY_CPPFLAGS="-I/usr/local/include -I/usr/local/include/boost -I/sw/include"
 MY_LDFLAGS="-L/usr/local/lib -L/sw/lib"
 
@@ -21,7 +15,7 @@ else
 fi
 
 if [ -d $TMPDIR/ledger ]; then
-    sudo rm -fr $TMPDIR/ledger || exit 1
+    rm -fr $TMPDIR/ledger || exit 1
 fi
 
 cd $TMPDIR || exit 1
