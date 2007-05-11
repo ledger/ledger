@@ -94,7 +94,12 @@ function build_ledger() {
 
     (cd gdtoa && make) || exit 1
     make || exit 1
-    make fullcheck || exit 1
+
+    if [ "$1" = "--opt" ]; then
+	make check || exit 1
+    else
+	make fullcheck || exit 1
+    fi
 }
 
 # With all of that defined, now build ledger in all its various
