@@ -132,6 +132,7 @@ pkginclude_HEADERS = \
 	src/report.h	     \
 	src/scoped_execute.h \
 	src/session.h	     \
+	src/system.hh	     \
 	src/textual.h	     \
 	src/times.h	     \
 	src/transform.h	     \
