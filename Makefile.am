@@ -99,6 +99,7 @@ libpyledger_la_LDFLAGS  = -release $(PACKAGE_VERSION)
 libpyledger_la_SOURCES = \
 	src/py_utils.cc  \
 	src/py_times.cc  \
+	src/py_commodity.cc \
 	src/py_amount.cc
 
 
@@ -179,6 +180,7 @@ ledger_so_SOURCES = \
 	src/pyledger.cc \
 	src/py_utils.cc \
 	src/py_times.cc \
+	src/py_commodity.cc \
 	src/py_amount.cc
 ledger_so_DEPENDENCIES = libledger.la gdtoa/libgdtoa.la libpyledger.la
 

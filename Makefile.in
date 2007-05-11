@@ -118,7 +118,8 @@ libledger_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(CXXFLAGS) $(libledger_la_LDFLAGS) $(LDFLAGS) -o $@
 libpyledger_la_LIBADD =
 am_libpyledger_la_OBJECTS = libpyledger_la-py_utils.lo \
-	libpyledger_la-py_times.lo libpyledger_la-py_amount.lo
+	libpyledger_la-py_times.lo libpyledger_la-py_commodity.lo \
+	libpyledger_la-py_amount.lo
 libpyledger_la_OBJECTS = $(am_libpyledger_la_OBJECTS)
 libpyledger_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
@@ -148,9 +149,10 @@ ledger_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) \
 	$(ledger_LDFLAGS) $(LDFLAGS) -o $@
 am__ledger_so_SOURCES_DIST = src/pyledger.cc src/py_utils.cc \
-	src/py_times.cc src/py_amount.cc
+	src/py_times.cc src/py_commodity.cc src/py_amount.cc
 @HAVE_BOOST_PYTHON_TRUE@am_ledger_so_OBJECTS = pyledger.$(OBJEXT) \
 @HAVE_BOOST_PYTHON_TRUE@	py_utils.$(OBJEXT) py_times.$(OBJEXT) \
+@HAVE_BOOST_PYTHON_TRUE@	py_commodity.$(OBJEXT) \
 @HAVE_BOOST_PYTHON_TRUE@	py_amount.$(OBJEXT)
 ledger_so_OBJECTS = $(am_ledger_so_OBJECTS)
 ledger_so_LDADD = $(LDADD)
@@ -351,7 +353,7 @@ CLEANFILES = $(am__append_12) $(am__append_14)
 ESC_srcdir = `echo "$(srcdir)" | sed 's/\//\\\\\//g'`
 ESC_builddir = `echo "$(top_builddir)" | sed 's/\//\\\\\//g'`
 ESC_distdir = `echo "$(distdir)" | sed 's/\//\\\\\//g'`
-EXTRA_DIST = docs tests ledger.pdf ledger.info
+EXTRA_DIST = docs tests
 lib_LTLIBRARIES = libledger.la $(am__append_1)
 AM_YFLAGS = -d
 AM_LFLAGS = -o $(LEX_OUTPUT_ROOT).c
@@ -378,6 +380,7 @@ libpyledger_la_LDFLAGS = -release $(PACKAGE_VERSION)
 libpyledger_la_SOURCES = \
 	src/py_utils.cc  \
 	src/py_times.cc  \
+	src/py_commodity.cc \
 	src/py_amount.cc
 
 pkginclude_HEADERS = \
@@ -390,6 +393,7 @@ pkginclude_HEADERS = \
 	src/csv.h	     \
 	src/derive.h	     \
 	src/emacs.h	     \
+	src/fdstream.hpp     \
 	src/flags.h	     \
 	src/format.h	     \
 	src/gnucash.h	     \
@@ -410,6 +414,7 @@ pkginclude_HEADERS = \
 	src/report.h	     \
 	src/scoped_execute.h \
 	src/session.h	     \
+	src/system.hh	     \
 	src/textual.h	     \
 	src/times.h	     \
 	src/transform.h	     \
@@ -434,6 +439,7 @@ dist_lisp_LISP = lisp/ledger.el lisp/timeclock.el
 @HAVE_BOOST_PYTHON_TRUE@	src/pyledger.cc \
 @HAVE_BOOST_PYTHON_TRUE@	src/py_utils.cc \
 @HAVE_BOOST_PYTHON_TRUE@	src/py_times.cc \
+@HAVE_BOOST_PYTHON_TRUE@	src/py_commodity.cc \
 @HAVE_BOOST_PYTHON_TRUE@	src/py_amount.cc
 
 @HAVE_BOOST_PYTHON_TRUE@ledger_so_DEPENDENCIES = libledger.la gdtoa/libgdtoa.la libpyledger.la
@@ -639,9 +645,11 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libledger_la-xmlparse.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libledger_la-xpath.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpyledger_la-py_amount.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpyledger_la-py_commodity.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpyledger_la-py_times.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpyledger_la-py_utils.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/py_amount.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/py_commodity.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/py_times.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/py_utils.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pyledger.Po@am__quote@
@@ -870,6 +878,13 @@ libpyledger_la-py_times.lo: src/py_times.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpyledger_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libpyledger_la-py_times.lo `test -f 'src/py_times.cc' || echo '$(srcdir)/'`src/py_times.cc
 
+libpyledger_la-py_commodity.lo: src/py_commodity.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpyledger_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libpyledger_la-py_commodity.lo -MD -MP -MF $(DEPDIR)/libpyledger_la-py_commodity.Tpo -c -o libpyledger_la-py_commodity.lo `test -f 'src/py_commodity.cc' || echo '$(srcdir)/'`src/py_commodity.cc
+@am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libpyledger_la-py_commodity.Tpo $(DEPDIR)/libpyledger_la-py_commodity.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/py_commodity.cc' object='libpyledger_la-py_commodity.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpyledger_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libpyledger_la-py_commodity.lo `test -f 'src/py_commodity.cc' || echo '$(srcdir)/'`src/py_commodity.cc
+
 libpyledger_la-py_amount.lo: src/py_amount.cc
 @am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpyledger_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libpyledger_la-py_amount.lo -MD -MP -MF $(DEPDIR)/libpyledger_la-py_amount.Tpo -c -o libpyledger_la-py_amount.lo `test -f 'src/py_amount.cc' || echo '$(srcdir)/'`src/py_amount.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libpyledger_la-py_amount.Tpo $(DEPDIR)/libpyledger_la-py_amount.Plo
@@ -1030,6 +1045,20 @@ py_times.obj: src/py_times.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/py_times.cc' object='py_times.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o py_times.obj `if test -f 'src/py_times.cc'; then $(CYGPATH_W) 'src/py_times.cc'; else $(CYGPATH_W) '$(srcdir)/src/py_times.cc'; fi`
+
+py_commodity.o: src/py_commodity.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT py_commodity.o -MD -MP -MF $(DEPDIR)/py_commodity.Tpo -c -o py_commodity.o `test -f 'src/py_commodity.cc' || echo '$(srcdir)/'`src/py_commodity.cc
+@am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/py_commodity.Tpo $(DEPDIR)/py_commodity.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/py_commodity.cc' object='py_commodity.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o py_commodity.o `test -f 'src/py_commodity.cc' || echo '$(srcdir)/'`src/py_commodity.cc
+
+py_commodity.obj: src/py_commodity.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT py_commodity.obj -MD -MP -MF $(DEPDIR)/py_commodity.Tpo -c -o py_commodity.obj `if test -f 'src/py_commodity.cc'; then $(CYGPATH_W) 'src/py_commodity.cc'; else $(CYGPATH_W) '$(srcdir)/src/py_commodity.cc'; fi`
+@am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/py_commodity.Tpo $(DEPDIR)/py_commodity.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/py_commodity.cc' object='py_commodity.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o py_commodity.obj `if test -f 'src/py_commodity.cc'; then $(CYGPATH_W) 'src/py_commodity.cc'; else $(CYGPATH_W) '$(srcdir)/src/py_commodity.cc'; fi`
 
 py_amount.o: src/py_amount.cc
 @am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT py_amount.o -MD -MP -MF $(DEPDIR)/py_amount.Tpo -c -o py_amount.o `test -f 'src/py_amount.cc' || echo '$(srcdir)/'`src/py_amount.cc

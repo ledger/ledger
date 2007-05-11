@@ -40,6 +40,13 @@ namespace ledger {
 
 using namespace boost::python;
 
+amount_t py_round_0(const amount_t& amount) {
+  return amount.round();
+}
+amount_t py_round_1(const amount_t& amount, amount_t::precision_t prec) {
+  return amount.round(prec);
+}
+
 double py_to_double_0(amount_t& amount) {
   return amount.to_double();
 }
@@ -54,26 +61,46 @@ long py_to_long_1(amount_t& amount, bool no_check) {
   return amount.to_long(no_check);
 }
 
-void py_parse_1(amount_t& amount, const string& str) {
-  amount.parse(str);
-}
-void py_parse_2(amount_t& amount, const string& str, unsigned char flags) {
-  amount.parse(str, flags);
-}
-
-amount_t py_round_0(const amount_t& amount) {
-  return amount.round();
-}
-amount_t py_round_1(const amount_t& amount, amount_t::precision_t prec) {
-  return amount.round(prec);
-}
-
 boost::optional<amount_t> py_value_0(const amount_t& amount) {
   return amount.value();
 }
 boost::optional<amount_t> py_value_1(const amount_t& amount,
 				     const boost::optional<moment_t>& moment) {
   return amount.value(moment);
+}
+
+void py_parse_2(amount_t& amount, object in, unsigned char flags) {
+  if (PyFile_Check(in.ptr())) {
+    pyifstream instr(reinterpret_cast<PyFileObject *>(in.ptr()));
+    amount.parse(instr, flags);
+  } else {
+    PyErr_SetString(PyExc_IOError,
+		    "Argument to amount.parse(file) is not a file object");
+  }
+}
+void py_parse_1(amount_t& amount, object in) {
+  py_parse_2(amount, in, 0);
+}
+
+void py_parse_str_1(amount_t& amount, const string& str) {
+  amount.parse(str);
+}
+void py_parse_str_2(amount_t& amount, const string& str, unsigned char flags) {
+  amount.parse(str, flags);
+}
+
+void py_read_1(amount_t& amount, object in) {
+  if (PyFile_Check(in.ptr())) {
+    pyifstream instr(reinterpret_cast<PyFileObject *>(in.ptr()));
+    amount.read(instr);
+  } else {
+    PyErr_SetString(PyExc_IOError,
+		    "Argument to amount.parse(file) is not a file object");
+  }
+}
+void py_read_2(amount_t& amount, const std::string& str) {
+  const char * p = str.c_str();
+  amount.read(p);
 }
 
 #define EXC_TRANSLATOR(type)				\
@@ -112,7 +139,9 @@ void export_amount()
     .def(init<long>())
     .def(init<std::string>())
 
-    .def("exact", &amount_t::exact)
+    .def("exact", &amount_t::exact, args("value"),
+	 "Construct an amount object whose display precision is always equal to its\n\
+internal precision.")
     .staticmethod("exact")
 
     .def(init<amount_t>())
@@ -197,7 +226,7 @@ void export_amount()
     .def(self	  /  double())
     .def(double() / self)
 
-    .def("precision", &amount_t::precision)
+    .add_property("precision", &amount_t::precision)
 
     .def("negate", &amount_t::negate)
     .def("in_place_negate", &amount_t::in_place_negate,
@@ -243,7 +272,7 @@ void export_amount()
     .def("fits_in_double", &amount_t::fits_in_double)
     .def("fits_in_long", &amount_t::fits_in_long)
 
-    .def("quantity_string", &amount_t::quantity_string)
+    .add_property("quantity_string", &amount_t::quantity_string)
 
     .add_property("commodity",
 		  make_function(&amount_t::commodity,
@@ -253,18 +282,24 @@ void export_amount()
 
     .def("has_commodity", &amount_t::has_commodity)
     .def("clear_commodity", &amount_t::clear_commodity)
-    .def("number", &amount_t::number)
+    .add_property("number", &amount_t::number)
 
     .def("annotate_commodity", &amount_t::annotate_commodity)
     .def("commodity_annotated", &amount_t::commodity_annotated)
-    .def("annotation_details", &amount_t::annotation_details)
+    .add_property("annotation_details", &amount_t::annotation_details)
     .def("strip_annotations", &amount_t::strip_annotations)
 
     .def("parse", py_parse_1)
     .def("parse", py_parse_2)
+    .def("parse", py_parse_str_1)
+    .def("parse", py_parse_str_2)
 
     .def("parse_conversion", &amount_t::parse_conversion)
     .staticmethod("parse_conversion")
+
+    .def("read", py_read_1)
+    .def("read", py_read_2)
+    .def("write", &amount_t::write)
 
     .def("valid", &amount_t::valid)
     ;

@@ -31,6 +31,7 @@
 
 #include "pyinterp.h"
 #include "pyutils.h"
+#include "pyfstream.h"
 
 #include <boost/python/module.hpp>
 #include <boost/python/def.hpp>
@@ -74,6 +75,7 @@ struct bool_from_python
 typedef register_python_conversion<bool, bool_to_python, bool_from_python>
   bool_python_conversion;
 
+
 struct string_to_python
 {
   static PyObject* convert(const string& str)
@@ -103,10 +105,69 @@ struct string_from_python
 typedef register_python_conversion<string, string_to_python, string_from_python>
   string_python_conversion;
 
+
+struct istream_to_python
+{
+  static PyObject* convert(const std::istream& str)
+  {
+    return incref(boost::python::detail::none());
+  }
+};
+   
+struct istream_from_python
+{
+  static void* convertible(PyObject* obj_ptr)
+  {
+    if (!PyFile_Check(obj_ptr)) return 0;
+    return obj_ptr;
+  }
+
+  static void construct(PyObject* obj_ptr, converter::rvalue_from_python_stage1_data* data)
+  {
+    void* storage = ((converter::rvalue_from_python_storage<pyifstream>*) data)->storage.bytes;
+    new (storage) pyifstream(reinterpret_cast<PyFileObject *>(obj_ptr));
+    data->convertible = storage;
+  }
+};
+
+typedef register_python_conversion<std::istream, istream_to_python, istream_from_python>
+  istream_python_conversion;
+
+
+struct ostream_to_python
+{
+  static PyObject* convert(const std::ostream& str)
+  {
+    return incref(boost::python::detail::none());
+  }
+};
+   
+struct ostream_from_python
+{
+  static void* convertible(PyObject* obj_ptr)
+  {
+    if (!PyFile_Check(obj_ptr)) return 0;
+    return obj_ptr;
+  }
+
+  static void construct(PyObject* obj_ptr, converter::rvalue_from_python_stage1_data* data)
+  {
+    void* storage = ((converter::rvalue_from_python_storage<pyofstream>*) data)->storage.bytes;
+    new (storage) pyofstream(reinterpret_cast<PyFileObject *>(obj_ptr));
+    data->convertible = storage;
+  }
+};
+
+typedef register_python_conversion<std::ostream, ostream_to_python, ostream_from_python>
+  ostream_python_conversion;
+
+
 void export_utils()
 {
   bool_python_conversion();
   string_python_conversion();
+  istream_python_conversion();
+  ostream_python_conversion();
 }
 
 } // namespace ledger

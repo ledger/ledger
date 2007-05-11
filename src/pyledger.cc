@@ -38,6 +38,7 @@ namespace ledger {
 void export_utils();
 void export_times();
 void export_amount();
+void export_commodity();
 #if 0
 void export_balance();
 void export_value();
@@ -55,6 +56,7 @@ void initialize_for_python()
   export_utils();
   export_times();
   export_amount();
+  export_commodity();
 #if 0
   export_balance();
   export_value();

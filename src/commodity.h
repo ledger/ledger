@@ -49,7 +49,7 @@ class annotated_commodity_t;
 
 class commodity_t
   : public delegates_flags<>,
-           equality_comparable1<commodity_t, noncopyable>
+    public equality_comparable1<commodity_t, noncopyable>
 {
   friend class commodity_pool_t;
 
@@ -255,7 +255,7 @@ inline std::ostream& operator<<(std::ostream& out, const annotation_t& details) 
 
 class annotated_commodity_t
   : public commodity_t,
-           equality_comparable<annotated_commodity_t,
+    public equality_comparable<annotated_commodity_t,
            equality_comparable2<annotated_commodity_t, commodity_t,
 				noncopyable> >
 {
