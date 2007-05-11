@@ -55,7 +55,9 @@ class document_t;
 class node_t : public supports_flags<>
 {
 public:
-  unsigned int	      name_id;
+  typedef uint_fast16_t nameid_t;
+
+  nameid_t	      name_id;
 #ifdef THREADSAFE
   document_t *	      document;
 #else
