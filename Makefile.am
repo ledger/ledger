@@ -112,6 +112,7 @@ pkginclude_HEADERS = \
 	src/csv.h	     \
 	src/derive.h	     \
 	src/emacs.h	     \
+	src/fdstream.hpp     \
 	src/flags.h	     \
 	src/format.h	     \
 	src/gnucash.h	     \
