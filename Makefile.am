@@ -60,14 +60,14 @@ libledger_la_SOURCES = \
 	src/xmlparse.cc	 \
 	src/xpath.cc
 
-if HAVE_EXPAT
-libledger_la_CPPFLAGS += -DHAVE_EXPAT=1
-libledger_la_SOURCES += src/gnucash.cc
-endif
-if HAVE_XMLPARSE
-libledger_la_CPPFLAGS += -DHAVE_XMLPARSE=1
-libledger_la_SOURCES += src/gnucash.cc
-endif
+#if HAVE_EXPAT
+#libledger_la_CPPFLAGS += -DHAVE_EXPAT=1
+#libledger_la_SOURCES += src/gnucash.cc
+#endif
+#if HAVE_XMLPARSE
+#libledger_la_CPPFLAGS += -DHAVE_XMLPARSE=1
+#libledger_la_SOURCES += src/gnucash.cc
+#endif
 if HAVE_LIBOFX
 libledger_la_CPPFLAGS += -DHAVE_LIBOFX=1
 libledger_la_SOURCES += src/ofx.cc
@@ -192,12 +192,12 @@ PYLIBS += boost_date_time$(BOOST_SUFFIX)  \
           boost_regex$(BOOST_SUFFIX)	  \
           boost_python$(BOOST_SUFFIX)
 
-if HAVE_EXPAT
-PYLIBS += expat
-endif
-if HAVE_XMLPARSE
-PYLIBS += xmlparse xmltok
-endif
+#if HAVE_EXPAT
+#PYLIBS += expat
+#endif
+#if HAVE_XMLPARSE
+#PYLIBS += xmlparse xmltok
+#endif
 if HAVE_LIBOFX
 PYLIBS += ofx
 endif
