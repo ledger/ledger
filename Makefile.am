@@ -165,6 +165,8 @@ nodist_info_TEXINFOS = docs/ledger.texi
 
 dist_lisp_LISP = lisp/ledger.el lisp/timeclock.el
 
+DISTCLEANFILES = ledger.elc timeclock.elc
+
 ######################################################################
 
 if HAVE_BOOST_PYTHON
@@ -256,7 +258,7 @@ fullcheck: check
 
 ######################################################################
 
-DISTCLEANFILES = Doxyfile.gen
+DISTCLEANFILES += Doxyfile.gen
 
 alldocs: docs/ledger.info docs/ledger.pdf doxygen-docs
 
