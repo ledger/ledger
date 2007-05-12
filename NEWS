@@ -1,5 +1,11 @@
 			     Ledger NEWS
 
+* 2.6.1
+
+- Gnucash parser is fixed.
+
+- Fix a memory leak bug in the amount parser.
+
 * 2.6
 
 - The style for eliding long account names (for example, in the
