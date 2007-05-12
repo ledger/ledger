@@ -14,6 +14,9 @@
 # later examination if desired.
 
 SRCDIR=$(dirname $0)
+if [ -z "$SRCDIR" ]; then
+    SRCDIR=$(pwd)
+fi
 
 if [ -n "$1" -a -d "$1" ]; then
     TMPDIR="$1"
