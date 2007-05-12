@@ -1,3 +1,9 @@
+/config.guess
+/config.sub
+/depcomp
+/install-sh
+/ltmain.sh
+/missing
 Makefile
 acconf.h
 arith.h

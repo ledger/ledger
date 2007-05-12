@@ -273,16 +273,77 @@ doxygen-docs: $(top_builddir)/Doxyfile.gen
 
 ###############################################################################
 
-check-syntax:
-	g++ -I. -Itests $(CPPFLAGS) $(UnitTests_CXXFLAGS) \
-		-o /dev/null -S $(CHK_SOURCES)
+clean-backupfiles:
+	rm -fr *~  \
+	       .*~ \
+	       .\#*
 
-all-clean: maintainer-clean
-	rm -fr *~ .*~ .\#* *.html *.info *.pdf *.a *.so *.o *.lo *.la	     \
-	       *.elc *.aux *.cp *.fn *.ky *.log *.pg *.toc *.tp *.vr	     \
-	       .gdb_history gmon.out h out TAGS ledger valexpr .deps .libs   \
-	       build INSTALL Makefile acconf.h acconf.h.in aclocal.m4	     \
-	       autom4te config.guess config.sub configure depcomp install-sh \
-	       libtool ltconfig ltmain.sh missing stamp texinfo.tex	     \
-	       Makefile.in mkinstalldirs elisp-comp elc-stamp elc-temp	     \
-	       py-compile ylwrap compile
+clean-documentation:
+	(cd docs; \
+	rm -fr *.aux  \
+	       *.cp   \
+	       *.fn   \
+	       *.info \
+	       *.ky   \
+	       *.log  \
+	       *.pdf  \
+	       *.pg   \
+	       *.toc  \
+	       *.tp   \
+	       *.vr)
+
+clean-buildproducts:
+	rm -fr *.Plo  \
+	       *.Po   \
+	       *.a    \
+	       *.elc  \
+	       *.gcno \
+	       *.gdca \
+	       *.la   \
+	       *.lo   \
+	       *.o    \
+	       *.so   \
+	       .deps  \
+	       .libs  \
+	       build
+
+clean-debugdata:
+	rm -fr .gdb_history \
+	       TAGS         \
+	       gmon.out	    \
+	       h	    \
+	       out
+
+clean-autoconf:
+	(cd $(srcdir);
+	rm -fr Makefile	     \
+	       Makefile.in   \
+	       acconf.h	     \
+	       acconf.h.in   \
+	       aclocal.m4    \
+	       autom4te      \
+	       compile	     \
+	       config.guess  \
+	       config.sub    \
+	       configure     \
+	       depcomp	     \
+	       elc-stamp     \
+	       elc-temp	     \
+	       elisp-comp    \
+	       install-sh    \
+	       libtool	     \
+	       ltconfig	     \
+	       ltmain.sh     \
+	       missing	     \
+	       mkinstalldirs \
+	       py-compile    \
+	       stamp	     \
+	       texinfo.tex   \
+	       ylwrap)
+
+all-clean: maintainer-clean    \
+	   clean-buildproducts \
+	   clean-backupfiles   \
+	   clean-debugdata     \
+	   clean-documentation \
+	   clean-autoconf
