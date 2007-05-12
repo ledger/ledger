@@ -9,3 +9,10 @@
 
 - Using mmap for the binary reader; or determine if the performance is
   even worth the maintenance headaches of that code altogether.
+
+- Rewrite the error context reporting logic, then tie in the logging
+  facility to it (so that warning can be reported with context, and
+  debug statements can be filtered by context).
+
+    PUSH_CONTEXT("amount.divide");
+    POP_CONTEXT(amount_context2("Dividing amounts", amt1, amt2));
