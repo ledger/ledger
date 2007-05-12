@@ -59,22 +59,13 @@ function dup_working_tree() {
 }
 
 # These functions understand how to do a distcheck build for ledger
-# either completely from scratch, or using the configure script that
-# is maintained in the repository.
+# completely from scratch.
 
 function build_distcheck_from_scratch() {
     cd $TMPDIR/ledger || exit 1
     dup_working_tree distcheck_scratch || exit 1
     cd distcheck_scratch || exit 1
     ./acprep --local || exit 1
-    make CPPFLAGS="$MY_CPPFLAGS" LDFLAGS="$MY_LDFLAGS" distcheck || exit 1
-}
-
-function build_distcheck_from_distrib() {
-    cd $TMPDIR/ledger || exit 1
-    dup_working_tree distcheck_distrib || exit 1
-    cd distcheck_distrib || exit 1
-    ./configure CPPFLAGS="$MY_CPPFLAGS" LDFLAGS="$MY_LDFLAGS" || exit 1
     make CPPFLAGS="$MY_CPPFLAGS" LDFLAGS="$MY_LDFLAGS" distcheck || exit 1
 }
 
@@ -108,7 +99,6 @@ function build_ledger() {
 # optimized one.  Note that this will take a long while!
 
 build_distcheck_from_scratch || exit 1
-build_distcheck_from_distrib || exit 1
 
 build_ledger normal || exit 1
 build_ledger python --python || exit 1
