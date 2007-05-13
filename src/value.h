@@ -299,7 +299,7 @@ class value_t
   bool operator<(const value_t& val) const;
   //bool operator>(const value_t& val) const;
 
-  string label(optional<type_t> the_type = optional<type_t>()) const {
+  string label(optional<type_t> the_type = none) const {
     switch (the_type ? *the_type : type) {
     case VOID:
       return "an uninitialized value";
@@ -362,9 +362,8 @@ class value_t
 			    const bool keep_tag   = amount_t::keep_tag) const;
 
   value_t& add(const amount_t& amount,
-	       const optional<amount_t>& cost = optional<amount_t>());
-  value_t  value(const optional<moment_t>& moment =
-		 optional<moment_t>()) const;
+	       const optional<amount_t>& cost = none);
+  value_t  value(const optional<moment_t>& moment = none) const;
 
   void    in_place_reduce();
   value_t reduce() const {

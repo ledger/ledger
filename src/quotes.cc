@@ -60,7 +60,7 @@ quotes_by_script::operator()(commodity_t&	       commodity,
       (last && (now - *last) < pricing_leeway) ||
       (moment && date && *moment > *date &&
        (*moment - *date) <= pricing_leeway))
-    return optional<amount_t>();
+    return none;
 
   DEBUG_("downloading quote for symbol " << commodity.symbol());
 
@@ -111,7 +111,7 @@ quotes_by_script::operator()(commodity_t&	       commodity,
 	   "Failed to download price for '" << commodity.symbol() <<
 	   "' (command: \"getquote " << commodity.base_symbol() << "\")");
   }
-  return optional<amount_t>();
+  return none;
 }
 
 } // namespace ledger

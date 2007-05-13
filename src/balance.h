@@ -179,10 +179,9 @@ public:
     return true;
   }
 
-  optional<amount_t>  amount(const optional<const commodity_t&>& commodity =
-			     optional<const commodity_t&>()) const;
-  optional<balance_t> value(const optional<moment_t>& moment =
-			    optional<moment_t>()) const;
+  optional<amount_t>
+  amount(const optional<const commodity_t&>& commodity = none) const;
+  optional<balance_t> value(const optional<moment_t>& moment = none) const;
 
   balance_t
   strip_annotations(const bool keep_price = amount_t::keep_price,

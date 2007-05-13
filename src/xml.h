@@ -300,7 +300,7 @@ class xml_parser_t : public parser_t
   virtual unsigned int parse(std::istream&	   in,
 			     journal_t *	   journal,
 			     account_t *	   master   = NULL,
-			     const optional<path>& original = optional<path>());
+			     const optional<path>& original = none);
 };
 
 DECLARE_EXCEPTION(parse_error);

@@ -148,14 +148,14 @@ public:
   optional<string> name() const {
     return base->name;
   }
-  void set_name(const optional<string>& arg = optional<string>()) {
+  void set_name(const optional<string>& arg = none) {
     base->name = arg;
   }
 
   optional<string> note() const {
     return base->note;
   }
-  void set_note(const optional<string>& arg = optional<string>()) {
+  void set_note(const optional<string>& arg = none) {
     base->note = arg;
   }
 
@@ -169,14 +169,14 @@ public:
   optional<amount_t> smaller() const {
     return base->smaller;
   }
-  void set_smaller(const optional<amount_t>& arg = optional<amount_t>()) {
+  void set_smaller(const optional<amount_t>& arg = none) {
     base->smaller = arg;
   }
 
   optional<amount_t> larger() const {
     return base->larger;
   }
-  void set_larger(const optional<amount_t>& arg = optional<amount_t>()) {
+  void set_larger(const optional<amount_t>& arg = none) {
     base->larger = arg;
   }
 
@@ -187,8 +187,7 @@ public:
   void	   add_price(const moment_t& date, const amount_t& price);
   bool	   remove_price(const moment_t& date);
 
-  optional<amount_t> value(const optional<moment_t>& moment =
-			   optional<moment_t>());
+  optional<amount_t> value(const optional<moment_t>& moment = none);
 
   static void parse_symbol(std::istream& in, string& symbol);
   static string parse_symbol(std::istream& in) {
@@ -220,9 +219,9 @@ struct annotation_t : public equality_comparable<annotation_t>
   optional<string>    tag;
 
   explicit annotation_t
-    (const optional<amount_t>& _price = optional<amount_t>(),
-     const optional<moment_t>& _date  = optional<moment_t>(),
-     const optional<string>&   _tag   = optional<string>())
+    (const optional<amount_t>& _price = none,
+     const optional<moment_t>& _date  = none,
+     const optional<string>&   _tag   = none)
     : price(_price), date(_date), tag(_tag) {}
 
   operator bool() const {
@@ -354,8 +353,7 @@ public:
 		  (commodity_t&		     commodity,
 		   const optional<moment_t>& date,
 		   const optional<moment_t>& moment,
-		   const optional<moment_t>& last),
-		  first_initialized<optional<amount_t> > > get_quote;
+		   const optional<moment_t>& last)> get_quote;
 
   explicit commodity_pool_t();
 

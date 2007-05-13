@@ -99,7 +99,7 @@ optional<amount_t> commodity_t::value(const optional<moment_t>& moment)
 	    age	  = (*i).first;
 	    price = (*i).second;
 	  } else {
-	    age   = optional<moment_t>();
+	    age   = none;
 	  }
 	} else {
 	  price = (*i).second;
@@ -307,9 +307,9 @@ annotated_commodity_t::strip_annotations(const bool _keep_price,
   {
     new_comm = parent().find_or_create
       (referent(),
-       annotation_t(_keep_price ? details.price : optional<amount_t>(),
-		    _keep_date  ? details.date  : optional<moment_t>(),
-		    _keep_tag   ? details.tag   : optional<string>()));
+       annotation_t(_keep_price ? details.price : none,
+		    _keep_date  ? details.date  : none,
+		    _keep_tag   ? details.tag   : none));
   } else {
     new_comm = parent().find_or_create(base_symbol());
   }

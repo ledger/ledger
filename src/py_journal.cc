@@ -291,8 +291,7 @@ void export_journal()
     ;
 
   class_< account_t >
-    ("Account",
-     init<optional<account_t *, string, string> >()
+    ("Account", init<optional<account_t *, string, string> >()
      [with_custodian_and_ward<1, 2>()])
     .def(self == self)
     .def(self != self)

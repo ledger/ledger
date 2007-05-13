@@ -157,12 +157,11 @@ public:
     return temp;
   }
 
-  optional<amount_t>  amount(const optional<const commodity_t&>& commodity =
-			     optional<const commodity_t&>()) const {
+  optional<amount_t>
+  amount(const optional<const commodity_t&>& commodity = none) const {
     return quantity.amount(commodity);
   }
-  optional<balance_t> value(const optional<moment_t>& moment =
-			    optional<moment_t>()) const {
+  optional<balance_t> value(const optional<moment_t>& moment = none) const {
     return quantity.value(moment);
   }
 
@@ -179,7 +178,7 @@ public:
   }
 
   balance_pair_t& add(const amount_t&  amt,
-		      const optional<amount_t>& a_cost = optional<amount_t>()) {
+		      const optional<amount_t>& a_cost = none) {
     if (a_cost && ! cost)
       cost = quantity;
     quantity += amt;

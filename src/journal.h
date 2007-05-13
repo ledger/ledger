@@ -94,10 +94,10 @@ class transaction_t : public supports_flags<>
       data(NULL) {
     TRACE_CTOR(transaction_t, "account_t *");
   }
-  explicit transaction_t(account_t *	 _account,
-			 const amount_t& _amount,
-			 unsigned int    _flags = TRANSACTION_NORMAL,
-			 const optional<string> _note = optional<string>())
+  explicit transaction_t(account_t *	        _account,
+			 const amount_t&        _amount,
+			 unsigned int           _flags = TRANSACTION_NORMAL,
+			 const optional<string> _note  = none)
     : supports_flags<>(_flags),
       entry(NULL),
       state(UNCLEARED),
@@ -345,7 +345,7 @@ class account_t
 
   account_t(account_t *   _parent = NULL,
 	    const string& _name   = "",
-	    const optional<string> _note = optional<string>())
+	    const optional<string> _note = none)
     : parent(_parent), name(_name), note(_note),
       depth(parent ? parent->depth + 1 : 0), data(NULL), ident(0) {
     TRACE_CTOR(account_t, "account_t *, const string&, const string&");

@@ -359,8 +359,7 @@ public:
   }
   amount_t& in_place_unreduce();
 
-  optional<amount_t> value(const optional<moment_t>& moment =
-			   optional<moment_t>()) const;
+  optional<amount_t> value(const optional<moment_t>& moment = none) const;
 
   /**
    * Truth tests.  An amount may be truth test in several ways:
@@ -502,7 +501,7 @@ public:
    * annotate_commodity(amount_t price, [moment_t date, string tag])
    * sets the annotations for the current amount's commodity.  Only
    * the price argument is required, although it can be passed as
-   * `optional<amount_t>()' if no price is desired.
+   * `none' if no price is desired.
    *
    * commodity_annotated() returns true if an amount's commodity has
    * any annotation details associated with it.

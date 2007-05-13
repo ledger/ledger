@@ -659,7 +659,7 @@ optional<amount_t> amount_t::value(const optional<moment_t>& moment) const
   } else {
     throw_(amount_error, "Cannot determine value of an uninitialized amount");
   }
-  return optional<amount_t>();
+  return none;
 }
 
 

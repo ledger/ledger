@@ -151,12 +151,12 @@ class session_t : public xml::xpath_t::scope_t
   unsigned int read_journal(std::istream&	  in,
 			    journal_t *		  journal,
 			    account_t *		  master   = NULL,
-			    const optional<path>& original = optional<path>());
+			    const optional<path>& original = none);
 
   unsigned int read_journal(const path&		  pathname,
 			    journal_t *		  journal,
 			    account_t *		  master   = NULL,
-			    const optional<path>& original = optional<path>());
+			    const optional<path>& original = none);
 
   void read_init();
 

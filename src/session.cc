@@ -93,8 +93,7 @@ unsigned int session_t::read_journal(const path&	   pathname,
   journal->sources.push_back(pathname);
 
   if (! exists(pathname))
-    throw filesystem_error(BOOST_CURRENT_FUNCTION, pathname,
-			   "Cannot read file");
+    throw_(std::logic_error, "Cannot read file" << pathname);
 
   ifstream stream(pathname);
   return read_journal(stream, journal, master,
@@ -107,8 +106,7 @@ void session_t::read_init()
     return;
 
   if (! exists(*init_file))
-    throw filesystem_error(BOOST_CURRENT_FUNCTION, *init_file,
-			   "Cannot read init file");
+    throw_(std::logic_error, "Cannot read init file" << *init_file);
 
   ifstream init(*init_file);
 

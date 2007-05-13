@@ -26,8 +26,7 @@ class builder_t
 
   virtual void     appendText(const string& text)	= 0;
 
-  virtual node_t * endNode(const optional<string>& name = 
-			   optional<string>())		= 0;
+  virtual node_t * endNode(const optional<string>& name = none) = 0;
   virtual node_t * endNode(const nameid_t name_id)	= 0;
 };
 

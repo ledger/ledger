@@ -49,7 +49,7 @@ class parser_t
   virtual unsigned int parse(std::istream&	   in,
 			     journal_t *	   journal,
 			     account_t *	   master   = NULL,
-			     const optional<path>& original = optional<path>()) = 0;
+			     const optional<path>& original = none) = 0;
 };
 
 DECLARE_EXCEPTION(parse_error);

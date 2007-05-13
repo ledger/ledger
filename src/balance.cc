@@ -135,7 +135,7 @@ balance_t::amount(const optional<const commodity_t&>& commodity) const
     if (i != amounts.end())
       return (*i).second;
   }
-  return optional<amount_t>();
+  return none;
 }
 
 optional<balance_t>
