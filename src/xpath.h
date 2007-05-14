@@ -311,7 +311,7 @@ public:
 
     value_t& as_value() {
       assert(kind == VALUE);
-      value_t * val = boost::get<scoped_ptr<value_t> >(data).get();
+      value_t * val = boost::get<shared_ptr<value_t> >(data).get();
       assert(val);
       return *val;
     }
@@ -418,6 +418,7 @@ public:
     static ptr_op_t defer_sequence(value_t::sequence_t& result_seq);
 
     bool print(std::ostream&   out,
+	       document_t&     document,
 	       const bool      relaxed	  = true,
 	       const ptr_op_t& op_to_find = NULL,
 	       unsigned long * start_pos  = NULL,
@@ -510,12 +511,13 @@ public:
   }
 
   bool print(std::ostream&   out,
+	     document_t&     document,
 	     const bool      relaxed,
 	     const ptr_op_t  op_to_find,
 	     unsigned long * start_pos,
 	     unsigned long * end_pos) const {
     if (ptr)
-      ptr->print(out, relaxed, op_to_find, start_pos, end_pos);
+      ptr->print(out, document, relaxed, op_to_find, start_pos, end_pos);
     return true;
   }
 
@@ -613,8 +615,8 @@ public:
     return temp.calc(top, scope);
   }
 
-  void print(std::ostream& out) const {
-    print(out, true, NULL, NULL, NULL);
+  void print(std::ostream& out, xml::document_t& document) const {
+    print(out, document, true, NULL, NULL, NULL);
   }
   void dump(std::ostream& out) const {
     if (ptr)
@@ -623,11 +625,6 @@ public:
 
   friend class scope_t;
 };
-
-inline std::ostream& operator<<(std::ostream& out, const xpath_t::op_t& op) {
-  op.print(out);
-  return out;
-}
 
 inline void intrusive_ptr_add_ref(xpath_t::op_t * op) {
   op->acquire();

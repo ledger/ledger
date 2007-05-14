@@ -144,13 +144,13 @@ optional<const char *> document_t::lookup_name(nameid_t id) const
   if (id < 1000) {
     switch (id) {
     case CURRENT:
-      return "CURRENT";
+      return ".";
     case PARENT:
-      return "PARENT";
+      return "..";
     case ROOT:
-      return "ROOT";
+      return "";
     case ALL:
-      return "ALL";
+      return "*";
 
     default:
       assert(id >= 10);

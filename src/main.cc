@@ -142,19 +142,19 @@ static int read_and_report(ledger::report_t * report, int argc, char * argv[],
   else if (verb == "xpath")
     ;
   else if (verb == "parse") {
-    xml::xpath_t expr(*arg);
+    xml::xpath_t    expr(*arg);
+    xml::document_t temp(xml::LEDGER_NODE);
 
     IF_INFO() {
       std::cout << "Value expression tree:" << std::endl;
       expr.dump(std::cout);
       std::cout << std::endl;
       std::cout << "Value expression parsed was:" << std::endl;
-      expr.print(std::cout);
+      expr.print(std::cout, temp);
       std::cout << std::endl << std::endl;
       std::cout << "Result of calculation: ";
     }
 
-    xml::document_t temp(xml::LEDGER_NODE);
     std::cout << expr.calc(temp, report).strip_annotations() << std::endl;
 
     return 0;
@@ -254,7 +254,7 @@ static int read_and_report(ledger::report_t * report, int argc, char * argv[],
       expr.dump(*out);
       *out << std::endl;
       *out << "Value expression parsed was:" << std::endl;
-      expr.print(*out);
+      expr.print(*out, xml_document);
       *out << std::endl << std::endl;
       *out << "Result of calculation: ";
     }
@@ -266,7 +266,7 @@ static int read_and_report(ledger::report_t * report, int argc, char * argv[],
   else if (verb == "xpath") {
     std::cout << "XPath parsed:" << std::endl;
     xml::xpath_t xpath(*arg);
-    xpath.print(*out);
+    xpath.print(*out, xml_document);
     *out << std::endl;
 
 #if 0

@@ -575,7 +575,7 @@ xpath_t::parse_value_term(std::istream& in, flags_t tflags) const
     // An identifier followed by ( represents a function call
     tok = next_token(in, tflags);
     if (tok.kind == token_t::LPAREN) {
-      node->kind = op_t::FUNC_NAME;
+      node = new op_t(op_t::FUNC_NAME);
       node->set_string(ident);
 
       ptr_op_t call_node(new op_t(op_t::O_EVAL));
@@ -1779,6 +1779,7 @@ void xpath_t::context::describe(std::ostream& out) const throw()
 #endif
 
 bool xpath_t::op_t::print(std::ostream&	  out,
+			  document_t&     document,
 			  const bool      relaxed,
 			  const ptr_op_t& op_to_find,
 			  unsigned long * start_pos,
@@ -1836,9 +1837,17 @@ bool xpath_t::op_t::print(std::ostream&	  out,
     break;
   }
 
-  case NODE_ID:
-    out << '%' << as_name();
+  case ATTR_ID:
+    out << '@';
+    // fall through...
+  case NODE_ID: {
+    optional<const char *> name = document.lookup_name(as_name());
+    if (name)
+      out << *name;
+    else
+      out << '#' << as_name();
     break;
+  }
 
   case NODE_NAME:
   case FUNC_NAME:
@@ -1863,194 +1872,194 @@ bool xpath_t::op_t::print(std::ostream&	  out,
 
   case O_NOT:
     out << "!";
-    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     break;
   case O_NEG:
     out << "-";
-    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     break;
 
   case O_UNION:
-    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " | ";
-    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     break;
 
   case O_ADD:
     out << "(";
-    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " + ";
-    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case O_SUB:
     out << "(";
-    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " - ";
-    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case O_MUL:
     out << "(";
-    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " * ";
-    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case O_DIV:
     out << "(";
-    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " / ";
-    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
 
   case O_NEQ:
     out << "(";
-    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " != ";
-    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case O_EQ:
     out << "(";
-    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " == ";
-    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case O_LT:
     out << "(";
-    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " < ";
-    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case O_LTE:
     out << "(";
-    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " <= ";
-    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case O_GT:
     out << "(";
-    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " > ";
-    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case O_GTE:
     out << "(";
-    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " >= ";
-    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
 
   case O_AND:
     out << "(";
-    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " & ";
-    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case O_OR:
     out << "(";
-    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " | ";
-    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
 
   case O_QUES:
     out << "(";
-    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " ? ";
-    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case O_COLON:
-    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " : ";
-    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     break;
 
   case O_COMMA:
-    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ", ";
-    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     break;
 
   case O_DEFINE:
-    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << '=';
-    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     break;
   case O_EVAL:
-    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << "(";
-    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
 
   case O_FIND:
-    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << "/";
-    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     break;
   case O_RFIND:
-    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << "//";
-    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     break;
   case O_PRED:
-    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << "[";
-    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, document, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << "]";
     break;
