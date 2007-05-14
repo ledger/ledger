@@ -33,8 +33,10 @@ public:
       : offset(_offset), linenum(_linenum) {}
   };
 
+protected:
   position_t current_position;
 
+public:
   virtual void     set_start_position(std::istream& in) {}
   virtual void     set_position(const position_t& position) {}
   virtual position_t& position() { return current_position; }
@@ -72,20 +74,20 @@ public:
  */
 class document_builder_t : public builder_t
 {
-public:
   typedef std::list<std::pair<node_t::nameid_t, string> > attrs_list;
 
-  document_t& document;
+  document_t& document_;
   attrs_list  current_attrs;
   node_t *    current;
   string      current_text;
 
+public:
   document_builder_t(document_t& _document)
-    : document(_document), current(&document) {}
+    : document_(_document), current(&document_) {}
 
   virtual void     push_attr(const string&  name,
 			     const string& value) {
-    push_attr(document.register_name(name), value);
+    push_attr(document().register_name(name), value);
   }
   virtual void     push_attr(const node_t::nameid_t name_id,
 			     const string& value) {
@@ -93,7 +95,7 @@ public:
   }
 
   virtual void     begin_node(const string& name, bool terminal = false) {
-    begin_node(document.register_name(name), terminal);
+    begin_node(document().register_name(name), terminal);
   }
   virtual void     begin_node(const node_t::nameid_t name_id,
 			      bool terminal = false) {
@@ -118,6 +120,9 @@ public:
     end_node(name_id, end_pos);
   }
 
+  virtual document_t& document() {
+    return document_;
+  }
   virtual node_t * current_node() {
     return current;
   }
