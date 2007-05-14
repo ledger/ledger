@@ -1,5 +1,15 @@
 			     Ledger NEWS
 
+* 3.0
+
+- Ledger has pretty much been re-architected and rewritten.  Rather
+  than list the enormous number of changes here, I refer the reader to
+  the new manual.
+
+  Note that the textual data format is almost 100% backward
+  compatible, so no retroactive changes should be necessary to your
+  2.x journal files.
+
 * 2.6.1
 
 - Gnucash parser is fixed.
