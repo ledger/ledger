@@ -10,6 +10,13 @@
   compatible, so no retroactive changes should be necessary to your
   2.x journal files.
 
+  The one major area that changed is the so-called "value
+  expressions", which now use an XPath dialect instead of the custom
+  language used in 2.x.  This means that the predicates used in your
+  automated expression -- if they are at all complicated -- may need
+  to be redone.  Please confirm your results against 2.x to make sure
+  that your expressions are still working in 3.0.
+
 * 2.6.1
 
 - Gnucash parser is fixed.
