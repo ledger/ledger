@@ -104,14 +104,14 @@ void parse_transaction(builder_t&  builder,
     *e = '\0';
   }
 
-  builder.begin_node(ACCOUNT_PATH_NODE);
+  builder.begin_node(ACCOUNT_PATH_NODE, true);
   builder.append_text(account_path);
   builder.end_node(ACCOUNT_PATH_NODE);
 
   // Parse the optional amount
 
   if (amount) {
-    builder.begin_node(AMOUNT_EXPR_NODE);
+    builder.begin_node(AMOUNT_EXPR_NODE, true);
     builder.append_text(amount);
     builder.end_node(AMOUNT_EXPR_NODE);
   }
@@ -119,7 +119,7 @@ void parse_transaction(builder_t&  builder,
   // Parse the optional note
 
   if (note) {
-    builder.begin_node(NOTE_NODE);
+    builder.begin_node(NOTE_NODE, true);
     builder.append_text(note);
     builder.end_node(NOTE_NODE);
   }
@@ -246,7 +246,7 @@ void parse_entry(std::istream& in,
 
   builder.begin_node(ENTRY_NODE);
 
-  builder.begin_node(PAYEE_NODE);
+  builder.begin_node(PAYEE_NODE, true);
   assert(payee);
   builder.append_text(*payee != '\0' ? payee : "<Unspecified payee>");
   builder.end_node(PAYEE_NODE, end_of_line);
@@ -319,7 +319,7 @@ void textual_parser_t::parse(std::istream& in,
 
       builder.push_attr(TIME_ATTR, date);
       builder.push_attr(ACCOUNT_ATTR, p);
-      builder.begin_node(CHECKIN_NODE);
+      builder.begin_node(CHECKIN_NODE, true);
       builder.append_text(n);
       builder.end_node(CHECKIN_NODE, end_of_line);
       break;
@@ -334,7 +334,7 @@ void textual_parser_t::parse(std::istream& in,
 
       builder.push_attr(TIME_ATTR, date);
       builder.push_attr(ACCOUNT_ATTR, p);
-      builder.begin_node(CHECKIN_NODE);
+      builder.begin_node(CHECKIN_NODE, true);
       builder.append_text(n);
       builder.end_node(CHECKIN_NODE, end_of_line);
       break;
@@ -430,7 +430,7 @@ void textual_parser_t::parse(std::istream& in,
 
     case '=': {		// automated entry
       builder.begin_node(AUTO_ENTRY_NODE);
-      builder.begin_node(RULE_NODE);
+      builder.begin_node(RULE_NODE, true);
       builder.append_text(skip_ws(line + 1));
       builder.end_node(RULE_NODE);
 
@@ -445,7 +445,7 @@ void textual_parser_t::parse(std::istream& in,
 
     case '~':			// period entry
       builder.begin_node(PERIOD_ENTRY_NODE);
-      builder.begin_node(PERIOD_NODE);
+      builder.begin_node(PERIOD_NODE, true);
       builder.append_text(skip_ws(line + 1));
       builder.end_node(PERIOD_NODE);
 

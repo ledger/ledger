@@ -60,17 +60,22 @@ void output_xml_string(std::ostream& out, const string& str)
   }
 }
 
-void parent_node_t::print(std::ostream& out) const
+void node_t::print_attributes(std::ostream& out) const
 {
-  out << '<' << name();
   if (attributes) {
     typedef attributes_t::nth_index<0>::type attributes_by_order;
     foreach (const attr_pair& attr, attributes->get<0>())
-      out << ' ' << document().lookup_name(attr.first)
+      out << ' ' << *document().lookup_name(attr.first)
 	  << "=\"" << attr.second << "\"";
   }
   IF_VERIFY()
     out << " type=\"parent_node_t\"";
+}
+
+void parent_node_t::print(std::ostream& out) const
+{
+  out << '<' << name();
+  print_attributes(out);
   out << '>';
 
   foreach (node_t * child, *this)
@@ -83,13 +88,11 @@ void terminal_node_t::print(std::ostream& out) const
 {
   if (data.empty()) {
     out << '<' << name();
-    IF_VERIFY()
-      out << " type=\"terminal_node_t\"";
+    print_attributes(out);
     out << " />";
   } else {
     out << '<' << name();
-    IF_VERIFY()
-      out << " type=\"terminal_node_t\"";
+    print_attributes(out);
     out << '>';
     output_xml_string(out, text());
     out << "</" << name() << '>';

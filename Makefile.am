@@ -124,7 +124,6 @@ pkginclude_HEADERS = \
 	src/tuples.hpp	     \
 	src/utils.h	     \
 	src/value.h	     \
-	src/xml.h	     \
 	src/xpath.h
 
 ###############################################################################

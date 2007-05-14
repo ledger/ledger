@@ -102,8 +102,9 @@ public:
     return *polymorphic_downcast<const parent_node_t *>(this);
   }    
 
-  virtual value_t to_value() const		      = 0;
+  virtual value_t to_value() const		 = 0;
   virtual void    print(std::ostream& out) const = 0;
+  virtual void    print_attributes(std::ostream& out) const;
 
   const char * name() const;
   nameid_t name_id() const {
@@ -168,6 +169,7 @@ public:
   T * create_child(nameid_t _name_id) {
     T * child = new T(_name_id, document(), *this);
     children.push_back(child);
+    return child;
   }
 
   void delete_child(node_t * child) {
