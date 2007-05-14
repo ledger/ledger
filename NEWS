@@ -61,7 +61,7 @@
   to "trailing", even though it elides at the beginning for long
   account names.
 
-- Error reporting has been greatly improving, now showing full
+- Error reporting has been greatly improved, now showing full
   contextual information for most error messages.
 
 - Added --base reporting option, for reporting convertible commodities
