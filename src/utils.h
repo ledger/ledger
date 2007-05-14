@@ -72,7 +72,6 @@
 #define TRACING_ON  1
 #define DEBUG_ON    1
 #define TIMERS_ON   1
-#define FREE_MEMORY 1
 #elif defined(NDEBUG)
 #define NO_ASSERTS  1
 #define NO_LOGGING  1
@@ -284,9 +283,11 @@ bool logger_func(log_level_t level);
 extern unsigned int _trace_level;
 
 #define SHOW_TRACE(lvl) \
-  (_log_level >= LOG_TRACE && lvl <= _trace_level)
+  (ledger::_log_level >= ledger::LOG_TRACE && lvl <= ledger::_trace_level)
 #define TRACE(lvl, msg) \
-  (SHOW_TRACE(lvl) ? ((_log_buffer << msg), logger_func(LOG_TRACE)) : false)
+  (SHOW_TRACE(lvl) ? \
+   ((ledger::_log_buffer << msg), \
+    ledger::logger_func(ledger::LOG_TRACE)) : false)
 
 #else // TRACING_ON
 
@@ -304,11 +305,13 @@ inline bool category_matches(const char * cat) {
 }
 
 #define SHOW_DEBUG(cat) \
-  (_log_level >= LOG_DEBUG && category_matches(cat))
+  (ledger::_log_level >= ledger::LOG_DEBUG && ledger::category_matches(cat))
 #define SHOW_DEBUG_() SHOW_DEBUG(_this_category)
 
 #define DEBUG(cat, msg) \
-  (SHOW_DEBUG(cat) ? ((_log_buffer << msg), logger_func(LOG_DEBUG)) : false)
+  (SHOW_DEBUG(cat) ? \
+   ((ledger::_log_buffer << msg), \
+    ledger::logger_func(ledger::LOG_DEBUG)) : false)
 #define DEBUG_(msg) DEBUG(_this_category, msg)
 
 #else // DEBUG_ON
@@ -320,22 +323,22 @@ inline bool category_matches(const char * cat) {
 
 #endif // DEBUG_ON
    
-#define LOG_MACRO(level, msg)				\
-  (_log_level >= level ?				\
-   ((_log_buffer << msg), logger_func(level)) : false)
+#define LOG_MACRO(level, msg) \
+  (ledger::_log_level >= level ? \
+   ((ledger::_log_buffer << msg), ledger::logger_func(level)) : false)
 
-#define SHOW_INFO()     (_log_level >= LOG_INFO)
-#define SHOW_WARN()     (_log_level >= LOG_WARN)
-#define SHOW_ERROR()    (_log_level >= LOG_ERROR)
-#define SHOW_FATAL()    (_log_level >= LOG_FATAL)
-#define SHOW_CRITICAL() (_log_level >= LOG_CRIT)
+#define SHOW_INFO()     (ledger::_log_level >= ledger::LOG_INFO)
+#define SHOW_WARN()     (ledger::_log_level >= ledger::LOG_WARN)
+#define SHOW_ERROR()    (ledger::_log_level >= ledger::LOG_ERROR)
+#define SHOW_FATAL()    (ledger::_log_level >= ledger::LOG_FATAL)
+#define SHOW_CRITICAL() (ledger::_log_level >= ledger::LOG_CRIT)
 
-#define INFO(msg)      LOG_MACRO(LOG_INFO, msg)
-#define WARN(msg)      LOG_MACRO(LOG_WARN, msg)
-#define ERROR(msg)     LOG_MACRO(LOG_ERROR, msg)
-#define FATAL(msg)     LOG_MACRO(LOG_FATAL, msg)
-#define CRITICAL(msg)  LOG_MACRO(LOG_CRIT, msg)
-#define EXCEPTION(msg) LOG_MACRO(LOG_EXCEPT, msg)
+#define INFO(msg)      LOG_MACRO(ledger::LOG_INFO, msg)
+#define WARN(msg)      LOG_MACRO(ledger::LOG_WARN, msg)
+#define ERROR(msg)     LOG_MACRO(ledger::LOG_ERROR, msg)
+#define FATAL(msg)     LOG_MACRO(ledger::LOG_FATAL, msg)
+#define CRITICAL(msg)  LOG_MACRO(ledger::LOG_CRIT, msg)
+#define EXCEPTION(msg) LOG_MACRO(ledger::LOG_EXCEPT, msg)
 
 } // namespace ledger
 
@@ -386,13 +389,14 @@ void stop_timer(const char * name);
 void finish_timer(const char * name);
 
 #if defined(TRACING_ON)
-#define TRACE_START(name, lvl, msg)					\
-  (SHOW_TRACE(lvl) ?							\
-   ((_log_buffer << msg), start_timer(#name, LOG_TRACE)) : ((void)0))
+#define TRACE_START(name, lvl, msg) \
+  (SHOW_TRACE(lvl) ? \
+   ((ledger::_log_buffer << msg), \
+    ledger::start_timer(#name, ledger::LOG_TRACE)) : ((void)0))
 #define TRACE_STOP(name, lvl) \
-  (SHOW_TRACE(lvl) ? stop_timer(#name) : ((void)0))
+  (SHOW_TRACE(lvl) ? ledger::stop_timer(#name) : ((void)0))
 #define TRACE_FINISH(name, lvl) \
-  (SHOW_TRACE(lvl) ? finish_timer(#name) : ((void)0))
+  (SHOW_TRACE(lvl) ? ledger::finish_timer(#name) : ((void)0))
 #else
 #define TRACE_START(name, lvl, msg)
 #define TRACE_STOP(name)
@@ -400,17 +404,18 @@ void finish_timer(const char * name);
 #endif
 
 #if defined(DEBUG_ON)
-#define DEBUG_START(name, cat, msg)					\
-  (SHOW_DEBUG(cat) ?							\
-   ((_log_buffer << msg), start_timer(#name, LOG_DEBUG)) : ((void)0))
+#define DEBUG_START(name, cat, msg) \
+  (SHOW_DEBUG(cat) ? \
+   ((ledger::_log_buffer << msg), \
+    ledger::start_timer(#name, ledger::LOG_DEBUG)) : ((void)0))
 #define DEBUG_START_(name, msg) \
   DEBUG_START_(name, _this_category, msg)
 #define DEBUG_STOP(name, cat) \
-  (SHOW_DEBUG(cat) ? stop_timer(#name) : ((void)0))
+  (SHOW_DEBUG(cat) ? ledger::stop_timer(#name) : ((void)0))
 #define DEBUG_STOP_(name) \
   DEBUG_STOP_(name, _this_category)
 #define DEBUG_FINISH(name, cat) \
-  (SHOW_DEBUG(cat) ? finish_timer(#name) : ((void)0))
+  (SHOW_DEBUG(cat) ? ledger::finish_timer(#name) : ((void)0))
 #define DEBUG_FINISH_(name) \
   DEBUG_FINISH_(name, _this_category)
 #else
@@ -420,9 +425,10 @@ void finish_timer(const char * name);
 #define DEBUG_FINISH(name)
 #endif
 
-#define INFO_START(name, msg)						\
-  (SHOW_INFO() ?							\
-   ((_log_buffer << msg), start_timer(#name, LOG_INFO)) : ((void)0))
+#define INFO_START(name, msg) \
+  (SHOW_INFO() ? \
+   ((ledger::_log_buffer << msg), \
+    ledger::start_timer(#name, ledger::LOG_INFO)) : ((void)0))
 #define INFO_STOP(name) \
   (SHOW_INFO() ? stop_timer(#name) : ((void)0))
 #define INFO_FINISH(name) \

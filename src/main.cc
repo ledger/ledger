@@ -46,19 +46,11 @@
 #include <fdstream.hpp>
 #endif
 
-using namespace ledger;
-
-#if 0
-class print_addr : public repitem_t::select_callback_t {
-  virtual void operator()(repitem_t * item) {
-    std::cout << item << std::endl;
-  }
-};
-#endif
-
-static int read_and_report(report_t * report, int argc, char * argv[],
+static int read_and_report(ledger::report_t * report, int argc, char * argv[],
 			   char * envp[])
 {
+  using namespace ledger;
+
   session_t& session(*report->session);
 
   // Handle the command-line arguments
@@ -119,52 +111,28 @@ static int read_and_report(report_t * report, int argc, char * argv[],
   xml::xpath_t::function_t command;
 
 #if 0
-  if (verb == "register" || verb == "reg" || verb == "r") {
+  if (verb == "register" || verb == "reg" || verb == "r")
     command = register_command();
-#if 0
-    command = new format_command
-      ("register", either_or(report->format_string,
-			     report->session->register_format));
-#endif
-  }
-  else if (verb == "balance" || verb == "bal" || verb == "b") {
-    if (! report->raw_mode) {
-      report->transforms.push_back(new accounts_transform);
-      report->transforms.push_back(new clean_transform);
-      report->transforms.push_back(new compact_transform);
-    }
-    command = new format_command
-      ("balance", either_or(report->format_string,
-			     report->session->balance_format));
-  }
-  else if (verb == "print" || verb == "p") {
-    if (! report->raw_mode)
-      report->transforms.push_back(new optimize_transform);
-    command = new format_command
-      ("print", either_or(report->format_string,
-			  report->session->print_format));
-  }
-  else if (verb == "equity") {
-    if (! report->raw_mode)
-      report->transforms.push_back(new accounts_transform);
-    command = new format_command
-      ("equity", either_or(report->format_string,
-			   report->session->equity_format));
-  }
+  else if (verb == "balance" || verb == "bal" || verb == "b")
+    command = balance_command();
+  else if (verb == "print" || verb == "p")
+    command = print_command();
+  else if (verb == "equity")
+    command = equity_command();
   else if (verb == "entry")
-    command = new entry_command;
+    command = entry_command();
   else if (verb == "dump")
-    command = new dump_command;
+    command = dump_command();
   else if (verb == "output")
-    command = new output_command;
+    command = output_command();
   else if (verb == "prices")
-    command = new prices_command;
+    command = prices_command();
   else if (verb == "pricesdb")
-    command = new pricesdb_command;
+    command = pricesdb_command();
   else if (verb == "csv")
-    command = new csv_command;
+    command = csv_command();
   else if (verb == "emacs" || verb == "lisp")
-    command = new emacs_command;
+    command = emacs_command();
   else
 #endif
   if (verb == "xml")
@@ -196,8 +164,6 @@ static int read_and_report(report_t * report, int argc, char * argv[],
     std::strcpy(buf, "command_");
     std::strcat(buf, verb.c_str());
 
-    // jww (2007-04-19): This is an error, since command is an
-    // auto_ptr!
     if (xml::xpath_t::ptr_op_t def = report->lookup(buf))
       command = def->as_function();
 
@@ -212,9 +178,10 @@ static int read_and_report(report_t * report, int argc, char * argv[],
 
   INFO_START(journal, "Read journal file");
 
-  xml::document_t xml_document(xml::LEDGER_NODE);
+  xml::document_t	  xml_document(xml::LEDGER_NODE);
+  journal_t *		  journal = session.create_journal();
   xml::document_builder_t builder(xml_document);
-  journal_t * journal = session.create_journal();
+
   if (! session.read_data(builder, journal, report->account))
     throw_(parse_error, "Failed to locate any journal entries; "
 	   "did you specify a valid file with -f?");
@@ -304,84 +271,38 @@ static int read_and_report(report_t * report, int argc, char * argv[],
 
 #if 0
     std::auto_ptr<repitem_t> items(repitem_t::wrap(&session, report, true));
-    print_addr cb;
-    items->select(path.get(), cb);
+    items->select(path.get());
 #endif
     return 0;
   }
 
-  // Create the an argument scope containing the report command's
+  // Apply transforms to the hierarchical document structure
+
+  INFO_START(transforms, "Applied transforms");
+  report->apply_transforms(xml_document);
+  INFO_FINISH(transforms);
+
+  // Create an argument scope containing the report command's
   // arguments, and then invoke the command.
 
   scoped_ptr<xml::xpath_t::scope_t> locals
     (new xml::xpath_t::scope_t(report, xml::xpath_t::scope_t::ARGUMENT));
 
   locals->args = value_t::sequence_t();
+
   locals->args.push_back(out);
   locals->args.push_back(&xml_document);
 
-#if 0
-  if (command->wants_args) {
-    for (strings_list::iterator i = args.begin();
-	 i != args.end();
-	 i++)
-      locals->args.push_back(*i);
-  } else {
-    string regexps[4];
-
-    // Treat the remaining command-line arguments as regular
-    // expressions, used for refining report results.
-
-    int base = 0;
-    for (strings_list::iterator i = arg; i != args.end(); i++)
-      if ((*i)[0] == '-') {
-	if ((*i)[1] == '-') {
-	  if (base == 0)
-	    base += 2;
-	  continue;
-	}
-	if (! regexps[base + 1].empty())
-	  regexps[base + 1] += "|";
-	regexps[base + 1] += (*i).substr(1);
-      } else {
-	if (! regexps[base].empty())
-	  regexps[base] += "|";
-	regexps[base] += *i;
-      }
-
-#if 0
-    // jww (2006-09-21): Escape the \ in these strings!
-
-    if (! regexps[3].empty())
-      report->transforms.push_front
-	(new remove_transform
-	 (string("//entry[payee =~ /(") + regexps[3] + ")/]"));
-
-    if (! regexps[2].empty())
-      report->transforms.push_front
-	(new select_transform
-	 (string("//entry[payee =~ /(") + regexps[2] + ")/]"));
-
-    if (! regexps[1].empty())
-      report->transforms.push_front
-	(new remove_transform
-	 (string("//xact[account =~ /(") + regexps[1] + ")/]"));
-
-    if (! regexps[0].empty())
-      report->transforms.push_front
-	(new select_transform
-	 (string("//xact[account =~ /(") + regexps[0] + ")/]"));
-#endif
-  }
-#endif
-
-  INFO_START(transforms, "Applied transforms");
-  report->apply_transforms(xml_document);
-  INFO_FINISH(transforms);
+  value_t::sequence_t args_list;
+  foreach (string& i, args)
+    args_list.push_back(value_t(i));
+  locals->args.push_back(value_t(args_list));
 
   INFO_START(command, "Did user command '" << verb << "'");
+
   value_t temp;
   command(temp, locals.get());
+
   INFO_FINISH(command);
 
   // Write out the binary cache, if need be
@@ -389,20 +310,13 @@ static int read_and_report(report_t * report, int argc, char * argv[],
   if (session.use_cache && session.cache_dirty && session.cache_file) {
     TRACE_START(binary_cache, 1, "Wrote binary journal file");
 
-    ofstream stream(*session.cache_file);
 #if 0
+    ofstream stream(*session.cache_file);
     write_binary_journal(stream, journal);
 #endif
 
     TRACE_FINISH(binary_cache, 1);
   }
-
-#if defined(FREE_MEMORY)
-  // Cleanup memory -- if this is a beta or development build.
-
-  if (report->output_file)
-    checked_delete(out);
-#endif
 
   // If the user specified a pager, wait for it to exit now
 
@@ -417,6 +331,9 @@ static int read_and_report(report_t * report, int argc, char * argv[],
       throw_(std::logic_error, "Something went wrong in the pager");
   }
 #endif
+  else if (DO_VERIFY() && report->output_file) {
+    checked_delete(out);
+  }
 
   return 0;
 }
@@ -427,36 +344,39 @@ int main(int argc, char * argv[], char * envp[])
 
   for (int i = 1; i < argc; i++)
     if (argv[i][0] == '-') {
+      if (std::strcmp(argv[i], "--verify") == 0) {
 #if defined(VERIFY_ON)
-      if (std::strcmp(argv[i], "--verify") == 0)
 	ledger::verify_enabled = true;
 #endif
+      }
+      else if (std::strcmp(argv[i], "--verbose") == 0 ||
+	       std::strcmp(argv[i], "-v") == 0) {
 #if defined(LOGGING_ON)
-      if (std::strcmp(argv[i], "--verbose") == 0 ||
-	  std::strcmp(argv[i], "-v") == 0)
-	ledger::_log_level    = LOG_INFO;
+	ledger::_log_level    = ledger::LOG_INFO;
 #endif
+      }
+      else if (i + 1 < argc && std::strcmp(argv[i], "--debug") == 0) {
 #if defined(DEBUG_ON)
-      if (i + 1 < argc && std::strcmp(argv[i], "--debug") == 0) {
-	ledger::_log_level    = LOG_DEBUG;
+	ledger::_log_level    = ledger::LOG_DEBUG;
 	ledger::_log_category = argv[i + 1];
 	i++;
-      }
 #endif
+      }
+      else if (i + 1 < argc && std::strcmp(argv[i], "--trace") == 0) {
 #if defined(TRACING_ON)
-      if (i + 1 < argc && std::strcmp(argv[i], "--trace") == 0) {
-	ledger::_log_level   = LOG_TRACE;
-	ledger::_trace_level = lexical_cast<int>(argv[i + 1]);
+	ledger::_log_level   = ledger::LOG_TRACE;
+	ledger::_trace_level = boost::lexical_cast<int>(argv[i + 1]);
 	i++;
-      }
 #endif
+      }
     }
 
   IF_VERIFY()
-    initialize_memory_tracing();
+    ledger::initialize_memory_tracing();
 
   try {
     std::ios::sync_with_stdio(false);
+
     boost::filesystem::path::default_name_check
       (boost::filesystem::portable_posix_name);
 
@@ -477,17 +397,17 @@ int main(int argc, char * argv[], char * envp[])
 #endif
     session->register_parser(new qif_parser_t);
 #endif
-    session->register_parser(new textual_parser_t);
+    session->register_parser(new ledger::textual_parser_t);
 
     std::auto_ptr<ledger::report_t> report(new ledger::report_t(session.get()));
 
     status = read_and_report(report.get(), argc, argv, envp);
 
-    if (! DO_VERIFY()) {
+    if (DO_VERIFY()) {
+      ledger::set_session_context();
+    } else {
       report.release();
       session.release();
-    } else {
-      ledger::set_session_context();
     }
   }
 #if 0
@@ -522,7 +442,7 @@ int main(int argc, char * argv[], char * envp[])
 
   IF_VERIFY() {
     INFO("Ledger ended (Boost/libstdc++ may still hold memory)");
-    shutdown_memory_tracing();
+    ledger::shutdown_memory_tracing();
   } else {
     INFO("Ledger ended");
   }
