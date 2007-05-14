@@ -562,7 +562,7 @@ bool xpath_t::function_scope_t::resolve(const string& name,
   case 't':
     if (name == "text") {
       if (value->type == value_t::XML_NODE)
-	result.set_string(value->as_xml_node()->text());
+	result = value->as_xml_node()->to_value();
       else
 	throw_(calc_error, "Attempt to call text() on a non-node value");
       return true;
@@ -679,14 +679,14 @@ xpath_t::parse_value_term(std::istream& in, unsigned short tflags) const
 #endif
 
     string ident = tok.value.as_string();
-    int id = -1;
     if (std::isdigit(ident[0])) {
       node.reset(new op_t(op_t::ARG_INDEX));
       node->arg_index = lexical_cast<unsigned int>(ident.c_str());
     }
-    else if ((id = document_t::lookup_builtin_id(ident)) != -1) {
+    else if (optional<node_t::nameid_t> id =
+	     document_t::lookup_builtin_id(ident)) {
       node.reset(new op_t(op_t::NODE_ID));
-      node->name_id = id;
+      node->name_id = *id;
     }
     else {
       node.reset(new op_t(op_t::NODE_NAME));
@@ -1213,11 +1213,8 @@ void xpath_t::op_t::find_values(value_t * context, scope_t * scope,
   if (recursive) {
     if (context->type == value_t::XML_NODE) {
       node_t * ptr = context->as_xml_node();
-      if (ptr->has_flags(XML_NODE_IS_PARENT)) {
-	parent_node_t * parent = static_cast<parent_node_t *>(ptr);
-	for (node_t * node = parent->children();
-	     node;
-	     node = node->next) {
+      if (ptr->is_parent_node()) {
+	foreach (node_t * node, ptr->as_parent_node()) {
 	  value_t temp(node);
 	  find_values(&temp, scope, result_seq, recursive);
 	}
@@ -1308,8 +1305,8 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
     case document_t::PARENT:
       if (context->type != value_t::XML_NODE)
 	throw_(compile_error, "Referencing parent node from a non-node value");
-      else if (context->as_xml_node()->parent)
-	return wrap_value(context->as_xml_node()->parent)->acquire();
+      else if (context->as_xml_node()->parent())
+	return wrap_value(&*context->as_xml_node()->parent())->acquire();
       else
 	throw_(compile_error, "Referencing parent node from the root node");
 
@@ -1317,15 +1314,14 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
       if (context->type != value_t::XML_NODE)
 	throw_(compile_error, "Referencing root node from a non-node value");
       else
-	return wrap_value(context->as_xml_node()->document->top)->acquire();
+	return wrap_value(&context->as_xml_node()->document())->acquire();
 
     case document_t::ALL: {
       if (context->type != value_t::XML_NODE)
 	throw_(compile_error, "Referencing child nodes from a non-node value");
 
-      parent_node_t *	  parent = context->as_xml_node()->as_parent_node();
       value_t::sequence_t nodes;
-      for (node_t * node = parent->children(); node; node = node->next)
+      foreach (node_t * node, context->as_xml_node()->as_parent_node())
 	nodes.push_back(node);
 
       return wrap_value(nodes)->acquire();
@@ -1343,37 +1339,37 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
 	// First, look up the symbol as a node name within the current
 	// context.  If any exist, then return the set of names.
 
-	value_t::sequence_t nodes;
+	if (ptr->is_parent_node()) {
+	  value_t::sequence_t nodes;
 
-	if (ptr->has_flags(XML_NODE_IS_PARENT)) {
-	  parent_node_t * parent = static_cast<parent_node_t *>(ptr);
-	  for (node_t * node = parent->children();
-	       node;
-	       node = node->next) {
+	  foreach (node_t * node, ptr->as_parent_node()) {
 	    if ((kind == NODE_NAME &&
 		 std::strcmp(name->c_str(), node->name()) == 0) ||
-		(kind == NODE_ID && name_id == node->name_id))
+		(kind == NODE_ID && name_id == node->name_id()))
 	      nodes.push_back(node);
 	  }
+	  return wrap_value(nodes)->acquire();
 	}
-	return wrap_value(nodes)->acquire();
       } else {
 	assert(ptr);
-	int id = ptr->document->lookup_name_id(*name);
-	if (id != -1) {
+	if (optional<node_t::nameid_t> id =
+	    ptr->document().lookup_name_id(*name)) {
 	  op_t * node = new_node(NODE_ID);
-	  node->name_id = id;
+	  node->name_id = *id;
 	  return node->acquire();
 	}
       }
     }
     return acquire();
 
-  case ATTR_NAME: {
-    // jww (2006-09-29): Attrs should map strings to values, not strings
-    const char * value = context->as_xml_node()->get_attr(name->c_str());
-    return wrap_value(value)->acquire();
-  }
+  case ATTR_NAME:
+    if (optional<node_t::nameid_t> id =
+	context->as_xml_node()->document().lookup_name_id(*name)) {
+      optional<const string&> value = context->as_xml_node()->get_attr(*id);
+      if (value)
+	return wrap_value(*value)->acquire();
+    }
+    return acquire();
 
   case VAR_NAME:
   case FUNC_NAME:
@@ -1903,23 +1899,16 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
   return NULL;
 }
 
-void xpath_t::calc(value_t& result, node_t * node, scope_t * scope) const
+void xpath_t::calc(value_t& result, node_t& node, scope_t * scope) const
 {
 #if 0
   try {
 #endif
-    if (node) {
-      value_t context_node(node);
-      xpath_t final(ptr->compile(&context_node, scope, true));
-      // jww (2006-09-09): Give a better error here if this is not
-      // actually a value
-      final->get_value(result);
-    } else {
-      std::auto_ptr<terminal_node_t> fake_node(new terminal_node_t(NULL));
-      value_t context_node(fake_node.get());
-      xpath_t final(ptr->compile(&context_node, scope, true));
-      final->get_value(result);
-    }
+    value_t context_node(&node);
+    xpath_t final(ptr->compile(&context_node, scope, true));
+    // jww (2006-09-09): Give a better error here if this is not
+    // actually a value
+    final->get_value(result);
 #if 0
   }
   catch (error * err) {
@@ -2041,11 +2030,7 @@ bool xpath_t::op_t::print(std::ostream&	  out,
     break;
 
   case NODE_ID:
-#ifdef THREADSAFE
     out << '%' << name_id;
-#else
-    out << node_t::document->lookup_name(name_id);
-#endif
     break;
 
   case NODE_NAME:
@@ -2331,11 +2316,7 @@ void xpath_t::op_t::dump(std::ostream& out, const int depth) const
     break;
 
   case NODE_ID:
-#ifdef THREADSAFE
     out << "NODE_ID - " << name_id;
-#else
-    out << "NODE_ID - " << node_t::document->lookup_name(name_id);
-#endif
     break;
 
   case ATTR_NAME:

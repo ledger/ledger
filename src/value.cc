@@ -30,7 +30,7 @@
  */
 
 #include "value.h"
-#include "xml.h"
+#include "node.h"
 
 namespace ledger {
 
@@ -1610,7 +1610,7 @@ std::ostream& operator<<(std::ostream& out, const value_t& val)
     if (val.as_xml_node()->has_flags(XML_NODE_IS_PARENT))
       out << '<' << val.as_xml_node()->name() << '>';
     else
-      out << val.as_xml_node()->text();
+      out << val.as_xml_node()->to_value();
     break;
 
   case value_t::POINTER:

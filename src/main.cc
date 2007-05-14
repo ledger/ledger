@@ -186,8 +186,8 @@ static int read_and_report(report_t * report, int argc, char * argv[],
       std::cout << "Result of calculation: ";
     }
 
-    std::cout << expr.calc((xml::document_t *)NULL, report).
-      strip_annotations() << std::endl;
+    xml::document_t temp(xml::LEDGER_NODE);
+    std::cout << expr.calc(temp, report).strip_annotations() << std::endl;
 
     return 0;
   }
@@ -215,8 +215,16 @@ static int read_and_report(report_t * report, int argc, char * argv[],
   {
     textual_parser_t text_parser;
     ifstream input(session.data_file);
+
+#if 1
+    xml::document_t temp(xml::LEDGER_NODE);
+    xml::document_builder_t builder(temp);
+    text_parser.parse(input, session.data_file, builder);
+    temp.print(std::cout);
+#else
     xml::xml_writer_t writer(std::cout);
     text_parser.parse(input, session.data_file, writer);
+#endif
   }  
   INFO_FINISH(journal);
   return 0;
@@ -292,8 +300,8 @@ static int read_and_report(report_t * report, int argc, char * argv[],
       *out << "Result of calculation: ";
     }
 
-    *out << expr.calc((xml::document_t *)NULL, report).
-      strip_annotations() << std::endl;
+    xml::document_t temp(xml::LEDGER_NODE);
+    *out << expr.calc(temp, report).strip_annotations() << std::endl;
 
     return 0;
   }

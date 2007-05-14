@@ -29,3 +29,72 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "node.h"
+#include "document.h"
+
+namespace ledger {
+namespace xml {
+
+const char * node_t::name() const
+{
+  return *document().lookup_name(name_id());
+}
+
+void output_xml_string(std::ostream& out, const string& str)
+{
+  for (const char * s = str.c_str(); *s; s++) {
+    switch (*s) {
+    case '<':
+      out << "&lt;";
+      break;
+    case '>':
+      out << "&gt;";
+      break;
+    case '&':
+      out << "&amp;";
+      break;
+    default:
+      out << *s;
+      break;
+    }
+  }
+}
+
+void parent_node_t::print(std::ostream& out) const
+{
+  out << '<' << name();
+  if (attributes) {
+    typedef attributes_t::nth_index<0>::type attributes_by_order;
+    foreach (const attr_pair& attr, attributes->get<0>())
+      out << ' ' << document().lookup_name(attr.first)
+	  << "=\"" << attr.second << "\"";
+  }
+  IF_VERIFY()
+    out << " type=\"parent_node_t\"";
+  out << '>';
+
+  foreach (node_t * child, *this)
+    child->print(out);
+
+  out << "</" << name() << '>';
+}
+
+void terminal_node_t::print(std::ostream& out) const
+{
+  if (data.empty()) {
+    out << '<' << name();
+    IF_VERIFY()
+      out << " type=\"terminal_node_t\"";
+    out << " />";
+  } else {
+    out << '<' << name();
+    IF_VERIFY()
+      out << " type=\"terminal_node_t\"";
+    out << '>';
+    output_xml_string(out, text());
+    out << "</" << name() << '>';
+  }
+}
+
+} // namespace xml
+} // namespace ledger

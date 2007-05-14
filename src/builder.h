@@ -1,7 +1,7 @@
 #ifndef _BUILDER_H
 #define _BUILDER_H
 
-#include "xml.h"
+#include "document.h"
 
 namespace ledger {
 namespace xml {
@@ -44,8 +44,8 @@ public:
   virtual void     push_attr(const node_t::nameid_t name_id,
 			     const string& value) = 0;
 
-  virtual void     begin_node(const string& name)     = 0;
-  virtual void     begin_node(const node_t::nameid_t name_id) = 0;
+  virtual void     begin_node(const string& name, bool terminal = false)     = 0;
+  virtual void     begin_node(const node_t::nameid_t name_id, bool terminal = false) = 0;
 
   virtual void     push_node(const string& name,
 			     const optional<position_t>& end_pos = none) = 0;
@@ -70,8 +70,71 @@ public:
  * This builder can be used to parse ordinary XML into a document
  * object structure which can then be traversed in memory.
  */
-class xml_builder_t : public builder_t
+class document_builder_t : public builder_t
 {
+public:
+  typedef std::list<std::pair<node_t::nameid_t, string> > attrs_list;
+
+  document_t& document;
+  attrs_list  current_attrs;
+  node_t *    current;
+  string      current_text;
+
+  document_builder_t(document_t& _document)
+    : document(_document), current(&document) {}
+
+  virtual void     push_attr(const string&  name,
+			     const string& value) {
+    push_attr(document.register_name(name), value);
+  }
+  virtual void     push_attr(const node_t::nameid_t name_id,
+			     const string& value) {
+    current_attrs.push_back(attrs_list::value_type(name_id, value.c_str()));
+  }
+
+  virtual void     begin_node(const string& name, bool terminal = false) {
+    begin_node(document.register_name(name), terminal);
+  }
+  virtual void     begin_node(const node_t::nameid_t name_id,
+			      bool terminal = false) {
+    if (terminal)
+      current = current->as_parent_node().create_child<terminal_node_t>(name_id);
+    else
+      current = current->as_parent_node().create_child<parent_node_t>(name_id);
+
+    foreach (const attrs_list::value_type& pair, current_attrs)
+      current->set_attr(pair.first, pair.second.c_str());
+    current_attrs.clear();
+  }
+
+  virtual void     push_node(const string& name,
+			     const optional<position_t>& end_pos = none) {
+    begin_node(name, true);
+    end_node(name, end_pos);
+  }
+  virtual void     push_node(const node_t::nameid_t name_id,
+			     const optional<position_t>& end_pos = none) {
+    begin_node(name_id, true);
+    end_node(name_id, end_pos);
+  }
+
+  virtual node_t * current_node() {
+    return current;
+  }
+
+  virtual void     append_text(const string& text) {
+    assert(! current->is_parent_node());
+    polymorphic_downcast<terminal_node_t *>(current)->set_text(text);
+  }
+
+  virtual node_t * end_node(const string& name,
+			    const optional<position_t>& end_pos = none) {
+    current = &*current->parent();
+  }
+  virtual node_t * end_node(const node_t::nameid_t name_id,
+			    const optional<position_t>& end_pos = none) {
+    current = &*current->parent();
+  }
 };
 
 /**
@@ -91,7 +154,7 @@ class xml_builder_t : public builder_t
  * constructed on the fly, as if they'd been created in the first
  * place by a regular xml_builder_t.
  */
-class journal_builder_t : public xml_builder_t
+class journal_builder_t : public document_builder_t
 {
 public:
   virtual void set_start_position(std::istream& in) {
@@ -138,20 +201,20 @@ public:
     push_attr("hello", value);
   }
 
-  virtual void     begin_node(const string& name) {
+  virtual void     begin_node(const string& name, bool terminal = false) {
     outs << '<' << name;
     foreach (const attrs_list::value_type& attr, current_attrs)
       outs << ' ' << attr.first << "=\"" << attr.second << "\"";
     current_attrs.clear();
     outs << '>';
   }
-  virtual void     begin_node(const node_t::nameid_t name_id) {
+  virtual void     begin_node(const node_t::nameid_t name_id, bool terminal = false) {
     begin_node("hello");
   }
 
   virtual void     push_node(const string& name,
 			     const optional<position_t>& end_pos = none) {
-    begin_node(name);
+    begin_node(name, true);
     end_node(name, end_pos);
   }
   virtual void     push_node(const node_t::nameid_t name_id,

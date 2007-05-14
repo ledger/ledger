@@ -88,7 +88,9 @@ class report_t : public xml::xpath_t::scope_t
   //
 
   void eval(const string& expr) {
+#if 0
     xml::xpath_t(expr).compile((xml::document_t *)NULL, this);
+#endif
   }
   void option_eval(value_t&, xml::xpath_t::scope_t * locals) {
     eval(locals->args[0].as_string());

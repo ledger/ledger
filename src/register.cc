@@ -125,15 +125,12 @@ string abbreviate(const string&	  str,
 
 static void scan_for_transactions(std::ostream& out, const xml::node_t * node)
 {
+#if 0
   if (! node->has_flags(XML_NODE_IS_PARENT))
     return;
-  
-  const xml::parent_node_t * parent = node->as_parent_node();
 
-  for (const xml::node_t * child = parent->children();
-       child;
-       child = child->next)
-    if (child->name_id == xml::document_t::TRANSACTION) {
+  foreach (const xml::node_t * child, node->as_parent_node()) {
+    if (child->name_id == xml::TRANSACTION_NODE) {
       const xml::transaction_node_t * xact_node =
 	dynamic_cast<const xml::transaction_node_t *>(child);
       assert(xact_node);
@@ -154,13 +151,14 @@ static void scan_for_transactions(std::ostream& out, const xml::node_t * node)
     } else {
       scan_for_transactions(out, child);
     }
+#endif
 }
 
 void register_command::print_document(std::ostream&	out,
 				      xml::document_t * doc)
 {
 #if 1
-  scan_for_transactions(out, doc->top);
+  scan_for_transactions(out, doc);
   out.flush();
 #else
   value_t nodelist;

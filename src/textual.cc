@@ -33,13 +33,15 @@
 
 namespace ledger {
 
+using namespace xml;
+
 #define MAX_LINE 1024
 
-typedef xml::builder_t::position_t position_t;
+typedef builder_t::position_t position_t;
 
-void parse_transaction(xml::builder_t& builder,
-		       char *	       line,
-		       position_t&     end_of_line)
+void parse_transaction(builder_t&  builder,
+		       char *	   line,
+		       position_t& end_of_line)
 {
   // First cut up the input line into its various parts.
 
@@ -125,7 +127,7 @@ void parse_transaction(xml::builder_t& builder,
   builder.end_node(TRANSACTION_NODE, end_of_line);
 }
 
-bool parse_transactions(std::istream& in, xml::builder_t& builder)
+bool parse_transactions(std::istream& in, builder_t& builder)
 {
   TRACE_START(entry_xacts, 1, "Time spent parsing transactions:");
 
@@ -155,10 +157,10 @@ bool parse_transactions(std::istream& in, xml::builder_t& builder)
   return added;
 }
 
-void parse_entry(std::istream&	 in,
-		 xml::builder_t& builder,
-		 char *		 line,
-		 position_t&	 end_of_line)
+void parse_entry(std::istream& in,
+		 builder_t&    builder,
+		 char *	       line,
+		 position_t&   end_of_line)
 {
   TRACE_START(entry_text, 1, "Time spent preparing entry text:");
 
@@ -226,7 +228,7 @@ void parse_entry(std::istream&	 in,
   builder.push_attr(DATE_ATTR, date);
 
   if (date_eff)
-    builder.push_attr(DATE_EFF_ATTR, date_eff);
+    builder.push_attr(EFF_DATE_ATTR, date_eff);
 
   if (statep) {
     switch (*statep) {
@@ -273,9 +275,9 @@ bool textual_parser_t::test(std::istream& in) const
   return true;
 }
 
-void textual_parser_t::parse(std::istream&   in,
-			     const path&     pathname,
-			     xml::builder_t& builder)
+void textual_parser_t::parse(std::istream& in,
+			     const path&   pathname,
+			     builder_t&	   builder)
 {
   TRACE_START(parsing_total, 1, "Total time spent parsing text:");
 

@@ -44,10 +44,9 @@
 #include <amount.h>
 #include <balance.h>
 #include <value.h>
-#include <xml.h>
 #include <xpath.h>
 #include <format.h>
-#include <quotes.h>
+//#include <quotes.h>
 
 #include <session.h>
 #include <journal.h>

@@ -29,8 +29,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _XML_H
-#define _XML_H
+#ifndef _NODE_H
+#define _NODE_H
 
 #include "journal.h"
 #include "value.h"
@@ -507,4 +507,4 @@ wrap_node(document_t * doc, journal_t * journal, void * parent_node) {
 } // namespace xml
 } // namespace ledger
 
-#endif // _XML_H
+#endif // _NODE_H

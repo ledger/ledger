@@ -364,6 +364,7 @@ auto_entry_t::~auto_entry_t() {
 
 void auto_entry_t::extend_entry(entry_base_t& entry, bool post)
 {
+#if 0
   transactions_list initial_xacts(entry.transactions.begin(),
 				  entry.transactions.end());
 
@@ -400,6 +401,7 @@ void auto_entry_t::extend_entry(entry_base_t& entry, bool post)
       }
     }
   }
+#endif
 }
 
 account_t::~account_t()

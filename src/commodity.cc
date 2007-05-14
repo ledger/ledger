@@ -455,14 +455,8 @@ commodity_t * commodity_pool_t::create(const string& symbol)
 
   commodity->ident = commodities.size();
 
-  std::pair<commodities_t::iterator, bool> result =
-    commodities.insert(commodity.get());
-  if (! result.second) {
-    assert(false);
-    return NULL;
-  } else {
-    return commodity.release();
-  }
+  commodities.push_back(commodity.get());
+  return commodity.release();
 }
 
 commodity_t * commodity_pool_t::find_or_create(const string& symbol)
@@ -498,11 +492,7 @@ commodity_t * commodity_pool_t::find(const commodity_t::ident_t ident)
     commodities_by_ident;
 
   commodities_by_ident& ident_index = commodities.get<0>();
-  commodities_by_ident::iterator i = ident_index.find(ident);
-  if (i != ident_index.end())
-    return *i;
-  else
-    return NULL;
+  return ident_index[ident];
 }
 
 commodity_t *
@@ -598,14 +588,8 @@ commodity_pool_t::create(commodity_t&	     comm,
   commodity->ident	  = commodities.size();
   commodity->mapping_key_ = mapping_key;
 
-  std::pair<commodities_t::iterator, bool> result
-    = commodities.insert(commodity.get());
-  if (! result.second) {
-    assert(false);
-    return NULL;
-  } else {
-    return commodity.release();
-  }
+  commodities.push_back(commodity.get());
+  return commodity.release();
 }
 
 commodity_t * commodity_pool_t::find_or_create(commodity_t&	   comm,

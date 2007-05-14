@@ -32,7 +32,7 @@
 #ifndef _XPATH_H
 #define _XPATH_H
 
-#include "xml.h"
+#include "document.h"
 
 namespace ledger {
 namespace xml {
@@ -123,8 +123,7 @@ public:
 		     void (T::*_mptr)(value_t& result))
       : functor_t(_name, false), ptr(_ptr), mptr(_mptr) {}
 
-    virtual void operator()(value_t& result,
-			    scope_t * locals = NULL) {
+    virtual void operator()(value_t& result, scope_t * locals = NULL) {
       assert(ptr);
       assert(mptr);
       assert(locals || locals == NULL);
@@ -430,7 +429,7 @@ public:
       string *	   name;	// used by constant SYMBOL
       unsigned int arg_index;	// used by ARG_INDEX and O_ARG
       functor_t *  functor;	// used by terminal FUNCTOR
-      unsigned int name_id;	// used by NODE_NAME and ATTR_NAME
+      node_t::nameid_t name_id;	// used by NODE_NAME and ATTR_NAME
 #if 0
       mask_t *	   mask;	// used by terminal MASK
 #endif
@@ -720,30 +719,9 @@ public:
     reset(tmp ? tmp->acquire() : NULL);
   }
 
-  void compile(const string& _expr, scope_t * scope = NULL,
-	       unsigned short _flags = XPATH_PARSE_RELAXED) {
-    parse(_expr, _flags);
-    // jww (2006-09-24): fix
-    compile((node_t *)NULL, scope);
-  }
-  void compile(std::istream& in, scope_t * scope = NULL,
-	       unsigned short _flags = XPATH_PARSE_RELAXED) {
-    parse(in, _flags);
-    // jww (2006-09-24): fix
-    compile((node_t *)NULL, scope);
-  }
-
-  void compile(document_t * document, scope_t * scope = NULL) {
-    if (! document) {
-      document_t tdoc;
-      compile(tdoc.top, scope);
-    } else {
-      compile(document->top, scope);
-    }
-  }
-  void compile(node_t * top_node, scope_t * scope = NULL) {
+  void compile(node_t& top_node, scope_t * scope = NULL) {
     if (ptr) {
-      value_t noderef(top_node);
+      value_t noderef(&top_node);
       op_t * compiled = ptr->compile(&noderef, scope);
       if (compiled == ptr)
 	compiled->release();
@@ -752,16 +730,9 @@ public:
     }
   }
 
-  virtual void calc(value_t& result, node_t * node, scope_t * scope = NULL) const;
-
-  virtual value_t calc(document_t * document, scope_t * scope = NULL) const {
-    if (! ptr)
-      return 0L;
-    value_t temp;
-    calc(temp, document ? document->top : NULL, scope);
-    return temp;
-  }
-  virtual value_t calc(node_t * tcontext, scope_t * scope = NULL) const {
+  virtual void    calc(value_t& result, node_t& node,
+		       scope_t * scope = NULL) const;
+  virtual value_t calc(node_t& tcontext, scope_t * scope = NULL) const {
     if (! ptr)
       return 0L;
     value_t temp;
@@ -769,15 +740,15 @@ public:
     return temp;
   }
 
-  static void eval(value_t& result, const string& _expr,
-		   document_t * document, scope_t * scope = NULL) {
+  static void eval(value_t& result, const string& _expr, node_t& top,
+		   scope_t * scope = NULL) {
     xpath_t temp(_expr);
-    temp.calc(result, document->top, scope);
+    temp.calc(result, top, scope);
   }
-  static value_t eval(const string& _expr, document_t * document,
+  static value_t eval(const string& _expr, node_t& top,
 		      scope_t * scope = NULL) {
     xpath_t temp(_expr);
-    return temp.calc(document, scope);
+    return temp.calc(top, scope);
   }
 
   void print(std::ostream& out) const {

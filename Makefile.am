@@ -41,11 +41,13 @@ libledger_la_SOURCES = \
 	src/amount.cc    \
 	src/balance.cc   \
 	src/value.cc     \
-	src/xml.cc	 \
+	src/document.cc	 \
+	src/node.cc	 \
 	src/xpath.cc     \
 	src/builder.cc	 \
 	src/journal.cc	 \
 	src/textual.cc	 \
+	src/binary.cc	 \
 	src/transform.cc \
 	src/register.cc	 \
 	src/report.cc	 \
@@ -99,26 +101,18 @@ pkginclude_HEADERS = \
 	src/builder.h	     \
 	src/commodity.h	     \
 	src/context.h	     \
-	src/csv.h	     \
-	src/derive.h	     \
-	src/emacs.h	     \
 	src/fdstream.hpp     \
 	src/flags.h	     \
 	src/format.h	     \
-	src/gnucash.h	     \
 	src/journal.h	     \
 	src/ledger.h	     \
 	src/mask.h	     \
-	src/ofx.h	     \
 	src/option.h	     \
 	src/parser.h	     \
 	src/pyfstream.h	     \
 	src/pyinterp.h	     \
 	src/pyledger.h	     \
 	src/pyutils.h	     \
-	src/qif.h	     \
-	src/quotes.h	     \
-	src/reconcile.h	     \
 	src/register.h	     \
 	src/report.h	     \
 	src/scoped_execute.h \

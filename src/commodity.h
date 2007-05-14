@@ -318,9 +318,7 @@ class commodity_pool_t : public noncopyable
   typedef multi_index_container<
     commodity_t *,
     multi_index::indexed_by<
-      multi_index::ordered_unique<
-	multi_index::member<commodity_t,
-			    commodity_t::ident_t, &commodity_t::ident> >,
+      multi_index::random_access<>,
       multi_index::hashed_unique<
 	multi_index::const_mem_fun<commodity_t,
 				   string, &commodity_t::mapping_key> >
