@@ -295,8 +295,8 @@ static int read_and_report(ledger::report_t * report, int argc, char * argv[],
 
   value_t::sequence_t args_list;
   foreach (string& i, args)
-    args_list.push_back(value_t(i));
-  locals->args.push_back(value_t(args_list));
+    args_list.push_back(value_t(i, true));
+  locals->args.push_back(args_list);
 
   INFO_START(command, "Did user command '" << verb << "'");
 
