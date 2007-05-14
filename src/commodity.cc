@@ -186,6 +186,26 @@ void commodity_t::parse_symbol(std::istream& in, string& symbol)
   symbol = buf;
 }
 
+void commodity_t::parse_symbol(const char *& p, string& symbol)
+{
+  if (*p == '"') {
+    char * q = std::strchr(p + 1, '"');
+    if (! q)
+      throw_(parse_error, "Quoted commodity symbol lacks closing quote");
+    symbol = string(p + 1, 0, q - p - 1);
+    p = q + 2;
+  } else {
+    char * q = next_element(p);
+    symbol = p;
+    if (q)
+      p = q;
+    else
+      p += symbol.length();
+  }
+  if (symbol.empty())
+    throw_(parse_error, "Failed to parse commodity");
+}
+
 bool commodity_t::valid() const
 {
   if (symbol().empty() && this != parent().null_commodity) {

@@ -16,15 +16,17 @@ namespace ledger {
  */
 class builder_t
 {
-  virtual void     pushAttribute(const string& name,
-				 const string& value)	= 0;
-  virtual void     pushAttribute(const nameid_t name_id,
-				 const string& value)	= 0;
+public:
+  struct position_t
+  {
+    typedef uint_least32_t file_pos_t;
+    typedef uint_least32_t file_line_t;
 
-  virtual void     beginNode(const string& name)	= 0;
-  virtual void     beginNode(const nameid_t name_id)	= 0;
+    path	pathname;
+    file_pos_t	offset;
+    file_line_t linenum;
 
-  virtual void     appendText(const string& text)	= 0;
+    position_t() : offset(0), linenum(0) {}
 
   virtual node_t * endNode(const optional<string>& name = none) = 0;
   virtual node_t * endNode(const nameid_t name_id)	= 0;
