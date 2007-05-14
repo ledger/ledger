@@ -28,8 +28,55 @@ public:
 
     position_t() : offset(0), linenum(0) {}
 
-  virtual node_t * endNode(const optional<string>& name = none) = 0;
-  virtual node_t * endNode(const nameid_t name_id)	= 0;
+    explicit position_t(path	    _pathname,
+			file_pos_t  _offset,
+			file_line_t _linenum)
+      : pathname(_pathname),
+	offset(_offset), linenum(_linenum) {}
+  };
+
+  position_t current_position;
+
+  virtual void start_position(const std::istream& in,
+			      const path& pathname) {
+    set_position(position_t(pathname, in.tellg(), 1));
+  }
+
+  virtual void set_position(const position_t& position) {
+    current_position = position;
+  }
+
+  virtual position_t& position() {
+    return current_position;
+  }
+
+  virtual void     push_attr(const string&  name,
+			     const string& value) = 0;
+  virtual void     push_attr(const nameid_t name_id,
+			     const string& value) = 0;
+
+  virtual void     begin_node(const string& name)     = 0;
+  virtual void     begin_node(const nameid_t name_id) = 0;
+
+  template <typename T>
+  virtual void     begin_node(typename T::pointer data) = 0;
+
+  virtual void     push_node(const string& name,
+			     const optional<position_t>& end_pos) = 0;
+  virtual void     push_node(const nameid_t name_id,
+			     const optional<position_t>& end_pos) = 0;
+
+  virtual node_t * current_node() = 0;
+
+  template <typename T>
+  virtual T *      current_node() = 0;
+
+  virtual void     append_text(const string& text) = 0;
+
+  virtual node_t * end_node(const string& name,
+			     const optional<position_t>& end_pos) = 0;
+  virtual node_t * end_node(const nameid_t name_id,
+			     const optional<position_t>& end_pos) = 0;
 };
 
 /**
