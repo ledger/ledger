@@ -33,18 +33,9 @@
 #define _JOURNAL_H
 
 #include "amount.h"
+#include "xpath.h"
 
 namespace ledger {
-
-namespace xml {
-  class document_t;
-  class xpath_t;
-
-  class transaction_node_t;
-  class entry_node_t;
-  class account_node_t;
-  class journal_node_t;
-}
 
 // These flags persist with the object
 #define TRANSACTION_NORMAL     0x0000
@@ -72,43 +63,20 @@ class transaction_t : public supports_flags<>
   optional<amount_t> cost;
   optional<string>   cost_expr;
   optional<string>   note;
-  unsigned long	     beg_pos;
-  unsigned long	     beg_line;
-  unsigned long	     end_pos;
-  unsigned long	     end_line;
-
-  typedef xml::transaction_node_t node_type;
-  mutable node_type * data;
 
   static bool use_effective_date;
 
   explicit transaction_t(account_t * _account = NULL)
-    : supports_flags<>(TRANSACTION_NORMAL),
-      entry(NULL),
-      state(UNCLEARED),
-      account(_account),
-      beg_pos(0),
-      beg_line(0),
-      end_pos(0),
-      end_line(0),
-      data(NULL) {
+    : supports_flags<>(TRANSACTION_NORMAL), entry(NULL),
+      state(UNCLEARED), account(_account) {
     TRACE_CTOR(transaction_t, "account_t *");
   }
   explicit transaction_t(account_t *	        _account,
 			 const amount_t&        _amount,
 			 unsigned int           _flags = TRANSACTION_NORMAL,
 			 const optional<string> _note  = none)
-    : supports_flags<>(_flags),
-      entry(NULL),
-      state(UNCLEARED),
-      account(_account),
-      amount(_amount),
-      note(_note),
-      beg_pos(0),
-      beg_line(0),
-      end_pos(0),
-      end_line(0),
-      data(NULL) {
+    : supports_flags<>(_flags), entry(NULL), state(UNCLEARED),
+      account(_account), amount(_amount), note(_note) {
     TRACE_CTOR(transaction_t,
 	       "account_t *, const amount_t&, unsigned int, const string&");
   }
@@ -123,12 +91,7 @@ class transaction_t : public supports_flags<>
       amount_expr(xact.amount_expr),
       cost(xact.cost),
       cost_expr(xact.cost_expr),
-      note(xact.note),
-      beg_pos(xact.beg_pos),
-      beg_line(xact.beg_line),
-      end_pos(xact.end_pos),
-      end_line(xact.end_line),
-      data(xact.data) {
+      note(xact.note) {
     TRACE_CTOR(transaction_t, "copy");
   }
   ~transaction_t();
@@ -164,19 +127,12 @@ class entry_base_t
 {
  public:
   journal_t *       journal;
-  unsigned long     src_idx;
-  unsigned long	    beg_pos;
-  unsigned long     beg_line;
-  unsigned long	    end_pos;
-  unsigned long     end_line;
   transactions_list transactions;
 
-  entry_base_t() : journal(NULL),
-    beg_pos(0), beg_line(0), end_pos(0), end_line(0) {
+  entry_base_t() : journal(NULL) {
     TRACE_CTOR(entry_base_t, "");
   }
-  entry_base_t(const entry_base_t& e) : journal(NULL),
-    beg_pos(0), beg_line(0), end_pos(0), end_line(0)
+  entry_base_t(const entry_base_t& e) : journal(NULL)
   {
     TRACE_CTOR(entry_base_t, "copy");
     for (transactions_list::const_iterator i = e.transactions.begin();
@@ -217,10 +173,7 @@ public:
   optional<string>   code;
   string	     payee;
 
-  typedef xml::entry_node_t node_type;
-  mutable node_type * data;
-
-  entry_t() : data(NULL) {
+  entry_t() {
     TRACE_CTOR(entry_t, "");
   }
   entry_t(const entry_t& e);
@@ -337,9 +290,6 @@ class account_t
   unsigned short   depth;
   accounts_map	   accounts;
 
-  typedef xml::account_node_t node_type;
-  mutable node_type * data;
-
   mutable ident_t ident;
   mutable string  _fullname;
 
@@ -347,7 +297,7 @@ class account_t
 	    const string& _name   = "",
 	    const optional<string> _note = none)
     : parent(_parent), name(_name), note(_note),
-      depth(parent ? parent->depth + 1 : 0), data(NULL), ident(0) {
+      depth(parent ? parent->depth + 1 : 0), ident(0) {
     TRACE_CTOR(account_t, "account_t *, const string&, const string&");
   }
   ~account_t();
@@ -432,16 +382,6 @@ class journal_t
   char *	 item_pool;
   char *	 item_pool_end;
 
-  // This is used for dynamically representing the journal data as an
-  // XML tree, to facilitate transformations without modifying any of
-  // the underlying structures (the transformers modify the XML tree
-  // -- perhaps even adding, changing or deleting nodes -- but they do
-  // not affect the basic data parsed from the journal file).
-  mutable xml::document_t * document;
-
-  typedef xml::journal_node_t node_type;
-  mutable node_type * data;
-
   auto_entries_list    auto_entries;
   period_entries_list  period_entries;
   mutable accounts_map accounts_cache;
@@ -450,7 +390,7 @@ class journal_t
 
   journal_t(session_t * _session)
     : session(_session), basket(NULL),
-      item_pool(NULL), item_pool_end(NULL), document(NULL) {
+      item_pool(NULL), item_pool_end(NULL) {
     TRACE_CTOR(journal_t, "");
     master = new account_t(NULL, "");
     master->journal = this;

@@ -136,7 +136,7 @@ void xpath_t::token_t::parse_ident(std::istream& in)
     value.set_string(buf);
 }
 
-void xpath_t::token_t::next(std::istream& in, unsigned short flags)
+void xpath_t::token_t::next(std::istream& in, flags_t flags)
 {
   if (in.eof()) {
     kind = TOK_EOF;
@@ -245,16 +245,6 @@ void xpath_t::token_t::next(std::istream& in, unsigned short flags)
       length = 2;
       break;
     }
-#if 0
-    else if (c == '~') {
-      in.get(c);
-      symbol[1] = c;
-      symbol[2] = '\0';
-      kind = NMATCH;
-      length = 2;
-      break;
-    }
-#endif
     kind = EXCLAM;
     break;
 
@@ -282,33 +272,11 @@ void xpath_t::token_t::next(std::istream& in, unsigned short flags)
 
   case '/':
     in.get(c);
-#if 0
-    if (flags & XPATH_PARSE_REGEXP) {
-      char buf[1024];
-      READ_INTO_(in, buf, 1023, c, length, c != '/');
-      in.get(c);
-      if (c != '/')
-	unexpected(c, '/');
-      kind = REGEXP;
-      value.set_string(buf);
-      break;
-    }
-#endif
     kind = SLASH;
     break;
 
   case '=':
     in.get(c);
-#if 0
-    if (in.peek() == '~') {
-      in.get(c);
-      symbol[1] = c;
-      symbol[2] = '\0';
-      kind = MATCH;
-      length = 2;
-      break;
-    }
-#endif
     kind = EQUAL;
     break;
 
@@ -366,12 +334,6 @@ void xpath_t::token_t::next(std::istream& in, unsigned short flags)
     in.get(c);
     kind = COMMA;
     break;
-#if 0
-  case '%':
-    in.get(c);
-    kind = PERCENT;
-    break;
-#endif
 
   case '.':
     in.get(c);
@@ -471,40 +433,35 @@ void xpath_t::token_t::unexpected(char c, char wanted)
   }
 }
 
-xpath_t::op_t * xpath_t::wrap_value(const value_t& val)
+xpath_t::ptr_op_t xpath_t::wrap_value(const value_t& val)
 {
-  xpath_t::op_t * temp = new xpath_t::op_t(xpath_t::op_t::VALUE);
-  temp->valuep = new value_t(val);
+  xpath_t::ptr_op_t temp(new xpath_t::op_t(xpath_t::op_t::VALUE));
+  temp->set_value(new value_t(val));
   return temp;
 }
 
-xpath_t::op_t * xpath_t::wrap_sequence(const value_t::sequence_t& val)
+xpath_t::ptr_op_t xpath_t::wrap_sequence(const value_t::sequence_t& val)
 {
+  xpath_t::ptr_op_t temp(new xpath_t::op_t(xpath_t::op_t::VALUE));
+
   if (val.size() == 0)
-    return wrap_value(false);
+    temp->set_value(new value_t(false));
   else if (val.size() == 1)
-    return wrap_value(val.front());
+    temp->set_value(new value_t(val.front()));
   else
-    return wrap_value(val);
-}
+    temp->set_value(new value_t(val));
 
-xpath_t::op_t * xpath_t::wrap_functor(functor_t * fobj)
-{
-  xpath_t::op_t * temp = new xpath_t::op_t(xpath_t::op_t::FUNCTOR);
-  temp->functor = fobj;
   return temp;
 }
 
-#if 0
-xpath_t::op_t * xpath_t::wrap_mask(const string& pattern)
+xpath_t::ptr_op_t xpath_t::wrap_functor(const function_t& fobj)
 {
-  xpath_t::op_t * temp = new xpath_t::op_t(xpath_t::op_t::MASK);
-  temp->mask = new mask_t(pattern);
+  xpath_t::ptr_op_t temp(new xpath_t::op_t(xpath_t::op_t::FUNCTION));
+  temp->set_function(fobj);
   return temp;
 }
-#endif
 
-void xpath_t::scope_t::define(const string& name, op_t * def)
+void xpath_t::scope_t::define(const string& name, ptr_op_t def)
 {
   DEBUG("ledger.xpath.syms", "Defining '" << name << "' = " << def);
 
@@ -525,7 +482,7 @@ void xpath_t::scope_t::define(const string& name, op_t * def)
   def->acquire();
 }
 
-xpath_t::op_t *
+xpath_t::ptr_op_t
 xpath_t::scope_t::lookup(const string& name)
 {
   symbol_map::const_iterator i = symbols.find(name);
@@ -536,7 +493,7 @@ xpath_t::scope_t::lookup(const string& name)
   return NULL;
 }
 
-void xpath_t::scope_t::define(const string& name, functor_t * def) {
+void xpath_t::scope_t::define(const string& name, const function_t& def) {
   define(name, wrap_functor(def));
 }
 
@@ -561,8 +518,8 @@ bool xpath_t::function_scope_t::resolve(const string& name,
 
   case 't':
     if (name == "text") {
-      if (value->type == value_t::XML_NODE)
-	result = value->as_xml_node()->to_value();
+      if (value.type == value_t::XML_NODE)
+	result = value.as_xml_node()->to_value();
       else
 	throw_(calc_error, "Attempt to call text() on a non-node value");
       return true;
@@ -572,82 +529,17 @@ bool xpath_t::function_scope_t::resolve(const string& name,
   return scope_t::resolve(name, result, locals);
 }
 
-xpath_t::op_t::~op_t()
+xpath_t::ptr_op_t
+xpath_t::parse_value_term(std::istream& in, flags_t tflags) const
 {
-  TRACE_DTOR(xpath_t::op_t);
-
-  DEBUG("ledger.xpath.memory", "Destroying " << this);
-  assert(refc == 0);
-
-  switch (kind) {
-  case VALUE:
-    assert(! left);
-    assert(valuep);
-    checked_delete(valuep);
-    break;
-
-  case NODE_NAME:
-  case FUNC_NAME:
-  case ATTR_NAME:
-  case VAR_NAME:
-    assert(! left);
-    assert(name);
-    checked_delete(name);
-    break;
-
-  case ARG_INDEX:
-    break;
-
-  case FUNCTOR:
-    assert(! left);
-    assert(functor);
-    checked_delete(functor);
-    break;
-
-#if 0
-  case MASK:
-    assert(! left);
-    assert(mask);
-    checked_delete(mask);
-    break;
-#endif
-
-  default:
-    assert(kind < LAST);
-    if (left)
-      left->release();
-    if (kind > TERMINALS && right)
-      right->release();
-    break;
-  }
-}
-
-void xpath_t::op_t::get_value(value_t& result) const
-{
-  switch (kind) {
-  case VALUE:
-    result = *valuep;
-    break;
-  case ARG_INDEX:
-    result = (long)arg_index;
-    break;
-  default:
-    throw_(calc_error,
-	   "Cannot determine value of expression symbol '" << *this << "'");
-  }
-}
-
-xpath_t::op_t *
-xpath_t::parse_value_term(std::istream& in, unsigned short tflags) const
-{
-  std::auto_ptr<op_t> node;
+  ptr_op_t node;
 
   token_t& tok = next_token(in, tflags);
 
   switch (tok.kind) {
   case token_t::VALUE:
-    node.reset(new op_t(op_t::VALUE));
-    node->valuep = new value_t(tok.value);
+    node = new op_t(op_t::VALUE);
+    node->set_value(new value_t(tok.value));
     break;
 
   case token_t::IDENT: {
@@ -660,15 +552,15 @@ xpath_t::parse_value_term(std::istream& in, unsigned short tflags) const
 	std::strcpy(buf, "lambda ");
 	READ_INTO(in, &buf[7], 4000, c, true);
 
-	op_t * eval = new op_t(op_t::O_EVAL);
-	op_t * lambda = new op_t(op_t::FUNCTOR);
+	ptr_op_t eval = new op_t(op_t::O_EVAL);
+	ptr_op_t lambda = new op_t(op_t::FUNCTION);
 	lambda->functor = new python_functor_t(python_eval(buf));
 	eval->set_left(lambda);
-	op_t * sym = new op_t(op_t::SYMBOL);
+	ptr_op_t sym = new op_t(op_t::SYMBOL);
 	sym->name = new string("__ptr");
 	eval->set_right(sym);
 
-	node.reset(eval);
+	node = eval;
 
 	goto done;
       }
@@ -679,49 +571,57 @@ xpath_t::parse_value_term(std::istream& in, unsigned short tflags) const
 #endif
 
     string ident = tok.value.as_string();
-    if (std::isdigit(ident[0])) {
-      node.reset(new op_t(op_t::ARG_INDEX));
-      node->arg_index = lexical_cast<unsigned int>(ident.c_str());
-    }
-    else if (optional<node_t::nameid_t> id =
-	     document_t::lookup_builtin_id(ident)) {
-      node.reset(new op_t(op_t::NODE_ID));
-      node->name_id = *id;
-    }
-    else {
-      node.reset(new op_t(op_t::NODE_NAME));
-      node->name = new string(ident);
-    }
 
     // An identifier followed by ( represents a function call
     tok = next_token(in, tflags);
     if (tok.kind == token_t::LPAREN) {
       node->kind = op_t::FUNC_NAME;
+      node->set_string(ident);
 
-      std::auto_ptr<op_t> call_node;
-      call_node.reset(new op_t(op_t::O_EVAL));
-      call_node->set_left(node.release());
+      ptr_op_t call_node(new op_t(op_t::O_EVAL));
+      call_node->set_left(node);
       call_node->set_right(parse_value_expr(in, tflags | XPATH_PARSE_PARTIAL));
 
       tok = next_token(in, tflags);
       if (tok.kind != token_t::RPAREN)
 	tok.unexpected();		// jww (2006-09-09): wanted )
 
-      node.reset(call_node.release());
+      node = call_node;
     } else {
+      if (std::isdigit(ident[0])) {
+	node = new op_t(op_t::ARG_INDEX);
+	node->set_long(lexical_cast<unsigned int>(ident.c_str()));
+      }
+      else if (optional<node_t::nameid_t> id =
+	       document_t::lookup_builtin_id(ident)) {
+	node = new op_t(op_t::NODE_ID);
+	node->set_name(*id);
+      }
+      else {
+	node = new op_t(op_t::NODE_NAME);
+	node->set_string(ident);
+      }
       push_token(tok);
     }
     break;
   }
 
-  case token_t::AT_SYM:
+  case token_t::AT_SYM: {
     tok = next_token(in, tflags);
     if (tok.kind != token_t::IDENT)
       throw_(parse_error, "@ symbol must be followed by attribute name");
 
-    node.reset(new op_t(op_t::ATTR_NAME));
-    node->name = new string(tok.value.as_string());
+    string ident = tok.value.as_string();
+    if (optional<node_t::nameid_t> id = document_t::lookup_builtin_id(ident)) {
+      node = new op_t(op_t::ATTR_ID);
+      node->set_name(*id);
+    }
+    else {
+      node = new op_t(op_t::ATTR_NAME);
+      node->set_string(ident);
+    }
     break;
+  }
 
 #if 0
   case token_t::DOLLAR:
@@ -729,44 +629,38 @@ xpath_t::parse_value_term(std::istream& in, unsigned short tflags) const
     if (tok.kind != token_t::IDENT)
       throw parse_error("$ symbol must be followed by variable name");
 
-    node.reset(new op_t(op_t::VAR_NAME));
+    node = new op_t(op_t::VAR_NAME);
     node->name = new string(tok.value.as_string());
     break;
 #endif
 
   case token_t::DOT:
-    node.reset(new op_t(op_t::NODE_ID));
-    node->name_id = document_t::CURRENT;
+    node = new op_t(op_t::NODE_ID);
+    node->set_name(document_t::CURRENT);
     break;
   case token_t::DOTDOT:
-    node.reset(new op_t(op_t::NODE_ID));
-    node->name_id = document_t::PARENT;
+    node = new op_t(op_t::NODE_ID);
+    node->set_name(document_t::PARENT);
     break;
   case token_t::SLASH:
-    node.reset(new op_t(op_t::NODE_ID));
-    node->name_id = document_t::ROOT;
+    node = new op_t(op_t::NODE_ID);
+    node->set_name(document_t::ROOT);
     push_token();
     break;
   case token_t::STAR:
-    node.reset(new op_t(op_t::NODE_ID));
-    node->name_id = document_t::ALL;
+    node = new op_t(op_t::NODE_ID);
+    node->set_name(document_t::ALL);
     break;
 
   case token_t::LPAREN:
-    node.reset(parse_value_expr(in, tflags | XPATH_PARSE_PARTIAL));
-    if (! node.get())
+    node = parse_value_expr(in, tflags | XPATH_PARSE_PARTIAL);
+    if (! node)
       throw_(parse_error,
 	     tok.symbol << " operator not followed by argument");
     tok = next_token(in, tflags);
     if (tok.kind != token_t::RPAREN)
       tok.unexpected();		// jww (2006-09-09): wanted )
     break;
-
-#if 0
-  case token_t::REGEXP:
-    node.reset(wrap_mask(tok.value.as_string()));
-    break;
-#endif
 
   default:
     push_token(tok);
@@ -778,22 +672,22 @@ xpath_t::parse_value_term(std::istream& in, unsigned short tflags) const
  done:
 #endif
 #endif
-  return node.release();
+  return node;
 }
 
-xpath_t::op_t *
-xpath_t::parse_predicate_expr(std::istream& in, unsigned short tflags) const
+xpath_t::ptr_op_t
+xpath_t::parse_predicate_expr(std::istream& in, flags_t tflags) const
 {
-  std::auto_ptr<op_t> node(parse_value_term(in, tflags));
+  ptr_op_t node(parse_value_term(in, tflags));
 
-  if (node.get()) {
+  if (node) {
     token_t& tok = next_token(in, tflags);
     while (tok.kind == token_t::LBRACKET) {
-      std::auto_ptr<op_t> prev(node.release());
-      node.reset(new op_t(op_t::O_PRED));
-      node->set_left(prev.release());
+      ptr_op_t prev(node);
+      node = new op_t(op_t::O_PRED);
+      node->set_left(prev);
       node->set_right(parse_value_expr(in, tflags | XPATH_PARSE_PARTIAL));
-      if (! node->right)
+      if (! node->right())
 	throw_(parse_error, "[ operator not followed by valid expression");
 
       tok = next_token(in, tflags);
@@ -806,28 +700,28 @@ xpath_t::parse_predicate_expr(std::istream& in, unsigned short tflags) const
     push_token(tok);
   }
 
-  return node.release();
+  return node;
 }
 
-xpath_t::op_t *
-xpath_t::parse_path_expr(std::istream& in, unsigned short tflags) const
+xpath_t::ptr_op_t
+xpath_t::parse_path_expr(std::istream& in, flags_t tflags) const
 {
-  std::auto_ptr<op_t> node(parse_predicate_expr(in, tflags));
+  ptr_op_t node(parse_predicate_expr(in, tflags));
 
-  if (node.get()) {
+  if (node) {
     token_t& tok = next_token(in, tflags);
     while (tok.kind == token_t::SLASH) {
-      std::auto_ptr<op_t> prev(node.release());
+      ptr_op_t prev(node);
 
       tok = next_token(in, tflags);
-      node.reset(new op_t(tok.kind == token_t::SLASH ?
-			  op_t::O_RFIND : op_t::O_FIND));
+      node = new op_t(tok.kind == token_t::SLASH ?
+		      op_t::O_RFIND : op_t::O_FIND);
       if (tok.kind != token_t::SLASH)
 	push_token(tok);
 
-      node->set_left(prev.release());
+      node->set_left(prev);
       node->set_right(parse_predicate_expr(in, tflags));
-      if (! node->right)
+      if (! node->right())
 	throw_(parse_error, "/ operator not followed by a valid term");
 
       tok = next_token(in, tflags);
@@ -836,113 +730,97 @@ xpath_t::parse_path_expr(std::istream& in, unsigned short tflags) const
     push_token(tok);
   }
 
-  return node.release();
+  return node;
 }
 
-xpath_t::op_t *
-xpath_t::parse_unary_expr(std::istream& in, unsigned short tflags) const
+xpath_t::ptr_op_t
+xpath_t::parse_unary_expr(std::istream& in, flags_t tflags) const
 {
-  std::auto_ptr<op_t> node;
+  ptr_op_t node;
 
   token_t& tok = next_token(in, tflags);
 
   switch (tok.kind) {
   case token_t::EXCLAM: {
-    std::auto_ptr<op_t> texpr(parse_path_expr(in, tflags));
-    if (! texpr.get())
+    ptr_op_t texpr(parse_path_expr(in, tflags));
+    if (! texpr)
       throw_(parse_error,
 	     tok.symbol << " operator not followed by argument");
+
     // A very quick optimization
     if (texpr->kind == op_t::VALUE) {
-      *texpr->valuep = ! *texpr->valuep;
-      node.reset(texpr.release());
+      texpr->as_value().in_place_negate();
+      node = texpr;
     } else {
-      node.reset(new op_t(op_t::O_NOT));
-      node->set_left(texpr.release());
+      node = new op_t(op_t::O_NOT);
+      node->set_left(texpr);
     }
     break;
   }
 
   case token_t::MINUS: {
-    std::auto_ptr<op_t> texpr(parse_path_expr(in, tflags));
-    if (! texpr.get())
+    ptr_op_t texpr(parse_path_expr(in, tflags));
+    if (! texpr)
       throw_(parse_error,
 	     tok.symbol << " operator not followed by argument");
-    // A very quick optimization
-    if (texpr->kind == op_t::VALUE) {
-      texpr->valuep->in_place_negate();
-      node.reset(texpr.release());
-    } else {
-      node.reset(new op_t(op_t::O_NEG));
-      node->set_left(texpr.release());
-    }
-    break;
-  }
 
-#if 0
-  case token_t::PERCENT: {
-    std::auto_ptr<op_t> texpr(parse_path_expr(in, tflags));
-    if (! texpr.get())
-      throw_(parse_error,
-	     tok.symbol << " operator not followed by argument");
     // A very quick optimization
     if (texpr->kind == op_t::VALUE) {
-      static value_t perc("100.0%");
-      *texpr->valuep = perc * *texpr->valuep;
-      node.reset(texpr.release());
+      texpr->as_value().in_place_negate();
+      node = texpr;
     } else {
-      node.reset(new op_t(op_t::O_PERC));
-      node->set_left(texpr.release());
+      node = new op_t(op_t::O_NEG);
+      node->set_left(texpr);
     }
     break;
   }
-#endif
 
   default:
     push_token(tok);
-    node.reset(parse_path_expr(in, tflags));
+    node = parse_path_expr(in, tflags);
     break;
   }
 
-  return node.release();
+  return node;
 }
 
-xpath_t::op_t *
-xpath_t::parse_union_expr(std::istream& in, unsigned short tflags) const
+xpath_t::ptr_op_t
+xpath_t::parse_union_expr(std::istream& in, flags_t tflags) const
 {
-  std::auto_ptr<op_t> node(parse_unary_expr(in, tflags));
+  ptr_op_t node(parse_unary_expr(in, tflags));
 
-  if (node.get()) {
+  if (node) {
     token_t& tok = next_token(in, tflags);
     if (tok.kind == token_t::PIPE || tok.kind == token_t::KW_UNION) {
-      std::auto_ptr<op_t> prev(node.release());
-      node.reset(new op_t(op_t::O_UNION));
-      node->set_left(prev.release());
+      ptr_op_t prev(node);
+      node = new op_t(op_t::O_UNION);
+      node->set_left(prev);
       node->set_right(parse_union_expr(in, tflags));
-      if (! node->right)
+      if (! node->right())
 	throw_(parse_error,
 	       tok.symbol << " operator not followed by argument");
     } else {
       push_token(tok);
     }
   }
-  return node.release();
+
+  return node;
 }
 
-xpath_t::op_t *
-xpath_t::parse_mul_expr(std::istream& in, unsigned short tflags) const
+xpath_t::ptr_op_t
+xpath_t::parse_mul_expr(std::istream& in, flags_t tflags) const
 {
-  std::auto_ptr<op_t> node(parse_union_expr(in, tflags));
+  ptr_op_t node(parse_union_expr(in, tflags));
 
-  if (node.get()) {
+  if (node) {
     token_t& tok = next_token(in, tflags);
     if (tok.kind == token_t::STAR || tok.kind == token_t::KW_DIV) {
-      std::auto_ptr<op_t> prev(node.release());
-      node.reset(new op_t(tok.kind == token_t::STAR ?
-			  op_t::O_MUL : op_t::O_DIV));
-      node->set_left(prev.release());
+      ptr_op_t prev(node);
+      node = new op_t(tok.kind == token_t::STAR ?
+		      op_t::O_MUL : op_t::O_DIV);
+      node->set_left(prev);
       node->set_right(parse_mul_expr(in, tflags));
-      if (! node->right)
+      if (! node->right())
 	throw_(parse_error,
 	       tok.symbol << " operator not followed by argument");
 
@@ -951,24 +829,24 @@ xpath_t::parse_mul_expr(std::istream& in, unsigned short tflags) const
     push_token(tok);
   }
 
-  return node.release();
+  return node;
 }
 
-xpath_t::op_t *
-xpath_t::parse_add_expr(std::istream& in, unsigned short tflags) const
+xpath_t::ptr_op_t
+xpath_t::parse_add_expr(std::istream& in, flags_t tflags) const
 {
-  std::auto_ptr<op_t> node(parse_mul_expr(in, tflags));
+  ptr_op_t node(parse_mul_expr(in, tflags));
 
-  if (node.get()) {
+  if (node) {
     token_t& tok = next_token(in, tflags);
     if (tok.kind == token_t::PLUS ||
 	tok.kind == token_t::MINUS) {
-      std::auto_ptr<op_t> prev(node.release());
-      node.reset(new op_t(tok.kind == token_t::PLUS ?
-			  op_t::O_ADD : op_t::O_SUB));
-      node->set_left(prev.release());
+      ptr_op_t prev(node);
+      node = new op_t(tok.kind == token_t::PLUS ?
+		      op_t::O_ADD : op_t::O_SUB);
+      node->set_left(prev);
       node->set_right(parse_add_expr(in, tflags));
-      if (! node->right)
+      if (! node->right())
 	throw_(parse_error,
 	       tok.symbol << " operator not followed by argument");
 
@@ -977,20 +855,18 @@ xpath_t::parse_add_expr(std::istream& in, unsigned short tflags) const
     push_token(tok);
   }
 
-  return node.release();
+  return node;
 }
 
-xpath_t::op_t *
-xpath_t::parse_logic_expr(std::istream& in, unsigned short tflags) const
+xpath_t::ptr_op_t
+xpath_t::parse_logic_expr(std::istream& in, flags_t tflags) const
 {
-  std::auto_ptr<op_t> node(parse_add_expr(in, tflags));
+  ptr_op_t node(parse_add_expr(in, tflags));
 
-  if (node.get()) {
-    op_t::kind_t kind = op_t::LAST;
-
-    unsigned short _flags = tflags;
-
-    token_t& tok = next_token(in, tflags);
+  if (node) {
+    op_t::kind_t kind	= op_t::LAST;
+    flags_t	 _flags = tflags;
+    token_t&	 tok	= next_token(in, tflags);
     switch (tok.kind) {
     case token_t::ASSIGN:
       kind = op_t::O_DEFINE;
@@ -1001,16 +877,6 @@ xpath_t::parse_logic_expr(std::istream& in, unsigned short tflags) const
     case token_t::NEQUAL:
       kind = op_t::O_NEQ;
       break;
-#if 0
-    case token_t::MATCH:
-      kind = op_t::O_MATCH;
-      _flags |= XPATH_PARSE_REGEXP;
-      break;
-    case token_t::NMATCH:
-      kind = op_t::O_NMATCH;
-      _flags |= XPATH_PARSE_REGEXP;
-      break;
-#endif
     case token_t::LESS:
       kind = op_t::O_LT;
       break;
@@ -1029,15 +895,15 @@ xpath_t::parse_logic_expr(std::istream& in, unsigned short tflags) const
     }
 
     if (kind != op_t::LAST) {
-      std::auto_ptr<op_t> prev(node.release());
-      node.reset(new op_t(kind));
-      node->set_left(prev.release());
+      ptr_op_t prev(node);
+      node = new op_t(kind);
+      node->set_left(prev);
       if (kind == op_t::O_DEFINE)
 	node->set_right(parse_querycolon_expr(in, tflags));
       else
 	node->set_right(parse_add_expr(in, _flags));
 
-      if (! node->right) {
+      if (! node->right()) {
 	if (tok.kind == token_t::PLUS)
 	  throw_(parse_error,
 		 tok.symbol << " operator not followed by argument");
@@ -1048,96 +914,96 @@ xpath_t::parse_logic_expr(std::istream& in, unsigned short tflags) const
     }
   }
 
-  return node.release();
+  return node;
 }
 
-xpath_t::op_t *
-xpath_t::parse_and_expr(std::istream& in, unsigned short tflags) const
+xpath_t::ptr_op_t
+xpath_t::parse_and_expr(std::istream& in, flags_t tflags) const
 {
-  std::auto_ptr<op_t> node(parse_logic_expr(in, tflags));
+  ptr_op_t node(parse_logic_expr(in, tflags));
 
-  if (node.get()) {
+  if (node) {
     token_t& tok = next_token(in, tflags);
     if (tok.kind == token_t::KW_AND) {
-      std::auto_ptr<op_t> prev(node.release());
-      node.reset(new op_t(op_t::O_AND));
-      node->set_left(prev.release());
+      ptr_op_t prev(node);
+      node = new op_t(op_t::O_AND);
+      node->set_left(prev);
       node->set_right(parse_and_expr(in, tflags));
-      if (! node->right)
+      if (! node->right())
 	throw_(parse_error,
 	       tok.symbol << " operator not followed by argument");
     } else {
       push_token(tok);
     }
   }
-  return node.release();
+  return node;
 }
 
-xpath_t::op_t *
-xpath_t::parse_or_expr(std::istream& in, unsigned short tflags) const
+xpath_t::ptr_op_t
+xpath_t::parse_or_expr(std::istream& in, flags_t tflags) const
 {
-  std::auto_ptr<op_t> node(parse_and_expr(in, tflags));
+  ptr_op_t node(parse_and_expr(in, tflags));
 
-  if (node.get()) {
+  if (node) {
     token_t& tok = next_token(in, tflags);
     if (tok.kind == token_t::KW_OR) {
-      std::auto_ptr<op_t> prev(node.release());
-      node.reset(new op_t(op_t::O_OR));
-      node->set_left(prev.release());
+      ptr_op_t prev(node);
+      node = new op_t(op_t::O_OR);
+      node->set_left(prev);
       node->set_right(parse_or_expr(in, tflags));
-      if (! node->right)
+      if (! node->right())
 	throw_(parse_error,
 	       tok.symbol << " operator not followed by argument");
     } else {
       push_token(tok);
     }
   }
-  return node.release();
+  return node;
 }
 
-xpath_t::op_t *
-xpath_t::parse_querycolon_expr(std::istream& in, unsigned short tflags) const
+xpath_t::ptr_op_t
+xpath_t::parse_querycolon_expr(std::istream& in, flags_t tflags) const
 {
-  std::auto_ptr<op_t> node(parse_or_expr(in, tflags));
+  ptr_op_t node(parse_or_expr(in, tflags));
 
-  if (node.get()) {
+  if (node) {
     token_t& tok = next_token(in, tflags);
     if (tok.kind == token_t::QUESTION) {
-      std::auto_ptr<op_t> prev(node.release());
-      node.reset(new op_t(op_t::O_QUES));
-      node->set_left(prev.release());
+      ptr_op_t prev(node);
+      node = new op_t(op_t::O_QUES);
+      node->set_left(prev);
       node->set_right(new op_t(op_t::O_COLON));
-      node->right->set_left(parse_querycolon_expr(in, tflags));
-      if (! node->right)
+      node->right()->set_left(parse_querycolon_expr(in, tflags));
+      if (! node->right())
 	throw_(parse_error,
 	       tok.symbol << " operator not followed by argument");
       tok = next_token(in, tflags);
       if (tok.kind != token_t::COLON)
 	tok.unexpected();	// jww (2006-09-09): wanted :
-      node->right->set_right(parse_querycolon_expr(in, tflags));
-      if (! node->right)
+      node->right()->set_right(parse_querycolon_expr(in, tflags));
+      if (! node->right())
 	throw_(parse_error,
 	       tok.symbol << " operator not followed by argument");
     } else {
       push_token(tok);
     }
   }
-  return node.release();
+  return node;
 }
 
-xpath_t::op_t *
-xpath_t::parse_value_expr(std::istream& in, unsigned short tflags) const
+xpath_t::ptr_op_t
+xpath_t::parse_value_expr(std::istream& in, flags_t tflags) const
 {
-  std::auto_ptr<op_t> node(parse_querycolon_expr(in, tflags));
+  ptr_op_t node(parse_querycolon_expr(in, tflags));
 
-  if (node.get()) {
+  if (node) {
     token_t& tok = next_token(in, tflags);
     if (tok.kind == token_t::COMMA) {
-      std::auto_ptr<op_t> prev(node.release());
-      node.reset(new op_t(op_t::O_COMMA));
-      node->set_left(prev.release());
+      ptr_op_t prev(node);
+      node = new op_t(op_t::O_COMMA);
+      node->set_left(prev);
       node->set_right(parse_value_expr(in, tflags));
-      if (! node->right)
+      if (! node->right())
 	throw_(parse_error,
 	       tok.symbol << " operator not followed by argument");
       tok = next_token(in, tflags);
@@ -1154,13 +1020,13 @@ xpath_t::parse_value_expr(std::istream& in, unsigned short tflags) const
     throw_(parse_error, "Failed to parse value expression");
   }
 
-  return node.release();
+  return node;
 }
 
-xpath_t::op_t *
-xpath_t::parse_expr(std::istream& in, unsigned short tflags) const
+xpath_t::ptr_op_t
+xpath_t::parse_expr(std::istream& in, flags_t tflags) const
 {
-  std::auto_ptr<op_t> node(parse_value_expr(in, tflags));
+  ptr_op_t node(parse_value_expr(in, tflags));
 
   if (use_lookahead) {
     use_lookahead = false;
@@ -1176,74 +1042,72 @@ xpath_t::parse_expr(std::istream& in, unsigned short tflags) const
   lookahead->clear();
 #endif
 
-  return node.release();
+  return node;
 }
 
-xpath_t::op_t *
-xpath_t::op_t::new_node(kind_t kind, op_t * left, op_t * right)
+xpath_t::ptr_op_t
+xpath_t::op_t::new_node(kind_t kind, ptr_op_t left, ptr_op_t right)
 {
-  std::auto_ptr<op_t> node(new op_t(kind));
+  ptr_op_t node(new op_t(kind));
   if (left)
     node->set_left(left);
   if (right)
     node->set_right(right);
-  return node.release();
+  return node;
 }
 
-xpath_t::op_t *
-xpath_t::op_t::copy(op_t * tleft, op_t * tright) const
+xpath_t::ptr_op_t
+xpath_t::op_t::copy(ptr_op_t tleft, ptr_op_t tright) const
 {
-  std::auto_ptr<op_t> node(new op_t(kind));
+  ptr_op_t node(new op_t(kind));
   if (tleft)
     node->set_left(tleft);
   if (tright)
     node->set_right(tright);
-  return node.release();
+  return node;
 }
 
-void xpath_t::op_t::find_values(value_t * context, scope_t * scope,
+void xpath_t::op_t::find_values(value_t& context, scope_t * scope,
 				value_t::sequence_t& result_seq,
 				bool recursive)
 {
   xpath_t expr(compile(context, scope, true));
 
-  if (expr->kind == VALUE)
-    append_value(*expr->valuep, result_seq);
+  if (expr.ptr->kind == VALUE)
+    append_value(expr.ptr->as_value(), result_seq);
 
   if (recursive) {
-    if (context->type == value_t::XML_NODE) {
-      node_t * ptr = context->as_xml_node();
-      if (ptr->is_parent_node()) {
+    if (context.type == value_t::XML_NODE) {
+      node_t * ptr = context.as_xml_node();
+      if (ptr->is_parent_node())
 	foreach (node_t * node, ptr->as_parent_node()) {
 	  value_t temp(node);
-	  find_values(&temp, scope, result_seq, recursive);
+	  find_values(temp, scope, result_seq, recursive);
 	}
-      }
     } else {
       throw_(calc_error, "Recursive path selection on a non-node value");
     }
   }
 }
 
-bool xpath_t::op_t::test_value(value_t * context, scope_t * scope,
-			       int index)
+bool xpath_t::op_t::test_value(value_t& context, scope_t * scope, int index)
 {
   xpath_t expr(compile(context, scope, true));
 
-  if (expr->kind != VALUE)
+  if (expr.ptr->kind != VALUE)
     throw_(calc_error, "Predicate expression does not yield a constant value");
 
-  switch (expr->valuep->type) {
+  switch (expr.ptr->as_value().type) {
   case value_t::INTEGER:
   case value_t::AMOUNT:
-    return *expr->valuep == value_t((long)index + 1);
+    return expr.ptr->as_value() == value_t((long)index + 1);
 
   default:
-    return expr->valuep->as_boolean();
+    return expr.ptr->as_value().as_boolean();
   }
 }
 
-xpath_t::op_t * xpath_t::op_t::defer_sequence(value_t::sequence_t& result_seq)
+xpath_t::ptr_op_t xpath_t::op_t::defer_sequence(value_t::sequence_t& result_seq)
 {
   // If not all of the elements were constants, transform the result
   // into an expression sequence using O_COMMA.
@@ -1251,30 +1115,34 @@ xpath_t::op_t * xpath_t::op_t::defer_sequence(value_t::sequence_t& result_seq)
   assert(! result_seq.empty());
 
   if (result_seq.size() == 1)
-    return wrap_value(result_seq.front())->acquire();
+    return wrap_value(result_seq.front());
 
   value_t::sequence_t::iterator i = result_seq.begin();
 
-  std::auto_ptr<op_t> lit_seq(new op_t(O_COMMA));
+  ptr_op_t lit_seq(new op_t(O_COMMA));
 
   lit_seq->set_left(wrap_value(*i++));
-  op_t ** opp = &lit_seq->right;
+  ptr_op_t* opp = &lit_seq->right();
 
   for (; i != result_seq.end(); i++) {
     if (*opp) {
-      op_t * val = *opp;
+      ptr_op_t val = *opp;
       *opp = new op_t(O_COMMA);
       (*opp)->set_left(val);
-      opp = &(*opp)->right;
+      opp = &(*opp)->right();
     }
 
     if ((*i).type != value_t::POINTER)
-      *opp = wrap_value(*i)->acquire();
+      *opp = wrap_value(*i);
     else
-      *opp = static_cast<op_t *>((*i).as_pointer());
+#if 1
+      assert(false);
+#else
+      *opp = static_cast<ptr_op_t>((*i).as_pointer());
+#endif
   }
 
-  return lit_seq.release();
+  return lit_seq;
 }
 
 void xpath_t::op_t::append_value(value_t& val,
@@ -1287,44 +1155,44 @@ void xpath_t::op_t::append_value(value_t& val,
     result_seq.push_back(val);
 }
 
-xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
-				       bool resolve)
+xpath_t::ptr_op_t xpath_t::op_t::compile(value_t& context, scope_t * scope,
+					 bool resolve)
 {
 #if 0
   try {
 #endif
   switch (kind) {
   case VALUE:
-    return acquire();
+    return this;
 
   case NODE_ID:
-    switch (name_id) {
+    switch (as_name()) {
     case document_t::CURRENT:
-      return wrap_value(context)->acquire();
+      return wrap_value(context);
 
     case document_t::PARENT:
-      if (context->type != value_t::XML_NODE)
+      if (context.type != value_t::XML_NODE)
 	throw_(compile_error, "Referencing parent node from a non-node value");
-      else if (context->as_xml_node()->parent())
-	return wrap_value(&*context->as_xml_node()->parent())->acquire();
+      else if (context.as_xml_node()->parent())
+	return wrap_value(&*context.as_xml_node()->parent());
       else
 	throw_(compile_error, "Referencing parent node from the root node");
 
     case document_t::ROOT:
-      if (context->type != value_t::XML_NODE)
+      if (context.type != value_t::XML_NODE)
 	throw_(compile_error, "Referencing root node from a non-node value");
       else
-	return wrap_value(&context->as_xml_node()->document())->acquire();
+	return wrap_value(&context.as_xml_node()->document());
 
     case document_t::ALL: {
-      if (context->type != value_t::XML_NODE)
+      if (context.type != value_t::XML_NODE)
 	throw_(compile_error, "Referencing child nodes from a non-node value");
 
       value_t::sequence_t nodes;
-      foreach (node_t * node, context->as_xml_node()->as_parent_node())
+      foreach (node_t * node, context.as_xml_node()->as_parent_node())
 	nodes.push_back(node);
 
-      return wrap_value(nodes)->acquire();
+      return wrap_value(nodes);
     }
 
     default:
@@ -1333,8 +1201,8 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
     // fall through...
 
   case NODE_NAME:
-    if (context->type == value_t::XML_NODE) {
-      node_t * ptr = context->as_xml_node();
+    if (context.type == value_t::XML_NODE) {
+      node_t * ptr = context.as_xml_node();
       if (resolve) {
 	// First, look up the symbol as a node name within the current
 	// context.  If any exist, then return the set of names.
@@ -1344,136 +1212,131 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
 
 	  foreach (node_t * node, ptr->as_parent_node()) {
 	    if ((kind == NODE_NAME &&
-		 std::strcmp(name->c_str(), node->name()) == 0) ||
-		(kind == NODE_ID && name_id == node->name_id()))
+		 std::strcmp(as_string().c_str(), node->name()) == 0) ||
+		(kind == NODE_ID && as_name() == node->name_id()))
 	      nodes.push_back(node);
 	  }
-	  return wrap_value(nodes)->acquire();
+	  return wrap_value(nodes);
 	}
       } else {
 	assert(ptr);
 	if (optional<node_t::nameid_t> id =
-	    ptr->document().lookup_name_id(*name)) {
-	  op_t * node = new_node(NODE_ID);
-	  node->name_id = *id;
-	  return node->acquire();
+	    ptr->document().lookup_name_id(as_string())) {
+	  ptr_op_t node = new_node(NODE_ID);
+	  node->set_name(*id);
+	  return node;
 	}
       }
     }
-    return acquire();
+    return this;
+
+  case ATTR_ID:
+    if (optional<const string&> value = context.as_xml_node()->get_attr(as_long()))
+      return wrap_value(*value);
+    return this;
 
   case ATTR_NAME:
     if (optional<node_t::nameid_t> id =
-	context->as_xml_node()->document().lookup_name_id(*name)) {
-      optional<const string&> value = context->as_xml_node()->get_attr(*id);
-      if (value)
-	return wrap_value(*value)->acquire();
+	context.as_xml_node()->document().lookup_name_id(as_string())) {
+      if (optional<const string&> value = context.as_xml_node()->get_attr(*id))
+	return wrap_value(*value);
     }
-    return acquire();
+    return this;
 
   case VAR_NAME:
   case FUNC_NAME:
     if (scope) {
       if (resolve) {
 	value_t temp;
-	if (scope->resolve(*name, temp))
-	  return wrap_value(temp)->acquire();
+	if (scope->resolve(as_string(), temp))
+	  return wrap_value(temp);
       }
-      if (op_t * def = scope->lookup(*name))
+      if (ptr_op_t def = scope->lookup(as_string()))
 	return def->compile(context, scope, resolve);
     }
-    return acquire();
+    return this;
 
   case ARG_INDEX:
     if (scope && scope->kind == scope_t::ARGUMENT) {
       assert(scope->args.type == value_t::SEQUENCE);
-      if (arg_index < scope->args.as_sequence().size())
-	return wrap_value(scope->args.as_sequence()[arg_index])->acquire();
+      if (as_long() < scope->args.as_sequence().size())
+	return wrap_value(scope->args.as_sequence()[as_long()]);
       else
 	throw_(compile_error, "Reference to non-existing argument");
     } else {
-      return acquire();
+      return this;
     }
 
-  case FUNCTOR:
+  case FUNCTION:
     if (resolve) {
       value_t temp;
-      (*functor)(temp, scope);
-      return wrap_value(temp)->acquire();
+      as_function()(temp, scope);
+      return wrap_value(temp);
     } else {
-      return acquire();
+      return this;
     }
     break;
 
-#if 0
-  case MASK:
-    return acquire();
-#endif
-
   case O_NOT: {
-    assert(left);
-    xpath_t expr(left->compile(context, scope, resolve));
-    if (! expr->constant()) {
-      if (left == expr)
-	return acquire();
+    xpath_t expr(left()->compile(context, scope, resolve));
+    if (! expr.ptr->is_value()) {
+      if (left() == expr.ptr)
+	return this;
       else
-	return copy(expr)->acquire();
+	return copy(expr.ptr);
     }
 
-    if (left == expr) {
-      if (expr->valuep->strip_annotations())
-	return wrap_value(false)->acquire();
+    if (left() == expr.ptr) {
+      if (expr.ptr->as_value().strip_annotations())
+	return wrap_value(false);
       else
-	return wrap_value(true)->acquire();
+	return wrap_value(true);
     } else {
-      if (expr->valuep->strip_annotations())
-	*expr->valuep = false;
+      if (expr.ptr->as_value().strip_annotations())
+	expr.ptr->set_value(new value_t(false));
       else
-	*expr->valuep = true;
+	expr.ptr->set_value(new value_t(true));
 
-      return expr->acquire();
+      return expr.ptr;
     }
   }
 
   case O_NEG: {
-    assert(left);
-    xpath_t expr(left->compile(context, scope, resolve));
-    if (! expr->constant()) {
-      if (left == expr)
-	return acquire();
+    xpath_t expr(left()->compile(context, scope, resolve));
+    if (! expr.ptr->is_value()) {
+      if (left() == expr.ptr)
+	return this;
       else
-	return copy(expr)->acquire();
+	return copy(expr.ptr);
     }
 
-    if (left == expr) {
-      return wrap_value(expr->valuep->negate())->acquire();
+    if (left() == expr.ptr) {
+      return wrap_value(expr.ptr->as_value().negate());
     } else {
-      expr->valuep->in_place_negate();
-      return expr->acquire();
+      expr.ptr->as_value().in_place_negate();
+      return expr.ptr;
     }
   }
 
   case O_UNION: {
-    assert(left);
-    assert(right);
-    xpath_t lexpr(left->compile(context, scope, resolve));
-    xpath_t rexpr(right->compile(context, scope, resolve));
-    if (! lexpr->constant() || ! rexpr->constant()) {
-      if (left == lexpr && right == rexpr)
-	return acquire();
+    xpath_t lexpr(left()->compile(context, scope, resolve));
+    xpath_t rexpr(right()->compile(context, scope, resolve));
+    if (! lexpr.ptr->is_value() || ! rexpr.ptr->is_value()) {
+      if (left() == lexpr.ptr && right() == rexpr.ptr)
+	return this;
       else
-	return copy(lexpr, rexpr)->acquire();
+	return copy(lexpr.ptr, rexpr.ptr);
     }
 
     value_t::sequence_t result_seq;
 
-    append_value(*lexpr->valuep, result_seq);
-    append_value(*rexpr->valuep, result_seq);
+    append_value(lexpr.ptr->as_value(), result_seq);
+    append_value(rexpr.ptr->as_value(), result_seq);
 
     if (result_seq.size() == 1)
-      return wrap_value(result_seq.front())->acquire();
+      return wrap_value(result_seq.front());
     else
-      return wrap_sequence(result_seq)->acquire();
+      return wrap_sequence(result_seq);
     break;
   }
 
@@ -1481,36 +1344,34 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
   case O_SUB:
   case O_MUL:
   case O_DIV: {
-    assert(left);
-    assert(right);
-    xpath_t lexpr(left->compile(context, scope, resolve));
-    xpath_t rexpr(right->compile(context, scope, resolve));
-    if (! lexpr->constant() || ! rexpr->constant()) {
-      if (left == lexpr && right == rexpr)
-	return acquire();
+    xpath_t lexpr(left()->compile(context, scope, resolve));
+    xpath_t rexpr(right()->compile(context, scope, resolve));
+    if (! lexpr.ptr->is_value() || ! rexpr.ptr->is_value()) {
+      if (left() == lexpr.ptr && right() == rexpr.ptr)
+	return this;
       else
-	return copy(lexpr, rexpr)->acquire();
+	return copy(lexpr.ptr, rexpr.ptr);
     }
 
-    if (left == lexpr) {
-      value_t temp(*lexpr->valuep);
+    if (left() == lexpr.ptr) {
+      value_t temp(lexpr.ptr->as_value());
       switch (kind) {
-      case O_ADD: temp += *rexpr->valuep; break;
-      case O_SUB: temp -= *rexpr->valuep; break;
-      case O_MUL: temp *= *rexpr->valuep; break;
-      case O_DIV: temp /= *rexpr->valuep; break;
+      case O_ADD: temp += rexpr.ptr->as_value(); break;
+      case O_SUB: temp -= rexpr.ptr->as_value(); break;
+      case O_MUL: temp *= rexpr.ptr->as_value(); break;
+      case O_DIV: temp /= rexpr.ptr->as_value(); break;
       default: assert(false); break;
       }
-      return wrap_value(temp)->acquire();
+      return wrap_value(temp);
     } else {
       switch (kind) {
-      case O_ADD: *lexpr->valuep += *rexpr->valuep; break;
-      case O_SUB: *lexpr->valuep -= *rexpr->valuep; break;
-      case O_MUL: *lexpr->valuep *= *rexpr->valuep; break;
-      case O_DIV: *lexpr->valuep /= *rexpr->valuep; break;
+      case O_ADD: lexpr.ptr->as_value() += rexpr.ptr->as_value(); break;
+      case O_SUB: lexpr.ptr->as_value() -= rexpr.ptr->as_value(); break;
+      case O_MUL: lexpr.ptr->as_value() *= rexpr.ptr->as_value(); break;
+      case O_DIV: lexpr.ptr->as_value() /= rexpr.ptr->as_value(); break;
       default: assert(false); break;
       }
-      return lexpr->acquire();
+      return lexpr.ptr;
     }
   }
 
@@ -1520,209 +1381,179 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
   case O_LTE:
   case O_GT:
   case O_GTE: {
-    assert(left);
-    assert(right);
-    xpath_t lexpr(left->compile(context, scope, resolve));
-    xpath_t rexpr(right->compile(context, scope, resolve));
-    if (! lexpr->constant() || ! rexpr->constant()) {
-      if (left == lexpr && right == rexpr)
-	return acquire();
+    xpath_t lexpr(left()->compile(context, scope, resolve));
+    xpath_t rexpr(right()->compile(context, scope, resolve));
+    if (! lexpr.ptr->is_value() || ! rexpr.ptr->is_value()) {
+      if (left() == lexpr.ptr && right() == rexpr.ptr)
+	return this;
       else
-	return copy(lexpr, rexpr)->acquire();
+	return copy(lexpr.ptr, rexpr.ptr);
     }
 
-    if (left == lexpr) {
+    if (left() == lexpr.ptr) {
       switch (kind) {
       case O_NEQ:
-	return wrap_value(*lexpr->valuep != *rexpr->valuep)->acquire();
+	return wrap_value(lexpr.ptr->as_value() != rexpr.ptr->as_value());
 	break;
       case O_EQ:
-	return wrap_value(*lexpr->valuep == *rexpr->valuep)->acquire();
+	return wrap_value(lexpr.ptr->as_value() == rexpr.ptr->as_value());
 	break;
       case O_LT:
-	return wrap_value(*lexpr->valuep <  *rexpr->valuep)->acquire();
+	return wrap_value(lexpr.ptr->as_value() <  rexpr.ptr->as_value());
 	break;
       case O_LTE:
-	return wrap_value(*lexpr->valuep <= *rexpr->valuep)->acquire();
+	return wrap_value(lexpr.ptr->as_value() <= rexpr.ptr->as_value());
 	break;
       case O_GT:
-	return wrap_value(*lexpr->valuep >  *rexpr->valuep)->acquire();
+	return wrap_value(lexpr.ptr->as_value() >  rexpr.ptr->as_value());
 	break;
       case O_GTE:
-	return wrap_value(*lexpr->valuep >= *rexpr->valuep)->acquire();
+	return wrap_value(lexpr.ptr->as_value() >= rexpr.ptr->as_value());
 	break;
       default: assert(false); break;
       }
     } else {
       switch (kind) {
-      case O_NEQ: *lexpr->valuep = *lexpr->valuep != *rexpr->valuep; break;
-      case O_EQ:  *lexpr->valuep = *lexpr->valuep == *rexpr->valuep; break;
-      case O_LT:  *lexpr->valuep = *lexpr->valuep <  *rexpr->valuep; break;
-      case O_LTE: *lexpr->valuep = *lexpr->valuep <= *rexpr->valuep; break;
-      case O_GT:  *lexpr->valuep = *lexpr->valuep >  *rexpr->valuep; break;
-      case O_GTE: *lexpr->valuep = *lexpr->valuep >= *rexpr->valuep; break;
-      default: assert(false); break;
+      case O_NEQ:
+	lexpr.ptr->set_value(new value_t(lexpr.ptr->as_value() != rexpr.ptr->as_value()));
+	break;
+      case O_EQ:
+	lexpr.ptr->set_value(new value_t(lexpr.ptr->as_value() == rexpr.ptr->as_value()));
+	break;
+      case O_LT:
+	lexpr.ptr->set_value(new value_t(lexpr.ptr->as_value() <  rexpr.ptr->as_value()));
+	break;
+      case O_LTE:
+	lexpr.ptr->set_value(new value_t(lexpr.ptr->as_value() <= rexpr.ptr->as_value()));
+	break;
+      case O_GT:
+	lexpr.ptr->set_value(new value_t(lexpr.ptr->as_value() >  rexpr.ptr->as_value()));
+	break;
+      case O_GTE:
+	lexpr.ptr->set_value(new value_t(lexpr.ptr->as_value() >= rexpr.ptr->as_value()));
+	break;
+      default:
+	assert(false);
+	break;
       }
-      return lexpr->acquire();
+      return lexpr.ptr;
     }
   }
 
   case O_AND: {
-    assert(left);
-    assert(right);
-    xpath_t lexpr(left->compile(context, scope, resolve));
-    if (lexpr->constant() && ! lexpr->valuep->strip_annotations()) {
-      *lexpr->valuep = false;
-      return lexpr->acquire();
+    xpath_t lexpr(left()->compile(context, scope, resolve));
+    if (lexpr.ptr->is_value() && ! lexpr.ptr->as_value().strip_annotations()) {
+      lexpr.ptr->set_value(new value_t(false));
+      return lexpr.ptr;
     }
 
-    xpath_t rexpr(right->compile(context, scope, resolve));
-    if (! lexpr->constant() || ! rexpr->constant()) {
-      if (left == lexpr && right == rexpr)
-	return acquire();
+    xpath_t rexpr(right()->compile(context, scope, resolve));
+    if (! lexpr.ptr->is_value() || ! rexpr.ptr->is_value()) {
+      if (left() == lexpr.ptr && right() == rexpr.ptr)
+	return this;
       else
-	return copy(lexpr, rexpr)->acquire();
+	return copy(lexpr.ptr, rexpr.ptr);
     }
 
-    if (! rexpr->valuep->strip_annotations()) {
-      if (left == lexpr) {
-	return wrap_value(false)->acquire();
+    if (! rexpr.ptr->as_value().strip_annotations()) {
+      if (left() == lexpr.ptr) {
+	return wrap_value(false);
       } else {
-	*lexpr->valuep = false;
-	return lexpr->acquire();
+	lexpr.ptr->set_value(new value_t(false));
+	return lexpr.ptr;
       }
     } else {
-      return rexpr->acquire();
+      return rexpr.ptr;
     }
   }
 
   case O_OR: {
-    assert(left);
-    assert(right);
-    xpath_t lexpr(left->compile(context, scope, resolve));
-    if (lexpr->constant() && lexpr->valuep->strip_annotations())
-      return lexpr->acquire();
+    xpath_t lexpr(left()->compile(context, scope, resolve));
+    if (lexpr.ptr->is_value() && lexpr.ptr->as_value().strip_annotations())
+      return lexpr.ptr;
 
-    xpath_t rexpr(right->compile(context, scope, resolve));
-    if (! lexpr->constant() || ! rexpr->constant()) {
-      if (left == lexpr && right == rexpr)
-	return acquire();
+    xpath_t rexpr(right()->compile(context, scope, resolve));
+    if (! lexpr.ptr->is_value() || ! rexpr.ptr->is_value()) {
+      if (left() == lexpr.ptr && right() == rexpr.ptr)
+	return this;
       else
-	return copy(lexpr, rexpr)->acquire();
+	return copy(lexpr.ptr, rexpr.ptr);
     }
 
-    if (rexpr->valuep->strip_annotations()) {
-      return rexpr->acquire();
+    if (rexpr.ptr->as_value().strip_annotations()) {
+      return rexpr.ptr;
     } else {
-      if (left == lexpr) {
-	return wrap_value(false)->acquire();
+      if (left() == lexpr.ptr) {
+	return wrap_value(false);
       } else {
-	*lexpr->valuep = false;
-	return lexpr->acquire();
+	lexpr.ptr->set_value(new value_t(false));
+	return lexpr.ptr;
       }
     }
   }
 
   case O_QUES: {
-    assert(left);
-    assert(right);
-    assert(right->kind == O_COLON);
-    xpath_t lexpr(left->compile(context, scope, resolve));
-    if (! lexpr->constant()) {
-      xpath_t rexpr(right->compile(context, scope, resolve));
-      if (left == lexpr && right == rexpr)
-	return acquire();
+    assert(right()->kind == O_COLON);
+    xpath_t lexpr(left()->compile(context, scope, resolve));
+    if (! lexpr.ptr->is_value()) {
+      xpath_t rexpr(right()->compile(context, scope, resolve));
+      if (left() == lexpr.ptr && right() == rexpr.ptr)
+	return this;
       else
-	return copy(lexpr, rexpr)->acquire();
+	return copy(lexpr.ptr, rexpr.ptr);
     }
 
-    if (lexpr->valuep->strip_annotations())
-      return right->left->compile(context, scope, resolve);
+    if (lexpr.ptr->as_value().strip_annotations())
+      return right()->left()->compile(context, scope, resolve);
     else
-      return right->right->compile(context, scope, resolve);
+      return right()->right()->compile(context, scope, resolve);
   }
 
   case O_COLON: {
-    xpath_t lexpr(left->compile(context, scope, resolve));
-    xpath_t rexpr(right->compile(context, scope, resolve));
-    if (left == lexpr && right == rexpr)
-      return acquire();
+    xpath_t lexpr(left()->compile(context, scope, resolve));
+    xpath_t rexpr(right()->compile(context, scope, resolve));
+    if (left() == lexpr.ptr && right() == rexpr.ptr)
+      return this;
     else
-      return copy(lexpr, rexpr)->acquire();
+      return copy(lexpr.ptr, rexpr.ptr);
   }
 
   case O_COMMA: {
-    assert(left);
-    assert(right);
     // jww (2006-09-29): This should act just like union
-    xpath_t lexpr(left->compile(context, scope, resolve)); // for side-effects
-    return right->compile(context, scope, resolve);
+    xpath_t lexpr(left()->compile(context, scope, resolve)); // for side-effects
+    return right()->compile(context, scope, resolve);
   }
-
-#if 0
-  case O_MATCH:
-  case O_NMATCH: {
-    assert(left);
-    assert(right);
-    xpath_t rexpr(right->compile(context, scope, resolve));
-    xpath_t lexpr(left->compile(context, scope, resolve));
-    if (! lexpr->constant() || rexpr->kind != MASK) {
-      if (left == lexpr)
-	return acquire();
-      else
-	return copy(lexpr, rexpr)->acquire();
-    }
-
-    if (lexpr->valuep->type != value_t::STRING)
-      throw_(compile_error, "Left operand of mask operator is not a string");
-
-    assert(rexpr->mask);
-
-    bool result = rexpr->mask->match(lexpr->valuep->as_string());
-    if (kind == O_NMATCH)
-      result = ! result;
-
-    if (left == lexpr) {
-      return wrap_value(result)->acquire();
-    } else {
-      *lexpr->valuep = result;
-      return lexpr->acquire();
-    }
-  }
-#endif
 
   case O_DEFINE:
-    assert(left);
-    assert(right);
-    if (left->kind == VAR_NAME || left->kind == FUNC_NAME) {
-      xpath_t rexpr(right->compile(context, scope, resolve));
+    if (left()->kind == VAR_NAME || left()->kind == FUNC_NAME) {
+      xpath_t rexpr(right()->compile(context, scope, resolve));
       if (scope)
-	scope->define(*left->name, rexpr);
-      return rexpr->acquire();
+	scope->define(left()->as_string(), rexpr.ptr);
+      return rexpr.ptr;
     } else {
-      assert(left->kind == O_EVAL);
-      assert(left->left->kind == FUNC_NAME);
+      assert(left()->kind == O_EVAL);
+      assert(left()->left()->kind == FUNC_NAME);
 
       std::auto_ptr<scope_t> arg_scope(new scope_t(scope));
 
-      int index = 0;
-      op_t * args = left->right;
+      unsigned int index = 0;
+      ptr_op_t args = left()->right();
       while (args) {
-	op_t * arg = args;
+	ptr_op_t arg = args;
 	if (args->kind == O_COMMA) {
-	  arg = args->left;
-	  args = args->right;
+	  arg = args->left();
+	  args = args->right();
 	} else {
 	  args = NULL;
 	}
 
 	// Define the parameter so that on lookup the parser will find
 	// an ARG_INDEX value.
-	std::auto_ptr<op_t> ref(new op_t(ARG_INDEX));
-	ref->arg_index = index++;
+	ptr_op_t ref(new op_t(ARG_INDEX));
+	ref->set_long(index++);
 
 	assert(arg->kind == NODE_NAME);
-	arg_scope->define(*arg->name, ref.release());
+	arg_scope->define(arg->as_string(), ref);
       }
 
       // jww (2006-09-16): If I compile the definition of a function,
@@ -1730,62 +1561,61 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
       //xpath_t rexpr(right->compile(arg_scope.get(), resolve));
 
       if (scope)
-	scope->define(*left->left->name, right);
+	scope->define(left()->left()->as_string(), right());
 
-      return right->acquire();
+      return right();
     }
 
   case O_EVAL: {
-    assert(left);
-
     std::auto_ptr<scope_t> call_args(new scope_t(scope));
     call_args->kind = scope_t::ARGUMENT;
 
     value_t::sequence_t call_seq;
 
-    op_t * args = right;
+    ptr_op_t args = right();
     while (args) {
-      op_t * arg = args;
+      ptr_op_t arg = args;
       if (args->kind == O_COMMA) {
-	arg = args->left;
-	args = args->right;
+	arg  = args->left();
+	args = args->right();
       } else {
 	args = NULL;
       }
 
       // jww (2006-09-15): Need to return a reference to these, if
       // there are undetermined arguments!
-      call_seq.push_back(arg->compile(context, scope, resolve)->value());
+      call_seq.push_back(arg->compile(context, scope, resolve)->as_value());
     }
 
     call_args->args = call_seq;
 
-    if (left->kind == FUNC_NAME) {
+    if (left()->kind == FUNC_NAME) {
       if (resolve) {
 	value_t temp;
-	if (scope && scope->resolve(*left->name, temp, call_args.get()))
-	  return wrap_value(temp)->acquire();
+	if (scope && scope->resolve(left()->as_string(), temp, call_args.get()))
+	  return wrap_value(temp);
       }
 
       // Don't compile to the left, otherwise the function name may
       // get resolved before we have a chance to call it
-      xpath_t func(left->compile(context, scope, false));
-      if (func->kind == FUNCTOR) {
+      xpath_t func(left()->compile(context, scope, false));
+      if (func.ptr->kind == FUNCTION) {
 	value_t temp;
-	(*func->functor)(temp, call_args.get());
-	return wrap_value(temp)->acquire();
+	func.ptr->as_function()(temp, call_args.get());
+	return wrap_value(temp);
       }
       else if (! resolve) {
-	return func->compile(context, call_args.get(), resolve);
+	return func.ptr->compile(context, call_args.get(), resolve);
       }
       else {
-	throw_(calc_error, "Unknown function name '" << *left->name << "'");
+	throw_(calc_error,
+	       "Unknown function name '" << left()->as_string() << "'");
       }
     }
-    else if (left->kind == FUNCTOR) {
+    else if (left()->kind == FUNCTION) {
       value_t temp;
-      (*left->functor)(temp, call_args.get());
-      return wrap_value(temp)->acquire();
+      left()->as_function()(temp, call_args.get());
+      return wrap_value(temp);
     }
     else {
       assert(false);
@@ -1796,37 +1626,35 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
   case O_FIND:
   case O_RFIND:
   case O_PRED: {
-    assert(left);
-    assert(right);
-    xpath_t lexpr(left->compile(context, scope, resolve));
-    xpath_t rexpr(resolve ? right->acquire() :
-		  right->compile(context, scope, false));
+    xpath_t lexpr(left()->compile(context, scope, resolve));
+    xpath_t rexpr(resolve ? right() :
+		  right()->compile(context, scope, false));
 
-    if (! lexpr->constant() || ! resolve) {
-      if (left == lexpr)
-	return acquire();
+    if (! lexpr.ptr->is_value() || ! resolve) {
+      if (left() == lexpr.ptr)
+	return this;
       else
-	return copy(lexpr, rexpr)->acquire();
+	return copy(lexpr.ptr, rexpr.ptr);
     }
 
     value_t::sequence_t result_seq;
 
     // jww (2006-09-24): What about when nothing is found?
-    switch (lexpr->valuep->type) {
+    switch (lexpr.ptr->as_value().type) {
     case value_t::XML_NODE: {
-      function_scope_t xpath_fscope(lexpr->valuep, 0, scope);
+      function_scope_t xpath_fscope(lexpr.ptr->as_value(), 0, scope);
       if (kind == O_PRED) {
-	if (rexpr->test_value(lexpr->valuep, &xpath_fscope))
-	  result_seq.push_back(*lexpr->valuep);
+	if (rexpr.ptr->test_value(lexpr.ptr->as_value(), &xpath_fscope))
+	  result_seq.push_back(lexpr.ptr->as_value());
       } else {
-	rexpr->find_values(lexpr->valuep, &xpath_fscope, result_seq,
-			   kind == O_RFIND);
+	rexpr.ptr->find_values(lexpr.ptr->as_value(), &xpath_fscope, result_seq,
+			       kind == O_RFIND);
       }
       break;
     }
 
     case value_t::SEQUENCE: {
-      value_t::sequence_t& seq(lexpr->valuep->as_sequence());
+      value_t::sequence_t& seq(lexpr.ptr->as_value().as_sequence());
 
       int index = 0;
       for (value_t::sequence_t::iterator i = seq.begin();
@@ -1835,15 +1663,15 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
 	assert((*i).type != value_t::SEQUENCE);
 	if ((*i).type != value_t::XML_NODE)
 	  throw_(compile_error, "Attempting to apply path selection "
-				  "to non-node(s)");
+		 "to non-node(s)");
 
 	function_scope_t xpath_fscope(seq, &(*i), index, scope);
 	if (kind == O_PRED) {
-	  if (rexpr->test_value(&(*i), &xpath_fscope, index))
+	  if (rexpr.ptr->test_value(*i, &xpath_fscope, index))
 	    result_seq.push_back(*i);
 	} else {
-	  rexpr->find_values(&(*i), &xpath_fscope, result_seq,
-			     kind == O_RFIND);
+	  rexpr.ptr->find_values(*i, &xpath_fscope, result_seq,
+				 kind == O_RFIND);
 	}
       }
       break;
@@ -1855,27 +1683,10 @@ xpath_t::op_t * xpath_t::op_t::compile(value_t * context, scope_t * scope,
     }
 
     if (result_seq.size() == 1)
-      return wrap_value(result_seq.front())->acquire();
+      return wrap_value(result_seq.front());
     else
-      return wrap_sequence(result_seq)->acquire();
+      return wrap_sequence(result_seq);
   }
-
-#if 0
-  case O_PERC: {
-    assert(left);
-    xpath_t expr(left->compile(context, scope, resolve));
-    if (! expr->constant()) {
-      if (left == expr)
-	return acquire();
-      else
-	return copy(expr)->acquire();
-    }
-
-    static value_t perc("100.0%");
-    *expr->valuep = perc * *expr->valuep;
-    return expr->acquire();
-  }
-#endif
 
   case LAST:
   default:
@@ -1905,10 +1716,10 @@ void xpath_t::calc(value_t& result, node_t& node, scope_t * scope) const
   try {
 #endif
     value_t context_node(&node);
-    xpath_t final(ptr->compile(&context_node, scope, true));
+    xpath_t final(ptr->compile(context_node, scope, true));
     // jww (2006-09-09): Give a better error here if this is not
     // actually a value
-    final->get_value(result);
+    result = final.ptr->as_value();
 #if 0
   }
   catch (error * err) {
@@ -1929,17 +1740,11 @@ void xpath_t::calc(value_t& result, node_t& node, scope_t * scope) const
 }
 
 #if 0
-xpath_t::context::context(const xpath_t& _xpath,
-			  const op_t *   _err_node,
-			  const string&  desc) throw()
+xpath_t::context::context(const xpath_t&  _xpath,
+			  const ptr_op_t& _err_node,
+			  const string&   desc) throw()
   : error_context(desc), xpath(_xpath), err_node(_err_node)
 {
-  _err_node->acquire();
-}
-
-xpath_t::context::~context() throw()
-{
-  if (err_node) err_node->release();
 }
 
 void xpath_t::context::describe(std::ostream& out) const throw()
@@ -1975,7 +1780,7 @@ void xpath_t::context::describe(std::ostream& out) const throw()
 
 bool xpath_t::op_t::print(std::ostream&	  out,
 			  const bool      relaxed,
-			  const op_t *    op_to_find,
+			  const ptr_op_t& op_to_find,
 			  unsigned long * start_pos,
 			  unsigned long * end_pos) const
 {
@@ -1990,10 +1795,11 @@ bool xpath_t::op_t::print(std::ostream&	  out,
   string symbol;
 
   switch (kind) {
-  case VALUE:
-    switch (valuep->type) {
+  case VALUE: {
+    const value_t& value(as_value());
+    switch (value.type) {
     case value_t::BOOLEAN:
-      if (*(valuep))
+      if (value)
 	out << "1";
       else
 	out << "0";
@@ -2002,7 +1808,7 @@ bool xpath_t::op_t::print(std::ostream&	  out,
     case value_t::AMOUNT:
       if (! relaxed)
 	out << '{';
-      out << *(valuep);
+      out << value;
       if (! relaxed)
 	out << '}';
       break;
@@ -2011,273 +1817,243 @@ bool xpath_t::op_t::print(std::ostream&	  out,
       assert(false);
       break;
     case value_t::DATETIME:
-      out << '[' << *valuep << ']';
+      out << '[' << value << ']';
       break;
     case value_t::STRING:
-      out << '"' << *valuep << '"';
+      out << '"' << value << '"';
       break;
 
     case value_t::XML_NODE:
-      out << '<' << valuep << '>';
+      out << '<' << value << '>';
       break;
     case value_t::POINTER:
-      out << '&' << valuep;
+      out << '&' << value;
       break;
     case value_t::SEQUENCE:
-      out << '~' << valuep << '~';
+      out << '~' << value << '~';
       break;
     }
     break;
+  }
 
   case NODE_ID:
-    out << '%' << name_id;
+    out << '%' << as_name();
     break;
 
   case NODE_NAME:
   case FUNC_NAME:
-    out << *name;
+    out << as_string();
     break;
 
   case ATTR_NAME:
-    out << '@' << *name;
+    out << '@' << as_string();
     break;
 
   case VAR_NAME:
-    out << '$' << *name;
+    out << '$' << as_string();
     break;
 
-  case FUNCTOR:
-    out << functor->name();
+  case FUNCTION:
+    out << as_function();
     break;
-
-#if 0
-  case MASK:
-    out << '/' << mask->pattern << '/';
-    break;
-#endif
 
   case ARG_INDEX:
-    out << '@' << arg_index;
+    out << '@' << as_long();
     break;
 
   case O_NOT:
     out << "!";
-    if (left && left->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     break;
   case O_NEG:
     out << "-";
-    if (left && left->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     break;
 
   case O_UNION:
-    if (left && left->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " | ";
-    if (right && right->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     break;
 
   case O_ADD:
     out << "(";
-    if (left && left->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " + ";
-    if (right && right->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case O_SUB:
     out << "(";
-    if (left && left->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " - ";
-    if (right && right->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case O_MUL:
     out << "(";
-    if (left && left->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " * ";
-    if (right && right->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case O_DIV:
     out << "(";
-    if (left && left->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " / ";
-    if (right && right->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
 
   case O_NEQ:
     out << "(";
-    if (left && left->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " != ";
-    if (right && right->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case O_EQ:
     out << "(";
-    if (left && left->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " == ";
-    if (right && right->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case O_LT:
     out << "(";
-    if (left && left->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " < ";
-    if (right && right->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case O_LTE:
     out << "(";
-    if (left && left->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " <= ";
-    if (right && right->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case O_GT:
     out << "(";
-    if (left && left->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " > ";
-    if (right && right->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case O_GTE:
     out << "(";
-    if (left && left->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " >= ";
-    if (right && right->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
 
   case O_AND:
     out << "(";
-    if (left && left->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " & ";
-    if (right && right->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case O_OR:
     out << "(";
-    if (left && left->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " | ";
-    if (right && right->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
 
   case O_QUES:
     out << "(";
-    if (left && left->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " ? ";
-    if (right && right->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case O_COLON:
-    if (left && left->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " : ";
-    if (right && right->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     break;
 
   case O_COMMA:
-    if (left && left->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ", ";
-    if (right && right->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     break;
-
-#if 0
-  case O_MATCH:
-    if (left && left->print(out, relaxed, op_to_find, start_pos, end_pos))
-      found = true;
-    out << " =~ ";
-    if (right && right->print(out, relaxed, op_to_find, start_pos, end_pos))
-      found = true;
-    break;
-  case O_NMATCH:
-    if (left && left->print(out, relaxed, op_to_find, start_pos, end_pos))
-      found = true;
-    out << " !~ ";
-    if (right && right->print(out, relaxed, op_to_find, start_pos, end_pos))
-      found = true;
-    break;
-#endif
 
   case O_DEFINE:
-    if (left && left->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << '=';
-    if (right && right->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     break;
   case O_EVAL:
-    if (left && left->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << "(";
-    if (right && right->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
 
   case O_FIND:
-    if (left && left->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << "/";
-    if (right && right->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     break;
   case O_RFIND:
-    if (left && left->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << "//";
-    if (right && right->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     break;
   case O_PRED:
-    if (left && left->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (left() && left()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << "[";
-    if (right && right->print(out, relaxed, op_to_find, start_pos, end_pos))
+    if (right() && right()->print(out, relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << "]";
     break;
-
-#if 0
-  case O_PERC:
-    out << "%";
-    if (left && left->print(out, relaxed, op_to_find, start_pos, end_pos))
-      found = true;
-    break;
-#endif
 
   case LAST:
   default:
@@ -2308,41 +2084,38 @@ void xpath_t::op_t::dump(std::ostream& out, const int depth) const
 
   switch (kind) {
   case VALUE:
-    out << "VALUE - " << *valuep;
+    out << "VALUE - " << as_value();
     break;
 
   case NODE_NAME:
-    out << "NODE_NAME - " << *name;
+    out << "NODE_NAME - " << as_string();
     break;
-
   case NODE_ID:
-    out << "NODE_ID - " << name_id;
+    out << "NODE_ID - " << as_name();
     break;
 
   case ATTR_NAME:
-    out << "ATTR_NAME - " << *name;
+    out << "ATTR_NAME - " << as_string();
+    break;
+  case ATTR_ID:
+    out << "ATTR_ID - " << as_name();
     break;
 
   case FUNC_NAME:
-    out << "FUNC_NAME - " << *name;
+    out << "FUNC_NAME - " << as_string();
     break;
 
   case VAR_NAME:
-    out << "VAR_NAME - " << *name;
+    out << "VAR_NAME - " << as_string();
     break;
 
   case ARG_INDEX:
-    out << "ARG_INDEX - " << arg_index;
+    out << "ARG_INDEX - " << as_long();
     break;
 
-  case FUNCTOR:
-    out << "FUNCTOR - " << functor->name();
+  case FUNCTION:
+    out << "FUNCTION - " << as_function();
     break;
-#if 0
-  case MASK:
-    out << "MASK - " << mask->pattern;
-    break;
-#endif
 
   case O_NOT: out << "O_NOT"; break;
   case O_NEG: out << "O_NEG"; break;
@@ -2369,21 +2142,12 @@ void xpath_t::op_t::dump(std::ostream& out, const int depth) const
 
   case O_COMMA: out << "O_COMMA"; break;
 
-#if 0
-  case O_MATCH: out << "O_MATCH"; break;
-  case O_NMATCH: out << "O_NMATCH"; break;
-#endif
-
   case O_DEFINE: out << "O_DEFINE"; break;
   case O_EVAL: out << "O_EVAL"; break;
 
   case O_FIND: out << "O_FIND"; break;
   case O_RFIND: out << "O_RFIND"; break;
   case O_PRED: out << "O_PRED"; break;
-
-#if 0
-  case O_PERC: out << "O_PERC"; break;
-#endif
 
   case LAST:
   default:
@@ -2394,15 +2158,15 @@ void xpath_t::op_t::dump(std::ostream& out, const int depth) const
   out << " (" << refc << ')' << std::endl;
 
   if (kind > TERMINALS) {
-    if (left) {
-      left->dump(out, depth + 1);
-      if (right)
-	right->dump(out, depth + 1);
+    if (left()) {
+      left()->dump(out, depth + 1);
+      if (right())
+	right()->dump(out, depth + 1);
     } else {
-      assert(! right);
+      assert(! right());
     }
   } else {
-    assert(! left);
+    assert(! left());
   }
 }
 

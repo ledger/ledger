@@ -68,24 +68,24 @@ void release_session_context()
 #endif
 }
 
-void session_t::read_journal(std::istream&   in,
-			     const path&     pathname,
-			     xml::builder_t& builder)
+std::size_t session_t::read_journal(std::istream&   in,
+				    const path&     pathname,
+				    xml::builder_t& builder)
 {
 #if 0
   if (! master)
     master = journal->master;
 #endif
 
-  for (ptr_list<parser_t>::iterator i = parsers.begin();
-       i != parsers.end();
-       i++)
-    if (i->test(in))
-      i->parse(in, pathname, builder);
+  foreach (parser_t& parser, parsers)
+    if (parser.test(in))
+      return parser.parse(in, pathname, builder);
+
+  return 0;
 }
 
-void session_t::read_journal(const path&     pathname,
-			     xml::builder_t& builder)
+std::size_t session_t::read_journal(const path&     pathname,
+				    xml::builder_t& builder)
 {
 #if 0
   journal->sources.push_back(pathname);
@@ -95,7 +95,7 @@ void session_t::read_journal(const path&     pathname,
     throw_(std::logic_error, "Cannot read file" << pathname);
 
   ifstream stream(pathname);
-  read_journal(stream, pathname, builder);
+  return read_journal(stream, pathname, builder);
 }
 
 void session_t::read_init()
@@ -111,21 +111,16 @@ void session_t::read_init()
   // jww (2006-09-15): Read initialization options here!
 }
 
-journal_t * session_t::read_data(const string& master_account)
+std::size_t session_t::read_data(xml::builder_t& builder,
+				 journal_t *	 journal,
+				 const string&	 master_account)
 {
-#if 1
-  return NULL;
-#else
   if (data_file.empty())
     throw_(parse_error, "No journal file was specified (please use -f)");
 
   TRACE_START(parser, 1, "Parsing journal file");
 
-  journal_t * journal = new_journal();
-  journal->document = new xml::document_t;
-  journal->document->set_top(xml::wrap_node(journal->document, journal));
-
-  unsigned int entry_count = 0;
+  std::size_t entry_count = 0;
 
   DEBUG("ledger.cache", "3. use_cache = " << use_cache);
 
@@ -136,8 +131,7 @@ journal_t * session_t::read_data(const string& master_account)
       scoped_variable<optional<path> >
 	save_price_db(journal->price_db, price_db);
 
-      ifstream stream(*cache_file);
-      entry_count += read_journal(stream, journal, NULL, data_file);
+      entry_count += read_journal(*cache_file, builder);
       if (entry_count > 0)
 	cache_dirty = false;
     }
@@ -150,7 +144,7 @@ journal_t * session_t::read_data(const string& master_account)
 
     journal->price_db = price_db;
     if (journal->price_db && exists(*journal->price_db)) {
-      if (read_journal(*journal->price_db, journal)) {
+      if (read_journal(*journal->price_db, builder)) {
 	throw_(parse_error, "Entries not allowed in price history file");
       } else {
 	DEBUG("ledger.cache",
@@ -163,10 +157,10 @@ journal_t * session_t::read_data(const string& master_account)
     if (data_file == "-") {
       use_cache = false;
       journal->sources.push_back("<stdin>");
-      entry_count += read_journal(std::cin, journal, acct);
+      entry_count += read_journal(std::cin, "<stdin>", builder);
     }
     else if (exists(data_file)) {
-      entry_count += read_journal(data_file, journal, acct);
+      entry_count += read_journal(data_file, builder);
       if (journal->price_db)
 	journal->sources.push_back(*journal->price_db);
     }
@@ -174,14 +168,9 @@ journal_t * session_t::read_data(const string& master_account)
 
   VERIFY(journal->valid());
 
-  if (entry_count == 0)
-    throw_(parse_error, "Failed to locate any journal entries; "
-	   "did you specify a valid file with -f?");
-
   TRACE_STOP(parser, 1);
 
-  return journal;
-#endif
+  return entry_count;
 }
 
 bool session_t::resolve(const string& name, value_t& result,
@@ -221,7 +210,7 @@ bool session_t::resolve(const string& name, value_t& result,
   return xml::xpath_t::scope_t::resolve(name, result, locals);
 }
 
-xml::xpath_t::op_t * session_t::lookup(const string& name)
+xml::xpath_t::ptr_op_t session_t::lookup(const string& name)
 {
   const char * p = name.c_str();
   switch (*p) {
@@ -231,24 +220,26 @@ xml::xpath_t::op_t * session_t::lookup(const string& name)
       switch (*p) {
       case 'd':
 	if (std::strcmp(p, "debug") == 0)
-	  return MAKE_FUNCTOR(session_t, option_debug);
+	  return MAKE_FUNCTOR(session_t::option_debug);
 	break;
 
       case 'f':
 	if (! *(p + 1) || std::strcmp(p, "file") == 0)
-	  return MAKE_FUNCTOR(session_t, option_file);
+	  return MAKE_FUNCTOR(session_t::option_file);
 	break;
 
       case 't':
 	if (std::strcmp(p, "trace") == 0)
-	  return MAKE_FUNCTOR(session_t, option_trace);
+	  return MAKE_FUNCTOR(session_t::option_trace);
 	break;
 
       case 'v':
+#if 0
 	if (! *(p + 1) || std::strcmp(p, "verbose") == 0)
-	  return MAKE_FUNCTOR(session_t, option_verbose);
+	  return MAKE_FUNCTOR(session_t::option_verbose);
 	else if (std::strcmp(p, "verify") == 0)
-	  return MAKE_FUNCTOR(session_t, option_verify);
+	  return MAKE_FUNCTOR(session_t::option_verify);
+#endif
 	break;
       }
     }

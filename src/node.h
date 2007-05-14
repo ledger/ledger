@@ -32,17 +32,10 @@
 #ifndef _NODE_H
 #define _NODE_H
 
-#include "journal.h"
 #include "value.h"
 //#include "parser.h"
 
 namespace ledger {
-
-class transaction_t;
-class entry_t;
-class account_t;
-class journal_t;
-
 namespace xml {
 
 #define XML_NODE_IS_PARENT 0x1

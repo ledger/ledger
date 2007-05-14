@@ -32,9 +32,10 @@
 #ifndef _SESSION_H
 #define _SESSION_H
 
+#include "xpath.h"
 #include "journal.h"
 #include "parser.h"
-#include "register.h"
+#include "abbrev.h"
 
 namespace ledger {
 
@@ -131,7 +132,7 @@ class session_t : public xml::xpath_t::scope_t
     TRACE_DTOR(session_t);
   }
 
-  journal_t * new_journal() {
+  journal_t * create_journal() {
     journal_t * journal = new journal_t(this);
     journals.push_back(journal);
     return journal;
@@ -148,15 +149,17 @@ class session_t : public xml::xpath_t::scope_t
     checked_delete(journal);
   }
 
-  void read_journal(std::istream&   in,
-		    const path&	    pathname,
-		    xml::builder_t& builder);
-  void read_journal(const path&	    pathname,
-		    xml::builder_t& builder);
+  std::size_t read_journal(std::istream&   in,
+			   const path&	   pathname,
+			   xml::builder_t& builder);
+  std::size_t read_journal(const path&	   pathname,
+			   xml::builder_t& builder);
 
   void read_init();
 
-  journal_t * read_data(const string& master_account = "");
+  std::size_t read_data(xml::builder_t& builder,
+			journal_t *	journal,
+			const string&	master_account = "");
 
   void register_parser(parser_t * parser) {
     parsers.push_back(parser);
@@ -179,7 +182,7 @@ class session_t : public xml::xpath_t::scope_t
 
   virtual bool resolve(const string& name, value_t& result,
 		       xml::xpath_t::scope_t * locals = NULL);
-  virtual xml::xpath_t::op_t * lookup(const string& name);
+  virtual xml::xpath_t::ptr_op_t lookup(const string& name);
 
   //
   // Debug options

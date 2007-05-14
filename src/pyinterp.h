@@ -70,26 +70,24 @@ class python_interpreter_t : public xml::xpath_t::scope_t
     return eval(str, mode);
   }
 
-  class functor_t : public xml::xpath_t::functor_t {
+  class functor_t {
   protected:
     boost::python::object func;
   public:
-    functor_t(const string& name, boost::python::object _func)
-      : xml::xpath_t::functor_t(name), func(_func) {}
-
+    functor_t(const string& name, boost::python::object _func) : func(_func) {}
     virtual void operator()(value_t& result, xml::xpath_t::scope_t * locals);
   };
 
-  virtual void define(const string& name, xml::xpath_t::op_t * def) {
+  virtual void define(const string& name, xml::xpath_t::ptr_op_t def) {
     // Pass any definitions up to our parent
     parent->define(name, def);
   }
 
-  virtual xml::xpath_t::op_t * lookup(const string& name) {
-    boost::python::object func = eval(name);
-    if (! func)
+  virtual xml::xpath_t::ptr_op_t lookup(const string& name) {
+    if (boost::python::object func = eval(name))
+      return xml::xpath_t::wrap_functor(functor_t(name, func));
+    else
       return parent ? parent->lookup(name) : NULL;
-    return xml::xpath_t::wrap_functor(new functor_t(name, func));
   }
 
   class lambda_t : public functor_t {

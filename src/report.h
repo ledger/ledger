@@ -74,7 +74,7 @@ class report_t : public xml::xpath_t::scope_t
 
   virtual ~report_t();
 
-  void apply_transforms(xml::document_t * document);
+  void apply_transforms(xml::document_t& document);
 
   //
   // Utility functions for value expressions
@@ -163,7 +163,7 @@ class report_t : public xml::xpath_t::scope_t
 
   virtual bool resolve(const string& name, value_t& result,
 		       xml::xpath_t::scope_t * locals);
-  virtual xml::xpath_t::op_t * lookup(const string& name);
+  virtual xml::xpath_t::ptr_op_t lookup(const string& name);
 };
 
 string abbrev(const string& str, unsigned int width,

@@ -198,7 +198,7 @@ void python_interpreter_t::functor_t::operator()(value_t& result,
 	else if (PyObject * err = PyErr_Occurred()) {
 	  PyErr_Print();
 	  throw_(xml::xpath_t::calc_error,
-		 "While calling Python function '" << name() << "'");
+		 "While calling Python function '" /*<< name() <<*/ "'");
 	} else {
 	  assert(false);
 	}
@@ -210,7 +210,7 @@ void python_interpreter_t::functor_t::operator()(value_t& result,
   catch (const error_already_set&) {
     PyErr_Print();
     throw_(xml::xpath_t::calc_error,
-	   "While calling Python function '" << name() << "'");
+	   "While calling Python function '" /*<< name() <<*/ "'");
   }
 }
 

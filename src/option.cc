@@ -40,8 +40,8 @@ static ledger::option_t * find_option(const string& name);
 namespace ledger {
 
 namespace {
-  xml::xpath_t::op_t * find_option(xml::xpath_t::scope_t * scope,
-				   const string& name)
+  xml::xpath_t::ptr_op_t find_option(xml::xpath_t::scope_t * scope,
+				     const string& name)
   {
     char buf[128];
     std::strcpy(buf, "option_");
@@ -57,7 +57,7 @@ namespace {
     return scope->lookup(buf);
   }
 
-  xml::xpath_t::op_t * find_option(xml::xpath_t::scope_t * scope,
+  xml::xpath_t::ptr_op_t find_option(xml::xpath_t::scope_t * scope,
 				     const char letter)
   {
     char buf[9];
@@ -68,20 +68,20 @@ namespace {
     return scope->lookup(buf);
   }
 
-  void process_option(xml::xpath_t::functor_t * opt, xml::xpath_t::scope_t * scope,
-		      const char * arg)
+  void process_option(const xml::xpath_t::function_t& opt,
+		      xml::xpath_t::scope_t * scope, const char * arg)
   {
 #if 0
     try {
 #endif
-      std::auto_ptr<xml::xpath_t::scope_t> args;
+      scoped_ptr<xml::xpath_t::scope_t> args;
       if (arg) {
 	args.reset(new xml::xpath_t::scope_t(scope, xml::xpath_t::scope_t::ARGUMENT));
 	args->args.set_string(arg);
       }
 
       value_t temp;
-      (*opt)(temp, args.get());
+      opt(temp, args.get());
 #if 0
     }
     catch (error * err) {
@@ -99,13 +99,10 @@ namespace {
 bool process_option(const string& name, xml::xpath_t::scope_t * scope,
 		    const char * arg)
 {
-  std::auto_ptr<xml::xpath_t::op_t> opt(find_option(scope, name));
-  if (opt.get()) {
-    xml::xpath_t::functor_t * def = opt->functor_obj();
-    if (def) {
-      process_option(def, scope, arg);
-      return true;
-    }
+  xml::xpath_t::ptr_op_t opt(find_option(scope, name));
+  if (opt) {
+    process_option(opt->as_function(), scope, arg);
+    return true;
   }
   return false;
 }
@@ -134,7 +131,7 @@ void process_environment(const char ** envp, const string& tag,
 #if 0
 	try {
 #endif
-	  if (! process_option(buf, scope, q + 1))
+	  if (! process_option(string(buf), scope, q + 1))
 #if 0
 	    throw new option_error("unknown option")
 #endif
@@ -181,50 +178,37 @@ void process_arguments(int argc, char ** argv, const bool anywhere,
 	value = p;
       }
 
-      std::auto_ptr<xml::xpath_t::op_t> opt(find_option(scope, name));
-      if (! opt.get())
+      xml::xpath_t::ptr_op_t opt(find_option(scope, name));
+      if (! opt)
 	throw_(option_error, "illegal option --" << name);
 
-      xml::xpath_t::functor_t * def = opt->functor_obj();
-      if (! def)
-	throw_(option_error, "illegal option --" << name);
-
-      if (def->wants_args && value == NULL) {
+      if (/*def->wants_args &&*/ value == NULL) {
 	value = *++i;
 	if (value == NULL)
 	  throw_(option_error, "missing option argument for --" << name);
       }
-      process_option(def, scope, value);
+      process_option(opt->as_function(), scope, value);
     }
     else if ((*i)[1] == '\0') {
       throw_(option_error, "illegal option -");
     }
     else {
-      std::list<xml::xpath_t::op_t *> option_queue;
+      std::list<xml::xpath_t::ptr_op_t> option_queue;
 
       int x = 1;
       for (char c = (*i)[x]; c != '\0'; x++, c = (*i)[x]) {
-	xml::xpath_t::op_t * opt = find_option(scope, c);
+	xml::xpath_t::ptr_op_t opt = find_option(scope, c);
 	if (! opt)
-	  throw_(option_error, "illegal option -" << c);
-
-	xml::xpath_t::functor_t * def = opt->functor_obj();
-	if (! def)
 	  throw_(option_error, "illegal option -" << c);
 
 	option_queue.push_back(opt);
       }
 
-      for (std::list<xml::xpath_t::op_t *>::iterator
-	     o = option_queue.begin();
-	   o != option_queue.end();
-	   o++) {
+      foreach (xml::xpath_t::ptr_op_t& o, option_queue) {
 	char * value = NULL;
-
-	xml::xpath_t::functor_t * def = (*o)->functor_obj();
-	assert(def);
-
+#if 0
 	if (def->wants_args) {
+#endif
 	  value = *++i;
 	  if (value == NULL)
 	    throw_(option_error, "missing option argument for -" <<
@@ -234,10 +218,11 @@ void process_arguments(int argc, char ** argv, const bool anywhere,
 		   '?'
 #endif
 		   );
+#if 0
 	}
-	process_option(def, scope, value);
+#endif
+	process_option(o->as_function(), scope, value);
 
-	checked_delete(*o);
       }
     }
   }

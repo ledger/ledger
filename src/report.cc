@@ -38,12 +38,10 @@ report_t::~report_t()
   TRACE_DTOR(report_t);
 }
 
-void report_t::apply_transforms(xml::document_t * document)
+void report_t::apply_transforms(xml::document_t& document)
 {
-  for (ptr_list<transform_t>::iterator i = transforms.begin();
-       i != transforms.end();
-       i++)
-    i->execute(document);
+  foreach (transform_t& transform, transforms)
+    transform.execute(document);
 }
 
 void report_t::abbrev(value_t& result, xml::xpath_t::scope_t * locals)
@@ -107,7 +105,7 @@ bool report_t::resolve(const string& name, value_t& result,
   return xml::xpath_t::scope_t::resolve(name, result, locals);
 }
 
-xml::xpath_t::op_t * report_t::lookup(const string& name)
+xml::xpath_t::ptr_op_t report_t::lookup(const string& name)
 {
   const char * p = name.c_str();
   switch (*p) {
@@ -122,88 +120,91 @@ xml::xpath_t::op_t * report_t::lookup(const string& name)
 	else
 #endif
 	  if (std::strcmp(p, "amount") == 0)
-	  return MAKE_FUNCTOR(report_t, option_amount);
+	    return MAKE_FUNCTOR(report_t::option_amount);
 	break;
 
       case 'b':
 	if (std::strcmp(p, "bar") == 0)
-	  return MAKE_FUNCTOR(report_t, option_bar);
+	  return MAKE_FUNCTOR(report_t::option_bar);
 	break;
 
 #if 0
       case 'c':
 	if (std::strcmp(p, "clean") == 0)
-	  return MAKE_FUNCTOR(report_t, option_clean);
+	  return MAKE_FUNCTOR(report_t::option_clean);
 	else if (std::strcmp(p, "compact") == 0)
-	  return MAKE_FUNCTOR(report_t, option_compact);
+	  return MAKE_FUNCTOR(report_t::option_compact);
 	break;
 #endif
 
       case 'e':
 #if 0
 	if (std::strcmp(p, "entries") == 0)
-	  return MAKE_FUNCTOR(report_t, option_entries);
+	  return MAKE_FUNCTOR(report_t::option_entries);
 	else if (std::strcmp(p, "eval") == 0)
-	  return MAKE_FUNCTOR(report_t, option_eval);
+	  return MAKE_FUNCTOR(report_t::option_eval);
 	else if (std::strcmp(p, "exclude") == 0)
-	  return MAKE_FUNCTOR(report_t, option_remove);
+	  return MAKE_FUNCTOR(report_t::option_remove);
 #endif
 	break;
 
       case 'f':
+#if 0
 	if (std::strcmp(p, "foo") == 0)
-	  return MAKE_FUNCTOR(report_t, option_foo);
-	else if (std::strcmp(p, "format") == 0)
-	  return MAKE_FUNCTOR(report_t, option_format);
+	  return MAKE_FUNCTOR(report_t::option_foo);
+	else
+#endif
+	  if (std::strcmp(p, "format") == 0)
+	  return MAKE_FUNCTOR(report_t::option_format);
 	break;
 
       case 'i':
 #if 0
 	if (std::strcmp(p, "include") == 0)
-	  return MAKE_FUNCTOR(report_t, option_select);
+	  return MAKE_FUNCTOR(report_t::option_select);
 #endif
 	break;
 
       case 'l':
 #if 0
 	if (! *(p + 1) || std::strcmp(p, "limit") == 0)
-	  return MAKE_FUNCTOR(report_t, option_limit);
+	  return MAKE_FUNCTOR(report_t::option_limit);
 #endif
 	break;
 
 #if 0
       case 'm':
 	if (std::strcmp(p, "merge") == 0)
-	  return MAKE_FUNCTOR(report_t, option_merge);
+	  return MAKE_FUNCTOR(report_t::option_merge);
 	break;
 #endif
 
       case 'r':
 #if 0
 	if (std::strcmp(p, "remove") == 0)
-	  return MAKE_FUNCTOR(report_t, option_remove);
+	  return MAKE_FUNCTOR(report_t::option_remove);
 #endif
 	break;
 
 #if 0
       case 's':
 	if (std::strcmp(p, "select") == 0)
-	  return MAKE_FUNCTOR(report_t, option_select);
+	  return MAKE_FUNCTOR(report_t::option_select);
 	else if (std::strcmp(p, "split") == 0)
-	  return MAKE_FUNCTOR(report_t, option_split);
+	  return MAKE_FUNCTOR(report_t::option_split);
 	break;
 #endif
 
       case 't':
 	if (! *(p + 1))
-	  return MAKE_FUNCTOR(report_t, option_amount);
+	  return MAKE_FUNCTOR(report_t::option_amount);
 	else if (std::strcmp(p, "total") == 0)
-	  return MAKE_FUNCTOR(report_t, option_total);
+	  return MAKE_FUNCTOR(report_t::option_total);
 	break;
 
       case 'T':
 	if (! *(p + 1))
-	  return MAKE_FUNCTOR(report_t, option_total);
+	  return MAKE_FUNCTOR(report_t::option_total);
 	break;
       }
     }

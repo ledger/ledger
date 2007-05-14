@@ -41,6 +41,7 @@ class xpath_t
 {
 public:
   struct op_t;
+  typedef intrusive_ptr<op_t> ptr_op_t;
 
   static void initialize();
   static void shutdown();
@@ -49,144 +50,23 @@ public:
   DECLARE_EXCEPTION(compile_error);
   DECLARE_EXCEPTION(calc_error);
 
-#if 0
-  class context : public error_context {
-  public:
-    const xpath_t& xpath;
-    const op_t *   err_node;
-
-    context(const xpath_t& _xpath,
-	    const op_t *   _err_node,
-	    const string& desc = "") throw();
-    virtual ~context() throw();
-
-    virtual void describe(std::ostream& out) const throw();
-  };
-#endif
-
 public:
   class scope_t;
 
-  class functor_t {
-  protected:
-    string fname;
-  public:
-    bool wants_args;
+  typedef function<void (value_t&, scope_t *)> function_t;
 
-    functor_t(const string& _fname, bool _wants_args = false)
-      : fname(_fname), wants_args(_wants_args) {}
-    virtual ~functor_t() {}
+#define MAKE_FUNCTOR(x) \
+  xml::xpath_t::wrap_functor(bind(&x, this, _1, _2))
 
-    virtual void operator()(value_t& result, scope_t * locals) = 0;
-    virtual string name() const { return fname; }
-  };
-
-  template <typename T, typename U>
-  class member_functor_t : public functor_t {
-  public:
-    T * ptr;
-    U T::*dptr;
-
-    member_functor_t(const string& _name, T * _ptr, U T::*_dptr)
-      : functor_t(_name, false), ptr(_ptr), dptr(_dptr) {}
-
-    virtual void operator()(value_t& result, scope_t * locals) {
-      assert(ptr);
-      assert(dptr);
-      result = ptr->*dptr;
-    }
-  };
-
-  template <typename T>
-  class member_functor_t<T, string> : public functor_t {
-  public:
-    T * ptr;
-    string T::*dptr;
-
-    member_functor_t(const string& _name, T * _ptr, string T::*_dptr)
-      : functor_t(_name, false), ptr(_ptr), dptr(_dptr) {}
-
-    virtual void operator()(value_t& result, scope_t * locals) {
-      assert(ptr);
-      assert(dptr);
-      result.set_string(ptr->*dptr);
-    }
-  };
-
-  template <typename T>
-  class memfun_functor_t : public functor_t {
-  public:
-    T * ptr;
-    void (T::*mptr)(value_t& result);
-
-    memfun_functor_t(const string& _name, T * _ptr,
-		     void (T::*_mptr)(value_t& result))
-      : functor_t(_name, false), ptr(_ptr), mptr(_mptr) {}
-
-    virtual void operator()(value_t& result, scope_t * locals = NULL) {
-      assert(ptr);
-      assert(mptr);
-      assert(locals || locals == NULL);
-      (ptr->*mptr)(result);
-    }
-  };
-
-  template <typename T>
-  class memfun_args_functor_t : public functor_t {
-  public:
-    T * ptr;
-    void (T::*mptr)(value_t& result, scope_t * locals);
-
-    memfun_args_functor_t(const string& _name, T * _ptr,
-			  void (T::*_mptr)(value_t& result, scope_t * locals))
-      : functor_t(_name, true), ptr(_ptr), mptr(_mptr) {}
-
-    virtual void operator()(value_t& result, scope_t * locals) {
-      assert(ptr);
-      assert(mptr);
-      (ptr->*mptr)(result, locals);
-    }
-  };
-
-  static op_t * wrap_value(const value_t& val);
-  static op_t * wrap_sequence(const value_t::sequence_t& val);
-  static op_t * wrap_functor(functor_t * fobj);
-#if 0
-  static op_t * wrap_mask(const string& pattern);
-#endif
-
-  template <typename T, typename U>
-  static op_t *
-  make_functor(const string& name, T * ptr, U T::*mptr) {
-    return wrap_functor(new member_functor_t<T, U>(name, ptr, mptr));
-  }
-
-  template <typename T>
-  static op_t *
-  make_functor(const string& fname, T * ptr,
-	       void (T::*mptr)(value_t& result)) {
-    return wrap_functor(new memfun_functor_t<T>(fname, ptr, mptr));
-  }
-
-  template <typename T>
-  static op_t *
-  make_functor(const string& fname, T * ptr,
-	       void (T::*mptr)(value_t& result, scope_t * locals)) {
-    return wrap_functor(new memfun_args_functor_t<T>(fname, ptr, mptr));
-  }
-
-#define MAKE_FUNCTOR(cls, name)				\
-  xml::xpath_t::make_functor(#name, this, &cls::name)
+  static ptr_op_t wrap_value(const value_t& val);
+  static ptr_op_t wrap_sequence(const value_t::sequence_t& val);
+  static ptr_op_t wrap_functor(const function_t& fobj);
 
 public:
-  class scope_t
+  class scope_t : public noncopyable
   {
-    typedef std::map<const string, op_t *> symbol_map;
-
+    typedef std::map<const string, ptr_op_t> symbol_map;
     symbol_map symbols;
-
-    scope_t(const scope_t&);
-    scope_t& operator=(const scope_t&);
 
   public:
     scope_t * parent;
@@ -201,23 +81,19 @@ public:
 
     virtual ~scope_t() {
       TRACE_DTOR(xpath_t::scope_t);
-      for (symbol_map::iterator i = symbols.begin();
-	   i != symbols.end();
-	   i++)
-	(*i).second->release();
     }
 
   public:
-    virtual void define(const string& name, op_t * def);
+    virtual void define(const string& name, ptr_op_t def);
     virtual bool resolve(const string& name, value_t& result,
 			 scope_t * locals = NULL) {
       if (parent)
 	return parent->resolve(name, result, locals);
       return false;
     }
-    virtual op_t * lookup(const string& name);
+    virtual ptr_op_t lookup(const string& name);
 
-    void define(const string& name, functor_t * def);
+    void define(const string& name, const function_t& def);
 
     friend struct op_t;
   };
@@ -225,15 +101,17 @@ public:
   class function_scope_t : public scope_t
   {
     value_t::sequence_t sequence;
-    value_t *		value;
+    value_t		value;
     int			index;
 
   public:
     function_scope_t(const value_t::sequence_t& _sequence,
-		     value_t * _value, int _index, scope_t * _parent = NULL)
+		     value_t * _value, int _index,
+		     scope_t * _parent = NULL)
       : scope_t(_parent, STATIC),
 	sequence(_sequence), value(_value), index(_index) {}
-    function_scope_t(value_t * _value, int _index, scope_t * _parent = NULL)
+    function_scope_t(const value_t& _value, int _index,
+		     scope_t * _parent = NULL)
       : scope_t(_parent, STATIC), value(_value), index(_index) {}
 
     virtual bool resolve(const string& name, value_t& result,
@@ -245,10 +123,9 @@ public:
 #define XPATH_PARSE_RELAXED    0x02
 #define XPATH_PARSE_NO_MIGRATE 0x04
 #define XPATH_PARSE_NO_REDUCE  0x08
-#if 0
-#define XPATH_PARSE_REGEXP     0x10
-#endif
-#define XPATH_PARSE_ALLOW_DATE 0x20
+#define XPATH_PARSE_ALLOW_DATE 0x10
+
+  typedef uint_least8_t flags_t;
 
 private:
   struct token_t
@@ -256,10 +133,6 @@ private:
     enum kind_t {
       IDENT,			// [A-Za-z_][-A-Za-z0-9_:]*
       VALUE,			// any kind of literal value
-#if 0
-      REGEXP,			// /regexp/  jww (2006-09-24): deprecate
-				// in favor of a "match" function
-#endif
       AT_SYM,			// @
       DOLLAR,			// $
       DOT,			// .
@@ -286,11 +159,6 @@ private:
       QUESTION,			// ?
       COLON,			// :
       COMMA,			// ,
-#if 0
-      MATCH,			// =~
-      NMATCH,			// !~
-      PERCENT,			// %
-#endif
       KW_AND,
       KW_OR,
       KW_DIV,
@@ -336,34 +204,33 @@ private:
     }
 
     void parse_ident(std::istream& in);
-    void next(std::istream& in, unsigned short flags);
-    void rewind(std::istream& in);
-    void unexpected();
 
+    void next(std::istream& in, flags_t flags);
+    void rewind(std::istream& in);
+
+    void unexpected();
     static void unexpected(char c, char wanted = '\0');
   };
 
 public:
-  struct op_t
+  struct op_t : public noncopyable
   {
     enum kind_t {
       VOID,
       VALUE,
 
-      NODE_NAME,
       NODE_ID,
-      FUNC_NAME,
+      NODE_NAME,
+      ATTR_ID,
       ATTR_NAME,
+      FUNC_NAME,
       VAR_NAME,
 
       ARG_INDEX,
 
       CONSTANTS,		// constants end here
 
-      FUNCTOR,
-#if 0
-      MASK,
-#endif
+      FUNCTION,
 
       TERMINALS,		// terminals end here
 
@@ -392,18 +259,9 @@ public:
 
       O_COMMA,
 
-#if 0
-      O_MATCH,
-      O_NMATCH,
-#endif
-
       O_DEFINE,
       O_EVAL,
       O_ARG,
-
-#if 0
-      O_PERC,
-#endif
 
       O_FIND,
       O_RFIND,
@@ -414,53 +272,96 @@ public:
 
     kind_t	  kind;
     mutable short refc;
-    op_t *	  left;
+    ptr_op_t	  left_;
 
-#if 0
-    optional<variant<value_t,
-		     string,
-		     unsigned int,
-		     functor_t,
-		     mask_t,
-		     op_t> > data;
-#else
-    union {
-      value_t *	   valuep;	// used by constant VALUE
-      string *	   name;	// used by constant SYMBOL
-      unsigned int arg_index;	// used by ARG_INDEX and O_ARG
-      functor_t *  functor;	// used by terminal FUNCTOR
-      node_t::nameid_t name_id;	// used by NODE_NAME and ATTR_NAME
-#if 0
-      mask_t *	   mask;	// used by terminal MASK
-#endif
-      op_t *	   right;	// used by all operators
-    };
-#endif
+    variant<unsigned int,	 // used by ARG_INDEX and O_ARG
+	    shared_ptr<value_t>, // used by constant VALUE
+	    string,		 // used by constant SYMBOL
+	    function_t,		 // used by terminal FUNCTION
+	    node_t::nameid_t,	 // used by NODE_NAME and ATTR_NAME
+	    ptr_op_t>		 // used by all binary operators
+      data;
 
-    op_t(const kind_t _kind)
-      : kind(_kind), refc(0), left(NULL), right(NULL) {
+    op_t(const kind_t _kind) : kind(_kind), refc(0){
       TRACE_CTOR(xpath_t::op_t, "const kind_t");
     }
-    op_t(const op_t&);
-    ~op_t();
+    ~op_t() {
+      TRACE_DTOR(xpath_t::op_t);
+
+      DEBUG("ledger.xpath.memory", "Destroying " << this);
+      assert(refc == 0);
+    }
 
     op_t& operator=(const op_t&);
 
-    bool constant() const {
+    bool is_value() const {
       return kind == VALUE;
     }
-    void get_value(value_t& result) const;
-    value_t value() const {
-      value_t temp;
-      get_value(temp);
-      return temp;
+
+    unsigned int& as_long() {
+      assert(kind == ARG_INDEX || kind == O_ARG);
+      return boost::get<unsigned int>(data);
+    }
+    const unsigned int& as_long() const {
+      return const_cast<op_t *>(this)->as_long();
+    }
+    void set_long(unsigned int val) {
+      data = val;
     }
 
-    functor_t * functor_obj() const {
-      if (kind == FUNCTOR)
-	return functor;
-      else
-	return NULL;
+    value_t& as_value() {
+      assert(kind == VALUE);
+      value_t * val = boost::get<scoped_ptr<value_t> >(data).get();
+      assert(val);
+      return *val;
+    }
+    const value_t& as_value() const {
+      return const_cast<op_t *>(this)->as_value();
+    }
+    void set_value(value_t * val) {
+      // jww (2007-05-14): Ugh, fix this
+      data = shared_ptr<value_t>(val);
+    }
+
+    string& as_string() {
+      assert(kind == NODE_NAME || kind == ATTR_NAME || kind == FUNC_NAME);
+      return boost::get<string>(data);
+    }
+    const string& as_string() const {
+      return const_cast<op_t *>(this)->as_string();
+    }
+    void set_string(const string& val) {
+      data = val;
+    }
+
+    function_t& as_function() {
+      assert(kind == FUNCTION);
+      return boost::get<function_t>(data);
+    }
+    const function_t& as_function() const {
+      return const_cast<op_t *>(this)->as_function();
+    }
+    void set_function(const function_t& val) {
+      data = val;
+    }
+
+    node_t::nameid_t& as_name() {
+      assert(kind == NODE_ID || kind == ATTR_ID);
+      return boost::get<node_t::nameid_t>(data);
+    }
+    const node_t::nameid_t& as_name() const {
+      return const_cast<op_t *>(this)->as_name();
+    }
+    void set_name(const node_t::nameid_t& val) {
+      data = val;
+    }
+
+    ptr_op_t& as_op() {
+      assert(kind > TERMINALS);
+      return boost::get<ptr_op_t>(data);
+    }
+    const ptr_op_t& as_op() const {
+      return const_cast<op_t *>(this)->as_op();
     }
 
     void release() const {
@@ -470,54 +371,55 @@ public:
       if (--refc == 0)
 	checked_delete(this);
     }
-    op_t * acquire() {
+    void acquire() {
       DEBUG("ledger.xpath.memory",
 	     "Acquiring " << this << ", refc now " << refc + 1);
       assert(refc >= 0);
       refc++;
-      return this;
-    }
-    const op_t * acquire() const {
-      DEBUG("ledger.xpath.memory",
-	     "Acquiring " << this << ", refc now " << refc + 1);
-      assert(refc >= 0);
-      refc++;
-      return this;
     }
 
-    void set_left(op_t * expr) {
+    ptr_op_t& left() {
+      return left_;
+    }
+    const ptr_op_t& left() const {
       assert(kind > TERMINALS);
-      if (left)
-	left->release();
-      left = expr ? expr->acquire() : NULL;
+      return left_;
     }
-
-    void set_right(op_t * expr) {
+    void set_left(const ptr_op_t& expr) {
       assert(kind > TERMINALS);
-      if (right)
-	right->release();
-      right = expr ? expr->acquire() : NULL;
+      left_ = expr;
     }
 
-    static op_t * new_node(kind_t kind, op_t * left = NULL,
-			   op_t * right = NULL);
+    ptr_op_t& right() {
+      assert(kind > TERMINALS);
+      return as_op();
+    }
+    const ptr_op_t& right() const {
+      assert(kind > TERMINALS);
+      return as_op();
+    }
+    void set_right(const ptr_op_t& expr) {
+      assert(kind > TERMINALS);
+      data = expr;
+    }
 
-    op_t * copy(op_t * left = NULL,
-		op_t * right = NULL) const;
-    op_t * compile(value_t * context, scope_t * scope,
-		   bool resolve = false);
+    static ptr_op_t new_node(kind_t kind, ptr_op_t left = NULL,
+			     ptr_op_t right = NULL);
 
-    void find_values(value_t * context, scope_t * scope,
+    ptr_op_t copy(ptr_op_t left = NULL, ptr_op_t right = NULL) const;
+    ptr_op_t compile(value_t& context, scope_t * scope, bool resolve = false);
+
+    void find_values(value_t& context, scope_t * scope,
 		     value_t::sequence_t& result_seq, bool recursive);
-    bool test_value(value_t * context, scope_t * scope, int index = 0);
+    bool test_value(value_t& context, scope_t * scope, int index = 0);
 
     void append_value(value_t& value, value_t::sequence_t& result_seq);
 
-    static op_t * defer_sequence(value_t::sequence_t& result_seq);
+    static ptr_op_t defer_sequence(value_t::sequence_t& result_seq);
 
     bool print(std::ostream&   out,
 	       const bool      relaxed	  = true,
-	       const op_t *    op_to_find = NULL,
+	       const ptr_op_t& op_to_find = NULL,
 	       unsigned long * start_pos  = NULL,
 	       unsigned long * end_pos	  = NULL) const;
 
@@ -525,42 +427,12 @@ public:
   };
 
 public:
-  op_t * ptr;
+  ptr_op_t ptr;
 
-  xpath_t& operator=(op_t * _expr) {
+  xpath_t& operator=(ptr_op_t _expr) {
     expr = "";
-    reset(_expr);
+    ptr	 = _expr;
     return *this;
-  }
-
-  op_t& operator*() throw() {
-    return *ptr;
-  }
-  const op_t& operator*() const throw() {
-    return *ptr;
-  }
-  op_t * operator->() throw() {
-    return ptr;
-  }
-  const op_t * operator->() const throw() {
-    return ptr;
-  }
-
-  op_t * get() throw() { return ptr; }
-  const op_t * get() const throw() { return ptr; }
-
-  op_t * release() throw() {
-    op_t * tmp = ptr;
-    ptr = 0;
-    return tmp;
-  }
-
-  void reset(op_t * p = 0) throw() {
-    if (p != ptr) {
-      if (ptr)
-	ptr->release();
-      ptr = p;
-    }
   }
 
 #ifdef THREADSAFE
@@ -570,7 +442,7 @@ public:
 #endif
   mutable bool	    use_lookahead;
 
-  token_t& next_token(std::istream& in, unsigned short tflags) const {
+  token_t& next_token(std::istream& in, flags_t tflags) const {
     if (use_lookahead)
       use_lookahead = false;
     else
@@ -597,24 +469,24 @@ public:
     use_lookahead = true;
   }
 
-  op_t * parse_value_term(std::istream& in, unsigned short flags) const;
-  op_t * parse_predicate_expr(std::istream& in, unsigned short flags) const;
-  op_t * parse_path_expr(std::istream& in, unsigned short flags) const;
-  op_t * parse_unary_expr(std::istream& in, unsigned short flags) const;
-  op_t * parse_union_expr(std::istream& in, unsigned short flags) const;
-  op_t * parse_mul_expr(std::istream& in, unsigned short flags) const;
-  op_t * parse_add_expr(std::istream& in, unsigned short flags) const;
-  op_t * parse_logic_expr(std::istream& in, unsigned short flags) const;
-  op_t * parse_and_expr(std::istream& in, unsigned short flags) const;
-  op_t * parse_or_expr(std::istream& in, unsigned short flags) const;
-  op_t * parse_querycolon_expr(std::istream& in, unsigned short flags) const;
-  op_t * parse_value_expr(std::istream& in, unsigned short flags) const;
+  ptr_op_t parse_value_term(std::istream& in, flags_t flags) const;
+  ptr_op_t parse_predicate_expr(std::istream& in, flags_t flags) const;
+  ptr_op_t parse_path_expr(std::istream& in, flags_t flags) const;
+  ptr_op_t parse_unary_expr(std::istream& in, flags_t flags) const;
+  ptr_op_t parse_union_expr(std::istream& in, flags_t flags) const;
+  ptr_op_t parse_mul_expr(std::istream& in, flags_t flags) const;
+  ptr_op_t parse_add_expr(std::istream& in, flags_t flags) const;
+  ptr_op_t parse_logic_expr(std::istream& in, flags_t flags) const;
+  ptr_op_t parse_and_expr(std::istream& in, flags_t flags) const;
+  ptr_op_t parse_or_expr(std::istream& in, flags_t flags) const;
+  ptr_op_t parse_querycolon_expr(std::istream& in, flags_t flags) const;
+  ptr_op_t parse_value_expr(std::istream& in, flags_t flags) const;
 
-  op_t * parse_expr(std::istream& in,
-		    unsigned short flags = XPATH_PARSE_RELAXED) const;
+  ptr_op_t parse_expr(std::istream& in,
+		      flags_t flags = XPATH_PARSE_RELAXED) const;
 
-  op_t * parse_expr(const string& str,
-		    unsigned short tflags = XPATH_PARSE_RELAXED) const
+  ptr_op_t parse_expr(const string& str,
+		      flags_t tflags = XPATH_PARSE_RELAXED) const
   {
     std::istringstream stream(str);
 #if 0
@@ -632,14 +504,14 @@ public:
 #endif
   }
 
-  op_t * parse_expr(const char * p,
-		    unsigned short tflags = XPATH_PARSE_RELAXED) const {
+  ptr_op_t parse_expr(const char * p,
+		      flags_t tflags = XPATH_PARSE_RELAXED) const {
     return parse_expr(string(p), tflags);
   }
 
   bool print(std::ostream&   out,
 	     const bool      relaxed,
-	     const op_t *  op_to_find,
+	     const ptr_op_t  op_to_find,
 	     unsigned long * start_pos,
 	     unsigned long * end_pos) const {
     if (ptr)
@@ -648,36 +520,34 @@ public:
   }
 
 public:
-  string    expr;
-  unsigned short flags;		// flags used to parse `expr'
+  string  expr;
+  flags_t flags;		// flags used to parse `expr'
 
   xpath_t() : ptr(NULL), use_lookahead(false), flags(0) {
     TRACE_CTOR(xpath_t, "");
   }
-  xpath_t(op_t * _ptr) : ptr(_ptr), use_lookahead(false) {
-    TRACE_CTOR(xpath_t, "op_t *");
+  xpath_t(ptr_op_t _ptr) : ptr(_ptr), use_lookahead(false) {
+    TRACE_CTOR(xpath_t, "ptr_op_t");
   }
 
-  xpath_t(const string& _expr,
-	  unsigned short _flags = XPATH_PARSE_RELAXED)
+  xpath_t(const string& _expr, flags_t _flags = XPATH_PARSE_RELAXED)
     : ptr(NULL), use_lookahead(false), flags(0) {
-    TRACE_CTOR(xpath_t, "const string&, unsigned short");
+    TRACE_CTOR(xpath_t, "const string&, flags_t");
     if (! _expr.empty())
       parse(_expr, _flags);
   }
-  xpath_t(std::istream& in, unsigned short _flags = XPATH_PARSE_RELAXED)
+  xpath_t(std::istream& in, flags_t _flags = XPATH_PARSE_RELAXED)
     : ptr(NULL), use_lookahead(false), flags(0) {
-    TRACE_CTOR(xpath_t, "std::istream&, unsigned short");
+    TRACE_CTOR(xpath_t, "std::istream&, flags_t");
     parse(in, _flags);
   }
   xpath_t(const xpath_t& other)
-    : ptr(other.ptr ? other.ptr->acquire() : NULL),
-      use_lookahead(false), expr(other.expr), flags(other.flags) {
+    : ptr(other.ptr), use_lookahead(false),
+      expr(other.expr), flags(other.flags) {
     TRACE_CTOR(xpath_t, "copy");
   }
   virtual ~xpath_t() {
     TRACE_DTOR(xpath_t);
-    reset(NULL);
   }
 
   xpath_t& operator=(const string& _expr) {
@@ -686,14 +556,14 @@ public:
   }
   xpath_t& operator=(const xpath_t& _expr);
   xpath_t& operator=(xpath_t& _xpath) {
-    ptr	  = _xpath.ptr->acquire();
+    ptr	  = _xpath.ptr;
     expr  = _xpath.expr;
     flags = _xpath.flags;
     use_lookahead = false;
     return *this;
   }
 
-  operator op_t *() throw() {
+  operator ptr_op_t() throw() {
     return ptr;
   }
 
@@ -704,29 +574,21 @@ public:
     return expr;
   }
 
-  void parse(const string& _expr, unsigned short _flags = XPATH_PARSE_RELAXED) {
+  void parse(const string& _expr, flags_t _flags = XPATH_PARSE_RELAXED) {
     expr  = _expr;
     flags = _flags;
-    op_t * tmp = parse_expr(_expr, _flags);
-    assert(tmp);
-    reset(tmp ? tmp->acquire() : NULL);
+    ptr	  = parse_expr(_expr, _flags);
   }
-  void parse(std::istream& in, unsigned short _flags = XPATH_PARSE_RELAXED) {
+  void parse(std::istream& in, flags_t _flags = XPATH_PARSE_RELAXED) {
     expr  = "";
     flags = _flags;
-    op_t * tmp = parse_expr(in, _flags);
-    assert(tmp);
-    reset(tmp ? tmp->acquire() : NULL);
+    ptr   = parse_expr(in, _flags);
   }
 
   void compile(node_t& top_node, scope_t * scope = NULL) {
-    if (ptr) {
+    if (ptr.get()) {
       value_t noderef(&top_node);
-      op_t * compiled = ptr->compile(&noderef, scope);
-      if (compiled == ptr)
-	compiled->release();
-      else
-	reset(compiled);
+      ptr = ptr->compile(noderef, scope);
     }
   }
 
@@ -767,6 +629,13 @@ inline std::ostream& operator<<(std::ostream& out, const xpath_t::op_t& op) {
   return out;
 }
 
+inline void intrusive_ptr_add_ref(xpath_t::op_t * op) {
+  op->acquire();
+}
+inline void intrusive_ptr_release(xpath_t::op_t * op) {
+  op->release();
+}
+
 } // namespace xml
 
 template <typename T>
@@ -777,15 +646,20 @@ inline T * get_ptr(xml::xpath_t::scope_t * locals, unsigned int idx) {
   return ptr;
 }
 
-class xml_command : public xml::xpath_t::functor_t
+template <typename T>
+inline T * get_node_ptr(xml::xpath_t::scope_t * locals, unsigned int idx) {
+  assert(locals->args.size() > idx);
+  T * ptr = polymorphic_downcast<T *>(locals->args[idx].as_xml_node());
+  assert(ptr);
+  return ptr;
+}
+
+class xml_command
 {
  public:
-  xml_command() : xml::xpath_t::functor_t("xml") {}
-
-  virtual void operator()(value_t&, xml::xpath_t::scope_t * locals) {
+  void operator()(value_t&, xml::xpath_t::scope_t * locals) {
     std::ostream *    out = get_ptr<std::ostream>(locals, 0);
-    xml::document_t * doc = get_ptr<xml::document_t>(locals, 1);
-
+    xml::document_t * doc = get_node_ptr<xml::document_t>(locals, 1);
     doc->print(*out);
   }
 };

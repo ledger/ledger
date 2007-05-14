@@ -116,18 +116,17 @@ static int read_and_report(report_t * report, int argc, char * argv[],
 
   string verb = *arg++;
 
-  std::auto_ptr<xml::xpath_t::functor_t> command;
+  xml::xpath_t::function_t command;
 
+#if 0
   if (verb == "register" || verb == "reg" || verb == "r") {
-#if 1
-    command.reset(new register_command);
-#else
+    command = register_command();
+#if 0
     command = new format_command
       ("register", either_or(report->format_string,
 			     report->session->register_format));
 #endif
   }
-#if 0
   else if (verb == "balance" || verb == "bal" || verb == "b") {
     if (! report->raw_mode) {
       report->transforms.push_back(new accounts_transform);
@@ -166,9 +165,10 @@ static int read_and_report(report_t * report, int argc, char * argv[],
     command = new csv_command;
   else if (verb == "emacs" || verb == "lisp")
     command = new emacs_command;
+  else
 #endif
-  else if (verb == "xml")
-    command.reset(new xml_command);
+  if (verb == "xml")
+    command = xml_command();
   else if (verb == "expr")
     ;
   else if (verb == "xpath")
@@ -198,10 +198,10 @@ static int read_and_report(report_t * report, int argc, char * argv[],
 
     // jww (2007-04-19): This is an error, since command is an
     // auto_ptr!
-    if (xml::xpath_t::op_t * def = report->lookup(buf))
-      command.reset(def->functor_obj());
+    if (xml::xpath_t::ptr_op_t def = report->lookup(buf))
+      command = def->as_function();
 
-    if (! command.get())
+    if (! command)
       throw_(std::logic_error, string("Unrecognized command '") + verb + "'");
   }
 
@@ -211,23 +211,15 @@ static int read_and_report(report_t * report, int argc, char * argv[],
   session.read_init();
 
   INFO_START(journal, "Read journal file");
-  journal_t * journal = session.read_data(report->account);
-  {
-    textual_parser_t text_parser;
-    ifstream input(session.data_file);
 
-#if 1
-    xml::document_t temp(xml::LEDGER_NODE);
-    xml::document_builder_t builder(temp);
-    text_parser.parse(input, session.data_file, builder);
-    temp.print(std::cout);
-#else
-    xml::xml_writer_t writer(std::cout);
-    text_parser.parse(input, session.data_file, writer);
-#endif
-  }  
+  xml::document_t xml_document(xml::LEDGER_NODE);
+  xml::document_builder_t builder(xml_document);
+  journal_t * journal = session.create_journal();
+  if (! session.read_data(builder, journal, report->account))
+    throw_(parse_error, "Failed to locate any journal entries; "
+	   "did you specify a valid file with -f?");
+
   INFO_FINISH(journal);
-  return 0;
 
   TRACE_FINISH(entry_text, 1);
   TRACE_FINISH(entry_date, 1);
@@ -300,8 +292,7 @@ static int read_and_report(report_t * report, int argc, char * argv[],
       *out << "Result of calculation: ";
     }
 
-    xml::document_t temp(xml::LEDGER_NODE);
-    *out << expr.calc(temp, report).strip_annotations() << std::endl;
+    *out << expr.calc(xml_document, report).strip_annotations() << std::endl;
 
     return 0;
   }
@@ -322,13 +313,14 @@ static int read_and_report(report_t * report, int argc, char * argv[],
   // Create the an argument scope containing the report command's
   // arguments, and then invoke the command.
 
-  std::auto_ptr<xml::xpath_t::scope_t> locals
+  scoped_ptr<xml::xpath_t::scope_t> locals
     (new xml::xpath_t::scope_t(report, xml::xpath_t::scope_t::ARGUMENT));
 
   locals->args = value_t::sequence_t();
   locals->args.push_back(out);
-  locals->args.push_back(journal->document);
+  locals->args.push_back(&xml_document);
 
+#if 0
   if (command->wants_args) {
     for (strings_list::iterator i = args.begin();
 	 i != args.end();
@@ -381,14 +373,15 @@ static int read_and_report(report_t * report, int argc, char * argv[],
 	 (string("//xact[account =~ /(") + regexps[0] + ")/]"));
 #endif
   }
+#endif
 
   INFO_START(transforms, "Applied transforms");
-  report->apply_transforms(journal->document);
+  report->apply_transforms(xml_document);
   INFO_FINISH(transforms);
 
   INFO_START(command, "Did user command '" << verb << "'");
   value_t temp;
-  (*command)(temp, locals.get());
+  command(temp, locals.get());
   INFO_FINISH(command);
 
   // Write out the binary cache, if need be
@@ -483,8 +476,8 @@ int main(int argc, char * argv[], char * envp[])
     session->register_parser(new ofx_parser_t);
 #endif
     session->register_parser(new qif_parser_t);
-    session->register_parser(new textual_parser_t);
 #endif
+    session->register_parser(new textual_parser_t);
 
     std::auto_ptr<ledger::report_t> report(new ledger::report_t(session.get()));
 

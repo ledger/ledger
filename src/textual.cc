@@ -275,15 +275,17 @@ bool textual_parser_t::test(std::istream& in) const
   return true;
 }
 
-void textual_parser_t::parse(std::istream& in,
-			     const path&   pathname,
-			     builder_t&	   builder)
+std::size_t textual_parser_t::parse(std::istream& in,
+				    const path&   pathname,
+				    builder_t&	  builder)
 {
   TRACE_START(parsing_total, 1, "Total time spent parsing text:");
 
   INFO("Parsing file '" << pathname.string() << "'");
 
   builder.begin_node(JOURNAL_NODE);
+
+  std::size_t count = 0;
 
   while (in.good() && ! in.eof()) {
     static char line[MAX_LINE + 1];
@@ -460,6 +462,7 @@ void textual_parser_t::parse(std::istream& in,
     default:
       TRACE_START(entries, 1, "Time spent handling entries:");
       parse_entry(in, builder, line, end_of_line);
+      count++;
       TRACE_STOP(entries, 1);
       break;
     }
@@ -470,6 +473,8 @@ void textual_parser_t::parse(std::istream& in,
   builder.end_node(JOURNAL_NODE);
 
   TRACE_STOP(parsing_total, 1);
+
+  return count;
 }
 
 } // namespace ledger

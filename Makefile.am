@@ -37,6 +37,7 @@ libledger_la_SOURCES = \
 	src/utils.cc	 \
 	src/times.cc	 \
 	src/mask.cc	 \
+	src/abbrev.cc	 \
 	src/commodity.cc \
 	src/amount.cc    \
 	src/balance.cc   \
@@ -49,7 +50,6 @@ libledger_la_SOURCES = \
 	src/textual.cc	 \
 	src/binary.cc	 \
 	src/transform.cc \
-	src/register.cc	 \
 	src/report.cc	 \
 	src/session.cc
 
@@ -94,6 +94,7 @@ libpyledger_la_SOURCES =    \
 
 
 pkginclude_HEADERS = \
+	src/abbrev.h	     \
 	src/amount.h	     \
 	src/balance.h	     \
 	src/balpair.h	     \
@@ -113,7 +114,6 @@ pkginclude_HEADERS = \
 	src/pyinterp.h	     \
 	src/pyledger.h	     \
 	src/pyutils.h	     \
-	src/register.h	     \
 	src/report.h	     \
 	src/scoped_execute.h \
 	src/session.h	     \

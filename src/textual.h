@@ -41,9 +41,9 @@ class textual_parser_t : public parser_t
  public:
   virtual bool test(std::istream& in) const;
 
-  virtual void parse(std::istream&   in,
-		     const path&     pathname,
-		     xml::builder_t& builder);
+  virtual std::size_t parse(std::istream&   in,
+			    const path&     pathname,
+			    xml::builder_t& builder);
 };
 
 } // namespace ledger

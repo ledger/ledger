@@ -140,6 +140,7 @@ extern "C" {
 #include <boost/filesystem/path.hpp>
 #include <boost/foreach.hpp>
 #include <boost/function.hpp>
+#include <boost/intrusive_ptr.hpp>
 #include <boost/lambda/bind.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <boost/lexical_cast.hpp>
@@ -154,5 +155,6 @@ extern "C" {
 #include <boost/ptr_container/ptr_list.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/regex.hpp>
+#include <boost/variant.hpp>
 
 #endif // _SYSTEM_HH

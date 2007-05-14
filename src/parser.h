@@ -47,9 +47,9 @@ class parser_t
 
   virtual bool test(std::istream& in) const = 0;
 
-  virtual void parse(std::istream&   in,
-		     const path&     pathname,
-		     xml::builder_t& builder) = 0;
+  virtual std::size_t parse(std::istream&   in,
+			    const path&     pathname,
+			    xml::builder_t& builder) = 0;
 };
 
 DECLARE_EXCEPTION(parse_error);
