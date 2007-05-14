@@ -511,6 +511,8 @@ inline void throw_unexpected_error(char, char) {
  * General utility functions
  */
 
+#define foreach BOOST_FOREACH
+
 namespace ledger {
 
 path resolve_path(const path& pathname);

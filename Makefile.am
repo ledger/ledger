@@ -41,24 +41,15 @@ libledger_la_SOURCES = \
 	src/amount.cc    \
 	src/balance.cc   \
 	src/value.cc     \
-			 \
-	src/session.cc	 \
+	src/xml.cc	 \
+	src/xpath.cc     \
+	src/builder.cc	 \
 	src/journal.cc	 \
-	src/binary.cc	 \
-	src/qif.cc	 \
 	src/textual.cc	 \
-	src/quotes.cc	 \
-	src/csv.cc	 \
-	src/derive.cc	 \
-	src/emacs.cc	 \
-	src/format.cc	 \
-	src/reconcile.cc \
+	src/transform.cc \
 	src/register.cc	 \
 	src/report.cc	 \
-	src/transform.cc \
-	src/xml.cc	 \
-	src/xmlparse.cc	 \
-	src/xpath.cc
+	src/session.cc
 
 #if HAVE_EXPAT
 #libledger_la_CPPFLAGS += -DHAVE_EXPAT=1

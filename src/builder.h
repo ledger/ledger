@@ -4,6 +4,7 @@
 #include "xml.h"
 
 namespace ledger {
+namespace xml {
 
 /**
  * @class builder_t
@@ -22,61 +23,43 @@ public:
     typedef uint_least32_t file_pos_t;
     typedef uint_least32_t file_line_t;
 
-    path	pathname;
     file_pos_t	offset;
     file_line_t linenum;
 
     position_t() : offset(0), linenum(0) {}
 
-    explicit position_t(path	    _pathname,
-			file_pos_t  _offset,
+    explicit position_t(file_pos_t  _offset,
 			file_line_t _linenum)
-      : pathname(_pathname),
-	offset(_offset), linenum(_linenum) {}
+      : offset(_offset), linenum(_linenum) {}
   };
 
   position_t current_position;
 
-  virtual void start_position(const std::istream& in,
-			      const path& pathname) {
-    set_position(position_t(pathname, in.tellg(), 1));
-  }
-
-  virtual void set_position(const position_t& position) {
-    current_position = position;
-  }
-
-  virtual position_t& position() {
-    return current_position;
-  }
+  virtual void     set_start_position(std::istream& in) {}
+  virtual void     set_position(const position_t& position) {}
+  virtual position_t& position() { return current_position; }
 
   virtual void     push_attr(const string&  name,
 			     const string& value) = 0;
-  virtual void     push_attr(const nameid_t name_id,
+  virtual void     push_attr(const node_t::nameid_t name_id,
 			     const string& value) = 0;
 
   virtual void     begin_node(const string& name)     = 0;
-  virtual void     begin_node(const nameid_t name_id) = 0;
-
-  template <typename T>
-  virtual void     begin_node(typename T::pointer data) = 0;
+  virtual void     begin_node(const node_t::nameid_t name_id) = 0;
 
   virtual void     push_node(const string& name,
-			     const optional<position_t>& end_pos) = 0;
-  virtual void     push_node(const nameid_t name_id,
-			     const optional<position_t>& end_pos) = 0;
+			     const optional<position_t>& end_pos = none) = 0;
+  virtual void     push_node(const node_t::nameid_t name_id,
+			     const optional<position_t>& end_pos = none) = 0;
 
   virtual node_t * current_node() = 0;
-
-  template <typename T>
-  virtual T *      current_node() = 0;
 
   virtual void     append_text(const string& text) = 0;
 
   virtual node_t * end_node(const string& name,
-			     const optional<position_t>& end_pos) = 0;
-  virtual node_t * end_node(const nameid_t name_id,
-			     const optional<position_t>& end_pos) = 0;
+			     const optional<position_t>& end_pos = none) = 0;
+  virtual node_t * end_node(const node_t::nameid_t name_id,
+			     const optional<position_t>& end_pos = none) = 0;
 };
 
 /**
@@ -110,6 +93,14 @@ class xml_builder_t : public builder_t
  */
 class journal_builder_t : public xml_builder_t
 {
+public:
+  virtual void set_start_position(std::istream& in) {
+    set_position(position_t(in.tellg(), 1));
+  }
+
+  virtual void set_position(const position_t& position) {
+    current_position = position;
+  }
 };
 
 /**
@@ -124,8 +115,67 @@ class journal_builder_t : public xml_builder_t
  */
 class xml_writer_t : public builder_t
 {
+  typedef std::list<std::pair<string, string> > attrs_list;
+
+  attrs_list	current_attrs;
+  std::ostream& outs;
+
+public:
+  xml_writer_t(std::ostream& _outs) : outs(_outs) {
+    outs << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+    begin_node("ledger");
+  }
+  ~xml_writer_t() {
+    end_node("ledger");
+  }
+
+  virtual void     push_attr(const string&  name,
+			     const string& value) {
+    current_attrs.push_back(attrs_list::value_type(name, value));
+  }
+  virtual void     push_attr(const node_t::nameid_t name_id,
+			     const string& value) {
+    push_attr("hello", value);
+  }
+
+  virtual void     begin_node(const string& name) {
+    outs << '<' << name;
+    foreach (const attrs_list::value_type& attr, current_attrs)
+      outs << ' ' << attr.first << "=\"" << attr.second << "\"";
+    current_attrs.clear();
+    outs << '>';
+  }
+  virtual void     begin_node(const node_t::nameid_t name_id) {
+    begin_node("hello");
+  }
+
+  virtual void     push_node(const string& name,
+			     const optional<position_t>& end_pos = none) {
+    begin_node(name);
+    end_node(name, end_pos);
+  }
+  virtual void     push_node(const node_t::nameid_t name_id,
+			     const optional<position_t>& end_pos = none) {
+    push_node("hello", end_pos);
+  }
+
+  virtual node_t * current_node() { return NULL; }
+
+  virtual void     append_text(const string& text) {
+    outs << text;
+  }
+
+  virtual node_t * end_node(const string& name,
+			    const optional<position_t>& end_pos = none) {
+    outs << "</" << name << '>';
+  }
+  virtual node_t * end_node(const node_t::nameid_t name_id,
+			    const optional<position_t>& end_pos = none) {
+    end_node("hello", end_pos);
+  }
 };
 
+} // namespace xml
 } // namespace ledger
 
 #endif // _BUILDER_H

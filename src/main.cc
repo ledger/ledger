@@ -31,11 +31,12 @@
 
 #include "utils.h"
 #include "option.h"
-#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
-#include "gnucash.h"
-#endif
-#include "qif.h"
-#include "ofx.h"
+//#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
+//#include "gnucash.h"
+//#endif
+//#include "qif.h"
+//#include "ofx.h"
+#include "builder.h"
 
 #include <ledger.h>
 
@@ -211,7 +212,14 @@ static int read_and_report(report_t * report, int argc, char * argv[],
 
   INFO_START(journal, "Read journal file");
   journal_t * journal = session.read_data(report->account);
+  {
+    textual_parser_t text_parser;
+    ifstream input(session.data_file);
+    xml::xml_writer_t writer(std::cout);
+    text_parser.parse(input, session.data_file, writer);
+  }  
   INFO_FINISH(journal);
+  return 0;
 
   TRACE_FINISH(entry_text, 1);
   TRACE_FINISH(entry_date, 1);
@@ -459,7 +467,6 @@ int main(int argc, char * argv[], char * envp[])
 
 #if 0
     session->register_parser(new binary_parser_t);
-#endif
 #if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
     session->register_parser(new xml::xml_parser_t);
     session->register_parser(new gnucash_parser_t);
@@ -469,6 +476,7 @@ int main(int argc, char * argv[], char * envp[])
 #endif
     session->register_parser(new qif_parser_t);
     session->register_parser(new textual_parser_t);
+#endif
 
     std::auto_ptr<ledger::report_t> report(new ledger::report_t(session.get()));
 

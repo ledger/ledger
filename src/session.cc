@@ -68,36 +68,34 @@ void release_session_context()
 #endif
 }
 
-unsigned int session_t::read_journal(std::istream&	   in,
-				     journal_t *	   journal,
-				     account_t *	   master,
-				     const optional<path>& original)
+void session_t::read_journal(std::istream&   in,
+			     const path&     pathname,
+			     xml::builder_t& builder)
 {
+#if 0
   if (! master)
     master = journal->master;
+#endif
 
   for (ptr_list<parser_t>::iterator i = parsers.begin();
        i != parsers.end();
        i++)
     if (i->test(in))
-      return i->parse(in, journal, master, original);
-
-  return 0;
+      i->parse(in, pathname, builder);
 }
 
-unsigned int session_t::read_journal(const path&	   pathname,
-				     journal_t *	   journal,
-				     account_t *	   master,
-				     const optional<path>& original)
+void session_t::read_journal(const path&     pathname,
+			     xml::builder_t& builder)
 {
+#if 0
   journal->sources.push_back(pathname);
+#endif
 
   if (! exists(pathname))
     throw_(std::logic_error, "Cannot read file" << pathname);
 
   ifstream stream(pathname);
-  return read_journal(stream, journal, master,
-		      original ? original : pathname);
+  read_journal(stream, pathname, builder);
 }
 
 void session_t::read_init()
@@ -115,6 +113,9 @@ void session_t::read_init()
 
 journal_t * session_t::read_data(const string& master_account)
 {
+#if 1
+  return NULL;
+#else
   if (data_file.empty())
     throw_(parse_error, "No journal file was specified (please use -f)");
 
@@ -180,6 +181,7 @@ journal_t * session_t::read_data(const string& master_account)
   TRACE_STOP(parser, 1);
 
   return journal;
+#endif
 }
 
 bool session_t::resolve(const string& name, value_t& result,

@@ -148,15 +148,11 @@ class session_t : public xml::xpath_t::scope_t
     checked_delete(journal);
   }
 
-  unsigned int read_journal(std::istream&	  in,
-			    journal_t *		  journal,
-			    account_t *		  master   = NULL,
-			    const optional<path>& original = none);
-
-  unsigned int read_journal(const path&		  pathname,
-			    journal_t *		  journal,
-			    account_t *		  master   = NULL,
-			    const optional<path>& original = none);
+  void read_journal(std::istream&   in,
+		    const path&	    pathname,
+		    xml::builder_t& builder);
+  void read_journal(const path&	    pathname,
+		    xml::builder_t& builder);
 
   void read_init();
 

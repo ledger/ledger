@@ -34,7 +34,7 @@
 
 #include "journal.h"
 #include "value.h"
-#include "parser.h"
+//#include "parser.h"
 
 namespace ledger {
 
@@ -46,6 +46,43 @@ class journal_t;
 namespace xml {
 
 #define XML_NODE_IS_PARENT 0x1
+
+#define ACCOUNT_ATTR		  "account"
+#define ACCOUNT_PATH_NODE	  "account-path"
+#define AMOUNT_EXPR_NODE	  "amount-expr"
+#define ARG_ATTR		  "arg"
+#define AUTO_ENTRY_NODE		  "auto-entry"
+#define BALANCE_ATTR		  "balance"
+#define CHECKIN_NODE		  "checkin"
+#define CLEARED_ATTR		  "cleared"
+#define CODE_ATTR		  "code"
+#define COMMODITY_CONVERSION_NODE "commodity-conversion"
+#define COMMODITY_NOMARKET_NODE	  "commodity-nomarket"
+#define COMMODITY_TEMPLATE_NODE	  "commodity-template"
+#define CURRENT_YEAR_NODE	  "current-year"
+#define DATE_ATTR		  "date"
+#define DATE_EFF_ATTR		  "effective"
+#define DEFAULT_ACCOUNT_NODE	  "default-account"
+#define DIRECTIVE_NODE		  "directive"
+#define ENTRY_NODE		  "entry"
+#define FROM_ATTR		  "from"
+#define JOURNAL_NODE		  "journal"
+#define NAME_ATTR		  "name"
+#define NOTE_NODE		  "note"
+#define PAYEE_NODE		  "payee"
+#define PENDING_ATTR		  "pending"
+#define PERIOD_ENTRY_NODE	  "period-entry"
+#define PERIOD_NODE		  "period"
+#define PRICE_ATTR		  "price"
+#define PRICE_HISTORY_NODE	  "price-history"
+#define RULE_NODE		  "rule"
+#define SYMBOL_ATTR		  "symbol"
+#define TEMPLATE_ATTR		  "template"
+#define TIME_ATTR		  "time"
+#define TO_ATTR			  "to"
+#define TRANSACTION_NODE	  "transaction"
+#define VIRTUAL_ATTR		  "virtual"
+#define YEAR_ATTR		  "year"
 
 DECLARE_EXCEPTION(conversion_error);
 
@@ -290,6 +327,7 @@ public:
 #endif
 };
 
+#if 0
 #if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
 
 class xml_parser_t : public parser_t
@@ -305,6 +343,7 @@ class xml_parser_t : public parser_t
 
 DECLARE_EXCEPTION(parse_error);
 
+#endif
 #endif
 
 class commodity_node_t : public parent_node_t

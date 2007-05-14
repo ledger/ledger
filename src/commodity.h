@@ -190,7 +190,7 @@ public:
   optional<amount_t> value(const optional<moment_t>& moment = none);
 
   static void parse_symbol(std::istream& in, string& symbol);
-  static void parse_symbol(const char *& p, string& symbol);
+  static void parse_symbol(char *& p, string& symbol);
   static string parse_symbol(std::istream& in) {
     string temp;
     parse_symbol(in, temp);

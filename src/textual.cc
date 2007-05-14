@@ -37,32 +37,9 @@ namespace ledger {
 
 typedef xml::builder_t::position_t position_t;
 
-namespace {
-  inline char * next_element(char * buf, bool variable = false) {
-    for (char * p = buf; *p; p++) {
-      if (! (*p == ' ' || *p == '\t'))
-	continue;
-
-      if (! variable) {
-	*p = '\0';
-	return skip_ws(p + 1);
-      }
-      else if (*p == '\t') {
-	*p = '\0';
-	return skip_ws(p + 1);
-      }
-      else if (*(p + 1) == ' ') {
-	*p = '\0';
-	return skip_ws(p + 2);
-      }
-    }
-    return NULL;
-  }
-}
-
-void parse_transaction(builder_t&  builder,
-		       char *	   line,
-		       position_t& end_of_line,
+void parse_transaction(xml::builder_t& builder,
+		       char *	       line,
+		       position_t&     end_of_line)
 {
   // First cut up the input line into its various parts.
 
@@ -99,8 +76,8 @@ void parse_transaction(builder_t&  builder,
 
   // Setup the details for this node
 
-  if (statep) {
-    switch (*statep) {
+  if (state) {
+    switch (*state) {
     case '*':
       builder.push_attr(CLEARED_ATTR, "yes");
       break;
@@ -131,9 +108,11 @@ void parse_transaction(builder_t&  builder,
 
   // Parse the optional amount
 
-  builder.begin_node(AMOUNT_EXPR_NODE);
-  builder.append_text(account_path);
-  builder.end_node(AMOUNT_EXPR_NODE);
+  if (amount) {
+    builder.begin_node(AMOUNT_EXPR_NODE);
+    builder.append_text(amount);
+    builder.end_node(AMOUNT_EXPR_NODE);
+  }
 
   // Parse the optional note
 
@@ -146,7 +125,7 @@ void parse_transaction(builder_t&  builder,
   builder.end_node(TRANSACTION_NODE, end_of_line);
 }
 
-bool parse_transactions(std::istream& in, builder_t& builder)
+bool parse_transactions(std::istream& in, xml::builder_t& builder)
 {
   TRACE_START(entry_xacts, 1, "Time spent parsing transactions:");
 
@@ -168,6 +147,7 @@ bool parse_transactions(std::istream& in, builder_t& builder)
       break;
 
     parse_transaction(builder, line, end_of_line);
+    added = true;
   }
 
   TRACE_STOP(entry_xacts, 1);
@@ -175,10 +155,10 @@ bool parse_transactions(std::istream& in, builder_t& builder)
   return added;
 }
 
-void parse_entry(std::istream& in,
-		 builder_t&    builder,
-		 char *	       line,
-		 position_t&   end_of_line)
+void parse_entry(std::istream&	 in,
+		 xml::builder_t& builder,
+		 char *		 line,
+		 position_t&	 end_of_line)
 {
   TRACE_START(entry_text, 1, "Time spent preparing entry text:");
 
@@ -293,12 +273,13 @@ bool textual_parser_t::test(std::istream& in) const
   return true;
 }
 
-void textual_parser_t::parse(std::istream& in,
-			     builder_t&	   builder)
+void textual_parser_t::parse(std::istream&   in,
+			     const path&     pathname,
+			     xml::builder_t& builder)
 {
   TRACE_START(parsing_total, 1, "Total time spent parsing text:");
 
-  INFO("Parsing file '" << builder.position().pathname.string() << "'");
+  INFO("Parsing file '" << pathname.string() << "'");
 
   builder.begin_node(JOURNAL_NODE);
 
@@ -312,7 +293,7 @@ void textual_parser_t::parse(std::istream& in,
     end_of_line.offset += std::strlen(line) + 1;
     end_of_line.linenum++;
 
-    PUSH_CONTEXT();
+    //PUSH_CONTEXT();
 
     switch (line[0]) {
     case '\0':
@@ -481,7 +462,7 @@ void textual_parser_t::parse(std::istream& in,
       break;
     }
 
-    POP_CONTEXT(builder_context(builder));
+    //POP_CONTEXT(builder_context(builder));
   }
 
   builder.end_node(JOURNAL_NODE);

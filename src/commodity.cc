@@ -186,7 +186,7 @@ void commodity_t::parse_symbol(std::istream& in, string& symbol)
   symbol = buf;
 }
 
-void commodity_t::parse_symbol(const char *& p, string& symbol)
+void commodity_t::parse_symbol(char *& p, string& symbol)
 {
   if (*p == '"') {
     char * q = std::strchr(p + 1, '"');
