@@ -22,20 +22,12 @@ cd $TMPDIR || exit 1
 mkdir ledger || exit 1
 cd ledger || exit 1
 
-# Determine if we can use git to pull down Ledger, since it's very
-# fast and efficient (and the trunk of ledger-git is more bleeding
-# edge).  Otherwise, fall back on the public sebversion repository.
+# Pull the Ledger sources from the Subversion repository.
 
-USING_GIT=true
+LEDGER_SVN=https://ledger.svn.sourceforge.net/svnroot/ledger
 
-cmd=$(which git 2>&1)
-if [ ! -x "$cmd" ]; then
-    USING_GIT=false
-    LEDGER_SVN=https://ledger.svn.sourceforge.net/svnroot/ledger
-elif [ -d $HOME/src/ledger/.git ]; then
-    LEDGER_GIT=$HOME/src/ledger
-else
-    LEDGER_GIT=http://newartisans.com/ledger.git
+if [ -d $HOME/Projects/ledger ]; then
+    cp -Rp $HOME/Projects/ledger local_svn
 fi
 
 # Create a reference copy of the sources in a pristine working tree
@@ -44,18 +36,10 @@ fi
 # `dup_working_tree' creates a copy for us, either cheaply using git,
 # or via an ordinary copy if we're using subversion.
 
-if [ "$USING_GIT" = "true" ]; then
-    git clone -l $LEDGER_GIT local_git || exit 1
-else
-    svn checkout $LEDGER_SVN/trunk local_svn
-fi
+svn checkout $LEDGER_SVN/trunk local_svn
 
 function dup_working_tree() {
-    if [ "$USING_GIT" = "true" ]; then
-	git clone -l local_git "$1" || exit 1
-    else
-	cp -Rp local_svn "$1" || exit 1
-    fi
+    cp -Rp local_svn "$1" || exit 1
 }
 
 # These functions understand how to do a distcheck build for ledger

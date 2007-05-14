@@ -3,7 +3,7 @@ BUILT_SOURCES =
 CLEANFILES    =
 EXTRA_DIST    = LICENSE docs tests contrib scripts setup.py \
 		acprep verify.sh run_verify.sh valgrind.sh \
-		src/TODO src/gnucash.cc 
+		src/TODO # src/gnucash.cc src/ofx.cc
 
 ESC_srcdir=`echo "$(srcdir)" | sed 's/\//\\\\\//g'`
 ESC_builddir=`echo "$(top_builddir)" | sed 's/\//\\\\\//g'`
@@ -61,10 +61,10 @@ libledger_la_SOURCES = \
 #libledger_la_CPPFLAGS += -DHAVE_XMLPARSE=1
 #libledger_la_SOURCES += src/gnucash.cc
 #endif
-if HAVE_LIBOFX
-libledger_la_CPPFLAGS += -DHAVE_LIBOFX=1
-libledger_la_SOURCES += src/ofx.cc
-endif
+#if HAVE_LIBOFX
+#libledger_la_CPPFLAGS += -DHAVE_LIBOFX=1
+#libledger_la_SOURCES += src/ofx.cc
+#endif
 if DEBUG
 libledger_la_CPPFLAGS += -DDEBUG_MODE
 endif
@@ -102,12 +102,14 @@ pkginclude_HEADERS = \
 	src/builder.h	     \
 	src/commodity.h	     \
 	src/context.h	     \
+	src/document.h	     \
 	src/fdstream.hpp     \
 	src/flags.h	     \
 	src/format.h	     \
 	src/journal.h	     \
 	src/ledger.h	     \
 	src/mask.h	     \
+	src/node.h	     \
 	src/option.h	     \
 	src/parser.h	     \
 	src/pyfstream.h	     \
@@ -183,9 +185,9 @@ PYLIBS += boost_date_time$(BOOST_SUFFIX)  \
 #if HAVE_XMLPARSE
 #PYLIBS += xmlparse xmltok
 #endif
-if HAVE_LIBOFX
-PYLIBS += ofx
-endif
+#if HAVE_LIBOFX
+#PYLIBS += ofx
+#endif
 
 ledger.so: $(ledger_so_SOURCES) $(ledger_so_DEPENDENCIES)
 	CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libledger_la_CPPFLAGS)" \
