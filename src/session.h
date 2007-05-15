@@ -188,11 +188,11 @@ class session_t : public xml::xpath_t::scope_t
   // Debug options
   //
 
-  void option_verify(value_t&) {}
-  void option_trace(value_t&, xml::xpath_t::scope_t * locals) {}
-  void option_debug(value_t&, xml::xpath_t::scope_t * locals) {}
+  void option_trace_(value_t&, xml::xpath_t::scope_t * locals) {}
+  void option_debug_(value_t&, xml::xpath_t::scope_t * locals) {}
 
-  void option_verbose(value_t&) {
+  void option_verify(value_t&, xml::xpath_t::scope_t *) {}
+  void option_verbose(value_t&, xml::xpath_t::scope_t *) {
 #if defined(LOGGING_ON)
     if (_log_level < LOG_INFO)
       _log_level = LOG_INFO;
@@ -203,13 +203,13 @@ class session_t : public xml::xpath_t::scope_t
   // Option handlers
   //
 
-  void option_file(value_t&, xml::xpath_t::scope_t * locals) {
+  void option_file_(value_t&, xml::xpath_t::scope_t * locals) {
     data_file = locals->args.as_string();
   }
 
 #if 0
 #if defined(USE_BOOST_PYTHON)
-  void option_import(value_t&) {
+  void option_import_(value_t&) {
     python_import(optarg);
   }
   void option_import_stdin(value_t&) {

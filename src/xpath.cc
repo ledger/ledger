@@ -71,7 +71,7 @@ void xpath_t::token_t::parse_ident(std::istream& in)
 
   char buf[256];
   READ_INTO_(in, buf, 255, c, length,
-	     std::isalnum(c) || c == '_' || c == '.');
+	     std::isalnum(c) || c == '_' || c == '.' || c == '-');
 
   switch (buf[0]) {
   case 'a':
@@ -437,20 +437,6 @@ xpath_t::ptr_op_t xpath_t::wrap_value(const value_t& val)
 {
   xpath_t::ptr_op_t temp(new xpath_t::op_t(xpath_t::op_t::VALUE));
   temp->set_value(new value_t(val));
-  return temp;
-}
-
-xpath_t::ptr_op_t xpath_t::wrap_sequence(const value_t::sequence_t& val)
-{
-  xpath_t::ptr_op_t temp(new xpath_t::op_t(xpath_t::op_t::VALUE));
-
-  if (val.size() == 0)
-    temp->set_value(new value_t(false));
-  else if (val.size() == 1)
-    temp->set_value(new value_t(val.front()));
-  else
-    temp->set_value(new value_t(val));
-
   return temp;
 }
 
@@ -1073,7 +1059,9 @@ void xpath_t::op_t::find_values(value_t& context, scope_t * scope,
 {
   xpath_t expr(compile(context, scope, true));
 
-  if (expr.ptr->kind == VALUE)
+  if (expr.ptr->is_value() &&
+      (expr.ptr->as_value().is_xml_node() ||
+       expr.ptr->as_value().is_sequence()))
     append_value(expr.ptr->as_value(), result_seq);
 
   if (recursive) {
@@ -1191,7 +1179,6 @@ xpath_t::ptr_op_t xpath_t::op_t::compile(value_t& context, scope_t * scope,
       value_t::sequence_t nodes;
       foreach (node_t * node, context.as_xml_node()->as_parent_node())
 	nodes.push_back(node);
-
       return wrap_value(nodes);
     }
 
@@ -1201,7 +1188,7 @@ xpath_t::ptr_op_t xpath_t::op_t::compile(value_t& context, scope_t * scope,
     // fall through...
 
   case NODE_NAME:
-    if (context.type == value_t::XML_NODE) {
+    if (context.is_xml_node()) {
       node_t * ptr = context.as_xml_node();
       if (resolve) {
 	// First, look up the symbol as a node name within the current
@@ -1218,14 +1205,12 @@ xpath_t::ptr_op_t xpath_t::op_t::compile(value_t& context, scope_t * scope,
 	  }
 	  return wrap_value(nodes);
 	}
-      } else {
-	assert(ptr);
-	if (optional<node_t::nameid_t> id =
-	    ptr->document().lookup_name_id(as_string())) {
-	  ptr_op_t node = new_node(NODE_ID);
-	  node->set_name(*id);
-	  return node;
-	}
+      }
+      else if (optional<node_t::nameid_t> id =
+	       ptr->document().lookup_name_id(as_string())) {
+	ptr_op_t node = new_node(NODE_ID);
+	node->set_name(*id);
+	return node;
       }
     }
     return this;
@@ -1333,11 +1318,7 @@ xpath_t::ptr_op_t xpath_t::op_t::compile(value_t& context, scope_t * scope,
     append_value(lexpr.ptr->as_value(), result_seq);
     append_value(rexpr.ptr->as_value(), result_seq);
 
-    if (result_seq.size() == 1)
-      return wrap_value(result_seq.front());
-    else
-      return wrap_sequence(result_seq);
-    break;
+    return wrap_value(result_seq);
   }
 
   case O_ADD:
@@ -1627,8 +1608,7 @@ xpath_t::ptr_op_t xpath_t::op_t::compile(value_t& context, scope_t * scope,
   case O_RFIND:
   case O_PRED: {
     xpath_t lexpr(left()->compile(context, scope, resolve));
-    xpath_t rexpr(resolve ? right() :
-		  right()->compile(context, scope, false));
+    xpath_t rexpr(resolve ? right() : right()->compile(context, scope, false));
 
     if (! lexpr.ptr->is_value() || ! resolve) {
       if (left() == lexpr.ptr)
@@ -1682,10 +1662,7 @@ xpath_t::ptr_op_t xpath_t::op_t::compile(value_t& context, scope_t * scope,
 	     "to non-node(s)");
     }
 
-    if (result_seq.size() == 1)
-      return wrap_value(result_seq.front());
-    else
-      return wrap_sequence(result_seq);
+    return wrap_value(result_seq);
   }
 
   case LAST:

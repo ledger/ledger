@@ -269,10 +269,12 @@ static int read_and_report(ledger::report_t * report, int argc, char * argv[],
     xpath.print(*out, xml_document);
     *out << std::endl;
 
-#if 0
-    std::auto_ptr<repitem_t> items(repitem_t::wrap(&session, report, true));
-    items->select(path.get());
-#endif
+    value_t nodelist;
+    xpath.calc(nodelist, xml_document, report);
+
+    foreach (const value_t& node, nodelist.as_sequence())
+      node.as_xml_node()->print(*out);
+
     return 0;
   }
 

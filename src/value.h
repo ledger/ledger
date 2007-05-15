@@ -187,6 +187,9 @@ class value_t
     return *this;
   }
 
+  bool is_boolean() const {
+    return type == BOOLEAN;
+  }
   bool& as_boolean() {
     assert(type == BOOLEAN);
     return *(bool *) data;
@@ -194,6 +197,10 @@ class value_t
   const bool& as_boolean() const {
     assert(type == BOOLEAN);
     return *(bool *) data;
+  }
+
+  bool is_long() const {
+    return type == INTEGER;
   }
   long& as_long() {
     assert(type == INTEGER);
@@ -203,6 +210,10 @@ class value_t
     assert(type == INTEGER);
     return *(long *) data;
   }
+
+  bool is_datetime() const {
+    return type == DATETIME;
+  }
   moment_t& as_datetime() {
     assert(type == DATETIME);
     return *(moment_t *) data;
@@ -210,6 +221,10 @@ class value_t
   const moment_t& as_datetime() const {
     assert(type == DATETIME);
     return *(moment_t *) data;
+  }
+
+  bool is_amount() const {
+    return type == AMOUNT;
   }
   amount_t& as_amount() {
     assert(type == AMOUNT);
@@ -219,6 +234,10 @@ class value_t
     assert(type == AMOUNT);
     return *(amount_t *) data;
   }
+
+  bool is_balance() const {
+    return type == BALANCE;
+  }
   balance_t& as_balance() {
     assert(type == BALANCE);
     return *(balance_t *) data;
@@ -226,6 +245,10 @@ class value_t
   const balance_t& as_balance() const {
     assert(type == BALANCE);
     return *(balance_t *) data;
+  }
+
+  bool is_balance_pair() const {
+    return type == BALANCE_PAIR;
   }
   balance_pair_t& as_balance_pair() {
     assert(type == BALANCE_PAIR);
@@ -235,6 +258,10 @@ class value_t
     assert(type == BALANCE_PAIR);
     return *(balance_pair_t *) data;
   }
+
+  bool is_string() const {
+    return type == STRING;
+  }
   string& as_string() {
     assert(type == STRING);
     return *(string *) data;
@@ -242,6 +269,10 @@ class value_t
   const string& as_string() const {
     assert(type == STRING);
     return *(string *) data;
+  }
+
+  bool is_sequence() const {
+    return type == SEQUENCE;
   }
   sequence_t& as_sequence() {
     assert(type == SEQUENCE);
@@ -252,6 +283,9 @@ class value_t
     return *(sequence_t *) data;
   }
 
+  bool is_xml_node() const {
+    return type == XML_NODE;
+  }
   xml::node_t *& as_xml_node() {
     assert(type == XML_NODE);
     return *(xml::node_t **) data;
@@ -259,6 +293,10 @@ class value_t
   xml::node_t * as_xml_node() const {
     assert(type == XML_NODE);
     return *(xml::node_t **) data;
+  }
+
+  bool is_pointer() const {
+    return type == POINTER;
   }
   void *& as_pointer() {
     assert(type == POINTER);

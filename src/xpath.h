@@ -59,7 +59,6 @@ public:
   xml::xpath_t::wrap_functor(bind(&x, this, _1, _2))
 
   static ptr_op_t wrap_value(const value_t& val);
-  static ptr_op_t wrap_sequence(const value_t::sequence_t& val);
   static ptr_op_t wrap_functor(const function_t& fobj);
 
 public:
@@ -294,10 +293,9 @@ public:
 
     op_t& operator=(const op_t&);
 
-    bool is_value() const {
-      return kind == VALUE;
+    bool is_long() const {
+      return data.type() == typeid(unsigned int);
     }
-
     unsigned int& as_long() {
       assert(kind == ARG_INDEX || kind == O_ARG);
       return boost::get<unsigned int>(data);
@@ -309,6 +307,9 @@ public:
       data = val;
     }
 
+    bool is_value() const {
+      return kind == VALUE;
+    }
     value_t& as_value() {
       assert(kind == VALUE);
       value_t * val = boost::get<shared_ptr<value_t> >(data).get();
@@ -323,6 +324,9 @@ public:
       data = shared_ptr<value_t>(val);
     }
 
+    bool is_string() const {
+      return data.type() == typeid(string);
+    }
     string& as_string() {
       assert(kind == NODE_NAME || kind == ATTR_NAME || kind == FUNC_NAME);
       return boost::get<string>(data);
@@ -334,6 +338,9 @@ public:
       data = val;
     }
 
+    bool is_function() const {
+      return kind == FUNCTION;
+    }
     function_t& as_function() {
       assert(kind == FUNCTION);
       return boost::get<function_t>(data);
@@ -345,6 +352,9 @@ public:
       data = val;
     }
 
+    bool is_name() const {
+      return data.type() == typeid(node_t::nameid_t);
+    }
     node_t::nameid_t& as_name() {
       assert(kind == NODE_ID || kind == ATTR_ID);
       return boost::get<node_t::nameid_t>(data);

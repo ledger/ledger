@@ -219,27 +219,26 @@ xml::xpath_t::ptr_op_t session_t::lookup(const string& name)
       p = p + 7;
       switch (*p) {
       case 'd':
-	if (std::strcmp(p, "debug") == 0)
-	  return MAKE_FUNCTOR(session_t::option_debug);
+	if (std::strcmp(p, "debug_") == 0)
+	  return MAKE_FUNCTOR(session_t::option_debug_);
 	break;
 
       case 'f':
-	if (! *(p + 1) || std::strcmp(p, "file") == 0)
-	  return MAKE_FUNCTOR(session_t::option_file);
+	if ((*(p + 1) == '_' && ! *(p + 2)) ||
+	    std::strcmp(p, "file_") == 0)
+	  return MAKE_FUNCTOR(session_t::option_file_);
 	break;
 
       case 't':
-	if (std::strcmp(p, "trace") == 0)
-	  return MAKE_FUNCTOR(session_t::option_trace);
+	if (std::strcmp(p, "trace_") == 0)
+	  return MAKE_FUNCTOR(session_t::option_trace_);
 	break;
 
       case 'v':
-#if 0
 	if (! *(p + 1) || std::strcmp(p, "verbose") == 0)
 	  return MAKE_FUNCTOR(session_t::option_verbose);
 	else if (std::strcmp(p, "verify") == 0)
 	  return MAKE_FUNCTOR(session_t::option_verify);
-#endif
 	break;
       }
     }

@@ -727,7 +727,7 @@ bool value_t::operator==(const value_t& val) const
     case INTEGER:
       return as_long() == val.as_long();
     case AMOUNT:
-      return val.as_amount() == as_amount();
+      return val.as_amount() == to_amount();
     case BALANCE:
       return val.as_balance() == to_amount();
     case BALANCE_PAIR:
@@ -1569,9 +1569,20 @@ void value_t::print(std::ostream& out, const int first_width,
     as_xml_node()->print(out);
     break;
 
-  case SEQUENCE:
-    assert(false);			// jww (2006-09-28): write them all out!
-    throw_(value_error, "Cannot write out a sequence");
+  case SEQUENCE: {
+    out << '(';
+    bool first = true;
+    foreach (const value_t& value, as_sequence()) {
+      if (first)
+	first = false;
+      else
+	out << ", ";
+
+      value.print(out, first_width, latter_width);
+    }
+    out << ')';
+    break;
+  }
 
   case BALANCE:
     as_balance().print(out, first_width, latter_width);

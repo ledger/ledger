@@ -31,17 +31,12 @@
 
 #include "option.h"
 
-#if 0
-#ifdef USE_BOOST_PYTHON
-static ledger::option_t * find_option(const string& name);
-#endif
-#endif
-
 namespace ledger {
 
 namespace {
-  xml::xpath_t::ptr_op_t find_option(xml::xpath_t::scope_t * scope,
-				     const string& name)
+  typedef tuple<xml::xpath_t::ptr_op_t, bool> op_bool_tuple;
+
+  op_bool_tuple find_option(xml::xpath_t::scope_t * scope, const string& name)
   {
     char buf[128];
     std::strcpy(buf, "option_");
@@ -54,18 +49,31 @@ namespace {
     }
     *p = '\0';
 
-    return scope->lookup(buf);
+    xml::xpath_t::ptr_op_t op = scope->lookup(buf);
+    if (op)
+      return op_bool_tuple(op, false);
+
+    *p++ = '_';
+    *p = '\0';
+
+    return op_bool_tuple(scope->lookup(buf), true);
   }
 
-  xml::xpath_t::ptr_op_t find_option(xml::xpath_t::scope_t * scope,
-				     const char letter)
+  op_bool_tuple find_option(xml::xpath_t::scope_t * scope, const char letter)
   {
-    char buf[9];
+    char buf[10];
     std::strcpy(buf, "option_");
     buf[7] = letter;
     buf[8] = '\0';
 
-    return scope->lookup(buf);
+    xml::xpath_t::ptr_op_t op = scope->lookup(buf);
+    if (op)
+      return op_bool_tuple(op, false);
+
+    buf[8] = '_';
+    buf[9] = '\0';
+
+    return op_bool_tuple(scope->lookup(buf), true);
   }
 
   void process_option(const xml::xpath_t::function_t& opt,
@@ -99,9 +107,9 @@ namespace {
 bool process_option(const string& name, xml::xpath_t::scope_t * scope,
 		    const char * arg)
 {
-  xml::xpath_t::ptr_op_t opt(find_option(scope, name));
-  if (opt) {
-    process_option(opt->as_function(), scope, arg);
+  op_bool_tuple opt(find_option(scope, name));
+  if (opt.get<0>()) {
+    process_option(opt.get<0>()->as_function(), scope, arg);
     return true;
   }
   return false;
@@ -132,10 +140,7 @@ void process_environment(const char ** envp, const string& tag,
 	try {
 #endif
 	  if (! process_option(string(buf), scope, q + 1))
-#if 0
-	    throw new option_error("unknown option")
-#endif
-	      ;
+	    ; //throw_(option_error, "unknown option");
 #if 0
 	}
 	catch (error * err) {
@@ -178,51 +183,44 @@ void process_arguments(int argc, char ** argv, const bool anywhere,
 	value = p;
       }
 
-      xml::xpath_t::ptr_op_t opt(find_option(scope, name));
-      if (! opt)
+      op_bool_tuple opt(find_option(scope, name));
+      if (! opt.get<0>())
 	throw_(option_error, "illegal option --" << name);
 
-      if (/*def->wants_args &&*/ value == NULL) {
+      if (opt.get<1>() && value == NULL) {
 	value = *++i;
 	if (value == NULL)
 	  throw_(option_error, "missing option argument for --" << name);
       }
-      process_option(opt->as_function(), scope, value);
+      process_option(opt.get<0>()->as_function(), scope, value);
     }
     else if ((*i)[1] == '\0') {
       throw_(option_error, "illegal option -");
     }
     else {
-      std::list<xml::xpath_t::ptr_op_t> option_queue;
+      typedef tuple<xml::xpath_t::ptr_op_t, bool, char> op_bool_char_tuple;
+
+      std::list<op_bool_char_tuple> option_queue;
 
       int x = 1;
       for (char c = (*i)[x]; c != '\0'; x++, c = (*i)[x]) {
-	xml::xpath_t::ptr_op_t opt = find_option(scope, c);
-	if (! opt)
+	op_bool_tuple opt(find_option(scope, c));
+	if (! opt.get<0>())
 	  throw_(option_error, "illegal option -" << c);
 
-	option_queue.push_back(opt);
+	option_queue.push_back
+	  (op_bool_char_tuple(opt.get<0>(), opt.get<1>(), c));
       }
 
-      foreach (xml::xpath_t::ptr_op_t& o, option_queue) {
+      foreach (op_bool_char_tuple& o, option_queue) {
 	char * value = NULL;
-#if 0
-	if (def->wants_args) {
-#endif
+	if (o.get<1>()) {
 	  value = *++i;
 	  if (value == NULL)
-	    throw_(option_error, "missing option argument for -" <<
-#if 0
-		   def->short_opt
-#else
-		   '?'
-#endif
-		   );
-#if 0
+	    throw_(option_error,
+		   "missing option argument for -" << o.get<2>());
 	}
-#endif
-	process_option(o->as_function(), scope, value);
-
+	process_option(o.get<0>()->as_function(), scope, value);
       }
     }
   }
