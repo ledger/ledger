@@ -46,10 +46,6 @@
 #include <fdstream.hpp>
 #endif
 
-void print_node(ledger::xml::node_t& node) {
-  node.print(std::cout);
-}
-
 static int read_and_report(ledger::report_t * report, int argc, char * argv[],
 			   char * envp[])
 {
@@ -269,25 +265,15 @@ static int read_and_report(ledger::report_t * report, int argc, char * argv[],
   }
   else if (verb == "xpath") {
     std::cout << "XPath parsed:" << std::endl;
+
     xml::xpath_t xpath(*arg);
     xpath.print(*out, xml_document);
     *out << std::endl;
 
-#if 1
-    try {
-      xml::xpath_t::path_t path_selection(xpath);
-      path_selection.visit(xml_document, report, bind(print_node, _1));
+    foreach (xml::node_t * node, xpath.find_all(xml_document, report)) {
+      node->print(std::cout);
+      std::cout << std::endl;
     }
-    catch (...) {
-      throw;
-    }
-#else
-    value_t nodelist;
-    xpath.calc(nodelist, xml_document, report);
-
-    foreach (const value_t& node, nodelist.as_sequence())
-      node.as_xml_node()->print(*out);
-#endif
     return 0;
   }
 

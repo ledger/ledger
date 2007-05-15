@@ -271,8 +271,12 @@ public:
 
   class path_iterator_t
   {
-    path_t		  path;
-    std::vector<node_t *> sequence;
+    path_t    path;
+    node_t&   start;
+    scope_t * scope;
+
+    mutable std::vector<node_t *> sequence;
+    mutable bool searched;
 
     struct node_appender_t {
       std::vector<node_t *>& sequence;
@@ -288,13 +292,21 @@ public:
     typedef std::vector<node_t *>::const_iterator const_iterator;
 
     path_iterator_t(const xpath_t& path_expr,
-		    node_t& start, scope_t * scope)
-      : path(path_expr) {
-      path.visit(start, scope, node_appender_t(sequence));
+		    node_t& _start, scope_t * _scope)
+      : path(path_expr), start(_start), scope(_scope),
+	searched(false) {
     }
 
-    iterator begin() { return sequence.begin(); }
-    const_iterator begin() const { return sequence.begin(); }
+    iterator begin() {
+      if (! searched) {
+	path.visit(start, scope, node_appender_t(sequence));
+	searched = true;
+      }
+      return sequence.begin();
+    }
+    const_iterator begin() const {
+      return const_cast<path_iterator_t *>(this)->begin();
+    }
 
     iterator end() { return sequence.end(); }
     const_iterator end() const { return sequence.end(); }
@@ -748,15 +760,14 @@ public:
     path_t path(*this);
     path.find_all(result, start, scope);
   }
+  path_iterator_t find_all(node_t& start, scope_t * scope) {
+    return path_iterator_t(*this, start, scope);
+  }
 
   void visit(node_t& start, scope_t * scope,
 	     const function<void (node_t&)>& func) {
     path_t path(*this);
     path.visit(start, scope, func);
-  }
-
-  path_iterator_t sequence(node_t& start, scope_t * scope) {
-    return path_iterator_t(*this, start, scope);
   }
 
   void print(std::ostream& out, xml::document_t& document) const {
