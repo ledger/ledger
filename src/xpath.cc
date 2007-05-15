@@ -490,7 +490,7 @@ bool xpath_t::function_scope_t::resolve(const string& name,
   switch (name[0]) {
   case 'l':
     if (name == "last") {
-      result = (long)sequence.size();
+      result = (long)size;
       return true;
     }
     break;
@@ -504,10 +504,7 @@ bool xpath_t::function_scope_t::resolve(const string& name,
 
   case 't':
     if (name == "text") {
-      if (value.type == value_t::XML_NODE)
-	result = value.as_xml_node()->to_value();
-      else
-	throw_(calc_error, "Attempt to call text() on a non-node value");
+      result = node.to_value();
       return true;
     }
     break;
@@ -1622,12 +1619,13 @@ xpath_t::op_t::compile(value_t& context, scope_t * scope, bool resolve)
     // jww (2006-09-24): What about when nothing is found?
     switch (lexpr.ptr->as_value().type) {
     case value_t::XML_NODE: {
-      function_scope_t xpath_fscope(lexpr.ptr->as_value(), 0, scope);
+      value_t& value(lexpr.ptr->as_value());
+      function_scope_t xpath_fscope(*value.as_xml_node(), 0, 1, scope);
       if (kind == O_PRED) {
-	if (rexpr.ptr->test_value(lexpr.ptr->as_value(), &xpath_fscope))
-	  result_seq.push_back(lexpr.ptr->as_value());
+	if (rexpr.ptr->test_value(value, &xpath_fscope))
+	  result_seq.push_back(value);
       } else {
-	rexpr.ptr->find_values(lexpr.ptr->as_value(), &xpath_fscope, result_seq,
+	rexpr.ptr->find_values(value, &xpath_fscope, result_seq,
 			       kind == O_RFIND);
       }
       break;
@@ -1645,7 +1643,7 @@ xpath_t::op_t::compile(value_t& context, scope_t * scope, bool resolve)
 	  throw_(compile_error, "Attempting to apply path selection "
 		 "to non-node(s)");
 
-	function_scope_t xpath_fscope(seq, &(*i), index, scope);
+	function_scope_t xpath_fscope(seq, *(*i).as_xml_node(), index, scope);
 	if (kind == O_PRED) {
 	  if (rexpr.ptr->test_value(*i, &xpath_fscope, index))
 	    result_seq.push_back(*i);
@@ -2158,38 +2156,87 @@ xpath_t::path_t::path_t(const xpath_t& path_expr)
   ptr_op_t op = path_expr.ptr;
 
   while (true) {
-    switch (op->kind) {
-    case op_t::O_FIND:
-    case op_t::O_RFIND:
-    case op_t::O_PRED:
-      break;
+    element_t element;
 
-    case op_t::NODE_ID:
+    switch (op->kind) {
+    case op_t::O_RFIND:
+      element.recurse = true;
+      // fall through...
+    case op_t::O_FIND: {
+      ptr_op_t name;
+      if (op->right()->kind == op_t::O_PRED) {
+	element.predicate = op_predicate(op->right()->right());
+	name = op->right()->left();
+      } else {
+	name = op->right();
+      }
+
+      switch (name->kind) {
+      case op_t::NODE_ID: {
+      //case op_t::ATTR_ID:
+	node_t::nameid_t name_id = name->as_name();
+	if (name_id < document_t::LAST_BUILTIN)
+	  element.ident = document_t::special_names_t(name_id);
+	else
+	  element.ident = name_id;
+	break;
+      }
+      case op_t::NODE_NAME:
+      //case op_t::ATTR_NAME:
+	element.ident = name->as_string();
+	break;
+      default:
+	break;
+      }
+      break;
+    }
+
+    case op_t::NODE_ID: {
+    //case op_t::ATTR_ID:
+      node_t::nameid_t name_id = op->as_name();
+      if (name_id < document_t::LAST_BUILTIN)
+	element.ident = document_t::special_names_t(name_id);
+      else
+	element.ident = name_id;
+      break;
+    }
     case op_t::NODE_NAME:
-    case op_t::ATTR_ID:
-    case op_t::ATTR_NAME:
+    //case op_t::ATTR_NAME:
+      element.ident = op->as_string();
       break;
 
     default:
       throw_(std::logic_error, "XPath expression is not strictly a path selection");
       break;
     }
-    break;
+
+    elements.push_front(element);
+
+    if (op->kind < op_t::TERMINALS)
+      break;
+    else
+      op = op->left();
   }
 }
 
 void xpath_t::path_t::check_element(node_t&		    start,
 				    const element_iterator& element,
 				    scope_t *		    scope,
+				    std::size_t             index,
+				    std::size_t             size,
 				    const visitor_t&	    func)
 {
-  if (! element->predicate || element->predicate(start, scope)) {
-    element_iterator next_element = next(element);
-    if (next_element == elements.end())
-      func(start);
-    else
-      walk_elements(start, next_element, scope, func);
+  if (element->predicate) {
+    function_scope_t xpath_fscope(start, index, size, scope);
+    if (! element->predicate(start, &xpath_fscope))
+      return;
   }
+
+  element_iterator next_element = next(element);
+  if (next_element == elements.end())
+    func(start);
+  else
+    walk_elements(start, next_element, scope, func);
 }
 
 void xpath_t::path_t::walk_elements(node_t&			  start,
@@ -2200,44 +2247,47 @@ void xpath_t::path_t::walk_elements(node_t&			  start,
   if (element->ident.type() == typeid(document_t::special_names_t)) {
     switch (boost::get<document_t::special_names_t>(element->ident)) {
     case document_t::CURRENT:
-      check_element(start, element, scope, func);
+      check_element(start, element, scope, 0, 1, func);
       break;
 
     case document_t::PARENT:
       if (optional<parent_node_t&> parent = start.parent())
-	check_element(*parent, element, scope, func);
+	check_element(*parent, element, scope, 0, 1, func);
       else
 	throw_(std::logic_error, "Attempt to access parent of root node");
       break;
 
     case document_t::ROOT:
-      check_element(start.document(), element, scope, func);
+      check_element(start.document(), element, scope, 0, 1, func);
       break;
 
-    case document_t::ALL:
+    case document_t::ALL: {
       if (! start.is_parent_node())
 	throw_(compile_error, "Referencing child nodes from a non-parent value");
 
+      std::size_t index = 0;
+      std::size_t size  = start.as_parent_node().size();
       foreach (node_t * node, start.as_parent_node())
-	check_element(*node, element, scope, func);
+	check_element(*node, element, scope, index++, size, func);
       break;
+    }
     }
   }
   else if (start.is_parent_node()) {
     bool have_name_id = element->ident.type() == typeid(node_t::nameid_t);
 
+    std::size_t index = 0;
+    std::size_t size  = start.as_parent_node().size();
     foreach (node_t * child, start.as_parent_node()) {
       if ((have_name_id &&
 	   boost::get<node_t::nameid_t>(element->ident) == child->name_id()) ||
 	  (! have_name_id &&
 	   boost::get<string>(element->ident) == child->name()))
-	check_element(*child, element, scope, func);
+	check_element(*child, element, scope, index++, size, func);
+      else if (element->recurse)
+	walk_elements(*child, element, scope, func);
     }
   }
-
-  if (element->recurse && start.is_parent_node())
-    foreach (node_t * child, start.as_parent_node())
-      walk_elements(*child, element, scope, func);
 }
 
 } // namespace xml

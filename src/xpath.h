@@ -99,19 +99,21 @@ public:
 
   class function_scope_t : public scope_t
   {
-    value_t::sequence_t sequence;
-    value_t		value;
-    int			index;
+    node_t&	node;
+    std::size_t	index;
+    std::size_t size;
 
   public:
     function_scope_t(const value_t::sequence_t& _sequence,
-		     value_t * _value, int _index,
+		     node_t& _node, std::size_t _index,
 		     scope_t * _parent = NULL)
-      : scope_t(_parent, STATIC),
-	sequence(_sequence), value(_value), index(_index) {}
-    function_scope_t(const value_t& _value, int _index,
-		     scope_t * _parent = NULL)
-      : scope_t(_parent, STATIC), value(_value), index(_index) {}
+      : scope_t(_parent, STATIC), node(_node), index(_index),
+	size(_sequence.size()) {}
+
+    function_scope_t(node_t& _node, std::size_t _index,
+		     std::size_t _size, scope_t * _parent = NULL)
+      : scope_t(_parent, STATIC), node(_node), index(_index),
+	size(_size) {}
 
     virtual bool resolve(const string& name, value_t& result,
 			 scope_t * locals = NULL);
@@ -212,9 +214,8 @@ private:
   };
 
 public:
-  class path_t : public noncopyable
+  class path_t
   {
-  public: // jww (2007-05-14): for testing
     typedef function<void (node_t&)>            visitor_t;
     typedef function<bool (node_t&, scope_t *)> predicate_t;
 
@@ -233,7 +234,7 @@ public:
 
     struct value_node_appender_t {
       value_t::sequence_t& sequence;
-      node_appender_t(value_t::sequence_t& _sequence)
+      value_node_appender_t(value_t::sequence_t& _sequence)
 	: sequence(_sequence) {}
       void operator()(node_t& node) {
 	sequence.push_back(&node);
@@ -255,10 +256,17 @@ public:
     }
 
   private:
-    void walk_elements(node_t& start, const element_iterator& element,
-		       scope_t * scope, const function<void (node_t&)>& func);
-    void check_element(node_t& start, const element_iterator& element,
-		       scope_t * scope, const function<void (node_t&)>& func);
+    void walk_elements(node_t&		       start,
+		       const element_iterator& element,
+		       scope_t *	       scope,
+		       const visitor_t&	       func);
+
+    void check_element(node_t&		       start,
+		       const element_iterator& element,
+		       scope_t *	       scope,
+		       std::size_t             index,
+		       std::size_t             size,
+		       const visitor_t&	       func);
   };
 
   class path_iterator_t
@@ -279,7 +287,8 @@ public:
     typedef std::vector<node_t *>::iterator       iterator;
     typedef std::vector<node_t *>::const_iterator const_iterator;
 
-    path_iterator_t(const xpath_t& path_expr, node_t& start, scope_t * scope)
+    path_iterator_t(const xpath_t& path_expr,
+		    node_t& start, scope_t * scope)
       : path(path_expr) {
       path.visit(start, scope, node_appender_t(sequence));
     }
@@ -744,6 +753,10 @@ public:
 	     const function<void (node_t&)>& func) {
     path_t path(*this);
     path.visit(start, scope, func);
+  }
+
+  path_iterator_t sequence(node_t& start, scope_t * scope) {
+    return path_iterator_t(*this, start, scope);
   }
 
   void print(std::ostream& out, xml::document_t& document) const {

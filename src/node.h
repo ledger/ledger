@@ -199,6 +199,10 @@ public:
     return children.get<0>().end();
   }
 
+  std::size_t size() const {
+    return children.get<0>().size();
+  }
+
   children_by_nameid::iterator begin(nameid_t _name_id) {
     return std::find_if(children.get<1>().begin(),
 			children.get<1>().end(), match_nameid(_name_id));

@@ -276,13 +276,6 @@ static int read_and_report(ledger::report_t * report, int argc, char * argv[],
 #if 1
     try {
       xml::xpath_t::path_t path_selection(xpath);
-
-      xml::xpath_t::path_t::element_t elem;
-      elem.ident = xml::document_t::ROOT;
-      path_selection.elements.push_back(elem);
-      elem.ident = xml::TRANSACTION_NODE;
-      elem.recurse = true;
-      path_selection.elements.push_back(elem);
       path_selection.visit(xml_document, report, bind(print_node, _1));
     }
     catch (...) {

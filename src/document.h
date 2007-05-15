@@ -100,7 +100,7 @@ public:
   // Ids 0-9 are reserved.  10-999 are for "builtin" names.  1000+ are
   // for dynamically registered names.
   enum special_names_t {
-    CURRENT, PARENT, ROOT, ALL
+    CURRENT, PARENT, ROOT, ALL, LAST_BUILTIN = 10
   };
 
   document_t(node_t::nameid_t _name_id)
