@@ -1565,6 +1565,9 @@ void value_t::print(std::ostream& out, const int first_width,
   case AMOUNT:
   case STRING:
   case POINTER:
+    // jww (2007-05-14): I need a version of this print just for XPath
+    // expression, since amounts and strings need to be output with
+    // special syntax.
     out << *this;
     break;
 

@@ -259,7 +259,7 @@ public:
   }
 
   virtual value_t to_value() const {
-    return text();
+    return value_t(text(), true);
   }
 
   void print(std::ostream& out) const;

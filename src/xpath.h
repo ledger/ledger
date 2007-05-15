@@ -231,7 +231,7 @@ public:
 
     typedef std::list<element_t>::const_iterator element_iterator;
 
-    struct node_appender_t {
+    struct value_node_appender_t {
       value_t::sequence_t& sequence;
       node_appender_t(value_t::sequence_t& _sequence)
 	: sequence(_sequence) {}
@@ -245,7 +245,7 @@ public:
 
     void find_all(value_t::sequence_t& result,
 		  node_t& start, scope_t * scope) {
-      visit(start, scope, node_appender_t(result));
+      visit(start, scope, value_node_appender_t(result));
     }
 
     void visit(node_t& start, scope_t * scope,
@@ -259,6 +259,36 @@ public:
 		       scope_t * scope, const function<void (node_t&)>& func);
     void check_element(node_t& start, const element_iterator& element,
 		       scope_t * scope, const function<void (node_t&)>& func);
+  };
+
+  class path_iterator_t
+  {
+    path_t		  path;
+    std::vector<node_t *> sequence;
+
+    struct node_appender_t {
+      std::vector<node_t *>& sequence;
+      node_appender_t(std::vector<node_t *>& _sequence)
+	: sequence(_sequence) {}
+      void operator()(node_t& node) {
+	sequence.push_back(&node);
+      }
+    };
+
+  public:
+    typedef std::vector<node_t *>::iterator       iterator;
+    typedef std::vector<node_t *>::const_iterator const_iterator;
+
+    path_iterator_t(const xpath_t& path_expr, node_t& start, scope_t * scope)
+      : path(path_expr) {
+      path.visit(start, scope, node_appender_t(sequence));
+    }
+
+    iterator begin() { return sequence.begin(); }
+    const_iterator begin() const { return sequence.begin(); }
+
+    iterator end() { return sequence.end(); }
+    const_iterator end() const { return sequence.end(); }
   };
 
   struct op_t : public noncopyable
@@ -702,6 +732,18 @@ public:
 		      scope_t * scope = NULL) {
     xpath_t temp(_expr);
     return temp.calc(top, scope);
+  }
+
+  void find_all(value_t::sequence_t& result,
+		node_t& start, scope_t * scope) {
+    path_t path(*this);
+    path.find_all(result, start, scope);
+  }
+
+  void visit(node_t& start, scope_t * scope,
+	     const function<void (node_t&)>& func) {
+    path_t path(*this);
+    path.visit(start, scope, func);
   }
 
   void print(std::ostream& out, xml::document_t& document) const {

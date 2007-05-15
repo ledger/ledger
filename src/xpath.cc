@@ -2150,8 +2150,6 @@ void xpath_t::op_t::dump(std::ostream& out, const int depth) const
     } else {
       assert(! right());
     }
-  } else {
-    assert(! left());
   }
 }
 
