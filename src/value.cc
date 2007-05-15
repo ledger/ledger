@@ -1440,9 +1440,12 @@ value_t value_t::strip_annotations(const bool keep_price,
   case POINTER:
     return *this;
 
-  case SEQUENCE:
-    assert(false);			// jww (2006-09-28): strip them all!
-    break;
+  case SEQUENCE: {
+    sequence_t temp;
+    foreach (const value_t& value, as_sequence())
+      temp.push_back(value.strip_annotations(keep_price, keep_date, keep_tag));
+    return temp;
+  }
 
   case AMOUNT:
     return as_amount().strip_annotations

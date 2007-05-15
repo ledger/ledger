@@ -46,6 +46,10 @@
 #include <fdstream.hpp>
 #endif
 
+void print_node(ledger::xml::node_t& node) {
+  node.print(std::cout);
+}
+
 static int read_and_report(ledger::report_t * report, int argc, char * argv[],
 			   char * envp[])
 {
@@ -269,12 +273,28 @@ static int read_and_report(ledger::report_t * report, int argc, char * argv[],
     xpath.print(*out, xml_document);
     *out << std::endl;
 
+#if 1
+    try {
+      xml::xpath_t::path_t path_selection(xpath);
+
+      xml::xpath_t::path_t::element_t elem;
+      elem.ident = xml::document_t::ROOT;
+      path_selection.elements.push_back(elem);
+      elem.ident = xml::TRANSACTION_NODE;
+      elem.recurse = true;
+      path_selection.elements.push_back(elem);
+      path_selection.visit(xml_document, report, bind(print_node, _1));
+    }
+    catch (...) {
+      throw;
+    }
+#else
     value_t nodelist;
     xpath.calc(nodelist, xml_document, report);
 
     foreach (const value_t& node, nodelist.as_sequence())
       node.as_xml_node()->print(*out);
-
+#endif
     return 0;
   }
 

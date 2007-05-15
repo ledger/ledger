@@ -699,7 +699,7 @@ xpath_t::parse_path_expr(std::istream& in, flags_t tflags) const
     while (tok.kind == token_t::SLASH) {
       ptr_op_t prev(node);
 
-      tok = next_token(in, tflags);
+      tok  = next_token(in, tflags);
       node = new op_t(tok.kind == token_t::SLASH ?
 		      op_t::O_RFIND : op_t::O_FIND);
       if (tok.kind != token_t::SLASH)
@@ -1143,8 +1143,8 @@ void xpath_t::op_t::append_value(value_t& val,
     result_seq.push_back(val);
 }
 
-xpath_t::ptr_op_t xpath_t::op_t::compile(value_t& context, scope_t * scope,
-					 bool resolve)
+xpath_t::ptr_op_t
+xpath_t::op_t::compile(value_t& context, scope_t * scope, bool resolve)
 {
 #if 0
   try {
@@ -1661,7 +1661,6 @@ xpath_t::ptr_op_t xpath_t::op_t::compile(value_t& context, scope_t * scope,
       throw_(compile_error, "Attempting to apply path selection "
 	     "to non-node(s)");
     }
-
     return wrap_value(result_seq);
   }
 
@@ -2103,37 +2102,37 @@ void xpath_t::op_t::dump(std::ostream& out, const int depth) const
     out << "FUNCTION - " << as_function();
     break;
 
-  case O_NOT: out << "O_NOT"; break;
-  case O_NEG: out << "O_NEG"; break;
+  case O_NOT:	 out << "O_NOT"; break;
+  case O_NEG:	 out << "O_NEG"; break;
 
-  case O_UNION: out << "O_UNION"; break;
+  case O_UNION:	 out << "O_UNION"; break;
 
-  case O_ADD: out << "O_ADD"; break;
-  case O_SUB: out << "O_SUB"; break;
-  case O_MUL: out << "O_MUL"; break;
-  case O_DIV: out << "O_DIV"; break;
+  case O_ADD:	 out << "O_ADD"; break;
+  case O_SUB:	 out << "O_SUB"; break;
+  case O_MUL:	 out << "O_MUL"; break;
+  case O_DIV:	 out << "O_DIV"; break;
 
-  case O_NEQ: out << "O_NEQ"; break;
-  case O_EQ: out << "O_EQ"; break;
-  case O_LT: out << "O_LT"; break;
-  case O_LTE: out << "O_LTE"; break;
-  case O_GT: out << "O_GT"; break;
-  case O_GTE: out << "O_GTE"; break;
+  case O_NEQ:	 out << "O_NEQ"; break;
+  case O_EQ:	 out << "O_EQ"; break;
+  case O_LT:	 out << "O_LT"; break;
+  case O_LTE:	 out << "O_LTE"; break;
+  case O_GT:	 out << "O_GT"; break;
+  case O_GTE:	 out << "O_GTE"; break;
 
-  case O_AND: out << "O_AND"; break;
-  case O_OR: out << "O_OR"; break;
+  case O_AND:	 out << "O_AND"; break;
+  case O_OR:	 out << "O_OR"; break;
 
-  case O_QUES: out << "O_QUES"; break;
-  case O_COLON: out << "O_COLON"; break;
+  case O_QUES:	 out << "O_QUES"; break;
+  case O_COLON:	 out << "O_COLON"; break;
 
-  case O_COMMA: out << "O_COMMA"; break;
+  case O_COMMA:	 out << "O_COMMA"; break;
 
   case O_DEFINE: out << "O_DEFINE"; break;
-  case O_EVAL: out << "O_EVAL"; break;
+  case O_EVAL:	 out << "O_EVAL"; break;
 
-  case O_FIND: out << "O_FIND"; break;
-  case O_RFIND: out << "O_RFIND"; break;
-  case O_PRED: out << "O_PRED"; break;
+  case O_FIND:	 out << "O_FIND"; break;
+  case O_RFIND:	 out << "O_RFIND"; break;
+  case O_PRED:	 out << "O_PRED"; break;
 
   case LAST:
   default:
@@ -2154,6 +2153,93 @@ void xpath_t::op_t::dump(std::ostream& out, const int depth) const
   } else {
     assert(! left());
   }
+}
+
+xpath_t::path_t::path_t(const xpath_t& path_expr)
+{
+  ptr_op_t op = path_expr.ptr;
+
+  while (true) {
+    switch (op->kind) {
+    case op_t::O_FIND:
+    case op_t::O_RFIND:
+    case op_t::O_PRED:
+      break;
+
+    case op_t::NODE_ID:
+    case op_t::NODE_NAME:
+    case op_t::ATTR_ID:
+    case op_t::ATTR_NAME:
+      break;
+
+    default:
+      throw_(std::logic_error, "XPath expression is not strictly a path selection");
+      break;
+    }
+    break;
+  }
+}
+
+void xpath_t::path_t::check_element(node_t&		    start,
+				    const element_iterator& element,
+				    scope_t *		    scope,
+				    const visitor_t&	    func)
+{
+  if (! element->predicate || element->predicate(start, scope)) {
+    element_iterator next_element = next(element);
+    if (next_element == elements.end())
+      func(start);
+    else
+      walk_elements(start, next_element, scope, func);
+  }
+}
+
+void xpath_t::path_t::walk_elements(node_t&			  start,
+				    const element_iterator&	  element,
+				    scope_t *		  	  scope,
+				    const visitor_t&		  func)
+{
+  if (element->ident.type() == typeid(document_t::special_names_t)) {
+    switch (boost::get<document_t::special_names_t>(element->ident)) {
+    case document_t::CURRENT:
+      check_element(start, element, scope, func);
+      break;
+
+    case document_t::PARENT:
+      if (optional<parent_node_t&> parent = start.parent())
+	check_element(*parent, element, scope, func);
+      else
+	throw_(std::logic_error, "Attempt to access parent of root node");
+      break;
+
+    case document_t::ROOT:
+      check_element(start.document(), element, scope, func);
+      break;
+
+    case document_t::ALL:
+      if (! start.is_parent_node())
+	throw_(compile_error, "Referencing child nodes from a non-parent value");
+
+      foreach (node_t * node, start.as_parent_node())
+	check_element(*node, element, scope, func);
+      break;
+    }
+  }
+  else if (start.is_parent_node()) {
+    bool have_name_id = element->ident.type() == typeid(node_t::nameid_t);
+
+    foreach (node_t * child, start.as_parent_node()) {
+      if ((have_name_id &&
+	   boost::get<node_t::nameid_t>(element->ident) == child->name_id()) ||
+	  (! have_name_id &&
+	   boost::get<string>(element->ident) == child->name()))
+	check_element(*child, element, scope, func);
+    }
+  }
+
+  if (element->recurse && start.is_parent_node())
+    foreach (node_t * child, start.as_parent_node())
+      walk_elements(*child, element, scope, func);
 }
 
 } // namespace xml

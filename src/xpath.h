@@ -212,6 +212,55 @@ private:
   };
 
 public:
+  class path_t : public noncopyable
+  {
+  public: // jww (2007-05-14): for testing
+    typedef function<void (node_t&)>            visitor_t;
+    typedef function<bool (node_t&, scope_t *)> predicate_t;
+
+    struct element_t
+    {
+      variant<node_t::nameid_t, string,
+	      document_t::special_names_t> ident;
+
+      bool	  recurse;
+      predicate_t predicate;
+    };
+
+    std::list<element_t> elements;
+
+    typedef std::list<element_t>::const_iterator element_iterator;
+
+    struct node_appender_t {
+      value_t::sequence_t& sequence;
+      node_appender_t(value_t::sequence_t& _sequence)
+	: sequence(_sequence) {}
+      void operator()(node_t& node) {
+	sequence.push_back(&node);
+      }
+    };
+
+  public:
+    path_t(const xpath_t& path_expr);
+
+    void find_all(value_t::sequence_t& result,
+		  node_t& start, scope_t * scope) {
+      visit(start, scope, node_appender_t(result));
+    }
+
+    void visit(node_t& start, scope_t * scope,
+	       const function<void (node_t&)>& func) {
+      if (elements.begin() != elements.end())
+	walk_elements(start, elements.begin(), scope, func);
+    }
+
+  private:
+    void walk_elements(node_t& start, const element_iterator& element,
+		       scope_t * scope, const function<void (node_t&)>& func);
+    void check_element(node_t& start, const element_iterator& element,
+		       scope_t * scope, const function<void (node_t&)>& func);
+  };
+
   struct op_t : public noncopyable
   {
     enum kind_t {
@@ -366,6 +415,22 @@ public:
       data = val;
     }
 
+#if 0
+    bool is_path() const {
+      return kind == PATH;
+    }
+    path_t& as_path() {
+      assert(kind == PATH);
+      return boost::get<path_t>(data);
+    }
+    const path_t& as_path() const {
+      return const_cast<op_t *>(this)->as_path();
+    }
+    void set_path(const path_t& val) {
+      data = val;
+    }
+#endif
+
     ptr_op_t& as_op() {
       assert(kind > TERMINALS);
       return boost::get<ptr_op_t>(data);
@@ -435,6 +500,20 @@ public:
 	       unsigned long * end_pos	  = NULL) const;
 
     void dump(std::ostream& out, const int depth) const;
+  };
+
+  class op_predicate
+  {
+    ptr_op_t op;
+
+  public:
+    op_predicate(ptr_op_t _op) : op(_op) {}
+
+    bool operator()(node_t& node, scope_t * scope) {
+      value_t context_node(&node);
+      xpath_t result(op->compile(context_node, scope, true));
+      return result.ptr->as_value().to_boolean();
+    }
   };
 
 public:
