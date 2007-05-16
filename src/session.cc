@@ -173,41 +173,35 @@ std::size_t session_t::read_data(xml::builder_t& builder,
   return entry_count;
 }
 
-bool session_t::resolve(const string& name, value_t& result,
-			xml::xpath_t::scope_t * locals)
+optional<value_t>
+session_t::resolve(const string& name, xml::xpath_t::scope_t * locals)
 {
   const char * p = name.c_str();
   switch (*p) {
   case 'd':
+#if 0
     if (name == "date_format") {
       // jww (2007-04-18): What to do here?
-#if 0
-      result.set_string(moment_t::output_format);
-#endif
-      return true;
+      return value_t(moment_t::output_format, true);
     }
+#endif
     break;
 
   case 'n':
     switch (*++p) {
     case 'o':
-      if (name == "now") {
-	result = now;
-	return true;
-      }
+      if (name == "now")
+	return value_t(now);
       break;
     }
     break;
 
   case 'r':
-    if (name == "register_format") {
-      result = register_format;
-      return true;
-    }
+    if (name == "register_format")
+      return value_t(register_format, true);
     break;
   }
-
-  return xml::xpath_t::scope_t::resolve(name, result, locals);
+  return xml::xpath_t::scope_t::resolve(name, locals);
 }
 
 xml::xpath_t::ptr_op_t session_t::lookup(const string& name)

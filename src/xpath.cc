@@ -483,33 +483,29 @@ void xpath_t::scope_t::define(const string& name, const function_t& def) {
   define(name, wrap_functor(def));
 }
 
-bool xpath_t::function_scope_t::resolve(const string& name,
-					value_t&      result,
-					scope_t *     locals)
+optional<value_t>
+xpath_t::function_scope_t::resolve(const string& name, scope_t * locals)
 {
   switch (name[0]) {
   case 'l':
     if (name == "last") {
-      result = (long)size;
-      return true;
+      return value_t((long)size);
     }
     break;
 
   case 'p':
     if (name == "position") {
-      result = (long)index + 1;
-      return true;
+      return value_t((long)index + 1);
     }
     break;
 
   case 't':
     if (name == "text") {
-      result = node.to_value();
-      return true;
+      return node.to_value();
     }
     break;
   }
-  return scope_t::resolve(name, result, locals);
+  return scope_t::resolve(name, locals);
 }
 
 xpath_t::ptr_op_t
@@ -1208,9 +1204,8 @@ xpath_t::op_t::compile(const node_t& context, scope_t * scope, bool resolve)
   case FUNC_NAME:
     if (scope) {
       if (resolve) {
-	value_t temp;
-	if (scope->resolve(as_string(), temp))
-	  return wrap_value(temp);
+	if (optional<value_t> temp = scope->resolve(as_string()))
+	  return wrap_value(*temp);
       }
       if (ptr_op_t def = scope->lookup(as_string()))
 	return def->compile(context, scope, resolve);
@@ -1543,11 +1538,10 @@ xpath_t::op_t::compile(const node_t& context, scope_t * scope, bool resolve)
     call_args->args = call_seq;
 
     if (left()->kind == FUNC_NAME) {
-      if (resolve) {
-	value_t temp;
-	if (scope && scope->resolve(left()->as_string(), temp, call_args.get()))
-	  return wrap_value(temp);
-      }
+      if (resolve && scope)
+	if (optional<value_t> temp =
+	    scope->resolve(left()->as_string(), call_args.get()))
+	  return wrap_value(*temp);
 
       // Don't compile to the left, otherwise the function name may
       // get resolved before we have a chance to call it

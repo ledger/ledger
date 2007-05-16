@@ -180,8 +180,8 @@ class session_t : public xml::xpath_t::scope_t
   // Scope members
   //
 
-  virtual bool resolve(const string& name, value_t& result,
-		       xml::xpath_t::scope_t * locals = NULL);
+  virtual optional<value_t> resolve(const string& name,
+				    xml::xpath_t::scope_t * locals = NULL);
   virtual xml::xpath_t::ptr_op_t lookup(const string& name);
 
   //

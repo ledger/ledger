@@ -84,12 +84,11 @@ public:
 
   public:
     virtual void define(const string& name, ptr_op_t def);
-    // jww (2007-05-15): ??
-    virtual bool resolve(const string& name, value_t& result,
-			 scope_t * locals = NULL) {
+    virtual optional<value_t> resolve(const string& name,
+				      scope_t * locals = NULL) {
       if (parent)
-	return parent->resolve(name, result, locals);
-      return false;
+	return parent->resolve(name, locals);
+      return none;
     }
     virtual ptr_op_t lookup(const string& name);
 
@@ -116,8 +115,8 @@ public:
       : scope_t(_parent, STATIC), node(_node), index(_index),
 	size(_size) {}
 
-    virtual bool resolve(const string& name, value_t& result,
-			 scope_t * locals = NULL);
+    virtual optional<value_t> resolve(const string& name,
+				      scope_t * locals = NULL);
   };
 
 #define XPATH_PARSE_NORMAL     0x00

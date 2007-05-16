@@ -82,27 +82,24 @@ value_t report_t::ftime(xml::xpath_t::scope_t * locals)
 #endif
 }
 
-bool report_t::resolve(const string& name, value_t& result,
-		       xml::xpath_t::scope_t * locals)
+optional<value_t>
+report_t::resolve(const string& name, xml::xpath_t::scope_t * locals)
 {
   const char * p = name.c_str();
   switch (*p) {
   case 'a':
     if (name == "abbrev") {
-      result = abbrev(locals);
-      return true;
+      return abbrev(locals);
     }
     break;
 
   case 'f':
     if (name == "ftime") {
-      result = ftime(locals);
-      return true;
+      return ftime(locals);
     }
     break;
   }
-
-  return xml::xpath_t::scope_t::resolve(name, result, locals);
+  return xml::xpath_t::scope_t::resolve(name, locals);
 }
 
 xml::xpath_t::ptr_op_t report_t::lookup(const string& name)
