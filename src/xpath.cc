@@ -2077,7 +2077,8 @@ void xpath_t::path_t::walk_elements(NodeType&	     start,
     break;
 
   default: {
-    xpath_t final(name->compile(start, scope, true));
+    function_scope_t xpath_fscope(start, 0, 1, scope);
+    xpath_t final(name->compile(start, &xpath_fscope, true));
 
     if (final.ptr->is_value()) {
       value_t& result(final.ptr->as_value());
@@ -2100,17 +2101,21 @@ void xpath_t::path_t::walk_elements(NodeType&	     start,
 	      walk_elements<NodeType>(*value.template as_xml_node<NodeType>(),
 				      element, recurse, scope, func);
 	  } else {
-	    if (element->kind > op_t::TERMINALS)
+	    if (element->kind == op_t::O_FIND ||
+		element->kind == op_t::O_RFIND)
 	      throw_(compile_error,
 		     "Non-final expression in XPath selection returns non-node");
+
 	    func(value);
 	  }
 	}
       }
       else {
-	if (element->kind > op_t::TERMINALS)
+	if (element->kind == op_t::O_FIND ||
+	    element->kind == op_t::O_RFIND)
 	  throw_(compile_error,
 		 "Non-final expression in XPath selection returns non-node");
+
 	func(result);
       }
     } else {

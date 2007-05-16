@@ -271,8 +271,10 @@ static int read_and_report(ledger::report_t * report, int argc, char * argv[],
     foreach (const value_t& value, xpath.find_all(xml_document, report)) {
       if (value.is_xml_node()) {
 	value.as_xml_node()->print(std::cout);
-	std::cout << std::endl;
+      } else {
+	std::cout << value;
       }
+      std::cout << std::endl;
     }
     return 0;
   }
