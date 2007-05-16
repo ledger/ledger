@@ -219,19 +219,6 @@ public:
     typedef function<void (node_t&)>            visitor_t;
     typedef function<bool (node_t&, scope_t *)> predicate_t;
 
-    struct element_t
-    {
-      variant<node_t::nameid_t, string,
-	      document_t::special_names_t> ident;
-
-      bool	  recurse;
-      predicate_t predicate;
-    };
-
-    std::list<element_t> elements;
-
-    typedef std::list<element_t>::const_iterator element_iterator;
-
     struct value_node_appender_t {
       value_t::sequence_t& sequence;
       value_node_appender_t(value_t::sequence_t& _sequence)
@@ -241,34 +228,36 @@ public:
       }
     };
 
+    ptr_op_t path_expr;
+
   public:
-    path_t(const xpath_t& path_expr);
+    path_t(const xpath_t& xpath) : path_expr(xpath.ptr) {}
 
     value_t find_all(node_t& start, scope_t * scope) {
       value_t result = value_t::sequence_t();
-      visit(start, scope,
-	    value_node_appender_t(result.as_sequence_lval()));
+      visit(start, scope, value_node_appender_t(result.as_sequence_lval()));
       return result;
     }
 
     void visit(node_t& start, scope_t * scope,
 	       const function<void (node_t&)>& func) {
-      if (elements.begin() != elements.end())
-	walk_elements(start, elements.begin(), scope, func);
+      if (path_expr)
+	walk_elements(start, path_expr, false, scope, func);
     }
 
   private:
-    void walk_elements(node_t&		       start,
-		       const element_iterator& element,
-		       scope_t *	       scope,
-		       const visitor_t&	       func);
+    void walk_elements(node_t&		start,
+		       const ptr_op_t&	element,
+		       const bool       recurse,
+		       scope_t *	scope,
+		       const visitor_t&	func);
 
-    void check_element(node_t&		       start,
-		       const element_iterator& element,
-		       scope_t *	       scope,
-		       std::size_t             index,
-		       std::size_t             size,
-		       const visitor_t&	       func);
+    void check_element(node_t&		start,
+		       const ptr_op_t&	element,
+		       scope_t *	scope,
+		       std::size_t      index,
+		       std::size_t      size,
+		       const visitor_t&	func);
   };
 
   class path_iterator_t

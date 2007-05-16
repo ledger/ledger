@@ -75,6 +75,7 @@ class python_interpreter_t : public xml::xpath_t::scope_t
     boost::python::object func;
   public:
     functor_t(const string& name, boost::python::object _func) : func(_func) {}
+    virtual ~functor_t() {}
     virtual value_t operator()(xml::xpath_t::scope_t * locals);
   };
 

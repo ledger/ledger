@@ -689,7 +689,7 @@ xpath_t::parse_path_expr(std::istream& in, flags_t tflags) const
 
   if (node) {
     token_t& tok = next_token(in, tflags);
-    while (tok.kind == token_t::SLASH) {
+    if (tok.kind == token_t::SLASH) {
       ptr_op_t prev(node);
 
       tok  = next_token(in, tflags);
@@ -699,14 +699,12 @@ xpath_t::parse_path_expr(std::istream& in, flags_t tflags) const
 	push_token(tok);
 
       node->set_left(prev);
-      node->set_right(parse_predicate_expr(in, tflags));
+      node->set_right(parse_path_expr(in, tflags));
       if (! node->right())
 	throw_(parse_error, "/ operator not followed by a valid term");
-
-      tok = next_token(in, tflags);
+    } else {
+      push_token(tok);
     }
-
-    push_token(tok);
   }
 
   return node;
@@ -2117,101 +2115,40 @@ void xpath_t::op_t::dump(std::ostream& out, const int depth) const
   }
 }
 
-xpath_t::path_t::path_t(const xpath_t& path_expr)
+void xpath_t::path_t::check_element(node_t&	     start,
+				    const ptr_op_t&  element,
+				    scope_t *	     scope,
+				    std::size_t      index,
+				    std::size_t      size,
+				    const visitor_t& func)
 {
-  ptr_op_t op = path_expr.ptr;
-
-  while (true) {
-    element_t element;
-
-    switch (op->kind) {
-    case op_t::O_RFIND:
-      element.recurse = true;
-      // fall through...
-    case op_t::O_FIND: {
-      ptr_op_t name;
-      if (op->right()->kind == op_t::O_PRED) {
-	element.predicate = op_predicate(op->right()->right());
-	name = op->right()->left();
-      } else {
-	name = op->right();
-      }
-
-      switch (name->kind) {
-      case op_t::NODE_ID: {
-      //case op_t::ATTR_ID:
-	node_t::nameid_t name_id = name->as_name();
-	if (name_id < document_t::LAST_BUILTIN)
-	  element.ident = document_t::special_names_t(name_id);
-	else
-	  element.ident = name_id;
-	break;
-      }
-      case op_t::NODE_NAME:
-      //case op_t::ATTR_NAME:
-	element.ident = name->as_string();
-	break;
-      default:
-	break;
-      }
-      break;
-    }
-
-    case op_t::NODE_ID: {
-    //case op_t::ATTR_ID:
-      node_t::nameid_t name_id = op->as_name();
-      if (name_id < document_t::LAST_BUILTIN)
-	element.ident = document_t::special_names_t(name_id);
-      else
-	element.ident = name_id;
-      break;
-    }
-    case op_t::NODE_NAME:
-    //case op_t::ATTR_NAME:
-      element.ident = op->as_string();
-      break;
-
-    default:
-      throw_(std::logic_error, "XPath expression is not strictly a path selection");
-      break;
-    }
-
-    elements.push_front(element);
-
-    if (op->kind < op_t::TERMINALS)
-      break;
-    else
-      op = op->left();
-  }
-}
-
-void xpath_t::path_t::check_element(node_t&		    start,
-				    const element_iterator& element,
-				    scope_t *		    scope,
-				    std::size_t             index,
-				    std::size_t             size,
-				    const visitor_t&	    func)
-{
-  if (element->predicate) {
+  if (element->kind > op_t::TERMINALS &&
+      element->left()->kind == op_t::O_PRED) {
     function_scope_t xpath_fscope(start, index, size, scope);
-    if (! element->predicate(start, &xpath_fscope))
+    if (! op_predicate(element->left()->right())(start, &xpath_fscope))
       return;
   }
 
-  element_iterator next_element = next(element);
-  if (next_element == elements.end())
+  if (element->kind < op_t::TERMINALS)
     func(start);
   else
-    walk_elements(start, next_element, scope, func);
+    walk_elements(start, element->right(), element->kind == op_t::O_RFIND,
+		  scope, func);
 }
 
-void xpath_t::path_t::walk_elements(node_t&			  start,
-				    const element_iterator&	  element,
-				    scope_t *		  	  scope,
-				    const visitor_t&		  func)
+void xpath_t::path_t::walk_elements(node_t&	     start,
+				    const ptr_op_t&  element,
+				    const bool       recurse,
+				    scope_t *	     scope,
+				    const visitor_t& func)
 {
-  if (element->ident.type() == typeid(document_t::special_names_t)) {
-    switch (boost::get<document_t::special_names_t>(element->ident)) {
+  ptr_op_t name(element->kind < op_t::TERMINALS ? element : element->left());
+  if (name->kind == op_t::O_PRED)
+    name = name->left();
+
+  switch (name->kind) {
+  case op_t::NODE_ID:
+    switch (name->as_name()) {
     case document_t::CURRENT:
       check_element(start, element, scope, 0, 1, func);
       break;
@@ -2239,24 +2176,32 @@ void xpath_t::path_t::walk_elements(node_t&			  start,
     }
 
     default:
-      assert(false);
-      break;
+      break;			// pass down to the NODE_NAME case
     }
-  }
-  else if (start.is_parent_node()) {
-    bool have_name_id = element->ident.type() == typeid(node_t::nameid_t);
+    // fall through...
 
-    std::size_t index = 0;
-    std::size_t size  = start.as_parent_node().size();
-    foreach (node_t * child, start.as_parent_node()) {
-      if ((have_name_id &&
-	   boost::get<node_t::nameid_t>(element->ident) == child->name_id()) ||
-	  (! have_name_id &&
-	   boost::get<string>(element->ident) == child->name()))
-	check_element(*child, element, scope, index++, size, func);
-      else if (element->recurse)
-	walk_elements(*child, element, scope, func);
+  case op_t::NODE_NAME:
+    if (start.is_parent_node()) {
+      bool have_name_id = name->kind == op_t::NODE_ID;
+
+      std::size_t index = 0;
+      std::size_t size  = start.as_parent_node().size();
+      foreach (node_t * child, start.as_parent_node()) {
+	if ((have_name_id && name->as_name() == child->name_id()) ||
+	    (! have_name_id && name->as_string() == child->name()))
+	  check_element(*child, element, scope, index++, size, func);
+	else if (recurse)
+	  walk_elements(*child, element, recurse, scope, func);
+      }
     }
+    break;
+
+  default:
+    // jww (2007-05-15): Instead of a name, this might be an
+    // expression resulting in a nodelist with respect to the current
+    // context.
+    throw_(std::logic_error, "XPath expression is not strictly a path selection");
+    break;
   }
 }
 
