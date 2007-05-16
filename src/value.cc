@@ -82,16 +82,6 @@ void value_t::shutdown()
   false_value = intrusive_ptr<storage_t>();
 }
 
-value_t& value_t::operator=(const value_t& val)
-{
-  if (this == &val || storage == val.storage)
-    return *this;
-
-  storage = val.storage;
-
-  return *this;
-}
-
 value_t::operator bool() const
 {
   switch (type()) {

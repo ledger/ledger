@@ -1484,7 +1484,10 @@ xpath_t::op_t::compile(const node_t& context, scope_t * scope, bool resolve)
   case O_RFIND:
   case NODE_ID:
   case NODE_NAME:
-    return wrap_value(path_t(ptr_op_t(this)).find_all(context, scope));
+    if (resolve)
+      return wrap_value(path_t(ptr_op_t(this)).find_all(context, scope));
+    else
+      return this;
 
   case O_PRED:
     assert(false);		// this should never occur by itself
@@ -1981,13 +1984,13 @@ void xpath_t::op_t::dump(std::ostream& out, const int depth) const
   }
 }
 
-template <typename NodeType, typename FuncType>
-void xpath_t::path_t::check_element(NodeType&	    start,
-				    const ptr_op_t& element,
-				    scope_t *	    scope,
-				    std::size_t     index,
-				    std::size_t     size,
-				    const FuncType& func)
+template <typename NodeType>
+void xpath_t::path_t::check_element(NodeType&	     start,
+				    const ptr_op_t&  element,
+				    scope_t *	     scope,
+				    std::size_t	     index,
+				    std::size_t	     size,
+				    const visitor_t& func)
 {
   if (element->kind > op_t::TERMINALS &&
       element->left()->kind == op_t::O_PRED) {
@@ -1996,40 +1999,49 @@ void xpath_t::path_t::check_element(NodeType&	    start,
       return;
   }
 
-  if (element->kind < op_t::TERMINALS)
-    func(start);
-  else
-    walk_elements<NodeType, FuncType>
-      (start, element->right(), element->kind == op_t::O_RFIND, scope, func);
+  if (element->kind < op_t::TERMINALS) {
+    value_t temp(&start);
+    assert(temp.is_xml_node());
+    func(temp);
+  } else {
+    walk_elements<NodeType>(start, element->right(),
+			    element->kind == op_t::O_RFIND, scope, func);
+  }
 }
 
-template <typename NodeType, typename FuncType>
-void xpath_t::path_t::walk_elements(NodeType&	    start,
-				    const ptr_op_t& element,
-				    const bool      recurse,
-				    scope_t *	    scope,
-				    const FuncType& func)
+template <typename NodeType>
+void xpath_t::path_t::walk_elements(NodeType&	     start,
+				    const ptr_op_t&  element,
+				    const bool	     recurse,
+				    scope_t *	     scope,
+				    const visitor_t& func)
 {
-  ptr_op_t name(element->kind < op_t::TERMINALS ? element : element->left());
-  if (name->kind == op_t::O_PRED)
-    name = name->left();
+  ptr_op_t name(element);
+
+  if (name->kind > op_t::TERMINALS &&
+      (name->kind == op_t::O_FIND || name->kind == op_t::O_RFIND)) {
+    name = element->left();
+
+    if (name->kind == op_t::O_PRED)
+      name = name->left();
+  }
 
   switch (name->kind) {
   case op_t::NODE_ID:
     switch (name->as_name()) {
     case document_t::CURRENT:
-      check_element(start, element, scope, 0, 1, func);
+      check_element<NodeType>(start, element, scope, 0, 1, func);
       break;
 
     case document_t::PARENT:
       if (optional<parent_node_t&> parent = start.parent())
-	check_element(*parent, element, scope, 0, 1, func);
+	check_element<NodeType>(*parent, element, scope, 0, 1, func);
       else
 	throw_(std::logic_error, "Attempt to access parent of root node");
       break;
 
     case document_t::ROOT:
-      check_element(start.document(), element, scope, 0, 1, func);
+      check_element<NodeType>(start.document(), element, scope, 0, 1, func);
       break;
 
     case document_t::ALL: {
@@ -2038,8 +2050,8 @@ void xpath_t::path_t::walk_elements(NodeType&	    start,
 
       std::size_t index = 0;
       std::size_t size  = start.as_parent_node().size();
-      foreach (node_t * node, start.as_parent_node())
-	check_element(*node, element, scope, index++, size, func);
+      foreach (NodeType * node, start.as_parent_node())
+	check_element<NodeType>(*node, element, scope, index++, size, func);
       break;
     }
 
@@ -2054,27 +2066,63 @@ void xpath_t::path_t::walk_elements(NodeType&	    start,
 
       std::size_t index = 0;
       std::size_t size  = start.as_parent_node().size();
-      foreach (node_t * child, start.as_parent_node()) {
+      foreach (NodeType * child, start.as_parent_node()) {
 	if ((have_name_id && name->as_name() == child->name_id()) ||
 	    (! have_name_id && name->as_string() == child->name()))
-	  check_element(*child, element, scope, index++, size, func);
+	  check_element<NodeType>(*child, element, scope, index++, size, func);
 	else if (recurse)
-	  walk_elements(*child, element, recurse, scope, func);
+	  walk_elements<NodeType>(*child, element, recurse, scope, func);
       }
     }
     break;
 
-  default:
-    // jww (2007-05-15): Instead of a name, this might be an
-    // expression resulting in a nodelist with respect to the current
-    // context.
-    throw_(std::logic_error, "XPath expression is not strictly a path selection");
+  default: {
+    xpath_t final(name->compile(start, scope, true));
+
+    if (final.ptr->is_value()) {
+      value_t& result(final.ptr->as_value());
+
+      if (result.is_xml_node()) {
+	check_element<NodeType>(*result.template as_xml_node<NodeType>(),
+				element, scope, 0, 1, func);
+      }
+      else if (result.is_sequence()) {
+	std::size_t index = 0;
+	std::size_t size  = start.as_parent_node().size();
+
+	foreach (const value_t& value, result.as_sequence()) {
+	  if (value.is_xml_node()) {
+	    check_element<NodeType>(*value.template as_xml_node<NodeType>(),
+				    element, scope, index++, size, func);
+
+	    // Apply to every child if this part is recursive
+	    if (recurse)
+	      walk_elements<NodeType>(*value.template as_xml_node<NodeType>(),
+				      element, recurse, scope, func);
+	  } else {
+	    if (element->kind > op_t::TERMINALS)
+	      throw_(compile_error,
+		     "Non-final expression in XPath selection returns non-node");
+	    func(value);
+	  }
+	}
+      }
+      else {
+	if (element->kind > op_t::TERMINALS)
+	  throw_(compile_error,
+		 "Non-final expression in XPath selection returns non-node");
+	func(result);
+      }
+    } else {
+      throw_(compile_error, "Expression in XPath selection is invalid");
+    }
     break;
+  }
   }
 }
 
 template
-void xpath_t::path_t::walk_elements<node_t, xpath_t::path_t::visitor_t>
+void xpath_t::path_t::walk_elements<node_t>
   (node_t&	    start,
    const ptr_op_t&  element,
    const bool	    recurse,
@@ -2082,30 +2130,13 @@ void xpath_t::path_t::walk_elements<node_t, xpath_t::path_t::visitor_t>
    const visitor_t& func);
 
 template
-void xpath_t::path_t::walk_elements<const node_t, xpath_t::path_t::const_visitor_t>
-  (const node_t&	  start,
-   const ptr_op_t&	  element,
-   const bool		  recurse,
-   scope_t *		  scope,
-   const const_visitor_t& func);
-
-template
-void xpath_t::path_t::check_element<node_t, xpath_t::path_t::visitor_t>
-  (node_t&	    start,
+void xpath_t::path_t::check_element<const node_t>
+  (const node_t&    start,
    const ptr_op_t&  element,
    scope_t *	    scope,
    std::size_t	    index,
    std::size_t	    size,
    const visitor_t& func);
-
-template
-void xpath_t::path_t::check_element<const node_t, xpath_t::path_t::const_visitor_t>
-  (const node_t&	  start,
-   const ptr_op_t&	  element,
-   scope_t *		  scope,
-   std::size_t		  index,
-   std::size_t		  size,
-   const const_visitor_t& func);
 
 } // namespace xml
 } // namespace ledger

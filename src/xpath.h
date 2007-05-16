@@ -216,45 +216,36 @@ private:
 public:
   class path_t
   {
-    typedef function<void (node_t&)>       visitor_t;
-    typedef function<void (const node_t&)> const_visitor_t;
-
+  public:
+    typedef function<void (const value_t&)> visitor_t;
     typedef function<bool (const node_t&, scope_t *)> predicate_t;
 
-    struct value_node_appender_t {
+  private:
+    struct value_appender_t {
       value_t::sequence_t& sequence;
-      value_node_appender_t(value_t::sequence_t& _sequence)
+      value_appender_t(value_t::sequence_t& _sequence)
 	: sequence(_sequence) {}
-      void operator()(node_t& node) {
-	sequence.push_back(&node);
-      }
-    };
-
-    struct const_value_node_appender_t {
-      value_t::sequence_t& sequence;
-      const_value_node_appender_t(value_t::sequence_t& _sequence)
-	: sequence(_sequence) {}
-      void operator()(const node_t& node) {
-	sequence.push_back(&node);
+      void operator()(const value_t& val) {
+	sequence.push_back(val);
       }
     };
 
     ptr_op_t path_expr;
 
-    template <typename NodeType, typename FuncType>
-    void walk_elements(NodeType&       start,
-		       const ptr_op_t& element,
-		       const bool      recurse,
-		       scope_t *       scope,
-		       const FuncType& func);
+    template <typename NodeType>
+    void walk_elements(NodeType&	start,
+		       const ptr_op_t&	element,
+		       const bool	recurse,
+		       scope_t *	scope,
+		       const visitor_t& func);
 
-    template <typename NodeType, typename FuncType>
-    void check_element(NodeType&       start,
-		       const ptr_op_t& element,
-		       scope_t *       scope,
-		       std::size_t     index,
-		       std::size_t     size,
-		       const FuncType& func);
+    template <typename NodeType>
+    void check_element(NodeType&	start,
+		       const ptr_op_t&	element,
+		       scope_t *	scope,
+		       std::size_t	index,
+		       std::size_t	size,
+		       const visitor_t& func);
 
   public:
     path_t(const xpath_t& xpath) : path_expr(xpath.ptr) {}
@@ -262,53 +253,53 @@ public:
 
     value_t find_all(node_t& start, scope_t * scope) {
       value_t result = value_t::sequence_t();
-      visit(start, scope, value_node_appender_t(result.as_sequence_lval()));
+      visit(start, scope, value_appender_t(result.as_sequence_lval()));
       return result;
     }
     value_t find_all(const node_t& start, scope_t * scope) {
       value_t result = value_t::sequence_t();
-      visit(start, scope,
-	    const_value_node_appender_t(result.as_sequence_lval()));
+      visit(start, scope, value_appender_t(result.as_sequence_lval()));
       return result;
     }
 
     void visit(node_t& start, scope_t * scope, const visitor_t& func) {
       if (path_expr)
-	walk_elements<node_t, visitor_t>
-	  (start, path_expr, false, scope, func);
+	walk_elements<node_t>(start, path_expr, false, scope, func);
     }
-    void visit(const node_t& start, scope_t * scope,
-	       const const_visitor_t& func) {
+    void visit(const node_t& start, scope_t * scope, const visitor_t& func) {
       if (path_expr)
-	walk_elements<const node_t, const_visitor_t>
-	  (start, path_expr, false, scope, func);
+	walk_elements<const node_t>(start, path_expr, false, scope, func);
     }
   };
 
+  template <typename NodeType>
   class path_iterator_t
   {
+    typedef NodeType * pointer;
+    typedef NodeType&  reference;
+
     path_t    path;
-    node_t&   start;
+    reference start;
     scope_t * scope;
 
-    mutable std::vector<node_t *> sequence;
+    mutable value_t::sequence_t sequence;
     mutable bool searched;
 
     struct node_appender_t {
-      std::vector<node_t *>& sequence;
-      node_appender_t(std::vector<node_t *>& _sequence)
+      value_t::sequence_t& sequence;
+      node_appender_t(value_t::sequence_t& _sequence)
 	: sequence(_sequence) {}
-      void operator()(node_t& node) {
-	sequence.push_back(&node);
+      void operator()(const value_t& node) {
+	sequence.push_back(node);
       }
     };
 
   public:
-    typedef std::vector<node_t *>::iterator       iterator;
-    typedef std::vector<node_t *>::const_iterator const_iterator;
+    typedef value_t::sequence_t::iterator       iterator;
+    typedef value_t::sequence_t::const_iterator const_iterator;
 
     path_iterator_t(const xpath_t& path_expr,
-		    node_t& _start, scope_t * _scope)
+		    reference _start, scope_t * _scope)
       : path(path_expr), start(_start), scope(_scope),
 	searched(false) {
     }
@@ -753,18 +744,27 @@ public:
     return xpath_t(_expr).calc(context, scope);
   }
 
-  path_iterator_t find_all(node_t& start, scope_t * scope) {
-    return path_iterator_t(*this, start, scope);
+  path_iterator_t<node_t>
+  find_all(node_t& start, scope_t * scope) {
+    return path_iterator_t<node_t>(*this, start, scope);
+  }
+  path_iterator_t<const node_t>
+  find_all(const node_t& start, scope_t * scope) {
+    return path_iterator_t<const node_t>(*this, start, scope);
   }
 
-  void visit(node_t& start, scope_t * scope,
-	     const function<void (node_t&)>& func) {
+  void visit(node_t& start, scope_t * scope, const path_t::visitor_t& func) {
+    path_t(*this).visit(start, scope, func);
+  }
+  void visit(const node_t& start, scope_t * scope, const
+	     path_t::visitor_t& func) {
     path_t(*this).visit(start, scope, func);
   }
 
   void print(std::ostream& out, xml::document_t& document) const {
     print(out, document, true, NULL, NULL, NULL);
   }
+
   void dump(std::ostream& out) const {
     if (ptr)
       ptr->dump(out, 0);

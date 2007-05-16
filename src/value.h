@@ -229,7 +229,12 @@ public:
     TRACE_DTOR(value_t);
   }
 
-  value_t& operator=(const value_t& val);
+  value_t& operator=(const value_t& val) {
+    if (this == &val || storage == val.storage)
+      return *this;
+    storage = val.storage;
+    return *this;
+  }
 
   /**
    * _dup() makes a private copy of the current value so that it can
@@ -427,6 +432,11 @@ public:
     assert(is_xml_node());
     return *(const xml::node_t **) storage->data;
   }
+  template <typename T>
+  T * as_xml_node() const {
+    assert(is_xml_node());
+    return *(T **) storage->data;
+  }
   void set_xml_node(xml::node_t * val) {
     set_type(XML_NODE);
     *(xml::node_t **) storage->data = val;
@@ -591,6 +601,13 @@ public:
 
   friend std::ostream& operator<<(std::ostream& out, const value_t& val);
 };
+
+template <>
+inline const xml::node_t * value_t::as_xml_node() const {
+  assert(is_xml_node());
+  assert(! is_type(CONST_XML_NODE));
+  return *(const xml::node_t **) storage->data;
+}
 
 std::ostream& operator<<(std::ostream& out, const value_t& val);
 
