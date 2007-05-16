@@ -58,9 +58,7 @@ class value_t
            ordered_field_operators<value_t, unsigned long,
            ordered_field_operators<value_t, long> > > > > > >
 {
-  char data[sizeof(balance_pair_t)];
-
- public:
+public:
   typedef std::vector<value_t> sequence_t;
 
   enum type_t {
@@ -75,236 +73,366 @@ class value_t
     SEQUENCE,
     XML_NODE,
     POINTER
-  } type;
+  };
 
-  value_t() : type(VOID) {
+private:
+  class storage_t
+  {
+    char   data[sizeof(balance_pair_t)];
+    type_t type;
+
+    BOOST_STATIC_ASSERT(sizeof(balance_pair_t) > sizeof(bool));
+    BOOST_STATIC_ASSERT(sizeof(balance_pair_t) > sizeof(moment_t));
+    BOOST_STATIC_ASSERT(sizeof(balance_pair_t) > sizeof(long));
+    BOOST_STATIC_ASSERT(sizeof(balance_pair_t) > sizeof(amount_t));
+    BOOST_STATIC_ASSERT(sizeof(balance_pair_t) > sizeof(balance_t));
+    BOOST_STATIC_ASSERT(sizeof(balance_pair_t) > sizeof(string));
+    BOOST_STATIC_ASSERT(sizeof(balance_pair_t) > sizeof(sequence_t));
+    BOOST_STATIC_ASSERT(sizeof(balance_pair_t) > sizeof(xml::node_t *));
+
+    explicit storage_t() : type(VOID), refc(0) {
+      TRACE_CTOR(value_t::storage_t, "");
+    }
+    explicit storage_t(const storage_t& rhs)
+      : type(rhs.type), refc(0) {
+      TRACE_CTOR(value_t::storage_t, "");
+      std::memcpy(data, rhs.data, sizeof(balance_pair_t));
+    }
+
+  public:			// so `checked_delete' can access it
+    ~storage_t() {
+      TRACE_DTOR(value_t::storage_t);
+      DEBUG("value.storage.refcount", "Destroying " << this);
+      assert(refc == 0);
+      destroy();
+    }
+
+  private:
+    storage_t& operator=(const storage_t& rhs) {
+      type = rhs.type;
+      std::memcpy(data, rhs.data, sizeof(balance_pair_t));
+      return *this;
+    }
+
+    mutable int refc;
+
+    void acquire() const {
+      DEBUG("value.storage.refcount",
+	     "Acquiring " << this << ", refc now " << refc + 1);
+      assert(refc >= 0);
+      refc++;
+    }
+    void release() const {
+      DEBUG("value.storage.refcount",
+	     "Releasing " << this << ", refc now " << refc - 1);
+      assert(refc > 0);
+      if (--refc == 0)
+	checked_delete(this);
+    }
+
+    void destroy();
+
+    friend class value_t;
+
+    friend inline void intrusive_ptr_add_ref(value_t::storage_t * storage) {
+      storage->acquire();
+    }
+    friend inline void intrusive_ptr_release(value_t::storage_t * storage) {
+      storage->release();
+    }
+  };
+
+  intrusive_ptr<storage_t> storage;
+
+  static intrusive_ptr<storage_t> true_value;
+  static intrusive_ptr<storage_t> false_value;
+
+  // jww (2007-05-03): Make this private, and then make
+  // ledger::initialize into a member function of session_t.
+public:
+  static void initialize();
+  static void shutdown();
+
+public:
+  value_t() {
     TRACE_CTOR(value_t, "");
   }
 
-  value_t(const value_t& val) : type(VOID) {
+  value_t(const value_t& val) {
     TRACE_CTOR(value_t, "copy");
     *this = val;
   }
   value_t(const bool val) {
     TRACE_CTOR(value_t, "const bool");
-    type = BOOLEAN;
-    as_boolean() = val;
+    set_boolean(val);
   }
   value_t(const long val) {
     TRACE_CTOR(value_t, "const long");
-    type = INTEGER;
-    as_long() = val;
+    set_long(val);
   }
   value_t(const moment_t val) {
     TRACE_CTOR(value_t, "const moment_t");
-    type = DATETIME;
-    new((moment_t *) data) moment_t(val);
+    set_datetime(val);
   }
   value_t(const double val) {
     TRACE_CTOR(value_t, "const double");
-    type = AMOUNT;
-    new((amount_t *) data) amount_t(val);
+    set_amount(val);
   }
   value_t(const unsigned long val) {
     TRACE_CTOR(value_t, "const unsigned long");
-    type = AMOUNT;
-    new((amount_t *) data) amount_t(val);
+    set_amount(val);
   }
   value_t(const string& val, bool literal = false) {
     TRACE_CTOR(value_t, "const string&, bool");
-    if (literal) {
-      type = STRING;
-      new((string *) data) string(val);
-    } else {
-      type = AMOUNT;
-      new((amount_t *) data) amount_t(val);
-    }
+    if (literal)
+      set_string(val);
+    else
+      set_amount(val);
   }
   value_t(const char * val, bool literal = false) {
     TRACE_CTOR(value_t, "const char *");
-    if (literal) {
-      type = STRING;
-      new((string *) data) string(val);
-    } else {
-      type = AMOUNT;
-      new((amount_t *) data) amount_t(val);
-    }
+    if (literal)
+      set_string(val);
+    else
+      set_amount(val);
   }
   value_t(const amount_t& val) {
     TRACE_CTOR(value_t, "const amount_t&");
-    type = AMOUNT;
-    new((amount_t *)data) amount_t(val);
+    set_amount(val);
   }
-  value_t(const balance_t& val) : type(VOID) {
+  value_t(const balance_t& val) {
     TRACE_CTOR(value_t, "const balance_t&");
-    type = BALANCE;
-    new((balance_t *)data) balance_t(val);
+    set_balance(val);
   }
-  value_t(const balance_pair_t& val) : type(VOID) {
+  value_t(const balance_pair_t& val) {
     TRACE_CTOR(value_t, "const balance_pair_t&");
-    type = BALANCE_PAIR;
-    new((balance_pair_t *)data) balance_pair_t(val);
+    set_balance_pair(val);
   }
   value_t(const sequence_t& val) {
     TRACE_CTOR(value_t, "const sequence_t&");
-    type = SEQUENCE;
-    new((sequence_t *)data) sequence_t(val);
+    set_sequence(val);
   }
   value_t(xml::node_t * xml_node) {
     TRACE_CTOR(value_t, "xml::node_t *");
-    type = XML_NODE;
-    as_xml_node() = xml_node;
+    set_xml_node(xml_node);
   }
   value_t(void * item) {
     TRACE_CTOR(value_t, "void *");
-    type = POINTER;
-    as_pointer() = item;
+    set_pointer(item);
   }
-
   ~value_t() {
     TRACE_DTOR(value_t);
-    destroy();
   }
-
-  void destroy();
-  value_t simplify() const {
-    value_t temp = *this;
-    temp.in_place_simplify();
-    return temp;
-  }
-  void in_place_simplify();
 
   value_t& operator=(const value_t& val);
 
-  value_t& set_string(const string& str = "") {
-    if (type != STRING) {
-      destroy();
-      type = STRING;
-      new((string *) data) string(str);
-    } else {
-      as_string() = str;
-    }
-    return *this;
+  /**
+   * _dup() makes a private copy of the current value so that it can
+   * subsequently be modified.
+   *
+   * _clear() removes our pointer to the current value and initializes
+   * a new value for things to be stored in.
+   */
+  void _dup() {
+    assert(storage);
+    if (storage->refc > 1)
+      storage = new storage_t(*storage.get());
+  }
+  void _clear() {
+    if (! storage || storage->refc > 1)
+      storage = new storage_t;
+    else
+      storage->destroy();
+  }
+
+  operator bool() const;
+
+  bool is_null() const {
+    return ! storage || storage->type == VOID;
+  }
+
+  type_t type() const {
+    return storage ? storage->type : VOID;
+  }
+  bool is_type(type_t _type) const {
+    assert(_type >= VOID && _type <= POINTER);
+    return type() == _type;
+  }
+  void set_type(type_t new_type) {
+    assert(new_type >= VOID && new_type <= POINTER);
+    _clear();
+    storage->type = new_type;
+    assert(is_type(new_type));
   }
 
   bool is_boolean() const {
-    return type == BOOLEAN;
+    return is_type(BOOLEAN);
   }
-  bool& as_boolean() {
-    assert(type == BOOLEAN);
-    return *(bool *) data;
+  bool& as_boolean_lval() {
+    assert(is_boolean());
+    _dup();
+    return *(bool *) storage->data;
   }
   const bool& as_boolean() const {
-    assert(type == BOOLEAN);
-    return *(bool *) data;
+    assert(is_boolean());
+    return *(bool *) storage->data;
+  }
+  void set_boolean(const bool val) {
+    set_type(BOOLEAN);
+    storage = val ? true_value : false_value;
   }
 
   bool is_long() const {
-    return type == INTEGER;
+    return is_type(INTEGER);
   }
-  long& as_long() {
-    assert(type == INTEGER);
-    return *(long *) data;
+  long& as_long_lval() {
+    assert(is_long());
+    _dup();
+    return *(long *) storage->data;
   }
   const long& as_long() const {
-    assert(type == INTEGER);
-    return *(long *) data;
+    assert(is_long());
+    return *(long *) storage->data;
+  }
+  void set_long(const long val) {
+    set_type(INTEGER);
+    *(long *) storage->data = val;
   }
 
   bool is_datetime() const {
-    return type == DATETIME;
+    return is_type(DATETIME);
   }
-  moment_t& as_datetime() {
-    assert(type == DATETIME);
-    return *(moment_t *) data;
+  moment_t& as_datetime_lval() {
+    assert(is_datetime());
+    _dup();
+    return *(moment_t *) storage->data;
   }
   const moment_t& as_datetime() const {
-    assert(type == DATETIME);
-    return *(moment_t *) data;
+    assert(is_datetime());
+    return *(moment_t *) storage->data;
+  }
+  void set_datetime(const moment_t& val) {
+    set_type(DATETIME);
+    new((moment_t *) storage->data) moment_t(val);
   }
 
   bool is_amount() const {
-    return type == AMOUNT;
+    return is_type(AMOUNT);
   }
-  amount_t& as_amount() {
-    assert(type == AMOUNT);
-    return *(amount_t *) data;
+  amount_t& as_amount_lval() {
+    assert(is_amount());
+    _dup();
+    return *(amount_t *) storage->data;
   }
   const amount_t& as_amount() const {
-    assert(type == AMOUNT);
-    return *(amount_t *) data;
+    assert(is_amount());
+    return *(amount_t *) storage->data;
+  }
+  void set_amount(const amount_t& val) {
+    set_type(AMOUNT);
+    new((amount_t *) storage->data) amount_t(val);
   }
 
   bool is_balance() const {
-    return type == BALANCE;
+    return is_type(BALANCE);
   }
-  balance_t& as_balance() {
-    assert(type == BALANCE);
-    return *(balance_t *) data;
+  balance_t& as_balance_lval() {
+    assert(is_balance());
+    _dup();
+    return *(balance_t *) storage->data;
   }
   const balance_t& as_balance() const {
-    assert(type == BALANCE);
-    return *(balance_t *) data;
+    assert(is_balance());
+    return *(balance_t *) storage->data;
+  }
+  void set_balance(const balance_t& val) {
+    set_type(BALANCE);
+    new((balance_t *) storage->data) balance_t(val);
   }
 
   bool is_balance_pair() const {
-    return type == BALANCE_PAIR;
+    return is_type(BALANCE_PAIR);
   }
-  balance_pair_t& as_balance_pair() {
-    assert(type == BALANCE_PAIR);
-    return *(balance_pair_t *) data;
+  balance_pair_t& as_balance_pair_lval() {
+    assert(is_balance_pair());
+    _dup();
+    return *(balance_pair_t *) storage->data;
   }
   const balance_pair_t& as_balance_pair() const {
-    assert(type == BALANCE_PAIR);
-    return *(balance_pair_t *) data;
+    assert(is_balance_pair());
+    return *(balance_pair_t *) storage->data;
+  }
+  void set_balance_pair(const balance_pair_t& val) {
+    set_type(BALANCE_PAIR);
+    new((balance_pair_t *) storage->data) balance_pair_t(val);
   }
 
   bool is_string() const {
-    return type == STRING;
+    return is_type(STRING);
   }
-  string& as_string() {
-    assert(type == STRING);
-    return *(string *) data;
+  string& as_string_lval() {
+    assert(is_string());
+    _dup();
+    return *(string *) storage->data;
   }
   const string& as_string() const {
-    assert(type == STRING);
-    return *(string *) data;
+    assert(is_string());
+    return *(string *) storage->data;
+  }
+  void set_string(const string& val = "") {
+    set_type(STRING);
+    new((string *) storage->data) string(val);
   }
 
   bool is_sequence() const {
-    return type == SEQUENCE;
+    return is_type(SEQUENCE);
   }
-  sequence_t& as_sequence() {
-    assert(type == SEQUENCE);
-    return *(sequence_t *) data;
+  sequence_t& as_sequence_lval() {
+    assert(is_sequence());
+    _dup();
+    return *(sequence_t *) storage->data;
   }
   const sequence_t& as_sequence() const {
-    assert(type == SEQUENCE);
-    return *(sequence_t *) data;
+    assert(is_sequence());
+    return *(sequence_t *) storage->data;
+  }
+  void set_sequence(const sequence_t& val) {
+    set_type(SEQUENCE);
+    new((sequence_t *) storage->data) sequence_t(val);
   }
 
   bool is_xml_node() const {
-    return type == XML_NODE;
+    return is_type(XML_NODE);
   }
-  xml::node_t *& as_xml_node() {
-    assert(type == XML_NODE);
-    return *(xml::node_t **) data;
+  xml::node_t *& as_xml_node_lval() {
+    assert(is_xml_node());
+    _dup();
+    return *(xml::node_t **) storage->data;
   }
   xml::node_t * as_xml_node() const {
-    assert(type == XML_NODE);
-    return *(xml::node_t **) data;
+    assert(is_xml_node());
+    return *(xml::node_t **) storage->data;
+  }
+  void set_xml_node(xml::node_t * val) {
+    set_type(XML_NODE);
+    *(xml::node_t **) storage->data = val;
   }
 
   bool is_pointer() const {
-    return type == POINTER;
+    return is_type(POINTER);
   }
-  void *& as_pointer() {
-    assert(type == POINTER);
-    return *(void **) data;
+  void *& as_pointer_lval() {
+    assert(is_pointer());
+    _dup();
+    return *(void **) storage->data;
   }
   void * as_pointer() const {
-    assert(type == POINTER);
-    return *(void **) data;
+    assert(is_pointer());
+    return *(void **) storage->data;
+  }
+  void set_pointer(void * val) {
+    set_type(POINTER);
+    *(void **) storage->data = val;
   }
 
   bool		 to_boolean() const;
@@ -316,15 +444,25 @@ class value_t
   string	 to_string() const;
   sequence_t     to_sequence() const;
 
+  value_t simplify() const {
+    value_t temp = *this;
+    temp.in_place_simplify();
+    return temp;
+  }
+  void in_place_simplify();
+
   value_t& operator[](const int index) {
+    return as_sequence_lval()[index];
+  }
+  const value_t& operator[](const int index) const {
     return as_sequence()[index];
   }
 
   void push_back(const value_t& val) {
-    return as_sequence().push_back(val);
+    return as_sequence_lval().push_back(val);
   }
 
-  std::size_t size() const {
+  const std::size_t size() const {
     return as_sequence().size();
   }
 
@@ -335,10 +473,12 @@ class value_t
 
   bool operator==(const value_t& val) const;
   bool operator<(const value_t& val) const;
-  //bool operator>(const value_t& val) const;
+#if 0
+  bool operator>(const value_t& val) const;
+#endif
 
   string label(optional<type_t> the_type = none) const {
-    switch (the_type ? *the_type : type) {
+    switch (the_type ? *the_type : type()) {
     case VOID:
       return "an uninitialized value";
     case BOOLEAN:
@@ -369,8 +509,6 @@ class value_t
     return "<invalid>";
   }
   
-  operator bool() const;
-
   value_t operator-() const {
     return negate();
   }
@@ -420,19 +558,6 @@ class value_t
 };
 
 std::ostream& operator<<(std::ostream& out, const value_t& val);
-
-#if 0
-class value_context : public error_context
-{
-  value_t * bal;
- public:
-  value_context(const value_t& _bal,
-		const string& desc = "") throw();
-  virtual ~value_context() throw();
-
-  virtual void describe(std::ostream& out) const throw();
-};
-#endif
 
 DECLARE_EXCEPTION(value_error);
 

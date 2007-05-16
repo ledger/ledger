@@ -253,12 +253,14 @@ xml::xpath_t::ptr_op_t session_t::lookup(const string& name)
 static void initialize()
 {
   amount_t::initialize();
+  value_t::initialize();
   xml::xpath_t::initialize();
 }
 
 static void shutdown()
 {
   xml::xpath_t::shutdown();
+  value_t::shutdown();
   amount_t::shutdown();
 }
 

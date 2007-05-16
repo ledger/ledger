@@ -99,18 +99,18 @@ public:
 
   class function_scope_t : public scope_t
   {
-    node_t&	node;
-    std::size_t	index;
-    std::size_t size;
+    const node_t& node;
+    std::size_t	  index;
+    std::size_t	  size;
 
   public:
     function_scope_t(const value_t::sequence_t& _sequence,
-		     node_t& _node, std::size_t _index,
+		     const node_t& _node, std::size_t _index,
 		     scope_t * _parent = NULL)
       : scope_t(_parent, STATIC), node(_node), index(_index),
 	size(_sequence.size()) {}
 
-    function_scope_t(node_t& _node, std::size_t _index,
+    function_scope_t(const node_t& _node, std::size_t _index,
 		     std::size_t _size, scope_t * _parent = NULL)
       : scope_t(_parent, STATIC), node(_node), index(_index),
 	size(_size) {}
@@ -490,18 +490,18 @@ public:
       return const_cast<op_t *>(this)->as_op();
     }
 
+    void acquire() const {
+      DEBUG("ledger.xpath.memory",
+	     "Acquiring " << this << ", refc now " << refc + 1);
+      assert(refc >= 0);
+      refc++;
+    }
     void release() const {
       DEBUG("ledger.xpath.memory",
 	     "Releasing " << this << ", refc now " << refc - 1);
       assert(refc > 0);
       if (--refc == 0)
 	checked_delete(this);
-    }
-    void acquire() {
-      DEBUG("ledger.xpath.memory",
-	     "Acquiring " << this << ", refc now " << refc + 1);
-      assert(refc >= 0);
-      refc++;
     }
 
     ptr_op_t& left() {
@@ -533,11 +533,11 @@ public:
 			     ptr_op_t right = NULL);
 
     ptr_op_t copy(ptr_op_t left = NULL, ptr_op_t right = NULL) const;
-    ptr_op_t compile(value_t& context, scope_t * scope, bool resolve = false);
+    ptr_op_t compile(const value_t& context, scope_t * scope, bool resolve = false);
 
-    void find_values(value_t& context, scope_t * scope,
+    void find_values(const value_t& context, scope_t * scope,
 		     value_t::sequence_t& result_seq, bool recursive);
-    bool test_value(value_t& context, scope_t * scope, int index = 0);
+    bool test_value(const value_t& context, scope_t * scope, int index = 0);
 
     void append_value(value_t& value, value_t::sequence_t& result_seq);
 

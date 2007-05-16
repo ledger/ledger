@@ -1050,7 +1050,7 @@ xpath_t::op_t::copy(ptr_op_t tleft, ptr_op_t tright) const
   return node;
 }
 
-void xpath_t::op_t::find_values(value_t& context, scope_t * scope,
+void xpath_t::op_t::find_values(const value_t& context, scope_t * scope,
 				value_t::sequence_t& result_seq,
 				bool recursive)
 {
@@ -1062,7 +1062,7 @@ void xpath_t::op_t::find_values(value_t& context, scope_t * scope,
     append_value(expr.ptr->as_value(), result_seq);
 
   if (recursive) {
-    if (context.type == value_t::XML_NODE) {
+    if (context.is_type(value_t::XML_NODE)) {
       node_t * ptr = context.as_xml_node();
       if (ptr->is_parent_node())
 	foreach (node_t * node, ptr->as_parent_node()) {
@@ -1075,14 +1075,14 @@ void xpath_t::op_t::find_values(value_t& context, scope_t * scope,
   }
 }
 
-bool xpath_t::op_t::test_value(value_t& context, scope_t * scope, int index)
+bool xpath_t::op_t::test_value(const value_t& context, scope_t * scope, int index)
 {
   xpath_t expr(compile(context, scope, true));
 
   if (expr.ptr->kind != VALUE)
     throw_(calc_error, "Predicate expression does not yield a constant value");
 
-  switch (expr.ptr->as_value().type) {
+  switch (expr.ptr->as_value().type()) {
   case value_t::INTEGER:
   case value_t::AMOUNT:
     return expr.ptr->as_value() == value_t((long)index + 1);
@@ -1117,7 +1117,7 @@ xpath_t::ptr_op_t xpath_t::op_t::defer_sequence(value_t::sequence_t& result_seq)
       opp = &(*opp)->right();
     }
 
-    if ((*i).type != value_t::POINTER)
+    if (! (*i).is_type(value_t::POINTER))
       *opp = wrap_value(*i);
     else
 #if 1
@@ -1133,7 +1133,7 @@ xpath_t::ptr_op_t xpath_t::op_t::defer_sequence(value_t::sequence_t& result_seq)
 void xpath_t::op_t::append_value(value_t& val,
 				 value_t::sequence_t& result_seq)
 {
-  if (val.type == value_t::SEQUENCE)
+  if (val.is_type(value_t::SEQUENCE))
     std::for_each(val.as_sequence().begin(), val.as_sequence().end(),
 		  bind(&value_t::sequence_t::push_back, ref(result_seq), _1));
   else
@@ -1141,7 +1141,7 @@ void xpath_t::op_t::append_value(value_t& val,
 }
 
 xpath_t::ptr_op_t
-xpath_t::op_t::compile(value_t& context, scope_t * scope, bool resolve)
+xpath_t::op_t::compile(const value_t& context, scope_t * scope, bool resolve)
 {
 #if 0
   try {
@@ -1156,7 +1156,7 @@ xpath_t::op_t::compile(value_t& context, scope_t * scope, bool resolve)
       return wrap_value(context);
 
     case document_t::PARENT:
-      if (context.type != value_t::XML_NODE)
+      if (! context.is_type(value_t::XML_NODE))
 	throw_(compile_error, "Referencing parent node from a non-node value");
       else if (context.as_xml_node()->parent())
 	return wrap_value(&*context.as_xml_node()->parent());
@@ -1164,13 +1164,13 @@ xpath_t::op_t::compile(value_t& context, scope_t * scope, bool resolve)
 	throw_(compile_error, "Referencing parent node from the root node");
 
     case document_t::ROOT:
-      if (context.type != value_t::XML_NODE)
+      if (! context.is_type(value_t::XML_NODE))
 	throw_(compile_error, "Referencing root node from a non-node value");
       else
 	return wrap_value(&context.as_xml_node()->document());
 
     case document_t::ALL: {
-      if (context.type != value_t::XML_NODE)
+      if (! context.is_type(value_t::XML_NODE))
 	throw_(compile_error, "Referencing child nodes from a non-node value");
 
       value_t::sequence_t nodes;
@@ -1240,7 +1240,7 @@ xpath_t::op_t::compile(value_t& context, scope_t * scope, bool resolve)
 
   case ARG_INDEX:
     if (scope && scope->kind == scope_t::ARGUMENT) {
-      assert(scope->args.type == value_t::SEQUENCE);
+      assert(scope->args.is_type(value_t::SEQUENCE));
       if (as_long() < scope->args.as_sequence().size())
 	return wrap_value(scope->args.as_sequence()[as_long()]);
       else
@@ -1617,7 +1617,7 @@ xpath_t::op_t::compile(value_t& context, scope_t * scope, bool resolve)
     value_t::sequence_t result_seq;
 
     // jww (2006-09-24): What about when nothing is found?
-    switch (lexpr.ptr->as_value().type) {
+    switch (lexpr.ptr->as_value().type()) {
     case value_t::XML_NODE: {
       value_t& value(lexpr.ptr->as_value());
       function_scope_t xpath_fscope(*value.as_xml_node(), 0, 1, scope);
@@ -1632,14 +1632,14 @@ xpath_t::op_t::compile(value_t& context, scope_t * scope, bool resolve)
     }
 
     case value_t::SEQUENCE: {
-      value_t::sequence_t& seq(lexpr.ptr->as_value().as_sequence());
+      const value_t::sequence_t& seq(lexpr.ptr->as_value().as_sequence());
 
       int index = 0;
-      for (value_t::sequence_t::iterator i = seq.begin();
+      for (value_t::sequence_t::const_iterator i = seq.begin();
 	   i != seq.end();
 	   i++, index++) {
-	assert((*i).type != value_t::SEQUENCE);
-	if ((*i).type != value_t::XML_NODE)
+	assert(! (*i).is_type(value_t::SEQUENCE));
+	if (! (*i).is_type(value_t::XML_NODE))
 	  throw_(compile_error, "Attempting to apply path selection "
 		 "to non-node(s)");
 
@@ -1772,7 +1772,7 @@ bool xpath_t::op_t::print(std::ostream&	  out,
   switch (kind) {
   case VALUE: {
     const value_t& value(as_value());
-    switch (value.type) {
+    switch (value.type()) {
     case value_t::BOOLEAN:
       if (value)
 	out << "1";

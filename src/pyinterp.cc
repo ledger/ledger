@@ -180,10 +180,10 @@ void python_interpreter_t::functor_t::operator()(value_t& result,
     if (! PyCallable_Check(func.ptr())) {
       result = static_cast<const value_t&>(extract<value_t>(func.ptr()));
     } else {
-      assert(locals->args.type == value_t::SEQUENCE);
+      assert(locals->args.is_type(value_t::SEQUENCE));
       if (locals->args.as_sequence().size() > 0) {
 	list arglist;
-	for (value_t::sequence_t::iterator
+	for (value_t::sequence_t::const_iterator
 	       i = locals->args.as_sequence().begin();
 	     i != locals->args.as_sequence().end();
 	     i++)
@@ -218,10 +218,10 @@ void python_interpreter_t::lambda_t::operator()(value_t& result,
 						xml::xpath_t::scope_t * locals)
 {
   try {
-    assert(locals->args.type == value_t::SEQUENCE);
+    assert(locals->args.is_type(value_t::SEQUENCE));
     assert(locals->args.as_sequence().size() == 1);
     value_t item = locals->args[0];
-    assert(item.type == value_t::POINTER);
+    assert(item.is_type(value_t::POINTER));
     result = call<value_t>(func.ptr(), item.as_xml_node());
   }
   catch (const error_already_set&) {
