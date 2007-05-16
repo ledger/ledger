@@ -216,8 +216,10 @@ private:
 public:
   class path_t
   {
-    typedef function<void (node_t&)>            visitor_t;
-    typedef function<bool (node_t&, scope_t *)> predicate_t;
+    typedef function<void (node_t&)>       visitor_t;
+    typedef function<void (const node_t&)> const_visitor_t;
+
+    typedef function<bool (const node_t&, scope_t *)> predicate_t;
 
     struct value_node_appender_t {
       value_t::sequence_t& sequence;
@@ -228,36 +230,59 @@ public:
       }
     };
 
+    struct const_value_node_appender_t {
+      value_t::sequence_t& sequence;
+      const_value_node_appender_t(value_t::sequence_t& _sequence)
+	: sequence(_sequence) {}
+      void operator()(const node_t& node) {
+	sequence.push_back(&node);
+      }
+    };
+
     ptr_op_t path_expr;
+
+    template <typename NodeType, typename FuncType>
+    void walk_elements(NodeType&       start,
+		       const ptr_op_t& element,
+		       const bool      recurse,
+		       scope_t *       scope,
+		       const FuncType& func);
+
+    template <typename NodeType, typename FuncType>
+    void check_element(NodeType&       start,
+		       const ptr_op_t& element,
+		       scope_t *       scope,
+		       std::size_t     index,
+		       std::size_t     size,
+		       const FuncType& func);
 
   public:
     path_t(const xpath_t& xpath) : path_expr(xpath.ptr) {}
+    path_t(const ptr_op_t& _path_expr) : path_expr(_path_expr) {}
 
     value_t find_all(node_t& start, scope_t * scope) {
       value_t result = value_t::sequence_t();
       visit(start, scope, value_node_appender_t(result.as_sequence_lval()));
       return result;
     }
-
-    void visit(node_t& start, scope_t * scope,
-	       const function<void (node_t&)>& func) {
-      if (path_expr)
-	walk_elements(start, path_expr, false, scope, func);
+    value_t find_all(const node_t& start, scope_t * scope) {
+      value_t result = value_t::sequence_t();
+      visit(start, scope,
+	    const_value_node_appender_t(result.as_sequence_lval()));
+      return result;
     }
 
-  private:
-    void walk_elements(node_t&		start,
-		       const ptr_op_t&	element,
-		       const bool       recurse,
-		       scope_t *	scope,
-		       const visitor_t&	func);
-
-    void check_element(node_t&		start,
-		       const ptr_op_t&	element,
-		       scope_t *	scope,
-		       std::size_t      index,
-		       std::size_t      size,
-		       const visitor_t&	func);
+    void visit(node_t& start, scope_t * scope, const visitor_t& func) {
+      if (path_expr)
+	walk_elements<node_t, visitor_t>
+	  (start, path_expr, false, scope, func);
+    }
+    void visit(const node_t& start, scope_t * scope,
+	       const const_visitor_t& func) {
+      if (path_expr)
+	walk_elements<const node_t, const_visitor_t>
+	  (start, path_expr, false, scope, func);
+    }
   };
 
   class path_iterator_t
@@ -523,10 +548,6 @@ public:
     ptr_op_t copy(ptr_op_t left = NULL, ptr_op_t right = NULL) const;
     ptr_op_t compile(const node_t& context, scope_t * scope, bool resolve = false);
 
-    void find_values(const node_t& context, scope_t * scope,
-		     value_t::sequence_t& result_seq, bool recursive);
-    bool test_value(const node_t& context, scope_t * scope, int index = 0);
-
     void append_value(value_t::sequence_t& result_seq, value_t& value);
 
     static ptr_op_t defer_sequence(value_t::sequence_t& result_seq);
@@ -539,16 +560,22 @@ public:
 	       unsigned long * end_pos	  = NULL) const;
 
     void dump(std::ostream& out, const int depth) const;
+
+    friend inline void intrusive_ptr_add_ref(xpath_t::op_t * op) {
+      op->acquire();
+    }
+    friend inline void intrusive_ptr_release(xpath_t::op_t * op) {
+      op->release();
+    }
   };
 
   class op_predicate
   {
     ptr_op_t op;
-
   public:
     op_predicate(ptr_op_t _op) : op(_op) {}
 
-    bool operator()(node_t& node, scope_t * scope) {
+    bool operator()(const node_t& node, scope_t * scope) {
       xpath_t result(op->compile(node, scope, true));
       return result.ptr->as_value().to_boolean();
     }
@@ -746,19 +773,12 @@ public:
   friend class scope_t;
 };
 
-inline void intrusive_ptr_add_ref(xpath_t::op_t * op) {
-  op->acquire();
-}
-inline void intrusive_ptr_release(xpath_t::op_t * op) {
-  op->release();
-}
-
 } // namespace xml
 
 template <typename T>
 inline T * get_ptr(xml::xpath_t::scope_t * locals, unsigned int idx) {
   assert(locals->args.size() > idx);
-  T * ptr = static_cast<T *>(locals->args[idx].as_pointer());
+  T * ptr = locals->args[idx].as_pointer<T>();
   assert(ptr);
   return ptr;
 }
@@ -766,7 +786,7 @@ inline T * get_ptr(xml::xpath_t::scope_t * locals, unsigned int idx) {
 template <typename T>
 inline T * get_node_ptr(xml::xpath_t::scope_t * locals, unsigned int idx) {
   assert(locals->args.size() > idx);
-  T * ptr = polymorphic_downcast<T *>(locals->args[idx].as_xml_node());
+  T * ptr = polymorphic_downcast<T *>(locals->args[idx].as_xml_node_mutable());
   assert(ptr);
   return ptr;
 }

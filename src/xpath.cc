@@ -1044,39 +1044,6 @@ xpath_t::op_t::copy(ptr_op_t tleft, ptr_op_t tright) const
   return node;
 }
 
-void xpath_t::op_t::find_values(const node_t& context, scope_t * scope,
-				value_t::sequence_t& result_seq,
-				bool recursive)
-{
-  xpath_t expr(compile(context, scope, true));
-
-  if (expr.ptr->is_value() &&
-      (expr.ptr->as_value().is_xml_node() ||
-       expr.ptr->as_value().is_sequence()))
-    append_value(result_seq, expr.ptr->as_value());
-
-  if (recursive && context.is_parent_node())
-    foreach (node_t * node, context.as_parent_node())
-      find_values(*node, scope, result_seq, recursive);
-}
-
-bool xpath_t::op_t::test_value(const node_t& context, scope_t * scope, int index)
-{
-  xpath_t expr(compile(context, scope, true));
-
-  if (expr.ptr->kind != VALUE)
-    throw_(calc_error, "Predicate expression does not yield a constant value");
-
-  switch (expr.ptr->as_value().type()) {
-  case value_t::INTEGER:
-  case value_t::AMOUNT:
-    return expr.ptr->as_value() == value_t((long)index + 1);
-
-  default:
-    return expr.ptr->as_value().as_boolean();
-  }
-}
-
 xpath_t::ptr_op_t xpath_t::op_t::defer_sequence(value_t::sequence_t& result_seq)
 {
   // If not all of the elements were constants, transform the result
@@ -1102,7 +1069,7 @@ xpath_t::ptr_op_t xpath_t::op_t::defer_sequence(value_t::sequence_t& result_seq)
       opp = &(*opp)->right();
     }
 
-    if (! (*i).is_type(value_t::POINTER))
+    if (! (*i).is_pointer())
       *opp = wrap_value(*i);
     else
 #if 1
@@ -1117,7 +1084,7 @@ xpath_t::ptr_op_t xpath_t::op_t::defer_sequence(value_t::sequence_t& result_seq)
 
 void xpath_t::op_t::append_value(value_t::sequence_t& result_seq, value_t& val)
 {
-  if (val.is_type(value_t::SEQUENCE))
+  if (val.is_sequence())
     std::for_each(val.as_sequence().begin(), val.as_sequence().end(),
 		  bind(&value_t::sequence_t::push_back, ref(result_seq), _1));
   else
@@ -1132,57 +1099,6 @@ xpath_t::op_t::compile(const node_t& context, scope_t * scope, bool resolve)
 #endif
   switch (kind) {
   case VALUE:
-    return this;
-
-  case NODE_ID:
-    switch (as_name()) {
-    case document_t::CURRENT:
-      return wrap_value(&context);
-
-    case document_t::PARENT:
-      if (context.parent())
-	return wrap_value(&*context.parent());
-      else
-	throw_(compile_error, "Referencing parent node from the root node");
-
-    case document_t::ROOT:
-      return wrap_value(&context.document());
-
-    case document_t::ALL: {
-      value_t::sequence_t nodes;
-      foreach (node_t * node, context.as_parent_node())
-	nodes.push_back(node);
-      return wrap_value(nodes);
-    }
-
-    default:
-      break;			// pass down to the NODE_NAME case
-    }
-    // fall through...
-
-  case NODE_NAME:
-    if (resolve) {
-      // First, look up the symbol as a node name within the current
-      // context.  If any exist, then return the set of names.
-
-      if (context.is_parent_node()) {
-	value_t::sequence_t nodes;
-
-	foreach (node_t * node, context.as_parent_node()) {
-	  if ((kind == NODE_NAME &&
-	       std::strcmp(as_string().c_str(), node->name()) == 0) ||
-	      (kind == NODE_ID && as_name() == node->name_id()))
-	    nodes.push_back(node);
-	}
-	return wrap_value(nodes);
-      }
-    }
-    else if (optional<node_t::nameid_t> id =
-	     context.document().lookup_name_id(as_string())) {
-      ptr_op_t node = new_node(NODE_ID);
-      node->set_name(*id);
-      return node;
-    }
     return this;
 
   case ATTR_ID:
@@ -1566,64 +1482,13 @@ xpath_t::op_t::compile(const node_t& context, scope_t * scope, bool resolve)
 
   case O_FIND:
   case O_RFIND:
-  case O_PRED: {
-    xpath_t lexpr(left()->compile(context, scope, resolve));
-    xpath_t rexpr(resolve ? right() : right()->compile(context, scope, false));
+  case NODE_ID:
+  case NODE_NAME:
+    return wrap_value(path_t(ptr_op_t(this)).find_all(context, scope));
 
-    if (! lexpr.ptr->is_value() || ! resolve) {
-      if (left() == lexpr.ptr)
-	return this;
-      else
-	return copy(lexpr.ptr, rexpr.ptr);
-    }
-
-    value_t::sequence_t result_seq;
-
-    // jww (2006-09-24): What about when nothing is found?
-    switch (lexpr.ptr->as_value().type()) {
-    case value_t::XML_NODE: {
-      value_t& value(lexpr.ptr->as_value());
-      function_scope_t xpath_fscope(*value.as_xml_node(), 0, 1, scope);
-      if (kind == O_PRED) {
-	if (rexpr.ptr->test_value(*value.as_xml_node(), &xpath_fscope))
-	  result_seq.push_back(value);
-      } else {
-	rexpr.ptr->find_values(*value.as_xml_node(), &xpath_fscope,
-			       result_seq, kind == O_RFIND);
-      }
-      break;
-    }
-
-    case value_t::SEQUENCE: {
-      const value_t::sequence_t& seq(lexpr.ptr->as_value().as_sequence());
-
-      int index = 0;
-      for (value_t::sequence_t::const_iterator i = seq.begin();
-	   i != seq.end();
-	   i++, index++) {
-	assert(! (*i).is_type(value_t::SEQUENCE));
-	if (! (*i).is_type(value_t::XML_NODE))
-	  throw_(compile_error, "Attempting to apply path selection "
-		 "to non-node(s)");
-
-	function_scope_t xpath_fscope(seq, *(*i).as_xml_node(), index, scope);
-	if (kind == O_PRED) {
-	  if (rexpr.ptr->test_value(*(*i).as_xml_node(), &xpath_fscope, index))
-	    result_seq.push_back(*i);
-	} else {
-	  rexpr.ptr->find_values(*(*i).as_xml_node(), &xpath_fscope, result_seq,
-				 kind == O_RFIND);
-	}
-      }
-      break;
-    }
-
-    default:
-      throw_(compile_error, "Attempting to apply path selection "
-	     "to non-node(s)");
-    }
-    return wrap_value(result_seq);
-  }
+  case O_PRED:
+    assert(false);		// this should never occur by itself
+    break;
 
   case LAST:
   default:
@@ -1763,6 +1628,7 @@ bool xpath_t::op_t::print(std::ostream&	  out,
       break;
 
     case value_t::XML_NODE:
+    case value_t::CONST_XML_NODE:
       out << '<' << value << '>';
       break;
     case value_t::POINTER:
@@ -2115,12 +1981,13 @@ void xpath_t::op_t::dump(std::ostream& out, const int depth) const
   }
 }
 
-void xpath_t::path_t::check_element(node_t&	     start,
-				    const ptr_op_t&  element,
-				    scope_t *	     scope,
-				    std::size_t      index,
-				    std::size_t      size,
-				    const visitor_t& func)
+template <typename NodeType, typename FuncType>
+void xpath_t::path_t::check_element(NodeType&	    start,
+				    const ptr_op_t& element,
+				    scope_t *	    scope,
+				    std::size_t     index,
+				    std::size_t     size,
+				    const FuncType& func)
 {
   if (element->kind > op_t::TERMINALS &&
       element->left()->kind == op_t::O_PRED) {
@@ -2132,15 +1999,16 @@ void xpath_t::path_t::check_element(node_t&	     start,
   if (element->kind < op_t::TERMINALS)
     func(start);
   else
-    walk_elements(start, element->right(), element->kind == op_t::O_RFIND,
-		  scope, func);
+    walk_elements<NodeType, FuncType>
+      (start, element->right(), element->kind == op_t::O_RFIND, scope, func);
 }
 
-void xpath_t::path_t::walk_elements(node_t&	     start,
-				    const ptr_op_t&  element,
-				    const bool       recurse,
-				    scope_t *	     scope,
-				    const visitor_t& func)
+template <typename NodeType, typename FuncType>
+void xpath_t::path_t::walk_elements(NodeType&	    start,
+				    const ptr_op_t& element,
+				    const bool      recurse,
+				    scope_t *	    scope,
+				    const FuncType& func)
 {
   ptr_op_t name(element->kind < op_t::TERMINALS ? element : element->left());
   if (name->kind == op_t::O_PRED)
@@ -2204,6 +2072,40 @@ void xpath_t::path_t::walk_elements(node_t&	     start,
     break;
   }
 }
+
+template
+void xpath_t::path_t::walk_elements<node_t, xpath_t::path_t::visitor_t>
+  (node_t&	    start,
+   const ptr_op_t&  element,
+   const bool	    recurse,
+   scope_t *	    scope,
+   const visitor_t& func);
+
+template
+void xpath_t::path_t::walk_elements<const node_t, xpath_t::path_t::const_visitor_t>
+  (const node_t&	  start,
+   const ptr_op_t&	  element,
+   const bool		  recurse,
+   scope_t *		  scope,
+   const const_visitor_t& func);
+
+template
+void xpath_t::path_t::check_element<node_t, xpath_t::path_t::visitor_t>
+  (node_t&	    start,
+   const ptr_op_t&  element,
+   scope_t *	    scope,
+   std::size_t	    index,
+   std::size_t	    size,
+   const visitor_t& func);
+
+template
+void xpath_t::path_t::check_element<const node_t, xpath_t::path_t::const_visitor_t>
+  (const node_t&	  start,
+   const ptr_op_t&	  element,
+   scope_t *		  scope,
+   std::size_t		  index,
+   std::size_t		  size,
+   const const_visitor_t& func);
 
 } // namespace xml
 } // namespace ledger

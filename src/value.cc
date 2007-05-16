@@ -55,6 +55,9 @@ void value_t::storage_t::destroy()
   case SEQUENCE:
     ((sequence_t *)data)->~sequence_t();
     break;
+  case POINTER:
+    ((boost::any *)data)->~any();
+    break;
 
   default:
     break;
@@ -84,79 +87,7 @@ value_t& value_t::operator=(const value_t& val)
   if (this == &val || storage == val.storage)
     return *this;
 
-  if (type() == val.type())
-    switch (type()) {
-    case VOID:
-      assert(false);
-      return *this;
-    case BOOLEAN:
-      as_boolean_lval() = val.as_boolean();
-      return *this;
-    case INTEGER:
-      as_long_lval() = val.as_long();
-      return *this;
-    case DATETIME:
-      as_datetime_lval() = val.as_datetime();
-      return *this;
-    case AMOUNT:
-      as_amount_lval() = val.as_amount();
-      return *this;
-    case BALANCE:
-      as_balance_lval() = val.as_balance();
-      return *this;
-    case BALANCE_PAIR:
-      as_balance_pair_lval() = val.as_balance_pair();
-      return *this;
-    case STRING:
-      as_string_lval() = val.as_string();
-      return *this;
-    case SEQUENCE:
-      as_sequence_lval() = val.as_sequence();
-      return *this;
-    default:
-      break;
-    }
-
-  switch (val.type()) {
-  case VOID:
-    set_type(VOID);
-    break;
-
-  case BOOLEAN:
-    set_boolean(val.as_boolean());
-    break;
-  case INTEGER:
-    set_long(val.as_long());
-    break;
-  case DATETIME:
-    set_datetime(val.as_datetime());
-    break;
-  case AMOUNT:
-    set_amount(val.as_amount());
-    break;
-  case BALANCE:
-    set_balance(val.as_balance());
-    break;
-  case BALANCE_PAIR:
-    set_balance_pair(val.as_balance_pair());
-    break;
-  case STRING:
-    set_string(val.as_string());
-    break;
-  case SEQUENCE:
-    set_sequence(val.as_sequence());
-    break;
-  case XML_NODE:
-    set_xml_node(val.as_xml_node());
-    break;
-  case POINTER:
-    set_pointer(val.as_pointer());
-    break;
-
-  default:
-    assert(false);
-    break;
-  }
+  storage = val.storage;
 
   return *this;
 }
@@ -183,7 +114,7 @@ value_t::operator bool() const
   case XML_NODE:
     return as_xml_node()->to_value();
   case POINTER:
-    return as_pointer() != NULL;
+    return ! as_any_pointer().empty();
   default:
     assert(false);
     break;
@@ -291,19 +222,19 @@ void value_t::in_place_simplify()
     return;
   }
 
-  if (is_type(BALANCE_PAIR) &&
+  if (is_balance_pair() &&
       (! as_balance_pair().cost || as_balance_pair().cost->is_realzero())) {
     DEBUG_("Reducing balance pair to balance");
     in_place_cast(BALANCE);
   }
 
-  if (is_type(BALANCE) && as_balance().amounts.size() == 1) {
+  if (is_balance() && as_balance().amounts.size() == 1) {
     DEBUG_("Reducing balance to amount");
     in_place_cast(AMOUNT);
   }
 
 #if 0
-  if (is_type(AMOUNT) && ! as_amount().has_commodity() &&
+  if (is_amount() && ! as_amount().has_commodity() &&
       as_amount().fits_in_long()) {
     DEBUG_("Reducing amount to integer");
     in_place_cast(INTEGER);
@@ -313,15 +244,15 @@ void value_t::in_place_simplify()
 
 value_t& value_t::operator+=(const value_t& val)
 {
-  if (is_type(STRING)) {
-    if (val.is_type(STRING))
+  if (is_string()) {
+    if (val.is_string())
       as_string_lval() += val.as_string();
     else
       as_string_lval() += val.to_string();
     return *this;
   }
-  else if (is_type(SEQUENCE)) {
-    if (val.is_type(SEQUENCE)) {
+  else if (is_sequence()) {
+    if (val.is_sequence()) {
       sequence_t& seq(as_sequence_lval());
       seq.insert(seq.end(), val.as_sequence().begin(),
 		 val.as_sequence().end());
@@ -331,7 +262,7 @@ value_t& value_t::operator+=(const value_t& val)
     return *this;
   }
 
-  if (val.is_type(XML_NODE)) // recurse
+  if (val.is_xml_node()) // recurse
     return *this += val.as_xml_node()->to_value();
 
   switch (type()) {
@@ -456,10 +387,10 @@ value_t& value_t::operator+=(const value_t& val)
 
 value_t& value_t::operator-=(const value_t& val)
 {
-  if (is_type(SEQUENCE)) {
+  if (is_sequence()) {
     sequence_t& seq(as_sequence_lval());
 
-    if (val.is_type(SEQUENCE)) {
+    if (val.is_sequence()) {
       for (sequence_t::const_iterator i = val.as_sequence().begin();
 	   i != val.as_sequence().end();
 	   i++) {
@@ -475,7 +406,7 @@ value_t& value_t::operator-=(const value_t& val)
     return *this;
   }
 
-  if (val.is_type(XML_NODE)) // recurse
+  if (val.is_xml_node()) // recurse
     return *this -= val.as_xml_node()->to_value();
 
   switch (type()) {
@@ -619,7 +550,7 @@ value_t& value_t::operator-=(const value_t& val)
 
 value_t& value_t::operator*=(const value_t& val)
 {
-  if (is_type(STRING)) {
+  if (is_string()) {
     string temp;
     long count = val.to_long();
     for (long i = 0; i < count; i++)
@@ -627,7 +558,7 @@ value_t& value_t::operator*=(const value_t& val)
     set_string(temp);
     return *this;
   }
-  else if (is_type(SEQUENCE)) {
+  else if (is_sequence()) {
     value_t temp;
     long count = val.to_long();
     for (long i = 0; i < count; i++)
@@ -635,7 +566,7 @@ value_t& value_t::operator*=(const value_t& val)
     return *this = temp;
   }
 
-  if (val.is_type(XML_NODE)) // recurse
+  if (val.is_xml_node()) // recurse
     return *this *= val.as_xml_node()->to_value();
 
   switch (type()) {
@@ -712,7 +643,7 @@ value_t& value_t::operator*=(const value_t& val)
 
 value_t& value_t::operator/=(const value_t& val)
 {
-  if (val.is_type(XML_NODE)) // recurse
+  if (val.is_xml_node()) // recurse
     return *this /= val.as_xml_node()->to_value();
 
   switch (type()) {
@@ -791,21 +722,21 @@ value_t& value_t::operator/=(const value_t& val)
 
 bool value_t::operator==(const value_t& val) const
 {
-  if (is_type(XML_NODE) && val.is_type(XML_NODE))
+  if (is_xml_node() && val.is_xml_node())
     return as_xml_node() == val.as_xml_node();
-  else if (is_type(XML_NODE))
+  else if (is_xml_node())
     return as_xml_node()->to_value() == val;
-  else if (val.is_type(XML_NODE))
+  else if (val.is_xml_node())
     return *this == val.as_xml_node()->to_value();
 
   switch (type()) {
   case BOOLEAN:
-    if (val.is_type(BOOLEAN))
+    if (val.is_boolean())
       return as_boolean() == val.as_boolean();
     break;
 
   case DATETIME:
-    if (val.is_type(DATETIME))
+    if (val.is_datetime())
       return as_datetime() == val.as_datetime();
     break;
 
@@ -870,18 +801,13 @@ bool value_t::operator==(const value_t& val) const
     break;
 
   case STRING:
-    if (val.is_type(STRING))
+    if (val.is_string())
       return as_string() == val.as_string();
     break;
 
   case SEQUENCE:
-    if (val.is_type(SEQUENCE))
+    if (val.is_sequence())
       return as_sequence() == val.as_sequence();
-    break;
-
-  case POINTER:
-    if (val.is_type(POINTER))
-      return as_pointer() == val.as_pointer();
     break;
 
   default:
@@ -895,16 +821,16 @@ bool value_t::operator==(const value_t& val) const
 
 bool value_t::operator<(const value_t& val) const
 {
-  if (is_type(XML_NODE) && val.is_type(XML_NODE))
+  if (is_xml_node() && val.is_xml_node())
     return as_xml_node() < val.as_xml_node();
-  else if (is_type(XML_NODE))
+  else if (is_xml_node())
     return as_xml_node()->to_value() < val;
-  else if (val.is_type(XML_NODE))
+  else if (val.is_xml_node())
     return *this < val.as_xml_node()->to_value();
 
   switch (type()) {
   case DATETIME:
-    if (val.is_type(DATETIME))
+    if (val.is_datetime())
       return as_datetime() < val.as_datetime();
     break;
 
@@ -931,13 +857,8 @@ bool value_t::operator<(const value_t& val) const
     break;
 
   case STRING:
-    if (val.is_type(STRING))
+    if (val.is_string())
       return as_string() < val.as_string();
-    break;
-
-  case POINTER:
-    if (val.is_type(POINTER))
-      return as_pointer() < val.as_pointer();
     break;
 
   default:
@@ -952,16 +873,16 @@ bool value_t::operator<(const value_t& val) const
 #if 0
 bool value_t::operator>(const value_t& val) const
 {
-  if (is_type(XML_NODE) && val.is_type(XML_NODE))
+  if (is_xml_node() && val.is_xml_node())
     return as_xml_node() > val.as_xml_node();
-  else if (is_type(XML_NODE))
+  else if (is_xml_node())
     return as_xml_node()->to_value() > val;
-  else if (val.is_type(XML_NODE))
+  else if (val.is_xml_node())
     return *this > val.as_xml_node()->to_value();
 
   switch (type()) {
   case DATETIME:
-    if (val.is_type(DATETIME))
+    if (val.is_datetime())
       return as_datetime() > val.as_datetime();
     break;
 
@@ -988,13 +909,8 @@ bool value_t::operator>(const value_t& val) const
     break;
 
   case STRING:
-    if (val.is_type(STRING))
+    if (val.is_string())
       return as_string() > val.as_string();
-    break;
-
-  case POINTER:
-    if (val.is_type(POINTER))
-      return as_pointer() > val.as_pointer();
     break;
 
   default:
@@ -1028,7 +944,7 @@ void value_t::in_place_cast(type_t cast_type)
   // This must came after the if's above, otherwise it would be
   // impossible to turn an XML node into a sequence containing that
   // same XML node.
-  if (is_type(XML_NODE)) {
+  if (is_xml_node()) {
     *this = as_xml_node()->to_value().cast(cast_type);
     return;
   }
@@ -1214,7 +1130,7 @@ bool value_t::is_realzero() const
   case XML_NODE:
     return as_xml_node() == NULL;
   case POINTER:
-    return as_pointer() == NULL;
+    return as_any_pointer().empty();
 
   default:
     assert(false);
@@ -1310,18 +1226,23 @@ value_t value_t::unround() const
     throw_(value_error, "Cannot un-round a boolean");
   case DATETIME:
     throw_(value_error, "Cannot un-round a date/time");
+
   case INTEGER:
     return *this;
+
   case AMOUNT:
     return as_amount().unround();
   case BALANCE:
     return as_balance().unround();
   case BALANCE_PAIR:
     return as_balance_pair().unround();
+
   case STRING:
     throw_(value_error, "Cannot un-round a string");
+
   case XML_NODE:
     return as_xml_node()->to_value().unround();
+
   case POINTER:
     throw_(value_error, "Cannot un-round a pointer");
   case SEQUENCE:
@@ -1496,10 +1417,12 @@ value_t value_t::cost() const
   switch (type()) {
   case BOOLEAN:
     throw_(value_error, "Cannot find the cost of a boolean");
+
   case INTEGER:
   case AMOUNT:
   case BALANCE:
     return *this;
+
   case DATETIME:
     throw_(value_error, "Cannot find the cost of a date/time");
 
@@ -1512,8 +1435,10 @@ value_t value_t::cost() const
 
   case STRING:
     throw_(value_error, "Cannot find the cost of a string");
+
   case XML_NODE:
     return as_xml_node()->to_value().cost();
+
   case POINTER:
     throw_(value_error, "Cannot find the cost of a pointer");
   case SEQUENCE:
@@ -1541,13 +1466,13 @@ value_t& value_t::add(const amount_t& amount, const optional<amount_t>& tcost)
       in_place_cast(BALANCE_PAIR);
       return add(amount, tcost);
     }
-    else if ((is_type(AMOUNT) &&
+    else if ((is_amount() &&
 	      as_amount().commodity() != amount.commodity()) ||
-	     (! is_type(AMOUNT) && amount.commodity())) {
+	     (! is_amount() && amount.commodity())) {
       in_place_cast(BALANCE);
       return add(amount, tcost);
     }
-    else if (! is_type(AMOUNT)) {
+    else if (! is_amount()) {
       in_place_cast(AMOUNT);
     }
     *this += amount;

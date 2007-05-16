@@ -130,6 +130,7 @@ extern "C" {
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/any.hpp>
 #include <boost/cast.hpp>
 #include <boost/current_function.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>

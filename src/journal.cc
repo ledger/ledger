@@ -153,7 +153,7 @@ bool entry_base_t::finalize()
   // account if one has been set.
 
   if (journal && journal->basket && transactions.size() == 1) {
-    assert(balance.is_type(value_t::AMOUNT));
+    assert(balance.is_amount());
     transaction_t * nxact = new transaction_t(journal->basket);
     // The amount doesn't need to be set because the code below will
     // balance this transaction against the other.
@@ -166,7 +166,7 @@ bool entry_base_t::finalize()
   // determine its price by dividing the unit count into the value of
   // the balance.  This is done for the last eligible commodity.
 
-  if (! saw_null && balance && balance.is_type(value_t::BALANCE) &&
+  if (! saw_null && balance && balance.is_balance() &&
       balance.as_balance().amounts.size() == 2) {
     transactions_list::const_iterator x = transactions.begin();
     assert((*x)->amount);

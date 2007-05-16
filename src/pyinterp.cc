@@ -119,6 +119,7 @@ object python_interpreter_t::import(const string& str)
     PyErr_Print();
     throw_(std::logic_error, "Importing Python module " << str);
   }
+  return object();
 }
 
 object python_interpreter_t::eval(std::istream& in, py_eval_mode_t mode)
@@ -153,6 +154,7 @@ object python_interpreter_t::eval(std::istream& in, py_eval_mode_t mode)
     PyErr_Print();
     throw_(std::logic_error, "Evaluating Python code");
   }
+  return object();
 }
 
 object python_interpreter_t::eval(const string& str, py_eval_mode_t mode)
@@ -171,6 +173,7 @@ object python_interpreter_t::eval(const string& str, py_eval_mode_t mode)
     PyErr_Print();
     throw_(std::logic_error, "Evaluating Python code");
   }
+  return object();
 }
 
 value_t python_interpreter_t::functor_t::operator()(xml::xpath_t::scope_t * locals)
@@ -194,7 +197,7 @@ value_t python_interpreter_t::functor_t::operator()(xml::xpath_t::scope_t * loca
 	else if (PyObject * err = PyErr_Occurred()) {
 	  PyErr_Print();
 	  throw_(xml::xpath_t::calc_error,
-		 "While calling Python function '" /*<< name() <<*/ "'");
+		 "While calling Python function '" /*<< name() <<*/ "': " << err);
 	} else {
 	  assert(false);
 	}
@@ -208,6 +211,7 @@ value_t python_interpreter_t::functor_t::operator()(xml::xpath_t::scope_t * loca
     throw_(xml::xpath_t::calc_error,
 	   "While calling Python function '" /*<< name() <<*/ "'");
   }
+  return NULL_VALUE;
 }
 
 value_t python_interpreter_t::lambda_t::operator()
@@ -216,7 +220,7 @@ value_t python_interpreter_t::lambda_t::operator()
   try {
     assert(locals->args.size() == 1);
     value_t item = locals->args[0];
-    assert(item.is_type(value_t::XML_NODE));
+    assert(item.is_xml_node());
     return call<value_t>(func.ptr(), item.as_xml_node());
   }
   catch (const error_already_set&) {
@@ -224,6 +228,7 @@ value_t python_interpreter_t::lambda_t::operator()
     throw_(xml::xpath_t::calc_error,
 	   "While evaluating Python lambda expression");
   }
+  return NULL_VALUE;
 }
 
 } // namespace ledger

@@ -72,6 +72,7 @@ public:
     STRING,
     SEQUENCE,
     XML_NODE,
+    CONST_XML_NODE,
     POINTER
   };
 
@@ -216,6 +217,10 @@ public:
     TRACE_CTOR(value_t, "xml::node_t *");
     set_xml_node(xml_node);
   }
+  value_t(const xml::node_t * xml_node) {
+    TRACE_CTOR(value_t, "const xml::node_t *");
+    set_xml_node(xml_node);
+  }
   value_t(void * item) {
     TRACE_CTOR(value_t, "void *");
     set_pointer(item);
@@ -248,14 +253,16 @@ public:
   operator bool() const;
 
   bool is_null() const {
-    return ! storage || storage->type == VOID;
+    return ! storage || is_type(VOID);
+  }
+  type_t type() const {
+    type_t result = storage ? storage->type : VOID;
+    assert(result >= VOID && result <= POINTER);
+    return result;
   }
 
-  type_t type() const {
-    return storage ? storage->type : VOID;
-  }
+private:
   bool is_type(type_t _type) const {
-    assert(_type >= VOID && _type <= POINTER);
     return type() == _type;
   }
   void set_type(type_t new_type) {
@@ -265,6 +272,7 @@ public:
     assert(is_type(new_type));
   }
 
+public:
   bool is_boolean() const {
     return is_type(BOOLEAN);
   }
@@ -402,37 +410,63 @@ public:
   }
 
   bool is_xml_node() const {
-    return is_type(XML_NODE);
+    return is_type(XML_NODE) || is_type(CONST_XML_NODE);
   }
   xml::node_t *& as_xml_node_lval() {
     assert(is_xml_node());
+    assert(! is_type(CONST_XML_NODE));
     _dup();
     return *(xml::node_t **) storage->data;
   }
-  xml::node_t * as_xml_node() const {
+  xml::node_t * as_xml_node_mutable() {
     assert(is_xml_node());
+    assert(! is_type(CONST_XML_NODE));
     return *(xml::node_t **) storage->data;
+  }
+  const xml::node_t * as_xml_node() const {
+    assert(is_xml_node());
+    return *(const xml::node_t **) storage->data;
   }
   void set_xml_node(xml::node_t * val) {
     set_type(XML_NODE);
     *(xml::node_t **) storage->data = val;
   }
+  void set_xml_node(const xml::node_t * val) {
+    set_type(CONST_XML_NODE);
+    *(const xml::node_t **) storage->data = val;
+  }
 
   bool is_pointer() const {
     return is_type(POINTER);
   }
-  void *& as_pointer_lval() {
+  boost::any& as_any_pointer_lval() {
     assert(is_pointer());
     _dup();
-    return *(void **) storage->data;
+    return *(boost::any *) storage->data;
   }
-  void * as_pointer() const {
+  template <typename T>
+  T *& as_pointer_lval() {
     assert(is_pointer());
-    return *(void **) storage->data;
+    _dup();
+    return any_cast<T *>(*(boost::any *) storage->data);
   }
-  void set_pointer(void * val) {
+  boost::any as_any_pointer() const {
+    assert(is_pointer());
+    return *(boost::any *) storage->data;
+  }
+  template <typename T>
+  T * as_pointer() const {
+    assert(is_pointer());
+    return any_cast<T *>(*(boost::any *) storage->data);
+  }
+  void set_any_pointer(const boost::any& val) {
     set_type(POINTER);
-    *(void **) storage->data = val;
+    new((boost::any *) storage->data) boost::any(val);
+  }
+  template <typename T>
+  void set_pointer(T * val) {
+    set_type(POINTER);
+    new((boost::any *) storage->data) boost::any(val);
   }
 
   bool		 to_boolean() const;
@@ -498,6 +532,7 @@ public:
     case SEQUENCE:
       return "a sequence";
     case XML_NODE:
+    case CONST_XML_NODE:
       return "an xml node";
     case POINTER:
       return "a pointer";
