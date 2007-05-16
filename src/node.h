@@ -232,6 +232,7 @@ public:
 
   virtual value_t to_value() const {
     throw_(std::logic_error, "Cannot convert parent node to a value");
+    return NULL_VALUE;
   }
 
   void print(std::ostream& out) const;

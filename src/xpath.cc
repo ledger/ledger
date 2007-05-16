@@ -1723,7 +1723,6 @@ bool xpath_t::op_t::print(std::ostream&	  out,
 			  unsigned long * start_pos,
 			  unsigned long * end_pos) const
 {
-  int arg_index = 0;
   bool found = false;
 
   if (start_pos && this == op_to_find) {
@@ -1737,6 +1736,9 @@ bool xpath_t::op_t::print(std::ostream&	  out,
   case VALUE: {
     const value_t& value(as_value());
     switch (value.type()) {
+    case value_t::VOID:
+      out << "<VOID>";
+      break;
     case value_t::BOOLEAN:
       if (value)
 	out << "1";
@@ -2235,6 +2237,10 @@ void xpath_t::path_t::walk_elements(node_t&			  start,
 	check_element(*node, element, scope, index++, size, func);
       break;
     }
+
+    default:
+      assert(false);
+      break;
     }
   }
   else if (start.is_parent_node()) {

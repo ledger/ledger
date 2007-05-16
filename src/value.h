@@ -561,6 +561,8 @@ std::ostream& operator<<(std::ostream& out, const value_t& val);
 
 DECLARE_EXCEPTION(value_error);
 
+#define NULL_VALUE (value_t())
+
 } // namespace ledger
 
 #endif // _VALUE_H

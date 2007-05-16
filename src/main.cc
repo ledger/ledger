@@ -216,8 +216,6 @@ static int read_and_report(ledger::report_t * report, int argc, char * argv[],
       throw_(std::logic_error, "Failed to fork child process");
     }
     else if (status == 0) {	// child
-      const char *arg0;
-
       // Duplicate pipe's reading end into stdin
       status = dup2(pfd[0], STDIN_FILENO);
       if (status == -1)

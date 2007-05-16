@@ -84,7 +84,8 @@ namespace {
 #endif
       scoped_ptr<xml::xpath_t::scope_t> args;
       if (arg) {
-	args.reset(new xml::xpath_t::scope_t(scope, xml::xpath_t::scope_t::ARGUMENT));
+	args.reset(new xml::xpath_t::scope_t
+		   (scope, xml::xpath_t::scope_t::ARGUMENT));
 	args->args.push_back(value_t(arg, true));
       }
       opt(args.get());
@@ -102,15 +103,12 @@ namespace {
   }
 }
 
-bool process_option(const string& name, xml::xpath_t::scope_t * scope,
+void process_option(const string& name, xml::xpath_t::scope_t * scope,
 		    const char * arg)
 {
   op_bool_tuple opt(find_option(scope, name));
-  if (opt.get<0>()) {
+  if (opt.get<0>())
     process_option(opt.get<0>()->as_function(), scope, arg);
-    return true;
-  }
-  return false;
 }
 
 void process_environment(const char ** envp, const string& tag,
@@ -137,8 +135,7 @@ void process_environment(const char ** envp, const string& tag,
 #if 0
 	try {
 #endif
-	  if (! process_option(string(buf), scope, q + 1))
-	    ; //throw_(option_error, "unknown option");
+	  process_option(string(buf), scope, q + 1);
 #if 0
 	}
 	catch (error * err) {

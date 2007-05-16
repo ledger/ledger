@@ -37,6 +37,8 @@ protected:
   position_t current_position;
 
 public:
+  virtual ~builder_t() {}
+
   virtual void     set_start_position(std::istream& in) {}
   virtual void     set_position(const position_t& position) {}
   virtual position_t& position() { return current_position; }
@@ -134,11 +136,11 @@ public:
 
   virtual node_t * end_node(const string& name,
 			    const optional<position_t>& end_pos = none) {
-    current = &*current->parent();
+    return current = &*current->parent();
   }
   virtual node_t * end_node(const node_t::nameid_t name_id,
 			    const optional<position_t>& end_pos = none) {
-    current = &*current->parent();
+    return current = &*current->parent();
   }
 };
 
@@ -236,10 +238,12 @@ public:
   virtual node_t * end_node(const string& name,
 			    const optional<position_t>& end_pos = none) {
     outs << "</" << name << '>';
+    return NULL;
   }
   virtual node_t * end_node(const node_t::nameid_t name_id,
 			    const optional<position_t>& end_pos = none) {
     end_node("hello", end_pos);
+    return NULL;
   }
 };
 

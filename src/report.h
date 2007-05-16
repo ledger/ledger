@@ -94,28 +94,35 @@ class report_t : public xml::xpath_t::scope_t
   }
   value_t option_eval(xml::xpath_t::scope_t * locals) {
     eval(locals->args[0].as_string());
+    return NULL_VALUE;
   }
 
   value_t option_amount(xml::xpath_t::scope_t * locals) {
     eval(string("t=") + locals->args[0].as_string());
+    return NULL_VALUE;
   }
   value_t option_total(xml::xpath_t::scope_t * locals) {
     eval(string("T()=") + locals->args[0].as_string());
+    return NULL_VALUE;
   }
 
   value_t option_format(xml::xpath_t::scope_t * locals) {
     format_string = locals->args[0].as_string();
+    return NULL_VALUE;
   }
 
   value_t option_raw(xml::xpath_t::scope_t * locals) {
     raw_mode = true;
+    return NULL_VALUE;
   }
 
   value_t option_foo(xml::xpath_t::scope_t * locals) {
     std::cout << "This is foo" << std::endl;
+    return NULL_VALUE;
   }
   value_t option_bar(xml::xpath_t::scope_t * locals) {
     std::cout << "This is bar: " << locals->args[0] << std::endl;
+    return NULL_VALUE;
   }
 
   //
@@ -125,35 +132,44 @@ class report_t : public xml::xpath_t::scope_t
 #if 0
   value_t option_select(xml::xpath_t::scope_t * locals) {
     transforms.push_back(new select_transform(locals->args[0].as_string()));
+    return NULL_VALUE;
   }
   value_t option_limit(xml::xpath_t::scope_t * locals) {
     string expr = (string("//xact[") +
 			locals->args[0].as_string() + "]");
     transforms.push_back(new select_transform(expr));
+    return NULL_VALUE;
   }
 
   value_t option_remove(xml::xpath_t::scope_t * locals) {
     transforms.push_back(new remove_transform(locals->args[0].as_string()));
+    return NULL_VALUE;
   }
 
   value_t option_accounts(xml::xpath_t::scope_t * locals) {
     transforms.push_back(new accounts_transform);
+    return NULL_VALUE;
   }
   value_t option_compact(xml::xpath_t::scope_t * locals) {
     transforms.push_back(new compact_transform);
+    return NULL_VALUE;
   }
   value_t option_clean(xml::xpath_t::scope_t * locals) {
     transforms.push_back(new clean_transform);
+    return NULL_VALUE;
   }
   value_t option_entries(xml::xpath_t::scope_t * locals) {
     transforms.push_back(new entries_transform);
+    return NULL_VALUE;
   }
 
   value_t option_split(xml::xpath_t::scope_t * locals) {
     transforms.push_back(new split_transform);
+    return NULL_VALUE;
   }
   value_t option_merge(xml::xpath_t::scope_t * locals) {
     transforms.push_back(new merge_transform);
+    return NULL_VALUE;
   }
 #endif
 

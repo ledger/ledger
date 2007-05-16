@@ -36,7 +36,7 @@
 
 namespace ledger {
 
-bool process_option(const string& name, xml::xpath_t::scope_t * scope,
+void process_option(const string& name, xml::xpath_t::scope_t * scope,
 		    const char * arg = NULL);
 
 void process_environment(const char ** envp, const string& tag,

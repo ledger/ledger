@@ -22,15 +22,15 @@ endif
 AM_YFLAGS = -d
 AM_LFLAGS = -o $(LEX_OUTPUT_ROOT).c
 
-WARNFLAGS  = -Wall -Wextra -Wfloat-equal -Wno-endif-labels
-WARNFLAGS += -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion
-WARNFLAGS += -Wconversion -Wshorten-64-to-32 -Wsign-compare
-WARNFLAGS += -Wmissing-field-initializers -pedantic-errors
-WARNFLAGS += -Weffc++ -Wstrict-null-sentinel -Wold-style-cast
-WARNFLAGS += -Woverloaded-virtual -Wsign-promo
+WARNFLAGS  = -Wall #-pedantic-errors
+#WARNFLAGS += -Wextra -Wfloat-equal -Wno-endif-labels -Wcast-qual
+#WARNFLAGS += -Wcast-align -Wwrite-strings -Wconversion -Wconversion
+#WARNFLAGS += -Wshorten-64-to-32 -Wsign-compare -Weffc++ -Wsign-promo
+#WARNFLAGS += -Wmissing-field-initializers -Wstrict-null-sentinel
+#WARNFLAGS += -Wold-style-cast -Woverloaded-virtual 
 
 libledger_la_CPPFLAGS = -I$(top_builddir)/gdtoa -I$(srcdir)/gdtoa \
-			-I$(srcdir)/src #$(WARNFLAGS)
+			-I$(srcdir)/src $(WARNFLAGS)
 libledger_la_LDFLAGS  = -release $(PACKAGE_VERSION)
 
 libledger_la_SOURCES = \
