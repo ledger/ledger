@@ -967,7 +967,8 @@ void value_t::in_place_cast(type_t cast_type)
   }
   else if (cast_type == SEQUENCE) {
     sequence_t temp;
-    temp.push_back(*this);
+    if (! is_null())
+      temp.push_back(*this);
     set_sequence(temp);
     return;
   }

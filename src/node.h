@@ -116,12 +116,12 @@ public:
       attributes = attributes_t();
     attributes->push_back(attr_pair(_name_id, value));
   }
-  optional<const string&> get_attr(const nameid_t _name_id) {
+  optional<const string&> get_attr(const nameid_t _name_id) const {
     if (attributes) {
       typedef attributes_t::nth_index<1>::type attributes_by_name;
 
-      attributes_by_name& name_index = attributes->get<1>();
-      attributes_by_name::iterator i = name_index.find(_name_id);
+      const attributes_by_name& name_index = attributes->get<1>();
+      attributes_by_name::const_iterator i = name_index.find(_name_id);
       if (i != name_index.end())
 	return (*i).second;
     }

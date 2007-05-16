@@ -301,8 +301,7 @@ static int read_and_report(ledger::report_t * report, int argc, char * argv[],
 
   INFO_START(command, "Did user command '" << verb << "'");
 
-  value_t temp;
-  command(temp, locals.get());
+  command(locals.get());
 
   INFO_FINISH(command);
 

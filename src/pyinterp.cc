@@ -173,27 +173,23 @@ object python_interpreter_t::eval(const string& str, py_eval_mode_t mode)
   }
 }
 
-void python_interpreter_t::functor_t::operator()(value_t& result,
-						 xml::xpath_t::scope_t * locals)
+value_t python_interpreter_t::functor_t::operator()(xml::xpath_t::scope_t * locals)
 {
   try {
     if (! PyCallable_Check(func.ptr())) {
-      result = static_cast<const value_t&>(extract<value_t>(func.ptr()));
+      return extract<value_t>(func.ptr());
     } else {
-      assert(locals->args.is_type(value_t::SEQUENCE));
-      if (locals->args.as_sequence().size() > 0) {
+      if (locals->args.size() > 0) {
 	list arglist;
-	for (value_t::sequence_t::const_iterator
-	       i = locals->args.as_sequence().begin();
-	     i != locals->args.as_sequence().end();
-	     i++)
-	  arglist.append(*i);
+	foreach (const value_t& value, locals->args)
+	  arglist.append(value);
 
 	if (PyObject * val =
 	    PyObject_CallObject(func.ptr(),
 				boost::python::tuple(arglist).ptr())) {
-	  result = extract<value_t>(val)();
+	  value_t result = extract<value_t>(val)();
 	  Py_DECREF(val);
+	  return result;
 	}
 	else if (PyObject * err = PyErr_Occurred()) {
 	  PyErr_Print();
@@ -203,7 +199,7 @@ void python_interpreter_t::functor_t::operator()(value_t& result,
 	  assert(false);
 	}
       } else {
-	result = call<value_t>(func.ptr());
+	return call<value_t>(func.ptr());
       }
     }
   }
@@ -214,15 +210,14 @@ void python_interpreter_t::functor_t::operator()(value_t& result,
   }
 }
 
-void python_interpreter_t::lambda_t::operator()(value_t& result,
-						xml::xpath_t::scope_t * locals)
+value_t python_interpreter_t::lambda_t::operator()
+  (xml::xpath_t::scope_t * locals)
 {
   try {
-    assert(locals->args.is_type(value_t::SEQUENCE));
-    assert(locals->args.as_sequence().size() == 1);
+    assert(locals->args.size() == 1);
     value_t item = locals->args[0];
-    assert(item.is_type(value_t::POINTER));
-    result = call<value_t>(func.ptr(), item.as_xml_node());
+    assert(item.is_type(value_t::XML_NODE));
+    return call<value_t>(func.ptr(), item.as_xml_node());
   }
   catch (const error_already_set&) {
     PyErr_Print();

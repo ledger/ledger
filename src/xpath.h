@@ -53,10 +53,10 @@ public:
 public:
   class scope_t;
 
-  typedef function<void (value_t&, scope_t *)> function_t;
+  typedef function<value_t (scope_t *)> function_t;
 
 #define MAKE_FUNCTOR(x) \
-  xml::xpath_t::wrap_functor(bind(&x, this, _1, _2))
+  xml::xpath_t::wrap_functor(bind(&x, this, _1))
 
   static ptr_op_t wrap_value(const value_t& val);
   static ptr_op_t wrap_functor(const function_t& fobj);
@@ -68,8 +68,8 @@ public:
     symbol_map symbols;
 
   public:
-    scope_t * parent;
-    value_t   args;
+    scope_t *		parent;
+    value_t::sequence_t args;
 
     enum kind_t { NORMAL, STATIC, ARGUMENT } kind;
 
@@ -84,6 +84,7 @@ public:
 
   public:
     virtual void define(const string& name, ptr_op_t def);
+    // jww (2007-05-15): ??
     virtual bool resolve(const string& name, value_t& result,
 			 scope_t * locals = NULL) {
       if (parent)
@@ -244,9 +245,11 @@ public:
   public:
     path_t(const xpath_t& path_expr);
 
-    void find_all(value_t::sequence_t& result,
-		  node_t& start, scope_t * scope) {
-      visit(start, scope, value_node_appender_t(result));
+    value_t find_all(node_t& start, scope_t * scope) {
+      value_t result = value_t::sequence_t();
+      visit(start, scope,
+	    value_node_appender_t(result.as_sequence_lval()));
+      return result;
     }
 
     void visit(node_t& start, scope_t * scope,
@@ -374,7 +377,7 @@ public:
     ptr_op_t	  left_;
 
     variant<unsigned int,	 // used by ARG_INDEX and O_ARG
-	    shared_ptr<value_t>, // used by constant VALUE
+	    value_t,		 // used by constant VALUE
 	    string,		 // used by constant SYMBOL
 	    function_t,		 // used by terminal FUNCTION
 	    node_t::nameid_t,	 // used by NODE_NAME and ATTR_NAME
@@ -412,16 +415,13 @@ public:
     }
     value_t& as_value() {
       assert(kind == VALUE);
-      value_t * val = boost::get<shared_ptr<value_t> >(data).get();
-      assert(val);
-      return *val;
+      return boost::get<value_t>(data);
     }
     const value_t& as_value() const {
       return const_cast<op_t *>(this)->as_value();
     }
-    void set_value(value_t * val) {
-      // jww (2007-05-14): Ugh, fix this
-      data = shared_ptr<value_t>(val);
+    void set_value(const value_t& val) {
+      data = val;
     }
 
     bool is_string() const {
@@ -533,13 +533,13 @@ public:
 			     ptr_op_t right = NULL);
 
     ptr_op_t copy(ptr_op_t left = NULL, ptr_op_t right = NULL) const;
-    ptr_op_t compile(const value_t& context, scope_t * scope, bool resolve = false);
+    ptr_op_t compile(const node_t& context, scope_t * scope, bool resolve = false);
 
-    void find_values(const value_t& context, scope_t * scope,
+    void find_values(const node_t& context, scope_t * scope,
 		     value_t::sequence_t& result_seq, bool recursive);
-    bool test_value(const value_t& context, scope_t * scope, int index = 0);
+    bool test_value(const node_t& context, scope_t * scope, int index = 0);
 
-    void append_value(value_t& value, value_t::sequence_t& result_seq);
+    void append_value(value_t::sequence_t& result_seq, value_t& value);
 
     static ptr_op_t defer_sequence(value_t::sequence_t& result_seq);
 
@@ -561,8 +561,7 @@ public:
     op_predicate(ptr_op_t _op) : op(_op) {}
 
     bool operator()(node_t& node, scope_t * scope) {
-      value_t context_node(&node);
-      xpath_t result(op->compile(context_node, scope, true));
+      xpath_t result(op->compile(node, scope, true));
       return result.ptr->as_value().to_boolean();
     }
   };
@@ -727,47 +726,25 @@ public:
     ptr   = parse_expr(in, _flags);
   }
 
-  void compile(node_t& top_node, scope_t * scope = NULL) {
-    if (ptr.get()) {
-      value_t noderef(&top_node);
-      ptr = ptr->compile(noderef, scope);
-    }
+  void compile(const node_t& context, scope_t * scope = NULL) {
+    if (ptr.get())
+      ptr = ptr->compile(context, scope);
   }
 
-  virtual void    calc(value_t& result, node_t& node,
-		       scope_t * scope = NULL) const;
-  virtual value_t calc(node_t& tcontext, scope_t * scope = NULL) const {
-    if (! ptr)
-      return 0L;
-    value_t temp;
-    calc(temp, tcontext, scope);
-    return temp;
-  }
+  virtual value_t calc(const node_t& context, scope_t * scope = NULL) const;
 
-  static void eval(value_t& result, const string& _expr, node_t& top,
-		   scope_t * scope = NULL) {
-    xpath_t temp(_expr);
-    temp.calc(result, top, scope);
-  }
-  static value_t eval(const string& _expr, node_t& top,
+  static value_t eval(const string& _expr, const node_t& context,
 		      scope_t * scope = NULL) {
-    xpath_t temp(_expr);
-    return temp.calc(top, scope);
+    return xpath_t(_expr).calc(context, scope);
   }
 
-  void find_all(value_t::sequence_t& result,
-		node_t& start, scope_t * scope) {
-    path_t path(*this);
-    path.find_all(result, start, scope);
-  }
   path_iterator_t find_all(node_t& start, scope_t * scope) {
     return path_iterator_t(*this, start, scope);
   }
 
   void visit(node_t& start, scope_t * scope,
 	     const function<void (node_t&)>& func) {
-    path_t path(*this);
-    path.visit(start, scope, func);
+    path_t(*this).visit(start, scope, func);
   }
 
   void print(std::ostream& out, xml::document_t& document) const {
@@ -809,10 +786,11 @@ inline T * get_node_ptr(xml::xpath_t::scope_t * locals, unsigned int idx) {
 class xml_command
 {
  public:
-  void operator()(value_t&, xml::xpath_t::scope_t * locals) {
+  value_t operator()(xml::xpath_t::scope_t * locals) {
     std::ostream *    out = get_ptr<std::ostream>(locals, 0);
     xml::document_t * doc = get_node_ptr<xml::document_t>(locals, 1);
     doc->print(*out);
+    return true;
   }
 };
 

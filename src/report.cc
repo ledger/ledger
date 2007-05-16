@@ -44,7 +44,7 @@ void report_t::apply_transforms(xml::document_t& document)
     transform.execute(document);
 }
 
-void report_t::abbrev(value_t& result, xml::xpath_t::scope_t * locals)
+value_t report_t::abbrev(xml::xpath_t::scope_t * locals)
 {
   if (locals->args.size() < 2)
     throw_(std::logic_error, "usage: abbrev(STRING, WIDTH [, STYLE, ABBREV_LEN])");
@@ -60,10 +60,10 @@ void report_t::abbrev(value_t& result, xml::xpath_t::scope_t * locals)
   if (locals->args.size() == 4)
     abbrev_len = locals->args[3].as_long();
 
-  result.set_string(abbreviate(str, wid, style, true, (int)abbrev_len));
+  return value_t(abbreviate(str, wid, style, true, (int)abbrev_len), true);
 }
 
-void report_t::ftime(value_t&, xml::xpath_t::scope_t * locals)
+value_t report_t::ftime(xml::xpath_t::scope_t * locals)
 {
   if (locals->args.size() < 1)
     throw_(std::logic_error, "usage: ftime(DATE [, DATE_FORMAT])");
@@ -78,7 +78,7 @@ void report_t::ftime(value_t&, xml::xpath_t::scope_t * locals)
   else
     date_format = moment_t::output_format;
 
-  result.set_string(date.as_string(date_format));
+  return value_t(date.as_string(date_format), true);
 #endif
 }
 
@@ -89,14 +89,14 @@ bool report_t::resolve(const string& name, value_t& result,
   switch (*p) {
   case 'a':
     if (name == "abbrev") {
-      abbrev(result, locals);
+      result = abbrev(locals);
       return true;
     }
     break;
 
   case 'f':
     if (name == "ftime") {
-      ftime(result, locals);
+      result = ftime(locals);
       return true;
     }
     break;
@@ -116,7 +116,7 @@ xml::xpath_t::ptr_op_t report_t::lookup(const string& name)
       case 'a':
 #if 0
 	if (std::strcmp(p, "accounts") == 0)
-	  return MAKE_FUNCTOR(report_t, option_accounts);
+	  return MAKE_FUNCTOR(report_t::option_accounts);
 	else
 #endif
 	  if (std::strcmp(p, "amount") == 0)

@@ -85,11 +85,9 @@ namespace {
       scoped_ptr<xml::xpath_t::scope_t> args;
       if (arg) {
 	args.reset(new xml::xpath_t::scope_t(scope, xml::xpath_t::scope_t::ARGUMENT));
-	args->args.set_string(arg);
+	args->args.push_back(value_t(arg, true));
       }
-
-      value_t temp;
-      opt(temp, args.get());
+      opt(args.get());
 #if 0
     }
     catch (error * err) {
