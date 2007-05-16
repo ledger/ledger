@@ -158,7 +158,8 @@ optional<const char *> document_t::lookup_name(nameid_t id) const
     }
   }
   else if (names) {
-    int index = id - 1000;
+    assert(id >= 1000);
+    std::size_t index = id - 1000;
     typedef names_t::nth_index<0>::type names_by_random_access;
     const names_by_random_access& random_access = names->get<0>();
     if (index < random_access.size())

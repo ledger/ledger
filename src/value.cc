@@ -86,6 +86,9 @@ value_t& value_t::operator=(const value_t& val)
 
   if (type() == val.type())
     switch (type()) {
+    case VOID:
+      assert(false);
+      return *this;
     case BOOLEAN:
       as_boolean_lval() = val.as_boolean();
       return *this;
@@ -110,6 +113,8 @@ value_t& value_t::operator=(const value_t& val)
     case SEQUENCE:
       as_sequence_lval() = val.as_sequence();
       return *this;
+    default:
+      break;
     }
 
   switch (val.type()) {
@@ -338,6 +343,8 @@ value_t& value_t::operator+=(const value_t& val)
     case AMOUNT:
       as_datetime_lval() += date_duration(val.as_amount().to_long());
       return *this;
+    default:
+      break;
     }
     break;
 
@@ -358,6 +365,8 @@ value_t& value_t::operator+=(const value_t& val)
       in_place_cast(BALANCE_PAIR);
       as_balance_pair_lval() += val.as_balance_pair();
       return *this;
+    default:
+      break;
     }
     break;
 
@@ -392,6 +401,8 @@ value_t& value_t::operator+=(const value_t& val)
       in_place_cast(BALANCE_PAIR);
       as_balance_pair_lval() += val.as_balance_pair();
       return *this;
+    default:
+      break;
     }
     break;
 
@@ -410,6 +421,8 @@ value_t& value_t::operator+=(const value_t& val)
       in_place_cast(BALANCE_PAIR);
       as_balance_pair_lval() += val.as_balance_pair();
       return *this;
+    default:
+      break;
     }
     break;
 
@@ -427,7 +440,12 @@ value_t& value_t::operator+=(const value_t& val)
     case BALANCE_PAIR:
       as_balance_pair_lval() += val.as_balance_pair();
       return *this;
+    default:
+      break;
     }
+    break;
+
+  default:
     break;
   }
 
@@ -469,6 +487,8 @@ value_t& value_t::operator-=(const value_t& val)
     case AMOUNT:
       as_datetime_lval() -= date_duration(val.as_amount().to_long());
       return *this;
+    default:
+      break;
     }
     break;
 
@@ -492,6 +512,8 @@ value_t& value_t::operator-=(const value_t& val)
       as_balance_pair_lval() -= val.as_balance_pair();
       in_place_simplify();
       return *this;
+    default:
+      break;
     }
     break;
 
@@ -534,6 +556,8 @@ value_t& value_t::operator-=(const value_t& val)
       as_balance_pair_lval() -= val.as_balance_pair();
       in_place_simplify();
       return *this;
+    default:
+      break;
     }
     break;
 
@@ -556,6 +580,8 @@ value_t& value_t::operator-=(const value_t& val)
       as_balance_pair_lval() -= val.as_balance_pair();
       in_place_simplify();
       return *this;
+    default:
+      break;
     }
     break;
 
@@ -577,7 +603,12 @@ value_t& value_t::operator-=(const value_t& val)
       as_balance_pair_lval() -= val.as_balance_pair();
       in_place_simplify();
       return *this;
+    default:
+      break;
     }
+    break;
+
+  default:
     break;
   }
 
@@ -616,6 +647,8 @@ value_t& value_t::operator*=(const value_t& val)
     case AMOUNT:
       set_amount(val.as_amount() * as_long());
       return *this;
+    default:
+      break;
     }
     break;
 
@@ -624,13 +657,14 @@ value_t& value_t::operator*=(const value_t& val)
     case INTEGER:
       as_amount_lval() *= val.as_long();
       return *this;
-
     case AMOUNT:
       if (as_amount().commodity() == val.as_amount().commodity() ||
 	  ! val.as_amount().has_commodity()) {
 	as_amount_lval() *= val.as_amount();
 	return *this;
       }
+      break;
+    default:
       break;
     }
     break;
@@ -646,6 +680,8 @@ value_t& value_t::operator*=(const value_t& val)
 	return *this;
       }
       break;
+    default:
+      break;
     }
     break;
 
@@ -660,7 +696,12 @@ value_t& value_t::operator*=(const value_t& val)
 	return *this;
       }
       break;
+    default:
+      break;
     }
+    break;
+
+  default:
     break;
   }
 
@@ -683,6 +724,8 @@ value_t& value_t::operator/=(const value_t& val)
     case AMOUNT:
       set_amount(val.as_amount() / as_long());
       return *this;
+    default:
+      break;
     }
     break;
 
@@ -699,6 +742,8 @@ value_t& value_t::operator/=(const value_t& val)
 	return *this;
       }
       break;
+    default:
+      break;
     }
     break;
 
@@ -712,6 +757,8 @@ value_t& value_t::operator/=(const value_t& val)
 	as_balance_lval() /= val.as_amount();
 	return *this;
       }
+      break;
+    default:
       break;
     }
     break;
@@ -727,7 +774,12 @@ value_t& value_t::operator/=(const value_t& val)
 	return *this;
       }
       break;
+    default:
+      break;
     }
+    break;
+
+  default:
     break;
   }
 
@@ -987,6 +1039,8 @@ void value_t::in_place_cast(type_t cast_type)
     case STRING:
       set_string(as_boolean() ? "true" : "false");
       return;
+    default:
+      break;
     }
     break;
 
@@ -1004,6 +1058,8 @@ void value_t::in_place_cast(type_t cast_type)
     case STRING:
       set_string(lexical_cast<string>(as_long()));
       return;
+    default:
+      break;
     }
     break;
 
@@ -1021,6 +1077,8 @@ void value_t::in_place_cast(type_t cast_type)
     case STRING:
       set_string(as_amount().to_string());
       return;
+    default:
+      break;
     }
     break;
 
@@ -1045,6 +1103,8 @@ void value_t::in_place_cast(type_t cast_type)
     case BALANCE_PAIR:
       set_balance_pair(as_balance());
       return;
+    default:
+      break;
     }
     break;
 
@@ -1069,6 +1129,8 @@ void value_t::in_place_cast(type_t cast_type)
     case BALANCE:
       set_balance(as_balance_pair().quantity);
       return;
+    default:
+      break;
     }
     break;
 
@@ -1084,11 +1146,15 @@ void value_t::in_place_cast(type_t cast_type)
       }
       break;
     }
-
     case AMOUNT:
       set_amount(as_string());
       return;
+    default:
+      break;
     }
+    break;
+
+  default:
     break;
   }
 
@@ -1118,6 +1184,8 @@ void value_t::in_place_negate()
     *this = as_xml_node()->to_value();
     in_place_negate();
     return;
+  default:
+    break;
   }
 
   throw_(value_error, "Cannot negate " << label());
@@ -1180,6 +1248,9 @@ value_t value_t::value(const optional<moment_t>& moment) const
   }
   case XML_NODE:
     return as_xml_node()->to_value().value(moment);
+
+  default:
+    break;
   }
 
   throw_(value_error, "Cannot find the value of " << label());
@@ -1204,6 +1275,8 @@ void value_t::in_place_reduce()
     *this = as_xml_node()->to_value();
     in_place_reduce();		// recurse
     break;
+  default:
+    break;
   }
 
   throw_(value_error, "Cannot reduce " << label());
@@ -1222,6 +1295,8 @@ value_t value_t::round() const
     return as_balance_pair().round();
   case XML_NODE:
     return as_xml_node()->to_value().round();
+  default:
+    break;
   }
 
   throw_(value_error, "Cannot round " << label());
@@ -1251,6 +1326,8 @@ value_t value_t::unround() const
     throw_(value_error, "Cannot un-round a pointer");
   case SEQUENCE:
     throw_(value_error, "Cannot un-round a sequence");
+  default:
+    break;
   }
   assert(false);
   return value_t();
@@ -1509,6 +1586,10 @@ void value_t::print(std::ostream& out, const int first_width,
 		    const int latter_width) const
 {
   switch (type()) {
+  case VOID:
+    out << "NULL";
+    break;
+
   case BOOLEAN:
   case DATETIME:
   case INTEGER:
@@ -1545,6 +1626,9 @@ void value_t::print(std::ostream& out, const int first_width,
     break;
   case BALANCE_PAIR:
     as_balance_pair().print(out, first_width, latter_width);
+    break;
+  default:
+    assert(false);
     break;
   }
 }
