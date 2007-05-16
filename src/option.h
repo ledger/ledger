@@ -36,14 +36,14 @@
 
 namespace ledger {
 
-void process_option(const string& name, xml::xpath_t::scope_t * scope,
+void process_option(const string& name, xml::xpath_t::scope_t& scope,
 		    const char * arg = NULL);
 
 void process_environment(const char ** envp, const string& tag,
-			 xml::xpath_t::scope_t * scope);
+			 xml::xpath_t::scope_t& scope);
 
 void process_arguments(int argc, char ** argv, const bool anywhere,
-		       xml::xpath_t::scope_t * scope,
+		       xml::xpath_t::scope_t& scope,
 		       std::list<string>& args);
 
 DECLARE_EXCEPTION(option_error);

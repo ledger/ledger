@@ -1,3 +1,6 @@
+- What does SEQUENCE + VALUE mean in XPath?  Does it add VALUE to
+  every member of SEQUENCE?
+
 - Add tracing code for functions that records call count and total
   time spent, as well as average time per call.  This would implement
   selective profiling.

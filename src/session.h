@@ -79,9 +79,7 @@ class session_t : public xml::xpath_t::scope_t
   ptr_list<journal_t> journals;
   ptr_list<parser_t>  parsers;
 
-  session_t(xml::xpath_t::scope_t * _parent = NULL) :
-    xml::xpath_t::scope_t(_parent),
-
+  session_t() :
     register_format
     ("%((//entry)%{date} %-.20{payee}"
      "%((./xact)%32|%-22{abbrev(account, 22)} %12.67t %12.80T\n))"),
@@ -125,7 +123,7 @@ class session_t : public xml::xpath_t::scope_t
 
     ansi_codes(false),
     ansi_invert(false) {
-    TRACE_CTOR(session_t, "xml::xpath_t::scope_t *");
+    TRACE_CTOR(session_t, "xml::xpath_t::scope_t&");
   }
 
   virtual ~session_t() {
@@ -181,24 +179,24 @@ class session_t : public xml::xpath_t::scope_t
   //
 
   virtual optional<value_t> resolve(const string& name,
-				    xml::xpath_t::scope_t * locals = NULL);
+				    xml::xpath_t::scope_t& locals = NULL);
   virtual xml::xpath_t::ptr_op_t lookup(const string& name);
 
   //
   // Debug options
   //
 
-  value_t option_trace_(xml::xpath_t::scope_t * locals) {
+  value_t option_trace_(xml::xpath_t::scope_t& locals) {
     return NULL_VALUE;
   }
-  value_t option_debug_(xml::xpath_t::scope_t * locals) {
+  value_t option_debug_(xml::xpath_t::scope_t& locals) {
     return NULL_VALUE;
   }
 
-  value_t option_verify(xml::xpath_t::scope_t *) {
+  value_t option_verify(xml::xpath_t::scope_t&) {
     return NULL_VALUE;
   }
-  value_t option_verbose(xml::xpath_t::scope_t *) {
+  value_t option_verbose(xml::xpath_t::scope_t&) {
 #if defined(LOGGING_ON)
     if (_log_level < LOG_INFO)
       _log_level = LOG_INFO;
@@ -210,19 +208,19 @@ class session_t : public xml::xpath_t::scope_t
   // Option handlers
   //
 
-  value_t option_file_(xml::xpath_t::scope_t * locals) {
-    assert(locals->args.size() == 1);
-    data_file = locals->args[0].as_string();
+  value_t option_file_(xml::xpath_t::scope_t& locals) {
+    assert(locals.args.size() == 1);
+    data_file = locals.args[0].as_string();
     return NULL_VALUE;
   }
 
 #if 0
 #if defined(USE_BOOST_PYTHON)
-  value_t option_import_(xml::xpath_t::scope_t * locals) {
+  value_t option_import_(xml::xpath_t::scope_t& locals) {
     python_import(optarg);
     return NULL_VALUE;
   }
-  value_t option_import_stdin(xml::xpath_t::scope_t * locals) {
+  value_t option_import_stdin(xml::xpath_t::scope_t& locals) {
     python_eval(std::cin, PY_EVAL_MULTI);
     return NULL_VALUE;
   }

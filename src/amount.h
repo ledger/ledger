@@ -177,11 +177,11 @@ public:
   amount_t(const unsigned long val);
   amount_t(const long val);
 
-  amount_t(const string& val) : quantity(NULL) {
+  explicit amount_t(const string& val) : quantity(NULL) {
     TRACE_CTOR(amount_t, "const string&");
     parse(val);
   }
-  amount_t(const char * val) : quantity(NULL) {
+  explicit amount_t(const char * val) : quantity(NULL) {
     TRACE_CTOR(amount_t, "const char *");
     parse(val);
   }
@@ -216,7 +216,7 @@ public:
    * causing the result to compare equal to the reference amount.
    *
    * Note: `quantity' must be initialized to NULL first, otherwise the
-   * `_copy' function will attempt to release the unitialized pointer.
+   * `_copy' function will attempt to release the uninitialized pointer.
    */
   amount_t(const amount_t& amt) : quantity(NULL) {
     TRACE_CTOR(amount_t, "copy");
@@ -226,6 +226,13 @@ public:
       commodity_ = NULL;
   }
   amount_t& operator=(const amount_t& amt);
+
+  amount_t& operator=(const string& str) {
+    return *this = amount_t(str);
+  }
+  amount_t& operator=(const char * str) {
+    return *this = amount_t(str);
+  }
 
   /**
    * Comparison operators.  The fundamental comparison operation for

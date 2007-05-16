@@ -46,12 +46,12 @@
 #include <fdstream.hpp>
 #endif
 
-static int read_and_report(ledger::report_t * report, int argc, char * argv[],
+static int read_and_report(ledger::report_t& report, int argc, char * argv[],
 			   char * envp[])
 {
   using namespace ledger;
 
-  session_t& session(*report->session);
+  session_t& session(report.session);
 
   // Handle the command-line arguments
 
@@ -164,7 +164,7 @@ static int read_and_report(ledger::report_t * report, int argc, char * argv[],
     std::strcpy(buf, "command_");
     std::strcat(buf, verb.c_str());
 
-    if (xml::xpath_t::ptr_op_t def = report->lookup(buf))
+    if (xml::xpath_t::ptr_op_t def = report.lookup(buf))
       command = def->as_function();
 
     if (! command)
@@ -182,7 +182,7 @@ static int read_and_report(ledger::report_t * report, int argc, char * argv[],
   journal_t *		  journal = session.create_journal();
   xml::document_builder_t builder(xml_document);
 
-  if (! session.read_data(builder, journal, report->account))
+  if (! session.read_data(builder, journal, report.account))
     throw_(parse_error, "Failed to locate any journal entries; "
 	   "did you specify a valid file with -f?");
 
@@ -202,11 +202,11 @@ static int read_and_report(ledger::report_t * report, int argc, char * argv[],
 #endif
   std::ostream * out = &std::cout;
 
-  if (report->output_file) {
-    out = new ofstream(*report->output_file);
+  if (report.output_file) {
+    out = new ofstream(*report.output_file);
   }
 #ifdef HAVE_UNIX_PIPES
-  else if (report->pager) {
+  else if (report.pager) {
     status = pipe(pfd);
     if (status == -1)
       throw_(std::logic_error, "Failed to create pipe");
@@ -230,8 +230,8 @@ static int read_and_report(ledger::report_t * report, int argc, char * argv[],
       // Find command name: its the substring starting right of the
       // rightmost '/' character in the pager pathname.  See manpage
       // for strrchr.
-      execlp(report->pager->native_file_string().c_str(),
-	     basename(*report->pager).c_str(), (char *)0);
+      execlp(report.pager->native_file_string().c_str(),
+	     basename(*report.pager).c_str(), (char *)0);
       perror("execl");
       exit(1);
     }
@@ -282,28 +282,25 @@ static int read_and_report(ledger::report_t * report, int argc, char * argv[],
   // Apply transforms to the hierarchical document structure
 
   INFO_START(transforms, "Applied transforms");
-  report->apply_transforms(xml_document);
+  report.apply_transforms(xml_document);
   INFO_FINISH(transforms);
 
   // Create an argument scope containing the report command's
   // arguments, and then invoke the command.
 
-  scoped_ptr<xml::xpath_t::scope_t> locals
-    (new xml::xpath_t::scope_t(report, xml::xpath_t::scope_t::ARGUMENT));
+  xml::xpath_t::scope_t locals(report, xml::xpath_t::scope_t::ARGUMENT);
 
-  locals->args = value_t::sequence_t();
-
-  locals->args.push_back(out);
-  locals->args.push_back(&xml_document);
+  locals.args.push_back(out);
+  locals.args.push_back(&xml_document);
 
   value_t::sequence_t args_list;
   foreach (string& i, args)
     args_list.push_back(value_t(i, true));
-  locals->args.push_back(args_list);
+  locals.args.push_back(args_list);
 
   INFO_START(command, "Did user command '" << verb << "'");
 
-  command(locals.get());
+  command(locals);
 
   INFO_FINISH(command);
 
@@ -323,7 +320,7 @@ static int read_and_report(ledger::report_t * report, int argc, char * argv[],
   // If the user specified a pager, wait for it to exit now
 
 #ifdef HAVE_UNIX_PIPES
-  if (! report->output_file && report->pager) {
+  if (! report.output_file && report.pager) {
     checked_delete(out);
     close(pfd[1]);
 
@@ -333,7 +330,7 @@ static int read_and_report(ledger::report_t * report, int argc, char * argv[],
       throw_(std::logic_error, "Something went wrong in the pager");
   }
 #endif
-  else if (DO_VERIFY() && report->output_file) {
+  else if (DO_VERIFY() && report.output_file) {
     checked_delete(out);
   }
 
@@ -401,9 +398,9 @@ int main(int argc, char * argv[], char * envp[])
 #endif
     session->register_parser(new ledger::textual_parser_t);
 
-    std::auto_ptr<ledger::report_t> report(new ledger::report_t(session.get()));
+    std::auto_ptr<ledger::report_t> report(new ledger::report_t(*session.get()));
 
-    status = read_and_report(report.get(), argc, argv, envp);
+    status = read_and_report(*report.get(), argc, argv, envp);
 
     if (DO_VERIFY()) {
       ledger::set_session_context();

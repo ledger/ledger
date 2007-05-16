@@ -44,35 +44,35 @@ void report_t::apply_transforms(xml::document_t& document)
     transform.execute(document);
 }
 
-value_t report_t::abbrev(xml::xpath_t::scope_t * locals)
+value_t report_t::abbrev(xml::xpath_t::scope_t& locals)
 {
-  if (locals->args.size() < 2)
+  if (locals.args.size() < 2)
     throw_(std::logic_error, "usage: abbrev(STRING, WIDTH [, STYLE, ABBREV_LEN])");
 
-  string str = locals->args[0].as_string();
-  long	 wid = locals->args[1];
+  string str = locals.args[0].as_string();
+  long	 wid = locals.args[1];
 
-  elision_style_t style = session->elision_style;
-  if (locals->args.size() == 3)
-    style = (elision_style_t)locals->args[2].as_long();
+  elision_style_t style = session.elision_style;
+  if (locals.args.size() == 3)
+    style = (elision_style_t)locals.args[2].as_long();
 
-  long abbrev_len = session->abbrev_length;
-  if (locals->args.size() == 4)
-    abbrev_len = locals->args[3].as_long();
+  long abbrev_len = session.abbrev_length;
+  if (locals.args.size() == 4)
+    abbrev_len = locals.args[3].as_long();
 
   return value_t(abbreviate(str, wid, style, true, (int)abbrev_len), true);
 }
 
-value_t report_t::ftime(xml::xpath_t::scope_t * locals)
+value_t report_t::ftime(xml::xpath_t::scope_t& locals)
 {
-  if (locals->args.size() < 1)
+  if (locals.args.size() < 1)
     throw_(std::logic_error, "usage: ftime(DATE [, DATE_FORMAT])");
 
-  moment_t date = locals->args[0].as_datetime();
+  moment_t date = locals.args[0].as_datetime();
 
   string date_format;
-  if (locals->args.size() == 2)
-    date_format = locals->args[1].as_string();
+  if (locals.args.size() == 2)
+    date_format = locals.args[1].as_string();
 #if 0
   // jww (2007-04-18): Need to setup an output facet here
   else
@@ -85,7 +85,7 @@ value_t report_t::ftime(xml::xpath_t::scope_t * locals)
 }
 
 optional<value_t>
-report_t::resolve(const string& name, xml::xpath_t::scope_t * locals)
+report_t::resolve(const string& name, xml::xpath_t::scope_t& locals)
 {
   const char * p = name.c_str();
   switch (*p) {

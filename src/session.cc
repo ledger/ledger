@@ -174,7 +174,7 @@ std::size_t session_t::read_data(xml::builder_t& builder,
 }
 
 optional<value_t>
-session_t::resolve(const string& name, xml::xpath_t::scope_t * locals)
+session_t::resolve(const string& name, xml::xpath_t::scope_t& locals)
 {
   const char * p = name.c_str();
   switch (*p) {

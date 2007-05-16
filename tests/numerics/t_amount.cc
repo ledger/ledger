@@ -209,23 +209,15 @@ void AmountTestCase::testCommodityConstructors()
 void AmountTestCase::testAssignment()
 {
   amount_t x0;
-  amount_t x1  = 123456L;
-  amount_t x2  = 123456UL;
-  amount_t x3  = 123.456;
-  amount_t x5  = "123456";
-  amount_t x6  = "123.456";
-  amount_t x7  = string("123456");
-  amount_t x8  = string("123.456");
-  amount_t x9  = x3;
-  amount_t x10 = amount_t(x6);
-
-  assertEqual(x2, x1);
-  assertEqual(x5, x1);
-  assertEqual(x7, x1);
-  assertEqual(x6, x3);
-  assertEqual(x8, x3);
-  assertEqual(x10, x3);
-  assertEqual(x10, x9);
+  amount_t x1;
+  amount_t x2;
+  amount_t x3;
+  amount_t x5;
+  amount_t x6;
+  amount_t x7;
+  amount_t x8;
+  amount_t x9;
+  amount_t x10;
 
   x1  = 123456L;
   x2  = 123456UL;
@@ -264,16 +256,27 @@ void AmountTestCase::testAssignment()
 
 void AmountTestCase::testCommodityAssignment()
 {
-  amount_t x1  = "$123.45";
-  amount_t x2  = "-$123.45";
-  amount_t x3  = "$-123.45";
-  amount_t x4  = "DM 123.45";
-  amount_t x5  = "-DM 123.45";
-  amount_t x6  = "DM -123.45";
-  amount_t x7  = "123.45 euro";
-  amount_t x8  = "-123.45 euro";
-  amount_t x9  = "123.45€";
-  amount_t x10 = "-123.45€";
+  amount_t x1;
+  amount_t x2;
+  amount_t x3;
+  amount_t x4;
+  amount_t x5;
+  amount_t x6;
+  amount_t x7;
+  amount_t x8;
+  amount_t x9;
+  amount_t x10;
+
+  x1  = "$123.45";
+  x2  = "-$123.45";
+  x3  = "$-123.45";
+  x4  = "DM 123.45";
+  x5  = "-DM 123.45";
+  x6  = "DM -123.45";
+  x7  = "123.45 euro";
+  x8  = "-123.45 euro";
+  x9  = "123.45€";
+  x10 = "-123.45€";
 
   assertEqual(amount_t("$123.45"), x1);
   assertEqual(amount_t("-$123.45"), x2);
@@ -343,16 +346,27 @@ void AmountTestCase::testEquality()
 void AmountTestCase::testCommodityEquality()
 {
   amount_t x0;
-  amount_t x1  = "$123.45";
-  amount_t x2  = "-$123.45";
-  amount_t x3  = "$-123.45";
-  amount_t x4  = "DM 123.45";
-  amount_t x5  = "-DM 123.45";
-  amount_t x6  = "DM -123.45";
-  amount_t x7  = "123.45 euro";
-  amount_t x8  = "-123.45 euro";
-  amount_t x9  = "123.45€";
-  amount_t x10 = "-123.45€";
+  amount_t x1;
+  amount_t x2;
+  amount_t x3;
+  amount_t x4;
+  amount_t x5;
+  amount_t x6;
+  amount_t x7;
+  amount_t x8;
+  amount_t x9;
+  amount_t x10;
+
+  x1  = "$123.45";
+  x2  = "-$123.45";
+  x3  = "$-123.45";
+  x4  = "DM 123.45";
+  x5  = "-DM 123.45";
+  x6  = "DM -123.45";
+  x7  = "123.45 euro";
+  x8  = "-123.45 euro";
+  x9  = "123.45€";
+  x10 = "-123.45€";
 
   assertTrue(x0.is_null());
   assertThrow(x0.is_zero(), amount_error);

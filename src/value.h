@@ -183,19 +183,19 @@ public:
     TRACE_CTOR(value_t, "const unsigned long");
     set_amount(val);
   }
-  value_t(const string& val, bool literal = false) {
+  explicit value_t(const string& val, bool literal = false) {
     TRACE_CTOR(value_t, "const string&, bool");
     if (literal)
       set_string(val);
     else
-      set_amount(val);
+      set_amount(amount_t(val));
   }
-  value_t(const char * val, bool literal = false) {
+  explicit value_t(const char * val, bool literal = false) {
     TRACE_CTOR(value_t, "const char *");
     if (literal)
       set_string(val);
     else
-      set_amount(val);
+      set_amount(amount_t(val));
   }
   value_t(const amount_t& val) {
     TRACE_CTOR(value_t, "const amount_t&");

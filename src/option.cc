@@ -36,7 +36,7 @@ namespace ledger {
 namespace {
   typedef tuple<xml::xpath_t::ptr_op_t, bool> op_bool_tuple;
 
-  op_bool_tuple find_option(xml::xpath_t::scope_t * scope, const string& name)
+  op_bool_tuple find_option(xml::xpath_t::scope_t& scope, const string& name)
   {
     char buf[128];
     std::strcpy(buf, "option_");
@@ -49,46 +49,44 @@ namespace {
     }
     *p = '\0';
 
-    xml::xpath_t::ptr_op_t op = scope->lookup(buf);
+    xml::xpath_t::ptr_op_t op = scope.lookup(buf);
     if (op)
       return op_bool_tuple(op, false);
 
     *p++ = '_';
     *p = '\0';
 
-    return op_bool_tuple(scope->lookup(buf), true);
+    return op_bool_tuple(scope.lookup(buf), true);
   }
 
-  op_bool_tuple find_option(xml::xpath_t::scope_t * scope, const char letter)
+  op_bool_tuple find_option(xml::xpath_t::scope_t& scope, const char letter)
   {
     char buf[10];
     std::strcpy(buf, "option_");
     buf[7] = letter;
     buf[8] = '\0';
 
-    xml::xpath_t::ptr_op_t op = scope->lookup(buf);
+    xml::xpath_t::ptr_op_t op = scope.lookup(buf);
     if (op)
       return op_bool_tuple(op, false);
 
     buf[8] = '_';
     buf[9] = '\0';
 
-    return op_bool_tuple(scope->lookup(buf), true);
+    return op_bool_tuple(scope.lookup(buf), true);
   }
 
   void process_option(const xml::xpath_t::function_t& opt,
-		      xml::xpath_t::scope_t * scope, const char * arg)
+		      xml::xpath_t::scope_t& scope, const char * arg)
   {
 #if 0
     try {
 #endif
-      scoped_ptr<xml::xpath_t::scope_t> args;
-      if (arg) {
-	args.reset(new xml::xpath_t::scope_t
-		   (scope, xml::xpath_t::scope_t::ARGUMENT));
-	args->args.push_back(value_t(arg, true));
-      }
-      opt(args.get());
+      xml::xpath_t::scope_t arguments(scope, xml::xpath_t::scope_t::ARGUMENT);
+      if (arg)
+	arguments.args.push_back(value_t(arg, true));
+
+      opt(arguments);
 #if 0
     }
     catch (error * err) {
@@ -103,7 +101,7 @@ namespace {
   }
 }
 
-void process_option(const string& name, xml::xpath_t::scope_t * scope,
+void process_option(const string& name, xml::xpath_t::scope_t& scope,
 		    const char * arg)
 {
   op_bool_tuple opt(find_option(scope, name));
@@ -112,7 +110,7 @@ void process_option(const string& name, xml::xpath_t::scope_t * scope,
 }
 
 void process_environment(const char ** envp, const string& tag,
-			 xml::xpath_t::scope_t * scope)
+			 xml::xpath_t::scope_t& scope)
 {
   const char * tag_p   = tag.c_str();
   unsigned int tag_len = tag.length();
@@ -151,7 +149,7 @@ void process_environment(const char ** envp, const string& tag,
 }
 
 void process_arguments(int argc, char ** argv, const bool anywhere,
-		       xml::xpath_t::scope_t * scope,
+		       xml::xpath_t::scope_t& scope,
 		       std::list<string>& args)
 {
   for (char ** i = argv; *i; i++) {

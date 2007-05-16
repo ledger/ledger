@@ -1053,7 +1053,7 @@ void value_t::in_place_cast(type_t cast_type)
       break;
     }
     case AMOUNT:
-      set_amount(as_string());
+      set_amount(amount_t(as_string()));
       return;
     default:
       break;
@@ -1340,7 +1340,7 @@ value_t value_t::annotated_tag() const
     optional<string> temp = as_amount().annotation_details().tag;
     if (! temp)
       return false;
-    return *temp;
+    return value_t(*temp, true);
   }
 
   case BALANCE:

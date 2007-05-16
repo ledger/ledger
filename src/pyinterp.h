@@ -46,7 +46,7 @@ class python_interpreter_t : public xml::xpath_t::scope_t
  public:
   boost::python::dict nspace;
 
-  python_interpreter_t(xml::xpath_t::scope_t * parent);
+  python_interpreter_t(xml::xpath_t::scope_t& parent);
 
   virtual ~python_interpreter_t() {
     Py_Finalize();
@@ -76,7 +76,7 @@ class python_interpreter_t : public xml::xpath_t::scope_t
   public:
     functor_t(const string& name, boost::python::object _func) : func(_func) {}
     virtual ~functor_t() {}
-    virtual value_t operator()(xml::xpath_t::scope_t * locals);
+    virtual value_t operator()(xml::xpath_t::scope_t& locals);
   };
 
   virtual void define(const string& name, xml::xpath_t::ptr_op_t def) {
@@ -94,7 +94,7 @@ class python_interpreter_t : public xml::xpath_t::scope_t
   class lambda_t : public functor_t {
    public:
     lambda_t(boost::python::object code) : functor_t("<lambda>", code) {}
-    virtual value_t operator()(xml::xpath_t::scope_t * locals);
+    virtual value_t operator()(xml::xpath_t::scope_t& locals);
   };
 };
 

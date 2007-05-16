@@ -484,7 +484,7 @@ void xpath_t::scope_t::define(const string& name, const function_t& def) {
 }
 
 optional<value_t>
-xpath_t::function_scope_t::resolve(const string& name, scope_t * locals)
+xpath_t::function_scope_t::resolve(const string& name, scope_t& locals)
 {
   switch (name[0]) {
   case 'l':
@@ -1092,7 +1092,7 @@ void xpath_t::op_t::append_value(value_t::sequence_t& result_seq, value_t& val)
 }
 
 xpath_t::ptr_op_t
-xpath_t::op_t::compile(const node_t& context, scope_t * scope, bool resolve)
+xpath_t::op_t::compile(const node_t& context, scope_t& scope, bool resolve)
 {
 #if 0
   try {
@@ -1103,33 +1103,32 @@ xpath_t::op_t::compile(const node_t& context, scope_t * scope, bool resolve)
 
   case ATTR_ID:
     if (optional<const string&> value = context.get_attr(as_long()))
-      return wrap_value(*value);
+      return wrap_value(value_t(*value, true));
     return this;
 
   case ATTR_NAME:
     if (optional<node_t::nameid_t> id =
 	context.document().lookup_name_id(as_string())) {
       if (optional<const string&> value = context.get_attr(*id))
-	return wrap_value(*value);
+	return wrap_value(value_t(*value, true));
     }
     return this;
 
   case VAR_NAME:
   case FUNC_NAME:
-    if (scope) {
-      if (resolve) {
-	if (optional<value_t> temp = scope->resolve(as_string()))
-	  return wrap_value(*temp);
-      }
-      if (ptr_op_t def = scope->lookup(as_string()))
-	return def->compile(context, scope, resolve);
+    if (resolve) {
+      scope_t null_scope;
+      if (optional<value_t> temp = scope.resolve(as_string(), null_scope))
+	return wrap_value(*temp);
     }
+    if (ptr_op_t def = scope.lookup(as_string()))
+      return def->compile(context, scope, resolve);
     return this;
 
   case ARG_INDEX:
-    if (scope && scope->kind == scope_t::ARGUMENT) {
-      if (as_long() < scope->args.size())
-	return wrap_value(scope->args[as_long()]);
+    if (scope.kind == scope_t::ARGUMENT) {
+      if (as_long() < scope.args.size())
+	return wrap_value(scope.args[as_long()]);
       else
 	throw_(compile_error, "Reference to non-existing argument");
     } else {
@@ -1389,14 +1388,17 @@ xpath_t::op_t::compile(const node_t& context, scope_t * scope, bool resolve)
   case O_DEFINE:
     if (left()->kind == VAR_NAME || left()->kind == FUNC_NAME) {
       xpath_t rexpr(right()->compile(context, scope, resolve));
-      if (scope)
-	scope->define(left()->as_string(), rexpr.ptr);
+      scope.define(left()->as_string(), rexpr.ptr);
       return rexpr.ptr;
     } else {
       assert(left()->kind == O_EVAL);
       assert(left()->left()->kind == FUNC_NAME);
 
-      std::auto_ptr<scope_t> arg_scope(new scope_t(scope));
+#if 0
+      // jww (2006-09-16): If I compile the definition of a function,
+      // I eliminate the possibility of future lookups
+
+      scope_t arg_scope(scope);
 
       unsigned int index = 0;
       ptr_op_t args = left()->right();
@@ -1415,24 +1417,18 @@ xpath_t::op_t::compile(const node_t& context, scope_t * scope, bool resolve)
 	ref->set_long(index++);
 
 	assert(arg->kind == NODE_NAME);
-	arg_scope->define(arg->as_string(), ref);
+	arg_scope.define(arg->as_string(), ref);
       }
 
-      // jww (2006-09-16): If I compile the definition of a function,
-      // I eliminate the possibility of future lookups
-      //xpath_t rexpr(right->compile(arg_scope.get(), resolve));
-
-      if (scope)
-	scope->define(left()->left()->as_string(), right());
+      xpath_t rexpr(right->compile(arg_scope, resolve));
+#endif
+      scope.define(left()->left()->as_string(), right());
 
       return right();
     }
 
   case O_EVAL: {
-    std::auto_ptr<scope_t> call_args(new scope_t(scope));
-    call_args->kind = scope_t::ARGUMENT;
-
-    value_t::sequence_t call_seq;
+    scope_t call_args(scope, scope_t::ARGUMENT);
 
     ptr_op_t args = right();
     while (args) {
@@ -1446,25 +1442,23 @@ xpath_t::op_t::compile(const node_t& context, scope_t * scope, bool resolve)
 
       // jww (2006-09-15): Need to return a reference to these, if
       // there are undetermined arguments!
-      call_seq.push_back(arg->compile(context, scope, resolve)->as_value());
+      call_args.args.push_back(arg->compile(context, scope, resolve)->as_value());
     }
 
-    call_args->args = call_seq;
-
     if (left()->kind == FUNC_NAME) {
-      if (resolve && scope)
+      if (resolve)
 	if (optional<value_t> temp =
-	    scope->resolve(left()->as_string(), call_args.get()))
+	    scope.resolve(left()->as_string(), call_args))
 	  return wrap_value(*temp);
 
       // Don't compile to the left, otherwise the function name may
       // get resolved before we have a chance to call it
       xpath_t func(left()->compile(context, scope, false));
       if (func.ptr->kind == FUNCTION) {
-	return wrap_value(func.ptr->as_function()(call_args.get()));
+	return wrap_value(func.ptr->as_function()(call_args));
       }
       else if (! resolve) {
-	return func.ptr->compile(context, call_args.get(), resolve);
+	return func.ptr->compile(context, call_args, resolve);
       }
       else {
 	throw_(calc_error,
@@ -1472,7 +1466,7 @@ xpath_t::op_t::compile(const node_t& context, scope_t * scope, bool resolve)
       }
     }
     else if (left()->kind == FUNCTION) {
-      return wrap_value(left()->as_function()(call_args.get()));
+      return wrap_value(left()->as_function()(call_args));
     }
     else {
       assert(false);
@@ -1515,7 +1509,7 @@ xpath_t::op_t::compile(const node_t& context, scope_t * scope, bool resolve)
   return NULL;
 }
 
-value_t xpath_t::calc(const node_t& context, scope_t * scope) const
+value_t xpath_t::calc(const node_t& context, scope_t& scope) const
 {
 #if 0
   try {
@@ -1987,7 +1981,7 @@ void xpath_t::op_t::dump(std::ostream& out, const int depth) const
 template <typename NodeType>
 void xpath_t::path_t::check_element(NodeType&	     start,
 				    const ptr_op_t&  element,
-				    scope_t *	     scope,
+				    scope_t&	     scope,
 				    std::size_t	     index,
 				    std::size_t	     size,
 				    const visitor_t& func)
@@ -1995,7 +1989,7 @@ void xpath_t::path_t::check_element(NodeType&	     start,
   if (element->kind > op_t::TERMINALS &&
       element->left()->kind == op_t::O_PRED) {
     function_scope_t xpath_fscope(start, index, size, scope);
-    if (! op_predicate(element->left()->right())(start, &xpath_fscope))
+    if (! op_predicate(element->left()->right())(start, xpath_fscope))
       return;
   }
 
@@ -2013,7 +2007,7 @@ template <typename NodeType>
 void xpath_t::path_t::walk_elements(NodeType&	     start,
 				    const ptr_op_t&  element,
 				    const bool	     recurse,
-				    scope_t *	     scope,
+				    scope_t&	     scope,
 				    const visitor_t& func)
 {
   ptr_op_t name(element);
@@ -2078,7 +2072,7 @@ void xpath_t::path_t::walk_elements(NodeType&	     start,
 
   default: {
     function_scope_t xpath_fscope(start, 0, 1, scope);
-    xpath_t final(name->compile(start, &xpath_fscope, true));
+    xpath_t final(name->compile(start, xpath_fscope, true));
 
     if (final.ptr->is_value()) {
       value_t& result(final.ptr->as_value());
@@ -2131,14 +2125,14 @@ void xpath_t::path_t::walk_elements<node_t>
   (node_t&	    start,
    const ptr_op_t&  element,
    const bool	    recurse,
-   scope_t *	    scope,
+   scope_t&	    scope,
    const visitor_t& func);
 
 template
 void xpath_t::path_t::check_element<const node_t>
   (const node_t&    start,
    const ptr_op_t&  element,
-   scope_t *	    scope,
+   scope_t&	    scope,
    std::size_t	    index,
    std::size_t	    size,
    const visitor_t& func);
