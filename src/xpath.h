@@ -68,10 +68,7 @@ public:
       CHILD_SCOPE,
       SYMBOL_SCOPE,
       CALL_SCOPE,
-      CONTEXT_SCOPE,
-#if 0
-      PREDICATE_SCOPE
-#endif
+      CONTEXT_SCOPE
     } type_;
 
     explicit scope_t(type_t _type) : type_(_type) {
@@ -278,37 +275,6 @@ public:
       return *element.as_xml_node();
     }
   };
-
-#if 0
-  class predicate_scope_t : public child_scope_t
-  {
-  public:
-    ptr_op_t predicate;
-
-    explicit predicate_scope_t(scope_t& _parent,
-			       const ptr_op_t& _predicate)
-      : child_scope_t(_parent, PREDICATE_SCOPE), predicate(_predicate)
-    {
-      TRACE_CTOR(xpath_t::predicate_scope_t, "scope_t&, const ptr_op_t&");
-    }
-    virtual ~predicate_scope_t() {
-      TRACE_DTOR(xpath_t::predicate_scope_t);
-    }
-
-    bool test(scope_t& scope,
-	      const value_t& val,
-	      const optional<value_t>& sequence = none) const {
-      context_scope_t context_scope(scope, val, sequence);
-
-      if (predicate->is_value()) {
-	value_t& predicate_value(predicate->as_value());
-	if (predicate_value.is_long())
-	  return predicate_value.as_long() == (long)context_scope.index() + 1;
-      }
-      return predicate->calc(context_scope).to_boolean();
-    }
-  };
-#endif
 
 #define XPATH_PARSE_NORMAL     0x00
 #define XPATH_PARSE_PARTIAL    0x01
@@ -638,10 +604,12 @@ public:
     static ptr_op_t wrap_value(const value_t& val);
     static ptr_op_t wrap_functor(const function_t& fobj);
 
+    typedef function<value_t (scope_t&)> predicate_t;
+
     ptr_op_t compile(scope_t& scope);
     value_t  current_value(scope_t& scope);
     node_t&  current_xml_node(scope_t& scope);
-    value_t  calc(scope_t& scope);
+    value_t  calc(scope_t& scope, const predicate_t& = predicate_t());
 
     struct print_context_t
     {
@@ -671,12 +639,12 @@ public:
     }
   };
 
-  class op_predicate : public noncopyable {
+  class op_functor {
     ptr_op_t op;
   public:
-    explicit op_predicate(ptr_op_t _op) : op(_op) {}
-    bool operator()(scope_t& scope) const {
-      return op->calc(scope).to_boolean();
+    explicit op_functor(ptr_op_t _op) : op(_op) {}
+    value_t operator()(scope_t& scope) const {
+      return op->calc(scope);
     }
   };
 
