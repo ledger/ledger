@@ -29,8 +29,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _PY_EVAL_H
-#define _PY_EVAL_H
+#ifndef _PYINTERP_H
+#define _PYINTERP_H
 
 #include "xpath.h"
 
@@ -39,7 +39,7 @@
 
 namespace ledger {
 
-class python_interpreter_t : public xml::xpath_t::scope_t
+class python_interpreter_t : public xml::xpath_t::symbol_scope_t
 {
   boost::python::handle<> mmodule;
 
@@ -76,28 +76,23 @@ class python_interpreter_t : public xml::xpath_t::scope_t
   public:
     functor_t(const string& name, boost::python::object _func) : func(_func) {}
     virtual ~functor_t() {}
-    virtual value_t operator()(xml::xpath_t::scope_t& locals);
+    virtual value_t operator()(xml::xpath_t::call_scope_t& args);
   };
-
-  virtual void define(const string& name, xml::xpath_t::ptr_op_t def) {
-    // Pass any definitions up to our parent
-    parent->define(name, def);
-  }
 
   virtual xml::xpath_t::ptr_op_t lookup(const string& name) {
     if (boost::python::object func = eval(name))
-      return xml::xpath_t::wrap_functor(functor_t(name, func));
+      return WRAP_FUNCTOR(functor_t(name, func));
     else
-      return parent ? parent->lookup(name) : NULL;
+      return xml::xpath_t::symbol_scope_t::lookup(name);
   }
 
   class lambda_t : public functor_t {
    public:
     lambda_t(boost::python::object code) : functor_t("<lambda>", code) {}
-    virtual value_t operator()(xml::xpath_t::scope_t& locals);
+    virtual value_t operator()(xml::xpath_t::call_scope_t& args);
   };
 };
 
 } // namespace ledger
 
-#endif // _PY_EVAL_H
+#endif // _PYINTERP_H

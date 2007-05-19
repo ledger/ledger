@@ -61,6 +61,10 @@ class value_t
 public:
   typedef std::vector<value_t> sequence_t;
 
+  typedef sequence_t::iterator	      iterator;
+  typedef sequence_t::const_iterator  const_iterator;
+  typedef sequence_t::difference_type difference_type;
+
   enum type_t {
     VOID,
     BOOLEAN,
@@ -72,7 +76,6 @@ public:
     STRING,
     SEQUENCE,
     XML_NODE,
-    CONST_XML_NODE,
     POINTER
   };
 
@@ -217,12 +220,9 @@ public:
     TRACE_CTOR(value_t, "xml::node_t *");
     set_xml_node(xml_node);
   }
-  value_t(const xml::node_t * xml_node) {
-    TRACE_CTOR(value_t, "const xml::node_t *");
-    set_xml_node(xml_node);
-  }
-  value_t(void * item) {
-    TRACE_CTOR(value_t, "void *");
+  template <typename T>
+  value_t(T * item) {
+    TRACE_CTOR(value_t, "T *");
     set_pointer(item);
   }
   ~value_t() {
@@ -254,11 +254,22 @@ public:
     else
       storage->destroy();
   }
+  void _reset() {
+    if (storage) {
+      storage->destroy();
+      storage = intrusive_ptr<storage_t>();
+    }
+  }
 
   operator bool() const;
 
   bool is_null() const {
-    return ! storage || is_type(VOID);
+    if (! storage) {
+      return true;
+    } else {
+      assert(! is_type(VOID));
+      return false;
+    }
   }
   type_t type() const {
     type_t result = storage ? storage->type : VOID;
@@ -272,9 +283,14 @@ private:
   }
   void set_type(type_t new_type) {
     assert(new_type >= VOID && new_type <= POINTER);
-    _clear();
-    storage->type = new_type;
-    assert(is_type(new_type));
+    if (new_type == VOID) {
+      _reset();
+      assert(is_null());
+    } else {
+      _clear();
+      storage->type = new_type;
+      assert(is_type(new_type));
+    }
   }
 
 public:
@@ -415,35 +431,20 @@ public:
   }
 
   bool is_xml_node() const {
-    return is_type(XML_NODE) || is_type(CONST_XML_NODE);
+    return is_type(XML_NODE);
   }
   xml::node_t *& as_xml_node_lval() {
     assert(is_xml_node());
-    assert(! is_type(CONST_XML_NODE));
     _dup();
     return *(xml::node_t **) storage->data;
   }
-  xml::node_t * as_xml_node_mutable() {
+  xml::node_t * as_xml_node() const {
     assert(is_xml_node());
-    assert(! is_type(CONST_XML_NODE));
     return *(xml::node_t **) storage->data;
-  }
-  const xml::node_t * as_xml_node() const {
-    assert(is_xml_node());
-    return *(const xml::node_t **) storage->data;
-  }
-  template <typename T>
-  T * as_xml_node() const {
-    assert(is_xml_node());
-    return *(T **) storage->data;
   }
   void set_xml_node(xml::node_t * val) {
     set_type(XML_NODE);
     *(xml::node_t **) storage->data = val;
-  }
-  void set_xml_node(const xml::node_t * val) {
-    set_type(CONST_XML_NODE);
-    *(const xml::node_t **) storage->data = val;
   }
 
   bool is_pointer() const {
@@ -460,6 +461,12 @@ public:
     _dup();
     return any_cast<T *>(*(boost::any *) storage->data);
   }
+  template <typename T>
+  T& as_ref_lval() {
+    assert(is_pointer());
+    _dup();
+    return *any_cast<T *>(*(boost::any *) storage->data);
+  }
   boost::any as_any_pointer() const {
     assert(is_pointer());
     return *(boost::any *) storage->data;
@@ -468,6 +475,11 @@ public:
   T * as_pointer() const {
     assert(is_pointer());
     return any_cast<T *>(*(boost::any *) storage->data);
+  }
+  template <typename T>
+  T& as_ref() const {
+    assert(is_pointer());
+    return *any_cast<T *>(*(boost::any *) storage->data);
   }
   void set_any_pointer(const boost::any& val) {
     set_type(POINTER);
@@ -496,18 +508,66 @@ public:
   void in_place_simplify();
 
   value_t& operator[](const int index) {
-    return as_sequence_lval()[index];
+    assert(! is_null());
+    if (is_sequence())
+      return as_sequence_lval()[index];
+    else if (index == 0)
+      return *this;
+
+    assert(false);
+    static value_t null;
+    return null;
   }
   const value_t& operator[](const int index) const {
-    return as_sequence()[index];
+    assert(! is_null());
+    if (is_sequence())
+      return as_sequence()[index];
+    else if (index == 0)
+      return *this;
+
+    assert(false);
+    static value_t null;
+    return null;
   }
 
   void push_back(const value_t& val) {
-    return as_sequence_lval().push_back(val);
+    if (is_null()) {
+      *this = val;
+    } else {
+      if (! is_sequence())
+	in_place_cast(SEQUENCE);
+
+      if (! val.is_sequence())
+	as_sequence_lval().push_back(val);
+      else
+	std::copy(val.as_sequence().begin(), val.as_sequence().end(),
+		  as_sequence_lval().end());
+    }
+  }
+
+  void pop_back() {
+    assert(! is_null());
+
+    if (! is_sequence()) {
+      _reset();
+    } else {
+      as_sequence_lval().pop_back();
+
+      std::size_t new_size = as_sequence().size();
+      if (new_size == 0)
+	_reset();
+      else if (new_size == 1)
+	*this = as_sequence().front();
+    }
   }
 
   const std::size_t size() const {
-    return as_sequence().size();
+    if (is_null())
+      return 0;
+    else if (is_sequence())
+      return as_sequence().size();
+    else
+      return 1;
   }
 
   value_t& operator+=(const value_t& val);
@@ -542,7 +602,6 @@ public:
     case SEQUENCE:
       return "a sequence";
     case XML_NODE:
-    case CONST_XML_NODE:
       return "an xml node";
     case POINTER:
       return "a pointer";
@@ -602,18 +661,11 @@ public:
   friend std::ostream& operator<<(std::ostream& out, const value_t& val);
 };
 
-template <>
-inline const xml::node_t * value_t::as_xml_node() const {
-  assert(is_xml_node());
-  assert(! is_type(CONST_XML_NODE));
-  return *(const xml::node_t **) storage->data;
-}
+#define NULL_VALUE (value_t())
 
 std::ostream& operator<<(std::ostream& out, const value_t& val);
 
 DECLARE_EXCEPTION(value_error);
-
-#define NULL_VALUE (value_t())
 
 } // namespace ledger
 

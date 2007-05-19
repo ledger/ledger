@@ -87,7 +87,7 @@ struct python_run
 };
 
 python_interpreter_t::python_interpreter_t(xml::xpath_t::scope_t& parent)
-  : xml::xpath_t::scope_t(parent),
+  : xml::xpath_t::symbol_scope_t(parent),
     mmodule(borrowed(PyImport_AddModule("__main__"))),
     nspace(handle<>(borrowed(PyModule_GetDict(mmodule.get()))))
 {
@@ -176,16 +176,20 @@ object python_interpreter_t::eval(const string& str, py_eval_mode_t mode)
   return object();
 }
 
-value_t python_interpreter_t::functor_t::operator()(xml::xpath_t::scope_t& locals)
+value_t python_interpreter_t::functor_t::operator()
+  (xml::xpath_t::call_scope_t& args)
 {
   try {
     if (! PyCallable_Check(func.ptr())) {
       return extract<value_t>(func.ptr());
     } else {
-      if (locals.args.size() > 0) {
+      if (args.size() > 0) {
 	list arglist;
-	foreach (const value_t& value, locals.args)
-	  arglist.append(value);
+	if (args.value().is_sequence())
+	  foreach (const value_t& value, args.value().as_sequence())
+	    arglist.append(value);
+	else
+	  arglist.append(args.value());
 
 	if (PyObject * val =
 	    PyObject_CallObject(func.ptr(),
@@ -215,11 +219,11 @@ value_t python_interpreter_t::functor_t::operator()(xml::xpath_t::scope_t& local
 }
 
 value_t python_interpreter_t::lambda_t::operator()
-  (xml::xpath_t::scope_t& locals)
+  (xml::xpath_t::call_scope_t& args)
 {
   try {
-    assert(locals.args.size() == 1);
-    value_t item = locals.args[0];
+    assert(args.size() == 1);
+    value_t item = args[0];
     assert(item.is_xml_node());
     return call<value_t>(func.ptr(), item.as_xml_node());
   }

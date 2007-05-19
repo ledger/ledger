@@ -136,7 +136,7 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
   else
 #endif
   if (verb == "xml")
-    command = xml_command();
+    command = bind(xml_command, _1);
   else if (verb == "expr")
     ;
   else if (verb == "xpath")
@@ -145,17 +145,19 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
     xml::xpath_t    expr(*arg);
     xml::document_t temp(xml::LEDGER_NODE);
 
+    xml::xpath_t::document_scope_t doc_scope(report, temp);
+
     IF_INFO() {
       std::cout << "Value expression tree:" << std::endl;
       expr.dump(std::cout);
       std::cout << std::endl;
       std::cout << "Value expression parsed was:" << std::endl;
-      expr.print(std::cout, temp);
+      expr.print(std::cout, doc_scope);
       std::cout << std::endl << std::endl;
       std::cout << "Result of calculation: ";
     }
 
-    std::cout << expr.calc(temp, report).strip_annotations() << std::endl;
+    std::cout << expr.calc(doc_scope).strip_annotations() << std::endl;
 
     return 0;
   }
@@ -242,7 +244,11 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
   }
 #endif
 
+  report.define("ostream", value_t(out));
+
   // Are we handling the expr commands?  Do so now.
+
+  xml::xpath_t::document_scope_t doc_scope(report, xml_document);
 
   if (verb == "expr") {
     xml::xpath_t expr(*arg);
@@ -252,12 +258,12 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
       expr.dump(*out);
       *out << std::endl;
       *out << "Value expression parsed was:" << std::endl;
-      expr.print(*out, xml_document);
+      expr.print(*out, doc_scope);
       *out << std::endl << std::endl;
       *out << "Result of calculation: ";
     }
 
-    *out << expr.calc(xml_document, report).strip_annotations() << std::endl;
+    *out << expr.calc(doc_scope).strip_annotations() << std::endl;
 
     return 0;
   }
@@ -265,9 +271,10 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
     std::cout << "XPath parsed:" << std::endl;
 
     xml::xpath_t xpath(*arg);
-    xpath.print(*out, xml_document);
+    xpath.print(*out, doc_scope);
     *out << std::endl;
 
+#if 0
     foreach (const value_t& value, xpath.find_all(xml_document, report)) {
       if (value.is_xml_node()) {
 	value.as_xml_node()->print(std::cout);
@@ -276,31 +283,27 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
       }
       std::cout << std::endl;
     }
+#endif
     return 0;
   }
 
   // Apply transforms to the hierarchical document structure
 
   INFO_START(transforms, "Applied transforms");
-  report.apply_transforms(xml_document);
+  report.apply_transforms(doc_scope);
   INFO_FINISH(transforms);
 
   // Create an argument scope containing the report command's
   // arguments, and then invoke the command.
 
-  xml::xpath_t::scope_t locals(report, xml::xpath_t::scope_t::ARGUMENT);
+  xml::xpath_t::call_scope_t command_args(doc_scope);
 
-  locals.args.push_back(out);
-  locals.args.push_back(&xml_document);
-
-  value_t::sequence_t args_list;
-  foreach (string& i, args)
-    args_list.push_back(value_t(i, true));
-  locals.args.push_back(args_list);
+  for (strings_list::iterator i = arg; i != args.end(); i++)
+    command_args.push_back(value_t(*i, true));
 
   INFO_START(command, "Did user command '" << verb << "'");
 
-  command(locals);
+  command(command_args);
 
   INFO_FINISH(command);
 

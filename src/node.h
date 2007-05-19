@@ -87,12 +87,12 @@ public:
   parent_node_t& as_parent_node() {
     if (! is_parent_node())
       throw_(std::logic_error, "Request to cast leaf node to a parent node");
-    return *polymorphic_downcast<parent_node_t *>(this);
+    return downcast<parent_node_t>(*this);
   }    
   const parent_node_t& as_parent_node() const {
     if (! is_parent_node())
       throw_(std::logic_error, "Request to cast leaf node to a parent node");
-    return *polymorphic_downcast<const parent_node_t *>(this);
+    return downcast<const parent_node_t>(*this);
   }    
 
   virtual value_t to_value() const		 = 0;
@@ -116,6 +116,7 @@ public:
       attributes = attributes_t();
     attributes->push_back(attr_pair(_name_id, value));
   }
+  optional<const string&> get_attr(const string& _name) const;
   optional<const string&> get_attr(const nameid_t _name_id) const {
     if (attributes) {
       typedef attributes_t::nth_index<1>::type attributes_by_name;

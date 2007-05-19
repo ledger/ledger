@@ -40,6 +40,15 @@ const char * node_t::name() const
   return *document().lookup_name(name_id());
 }
 
+optional<const string&> node_t::get_attr(const string& _name) const
+{
+  optional<nameid_t> name_id = document().lookup_name_id(_name);
+  if (name_id)
+    return get_attr(*name_id);
+  else
+    return none;
+}
+
 void output_xml_string(std::ostream& out, const string& str)
 {
   for (const char * s = str.c_str(); *s; s++) {

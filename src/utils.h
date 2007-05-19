@@ -521,6 +521,11 @@ inline void throw_unexpected_error(char, char) {
 
 namespace ledger {
 
+template <typename T, typename U>
+inline T& downcast(U& object) {
+  return *polymorphic_downcast<T *>(&object);
+}
+
 path resolve_path(const path& pathname);
 
 #ifdef HAVE_REALPATH

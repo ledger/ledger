@@ -38,41 +38,46 @@ report_t::~report_t()
   TRACE_DTOR(report_t);
 }
 
-void report_t::apply_transforms(xml::document_t& document)
+void report_t::apply_transforms(xml::xpath_t::scope_t& scope)
 {
-  foreach (transform_t& transform, transforms)
-    transform.execute(document);
+  typedef tuple<shared_ptr<transform_t>, value_t> transform_details_tuple;
+
+  foreach (transform_details_tuple& transform_details, transforms) {
+    xml::xpath_t::call_scope_t call_args(scope);
+    call_args.set_args(transform_details.get<1>());
+    (*transform_details.get<0>())(call_args);
+  }
 }
 
-value_t report_t::abbrev(xml::xpath_t::scope_t& locals)
+value_t report_t::abbrev(xml::xpath_t::call_scope_t& args)
 {
-  if (locals.args.size() < 2)
+  if (args.size() < 2)
     throw_(std::logic_error, "usage: abbrev(STRING, WIDTH [, STYLE, ABBREV_LEN])");
 
-  string str = locals.args[0].as_string();
-  long	 wid = locals.args[1];
+  string str = args[0].as_string();
+  long	 wid = args[1];
 
   elision_style_t style = session.elision_style;
-  if (locals.args.size() == 3)
-    style = (elision_style_t)locals.args[2].as_long();
+  if (args.size() == 3)
+    style = (elision_style_t)args[2].as_long();
 
   long abbrev_len = session.abbrev_length;
-  if (locals.args.size() == 4)
-    abbrev_len = locals.args[3].as_long();
+  if (args.size() == 4)
+    abbrev_len = args[3].as_long();
 
   return value_t(abbreviate(str, wid, style, true, (int)abbrev_len), true);
 }
 
-value_t report_t::ftime(xml::xpath_t::scope_t& locals)
+value_t report_t::ftime(xml::xpath_t::call_scope_t& args)
 {
-  if (locals.args.size() < 1)
+  if (args.size() < 1)
     throw_(std::logic_error, "usage: ftime(DATE [, DATE_FORMAT])");
 
-  moment_t date = locals.args[0].as_datetime();
+  moment_t date = args[0].as_datetime();
 
   string date_format;
-  if (locals.args.size() == 2)
-    date_format = locals.args[1].as_string();
+  if (args.size() == 2)
+    date_format = args[1].as_string();
 #if 0
   // jww (2007-04-18): Need to setup an output facet here
   else
@@ -84,25 +89,27 @@ value_t report_t::ftime(xml::xpath_t::scope_t& locals)
 #endif
 }
 
+#if 0
 optional<value_t>
-report_t::resolve(const string& name, xml::xpath_t::scope_t& locals)
+report_t::resolve(const string& name, xml::xpath_t::call_scope_t& args)
 {
   const char * p = name.c_str();
   switch (*p) {
   case 'a':
     if (name == "abbrev") {
-      return abbrev(locals);
+      return abbrev(args);
     }
     break;
 
   case 'f':
     if (name == "ftime") {
-      return ftime(locals);
+      return ftime(args);
     }
     break;
   }
-  return xml::xpath_t::scope_t::resolve(name, locals);
+  return xml::xpath_t::scope_t::resolve(name, args);
 }
+#endif
 
 xml::xpath_t::ptr_op_t report_t::lookup(const string& name)
 {
@@ -210,7 +217,7 @@ xml::xpath_t::ptr_op_t report_t::lookup(const string& name)
     break;
   }
 
-  return xml::xpath_t::scope_t::lookup(name);
+  return xml::xpath_t::symbol_scope_t::lookup(name);
 }
 
 } // namespace ledger

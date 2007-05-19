@@ -39,9 +39,9 @@ namespace ledger {
 
 typedef std::list<string> strings_list;
 
-class report_t : public xml::xpath_t::scope_t
+class report_t : public xml::xpath_t::symbol_scope_t
 {
- public:
+public:
   optional<path> output_file;
   string	 format_string;
   string	 amount_expr;
@@ -59,10 +59,10 @@ class report_t : public xml::xpath_t::scope_t
   session_t&	 session;
   transform_t *  last_transform;
 
-  ptr_list<transform_t> transforms;
+  std::list<tuple<shared_ptr<transform_t>, value_t> > transforms;
 
   explicit report_t(session_t& _session)
-    : xml::xpath_t::scope_t(_session),
+    : xml::xpath_t::symbol_scope_t(downcast<xml::xpath_t::scope_t>(_session)),
       show_totals(false),
       raw_mode(false),
       session(_session),
@@ -76,14 +76,14 @@ class report_t : public xml::xpath_t::scope_t
 
   virtual ~report_t();
 
-  void apply_transforms(xml::document_t& document);
+  void apply_transforms(xml::xpath_t::scope_t& scope);
 
   //
   // Utility functions for value expressions
   //
 
-  value_t ftime(xml::xpath_t::scope_t& locals);
-  value_t abbrev(xml::xpath_t::scope_t& locals);
+  value_t ftime(xml::xpath_t::call_scope_t& args);
+  value_t abbrev(xml::xpath_t::call_scope_t& args);
 
   //
   // Config options
@@ -94,36 +94,36 @@ class report_t : public xml::xpath_t::scope_t
     xml::xpath_t(expr).compile((xml::document_t *)NULL, this);
 #endif
   }
-  value_t option_eval(xml::xpath_t::scope_t& locals) {
-    eval(locals.args[0].as_string());
+  value_t option_eval(xml::xpath_t::call_scope_t& args) {
+    eval(args[0].as_string());
     return NULL_VALUE;
   }
 
-  value_t option_amount(xml::xpath_t::scope_t& locals) {
-    eval(string("t=") + locals.args[0].as_string());
+  value_t option_amount(xml::xpath_t::call_scope_t& args) {
+    eval(string("t=") + args[0].as_string());
     return NULL_VALUE;
   }
-  value_t option_total(xml::xpath_t::scope_t& locals) {
-    eval(string("T()=") + locals.args[0].as_string());
-    return NULL_VALUE;
-  }
-
-  value_t option_format(xml::xpath_t::scope_t& locals) {
-    format_string = locals.args[0].as_string();
+  value_t option_total(xml::xpath_t::call_scope_t& args) {
+    eval(string("T()=") + args[0].as_string());
     return NULL_VALUE;
   }
 
-  value_t option_raw(xml::xpath_t::scope_t& locals) {
+  value_t option_format(xml::xpath_t::call_scope_t& args) {
+    format_string = args[0].as_string();
+    return NULL_VALUE;
+  }
+
+  value_t option_raw(xml::xpath_t::call_scope_t& args) {
     raw_mode = true;
     return NULL_VALUE;
   }
 
-  value_t option_foo(xml::xpath_t::scope_t& locals) {
+  value_t option_foo(xml::xpath_t::call_scope_t& args) {
     std::cout << "This is foo" << std::endl;
     return NULL_VALUE;
   }
-  value_t option_bar(xml::xpath_t::scope_t& locals) {
-    std::cout << "This is bar: " << locals.args[0] << std::endl;
+  value_t option_bar(xml::xpath_t::call_scope_t& args) {
+    std::cout << "This is bar: " << args[0] << std::endl;
     return NULL_VALUE;
   }
 
@@ -132,44 +132,44 @@ class report_t : public xml::xpath_t::scope_t
   //
 
 #if 0
-  value_t option_select(xml::xpath_t::scope_t& locals) {
-    transforms.push_back(new select_transform(locals.args[0].as_string()));
+  value_t option_select(xml::xpath_t::call_scope_t& args) {
+    transforms.push_back(new select_transform(args[0].as_string()));
     return NULL_VALUE;
   }
-  value_t option_limit(xml::xpath_t::scope_t& locals) {
+  value_t option_limit(xml::xpath_t::call_scope_t& args) {
     string expr = (string("//xact[") +
-			locals.args[0].as_string() + "]");
+		   args[0].as_string() + "]");
     transforms.push_back(new select_transform(expr));
     return NULL_VALUE;
   }
 
-  value_t option_remove(xml::xpath_t::scope_t& locals) {
-    transforms.push_back(new remove_transform(locals.args[0].as_string()));
+  value_t option_remove(xml::xpath_t::call_scope_t& args) {
+    transforms.push_back(new remove_transform(args[0].as_string()));
     return NULL_VALUE;
   }
 
-  value_t option_accounts(xml::xpath_t::scope_t& locals) {
+  value_t option_accounts(xml::xpath_t::call_scope_t& args) {
     transforms.push_back(new accounts_transform);
     return NULL_VALUE;
   }
-  value_t option_compact(xml::xpath_t::scope_t& locals) {
+  value_t option_compact(xml::xpath_t::call_scope_t& args) {
     transforms.push_back(new compact_transform);
     return NULL_VALUE;
   }
-  value_t option_clean(xml::xpath_t::scope_t& locals) {
+  value_t option_clean(xml::xpath_t::call_scope_t& args) {
     transforms.push_back(new clean_transform);
     return NULL_VALUE;
   }
-  value_t option_entries(xml::xpath_t::scope_t& locals) {
+  value_t option_entries(xml::xpath_t::call_scope_t& args) {
     transforms.push_back(new entries_transform);
     return NULL_VALUE;
   }
 
-  value_t option_split(xml::xpath_t::scope_t& locals) {
+  value_t option_split(xml::xpath_t::call_scope_t& args) {
     transforms.push_back(new split_transform);
     return NULL_VALUE;
   }
-  value_t option_merge(xml::xpath_t::scope_t& locals) {
+  value_t option_merge(xml::xpath_t::call_scope_t& args) {
     transforms.push_back(new merge_transform);
     return NULL_VALUE;
   }
@@ -179,8 +179,6 @@ class report_t : public xml::xpath_t::scope_t
   // Scope members
   //
 
-  virtual optional<value_t> resolve(const string& name,
-				    xml::xpath_t::scope_t& locals);
   virtual xml::xpath_t::ptr_op_t lookup(const string& name);
 };
 

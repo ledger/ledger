@@ -82,11 +82,11 @@ namespace {
 #if 0
     try {
 #endif
-      xml::xpath_t::scope_t arguments(scope, xml::xpath_t::scope_t::ARGUMENT);
+      xml::xpath_t::call_scope_t args(scope);
       if (arg)
-	arguments.args.push_back(value_t(arg, true));
+	args.push_back(value_t(arg, true));
 
-      opt(arguments);
+      opt(args);
 #if 0
     }
     catch (error * err) {

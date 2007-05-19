@@ -68,6 +68,56 @@ void release_session_context()
 #endif
 }
 
+session_t::session_t()
+  : symbol_scope_t(),
+
+    register_format
+    ("%((//entry)%{date} %-.20{payee}"
+     "%((./xact)%32|%-22{abbrev(account, 22)} %12.67t %12.80T\n))"),
+    wide_register_format
+    ("%D  %-.35P %-.38A %22.108t %!22.132T\n%/"
+     "%48|%-.38A %22.108t %!22.132T\n"),
+    print_format
+#if 1
+    ("%(/%(/%{date} %-.20{payee}\n%(:    %-34{account}  %12t\n)\n))"),
+#else
+    ("\n%d %Y%C%P\n    %-34W  %12o%n\n%/    %-34W  %12o%n\n"),
+#endif
+    balance_format
+    ("%(/%(//%20t  %{\"  \" * rdepth}%{rname}\n))--------------------\n%20t\n"),
+    equity_format
+
+    ("%((/)%{ftime(now, date_format)} %-.20{\"Opening Balance\"}\n%((.//account[value != 0])    %-34{fullname}  %12{value}\n)\n)"),
+    plot_amount_format
+    ("%D %(@S(@t))\n"),
+    plot_total_format
+    ("%D %(@S(@T))\n"),
+    write_hdr_format
+    ("%d %Y%C%P\n"),
+    write_xact_format
+    ("    %-34W  %12o%n\n"),
+    prices_format
+    ("%[%Y/%m/%d %H:%M:%S %Z]   %-10A %12t %12T\n"),
+    pricesdb_format
+    ("P %[%Y/%m/%d %H:%M:%S] %A %t\n"),
+
+    pricing_leeway(24 * 3600),
+
+    download_quotes(false),
+    use_cache(false),
+    cache_dirty(false),
+
+    now(now),
+
+    elision_style(ABBREVIATE),
+    abbrev_length(2),
+
+    ansi_codes(false),
+    ansi_invert(false)
+{
+  TRACE_CTOR(session_t, "xml::xpath_t::scope_t&");
+}
+
 std::size_t session_t::read_journal(std::istream&   in,
 				    const path&     pathname,
 				    xml::builder_t& builder)
@@ -173,6 +223,7 @@ std::size_t session_t::read_data(xml::builder_t& builder,
   return entry_count;
 }
 
+#if 0
 optional<value_t>
 session_t::resolve(const string& name, xml::xpath_t::scope_t& locals)
 {
@@ -203,6 +254,7 @@ session_t::resolve(const string& name, xml::xpath_t::scope_t& locals)
   }
   return xml::xpath_t::scope_t::resolve(name, locals);
 }
+#endif
 
 xml::xpath_t::ptr_op_t session_t::lookup(const string& name)
 {
@@ -239,7 +291,7 @@ xml::xpath_t::ptr_op_t session_t::lookup(const string& name)
     break;
   }
 
-  return xml::xpath_t::scope_t::lookup(name);
+  return xml::xpath_t::symbol_scope_t::lookup(name);
 }
 
 // jww (2007-04-26): All of Ledger should be accessed through a

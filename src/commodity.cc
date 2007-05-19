@@ -126,13 +126,13 @@ commodity_t::operator bool() const
 annotated_commodity_t& commodity_t::as_annotated()
 {
   assert(annotated);
-  return *polymorphic_downcast<annotated_commodity_t *>(this);
+  return downcast<annotated_commodity_t>(*this);
 }
 
 const annotated_commodity_t& commodity_t::as_annotated() const
 {
   assert(annotated);
-  return *polymorphic_downcast<const annotated_commodity_t *>(this);
+  return downcast<const annotated_commodity_t>(*this);
 }
 
 bool commodity_t::symbol_needs_quotes(const string& symbol)

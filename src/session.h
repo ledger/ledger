@@ -39,7 +39,7 @@
 
 namespace ledger {
 
-class session_t : public xml::xpath_t::scope_t
+class session_t : public xml::xpath_t::symbol_scope_t
 {
  public:
   static session_t * current;
@@ -79,53 +79,7 @@ class session_t : public xml::xpath_t::scope_t
   ptr_list<journal_t> journals;
   ptr_list<parser_t>  parsers;
 
-  session_t() :
-    register_format
-    ("%((//entry)%{date} %-.20{payee}"
-     "%((./xact)%32|%-22{abbrev(account, 22)} %12.67t %12.80T\n))"),
-    wide_register_format
-    ("%D  %-.35P %-.38A %22.108t %!22.132T\n%/"
-     "%48|%-.38A %22.108t %!22.132T\n"),
-    print_format
-#if 1
-    ("%(/%(/%{date} %-.20{payee}\n%(:    %-34{account}  %12t\n)\n))"),
-#else
-    ("\n%d %Y%C%P\n    %-34W  %12o%n\n%/    %-34W  %12o%n\n"),
-#endif
-    balance_format
-    ("%(/%(//%20t  %{\"  \" * rdepth}%{rname}\n))--------------------\n%20t\n"),
-    equity_format
-
-    ("%((/)%{ftime(now, date_format)} %-.20{\"Opening Balance\"}\n%((.//account[value != 0])    %-34{fullname}  %12{value}\n)\n)"),
-    plot_amount_format
-    ("%D %(@S(@t))\n"),
-    plot_total_format
-    ("%D %(@S(@T))\n"),
-    write_hdr_format
-    ("%d %Y%C%P\n"),
-    write_xact_format
-    ("    %-34W  %12o%n\n"),
-    prices_format
-    ("%[%Y/%m/%d %H:%M:%S %Z]   %-10A %12t %12T\n"),
-    pricesdb_format
-    ("P %[%Y/%m/%d %H:%M:%S] %A %t\n"),
-
-    pricing_leeway(24 * 3600),
-
-    download_quotes(false),
-    use_cache(false),
-    cache_dirty(false),
-
-    now(now),
-
-    elision_style(ABBREVIATE),
-    abbrev_length(2),
-
-    ansi_codes(false),
-    ansi_invert(false) {
-    TRACE_CTOR(session_t, "xml::xpath_t::scope_t&");
-  }
-
+  session_t();
   virtual ~session_t() {
     TRACE_DTOR(session_t);
   }
@@ -178,8 +132,6 @@ class session_t : public xml::xpath_t::scope_t
   // Scope members
   //
 
-  virtual optional<value_t> resolve(const string& name,
-				    xml::xpath_t::scope_t& locals = NULL);
   virtual xml::xpath_t::ptr_op_t lookup(const string& name);
 
   //
@@ -208,19 +160,19 @@ class session_t : public xml::xpath_t::scope_t
   // Option handlers
   //
 
-  value_t option_file_(xml::xpath_t::scope_t& locals) {
-    assert(locals.args.size() == 1);
-    data_file = locals.args[0].as_string();
+  value_t option_file_(xml::xpath_t::call_scope_t& args) {
+    assert(args.size() == 1);
+    data_file = args[0].as_string();
     return NULL_VALUE;
   }
 
 #if 0
 #if defined(USE_BOOST_PYTHON)
-  value_t option_import_(xml::xpath_t::scope_t& locals) {
+  value_t option_import_(xml::xpath_t::call_scope_t& args) {
     python_import(optarg);
     return NULL_VALUE;
   }
-  value_t option_import_stdin(xml::xpath_t::scope_t& locals) {
+  value_t option_import_stdin(xml::xpath_t::call_scope_t& args) {
     python_eval(std::cin, PY_EVAL_MULTI);
     return NULL_VALUE;
   }
