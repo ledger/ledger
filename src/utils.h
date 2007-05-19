@@ -149,7 +149,6 @@ extern bool verify_enabled;
 
 #define VERIFY(x)   (ledger::verify_enabled ? assert(x) : ((void)0))
 #define DO_VERIFY() ledger::verify_enabled
-#define IF_VERIFY() if (DO_VERIFY())
 
 void initialize_memory_tracing();
 void shutdown_memory_tracing();
@@ -237,10 +236,13 @@ inline bool operator!=(const string& __lhs, const char* __rhs)
 #else // ! VERIFY_ON
 
 #define VERIFY(x)
+#define DO_VERIFY() true
 #define TRACE_CTOR(cls, args)
 #define TRACE_DTOR(cls)
 
 #endif // VERIFY_ON
+
+#define IF_VERIFY() if (DO_VERIFY())
 
 /**********************************************************************
  *
