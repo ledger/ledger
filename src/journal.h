@@ -58,10 +58,8 @@ class transaction_t : public supports_flags<>
   account_t *	     account;
   optional<moment_t> _date;
   optional<moment_t> _date_eff;
-  optional<amount_t> amount;
-  optional<string>   amount_expr;
+  amount_t           amount;
   optional<amount_t> cost;
-  optional<string>   cost_expr;
   optional<string>   note;
 
   static bool use_effective_date;
@@ -88,9 +86,7 @@ class transaction_t : public supports_flags<>
       _date(xact._date),
       _date_eff(xact._date_eff),
       amount(xact.amount),
-      amount_expr(xact.amount_expr),
       cost(xact.cost),
-      cost_expr(xact.cost_expr),
       note(xact.note) {
     TRACE_CTOR(transaction_t, "copy");
   }
@@ -368,12 +364,9 @@ typedef std::list<period_entry_t *> period_entries_list;
 typedef std::list<path>	    	    path_list;
 typedef std::list<string>	    strings_list;
 
-class session_t;
-
 class journal_t
 {
  public:
-  session_t *	 session;
   account_t *	 master;
   account_t *	 basket;
   entries_list	 entries;
@@ -388,9 +381,7 @@ class journal_t
 
   std::list<entry_finalizer_t *> entry_finalize_hooks;
 
-  journal_t(session_t * _session)
-    : session(_session), basket(NULL),
-      item_pool(NULL), item_pool_end(NULL) {
+  journal_t() : basket(NULL), item_pool(NULL), item_pool_end(NULL) {
     TRACE_CTOR(journal_t, "");
     master = new account_t(NULL, "");
     master->journal = this;

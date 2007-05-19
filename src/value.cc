@@ -1203,20 +1203,20 @@ void value_t::in_place_reduce()
 {
   switch (type()) {
   case INTEGER:
-    break;
+    return;
   case AMOUNT:
     as_amount_lval().in_place_reduce();
-    break;
+    return;
   case BALANCE:
     as_balance_lval().in_place_reduce();
-    break;
+    return;
   case BALANCE_PAIR:
     as_balance_pair_lval().in_place_reduce();
-    break;
+    return;
   case XML_NODE:
     *this = as_xml_node()->to_value();
     in_place_reduce();		// recurse
-    break;
+    return;
   default:
     break;
   }

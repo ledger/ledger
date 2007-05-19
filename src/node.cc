@@ -40,7 +40,19 @@ const char * node_t::name() const
   return *document().lookup_name(name_id());
 }
 
-optional<value_t> node_t::get_attr(const string& _name) const
+value_t& node_t::set_attr(const string& _name, const char * value)
+{
+  nameid_t name_id = document().register_name(_name);
+  return set_attr(name_id, value);
+}
+
+value_t& node_t::set_attr(const string& _name, const value_t& value)
+{
+  nameid_t name_id = document().register_name(_name);
+  return set_attr(name_id, value);
+}
+
+optional<value_t&> node_t::get_attr(const string& _name)
 {
   optional<nameid_t> name_id = document().lookup_name_id(_name);
   if (name_id)
@@ -71,10 +83,17 @@ void output_xml_string(std::ostream& out, const string& str)
 
 void node_t::print_attributes(std::ostream& out) const
 {
-  if (attributes)
+  if (attributes) {
+#if 1
+    foreach (const attr_pair& attr, *attributes)
+      out << ' ' << *document().lookup_name(attr.first)
+	  << "=\"" << attr.second << "\"";
+#else
     foreach (const attr_pair& attr, attributes->get<0>())
       out << ' ' << *document().lookup_name(attr.first)
 	  << "=\"" << attr.second << "\"";
+#endif
+  }
 
   IF_VERIFY()
     out << " type=\"parent_node_t\"";

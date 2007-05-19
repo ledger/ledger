@@ -38,6 +38,8 @@
 namespace ledger {
 namespace xml {
 
+void compile_node(node_t& node, xml::xpath_t::scope_t& scope);
+
 #if 0
 class commodity_node_t : public parent_node_t
 {
@@ -82,6 +84,25 @@ public:
 };
 #endif
 
+class journal_node_t : public parent_node_t
+{
+public:
+  shared_ptr<journal_t> journal;
+
+  journal_node_t(nameid_t    _name_id,
+		 document_t& _document,
+		 const optional<parent_node_t&>& _parent = none,
+		 journal_t * _journal = NULL)
+    : parent_node_t(_name_id, _document, _parent), journal(_journal) {
+    TRACE_CTOR(journal_node_t, "document_t *, journal_t *, parent_node_t *");
+  }
+  virtual ~journal_node_t() {
+    TRACE_DTOR(journal_node_t);
+  }
+
+  void compile(xpath_t::scope_t& scope);
+};
+
 class entry_node_t : public parent_node_t
 {
 public:
@@ -99,7 +120,7 @@ public:
     TRACE_DTOR(entry_node_t);
   }
 
-  virtual void compile();
+  void compile(xpath_t::scope_t& scope);
 };
 
 class transaction_node_t : public parent_node_t
@@ -120,30 +141,15 @@ public:
   virtual ~transaction_node_t() {
     TRACE_DTOR(transaction_node_t);
   }
+
+  void compile(xpath_t::scope_t& scope);
+
+private:
+  void parse_amount_expr(xpath_t::scope_t& scope,
+			 const char * amount_expr);
 };
 
 #if 0
-class entry_node_t : public parent_node_t
-{
-  entry_t *  entry;
-
-public:
-  entry_node_t(document_t * _document, entry_t * _entry,
-	       parent_node_t * _parent = NULL)
-    : parent_node_t(_document, _parent), entry(_entry) {
-    TRACE_CTOR(entry_node_t, "document_t *, entry_t *, parent_node_t *");
-    set_name(document_t::ENTRY);
-  }
-  virtual ~entry_node_t() {
-    TRACE_DTOR(entry_node_t);
-  }
-
-  virtual node_t * children() const;
-  virtual node_t * lookup_child(int _name_id) const;
-
-  friend class transaction_node_t;
-};
-
 class account_node_t : public parent_node_t
 {
   account_t * account;
@@ -160,26 +166,6 @@ public:
   }
 
   virtual node_t * children() const;
-};
-
-class journal_node_t : public parent_node_t
-{
-  journal_t * journal;
-
-public:
-  journal_node_t(document_t * _document, journal_t * _journal,
-		 parent_node_t * _parent = NULL)
-    : parent_node_t(_document, _parent), journal(_journal) {
-    TRACE_CTOR(journal_node_t, "document_t *, journal_t *, parent_node_t *");
-    set_name(document_t::JOURNAL);
-  }
-  virtual ~journal_node_t() {
-    TRACE_DTOR(journal_node_t);
-  }
-
-  virtual node_t * children() const;
-
-  friend class transaction_node_t;
 };
 
 template <typename T>

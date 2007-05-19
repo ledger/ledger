@@ -83,7 +83,7 @@ bool transaction_t::valid() const
     return false;
   }
 
-  if (amount && ! amount->valid()) {
+  if (! amount.valid()) {
     DEBUG("ledger.validate", "transaction_t: ! amount.valid()");
     return false;
   }
@@ -122,22 +122,22 @@ bool entry_base_t::finalize()
        x++)
     if (! (*x)->has_flags(TRANSACTION_VIRTUAL) ||
 	(*x)->has_flags(TRANSACTION_BALANCE)) {
-      optional<amount_t>& p((*x)->cost ? (*x)->cost : (*x)->amount);
+      amount_t& p((*x)->cost ? *(*x)->cost : (*x)->amount);
       if (p) {
 	if (no_amounts) {
-	  balance = *p;
+	  balance = p;
 	  no_amounts = false;
 	} else {
-	  balance += *p;
+	  balance += p;
 	}
 
 	assert((*x)->amount);
-	if ((*x)->cost && (*x)->amount->commodity().annotated) {
+	if ((*x)->cost && (*x)->amount.commodity().annotated) {
 	  annotated_commodity_t&
 	    ann_comm(static_cast<annotated_commodity_t&>
-		     ((*x)->amount->commodity()));
+		     ((*x)->amount.commodity()));
 	  if (ann_comm.details.price)
-	    balance += (*ann_comm.details.price * (*x)->amount->number() -
+	    balance += (*ann_comm.details.price * (*x)->amount.number() -
 			*((*x)->cost));
 	}
       } else {
@@ -170,7 +170,7 @@ bool entry_base_t::finalize()
       balance.as_balance().amounts.size() == 2) {
     transactions_list::const_iterator x = transactions.begin();
     assert((*x)->amount);
-    commodity_t& this_comm = (*x)->amount->commodity();
+    commodity_t& this_comm = (*x)->amount.commodity();
 
     balance_t::amounts_map::const_iterator this_bal =
       balance.as_balance().amounts.find(&this_comm);
@@ -184,22 +184,21 @@ bool entry_base_t::finalize()
 
     for (; x != transactions.end(); x++) {
       if ((*x)->cost || (*x)->has_flags(TRANSACTION_VIRTUAL) ||
-	  ! (*x)->amount || (*x)->amount->commodity() != this_comm)
+	  (*x)->amount.commodity() != this_comm)
 	continue;
 
-      assert((*x)->amount);
-      balance -= *(*x)->amount;
+      balance -= (*x)->amount;
 
       entry_t * entry = dynamic_cast<entry_t *>(this);
 
-      if ((*x)->amount->commodity() &&
-	  ! (*x)->amount->commodity().annotated)
-	(*x)->amount->annotate_commodity
+      if ((*x)->amount.commodity() &&
+	  ! (*x)->amount.commodity().annotated)
+	(*x)->amount.annotate_commodity
 	  (annotation_t(per_unit_cost.abs(),
 			entry ? entry->actual_date() : optional<moment_t>(),
 			entry ? entry->code          : optional<string>()));
 
-      (*x)->cost = - (per_unit_cost * (*x)->amount->number());
+      (*x)->cost = - (per_unit_cost * (*x)->amount.number());
       balance += *(*x)->cost;
     }
   }
@@ -267,7 +266,7 @@ bool entry_base_t::finalize()
       (*x)->amount = balance.as_amount().negate();
       (*x)->add_flags(TRANSACTION_CALCULATED);
 
-      balance += *(*x)->amount;
+      balance += (*x)->amount;
       break;
 
     default:
@@ -378,7 +377,7 @@ void auto_entry_t::extend_entry(entry_base_t& entry, bool post)
 	   t++) {
 	amount_t amt;
 	assert((*t)->amount);
-	if (! (*t)->amount->commodity()) {
+	if (! (*t)->amount.commodity()) {
 	  if (! post)
 	    continue;
 	  assert((*i)->amount);
@@ -590,9 +589,8 @@ bool journal_t::add_entry(entry_t * entry)
        i++)
     if ((*i)->cost) {
       assert((*i)->amount);
-      assert(*(*i)->amount);
-      (*i)->amount->commodity().add_price(entry->date(),
-					  *(*i)->cost / (*i)->amount->number());
+      (*i)->amount.commodity().add_price(entry->date(),
+					 *(*i)->cost / (*i)->amount.number());
     }
 
   return true;

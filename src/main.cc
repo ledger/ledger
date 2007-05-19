@@ -37,6 +37,7 @@
 //#include "qif.h"
 //#include "ofx.h"
 #include "jbuilder.h"
+#include "compile.h"
 
 #include <ledger.h>
 
@@ -300,7 +301,7 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
       *out << "Compiled results:" << std::endl;
     }
 
-    xml_document.compile();
+    xml::compile_node(xml_document, report);
 
     foreach (const value_t& value, xpath.find_all(doc_scope)) {
       if (value.is_xml_node())

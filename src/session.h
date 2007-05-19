@@ -85,7 +85,7 @@ class session_t : public xml::xpath_t::symbol_scope_t
   }
 
   journal_t * create_journal() {
-    journal_t * journal = new journal_t(this);
+    journal_t * journal = new journal_t;
     journals.push_back(journal);
     return journal;
   }

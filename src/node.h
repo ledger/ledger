@@ -33,7 +33,6 @@
 #define _NODE_H
 
 #include "value.h"
-//#include "parser.h"
 
 namespace ledger {
 namespace xml {
@@ -42,8 +41,9 @@ namespace xml {
 
 DECLARE_EXCEPTION(conversion_error);
 
-class parent_node_t;
 class document_t;
+class parent_node_t;
+class terminal_node_t;
 
 class node_t : public supports_flags<>, public noncopyable
 {
@@ -58,6 +58,10 @@ protected:
   document_t&		   document_;
   optional<parent_node_t&> parent_;
 
+#if 1
+  typedef std::map<const nameid_t, value_t> attributes_t;
+  typedef std::pair<const nameid_t, value_t> attr_pair;
+#else
   typedef std::pair<nameid_t, value_t> attr_pair;
 
   typedef multi_index_container<
@@ -69,14 +73,15 @@ protected:
     >
   > attributes_t;
 
-  optional<attributes_t> attributes;
-
   typedef attributes_t::nth_index<0>::type attributes_by_order;
   typedef attributes_t::nth_index<1>::type attributes_hashed;
+#endif
 
-  bool compiled;
+  optional<attributes_t> attributes;
 
 public:
+  bool compiled;		// so that compile_node() can access it
+
   node_t(nameid_t _name_id, document_t& _document,
 	 const optional<parent_node_t&>& _parent = none, flags_t _flags = 0)
     : supports_flags<>(_flags), name_id_(_name_id),
@@ -88,10 +93,11 @@ public:
     TRACE_DTOR(node_t);
   }
 
+  void extract();
+
   bool is_compiled() const {
     return compiled;
   }
-  virtual void compile() {}
 
   bool is_parent_node() const {
     return has_flags(XML_NODE_IS_PARENT);
@@ -102,9 +108,19 @@ public:
     return downcast<parent_node_t>(*this);
   }    
   const parent_node_t& as_parent_node() const {
-    if (! is_parent_node())
-      throw_(std::logic_error, "Request to cast leaf node to a parent node");
-    return downcast<const parent_node_t>(*this);
+    return const_cast<node_t *>(this)->as_parent_node();
+  }    
+
+  bool is_terminal_node() const {
+    return ! has_flags(XML_NODE_IS_PARENT);
+  }
+  terminal_node_t& as_terminal_node() {
+    if (! is_terminal_node())
+      throw_(std::logic_error, "Request to cast parent node to a leaf node");
+    return downcast<terminal_node_t>(*this);
+  }    
+  const terminal_node_t& as_terminal_node() const {
+    return const_cast<node_t *>(this)->as_terminal_node();
   }    
 
   virtual value_t to_value() const		 = 0;
@@ -123,28 +139,60 @@ public:
     return parent_;
   }
 
-  void set_attr(const nameid_t _name_id, const char * value) {
-    if (! attributes)
-      attributes = attributes_t();
-    attributes->push_back(attr_pair(_name_id, string_value(value)));
+  value_t& set_attr(const string& _name, const char * value);
+  value_t& set_attr(const string& _name, const value_t& value);
+
+  value_t& set_attr(const nameid_t _name_id, const char * value) {
+    return set_attr(_name_id, string_value(value));
   }
-  void set_attr(const nameid_t _name_id, const value_t& value) {
+  value_t& set_attr(const nameid_t _name_id, const value_t& value) {
     if (! attributes)
       attributes = attributes_t();
-    attributes->push_back(attr_pair(_name_id, value));
+
+    attributes_t::iterator i = attributes->find(_name_id);
+    if (i == attributes->end()) {
+      std::pair<attributes_t::iterator, bool> result =
+	attributes->insert(attr_pair(_name_id, value));
+      assert(result.second);
+      return (*result.first).second;
+    } else {
+      i->second = value;
+      return i->second;
+    }
   }
 
-  optional<value_t> get_attr(const string& _name) const;
-  optional<value_t> get_attr(const nameid_t _name_id) const {
+  optional<value_t&> get_attr(const string& _name);
+  optional<value_t&> get_attr(const nameid_t _name_id) {
     if (attributes) {
+#if 1
+      attributes_t::iterator i = attributes->find(_name_id);
+      if (i != attributes->end())
+	return (*i).second;
+#else
       typedef attributes_t::nth_index<1>::type attributes_by_name;
 
       const attributes_by_name& name_index = attributes->get<1>();
-      attributes_by_name::const_iterator i = name_index.find(_name_id);
+      attributes_by_name::iterator i = name_index.find(_name_id);
       if (i != name_index.end())
 	return (*i).second;
+#endif
     }
     return none;
+  }
+
+  optional<const value_t&> get_attr(const string& _name) const {
+    if (optional<value_t&> value =
+	const_cast<node_t *>(this)->get_attr(_name))
+      return *value;
+    else
+      return none;
+  }
+  optional<const value_t&> get_attr(const nameid_t _name_id) const {
+    if (optional<value_t&> value =
+	const_cast<node_t *>(this)->get_attr(_name_id))
+      return *value;
+    else
+      return none;
   }
 };
 
@@ -177,11 +225,6 @@ public:
     clear_children();
   }
 
-  virtual void compile() {
-    foreach (node_t * child, *this)
-      child->compile();
-  }
-
   template <typename T>
   T * create_child(nameid_t _name_id) {
     T * child = new T(_name_id, document(), *this);
@@ -189,14 +232,17 @@ public:
     return child;
   }
 
-  void delete_child(node_t * child) {
+  void remove_child(node_t * child) {
     children_by_ptr& ptr_index = children.get<2>();
     children_by_ptr::iterator i = ptr_index.find(child);
     if (i == ptr_index.end())
       throw_(std::logic_error, "Request to delete node which is not a child");
-    node_t * ptr = *i;
     ptr_index.erase(i);
-    checked_delete(ptr);
+  }
+
+  void delete_child(node_t * child) {
+    remove_child(child);
+    checked_delete(child);
   }
 
   struct match_nameid {
@@ -261,6 +307,12 @@ public:
 
   void print(std::ostream& out) const;
 };
+
+inline void node_t::extract()
+{
+  if (parent_)
+    parent_->remove_child(this);
+}
 
 class terminal_node_t : public node_t
 {
