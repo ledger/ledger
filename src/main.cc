@@ -36,7 +36,7 @@
 //#endif
 //#include "qif.h"
 //#include "ofx.h"
-#include "builder.h"
+#include "jbuilder.h"
 
 #include <ledger.h>
 
@@ -192,9 +192,9 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
 
   INFO_START(journal, "Read journal file");
 
-  xml::document_t	  xml_document(xml::LEDGER_NODE);
-  journal_t *		  journal = session.create_journal();
-  xml::document_builder_t builder(xml_document);
+  xml::document_t	 xml_document(xml::LEDGER_NODE);
+  journal_t *		 journal = session.create_journal();
+  xml::journal_builder_t builder(xml_document, journal);
 
   if (! session.read_data(builder, journal, report.account))
     throw_(parse_error, "Failed to locate any journal entries; "

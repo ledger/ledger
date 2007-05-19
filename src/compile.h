@@ -29,323 +29,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _NODE_H
-#define _NODE_H
+#ifndef _COMPILE_H
+#define _COMPILE_H
 
+#include "node.h"
 #include "journal.h"
-#include "value.h"
-//#include "parser.h"
 
 namespace ledger {
-
-class transaction_t;
-class entry_t;
-class account_t;
-class journal_t;
-
 namespace xml {
 
-#define XML_NODE_IS_PARENT 0x1
-
-#define ACCOUNT_ATTR		  "account"
-#define ACCOUNT_PATH_NODE	  "account-path"
-#define AMOUNT_EXPR_NODE	  "amount-expr"
-#define ARG_ATTR		  "arg"
-#define AUTO_ENTRY_NODE		  "auto-entry"
-#define BALANCE_ATTR		  "balance"
-#define CHECKIN_NODE		  "checkin"
-#define CLEARED_ATTR		  "cleared"
-#define CODE_ATTR		  "code"
-#define COMMODITY_CONVERSION_NODE "commodity-conversion"
-#define COMMODITY_NOMARKET_NODE	  "commodity-nomarket"
-#define COMMODITY_TEMPLATE_NODE	  "commodity-template"
-#define CURRENT_YEAR_NODE	  "current-year"
-#define DATE_ATTR		  "date"
-#define DATE_EFF_ATTR		  "effective"
-#define DEFAULT_ACCOUNT_NODE	  "default-account"
-#define DIRECTIVE_NODE		  "directive"
-#define ENTRY_NODE		  "entry"
-#define FROM_ATTR		  "from"
-#define JOURNAL_NODE		  "journal"
-#define NAME_ATTR		  "name"
-#define NOTE_NODE		  "note"
-#define PAYEE_NODE		  "payee"
-#define PENDING_ATTR		  "pending"
-#define PERIOD_ENTRY_NODE	  "period-entry"
-#define PERIOD_NODE		  "period"
-#define PRICE_ATTR		  "price"
-#define PRICE_HISTORY_NODE	  "price-history"
-#define RULE_NODE		  "rule"
-#define SYMBOL_ATTR		  "symbol"
-#define TEMPLATE_ATTR		  "template"
-#define TIME_ATTR		  "time"
-#define TO_ATTR			  "to"
-#define TRANSACTION_NODE	  "transaction"
-#define VIRTUAL_ATTR		  "virtual"
-#define YEAR_ATTR		  "year"
-
-DECLARE_EXCEPTION(conversion_error);
-
-class parent_node_t;
-class document_t;
-
-class node_t : public supports_flags<>
-{
-public:
-  typedef uint_fast16_t nameid_t;
-
-  nameid_t	      name_id;
-#ifdef THREADSAFE
-  document_t *	      document;
-#else
-  static document_t * document;
-#endif
-  parent_node_t *     parent;
-  node_t *	      next;
-  node_t *	      prev;
-
-  typedef std::map<string, string> attrs_map;
-
-  attrs_map * attrs;
-
-  node_t(document_t * _document, parent_node_t * _parent = NULL,
-	 flags_t _flags = 0);
-
-  virtual ~node_t() {
-    TRACE_DTOR(node_t);
-    if (parent) extract();
-    if (attrs) checked_delete(attrs);
-  }
-
-  parent_node_t * as_parent_node() {
-    if (! has_flags(XML_NODE_IS_PARENT))
-      throw_(std::logic_error, "Request to cast leaf node to a parent node");
-    return polymorphic_downcast<parent_node_t *>(this);
-  }    
-  const parent_node_t * as_parent_node() const {
-    if (! has_flags(XML_NODE_IS_PARENT))
-      throw_(std::logic_error, "Request to cast leaf node to a parent node");
-    return polymorphic_downcast<const parent_node_t *>(this);
-  }    
-
-  void extract();		// extract this node from its parent's child list
-
-  virtual const char * text() const {
-    assert(false);
-    return NULL;
-  }
-
-  const char * name() const;
-  int set_name(const char * _name);
-  int set_name(int _name_id) {
-    name_id = _name_id;
-    return name_id;
-  }
-
-  void set_attr(const char * n, const char * v) {
-    if (! attrs)
-      attrs = new attrs_map;
-    std::pair<attrs_map::iterator, bool> result =
-      attrs->insert(attrs_map::value_type(n, v));
-    assert(result.second);
-  }
-  const char * get_attr(const char * n) {
-    if (attrs) {
-      attrs_map::iterator i = attrs->find(n);
-      if (i != attrs->end())
-	return (*i).second.c_str();
-    }
-    return NULL;
-  }
-
-  node_t * lookup_child(const char * _name) const;
-  node_t * lookup_child(const string& _name) const;
-  virtual node_t * lookup_child(int /* _name_id */) const {
-    return NULL;
-  }
-
-  virtual value_t to_value() const {
-    throw_(conversion_error, "Cannot convert node to a value");
-    return value_t();
-  }
-
-  virtual void print(std::ostream& out, int depth = 0) const = 0;
-
-private:
-  node_t(const node_t&);
-  node_t& operator=(const node_t&);
-};
-
-class parent_node_t : public node_t
-{
-public:
-  mutable node_t * _children;
-  mutable node_t * _last_child;
-
-  parent_node_t(document_t * _document, parent_node_t * _parent = NULL)
-    : node_t(_document, _parent, XML_NODE_IS_PARENT),
-      _children(NULL), _last_child(NULL)
-  {
-    TRACE_CTOR(parent_node_t, "document_t *, parent_node_t *");
-  }
-  virtual ~parent_node_t() {
-    TRACE_DTOR(parent_node_t);
-    if (_children) clear();
-  }
-
-  virtual void	   clear();	// clear out all child nodes
-  virtual node_t * children() const {
-    return _children;
-  }
-  virtual node_t * last_child() {
-    if (! _children)
-      children();
-    return _last_child;
-  }
-  virtual void	   add_child(node_t * node);
-
-  void print(std::ostream& out, int depth = 0) const;
-
-private:
-  parent_node_t(const parent_node_t&);
-  parent_node_t& operator=(const parent_node_t&);
-};
-
-class terminal_node_t : public node_t
-{
-  string data;
-
-public:
-  terminal_node_t(document_t * _document, parent_node_t * _parent = NULL)
-    : node_t(_document, _parent)
-  {
-    TRACE_CTOR(terminal_node_t, "document_t *, parent_node_t *");
-  }
-  virtual ~terminal_node_t() {
-    TRACE_DTOR(terminal_node_t);
-  }
-
-  virtual const char * text() const {
-    return data.c_str();
-  }
-  virtual void set_text(const char * _data) {
-    data = _data;
-  }
-  virtual void set_text(const string& _data) {
-    data = _data;
-  }
-
-  virtual value_t to_value() const {
-    return text();
-  }
-
-  void print(std::ostream& out, int depth = 0) const;
-
-private:
-  terminal_node_t(const node_t&);
-  terminal_node_t& operator=(const node_t&);
-};
-
-class document_t
-{
-  static const char * 	   ledger_builtins[];
-  static const std::size_t ledger_builtins_size;
-
-public:
-  enum ledger_builtins_t {
-    ACCOUNT = 10,
-    ACCOUNT_PATH,
-    AMOUNT,
-    CODE,
-    COMMODITY,
-    ENTRIES,
-    ENTRY,
-    JOURNAL,
-    NAME,
-    NOTE,
-    PAYEE,
-    TRANSACTION
-  };
-
-private:
-  typedef std::vector<string> names_array;
-
-  names_array names;
-
-  typedef std::map<string, int> names_map;
-
-  names_map names_index;
-
-public:
-  node_t * top;
-
-private:
-  terminal_node_t stub;
-
-public:
-  // Ids 0-9 are reserved.  10-999 are for "builtin" names.  1000+ are
-  // for dynamically registered names.
-  enum special_names_t {
-    CURRENT, PARENT, ROOT, ALL
-  };
-
-  document_t(node_t * _top = NULL)
-    : top(_top ? _top : &stub), stub(this) {
-    TRACE_CTOR(xml::document_t, "node_t *, const char **, const int");
-  }
-  ~document_t();
-
-  void set_top(node_t * _top);
-
-  int register_name(const string& name);
-  int lookup_name_id(const string& name) const;
-  static int lookup_builtin_id(const string& name);
-  const char * lookup_name(int id) const;
-
-  void print(std::ostream& out) const;
-
-#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
-  class parser_t
-  {
-  public:
-    document_t *	document;
-    XML_Parser		parser;
-    string		have_error;
-    const char *	pending;
-    node_t::attrs_map * pending_attrs;
-    bool                handled_data;
-
-    std::list<parent_node_t *> node_stack;
-
-    parser_t() : document(NULL), pending(NULL), pending_attrs(NULL),
-		 handled_data(false) {}
-    virtual ~parser_t() {}
-
-    virtual bool         test(std::istream& in) const;
-    virtual document_t * parse(std::istream& in);
-  };
-#endif
-};
-
 #if 0
-#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
-
-class xml_parser_t : public parser_t
-{
- public:
-  virtual bool test(std::istream& in) const;
-
-  virtual unsigned int parse(std::istream&	   in,
-			     journal_t *	   journal,
-			     account_t *	   master   = NULL,
-			     const optional<path>& original = none);
-};
-
-DECLARE_EXCEPTION(parse_error);
-
-#endif
-#endif
-
 class commodity_node_t : public parent_node_t
 {
 public:
@@ -387,33 +80,29 @@ public:
     return *amount;
   }
 };
+#endif
 
 class transaction_node_t : public parent_node_t
 {
-  mutable terminal_node_t * payee_virtual_node;
-
 public:
-  transaction_t * transaction;
+  shared_ptr<transaction_t> transaction;
 
-  transaction_node_t(document_t *    _document,
-		     transaction_t * _transaction,
-		     parent_node_t * _parent = NULL)
-    : parent_node_t(_document, _parent), payee_virtual_node(NULL),
+  transaction_node_t(nameid_t        _name_id,
+		     document_t&     _document,
+		     const optional<parent_node_t&>& _parent = none,
+		     transaction_t * _transaction = NULL)
+    : parent_node_t(_name_id, _document, _parent),
       transaction(_transaction) {
-    TRACE_CTOR(transaction_node_t, "document_t *, transaction_t *, parent_node_t *");
-    set_name(document_t::TRANSACTION);
+    TRACE_CTOR(transaction_node_t,
+	       "document_t&, parent_node_t, transaction_t *");
+    assert(_name_id == TRANSACTION_NODE);
   }
   virtual ~transaction_node_t() {
     TRACE_DTOR(transaction_node_t);
-    if (payee_virtual_node)
-      checked_delete(payee_virtual_node);
   }
-
-  virtual node_t * children() const;
-  virtual node_t * lookup_child(int _name_id) const;
-  virtual value_t  to_value() const;
 };
 
+#if 0
 class entry_node_t : public parent_node_t
 {
   entry_t *  entry;
@@ -503,8 +192,9 @@ inline journal_t::node_type *
 wrap_node(document_t * doc, journal_t * journal, void * parent_node) {
   return new journal_node_t(doc, journal, (parent_node_t *)parent_node);
 }
+#endif
 
 } // namespace xml
 } // namespace ledger
 
-#endif // _NODE_H
+#endif // _COMPILE_H

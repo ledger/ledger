@@ -44,8 +44,9 @@ libledger_la_SOURCES = \
 	src/value.cc     \
 	src/document.cc	 \
 	src/node.cc	 \
+	src/compile.cc	 \
+	src/jbuilder.cc	 \
 	src/xpath.cc     \
-	src/builder.cc	 \
 	src/journal.cc	 \
 	src/textual.cc	 \
 	src/binary.cc	 \
@@ -100,7 +101,9 @@ pkginclude_HEADERS = \
 	src/balpair.h	     \
 	src/binary.h	     \
 	src/builder.h	     \
+	src/jbuilder.h	     \
 	src/commodity.h	     \
+	src/compile.h	     \
 	src/context.h	     \
 	src/document.h	     \
 	src/fdstream.hpp     \
