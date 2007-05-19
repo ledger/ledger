@@ -15,6 +15,7 @@ else
 fi
 
 if [ -d $TMPDIR/ledger ]; then
+    find $TMPDIR/ledger -print0 | xargs -0 chmod u+w
     rm -fr $TMPDIR/ledger || exit 1
 fi
 
