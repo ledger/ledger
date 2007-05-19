@@ -68,7 +68,9 @@ public:
       CHILD_SCOPE,
       SYMBOL_SCOPE,
       CALL_SCOPE,
-      CONTEXT_SCOPE
+      CONTEXT_SCOPE,
+      SELECTION_SCOPE,
+      PREDICATE_SCOPE
     } type_;
 
     explicit scope_t(type_t _type) : type_(_type) {
@@ -91,9 +93,16 @@ public:
 
     virtual optional<scope_t&> find_scope(const type_t _type,
 					  bool skip_this = false) = 0;
+    virtual optional<scope_t&> find_first_scope(const type_t _type1,
+						const type_t _type2,
+						bool skip_this = false) = 0;
 
     template <typename T>
     T& find_scope(bool skip_this = false) {
+      assert(false);
+    }
+    template <typename T>
+    optional<T&> maybe_find_scope(bool skip_this = false) {
       assert(false);
     }
   };
@@ -129,6 +138,18 @@ public:
 					  bool skip_this = false) {
       for (scope_t * ptr = (skip_this ? parent : this); ptr; ) {
 	if (ptr->type() == _type)
+	  return *ptr;
+
+	ptr = polymorphic_downcast<child_scope_t *>(ptr)->parent;
+      }
+      return none;
+    }
+
+    virtual optional<scope_t&> find_first_scope(const type_t _type1,
+						const type_t _type2,
+						bool skip_this = false) {
+      for (scope_t * ptr = (skip_this ? parent : this); ptr; ) {
+	if (ptr->type() == _type1 || ptr->type() == _type2)
 	  return *ptr;
 
 	ptr = polymorphic_downcast<child_scope_t *>(ptr)->parent;
@@ -205,74 +226,74 @@ public:
   class context_scope_t : public child_scope_t
   {
   public:
-    value_t	      element;
-    optional<value_t> sequence;
+    value_t     current_element;
+    std::size_t element_index;
+    std::size_t sequence_size;
 
-    explicit context_scope_t(scope_t&	              _parent,
-			     const value_t&           _element,
-			     const optional<value_t>& _sequence = none)
-      : child_scope_t(_parent, CONTEXT_SCOPE)
+    explicit context_scope_t(scope_t&	        _parent,
+			     const value_t&     _element        = NULL_VALUE,
+			     const std::size_t  _element_index  = 0,
+			     const std::size_t  _sequence_size  = 0)
+      : child_scope_t(_parent, CONTEXT_SCOPE), current_element(_element), 
+	element_index(_element_index), sequence_size(_sequence_size)
     {
-      TRACE_CTOR(xpath_t::context_scope_t,
-		 "scope_t&, const value_t&, const optional<value_t>&");
-      set_context(_element, _sequence);
-    }
-    explicit context_scope_t(scope_t&	              _parent,
-			     node_t&                  _element,
-			     const optional<value_t>& _sequence = none)
-      : child_scope_t(_parent, CONTEXT_SCOPE)
-    {
-      TRACE_CTOR(xpath_t::context_scope_t,
-		 "scope_t&, const value_t&, const optional<value_t>&");
-      set_context(value_t(&_element), _sequence);
+      TRACE_CTOR(xpath_t::context_scope_t, "scope_t&, const value_t&, ...");
     }
     virtual ~context_scope_t() {
       TRACE_DTOR(xpath_t::context_scope_t);
     }
 
-    void set_context(const value_t& _element,
-		     const optional<value_t>& _sequence) {
-      element  = _element;
-      sequence = _sequence;
-
-      assert(! element.is_sequence());
-
-      if (DO_VERIFY() && sequence) {
-	if (sequence->is_sequence()) {
-	  value_t::sequence_t seq(sequence->as_sequence());
-	  value_t::iterator i = std::find(seq.begin(), seq.end(), element);
-	  assert(i != seq.end());
-	} else {
-	  assert(element == *sequence);
-	}
-      }
-    }
-
     const std::size_t index() const {
-      if (! sequence) {
-	return 0;
-      } else {
-	value_t::sequence_t seq(sequence->as_sequence());
-	value_t::iterator i = std::find(seq.begin(), seq.end(), element);
-	assert(i != seq.end());
-	int_least16_t offset = i - seq.begin();
-	assert(offset >= 0);
-	return std::size_t(offset);
-      }
+      return element_index;
     }
-
     const std::size_t size() const {
-      return sequence ? sequence->size() : (element.is_null() ? 0 : 1);
+      return sequence_size;
     }
 
     value_t& value() {
-      return element;
+      return current_element;
     }
-
     node_t& xml_node() {
-      if (! element.is_xml_node())
-	throw_(calc_error, "The current context value is not an XML node");
-      return *element.as_xml_node();
+      assert(current_element.is_xml_node());
+      return *current_element.as_xml_node();
+    }
+  };
+
+  class selection_scope_t : public child_scope_t
+  {
+  public:
+    ptr_op_t selection_path;
+    bool     recurse;
+
+    explicit selection_scope_t(scope_t&	       _parent,
+			       const ptr_op_t& _selection_path = NULL,
+			       const bool      _recurse        = false)
+      : child_scope_t(_parent, SELECTION_SCOPE),
+	selection_path(_selection_path), recurse(_recurse)
+    {
+      TRACE_CTOR(xpath_t::selection_scope_t,
+		 "scope_t&, const ptr_op_t&, const bool");
+    }
+    virtual ~selection_scope_t() {
+      TRACE_DTOR(xpath_t::selection_scope_t);
+    }
+  };
+
+  typedef function<bool (scope_t&)> predicate_t;
+
+  class predicate_scope_t : public child_scope_t
+  {
+  public:
+    predicate_t predicate;
+
+    explicit predicate_scope_t(scope_t&	_parent,
+			       const predicate_t& _predicate = predicate_t())
+      : child_scope_t(_parent, PREDICATE_SCOPE), predicate(_predicate)
+    {
+      TRACE_CTOR(xpath_t::predicate_scope_t, "scope_t&, const predicate_t&");
+    }
+    virtual ~predicate_scope_t() {
+      TRACE_DTOR(xpath_t::predicate_scope_t);
     }
   };
 
@@ -604,12 +625,10 @@ public:
     static ptr_op_t wrap_value(const value_t& val);
     static ptr_op_t wrap_functor(const function_t& fobj);
 
-    typedef function<value_t (scope_t&)> predicate_t;
-
     ptr_op_t compile(scope_t& scope);
     value_t  current_value(scope_t& scope);
     node_t&  current_xml_node(scope_t& scope);
-    value_t  calc(scope_t& scope, const predicate_t& = predicate_t());
+    value_t  calc(scope_t& scope);
 
     struct print_context_t
     {
@@ -639,12 +658,13 @@ public:
     }
   };
 
-  class op_functor {
+  class op_predicate {
     ptr_op_t op;
   public:
-    explicit op_functor(ptr_op_t _op) : op(_op) {}
-    value_t operator()(scope_t& scope) const {
-      return op->calc(scope);
+    explicit op_predicate(ptr_op_t _op) : op(_op) {}
+    bool operator()(scope_t& scope) {
+      predicate_scope_t null_predicate(scope);
+      return op->calc(null_predicate).to_boolean();
     }
   };
 
@@ -875,8 +895,30 @@ xpath_t::scope_t::find_scope<xpath_t::context_scope_t>(bool skip_this) {
   return downcast<context_scope_t>(*scope);
 }
 
+template<>
+inline optional<xpath_t::selection_scope_t&>
+xpath_t::scope_t::maybe_find_scope<xpath_t::selection_scope_t>(bool skip_this) {
+  optional<scope_t&> scope = find_scope(SELECTION_SCOPE, skip_this);
+  if (scope)
+    return downcast<selection_scope_t>(*scope);
+  else
+    return none;
+}
+
+template<>
+inline optional<xpath_t::predicate_scope_t&>
+xpath_t::scope_t::maybe_find_scope<xpath_t::predicate_scope_t>(bool skip_this) {
+  optional<scope_t&> scope = find_scope(PREDICATE_SCOPE, skip_this);
+  if (scope)
+    return downcast<predicate_scope_t>(*scope);
+  else
+    return none;
+}
+
 #define FIND_SCOPE(scope_type, scope_ref) \
   downcast<xml::xpath_t::scope_t>(scope_ref).find_scope<scope_type>()
+#define MAYBE_FIND_SCOPE(scope_type, scope_ref) \
+  downcast<xml::xpath_t::scope_t>(scope_ref).maybe_find_scope<scope_type>()
 
 #define CALL_SCOPE(scope_ref) \
   FIND_SCOPE(xml::xpath_t::call_scope_t, scope_ref)
@@ -884,6 +926,10 @@ xpath_t::scope_t::find_scope<xpath_t::context_scope_t>(bool skip_this) {
   FIND_SCOPE(xml::xpath_t::symbol_scope_t, scope_ref)
 #define CONTEXT_SCOPE(scope_ref) \
   FIND_SCOPE(xml::xpath_t::context_scope_t, scope_ref)
+#define SELECTION_SCOPE(scope_ref) \
+  MAYBE_FIND_SCOPE(xml::xpath_t::selection_scope_t, scope_ref)
+#define PREDICATE_SCOPE(scope_ref) \
+  MAYBE_FIND_SCOPE(xml::xpath_t::predicate_scope_t, scope_ref)
 
 } // namespace xml
 

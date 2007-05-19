@@ -539,19 +539,21 @@ public:
   }
 
   void push_back(const value_t& val) {
-    if (is_null()) {
-      *this = val;
-    } else {
-      if (! is_sequence())
-	in_place_cast(SEQUENCE);
-
-      value_t::sequence_t& seq(as_sequence_lval());
-      if (! val.is_sequence()) {
-	if (! val.is_null())
-	  seq.push_back(val);
+    if (! val.is_null()) {
+      if (is_null()) {
+	*this = val;
       } else {
-	const value_t::sequence_t& val_seq(val.as_sequence());
-	std::copy(val_seq.begin(), val_seq.end(), back_inserter(seq));
+	if (! is_sequence())
+	  in_place_cast(SEQUENCE);
+
+	value_t::sequence_t& seq(as_sequence_lval());
+	if (! val.is_sequence()) {
+	  if (! val.is_null())
+	    seq.push_back(val);
+	} else {
+	  const value_t::sequence_t& val_seq(val.as_sequence());
+	  std::copy(val_seq.begin(), val_seq.end(), back_inserter(seq));
+	}
       }
     }
   }

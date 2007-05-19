@@ -145,7 +145,7 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
     xml::xpath_t    expr(*arg);
     xml::document_t temp(xml::LEDGER_NODE);
 
-    xml::xpath_t::context_scope_t doc_scope(report, temp);
+    xml::xpath_t::context_scope_t doc_scope(report, &temp);
 
     IF_INFO() {
       std::cout << "Value expression tree:" << std::endl;
@@ -260,7 +260,7 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
 
   // Are we handling the expr commands?  Do so now.
 
-  xml::xpath_t::context_scope_t doc_scope(report, xml_document);
+  xml::xpath_t::context_scope_t doc_scope(report, &xml_document);
 
   if (verb == "expr") {
     xml::xpath_t expr(*arg);
