@@ -68,9 +68,7 @@ public:
       CHILD_SCOPE,
       SYMBOL_SCOPE,
       CALL_SCOPE,
-      CONTEXT_SCOPE,
-      SELECTION_SCOPE,
-      PREDICATE_SCOPE
+      CONTEXT_SCOPE
     } type_;
 
     explicit scope_t(type_t _type) : type_(_type) {
@@ -256,44 +254,6 @@ public:
     node_t& xml_node() {
       assert(current_element.is_xml_node());
       return *current_element.as_xml_node();
-    }
-  };
-
-  class selection_scope_t : public child_scope_t
-  {
-  public:
-    ptr_op_t selection_path;
-    bool     recurse;
-
-    explicit selection_scope_t(scope_t&	       _parent,
-			       const ptr_op_t& _selection_path = NULL,
-			       const bool      _recurse        = false)
-      : child_scope_t(_parent, SELECTION_SCOPE),
-	selection_path(_selection_path), recurse(_recurse)
-    {
-      TRACE_CTOR(xpath_t::selection_scope_t,
-		 "scope_t&, const ptr_op_t&, const bool");
-    }
-    virtual ~selection_scope_t() {
-      TRACE_DTOR(xpath_t::selection_scope_t);
-    }
-  };
-
-  typedef function<bool (scope_t&)> predicate_t;
-
-  class predicate_scope_t : public child_scope_t
-  {
-  public:
-    predicate_t predicate;
-
-    explicit predicate_scope_t(scope_t&	_parent,
-			       const predicate_t& _predicate = predicate_t())
-      : child_scope_t(_parent, PREDICATE_SCOPE), predicate(_predicate)
-    {
-      TRACE_CTOR(xpath_t::predicate_scope_t, "scope_t&, const predicate_t&");
-    }
-    virtual ~predicate_scope_t() {
-      TRACE_DTOR(xpath_t::predicate_scope_t);
     }
   };
 
@@ -663,8 +623,7 @@ public:
   public:
     explicit op_predicate(ptr_op_t _op) : op(_op) {}
     bool operator()(scope_t& scope) {
-      predicate_scope_t null_predicate(scope);
-      return op->calc(null_predicate).to_boolean();
+      return op->calc(scope).to_boolean();
     }
   };
 
@@ -895,30 +854,8 @@ xpath_t::scope_t::find_scope<xpath_t::context_scope_t>(bool skip_this) {
   return downcast<context_scope_t>(*scope);
 }
 
-template<>
-inline optional<xpath_t::selection_scope_t&>
-xpath_t::scope_t::maybe_find_scope<xpath_t::selection_scope_t>(bool skip_this) {
-  optional<scope_t&> scope = find_scope(SELECTION_SCOPE, skip_this);
-  if (scope)
-    return downcast<selection_scope_t>(*scope);
-  else
-    return none;
-}
-
-template<>
-inline optional<xpath_t::predicate_scope_t&>
-xpath_t::scope_t::maybe_find_scope<xpath_t::predicate_scope_t>(bool skip_this) {
-  optional<scope_t&> scope = find_scope(PREDICATE_SCOPE, skip_this);
-  if (scope)
-    return downcast<predicate_scope_t>(*scope);
-  else
-    return none;
-}
-
 #define FIND_SCOPE(scope_type, scope_ref) \
   downcast<xml::xpath_t::scope_t>(scope_ref).find_scope<scope_type>()
-#define MAYBE_FIND_SCOPE(scope_type, scope_ref) \
-  downcast<xml::xpath_t::scope_t>(scope_ref).maybe_find_scope<scope_type>()
 
 #define CALL_SCOPE(scope_ref) \
   FIND_SCOPE(xml::xpath_t::call_scope_t, scope_ref)
@@ -926,10 +863,6 @@ xpath_t::scope_t::maybe_find_scope<xpath_t::predicate_scope_t>(bool skip_this) {
   FIND_SCOPE(xml::xpath_t::symbol_scope_t, scope_ref)
 #define CONTEXT_SCOPE(scope_ref) \
   FIND_SCOPE(xml::xpath_t::context_scope_t, scope_ref)
-#define SELECTION_SCOPE(scope_ref) \
-  MAYBE_FIND_SCOPE(xml::xpath_t::selection_scope_t, scope_ref)
-#define PREDICATE_SCOPE(scope_ref) \
-  MAYBE_FIND_SCOPE(xml::xpath_t::predicate_scope_t, scope_ref)
 
 } // namespace xml
 

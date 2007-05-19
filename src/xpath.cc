@@ -1009,20 +1009,37 @@ node_t& xpath_t::op_t::current_xml_node(scope_t& scope)
 }
 
 namespace {
-  value_t find_recursively(node_t& node, xpath_t::scope_t& scope,
-			   xpath_t::selection_scope_t& sel_scope)
+  value_t select_nodes(xpath_t::scope_t& scope, const value_t& nodes,
+		       xpath_t::ptr_op_t selection_path, bool recurse)
   {
     value_t result;
 
-    if (node.is_parent_node()) {
-      parent_node_t& parent_node(node.as_parent_node());
-    
+    if (! nodes.is_sequence()) {
+      xpath_t::context_scope_t node_scope(scope, nodes, 0, 1);
+      result.push_back(selection_path->calc(node_scope));
+    } else {
       std::size_t index = 0;
-      std::size_t size  = parent_node.size();
+      std::size_t size  = nodes.as_sequence().size();
 
-      foreach (node_t * child, parent_node) {
-	xpath_t::context_scope_t node_scope(scope, child, index, size);
-	result.push_back(sel_scope.selection_path->calc(node_scope));
+      foreach (const value_t& node, nodes.as_sequence()) {
+	xpath_t::context_scope_t node_scope(scope, node, index, size);
+	result.push_back(selection_path->calc(node_scope));
+
+	if (recurse && node.is_xml_node()) {
+	  node_t& xml_node(*node.as_xml_node());
+
+	  value_t child_nodes;
+	  if (xml_node.is_parent_node()) {
+	    parent_node_t& parent_node(xml_node.as_parent_node());
+	    foreach (node_t * child, parent_node)
+	      child_nodes.push_back(child);
+	  }
+
+	  result.push_back(select_nodes(scope, child_nodes,
+					selection_path, recurse));
+	}
+
+	index++;
       }
     }
     return result;
@@ -1032,21 +1049,15 @@ namespace {
 value_t xpath_t::op_t::calc(scope_t& scope)
 {
   bool find_all_nodes = false;
-  bool checked	      = false;
-  bool have_xml_nodes = false;
-
-  value_t result;
 
   switch (kind) {
   case VALUE:
-    result = as_value();
-    break;
+    return as_value();
 
   case VAR_NAME:
   case FUNC_NAME:
     if (ptr_op_t reference = compile(scope)) {
-      result  = reference->calc(scope);
-      checked = true;
+      return reference->calc(scope);
     } else {
       throw_(calc_error, "No " << (kind == VAR_NAME ? "variable" : "function")
 	     << " named '" << as_string() << "'");
@@ -1078,60 +1089,67 @@ value_t xpath_t::op_t::calc(scope_t& scope)
 	     name.empty() ? string("Attempt to call non-function") :
 	     (string("Attempt to call unknown function '") + name + "'"));
 
-    result = func->as_function()(call_args);
-    break;
+    return func->as_function()(call_args);
   }
 
   case ARG_INDEX: {
     call_scope_t& args(CALL_SCOPE(scope));
 
     if (as_long() >= 0 && as_long() < args.size())
-      result = args[as_long()];
+      return args[as_long()];
     else
       throw_(calc_error, "Reference to non-existing argument");
     break;
   }
 
   case O_FIND:
-  case O_RFIND: {
-    selection_scope_t find_scope(scope, right(), kind == O_RFIND);
-    result  = left()->calc(find_scope);
-    checked = true;
+  case O_RFIND:
+    select_nodes(scope, left()->calc(scope), right(), kind == O_RFIND);
     break;
-  }
 
   case O_PRED: {
-    predicate_scope_t pred_scope(scope, op_predicate(right()));
-    result  = left()->calc(pred_scope);
-    checked = true;
+    value_t values = left()->calc(scope);
+
+    if (! values.is_null()) {
+      op_predicate pred(right());
+
+      if (! values.is_sequence()) {
+	context_scope_t value_scope(scope, values, 0, 1);
+	if (pred(value_scope))
+	  return values;
+	return NULL_VALUE;
+      } else {
+	std::size_t index = 0;
+	std::size_t size  = values.as_sequence().size();
+
+	value_t result;
+
+	foreach (const value_t& value, values.as_sequence()) {
+	  context_scope_t value_scope(scope, value, index, size);
+	  if (pred(value_scope))
+	    result.push_back(value);
+	  index++;
+	}
+	return result;
+      }
+    }
     break;
   }
 
-  case NODE_ID: {
-    bool break_at_end = false;
-
+  case NODE_ID:
     switch (as_name()) {
     case document_t::CURRENT:
-      result	     = current_value(scope);
-      have_xml_nodes = result.is_xml_node();
-      break_at_end   = true;
-      break;
+      return current_value(scope);
 
     case document_t::PARENT:
       if (optional<parent_node_t&> parent = current_xml_node(scope).parent())
-	result = &*parent;
+	return &*parent;
       else
 	throw_(std::logic_error, "Attempt to access parent of root node");
-
-      have_xml_nodes = true;
-      break_at_end   = true;
       break;
 
     case document_t::ROOT:
-      result = &current_xml_node(scope).document();
-      have_xml_nodes = true;
-      break_at_end   = true;
-      break;
+      return &current_xml_node(scope).document();
 
     case document_t::ALL:
       find_all_nodes = true;
@@ -1140,11 +1158,7 @@ value_t xpath_t::op_t::calc(scope_t& scope)
     default:
       break;			// pass down to the NODE_NAME case
     }
-
-    if (break_at_end)
-      break;
     // fall through...
-  }
 
   case NODE_NAME: {
     node_t& current_node(current_xml_node(scope));
@@ -1152,31 +1166,16 @@ value_t xpath_t::op_t::calc(scope_t& scope)
     if (current_node.is_parent_node()) {
       const bool have_name_id = kind == NODE_ID;
 
-      optional<predicate_scope_t&> pred_scope(PREDICATE_SCOPE(scope));
-
       parent_node_t& parent(current_node.as_parent_node());
 
-      std::size_t index = 0;
-      std::size_t size  = parent.size();
-
+      value_t result;
       foreach (node_t * child, parent) {
 	if (find_all_nodes ||
 	    (  have_name_id && as_name()   == child->name_id()) ||
-	    (! have_name_id && as_string() == child->name())) {
-	  if (! pred_scope || ! pred_scope->predicate) {
-	    result.push_back(child);
-	  } else {
-	    context_scope_t node_scope(scope, child, index, size);
-	    if (pred_scope->predicate(node_scope))
-	      result.push_back(child);
-	  }
-	}
-
-	index++;
+	    (! have_name_id && as_string() == child->name()))
+	  result.push_back(child);
       }
-
-      checked	     = true;
-      have_xml_nodes = true;
+      return result;
     }
     break;
   }
@@ -1186,7 +1185,7 @@ value_t xpath_t::op_t::calc(scope_t& scope)
     if (optional<const string&> value =
 	kind == ATTR_ID ? current_xml_node(scope).get_attr(as_long()) :
 	                  current_xml_node(scope).get_attr(as_string()))
-      result = value_t(*value, true);
+      return value_t(*value, true);
     else
       throw_(calc_error, "Attribute '"
 	     << (kind == ATTR_ID ?
@@ -1232,30 +1231,9 @@ value_t xpath_t::op_t::calc(scope_t& scope)
 
   case O_COMMA:
   case O_UNION: {
-    optional<predicate_scope_t&> pred_scope(PREDICATE_SCOPE(scope));
-    {
-      value_t temp(left()->calc(scope));
-
-      context_scope_t value_scope(scope, temp, 0, 1);
-      if (! pred_scope || ! pred_scope->predicate ||
-	  pred_scope->predicate(value_scope))
-	result.push_back(temp);
-    }
-
-    std::size_t index = 0;
-    std::size_t size  = 1;
+    value_t result(left()->calc(scope));
 
     ptr_op_t next = right();
-    while (next) {
-      size++;
-
-      if (next->kind == O_COMMA || next->kind == O_UNION)
-	next = next->right();
-      else
-	next = NULL;
-    }
-
-    next = right();
     while (next) {
       ptr_op_t value_op;
       if (next->kind == O_COMMA || next->kind == O_UNION) {
@@ -1266,18 +1244,9 @@ value_t xpath_t::op_t::calc(scope_t& scope)
 	next     = NULL;
       }
 
-      value_t inner_temp(value_op->calc(scope));
-
-      context_scope_t value_scope(scope, inner_temp, index, size);
-      if (! pred_scope || ! pred_scope->predicate ||
-	  pred_scope->predicate(value_scope))
-	result.push_back(inner_temp);
-
-      index++;
+      result.push_back(value_op->calc(scope));
     }
-
-    checked = true;
-    break;
+    return result;
   }
 
   case LAST:
@@ -1286,69 +1255,7 @@ value_t xpath_t::op_t::calc(scope_t& scope)
     break;
   }
 
-  if (! result.is_null() && (! checked || have_xml_nodes)) {
-    if (optional<scope_t&> sel_or_pred_scope =
-	scope.find_first_scope(scope_t::SELECTION_SCOPE,
-			       scope_t::PREDICATE_SCOPE)) {
-      value_t new_result;
-
-      if (sel_or_pred_scope->type() == scope_t::SELECTION_SCOPE) {
-	selection_scope_t& sel_scope(downcast<selection_scope_t>(*sel_or_pred_scope));
-
-	if (! result.is_sequence()) {
-	  context_scope_t node_scope(scope, result, 0, 1);
-
-	  new_result.push_back(sel_scope.selection_path->calc(node_scope));
-
-	  if (sel_scope.recurse && result.is_xml_node())
-	    new_result.push_back(find_recursively(*result.as_xml_node(),
-						  scope, sel_scope));
-	} else {
-	  std::size_t index = 0;
-	  std::size_t size  = result.as_sequence().size();
-
-	  foreach (const value_t& value, result.as_sequence()) {
-	    context_scope_t node_scope(scope, value, index, size);
-
-	    value_t item = sel_scope.selection_path->calc(node_scope);
-	    new_result.push_back(item);
-
-	    if (sel_scope.recurse && item.is_xml_node())
-	      new_result.push_back(find_recursively(*item.as_xml_node(),
-						    scope, sel_scope));
-
-	    index++;
-	  }
-	}
-      }
-      else {
-	predicate_scope_t& pred_scope(downcast<predicate_scope_t>(*sel_or_pred_scope));
-	if (pred_scope.predicate) {
-	  if (! result.is_sequence()) {
-	    context_scope_t value_scope(scope, result, 0, 1);
-	    if (! pred_scope.predicate(value_scope))
-	      new_result = NULL_VALUE;
-	    else
-	      new_result = result;
-	  } else {
-	    std::size_t index = 0;
-	    std::size_t size  = result.as_sequence().size();
-
-	    foreach (const value_t& value, result.as_sequence()) {
-	      context_scope_t value_scope(scope, value, index, size);
-	      if (pred_scope.predicate(value_scope))
-		new_result.push_back(value);
-	      index++;
-	    }
-	  }
-	}
-      }
-
-      result = new_result;
-    }
-  }
-
-  return result;
+  return NULL_VALUE;
 }
 
 
