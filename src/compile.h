@@ -82,6 +82,26 @@ public:
 };
 #endif
 
+class entry_node_t : public parent_node_t
+{
+public:
+  shared_ptr<entry_t> entry;
+
+  entry_node_t(nameid_t    _name_id,
+	       document_t& _document,
+	       const optional<parent_node_t&>& _parent = none,
+	       entry_t *   _entry = NULL)
+    : parent_node_t(_name_id, _document, _parent), entry(_entry) {
+    TRACE_CTOR(entry_node_t, "document_t&, parent_node_t, entry_t *");
+    assert(_name_id == ENTRY_NODE);
+  }
+  virtual ~entry_node_t() {
+    TRACE_DTOR(entry_node_t);
+  }
+
+  virtual void compile();
+};
+
 class transaction_node_t : public parent_node_t
 {
 public:

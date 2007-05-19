@@ -40,7 +40,7 @@ const char * node_t::name() const
   return *document().lookup_name(name_id());
 }
 
-optional<const string&> node_t::get_attr(const string& _name) const
+optional<value_t> node_t::get_attr(const string& _name) const
 {
   optional<nameid_t> name_id = document().lookup_name_id(_name);
   if (name_id)
@@ -71,12 +71,11 @@ void output_xml_string(std::ostream& out, const string& str)
 
 void node_t::print_attributes(std::ostream& out) const
 {
-  if (attributes) {
-    typedef attributes_t::nth_index<0>::type attributes_by_order;
+  if (attributes)
     foreach (const attr_pair& attr, attributes->get<0>())
       out << ' ' << *document().lookup_name(attr.first)
 	  << "=\"" << attr.second << "\"";
-  }
+
   IF_VERIFY()
     out << " type=\"parent_node_t\"";
 }

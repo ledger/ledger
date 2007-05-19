@@ -433,22 +433,34 @@ namespace {
   value_t xpath_fn_last(xpath_t::call_scope_t& scope)
   {
     xpath_t::context_scope_t& context(CONTEXT_SCOPE(scope));
-
     return context.size();
   }
 
   value_t xpath_fn_position(xpath_t::call_scope_t& scope)
   {
     xpath_t::context_scope_t& context(CONTEXT_SCOPE(scope));
-
     return context.index() + 1;
   }
 
   value_t xpath_fn_text(xpath_t::call_scope_t& scope)
   {
     xpath_t::context_scope_t& context(CONTEXT_SCOPE(scope));
-
     return value_t(context.xml_node().to_value().to_string(), true);
+  }
+
+  value_t xpath_fn_type(xpath_t::call_scope_t& scope)
+  {
+    if (scope.size() == 0) {
+      xpath_t::context_scope_t& context(CONTEXT_SCOPE(scope));
+      return string_value(context.value().label());
+    }
+    else if (scope.size() == 1) {
+      return string_value(scope[0].label());
+    }
+    else {
+      assert(false);
+      return string_value("INVALID");
+    }
   }
 }
 
@@ -469,6 +481,8 @@ xpath_t::symbol_scope_t::lookup(const string& name)
   case 't':
     if (name == "text")
       return WRAP_FUNCTOR(bind(xpath_fn_text, _1));
+    else if (name == "type")
+      return WRAP_FUNCTOR(bind(xpath_fn_type, _1));
     break;
   }
 
@@ -1194,10 +1208,10 @@ value_t xpath_t::op_t::calc(scope_t& scope)
 
   case ATTR_ID:
   case ATTR_NAME:
-    if (optional<const string&> value =
-	kind == ATTR_ID ? current_xml_node(scope).get_attr(as_long()) :
+    if (optional<value_t> value =
+	kind == ATTR_ID ? current_xml_node(scope).get_attr(as_name()) :
 	                  current_xml_node(scope).get_attr(as_string()))
-      return value_t(*value, true);
+      return *value;
     else
       throw_(calc_error, "Attribute '"
 	     << (kind == ATTR_ID ?

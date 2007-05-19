@@ -286,12 +286,27 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
     xpath.print(*out, doc_scope);
     *out << std::endl;
 
-    foreach (const value_t& value, xpath.find_all(doc_scope)) {
-      if (value.is_xml_node()) {
-	value.as_xml_node()->print(std::cout);
-      } else {
-	std::cout << value;
+    IF_INFO() {
+      *out << "Raw results:" << std::endl;
+
+      foreach (const value_t& value, xpath.find_all(doc_scope)) {
+	if (value.is_xml_node())
+	  value.as_xml_node()->print(std::cout);
+	else
+	  std::cout << value;
+	std::cout << std::endl;
       }
+
+      *out << "Compiled results:" << std::endl;
+    }
+
+    xml_document.compile();
+
+    foreach (const value_t& value, xpath.find_all(doc_scope)) {
+      if (value.is_xml_node())
+	value.as_xml_node()->print(std::cout);
+      else
+	std::cout << value;
       std::cout << std::endl;
     }
     return 0;

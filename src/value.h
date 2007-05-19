@@ -676,6 +676,10 @@ public:
 
 #define NULL_VALUE (value_t())
 
+inline value_t string_value(const string& str) {
+  return value_t(str, true);
+}
+
 std::ostream& operator<<(std::ostream& out, const value_t& val);
 
 DECLARE_EXCEPTION(value_error);

@@ -34,5 +34,29 @@
 namespace ledger {
 namespace xml {
 
+void entry_node_t::compile()
+{
+  typedef std::list<attributes_t::iterator> iterator_list;
+  
+  iterator_list to_update;
+
+  for (attributes_t::iterator i = attributes->begin();
+       i != attributes->end();
+       i++)
+    if (i->first == DATE_ATTR && i->second.is_string())
+      //i->second = parse_datetime(i->second.as_string().c_str());
+      to_update.push_back(i);
+
+  for (iterator_list::iterator i = to_update.begin();
+       i != to_update.end();
+       i++) {
+    attr_pair attr_def = **i;
+    attributes->erase(*i);
+
+    attr_def.second = parse_datetime(attr_def.second.as_string().c_str());
+    attributes->push_back(attr_def);
+  }
+}
+
 } // namespace xml
 } // namespace ledger

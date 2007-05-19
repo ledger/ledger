@@ -50,13 +50,15 @@ class node_t : public supports_flags<>, public noncopyable
 public:
   typedef uint_fast16_t nameid_t;
 
+  // This has to be public so that multi_index_container can reference
+  // it in parent_node_t.
   nameid_t name_id_;
 
 protected:
   document_t&		   document_;
   optional<parent_node_t&> parent_;
 
-  typedef std::pair<nameid_t, string> attr_pair;
+  typedef std::pair<nameid_t, value_t> attr_pair;
 
   typedef multi_index_container<
     attr_pair,
@@ -69,6 +71,11 @@ protected:
 
   optional<attributes_t> attributes;
 
+  typedef attributes_t::nth_index<0>::type attributes_by_order;
+  typedef attributes_t::nth_index<1>::type attributes_hashed;
+
+  bool compiled;
+
 public:
   node_t(nameid_t _name_id, document_t& _document,
 	 const optional<parent_node_t&>& _parent = none, flags_t _flags = 0)
@@ -80,6 +87,11 @@ public:
   virtual ~node_t() {
     TRACE_DTOR(node_t);
   }
+
+  bool is_compiled() const {
+    return compiled;
+  }
+  virtual void compile() {}
 
   bool is_parent_node() const {
     return has_flags(XML_NODE_IS_PARENT);
@@ -114,10 +126,16 @@ public:
   void set_attr(const nameid_t _name_id, const char * value) {
     if (! attributes)
       attributes = attributes_t();
+    attributes->push_back(attr_pair(_name_id, string_value(value)));
+  }
+  void set_attr(const nameid_t _name_id, const value_t& value) {
+    if (! attributes)
+      attributes = attributes_t();
     attributes->push_back(attr_pair(_name_id, value));
   }
-  optional<const string&> get_attr(const string& _name) const;
-  optional<const string&> get_attr(const nameid_t _name_id) const {
+
+  optional<value_t> get_attr(const string& _name) const;
+  optional<value_t> get_attr(const nameid_t _name_id) const {
     if (attributes) {
       typedef attributes_t::nth_index<1>::type attributes_by_name;
 
@@ -157,6 +175,11 @@ public:
   virtual ~parent_node_t() {
     TRACE_DTOR(parent_node_t);
     clear_children();
+  }
+
+  virtual void compile() {
+    foreach (node_t * child, *this)
+      child->compile();
   }
 
   template <typename T>
