@@ -280,7 +280,7 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
     return 0;
   }
   else if (verb == "xpath") {
-    std::cout << "XPath parsed:";
+    std::cout << "XPath parsed: ";
 
     xml::xpath_t xpath(*arg);
     xpath.print(*out, doc_scope);

@@ -1010,13 +1010,36 @@ node_t& xpath_t::op_t::current_xml_node(scope_t& scope)
 
 namespace {
   value_t select_nodes(xpath_t::scope_t& scope, const value_t& nodes,
+		       xpath_t::ptr_op_t selection_path, bool recurse);
+
+  value_t select_recursively(xpath_t::scope_t& scope, node_t& xml_node,
+			     xpath_t::ptr_op_t selection_path)
+  {
+    value_t result;
+
+    if (xml_node.is_parent_node()) {
+      parent_node_t& parent_node(xml_node.as_parent_node());
+      foreach (node_t * child, parent_node)
+	result.push_back(select_nodes(scope, child, selection_path, true));
+    }
+    return result;
+  }
+
+  value_t select_nodes(xpath_t::scope_t& scope, const value_t& nodes,
 		       xpath_t::ptr_op_t selection_path, bool recurse)
   {
+    if (nodes.is_null())
+      return NULL_VALUE;
+
     value_t result;
 
     if (! nodes.is_sequence()) {
       xpath_t::context_scope_t node_scope(scope, nodes, 0, 1);
       result.push_back(selection_path->calc(node_scope));
+
+      if (recurse && nodes.is_xml_node())
+	result.push_back(select_recursively(scope, *nodes.as_xml_node(),
+					    selection_path));
     } else {
       std::size_t index = 0;
       std::size_t size  = nodes.as_sequence().size();
@@ -1025,19 +1048,9 @@ namespace {
 	xpath_t::context_scope_t node_scope(scope, node, index, size);
 	result.push_back(selection_path->calc(node_scope));
 
-	if (recurse && node.is_xml_node()) {
-	  node_t& xml_node(*node.as_xml_node());
-
-	  value_t child_nodes;
-	  if (xml_node.is_parent_node()) {
-	    parent_node_t& parent_node(xml_node.as_parent_node());
-	    foreach (node_t * child, parent_node)
-	      child_nodes.push_back(child);
-	  }
-
-	  result.push_back(select_nodes(scope, child_nodes,
-					selection_path, recurse));
-	}
+	if (recurse && nodes.is_xml_node())
+	  result.push_back(select_recursively(scope, *node.as_xml_node(),
+					      selection_path));
 
 	index++;
       }
@@ -1104,8 +1117,7 @@ value_t xpath_t::op_t::calc(scope_t& scope)
 
   case O_FIND:
   case O_RFIND:
-    select_nodes(scope, left()->calc(scope), right(), kind == O_RFIND);
-    break;
+    return select_nodes(scope, left()->calc(scope), right(), kind == O_RFIND);
 
   case O_PRED: {
     value_t values = left()->calc(scope);
