@@ -82,17 +82,8 @@ public:
 private:
   class storage_t
   {
-    char   data[sizeof(balance_pair_t)];
+    char   data[sizeof(amount_t)];
     type_t type;
-
-    BOOST_STATIC_ASSERT(sizeof(balance_pair_t) > sizeof(bool));
-    BOOST_STATIC_ASSERT(sizeof(balance_pair_t) > sizeof(moment_t));
-    BOOST_STATIC_ASSERT(sizeof(balance_pair_t) > sizeof(long));
-    BOOST_STATIC_ASSERT(sizeof(balance_pair_t) > sizeof(amount_t));
-    BOOST_STATIC_ASSERT(sizeof(balance_pair_t) > sizeof(balance_t));
-    BOOST_STATIC_ASSERT(sizeof(balance_pair_t) > sizeof(string));
-    BOOST_STATIC_ASSERT(sizeof(balance_pair_t) > sizeof(sequence_t));
-    BOOST_STATIC_ASSERT(sizeof(balance_pair_t) > sizeof(xml::node_t *));
 
     explicit storage_t() : type(VOID), refc(0) {
       TRACE_CTOR(value_t::storage_t, "");
@@ -100,7 +91,7 @@ private:
     explicit storage_t(const storage_t& rhs)
       : type(rhs.type), refc(0) {
       TRACE_CTOR(value_t::storage_t, "");
-      std::memcpy(data, rhs.data, sizeof(balance_pair_t));
+      std::memcpy(data, rhs.data, sizeof(data));
     }
 
   public:			// so `checked_delete' can access it
@@ -114,7 +105,7 @@ private:
   private:
     storage_t& operator=(const storage_t& rhs) {
       type = rhs.type;
-      std::memcpy(data, rhs.data, sizeof(balance_pair_t));
+      std::memcpy(data, rhs.data, sizeof(data));
       return *this;
     }
 
@@ -244,8 +235,28 @@ public:
    */
   void _dup() {
     assert(storage);
-    if (storage->refc > 1)
+    if (storage->refc > 1) {
       storage = new storage_t(*storage.get());
+
+      // If the data referenced by storage is an allocated pointer, we
+      // need to create a new object in order to achieve duplication.
+      switch (storage->type) {
+      case BALANCE:
+	*(balance_t **) storage->data =
+	  new balance_t(**(balance_t **) storage->data);
+	break;
+      case BALANCE_PAIR:
+	*(balance_pair_t **) storage->data =
+	  new balance_pair_t(**(balance_pair_t **) storage->data);
+	break;
+      case SEQUENCE:
+	*(sequence_t **) storage->data =
+	  new sequence_t(**(sequence_t **) storage->data);
+	break;
+      default:
+	break;			// everything else has been duplicated
+      }
+    }
   }
   void _clear() {
     if (! storage || storage->refc > 1)
@@ -254,10 +265,8 @@ public:
       storage->destroy();
   }
   void _reset() {
-    if (storage) {
-      storage->destroy();
+    if (storage)
       storage = intrusive_ptr<storage_t>();
-    }
   }
 
   operator bool() const;
@@ -367,15 +376,15 @@ public:
   balance_t& as_balance_lval() {
     assert(is_balance());
     _dup();
-    return *(balance_t *) storage->data;
+    return **(balance_t **) storage->data;
   }
   const balance_t& as_balance() const {
     assert(is_balance());
-    return *(balance_t *) storage->data;
+    return **(balance_t **) storage->data;
   }
   void set_balance(const balance_t& val) {
     set_type(BALANCE);
-    new((balance_t *) storage->data) balance_t(val);
+    *(balance_t **) storage->data = new balance_t(val);
   }
 
   bool is_balance_pair() const {
@@ -384,15 +393,15 @@ public:
   balance_pair_t& as_balance_pair_lval() {
     assert(is_balance_pair());
     _dup();
-    return *(balance_pair_t *) storage->data;
+    return **(balance_pair_t **) storage->data;
   }
   const balance_pair_t& as_balance_pair() const {
     assert(is_balance_pair());
-    return *(balance_pair_t *) storage->data;
+    return **(balance_pair_t **) storage->data;
   }
   void set_balance_pair(const balance_pair_t& val) {
     set_type(BALANCE_PAIR);
-    new((balance_pair_t *) storage->data) balance_pair_t(val);
+    *(balance_pair_t **) storage->data = new balance_pair_t(val);
   }
 
   bool is_string() const {
@@ -418,15 +427,15 @@ public:
   sequence_t& as_sequence_lval() {
     assert(is_sequence());
     _dup();
-    return *(sequence_t *) storage->data;
+    return **(sequence_t **) storage->data;
   }
   const sequence_t& as_sequence() const {
     assert(is_sequence());
-    return *(sequence_t *) storage->data;
+    return **(sequence_t **) storage->data;
   }
   void set_sequence(const sequence_t& val) {
     set_type(SEQUENCE);
-    new((sequence_t *) storage->data) sequence_t(val);
+    *(sequence_t **) storage->data = new sequence_t(val);
   }
 
   bool is_xml_node() const {

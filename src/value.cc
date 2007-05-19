@@ -44,16 +44,16 @@ void value_t::storage_t::destroy()
     ((amount_t *)data)->~amount_t();
     break;
   case BALANCE:
-    ((balance_t *)data)->~balance_t();
+    checked_delete(*(balance_t **)data);
     break;
   case BALANCE_PAIR:
-    ((balance_pair_t *)data)->~balance_pair_t();
+    checked_delete(*(balance_pair_t **)data);
     break;
   case STRING:
     ((string *)data)->~string();
     break;
   case SEQUENCE:
-    ((sequence_t *)data)->~sequence_t();
+    checked_delete(*(sequence_t **)data);
     break;
   case POINTER:
     ((boost::any *)data)->~any();
@@ -67,6 +67,10 @@ void value_t::storage_t::destroy()
 
 void value_t::initialize()
 {
+#if 0
+  LOGGER("value.initialize");
+#endif
+
   true_value = new storage_t;
   true_value->type = BOOLEAN;
   *(bool *) true_value->data = true;
@@ -74,6 +78,38 @@ void value_t::initialize()
   false_value = new storage_t;
   false_value->type = BOOLEAN;
   *(bool *) false_value->data = false;
+
+  BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(bool));
+  BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(moment_t));
+  BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(long));
+  BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(amount_t));
+  BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(balance_t *));
+  BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(balance_pair_t *));
+  BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(string));
+  BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(sequence_t *));
+  BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(xml::node_t *));
+  BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(boost::any));
+
+#if 0
+  DEBUG_(std::setw(3) << std::right << sizeof(bool)
+	 << "  sizeof(bool)");
+  DEBUG_(std::setw(3) << std::right << sizeof(moment_t)
+	 << "  sizeof(moment_t)");
+  DEBUG_(std::setw(3) << std::right << sizeof(long)
+	 << "  sizeof(long)");
+  DEBUG_(std::setw(3) << std::right << sizeof(amount_t)
+	 << "  sizeof(amount_t)");
+  DEBUG_(std::setw(3) << std::right << sizeof(balance_t *)
+	 << "  sizeof(balance_t *)");
+  DEBUG_(std::setw(3) << std::right << sizeof(balance_pair_t *)
+	 << "  sizeof(balance_pair_t *)");
+  DEBUG_(std::setw(3) << std::right << sizeof(string)
+	 << "  sizeof(string)");
+  DEBUG_(std::setw(3) << std::right << sizeof(sequence_t *)
+	 << "  sizeof(sequence_t *)");
+  DEBUG_(std::setw(3) << std::right << sizeof(boost::any)
+	 << "  sizeof(boost::any)");
+#endif
 }
 
 void value_t::shutdown()
