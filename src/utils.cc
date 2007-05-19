@@ -284,7 +284,7 @@ void trace_ctor_func(void * ptr, const char * cls_name, const char * args,
   std::strcat(name, args);
   std::strcat(name, ")");
 
-  DEBUG("verify.memory", "TRACE_CTOR " << ptr << " " << name);
+  DEBUG("memory.debug", "TRACE_CTOR " << ptr << " " << name);
 
   live_objects->insert
     (live_objects_map::value_type(ptr, allocation_pair(cls_name, cls_size)));
@@ -303,7 +303,7 @@ void trace_dtor_func(void * ptr, const char * cls_name, std::size_t cls_size)
 
   if (! live_objects) return;
 
-  DEBUG("ledger.trace.debug", "TRACE_DTOR " << ptr << " " << cls_name);
+  DEBUG("memory.debug", "TRACE_DTOR " << ptr << " " << cls_name);
 
   live_objects_map::iterator i = live_objects->find(ptr);
   VERIFY(i != live_objects->end());

@@ -414,7 +414,6 @@ void xpath_t::symbol_scope_t::define(const string& name, ptr_op_t def)
   if (! result.second) {
     symbol_map::iterator i = symbols.find(name);
     assert(i != symbols.end());
-    (*i).second->release();
     symbols.erase(i);
 
     std::pair<symbol_map::iterator, bool> result2
@@ -423,7 +422,6 @@ void xpath_t::symbol_scope_t::define(const string& name, ptr_op_t def)
       throw_(compile_error,
 	     "Redefinition of '" << name << "' in same scope");
   }
-  def->acquire();
 }
 
 void xpath_t::scope_t::define(const string& name, const value_t& val) {
@@ -432,21 +430,21 @@ void xpath_t::scope_t::define(const string& name, const value_t& val) {
 
 value_t xpath_fn_last(xpath_t::call_scope_t& scope)
 {
-  xpath_t::context_scope_t& context(FIND_SCOPE(xpath_t::context_scope_t, scope));
+  xpath_t::context_scope_t& context(CONTEXT_SCOPE(scope));
 
   return context.size();
 }
 
 value_t xpath_fn_position(xpath_t::call_scope_t& scope)
 {
-  xpath_t::context_scope_t& context(FIND_SCOPE(xpath_t::context_scope_t, scope));
+  xpath_t::context_scope_t& context(CONTEXT_SCOPE(scope));
 
   return context.index();
 }
 
 value_t xpath_fn_text(xpath_t::call_scope_t& scope)
 {
-  xpath_t::context_scope_t& context(FIND_SCOPE(xpath_t::context_scope_t, scope));
+  xpath_t::context_scope_t& context(CONTEXT_SCOPE(scope));
 
   return value_t(context.xml_node().to_value().to_string(), true);
 }
@@ -971,6 +969,9 @@ xpath_t::ptr_op_t xpath_t::op_t::compile(scope_t& scope)
     break;
   }
 
+  if (kind < TERMINALS)
+    return this;
+
   ptr_op_t lhs(left()->compile(scope));
   ptr_op_t rhs(right() ? right()->compile(scope) : ptr_op_t());
 
@@ -987,14 +988,44 @@ xpath_t::ptr_op_t xpath_t::op_t::compile(scope_t& scope)
 
 value_t xpath_t::op_t::current_value(scope_t& scope)
 {
-  xpath_t::context_scope_t& context(FIND_SCOPE(xpath_t::context_scope_t, scope));
+  xpath_t::context_scope_t& context(CONTEXT_SCOPE(scope));
   return context.value();
 }
 
 node_t& xpath_t::op_t::current_xml_node(scope_t& scope)
 {
-  xpath_t::context_scope_t& context(FIND_SCOPE(xpath_t::context_scope_t, scope));
+  xpath_t::context_scope_t& context(CONTEXT_SCOPE(scope));
   return context.xml_node();
+}
+
+namespace {
+  value_t search_nodes(value_t nodes, xpath_t::ptr_op_t find_op,
+		       xpath_t::scope_t& scope, bool recurse)
+  {
+    value_t node_sequence = nodes.to_sequence();
+    value_t result;
+
+    foreach (value_t& node_value, node_sequence.as_sequence_lval()) {
+      if (! node_value.is_xml_node())
+	throw_(xpath_t::calc_error,
+	       "Application of / operator to non-node value '"
+	       << node_value << "'");
+
+      node_t& node(*node_value.as_xml_node());
+      xpath_t::context_scope_t node_scope(scope, node, node_sequence);
+
+      result.push_back(find_op->calc(node_scope));
+
+      if (recurse && node.is_parent_node()) {
+	value_t children;
+	foreach (node_t * child, node.as_parent_node())
+	  children.push_back(child);
+      
+	result.push_back(search_nodes(children, find_op, scope, recurse));
+      }
+    }
+    return result;
+  }
 }
 
 value_t xpath_t::op_t::calc(scope_t& scope)
@@ -1021,7 +1052,8 @@ value_t xpath_t::op_t::calc(scope_t& scope)
   case O_CALL: {
     call_scope_t call_args(scope);
 
-    call_args.set_args(right()->calc(scope));
+    if (right())
+      call_args.set_args(right()->calc(scope));
 
     ptr_op_t func = left();
     string   name;
@@ -1045,36 +1077,13 @@ value_t xpath_t::op_t::calc(scope_t& scope)
     if (as_long() >= 0 && as_long() < args.size())
       return args[as_long()];
     else
-      throw_(compile_error, "Reference to a non-existing argument");
+      throw_(calc_error, "Reference to a non-existing argument");
     break;
   }
 
   case O_FIND:
-  case O_RFIND: {
-    value_t result;
-
-    if (value_t items = left()->calc(scope)) {
-      value_t sequence = items.to_sequence();
-      foreach (value_t& item, sequence.as_sequence_lval()) {
-	if (item.is_xml_node()) {
-	  node_t&      node(*item.as_xml_node());
-	  node_scope_t node_scope(scope, node);
-
-	  result.push_back(right()->calc(node_scope));
-#if 0
-	  // jww (2007-05-17): How do I get it to recurse down?  I'll
-	  // have to use a recursive helper function.
-	  if (kind == O_RFIND && node.is_parent_node())
-	    foreach (node_t * child, node.as_parent_node())
-	      walk_elements(element->right(), scope, *child, NULL, func);
-#endif
-	} else {
-	  throw_(compile_error, "Application of / operator to non-node value");
-	}
-      }
-    }
-    return result;
-  }
+  case O_RFIND:
+    return search_nodes(left()->calc(scope), right(), scope, kind == O_RFIND);
 
   case NODE_ID:
     switch (as_name()) {
@@ -1094,7 +1103,7 @@ value_t xpath_t::op_t::calc(scope_t& scope)
     case document_t::ALL: {
       node_t& current_node(current_xml_node(scope));
       if (! current_node.is_parent_node())
-	throw_(compile_error, "Referencing child nodes from a non-parent value");
+	throw_(calc_error, "Referencing child nodes from a non-parent value");
 
       value_t result;
       foreach (node_t * child, current_node.as_parent_node())
@@ -1109,20 +1118,14 @@ value_t xpath_t::op_t::calc(scope_t& scope)
 
   case NODE_NAME: {
     node_t& current_node(current_xml_node(scope));
-
     if (current_node.is_parent_node()) {
       bool have_name_id = kind == NODE_ID;
 
       value_t result;
-      
       foreach (node_t * child, current_node.as_parent_node()) {
 	if ((  have_name_id && as_name()   == child->name_id()) ||
 	    (! have_name_id && as_string() == child->name()))
 	  result.push_back(child);
-#if 0
-	else if (recurse)
-	  /* ... */;
-#endif
       }
       return result;
     }
@@ -1130,30 +1133,36 @@ value_t xpath_t::op_t::calc(scope_t& scope)
   }
 
   case O_PRED: {
-#if 0
-    predicate_scope_t predicate_scope(scope, right());
-    return left()->calc(predicate_scope);
-#endif
-    break;
+    value_t values = left()->calc(scope).to_sequence();
+    value_t result;
+
+    std::size_t index = 0;
+    foreach (const value_t& value, values.as_sequence()) {
+      xpath_t::context_scope_t value_scope(scope, value);
+
+      value_t predval = right()->calc(value_scope);
+      if ((predval.is_long() &&
+	   predval.as_long() == (long)index + 1) ||
+	  predval.to_boolean())
+	result.push_back(value);
+      
+      index++;
+    }
+    return result;
   }
 
   case ATTR_ID:
   case ATTR_NAME: {
-    context_scope_t& context(scope.find_scope<context_scope_t>());
-
-    if (context.type() != scope_t::NODE_SCOPE)
-      throw_(calc_error, "Looking up attribute in a non-node context");
-
-    node_scope_t& node_scope(downcast<node_scope_t>(context));
+    node_t& current_node(current_xml_node(scope));
 
     if (optional<const string&> value =
-	kind == ATTR_ID ? node_scope.xml_node().get_attr(as_long()) :
-	node_scope.xml_node().get_attr(as_string()))
+	kind == ATTR_ID ? current_node.get_attr(as_long()) :
+	                  current_node.get_attr(as_string()))
       return value_t(*value, true);
     else
       throw_(calc_error, "Attribute '"
 	     << (kind == ATTR_ID ?
-		 *node_scope.xml_node().document().lookup_name(as_long()) :
+		 *current_node.document().lookup_name(as_long()) :
 		 as_string().c_str())
 	     << "' was not found");
     break;
@@ -1243,6 +1252,8 @@ bool xpath_t::op_t::print(std::ostream& out, print_context_t& context) const
 	out << "0";
       break;
     case value_t::INTEGER:
+      out << value;
+      break;
     case value_t::AMOUNT:
       if (! context.relaxed)
 	out << '{';
@@ -1278,16 +1289,9 @@ bool xpath_t::op_t::print(std::ostream& out, print_context_t& context) const
     out << '@';
     // fall through...
   case NODE_ID: {
-    context_scope_t& context_scope(context.scope.find_scope<context_scope_t>());
-
-    if (context_scope.type() != scope_t::NODE_SCOPE)
-      throw_(calc_error, "Looking up node name in a non-node context");
-
-    node_scope_t& node_scope(downcast<node_scope_t>(context_scope));
-
-    optional<const char *> name =
-      node_scope.xml_node().document().lookup_name(as_name());
-    if (name)
+    context_scope_t& node_scope(CONTEXT_SCOPE(context.scope));
+    if (optional<const char *> name =
+	node_scope.xml_node().document().lookup_name(as_name()))
       out << *name;
     else
       out << '#' << as_name();
@@ -1308,7 +1312,7 @@ bool xpath_t::op_t::print(std::ostream& out, print_context_t& context) const
     break;
 
   case FUNCTION:
-    out << as_function();
+    out << '<FUNCTION>';
     break;
 
   case ARG_INDEX:
@@ -1544,7 +1548,7 @@ void xpath_t::op_t::dump(std::ostream& out, const int depth) const
     break;
 
   case FUNCTION:
-    out << "FUNCTION - " << as_function();
+    out << "FUNCTION";
     break;
 
   case O_CALL:	 out << "O_CALL"; break;
@@ -1603,8 +1607,7 @@ value_t xml_command(xml::xpath_t::call_scope_t& args)
   value_t	ostream = args.resolve("ostream");
   std::ostream& outs(ostream.as_ref_lval<std::ostream>());
 
-  xml::xpath_t::node_scope_t& node_context
-    (FIND_SCOPE(xml::xpath_t::node_scope_t, args));
+  xml::xpath_t::context_scope_t& node_context(CONTEXT_SCOPE(args));
   node_context.xml_node().print(outs);
 
   return true;

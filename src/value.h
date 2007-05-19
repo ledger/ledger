@@ -216,12 +216,12 @@ public:
     TRACE_CTOR(value_t, "const sequence_t&");
     set_sequence(val);
   }
-  value_t(xml::node_t * xml_node) {
+  value_t(xml::node_t * item) {
     TRACE_CTOR(value_t, "xml::node_t *");
-    set_xml_node(xml_node);
+    set_xml_node(item);
   }
   template <typename T>
-  value_t(T * item) {
+  explicit value_t(T * item) {
     TRACE_CTOR(value_t, "T *");
     set_pointer(item);
   }
@@ -230,9 +230,8 @@ public:
   }
 
   value_t& operator=(const value_t& val) {
-    if (this == &val || storage == val.storage)
-      return *this;
-    storage = val.storage;
+    if (! (this == &val || storage == val.storage))
+      storage = val.storage;
     return *this;
   }
 
@@ -537,11 +536,14 @@ public:
       if (! is_sequence())
 	in_place_cast(SEQUENCE);
 
-      if (! val.is_sequence())
-	as_sequence_lval().push_back(val);
-      else
-	std::copy(val.as_sequence().begin(), val.as_sequence().end(),
-		  as_sequence_lval().end());
+      value_t::sequence_t& seq(as_sequence_lval());
+      if (! val.is_sequence()) {
+	if (! val.is_null())
+	  seq.push_back(val);
+      } else {
+	const value_t::sequence_t& val_seq(val.as_sequence());
+	std::copy(val_seq.begin(), val_seq.end(), back_inserter(seq));
+      }
     }
   }
 

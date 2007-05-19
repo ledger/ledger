@@ -69,8 +69,9 @@ public:
       SYMBOL_SCOPE,
       CALL_SCOPE,
       CONTEXT_SCOPE,
-      NODE_SCOPE,
+#if 0
       PREDICATE_SCOPE
+#endif
     } type_;
 
     explicit scope_t(type_t _type) : type_(_type) {
@@ -213,11 +214,30 @@ public:
     explicit context_scope_t(scope_t&	              _parent,
 			     const value_t&           _element,
 			     const optional<value_t>& _sequence = none)
-      : child_scope_t(_parent, CONTEXT_SCOPE),
-	element(_element), sequence(_sequence)
+      : child_scope_t(_parent, CONTEXT_SCOPE)
     {
       TRACE_CTOR(xpath_t::context_scope_t,
 		 "scope_t&, const value_t&, const optional<value_t>&");
+      set_context(_element, _sequence);
+    }
+    explicit context_scope_t(scope_t&	              _parent,
+			     node_t&                  _element,
+			     const optional<value_t>& _sequence = none)
+      : child_scope_t(_parent, CONTEXT_SCOPE)
+    {
+      TRACE_CTOR(xpath_t::context_scope_t,
+		 "scope_t&, const value_t&, const optional<value_t>&");
+      set_context(value_t(&_element), _sequence);
+    }
+    virtual ~context_scope_t() {
+      TRACE_DTOR(xpath_t::context_scope_t);
+    }
+
+    void set_context(const value_t& _element,
+		     const optional<value_t>& _sequence) {
+      element  = _element;
+      sequence = _sequence;
+
       assert(! element.is_sequence());
 
       if (DO_VERIFY() && sequence) {
@@ -229,9 +249,6 @@ public:
 	  assert(element == *sequence);
 	}
       }
-    }
-    virtual ~context_scope_t() {
-      TRACE_DTOR(xpath_t::context_scope_t);
     }
 
     const std::size_t index() const {
@@ -262,21 +279,7 @@ public:
     }
   };
 
-  class node_scope_t : public context_scope_t
-  {
-  public:
-    node_scope_t(scope_t& _parent, node_t& _node)
-      : context_scope_t(_parent, &_node) {
-      TRACE_CTOR(xpath_t::node_scope_t, "scope_t&, node_t&");
-      type_ = NODE_SCOPE;
-    }
-    virtual ~node_scope_t() {
-      TRACE_DTOR(xpath_t::node_scope_t);
-    }
-  };
-
-  typedef node_scope_t document_scope_t;
-
+#if 0
   class predicate_scope_t : public child_scope_t
   {
   public:
@@ -305,6 +308,7 @@ public:
       return predicate->calc(context_scope).to_boolean();
     }
   };
+#endif
 
 #define XPATH_PARSE_NORMAL     0x00
 #define XPATH_PARSE_PARTIAL    0x01
@@ -402,41 +406,27 @@ private:
   };
 
 public:
-#if 0
   class path_iterator_t
   {
-    typedef NodeType * pointer;
-    typedef NodeType&  reference;
+    typedef node_t * pointer;
+    typedef node_t&  reference;
 
-    path_t   path;
-    node_t&  start;
+    xpath_t& path_expr;
     scope_t& scope;
 
     mutable value_t::sequence_t sequence;
     mutable bool searched;
 
-    struct node_appender_t {
-      value_t::sequence_t& sequence;
-      node_appender_t(value_t::sequence_t& _sequence)
-	: sequence(_sequence) {}
-      void operator()(const value_t& node) {
-	sequence.push_back(node);
-      }
-    };
-
   public:
     typedef value_t::sequence_t::iterator       iterator;
     typedef value_t::sequence_t::const_iterator const_iterator;
 
-    path_iterator_t(const xpath_t& path_expr,
-		    node_t& _start, scope_t& _scope)
-      : path(path_expr), start(_start), scope(_scope),
-	searched(false) {
-    }
+    path_iterator_t(xpath_t& _path_expr, scope_t& _scope)
+      : path_expr(_path_expr), scope(_scope), searched(false) {}
 
     iterator begin() {
       if (! searched) {
-	path.visit(start, scope, node_appender_t(sequence));
+	sequence = path_expr.calc(scope).to_sequence();
 	searched = true;
       }
       return sequence.begin();
@@ -448,7 +438,6 @@ public:
     iterator end() { return sequence.end(); }
     const_iterator end() const { return sequence.end(); }
   };
-#endif
 
   struct op_t : public noncopyable
   {
@@ -857,24 +846,9 @@ public:
     return xpath_t(_expr).calc(scope);
   }
 
-#if 0
-  path_iterator_t<node_t>
-  find_all(node_t& start, scope_t& scope) {
-    return path_iterator_t<node_t>(*this, start, scope);
+  path_iterator_t find_all(scope_t& scope) {
+    return path_iterator_t(*this, scope);
   }
-  path_iterator_t<const node_t>
-  find_all(const node_t& start, scope_t& scope) {
-    return path_iterator_t<const node_t>(*this, start, scope);
-  }
-
-  void visit(node_t& start, scope_t& scope, const path_t::visitor_t& func) {
-    path_t(*this).visit(start, scope, func);
-  }
-  void visit(const node_t& start, scope_t& scope, const
-	     path_t::visitor_t& func) {
-    path_t(*this).visit(start, scope, func);
-  }
-#endif
 
   void print(std::ostream& out, scope_t& scope) const {
     op_t::print_context_t context(scope);
@@ -890,10 +864,8 @@ public:
 inline xpath_t::ptr_op_t
 xpath_t::op_t::new_node(kind_t _kind, ptr_op_t _left, ptr_op_t _right) {
   ptr_op_t node(new op_t(_kind));
-  if (_left)
-    node->set_left(_left);
-  if (_right)
-    node->set_right(_right);
+  node->set_left(_left);
+  node->set_right(_right);
   return node;
 }
 
@@ -935,16 +907,15 @@ xpath_t::scope_t::find_scope<xpath_t::context_scope_t>(bool skip_this) {
   return downcast<context_scope_t>(*scope);
 }
 
-template<>
-inline xpath_t::node_scope_t&
-xpath_t::scope_t::find_scope<xpath_t::node_scope_t>(bool skip_this) {
-  optional<scope_t&> scope = find_scope(NODE_SCOPE, skip_this);
-  assert(scope);
-  return downcast<node_scope_t>(*scope);
-}
-
 #define FIND_SCOPE(scope_type, scope_ref) \
   downcast<xml::xpath_t::scope_t>(scope_ref).find_scope<scope_type>()
+
+#define CALL_SCOPE(scope_ref) \
+  FIND_SCOPE(xml::xpath_t::call_scope_t, scope_ref)
+#define SYMBOL_SCOPE(scope_ref) \
+  FIND_SCOPE(xml::xpath_t::symbol_scope_t, scope_ref)
+#define CONTEXT_SCOPE(scope_ref) \
+  FIND_SCOPE(xml::xpath_t::context_scope_t, scope_ref)
 
 } // namespace xml
 

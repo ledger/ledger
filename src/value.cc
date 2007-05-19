@@ -1371,6 +1371,7 @@ value_t value_t::strip_annotations(const bool keep_price,
 				   const bool keep_tag) const
 {
   switch (type()) {
+  case VOID:
   case BOOLEAN:
   case INTEGER:
   case DATETIME:
@@ -1551,6 +1552,9 @@ void value_t::print(std::ostream& out, const int first_width,
 std::ostream& operator<<(std::ostream& out, const value_t& val)
 {
   switch (val.type()) {
+  case value_t::VOID:
+    out << "VOID";
+    break;
   case value_t::BOOLEAN:
     out << (val.as_boolean() ? "true" : "false");
     break;

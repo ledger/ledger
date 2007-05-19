@@ -145,15 +145,27 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
     xml::xpath_t    expr(*arg);
     xml::document_t temp(xml::LEDGER_NODE);
 
-    xml::xpath_t::document_scope_t doc_scope(report, temp);
+    xml::xpath_t::context_scope_t doc_scope(report, temp);
 
     IF_INFO() {
       std::cout << "Value expression tree:" << std::endl;
       expr.dump(std::cout);
       std::cout << std::endl;
+
       std::cout << "Value expression parsed was:" << std::endl;
       expr.print(std::cout, doc_scope);
       std::cout << std::endl << std::endl;
+
+      expr.compile(doc_scope);
+
+      std::cout << "Value expression after compiling:" << std::endl;
+      expr.dump(std::cout);
+      std::cout << std::endl;
+
+      std::cout << "Value expression is now:" << std::endl;
+      expr.print(std::cout, doc_scope);
+      std::cout << std::endl << std::endl;
+
       std::cout << "Result of calculation: ";
     }
 
@@ -248,7 +260,7 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
 
   // Are we handling the expr commands?  Do so now.
 
-  xml::xpath_t::document_scope_t doc_scope(report, xml_document);
+  xml::xpath_t::context_scope_t doc_scope(report, xml_document);
 
   if (verb == "expr") {
     xml::xpath_t expr(*arg);
@@ -268,14 +280,13 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
     return 0;
   }
   else if (verb == "xpath") {
-    std::cout << "XPath parsed:" << std::endl;
+    std::cout << "XPath parsed:";
 
     xml::xpath_t xpath(*arg);
     xpath.print(*out, doc_scope);
     *out << std::endl;
 
-#if 0
-    foreach (const value_t& value, xpath.find_all(xml_document, report)) {
+    foreach (const value_t& value, xpath.find_all(doc_scope)) {
       if (value.is_xml_node()) {
 	value.as_xml_node()->print(std::cout);
       } else {
@@ -283,7 +294,6 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
       }
       std::cout << std::endl;
     }
-#endif
     return 0;
   }
 
