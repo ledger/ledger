@@ -1053,7 +1053,7 @@ void value_t::in_place_cast(type_t cast_type)
   case BALANCE_PAIR:
     switch (cast_type) {
     case AMOUNT: {
-      const balance_t& temp(as_balance_pair().quantity);
+      const balance_t& temp(as_balance_pair().quantity());
       if (temp.amounts.size() == 1) {
 	set_amount((*temp.amounts.begin()).second);
 	return;
@@ -1069,7 +1069,7 @@ void value_t::in_place_cast(type_t cast_type)
       break;
     }
     case BALANCE:
-      set_balance(as_balance_pair().quantity);
+      set_balance(as_balance_pair().quantity());
       return;
     default:
       break;
@@ -1184,7 +1184,7 @@ value_t value_t::value(const optional<moment_t>& moment) const
   }
   case BALANCE_PAIR: {
     if (optional<balance_t> bal_pair =
-	as_balance_pair().quantity.value(moment))
+	as_balance_pair().quantity().value(moment))
       return *bal_pair;
     return false;
   }
@@ -1353,8 +1353,8 @@ value_t value_t::strip_annotations(const bool keep_price,
   case BALANCE:
     return as_balance().strip_annotations(keep_price, keep_date, keep_tag);
   case BALANCE_PAIR:
-    return as_balance_pair().quantity.strip_annotations(keep_price,
-							keep_date, keep_tag);
+    return as_balance_pair().quantity().strip_annotations(keep_price, keep_date,
+							  keep_tag);
 
   default:
     assert(false);
@@ -1377,7 +1377,7 @@ value_t value_t::cost() const
     if (as_balance_pair().cost)
       return *(as_balance_pair().cost);
     else
-      return as_balance_pair().quantity;
+      return as_balance_pair().quantity();
 
   case XML_NODE:
     return as_xml_node()->to_value().cost();

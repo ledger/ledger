@@ -83,17 +83,6 @@ class balance_pair_t
    */
   optional<balance_t> cost;
 
-  /**
-   * The `quantity' method provides direct access to the balance_t
-   * base-class part of the balance pair.
-   */
-  balance_t& quantity() {
-    return *this;
-  }
-  const balance_t& quantity() const {
-    return *this;
-  }
-
   friend class value_t;
   friend class entry_base_t;
 
@@ -223,6 +212,17 @@ public:
   }
   bool operator==(const amount_t& amt) const {
     return quantity() == amt;
+  }
+
+  /**
+   * The `quantity' method provides direct access to the balance_t
+   * base-class part of the balance pair.
+   */
+  balance_t& quantity() {
+    return *this;
+  }
+  const balance_t& quantity() const {
+    return *this;
   }
 
   // unary negation

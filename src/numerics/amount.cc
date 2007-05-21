@@ -586,35 +586,40 @@ amount_t& amount_t::in_place_negate()
   return *this;
 }
 
-amount_t amount_t::round(const optional<precision_t>& prec) const
+amount_t amount_t::round() const
 {
   if (! quantity)
     throw_(amount_error, "Cannot round an uninitialized amount");
 
-  if (! prec) {
-    if (! has_commodity())
-      return *this;
-    return round(commodity().precision());
-  } else {
-    amount_t t(*this);
+  if (! has_commodity())
+    return *this;
 
-    if (quantity->prec <= *prec) {
-      if (quantity && quantity->has_flags(BIGINT_KEEP_PREC)) {
-	t._dup();
-	t.quantity->drop_flags(BIGINT_KEEP_PREC);
-      }
-      return t;
+  return round(commodity().precision());
+}
+
+amount_t amount_t::round(precision_t prec) const
+{
+  if (! quantity)
+    throw_(amount_error, "Cannot round an uninitialized amount");
+
+  amount_t t(*this);
+
+  if (quantity->prec <= prec) {
+    if (quantity && quantity->has_flags(BIGINT_KEEP_PREC)) {
+      t._dup();
+      t.quantity->drop_flags(BIGINT_KEEP_PREC);
     }
-
-    t._dup();
-
-    mpz_round(MPZ(t.quantity), MPZ(t.quantity), t.quantity->prec, *prec);
-
-    t.quantity->prec = *prec;
-    t.quantity->drop_flags(BIGINT_KEEP_PREC);
-
     return t;
   }
+
+  t._dup();
+
+  mpz_round(MPZ(t.quantity), MPZ(t.quantity), t.quantity->prec, prec);
+
+  t.quantity->prec = prec;
+  t.quantity->drop_flags(BIGINT_KEEP_PREC);
+
+  return t;
 }
 
 amount_t amount_t::unround() const

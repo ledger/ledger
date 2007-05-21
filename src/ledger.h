@@ -45,7 +45,6 @@
 #include <balance.h>
 #include <value.h>
 #include <xpath.h>
-#include <format.h>
 #include <session.h>
 #include <journal.h>
 #include <parser.h>

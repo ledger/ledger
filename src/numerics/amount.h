@@ -294,8 +294,8 @@ public:
    * abs() returns the absolute value of an amount.  It is equivalent
    * to: `(x < 0) ? - x : x'.
    *
-   * round(optional<precision_t>) rounds an amount's internal value to
-   * the given precision, or to the commodity's current display
+   * round(precision_t) and round() round an amount's internal value
+   * to the given precision, or to the commodity's current display
    * precision if no precision value is given.  This method changes
    * the internal value of the amount, if it's internal precision was
    * greater than the rounding precision.
@@ -347,7 +347,8 @@ public:
     return *this;
   }
 
-  amount_t round(const optional<precision_t>& prec = none) const;
+  amount_t round() const;
+  amount_t round(precision_t prec) const;
   amount_t unround() const;
 
   amount_t reduce() const {

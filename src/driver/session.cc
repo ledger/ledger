@@ -178,7 +178,7 @@ std::size_t session_t::read_data(xml::builder_t& builder,
     DEBUG("ledger.cache", "using_cache " << cache_file->string());
     cache_dirty = true;
     if (exists(*cache_file)) {
-      scoped_variable<optional<path> >
+      push_variable<optional<path> >
 	save_price_db(journal->price_db, price_db);
 
       entry_count += read_journal(*cache_file, builder);

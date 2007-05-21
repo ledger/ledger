@@ -229,7 +229,7 @@ bool entry_base_t::finalize()
     const balance_t * bal = NULL;
     switch (balance.type()) {
     case value_t::BALANCE_PAIR:
-      bal = &balance.as_balance_pair().quantity;
+      bal = &balance.as_balance_pair().quantity();
       // fall through...
 
     case value_t::BALANCE:

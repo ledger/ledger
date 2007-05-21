@@ -67,6 +67,7 @@ Python_SRC = \
 	src/python/py_utils.cc
 
 libledger_la_SOURCES += $(Python_SRC)
+libledger_la_CPPFLAGS += -I$(srcdir)/src/python
 endif
 
 if HAVE_LIBOFX
