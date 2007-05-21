@@ -30,7 +30,7 @@
  */
 
 /**
- * @file   scoped_execute.h
+ * @file   scopevar.h
  * @author John Wiegley
  * @date   Sun May  6 20:10:52 2007
  * 
@@ -105,7 +105,7 @@
  * @endcode
  *
  * But what if it could be even easier?  That is what this file is
- * for, to provide a scoped_execute<> class which guarantees execution
+ * for, to provide a scopevar<> class which guarantees execution
  * of arbtirary code after a scope has terminated, without having to
  * resort to custom utility classes.  It relies on boost::bind to
  * declare pending function calls.  Here it what the above would look
@@ -114,7 +114,7 @@
  * @code
  *   void foo(pthread_mutex_t * mutex) {
  *     if (pthread_mutex_lock(mutex) == 0) {
- *       scoped_execute<void> unlock_mutex
+ *       scopevar<void> unlock_mutex
  *         (boost::bind(pthread_mutex_unlock, mutex));
  *       try {
  *         // Do work that requires the mutex to be locked
@@ -131,7 +131,7 @@
  * The single call to boost::bind creates a closure binding that will
  * be invoked once the containing scope has terminated.
  *
- * Another kind of scoped_execute is useful for setting the values of
+ * Another kind of scopevar is useful for setting the values of
  * variables to a predetermined value upon completion of a scope.
  * Consider this example:
  *
@@ -139,7 +139,7 @@
  *   bool foo_was_run;
  *
  *   void foo() {
- *     scoped_execute<bool&> set_success((_1 = true), foo_was_run);
+ *     scopevar<bool&> set_success((_1 = true), foo_was_run);
  *     // do some code, and make sure foo_was_run is set to true
  *     // once the scope is exited -- however this happens.
  *   }
@@ -177,34 +177,31 @@
  *   }
  * @endcode
  *
- * Finally, you can stop a scoped_execute or scoped_variable from
+ * Finally, you can stop a scopevar or scoped_variable from
  * invoking its completion code by calling the `clear' method on the
  * object instance.  Once `clear' is called, the scoped execution
  * becomes inert and will do nothing when the enclosing scope is
  * exited.
  */
 
-#ifndef _SCOPED_EXECUTE_H
-#define _SCOPED_EXECUTE_H
-
-#include <boost/noncopyable.hpp>
-#include <boost/function.hpp>
+#ifndef _SCOPEVAR_H
+#define _SCOPEVAR_H
 
 template <typename T>
-class scoped_variable : public boost::noncopyable
+class push_variable : public boost::noncopyable
 {
   T&   var;
   T    prev;
   bool enabled;
 
 public:
-  explicit scoped_variable(T& _var)
+  explicit push_variable(T& _var)
     : var(_var), prev(var), enabled(true) {}
-  explicit scoped_variable(T& _var, const T& value)
+  explicit push_variable(T& _var, const T& value)
     : var(_var), prev(var), enabled(true) {
     var = value;
   }
-  ~scoped_variable() {
+  ~push_variable() {
     if (enabled)
       var = prev;
   }
@@ -214,49 +211,4 @@ public:
   }
 };
 
-template <typename T>
-class scoped_execute : public boost::noncopyable
-{
-  typedef boost::function<void (T)> function_t;
-
-  function_t code;
-  T	     arg;
-  bool       enabled;
-
-public:
-  explicit scoped_execute(const function_t& _code, T _arg)
-    : code(_code), arg(_arg), enabled(true) {}
-
-  ~scoped_execute() {
-    if (enabled)
-      code(arg);
-  }
-
-  void clear() {
-    enabled = false;
-  }
-};
-
-template <>
-class scoped_execute<void> : public boost::noncopyable
-{
-  typedef boost::function<void ()> function_t;
-
-  function_t code;
-  bool       enabled;
-
-public:
-  explicit scoped_execute(const function_t& _code)
-    : code(_code), enabled(true) {}
-
-  ~scoped_execute() {
-    if (enabled)
-      code();
-  }
-
-  void clear() {
-    enabled = false;
-  }
-};
-
-#endif // _SCOPED_EXECUTE_H
+#endif // _SCOPEVAR_H

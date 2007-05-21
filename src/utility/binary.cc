@@ -29,7 +29,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "binary.h"
+#include "utils.h"
 
 namespace ledger {
 namespace binary {
