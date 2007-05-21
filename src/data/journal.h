@@ -358,7 +358,7 @@ bool run_hooks(std::list<T>& list, Data& item, bool post) {
 typedef std::list<entry_t *>	    entries_list;
 typedef std::list<auto_entry_t *>   auto_entries_list;
 typedef std::list<period_entry_t *> period_entries_list;
-typedef std::list<path>	    	    path_list;
+typedef std::list<path>		    path_list;
 typedef std::list<string>	    strings_list;
 
 class journal_t

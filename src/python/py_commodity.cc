@@ -51,7 +51,7 @@ void export_commodity()
   scope().attr("COMMODITY_STYLE_BUILTIN")   = COMMODITY_STYLE_BUILTIN;
 
   class_< commodity_t, bases<>,
-          commodity_t, boost::noncopyable > ("commodity", no_init)
+	  commodity_t, boost::noncopyable > ("commodity", no_init)
     .def(self == self)
 
     .def("drop_flags", &commodity_t::drop_flags)

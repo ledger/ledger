@@ -149,4 +149,4 @@ public:
 } // namespace xml
 } // namespace ledger
 
-#endif // _DOCUMENT_H 
+#endif // _DOCUMENT_H

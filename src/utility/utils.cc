@@ -143,7 +143,7 @@ inline void add_to_count_map(object_count_map& the_map,
 std::size_t current_memory_size()
 {
   std::size_t memory_size = 0;
-  
+
   for (object_count_map::const_iterator i = live_memory_count->begin();
        i != live_memory_count->end();
        i++)
@@ -262,7 +262,7 @@ inline void report_count_map(std::ostream& out, object_count_map& the_map)
 std::size_t current_objects_size()
 {
   std::size_t objects_size = 0;
-  
+
   for (object_count_map::const_iterator i = live_object_count->begin();
        i != live_object_count->end();
        i++)
@@ -617,7 +617,7 @@ void finish_timer(const char * name)
 
   if (need_paren)
     _log_buffer << '(';
-  
+
   _log_buffer << spent.total_milliseconds() << "ms";
 
   if (need_paren)

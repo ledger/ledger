@@ -83,9 +83,9 @@ public:
     }
 
     virtual void     define(const string& name, ptr_op_t def) = 0;
-            void     define(const string& name, const value_t& val);
+	    void     define(const string& name, const value_t& val);
     virtual ptr_op_t lookup(const string& name) = 0;
-            value_t  resolve(const string& name) {
+	    value_t  resolve(const string& name) {
       return lookup(name)->calc(*this);
     }
 
@@ -175,7 +175,7 @@ public:
     }
 
     virtual void     define(const string& name, ptr_op_t def);
-            void     define(const string& name, const value_t& val) {
+	    void     define(const string& name, const value_t& val) {
 	      scope_t::define(name, val);
 	    }
     virtual ptr_op_t lookup(const string& name);
@@ -232,7 +232,7 @@ public:
 			     const value_t&     _element        = NULL_VALUE,
 			     const std::size_t  _element_index  = 0,
 			     const std::size_t  _sequence_size  = 0)
-      : child_scope_t(_parent, CONTEXT_SCOPE), current_element(_element), 
+      : child_scope_t(_parent, CONTEXT_SCOPE), current_element(_element),
 	element_index(_element_index), sequence_size(_sequence_size)
     {
       TRACE_CTOR(xpath_t::context_scope_t, "scope_t&, const value_t&, ...");

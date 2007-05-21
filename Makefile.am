@@ -25,9 +25,16 @@ WARNFLAGS  = -Wall #-pedantic-errors
 #WARNFLAGS += -Wmissing-field-initializers -Wstrict-null-sentinel
 #WARNFLAGS += -Wold-style-cast -Woverloaded-virtual 
 
-libledger_la_CPPFLAGS = -I$(top_builddir)/gdtoa -I$(srcdir)/gdtoa \
-			-I$(srcdir)/src $(WARNFLAGS)
 libledger_la_LDFLAGS  = -release $(PACKAGE_VERSION)
+libledger_la_CPPFLAGS = $(WARNFLAGS) \
+	-I$(top_builddir)/gdtoa \
+	-I$(srcdir)/gdtoa \
+	-I$(srcdir)/src \
+	-I$(srcdir)/src/utility \
+	-I$(srcdir)/src/numerics \
+	-I$(srcdir)/src/data \
+	-I$(srcdir)/src/traversal \
+	-I$(srcdir)/src/driver
 
 libledger_la_SOURCES = \
 	src/utility/utils.cc	   \

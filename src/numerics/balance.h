@@ -33,9 +33,9 @@
  * @file   balance.h
  * @author John Wiegley
  * @date   Sun May 20 15:28:44 2007
- * 
+ *
  * @brief  Basic type for adding multiple commodities together.
- * 
+ *
  * Unlike the amount_t class, which throws an exception if amounts of
  * differing commodities are added or subtracted, the balance_t class
  * is designed to allow this, tracking the amounts of each component
@@ -60,19 +60,19 @@ DECLARE_EXCEPTION(balance_error);
  */
 class balance_t
   : public equality_comparable<balance_t,
-           equality_comparable<balance_t, amount_t,
-           equality_comparable<balance_t, double,
-           equality_comparable<balance_t, unsigned long,
-           equality_comparable<balance_t, long,
-           additive<balance_t,
-           additive<balance_t, amount_t,
-           additive<balance_t, double,
-           additive<balance_t, unsigned long,
-           additive<balance_t, long,
-           multiplicative<balance_t, amount_t,
-           multiplicative<balance_t, double,
-           multiplicative<balance_t, unsigned long,
-           multiplicative<balance_t, long> > > > > > > > > > > > > >
+	   equality_comparable<balance_t, amount_t,
+	   equality_comparable<balance_t, double,
+	   equality_comparable<balance_t, unsigned long,
+	   equality_comparable<balance_t, long,
+	   additive<balance_t,
+	   additive<balance_t, amount_t,
+	   additive<balance_t, double,
+	   additive<balance_t, unsigned long,
+	   additive<balance_t, long,
+	   multiplicative<balance_t, amount_t,
+	   multiplicative<balance_t, double,
+	   multiplicative<balance_t, unsigned long,
+	   multiplicative<balance_t, long> > > > > > > > > > > > > >
 {
 public:
   typedef std::map<const commodity_t *, amount_t> amounts_map;

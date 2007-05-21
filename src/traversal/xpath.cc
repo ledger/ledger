@@ -1210,7 +1210,7 @@ value_t xpath_t::op_t::calc(scope_t& scope)
   case ATTR_NAME:
     if (optional<value_t&> value =
 	kind == ATTR_ID ? current_xml_node(scope).get_attr(as_name()) :
-	                  current_xml_node(scope).get_attr(as_string()))
+			  current_xml_node(scope).get_attr(as_string()))
       return *value;
 
     break;

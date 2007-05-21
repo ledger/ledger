@@ -33,9 +33,9 @@
  * @file   commodity.h
  * @author John Wiegley
  * @date   Wed Apr 18 22:05:53 2007
- * 
+ *
  * @brief  Types for handling commodities.
- * 
+ *
  * This file contains one of the most basic types in Ledger:
  * commodity_t, and its annotated cousin, annotated_commodity_t.
  */
@@ -240,7 +240,7 @@ struct annotation_t : public equality_comparable<annotation_t>
     out << "price " << (price ? price->to_string() : "NONE") << " "
 	<< "date "  << (date  ? *date : moment_t()) << " "
 	<< "tag "   << (tag   ? *tag  : "NONE");
-  }    
+  }
 
   bool valid() const {
     assert(*this);
@@ -256,7 +256,7 @@ inline std::ostream& operator<<(std::ostream& out, const annotation_t& details) 
 class annotated_commodity_t
   : public commodity_t,
     public equality_comparable<annotated_commodity_t,
-           equality_comparable2<annotated_commodity_t, commodity_t,
+	   equality_comparable2<annotated_commodity_t, commodity_t,
 				noncopyable> >
 {
 public:

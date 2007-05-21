@@ -51,12 +51,12 @@ namespace xml {
 
 class value_t
   : public ordered_field_operators<value_t,
-           ordered_field_operators<value_t, balance_pair_t,
-           ordered_field_operators<value_t, balance_t,
-           ordered_field_operators<value_t, amount_t,
-           ordered_field_operators<value_t, double,
-           ordered_field_operators<value_t, unsigned long,
-           ordered_field_operators<value_t, long> > > > > > >
+	   ordered_field_operators<value_t, balance_pair_t,
+	   ordered_field_operators<value_t, balance_t,
+	   ordered_field_operators<value_t, amount_t,
+	   ordered_field_operators<value_t, double,
+	   ordered_field_operators<value_t, unsigned long,
+	   ordered_field_operators<value_t, long> > > > > > >
 {
 public:
   typedef std::vector<value_t> sequence_t;
@@ -625,7 +625,7 @@ public:
     assert(false);
     return "<invalid>";
   }
-  
+
   value_t operator-() const {
     return negate();
   }

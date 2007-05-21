@@ -33,9 +33,9 @@
  * @file   commodity.cc
  * @author John Wiegley
  * @date   Thu Apr 26 15:19:46 2007
- * 
+ *
  * @brief  Types for dealing with commodities.
- * 
+ *
  * This file defines member functions for flavors of commodity_t.
  */
 

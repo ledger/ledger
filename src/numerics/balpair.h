@@ -33,9 +33,9 @@
  * @file   balpair.h
  * @author John Wiegley
  * @date   Sun May 20 19:11:58 2007
- * 
+ *
  * @brief  Provides an abstraction around balance_t for tracking costs.
- * 
+ *
  * When a transaction's amount is added to a balance, only the "value"
  * of the amount is added -- not the associated cost of the
  * transaction.  To provide for this, the balance_pair_t type allows
@@ -56,24 +56,24 @@
 namespace ledger {
 
 class balance_pair_t
-  : public equality_comparable<balance_pair_t,
-           equality_comparable<balance_pair_t, balance_t,
-           equality_comparable<balance_pair_t, amount_t,
-           equality_comparable<balance_pair_t, double,
-           equality_comparable<balance_pair_t, unsigned long,
-           equality_comparable<balance_pair_t, long,
-           additive<balance_pair_t,
-           additive<balance_pair_t, balance_t,
-           additive<balance_pair_t, amount_t,
-           additive<balance_pair_t, double,
-           additive<balance_pair_t, unsigned long,
-           additive<balance_pair_t, long,
-           multiplicative<balance_pair_t, amount_t,
-           multiplicative<balance_pair_t, balance_t,
-           multiplicative<balance_pair_t, double,
-           multiplicative<balance_pair_t, unsigned long,
-           multiplicative2<balance_pair_t, long, balance_t
-			   > > > > > > > > > > > > > > > > >
+  : public balance_t,
+    public equality_comparable<balance_pair_t,
+	   equality_comparable<balance_pair_t, balance_t,
+	   equality_comparable<balance_pair_t, amount_t,
+	   equality_comparable<balance_pair_t, double,
+	   equality_comparable<balance_pair_t, unsigned long,
+	   equality_comparable<balance_pair_t, long,
+	   additive<balance_pair_t,
+	   additive<balance_pair_t, balance_t,
+	   additive<balance_pair_t, amount_t,
+	   additive<balance_pair_t, double,
+	   additive<balance_pair_t, unsigned long,
+	   additive<balance_pair_t, long,
+	   multiplicative<balance_pair_t, amount_t,
+	   multiplicative<balance_pair_t, balance_t,
+	   multiplicative<balance_pair_t, double,
+	   multiplicative<balance_pair_t, unsigned long,
+	   multiplicative<balance_pair_t, long> > > > > > > > > > > > > > > > >
 {
   /**
    * The `cost' member of a balance pair tracks the cost associated
@@ -216,33 +216,22 @@ public:
 
   // comparison
   bool operator==(const balance_pair_t& bal_pair) const {
-    return quantity == bal_pair.quantity;
+    return quantity() == bal_pair.quantity();
   }
   bool operator==(const balance_t& bal) const {
-    return quantity == bal;
+    return quantity() == bal;
   }
   bool operator==(const amount_t& amt) const {
-    return quantity == amt;
-  }
-
-  balance_pair_t& operator*=(const amount_t& amt) {
-    quantity *= amt;
-    if (cost)
-      *cost *= amt;
-    return *this;
-  }
-  balance_pair_t& operator/=(const amount_t& amt) {
-    quantity /= amt;
-    if (cost)
-      *cost /= amt;
-    return *this;
+    return quantity() == amt;
   }
 
   // unary negation
   void in_place_negate() {
+#if 0
     quantity.in_place_negate();
     if (cost)
       cost->in_place_negate();
+#endif
   }
   balance_pair_t negate() const {
     balance_pair_t temp = *this;
@@ -255,57 +244,67 @@ public:
 
   // test for non-zero (use ! for zero)
   operator bool() const {
-    return quantity;
+    return quantity();
   }
 
   bool is_realzero() const {
+#if 0
     return ((! cost || cost->is_realzero()) && quantity.is_realzero());
+#else
+    return false;
+#endif
   }
 
   balance_pair_t abs() const {
+#if 0
     balance_pair_t temp = *this;
     temp.quantity = temp.quantity.abs();
     if (temp.cost)
       temp.cost = temp.cost->abs();
     return temp;
+#else
+    return balance_pair_t();
+#endif
   }
 
   optional<amount_t>
   commodity_amount(const optional<const commodity_t&>& commodity = none) const {
-    return quantity.commodity_amount(commodity);
+    return quantity().commodity_amount(commodity);
   }
   optional<balance_t> value(const optional<moment_t>& moment = none) const {
-    return quantity.value(moment);
+    return quantity().value(moment);
   }
 
   balance_t
   strip_annotations(const bool keep_price = amount_t::keep_price,
 		    const bool keep_date  = amount_t::keep_date,
 		    const bool keep_tag   = amount_t::keep_tag) const {
-    return quantity.strip_annotations(keep_price, keep_date, keep_tag);
+    return quantity().strip_annotations(keep_price, keep_date, keep_tag);
   }
 
   void print(std::ostream& out, const int first_width,
 	     const int latter_width = -1) const {
-    quantity.print(out, first_width, latter_width);
+    quantity().print(out, first_width, latter_width);
   }
 
   balance_pair_t& add(const amount_t&  amt,
 		      const optional<amount_t>& a_cost = none) {
+#if 0
     if (a_cost && ! cost)
       cost = quantity;
     quantity += amt;
     if (cost)
       *cost += a_cost ? *a_cost : amt;
+#endif
     return *this;
   }
 
   bool valid() {
-    return quantity.valid() && (! cost || cost->valid());
+    return quantity().valid() && (! cost || cost->valid());
   }
 
   void in_place_reduce() {
-    quantity.in_place_reduce();
+    quantity().in_place_reduce();
     if (cost) cost->in_place_reduce();
   }
   balance_pair_t reduce() const {
@@ -320,7 +319,7 @@ public:
 
 inline std::ostream& operator<<(std::ostream& out,
 				const balance_pair_t& bal_pair) {
-  bal_pair.quantity.print(out, 12);
+  bal_pair.quantity().print(out, 12);
   return out;
 }
 

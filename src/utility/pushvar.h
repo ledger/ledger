@@ -33,9 +33,9 @@
  * @file   scopevar.h
  * @author John Wiegley
  * @date   Sun May  6 20:10:52 2007
- * 
+ *
  * @brief  Adds a facility to C++ for handling "scoped executions".
- * 
+ *
  * There are sometimes cases where you would like to guarantee that
  * something happens at the end of a scope, such as calling a function
  * to close a resource for you.

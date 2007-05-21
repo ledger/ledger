@@ -175,7 +175,7 @@ void parse_entry(std::istream& in,
   date = line;
 
   char * p = line;
-  
+
   while (*p && (std::isdigit(*p) || *p == '/' || *p == '.' || *p == '-'))
     p++;
   assert(*p);

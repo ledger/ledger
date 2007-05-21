@@ -56,7 +56,7 @@ struct date_to_python
     return PyDate_FromDate(dte.year(), dte.month(), dte.day());
   }
 };
-   
+
 struct date_from_python
 {
   static void* convertible(PyObject* obj_ptr)
@@ -93,7 +93,7 @@ struct datetime_to_python
 				      tod.total_microseconds() % 1000000);
   }
 };
-   
+
 struct datetime_from_python
 {
   static void* convertible(PyObject* obj_ptr)

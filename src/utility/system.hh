@@ -36,7 +36,7 @@
  * @file   system.hh
  * @author John Wiegley
  * @date   Mon Apr 23 03:43:05 2007
- * 
+ *
  * @brief  All system headers needed by Ledger.
  *
  * These are collected here so that a pre-compiled header can be made.

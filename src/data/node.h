@@ -106,10 +106,10 @@ public:
     if (! is_parent_node())
       throw_(std::logic_error, "Request to cast leaf node to a parent node");
     return downcast<parent_node_t>(*this);
-  }    
+  }
   const parent_node_t& as_parent_node() const {
     return const_cast<node_t *>(this)->as_parent_node();
-  }    
+  }
 
   bool is_terminal_node() const {
     return ! has_flags(XML_NODE_IS_PARENT);
@@ -118,10 +118,10 @@ public:
     if (! is_terminal_node())
       throw_(std::logic_error, "Request to cast parent node to a leaf node");
     return downcast<terminal_node_t>(*this);
-  }    
+  }
   const terminal_node_t& as_terminal_node() const {
     return const_cast<node_t *>(this)->as_terminal_node();
-  }    
+  }
 
   virtual value_t to_value() const		 = 0;
   virtual void    print(std::ostream& out) const = 0;

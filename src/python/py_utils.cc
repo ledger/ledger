@@ -50,7 +50,7 @@ struct bool_to_python
       Py_RETURN_FALSE;
   }
 };
-   
+
 struct bool_from_python
 {
   static void* convertible(PyObject* obj_ptr)
@@ -82,7 +82,7 @@ struct string_to_python
     return incref(object(*boost::polymorphic_downcast<const std::string *>(&str)).ptr());
   }
 };
-   
+
 struct string_from_python
 {
   static void* convertible(PyObject* obj_ptr)
@@ -112,7 +112,7 @@ struct istream_to_python
     return incref(boost::python::detail::none());
   }
 };
-   
+
 struct istream_from_python
 {
   static void* convertible(PyObject* obj_ptr)
@@ -140,7 +140,7 @@ struct ostream_to_python
     return incref(boost::python::detail::none());
   }
 };
-   
+
 struct ostream_from_python
 {
   static void* convertible(PyObject* obj_ptr)

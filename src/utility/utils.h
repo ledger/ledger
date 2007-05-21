@@ -33,9 +33,9 @@
  * @file   utils.h
  * @author John Wiegley
  * @date   Sun May  6 21:20:00 2007
- * 
+ *
  * @brief  This file contains general utility facilities used by Ledger.
- * 
+ *
  * Ledger has need of the following utility code, which this file
  * provides or includes in:
  *
@@ -195,7 +195,7 @@ inline string operator+(const string& __lhs, const string& __rhs)
 }
 
 string operator+(const char* __lhs, const string& __rhs);
-string operator+(char __lhs, const string& __rhs); 
+string operator+(char __lhs, const string& __rhs);
 
 inline string operator+(const string& __lhs, const char* __rhs)
 {
@@ -324,7 +324,7 @@ inline bool category_matches(const char * cat) {
 #define DEBUG_(msg)
 
 #endif // DEBUG_ON
-   
+
 #define LOG_MACRO(level, msg) \
   (ledger::_log_level >= level ? \
    ((ledger::_log_buffer << msg), ledger::logger_func(level)) : false)

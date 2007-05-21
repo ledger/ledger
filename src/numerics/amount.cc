@@ -33,9 +33,9 @@
  * @file   amount.cc
  * @author John Wiegley
  * @date   Thu Apr 26 15:19:46 2007
- * 
+ *
  * @brief  Types for handling commoditized math.
- * 
+ *
  * This file defines member functions for amount_t, and also defines a
  * helper class, bigint_t, which is used as a refcounted wrapper
  * around libgmp's mpz_t type.
@@ -43,6 +43,7 @@
 
 #include "amount.h"
 #include "binary.h"
+#include "parser.h"
 
 namespace ledger {
 
@@ -330,7 +331,7 @@ int amount_t::compare(const amount_t& amt) const
     else
       throw_(amount_error, "Cannot compare two uninitialized amounts");
   }
-  
+
   if (has_commodity() && amt.has_commodity() &&
       commodity() != amt.commodity())
     throw_(amount_error,
@@ -363,7 +364,7 @@ amount_t& amount_t::operator+=(const amount_t& amt)
     else
       throw_(amount_error, "Cannot add two uninitialized amounts");
   }
-  
+
   if (commodity() != amt.commodity())
     throw_(amount_error,
 	   "Adding amounts with different commodities: " <<
@@ -399,7 +400,7 @@ amount_t& amount_t::operator-=(const amount_t& amt)
     else
       throw_(amount_error, "Cannot subtract two uninitialized amounts");
   }
-  
+
   if (commodity() != amt.commodity())
     throw_(amount_error,
 	   "Subtracting amounts with different commodities: " <<
@@ -483,7 +484,7 @@ amount_t& amount_t::operator*=(const amount_t& amt)
     else
       throw_(amount_error, "Cannot multiply two uninitialized amounts");
   }
-  
+
   if (has_commodity() && amt.has_commodity() &&
       commodity() != amt.commodity())
     throw_(amount_error,
@@ -521,7 +522,7 @@ amount_t& amount_t::operator/=(const amount_t& amt)
     else
       throw_(amount_error, "Cannot divide two uninitialized amounts");
   }
-  
+
   if (has_commodity() && amt.has_commodity() &&
       commodity() != amt.commodity())
     throw_(amount_error,
@@ -1218,10 +1219,10 @@ namespace {
 
 void amount_t::read(std::istream& in)
 {
-  using ledger::binary;
+  using namespace ledger::binary;
 
   // Read in the commodity for this amount
-  
+
   commodity_t::ident_t ident;
   read_long(in, ident);
   if (ident == 0xffffffff)
@@ -1266,10 +1267,10 @@ void amount_t::read(std::istream& in)
 
 void amount_t::read(const char *& data)
 {
-  using ledger::binary;
-  
+  using namespace ledger::binary;
+
   // Read in the commodity for this amount
-  
+
   commodity_t::ident_t ident;
   read_long(data, ident);
   if (ident == 0xffffffff)
@@ -1323,10 +1324,10 @@ void amount_t::read(const char *& data)
 
 void amount_t::write(std::ostream& out, bool optimized) const
 {
-  using ledger::binary;
-  
+  using namespace ledger::binary;
+
   // Write out the commodity for this amount
-  
+
   if (! quantity)
     throw_(amount_error, "Cannot serialize an uninitialized amount");
 

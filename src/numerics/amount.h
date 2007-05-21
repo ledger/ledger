@@ -33,9 +33,9 @@
  * @file   amount.h
  * @author John Wiegley
  * @date   Wed Apr 18 22:05:53 2007
- * 
+ *
  * @brief  Basic type for handling commoditized math: amount_t.
- * 
+ *
  * This file contains the most basic numerical type in Ledger:
  * amount_t, which relies upon commodity.h (commodity_t) for handling
  * commoditized amounts.  This class allows Ledger to handle
@@ -78,7 +78,7 @@ class amount_t
   // jww (2007-05-03): Make this private, and then make
   // ledger::initialize into a member function of session_t.
 public:
-  /** 
+  /**
    * The initialize and shutdown methods ready the amount subsystem
    * for use.  Normally they are called by `ledger::initialize' and
    * `ledger::shutdown'.
@@ -347,7 +347,7 @@ public:
     return *this;
   }
 
-  amount_t round(const optional<precision_t>& prec) const;
+  amount_t round(const optional<precision_t>& prec = none) const;
   amount_t unround() const;
 
   amount_t reduce() const {
