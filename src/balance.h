@@ -147,7 +147,7 @@ public:
    * Destructor.  Destroys all of the accumulated amounts in the
    * balance.
    */
-  ~balance_t() {
+  virtual ~balance_t() {
     TRACE_DTOR(balance_t);
   }
 

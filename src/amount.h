@@ -43,7 +43,6 @@
  * as math using no commodities at all (such as increasing a dollar
  * amount by a multiplier).
  */
-
 #ifndef _AMOUNT_H
 #define _AMOUNT_H
 
