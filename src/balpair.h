@@ -167,21 +167,50 @@ public:
     return *this = balance_t(str);
   }
 
-  // in-place arithmetic
+  /**
+   * Binary arithmetic operators.  Balances support addition and
+   * subtraction of other balance pairs, balances or amounts, but
+   * multiplication and division are restricted to uncommoditized
+   * amounts only.
+   */
   balance_pair_t& operator+=(const balance_pair_t& bal_pair) {
-    if (bal_pair.cost && ! cost)
-      cost = quantity;
-    quantity += bal_pair.quantity;
-    if (cost)
-      *cost += bal_pair.cost ? *bal_pair.cost : bal_pair.quantity;
+    balance_t::operator+=(bal_pair);
+    if (bal_pair.cost) {
+      if (! cost)
+	*cost = quantity();
+      *cost += *bal_pair.cost;
+    }
     return *this;
   }
   balance_pair_t& operator-=(const balance_pair_t& bal_pair) {
-    if (bal_pair.cost && ! cost)
-      cost = quantity;
-    quantity -= bal_pair.quantity;
+    balance_t::operator+=(bal_pair);
+    if (bal_pair.cost) {
+      if (! cost)
+	*cost = quantity();
+      *cost += *bal_pair.cost;
+    }
+    return *this;
+  }
+
+  balance_pair_t& operator*=(const amount_t& amt) {
+    balance_t::operator*=(amt);
     if (cost)
-      *cost -= bal_pair.cost ? *bal_pair.cost : bal_pair.quantity;
+      *cost *= amt;
+    return *this;
+  }
+  balance_pair_t& operator*=(const double val) {
+    return *this *= amount_t(val);
+  }
+  balance_pair_t& operator*=(const unsigned long val) {
+    return *this *= amount_t(val);
+  }
+  balance_pair_t& operator*=(const long val) {
+    return *this *= amount_t(val);
+  }
+  balance_pair_t& operator/=(const amount_t& amt) {
+    balance_t::operator/=(amt);
+    if (cost)
+      *cost /= amt;
     return *this;
   }
 

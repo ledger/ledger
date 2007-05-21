@@ -585,29 +585,35 @@ amount_t& amount_t::in_place_negate()
   return *this;
 }
 
-amount_t amount_t::round(precision_t prec) const
+amount_t amount_t::round(const optional<precision_t>& prec) const
 {
   if (! quantity)
     throw_(amount_error, "Cannot round an uninitialized amount");
 
-  amount_t t(*this);
+  if (! prec) {
+    if (! has_commodity())
+      return *this;
+    return round(commodity().precision());
+  } else {
+    amount_t t(*this);
 
-  if (quantity->prec <= prec) {
-    if (quantity && quantity->has_flags(BIGINT_KEEP_PREC)) {
-      t._dup();
-      t.quantity->drop_flags(BIGINT_KEEP_PREC);
+    if (quantity->prec <= *prec) {
+      if (quantity && quantity->has_flags(BIGINT_KEEP_PREC)) {
+	t._dup();
+	t.quantity->drop_flags(BIGINT_KEEP_PREC);
+      }
+      return t;
     }
+
+    t._dup();
+
+    mpz_round(MPZ(t.quantity), MPZ(t.quantity), t.quantity->prec, *prec);
+
+    t.quantity->prec = *prec;
+    t.quantity->drop_flags(BIGINT_KEEP_PREC);
+
     return t;
   }
-
-  t._dup();
-
-  mpz_round(MPZ(t.quantity), MPZ(t.quantity), t.quantity->prec, prec);
-
-  t.quantity->prec = prec;
-  t.quantity->drop_flags(BIGINT_KEEP_PREC);
-
-  return t;
 }
 
 amount_t amount_t::unround() const
@@ -1212,10 +1218,12 @@ namespace {
 
 void amount_t::read(std::istream& in)
 {
+  using ledger::binary;
+
   // Read in the commodity for this amount
   
   commodity_t::ident_t ident;
-  read_binary_long(in, ident);
+  read_long(in, ident);
   if (ident == 0xffffffff)
     commodity_ = NULL;
   else if (ident == 0)
@@ -1258,10 +1266,12 @@ void amount_t::read(std::istream& in)
 
 void amount_t::read(const char *& data)
 {
+  using ledger::binary;
+  
   // Read in the commodity for this amount
   
   commodity_t::ident_t ident;
-  read_binary_long(data, ident);
+  read_long(data, ident);
   if (ident == 0xffffffff)
     commodity_ = NULL;
   else if (ident == 0)
@@ -1313,15 +1323,17 @@ void amount_t::read(const char *& data)
 
 void amount_t::write(std::ostream& out, bool optimized) const
 {
+  using ledger::binary;
+  
   // Write out the commodity for this amount
   
   if (! quantity)
     throw_(amount_error, "Cannot serialize an uninitialized amount");
 
   if (commodity_)
-    write_binary_long(out, commodity_->ident);
+    write_long(out, commodity_->ident);
   else
-    write_binary_long<commodity_t::ident_t>(out, 0xffffffff);
+    write_long<commodity_t::ident_t>(out, 0xffffffff);
 
   // Write out the quantity
 

@@ -9,15 +9,11 @@ ESC_srcdir=`echo "$(srcdir)" | sed 's/\//\\\\\//g'`
 ESC_builddir=`echo "$(top_builddir)" | sed 's/\//\\\\\//g'`
 ESC_distdir=`echo "$(distdir)" | sed 's/\//\\\\\//g'`
 
-#(cd $(distdir)/docs; zip -r doxygen-html.zip html; rm -fr html)
 dist-hook:
 	rm -fr `find $(distdir) -name .svn`
 
 
 lib_LTLIBRARIES = libledger.la
-if HAVE_BOOST_PYTHON
-lib_LTLIBRARIES += libpyledger.la
-endif
 
 AM_YFLAGS = -d
 AM_LFLAGS = -o $(LEX_OUTPUT_ROOT).c
@@ -34,38 +30,42 @@ libledger_la_CPPFLAGS = -I$(top_builddir)/gdtoa -I$(srcdir)/gdtoa \
 libledger_la_LDFLAGS  = -release $(PACKAGE_VERSION)
 
 libledger_la_SOURCES = \
-	src/utils.cc	 \
-	src/times.cc	 \
-	src/mask.cc	 \
-	src/abbrev.cc	 \
-	src/commodity.cc \
-	src/amount.cc    \
-	src/balance.cc   \
-	src/value.cc     \
-	src/document.cc	 \
-	src/node.cc	 \
-	src/compile.cc	 \
-	src/jbuilder.cc	 \
-	src/xpath.cc     \
-	src/journal.cc	 \
-	src/textual.cc	 \
-	src/binary.cc	 \
-	src/transform.cc \
-	src/report.cc	 \
-	src/session.cc
+	src/utility/utils.cc	   \
+	src/utility/times.cc	   \
+	src/utility/binary.cc	   \
+	src/utility/mask.cc	   \
+	src/numerics/commodity.cc  \
+	src/numerics/amount.cc	   \
+	src/numerics/balance.cc	   \
+	src/numerics/value.cc	   \
+	src/data/document.cc	   \
+	src/data/node.cc	   \
+	src/data/textual.cc	   \
+	src/data/compile.cc	   \
+	src/data/journal.cc	   \
+	src/data/jbuilder.cc	   \
+	src/traversal/xpath.cc	   \
+	src/traversal/transform.cc \
+	src/traversal/abbrev.cc	   \
+	src/driver/session.cc	   \
+	src/driver/report.cc
 
-#if HAVE_EXPAT
-#libledger_la_CPPFLAGS += -DHAVE_EXPAT=1
-#libledger_la_SOURCES += src/gnucash.cc
-#endif
-#if HAVE_XMLPARSE
-#libledger_la_CPPFLAGS += -DHAVE_XMLPARSE=1
-#libledger_la_SOURCES += src/gnucash.cc
-#endif
-#if HAVE_LIBOFX
-#libledger_la_CPPFLAGS += -DHAVE_LIBOFX=1
-#libledger_la_SOURCES += src/ofx.cc
-#endif
+if HAVE_BOOST_PYTHON
+Python_SRC = \
+	src/python/pyinterp.cc	   \
+	src/python/pyledger.cc	   \
+	src/python/py_amount.cc	   \
+	src/python/py_commodity.cc \
+	src/python/py_times.cc	   \
+	src/python/py_utils.cc
+
+libledger_la_SOURCES += $(Python_SRC)
+endif
+
+if HAVE_LIBOFX
+libledger_la_CPPFLAGS += -DHAVE_LIBOFX=1
+libledger_la_SOURCES += src/ofx.cc
+endif
 if DEBUG
 libledger_la_CPPFLAGS += -DDEBUG_MODE
 endif
@@ -76,60 +76,45 @@ nodist_libledger_la_SOURCES = system.hh.gch
 BUILT_SOURCES += system.hh.gch
 CLEANFILES += system.hh.gch system.hh
 
-$(top_builddir)/system.hh.gch: $(srcdir)/src/system.hh acconf.h
+$(top_builddir)/system.hh.gch: $(srcdir)/src/utility/system.hh acconf.h
 	echo "#include \"src/system.hh\"" > $(top_builddir)/system.hh
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(libledger_la_CPPFLAGS) \
-		-o $@ $(srcdir)/src/system.hh
+		-o $@ $(srcdir)/src/utility/system.hh
 endif
 
 
-libpyledger_la_CPPFLAGS = $(libledger_la_CPPFLAGS)
-libpyledger_la_LDFLAGS  = -release $(PACKAGE_VERSION)
-
-libpyledger_la_SOURCES =    \
-	src/pyinterp.cc	    \
-	src/py_utils.cc	    \
-	src/py_times.cc	    \
-	src/py_commodity.cc \
-	src/py_amount.cc
-
-
 pkginclude_HEADERS = \
-	src/abbrev.h	     \
-	src/amount.h	     \
-	src/balance.h	     \
-	src/balpair.h	     \
-	src/binary.h	     \
-	src/builder.h	     \
-	src/jbuilder.h	     \
-	src/commodity.h	     \
-	src/compile.h	     \
-	src/context.h	     \
-	src/document.h	     \
-	src/fdstream.hpp     \
-	src/flags.h	     \
-	src/format.h	     \
-	src/journal.h	     \
-	src/ledger.h	     \
-	src/mask.h	     \
-	src/node.h	     \
-	src/option.h	     \
-	src/parser.h	     \
-	src/pyfstream.h	     \
-	src/pyinterp.h	     \
-	src/pyledger.h	     \
-	src/pyutils.h	     \
-	src/report.h	     \
-	src/scoped_execute.h \
-	src/session.h	     \
-	src/system.hh	     \
-	src/textual.h	     \
-	src/times.h	     \
-	src/transform.h	     \
-	src/tuples.hpp	     \
-	src/utils.h	     \
-	src/value.h	     \
-	src/xpath.h
+	src/ledger.h		  \
+	src/utility/binary.h	  \
+	src/utility/context.h	  \
+	src/utility/flags.h	  \
+	src/utility/mask.h	  \
+	src/utility/pushvar.h	  \
+	src/utility/times.h	  \
+	src/utility/utils.h	  \
+	src/numerics/amount.h	  \
+	src/numerics/balance.h	  \
+	src/numerics/balpair.h	  \
+	src/numerics/commodity.h  \
+	src/numerics/value.h	  \
+	src/data/builder.h	  \
+	src/data/compile.h	  \
+	src/data/document.h	  \
+	src/data/jbuilder.h	  \
+	src/data/journal.h	  \
+	src/data/node.h		  \
+	src/data/parser.h	  \
+	src/data/textual.h	  \
+	src/traversal/abbrev.h	  \
+	src/traversal/transform.h \
+	src/traversal/xpath.h	  \
+	src/driver/option.h	  \
+	src/driver/report.h	  \
+	src/driver/session.h	  \
+	src/python/pyfstream.h	  \
+	src/python/pyinterp.h	  \
+	src/python/pyledger.h	  \
+	src/python/pyutils.h
 
 ###############################################################################
 
@@ -138,14 +123,7 @@ bin_PROGRAMS = ledger
 ledger_CPPFLAGS = $(libledger_la_CPPFLAGS)
 ledger_LDADD	= $(LIBOBJS) libledger.la gdtoa/libgdtoa.la $(LEXLIB)
 ledger_LDFLAGS	= -static	# for the sake of command-line speed
-
-ledger_SOURCES  = \
-	src/option.cc \
-	src/main.cc
-
-if HAVE_BOOST_PYTHON
-ledger_LDADD += libpyledger.la
-endif
+ledger_SOURCES  = src/driver/option.cc src/driver/main.cc
 
 nodist_info_TEXINFOS = docs/ledger.texi
 
@@ -166,31 +144,18 @@ CLEANFILES += ledger.so
 clean-local:
 	rm -fr build
 
-ledger_so_SOURCES = \
-	src/pyledger.cc \
-	src/pyinterp.cc \
-	src/py_utils.cc \
-	src/py_times.cc \
-	src/py_commodity.cc \
-	src/py_amount.cc
+ledger_so_SOURCES = $(Python_SRC)
+ledger_so_DEPENDENCIES = libledger.la gdtoa/libgdtoa.la
 
-ledger_so_DEPENDENCIES = libledger.la gdtoa/libgdtoa.la libpyledger.la
-
-PYLIBS  = pyledger ledger gdtoa gmp
-PYLIBS += boost_date_time$(BOOST_SUFFIX)  \
+PYLIBS  = ledger gdtoa gmp \
+	  boost_date_time$(BOOST_SUFFIX)  \
           boost_filesystem$(BOOST_SUFFIX) \
           boost_regex$(BOOST_SUFFIX)	  \
           boost_python$(BOOST_SUFFIX)
 
-#if HAVE_EXPAT
-#PYLIBS += expat
-#endif
-#if HAVE_XMLPARSE
-#PYLIBS += xmlparse xmltok
-#endif
-#if HAVE_LIBOFX
-#PYLIBS += ofx
-#endif
+if HAVE_LIBOFX
+PYLIBS += ofx
+endif
 
 ledger.so: $(ledger_so_SOURCES) $(ledger_so_DEPENDENCIES)
 	CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libledger_la_CPPFLAGS)" \

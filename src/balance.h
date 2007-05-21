@@ -234,7 +234,26 @@ public:
   balance_t& operator-=(const amount_t& amt);
 
   balance_t& operator*=(const amount_t& amt);
+  balance_t& operator*=(const double val) {
+    return *this *= amount_t(val);
+  }
+  balance_t& operator*=(const unsigned long val) {
+    return *this *= amount_t(val);
+  }
+  balance_t& operator*=(const long val) {
+    return *this *= amount_t(val);
+  }
+
   balance_t& operator/=(const amount_t& amt);
+  balance_t& operator/=(const double val) {
+    return *this /= amount_t(val);
+  }
+  balance_t& operator/=(const unsigned long val) {
+    return *this /= amount_t(val);
+  }
+  balance_t& operator/=(const long val) {
+    return *this /= amount_t(val);
+  }
 
   /**
    * Unary arithmetic operators.  There are only a few unary methods

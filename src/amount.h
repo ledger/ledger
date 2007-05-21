@@ -294,11 +294,11 @@ public:
    * abs() returns the absolute value of an amount.  It is equivalent
    * to: `(x < 0) ? - x : x'.
    *
-   * round(precision_t) rounds an amount's internal value to the given
-   * precision.
-   *
-   * round() rounds an amount to its commodity's current display
-   * precision.  This also changes the internal value of the amount.
+   * round(optional<precision_t>) rounds an amount's internal value to
+   * the given precision, or to the commodity's current display
+   * precision if no precision value is given.  This method changes
+   * the internal value of the amount, if it's internal precision was
+   * greater than the rounding precision.
    *
    * unround() yields an amount whose display precision is never
    * truncated, even though its commodity normally displays only
@@ -347,8 +347,7 @@ public:
     return *this;
   }
 
-  amount_t round(precision_t prec) const;
-  amount_t round() const;
+  amount_t round(const optional<precision_t>& prec) const;
   amount_t unround() const;
 
   amount_t reduce() const {
@@ -700,16 +699,7 @@ inline bool amount_t::operator==(const amount_t& amt) const {
   return compare(amt) == 0;
 }
 
-inline amount_t amount_t::round() const {
-  if (! quantity)
-    throw_(amount_error, "Cannot round an uninitialized amount");
-  if (! has_commodity())
-    return *this;
-  return round(commodity().precision());
-}
-
 inline commodity_t& amount_t::commodity() const {
-  // jww (2007-05-02): Should be a way to access null_commodity better
   return has_commodity() ? *commodity_ : *current_pool->null_commodity;
 }
 

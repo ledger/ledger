@@ -49,7 +49,7 @@
  * - exception framework
  * - date/time type
  * - supports_flags<> for objects that use flags
- * - scoped_execute<> for guaranteeing code execution
+ * - push_variable<> for restoring variable values
  */
 
 #ifndef _UTILS_H
@@ -512,7 +512,7 @@ inline void throw_unexpected_error(char, char) {
 
 #include "times.h"
 #include "flags.h"
-#include "scoped_execute.h"
+#include "pushvar.h"
 
 /**********************************************************************
  *
