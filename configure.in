@@ -3,7 +3,7 @@
 
 AC_PREREQ(2.61)
 
-AC_INIT([ledger],[3.0-git],[johnw@newartisans.com])
+AC_INIT([ledger],[3.0],[johnw@newartisans.com])
 AC_CONFIG_SRCDIR(ledger)
 AM_INIT_AUTOMAKE([dist-bzip2])
 

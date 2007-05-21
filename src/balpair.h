@@ -47,7 +47,7 @@ class balance_pair_t
            multiplicative<balance_pair_t, long,
 	   multiplicative<balance_pair_t, amount_t> > > > > > > > >
 {
-  balance_t quantity;
+  balance_t	      quantity;
   optional<balance_t> cost;
 
   friend class value_t;
@@ -158,8 +158,8 @@ public:
   }
 
   optional<amount_t>
-  amount(const optional<const commodity_t&>& commodity = none) const {
-    return quantity.amount(commodity);
+  commodity_amount(const optional<const commodity_t&>& commodity = none) const {
+    return quantity.commodity_amount(commodity);
   }
   optional<balance_t> value(const optional<moment_t>& moment = none) const {
     return quantity.value(moment);
@@ -198,24 +198,6 @@ public:
   balance_pair_t reduce() const {
     balance_pair_t temp(*this);
     temp.in_place_reduce();
-    return temp;
-  }
-
-  void in_place_round() {
-    quantity = quantity.round();
-    if (cost)
-      cost = cost->round();
-  }
-  balance_pair_t round() const {
-    balance_pair_t temp(*this);
-    temp.in_place_round();
-    return temp;
-  }
-
-  balance_pair_t unround() const {
-    balance_pair_t temp(quantity.unround());
-    if (cost)
-      temp.cost = cost->unround();
     return temp;
   }
 

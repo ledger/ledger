@@ -72,9 +72,9 @@ DECLARE_EXCEPTION(amount_error);
  */
 class amount_t
   : public ordered_field_operators<amount_t,
-	   ordered_field_operators<amount_t, long,
+	   ordered_field_operators<amount_t, double,
 	   ordered_field_operators<amount_t, unsigned long,
-	   ordered_field_operators<amount_t, double> > > >
+	   ordered_field_operators<amount_t, long> > > >
 {
   // jww (2007-05-03): Make this private, and then make
   // ledger::initialize into a member function of session_t.
@@ -165,9 +165,9 @@ public:
    * precision or sign is lost in any of these conversions.  The
    * resulting commodity is always `commodity_t::null_commodity'.
    *
-   * amount_t(string), amount_t(char*) both convert from a string
-   * representation of an amount, which may or may not include a
-   * commodity.  This is the proper way to initialize an amount like
+   * amount_t(string), amount_t(const char *) both convert from a
+   * string representation of an amount, which may or may not include
+   * a commodity.  This is the proper way to initialize an amount like
    * '$100.00'.
    */
   amount_t() : quantity(NULL), commodity_(NULL) {
@@ -322,7 +322,7 @@ public:
    *
    * Further, for the sake of efficiency and avoiding temporary
    * objects, the following methods support "in-place" variants that
-   * act on the value itself and return a reference to the result
+   * act on the amount itself and return a reference to the result
    * (`*this'):
    *
    * in_place_negate()
@@ -594,7 +594,7 @@ public:
    * and two arguments with default values:
    *
    * print(ostream, bool omit_commodity = false, bool full_precision =
-   * false) prits an amounts to the given output stream, using its
+   * false) prints an amounts to the given output stream, using its
    * commodity's default display characteristics.  If `omit_commodity'
    * is true, the commodity will not be displayed, only the amount
    * (although the commodity's display precision is still used).  If

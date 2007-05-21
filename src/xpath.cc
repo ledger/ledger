@@ -1365,7 +1365,7 @@ bool xpath_t::op_t::print(std::ostream& out, print_context_t& context) const
     break;
 
   case FUNCTION:
-    out << '<FUNCTION>';
+    out << "<FUNCTION>";
     break;
 
   case ARG_INDEX:

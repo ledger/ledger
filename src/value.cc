@@ -1231,10 +1231,6 @@ value_t value_t::round() const
     return *this;
   case AMOUNT:
     return as_amount().round();
-  case BALANCE:
-    return as_balance().round();
-  case BALANCE_PAIR:
-    return as_balance_pair().round();
   case XML_NODE:
     return as_xml_node()->to_value().round();
   default:
@@ -1248,48 +1244,23 @@ value_t value_t::round() const
 value_t value_t::unround() const
 {
   switch (type()) {
-  case BOOLEAN:
-    throw_(value_error, "Cannot un-round a boolean");
-  case DATETIME:
-    throw_(value_error, "Cannot un-round a date/time");
-
   case INTEGER:
     return *this;
-
   case AMOUNT:
     return as_amount().unround();
-  case BALANCE:
-    return as_balance().unround();
-  case BALANCE_PAIR:
-    return as_balance_pair().unround();
-
-  case STRING:
-    throw_(value_error, "Cannot un-round a string");
-
   case XML_NODE:
     return as_xml_node()->to_value().unround();
-
-  case POINTER:
-    throw_(value_error, "Cannot un-round a pointer");
-  case SEQUENCE:
-    throw_(value_error, "Cannot un-round a sequence");
   default:
     break;
   }
-  assert(false);
+
+  throw_(value_error, "Cannot unround " << label());
   return value_t();
 }
 
 value_t value_t::annotated_price() const
 {
   switch (type()) {
-  case BOOLEAN:
-    throw_(value_error, "Cannot find the annotated price of a boolean");
-  case INTEGER:
-    return *this;
-  case DATETIME:
-    throw_(value_error, "Cannot find the annotated price of a date/time");
-
   case AMOUNT: {
     optional<amount_t> temp = as_amount().annotation_details().price;
     if (! temp)
@@ -1297,37 +1268,20 @@ value_t value_t::annotated_price() const
     return *temp;
   }
 
-  case BALANCE:
-    throw_(value_error, "Cannot find the annotated price of a balance");
-  case BALANCE_PAIR:
-    throw_(value_error, "Cannot find the annotated price of a balance pair");
-  case STRING:
-    throw_(value_error, "Cannot find the annotated price of a string");
-
   case XML_NODE:
     return as_xml_node()->to_value().annotated_price();
 
-  case POINTER:
-    throw_(value_error, "Cannot find the annotated price of a pointer");
-  case SEQUENCE:
-    throw_(value_error, "Cannot find the annotated price of a sequence");
-
   default:
-    assert(false);
     break;
   }
-  assert(false);
+
+  throw_(value_error, "Cannot find the annotated price of " << label());
   return value_t();
 }
 
 value_t value_t::annotated_date() const
 {
   switch (type()) {
-  case BOOLEAN:
-    throw_(value_error, "Cannot find the annotated date of a boolean");
-  case INTEGER:
-    throw_(value_error, "Cannot find the annotated date of an integer");
-
   case DATETIME:
     return *this;
 
@@ -1338,37 +1292,20 @@ value_t value_t::annotated_date() const
     return *temp;
   }
 
-  case BALANCE:
-    throw_(value_error, "Cannot find the annotated date of a balance");
-  case BALANCE_PAIR:
-    throw_(value_error, "Cannot find the annotated date of a balance pair");
-  case STRING:
-    throw_(value_error, "Cannot find the annotated date of a string");
-
   case XML_NODE:
     return as_xml_node()->to_value().annotated_date();
 
-  case POINTER:
-    throw_(value_error, "Cannot find the annotated date of a pointer");
-  case SEQUENCE:
-    throw_(value_error, "Cannot find the annotated date of a sequence");
-
   default:
-    assert(false);
     break;
   }
-  assert(false);
+
+  throw_(value_error, "Cannot find the annotated date of " << label());
   return value_t();
 }
 
 value_t value_t::annotated_tag() const
 {
   switch (type()) {
-  case BOOLEAN:
-    throw_(value_error, "Cannot find the annotated tag of a boolean");
-  case INTEGER:
-    throw_(value_error, "Cannot find the annotated tag of an integer");
-
   case DATETIME:
     return *this;
 
@@ -1379,26 +1316,14 @@ value_t value_t::annotated_tag() const
     return value_t(*temp, true);
   }
 
-  case BALANCE:
-    throw_(value_error, "Cannot find the annotated tag of a balance");
-  case BALANCE_PAIR:
-    throw_(value_error, "Cannot find the annotated tag of a balance pair");
-  case STRING:
-    throw_(value_error, "Cannot find the annotated tag of a string");
-
   case XML_NODE:
     return as_xml_node()->to_value().annotated_tag();
 
-  case POINTER:
-    throw_(value_error, "Cannot find the annotated tag of a pointer");
-  case SEQUENCE:
-    throw_(value_error, "Cannot find the annotated tag of a sequence");
-
   default:
-    assert(false);
     break;
   }
-  assert(false);
+
+  throw_(value_error, "Cannot find the annotated tag of " << label());
   return value_t();
 }
 
@@ -1442,16 +1367,10 @@ value_t value_t::strip_annotations(const bool keep_price,
 value_t value_t::cost() const
 {
   switch (type()) {
-  case BOOLEAN:
-    throw_(value_error, "Cannot find the cost of a boolean");
-
   case INTEGER:
   case AMOUNT:
   case BALANCE:
     return *this;
-
-  case DATETIME:
-    throw_(value_error, "Cannot find the cost of a date/time");
 
   case BALANCE_PAIR:
     assert(as_balance_pair().cost);
@@ -1460,33 +1379,20 @@ value_t value_t::cost() const
     else
       return as_balance_pair().quantity;
 
-  case STRING:
-    throw_(value_error, "Cannot find the cost of a string");
-
   case XML_NODE:
     return as_xml_node()->to_value().cost();
 
-  case POINTER:
-    throw_(value_error, "Cannot find the cost of a pointer");
-  case SEQUENCE:
-    throw_(value_error, "Cannot find the cost of a sequence");
-
   default:
-    assert(false);
     break;
   }
-  assert(false);
+
+  throw_(value_error, "Cannot find the cost of " << label());
   return value_t();
 }
 
 value_t& value_t::add(const amount_t& amount, const optional<amount_t>& tcost)
 {
   switch (type()) {
-  case BOOLEAN:
-    throw_(value_error, "Cannot add an amount to a boolean");
-  case DATETIME:
-    throw_(value_error, "Cannot add an amount to a date/time");
-
   case INTEGER:
   case AMOUNT:
     if (tcost) {
@@ -1517,20 +1423,11 @@ value_t& value_t::add(const amount_t& amount, const optional<amount_t>& tcost)
     as_balance_pair_lval().add(amount, tcost);
     break;
 
-  case STRING:
-    throw_(value_error, "Cannot add an amount to a string");
-  case XML_NODE:
-    throw_(value_error, "Cannot add an amount to an XML node");
-  case POINTER:
-    throw_(value_error, "Cannot add an amount to a pointer");
-  case SEQUENCE:
-    throw_(value_error, "Cannot add an amount to a sequence");
-
   default:
-    assert(false);
     break;
   }
 
+  throw_(value_error, "Cannot add an amount to " << label());
   return *this;
 }
 
