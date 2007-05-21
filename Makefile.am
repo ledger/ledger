@@ -77,7 +77,7 @@ BUILT_SOURCES += system.hh.gch
 CLEANFILES += system.hh.gch system.hh
 
 $(top_builddir)/system.hh.gch: $(srcdir)/src/utility/system.hh acconf.h
-	echo "#include \"src/system.hh\"" > $(top_builddir)/system.hh
+	echo "#include \"src/utility/system.hh\"" > $(top_builddir)/system.hh
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(libledger_la_CPPFLAGS) \
 		-o $@ $(srcdir)/src/utility/system.hh
 endif
