@@ -97,8 +97,17 @@ public:
   balance_pair_t(const balance_t& bal) : balance_t(bal) {
     TRACE_CTOR(balance_pair_t, "const balance_t&");
   }
+  balance_pair_t(const balance_t& bal,
+		 const balance_t& cost_bal)
+    : balance_t(bal), cost(cost_bal) {
+    TRACE_CTOR(balance_pair_t, "const balance_t&, const balance_t&");
+  }
   balance_pair_t(const amount_t& amt) : balance_t(amt) {
     TRACE_CTOR(balance_pair_t, "const amount_t&");
+  }
+  balance_pair_t(const amount_t& amt, const amount_t& cost_amt)
+    : balance_t(amt), cost(cost_amt) {
+    TRACE_CTOR(balance_pair_t, "const amount_t&, const amount_t&");
   }
   balance_pair_t(const double val) : balance_t(val) {
     TRACE_CTOR(balance_pair_t, "const double");
@@ -161,12 +170,17 @@ public:
    * subtraction of other balance pairs, balances or amounts, but
    * multiplication and division are restricted to uncommoditized
    * amounts only.
+   *
+   * There is also an additional additive method called `add' which
+   * allows for adding an amount and an associated cost
+   * simultaneously.  The signature is:
+   *   add(amount_t amount, optional<amount_t> cost)
    */
   balance_pair_t& operator+=(const balance_pair_t& bal_pair) {
     balance_t::operator+=(bal_pair);
     if (bal_pair.cost) {
       if (! cost)
-	*cost = quantity();
+	cost = quantity();
       *cost += *bal_pair.cost;
     }
     return *this;
@@ -175,49 +189,124 @@ public:
     balance_t::operator+=(bal_pair);
     if (bal_pair.cost) {
       if (! cost)
-	*cost = quantity();
+	cost = quantity();
       *cost += *bal_pair.cost;
     }
     return *this;
   }
 
-  balance_pair_t& operator*=(const amount_t& amt) {
+  virtual balance_pair_t& operator*=(const amount_t& amt) {
     balance_t::operator*=(amt);
     if (cost)
       *cost *= amt;
     return *this;
   }
-  balance_pair_t& operator*=(const double val) {
-    return *this *= amount_t(val);
-  }
-  balance_pair_t& operator*=(const unsigned long val) {
-    return *this *= amount_t(val);
-  }
-  balance_pair_t& operator*=(const long val) {
-    return *this *= amount_t(val);
-  }
-  balance_pair_t& operator/=(const amount_t& amt) {
+
+  virtual balance_pair_t& operator/=(const amount_t& amt) {
     balance_t::operator/=(amt);
     if (cost)
       *cost /= amt;
     return *this;
   }
 
-  // comparison
-  bool operator==(const balance_pair_t& bal_pair) const {
-    return quantity() == bal_pair.quantity();
-  }
-  bool operator==(const balance_t& bal) const {
-    return quantity() == bal;
-  }
-  bool operator==(const amount_t& amt) const {
-    return quantity() == amt;
+  balance_pair_t& add(const amount_t&  amt,
+		      const optional<amount_t>& a_cost = none) {
+    if (a_cost && ! cost)
+      cost = quantity();
+
+    *this += amt;
+
+    if (cost)
+      *cost += a_cost ? *a_cost : amt;
+
+    return *this;
   }
 
   /**
-   * The `quantity' method provides direct access to the balance_t
-   * base-class part of the balance pair.
+   * Unary arithmetic operators.  There are only a few unary methods
+   * supported for balance pairs (otherwise, the operators inherited
+   * from balance_t are used):
+   *
+   * abs() returns the absolute value of both the quantity and the
+   * cost of a balance pair.
+   *
+   * in_place_negate() negates all the amounts in both the quantity
+   * and the cost.
+   *
+   * in_place_reduce() reduces all the amounts in both the quantity
+   * and the cost.
+   *
+   * in_place_unreduce() unreduces all the amounts in both the
+   * quantity and the cost.
+   *
+   * quantity() returns the balance part of a balance.  It is the same
+   * as doing a downcast<balance_t>(balance_pair).
    */
+  balance_pair_t abs() const {
+    balance_t temp;
+    for (amounts_map::const_iterator i = amounts.begin();
+	 i != amounts.end();
+	 i++)
+      temp += i->second.abs();
+
+    if (cost) {
+      balance_t cost_temp;
+      for (amounts_map::const_iterator i = cost->amounts.begin();
+	   i != cost->amounts.end();
+	   i++)
+	cost_temp += i->second.abs();
+      return balance_pair_t(temp, cost_temp);
+    }
+    return temp;
+  }
+
+  virtual balance_t& in_place_negate() {
+    balance_t::in_place_negate();
+    if (cost)
+      cost->in_place_negate();
+    return *this;
+  }
+
+  virtual balance_t& in_place_reduce() {
+    // A temporary must be used here because reduction may cause
+    // multiple component amounts to collapse to the same commodity.
+    balance_t temp;
+    for (amounts_map::const_iterator i = amounts.begin();
+	 i != amounts.end();
+	 i++)
+      temp += i->second.reduce();
+
+    if (cost) {
+      balance_t cost_temp;
+      for (amounts_map::const_iterator i = cost->amounts.begin();
+	   i != cost->amounts.end();
+	   i++)
+	cost_temp += i->second.reduce();
+      return *this = balance_pair_t(temp, cost_temp);
+    }
+    return *this = temp;
+  }
+
+  virtual balance_t& in_place_unreduce() {
+    // A temporary must be used here because unreduction may cause
+    // multiple component amounts to collapse to the same commodity.
+    balance_t temp;
+    for (amounts_map::const_iterator i = amounts.begin();
+	 i != amounts.end();
+	 i++)
+      temp += i->second.unreduce();
+
+    if (cost) {
+      balance_t cost_temp;
+      for (amounts_map::const_iterator i = cost->amounts.begin();
+	   i != cost->amounts.end();
+	   i++)
+	cost_temp += i->second.unreduce();
+      return *this = balance_pair_t(temp, cost_temp);
+    }
+    return *this = temp;
+  }
+
   balance_t& quantity() {
     return *this;
   }
@@ -225,103 +314,53 @@ public:
     return *this;
   }
 
-  // unary negation
-  void in_place_negate() {
-#if 0
-    quantity.in_place_negate();
-    if (cost)
-      cost->in_place_negate();
-#endif
-  }
-  balance_pair_t negate() const {
-    balance_pair_t temp = *this;
-    temp.in_place_negate();
-    return temp;
-  }
-  balance_pair_t operator-() const {
-    return negate();
+  /**
+   * Truth tests.  An balance pair may be truth tested by comparison
+   * to another balance pair, or by using one of the inherited
+   * operators from balance_t.
+   */
+  bool operator==(const balance_pair_t& bal_pair) const {
+    if (quantity() != bal_pair.quantity())
+      return false;
+
+    if ((cost && ! bal_pair.cost) ||
+	(! cost && bal_pair.cost))
+      return false;
+
+    if (*cost != *bal_pair.cost)
+      return false;
+
+    return true;
   }
 
-  // test for non-zero (use ! for zero)
-  operator bool() const {
-    return quantity();
+  bool operator==(const balance_t& bal) const {
+    return balance_t::operator==(bal);
+  }
+  bool operator==(const amount_t& amt) const {
+    return balance_t::operator==(amt);
+  }
+  template <typename T>
+  bool operator==(const T& val) const {
+    return balance_t::operator==(val);
   }
 
-  bool is_realzero() const {
-#if 0
-    return ((! cost || cost->is_realzero()) && quantity.is_realzero());
-#else
-    return false;
-#endif
-  }
+  /**
+   * Debugging methods.  There is only one method specifically for
+   * balance pairs to help with debugging:
+   *
+   * valid() returns true if the balances within the balance pair are
+   * valid.
+   */
+  virtual bool valid() {
+    if (! balance_t::valid())
+      return false;
 
-  balance_pair_t abs() const {
-#if 0
-    balance_pair_t temp = *this;
-    temp.quantity = temp.quantity.abs();
-    if (temp.cost)
-      temp.cost = temp.cost->abs();
-    return temp;
-#else
-    return balance_pair_t();
-#endif
-  }
+    if (cost && ! cost->valid())
+      return false;
 
-  optional<amount_t>
-  commodity_amount(const optional<const commodity_t&>& commodity = none) const {
-    return quantity().commodity_amount(commodity);
+    return true;
   }
-  optional<balance_t> value(const optional<moment_t>& moment = none) const {
-    return quantity().value(moment);
-  }
-
-  balance_t
-  strip_annotations(const bool keep_price = amount_t::keep_price,
-		    const bool keep_date  = amount_t::keep_date,
-		    const bool keep_tag   = amount_t::keep_tag) const {
-    return quantity().strip_annotations(keep_price, keep_date, keep_tag);
-  }
-
-  void print(std::ostream& out, const int first_width,
-	     const int latter_width = -1) const {
-    quantity().print(out, first_width, latter_width);
-  }
-
-  balance_pair_t& add(const amount_t&  amt,
-		      const optional<amount_t>& a_cost = none) {
-#if 0
-    if (a_cost && ! cost)
-      cost = quantity;
-    quantity += amt;
-    if (cost)
-      *cost += a_cost ? *a_cost : amt;
-#endif
-    return *this;
-  }
-
-  bool valid() {
-    return quantity().valid() && (! cost || cost->valid());
-  }
-
-  void in_place_reduce() {
-    quantity().in_place_reduce();
-    if (cost) cost->in_place_reduce();
-  }
-  balance_pair_t reduce() const {
-    balance_pair_t temp(*this);
-    temp.in_place_reduce();
-    return temp;
-  }
-
-  friend std::ostream& operator<<(std::ostream& out,
-				  const balance_pair_t& bal_pair);
 };
-
-inline std::ostream& operator<<(std::ostream& out,
-				const balance_pair_t& bal_pair) {
-  bal_pair.quantity().print(out, 12);
-  return out;
-}
 
 } // namespace ledger
 

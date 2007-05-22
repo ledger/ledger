@@ -77,14 +77,12 @@ class balance_t
 public:
   typedef std::map<const commodity_t *, amount_t> amounts_map;
 
-protected:
   amounts_map amounts;
 
   // jww (2007-05-20): Remove these two by adding access methods
   friend class value_t;
   friend class entry_base_t;
 
-public:
   /**
    * Constructors.  balance_t supports similar forms of construction
    * to amount_t.
@@ -233,7 +231,8 @@ public:
   balance_t& operator-=(const balance_t& bal);
   balance_t& operator-=(const amount_t& amt);
 
-  balance_t& operator*=(const amount_t& amt);
+  virtual balance_t& operator*=(const amount_t& amt);
+
   balance_t& operator*=(const double val) {
     return *this *= amount_t(val);
   }
@@ -244,7 +243,8 @@ public:
     return *this *= amount_t(val);
   }
 
-  balance_t& operator/=(const amount_t& amt);
+  virtual balance_t& operator/=(const amount_t& amt);
+
   balance_t& operator/=(const double val) {
     return *this /= amount_t(val);
   }
@@ -294,7 +294,7 @@ public:
     temp.in_place_negate();
     return temp;
   }
-  balance_t& in_place_negate() {
+  virtual balance_t& in_place_negate() {
     for (amounts_map::iterator i = amounts.begin();
 	 i != amounts.end();
 	 i++)
@@ -319,10 +319,10 @@ public:
     temp.in_place_reduce();
     return temp;
   }
-  balance_t& in_place_reduce() {
-    balance_t temp;
+  virtual balance_t& in_place_reduce() {
     // A temporary must be used here because reduction may cause
     // multiple component amounts to collapse to the same commodity.
+    balance_t temp;
     for (amounts_map::const_iterator i = amounts.begin();
 	 i != amounts.end();
 	 i++)
@@ -335,10 +335,10 @@ public:
     temp.in_place_unreduce();
     return temp;
   }
-  balance_t& in_place_unreduce() {
-    balance_t temp;
+  virtual balance_t& in_place_unreduce() {
     // A temporary must be used here because unreduction may cause
     // multiple component amounts to collapse to the same commodity.
+    balance_t temp;
     for (amounts_map::const_iterator i = amounts.begin();
 	 i != amounts.end();
 	 i++)
@@ -499,7 +499,7 @@ public:
     out << ")";
   }
 
-  bool valid() const {
+  virtual bool valid() const {
     for (amounts_map::const_iterator i = amounts.begin();
 	 i != amounts.end();
 	 i++)
