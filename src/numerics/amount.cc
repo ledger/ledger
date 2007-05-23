@@ -770,7 +770,7 @@ void amount_t::annotate_commodity(const annotation_t& details)
     throw_(amount_error, "Cannot annotate an amount with no commodity");
 
   if (commodity().annotated) {
-    this_ann  = &commodity().as_annotated();
+    this_ann  = &as_annotated_commodity(commodity());
     this_base = &this_ann->referent();
   } else {
     this_base = &commodity();
@@ -797,7 +797,7 @@ bool amount_t::commodity_annotated() const
     throw_(amount_error,
 	   "Cannot determine if an uninitialized amount's commodity is annotated");
 
-  assert(! commodity().annotated || commodity().as_annotated().details);
+  assert(! commodity().annotated || as_annotated_commodity(commodity()).details);
   return commodity().annotated;
 }
 
@@ -807,10 +807,10 @@ annotation_t amount_t::annotation_details() const
     throw_(amount_error,
 	   "Cannot return commodity annotation details of an uninitialized amount");
 
-  assert(! commodity().annotated || commodity().as_annotated().details);
+  assert(! commodity().annotated || as_annotated_commodity(commodity()).details);
 
   if (commodity().annotated) {
-    annotated_commodity_t& ann_comm(commodity().as_annotated());
+    annotated_commodity_t& ann_comm(as_annotated_commodity(commodity()));
     return ann_comm.details;
   }
   return annotation_t();
@@ -829,7 +829,7 @@ amount_t amount_t::strip_annotations(const bool _keep_price,
     return *this;
 
   amount_t t(*this);
-  t.set_commodity(commodity().as_annotated().
+  t.set_commodity(as_annotated_commodity(commodity()).
 		  strip_annotations(_keep_price, _keep_date, _keep_tag));
   return t;
 }

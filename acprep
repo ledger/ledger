@@ -1,7 +1,5 @@
 #!/bin/sh
 
-PYTHON_HOME="/Library/Frameworks/Python.framework/Versions/2.5"
-
 # acprep, version 3.0
 #
 # This script configures my ledger source tree on my Mac OS/X machine.
@@ -18,13 +16,14 @@ fi
 autoreconf --force --install
 
 
-INCDIRS="-I/usr/local/include"
-INCDIRS="$INCDIRS -I/usr/local/include/boost"
-INCDIRS="$INCDIRS -I/sw/include"
-INCDIRS="$INCDIRS -I/usr/include/httpd/xml"
+INCDIRS="-I/sw/include"
+INCDIRS="$INCDIRS -I/usr/local/include"
 
-LIBDIRS="-L/usr/local/lib"
-LIBDIRS="$LIBDIRS -L/sw/lib"
+LIBDIRS="-L/sw/lib"
+LIBDIRS="$LIBDIRS -L/usr/local/lib"
+
+PYTHON_HOME="/Library/Frameworks/Python.framework/Versions/2.5"
+
 
 SYSTEM=`uname -s`
 

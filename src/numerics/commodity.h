@@ -39,13 +39,10 @@
  * This file contains one of the most basic types in Ledger:
  * commodity_t, and its annotated cousin, annotated_commodity_t.
  */
-
 #ifndef _COMMODITY_H
 #define _COMMODITY_H
 
 namespace ledger {
-
-class annotated_commodity_t;
 
 class commodity_t
   : public delegates_flags<>,
@@ -127,9 +124,6 @@ public:
   commodity_pool_t& parent() const {
     return *parent_;
   }
-
-  annotated_commodity_t& as_annotated();
-  const annotated_commodity_t& as_annotated() const;
 
   string base_symbol() const {
     return base->symbol;
@@ -296,6 +290,16 @@ public:
   static void write_annotations(std::ostream&	    out,
 				const annotation_t& info);
 };
+
+inline annotated_commodity_t&
+as_annotated_commodity(commodity_t& commodity) {
+  return downcast<annotated_commodity_t>(commodity);
+}
+inline const annotated_commodity_t&
+as_annotated_commodity(const commodity_t& commodity) {
+  return downcast<const annotated_commodity_t>(commodity);
+}
+
 
 struct compare_amount_commodities {
   bool operator()(const amount_t * left, const amount_t * right) const;

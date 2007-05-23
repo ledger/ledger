@@ -123,18 +123,6 @@ commodity_t::operator bool() const
   return this != parent().null_commodity;
 }
 
-annotated_commodity_t& commodity_t::as_annotated()
-{
-  assert(annotated);
-  return downcast<annotated_commodity_t>(*this);
-}
-
-const annotated_commodity_t& commodity_t::as_annotated() const
-{
-  assert(annotated);
-  return downcast<const annotated_commodity_t>(*this);
-}
-
 bool commodity_t::symbol_needs_quotes(const string& symbol)
 {
   for (const char * p = symbol.c_str(); *p; p++)
@@ -302,7 +290,7 @@ bool annotated_commodity_t::operator==(const commodity_t& comm) const
   if (! comm.annotated)
     return false;
 
-  if (details != comm.as_annotated().details)
+  if (details != as_annotated_commodity(comm).details)
     return false;
 
   return true;
@@ -540,8 +528,7 @@ commodity_pool_t::find(const string& symbol, const annotation_t& details)
     string name = make_qualified_name(*comm, details);
 
     if (commodity_t * ann_comm = find(name)) {
-      assert(ann_comm->annotated &&
-	     ann_comm->as_annotated().details);
+      assert(ann_comm->annotated && as_annotated_commodity(*ann_comm).details);
       return ann_comm;
     }
     return NULL;
@@ -602,7 +589,7 @@ commodity_t * commodity_pool_t::find_or_create(commodity_t&	   comm,
   assert(! name.empty());
 
   if (commodity_t * ann_comm = find(name)) {
-    assert(ann_comm->annotated && ann_comm->as_annotated().details);
+    assert(ann_comm->annotated && as_annotated_commodity(*ann_comm).details);
     return ann_comm;
   }
   return create(comm, details, name);
