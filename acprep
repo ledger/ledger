@@ -44,8 +44,26 @@ fi
 # that is built again anyway by Xcode).
 SWITCHES=""
 CPPFLAGS="$INCDIRS"
+CXXFLAGS="-pipe"
 LDFLAGS="$LIBDIRS"
 LOCAL=false
+
+# Warning flags
+CXXFLAGS="$CXXFLAGS -Wall -Wextra -ansi"
+CXXFLAGS="$CXXFLAGS -Weffc++"
+CXXFLAGS="$CXXFLAGS -Wcast-align"
+CXXFLAGS="$CXXFLAGS -Wcast-qual"
+CXXFLAGS="$CXXFLAGS -Wconversion"
+CXXFLAGS="$CXXFLAGS -Wfloat-equal"
+CXXFLAGS="$CXXFLAGS -Wmissing-field-initializers"
+CXXFLAGS="$CXXFLAGS -Wno-endif-labels"
+CXXFLAGS="$CXXFLAGS -Wold-style-cast"
+CXXFLAGS="$CXXFLAGS -Woverloaded-virtual"
+CXXFLAGS="$CXXFLAGS -Wshorten-64-to-32"
+CXXFLAGS="$CXXFLAGS -Wsign-compare"
+CXXFLAGS="$CXXFLAGS -Wsign-promo"
+CXXFLAGS="$CXXFLAGS -Wstrict-null-sentinel"
+CXXFLAGS="$CXXFLAGS -Wwrite-strings"
 
 
 while [ -n "$1" ]; do
@@ -56,12 +74,13 @@ while [ -n "$1" ]; do
 
     --debug)
 	SWITCHES="$SWITCHES --enable-debug"
+	#CPPFLAGS="$CPPFLAGS -D_GLIBCXX_DEBUG=1"
 	CXXFLAGS="$CXXFLAGS -g" ;;
 
     --boost)
 	shift 1
 	SWITCHES="$SWITCHES --with-boost-suffix=$1"
-	CPPFLAGS="$CPPFLAGS -D_GLIBCXX_DEBUG=1" ;;
+	;;
 
     --gcov)
 	CXXFLAGS="$CXXFLAGS -fprofile-arcs -ftest-coverage" ;;
