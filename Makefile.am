@@ -63,10 +63,10 @@ libledger_la_SOURCES += $(Python_SRC)
 libledger_la_CPPFLAGS += -I$(srcdir)/src/python
 endif
 
-if HAVE_LIBOFX
-libledger_la_CPPFLAGS += -DHAVE_LIBOFX=1
-libledger_la_SOURCES += src/ofx.cc
-endif
+#if HAVE_LIBOFX
+#libledger_la_CPPFLAGS += -DHAVE_LIBOFX=1
+#libledger_la_SOURCES += src/ofx.cc
+#endif
 if DEBUG
 libledger_la_CPPFLAGS += -DDEBUG_MODE
 endif
@@ -154,9 +154,9 @@ PYLIBS  = ledger gdtoa gmp \
           boost_regex$(BOOST_SUFFIX)	  \
           boost_python$(BOOST_SUFFIX)
 
-if HAVE_LIBOFX
-PYLIBS += ofx
-endif
+#if HAVE_LIBOFX
+#PYLIBS += ofx
+#endif
 
 ledger.so: $(ledger_so_SOURCES) $(ledger_so_DEPENDENCIES)
 	CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libledger_la_CPPFLAGS)" \
