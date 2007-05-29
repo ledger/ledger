@@ -86,6 +86,7 @@ endif
 
 pkginclude_HEADERS = \
 	src/ledger.h		  \
+	src/utility/system.hh	  \
 	src/utility/binary.h	  \
 	src/utility/context.h	  \
 	src/utility/flags.h	  \
