@@ -109,6 +109,7 @@ pkginclude_HEADERS = \
 	src/traversal/abbrev.h	  \
 	src/traversal/transform.h \
 	src/traversal/xpath.h	  \
+	src/driver/fdstream.hpp	  \
 	src/driver/option.h	  \
 	src/driver/report.h	  \
 	src/driver/session.h	  \
