@@ -2,8 +2,7 @@ SUBDIRS	      = gdtoa
 BUILT_SOURCES =
 CLEANFILES    =
 EXTRA_DIST    = LICENSE docs tests contrib scripts setup.py \
-		acprep verify.sh run_verify.sh valgrind.sh \
-		src/TODO # src/gnucash.cc src/ofx.cc
+		acprep valgrind.sh src/TODO # src/gnucash.cc src/ofx.cc
 
 ESC_srcdir=`echo "$(srcdir)" | sed 's/\//\\\\\//g'`
 ESC_builddir=`echo "$(top_builddir)" | sed 's/\//\\\\\//g'`
