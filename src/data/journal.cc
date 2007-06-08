@@ -542,18 +542,22 @@ journal_t::~journal_t()
   // be deleted.
   for (entries_list::iterator i = entries.begin();
        i != entries.end();
-       i++)
+       i++) {
     if (! item_pool ||
-	((char *) *i) < item_pool || ((char *) *i) >= item_pool_end)
+	reinterpret_cast<char *>(*i) <  item_pool ||
+	reinterpret_cast<char *>(*i) >= item_pool_end) {
       checked_delete(*i);
-    else
+    } else {
       (*i)->~entry_t();
+    }
+  }
 
   for (auto_entries_list::iterator i = auto_entries.begin();
        i != auto_entries.end();
        i++)
     if (! item_pool ||
-	((char *) *i) < item_pool || ((char *) *i) >= item_pool_end)
+	reinterpret_cast<char *>(*i) < item_pool ||
+	reinterpret_cast<char *>(*i) >= item_pool_end)
       checked_delete(*i);
     else
       (*i)->~auto_entry_t();
@@ -562,7 +566,8 @@ journal_t::~journal_t()
        i != period_entries.end();
        i++)
     if (! item_pool ||
-	((char *) *i) < item_pool || ((char *) *i) >= item_pool_end)
+	reinterpret_cast<char *>(*i) < item_pool ||
+	reinterpret_cast<char *>(*i) >= item_pool_end)
       checked_delete(*i);
     else
       (*i)->~period_entry_t();

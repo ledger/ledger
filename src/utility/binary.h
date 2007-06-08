@@ -37,12 +37,12 @@ namespace binary {
 
 template <typename T>
 inline void read_number_nocheck(std::istream& in, T& num) {
-  in.read((char *)&num, sizeof(num));
+  in.read(reinterpret_cast<char *>(&num), sizeof(num));
 }
 
 template <typename T>
 inline void read_number_nocheck(const char *& data, T& num) {
-  num = *((T *) data);
+  num = *reinterpret_cast<const T *>(data);
   data += sizeof(T);
 }
 
@@ -71,14 +71,14 @@ inline T read_number_nocheck(const char *& data) {
 template <typename T>
 inline void read_number(std::istream& in, T& num) {
   read_guard(in, 0x2003);
-  in.read((char *)&num, sizeof(num));
+  in.read(reinterpret_cast<char *>(&num), sizeof(num));
   read_guard(in, 0x2004);
 }
 
 template <typename T>
 inline void read_number(const char *& data, T& num) {
   read_guard(data, 0x2003);
-  num = *((T *) data);
+  num = *reinterpret_cast<const T *>(data);
   data += sizeof(T);
   read_guard(data, 0x2004);
 }
@@ -124,19 +124,19 @@ void read_long(std::istream& in, T& num)
   unsigned char temp;
   if (len > 3) {
     read_number_nocheck(in, temp);
-    num |= ((unsigned long)temp) << 24;
+    num |= static_cast<unsigned long>(temp) << 24;
   }
   if (len > 2) {
     read_number_nocheck(in, temp);
-    num |= ((unsigned long)temp) << 16;
+    num |= static_cast<unsigned long>(temp) << 16;
   }
   if (len > 1) {
     read_number_nocheck(in, temp);
-    num |= ((unsigned long)temp) << 8;
+    num |= static_cast<unsigned long>(temp) << 8;
   }
 
   read_number_nocheck(in, temp);
-  num |= ((unsigned long)temp);
+  num |= static_cast<unsigned long>(temp);
 
   read_guard(in, 0x2002);
 }
@@ -153,19 +153,19 @@ void read_long(const char *& data, T& num)
   unsigned char temp;
   if (len > 3) {
     read_number_nocheck(data, temp);
-    num |= ((unsigned long)temp) << 24;
+    num |= static_cast<unsigned long>(temp) << 24;
   }
   if (len > 2) {
     read_number_nocheck(data, temp);
-    num |= ((unsigned long)temp) << 16;
+    num |= static_cast<unsigned long>(temp) << 16;
   }
   if (len > 1) {
     read_number_nocheck(data, temp);
-    num |= ((unsigned long)temp) << 8;
+    num |= static_cast<unsigned long>(temp) << 8;
   }
 
   read_number_nocheck(data, temp);
-  num |= ((unsigned long)temp);
+  num |= static_cast<unsigned long>(temp);
 
   read_guard(data, 0x2002);
 }
@@ -203,7 +203,7 @@ inline string read_string(const char *& data) {
 
 template <typename T>
 inline void write_number_nocheck(std::ostream& out, T num) {
-  out.write((char *)&num, sizeof(num));
+  out.write(reinterpret_cast<char *>(&num), sizeof(num));
 }
 
 #if DEBUG_LEVEL >= ALPHA
@@ -216,7 +216,7 @@ inline void write_number_nocheck(std::ostream& out, T num) {
 template <typename T>
 inline void write_number(std::ostream& out, T num) {
   write_guard(out, 0x2003);
-  out.write((char *)&num, sizeof(num));
+  out.write(reinterpret_cast<char *>(&num), sizeof(num));
   write_guard(out, 0x2004);
 }
 
@@ -228,29 +228,29 @@ void write_long(std::ostream& out, T num)
   write_guard(out, 0x2001);
 
   unsigned char len = 4;
-  if (((unsigned long)num) < 0x00000100UL)
+  if (static_cast<unsigned long>(num) < 0x00000100UL)
     len = 1;
-  else if (((unsigned long)num) < 0x00010000UL)
+  else if (static_cast<unsigned long>(num) < 0x00010000UL)
     len = 2;
-  else if (((unsigned long)num) < 0x01000000UL)
+  else if (static_cast<unsigned long>(num) < 0x01000000UL)
     len = 3;
   write_number_nocheck<unsigned char>(out, len);
 
   unsigned char temp;
   if (len > 3) {
-    temp = (((unsigned long)num) & 0xFF000000UL) >> 24;
+    temp = (static_cast<unsigned long>(num) & 0xFF000000UL) >> 24;
     write_number_nocheck(out, temp);
   }
   if (len > 2) {
-    temp = (((unsigned long)num) & 0x00FF0000UL) >> 16;
+    temp = (static_cast<unsigned long>(num) & 0x00FF0000UL) >> 16;
     write_number_nocheck(out, temp);
   }
   if (len > 1) {
-    temp = (((unsigned long)num) & 0x0000FF00UL) >> 8;
+    temp = (static_cast<unsigned long>(num) & 0x0000FF00UL) >> 8;
     write_number_nocheck(out, temp);
   }
 
-  temp = (((unsigned long)num) & 0x000000FFUL);
+  temp = (static_cast<unsigned long>(num) & 0x000000FFUL);
   write_number_nocheck(out, temp);
 
   write_guard(out, 0x2002);

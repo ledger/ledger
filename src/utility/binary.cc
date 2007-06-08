@@ -38,7 +38,7 @@ void read_bool(std::istream& in, bool& num)
 {
   read_guard(in, 0x2005);
   unsigned char val;
-  in.read((char *)&val, sizeof(val));
+  in.read(reinterpret_cast<char *>(&val), sizeof(val));
   num = val == 1;
   read_guard(in, 0x2006);
 }
@@ -46,7 +46,7 @@ void read_bool(std::istream& in, bool& num)
 void read_bool(const char *& data, bool& num)
 {
   read_guard(data, 0x2005);
-  unsigned char val = *((unsigned char *) data);
+  const unsigned char val = *reinterpret_cast<const unsigned char *>(data);
   data += sizeof(unsigned char);
   num = val == 1;
   read_guard(data, 0x2006);
@@ -130,7 +130,7 @@ void write_bool(std::ostream& out, bool num)
 {
   write_guard(out, 0x2005);
   unsigned char val = num ? 1 : 0;
-  out.write((char *)&val, sizeof(val));
+  out.write(reinterpret_cast<char *>(&val), sizeof(val));
   write_guard(out, 0x2006);
 }
 

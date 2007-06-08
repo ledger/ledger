@@ -41,22 +41,22 @@ void value_t::storage_t::destroy()
 {
   switch (type) {
   case AMOUNT:
-    ((amount_t *)data)->~amount_t();
+    reinterpret_cast<amount_t *>(data)->~amount_t();
     break;
   case BALANCE:
-    checked_delete(*(balance_t **)data);
+    checked_delete(*reinterpret_cast<balance_t **>(data));
     break;
   case BALANCE_PAIR:
-    checked_delete(*(balance_pair_t **)data);
+    checked_delete(*reinterpret_cast<balance_pair_t **>(data));
     break;
   case STRING:
-    ((string *)data)->~string();
+    reinterpret_cast<string *>(data)->~string();
     break;
   case SEQUENCE:
-    checked_delete(*(sequence_t **)data);
+    checked_delete(*reinterpret_cast<sequence_t **>(data));
     break;
   case POINTER:
-    ((boost::any *)data)->~any();
+    reinterpret_cast<boost::any *>(data)->~any();
     break;
 
   default:
@@ -73,11 +73,11 @@ void value_t::initialize()
 
   true_value = new storage_t;
   true_value->type = BOOLEAN;
-  *(bool *) true_value->data = true;
+  *reinterpret_cast<bool *>(true_value->data) = true;
 
   false_value = new storage_t;
   false_value->type = BOOLEAN;
-  *(bool *) false_value->data = false;
+  *reinterpret_cast<bool *>(false_value->data) = false;
 
   BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(bool));
   BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(moment_t));

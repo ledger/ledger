@@ -59,13 +59,14 @@ value_t report_t::abbrev(xml::xpath_t::call_scope_t& args)
 
   elision_style_t style = session.elision_style;
   if (args.size() == 3)
-    style = (elision_style_t)args[2].as_long();
+    style = static_cast<elision_style_t>(args[2].as_long());
 
   long abbrev_len = session.abbrev_length;
   if (args.size() == 4)
     abbrev_len = args[3].as_long();
 
-  return value_t(abbreviate(str, wid, style, true, (int)abbrev_len), true);
+  return value_t(abbreviate(str, wid, style, true,
+			    static_cast<int>(abbrev_len)), true);
 }
 
 value_t report_t::ftime(xml::xpath_t::call_scope_t& args)

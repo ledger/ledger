@@ -121,13 +121,14 @@ optional<node_t::nameid_t> document_t::lookup_name_id(const string& name) const
 optional<node_t::nameid_t> document_t::lookup_builtin_id(const string& name)
 {
   int first = 0;
-  int last  = (int)ledger_builtins_size;
+  int last  = static_cast<int>(ledger_builtins_size);
 
   while (first <= last) {
     int mid = (first + last) / 2; // compute mid point.
 
     int result;
-    if ((result = (int)name[0] - (int)ledger_builtins[mid][0]) == 0)
+    if ((result = (static_cast<int>(name[0]) -
+		   static_cast<int>(ledger_builtins[mid][0]))) == 0)
       result = std::strcmp(name.c_str(), ledger_builtins[mid]);
 
     if (result > 0)

@@ -130,20 +130,16 @@ void transaction_node_t::parse_amount_expr(xpath_t::scope_t& scope,
 
   // Parse the optional cost (@ PER-UNIT-COST, @@ TOTAL-COST)
 
-  unsigned int linenum = -1;
-
   if (in.good() && ! in.eof()) {
     char c = peek_next_nonws(in);
     if (c == '@') {
-      DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
-	    "Found a price indicator");
+      DEBUG("ledger.textual.parse", "Found a price indicator");
       bool per_unit = true;
       in.get(c);
       if (in.peek() == '@') {
 	in.get(c);
 	per_unit = false;
-	DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
-	      "And it's for a total price");
+	DEBUG("ledger.textual.parse", "And it's for a total price");
       }
 
       if (in.good() && ! in.eof()) {
@@ -179,22 +175,17 @@ void transaction_node_t::parse_amount_expr(xpath_t::scope_t& scope,
 			  transaction->entry->code));
 	}
 
-	DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
-	      "Total cost is " << cost);
-	DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
-	      "Per-unit cost is " << per_unit_cost);
-	DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
-	      "Annotated amount is " << base_amount);
-	DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
-	      "Bare amount is " << base_amount.number());
+	DEBUG("ledger.textual.parse", "Total cost is " << cost);
+	DEBUG("ledger.textual.parse", "Per-unit cost is " << per_unit_cost);
+	DEBUG("ledger.textual.parse", "Annotated amount is " << base_amount);
+	DEBUG("ledger.textual.parse", "Bare amount is " << base_amount.number());
       }
     }
   }
 
   amount->in_place_reduce();
 
-  DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
-	"Reduced amount is " << *amount);
+  DEBUG("ledger.textual.parse", "Reduced amount is " << *amount);
 }
 
 void transaction_node_t::compile(xpath_t::scope_t& scope)
