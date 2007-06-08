@@ -39,6 +39,7 @@ class context
 public:
   string description;	   // ex: 'While parsing file "%R" at line %L'
 
+  context() throw() {}
   explicit context(const string& _description) throw()
     : description(_description) {}
 
