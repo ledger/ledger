@@ -36,8 +36,8 @@
  *
  * @brief  Abstract dynamic type representing various numeric types.
  *
- * A value_t object can be one of many types, and can also change its
- * type dynamically based on how it is used.
+ * A value_t object can be one of many types, and can change its type
+ * dynamically based on how it is used.
  */
 #ifndef _VALUE_H
 #define _VALUE_H
