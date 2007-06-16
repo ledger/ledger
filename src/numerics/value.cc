@@ -118,6 +118,33 @@ void value_t::shutdown()
   false_value = intrusive_ptr<storage_t>();
 }
 
+void value_t::_dup()
+{
+  assert(storage);
+  if (storage->refc > 1) {
+    storage = new storage_t(*storage.get());
+
+    // If the data referenced by storage is an allocated pointer, we
+    // need to create a new object in order to achieve duplication.
+    switch (storage->type) {
+    case BALANCE:
+      *(balance_t **) storage->data =
+	new balance_t(**(balance_t **) storage->data);
+      break;
+    case BALANCE_PAIR:
+      *(balance_pair_t **) storage->data =
+	new balance_pair_t(**(balance_pair_t **) storage->data);
+      break;
+    case SEQUENCE:
+      *(sequence_t **) storage->data =
+	new sequence_t(**(sequence_t **) storage->data);
+      break;
+    default:
+      break;			// everything else has been duplicated
+    }
+  }
+}
+
 value_t::operator bool() const
 {
   switch (type()) {
@@ -1481,116 +1508,5 @@ void value_t::print(std::ostream& out, const int first_width,
     break;
   }
 }
-
-std::ostream& operator<<(std::ostream& out, const value_t& val)
-{
-  switch (val.type()) {
-  case value_t::VOID:
-    out << "VOID";
-    break;
-  case value_t::BOOLEAN:
-    out << (val.as_boolean() ? "true" : "false");
-    break;
-  case value_t::INTEGER:
-    out << val.as_long();
-    break;
-  case value_t::DATETIME:
-    out << val.as_datetime();
-    break;
-  case value_t::AMOUNT:
-    out << val.as_amount();
-    break;
-  case value_t::BALANCE:
-    out << val.as_balance();
-    break;
-  case value_t::BALANCE_PAIR:
-    out << val.as_balance_pair();
-    break;
-  case value_t::STRING:
-    out << val.as_string();
-    break;
-  case value_t::XML_NODE:
-    if (val.as_xml_node()->has_flags(XML_NODE_IS_PARENT))
-      out << '<' << val.as_xml_node()->name() << '>';
-    else
-      out << val.as_xml_node()->to_value();
-    break;
-
-  case value_t::POINTER:
-    throw_(value_error, "Cannot output a pointer value");
-
-  case value_t::SEQUENCE: {
-    out << '(';
-    bool first = true;
-    for (value_t::sequence_t::const_iterator i = val.as_sequence().begin();
-	 i != val.as_sequence().end();
-	 i++) {
-      if (first)
-	first = false;
-      else
-	out << ", ";
-      out << *i;
-    }
-    out << ')';
-    break;
-  }
-
-  default:
-    assert(false);
-    break;
-  }
-  return out;
-}
-
-#if 0
-value_context::value_context(const value_t& _bal,
-			     const string& _desc) throw()
-  : error_context(_desc), bal(new value_t(_bal)) {}
-
-value_context::~value_context() throw()
-{
-  checked_delete(bal);
-}
-
-void value_context::describe(std::ostream& out) const throw()
-{
-  if (! desc.empty())
-    out << desc << std::endl;
-
-  balance_t * ptr = NULL;
-
-  out << std::right;
-  out.width(20);
-
-  switch (bal->type()) {
-  case value_t::BOOLEAN:
-    out << (*((bool *) bal->data) ? "true" : "false");
-    break;
-  case value_t::INTEGER:
-    out << *((long *) bal->data);
-    break;
-  case value_t::DATETIME:
-    out << *((moment_t *) bal->data);
-    break;
-  case value_t::AMOUNT:
-    out << *((amount_t *) bal->data);
-    break;
-  case value_t::BALANCE:
-    ptr = (balance_t *) bal->data;
-    // fall through...
-
-  case value_t::BALANCE_PAIR:
-    if (! ptr)
-      ptr = &((balance_pair_t *) bal->data)->quantity;
-
-    ptr->print(out, 20);
-    break;
-  default:
-    assert(false);
-    break;
-  }
-  out << std::endl;
-}
-#endif
 
 } // namespace ledger

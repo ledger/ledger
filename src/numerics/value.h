@@ -29,6 +29,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   value.h
+ * @author John Wiegley
+ * @date   Thu Jun 14 21:54:00 2007
+ *
+ * @brief  Abstract dynamic type representing various numeric types.
+ *
+ * A value_t object can be one of many types, and can also change its
+ * type dynamically based on how it is used.
+ */
 #ifndef _VALUE_H
 #define _VALUE_H
 
@@ -40,61 +50,106 @@ namespace xml {
   class node_t;
 }
 
-// The following type is a polymorphous value type used solely for
-// performance reasons.  The alternative is to compute value
-// expressions (valexpr.cc) in terms of the largest data type,
-// balance_t. This was found to be prohibitively expensive, especially
-// when large logic chains were involved, since many temporary
-// allocations would occur for every operator.  With value_t, and the
-// fact that logic chains only need boolean values to continue, no
-// memory allocations need to take place at all.
-
+/**
+ * @class value_t
+ *
+ * @brief Dynamic type representing various numeric types.
+ *
+ * The following type is a polymorphous value type used solely for
+ * performance reasons.  The alternative is to compute value
+ * expressions (valexpr.cc) in terms of the largest data type,
+ * balance_t. This was found to be prohibitively expensive, especially
+ * when large logic chains were involved, since many temporary
+ * allocations would occur for every operator.  With value_t, and the
+ * fact that logic chains only need boolean values to continue, no
+ * memory allocations need to take place at all.
+ */
 class value_t
   : public ordered_field_operators<value_t,
-	   ordered_field_operators<value_t, balance_pair_t,
-	   ordered_field_operators<value_t, balance_t,
+	   equality_comparable<value_t, balance_pair_t,
+	   equality_comparable<value_t, balance_t,
+	   additive<value_t, balance_pair_t,
+	   additive<value_t, balance_t,
+	   multiplicative<value_t, balance_pair_t,
+	   multiplicative<value_t, balance_t,
 	   ordered_field_operators<value_t, amount_t,
 	   ordered_field_operators<value_t, double,
 	   ordered_field_operators<value_t, unsigned long,
-	   ordered_field_operators<value_t, long> > > > > > >
+	   ordered_field_operators<value_t, long> > > > > > > > > > >
 {
 public:
+  /**
+   * The sequence_t member type abstracts the type used to represent a
+   * resizable "array" of value_t objects.
+   */
   typedef std::vector<value_t> sequence_t;
 
   typedef sequence_t::iterator	      iterator;
   typedef sequence_t::const_iterator  const_iterator;
   typedef sequence_t::difference_type difference_type;
 
+  /**
+   * type_t gives the type of the data contained or referenced by a
+   * value_t object.  Use the type() method to get a value of type
+   * type_t.
+   */
   enum type_t {
-    VOID,
-    BOOLEAN,
-    DATETIME,
-    INTEGER,
-    AMOUNT,
-    BALANCE,
-    BALANCE_PAIR,
-    STRING,
-    SEQUENCE,
-    XML_NODE,
-    POINTER
+    VOID,			// a null value (i.e., uninitialized)
+    BOOLEAN,			// a boolean
+    DATETIME,			// a date and time (Boost posix_time)
+    INTEGER,			// a signed integer value
+    AMOUNT,			// a ledger::amount_t
+    BALANCE,			// a ledger::balance_t
+    BALANCE_PAIR,		// a ledger::balance_pair_t
+    STRING,			// a string object
+    SEQUENCE,			// a vector of value_t objects
+    XML_NODE,			// a pointer to an ledger::xml::node_t
+    POINTER			// an opaque pointer of any type
   };
 
 private:
   class storage_t
   {
+    friend class value_t;
+
+    /**
+     * The `data' member holds the actual bytes relating to whatever
+     * has been stuffed into this storage object.  There is a set of
+     * asserts in value.cc to guarantee that the sizeof expression
+     * used here is indeed at least as big as the largest object that
+     * will ever be copied into `data'.
+     *
+     * The `type' member holds the value_t::type_t value representing
+     * the type of the object stored.
+     */
     char   data[sizeof(amount_t)];
     type_t type;
 
+    /**
+     * `refc' holds the current reference count for each storage_t
+     * object.
+     */
+    mutable int refc;
+
+    /**
+     * Constructor.  Since all storage object are assigned to after
+     * construction, the only constructors allowed are explicit, and
+     * copy (see below).  The default starting type is VOID, which
+     * should rarely ever be seen in practice, since the first thing
+     * that value_t typically does is to assign a valid value.
+     */
     explicit storage_t() : type(VOID), refc(0) {
       TRACE_CTOR(value_t::storage_t, "");
     }
-    explicit storage_t(const storage_t& rhs)
-      : type(rhs.type), refc(0) {
-      TRACE_CTOR(value_t::storage_t, "");
-      std::memcpy(data, rhs.data, sizeof(data));
-    }
 
   public:			// so `checked_delete' can access it
+    /**
+     * Destructor.  Must only be called when the reference count has
+     * reached zero.  The `destroy' method is used to do the actual
+     * cleanup of the data, since it's quite possible for `destroy' to
+     * be called while the object is still active -- to clear the
+     * stored data for subsequent reuse of the storage_t object.
+     */
     ~storage_t() {
       TRACE_DTOR(value_t::storage_t);
       DEBUG("value.storage.refcount", "Destroying " << this);
@@ -102,15 +157,29 @@ private:
       destroy();
     }
 
+    void destroy();
+
   private:
+    /**
+     * Assignment and copy operators.  These are called when making a
+     * new copy of a storage object in order to modify the copy.
+     */
+    explicit storage_t(const storage_t& rhs)
+      : type(rhs.type), refc(0) {
+      TRACE_CTOR(value_t::storage_t, "");
+      std::memcpy(data, rhs.data, sizeof(data));
+    }
     storage_t& operator=(const storage_t& rhs) {
       type = rhs.type;
       std::memcpy(data, rhs.data, sizeof(data));
       return *this;
     }
 
-    mutable int refc;
-
+    /**
+     * Reference counting methods.  The intrusive_ptr_* methods are
+     * used by boost::intrusive_ptr to manage the calls to acquire and
+     * release.
+     */
     void acquire() const {
       DEBUG("value.storage.refcount",
 	     "Acquiring " << this << ", refc now " << refc + 1);
@@ -125,10 +194,6 @@ private:
 	checked_delete(this);
     }
 
-    void destroy();
-
-    friend class value_t;
-
     friend inline void intrusive_ptr_add_ref(value_t::storage_t * storage) {
       storage->acquire();
     }
@@ -137,25 +202,64 @@ private:
     }
   };
 
+  /**
+   * The actual data for each value_t is kept in the `storage' member.
+   * Data is modified using a copy-on-write policy.
+   */
   intrusive_ptr<storage_t> storage;
 
+  /**
+   * _dup() makes a private copy of the current value so that it can
+   * subsequently be modified.
+   *
+   * _clear() removes our pointer to the current value and initializes
+   * a new value for things to be stored in.
+   *
+   * _reset() makes the current object appear as if it had been
+   * default initialized.
+   */
+  void _dup();
+  void _clear() {
+    if (! storage || storage->refc > 1)
+      storage = new storage_t;
+    else
+      storage->destroy();
+  }
+  void _reset() {
+    if (storage)
+      storage = intrusive_ptr<storage_t>();
+  }
+
+  /**
+   * Because boolean "true" and "false" are so common, a pair of
+   * static references are kept to prevent the creation of throwaway
+   * storage_t objects just to represent these two common values.
+   */
   static intrusive_ptr<storage_t> true_value;
   static intrusive_ptr<storage_t> false_value;
 
-  // jww (2007-05-03): Make this private, and then make
-  // ledger::initialize into a member function of session_t.
 public:
+  // jww (2007-05-03): Make these private, and make ledger::initialize
+  // a member function of session_t.
   static void initialize();
   static void shutdown();
 
 public:
+  /**
+   * Constructors.  value_t objects may be constructed from almost any
+   * value type that they can contain, including variations on those
+   * types (such as long, unsigned long, etc).  The ordering of the
+   * methods here reflects the ordering of the constants in type_t
+   * above.
+   *
+   * One constructor of special note is that taking a string or
+   * character pointer as an argument.  Because value_t("$100") is
+   * interpreted as a commoditized amount, the form value_t("$100",
+   * true) is required to represent the literal string "$100", and not
+   * the amount "one hundred dollars".
+   */
   value_t() {
     TRACE_CTOR(value_t, "");
-  }
-
-  value_t(const value_t& val) {
-    TRACE_CTOR(value_t, "copy");
-    *this = val;
   }
   value_t(const bool val) {
     TRACE_CTOR(value_t, "const bool");
@@ -216,10 +320,25 @@ public:
     TRACE_CTOR(value_t, "T *");
     set_pointer(item);
   }
+
+  /**
+   * Destructor.  This does not do anything, because the intrusive_ptr
+   * that refers to our storage object will decrease its reference
+   * count itself upon destruction.
+   */
   ~value_t() {
     TRACE_DTOR(value_t);
   }
 
+  /**
+   * Assignment and copy operators.  Values are cheaply copied by
+   * simply creating another reference to the other value's storage
+   * object.  A true copy is only ever made prior to modification.
+   */
+  value_t(const value_t& val) {
+    TRACE_CTOR(value_t, "copy");
+    *this = val;
+  }
   value_t& operator=(const value_t& val) {
     if (! (this == &val || storage == val.storage))
       storage = val.storage;
@@ -227,50 +346,63 @@ public:
   }
 
   /**
-   * _dup() makes a private copy of the current value so that it can
-   * subsequently be modified.
-   *
-   * _clear() removes our pointer to the current value and initializes
-   * a new value for things to be stored in.
+   * Comparison operators.
    */
-  void _dup() {
-    assert(storage);
-    if (storage->refc > 1) {
-      storage = new storage_t(*storage.get());
+  bool operator==(const value_t& val) const;
+  bool operator<(const value_t& val) const;
+#if 0
+  bool operator>(const value_t& val) const;
+#endif
 
-      // If the data referenced by storage is an allocated pointer, we
-      // need to create a new object in order to achieve duplication.
-      switch (storage->type) {
-      case BALANCE:
-	*(balance_t **) storage->data =
-	  new balance_t(**(balance_t **) storage->data);
-	break;
-      case BALANCE_PAIR:
-	*(balance_pair_t **) storage->data =
-	  new balance_pair_t(**(balance_pair_t **) storage->data);
-	break;
-      case SEQUENCE:
-	*(sequence_t **) storage->data =
-	  new sequence_t(**(sequence_t **) storage->data);
-	break;
-      default:
-	break;			// everything else has been duplicated
-      }
-    }
+  /**
+   * Binary arithmetic operators.
+   *
+   * add(amount_t, optional<amount_t>) allows for the possibility of
+   * adding both an amount and its cost in a single operation.
+   * Otherwise, there is no way to separately represent the "cost"
+   * part of an amount addition statement.
+   */
+  value_t& operator+=(const value_t& val);
+  value_t& operator-=(const value_t& val);
+  value_t& operator*=(const value_t& val);
+  value_t& operator/=(const value_t& val);
+
+  value_t& add(const amount_t& amount,
+	       const optional<amount_t>& cost = none);
+
+  /**
+   * Unary arithmetic operators.
+   */
+  value_t negate() const {
+    value_t temp = *this;
+    temp.in_place_negate();
+    return temp;
   }
-  void _clear() {
-    if (! storage || storage->refc > 1)
-      storage = new storage_t;
-    else
-      storage->destroy();
-  }
-  void _reset() {
-    if (storage)
-      storage = intrusive_ptr<storage_t>();
+  void in_place_negate();
+
+  value_t operator-() const {
+    return negate();
   }
 
+  value_t abs() const;
+  value_t round() const;
+  value_t unround() const;
+
+  value_t reduce() const {
+    value_t temp(*this);
+    temp.in_place_reduce();
+    return temp;
+  }
+  void    in_place_reduce();
+
+  value_t value(const optional<moment_t>& moment = none) const;
+
+  /**
+   * Truth tests.
+   */
   operator bool() const;
 
+  bool is_realzero() const;
   bool is_null() const {
     if (! storage) {
       return true;
@@ -279,16 +411,17 @@ public:
       return false;
     }
   }
+
   type_t type() const {
     type_t result = storage ? storage->type : VOID;
     assert(result >= VOID && result <= POINTER);
     return result;
   }
 
-private:
   bool is_type(type_t _type) const {
     return type() == _type;
   }
+private:
   void set_type(type_t new_type) {
     assert(new_type >= VOID && new_type <= POINTER);
     if (new_type == VOID) {
@@ -302,6 +435,36 @@ private:
   }
 
 public:
+  /**
+   * Data manipulation methods.  A value object may be truth tested
+   * for the existence of every type it can contain:
+   *
+   * is_boolean()
+   * is_long()
+   * is_datetime()
+   * is_amount()
+   * is_balance()
+   * is_balance_pair()
+   * is_string()
+   * is_sequence()
+   * is_xml_node()
+   * is_pointer()
+   *
+   * There are corresponding as_*() methods that represent a value as
+   * a reference to its underlying type.  For example, as_integer()
+   * returns a reference to a "const long".
+   *
+   * There are also as_*_lval() methods, which represent the
+   * underlying data as a reference to a non-const type.  The
+   * difference here is that an _lval() call causes the underlying
+   * data to be fully copied before the resulting reference is
+   * returned.
+   *
+   * Lastly, there are corresponding set_*(data) methods for directly
+   * assigning data of a particular type, rather than using the
+   * regular assignment operator (whose implementation simply calls
+   * the various set_ methods).
+   */
   bool is_boolean() const {
     return is_type(BOOLEAN);
   }
@@ -499,6 +662,11 @@ public:
     new((boost::any *) storage->data) boost::any(val);
   }
 
+  /**
+   * Data conversion methods.  These methods convert a value object to
+   * its underlying type, where possible.  If not possible, an
+   * exception is thrown.
+   */
   bool		 to_boolean() const;
   long		 to_long() const;
   moment_t       to_datetime() const;
@@ -508,6 +676,29 @@ public:
   string	 to_string() const;
   sequence_t     to_sequence() const;
 
+  /**
+   * Dynamic typing conversion methods.
+   *
+   * `cast(type_t)' returns a new value whose type has been cast to
+   * the given type, but whose value is based on the original value.
+   * For example, the uncommoditized AMOUNT "100.00" could be cast to
+   * an INTEGER value.  If a cast would lose information or is not
+   * meaningful, an exception is thrown.
+   *
+   * `simplify()' is an automatic cast to the simplest type that can
+   * still represent the original value.
+   *
+   * There are also "in-place" versions of these two methods:
+   *   in_place_cast
+   *   in_place_simplify
+   */
+  value_t cast(type_t cast_type) const {
+    value_t temp(*this);
+    temp.in_place_cast(cast_type);
+    return temp;
+  }
+  void    in_place_cast(type_t cast_type);
+
   value_t simplify() const {
     value_t temp = *this;
     temp.in_place_simplify();
@@ -515,6 +706,20 @@ public:
   }
   void in_place_simplify();
 
+  /**
+   * Annotated commodity methods.
+   */
+  value_t annotated_price() const;
+  value_t annotated_date() const;
+  value_t annotated_tag() const;
+
+  value_t strip_annotations(const bool keep_price = amount_t::keep_price,
+			    const bool keep_date  = amount_t::keep_date,
+			    const bool keep_tag   = amount_t::keep_tag) const;
+
+  /**
+   * Collection-style access methods
+   */
   value_t& operator[](const int index) {
     assert(! is_null());
     if (is_sequence())
@@ -583,17 +788,9 @@ public:
       return 1;
   }
 
-  value_t& operator+=(const value_t& val);
-  value_t& operator-=(const value_t& val);
-  value_t& operator*=(const value_t& val);
-  value_t& operator/=(const value_t& val);
-
-  bool operator==(const value_t& val) const;
-  bool operator<(const value_t& val) const;
-#if 0
-  bool operator>(const value_t& val) const;
-#endif
-
+  /**
+   * Informational methods.
+   */
   string label(optional<type_t> the_type = none) const {
     switch (the_type ? *the_type : type()) {
     case VOID:
@@ -626,52 +823,17 @@ public:
     return "<invalid>";
   }
 
-  value_t operator-() const {
-    return negate();
-  }
-  value_t negate() const {
-    value_t temp = *this;
-    temp.in_place_negate();
-    return temp;
-  }
-  void in_place_negate();
-
-  bool    is_realzero() const;
-  value_t abs() const;
-  void    in_place_cast(type_t cast_type);
   value_t cost() const;
-  value_t annotated_price() const;
-  value_t annotated_date() const;
-  value_t annotated_tag() const;
 
-  value_t cast(type_t cast_type) const {
-    value_t temp(*this);
-    temp.in_place_cast(cast_type);
-    return temp;
-  }
-
-  value_t strip_annotations(const bool keep_price = amount_t::keep_price,
-			    const bool keep_date  = amount_t::keep_date,
-			    const bool keep_tag   = amount_t::keep_tag) const;
-
-  value_t& add(const amount_t& amount,
-	       const optional<amount_t>& cost = none);
-  value_t  value(const optional<moment_t>& moment = none) const;
-
-  void    in_place_reduce();
-  value_t reduce() const {
-    value_t temp(*this);
-    temp.in_place_reduce();
-    return temp;
-  }
-
-  value_t round() const;
-  value_t unround() const;
-
+  /**
+   * Printing methods.
+   */
   void print(std::ostream& out, const int first_width,
 	     const int latter_width = -1) const;
 
-  friend std::ostream& operator<<(std::ostream& out, const value_t& val);
+  /**
+   * Debugging methods.
+   */
 };
 
 #define NULL_VALUE (value_t())
@@ -680,7 +842,10 @@ inline value_t string_value(const string& str) {
   return value_t(str, true);
 }
 
-std::ostream& operator<<(std::ostream& out, const value_t& val);
+inline std::ostream& operator<<(std::ostream& out, const value_t& val) {
+  val.print(out, 12);
+  return out;
+}
 
 DECLARE_EXCEPTION(value_error);
 
