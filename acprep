@@ -6,8 +6,8 @@
 # This is not necessary, however, since I keep all the files necessary
 # for building checked in to the source tree.  Users can just type
 # './configure && make'.  This script simply sets up the compiler and
-# linker flags for all the various build permutations I use for
-# testing and profiling.
+# linker flags for all the various build permutations I use for testing
+# and profiling.
 
 cmd=$(which glibtoolize 2>&1)
 if [ -x "$cmd" ]; then
