@@ -18,6 +18,7 @@ autoreconf --force --install
 
 INCDIRS="-I/sw/include"
 INCDIRS="$INCDIRS -I/usr/local/include"
+INCDIRS="$INCDIRS -I/usr/local/include/boost-1_34"
 
 LIBDIRS="-L/sw/lib"
 LIBDIRS="$LIBDIRS -L/usr/local/lib"
