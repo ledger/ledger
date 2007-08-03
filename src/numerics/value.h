@@ -36,8 +36,10 @@
  *
  * @brief  Abstract dynamic type representing various numeric types.
  *
- * A value_t object can be one of many types, and can change its type
- * dynamically based on how it is used.
+ * A value_t object can be one of many types, and changes its type
+ * dynamically based on how it is used.  For example, if you assign
+ * the number 10 to a value object, it's internal type will be
+ * INTEGER.
  */
 #ifndef _VALUE_H
 #define _VALUE_H
@@ -346,13 +348,19 @@ public:
   }
 
   /**
-   * Comparison operators.
+   * Comparison operators.  Values can be compared to other values
    */
   bool operator==(const value_t& val) const;
   bool operator<(const value_t& val) const;
-#if 0
-  bool operator>(const value_t& val) const;
-#endif
+
+  template <typename T>
+  bool operator==(const T& amt) const {
+    return *this == value_t(amt);
+  }
+  template <typename T>
+  bool operator<(const T& amt) const {
+    return *this < value_t(amt);
+  }
 
   /**
    * Binary arithmetic operators.
