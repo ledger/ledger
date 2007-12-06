@@ -17,11 +17,21 @@ else
 fi
 autoconf
 
-INCDIRS="-I/sw/include -I/sw/include/boost -I/usr/include/httpd/xml"
+HERE="$PWD"
+
+if [ -d "$HOME/Products" ]; then
+    projdir="$HOME/Products/$(basename $HERE)"
+    if [ ! -d "$projdir" ]; then
+	mkdir -p "$projdir"
+    fi
+    cd "$projdir" || (echo "Cannot change to $projdir"; exit 1)
+fi
+
+INCDIRS="-I/opt/local/include -I/usr/local/include -I/usr/include/httpd/xml"
 #INCDIRS="$INCDIRS -I/sw/include/libofx"
 INCDIRS="$INCDIRS -I/usr/include/python2.3"
 INCDIRS="$INCDIRS -Wno-long-double"
-LIBDIRS="-L/sw/lib -L/usr/local/lib -L/usr/lib/python2.3/config"
+LIBDIRS="-L/opt/local/lib -L/usr/local/lib"
 
 if [ "$1" = "--debug" ]; then
     shift 1
