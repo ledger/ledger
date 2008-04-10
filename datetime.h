@@ -96,7 +96,7 @@ class date_t
   operator bool() const {
     return when != 0;
   }
-  operator std::time_t() {
+  operator std::time_t() const {
     return when;
   }
   operator std::string() const {
@@ -138,7 +138,7 @@ class date_t
 inline long operator-(const date_t& left, const date_t& right) {
   date_t temp(left);
   temp -= right;
-  return (long)temp;
+  return long(temp);
 }
 
 inline date_t operator+(const date_t& left, const long days) {
