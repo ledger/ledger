@@ -1,5 +1,14 @@
 #!/bin/sh
 
+# acprep, version 3.0
+#
+# This script configures my ledger source tree on my Mac OS/X machine.
+# This is not necessary, however, since I keep all the files necessary
+# for building checked in to the source tree.  Users can just type
+# './configure && make'.  This script simply sets up the compiler and
+# linker flags for all the various build permutations I use for testing
+# and profiling.
+
 export AUTOCONF_VERSION=2.61
 export AUTOMAKE_VERSION=1.9
 
@@ -11,23 +20,15 @@ if [ -x "$cmd" ]; then
 fi
 autoreconf --force --install
 
-HERE="$PWD"
+INCDIRS="-I/sw/include -I/opt/local/include"
+INCDIRS="$INCDIRS -I/usr/local/include"
+INCDIRS="$INCDIRS -I/usr/local/include/boost-1_35"
 
-if [ ! "$1" = "--local" ]; then
-    if [ -d "$HOME/Products" ]; then
-	projdir="$HOME/Products/$(basename $HERE)"
-	if [ ! -d "$projdir" ]; then
-	    mkdir -p "$projdir"
-	fi
-	cd "$projdir" || (echo "Cannot change to $projdir"; exit 1)
-    fi
-else
-    shift 1
-fi
+LIBDIRS="-L/sw/lib -L/opt/local/lib"
+LIBDIRS="$LIBDIRS -L/usr/local/lib"
 
-INCDIRS="-I/opt/local/include -I/usr/local/include -I/usr/include/httpd/xml"
-INCDIRS="$INCDIRS -I/usr/include/python2.5"
-LIBDIRS="-L/opt/local/lib -L/usr/local/lib"
+PYTHON_HOME="/Library/Frameworks/Python.framework/Versions/2.5"
+
 
 SYSTEM=`uname -s`
 
@@ -43,33 +44,93 @@ else
     CXXFLAGS=""
 fi
 
-if [ "$1" = "--debug" ]; then
-    shift 1
-    $HERE/configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
-	CXXFLAGS="$CXXFLAGS -g" --enable-debug --enable-python "$@"
-elif [ "$1" = "--opt" ]; then
-    shift 1
-    $HERE/configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
-	CXXFLAGS="$CXXFLAGS -fomit-frame-pointer -O3 -mcpu=7450 -fPIC" "$@"
-elif [ "$1" = "--flat-opt" ]; then
-    shift 1
-    $HERE/configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
-	CXXFLAGS="$CXXFLAGS -fomit-frame-pointer -O3 -mcpu=7450" "$@"
-elif [ "$1" = "--safe-opt" ]; then
-    shift 1
-    $HERE/configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
-	CXXFLAGS="$CXXFLAGS -fomit-frame-pointer -O3 -mcpu=7450 -fPIC -DDEBUG_LEVEL=1" "$@"
-elif [ "$1" = "--perf" ]; then
-    shift 1
-    $HERE/configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
-	CXXFLAGS="$CXXFLAGS -g -pg" "$@"
-elif [ "$1" = "--python" ]; then
-    shift 1
-    $HERE/configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
-	CXXFLAGS="$CXXFLAGS -g" --enable-python "$@"
-else
-    $HERE/configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
-	CXXFLAGS="$CXXFLAGS -g" "$@"
+# Building the command-line tool as a shared library is a luxury,
+# since there are no clients except a GUI tool which might use it (and
+# that is built again anyway by Xcode).
+SWITCHES=""
+CPPFLAGS="$INCDIRS"
+CXXFLAGS="-pipe"
+LDFLAGS="$LIBDIRS"
+LOCAL=false
+
+# Warning flags
+CXXFLAGS="$CXXFLAGS -Wall -ansi"
+#CXXFLAGS="$CXXFLAGS -Wextra"
+#CXXFLAGS="$CXXFLAGS -Weffc++"
+#CXXFLAGS="$CXXFLAGS -Wcast-align"
+#CXXFLAGS="$CXXFLAGS -Wcast-qual"
+#CXXFLAGS="$CXXFLAGS -Wconversion"
+#CXXFLAGS="$CXXFLAGS -Wfloat-equal"
+#CXXFLAGS="$CXXFLAGS -Wmissing-field-initializers"
+#CXXFLAGS="$CXXFLAGS -Wno-endif-labels"
+#CXXFLAGS="$CXXFLAGS -Wold-style-cast"
+#CXXFLAGS="$CXXFLAGS -Woverloaded-virtual"
+#CXXFLAGS="$CXXFLAGS -Wshorten-64-to-32"
+#CXXFLAGS="$CXXFLAGS -Wsign-compare"
+#CXXFLAGS="$CXXFLAGS -Wsign-promo"
+#CXXFLAGS="$CXXFLAGS -Wstrict-null-sentinel"
+#CXXFLAGS="$CXXFLAGS -Wwrite-strings"
+
+
+while [ -n "$1" ]; do
+  case "$1" in
+    --devel)
+	SWITCHES="$SWITCHES --disable-shared --enable-pch"
+	;;
+
+    --debug)
+	SWITCHES="$SWITCHES --enable-debug"
+	#CPPFLAGS="$CPPFLAGS -D_GLIBCXX_DEBUG=1"
+	CXXFLAGS="$CXXFLAGS -g" ;;
+
+    --boost)
+	shift 1
+	SWITCHES="$SWITCHES --with-boost-suffix=$1"
+	;;
+
+    --gcov)
+	CXXFLAGS="$CXXFLAGS -fprofile-arcs -ftest-coverage" ;;
+
+    --gprof)
+        CXXFLAGS="$CXXFLAGS -g -pg" ;;
+
+    --python)
+	if [ -d "$PYTHON_HOME" ]; then
+	    SWITCHES="$SWITCHES --enable-python"
+	    CPPFLAGS="$CPPFLAGS -I$PYTHON_HOME/include/python2.5"
+	    LDFLAGS="$LDFLAGS -L$PYTHON_HOME/lib/python2.5/config"
+	fi ;;
+
+    --pic)
+	CXXFLAGS="$CXXFLAGS -fPIC" ;;
+
+    --opt)
+	CXXFLAGS="$CXXFLAGS -fomit-frame-pointer -O3" ;;
+
+    --local)
+	LOCAL=true ;;
+
+    *)
+	break ;;
+  esac
+  shift 1
+done
+
+
+HERE="$PWD"
+
+if [ "$LOCAL" = "false" -a -d "$HOME/Products" ]; then
+    version=""
+    if [ -x version ]; then
+	version="-$(./version)"
+    fi
+    projdir="$HOME/Products/$(basename $HERE)$version"
+    if [ ! -d "$projdir" ]; then
+	mkdir -p "$projdir"
+    fi
+    cd "$projdir" || (echo "Cannot change to $projdir"; exit 1)
 fi
 
-rm -f AUTHORS COPYING
+"$HERE/configure" --srcdir="$HERE" \
+    CPPFLAGS="$CPPFLAGS" CXXFLAGS="$CXXFLAGS $local_cxxflags" \
+    LDFLAGS="$LDFLAGS" LIBS="$LIBS" $SWITCHES "$@"

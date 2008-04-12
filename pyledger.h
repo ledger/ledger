@@ -29,27 +29,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mask.h"
+#ifndef _PYLEDGER_H
+#define _PYLEDGER_H
 
-namespace ledger {
+//////////////////////////////////////////////////////////////////////
+//
+// Ledger Accounting Tool (with Python support via Boost.Python)
+//
+//   A command-line tool for general double-entry accounting.
+//
+// Copyright (c) 2003,2004 John Wiegley <johnw@newartisans.com>
+//
 
-mask_t::mask_t(const string& pat) : exclude(false)
-{
-  const char * p = pat.c_str();
+#include <ledger.h>
+#include <pyinterp.h>
 
-  if (*p == '-') {
-    exclude = true;
-    p++;
-    while (std::isspace(*p))
-      p++;
-  }
-  else if (*p == '+') {
-    p++;
-    while (std::isspace(*p))
-      p++;
-  }
-
-  expr.assign(p);
-}
-
-} // namespace ledger
+#endif // _PYLEDGER_H

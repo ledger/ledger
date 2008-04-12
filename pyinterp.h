@@ -29,27 +29,70 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mask.h"
+#ifndef _PYINTERP_H
+#define _PYINTERP_H
+
+#include "xpath.h"
+
+#include <boost/python.hpp>
+#include <Python.h>
 
 namespace ledger {
 
-mask_t::mask_t(const string& pat) : exclude(false)
+class python_interpreter_t : public xml::xpath_t::symbol_scope_t
 {
-  const char * p = pat.c_str();
+  boost::python::handle<> mmodule;
 
-  if (*p == '-') {
-    exclude = true;
-    p++;
-    while (std::isspace(*p))
-      p++;
-  }
-  else if (*p == '+') {
-    p++;
-    while (std::isspace(*p))
-      p++;
+ public:
+  boost::python::dict nspace;
+
+  python_interpreter_t(xml::xpath_t::scope_t& parent);
+
+  virtual ~python_interpreter_t() {
+    Py_Finalize();
   }
 
-  expr.assign(p);
-}
+  boost::python::object import(const string& name);
+
+  enum py_eval_mode_t {
+    PY_EVAL_EXPR,
+    PY_EVAL_STMT,
+    PY_EVAL_MULTI
+  };
+
+  boost::python::object eval(std::istream& in,
+			     py_eval_mode_t mode = PY_EVAL_EXPR);
+  boost::python::object eval(const string& str,
+			     py_eval_mode_t mode = PY_EVAL_EXPR);
+  boost::python::object eval(const char * c_str,
+			     py_eval_mode_t mode = PY_EVAL_EXPR) {
+    string str(c_str);
+    return eval(str, mode);
+  }
+
+  class functor_t {
+  protected:
+    boost::python::object func;
+  public:
+    functor_t(const string& name, boost::python::object _func) : func(_func) {}
+    virtual ~functor_t() {}
+    virtual value_t operator()(xml::xpath_t::call_scope_t& args);
+  };
+
+  virtual xml::xpath_t::ptr_op_t lookup(const string& name) {
+    if (boost::python::object func = eval(name))
+      return WRAP_FUNCTOR(functor_t(name, func));
+    else
+      return xml::xpath_t::symbol_scope_t::lookup(name);
+  }
+
+  class lambda_t : public functor_t {
+   public:
+    lambda_t(boost::python::object code) : functor_t("<lambda>", code) {}
+    virtual value_t operator()(xml::xpath_t::call_scope_t& args);
+  };
+};
 
 } // namespace ledger
+
+#endif // _PYINTERP_H

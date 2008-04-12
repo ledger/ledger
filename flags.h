@@ -29,27 +29,75 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mask.h"
+#ifndef _FLAGS_H
+#define _FLAGS_H
 
-namespace ledger {
-
-mask_t::mask_t(const string& pat) : exclude(false)
+template <typename T = boost::uint_least8_t>
+class supports_flags
 {
-  const char * p = pat.c_str();
+public:
+  typedef T flags_t;
 
-  if (*p == '-') {
-    exclude = true;
-    p++;
-    while (std::isspace(*p))
-      p++;
+protected:
+  flags_t flags_;
+
+public:
+  supports_flags() : flags_(0) {}
+  supports_flags(const flags_t arg) : flags_(arg) {}
+
+  flags_t flags() const {
+    return flags_;
   }
-  else if (*p == '+') {
-    p++;
-    while (std::isspace(*p))
-      p++;
+  bool has_flags(const flags_t arg) const {
+    return flags_ & arg;
   }
 
-  expr.assign(p);
-}
+  void set_flags(const flags_t arg) {
+    flags_ = arg;
+  }
+  void clear_flags() {
+    flags_ = 0;
+  }
+  void add_flags(const flags_t arg) {
+    flags_ |= arg;
+  }
+  void drop_flags(const flags_t arg) {
+    flags_ &= ~arg;
+  }
+};
 
-} // namespace ledger
+template <typename T = boost::uint_least8_t>
+class delegates_flags : public boost::noncopyable
+{
+public:
+  typedef T flags_t;
+
+protected:
+  supports_flags<T>& flags_;
+
+public:
+  delegates_flags() : flags_() {}
+  delegates_flags(supports_flags<T>& arg) : flags_(arg) {}
+
+  flags_t flags() const {
+    return flags_.flags();
+  }
+  bool has_flags(const flags_t arg) const {
+    return flags_.has_flags(arg);
+  }
+
+  void set_flags(const flags_t arg) {
+    flags_.set_flags(arg);
+  }
+  void clear_flags() {
+    flags_.clear_flags();
+  }
+  void add_flags(const flags_t arg) {
+    flags_.add_flags(arg);
+  }
+  void drop_flags(const flags_t arg) {
+    flags_.drop_flags(arg);
+  }
+};
+
+#endif // _FLAGS_H

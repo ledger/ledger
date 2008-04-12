@@ -7,6 +7,8 @@
 #include <sstream>
 #include <list>
 
+namespace ledger {
+
 class error_context
 {
  public:
@@ -63,15 +65,13 @@ class line_context : public error_context {
 
 //////////////////////////////////////////////////////////////////////
 
-class str_exception : public std::exception {
- protected:
-  std::string reason;
+class str_exception : public std::logic_error {
  public:
   std::list<error_context *> context;
 
-  str_exception(const std::string& _reason,
+  str_exception(const std::string& why,
 		error_context * ctxt = NULL) throw()
-    : reason(_reason) {
+    : std::logic_error(why) {
     if (ctxt)
       context.push_back(ctxt);
   }
@@ -95,31 +95,36 @@ class str_exception : public std::exception {
       (*i)->describe(out);
     }
   }
-
-  virtual const char* what() const throw() {
-    return reason.c_str();
-  }
 };
+
+#define DECLARE_EXCEPTION(kind, name)					\
+  class name : public kind {						\
+  public:								\
+    name(const std::string& why, error_context * ctxt = NULL) throw()	\
+      : kind(why, ctxt) {}						\
+  }
 
 class error : public str_exception {
  public:
-  error(const std::string& reason, error_context * ctxt = NULL) throw()
-    : str_exception(reason, ctxt) {}
+  error(const std::string& why, error_context * ctxt = NULL) throw()
+    : str_exception(why, ctxt) {}
   virtual ~error() throw() {}
 };
 
 class fatal : public str_exception {
  public:
-  fatal(const std::string& reason, error_context * ctxt = NULL) throw()
-    : str_exception(reason, ctxt) {}
+  fatal(const std::string& why, error_context * ctxt = NULL) throw()
+    : str_exception(why, ctxt) {}
   virtual ~fatal() throw() {}
 };
 
 class fatal_assert : public fatal {
  public:
-  fatal_assert(const std::string& reason, error_context * ctxt = NULL) throw()
-    : fatal(std::string("assertion failed '") + reason + "'", ctxt) {}
+  fatal_assert(const std::string& why, error_context * ctxt = NULL) throw()
+    : fatal(std::string("assertion failed '") + why + "'", ctxt) {}
   virtual ~fatal_assert() throw() {}
 };
+
+} // namespace ledger
 
 #endif // _ERROR_H

@@ -29,27 +29,39 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mask.h"
+/**
+ * @file   pushvar.h
+ * @author John Wiegley
+ * @date   Sun May  6 20:10:52 2007
+ *
+ * @brief  Adds a facility to C++ for handling "scoped yet global".
+ */
 
-namespace ledger {
+#ifndef _PUSHVAR_H
+#define _PUSHVAR_H
 
-mask_t::mask_t(const string& pat) : exclude(false)
+template <typename T>
+class push_variable : public boost::noncopyable
 {
-  const char * p = pat.c_str();
+  T&   var;
+  T    prev;
+  bool enabled;
 
-  if (*p == '-') {
-    exclude = true;
-    p++;
-    while (std::isspace(*p))
-      p++;
+public:
+  explicit push_variable(T& _var)
+    : var(_var), prev(var), enabled(true) {}
+  explicit push_variable(T& _var, const T& value)
+    : var(_var), prev(var), enabled(true) {
+    var = value;
   }
-  else if (*p == '+') {
-    p++;
-    while (std::isspace(*p))
-      p++;
+  ~push_variable() {
+    if (enabled)
+      var = prev;
   }
 
-  expr.assign(p);
-}
+  void clear() {
+    enabled = false;
+  }
+};
 
-} // namespace ledger
+#endif // _PUSHVAR_H

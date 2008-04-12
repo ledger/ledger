@@ -4,15 +4,17 @@ from distutils.core import setup, Extension
 
 import os
 
-libs = ["amounts", "boost_python", "gmp"]
+defines = [('PYTHON_MODULE', 1)]
+libs    = os.environ["PYLIBS"].split()
 
-setup(name         = "Amounts",
-      version      = "2.6.0.90",
-      description  = "Amounts and Commodities Library",
+setup(name         = "Ledger",
+      version      = "2.7",
+      description  = "Ledger Accounting Library",
       author       = "John Wiegley",
       author_email = "johnw@newartisans.com",
-      url          = "http://www.newartisans.com/johnw/",
+      url          = "http://www.newartisans.com/software/ledger.html",
       ext_modules  = [
-    Extension("amounts", ["amounts.cc"],
-	      define_macros = [('PYTHON_MODULE', 1)],
-	      libraries     = libs)])
+	Extension("ledger",
+                  [os.path.join(os.environ['SRCDIR'],
+                                "src", "python", "pyledger.cc")],
+		  define_macros = defines, libraries = libs)])

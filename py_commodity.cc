@@ -29,27 +29,35 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mask.h"
+#include "pyinterp.h"
+#include "pyutils.h"
+#include "amount.h"
+
+#include <boost/python/exception_translator.hpp>
+#include <boost/python/implicit.hpp>
 
 namespace ledger {
 
-mask_t::mask_t(const string& pat) : exclude(false)
+using namespace boost::python;
+
+void export_commodity()
 {
-  const char * p = pat.c_str();
+  scope().attr("COMMODITY_STYLE_DEFAULTS")  = COMMODITY_STYLE_DEFAULTS;
+  scope().attr("COMMODITY_STYLE_SUFFIXED")  = COMMODITY_STYLE_SUFFIXED;
+  scope().attr("COMMODITY_STYLE_SEPARATED") = COMMODITY_STYLE_SEPARATED;
+  scope().attr("COMMODITY_STYLE_EUROPEAN")  = COMMODITY_STYLE_EUROPEAN;
+  scope().attr("COMMODITY_STYLE_THOUSANDS") = COMMODITY_STYLE_THOUSANDS;
+  scope().attr("COMMODITY_STYLE_NOMARKET")  = COMMODITY_STYLE_NOMARKET;
+  scope().attr("COMMODITY_STYLE_BUILTIN")   = COMMODITY_STYLE_BUILTIN;
 
-  if (*p == '-') {
-    exclude = true;
-    p++;
-    while (std::isspace(*p))
-      p++;
-  }
-  else if (*p == '+') {
-    p++;
-    while (std::isspace(*p))
-      p++;
-  }
+  class_< commodity_t, bases<>,
+	  commodity_t, boost::noncopyable > ("commodity", no_init)
+    .def(self == self)
 
-  expr.assign(p);
+    .def("drop_flags", &commodity_t::drop_flags)
+
+    .add_property("precision", &commodity_t::precision)
+    ;
 }
 
 } // namespace ledger
