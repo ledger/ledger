@@ -138,7 +138,7 @@ class date_t
 inline long operator-(const date_t& left, const date_t& right) {
   date_t temp(left);
   temp -= right;
-  return temp;
+  return long(temp);
 }
 
 inline date_t operator+(const date_t& left, const long days) {
