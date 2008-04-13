@@ -2,6 +2,7 @@
 #define _AMOUNT_H
 
 #include <map>
+#include <deque>
 #include <stack>
 #include <string>
 #include <cctype>
@@ -36,34 +37,29 @@ class amount_t
   void _release();
   void _dup();
   void _resize(unsigned int prec);
-
-  void _clear() {
-    if (quantity) {
-      assert(commodity_);
-      _release();
-      quantity   = NULL;
-      commodity_ = NULL;
-    } else {
-      assert(! commodity_);
-    }
-  }
+  void _clear();
 
   bigint_t *	quantity;
   commodity_t *	commodity_;
 
  public:
   // constructors
-  amount_t() : quantity(NULL), commodity_(NULL) {}
+  amount_t() : quantity(NULL), commodity_(NULL) {
+    TRACE_CTOR("amount_t()");
+  }
   amount_t(const amount_t& amt) : quantity(NULL) {
+    TRACE_CTOR("amount_t(copy)");
     if (amt.quantity)
       _copy(amt);
     else
       commodity_ = NULL;
   }
   amount_t(const std::string& value) : quantity(NULL) {
+    TRACE_CTOR("amount_t(const std::string&)");
     parse(value);
   }
   amount_t(const char * value) : quantity(NULL) {
+    TRACE_CTOR("amount_t(const char *)");
     parse(value);
   }
   amount_t(const bool value);
@@ -73,10 +69,12 @@ class amount_t
 
   // destructor
   ~amount_t() {
+    TRACE_DTOR("amount_t");
     if (quantity)
       _release();
   }
 
+  bool has_commodity() const;
   commodity_t& commodity() const;
   void set_commodity(commodity_t& comm) {
     commodity_ = &comm;
@@ -260,34 +258,14 @@ class amount_t
       negate();
   }
 
-#define AMOUNT_PARSE_NO_MIGRATE 0x01
-#define AMOUNT_PARSE_NO_REDUCE  0x02
-
-  void parse(std::istream& in, unsigned char flags = 0);
-  void parse(const std::string& str, unsigned char flags = 0);
   void reduce();
-
   amount_t reduced() const {
     amount_t temp(*this);
     temp.reduce();
     return temp;
   }
 
-  void read_quantity(char *& data);
-  void read_quantity(std::istream& in);
-  void write_quantity(std::ostream& out) const;
-
   bool valid() const;
-
-  // Classes that are friends, and help to implement this class
-
-  friend std::ostream& operator<<(std::ostream& out, const amount_t& amt);
-  friend std::istream& operator>>(std::istream& in, amount_t& amt);
-
-  friend unsigned int sizeof_bigint_t();
-
-  friend void read_binary_amount(char *& data, amount_t& amt);
-  friend void write_binary_amount(std::ostream& out, const amount_t& amt);
 
   // This function is special, and exists only to support a custom
   // optimization in binary.cc (which offers a significant enough gain
@@ -298,52 +276,44 @@ class amount_t
 
   friend void parse_annotations(std::istream& in, amount_t& price,
 				datetime_t& date, std::string& tag);
-};
 
-unsigned int sizeof_bigint_t();
+  // Streaming interface
 
-void parse_quantity(std::istream& in, std::string& value);
-void parse_commodity(std::istream& in, std::string& symbol);
-void parse_annotations(std::istream& in, const std::string& symbol,
-		       std::string& name, std::string& price,
-		       std::string& date, std::string& tag);
-void parse_conversion(const std::string& larger,
-		      const std::string& smaller);
-
-inline bool is_quote_or_paren(char * p) {
-  return *p == '"' || *p == '{' || *p == '[' || *p == '(';
-}
-
-inline char * scan_past_quotes_and_parens(char * expr)
-{
-  std::stack<char> paren_stack;
-
-  char * p;
-  for (p = expr; *p; p++) {
-    if (*p == '"' ||
-	((*p == '(' || ((*p == '{' || *p == '[') &&
-			paren_stack.top() != '(')) &&
-	 paren_stack.top() != '"')) {
-      paren_stack.push(*p);
-    }
-    else if ((*p == ')' && paren_stack.top() == '(') ||
-	     (*p == '}' && paren_stack.top() == '{') ||
-	     (*p == ']' && paren_stack.top() == '[') ||
-	     (*p == '"' && paren_stack.top() == '"')) {
-      paren_stack.pop();
-      if (paren_stack.size() == 0)
-	break;
-    }
+  void dump(std::ostream& out) const {
+    out << "AMOUNT(";
+    print(out);
+    out << ")";
   }
-  return p;
-}
+
+#define AMOUNT_PARSE_NO_MIGRATE 0x01
+#define AMOUNT_PARSE_NO_REDUCE  0x02
+
+  void print(std::ostream& out) const;
+  void parse(std::istream& in, unsigned char flags = 0);
+  void parse(const std::string& str, unsigned char flags = 0) {
+    std::istringstream stream(str);
+    parse(stream, flags);
+  }
+
+  void print_quantity(std::ostream& out) const;
+
+  void write(std::ostream& out) const;
+  void read(std::istream& in);
+  void read(char *& data);
+
+  void write_quantity(std::ostream& out) const;
+  void read_quantity(std::istream& in);
+  void read_quantity(char *& data);
+};
 
 inline amount_t abs(const amount_t& amt) {
   return amt < 0 ? amt.negated() : amt;
 }
 
-std::ostream& operator<<(std::ostream& out, const amount_t& amt);
-
+inline std::ostream& operator<<(std::ostream& out, const amount_t& amt) {
+  amt.print(out);
+  return out;
+}
 inline std::istream& operator>>(std::istream& in, amount_t& amt) {
   amt.parse(in);
   return in;
@@ -432,6 +402,8 @@ class commodity_base_t
 typedef std::map<const std::string, commodity_t *>  commodities_map;
 typedef std::pair<const std::string, commodity_t *> commodities_pair;
 
+typedef std::deque<commodity_t *> commodities_array;
+
 class commodity_t
 {
   friend class annotated_commodity_t;
@@ -439,10 +411,11 @@ class commodity_t
  public:
   // This map remembers all commodities that have been defined.
 
-  static commodities_map commodities;
-  static bool            commodities_sorted;
-  static commodity_t *   null_commodity;
-  static commodity_t *   default_commodity;
+  static commodities_map   commodities;
+  static commodities_array commodities_by_ident;
+  static bool		   commodities_sorted;
+  static commodity_t *	   null_commodity;
+  static commodity_t *	   default_commodity;
 
   static commodity_t * create(const std::string& symbol);
   static commodity_t * find(const std::string& name);
@@ -463,8 +436,12 @@ class commodity_t
   bool		     annotated;
 
  public:
-  explicit commodity_t() : base(NULL), annotated(false) {}
-  virtual ~commodity_t() {}
+  explicit commodity_t() : base(NULL), annotated(false) {
+    TRACE_CTOR("commodity_t()");
+  }
+  virtual ~commodity_t() {
+    TRACE_DTOR("commodity_t");
+  }
 
   operator bool() const {
     return this != null_commodity;
@@ -568,6 +545,7 @@ class annotated_commodity_t : public commodity_t
   std::string tag;
 
   explicit annotated_commodity_t() {
+    TRACE_CTOR("annotated_commodity_t()");
     annotated = true;
   }
 
@@ -597,8 +575,7 @@ class annotated_commodity_t : public commodity_t
   friend class amount_t;
 };
 
-inline std::ostream& operator<<(std::ostream& out,
-				const commodity_t& comm) {
+inline std::ostream& operator<<(std::ostream& out, const commodity_t& comm) {
   out << comm.symbol();
   return out;
 }
@@ -607,12 +584,21 @@ inline amount_t amount_t::round() const {
   return round(commodity().precision());
 }
 
+inline bool amount_t::has_commodity() const {
+  return commodity_ && commodity_ != commodity_t::null_commodity;
+}
+
 inline commodity_t& amount_t::commodity() const {
   if (! commodity_)
     return *commodity_t::null_commodity;
   else
     return *commodity_;
 }
+
+
+void parse_conversion(const std::string& larger_str,
+		      const std::string& smaller_str);
+
 
 class amount_error : public error {
  public:

@@ -5,9 +5,14 @@
 #include "balance.h"
 #include "error.h"
 
+#include <deque>
 #include <exception>
 
 namespace ledger {
+
+namespace xml {
+  class node_t;
+}
 
 // The following type is a polymorphous value type used solely for
 // performance reasons.  The alternative is to compute value
@@ -21,6 +26,8 @@ namespace ledger {
 class value_t
 {
  public:
+  typedef std::deque<value_t> sequence_t;
+
   char data[sizeof(balance_pair_t)];
 
   enum type_t {
@@ -29,57 +36,91 @@ class value_t
     DATETIME,
     AMOUNT,
     BALANCE,
-    BALANCE_PAIR
+    BALANCE_PAIR,
+    STRING,
+    XML_NODE,
+    POINTER,
+    SEQUENCE
   } type;
 
   value_t() {
+    TRACE_CTOR("value_t()");
     *((long *) data) = 0;
     type = INTEGER;
   }
 
   value_t(const value_t& value) : type(INTEGER) {
+    TRACE_CTOR("value_t(copy)");
     *this = value;
   }
   value_t(const bool value) {
+    TRACE_CTOR("value_t(const bool)");
     *((bool *) data) = value;
     type = BOOLEAN;
   }
   value_t(const long value) {
+    TRACE_CTOR("value_t(const long)");
     *((long *) data) = value;
     type = INTEGER;
   }
   value_t(const datetime_t value) {
+    TRACE_CTOR("value_t(const datetime_t)");
     *((datetime_t *) data) = value;
     type = DATETIME;
   }
   value_t(const unsigned long value) {
+    TRACE_CTOR("value_t(const unsigned long)");
     new((amount_t *) data) amount_t(value);
     type = AMOUNT;
   }
   value_t(const double value) {
+    TRACE_CTOR("value_t(const double)");
     new((amount_t *) data) amount_t(value);
     type = AMOUNT;
   }
-  value_t(const std::string& value) {
-    new((amount_t *) data) amount_t(value);
-    type = AMOUNT;
+  value_t(const std::string& value, bool literal = false) {
+    TRACE_CTOR("value_t(const std::string&, bool)");
+    if (literal) {
+      type = INTEGER;
+      set_string(value);
+    } else {
+      new((amount_t *) data) amount_t(value);
+      type = AMOUNT;
+    }
   }
   value_t(const char * value) {
+    TRACE_CTOR("value_t(const char *)");
     new((amount_t *) data) amount_t(value);
     type = AMOUNT;
   }
   value_t(const amount_t& value) {
+    TRACE_CTOR("value_t(const amount_t&)");
     new((amount_t *)data) amount_t(value);
     type = AMOUNT;
   }
   value_t(const balance_t& value) : type(INTEGER) {
+    TRACE_CTOR("value_t(const balance_t&)");
     *this = value;
   }
   value_t(const balance_pair_t& value) : type(INTEGER) {
+    TRACE_CTOR("value_t(const balance_pair_t&)");
     *this = value;
+  }
+  value_t(xml::node_t * xml_node) : type(INTEGER) { // gets set in =
+    TRACE_CTOR("value_t(xml::node_t *)");
+    *this = xml_node;
+  }
+  value_t(void * item) : type(INTEGER) { // gets set in =
+    TRACE_CTOR("value_t(void *)");
+    *this = item;
+  }
+  value_t(sequence_t * seq) : type(INTEGER) { // gets set in =
+    TRACE_CTOR("value_t(sequence_t *)");
+    *this = seq;
   }
 
   ~value_t() {
+    TRACE_DTOR("value_t");
     destroy();
   }
 
@@ -127,7 +168,7 @@ class value_t
     if (type == AMOUNT &&
 	(amount_t *) data == &value)
       return *this;
-    
+
     if (value.realzero()) {
       return *this = 0L;
     } else {
@@ -141,7 +182,7 @@ class value_t
     if (type == BALANCE &&
 	(balance_t *) data == &value)
       return *this;
-    
+
     if (value.realzero()) {
       return *this = 0L;
     }
@@ -159,7 +200,7 @@ class value_t
     if (type == BALANCE_PAIR &&
 	(balance_pair_t *) data == &value)
       return *this;
-    
+
     if (value.realzero()) {
       return *this = 0L;
     }
@@ -172,6 +213,94 @@ class value_t
       type = BALANCE_PAIR;
       return *this;
     }
+  }
+  value_t& operator=(xml::node_t * xml_node) {
+    assert(xml_node);
+    if (type == XML_NODE && *(xml::node_t **) data == xml_node)
+      return *this;
+
+    if (! xml_node) {
+      type = XML_NODE;
+      return *this = 0L;
+    }
+    else {
+      destroy();
+      *(xml::node_t **)data = xml_node;
+      type = XML_NODE;
+      return *this;
+    }
+  }
+  value_t& operator=(void * item) {
+    assert(item);
+    if (type == POINTER && *(void **) data == item)
+      return *this;
+
+    if (! item) {
+      type = POINTER;
+      return *this = 0L;
+    }
+    else {
+      destroy();
+      *(void **)data = item;
+      type = POINTER;
+      return *this;
+    }
+  }
+  value_t& operator=(sequence_t * seq) {
+    assert(seq);
+    if (type == SEQUENCE && *(sequence_t **) data == seq)
+      return *this;
+
+    if (! seq) {
+      type = SEQUENCE;
+      return *this = 0L;
+    }
+    else {
+      destroy();
+      *(sequence_t **)data = seq;
+      type = SEQUENCE;
+      return *this;
+    }
+  }
+
+  value_t& set_string(const std::string& str = "") {
+    if (type != STRING) {
+      destroy();
+      *(std::string **) data = new std::string(str);
+      type = STRING;
+    } else {
+      **(std::string **) data = str;
+    }
+    return *this;
+  }
+
+  bool		 to_boolean() const;
+  long		 to_integer() const;
+  datetime_t	 to_datetime() const;
+  amount_t	 to_amount() const;
+  balance_t	 to_balance() const;
+  balance_pair_t to_balance_pair() const;
+  std::string	 to_string() const;
+  xml::node_t *	 to_xml_node() const;
+  void *	 to_pointer() const;
+  sequence_t *	 to_sequence() const;
+
+  value_t& operator[](const int index) {
+    sequence_t * seq = to_sequence();
+    assert(seq);
+    return (*seq)[index];
+  }
+
+  void push_back(const value_t& value) {
+    sequence_t * seq = to_sequence();
+    assert(seq);
+    return seq->push_back(value);
+  }
+
+  std::size_t size() const {
+    sequence_t * seq = to_sequence();
+    assert(seq);
+    return seq->size();
   }
 
   value_t& operator+=(const value_t& value);
@@ -295,6 +424,12 @@ class value_t
       return ((balance_t *) data)->realzero();
     case BALANCE_PAIR:
       return ((balance_pair_t *) data)->realzero();
+    case STRING:
+      return ((std::string *) data)->empty();
+    case XML_NODE:
+    case POINTER:
+    case SEQUENCE:
+      return *(void **) data == NULL;
 
     default:
       assert(0);
@@ -324,8 +459,11 @@ class value_t
     return temp;
   }
 
-  void     round();
-  value_t  unround() const;
+  void    round();
+  value_t unround() const;
+
+  void write(std::ostream& out, const int first_width,
+	     const int latter_width = -1) const;
 };
 
 #define DEF_VALUE_AUX_OP(OP)					\
@@ -363,17 +501,23 @@ value_t::operator T() const
 {
   switch (type) {
   case BOOLEAN:
-    return *((bool *) data);
+    return *(bool *) data;
   case INTEGER:
-    return *((long *) data);
+    return *(long *) data;
   case DATETIME:
-    return *((datetime_t *) data);
+    return *(datetime_t *) data;
   case AMOUNT:
-    return *((amount_t *) data);
+    return *(amount_t *) data;
   case BALANCE:
-    return *((balance_t *) data);
-  case BALANCE_PAIR:
-    return *((balance_pair_t *) data);
+    return *(balance_t *) data;
+  case STRING:
+    return **(std::string **) data;
+  case XML_NODE:
+    return *(xml::node_t **) data;
+  case POINTER:
+    return *(void **) data;
+  case SEQUENCE:
+    return *(sequence_t **) data;
 
   default:
     assert(0);
@@ -383,9 +527,11 @@ value_t::operator T() const
   return 0;
 }
 
+template <> value_t::operator bool() const;
 template <> value_t::operator long() const;
 template <> value_t::operator datetime_t() const;
 template <> value_t::operator double() const;
+template <> value_t::operator std::string() const;
 
 inline value_t abs(const value_t& value) {
   value_t temp(value);
@@ -393,33 +539,7 @@ inline value_t abs(const value_t& value) {
   return temp;
 }
 
-inline std::ostream& operator<<(std::ostream& out, const value_t& value) {
-  switch (value.type) {
-  case value_t::BOOLEAN:
-    out << (*((bool *) value.data) ? "true" : "false");
-    break;
-  case value_t::INTEGER:
-    out << *((long *) value.data);
-    break;
-  case value_t::DATETIME:
-    out << *((datetime_t *) value.data);
-    break;
-  case value_t::AMOUNT:
-    out << *((amount_t *) value.data);
-    break;
-  case value_t::BALANCE:
-    out << *((balance_t *) value.data);
-    break;
-  case value_t::BALANCE_PAIR:
-    out << *((balance_pair_t *) value.data);
-    break;
-
-  default:
-    assert(0);
-    break;
-  }
-  return out;
-}
+std::ostream& operator<<(std::ostream& out, const value_t& value);
 
 class value_context : public error_context
 {

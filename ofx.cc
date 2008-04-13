@@ -1,3 +1,6 @@
+#ifdef USE_PCH
+#include "pch.h"
+#else
 #include "journal.h"
 #include "ofx.h"
 #include "format.h"
@@ -7,6 +10,7 @@
 #include "util.h"
 
 #include <libofx.h>
+#endif
 
 namespace ledger {
 
@@ -116,8 +120,10 @@ int ofx_proc_transaction_cb(struct OfxTransactionData data,
 
   if (! curr_journal->add_entry(entry)) {
     print_entry(std::cerr, *entry);
+#if 0
     // jww (2005-02-09): uncomment
-    //have_error = "The above entry does not balance";
+    have_error = "The above entry does not balance";
+#endif
     delete entry;
     return -1;
   }
@@ -195,7 +201,6 @@ bool ofx_parser_t::test(std::istream& in) const
 }
 
 unsigned int ofx_parser_t::parse(std::istream&	     in,
-				 config_t&           config,
 				 journal_t *	     journal,
 				 account_t *	     master,
 				 const std::string * original_file)

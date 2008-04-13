@@ -1,3 +1,6 @@
+#ifdef USE_PCH
+#include "pch.h"
+#else
 #include "xml.h"
 #include "journal.h"
 #include "datetime.h"
@@ -6,170 +9,299 @@
 #include <iostream>
 #include <sstream>
 #include <cstring>
-
-extern "C" {
-#if defined(HAVE_EXPAT)
-#include <expat.h>           // expat XML parser
-#elif defined(HAVE_XMLPARSE)
-#include <xmlparse.h>        // expat XML parser
 #endif
-}
 
 namespace ledger {
+namespace xml {
+
+document_t::document_t(node_t * _top, const char ** _builtins,
+		       const int _builtins_size)
+  : builtins(_builtins), builtins_size(_builtins_size),
+    top(new terminal_node_t(this)) {}
+
+int document_t::register_name(const std::string& name)
+{
+  int index = lookup_name_id(name);
+  if (index != -1)
+    return index;
+
+  names.push_back(name);
+  index = names.size() - 1;
+
+  DEBUG_PRINT("xml.lookup", this << " Inserting name: " << names.back());
+
+  std::pair<names_map::iterator, bool> result =
+    names_index.insert(names_pair(names.back(), index));
+  assert(result.second);
+
+  return index + 1000;
+}
+
+int document_t::lookup_name_id(const std::string& name) const
+{
+  if (builtins) {
+    int first = 0;
+    int last  = builtins_size;
+    while (first <= last) {
+      int mid = (first + last) / 2; // compute mid point.
+
+      int result;
+      if ((result = (int)name[0] - (int)builtins[mid][0]) == 0)
+	result = std::strcmp(name.c_str(), builtins[mid]);
+
+      if (result > 0)
+	first = mid + 1;		// repeat search in top half.
+      else if (result < 0)
+	last = mid - 1;		// repeat search in bottom half.
+      else
+	return mid;
+    }
+  }
+
+  DEBUG_PRINT("xml.lookup", this << " Finding name: " << name);
+
+  names_map::const_iterator i = names_index.find(name);
+  if (i != names_index.end())
+    return (*i).second + 1000;
+
+  return -1;
+}
+
+const char * document_t::lookup_name(int id) const
+{
+  if (id < 1000) {
+    switch (id) {
+    case CURRENT:
+      return "CURRENT";
+    case PARENT:
+      return "PARENT";
+    case ROOT:
+      return "ROOT";
+    case ALL:
+      return "ALL";
+    default:
+      assert(id >= 10);
+      assert(builtins);
+      return builtins[id - 10];
+    }
+  } else {
+    return names[id - 1000].c_str();
+  }
+}
+
+void document_t::write(std::ostream& out) const
+{
+  if (top) {
+    out << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+    top->write(out);
+  }
+}
+
+#ifndef THREADSAFE
+document_t * node_t::document;
+#endif
+
+node_t::node_t(document_t * _document, parent_node_t * _parent,
+	       unsigned int _flags)
+  : name_id(-1),
+    parent(_parent),
+    next(NULL), prev(NULL), flags(_flags), info(NULL), attrs(NULL)
+{
+  TRACE_CTOR("node_t(document_t *, node_t *)");
+#ifdef THREADSAFE
+  document = _document;
+#else
+  if (! document)
+    document = _document;
+#if 0
+  else
+    assert(document == _document);
+#endif
+#endif
+  if (parent)
+    parent->add_child(this);
+}
+
+void node_t::extract()
+{
+  if (prev)
+    prev->next = next;
+
+  if (parent) {
+    if (parent->_children == this)
+      parent->_children = next;
+
+    if (parent->_last_child == this)
+      parent->_last_child = prev;
+
+    parent = NULL;
+  }
+
+  if (next)
+    next->prev = prev;
+
+  next = NULL;
+  prev = NULL;
+}
+
+void parent_node_t::clear()
+{
+  node_t * child = _children;
+  while (child) {
+    node_t * next = child->next;
+    delete child;
+    child = next;
+  }
+}
+
+void parent_node_t::add_child(node_t * node)
+{
+  // It is important that this node is not called before children(),
+  // otherwise, this node will not get auto-populated.
+  if (_children == NULL) {
+    assert(_last_child == NULL);
+    _children = node;
+    node->prev = NULL;
+  } else {
+    assert(_last_child != NULL);
+    _last_child->next = node;
+    node->prev = _last_child;
+  }
+
+  node->parent = this;
+
+  while (node->next) {
+    node_t * next_node = node->next;
+    assert(next_node->prev == node);
+    next_node->parent = this;
+    node = next_node;
+  }
+
+  _last_child = node;
+}
+
+void parent_node_t::write(std::ostream& out, int depth) const
+{
+  for (int i = 0; i < depth; i++) out << "  ";
+  out << '<' << name() << ">\n";
+
+  for (node_t * child = children(); child; child = child->next)
+    child->write(out, depth + 1);
+
+  for (int i = 0; i < depth; i++) out << "  ";
+  out << "</" << name() << ">\n";
+}
+
+void terminal_node_t::write(std::ostream& out, int depth) const
+{
+  for (int i = 0; i < depth; i++) out << "  ";
+
+  if (data.empty()) {
+    out << '<' << name() << " />\n";
+  } else {
+    out << '<' << name() << ">"
+	<< text()
+	<< "</" << name() << ">\n";
+  }
+}
 
 #if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
 
-static XML_Parser    current_parser;
-static unsigned int  count;
+template <typename T>
+inline T * create_node(parser_t * parser)
+{
+  T * node = new T(parser->document, parser->node_stack.empty() ?
+		   NULL : parser->node_stack.front());
 
-static journal_t *   curr_journal;
-static entry_t *     curr_entry;
-static commodity_t * curr_comm;
-static std::string   comm_flags;
+  node->set_name(parser->pending);
+  node->attrs = parser->pending_attrs;
 
-static transaction_t::state_t curr_state;
+  parser->pending	= NULL;
+  parser->pending_attrs = NULL;
 
-static std::string   data;
-static bool          ignore;
-static std::string   have_error;
+  return node;
+}
 
 static void startElement(void *userData, const char *name, const char **attrs)
 {
-  if (ignore)
-    return;
+  parser_t * parser = static_cast<parser_t *>(userData);
 
-  if (std::strcmp(name, "entry") == 0) {
-    assert(! curr_entry);
-    curr_entry = new entry_t;
-    curr_state = transaction_t::UNCLEARED;
+  DEBUG_PRINT("xml.parse", "startElement(" << name << ")");
+
+  if (parser->pending) {
+    parent_node_t * node = create_node<parent_node_t>(parser);
+    if (parser->node_stack.empty())
+      parser->document->top = node;
+    parser->node_stack.push_front(node);
   }
-  else if (std::strcmp(name, "transaction") == 0) {
-    assert(curr_entry);
-    curr_entry->add_transaction(new transaction_t);
-    if (curr_state != transaction_t::UNCLEARED)
-      curr_entry->transactions.back()->state = curr_state;
-  }
-  else if (std::strcmp(name, "commodity") == 0) {
-    if (std::string(attrs[0]) == "flags")
-      comm_flags = attrs[1];
-  }
-  else if (std::strcmp(name, "total") == 0) {
-    ignore = true;
+
+  parser->pending = name;
+
+  if (attrs) {
+    for (const char ** p = attrs; *p; p += 2) {
+      if (! parser->pending_attrs)
+	parser->pending_attrs = new node_t::attrs_map;
+
+      std::pair<node_t::attrs_map::iterator, bool> result
+	= parser->pending_attrs->insert(node_t::attrs_pair(*p, *(p + 1)));
+      assert(result.second);
+    }
   }
 }
 
 static void endElement(void *userData, const char *name)
 {
-  if (ignore) {
-    if (std::strcmp(name, "total") == 0)
-      ignore = false;
-    return;
-  }
+  parser_t * parser = static_cast<parser_t *>(userData);
 
-  if (std::strcmp(name, "entry") == 0) {
-    assert(curr_entry);
-    if (curr_journal->add_entry(curr_entry)) {
-      count++;
-    } else {
-      account_t * acct = curr_journal->find_account("<Unknown>");
-      curr_entry->add_transaction(new transaction_t(acct));
-      if (curr_journal->add_entry(curr_entry)) {
-	count++;
-      } else {
-	delete curr_entry;
-	have_error = "Entry cannot be balanced";
-      }
-    }
-    curr_entry = NULL;
-  }
-  else if (std::strcmp(name, "en:date") == 0) {
-    curr_entry->_date = data;
-  }
-  else if (std::strcmp(name, "en:date_eff") == 0) {
-    curr_entry->_date_eff = data;
-  }
-  else if (std::strcmp(name, "en:code") == 0) {
-    curr_entry->code = data;
-  }
-  else if (std::strcmp(name, "en:cleared") == 0) {
-    curr_state = transaction_t::CLEARED;
-  }
-  else if (std::strcmp(name, "en:pending") == 0) {
-    curr_state = transaction_t::PENDING;
-  }
-  else if (std::strcmp(name, "en:payee") == 0) {
-    curr_entry->payee = data;
-  }
-  else if (std::strcmp(name, "tr:account") == 0) {
-    curr_entry->transactions.back()->account = curr_journal->find_account(data);
-  }
-  else if (std::strcmp(name, "tr:cleared") == 0) {
-    curr_entry->transactions.back()->state = transaction_t::CLEARED;
-  }
-  else if (std::strcmp(name, "tr:pending") == 0) {
-    curr_entry->transactions.back()->state = transaction_t::PENDING;
-  }
-  else if (std::strcmp(name, "tr:virtual") == 0) {
-    curr_entry->transactions.back()->flags |= TRANSACTION_VIRTUAL;
-  }
-  else if (std::strcmp(name, "tr:generated") == 0) {
-    curr_entry->transactions.back()->flags |= TRANSACTION_AUTO;
-  }
-  else if (std::strcmp(name, "symbol") == 0) {
-    assert(! curr_comm);
-    curr_comm = commodity_t::find_or_create(data);
-    assert(curr_comm);
-    curr_comm->add_flags(COMMODITY_STYLE_SUFFIXED);
-    if (! comm_flags.empty()) {
-      for (std::string::size_type i = 0, l = comm_flags.length(); i < l; i++) {
-	switch (comm_flags[i]) {
-	case 'P': curr_comm->drop_flags(COMMODITY_STYLE_SUFFIXED); break;
-	case 'S': curr_comm->add_flags(COMMODITY_STYLE_SEPARATED); break;
-	case 'T': curr_comm->add_flags(COMMODITY_STYLE_THOUSANDS); break;
-	case 'E': curr_comm->add_flags(COMMODITY_STYLE_EUROPEAN); break;
-	}
-      }
+  DEBUG_PRINT("xml.parse", "endElement(" << name << ")");
+
+  if (parser->pending) {
+    terminal_node_t * node = create_node<terminal_node_t>(parser);
+    if (parser->node_stack.empty()) {
+      parser->document->top = node;
+      return;
     }
   }
-#if 0
-  // jww (2006-03-02): !!!
-  else if (std::strcmp(name, "price") == 0) {
-    assert(curr_comm);
-    amount_t * price = new amount_t(data);
-    std::ostringstream symstr;
-    symstr << curr_comm->symbol << " {" << *price << "}";
-    commodity_t * priced_comm =
-      commodity_t::find_commodity(symstr.str(), true);
-    priced_comm->price = price;
-    priced_comm->base = curr_comm;
-    curr_comm = priced_comm;
+  else if (! parser->handled_data) {
+    assert(! parser->node_stack.empty());
+    parser->node_stack.pop_front();
   }
-#endif
-  else if (std::strcmp(name, "quantity") == 0) {
-    curr_entry->transactions.back()->amount.parse(data);
-    if (curr_comm) {
-      std::string::size_type i = data.find('.');
-      if (i != std::string::npos) {
-	int precision = data.length() - i - 1;
-	if (precision > curr_comm->precision())
-	  curr_comm->set_precision(precision);
-      }
-      curr_entry->transactions.back()->amount.set_commodity(*curr_comm);
-      curr_comm = NULL;
-    }
-  }
-  else if (std::strcmp(name, "tr:amount") == 0) {
-    curr_comm = NULL;
+  else {
+    parser->handled_data = false;
   }
 }
 
 static void dataHandler(void *userData, const char *s, int len)
 {
-  if (! ignore)
-    data = std::string(s, len);
+  parser_t * parser = static_cast<parser_t *>(userData);
+
+  DEBUG_PRINT("xml.parse", "dataHandler(" << std::string(s, len) << ")");
+
+  bool all_whitespace = true;
+  for (int i = 0; i < len; i++) {
+    if (! std::isspace(s[i])) {
+      all_whitespace = false;
+      break;
+    }
+  }
+
+  // jww (2006-09-28): I currently do not support text nodes within a
+  // node that has children.
+
+  if (! all_whitespace) {
+    terminal_node_t * node = create_node<terminal_node_t>(parser);
+
+    node->set_text(std::string(s, len));
+    parser->handled_data = true;
+
+    if (parser->node_stack.empty()) {
+      parser->document->top = node;
+      return;
+    }
+  }
 }
 
-bool xml_parser_t::test(std::istream& in) const
+bool parser_t::test(std::istream& in) const
 {
   char buf[80];
 
@@ -180,39 +312,26 @@ bool xml_parser_t::test(std::istream& in) const
     return false;
   }
 
-  in.getline(buf, 79);
-  if (! std::strstr(buf, "<ledger")) {
-    in.clear();
-    in.seekg(0, std::ios::beg);
-    return false;
-  }
-
   in.clear();
   in.seekg(0, std::ios::beg);
   return true;
 }
 
-unsigned int xml_parser_t::parse(std::istream&	     in,
-				 config_t&           config,
-				 journal_t *	     journal,
-				 account_t *	     master,
-				 const std::string * original_file)
+document_t * parser_t::parse(std::istream& in, const char ** builtins,
+			     const int builtins_size)
 {
-  char buf[BUFSIZ];
+  std::auto_ptr<document_t> doc(new document_t(NULL, builtins, builtins_size));
 
-  count        = 0;
-  curr_journal = journal;
-  curr_entry   = NULL;
-  curr_comm    = NULL;
-  ignore       = false;
+  document = doc.get();
 
   unsigned int offset = 2;
-  XML_Parser   parser = XML_ParserCreate(NULL);
-  current_parser = parser;
+  parser = XML_ParserCreate(NULL);
 
   XML_SetElementHandler(parser, startElement, endElement);
   XML_SetCharacterDataHandler(parser, dataHandler);
+  XML_SetUserData(parser, this);
 
+  char buf[BUFSIZ];
   while (! in.eof()) {
     in.getline(buf, BUFSIZ - 1);
     std::strcat(buf, "\n");
@@ -243,109 +362,90 @@ unsigned int xml_parser_t::parse(std::istream&	     in,
 
   XML_ParserFree(parser);
 
-  return count;
+  document = NULL;
+  return doc.release();
+}
+
+node_t * transaction_node_t::children() const
+{
+  if (! _children) {
+    terminal_node_t * account_node =
+      new terminal_node_t(document, const_cast<transaction_node_t *>(this));
+    account_node->set_name("account");
+    account_node->set_text(transaction->account->fullname());
+  }
+  return parent_node_t::children();
+}
+
+node_t * entry_node_t::children() const
+{
+  if (! _children) {
+    if (! entry->code.empty()) {
+      terminal_node_t * code_node =
+	new terminal_node_t(document, const_cast<entry_node_t *>(this));
+      code_node->set_name("code");
+      code_node->set_text(entry->code);
+    }
+
+    if (! entry->payee.empty()) {
+      terminal_node_t * payee_node =
+	new terminal_node_t(document, const_cast<entry_node_t *>(this));
+      payee_node->set_name("payee");
+      payee_node->set_text(entry->payee);
+    }
+
+    for (transactions_list::iterator i = entry->transactions.begin();
+	 i != entry->transactions.end();
+	 i++)
+      new transaction_node_t(document, *i, const_cast<entry_node_t *>(this));
+  }
+  return parent_node_t::children();
+}
+
+node_t * account_node_t::children() const
+{
+  if (! _children) {
+    if (! account->name.empty()) {
+      terminal_node_t * name_node =
+	new terminal_node_t(document, const_cast<account_node_t *>(this));
+      name_node->set_name("name");
+      name_node->set_text(account->name);
+    }
+
+    if (! account->note.empty()) {
+      terminal_node_t * note_node =
+	new terminal_node_t(document, const_cast<account_node_t *>(this));
+      note_node->set_name("note");
+      note_node->set_text(account->note);
+    }
+
+    for (accounts_map::iterator i = account->accounts.begin();
+	 i != account->accounts.end();
+	 i++)
+      new account_node_t(document, (*i).second, const_cast<account_node_t *>(this));
+  }
+  return parent_node_t::children();
+}
+
+node_t * journal_node_t::children() const
+{
+  if (! _children) {
+    account_node_t * master_account =
+      new account_node_t(document, journal->master, const_cast<journal_node_t *>(this));
+
+    parent_node_t * entries =
+      new parent_node_t(document, const_cast<journal_node_t *>(this));
+    entries->set_name("entries");
+
+    for (entries_list::iterator i = journal->entries.begin();
+	 i != journal->entries.end();
+	 i++)
+      new entry_node_t(document, *i, const_cast<journal_node_t *>(this));
+  }
+  return parent_node_t::children();
 }
 
 #endif // defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
-
-void xml_write_amount(std::ostream& out, const amount_t& amount,
-		      const int depth = 0)
-{
-  for (int i = 0; i < depth; i++) out << ' ';
-  out << "<amount>\n";
-
-  commodity_t& c = amount.commodity();
-  for (int i = 0; i < depth + 2; i++) out << ' ';
-  out << "<commodity flags=\"";
-  if (! (c.flags() & COMMODITY_STYLE_SUFFIXED)) out << 'P';
-  if (c.flags() & COMMODITY_STYLE_SEPARATED)    out << 'S';
-  if (c.flags() & COMMODITY_STYLE_THOUSANDS)    out << 'T';
-  if (c.flags() & COMMODITY_STYLE_EUROPEAN)     out << 'E';
-  out << "\">\n";
-  for (int i = 0; i < depth + 4; i++) out << ' ';
-#if 0
-  // jww (2006-03-02): !!!
-  if (c.price) {
-    out << "<symbol>" << c.base->symbol << "</symbol>\n";
-    for (int i = 0; i < depth + 4; i++) out << ' ';
-    out << "<price>\n";
-    xml_write_amount(out, *c.price, depth + 6);
-    for (int i = 0; i < depth + 4; i++) out << ' ';
-    out << "</price>\n";
-  } else {
-    out << "<symbol>" << c.symbol << "</symbol>\n";
-  }
-#endif
-  for (int i = 0; i < depth + 2; i++) out << ' ';
-  out << "</commodity>\n";
-
-  for (int i = 0; i < depth + 2; i++) out << ' ';
-  out << "<quantity>";
-  out << amount.quantity_string() << "</quantity>\n";
-
-  for (int i = 0; i < depth; i++) out << ' ';
-  out << "</amount>\n";
-}
-
-void xml_write_value(std::ostream& out, const value_t& value,
-		     const int depth = 0)
-{
-  balance_t * bal = NULL;
-
-  for (int i = 0; i < depth; i++) out << ' ';
-  out << "<value type=\"";
-  switch (value.type) {
-  case value_t::BOOLEAN: out << "boolean"; break;
-  case value_t::INTEGER: out << "integer"; break;
-  case value_t::AMOUNT: out << "amount"; break;
-  case value_t::BALANCE:
-  case value_t::BALANCE_PAIR: out << "balance"; break;
-  }
-  out << "\">\n";
-
-  switch (value.type) {
-  case value_t::BOOLEAN:
-    for (int i = 0; i < depth + 2; i++) out << ' ';
-    out << "<boolean>" << *((bool *) value.data) << "</boolean>\n";
-    break;
-
-  case value_t::INTEGER:
-    for (int i = 0; i < depth + 2; i++) out << ' ';
-    out << "<integer>" << *((long *) value.data) << "</integer>\n";
-    break;
-
-  case value_t::AMOUNT:
-    xml_write_amount(out, *((amount_t *) value.data), depth + 2);
-    break;
-
-  case value_t::BALANCE:
-    bal = (balance_t *) value.data;
-    // fall through...
-
-  case value_t::BALANCE_PAIR:
-    if (! bal)
-      bal = &((balance_pair_t *) value.data)->quantity;
-
-    for (int i = 0; i < depth + 2; i++) out << ' ';
-    out << "<balance>\n";
-
-    for (amounts_map::const_iterator i = bal->amounts.begin();
-	 i != bal->amounts.end();
-	 i++)
-      xml_write_amount(out, (*i).second, depth + 4);
-
-    for (int i = 0; i < depth + 2; i++) out << ' ';
-    out << "</balance>\n";
-    break;
-
-  default:
-    assert(0);
-    break;
-  }
-
-  for (int i = 0; i < depth; i++) out << ' ';
-  out << "</value>\n";
-}
 
 void output_xml_string(std::ostream& out, const std::string& str)
 {
@@ -367,110 +467,5 @@ void output_xml_string(std::ostream& out, const std::string& str)
   }
 }
 
-void format_xml_entries::format_last_entry()
-{
-  output_stream << "  <entry>\n"
-		<< "    <en:date>" << last_entry->_date.to_string("%Y/%m/%d")
-		<< "</en:date>\n";
-
-  if (last_entry->_date_eff)
-    output_stream << "    <en:date_eff>"
-		  << last_entry->_date_eff.to_string("%Y/%m/%d")
-		  << "</en:date_eff>\n";
-
-  if (! last_entry->code.empty()) {
-    output_stream << "    <en:code>";
-    output_xml_string(output_stream, last_entry->code);
-    output_stream << "</en:code>\n";
-  }
-
-  if (! last_entry->payee.empty()) {
-    output_stream << "    <en:payee>";
-    output_xml_string(output_stream, last_entry->payee);
-    output_stream << "</en:payee>\n";
-  }
-
-  bool first = true;
-  for (transactions_list::const_iterator i = last_entry->transactions.begin();
-       i != last_entry->transactions.end();
-       i++) {
-    if (transaction_has_xdata(**i) &&
-	transaction_xdata_(**i).dflags & TRANSACTION_TO_DISPLAY) {
-      if (first) {
-	output_stream << "    <en:transactions>\n";
-	first = false;
-      }
-
-      output_stream << "      <transaction>\n";
-
-      if ((*i)->_date)
-	output_stream << "        <tr:date>"
-		      << (*i)->_date.to_string("%Y/%m/%d")
-		      << "</tr:date>\n";
-
-      if ((*i)->_date_eff)
-	output_stream << "        <tr:date_eff>"
-		      << (*i)->_date_eff.to_string("%Y/%m/%d")
-		      << "</tr:date_eff>\n";
-
-      if ((*i)->state == transaction_t::CLEARED)
-	output_stream << "        <tr:cleared/>\n";
-      else if ((*i)->state == transaction_t::PENDING)
-	output_stream << "        <tr:pending/>\n";
-
-      if ((*i)->flags & TRANSACTION_VIRTUAL)
-	output_stream << "        <tr:virtual/>\n";
-      if ((*i)->flags & TRANSACTION_AUTO)
-	output_stream << "        <tr:generated/>\n";
-
-      if ((*i)->account) {
-	std::string name = (*i)->account->fullname();
-	if (name == "<Total>")
-	  name = "[TOTAL]";
-	else if (name == "<Unknown>")
-	  name = "[UNKNOWN]";
-
-	output_stream << "        <tr:account>";
-	output_xml_string(output_stream, name);
-	output_stream << "</tr:account>\n";
-      }
-
-      output_stream << "        <tr:amount>\n";
-      if (transaction_xdata_(**i).dflags & TRANSACTION_COMPOUND)
-	xml_write_value(output_stream,
-			transaction_xdata_(**i).value, 10);
-      else
-	xml_write_value(output_stream, value_t((*i)->amount), 10);
-      output_stream << "        </tr:amount>\n";
-
-      if ((*i)->cost) {
-	output_stream << "        <tr:cost>\n";
-	xml_write_value(output_stream, value_t(*(*i)->cost), 10);
-	output_stream << "        </tr:cost>\n";
-      }
-
-      if (! (*i)->note.empty()) {
-	output_stream << "        <tr:note>";
-	output_xml_string(output_stream, (*i)->note);
-	output_stream << "</tr:note>\n";
-      }
-
-      if (show_totals) {
-	output_stream << "        <total>\n";
-	xml_write_value(output_stream, transaction_xdata_(**i).total, 10);
-	output_stream << "        </total>\n";
-      }
-
-      output_stream << "      </transaction>\n";
-
-      transaction_xdata_(**i).dflags |= TRANSACTION_DISPLAYED;
-    }
-  }
-
-  if (! first)
-    output_stream << "    </en:transactions>\n";
-
-  output_stream << "  </entry>\n";
-}
-
+} // namespace xml
 } // namespace ledger

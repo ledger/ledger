@@ -1,78 +1,142 @@
 #ifndef _REPORT_H
 #define _REPORT_H
 
-#include "ledger.h"
-#include "timing.h"
+#include "session.h"
+#include "transform.h"
 
-#include <iostream>
-#include <memory>
+#include <string>
 #include <list>
 
 namespace ledger {
 
-class report_t
+typedef std::list<std::string> strings_list;
+
+class report_t : public xml::xpath_t::scope_t
 {
  public:
   std::string output_file;
-  std::string predicate;
-  std::string secondary_predicate;
-  std::string display_predicate;
-  std::string report_period;
-  std::string report_period_sort;
   std::string format_string;
-  std::string sort_string;
   std::string amount_expr;
   std::string total_expr;
-  std::string descend_expr;
-  std::string forecast_limit;
-  std::string reconcile_balance;
-  std::string reconcile_date;
   std::string date_output_format;
 
   unsigned long budget_flags;
 
-  int head_entries;
-  int tail_entries;
+  std::string account;
+  std::string pager;
 
-  bool show_collapsed;
-  bool show_subtotal;
   bool show_totals;
-  bool show_related;
-  bool show_all_related;
-  bool show_inverted;
-  bool show_empty;
-  bool days_of_the_week;
-  bool by_payee;
-  bool comm_as_payee;
-  bool code_as_payee;
-  bool show_revalued;
-  bool show_revalued_only;
-  bool keep_price;
-  bool keep_date;
-  bool keep_tag;
-  bool entry_sort;
-  bool sort_all;
+  bool raw_mode;
 
-  report_t();
+  session_t *   session;
+  transform_t * last_transform;
 
-  void regexps_to_predicate(const std::string& command,
-			    std::list<std::string>::const_iterator begin,
-			    std::list<std::string>::const_iterator end,
-			    const bool account_regexp	       = false,
-			    const bool add_account_short_masks = false,
-			    const bool logical_and             = true);
+  std::list<transform_t *> transforms;
 
-  void process_options(const std::string&     command,
-		       strings_list::iterator arg,
-		       strings_list::iterator args_end);
+  report_t(session_t * _session)
+    : xml::xpath_t::scope_t(_session),
+      show_totals(false),
+      raw_mode(false),
+      session(_session),
+      last_transform(NULL)
+  {
+    eval("t=total,TOT=0,T()=(TOT=TOT+t,TOT)");
+  }
 
-  item_handler<transaction_t> *
-  chain_xact_handlers(const std::string& command,
-		      item_handler<transaction_t> * base_formatter,
-		      journal_t * journal,
-		      account_t * master,
-		      std::list<item_handler<transaction_t> *>& ptrs);
+  virtual ~report_t();
+
+  void apply_transforms(xml::document_t * document);
+
+  //
+  // Utility functions for value expressions
+  //
+
+  void ftime(value_t& result, xml::xpath_t::scope_t * locals);
+  void abbrev(value_t& result, xml::xpath_t::scope_t * locals);
+
+  //
+  // Config options
+  //
+
+  void eval(const std::string& expr) {
+    xml::xpath_t(expr).compile((xml::document_t *)NULL, this);
+  }
+  void option_eval(value_t&, xml::xpath_t::scope_t * locals) {
+    eval(locals->args[0].to_string());
+  }
+
+  void option_amount(value_t&, xml::xpath_t::scope_t * locals) {
+    eval(std::string("t=") + locals->args[0].to_string());
+  }
+  void option_total(value_t&, xml::xpath_t::scope_t * locals) {
+    eval(std::string("T()=") + locals->args[0].to_string());
+  }
+
+  void option_format(value_t&, xml::xpath_t::scope_t * locals) {
+    format_string = locals->args[0].to_string();
+  }
+
+  void option_raw(value_t&) {
+    raw_mode = true;
+  }
+
+  void option_foo(value_t&) {
+    std::cout << "This is foo" << std::endl;
+  }
+  void option_bar(value_t&, xml::xpath_t::scope_t * locals) {
+    std::cout << "This is bar: " << locals->args[0] << std::endl;
+  }
+
+  //
+  // Transform options
+  //
+
+#if 0
+  void option_select(value_t&, xml::xpath_t::scope_t * locals) {
+    transforms.push_back(new select_transform(locals->args[0].to_string()));
+  }
+  void option_limit(value_t&, xml::xpath_t::scope_t * locals) {
+    std::string expr = (std::string("//xact[") +
+			locals->args[0].to_string() + "]");
+    transforms.push_back(new select_transform(expr));
+  }
+
+  void option_remove(value_t&, xml::xpath_t::scope_t * locals) {
+    transforms.push_back(new remove_transform(locals->args[0].to_string()));
+  }
+
+  void option_accounts(value_t&) {
+    transforms.push_back(new accounts_transform);
+  }
+  void option_compact(value_t&) {
+    transforms.push_back(new compact_transform);
+  }
+  void option_clean(value_t&) {
+    transforms.push_back(new clean_transform);
+  }
+  void option_entries(value_t&) {
+    transforms.push_back(new entries_transform);
+  }
+
+  void option_split(value_t&) {
+    transforms.push_back(new split_transform);
+  }
+  void option_merge(value_t&) {
+    transforms.push_back(new merge_transform);
+  }
+#endif
+
+  //
+  // Scope members
+  //
+
+  virtual bool resolve(const std::string& name, value_t& result,
+		       xml::xpath_t::scope_t * locals);
+  virtual xml::xpath_t::op_t * lookup(const std::string& name);
 };
+
+std::string abbrev(const std::string& str, unsigned int width,
+		   const bool is_account);
 
 } // namespace ledger
 

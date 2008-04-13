@@ -59,4 +59,41 @@ inline char peek_next_nonws(std::istream& in) {
   *_p = '\0';								\
 }
 
+#define READ_INTO_(str, targ, size, var, idx, cond) {			\
+  char * _p = targ;							\
+  var = str.peek();							\
+  while (! str.eof() && var != '\n' && (cond) && _p - targ < size) {	\
+    str.get(var);							\
+    if (str.eof())							\
+      break;								\
+    idx++;								\
+    if (var == '\\') {							\
+      str.get(var);							\
+      if (in.eof())							\
+	break;								\
+      idx++;								\
+    }									\
+    *_p++ = var;							\
+    var = str.peek();							\
+  }									\
+  *_p = '\0';								\
+}
+
+std::string resolve_path(const std::string& path);
+
+#ifdef HAVE_REALPATH
+extern "C" char *realpath(const char *, char resolved_path[]);
+#endif
+
+enum elision_style_t {
+  TRUNCATE_TRAILING,
+  TRUNCATE_MIDDLE,
+  TRUNCATE_LEADING,
+  ABBREVIATE
+};
+
+std::string abbreviate(const std::string& str, unsigned int width,
+		       elision_style_t elision_style = TRUNCATE_TRAILING,
+		       const bool is_account = false, int abbrev_length = 2);
+
 #endif // _UTIL_H

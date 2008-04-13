@@ -1,3 +1,6 @@
+#ifdef USE_PCH
+#include "pch.h"
+#else
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -9,6 +12,7 @@
 #include <cstdlib>
 #include <cstring>
 
+#include "option.h"
 #include "acconf.h"
 
 #ifdef HAVE_UNIX_PIPES
@@ -18,202 +22,184 @@
 #include "fdstream.hpp"
 #endif
 
+#ifdef USE_BOOST_PYTHON
+#include "pyledger.h"
+#else
 #include "ledger.h"
+#endif
+#include "debug.h"
+#endif
 
 using namespace ledger;
 
-int parse_and_report(config_t& config, report_t& report,
-		     int argc, char * argv[], char * envp[])
+static inline
+const std::string& either_or(const std::string& first,
+			     const std::string& second)
 {
-  // Configure the terminus for value expressions
+  if (first.empty())
+    return second;
+  else
+    return first;
+}
 
-  ledger::terminus = datetime_t::now;
+#if 0
+class print_addr : public repitem_t::select_callback_t {
+  virtual void operator()(repitem_t * item) {
+    std::cout << item << std::endl;
+  }
+};
+#endif
 
-  // Parse command-line arguments, and those set in the environment
+static int read_and_report(report_t * report, int argc, char * argv[],
+			    char * envp[])
+{
+  session_t& session(*report->session);
+
+  // Handle the command-line arguments
 
   std::list<std::string> args;
-  process_arguments(ledger::config_options, argc - 1, argv + 1, false, args);
+  process_arguments(argc - 1, argv + 1, false, report, args);
 
   if (args.empty()) {
-    option_help(std::cerr);
+#if 0
+    help(std::cerr);
+#endif
     return 1;
   }
   strings_list::iterator arg = args.begin();
 
-  if (config.cache_file == "<none>")
-    config.use_cache = false;
+  if (session.cache_file == "<none>")
+    session.use_cache = false;
   else
-    config.use_cache = config.data_file.empty() && config.price_db.empty();
-  DEBUG_PRINT("ledger.config.cache", "1. use_cache = " << config.use_cache);
+    session.use_cache = session.data_file.empty() && session.price_db.empty();
 
-  TRACE(main, "Processing options and environment variables");
+  DEBUG_PRINT("ledger.session.cache", "1. use_cache = " << session.use_cache);
 
-  process_environment(ledger::config_options,
-		      const_cast<const char **>(envp), "LEDGER_");
+  // Process the environment settings
 
-#if 1
-  // These are here for backwards compatability, but are deprecated.
+  TRACE(main, "Processing options and environment settings");
 
-  if (const char * p = std::getenv("LEDGER"))
-    process_option(ledger::config_options, "file", p);
-  if (const char * p = std::getenv("LEDGER_INIT"))
-    process_option(ledger::config_options, "init-file", p);
-  if (const char * p = std::getenv("PRICE_HIST"))
-    process_option(ledger::config_options, "price-db", p);
-  if (const char * p = std::getenv("PRICE_EXP"))
-    process_option(ledger::config_options, "price-exp", p);
-#endif
+  process_environment(const_cast<const char **>(envp), "LEDGER_", report);
 
-  const char * p    = std::getenv("HOME");
-  std::string  home = p ? p : "";
+  const char * p = std::getenv("HOME");
+  std::string home = p ? p : "";
 
-  if (config.init_file.empty())
-    config.init_file  = home + "/.ledgerrc";
-  if (config.price_db.empty())
-    config.price_db   = home + "/.pricedb";
+  if (session.init_file.empty())
+    session.init_file  = home + "/.ledgerrc";
+  if (session.price_db.empty())
+    session.price_db   = home + "/.pricedb";
 
-  if (config.cache_file.empty())
-    config.cache_file = home + "/.ledger-cache";
+  if (session.cache_file.empty())
+    session.cache_file = home + "/.ledger-cache";
 
-  if (config.data_file == config.cache_file)
-    config.use_cache = false;
-  DEBUG_PRINT("ledger.config.cache", "2. use_cache = " << config.use_cache);
+  if (session.data_file == session.cache_file)
+    session.use_cache = false;
 
-  TRACE(main, std::string("Initialization file is ") + config.init_file);
-  TRACE(main, std::string("Price database is ") + config.price_db);
-  TRACE(main, std::string("Binary cache is ") + config.cache_file);
-  TRACE(main, std::string("Main journal is ") + config.data_file);
+  DEBUG_PRINT("ledger.session.cache", "2. use_cache = " << session.use_cache);
+
+  TRACE(main, std::string("Initialization file is ") + session.init_file);
+  TRACE(main, std::string("Price database is ") + session.price_db);
+  TRACE(main, std::string("Binary cache is ") + session.cache_file);
+  TRACE(main, std::string("Main journal is ") + session.data_file);
 
   TRACE(main, std::string("Based on option settings, binary cache ") +
-	(config.use_cache ? "WILL " : "will NOT ") + "be used");
+	(session.use_cache ? "WILL " : "will NOT ") + "be used");
 
-  // Read the command word, canonicalize it to its one letter form,
-  // then configure the system based on the kind of report to be
-  // generated
+  // Read the command word and create a command object based on it
 
-  std::string command = *arg++;
+  std::string verb = *arg++;
 
-  if (command == "balance" || command == "bal" || command == "b")
-    command = "b";
-  else if (command == "register" || command == "reg" || command == "r")
-    command = "r";
-  else if (command == "print" || command == "p")
-    command = "p";
-  else if (command == "output")
-    command = "w";
-  else if (command == "dump")
-    command = "W";
-  else if (command == "emacs" || command == "lisp")
-    command = "x";
-  else if (command == "xml")
-    command = "X";
-  else if (command == "entry")
-    command = "e";
-  else if (command == "equity")
-    command = "E";
-  else if (command == "prices")
-    command = "P";
-  else if (command == "pricesdb")
-    command = "D";
-  else if (command == "csv")
-    command = "c";
-  else if (command == "parse") {
-    value_expr expr(ledger::parse_value_expr(*arg));
+  xml::xpath_t::functor_t * command = NULL;
 
-    if (config.verbose_mode) {
+  if (false) {
+    ;
+  }
+#if 0
+  if (verb == "register" || verb == "reg" || verb == "r") {
+    command = new format_command
+      ("register", either_or(report->format_string,
+			     report->session->register_format));
+  }
+  else if (verb == "balance" || verb == "bal" || verb == "b") {
+    if (! report->raw_mode) {
+      report->transforms.push_back(new accounts_transform);
+      report->transforms.push_back(new clean_transform);
+      report->transforms.push_back(new compact_transform);
+    }
+    command = new format_command
+      ("balance", either_or(report->format_string,
+			     report->session->balance_format));
+  }
+  else if (verb == "print" || verb == "p") {
+    if (! report->raw_mode)
+      report->transforms.push_back(new optimize_transform);
+    command = new format_command
+      ("print", either_or(report->format_string,
+			  report->session->print_format));
+  }
+  else if (verb == "equity") {
+    if (! report->raw_mode)
+      report->transforms.push_back(new accounts_transform);
+    command = new format_command
+      ("equity", either_or(report->format_string,
+			   report->session->equity_format));
+  }
+  else if (verb == "entry")
+    command = new entry_command;
+  else if (verb == "dump")
+    command = new dump_command;
+  else if (verb == "output")
+    command = new output_command;
+  else if (verb == "prices")
+    command = new prices_command;
+  else if (verb == "pricesdb")
+    command = new pricesdb_command;
+  else if (verb == "csv")
+    command = new csv_command;
+  else if (verb == "emacs" || verb == "lisp")
+    command = new emacs_command;
+#endif
+  else if (verb == "xml")
+    command = new xml_command;
+  else if (verb == "expr")
+    ;
+  else if (verb == "xpath")
+    ;
+  else if (verb == "parse") {
+    xml::xpath_t expr(*arg);
+
+    if (session.verbose_mode) {
       std::cout << "Value expression tree:" << std::endl;
-      ledger::dump_value_expr(std::cout, expr.get());
+      expr.dump(std::cout);
       std::cout << std::endl;
       std::cout << "Value expression parsed was:" << std::endl;
-      ledger::write_value_expr(std::cout, expr.get());
+      expr.write(std::cout);
       std::cout << std::endl << std::endl;
-      std::cout << "Result of computation: ";
+      std::cout << "Result of calculation: ";
     }
 
-    value_t result = guarded_compute(expr.get());
-    std::cout << result.strip_annotations() << std::endl;
+    std::cout << expr.calc((xml::document_t *)NULL, report).
+      strip_annotations() << std::endl;
 
     return 0;
   }
-  else if (command == "expr") {
-    // this gets done below...
-  }
   else {
-    throw new error(std::string("Unrecognized command '") + command + "'");
+    char buf[128];
+    std::strcpy(buf, "command_");
+    std::strcat(buf, verb.c_str());
+    if (xml::xpath_t::op_t * def = report->lookup(buf))
+      command = def->functor_obj();
+
+    if (! command)
+      throw new error(std::string("Unrecognized command '") + verb + "'");
   }
 
-  // Parse initialization files, ledger data, price database, etc.
+  // Parse the initialization file, which can only be textual; then
+  // parse the journal data.
 
-  std::auto_ptr<journal_t> journal(new journal_t);
+  session.read_init();
 
-  { TRACE_PUSH(parser, "Parsing journal file");
-
-    if (parse_ledger_data(config, journal.get()) == 0)
-      throw new error("Please specify ledger file using -f"
-		      " or LEDGER_FILE environment variable.");
-
-    TRACE_POP(parser, "Finished parsing"); }
-
-  // process the command word and its following arguments
-
-  std::string first_arg;
-  if (command == "w") {
-    if (arg != args.end())
-      first_arg = *arg++;
-  }
-  else if (command == "W") {
-    if (report.output_file.empty())
-      throw new error("The 'dump' command requires use of the --output option");
-  }
-
-  TRACE(options, std::string("Post-processing options ") +
-	"for command \"" + command + "\"");
-
-  report.process_options(command, arg, args.end());
-
-  // If downloading is to be supported, configure the updater
-
-  if (! commodity_base_t::updater && config.download_quotes)
-    commodity_base_t::updater =
-      new quotes_by_script(config.price_db, config.pricing_leeway,
-			   config.cache_dirty);
-
-  std::auto_ptr<entry_t> new_entry;
-  if (command == "e") {
-    if (arg == args.end()) {
-      std::cout << "\
-The entry command requires at least one argument, so Ledger can intelligently\n\
-create a new entry for you.  The possible arguments are:\n\
-    DATE  PAYEE  [ACCOUNT] [AMOUNT] [DRAW ACCOUNT]\n\n\
-Some things to note:\n\
-  - The ACCOUNT is optional; if no account is given, the last account affected\n\
-    by PAYEE is used.  If no payee can be found, the generic account 'Expenses'\n\
-    is used.\n\
-  - The AMOUNT is optional; if not specified, the same amount is used as the\n\
-    last time PAYEE was seen, or 0 if not applicable.\n\
-  - The AMOUNT does not require a commodity; if none is given, the commodity\n\
-    currently contained within ACCOUNT is used, or no commodity at all if\n\
-    either: the ACCOUNT was not found, or it contains more than one commodity.\n\
-  - Lastly, the DRAW ACCOUNT is optional; if not present, the last account\n\
-    drawn from by PAYEE is used, or the 'basket' account (specified with\n\
-    'A ACCOUNT' in your Ledger file) if that does not apply, or the generic\n\
-    account 'Equity' is used.\n\n\
-Here are a few examples, all of which may be equivalent depending on your\n\
-Ledger data:\n\
-    ledger entry 3/25 chevron\n\
-    ledger entry 3/25 chevron 20\n\
-    ledger entry 3/25 chevron \\$20\n\
-    ledger entry 3/25 chevron gas 20\n\
-    ledger entry 3/25 chevron gas \\$20 checking\n\n\
-A final note: Ledger never modifies your data!  You are responsible for\n\
-appending the output of this command to your Ledger file if you so choose."
-		<< std::endl;
-      return 1;
-    }
-    new_entry.reset(derive_new_entry(*journal, arg, args.end()));
-    if (! new_entry.get())
-      return 1;
-  }
+  journal_t * journal = session.read_data(report->account);
 
   // Configure the output stream
 
@@ -222,11 +208,11 @@ appending the output of this command to your Ledger file if you so choose."
 #endif
   std::ostream * out = &std::cout;
 
-  if (! report.output_file.empty()) {
-    out = new std::ofstream(report.output_file.c_str());
+  if (! report->output_file.empty()) {
+    out = new std::ofstream(report->output_file.c_str());
   }
 #ifdef HAVE_UNIX_PIPES
-  else if (! config.pager.empty()) {
+  else if (! report->pager.empty()) {
     status = pipe(pfd);
     if (status == -1)
       throw new error("Failed to create pipe");
@@ -252,13 +238,13 @@ appending the output of this command to your Ledger file if you so choose."
       // Find command name: its the substring starting right of the
       // rightmost '/' character in the pager pathname.  See manpage
       // for strrchr.
-      arg0 = std::strrchr(config.pager.c_str(), '/');
+      arg0 = std::strrchr(report->pager.c_str(), '/');
       if (arg0)
 	arg0++;
       else
-	arg0 = config.pager.c_str(); // No slashes in pager.
+	arg0 = report->pager.c_str(); // No slashes in pager.
 
-      execlp(config.pager.c_str(), arg0, (char *)0);
+      execlp(report->pager.c_str(), arg0, (char *)0);
       perror("execl");
       exit(1);
     }
@@ -269,162 +255,147 @@ appending the output of this command to your Ledger file if you so choose."
   }
 #endif
 
-  // Are we handling the parse or expr commands?  Do so now.
+  // Are we handling the expr commands?  Do so now.
 
-  if (command == "expr") {
-    value_expr expr(ledger::parse_value_expr(*arg));
+  if (verb == "expr") {
+    xml::xpath_t expr(*arg);
 
-    if (config.verbose_mode) {
-      std::cout << "Value expression tree:" << std::endl;
-      ledger::dump_value_expr(std::cout, expr.get());
-      std::cout << std::endl;
-      std::cout << "Value expression parsed was:" << std::endl;
-      ledger::write_value_expr(std::cout, expr.get());
-      std::cout << std::endl << std::endl;
-      std::cout << "Result of computation: ";
+    if (session.verbose_mode) {
+      *out << "Value expression tree:" << std::endl;
+      expr.dump(*out);
+      *out << std::endl;
+      *out << "Value expression parsed was:" << std::endl;
+      expr.write(*out);
+      *out << std::endl << std::endl;
+      *out << "Result of calculation: ";
     }
 
-    value_t result = guarded_compute(expr.get());
-    std::cout << result.strip_annotations() << std::endl;
+    *out << expr.calc((xml::document_t *)NULL, report).
+      strip_annotations() << std::endl;
 
     return 0;
   }
+  else if (verb == "xpath") {
+    std::cout << "XPath parsed:" << std::endl;
+    xml::xpath_t xpath(*arg);
+    xpath.write(*out);
+    *out << std::endl;
 
-  // Compile the format strings
-
-  const std::string * format;
-
-  if (! report.format_string.empty())
-    format = &report.format_string;
-  else if (command == "b")
-    format = &config.balance_format;
-  else if (command == "r")
-    format = &config.register_format;
-  else if (command == "E")
-    format = &config.equity_format;
-  else if (command == "P")
-    format = &config.prices_format;
-  else if (command == "D")
-    format = &config.pricesdb_format;
-  else if (command == "w")
-    format = &config.write_xact_format;
-  else
-    format = &config.print_format;
-
-  // Walk the entries based on the report type and the options
-
-  item_handler<transaction_t> *		   formatter;
-  std::list<item_handler<transaction_t> *> formatter_ptrs;
-
-  if (command == "b" || command == "E")
-    formatter = new set_account_value;
-  else if (command == "p" || command == "e")
-    formatter = new format_entries(*out, *format);
-  else if (command == "x")
-    formatter = new format_emacs_transactions(*out);
-  else if (command == "X")
-    formatter = new format_xml_entries(*out, report.show_totals);
-  else if (command == "c")
-    formatter = new format_csv_transactions(*out);
-  else
-    formatter = new format_transactions(*out, *format);
-
-  if (command == "w") {
-    TRACE_PUSH(text_writer, "Writing journal file");
-    write_textual_journal(*journal, first_arg, *formatter,
-			  config.write_hdr_format, *out);
-    TRACE_POP(text_writer, "Finished writing");
-  }
-  else if (command == "W") {
-    TRACE_PUSH(binary_writer, "Writing binary file");
-    std::ofstream stream(report.output_file.c_str());
-    write_binary_journal(stream, journal.get());
-    TRACE_POP(binary_writer, "Finished writing");
-  }
-  else {
-    TRACE_PUSH(main, "Walking journal entries");
-
-    formatter = report.chain_xact_handlers(command, formatter, journal.get(),
-					   journal->master, formatter_ptrs);
-    if (command == "e")
-      walk_transactions(new_entry->transactions, *formatter);
-    else if (command == "P" || command == "D")
-      walk_commodities(commodity_t::commodities, *formatter);
-    else
-      walk_entries(journal->entries, *formatter);
-
-    if (command != "P" && command != "D")
-      formatter->flush();
-
-    TRACE_POP(main, "Finished entry walk");
+#if 0
+    std::auto_ptr<repitem_t> items(repitem_t::wrap(&session, report, true));
+    print_addr cb;
+    items->select(path.get(), cb);
+#endif
+    return 0;
   }
 
-  // For the balance and equity reports, output the sum totals.
-
-  if (command == "b") {
-    TRACE_PUSH(main, "Walking journal accounts");
-
-    format_account acct_formatter(*out, *format, report.display_predicate);
-    sum_accounts(*journal->master);
-    walk_accounts(*journal->master, acct_formatter, report.sort_string);
-    acct_formatter.flush();
-
-    if (account_has_xdata(*journal->master)) {
-      account_xdata_t& xdata = account_xdata(*journal->master);
-      if (! report.show_collapsed && xdata.total) {
-	*out << "--------------------\n";
-	xdata.value = xdata.total;
-	acct_formatter.format.format(*out, details_t(*journal->master));
-      }
-    }
-    TRACE_POP(main, "Finished account walk");
-  }
-  else if (command == "E") {
-    TRACE_PUSH(main, "Walking journal accounts");
-
-    format_equity acct_formatter(*out, *format, report.display_predicate);
-    sum_accounts(*journal->master);
-    walk_accounts(*journal->master, acct_formatter, report.sort_string);
-    acct_formatter.flush();
-
-    TRACE_POP(main, "Finished account walk");
-  }
+  // Cleanup memory -- if this is a beta or development build.
 
 #if DEBUG_LEVEL >= BETA
   { TRACE_PUSH(cleanup, "Cleaning up allocated memory");
 
-  clear_transaction_xdata xact_cleaner;
-  walk_entries(journal->entries, xact_cleaner);
-
-  clear_account_xdata acct_cleaner;
-  walk_accounts(*journal->master, acct_cleaner);
-
-  if (! report.output_file.empty())
-    delete out;
-
-  for (std::list<item_handler<transaction_t> *>::iterator i
-	 = formatter_ptrs.begin();
-       i != formatter_ptrs.end();
-       i++)
-    delete *i;
-
-  TRACE_POP(cleanup, "Finished cleaning"); }
+#ifdef USE_BOOST_PYTHON
+    shutdown_ledger_for_python();
 #endif
+
+    if (! report->output_file.empty())
+      delete out;
+
+    TRACE_POP(cleanup, "Finished cleaning"); }
+#endif
+
+  // Create the an argument scope containing the report command's
+  // arguments, and then invoke the command.
+
+  xml::xpath_t::scope_t * locals =
+    new xml::xpath_t::scope_t(report, xml::xpath_t::scope_t::ARGUMENT);
+
+  locals->args = new value_t::sequence_t;
+  locals->args.push_back(out);
+  locals->args.push_back(journal->document);
+
+  if (command->wants_args) {
+#if 1
+    locals->args.push_back(&args);
+#else
+    for (strings_list::iterator i = args.begin();
+	 i != args.end();
+	 i++)
+      locals->args.push_back(*i);
+#endif
+  } else {
+    std::string regexps[4];
+
+    // Treat the remaining command-line arguments as regular
+    // expressions, used for refining report results.
+
+    int base = 0;
+    for (strings_list::iterator i = arg; i != args.end(); i++)
+      if ((*i)[0] == '-') {
+	if ((*i)[1] == '-') {
+	  if (base == 0)
+	    base += 2;
+	  continue;
+	}
+	if (! regexps[base + 1].empty())
+	  regexps[base + 1] += "|";
+	regexps[base + 1] += (*i).substr(1);
+      } else {
+	if (! regexps[base].empty())
+	  regexps[base] += "|";
+	regexps[base] += *i;
+      }
+
+#if 0
+    // jww (2006-09-21): Escape the \ in these strings!
+
+    if (! regexps[3].empty())
+      report->transforms.push_front
+	(new remove_transform
+	 (std::string("//entry[payee =~ /(") + regexps[3] + ")/]"));
+
+    if (! regexps[2].empty())
+      report->transforms.push_front
+	(new select_transform
+	 (std::string("//entry[payee =~ /(") + regexps[2] + ")/]"));
+
+    if (! regexps[1].empty())
+      report->transforms.push_front
+	(new remove_transform
+	 (std::string("//xact[account =~ /(") + regexps[1] + ")/]"));
+
+    if (! regexps[0].empty())
+      report->transforms.push_front
+	(new select_transform
+	 (std::string("//xact[account =~ /(") + regexps[0] + ")/]"));
+#endif
+  }
+
+#if 0
+  report->apply_transforms(items.get());
+#endif
+
+  value_t temp;
+  (*command)(temp, locals);
 
   // Write out the binary cache, if need be
 
-  if (config.use_cache && config.cache_dirty &&
-      ! config.cache_file.empty()) {
+  if (session.use_cache && session.cache_dirty &&
+      ! session.cache_file.empty()) {
     TRACE_PUSH(binary_cache, "Writing journal file");
 
-    std::ofstream stream(config.cache_file.c_str());
-    write_binary_journal(stream, journal.get());
+    std::ofstream stream(session.cache_file.c_str());
+#if 0
+    write_binary_journal(stream, journal);
+#endif
 
     TRACE_POP(binary_cache, "Finished writing");
   }
 
+  // If the user specified a pager, wait for it to exit now
+
 #ifdef HAVE_UNIX_PIPES
-  if (! config.pager.empty()) {
+  if (report->output_file.empty() && ! report->pager.empty()) {
     delete out;
     close(pfd[1]);
 
@@ -441,16 +412,47 @@ appending the output of this command to your Ledger file if you so choose."
 int main(int argc, char * argv[], char * envp[])
 {
   try {
+    std::ios::sync_with_stdio(false);
+
+    ledger::tracing_active = true;
+
 #if DEBUG_LEVEL < BETA
     ledger::do_cleanup = false;
 #endif
-    config_t config;
-    report_t report;
-    ledger::config = &config;
-    ledger::report = &report;
     TRACE_PUSH(main, "Ledger starting");
-    int status = parse_and_report(config, report, argc, argv, envp);
+
+    std::auto_ptr<ledger::session_t> session(new ledger::session_t);
+
+#if 0
+    session->register_parser(new binary_parser_t);
+#endif
+#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
+    session->register_parser(new xml_parser_t);
+    session->register_parser(new gnucash_parser_t);
+#endif
+#ifdef HAVE_LIBOFX
+    session->register_parser(new ofx_parser_t);
+#endif
+    session->register_parser(new qif_parser_t);
+    session->register_parser(new textual_parser_t);
+
+    std::auto_ptr<ledger::report_t> report(new ledger::report_t(session.get()));
+
+    int status = read_and_report(report.get(), argc, argv, envp);
+
+    if (! ledger::do_cleanup) {
+      report.release();
+      session.release();
+    }
+
     TRACE_POP(main, "Ledger done");
+
+    DEBUG_IF("ledger.trace.memory") {
+      report_memory(std::cout);
+    }
+
+    ledger::tracing_active = false;
+
     return status;
   }
   catch (error * err) {
@@ -462,6 +464,7 @@ int main(int argc, char * argv[], char * envp[])
     err->reveal_context(std::cerr, "Error");
     std::cerr << err->what() << std::endl;
     delete err;
+    ledger::tracing_active = false;
     return 1;
   }
   catch (fatal * err) {
@@ -473,14 +476,17 @@ int main(int argc, char * argv[], char * envp[])
     err->reveal_context(std::cerr, "Fatal");
     std::cerr << err->what() << std::endl;
     delete err;
+    ledger::tracing_active = false;
     return 1;
   }
   catch (const std::exception& err) {
     std::cout.flush();
     std::cerr << "Error: " << err.what() << std::endl;
+    ledger::tracing_active = false;
     return 1;
   }
   catch (int status) {
+    ledger::tracing_active = false;
     return status;
   }
 }

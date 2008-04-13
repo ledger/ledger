@@ -1,8 +1,12 @@
+#ifdef USE_PCH
+#include "pch.h"
+#else
 #include "balance.h"
 #include "util.h"
 
 #include <deque>
 #include <algorithm>
+#endif
 
 namespace ledger {
 
@@ -125,7 +129,8 @@ void balance_t::write(std::ostream& out,
       if ((*i).second)
 	sorted.push_back(&(*i).second);
 
-    std::stable_sort(sorted.begin(), sorted.end(), compare_amount_commodities());
+    std::stable_sort(sorted.begin(), sorted.end(),
+		     compare_amount_commodities());
 
     for (amounts_deque::const_iterator i = sorted.begin();
 	 i != sorted.end();
@@ -321,7 +326,9 @@ balance_t::operator amount_t() const
 
 #ifdef USE_BOOST_PYTHON
 
+#ifndef USE_PCH
 #include <boost/python.hpp>
+#endif
 
 using namespace boost::python;
 using namespace ledger;

@@ -1,40 +1,77 @@
-lib_LTLIBRARIES = libamounts.la libledger.la
+if USE_PCH
+#BUILT_SOURCES = pchpic.h.gch pchnopic.h.gch
+BUILT_SOURCES = pchnopic.h.gch
+#CLEANFILES = pchpic.h.gch pchnopic.h.gch
+CLEANFILES = pchnopic.h.gch
+endif
 
-libamounts_la_CXXFLAGS =
-libamounts_la_SOURCES = \
-	amount.cc      \
-	balance.cc     \
-	datetime.cc    \
-	value.cc
-if HAVE_BOOST_PYTHON
-libamounts_la_CXXFLAGS += -DUSE_BOOST_PYTHON=1
-endif
-if DEBUG
-libamounts_la_CXXFLAGS += -DDEBUG_LEVEL=4
-libamounts_la_SOURCES  += debug.cc
-endif
+######################################################################
+
+#bin_PROGRAMS = xpath
+#
+#xpath_CXXFLAGS = -DTEST
+#xpath_SOURCES = \
+#	amount.cc      \
+#	datetime.cc    \
+#	quotes.cc      \
+#	balance.cc     \
+#	value.cc       \
+#	mask.cc        \
+#	xml.cc         \
+#	xpath.cc       \
+#	trace.cc       \
+#	util.cc
+#xpath_LDADD = $(LIBOBJS)
+#if HAVE_EXPAT
+#xpath_CXXFLAGS += -DHAVE_EXPAT=1
+#endif
+#if HAVE_XMLPARSE
+#xpath_CXXFLAGS += -DHAVE_XMLPARSE=1
+#endif
+#if DEBUG
+#xpath_CXXFLAGS += -DDEBUG_LEVEL=4
+#xpath_SOURCES  += debug.cc
+#endif
+#xpath_LDFLAGS = -static	# for the sake of command-line speed
+
+######################################################################
+
+lib_LTLIBRARIES = libledger.la
 
 libledger_la_CXXFLAGS =
+if USE_PCH
+libledger_la_CXXFLAGS += -DUSE_PCH -Winvalid-pch -fpch-deps
+endif
 libledger_la_SOURCES = \
+	amount.cc      \
+	quotes.cc      \
+	balance.cc     \
+	value.cc       \
+	datetime.cc    \
+	xml.cc         \
+	xpath.cc       \
+	mask.cc        \
+	format.cc      \
+		       \
+	trace.cc       \
+	util.cc        \
+		       \
+	session.cc     \
+	journal.cc     \
+	parser.cc      \
+	textual.cc     \
 	binary.cc      \
-	config.cc      \
+	xmlparse.cc    \
+	qif.cc	       \
+		       \
+	report.cc      \
+	transform.cc   \
+		       \
+	dump.cc        \
 	csv.cc         \
 	derive.cc      \
 	emacs.cc       \
-	format.cc      \
-	journal.cc     \
-	mask.cc        \
-	option.cc      \
-	parser.cc      \
-	qif.cc	       \
-	quotes.cc      \
-	reconcile.cc   \
-	report.cc      \
-	startup.cc     \
-	textual.cc     \
-	valexpr.cc     \
-	walk.cc        \
-	xml.cc
+	reconcile.cc
 if HAVE_EXPAT
 libledger_la_CXXFLAGS += -DHAVE_EXPAT=1
 libledger_la_SOURCES += gnucash.cc
@@ -47,50 +84,66 @@ if HAVE_LIBOFX
 libledger_la_CXXFLAGS += -DHAVE_LIBOFX=1
 libledger_la_SOURCES += ofx.cc
 endif
+if HAVE_BOOST_PYTHON
+libledger_la_CXXFLAGS += -DUSE_BOOST_PYTHON=1
+libledger_la_SOURCES += py_eval.cc
+endif
 if DEBUG
 libledger_la_CXXFLAGS += -DDEBUG_LEVEL=4
+libledger_la_SOURCES  += debug.cc
 endif
-libledger_la_LDFLAGS = -release 2.6
+libledger_la_LDFLAGS = -release 3.0
 
 pkginclude_HEADERS = \
 	acconf.h     \
-		     \
 	amount.h     \
 	balance.h    \
-	datetime.h   \
-	value.h      \
-	debug.h	     \
-	util.h	     \
-		     \
 	binary.h     \
-	config.h     \
-	csv.h        \
+	csv.h	     \
+	datetime.h   \
+	debug.h	     \
 	derive.h     \
-	emacs.h      \
-	error.h      \
+	dump.h	     \
+	emacs.h	     \
+	error.h	     \
 	format.h     \
 	gnucash.h    \
 	journal.h    \
 	ledger.h     \
-	mask.h       \
+	mask.h	     \
+	ofx.h	     \
 	option.h     \
 	parser.h     \
+	py_eval.h    \
+	pyfstream.h  \
+	pyledger.h   \
 	qif.h	     \
 	quotes.h     \
 	reconcile.h  \
 	report.h     \
+	session.h    \
 	textual.h    \
 	timing.h     \
-	valexpr.h    \
-	walk.h       \
-	xml.h
+	trace.h	     \
+	transform.h  \
+	util.h	     \
+	value.h	     \
+	xml.h        \
+	xpath.h
+
+pchpic.h.gch: pch.h pchdata.h $(pkginclude_HEADERS)
+	$(CXXCOMPILE) $(CXXFLAGS) -DPIC -o $@ pchdata.h
+
+pchnopic.h.gch: pch.h pchdata.h $(pkginclude_HEADERS)
+	$(CXXCOMPILE) $(CXXFLAGS) -o $@ pchdata.h
 
 ######################################################################
 
 bin_PROGRAMS = ledger
+
 ledger_CXXFLAGS =
-ledger_SOURCES = main.cc
-ledger_LDADD = $(LIBOBJS) libamounts.la libledger.la
+ledger_SOURCES = option.cc main.cc
+ledger_LDADD = $(LIBOBJS) libledger.la
 if HAVE_EXPAT
 ledger_CXXFLAGS += -DHAVE_EXPAT=1
 endif
@@ -99,6 +152,9 @@ ledger_CXXFLAGS += -DHAVE_XMLPARSE=1
 endif
 if HAVE_LIBOFX
 ledger_CXXFLAGS += -DHAVE_LIBOFX=1
+endif
+if HAVE_BOOST_PYTHON
+ledger_CXXFLAGS += -DUSE_BOOST_PYTHON=1
 endif
 if DEBUG
 ledger_CXXFLAGS += -DDEBUG_LEVEL=4
@@ -109,16 +165,16 @@ info_TEXINFOS = ledger.texi
 
 ######################################################################
 
-lisp_LISP = ledger.el timeclock.el
-dist_lisp_LISP = ledger.el timeclock.el
+#lisp_LISP = ledger.el timeclock.el
+#dist_lisp_LISP = ledger.el timeclock.el
 
 ######################################################################
 
 if HAVE_BOOST_PYTHON
 
-noinst_PROGRAMS = amounts.so
+noinst_PROGRAMS = ledger.so
 
-amounts.so: amounts.cc libamounts.la
+ledger.so: pyledger.cc libledger.la
 	CFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS) -L. -L.libs" \
 	    python setup.py build --build-lib=.
 
@@ -130,40 +186,33 @@ endif
 
 ######################################################################
 
-TESTS = alltests
+TESTS = UnitTests
 
-CXXTEST_DIR = /usr/local/cxxtest
-TESTGEN = $(CXXTEST_DIR)/cxxtestgen.py
-TESTSUITES = tests/*.h
+check_PROGRAMS = $(TESTS)
 
-AM_CXXFLAGS =
+UnitTests_SOURCES = tests/UnitTests.cc \
+	tests/corelib/numerics/BasicAmountTest.cc
+
+UnitTests_LDADD   = $(lib_LTLIBRARIES) -lcppunit
+UnitTests_LDFLAGS = $(LIBADD_DL)
+
+UnitTests_CXXFLAGS = -Itests
 if HAVE_EXPAT
-AM_CXXFLAGS += -DHAVE_EXPAT=1
+UnitTests_CXXFLAGS += -DHAVE_EXPAT=1
 endif
 if HAVE_XMLPARSE
-AM_CXXFLAGS += -DHAVE_XMLPARSE=1
+UnitTests_CXXFLAGS += -DHAVE_XMLPARSE=1
 endif
 if HAVE_LIBOFX
-AM_CXXFLAGS += -DHAVE_LIBOFX=1
+UnitTests_CXXFLAGS += -DHAVE_LIBOFX=1
 endif
 if DEBUG
-AM_CXXFLAGS += -DDEBUG_LEVEL=4
+UnitTests_CXXFLAGS += -DDEBUG_LEVEL=4
 endif
 
-alltests.cc: $(TESTSUITES)
-	test -f $(TESTGEN) && python $(TESTGEN) -o $@ --error-printer $(TESTSUITES)
-
-alltests: alltests.cc ledger
-	$(CXXCOMPILE) -I$(CXXTEST_DIR) -lexpat -lgmp -lpcre -o $@ \
-		alltests.cc -L. -L.libs -lamounts -lledger
-
-runtests: alltests
-	LD_LIBRARY_PATH=.libs ./alltests && tests/regress && tests/regtest
-
-verify: runtests
-	python tests/runtests.py
-
 ######################################################################
+
+all: check
 
 all-clean: maintainer-clean
 	rm -fr	*~ .*~ .\#* *.html *.info *.pdf *.a *.so *.o *.lo *.la \
@@ -173,4 +222,4 @@ all-clean: maintainer-clean
 		acconf.h.in aclocal.m4 autom4te config.guess config.sub \
 		configure depcomp install-sh libtool ltconfig ltmain.sh \
 		missing stamp texinfo.tex Makefile.in mkinstalldirs \
-		elisp-comp elc-stamp py-compile
+		elisp-comp elc-stamp py-compile *.gch UnitTests

@@ -13,39 +13,34 @@
 #include <amount.h>
 #include <balance.h>
 #include <value.h>
-
-#include <journal.h>
-
 #include <datetime.h>
+#include <xml.h>
+#include <xpath.h>
 #include <format.h>
-#include <emacs.h>
-#include <csv.h>
 #include <quotes.h>
-#include <valexpr.h>
-#include <walk.h>
-#include <derive.h>
-#include <reconcile.h>
-#include <error.h>
-#include <option.h>
 
+#include <error.h>
+#include <util.h>
+
+#include <session.h>
+#include <journal.h>
 #include <parser.h>
 #include <textual.h>
 #include <binary.h>
-#include <xml.h>
+#include <xmlparse.h>
 #include <gnucash.h>
 #include <qif.h>
 #include <ofx.h>
 
-namespace ledger {
-  extern parser_t * binary_parser_ptr;
-  extern parser_t * xml_parser_ptr;
-  extern parser_t * gnucash_parser_ptr;
-  extern parser_t * ofx_parser_ptr;
-  extern parser_t * qif_parser_ptr;
-  extern parser_t * textual_parser_ptr;
-}
-
-#include <config.h>
 #include <report.h>
+#include <transform.h>
+
+#include <dump.h>
+#if 0
+#include <emacs.h>
+#include <csv.h>
+#include <derive.h>
+#include <reconcile.h>
+#endif
 
 #endif // _LEDGER_H

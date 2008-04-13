@@ -122,4 +122,20 @@ class fatal_assert : public fatal {
   virtual ~fatal_assert() throw() {}
 };
 
+inline void unexpected(char c, char wanted)
+{
+  if ((unsigned char) c == 0xff) {
+    if (wanted)
+      throw new error(std::string("Missing '") + wanted + "'");
+    else
+      throw new error("Unexpected end of input");
+  } else {
+    if (wanted)
+      throw new error(std::string("Invalid char '") + c +
+		      "' (wanted '" + wanted + "')");
+    else
+      throw new error(std::string("Invalid char '") + c + "'");
+  }
+}
+
 #endif // _ERROR_H

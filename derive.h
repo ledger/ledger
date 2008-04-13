@@ -5,9 +5,13 @@
 
 namespace ledger {
 
-entry_t * derive_new_entry(journal_t& journal,
-			   strings_list::iterator begin,
-			   strings_list::iterator end);
+class derive_command : public xml::xpath_t::functor_t
+{
+ public:
+  derive_command() : xml::xpath_t::functor_t("entry", true) {}
+
+  virtual void operator()(value_t& result, xml::xpath_t::scope_t * locals);
+};
 
 } // namespace ledger
 

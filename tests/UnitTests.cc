@@ -1,0 +1,111 @@
+#include <cppunit/CompilerOutputter.h>
+#include <cppunit/TestResult.h>
+#include <cppunit/TestResultCollector.h>
+#include <cppunit/TestRunner.h>
+#include <cppunit/TextTestProgressListener.h>
+#include <cppunit/BriefTestProgressListener.h>
+#include <cppunit/XmlOutputter.h>
+#include <cppunit/extensions/TestFactoryRegistry.h>
+
+#include <stdexcept>
+#include <fstream>
+
+#include "UnitTests.h"
+
+
+// Create the CppUnit registry
+
+CPPUNIT_REGISTRY_ADD_TO_DEFAULT("Framework");
+
+CPPUNIT_REGISTRY_ADD_TO_DEFAULT("corelib");
+
+CPPUNIT_REGISTRY_ADD("numerics", "corelib");
+CPPUNIT_REGISTRY_ADD("balances", "corelib");
+CPPUNIT_REGISTRY_ADD("values", "corelib");
+
+CPPUNIT_REGISTRY_ADD_TO_DEFAULT("driver");
+CPPUNIT_REGISTRY_ADD_TO_DEFAULT("journal");
+CPPUNIT_REGISTRY_ADD_TO_DEFAULT("reports");
+CPPUNIT_REGISTRY_ADD_TO_DEFAULT("transforms");
+
+
+// Create a sample test, which acts both as a template, and a
+// verification that the basic framework is functioning.
+
+class UnitTests : public CPPUNIT_NS::TestCase
+{
+  CPPUNIT_TEST_SUITE( UnitTests );
+  CPPUNIT_TEST( testInitialization );
+  CPPUNIT_TEST_SUITE_END();
+
+public:
+  UnitTests() {}
+  virtual ~UnitTests() {}
+
+  virtual void setUp() {}
+  virtual void tearDown() {}
+
+  void testInitialization() {
+    assertEquals(std::string("Hello, world!"),
+		 std::string("Hello, world!"));
+  }
+
+private:
+  UnitTests( const UnitTests &copy );
+  void operator =( const UnitTests &copy );
+};
+
+CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(UnitTests, "framework");
+
+
+// Create the various runners and commence running the tests!
+
+int main(int argc, char* argv[])
+{
+  // Retreive test path from command line first argument. Default to
+  // "" which resolves to the top level suite.
+  std::string testPath = (argc > 1) ? std::string(argv[1]) : std::string("");
+
+  // Create the event manager and test controller
+  CPPUNIT_NS::TestResult controller;
+
+  // Add a listener that collects test results
+  CPPUNIT_NS::TestResultCollector result;
+  controller.addListener(&result);
+
+  // Add a listener that print dots as test run.
+#if 1
+  CPPUNIT_NS::TextTestProgressListener progress;
+#else
+  CPPUNIT_NS::BriefTestProgressListener progress;
+#endif
+  controller.addListener(&progress);
+
+  // Add the top suite to the test runner
+  CPPUNIT_NS::TestRunner runner;
+  runner.addTest(CPPUNIT_NS::TestFactoryRegistry::getRegistry().makeTest());
+  try {
+    runner.run(controller, testPath);
+
+    // Print test in a compiler compatible format.
+    CPPUNIT_NS::CompilerOutputter outputter(&result, CPPUNIT_NS::stdCOut());
+    outputter.write();
+
+#if 0
+    // Uncomment this for XML output
+    std::ofstream file("tests.xml");
+    CPPUNIT_NS::XmlOutputter xml(&result, file);
+    xml.setStyleSheet("report.xsl");
+    xml.write();
+    file.close();
+#endif
+  }
+  catch (std::invalid_argument &e) { // Test path not resolved
+    CPPUNIT_NS::stdCOut()  <<  "\n"
+			   <<  "ERROR: "  <<  e.what()
+			   << "\n";
+    return 0;
+  }
+
+  return result.wasSuccessful() ? 0 : 1;
+}

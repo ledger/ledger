@@ -2,22 +2,27 @@
 #include "datetime.h"
 #include "error.h"
 #include "mask.h"
-#include "walk.h"
 
 #include <memory>
 
 namespace ledger {
 
-entry_t * derive_new_entry(journal_t& journal,
-			   strings_list::iterator i,
-			   strings_list::iterator end)
+void derive_command::operator()(value_t& result,
+				xml::xpath_t::scope_t * locals)
 {
+#if 0
+  std::ostream& out   = *get_ptr<std::ostream>(locals, 0);
+  repitem_t *	items = get_ptr<repitem_t>(locals, 1);
+  strings_list& args  = *get_ptr<strings_list *>(locals, 2);
+
   std::auto_ptr<entry_t> added(new entry_t);
 
   entry_t * matching = NULL;
 
+  strings_list::iterator i = args.begin();
+
   added->_date = *i++;
-  if (i == end)
+  if (i == args.end())
     throw new error("Too few arguments to 'entry'");
 
   mask_t regexp(*i++);
@@ -35,10 +40,10 @@ entry_t * derive_new_entry(journal_t& journal,
 
   if (! matching) {
     account_t * acct;
-    if (i == end || ((*i)[0] == '-' || std::isdigit((*i)[0]))) {
+    if (i == args.end() || ((*i)[0] == '-' || std::isdigit((*i)[0]))) {
       acct = journal.find_account("Expenses");
     }
-    else if (i != end) {
+    else if (i != args.end()) {
       acct = journal.find_account_re(*i);
       if (! acct)
 	acct = journal.find_account(*i);
@@ -46,7 +51,7 @@ entry_t * derive_new_entry(journal_t& journal,
       i++;
     }
 
-    if (i == end) {
+    if (i == args.end()) {
       added->add_transaction(new transaction_t(acct));
     } else {
       transaction_t * xact = new transaction_t(acct, amount_t(*i++));
@@ -79,7 +84,7 @@ entry_t * derive_new_entry(journal_t& journal,
 
     added->add_transaction(new transaction_t(acct));
   }
-  else if (i == end) {
+  else if (i == args.end()) {
     // If no argument were given but the payee, assume the user wants
     // to see the same transaction as last time.
     added->code = matching->code;
@@ -104,7 +109,7 @@ entry_t * derive_new_entry(journal_t& journal,
     xact = new transaction_t(m_xact->account, - first->amount);
     added->add_transaction(xact);
 
-    if (i != end) {
+    if (i != args.end()) {
       account_t * acct = journal.find_account_re(*i);
       if (! acct)
 	acct = journal.find_account(*i);
@@ -113,7 +118,7 @@ entry_t * derive_new_entry(journal_t& journal,
     }
   }
   else {
-    while (i != end) {
+    while (i != args.end()) {
       std::string& re_pat(*i++);
       account_t *  acct = NULL;
       amount_t *   amt  = NULL;
@@ -142,7 +147,7 @@ entry_t * derive_new_entry(journal_t& journal,
 	acct = journal.find_account(re_pat);
 
       transaction_t * xact;
-      if (i == end) {
+      if (i == args.end()) {
 	if (amt)
 	  xact = new transaction_t(acct, *amt);
 	else
@@ -171,6 +176,7 @@ entry_t * derive_new_entry(journal_t& journal,
     throw new error("Failed to finalize derived entry (check commodities)");
 
   return added.release();
+#endif
 }
 
 } // namespace ledger

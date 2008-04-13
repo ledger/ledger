@@ -1,11 +1,16 @@
+#ifdef USE_PCH
+#include "pch.h"
+#else
 #if defined(__GNUG__) && __GNUG__ < 3
 #define _XOPEN_SOURCE
 #endif
 
 #include "datetime.h"
+#include "util.h"
 
 #include <ctime>
 #include <cctype>
+#endif
 
 date_t       date_t::now(std::time(NULL));
 int	     date_t::current_year = date_t::now.year();
@@ -37,10 +42,50 @@ namespace {
     31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
   };
 
-  bool parse_date_mask(const char * date_str, struct std::tm * result);
-  bool parse_date(const char * date_str, std::time_t * result,
-		  const int year = -1);
-  bool quick_parse_date(const char * date_str, std::time_t * result);
+  bool parse_date_mask(const char * date_str, struct std::tm * result)
+  {
+    if (! date_t::input_format.empty()) {
+      std::memset(result, INT_MAX, sizeof(struct std::tm));
+      if (strptime(date_str, date_t::input_format.c_str(), result))
+	return true;
+    }
+    for (const char ** f = date_t::formats; *f; f++) {
+      std::memset(result, INT_MAX, sizeof(struct std::tm));
+      if (strptime(date_str, *f, result))
+	return true;
+    }
+    return false;
+  }
+
+  bool parse_date(const char * date_str, std::time_t * result, const int year)
+  {
+    struct std::tm when;
+
+    if (! parse_date_mask(date_str, &when))
+      return false;
+
+    when.tm_hour = 0;
+    when.tm_min  = 0;
+    when.tm_sec  = 0;
+
+    if (when.tm_year == -1)
+      when.tm_year = ((year == -1) ? date_t::current_year : (year - 1900));
+
+    if (when.tm_mon == -1)
+      when.tm_mon = 0;
+
+    if (when.tm_mday == -1)
+      when.tm_mday = 1;
+
+    *result = std::mktime(&when);
+
+    return true;
+  }
+
+  inline bool quick_parse_date(const char * date_str, std::time_t * result)
+  {
+    return parse_date(date_str, result, date_t::current_year + 1900);
+  }
 }
 
 date_t::date_t(const std::string& _when)
@@ -50,20 +95,116 @@ date_t::date_t(const std::string& _when)
       (std::string("Invalid date string: ") + _when);
 }
 
+void date_t::parse(std::istream& in)
+{
+  char buf[256];
+  char c = peek_next_nonws(in);
+  READ_INTO(in, buf, 255, c,
+	    std::isalnum(c) || c == '-' || c == '.' || c == '/');
+
+  if (! quick_parse_date(buf, &when))
+    throw new date_error
+      (std::string("Invalid date string: ") + buf);
+}
+
 datetime_t::datetime_t(const std::string& _when)
 {
-  if (const char * p = std::strchr(_when.c_str(), ' ')) {
-    date_t date(std::string(_when, 0, p - _when.c_str()));
+  std::istringstream datestr(_when);
+  parse(datestr);		// parse both the date and optional time
+}
 
-    struct std::tm moment = *std::localtime(&date.when);
-    if (! strptime(++p, "%H:%M:%S", &moment))
-      throw new datetime_error
-	(std::string("Invalid date/time string: ") + _when);
+void datetime_t::parse(std::istream& in)
+{
+  date_t::parse(in);		// first grab the date part
 
-    when = std::mktime(&moment);
-  } else {
-    when = date_t(_when).when;
+  istream_pos_type beg_pos = in.tellg();
+
+  int hour = 0;
+  int min  = 0;
+  int sec  = 0;
+
+  // Now look for the (optional) time specifier.  If no time is given,
+  // we use midnight of the given day.
+  char buf[256];
+  char c = peek_next_nonws(in);
+  if (! std::isdigit(c))
+    goto abort;
+  READ_INTO(in, buf, 255, c, std::isdigit(c));
+  if (buf[0] == '\0')
+    goto abort;
+
+  hour = std::atoi(buf);
+  if (hour > 23)
+    goto abort;
+
+  if (in.peek() == ':') {
+    in.get(c);
+    READ_INTO(in, buf, 255, c, std::isdigit(c));
+    if (buf[0] == '\0')
+      goto abort;
+
+    min = std::atoi(buf);
+    if (min > 59)
+      goto abort;
+
+    if (in.peek() == ':') {
+      in.get(c);
+      READ_INTO(in, buf, 255, c, std::isdigit(c));
+      if (buf[0] == '\0')
+	goto abort;
+
+      sec = std::atoi(buf);
+      if (sec > 59)
+	goto abort;
+    }
   }
+
+  c = peek_next_nonws(in);
+  if (c == 'a' || c == 'p' || c == 'A' || c == 'P') {
+    if (hour > 12)
+      goto abort;
+    in.get(c);
+
+    if (c == 'p' || c == 'P') {
+      if (hour != 12)
+	hour += 12;
+    } else {
+      if (hour == 12)
+	hour = 0;
+    }
+
+    c = in.peek();
+    if (c == 'm' || c == 'M')
+      in.get(c);
+  }
+
+  struct std::tm * desc = std::localtime(&when);
+
+  desc->tm_hour  = hour;
+  desc->tm_min   = min;
+  desc->tm_sec   = sec;
+  desc->tm_isdst = -1;
+
+  when = std::mktime(desc);
+
+  return;			// the time has been successfully parsed
+
+ abort:				// there was no valid time string to parse
+  in.clear();
+  in.seekg(beg_pos, std::ios::beg);
+}
+
+std::ostream& operator<<(std::ostream& out, const datetime_t& moment)
+{
+  std::string format = datetime_t::output_format;
+  std::tm * when = moment.localtime();
+  if (when->tm_hour != 0 || when->tm_min != 0 || when->tm_sec != 0)
+    format += " %H:%M:%S";
+
+  char buf[64];
+  std::strftime(buf, 63, format.c_str(), when);
+  out << buf;
+  return out;
 }
 
 datetime_t interval_t::first(const datetime_t& moment) const
@@ -314,49 +455,123 @@ void interval_t::parse(std::istream& in)
   }
 }
 
-namespace {
-  bool parse_date_mask(const char * date_str, struct std::tm * result)
-  {
-    if (! date_t::input_format.empty()) {
-      std::memset(result, INT_MAX, sizeof(struct std::tm));
-      if (strptime(date_str, date_t::input_format.c_str(), result))
-	return true;
-    }
-    for (const char ** f = date_t::formats; *f; f++) {
-      std::memset(result, INT_MAX, sizeof(struct std::tm));
-      if (strptime(date_str, *f, result))
-	return true;
-    }
-    return false;
+#ifdef USE_BOOST_PYTHON
+
+#ifndef USE_PCH
+#include <boost/python.hpp>
+#endif
+
+using namespace boost::python;
+
+unsigned int interval_len(interval_t& interval)
+{
+  int periods = 1;
+  std::time_t when = interval.first();
+  while (interval.end && when < interval.end) {
+    when = interval.increment(when);
+    if (when < interval.end)
+      periods++;
   }
-
-  bool parse_date(const char * date_str, std::time_t * result, const int year)
-  {
-    struct std::tm when;
-
-    if (! parse_date_mask(date_str, &when))
-      return false;
-
-    when.tm_hour = 0;
-    when.tm_min  = 0;
-    when.tm_sec  = 0;
-
-    if (when.tm_year == -1)
-      when.tm_year = ((year == -1) ? date_t::current_year : (year - 1900));
-
-    if (when.tm_mon == -1)
-      when.tm_mon = 0;
-
-    if (when.tm_mday == -1)
-      when.tm_mday = 1;
-
-    *result = std::mktime(&when);
-
-    return true;
-  }
-
-  bool quick_parse_date(const char * date_str, std::time_t * result)
-  {
-    return parse_date(date_str, result, date_t::current_year + 1900);
-  }
+  return periods;
 }
+
+std::time_t interval_getitem(interval_t& interval, int i)
+{
+  static std::time_t last_index = 0;
+  static std::time_t last_moment = 0;
+
+  if (i == 0) {
+    last_index = 0;
+    last_moment = interval.first();
+  }
+  else {
+    last_moment = interval.increment(last_moment);
+    if (interval.end && last_moment >= interval.end) {
+      PyErr_SetString(PyExc_IndexError, "Index out of range");
+      throw_error_already_set();
+    }
+  }
+  return last_moment;
+}
+
+std::time_t py_parse_date(const char * date_str)
+{
+  std::time_t temp;
+  if (parse_date(date_str, &temp))
+    return temp;
+  return 0;
+}
+
+std::time_t py_parse_date_yr(const char * date_str, const int year)
+{
+  std::time_t temp;
+  if (parse_date(date_str, &temp, year))
+    return temp;
+  return 0;
+}
+
+void export_datetime()
+{
+  class_< date_t > ("Date")
+    .def("now", &date_t::now)
+    .def("formats", &date_t::formats)
+    .def("current_year", &date_t::current_year)
+    .def("input_format", &date_t::input_format)
+    .def("output_format", &date_t::output_format)
+
+    .def(init<>())
+    .def(init<const date_t&>())
+    .def(init<const std::time_t&>())
+    .def(init<const interval_t&>())
+    .def(init<const std::string&>())
+
+    .def(self += other<const interval_t&>())
+    .def(self -= other<const date_t&>())
+    .def(self += long())
+    .def(self -= long())
+
+    .def(self < other<const date_t&>())
+    .def(self <= other<const date_t&>())
+    .def(self > other<const date_t&>())
+    .def(self >= other<const date_t&>())
+    .def(self == other<const date_t&>())
+    .def(self != other<const date_t&>())
+
+    .def("year", &date_t::year)
+    .def("month", &date_t::month)
+    .def("day", &date_t::day)
+    .def("wday", &date_t::wday)
+    .def("localtime", &date_t::localtime)
+
+    .def("write", &date_t::write)
+    .def("parse", &date_t::parse)
+    ;
+
+  class_< interval_t >
+    ("Interval", init<optional<int, int, int, std::time_t, std::time_t> >())
+    .def(init<std::string>())
+    .def(! self)
+
+    .def_readwrite("years", &interval_t::years)
+    .def_readwrite("months", &interval_t::months)
+    .def_readwrite("days", &interval_t::days)
+    .def_readwrite("hours", &interval_t::hours)
+    .def_readwrite("minutes", &interval_t::minutes)
+    .def_readwrite("seconds", &interval_t::seconds)
+
+    .def_readwrite("begin", &interval_t::begin)
+    .def_readwrite("end", &interval_t::end)
+
+    .def("__len__", interval_len)
+    .def("__getitem__", interval_getitem)
+
+    .def("start", &interval_t::start)
+    .def("first", &interval_t::first)
+    .def("increment", &interval_t::increment)
+    ;
+
+  def("parse_date", py_parse_date);
+  def("parse_date", py_parse_date_yr);
+}
+
+#endif // USE_BOOST_PYTHON
