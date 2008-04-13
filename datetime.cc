@@ -2,6 +2,7 @@
 #define _XOPEN_SOURCE
 #endif
 
+#include "debug.h"
 #include "datetime.h"
 
 #include <ctime>
