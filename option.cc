@@ -224,7 +224,7 @@ Report filtering:\n\
   -R, --real             consider only real (non-virtual) transactions\n\
   -L, --actual           consider only actual (non-automated) transactions\n\
   -r, --related          calculate report using related transactions\n\
-      --budget           generate budget entries based on FILE\n\
+      --budget           generate budget entries based on periodic entries\n\
       --add-budget       show all transactions plus the budget\n\
       --unbudgeted       show only unbudgeted transactions\n\
       --forecast EXPR    generate forecast entries while EXPR is true\n\
@@ -316,7 +316,7 @@ void option_calc_help(std::ostream& out)
   -R, --real             consider only real (non-virtual) transactions\n\
   -L, --actual           consider only actual (non-automated) transactions\n\
   -r, --related          calculate report using related transactions\n\
-      --budget           generate budget entries based on FILE\n\
+      --budget           generate budget entries based on periodic entries\n\
       --add-budget       show all transactions plus the budget\n\
       --unbudgeted       show only unbudgeted transactions\n\
       --forecast EXPR    generate forecast entries while EXPR is true\n\
