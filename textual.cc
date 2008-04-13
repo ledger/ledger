@@ -349,7 +349,7 @@ namespace {
 }
 
 entry_t * parse_entry(std::istream& in, char * line, account_t * master,
-		      textual_parser_t& parser, unsigned long beg_pos)
+		      textual_parser_t& parser, unsigned long& pos)
 {
   std::auto_ptr<entry_t> curr(new entry_t);
 
@@ -409,6 +409,8 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
   unsigned long beg_line = linenum;
 
   while (! in.eof() && (in.peek() == ' ' || in.peek() == '\t')) {
+    unsigned long beg_pos = (unsigned long)in.tellg();
+
     line[0] = '\0';
     in.getline(line, MAX_LINE);
     if (in.eof() && line[0] == '\0')
@@ -431,7 +433,7 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
       xact->beg_line = beg_line;
       xact->end_pos  = end_pos;
       xact->end_line = linenum;
-      beg_pos = end_pos;
+      pos = end_pos;
 
       curr->add_transaction(xact);
     }
@@ -715,7 +717,8 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
       case 'h':
       case 'b':
 #endif
-      case ';':                   // a comment line
+      case '*':                   // comment line
+      case ';':                   // comment line
 	break;
 
       case '-': {                 // option setting
@@ -837,14 +840,14 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
       default: {
 	unsigned int first_line = linenum;
-	unsigned long pos = end_pos;
+	unsigned long pos = beg_pos;
 	if (entry_t * entry =
 	    parse_entry(in, line, account_stack.front(), *this, pos)) {
 	  if (journal->add_entry(entry)) {
 	    entry->src_idx  = src_idx;
 	    entry->beg_pos  = beg_pos;
 	    entry->beg_line = beg_line;
-	    entry->end_pos  = end_pos;
+	    entry->end_pos  = pos;
 	    entry->end_line = linenum;
 	    count++;
 	  } else {
