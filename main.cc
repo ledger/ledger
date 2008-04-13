@@ -314,7 +314,7 @@ int parse_and_report(int argc, char * argv[], char * envp[])
   // Parse initialization files, ledger data, price database, etc.
 
   std::auto_ptr<binary_parser_t>  bin_parser(new binary_parser_t);
-#ifdef HAVE_XMLPARSE
+#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
   std::auto_ptr<xml_parser_t>     xml_parser(new xml_parser_t);
   std::auto_ptr<gnucash_parser_t> gnucash_parser(new gnucash_parser_t);
 #endif
@@ -325,7 +325,7 @@ int parse_and_report(int argc, char * argv[], char * envp[])
   std::auto_ptr<textual_parser_t> text_parser(new textual_parser_t);
 
   register_parser(bin_parser.get());
-#ifdef HAVE_XMLPARSE
+#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
   register_parser(xml_parser.get());
   register_parser(gnucash_parser.get());
 #endif
@@ -336,7 +336,7 @@ int parse_and_report(int argc, char * argv[], char * envp[])
   register_parser(text_parser.get());
 
   parse_ledger_data(journal.get(), bin_parser.get(), text_parser.get()
-#ifdef HAVE_XMLPARSE
+#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
 		    , xml_parser.get()
 #endif
 		    );
