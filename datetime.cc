@@ -110,7 +110,7 @@ datetime_t interval_t::increment(const datetime_t& moment) const
   if (months)
     desc->tm_mon += months;
   if (days)
-    desc->tm_mon += days;
+    desc->tm_mday += days;
 
   desc->tm_hour += hours;
   desc->tm_min  += minutes;
