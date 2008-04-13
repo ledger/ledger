@@ -1793,9 +1793,9 @@ bool compare_amount_commodities::operator()(const amount_t * left,
       rightprice.reduce();
 
       if (leftprice.commodity() == rightprice.commodity()) {
-	amount_t val = leftprice - rightprice;
-	if (val)
-	  return val < 0;
+	int diff = leftprice.compare(rightprice);
+	if (diff)
+	  return diff;
       } else {
 	// Since we have two different amounts, there's really no way
 	// to establish a true sorting order; we'll just do it based
@@ -1803,9 +1803,9 @@ bool compare_amount_commodities::operator()(const amount_t * left,
 	leftprice.clear_commodity();
 	rightprice.clear_commodity();
 
-	amount_t val = leftprice - rightprice;
-	if (val)
-	  return val < 0;
+	int diff = leftprice.compare(rightprice);
+	if (diff)
+	  return diff;
       }
     }
 
@@ -1828,6 +1828,8 @@ bool compare_amount_commodities::operator()(const amount_t * left,
     if (! aleftcomm.tag.empty() && ! arightcomm.tag.empty())
       return aleftcomm.tag < arightcomm.tag;
 
+    // The two annotated commodities don't differ enough to matter.  This
+    // should make this identical.
     assert(0);
     return true;
   }
