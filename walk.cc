@@ -213,8 +213,6 @@ void handle_value(const value_t&	       value,
 
   if (date)
     xdata.date = date;
-  if (flags)
-    xdata.dflags |= flags;
 
   value_t temp(value);
 
@@ -235,6 +233,9 @@ void handle_value(const value_t&	       value,
     flags |= TRANSACTION_COMPOUND;
     break;
   }
+
+  if (flags)
+    xdata.dflags |= flags;
 
   handler(xact);
 }
