@@ -112,6 +112,7 @@ class entry_base_t
 {
  public:
   journal_t *       journal;
+  std::string	    note;
   unsigned long     src_idx;
   istream_pos_type  beg_pos;
   unsigned long     beg_line;
