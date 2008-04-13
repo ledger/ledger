@@ -50,7 +50,7 @@ endif
 if DEBUG
 libledger_la_CXXFLAGS += -DDEBUG_LEVEL=4
 endif
-libledger_la_LDFLAGS = -release 2.6
+libledger_la_LDFLAGS = -release 2.6.0.90
 
 pkginclude_HEADERS = \
 	acconf.h     \

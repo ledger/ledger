@@ -1,5 +1,71 @@
 			     Ledger NEWS
 
+* 2.6.0.90
+
+- Gnucash parser is fixed.
+
+- Fix a memory leak bug in the amount parser.
+
+- (This feature is from 2.6, but was not documented anywhere):
+
+  Commodities may now specify lot details, to assign in managing set
+  groups of items, like buying and selling shares of stock.
+
+  For example, let's say you buy 50 shares of AAPL at $10 a share:
+
+    2007/01/14 Stock purchase
+      Assets:Brokerage         50 AAPL @ $10
+      Assets:Brokerage
+
+  Three months later, you sell this "lot".  Based on the original
+  purchase information, Ledger remembers how much each share was
+  purchased for, and the date on which it was purchased.  This means
+  you can sell this specific lot by price, by date, or by both.  Let's
+  sell it by price, this time for $20 a share.
+
+    2007/04/14 Stock purchase
+      Assets:Brokerage         $1000.00
+      Assets:Brokerage         -50 AAPL {$10} @ $20
+      Income:Capital Gains     $-500.00
+
+  Note that the Income:Capital Gains line is now required to balance
+  the transaction.  Because you sold 50 AAPL at $20/share, and because
+  you are selling shares that were originally valued at $10/share,
+  Ledger needs to know how you will "balance" this difference.  An
+  equivalent Expenses:Capital Loss would be needed if the selling
+  price were less than the buying price.
+
+  Here's the same example, this time selling by date and price:
+
+    2007/04/14 Stock purchase
+      Assets:Brokerage         $1000.00
+      Assets:Brokerage         -50 AAPL {$10} [2007/01/14] @ $20
+      Income:Capital Gains     $-500.00
+
+  If you attempt to sell shares for a date you did not buy them, note
+  that Ledger will not complain (as it never complains about the
+  movement of commodities between accounts).  In this case, it will
+  simply create a negative balance for such shares within your
+  Brokerage account; it's up to you to determine whether you have them
+  or not.
+
+- To facilitate lot pricing reports, there are some new reporting
+  options:
+
+    --lot-prices   Report commodities with different lot prices as if
+                   they were different commodities.  Otherwise, Ledger
+                   just gloms all the AAPL shares together.
+
+    --lot-dates    Separate commodities by lot date.  Every
+                   transaction that uses the '@' cost specifier will
+                   have an implicit lot date and lot price.
+
+    --lot-tags     Separate commodities by their arbitrary note tag.
+                   Note tags may be specified using (note) after the
+                   commodity.
+
+    --lots         Separate commodities using all lot information.
+
 * 2.6
 
 - The style for eliding long account names (for example, in the
