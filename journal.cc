@@ -371,6 +371,18 @@ void auto_entry_t::extend_entry(entry_base_t& entry, bool post)
 
 	transaction_t * xact
 	  = new transaction_t(account, amt, (*t)->flags | TRANSACTION_AUTO);
+
+	// Copy over details so that the resulting transaction is a mirror of
+	// the automated entry's one.
+	xact->state	= (*t)->state;
+	xact->_date	= (*t)->_date;
+	xact->_date_eff = (*t)->_date_eff;
+	xact->note	= (*t)->note;
+	xact->beg_pos	= (*t)->beg_pos;
+	xact->beg_line	= (*t)->beg_line;
+	xact->end_pos	= (*t)->end_pos;
+	xact->end_line	= (*t)->end_line;
+
 	entry.add_transaction(xact);
       }
     }
