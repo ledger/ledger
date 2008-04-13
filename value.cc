@@ -890,10 +890,10 @@ void value_t::cast(type_t cast_type)
       new((amount_t *)data) amount_t(*((long *) data));
       break;
     case BALANCE:
-      new((balance_t *)data) balance_t(*((long *) data));
+      new((balance_t *)data) balance_t(amount_t(*((long *) data)));
       break;
     case BALANCE_PAIR:
-      new((balance_pair_t *)data) balance_pair_t(*((long *) data));
+      new((balance_pair_t *)data) balance_pair_t(amount_t(*((long *) data)));
       break;
 
     default:
