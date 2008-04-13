@@ -1,5 +1,9 @@
 			     Ledger NEWS
 
+* 2.4.1
+
+- Corrected an issue that had inadvertantly disabled Gnucash support.
+
 * 2.4
 
 - Both "-$100.00" and "$-100.00" are now equivalent amounts.
