@@ -388,6 +388,10 @@
 - Did much internal restructuring to allow the use of libledger.so in
   non-command-line environments (such as GUI tools).
 
+* 2.4.1
+
+- Corrected an issue that had inadvertantly disabled Gnucash support.
+
 * 2.4
 
 - Both "-$100.00" and "$-100.00" are now equivalent amounts.
