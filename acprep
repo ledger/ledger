@@ -19,12 +19,16 @@ autoconf
 
 HERE="$PWD"
 
-if [ -d "$HOME/Products" ]; then
-    projdir="$HOME/Products/$(basename $HERE)"
-    if [ ! -d "$projdir" ]; then
-	mkdir -p "$projdir"
+if [ "$1" != "--local" ]; then
+    if [ -d "$HOME/Products" ]; then
+	projdir="$HOME/Products/$(basename $HERE)"
+	if [ ! -d "$projdir" ]; then
+	    mkdir -p "$projdir"
+	fi
+	cd "$projdir" || (echo "Cannot change to $projdir"; exit 1)
     fi
-    cd "$projdir" || (echo "Cannot change to $projdir"; exit 1)
+else
+    shift 1
 fi
 
 INCDIRS="-I/opt/local/include -I/usr/local/include -I/usr/include/httpd/xml"
