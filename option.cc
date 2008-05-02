@@ -482,17 +482,17 @@ OPT_BEGIN(begin, "b:") {
 OPT_BEGIN(end, "e:") {
   char buf[128];
   interval_t interval(optarg);
-  if (! interval.begin)
+  if (! interval.end)
     throw new error(std::string("Could not determine end of period '") +
 		    optarg + "'");
 
   if (! report->predicate.empty())
     report->predicate += "&";
   report->predicate += "d<[";
-  report->predicate += interval.begin.to_string();
+  report->predicate += interval.end.to_string();
   report->predicate += "]";
 
-  terminus = interval.begin;
+  terminus = interval.end;
 } OPT_END(end);
 
 OPT_BEGIN(current, "c") {

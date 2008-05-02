@@ -294,7 +294,7 @@ in the distribution), and that the contents of that file are:
   Equity:Opening Balances
 
 2004/05/01 * Investment balance
-  Assets:Brokerage              50 AAPL @@ $30.00
+  Assets:Brokerage              50 AAPL @ $30.00
   Equity:Opening Balances
 
 2004/05/14 * Pay day
@@ -2386,8 +2386,8 @@ The format of each following transaction is:
 The @samp{ACCOUNT} may be surrounded by parentheses if it is a virtual
 transactions, or square brackets if it is a virtual transactions that
 must balance.  The @samp{AMOUNT} can be followed by a per-unit
-transaction cost, by specifying @samp{@@ AMOUNT}, or a complete
-transaction cost with @samp{@@@@ AMOUNT}.  Lastly, the @samp{NOTE} may
+transaction cost, by specifying @samp{@ AMOUNT}, or a complete
+transaction cost with @samp{@@ AMOUNT}.  Lastly, the @samp{NOTE} may
 specify an actual and/or effective date for the transaction by using
 the syntax @samp{[ACTUAL_DATE]} or @samp{[=EFFECTIVE_DATE]} or
 @samp{[ACTUAL_DATE=EFFECtIVE_DATE]}.
