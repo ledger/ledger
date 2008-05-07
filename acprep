@@ -27,34 +27,49 @@ fi
 
 INCDIRS="-I/opt/local/include -I/usr/local/include -I/usr/include/httpd/xml"
 INCDIRS="$INCDIRS -I/usr/include/python2.5"
-INCDIRS="$INCDIRS -Wno-long-double"
 LIBDIRS="-L/opt/local/lib -L/usr/local/lib"
+
+SYSTEM=`uname -s`
+
+if [ $SYSTEM = Linux ]; then
+    CXXFLAGS="-pthread"
+elif [ $SYSTEM = Solaris ]; then
+    CXXFLAGS="-pthreads"
+elif [ $SYSTEM = Darwin ]; then
+    #CXXFLAGS="-arch i386 -arch ppc -isysroot /Developer/SDKs/MacOSX10.4u.sdk"
+    CXXFLAGS="$CXXFLAGS -Wno-long-double"
+    #LIBDIRS="$LIBDIRS -arch i386 -arch ppc -isysroot /Developer/SDKs/MacOSX10.4u.sdk"
+else
+    CXXFLAGS=""
+fi
 
 if [ "$1" = "--debug" ]; then
     shift 1
-    $HERE/configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" CXXFLAGS="-g" \
-	--enable-debug --enable-python "$@"
+    $HERE/configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
+	CXXFLAGS="$CXXFLAGS -g" --enable-debug --enable-python "$@"
 elif [ "$1" = "--opt" ]; then
     shift 1
     $HERE/configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
-	CXXFLAGS="-fomit-frame-pointer -O3 -mcpu=7450 -fPIC" "$@"
+	CXXFLAGS="$CXXFLAGS -fomit-frame-pointer -O3 -mcpu=7450 -fPIC" "$@"
 elif [ "$1" = "--flat-opt" ]; then
     shift 1
     $HERE/configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
-	CXXFLAGS="-fomit-frame-pointer -O3 -mcpu=7450" "$@"
+	CXXFLAGS="$CXXFLAGS -fomit-frame-pointer -O3 -mcpu=7450" "$@"
 elif [ "$1" = "--safe-opt" ]; then
     shift 1
     $HERE/configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
-	CXXFLAGS="-fomit-frame-pointer -O3 -mcpu=7450 -fPIC -DDEBUG_LEVEL=1" "$@"
+	CXXFLAGS="$CXXFLAGS -fomit-frame-pointer -O3 -mcpu=7450 -fPIC -DDEBUG_LEVEL=1" "$@"
 elif [ "$1" = "--perf" ]; then
     shift 1
-    $HERE/configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" CXXFLAGS="-g -pg" "$@"
+    $HERE/configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
+	CXXFLAGS="$CXXFLAGS -g -pg" "$@"
 elif [ "$1" = "--python" ]; then
     shift 1
-    $HERE/configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" CXXFLAGS="-g" \
-	--enable-python "$@"
+    $HERE/configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
+	CXXFLAGS="$CXXFLAGS -g" --enable-python "$@"
 else
-    $HERE/configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" CXXFLAGS="-g" "$@"
+    $HERE/configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
+	CXXFLAGS="$CXXFLAGS -g" "$@"
 fi
 
 rm -f AUTHORS COPYING
