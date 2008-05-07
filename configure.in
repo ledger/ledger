@@ -19,7 +19,7 @@ AM_PATH_LISPDIR
 # check if UNIX pipes are available
 AC_CACHE_CHECK(
   [if pipes can be used],
-  [pipes_avail],
+  [pipes_avail_cv_],
   [AC_LANG_PUSH(C++)
    AC_TRY_LINK(
      [#include <sys/types.h>
@@ -47,18 +47,18 @@ AC_CACHE_CHECK(
       } else {
 	close(pfd[0]);
       }],
-     [pipes_avail=true],
-     [pipes_avail=false])
+     [pipes_avail_cv_=true],
+     [pipes_avail_cv_=false])
    AC_LANG_POP])
 
-if [test x$pipes_avail = xtrue ]; then
+if [test x$pipes_avail_cv_ = xtrue ]; then
   AC_DEFINE([HAVE_UNIX_PIPES], [1], [Whether UNIX pipes are available])
 fi
 
 # check for gmp
 AC_CACHE_CHECK(
   [if libgmp is available],
-  [libgmp_avail],
+  [libgmp_avail_cv_],
   [libgmp_save_libs=$LIBS
    LIBS="-lgmp $LIBS"
    AC_LANG_PUSH(C++)
@@ -67,12 +67,12 @@ AC_CACHE_CHECK(
      [mpz_t bar;
       mpz_init(bar);
       mpz_clear(bar);],
-     [libgmp_avail=true],
-     [libgmp_avail=false])
+     [libgmp_avail_cv_=true],
+     [libgmp_avail_cv_=false])
    AC_LANG_POP
    LIBS=$libgmp_save_libs])
 
-if [test x$libgmp_avail = xtrue ]; then
+if [test x$libgmp_avail_cv_ = xtrue ]; then
   AM_CONDITIONAL(HAVE_GMP, true)
   LIBS="-lgmp $LIBS"
 else
@@ -82,19 +82,19 @@ fi
 # check for pcre
 AC_CACHE_CHECK(
   [if libpcre is available],
-  [libpcre_avail],
+  [libpcre_avail_cv_],
   [libpcre_save_libs=$LIBS
    LIBS="-lpcre $LIBS"
    AC_LANG_PUSH(C++)
    AC_TRY_LINK(
      [#include <pcre.h>],
      [pcre_free((pcre *)NULL);],
-     [libpcre_avail=true],
-     [libpcre_avail=false])
+     [libpcre_avail_cv_=true],
+     [libpcre_avail_cv_=false])
    AC_LANG_POP
    LIBS=$libpcre_save_libs])
 
-if [test x$libpcre_avail = xtrue ]; then
+if [test x$libpcre_avail_cv_ = xtrue ]; then
   AM_CONDITIONAL(HAVE_PCRE, true)
   LIBS="-lpcre $LIBS"
 else
@@ -114,7 +114,7 @@ AM_CONDITIONAL(USE_XML, test x$xml = xtrue)
 if [test x$xml = xtrue ]; then
   AC_CACHE_CHECK(
     [if libexpat is available],
-    [libexpat_avail],
+    [libexpat_avail_cv_],
     [libexpat_save_libs=$LIBS
      LIBS="-lexpat $LIBS"
      AC_LANG_PUSH(C++)
@@ -125,12 +125,12 @@ if [test x$xml = xtrue ]; then
 	}],
        [XML_Parser parser = XML_ParserCreate(NULL);
 	return parser != NULL;],
-       [libexpat_avail=true],
-       [libexpat_avail=false])
+       [libexpat_avail_cv_=true],
+       [libexpat_avail_cv_=false])
      AC_LANG_POP
      LIBS=$libexpat_save_libs])
 
-  if [test x$libexpat_avail = xtrue ]; then
+  if [test x$libexpat_avail_cv_ = xtrue ]; then
     AM_CONDITIONAL(HAVE_EXPAT, true)
     LIBS="-lexpat $LIBS"
   else
@@ -141,10 +141,10 @@ else
 fi
 
 if [test x$xml = xtrue ]; then
-  if [test x$libexpat_avail = xfalse ]; then
+  if [test x$libexpat_avail_cv_ = xfalse ]; then
     AC_CACHE_CHECK(
       [if libxmlparse is available],
-      [libxmlparse_avail],
+      [libxmlparse_avail_cv_],
       [libxmlparse_save_libs=$LIBS
        LIBS="-lxmlparse -lxmltok $LIBS"
        AC_LANG_PUSH(C++)
@@ -155,12 +155,12 @@ if [test x$xml = xtrue ]; then
 	}],
 	 [XML_Parser parser = XML_ParserCreate(NULL);
 	return parser != NULL;],
-	 [libxmlparse_avail=true],
-	 [libxmlparse_avail=false])
+	 [libxmlparse_avail_cv_=true],
+	 [libxmlparse_avail_cv_=false])
        AC_LANG_POP
        LIBS=$libxmlparse_save_libs])
 
-    if [test x$libxmlparse_avail = xtrue ]; then
+    if [test x$libxmlparse_avail_cv_ = xtrue ]; then
       AM_CONDITIONAL(HAVE_XMLPARSE, true)
       LIBS="-lxmlparse -lxmltok $LIBS"
     else
@@ -186,19 +186,19 @@ AM_CONDITIONAL(USE_OFX, test x$ofx = xtrue)
 if [test x$ofx = xtrue ]; then
   AC_CACHE_CHECK(
     [if libofx is available],
-    [libofx_avail],
+    [libofx_avail_cv_],
     [libofx_save_libs=$LIBS
      LIBS="-lofx $LIBS"
      AC_LANG_PUSH(C++)
      AC_TRY_LINK(
        [#include <libofx.h>],
        [  LibofxContextPtr libofx_context = libofx_get_new_context();],
-       [libofx_avail=true],
-       [libofx_avail=false])
+       [libofx_avail_cv_=true],
+       [libofx_avail_cv_=false])
      AC_LANG_POP
      LIBS=$libofx_save_libs])
 
-  if [test x$libofx_avail = xtrue ]; then
+  if [test x$libofx_avail_cv_ = xtrue ]; then
     AM_CONDITIONAL(HAVE_LIBOFX, true)
     LIBS="-lofx $LIBS"
   else
@@ -223,7 +223,7 @@ if [test x$python = xtrue ]; then
   if [test "$PYTHON" != :]; then
     AC_CACHE_CHECK(
       [if boost_python is available],
-      [boost_python_cpplib_avail],
+      [boost_python_cpplib_avail_cv_],
       [boost_python_save_libs=$LIBS
        LIBS="-lboost_python -lpython$PYTHON_VERSION $LIBS"
        AC_LANG_PUSH(C++)
@@ -235,11 +235,11 @@ if [test x$python = xtrue ]; then
 	    class_< foo > ("foo") ;
 	  }],
 	 [return 0],
-	 [boost_python_cpplib_avail=true],
-	 [boost_python_cpplib_avail=false])
+	 [boost_python_cpplib_avail_cv_=true],
+	 [boost_python_cpplib_avail_cv_=false])
        AC_LANG_POP
        LIBS=$boost_python_save_libs])
-    if [test x$boost_python_cpplib_avail = xtrue ]; then
+    if [test x$boost_python_cpplib_avail_cv_ = xtrue ]; then
       AM_CONDITIONAL(HAVE_BOOST_PYTHON, true)
       LIBS="-lboost_python -lpython$PYTHON_VERSION $LIBS"
     else
