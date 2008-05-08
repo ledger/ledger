@@ -2,7 +2,7 @@
 #define _VALEXPR_H
 
 #include "value.h"
-#include "error.h"
+#include "utils.h"
 #include "mask.h"
 
 #include <memory>
@@ -22,16 +22,16 @@ struct details_t
   details_t() : entry(NULL), xact(NULL), account(NULL) {}
   details_t(const entry_t& _entry)
     : entry(&_entry), xact(NULL), account(NULL) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor details_t");
+    DEBUG("ledger.memory.ctors", "ctor details_t");
   }
   details_t(const transaction_t& _xact);
   details_t(const account_t& _account)
     : entry(NULL), xact(NULL), account(&_account) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor details_t");
+    DEBUG("ledger.memory.ctors", "ctor details_t");
   }
 #ifdef DEBUG_ENABLED
   ~details_t() {
-    DEBUG_PRINT("ledger.memory.dtors", "dtor details_t");
+    DEBUG("ledger.memory.dtors", "dtor details_t");
   }
 #endif
 };
@@ -134,26 +134,26 @@ struct value_expr_t
 
   value_expr_t(const kind_t _kind)
     : kind(_kind), refc(0), left(NULL), right(NULL) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor value_expr_t " << this);
+    DEBUG("ledger.memory.ctors", "ctor value_expr_t " << this);
   }
   ~value_expr_t();
 
   void release() const {
-    DEBUG_PRINT("ledger.valexpr.memory",
+    DEBUG("ledger.valexpr.memory",
 		"Releasing " << this << ", refc now " << refc - 1);
     assert(refc > 0);
     if (--refc == 0)
       delete this;
   }
   value_expr_t * acquire() {
-    DEBUG_PRINT("ledger.valexpr.memory",
+    DEBUG("ledger.valexpr.memory",
 		"Acquiring " << this << ", refc now " << refc + 1);
     assert(refc >= 0);
     refc++;
     return this;
   }
   const value_expr_t * acquire() const {
-    DEBUG_PRINT("ledger.valexpr.memory",
+    DEBUG("ledger.valexpr.memory",
 		"Acquiring " << this << ", refc now " << refc + 1);
     refc++;
     return this;
@@ -186,7 +186,7 @@ struct value_expr_t
 
  private:
   value_expr_t(const value_expr_t&) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor value_expr_t (copy) " << this);
+    DEBUG("ledger.memory.ctors", "ctor value_expr_t (copy) " << this);
   }
 };
 
@@ -196,7 +196,7 @@ class valexpr_context : public error_context {
   const ledger::value_expr_t * error_node;
 
   valexpr_context(const ledger::value_expr_t * _expr,
-		  const std::string& desc = "") throw();
+		  const string& desc = "") throw();
   virtual ~valexpr_context() throw();
 
   virtual void describe(std::ostream& out) const throw();
@@ -204,14 +204,14 @@ class valexpr_context : public error_context {
 
 class compute_error : public error {
  public:
-  compute_error(const std::string& reason, error_context * ctxt = NULL) throw()
+  compute_error(const string& reason, error_context * ctxt = NULL) throw()
     : error(reason, ctxt) {}
   virtual ~compute_error() throw() {}
 };
 
 class value_expr_error : public error {
  public:
-  value_expr_error(const std::string& reason,
+  value_expr_error(const string& reason,
 		   error_context * ctxt = NULL) throw()
     : error(reason, ctxt) {}
   virtual ~value_expr_error() throw() {}
@@ -221,24 +221,24 @@ struct scope_t
 {
   scope_t * parent;
 
-  typedef std::map<const std::string, value_expr_t *>  symbol_map;
-  typedef std::pair<const std::string, value_expr_t *> symbol_pair;
+  typedef std::map<const string, value_expr_t *>  symbol_map;
+  typedef std::pair<const string, value_expr_t *> symbol_pair;
 
   symbol_map symbols;
 
   scope_t(scope_t * _parent = NULL) : parent(_parent) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor scope_t");
+    DEBUG("ledger.memory.ctors", "ctor scope_t");
   }
   ~scope_t() {
-    DEBUG_PRINT("ledger.memory.dtors", "dtor scope_t");
+    DEBUG("ledger.memory.dtors", "dtor scope_t");
     for (symbol_map::iterator i = symbols.begin();
 	 i != symbols.end();
 	 i++)
       (*i).second->release();
   }
 
-  void define(const std::string& name, value_expr_t * def) {
-    DEBUG_PRINT("ledger.valexpr.syms",
+  void define(const string& name, value_expr_t * def) {
+    DEBUG("ledger.valexpr.syms",
 		"Defining '" << name << "' = " << def);
     std::pair<symbol_map::iterator, bool> result
       = symbols.insert(symbol_pair(name, def));
@@ -248,13 +248,13 @@ struct scope_t
 	= symbols.insert(symbol_pair(name, def));
       if (! result.second) {
 	def->release();
-	throw new compute_error(std::string("Redefinition of '") +
+	throw new compute_error(string("Redefinition of '") +
 				name + "' in same scope");
       }
     }
     def->acquire();
   }
-  value_expr_t * lookup(const std::string& name) {
+  value_expr_t * lookup(const string& name) {
     symbol_map::const_iterator i = symbols.find(name);
     if (i != symbols.end())
       return (*i).second;
@@ -286,9 +286,9 @@ value_expr_t * parse_value_expr(std::istream& in,
 				const short flags = PARSE_VALEXPR_RELAXED);
 
 inline value_expr_t *
-parse_value_expr(const std::string& str,
-		 scope_t *	    scope = NULL,
-		 const short        flags = PARSE_VALEXPR_RELAXED) {
+parse_value_expr(const string& str,
+		 scope_t *     scope	  = NULL,
+		 const short   flags = PARSE_VALEXPR_RELAXED) {
   std::istringstream stream(str);
   try {
     return parse_value_expr(stream, scope, flags);
@@ -305,13 +305,13 @@ inline value_expr_t *
 parse_value_expr(const char * p,
 		 scope_t *    scope = NULL,
 		 const short  flags  = PARSE_VALEXPR_RELAXED) {
-  return parse_value_expr(std::string(p), scope, flags);
+  return parse_value_expr(string(p), scope, flags);
 }
 
 void dump_value_expr(std::ostream& out, const value_expr_t * node,
 		     const int depth = 0);
 
-bool write_value_expr(std::ostream&	   out,
+bool print_value_expr(std::ostream&	   out,
 		      const value_expr_t * node,
 		      const bool           relaxed      = true,
 		      const value_expr_t * node_to_find = NULL,
@@ -354,12 +354,12 @@ class value_expr
 {
   value_expr_t * ptr;
 public:
-  std::string    expr;
+  string expr;
 
   value_expr() : ptr(NULL) {}
 
-  value_expr(const std::string& _expr) : expr(_expr) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor value_expr");
+  value_expr(const string& _expr) : expr(_expr) {
+    DEBUG("ledger.memory.ctors", "ctor value_expr");
     if (! _expr.empty())
       ptr = parse_value_expr(expr)->acquire();
     else
@@ -367,20 +367,20 @@ public:
   }
   value_expr(value_expr_t * _ptr)
     : ptr(_ptr ? _ptr->acquire(): NULL) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor value_expr");
+    DEBUG("ledger.memory.ctors", "ctor value_expr");
   }
   value_expr(const value_expr& other)
     : ptr(other.ptr ? other.ptr->acquire() : NULL),
       expr(other.expr) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor value_expr");
+    DEBUG("ledger.memory.ctors", "ctor value_expr");
   }
   virtual ~value_expr() {
-    DEBUG_PRINT("ledger.memory.dtors", "dtor value_expr");
+    DEBUG("ledger.memory.dtors", "dtor value_expr");
     if (ptr)
       ptr->release();
   }
 
-  value_expr& operator=(const std::string& _expr) {
+  value_expr& operator=(const string& _expr) {
     expr = _expr;
     reset(parse_value_expr(expr));
     return *this;
@@ -399,7 +399,7 @@ public:
   operator bool() const throw() {
     return ptr != NULL;
   }
-  operator std::string() const throw() {
+  operator string() const throw() {
     return expr;
   }
   operator value_expr_t *() const throw() {
@@ -439,7 +439,7 @@ public:
     return temp;
   }
 
-  friend bool write_value_expr(std::ostream&	    out,
+  friend bool print_value_expr(std::ostream&	    out,
 			       const value_expr_t * node,
 			       const value_expr_t * node_to_find,
 			       unsigned long *	    start_pos,
@@ -474,7 +474,7 @@ inline value_t compute_total(const details_t& details = details_t()) {
 value_expr_t * parse_boolean_expr(std::istream& in, scope_t * scope,
 				  const short flags);
 
-inline void parse_value_definition(const std::string& str,
+inline void parse_value_definition(const string& str,
 				   scope_t * scope = NULL) {
   std::istringstream def(str);
   value_expr expr
@@ -490,18 +490,18 @@ class item_predicate
  public:
   const value_expr_t * predicate;
 
-  item_predicate(const std::string& _predicate) : predicate(NULL) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor item_predicate<T>");
+  item_predicate(const string& _predicate) : predicate(NULL) {
+    DEBUG("ledger.memory.ctors", "ctor item_predicate<T>");
     if (! _predicate.empty())
       predicate = parse_value_expr(_predicate)->acquire();
   }
   item_predicate(const value_expr_t * _predicate = NULL)
     : predicate(_predicate->acquire()) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor item_predicate<T>");
+    DEBUG("ledger.memory.ctors", "ctor item_predicate<T>");
   }
 
   ~item_predicate() {
-    DEBUG_PRINT("ledger.memory.dtors", "dtor item_predicate<T>");
+    DEBUG("ledger.memory.dtors", "dtor item_predicate<T>");
     if (predicate)
       predicate->release();
   }

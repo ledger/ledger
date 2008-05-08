@@ -79,7 +79,7 @@ void value_t::initialize()
   *reinterpret_cast<bool *>(false_value->data) = false;
 
   BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(bool));
-  BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(moment_t));
+  BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(datetime_t));
   BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(long));
   BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(amount_t));
   BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(balance_t *));
@@ -91,8 +91,8 @@ void value_t::initialize()
 #if 0
   DEBUG_(std::setw(3) << std::right << sizeof(bool)
 	 << "  sizeof(bool)");
-  DEBUG_(std::setw(3) << std::right << sizeof(moment_t)
-	 << "  sizeof(moment_t)");
+  DEBUG_(std::setw(3) << std::right << sizeof(datetime_t)
+	 << "  sizeof(datetime_t)");
   DEBUG_(std::setw(3) << std::right << sizeof(long)
 	 << "  sizeof(long)");
   DEBUG_(std::setw(3) << std::right << sizeof(amount_t)
@@ -151,7 +151,7 @@ value_t::operator bool() const
   case INTEGER:
     return as_long();
   case DATETIME:
-    return is_valid_moment(as_datetime());
+    return is_valid(as_datetime());
   case AMOUNT:
     return as_amount();
   case BALANCE:
@@ -194,7 +194,7 @@ long value_t::to_long() const
   }
 }
 
-moment_t value_t::to_datetime() const
+datetime_t value_t::to_datetime() const
 {
   if (is_datetime()) {
     return as_datetime();
@@ -1119,7 +1119,7 @@ bool value_t::is_realzero() const
   case INTEGER:
     return as_long() == 0;
   case DATETIME:
-    return ! is_valid_moment(as_datetime());
+    return ! is_valid(as_datetime());
   case AMOUNT:
     return as_amount().is_realzero();
   case BALANCE:
@@ -1142,7 +1142,7 @@ bool value_t::is_realzero() const
   return true;
 }
 
-value_t value_t::value(const optional<moment_t>& moment) const
+value_t value_t::value(const optional<datetime_t>& moment) const
 {
   switch (type()) {
   case INTEGER:
@@ -1192,6 +1192,29 @@ void value_t::in_place_reduce()
   }
 
   throw_(value_error, "Cannot reduce " << label());
+}
+
+value_t value_t::abs() const
+{
+  switch (type()) {
+  case INTEGER: {
+    long val = const_cast<value_t&>(*this).as_long_lval();
+    if (val < 0)
+      return - val;
+    return val;
+  }
+  case AMOUNT:
+    return const_cast<value_t&>(*this).as_amount_lval().abs();
+  case BALANCE:
+    return const_cast<value_t&>(*this).as_balance_lval().abs();
+  case BALANCE_PAIR:
+    return const_cast<value_t&>(*this).as_balance_pair_lval().abs();
+  default:
+    break;
+  }
+
+  throw_(value_error, "Cannot abs " << label());
+  return value_t();
 }
 
 value_t value_t::round() const
@@ -1249,7 +1272,7 @@ value_t value_t::annotated_date() const
     return *this;
 
   case AMOUNT: {
-    optional<moment_t> temp = as_amount().annotation_details().date;
+    optional<datetime_t> temp = as_amount().annotation_details().date;
     if (! temp)
       return false;
     return *temp;
@@ -1429,6 +1452,46 @@ void value_t::print(std::ostream& out, const int first_width,
     assert(false);
     break;
   }
+}
+
+void value_context::describe(std::ostream& out) const throw()
+{
+  if (! desc.empty())
+    out << desc << std::endl;
+
+  balance_t * ptr = NULL;
+
+  out << std::right;
+  out.width(20);
+
+  switch (bal.type()) {
+  case value_t::BOOLEAN:
+    out << (const_cast<value_t&>(bal).as_boolean_lval() ? "true" : "false");
+    break;
+  case value_t::INTEGER:
+    out << const_cast<value_t&>(bal).as_long_lval();
+    break;
+  case value_t::DATETIME:
+    out << const_cast<value_t&>(bal).as_datetime_lval();
+    break;
+  case value_t::AMOUNT:
+    out << const_cast<value_t&>(bal).as_amount_lval();
+    break;
+  case value_t::BALANCE:
+    ptr = &(const_cast<value_t&>(bal).as_balance_lval());
+    // fall through...
+
+  case value_t::BALANCE_PAIR:
+    if (! ptr)
+      ptr = &(const_cast<value_t&>(bal).as_balance_pair_lval().quantity());
+
+    ptr->print(out, 20);
+    break;
+  default:
+    assert(0);
+    break;
+  }
+  out << std::endl;
 }
 
 } // namespace ledger

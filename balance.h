@@ -275,7 +275,7 @@ public:
    * amount.  That is, a balance of 10m and 1799s will unreduce to
    * 39.98m.
    *
-   * value(optional<moment_t>) returns the total historical value for
+   * value(optional<datetime_t>) returns the total historical value for
    * a balance -- the default moment returns a value based on the most
    * recently known price -- based on the price history of its
    * component commodities.  See amount_t::value for an example.
@@ -346,7 +346,7 @@ public:
     return *this = temp;
   }
 
-  optional<balance_t> value(const optional<moment_t>& moment = none) const;
+  optional<balance_t> value(const optional<datetime_t>& moment = none) const;
 
   /**
    * Truth tests.  An balance may be truth test in two ways:

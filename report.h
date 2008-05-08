@@ -2,7 +2,6 @@
 #define _REPORT_H
 
 #include "ledger.h"
-#include "timing.h"
 
 #include <iostream>
 #include <memory>
@@ -13,21 +12,22 @@ namespace ledger {
 class report_t
 {
  public:
-  std::string output_file;
-  std::string predicate;
-  std::string secondary_predicate;
-  std::string display_predicate;
-  std::string report_period;
-  std::string report_period_sort;
-  std::string format_string;
-  std::string sort_string;
-  std::string amount_expr;
-  std::string total_expr;
-  std::string descend_expr;
-  std::string forecast_limit;
-  std::string reconcile_balance;
-  std::string reconcile_date;
-  std::string date_output_format;
+  path output_file;
+
+  string predicate;
+  string secondary_predicate;
+  string display_predicate;
+  string report_period;
+  string report_period_sort;
+  string format_string;
+  string sort_string;
+  string amount_expr;
+  string total_expr;
+  string descend_expr;
+  string forecast_limit;
+  string reconcile_balance;
+  string reconcile_date;
+  string date_output_format;
 
   unsigned long budget_flags;
 
@@ -55,19 +55,19 @@ class report_t
 
   report_t();
 
-  void regexps_to_predicate(const std::string& command,
-			    std::list<std::string>::const_iterator begin,
-			    std::list<std::string>::const_iterator end,
+  void regexps_to_predicate(const string& command,
+			    std::list<string>::const_iterator begin,
+			    std::list<string>::const_iterator end,
 			    const bool account_regexp	       = false,
 			    const bool add_account_short_masks = false,
 			    const bool logical_and             = true);
 
-  void process_options(const std::string&     command,
+  void process_options(const string&     command,
 		       strings_list::iterator arg,
 		       strings_list::iterator args_end);
 
   item_handler<transaction_t> *
-  chain_xact_handlers(const std::string& command,
+  chain_xact_handlers(const string& command,
 		      item_handler<transaction_t> * base_formatter,
 		      journal_t * journal,
 		      account_t * master,

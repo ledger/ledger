@@ -12,10 +12,10 @@ int format_t::abbrev_length = 2;
 bool format_t::ansi_codes  = false;
 bool format_t::ansi_invert = false;
 
-std::string format_t::truncate(const std::string& str, unsigned int width,
+string format_t::truncate(const string& str, unsigned int width,
 			       const bool is_account)
 {
-  const int len = str.length();
+  const unsigned int len = str.length();
   if (len <= width)
     return str;
 
@@ -43,28 +43,28 @@ std::string format_t::truncate(const std::string& str, unsigned int width,
 
   case ABBREVIATE:
     if (is_account) {
-      std::list<std::string> parts;
-      std::string::size_type beg = 0;
-      for (std::string::size_type pos = str.find(':');
-	   pos != std::string::npos;
+      std::list<string> parts;
+      string::size_type beg = 0;
+      for (string::size_type pos = str.find(':');
+	   pos != string::npos;
 	   beg = pos + 1, pos = str.find(':', beg))
-	parts.push_back(std::string(str, beg, pos - beg));
-      parts.push_back(std::string(str, beg));
+	parts.push_back(string(str, beg, pos - beg));
+      parts.push_back(string(str, beg));
 
-      std::string result;
-      int newlen = len;
-      for (std::list<std::string>::iterator i = parts.begin();
+      string result;
+      unsigned int newlen = len;
+      for (std::list<string>::iterator i = parts.begin();
 	   i != parts.end();
 	   i++) {
 	// Don't contract the last element
-	std::list<std::string>::iterator x = i;
+	std::list<string>::iterator x = i;
 	if (++x == parts.end()) {
 	  result += *i;
 	  break;
 	}
 
 	if (newlen > width) {
-	  result += std::string(*i, 0, abbrev_length);
+	  result += string(*i, 0, abbrev_length);
 	  result += ":";
 	  newlen -= (*i).length() - abbrev_length;
 	} else {
@@ -98,9 +98,9 @@ std::string format_t::truncate(const std::string& str, unsigned int width,
   return buf;
 }
 
-std::string partial_account_name(const account_t& account)
+string partial_account_name(const account_t& account)
 {
-  std::string name;
+  string name;
 
   for (const account_t * acct = &account;
        acct && acct->parent;
@@ -118,7 +118,7 @@ std::string partial_account_name(const account_t& account)
   return name;
 }
 
-element_t * format_t::parse_elements(const std::string& fmt)
+element_t * format_t::parse_elements(const string& fmt)
 {
   std::auto_ptr<element_t> result;
 
@@ -143,7 +143,7 @@ element_t * format_t::parse_elements(const std::string& fmt)
 
     if (q != buf) {
       current->type  = element_t::STRING;
-      current->chars = std::string(buf, q);
+      current->chars = string(buf, q);
       q = buf;
 
       current->next  = new element_t;
@@ -219,7 +219,7 @@ element_t * format_t::parse_elements(const std::string& fmt)
       current->type = element_t::VALUE_EXPR;
 
       assert(! current->val_expr);
-      current->val_expr = std::string(b, p);
+      current->val_expr = string(b, p);
       break;
     }
 
@@ -238,7 +238,7 @@ element_t * format_t::parse_elements(const std::string& fmt)
 	throw new format_error("Missing ']'");
 
       current->type  = element_t::DATE_STRING;
-      current->chars = std::string(b, p);
+      current->chars = string(b, p);
       break;
     }
 
@@ -255,11 +255,11 @@ element_t * format_t::parse_elements(const std::string& fmt)
 
     case 'd':
       current->type  = element_t::COMPLETE_DATE_STRING;
-      current->chars = datetime_t::output_format;
+      current->chars = output_time_format;
       break;
     case 'D':
       current->type  = element_t::DATE_STRING;
-      current->chars = datetime_t::output_format;
+      current->chars = output_time_format;
       break;
 
     case 'S': current->type = element_t::SOURCE; break;
@@ -294,7 +294,7 @@ element_t * format_t::parse_elements(const std::string& fmt)
       current = current->next;
     }
     current->type  = element_t::STRING;
-    current->chars = std::string(buf, q);
+    current->chars = string(buf, q);
   }
 
   return result.release();
@@ -324,7 +324,7 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 {
   for (const element_t * elem = elements; elem; elem = elem->next) {
     std::ostringstream out;
-    std::string name;
+    string name;
     bool ignore_max_width = false;
 
     if (elem->flags & ELEMENT_ALIGN_LEFT)
@@ -349,7 +349,7 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
       case element_t::TOTAL:      calc = total_expr; break;
       case element_t::VALUE_EXPR: calc = elem->val_expr; break;
       default:
-	assert(0);
+	assert(false);
 	break;
       }
       if (! calc)
@@ -363,7 +363,7 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
       if (! amount_t::keep_price ||
 	  ! amount_t::keep_date ||
 	  ! amount_t::keep_tag) {
-	switch (value.type) {
+	switch (value.type()) {
 	case value_t::AMOUNT:
 	case value_t::BALANCE:
 	case value_t::BALANCE_PAIR:
@@ -376,56 +376,56 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 
       bool highlighted = false;
 
-      switch (value.type) {
+      switch (value.type()) {
       case value_t::BOOLEAN:
-	out << (*((bool *) value.data) ? "true" : "false");
+	out << (value.as_boolean_lval() ? "true" : "false");
 	break;
 
       case value_t::INTEGER:
 	if (ansi_codes && elem->flags & ELEMENT_HIGHLIGHT) {
 	  if (ansi_invert) {
-	    if (*((long *) value.data) > 0) {
+	    if (value.as_long_lval() > 0) {
 	      mark_red(out, elem);
 	      highlighted = true;
 	    }
 	  } else {
-	    if (*((long *) value.data) < 0) {
+	    if (value.as_long_lval() < 0) {
 	      mark_red(out, elem);
 	      highlighted = true;
 	    }
 	  }
 	}
-	out << *((long *) value.data);
+	out << value.as_long_lval();
 	break;
 
       case value_t::DATETIME:
-	out << *((datetime_t *) value.data);
+	out << value.as_datetime_lval();
 	break;
 
       case value_t::AMOUNT:
 	if (ansi_codes && elem->flags & ELEMENT_HIGHLIGHT) {
 	  if (ansi_invert) {
-	    if (*((amount_t *) value.data) > 0) {
+	    if (value.as_amount_lval().sign() > 0) {
 	      mark_red(out, elem);
 	      highlighted = true;
 	    }
 	  } else {
-	    if (*((amount_t *) value.data) < 0) {
+	    if (value.as_amount_lval().sign() < 0) {
 	      mark_red(out, elem);
 	      highlighted = true;
 	    }
 	  }
 	}
-	out << *((amount_t *) value.data);
+	out << value.as_amount_lval();
 	break;
 
       case value_t::BALANCE:
-	bal = (balance_t *) value.data;
+	bal = &(value.as_balance_lval());
 	// fall through...
 
       case value_t::BALANCE_PAIR:
 	if (! bal)
-	  bal = &((balance_pair_t *) value.data)->quantity;
+	  bal = &(value.as_balance_pair_lval().quantity());
 
 	if (ansi_codes && elem->flags & ELEMENT_HIGHLIGHT) {
 	  if (ansi_invert) {
@@ -440,14 +440,14 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 	    }
 	  }
 	}
-	bal->write(out, elem->min_width,
+	bal->print(out, elem->min_width,
 		   (elem->max_width > 0 ?
 		    elem->max_width : elem->min_width));
 
 	ignore_max_width = true;
 	break;
       default:
-	assert(0);
+	assert(false);
 	break;
       }
 
@@ -458,7 +458,7 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 
     case element_t::OPT_AMOUNT:
       if (details.xact) {
-	std::string disp;
+	string disp;
 	bool use_disp = false;
 
 	if (details.xact->cost && details.xact->amount) {
@@ -511,7 +511,7 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
     case element_t::SOURCE:
       if (details.entry && details.entry->journal) {
 	int idx = details.entry->src_idx;
-	for (strings_list::iterator i = details.entry->journal->sources.begin();
+	for (paths_list::const_iterator i = details.entry->journal->sources.begin();
 	     i != details.entry->journal->sources.end();
 	     i++)
 	  if (! idx--) {
@@ -568,9 +568,12 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
       else if (details.entry)
 	date = details.entry->date();
 
+#if 0
+      // jww (2008-04-20): This needs to be rewritten
       char buf[256];
       std::strftime(buf, 255, elem->chars.c_str(), date.localtime());
       out << (elem->max_width == 0 ? buf : truncate(buf, elem->max_width));
+#endif
       break;
     }
 
@@ -587,13 +590,23 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
       }
 
       char abuf[256];
+#if 0
+      // jww (2008-04-20): This needs to be rewritten
       std::strftime(abuf, 255, elem->chars.c_str(), actual_date.localtime());
+#else
+      abuf[0] = '\0';
+#endif
 
-      if (effective_date && effective_date != actual_date) {
+      if (is_valid(effective_date) && effective_date != actual_date) {
 	char buf[512];
 	char ebuf[256];
+#if 0
+      // jww (2008-04-20): This needs to be rewritten
 	std::strftime(ebuf, 255, elem->chars.c_str(),
 		      effective_date.localtime());
+#else
+	ebuf[0] = '\0';
+#endif
 
 	std::strcpy(buf, abuf);
 	std::strcat(buf, "=");
@@ -615,6 +628,8 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 	case transaction_t::PENDING:
 	  out << "! ";
 	  break;
+	case transaction_t::UNCLEARED:
+	  break;
 	}
       }
       break;
@@ -630,12 +645,14 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 	  case transaction_t::PENDING:
 	    out << "! ";
 	    break;
+	  case transaction_t::UNCLEARED:
+	    break;
 	  }
       }
       break;
 
     case element_t::CODE: {
-      std::string temp;
+      string temp;
       if (details.entry && ! details.entry->code.empty()) {
 	temp += "(";
 	temp += details.entry->code;
@@ -675,6 +692,8 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 	  case transaction_t::PENDING:
 	    name = "! ";
 	    break;
+	  case transaction_t::UNCLEARED:
+	    break;
 	  }
       }
       // fall through...
@@ -691,9 +710,9 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 	    name = truncate(name, elem->max_width - 2, true);
 
 	  if (details.xact->flags & TRANSACTION_BALANCE)
-	    name = "[" + name + "]";
+	    name = string("[") + name + "]";
 	  else
-	    name = "(" + name + ")";
+	    name = string("(") + name + ")";
 	}
 	else if (elem->max_width > 0)
 	  name = truncate(name, elem->max_width, true);
@@ -722,11 +741,11 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
       break;
 
     default:
-      assert(0);
+      assert(false);
       break;
     }
 
-    std::string temp = out.str();
+    string temp = out.str();
     if (! ignore_max_width &&
 	elem->max_width > 0 && elem->max_width < temp.length())
       temp.erase(elem->max_width);
@@ -735,13 +754,13 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 }
 
 format_transactions::format_transactions(std::ostream& _output_stream,
-					 const std::string& format)
+					 const string& format)
   : output_stream(_output_stream), last_entry(NULL), last_xact(NULL)
 {
   const char * f = format.c_str();
   if (const char * p = std::strstr(f, "%/")) {
-    first_line_format.reset(std::string(f, 0, p - f));
-    next_lines_format.reset(std::string(p + 2));
+    first_line_format.reset(string(f, 0, p - f));
+    next_lines_format.reset(string(p + 2));
   } else {
     first_line_format.reset(format);
     next_lines_format.reset(format);
@@ -798,11 +817,11 @@ void format_entries::operator()(transaction_t& xact)
 }
 
 void print_entry(std::ostream& out, const entry_base_t& entry_base,
-		 const std::string& prefix)
+		 const string& prefix)
 {
-  std::string print_format;
+  string print_format;
 
-  if (const entry_t * entry = dynamic_cast<const entry_t *>(&entry_base)) {
+  if (dynamic_cast<const entry_t *>(&entry_base)) {
     print_format = (prefix + "%D %X%C%P\n" +
 		    prefix + "    %-34A  %12o\n%/" +
 		    prefix + "    %-34A  %12o\n");
@@ -818,7 +837,7 @@ void print_entry(std::ostream& out, const entry_base_t& entry_base,
     print_format = prefix + "    %-34A  %12o\n";
   }
   else {
-    assert(0);
+    assert(false);
   }
 
   format_entries formatter(out, print_format);
@@ -901,15 +920,15 @@ void format_account::operator()(account_t& account)
   }
 }
 
-format_equity::format_equity(std::ostream&      _output_stream,
-			     const std::string& _format,
-			     const std::string& display_predicate)
+format_equity::format_equity(std::ostream& _output_stream,
+			     const string& _format,
+			     const string& display_predicate)
   : output_stream(_output_stream), disp_pred(display_predicate)
 {
   const char * f = _format.c_str();
   if (const char * p = std::strstr(f, "%/")) {
-    first_line_format.reset(std::string(f, 0, p - f));
-    next_lines_format.reset(std::string(p + 2));
+    first_line_format.reset(string(f, 0, p - f));
+    next_lines_format.reset(string(p + 2));
   } else {
     first_line_format.reset(_format);
     next_lines_format.reset(_format);
@@ -917,7 +936,7 @@ format_equity::format_equity(std::ostream&      _output_stream,
 
   entry_t header_entry;
   header_entry.payee = "Opening Balances";
-  header_entry._date = datetime_t::now;
+  header_entry._date = current_moment;
   first_line_format.format(output_stream, details_t(header_entry));
 }
 
@@ -929,16 +948,16 @@ void format_equity::flush()
   account_t summary(NULL, "Equity:Opening Balances");
   summary.data = &xdata;
 
-  if (total.type >= value_t::BALANCE) {
+  if (total.type() >= value_t::BALANCE) {
     balance_t * bal;
-    if (total.type == value_t::BALANCE)
-      bal = (balance_t *) total.data;
-    else if (total.type == value_t::BALANCE_PAIR)
-      bal = &((balance_pair_t *) total.data)->quantity;
+    if (total.is_type(value_t::BALANCE))
+      bal = &(total.as_balance_lval());
+    else if (total.is_type(value_t::BALANCE_PAIR))
+      bal = &(total.as_balance_pair_lval().quantity());
     else
-      assert(0);
+      assert(false);
 
-    for (amounts_map::const_iterator i = bal->amounts.begin();
+    for (balance_t::amounts_map::const_iterator i = bal->amounts.begin();
 	 i != bal->amounts.end();
 	 i++) {
       xdata.value = (*i).second;
@@ -957,16 +976,16 @@ void format_equity::operator()(account_t& account)
     if (account_has_xdata(account)) {
       value_t val = account_xdata_(account).value;
 
-      if (val.type >= value_t::BALANCE) {
+      if (val.type() >= value_t::BALANCE) {
 	balance_t * bal;
-	if (val.type == value_t::BALANCE)
-	  bal = (balance_t *) val.data;
-	else if (val.type == value_t::BALANCE_PAIR)
-	  bal = &((balance_pair_t *) val.data)->quantity;
+	if (val.is_type(value_t::BALANCE))
+	  bal = &(val.as_balance_lval());
+	else if (val.is_type(value_t::BALANCE_PAIR))
+	  bal = &(val.as_balance_pair_lval().quantity());
 	else
-	  assert(0);
+	  assert(false);
 
-	for (amounts_map::const_iterator i = bal->amounts.begin();
+	for (balance_t::amounts_map::const_iterator i = bal->amounts.begin();
 	     i != bal->amounts.end();
 	     i++) {
 	  account_xdata_(account).value = (*i).second;

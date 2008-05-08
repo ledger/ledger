@@ -20,8 +20,8 @@ extern "C" {
 
 namespace ledger {
 
-typedef std::map<const std::string, account_t *>  accounts_map;
-typedef std::pair<const std::string, account_t *> accounts_pair;
+typedef std::map<const string, account_t *>  accounts_map;
+typedef std::pair<const string, account_t *> accounts_pair;
 
 typedef std::map<account_t *, commodity_t *>  account_comm_map;
 typedef std::pair<account_t *, commodity_t *> account_comm_pair;
@@ -29,7 +29,7 @@ typedef std::pair<account_t *, commodity_t *> account_comm_pair;
 static journal_t *	curr_journal;
 static account_t *	master_account;
 static account_t *	curr_account;
-static std::string	curr_account_id;
+static string	curr_account_id;
 static entry_t *	curr_entry;
 static commodity_t *	entry_comm;
 static commodity_t *	curr_comm;
@@ -39,12 +39,12 @@ static XML_Parser	current_parser;
 static accounts_map	accounts_by_id;
 static account_comm_map	account_comms;
 static unsigned int	count;
-static std::string	have_error;
+static string	have_error;
 
 static std::istream *   instreamp;
 static unsigned int     offset;
 static XML_Parser       parser;
-static std::string      path;
+static path      	pathname;
 static unsigned int     src_idx;
 static istream_pos_type beg_pos;
 static unsigned long    beg_line;
@@ -200,14 +200,14 @@ static void endElement(void *userData, const char *name)
 }
 
 
-static amount_t convert_number(const std::string& number,
+static amount_t convert_number(const string& number,
 			       int * precision = NULL)
 {
   const char * num = number.c_str();
 
   if (char * p = std::strchr(num, '/')) {
-    std::string numer_str(num, p - num);
-    std::string denom_str(p + 1);
+    string numer_str(num, p - num);
+    string denom_str(p + 1);
 
     amount_t amt(numer_str);
     amount_t den(denom_str);
@@ -230,15 +230,15 @@ static void dataHandler(void *userData, const char *s, int len)
 {
   switch (action) {
   case ACCOUNT_NAME:
-    curr_account->name = std::string(s, len);
+    curr_account->name = string(s, len);
     break;
 
   case ACCOUNT_ID:
-    curr_account_id = std::string(s, len);
+    curr_account_id = string(s, len);
     break;
 
   case ACCOUNT_PARENT: {
-    accounts_map::iterator i = accounts_by_id.find(std::string(s, len));
+    accounts_map::iterator i = accounts_by_id.find(string(s, len));
     assert(i != accounts_by_id.end());
     curr_account->parent = (*i).second;
     curr_account->depth  = curr_account->parent->depth + 1;
@@ -247,10 +247,10 @@ static void dataHandler(void *userData, const char *s, int len)
   }
 
   case COMM_SYM: {
-      std::string symbol(s, len);
+      string symbol(s, len);
     if (symbol == "USD") symbol = "$";
 
-    curr_comm = commodity_t::find_or_create(symbol);
+    curr_comm = amount_t::current_pool->find_or_create(symbol);
     assert(curr_comm);
 
     if (symbol != "$")
@@ -264,7 +264,7 @@ static void dataHandler(void *userData, const char *s, int len)
   }
 
   case COMM_NAME:
-    curr_comm->set_name(std::string(s, len));
+    curr_comm->set_name(string(s, len));
     break;
 
   case COMM_PREC:
@@ -272,15 +272,15 @@ static void dataHandler(void *userData, const char *s, int len)
     break;
 
   case ENTRY_NUM:
-    curr_entry->code = std::string(s, len);
+    curr_entry->code = string(s, len);
     break;
 
   case ENTRY_DATE:
-    curr_entry->_date = std::string(s, len);
+    curr_entry->_date = parse_datetime(string(s, len));
     break;
 
   case ENTRY_DESC:
-    curr_entry->payee = std::string(s, len);
+    curr_entry->payee = string(s, len);
     break;
 
   case XACT_STATE:
@@ -295,7 +295,7 @@ static void dataHandler(void *userData, const char *s, int len)
   case XACT_VALUE: {
     int precision;
     assert(entry_comm);
-    curr_value = convert_number(std::string(s, len), &precision);
+    curr_value = convert_number(string(s, len), &precision);
     curr_value.set_commodity(*entry_comm);
 
     if (precision > entry_comm->precision())
@@ -304,26 +304,26 @@ static void dataHandler(void *userData, const char *s, int len)
   }
 
   case XACT_QUANTITY:
-    curr_quant = convert_number(std::string(s, len));
+    curr_quant = convert_number(string(s, len));
     break;
 
   case XACT_ACCOUNT: {
     transaction_t * xact = curr_entry->transactions.back();
 
-    accounts_map::iterator i = accounts_by_id.find(std::string(s, len));
+    accounts_map::iterator i = accounts_by_id.find(string(s, len));
     if (i != accounts_by_id.end()) {
       xact->account = (*i).second;
     } else {
       xact->account = curr_journal->find_account("<Unknown>");
 
-      have_error = (std::string("Could not find account ") +
-		    std::string(s, len));
+      have_error = (string("Could not find account ") +
+		    string(s, len));
     }
     break;
   }
 
   case XACT_NOTE:
-    curr_entry->transactions.back()->note = std::string(s, len);
+    curr_entry->transactions.back()->note = string(s, len);
     break;
 
   case NO_ACTION:
@@ -332,7 +332,7 @@ static void dataHandler(void *userData, const char *s, int len)
     break;
 
   default:
-    assert(0);
+    assert(false);
     break;
   }
 }
@@ -347,17 +347,20 @@ bool gnucash_parser_t::test(std::istream& in) const
   return std::strncmp(buf, "<?xml", 5) == 0;
 }
 
-unsigned int gnucash_parser_t::parse(std::istream&	 in,
-				     config_t&           config,
-				     journal_t *	 journal,
-				     account_t *	 master,
-				     const std::string * original_file)
+unsigned int gnucash_parser_t::parse(std::istream& in,
+				     config_t&     config,
+				     journal_t *   journal,
+				     account_t *   master,
+				     const path *  original_file)
 {
   char buf[BUFSIZ];
 
+#if 0
+  // jww (2008-05-08): Replace this
   // This is the date format used by Gnucash, so override whatever the
   // user specified.
   date_t::input_format = "%Y-%m-%d %H:%M:%S %z";
+#endif
 
   count		 = 0;
   action	 = NO_ACTION;
@@ -370,12 +373,12 @@ unsigned int gnucash_parser_t::parse(std::istream&	 in,
   curr_state	 = transaction_t::UNCLEARED;
 
   instreamp = &in;
-  path	    = original_file ? *original_file : "<gnucash>";
+  pathname  = original_file ? *original_file : "<gnucash>";
   src_idx   = journal->sources.size() - 1;
 
   // GnuCash uses the USD commodity without defining it, which really
   // means $.
-  commodity_t * usd = commodity_t::find_or_create("$");
+  commodity_t * usd = amount_t::current_pool->find_or_create("$");
   usd->set_precision(2);
   usd->add_flags(COMMODITY_STYLE_THOUSANDS);
 
@@ -392,14 +395,14 @@ unsigned int gnucash_parser_t::parse(std::istream&	 in,
     in.getline(buf, BUFSIZ - 1);
     std::strcat(buf, "\n");
     if (! XML_Parse(parser, buf, std::strlen(buf), in.eof())) {
-      unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
+      //unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
       const char *  msg  = XML_ErrorString(XML_GetErrorCode(parser));
       XML_ParserFree(parser);
       throw new parse_error(msg);
     }
 
     if (! have_error.empty()) {
-      unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
+      //unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
       parse_error err(have_error);
       std::cerr << "Error: " << err.what() << std::endl;
       have_error = "";

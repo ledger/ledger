@@ -7,10 +7,10 @@
 
 namespace ledger {
 
-std::string truncated(const std::string& str, unsigned int width,
+string truncated(const string& str, unsigned int width,
 		      const int style = 2);
 
-std::string partial_account_name(const account_t&   account,
+string partial_account_name(const account_t&   account,
 				 const unsigned int start_depth);
 
 #define ELEMENT_ALIGN_LEFT 0x01
@@ -50,7 +50,7 @@ struct element_t
 
   kind_t	type;
   unsigned char flags;
-  std::string	chars;
+  string	chars;
   unsigned char min_width;
   unsigned char max_width;
   value_expr	val_expr;
@@ -59,18 +59,18 @@ struct element_t
 
   element_t() : type(STRING), flags(false),
 		min_width(0), max_width(0), next(NULL) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor element_t");
+    DEBUG("ledger.memory.ctors", "ctor element_t");
   }
 
   ~element_t() {
-    DEBUG_PRINT("ledger.memory.dtors", "dtor element_t");
+    DEBUG("ledger.memory.dtors", "dtor element_t");
     if (next) delete next;	// recursive, but not too deep
   }
 };
 
 struct format_t
 {
-  std::string format_string;
+  string format_string;
   element_t * elements;
 
   enum elision_style_t {
@@ -87,27 +87,27 @@ struct format_t
   static bool ansi_invert;
 
   format_t() : elements(NULL) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor format_t");
+    DEBUG("ledger.memory.ctors", "ctor format_t");
   }
-  format_t(const std::string& _format) : elements(NULL) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor format_t");
+  format_t(const string& _format) : elements(NULL) {
+    DEBUG("ledger.memory.ctors", "ctor format_t");
     reset(_format);
   }
   ~format_t() {
-    DEBUG_PRINT("ledger.memory.dtors", "dtor format_t");
+    DEBUG("ledger.memory.dtors", "dtor format_t");
     if (elements) delete elements;
   }
 
-  void reset(const std::string& _format) {
+  void reset(const string& _format) {
     if (elements)
       delete elements;
     elements = parse_elements(_format);
     format_string = _format;
   }
 
-  static element_t * parse_elements(const std::string& fmt);
+  static element_t * parse_elements(const string& fmt);
 
-  static std::string truncate(const std::string& str, unsigned int width,
+  static string truncate(const string& str, unsigned int width,
 			      const bool is_account = false);
 
   void format(std::ostream& out, const details_t& details) const;
@@ -124,7 +124,7 @@ class format_transactions : public item_handler<transaction_t>
 
  public:
   format_transactions(std::ostream& _output_stream,
-		      const std::string& format);
+		      const string& format);
 
   virtual void flush() {
     output_stream.flush();
@@ -135,7 +135,7 @@ class format_transactions : public item_handler<transaction_t>
 class format_entries : public format_transactions
 {
  public:
-  format_entries(std::ostream& output_stream, const std::string& format)
+  format_entries(std::ostream& output_stream, const string& format)
     : format_transactions(output_stream, format) {}
 
   virtual void format_last_entry();
@@ -151,7 +151,7 @@ class format_entries : public format_transactions
 };
 
 void print_entry(std::ostream& out, const entry_base_t& entry,
-		 const std::string& prefix = "");
+		 const string& prefix = "");
 
 bool disp_subaccounts_p(const account_t& account,
 			const item_predicate<account_t>& disp_pred,
@@ -175,8 +175,8 @@ class format_account : public item_handler<account_t>
   format_t format;
 
   format_account(std::ostream&      _output_stream,
-		 const std::string& _format,
-		 const std::string& display_predicate = NULL)
+		 const string& _format,
+		 const string& display_predicate = NULL)
     : output_stream(_output_stream), disp_pred(display_predicate),
       format(_format) {}
 
@@ -199,8 +199,8 @@ class format_equity : public item_handler<account_t>
 
  public:
   format_equity(std::ostream&      _output_stream,
-		const std::string& _format,
-		const std::string& display_predicate);
+		const string& _format,
+		const string& display_predicate);
 
   virtual void flush();
   virtual void operator()(account_t& account);
@@ -208,7 +208,7 @@ class format_equity : public item_handler<account_t>
 
 class format_error : public error {
  public:
-  format_error(const std::string& reason, error_context * ctxt = NULL) throw()
+  format_error(const string& reason, error_context * ctxt = NULL) throw()
     : error(reason, ctxt) {}
   virtual ~format_error() throw() {}
 };

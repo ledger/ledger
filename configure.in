@@ -3,7 +3,7 @@
 
 AC_PREREQ(2.61)
 
-AC_INIT([ledger],[2.7],[johnw@newartisans.com])
+AC_INIT([ledger],[v3.0-merge-back],[johnw@newartisans.com])
 AC_CONFIG_SRCDIR(ledger)
 AM_INIT_AUTOMAKE([dist-bzip2])
 
@@ -79,8 +79,8 @@ AC_CACHE_CHECK(
 	  } else {
 	    close(pfd[0]);
 	  }]])],
-     [pipes_avail=true],
-     [pipes_avail=false])
+     [pipes_avail_cv_=true],
+     [pipes_avail_cv_=false])
    AC_LANG_POP])
 
 if [test x$pipes_avail_cv_ = xtrue ]; then
@@ -96,11 +96,11 @@ AC_CACHE_CHECK(
    AC_LANG_PUSH(C++)
    AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <gmp.h>]], [[mpz_t bar;
       mpz_init(bar);
-      mpz_clear(bar);]])],[libgmp_avail=true],[libgmp_avail=false])
+      mpz_clear(bar);]])],[libgmp_avail_cv_=true],[libgmp_avail_cv_=false])
    AC_LANG_POP
    LIBS=$libgmp_save_libs])
 
-if [test x$libgmp_avail = xtrue ]; then
+if [test x$libgmp_avail_cv_ = xtrue ]; then
   LIBS="-lgmp $LIBS"
 else
   AC_MSG_FAILURE("Could not find gmp library (set CPPFLAGS and LDFLAGS?)")
@@ -203,7 +203,7 @@ fi
 # check for boost_regex
 AC_CACHE_CHECK(
   [if boost_regex is available],
-  [boost_regex_avail],
+  [boost_regex_avail_cv_],
   [boost_regex_save_libs=$LIBS
    LIBS="-lboost_regex$BOOST_SUFFIX $LIBS"
    AC_LANG_PUSH(C++)
@@ -211,12 +211,12 @@ AC_CACHE_CHECK(
      [AC_LANG_PROGRAM(
        [[#include <boost/regex.hpp>]],
        [[boost::regex foo_regexp("Hello, world!");]])],
-     [boost_regex_avail=true],
-     [boost_regex_avail=false])
+     [boost_regex_avail_cv_=true],
+     [boost_regex_avail_cv_=false])
    AC_LANG_POP
    LIBS=$boost_regex_save_libs])
 
-if [test x$boost_regex_avail = xtrue ]; then
+if [test x$boost_regex_avail_cv_ = xtrue ]; then
   LIBS="-lboost_regex$BOOST_SUFFIX $LIBS"
 else
   AC_MSG_FAILURE("Could not find boost_regex library (set CPPFLAGS and LDFLAGS?)")
@@ -225,7 +225,7 @@ fi
 # check for boost_date_time
 AC_CACHE_CHECK(
   [if boost_date_time is available],
-  [boost_date_time_cpplib_avail],
+  [boost_date_time_cpplib_avail_cv_],
   [boost_date_time_save_libs=$LIBS
    LIBS="-lboost_date_time$BOOST_SUFFIX $LIBS"
    AC_LANG_PUSH(C++)
@@ -251,12 +251,12 @@ AC_CACHE_CHECK(
 	  ptime t12 = time_to_system_local(t10);
 
 	  return t10 != t12;]])],
-     [boost_date_time_cpplib_avail=true],
-     [boost_date_time_cpplib_avail=false])
+     [boost_date_time_cpplib_avail_cv_=true],
+     [boost_date_time_cpplib_avail_cv_=false])
    AC_LANG_POP
    LIBS=$boost_date_time_save_libs])
 
-if [test x$boost_date_time_cpplib_avail = xtrue ]; then
+if [test x$boost_date_time_cpplib_avail_cv_ = xtrue ]; then
   LIBS="-lboost_date_time$BOOST_SUFFIX $LIBS"
 else
   AC_MSG_FAILURE("Could not find boost_date_time library (set CPPFLAGS and LDFLAGS?)")
@@ -265,7 +265,7 @@ fi
 # check for boost_filesystem
 AC_CACHE_CHECK(
   [if boost_filesystem is available],
-  [boost_filesystem_cpplib_avail],
+  [boost_filesystem_cpplib_avail_cv_],
   [boost_filesystem_save_libs=$LIBS
    LIBS="-lboost_filesystem$BOOST_SUFFIX -lboost_system$BOOST_SUFFIX $LIBS"
    AC_LANG_PUSH(C++)
@@ -273,12 +273,12 @@ AC_CACHE_CHECK(
      [AC_LANG_PROGRAM(
 	[[#include <boost/filesystem/path.hpp>]],
 	[[boost::filesystem::path this_path("Hello");]])],
-     [boost_filesystem_cpplib_avail=true],
-     [boost_filesystem_cpplib_avail=false])
+     [boost_filesystem_cpplib_avail_cv_=true],
+     [boost_filesystem_cpplib_avail_cv_=false])
    AC_LANG_POP
    LIBS=$boost_filesystem_save_libs])
 
-if [test x$boost_filesystem_cpplib_avail = xtrue ]; then
+if [test x$boost_filesystem_cpplib_avail_cv_ = xtrue ]; then
   LIBS="-lboost_filesystem$BOOST_SUFFIX -lboost_system$BOOST_SUFFIX $LIBS"
 else
   AC_MSG_FAILURE("Could not find boost_filesystem library (set CPPFLAGS and LDFLAGS?)")
@@ -287,7 +287,7 @@ fi
 ## check for boost_signals
 #AC_CACHE_CHECK(
 #  [if boost_signals is available],
-#  [boost_signals_cpplib_avail],
+#  [boost_signals_cpplib_avail_cv_],
 #  [boost_signals_save_libs=$LIBS
 #   LIBS="-lboost_signals$BOOST_SUFFIX $LIBS"
 #   AC_LANG_PUSH(C++)
@@ -295,12 +295,12 @@ fi
 #     [AC_LANG_PROGRAM(
 #        [[#include <boost/signal.hpp>]],
 #        [[boost::signal<void (void)> this_signal;]])],
-#     [boost_signals_cpplib_avail=true],
-#     [boost_signals_cpplib_avail=false])
+#     [boost_signals_cpplib_avail_cv_=true],
+#     [boost_signals_cpplib_avail_cv_=false])
 #   AC_LANG_POP
 #   LIBS=$boost_signals_save_libs])
 #
-#if [test x$boost_signals_cpplib_avail = xtrue ]; then
+#if [test x$boost_signals_cpplib_avail_cv_ = xtrue ]; then
 #  LIBS="-lboost_signals$BOOST_SUFFIX $LIBS"
 #else
 #  AC_MSG_FAILURE("Could not find boost_signals library (set CPPFLAGS and LDFLAGS?)")
@@ -328,8 +328,8 @@ if [test x$ofx = xtrue ]; then
        [AC_LANG_PROGRAM(
 	  [[#include <libofx.h>]],
 	  [[LibofxContextPtr libofx_context = libofx_get_new_context();]])],
-       [libofx_avail=true],
-       [libofx_avail=false])
+       [libofx_avail_cv_=true],
+       [libofx_avail_cv_=false])
      AC_LANG_POP
      LIBS=$libofx_save_libs])
 
@@ -372,12 +372,12 @@ if [test x$python = xtrue ]; then
 		class_< foo > ("foo") ;
 	      }]],
 	    [[return 0]])],
-	 [boost_python_cpplib_avail=true],
-	 [boost_python_cpplib_avail=false])
+	 [boost_python_cpplib_avail_cv_=true],
+	 [boost_python_cpplib_avail_cv_=false])
        AC_LANG_POP
        LIBS=$boost_python_save_libs])
 
-    if [test x$boost_python_cpplib_avail = xtrue ]; then
+    if [test x$boost_python_cpplib_avail_cv_ = xtrue ]; then
       AM_CONDITIONAL(HAVE_BOOST_PYTHON, true)
       LIBS="-lboost_python$BOOST_SUFFIX -lpython$PYTHON_VERSION $LIBS"
     else
@@ -393,7 +393,7 @@ fi
 # check for CppUnit
 AC_CACHE_CHECK(
   [if cppunit is available],
-  [cppunit_avail],
+  [cppunit_avail_cv_],
   [cppunit_save_libs=$LIBS
    LIBS="-lcppunit $LIBS"
    AC_LANG_PUSH(C++)
@@ -409,12 +409,12 @@ AC_CACHE_CHECK(
 	  #include <cppunit/extensions/TestFactoryRegistry.h>]],
 	[[CPPUNIT_NS::TestResult controller;
 	  CPPUNIT_NS::TestResultCollector result;]])],
-     [cppunit_avail=true],
-     [cppunit_avail=false])
+     [cppunit_avail_cv_=true],
+     [cppunit_avail_cv_=false])
    AC_LANG_POP
    LIBS=$cppunit_save_libs])
 
-if [test x$cppunit_avail = xtrue ]; then
+if [test x$cppunit_avail_cv_ = xtrue ]; then
   AM_CONDITIONAL(HAVE_CPPUNIT, true)
 else
   AM_CONDITIONAL(HAVE_CPPUNIT, false)

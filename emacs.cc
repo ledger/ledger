@@ -5,7 +5,7 @@ namespace ledger {
 void format_emacs_transactions::write_entry(entry_t& entry)
 {
   int idx = entry.src_idx;
-  for (strings_list::iterator i = entry.journal->sources.begin();
+  for (paths_list::const_iterator i = entry.journal->sources.begin();
        i != entry.journal->sources.end();
        i++)
     if (! idx--) {
@@ -15,7 +15,8 @@ void format_emacs_transactions::write_entry(entry_t& entry)
 
   out << (((unsigned long)entry.beg_pos) + 1) << " ";
 
-  std::time_t date = entry.date();
+  tm when = boost::posix_time::to_tm(entry.date());
+  std::time_t date = std::mktime(&when); // jww (2008-04-20): Is this GMT or local?
   out << "(" << (date / 65536) << " " << (date % 65536) << " 0) ";
 
   if (entry.code.empty())

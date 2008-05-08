@@ -1,11 +1,6 @@
 #ifndef _JOURNAL_H
 #define _JOURNAL_H
 
-#include <map>
-#include <list>
-#include <string>
-#include <iostream>
-
 #include "amount.h"
 #include "value.h"
 #include "valexpr.h"
@@ -36,10 +31,10 @@ class transaction_t
   amount_t	   amount;
   value_expr       amount_expr;
   amount_t *	   cost;
-  std::string      cost_expr;
+  string	   cost_expr;
   state_t	   state;
   unsigned short   flags;
-  std::string	   note;
+  string	   note;
   istream_pos_type beg_pos;
   unsigned long    beg_line;
   istream_pos_type end_pos;
@@ -52,24 +47,24 @@ class transaction_t
     : entry(NULL), account(_account), cost(NULL),
       state(UNCLEARED), flags(TRANSACTION_NORMAL),
       beg_pos(0), beg_line(0), end_pos(0), end_line(0), data(NULL) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor transaction_t");
+    DEBUG("ledger.memory.ctors", "ctor transaction_t");
   }
-  transaction_t(account_t *	   _account,
-		const amount_t&    _amount,
-		unsigned int	   _flags = TRANSACTION_NORMAL,
-		const std::string& _note  = "")
+  transaction_t(account_t *	_account,
+		const amount_t& _amount,
+		unsigned int	_flags = TRANSACTION_NORMAL,
+		const string&   _note    = "")
     : entry(NULL), account(_account), amount(_amount), cost(NULL),
       state(UNCLEARED), flags(_flags),
       note(_note), beg_pos(0), beg_line(0), end_pos(0), end_line(0),
       data(NULL) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor transaction_t");
+    DEBUG("ledger.memory.ctors", "ctor transaction_t");
   }
   transaction_t(const transaction_t& xact)
     : entry(xact.entry), account(xact.account), amount(xact.amount),
       cost(xact.cost ? new amount_t(*xact.cost) : NULL),
       state(xact.state), flags(xact.flags), note(xact.note),
       beg_pos(0), beg_line(0), end_pos(0), end_line(0), data(NULL) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor transaction_t");
+    DEBUG("ledger.memory.ctors", "ctor transaction_t");
   }
   ~transaction_t();
 
@@ -97,7 +92,7 @@ class xact_context : public file_context {
   const transaction_t& xact;
 
   xact_context(const transaction_t& _xact,
-	       const std::string& desc = "") throw();
+	       const string& desc = "") throw();
   virtual ~xact_context() throw() {}
 };
 
@@ -109,7 +104,7 @@ class entry_base_t
 {
  public:
   journal_t *       journal;
-  std::string	    note;
+  string	    note;
   unsigned long     src_idx;
   istream_pos_type  beg_pos;
   unsigned long     beg_line;
@@ -120,19 +115,19 @@ class entry_base_t
   entry_base_t() : journal(NULL),
     beg_pos(0), beg_line(0), end_pos(0), end_line(0)
   {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor entry_base_t");
+    DEBUG("ledger.memory.ctors", "ctor entry_base_t");
   }
   entry_base_t(const entry_base_t& e) : journal(NULL),
     beg_pos(0), beg_line(0), end_pos(0), end_line(0)
   {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor entry_base_t");
+    DEBUG("ledger.memory.ctors", "ctor entry_base_t");
     for (transactions_list::const_iterator i = e.transactions.begin();
 	 i != e.transactions.end();
 	 i++)
       transactions.push_back(new transaction_t(**i));
   }
   virtual ~entry_base_t() {
-    DEBUG_PRINT("ledger.memory.dtors", "dtor entry_base_t");
+    DEBUG("ledger.memory.dtors", "dtor entry_base_t");
     for (transactions_list::iterator i = transactions.begin();
 	 i != transactions.end();
 	 i++)
@@ -159,25 +154,25 @@ class entry_base_t
 class entry_t : public entry_base_t
 {
  public:
-  datetime_t  _date;
-  datetime_t  _date_eff;
-  std::string code;
-  std::string payee;
+  datetime_t _date;
+  datetime_t _date_eff;
+  string     code;
+  string     payee;
 
   entry_t() {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor entry_t");
+    DEBUG("ledger.memory.ctors", "ctor entry_t");
   }
   entry_t(const entry_t& e);
 
   virtual ~entry_t() {
-    DEBUG_PRINT("ledger.memory.dtors", "dtor entry_t");
+    DEBUG("ledger.memory.dtors", "dtor entry_t");
   }
 
   datetime_t actual_date() const {
     return _date;
   }
   datetime_t effective_date() const {
-    if (! _date_eff)
+    if (! is_valid(_date_eff))
       return _date;
     return _date_eff;
   }
@@ -205,18 +200,11 @@ class entry_context : public error_context {
   const entry_base_t& entry;
 
   entry_context(const entry_base_t& _entry,
-		const std::string& desc = "") throw()
+		const string& desc = "") throw()
     : error_context(desc), entry(_entry) {}
   virtual ~entry_context() throw() {}
 
   virtual void describe(std::ostream& out) const throw();
-};
-
-class balance_error : public error {
- public:
-  balance_error(const std::string& reason, error_context * ctxt = NULL) throw()
-    : error(reason, ctxt) {}
-  virtual ~balance_error() throw() {}
 };
 
 
@@ -227,12 +215,12 @@ class auto_entry_t : public entry_base_t
 {
 public:
   item_predicate<transaction_t> * predicate;
-  std::string predicate_string;
+  string predicate_string;
 
   auto_entry_t() : predicate(NULL) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor auto_entry_t");
+    DEBUG("ledger.memory.ctors", "ctor auto_entry_t");
   }
-  auto_entry_t(const std::string& _predicate);
+  auto_entry_t(const string& _predicate);
 
   virtual ~auto_entry_t();
 
@@ -253,23 +241,23 @@ struct auto_entry_finalizer_t : public entry_finalizer_t {
 class period_entry_t : public entry_base_t
 {
  public:
-  interval_t  period;
-  std::string period_string;
+  interval_t period;
+  string     period_string;
 
   period_entry_t() {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor period_entry_t");
+    DEBUG("ledger.memory.ctors", "ctor period_entry_t");
   }
-  period_entry_t(const std::string& _period)
+  period_entry_t(const string& _period)
     : period(_period), period_string(_period) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor period_entry_t");
+    DEBUG("ledger.memory.ctors", "ctor period_entry_t");
   }
   period_entry_t(const period_entry_t& e)
     : entry_base_t(e), period(e.period), period_string(e.period_string) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor period_entry_t");
+    DEBUG("ledger.memory.ctors", "ctor period_entry_t");
   }
 
   virtual ~period_entry_t() {
-    DEBUG_PRINT("ledger.memory.dtors", "dtor period_entry_t");
+    DEBUG("ledger.memory.dtors", "dtor period_entry_t");
   }
 
   virtual bool valid() const {
@@ -278,8 +266,8 @@ class period_entry_t : public entry_base_t
 };
 
 
-typedef std::map<const std::string, account_t *> accounts_map;
-typedef std::pair<const std::string, account_t *> accounts_pair;
+typedef std::map<const string, account_t *> accounts_map;
+typedef std::pair<const string, account_t *> accounts_pair;
 
 class account_t
 {
@@ -288,21 +276,21 @@ class account_t
 
   journal_t *    journal;
   account_t *	 parent;
-  std::string	 name;
-  std::string	 note;
+  string	 name;
+  string	 note;
   unsigned short depth;
   accounts_map	 accounts;
 
   mutable void *  data;
   mutable ident_t ident;
-  mutable std::string _fullname;
+  mutable string _fullname;
 
-  account_t(account_t *        _parent = NULL,
-	    const std::string& _name   = "",
-	    const std::string& _note   = "")
+  account_t(account_t *   _parent = NULL,
+	    const string& _name   = "",
+	    const string& _note   = "")
     : parent(_parent), name(_name), note(_note),
       depth(parent ? parent->depth + 1 : 0), data(NULL), ident(0) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor account_t " << this);
+    DEBUG("ledger.memory.ctors", "ctor account_t " << this);
   }
   ~account_t();
 
@@ -313,7 +301,7 @@ class account_t
     return ! (*this == account);
   }
 
-  std::string fullname() const;
+  string fullname() const;
 
   void add_account(account_t * acct) {
     accounts.insert(accounts_pair(acct->name, acct));
@@ -325,9 +313,9 @@ class account_t
     return n > 0;
   }
 
-  account_t * find_account(const std::string& name, bool auto_create = true);
+  account_t * find_account(const string& name, bool auto_create = true);
 
-  operator std::string() const {
+  operator string() const {
     return fullname();
   }
 
@@ -376,7 +364,8 @@ bool run_hooks(std::list<T>& list, Data& item, bool post) {
 typedef std::list<entry_t *>	    entries_list;
 typedef std::list<auto_entry_t *>   auto_entries_list;
 typedef std::list<period_entry_t *> period_entries_list;
-typedef std::list<std::string>	    strings_list;
+typedef std::list<string>	    strings_list;
+typedef std::list<path>	            paths_list;
 
 class journal_t
 {
@@ -384,8 +373,8 @@ class journal_t
   account_t *  master;
   account_t *  basket;
   entries_list entries;
-  strings_list sources;
-  std::string  price_db;
+  paths_list   sources;
+  path         price_db;
   char *       item_pool;
   char *       item_pool_end;
 
@@ -396,7 +385,7 @@ class journal_t
   std::list<entry_finalizer_t *> entry_finalize_hooks;
 
   journal_t() : basket(NULL) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor journal_t");
+    DEBUG("ledger.memory.ctors", "ctor journal_t");
     master = new account_t(NULL, "");
     master->journal = this;
     item_pool = item_pool_end = NULL;
@@ -419,7 +408,7 @@ class journal_t
     acct->journal = NULL;
   }
 
-  account_t * find_account(const std::string& name, bool auto_create = true) {
+  account_t * find_account(const string& name, bool auto_create = true) {
     accounts_map::iterator c = accounts_cache.find(name);
     if (c != accounts_cache.end())
       return (*c).second;
@@ -429,7 +418,7 @@ class journal_t
     account->journal = this;
     return account;
   }
-  account_t * find_account_re(const std::string& regexp);
+  account_t * find_account_re(const string& regexp);
 
   bool add_entry(entry_t * entry);
   bool remove_entry(entry_t * entry);
@@ -457,7 +446,7 @@ inline bool auto_entry_finalizer_t::operator()(entry_t& entry, bool post) {
   return true;
 }
 
-extern const std::string version;
+extern const string version;
 
 } // namespace ledger
 

@@ -98,6 +98,11 @@ struct amount_t::bigint_t : public supports_flags<>
   }
 };
 
+uint_fast32_t amount_t::sizeof_bigint_t()
+{
+  return sizeof(bigint_t);
+}
+
 void amount_t::initialize()
 {
   mpz_init(temp);
@@ -661,7 +666,7 @@ amount_t& amount_t::in_place_unreduce()
   return *this;
 }
 
-optional<amount_t> amount_t::value(const optional<moment_t>& moment) const
+optional<amount_t> amount_t::value(const optional<datetime_t>& moment) const
 {
   if (quantity) {
     optional<amount_t> amt(commodity().value(moment));
@@ -1213,13 +1218,18 @@ void amount_t::print(std::ostream& _out, bool omit_commodity,
 }
 
 
+#if 0
+// jww (2008-05-08): Should these be global?
 namespace {
+#endif
   char *	bigints;
   char *	bigints_next;
   uint_fast32_t bigints_index;
   uint_fast32_t bigints_count;
   char		buf[4096];
+#if 0
 }
+#endif
 
 void amount_t::read(std::istream& in)
 {

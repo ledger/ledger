@@ -3,10 +3,10 @@
 namespace ledger {
 
 namespace {
-  inline void write_escaped_string(std::ostream& out, const std::string& xact)
+  inline void write_escaped_string(std::ostream& out, const string& xact)
   {
     out << "\"";
-    for (std::string::const_iterator i = xact.begin(); i != xact.end(); i++)
+    for (string::const_iterator i = xact.begin(); i != xact.end(); i++)
       if (*i == '"') {
 	out << "\\";
 	out << "\"";

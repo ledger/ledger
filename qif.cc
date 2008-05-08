@@ -1,18 +1,13 @@
 #include "journal.h"
 #include "qif.h"
-#include "datetime.h"
-#include "error.h"
-#include "util.h"
-
-#include <cstring>
-#include <memory>
+#include "utils.h"
 
 namespace ledger {
 
 #define MAX_LINE 1024
 
 static char         line[MAX_LINE + 1];
-static std::string  path;
+static path         pathname;
 static unsigned int src_idx;
 static unsigned int linenum;
 
@@ -38,11 +33,11 @@ bool qif_parser_t::test(std::istream& in) const
 	  std::strcmp(magic, "\r\n!T") == 0);
 }
 
-unsigned int qif_parser_t::parse(std::istream&	     in,
-				 config_t&           config,
-				 journal_t *	     journal,
-				 account_t *	     master,
-				 const std::string * original_file)
+unsigned int qif_parser_t::parse(std::istream& in,
+				 config_t&     config,
+				 journal_t *   journal,
+				 account_t *   master,
+				 const path *  original_file)
 {
   std::auto_ptr<entry_t>  entry;
   std::auto_ptr<amount_t> amount;
@@ -59,9 +54,9 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
   xact = new transaction_t(master);
   entry->add_transaction(xact);
 
-  path	  = journal->sources.back();
-  src_idx = journal->sources.size() - 1;
-  linenum = 1;
+  pathname = journal->sources.back();
+  src_idx  = journal->sources.size() - 1;
+  linenum  = 1;
 
   istream_pos_type beg_pos  = 0;
   unsigned long    beg_line = 0;
@@ -97,14 +92,14 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
 	  std::strcmp(line, "Type:Cat") == 0 ||
 	  std::strcmp(line, "Type:Class") == 0 ||
 	  std::strcmp(line, "Type:Memorized") == 0)
-	throw new parse_error(std::string("QIF files of type ") + line +
+	throw new parse_error(string("QIF files of type ") + line +
 			      " are not supported.");
       break;
 
     case 'D':
       SET_BEG_POS_AND_LINE();
       get_line(in);
-      entry->_date = line;
+      entry->_date = parse_datetime(line);
       break;
 
     case 'T':
@@ -117,7 +112,7 @@ unsigned int qif_parser_t::parse(std::istream&	     in,
       unsigned char prec  = xact->amount.commodity().precision();
 
       if (! def_commodity) {
-	def_commodity = commodity_t::find_or_create("$");
+	def_commodity = amount_t::current_pool->find_or_create("$");
 	assert(def_commodity);
       }
       xact->amount.set_commodity(*def_commodity);

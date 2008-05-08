@@ -38,21 +38,21 @@ report_t::report_t()
 }
 
 void
-report_t::regexps_to_predicate(const std::string& command,
-			       std::list<std::string>::const_iterator begin,
-			       std::list<std::string>::const_iterator end,
+report_t::regexps_to_predicate(const string& command,
+			       std::list<string>::const_iterator begin,
+			       std::list<string>::const_iterator end,
 			       const bool account_regexp,
 			       const bool add_account_short_masks,
 			       const bool logical_and)
 {
-  std::string regexps[2];
+  string regexps[2];
 
   assert(begin != end);
 
   // Treat the remaining command-line arguments as regular
   // expressions, used for refining report results.
 
-  for (std::list<std::string>::const_iterator i = begin;
+  for (std::list<string>::const_iterator i = begin;
        i != end;
        i++)
     if ((*i)[0] == '-') {
@@ -83,12 +83,12 @@ report_t::regexps_to_predicate(const std::string& command,
       predicate += "!";
     }
     else if (add_account_short_masks) {
-      if (regexps[i].find(':') != std::string::npos ||
-	  regexps[i].find('.') != std::string::npos ||
-	  regexps[i].find('*') != std::string::npos ||
-	  regexps[i].find('+') != std::string::npos ||
-	  regexps[i].find('[') != std::string::npos ||
-	  regexps[i].find('(') != std::string::npos) {
+      if (regexps[i].find(':') != string::npos ||
+	  regexps[i].find('.') != string::npos ||
+	  regexps[i].find('*') != string::npos ||
+	  regexps[i].find('+') != string::npos ||
+	  regexps[i].find('[') != string::npos ||
+	  regexps[i].find('(') != string::npos) {
 	show_subtotal = true;
 	add_predicate = 1;
       } else {
@@ -127,7 +127,7 @@ report_t::regexps_to_predicate(const std::string& command,
   }
 }
 
-void report_t::process_options(const std::string&     command,
+void report_t::process_options(const string&     command,
 			       strings_list::iterator arg,
 			       strings_list::iterator args_end)
 {
@@ -158,7 +158,7 @@ void report_t::process_options(const std::string&     command,
     // Treat the remaining command-line arguments as regular
     // expressions, used for refining report results.
 
-    std::list<std::string>::iterator i = arg;
+    std::list<string>::iterator i = arg;
     for (; i != args_end; i++)
       if (*i == "--")
 	break;
@@ -191,8 +191,8 @@ void report_t::process_options(const std::string&     command,
     }
   }
 
-  DEBUG_PRINT("ledger.config.predicates", "Predicate: " << predicate);
-  DEBUG_PRINT("ledger.config.predicates", "Display P: " << display_predicate);
+  DEBUG("ledger.config.predicates", "Predicate: " << predicate);
+  DEBUG("ledger.config.predicates", "Display P: " << display_predicate);
 
   // Setup the values of %t and %T, used in format strings
 
@@ -204,7 +204,7 @@ void report_t::process_options(const std::string&     command,
   // Now setup the various formatting strings
 
   if (! date_output_format.empty())
-    date_t::output_format = date_output_format;
+    output_time_format = date_output_format;
 
   amount_t::keep_price = keep_price;
   amount_t::keep_date  = keep_date;
@@ -215,7 +215,7 @@ void report_t::process_options(const std::string&     command,
 }
 
 item_handler<transaction_t> *
-report_t::chain_xact_handlers(const std::string& command,
+report_t::chain_xact_handlers(const string& command,
 			      item_handler<transaction_t> * base_formatter,
 			      journal_t * journal,
 			      account_t * master,
@@ -254,16 +254,16 @@ report_t::chain_xact_handlers(const std::string& command,
     // transactions which made up the total for that reported
     // transaction.
     if (! descend_expr.empty()) {
-      std::list<std::string> descend_exprs;
+      std::list<string> descend_exprs;
 
-      std::string::size_type beg = 0;
-      for (std::string::size_type pos = descend_expr.find(';');
-	   pos != std::string::npos;
+      string::size_type beg = 0;
+      for (string::size_type pos = descend_expr.find(';');
+	   pos != string::npos;
 	   beg = pos + 1, pos = descend_expr.find(';', beg))
-	descend_exprs.push_back(std::string(descend_expr, beg, pos - beg));
-      descend_exprs.push_back(std::string(descend_expr, beg));
+	descend_exprs.push_back(string(descend_expr, beg, pos - beg));
+      descend_exprs.push_back(string(descend_expr, beg));
 
-      for (std::list<std::string>::reverse_iterator i =
+      for (std::list<string>::reverse_iterator i =
 	     descend_exprs.rbegin();
 	   i != descend_exprs.rend();
 	   i++)
@@ -277,9 +277,9 @@ report_t::chain_xact_handlers(const std::string& command,
     // transactions which can be reconciled to a given balance
     // (calculated against the transactions which it receives).
     if (! reconcile_balance.empty()) {
-      datetime_t cutoff = datetime_t::now;
+      datetime_t cutoff = current_moment;
       if (! reconcile_date.empty())
-	cutoff = reconcile_date;
+	cutoff = parse_datetime(reconcile_date);
       ptrs.push_back(formatter =
 		     new reconcile_transactions
 		     (formatter, value_t(reconcile_balance), cutoff));

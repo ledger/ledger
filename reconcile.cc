@@ -40,11 +40,10 @@ void reconcile_transactions::flush()
   transaction_t *  first    = NULL;
   transaction_t ** last_ptr = &first;
 
-  bool found_pending = false;
   for (transactions_list::iterator x = xacts.begin();
        x != xacts.end();
        x++) {
-    if (! cutoff || (*x)->date() < cutoff) {
+    if (! is_valid(cutoff) || (*x)->date() < cutoff) {
       switch ((*x)->state) {
       case transaction_t::CLEARED:
 	cleared_balance += (*x)->amount;
@@ -59,25 +58,25 @@ void reconcile_transactions::flush()
     }
   }
 
-  if (cleared_balance.type >= value_t::BALANCE)
+  if (cleared_balance.type() >= value_t::BALANCE)
     throw new error("Cannot reconcile accounts with multiple commodities");
 
   cleared_balance.cast(value_t::AMOUNT);
   balance.cast(value_t::AMOUNT);
 
-  commodity_t& cb_comm = ((amount_t *) cleared_balance.data)->commodity();
-  commodity_t& b_comm  = ((amount_t *) balance.data)->commodity();
+  commodity_t& cb_comm = cleared_balance.as_amount_lval().commodity();
+  commodity_t& b_comm  = balance.as_amount_lval().commodity();
 
   balance -= cleared_balance;
-  if (balance.type >= value_t::BALANCE)
-    throw new error(std::string("Reconcile balance is not of the same commodity ('") +
-		    b_comm.symbol() + "' != '" + cb_comm.symbol() + "')");
+  if (balance.type() >= value_t::BALANCE)
+    throw new error(string("Reconcile balance is not of the same commodity ('") +
+		    b_comm.symbol() + string("' != '") + cb_comm.symbol() + "')");
 
   // If the amount to reconcile is the same as the pending balance,
   // then assume an exact match and return the results right away.
-  amount_t to_reconcile = *((amount_t *) balance.data);
+  amount_t& to_reconcile(balance.as_amount_lval());
   pending_balance.cast(value_t::AMOUNT);
-  if (to_reconcile == *((amount_t *) pending_balance.data) ||
+  if (to_reconcile == pending_balance.as_amount_lval() ||
       search_for_balance(to_reconcile, &first, first)) {
     push_to_handler(first);
   } else {

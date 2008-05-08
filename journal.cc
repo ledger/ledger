@@ -1,34 +1,32 @@
 #include "journal.h"
-#include "datetime.h"
+#include "utils.h"
 #include "valexpr.h"
 #include "mask.h"
 #include "format.h"
 #include "acconf.h"
 
-#include <fstream>
-
 namespace ledger {
 
-const std::string version = PACKAGE_VERSION;
+const string version = PACKAGE_VERSION;
 
 bool transaction_t::use_effective_date = false;
 
 transaction_t::~transaction_t()
 {
-  DEBUG_PRINT("ledger.memory.dtors", "dtor transaction_t");
+  DEBUG("ledger.memory.dtors", "dtor transaction_t");
   if (cost) delete cost;
 }
 
 datetime_t transaction_t::actual_date() const
 {
-  if (! _date && entry)
+  if (! is_valid(_date) && entry)
     return entry->actual_date();
   return _date;
 }
 
 datetime_t transaction_t::effective_date() const
 {
-  if (! _date_eff && entry)
+  if (! is_valid(_date_eff) && entry)
     return entry->effective_date();
   return _date_eff;
 }
@@ -36,12 +34,12 @@ datetime_t transaction_t::effective_date() const
 bool transaction_t::valid() const
 {
   if (! entry) {
-    DEBUG_PRINT("ledger.validate", "transaction_t: ! entry");
+    DEBUG("ledger.validate", "transaction_t: ! entry");
     return false;
   }
 
   if (state != UNCLEARED && state != CLEARED && state != PENDING) {
-    DEBUG_PRINT("ledger.validate", "transaction_t: state is bad");
+    DEBUG("ledger.validate", "transaction_t: state is bad");
     return false;
   }
 
@@ -54,27 +52,27 @@ bool transaction_t::valid() const
       break;
     }
   if (! found) {
-    DEBUG_PRINT("ledger.validate", "transaction_t: ! found");
+    DEBUG("ledger.validate", "transaction_t: ! found");
     return false;
   }
 
   if (! account) {
-    DEBUG_PRINT("ledger.validate", "transaction_t: ! account");
+    DEBUG("ledger.validate", "transaction_t: ! account");
     return false;
   }
 
   if (! amount.valid()) {
-    DEBUG_PRINT("ledger.validate", "transaction_t: ! amount.valid()");
+    DEBUG("ledger.validate", "transaction_t: ! amount.valid()");
     return false;
   }
 
   if (cost && ! cost->valid()) {
-    DEBUG_PRINT("ledger.validate", "transaction_t: cost && ! cost->valid()");
+    DEBUG("ledger.validate", "transaction_t: cost && ! cost->valid()");
     return false;
   }
 
   if (flags & ~0x003f) {
-    DEBUG_PRINT("ledger.validate", "transaction_t: flags are bad");
+    DEBUG("ledger.validate", "transaction_t: flags are bad");
     return false;
   }
 
@@ -91,6 +89,8 @@ bool entry_base_t::remove_transaction(transaction_t * xact)
   transactions.remove(xact);
   return true;
 }
+
+// jww (2008-04-20): Migrate the Common Lisp version here!
 
 bool entry_base_t::finalize()
 {
@@ -120,8 +120,9 @@ bool entry_base_t::finalize()
 	  annotated_commodity_t&
 	    ann_comm(static_cast<annotated_commodity_t&>
 		     ((*x)->amount.commodity()));
-	  if (ann_comm.price)
-	    balance += ann_comm.price * (*x)->amount - *((*x)->cost);
+	  if (ann_comm.details.price)
+	    balance += ((*ann_comm.details.price) * (*x)->amount -
+			*((*x)->cost));
 	}
       } else {
 	saw_null = true;
@@ -136,7 +137,7 @@ bool entry_base_t::finalize()
   // account if one has been set.
 
   if (journal && journal->basket && transactions.size() == 1) {
-    assert(balance.type < value_t::BALANCE);
+    assert(balance.type() < value_t::BALANCE);
     transaction_t * nxact = new transaction_t(journal->basket);
     // The amount doesn't need to be set because the code below will
     // balance this transaction against the other.
@@ -149,20 +150,22 @@ bool entry_base_t::finalize()
   // determine its price by dividing the unit count into the value of
   // the balance.  This is done for the last eligible commodity.
 
-  if (! saw_null && balance && balance.type == value_t::BALANCE &&
-      ((balance_t *) balance.data)->amounts.size() == 2) {
+  if (! saw_null && balance && balance.is_type(value_t::BALANCE) &&
+      balance.as_balance_lval().amounts.size() == 2) {
     transactions_list::const_iterator x = transactions.begin();
     commodity_t& this_comm = (*x)->amount.commodity();
 
-    amounts_map::const_iterator this_bal =
-      ((balance_t *) balance.data)->amounts.find(&this_comm);
-    amounts_map::const_iterator other_bal =
-      ((balance_t *) balance.data)->amounts.begin();
-    if (this_bal == other_bal)
-      other_bal++;
+    balance_t& bal(balance.as_balance_lval());
+
+    balance_t::amounts_map::const_iterator this_amt =
+      bal.amounts.find(&this_comm);
+    balance_t::amounts_map::const_iterator other_amt =
+      bal.amounts.begin();
+    if (this_amt == other_amt)
+      other_amt++;
 
     amount_t per_unit_cost =
-      amount_t((*other_bal).second / (*this_bal).second).unround();
+      amount_t((*other_amt).second / (*this_amt).second).unround();
 
     for (; x != transactions.end(); x++) {
       if ((*x)->cost || ((*x)->flags & TRANSACTION_VIRTUAL) ||
@@ -177,9 +180,9 @@ bool entry_base_t::finalize()
       if ((*x)->amount.commodity() &&
 	  ! (*x)->amount.commodity().annotated)
 	(*x)->amount.annotate_commodity
-	  (abs(per_unit_cost),
-	   entry ? entry->actual_date() : datetime_t(),
-	   entry ? entry->code : "");
+	  (annotation_t(per_unit_cost.abs(),
+			entry ? optional<datetime_t>(entry->actual_date()) : none,
+			entry ? optional<string>(entry->code) : none));
 
       (*x)->cost = new amount_t(- (per_unit_cost * (*x)->amount));
       balance += *(*x)->cost;
@@ -194,7 +197,7 @@ bool entry_base_t::finalize()
   for (transactions_list::const_iterator x = transactions.begin();
        x != transactions.end();
        x++) {
-    if (! (*x)->amount.null() ||
+    if (! (*x)->amount.is_null() ||
 	(((*x)->flags & TRANSACTION_VIRTUAL) &&
 	 ! ((*x)->flags & TRANSACTION_BALANCE)))
       continue;
@@ -209,20 +212,20 @@ bool entry_base_t::finalize()
     // generated to balance them all.
 
     balance_t * bal = NULL;
-    switch (balance.type) {
+    switch (balance.type()) {
     case value_t::BALANCE_PAIR:
-      bal = &((balance_pair_t *) balance.data)->quantity;
+      bal = &(balance.as_balance_pair_lval().quantity());
       // fall through...
 
     case value_t::BALANCE:
       if (! bal)
-	bal = (balance_t *) balance.data;
+	bal = &(balance.as_balance_lval());
 
       if (bal->amounts.size() < 2) {
 	balance.cast(value_t::AMOUNT);
       } else {
 	bool first = true;
-	for (amounts_map::const_iterator i = bal->amounts.begin();
+	for (balance_t::amounts_map::const_iterator i = bal->amounts.begin();
 	     i != bal->amounts.end();
 	     i++) {
 	  amount_t amt = (*i).second;
@@ -245,7 +248,7 @@ bool entry_base_t::finalize()
       // fall through...
 
     case value_t::AMOUNT:
-      (*x)->amount = *((amount_t *) balance.data);
+      (*x)->amount = balance.as_amount_lval();
       (*x)->amount.negate();
       (*x)->flags |= TRANSACTION_CALCULATED;
 
@@ -273,7 +276,7 @@ entry_t::entry_t(const entry_t& e)
   : entry_base_t(e), _date(e._date), _date_eff(e._date_eff),
     code(e.code), payee(e.payee)
 {
-  DEBUG_PRINT("ledger.memory.ctors", "ctor entry_t");
+  DEBUG("ledger.memory.ctors", "ctor entry_t");
 
   for (transactions_list::const_iterator i = transactions.begin();
        i != transactions.end();
@@ -310,8 +313,8 @@ void entry_t::add_transaction(transaction_t * xact)
 
 bool entry_t::valid() const
 {
-  if (! _date || ! journal) {
-    DEBUG_PRINT("ledger.validate", "entry_t: ! _date || ! journal");
+  if (! is_valid(_date) || ! journal) {
+    DEBUG("ledger.validate", "entry_t: ! _date || ! journal");
     return false;
   }
 
@@ -319,23 +322,23 @@ bool entry_t::valid() const
        i != transactions.end();
        i++)
     if ((*i)->entry != this || ! (*i)->valid()) {
-      DEBUG_PRINT("ledger.validate", "entry_t: transaction not valid");
+      DEBUG("ledger.validate", "entry_t: transaction not valid");
       return false;
     }
 
   return true;
 }
 
-auto_entry_t::auto_entry_t(const std::string& _predicate)
+auto_entry_t::auto_entry_t(const string& _predicate)
   : predicate_string(_predicate)
 {
-  DEBUG_PRINT("ledger.memory.ctors", "ctor auto_entry_t");
+  DEBUG("ledger.memory.ctors", "ctor auto_entry_t");
   predicate = new item_predicate<transaction_t>(predicate_string);
 }
 
 auto_entry_t::~auto_entry_t()
 {
-  DEBUG_PRINT("ledger.memory.dtors", "dtor auto_entry_t");
+  DEBUG("ledger.memory.dtors", "dtor auto_entry_t");
   if (predicate)
     delete predicate;
 }
@@ -364,7 +367,7 @@ void auto_entry_t::extend_entry(entry_base_t& entry, bool post)
 	}
 
 	account_t * account  = (*t)->account;
-	std::string fullname = account->fullname();
+	string	    fullname = account->fullname();
 	assert(! fullname.empty());
 	if (fullname == "$account" || fullname == "@account")
 	  account = (*i)->account;
@@ -391,7 +394,7 @@ void auto_entry_t::extend_entry(entry_base_t& entry, bool post)
 
 account_t::~account_t()
 {
-  DEBUG_PRINT("ledger.memory.dtors", "dtor account_t " << this);
+  DEBUG("ledger.memory.dtors", "dtor account_t " << this);
   //assert(! data);
 
   for (accounts_map::iterator i = accounts.begin();
@@ -400,8 +403,8 @@ account_t::~account_t()
     delete (*i).second;
 }
 
-account_t * account_t::find_account(const std::string& name,
-				    const bool	       auto_create)
+account_t * account_t::find_account(const string& name,
+				    const bool	  auto_create)
 {
   accounts_map::const_iterator i = accounts.find(name);
   if (i != accounts.end())
@@ -409,11 +412,11 @@ account_t * account_t::find_account(const std::string& name,
 
   char buf[256];
 
-  std::string::size_type sep = name.find(':');
-  assert(sep < 256|| sep == std::string::npos);
+  string::size_type sep = name.find(':');
+  assert(sep < 256|| sep == string::npos);
 
   const char * first, * rest;
-  if (sep == std::string::npos) {
+  if (sep == string::npos) {
     first = name.c_str();
     rest  = NULL;
   } else {
@@ -462,18 +465,18 @@ account_t * find_account_re_(account_t * account, const mask_t& regexp)
   return NULL;
 }
 
-account_t * journal_t::find_account_re(const std::string& regexp)
+account_t * journal_t::find_account_re(const string& regexp)
 {
   return find_account_re_(master, mask_t(regexp));
 }
 
-std::string account_t::fullname() const
+string account_t::fullname() const
 {
   if (! _fullname.empty()) {
     return _fullname;
   } else {
-    const account_t *	first	 = this;
-    std::string		fullname = name;
+    const account_t * first    = this;
+    string	      fullname = name;
 
     while (first->parent) {
       first = first->parent;
@@ -496,7 +499,7 @@ std::ostream& operator<<(std::ostream& out, const account_t& account)
 bool account_t::valid() const
 {
   if (depth > 256 || ! journal) {
-    DEBUG_PRINT("ledger.validate", "account_t: depth > 256 || ! journal");
+    DEBUG("ledger.validate", "account_t: depth > 256 || ! journal");
     return false;
   }
 
@@ -504,12 +507,12 @@ bool account_t::valid() const
        i != accounts.end();
        i++) {
     if (this == (*i).second) {
-      DEBUG_PRINT("ledger.validate", "account_t: parent refers to itself!");
+      DEBUG("ledger.validate", "account_t: parent refers to itself!");
       return false;
     }
 
     if (! (*i).second->valid()) {
-      DEBUG_PRINT("ledger.validate", "account_t: child not valid");
+      DEBUG("ledger.validate", "account_t: child not valid");
       return false;
     }
   }
@@ -519,7 +522,7 @@ bool account_t::valid() const
 
 journal_t::~journal_t()
 {
-  DEBUG_PRINT("ledger.memory.dtors", "dtor journal_t");
+  DEBUG("ledger.memory.dtors", "dtor journal_t");
 
   assert(master);
   delete master;
@@ -602,7 +605,7 @@ bool journal_t::remove_entry(entry_t * entry)
 bool journal_t::valid() const
 {
   if (! master->valid()) {
-    DEBUG_PRINT("ledger.validate", "journal_t: master not valid");
+    DEBUG("ledger.validate", "journal_t: master not valid");
     return false;
   }
 
@@ -610,15 +613,16 @@ bool journal_t::valid() const
        i != entries.end();
        i++)
     if (! (*i)->valid()) {
-      DEBUG_PRINT("ledger.validate", "journal_t: entry not valid");
+      DEBUG("ledger.validate", "journal_t: entry not valid");
       return false;
     }
 
-  for (commodities_map::const_iterator i = commodity_t::commodities.begin();
-       i != commodity_t::commodities.end();
+  for (commodity_pool_t::commodities_by_ident::const_iterator
+	 i = amount_t::current_pool->commodities.begin();
+       i != amount_t::current_pool->commodities.end();
        i++)
-    if (! (*i).second->valid()) {
-      DEBUG_PRINT("ledger.validate", "journal_t: commodity not valid");
+    if (! (*i)->valid()) {
+      DEBUG("ledger.validate", "journal_t: commodity not valid");
       return false;
     }
 
@@ -634,12 +638,12 @@ void entry_context::describe(std::ostream& out) const throw()
 }
 
 xact_context::xact_context(const ledger::transaction_t& _xact,
-			   const std::string& desc) throw()
-  : xact(_xact), file_context("", 0, desc)
+			   const string& desc) throw()
+  : file_context("", 0, desc), xact(_xact)
 {
-  const ledger::strings_list& sources(xact.entry->journal->sources);
-  int x = 0;
-  for (ledger::strings_list::const_iterator i = sources.begin();
+  const ledger::paths_list& sources(xact.entry->journal->sources);
+  unsigned int x = 0;
+  for (ledger::paths_list::const_iterator i = sources.begin();
        i != sources.end();
        i++, x++)
     if (x == xact.entry->src_idx) {

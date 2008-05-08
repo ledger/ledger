@@ -1,19 +1,6 @@
 #include "xml.h"
 #include "journal.h"
-#include "datetime.h"
-#include "error.h"
-
-#include <iostream>
-#include <sstream>
-#include <cstring>
-
-extern "C" {
-#if defined(HAVE_EXPAT)
-#include <expat.h>           // expat XML parser
-#elif defined(HAVE_XMLPARSE)
-#include <xmlparse.h>        // expat XML parser
-#endif
-}
+#include "utils.h"
 
 namespace ledger {
 
@@ -25,13 +12,13 @@ static unsigned int  count;
 static journal_t *   curr_journal;
 static entry_t *     curr_entry;
 static commodity_t * curr_comm;
-static std::string   comm_flags;
+static string   comm_flags;
 
 static transaction_t::state_t curr_state;
 
-static std::string   data;
+static string   data;
 static bool          ignore;
-static std::string   have_error;
+static string   have_error;
 
 static void startElement(void *userData, const char *name, const char **attrs)
 {
@@ -50,7 +37,7 @@ static void startElement(void *userData, const char *name, const char **attrs)
       curr_entry->transactions.back()->state = curr_state;
   }
   else if (std::strcmp(name, "commodity") == 0) {
-    if (std::string(attrs[0]) == "flags")
+    if (string(attrs[0]) == "flags")
       comm_flags = attrs[1];
   }
   else if (std::strcmp(name, "total") == 0) {
@@ -83,10 +70,10 @@ static void endElement(void *userData, const char *name)
     curr_entry = NULL;
   }
   else if (std::strcmp(name, "en:date") == 0) {
-    curr_entry->_date = data;
+    curr_entry->_date = parse_datetime(data);
   }
   else if (std::strcmp(name, "en:date_eff") == 0) {
-    curr_entry->_date_eff = data;
+    curr_entry->_date_eff = parse_datetime(data);
   }
   else if (std::strcmp(name, "en:code") == 0) {
     curr_entry->code = data;
@@ -117,11 +104,11 @@ static void endElement(void *userData, const char *name)
   }
   else if (std::strcmp(name, "symbol") == 0) {
     assert(! curr_comm);
-    curr_comm = commodity_t::find_or_create(data);
+    curr_comm = amount_t::current_pool->find_or_create(data);
     assert(curr_comm);
     curr_comm->add_flags(COMMODITY_STYLE_SUFFIXED);
     if (! comm_flags.empty()) {
-      for (std::string::size_type i = 0, l = comm_flags.length(); i < l; i++) {
+      for (string::size_type i = 0, l = comm_flags.length(); i < l; i++) {
 	switch (comm_flags[i]) {
 	case 'P': curr_comm->drop_flags(COMMODITY_STYLE_SUFFIXED); break;
 	case 'S': curr_comm->add_flags(COMMODITY_STYLE_SEPARATED); break;
@@ -148,8 +135,8 @@ static void endElement(void *userData, const char *name)
   else if (std::strcmp(name, "quantity") == 0) {
     curr_entry->transactions.back()->amount.parse(data);
     if (curr_comm) {
-      std::string::size_type i = data.find('.');
-      if (i != std::string::npos) {
+      string::size_type i = data.find('.');
+      if (i != string::npos) {
 	int precision = data.length() - i - 1;
 	if (precision > curr_comm->precision())
 	  curr_comm->set_precision(precision);
@@ -166,7 +153,7 @@ static void endElement(void *userData, const char *name)
 static void dataHandler(void *userData, const char *s, int len)
 {
   if (! ignore)
-    data = std::string(s, len);
+    data = string(s, len);
 }
 
 bool xml_parser_t::test(std::istream& in) const
@@ -192,11 +179,11 @@ bool xml_parser_t::test(std::istream& in) const
   return true;
 }
 
-unsigned int xml_parser_t::parse(std::istream&	     in,
-				 config_t&           config,
-				 journal_t *	     journal,
-				 account_t *	     master,
-				 const std::string * original_file)
+unsigned int xml_parser_t::parse(std::istream& in,
+				 config_t&     config,
+				 journal_t *   journal,
+				 account_t *   master,
+				 const path *  original_file)
 {
   char buf[BUFSIZ];
 
@@ -206,7 +193,6 @@ unsigned int xml_parser_t::parse(std::istream&	     in,
   curr_comm    = NULL;
   ignore       = false;
 
-  unsigned int offset = 2;
   XML_Parser   parser = XML_ParserCreate(NULL);
   current_parser = parser;
 
@@ -221,20 +207,20 @@ unsigned int xml_parser_t::parse(std::istream&	     in,
       result = XML_Parse(parser, buf, std::strlen(buf), in.eof());
     }
     catch (const std::exception& err) {
-      unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
+      //unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
       XML_ParserFree(parser);
       throw new parse_error(err.what());
     }
 
     if (! have_error.empty()) {
-      unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
+      //unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
       parse_error err(have_error);
       std::cerr << "Error: " << err.what() << std::endl;
       have_error = "";
     }
 
     if (! result) {
-      unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
+      //unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
       const char *  err  = XML_ErrorString(XML_GetErrorCode(parser));
       XML_ParserFree(parser);
       throw new parse_error(err);
@@ -290,46 +276,49 @@ void xml_write_amount(std::ostream& out, const amount_t& amount,
 void xml_write_value(std::ostream& out, const value_t& value,
 		     const int depth = 0)
 {
-  balance_t * bal = NULL;
+  const balance_t * bal = NULL;
 
   for (int i = 0; i < depth; i++) out << ' ';
   out << "<value type=\"";
-  switch (value.type) {
+  switch (value.type()) {
   case value_t::BOOLEAN: out << "boolean"; break;
   case value_t::INTEGER: out << "integer"; break;
   case value_t::AMOUNT: out << "amount"; break;
   case value_t::BALANCE:
   case value_t::BALANCE_PAIR: out << "balance"; break;
+  default:
+    assert(false);
+    break;
   }
   out << "\">\n";
 
-  switch (value.type) {
+  switch (value.type()) {
   case value_t::BOOLEAN:
     for (int i = 0; i < depth + 2; i++) out << ' ';
-    out << "<boolean>" << *((bool *) value.data) << "</boolean>\n";
+    out << "<boolean>" << value.as_boolean() << "</boolean>\n";
     break;
 
   case value_t::INTEGER:
     for (int i = 0; i < depth + 2; i++) out << ' ';
-    out << "<integer>" << *((long *) value.data) << "</integer>\n";
+    out << "<integer>" << value.as_long() << "</integer>\n";
     break;
 
   case value_t::AMOUNT:
-    xml_write_amount(out, *((amount_t *) value.data), depth + 2);
+    xml_write_amount(out, value.as_amount(), depth + 2);
     break;
 
   case value_t::BALANCE:
-    bal = (balance_t *) value.data;
+    bal = &(value.as_balance());
     // fall through...
 
   case value_t::BALANCE_PAIR:
     if (! bal)
-      bal = &((balance_pair_t *) value.data)->quantity;
+      bal = &(value.as_balance_pair().quantity());
 
     for (int i = 0; i < depth + 2; i++) out << ' ';
     out << "<balance>\n";
 
-    for (amounts_map::const_iterator i = bal->amounts.begin();
+    for (balance_t::amounts_map::const_iterator i = bal->amounts.begin();
 	 i != bal->amounts.end();
 	 i++)
       xml_write_amount(out, (*i).second, depth + 4);
@@ -339,7 +328,7 @@ void xml_write_value(std::ostream& out, const value_t& value,
     break;
 
   default:
-    assert(0);
+    assert(false);
     break;
   }
 
@@ -347,7 +336,7 @@ void xml_write_value(std::ostream& out, const value_t& value,
   out << "</value>\n";
 }
 
-void output_xml_string(std::ostream& out, const std::string& str)
+void output_xml_string(std::ostream& out, const string& str)
 {
   for (const char * s = str.c_str(); *s; s++) {
     switch (*s) {
@@ -369,14 +358,17 @@ void output_xml_string(std::ostream& out, const std::string& str)
 
 void format_xml_entries::format_last_entry()
 {
+#if 0
+  // jww (2008-05-08): Need to format these dates
   output_stream << "  <entry>\n"
 		<< "    <en:date>" << last_entry->_date.to_string("%Y/%m/%d")
 		<< "</en:date>\n";
 
-  if (last_entry->_date_eff)
+  if (is_valid(last_entry->_date_eff))
     output_stream << "    <en:date_eff>"
 		  << last_entry->_date_eff.to_string("%Y/%m/%d")
 		  << "</en:date_eff>\n";
+#endif
 
   if (! last_entry->code.empty()) {
     output_stream << "    <en:code>";
@@ -403,15 +395,18 @@ void format_xml_entries::format_last_entry()
 
       output_stream << "      <transaction>\n";
 
+#if 0
+      // jww (2008-05-08): Need to format these
       if ((*i)->_date)
 	output_stream << "        <tr:date>"
 		      << (*i)->_date.to_string("%Y/%m/%d")
 		      << "</tr:date>\n";
 
-      if ((*i)->_date_eff)
+      if (is_valid((*i)->_date_eff))
 	output_stream << "        <tr:date_eff>"
 		      << (*i)->_date_eff.to_string("%Y/%m/%d")
 		      << "</tr:date_eff>\n";
+#endif
 
       if ((*i)->state == transaction_t::CLEARED)
 	output_stream << "        <tr:cleared/>\n";
@@ -424,7 +419,7 @@ void format_xml_entries::format_last_entry()
 	output_stream << "        <tr:generated/>\n";
 
       if ((*i)->account) {
-	std::string name = (*i)->account->fullname();
+	string name = (*i)->account->fullname();
 	if (name == "<Total>")
 	  name = "[TOTAL]";
 	else if (name == "<Unknown>")

@@ -139,6 +139,8 @@ public:
    */
   static bool stream_fullstrings;
 
+  static uint_fast32_t sizeof_bigint_t();
+
 protected:
   void _copy(const amount_t& amt);
   void _dup();
@@ -148,6 +150,7 @@ protected:
 
   struct bigint_t;
 
+public:				// needed by binary.cc
   bigint_t *	quantity;
   commodity_t *	commodity_;
 
@@ -312,7 +315,7 @@ public:
    * compact form greater than 1.0.  That is, 3599s will unreduce to
    * 59.98m, while 3601 unreduces to 1h.
    *
-   * value(optional<moment_t>) returns the historical value for an
+   * value(optional<datetime_t>) returns the historical value for an
    * amount -- the default moment returns the most recently known
    * price -- based on the price history of its commodity.  For
    * example, if the amount were 10 AAPL, and on Apr 10, 2000 each
@@ -365,7 +368,7 @@ public:
   }
   amount_t& in_place_unreduce();
 
-  optional<amount_t> value(const optional<moment_t>& moment = none) const;
+  optional<amount_t> value(const optional<datetime_t>& moment = none) const;
 
   /**
    * Truth tests.  An amount may be truth test in several ways:
@@ -504,7 +507,7 @@ public:
    * purchased for, when it was acquired, or an arbitrary note,
    * identifying perhaps the lot number of an item.
    *
-   * annotate_commodity(amount_t price, [moment_t date, string tag])
+   * annotate_commodity(amount_t price, [datetime_t date, string tag])
    * sets the annotations for the current amount's commodity.  Only
    * the price argument is required, although it can be passed as
    * `none' if no price is desired.

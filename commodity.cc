@@ -44,7 +44,7 @@
 
 namespace ledger {
 
-void commodity_t::add_price(const moment_t& date,
+void commodity_t::add_price(const datetime_t& date,
 			    const amount_t& price)
 {
   if (! base->history)
@@ -60,7 +60,7 @@ void commodity_t::add_price(const moment_t& date,
   }
 }
 
-bool commodity_t::remove_price(const moment_t& date)
+bool commodity_t::remove_price(const datetime_t& date)
 {
   if (base->history) {
     history_map::size_type n = base->history->prices.erase(date);
@@ -73,9 +73,9 @@ bool commodity_t::remove_price(const moment_t& date)
   return false;
 }
 
-optional<amount_t> commodity_t::value(const optional<moment_t>& moment)
+optional<amount_t> commodity_t::value(const optional<datetime_t>& moment)
 {
-  optional<moment_t> age;
+  optional<datetime_t> age;
   optional<amount_t> price;
 
   if (base->history) {
@@ -112,7 +112,7 @@ optional<amount_t> commodity_t::value(const optional<moment_t>& moment)
     if (optional<amount_t> quote = parent().get_quote
 	(*this, age, moment,
 	 (base->history && base->history->prices.size() > 0 ?
-	  (*base->history->prices.rbegin()).first : optional<moment_t>())))
+	  (*base->history->prices.rbegin()).first : optional<datetime_t>())))
       return *quote;
   }
   return price;

@@ -15,14 +15,16 @@ lib_LTLIBRARIES = libamounts.la libledger.la
 libamounts_la_CPPFLAGS =
 libamounts_la_SOURCES = \
 	amount.cc      \
+	commodity.cc   \
 	balance.cc     \
-	value.cc
+	value.cc       \
+	times.cc       \
+	utils.cc
 if HAVE_BOOST_PYTHON
 libamounts_la_CPPFLAGS += -DUSE_BOOST_PYTHON=1
 endif
 if DEBUG
 libamounts_la_CPPFLAGS += -DDEBUG_MODE
-libamounts_la_SOURCES  += utils.cc
 endif
 
 libledger_la_CPPFLAGS =
@@ -38,7 +40,6 @@ libledger_la_SOURCES = \
 	option.cc      \
 	parser.cc      \
 	qif.cc	       \
-	quotes.cc      \
 	reconcile.cc   \
 	report.cc      \
 	startup.cc     \
@@ -46,6 +47,7 @@ libledger_la_SOURCES = \
 	valexpr.cc     \
 	walk.cc        \
 	xml.cc
+#	quotes.cc      this is currently not being included
 if HAVE_EXPAT
 libledger_la_CPPFLAGS += -DHAVE_EXPAT=1
 libledger_la_SOURCES += gnucash.cc
@@ -67,11 +69,12 @@ pkginclude_HEADERS = \
 	acconf.h     \
 		     \
 	amount.h     \
+	commodity.h  \
 	balance.h    \
-	datetime.h   \
+	balpair.h    \
 	value.h      \
-	debug.h	     \
-	util.h	     \
+	times.h	     \
+	utils.h	     \
 		     \
 	binary.h     \
 	config.h     \
@@ -91,7 +94,6 @@ pkginclude_HEADERS = \
 	reconcile.h  \
 	report.h     \
 	textual.h    \
-	timing.h     \
 	valexpr.h    \
 	walk.h       \
 	xml.h

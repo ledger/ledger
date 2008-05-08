@@ -472,7 +472,7 @@ bool logger_func(log_level_t level)
     IF_VERIFY()
       *_log_stream << " TIME  OBJSZ  MEMSZ" << std::endl;
 
-    appender = (logger_start - now).total_milliseconds();
+    appender = (logger_start - current_moment).total_milliseconds();
   }
 
   *_log_stream << std::right << std::setw(5)

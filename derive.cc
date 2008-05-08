@@ -1,10 +1,7 @@
 #include "derive.h"
-#include "datetime.h"
-#include "error.h"
+#include "utils.h"
 #include "mask.h"
 #include "walk.h"
-
-#include <memory>
 
 namespace ledger {
 
@@ -16,7 +13,9 @@ entry_t * derive_new_entry(journal_t& journal,
 
   entry_t * matching = NULL;
 
-  added->_date = *i++;
+  // jww (2008-04-20): Need to parse the string here
+  //added->_date = *i++;
+  added->_date = boost::posix_time::time_from_string(*i++);
   if (i == end)
     throw new error("Too few arguments to 'entry'");
 
@@ -31,7 +30,7 @@ entry_t * derive_new_entry(journal_t& journal,
       break;
     }
 
-  added->payee = matching ? matching->payee : regexp.pattern;
+  added->payee = matching ? matching->payee : regexp.expr.str();
 
   if (! matching) {
     account_t * acct;
@@ -67,8 +66,8 @@ entry_t * derive_new_entry(journal_t& journal,
 	sum_accounts(*journal.master);
 
 	value_t total = account_xdata(*acct).total;
-	if (total.type == value_t::AMOUNT)
-	  xact->amount.set_commodity(((amount_t *) total.data)->commodity());
+	if (total.is_type(value_t::AMOUNT))
+	  xact->amount.set_commodity(total.as_amount_lval().commodity());
       }
     }
 
@@ -114,9 +113,9 @@ entry_t * derive_new_entry(journal_t& journal,
   }
   else {
     while (i != end) {
-      std::string& re_pat(*i++);
-      account_t *  acct = NULL;
-      amount_t *   amt  = NULL;
+      string&	  re_pat(*i++);
+      account_t * acct = NULL;
+      amount_t *  amt  = NULL;
 
       mask_t acct_regex(re_pat);
 
@@ -152,8 +151,8 @@ entry_t * derive_new_entry(journal_t& journal,
 	if (! xact->amount.commodity()) {
 	  if (amt)
 	    xact->amount.set_commodity(amt->commodity());
-	  else if (commodity_t::default_commodity)
-	    xact->amount.set_commodity(*commodity_t::default_commodity);
+	  else if (amount_t::current_pool->default_commodity)
+	    xact->amount.set_commodity(*amount_t::current_pool->default_commodity);
 	}
       }
       added->add_transaction(xact);
@@ -164,7 +163,6 @@ entry_t * derive_new_entry(journal_t& journal,
       added->add_transaction(new transaction_t(draw_acct));
   }
 
- done:
   if (! run_hooks(journal.entry_finalize_hooks, *added, false) ||
       ! added->finalize() ||
       ! run_hooks(journal.entry_finalize_hooks, *added, true))

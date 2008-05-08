@@ -1,4 +1,8 @@
 #include "ledger.h"
+#include "xml.h"
+#include "gnucash.h"
+#include "qif.h"
+#include "ofx.h"
 
 using namespace ledger;
 
@@ -49,8 +53,11 @@ namespace {
 
   startup::~startup()
   {
+    // jww (2008-04-22): What about this?
+#if 0
     if (! ledger::do_cleanup)
       return;
+#endif
     shutdown_parser_support();
   }
 }

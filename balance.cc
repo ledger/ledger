@@ -166,7 +166,7 @@ balance_t& balance_t::operator/=(const amount_t& amt)
 }
 
 optional<balance_t>
-balance_t::value(const optional<moment_t>& moment) const
+balance_t::value(const optional<datetime_t>& moment) const
 {
   optional<balance_t> temp;
 
@@ -242,8 +242,7 @@ void balance_t::print(std::ostream& out,
     if (i->second)
       sorted.push_back(&i->second);
 
-  std::stable_sort(sorted.begin(), sorted.end(),
-		   compare_amount_commodities());
+  std::stable_sort(sorted.begin(), sorted.end(), compare_amount_commodities());
 
   for (amounts_array::const_iterator i = sorted.begin();
        i != sorted.end();

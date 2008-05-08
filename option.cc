@@ -1,14 +1,9 @@
 #include "option.h"
 #include "config.h"
 #include "report.h"
-#include "debug.h"
-#include "error.h"
+#include "utils.h"
 
-#include <iostream>
-#include <cstdarg>
-#include <unistd.h>
-
-#include "util.h"
+namespace ledger {
 
 namespace {
   inline void process_option(option_t * opt, const char * arg = NULL) {
@@ -19,9 +14,9 @@ namespace {
       catch (error * err) {
 	err->context.push_back
 	  (new error_context
-	   (std::string("While parsing option '--") + opt->long_opt +
+	   (string("While parsing option '--") + opt->long_opt +
 	    "'" + (opt->short_opt != '\0' ?
-		   (std::string(" (-") + opt->short_opt + "):") : ":")));
+		   (string(" (-") + opt->short_opt + "):") : ":")));
 	throw err;
       }
       opt->handled = true;
@@ -58,7 +53,7 @@ namespace {
   }
 }
 
-bool process_option(option_t * options, const std::string& name,
+bool process_option(option_t * options, const string& name,
 		    const char * arg)
 {
   option_t * opt = search_options(options, name.c_str());
@@ -70,9 +65,8 @@ bool process_option(option_t * options, const std::string& name,
 }
 
 void process_arguments(option_t * options, int argc, char ** argv,
-		       const bool anywhere, std::list<std::string>& args)
+		       const bool anywhere, std::list<string>& args)
 {
-  int index = 0;
   for (char ** i = argv; *i; i++) {
     if ((*i)[0] != '-') {
       if (anywhere) {
@@ -86,7 +80,6 @@ void process_arguments(option_t * options, int argc, char ** argv,
     }
 
     // --long-option or -s
-   again:
     if ((*i)[1] == '-') {
       if ((*i)[2] == '\0')
 	break;
@@ -100,18 +93,18 @@ void process_arguments(option_t * options, int argc, char ** argv,
 
       option_t * opt = search_options(options, name);
       if (! opt)
-	throw new option_error(std::string("illegal option --") + name);
+	throw new option_error(string("illegal option --") + name);
 
       if (opt->wants_arg && value == NULL) {
 	value = *++i;
 	if (value == NULL)
-	  throw new option_error(std::string("missing option argument for --") +
+	  throw new option_error(string("missing option argument for --") +
 				 name);
       }
       process_option(opt, value);
     }
     else if ((*i)[1] == '\0') {
-      throw new option_error(std::string("illegal option -"));
+      throw new option_error(string("illegal option -"));
     }
     else {
       std::list<option_t *> opt_queue;
@@ -120,7 +113,7 @@ void process_arguments(option_t * options, int argc, char ** argv,
       for (char c = (*i)[x]; c != '\0'; x++, c = (*i)[x]) {
 	option_t * opt = search_options(options, c);
 	if (! opt)
-	  throw new option_error(std::string("illegal option -") + c);
+	  throw new option_error(string("illegal option -") + c);
 	opt_queue.push_back(opt);
       }
 
@@ -130,20 +123,17 @@ void process_arguments(option_t * options, int argc, char ** argv,
 	if ((*o)->wants_arg) {
 	  value = *++i;
 	  if (value == NULL)
-	    throw new option_error(std::string("missing option argument for -") +
+	    throw new option_error(string("missing option argument for -") +
 				   (*o)->short_opt);
 	}
 	process_option(*o, value);
       }
     }
-
-   next:
-    ;
   }
 }
 
 void process_environment(option_t * options, const char ** envp,
-			 const std::string& tag)
+			 const string& tag)
 {
   const char * tag_p   = tag.c_str();
   unsigned int tag_len = tag.length();
@@ -170,7 +160,7 @@ void process_environment(option_t * options, const char ** envp,
 	  err->context.pop_back();
 	  err->context.push_back
 	    (new error_context
-	     (std::string("While parsing environment variable option '") +
+	     (string("While parsing environment variable option '") +
 	      *p + "':"));
 	  throw err;
 	}
@@ -179,8 +169,6 @@ void process_environment(option_t * options, const char ** envp,
 }
 
 //////////////////////////////////////////////////////////////////////
-
-namespace ledger {
 
 config_t * config = NULL;
 report_t * report = NULL;
@@ -405,23 +393,23 @@ OPT_BEGIN(version, "v") {
 } OPT_END(version);
 
 OPT_BEGIN(init_file, "i:") {
-  std::string path = resolve_path(optarg);
-  if (access(path.c_str(), R_OK) != -1)
-    config->init_file = path;
+  path pathname = resolve_path(optarg);
+  if (boost::filesystem::exists(pathname))
+    config->init_file = pathname;
   else
-    throw new error(std::string("The init file '") + path +
+    throw new error(string("The init file '") + string(pathname.string()) +
 		    "' does not exist or is not readable");
 } OPT_END(init_file);
 
 OPT_BEGIN(file, "f:") {
-  if (std::string(optarg) == "-") {
+  if (string(optarg) == "-") {
     config->data_file = optarg;
   } else {
-    std::string path = resolve_path(optarg);
-    if (access(path.c_str(), R_OK) != -1)
-      config->data_file = path;
+    path pathname = resolve_path(optarg);
+    if (boost::filesystem::exists(pathname))
+      config->data_file = pathname;
     else
-      throw new error(std::string("The ledger file '") + path +
+      throw new error(string("The ledger file '") + string(pathname.string()) +
 		      "' does not exist or is not readable");
   }
 } OPT_END(file);
@@ -435,10 +423,8 @@ OPT_BEGIN(no_cache, "") {
 } OPT_END(no_cache);
 
 OPT_BEGIN(output, "o:") {
-  if (std::string(optarg) != "-") {
-    std::string path = resolve_path(optarg);
-    report->output_file = path;
-  }
+  if (string(optarg) != "-")
+    report->output_file = resolve_path(optarg);
 } OPT_END(output);
 
 OPT_BEGIN(account, "a:") {
@@ -467,30 +453,30 @@ OPT_BEGIN(effective, "") {
 } OPT_END(effective);
 
 OPT_BEGIN(begin, "b:") {
-  char buf[128];
   interval_t interval(optarg);
-  if (! interval.begin)
-    throw new error(std::string("Could not determine beginning of period '") +
+  if (! is_valid(interval.begin))
+    throw new error(string("Could not determine beginning of period '") +
 		    optarg + "'");
 
   if (! report->predicate.empty())
     report->predicate += "&";
   report->predicate += "d>=[";
-  report->predicate += interval.begin.to_string();
+  // jww (2008-04-20): fix
+  //report->predicate += interval.begin.to_string();
   report->predicate += "]";
 } OPT_END(begin);
 
 OPT_BEGIN(end, "e:") {
-  char buf[128];
   interval_t interval(optarg);
-  if (! interval.end)
-    throw new error(std::string("Could not determine end of period '") +
+  if (! is_valid(interval.end))
+    throw new error(string("Could not determine end of period '") +
 		    optarg + "'");
 
   if (! report->predicate.empty())
     report->predicate += "&";
   report->predicate += "d<[";
-  report->predicate += interval.end.to_string();
+  // jww (2008-04-20): fix
+  //report->predicate += interval.end.to_string();
   report->predicate += "]";
 
   terminus = interval.end;
@@ -617,7 +603,7 @@ OPT_BEGIN(pager, ":") {
 } OPT_END(pager);
 
 OPT_BEGIN(truncate, ":") {
-  std::string style(optarg);
+  string style(optarg);
   if (style == "leading")
     format_t::elision_style = format_t::TRUNCATE_LEADING;
   else if (style == "middle")
@@ -673,16 +659,16 @@ OPT_BEGIN(related, "r") {
 } OPT_END(related);
 
 OPT_BEGIN(descend, "") {
-  std::string arg(optarg);
-  std::string::size_type beg = 0;
+  string arg(optarg);
+  string::size_type beg = 0;
   report->descend_expr = "";
-  for (std::string::size_type pos = arg.find(';');
-       pos != std::string::npos;
+  for (string::size_type pos = arg.find(';');
+       pos != string::npos;
        beg = pos + 1, pos = arg.find(';', beg))
-    report->descend_expr += (std::string("t=={") +
-			     std::string(arg, beg, pos - beg) + "};");
-  report->descend_expr += (std::string("t=={") +
-			   std::string(arg, beg) + "}");
+    report->descend_expr += (string("t=={") +
+			     string(arg, beg, pos - beg) + "};");
+  report->descend_expr += (string("t=={") +
+			   string(arg, beg) + "}");
 } OPT_END(descend);
 
 OPT_BEGIN(descend_if, "") {
@@ -703,19 +689,21 @@ OPT_BEGIN(period, "p:") {
 
   interval_t interval(report->report_period);
 
-  if (interval.begin) {
+  if (is_valid(interval.begin)) {
     if (! report->predicate.empty())
       report->predicate += "&";
     report->predicate += "d>=[";
-    report->predicate += interval.begin.to_string();
+    // jww (2008-04-20): fix
+    //report->predicate += interval.begin.to_string();
     report->predicate += "]";
   }
 
-  if (interval.end) {
+  if (is_valid(interval.end)) {
     if (! report->predicate.empty())
       report->predicate += "&";
     report->predicate += "d<[";
-    report->predicate += interval.end.to_string();
+    // jww (2008-04-20): fix
+    //report->predicate += interval.end.to_string();
     report->predicate += "]";
 
     terminus = interval.end;
@@ -726,35 +714,35 @@ OPT_BEGIN(daily, "") {
   if (report->report_period.empty())
     report->report_period = "daily";
   else
-    report->report_period = std::string("daily ") + report->report_period;
+    report->report_period = string("daily ") + report->report_period;
 } OPT_END(daily);
 
 OPT_BEGIN(weekly, "W") {
   if (report->report_period.empty())
     report->report_period = "weekly";
   else
-    report->report_period = std::string("weekly ") + report->report_period;
+    report->report_period = string("weekly ") + report->report_period;
 } OPT_END(weekly);
 
 OPT_BEGIN(monthly, "M") {
   if (report->report_period.empty())
     report->report_period = "monthly";
   else
-    report->report_period = std::string("monthly ") + report->report_period;
+    report->report_period = string("monthly ") + report->report_period;
 } OPT_END(monthly);
 
 OPT_BEGIN(quarterly, "") {
   if (report->report_period.empty())
     report->report_period = "quarterly";
   else
-    report->report_period = std::string("quarterly ") + report->report_period;
+    report->report_period = string("quarterly ") + report->report_period;
 } OPT_END(quarterly);
 
 OPT_BEGIN(yearly, "Y") {
   if (report->report_period.empty())
     report->report_period = "yearly";
   else
-    report->report_period = std::string("yearly ") + report->report_period;
+    report->report_period = string("yearly ") + report->report_period;
 } OPT_END(yearly);
 
 OPT_BEGIN(dow, "") {
@@ -901,24 +889,26 @@ namespace {
     while (equals > optarg && std::isspace(*(equals - 1)))
       equals--;
 
-    std::string symbol(optarg, 0, equals - optarg);
+    string symbol(optarg, 0, equals - optarg);
     amount_t price(equals + 1);
 
-    if (commodity_t * commodity = commodity_t::find_or_create(symbol)) {
-      commodity->add_price(datetime_t::now, price);
-      commodity->history()->bogus_time = datetime_t::now;
+    if (commodity_t * commodity =
+	amount_t::current_pool->find_or_create(symbol)) {
+      commodity->add_price(current_moment, price);
+      // jww (2008-04-20): what was this?
+      //commodity->history()->bogus_time = current_moment;
     }
   }
 }
 
 OPT_BEGIN(set_price, ":") {
-  std::string arg(optarg);
-  std::string::size_type beg = 0;
-  for (std::string::size_type pos = arg.find(';');
-       pos != std::string::npos;
+  string arg(optarg);
+  string::size_type beg = 0;
+  for (string::size_type pos = arg.find(';');
+       pos != string::npos;
        beg = pos + 1, pos = arg.find(';', beg))
-    parse_price_setting(std::string(arg, beg, pos - beg).c_str());
-  parse_price_setting(std::string(arg, beg).c_str());
+    parse_price_setting(string(arg, beg, pos - beg).c_str());
+  parse_price_setting(string(arg, beg).c_str());
 } OPT_END(set_price);
 
 OPT_BEGIN(performance, "g") {
@@ -934,15 +924,15 @@ OPT_BEGIN(gain, "G") {
   ledger::total_expr  = "@G";
 } OPT_END(gain);
 
-static std::string expand_value_expr(const std::string& tmpl,
-				     const std::string& expr)
+static string expand_value_expr(const string& tmpl,
+				     const string& expr)
 {
-  std::string xp = tmpl;
-  for (std::string::size_type i = xp.find('#');
-       i != std::string::npos;
+  string xp = tmpl;
+  for (string::size_type i = xp.find('#');
+       i != string::npos;
        i = xp.find('#'))
-    xp = (std::string(xp, 0, i) + "(" + expr + ")" +
-	  std::string(xp, i + 1));
+    xp = (string(xp, 0, i) + "(" + expr + ")" +
+	  string(xp, i + 1));
   return xp;
 }
 

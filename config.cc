@@ -1,38 +1,21 @@
 #include "config.h"
 #include "acconf.h"
 #include "option.h"
-#include "datetime.h"
-#include "quotes.h"
+//#include "quotes.h"
 #include "valexpr.h"
 #include "walk.h"
 
-#include <fstream>
-#include <cstdlib>
-#ifdef WIN32
-#include <io.h>
-#else
-#include <unistd.h>
-#endif
-
-#ifdef HAVE_REALPATH
-extern "C" char *realpath(const char *, char resolved_path[]);
-#endif
-
-#if defined(HAVE_GETPWUID) || defined(HAVE_GETPWNAM)
-#include <pwd.h>
-#endif
-
 namespace ledger {
 
-std::string expand_path(const std::string& path)
+string expand_path(const string& pathname)
 {
-  if (path.length() == 0 || path[0] != '~')
-    return path;
+  if (pathname.length() == 0 || pathname[0] != '~')
+    return pathname;
 
   const char * pfx = NULL;
-  std::string::size_type pos = path.find_first_of('/');
+  string::size_type pos = pathname.find_first_of('/');
 
-  if (path.length() == 1 || pos == 1) {
+  if (pathname.length() == 1 || pos == 1) {
     pfx = std::getenv("HOME");
 #ifdef HAVE_GETPWUID
     if (! pfx) {
@@ -45,37 +28,38 @@ std::string expand_path(const std::string& path)
   }
 #ifdef HAVE_GETPWNAM
   else {
-    std::string user(path, 1, pos == std::string::npos ?
-		     std::string::npos : pos - 1);
+    string user(pathname, 1, pos == string::npos ?
+		     string::npos : pos - 1);
     struct passwd * pw = getpwnam(user.c_str());
     if (pw)
       pfx = pw->pw_dir;
   }
 #endif
 
-  // if we failed to find an expansion, return the path unchanged.
+  // if we failed to find an expansion, return the pathname unchanged.
 
   if (! pfx)
-    return path;
+    return pathname;
 
-  std::string result(pfx);
+  string result(pfx);
 
-  if (pos == std::string::npos)
+  if (pos == string::npos)
     return result;
 
   if (result.length() == 0 || result[result.length() - 1] != '/')
     result += '/';
 
-  result += path.substr(pos + 1);
+  result += pathname.substr(pos + 1);
 
   return result;
 }
 
-std::string resolve_path(const std::string& path)
+// jww (2008-04-22): This needs to be changed to use boost::filesystem
+string resolve_path(const string& pathname)
 {
-  if (path[0] == '~')
-    return expand_path(path);
-  return path;
+  if (pathname[0] == '~')
+    return expand_path(pathname);
+  return pathname;
 }
 
 config_t::config_t()
@@ -102,31 +86,6 @@ config_t::config_t()
   debug_mode	       = false;
   verbose_mode	       = false;
   trace_mode	       = false;
-}
-
-//////////////////////////////////////////////////////////////////////
-
-void trace(const std::string& cat, const std::string& str)
-{
-  char buf[32];
-  std::strftime(buf, 31, "%H:%M:%S", datetime_t::now.localtime());
-  std::cerr << buf << " " << cat << ": " << str << std::endl;
-}
-
-void trace_push(const std::string& cat, const std::string& str,
-		timing_t& timer)
-{
-  timer.start();
-  trace(cat, str);
-}
-
-void trace_pop(const std::string& cat, const std::string& str,
-	       timing_t& timer)
-{
-  timer.stop();
-  std::ostringstream out;
-  out << str << ": " << (double(timer.cumulative) / double(CLOCKS_PER_SEC)) << "s";
-  trace(cat, out.str());
 }
 
 } // namespace ledger

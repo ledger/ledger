@@ -266,8 +266,8 @@ public:
     TRACE_CTOR(value_t, "const long");
     set_long(val);
   }
-  value_t(const moment_t val) {
-    TRACE_CTOR(value_t, "const moment_t");
+  value_t(const datetime_t val) {
+    TRACE_CTOR(value_t, "const datetime_t");
     set_datetime(val);
   }
   value_t(const double val) {
@@ -366,6 +366,8 @@ public:
   value_t& operator*=(const value_t& val);
   value_t& operator/=(const value_t& val);
 
+  // jww (2008-04-24): This could be expensive; perhaps it should be
+  // optional<amount_t&>&?
   value_t& add(const amount_t& amount,
 	       const optional<amount_t>& cost = none);
 
@@ -394,7 +396,7 @@ public:
   }
   void    in_place_reduce();
 
-  value_t value(const optional<moment_t>& moment = none) const;
+  value_t value(const optional<datetime_t>& moment = none) const;
 
   /**
    * Truth tests.
@@ -500,18 +502,18 @@ public:
   bool is_datetime() const {
     return is_type(DATETIME);
   }
-  moment_t& as_datetime_lval() {
+  datetime_t& as_datetime_lval() {
     assert(is_datetime());
     _dup();
-    return *(moment_t *) storage->data;
+    return *(datetime_t *) storage->data;
   }
-  const moment_t& as_datetime() const {
+  const datetime_t& as_datetime() const {
     assert(is_datetime());
-    return *(moment_t *) storage->data;
+    return *(datetime_t *) storage->data;
   }
-  void set_datetime(const moment_t& val) {
+  void set_datetime(const datetime_t& val) {
     set_type(DATETIME);
-    new((moment_t *) storage->data) moment_t(val);
+    new((datetime_t *) storage->data) datetime_t(val);
   }
 
   bool is_amount() const {
@@ -650,7 +652,7 @@ public:
    */
   bool		 to_boolean() const;
   long		 to_long() const;
-  moment_t       to_datetime() const;
+  datetime_t       to_datetime() const;
   amount_t	 to_amount() const;
   balance_t	 to_balance() const;
   balance_pair_t to_balance_pair() const;
@@ -825,6 +827,17 @@ inline std::ostream& operator<<(std::ostream& out, const value_t& val) {
   val.print(out, 12);
   return out;
 }
+
+class value_context : public error_context
+{
+  value_t bal;
+ public:
+  value_context(const value_t& _bal, const string& desc = "") throw()
+    : error_context(desc), bal(_bal) {}
+  virtual ~value_context() throw() {}
+
+  virtual void describe(std::ostream& out) const throw();
+};
 
 DECLARE_EXCEPTION(error, value_error);
 

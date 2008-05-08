@@ -44,8 +44,9 @@ void add_transaction_to(const transaction_t& xact, value_t& value)
       transaction_xdata_(xact).dflags & TRANSACTION_COMPOUND) {
     value += transaction_xdata_(xact).value;
   }
-  else if (xact.cost || ! value.realzero()) {
-    value.add(xact.amount, xact.cost);
+  else if (xact.cost || ! value.is_realzero()) {
+    // jww (2008-04-24): Is this costly?
+    value.add(xact.amount, xact.cost ? optional<amount_t>(*xact.cost) : none);
   }
   else {
     value = xact.amount;
@@ -211,12 +212,12 @@ void handle_value(const value_t&	       value,
 
   transaction_xdata_t& xdata(transaction_xdata(xact));
 
-  if (date)
+  if (is_valid(date))
     xdata.date = date;
 
   value_t temp(value);
 
-  switch (value.type) {
+  switch (value.type()) {
   case value_t::BOOLEAN:
   case value_t::DATETIME:
   case value_t::INTEGER:
@@ -224,13 +225,17 @@ void handle_value(const value_t&	       value,
     // fall through...
 
   case value_t::AMOUNT:
-    xact.amount = *((amount_t *) temp.data);
+    xact.amount = temp.as_amount_lval();
     break;
 
   case value_t::BALANCE:
   case value_t::BALANCE_PAIR:
     xdata.value = temp;
     flags |= TRANSACTION_COMPOUND;
+    break;
+
+  default:
+    assert(false);		// jww (2008-04-24): What to do here?
     break;
   }
 
@@ -320,7 +325,10 @@ void changed_value_transactions::output_diff(const datetime_t& current)
   transaction_xdata(*last_xact).date = current;
   compute_total(cur_bal, details_t(*last_xact));
   cur_bal.round();
+  // jww (2008-04-24): What does this do?
+#if 0
   transaction_xdata(*last_xact).date = 0;
+#endif
 
   if (value_t diff = cur_bal - last_balance) {
     entry_temps.push_back(entry_t());
@@ -370,11 +378,16 @@ void subtotal_transactions::report_subtotal(const char * spec_fmt)
 {
   std::ostringstream out_date;
   if (! spec_fmt) {
-    std::string fmt = "- ";
-    fmt += date_t::output_format;
+    string fmt = "- ";
+    fmt += output_time_format;	// jww (2008-04-24): output_date_format?
+    // jww (2008-04-24): There is no date output function?
+#if 0
     finish.write(out_date, fmt);
+#endif
   } else {
+#if 0
     finish.write(out_date, spec_fmt);
+#endif
   }
 
   entry_temps.push_back(entry_t());
@@ -393,9 +406,9 @@ void subtotal_transactions::report_subtotal(const char * spec_fmt)
 
 void subtotal_transactions::operator()(transaction_t& xact)
 {
-  if (! start || xact.date() < start)
+  if (! is_valid(start) || xact.date() < start)
     start = xact.date();
-  if (! finish || xact.date() > finish)
+  if (! is_valid(finish) || xact.date() > finish)
     finish = xact.date();
 
   account_t * acct = xact_account(xact);
@@ -434,8 +447,13 @@ void interval_transactions::report_subtotal(const datetime_t& moment)
   assert(last_xact);
 
   start = interval.begin;
-  if (moment)
+  if (is_valid(moment))
+    // jww (2008-04-24): How to change this back into a datetime?
+#if 0
     finish = moment - 86400L;
+#else
+  ;
+#endif
   else
     finish = last_xact->date();
 
@@ -448,13 +466,13 @@ void interval_transactions::operator()(transaction_t& xact)
 {
   const datetime_t date = xact.date();
 
-  if ((interval.begin && date < interval.begin) ||
-      (interval.end   && date >= interval.end))
+  if ((is_valid(interval.begin) && date < interval.begin) ||
+      (is_valid(interval.end)   && date >= interval.end))
     return;
 
   if (interval) {
     if (! started) {
-      if (! interval.begin)
+      if (! is_valid(interval.begin))
 	interval.start(date);
       start   = interval.begin;
       started = true;
@@ -572,7 +590,10 @@ void set_code_as_payee::operator()(transaction_t& xact)
 void dow_transactions::flush()
 {
   for (int i = 0; i < 7; i++) {
+    // jww (2008-04-24): What to use here?
+#if 0
     start = finish = 0;
+#endif
     for (transactions_list::iterator d = days_of_the_week[i].begin();
 	 d != days_of_the_week[i].end();
 	 d++)
@@ -614,19 +635,22 @@ void budget_transactions::report_budget_items(const datetime_t& moment)
 	 i != pending_xacts.end();
 	 i++) {
       datetime_t& begin = (*i).first.begin;
-      if (! begin) {
+      if (! is_valid(begin)) {
 	(*i).first.start(moment);
 	begin = (*i).first.begin;
       }
 
       if (begin < moment &&
-	  (! (*i).first.end || begin < (*i).first.end)) {
+	  (! is_valid((*i).first.end) || begin < (*i).first.end)) {
 	transaction_t& xact = *(*i).second;
 
-	DEBUG_PRINT("ledger.walk.budget", "Reporting budget for "
+	DEBUG("ledger.walk.budget", "Reporting budget for "
 		    << xact_account(xact)->fullname());
-	DEBUG_PRINT_TIME("ledger.walk.budget", begin);
-	DEBUG_PRINT_TIME("ledger.walk.budget", moment);
+#if 0
+	// jww (2008-04-24): Need a new debug macro here
+	DEBUG_TIME("ledger.walk.budget", begin);
+	DEBUG_TIME("ledger.walk.budget", moment);
+#endif
 
 	entry_temps.push_back(entry_t());
 	entry_t& entry = entry_temps.back();
@@ -686,11 +710,11 @@ void forecast_transactions::add_transaction(const interval_t& period,
   generate_transactions::add_transaction(period, xact);
 
   interval_t& i = pending_xacts.back().first;
-  if (! i.begin) {
-    i.start(datetime_t::now);
+  if (! is_valid(i.begin)) {
+    i.start(current_moment);
     i.begin = i.increment(i.begin);
   } else {
-    while (i.begin < datetime_t::now)
+    while (i.begin < current_moment)
       i.begin = i.increment(i.begin);
   }
 }
@@ -710,7 +734,7 @@ void forecast_transactions::flush()
 
     datetime_t& begin = (*least).first.begin;
 
-    if ((*least).first.end && begin >= (*least).first.end) {
+    if (is_valid((*least).first.end) && begin >= (*least).first.end) {
       pending_xacts.erase(least);
       passed.remove((*least).second);
       continue;
@@ -731,8 +755,9 @@ void forecast_transactions::flush()
     entry.add_transaction(&temp);
 
     datetime_t next = (*least).first.increment(begin);
+    // jww (2008-04-24): Does seconds() here give the total seconds?
     if (next < begin || // wraparound
-	(last && (next - last) > 365 * 5 * 24 * 3600))
+	(is_valid(last) && (next - last).seconds() > 365 * 5 * 24 * 3600))
       break;
     begin = next;
 
@@ -811,7 +836,7 @@ void sum_accounts(account_t& account)
 
   value_t result;
   compute_amount(result, details_t(account));
-  if (! result.realzero())
+  if (! result.is_realzero())
     xdata.total += result;
   xdata.total_count += xdata.count;
 }
@@ -854,7 +879,7 @@ void walk_accounts(account_t&		    account,
 
 void walk_accounts(account_t&		    account,
 		   item_handler<account_t>& handler,
-		   const std::string&       sort_string)
+		   const string&	    sort_string)
 {
   if (! sort_string.empty()) {
     value_expr sort_order;
@@ -865,25 +890,26 @@ void walk_accounts(account_t&		    account,
   }
 }
 
-void walk_commodities(commodities_map& commodities,
+void walk_commodities(commodity_pool_t::commodities_by_ident& commodities,
 		      item_handler<transaction_t>& handler)
 {
   std::list<transaction_t> xact_temps;
   std::list<entry_t>       entry_temps;
   std::list<account_t>     acct_temps;
 
-  for (commodities_map::iterator i = commodities.begin();
+  for (commodity_pool_t::commodities_by_ident::iterator
+	 i = commodities.begin();
        i != commodities.end();
        i++) {
-    if ((*i).second->flags() & COMMODITY_STYLE_NOMARKET)
+    if ((*i)->has_flags(COMMODITY_STYLE_NOMARKET))
       continue;
 
     entry_temps.push_back(entry_t());
-    acct_temps.push_back(account_t(NULL, (*i).second->symbol()));
+    acct_temps.push_back(account_t(NULL, (*i)->symbol()));
 
-    if ((*i).second->history())
-      for (history_map::iterator j = (*i).second->history()->prices.begin();
-	   j != (*i).second->history()->prices.end();
+    if ((*i)->history())
+      for (commodity_t::history_map::iterator j = (*i)->history()->prices.begin();
+	   j != (*i)->history()->prices.end();
 	   j++) {
 	entry_temps.back()._date = (*j).first;
 

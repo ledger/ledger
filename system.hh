@@ -68,6 +68,7 @@
 #include <vector>
 
 #if defined(__GNUG__) && __GNUG__ < 3
+
 namespace std {
   inline ostream & right (ostream & i) {
     i.setf(i.right, i.adjustfield);
@@ -78,6 +79,15 @@ namespace std {
     return i;
   }
 }
+
+typedef unsigned long istream_pos_type;
+typedef unsigned long ostream_pos_type;
+
+#else // ! (defined(__GNUG__) && __GNUG__ < 3)
+
+typedef std::istream::pos_type istream_pos_type;
+typedef std::ostream::pos_type ostream_pos_type;
+
 #endif
 
 #include <cassert>

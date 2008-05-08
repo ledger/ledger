@@ -17,24 +17,24 @@ void quotes_by_script::operator()(commodity_base_t& commodity,
 {
   DEBUG_CLASS("ledger.quotes.download");
 
-  DEBUG_PRINT_("commodity: " << commodity.symbol);
-  DEBUG_PRINT_TIME_(datetime_t::now);
-  DEBUG_PRINT_TIME_(moment);
-  DEBUG_PRINT_TIME_(date);
-  DEBUG_PRINT_TIME_(last);
+  DEBUG_("commodity: " << commodity.symbol);
+  DEBUG_TIME_(current_moment);
+  DEBUG_TIME_(moment);
+  DEBUG_TIME_(date);
+  DEBUG_TIME_(last);
   if (commodity.history)
-    DEBUG_PRINT_TIME_(commodity.history->last_lookup);
-  DEBUG_PRINT_("pricing_leeway is " << pricing_leeway);
+    DEBUG_TIME_(commodity.history->last_lookup);
+  DEBUG_("pricing_leeway is " << pricing_leeway);
 
   if ((commodity.history &&
-       (datetime_t::now - commodity.history->last_lookup) < pricing_leeway) ||
-      (datetime_t::now - last) < pricing_leeway ||
+       (current_moment - commodity.history->last_lookup) < pricing_leeway) ||
+      (current_moment - last) < pricing_leeway ||
       (price && moment > date && (moment - date) <= pricing_leeway))
     return;
 
   using namespace std;
 
-  DEBUG_PRINT_("downloading quote for symbol " << commodity.symbol);
+  DEBUG_("downloading quote for symbol " << commodity.symbol);
 
   char buf[256];
   buf[0] = '\0';
@@ -55,12 +55,12 @@ void quotes_by_script::operator()(commodity_base_t& commodity,
     char * p = strchr(buf, '\n');
     if (p) *p = '\0';
 
-    DEBUG_PRINT_("downloaded quote: " << buf);
+    DEBUG_("downloaded quote: " << buf);
 
     price.parse(buf);
-    commodity.add_price(datetime_t::now, price);
+    commodity.add_price(current_moment, price);
 
-    commodity.history->last_lookup = datetime_t::now;
+    commodity.history->last_lookup = current_moment;
     cache_dirty = true;
 
     if (price && ! price_db.empty()) {
@@ -69,11 +69,11 @@ void quotes_by_script::operator()(commodity_base_t& commodity,
 #else
       ofstream database(price_db.c_str(), ios_base::out | ios_base::app);
 #endif
-      database << "P " << datetime_t::now.to_string("%Y/%m/%d %H:%M:%S")
+      database << "P " << current_moment.to_string("%Y/%m/%d %H:%M:%S")
 	       << " " << commodity.symbol << " " << price << endl;
     }
   } else {
-    throw new error(std::string("Failed to download price for '") +
+    throw new error(string("Failed to download price for '") +
 		    commodity.symbol + "' (command: \"getquote " +
 		    commodity.symbol + "\")");
   }

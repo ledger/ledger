@@ -4,7 +4,6 @@
 #include "journal.h"
 #include "balance.h"
 #include "valexpr.h"
-#include "datetime.h"
 
 #include <iostream>
 #include <fstream>
@@ -18,13 +17,13 @@ struct item_handler {
 
  public:
   item_handler() : handler(NULL) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor item_handler<T>");
+    DEBUG("ledger.memory.ctors", "ctor item_handler<T>");
   }
   item_handler(item_handler * _handler) : handler(_handler) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor item_handler<T>");
+    DEBUG("ledger.memory.ctors", "ctor item_handler<T>");
   }
   virtual ~item_handler() {
-    DEBUG_PRINT("ledger.memory.dtors", "dtor item_handler<T>");
+    DEBUG("ledger.memory.dtors", "dtor item_handler<T>");
   }
 
   virtual void flush() {
@@ -99,11 +98,11 @@ struct transaction_xdata_t
   transaction_xdata_t()
     : index(0), dflags(0),
       account(NULL), ptr(NULL), component_xacts(NULL) {
-    DEBUG_PRINT("ledger.memory.ctors", "ctor transaction_xdata_t " << this);
+    DEBUG("ledger.memory.ctors", "ctor transaction_xdata_t " << this);
   }
 
   ~transaction_xdata_t() {
-    DEBUG_PRINT("ledger.memory.dtors", "dtor transaction_xdata_t " << this);
+    DEBUG("ledger.memory.dtors", "dtor transaction_xdata_t " << this);
     if (component_xacts)
       delete component_xacts;
   }
@@ -255,7 +254,7 @@ class sort_transactions : public item_handler<transaction_t>
       sort_order(_sort_order->acquire()) {}
 
   sort_transactions(item_handler<transaction_t> * handler,
-		    const std::string& _sort_order)
+		    const string& _sort_order)
     : item_handler<transaction_t>(handler) {
     assert(! _sort_order.empty());
     sort_order = parse_value_expr(_sort_order)->acquire();
@@ -289,7 +288,7 @@ class sort_entries : public item_handler<transaction_t>
     : sorter(handler, _sort_order) {}
 
   sort_entries(item_handler<transaction_t> * handler,
-	       const std::string& _sort_order)
+	       const string& _sort_order)
     : sorter(handler, _sort_order) {}
 
   virtual void flush() {
@@ -317,7 +316,7 @@ class filter_transactions : public item_handler<transaction_t>
     : item_handler<transaction_t>(handler), pred(predicate) {}
 
   filter_transactions(item_handler<transaction_t> * handler,
-		      const std::string& predicate)
+		      const string& predicate)
     : item_handler<transaction_t>(handler), pred(predicate) {}
 
   virtual void operator()(transaction_t& xact) {
@@ -397,7 +396,7 @@ class component_transactions : public item_handler<transaction_t>
     : item_handler<transaction_t>(handler), pred(predicate) {}
 
   component_transactions(item_handler<transaction_t> * handler,
-			 const std::string& predicate)
+			 const string& predicate)
     : item_handler<transaction_t>(handler), pred(predicate) {}
 
   virtual void operator()(transaction_t& xact);
@@ -445,7 +444,7 @@ class changed_value_transactions : public item_handler<transaction_t>
 
   virtual void flush() {
     if (last_xact) {
-      output_diff(datetime_t::now);
+      output_diff(current_moment);
       last_xact = NULL;
     }
     item_handler<transaction_t>::flush();
@@ -470,8 +469,8 @@ class subtotal_transactions : public item_handler<transaction_t>
       : account(av.account), value(av.value) {}
   };
 
-  typedef std::map<std::string, acct_value_t>  values_map;
-  typedef std::pair<std::string, acct_value_t> values_pair;
+  typedef std::map<string, acct_value_t>  values_map;
+  typedef std::pair<string, acct_value_t> values_pair;
 
  protected:
   values_map values;
@@ -490,7 +489,7 @@ class subtotal_transactions : public item_handler<transaction_t>
       remember_components(_remember_components) {}
 #ifdef DEBUG_ENABLED
   subtotal_transactions(const subtotal_transactions&) {
-    assert(0);
+    assert(false);
   }
 #endif
   virtual ~subtotal_transactions() {
@@ -509,7 +508,7 @@ class subtotal_transactions : public item_handler<transaction_t>
 
 class interval_expr_error : public error {
  public:
-  interval_expr_error(const std::string& reason,
+  interval_expr_error(const string& reason,
 		      error_context * ctxt = NULL) throw()
     : error(reason, ctxt) {}
   virtual ~interval_expr_error() throw() {}
@@ -529,7 +528,7 @@ class interval_transactions : public subtotal_transactions
       interval(_interval), last_xact(NULL), started(false) {}
 
   interval_transactions(item_handler<transaction_t> * _handler,
-			const std::string& _interval,
+			const string& _interval,
 			bool remember_components = false)
     : subtotal_transactions(_handler, remember_components),
       interval(_interval), last_xact(NULL), started(false) {}
@@ -546,8 +545,8 @@ class interval_transactions : public subtotal_transactions
 
 class by_payee_transactions : public item_handler<transaction_t>
 {
-  typedef std::map<std::string, subtotal_transactions *>  payee_subtotals_map;
-  typedef std::pair<std::string, subtotal_transactions *> payee_subtotals_pair;
+  typedef std::map<string, subtotal_transactions *>  payee_subtotals_map;
+  typedef std::pair<string, subtotal_transactions *> payee_subtotals_pair;
 
   payee_subtotals_map payee_subtotals;
   bool remember_components;
@@ -606,7 +605,7 @@ class dow_transactions : public subtotal_transactions
 
   virtual void flush();
   virtual void operator()(transaction_t& xact) {
-    days_of_the_week[xact.date().wday()].push_back(&xact);
+    days_of_the_week[xact.date().date().day_of_week()].push_back(&xact);
   }
 };
 
@@ -661,7 +660,7 @@ class forecast_transactions : public generate_transactions
     : generate_transactions(handler), pred(predicate) {}
 
   forecast_transactions(item_handler<transaction_t> * handler,
-			const std::string& predicate)
+			const string& predicate)
     : generate_transactions(handler), pred(predicate) {}
 
   virtual void add_transaction(const interval_t& period,
@@ -729,11 +728,11 @@ void walk_accounts(account_t&		    account,
 		   const value_expr_t *     sort_order = NULL);
 void walk_accounts(account_t&		    account,
 		   item_handler<account_t>& handler,
-		   const std::string&       sort_string);
+		   const string&       sort_string);
 
 //////////////////////////////////////////////////////////////////////
 
-void walk_commodities(commodities_map& commodities,
+void walk_commodities(commodity_pool_t::commodities_by_ident& commodities,
 		      item_handler<transaction_t>& handler);
 
 inline void clear_journal_xdata(journal_t * journal) {

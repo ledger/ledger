@@ -10,11 +10,11 @@
 
 namespace ledger {
 
-typedef std::map<const std::string, account_t *>  accounts_map;
-typedef std::pair<const std::string, account_t *> accounts_pair;
+typedef std::map<const string, account_t *>  accounts_map;
+typedef std::pair<const string, account_t *> accounts_pair;
 
-typedef std::map<const std::string, commodity_t *>  commodities_map;
-typedef std::pair<const std::string, commodity_t *> commodities_pair;
+typedef std::map<const string, commodity_t *>  commodities_map;
+typedef std::pair<const string, commodity_t *> commodities_pair;
 
 journal_t *	curr_journal;
 accounts_map	ofx_accounts;
@@ -31,7 +31,7 @@ int ofx_proc_account_cb(struct OfxAccountData data, void * account_data)
   if (! data.account_id_valid)
     return -1;
 
-  DEBUG_PRINT("ledger.ofx.parse", "account " << data.account_name);
+  DEBUG("ledger.ofx.parse", "account " << data.account_name);
   account_t * account = new account_t(master_account, data.account_name);
   curr_journal->add_account(account);
   ofx_accounts.insert(accounts_pair(data.account_id, account));
@@ -88,7 +88,7 @@ int ofx_proc_transaction_cb(struct OfxTransactionData data,
     xact->cost = new amount_t(stream.str() + " " + default_commodity->base_symbol());
   }
 
-  DEBUG_PRINT("ledger.ofx.parse", "xact " << xact->amount
+  DEBUG("ledger.ofx.parse", "xact " << xact->amount
 	      << " from " << *xact->account);
 
   if (data.date_initiated_valid)
@@ -129,7 +129,7 @@ int ofx_proc_security_cb(struct OfxSecurityData data, void * security_data)
   if (! data.unique_id_valid)
     return -1;
 
-  std::string symbol;
+  string symbol;
   if (data.ticker_valid)
     symbol = data.ticker;
   else if (data.currency_valid)
@@ -148,13 +148,13 @@ int ofx_proc_security_cb(struct OfxSecurityData data, void * security_data)
 
   commodities_map::iterator i = ofx_securities.find(data.unique_id);
   if (i == ofx_securities.end()) {
-    DEBUG_PRINT("ledger.ofx.parse", "security " << symbol);
+    DEBUG("ledger.ofx.parse", "security " << symbol);
     ofx_securities.insert(commodities_pair(data.unique_id, commodity));
   }
 
   // jww (2005-02-09): What is the commodity for data.unitprice?
   if (data.date_unitprice_valid && data.unitprice_valid) {
-    DEBUG_PRINT("ledger.ofx.parse", "  price " << data.unitprice);
+    DEBUG("ledger.ofx.parse", "  price " << data.unitprice);
     commodity->add_price(data.date_unitprice, amount_t(data.unitprice));
   }
 
@@ -194,11 +194,11 @@ bool ofx_parser_t::test(std::istream& in) const
   return true;
 }
 
-unsigned int ofx_parser_t::parse(std::istream&	     in,
-				 config_t&           config,
-				 journal_t *	     journal,
-				 account_t *	     master,
-				 const std::string * original_file)
+unsigned int ofx_parser_t::parse(std::istream& in,
+				 config_t&     config,
+				 journal_t *   journal,
+				 account_t *   master,
+				 const path *  original_file)
 {
   if (! original_file)
     return 0;

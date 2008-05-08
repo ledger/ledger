@@ -50,10 +50,12 @@ class commodity_t
 {
   friend class commodity_pool_t;
 
+public:
   class base_t : public noncopyable, public supports_flags<>
   {
   public:
-    typedef std::map<const moment_t, amount_t> history_map;
+    typedef std::map<const datetime_t, amount_t>  history_map;
+    typedef std::pair<const datetime_t, amount_t> history_pair;
 
     struct history_t {
       history_map prices;
@@ -178,10 +180,10 @@ public:
     return base->history;
   }
 
-  void	   add_price(const moment_t& date, const amount_t& price);
-  bool	   remove_price(const moment_t& date);
+  void	   add_price(const datetime_t& date, const amount_t& price);
+  bool	   remove_price(const datetime_t& date);
 
-  optional<amount_t> value(const optional<moment_t>& moment = none);
+  optional<amount_t> value(const optional<datetime_t>& moment = none);
 
   static void parse_symbol(std::istream& in, string& symbol);
   static void parse_symbol(char *& p, string& symbol);
@@ -209,14 +211,14 @@ inline std::ostream& operator<<(std::ostream& out, const commodity_t& comm) {
 
 struct annotation_t : public equality_comparable<annotation_t>
 {
-  optional<amount_t>  price;
-  optional<moment_t>  date;
-  optional<string>    tag;
+  optional<amount_t>   price;
+  optional<datetime_t> date;
+  optional<string>     tag;
 
   explicit annotation_t
-    (const optional<amount_t>& _price = none,
-     const optional<moment_t>& _date  = none,
-     const optional<string>&   _tag   = none)
+    (const optional<amount_t>&	 _price = none,
+     const optional<datetime_t>& _date  = none,
+     const optional<string>&     _tag	= none)
     : price(_price), date(_date), tag(_tag) {}
 
   operator bool() const {
@@ -232,7 +234,7 @@ struct annotation_t : public equality_comparable<annotation_t>
   void parse(std::istream& in);
   void print(std::ostream& out) const {
     out << "price " << (price ? price->to_string() : "NONE") << " "
-	<< "date "  << (date  ? *date : moment_t()) << " "
+	<< "date "  << (date  ? *date : datetime_t()) << " "
 	<< "tag "   << (tag   ? *tag  : "NONE");
   }
 
@@ -329,9 +331,12 @@ class commodity_pool_t : public noncopyable
     >
   > commodities_t;
 
+public:
+  typedef commodity_pool_t::commodities_t::nth_index<0>::type
+    commodities_by_ident;
+
   commodities_t commodities;
 
-public:
   commodity_t *	null_commodity;
   commodity_t *	default_commodity;
 
@@ -354,16 +359,13 @@ private:
 public:
   boost::function<optional<amount_t>
 		  (commodity_t&		     commodity,
-		   const optional<moment_t>& date,
-		   const optional<moment_t>& moment,
-		   const optional<moment_t>& last)> get_quote;
+		   const optional<datetime_t>& date,
+		   const optional<datetime_t>& moment,
+		   const optional<datetime_t>& last)> get_quote;
 
   explicit commodity_pool_t();
 
   ~commodity_pool_t() {
-    typedef commodity_pool_t::commodities_t::nth_index<0>::type
-      commodities_by_ident;
-
     commodities_by_ident& ident_index = commodities.get<0>();
     for (commodities_by_ident::iterator i = ident_index.begin();
 	 i != ident_index.end();

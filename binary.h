@@ -32,7 +32,12 @@
 #ifndef BINARY_H
 #define BINARY_H
 
+#include "parser.h"
+
 namespace ledger {
+
+class journal_t;
+  
 namespace binary {
 
 template <typename T>
@@ -262,6 +267,8 @@ template <typename T>
 inline void write_object(std::ostream& out, const T& journal) {
   assert(false);
 }
+
+void write_journal(std::ostream& out, journal_t * journal);
 
 } // namespace binary
 } // namespace ledger
