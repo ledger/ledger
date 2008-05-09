@@ -52,7 +52,7 @@ class AmountTestCase : public CPPUNIT_NS::TestCase
   CPPUNIT_TEST_SUITE_END();
 
 public:
-  ledger::session_t session;
+  //ledger::session_t session;
 
   AmountTestCase() {}
   virtual ~AmountTestCase() {}

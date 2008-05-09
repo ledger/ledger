@@ -11,6 +11,7 @@
 /.deps
 /.libs
 /AUTHORS
+/COPYING
 /Makefile
 /Makefile.in
 /acconf.h

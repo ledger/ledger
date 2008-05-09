@@ -3,10 +3,10 @@
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(CommodityTestCase, "numerics");
 
 void CommodityTestCase::setUp() {
-  ledger::set_session_context(&session);
+  //ledger::set_session_context(&session);
 }
 void CommodityTestCase::tearDown() {
-  ledger::set_session_context();
+  //ledger::set_session_context();
 }
 
 void CommodityTestCase::testPriceHistory()
@@ -40,7 +40,7 @@ void CommodityTestCase::testPriceHistory()
   assertTrue(amt1);
   assertEqual(amount_t("$1831.83"), *amt1);
 
-  optional<amount_t> amt2 = x1.value(now);
+  optional<amount_t> amt2 = x1.value(current_moment);
   assertTrue(amt2);
   assertEqual(amount_t("$2124.12"), *amt2);
 

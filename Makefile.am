@@ -130,7 +130,7 @@ ledger_CPPFLAGS += -DDEBUG_MODE
 endif
 ledger_LDFLAGS = -static	# for the sake of command-line speed
 
-info_TEXINFOS = doc/ledger.texi
+info_TEXINFOS = ledger.texi
 
 ######################################################################
 
@@ -174,24 +174,24 @@ endif
 
 check_PROGRAMS = $(TESTS)
 
-nodist_UnitTests_SOURCES = tests/UnitTests.cc \
+nodist_UnitTests_SOURCES = test/UnitTests.cc \
 	\
-	tests/utility/t_utils.cc      \
-	tests/utility/t_times.cc      \
-	tests/numerics/t_commodity.cc \
-	tests/numerics/t_amount.cc    \
-	tests/numerics/t_balance.cc
+	test/utility/t_utils.cc      \
+	test/utility/t_times.cc      \
+	test/numerics/t_commodity.cc \
+	test/numerics/t_amount.cc    \
+	test/numerics/t_balance.cc
 
-UnitTests_CPPFLAGS = -I$(srcdir)/tests $(libledger_la_CPPFLAGS)
+UnitTests_CPPFLAGS = -I$(srcdir)/test $(libledger_la_CPPFLAGS)
 UnitTests_LDFLAGS  = $(LIBADD_DL)
-UnitTests_LDADD    = $(lib_LTLIBRARIES) gdtoa/libgdtoa.la -lcppunit
+UnitTests_LDADD    = $(lib_LTLIBRARIES) -lcppunit
 
-nodist_PyUnitTests_SOURCES = tests/python/PyUnitTests.py
+nodist_PyUnitTests_SOURCES = test/python/PyUnitTests.py
 
 # jww (2007-05-10): This rule will not be triggered on systems that
 # define an EXEEXT.
-PyUnitTests: $(srcdir)/tests/python/PyUnitTests.py
-	cat $(srcdir)/tests/python/PyUnitTests.py \
+PyUnitTests: $(srcdir)/test/python/PyUnitTests.py
+	cat $(srcdir)/test/python/PyUnitTests.py \
 	    | sed "s/%srcdir%/$(ESC_srcdir)/g" \
 	    | sed "s/%builddir%/$(ESC_builddir)/g" > $@
 	chmod 755 $@
@@ -209,10 +209,10 @@ fullcheck: check
 
 DISTCLEANFILES += Doxyfile.gen
 
-alldocs: docs/ledger.info docs/ledger.pdf doxygen-docs
+alldocs: ledger.info ledger.pdf doxygen-docs
 
-$(top_builddir)/Doxyfile.gen: $(srcdir)/docs/Doxyfile
-	cat $(srcdir)/docs/Doxyfile \
+$(top_builddir)/Doxyfile.gen: $(srcdir)/Doxyfile
+	cat $(srcdir)/Doxyfile \
 	    | sed "s/%srcdir%/$(ESC_srcdir)/g" \
 	    | sed "s/%builddir%/$(ESC_builddir)/g" > $@
 
