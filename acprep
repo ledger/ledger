@@ -18,6 +18,9 @@ cmd=$(which glibtoolize 2>&1)
 if [ -x "$cmd" ]; then
     export LIBTOOLIZE="$cmd"
 fi
+
+cat configure.tmpl | sed "s/%VERSION%/$(git describe)/" > configure.in
+
 autoreconf --force --install
 
 INCDIRS="-I/sw/include -I/opt/local/include"
