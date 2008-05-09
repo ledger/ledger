@@ -24,6 +24,7 @@
 /config.status
 /config.sub
 /configure
+/configure.in
 /depcomp
 /elc-stamp
 /elisp-comp
