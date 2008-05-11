@@ -7,6 +7,7 @@
 
 #include <ctime>
 #include <cctype>
+#include <climits>
 
 date_t       date_t::now(std::time(NULL));
 int	     date_t::current_year = date_t::now.year();

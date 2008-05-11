@@ -19,6 +19,7 @@
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
+#include <climits>
 
 #ifdef HAVE_REALPATH
 extern "C" char *realpath(const char *, char resolved_path[]);
