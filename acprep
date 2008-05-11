@@ -30,7 +30,7 @@ INCDIRS="$INCDIRS -I/usr/local/include/boost-1_35"
 LIBDIRS="-L/sw/lib -L/opt/local/lib"
 LIBDIRS="$LIBDIRS -L/usr/local/lib"
 
-PYTHON_HOME="/Library/Frameworks/Python.framework/Versions/2.5"
+PYTHON_HOME="/usr"
 
 
 SYSTEM=`uname -s`
