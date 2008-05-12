@@ -57,7 +57,7 @@ LDFLAGS="$LIBDIRS"
 LOCAL=false
 
 # Warning flags
-CXXFLAGS="$CXXFLAGS -Wall -ansi"
+CXXFLAGS="$CXXFLAGS -Wall -ansi -Winvalid-pch"
 #CXXFLAGS="$CXXFLAGS -Wextra"
 #CXXFLAGS="$CXXFLAGS -Weffc++"
 #CXXFLAGS="$CXXFLAGS -Wcast-align"
@@ -78,7 +78,10 @@ CXXFLAGS="$CXXFLAGS -Wall -ansi"
 while [ -n "$1" ]; do
   case "$1" in
     --devel)
-	SWITCHES="$SWITCHES --disable-shared --enable-pch"
+	#SWITCHES="$SWITCHES --disable-shared --enable-pch"
+	SWITCHES="$SWITCHES --disable-shared"
+	CPPFLAGS="$CPPFLAGS -DBOOST_MULTI_INDEX_ENABLE_INVARIANT_CHECKING=1"
+	CPPFLAGS="$CPPFLAGS -DBOOST_MULTI_INDEX_ENABLE_SAFE_MODE=1"
 	;;
 
     --debug)
@@ -127,13 +130,15 @@ if [ "$LOCAL" = "false" -a -d "$HOME/Products" ]; then
     if [ -x version ]; then
 	version="-$(./version)"
     fi
-    projdir="$HOME/Products/$(basename $HERE)$version"
+    projdir="$HOME/Products/$(basename $HERE)"
+    rm -fr ${projdir}*
+    projdir="$projdir$version"
     if [ ! -d "$projdir" ]; then
 	mkdir -p "$projdir"
     fi
     cd "$projdir" || (echo "Cannot change to $projdir"; exit 1)
 fi
 
-"$HERE/configure" --srcdir="$HERE" \
+"$HERE/configure" --srcdir="$HERE" CXX="$CXX" \
     CPPFLAGS="$CPPFLAGS" CXXFLAGS="$CXXFLAGS $local_cxxflags" \
     LDFLAGS="$LDFLAGS" LIBS="$LIBS" $SWITCHES "$@"

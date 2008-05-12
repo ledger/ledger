@@ -20,6 +20,15 @@ libamounts_la_SOURCES = \
 	value.cc       \
 	times.cc       \
 	utils.cc
+if HAVE_EXPAT
+libamounts_la_CPPFLAGS += -DHAVE_EXPAT=1
+endif
+if HAVE_XMLPARSE
+libamounts_la_CPPFLAGS += -DHAVE_XMLPARSE=1
+endif
+if HAVE_LIBOFX
+libamounts_la_CPPFLAGS += -DHAVE_LIBOFX=1
+endif
 if HAVE_BOOST_PYTHON
 libamounts_la_CPPFLAGS += -DUSE_BOOST_PYTHON=1
 endif
@@ -27,7 +36,7 @@ if DEBUG
 libamounts_la_CPPFLAGS += -DDEBUG_MODE
 endif
 
-libledger_la_CPPFLAGS =
+libledger_la_CPPFLAGS = $(libamounts_la_CPPFLAGS)
 libledger_la_SOURCES = \
 	binary.cc      \
 	config.cc      \
@@ -49,20 +58,15 @@ libledger_la_SOURCES = \
 	xml.cc
 #	quotes.cc      this is currently not being included
 if HAVE_EXPAT
-libledger_la_CPPFLAGS += -DHAVE_EXPAT=1
 libledger_la_SOURCES += gnucash.cc
 endif
 if HAVE_XMLPARSE
-libledger_la_CPPFLAGS += -DHAVE_XMLPARSE=1
 libledger_la_SOURCES += gnucash.cc
 endif
 if HAVE_LIBOFX
-libledger_la_CPPFLAGS += -DHAVE_LIBOFX=1
 libledger_la_SOURCES += ofx.cc
 endif
-if DEBUG
-libledger_la_CPPFLAGS += -DDEBUG_MODE
-endif
+
 libledger_la_LDFLAGS = -release 2.6.0.90
 
 pkginclude_HEADERS = \
@@ -104,39 +108,28 @@ nodist_libledger_la_SOURCES = system.hh.gch
 BUILT_SOURCES += system.hh.gch
 CLEANFILES += system.hh.gch system.hh
 
-$(top_builddir)/system.hh.gch: $(srcdir)/src/utility/system.hh acconf.h
-	echo "#include \"src/utility/system.hh\"" > $(top_builddir)/system.hh
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(libledger_la_CPPFLAGS) \
-		-o $@ $(srcdir)/src/utility/system.hh
+$(top_builddir)/system.hh.gch: $(srcdir)/system.hh $(top_builddir)/acconf.h
+	echo "#include \"$(srcdir)/system.hh\"" > $(top_builddir)/system.hh
+	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+		$(libledger_la_CPPFLAGS) \
+		$(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) \
+		-g -o $@ $(srcdir)/system.hh
 endif
 
 ######################################################################
 
-bin_PROGRAMS = ledger
-ledger_CPPFLAGS =
-ledger_SOURCES = main.cc
-ledger_LDADD = $(LIBOBJS) libamounts.la libledger.la
-if HAVE_EXPAT
-ledger_CPPFLAGS += -DHAVE_EXPAT=1
-endif
-if HAVE_XMLPARSE
-ledger_CPPFLAGS += -DHAVE_XMLPARSE=1
-endif
-if HAVE_LIBOFX
-ledger_CPPFLAGS += -DHAVE_LIBOFX=1
-endif
-if DEBUG
-ledger_CPPFLAGS += -DDEBUG_MODE
-endif
-ledger_LDFLAGS = -static	# for the sake of command-line speed
+bin_PROGRAMS	= ledger
 
-info_TEXINFOS = ledger.texi
+ledger_CPPFLAGS = $(libledger_la_CPPFLAGS)
+ledger_SOURCES	= main.cc
+ledger_LDADD	= $(LIBOBJS) libamounts.la libledger.la
+ledger_LDFLAGS	= -static	# for the sake of command-line speed
 
-######################################################################
+info_TEXINFOS   = ledger.texi
 
-dist_lisp_LISP = ledger.el timeclock.el
+dist_lisp_LISP  = ledger.el timeclock.el
 
-DISTCLEANFILES = ledger.elc timeclock.elc
+DISTCLEANFILES  = ledger.elc timeclock.elc
 
 ######################################################################
 
@@ -152,13 +145,13 @@ clean-local:
 PYLIBS = amounts gmp
 
 amounts.so: amounts.cc libamounts.la
-	CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libamounts_la_CPPFLAGS)" \
+	CFLAGS="$(CPPFLAGS) $(DEFAULT_INCLUDES) $(libamounts_la_CPPFLAGS)" \
 	LDFLAGS="$(LDFLAGS) -L. -L.libs" \
 	PYLIBS="$(PYLIBS)" SRCDIR="$(srcdir)" \
 	    python $(srcdir)/setup.py build --build-lib=.
 
 install-exec-hook:
-	CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libamounts_la_CPPFLAGS)" \
+	CFLAGS="$(CPPFLAGS) $(DEFAULT_INCLUDES) $(libamounts_la_CPPFLAGS)" \
 	LDFLAGS="$(LDFLAGS) -L. -L.libs" \
 	PYLIBS="$(PYLIBS)" SRCDIR="$(srcdir)" \
 	    python $(srcdir)/setup.py install --prefix=$(prefix)

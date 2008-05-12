@@ -15,6 +15,5 @@ setup(name         = "Ledger",
       url          = "http://www.newartisans.com/software/ledger.html",
       ext_modules  = [
 	Extension("ledger",
-                  [os.path.join(os.environ['SRCDIR'],
-                                "src", "python", "pyledger.cc")],
+                  [os.path.join(os.environ['SRCDIR'], "pyledger.cc")],
 		  define_macros = defines, libraries = libs)])

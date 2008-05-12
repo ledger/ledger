@@ -281,6 +281,8 @@ bool parse_transactions(std::istream&	   in,
 			const string& kind,
 			unsigned long      beg_pos)
 {
+  TRACE_START(entry_xacts, 1, "Time spent parsing transactions:");
+
   static char line[MAX_LINE + 1];
   bool	      added = false;
 
@@ -302,28 +304,19 @@ bool parse_transactions(std::istream&	   in,
     }
   }
 
+  TRACE_STOP(entry_xacts, 1);
+
   return added;
 }
-
-#if 0
-namespace {
-  TIMER_DEF(parsing_total, "total parsing time");
-  TIMER_DEF(entry_xacts,   "parsing transactions");
-  TIMER_DEF(entry_details, "parsing entry details");
-  TIMER_DEF(entry_date,    "parsing entry date");
-}
-#endif
 
 entry_t * parse_entry(std::istream& in, char * line, account_t * master,
 		      textual_parser_t& parser, unsigned long& pos)
 {
+  TRACE_START(entry_text, 1, "Time spent preparing entry text:");
+
   std::auto_ptr<entry_t> curr(new entry_t);
 
   // Parse the date
-
-#if 0
-  TIMER_START(entry_date);
-#endif
 
   char * next = next_element(line);
 
@@ -333,15 +326,7 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
   }
   curr->_date = parse_datetime(line);
 
-#if 0
-  TIMER_STOP(entry_date);
-#endif
-
   // Parse the optional cleared flag: *
-
-#if 0
-  TIMER_START(entry_details);
-#endif
 
   transaction_t::state_t state = transaction_t::UNCLEARED;
   if (next) {
@@ -371,15 +356,11 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
 
   curr->payee = next ? next : "<Unspecified payee>";
 
-#if 0
-  TIMER_STOP(entry_details);
-#endif
+  TRACE_STOP(entry_text, 1);
 
   // Parse all of the transactions associated with this entry
 
-#if 0
-  TIMER_START(entry_xacts);
-#endif
+  TRACE_START(entry_details, 1, "Time spent parsing entry details:");
 
   unsigned long end_pos;
   unsigned long beg_line = linenum;
@@ -418,9 +399,7 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
       break;
   }
 
-#if 0
-  TIMER_STOP(entry_xacts);
-#endif
+  TRACE_STOP(entry_details, 1);
 
   return curr.release();
 }
@@ -544,14 +523,12 @@ unsigned int textual_parser_t::parse(std::istream& in,
 				     account_t *   master,
 				     const path *  original_file)
 {
+  TRACE_START(parsing_total, 1, "Total time spent parsing text:");
+
   static bool  added_auto_entry_hook = false;
   static char  line[MAX_LINE + 1];
   unsigned int count  = 0;
   unsigned int errors = 0;
-
-#if 0
-  TIMER_START(parsing_total);
-#endif
 
   std::list<account_t *> account_stack;
   auto_entry_finalizer_t auto_entry_finalizer(journal);
@@ -827,6 +804,7 @@ unsigned int textual_parser_t::parse(std::istream& in,
 
       default: {
 	unsigned long pos = beg_pos;
+      TRACE_START(entries, 1, "Time spent handling entries:");
 	if (entry_t * entry =
 	    parse_entry(in, line, account_stack.front(), *this, pos)) {
 	  if (journal->add_entry(entry)) {
@@ -844,6 +822,7 @@ unsigned int textual_parser_t::parse(std::istream& in,
 	  throw new parse_error("Failed to parse entry");
 	}
 	end_pos = pos;
+      TRACE_STOP(entries, 1);
 	break;
       }
       }
@@ -882,9 +861,7 @@ unsigned int textual_parser_t::parse(std::istream& in,
   if (errors > 0)
     throw (int)errors;
 
-#if 0
-  TIMER_STOP(parsing_total);
-#endif
+  TRACE_STOP(parsing_total, 1);
 
   return count;
 }
