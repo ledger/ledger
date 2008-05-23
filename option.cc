@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <cstdarg>
+#include <cstdlib>
 #include <unistd.h>
 
 #include "util.h"
