@@ -4,7 +4,6 @@
 #include <list>
 #include <sstream>
 #include <cstdlib>
-#include <memory>
 
 #include <gmp.h>
 

@@ -4,6 +4,7 @@
 #include <map>
 #include <stack>
 #include <string>
+#include <memory>
 #include <cctype>
 #include <iostream>
 #include <sstream>
