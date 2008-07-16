@@ -3703,16 +3703,17 @@ reports in a format directly @code{read}-able from Emacs Lisp.
 
 The Ledger tool is fast and simple, but it offers no custom method for
 actually editing the ledger.  It assumes you know how to use a text
-editor, and like doing so.  Perhaps an Emacs mode will appear someday
-soon to make editing Ledger's data files much easier.
+editor, and like doing so.  There is, at least, an Emacs mode that
+makes editing Ledger's data files much easier.
 
-Until then, you are free to use GnuCash to maintain your ledger, and
-the Ledger program for querying and reporting on the contents of that
+You are also free to use GnuCash to maintain your ledger, and the
+Ledger program for querying and reporting on the contents of that
 ledger.  It takes a little longer to parse the XML data format that
 GnuCash uses, but the end result is identical.
 
-Then again, why would anyone use a Gnome-centric, 35 megabyte behemoth
-to edit their data, and a one megabyte binary to query it?
+Then again, why would anyone use a Gnome-centric, multi-megabyte
+behemoth to edit their data, and only a one megabyte binary to query
+it?
 
 @node Using timeclock to record billable time,  , Using GnuCash to Keep Your Ledger, Keeping a ledger
 @section Using timeclock to record billable time
