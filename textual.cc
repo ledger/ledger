@@ -139,7 +139,8 @@ transaction_t * parse_transaction(char * line, account_t * account,
   while (! in.eof()) {
     in.get(p);
     if (in.eof() || (std::isspace(p) &&
-		     (p == '\t' || std::isspace(in.peek()))))
+		     (p == '\t' || in.peek() == EOF ||
+		      std::isspace(in.peek()))))
       break;
     account_end++;
   }
