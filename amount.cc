@@ -1830,7 +1830,6 @@ bool compare_amount_commodities::operator()(const amount_t * left,
 
     // The two annotated commodities don't differ enough to matter.  This
     // should make this identical.
-    assert(0);
     return true;
   }
 }
