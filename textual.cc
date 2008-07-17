@@ -335,12 +335,17 @@ bool parse_transactions(std::istream&	   in,
     in.getline(line, MAX_LINE);
     if (in.eof())
       break;
-    beg_pos += std::strlen(line) + 1;
+
+    int len = std::strlen(line);
+    if (line[len - 1] == '\r')
+      line[--len] == '\0';
+
+    beg_pos += len + 1;
     linenum++;
 
-    if (line[0] == ' ' || line[0] == '\t' || line[0] == '\r') {
+    if (line[0] == ' ' || line[0] == '\t') {
       char * p = skip_ws(line);
-      if (! *p || *p == '\r')
+      if (! *p)
 	break;
     }
     if (transaction_t * xact = parse_transaction(line, account)) {
@@ -426,12 +431,17 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
     in.getline(line, MAX_LINE);
     if (in.eof() && line[0] == '\0')
       break;
-    end_pos = beg_pos + std::strlen(line) + 1;
+
+    int len = std::strlen(line);
+    if (line[len - 1] == '\r')
+      line[--len] == '\0';
+
+    end_pos = beg_pos + len + 1;
     linenum++;
 
-    if (line[0] == ' ' || line[0] == '\t' || line[0] == '\r') {
+    if (line[0] == ' ' || line[0] == '\t') {
       char * p = skip_ws(line);
-      if (! *p || *p == '\r')
+      if (! *p)
 	break;
     }
 
@@ -608,18 +618,22 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
       in.getline(line, MAX_LINE);
       if (in.eof())
 	break;
-      end_pos = beg_pos + std::strlen(line) + 1;
+
+      int len = std::strlen(line);
+      if (line[len - 1] == '\r')
+	line[--len] == '\0';
+
+      end_pos = beg_pos + len + 1;
       linenum++;
 
       switch (line[0]) {
       case '\0':
-      case '\r':
 	break;
 
       case ' ':
       case '\t': {
 	char * p = skip_ws(line);
-	if (*p && *p != '\r')
+	if (*p)
 	  throw new parse_error("Line begins with whitespace");
 	break;
       }
