@@ -256,12 +256,12 @@ inline std::ostream& operator<<(std::ostream& out,
 
 struct interval_t
 {
-  unsigned short years;
-  unsigned short months;
-  unsigned short days;
-  unsigned short hours;
-  unsigned short minutes;
-  unsigned short seconds;
+  int years;
+  int months;
+  int days;
+  int hours;
+  int minutes;
+  int seconds;
 
   datetime_t begin;
   datetime_t end;

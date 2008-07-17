@@ -33,8 +33,8 @@ const char * date_t::formats[] = {
 datetime_t datetime_t::now(std::time(NULL));
 
 namespace {
-  static std::time_t base = -1;
-  static int base_year = -1;
+  static std::time_t base      = -1;
+  static int	     base_year = -1;
 
   static const int month_days[12] = {
     31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
@@ -132,17 +132,17 @@ namespace {
     if (! parse_date_mask(word.c_str(), &when))
       throw new datetime_error(std::string("Could not parse date mask: ") + word);
 
-    when.tm_hour	= 0;
-    when.tm_min	= 0;
-    when.tm_sec	= 0;
-    when.tm_isdst = -1;
+    when.tm_hour   = 0;
+    when.tm_min	   = 0;
+    when.tm_sec	   = 0;
+    when.tm_isdst  = -1;
 
     bool saw_year = true;
     bool saw_mon  = true;
     bool saw_day  = true;
 
     if (when.tm_year == -1) {
-      when.tm_year = date_t::current_year;
+      when.tm_year = date_t::current_year - 1900;
       saw_year = false;
     }
     if (when.tm_mon == -1) {
@@ -155,18 +155,22 @@ namespace {
       when.tm_mday = 1;
       saw_day = false;
     } else {
-      saw_mon = false;		// don't increment by month if day used
+      saw_mon  = false;		// don't increment by month if day used
       saw_year = false;		// don't increment by year if day used
     }
 
     if (begin) {
       *begin = std::mktime(&when);
-      if (end)
-	*end = interval_t(saw_day ? 86400 : 0, saw_mon ? 1 : 0,
+      assert(int(*begin) != -1);
+      if (end) {
+	*end = interval_t(saw_day ? 1 : 0, saw_mon ? 1 : 0,
 			  saw_year ? 1 : 0).increment(*begin);
+	assert(int(*end) != -1);
+      }
     }
     else if (end) {
       *end = std::mktime(&when);
+      assert(int(*end) != -1);
     }
   }
 
@@ -321,12 +325,12 @@ namespace {
   bool parse_date_mask(const char * date_str, struct std::tm * result)
   {
     if (! date_t::input_format.empty()) {
-      std::memset(result, INT_MAX, sizeof(struct std::tm));
+      std::memset(result, -1, sizeof(struct std::tm));
       if (strptime(date_str, date_t::input_format.c_str(), result))
 	return true;
     }
     for (const char ** f = date_t::formats; *f; f++) {
-      std::memset(result, INT_MAX, sizeof(struct std::tm));
+      std::memset(result, -1, sizeof(struct std::tm));
       if (strptime(date_str, *f, result))
 	return true;
     }
