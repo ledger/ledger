@@ -96,9 +96,6 @@ class date_t
   operator bool() const {
     return when != 0;
   }
-  operator std::time_t() {
-    return when;
-  }
   operator std::string() const {
     return to_string();
   }
@@ -225,13 +222,13 @@ class datetime_t : public date_t
   int sec() const {
     return localtime()->tm_sec;
   }
-};
 
-inline long operator-(const datetime_t& left, const datetime_t& right) {
-  std::time_t left_time(left);
-  std::time_t right_time(right);
-  return left_time - right_time;
-}
+  friend inline long operator-(const datetime_t& left, const datetime_t& right) {
+    std::time_t left_time  = left.when;
+    std::time_t right_time = right.when;
+    return long(left_time) - long(right_time);
+  }
+};
 
 inline datetime_t operator+(const datetime_t& left, const long seconds) {
   datetime_t temp(left);
