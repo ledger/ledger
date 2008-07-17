@@ -43,8 +43,17 @@ struct time_entry_t {
   datetime_t  checkin;
   account_t * account;
   std::string desc;
+
+  time_entry_t() : account(NULL) {}
+  time_entry_t(datetime_t  _checkin,
+	       account_t * _account = NULL,
+	       std::string _desc    = "")
+    : checkin(_checkin), account(_account), desc(_desc) {}
+
+  time_entry_t(const time_entry_t& entry)
+    : checkin(entry.checkin), account(entry.account),
+      desc(entry.desc) {}
 };
-std::list<time_entry_t> time_entries;
 #endif
 
 inline char * next_element(char * buf, bool variable = false)
@@ -496,10 +505,11 @@ bool textual_parser_t::test(std::istream& in) const
   return true;
 }
 
-static void clock_out_from_timelog(const datetime_t& when,
-				   account_t *	     account,
-				   const char *	     desc,
-				   journal_t *	     journal)
+static void clock_out_from_timelog(std::list<time_entry_t>& time_entries,
+				   const datetime_t&	    when,
+				   account_t *		    account,
+				   const char *		    desc,
+				   journal_t *		    journal)
 {
   time_entry_t event;
 
@@ -576,8 +586,9 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
   TIMER_START(parsing_total);
 
-  std::list<account_t *> account_stack;
-  auto_entry_finalizer_t auto_entry_finalizer(journal);
+  std::list<account_t *>  account_stack;
+  auto_entry_finalizer_t  auto_entry_finalizer(journal);
+  std::list<time_entry_t> time_entries;
 
   if (! master)
     master = journal->master;
@@ -621,10 +632,8 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	char * p = skip_ws(line + 22);
 	char * n = next_element(p, true);
 
-	time_entry_t event;
-	event.desc    = n ? n : "";
-	event.checkin = date;
-	event.account = account_stack.front()->find_account(p);
+	time_entry_t event(date, account_stack.front()->find_account(p),
+			   n ? n : "");
 
 	if (! time_entries.empty())
 	  for (std::list<time_entry_t>::iterator i = time_entries.begin();
@@ -649,8 +658,8 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	  char * n = next_element(p, true);
 
 	  clock_out_from_timelog
-	    (date, p ? account_stack.front()->find_account(p) : NULL, n,
-	     journal);
+	    (time_entries, date,
+	     p ? account_stack.front()->find_account(p) : NULL, n, journal);
 	  count++;
 	}
 	break;
@@ -886,11 +895,19 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
  done:
   if (! time_entries.empty()) {
+    std::list<account_t *> accounts;
+
     for (std::list<time_entry_t>::iterator i = time_entries.begin();
 	 i != time_entries.end();
 	 i++)
-      clock_out_from_timelog(datetime_t::now, (*i).account, NULL, journal);
-    time_entries.clear();
+      accounts.push_back((*i).account);
+
+    for (std::list<account_t *>::iterator i = accounts.begin();
+	 i != accounts.end();
+	 i++)
+      clock_out_from_timelog(time_entries, datetime_t::now, *i, NULL, journal);
+
+    assert(time_entries.empty());
   }
 
   if (added_auto_entry_hook)
