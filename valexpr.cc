@@ -1035,8 +1035,8 @@ value_expr_t * parse_value_term(std::istream& in, scope_t * scope,
       unexpected(c, ']');
     in.get(c);
 
-    node.reset(new value_expr_t(value_expr_t::CONSTANT));
     interval_t timespan(buf);
+    node.reset(new value_expr_t(value_expr_t::CONSTANT));
     node->value = new value_t(timespan.first());
     break;
   }
