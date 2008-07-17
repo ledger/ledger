@@ -578,8 +578,12 @@ void value_expr_t::compute(value_t& result, const details_t& details,
   }
 
   case O_COM:
-    assert(left);
-    assert(right);
+    if (! left)
+      throw new compute_error("Comma operator missing left operand",
+			      new valexpr_context(this));
+    if (! right)
+      throw new compute_error("Comma operator missing right operand",
+			      new valexpr_context(this));
     left->compute(result, details, context);
     right->compute(result, details, context);
     break;
@@ -1731,10 +1735,12 @@ bool write_value_expr(std::ostream&	   out,
     break;
 
   case value_expr_t::O_COM:
-    if (write_value_expr(out, node->left, relaxed, node_to_find, start_pos, end_pos))
+    if (node->left &&
+	write_value_expr(out, node->left, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     out << ", ";
-    if (write_value_expr(out, node->right, relaxed, node_to_find, start_pos, end_pos))
+    if (node->right &&
+	write_value_expr(out, node->right, relaxed, node_to_find, start_pos, end_pos))
       found = true;
     break;
   case value_expr_t::O_QUES:
