@@ -712,7 +712,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
       }
 
       case 'Y':                   // set the current year
-	date_t::current_year = std::atoi(skip_ws(line + 1)) - 1900;
+	date_t::current_year = std::atoi(skip_ws(line + 1));
 	break;
 
 #ifdef TIMELOG_SUPPORT

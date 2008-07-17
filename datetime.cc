@@ -16,10 +16,13 @@ std::string  date_t::input_format;
 std::string  date_t::output_format = "%Y/%m/%d";
 
 const char * date_t::formats[] = {
+  "%y/%m/%d",
   "%Y/%m/%d",
   "%m/%d",
+  "%y.%m.%d",
   "%Y.%m.%d",
   "%m.%d",
+  "%y-%m-%d",
   "%Y-%m-%d",
   "%m-%d",
   "%a",
@@ -349,7 +352,7 @@ namespace {
     when.tm_sec  = 0;
 
     if (when.tm_year == -1)
-      when.tm_year = ((year == -1) ? date_t::current_year : (year - 1900));
+      when.tm_year = ((year == -1) ? date_t::current_year : year) - 1900;
 
     if (when.tm_mon == -1)
       when.tm_mon = 0;
@@ -364,6 +367,6 @@ namespace {
 
   bool quick_parse_date(const char * date_str, std::time_t * result)
   {
-    return parse_date(date_str, result, date_t::current_year + 1900);
+    return parse_date(date_str, result, date_t::current_year);
   }
 }
