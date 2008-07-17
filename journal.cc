@@ -161,28 +161,30 @@ bool entry_base_t::finalize()
     if (this_bal == other_bal)
       other_bal++;
 
-    amount_t per_unit_cost =
-      amount_t((*other_bal).second / (*this_bal).second).unround();
+    if (this_bal != ((balance_t *) balance.data)->amounts.end()) {
+      amount_t per_unit_cost =
+	amount_t((*other_bal).second / (*this_bal).second).unround();
 
-    for (; x != transactions.end(); x++) {
-      if ((*x)->cost || ((*x)->flags & TRANSACTION_VIRTUAL) ||
-	  ! (*x)->amount || (*x)->amount.commodity() != this_comm)
-	continue;
+      for (; x != transactions.end(); x++) {
+	if ((*x)->cost || ((*x)->flags & TRANSACTION_VIRTUAL) ||
+	    ! (*x)->amount || (*x)->amount.commodity() != this_comm)
+	  continue;
 
-      assert((*x)->amount);
-      balance -= (*x)->amount;
+	assert((*x)->amount);
+	balance -= (*x)->amount;
 
-      entry_t * entry = dynamic_cast<entry_t *>(this);
+	entry_t * entry = dynamic_cast<entry_t *>(this);
 
-      if ((*x)->amount.commodity() &&
-	  ! (*x)->amount.commodity().annotated)
-	(*x)->amount.annotate_commodity
-	  (abs(per_unit_cost),
-	   entry ? entry->actual_date() : datetime_t(),
-	   entry ? entry->code : "");
+	if ((*x)->amount.commodity() &&
+	    ! (*x)->amount.commodity().annotated)
+	  (*x)->amount.annotate_commodity
+	    (abs(per_unit_cost),
+	     entry ? entry->actual_date() : datetime_t(),
+	     entry ? entry->code : "");
 
-      (*x)->cost = new amount_t(- (per_unit_cost * (*x)->amount));
-      balance += *(*x)->cost;
+	(*x)->cost = new amount_t(- (per_unit_cost * (*x)->amount));
+	balance += *(*x)->cost;
+      }
     }
   }
 
