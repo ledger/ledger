@@ -100,8 +100,18 @@ static value_expr parse_amount_expr(std::istream& in, amount_t& amount,
   if (! compute_amount(expr, amount, xact))
     throw new parse_error("Amount expression failed to compute");
 
-  if (expr->kind == value_expr_t::CONSTANT)
+#if 0
+  if (expr->kind == value_expr_t::CONSTANT) {
     expr = NULL;
+  } else {
+    DEBUG_IF("ledger.textual.parse") {
+      std::cout << "Value expression tree:" << std::endl;
+      ledger::dump_value_expr(std::cout, expr.get());
+    }
+  }
+#else
+  expr = NULL;
+#endif
 
   DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
 	      "The transaction amount is " << xact->amount);
@@ -233,7 +243,7 @@ transaction_t * parse_transaction(char * line, account_t * account,
 	  if (parse_amount_expr(in, *xact->cost, xact.get(),
 				PARSE_VALEXPR_NO_MIGRATE))
 	    throw new parse_error
-	      ("A transaction's cost must evalute to a constant value");
+	      ("A transaction's cost must evaluate to a constant value");
 
 	  unsigned long end = (long)in.tellg();
 
