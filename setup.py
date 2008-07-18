@@ -7,7 +7,7 @@ import os
 libs = ["amounts", "boost_python", "gmp"]
 
 setup(name         = "Amounts",
-      version      = "2.6.0.90",
+      version      = "2.6.1",
       description  = "Amounts and Commodities Library",
       author       = "John Wiegley",
       author_email = "johnw@newartisans.com",
