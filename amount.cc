@@ -1170,14 +1170,13 @@ void amount_t::parse(std::istream& in, unsigned char flags)
 
   // Set the commodity's flags and precision accordingly
 
-  if (newly_created || ! (flags & AMOUNT_PARSE_NO_MIGRATE)) {
+  if (! (flags & AMOUNT_PARSE_NO_MIGRATE)) {
     commodity().add_flags(comm_flags);
     if (quantity->prec > commodity().precision())
       commodity().set_precision(quantity->prec);
-  }
-
-  if (flags & AMOUNT_PARSE_NO_MIGRATE)
+  } else {
     quantity->flags |= BIGINT_KEEP_PREC;
+  }
 
   // Now we have the final number.  Remove commas and periods, if
   // necessary.
