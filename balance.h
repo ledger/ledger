@@ -926,6 +926,22 @@ class balance_pair_t
       temp.cost = new balance_t(cost->unround());
     return temp;
   }
+
+  friend inline bool operator<(const balance_t& bal, const balance_pair_t& bal_pair) {
+    return bal_pair >= bal;
+  }
+  friend inline bool operator<=(const balance_t& bal, const balance_pair_t& bal_pair) {
+    return bal_pair > bal;
+  }
+  friend inline bool operator>(const balance_t& bal, const balance_pair_t& bal_pair) {
+    return bal_pair <= bal;
+  }
+  friend inline bool operator>=(const balance_t& bal, const balance_pair_t& bal_pair) {
+    return bal_pair < bal;
+  }
+  friend inline bool operator==(const balance_t& bal, const balance_pair_t& bal_pair) {
+    return bal_pair == bal;
+  }
 };
 
 inline balance_pair_t abs(const balance_pair_t& bal_pair) {
