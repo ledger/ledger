@@ -19,15 +19,14 @@ class date_t
 {
   date_t(const datetime_t& _when);
 
- protected:
-  std::time_t when;
-
  public:
   static date_t       now;
   static const char * formats[];
   static int	      current_year;
   static std::string  input_format;
   static std::string  output_format;
+
+  std::time_t when;
 
   date_t() : when(0) {}
   date_t(const date_t& _when) : when(_when.when) {}

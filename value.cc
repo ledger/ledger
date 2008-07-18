@@ -1067,7 +1067,9 @@ void value_t::negate()
     *((long *) data) = - *((long *) data);
     break;
   case DATETIME:
-    throw new value_error("Cannot negate a date/time");
+    cast(INTEGER);
+    negate();
+    break;
   case AMOUNT:
     ((amount_t *) data)->negate();
     break;
