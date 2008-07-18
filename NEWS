@@ -197,9 +197,9 @@
   register, print, etc), you can now descend into the component
   transactions that made up any of the values you see.
 
-  For example, say you request a --monthtly expenses report:
+  For example, say you request a --monthly expenses report:
 
-    $ ledger --monthly --descend "\$500.00" register ^Expenses
+    $ ledger --monthly register ^Expenses
 
   Now, in one of the reported months you see $500.00 spent on
   Expenses:Food.  You can ask Ledger to "descend" into, and show the
