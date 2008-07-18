@@ -79,7 +79,7 @@
   "Interface to the Ledger command-line accounting program."
   :group 'data)
 
-(defcustom ledger-binary-path (executable-find "ledger")
+(defcustom ledger-binary-path "ledger"
   "Path to the ledger executable."
   :type 'file
   :group 'ledger)
@@ -798,15 +798,10 @@ If name exists, returns the object naming the report, otherwise returns nil."
 
 (defun ledger-run-ledger (buffer &rest args)
   "run ledger with supplied arguments"
+  ;; Let's try again, just in case they moved it while we were sleeping.
   (cond
    ((null ledger-binary-path)
     (error "The variable `ledger-binary-path' has not been set"))
-   ((not (file-exists-p ledger-binary-path))
-    (error "The file `ledger-binary-path' (\"%s\") does not exist"
-	   ledger-binary-path))
-   ((not (file-executable-p ledger-binary-path))
-    (error "The file `ledger-binary-path' (\"%s\") cannot be executed"
-	   ledger-binary-path))
    (t
     (let ((buf (current-buffer)))
       (with-current-buffer buffer
