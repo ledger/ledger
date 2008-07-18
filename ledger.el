@@ -416,7 +416,7 @@ dropped."
     ;; attempt to auto-reconcile in the background
     (with-temp-buffer
       (let ((exit-code
-	     (ledger-run-ledger buffer "--format" "%xB\\n"
+	     (ledger-run-ledger buffer "--format" "%xb\\n"
 	      "--reconcile" balance "--reconcile-date" date
 	      "register" account)))
 	(if (/= 0 exit-code)
@@ -427,7 +427,9 @@ dropped."
 	    (error (buffer-string)))
 	  (while (not (eobp))
 	    (setq cleared
-		  (cons (1+ (read (current-buffer))) cleared))
+		  (cons (save-excursion
+			  (goto-line (1+ (read (current-buffer))))
+			  (point-marker)) cleared))
 	    (forward-line)))))
     (goto-char (point-min))
     (with-current-buffer ledger-buf
@@ -531,8 +533,12 @@ dropped."
 		   (cons
 		    (nth 0 item)
 		    (if ledger-clear-whole-entries
-			(copy-marker (nth 1 item))
-		      (copy-marker (nth 0 xact)))))))
+			(save-excursion
+			  (goto-line (nth 1 item))
+			  (point-marker))
+		      (save-excursion
+			(goto-line (nth 0 xact))
+			(point-marker)))))))
 	    (insert (format "%s %-30s %-25s %15s\n"
 			    (format-time-string "%m/%d" (nth 2 item))
 			    (nth 4 item) (nth 1 xact) (nth 2 xact)))

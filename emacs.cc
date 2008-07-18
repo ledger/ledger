@@ -13,9 +13,9 @@ void format_emacs_transactions::write_entry(entry_t& entry)
       break;
     }
 
-  out << (((unsigned long)entry.beg_pos) + 1) << " ";
+  out << (((unsigned long)entry.beg_line) + 1) << " ";
 
-  std::time_t date = entry.date();
+  std::time_t date = entry.date().when;
   out << "(" << (date / 65536) << " " << (date % 65536) << " 0) ";
 
   if (entry.code.empty())
@@ -47,7 +47,7 @@ void format_emacs_transactions::operator()(transaction_t& xact)
       out << "\n";
     }
 
-    out << "  (" << (((unsigned long)xact.beg_pos) + 1) << " ";
+    out << "  (" << (((unsigned long)xact.beg_line) + 1) << " ";
     out << "\"" << xact_account(xact)->fullname() << "\" \""
 	<< xact.amount << "\"";
 
