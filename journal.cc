@@ -263,6 +263,9 @@ bool entry_base_t::finalize()
     error * err =
       new balance_error("Entry does not balance",
 			new entry_context(*this, "While balancing entry:"));
+    DEBUG_PRINT("ledger.journal.unbalanced_remainder",
+		"balance = " << balance);
+    balance.round();
     err->context.push_front
       (new value_context(balance, "Unbalanced remainder is:"));
     throw err;
