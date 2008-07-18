@@ -113,6 +113,8 @@ entry_t * derive_new_entry(journal_t& journal,
     }
   }
   else {
+    account_t * draw_acct = NULL;
+
     while (i != end) {
       std::string& re_pat(*i++);
       account_t *  acct = NULL;
@@ -136,11 +138,6 @@ entry_t * derive_new_entry(journal_t& journal,
 	}
 
     found:
-      if (! acct)
-	acct = journal.find_account_re(re_pat);
-      if (! acct)
-	acct = journal.find_account(re_pat);
-
       transaction_t * xact;
       if (i == end) {
 	if (amt)
@@ -148,7 +145,22 @@ entry_t * derive_new_entry(journal_t& journal,
 	else
 	  xact = new transaction_t(acct);
       } else {
-	xact = new transaction_t(acct, amount_t(*i++));
+	amount_t amount(*i++);
+
+	strings_list::iterator x = i;
+	if (i != end && ++x == end) {
+	  draw_acct = journal.find_account_re(*i);
+	  if (! draw_acct)
+	    draw_acct = journal.find_account(*i);
+	  i++;
+	}
+
+	if (! acct)
+	  acct = journal.find_account_re(re_pat);
+	if (! acct)
+	  acct = journal.find_account(re_pat);
+
+	xact = new transaction_t(acct, amount);
 	if (! xact->amount.commodity()) {
 	  if (amt)
 	    xact->amount.set_commodity(amt->commodity());
@@ -159,8 +171,11 @@ entry_t * derive_new_entry(journal_t& journal,
       added->add_transaction(xact);
     }
 
-    assert(matching->transactions.back()->account);
-    if (account_t * draw_acct = matching->transactions.back()->account)
+    if (! draw_acct) {
+      assert(matching->transactions.back()->account);
+      draw_acct = matching->transactions.back()->account;
+    }
+    if (draw_acct)
       added->add_transaction(new transaction_t(draw_acct));
   }
 
