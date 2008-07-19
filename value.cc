@@ -630,7 +630,7 @@ bool value_t::operator OP(const value_t& value)				\
 									\
     case DATETIME:							\
       return (*((long *) data) OP					\
-	      ((long) *((datetime_t *) value.data)));			\
+	      ((long) ((datetime_t *) value.data)->when));		\
 									\
     case AMOUNT:							\
       return (amount_t(*((long *) data)) OP				\
@@ -657,7 +657,7 @@ bool value_t::operator OP(const value_t& value)				\
 									\
     case INTEGER:							\
       return (*((datetime_t *) data) OP					\
-	      datetime_t(*((long *) value.data)));			\
+	      datetime_t(std::time_t(*((long *) value.data))));		\
 									\
     case DATETIME:							\
       return (*((datetime_t *) data) OP					\
@@ -786,7 +786,7 @@ value_t::operator long() const
   case INTEGER:
     return *((long *) data);
   case DATETIME:
-    return *((datetime_t *) data);
+    return ((datetime_t *) data)->when;
   case AMOUNT:
     return *((amount_t *) data);
   case BALANCE:
@@ -884,7 +884,7 @@ void value_t::cast(type_t cast_type)
     case INTEGER:
       break;
     case DATETIME:
-      *((datetime_t *) data) = datetime_t(*((long *) data));
+      *((datetime_t *) data) = datetime_t(std::time_t(*((long *) data)));
       break;
     case AMOUNT:
       new((amount_t *)data) amount_t(*((long *) data));
@@ -908,7 +908,7 @@ void value_t::cast(type_t cast_type)
       *((bool *) data) = *((datetime_t *) data);
       break;
     case INTEGER:
-      *((long *) data) = *((datetime_t *) data);
+      *((long *) data) = ((datetime_t *) data)->when;
       break;
     case DATETIME:
       break;
