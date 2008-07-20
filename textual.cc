@@ -348,7 +348,7 @@ bool parse_transactions(std::istream&	   in,
 
     int len = std::strlen(line);
     if (line[len - 1] == '\r')
-      line[--len] == '\0';
+      line[--len] = '\0';
 
     beg_pos += len + 1;
     linenum++;
@@ -444,7 +444,7 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
 
     int len = std::strlen(line);
     if (line[len - 1] == '\r')
-      line[--len] == '\0';
+      line[--len] = '\0';
 
     end_pos = beg_pos + len + 1;
     linenum++;
@@ -631,7 +631,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
       int len = std::strlen(line);
       if (line[len - 1] == '\r')
-	line[--len] == '\0';
+	line[--len] = '\0';
 
       end_pos = beg_pos + len + 1;
       linenum++;
