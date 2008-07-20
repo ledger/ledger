@@ -51,6 +51,7 @@ int current_year(current_moment.date().year());
 string input_time_format;
 string output_time_format = "%Y/%m/%d";
 
+#if 0
 static const char * formats[] = {
   "%Y/%m/%d",
   "%m/%d",
@@ -65,6 +66,7 @@ static const char * formats[] = {
   "%Y",
   NULL
 };
+#endif
 
 bool day_before_month = false;
 static bool  day_before_month_initialized = false;
@@ -136,8 +138,6 @@ datetime_t interval_t::first(const datetime_t& moment) const
 
 datetime_t interval_t::increment(const datetime_t& moment) const
 {
-  struct std::tm * desc = NULL;
-
 #if 0
   struct std::tm * desc = std::localtime(&moment.when);
 

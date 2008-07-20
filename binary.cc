@@ -654,9 +654,9 @@ unsigned int read_journal(std::istream&	in,
   base_commodities = base_commodities_next = new commodity_t::base_t *[bc_count];
 
   for (commodity_t::ident_t i = 0; i < bc_count; i++) {
+#if 0
     commodity_t::base_t * base = read_commodity_base(data);
 
-#if 0
     // jww (2008-04-22): How does the pool get created here?
     amount_t::current_pool->commodities.push_back(commodity);
 

@@ -32,7 +32,7 @@
 #ifndef _PYINTERP_H
 #define _PYINTERP_H
 
-#include "xpath.h"
+#include "valexpr.h"
 
 #include <boost/python.hpp>
 #include <Python.h>
