@@ -179,6 +179,28 @@ void read_string(const char *& data, string * str)
   read_guard(data, 0x3002);
 }
 
+void read_string(std::istream& in, optional<string>& str)
+{
+  if (read_bool(in)) {
+    string temp;
+    read_string(in, temp);
+    str = temp;
+  } else {
+    str = none;
+  }
+}
+
+void read_string(const char *& data, optional<string>& str)
+{
+  if (read_bool(data)) {
+    string temp;
+    read_string(data, temp);
+    str = temp;
+  } else {
+    str = none;
+  }
+}
+
 
 void write_bool(std::ostream& out, bool num)
 {
@@ -205,6 +227,16 @@ void write_string(std::ostream& out, const string& str)
     out.write(str.c_str(), len);
 
   write_guard(out, 0x3002);
+}
+
+void write_string(std::ostream& out, const optional<string>& str)
+{
+  if (str) {
+    write_bool(out, true);
+    write_string(out, *str);
+  } else {
+    write_bool(out, false);
+  }
 }
 
 inline void read_amount(const char *& data, amount_t& amt)
@@ -260,50 +292,53 @@ inline void read_mask(const char *& data, mask_t *& mask)
   mask->exclude = exclude;
 }
 
-inline void read_value_expr(const char *& data, value_expr_t *& expr)
+inline expr::ptr_op_t read_value_expr(const char *& data)
 {
-  if (! read_bool(data)) {
-    expr = NULL;
-    return;
-  }
+  if (! read_bool(data))
+    return expr::ptr_op_t();
 
-  value_expr_t::kind_t kind;
+  expr::op_t::kind_t kind;
   read_number(data, kind);
 
-  expr = new value_expr_t(kind);
+  expr::ptr_op_t expr = new expr::op_t(kind);
 
-  if (kind > value_expr_t::TERMINALS) {
-    read_value_expr(data, expr->left);
-    if (expr->left) expr->left->acquire();
-  }
+  if (kind > expr::op_t::TERMINALS)
+    expr->set_left(read_value_expr(data));
 
   switch (expr->kind) {
-  case value_expr_t::O_ARG:
-  case value_expr_t::INDEX:
-    read_long(data, expr->arg_index);
+  case expr::op_t::O_ARG:
+  case expr::op_t::INDEX: {
+    long temp;
+    read_long(data, temp);
+    expr->set_long(temp);
     break;
-  case value_expr_t::CONSTANT:
-    expr->value = new value_t;
-    read_value(data, *expr->value);
+  }
+  case expr::op_t::VALUE: {
+    value_t temp;
+    read_value(data, temp);
+    expr->set_value(temp);
     break;
+  }
 
-  case value_expr_t::F_CODE_MASK:
-  case value_expr_t::F_PAYEE_MASK:
-  case value_expr_t::F_NOTE_MASK:
-  case value_expr_t::F_ACCOUNT_MASK:
-  case value_expr_t::F_SHORT_ACCOUNT_MASK:
-  case value_expr_t::F_COMMODITY_MASK:
+  case expr::op_t::F_CODE_MASK:
+  case expr::op_t::F_PAYEE_MASK:
+  case expr::op_t::F_NOTE_MASK:
+  case expr::op_t::F_ACCOUNT_MASK:
+  case expr::op_t::F_SHORT_ACCOUNT_MASK:
+  case expr::op_t::F_COMMODITY_MASK:
+#if 0
     if (read_bool(data))
       read_mask(data, expr->mask);
+#endif
     break;
 
   default:
-    if (kind > value_expr_t::TERMINALS) {
-      read_value_expr(data, expr->right);
-      if (expr->right) expr->right->acquire();
-    }
+    if (kind > expr::op_t::TERMINALS)
+      expr->set_right(read_value_expr(data));
     break;
   }
+
+  return expr;
 }
 
 
@@ -322,25 +357,29 @@ inline void read_transaction(const char *& data, transaction_t * xact)
     read_string(data, xact->amount_expr.expr);
   }
   else {
-    value_expr_t * ptr = NULL;
-    read_value_expr(data, ptr);
-    assert(ptr);
+    expr::ptr_op_t ptr = read_value_expr(data);
+    assert(ptr.get());
     xact->amount_expr.reset(ptr);
     read_string(data, xact->amount_expr.expr);
   }
 
   if (read_bool(data)) {
-    xact->cost = new amount_t;
+    xact->cost = amount_t();
     read_amount(data, *xact->cost);
-    read_string(data, xact->cost_expr);
+
+    expr::ptr_op_t ptr = read_value_expr(data);
+    assert(ptr.get());
+    value_expr expr;
+    expr.reset(ptr);
+    xact->cost_expr = expr;
   } else {
-    xact->cost = NULL;
+    xact->cost = none;
   }
 
   read_number(data, xact->state);
-  read_number(data, xact->flags);
-  xact->flags |= TRANSACTION_BULK_ALLOC;
-  read_string(data, &xact->note);
+  xact->set_flags(read_number<transaction_t::flags_t>(data));
+  xact->add_flags(TRANSACTION_BULK_ALLOC);
+  read_string(data, xact->note);
 
   xact->beg_pos = read_long<unsigned long>(data);
   read_long(data, xact->beg_line);
@@ -350,7 +389,7 @@ inline void read_transaction(const char *& data, transaction_t * xact)
   xact->data = NULL;
 
   if (xact->amount_expr)
-    compute_amount(xact->amount_expr, xact->amount, xact);
+    expr::compute_amount(xact->amount_expr.get(), xact->amount, xact);
 }
 
 inline void read_entry_base(const char *& data, entry_base_t * entry,
@@ -369,7 +408,7 @@ inline void read_entry_base(const char *& data, entry_base_t * entry,
        i++) {
     new(xact_pool) transaction_t;
     read_transaction(data, xact_pool);
-    if (ignore_calculated && xact_pool->flags & TRANSACTION_CALCULATED)
+    if (ignore_calculated && xact_pool->has_flags(TRANSACTION_CALCULATED))
       finalize = true;
     entry->add_transaction(xact_pool++);
   }
@@ -381,8 +420,8 @@ inline void read_entry(const char *& data, entry_t * entry,
   read_entry_base(data, entry, xact_pool, finalize);
   read_number(data, entry->_date);
   read_number(data, entry->_date_eff);
-  read_string(data, &entry->code);
-  read_string(data, &entry->payee);
+  read_string(data, entry->code);
+  read_string(data, entry->payee);
 }
 
 inline void read_auto_entry(const char *& data, auto_entry_t * entry,
@@ -390,10 +429,7 @@ inline void read_auto_entry(const char *& data, auto_entry_t * entry,
 {
   bool ignore;
   read_entry_base(data, entry, xact_pool, ignore);
-  value_expr_t * expr;
-  read_value_expr(data, expr);
-  // the item_predicate constructor will acquire the reference
-  entry->predicate = new item_predicate<transaction_t>(expr);
+  entry->predicate = item_predicate<transaction_t>(read_value_expr(data));
 }
 
 inline void read_period_entry(const char *& data, period_entry_t * entry,
@@ -411,8 +447,7 @@ inline commodity_t::base_t * read_commodity_base(const char *& data)
   
   read_string(data, str);
 
-  commodity_t::base_t * commodity = new commodity_t::base_t(str);
-  *base_commodities_next++ = commodity;
+  std::auto_ptr<commodity_t::base_t> commodity(new commodity_t::base_t(str));
 
   read_string(data, str);
   if (! str.empty())
@@ -427,7 +462,7 @@ inline commodity_t::base_t * read_commodity_base(const char *& data)
   read_number(data, flags);
   commodity->set_flags(flags);
 
-  return commodity;
+  return *base_commodities_next++ = commodity.release();
 }
 
 inline void read_commodity_base_extra(const char *& data,
@@ -596,8 +631,13 @@ unsigned int read_journal(std::istream&	in,
     // Make sure that the cache uses the same price database,
     // otherwise it means that LEDGER_PRICE_DB has been changed, and
     // we should ignore this cache file.
-    if (read_string(in) != journal->price_db)
-      return 0;
+    if (read_bool(in)) {
+      string pathname;
+      read_string(in, pathname);
+      if (! journal->price_db ||
+	  journal->price_db->string() != std::string(pathname))
+	return 0;
+    }
   }
 
   // Read all of the data in at once, so that we're just dealing with
@@ -812,44 +852,47 @@ void write_mask(std::ostream& out, mask_t * mask)
   write_string(out, mask->expr.str());
 }
 
-void write_value_expr(std::ostream& out, const value_expr_t * expr)
+void write_value_expr(std::ostream& out, const expr::ptr_op_t expr)
 {
   if (! expr) {
     write_bool(out, false);
     return;
   }
+
   write_bool(out, true);
   write_number(out, expr->kind);
 
-  if (expr->kind > value_expr_t::TERMINALS)
-    write_value_expr(out, expr->left);
+  if (expr->kind > expr::op_t::TERMINALS)
+    write_value_expr(out, expr->left());
 
   switch (expr->kind) {
-  case value_expr_t::O_ARG:
-  case value_expr_t::INDEX:
-    write_long(out, expr->arg_index);
+  case expr::op_t::O_ARG:
+  case expr::op_t::INDEX:
+    write_long(out, expr->as_long());
     break;
-  case value_expr_t::CONSTANT:
-    write_value(out, *expr->value);
+  case expr::op_t::VALUE:
+    write_value(out, expr->as_value());
     break;
 
-  case value_expr_t::F_CODE_MASK:
-  case value_expr_t::F_PAYEE_MASK:
-  case value_expr_t::F_NOTE_MASK:
-  case value_expr_t::F_ACCOUNT_MASK:
-  case value_expr_t::F_SHORT_ACCOUNT_MASK:
-  case value_expr_t::F_COMMODITY_MASK:
+  case expr::op_t::F_CODE_MASK:
+  case expr::op_t::F_PAYEE_MASK:
+  case expr::op_t::F_NOTE_MASK:
+  case expr::op_t::F_ACCOUNT_MASK:
+  case expr::op_t::F_SHORT_ACCOUNT_MASK:
+  case expr::op_t::F_COMMODITY_MASK:
+#if 0
     if (expr->mask) {
       write_bool(out, true);
       write_mask(out, expr->mask);
     } else {
       write_bool(out, false);
     }
+#endif
     break;
 
   default:
-    if (expr->kind > value_expr_t::TERMINALS)
-      write_value_expr(out, expr->right);
+    if (expr->kind > expr::op_t::TERMINALS)
+      write_value_expr(out, expr->right());
     break;
   }
 
@@ -862,7 +905,7 @@ void write_transaction(std::ostream& out, transaction_t * xact,
   write_number(out, xact->_date_eff);
   write_long(out, xact->account->ident);
 
-  if (ignore_calculated && xact->flags & TRANSACTION_CALCULATED) {
+  if (ignore_calculated && xact->has_flags(TRANSACTION_CALCULATED)) {
     write_number<unsigned char>(out, 0);
     write_amount(out, amount_t());
   }
@@ -882,16 +925,16 @@ void write_transaction(std::ostream& out, transaction_t * xact,
   }
 
   if (xact->cost &&
-      (! (ignore_calculated && xact->flags & TRANSACTION_CALCULATED))) {
+      (! (ignore_calculated && xact->has_flags(TRANSACTION_CALCULATED)))) {
     write_bool(out, true);
     write_amount(out, *xact->cost);
-    write_string(out, xact->cost_expr);
+    write_string(out, xact->cost_expr->expr);
   } else {
     write_bool(out, false);
   }
 
   write_number(out, xact->state);
-  write_number(out, xact->flags);
+  write_number(out, xact->flags());
   write_string(out, xact->note);
 
   write_long(out, xact->beg_pos);
@@ -938,7 +981,7 @@ void write_entry(std::ostream& out, entry_t * entry)
 void write_auto_entry(std::ostream& out, auto_entry_t * entry)
 {
   write_entry_base(out, entry);
-  write_value_expr(out, entry->predicate->predicate);
+  write_value_expr(out, entry->predicate.predicate.get());
 }
 
 void write_period_entry(std::ostream& out, period_entry_t * entry)
@@ -1088,7 +1131,12 @@ void write_journal(std::ostream& out, journal_t * journal)
 
     // Write out the price database that relates to this data file, so
     // that if it ever changes the cache can be invalidated.
-    write_string(out, journal->price_db.string());
+    if (journal->price_db) {
+      write_bool(out, true);
+      write_string(out, journal->price_db->string());
+    } else {
+      write_bool(out, false);
+    }
   }
 
   ostream_pos_type data_val = out.tellp();

@@ -127,7 +127,7 @@ unsigned int parse_ledger_data(config_t&   config,
     if (boost::filesystem::exists(config.cache_file)) {
       boost::filesystem::ifstream stream(config.cache_file);
       if (cache_parser && cache_parser->test(stream)) {
-	path price_db_orig = journal->price_db;
+	optional<path> price_db_orig = journal->price_db;
 	journal->price_db = config.price_db;
 	entry_count += cache_parser->parse(stream, config, journal,
 					   NULL, &config.data_file);
@@ -145,13 +145,13 @@ unsigned int parse_ledger_data(config_t&   config,
       acct = journal->find_account(config.account);
 
     journal->price_db = config.price_db;
-    if (! journal->price_db.empty() &&
-	boost::filesystem::exists(journal->price_db)) {
-      if (parse_journal_file(journal->price_db, config, journal)) {
+    if (journal->price_db &&
+	boost::filesystem::exists(*journal->price_db)) {
+      if (parse_journal_file(*journal->price_db, config, journal)) {
 	throw new error("Entries not allowed in price history file");
       } else {
 	DEBUG("ledger.config.cache",
-		    "read price database " << journal->price_db);
+	      "read price database " << *journal->price_db);
 	journal->sources.pop_back();
       }
     }
@@ -172,8 +172,8 @@ unsigned int parse_ledger_data(config_t&   config,
     else if (boost::filesystem::exists(config.data_file)) {
       entry_count += parse_journal_file(config.data_file, config, journal,
 					acct);
-      if (! journal->price_db.empty())
-	journal->sources.push_back(journal->price_db);
+      if (journal->price_db)
+	journal->sources.push_back(*journal->price_db);
     }
   }
 

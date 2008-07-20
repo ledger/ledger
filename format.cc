@@ -468,8 +468,8 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 	  else
 	    stream << details.xact->amount.strip_annotations();
 
-	  if (! details.xact->cost_expr.empty())
-	    stream << details.xact->cost_expr;
+	  if (details.xact->cost_expr)
+	    stream << details.xact->cost_expr->expr;
 	  else
 	    stream << " @ " << amount_t(*details.xact->cost /
 					details.xact->amount).unround();
@@ -653,9 +653,9 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 
     case element_t::CODE: {
       string temp;
-      if (details.entry && ! details.entry->code.empty()) {
+      if (details.entry && details.entry->code) {
 	temp += "(";
-	temp += details.entry->code;
+	temp += *details.entry->code;
 	temp += ") ";
       }
       out << temp;
@@ -670,14 +670,14 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
       break;
 
     case element_t::OPT_NOTE:
-      if (details.xact && ! details.xact->note.empty())
+      if (details.xact && details.xact->note)
 	out << "  ; ";
       // fall through...
 
     case element_t::NOTE:
       if (details.xact)
 	out << (elem->max_width == 0 ?
-		details.xact->note : truncate(details.xact->note,
+		details.xact->note : truncate(*details.xact->note,
 					      elem->max_width));
       break;
 
@@ -705,11 +705,11 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 		 details.account->fullname() :
 		 partial_account_name(*details.account));
 
-	if (details.xact && details.xact->flags & TRANSACTION_VIRTUAL) {
+	if (details.xact && details.xact->has_flags(TRANSACTION_VIRTUAL)) {
 	  if (elem->max_width > 2)
 	    name = truncate(name, elem->max_width - 2, true);
 
-	  if (details.xact->flags & TRANSACTION_BALANCE)
+	  if (details.xact->has_flags(TRANSACTION_BALANCE))
 	    name = string("[") + name + "]";
 	  else
 	    name = string("(") + name + ")";
@@ -828,7 +828,7 @@ void print_entry(std::ostream& out, const entry_base_t& entry_base,
   }
   else if (const auto_entry_t * entry =
 	   dynamic_cast<const auto_entry_t *>(&entry_base)) {
-    out << "= " << entry->predicate_string << '\n';
+    out << "= " << entry->predicate.predicate.expr << '\n';
     print_format = prefix + "    %-34A  %12o\n";
   }
   else if (const period_entry_t * entry =
@@ -850,13 +850,13 @@ void print_entry(std::ostream& out, const entry_base_t& entry_base,
 		    cleaner);
 }
 
-bool disp_subaccounts_p(const account_t&		 account,
-			const item_predicate<account_t>& disp_pred,
-			const account_t *&		 to_show)
+bool disp_subaccounts_p(const account_t&			    account,
+			const optional<item_predicate<account_t> >& disp_pred,
+			const account_t *&			    to_show)
 {
   bool	       display  = false;
   unsigned int counted  = 0;
-  bool         matches  = disp_pred(account);
+  bool         matches  = disp_pred ? (*disp_pred)(account) : true;
   value_t      acct_total;
   bool         computed = false;
   value_t      result;
@@ -866,7 +866,7 @@ bool disp_subaccounts_p(const account_t&		 account,
   for (accounts_map::const_iterator i = account.accounts.begin();
        i != account.accounts.end();
        i++) {
-    if (! disp_pred(*(*i).second))
+    if (disp_pred && ! (*disp_pred)(*(*i).second))
       continue;
 
     compute_total(result, details_t(*(*i).second));
@@ -887,7 +887,7 @@ bool disp_subaccounts_p(const account_t&		 account,
 }
 
 bool display_account(const account_t& account,
-		     const item_predicate<account_t>& disp_pred)
+		     const optional<item_predicate<account_t> >& disp_pred)
 {
   // Never display an account that has already been displayed.
   if (account_has_xdata(account) &&
@@ -905,7 +905,7 @@ bool display_account(const account_t& account,
   if (disp_subaccounts_p(account, disp_pred, account_to_show))
     return true;
 
-  return ! account_to_show && disp_pred(account);
+  return ! account_to_show && (! disp_pred || (*disp_pred)(account));
 }
 
 void format_account::operator()(account_t& account)

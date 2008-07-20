@@ -13,9 +13,59 @@ class entry_t;
 class transaction_t;
 class account_t;
 
+namespace expr {
+
+#if 0
+struct context_t
+{
+  const entry_t * entry() {
+    return NULL;
+  }
+  const transaction_t * xact() {
+    return NULL;
+  }
+  const account_t * account() {
+    return NULL;
+  }
+};
+
+struct entry_context_t : public context_t
+{
+  const entry_t * entry_;
+
+  const entry_t * entry() {
+    return entry_;
+  }
+};
+
+struct xact_context_t : public context_t
+{
+  const transaction_t * xact_;
+
+  const entry_t * entry() {
+    return xact_->entry;
+  }
+  const transaction_t * xact() {
+    return xact_;
+  }
+  const account_t * account() {
+    return xact_->account;
+  }
+};
+
+struct account_context_t : public context_t
+{
+  const account_t * account_;
+
+  const account_t * account() {
+    return account_;
+  }
+};
+#endif
+
 struct details_t
 {
-  const entry_t *	entry;
+  const entry_t *       entry;
   const transaction_t * xact;
   const account_t *     account;
 
@@ -36,11 +86,217 @@ struct details_t
 #endif
 };
 
-struct value_expr_t
+struct op_t;
+typedef intrusive_ptr<op_t> ptr_op_t;
+
+class call_scope_t;
+
+typedef function<value_t (call_scope_t&)> function_t;
+
+#define MAKE_FUNCTOR(x) expr::op_t::wrap_functor(bind(&x, this, _1))
+#define WRAP_FUNCTOR(x) expr::op_t::wrap_functor(x)
+
+class scope_t : public noncopyable
+{
+public:
+  enum type_t {
+    CHILD_SCOPE,
+    SYMBOL_SCOPE,
+    CALL_SCOPE,
+    CONTEXT_SCOPE
+  } type_;
+
+  explicit scope_t(type_t _type) : type_(_type) {
+    TRACE_CTOR(expr::scope_t, "type_t");
+  }
+  virtual ~scope_t() {
+    TRACE_DTOR(expr::scope_t);
+  }
+
+  const type_t type() const {
+    return type_;
+  }
+
+  virtual void     define(const string& name, ptr_op_t def) = 0;
+          void     define(const string& name, const value_t& val);
+  virtual ptr_op_t lookup(const string& name) = 0;
+          value_t  resolve(const string& name) {
+#if 0
+    return lookup(name)->calc(*this);
+#else
+    return value_t();
+#endif
+  }
+
+  virtual optional<scope_t&> find_scope(const type_t _type,
+					bool skip_this = false) = 0;
+  virtual optional<scope_t&> find_first_scope(const type_t _type1,
+					      const type_t _type2,
+					      bool skip_this = false) = 0;
+
+  template <typename T>
+  T& find_scope(bool skip_this = false) {
+    assert(false);
+  }
+  template <typename T>
+  optional<T&> maybe_find_scope(bool skip_this = false) {
+    assert(false);
+  }
+};
+
+class child_scope_t : public scope_t
+{
+  scope_t * parent;
+
+public:
+  explicit child_scope_t(type_t _type = CHILD_SCOPE)
+    : scope_t(_type), parent(NULL) {
+    TRACE_CTOR(expr::child_scope_t, "type_t");
+  }
+  explicit child_scope_t(scope_t& _parent, type_t _type = CHILD_SCOPE)
+    : scope_t(_type), parent(&_parent) {
+    TRACE_CTOR(expr::child_scope_t, "scope_t&, type_t");
+  }
+  virtual ~child_scope_t() {
+    TRACE_DTOR(expr::child_scope_t);
+  }
+public:
+  virtual void     define(const string& name, ptr_op_t def) {
+    if (parent)
+      parent->define(name, def);
+  }
+  virtual ptr_op_t lookup(const string& name) {
+    if (parent)
+      return parent->lookup(name);
+    return ptr_op_t();
+  }
+
+  virtual optional<scope_t&> find_scope(type_t _type,
+					bool skip_this = false) {
+    for (scope_t * ptr = (skip_this ? parent : this); ptr; ) {
+      if (ptr->type() == _type)
+	return *ptr;
+
+      ptr = polymorphic_downcast<child_scope_t *>(ptr)->parent;
+    }
+    return none;
+  }
+
+  virtual optional<scope_t&> find_first_scope(const type_t _type1,
+					      const type_t _type2,
+					      bool skip_this = false) {
+    for (scope_t * ptr = (skip_this ? parent : this); ptr; ) {
+      if (ptr->type() == _type1 || ptr->type() == _type2)
+	return *ptr;
+
+      ptr = polymorphic_downcast<child_scope_t *>(ptr)->parent;
+    }
+    return none;
+  }
+};
+
+class symbol_scope_t : public child_scope_t
+{
+  typedef std::map<const string, ptr_op_t> symbol_map;
+  symbol_map symbols;
+
+public:
+  explicit symbol_scope_t()
+    : child_scope_t(SYMBOL_SCOPE) {
+    TRACE_CTOR(expr::symbol_scope_t, "");
+  }
+  explicit symbol_scope_t(scope_t& _parent)
+    : child_scope_t(_parent, SYMBOL_SCOPE) {
+    TRACE_CTOR(expr::symbol_scope_t, "scope_t&");
+  }
+  virtual ~symbol_scope_t() {
+    TRACE_DTOR(expr::symbol_scope_t);
+  }
+
+  virtual void     define(const string& name, ptr_op_t def);
+  void     define(const string& name, const value_t& val) {
+    scope_t::define(name, val);
+  }
+  virtual ptr_op_t lookup(const string& name);
+};
+
+class call_scope_t : public child_scope_t
+{
+  value_t args;
+
+public:
+  explicit call_scope_t(scope_t& _parent)
+    : child_scope_t(_parent, CALL_SCOPE) {
+    TRACE_CTOR(expr::call_scope_t, "scope_t&");
+  }
+  virtual ~call_scope_t() {
+    TRACE_DTOR(expr::call_scope_t);
+  }
+
+  void set_args(const value_t& _args) {
+    args = _args;
+  }
+
+  value_t& value() {
+    return args;
+  }
+
+  value_t& operator[](const int index) {
+    return args[index];
+  }
+  const value_t& operator[](const int index) const {
+    return args[index];
+  }
+
+  void push_back(const value_t& val) {
+    args.push_back(val);
+  }
+  void pop_back() {
+    args.pop_back();
+  }
+
+  const std::size_t size() const {
+    return args.size();
+  }
+};
+
+class context_scope_t : public child_scope_t
+{
+public:
+  value_t     current_element;
+  std::size_t element_index;
+  std::size_t sequence_size;
+
+  explicit context_scope_t(scope_t&	        _parent,
+			   const value_t&     _element        = NULL_VALUE,
+			   const std::size_t  _element_index  = 0,
+			   const std::size_t  _sequence_size  = 0)
+    : child_scope_t(_parent, CONTEXT_SCOPE), current_element(_element),
+      element_index(_element_index), sequence_size(_sequence_size)
+  {
+    TRACE_CTOR(expr::context_scope_t, "scope_t&, const value_t&, ...");
+  }
+  virtual ~context_scope_t() {
+    TRACE_DTOR(expr::context_scope_t);
+  }
+
+  const std::size_t index() const {
+    return element_index;
+  }
+  const std::size_t size() const {
+    return sequence_size;
+  }
+
+  value_t& value() {
+    return current_element;
+  }
+};
+
+struct op_t : public noncopyable
 {
   enum kind_t {
     // Constants
-    CONSTANT,
+    VALUE,
     ARG_INDEX,
 
     CONSTANTS,
@@ -70,6 +326,8 @@ struct value_expr_t
     TOTAL_EXPR,
 
     // Functions
+    FUNCTION,
+
     F_NOW,
     F_ARITH_MEAN,
     F_QUANTITY,
@@ -121,82 +379,231 @@ struct value_expr_t
     LAST
   };
 
-  kind_t	 kind;
-  mutable short  refc;
-  value_expr_t * left;
+  kind_t	kind;
+  mutable short refc;
+  ptr_op_t	left_;
 
-  union {
-    value_t *	   value;
-    mask_t *	   mask;
-    unsigned int   arg_index;	// used by ARG_INDEX and O_ARG
-    value_expr_t * right;
-  };
+  variant<unsigned int,		// used by ARG_INDEX and O_ARG
+	  value_t,		// used by constant VALUE
+	  mask_t,		// used by constant MASK
+	  function_t,		// used by terminal FUNCTION
+#if 0
+	  node_t::nameid_t,	// used by NODE_ID and ATTR_ID
+#endif
+	  ptr_op_t>		// used by all binary operators
+  data;
 
-  value_expr_t(const kind_t _kind)
-    : kind(_kind), refc(0), left(NULL), right(NULL) {
-    DEBUG("ledger.memory.ctors", "ctor value_expr_t " << this);
+  explicit op_t(const kind_t _kind) : kind(_kind), refc(0){
+    TRACE_CTOR(expr::op_t, "const kind_t");
   }
-  ~value_expr_t();
+  ~op_t() {
+    TRACE_DTOR(expr::op_t);
 
-  void release() const {
-    DEBUG("ledger.valexpr.memory",
-		"Releasing " << this << ", refc now " << refc - 1);
-    assert(refc > 0);
-    if (--refc == 0)
-      delete this;
+    DEBUG("ledger.xpath.memory", "Destroying " << this);
+    assert(refc == 0);
   }
-  value_expr_t * acquire() {
-    DEBUG("ledger.valexpr.memory",
-		"Acquiring " << this << ", refc now " << refc + 1);
+
+  bool is_long() const {
+    return data.type() == typeid(unsigned int);
+  }
+  unsigned int& as_long() {
+    assert(kind == ARG_INDEX || kind == O_ARG);
+    return boost::get<unsigned int>(data);
+  }
+  const unsigned int& as_long() const {
+    return const_cast<op_t *>(this)->as_long();
+  }
+  void set_long(unsigned int val) {
+    data = val;
+  }
+
+  bool is_value() const {
+    if (kind == VALUE) {
+      assert(data.type() == typeid(value_t));
+      return true;
+    }
+    return false;
+  }
+  value_t& as_value() {
+    assert(is_value());
+    return boost::get<value_t>(data);
+  }
+  const value_t& as_value() const {
+    return const_cast<op_t *>(this)->as_value();
+  }
+  void set_value(const value_t& val) {
+    data = val;
+  }
+
+  bool is_string() const {
+    if (kind == VALUE) {
+      assert(data.type() == typeid(value_t));
+      return boost::get<value_t>(data).is_string();
+    }
+    return false;
+  }
+  string& as_string() {
+    assert(is_string());
+    return boost::get<value_t>(data).as_string_lval();
+  }
+  const string& as_string() const {
+    return const_cast<op_t *>(this)->as_string();
+  }
+  void set_string(const string& val) {
+    data = value_t(val);
+  }
+
+  bool is_function() const {
+    return kind == FUNCTION;
+  }
+  function_t& as_function() {
+    assert(kind == FUNCTION);
+    return boost::get<function_t>(data);
+  }
+  const function_t& as_function() const {
+    return const_cast<op_t *>(this)->as_function();
+  }
+  void set_function(const function_t& val) {
+    data = val;
+  }
+
+#if 0
+  bool is_name() const {
+    return data.type() == typeid(node_t::nameid_t);
+  }
+  node_t::nameid_t& as_name() {
+    assert(kind == NODE_ID || kind == ATTR_ID);
+    return boost::get<node_t::nameid_t>(data);
+  }
+  const node_t::nameid_t& as_name() const {
+    return const_cast<op_t *>(this)->as_name();
+  }
+  void set_name(const node_t::nameid_t& val) {
+    data = val;
+  }
+#endif
+
+  ptr_op_t& as_op() {
+    assert(kind > TERMINALS);
+    return boost::get<ptr_op_t>(data);
+  }
+  const ptr_op_t& as_op() const {
+    return const_cast<op_t *>(this)->as_op();
+  }
+
+  void acquire() const {
+    DEBUG("ledger.xpath.memory",
+	  "Acquiring " << this << ", refc now " << refc + 1);
     assert(refc >= 0);
     refc++;
-    return this;
   }
-  const value_expr_t * acquire() const {
-    DEBUG("ledger.valexpr.memory",
-		"Acquiring " << this << ", refc now " << refc + 1);
-    refc++;
-    return this;
-  }
-
-  void set_left(value_expr_t * expr) {
-    assert(kind > TERMINALS);
-    if (left)
-      left->release();
-    left = expr ? expr->acquire() : NULL;
+  void release() const {
+    DEBUG("ledger.xpath.memory",
+	  "Releasing " << this << ", refc now " << refc - 1);
+    assert(refc > 0);
+    if (--refc == 0)
+      checked_delete(this);
   }
 
-  void set_right(value_expr_t * expr) {
-    assert(kind > TERMINALS);
-    if (right)
-      right->release();
-    right = expr ? expr->acquire() : NULL;
+  ptr_op_t& left() {
+    return left_;
   }
+  const ptr_op_t& left() const {
+    assert(kind > TERMINALS);
+    return left_;
+  }
+  void set_left(const ptr_op_t& expr) {
+    assert(kind > TERMINALS);
+    left_ = expr;
+  }
+
+  ptr_op_t& right() {
+    assert(kind > TERMINALS);
+    return as_op();
+  }
+  const ptr_op_t& right() const {
+    assert(kind > TERMINALS);
+    return as_op();
+  }
+  void set_right(const ptr_op_t& expr) {
+    assert(kind > TERMINALS);
+    data = expr;
+  }
+
+  static ptr_op_t new_node(kind_t _kind, ptr_op_t _left = NULL,
+			   ptr_op_t _right = NULL);
+  ptr_op_t copy(ptr_op_t _left = NULL, ptr_op_t _right = NULL) const {
+    return new_node(kind, _left, _right);
+  }
+
+  static ptr_op_t wrap_value(const value_t& val);
+  static ptr_op_t wrap_functor(const function_t& fobj);
+
+  ptr_op_t compile(scope_t& scope);
+  value_t  current_value(scope_t& scope);
+#if 0
+  node_t&  current_xml_node(scope_t& scope);
+#endif
+  value_t  calc(scope_t& scope);
 
   void compute(value_t& result,
 	       const details_t& details = details_t(),
-	       value_expr_t *   context = NULL) const;
+	       ptr_op_t context = NULL) const;
 
   value_t compute(const details_t& details = details_t(),
-		  value_expr_t *   context = NULL) const {
+		  ptr_op_t context = NULL) const {
     value_t temp;
     compute(temp, details, context);
     return temp;
   }
 
- private:
-  value_expr_t(const value_expr_t&) {
-    DEBUG("ledger.memory.ctors", "ctor value_expr_t (copy) " << this);
+  struct print_context_t
+  {
+    scope_t&        scope;
+    const bool      relaxed;
+    const ptr_op_t& op_to_find;
+    unsigned long * start_pos;
+    unsigned long * end_pos;
+
+    print_context_t(scope_t& _scope,
+		    const bool      _relaxed	  = false,
+		    const ptr_op_t& _op_to_find = ptr_op_t(),
+		    unsigned long * _start_pos  = NULL,
+		    unsigned long * _end_pos	  = NULL)
+      : scope(_scope), relaxed(_relaxed), op_to_find(_op_to_find),
+	start_pos(_start_pos), end_pos(_end_pos) {}
+  };
+
+  bool print(std::ostream& out, print_context_t& context) const;
+  void dump(std::ostream& out, const int depth) const;
+
+  friend inline void intrusive_ptr_add_ref(op_t * op) {
+    op->acquire();
+  }
+  friend inline void intrusive_ptr_release(op_t * op) {
+    op->release();
   }
 };
 
+#if 0
+class op_predicate {
+  ptr_op_t op;
+
+public:
+  explicit op_predicate(ptr_op_t _op) : op(_op) {}
+  bool operator()(scope_t& scope) {
+    return op->calc(scope).to_boolean();
+  }
+};
+#endif
+
 class valexpr_context : public error_context {
  public:
-  const ledger::value_expr_t * expr;
-  const ledger::value_expr_t * error_node;
+  ptr_op_t expr;
+  ptr_op_t error_node;
 
-  valexpr_context(const ledger::value_expr_t * _expr,
-		  const string& desc = "") throw();
+  valexpr_context(const ptr_op_t _expr,
+		  const string&	 desc = "") throw();
   virtual ~valexpr_context() throw();
 
   virtual void describe(std::ostream& out) const throw();
@@ -217,53 +624,6 @@ class value_expr_error : public error {
   virtual ~value_expr_error() throw() {}
 };
 
-struct scope_t
-{
-  scope_t * parent;
-
-  typedef std::map<const string, value_expr_t *>  symbol_map;
-  typedef std::pair<const string, value_expr_t *> symbol_pair;
-
-  symbol_map symbols;
-
-  scope_t(scope_t * _parent = NULL) : parent(_parent) {
-    DEBUG("ledger.memory.ctors", "ctor scope_t");
-  }
-  ~scope_t() {
-    DEBUG("ledger.memory.dtors", "dtor scope_t");
-    for (symbol_map::iterator i = symbols.begin();
-	 i != symbols.end();
-	 i++)
-      (*i).second->release();
-  }
-
-  void define(const string& name, value_expr_t * def) {
-    DEBUG("ledger.valexpr.syms",
-		"Defining '" << name << "' = " << def);
-    std::pair<symbol_map::iterator, bool> result
-      = symbols.insert(symbol_pair(name, def));
-    if (! result.second) {
-      symbols.erase(name);
-      std::pair<symbol_map::iterator, bool> result
-	= symbols.insert(symbol_pair(name, def));
-      if (! result.second) {
-	def->release();
-	throw new compute_error(string("Redefinition of '") +
-				name + "' in same scope");
-      }
-    }
-    def->acquire();
-  }
-  value_expr_t * lookup(const string& name) {
-    symbol_map::const_iterator i = symbols.find(name);
-    if (i != symbols.end())
-      return (*i).second;
-    else if (parent)
-      return parent->lookup(name);
-    return NULL;
-  }
-};
-
 extern std::auto_ptr<scope_t> global_scope;
 
 extern datetime_t terminus;
@@ -271,9 +631,9 @@ extern bool	  initialized;
 
 void init_value_expr();
 
-bool compute_amount(value_expr_t * expr, amount_t& amt,
+bool compute_amount(const ptr_op_t expr, amount_t& amt,
 		    const transaction_t * xact,
-		    value_expr_t * context = NULL);
+		    const ptr_op_t context = NULL);
 
 #define PARSE_VALEXPR_NORMAL	 0x00
 #define PARSE_VALEXPR_PARTIAL	 0x01
@@ -281,11 +641,11 @@ bool compute_amount(value_expr_t * expr, amount_t& amt,
 #define PARSE_VALEXPR_NO_MIGRATE 0x04
 #define PARSE_VALEXPR_NO_REDUCE  0x08
 
-value_expr_t * parse_value_expr(std::istream& in,
+ptr_op_t parse_value_expr(std::istream& in,
 				scope_t * scope = NULL,
 				const short flags = PARSE_VALEXPR_RELAXED);
 
-inline value_expr_t *
+inline ptr_op_t
 parse_value_expr(const string& str,
 		 scope_t *     scope	  = NULL,
 		 const short   flags = PARSE_VALEXPR_RELAXED) {
@@ -301,29 +661,29 @@ parse_value_expr(const string& str,
   }
 }
 
-inline value_expr_t *
+inline ptr_op_t
 parse_value_expr(const char * p,
 		 scope_t *    scope = NULL,
 		 const short  flags  = PARSE_VALEXPR_RELAXED) {
   return parse_value_expr(string(p), scope, flags);
 }
 
-void dump_value_expr(std::ostream& out, const value_expr_t * node,
+void dump_value_expr(std::ostream& out, const ptr_op_t node,
 		     const int depth = 0);
 
 bool print_value_expr(std::ostream&	   out,
-		      const value_expr_t * node,
+		      const ptr_op_t node,
 		      const bool           relaxed      = true,
-		      const value_expr_t * node_to_find = NULL,
+		      const ptr_op_t node_to_find = NULL,
 		      unsigned long *	   start_pos    = NULL,
 		      unsigned long *	   end_pos      = NULL);
 
 //////////////////////////////////////////////////////////////////////
 
-inline void guarded_compute(const value_expr_t * expr,
-			    value_t&		 result,
-			    const details_t&	 details = details_t(),
-			    value_expr_t *       context = NULL) {
+inline void guarded_compute(const ptr_op_t   expr,
+			    value_t&	     result,
+			    const details_t& details = details_t(),
+			    const ptr_op_t   context = NULL) {
   try {
     expr->compute(result, details);
   }
@@ -333,45 +693,81 @@ inline void guarded_compute(const value_expr_t * expr,
       err->context.push_back(new valexpr_context(expr));
     error_context * last = err->context.back();
     if (valexpr_context * ctxt = dynamic_cast<valexpr_context *>(last)) {
-      ctxt->expr = expr->acquire();
+      ctxt->expr = expr;
       ctxt->desc = "While computing value expression:";
     }
     throw err;
   }
 }
 
-inline value_t guarded_compute(const value_expr_t * expr,
+inline value_t guarded_compute(const ptr_op_t expr,
 			       const details_t&	    details = details_t(),
-			       value_expr_t *       context = NULL) {
+			       ptr_op_t       context = NULL) {
   value_t temp;
   guarded_compute(expr, temp, details, context);
   return temp;
 }
 
+template<>
+inline symbol_scope_t&
+scope_t::find_scope<symbol_scope_t>(bool skip_this) {
+  optional<scope_t&> scope = find_scope(SYMBOL_SCOPE, skip_this);
+  assert(scope);
+  return downcast<symbol_scope_t>(*scope);
+}
+
+template<>
+inline call_scope_t&
+scope_t::find_scope<call_scope_t>(bool skip_this) {
+  optional<scope_t&> scope = find_scope(CALL_SCOPE, skip_this);
+  assert(scope);
+  return downcast<call_scope_t>(*scope);
+}
+
+template<>
+inline context_scope_t&
+scope_t::find_scope<context_scope_t>(bool skip_this) {
+  optional<scope_t&> scope = find_scope(CONTEXT_SCOPE, skip_this);
+  assert(scope);
+  return downcast<context_scope_t>(*scope);
+}
+
+#define FIND_SCOPE(scope_type, scope_ref) \
+  downcast<scope_t>(scope_ref).find_scope<scope_type>()
+
+#define CALL_SCOPE(scope_ref) \
+  FIND_SCOPE(call_scope_t, scope_ref)
+#define SYMBOL_SCOPE(scope_ref) \
+  FIND_SCOPE(symbol_scope_t, scope_ref)
+#define CONTEXT_SCOPE(scope_ref) \
+  FIND_SCOPE(context_scope_t, scope_ref)
+
+} // namespace expr
+
 //////////////////////////////////////////////////////////////////////
 
 class value_expr
 {
-  value_expr_t * ptr;
+  expr::ptr_op_t ptr;
+
 public:
   string expr;
+
+  typedef expr::details_t details_t;
 
   value_expr() : ptr(NULL) {}
 
   value_expr(const string& _expr) : expr(_expr) {
     DEBUG("ledger.memory.ctors", "ctor value_expr");
     if (! _expr.empty())
-      ptr = parse_value_expr(expr)->acquire();
+      ptr = expr::parse_value_expr(expr);
     else
-      ptr = NULL;
+      ptr = expr::ptr_op_t();
   }
-  value_expr(value_expr_t * _ptr)
-    : ptr(_ptr ? _ptr->acquire(): NULL) {
+  value_expr(const expr::ptr_op_t _ptr) : ptr(_ptr) {
     DEBUG("ledger.memory.ctors", "ctor value_expr");
   }
-  value_expr(const value_expr& other)
-    : ptr(other.ptr ? other.ptr->acquire() : NULL),
-      expr(other.expr) {
+  value_expr(const value_expr& other) : ptr(other.ptr), expr(other.expr) {
     DEBUG("ledger.memory.ctors", "ctor value_expr");
   }
   virtual ~value_expr() {
@@ -382,10 +778,10 @@ public:
 
   value_expr& operator=(const string& _expr) {
     expr = _expr;
-    reset(parse_value_expr(expr));
+    reset(expr::parse_value_expr(expr));
     return *this;
   }
-  value_expr& operator=(value_expr_t * _expr) {
+  value_expr& operator=(expr::ptr_op_t _expr) {
     expr = "";
     reset(_expr);
     return *this;
@@ -402,49 +798,47 @@ public:
   operator string() const throw() {
     return expr;
   }
-  operator value_expr_t *() const throw() {
+  operator const expr::ptr_op_t() const throw() {
     return ptr;
   }
 
-  value_expr_t& operator*() const throw() {
+  const expr::op_t& operator*() const throw() {
     return *ptr;
   }
-  value_expr_t * operator->() const throw() {
+  const expr::ptr_op_t operator->() const throw() {
     return ptr;
   }
 
-  value_expr_t * get() const throw() { return ptr; }
-  value_expr_t * release() throw() {
-    value_expr_t * tmp = ptr;
-    ptr = 0;
+  const expr::ptr_op_t get() const throw() { return ptr; }
+  const expr::ptr_op_t release() throw() {
+    const expr::ptr_op_t tmp = ptr;
+    ptr = expr::ptr_op_t();
     return tmp;
   }
-  void reset(value_expr_t * p = 0) throw() {
-    if (p != ptr) {
-      if (ptr)
-	ptr->release();
-      ptr = p ? p->acquire() : NULL;
-    }
+  void reset(const expr::ptr_op_t p = expr::ptr_op_t()) throw() {
+    ptr = p;
   }
 
   virtual void compute(value_t& result,
 		       const details_t& details = details_t(),
-		       value_expr_t *   context = NULL) {
+		       expr::ptr_op_t   context = NULL) {
     guarded_compute(ptr, result, details, context);
   }
   virtual value_t compute(const details_t& details = details_t(),
-			  value_expr_t *   context = NULL) {
+			  expr::ptr_op_t   context = NULL) {
     value_t temp;
     guarded_compute(ptr, temp, details, context);
     return temp;
   }
 
   friend bool print_value_expr(std::ostream&	    out,
-			       const value_expr_t * node,
-			       const value_expr_t * node_to_find,
+			       const expr::ptr_op_t node,
+			       const expr::ptr_op_t node_to_find,
 			       unsigned long *	    start_pos,
 			       unsigned long *	    end_pos);
 };
+
+typedef value_expr::details_t details_t; // jww (2008-07-20): remove
 
 extern value_expr amount_expr;
 extern value_expr total_expr;
@@ -471,14 +865,14 @@ inline value_t compute_total(const details_t& details = details_t()) {
     return total_expr->compute(details);
 }
 
-value_expr_t * parse_boolean_expr(std::istream& in, scope_t * scope,
+expr::ptr_op_t parse_boolean_expr(std::istream& in, expr::scope_t * scope,
 				  const short flags);
 
 inline void parse_value_definition(const string& str,
-				   scope_t * scope = NULL) {
+				   expr::scope_t * scope = NULL) {
   std::istringstream def(str);
   value_expr expr
-    (parse_boolean_expr(def, scope ? scope : global_scope.get(),
+    (parse_boolean_expr(def, scope ? scope : expr::global_scope.get(),
 			PARSE_VALEXPR_RELAXED));
 }
 
@@ -487,28 +881,26 @@ inline void parse_value_definition(const string& str,
 template <typename T>
 class item_predicate
 {
- public:
-  const value_expr_t * predicate;
+public:
+  value_expr predicate;
 
-  item_predicate(const string& _predicate) : predicate(NULL) {
-    DEBUG("ledger.memory.ctors", "ctor item_predicate<T>");
-    if (! _predicate.empty())
-      predicate = parse_value_expr(_predicate)->acquire();
+  item_predicate() {
+    TRACE_CTOR(item_predicate, "ctor item_predicate<T>()");
   }
-  item_predicate(const value_expr_t * _predicate = NULL)
-    : predicate(_predicate->acquire()) {
-    DEBUG("ledger.memory.ctors", "ctor item_predicate<T>");
+  item_predicate(const value_expr& _predicate) : predicate(_predicate) {
+    TRACE_CTOR(item_predicate, "ctor item_predicate<T>(const value_expr&)");
+  }
+  item_predicate(const string& _predicate) : predicate(_predicate) {
+    TRACE_CTOR(item_predicate, "ctor item_predicate<T>(const string&)");
   }
 
   ~item_predicate() {
-    DEBUG("ledger.memory.dtors", "dtor item_predicate<T>");
-    if (predicate)
-      predicate->release();
+    TRACE_DTOR(item_predicate);
   }
 
   bool operator()(const T& item) const {
     return (! predicate ||
-	    predicate->compute(details_t(item)).strip_annotations());
+	    predicate->compute(value_expr::details_t(item)).strip_annotations());
   }
 };
 

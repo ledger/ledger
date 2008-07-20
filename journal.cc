@@ -1,9 +1,38 @@
+/*
+ * Copyright (c) 2003-2007, John Wiegley.  All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ * - Redistributions of source code must retain the above copyright
+ *   notice, this list of conditions and the following disclaimer.
+ *
+ * - Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in the
+ *   documentation and/or other materials provided with the distribution.
+ *
+ * - Neither the name of New Artisans LLC nor the names of its
+ *   contributors may be used to endorse or promote products derived from
+ *   this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 #include "journal.h"
 #include "utils.h"
 #include "valexpr.h"
 #include "mask.h"
-#include "format.h"
-#include "acconf.h"
 
 namespace ledger {
 
@@ -13,22 +42,21 @@ bool transaction_t::use_effective_date = false;
 
 transaction_t::~transaction_t()
 {
-  DEBUG("ledger.memory.dtors", "dtor transaction_t");
-  if (cost) delete cost;
+  TRACE_DTOR(transaction_t);
 }
 
 datetime_t transaction_t::actual_date() const
 {
-  if (! is_valid(_date) && entry)
+  if (! _date && entry)
     return entry->actual_date();
-  return _date;
+  return *_date;
 }
 
 datetime_t transaction_t::effective_date() const
 {
-  if (! is_valid(_date_eff) && entry)
+  if (! _date_eff && entry)
     return entry->effective_date();
-  return _date_eff;
+  return *_date_eff;
 }
 
 bool transaction_t::valid() const
@@ -43,15 +71,10 @@ bool transaction_t::valid() const
     return false;
   }
 
-  bool found = false;
-  for (transactions_list::const_iterator i = entry->transactions.begin();
-       i != entry->transactions.end();
-       i++)
-    if (*i == this) {
-      found = true;
-      break;
-    }
-  if (! found) {
+  transactions_list::const_iterator i =
+    std::find(entry->transactions.begin(),
+	      entry->transactions.end(), this);
+  if (i == entry->transactions.end()) {
     DEBUG("ledger.validate", "transaction_t: ! found");
     return false;
   }
@@ -71,7 +94,7 @@ bool transaction_t::valid() const
     return false;
   }
 
-  if (flags & ~0x003f) {
+  if (flags() & ~0x003f) {
     DEBUG("ledger.validate", "transaction_t: flags are bad");
     return false;
   }
@@ -99,29 +122,30 @@ bool entry_base_t::finalize()
   // and the per-unit price of unpriced commodities.
 
   value_t balance;
+  bool	  no_amounts = true;
+  bool	  saw_null   = false;
 
-  bool no_amounts = true;
-  bool saw_null   = false;
   for (transactions_list::const_iterator x = transactions.begin();
        x != transactions.end();
        x++)
-    if (! ((*x)->flags & TRANSACTION_VIRTUAL) ||
-	((*x)->flags & TRANSACTION_BALANCE)) {
-      amount_t * p = (*x)->cost ? (*x)->cost : &(*x)->amount;
-      if (! p->is_null()) {
+    if (! (*x)->has_flags(TRANSACTION_VIRTUAL) ||
+	(*x)->has_flags(TRANSACTION_BALANCE)) {
+      amount_t& p((*x)->cost ? *(*x)->cost : (*x)->amount);
+      if (! p.is_null()) {
 	if (no_amounts) {
-	  balance = *p;
+	  balance = p;
 	  no_amounts = false;
 	} else {
-	  balance += *p;
+	  balance += p;
 	}
 
+	assert((*x)->amount);
 	if ((*x)->cost && (*x)->amount.commodity().annotated) {
 	  annotated_commodity_t&
 	    ann_comm(static_cast<annotated_commodity_t&>
 		     ((*x)->amount.commodity()));
 	  if (ann_comm.details.price)
-	    balance += ((*ann_comm.details.price) * (*x)->amount -
+	    balance += (*ann_comm.details.price * (*x)->amount.number() -
 			*((*x)->cost));
 	}
       } else {
@@ -137,12 +161,12 @@ bool entry_base_t::finalize()
   // account if one has been set.
 
   if (journal && journal->basket && transactions.size() == 1) {
-    assert(balance.type() < value_t::BALANCE);
+    assert(balance.is_amount());
     transaction_t * nxact = new transaction_t(journal->basket);
     // The amount doesn't need to be set because the code below will
     // balance this transaction against the other.
     add_transaction(nxact);
-    nxact->flags |= TRANSACTION_CALCULATED;
+    nxact->add_flags(TRANSACTION_CALCULATED);
   }
 
   // If the first transaction of a two-transaction entry is of a
@@ -150,30 +174,28 @@ bool entry_base_t::finalize()
   // determine its price by dividing the unit count into the value of
   // the balance.  This is done for the last eligible commodity.
 
-  if (! saw_null && balance && balance.is_type(value_t::BALANCE) &&
-      balance.as_balance_lval().amounts.size() == 2) {
-    transactions_list::const_iterator x = transactions.begin();
-    commodity_t& this_comm = (*x)->amount.commodity();
-
+  if (! saw_null && balance && balance.is_balance()) {
     balance_t& bal(balance.as_balance_lval());
+    if (bal.amounts.size() == 2) {
+      transactions_list::const_iterator x = transactions.begin();
+      assert((*x)->amount);
+      commodity_t& this_comm = (*x)->amount.commodity();
 
-    balance_t::amounts_map::const_iterator this_amt =
-      bal.amounts.find(&this_comm);
-    balance_t::amounts_map::const_iterator other_amt =
-      bal.amounts.begin();
-    if (this_amt == other_amt)
-      other_amt++;
+      balance_t::amounts_map::const_iterator this_bal =
+	bal.amounts.find(&this_comm);
+      balance_t::amounts_map::const_iterator other_bal =
+	bal.amounts.begin();
+      if (this_bal == other_bal)
+	other_bal++;
 
-    if (this_amt != bal.amounts.end()) {
       amount_t per_unit_cost =
-	amount_t((*other_amt).second / (*this_amt).second).unround();
+	amount_t((*other_bal).second / (*this_bal).second.number()).unround();
 
       for (; x != transactions.end(); x++) {
-	if ((*x)->cost || ((*x)->flags & TRANSACTION_VIRTUAL) ||
-	    ! (*x)->amount || (*x)->amount.commodity() != this_comm)
+	if ((*x)->cost || (*x)->has_flags(TRANSACTION_VIRTUAL) ||
+	    (*x)->amount.commodity() != this_comm)
 	  continue;
 
-	assert((*x)->amount);
 	balance -= (*x)->amount;
 
 	entry_t * entry = dynamic_cast<entry_t *>(this);
@@ -182,10 +204,10 @@ bool entry_base_t::finalize()
 	    ! (*x)->amount.commodity().annotated)
 	  (*x)->amount.annotate_commodity
 	    (annotation_t(per_unit_cost.abs(),
-			  entry ? optional<datetime_t>(entry->actual_date()) : none,
-			  entry ? optional<string>(entry->code) : none));
+			  entry ? entry->actual_date() : optional<datetime_t>(),
+			  entry ? entry->code          : optional<string>()));
 
-	(*x)->cost = new amount_t(- (per_unit_cost * (*x)->amount));
+	(*x)->cost = - (per_unit_cost * (*x)->amount.number());
 	balance += *(*x)->cost;
       }
     }
@@ -199,13 +221,14 @@ bool entry_base_t::finalize()
   for (transactions_list::const_iterator x = transactions.begin();
        x != transactions.end();
        x++) {
-    if (! (*x)->amount.is_null() ||
-	(((*x)->flags & TRANSACTION_VIRTUAL) &&
-	 ! ((*x)->flags & TRANSACTION_BALANCE)))
+    if ((*x)->amount ||
+	((*x)->has_flags(TRANSACTION_VIRTUAL) &&
+	 ! (*x)->has_flags(TRANSACTION_BALANCE)))
       continue;
 
     if (! empty_allowed)
-      throw new error("Only one transaction with null amount allowed per entry");
+      throw_(std::logic_error,
+	     "Only one transaction with null amount allowed per entry");
     empty_allowed = false;
 
     // If one transaction gives no value at all, its value will become
@@ -213,25 +236,25 @@ bool entry_base_t::finalize()
     // commodities are involved, multiple transactions will be
     // generated to balance them all.
 
-    balance_t * bal = NULL;
+    const balance_t * bal = NULL;
     switch (balance.type()) {
     case value_t::BALANCE_PAIR:
-      bal = &(balance.as_balance_pair_lval().quantity());
+      bal = &balance.as_balance_pair_lval().quantity();
       // fall through...
 
     case value_t::BALANCE:
       if (! bal)
-	bal = &(balance.as_balance_lval());
+	bal = &balance.as_balance_lval();
 
       if (bal->amounts.size() < 2) {
 	balance.cast(value_t::AMOUNT);
       } else {
 	bool first = true;
-	for (balance_t::amounts_map::const_iterator i = bal->amounts.begin();
+	for (balance_t::amounts_map::const_iterator
+	       i = bal->amounts.begin();
 	     i != bal->amounts.end();
 	     i++) {
-	  amount_t amt = (*i).second;
-	  amt.negate();
+	  amount_t amt = (*i).second.negate();
 
 	  if (first) {
 	    (*x)->amount = amt;
@@ -239,7 +262,7 @@ bool entry_base_t::finalize()
 	  } else {
 	    transaction_t * nxact = new transaction_t((*x)->account);
 	    add_transaction(nxact);
-	    nxact->flags |= TRANSACTION_CALCULATED;
+	    nxact->add_flags(TRANSACTION_CALCULATED);
 	    nxact->amount = amt;
 	  }
 
@@ -250,9 +273,8 @@ bool entry_base_t::finalize()
       // fall through...
 
     case value_t::AMOUNT:
-      (*x)->amount = balance.as_amount_lval();
-      (*x)->amount.in_place_negate();
-      (*x)->flags |= TRANSACTION_CALCULATED;
+      (*x)->amount = balance.as_amount().negate();
+      (*x)->add_flags(TRANSACTION_CALCULATED);
 
       balance += (*x)->amount;
       break;
@@ -280,8 +302,7 @@ entry_t::entry_t(const entry_t& e)
   : entry_base_t(e), _date(e._date), _date_eff(e._date_eff),
     code(e.code), payee(e.payee)
 {
-  DEBUG("ledger.memory.ctors", "ctor entry_t");
-
+  TRACE_CTOR(entry_t, "copy");
   for (transactions_list::const_iterator i = transactions.begin();
        i != transactions.end();
        i++)
@@ -333,20 +354,6 @@ bool entry_t::valid() const
   return true;
 }
 
-auto_entry_t::auto_entry_t(const string& _predicate)
-  : predicate_string(_predicate)
-{
-  DEBUG("ledger.memory.ctors", "ctor auto_entry_t");
-  predicate = new item_predicate<transaction_t>(predicate_string);
-}
-
-auto_entry_t::~auto_entry_t()
-{
-  DEBUG("ledger.memory.dtors", "dtor auto_entry_t");
-  if (predicate)
-    delete predicate;
-}
-
 void auto_entry_t::extend_entry(entry_base_t& entry, bool post)
 {
   transactions_list initial_xacts(entry.transactions.begin(),
@@ -355,14 +362,16 @@ void auto_entry_t::extend_entry(entry_base_t& entry, bool post)
   for (transactions_list::iterator i = initial_xacts.begin();
        i != initial_xacts.end();
        i++) {
-    if ((*predicate)(**i)) {
+    if (predicate(**i)) {
       for (transactions_list::iterator t = transactions.begin();
 	   t != transactions.end();
 	   t++) {
 	amount_t amt;
+	assert((*t)->amount);
 	if (! (*t)->amount.commodity()) {
 	  if (! post)
 	    continue;
+	  assert((*i)->amount);
 	  amt = (*i)->amount * (*t)->amount;
 	} else {
 	  if (post)
@@ -371,13 +380,13 @@ void auto_entry_t::extend_entry(entry_base_t& entry, bool post)
 	}
 
 	account_t * account  = (*t)->account;
-	string	    fullname = account->fullname();
+	string fullname = account->fullname();
 	assert(! fullname.empty());
 	if (fullname == "$account" || fullname == "@account")
 	  account = (*i)->account;
 
 	transaction_t * xact
-	  = new transaction_t(account, amt, (*t)->flags | TRANSACTION_AUTO);
+	  = new transaction_t(account, amt, (*t)->flags() | TRANSACTION_AUTO);
 
 	// Copy over details so that the resulting transaction is a mirror of
 	// the automated entry's one.
@@ -398,17 +407,16 @@ void auto_entry_t::extend_entry(entry_base_t& entry, bool post)
 
 account_t::~account_t()
 {
-  DEBUG("ledger.memory.dtors", "dtor account_t " << this);
-  //assert(! data);
+  TRACE_DTOR(account_t);
 
   for (accounts_map::iterator i = accounts.begin();
        i != accounts.end();
        i++)
-    delete (*i).second;
+    checked_delete((*i).second);
 }
 
 account_t * account_t::find_account(const string& name,
-				    const bool	  auto_create)
+				    const bool	       auto_create)
 {
   accounts_map::const_iterator i = accounts.find(name);
   if (i != accounts.end())
@@ -442,7 +450,7 @@ account_t * account_t::find_account(const string& name,
     account->journal = journal;
 
     std::pair<accounts_map::iterator, bool> result
-      = accounts.insert(accounts_pair(first, account));
+      = accounts.insert(accounts_map::value_type(first, account));
     assert(result.second);
   } else {
     account = (*i).second;
@@ -479,8 +487,8 @@ string account_t::fullname() const
   if (! _fullname.empty()) {
     return _fullname;
   } else {
-    const account_t * first    = this;
-    string	      fullname = name;
+    const account_t *	first	 = this;
+    string		fullname = name;
 
     while (first->parent) {
       first = first->parent;
@@ -526,29 +534,33 @@ bool account_t::valid() const
 
 journal_t::~journal_t()
 {
-  DEBUG("ledger.memory.dtors", "dtor journal_t");
+  TRACE_DTOR(journal_t);
 
   assert(master);
-  delete master;
+  checked_delete(master);
 
   // Don't bother unhooking each entry's transactions from the
   // accounts they refer to, because all accounts are about to
   // be deleted.
   for (entries_list::iterator i = entries.begin();
        i != entries.end();
-       i++)
+       i++) {
     if (! item_pool ||
-	((char *) *i) < item_pool || ((char *) *i) >= item_pool_end)
-      delete *i;
-    else
+	reinterpret_cast<char *>(*i) <  item_pool ||
+	reinterpret_cast<char *>(*i) >= item_pool_end) {
+      checked_delete(*i);
+    } else {
       (*i)->~entry_t();
+    }
+  }
 
   for (auto_entries_list::iterator i = auto_entries.begin();
        i != auto_entries.end();
        i++)
     if (! item_pool ||
-	((char *) *i) < item_pool || ((char *) *i) >= item_pool_end)
-      delete *i;
+	reinterpret_cast<char *>(*i) < item_pool ||
+	reinterpret_cast<char *>(*i) >= item_pool_end)
+      checked_delete(*i);
     else
       (*i)->~auto_entry_t();
 
@@ -556,13 +568,14 @@ journal_t::~journal_t()
        i != period_entries.end();
        i++)
     if (! item_pool ||
-	((char *) *i) < item_pool || ((char *) *i) >= item_pool_end)
-      delete *i;
+	reinterpret_cast<char *>(*i) < item_pool ||
+	reinterpret_cast<char *>(*i) >= item_pool_end)
+      checked_delete(*i);
     else
       (*i)->~period_entry_t();
 
   if (item_pool)
-    delete[] item_pool;
+    checked_array_delete(item_pool);
 }
 
 bool journal_t::add_entry(entry_t * entry)
@@ -581,9 +594,11 @@ bool journal_t::add_entry(entry_t * entry)
   for (transactions_list::const_iterator i = entry->transactions.begin();
        i != entry->transactions.end();
        i++)
-    if ((*i)->cost && (*i)->amount)
+    if ((*i)->cost) {
+      assert((*i)->amount);
       (*i)->amount.commodity().add_price(entry->date(),
-					 *(*i)->cost / (*i)->amount);
+					 *(*i)->cost / (*i)->amount.number());
+    }
 
   return true;
 }
@@ -621,16 +636,43 @@ bool journal_t::valid() const
       return false;
     }
 
-  for (commodity_pool_t::commodities_by_ident::const_iterator
-	 i = amount_t::current_pool->commodities.begin();
-       i != amount_t::current_pool->commodities.end();
-       i++)
-    if (! (*i)->valid()) {
-      DEBUG("ledger.validate", "journal_t: commodity not valid");
-      return false;
-    }
-
   return true;
+}
+
+void print_entry(std::ostream& out, const entry_base_t& entry_base,
+		 const string& prefix)
+{
+  string print_format;
+
+  if (dynamic_cast<const entry_t *>(&entry_base)) {
+    print_format = (prefix + "%D %X%C%P\n" +
+		    prefix + "    %-34A  %12o\n%/" +
+		    prefix + "    %-34A  %12o\n");
+  }
+  else if (const auto_entry_t * entry =
+	   dynamic_cast<const auto_entry_t *>(&entry_base)) {
+    out << "= " << entry->predicate.predicate.expr << '\n';
+    print_format = prefix + "    %-34A  %12o\n";
+  }
+  else if (const period_entry_t * entry =
+	   dynamic_cast<const period_entry_t *>(&entry_base)) {
+    out << "~ " << entry->period_string << '\n';
+    print_format = prefix + "    %-34A  %12o\n";
+  }
+  else {
+    assert(false);
+  }
+
+#if 0
+  format_entries formatter(out, print_format);
+  walk_transactions(const_cast<transactions_list&>(entry_base.transactions),
+		    formatter);
+  formatter.flush();
+
+  clear_transaction_xdata cleaner;
+  walk_transactions(const_cast<transactions_list&>(entry_base.transactions),
+		    cleaner);
+#endif
 }
 
 void entry_context::describe(std::ostream& out) const throw()

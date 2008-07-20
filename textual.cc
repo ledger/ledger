@@ -64,7 +64,7 @@ static value_expr parse_amount_expr(std::istream& in, amount_t& amount,
     throw new parse_error("Amount expression failed to compute");
 
 #if 0
-  if (expr->kind == value_expr_t::CONSTANT) {
+  if (expr->kind == expr::node_t::CONSTANT) {
     expr = NULL;
   } else {
     DEBUG_IF("ledger.textual.parse") {

@@ -154,16 +154,16 @@ void print_entry(std::ostream& out, const entry_base_t& entry,
 		 const string& prefix = "");
 
 bool disp_subaccounts_p(const account_t& account,
-			const item_predicate<account_t>& disp_pred,
+			const optional<item_predicate<account_t> >& disp_pred,
 			const account_t *& to_show);
 
 inline bool disp_subaccounts_p(const account_t& account) {
   const account_t * temp;
-  return disp_subaccounts_p(account, item_predicate<account_t>(NULL), temp);
+  return disp_subaccounts_p(account, none, temp);
 }
 
 bool display_account(const account_t& account,
-		     const item_predicate<account_t>& disp_pred);
+		     const optional<item_predicate<account_t> >& disp_pred);
 
 class format_account : public item_handler<account_t>
 {

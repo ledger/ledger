@@ -205,6 +205,9 @@ inline string read_string(const char *& data) {
   return temp;
 }
 
+void read_string(std::istream& in, optional<string>& str);
+void read_string(const char *& data, optional<string>& str);
+
 
 template <typename T>
 inline void write_number_nocheck(std::ostream& out, T num) {
@@ -262,6 +265,7 @@ void write_long(std::ostream& out, T num)
 }
 
 void write_string(std::ostream& out, const string& str);
+void write_string(std::ostream& out, const optional<string>& str);
 
 template <typename T>
 inline void write_object(std::ostream& out, const T& journal) {

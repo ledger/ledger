@@ -51,6 +51,7 @@ libledger_la_SOURCES = \
 	qif.cc	       \
 	reconcile.cc   \
 	report.cc      \
+	session.cc     \
 	startup.cc     \
 	textual.cc     \
 	valexpr.cc     \

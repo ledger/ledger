@@ -16,14 +16,14 @@ bool compare_items<transaction_t>::operator()(const transaction_t * left,
 
   transaction_xdata_t& lxdata(transaction_xdata(*left));
   if (! (lxdata.dflags & TRANSACTION_SORT_CALC)) {
-    guarded_compute(sort_order, lxdata.sort_value, details_t(*left));
+    sort_order.compute(lxdata.sort_value, details_t(*left));
     lxdata.sort_value.reduce();
     lxdata.dflags |= TRANSACTION_SORT_CALC;
   }
 
   transaction_xdata_t& rxdata(transaction_xdata(*right));
   if (! (rxdata.dflags & TRANSACTION_SORT_CALC)) {
-    guarded_compute(sort_order, rxdata.sort_value, details_t(*right));
+    sort_order.compute(rxdata.sort_value, details_t(*right));
     rxdata.sort_value.reduce();
     rxdata.dflags |= TRANSACTION_SORT_CALC;
   }
@@ -799,13 +799,13 @@ bool compare_items<account_t>::operator()(const account_t * left,
 
   account_xdata_t& lxdata(account_xdata(*left));
   if (! (lxdata.dflags & ACCOUNT_SORT_CALC)) {
-    guarded_compute(sort_order, lxdata.sort_value, details_t(*left));
+    sort_order.compute(lxdata.sort_value, details_t(*left));
     lxdata.dflags |= ACCOUNT_SORT_CALC;
   }
 
   account_xdata_t& rxdata(account_xdata(*right));
   if (! (rxdata.dflags & ACCOUNT_SORT_CALC)) {
-    guarded_compute(sort_order, rxdata.sort_value, details_t(*right));
+    sort_order.compute(rxdata.sort_value, details_t(*right));
     rxdata.dflags |= ACCOUNT_SORT_CALC;
   }
 
@@ -841,9 +841,9 @@ void sum_accounts(account_t& account)
   xdata.total_count += xdata.count;
 }
 
-void sort_accounts(account_t&		account,
-		   const value_expr_t * sort_order,
-		   accounts_deque&      accounts)
+void sort_accounts(account_t&	     account,
+		   const value_expr& sort_order,
+		   accounts_deque&   accounts)
 {
   for (accounts_map::iterator i = account.accounts.begin();
        i != account.accounts.end();
@@ -854,15 +854,15 @@ void sort_accounts(account_t&		account,
 		   compare_items<account_t>(sort_order));
 }
 
-void walk_accounts(account_t&		    account,
-		   item_handler<account_t>& handler,
-		   const value_expr_t *     sort_order)
+void walk_accounts(account_t&		       account,
+		   item_handler<account_t>&    handler,
+		   const optional<value_expr>& sort_order)
 {
   handler(account);
 
   if (sort_order) {
     accounts_deque accounts;
-    sort_accounts(account, sort_order, accounts);
+    sort_accounts(account, *sort_order, accounts);
     for (accounts_deque::const_iterator i = accounts.begin();
 	 i != accounts.end();
 	 i++) {
@@ -884,7 +884,7 @@ void walk_accounts(account_t&		    account,
   if (! sort_string.empty()) {
     value_expr sort_order;
     sort_order.reset(parse_value_expr(sort_string));
-    walk_accounts(account, handler, sort_order.get());
+    walk_accounts(account, handler, sort_order);
   } else {
     walk_accounts(account, handler);
   }

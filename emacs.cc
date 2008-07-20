@@ -20,10 +20,10 @@ void format_emacs_transactions::write_entry(entry_t& entry)
 
   out << "(" << (date / 65536) << " " << (date % 65536) << " 0) ";
 
-  if (entry.code.empty())
+  if (! entry.code)
     out << "nil ";
   else
-    out << "\"" << entry.code << "\" ";
+    out << "\"" << *entry.code << "\" ";
 
   if (entry.payee.empty())
     out << "nil";
@@ -67,10 +67,8 @@ void format_emacs_transactions::operator()(transaction_t& xact)
 
     if (xact.cost)
       out << " \"" << *xact.cost << "\"";
-    else if (! xact.note.empty())
-      out << " nil";
-    if (! xact.note.empty())
-      out << " \"" << xact.note << "\"";
+    if (xact.note)
+      out << " \"" << *xact.note << "\"";
     out << ")";
 
     last_entry = xact.entry;

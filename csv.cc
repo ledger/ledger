@@ -87,7 +87,8 @@ void format_csv_transactions::operator()(transaction_t& xact)
     }
     out << ',';
 
-    write_escaped_string(out, xact.entry->code);
+    if (xact.entry->code)
+      write_escaped_string(out, *xact.entry->code);
     out << ',';
 
     {

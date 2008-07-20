@@ -38,12 +38,9 @@ struct item_handler {
 
 template <typename T>
 class compare_items {
-  const value_expr_t * sort_order;
+  value_expr sort_order;
  public:
-  compare_items(const value_expr_t * _sort_order)
-    : sort_order(_sort_order) {
-    assert(sort_order);
-  }
+  compare_items(value_expr _sort_order) : sort_order(_sort_order) {}
   bool operator()(const T * left, const T * right);
 };
 
@@ -55,8 +52,8 @@ bool compare_items<T>::operator()(const T * left, const T * right)
 
   value_t left_result;
   value_t right_result;
-  guarded_compute(sort_order, left_result, details_t(*left));
-  guarded_compute(sort_order, right_result, details_t(*right));
+  sort_order.compute(left_result, details_t(*left));
+  sort_order.compute(right_result, details_t(*right));
 
   return left_result < right_result;
 }
@@ -244,26 +241,19 @@ class sort_transactions : public item_handler<transaction_t>
 {
   typedef std::deque<transaction_t *> transactions_deque;
 
-  transactions_deque   transactions;
-  const value_expr_t * sort_order;
+  transactions_deque transactions;
+  const value_expr   sort_order;
 
  public:
   sort_transactions(item_handler<transaction_t> * handler,
-		    const value_expr_t * _sort_order)
+		    const value_expr& _sort_order)
     : item_handler<transaction_t>(handler),
-      sort_order(_sort_order->acquire()) {}
+      sort_order(_sort_order) {}
 
   sort_transactions(item_handler<transaction_t> * handler,
 		    const string& _sort_order)
-    : item_handler<transaction_t>(handler) {
-    assert(! _sort_order.empty());
-    sort_order = parse_value_expr(_sort_order)->acquire();
-  }
-
-  virtual ~sort_transactions() {
-    assert(sort_order);
-    sort_order->release();
-  }
+    : item_handler<transaction_t>(handler),
+      sort_order(_sort_order) {}
 
   virtual void post_accumulated_xacts();
 
@@ -284,7 +274,7 @@ class sort_entries : public item_handler<transaction_t>
 
  public:
   sort_entries(item_handler<transaction_t> * handler,
-	       const value_expr_t * _sort_order)
+	       const value_expr& _sort_order)
     : sorter(handler, _sort_order) {}
 
   sort_entries(item_handler<transaction_t> * handler,
@@ -312,7 +302,7 @@ class filter_transactions : public item_handler<transaction_t>
 
  public:
   filter_transactions(item_handler<transaction_t> * handler,
-		      const value_expr_t * predicate)
+		      const value_expr& predicate)
     : item_handler<transaction_t>(handler), pred(predicate) {}
 
   filter_transactions(item_handler<transaction_t> * handler,
@@ -392,7 +382,7 @@ class component_transactions : public item_handler<transaction_t>
 
  public:
   component_transactions(item_handler<transaction_t> * handler,
-			 const value_expr_t * predicate)
+			 const value_expr& predicate)
     : item_handler<transaction_t>(handler), pred(predicate) {}
 
   component_transactions(item_handler<transaction_t> * handler,
@@ -656,7 +646,7 @@ class forecast_transactions : public generate_transactions
 
  public:
   forecast_transactions(item_handler<transaction_t> * handler,
-			const value_expr_t * predicate)
+			const value_expr& predicate)
     : generate_transactions(handler), pred(predicate) {}
 
   forecast_transactions(item_handler<transaction_t> * handler,
@@ -720,12 +710,12 @@ void sum_accounts(account_t& account);
 
 typedef std::deque<account_t *> accounts_deque;
 
-void sort_accounts(account_t&	        account,
-		   const value_expr_t * sort_order,
-		   accounts_deque&      accounts);
-void walk_accounts(account_t&		    account,
-		   item_handler<account_t>& handler,
-		   const value_expr_t *     sort_order = NULL);
+void sort_accounts(account_t&	     account,
+		   const value_expr& sort_order,
+		   accounts_deque&   accounts);
+void walk_accounts(account_t&		       account,
+		   item_handler<account_t>&    handler,
+		   const optional<value_expr>& sort_order = none);
 void walk_accounts(account_t&		    account,
 		   item_handler<account_t>& handler,
 		   const string&       sort_string);
