@@ -489,6 +489,7 @@ amount_t& amount_t::operator*=(const amount_t& amt)
       throw_(amount_error, "Cannot multiply two uninitialized amounts");
   }
 
+#if 0
   if (has_commodity() && amt.has_commodity() &&
       commodity() != amt.commodity())
     throw_(amount_error,
@@ -496,6 +497,7 @@ amount_t& amount_t::operator*=(const amount_t& amt)
 	   (has_commodity() ? commodity().symbol() : "NONE") <<
 	   " != " <<
 	   (amt.has_commodity() ? amt.commodity().symbol() : "NONE"));
+#endif
 
   _dup();
 
@@ -527,6 +529,7 @@ amount_t& amount_t::operator/=(const amount_t& amt)
       throw_(amount_error, "Cannot divide two uninitialized amounts");
   }
 
+#if 0
   if (has_commodity() && amt.has_commodity() &&
       commodity() != amt.commodity())
     throw_(amount_error,
@@ -534,6 +537,7 @@ amount_t& amount_t::operator/=(const amount_t& amt)
 	   (has_commodity() ? commodity().symbol() : "NONE") <<
 	   " != " <<
 	   (amt.has_commodity() ? amt.commodity().symbol() : "NONE"));
+#endif
 
   if (! amt)
     throw_(amount_error, "Divide by zero");

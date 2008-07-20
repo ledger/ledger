@@ -495,10 +495,18 @@ int main(int argc, char * argv[], char * envp[])
     report_t report;
     ledger::config = &config;
     ledger::report = &report;
+
+    amount_t::initialize();
+    value_t::initialize();
+
 #if 0
     TRACE_PUSH(main, "Ledger starting");
 #endif
     int status = parse_and_report(config, journal, report, argc, argv, envp);
+
+    value_t::shutdown();
+    amount_t::shutdown();
+
 #if 0
     TRACE_POP(main, "Ledger done");
 #endif

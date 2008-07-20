@@ -185,6 +185,7 @@ public:
   }
   explicit amount_t(const char * val) : quantity(NULL) {
     TRACE_CTOR(amount_t, "const char *");
+    assert(val);
     parse(val);
   }
 
@@ -229,10 +230,21 @@ public:
   }
   amount_t& operator=(const amount_t& amt);
 
+  amount_t& operator=(const double val) {
+    return *this = amount_t(val);
+  }
+  amount_t& operator=(const unsigned long val) {
+    return *this = amount_t(val);
+  }
+  amount_t& operator=(const long val) {
+    return *this = amount_t(val);
+  }
+
   amount_t& operator=(const string& str) {
     return *this = amount_t(str);
   }
   amount_t& operator=(const char * str) {
+    assert(str);
     return *this = amount_t(str);
   }
 

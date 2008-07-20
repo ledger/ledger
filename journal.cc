@@ -108,7 +108,7 @@ bool entry_base_t::finalize()
     if (! ((*x)->flags & TRANSACTION_VIRTUAL) ||
 	((*x)->flags & TRANSACTION_BALANCE)) {
       amount_t * p = (*x)->cost ? (*x)->cost : &(*x)->amount;
-      if (*p) {
+      if (! p->is_null()) {
 	if (no_amounts) {
 	  balance = *p;
 	  no_amounts = false;
@@ -251,7 +251,7 @@ bool entry_base_t::finalize()
 
     case value_t::AMOUNT:
       (*x)->amount = balance.as_amount_lval();
-      (*x)->amount.negate();
+      (*x)->amount.in_place_negate();
       (*x)->flags |= TRANSACTION_CALCULATED;
 
       balance += (*x)->amount;

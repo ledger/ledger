@@ -158,6 +158,8 @@ transaction_t * parse_transaction(char * line, account_t * account,
 
   // Parse the optional amount
 
+  bool saw_amount = false;
+
   if (in.good() && ! in.eof()) {
     p = peek_next_nonws(in);
     if (in.eof())
@@ -171,6 +173,11 @@ transaction_t * parse_transaction(char * line, account_t * account,
       xact->amount_expr =
 	parse_amount_expr(in, xact->amount, xact.get(),
 			  PARSE_VALEXPR_NO_REDUCE);
+      saw_amount = true;
+
+      xact->amount.reduce();
+      DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
+	    "Reduced amount is " << xact->amount);
 
       unsigned long end = (long)in.tellg();
       xact->amount_expr.expr = string(line, beg, end - beg);
@@ -186,6 +193,10 @@ transaction_t * parse_transaction(char * line, account_t * account,
   if (in.good() && ! in.eof()) {
     p = peek_next_nonws(in);
     if (p == '@') {
+      if (! saw_amount)
+	throw new parse_error
+	  ("Transaction cannot have a cost expression with an amount");
+	
       DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 		  "Found a price indicator");
       bool per_unit = true;
@@ -248,10 +259,6 @@ transaction_t * parse_transaction(char * line, account_t * account,
       }
     }
   }
-
-  xact->amount.reduce();
-  DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
-	      "Reduced amount is " << xact->amount);
 
   // Parse the optional note
 
