@@ -7,6 +7,8 @@ namespace ledger {
 value_expr amount_expr;
 value_expr total_expr;
 
+namespace expr {
+
 std::auto_ptr<scope_t> global_scope;
 datetime_t terminus;
 
@@ -31,45 +33,12 @@ bool compute_amount(ptr_op_t expr, amount_t& amt,
       err->context.push_back(new valexpr_context(expr));
     error_context * last = err->context.back();
     if (valexpr_context * ctxt = dynamic_cast<valexpr_context *>(last)) {
-      ctxt->expr = expr->acquire();
+      ctxt->expr = expr;
       ctxt->desc = "While computing amount expression:";
     }
     throw err;
   }
   return true;
-}
-
-op_t::~op_t()
-{
-  DEBUG("ledger.memory.dtors", "dtor op_t " << this);
-
-  DEBUG("ledger.valexpr.memory", "Destroying " << this);
-  assert(refc == 0);
-
-  if (left)
-    left->release();
-
-  switch (kind) {
-  case F_CODE_MASK:
-  case F_PAYEE_MASK:
-  case F_NOTE_MASK:
-  case F_ACCOUNT_MASK:
-  case F_SHORT_ACCOUNT_MASK:
-  case F_COMMODITY_MASK:
-    assert(mask);
-    delete mask;
-    break;
-
-  case CONSTANT:
-    assert(value);
-    delete value;
-    break;
-
-  default:
-    if (kind > TERMINALS && right)
-      right->release();
-    break;
-  }
 }
 
 namespace {
@@ -79,8 +48,8 @@ namespace {
     if (expr->kind != op_t::O_COM) {
       count = 1;
     } else {
-      count += count_leaves(expr->left);
-      count += count_leaves(expr->right);
+      count += count_leaves(expr->left());
+      count += count_leaves(expr->right());
     }
     return count;
   }
@@ -97,19 +66,19 @@ namespace {
       if (expr->kind < op_t::TERMINALS) {
 	temp.reset(expr);
       } else {
-	temp.reset(new op_t(op_t::CONSTANT));
-	temp->value = new value_t;
-	expr->compute(*(temp->value), details, context);
+	temp.reset(new op_t(op_t::VALUE));
+	temp->set_value(value_t());
+	expr->compute(temp->as_value(), details, context);
       }
     } else {
       temp.reset(new op_t(op_t::O_COM));
-      temp->set_left(reduce_leaves(expr->left, details, context));
-      temp->set_right(reduce_leaves(expr->right, details, context));
+      temp->set_left(reduce_leaves(expr->left(), details, context));
+      temp->set_right(reduce_leaves(expr->right(), details, context));
     }
     return temp.release();
   }
 
-  ptr_op_t find_leaf(ptr_op_t context, int goal, int& found)
+  ptr_op_t find_leaf(ptr_op_t context, int goal, long& found)
   {
     if (! context)
       return NULL;
@@ -118,10 +87,10 @@ namespace {
       if (goal == found++)
 	return context;
     } else {
-      ptr_op_t expr = find_leaf(context->left, goal, found);
+      ptr_op_t expr = find_leaf(context->left(), goal, found);
       if (expr)
 	return expr;
-      expr = find_leaf(context->right, goal, found);
+      expr = find_leaf(context->right(), goal, found);
       if (expr)
 	return expr;
     }
@@ -130,16 +99,15 @@ namespace {
 }
 
 void op_t::compute(value_t& result, const details_t& details,
-			   ptr_op_t context) const
+		   ptr_op_t context) const
 {
   try {
   switch (kind) {
   case ARG_INDEX:
     throw new compute_error("Cannot directly compute an arg_index");
 
-  case CONSTANT:
-    assert(value);
-    result = *value;
+  case VALUE:
+    result = as_value();
     break;
 
   case F_NOW:
@@ -303,14 +271,14 @@ void op_t::compute(value_t& result, const details_t& details,
 
   case REAL:
     if (details.xact)
-      result = ! (details.xact->flags & TRANSACTION_VIRTUAL);
+      result = ! (details.xact->has_flags(TRANSACTION_VIRTUAL));
     else
       result = true;
     break;
 
   case ACTUAL:
     if (details.xact)
-      result = ! (details.xact->flags & TRANSACTION_AUTO);
+      result = ! (details.xact->has_flags(TRANSACTION_AUTO));
     else
       result = true;
     break;
@@ -341,7 +309,7 @@ void op_t::compute(value_t& result, const details_t& details,
     break;
 
   case F_PRICE: {
-    int arg_index = 0;
+    long arg_index = 0;
     ptr_op_t expr = find_leaf(context, 0, arg_index);
     expr->compute(result, details, context);
     result = result.value();
@@ -349,7 +317,7 @@ void op_t::compute(value_t& result, const details_t& details,
   }
 
   case F_DATE: {
-    int arg_index = 0;
+    long arg_index = 0;
     ptr_op_t expr = find_leaf(context, 0, arg_index);
     expr->compute(result, details, context);
     result = result.as_datetime_lval();
@@ -357,7 +325,7 @@ void op_t::compute(value_t& result, const details_t& details,
   }
 
   case F_DATECMP: {
-    int arg_index = 0;
+    long arg_index = 0;
     ptr_op_t expr = find_leaf(context, 0, arg_index);
     expr->compute(result, details, context);
     result = result.as_datetime_lval();
@@ -382,7 +350,7 @@ void op_t::compute(value_t& result, const details_t& details,
   case F_YEAR:
   case F_MONTH:
   case F_DAY: {
-    int arg_index = 0;
+    long arg_index = 0;
     ptr_op_t expr = find_leaf(context, 0, arg_index);
     expr->compute(result, details, context);
 
@@ -408,7 +376,7 @@ void op_t::compute(value_t& result, const details_t& details,
   }
 
   case F_ARITH_MEAN: {
-    int arg_index = 0;
+    long arg_index = 0;
     ptr_op_t expr = find_leaf(context, 0, arg_index);
     if (details.xact && transaction_has_xdata(*details.xact)) {
       expr->compute(result, details, context);
@@ -427,11 +395,11 @@ void op_t::compute(value_t& result, const details_t& details,
 
   case F_PARENT:
     if (details.account && details.account->parent)
-      left->compute(result, details_t(*details.account->parent), context);
+      left()->compute(result, details_t(*details.account->parent), context);
     break;
 
   case F_ABS: {
-    int arg_index = 0;
+    long arg_index = 0;
     ptr_op_t expr = find_leaf(context, 0, arg_index);
     expr->compute(result, details, context);
     result.abs();
@@ -439,7 +407,7 @@ void op_t::compute(value_t& result, const details_t& details,
   }
 
   case F_ROUND: {
-    int arg_index = 0;
+    long arg_index = 0;
     ptr_op_t expr = find_leaf(context, 0, arg_index);
     expr->compute(result, details, context);
     result.round();
@@ -447,7 +415,7 @@ void op_t::compute(value_t& result, const details_t& details,
   }
 
   case F_COMMODITY: {
-    int arg_index = 0;
+    long arg_index = 0;
     ptr_op_t expr = find_leaf(context, 0, arg_index);
     expr->compute(result, details, context);
     if (! result.is_type(value_t::AMOUNT))
@@ -460,7 +428,7 @@ void op_t::compute(value_t& result, const details_t& details,
   }
 
   case F_SET_COMMODITY: {
-    int arg_index = 0;
+    long arg_index = 0;
     ptr_op_t expr = find_leaf(context, 0, arg_index);
     value_t temp;
     expr->compute(temp, details, context);
@@ -481,7 +449,7 @@ void op_t::compute(value_t& result, const details_t& details,
   }
 
   case F_QUANTITY: {
-    int arg_index = 0;
+    long arg_index = 0;
     ptr_op_t expr = find_leaf(context, 0, arg_index);
     expr->compute(result, details, context);
 
@@ -521,6 +489,7 @@ void op_t::compute(value_t& result, const details_t& details,
     break;
   }
 
+#if 0
   case F_CODE_MASK:
     assert(mask);
     if (details.entry)
@@ -568,12 +537,12 @@ void op_t::compute(value_t& result, const details_t& details,
     else
       result = false;
     break;
+#endif
 
   case O_ARG: {
-    int arg_index = 0;
-    assert(left);
-    assert(left->kind == ARG_INDEX);
-    ptr_op_t expr = find_leaf(context, left->arg_index, arg_index);
+    long arg_index = 0;
+    assert(left()->kind == ARG_INDEX);
+    ptr_op_t expr = find_leaf(context, left()->as_long(), arg_index);
     if (expr)
       expr->compute(result, details, context);
     else
@@ -582,14 +551,14 @@ void op_t::compute(value_t& result, const details_t& details,
   }
 
   case O_COM:
-    if (! left)
+    if (! left())
       throw new compute_error("Comma operator missing left operand",
 			      new valexpr_context(this));
-    if (! right)
+    if (! right())
       throw new compute_error("Comma operator missing right operand",
 			      new valexpr_context(this));
-    left->compute(result, details, context);
-    right->compute(result, details, context);
+    left()->compute(result, details, context);
+    right()->compute(result, details, context);
     break;
 
   case O_DEF:
@@ -597,18 +566,18 @@ void op_t::compute(value_t& result, const details_t& details,
     break;
 
   case O_REF: {
-    assert(left);
-    if (right) {
-      value_expr args(reduce_leaves(right, details, context));
-      left->compute(result, details, args.get());
+    assert(left());
+    if (right()) {
+      value_expr args(reduce_leaves(right(), details, context));
+      left()->compute(result, details, args.get());
     } else {
-      left->compute(result, details, context);
+      left()->compute(result, details, context);
     }
     break;
   }
 
   case F_VALUE: {
-    int arg_index = 0;
+    long arg_index = 0;
     ptr_op_t expr = find_leaf(context, 0, arg_index);
     expr->compute(result, details, context);
 
@@ -625,7 +594,7 @@ void op_t::compute(value_t& result, const details_t& details,
   }
 
   case O_NOT:
-    left->compute(result, details, context);
+    left()->compute(result, details, context);
     if (result.strip_annotations())
       result = false;
     else
@@ -633,32 +602,32 @@ void op_t::compute(value_t& result, const details_t& details,
     break;
 
   case O_QUES: {
-    assert(left);
-    assert(right);
-    assert(right->kind == O_COL);
-    left->compute(result, details, context);
+    assert(left());
+    assert(right());
+    assert(right()->kind == O_COL);
+    left()->compute(result, details, context);
     if (result.strip_annotations())
-      right->left->compute(result, details, context);
+      right()->left()->compute(result, details, context);
     else
-      right->right->compute(result, details, context);
+      right()->right()->compute(result, details, context);
     break;
   }
 
   case O_AND:
-    assert(left);
-    assert(right);
-    left->compute(result, details, context);
+    assert(left());
+    assert(right());
+    left()->compute(result, details, context);
     result = result.strip_annotations();
     if (result)
-      right->compute(result, details, context);
+      right()->compute(result, details, context);
     break;
 
   case O_OR:
-    assert(left);
-    assert(right);
-    left->compute(result, details, context);
+    assert(left());
+    assert(right());
+    left()->compute(result, details, context);
     if (! result.strip_annotations())
-      right->compute(result, details, context);
+      right()->compute(result, details, context);
     break;
 
   case O_NEQ:
@@ -667,11 +636,11 @@ void op_t::compute(value_t& result, const details_t& details,
   case O_LTE:
   case O_GT:
   case O_GTE: {
-    assert(left);
-    assert(right);
+    assert(left());
+    assert(right());
     value_t temp;
-    left->compute(temp, details, context);
-    right->compute(result, details, context);
+    left()->compute(temp, details, context);
+    right()->compute(result, details, context);
     switch (kind) {
     case O_NEQ: result = temp != result; break;
     case O_EQ:  result = temp == result; break;
@@ -685,8 +654,8 @@ void op_t::compute(value_t& result, const details_t& details,
   }
 
   case O_NEG:
-    assert(left);
-    left->compute(result, details, context);
+    assert(left());
+    left()->compute(result, details, context);
     result.negate();
     break;
 
@@ -694,11 +663,11 @@ void op_t::compute(value_t& result, const details_t& details,
   case O_SUB:
   case O_MUL:
   case O_DIV: {
-    assert(left);
-    assert(right);
+    assert(left());
+    assert(right());
     value_t temp;
-    right->compute(temp, details, context);
-    left->compute(result, details, context);
+    right()->compute(temp, details, context);
+    left()->compute(result, details, context);
     switch (kind) {
     case O_ADD: result += temp; break;
     case O_SUB: result -= temp; break;
@@ -710,10 +679,10 @@ void op_t::compute(value_t& result, const details_t& details,
   }
 
   case O_PERC: {
-    assert(left);
+    assert(left());
     result = "100.0%";
     value_t temp;
-    left->compute(temp, details, context);
+    left()->compute(temp, details, context);
     result *= temp;
     break;
   }
@@ -799,8 +768,8 @@ ptr_op_t parse_value_term(std::istream& in, scope_t * scope,
 	  throw err;
 	}
       }
-      node.reset(new op_t(op_t::CONSTANT));
-      node->value = new value_t(temp);
+      node.reset(new op_t(op_t::VALUE));
+      node->set_value(temp);
       goto parsed;
     }
   }
@@ -810,8 +779,8 @@ ptr_op_t parse_value_term(std::istream& in, scope_t * scope,
     READ_INTO(in, buf, 255, c, std::isdigit(c) || c == '.');
     amount_t temp;
     temp.parse(buf, AMOUNT_PARSE_NO_MIGRATE);
-    node.reset(new op_t(op_t::CONSTANT));
-    node->value = new value_t(temp);
+    node.reset(new op_t(op_t::VALUE));
+    node->set_value(temp);
     goto parsed;
   }
   else if (std::isalnum(c) || c == '_') {
@@ -854,9 +823,9 @@ ptr_op_t parse_value_term(std::istream& in, scope_t * scope,
     }
 
     if (definition) {
-      std::auto_ptr<scope_t> params(new scope_t(scope));
+      std::auto_ptr<call_scope_t> params(new call_scope_t(scope));
 
-      int arg_index = 0;
+      long arg_index = 0;
       if (have_args) {
 	bool done = false;
 
@@ -1996,4 +1965,5 @@ void dump_value_expr(std::ostream& out, const ptr_op_t node,
   }
 }
 
+} // namespace expr
 } // namespace ledger

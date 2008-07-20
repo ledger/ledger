@@ -113,7 +113,7 @@ void set_account_value::operator()(transaction_t& xact)
   add_transaction_to(xact, xdata.value);
 
   xdata.count++;
-  if (xact.flags & TRANSACTION_VIRTUAL)
+  if (xact.has_flags(TRANSACTION_VIRTUAL))
     xdata.virtuals++;
 
   item_handler<transaction_t>::operator()(xact);
@@ -190,7 +190,7 @@ void handle_value(const value_t&	       value,
   temps.push_back(transaction_t(account));
   transaction_t& xact(temps.back());
   xact.entry = entry;
-  xact.flags |= TRANSACTION_BULK_ALLOC;
+  xact.add_flags(TRANSACTION_BULK_ALLOC);
   entry->add_transaction(&xact);
 
   // If there are component transactions to associate with this
@@ -205,9 +205,9 @@ void handle_value(const value_t&	       value,
 
   if (account && account_has_xdata(*account))
     if (! (account_xdata_(*account).dflags & ACCOUNT_HAS_NON_VIRTUALS)) {
-      xact.flags |= TRANSACTION_VIRTUAL;
+      xact.add_flags(TRANSACTION_VIRTUAL);
       if (! (account_xdata_(*account).dflags & ACCOUNT_HAS_UNB_VIRTUALS))
-	xact.flags |= TRANSACTION_BALANCE;
+	xact.add_flags(TRANSACTION_BALANCE);
     }
 
   transaction_xdata_t& xdata(transaction_xdata(xact));
@@ -295,7 +295,7 @@ void related_transactions::flush()
 	  transaction_xdata_t& xdata = transaction_xdata(**j);
 	  if (! (xdata.dflags & TRANSACTION_HANDLED) &&
 	      (! (xdata.dflags & TRANSACTION_RECEIVED) ?
-	       ! ((*j)->flags & (TRANSACTION_AUTO | TRANSACTION_VIRTUAL)) :
+	       ! (*j)->has_flags(TRANSACTION_AUTO | TRANSACTION_VIRTUAL) :
 	       also_matching)) {
 	    xdata.dflags |= TRANSACTION_HANDLED;
 	    item_handler<transaction_t>::operator()(**j);
@@ -307,7 +307,7 @@ void related_transactions::flush()
 	// output auto or period entries.
 	transaction_xdata_t& xdata = transaction_xdata(**i);
 	if (! (xdata.dflags & TRANSACTION_HANDLED) &&
-	    ! ((*i)->flags & TRANSACTION_AUTO)) {
+	    ! (*i)->has_flags(TRANSACTION_AUTO)) {
 	  xdata.dflags |= TRANSACTION_HANDLED;
 	  item_handler<transaction_t>::operator()(**i);
 	}
@@ -436,9 +436,9 @@ void subtotal_transactions::operator()(transaction_t& xact)
   // such, so that `handle_value' can show "(Account)" for accounts
   // that contain only virtual transactions.
 
-  if (! (xact.flags & TRANSACTION_VIRTUAL))
+  if (! xact.has_flags(TRANSACTION_VIRTUAL))
     account_xdata(*xact_account(xact)).dflags |= ACCOUNT_HAS_NON_VIRTUALS;
-  else if (! (xact.flags & TRANSACTION_BALANCE))
+  else if (! xact.has_flags(TRANSACTION_BALANCE))
     account_xdata(*xact_account(xact)).dflags |= ACCOUNT_HAS_UNB_VIRTUALS;
 }
 

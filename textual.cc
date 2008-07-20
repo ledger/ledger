@@ -45,8 +45,8 @@ static value_expr parse_amount_expr(std::istream& in, amount_t& amount,
 				    transaction_t * xact,
 				    unsigned short flags = 0)
 {
-  value_expr expr(parse_value_expr(in, NULL, flags | PARSE_VALEXPR_RELAXED |
-				   PARSE_VALEXPR_PARTIAL)->acquire());
+  value_expr expr(expr::parse_value_expr(in, NULL, flags | PARSE_VALEXPR_RELAXED |
+					 PARSE_VALEXPR_PARTIAL));
 
   DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 	      "Parsed an amount expression");
@@ -60,11 +60,11 @@ static value_expr parse_amount_expr(std::istream& in, amount_t& amount,
   }
 #endif
 
-  if (! compute_amount(expr, amount, xact))
+  if (! expr::compute_amount(expr, amount, xact))
     throw new parse_error("Amount expression failed to compute");
 
 #if 0
-  if (expr->kind == expr::node_t::CONSTANT) {
+  if (expr->kind == expr::node_t::VALUE) {
     expr = NULL;
   } else {
     DEBUG_IF("ledger.textual.parse") {
@@ -73,7 +73,7 @@ static value_expr parse_amount_expr(std::istream& in, amount_t& amount,
     }
   }
 #else
-  expr = NULL;
+  expr = value_expr();
 #endif
 
   DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
@@ -134,11 +134,11 @@ transaction_t * parse_transaction(char * line, account_t * account,
   char * e = &line[account_end];
   if ((*b == '[' && *(e - 1) == ']') ||
       (*b == '(' && *(e - 1) == ')')) {
-    xact->flags |= TRANSACTION_VIRTUAL;
+    xact->add_flags(TRANSACTION_VIRTUAL);
     DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 		"Parsed a virtual account name");
     if (*b == '[') {
-      xact->flags |= TRANSACTION_BALANCE;
+      xact->add_flags(TRANSACTION_BALANCE);
       DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 		  "Parsed a balanced virtual account name");
     }
@@ -270,10 +270,10 @@ transaction_t * parse_transaction(char * line, account_t * account,
       p = peek_next_nonws(in);
       xact->note = &line[in.tellg()];
       DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
-		  "Parsed a note '" << xact->note << "'");
+		  "Parsed a note '" << *xact->note << "'");
 
-      if (char * b = std::strchr(xact->note.c_str(), '['))
-	if (char * e = std::strchr(xact->note.c_str(), ']')) {
+      if (char * b = std::strchr(xact->note->c_str(), '['))
+	if (char * e = std::strchr(xact->note->c_str(), ']')) {
 	  char buf[256];
 	  std::strncpy(buf, b + 1, e - b - 1);
 	  buf[e - b - 1] = '\0';
@@ -835,12 +835,12 @@ unsigned int textual_parser_t::parse(std::istream& in,
 	    // parser to resolve alias references.
 	    account_t * acct = account_stack.front()->find_account(e);
 	    std::pair<accounts_map::iterator, bool> result
-	      = account_aliases.insert(accounts_pair(b, acct));
+	      = account_aliases.insert(accounts_map::pair_type(b, acct));
 	    assert(result.second);
 	  }
 	}
 	else if (word == "def") {
-	  if (! global_scope.get())
+	  if (! expr::global_scope.get())
 	    init_value_expr();
 	  parse_value_definition(p);
 	}
@@ -980,7 +980,7 @@ void write_textual_journal(journal_t& journal, path pathname,
       base = *el++;
     }
     else if (al != journal.auto_entries.end() && pos == (*al)->beg_pos) {
-      out << "= " << (*al)->predicate_string << '\n';
+      out << "= " << (*al)->predicate.predicate.expr << '\n';
       base = *al++;
     }
     else if (pl != journal.period_entries.end() && pos == (*pl)->beg_pos) {
@@ -993,7 +993,7 @@ void write_textual_journal(journal_t& journal, path pathname,
       for (transactions_list::iterator x = base->transactions.begin();
 	   x != base->transactions.end();
 	   x++)
-	if (! ((*x)->flags & TRANSACTION_AUTO)) {
+	if (! (*x)->has_flags(TRANSACTION_AUTO)) {
 	  transaction_xdata(**x).dflags |= TRANSACTION_TO_DISPLAY;
 	  formatter(**x);
 	}

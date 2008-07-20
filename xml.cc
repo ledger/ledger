@@ -97,10 +97,10 @@ static void endElement(void *userData, const char *name)
     curr_entry->transactions.back()->state = transaction_t::PENDING;
   }
   else if (std::strcmp(name, "tr:virtual") == 0) {
-    curr_entry->transactions.back()->flags |= TRANSACTION_VIRTUAL;
+    curr_entry->transactions.back()->add_flags(TRANSACTION_VIRTUAL);
   }
   else if (std::strcmp(name, "tr:generated") == 0) {
-    curr_entry->transactions.back()->flags |= TRANSACTION_AUTO;
+    curr_entry->transactions.back()->add_flags(TRANSACTION_AUTO);
   }
   else if (std::strcmp(name, "symbol") == 0) {
     assert(! curr_comm);
@@ -370,9 +370,9 @@ void format_xml_entries::format_last_entry()
 		  << "</en:date_eff>\n";
 #endif
 
-  if (! last_entry->code.empty()) {
+  if (last_entry->code) {
     output_stream << "    <en:code>";
-    output_xml_string(output_stream, last_entry->code);
+    output_xml_string(output_stream, *last_entry->code);
     output_stream << "</en:code>\n";
   }
 
@@ -413,9 +413,9 @@ void format_xml_entries::format_last_entry()
       else if ((*i)->state == transaction_t::PENDING)
 	output_stream << "        <tr:pending/>\n";
 
-      if ((*i)->flags & TRANSACTION_VIRTUAL)
+      if ((*i)->has_flags(TRANSACTION_VIRTUAL))
 	output_stream << "        <tr:virtual/>\n";
-      if ((*i)->flags & TRANSACTION_AUTO)
+      if ((*i)->has_flags(TRANSACTION_AUTO))
 	output_stream << "        <tr:generated/>\n";
 
       if ((*i)->account) {
@@ -444,9 +444,9 @@ void format_xml_entries::format_last_entry()
 	output_stream << "        </tr:cost>\n";
       }
 
-      if (! (*i)->note.empty()) {
+      if ((*i)->note) {
 	output_stream << "        <tr:note>";
-	output_xml_string(output_stream, (*i)->note);
+	output_xml_string(output_stream, *(*i)->note);
 	output_stream << "</tr:note>\n";
       }
 

@@ -109,7 +109,9 @@ session_t::session_t()
 
     now(now),
 
+#if 0
     elision_style(ABBREVIATE),
+#endif
     abbrev_length(2),
 
     ansi_codes(false),
@@ -118,6 +120,8 @@ session_t::session_t()
   TRACE_CTOR(session_t, "xml::xpath_t::scope_t&");
 }
 
+#if 0
+  
 std::size_t session_t::read_journal(std::istream&   in,
 				    const path&     pathname,
 				    xml::builder_t& builder)
@@ -223,6 +227,8 @@ std::size_t session_t::read_data(xml::builder_t& builder,
   return entry_count;
 }
 
+#endif
+
 #if 0
 optional<value_t>
 session_t::resolve(const string& name, xml::xpath_t::scope_t& locals)
@@ -256,7 +262,7 @@ session_t::resolve(const string& name, xml::xpath_t::scope_t& locals)
 }
 #endif
 
-xml::xpath_t::ptr_op_t session_t::lookup(const string& name)
+expr::ptr_op_t session_t::lookup(const string& name)
 {
   const char * p = name.c_str();
   switch (*p) {
@@ -291,7 +297,7 @@ xml::xpath_t::ptr_op_t session_t::lookup(const string& name)
     break;
   }
 
-  return xml::xpath_t::symbol_scope_t::lookup(name);
+  return expr::symbol_scope_t::lookup(name);
 }
 
 // jww (2007-04-26): All of Ledger should be accessed through a
@@ -300,12 +306,16 @@ static void initialize()
 {
   amount_t::initialize();
   value_t::initialize();
-  xml::xpath_t::initialize();
+#if 0
+  expr::initialize();
+#endif
 }
 
 static void shutdown()
 {
-  xml::xpath_t::shutdown();
+#if 0
+  expr::shutdown();
+#endif
   value_t::shutdown();
   amount_t::shutdown();
 }

@@ -73,17 +73,17 @@ class transaction_t : public supports_flags<>
   mutable void * data;
   static bool	 use_effective_date;
 
-  explicit transaction_t(account_t * _account = NULL)
+  transaction_t(account_t * _account = NULL)
     : supports_flags<>(TRANSACTION_NORMAL), entry(NULL),
       state(UNCLEARED), account(_account),
       beg_pos(0), beg_line(0), end_pos(0), end_line(0), data(NULL)
   {
     TRACE_CTOR(transaction_t, "account_t *");
   }
-  explicit transaction_t(account_t *	        _account,
-			 const amount_t&        _amount,
-			 unsigned int           _flags = TRANSACTION_NORMAL,
-			 const optional<string> _note  = none)
+  transaction_t(account_t *	       _account,
+		const amount_t&        _amount,
+		unsigned int           _flags = TRANSACTION_NORMAL,
+		const optional<string> _note  = none)
     : supports_flags<>(_flags), entry(NULL), state(UNCLEARED),
       account(_account), amount(_amount), note(_note),
       beg_pos(0), beg_line(0), end_pos(0), end_line(0), data(NULL)
@@ -91,7 +91,7 @@ class transaction_t : public supports_flags<>
     TRACE_CTOR(transaction_t,
 	       "account_t *, const amount_t&, unsigned int, const string&");
   }
-  explicit transaction_t(const transaction_t& xact)
+  transaction_t(const transaction_t& xact)
     : supports_flags<>(xact),
       entry(xact.entry),
       state(xact.state),

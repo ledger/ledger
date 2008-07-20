@@ -36,8 +36,6 @@
 //#endif
 //#include "qif.h"
 //#include "ofx.h"
-#include "jbuilder.h"
-#include "compile.h"
 
 #include <ledger.h>
 
@@ -109,7 +107,7 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
 
   string verb = *arg++;
 
-  xml::xpath_t::function_t command;
+  expr::function_t command;
 
 #if 0
   if (verb == "register" || verb == "reg" || verb == "r")

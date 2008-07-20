@@ -602,8 +602,8 @@ class valexpr_context : public error_context {
   ptr_op_t expr;
   ptr_op_t error_node;
 
-  valexpr_context(const ptr_op_t _expr,
-		  const string&	 desc = "") throw();
+  valexpr_context(const ptr_op_t& _expr,
+		  const string&	  desc = "") throw();
   virtual ~valexpr_context() throw();
 
   virtual void describe(std::ostream& out) const throw();
