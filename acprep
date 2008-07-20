@@ -131,7 +131,6 @@ if [ "$LOCAL" = "false" -a -d "$HOME/Products" ]; then
 	version="-$(./version)"
     fi
     projdir="$HOME/Products/$(basename $HERE)"
-    rm -fr ${projdir}*
     projdir="$projdir$version"
     if [ ! -d "$projdir" ]; then
 	mkdir -p "$projdir"
