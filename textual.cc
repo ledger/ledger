@@ -579,9 +579,11 @@ unsigned int textual_parser_t::parse(std::istream& in,
 
   account_stack.push_front(master);
 
-  pathname	  = journal->sources.back();
-  src_idx = journal->sources.size() - 1;
-  linenum = 1;
+  pathname = journal->sources.back();
+  src_idx  = journal->sources.size() - 1;
+  linenum  = 1;
+
+  INFO("Parsing file '" << pathname.string() << "'");
 
   unsigned long beg_pos = in.tellg();
   unsigned long end_pos;
