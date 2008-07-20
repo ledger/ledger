@@ -209,7 +209,7 @@ transaction_t * parse_transaction(char * line, account_t * account,
       }
 
       if (in.good() && ! in.eof()) {
-	xact->cost = new amount_t;
+	xact->cost = amount_t();
 
 	try {
 	  unsigned long beg = (long)in.tellg();
@@ -734,7 +734,9 @@ unsigned int textual_parser_t::parse(std::istream& in,
 	  if (p)
 	    *p++ = '\0';
 	}
+#if 0
 	process_option(config_options, line + 2, p);
+#endif
 	break;
       }
 
@@ -835,13 +837,15 @@ unsigned int textual_parser_t::parse(std::istream& in,
 	    // parser to resolve alias references.
 	    account_t * acct = account_stack.front()->find_account(e);
 	    std::pair<accounts_map::iterator, bool> result
-	      = account_aliases.insert(accounts_map::pair_type(b, acct));
+	      = account_aliases.insert(accounts_map::value_type(b, acct));
 	    assert(result.second);
 	  }
 	}
 	else if (word == "def") {
+#if 0
 	  if (! expr::global_scope.get())
 	    init_value_expr();
+#endif
 	  parse_value_definition(p);
 	}
 	break;

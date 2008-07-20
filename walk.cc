@@ -558,7 +558,7 @@ void set_comm_as_payee::operator()(transaction_t& xact)
   transaction_t& temp = xact_temps.back();
   temp.entry = &entry;
   temp.state = xact.state;
-  temp.flags |= TRANSACTION_BULK_ALLOC;
+  temp.add_flags(TRANSACTION_BULK_ALLOC);
 
   entry.add_transaction(&temp);
 
@@ -571,8 +571,8 @@ void set_code_as_payee::operator()(transaction_t& xact)
   entry_t& entry = entry_temps.back();
   entry._date = xact.date();
 
-  if (! xact.entry->code.empty())
-    entry.payee = xact.entry->code;
+  if (xact.entry->code)
+    entry.payee = *xact.entry->code;
   else
     entry.payee = "<none>";
 
@@ -580,7 +580,7 @@ void set_code_as_payee::operator()(transaction_t& xact)
   transaction_t& temp = xact_temps.back();
   temp.entry = &entry;
   temp.state = xact.state;
-  temp.flags |= TRANSACTION_BULK_ALLOC;
+  temp.add_flags(TRANSACTION_BULK_ALLOC);
 
   entry.add_transaction(&temp);
 
@@ -659,8 +659,8 @@ void budget_transactions::report_budget_items(const datetime_t& moment)
 
 	xact_temps.push_back(xact);
 	transaction_t& temp = xact_temps.back();
-	temp.entry   = &entry;
-	temp.flags  |= TRANSACTION_AUTO | TRANSACTION_BULK_ALLOC;
+	temp.entry = &entry;
+	temp.add_flags(TRANSACTION_AUTO | TRANSACTION_BULK_ALLOC);
 	temp.amount.negate();
 	entry.add_transaction(&temp);
 
@@ -750,8 +750,7 @@ void forecast_transactions::flush()
     xact_temps.push_back(xact);
     transaction_t& temp = xact_temps.back();
     temp.entry = &entry;
-    temp.flags |= TRANSACTION_AUTO;
-    temp.flags |= TRANSACTION_BULK_ALLOC;
+    temp.add_flags(TRANSACTION_AUTO | TRANSACTION_BULK_ALLOC);
     entry.add_transaction(&temp);
 
     datetime_t next = (*least).first.increment(begin);
@@ -873,7 +872,7 @@ void walk_accounts(account_t&		       account,
     for (accounts_map::const_iterator i = account.accounts.begin();
 	 i != account.accounts.end();
 	 i++)
-      walk_accounts(*(*i).second, handler, NULL);
+      walk_accounts(*(*i).second, handler);
   }
 }
 
@@ -882,9 +881,8 @@ void walk_accounts(account_t&		    account,
 		   const string&	    sort_string)
 {
   if (! sort_string.empty()) {
-    value_expr sort_order;
-    sort_order.reset(parse_value_expr(sort_string));
-    walk_accounts(account, handler, sort_order);
+    value_expr sorter(sort_string);
+    walk_accounts(account, handler, optional<value_expr>(sorter));
   } else {
     walk_accounts(account, handler);
   }
@@ -917,7 +915,7 @@ void walk_commodities(commodity_pool_t::commodities_by_ident& commodities,
 	transaction_t& temp = xact_temps.back();
 	temp.entry  = &entry_temps.back();
 	temp.amount = (*j).second;
-	temp.flags |= TRANSACTION_BULK_ALLOC;
+	temp.add_flags(TRANSACTION_BULK_ALLOC);
 	entry_temps.back().add_transaction(&temp);
 
 	handler(xact_temps.back());

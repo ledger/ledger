@@ -9,7 +9,7 @@ value_expr total_expr;
 
 namespace expr {
 
-std::auto_ptr<scope_t> global_scope;
+std::auto_ptr<symbol_scope_t> global_scope;
 datetime_t terminus;
 
 details_t::details_t(const transaction_t& _xact)
@@ -553,10 +553,10 @@ void op_t::compute(value_t& result, const details_t& details,
   case O_COM:
     if (! left())
       throw new compute_error("Comma operator missing left operand",
-			      new valexpr_context(this));
+			      new valexpr_context(const_cast<op_t *>(this)));
     if (! right())
       throw new compute_error("Comma operator missing right operand",
-			      new valexpr_context(this));
+			      new valexpr_context(const_cast<op_t *>(this)));
     left()->compute(result, details, context);
     right()->compute(result, details, context);
     break;
@@ -696,7 +696,7 @@ void op_t::compute(value_t& result, const details_t& details,
   catch (error * err) {
     if (err->context.empty() ||
 	! dynamic_cast<valexpr_context *>(err->context.back()))
-      err->context.push_back(new valexpr_context(this));
+      err->context.push_back(new valexpr_context(const_cast<op_t *>(this)));
     throw err;
   }
 }
@@ -823,7 +823,7 @@ ptr_op_t parse_value_term(std::istream& in, scope_t * scope,
     }
 
     if (definition) {
-      std::auto_ptr<call_scope_t> params(new call_scope_t(scope));
+      std::auto_ptr<call_scope_t> params(new call_scope_t(*scope));
 
       long arg_index = 0;
       if (have_args) {
@@ -846,7 +846,7 @@ ptr_op_t parse_value_term(std::istream& in, scope_t * scope,
 	  // an O_ARG value.
 	  node.reset(new op_t(op_t::O_ARG));
 	  node->set_left(new op_t(op_t::ARG_INDEX));
-	  node->left->arg_index = arg_index++;
+	  node->left()->set_long(arg_index++);
 	  params->define(ident, node.release());
 	}
 
@@ -864,7 +864,7 @@ ptr_op_t parse_value_term(std::istream& in, scope_t * scope,
 
       node.reset(new op_t(op_t::O_DEF));
       node->set_left(new op_t(op_t::ARG_INDEX));
-      node->left->arg_index = arg_index;
+      node->left()->set_long(arg_index);
       node->set_right(def.release());
 
       scope->define(buf, node.get());
@@ -883,7 +883,7 @@ ptr_op_t parse_value_term(std::istream& in, scope_t * scope,
       }
       else if (def->kind == op_t::O_DEF) {
 	node.reset(new op_t(op_t::O_REF));
-	node->set_left(def->right);
+	node->set_left(def->right());
 
 	unsigned int count = 0;
 	if (have_args) {
@@ -904,10 +904,11 @@ ptr_op_t parse_value_term(std::istream& in, scope_t * scope,
 	  }
 	}
 
-	if (count != def->left->arg_index) {
+	if (count != def->left()->as_long()) {
 	  std::ostringstream errmsg;
 	  errmsg << "Wrong number of arguments to '" << buf
-		 << "': saw " << count << ", wanted " << def->left->arg_index;
+		 << "': saw " << count
+		 << ", wanted " << def->left()->as_long();
 	  throw new value_expr_error(errmsg.str());
 	}
       }
@@ -928,6 +929,7 @@ ptr_op_t parse_value_term(std::istream& in, scope_t * scope,
     break;
 
   // Other
+#if 0
   case 'c':
   case 'C':
   case 'p':
@@ -983,6 +985,7 @@ ptr_op_t parse_value_term(std::istream& in, scope_t * scope,
     node->mask = new mask_t(buf);
     break;
   }
+#endif
 
   case '{': {
     amount_t temp;
@@ -991,13 +994,13 @@ ptr_op_t parse_value_term(std::istream& in, scope_t * scope,
     if (c != '}')
       unexpected(c, '}');
 
-    node.reset(new op_t(op_t::CONSTANT));
-    node->value = new value_t(temp);
+    node.reset(new op_t(op_t::VALUE));
+    node->set_value(temp);
     break;
   }
 
   case '(': {
-    std::auto_ptr<scope_t> locals(new scope_t(scope));
+    std::auto_ptr<symbol_scope_t> locals(new symbol_scope_t(*scope));
     node.reset(parse_value_expr(in, locals.get(),
 				flags | PARSE_VALEXPR_PARTIAL));
     in.get(c);
@@ -1013,8 +1016,8 @@ ptr_op_t parse_value_term(std::istream& in, scope_t * scope,
     in.get(c);
 
     interval_t timespan(buf);
-    node.reset(new op_t(op_t::CONSTANT));
-    node->value = new value_t(timespan.first());
+    node.reset(new op_t(op_t::VALUE));
+    node->set_value(timespan.first());
     break;
   }
 
@@ -1079,8 +1082,8 @@ ptr_op_t parse_add_expr(std::istream& in, scope_t * scope,
     char c;
     in.get(c);
     value_expr expr(parse_mul_expr(in, scope, flags));
-    if (expr->kind == op_t::CONSTANT) {
-      expr->value->negate();
+    if (expr->kind == op_t::VALUE) {
+      expr->as_value().in_place_negate();
       return expr.release();
     }
     node.reset(new op_t(op_t::O_NEG));
@@ -1219,12 +1222,12 @@ ptr_op_t parse_boolean_expr(std::istream& in, scope_t * scope,
 	node.reset(new op_t(op_t::O_QUES));
 	node->set_left(prev.release());
 	node->set_right(new op_t(op_t::O_COL));
-	node->right->set_left(parse_logic_expr(in, scope, flags));
+	node->right()->set_left(parse_logic_expr(in, scope, flags));
 	c = peek_next_nonws(in);
 	if (c != ':')
 	  unexpected(c, ':');
 	in.get(c);
-	node->right->set_right(parse_logic_expr(in, scope, flags));
+	node->right()->set_right(parse_logic_expr(in, scope, flags));
 	break;
       }
 
@@ -1242,8 +1245,8 @@ ptr_op_t parse_boolean_expr(std::istream& in, scope_t * scope,
 
 void init_value_expr()
 {
-  global_scope.reset(new scope_t());
-  scope_t * globals = global_scope.get();
+  global_scope.reset(new symbol_scope_t());
+  symbol_scope_t * globals = global_scope.get();
 
   ptr_op_t node;
 
@@ -1318,26 +1321,26 @@ void init_value_expr()
   globals->define("total_cost", node);
 
   // Relating to format_t
-  globals->define("t", new op_t(op_t::VALUE_EXPR));
-  globals->define("T", new op_t(op_t::TOTAL_EXPR));
+  globals->define("t", ptr_op_t(new op_t(op_t::VALUE_EXPR)));
+  globals->define("T", ptr_op_t(new op_t(op_t::TOTAL_EXPR)));
 
   // Functions
   node = new op_t(op_t::O_DEF);
   node->set_left(new op_t(op_t::ARG_INDEX));
-  node->left->arg_index = 1;
+  node->left()->set_long(1);
   node->set_right(new op_t(op_t::F_ABS));
   globals->define("U", node);
   globals->define("abs", node);
 
   node = new op_t(op_t::O_DEF);
   node->set_left(new op_t(op_t::ARG_INDEX));
-  node->left->arg_index = 1;
+  node->left()->set_long(1);
   node->set_right(new op_t(op_t::F_ROUND));
   globals->define("round", node);
 
   node = new op_t(op_t::O_DEF);
   node->set_left(new op_t(op_t::ARG_INDEX));
-  node->left->arg_index = 1;
+  node->left()->set_long(1);
   node->set_right(new op_t(op_t::F_QUANTITY));
   globals->define("S", node);
   globals->define("quant", node);
@@ -1345,21 +1348,21 @@ void init_value_expr()
 
   node = new op_t(op_t::O_DEF);
   node->set_left(new op_t(op_t::ARG_INDEX));
-  node->left->arg_index = 1;
+  node->left()->set_long(1);
   node->set_right(new op_t(op_t::F_COMMODITY));
   globals->define("comm", node);
   globals->define("commodity", node);
 
   node = new op_t(op_t::O_DEF);
   node->set_left(new op_t(op_t::ARG_INDEX));
-  node->left->arg_index = 2;
+  node->left()->set_long(2);
   node->set_right(new op_t(op_t::F_SET_COMMODITY));
   globals->define("setcomm", node);
   globals->define("set_commodity", node);
 
   node = new op_t(op_t::O_DEF);
   node->set_left(new op_t(op_t::ARG_INDEX));
-  node->left->arg_index = 1;
+  node->left()->set_long(1);
   node->set_right(new op_t(op_t::F_ARITH_MEAN));
   globals->define("A", node);
   globals->define("avg", node);
@@ -1368,7 +1371,7 @@ void init_value_expr()
 
   node = new op_t(op_t::O_DEF);
   node->set_left(new op_t(op_t::ARG_INDEX));
-  node->left->arg_index = 2;
+  node->left()->set_long(2);
   node->set_right(new op_t(op_t::F_VALUE));
   globals->define("P", node);
 
@@ -1379,37 +1382,37 @@ void init_value_expr()
 
   node = new op_t(op_t::O_DEF);
   node->set_left(new op_t(op_t::ARG_INDEX));
-  node->left->arg_index = 1;
+  node->left()->set_long(1);
   node->set_right(new op_t(op_t::F_PRICE));
   globals->define("priceof", node);
 
   node = new op_t(op_t::O_DEF);
   node->set_left(new op_t(op_t::ARG_INDEX));
-  node->left->arg_index = 1;
+  node->left()->set_long(1);
   node->set_right(new op_t(op_t::F_DATE));
   globals->define("dateof", node);
 
   node = new op_t(op_t::O_DEF);
   node->set_left(new op_t(op_t::ARG_INDEX));
-  node->left->arg_index = 2;
+  node->left()->set_long(2);
   node->set_right(new op_t(op_t::F_DATECMP));
   globals->define("datecmp", node);
 
   node = new op_t(op_t::O_DEF);
   node->set_left(new op_t(op_t::ARG_INDEX));
-  node->left->arg_index = 1;
+  node->left()->set_long(1);
   node->set_right(new op_t(op_t::F_YEAR));
   globals->define("yearof", node);
 
   node = new op_t(op_t::O_DEF);
   node->set_left(new op_t(op_t::ARG_INDEX));
-  node->left->arg_index = 1;
+  node->left()->set_long(1);
   node->set_right(new op_t(op_t::F_MONTH));
   globals->define("monthof", node);
 
   node = new op_t(op_t::O_DEF);
   node->set_left(new op_t(op_t::ARG_INDEX));
-  node->left->arg_index = 1;
+  node->left()->set_long(1);
   node->set_right(new op_t(op_t::F_DAY));
   globals->define("dayof", node);
 
@@ -1444,8 +1447,8 @@ ptr_op_t parse_value_expr(std::istream& in, scope_t * scope,
   if (! global_scope.get())
     init_value_expr();
 
-  std::auto_ptr<scope_t> this_scope(new scope_t(scope ? scope :
-						global_scope.get()));
+  std::auto_ptr<symbol_scope_t>
+    this_scope(new symbol_scope_t(scope ? *scope : *global_scope.get()));
   value_expr node;
   node.reset(parse_boolean_expr(in, this_scope.get(), flags));
 
@@ -1489,19 +1492,6 @@ ptr_op_t parse_value_expr(std::istream& in, scope_t * scope,
   return node.release();
 }
 
-valexpr_context::valexpr_context(const ledger::ptr_op_t _expr,
-				 const string& desc) throw()
-  : error_context(desc), expr(_expr), error_node(_expr)
-{
-  error_node->acquire();
-}
-
-valexpr_context::~valexpr_context() throw()
-{
-  if (expr) expr->release();
-  if (error_node) error_node->release();
-}
-
 void valexpr_context::describe(std::ostream& out) const throw()
 {
   if (! expr) {
@@ -1516,8 +1506,7 @@ void valexpr_context::describe(std::ostream& out) const throw()
   unsigned long start = (long)out.tellp() - 1;
   unsigned long begin;
   unsigned long end;
-  bool found = ledger::print_value_expr(out, expr, true,
-					error_node, &begin, &end);
+  bool found = print_value_expr(out, expr, true, error_node, &begin, &end);
   out << std::endl;
   if (found) {
     out << "  ";
@@ -1531,12 +1520,12 @@ void valexpr_context::describe(std::ostream& out) const throw()
   }
 }
 
-bool print_value_expr(std::ostream&	   out,
-		      const ptr_op_t node,
-		      const bool           relaxed,
-		      const ptr_op_t op_to_find,
-		      unsigned long *	   start_pos,
-		      unsigned long *	   end_pos)
+bool print_value_expr(std::ostream&   out,
+		      const ptr_op_t  node,
+		      const bool      relaxed,
+		      const ptr_op_t  op_to_find,
+		      unsigned long * start_pos,
+		      unsigned long * end_pos)
 {
   bool found = false;
 
@@ -1549,22 +1538,22 @@ bool print_value_expr(std::ostream&	   out,
 
   switch (node->kind) {
   case op_t::ARG_INDEX:
-    out << node->arg_index;
+    out << node->as_long();
     break;
 
-  case op_t::CONSTANT:
-    switch (node->value->type()) {
+  case op_t::VALUE:
+    switch (node->as_value().type()) {
     case value_t::BOOLEAN:
       assert(false);
       break;
     case value_t::DATETIME:
-      out << '[' << *(node->value) << ']';
+      out << '[' << node->as_value().as_datetime() << ']';
       break;
     case value_t::INTEGER:
     case value_t::AMOUNT:
       if (! relaxed)
 	out << '{';
-      out << *(node->value);
+      out << node->as_value();
       if (! relaxed)
 	out << '}';
       break;
@@ -1647,6 +1636,7 @@ bool print_value_expr(std::ostream&	   out,
   case op_t::F_DAY:
     symbol = "dayof"; break;
 
+#if 0
   case op_t::F_CODE_MASK:
     out << "c/" << node->mask->expr.str() << "/";
     break;
@@ -1665,180 +1655,181 @@ bool print_value_expr(std::ostream&	   out,
   case op_t::F_COMMODITY_MASK:
     out << "C/" << node->mask->expr.str() << "/";
     break;
+#endif
 
   case op_t::O_NOT:
     out << "!";
-    if (print_value_expr(out, node->left, relaxed, op_to_find, start_pos, end_pos))
+    if (print_value_expr(out, node->left(), relaxed, op_to_find, start_pos, end_pos))
       found = true;
     break;
   case op_t::O_NEG:
     out << "-";
-    if (print_value_expr(out, node->left, relaxed, op_to_find, start_pos, end_pos))
+    if (print_value_expr(out, node->left(), relaxed, op_to_find, start_pos, end_pos))
       found = true;
     break;
   case op_t::O_PERC:
     out << "%";
-    if (print_value_expr(out, node->left, relaxed, op_to_find, start_pos, end_pos))
+    if (print_value_expr(out, node->left(), relaxed, op_to_find, start_pos, end_pos))
       found = true;
     break;
 
   case op_t::O_ARG:
-    out << "@arg" << node->arg_index;
+    out << "@arg" << node->as_long();
     break;
   case op_t::O_DEF:
     out << "<def args=\"";
-    if (print_value_expr(out, node->left, relaxed, op_to_find, start_pos, end_pos))
+    if (print_value_expr(out, node->left(), relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << "\" value=\"";
-    if (print_value_expr(out, node->right, relaxed, op_to_find, start_pos, end_pos))
+    if (print_value_expr(out, node->right(), relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << "\">";
     break;
 
   case op_t::O_REF:
-    if (print_value_expr(out, node->left, relaxed, op_to_find, start_pos, end_pos))
+    if (print_value_expr(out, node->left(), relaxed, op_to_find, start_pos, end_pos))
       found = true;
-    if (node->right) {
+    if (node->right()) {
       out << "(";
-      if (print_value_expr(out, node->right, relaxed, op_to_find, start_pos, end_pos))
+      if (print_value_expr(out, node->right(), relaxed, op_to_find, start_pos, end_pos))
 	found = true;
       out << ")";
     }
     break;
 
   case op_t::O_COM:
-    if (node->left &&
-	print_value_expr(out, node->left, relaxed, op_to_find, start_pos, end_pos))
+    if (node->left() &&
+	print_value_expr(out, node->left(), relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ", ";
-    if (node->right &&
-	print_value_expr(out, node->right, relaxed, op_to_find, start_pos, end_pos))
+    if (node->right() &&
+	print_value_expr(out, node->right(), relaxed, op_to_find, start_pos, end_pos))
       found = true;
     break;
   case op_t::O_QUES:
     out << "(";
-    if (print_value_expr(out, node->left, relaxed, op_to_find, start_pos, end_pos))
+    if (print_value_expr(out, node->left(), relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " ? ";
-    if (print_value_expr(out, node->right, relaxed, op_to_find, start_pos, end_pos))
+    if (print_value_expr(out, node->right(), relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case op_t::O_COL:
-    if (print_value_expr(out, node->left, relaxed, op_to_find, start_pos, end_pos))
+    if (print_value_expr(out, node->left(), relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " : ";
-    if (print_value_expr(out, node->right, relaxed, op_to_find, start_pos, end_pos))
+    if (print_value_expr(out, node->right(), relaxed, op_to_find, start_pos, end_pos))
       found = true;
     break;
 
   case op_t::O_AND:
     out << "(";
-    if (print_value_expr(out, node->left, relaxed, op_to_find, start_pos, end_pos))
+    if (print_value_expr(out, node->left(), relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " & ";
-    if (print_value_expr(out, node->right, relaxed, op_to_find, start_pos, end_pos))
+    if (print_value_expr(out, node->right(), relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case op_t::O_OR:
     out << "(";
-    if (print_value_expr(out, node->left, relaxed, op_to_find, start_pos, end_pos))
+    if (print_value_expr(out, node->left(), relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " | ";
-    if (print_value_expr(out, node->right, relaxed, op_to_find, start_pos, end_pos))
+    if (print_value_expr(out, node->right(), relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
 
   case op_t::O_NEQ:
     out << "(";
-    if (print_value_expr(out, node->left, relaxed, op_to_find, start_pos, end_pos))
+    if (print_value_expr(out, node->left(), relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " != ";
-    if (print_value_expr(out, node->right, relaxed, op_to_find, start_pos, end_pos))
+    if (print_value_expr(out, node->right(), relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case op_t::O_EQ:
     out << "(";
-    if (print_value_expr(out, node->left, relaxed, op_to_find, start_pos, end_pos))
+    if (print_value_expr(out, node->left(), relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " == ";
-    if (print_value_expr(out, node->right, relaxed, op_to_find, start_pos, end_pos))
+    if (print_value_expr(out, node->right(), relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case op_t::O_LT:
     out << "(";
-    if (print_value_expr(out, node->left, relaxed, op_to_find, start_pos, end_pos))
+    if (print_value_expr(out, node->left(), relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " < ";
-    if (print_value_expr(out, node->right, relaxed, op_to_find, start_pos, end_pos))
+    if (print_value_expr(out, node->right(), relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case op_t::O_LTE:
     out << "(";
-    if (print_value_expr(out, node->left, relaxed, op_to_find, start_pos, end_pos))
+    if (print_value_expr(out, node->left(), relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " <= ";
-    if (print_value_expr(out, node->right, relaxed, op_to_find, start_pos, end_pos))
+    if (print_value_expr(out, node->right(), relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case op_t::O_GT:
     out << "(";
-    if (print_value_expr(out, node->left, relaxed, op_to_find, start_pos, end_pos))
+    if (print_value_expr(out, node->left(), relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " > ";
-    if (print_value_expr(out, node->right, relaxed, op_to_find, start_pos, end_pos))
+    if (print_value_expr(out, node->right(), relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case op_t::O_GTE:
     out << "(";
-    if (print_value_expr(out, node->left, relaxed, op_to_find, start_pos, end_pos))
+    if (print_value_expr(out, node->left(), relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " >= ";
-    if (print_value_expr(out, node->right, relaxed, op_to_find, start_pos, end_pos))
+    if (print_value_expr(out, node->right(), relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
 
   case op_t::O_ADD:
     out << "(";
-    if (print_value_expr(out, node->left, relaxed, op_to_find, start_pos, end_pos))
+    if (print_value_expr(out, node->left(), relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " + ";
-    if (print_value_expr(out, node->right, relaxed, op_to_find, start_pos, end_pos))
+    if (print_value_expr(out, node->right(), relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case op_t::O_SUB:
     out << "(";
-    if (print_value_expr(out, node->left, relaxed, op_to_find, start_pos, end_pos))
+    if (print_value_expr(out, node->left(), relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " - ";
-    if (print_value_expr(out, node->right, relaxed, op_to_find, start_pos, end_pos))
+    if (print_value_expr(out, node->right(), relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case op_t::O_MUL:
     out << "(";
-    if (print_value_expr(out, node->left, relaxed, op_to_find, start_pos, end_pos))
+    if (print_value_expr(out, node->left(), relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " * ";
-    if (print_value_expr(out, node->right, relaxed, op_to_find, start_pos, end_pos))
+    if (print_value_expr(out, node->right(), relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
   case op_t::O_DIV:
     out << "(";
-    if (print_value_expr(out, node->left, relaxed, op_to_find, start_pos, end_pos))
+    if (print_value_expr(out, node->left(), relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << " / ";
-    if (print_value_expr(out, node->right, relaxed, op_to_find, start_pos, end_pos))
+    if (print_value_expr(out, node->right(), relaxed, op_to_find, start_pos, end_pos))
       found = true;
     out << ")";
     break;
@@ -1873,10 +1864,10 @@ void dump_value_expr(std::ostream& out, const ptr_op_t node,
 
   switch (node->kind) {
   case op_t::ARG_INDEX:
-    out << "ARG_INDEX - " << node->arg_index;
+    out << "ARG_INDEX - " << node->as_long();
     break;
-  case op_t::CONSTANT:
-    out << "CONSTANT - " << *(node->value);
+  case op_t::VALUE:
+    out << "VALUE - " << node->as_value();
     break;
 
   case op_t::AMOUNT: out << "AMOUNT"; break;
@@ -1953,15 +1944,9 @@ void dump_value_expr(std::ostream& out, const ptr_op_t node,
   out << " (" << node->refc << ')' << std::endl;
 
   if (node->kind > op_t::TERMINALS) {
-    if (node->left) {
-      dump_value_expr(out, node->left, depth + 1);
-      if (node->right)
-	dump_value_expr(out, node->right, depth + 1);
-    } else {
-      assert(! node->right);
-    }
-  } else {
-    assert(! node->left);
+    dump_value_expr(out, node->left(), depth + 1);
+    if (node->right())
+      dump_value_expr(out, node->right(), depth + 1);
   }
 }
 

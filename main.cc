@@ -135,16 +135,20 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
   else
 #endif
   if (verb == "xml")
+#if 0
     command = bind(xml_command, _1);
+#else
+  ;
+#endif
   else if (verb == "expr")
     ;
   else if (verb == "xpath")
     ;
   else if (verb == "parse") {
-    xml::xpath_t    expr(*arg);
-    xml::document_t temp(xml::LEDGER_NODE);
+    value_expr expr(*arg);
 
-    xml::xpath_t::context_scope_t doc_scope(report, &temp);
+#if 0
+    expr::context_scope_t doc_scope(report, &temp);
 
     IF_INFO() {
       std::cout << "Value expression tree:" << std::endl;
@@ -169,6 +173,7 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
     }
 
     std::cout << expr.calc(doc_scope).strip_annotations() << std::endl;
+#endif
 
     return 0;
   }
@@ -177,7 +182,7 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
     std::strcpy(buf, "command_");
     std::strcat(buf, verb.c_str());
 
-    if (xml::xpath_t::ptr_op_t def = report.lookup(buf))
+    if (expr::ptr_op_t def = report.lookup(buf))
       command = def->as_function();
 
     if (! command)
@@ -187,17 +192,19 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
   // Parse the initialization file, which can only be textual; then
   // parse the journal data.
 
+#if 0
   session.read_init();
+#endif
 
   INFO_START(journal, "Read journal file");
 
-  xml::document_t	 xml_document(xml::LEDGER_NODE);
-  journal_t *		 journal = session.create_journal();
-  xml::journal_builder_t builder(xml_document, journal);
+  journal_t * journal = session.create_journal();
 
+#if 0
   if (! session.read_data(builder, journal, report.account))
     throw_(parse_error, "Failed to locate any journal entries; "
 	   "did you specify a valid file with -f?");
+#endif
 
   INFO_FINISH(journal);
 
@@ -259,10 +266,10 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
 
   // Are we handling the expr commands?  Do so now.
 
-  xml::xpath_t::context_scope_t doc_scope(report, &xml_document);
+  expr::context_scope_t doc_scope(report, &xml_document);
 
   if (verb == "expr") {
-    xml::xpath_t expr(*arg);
+    value_expr expr(*arg);
 
     IF_INFO() {
       *out << "Value expression tree:" << std::endl;
@@ -276,38 +283,6 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
 
     *out << expr.calc(doc_scope).strip_annotations() << std::endl;
 
-    return 0;
-  }
-  else if (verb == "xpath") {
-    std::cout << "XPath parsed: ";
-
-    xml::xpath_t xpath(*arg);
-    xpath.print(*out, doc_scope);
-    *out << std::endl;
-
-    IF_INFO() {
-      *out << "Raw results:" << std::endl;
-
-      foreach (const value_t& value, xpath.find_all(doc_scope)) {
-	if (value.is_xml_node())
-	  value.as_xml_node()->print(std::cout);
-	else
-	  std::cout << value;
-	std::cout << std::endl;
-      }
-
-      *out << "Compiled results:" << std::endl;
-    }
-
-    xml::compile_node(xml_document, report);
-
-    foreach (const value_t& value, xpath.find_all(doc_scope)) {
-      if (value.is_xml_node())
-	value.as_xml_node()->print(std::cout);
-      else
-	std::cout << value;
-      std::cout << std::endl;
-    }
     return 0;
   }
 

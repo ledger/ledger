@@ -603,8 +603,9 @@ class valexpr_context : public error_context {
   ptr_op_t error_node;
 
   valexpr_context(const ptr_op_t& _expr,
-		  const string&	  desc = "") throw();
-  virtual ~valexpr_context() throw();
+		  const string&   desc = "") throw()
+    : error_context(desc), expr(_expr), error_node(_expr) {}
+  virtual ~valexpr_context() throw() {}
 
   virtual void describe(std::ostream& out) const throw();
 };
@@ -624,7 +625,7 @@ class value_expr_error : public error {
   virtual ~value_expr_error() throw() {}
 };
 
-extern std::auto_ptr<scope_t> global_scope;
+extern std::auto_ptr<symbol_scope_t> global_scope;
 
 extern datetime_t terminus;
 extern bool	  initialized;

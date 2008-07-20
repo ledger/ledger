@@ -179,7 +179,7 @@ static void endElement(void *userData, const char *name)
     xact->state  = curr_state;
     xact->amount = value;
     if (value != curr_value)
-      xact->cost = new amount_t(curr_value);
+      xact->cost = curr_value;
 
     xact->beg_pos  = beg_pos;
     xact->beg_line = beg_line;
