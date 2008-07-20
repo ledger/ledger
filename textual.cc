@@ -27,9 +27,18 @@ static std::list<std::pair<path, int> > include_stack;
 struct time_entry_t {
   datetime_t  checkin;
   account_t * account;
-  string desc;
+  string      desc;
+
+  time_entry_t() : account(NULL) {}
+  time_entry_t(datetime_t  _checkin,
+	       account_t * _account = NULL,
+	       std::string _desc    = "")
+    : checkin(_checkin), account(_account), desc(_desc) {}
+
+  time_entry_t(const time_entry_t& entry)
+    : checkin(entry.checkin), account(entry.account),
+      desc(entry.desc) {}
 };
-std::list<time_entry_t> time_entries;
 #endif
 
 static value_expr parse_amount_expr(std::istream& in, amount_t& amount,
@@ -54,8 +63,18 @@ static value_expr parse_amount_expr(std::istream& in, amount_t& amount,
   if (! compute_amount(expr, amount, xact))
     throw new parse_error("Amount expression failed to compute");
 
-  if (expr->kind == value_expr_t::CONSTANT)
+#if 0
+  if (expr->kind == value_expr_t::CONSTANT) {
     expr = NULL;
+  } else {
+    DEBUG_IF("ledger.textual.parse") {
+      std::cout << "Value expression tree:" << std::endl;
+      ledger::dump_value_expr(std::cout, expr.get());
+    }
+  }
+#else
+  expr = NULL;
+#endif
 
   DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 	      "The transaction amount is " << xact->amount);
@@ -102,7 +121,8 @@ transaction_t * parse_transaction(char * line, account_t * account,
   while (! in.eof()) {
     in.get(p);
     if (in.eof() || (std::isspace(p) &&
-		     (p == '\t' || std::isspace(in.peek()))))
+		     (p == '\t' || in.peek() == EOF ||
+		      std::isspace(in.peek()))))
       break;
     account_end++;
   }
@@ -186,7 +206,7 @@ transaction_t * parse_transaction(char * line, account_t * account,
 	  if (parse_amount_expr(in, *xact->cost, xact.get(),
 				PARSE_VALEXPR_NO_MIGRATE))
 	    throw new parse_error
-	      ("A transaction's cost must evalute to a constant value");
+	      ("A transaction's cost must evaluate to a constant value");
 
 	  unsigned long end = (long)in.tellg();
 
@@ -213,9 +233,11 @@ transaction_t * parse_transaction(char * line, account_t * account,
 
 	if (xact->amount.commodity() &&
 	    ! xact->amount.commodity().annotated)
-	  xact->amount.annotate_commodity(annotation_t(per_unit_cost,
-						       xact->entry->actual_date(),
-						       xact->entry->code));
+	  xact->amount.annotate_commodity
+	    (annotation_t
+	     (per_unit_cost,
+	      xact->entry ? optional<datetime_t>(xact->entry->actual_date()) : none,
+	      xact->entry ? optional<string>(xact->entry->code) : none));
 
 	DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 		    "Total cost is " << *xact->cost);
@@ -290,12 +312,17 @@ bool parse_transactions(std::istream&	   in,
     in.getline(line, MAX_LINE);
     if (in.eof())
       break;
-    beg_pos += std::strlen(line) + 1;
+
+    int len = std::strlen(line);
+    if (line[len - 1] == '\r')
+      line[--len] = '\0';
+
+    beg_pos += len + 1;
     linenum++;
 
-    if (line[0] == ' ' || line[0] == '\t' || line[0] == '\r') {
+    if (line[0] == ' ' || line[0] == '\t') {
       char * p = skip_ws(line);
-      if (! *p || *p == '\r')
+      if (! *p)
 	break;
     }
     if (transaction_t * xact = parse_transaction(line, account)) {
@@ -372,12 +399,17 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
     in.getline(line, MAX_LINE);
     if (in.eof() && line[0] == '\0')
       break;
-    end_pos = beg_pos + std::strlen(line) + 1;
+
+    int len = std::strlen(line);
+    if (line[len - 1] == '\r')
+      line[--len] = '\0';
+
+    end_pos = beg_pos + len + 1;
     linenum++;
 
-    if (line[0] == ' ' || line[0] == '\t' || line[0] == '\r') {
+    if (line[0] == ' ' || line[0] == '\t') {
       char * p = skip_ws(line);
-      if (! *p || *p == '\r')
+      if (! *p)
 	break;
     }
 
@@ -451,10 +483,11 @@ bool textual_parser_t::test(std::istream& in) const
   return true;
 }
 
-static void clock_out_from_timelog(const datetime_t& when,
-				   account_t *	     account,
-				   const char *	     desc,
-				   journal_t *	     journal)
+static void clock_out_from_timelog(std::list<time_entry_t>& time_entries,
+				   const datetime_t&	    when,
+				   account_t *		    account,
+				   const char *		    desc,
+				   journal_t *		    journal)
 {
   time_entry_t event;
 
@@ -530,8 +563,9 @@ unsigned int textual_parser_t::parse(std::istream& in,
   unsigned int count  = 0;
   unsigned int errors = 0;
 
-  std::list<account_t *> account_stack;
-  auto_entry_finalizer_t auto_entry_finalizer(journal);
+  std::list<account_t *>  account_stack;
+  auto_entry_finalizer_t  auto_entry_finalizer(journal);
+  std::list<time_entry_t> time_entries;
 
   if (! master)
     master = journal->master;
@@ -551,18 +585,22 @@ unsigned int textual_parser_t::parse(std::istream& in,
       in.getline(line, MAX_LINE);
       if (in.eof())
 	break;
-      end_pos = beg_pos + std::strlen(line) + 1;
+
+      int len = std::strlen(line);
+      if (line[len - 1] == '\r')
+	line[--len] = '\0';
+
+      end_pos = beg_pos + len + 1;
       linenum++;
 
       switch (line[0]) {
       case '\0':
-      case '\r':
 	break;
 
       case ' ':
       case '\t': {
 	char * p = skip_ws(line);
-	if (*p && *p != '\r')
+	if (*p)
 	  throw new parse_error("Line begins with whitespace");
 	break;
       }
@@ -575,10 +613,8 @@ unsigned int textual_parser_t::parse(std::istream& in,
 	char * p = skip_ws(line + 22);
 	char * n = next_element(p, true);
 
-	time_entry_t event;
-	event.desc    = n ? n : "";
-	event.checkin = parse_datetime(date);
-	event.account = account_stack.front()->find_account(p);
+	time_entry_t event(parse_datetime(date),
+			   account_stack.front()->find_account(p), n ? n : "");
 
 	if (! time_entries.empty())
 	  for (std::list<time_entry_t>::iterator i = time_entries.begin();
@@ -602,9 +638,9 @@ unsigned int textual_parser_t::parse(std::istream& in,
 	  char * p = skip_ws(line + 22);
 	  char * n = next_element(p, true);
 
-	  clock_out_from_timelog(parse_datetime(date),
-				 p ? account_stack.front()->find_account(p) : NULL,
-				 n, journal);
+	  clock_out_from_timelog
+	    (time_entries, parse_datetime(date),
+	     p ? account_stack.front()->find_account(p) : NULL, n, journal);
 	  count++;
 	}
 	break;
@@ -671,7 +707,7 @@ unsigned int textual_parser_t::parse(std::istream& in,
       }
 
       case 'Y':                   // set the current year
-	current_year = std::atoi(skip_ws(line + 1)) - 1900;
+	current_year = std::atoi(skip_ws(line + 1));
 	break;
 
 #ifdef TIMELOG_SUPPORT
@@ -848,11 +884,19 @@ unsigned int textual_parser_t::parse(std::istream& in,
   }
 
   if (! time_entries.empty()) {
+    std::list<account_t *> accounts;
+
     for (std::list<time_entry_t>::iterator i = time_entries.begin();
 	 i != time_entries.end();
 	 i++)
-      clock_out_from_timelog(current_moment, (*i).account, NULL, journal);
-    time_entries.clear();
+      accounts.push_back((*i).account);
+
+    for (std::list<account_t *>::iterator i = accounts.begin();
+	 i != accounts.end();
+	 i++)
+      clock_out_from_timelog(time_entries, current_moment, *i, NULL, journal);
+
+    assert(time_entries.empty());
   }
 
   if (added_auto_entry_hook)

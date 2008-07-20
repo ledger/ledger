@@ -461,25 +461,22 @@ OPT_BEGIN(begin, "b:") {
   if (! report->predicate.empty())
     report->predicate += "&";
   report->predicate += "d>=[";
-  // jww (2008-04-20): fix
-  //report->predicate += interval.begin.to_string();
+  report->predicate += format_datetime(interval.begin);
   report->predicate += "]";
 } OPT_END(begin);
 
 OPT_BEGIN(end, "e:") {
   interval_t interval(optarg);
-  if (! is_valid(interval.end))
-    throw new error(string("Could not determine end of period '") +
-		    optarg + "'");
+  if (! is_valid(interval.begin))
+    throw new error(string("Could not determine end of period '") + optarg + "'");
 
   if (! report->predicate.empty())
     report->predicate += "&";
   report->predicate += "d<[";
-  // jww (2008-04-20): fix
-  //report->predicate += interval.end.to_string();
+  report->predicate += format_datetime(interval.begin);
   report->predicate += "]";
 
-  terminus = interval.end;
+  terminus = interval.begin;
 } OPT_END(end);
 
 OPT_BEGIN(current, "c") {
@@ -693,8 +690,7 @@ OPT_BEGIN(period, "p:") {
     if (! report->predicate.empty())
       report->predicate += "&";
     report->predicate += "d>=[";
-    // jww (2008-04-20): fix
-    //report->predicate += interval.begin.to_string();
+    report->predicate += format_datetime(interval.begin);
     report->predicate += "]";
   }
 
@@ -702,8 +698,7 @@ OPT_BEGIN(period, "p:") {
     if (! report->predicate.empty())
       report->predicate += "&";
     report->predicate += "d<[";
-    // jww (2008-04-20): fix
-    //report->predicate += interval.end.to_string();
+    report->predicate += format_datetime(interval.end);
     report->predicate += "]";
 
     terminus = interval.end;
@@ -895,8 +890,10 @@ namespace {
     if (commodity_t * commodity =
 	amount_t::current_pool->find_or_create(symbol)) {
       commodity->add_price(current_moment, price);
+#if 0
       // jww (2008-04-20): what was this?
-      //commodity->history()->bogus_time = current_moment;
+      commodity->history()->bogus_time = current_moment;
+#endif
     }
   }
 }

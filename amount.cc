@@ -977,7 +977,7 @@ void amount_t::parse(std::istream& in, flags_t flags)
 
   // Set the commodity's flags and precision accordingly
 
-  if (commodity_ && (newly_created || ! (flags & AMOUNT_PARSE_NO_MIGRATE))) {
+  if (commodity_ && ! (flags & AMOUNT_PARSE_NO_MIGRATE)) {
     commodity().add_flags(comm_flags);
 
     if (quantity->prec > commodity().precision())

@@ -1093,6 +1093,7 @@ void value_t::in_place_negate()
     set_boolean(! as_boolean());
     return;
   case INTEGER:
+  case DATETIME:
     set_long(- as_long());
     return;
   case AMOUNT:

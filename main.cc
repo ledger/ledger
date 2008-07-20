@@ -22,8 +22,8 @@
 
 using namespace ledger;
 
-int parse_and_report(config_t& config, report_t& report,
-		     int argc, char * argv[], char * envp[])
+int parse_and_report(config_t& config, std::auto_ptr<journal_t>& journal,
+		     report_t& report, int argc, char * argv[], char * envp[])
 {
   // Configure the terminus for value expressions
 
@@ -148,7 +148,7 @@ int parse_and_report(config_t& config, report_t& report,
 
   // Parse initialization files, ledger data, price database, etc.
 
-  std::auto_ptr<journal_t> journal(new journal_t);
+  journal.reset(new journal_t);
 
 #if 0
   { TRACE_PUSH(parser, "Parsing journal file");
@@ -481,6 +481,12 @@ appending the output of this command to your Ledger file if you so choose."
 
 int main(int argc, char * argv[], char * envp[])
 {
+  // This variable must be defined here so that any memory it holds is still
+  // available should the subsequent exception handlers catch an inner
+  // exception and need to report something on the invalid state of the
+  // journal (such as an unbalanced entry).
+  std::auto_ptr<journal_t> journal;
+
   try {
 #if DEBUG_LEVEL < BETA
     ledger::do_cleanup = false;
@@ -492,7 +498,7 @@ int main(int argc, char * argv[], char * envp[])
 #if 0
     TRACE_PUSH(main, "Ledger starting");
 #endif
-    int status = parse_and_report(config, report, argc, argv, envp);
+    int status = parse_and_report(config, journal, report, argc, argv, envp);
 #if 0
     TRACE_POP(main, "Ledger done");
 #endif

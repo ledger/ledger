@@ -67,7 +67,7 @@ if HAVE_LIBOFX
 libledger_la_SOURCES += ofx.cc
 endif
 
-libledger_la_LDFLAGS = -release 2.6.0.90
+libledger_la_LDFLAGS = -release 2.7.0
 
 pkginclude_HEADERS = \
 	acconf.h     \

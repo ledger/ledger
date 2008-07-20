@@ -162,13 +162,9 @@ static void endElement(void *userData, const char *name)
     // the transaction is worth.
     amount_t value;
     commodity_t * default_commodity = NULL;
-    if (entry_comm) {
-      default_commodity = entry_comm;
-    } else {
-      account_comm_map::iterator ac = account_comms.find(xact->account);
-      if (ac != account_comms.end())
-	default_commodity = (*ac).second;
-    }
+    account_comm_map::iterator ac = account_comms.find(xact->account);
+    if (ac != account_comms.end())
+      default_commodity = (*ac).second;
 
     if (default_commodity) {
       curr_quant.set_commodity(*default_commodity);

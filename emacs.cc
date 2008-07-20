@@ -13,10 +13,11 @@ void format_emacs_transactions::write_entry(entry_t& entry)
       break;
     }
 
-  out << (((unsigned long)entry.beg_pos) + 1) << " ";
+  out << (((unsigned long)entry.beg_line) + 1) << " ";
 
   tm when = boost::posix_time::to_tm(entry.date());
   std::time_t date = std::mktime(&when); // jww (2008-04-20): Is this GMT or local?
+
   out << "(" << (date / 65536) << " " << (date % 65536) << " 0) ";
 
   if (entry.code.empty())
@@ -48,7 +49,7 @@ void format_emacs_transactions::operator()(transaction_t& xact)
       out << "\n";
     }
 
-    out << "  (" << (((unsigned long)xact.beg_pos) + 1) << " ";
+    out << "  (" << (((unsigned long)xact.beg_line) + 1) << " ";
     out << "\"" << xact_account(xact)->fullname() << "\" \""
 	<< xact.amount << "\"";
 

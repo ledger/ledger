@@ -127,6 +127,10 @@ inline datetime_t parse_datetime(const string& str) {
   return parse_datetime(str.c_str());
 }
 
+inline string format_datetime(const datetime_t& when) {
+  return "";			// jww (2008-07-19): NYI
+}
+
 extern const ptime time_now;
 extern const date  date_now;
 extern bool        day_before_month;

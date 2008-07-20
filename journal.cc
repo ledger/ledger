@@ -164,28 +164,30 @@ bool entry_base_t::finalize()
     if (this_amt == other_amt)
       other_amt++;
 
-    amount_t per_unit_cost =
-      amount_t((*other_amt).second / (*this_amt).second).unround();
+    if (this_amt != bal.amounts.end()) {
+      amount_t per_unit_cost =
+	amount_t((*other_amt).second / (*this_amt).second).unround();
 
-    for (; x != transactions.end(); x++) {
-      if ((*x)->cost || ((*x)->flags & TRANSACTION_VIRTUAL) ||
-	  ! (*x)->amount || (*x)->amount.commodity() != this_comm)
-	continue;
+      for (; x != transactions.end(); x++) {
+	if ((*x)->cost || ((*x)->flags & TRANSACTION_VIRTUAL) ||
+	    ! (*x)->amount || (*x)->amount.commodity() != this_comm)
+	  continue;
 
-      assert((*x)->amount);
-      balance -= (*x)->amount;
+	assert((*x)->amount);
+	balance -= (*x)->amount;
 
-      entry_t * entry = dynamic_cast<entry_t *>(this);
+	entry_t * entry = dynamic_cast<entry_t *>(this);
 
-      if ((*x)->amount.commodity() &&
-	  ! (*x)->amount.commodity().annotated)
-	(*x)->amount.annotate_commodity
-	  (annotation_t(per_unit_cost.abs(),
-			entry ? optional<datetime_t>(entry->actual_date()) : none,
-			entry ? optional<string>(entry->code) : none));
+	if ((*x)->amount.commodity() &&
+	    ! (*x)->amount.commodity().annotated)
+	  (*x)->amount.annotate_commodity
+	    (annotation_t(per_unit_cost.abs(),
+			  entry ? optional<datetime_t>(entry->actual_date()) : none,
+			  entry ? optional<string>(entry->code) : none));
 
-      (*x)->cost = new amount_t(- (per_unit_cost * (*x)->amount));
-      balance += *(*x)->cost;
+	(*x)->cost = new amount_t(- (per_unit_cost * (*x)->amount));
+	balance += *(*x)->cost;
+      }
     }
   }
 
@@ -264,6 +266,8 @@ bool entry_base_t::finalize()
     error * err =
       new balance_error("Entry does not balance",
 			new entry_context(*this, "While balancing entry:"));
+    DEBUG("ledger.journal.unbalanced_remainder", "balance = " << balance);
+    balance.round();
     err->context.push_front
       (new value_context(balance, "Unbalanced remainder is:"));
     throw err;
