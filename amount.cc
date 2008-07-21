@@ -43,6 +43,7 @@
 
 #include "amount.h"
 #include "parser.h"
+#include "binary.h"
 
 namespace ledger {
 

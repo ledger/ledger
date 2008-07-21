@@ -23,18 +23,6 @@ class parser_t
 			     const path *  original_file = NULL) = 0;
 };
 
-class binary_parser_t : public parser_t
-{
-public:
-  virtual bool test(std::istream& in) const;
-
-  virtual unsigned int parse(std::istream& in,
-			     config_t&     config,
-			     journal_t *   journal,
-			     account_t *   master        = NULL,
-			     const path *  original_file = NULL);
-};
-
 bool register_parser(parser_t * parser);
 bool unregister_parser(parser_t * parser);
 

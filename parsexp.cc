@@ -30,6 +30,7 @@
  */
 
 #include "parsexp.h"
+#include "parser.h"
 
 namespace ledger {
 namespace expr {

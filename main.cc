@@ -31,11 +31,11 @@
 
 #include "utils.h"
 #include "option.h"
-//#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
-//#include "gnucash.h"
-//#endif
-//#include "qif.h"
-//#include "ofx.h"
+#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
+#include "gnucash.h"
+#endif
+#include "qif.h"
+#include "ofx.h"
 
 #include <ledger.h>
 
@@ -313,10 +313,8 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
   if (session.use_cache && session.cache_dirty && session.cache_file) {
     TRACE_START(binary_cache, 1, "Wrote binary journal file");
 
-#if 0
     ofstream stream(*session.cache_file);
-    write_binary_journal(stream, journal);
-#endif
+    binary::write_journal(stream, journal);
 
     TRACE_FINISH(binary_cache, 1);
   }
@@ -389,17 +387,15 @@ int main(int argc, char * argv[], char * envp[])
 
     ledger::set_session_context(session.get());
 
-#if 0
-    session->register_parser(new binary_parser_t);
+    session->register_parser(new ledger::binary_parser_t);
 #if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
-    session->register_parser(new xml::xml_parser_t);
-    session->register_parser(new gnucash_parser_t);
+    session->register_parser(new ledger::xml_parser_t);
+    session->register_parser(new ledger::gnucash_parser_t);
 #endif
 #ifdef HAVE_LIBOFX
-    session->register_parser(new ofx_parser_t);
+    session->register_parser(new ledger::ofx_parser_t);
 #endif
-    session->register_parser(new qif_parser_t);
-#endif
+    session->register_parser(new ledger::qif_parser_t);
     session->register_parser(new ledger::textual_parser_t);
 
     std::auto_ptr<ledger::report_t> report(new ledger::report_t(*session.get()));
@@ -413,31 +409,29 @@ int main(int argc, char * argv[], char * envp[])
       session.release();
     }
   }
-#if 0
-  catch (error * err) {
+  catch (ledger::error * err) {
     std::cout.flush();
     // Push a null here since there's no file context
     if (err->context.empty() ||
-	! dynamic_cast<xact_context *>(err->context.front()))
-      err->context.push_front(new error_context(""));
+	! dynamic_cast<ledger::xact_context *>(err->context.front()))
+      err->context.push_front(new ledger::error_context(""));
     err->reveal_context(std::cerr, "Error");
     std::cerr << err->what() << std::endl;
-    checked_delete(err);
+    ledger::checked_delete(err);
   }
-  catch (fatal * err) {
+  catch (ledger::fatal * err) {
     std::cout.flush();
     // Push a null here since there's no file context
     if (err->context.empty() ||
-	! dynamic_cast<xact_context *>(err->context.front()))
-      err->context.push_front(new error_context(""));
+	! dynamic_cast<ledger::xact_context *>(err->context.front()))
+      err->context.push_front(new ledger::error_context(""));
     err->reveal_context(std::cerr, "Fatal");
     std::cerr << err->what() << std::endl;
-    checked_delete(err);
+    ledger::checked_delete(err);
   }
-#endif
   catch (const std::exception& err) {
     std::cout.flush();
-    std::cerr << "Error: " << err.what() << std::endl;
+    std::cerr << "Exception: " << err.what() << std::endl;
   }
   catch (int _status) {
     status = _status;

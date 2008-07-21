@@ -503,13 +503,11 @@ inline void throw_unexpected_error(char, char) {
  *
  * Date/time support classes
  * General support for objects with "flags"
- * Support for object serialization (binary read/write)
  * Support for scoped execution and variable restoration
  */
 
 #include "times.h"
 #include "flags.h"
-#include "binary.h"
 #include "pushvar.h"
 
 /**********************************************************************
