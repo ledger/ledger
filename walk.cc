@@ -28,6 +28,11 @@ bool compare_items<transaction_t>::operator()(const transaction_t * left,
     rxdata.dflags |= TRANSACTION_SORT_CALC;
   }
 
+  DEBUG("ledger.walk.compare_items_xact",
+	"lxdata.sort_value = " << lxdata.sort_value);
+  DEBUG("ledger.walk.compare_items_xact",
+	"rxdata.sort_value = " << rxdata.sort_value);
+
   return lxdata.sort_value < rxdata.sort_value;
 }
 
