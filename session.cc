@@ -290,6 +290,8 @@ expr::ptr_op_t session_t::lookup(const string& name)
       case 'v':
 	if (! *(p + 1) || std::strcmp(p, "verbose") == 0)
 	  return MAKE_FUNCTOR(session_t::option_verbose);
+	else if (std::strcmp(p, "version") == 0)
+	  return MAKE_FUNCTOR(session_t::option_version);
 	else if (std::strcmp(p, "verify") == 0)
 	  return MAKE_FUNCTOR(session_t::option_verify);
 	break;

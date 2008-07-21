@@ -137,6 +137,26 @@ class session_t : public expr::symbol_scope_t
   virtual expr::ptr_op_t lookup(const string& name);
 
   //
+  // Help options
+  //
+
+  value_t option_version(expr::scope_t&) {
+    std::cout << "Ledger " << ledger::version << ", the command-line accounting tool";
+    std::cout << "\n\nCopyright (c) 2003-2008, John Wiegley.  All rights reserved.\n\n\
+This program is made available under the terms of the BSD Public License.\n\
+See LICENSE file included with the distribution for details and disclaimer.\n";
+    std::cout << "\n(modules: gmp, pcre";
+#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
+    std::cout << ", xml";
+#endif
+#ifdef HAVE_LIBOFX
+    std::cout << ", ofx";
+#endif
+    std::cout << ")\n";
+    return NULL_VALUE;
+  }
+
+  //
   // Debug options
   //
 

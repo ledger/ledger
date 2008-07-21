@@ -19,7 +19,10 @@ if [ -x "$cmd" ]; then
     export LIBTOOLIZE="$cmd"
 fi
 
-cat configure.tmpl | sed "s/%VERSION%/$(git describe)/" > configure.in
+COMMIT=$(git describe --all --long | sed 's/heads\///')
+
+cat configure.tmpl | \
+    sed "s/%VERSION%/$COMMIT/" > configure.in
 
 autoreconf --force --install
 
@@ -142,3 +145,12 @@ fi
 "$HERE/configure" --srcdir="$HERE" CXX="$CXX" \
     CPPFLAGS="$CPPFLAGS" CXXFLAGS="$CXXFLAGS $local_cxxflags" \
     LDFLAGS="$LDFLAGS" LIBS="$LIBS" $SWITCHES "$@"
+
+# Alter the Makefile so that it's not nearly so verbose.  This makes finding
+# errors and warnings much easier.
+
+if [ -f Makefile ]; then
+    perl -i -pe 's/^\t(\$\((LIBTOOL|CXX)\).*)/\t\@echo "   " CXX \$\@;$1 > \/dev\/null/;' Makefile
+    perl -i -pe 's/^\tmv -f/\t\@mv -f/;' Makefile
+    perl -i -pe 's/^\t(\$\((.*?)LINK\).*)/\t\@echo "   " LD \$\@;$1 > \/dev\/null/;' Makefile
+fi

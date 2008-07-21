@@ -149,8 +149,7 @@ void process_environment(const char ** envp, const string& tag,
 }
 
 void process_arguments(int argc, char ** argv, const bool anywhere,
-		       expr::scope_t& scope,
-		       std::list<string>& args)
+		       expr::scope_t& scope, std::list<string>& args)
 {
   for (char ** i = argv; *i; i++) {
     if ((*i)[0] != '-') {
