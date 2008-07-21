@@ -189,7 +189,7 @@ report_t * report = NULL;
 static void show_version(std::ostream& out)
 {
   out << "Ledger " << ledger::version << ", the command-line accounting tool";
-  out << "\n\nCopyright (c) 2003-2006, John Wiegley.  All rights reserved.\n\n\
+  out << "\n\nCopyright (c) 2003-2008, John Wiegley.  All rights reserved.\n\n\
 This program is made available under the terms of the BSD Public License.\n\
 See LICENSE file included with the distribution for details and disclaimer.\n";
   out << "\n(modules: gmp, pcre";
