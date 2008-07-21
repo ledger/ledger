@@ -72,10 +72,21 @@ entry_t * derive_new_entry(journal_t& journal,
       }
     }
 
-    if (journal.basket)
-      acct = journal.basket;
-    else
-      acct = journal.find_account("Equity");
+    acct = NULL;
+
+    if (i != end) {
+      if (! acct)
+	acct = journal.find_account_re(*i);
+      if (! acct)
+	acct = journal.find_account(*i);
+    }
+
+    if (! acct) {
+      if (journal.basket)
+	acct = journal.basket;
+      else
+	acct = journal.find_account("Equity");
+    }   
 
     added->add_transaction(new transaction_t(acct));
   }
