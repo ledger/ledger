@@ -1,11 +1,11 @@
 ;;; ledger.el --- Helper code for use with the "ledger" command-line tool
 
-;; Copyright (C) 2007 John Wiegley (johnw AT gnu DOT org)
+;; Copyright (C) 2008 John Wiegley (johnw AT gnu DOT org)
 
 ;; Emacs Lisp Archive Entry
 ;; Filename: ledger.el
 ;; Version: 2.6.1
-;; Date: Thu 18-Jul-2008
+;; Date: Fri 18-Jul-2008
 ;; Keywords: data
 ;; Author: John Wiegley (johnw AT gnu DOT org)
 ;; Maintainer: John Wiegley (johnw AT gnu DOT org)
