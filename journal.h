@@ -252,7 +252,9 @@ class auto_entry_t : public entry_base_t
 public:
   item_predicate<transaction_t> predicate;
 
-  auto_entry_t();
+  auto_entry_t() {
+    TRACE_CTOR(auto_entry_t, "");
+  }
   auto_entry_t(const string& _predicate)
     : predicate(_predicate)
   {

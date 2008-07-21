@@ -266,12 +266,11 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
 
   // Are we handling the expr commands?  Do so now.
 
-  expr::context_scope_t doc_scope(report, &xml_document);
-
   if (verb == "expr") {
     value_expr expr(*arg);
 
     IF_INFO() {
+#if 0
       *out << "Value expression tree:" << std::endl;
       expr.dump(*out);
       *out << std::endl;
@@ -279,9 +278,12 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
       expr.print(*out, doc_scope);
       *out << std::endl << std::endl;
       *out << "Result of calculation: ";
+#endif
     }
 
+#if 0
     *out << expr.calc(doc_scope).strip_annotations() << std::endl;
+#endif
 
     return 0;
   }
@@ -289,13 +291,13 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
   // Apply transforms to the hierarchical document structure
 
   INFO_START(transforms, "Applied transforms");
-  report.apply_transforms(doc_scope);
+  report.apply_transforms(*expr::global_scope);
   INFO_FINISH(transforms);
 
   // Create an argument scope containing the report command's
   // arguments, and then invoke the command.
 
-  xml::xpath_t::call_scope_t command_args(doc_scope);
+  expr::call_scope_t command_args(*expr::global_scope);
 
   for (strings_list::iterator i = arg; i != args.end(); i++)
     command_args.push_back(value_t(*i, true));

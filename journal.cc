@@ -32,6 +32,7 @@
 #include "journal.h"
 #include "utils.h"
 #include "valexpr.h"
+#include "format.h"
 #include "mask.h"
 
 namespace ledger {
@@ -637,42 +638,6 @@ bool journal_t::valid() const
     }
 
   return true;
-}
-
-void print_entry(std::ostream& out, const entry_base_t& entry_base,
-		 const string& prefix)
-{
-  string print_format;
-
-  if (dynamic_cast<const entry_t *>(&entry_base)) {
-    print_format = (prefix + "%D %X%C%P\n" +
-		    prefix + "    %-34A  %12o\n%/" +
-		    prefix + "    %-34A  %12o\n");
-  }
-  else if (const auto_entry_t * entry =
-	   dynamic_cast<const auto_entry_t *>(&entry_base)) {
-    out << "= " << entry->predicate.predicate.expr << '\n';
-    print_format = prefix + "    %-34A  %12o\n";
-  }
-  else if (const period_entry_t * entry =
-	   dynamic_cast<const period_entry_t *>(&entry_base)) {
-    out << "~ " << entry->period_string << '\n';
-    print_format = prefix + "    %-34A  %12o\n";
-  }
-  else {
-    assert(false);
-  }
-
-#if 0
-  format_entries formatter(out, print_format);
-  walk_transactions(const_cast<transactions_list&>(entry_base.transactions),
-		    formatter);
-  formatter.flush();
-
-  clear_transaction_xdata cleaner;
-  walk_transactions(const_cast<transactions_list&>(entry_base.transactions),
-		    cleaner);
-#endif
 }
 
 void entry_context::describe(std::ostream& out) const throw()

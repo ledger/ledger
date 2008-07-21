@@ -15,6 +15,10 @@ class account_t;
 
 namespace expr {
 
+DECLARE_EXCEPTION(error, parse_error);
+DECLARE_EXCEPTION(error, compile_error);
+DECLARE_EXCEPTION(error, calc_error);
+
 #if 0
 struct context_t
 {
@@ -642,9 +646,12 @@ bool compute_amount(const ptr_op_t expr, amount_t& amt,
 #define PARSE_VALEXPR_NO_MIGRATE 0x04
 #define PARSE_VALEXPR_NO_REDUCE  0x08
 
+ptr_op_t parse_boolean_expr(std::istream& in, scope_t * scope,
+			    const short flags);
+
 ptr_op_t parse_value_expr(std::istream& in,
-				scope_t * scope = NULL,
-				const short flags = PARSE_VALEXPR_RELAXED);
+			  scope_t * scope = NULL,
+			  const short flags = PARSE_VALEXPR_RELAXED);
 
 inline ptr_op_t
 parse_value_expr(const string& str,
@@ -742,6 +749,25 @@ scope_t::find_scope<context_scope_t>(bool skip_this) {
   FIND_SCOPE(symbol_scope_t, scope_ref)
 #define CONTEXT_SCOPE(scope_ref) \
   FIND_SCOPE(context_scope_t, scope_ref)
+
+inline ptr_op_t op_t::new_node(kind_t _kind, ptr_op_t _left, ptr_op_t _right) {
+  ptr_op_t node(new op_t(_kind));
+  node->set_left(_left);
+  node->set_right(_right);
+  return node;
+}
+
+inline ptr_op_t op_t::wrap_value(const value_t& val) {
+  ptr_op_t temp(new op_t(op_t::VALUE));
+  temp->set_value(val);
+  return temp;
+}
+
+inline ptr_op_t op_t::wrap_functor(const function_t& fobj) {
+  ptr_op_t temp(new op_t(op_t::FUNCTION));
+  temp->set_function(fobj);
+  return temp;
+}
 
 } // namespace expr
 
@@ -866,15 +892,12 @@ inline value_t compute_total(const details_t& details = details_t()) {
     return total_expr->compute(details);
 }
 
-expr::ptr_op_t parse_boolean_expr(std::istream& in, expr::scope_t * scope,
-				  const short flags);
-
 inline void parse_value_definition(const string& str,
 				   expr::scope_t * scope = NULL) {
   std::istringstream def(str);
   value_expr expr
-    (parse_boolean_expr(def, scope ? scope : expr::global_scope.get(),
-			PARSE_VALEXPR_RELAXED));
+    (expr::parse_boolean_expr(def, scope ? scope : expr::global_scope.get(),
+			      PARSE_VALEXPR_RELAXED));
 }
 
 //////////////////////////////////////////////////////////////////////

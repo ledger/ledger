@@ -41,6 +41,29 @@ bool compute_amount(ptr_op_t expr, amount_t& amt,
   return true;
 }
 
+void scope_t::define(const string& name, const value_t& val) {
+  define(name, op_t::wrap_value(val));
+}
+
+void symbol_scope_t::define(const string& name, ptr_op_t def)
+{
+  DEBUG("ledger.xpath.syms", "Defining '" << name << "' = " << def);
+
+  std::pair<symbol_map::iterator, bool> result
+    = symbols.insert(symbol_map::value_type(name, def));
+  if (! result.second) {
+    symbol_map::iterator i = symbols.find(name);
+    assert(i != symbols.end());
+    symbols.erase(i);
+
+    std::pair<symbol_map::iterator, bool> result2
+      = symbols.insert(symbol_map::value_type(name, def));
+    if (! result2.second)
+      throw_(compile_error,
+	     "Redefinition of '" << name << "' in same scope");
+  }
+}
+
 namespace {
   int count_leaves(ptr_op_t expr)
   {
@@ -97,6 +120,37 @@ namespace {
     return NULL;
   }
 }
+
+ptr_op_t symbol_scope_t::lookup(const string& name)
+{
+  switch (name[0]) {
+#if 0
+  case 'l':
+    if (name == "last")
+      return WRAP_FUNCTOR(bind(xpath_fn_last, _1));
+    break;
+
+  case 'p':
+    if (name == "position")
+      return WRAP_FUNCTOR(bind(xpath_fn_position, _1));
+    break;
+
+  case 't':
+    if (name == "text")
+      return WRAP_FUNCTOR(bind(xpath_fn_text, _1));
+    else if (name == "type")
+      return WRAP_FUNCTOR(bind(xpath_fn_type, _1));
+#endif
+    break;
+  }
+
+  symbol_map::const_iterator i = symbols.find(name);
+  if (i != symbols.end())
+    return (*i).second;
+
+  return child_scope_t::lookup(name);
+}
+
 
 void op_t::compute(value_t& result, const details_t& details,
 		   ptr_op_t context) const
