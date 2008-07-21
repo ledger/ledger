@@ -130,8 +130,9 @@ if [ "$LOCAL" = "false" -a -d "$HOME/Products" ]; then
     if [ -x version ]; then
 	version="-$(./version)"
     fi
-    projdir="$HOME/Products/$(basename $HERE)"
-    projdir="$projdir$version"
+    #projdir="$HOME/Products/$(basename $HERE)"
+    #projdir="$projdir$version"
+    projdir="$HOME/Products/ledger"
     if [ ! -d "$projdir" ]; then
 	mkdir -p "$projdir"
     fi
