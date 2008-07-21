@@ -1,11 +1,40 @@
+/*
+ * Copyright (c) 2003-2007, John Wiegley.  All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ * - Redistributions of source code must retain the above copyright
+ *   notice, this list of conditions and the following disclaimer.
+ *
+ * - Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in the
+ *   documentation and/or other materials provided with the distribution.
+ *
+ * - Neither the name of New Artisans LLC nor the names of its
+ *   contributors may be used to endorse or promote products derived from
+ *   this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 #ifndef _VALEXPR_H
 #define _VALEXPR_H
 
 #include "value.h"
 #include "utils.h"
 #include "mask.h"
-
-#include <memory>
 
 namespace ledger {
 
@@ -15,7 +44,6 @@ class account_t;
 
 namespace expr {
 
-DECLARE_EXCEPTION(error, parse_error);
 DECLARE_EXCEPTION(error, compile_error);
 DECLARE_EXCEPTION(error, calc_error);
 
@@ -375,7 +403,7 @@ struct op_t : public noncopyable
     O_OR,
     O_QUES,
     O_COL,
-    O_COM,
+    O_COMMA,
     O_DEF,
     O_REF,
     O_ARG,
@@ -632,59 +660,10 @@ class value_expr_error : public error {
 extern std::auto_ptr<symbol_scope_t> global_scope;
 
 extern datetime_t terminus;
-extern bool	  initialized;
-
-void init_value_expr();
 
 bool compute_amount(const ptr_op_t expr, amount_t& amt,
 		    const transaction_t * xact,
 		    const ptr_op_t context = NULL);
-
-#define PARSE_VALEXPR_NORMAL	 0x00
-#define PARSE_VALEXPR_PARTIAL	 0x01
-#define PARSE_VALEXPR_RELAXED	 0x02
-#define PARSE_VALEXPR_NO_MIGRATE 0x04
-#define PARSE_VALEXPR_NO_REDUCE  0x08
-
-ptr_op_t parse_boolean_expr(std::istream& in, scope_t * scope,
-			    const short flags);
-
-ptr_op_t parse_value_expr(std::istream& in,
-			  scope_t * scope = NULL,
-			  const short flags = PARSE_VALEXPR_RELAXED);
-
-inline ptr_op_t
-parse_value_expr(const string& str,
-		 scope_t *     scope	  = NULL,
-		 const short   flags = PARSE_VALEXPR_RELAXED) {
-  std::istringstream stream(str);
-  try {
-    return parse_value_expr(stream, scope, flags);
-  }
-  catch (error * err) {
-    err->context.push_back
-      (new line_context(str, (long)stream.tellg() - 1,
-			"While parsing value expression:"));
-    throw err;
-  }
-}
-
-inline ptr_op_t
-parse_value_expr(const char * p,
-		 scope_t *    scope = NULL,
-		 const short  flags  = PARSE_VALEXPR_RELAXED) {
-  return parse_value_expr(string(p), scope, flags);
-}
-
-void dump_value_expr(std::ostream& out, const ptr_op_t node,
-		     const int depth = 0);
-
-bool print_value_expr(std::ostream&	   out,
-		      const ptr_op_t node,
-		      const bool           relaxed      = true,
-		      const ptr_op_t node_to_find = NULL,
-		      unsigned long *	   start_pos    = NULL,
-		      unsigned long *	   end_pos      = NULL);
 
 //////////////////////////////////////////////////////////////////////
 
@@ -769,6 +748,40 @@ inline ptr_op_t op_t::wrap_functor(const function_t& fobj) {
   return temp;
 }
 
+#if 0
+class xpath_t
+{
+public:
+public:
+  void parse(const string& _expr, flags_t _flags = XPATH_PARSE_RELAXED) {
+    expr  = _expr;
+    flags = _flags;
+    ptr	  = parse_expr(_expr, _flags);
+  }
+  void parse(std::istream& in, flags_t _flags = XPATH_PARSE_RELAXED) {
+    expr  = "";
+    flags = _flags;
+    ptr   = parse_expr(in, _flags);
+  }
+
+  void compile(scope_t& scope) {
+    if (ptr.get())
+      ptr = ptr->compile(scope);
+  }
+
+  value_t calc(scope_t& scope) const {
+    if (ptr.get())
+      return ptr->calc(scope);
+    return NULL_VALUE;
+  }
+
+  static value_t eval(const string& _expr, scope_t& scope) {
+    return xpath_t(_expr).calc(scope);
+  }
+
+};
+#endif
+
 } // namespace expr
 
 //////////////////////////////////////////////////////////////////////
@@ -778,60 +791,46 @@ class value_expr
   expr::ptr_op_t ptr;
 
 public:
-  string expr;
+  string expr_str;
 
   typedef expr::details_t details_t;
 
-  value_expr() : ptr(NULL) {}
+  value_expr() {}
 
-  value_expr(const string& _expr) : expr(_expr) {
-    DEBUG("ledger.memory.ctors", "ctor value_expr");
-    if (! _expr.empty())
-      ptr = expr::parse_value_expr(expr);
-    else
-      ptr = expr::ptr_op_t();
+  value_expr(const string& _expr_str);
+  value_expr(const expr::ptr_op_t _ptr, const string& _expr_str = "")
+    : ptr(_ptr), expr_str(_expr_str) {
+    TRACE_CTOR(value_expr, "const expr::ptr_op_t");
   }
-  value_expr(const expr::ptr_op_t _ptr) : ptr(_ptr) {
-    DEBUG("ledger.memory.ctors", "ctor value_expr");
-  }
-  value_expr(const value_expr& other) : ptr(other.ptr), expr(other.expr) {
-    DEBUG("ledger.memory.ctors", "ctor value_expr");
-  }
-  virtual ~value_expr() {
-    DEBUG("ledger.memory.dtors", "dtor value_expr");
-    if (ptr)
-      ptr->release();
-  }
-
-  value_expr& operator=(const string& _expr) {
-    expr = _expr;
-    reset(expr::parse_value_expr(expr));
-    return *this;
-  }
-  value_expr& operator=(expr::ptr_op_t _expr) {
-    expr = "";
-    reset(_expr);
-    return *this;
+  value_expr(const value_expr& other)
+    : ptr(other.ptr), expr_str(other.expr_str) {
+    TRACE_CTOR(value_expr, "copy");
   }
   value_expr& operator=(const value_expr& _expr) {
-    expr = _expr.expr;
+    expr_str = _expr.expr_str;
     reset(_expr.get());
     return *this;
+  }
+
+  virtual ~value_expr() throw() {
+    TRACE_DTOR(value_expr);
   }
 
   operator bool() const throw() {
     return ptr != NULL;
   }
   operator string() const throw() {
-    return expr;
+    return expr_str;
   }
   operator const expr::ptr_op_t() const throw() {
     return ptr;
   }
 
+#if 0
   const expr::op_t& operator*() const throw() {
     return *ptr;
   }
+#endif
   const expr::ptr_op_t operator->() const throw() {
     return ptr;
   }
@@ -892,14 +891,6 @@ inline value_t compute_total(const details_t& details = details_t()) {
     return total_expr->compute(details);
 }
 
-inline void parse_value_definition(const string& str,
-				   expr::scope_t * scope = NULL) {
-  std::istringstream def(str);
-  value_expr expr
-    (expr::parse_boolean_expr(def, scope ? scope : expr::global_scope.get(),
-			      PARSE_VALEXPR_RELAXED));
-}
-
 //////////////////////////////////////////////////////////////////////
 
 template <typename T>
@@ -909,13 +900,13 @@ public:
   value_expr predicate;
 
   item_predicate() {
-    TRACE_CTOR(item_predicate, "ctor item_predicate<T>()");
+    TRACE_CTOR(item_predicate, "");
   }
   item_predicate(const value_expr& _predicate) : predicate(_predicate) {
-    TRACE_CTOR(item_predicate, "ctor item_predicate<T>(const value_expr&)");
+    TRACE_CTOR(item_predicate, "const value_expr&");
   }
   item_predicate(const string& _predicate) : predicate(_predicate) {
-    TRACE_CTOR(item_predicate, "ctor item_predicate<T>(const string&)");
+    TRACE_CTOR(item_predicate, "const string&");
   }
 
   ~item_predicate() {

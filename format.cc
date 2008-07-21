@@ -463,13 +463,13 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 
 	if (details.xact->cost && details.xact->amount) {
 	  std::ostringstream stream;
-	  if (! details.xact->amount_expr.expr.empty())
-	    stream << details.xact->amount_expr.expr;
+	  if (! details.xact->amount_expr.expr_str.empty())
+	    stream << details.xact->amount_expr.expr_str;
 	  else
 	    stream << details.xact->amount.strip_annotations();
 
 	  if (details.xact->cost_expr)
-	    stream << details.xact->cost_expr->expr;
+	    stream << details.xact->cost_expr->expr_str;
 	  else
 	    stream << " @ " << amount_t(*details.xact->cost /
 					details.xact->amount).unround();
@@ -498,8 +498,8 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 	}
 
 	if (! use_disp) {
-	  if (! details.xact->amount_expr.expr.empty())
-	    out << details.xact->amount_expr.expr;
+	  if (! details.xact->amount_expr.expr_str.empty())
+	    out << details.xact->amount_expr.expr_str;
 	  else
 	    out << details.xact->amount.strip_annotations();
 	} else {
@@ -828,7 +828,7 @@ void print_entry(std::ostream& out, const entry_base_t& entry_base,
   }
   else if (const auto_entry_t * entry =
 	   dynamic_cast<const auto_entry_t *>(&entry_base)) {
-    out << "= " << entry->predicate.predicate.expr << '\n';
+    out << "= " << entry->predicate.predicate.expr_str << '\n';
     print_format = prefix + "    %-34A  %12o\n";
   }
   else if (const period_entry_t * entry =

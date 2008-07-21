@@ -72,21 +72,31 @@ struct interval_t
   unsigned short minutes;
   unsigned short seconds;
 
-  datetime_t begin;
-  datetime_t end;
+  datetime_t	 begin;
+  datetime_t	 end;
+
+  mutable bool   advanced;
 
   interval_t(int _days = 0, int _months = 0, int _years = 0,
 	     const datetime_t& _begin = datetime_t(),
 	     const datetime_t& _end   = datetime_t())
     : years(_years), months(_months), days(_days),
       hours(0), minutes(0), seconds(0),
-      begin(_begin), end(_end) {}
+      begin(_begin), end(_end), advanced(false) {
+    TRACE_CTOR(interval_t,
+	       "int, int, int, const datetime_t&, const datetime_t&");
+  }
 
   interval_t(const string& desc)
     : years(0), months(0), days(0),
-      hours(0), minutes(0), seconds(0) {
+      hours(0), minutes(0), seconds(0), advanced(false) {
+    TRACE_CTOR(interval_t, "const string&");
     std::istringstream stream(desc);
     parse(stream);
+  }
+
+  ~interval_t() throw() {
+    TRACE_DTOR(interval_t);
   }
 
   operator bool() const {
@@ -98,6 +108,7 @@ struct interval_t
     begin = first(moment);
   }
   datetime_t first(const datetime_t& moment = datetime_t()) const;
+
   datetime_t increment(const datetime_t&) const;
 
   void parse(std::istream& in);

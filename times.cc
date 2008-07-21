@@ -124,8 +124,10 @@ datetime_t interval_t::first(const datetime_t& moment) const
 {
   datetime_t quant(begin);
 
+  if (! advanced)
+    advanced = true;
+
 #if 0
-  // jww (2008-05-08): Implement
   if (is_valid(moment) && moment > quant) {
     // Find an efficient starting point for the upcoming while loop.
     // We want a date early enough that the range will be correct, but
@@ -162,7 +164,6 @@ datetime_t interval_t::increment(const datetime_t& moment) const
 #if 0
   struct std::tm * desc = std::localtime(&moment.when);
 
-  // jww (2008-05-08): Implement
   if (years)
     desc->tm_year += years;
   if (months)

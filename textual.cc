@@ -45,8 +45,8 @@ static value_expr parse_amount_expr(std::istream& in, amount_t& amount,
 				    transaction_t * xact,
 				    unsigned short flags = 0)
 {
-  value_expr expr(expr::parse_value_expr(in, NULL, flags | PARSE_VALEXPR_RELAXED |
-					 PARSE_VALEXPR_PARTIAL));
+  value_expr expr(expr::parser_t(in, flags | EXPR_PARSE_RELAXED |
+				 EXPR_PARSE_PARTIAL));
 
   DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 	      "Parsed an amount expression");
@@ -172,7 +172,7 @@ transaction_t * parse_transaction(char * line, account_t * account,
 
       xact->amount_expr =
 	parse_amount_expr(in, xact->amount, xact.get(),
-			  PARSE_VALEXPR_NO_REDUCE);
+			  EXPR_PARSE_NO_REDUCE);
       saw_amount = true;
 
       xact->amount.reduce();
@@ -180,7 +180,7 @@ transaction_t * parse_transaction(char * line, account_t * account,
 	    "Reduced amount is " << xact->amount);
 
       unsigned long end = (long)in.tellg();
-      xact->amount_expr.expr = string(line, beg, end - beg);
+      xact->amount_expr.expr_str = string(line, beg, end - beg);
     }
     catch (error * err) {
       err_desc = "While parsing transaction amount:";
@@ -215,7 +215,7 @@ transaction_t * parse_transaction(char * line, account_t * account,
 	  unsigned long beg = (long)in.tellg();
 
 	  if (parse_amount_expr(in, *xact->cost, xact.get(),
-				PARSE_VALEXPR_NO_MIGRATE))
+				EXPR_PARSE_NO_MIGRATE))
 	    throw new parse_error
 	      ("A transaction's cost must evaluate to a constant value");
 
@@ -845,8 +845,8 @@ unsigned int textual_parser_t::parse(std::istream& in,
 #if 0
 	  if (! expr::global_scope.get())
 	    init_value_expr();
-#endif
 	  parse_value_definition(p);
+#endif
 	}
 	break;
       }
@@ -984,7 +984,7 @@ void write_textual_journal(journal_t& journal, path pathname,
       base = *el++;
     }
     else if (al != journal.auto_entries.end() && pos == (*al)->beg_pos) {
-      out << "= " << (*al)->predicate.predicate.expr << '\n';
+      out << "= " << (*al)->predicate.predicate.expr_str << '\n';
       base = *al++;
     }
     else if (pl != journal.period_entries.end() && pos == (*pl)->beg_pos) {

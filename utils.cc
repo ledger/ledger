@@ -423,6 +423,8 @@ string::~string() {
 
 #endif // VERIFY_ON
 
+ledger::string empty_string("");
+
 /**********************************************************************
  *
  * Logging

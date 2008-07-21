@@ -30,6 +30,7 @@
  */
 
 #include "session.h"
+#include "parsexp.h"
 
 namespace ledger {
 
@@ -306,16 +307,10 @@ static void initialize()
 {
   amount_t::initialize();
   value_t::initialize();
-#if 0
-  expr::initialize();
-#endif
 }
 
 static void shutdown()
 {
-#if 0
-  expr::shutdown();
-#endif
   value_t::shutdown();
   amount_t::shutdown();
 }

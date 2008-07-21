@@ -354,13 +354,13 @@ inline void read_transaction(const char *& data, transaction_t * xact)
   }
   else if (flag == 1) {
     read_amount(data, xact->amount);
-    read_string(data, xact->amount_expr.expr);
+    read_string(data, xact->amount_expr.expr_str);
   }
   else {
     expr::ptr_op_t ptr = read_value_expr(data);
     assert(ptr.get());
     xact->amount_expr.reset(ptr);
-    read_string(data, xact->amount_expr.expr);
+    read_string(data, xact->amount_expr.expr_str);
   }
 
   if (read_bool(data)) {
@@ -912,12 +912,12 @@ void write_transaction(std::ostream& out, transaction_t * xact,
   else if (xact->amount_expr) {
     write_number<unsigned char>(out, 2);
     write_value_expr(out, xact->amount_expr.get());
-    write_string(out, xact->amount_expr.expr);
+    write_string(out, xact->amount_expr.expr_str);
   }
-  else if (! xact->amount_expr.expr.empty()) {
+  else if (! xact->amount_expr.expr_str.empty()) {
     write_number<unsigned char>(out, 1);
     write_amount(out, xact->amount);
-    write_string(out, xact->amount_expr.expr);
+    write_string(out, xact->amount_expr.expr_str);
   }
   else {
     write_number<unsigned char>(out, 0);
@@ -928,7 +928,7 @@ void write_transaction(std::ostream& out, transaction_t * xact,
       (! (ignore_calculated && xact->has_flags(TRANSACTION_CALCULATED)))) {
     write_bool(out, true);
     write_amount(out, *xact->cost);
-    write_string(out, xact->cost_expr->expr);
+    write_string(out, xact->cost_expr->expr_str);
   } else {
     write_bool(out, false);
   }

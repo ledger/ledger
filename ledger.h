@@ -52,6 +52,7 @@
 #include <csv.h>
 //#include <quotes.h>
 #include <valexpr.h>
+#include <parsexp.h>
 #include <walk.h>
 #include <derive.h>
 #include <reconcile.h>

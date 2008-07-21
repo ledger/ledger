@@ -48,6 +48,7 @@ libledger_la_SOURCES = \
 	mask.cc        \
 	option.cc      \
 	parser.cc      \
+	parsexp.cc     \
 	qif.cc	       \
 	reconcile.cc   \
 	report.cc      \
@@ -94,6 +95,7 @@ pkginclude_HEADERS = \
 	mask.h       \
 	option.h     \
 	parser.h     \
+	parsexp.h    \
 	qif.h	     \
 	quotes.h     \
 	reconcile.h  \

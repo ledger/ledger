@@ -242,6 +242,8 @@ inline bool operator!=(const string& __lhs, const char* __rhs)
 
 #endif // VERIFY_ON
 
+extern ledger::string empty_string;
+
 #define IF_VERIFY() if (DO_VERIFY())
 
 /**********************************************************************
