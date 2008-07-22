@@ -194,29 +194,17 @@ private:
   ptr_op_t parse_value_expr(std::istream& in, scope_t& scope,
 			    const flags_t flags) const;
 
-  void parse_expr(std::istream& in, string& str,
-		  scope_t& scope, const flags_t flags) {
+  value_expr& parse_expr(std::istream& in, string& str,
+			 scope_t& scope, const flags_t flags) {
     try {
       ptr_op_t top_node = parse_value_expr(in, scope, flags);
       expr = value_expr(top_node, str);
 
-#if 0
-      // jww (2008-07-20): This code should no longer be needed, since we
-      // can't re-use parser_t anymore.
       if (use_lookahead) {
 	use_lookahead = false;
-#ifdef THREADSAFE
 	lookahead.rewind(in);
-#else
-	lookahead->rewind(in);
-#endif
       }
-#ifdef THREADSAFE
       lookahead.clear();
-#else
-      lookahead->clear();
-#endif
-#endif
     }
     catch (error * err) {
       err->context.push_back
@@ -224,44 +212,37 @@ private:
 			  "While parsing value expression:"));
       throw err;
     }
+
+    return expr;
   }
 
 public:
-  parser_t(std::istream& in, const flags_t flags = EXPR_PARSE_RELAXED)
-    : use_lookahead(false)
-  {
-    TRACE_CTOR(parser_t, "std::istream&, const flags_t");
-    parse_expr(in, empty_string, *global_scope, flags);
-  }
-  parser_t(std::istream& in, const flags_t flags = EXPR_PARSE_RELAXED, scope_t& scope)
-    : use_lookahead(false)
-  {
-    TRACE_CTOR(parser_t, "std::istream&, const flags_t, scope_t&");
-    parse_expr(in, empty_string, scope, flags);
-  }
-  parser_t(string& str, const flags_t flags = EXPR_PARSE_RELAXED)
-    : use_lookahead(false)
-  {
-    TRACE_CTOR(parser_t, "string&, const flags_t");
+  parser_t() : use_lookahead(false) {}
 
+  value_expr& parse(std::istream& in,
+		    const flags_t flags = EXPR_PARSE_RELAXED)
+  {
+    return parse_expr(in, empty_string, *global_scope, flags);
+  }
+
+  value_expr& parse(std::istream& in,
+		    const flags_t flags = EXPR_PARSE_RELAXED,
+		    scope_t& scope)
+  {
+    return parse_expr(in, empty_string, scope, flags);
+  }
+
+  value_expr& parse(string& str, const flags_t flags = EXPR_PARSE_RELAXED)
+  {
     std::istringstream stream(str);
-    parse_expr(stream, str, *global_scope, flags);
+    return parse_expr(stream, str, *global_scope, flags);
   }
-  parser_t(string& str, const flags_t flags = EXPR_PARSE_RELAXED, scope_t& scope)
-    : use_lookahead(false)
+
+  value_expr& parse(string& str, const flags_t flags = EXPR_PARSE_RELAXED,
+		    scope_t& scope)
   {
-    TRACE_CTOR(parser_t, "string&, const flags_t, scope_t&");
-
     std::istringstream stream(str);
-    parse_expr(stream, str, scope, flags);
-  }
-
-  ~parser_t() throw() {
-    TRACE_DTOR(parser_t);
-  }
-	   
-  operator value_expr() const {
-    return expr;
+    return parse_expr(stream, str, scope, flags);
   }
 };
 

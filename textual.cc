@@ -40,44 +40,48 @@ struct time_entry_t {
 };
 #endif
 
-static value_expr parse_amount_expr(std::istream& in, amount_t& amount,
-				    transaction_t * xact,
-				    unsigned short flags = 0)
-{
-  value_expr expr(expr::parser_t(in, flags | EXPR_PARSE_RELAXED |
-				 EXPR_PARSE_PARTIAL));
+namespace {
+  expr::parser_t amount_parser;
 
-  DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
-	      "Parsed an amount expression");
+  static value_expr parse_amount_expr(std::istream& in, amount_t& amount,
+				      transaction_t * xact,
+				      unsigned short flags = 0)
+  {
+    value_expr expr =
+      amount_parser.parse(in, flags | EXPR_PARSE_RELAXED | EXPR_PARSE_PARTIAL);
+
+    DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
+	  "Parsed an amount expression");
 
 #ifdef DEBUG_ENABLED
-  DEBUG_IF("ledger.textual.parse") {
-    if (_debug_stream) {
-      ledger::dump_value_expr(*_debug_stream, expr);
-      *_debug_stream << std::endl;
+    DEBUG_IF("ledger.textual.parse") {
+      if (_debug_stream) {
+	ledger::dump_value_expr(*_debug_stream, expr);
+	*_debug_stream << std::endl;
+      }
     }
-  }
 #endif
 
-  if (! expr::compute_amount(expr, amount, xact))
-    throw new parse_error("Amount expression failed to compute");
+    if (! expr::compute_amount(expr, amount, xact))
+      throw new parse_error("Amount expression failed to compute");
 
 #if 0
-  if (expr->kind == expr::node_t::VALUE) {
-    expr = NULL;
-  } else {
-    DEBUG_IF("ledger.textual.parse") {
-      std::cout << "Value expression tree:" << std::endl;
-      ledger::dump_value_expr(std::cout, expr.get());
+    if (expr->kind == expr::node_t::VALUE) {
+      expr = NULL;
+    } else {
+      DEBUG_IF("ledger.textual.parse") {
+	std::cout << "Value expression tree:" << std::endl;
+	ledger::dump_value_expr(std::cout, expr.get());
+      }
     }
-  }
 #else
-  expr = value_expr();
+    expr = value_expr();
 #endif
 
-  DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
-	      "The transaction amount is " << xact->amount);
-  return expr;
+    DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
+	  "The transaction amount is " << xact->amount);
+    return expr;
+  }
 }
 
 transaction_t * parse_transaction(char * line, account_t * account,

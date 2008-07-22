@@ -140,7 +140,8 @@ bool entry_base_t::finalize()
 	  balance += p;
 	}
 
-	assert((*x)->amount);
+	assert(! (*x)->amount.is_null());
+
 	if ((*x)->cost && (*x)->amount.commodity().annotated) {
 	  annotated_commodity_t&
 	    ann_comm(static_cast<annotated_commodity_t&>
@@ -222,7 +223,7 @@ bool entry_base_t::finalize()
   for (transactions_list::const_iterator x = transactions.begin();
        x != transactions.end();
        x++) {
-    if ((*x)->amount ||
+    if (! (*x)->amount.is_null() ||
 	((*x)->has_flags(TRANSACTION_VIRTUAL) &&
 	 ! (*x)->has_flags(TRANSACTION_BALANCE)))
       continue;

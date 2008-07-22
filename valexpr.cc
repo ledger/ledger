@@ -1083,12 +1083,16 @@ value_t op_t::calc(scope_t& scope)
 
 } // namespace expr
 
+namespace {
+  expr::parser_t value_expr_parser;
+}
+
 value_expr::value_expr(const string& _expr_str) : expr_str(_expr_str)
 {
   TRACE_CTOR(value_expr, "const string&");
 
   if (! _expr_str.empty())
-    ptr = expr::parser_t(expr_str).expr.ptr;
+    ptr = value_expr_parser.parse(expr_str).ptr;
 }
 
 } // namespace ledger

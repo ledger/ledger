@@ -695,7 +695,7 @@ int amount_t::sign() const
 bool amount_t::is_zero() const
 {
   if (! quantity)
-    throw_(amount_error, "Cannot determine sign if an uninitialized amount is zero");
+    throw_(amount_error, "Cannot determine if an uninitialized amount is zero");
 
   if (has_commodity()) {
     if (quantity->prec <= commodity().precision())
