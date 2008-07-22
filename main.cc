@@ -373,7 +373,14 @@ int main(int argc, char * argv[], char * envp[])
       else if (i + 1 < argc && std::strcmp(argv[i], "--trace") == 0) {
 #if defined(TRACING_ON)
 	ledger::_log_level   = ledger::LOG_TRACE;
-	ledger::_trace_level = boost::lexical_cast<int>(argv[i + 1]);
+	try {
+	  ledger::_trace_level = boost::lexical_cast<int>(argv[i + 1]);
+	}
+	catch (const boost::bad_lexical_cast& e) {
+	  std::cerr << "Argument to --trace must be an integer."
+		    << std::endl;
+	  return 1;
+	}
 	i++;
 #endif
       }
