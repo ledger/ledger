@@ -12,13 +12,13 @@ static unsigned int  count;
 static journal_t *   curr_journal;
 static entry_t *     curr_entry;
 static commodity_t * curr_comm;
-static string   comm_flags;
+static string	     comm_flags;
 
 static transaction_t::state_t curr_state;
 
-static string   data;
-static bool          ignore;
-static string   have_error;
+static string data;
+static bool   ignore;
+static string have_error;
 
 static void startElement(void *userData, const char *name, const char **attrs)
 {
@@ -180,15 +180,15 @@ bool xml_parser_t::test(std::istream& in) const
 }
 
 unsigned int xml_parser_t::parse(std::istream& in,
-				 config_t&     config,
-				 journal_t *   journal,
+				 session_t&     session,
+				 journal_t&   journal,
 				 account_t *   master,
 				 const path *  original_file)
 {
   char buf[BUFSIZ];
 
   count        = 0;
-  curr_journal = journal;
+  curr_journal = &journal;
   curr_entry   = NULL;
   curr_comm    = NULL;
   ignore       = false;

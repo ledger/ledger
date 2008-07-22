@@ -725,12 +725,12 @@ void walk_accounts(account_t&		    account,
 void walk_commodities(commodity_pool_t::commodities_by_ident& commodities,
 		      item_handler<transaction_t>& handler);
 
-inline void clear_journal_xdata(journal_t * journal) {
+inline void clear_journal_xdata(journal_t& journal) {
   clear_transaction_xdata xact_cleaner;
-  walk_entries(journal->entries, xact_cleaner);
+  walk_entries(journal.entries, xact_cleaner);
 
   clear_account_xdata acct_cleaner;
-  walk_accounts(*journal->master, acct_cleaner);
+  walk_accounts(*journal.master, acct_cleaner);
 }
 
 } // namespace ledger

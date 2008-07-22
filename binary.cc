@@ -72,13 +72,13 @@ bool binary_parser_t::test(std::istream& in) const
 namespace binary {
   unsigned int read_journal(std::istream& in,
 			    const path&	  file,
-			    journal_t *	  journal,
+			    journal_t&	  journal,
 			    account_t *	  master);
 }
 
 unsigned int binary_parser_t::parse(std::istream& in,
-				    config_t&     config,
-				    journal_t *	  journal,
+				    session_t&     session,
+				    journal_t&	  journal,
 				    account_t *	  master,
 				    const path *  original_file)
 {
@@ -558,13 +558,13 @@ inline commodity_t * read_commodity_annotated(const char *& data)
 }
 
 inline
-account_t * read_account(const char *& data, journal_t * journal,
+account_t * read_account(const char *& data, journal_t& journal,
 			 account_t * master = NULL)
 {
   account_t * acct = new account_t(NULL);
   *accounts_next++ = acct;
 
-  acct->journal = journal;
+  acct->journal = &journal;
 
   account_t::ident_t id;
   read_long(data, id);	// parent id
@@ -601,7 +601,7 @@ account_t * read_account(const char *& data, journal_t * journal,
 
 unsigned int read_journal(std::istream&	in,
 			  const path&	file,
-			  journal_t *	journal,
+			  journal_t&	journal,
 			  account_t *	master)
 {
   account_index	       = 
@@ -625,7 +625,7 @@ unsigned int read_journal(std::istream&	in,
       if (std::difftime(info.st_mtime, old_mtime) > 0)
 	return 0;
 
-      journal->sources.push_back(pathname);
+      journal.sources.push_back(pathname);
     }
 
     // Make sure that the cache uses the same price database,
@@ -634,8 +634,8 @@ unsigned int read_journal(std::istream&	in,
     if (read_bool(in)) {
       string pathname;
       read_string(in, pathname);
-      if (! journal->price_db ||
-	  journal->price_db->string() != std::string(pathname))
+      if (! journal.price_db ||
+	  journal.price_db->string() != std::string(pathname))
 	return 0;
     }
   }
@@ -655,12 +655,12 @@ unsigned int read_journal(std::istream&	in,
   account_t::ident_t a_count = read_long<account_t::ident_t>(data);
   accounts = accounts_next = new account_t *[a_count];
 
-  assert(journal->master);
-  delete journal->master;
-  journal->master = read_account(data, journal, master);
+  assert(journal.master);
+  delete journal.master;
+  journal.master = read_account(data, journal, master);
 
   if (read_bool(data))
-    journal->basket = accounts[read_long<account_t::ident_t>(data) - 1];
+    journal.basket = accounts[read_long<account_t::ident_t>(data) - 1];
 
   // Allocate the memory needed for the entries and transactions in
   // one large block, which is then chopped up and custom constructed
@@ -678,8 +678,8 @@ unsigned int read_journal(std::istream&	in,
 
   char * item_pool = new char[pool_size];
 
-  journal->item_pool	 = item_pool;
-  journal->item_pool_end = item_pool + pool_size;
+  journal.item_pool	 = item_pool;
+  journal.item_pool_end = item_pool + pool_size;
 
   entry_t *	  entry_pool = (entry_t *) item_pool;
   transaction_t * xact_pool  = (transaction_t *) (item_pool +
@@ -777,27 +777,27 @@ unsigned int read_journal(std::istream&	in,
     new(entry_pool) entry_t;
     bool finalize = false;
     read_entry(data, entry_pool, xact_pool, finalize);
-    entry_pool->journal = journal;
+    entry_pool->journal = &journal;
     if (finalize && ! entry_pool->finalize())
       continue;
-    journal->entries.push_back(entry_pool++);
+    journal.entries.push_back(entry_pool++);
   }
 
   for (unsigned long i = 0; i < auto_count; i++) {
     auto_entry_t * auto_entry = new auto_entry_t;
     read_auto_entry(data, auto_entry, xact_pool);
-    auto_entry->journal = journal;
-    journal->auto_entries.push_back(auto_entry);
+    auto_entry->journal = &journal;
+    journal.auto_entries.push_back(auto_entry);
   }
 
   for (unsigned long i = 0; i < period_count; i++) {
     period_entry_t * period_entry = new period_entry_t;
     bool finalize = false;
     read_period_entry(data, period_entry, xact_pool, finalize);
-    period_entry->journal = journal;
+    period_entry->journal = &journal;
     if (finalize && ! period_entry->finalize())
       continue;
-    journal->period_entries.push_back(period_entry);
+    journal.period_entries.push_back(period_entry);
   }
 
   // Clean up and return the number of entries read
@@ -806,7 +806,7 @@ unsigned int read_journal(std::istream&	in,
   delete[] commodities;
   delete[] data_pool;
 
-  VERIFY(journal->valid());
+  VERIFY(journal.valid());
 
   return count;
 }
@@ -1104,7 +1104,7 @@ void write_account(std::ostream& out, account_t * account)
     write_account(out, (*i).second);
 }
 
-void write_journal(std::ostream& out, journal_t * journal)
+void write_journal(std::ostream& out, journal_t& journal)
 {
   account_index	       = 
   base_commodity_index = 
@@ -1116,12 +1116,12 @@ void write_journal(std::ostream& out, journal_t * journal)
   // Write out the files that participated in this journal, so that
   // they can be checked for changes on reading.
 
-  if (journal->sources.empty()) {
+  if (journal.sources.empty()) {
     write_number<unsigned short>(out, 0);
   } else {
-    write_number<unsigned short>(out, journal->sources.size());
-    for (paths_list::const_iterator i = journal->sources.begin();
-	 i != journal->sources.end();
+    write_number<unsigned short>(out, journal.sources.size());
+    for (paths_list::const_iterator i = journal.sources.begin();
+	 i != journal.sources.end();
 	 i++) {
       write_string(out, (*i).string());
       struct stat info;
@@ -1131,9 +1131,9 @@ void write_journal(std::ostream& out, journal_t * journal)
 
     // Write out the price database that relates to this data file, so
     // that if it ever changes the cache can be invalidated.
-    if (journal->price_db) {
+    if (journal.price_db) {
       write_bool(out, true);
-      write_string(out, journal->price_db->string());
+      write_string(out, journal.price_db->string());
     } else {
       write_bool(out, false);
     }
@@ -1144,21 +1144,21 @@ void write_journal(std::ostream& out, journal_t * journal)
 
   // Write out the accounts
 
-  write_long<account_t::ident_t>(out, count_accounts(journal->master));
-  write_account(out, journal->master);
+  write_long<account_t::ident_t>(out, count_accounts(journal.master));
+  write_account(out, journal.master);
 
-  if (journal->basket) {
+  if (journal.basket) {
     write_bool(out, true);
-    write_long(out, journal->basket->ident);
+    write_long(out, journal.basket->ident);
   } else {
     write_bool(out, false);
   }
 
   // Write out the number of entries, transactions, and amounts
 
-  write_long<unsigned long>(out, journal->entries.size());
-  write_long<unsigned long>(out, journal->auto_entries.size());
-  write_long<unsigned long>(out, journal->period_entries.size());
+  write_long<unsigned long>(out, journal.entries.size());
+  write_long<unsigned long>(out, journal.auto_entries.size());
+  write_long<unsigned long>(out, journal.period_entries.size());
 
   ostream_pos_type xacts_val = out.tellp();
   write_number<unsigned long>(out, 0);
@@ -1222,22 +1222,22 @@ void write_journal(std::ostream& out, journal_t * journal)
 
   unsigned long xact_count = 0;
 
-  for (entries_list::const_iterator i = journal->entries.begin();
-       i != journal->entries.end();
+  for (entries_list::const_iterator i = journal.entries.begin();
+       i != journal.entries.end();
        i++) {
     write_entry(out, *i);
     xact_count += (*i)->transactions.size();
   }
 
-  for (auto_entries_list::const_iterator i = journal->auto_entries.begin();
-       i != journal->auto_entries.end();
+  for (auto_entries_list::const_iterator i = journal.auto_entries.begin();
+       i != journal.auto_entries.end();
        i++) {
     write_auto_entry(out, *i);
     xact_count += (*i)->transactions.size();
   }
 
-  for (period_entries_list::const_iterator i = journal->period_entries.begin();
-       i != journal->period_entries.end();
+  for (period_entries_list::const_iterator i = journal.period_entries.begin();
+       i != journal.period_entries.end();
        i++) {
     write_period_entry(out, *i);
     xact_count += (*i)->transactions.size();

@@ -34,8 +34,8 @@ bool qif_parser_t::test(std::istream& in) const
 }
 
 unsigned int qif_parser_t::parse(std::istream& in,
-				 config_t&     config,
-				 journal_t *   journal,
+				 session_t&     session,
+				 journal_t&   journal,
 				 account_t *   master,
 				 const path *  original_file)
 {
@@ -54,8 +54,8 @@ unsigned int qif_parser_t::parse(std::istream& in,
   xact = new transaction_t(master);
   entry->add_transaction(xact);
 
-  pathname = journal->sources.back();
-  src_idx  = journal->sources.size() - 1;
+  pathname = journal.sources.back();
+  src_idx  = journal.sources.size() - 1;
   linenum  = 1;
 
   istream_pos_type beg_pos  = 0;
@@ -166,7 +166,7 @@ unsigned int qif_parser_t::parse(std::istream& in,
 	int len = std::strlen(line);
 	if (line[len - 1] == ']')
 	  line[len - 1] = '\0';
-	xact->account = journal->find_account(line[0] == '[' ?
+	xact->account = journal.find_account(line[0] == '[' ?
 					      line + 1 : line);
 	if (c == 'L')
 	  saw_category = true;
@@ -191,7 +191,7 @@ unsigned int qif_parser_t::parse(std::istream& in,
       account_t * other;
       if (xact->account == master) {
 	if (! misc)
-	  misc = journal->find_account("Miscellaneous");
+	  misc = journal.find_account("Miscellaneous");
 	other = misc;
       } else {
 	other = master;
@@ -211,7 +211,7 @@ unsigned int qif_parser_t::parse(std::istream& in,
 	entry->add_transaction(nxact);
       }
 
-      if (journal->add_entry(entry.get())) {
+      if (journal.add_entry(entry.get())) {
 	entry->src_idx  = src_idx;
 	entry->beg_pos  = beg_pos;
 	entry->beg_line = beg_line;

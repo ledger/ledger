@@ -199,19 +199,15 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
   // Parse the initialization file, which can only be textual; then
   // parse the journal data.
 
-#if 0
   session.read_init();
-#endif
 
   INFO_START(journal, "Read journal file");
 
-  journal_t * journal = session.create_journal();
+  journal_t& journal(*session.create_journal());
 
-#if 0
-  if (! session.read_data(builder, journal, report.account))
+  if (! session.read_data(journal, report.account))
     throw_(parse_error, "Failed to locate any journal entries; "
 	   "did you specify a valid file with -f?");
-#endif
 
   INFO_FINISH(journal);
 

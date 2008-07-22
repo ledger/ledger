@@ -85,7 +85,7 @@ class session_t : public expr::symbol_scope_t
   }
 
   journal_t * create_journal() {
-    journal_t * journal = new journal_t;
+    journal_t * journal = new journal_t(this);
     journals.push_back(journal);
     return journal;
   }
@@ -101,19 +101,18 @@ class session_t : public expr::symbol_scope_t
     checked_delete(journal);
   }
 
-#if 0
-  std::size_t read_journal(std::istream&   in,
-			   const path&	   pathname,
-			   xml::builder_t& builder);
-  std::size_t read_journal(const path&	   pathname,
-			   xml::builder_t& builder);
+  std::size_t read_journal(journal_t&	 journal,
+			   std::istream& in,
+			   const path&	 pathname,
+			   account_t *   master = NULL);
+  std::size_t read_journal(journal_t&	 journal,
+			   const path&	 pathname,
+			   account_t *   master = NULL);
 
   void read_init();
 
-  std::size_t read_data(xml::builder_t& builder,
-			journal_t *	journal,
-			const string&	master_account = "");
-#endif
+  std::size_t read_data(journal_t&    journal,
+			const string& master_account = "");
 
   void register_parser(parser_t * parser) {
     parsers.push_back(parser);

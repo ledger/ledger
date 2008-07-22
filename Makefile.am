@@ -39,7 +39,6 @@ endif
 libledger_la_CPPFLAGS = $(libamounts_la_CPPFLAGS)
 libledger_la_SOURCES = \
 	binary.cc      \
-	config.cc      \
 	csv.cc         \
 	derive.cc      \
 	emacs.cc       \
@@ -47,13 +46,11 @@ libledger_la_SOURCES = \
 	journal.cc     \
 	mask.cc        \
 	option.cc      \
-	parser.cc      \
 	parsexp.cc     \
 	qif.cc	       \
 	reconcile.cc   \
 	report.cc      \
 	session.cc     \
-	startup.cc     \
 	textual.cc     \
 	valexpr.cc     \
 	walk.cc        \
@@ -83,7 +80,6 @@ pkginclude_HEADERS = \
 	utils.h	     \
 		     \
 	binary.h     \
-	config.h     \
 	csv.h        \
 	derive.h     \
 	emacs.h      \
@@ -223,7 +219,6 @@ clean-backupfiles:
 	       .\#*
 
 clean-documentation:
-	(cd doc; \
 	rm -fr *.aux  \
 	       *.cp   \
 	       *.fn   \
@@ -234,7 +229,7 @@ clean-documentation:
 	       *.pg   \
 	       *.toc  \
 	       *.tp   \
-	       *.vr)
+	       *.vr
 
 clean-buildproducts:
 	rm -fr *.Plo  \
@@ -284,9 +279,9 @@ clean-autoconf:
 	       texinfo.tex   \
 	       ylwrap
 
-all-clean: maintainer-clean    \
-	   clean-buildproducts \
-	   clean-backupfiles   \
-	   clean-debugdata     \
-	   clean-documentation \
-	   clean-autoconf
+scour:  maintainer-clean    \
+	clean-buildproducts \
+	clean-backupfiles   \
+	clean-debugdata     \
+	clean-documentation \
+	clean-autoconf

@@ -5,8 +5,7 @@
 #include "journal.h"
 #include "textual.h"
 #include "valexpr.h"
-#include "option.h"
-#include "config.h"
+#include "parsexp.h"
 #include "utils.h"
 #include "acconf.h"
 
@@ -494,7 +493,7 @@ static void clock_out_from_timelog(std::list<time_entry_t>& time_entries,
 				   const datetime_t&	    when,
 				   account_t *		    account,
 				   const char *		    desc,
-				   journal_t *		    journal)
+				   journal_t&		    journal)
 {
   time_entry_t event;
 
@@ -551,15 +550,15 @@ static void clock_out_from_timelog(std::list<time_entry_t>& time_entries,
   xact->state = transaction_t::CLEARED;
   curr->add_transaction(xact);
 
-  if (! journal->add_entry(curr.get()))
+  if (! journal.add_entry(curr.get()))
     throw new parse_error("Failed to record 'out' timelog entry");
   else
     curr.release();
 }
 
 unsigned int textual_parser_t::parse(std::istream& in,
-				     config_t&     config,
-				     journal_t *   journal,
+				     session_t&    session,
+				     journal_t&	   journal,
 				     account_t *   master,
 				     const path *  original_file)
 {
@@ -571,16 +570,16 @@ unsigned int textual_parser_t::parse(std::istream& in,
   unsigned int errors = 0;
 
   std::list<account_t *>  account_stack;
-  auto_entry_finalizer_t  auto_entry_finalizer(journal);
+  auto_entry_finalizer_t  auto_entry_finalizer(&journal);
   std::list<time_entry_t> time_entries;
 
   if (! master)
-    master = journal->master;
+    master = journal.master;
 
   account_stack.push_front(master);
 
-  pathname = journal->sources.back();
-  src_idx  = journal->sources.size() - 1;
+  pathname = journal.sources.back();
+  src_idx  = journal.sources.size() - 1;
   linenum  = 1;
 
   INFO("Parsing file '" << pathname.string() << "'");
@@ -662,7 +661,7 @@ unsigned int textual_parser_t::parse(std::istream& in,
       }
 
       case 'A':		        // a default account for unbalanced xacts
-	journal->basket =
+	journal.basket =
 	  account_stack.front()->find_account(skip_ws(line + 1));
 	break;
 
@@ -742,14 +741,14 @@ unsigned int textual_parser_t::parse(std::istream& in,
 
       case '=': {		// automated entry
 	if (! added_auto_entry_hook) {
-	  journal->add_entry_finalizer(&auto_entry_finalizer);
+	  journal.add_entry_finalizer(&auto_entry_finalizer);
 	  added_auto_entry_hook = true;
 	}
 
 	auto_entry_t * ae = new auto_entry_t(skip_ws(line + 1));
 	if (parse_transactions(in, account_stack.front(), *ae,
 			       "automated", end_pos)) {
-	  journal->auto_entries.push_back(ae);
+	  journal.auto_entries.push_back(ae);
 	  ae->src_idx  = src_idx;
 	  ae->beg_pos  = beg_pos;
 	  ae->beg_line = beg_line;
@@ -767,8 +766,8 @@ unsigned int textual_parser_t::parse(std::istream& in,
 	if (parse_transactions(in, account_stack.front(), *pe,
 			       "period", end_pos)) {
 	  if (pe->finalize()) {
-	    extend_entry_base(journal, *pe, true);
-	    journal->period_entries.push_back(pe);
+	    extend_entry_base(&journal, *pe, true);
+	    journal.period_entries.push_back(pe);
 	    pe->src_idx	 = src_idx;
 	    pe->beg_pos	 = beg_pos;
 	    pe->beg_line = beg_line;
@@ -808,11 +807,13 @@ unsigned int textual_parser_t::parse(std::istream& in,
 	  DEBUG("ledger.textual.include", "line " << linenum << ": " <<
 		      "Including path '" << pathname << "'");
 
+#if 0
 	  include_stack.push_back(std::pair<path, int>
-				  (journal->sources.back(), linenum - 1));
+				  (journal.sources.back(), linenum - 1));
 	  count += parse_journal_file(pathname, config, journal,
 				      account_stack.front());
 	  include_stack.pop_back();
+#endif
 	}
 	else if (word == "account") {
 	  account_t * acct;
@@ -856,7 +857,7 @@ unsigned int textual_parser_t::parse(std::istream& in,
       TRACE_START(entries, 1, "Time spent handling entries:");
 	if (entry_t * entry =
 	    parse_entry(in, line, account_stack.front(), *this, pos)) {
-	  if (journal->add_entry(entry)) {
+	  if (journal.add_entry(entry)) {
 	    entry->src_idx  = src_idx;
 	    entry->beg_pos  = beg_pos;
 	    entry->beg_line = beg_line;
@@ -913,7 +914,7 @@ unsigned int textual_parser_t::parse(std::istream& in,
   }
 
   if (added_auto_entry_hook)
-    journal->remove_entry_finalizer(&auto_entry_finalizer);
+    journal.remove_entry_finalizer(&auto_entry_finalizer);
 
   if (errors > 0)
     throw (int)errors;

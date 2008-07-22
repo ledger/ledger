@@ -76,7 +76,7 @@ namespace ledger {
   extern parser_t * textual_parser_ptr;
 }
 
-#include <config.h>
+#include <session.h>
 #include <report.h>
 
 #endif // _LEDGER_H

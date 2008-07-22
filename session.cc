@@ -118,39 +118,35 @@ session_t::session_t()
     ansi_codes(false),
     ansi_invert(false)
 {
-  TRACE_CTOR(session_t, "xml::xpath_t::scope_t&");
+  TRACE_CTOR(session_t, "expr::scope_t&");
 }
 
-#if 0
-  
-std::size_t session_t::read_journal(std::istream&   in,
-				    const path&     pathname,
-				    xml::builder_t& builder)
+std::size_t session_t::read_journal(journal_t&	  journal,
+				    std::istream& in,
+				    const path&	  pathname,
+				    account_t *   master)
 {
-#if 0
   if (! master)
-    master = journal->master;
-#endif
+    master = journal.master;
 
   foreach (parser_t& parser, parsers)
     if (parser.test(in))
-      return parser.parse(in, pathname, builder);
+      return parser.parse(in, *this, journal, master, &pathname);
 
   return 0;
 }
 
-std::size_t session_t::read_journal(const path&     pathname,
-				    xml::builder_t& builder)
+std::size_t session_t::read_journal(journal_t&	journal,
+				    const path& pathname,
+				    account_t * master)
 {
-#if 0
-  journal->sources.push_back(pathname);
-#endif
+  journal.sources.push_back(pathname);
 
   if (! exists(pathname))
     throw_(std::logic_error, "Cannot read file" << pathname);
 
   ifstream stream(pathname);
-  return read_journal(stream, pathname, builder);
+  return read_journal(journal, stream, pathname, master);
 }
 
 void session_t::read_init()
@@ -166,9 +162,8 @@ void session_t::read_init()
   // jww (2006-09-15): Read initialization options here!
 }
 
-std::size_t session_t::read_data(xml::builder_t& builder,
-				 journal_t *	 journal,
-				 const string&	 master_account)
+std::size_t session_t::read_data(journal_t&    journal,
+				 const string& master_account)
 {
   if (data_file.empty())
     throw_(parse_error, "No journal file was specified (please use -f)");
@@ -184,9 +179,9 @@ std::size_t session_t::read_data(xml::builder_t& builder,
     cache_dirty = true;
     if (exists(*cache_file)) {
       push_variable<optional<path> >
-	save_price_db(journal->price_db, price_db);
+	save_price_db(journal.price_db, price_db);
 
-      entry_count += read_journal(*cache_file, builder);
+      entry_count += read_journal(journal, *cache_file);
       if (entry_count > 0)
 	cache_dirty = false;
     }
@@ -195,44 +190,41 @@ std::size_t session_t::read_data(xml::builder_t& builder,
   if (entry_count == 0) {
     account_t * acct = NULL;
     if (! master_account.empty())
-      acct = journal->find_account(master_account);
+      acct = journal.find_account(master_account);
 
-    journal->price_db = price_db;
-    if (journal->price_db && exists(*journal->price_db)) {
-      if (read_journal(*journal->price_db, builder)) {
+    journal.price_db = price_db;
+    if (journal.price_db && exists(*journal.price_db)) {
+      if (read_journal(journal, *journal.price_db)) {
 	throw_(parse_error, "Entries not allowed in price history file");
       } else {
 	DEBUG("ledger.cache",
-	      "read price database " << journal->price_db->string());
-	journal->sources.pop_back();
+	      "read price database " << journal.price_db->string());
+	journal.sources.pop_back();
       }
     }
 
     DEBUG("ledger.cache", "rejected cache, parsing " << data_file.string());
     if (data_file == "-") {
       use_cache = false;
-      journal->sources.push_back("<stdin>");
-      entry_count += read_journal(std::cin, "<stdin>", builder);
+      journal.sources.push_back("/dev/stdin");
+      entry_count += read_journal(journal, std::cin, "/dev/stdin", acct);
     }
     else if (exists(data_file)) {
-      entry_count += read_journal(data_file, builder);
-      if (journal->price_db)
-	journal->sources.push_back(*journal->price_db);
+      entry_count += read_journal(journal, data_file, acct);
+      if (journal.price_db)
+	journal.sources.push_back(*journal.price_db);
     }
   }
 
-  VERIFY(journal->valid());
+  VERIFY(journal.valid());
 
   TRACE_STOP(parser, 1);
 
   return entry_count;
 }
 
-#endif
-
 #if 0
-optional<value_t>
-session_t::resolve(const string& name, xml::xpath_t::scope_t& locals)
+value_t session_t::resolve(const string& name, expr::scope_t& locals)
 {
   const char * p = name.c_str();
   switch (*p) {
@@ -259,7 +251,7 @@ session_t::resolve(const string& name, xml::xpath_t::scope_t& locals)
       return value_t(register_format, true);
     break;
   }
-  return xml::xpath_t::scope_t::resolve(name, locals);
+  return expr::scope_t::resolve(name, locals);
 }
 #endif
 

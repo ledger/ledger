@@ -399,9 +399,12 @@ typedef std::list<period_entry_t *> period_entries_list;
 typedef std::list<path>		    paths_list;
 typedef std::list<string>	    strings_list;
 
+class session_t;
+
 class journal_t
 {
  public:
+  session_t *	 owner;
   account_t *	 master;
   account_t *	 basket;
   entries_list	 entries;
@@ -416,7 +419,8 @@ class journal_t
 
   std::list<entry_finalizer_t *> entry_finalize_hooks;
 
-  journal_t() : basket(NULL), item_pool(NULL), item_pool_end(NULL) {
+  journal_t(session_t * _owner) :
+    owner(_owner), basket(NULL), item_pool(NULL), item_pool_end(NULL) {
     TRACE_CTOR(journal_t, "");
     master = new account_t(NULL, "");
     master->journal = this;

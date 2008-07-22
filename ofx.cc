@@ -195,8 +195,8 @@ bool ofx_parser_t::test(std::istream& in) const
 }
 
 unsigned int ofx_parser_t::parse(std::istream& in,
-				 config_t&     config,
-				 journal_t *   journal,
+				 session_t&     session,
+				 journal_t&   journal,
 				 account_t *   master,
 				 const path *  original_file)
 {

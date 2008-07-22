@@ -344,8 +344,8 @@ bool gnucash_parser_t::test(std::istream& in) const
 }
 
 unsigned int gnucash_parser_t::parse(std::istream& in,
-				     config_t&     config,
-				     journal_t *   journal,
+				     session_t&     session,
+				     journal_t&   journal,
 				     account_t *   master,
 				     const path *  original_file)
 {
@@ -360,8 +360,8 @@ unsigned int gnucash_parser_t::parse(std::istream& in,
 
   count		 = 0;
   action	 = NO_ACTION;
-  curr_journal	 = journal;
-  master_account = master ? master : journal->master;
+  curr_journal	 = &journal;
+  master_account = master ? master : journal.master;
   curr_account	 = NULL;
   curr_entry	 = NULL;
   curr_comm	 = NULL;
@@ -370,7 +370,7 @@ unsigned int gnucash_parser_t::parse(std::istream& in,
 
   instreamp = &in;
   pathname  = original_file ? *original_file : "<gnucash>";
-  src_idx   = journal->sources.size() - 1;
+  src_idx   = journal.sources.size() - 1;
 
   // GnuCash uses the USD commodity without defining it, which really
   // means $.

@@ -272,7 +272,7 @@ inline void write_object(std::ostream& out, const T& journal) {
   assert(false);
 }
 
-void write_journal(std::ostream& out, journal_t * journal);
+void write_journal(std::ostream& out, journal_t& journal);
 
 } // namespace binary
 
@@ -282,8 +282,8 @@ class binary_parser_t : public parser_t
   virtual bool test(std::istream& in) const;
 
   virtual unsigned int parse(std::istream& in,
-			     config_t&     config,
-			     journal_t *   journal,
+			     session_t&     session,
+			     journal_t&   journal,
 			     account_t *   master        = NULL,
 			     const path *  original_file = NULL);
 };
