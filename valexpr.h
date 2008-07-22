@@ -152,13 +152,7 @@ public:
   virtual void     define(const string& name, ptr_op_t def) = 0;
           void     define(const string& name, const value_t& val);
   virtual ptr_op_t lookup(const string& name) = 0;
-          value_t  resolve(const string& name) {
-#if 0
-    return lookup(name)->calc(*this);
-#else
-    return value_t();
-#endif
-  }
+          value_t  resolve(const string& name);
 
   virtual optional<scope_t&> find_scope(const type_t _type,
 					bool skip_this = false) = 0;
@@ -273,10 +267,12 @@ public:
     return args;
   }
 
-  value_t& operator[](const int index) {
+  value_t& operator[](const unsigned int index) {
+    // jww (2008-07-21): exception here if it's out of bounds
     return args[index];
   }
-  const value_t& operator[](const int index) const {
+  const value_t& operator[](const unsigned int index) const {
+    // jww (2008-07-21): exception here if it's out of bounds
     return args[index];
   }
 
@@ -290,6 +286,21 @@ public:
   const std::size_t size() const {
     return args.size();
   }
+};
+
+template <typename T>
+struct var_t
+{
+  T * value;
+
+  // jww (2008-07-21): Give a good exception here if we can't find "name"
+  var_t(scope_t& scope, const string& name)
+    : value(scope.resolve(name).template as_pointer<T>()) {}
+  var_t(call_scope_t& scope, const unsigned int idx)
+    : value(scope[idx].template as_pointer<T>()) {}
+
+  T& operator *() { return *value; }
+  T * operator->() { return value; }
 };
 
 class context_scope_t : public child_scope_t
@@ -748,40 +759,6 @@ inline ptr_op_t op_t::wrap_functor(const function_t& fobj) {
   return temp;
 }
 
-#if 0
-class xpath_t
-{
-public:
-public:
-  void parse(const string& _expr, flags_t _flags = XPATH_PARSE_RELAXED) {
-    expr  = _expr;
-    flags = _flags;
-    ptr	  = parse_expr(_expr, _flags);
-  }
-  void parse(std::istream& in, flags_t _flags = XPATH_PARSE_RELAXED) {
-    expr  = "";
-    flags = _flags;
-    ptr   = parse_expr(in, _flags);
-  }
-
-  void compile(scope_t& scope) {
-    if (ptr.get())
-      ptr = ptr->compile(scope);
-  }
-
-  value_t calc(scope_t& scope) const {
-    if (ptr.get())
-      return ptr->calc(scope);
-    return NULL_VALUE;
-  }
-
-  static value_t eval(const string& _expr, scope_t& scope) {
-    return xpath_t(_expr).calc(scope);
-  }
-
-};
-#endif
-
 } // namespace expr
 
 //////////////////////////////////////////////////////////////////////
@@ -826,11 +803,6 @@ public:
     return ptr;
   }
 
-#if 0
-  const expr::op_t& operator*() const throw() {
-    return *ptr;
-  }
-#endif
   const expr::ptr_op_t operator->() const throw() {
     return ptr;
   }

@@ -610,7 +610,7 @@ public:
     return *(boost::any *) storage->data;
   }
   template <typename T>
-  T *& as_pointer_lval() {
+  T * as_pointer_lval() {
     assert(is_pointer());
     _dup();
     return any_cast<T *>(*(boost::any *) storage->data);
@@ -652,7 +652,7 @@ public:
    */
   bool		 to_boolean() const;
   long		 to_long() const;
-  datetime_t       to_datetime() const;
+  datetime_t     to_datetime() const;
   amount_t	 to_amount() const;
   balance_t	 to_balance() const;
   balance_pair_t to_balance_pair() const;

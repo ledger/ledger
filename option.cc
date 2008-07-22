@@ -215,32 +215,12 @@ void process_arguments(int argc, char ** argv, const bool anywhere,
 	process_option(o.get<0>()->as_function(), scope, value);
       }
     }
+  }
+}
+
+} // namespace ledger
+
 #if 0
-}
-
-//////////////////////////////////////////////////////////////////////
-
-namespace ledger {
-
-config_t * config = NULL;
-report_t * report = NULL;
-
-static void show_version(std::ostream& out)
-{
-  out << "Ledger " << ledger::version << ", the command-line accounting tool";
-  out << "\n\nCopyright (c) 2003-2008, John Wiegley.  All rights reserved.\n\n\
-This program is made available under the terms of the BSD Public License.\n\
-See LICENSE file included with the distribution for details and disclaimer.\n";
-  out << "\n(modules: gmp, pcre";
-#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
-  out << ", xml";
-#endif
-#ifdef HAVE_LIBOFX
-  out << ", ofx";
-#endif
-  out << ")\n";
-}
-
 void option_full_help(std::ostream& out)
 {
   out << "usage: ledger [options] COMMAND [ACCT REGEX]... [-- [PAYEE REGEX]...]\n\n\
@@ -948,8 +928,6 @@ namespace {
       commodity->add_price(datetime_t::now, price);
       commodity->history()->bogus_time = datetime_t::now;
     }
-#endif
   }
 }
-
-} // namespace ledger
+#endif

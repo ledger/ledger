@@ -1413,19 +1413,31 @@ void value_t::print(std::ostream& out, const int first_width,
 {
   switch (type()) {
   case VOID:
-    out << "NULL";
+    out << "VOID";
     break;
 
   case BOOLEAN:
+    out << const_cast<value_t&>(*this).as_boolean_lval();
+    break;
+
   case DATETIME:
+    out << const_cast<value_t&>(*this).as_datetime_lval();
+    break;
+
   case INTEGER:
+    out << const_cast<value_t&>(*this).as_long_lval();
+    break;
+
   case AMOUNT:
+    out << const_cast<value_t&>(*this).as_amount_lval();
+    break;
+
   case STRING:
+    out << const_cast<value_t&>(*this).as_string_lval();
+    break;
+
   case POINTER:
-    // jww (2007-05-14): I need a version of this print just for XPath
-    // expression, since amounts and strings need to be output with
-    // special syntax.
-    out << *this;
+    out << boost::unsafe_any_cast<void *>(&const_cast<value_t&>(*this).as_any_pointer_lval());
     break;
 
   case SEQUENCE: {

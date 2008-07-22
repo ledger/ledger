@@ -45,6 +45,17 @@
 #include <fdstream.hpp>
 #endif
 
+namespace ledger {
+  value_t register_command(expr::call_scope_t& args)
+  {
+    expr::var_t<std::ostream> ostream(args, "ostream");
+
+    *ostream << "This (will be) the register command.\n";
+
+    return true;
+  }
+}
+
 static int read_and_report(ledger::report_t& report, int argc, char * argv[],
 			   char * envp[])
 {
@@ -109,9 +120,9 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
 
   expr::function_t command;
 
-#if 0
   if (verb == "register" || verb == "reg" || verb == "r")
-    command = register_command();
+    command = register_command;
+#if 0
   else if (verb == "balance" || verb == "bal" || verb == "b")
     command = balance_command();
   else if (verb == "print" || verb == "p")
@@ -132,12 +143,8 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
     command = csv_command();
   else if (verb == "emacs" || verb == "lisp")
     command = emacs_command();
-  else
-#endif
-  if (verb == "xml")
-#if 0
+  else if (verb == "xml")
     command = bind(xml_command, _1);
-#else
   ;
 #endif
   else if (verb == "expr")
@@ -297,7 +304,7 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
   // Create an argument scope containing the report command's
   // arguments, and then invoke the command.
 
-  expr::call_scope_t command_args(*expr::global_scope);
+  expr::call_scope_t command_args(report);
 
   for (strings_list::iterator i = arg; i != args.end(); i++)
     command_args.push_back(value_t(*i, true));

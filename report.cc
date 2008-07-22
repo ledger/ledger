@@ -57,9 +57,9 @@ value_t report_t::abbrev(expr::call_scope_t& args)
     throw_(std::logic_error, "usage: abbrev(STRING, WIDTH [, STYLE, ABBREV_LEN])");
 
   string str = args[0].as_string();
+#if 0
   long	 wid = args[1];
 
-#if 0
   elision_style_t style = session.elision_style;
   if (args.size() == 3)
     style = static_cast<elision_style_t>(args[2].as_long());

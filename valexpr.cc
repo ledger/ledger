@@ -77,6 +77,14 @@ void scope_t::define(const string& name, const value_t& val) {
   define(name, op_t::wrap_value(val));
 }
 
+value_t scope_t::resolve(const string& name) {
+  ptr_op_t definition = lookup(name);
+  if (definition)
+    return definition->calc(*this);
+  else
+    return value_t();
+}
+
 void symbol_scope_t::define(const string& name, ptr_op_t def)
 {
   DEBUG("ledger.xpath.syms", "Defining '" << name << "' = " << def);
@@ -817,10 +825,10 @@ void valexpr_context::describe(std::ostream& out) const throw()
 #endif
 }
 
-#if 0
-xpath_t::ptr_op_t xpath_t::op_t::compile(scope_t& scope)
+ptr_op_t op_t::compile(scope_t& scope)
 {
   switch (kind) {
+#if 0
   case VAR_NAME:
   case FUNC_NAME:
     if (ptr_op_t def = scope.lookup(as_string())) {
@@ -833,6 +841,7 @@ xpath_t::ptr_op_t xpath_t::op_t::compile(scope_t& scope)
 #endif
     }
     return this;
+#endif
 
   default:
     break;
@@ -856,14 +865,17 @@ xpath_t::ptr_op_t xpath_t::op_t::compile(scope_t& scope)
 }
 
 
-value_t xpath_t::op_t::calc(scope_t& scope)
+value_t op_t::calc(scope_t& scope)
 {
+#if 0
   bool find_all_nodes = false;
+#endif
 
   switch (kind) {
   case VALUE:
     return as_value();
 
+#if 0
   case VAR_NAME:
   case FUNC_NAME:
     if (ptr_op_t reference = compile(scope)) {
@@ -873,6 +885,7 @@ value_t xpath_t::op_t::calc(scope_t& scope)
 	     << " named '" << as_string() << "'");
     }
     break;
+#endif
 
   case FUNCTION:
     // This should never be evaluated directly; it only appears as the
@@ -880,6 +893,7 @@ value_t xpath_t::op_t::calc(scope_t& scope)
     assert(false);
     break;
 
+#if 0
   case O_CALL: {
     call_scope_t call_args(scope);
 
@@ -901,6 +915,7 @@ value_t xpath_t::op_t::calc(scope_t& scope)
 
     return func->as_function()(call_args);
   }
+#endif
 
   case ARG_INDEX: {
     call_scope_t& args(CALL_SCOPE(scope));
@@ -912,6 +927,7 @@ value_t xpath_t::op_t::calc(scope_t& scope)
     break;
   }
 
+#if 0
   case O_FIND:
   case O_RFIND:
     return select_nodes(scope, left()->calc(scope), right(), kind == O_RFIND);
@@ -997,6 +1013,7 @@ value_t xpath_t::op_t::calc(scope_t& scope)
       return *value;
 
     break;
+#endif
 
   case O_NEQ:
     return left()->calc(scope) != right()->calc(scope);
@@ -1033,14 +1050,16 @@ value_t xpath_t::op_t::calc(scope_t& scope)
   case O_OR:
     return left()->calc(scope) || right()->calc(scope);
 
-  case O_COMMA:
-  case O_UNION: {
+#if 0
+  case O_UNION:
+#endif
+  case O_COMMA: {
     value_t result(left()->calc(scope));
 
     ptr_op_t next = right();
     while (next) {
       ptr_op_t value_op;
-      if (next->kind == O_COMMA || next->kind == O_UNION) {
+      if (next->kind == O_COMMA /* || next->kind == O_UNION */) {
 	value_op = next->left();
 	next     = next->right();
       } else {
@@ -1061,7 +1080,6 @@ value_t xpath_t::op_t::calc(scope_t& scope)
 
   return NULL_VALUE;
 }
-#endif
 
 } // namespace expr
 
