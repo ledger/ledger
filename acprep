@@ -12,7 +12,7 @@
 export AUTOCONF_VERSION=2.61
 export AUTOMAKE_VERSION=1.9
 
-touch AUTHORS COPYING
+touch AUTHORS COPYING ChangeLog
 
 cmd=$(which glibtoolize 2>&1)
 if [ -x "$cmd" ]; then
