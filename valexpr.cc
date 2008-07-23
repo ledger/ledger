@@ -56,8 +56,11 @@ bool compute_amount(ptr_op_t expr, amount_t& amt,
   value_t result;
   try {
     expr->compute(result, xact ? details_t(*xact) : details_t(), context);
-    result.cast(value_t::AMOUNT);
-    amt = result.as_amount_lval();
+
+    // Most of the time when computing the amount of a transaction this cast
+    // will do nothing at all.
+    result.in_place_cast(value_t::AMOUNT);
+    amt = result.as_amount();
   }
   catch (error * err) {
     if (err->context.empty() ||

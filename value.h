@@ -164,13 +164,9 @@ private:
     explicit storage_t(const storage_t& rhs)
       : type(rhs.type), refc(0) {
       TRACE_CTOR(value_t::storage_t, "");
-      std::memcpy(data, rhs.data, sizeof(data));
+      *this = rhs;
     }
-    storage_t& operator=(const storage_t& rhs) {
-      type = rhs.type;
-      std::memcpy(data, rhs.data, sizeof(data));
-      return *this;
-    }
+    storage_t& operator=(const storage_t& rhs);
 
     /**
      * Reference counting methods.  The intrusive_ptr_* methods are

@@ -36,6 +36,45 @@ namespace ledger {
 intrusive_ptr<value_t::storage_t> value_t::true_value;
 intrusive_ptr<value_t::storage_t> value_t::false_value;
 
+value_t::storage_t& value_t::storage_t::operator=(const value_t::storage_t& rhs)
+{
+  type = rhs.type;
+
+  switch (type) {
+  case DATETIME:
+    new((datetime_t *) data) datetime_t(*(datetime_t *) rhs.data);
+    break;
+
+  case AMOUNT:
+    new((amount_t *) data) amount_t(*(amount_t *) rhs.data);
+    break;
+
+  case BALANCE:
+    *(balance_t **) data = new balance_t(**(balance_t **) rhs.data);
+    break;
+
+  case BALANCE_PAIR:
+    *(balance_pair_t **) data =
+      new balance_pair_t(**(balance_pair_t **) rhs.data);
+    break;
+
+  case STRING:
+    new((string *) data) string(*(string *) rhs.data);
+    break;
+
+  case SEQUENCE:
+    *(sequence_t **) data = new sequence_t(**(sequence_t **) rhs.data);
+    break;
+
+  default:
+    // The rest are fundamental types, which can copy using std::memcpy
+    std::memcpy(data, rhs.data, sizeof(data));
+    break;
+  }
+
+  return *this;
+}
+
 void value_t::storage_t::destroy()
 {
   switch (type) {
@@ -119,28 +158,8 @@ void value_t::shutdown()
 void value_t::_dup()
 {
   assert(storage);
-  if (storage->refc > 1) {
+  if (storage->refc > 1)
     storage = new storage_t(*storage.get());
-
-    // If the data referenced by storage is an allocated pointer, we
-    // need to create a new object in order to achieve duplication.
-    switch (storage->type) {
-    case BALANCE:
-      *(balance_t **) storage->data =
-	new balance_t(**(balance_t **) storage->data);
-      break;
-    case BALANCE_PAIR:
-      *(balance_pair_t **) storage->data =
-	new balance_pair_t(**(balance_pair_t **) storage->data);
-      break;
-    case SEQUENCE:
-      *(sequence_t **) storage->data =
-	new sequence_t(**(sequence_t **) storage->data);
-      break;
-    default:
-      break;			// everything else has been duplicated
-    }
-  }
 }
 
 value_t::operator bool() const

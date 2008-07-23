@@ -492,18 +492,16 @@ parser_t::parse_value_term(std::istream& in, scope_t& scope, const flags_t tflag
     break;
   }
 
+#if 0
   case token_t::DOLLAR:
     tok = next_token(in, tflags);
     if (tok.kind != token_t::IDENT)
       throw parse_error("$ symbol must be followed by variable name");
 
-#if 0
     node = new op_t(op_t::VAR_NAME);
     node->set_string(tok.value.as_string());
-#endif
     break;
 
-#if 0
   case token_t::DOT:
     node = new op_t(op_t::NODE_ID);
     node->set_name(document_t::CURRENT);
