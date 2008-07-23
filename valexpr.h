@@ -794,7 +794,7 @@ public:
   }
 
   operator bool() const throw() {
-    return ptr != NULL;
+    return ptr.get() != NULL;
   }
   operator string() const throw() {
     return expr_str;

@@ -62,21 +62,23 @@ namespace {
     }
 #endif
 
-    if (! expr::compute_amount(expr, amount, xact))
-      throw new parse_error("Amount expression failed to compute");
+    if (expr) {
+      if (! expr::compute_amount(expr, amount, xact))
+	throw new parse_error("Amount expression failed to compute");
 
 #if 0
-    if (expr->kind == expr::node_t::VALUE) {
-      expr = NULL;
-    } else {
-      DEBUG_IF("ledger.textual.parse") {
-	std::cout << "Value expression tree:" << std::endl;
-	ledger::dump_value_expr(std::cout, expr.get());
+      if (expr->kind == expr::node_t::VALUE) {
+	expr = NULL;
+      } else {
+	DEBUG_IF("ledger.textual.parse") {
+	  std::cout << "Value expression tree:" << std::endl;
+	  ledger::dump_value_expr(std::cout, expr.get());
+	}
       }
-    }
 #else
-    expr = value_expr();
+      expr = value_expr();
 #endif
+    }
 
     DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 	  "The transaction amount is " << xact->amount);
@@ -178,12 +180,16 @@ transaction_t * parse_transaction(char * line, account_t * account,
 			  EXPR_PARSE_NO_REDUCE);
       saw_amount = true;
 
-      xact->amount.reduce();
-      DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
-	    "Reduced amount is " << xact->amount);
+      if (! xact->amount.is_null()) {
+	xact->amount.reduce();
+	DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
+	      "Reduced amount is " << xact->amount);
+      }
 
-      unsigned long end = (long)in.tellg();
-      xact->amount_expr.expr_str = string(line, beg, end - beg);
+      if (xact->amount_expr) {
+	unsigned long end = (long)in.tellg();
+	xact->amount_expr.expr_str = string(line, beg, end - beg);
+      }
     }
     catch (error * err) {
       err_desc = "While parsing transaction amount:";
