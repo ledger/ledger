@@ -118,185 +118,249 @@ bool entry_base_t::remove_transaction(transaction_t * xact)
 
 bool entry_base_t::finalize()
 {
-  // Scan through and compute the total balance for the entry.  This
-  // is used for auto-calculating the value of entries with no cost,
-  // and the per-unit price of unpriced commodities.
+  // Scan through and compute the total balance for the entry.  This is used
+  // for auto-calculating the value of entries with no cost, and the per-unit
+  // price of unpriced commodities.
 
-  value_t balance;
-  bool	  no_amounts = true;
-  bool	  saw_null   = false;
+  // (let ((balance 0)
+  //       null-xact)
+
+  value_t	  balance;
+  transaction_t * null_xact = NULL;
+
+  //   (do-transactions (xact entry)
+  //     (when (xact-must-balance-p xact)
+  //       (let ((amt (xact-amount* xact)))
+  //         (if amt
+  //             (setf balance (add balance (or (xact-cost xact) amt)))
+  //             (if null-xact
+  //                 (error "Only one transaction with null amount allowed ~
+  //                         per entry (beg ~S end ~S)"
+  //                        (item-position-begin-line (entry-position entry))
+  //                        (item-position-end-line (entry-position entry)))
+  //                 (setf null-xact xact))))))
+  //
 
   for (transactions_list::const_iterator x = transactions.begin();
        x != transactions.end();
        x++) {
-    if (! (*x)->has_flags(TRANSACTION_VIRTUAL) ||
-	(*x)->has_flags(TRANSACTION_BALANCE)) {
+    if ((*x)->must_balance()) {
       amount_t& p((*x)->cost ? *(*x)->cost : (*x)->amount);
       if (! p.is_null()) {
-	if (no_amounts) {
+	if (balance.is_null())
 	  balance = p;
-	  no_amounts = false;
-	} else {
+	else
 	  balance += p;
-	}
-
-	assert(! (*x)->amount.is_null());
-
-	if ((*x)->cost && (*x)->amount.commodity().annotated) {
-	  annotated_commodity_t&
-	    ann_comm(static_cast<annotated_commodity_t&>
-		     ((*x)->amount.commodity()));
-	  if (ann_comm.details.price)
-	    balance += (*ann_comm.details.price * (*x)->amount.number() -
-			*((*x)->cost));
-	}
       } else {
-	saw_null = true;
+	if (null_xact)
+	  throw_(std::logic_error,
+		 "Only one transaction with null amount allowed per entry");
+	else
+	  null_xact = *x;
       }
     }
   }
-
   assert(balance.valid());
 
-  // If it's a null entry, then let the user have their fun
-  if (no_amounts)
-    return true;
+  DEBUG("ledger.journal.finalize", "initial balance = " << balance);
 
-  // If there is only one transaction, balance against the basket
-  // account if one has been set.
+  // If there is only one transaction, balance against the default account if
+  // one has been set.
+
+  //   (when (= 1 (length (entry-transactions entry)))
+  //     (if-let ((default-account
+  //                  (journal-default-account (entry-journal entry))))
+  //       (setf null-xact
+  //             (make-transaction :entry entry
+  //                               :status (xact-status
+  //                                        (first (entry-transactions entry)))
+  //                               :account default-account
+  //                               :generatedp t))
+  //       (add-transaction entry null-xact)))
 
   if (journal && journal->basket && transactions.size() == 1) {
-    assert(balance.is_amount());
-    transaction_t * nxact = new transaction_t(journal->basket);
-    // The amount doesn't need to be set because the code below will
-    // balance this transaction against the other.
-    add_transaction(nxact);
-    nxact->add_flags(TRANSACTION_CALCULATED);
+    // jww (2008-07-24): Need to make the rest of the code aware of what to do
+    // when it sees a generated transaction.
+    null_xact = new transaction_t(journal->basket, TRANSACTION_GENERATED);
+    null_xact->state = (*transactions.begin())->state;
+    add_transaction(null_xact);
   }
 
-  // If the first transaction of a two-transaction entry is of a
-  // different commodity than the other, and it has no per-unit price,
-  // determine its price by dividing the unit count into the value of
-  // the balance.  This is done for the last eligible commodity.
+  if (null_xact != NULL) {
+    // If one transaction has no value at all, its value will become the
+    // inverse of the rest.  If multiple commodities are involved, multiple
+    // transactions are generated to balance them all.
 
-  if (! saw_null && balance && balance.is_balance()) {
+    // (progn
+    //   (if (balance-p balance)
+    //       (let ((first t))
+    //         (dolist (amount (balance-amounts balance))
+    //           (if first
+    //               (setf (xact-amount* null-xact) (negate amount)
+    //                     first nil)
+    //               (add-transaction
+    //                entry
+    //                (make-transaction :entry entry
+    //                                  :account (xact-account null-xact)
+    //                                  :amount (negate amount)
+    //                                  :generatedp t)))))
+    //       (setf (xact-amount* null-xact) (negate balance)
+    //             (xact-calculatedp null-xact) t))
+    //
+    //   (setf balance 0))
+
+    if (balance.is_balance()) {
+      bool first = true;
+      const balance_t& bal(balance.as_balance());
+      for (balance_t::amounts_map::const_iterator i = bal.amounts.begin();
+	   i != bal.amounts.end();
+	   i++) {
+	if (first) {
+	  null_xact->amount = (*i).second.negate();
+	  first = false;
+	} else {
+	  add_transaction(new transaction_t(null_xact->account,
+					    (*i).second.negate(),
+					    TRANSACTION_GENERATED));
+	}
+      }
+    } else {
+      null_xact->amount = balance.as_amount().negate();
+      null_xact->add_flags(TRANSACTION_CALCULATED);
+    }
+    balance = NULL_VALUE;
+
+  }
+  else if (balance.is_balance() &&
+	   balance.as_balance().amounts.size() == 2) {
+    // When an entry involves two different commodities (regardless of how
+    // many transactions there are) determine the conversion ratio by dividing
+    // the total value of one commodity by the total value of the other.  This
+    // establishes the per-unit cost for this transaction for both
+    // commodities.
+
+    // (when (and (balance-p balance)
+    //            (= 2 (balance-commodity-count balance)))
+    //   (destructuring-bind (x y) (balance-amounts balance)
+    //     (let ((a-commodity (amount-commodity x))
+    //           (per-unit-cost (value-abs (divide x y))))
+    //       (do-transactions (xact entry)
+    //         (let ((amount (xact-amount* xact)))
+    //           (unless (or (xact-cost xact)
+    //                       (not (xact-must-balance-p xact))
+    //                       (commodity-equal (amount-commodity amount)
+    //                                        a-commodity))
+    //             (setf balance (subtract balance amount)
+    //                   (xact-cost xact) (multiply per-unit-cost amount)
+    //                   balance (add balance (xact-cost xact))))))))))
+
     const balance_t& bal(balance.as_balance());
-    if (bal.amounts.size() == 2) {
-      transactions_list::const_iterator x = transactions.begin();
-      assert(! (*x)->amount.is_null());
-      commodity_t& this_comm = (*x)->amount.commodity();
 
-      balance_t::amounts_map::const_iterator this_bal =
-	bal.amounts.find(&this_comm);
-      assert(this_bal != bal.amounts.end());
+    balance_t::amounts_map::const_iterator a = bal.amounts.begin();
+    
+    const amount_t& x((*a++).second);
+    const amount_t& y((*a++).second);
 
-      balance_t::amounts_map::const_iterator other_bal =
-	bal.amounts.begin();
-      
-      if (this_bal == other_bal)
-	other_bal++;
+    if (! y.is_realzero()) {
+      amount_t per_unit_cost = (x / y).abs();
 
-      amount_t per_unit_cost =
-	((*other_bal).second / (*this_bal).second.number()).unround();
+      commodity_t& comm(x.commodity());
 
-      for (; x != transactions.end(); x++) {
-	if ((*x)->cost || (*x)->has_flags(TRANSACTION_VIRTUAL) ||
-	    (*x)->amount.commodity() != this_comm)
-	  continue;
+      for (transactions_list::const_iterator x = transactions.begin();
+	   x != transactions.end();
+	   x++) {
+	const amount_t& x_amt((*x)->amount);
 
-	balance -= (*x)->amount;
+	if (! ((*x)->cost ||
+	       ! (*x)->must_balance() ||
+	       x_amt.commodity() == comm)) {
+	  DEBUG("ledger.journal.finalize", "before operation 1 = " << balance);
+	  balance -= x_amt;
+	  DEBUG("ledger.journal.finalize", "after operation 1 = " << balance);
+	  DEBUG("ledger.journal.finalize", "x_amt = " << x_amt);
+	  DEBUG("ledger.journal.finalize", "per_unit_cost = " << per_unit_cost);
 
-	entry_t * entry = dynamic_cast<entry_t *>(this);
+	  (*x)->cost = per_unit_cost * x_amt;
+	  DEBUG("ledger.journal.finalize", "*(*x)->cost = " << *(*x)->cost);
 
-	if ((*x)->amount.commodity() &&
-	    ! (*x)->amount.commodity().annotated)
-	  (*x)->amount.annotate_commodity
-	    (annotation_t(per_unit_cost.abs(),
-			  entry ? entry->actual_date() : optional<datetime_t>(),
-			  entry ? entry->code          : optional<string>()));
+	  balance += *(*x)->cost;
+	  DEBUG("ledger.journal.finalize", "after operation 2 = " << balance);
+	}
 
-	(*x)->cost = - (per_unit_cost * (*x)->amount.number());
-	balance += *(*x)->cost;
       }
     }
+
+    DEBUG("ledger.journal.finalize", "resolved balance = " << balance);
   }
 
-  // Walk through each of the transactions, fixing up any that we
-  // can, and performing any on-the-fly calculations.
+  // Now that the transaction list has its final form, calculate the balance
+  // once more in terms of total cost, accounting for any possible gain/loss
+  // amounts.
 
-  bool empty_allowed = true;
+  // (do-transactions (xact entry)
+  //   (when (xact-cost xact)
+  //     (let ((amount (xact-amount* xact)))
+  //       (assert (not (commodity-equal (amount-commodity amount)
+  //                                     (amount-commodity (xact-cost xact)))))
+  //       (multiple-value-bind (annotated-amount total-cost basis-cost)
+  //           (exchange-commodity amount :total-cost (xact-cost xact)
+  //                               :moment (entry-date entry)
+  //                               :tag (entry-code entry))
+  //         (if (annotated-commodity-p (amount-commodity amount))
+  //             (if-let ((price (annotation-price
+  //                              (commodity-annotation
+  //                               (amount-commodity amount)))))
+  //               (setf balance
+  //                     (add balance (subtract basis-cost total-cost))))
+  //             (setf (xact-amount* xact) annotated-amount))))))
 
   for (transactions_list::const_iterator x = transactions.begin();
        x != transactions.end();
        x++) {
-    if (! (*x)->amount.is_null() ||
-	((*x)->has_flags(TRANSACTION_VIRTUAL) &&
-	 ! (*x)->has_flags(TRANSACTION_BALANCE)))
-      continue;
+    if ((*x)->cost) {
+      const amount_t& x_amt((*x)->amount);
 
-    if (! empty_allowed)
-      throw_(std::logic_error,
-	     "Only one transaction with null amount allowed per entry");
-    empty_allowed = false;
+      assert(x_amt.commodity() != (*x)->cost->commodity());
 
-    // If one transaction gives no value at all, its value will become
-    // the inverse of the value of the others.  If multiple
-    // commodities are involved, multiple transactions will be
-    // generated to balance them all.
+      entry_t * entry = dynamic_cast<entry_t *>(this);
 
-    const balance_t * bal = NULL;
-    switch (balance.type()) {
-    case value_t::BALANCE_PAIR:
-      bal = &balance.as_balance_pair().quantity();
-      // fall through...
+      // jww (2008-07-24): Pass the entry's code here if we can, as the
+      // auto-tag
+      amount_t final_cost;
+      amount_t basis_cost;
+      amount_t ann_amount =
+	commodity_t::exchange(x_amt, final_cost, basis_cost,
+			      (*x)->cost, none, (*x)->actual_date(),
+			      entry ? entry->code : optional<string>());
 
-    case value_t::BALANCE:
-      if (! bal)
-	bal = &balance.as_balance();
-
-      if (bal->amounts.size() < 2) {
-	balance.cast(value_t::AMOUNT);
-      } else {
-	bool first = true;
-	for (balance_t::amounts_map::const_iterator
-	       i = bal->amounts.begin();
-	     i != bal->amounts.end();
-	     i++) {
-	  amount_t amt = (*i).second.negate();
-
-	  if (first) {
-	    (*x)->amount = amt;
-	    first = false;
-	  } else {
-	    transaction_t * nxact = new transaction_t((*x)->account);
-	    add_transaction(nxact);
-	    nxact->add_flags(TRANSACTION_CALCULATED);
-	    nxact->amount = amt;
-	  }
-
-	  balance += amt;
+      if ((*x)->amount.commodity_annotated()) {
+	if (ann_amount.annotation_details().price) {
+	  if (balance.is_null())
+	    balance = basis_cost - final_cost;
+	  else
+	    balance += basis_cost - final_cost;
 	}
-	break;
+      } else {
+	(*x)->amount = ann_amount;
       }
-      // fall through...
-
-    case value_t::AMOUNT:
-      (*x)->amount = balance.as_amount().negate();
-      (*x)->add_flags(TRANSACTION_CALCULATED);
-
-      balance += (*x)->amount;
-      break;
-
-    default:
-      break;
     }
   }
 
-  if (balance) {
+  DEBUG("ledger.journal.finalize", "final balance = " << balance);
+
+  // (if (value-zerop balance)
+  //     (prog1
+  //         entry
+  //       (setf (entry-normalizedp entry) t))
+  //     (error "Entry does not balance (beg ~S end ~S); remaining balance is:~%~A"
+  //            (item-position-begin-line (entry-position entry))
+  //            (item-position-end-line (entry-position entry))
+  //            (format-value balance :width 20)))
+
+  if (! balance.is_null() && ! balance.is_zero()) {
     error * err =
       new balance_error("Entry does not balance",
 			new entry_context(*this, "While balancing entry:"));
-    DEBUG("ledger.journal.unbalanced_remainder", "balance = " << balance);
     balance.round();
     err->context.push_front
       (new value_context(balance, "Unbalanced remainder is:"));

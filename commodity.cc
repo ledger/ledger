@@ -118,6 +118,75 @@ optional<amount_t> commodity_t::value(const optional<datetime_t>& moment)
   return price;
 }
 
+amount_t commodity_t::exchange(const amount_t&		   amount,
+			       amount_t&		   final_cost, // out
+			       amount_t&		   basis_cost, // out
+			       const optional<amount_t>&   total_cost_,
+			       const optional<amount_t>&   per_unit_cost_,
+			       const optional<datetime_t>& moment,
+			       const optional<string>&     tag)
+{
+  // (assert (or (and total-cost (not per-unit-cost))
+  //             (and per-unit-cost (not total-cost))))
+
+  assert((total_cost_ && ! per_unit_cost_) || (per_unit_cost_ && ! total_cost_));
+
+  // (let* ((commodity (amount-commodity amount))
+  //        (current-annotation
+  //         (and (annotated-commodity-p commodity)
+  //              (commodity-annotation commodity)))
+  //        (base-commodity (if (annotated-commodity-p commodity)
+  //                            (get-referent commodity)
+  //                            commodity))
+  //        (per-unit-cost (or per-unit-cost
+  //                           (divide total-cost amount)))
+  //        (total-cost (or total-cost
+  //                        (multiply per-unit-cost amount))))
+
+  commodity_t& commodity(amount.commodity());
+
+  annotation_t * current_annotation = NULL;
+  if (commodity.annotated)
+    current_annotation = &as_annotated_commodity(commodity).details;
+
+  commodity_t& base_commodity
+    (current_annotation ?
+     as_annotated_commodity(commodity).referent() : commodity);
+
+  amount_t per_unit_cost(per_unit_cost_ ?
+			 *per_unit_cost_ : *total_cost_ / amount);
+  final_cost = total_cost_ ? *total_cost_ : *per_unit_cost_ * amount;
+
+  // Add a price history entry for this conversion if we know when it took
+  // place
+
+  // (if (and moment (not (commodity-no-market-price-p base-commodity)))
+  //     (add-price base-commodity per-unit-cost moment))
+
+  if (moment && ! commodity.has_flags(COMMODITY_STYLE_NOMARKET))
+    base_commodity.add_price(*moment, per_unit_cost);
+
+  // ;; returns: ANNOTATED-AMOUNT TOTAL-COST BASIS-COST
+  // (values (annotate-commodity
+  //          amount
+  //          (make-commodity-annotation :price per-unit-cost
+  //                                     :date  moment
+  //                                     :tag   tag))
+  //         total-cost
+  //         (if current-annotation
+  //             (multiply (annotation-price current-annotation) amount)
+  //             total-cost))))
+
+  if (current_annotation && current_annotation->price)
+    basis_cost = *current_annotation->price * amount;
+  else
+    basis_cost = final_cost;
+
+  amount_t ann_amount(amount);
+  ann_amount.annotate_commodity(annotation_t(per_unit_cost, moment, tag));
+  return ann_amount;
+}
+
 commodity_t::operator bool() const
 {
   return this != parent().null_commodity;

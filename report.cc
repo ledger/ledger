@@ -73,7 +73,7 @@ value_t report_t::abbrev(expr::call_scope_t& args)
   return value_t(abbreviate(str, wid, style, true,
 			    static_cast<int>(abbrev_len)), true);
 #else
-  return value_t();
+  return NULL_VALUE;
 #endif
 }
 

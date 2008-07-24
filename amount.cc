@@ -855,19 +855,18 @@ bool amount_t::commodity_annotated() const
   return commodity().annotated;
 }
 
-annotation_t amount_t::annotation_details() const
+annotation_t& amount_t::annotation_details()
 {
   if (! quantity)
     throw_(amount_error,
 	   "Cannot return commodity annotation details of an uninitialized amount");
 
-  assert(! commodity().annotated || as_annotated_commodity(commodity()).details);
+  if (! commodity().is_annotated())
+    throw_(amount_error,
+	   "Request for annotation details from an unannotated amount");
 
-  if (commodity().annotated) {
-    annotated_commodity_t& ann_comm(as_annotated_commodity(commodity()));
-    return ann_comm.details;
-  }
-  return annotation_t();
+  annotated_commodity_t& ann_comm(as_annotated_commodity(commodity()));
+  return ann_comm.details;
 }
 
 amount_t amount_t::strip_annotations(const bool _keep_price,
@@ -1097,8 +1096,10 @@ void amount_t::print(std::ostream& _out, bool omit_commodity,
 {
   assert(valid());
 
-  if (! quantity)
-    throw_(amount_error, "Cannot write out an uninitialized amount");
+  if (! quantity) {
+    _out << "<null>";
+    return;
+  }
 
   amount_t base(*this);
   if (! amount_t::keep_base)

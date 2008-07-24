@@ -46,6 +46,7 @@ namespace ledger {
 #define TRANSACTION_AUTO       0x0004
 #define TRANSACTION_BULK_ALLOC 0x0008
 #define TRANSACTION_CALCULATED 0x0010
+#define TRANSACTION_GENERATED  0x0020
 
 class entry_t;
 class account_t;
@@ -73,8 +74,9 @@ class transaction_t : public supports_flags<>
   mutable void * data;
   static bool	 use_effective_date;
 
-  transaction_t(account_t * _account = NULL)
-    : supports_flags<>(TRANSACTION_NORMAL), entry(NULL),
+  transaction_t(account_t * _account = NULL,
+		unsigned int _flags  = TRANSACTION_NORMAL)
+    : supports_flags<>(_flags), entry(NULL),
       state(UNCLEARED), account(_account),
       beg_pos(0), beg_line(0), end_pos(0), end_line(0), data(NULL)
   {
@@ -118,6 +120,10 @@ class transaction_t : public supports_flags<>
       return effective_date();
     else
       return actual_date();
+  }
+
+  bool must_balance() const {
+    return ! has_flags(TRANSACTION_VIRTUAL) || has_flags(TRANSACTION_BALANCE);
   }
 
   bool valid() const;

@@ -400,6 +400,7 @@ public:
   operator bool() const;
 
   bool is_realzero() const;
+  bool is_zero() const;
   bool is_null() const {
     if (! storage) {
       return true;

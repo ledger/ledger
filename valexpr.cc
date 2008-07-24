@@ -87,7 +87,7 @@ value_t scope_t::resolve(const string& name) {
   if (definition)
     return definition->calc(*this);
   else
-    return value_t();
+    return NULL_VALUE;
 }
 
 void symbol_scope_t::define(const string& name, ptr_op_t def)
@@ -135,7 +135,7 @@ namespace {
 	temp.reset(expr);
       } else {
 	temp.reset(new op_t(op_t::VALUE));
-	temp->set_value(value_t());
+	temp->set_value(NULL_VALUE);
 	expr->compute(temp->as_value_lval(), details, context);
       }
     } else {

@@ -117,6 +117,10 @@ public:
 
   operator bool() const;
 
+  bool is_annotated() const {
+    return annotated;
+  }
+
   virtual bool operator==(const commodity_t& comm) const {
     if (comm.annotated)
       return comm == *this;
@@ -184,6 +188,14 @@ public:
   bool	   remove_price(const datetime_t& date);
 
   optional<amount_t> value(const optional<datetime_t>& moment = none);
+
+  static amount_t exchange(const amount_t&	       amount,
+			   amount_t&		       final_cost, // out
+			   amount_t&		       basis_cost, // out
+			   const optional<amount_t>&   total_cost,
+			   const optional<amount_t>&   per_unit_cost = none,
+			   const optional<datetime_t>& moment        = none,
+			   const optional<string>&     tag           = none);
 
   static void parse_symbol(std::istream& in, string& symbol);
   static void parse_symbol(char *& p, string& symbol);

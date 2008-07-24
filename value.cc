@@ -298,7 +298,9 @@ void value_t::in_place_simplify()
 
   if (is_balance() && as_balance().amounts.size() == 1) {
     DEBUG_("Reducing balance to amount");
+    DEBUG("ledger.value.reduce", "as a balance it looks like: " << *this);
     in_place_cast(AMOUNT);
+    DEBUG("ledger.value.reduce", "as an amount it looks like: " << *this);
   }
 
 #if 0
@@ -445,7 +447,7 @@ value_t& value_t::operator+=(const value_t& val)
     break;
   }
 
-  throw_(value_error, "Cannot add " << label() << " to " << val.label());
+  throw_(value_error, "Cannot add " << val.label() << " to " << label());
 
   return *this;
 }
@@ -605,7 +607,7 @@ value_t& value_t::operator-=(const value_t& val)
     break;
   }
 
-  throw_(value_error, "Cannot subtract " << label() << " from " << val.label());
+  throw_(value_error, "Cannot subtract " << val.label() << " from " << label());
 
   return *this;
 }
@@ -952,8 +954,7 @@ bool value_t::operator>(const value_t& val) const
     break;
   }
 
-  throw_(value_error,
-	 "Cannot compare " << label() << " to " << val.label());
+  throw_(value_error, "Cannot compare " << label() << " to " << val.label());
 
   return *this;
 }
@@ -1019,13 +1020,13 @@ void value_t::in_place_cast(type_t cast_type)
       if (amt.is_null())
 	set_balance(balance_t());
       else
-	set_balance(as_amount());
+	set_balance(as_amount()); // creates temporary
       return;
     case BALANCE_PAIR:
       if (amt.is_null())
 	set_balance_pair(balance_pair_t());
       else
-	set_balance_pair(as_amount());
+	set_balance_pair(as_amount()); // creates temporary
       return;
     case STRING:
       if (amt.is_null())
@@ -1044,7 +1045,10 @@ void value_t::in_place_cast(type_t cast_type)
     case AMOUNT: {
       const balance_t& temp(as_balance());
       if (temp.amounts.size() == 1) {
-	set_amount((*temp.amounts.begin()).second);
+	// Because we are changing the current balance value to an amount
+	// value, and because set_amount takes a reference (and that memory is
+	// about to be repurposed), we must pass in a copy.
+	set_amount(amount_t((*temp.amounts.begin()).second));
 	return;
       }
       else if (temp.amounts.size() == 0) {
@@ -1070,7 +1074,7 @@ void value_t::in_place_cast(type_t cast_type)
     case AMOUNT: {
       const balance_t& temp(as_balance_pair().quantity());
       if (temp.amounts.size() == 1) {
-	set_amount((*temp.amounts.begin()).second);
+	set_amount(amount_t((*temp.amounts.begin()).second));
 	return;
       }
       else if (temp.amounts.size() == 0) {
@@ -1084,7 +1088,9 @@ void value_t::in_place_cast(type_t cast_type)
       break;
     }
     case BALANCE:
-      set_balance(as_balance_pair().quantity());
+      // A temporary is required, becaues set_balance is going to wipe us out
+      // before assigned the value passed in.
+      set_balance(balance_t(as_balance_pair().quantity()));
       return;
     default:
       break;
@@ -1176,6 +1182,37 @@ bool value_t::is_realzero() const
   return true;
 }
 
+bool value_t::is_zero() const
+{
+  switch (type()) {
+  case BOOLEAN:
+    return ! as_boolean();
+  case INTEGER:
+    return as_long() == 0;
+  case DATETIME:
+    return ! is_valid(as_datetime());
+  case AMOUNT:
+    return as_amount().is_zero();
+  case BALANCE:
+    return as_balance().is_zero();
+  case BALANCE_PAIR:
+    return as_balance_pair().is_zero();
+  case STRING:
+    return as_string().empty();
+  case SEQUENCE:
+    return as_sequence().empty();
+
+  case POINTER:
+    return as_any_pointer().empty();
+
+  default:
+    assert(false);
+    break;
+  }
+  assert(false);
+  return true;
+}
+
 value_t value_t::value(const optional<datetime_t>& moment) const
 {
   switch (type()) {
@@ -1204,7 +1241,7 @@ value_t value_t::value(const optional<datetime_t>& moment) const
   }
 
   throw_(value_error, "Cannot find the value of " << label());
-  return value_t();
+  return NULL_VALUE;
 }
 
 void value_t::in_place_reduce()
@@ -1248,7 +1285,7 @@ value_t value_t::abs() const
   }
 
   throw_(value_error, "Cannot abs " << label());
-  return value_t();
+  return NULL_VALUE;
 }
 
 value_t value_t::round() const
@@ -1267,7 +1304,7 @@ value_t value_t::round() const
   }
 
   throw_(value_error, "Cannot round " << label());
-  return value_t();
+  return NULL_VALUE;
 }
 
 value_t value_t::unround() const
@@ -1282,7 +1319,7 @@ value_t value_t::unround() const
   }
 
   throw_(value_error, "Cannot unround " << label());
-  return value_t();
+  return NULL_VALUE;
 }
 
 value_t value_t::annotated_price() const
@@ -1300,7 +1337,7 @@ value_t value_t::annotated_price() const
   }
 
   throw_(value_error, "Cannot find the annotated price of " << label());
-  return value_t();
+  return NULL_VALUE;
 }
 
 value_t value_t::annotated_date() const
@@ -1321,7 +1358,7 @@ value_t value_t::annotated_date() const
   }
 
   throw_(value_error, "Cannot find the annotated date of " << label());
-  return value_t();
+  return NULL_VALUE;
 }
 
 value_t value_t::annotated_tag() const
@@ -1342,7 +1379,7 @@ value_t value_t::annotated_tag() const
   }
 
   throw_(value_error, "Cannot find the annotated tag of " << label());
-  return value_t();
+  return NULL_VALUE;
 }
 
 value_t value_t::strip_annotations(const bool keep_price,
@@ -1378,7 +1415,7 @@ value_t value_t::strip_annotations(const bool keep_price,
     break;
   }
   assert(false);
-  return value_t();
+  return NULL_VALUE;
 }
 
 value_t value_t::cost() const
@@ -1401,7 +1438,7 @@ value_t value_t::cost() const
   }
 
   throw_(value_error, "Cannot find the cost of " << label());
-  return value_t();
+  return NULL_VALUE;
 }
 
 value_t& value_t::add(const amount_t& amount, const optional<amount_t>& tcost)

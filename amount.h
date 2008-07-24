@@ -538,12 +538,17 @@ public:
    * amount_t::keep_price, amount_t::keep_date and amount_t::keep_tag
    * have been set to (which all default to false).
    */
-  void         annotate_commodity(const annotation_t& details);
-  bool         commodity_annotated() const;
-  annotation_t annotation_details() const;
-  amount_t     strip_annotations(const bool _keep_price = keep_price,
-				 const bool _keep_date  = keep_date,
-				 const bool _keep_tag   = keep_tag) const;
+  void          annotate_commodity(const annotation_t& details);
+  bool          commodity_annotated() const;
+
+  annotation_t& annotation_details();
+  const annotation_t& annotation_details() const {
+    return const_cast<amount_t&>(*this).annotation_details();
+  }
+
+  amount_t      strip_annotations(const bool _keep_price = keep_price,
+				  const bool _keep_date  = keep_date,
+				  const bool _keep_tag   = keep_tag) const;
 
   /**
    * Parsing methods.  The method `parse' is used to parse an amount

@@ -205,11 +205,14 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
 
   journal_t& journal(*session.create_journal());
 
-  if (! session.read_data(journal, report.account))
+  std::size_t count = session.read_data(journal, report.account);
+  if (count == 0)
     throw_(parse_error, "Failed to locate any journal entries; "
 	   "did you specify a valid file with -f?");
 
   INFO_FINISH(journal);
+
+  INFO("Found " << count << " entries");
 
   TRACE_FINISH(entry_text, 1);
   TRACE_FINISH(entry_date, 1);
