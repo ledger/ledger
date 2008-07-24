@@ -186,6 +186,8 @@ transaction_t * parse_transaction(char * line, account_t * account,
 	      "Reduced amount is " << xact->amount);
       }
 
+      // jww (2008-07-24): I don't think this is right, since amount_expr is
+      // always NULL right now
       if (xact->amount_expr) {
 	unsigned long end = (long)in.tellg();
 	xact->amount_expr.expr_str = string(line, beg, end - beg);
@@ -227,15 +229,18 @@ transaction_t * parse_transaction(char * line, account_t * account,
 				EXPR_PARSE_NO_MIGRATE))
 	    throw new parse_error
 	      ("A transaction's cost must evaluate to a constant value");
+	  assert(xact->cost->valid());
 
-	  unsigned long end = (long)in.tellg();
-
-	  if (per_unit)
-	    xact->cost_expr = (string("@") +
-			       string(line, beg, end - beg));
-	  else
-	    xact->cost_expr = (string("@@") +
-			       string(line, beg, end - beg));
+	  // jww (2008-07-24): I don't think this is right...
+	  if (xact->cost_expr) {
+	    unsigned long end = (long)in.tellg();
+	    if (per_unit)
+	      xact->cost_expr->expr_str = (string("@") +
+					   string(line, beg, end - beg));
+	    else
+	      xact->cost_expr->expr_str = (string("@@") +
+					   string(line, beg, end - beg));
+	  }
 	}
 	catch (error * err) {
 	  err_desc = "While parsing transaction cost:";
@@ -554,6 +559,7 @@ static void clock_out_from_timelog(std::list<time_entry_t>& time_entries,
   std::sprintf(buf, "%lds", long((curr->_date - event.checkin).seconds()));
   amount_t amt;
   amt.parse(buf);
+  assert(amt.valid());
 
   transaction_t * xact
     = new transaction_t(event.account, amt, TRANSACTION_VIRTUAL);
@@ -666,6 +672,7 @@ unsigned int textual_parser_t::parse(std::istream& in,
 
       case 'D':	{		// a default commodity for "entry"
 	amount_t amt(skip_ws(line + 1));
+	assert(amt.valid());
 	amount_t::current_pool->default_commodity = &amt.commodity();
 	break;
       }
@@ -706,6 +713,7 @@ unsigned int textual_parser_t::parse(std::istream& in,
 	string symbol;
 	parse_symbol(symbol_and_price, symbol);
 	amount_t price(symbol_and_price);
+	assert(price.valid());
 
 	if (commodity_t * commodity =
 	    amount_t::current_pool->find_or_create(symbol))

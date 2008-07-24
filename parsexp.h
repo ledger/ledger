@@ -46,7 +46,7 @@ class parser_t
 #define EXPR_PARSE_RELAXED    0x02
 #define EXPR_PARSE_NO_MIGRATE 0x04
 #define EXPR_PARSE_NO_REDUCE  0x08
-#define EXPR_PARSE_ALLOW_DATE 0x10
+#define EXPR_PARSE_NO_DATES   0x10
 
 public:
   typedef uint_least8_t flags_t;
@@ -56,6 +56,13 @@ private:
   {
     enum kind_t {
       VALUE,			// any kind of literal value
+
+      SHORT_ACCOUNT_MASK,
+      CODE_MASK,
+      COMMODITY_MASK,
+      PAYEE_MASK,
+      NOTE_MASK,
+      ACCOUNT_MASK,
 
       IDENT,			// [A-Za-z_][-A-Za-z0-9_:]*
       DOLLAR,			// $
@@ -98,7 +105,7 @@ private:
       UNKNOWN
     } kind;
 
-    char	      symbol[3];
+    char	symbol[3];
     value_t     value;
     std::size_t length;
 
@@ -225,9 +232,8 @@ public:
     return parse_expr(in, empty_string, *global_scope, flags);
   }
 
-  value_expr& parse(std::istream& in,
-		    const flags_t flags = EXPR_PARSE_RELAXED,
-		    scope_t& scope)
+  value_expr& parse(std::istream& in, scope_t& scope,
+		    const flags_t flags = EXPR_PARSE_RELAXED)
   {
     return parse_expr(in, empty_string, scope, flags);
   }
@@ -238,8 +244,8 @@ public:
     return parse_expr(stream, str, *global_scope, flags);
   }
 
-  value_expr& parse(string& str, const flags_t flags = EXPR_PARSE_RELAXED,
-		    scope_t& scope)
+  value_expr& parse(string& str, scope_t& scope,
+		    const flags_t flags = EXPR_PARSE_RELAXED)
   {
     std::istringstream stream(str);
     return parse_expr(stream, str, scope, flags);

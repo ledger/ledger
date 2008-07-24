@@ -64,8 +64,8 @@ void reconcile_transactions::flush()
   cleared_balance.cast(value_t::AMOUNT);
   balance.cast(value_t::AMOUNT);
 
-  commodity_t& cb_comm = cleared_balance.as_amount_lval().commodity();
-  commodity_t& b_comm  = balance.as_amount_lval().commodity();
+  commodity_t& cb_comm = cleared_balance.as_amount().commodity();
+  commodity_t& b_comm  = balance.as_amount().commodity();
 
   balance -= cleared_balance;
   if (balance.type() >= value_t::BALANCE)
@@ -76,7 +76,7 @@ void reconcile_transactions::flush()
   // then assume an exact match and return the results right away.
   amount_t& to_reconcile(balance.as_amount_lval());
   pending_balance.cast(value_t::AMOUNT);
-  if (to_reconcile == pending_balance.as_amount_lval() ||
+  if (to_reconcile == pending_balance.as_amount() ||
       search_for_balance(to_reconcile, &first, first)) {
     push_to_handler(first);
   } else {

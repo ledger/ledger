@@ -35,6 +35,10 @@ LIBDIRS="$LIBDIRS -L/usr/local/lib"
 
 PYTHON_HOME="/usr"
 
+if [ -x /usr/bin/g++-4.2 ]; then
+    CXX=g++-4.2
+fi
+
 
 SYSTEM=`uname -s`
 
@@ -85,44 +89,50 @@ while [ -n "$1" ]; do
 	SWITCHES="$SWITCHES --disable-shared"
 	CPPFLAGS="$CPPFLAGS -DBOOST_MULTI_INDEX_ENABLE_INVARIANT_CHECKING=1"
 	CPPFLAGS="$CPPFLAGS -DBOOST_MULTI_INDEX_ENABLE_SAFE_MODE=1"
-	;;
+	shift 1 ;;
 
     --debug)
 	SWITCHES="$SWITCHES --enable-debug"
 	#CPPFLAGS="$CPPFLAGS -D_GLIBCXX_DEBUG=1"
-	CXXFLAGS="$CXXFLAGS -g" ;;
-
+	CXXFLAGS="$CXXFLAGS -g"
+	shift 1 ;;
+      
     --boost)
 	shift 1
 	SWITCHES="$SWITCHES --with-boost-suffix=$1"
-	;;
+	shift 1 ;;
 
     --gcov)
-	CXXFLAGS="$CXXFLAGS -fprofile-arcs -ftest-coverage" ;;
+	CXXFLAGS="$CXXFLAGS -fprofile-arcs -ftest-coverage"
+	shift 1 ;;
 
     --gprof)
-        CXXFLAGS="$CXXFLAGS -g -pg" ;;
+        CXXFLAGS="$CXXFLAGS -g -pg"
+	shift 1 ;;
 
     --python)
 	if [ -d "$PYTHON_HOME" ]; then
 	    SWITCHES="$SWITCHES --enable-python"
 	    CPPFLAGS="$CPPFLAGS -I$PYTHON_HOME/include/python2.5"
 	    LDFLAGS="$LDFLAGS -L$PYTHON_HOME/lib/python2.5/config"
-	fi ;;
+	fi
+	shift 1;;
 
     --pic)
-	CXXFLAGS="$CXXFLAGS -fPIC" ;;
+	CXXFLAGS="$CXXFLAGS -fPIC"
+	shift 1 ;;
 
     --opt)
-	CXXFLAGS="$CXXFLAGS -fomit-frame-pointer -O3" ;;
+	CXXFLAGS="$CXXFLAGS -fomit-frame-pointer -O3"
+	shift 1 ;;
 
     --local)
-	LOCAL=true ;;
+	LOCAL=true
+	shift 1 ;;
 
     *)
 	break ;;
   esac
-  shift 1
 done
 
 

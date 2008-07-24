@@ -97,6 +97,25 @@ struct amount_t::bigint_t : public supports_flags<>
     assert(ref == 0);
     mpz_clear(val);
   }
+
+  bool valid() const {
+    if (prec > 32) {
+      DEBUG("ledger.validate", "amount_t::bigint_t: prec > 32");
+      return false;
+    }
+    if (ref > 128) {
+      DEBUG("ledger.validate", "amount_t::bigint_t: ref > 128");
+      return false;
+    }
+#if 0
+    // jww (2008-07-24): How does one check the validity of an mpz_t?
+    if (val[0]._mp_size < 0 || val[0]._mp_size > 100) {
+      DEBUG("ledger.validate", "amount_t::bigint_t: val._mp_size is bad");
+      return false;
+    }
+#endif
+    return true;
+  }
 };
 
 uint_fast32_t amount_t::sizeof_bigint_t()
@@ -139,6 +158,8 @@ void amount_t::shutdown()
 
 void amount_t::_copy(const amount_t& amt)
 {
+  assert(amt.valid());
+
   if (quantity != amt.quantity) {
     if (quantity)
       _release();
@@ -155,15 +176,21 @@ void amount_t::_copy(const amount_t& amt)
     }
   }
   commodity_ = amt.commodity_;
+
+  assert(valid());
 }
 
 void amount_t::_dup()
 {
+  assert(valid());
+
   if (quantity->ref > 1) {
     bigint_t * q = new bigint_t(*quantity);
     _release();
     quantity = q;
   }
+
+  assert(valid());
 }
 
 void amount_t::_resize(precision_t prec)
@@ -180,6 +207,8 @@ void amount_t::_resize(precision_t prec)
   mpz_mul(MPZ(quantity), MPZ(quantity), divisor);
 
   quantity->prec = prec;
+
+  assert(valid());
 }
 
 void amount_t::_clear()
@@ -195,6 +224,8 @@ void amount_t::_clear()
 
 void amount_t::_release()
 {
+  assert(valid());
+
   DEBUG("amounts.refs", quantity << " ref--, now " << (quantity->ref - 1));
 
   if (--quantity->ref == 0) {
@@ -202,7 +233,11 @@ void amount_t::_release()
       quantity->~bigint_t();
     else
       checked_delete(quantity);
+    quantity   = NULL;
+    commodity_ = NULL;
   }
+
+  assert(valid());
 }
 
 
@@ -328,6 +363,8 @@ amount_t& amount_t::operator=(const amount_t& amt)
 
 int amount_t::compare(const amount_t& amt) const
 {
+  assert(amt.valid());
+
   if (! quantity || ! amt.quantity) {
     if (quantity)
       throw_(amount_error, "Cannot compare an amount to an uninitialized amount");
@@ -361,6 +398,8 @@ int amount_t::compare(const amount_t& amt) const
 
 amount_t& amount_t::operator+=(const amount_t& amt)
 {
+  assert(amt.valid());
+
   if (! quantity || ! amt.quantity) {
     if (quantity)
       throw_(amount_error, "Cannot add an amount to an uninitialized amount");
@@ -397,6 +436,8 @@ amount_t& amount_t::operator+=(const amount_t& amt)
 
 amount_t& amount_t::operator-=(const amount_t& amt)
 {
+  assert(amt.valid());
+
   if (! quantity || ! amt.quantity) {
     if (quantity)
       throw_(amount_error, "Cannot subtract an amount from an uninitialized amount");
@@ -481,6 +522,8 @@ namespace {
 
 amount_t& amount_t::operator*=(const amount_t& amt)
 {
+  assert(amt.valid());
+
   if (! quantity || ! amt.quantity) {
     if (quantity)
       throw_(amount_error, "Cannot multiply an amount by an uninitialized amount");
@@ -521,6 +564,8 @@ amount_t& amount_t::operator*=(const amount_t& amt)
 
 amount_t& amount_t::operator/=(const amount_t& amt)
 {
+  assert(amt.valid());
+
   if (! quantity || ! amt.quantity) {
     if (quantity)
       throw_(amount_error, "Cannot divide an amount by an uninitialized amount");
@@ -1023,6 +1068,8 @@ void amount_t::parse(std::istream& in, flags_t flags)
     in_place_reduce();
 
   safe_holder.release();	// `this->quantity' owns the pointer
+
+  assert(valid());
 }
 
 void amount_t::parse_conversion(const string& larger_str,
@@ -1048,6 +1095,8 @@ void amount_t::parse_conversion(const string& larger_str,
 void amount_t::print(std::ostream& _out, bool omit_commodity,
 		     bool full_precision) const
 {
+  assert(valid());
+
   if (! quantity)
     throw_(amount_error, "Cannot write out an uninitialized amount");
 
@@ -1400,6 +1449,9 @@ void amount_t::write(std::ostream& out, bool optimized) const
 bool amount_t::valid() const
 {
   if (quantity) {
+    if (! quantity->valid())
+      return false;
+
     if (quantity->ref == 0) {
       DEBUG("ledger.validate", "amount_t: quantity->ref == 0");
       return false;

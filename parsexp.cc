@@ -155,9 +155,16 @@ void parser_t::token_t::next(std::istream& in, const flags_t flags)
     in.get(c);
     kind = AT_SYM;
     break;
+#if 0
   case '$':
     in.get(c);
     kind = DOLLAR;
+    break;
+#endif
+
+  case '&':
+    in.get(c);
+    kind = KW_AND;
     break;
 
   case '(':
@@ -171,7 +178,7 @@ void parser_t::token_t::next(std::istream& in, const flags_t flags)
 
   case '[': {
     in.get(c);
-    if (flags & EXPR_PARSE_ALLOW_DATE) {
+    if (! (flags & EXPR_PARSE_NO_DATES)) {
       char buf[256];
       READ_INTO_(in, buf, 255, c, length, c != ']');
       if (c != ']')
@@ -192,6 +199,7 @@ void parser_t::token_t::next(std::istream& in, const flags_t flags)
     kind = RBRACKET;
     break;
   }
+
 
   case '\'':
   case '"': {
@@ -249,10 +257,68 @@ void parser_t::token_t::next(std::istream& in, const flags_t flags)
     kind = STAR;
     break;
 
+#if 0
   case '/':
     in.get(c);
     kind = SLASH;
     break;
+#endif
+
+  case 'c':
+  case 'C':
+  case 'p':
+  case 'w':
+  case 'W':
+  case 'e':
+  case '/': {
+    bool code_mask	    = c == 'c';
+    bool commodity_mask	    = c == 'C';
+    bool payee_mask	    = c == 'p';
+    bool note_mask	    = c == 'e';
+    bool short_account_mask = c == 'w';
+
+    in.get(c);
+    if (c == '/') {
+      c = peek_next_nonws(in);
+      if (c == '/') {
+	in.get(c);
+	c = in.peek();
+	if (c == '/') {
+	  in.get(c);
+	  c = in.peek();
+	  short_account_mask = true;
+	} else {
+	  payee_mask = true;
+	}
+      }
+    } else {
+      in.get(c);
+    }
+
+    // Read in the regexp
+    char buf[256];
+    READ_INTO_(in, buf, 255, c, length, c != '/');
+    if (c != '/')
+      unexpected(c, '/');
+    in.get(c);
+    length++;
+
+    if (short_account_mask)
+      kind = SHORT_ACCOUNT_MASK;
+    else if (code_mask)
+      kind = CODE_MASK;
+    else if (commodity_mask)
+      kind = COMMODITY_MASK;
+    else if (payee_mask)
+      kind = PAYEE_MASK;
+    else if (note_mask)
+      kind = NOTE_MASK;
+    else
+      kind = ACCOUNT_MASK;
+
+    value.set_string(buf);
+    break;
+  }
 
   case '=':
     in.get(c);
@@ -336,7 +402,7 @@ void parser_t::token_t::next(std::istream& in, const flags_t flags)
 	kind = VALUE;
 	value = temp;
       }
-      catch (amount_error& err) {
+      catch (const amount_error& err) {
 	// If the amount had no commodity, it must be an unambiguous
 	// variable reference
 
@@ -407,6 +473,31 @@ parser_t::parse_value_term(std::istream& in, scope_t& scope, const flags_t tflag
     node->set_value(tok.value);
     break;
 
+  case token_t::SHORT_ACCOUNT_MASK:
+    node = new op_t(op_t::F_SHORT_ACCOUNT_MASK);
+    node->set_mask(tok.value.as_string());
+    break;
+  case token_t::CODE_MASK:
+    node = new op_t(op_t::F_CODE_MASK);
+    node->set_mask(tok.value.as_string());
+    break;
+  case token_t::COMMODITY_MASK:
+    node = new op_t(op_t::F_COMMODITY_MASK);
+    node->set_mask(tok.value.as_string());
+    break;
+  case token_t::PAYEE_MASK:
+    node = new op_t(op_t::F_PAYEE_MASK);
+    node->set_mask(tok.value.as_string());
+    break;
+  case token_t::NOTE_MASK:
+    node = new op_t(op_t::F_NOTE_MASK);
+    node->set_mask(tok.value.as_string());
+    break;
+  case token_t::ACCOUNT_MASK:
+    node = new op_t(op_t::F_ACCOUNT_MASK);
+    node->set_mask(tok.value.as_string());
+    break;
+
   case token_t::IDENT: {
 #if 0
 #ifdef USE_BOOST_PYTHON
@@ -473,12 +564,12 @@ parser_t::parse_value_term(std::istream& in, scope_t& scope, const flags_t tflag
     break;
   }
 
+#if 0
   case token_t::AT_SYM: {
     tok = next_token(in, tflags);
     if (tok.kind != token_t::IDENT)
       throw_(parse_error, "@ symbol must be followed by attribute name");
 
-#if 0
     string ident = tok.value.as_string();
     if (optional<node_t::nameid_t> id = document_t::lookup_builtin_id(ident)) {
       node = new op_t(op_t::ATTR_ID);
@@ -488,11 +579,9 @@ parser_t::parse_value_term(std::istream& in, scope_t& scope, const flags_t tflag
       node = new op_t(op_t::ATTR_NAME);
       node->set_string(ident);
     }
-#endif
     break;
   }
 
-#if 0
   case token_t::DOLLAR:
     tok = next_token(in, tflags);
     if (tok.kind != token_t::IDENT)
@@ -546,7 +635,8 @@ parser_t::parse_value_term(std::istream& in, scope_t& scope, const flags_t tflag
 }
 
 ptr_op_t
-parser_t::parse_unary_expr(std::istream& in, scope_t& scope, const flags_t tflags) const
+parser_t::parse_unary_expr(std::istream& in, scope_t& scope,
+			   const flags_t tflags) const
 {
   ptr_op_t node;
 
@@ -561,7 +651,7 @@ parser_t::parse_unary_expr(std::istream& in, scope_t& scope, const flags_t tflag
 
     // A very quick optimization
     if (term->kind == op_t::VALUE) {
-      term->as_value().in_place_negate();
+      term->as_value_lval().in_place_negate();
       node = term;
     } else {
       node = new op_t(op_t::O_NOT);
@@ -578,7 +668,7 @@ parser_t::parse_unary_expr(std::istream& in, scope_t& scope, const flags_t tflag
 
     // A very quick optimization
     if (term->kind == op_t::VALUE) {
-      term->as_value().in_place_negate();
+      term->as_value_lval().in_place_negate();
       node = term;
     } else {
       node = new op_t(op_t::O_NEG);
@@ -1406,64 +1496,6 @@ ptr_op_t parse_value_term(std::istream& in, scope_t * scope,
     break;
 
   // Other
-#if 0
-  case 'c':
-  case 'C':
-  case 'p':
-  case 'w':
-  case 'W':
-  case 'e':
-  case '/': {
-    bool code_mask	    = c == 'c';
-    bool commodity_mask	    = c == 'C';
-    bool payee_mask	    = c == 'p';
-    bool note_mask	    = c == 'e';
-    bool short_account_mask = c == 'w';
-
-    if (c == '/') {
-      c = peek_next_nonws(in);
-      if (c == '/') {
-	in.get(c);
-	c = in.peek();
-	if (c == '/') {
-	  in.get(c);
-	  c = in.peek();
-	  short_account_mask = true;
-	} else {
-	  payee_mask = true;
-	}
-      }
-    } else {
-      in.get(c);
-    }
-
-    // Read in the regexp
-    READ_INTO(in, buf, 255, c, c != '/');
-    if (c != '/')
-      unexpected(c, '/');
-
-    op_t::kind_t kind;
-
-    if (short_account_mask)
-      kind = op_t::F_SHORT_ACCOUNT_MASK;
-    else if (code_mask)
-      kind = op_t::F_CODE_MASK;
-    else if (commodity_mask)
-      kind = op_t::F_COMMODITY_MASK;
-    else if (payee_mask)
-      kind = op_t::F_PAYEE_MASK;
-    else if (note_mask)
-      kind = op_t::F_NOTE_MASK;
-    else
-      kind = op_t::F_ACCOUNT_MASK;
-
-    in.get(c);
-    node.reset(new op_t(kind));
-    node->mask = new mask_t(buf);
-    break;
-  }
-#endif
-
   case '{': {
     amount_t temp;
     temp.parse(in, AMOUNT_PARSE_NO_MIGRATE);

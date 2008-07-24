@@ -1218,17 +1218,17 @@ value_t value_t::abs() const
 {
   switch (type()) {
   case INTEGER: {
-    long val = const_cast<value_t&>(*this).as_long_lval();
+    long val = as_long();
     if (val < 0)
       return - val;
     return val;
   }
   case AMOUNT:
-    return const_cast<value_t&>(*this).as_amount_lval().abs();
+    return as_amount().abs();
   case BALANCE:
-    return const_cast<value_t&>(*this).as_balance_lval().abs();
+    return as_balance().abs();
   case BALANCE_PAIR:
-    return const_cast<value_t&>(*this).as_balance_pair_lval().abs();
+    return as_balance_pair().abs();
   default:
     break;
   }
@@ -1436,27 +1436,27 @@ void value_t::print(std::ostream& out, const int first_width,
     break;
 
   case BOOLEAN:
-    out << const_cast<value_t&>(*this).as_boolean_lval();
+    out << as_boolean();
     break;
 
   case DATETIME:
-    out << const_cast<value_t&>(*this).as_datetime_lval();
+    out << as_datetime();
     break;
 
   case INTEGER:
-    out << const_cast<value_t&>(*this).as_long_lval();
+    out << as_long();
     break;
 
   case AMOUNT:
-    out << const_cast<value_t&>(*this).as_amount_lval();
+    out << as_amount();
     break;
 
   case STRING:
-    out << const_cast<value_t&>(*this).as_string_lval();
+    out << as_string();
     break;
 
   case POINTER:
-    out << boost::unsafe_any_cast<void *>(&const_cast<value_t&>(*this).as_any_pointer_lval());
+    out << boost::unsafe_any_cast<const void *>(&as_any_pointer());
     break;
 
   case SEQUENCE: {
@@ -1486,36 +1486,51 @@ void value_t::print(std::ostream& out, const int first_width,
   }
 }
 
+bool value_t::valid() const
+{
+  switch (type()) {
+  case AMOUNT:
+    return as_amount().valid();
+  case BALANCE:
+    return as_balance().valid();
+  case BALANCE_PAIR:
+    return as_balance_pair().valid();
+  default:
+    break;
+  }
+  return true;
+}
+
 void value_context::describe(std::ostream& out) const throw()
 {
   if (! desc.empty())
     out << desc << std::endl;
 
-  balance_t * ptr = NULL;
+  const balance_t * ptr = NULL;
 
   out << std::right;
   out.width(20);
 
   switch (bal.type()) {
   case value_t::BOOLEAN:
-    out << (const_cast<value_t&>(bal).as_boolean_lval() ? "true" : "false");
+    out << (bal.as_boolean() ? "true" : "false");
     break;
   case value_t::INTEGER:
-    out << const_cast<value_t&>(bal).as_long_lval();
+    out << bal.as_long();
     break;
   case value_t::DATETIME:
-    out << const_cast<value_t&>(bal).as_datetime_lval();
+    out << bal.as_datetime();
     break;
   case value_t::AMOUNT:
-    out << const_cast<value_t&>(bal).as_amount_lval();
+    out << bal.as_amount();
     break;
   case value_t::BALANCE:
-    ptr = &(const_cast<value_t&>(bal).as_balance_lval());
+    ptr = &bal.as_balance();
     // fall through...
 
   case value_t::BALANCE_PAIR:
     if (! ptr)
-      ptr = &(const_cast<value_t&>(bal).as_balance_pair_lval().quantity());
+      ptr = &bal.as_balance_pair().quantity();
 
     ptr->print(out, 20);
     break;

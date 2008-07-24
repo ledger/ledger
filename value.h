@@ -433,8 +433,8 @@ private:
 
 public:
   /**
-   * Data manipulation methods.  A value object may be truth tested
-   * for the existence of every type it can contain:
+   * Data manipulation methods.  A value object may be truth tested for the
+   * existence of every type it can contain:
    *
    * is_boolean()
    * is_long()
@@ -446,20 +446,19 @@ public:
    * is_sequence()
    * is_pointer()
    *
-   * There are corresponding as_*() methods that represent a value as
-   * a reference to its underlying type.  For example, as_integer()
-   * returns a reference to a "const long".
+   * There are corresponding as_*() methods that represent a value as a
+   * reference to its underlying type.  For example, as_long() returns a
+   * reference to a "const long".
    *
-   * There are also as_*_lval() methods, which represent the
-   * underlying data as a reference to a non-const type.  The
-   * difference here is that an _lval() call causes the underlying
-   * data to be fully copied before the resulting reference is
-   * returned.
+   * There are also as_*_lval() methods, which represent the underlying data
+   * as a reference to a non-const type.  The difference here is that an
+   * _lval() call causes the underlying data to be fully copied before the
+   * resulting reference is returned.
    *
    * Lastly, there are corresponding set_*(data) methods for directly
-   * assigning data of a particular type, rather than using the
-   * regular assignment operator (whose implementation simply calls
-   * the various set_ methods).
+   * assigning data of a particular type, rather than using the regular
+   * assignment operator (whose implementation simply calls the various set_
+   * methods).
    */
   bool is_boolean() const {
     return is_type(BOOLEAN);
@@ -518,13 +517,18 @@ public:
   amount_t& as_amount_lval() {
     assert(is_amount());
     _dup();
-    return *(amount_t *) storage->data;
+    amount_t& amt(*(amount_t *) storage->data);
+    assert(amt.valid());
+    return amt;
   }
   const amount_t& as_amount() const {
     assert(is_amount());
-    return *(amount_t *) storage->data;
+    amount_t& amt(*(amount_t *) storage->data);
+    assert(amt.valid());
+    return amt;
   }
   void set_amount(const amount_t& val) {
+    assert(val.valid());
     set_type(AMOUNT);
     new((amount_t *) storage->data) amount_t(val);
   }
@@ -535,13 +539,18 @@ public:
   balance_t& as_balance_lval() {
     assert(is_balance());
     _dup();
-    return **(balance_t **) storage->data;
+    balance_t& bal(**(balance_t **) storage->data);
+    assert(bal.valid());
+    return bal;
   }
   const balance_t& as_balance() const {
     assert(is_balance());
-    return **(balance_t **) storage->data;
+    balance_t& bal(**(balance_t **) storage->data);
+    assert(bal.valid());
+    return bal;
   }
   void set_balance(const balance_t& val) {
+    assert(val.valid());
     set_type(BALANCE);
     *(balance_t **) storage->data = new balance_t(val);
   }
@@ -552,13 +561,18 @@ public:
   balance_pair_t& as_balance_pair_lval() {
     assert(is_balance_pair());
     _dup();
-    return **(balance_pair_t **) storage->data;
+    balance_pair_t& bal_pair(**(balance_pair_t **) storage->data);
+    assert(bal_pair.valid());
+    return bal_pair;
   }
   const balance_pair_t& as_balance_pair() const {
     assert(is_balance_pair());
-    return **(balance_pair_t **) storage->data;
+    balance_pair_t& bal_pair(**(balance_pair_t **) storage->data);
+    assert(bal_pair.valid());
+    return bal_pair;
   }
   void set_balance_pair(const balance_pair_t& val) {
+    assert(val.valid());
     set_type(BALANCE_PAIR);
     *(balance_pair_t **) storage->data = new balance_pair_t(val);
   }
@@ -576,6 +590,10 @@ public:
     return *(string *) storage->data;
   }
   void set_string(const string& val = "") {
+    set_type(STRING);
+    new((string *) storage->data) string(val);
+  }
+  void set_string(const char * val = "") {
     set_type(STRING);
     new((string *) storage->data) string(val);
   }
@@ -617,7 +635,7 @@ public:
     _dup();
     return *any_cast<T *>(*(boost::any *) storage->data);
   }
-  boost::any as_any_pointer() const {
+  const boost::any& as_any_pointer() const {
     assert(is_pointer());
     return *(boost::any *) storage->data;
   }
@@ -730,13 +748,13 @@ public:
 	if (! is_sequence())
 	  in_place_cast(SEQUENCE);
 
-	value_t::sequence_t& seq(as_sequence_lval());
 	if (! val.is_sequence()) {
 	  if (! val.is_null())
-	    seq.push_back(val);
+	    as_sequence_lval().push_back(val);
 	} else {
 	  const value_t::sequence_t& val_seq(val.as_sequence());
-	  std::copy(val_seq.begin(), val_seq.end(), back_inserter(seq));
+	  std::copy(val_seq.begin(), val_seq.end(),
+		    back_inserter(as_sequence_lval()));
 	}
       }
     }
@@ -750,11 +768,12 @@ public:
     } else {
       as_sequence_lval().pop_back();
 
-      std::size_t new_size = as_sequence().size();
+      const value_t::sequence_t& seq(as_sequence());
+      std::size_t new_size = seq.size();
       if (new_size == 0)
 	_reset();
       else if (new_size == 1)
-	*this = as_sequence().front();
+	*this = seq.front();
     }
   }
 
@@ -811,6 +830,8 @@ public:
   /**
    * Debugging methods.
    */
+
+  bool valid() const;
 };
 
 #define NULL_VALUE (value_t())

@@ -128,7 +128,7 @@ bool entry_base_t::finalize()
 
   for (transactions_list::const_iterator x = transactions.begin();
        x != transactions.end();
-       x++)
+       x++) {
     if (! (*x)->has_flags(TRANSACTION_VIRTUAL) ||
 	(*x)->has_flags(TRANSACTION_BALANCE)) {
       amount_t& p((*x)->cost ? *(*x)->cost : (*x)->amount);
@@ -154,6 +154,9 @@ bool entry_base_t::finalize()
 	saw_null = true;
       }
     }
+  }
+
+  assert(balance.valid());
 
   // If it's a null entry, then let the user have their fun
   if (no_amounts)
@@ -177,21 +180,24 @@ bool entry_base_t::finalize()
   // the balance.  This is done for the last eligible commodity.
 
   if (! saw_null && balance && balance.is_balance()) {
-    balance_t& bal(balance.as_balance_lval());
+    const balance_t& bal(balance.as_balance());
     if (bal.amounts.size() == 2) {
       transactions_list::const_iterator x = transactions.begin();
-      assert((*x)->amount);
+      assert(! (*x)->amount.is_null());
       commodity_t& this_comm = (*x)->amount.commodity();
 
       balance_t::amounts_map::const_iterator this_bal =
 	bal.amounts.find(&this_comm);
+      assert(this_bal != bal.amounts.end());
+
       balance_t::amounts_map::const_iterator other_bal =
 	bal.amounts.begin();
+      
       if (this_bal == other_bal)
 	other_bal++;
 
       amount_t per_unit_cost =
-	amount_t((*other_bal).second / (*this_bal).second.number()).unround();
+	((*other_bal).second / (*this_bal).second.number()).unround();
 
       for (; x != transactions.end(); x++) {
 	if ((*x)->cost || (*x)->has_flags(TRANSACTION_VIRTUAL) ||
@@ -241,12 +247,12 @@ bool entry_base_t::finalize()
     const balance_t * bal = NULL;
     switch (balance.type()) {
     case value_t::BALANCE_PAIR:
-      bal = &balance.as_balance_pair_lval().quantity();
+      bal = &balance.as_balance_pair().quantity();
       // fall through...
 
     case value_t::BALANCE:
       if (! bal)
-	bal = &balance.as_balance_lval();
+	bal = &balance.as_balance();
 
       if (bal->amounts.size() < 2) {
 	balance.cast(value_t::AMOUNT);

@@ -355,8 +355,8 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
       if (! calc)
 	break;
 
-      value_t     value;
-      balance_t * bal = NULL;
+      value_t		value;
+      const balance_t * bal = NULL;
 
       calc->compute(value, details);
 
@@ -378,54 +378,54 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 
       switch (value.type()) {
       case value_t::BOOLEAN:
-	out << (value.as_boolean_lval() ? "true" : "false");
+	out << (value.as_boolean() ? "true" : "false");
 	break;
 
       case value_t::INTEGER:
 	if (ansi_codes && elem->flags & ELEMENT_HIGHLIGHT) {
 	  if (ansi_invert) {
-	    if (value.as_long_lval() > 0) {
+	    if (value.as_long() > 0) {
 	      mark_red(out, elem);
 	      highlighted = true;
 	    }
 	  } else {
-	    if (value.as_long_lval() < 0) {
+	    if (value.as_long() < 0) {
 	      mark_red(out, elem);
 	      highlighted = true;
 	    }
 	  }
 	}
-	out << value.as_long_lval();
+	out << value.as_long();
 	break;
 
       case value_t::DATETIME:
-	out << value.as_datetime_lval();
+	out << value.as_datetime();
 	break;
 
       case value_t::AMOUNT:
 	if (ansi_codes && elem->flags & ELEMENT_HIGHLIGHT) {
 	  if (ansi_invert) {
-	    if (value.as_amount_lval().sign() > 0) {
+	    if (value.as_amount().sign() > 0) {
 	      mark_red(out, elem);
 	      highlighted = true;
 	    }
 	  } else {
-	    if (value.as_amount_lval().sign() < 0) {
+	    if (value.as_amount().sign() < 0) {
 	      mark_red(out, elem);
 	      highlighted = true;
 	    }
 	  }
 	}
-	out << value.as_amount_lval();
+	out << value.as_amount();
 	break;
 
       case value_t::BALANCE:
-	bal = &(value.as_balance_lval());
+	bal = &(value.as_balance());
 	// fall through...
 
       case value_t::BALANCE_PAIR:
 	if (! bal)
-	  bal = &(value.as_balance_pair_lval().quantity());
+	  bal = &(value.as_balance_pair().quantity());
 
 	if (ansi_codes && elem->flags & ELEMENT_HIGHLIGHT) {
 	  if (ansi_invert) {
@@ -949,11 +949,11 @@ void format_equity::flush()
   summary.data = &xdata;
 
   if (total.type() >= value_t::BALANCE) {
-    balance_t * bal;
+    const balance_t * bal;
     if (total.is_type(value_t::BALANCE))
-      bal = &(total.as_balance_lval());
+      bal = &(total.as_balance());
     else if (total.is_type(value_t::BALANCE_PAIR))
-      bal = &(total.as_balance_pair_lval().quantity());
+      bal = &(total.as_balance_pair().quantity());
     else
       assert(false);
 
@@ -977,11 +977,11 @@ void format_equity::operator()(account_t& account)
       value_t val = account_xdata_(account).value;
 
       if (val.type() >= value_t::BALANCE) {
-	balance_t * bal;
+	const balance_t * bal;
 	if (val.is_type(value_t::BALANCE))
-	  bal = &(val.as_balance_lval());
+	  bal = &(val.as_balance());
 	else if (val.is_type(value_t::BALANCE_PAIR))
-	  bal = &(val.as_balance_pair_lval().quantity());
+	  bal = &(val.as_balance_pair().quantity());
 	else
 	  assert(false);
 

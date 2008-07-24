@@ -230,7 +230,7 @@ void handle_value(const value_t&	       value,
     // fall through...
 
   case value_t::AMOUNT:
-    xact.amount = temp.as_amount_lval();
+    xact.amount = temp.as_amount();
     break;
 
   case value_t::BALANCE:

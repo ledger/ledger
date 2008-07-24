@@ -351,7 +351,7 @@ public:
    * valid() returns true if the balances within the balance pair are
    * valid.
    */
-  virtual bool valid() {
+  bool valid() const {
     if (! balance_t::valid())
       return false;
 

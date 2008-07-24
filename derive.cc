@@ -67,7 +67,7 @@ entry_t * derive_new_entry(journal_t& journal,
 
 	value_t total = account_xdata(*acct).total;
 	if (total.is_type(value_t::AMOUNT))
-	  xact->amount.set_commodity(total.as_amount_lval().commodity());
+	  xact->amount.set_commodity(total.as_amount().commodity());
       }
     }
 

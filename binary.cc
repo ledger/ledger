@@ -827,16 +827,16 @@ void write_value(std::ostream& out, const value_t& val)
 
   switch (val.type()) {
   case value_t::BOOLEAN:
-    write_bool(out, const_cast<value_t&>(val).as_boolean_lval());
+    write_bool(out, val.as_boolean());
     break;
   case value_t::INTEGER:
-    write_long(out, const_cast<value_t&>(val).as_long_lval());
+    write_long(out, val.as_long());
     break;
   case value_t::DATETIME:
-    write_number(out, const_cast<value_t&>(val).as_datetime_lval());
+    write_number(out,val.as_datetime());
     break;
   case value_t::AMOUNT:
-    write_amount(out, const_cast<value_t&>(val).as_amount_lval());
+    write_amount(out, val.as_amount());
     break;
 
   //case value_t::BALANCE:

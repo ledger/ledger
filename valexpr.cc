@@ -59,8 +59,10 @@ bool compute_amount(ptr_op_t expr, amount_t& amt,
 
     // Most of the time when computing the amount of a transaction this cast
     // will do nothing at all.
+    assert(result.valid());
     result.in_place_cast(value_t::AMOUNT);
     amt = result.as_amount();
+    assert(amt.valid());
   }
   catch (error * err) {
     if (err->context.empty() ||
@@ -134,7 +136,7 @@ namespace {
       } else {
 	temp.reset(new op_t(op_t::VALUE));
 	temp->set_value(value_t());
-	expr->compute(temp->as_value(), details, context);
+	expr->compute(temp->as_value_lval(), details, context);
       }
     } else {
       temp.reset(new op_t(op_t::O_COMMA));
@@ -417,7 +419,7 @@ void op_t::compute(value_t& result, const details_t& details,
     long arg_index = 0;
     ptr_op_t expr = find_leaf(context, 0, arg_index);
     expr->compute(result, details, context);
-    result = result.as_datetime_lval();
+    result = result.as_datetime();
     break;
   }
 
@@ -425,7 +427,7 @@ void op_t::compute(value_t& result, const details_t& details,
     long arg_index = 0;
     ptr_op_t expr = find_leaf(context, 0, arg_index);
     expr->compute(result, details, context);
-    result = result.as_datetime_lval();
+    result = result.as_datetime();
     if (! result)
       break;
 
@@ -455,7 +457,7 @@ void op_t::compute(value_t& result, const details_t& details,
       throw new compute_error("Invalid date passed to year|month|day(date)",
 			      new valexpr_context(expr));
 
-    datetime_t& moment(result.as_datetime_lval());
+    const datetime_t& moment(result.as_datetime());
     switch (kind) {
     case F_YEAR:
       result = (long)moment.date().year();
@@ -519,7 +521,7 @@ void op_t::compute(value_t& result, const details_t& details,
       throw new compute_error("Argument to commodity() must be a commoditized amount",
 			      new valexpr_context(expr));
     amount_t temp("1");
-    temp.set_commodity(result.as_amount_lval().commodity());
+    temp.set_commodity(result.as_amount().commodity());
     result = temp;
     break;
   }
@@ -538,7 +540,7 @@ void op_t::compute(value_t& result, const details_t& details,
 	("Second argument to set_commodity() must be a commoditized amount",
 	 new valexpr_context(expr));
     amount_t one("1");
-    one.set_commodity(result.as_amount_lval().commodity());
+    one.set_commodity(result.as_amount().commodity());
     result = one;
 
     result *= temp;
@@ -550,15 +552,15 @@ void op_t::compute(value_t& result, const details_t& details,
     ptr_op_t expr = find_leaf(context, 0, arg_index);
     expr->compute(result, details, context);
 
-    balance_t * bal = NULL;
+    const balance_t * bal = NULL;
     switch (result.type()) {
     case value_t::BALANCE_PAIR:
-      bal = &(result.as_balance_pair_lval().quantity());
+      bal = &(result.as_balance_pair().quantity());
       // fall through...
 
     case value_t::BALANCE:
       if (! bal)
-	bal = &(result.as_balance_lval());
+	bal = &result.as_balance();
 
       if (bal->amounts.size() < 2) {
 	result.cast(value_t::AMOUNT);
@@ -586,55 +588,47 @@ void op_t::compute(value_t& result, const details_t& details,
     break;
   }
 
-#if 0
   case F_CODE_MASK:
-    assert(mask);
-    if (details.entry)
-      result = mask->match(details.entry->code);
+    if (details.entry && details.entry->code)
+      result = as_mask().match(*details.entry->code);
     else
       result = false;
     break;
 
   case F_PAYEE_MASK:
-    assert(mask);
     if (details.entry)
-      result = mask->match(details.entry->payee);
+      result = as_mask().match(details.entry->payee);
     else
       result = false;
     break;
 
   case F_NOTE_MASK:
-    assert(mask);
-    if (details.xact)
-      result = mask->match(details.xact->note);
+    if (details.xact && details.xact->note)
+      result = as_mask().match(*details.xact->note);
     else
       result = false;
     break;
 
   case F_ACCOUNT_MASK:
-    assert(mask);
     if (details.account)
-      result = mask->match(details.account->fullname());
+      result = as_mask().match(details.account->fullname());
     else
       result = false;
     break;
 
   case F_SHORT_ACCOUNT_MASK:
-    assert(mask);
     if (details.account)
-      result = mask->match(details.account->name);
+      result = as_mask().match(details.account->name);
     else
       result = false;
     break;
 
   case F_COMMODITY_MASK:
-    assert(mask);
     if (details.xact)
-      result = mask->match(details.xact->amount.commodity().base_symbol());
+      result = as_mask().match(details.xact->amount.commodity().base_symbol());
     else
       result = false;
     break;
-#endif
 
   case O_ARG: {
     long arg_index = 0;
@@ -686,7 +680,7 @@ void op_t::compute(value_t& result, const details_t& details,
       throw new compute_error("Invalid date passed to P(value,date)",
 			      new valexpr_context(expr));
 
-    result = result.value(moment.as_datetime_lval());
+    result = result.value(moment.as_datetime());
     break;
   }
 

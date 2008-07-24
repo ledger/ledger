@@ -340,6 +340,7 @@ struct op_t : public noncopyable
   enum kind_t {
     // Constants
     VALUE,
+    MASK,
     ARG_INDEX,
 
     CONSTANTS,
@@ -385,12 +386,15 @@ struct op_t : public noncopyable
     F_YEAR,
     F_MONTH,
     F_DAY,
+
+    BEGIN_MASKS,
     F_CODE_MASK,
     F_PAYEE_MASK,
     F_NOTE_MASK,
     F_ACCOUNT_MASK,
     F_SHORT_ACCOUNT_MASK,
     F_COMMODITY_MASK,
+    END_MASKS,
 
     TERMINALS,
 
@@ -449,12 +453,12 @@ struct op_t : public noncopyable
   bool is_long() const {
     return data.type() == typeid(unsigned int);
   }
-  unsigned int& as_long() {
+  unsigned int& as_long_lval() {
     assert(kind == ARG_INDEX || kind == O_ARG);
     return boost::get<unsigned int>(data);
   }
   const unsigned int& as_long() const {
-    return const_cast<op_t *>(this)->as_long();
+    return const_cast<op_t *>(this)->as_long_lval();
   }
   void set_long(unsigned int val) {
     data = val;
@@ -467,14 +471,17 @@ struct op_t : public noncopyable
     }
     return false;
   }
-  value_t& as_value() {
+  value_t& as_value_lval() {
     assert(is_value());
-    return boost::get<value_t>(data);
+    value_t& val(boost::get<value_t>(data));
+    assert(val.valid());
+    return val;
   }
   const value_t& as_value() const {
-    return const_cast<op_t *>(this)->as_value();
+    return const_cast<op_t *>(this)->as_value_lval();
   }
   void set_value(const value_t& val) {
+    assert(val.valid());
     data = val;
   }
 
@@ -485,26 +492,47 @@ struct op_t : public noncopyable
     }
     return false;
   }
-  string& as_string() {
+  string& as_string_lval() {
     assert(is_string());
     return boost::get<value_t>(data).as_string_lval();
   }
   const string& as_string() const {
-    return const_cast<op_t *>(this)->as_string();
+    return const_cast<op_t *>(this)->as_string_lval();
   }
   void set_string(const string& val) {
     data = value_t(val);
   }
 
+  bool is_mask() const {
+    if (kind > BEGIN_MASKS && kind < END_MASKS) {
+      assert(data.type() == typeid(mask_t));
+      return true;
+    }
+    return false;
+  }
+  mask_t& as_mask_lval() {
+    assert(is_mask());
+    return boost::get<mask_t>(data);
+  }
+  const mask_t& as_mask() const {
+    return const_cast<op_t *>(this)->as_mask_lval();
+  }
+  void set_mask(const mask_t& val) {
+    data = val;
+  }
+  void set_mask(const string& expr) {
+    data = mask_t(expr);
+  }
+
   bool is_function() const {
     return kind == FUNCTION;
   }
-  function_t& as_function() {
+  function_t& as_function_lval() {
     assert(kind == FUNCTION);
     return boost::get<function_t>(data);
   }
   const function_t& as_function() const {
-    return const_cast<op_t *>(this)->as_function();
+    return const_cast<op_t *>(this)->as_function_lval();
   }
   void set_function(const function_t& val) {
     data = val;
@@ -514,24 +542,24 @@ struct op_t : public noncopyable
   bool is_name() const {
     return data.type() == typeid(node_t::nameid_t);
   }
-  node_t::nameid_t& as_name() {
+  node_t::nameid_t& as_name_lval() {
     assert(kind == NODE_ID || kind == ATTR_ID);
     return boost::get<node_t::nameid_t>(data);
   }
   const node_t::nameid_t& as_name() const {
-    return const_cast<op_t *>(this)->as_name();
+    return const_cast<op_t *>(this)->as_name_lval();
   }
   void set_name(const node_t::nameid_t& val) {
     data = val;
   }
 #endif
 
-  ptr_op_t& as_op() {
+  ptr_op_t& as_op_lval() {
     assert(kind > TERMINALS);
     return boost::get<ptr_op_t>(data);
   }
   const ptr_op_t& as_op() const {
-    return const_cast<op_t *>(this)->as_op();
+    return const_cast<op_t *>(this)->as_op_lval();
   }
 
   void acquire() const {
@@ -562,7 +590,7 @@ struct op_t : public noncopyable
 
   ptr_op_t& right() {
     assert(kind > TERMINALS);
-    return as_op();
+    return as_op_lval();
   }
   const ptr_op_t& right() const {
     assert(kind > TERMINALS);
@@ -628,7 +656,6 @@ struct op_t : public noncopyable
   }
 };
 
-#if 0
 class op_predicate {
   ptr_op_t op;
 
@@ -638,7 +665,6 @@ public:
     return op->calc(scope).to_boolean();
   }
 };
-#endif
 
 class valexpr_context : public error_context {
  public:
