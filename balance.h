@@ -314,6 +314,31 @@ public:
     return temp;
   }
 
+  balance_t round() const {
+    balance_t temp;
+    for (amounts_map::const_iterator i = amounts.begin();
+	 i != amounts.end();
+	 i++)
+      temp += i->second.round();
+    return temp;
+  }
+  balance_t round(amount_t::precision_t prec) const {
+    balance_t temp;
+    for (amounts_map::const_iterator i = amounts.begin();
+	 i != amounts.end();
+	 i++)
+      temp += i->second.round(prec);
+    return temp;
+  }
+  balance_t unround() const {
+    balance_t temp;
+    for (amounts_map::const_iterator i = amounts.begin();
+	 i != amounts.end();
+	 i++)
+      temp += i->second.unround();
+    return temp;
+  }
+
   balance_t reduce() const {
     balance_t temp(*this);
     temp.in_place_reduce();

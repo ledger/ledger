@@ -1006,24 +1006,38 @@ void value_t::in_place_cast(type_t cast_type)
     }
     break;
 
-  case AMOUNT:
+  case AMOUNT: {
+    const amount_t& amt(as_amount());
     switch (cast_type) {
     case INTEGER:
-      set_long(as_amount().to_long());
+      if (amt.is_null())
+	set_long(0L);
+      else
+	set_long(as_amount().to_long());
       return;
     case BALANCE:
-      set_balance(as_amount());
+      if (amt.is_null())
+	set_balance(balance_t());
+      else
+	set_balance(as_amount());
       return;
     case BALANCE_PAIR:
-      set_balance_pair(as_amount());
+      if (amt.is_null())
+	set_balance_pair(balance_pair_t());
+      else
+	set_balance_pair(as_amount());
       return;
     case STRING:
-      set_string(as_amount().to_string());
+      if (amt.is_null())
+	set_string("");
+      else
+	set_string(as_amount().to_string());
       return;
     default:
       break;
     }
     break;
+  }
 
   case BALANCE:
     switch (cast_type) {
@@ -1244,6 +1258,10 @@ value_t value_t::round() const
     return *this;
   case AMOUNT:
     return as_amount().round();
+  case BALANCE:
+    return as_balance().round();
+  case BALANCE_PAIR:
+    return as_balance_pair().round();
   default:
     break;
   }
