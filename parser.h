@@ -9,10 +9,15 @@ class account_t;
 class journal_t;
 class session_t;
 
-class parser_t
+class parser_t : public noncopyable
 {
- public:
-  virtual ~parser_t() {}
+public:
+  parser_t() {
+    TRACE_CTOR(parser_t, "");
+  }
+  virtual ~parser_t() {
+    TRACE_DTOR(parser_t);
+  }
 
   virtual bool test(std::istream& in) const = 0;
 
@@ -41,8 +46,9 @@ unsigned int parse_ledger_data(session_t& session,
 			       parser_t * xml_parser   = NULL,
 			       parser_t * stdin_parser = NULL);
 
-class parse_error : public error {
- public:
+class parse_error : public error
+{
+public:
   parse_error(const string& reason, error_context * ctxt = NULL) throw()
     : error(reason, ctxt) {}
   virtual ~parse_error() throw() {}

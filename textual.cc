@@ -23,20 +23,29 @@ static accounts_map account_aliases;
 static std::list<std::pair<path, int> > include_stack;
 
 #ifdef TIMELOG_SUPPORT
-struct time_entry_t {
+struct time_entry_t
+{
   datetime_t  checkin;
   account_t * account;
   string      desc;
 
-  time_entry_t() : account(NULL) {}
-  time_entry_t(datetime_t  _checkin,
-	       account_t * _account = NULL,
-	       std::string _desc    = "")
-    : checkin(_checkin), account(_account), desc(_desc) {}
-
+  time_entry_t() : account(NULL) {
+    TRACE_CTOR(time_entry_t, "");
+  }
+  time_entry_t(const datetime_t& _checkin,
+	       account_t *	 _account = NULL,
+	       const string&     _desc	  = "")
+    : checkin(_checkin), account(_account), desc(_desc) {
+    TRACE_CTOR(time_entry_t, "const datetime_t&, account_t *, const string&");
+  }
   time_entry_t(const time_entry_t& entry)
     : checkin(entry.checkin), account(entry.account),
-      desc(entry.desc) {}
+      desc(entry.desc) {
+    TRACE_CTOR(time_entry_t, "copy");
+  }
+  ~time_entry_t() throw() {
+    TRACE_DTOR(time_entry_t);
+  }
 };
 #endif
 
@@ -457,14 +466,6 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
   return curr.release();
 }
 
-template <typename T>
-struct push_var {
-  T& var;
-  T prev;
-  push_var(T& _var) : var(_var), prev(var) {}
-  ~push_var() { var = prev; }
-};
-
 static inline void parse_symbol(char *& p, string& symbol)
 {
   if (*p == '"') {
@@ -803,13 +804,12 @@ unsigned int textual_parser_t::parse(std::istream& in,
 	char * p = next_element(line);
 	string word(line + 1);
 	if (word == "include") {
-	  push_var<path>	  save_pathname(pathname);
-	  push_var<unsigned int>  save_src_idx(src_idx);
-	  push_var<unsigned long> save_beg_pos(beg_pos);
-	  push_var<unsigned long> save_end_pos(end_pos);
-	  push_var<unsigned int>  save_linenum(linenum);
+	  push_variable<path>	       save_pathname(pathname);
+	  push_variable<unsigned int>  save_src_idx(src_idx);
+	  push_variable<unsigned long> save_beg_pos(beg_pos);
+	  push_variable<unsigned long> save_end_pos(end_pos);
+	  push_variable<unsigned int>  save_linenum(linenum);
 
-	  // jww (2008-04-22): Fix this!
 	  pathname = p;
 #if 0
 	  if (pathname[0] != '/' && pathname[0] != '\\' && pathname[0] != '~') {
@@ -820,12 +820,10 @@ unsigned int textual_parser_t::parse(std::istream& in,
 	      pathname = string(save_pathname.prev, 0, pos + 1) + pathname;
 	  }
 	  pathname = resolve_path(pathname);
-#endif
 
 	  DEBUG("ledger.textual.include", "line " << linenum << ": " <<
 		      "Including path '" << pathname << "'");
 
-#if 0
 	  include_stack.push_back(std::pair<path, int>
 				  (journal.sources.back(), linenum - 1));
 	  count += parse_journal_file(pathname, config, journal,

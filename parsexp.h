@@ -39,7 +39,7 @@ namespace expr {
 
 DECLARE_EXCEPTION(error, parse_error);
 
-class parser_t
+class parser_t : public noncopyable
 {
 #define EXPR_PARSE_NORMAL     0x00
 #define EXPR_PARSE_PARTIAL    0x01
@@ -52,7 +52,7 @@ public:
   typedef uint_least8_t flags_t;
 
 private:
-  struct token_t
+  struct token_t : public noncopyable
   {
     enum kind_t {
       VALUE,			// any kind of literal value
@@ -112,12 +112,14 @@ private:
     explicit token_t() : kind(UNKNOWN), length(0) {
       TRACE_CTOR(token_t, "");
     }
+#if 0
     token_t(const token_t& other) {
       assert(false);
       TRACE_CTOR(token_t, "copy");
       *this = other;
     }
-    ~token_t() {
+#endif
+    ~token_t() throw() {
       TRACE_DTOR(token_t);
     }
 

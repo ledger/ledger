@@ -33,11 +33,6 @@
 
 namespace ledger {
 
-report_t::~report_t()
-{
-  TRACE_DTOR(report_t);
-}
-
 void report_t::apply_transforms(expr::scope_t& scope)
 {
 #if 0

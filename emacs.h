@@ -8,13 +8,20 @@ namespace ledger {
 
 class format_emacs_transactions : public item_handler<transaction_t>
 {
- protected:
+  format_emacs_transactions();
+
+protected:
   std::ostream& out;
   entry_t *     last_entry;
 
- public:
+public:
   format_emacs_transactions(std::ostream& _out)
-    : out(_out), last_entry(NULL) {}
+    : out(_out), last_entry(NULL) {
+    TRACE_CTOR(format_emacs_transactions, "std::ostream&");
+  }
+  ~format_emacs_transactions() {
+    TRACE_DTOR(format_emacs_transactions);
+  }
 
   virtual void write_entry(entry_t& entry);
   virtual void flush() {

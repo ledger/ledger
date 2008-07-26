@@ -25,12 +25,19 @@ class xml_parser_t : public parser_t
 class format_xml_entries : public format_entries
 {
   bool show_totals;
- public:
+
+  format_xml_entries();
+
+public:
   format_xml_entries(std::ostream& output_stream,
 		     const bool _show_totals = false)
     : format_entries(output_stream, ""), show_totals(_show_totals) {
+    TRACE_CTOR(format_xml_entries, "std::ostream&, const bool");
     output_stream << "<?xml version=\"1.0\"?>\n"
 		  << "<ledger version=\"2.5\">\n";
+  }
+  virtual ~format_xml_entries() throw() {
+    TRACE_DTOR(format_xml_entries);
   }
 
   virtual void flush() {

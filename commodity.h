@@ -231,7 +231,17 @@ struct annotation_t : public equality_comparable<annotation_t>
     (const optional<amount_t>&	 _price = none,
      const optional<datetime_t>& _date  = none,
      const optional<string>&     _tag	= none)
-    : price(_price), date(_date), tag(_tag) {}
+    : price(_price), date(_date), tag(_tag) {
+    TRACE_CTOR(annotation_t, "const optional<amount_t>& + datetime_t + string");
+  }
+  annotation_t(const annotation_t& other)
+    : price(other.price), date(other.date), tag(other.tag) {
+    TRACE_CTOR(annotation_t, "copy");
+  }
+
+  ~annotation_t() {
+    TRACE_DTOR(annotation_t);
+  }
 
   operator bool() const {
     return price || date || tag;
@@ -378,6 +388,7 @@ public:
   explicit commodity_pool_t();
 
   ~commodity_pool_t() {
+    TRACE_DTOR(commodity_pool_t);
     commodities_by_ident& ident_index = commodities.get<0>();
     for (commodities_by_ident::iterator i = ident_index.begin();
 	 i != ident_index.end();

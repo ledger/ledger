@@ -75,23 +75,23 @@ class transaction_t : public supports_flags<>
   static bool	 use_effective_date;
 
   transaction_t(account_t * _account = NULL,
-		unsigned int _flags  = TRANSACTION_NORMAL)
+		flags_t     _flags   = TRANSACTION_NORMAL)
     : supports_flags<>(_flags), entry(NULL),
       state(UNCLEARED), account(_account),
       beg_pos(0), beg_line(0), end_pos(0), end_line(0), data(NULL)
   {
-    TRACE_CTOR(transaction_t, "account_t *");
+    TRACE_CTOR(transaction_t, "account_t *, flags_t");
   }
-  transaction_t(account_t *	       _account,
-		const amount_t&        _amount,
-		unsigned int           _flags = TRANSACTION_NORMAL,
-		const optional<string> _note  = none)
+  transaction_t(account_t *	_account,
+		const amount_t& _amount,
+		flags_t         _flags = TRANSACTION_NORMAL,
+		const optional<string>& _note = none)
     : supports_flags<>(_flags), entry(NULL), state(UNCLEARED),
       account(_account), amount(_amount), note(_note),
       beg_pos(0), beg_line(0), end_pos(0), end_line(0), data(NULL)
   {
     TRACE_CTOR(transaction_t,
-	       "account_t *, const amount_t&, unsigned int, const string&");
+	       "account_t *, const amount_t&, flags_t, const string&");
   }
   transaction_t(const transaction_t& xact)
     : supports_flags<>(xact),
@@ -168,8 +168,10 @@ class entry_base_t
 	 i++)
       transactions.push_back(new transaction_t(**i));
   }
+
   virtual ~entry_base_t() {
     TRACE_DTOR(entry_base_t);
+
     for (transactions_list::iterator i = transactions.begin();
 	 i != transactions.end();
 	 i++)
@@ -250,8 +252,7 @@ class entry_context : public error_context {
 };
 
 
-template <typename T>
-class item_predicate;
+template <typename T> class item_predicate;
 
 class auto_entry_t : public entry_base_t
 {
@@ -260,6 +261,10 @@ public:
 
   auto_entry_t() {
     TRACE_CTOR(auto_entry_t, "");
+  }
+  auto_entry_t(const auto_entry_t& other)
+  : predicate(other.predicate) {
+    TRACE_CTOR(auto_entry_t, "copy");
   }
   auto_entry_t(const string& _predicate)
     : predicate(_predicate)
@@ -277,9 +282,24 @@ public:
   }
 };
 
-struct auto_entry_finalizer_t : public entry_finalizer_t {
+struct auto_entry_finalizer_t : public entry_finalizer_t
+{
   journal_t * journal;
-  auto_entry_finalizer_t(journal_t * _journal) : journal(_journal) {}
+
+  auto_entry_finalizer_t() : journal(NULL) {
+    TRACE_CTOR(auto_entry_finalizer_t, "");
+  }
+  auto_entry_finalizer_t(const auto_entry_finalizer_t& other)
+    : journal(other.journal) {
+    TRACE_CTOR(auto_entry_finalizer_t, "copy");
+  }
+  auto_entry_finalizer_t(journal_t * _journal) : journal(_journal) {
+    TRACE_CTOR(auto_entry_finalizer_t, "journal_t *");
+  }
+  ~auto_entry_finalizer_t() throw() {
+    TRACE_DTOR(auto_entry_finalizer_t);
+  }
+
   virtual bool operator()(entry_t& entry, bool post);
 };
 
@@ -293,16 +313,16 @@ class period_entry_t : public entry_base_t
   period_entry_t() {
     TRACE_CTOR(period_entry_t, "");
   }
-  period_entry_t(const string& _period)
-    : period(_period), period_string(_period) {
-    TRACE_CTOR(period_entry_t, "const string&");
-  }
   period_entry_t(const period_entry_t& e)
     : entry_base_t(e), period(e.period), period_string(e.period_string) {
     TRACE_CTOR(period_entry_t, "copy");
   }
+  period_entry_t(const string& _period)
+    : period(_period), period_string(_period) {
+    TRACE_CTOR(period_entry_t, "const string&");
+  }
 
-  virtual ~period_entry_t() {
+  virtual ~period_entry_t() throw() {
     TRACE_DTOR(period_entry_t);
   }
 
@@ -337,6 +357,19 @@ class account_t
       depth(parent ? parent->depth + 1 : 0), data(NULL), ident(0) {
     TRACE_CTOR(account_t, "account_t *, const string&, const string&");
   }
+  account_t(const account_t& other)
+    : journal(other.journal),
+      parent(other.parent),
+      name(other.name),
+      note(other.note),
+      depth(other.depth),
+      accounts(other.accounts),
+      data(NULL),
+      ident(0) {
+    TRACE_CTOR(account_t, "copy");
+    assert(other.data == NULL);
+    assert(other.ident == 0);
+  }
   ~account_t();
 
   operator string() const {
@@ -364,12 +397,26 @@ class account_t
 std::ostream& operator<<(std::ostream& out, const account_t& account);
 
 
-struct func_finalizer_t : public entry_finalizer_t {
-  typedef bool (*func_t)(entry_t& entry, bool post);
+class func_finalizer_t : public entry_finalizer_t
+{
+  func_finalizer_t();
+
+public:
+  typedef function<bool (entry_t& entry, bool post)> func_t;
+
   func_t func;
-  func_finalizer_t(func_t _func) : func(_func) {}
+
+  func_finalizer_t(func_t _func) : func(_func) {
+    TRACE_CTOR(func_finalizer_t, "func_t");
+  }
   func_finalizer_t(const func_finalizer_t& other) :
-    entry_finalizer_t(), func(other.func) {}
+    entry_finalizer_t(), func(other.func) {
+    TRACE_CTOR(func_finalizer_t, "copy");
+  }
+  ~func_finalizer_t() throw() {
+    TRACE_DTOR(func_finalizer_t);
+  }
+
   virtual bool operator()(entry_t& entry, bool post) {
     return func(entry, post);
   }
@@ -407,7 +454,7 @@ typedef std::list<string>	    strings_list;
 
 class session_t;
 
-class journal_t
+class journal_t : public noncopyable
 {
  public:
   session_t *	 owner;

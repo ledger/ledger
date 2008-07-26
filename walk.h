@@ -12,18 +12,19 @@
 namespace ledger {
 
 template <typename T>
-struct item_handler {
+struct item_handler : public noncopyable
+{
   item_handler * handler;
 
- public:
+public:
   item_handler() : handler(NULL) {
-    DEBUG("ledger.memory.ctors", "ctor item_handler<T>");
+    TRACE_CTOR(item_handler, "");
   }
   item_handler(item_handler * _handler) : handler(_handler) {
-    DEBUG("ledger.memory.ctors", "ctor item_handler<T>");
+    TRACE_CTOR(item_handler, "item_handler *");
   }
   virtual ~item_handler() {
-    DEBUG("ledger.memory.dtors", "dtor item_handler<T>");
+    TRACE_DTOR(item_handler);
   }
 
   virtual void flush() {
@@ -37,10 +38,22 @@ struct item_handler {
 };
 
 template <typename T>
-class compare_items {
+class compare_items
+{
   value_expr sort_order;
- public:
-  compare_items(value_expr _sort_order) : sort_order(_sort_order) {}
+
+  compare_items();
+  
+public:
+  compare_items(const compare_items& other) : sort_order(other.sort_order) {
+    TRACE_CTOR(compare_items, "copy");
+  }
+  compare_items(const value_expr& _sort_order) : sort_order(_sort_order) {
+    TRACE_CTOR(compare_items, "const value_expr&");
+  }
+  ~compare_items() throw() {
+    TRACE_DTOR(compare_items);
+  }
   bool operator()(const T * left, const T * right);
 };
 
@@ -79,7 +92,7 @@ bool compare_items<account_t>::operator()(const account_t * left,
 #define TRANSACTION_COMPOUND   0x0040
 #define TRANSACTION_MATCHES    0x0080
 
-struct transaction_xdata_t
+struct transaction_xdata_t : public noncopyable
 {
   value_t	 total;
   value_t	 sort_value;
@@ -95,13 +108,13 @@ struct transaction_xdata_t
   transaction_xdata_t()
     : index(0), dflags(0),
       account(NULL), ptr(NULL), component_xacts(NULL) {
-    DEBUG("ledger.memory.ctors", "ctor transaction_xdata_t " << this);
+    TRACE_CTOR(transaction_xdata_t, "");
   }
 
   ~transaction_xdata_t() {
-    DEBUG("ledger.memory.dtors", "dtor transaction_xdata_t " << this);
+    TRACE_DTOR(transaction_xdata_t);
     if (component_xacts)
-      delete component_xacts;
+      checked_delete(component_xacts);
   }
 
   void remember_xact(transaction_t& xact) {
@@ -181,13 +194,13 @@ inline void walk_entries(entries_list& list,
 
 class ignore_transactions : public item_handler<transaction_t>
 {
- public:
+public:
   virtual void operator()(transaction_t& xact) {}
 };
 
 class clear_transaction_xdata : public item_handler<transaction_t>
 {
- public:
+public:
   virtual void operator()(transaction_t& xact) {
     if (xact.data) {
       delete (transaction_xdata_t *) xact.data;
@@ -203,11 +216,18 @@ class truncate_entries : public item_handler<transaction_t>
 
   transactions_list xacts;
 
- public:
+  truncate_entries();
+
+public:
   truncate_entries(item_handler<transaction_t> * handler,
 		   int _head_count, int _tail_count)
     : item_handler<transaction_t>(handler),
-      head_count(_head_count), tail_count(_tail_count) {}
+      head_count(_head_count), tail_count(_tail_count) {
+    TRACE_CTOR(truncate_entries, "item_handler<transaction_t> *, int, int");
+  }
+  virtual ~truncate_entries() {
+    TRACE_DTOR(truncate_entries);
+  }
 
   virtual void flush();
   virtual void operator()(transaction_t& xact) {
@@ -217,7 +237,7 @@ class truncate_entries : public item_handler<transaction_t>
 
 class set_account_value : public item_handler<transaction_t>
 {
- public:
+public:
   set_account_value(item_handler<transaction_t> * handler = NULL)
     : item_handler<transaction_t>(handler) {}
 
@@ -226,11 +246,18 @@ class set_account_value : public item_handler<transaction_t>
 
 class push_to_transactions_list : public item_handler<transaction_t>
 {
- public:
+  push_to_transactions_list();
+
+public:
   transactions_list& xact_list;
 
   push_to_transactions_list(transactions_list& _xact_list)
-    : xact_list(_xact_list) {}
+    : xact_list(_xact_list) {
+    TRACE_CTOR(push_to_transactions_list, "transactions_list&");
+  }
+  virtual ~push_to_transactions_list() {
+    TRACE_DTOR(push_to_transactions_list);
+  }
 
   virtual void operator()(transaction_t& xact) {
     xact_list.push_back(&xact);
@@ -244,16 +271,26 @@ class sort_transactions : public item_handler<transaction_t>
   transactions_deque transactions;
   const value_expr   sort_order;
 
- public:
+  sort_transactions();
+
+public:
   sort_transactions(item_handler<transaction_t> * handler,
 		    const value_expr& _sort_order)
     : item_handler<transaction_t>(handler),
-      sort_order(_sort_order) {}
-
+      sort_order(_sort_order) {
+    TRACE_CTOR(sort_transactions,
+	       "item_handler<transaction_t> *, const value_expr&");
+  }
   sort_transactions(item_handler<transaction_t> * handler,
 		    const string& _sort_order)
     : item_handler<transaction_t>(handler),
-      sort_order(_sort_order) {}
+      sort_order(_sort_order) {
+    TRACE_CTOR(sort_transactions,
+	       "item_handler<transaction_t> *, const string&");
+  }
+  virtual ~sort_transactions() {
+    TRACE_DTOR(sort_transactions);
+  }
 
   virtual void post_accumulated_xacts();
 
@@ -270,16 +307,26 @@ class sort_transactions : public item_handler<transaction_t>
 class sort_entries : public item_handler<transaction_t>
 {
   sort_transactions sorter;
-  entry_t * last_entry;
+  entry_t *	    last_entry;
 
- public:
+  sort_entries();
+
+public:
   sort_entries(item_handler<transaction_t> * handler,
 	       const value_expr& _sort_order)
-    : sorter(handler, _sort_order) {}
-
+    : sorter(handler, _sort_order) {
+    TRACE_CTOR(sort_entries,
+	       "item_handler<transaction_t> *, const value_expr&");
+  }
   sort_entries(item_handler<transaction_t> * handler,
 	       const string& _sort_order)
-    : sorter(handler, _sort_order) {}
+    : sorter(handler, _sort_order) {
+    TRACE_CTOR(sort_entries,
+	       "item_handler<transaction_t> *, const string&");
+  }
+  virtual ~sort_entries() {
+    TRACE_DTOR(sort_entries);
+  }
 
   virtual void flush() {
     sorter.flush();
@@ -300,14 +347,25 @@ class filter_transactions : public item_handler<transaction_t>
 {
   item_predicate<transaction_t> pred;
 
- public:
+  filter_transactions();
+
+public:
   filter_transactions(item_handler<transaction_t> * handler,
 		      const value_expr& predicate)
-    : item_handler<transaction_t>(handler), pred(predicate) {}
+    : item_handler<transaction_t>(handler), pred(predicate) {
+    TRACE_CTOR(filter_transactions,
+	       "item_handler<transaction_t> *, const value_expr&");
+  }
 
   filter_transactions(item_handler<transaction_t> * handler,
 		      const string& predicate)
-    : item_handler<transaction_t>(handler), pred(predicate) {}
+    : item_handler<transaction_t>(handler), pred(predicate) {
+    TRACE_CTOR(filter_transactions,
+	       "item_handler<transaction_t> *, const string&");
+  }
+  virtual ~filter_transactions() {
+    TRACE_DTOR(filter_transactions);
+  }
 
   virtual void operator()(transaction_t& xact) {
     if (pred(xact)) {
@@ -321,16 +379,25 @@ class calc_transactions : public item_handler<transaction_t>
 {
   transaction_t * last_xact;
 
- public:
+  calc_transactions();
+
+public:
   calc_transactions(item_handler<transaction_t> * handler)
-    : item_handler<transaction_t>(handler), last_xact(NULL) {}
+    : item_handler<transaction_t>(handler), last_xact(NULL) {
+    TRACE_CTOR(calc_transactions, "item_handler<transaction_t> *");
+  }
+  virtual ~calc_transactions() {
+    TRACE_DTOR(calc_transactions);
+  }
 
   virtual void operator()(transaction_t& xact);
 };
 
 class invert_transactions : public item_handler<transaction_t>
 {
- public:
+  invert_transactions();
+
+public:
   invert_transactions(item_handler<transaction_t> * handler)
     : item_handler<transaction_t>(handler) {}
 
@@ -355,13 +422,17 @@ class collapse_transactions : public item_handler<transaction_t>
   std::list<entry_t>       entry_temps;
   std::list<transaction_t> xact_temps;
 
- public:
+  collapse_transactions();
+
+public:
   collapse_transactions(item_handler<transaction_t> * handler)
     : item_handler<transaction_t>(handler), count(0),
       last_entry(NULL), last_xact(NULL),
-      totals_account(NULL, "<Total>") {}
-
-  ~collapse_transactions() {
+      totals_account(NULL, "<Total>") {
+    TRACE_CTOR(collapse_transactions, "item_handler<transaction_t> *");
+  }
+  virtual ~collapse_transactions() {
+    TRACE_DTOR(collapse_transactions);
     clear_entries_transactions(entry_temps);
   }
 
@@ -380,14 +451,24 @@ class component_transactions : public item_handler<transaction_t>
 {
   item_predicate<transaction_t> pred;
 
- public:
+  component_transactions();
+
+public:
   component_transactions(item_handler<transaction_t> * handler,
 			 const value_expr& predicate)
-    : item_handler<transaction_t>(handler), pred(predicate) {}
-
+    : item_handler<transaction_t>(handler), pred(predicate) {
+    TRACE_CTOR(component_transactions,
+	       "item_handler<transaction_t> *, const value_expr&");
+  }
   component_transactions(item_handler<transaction_t> * handler,
 			 const string& predicate)
-    : item_handler<transaction_t>(handler), pred(predicate) {}
+    : item_handler<transaction_t>(handler), pred(predicate) {
+    TRACE_CTOR(component_transactions,
+	       "item_handler<transaction_t> *, const string&");
+  }
+  virtual ~component_transactions() throw() {
+    TRACE_DTOR(component_transactions);
+  }
 
   virtual void operator()(transaction_t& xact);
 };
@@ -397,11 +478,19 @@ class related_transactions : public item_handler<transaction_t>
   transactions_list transactions;
   bool		    also_matching;
 
- public:
+  related_transactions();
+
+public:
   related_transactions(item_handler<transaction_t> * handler,
 		       const bool _also_matching = false)
     : item_handler<transaction_t>(handler),
-      also_matching(_also_matching) {}
+      also_matching(_also_matching) {
+    TRACE_CTOR(related_transactions,
+	       "item_handler<transaction_t> *, const bool");
+  }
+  virtual ~related_transactions() throw() {
+    TRACE_DTOR(related_transactions);
+  }
 
   virtual void flush();
   virtual void operator()(transaction_t& xact) {
@@ -422,13 +511,18 @@ class changed_value_transactions : public item_handler<transaction_t>
   std::list<entry_t>       entry_temps;
   std::list<transaction_t> xact_temps;
 
- public:
+  changed_value_transactions();
+
+public:
   changed_value_transactions(item_handler<transaction_t> * handler,
 			     bool _changed_values_only)
     : item_handler<transaction_t>(handler),
-      changed_values_only(_changed_values_only), last_xact(NULL) {}
-
-  ~changed_value_transactions() {
+      changed_values_only(_changed_values_only), last_xact(NULL) {
+    TRACE_CTOR(changed_value_transactions,
+	       "item_handler<transaction_t> *, bool");
+  }
+  virtual ~changed_value_transactions() {
+    TRACE_DTOR(changed_value_transactions);
     clear_entries_transactions(entry_temps);
   }
 
@@ -447,42 +541,57 @@ class changed_value_transactions : public item_handler<transaction_t>
 
 class subtotal_transactions : public item_handler<transaction_t>
 {
-  struct acct_value_t {
+  class acct_value_t
+  {
+    acct_value_t();
+
+  public:
     account_t *	account;
     value_t	value;
 
     transactions_list components;
 
-    acct_value_t(account_t * a) : account(a) {}
-    acct_value_t(account_t * a, value_t& v) : account(a), value(v) {}
+    acct_value_t(account_t * a) : account(a) {
+      TRACE_CTOR(acct_value_t, "acount_t *");
+    }
+    acct_value_t(account_t * a, value_t& v) : account(a), value(v) {
+      TRACE_CTOR(acct_value_t, "acount_t *, value_t&");
+    }
     acct_value_t(const acct_value_t& av)
-      : account(av.account), value(av.value) {}
+      : account(av.account), value(av.value),
+	components(av.components) {
+      TRACE_CTOR(acct_value_t, "copy");
+    }
+    ~acct_value_t() throw() {
+      TRACE_DTOR(acct_value_t);
+    }
   };
 
   typedef std::map<string, acct_value_t>  values_map;
   typedef std::pair<string, acct_value_t> values_pair;
 
- protected:
+  subtotal_transactions();
+
+protected:
   values_map values;
   bool       remember_components;
 
   std::list<entry_t>       entry_temps;
   std::list<transaction_t> xact_temps;
 
- public:
+public:
   datetime_t start;
   datetime_t finish;
 
   subtotal_transactions(item_handler<transaction_t> * handler,
 			bool _remember_components = false)
     : item_handler<transaction_t>(handler),
-      remember_components(_remember_components) {}
-#ifdef DEBUG_ENABLED
-  subtotal_transactions(const subtotal_transactions&) {
-    assert(false);
+      remember_components(_remember_components) {
+    TRACE_CTOR(subtotal_transactions,
+	       "item_handler<transaction_t> *, bool");
   }
-#endif
   virtual ~subtotal_transactions() {
+    TRACE_DTOR(subtotal_transactions);
     clear_entries_transactions(entry_temps);
   }
 
@@ -510,18 +619,28 @@ class interval_transactions : public subtotal_transactions
   transaction_t * last_xact;
   bool            started;
 
- public:
+  interval_transactions();
+
+public:
   interval_transactions(item_handler<transaction_t> * _handler,
 			const interval_t& _interval,
 			bool remember_components = false)
     : subtotal_transactions(_handler, remember_components),
-      interval(_interval), last_xact(NULL), started(false) {}
-
+      interval(_interval), last_xact(NULL), started(false) {
+    TRACE_CTOR(interval_transactions,
+	       "item_handler<transaction_t> *, const interval_t&, bool");
+  }
   interval_transactions(item_handler<transaction_t> * _handler,
 			const string& _interval,
 			bool remember_components = false)
     : subtotal_transactions(_handler, remember_components),
-      interval(_interval), last_xact(NULL), started(false) {}
+      interval(_interval), last_xact(NULL), started(false) {
+    TRACE_CTOR(interval_transactions,
+	       "item_handler<transaction_t> *, const string&, bool");
+  }
+  virtual ~interval_transactions() throw() {
+    TRACE_DTOR(interval_transactions);
+  }
 
   void report_subtotal(const datetime_t& moment = datetime_t());
 
@@ -539,13 +658,18 @@ class by_payee_transactions : public item_handler<transaction_t>
   typedef std::pair<string, subtotal_transactions *> payee_subtotals_pair;
 
   payee_subtotals_map payee_subtotals;
-  bool remember_components;
+  bool		      remember_components;
+
+  by_payee_transactions();
 
  public:
   by_payee_transactions(item_handler<transaction_t> * handler,
 			bool _remember_components = false)
     : item_handler<transaction_t>(handler),
-      remember_components(_remember_components) {}
+      remember_components(_remember_components) {
+    TRACE_CTOR(by_payee_transactions,
+	       "item_handler<transaction_t> *, bool");
+  }
   virtual ~by_payee_transactions();
 
   virtual void flush();
@@ -557,11 +681,15 @@ class set_comm_as_payee : public item_handler<transaction_t>
   std::list<entry_t>       entry_temps;
   std::list<transaction_t> xact_temps;
 
- public:
-  set_comm_as_payee(item_handler<transaction_t> * handler)
-    : item_handler<transaction_t>(handler) {}
+  set_comm_as_payee();
 
-  ~set_comm_as_payee() {
+public:
+  set_comm_as_payee(item_handler<transaction_t> * handler)
+    : item_handler<transaction_t>(handler) {
+    TRACE_CTOR(set_comm_as_payee, "item_handler<transaction_t> *");
+  }
+  virtual ~set_comm_as_payee() {
+    TRACE_DTOR(set_comm_as_payee);
     clear_entries_transactions(entry_temps);
   }
 
@@ -573,11 +701,15 @@ class set_code_as_payee : public item_handler<transaction_t>
   std::list<entry_t>       entry_temps;
   std::list<transaction_t> xact_temps;
 
- public:
-  set_code_as_payee(item_handler<transaction_t> * handler)
-    : item_handler<transaction_t>(handler) {}
+  set_code_as_payee();
 
-  ~set_code_as_payee() {
+public:
+  set_code_as_payee(item_handler<transaction_t> * handler)
+    : item_handler<transaction_t>(handler) {
+    TRACE_CTOR(set_code_as_payee, "item_handler<transaction_t> *");
+  }
+  virtual ~set_code_as_payee() {
+    TRACE_DTOR(set_code_as_payee);
     clear_entries_transactions(entry_temps);
   }
 
@@ -588,10 +720,17 @@ class dow_transactions : public subtotal_transactions
 {
   transactions_list days_of_the_week[7];
 
- public:
+  dow_transactions();
+
+public:
   dow_transactions(item_handler<transaction_t> * handler,
 		   bool remember_components = false)
-    : subtotal_transactions(handler, remember_components) {}
+    : subtotal_transactions(handler, remember_components) {
+    TRACE_CTOR(dow_transactions, "item_handler<transaction_t> *, bool");
+  }
+  virtual ~dow_transactions() throw() {
+    TRACE_DTOR(dow_transactions);
+  }
 
   virtual void flush();
   virtual void operator()(transaction_t& xact) {
@@ -601,7 +740,9 @@ class dow_transactions : public subtotal_transactions
 
 class generate_transactions : public item_handler<transaction_t>
 {
- protected:
+  generate_transactions();
+
+protected:
   typedef std::pair<interval_t, transaction_t *> pending_xacts_pair;
   typedef std::list<pending_xacts_pair>          pending_xacts_list;
 
@@ -609,11 +750,14 @@ class generate_transactions : public item_handler<transaction_t>
   std::list<entry_t>	   entry_temps;
   std::list<transaction_t> xact_temps;
 
- public:
+public:
   generate_transactions(item_handler<transaction_t> * handler)
-    : item_handler<transaction_t>(handler) {}
+    : item_handler<transaction_t>(handler) {
+    TRACE_CTOR(dow_transactions, "item_handler<transaction_t> *");
+  }
 
-  ~generate_transactions() {
+  virtual ~generate_transactions() {
+    TRACE_DTOR(generate_transactions);
     clear_entries_transactions(entry_temps);
   }
 
@@ -630,10 +774,18 @@ class budget_transactions : public generate_transactions
 {
   unsigned short flags;
 
- public:
+  budget_transactions();
+
+public:
   budget_transactions(item_handler<transaction_t> * handler,
 		      unsigned long _flags = BUDGET_BUDGETED)
-    : generate_transactions(handler), flags(_flags) {}
+    : generate_transactions(handler), flags(_flags) {
+    TRACE_CTOR(budget_transactions,
+	       "item_handler<transaction_t> *, unsigned long");
+  }
+  virtual ~budget_transactions() throw() {
+    TRACE_DTOR(budget_transactions);
+  }
 
   void report_budget_items(const datetime_t& moment);
 
@@ -647,11 +799,19 @@ class forecast_transactions : public generate_transactions
  public:
   forecast_transactions(item_handler<transaction_t> * handler,
 			const value_expr& predicate)
-    : generate_transactions(handler), pred(predicate) {}
-
+    : generate_transactions(handler), pred(predicate) {
+    TRACE_CTOR(forecast_transactions,
+	       "item_handler<transaction_t> *, const value_expr&");
+  }
   forecast_transactions(item_handler<transaction_t> * handler,
 			const string& predicate)
-    : generate_transactions(handler), pred(predicate) {}
+    : generate_transactions(handler), pred(predicate) {
+    TRACE_CTOR(forecast_transactions,
+	       "item_handler<transaction_t> *, const string&");
+  }
+  virtual ~forecast_transactions() throw() {
+    TRACE_DTOR(forecast_transactions);
+  }
 
   virtual void add_transaction(const interval_t& period,
 			       transaction_t&	 xact);
@@ -670,7 +830,7 @@ class forecast_transactions : public generate_transactions
 #define ACCOUNT_HAS_NON_VIRTUALS 0x0008
 #define ACCOUNT_HAS_UNB_VIRTUALS 0x0010
 
-struct account_xdata_t
+struct account_xdata_t : public noncopyable
 {
   value_t	 value;
   value_t	 total;
@@ -680,7 +840,12 @@ struct account_xdata_t
   unsigned int   virtuals;
   unsigned short dflags;
 
-  account_xdata_t() : count(0), total_count(0), virtuals(0), dflags(0) {}
+  account_xdata_t() : count(0), total_count(0), virtuals(0), dflags(0) {
+    TRACE_CTOR(account_xdata_t, "");
+  }
+  ~account_xdata_t() throw() {
+    TRACE_DTOR(account_xdata_t);
+  }
 };
 
 inline bool account_has_xdata(const account_t& account) {
@@ -697,7 +862,7 @@ account_xdata_t& account_xdata(const account_t& account);
 
 class clear_account_xdata : public item_handler<account_t>
 {
- public:
+public:
   virtual void operator()(account_t& acct) {
     if (acct.data) {
       delete (account_xdata_t *) acct.data;

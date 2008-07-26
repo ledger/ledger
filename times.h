@@ -86,6 +86,20 @@ struct interval_t
     TRACE_CTOR(interval_t,
 	       "int, int, int, const datetime_t&, const datetime_t&");
   }
+  interval_t(const interval_t& other)
+    : years(other.years),
+      months(other.months),
+      days(other.days),
+      hours(other.hours),
+      minutes(other.minutes),
+      seconds(other.seconds),
+
+      begin(other.begin),
+      end(other.end),
+
+      advanced(other.advanced) {
+    TRACE_CTOR(interval_t, "copy");
+  }
 
   interval_t(const string& desc)
     : years(0), months(0), days(0),
@@ -149,7 +163,7 @@ extern bool        day_before_month;
 #if 0
 struct intorchar
 {
-  int	      ival;
+  int	 ival;
   string sval;
 
   intorchar() : ival(-1) {}

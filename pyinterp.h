@@ -39,16 +39,21 @@
 
 namespace ledger {
 
-class python_interpreter_t : public xml::xpath_t::symbol_scope_t
+class python_interpreter_t
+  : public noncopyable, public expr::symbol_scope_t
 {
   boost::python::handle<> mmodule;
 
- public:
+  python_interpreter_t();
+
+public:
   boost::python::dict nspace;
 
-  python_interpreter_t(xml::xpath_t::scope_t& parent);
+  python_interpreter_t(expr::scope_t& parent);
 
   virtual ~python_interpreter_t() {
+    TRACE_DTOR(python_interpreter_t);
+
     Py_Finalize();
   }
 
@@ -71,25 +76,42 @@ class python_interpreter_t : public xml::xpath_t::symbol_scope_t
   }
 
   class functor_t {
+    functor_t();
   protected:
     boost::python::object func;
   public:
-    functor_t(const string& name, boost::python::object _func) : func(_func) {}
-    virtual ~functor_t() {}
-    virtual value_t operator()(xml::xpath_t::call_scope_t& args);
+    functor_t(const string& name, boost::python::object _func) : func(_func) {
+      TRACE_CTOR(functor_t, "const string&, boost::python::object");
+    }
+    functor_t(const functor_t& other) : func(other.func) {
+      TRACE_CTOR(functor_t, "copy");
+    }
+    virtual ~functor_t() throw() {
+      TRACE_DTOR(functor_t);
+    }
+    virtual value_t operator()(expr::call_scope_t& args);
   };
 
-  virtual xml::xpath_t::ptr_op_t lookup(const string& name) {
+  virtual expr::ptr_op_t lookup(const string& name) {
     if (boost::python::object func = eval(name))
       return WRAP_FUNCTOR(functor_t(name, func));
     else
-      return xml::xpath_t::symbol_scope_t::lookup(name);
+      return expr::symbol_scope_t::lookup(name);
   }
 
   class lambda_t : public functor_t {
-   public:
-    lambda_t(boost::python::object code) : functor_t("<lambda>", code) {}
-    virtual value_t operator()(xml::xpath_t::call_scope_t& args);
+    lambda_t();
+  public:
+    lambda_t(boost::python::object code) : functor_t("<lambda>", code) {
+      TRACE_CTOR(functor_t, "boost::python::object");
+    }
+    lambda_t(const lambda_t& other) : functor_t(other) {
+      TRACE_CTOR(lambda_t, "copy");
+    }
+    virtual ~lambda_t() throw() {
+      TRACE_DTOR(lambda_t);
+    }
+    virtual value_t operator()(expr::call_scope_t& args);
   };
 };
 

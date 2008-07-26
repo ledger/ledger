@@ -43,20 +43,33 @@
 template <typename T>
 class push_variable : public boost::noncopyable
 {
+  push_variable();
+
+public:
   T&   var;
   T    prev;
   bool enabled;
 
-public:
   explicit push_variable(T& _var)
-    : var(_var), prev(var), enabled(true) {}
+    : var(_var), prev(var), enabled(true) {
+    TRACE_CTOR(push_variable, "T&");
+  }
   explicit push_variable(T& _var, const T& value)
     : var(_var), prev(var), enabled(true) {
+    TRACE_CTOR(push_variable, "T&, constT&");
     var = value;
   }
-  ~push_variable() {
+  ~push_variable() throw() {
+    TRACE_DTOR(push_variable);
     if (enabled)
       var = prev;
+  }
+
+  T& operator*() {
+    return var;
+  }
+  T * operator->() {
+    return &var;
   }
 
   void clear() {

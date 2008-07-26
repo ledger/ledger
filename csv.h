@@ -8,11 +8,19 @@ namespace ledger {
 
 class format_csv_transactions : public item_handler<transaction_t>
 {
- protected:
+  format_csv_transactions();
+
+protected:
   std::ostream&	out;
 
- public:
-  format_csv_transactions(std::ostream& _out) : out(_out) {}
+public:
+  format_csv_transactions(std::ostream& _out) : out(_out) {
+    TRACE_CTOR(format_csv_transactions, "std::ostream&");
+  }
+  ~format_csv_transactions() {
+    TRACE_DTOR(format_csv_transactions);
+  }
+
   virtual void flush() {
     out.flush();
   }

@@ -375,6 +375,7 @@ entry_t::entry_t(const entry_t& e)
     code(e.code), payee(e.payee)
 {
   TRACE_CTOR(entry_t, "copy");
+
   for (transactions_list::const_iterator i = transactions.begin();
        i != transactions.end();
        i++)

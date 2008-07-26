@@ -80,7 +80,7 @@ class session_t : public expr::symbol_scope_t
   ptr_list<parser_t>  parsers;
 
   session_t();
-  virtual ~session_t() {
+  virtual ~session_t() throw() {
     TRACE_DTOR(session_t);
   }
 

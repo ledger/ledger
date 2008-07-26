@@ -757,6 +757,8 @@ format_transactions::format_transactions(std::ostream& _output_stream,
 					 const string& format)
   : output_stream(_output_stream), last_entry(NULL), last_xact(NULL)
 {
+  TRACE_CTOR(format_transactions, "std::ostream&, const string&");
+
   const char * f = format.c_str();
   if (const char * p = std::strstr(f, "%/")) {
     first_line_format.reset(string(f, 0, p - f));

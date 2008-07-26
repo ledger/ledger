@@ -36,10 +36,10 @@
 
 namespace ledger {
 
-typedef std::list<string> strings_list;
-
 class report_t : public expr::symbol_scope_t
 {
+  report_t();
+
 public:
   optional<path> output_file;
   string	 format_string;
@@ -78,7 +78,9 @@ public:
 #endif
   }
 
-  virtual ~report_t();
+  virtual ~report_t() throw() {
+    TRACE_DTOR(report_t);
+  }
 
   void apply_transforms(expr::scope_t& scope);
 

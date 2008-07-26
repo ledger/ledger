@@ -47,7 +47,7 @@ datetime_t terminus;
 details_t::details_t(const transaction_t& _xact)
   : entry(_xact.entry), xact(&_xact), account(xact_account(_xact))
 {
-  DEBUG("ledger.memory.ctors", "ctor details_t");
+  TRACE_CTOR(details_t, "const transaction_t&");
 }
 
 bool compute_amount(ptr_op_t expr, amount_t& amt,

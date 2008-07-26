@@ -306,7 +306,11 @@ void trace_dtor_func(void * ptr, const char * cls_name, std::size_t cls_size)
   DEBUG("memory.debug", "TRACE_DTOR " << ptr << " " << cls_name);
 
   live_objects_map::iterator i = live_objects->find(ptr);
-  VERIFY(i != live_objects->end());
+  if (i == live_objects->end()) {
+    std::cerr << "Attempting to delete " << ptr << " a non-living " << cls_name
+	      << std::endl;
+    assert(false);
+  }
 
   int ptr_count = live_objects->count(ptr);
   for (int x = 0; x < ptr_count; x++, i++) {
@@ -389,7 +393,7 @@ string::string() : std::string() {
   TRACE_CTOR(string, "");
 }
 string::string(const string& str) : std::string(str) {
-  TRACE_CTOR(string, "const string&");
+  TRACE_CTOR(string, "copy");
 }
 string::string(const std::string& str) : std::string(str) {
   TRACE_CTOR(string, "const std::string&");
@@ -415,7 +419,7 @@ string::string(const char * str, int x) : std::string(str, x) {
 string::string(const char * str, int x, int y) : std::string(str, x, y) {
   TRACE_CTOR(string, "const char *, int, int");
 }
-string::~string() {
+string::~string() throw() {
   TRACE_DTOR(string);
 }
 
@@ -541,7 +545,8 @@ optional<std::string> _log_category;
 
 namespace ledger {
 
-struct timer_t {
+struct timer_t
+{
   log_level_t	level;
   ptime		begin;
   time_duration	spent;

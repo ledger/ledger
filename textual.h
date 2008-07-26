@@ -27,7 +27,8 @@ void write_textual_journal(journal_t& journal, path pathname,
 			   const string& write_hdr_format,
 			   std::ostream& out);
 
-class include_context : public file_context {
+class include_context : public file_context
+{
  public:
   include_context(const path& file, unsigned long line,
 		  const string& desc = "") throw()

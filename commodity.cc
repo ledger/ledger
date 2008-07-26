@@ -478,6 +478,7 @@ bool compare_amount_commodities::operator()(const amount_t * left,
 
 commodity_pool_t::commodity_pool_t() : default_commodity(NULL)
 {
+  TRACE_CTOR(commodity_pool_t, "");
   null_commodity = create("");
   null_commodity->add_flags(COMMODITY_STYLE_NOMARKET |
 			    COMMODITY_STYLE_BUILTIN);

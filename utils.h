@@ -95,6 +95,8 @@ namespace ledger {
   typedef std::string string;
 #endif
 
+  typedef std::list<string> strings_list;
+
   typedef posix_time::ptime	    ptime;
   typedef ptime::time_duration_type time_duration;
   typedef gregorian::date	    date;
@@ -161,9 +163,11 @@ void trace_ctor_func(void * ptr, const char * cls_name, const char * args,
 void trace_dtor_func(void * ptr, const char * cls_name, std::size_t cls_size);
 
 #define TRACE_CTOR(cls, args) \
-  (DO_VERIFY() ? trace_ctor_func(this, #cls, args, sizeof(cls)) : ((void)0))
+  (DO_VERIFY() ? \
+   ledger::trace_ctor_func(this, #cls, args, sizeof(cls)) : ((void)0))
 #define TRACE_DTOR(cls) \
-  (DO_VERIFY() ? trace_dtor_func(this, #cls, sizeof(cls)) : ((void)0))
+  (DO_VERIFY() ? \
+   ledger::trace_dtor_func(this, #cls, sizeof(cls)) : ((void)0))
 
 void report_memory(std::ostream& out, bool report_all = false);
 
@@ -184,7 +188,7 @@ public:
   string(const string& str, int x, int y);
   string(const char * str, int x);
   string(const char * str, int x, int y);
-  ~string();
+  ~string() throw();
 };
 
 inline string operator+(const string& __lhs, const string& __rhs)

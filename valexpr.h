@@ -101,21 +101,27 @@ struct details_t
   const transaction_t * xact;
   const account_t *     account;
 
-  details_t() : entry(NULL), xact(NULL), account(NULL) {}
+  details_t() : entry(NULL), xact(NULL), account(NULL) {
+    TRACE_CTOR(details_t, "");
+  }
+  details_t(const details_t& other)
+    : entry(other.entry),
+      xact(other.xact),
+      account(other.account) {
+    TRACE_CTOR(details_t, "copy");
+  }
   details_t(const entry_t& _entry)
     : entry(&_entry), xact(NULL), account(NULL) {
-    DEBUG("ledger.memory.ctors", "ctor details_t");
+    TRACE_CTOR(details_t, "const entry_t&");
   }
   details_t(const transaction_t& _xact);
   details_t(const account_t& _account)
     : entry(NULL), xact(NULL), account(&_account) {
-    DEBUG("ledger.memory.ctors", "ctor details_t");
+    TRACE_CTOR(details_t, "const account_t&");
   }
-#ifdef DEBUG_ENABLED
-  ~details_t() {
-    DEBUG("ledger.memory.dtors", "dtor details_t");
+  ~details_t() throw() {
+    TRACE_DTOR(details_t);
   }
-#endif
 };
 
 struct op_t;
@@ -130,6 +136,8 @@ typedef function<value_t (call_scope_t&)> function_t;
 
 class scope_t : public noncopyable
 {
+  scope_t();
+
 public:
   enum type_t {
     CHILD_SCOPE,
@@ -139,10 +147,10 @@ public:
   } type_;
 
   explicit scope_t(type_t _type) : type_(_type) {
-    TRACE_CTOR(expr::scope_t, "type_t");
+    TRACE_CTOR(scope_t, "type_t");
   }
-  virtual ~scope_t() {
-    TRACE_DTOR(expr::scope_t);
+  virtual ~scope_t() throw() {
+    TRACE_DTOR(scope_t);
   }
 
   const type_t type() const {
@@ -174,17 +182,19 @@ class child_scope_t : public scope_t
 {
   scope_t * parent;
 
+  child_scope_t();
+
 public:
   explicit child_scope_t(type_t _type = CHILD_SCOPE)
     : scope_t(_type), parent(NULL) {
-    TRACE_CTOR(expr::child_scope_t, "type_t");
+    TRACE_CTOR(child_scope_t, "type_t");
   }
   explicit child_scope_t(scope_t& _parent, type_t _type = CHILD_SCOPE)
     : scope_t(_type), parent(&_parent) {
-    TRACE_CTOR(expr::child_scope_t, "scope_t&, type_t");
+    TRACE_CTOR(child_scope_t, "scope_t&, type_t");
   }
-  virtual ~child_scope_t() {
-    TRACE_DTOR(expr::child_scope_t);
+  virtual ~child_scope_t() throw() {
+    TRACE_DTOR(child_scope_t);
   }
 public:
   virtual void     define(const string& name, ptr_op_t def) {
@@ -229,14 +239,14 @@ class symbol_scope_t : public child_scope_t
 public:
   explicit symbol_scope_t()
     : child_scope_t(SYMBOL_SCOPE) {
-    TRACE_CTOR(expr::symbol_scope_t, "");
+    TRACE_CTOR(symbol_scope_t, "");
   }
   explicit symbol_scope_t(scope_t& _parent)
     : child_scope_t(_parent, SYMBOL_SCOPE) {
-    TRACE_CTOR(expr::symbol_scope_t, "scope_t&");
+    TRACE_CTOR(symbol_scope_t, "scope_t&");
   }
-  virtual ~symbol_scope_t() {
-    TRACE_DTOR(expr::symbol_scope_t);
+  virtual ~symbol_scope_t() throw() {
+    TRACE_DTOR(symbol_scope_t);
   }
 
   virtual void     define(const string& name, ptr_op_t def);
@@ -250,13 +260,15 @@ class call_scope_t : public child_scope_t
 {
   value_t args;
 
+  call_scope_t();
+
 public:
   explicit call_scope_t(scope_t& _parent)
     : child_scope_t(_parent, CALL_SCOPE) {
-    TRACE_CTOR(expr::call_scope_t, "scope_t&");
+    TRACE_CTOR(call_scope_t, "scope_t&");
   }
-  virtual ~call_scope_t() {
-    TRACE_DTOR(expr::call_scope_t);
+  virtual ~call_scope_t() throw() {
+    TRACE_DTOR(call_scope_t);
   }
 
   void set_args(const value_t& _args) {
@@ -289,20 +301,31 @@ public:
 };
 
 template <typename T>
-struct var_t
+class var_t : public noncopyable
 {
   T * value;
 
+  var_t();
+
+public:
   // jww (2008-07-21): Give a good exception here if we can't find "name"
   var_t(scope_t& scope, const string& name)
-    : value(scope.resolve(name).template as_pointer<T>()) {}
+    : value(scope.resolve(name).template as_pointer<T>()) {
+    TRACE_CTOR(var_t, "scope_t&, const string&");
+  }
   var_t(call_scope_t& scope, const unsigned int idx)
-    : value(scope[idx].template as_pointer<T>()) {}
+    : value(scope[idx].template as_pointer<T>()) {
+    TRACE_CTOR(var_t, "call_scope_t&, const unsigned int");
+  }
+  ~var_t() throw() {
+    TRACE_DTOR(var_t);
+  }
 
   T& operator *() { return *value; }
   T * operator->() { return value; }
 };
 
+#if 0
 class context_scope_t : public child_scope_t
 {
 public:
@@ -334,9 +357,13 @@ public:
     return current_element;
   }
 };
+#endif
 
-struct op_t : public noncopyable
+class op_t : public noncopyable
 {
+  op_t();
+
+public:
   enum kind_t {
     // Constants
     VALUE,
@@ -441,12 +468,10 @@ struct op_t : public noncopyable
   data;
 
   explicit op_t(const kind_t _kind) : kind(_kind), refc(0){
-    TRACE_CTOR(expr::op_t, "const kind_t");
+    TRACE_CTOR(op_t, "const kind_t");
   }
   ~op_t() {
-    TRACE_DTOR(expr::op_t);
-
-    DEBUG("ledger.xpath.memory", "Destroying " << this);
+    TRACE_DTOR(op_t);
     assert(refc == 0);
   }
 
@@ -656,18 +681,27 @@ struct op_t : public noncopyable
   }
 };
 
-class op_predicate {
+class op_predicate : public noncopyable
+{
   ptr_op_t op;
 
+  op_predicate();
+
 public:
-  explicit op_predicate(ptr_op_t _op) : op(_op) {}
+  explicit op_predicate(ptr_op_t _op) : op(_op) {
+    TRACE_CTOR(op_predicate, "ptr_op_t");
+  }
+  ~op_predicate() throw() {
+    TRACE_DTOR(op_predicate);
+  }
   bool operator()(scope_t& scope) {
     return op->calc(scope).to_boolean();
   }
 };
 
-class valexpr_context : public error_context {
- public:
+class valexpr_context : public error_context
+{
+public:
   ptr_op_t expr;
   ptr_op_t error_node;
 
@@ -679,15 +713,17 @@ class valexpr_context : public error_context {
   virtual void describe(std::ostream& out) const throw();
 };
 
-class compute_error : public error {
- public:
+class compute_error : public error
+{
+public:
   compute_error(const string& reason, error_context * ctxt = NULL) throw()
     : error(reason, ctxt) {}
   virtual ~compute_error() throw() {}
 };
 
-class value_expr_error : public error {
- public:
+class value_expr_error : public error
+{
+public:
   value_expr_error(const string& reason,
 		   error_context * ctxt = NULL) throw()
     : error(reason, ctxt) {}
@@ -748,6 +784,7 @@ scope_t::find_scope<call_scope_t>(bool skip_this) {
   return downcast<call_scope_t>(*scope);
 }
 
+#if 0
 template<>
 inline context_scope_t&
 scope_t::find_scope<context_scope_t>(bool skip_this) {
@@ -755,6 +792,7 @@ scope_t::find_scope<context_scope_t>(bool skip_this) {
   assert(scope);
   return downcast<context_scope_t>(*scope);
 }
+#endif
 
 #define FIND_SCOPE(scope_type, scope_ref) \
   downcast<scope_t>(scope_ref).find_scope<scope_type>()
@@ -763,8 +801,10 @@ scope_t::find_scope<context_scope_t>(bool skip_this) {
   FIND_SCOPE(call_scope_t, scope_ref)
 #define SYMBOL_SCOPE(scope_ref) \
   FIND_SCOPE(symbol_scope_t, scope_ref)
+#if 0
 #define CONTEXT_SCOPE(scope_ref) \
   FIND_SCOPE(context_scope_t, scope_ref)
+#endif
 
 inline ptr_op_t op_t::new_node(kind_t _kind, ptr_op_t _left, ptr_op_t _right) {
   ptr_op_t node(new op_t(_kind));
@@ -798,7 +838,9 @@ public:
 
   typedef expr::details_t details_t;
 
-  value_expr() {}
+  value_expr() {
+    TRACE_CTOR(value_expr, "");
+  }
 
   value_expr(const string& _expr_str);
   value_expr(const expr::ptr_op_t _ptr, const string& _expr_str = "")
@@ -809,14 +851,14 @@ public:
     : ptr(other.ptr), expr_str(other.expr_str) {
     TRACE_CTOR(value_expr, "copy");
   }
+  virtual ~value_expr() throw() {
+    TRACE_DTOR(value_expr);
+  }
+
   value_expr& operator=(const value_expr& _expr) {
     expr_str = _expr.expr_str;
     reset(_expr.get());
     return *this;
-  }
-
-  virtual ~value_expr() throw() {
-    TRACE_DTOR(value_expr);
   }
 
   operator bool() const throw() {
@@ -900,14 +942,16 @@ public:
   item_predicate() {
     TRACE_CTOR(item_predicate, "");
   }
+  item_predicate(const item_predicate& other) : predicate(other.predicate) {
+    TRACE_CTOR(item_predicate, "copy");
+  }
   item_predicate(const value_expr& _predicate) : predicate(_predicate) {
     TRACE_CTOR(item_predicate, "const value_expr&");
   }
   item_predicate(const string& _predicate) : predicate(_predicate) {
     TRACE_CTOR(item_predicate, "const string&");
   }
-
-  ~item_predicate() {
+  ~item_predicate() throw() {
     TRACE_DTOR(item_predicate);
   }
 

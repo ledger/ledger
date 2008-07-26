@@ -35,14 +35,23 @@
 // pyofstream
 // - a stream that writes on a Python file object
 
-class pyoutbuf : public std::streambuf {
- protected:
-  PyFileObject * fo;    // Python file object
- public:
-  // constructor
-  pyoutbuf (PyFileObject * _fo) : fo(_fo) {}
+class pyoutbuf : public boost::noncopyable, public std::streambuf
+{
+  pyoutbf();
 
- protected:
+protected:
+  PyFileObject * fo;    // Python file object
+
+public:
+  // constructor
+  pyoutbuf(PyFileObject * _fo) : fo(_fo) {
+    TRACE_CTOR(pyoutbuf, "PyFileObject *");
+  }
+  ~pyoutbuf() : throw() {
+    TRACE_DTOR(pyoutbuf);
+  }
+
+protected:
   // write one character
   virtual int_type overflow (int_type c) {
     if (c != EOF) {
@@ -68,22 +77,34 @@ class pyoutbuf : public std::streambuf {
   }
 };
 
-class pyofstream : public std::ostream {
- protected:
+class pyofstream : public noncopyable, public std::ostream
+{
+  pyofstream();
+
+protected:
   pyoutbuf buf;
- public:
+
+public:
   pyofstream (PyFileObject * fo) : std::ostream(0), buf(fo) {
+    TRACE_CTOR(pyofstream, "PyFileObject *");
     rdbuf(&buf);
+  }
+  ~pyofstream() throw() {
+    TRACE_DTOR(pyofstream);
   }
 };
 
 // pyifstream
 // - a stream that reads on a file descriptor
 
-class pyinbuf : public std::streambuf {
- protected:
+class pyinbuf : public noncopyable, public std::streambuf
+{
+  pyinbuf();
+
+protected:
   PyFileObject * fo;    // Python file object
- protected:
+
+protected:
   /* data buffer:
    * - at most, pbSize characters in putback area plus
    * - at most, bufSize characters in ordinary read buffer
@@ -92,7 +113,7 @@ class pyinbuf : public std::streambuf {
   static const int bufSize = 1024; // size of the data buffer
   char buffer[bufSize + pbSize];   // data buffer
 
- public:
+public:
   /* constructor
    * - initialize file descriptor
    * - initialize empty data buffer
@@ -100,12 +121,17 @@ class pyinbuf : public std::streambuf {
    * => force underflow()
    */
   pyinbuf (PyFileObject * _fo) : fo(_fo) {
+    TRACE_CTOR(pyinbuf, "PyFileObject *");
+
     setg (buffer+pbSize,     // beginning of putback area
 	  buffer+pbSize,     // read position
 	  buffer+pbSize);    // end position
   }
+  ~pyinbuf() throw() {
+    TRACE_DTOR(pyinbuf);
+  }
 
- protected:
+protected:
   // insert new characters into the buffer
   virtual int_type underflow () {
 #ifndef _MSC_VER
@@ -157,12 +183,20 @@ class pyinbuf : public std::streambuf {
   }
 };
 
-class pyifstream : public std::istream {
- protected:
+class pyifstream : public noncopyable, public std::istream
+{
+  pyifstream();
+
+protected:
   pyinbuf buf;
- public:
+
+public:
   pyifstream (PyFileObject * fo) : std::istream(0), buf(fo) {
+    TRACE_CTOR(pyifstream, "PyFileObject *");
     rdbuf(&buf);
+  }
+  ~pyifstream() throw() {
+    TRACE_DTOR(pyifstream);
   }
 };
 

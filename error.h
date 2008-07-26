@@ -12,7 +12,7 @@ namespace ledger {
 
 class error_context
 {
- public:
+public:
   string desc;
 
   error_context(const string& _desc) throw() : desc(_desc) {}

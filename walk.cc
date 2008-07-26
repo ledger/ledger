@@ -424,8 +424,7 @@ void subtotal_transactions::operator()(transaction_t& xact)
     value_t temp;
     add_transaction_to(xact, temp);
     std::pair<values_map::iterator, bool> result
-      = values.insert(values_pair(acct->fullname(),
-				  acct_value_t(acct, temp)));
+      = values.insert(values_pair(acct->fullname(), acct_value_t(acct, temp)));
     assert(result.second);
 
     if (remember_components)
@@ -507,6 +506,8 @@ void interval_transactions::operator()(transaction_t& xact)
 
 by_payee_transactions::~by_payee_transactions()
 {
+  TRACE_DTOR(by_payee_transactions);
+
   for (payee_subtotals_map::iterator i = payee_subtotals.begin();
        i != payee_subtotals.end();
        i++)

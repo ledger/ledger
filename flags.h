@@ -42,8 +42,15 @@ protected:
   flags_t flags_;
 
 public:
-  supports_flags() : flags_(0) {}
-  supports_flags(const flags_t arg) : flags_(arg) {}
+  supports_flags() : flags_(0) {
+    TRACE_CTOR(supports_flags, "");
+  }
+  supports_flags(const flags_t& arg) : flags_(arg) {
+    TRACE_CTOR(supports_flags, "copy");
+  }
+  ~supports_flags() throw() {
+    TRACE_DTOR(supports_flags);
+  }
 
   flags_t flags() const {
     return flags_;
@@ -76,8 +83,15 @@ protected:
   supports_flags<T>& flags_;
 
 public:
-  delegates_flags() : flags_() {}
-  delegates_flags(supports_flags<T>& arg) : flags_(arg) {}
+  delegates_flags() : flags_() {
+    TRACE_CTOR(delegates_flags, "");
+  }
+  delegates_flags(supports_flags<T>& arg) : flags_(arg) {
+    TRACE_CTOR(delegates_flags, "const supports_flags<T>&");
+  }
+  ~delegates_flags() throw() {
+    TRACE_DTOR(delegates_flags);
+  }
 
   flags_t flags() const {
     return flags_.flags();

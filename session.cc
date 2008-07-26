@@ -118,7 +118,7 @@ session_t::session_t()
     ansi_codes(false),
     ansi_invert(false)
 {
-  TRACE_CTOR(session_t, "expr::scope_t&");
+  TRACE_CTOR(session_t, "");
 }
 
 std::size_t session_t::read_journal(journal_t&	  journal,

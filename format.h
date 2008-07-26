@@ -16,7 +16,7 @@ string partial_account_name(const account_t&   account,
 #define ELEMENT_ALIGN_LEFT 0x01
 #define ELEMENT_HIGHLIGHT  0x02
 
-struct element_t
+struct element_t : public noncopyable
 {
   enum kind_t {
     STRING,
@@ -59,16 +59,16 @@ struct element_t
 
   element_t() : type(STRING), flags(false),
 		min_width(0), max_width(0), next(NULL) {
-    DEBUG("ledger.memory.ctors", "ctor element_t");
+    TRACE_CTOR(element_t, "");
   }
 
   ~element_t() {
-    DEBUG("ledger.memory.dtors", "dtor element_t");
+    TRACE_DTOR(element_t);
     if (next) delete next;	// recursive, but not too deep
   }
 };
 
-struct format_t
+struct format_t : public noncopyable
 {
   string format_string;
   element_t * elements;
@@ -87,14 +87,14 @@ struct format_t
   static bool ansi_invert;
 
   format_t() : elements(NULL) {
-    DEBUG("ledger.memory.ctors", "ctor format_t");
+    TRACE_CTOR(format_t, "");
   }
   format_t(const string& _format) : elements(NULL) {
-    DEBUG("ledger.memory.ctors", "ctor format_t");
+    TRACE_CTOR(format_t, "const string&");
     reset(_format);
   }
   ~format_t() {
-    DEBUG("ledger.memory.dtors", "dtor format_t");
+    TRACE_DTOR(format_t);
     if (elements) delete elements;
   }
 
@@ -115,16 +115,19 @@ struct format_t
 
 class format_transactions : public item_handler<transaction_t>
 {
- protected:
+protected:
   std::ostream&   output_stream;
   format_t	  first_line_format;
   format_t	  next_lines_format;
   entry_t *       last_entry;
   transaction_t * last_xact;
 
- public:
+public:
   format_transactions(std::ostream& _output_stream,
 		      const string& format);
+  ~format_transactions() throw() {
+    TRACE_DTOR(format_transactions);
+  }
 
   virtual void flush() {
     output_stream.flush();
@@ -136,7 +139,12 @@ class format_entries : public format_transactions
 {
  public:
   format_entries(std::ostream& output_stream, const string& format)
-    : format_transactions(output_stream, format) {}
+    : format_transactions(output_stream, format) {
+    TRACE_CTOR(format_entries, "std::ostream&, const string&");
+  }
+  ~format_entries() throw() {
+    TRACE_DTOR(format_entries);
+  }
 
   virtual void format_last_entry();
 
@@ -174,11 +182,16 @@ class format_account : public item_handler<account_t>
  public:
   format_t format;
 
-  format_account(std::ostream&      _output_stream,
+  format_account(std::ostream& _output_stream,
 		 const string& _format,
 		 const string& display_predicate = NULL)
     : output_stream(_output_stream), disp_pred(display_predicate),
-      format(_format) {}
+      format(_format) {
+    TRACE_CTOR(format_account, "std::ostream&, const string&, const string&");
+  }
+  ~format_account() throw() {
+    TRACE_DTOR(format_account);
+  }
 
   virtual void flush() {
     output_stream.flush();
@@ -206,7 +219,8 @@ class format_equity : public item_handler<account_t>
   virtual void operator()(account_t& account);
 };
 
-class format_error : public error {
+class format_error : public error
+{
  public:
   format_error(const string& reason, error_context * ctxt = NULL) throw()
     : error(reason, ctxt) {}

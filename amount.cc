@@ -87,7 +87,7 @@ struct amount_t::bigint_t : public supports_flags<>
     mpz_init_set(val, _val);
   }
   bigint_t(const bigint_t& other)
-    : supports_flags<>(other.flags() & BIGINT_KEEP_PREC),
+    : supports_flags<>(other.flags() & ~BIGINT_BULK_ALLOC),
       prec(other.prec), ref(1), index(0) {
     TRACE_CTOR(bigint_t, "copy");
     mpz_init_set(val, other.val);
