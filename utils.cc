@@ -109,21 +109,20 @@ void shutdown_memory_tracing()
   if (live_objects) {
     IF_DEBUG("memory.counts")
       report_memory(std::cerr, true);
-    else
-      IF_DEBUG("memory.counts.live")
-	report_memory(std::cerr);
+    else IF_DEBUG("memory.counts.live")
+      report_memory(std::cerr);
     else if (live_objects->size() > 0)
       report_memory(std::cerr);
   }
 
-  checked_delete(live_memory);        live_memory	= NULL;
-  checked_delete(live_memory_count);  live_memory_count	= NULL;
+  checked_delete(live_memory);        live_memory	 = NULL;
+  checked_delete(live_memory_count);  live_memory_count	 = NULL;
   checked_delete(total_memory_count); total_memory_count = NULL;
 
-  checked_delete(live_objects);       live_objects	= NULL;
-  checked_delete(live_object_count);  live_object_count	= NULL;
+  checked_delete(live_objects);       live_objects	 = NULL;
+  checked_delete(live_object_count);  live_object_count	 = NULL;
   checked_delete(total_object_count); total_object_count = NULL;
-  checked_delete(total_ctor_count);   total_ctor_count	= NULL;
+  checked_delete(total_ctor_count);   total_ctor_count	 = NULL;
 }
 
 inline void add_to_count_map(object_count_map& the_map,
@@ -254,7 +253,7 @@ inline void report_count_map(std::ostream& out, object_count_map& the_map)
        i != the_map.end();
        i++)
     out << "  " << std::right << std::setw(12) << (*i).second.first
-	<< "  " << std::right << std::setw(12) << (*i).second.second
+	<< "  " << std::right << std::setw(7) << (*i).second.second
 	<< "  " << std::left  << (*i).first
 	<< std::endl;
 }
@@ -347,7 +346,7 @@ void report_memory(std::ostream& out, bool report_all)
     for (live_memory_map::const_iterator i = live_memory->begin();
 	 i != live_memory->end();
 	 i++)
-      out << "  " << std::right << std::setw(7) << (*i).first
+      out << "  " << std::right << std::setw(12) << (*i).first
 	  << "  " << std::right << std::setw(7) << (*i).second.second
 	  << "  " << std::left  << (*i).second.first
 	  << std::endl;
@@ -369,7 +368,7 @@ void report_memory(std::ostream& out, bool report_all)
     for (live_objects_map::const_iterator i = live_objects->begin();
 	 i != live_objects->end();
 	 i++)
-      out << "  " << std::right << std::setw(7) << (*i).first
+      out << "  " << std::right << std::setw(12) << (*i).first
 	  << "  " << std::right << std::setw(7) << (*i).second.second
 	  << "  " << std::left  << (*i).second.first
 	  << std::endl;

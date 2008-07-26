@@ -343,11 +343,19 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
     case element_t::AMOUNT:
     case element_t::TOTAL:
     case element_t::VALUE_EXPR: {
-      value_expr calc;
+      value_expr * calc;
       switch (elem->type) {
-      case element_t::AMOUNT:     calc = amount_expr; break;
-      case element_t::TOTAL:      calc = total_expr; break;
-      case element_t::VALUE_EXPR: calc = elem->val_expr; break;
+      case element_t::AMOUNT:
+	assert(value_expr::amount_expr.get());
+	calc = value_expr::amount_expr.get();
+	break;
+      case element_t::TOTAL:
+	assert(value_expr::total_expr.get());
+	calc = value_expr::total_expr.get();
+	break;
+      case element_t::VALUE_EXPR:
+	calc = const_cast<value_expr *>(&elem->val_expr);
+	break;
       default:
 	assert(false);
 	break;

@@ -825,6 +825,8 @@ inline ptr_op_t op_t::wrap_functor(const function_t& fobj) {
   return temp;
 }
 
+class parser_t;
+
 } // namespace expr
 
 //////////////////////////////////////////////////////////////////////
@@ -902,33 +904,37 @@ public:
 			       const expr::ptr_op_t node_to_find,
 			       unsigned long *	    start_pos,
 			       unsigned long *	    end_pos);
+
+  static std::auto_ptr<value_expr>     amount_expr;
+  static std::auto_ptr<value_expr>     total_expr;
+  static std::auto_ptr<expr::parser_t> parser;
+
+  static void initialize();
+  static void shutdown();
 };
 
 typedef value_expr::details_t details_t; // jww (2008-07-20): remove
 
-extern value_expr amount_expr;
-extern value_expr total_expr;
-
 inline void compute_amount(value_t& result,
 			   const details_t& details = details_t()) {
-  if (amount_expr)
-    amount_expr->compute(result, details);
+  if (value_expr::amount_expr.get())
+    value_expr::amount_expr->compute(result, details);
 }
 
 inline value_t compute_amount(const details_t& details = details_t()) {
-  if (amount_expr)
-    return amount_expr->compute(details);
+  if (value_expr::amount_expr.get())
+    return value_expr::amount_expr->compute(details);
 }
 
 inline void compute_total(value_t& result,
 			  const details_t& details = details_t()) {
-  if (total_expr)
-    total_expr->compute(result, details);
+  if (value_expr::total_expr.get())
+    value_expr::total_expr->compute(result, details);
 }
 
 inline value_t compute_total(const details_t& details = details_t()) {
-  if (total_expr)
-    return total_expr->compute(details);
+  if (value_expr::total_expr.get())
+    return value_expr::total_expr->compute(details);
 }
 
 //////////////////////////////////////////////////////////////////////

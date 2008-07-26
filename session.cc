@@ -301,10 +301,12 @@ static void initialize()
 {
   amount_t::initialize();
   value_t::initialize();
+  value_expr::initialize();
 }
 
 static void shutdown()
 {
+  value_expr::shutdown();
   value_t::shutdown();
   amount_t::shutdown();
 }

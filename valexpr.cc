@@ -36,9 +36,6 @@
 
 namespace ledger {
 
-value_expr amount_expr;
-value_expr total_expr;
-
 namespace expr {
 
 std::auto_ptr<symbol_scope_t> global_scope;
@@ -307,14 +304,14 @@ void op_t::compute(value_t& result, const details_t& details,
     break;
 
   case VALUE_EXPR:
-    if (amount_expr.get())
-      amount_expr->compute(result, details, context);
+    if (value_expr::amount_expr.get())
+      value_expr::amount_expr->compute(result, details, context);
     else
       result = 0L;
     break;
   case TOTAL_EXPR:
-    if (total_expr.get())
-      total_expr->compute(result, details, context);
+    if (value_expr::total_expr.get())
+      value_expr::total_expr->compute(result, details, context);
     else
       result = 0L;
     break;
@@ -1080,8 +1077,20 @@ value_t op_t::calc(scope_t& scope)
 
 } // namespace expr
 
-namespace {
-  expr::parser_t value_expr_parser;
+std::auto_ptr<value_expr>     value_expr::amount_expr;
+std::auto_ptr<value_expr>     value_expr::total_expr;
+std::auto_ptr<expr::parser_t> value_expr::parser;
+
+void value_expr::initialize()
+{
+  parser.reset(new expr::parser_t);
+}
+
+void value_expr::shutdown()
+{
+  amount_expr.reset();
+  total_expr.reset();
+  parser.reset();
 }
 
 value_expr::value_expr(const string& _expr_str) : expr_str(_expr_str)
@@ -1089,7 +1098,7 @@ value_expr::value_expr(const string& _expr_str) : expr_str(_expr_str)
   TRACE_CTOR(value_expr, "const string&");
 
   if (! _expr_str.empty())
-    ptr = value_expr_parser.parse(expr_str).ptr;
+    ptr = parser->parse(expr_str).ptr;
 }
 
 } // namespace ledger

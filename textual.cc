@@ -50,14 +50,14 @@ struct time_entry_t
 #endif
 
 namespace {
-  expr::parser_t amount_parser;
-
-  static value_expr parse_amount_expr(std::istream& in, amount_t& amount,
-				      transaction_t * xact,
-				      unsigned short flags = 0)
+  value_expr parse_amount_expr(std::istream&   in,
+			       amount_t&       amount,
+			       transaction_t * xact,
+			       unsigned short  flags = 0)
   {
     value_expr expr =
-      amount_parser.parse(in, flags | EXPR_PARSE_RELAXED | EXPR_PARSE_PARTIAL);
+      value_expr::parser->parse(in, flags |
+				EXPR_PARSE_RELAXED | EXPR_PARSE_PARTIAL);
 
     DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 	  "Parsed an amount expression");
@@ -870,7 +870,7 @@ unsigned int textual_parser_t::parse(std::istream& in,
 
       default: {
 	unsigned long pos = beg_pos;
-      TRACE_START(entries, 1, "Time spent handling entries:");
+	TRACE_START(entries, 1, "Time spent handling entries:");
 	if (entry_t * entry =
 	    parse_entry(in, line, account_stack.front(), *this, pos)) {
 	  if (journal.add_entry(entry)) {

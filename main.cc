@@ -314,6 +314,31 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
 
   INFO_FINISH(command);
 
+  // Clean up memory, if we 
+
+  if (DO_VERIFY()) {
+    TRACE_START(cleanup, 1, "Cleaning up allocated memory");
+
+    clear_transaction_xdata xact_cleaner;
+    walk_entries(journal.entries, xact_cleaner);
+
+    clear_account_xdata acct_cleaner;
+    walk_accounts(*journal.master, acct_cleaner);
+
+    if (report.output_file)
+      checked_delete(out);
+
+#if 0
+    for (std::list<item_handler<transaction_t> *>::iterator i
+	   = formatter_ptrs.begin();
+	 i != formatter_ptrs.end();
+	 i++)
+      checked_delete(*i);
+#endif
+
+    TRACE_FINISH(cleanup, 1);
+  }
+
   // Write out the binary cache, if need be
 
   if (session.use_cache && session.cache_dirty && session.cache_file) {
