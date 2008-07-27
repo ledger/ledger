@@ -833,7 +833,8 @@ value_expr_t * parse_value_term(std::istream& in, scope_t * scope,
     bool definition = false;
     if (c == '=') {
       in.get(c);
-      if (peek_next_nonws(in) == '=') {
+      if ((flags & PARSE_VALEXPR_NO_ASSIGN) ||
+	  peek_next_nonws(in) == '=') {
 	in.unget();
 	c = '\0';
       } else {
@@ -1160,10 +1161,16 @@ value_expr_t * parse_logic_expr(std::istream& in, scope_t * scope,
       case '!':
       case '=': {
 	bool negate = c == '!';
-	if ((c = peek_next_nonws(in)) == '=')
+	if (! negate && (flags & PARSE_VALEXPR_NO_ASSIGN)) {
+	  in.unget();
+	  break;
+	}
+	else if ((c = peek_next_nonws(in)) == '=') {
 	  in.get(c);
-	else
+	}
+	else {
 	  unexpected(c, '=');
+	}
 	value_expr prev(node.release());
 	node.reset(new value_expr_t(negate ? value_expr_t::O_NEQ :
 				    value_expr_t::O_EQ));

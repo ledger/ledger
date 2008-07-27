@@ -182,6 +182,10 @@ unsigned int parse_ledger_data(config_t&   config,
 					journal, acct);
       if (! journal->price_db.empty())
 	journal->sources.push_back(journal->price_db);
+
+      // Clear out what was set during the textual parsing phase
+      clear_account_xdata acct_cleaner;
+      walk_accounts(*journal->master, acct_cleaner);
     }
   }
 
