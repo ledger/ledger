@@ -36,9 +36,9 @@ namespace ledger {
 
 static unsigned long binary_magic_number = 0xFFEED765;
 #ifdef DEBUG_ENABLED
-static unsigned long format_version      = 0x0002060b;
+static unsigned long format_version      = 0x00020701;
 #else
-static unsigned long format_version      = 0x0002060a;
+static unsigned long format_version      = 0x00020700;
 #endif
 
 static account_t **	      accounts;
