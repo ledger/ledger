@@ -772,29 +772,21 @@ value_expr_t * parse_value_term(std::istream& in, scope_t * scope,
       // When in relaxed parsing mode, we do want to migrate commodity
       // flags, so that any precision specified by the user updates
       // the current maximum precision displayed.
-      try {
-	pos = (long)in.tellg();
+      pos = (long)in.tellg();
 
-	unsigned char parse_flags = 0;
-	if (flags & PARSE_VALEXPR_NO_MIGRATE)
-	  parse_flags |= AMOUNT_PARSE_NO_MIGRATE;
-	if (flags & PARSE_VALEXPR_NO_REDUCE)
-	  parse_flags |= AMOUNT_PARSE_NO_REDUCE;
+      unsigned char parse_flags = 0;
+      if (flags & PARSE_VALEXPR_NO_MIGRATE)
+	parse_flags |= AMOUNT_PARSE_NO_MIGRATE;
+      if (flags & PARSE_VALEXPR_NO_REDUCE)
+	parse_flags |= AMOUNT_PARSE_NO_REDUCE;
 
-	temp.parse(in, parse_flags);
+      if (! temp.parse(in, parse_flags | AMOUNT_PARSE_SOFT_FAIL)) {
+	in.clear();
+	in.seekg(pos, std::ios::beg);
+	c = prev_c;
+	goto parse_ident;
       }
-      catch (amount_error * err) {
-	// If the amount had no commodity, it must be an unambiguous
-	// variable reference
-	if (std::strcmp(err->what(), "No quantity specified for amount") == 0) {
-	  in.clear();
-	  in.seekg(pos, std::ios::beg);
-	  c = prev_c;
-	  goto parse_ident;
-	} else {
-	  throw err;
-	}
-      }
+
       node.reset(new value_expr_t(value_expr_t::CONSTANT));
       node->value = new value_t(temp);
       goto parsed;

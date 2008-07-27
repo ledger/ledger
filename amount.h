@@ -263,9 +263,10 @@ class amount_t
 
 #define AMOUNT_PARSE_NO_MIGRATE 0x01
 #define AMOUNT_PARSE_NO_REDUCE  0x02
+#define AMOUNT_PARSE_SOFT_FAIL  0x04
 
-  void parse(std::istream& in, unsigned char flags = 0);
-  void parse(const std::string& str, unsigned char flags = 0);
+  bool parse(std::istream& in, unsigned char flags = 0);
+  bool parse(const std::string& str, unsigned char flags = 0);
   void reduce();
 
   amount_t reduced() const {

@@ -1062,7 +1062,7 @@ void parse_annotations(std::istream& in, amount_t& price,
 	      << "  tag " << tag);
 }
 
-void amount_t::parse(std::istream& in, unsigned char flags)
+bool amount_t::parse(std::istream& in, unsigned char flags)
 {
   // The possible syntax for an amount is:
   //
@@ -1114,8 +1114,12 @@ void amount_t::parse(std::istream& in, unsigned char flags)
     }
   }
 
-  if (quant.empty())
-    throw new amount_error("No quantity specified for amount");
+  if (quant.empty()) {
+    if (flags & AMOUNT_PARSE_SOFT_FAIL)
+      return false;
+    else
+      throw new amount_error("No quantity specified for amount");
+  }
 
   _init();
 
@@ -1205,6 +1209,8 @@ void amount_t::parse(std::istream& in, unsigned char flags)
 
   if (! (flags & AMOUNT_PARSE_NO_REDUCE))
     reduce();
+
+  return true;
 }
 
 void amount_t::reduce()
@@ -1215,7 +1221,7 @@ void amount_t::reduce()
   }
 }
 
-void amount_t::parse(const std::string& str, unsigned char flags)
+bool amount_t::parse(const std::string& str, unsigned char flags)
 {
   std::istringstream stream(str);
   parse(stream, flags);
