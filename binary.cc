@@ -564,8 +564,6 @@ account_t * read_account(const char *& data, journal_t& journal,
   account_t * acct = new account_t(NULL);
   *accounts_next++ = acct;
 
-  acct->journal = &journal;
-
   account_t::ident_t id;
   read_long(data, id);	// parent id
   if (id == 0xffffffff)

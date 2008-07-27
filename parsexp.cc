@@ -388,35 +388,27 @@ void parser_t::token_t::next(std::istream& in, const flags_t flags)
       // When in relaxed parsing mode, we want to migrate commodity
       // flags so that any precision specified by the user updates the
       // current maximum displayed precision.
-      try {
-	pos = (long)in.tellg();
+      pos = (long)in.tellg();
 
-	unsigned char parse_flags = 0;
-	if (flags & EXPR_PARSE_NO_MIGRATE)
-	  parse_flags |= AMOUNT_PARSE_NO_MIGRATE;
-	if (flags & EXPR_PARSE_NO_REDUCE)
-	  parse_flags |= AMOUNT_PARSE_NO_REDUCE;
+      unsigned char parse_flags = 0;
+      if (flags & EXPR_PARSE_NO_MIGRATE)
+	parse_flags |= AMOUNT_PARSE_NO_MIGRATE;
+      if (flags & EXPR_PARSE_NO_REDUCE)
+	parse_flags |= AMOUNT_PARSE_NO_REDUCE;
 
-	temp.parse(in, parse_flags);
-
-	kind = VALUE;
-	value = temp;
-      }
-      catch (const amount_error& err) {
+      if (! temp.parse(in, parse_flags | AMOUNT_PARSE_SOFT_FAIL)) {
 	// If the amount had no commodity, it must be an unambiguous
 	// variable reference
 
-	// jww (2007-04-19): There must be a more efficient way to do this!
-	if (std::strcmp(err.what(), "No quantity specified for amount") == 0) {
-	  in.clear();
-	  in.seekg(pos, std::ios::beg);
+	in.clear();
+	in.seekg(pos, std::ios::beg);
 
-	  c = in.peek();
-	  assert(! (std::isdigit(c) || c == '.'));
-	  parse_ident(in);
-	} else {
-	  throw;
-	}
+	c = in.peek();
+	assert(! (std::isdigit(c) || c == '.'));
+	parse_ident(in);
+      } else {
+	kind = VALUE;
+	value = temp;
       }
     }
     break;

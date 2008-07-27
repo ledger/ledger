@@ -906,7 +906,7 @@ namespace {
   }
 }
 
-void amount_t::parse(std::istream& in, flags_t flags)
+bool amount_t::parse(std::istream& in, flags_t flags)
 {
   // The possible syntax for an amount is:
   //
@@ -957,8 +957,12 @@ void amount_t::parse(std::istream& in, flags_t flags)
     }
   }
 
-  if (quant.empty())
-    throw_(amount_error, "No quantity specified for amount");
+  if (quant.empty()) {
+    if (flags & AMOUNT_PARSE_SOFT_FAIL)
+      return false;
+    else
+      throw_(amount_error, "No quantity specified for amount");
+  }
 
   // Allocate memory for the amount's quantity value.  We have to
   // monitor the allocation in an auto_ptr because this function gets
@@ -1069,6 +1073,8 @@ void amount_t::parse(std::istream& in, flags_t flags)
   safe_holder.release();	// `this->quantity' owns the pointer
 
   assert(valid());
+
+  return true;
 }
 
 void amount_t::parse_conversion(const string& larger_str,

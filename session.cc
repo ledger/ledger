@@ -73,22 +73,17 @@ session_t::session_t()
   : symbol_scope_t(),
 
     register_format
-    ("%((//entry)%{date} %-.20{payee}"
-     "%((./xact)%32|%-22{abbrev(account, 22)} %12.67t %12.80T\n))"),
+    ("%D %-.20P %-.22A %12.67t %!12.80T\n%/"
+     "%32|%-.22A %12.67t %!12.80T\n"),
     wide_register_format
     ("%D  %-.35P %-.38A %22.108t %!22.132T\n%/"
      "%48|%-.38A %22.108t %!22.132T\n"),
     print_format
-#if 1
-    ("%(/%(/%{date} %-.20{payee}\n%(:    %-34{account}  %12t\n)\n))"),
-#else
     ("\n%d %Y%C%P\n    %-34W  %12o%n\n%/    %-34W  %12o%n\n"),
-#endif
     balance_format
-    ("%(/%(//%20t  %{\"  \" * rdepth}%{rname}\n))--------------------\n%20t\n"),
+    ("%20T  %2_%-a\n"),
     equity_format
-
-    ("%((/)%{ftime(now, date_format)} %-.20{\"Opening Balance\"}\n%((.//account[value != 0])    %-34{fullname}  %12{value}\n)\n)"),
+    ("\n%D %Y%C%P\n%/    %-34W  %12t\n"),
     plot_amount_format
     ("%D %(@S(@t))\n"),
     plot_total_format
@@ -116,7 +111,9 @@ session_t::session_t()
     abbrev_length(2),
 
     ansi_codes(false),
-    ansi_invert(false)
+    ansi_invert(false),
+
+    master(new account_t(NULL, ""))
 {
   TRACE_CTOR(session_t, "");
 }
@@ -221,6 +218,27 @@ std::size_t session_t::read_data(journal_t&    journal,
   TRACE_STOP(parser, 1);
 
   return entry_count;
+}
+
+namespace {
+  account_t * find_account_re_(account_t * account, const mask_t& regexp)
+  {
+    if (regexp.match(account->fullname()))
+      return account;
+
+    for (accounts_map::iterator i = account->accounts.begin();
+	 i != account->accounts.end();
+	 i++)
+      if (account_t * a = find_account_re_((*i).second, regexp))
+	return a;
+
+    return NULL;
+  }
+}
+
+account_t * session_t::find_account_re(const string& regexp)
+{
+  return find_account_re_(master, mask_t(regexp));
 }
 
 #if 0

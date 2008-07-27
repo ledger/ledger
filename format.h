@@ -173,7 +173,7 @@ inline bool disp_subaccounts_p(const account_t& account) {
 bool display_account(const account_t& account,
 		     const optional<item_predicate<account_t> >& disp_pred);
 
-class format_account : public item_handler<account_t>
+class format_accounts : public item_handler<account_t>
 {
   std::ostream& output_stream;
 
@@ -182,15 +182,15 @@ class format_account : public item_handler<account_t>
  public:
   format_t format;
 
-  format_account(std::ostream& _output_stream,
-		 const string& _format,
-		 const string& display_predicate = NULL)
+  format_accounts(std::ostream& _output_stream,
+		  const string& _format,
+		  const string& display_predicate = NULL)
     : output_stream(_output_stream), disp_pred(display_predicate),
       format(_format) {
-    TRACE_CTOR(format_account, "std::ostream&, const string&, const string&");
+    TRACE_CTOR(format_accounts, "std::ostream&, const string&, const string&");
   }
-  ~format_account() throw() {
-    TRACE_DTOR(format_account);
+  ~format_accounts() throw() {
+    TRACE_DTOR(format_accounts);
   }
 
   virtual void flush() {
@@ -211,7 +211,7 @@ class format_equity : public item_handler<account_t>
   mutable value_t total;
 
  public:
-  format_equity(std::ostream&      _output_stream,
+  format_equity(std::ostream& _output_stream,
 		const string& _format,
 		const string& display_predicate);
 

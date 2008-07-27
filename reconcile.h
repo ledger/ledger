@@ -16,13 +16,13 @@ class reconcile_transactions : public item_handler<transaction_t>
   reconcile_transactions();
 
 public:
-  reconcile_transactions(item_handler<transaction_t> * handler,
+  reconcile_transactions(xact_handler_ptr  handler,
 			 const value_t&    _balance,
 			 const datetime_t& _cutoff)
     : item_handler<transaction_t>(handler),
       balance(_balance), cutoff(_cutoff) {
     TRACE_CTOR(reconcile_transactions,
-	       "item_handler<transaction_t> *, const value_t&, const datetime_t&");
+	       "xact_handler_ptr, const value_t&, const datetime_t&");
   }
   virtual ~reconcile_transactions() throw() {
     TRACE_DTOR(reconcile_transactions);

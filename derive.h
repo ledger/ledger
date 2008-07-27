@@ -1,11 +1,11 @@
 #ifndef _DERIVE_H
 #define _DERIVE_H
 
-#include "journal.h"
+#include "report.h"
 
 namespace ledger {
 
-entry_t * derive_new_entry(journal_t& journal,
+entry_t * derive_new_entry(report_t& report,
 			   strings_list::iterator begin,
 			   strings_list::iterator end);
 

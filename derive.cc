@@ -1,14 +1,15 @@
 #include "derive.h"
-#include "utils.h"
-#include "mask.h"
+#include "session.h"
 #include "walk.h"
 
 namespace ledger {
 
-entry_t * derive_new_entry(journal_t& journal,
+entry_t * derive_new_entry(report_t& report,
 			   strings_list::iterator i,
 			   strings_list::iterator end)
 {
+  session_t& session(report.session);
+
   std::auto_ptr<entry_t> added(new entry_t);
 
   entry_t * matching = NULL;
@@ -21,26 +22,32 @@ entry_t * derive_new_entry(journal_t& journal,
 
   mask_t regexp(*i++);
 
+  journals_iterator iter(session);
   entries_list::reverse_iterator j;
-  for (j = journal.entries.rbegin();
-       j != journal.entries.rend();
-       j++)
-    if (regexp.match((*j)->payee)) {
-      matching = *j;
-      break;
+
+  for (journal_t * journal = iter(); journal; journal = iter()) {
+    for (j = journal->entries.rbegin();
+	 j != journal->entries.rend();
+	 j++) {
+      if (regexp.match((*j)->payee)) {
+	matching = *j;
+	break;
+      }
     }
+    if (matching) break;
+  }
 
   added->payee = matching ? matching->payee : regexp.expr.str();
 
   if (! matching) {
     account_t * acct;
     if (i == end || ((*i)[0] == '-' || std::isdigit((*i)[0]))) {
-      acct = journal.find_account("Expenses");
+      acct = session.find_account("Expenses");
     }
     else if (i != end) {
-      acct = journal.find_account_re(*i);
+      acct = session.find_account_re(*i);
       if (! acct)
-	acct = journal.find_account(*i);
+	acct = session.find_account(*i);
       assert(acct);
       i++;
     }
@@ -58,12 +65,7 @@ entry_t * derive_new_entry(journal_t& journal,
 	// account to which only dollars are applied would imply that
 	// dollars are wanted now too.
 
-	std::auto_ptr<item_handler<transaction_t> > formatter;
-	formatter.reset(new set_account_value);
-	walk_entries(journal.entries, *formatter.get());
-	formatter->flush();
-
-	sum_accounts(*journal.master);
+	report.sum_all_accounts();
 
 	value_t total = account_xdata(*acct).total;
 	if (total.is_type(value_t::AMOUNT))
@@ -75,16 +77,16 @@ entry_t * derive_new_entry(journal_t& journal,
 
     if (i != end) {
       if (! acct)
-	acct = journal.find_account_re(*i);
+	acct = session.find_account_re(*i);
       if (! acct)
-	acct = journal.find_account(*i);
+	acct = session.find_account(*i);
     }
 
     if (! acct) {
-      if (journal.basket)
-	acct = journal.basket;
+      if (matching && matching->journal->basket)
+	acct = matching->journal->basket;
       else
-	acct = journal.find_account("Equity");
+	acct = session.find_account("Equity");
     }   
 
     added->add_transaction(new transaction_t(acct));
@@ -115,9 +117,9 @@ entry_t * derive_new_entry(journal_t& journal,
     added->add_transaction(xact);
 
     if (i != end) {
-      account_t * acct = journal.find_account_re(*i);
+      account_t * acct = session.find_account_re(*i);
       if (! acct)
-	acct = journal.find_account(*i);
+	acct = session.find_account(*i);
       assert(acct);
       added->transactions.back()->account = acct;
     }
@@ -132,7 +134,7 @@ entry_t * derive_new_entry(journal_t& journal,
 
       mask_t acct_regex(re_pat);
 
-      for (; j != journal.entries.rend(); j++)
+      for (; j != matching->journal->entries.rend(); j++)
 	if (regexp.match((*j)->payee)) {
 	  entry_t * entry = *j;
 	  for (transactions_list::const_iterator x =
@@ -159,16 +161,16 @@ entry_t * derive_new_entry(journal_t& journal,
 
 	strings_list::iterator x = i;
 	if (i != end && ++x == end) {
-	  draw_acct = journal.find_account_re(*i);
+	  draw_acct = session.find_account_re(*i);
 	  if (! draw_acct)
-	    draw_acct = journal.find_account(*i);
+	    draw_acct = session.find_account(*i);
 	  i++;
 	}
 
 	if (! acct)
-	  acct = journal.find_account_re(re_pat);
+	  acct = session.find_account_re(re_pat);
 	if (! acct)
-	  acct = journal.find_account(re_pat);
+	  acct = session.find_account(re_pat);
 
 	xact = new transaction_t(acct, amount);
 	if (! xact->amount.commodity()) {
@@ -189,9 +191,11 @@ entry_t * derive_new_entry(journal_t& journal,
       added->add_transaction(new transaction_t(draw_acct));
   }
 
-  if (! run_hooks(journal.entry_finalize_hooks, *added, false) ||
+  if ((matching &&
+       ! run_hooks(matching->journal->entry_finalize_hooks, *added, false)) ||
       ! added->finalize() ||
-      ! run_hooks(journal.entry_finalize_hooks, *added, true))
+      (matching &&
+       ! run_hooks(matching->journal->entry_finalize_hooks, *added, true)))
     throw new error("Failed to finalize derived entry (check commodities)");
 
   return added.release();

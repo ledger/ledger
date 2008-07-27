@@ -1,7 +1,7 @@
 #include "walk.h"
+#include "session.h"
 #include "format.h"
 #include "textual.h"
-#include "util.h"
 
 #include <algorithm>
 
@@ -49,13 +49,64 @@ void add_transaction_to(const transaction_t& xact, value_t& value)
       transaction_xdata_(xact).dflags & TRANSACTION_COMPOUND) {
     value += transaction_xdata_(xact).value;
   }
-  else if (xact.cost || ! value.is_realzero()) {
+  else if (xact.cost || (! value.is_null() && ! value.is_realzero())) {
     // jww (2008-04-24): Is this costly?
     value.add(xact.amount, xact.cost ? optional<amount_t>(*xact.cost) : none);
   }
   else {
     value = xact.amount;
   }
+}
+
+void entries_iterator::reset(session_t& session)
+{
+  journals_i   = session.journals.begin();
+  journals_end = session.journals.end();
+
+  journals_uninitialized = false;
+
+  if (journals_i != journals_end) {
+    entries_i   = (*journals_i).entries.begin();
+    entries_end = (*journals_i).entries.end();
+
+    entries_uninitialized = false;
+  } else {
+    entries_uninitialized = true;
+  }
+}
+
+entry_t * entries_iterator::operator()()
+{
+  if (entries_i == entries_end) {
+    journals_i++;
+    if (journals_i == journals_end)
+      return NULL;
+
+    entries_i	= (*journals_i).entries.begin();
+    entries_end = (*journals_i).entries.end();
+  }
+  return *entries_i++;
+}
+
+void session_transactions_iterator::reset(session_t& session)
+{
+  entries.reset(session);
+  entry_t * entry = entries();
+  if (entry != NULL)
+    xacts.reset(*entry);
+}
+
+transaction_t * session_transactions_iterator::operator()()
+{
+  transaction_t * xact = xacts();
+  if (xact == NULL) {
+    entry_t * entry = entries();
+    if (entry != NULL) {
+      xacts.reset(*entry);
+      xact = xacts();
+    }
+  }
+  return xact;
 }
 
 void truncate_entries::flush()
@@ -846,52 +897,59 @@ void sum_accounts(account_t& account)
   xdata.total_count += xdata.count;
 }
 
-void sort_accounts(account_t&	     account,
-		   const value_expr& sort_order,
-		   accounts_deque&   accounts)
+account_t * accounts_iterator::operator()()
+{
+  while (! accounts_i.empty() &&
+	 accounts_i.back() == accounts_end.back()) {
+    accounts_i.pop_back();
+    accounts_end.pop_back();
+  }
+  if (accounts_i.empty())
+    return NULL;
+
+  account_t * account = (*(accounts_i.back()++)).second;
+  assert(account);
+
+  // If this account has children, queue them up to be iterated next.
+  if (! account->accounts.empty())
+    push_back(*account);
+
+  return account;
+}
+
+void sorted_accounts_iterator::sort_accounts(account_t& account,
+					     accounts_deque_t& deque)
 {
   for (accounts_map::iterator i = account.accounts.begin();
        i != account.accounts.end();
        i++)
-    accounts.push_back((*i).second);
+    deque.push_back((*i).second);
 
-  std::stable_sort(accounts.begin(), accounts.end(),
-		   compare_items<account_t>(sort_order));
+  std::stable_sort(deque.begin(), deque.end(),
+		   compare_items<account_t>(sort_cmp));
 }
 
-void walk_accounts(account_t&		       account,
-		   item_handler<account_t>&    handler,
-		   const optional<value_expr>& sort_order)
+account_t * sorted_accounts_iterator::operator()()
 {
-  handler(account);
-
-  if (sort_order) {
-    accounts_deque accounts;
-    sort_accounts(account, *sort_order, accounts);
-    for (accounts_deque::const_iterator i = accounts.begin();
-	 i != accounts.end();
-	 i++) {
-      account_xdata(**i).dflags &= ~ACCOUNT_SORT_CALC;
-      walk_accounts(**i, handler, sort_order);
-    }
-  } else {
-    for (accounts_map::const_iterator i = account.accounts.begin();
-	 i != account.accounts.end();
-	 i++)
-      walk_accounts(*(*i).second, handler);
+  while (! sorted_accounts_i.empty() &&
+	 sorted_accounts_i.back() == sorted_accounts_end.back()) {
+    sorted_accounts_i.pop_back();
+    sorted_accounts_end.pop_back();
+    assert(! accounts_list.empty());
+    accounts_list.pop_back();
   }
-}
+  if (sorted_accounts_i.empty())
+    return NULL;
 
-void walk_accounts(account_t&		    account,
-		   item_handler<account_t>& handler,
-		   const string&	    sort_string)
-{
-  if (! sort_string.empty()) {
-    value_expr sorter(sort_string);
-    walk_accounts(account, handler, optional<value_expr>(sorter));
-  } else {
-    walk_accounts(account, handler);
-  }
+  account_t * account = *sorted_accounts_i.back()++;
+  assert(account);
+
+  // If this account has children, queue them up to be iterated next.
+  if (! account->accounts.empty())
+    push_back(*account);
+
+  account_xdata(*account).dflags &= ~ACCOUNT_SORT_CALC;
+  return account;
 }
 
 void walk_commodities(commodity_pool_t::commodities_by_ident& commodities,
@@ -931,6 +989,19 @@ void walk_commodities(commodity_pool_t::commodities_by_ident& commodities,
   handler.flush();
 
   clear_entries_transactions(entry_temps);
+}
+
+void journals_iterator::reset(session_t& session)
+{
+  journals_i   = session.journals.begin();
+  journals_end = session.journals.end();
+}
+
+journal_t * journals_iterator::operator()()
+{
+  if (journals_i == journals_end)
+    return NULL;
+  return &(*journals_i++);
 }
 
 } // namespace ledger

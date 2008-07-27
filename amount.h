@@ -590,16 +590,18 @@ public:
    *   amount_t::parse_conversion("1.0m", "60s"); // a minute is 60 seconds
    *   amount_t::parse_conversion("1.0h", "60m"); // an hour is 60 minutes
    */
-#define AMOUNT_PARSE_NO_MIGRATE 0x01
-#define AMOUNT_PARSE_NO_REDUCE  0x02
+#define AMOUNT_PARSE_NO_MIGRATE	 0x01
+#define AMOUNT_PARSE_NO_REDUCE	 0x02
+#define AMOUNT_PARSE_SOFT_FAIL   0x04
 
   typedef uint_least8_t flags_t;
 
-  void parse(std::istream& in, flags_t flags = 0);
-  void parse(const string& str, flags_t flags = 0) {
+  bool parse(std::istream& in, flags_t flags = 0);
+  bool parse(const string& str, flags_t flags = 0) {
     std::istringstream stream(str);
-    parse(stream, flags);
+    bool result = parse(stream, flags);
     assert(stream.eof());
+    return result;
   }
 
   static void parse_conversion(const string& larger_str,

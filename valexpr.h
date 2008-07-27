@@ -149,7 +149,7 @@ public:
   explicit scope_t(type_t _type) : type_(_type) {
     TRACE_CTOR(scope_t, "type_t");
   }
-  virtual ~scope_t() throw() {
+  virtual ~scope_t() {
     TRACE_DTOR(scope_t);
   }
 
@@ -193,7 +193,7 @@ public:
     : scope_t(_type), parent(&_parent) {
     TRACE_CTOR(child_scope_t, "scope_t&, type_t");
   }
-  virtual ~child_scope_t() throw() {
+  virtual ~child_scope_t() {
     TRACE_DTOR(child_scope_t);
   }
 public:
@@ -245,7 +245,7 @@ public:
     : child_scope_t(_parent, SYMBOL_SCOPE) {
     TRACE_CTOR(symbol_scope_t, "scope_t&");
   }
-  virtual ~symbol_scope_t() throw() {
+  virtual ~symbol_scope_t() {
     TRACE_DTOR(symbol_scope_t);
   }
 
@@ -267,7 +267,7 @@ public:
     : child_scope_t(_parent, CALL_SCOPE) {
     TRACE_CTOR(call_scope_t, "scope_t&");
   }
-  virtual ~call_scope_t() throw() {
+  virtual ~call_scope_t() {
     TRACE_DTOR(call_scope_t);
   }
 
@@ -861,6 +861,9 @@ public:
     expr_str = _expr.expr_str;
     reset(_expr.get());
     return *this;
+  }
+  value_expr& operator=(const string& _expr) {
+    return *this = value_expr(_expr);
   }
 
   operator bool() const throw() {

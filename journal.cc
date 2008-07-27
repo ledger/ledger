@@ -30,10 +30,8 @@
  */
 
 #include "journal.h"
-#include "utils.h"
-#include "valexpr.h"
 #include "format.h"
-#include "mask.h"
+#include "session.h"
 
 namespace ledger {
 
@@ -520,8 +518,6 @@ account_t * account_t::find_account(const string& name,
       return NULL;
 
     account = new account_t(this, first);
-    account->journal = journal;
-
     std::pair<accounts_map::iterator, bool> result
       = accounts.insert(accounts_map::value_type(first, account));
     assert(result.second);
@@ -533,26 +529,6 @@ account_t * account_t::find_account(const string& name,
     account = account->find_account(rest, auto_create);
 
   return account;
-}
-
-static inline
-account_t * find_account_re_(account_t * account, const mask_t& regexp)
-{
-  if (regexp.match(account->fullname()))
-    return account;
-
-  for (accounts_map::iterator i = account->accounts.begin();
-       i != account->accounts.end();
-       i++)
-    if (account_t * a = find_account_re_((*i).second, regexp))
-      return a;
-
-  return NULL;
-}
-
-account_t * journal_t::find_account_re(const string& regexp)
-{
-  return find_account_re_(master, mask_t(regexp));
 }
 
 string account_t::fullname() const
@@ -583,8 +559,8 @@ std::ostream& operator<<(std::ostream& out, const account_t& account)
 
 bool account_t::valid() const
 {
-  if (depth > 256 || ! journal) {
-    DEBUG("ledger.validate", "account_t: depth > 256 || ! journal");
+  if (depth > 256) {
+    DEBUG("ledger.validate", "account_t: depth > 256");
     return false;
   }
 
@@ -605,12 +581,16 @@ bool account_t::valid() const
   return true;
 }
 
+journal_t::journal_t(session_t * _owner) :
+  owner(_owner), basket(NULL), item_pool(NULL), item_pool_end(NULL)
+{
+  TRACE_CTOR(journal_t, "");
+  master = owner->master;
+}
+
 journal_t::~journal_t()
 {
   TRACE_DTOR(journal_t);
-
-  assert(master);
-  checked_delete(master);
 
   // Don't bother unhooking each entry's transactions from the
   // accounts they refer to, because all accounts are about to
@@ -649,6 +629,26 @@ journal_t::~journal_t()
 
   if (item_pool)
     checked_array_delete(item_pool);
+}
+
+void journal_t::add_account(account_t * acct)
+{
+  owner->add_account(acct);
+}
+
+bool journal_t::remove_account(account_t * acct)
+{
+  return owner->remove_account(acct);
+}
+
+account_t * journal_t::find_account(const string& name, bool auto_create)
+{
+  return owner->find_account(name, auto_create);
+}
+
+account_t * journal_t::find_account_re(const string& regexp)
+{
+  return owner->find_account_re(regexp);
 }
 
 bool journal_t::add_entry(entry_t * entry)

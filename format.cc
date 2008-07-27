@@ -850,6 +850,7 @@ void print_entry(std::ostream& out, const entry_base_t& entry_base,
     assert(false);
   }
 
+#if 0
   format_entries formatter(out, print_format);
   walk_transactions(const_cast<transactions_list&>(entry_base.transactions),
 		    formatter);
@@ -858,6 +859,7 @@ void print_entry(std::ostream& out, const entry_base_t& entry_base,
   clear_transaction_xdata cleaner;
   walk_transactions(const_cast<transactions_list&>(entry_base.transactions),
 		    cleaner);
+#endif
 }
 
 bool disp_subaccounts_p(const account_t&			    account,
@@ -918,7 +920,7 @@ bool display_account(const account_t& account,
   return ! account_to_show && (! disp_pred || (*disp_pred)(account));
 }
 
-void format_account::operator()(account_t& account)
+void format_accounts::operator()(account_t& account)
 {
   if (display_account(account, disp_pred)) {
     if (! account.parent) {

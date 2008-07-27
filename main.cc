@@ -45,17 +45,6 @@
 #include <fdstream.hpp>
 #endif
 
-namespace ledger {
-  value_t register_command(expr::call_scope_t& args)
-  {
-    expr::var_t<std::ostream> ostream(args, "ostream");
-
-    *ostream << "This (will be) the register command.\n";
-
-    return true;
-  }
-}
-
 static int read_and_report(ledger::report_t& report, int argc, char * argv[],
 			   char * envp[])
 {
@@ -114,113 +103,6 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
   if (! session.use_cache)
     INFO("Binary cache mechanism will not be used");
 
-  // Read the command word and create a command object based on it
-
-  string verb = *arg++;
-
-  expr::function_t command;
-
-  if (verb == "register" || verb == "reg" || verb == "r")
-    command = register_command;
-#if 0
-  else if (verb == "balance" || verb == "bal" || verb == "b")
-    command = balance_command();
-  else if (verb == "print" || verb == "p")
-    command = print_command();
-  else if (verb == "equity")
-    command = equity_command();
-  else if (verb == "entry")
-    command = entry_command();
-  else if (verb == "dump")
-    command = dump_command();
-  else if (verb == "output")
-    command = output_command();
-  else if (verb == "prices")
-    command = prices_command();
-  else if (verb == "pricesdb")
-    command = pricesdb_command();
-  else if (verb == "csv")
-    command = csv_command();
-  else if (verb == "emacs" || verb == "lisp")
-    command = emacs_command();
-  else if (verb == "xml")
-    command = bind(xml_command, _1);
-  ;
-#endif
-  else if (verb == "expr")
-    ;
-  else if (verb == "xpath")
-    ;
-  else if (verb == "parse") {
-    value_expr expr(*arg);
-
-#if 0
-    expr::context_scope_t doc_scope(report, &temp);
-
-    IF_INFO() {
-      std::cout << "Value expression tree:" << std::endl;
-      expr.dump(std::cout);
-      std::cout << std::endl;
-
-      std::cout << "Value expression parsed was:" << std::endl;
-      expr.print(std::cout, doc_scope);
-      std::cout << std::endl << std::endl;
-
-      expr.compile(doc_scope);
-
-      std::cout << "Value expression after compiling:" << std::endl;
-      expr.dump(std::cout);
-      std::cout << std::endl;
-
-      std::cout << "Value expression is now:" << std::endl;
-      expr.print(std::cout, doc_scope);
-      std::cout << std::endl << std::endl;
-
-      std::cout << "Result of calculation: ";
-    }
-
-    std::cout << expr.calc(doc_scope).strip_annotations() << std::endl;
-#endif
-
-    return 0;
-  }
-  else {
-    char buf[128];
-    std::strcpy(buf, "command_");
-    std::strcat(buf, verb.c_str());
-
-    if (expr::ptr_op_t def = report.lookup(buf))
-      command = def->as_function();
-
-    if (! command)
-      throw_(std::logic_error, string("Unrecognized command '") + verb + "'");
-  }
-
-  // Parse the initialization file, which can only be textual; then
-  // parse the journal data.
-
-  session.read_init();
-
-  INFO_START(journal, "Read journal file");
-
-  journal_t& journal(*session.create_journal());
-
-  std::size_t count = session.read_data(journal, report.account);
-  if (count == 0)
-    throw_(parse_error, "Failed to locate any journal entries; "
-	   "did you specify a valid file with -f?");
-
-  INFO_FINISH(journal);
-
-  INFO("Found " << count << " entries");
-
-  TRACE_FINISH(entry_text, 1);
-  TRACE_FINISH(entry_date, 1);
-  TRACE_FINISH(entry_details, 1);
-  TRACE_FINISH(entry_xacts, 1);
-  TRACE_FINISH(entries, 1);
-  TRACE_FINISH(parsing_total, 1);
-
   // Configure the output stream
 
 #ifdef HAVE_UNIX_PIPES
@@ -268,7 +150,68 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
   }
 #endif
 
-  report.define("ostream", value_t(out));
+  // Read the command word and create a command object based on it
+
+  string verb = *arg++;
+
+  if (verb == "parse") {
+    value_expr expr(*arg);
+
+#if 0
+    expr::context_scope_t doc_scope(report, &temp);
+
+    IF_INFO() {
+      std::cout << "Value expression tree:" << std::endl;
+      expr.dump(std::cout);
+      std::cout << std::endl;
+
+      std::cout << "Value expression parsed was:" << std::endl;
+      expr.print(std::cout, doc_scope);
+      std::cout << std::endl << std::endl;
+
+      expr.compile(doc_scope);
+
+      std::cout << "Value expression after compiling:" << std::endl;
+      expr.dump(std::cout);
+      std::cout << std::endl;
+
+      std::cout << "Value expression is now:" << std::endl;
+      expr.print(std::cout, doc_scope);
+      std::cout << std::endl << std::endl;
+
+      std::cout << "Result of calculation: ";
+    }
+
+    std::cout << expr.calc(doc_scope).strip_annotations() << std::endl;
+#endif
+
+    return 0;
+  }
+
+  // Parse the initialization file, which can only be textual; then
+  // parse the journal data.
+
+  session.read_init();
+
+  INFO_START(journal, "Read journal file");
+
+  journal_t& journal(*session.create_journal());
+
+  std::size_t count = session.read_data(journal, report.account);
+  if (count == 0)
+    throw_(parse_error, "Failed to locate any journal entries; "
+	   "did you specify a valid file with -f?");
+
+  INFO_FINISH(journal);
+
+  INFO("Found " << count << " entries");
+
+  TRACE_FINISH(entry_text, 1);
+  TRACE_FINISH(entry_date, 1);
+  TRACE_FINISH(entry_details, 1);
+  TRACE_FINISH(entry_xacts, 1);
+  TRACE_FINISH(entries, 1);
+  TRACE_FINISH(parsing_total, 1);
 
   // Are we handling the expr commands?  Do so now.
 
@@ -294,11 +237,52 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
     return 0;
   }
 
-  // Apply transforms to the hierarchical document structure
+  // Read the command word and create a command object based on it
 
-  INFO_START(transforms, "Applied transforms");
-  report.apply_transforms(*expr::global_scope);
-  INFO_FINISH(transforms);
+  if (verb == "register" || verb == "reg" || verb == "r")
+    report.transactions_report
+      (xact_handler_ptr(new format_transactions(*out, session.register_format)));
+  else if (verb == "balance" || verb == "bal" || verb == "b")
+    report.accounts_report
+      (acct_handler_ptr(new format_accounts(*out, session.balance_format,
+					    report.display_predicate)));
+#if 0
+  else if (verb == "print" || verb == "p")
+    command = print_command();
+  else if (verb == "equity")
+    command = equity_command();
+  else if (verb == "entry")
+    command = entry_command();
+  else if (verb == "dump")
+    command = dump_command();
+  else if (verb == "output")
+    command = output_command();
+  else if (verb == "prices")
+    command = prices_command();
+  else if (verb == "pricesdb")
+    command = pricesdb_command();
+  else if (verb == "csv")
+    command = csv_command();
+  else if (verb == "emacs" || verb == "lisp")
+    command = emacs_command();
+  else if (verb == "xml")
+    command = bind(xml_command, _1);
+  ;
+  else if (verb == "expr")
+    ;
+  else if (verb == "xpath")
+    ;
+  else {
+    char buf[128];
+    std::strcpy(buf, "command_");
+    std::strcat(buf, verb.c_str());
+
+    if (expr::ptr_op_t def = report.lookup(buf))
+      command = def->as_function();
+
+    if (! command)
+      throw_(std::logic_error, string("Unrecognized command '") + verb + "'");
+  }
 
   // Create an argument scope containing the report command's
   // arguments, and then invoke the command.
@@ -313,31 +297,12 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
   command(command_args);
 
   INFO_FINISH(command);
-
-  // Clean up memory, if we 
-
-  if (DO_VERIFY()) {
-    TRACE_START(cleanup, 1, "Cleaning up allocated memory");
-
-    clear_transaction_xdata xact_cleaner;
-    walk_entries(journal.entries, xact_cleaner);
-
-    clear_account_xdata acct_cleaner;
-    walk_accounts(*journal.master, acct_cleaner);
-
-    if (report.output_file)
-      checked_delete(out);
-
-#if 0
-    for (std::list<item_handler<transaction_t> *>::iterator i
-	   = formatter_ptrs.begin();
-	 i != formatter_ptrs.end();
-	 i++)
-      checked_delete(*i);
 #endif
 
-    TRACE_FINISH(cleanup, 1);
-  }
+  // Clean up memory, if it matters
+
+  if (DO_VERIFY() && report.output_file)
+    checked_delete(out);
 
   // Write out the binary cache, if need be
 

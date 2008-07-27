@@ -339,7 +339,6 @@ class account_t
  public:
   typedef unsigned long ident_t;
 
-  journal_t *	   journal;
   account_t *	   parent;
   string	   name;
   optional<string> note;
@@ -358,8 +357,7 @@ class account_t
     TRACE_CTOR(account_t, "account_t *, const string&, const string&");
   }
   account_t(const account_t& other)
-    : journal(other.journal),
-      parent(other.parent),
+    : parent(other.parent),
       name(other.name),
       note(other.note),
       depth(other.depth),
@@ -379,11 +377,9 @@ class account_t
 
   void add_account(account_t * acct) {
     accounts.insert(accounts_map::value_type(acct->name, acct));
-    acct->journal = journal;
   }
   bool remove_account(account_t * acct) {
     accounts_map::size_type n = accounts.erase(acct->name);
-    acct->journal = NULL;
     return n > 0;
   }
 
@@ -468,37 +464,17 @@ class journal_t : public noncopyable
 
   auto_entries_list    auto_entries;
   period_entries_list  period_entries;
-  mutable accounts_map accounts_cache;
 
   std::list<entry_finalizer_t *> entry_finalize_hooks;
 
-  journal_t(session_t * _owner) :
-    owner(_owner), basket(NULL), item_pool(NULL), item_pool_end(NULL) {
-    TRACE_CTOR(journal_t, "");
-    master = new account_t(NULL, "");
-    master->journal = this;
-  }
+  journal_t(session_t * _owner);
   ~journal_t();
 
-  void add_account(account_t * acct) {
-    master->add_account(acct);
-    acct->journal = this;
-  }
-  bool remove_account(account_t * acct) {
-    return master->remove_account(acct);
-    acct->journal = NULL;
-  }
-
-  account_t * find_account(const string& name, bool auto_create = true) {
-    accounts_map::iterator c = accounts_cache.find(name);
-    if (c != accounts_cache.end())
-      return (*c).second;
-
-    account_t * account = master->find_account(name, auto_create);
-    accounts_cache.insert(accounts_map::value_type(name, account));
-    account->journal = this;
-    return account;
-  }
+  // These four methods are delegated to 'owner', since all accounts processed
+  // are gathered together at the session level.
+  void	      add_account(account_t * acct);
+  bool	      remove_account(account_t * acct);
+  account_t * find_account(const string& name, bool auto_create = true);
   account_t * find_account_re(const string& regexp);
 
   bool add_entry(entry_t * entry);

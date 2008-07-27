@@ -79,9 +79,16 @@ class session_t : public expr::symbol_scope_t
   ptr_list<journal_t> journals;
   ptr_list<parser_t>  parsers;
 
+  account_t *	       master;
+  mutable accounts_map accounts_cache;
+
   session_t();
-  virtual ~session_t() throw() {
+
+  virtual ~session_t() {
     TRACE_DTOR(session_t);
+
+    assert(master);
+    checked_delete(master);
   }
 
   journal_t * create_journal() {
@@ -128,6 +135,28 @@ class session_t : public expr::symbol_scope_t
     assert(false);
     checked_delete(parser);
   }
+
+  //
+  // Dealing with accounts
+  //
+
+  void add_account(account_t * acct) {
+    master->add_account(acct);
+  }
+  bool remove_account(account_t * acct) {
+    return master->remove_account(acct);
+  }
+
+  account_t * find_account(const string& name, bool auto_create = true) {
+    accounts_map::iterator c = accounts_cache.find(name);
+    if (c != accounts_cache.end())
+      return (*c).second;
+
+    account_t * account = master->find_account(name, auto_create);
+    accounts_cache.insert(accounts_map::value_type(name, account));
+    return account;
+  }
+  account_t * find_account_re(const string& regexp);
 
   //
   // Scope members

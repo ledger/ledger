@@ -33,8 +33,53 @@
 #define _REPORT_H
 
 #include "session.h"
+#include "walk.h"
 
 namespace ledger {
+
+// These are the elements of any report:
+//
+// 1. Formatting string used for outputting the underlying ReportedType.
+//
+// 2. Handler object for the ReportedType.  This is constructed using #1, or
+//    else #1 is ignored completely.  This handler object is also constructed
+//    with the output stream that will be used during formatting.
+//
+// --- The details of #1 and #2 together represent the ItemHandler.
+//
+// 3. Mode of the report.  Currently there are four modes:
+// 
+//    a. Transaction or commodity iteration.  In this mode, all the journal's
+//       entries, the transactions of a specific entry, or all the journal's
+//       commodities are walked.  In the first two cases, it's the underlying
+//       transactions which are passed to #2; in the second case, each
+//       commodity is passed to #2.
+//
+//    b. Account iteration.  This employs step 'a', but add a prologue and
+//       epilogue to it.  In the prologue it "sums" all account totals and
+//       subtotals; in the epilogue it calls yet another handler whose job is
+//       reporting (the handler used in 'a' is only for calculation).
+//
+//       There is one variation on 'b' in which a "totals" line is also
+//       displayed.
+//
+//    c. Write journal.  In this mode, a single function is called that output
+//       the journal object as a textual file.  #2 is used to print out each
+//       transaction in the journal.
+// 
+//    d. Dump binary file.  This is just like 'c', except that it dumps out a
+//       binary file and #2 is completely ignored.
+//
+// 4. For 'a' and 'b' in #3, there is a different iteration function called,
+//    depending on whether we're iterating:
+//
+//    a. The transactions of an entry: walk_transactions.
+//    b. The entries of a journal: walk_entries.
+//    c. The commodities of a journal: walk_commodities.
+//
+// 5. Finally, for the 'a' and 'b' reporting modes, there is a variant which
+//    says that the formatter should be "flushed" after the entities are
+//    iterated.  This does not happen for the commodities iteration, however.
 
 class report_t : public expr::symbol_scope_t
 {
@@ -46,43 +91,115 @@ public:
   string	 amount_expr;
   string	 total_expr;
   string	 date_output_format;
+  string	 predicate;
+  string	 secondary_predicate;
+  string	 display_predicate;
+  string	 report_period;
+  string	 report_period_sort;
+  string	 sort_string;
+  string	 descend_expr;
+  string	 forecast_limit;
+  string	 reconcile_balance;
+  string	 reconcile_date;
 
   unsigned long  budget_flags;
+
+  int		 head_entries;
+  int		 tail_entries;
+
+  bool		 show_collapsed;
+  bool		 show_subtotal;
+  bool		 show_totals;
+  bool		 show_related;
+  bool		 show_all_related;
+  bool		 show_inverted;
+  bool		 show_empty;
+  bool		 days_of_the_week;
+  bool		 by_payee;
+  bool		 comm_as_payee;
+  bool		 code_as_payee;
+  bool		 show_revalued;
+  bool		 show_revalued_only;
+  bool		 keep_price;
+  bool		 keep_date;
+  bool		 keep_tag;
+  bool		 entry_sort;
+  bool		 sort_all;
 
   string	 account;
   optional<path> pager;
 
-  bool           show_totals;
   bool           raw_mode;
 
   session_t&	 session;
-#if 0
-  transform_t *  last_transform;
-
-  std::list<tuple<shared_ptr<transform_t>, value_t> > transforms;
-#endif
 
   explicit report_t(session_t& _session)
     : expr::symbol_scope_t(downcast<expr::scope_t>(_session)),
+
+      head_entries(0),
+      tail_entries(0),
+
+      show_collapsed(false),
+      show_subtotal(false),
       show_totals(false),
+      show_related(false),
+      show_all_related(false),
+      show_inverted(false),
+      show_empty(false),
+      days_of_the_week(false),
+      by_payee(false),
+      comm_as_payee(false),
+      code_as_payee(false),
+      show_revalued(false),
+      show_revalued_only(false),
+      keep_price(false),
+      keep_date(false),
+      keep_tag(false),
+      entry_sort(false),
+      sort_all(false),
+
       raw_mode(false),
+
       session(_session)
-#if 0
-    ,
-      last_transform(NULL)
-#endif
   {
     TRACE_CTOR(report_t, "session_t&");
+
 #if 0
     eval("t=total,TOT=0,T()=(TOT=TOT+t,TOT)");
 #endif
+
+    value_expr::amount_expr.reset(new value_expr("@a"));
+    value_expr::total_expr.reset(new value_expr("@O"));
   }
 
-  virtual ~report_t() throw() {
+  virtual ~report_t() {
     TRACE_DTOR(report_t);
   }
 
-  void apply_transforms(expr::scope_t& scope);
+  //
+  // Actual report generation; this is why we're here...
+  //
+
+  xact_handler_ptr
+  chain_xact_handlers(xact_handler_ptr handler,
+		      const bool handle_individual_transactions = true);
+
+  void transactions_report(xact_handler_ptr handler);
+
+  void entry_report(xact_handler_ptr handler, entry_t& entry);
+
+  void sum_all_accounts();
+
+  void accounts_report(acct_handler_ptr handler,
+		       const bool print_final_total = true);
+
+  void commodities_report(const string& format);
+
+  void entry_report(const entry_t& entry, const string& format);
+
+  void clean_transactions();
+  void clean_transactions(entry_t& entry);
+  void clean_accounts();
 
   //
   // Utility functions for value expressions
