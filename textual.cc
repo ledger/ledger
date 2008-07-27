@@ -180,13 +180,15 @@ transaction_t * parse_transaction(char * line, account_t * account,
       goto finished;
     if (p == ';')
       goto parse_note;
+    if (p == '=' && entry)
+      goto parse_assign;
 
     try {
       unsigned long beg = (long)in.tellg();
 
       xact->amount_expr =
 	parse_amount_expr(in, xact->amount, xact.get(),
-			  EXPR_PARSE_NO_REDUCE);
+			  EXPR_PARSE_NO_REDUCE | EXPR_PARSE_NO_ASSIGN);
       saw_amount = true;
 
       if (! xact->amount.is_null()) {
@@ -235,7 +237,8 @@ transaction_t * parse_transaction(char * line, account_t * account,
 	  unsigned long beg = (long)in.tellg();
 
 	  if (parse_amount_expr(in, *xact->cost, xact.get(),
-				EXPR_PARSE_NO_MIGRATE))
+				EXPR_PARSE_NO_MIGRATE |
+				EXPR_PARSE_NO_ASSIGN))
 	    throw new parse_error
 	      ("A transaction's cost must evaluate to a constant value");
 	  assert(xact->cost->valid());
@@ -279,6 +282,94 @@ transaction_t * parse_transaction(char * line, account_t * account,
 		    "Per-unit cost is " << per_unit_cost);
 	DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 		    "Annotated amount is " << xact->amount);
+      }
+    }
+  }
+
+ parse_assign:
+  if (entry != NULL) {
+    // Add this amount to the related account now
+
+    account_xdata_t& xdata(account_xdata(*xact->account));
+
+    if (xact->amount) {
+      xdata.value += xact->amount;
+      DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
+	    "XACT assign: account total = " << xdata.value);
+    }
+
+    // Parse the optional assigned (= AMOUNT)
+
+    if (in.good() && ! in.eof()) {
+      p = peek_next_nonws(in);
+      if (p == '=') {
+	in.get(p);
+	DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
+	      "Found a balance assignment indicator");
+	if (in.good() && ! in.eof()) {
+	  amount_t amt;
+
+	  try {
+#if 0
+	    unsigned long beg = (long)in.tellg();
+#endif
+
+	    if (parse_amount_expr(in, amt, xact.get(),
+				  EXPR_PARSE_NO_MIGRATE))
+	      throw new parse_error
+		("An assigned balance must evaluate to a constant value");
+
+	    DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
+		  "XACT assign: parsed amt = " << amt);
+
+#if 0
+	    unsigned long end = (long)in.tellg();
+#endif
+
+	    amount_t diff;
+	    if (xdata.value.is_amount()) {
+	      diff = amt - xdata.value.as_amount();
+	    }
+	    else if (xdata.value.is_balance()) {
+	      optional<amount_t> comm_bal =
+		xdata.value.as_balance().commodity_amount(amt.commodity());
+	      diff = amt - (comm_bal ? *comm_bal : amount_t(0L));
+	    }
+	    else if (xdata.value.is_balance_pair()) {
+	      optional<amount_t> comm_bal =
+		xdata.value.as_balance_pair().commodity_amount(amt.commodity());
+	      diff = amt - (comm_bal ? *comm_bal : amount_t(0L));
+	    }
+	    else {
+	      diff = amt;
+	    }
+
+	    DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
+		  "XACT assign: diff = " << diff);
+
+	    if (! diff.is_realzero()) {
+	      if (xact->amount) {
+		transaction_t * temp =
+		  new transaction_t(xact->account, diff,
+				    TRANSACTION_GENERATED |
+				    TRANSACTION_CALCULATED);
+		entry->add_transaction(temp);
+
+		DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
+		      "Created balancing transaction");
+	      } else {
+		xact->amount = diff;
+		DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
+		      "Overwrite null transaction");
+	      }
+	      xdata.value = amt;
+	    }
+	  }
+	  catch (error * err) {
+	    err_desc = "While parsing assigned balance:";
+	    throw err;
+	  }
+	}
       }
     }
   }

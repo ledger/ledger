@@ -46,7 +46,8 @@ class parser_t : public noncopyable
 #define EXPR_PARSE_RELAXED    0x02
 #define EXPR_PARSE_NO_MIGRATE 0x04
 #define EXPR_PARSE_NO_REDUCE  0x08
-#define EXPR_PARSE_NO_DATES   0x10
+#define EXPR_PARSE_NO_ASSIGN  0x10
+#define EXPR_PARSE_NO_DATES   0x20
 
 public:
   typedef uint_least8_t flags_t;

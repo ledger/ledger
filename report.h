@@ -197,10 +197,6 @@ public:
 
   void entry_report(const entry_t& entry, const string& format);
 
-  void clean_transactions();
-  void clean_transactions(entry_t& entry);
-  void clean_accounts();
-
   //
   // Utility functions for value expressions
   //

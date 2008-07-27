@@ -765,7 +765,10 @@ parser_t::parse_logic_expr(std::istream& in, scope_t& scope, const flags_t tflag
     token_t&	 tok	= next_token(in, tflags);
     switch (tok.kind) {
     case token_t::EQUAL:
-      kind = op_t::O_EQ;
+      if (tflags & EXPR_PARSE_NO_ASSIGN)
+	tok.rewind(in);
+      else
+	kind = op_t::O_EQ;
       break;
     case token_t::NEQUAL:
       kind = op_t::O_NEQ;
@@ -1371,7 +1374,8 @@ ptr_op_t parse_value_term(std::istream& in, scope_t * scope,
     bool definition = false;
     if (c == '=') {
       in.get(c);
-      if (peek_next_nonws(in) == '=') {
+      if ((flags & EXPR_PARSE_NO_ASSIGN) ||
+	  peek_next_nonws(in) == '=') {
 	in.unget();
 	c = '\0';
       } else {

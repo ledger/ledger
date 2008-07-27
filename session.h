@@ -158,6 +158,11 @@ class session_t : public expr::symbol_scope_t
   }
   account_t * find_account_re(const string& regexp);
 
+  void clean_accounts();
+
+  void clean_transactions();
+  void clean_transactions(entry_t& entry);
+
   //
   // Scope members
   //

@@ -216,7 +216,7 @@ void report_t::transactions_report(xact_handler_ptr handler)
   handler->flush();
 
   if (DO_VERIFY())
-    clean_transactions();
+    session.clean_transactions();
 }
 
 void report_t::entry_report(xact_handler_ptr handler, entry_t& entry)
@@ -226,7 +226,7 @@ void report_t::entry_report(xact_handler_ptr handler, entry_t& entry)
   handler->flush();
 
   if (DO_VERIFY())
-    clean_transactions(entry);
+    session.clean_transactions(entry);
 }
 
 void report_t::sum_all_accounts()
@@ -265,8 +265,8 @@ void report_t::accounts_report(acct_handler_ptr handler,
   }
 
   if (DO_VERIFY()) {
-    clean_transactions();
-    clean_accounts();
+    session.clean_transactions();
+    session.clean_accounts();
   }
 }
 
@@ -276,26 +276,6 @@ void report_t::commodities_report(const string& format)
 
 void report_t::entry_report(const entry_t& entry, const string& format)
 {
-}
-
-void report_t::clean_transactions()
-{
-  session_transactions_iterator walker(session);
-  pass_down_transactions
-    (xact_handler_ptr(new clear_transaction_xdata), walker);
-}
-
-void report_t::clean_transactions(entry_t& entry)
-{
-  entry_transactions_iterator walker(entry);
-  pass_down_transactions(xact_handler_ptr(new clear_transaction_xdata), walker);
-}
-
-void report_t::clean_accounts()
-{
-  accounts_iterator acct_walker(*session.master);
-  pass_down_accounts<accounts_iterator>
-    (acct_handler_ptr(new clear_account_xdata), acct_walker);
 }
 
 value_t report_t::abbrev(expr::call_scope_t& args)

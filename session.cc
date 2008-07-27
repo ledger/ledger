@@ -31,6 +31,7 @@
 
 #include "session.h"
 #include "parsexp.h"
+#include "walk.h"
 
 namespace ledger {
 
@@ -210,6 +211,7 @@ std::size_t session_t::read_data(journal_t&    journal,
       entry_count += read_journal(journal, data_file, acct);
       if (journal.price_db)
 	journal.sources.push_back(*journal.price_db);
+      clean_accounts();
     }
   }
 
@@ -239,6 +241,26 @@ namespace {
 account_t * session_t::find_account_re(const string& regexp)
 {
   return find_account_re_(master, mask_t(regexp));
+}
+
+void session_t::clean_transactions()
+{
+  session_transactions_iterator walker(*this);
+  pass_down_transactions
+    (xact_handler_ptr(new clear_transaction_xdata), walker);
+}
+
+void session_t::clean_transactions(entry_t& entry)
+{
+  entry_transactions_iterator walker(entry);
+  pass_down_transactions(xact_handler_ptr(new clear_transaction_xdata), walker);
+}
+
+void session_t::clean_accounts()
+{
+  accounts_iterator acct_walker(*master);
+  pass_down_accounts<accounts_iterator>
+    (acct_handler_ptr(new clear_account_xdata), acct_walker);
 }
 
 #if 0
