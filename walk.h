@@ -145,9 +145,11 @@ transaction_xdata_t& transaction_xdata(const transaction_t& xact);
 void add_transaction_to(const transaction_t& xact, value_t& value);
 
 inline account_t * xact_account(transaction_t& xact) {
-  account_t * account = transaction_xdata(xact).account;
-  if (account)
-    return account;
+  if (xact.data) {
+    account_t * account = transaction_xdata(xact).account;
+    if (account)
+      return account;
+  }
   return xact.account;
 }
 
