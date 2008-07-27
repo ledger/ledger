@@ -83,7 +83,7 @@ public:
     for (std::list<error_context *>::iterator i = context.begin();
 	 i != context.end();
 	 i++)
-      delete *i;
+      checked_delete(*i);
   }
 
   virtual void reveal_context(std::ostream& out,

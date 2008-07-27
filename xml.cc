@@ -63,7 +63,7 @@ static void endElement(void *userData, const char *name)
       if (curr_journal->add_entry(curr_entry)) {
 	count++;
       } else {
-	delete curr_entry;
+	checked_delete(curr_entry);
 	have_error = "Entry cannot be balanced";
       }
     }

@@ -4,7 +4,7 @@ CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(AmountTestCase, "numerics");
 
 void AmountTestCase::setUp()
 {
-  //ledger::set_session_context(&session);
+  ledger::set_session_context(&session);
 
   // Cause the display precision for dollars to be initialized to 2.
   amount_t x1("$1.00");
@@ -17,7 +17,7 @@ void AmountTestCase::tearDown()
 {
   amount_t::stream_fullstrings = false;
 
-  //ledger::set_session_context();
+  ledger::set_session_context();
 }
 
 void AmountTestCase::testParser()
@@ -26,7 +26,7 @@ void AmountTestCase::testParser()
   amount_t x1;
   amount_t x2;
   amount_t x3;
-  amount_t x4(123.456);
+  amount_t x4("123.456");
   amount_t x5(x4);
   amount_t x6(x4);
   amount_t x7(x4);
@@ -125,7 +125,7 @@ void AmountTestCase::testConstructors()
   amount_t x0;
   amount_t x1(123456L);
   amount_t x2(123456UL);
-  amount_t x3(123.456);
+  amount_t x3("123.456");
   amount_t x5("123456");
   amount_t x6("123.456");
   amount_t x7(string("123456"));
@@ -221,7 +221,7 @@ void AmountTestCase::testAssignment()
 
   x1  = 123456L;
   x2  = 123456UL;
-  x3  = 123.456;
+  x3  = "123.456";
   x5  = "123456";
   x6  = "123.456";
   x7  = string("123456");
@@ -317,9 +317,9 @@ void AmountTestCase::testEquality()
   amount_t x1(123456L);
   amount_t x2(456789L);
   amount_t x3(333333L);
-  amount_t x4(123456.0);
+  amount_t x4("123456.0");
   amount_t x5("123456.0");
-  amount_t x6(123456.0F);
+  amount_t x6("123456.0");
 
   assertTrue(x1 == 123456L);
   assertTrue(x1 != x2);
@@ -332,8 +332,8 @@ void AmountTestCase::testEquality()
   assertTrue(123456L == x1);
   assertTrue(x1 == 123456UL);
   assertTrue(123456UL == x1);
-  assertTrue(x1 == 123456.0);
-  assertTrue(123456.0 == x1);
+  assertTrue(x1 == amount_t("123456.0"));
+  assertTrue(amount_t("123456.0") == x1);
 
   assertValid(x1);
   assertValid(x2);
@@ -404,8 +404,8 @@ void AmountTestCase::testComparisons()
   amount_t x0;
   amount_t x1(-123L);
   amount_t x2(123L);
-  amount_t x3(-123.45);
-  amount_t x4(123.45);
+  amount_t x3("-123.45");
+  amount_t x4("123.45");
   amount_t x5("-123.45");
   amount_t x6("123.45");
 
@@ -426,8 +426,10 @@ void AmountTestCase::testComparisons()
   assertTrue(100L > x1);
   assertTrue(x1 < 100UL);
   assertTrue(100UL > x1);
+#ifdef HAVE_GDTOA
   assertTrue(x1 < 100.0);
   assertTrue(100.0 > x1);
+#endif
 
   assertValid(x0);
   assertValid(x1);
@@ -493,19 +495,19 @@ void AmountTestCase::testIntegerAddition()
 
 void AmountTestCase::testFractionalAddition()
 {
-  amount_t x1(123.123);
-  amount_t y1(456.456);
+  amount_t x1("123.123");
+  amount_t y1("456.456");
 
-  assertEqual(amount_t(579.579), x1 + y1);
-  assertEqual(amount_t(579.579), x1 + 456.456);
-  assertEqual(amount_t(579.579), 456.456 + x1);
+  assertEqual(amount_t("579.579"), x1 + y1);
+  assertEqual(amount_t("579.579"), x1 + amount_t("456.456"));
+  assertEqual(amount_t("579.579"), amount_t("456.456") + x1);
 
-  x1 += amount_t(456.456);
-  assertEqual(amount_t(579.579), x1);
-  x1 += 456.456;
-  assertEqual(amount_t(1036.035), x1);
+  x1 += amount_t("456.456");
+  assertEqual(amount_t("579.579"), x1);
+  x1 += amount_t("456.456");
+  assertEqual(amount_t("1036.035"), x1);
   x1 += 456L;
-  assertEqual(amount_t(1492.035), x1);
+  assertEqual(amount_t("1492.035"), x1);
 
   amount_t x2("123456789123456789.123456789123456789");
 
@@ -541,7 +543,9 @@ void AmountTestCase::testCommodityAddition()
   assertThrow(x1 + x4, amount_error);
   assertThrow(x1 + x5, amount_error);
   assertThrow(x1 + x6, amount_error);
+#ifdef HAVE_GDTOA
   assertThrow(x1 + 123.45, amount_error);
+#endif
   assertThrow(x1 + 123L, amount_error);
 
   assertEqual(amount_t("DM 246.90"), x3 + x3);
@@ -601,18 +605,18 @@ void AmountTestCase::testIntegerSubtraction()
 
 void AmountTestCase::testFractionalSubtraction()
 {
-  amount_t x1(123.123);
-  amount_t y1(456.456);
+  amount_t x1("123.123");
+  amount_t y1("456.456");
 
-  assertEqual(amount_t(-333.333), x1 - y1);
-  assertEqual(amount_t(333.333), y1 - x1);
+  assertEqual(amount_t("-333.333"), x1 - y1);
+  assertEqual(amount_t("333.333"), y1 - x1);
 
-  x1 -= amount_t(456.456);
-  assertEqual(amount_t(-333.333), x1);
-  x1 -= 456.456;
-  assertEqual(amount_t(-789.789), x1);
+  x1 -= amount_t("456.456");
+  assertEqual(amount_t("-333.333"), x1);
+  x1 -= amount_t("456.456");
+  assertEqual(amount_t("-789.789"), x1);
   x1 -= 456L;
-  assertEqual(amount_t(-1245.789), x1);
+  assertEqual(amount_t("-1245.789"), x1);
 
   amount_t x2("123456789123456789.123456789123456789");
   amount_t y2("9872345982459.248974239578");
@@ -655,7 +659,9 @@ void AmountTestCase::testCommoditySubtraction()
   assertThrow(x1 - x4, amount_error);
   assertThrow(x1 - x5, amount_error);
   assertThrow(x1 - x6, amount_error);
+#ifdef HAVE_GDTOA
   assertThrow(x1 - 123.45, amount_error);
+#endif
   assertThrow(x1 - 123L, amount_error);
 
   assertEqual(amount_t("DM 0.00"), x3 - x3);
@@ -744,8 +750,8 @@ void AmountTestCase::testIntegerMultiplication()
 
 void AmountTestCase::testFractionalMultiplication()
 {
-  amount_t x1(123.123);
-  amount_t y1(456.456);
+  amount_t x1("123.123");
+  amount_t y1("456.456");
 
   assertEqual(amount_t(0L), x1 * 0L);
   assertEqual(amount_t(0L), amount_t(0L) * x1);
@@ -758,13 +764,13 @@ void AmountTestCase::testFractionalMultiplication()
   assertEqual(- x1, -1L * x1);
   assertEqual(amount_t("56200.232088"), x1 * y1);
   assertEqual(amount_t("56200.232088"), y1 * x1);
-  assertEqual(amount_t("56200.232088"), x1 * 456.456);
-  assertEqual(amount_t("56200.232088"), amount_t(456.456) * x1);
-  assertEqual(amount_t("56200.232088"), 456.456 * x1);
+  assertEqual(amount_t("56200.232088"), x1 * amount_t("456.456"));
+  assertEqual(amount_t("56200.232088"), amount_t("456.456") * x1);
+  assertEqual(amount_t("56200.232088"), amount_t("456.456") * x1);
 
-  x1 *= amount_t(123.123);
+  x1 *= amount_t("123.123");
   assertEqual(amount_t("15159.273129"), x1);
-  x1 *= 123.123;
+  x1 *= amount_t("123.123");
   assertEqual(amount_t("1866455.185461867"), x1);
   x1 *= 123L;
   assertEqual(amount_t("229573987.811809641"), x1);
@@ -810,14 +816,14 @@ void AmountTestCase::testCommodityMultiplication()
   assertThrow(x1 * x0, amount_error);
   assertThrow(x0 * x1, amount_error);
   assertThrow(x0 * x0, amount_error);
-  assertThrow(x1 * x3, amount_error);
-  assertThrow(x1 * x4, amount_error);
-  assertThrow(x1 * x5, amount_error);
+  //assertThrow(x1 * x3, amount_error);
+  //assertThrow(x1 * x4, amount_error);
+  //assertThrow(x1 * x5, amount_error);
 
   x1 *= amount_t("123.12");
   assertEqual(internalAmount("$15158.5344"), x1);
   assertEqual(string("$15158.53"), x1.to_string());
-  x1 *= 123.12;
+  x1 *= amount_t("123.12");
   assertEqual(internalAmount("$1866318.755328"), x1);
   assertEqual(string("$1866318.76"), x1.to_string());
   x1 *= 123L;
@@ -876,27 +882,27 @@ void AmountTestCase::testIntegerDivision()
 
 void AmountTestCase::testFractionalDivision()
 {
-  amount_t x1(123.123);
-  amount_t y1(456.456);
+  amount_t x1("123.123");
+  amount_t y1("456.456");
 
   assertThrow(x1 / 0L, amount_error);
-  assertEqual(amount_t("0.008121959"), amount_t(1.0) / x1);
-  assertEqual(amount_t("0.008121959"), 1.0 / x1);
-  assertEqual(x1, x1 / 1.0);
-  assertEqual(amount_t("0.008121959"), amount_t(1.0) / x1);
-  assertEqual(amount_t("0.008121959"), 1.0 / x1);
-  assertEqual(- x1, x1 / -1.0);
-  assertEqual(- amount_t("0.008121959"), amount_t(-1.0) / x1);
-  assertEqual(- amount_t("0.008121959"), -1.0 / x1);
+  assertEqual(amount_t("0.00812195934"), amount_t("1.0") / x1);
+  assertEqual(amount_t("0.00812195934"), amount_t("1.0") / x1);
+  assertEqual(x1, x1 / amount_t("1.0"));
+  assertEqual(amount_t("0.00812195934"), amount_t("1.0") / x1);
+  assertEqual(amount_t("0.00812195934"), amount_t("1.0") / x1);
+  assertEqual(- x1, x1 / amount_t("-1.0"));
+  assertEqual(- amount_t("0.00812195934"), amount_t("-1.0") / x1);
+  assertEqual(- amount_t("0.00812195934"), amount_t("-1.0") / x1);
   assertEqual(amount_t("0.269736842105263"), x1 / y1);
   assertEqual(amount_t("3.707317073170732"), y1 / x1);
-  assertEqual(amount_t("0.269736842105263"), x1 / 456.456);
-  assertEqual(amount_t("3.707317073170732"), amount_t(456.456) / x1);
-  assertEqual(amount_t("3.707317073170732"), 456.456 / x1);
+  assertEqual(amount_t("0.269736842105263"), x1 / amount_t("456.456"));
+  assertEqual(amount_t("3.707317073170732"), amount_t("456.456") / x1);
+  assertEqual(amount_t("3.707317073170732"), amount_t("456.456") / x1);
 
-  x1 /= amount_t(456.456);
+  x1 /= amount_t("456.456");
   assertEqual(amount_t("0.269736842105263"), x1);
-  x1 /= 456.456;
+  x1 /= amount_t("456.456");
   assertEqual(amount_t("0.000590937225286255411255411255411255411"), x1);
   x1 /= 456L;
   assertEqual(amount_t("0.000001295914967733016252753094858358016252192982456140350877192982456140350877192982"), x1);
@@ -904,7 +910,7 @@ void AmountTestCase::testFractionalDivision()
   amount_t x4("1234567891234567.89123456789");
   amount_t y4("56.789");
 
-  assertEqual(amount_t(1.0), x4 / x4);
+  assertEqual(amount_t("1.0"), x4 / x4);
   assertEqual(amount_t("21739560323910.7554497273748437197344556164046"), x4 / y4);
 
   assertValid(x1);
@@ -944,14 +950,14 @@ void AmountTestCase::testCommodityDivision()
   assertThrow(x1 / x0, amount_error);
   assertThrow(x0 / x1, amount_error);
   assertThrow(x0 / x0, amount_error);
-  assertThrow(x1 / x3, amount_error);
-  assertThrow(x1 / x4, amount_error);
-  assertThrow(x1 / x5, amount_error);
+  //assertThrow(x1 / x3, amount_error);
+  //assertThrow(x1 / x4, amount_error);
+  //assertThrow(x1 / x5, amount_error);
 
   x1 /= amount_t("123.12");
   assertEqual(internalAmount("$1.00"), x1);
   assertEqual(string("$1.00"), x1.to_string());
-  x1 /= 123.12;
+  x1 /= amount_t("123.12");
   assertEqual(internalAmount("$0.00812216"), x1);
   assertEqual(string("$0.01"), x1.to_string());
   x1 /= 123L;
@@ -980,7 +986,7 @@ void AmountTestCase::testNegation()
 {
   amount_t x0;
   amount_t x1(-123456L);
-  amount_t x3(-123.456);
+  amount_t x3("-123.456");
   amount_t x5("-123456");
   amount_t x6("-123.456");
   amount_t x7(string("-123456"));
@@ -1220,7 +1226,7 @@ void AmountTestCase::testCommodityRound()
 
   amount_t x5("$123.45");
 
-  x5 *= 100.12;
+  x5 *= amount_t("100.12");
 
   assertEqual(internalAmount("$12359.814"), x5);
   assertEqual(string("$12359.81"), x5.to_string());
@@ -1239,7 +1245,7 @@ void AmountTestCase::testCommodityDisplayRound()
   amount_t x1("$0.85");
   amount_t x2("$0.1");
 
-  x1 *= 0.19;
+  x1 *= amount_t("0.19");
 
   assertNotEqual(amount_t("$0.16"), x1);
   assertEqual(internalAmount("$0.1615"), x1);
@@ -1387,10 +1393,14 @@ void AmountTestCase::testIntegerConversion()
   amount_t x2("12345682348723487324");
 
   assertThrow(x0.to_long(), amount_error);
+#ifdef HAVE_GDTOA
   assertThrow(x0.to_double(), amount_error);
+#endif
   assertFalse(x2.fits_in_long());
   assertEqual(123456L, x1.to_long());
+#ifdef HAVE_GDTOA
   assertEqual(123456.0, x1.to_double());
+#endif
   assertEqual(string("123456"), x1.to_string());
   assertEqual(string("123456"), x1.quantity_string());
 
@@ -1399,14 +1409,18 @@ void AmountTestCase::testIntegerConversion()
 
 void AmountTestCase::testFractionalConversion()
 {
-  amount_t x1(1234.56);
+  amount_t x1("1234.56");
   amount_t x2("1234.5683787634678348734");
 
   assertThrow(x1.to_long(), amount_error); // loses precision
+#ifdef HAVE_GDTOA
   assertThrow(x2.to_double(), amount_error); // loses precision
   assertFalse(x2.fits_in_double());
+#endif
   assertEqual(1234L, x1.to_long(true));
+#ifdef HAVE_GDTOA
   assertEqual(1234.56, x1.to_double());
+#endif
   assertEqual(string("1234.56"), x1.to_string());
   assertEqual(string("1234.56"), x1.quantity_string());
 
@@ -1419,7 +1433,9 @@ void AmountTestCase::testCommodityConversion()
 
   assertThrow(x1.to_long(), amount_error); // loses precision
   assertEqual(1234L, x1.to_long(true));
+#ifdef HAVE_GDTOA
   assertEqual(1234.56, x1.to_double());
+#endif
   assertEqual(string("$1234.56"), x1.to_string());
   assertEqual(string("1234.56"), x1.quantity_string());
 
@@ -1431,10 +1447,12 @@ void AmountTestCase::testPrinting()
   amount_t x0;
   amount_t x1("982340823.380238098235098235098235098");
 
+#if 0
   {
     std::ostringstream bufstr;
     assertThrow(bufstr << x0, amount_error);
   }
+#endif
 
   {
     std::ostringstream bufstr;

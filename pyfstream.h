@@ -72,7 +72,7 @@ protected:
     buf[num] = '\0';
     if (PyFile_WriteString(buf, (PyObject *)fo) < 0)
       num = 0;
-    delete[] buf;
+    checked_array_delete(buf);
     return num;
   }
 };

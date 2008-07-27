@@ -64,7 +64,7 @@ struct element_t : public noncopyable
 
   ~element_t() {
     TRACE_DTOR(element_t);
-    if (next) delete next;	// recursive, but not too deep
+    if (next) checked_delete(next); // recursive, but not too deep
   }
 };
 
@@ -95,12 +95,12 @@ struct format_t : public noncopyable
   }
   ~format_t() {
     TRACE_DTOR(format_t);
-    if (elements) delete elements;
+    if (elements) checked_delete(elements);
   }
 
   void reset(const string& _format) {
     if (elements)
-      delete elements;
+      checked_delete(elements);
     elements = parse_elements(_format);
     format_string = _format;
   }

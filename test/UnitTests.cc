@@ -7,9 +7,6 @@
 #include <cppunit/XmlOutputter.h>
 #include <cppunit/extensions/TestFactoryRegistry.h>
 
-#include <stdexcept>
-#include <fstream>
-
 #include "UnitTests.h"
 
 

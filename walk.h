@@ -269,7 +269,7 @@ class clear_transaction_xdata : public item_handler<transaction_t>
 public:
   virtual void operator()(transaction_t& xact) {
     if (xact.data) {
-      delete (transaction_xdata_t *) xact.data;
+      checked_delete((transaction_xdata_t *) xact.data);
       xact.data = NULL;
     }
   }
@@ -1016,7 +1016,7 @@ class clear_account_xdata : public item_handler<account_t>
 public:
   virtual void operator()(account_t& acct) {
     if (acct.data) {
-      delete (account_xdata_t *) acct.data;
+      checked_delete((account_xdata_t *) acct.data);
       acct.data = NULL;
     }
   }

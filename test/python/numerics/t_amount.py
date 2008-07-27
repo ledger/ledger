@@ -16,21 +16,20 @@ class t_amountTestCase(unittest.TestCase):
         self.assertTrue(amt.valid())
 
     def setUp(self):
-        #self.testSession = session()
-        #set_session_context(self.testSession)
+        self.testSession = session()
+        set_session_context(self.testSession)
 
         # Cause the display precision for dollars to be initialized to 2.
         x1 = amount("$1.00")
         self.assertTrue(x1)
 
-        #amount.stream_fullstrings = True # make reports from UnitTests accurate
+        amount.stream_fullstrings = True # make reports from UnitTests accurate
 
     def tearDown(self):
-        pass
-        #amount.stream_fullstrings = False
+        amount.stream_fullstrings = False
 
-        #set_session_context()
-        #self.testSession = None
+        set_session_context()
+        self.testSession = None
 
     def testParser(self):
         x0 = amount()

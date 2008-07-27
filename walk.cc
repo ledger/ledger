@@ -562,7 +562,7 @@ by_payee_transactions::~by_payee_transactions()
   for (payee_subtotals_map::iterator i = payee_subtotals.begin();
        i != payee_subtotals.end();
        i++)
-    delete (*i).second;
+    checked_delete((*i).second);
 }
 
 void by_payee_transactions::flush()

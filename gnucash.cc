@@ -140,7 +140,7 @@ static void endElement(void *userData, const char *name)
     if (! curr_journal->add_entry(curr_entry)) {
       print_entry(std::cerr, *curr_entry);
       have_error = "The above entry does not balance";
-      delete curr_entry;
+      checked_delete(curr_entry);
     } else {
       curr_entry->src_idx  = src_idx;
       curr_entry->beg_pos  = beg_pos;

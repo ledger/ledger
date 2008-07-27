@@ -99,8 +99,8 @@ struct amount_t::bigint_t : public supports_flags<>
   }
 
   bool valid() const {
-    if (prec > 32) {
-      DEBUG("ledger.validate", "amount_t::bigint_t: prec > 32");
+    if (prec > 128) {
+      DEBUG("ledger.validate", "amount_t::bigint_t: prec > 128");
       return false;
     }
     if (ref > 128) {
@@ -241,49 +241,10 @@ void amount_t::_release()
 }
 
 
+#ifdef HAVE_GDTOA
 namespace {
   amount_t::precision_t convert_double(mpz_t dest, double val)
   {
-#ifndef HAVE_GDTOA
-    // This code is far too imprecise to be worthwhile.
-
-    mpf_t temp;
-    mpf_init_set_d(temp, val);
-
-    mp_exp_t exp;
-    char * buf = mpf_get_str(NULL, &exp, 10, 1000, temp);
-
-    int len = std::strlen(buf);
-    if (len > 0 && buf[0] == '-')
-      exp++;
-
-    if (exp <= len) {
-      exp = len - exp;
-    } else {
-      // There were trailing zeros, which we have to put back on in
-      // order to convert this buffer into an integer.
-
-      int zeroes = exp - len;
-
-      char * newbuf = (char *)std::malloc(len + zeroes);
-      std::strcpy(newbuf, buf);
-
-      int i;
-      for (i = 0; i < zeroes; i++)
-	newbuf[len + i] = '0';
-      newbuf[len + i] = '\0';
-
-      free(buf);
-      buf = newbuf;
-
-      exp = (len - exp) + zeroes;
-    }
-
-    mpz_set_str(dest, buf, 10);
-    free(buf);
-
-    return amount_t::precision_t(exp);
-#else
     int	   decpt, sign;
     char * buf = dtoa(val, 0, 0, &decpt, &sign, NULL);
     char * result;
@@ -323,7 +284,6 @@ namespace {
     freedtoa(buf);
 
     return decpt;
-#endif
   }
 }
 
@@ -333,6 +293,7 @@ amount_t::amount_t(const double val) : commodity_(NULL)
   quantity = new bigint_t;
   quantity->prec = convert_double(MPZ(quantity), val);
 }
+#endif
 
 amount_t::amount_t(const unsigned long val) : commodity_(NULL)
 {
@@ -710,7 +671,7 @@ amount_t& amount_t::in_place_unreduce()
   while (commodity_ && commodity().larger()) {
     *this /= commodity().larger()->number();
     commodity_ = commodity().larger()->commodity_;
-    if (abs() < amount_t(1.0))
+    if (abs() < amount_t(1L))
       break;
   }
   return *this;
@@ -752,6 +713,7 @@ bool amount_t::is_zero() const
 }
 
 
+#ifdef HAVE_GDTOA
 double amount_t::to_double(bool no_check) const
 {
   if (! quantity)
@@ -782,6 +744,7 @@ double amount_t::to_double(bool no_check) const
 
   return value;
 }
+#endif
 
 long amount_t::to_long(bool no_check) const
 {
@@ -800,11 +763,13 @@ long amount_t::to_long(bool no_check) const
   return value;
 }
 
+#ifdef HAVE_GDTOA
 bool amount_t::fits_in_double() const
 {
   double value = to_double(true);
   return *this == amount_t(value);
 }
+#endif
 
 bool amount_t::fits_in_long() const
 {

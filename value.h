@@ -71,9 +71,14 @@ class value_t
 	   multiplicative<value_t, balance_pair_t,
 	   multiplicative<value_t, balance_t,
 	   ordered_field_operators<value_t, amount_t,
+#ifdef HAVE_GDTOA
 	   ordered_field_operators<value_t, double,
+#endif
 	   ordered_field_operators<value_t, unsigned long,
-	   ordered_field_operators<value_t, long> > > > > > > > > > >
+	   ordered_field_operators<value_t, long> > > > > > > > > >
+#ifdef HAVE_GDTOA
+				   >
+#endif
 {
 public:
   /**
@@ -266,10 +271,12 @@ public:
     TRACE_CTOR(value_t, "const datetime_t");
     set_datetime(val);
   }
+#ifdef HAVE_GDTOA
   value_t(const double val) {
     TRACE_CTOR(value_t, "const double");
     set_amount(val);
   }
+#endif
   value_t(const unsigned long val) {
     TRACE_CTOR(value_t, "const unsigned long");
     set_amount(val);

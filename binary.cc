@@ -580,7 +580,7 @@ account_t * read_account(const char *& data, journal_t& journal,
   // journal's own master account.
 
   if (master && acct != master) {
-    delete acct;
+    checked_delete(acct);
     acct = master;
   }
 
@@ -654,7 +654,7 @@ unsigned int read_journal(std::istream&	in,
   accounts = accounts_next = new account_t *[a_count];
 
   assert(journal.master);
-  delete journal.master;
+  checked_delete(journal.master);
   journal.master = read_account(data, journal, master);
 
   if (read_bool(data))
@@ -715,14 +715,14 @@ unsigned int read_journal(std::istream&	in,
       (*c).second->precision = commodity->precision;
       (*c).second->flags     = commodity->flags;
       if ((*c).second->smaller)
-	delete (*c).second->smaller;
+	checked_delete((*c).second->smaller);
       (*c).second->smaller   = commodity->smaller;
       if ((*c).second->larger)
-	delete (*c).second->larger;
+	checked_delete((*c).second->larger);
       (*c).second->larger    = commodity->larger;
 
       *(base_commodities_next - 1) = (*c).second;
-      delete commodity;
+      checked_delete(commodity);
     }
 #endif
   }
@@ -754,7 +754,7 @@ unsigned int read_journal(std::istream&	in,
 			commodity->symbol());
 
       *(commodities_next - 1) = (*c).second;
-      delete commodity;
+      checked_delete(commodity);
     }
 #endif
   }
@@ -800,9 +800,9 @@ unsigned int read_journal(std::istream&	in,
 
   // Clean up and return the number of entries read
 
-  delete[] accounts;
-  delete[] commodities;
-  delete[] data_pool;
+  checked_array_delete(accounts);
+  checked_array_delete(commodities);
+  checked_array_delete(data_pool);
 
   VERIFY(journal.valid());
 

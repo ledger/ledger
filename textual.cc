@@ -881,7 +881,7 @@ unsigned int textual_parser_t::parse(std::istream& in,
 	    entry->end_line = linenum;
 	    count++;
 	  } else {
-	    delete entry;
+	    checked_delete(entry);
 	    throw new parse_error("Entry does not balance");
 	  }
 	} else {
@@ -907,7 +907,7 @@ unsigned int textual_parser_t::parse(std::istream& in,
 	std::cerr << std::endl;
       err->reveal_context(std::cerr, "Error");
       std::cerr << err->what() << std::endl;
-      delete err;
+      checked_delete(err);
       errors++;
     }
     beg_pos = end_pos;

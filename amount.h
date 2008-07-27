@@ -71,9 +71,14 @@ DECLARE_EXCEPTION(error, amount_error);
  */
 class amount_t
   : public ordered_field_operators<amount_t,
+#ifdef HAVE_GDTOA
 	   ordered_field_operators<amount_t, double,
+#endif
 	   ordered_field_operators<amount_t, unsigned long,
-	   ordered_field_operators<amount_t, long> > > >
+	   ordered_field_operators<amount_t, long> > >
+#ifdef HAVE_GDTOA
+				   >
+#endif
 {
   // jww (2007-05-03): Make this private, and then make
   // ledger::initialize into a member function of session_t.
@@ -175,7 +180,9 @@ public:
   amount_t() : quantity(NULL), commodity_(NULL) {
     TRACE_CTOR(amount_t, "");
   }
+#ifdef HAVE_GDTOA
   amount_t(const double val);
+#endif
   amount_t(const unsigned long val);
   amount_t(const long val);
 
@@ -230,9 +237,11 @@ public:
   }
   amount_t& operator=(const amount_t& amt);
 
+#ifdef HAVE_GDTOA
   amount_t& operator=(const double val) {
     return *this = amount_t(val);
   }
+#endif
   amount_t& operator=(const unsigned long val) {
     return *this = amount_t(val);
   }
@@ -462,13 +471,17 @@ public:
    * been stripped and the full, internal precision of the amount
    * would be displayed.
    */
+#ifdef HAVE_GDTOA
   double to_double(bool no_check = false) const;
+#endif
   long   to_long(bool no_check = false) const;
   string to_string() const;
   string to_fullstring() const;
   string quantity_string() const;
 
+#ifdef HAVE_GDTOA
   bool fits_in_double() const;
+#endif
   bool fits_in_long() const;
 
   /**
