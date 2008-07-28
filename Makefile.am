@@ -172,7 +172,8 @@ nodist_UnitTests_SOURCES = test/UnitTests.cc \
 	test/utility/t_times.cc      \
 	test/numerics/t_commodity.cc \
 	test/numerics/t_amount.cc    \
-	test/numerics/t_balance.cc
+	test/numerics/t_balance.cc   \
+	test/numerics/t_valexpr.cc
 
 UnitTests_CPPFLAGS = -I$(srcdir)/test $(libledger_la_CPPFLAGS)
 UnitTests_LDFLAGS  = $(LIBADD_DL)
