@@ -548,14 +548,12 @@ amount_t::operator bool() const
   if (! quantity)
     return false;
 
-  if (quantity->prec <= commodity().precision()) {
+  if (quantity->prec <= commodity().precision() ||
+      (quantity->flags & BIGINT_KEEP_PREC)) {
     return mpz_sgn(MPZ(quantity)) != 0;
   } else {
     mpz_set(temp, MPZ(quantity));
-    if (quantity->flags & BIGINT_KEEP_PREC)
-      mpz_ui_pow_ui(divisor, 10, quantity->prec);
-    else
-      mpz_ui_pow_ui(divisor, 10, quantity->prec - commodity().precision());
+    mpz_ui_pow_ui(divisor, 10, quantity->prec - commodity().precision());
     mpz_tdiv_q(temp, temp, divisor);
     bool zero = mpz_sgn(temp) == 0;
     return ! zero;
