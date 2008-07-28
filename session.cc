@@ -86,9 +86,9 @@ session_t::session_t()
     equity_format
     ("\n%D %Y%C%P\n%/    %-34W  %12t\n"),
     plot_amount_format
-    ("%D %(@S(@t))\n"),
+    ("%D %(S(t))\n"),
     plot_total_format
-    ("%D %(@S(@T))\n"),
+    ("%D %(S(T))\n"),
     write_hdr_format
     ("%d %Y%C%P\n"),
     write_xact_format

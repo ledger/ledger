@@ -888,25 +888,25 @@ OPT_BEGIN(download, "Q") {
 } OPT_END(download);
 
 OPT_BEGIN(quantity, "O") {
-  ledger::amount_expr = "@a";
-  ledger::total_expr  = "@O";
+  ledger::amount_expr = "a";
+  ledger::total_expr  = "O";
 } OPT_END(quantity);
 
 OPT_BEGIN(basis, "B") {
-  ledger::amount_expr = "@b";
-  ledger::total_expr  = "@B";
+  ledger::amount_expr = "b";
+  ledger::total_expr  = "B";
 } OPT_END(basis);
 
 OPT_BEGIN(price, "I") {
-  ledger::amount_expr = "@i";
-  ledger::total_expr  = "@I";
+  ledger::amount_expr = "i";
+  ledger::total_expr  = "I";
 } OPT_END(price);
 
 OPT_BEGIN(market, "V") {
   report->show_revalued = true;
 
-  ledger::amount_expr = "@v";
-  ledger::total_expr  = "@V";
+  ledger::amount_expr = "v";
+  ledger::total_expr  = "V";
 } OPT_END(market);
 
 namespace {

@@ -163,26 +163,17 @@ namespace {
   }
 }
 
+value_t get_amount(scope_t& scope)
+{
+  assert("I can't get the amount!");
+}
+
 ptr_op_t symbol_scope_t::lookup(const string& name)
 {
   switch (name[0]) {
-#if 0
-  case 'l':
-    if (name == "last")
-      return WRAP_FUNCTOR(bind(xpath_fn_last, _1));
-    break;
-
-  case 'p':
-    if (name == "position")
-      return WRAP_FUNCTOR(bind(xpath_fn_position, _1));
-    break;
-
-  case 't':
-    if (name == "text")
-      return WRAP_FUNCTOR(bind(xpath_fn_text, _1));
-    else if (name == "type")
-      return WRAP_FUNCTOR(bind(xpath_fn_type, _1));
-#endif
+  case 'a':
+    if (name[1] == '\0' || name == "amount")
+      return WRAP_FUNCTOR(bind(get_amount, _1));
     break;
   }
 

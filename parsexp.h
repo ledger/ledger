@@ -95,11 +95,6 @@ private:
       KW_OR,
       KW_MOD,
 
-#if 0
-      PIPE,			// |
-      KW_UNION,
-#endif
-
       COMMA,			// ,
 
       TOK_EOF,
@@ -113,13 +108,6 @@ private:
     explicit token_t() : kind(UNKNOWN), length(0) {
       TRACE_CTOR(token_t, "");
     }
-#if 0
-    token_t(const token_t& other) {
-      assert(false);
-      TRACE_CTOR(token_t, "copy");
-      *this = other;
-    }
-#endif
     ~token_t() throw() {
       TRACE_DTOR(token_t);
     }
@@ -166,29 +154,16 @@ private:
     assert(&tok == &lookahead);
     use_lookahead = true;
   }
+
   void push_token() const
   {
     use_lookahead = true;
   }
 
-public:
-  value_expr expr;
-
-private:
   ptr_op_t parse_value_term(std::istream& in, scope_t& scope,
 			    const flags_t flags) const;
-#if 0
-  ptr_op_t parse_predicate_expr(std::istream& in, scope_t& scope,
-			    const flags_t flags) const;
-  ptr_op_t parse_path_expr(std::istream& in, scope_t& scope,
-			    const flags_t flags) const;
-#endif
   ptr_op_t parse_unary_expr(std::istream& in, scope_t& scope,
 			    const flags_t flags) const;
-#if 0
-  ptr_op_t parse_union_expr(std::istream& in, scope_t& scope,
-			    const flags_t flags) const;
-#endif
   ptr_op_t parse_mul_expr(std::istream& in, scope_t& scope,
 			    const flags_t flags) const;
   ptr_op_t parse_add_expr(std::istream& in, scope_t& scope,
@@ -204,17 +179,18 @@ private:
   ptr_op_t parse_value_expr(std::istream& in, scope_t& scope,
 			    const flags_t flags) const;
 
-  value_expr& parse_expr(std::istream& in, string& str,
-			 scope_t& scope, const flags_t flags) {
+  value_expr parse_expr(std::istream& in, string& str,
+			scope_t& scope, const flags_t flags) {
     try {
       ptr_op_t top_node = parse_value_expr(in, scope, flags);
-      expr = value_expr(top_node, str);
 
       if (use_lookahead) {
 	use_lookahead = false;
 	lookahead.rewind(in);
       }
       lookahead.clear();
+
+      return value_expr(top_node, str);
     }
     catch (error * err) {
       err->context.push_back
@@ -222,47 +198,36 @@ private:
 			  "While parsing value expression:"));
       throw err;
     }
-
-    return expr;
   }
 
 public:
   parser_t() : use_lookahead(false) {}
 
-  value_expr& parse(std::istream& in,
-		    const flags_t flags = EXPR_PARSE_RELAXED)
+  value_expr parse(std::istream& in,
+		   const flags_t flags = EXPR_PARSE_RELAXED)
   {
     return parse_expr(in, empty_string, *global_scope, flags);
   }
 
-  value_expr& parse(std::istream& in, scope_t& scope,
-		    const flags_t flags = EXPR_PARSE_RELAXED)
+  value_expr parse(std::istream& in, scope_t& scope,
+		   const flags_t flags = EXPR_PARSE_RELAXED)
   {
     return parse_expr(in, empty_string, scope, flags);
   }
 
-  value_expr& parse(string& str, const flags_t flags = EXPR_PARSE_RELAXED)
+  value_expr parse(string& str, const flags_t flags = EXPR_PARSE_RELAXED)
   {
     std::istringstream stream(str);
     return parse_expr(stream, str, *global_scope, flags);
   }
 
-  value_expr& parse(string& str, scope_t& scope,
-		    const flags_t flags = EXPR_PARSE_RELAXED)
+  value_expr parse(string& str, scope_t& scope,
+		   const flags_t flags = EXPR_PARSE_RELAXED)
   {
     std::istringstream stream(str);
     return parse_expr(stream, str, scope, flags);
   }
 };
-
-void dump(std::ostream& out, const ptr_op_t node, const int depth = 0);
-
-bool print(std::ostream&   out,
-	   const ptr_op_t  node,
-	   const bool      relaxed      = true,
-	   const ptr_op_t  node_to_find = NULL,
-	   unsigned long * start_pos    = NULL,
-	   unsigned long * end_pos      = NULL);
 
 } // namespace expr
 } // namespace ledger

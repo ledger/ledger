@@ -168,8 +168,8 @@ public:
     eval("t=total,TOT=0,T()=(TOT=TOT+t,TOT)");
 #endif
 
-    value_expr::amount_expr.reset(new value_expr("@a"));
-    value_expr::total_expr.reset(new value_expr("@O"));
+    value_expr::amount_expr.reset(new value_expr("a"));
+    value_expr::total_expr.reset(new value_expr("O"));
   }
 
   virtual ~report_t() {

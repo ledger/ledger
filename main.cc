@@ -45,6 +45,19 @@
 #include <fdstream.hpp>
 #endif
 
+namespace ledger {
+  value_t register_command(expr::call_scope_t& args)
+  {
+    expr::var_t<report_t>     report(args, 0);
+    expr::var_t<std::ostream> ostream(args, 1);
+
+    report->transactions_report
+      (xact_handler_ptr(new format_transactions
+			(*ostream, report->session.register_format)));
+    return true;
+  }
+}
+
 static int read_and_report(ledger::report_t& report, int argc, char * argv[],
 			   char * envp[])
 {
@@ -158,31 +171,29 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
     value_expr expr(*arg);
 
 #if 0
-    expr::context_scope_t doc_scope(report, &temp);
-
     IF_INFO() {
       std::cout << "Value expression tree:" << std::endl;
       expr.dump(std::cout);
       std::cout << std::endl;
 
       std::cout << "Value expression parsed was:" << std::endl;
-      expr.print(std::cout, doc_scope);
+      expr.print(std::cout, report);
       std::cout << std::endl << std::endl;
 
-      expr.compile(doc_scope);
+      expr.compile(report);
 
       std::cout << "Value expression after compiling:" << std::endl;
       expr.dump(std::cout);
       std::cout << std::endl;
 
       std::cout << "Value expression is now:" << std::endl;
-      expr.print(std::cout, doc_scope);
+      expr.print(std::cout, report);
       std::cout << std::endl << std::endl;
 
       std::cout << "Result of calculation: ";
     }
 
-    std::cout << expr.calc(doc_scope).strip_annotations() << std::endl;
+    std::cout << expr.calc(report).strip_annotations() << std::endl;
 #endif
 
     return 0;
@@ -218,8 +229,8 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
   if (verb == "expr") {
     value_expr expr(*arg);
 
-    IF_INFO() {
 #if 0
+    IF_INFO() {
       *out << "Value expression tree:" << std::endl;
       expr.dump(*out);
       *out << std::endl;
@@ -227,10 +238,8 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
       expr.print(*out, doc_scope);
       *out << std::endl << std::endl;
       *out << "Result of calculation: ";
-#endif
     }
 
-#if 0
     *out << expr.calc(doc_scope).strip_annotations() << std::endl;
 #endif
 
@@ -239,14 +248,13 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
 
   // Read the command word and create a command object based on it
 
+  expr::function_t command;
+
   if (verb == "register" || verb == "reg" || verb == "r")
-    report.transactions_report
-      (xact_handler_ptr(new format_transactions(*out, session.register_format)));
-  else if (verb == "balance" || verb == "bal" || verb == "b")
-    report.accounts_report
-      (acct_handler_ptr(new format_accounts(*out, session.balance_format,
-					    report.display_predicate)));
+    command = register_command;
 #if 0
+  else if (verb == "balance" || verb == "bal" || verb == "b")
+    command = balance_command();
   else if (verb == "print" || verb == "p")
     command = print_command();
   else if (verb == "equity")
@@ -266,8 +274,8 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
   else if (verb == "emacs" || verb == "lisp")
     command = emacs_command();
   else if (verb == "xml")
-    command = bind(xml_command, _1);
-  ;
+    command = xml_command();
+#endif
   else if (verb == "expr")
     ;
   else if (verb == "xpath")
@@ -289,6 +297,9 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
 
   expr::call_scope_t command_args(report);
 
+  command_args.push_back(value_t(&report));
+  command_args.push_back(value_t(out));
+
   for (strings_list::iterator i = arg; i != args.end(); i++)
     command_args.push_back(value_t(*i, true));
 
@@ -297,7 +308,6 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
   command(command_args);
 
   INFO_FINISH(command);
-#endif
 
   // Clean up memory, if it matters
 

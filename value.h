@@ -832,8 +832,9 @@ public:
   /**
    * Printing methods.
    */
-  void print(std::ostream& out, const int first_width,
-	     const int latter_width = -1) const;
+  void dump(std::ostream& out, const int first_width,
+	    const int latter_width = -1) const;
+  void print(std::ostream& out, const bool relaxed = true) const;
 
   /**
    * Debugging methods.

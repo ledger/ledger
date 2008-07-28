@@ -449,6 +449,7 @@ public:
     O_DEF,
     O_REF,
     O_ARG,
+    O_LOOKUP,
 
     LAST
   };
@@ -901,6 +902,37 @@ public:
     guarded_compute(ptr, temp, details, context);
     return temp;
   }
+
+#if 0
+  void compile(scope_t& scope) {
+    if (ptr.get())
+      ptr = ptr->compile(scope);
+  }
+
+  value_t calc(scope_t& scope) const {
+    if (ptr.get())
+      return ptr->calc(scope);
+    return NULL_VALUE;
+  }
+
+  static value_t eval(const string& _expr, scope_t& scope) {
+    return xpath_t(_expr).calc(scope);
+  }
+
+  path_iterator_t find_all(scope_t& scope) {
+    return path_iterator_t(*this, scope);
+  }
+
+  void print(std::ostream& out, scope_t& scope) const {
+    op_t::print_context_t context(scope);
+    print(out, context);
+  }
+
+  void dump(std::ostream& out) const {
+    if (ptr)
+      ptr->dump(out, 0);
+  }
+#endif
 
   friend bool print_value_expr(std::ostream&	    out,
 			       const expr::ptr_op_t node,

@@ -10,6 +10,7 @@
 .svn
 /.deps
 /.libs
+/3.0
 /AUTHORS
 /COPYING
 /ChangeLog

@@ -1482,8 +1482,8 @@ value_t& value_t::add(const amount_t& amount, const optional<amount_t>& tcost)
   return *this;
 }
 
-void value_t::print(std::ostream& out, const int first_width,
-		    const int latter_width) const
+void value_t::dump(std::ostream& out, const int first_width,
+		   const int latter_width) const
 {
   switch (type()) {
   case VOID:
@@ -1523,7 +1523,7 @@ void value_t::print(std::ostream& out, const int first_width,
       else
 	out << ", ";
 
-      value.print(out, first_width, latter_width);
+      value.dump(out, first_width, latter_width);
     }
     out << ')';
     break;
@@ -1538,6 +1538,66 @@ void value_t::print(std::ostream& out, const int first_width,
   default:
     assert(false);
     break;
+  }
+}
+
+void value_t::print(std::ostream& out, const bool relaxed) const
+{
+  switch (type()) {
+  case VOID:
+    out << "";
+    break;
+
+  case BOOLEAN:
+    if (as_boolean())
+      out << "true";
+    else
+      out << "false";
+    break;
+
+  case INTEGER:
+    out << as_long();
+    break;
+
+  case AMOUNT:
+    if (! relaxed)
+      out << '{';
+    out << as_amount();
+    if (! relaxed)
+      out << '}';
+    break;
+
+  case BALANCE:
+  case BALANCE_PAIR:
+    assert(false);
+    break;
+
+  case DATETIME:
+    out << '[' << format_datetime(as_datetime()) << ']';
+    break;
+
+  case STRING:
+    out << '"' << as_string() << '"';
+    break;
+
+  case POINTER:
+    assert(false);
+    break;
+
+  case SEQUENCE: {
+    out << '(';
+    bool first = true;
+    foreach (const value_t& value, as_sequence()) {
+      if (first)
+	first = false;
+      else
+	out << ", ";
+
+      value.print(out, relaxed);
+    }
+    out << ')';
+    break;
+  }
   }
 }
 
@@ -1561,38 +1621,9 @@ void value_context::describe(std::ostream& out) const throw()
   if (! desc.empty())
     out << desc << std::endl;
 
-  const balance_t * ptr = NULL;
-
   out << std::right;
   out.width(20);
-
-  switch (bal.type()) {
-  case value_t::BOOLEAN:
-    out << (bal.as_boolean() ? "true" : "false");
-    break;
-  case value_t::INTEGER:
-    out << bal.as_long();
-    break;
-  case value_t::DATETIME:
-    out << bal.as_datetime();
-    break;
-  case value_t::AMOUNT:
-    out << bal.as_amount();
-    break;
-  case value_t::BALANCE:
-    ptr = &bal.as_balance();
-    // fall through...
-
-  case value_t::BALANCE_PAIR:
-    if (! ptr)
-      ptr = &bal.as_balance_pair().quantity();
-
-    ptr->print(out, 20);
-    break;
-  default:
-    assert(0);
-    break;
-  }
+  bal.print(out);
   out << std::endl;
 }
 
