@@ -703,7 +703,8 @@ bool amount_t::is_zero() const
     throw_(amount_error, "Cannot determine if an uninitialized amount is zero");
 
   if (has_commodity()) {
-    if (quantity->prec <= commodity().precision())
+    if (quantity->prec <= commodity().precision() ||
+	quantity->has_flags(BIGINT_KEEP_PREC))
       return is_realzero();
     else
       return round(commodity().precision()).sign() == 0;

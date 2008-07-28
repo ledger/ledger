@@ -311,14 +311,16 @@ bool entry_base_t::finalize()
   //            (item-position-end-line (entry-position entry))
   //            (format-value balance :width 20)))
 
-  if (! balance.is_null() && ! balance.is_zero()) {
-    error * err =
-      new balance_error("Entry does not balance",
-			new entry_context(*this, "While balancing entry:"));
+  if (! balance.is_null()) {
     balance.round();
-    err->context.push_front
-      (new value_context(balance, "Unbalanced remainder is:"));
-    throw err;
+    if (! balance.is_zero()) {
+      error * err =
+	new balance_error("Entry does not balance",
+			  new entry_context(*this, "While balancing entry:"));
+      err->context.push_front
+	(new value_context(balance, "Unbalanced remainder is:"));
+      throw err;
+    }
   }
 
   return true;
