@@ -37,7 +37,7 @@
 
 namespace ledger {
 
-class session_t : public symbol_scope_t
+class session_t : public noncopyable, public scope_t
 {
   static void initialize();
   static void shutdown();

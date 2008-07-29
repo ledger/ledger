@@ -39,8 +39,7 @@
 
 namespace ledger {
 
-class python_interpreter_t
-  : public noncopyable, public expr_t::symbol_scope_t
+class python_interpreter_t : public noncopyable, public scope_t
 {
   boost::python::handle<> mmodule;
 
@@ -95,8 +94,7 @@ public:
   virtual expr_t::ptr_op_t lookup(const string& name) {
     if (boost::python::object func = eval(name))
       return WRAP_FUNCTOR(functor_t(name, func));
-    else
-      return expr_t::symbol_scope_t::lookup(name);
+    return expr_t::ptr_op_t();
   }
 
   class lambda_t : public functor_t {

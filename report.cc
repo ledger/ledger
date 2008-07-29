@@ -453,7 +453,7 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
     break;
   }
 
-  return symbol_scope_t::lookup(name);
+  return session.lookup(name);
 }
 
 } // namespace ledger

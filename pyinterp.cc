@@ -86,9 +86,8 @@ struct python_run
   }
 };
 
-python_interpreter_t::python_interpreter_t(expr_t::scope_t& parent)
-  : expr_t::symbol_scope_t(parent),
-    mmodule(borrowed(PyImport_AddModule("__main__"))),
+python_interpreter_t::python_interpreter_t()
+  : scope_t(), mmodule(borrowed(PyImport_AddModule("__main__"))),
     nspace(handle<>(borrowed(PyModule_GetDict(mmodule.get()))))
 {
   TRACE_CTOR(python_interpreter_t, "expr_t::scope_t&");

@@ -37,36 +37,17 @@
 
 namespace ledger {
 
-class scope_t : public noncopyable
+class scope_t
 {
-  scope_t();
-
-protected:
-  enum type_t {
-    CHILD_SCOPE,
-    SYMBOL_SCOPE,
-    CALL_SCOPE,
-    CONTEXT_SCOPE
-  } type_;
-
 public:
-  explicit scope_t(type_t _type) : type_(_type) {
-    TRACE_CTOR(scope_t, "type_t");
+  explicit scope_t() {
+    TRACE_CTOR(scope_t, "");
   }
   virtual ~scope_t() {
     TRACE_DTOR(scope_t);
   }
 
-  const type_t type() const {
-    return type_;
-  }
-
-  void    define(const string& name, const value_t& val) {
-    define(name, expr_t::op_t::wrap_value(val));
-  }
-  void    define(const string& name, const function_t& func) {
-    define(name, expr_t::op_t::wrap_functor(func));
-  }
+  virtual expr_t::ptr_op_t lookup(const string& name) = 0;
 
   value_t resolve(const string& name) {
     expr_t::ptr_op_t definition = lookup(name);
@@ -75,80 +56,28 @@ public:
     else
       return NULL_VALUE;
   }
-
-  virtual void define(const string& name, expr_t::ptr_op_t def) = 0;
-  virtual expr_t::ptr_op_t lookup(const string& name) = 0;
-
-protected:
-  virtual optional<scope_t&> find_scope(const type_t _type,
-					bool skip_this = false) = 0;
-  virtual optional<scope_t&> find_first_scope(const type_t _type1,
-					      const type_t _type2,
-					      bool skip_this = false) = 0;
-  template <typename T>
-  T& find_scope(bool skip_this = false) {
-    assert(false);
-  }
-  template <typename T>
-  optional<T&> maybe_find_scope(bool skip_this = false) {
-    assert(false);
-  }
-
-  friend class child_scope_t;
-  friend class expr_t::op_t;
 };
 
-class child_scope_t : public scope_t
+class child_scope_t : public noncopyable, public scope_t
 {
   scope_t * parent;
 
-  child_scope_t();
-
 public:
-  explicit child_scope_t(type_t _type = CHILD_SCOPE)
-    : scope_t(_type), parent(NULL) {
-    TRACE_CTOR(child_scope_t, "type_t");
+  explicit child_scope_t() : parent(NULL) {
+    TRACE_CTOR(child_scope_t, "");
   }
-  explicit child_scope_t(scope_t& _parent, type_t _type = CHILD_SCOPE)
-    : scope_t(_type), parent(&_parent) {
-    TRACE_CTOR(child_scope_t, "scope_t&, type_t");
+  explicit child_scope_t(scope_t& _parent)
+    : parent(&_parent) {
+    TRACE_CTOR(child_scope_t, "scope_t&");
   }
   virtual ~child_scope_t() {
     TRACE_DTOR(child_scope_t);
   }
 
-  virtual void define(const string& name, expr_t::ptr_op_t def) {
-    if (parent)
-      parent->define(name, def);
-  }
   virtual expr_t::ptr_op_t lookup(const string& name) {
     if (parent)
       return parent->lookup(name);
     return expr_t::ptr_op_t();
-  }
-
-protected:
-  virtual optional<scope_t&> find_scope(type_t _type,
-					bool skip_this = false) {
-    for (scope_t * ptr = (skip_this ? parent : this); ptr; ) {
-      if (ptr->type() == _type)
-	return *ptr;
-
-      ptr = polymorphic_downcast<child_scope_t *>(ptr)->parent;
-    }
-    return none;
-  }
-
-  virtual optional<scope_t&> find_first_scope(const type_t _type1,
-					      const type_t _type2,
-					      bool skip_this = false) {
-    for (scope_t * ptr = (skip_this ? parent : this); ptr; ) {
-      if (ptr->type() == _type1 || ptr->type() == _type2)
-	return *ptr;
-
-      ptr = polymorphic_downcast<child_scope_t *>(ptr)->parent;
-    }
-    return none;
   }
 };
 
@@ -159,12 +88,10 @@ class symbol_scope_t : public child_scope_t
   symbol_map symbols;
 
 public:
-  explicit symbol_scope_t()
-    : child_scope_t(SYMBOL_SCOPE) {
+  explicit symbol_scope_t() {
     TRACE_CTOR(symbol_scope_t, "");
   }
-  explicit symbol_scope_t(scope_t& _parent)
-    : child_scope_t(_parent, SYMBOL_SCOPE) {
+  explicit symbol_scope_t(scope_t& _parent) : child_scope_t(_parent) {
     TRACE_CTOR(symbol_scope_t, "scope_t&");
   }
   virtual ~symbol_scope_t() {
@@ -172,13 +99,13 @@ public:
   }
 
   void define(const string& name, const value_t& val) {
-    scope_t::define(name, val);
+    define(name, expr_t::op_t::wrap_value(val));
   }
   void define(const string& name, const function_t& func) {
-    scope_t::define(name, func);
+    define(name, expr_t::op_t::wrap_functor(func));
   }
-
   virtual void define(const string& name, expr_t::ptr_op_t def);
+
   virtual expr_t::ptr_op_t lookup(const string& name);
 };
 
@@ -189,8 +116,7 @@ class call_scope_t : public child_scope_t
   call_scope_t();
 
 public:
-  explicit call_scope_t(scope_t& _parent)
-    : child_scope_t(_parent, CALL_SCOPE) {
+  explicit call_scope_t(scope_t& _parent) : child_scope_t(_parent) {
     TRACE_CTOR(call_scope_t, "scope_t&");
   }
   virtual ~call_scope_t() {
@@ -249,124 +175,6 @@ public:
   T& operator *() { return *value; }
   T * operator->() { return value; }
 };
-
-#if 0
-class context_scope_t : public child_scope_t
-{
-public:
-  value_t     current_element;
-  std::size_t element_index;
-  std::size_t sequence_size;
-
-  explicit context_scope_t(scope_t&	        _parent,
-			   const value_t&     _element        = NULL_VALUE,
-			   const std::size_t  _element_index  = 0,
-			   const std::size_t  _sequence_size  = 0)
-    : child_scope_t(_parent, CONTEXT_SCOPE), current_element(_element),
-      element_index(_element_index), sequence_size(_sequence_size)
-  {
-    TRACE_CTOR(expr::context_scope_t, "scope_t&, const value_t&, ...");
-  }
-  virtual ~context_scope_t() {
-    TRACE_DTOR(expr::context_scope_t);
-  }
-
-  const std::size_t index() const {
-    return element_index;
-  }
-  const std::size_t size() const {
-    return sequence_size;
-  }
-
-  value_t& value() {
-    return current_element;
-  }
-};
-
-struct context_t
-{
-  const entry_t * entry() {
-    return NULL;
-  }
-  const transaction_t * xact() {
-    return NULL;
-  }
-  const account_t * account() {
-    return NULL;
-  }
-};
-
-struct entry_context_t : public context_t
-{
-  const entry_t * entry_;
-
-  const entry_t * entry() {
-    return entry_;
-  }
-};
-
-struct xact_context_t : public context_t
-{
-  const transaction_t * xact_;
-
-  const entry_t * entry() {
-    return xact_->entry;
-  }
-  const transaction_t * xact() {
-    return xact_;
-  }
-  const account_t * account() {
-    return xact_->account;
-  }
-};
-
-struct account_context_t : public context_t
-{
-  const account_t * account_;
-
-  const account_t * account() {
-    return account_;
-  }
-};
-#endif
-
-template<>
-inline symbol_scope_t&
-scope_t::find_scope<symbol_scope_t>(bool skip_this) {
-  optional<scope_t&> scope = find_scope(SYMBOL_SCOPE, skip_this);
-  assert(scope);
-  return downcast<symbol_scope_t>(*scope);
-}
-
-template<>
-inline call_scope_t&
-scope_t::find_scope<call_scope_t>(bool skip_this) {
-  optional<scope_t&> scope = find_scope(CALL_SCOPE, skip_this);
-  assert(scope);
-  return downcast<call_scope_t>(*scope);
-}
-
-#if 0
-template<>
-inline context_scope_t&
-scope_t::find_scope<context_scope_t>(bool skip_this) {
-  optional<scope_t&> scope = find_scope(CONTEXT_SCOPE, skip_this);
-  assert(scope);
-  return downcast<context_scope_t>(*scope);
-}
-#endif
-
-#define FIND_SCOPE(scope_type, scope_ref) \
-  downcast<scope_t>(scope_ref).find_scope<scope_type>()
-
-#define CALL_SCOPE(scope_ref) \
-  FIND_SCOPE(call_scope_t, scope_ref)
-#define SYMBOL_SCOPE(scope_ref) \
-  FIND_SCOPE(symbol_scope_t, scope_ref)
-#if 0
-#define CONTEXT_SCOPE(scope_ref) \
-  FIND_SCOPE(context_scope_t, scope_ref)
-#endif
 
 } // namespace ledger
 

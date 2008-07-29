@@ -81,7 +81,7 @@ namespace ledger {
 //    says that the formatter should be "flushed" after the entities are
 //    iterated.  This does not happen for the commodities iteration, however.
 
-class report_t : public symbol_scope_t
+class report_t : public noncopyable, public scope_t
 {
   report_t();
 
@@ -134,9 +134,7 @@ public:
   session_t&	 session;
 
   explicit report_t(session_t& _session)
-    : symbol_scope_t(downcast<scope_t>(_session)),
-
-      head_entries(0),
+    : head_entries(0),
       tail_entries(0),
 
       show_collapsed(false),

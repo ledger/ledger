@@ -351,7 +351,7 @@ class account_t
 
   account_t(account_t *   _parent = NULL,
 	    const string& _name   = "",
-	    const optional<string> _note = none)
+	    const optional<string>& _note = none)
     : parent(_parent), name(_name), note(_note),
       depth(parent ? parent->depth + 1 : 0), data(NULL), ident(0) {
     TRACE_CTOR(account_t, "account_t *, const string&, const string&");
@@ -502,10 +502,10 @@ public:
   {
   public:
     parser_t() {
-      TRACE_CTOR(parser_t, "");
+      TRACE_CTOR(journal_t::parser_t, "");
     }
     virtual ~parser_t() {
-      TRACE_DTOR(parser_t);
+      TRACE_DTOR(journal_t::parser_t);
     }
 
     virtual bool test(std::istream& in) const = 0;

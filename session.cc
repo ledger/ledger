@@ -67,9 +67,7 @@ void release_session_context()
 }
 
 session_t::session_t()
-  : symbol_scope_t(),
-
-    register_format
+  : register_format
     ("%D %-.20P %-.22A %12.67t %!12.80T\n%/"
      "%32|%-.22A %12.67t %!12.80T\n"),
     wide_register_format
@@ -328,7 +326,7 @@ expr_t::ptr_op_t session_t::lookup(const string& name)
     break;
   }
 
-  return symbol_scope_t::lookup(name);
+  return expr_t::ptr_op_t();
 }
 
 // jww (2007-04-26): All of Ledger should be accessed through a
