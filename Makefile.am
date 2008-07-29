@@ -124,7 +124,7 @@ amounts.so: amounts.cc libamounts.la
 
 install-exec-hook:
 	CFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS) -L. -L.libs" \
-	    python setup.py install --prefix=$(prefix)
+	    python setup.py install --prefix=$(prefix) --root=$(DESTDIR)/
 
 endif
 
