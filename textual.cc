@@ -509,7 +509,7 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
   TIMER_START(entry_xacts);
 
   unsigned long end_pos;
-  unsigned long beg_line = linenum;
+  unsigned long beg_line;
 
   while (! in.eof() && (in.peek() == ' ' || in.peek() == '\t')) {
     unsigned long beg_pos = (unsigned long)in.tellg();
@@ -524,6 +524,7 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
       line[--len] = '\0';
 
     end_pos = beg_pos + len + 1;
+    beg_line = linenum;
     linenum++;
 
     if (line[0] == ' ' || line[0] == '\t') {
@@ -698,7 +699,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
   unsigned long beg_pos = in.tellg();
   unsigned long end_pos;
-  unsigned long beg_line = linenum;
+  unsigned long beg_line;
 
   while (in.good() && ! in.eof()) {
     try {
@@ -711,6 +712,7 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 	line[--len] = '\0';
 
       end_pos = beg_pos + len + 1;
+      beg_line = linenum;
       linenum++;
 
       switch (line[0]) {
@@ -951,7 +953,6 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
       }
 
       default: {
-	unsigned int first_line = linenum;
 	unsigned long pos = beg_pos;
 	if (entry_t * entry =
 	    parse_entry(in, line, account_stack.front(), *this, pos)) {
