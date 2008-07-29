@@ -34,8 +34,8 @@
 
 #include "amount.h"
 #include "value.h"
-#include "valexpr.h"
-#include "utils.h"
+#include "expr.h"
+#include "predicate.h"
 
 namespace ledger {
 
@@ -62,9 +62,9 @@ class transaction_t : public supports_flags<>
   optional<datetime_t> _date;
   optional<datetime_t> _date_eff;
   amount_t	       amount;
-  value_expr	       amount_expr;
+  expr_t	       amount_expr;
   optional<amount_t>   cost;
-  optional<value_expr> cost_expr;
+  optional<expr_t>     cost_expr;
   optional<string>     note;
   istream_pos_type     beg_pos;
   unsigned long	       beg_line;
@@ -452,7 +452,7 @@ class session_t;
 
 class journal_t : public noncopyable
 {
- public:
+public:
   session_t *	 owner;
   account_t *	 master;
   account_t *	 basket;
@@ -488,6 +488,57 @@ class journal_t : public noncopyable
   }
 
   bool valid() const;
+
+/**
+ * @class journal_t::parser_t
+ *
+ * @brief Provides an abstract interface for writing journal parsers.
+ *
+ * Any data format for Ledger data is possible, as long as it can be parsed
+ * into a journal_t data tree.  This class provides the basic interface which
+ * must be implemented by every such journal parser.
+ */
+  class parser_t : public noncopyable
+  {
+  public:
+    parser_t() {
+      TRACE_CTOR(parser_t, "");
+    }
+    virtual ~parser_t() {
+      TRACE_DTOR(parser_t);
+    }
+
+    virtual bool test(std::istream& in) const = 0;
+
+    virtual unsigned int parse(std::istream& in,
+			       session_t&    session,
+			       journal_t&    journal,
+			       account_t *   master        = NULL,
+			       const path *  original_file = NULL) = 0;
+  };
+
+  class binary_parser_t : public parser_t
+  {
+  public:
+    virtual bool test(std::istream& in) const;
+
+    virtual unsigned int parse(std::istream& in,
+			       session_t&     session,
+			       journal_t&   journal,
+			       account_t *   master        = NULL,
+			       const path *  original_file = NULL);
+  };
+
+  unsigned int read(std::istream& in, const path& file, account_t * master);
+  void write(std::ostream& out);
+
+  class parse_error : public error
+  {
+  public:
+    parse_error(const string& reason, error_context * ctxt = NULL) throw()
+      : error(reason, ctxt) {}
+    virtual ~parse_error() throw() {}
+  };
 };
 
 inline void extend_entry_base(journal_t * journal, entry_base_t& entry,

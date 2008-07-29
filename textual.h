@@ -1,13 +1,13 @@
 #ifndef _TEXTUAL_H
 #define _TEXTUAL_H
 
-#include "parser.h"
+#include "journal.h"
 #include "format.h"
 #include "walk.h"
 
 namespace ledger {
 
-class textual_parser_t : public parser_t
+class textual_parser_t : public journal_t::parser_t
 {
 public:
   virtual bool test(std::istream& in) const;

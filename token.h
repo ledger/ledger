@@ -29,24 +29,91 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _OPTION_H
-#define _OPTION_H
+#ifndef _TOKEN_H
+#define _TOKEN_H
 
-#include "scope.h"
+#include "expr.h"
 
 namespace ledger {
 
-void process_option(const string& name, scope_t& scope,
-		    const char * arg = NULL);
+struct expr_t::token_t : public noncopyable, public supports_flags<>
+{
+#define TOKEN_SHORT_ACCOUNT_MASK  0x01
+#define TOKEN_CODE_MASK           0x02
+#define TOKEN_COMMODITY_MASK      0x04
+#define TOKEN_PAYEE_MASK          0x08
+#define TOKEN_NOTE_MASK           0x10
+#define TOKEN_ACCOUNT_MASK        0x20
 
-void process_environment(const char ** envp, const string& tag,
-			 scope_t& scope);
+  enum kind_t {
+    VALUE,			// any kind of literal value
+    IDENT,			// [A-Za-z_][-A-Za-z0-9_:]*
+    MASK,			// /regexp/
 
-void process_arguments(int argc, char ** argv, const bool anywhere,
-		       scope_t& scope, std::list<string>& args);
+    LPAREN,			// (
+    RPAREN,			// )
 
-DECLARE_EXCEPTION(error, option_error);
+    EQUAL,			// ==
+    NEQUAL,			// !=
+    LESS,			// <
+    LESSEQ,			// <=
+    GREATER,			// >
+    GREATEREQ,			// >=
+
+    ASSIGN,			// =
+    MINUS,			// -
+    PLUS,			// +
+    STAR,			// *
+    KW_DIV,			// /
+
+    EXCLAM,			// !
+    KW_AND,			// &
+    KW_OR,			// |
+    KW_MOD,			// %
+
+    COMMA,			// ,
+
+    TOK_EOF,
+    UNKNOWN
+
+  } kind;
+
+  char	      symbol[3];
+  value_t     value;
+  std::size_t length;
+
+  explicit token_t() : supports_flags<>(), kind(UNKNOWN), length(0) {
+    TRACE_CTOR(token_t, "");
+  }
+  ~token_t() throw() {
+    TRACE_DTOR(token_t);
+  }
+
+  token_t& operator=(const token_t& other) {
+    if (&other == this)
+      return *this;
+    assert(false);
+    return *this;
+  }
+
+  void clear() {
+    kind   = UNKNOWN;
+    length = 0;
+    value  = NULL_VALUE;
+
+    symbol[0] = '\0';
+    symbol[1] = '\0';
+    symbol[2] = '\0';
+  }
+
+  void parse_ident(std::istream& in);
+  void next(std::istream& in, unsigned int flags);
+  void rewind(std::istream& in);
+  void unexpected();
+
+  static void unexpected(char c, char wanted = '\0');
+};
 
 } // namespace ledger
 
-#endif // _OPTION_H
+#endif // _TOKEN_H

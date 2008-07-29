@@ -14,6 +14,7 @@ bool compare_items<transaction_t>::operator()(const transaction_t * left,
   assert(left);
   assert(right);
 
+#if 0
   transaction_xdata_t& lxdata(transaction_xdata(*left));
   if (! (lxdata.dflags & TRANSACTION_SORT_CALC)) {
     sort_order.compute(lxdata.sort_value, details_t(*left));
@@ -34,6 +35,9 @@ bool compare_items<transaction_t>::operator()(const transaction_t * left,
 	"rxdata.sort_value = " << rxdata.sort_value);
 
   return lxdata.sort_value < rxdata.sort_value;
+#else
+  return false;
+#endif
 }
 
 transaction_xdata_t& transaction_xdata(const transaction_t& xact)
@@ -379,7 +383,9 @@ void changed_value_transactions::output_diff(const datetime_t& current)
   value_t cur_bal;
 
   transaction_xdata(*last_xact).date = current;
+#if 0
   compute_total(cur_bal, details_t(*last_xact));
+#endif
   cur_bal.round();
   // jww (2008-04-24): What does this do?
 #if 0
@@ -413,7 +419,9 @@ void changed_value_transactions::operator()(transaction_t& xact)
 
   item_handler<transaction_t>::operator()(xact);
 
+#if 0
   compute_total(last_balance, details_t(xact));
+#endif
   last_balance.round();
 
   last_xact = &xact;
@@ -853,6 +861,7 @@ bool compare_items<account_t>::operator()(const account_t * left,
   assert(left);
   assert(right);
 
+#if 0
   account_xdata_t& lxdata(account_xdata(*left));
   if (! (lxdata.dflags & ACCOUNT_SORT_CALC)) {
     sort_order.compute(lxdata.sort_value, details_t(*left));
@@ -866,6 +875,9 @@ bool compare_items<account_t>::operator()(const account_t * left,
   }
 
   return lxdata.sort_value < rxdata.sort_value;
+#else
+  return false;
+#endif
 }
 
 account_xdata_t& account_xdata(const account_t& account)
@@ -891,7 +903,9 @@ void sum_accounts(account_t& account)
   }
 
   value_t result;
+#if 0
   compute_amount(result, details_t(account));
+#endif
   if (! result.is_realzero())
     xdata.total += result;
   xdata.total_count += xdata.count;

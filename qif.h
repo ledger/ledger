@@ -1,11 +1,11 @@
 #ifndef _QIF_H
 #define _QIF_H
 
-#include "parser.h"
+#include "journal.h"
 
 namespace ledger {
 
-class qif_parser_t : public parser_t
+class qif_parser_t : public journal_t::parser_t
 {
  public:
   virtual bool test(std::istream& in) const;

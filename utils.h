@@ -539,6 +539,80 @@ inline const string& either_or(const string& first,
   return first.empty() ? second : first;
 }
 
+inline char * skip_ws(char * ptr) {
+  while (*ptr == ' ' || *ptr == '\t' || *ptr == '\n')
+    ptr++;
+  return ptr;
+}
+
+inline char * next_element(char * buf, bool variable = false) {
+  for (char * p = buf; *p; p++) {
+    if (! (*p == ' ' || *p == '\t'))
+      continue;
+
+    if (! variable) {
+      *p = '\0';
+      return skip_ws(p + 1);
+    }
+    else if (*p == '\t') {
+      *p = '\0';
+      return skip_ws(p + 1);
+    }
+    else if (*(p + 1) == ' ') {
+      *p = '\0';
+      return skip_ws(p + 2);
+    }
+  }
+  return NULL;
+}
+
+inline char peek_next_nonws(std::istream& in) {
+  char c = in.peek();
+  while (! in.eof() && std::isspace(c)) {
+    in.get(c);
+    c = in.peek();
+  }
+  return c;
+}
+
+#define READ_INTO(str, targ, size, var, cond) {				\
+  char * _p = targ;							\
+  var = str.peek();							\
+  while (! str.eof() && var != '\n' && (cond) && _p - targ < size) {	\
+    str.get(var);							\
+    if (str.eof())							\
+      break;								\
+    if (var == '\\') {							\
+      str.get(var);							\
+      if (in.eof())							\
+	break;								\
+    }									\
+    *_p++ = var;							\
+    var = str.peek();							\
+  }									\
+  *_p = '\0';								\
+}
+
+#define READ_INTO_(str, targ, size, var, idx, cond) {			\
+  char * _p = targ;							\
+  var = str.peek();							\
+  while (! str.eof() && var != '\n' && (cond) && _p - targ < size) {	\
+    str.get(var);							\
+    if (str.eof())							\
+      break;								\
+    idx++;								\
+    if (var == '\\') {							\
+      str.get(var);							\
+      if (in.eof())							\
+	break;								\
+      idx++;								\
+    }									\
+    *_p++ = var;							\
+    var = str.peek();							\
+  }									\
+  *_p = '\0';								\
+}
+
 } // namespace ledger
 
 #endif // _UTILS_H

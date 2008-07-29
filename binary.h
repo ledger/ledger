@@ -32,12 +32,9 @@
 #ifndef BINARY_H
 #define BINARY_H
 
-#include "parser.h"
+#include "utils.h"
 
 namespace ledger {
-
-class journal_t;
-  
 namespace binary {
 
 template <typename T>
@@ -272,22 +269,7 @@ inline void write_object(std::ostream& out, const T& journal) {
   assert(false);
 }
 
-void write_journal(std::ostream& out, journal_t& journal);
-
 } // namespace binary
-
-class binary_parser_t : public parser_t
-{
- public:
-  virtual bool test(std::istream& in) const;
-
-  virtual unsigned int parse(std::istream& in,
-			     session_t&     session,
-			     journal_t&   journal,
-			     account_t *   master        = NULL,
-			     const path *  original_file = NULL);
-};
-
 } // namespace ledger
 
 #endif // BINARY_H

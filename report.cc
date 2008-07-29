@@ -278,7 +278,7 @@ void report_t::entry_report(const entry_t& entry, const string& format)
 {
 }
 
-value_t report_t::abbrev(expr::call_scope_t& args)
+value_t report_t::abbrev(call_scope_t& args)
 {
   if (args.size() < 2)
     throw_(std::logic_error, "usage: abbrev(STRING, WIDTH [, STYLE, ABBREV_LEN])");
@@ -304,7 +304,7 @@ value_t report_t::abbrev(expr::call_scope_t& args)
 #endif
 }
 
-value_t report_t::ftime(expr::call_scope_t& args)
+value_t report_t::ftime(call_scope_t& args)
 {
   if (args.size() < 1)
     throw_(std::logic_error, "usage: ftime(DATE [, DATE_FORMAT])");
@@ -327,7 +327,7 @@ value_t report_t::ftime(expr::call_scope_t& args)
 
 #if 0
 optional<value_t>
-report_t::resolve(const string& name, expr::call_scope_t& args)
+report_t::resolve(const string& name, call_scope_t& args)
 {
   const char * p = name.c_str();
   switch (*p) {
@@ -343,11 +343,11 @@ report_t::resolve(const string& name, expr::call_scope_t& args)
     }
     break;
   }
-  return expr::scope_t::resolve(name, args);
+  return scope_t::resolve(name, args);
 }
 #endif
 
-expr::ptr_op_t report_t::lookup(const string& name)
+expr_t::ptr_op_t report_t::lookup(const string& name)
 {
   const char * p = name.c_str();
   switch (*p) {
@@ -453,7 +453,7 @@ expr::ptr_op_t report_t::lookup(const string& name)
     break;
   }
 
-  return expr::symbol_scope_t::lookup(name);
+  return symbol_scope_t::lookup(name);
 }
 
 } // namespace ledger

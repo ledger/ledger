@@ -30,7 +30,6 @@
  */
 
 #include "session.h"
-#include "parsexp.h"
 #include "walk.h"
 
 namespace ledger {
@@ -41,9 +40,6 @@ session_t * session_t::current = NULL;
 boost::mutex session_t::session_mutex;
 #endif
 
-static void initialize();
-static void shutdown();
-
 void set_session_context(session_t * session)
 {
 #if 0
@@ -51,10 +47,10 @@ void set_session_context(session_t * session)
 #endif
 
   if (session && ! session_t::current) {
-    initialize();
+    session_t::initialize();
   }
   else if (! session && session_t::current) {
-    shutdown();
+    session_t::shutdown();
 #if 0
     session_t::session_mutex.unlock();
 #endif
@@ -127,7 +123,7 @@ std::size_t session_t::read_journal(journal_t&	  journal,
   if (! master)
     master = journal.master;
 
-  foreach (parser_t& parser, parsers)
+  foreach (journal_t::parser_t& parser, parsers)
     if (parser.test(in))
       return parser.parse(in, *this, journal, master, &pathname);
 
@@ -264,7 +260,7 @@ void session_t::clean_accounts()
 }
 
 #if 0
-value_t session_t::resolve(const string& name, expr::scope_t& locals)
+value_t session_t::resolve(const string& name, expr_t::scope_t& locals)
 {
   const char * p = name.c_str();
   switch (*p) {
@@ -291,11 +287,11 @@ value_t session_t::resolve(const string& name, expr::scope_t& locals)
       return value_t(register_format, true);
     break;
   }
-  return expr::scope_t::resolve(name, locals);
+  return expr_t::scope_t::resolve(name, locals);
 }
 #endif
 
-expr::ptr_op_t session_t::lookup(const string& name)
+expr_t::ptr_op_t session_t::lookup(const string& name)
 {
   const char * p = name.c_str();
   switch (*p) {
@@ -332,21 +328,21 @@ expr::ptr_op_t session_t::lookup(const string& name)
     break;
   }
 
-  return expr::symbol_scope_t::lookup(name);
+  return symbol_scope_t::lookup(name);
 }
 
 // jww (2007-04-26): All of Ledger should be accessed through a
 // session_t object
-static void initialize()
+void session_t::initialize()
 {
   amount_t::initialize();
   value_t::initialize();
-  value_expr::initialize();
+  expr_t::initialize();
 }
 
-static void shutdown()
+void session_t::shutdown()
 {
-  value_expr::shutdown();
+  expr_t::shutdown();
   value_t::shutdown();
   amount_t::shutdown();
 }

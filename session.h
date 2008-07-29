@@ -32,15 +32,20 @@
 #ifndef _SESSION_H
 #define _SESSION_H
 
-#include "valexpr.h"
+#include "scope.h"
 #include "journal.h"
-#include "parser.h"
 
 namespace ledger {
 
-class session_t : public expr::symbol_scope_t
+class session_t : public symbol_scope_t
 {
- public:
+  static void initialize();
+  static void shutdown();
+
+  friend void set_session_context(session_t * session);
+  friend void release_session_context();
+
+public:
   static session_t * current;
 
   path		 data_file;
@@ -76,8 +81,8 @@ class session_t : public expr::symbol_scope_t
   bool ansi_codes;
   bool ansi_invert;
 
-  ptr_list<journal_t> journals;
-  ptr_list<parser_t>  parsers;
+  ptr_list<journal_t>		journals;
+  ptr_list<journal_t::parser_t> parsers;
 
   account_t *	       master;
   mutable accounts_map accounts_cache;
@@ -121,11 +126,11 @@ class session_t : public expr::symbol_scope_t
   std::size_t read_data(journal_t&    journal,
 			const string& master_account = "");
 
-  void register_parser(parser_t * parser) {
+  void register_parser(journal_t::parser_t * parser) {
     parsers.push_back(parser);
   }
-  void unregister_parser(parser_t * parser) {
-    for (ptr_list<parser_t>::iterator i = parsers.begin();
+  void unregister_parser(journal_t::parser_t * parser) {
+    for (ptr_list<journal_t::parser_t>::iterator i = parsers.begin();
 	 i != parsers.end();
 	 i++)
       if (&*i == parser) {
@@ -167,13 +172,13 @@ class session_t : public expr::symbol_scope_t
   // Scope members
   //
 
-  virtual expr::ptr_op_t lookup(const string& name);
+  virtual expr_t::ptr_op_t lookup(const string& name);
 
   //
   // Help options
   //
 
-  value_t option_version(expr::scope_t&) {
+  value_t option_version(scope_t&) {
     std::cout << "Ledger " << ledger::version << ", the command-line accounting tool";
     std::cout << "\n\nCopyright (c) 2003-2008, John Wiegley.  All rights reserved.\n\n\
 This program is made available under the terms of the BSD Public License.\n\
@@ -193,17 +198,17 @@ See LICENSE file included with the distribution for details and disclaimer.\n";
   // Debug options
   //
 
-  value_t option_trace_(expr::scope_t& locals) {
+  value_t option_trace_(scope_t& locals) {
     return NULL_VALUE;
   }
-  value_t option_debug_(expr::scope_t& locals) {
+  value_t option_debug_(scope_t& locals) {
     return NULL_VALUE;
   }
 
-  value_t option_verify(expr::scope_t&) {
+  value_t option_verify(scope_t&) {
     return NULL_VALUE;
   }
-  value_t option_verbose(expr::scope_t&) {
+  value_t option_verbose(scope_t&) {
 #if defined(LOGGING_ON)
     if (_log_level < LOG_INFO)
       _log_level = LOG_INFO;
@@ -215,7 +220,7 @@ See LICENSE file included with the distribution for details and disclaimer.\n";
   // Option handlers
   //
 
-  value_t option_file_(expr::call_scope_t& args) {
+  value_t option_file_(call_scope_t& args) {
     assert(args.size() == 1);
     data_file = args[0].as_string();
     return NULL_VALUE;
@@ -223,11 +228,11 @@ See LICENSE file included with the distribution for details and disclaimer.\n";
 
 #if 0
 #if defined(USE_BOOST_PYTHON)
-  value_t option_import_(expr::call_scope_t& args) {
+  value_t option_import_(call_scope_t& args) {
     python_import(optarg);
     return NULL_VALUE;
   }
-  value_t option_import_stdin(expr::call_scope_t& args) {
+  value_t option_import_stdin(call_scope_t& args) {
     python_eval(std::cin, PY_EVAL_MULTI);
     return NULL_VALUE;
   }

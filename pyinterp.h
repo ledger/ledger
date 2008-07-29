@@ -32,7 +32,7 @@
 #ifndef _PYINTERP_H
 #define _PYINTERP_H
 
-#include "valexpr.h"
+#include "scope.h"
 
 #include <boost/python.hpp>
 #include <Python.h>
@@ -40,7 +40,7 @@
 namespace ledger {
 
 class python_interpreter_t
-  : public noncopyable, public expr::symbol_scope_t
+  : public noncopyable, public expr_t::symbol_scope_t
 {
   boost::python::handle<> mmodule;
 
@@ -49,7 +49,7 @@ class python_interpreter_t
 public:
   boost::python::dict nspace;
 
-  python_interpreter_t(expr::scope_t& parent);
+  python_interpreter_t(expr_t::scope_t& parent);
 
   virtual ~python_interpreter_t() {
     TRACE_DTOR(python_interpreter_t);
@@ -89,14 +89,14 @@ public:
     virtual ~functor_t() throw() {
       TRACE_DTOR(functor_t);
     }
-    virtual value_t operator()(expr::call_scope_t& args);
+    virtual value_t operator()(expr_t::call_scope_t& args);
   };
 
-  virtual expr::ptr_op_t lookup(const string& name) {
+  virtual expr_t::ptr_op_t lookup(const string& name) {
     if (boost::python::object func = eval(name))
       return WRAP_FUNCTOR(functor_t(name, func));
     else
-      return expr::symbol_scope_t::lookup(name);
+      return expr_t::symbol_scope_t::lookup(name);
   }
 
   class lambda_t : public functor_t {
@@ -111,7 +111,7 @@ public:
     virtual ~lambda_t() throw() {
       TRACE_DTOR(lambda_t);
     }
-    virtual value_t operator()(expr::call_scope_t& args);
+    virtual value_t operator()(expr_t::call_scope_t& args);
   };
 };
 

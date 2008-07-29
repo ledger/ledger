@@ -29,44 +29,46 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _LEDGER_H
-#define _LEDGER_H
+#ifndef _PREDICATE_H
+#define _PREDICATE_H
 
-//////////////////////////////////////////////////////////////////////
-//
-// Ledger Accounting Tool
-//
-//   A command-line tool for general double-entry accounting.
-//
-// Copyright (c) 2003-2008, John Wiegley <johnw@newartisans.com>
-//
+#include "expr.h"
+#include "scope.h"
 
-#include <amount.h>
-#include <balance.h>
-#include <value.h>
+namespace ledger {
 
-#include <journal.h>
+template <typename T>
+class item_predicate
+{
+public:
+  expr_t predicate;
 
-#include <format.h>
-#include <emacs.h>
-#include <csv.h>
-//#include <quotes.h>
-#include <expr.h>
-#include <walk.h>
-#include <derive.h>
-#include <reconcile.h>
-#include <error.h>
-#include <option.h>
+  item_predicate() {
+    TRACE_CTOR(item_predicate, "");
+  }
+  item_predicate(const item_predicate& other) : predicate(other.predicate) {
+    TRACE_CTOR(item_predicate, "copy");
+  }
+  item_predicate(const expr_t& _predicate) : predicate(_predicate) {
+    TRACE_CTOR(item_predicate, "const expr_t&");
+  }
+  item_predicate(const string& _predicate) : predicate(expr_t(_predicate)) {
+    TRACE_CTOR(item_predicate, "const string&");
+  }
+  ~item_predicate() throw() {
+    TRACE_DTOR(item_predicate);
+  }
 
-#include <parser.h>
-#include <textual.h>
-#include <binary.h>
-#include <xml.h>
-#include <gnucash.h>
-#include <qif.h>
-#include <ofx.h>
+  bool operator()(const T& item) const {
+#if 0
+    template context_t<T> context(item);
+    return ! predicate || predicate->calc(context).strip_annotations();
+#else
+    return false;
+#endif
+  }
+};
 
-#include <session.h>
-#include <report.h>
+} // namespace ledger
 
-#endif // _LEDGER_H
+#endif // _PREDICATE_H

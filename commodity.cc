@@ -40,7 +40,6 @@
  */
 
 #include "amount.h"
-#include "parser.h"		// for parsing utility functions
 
 namespace ledger {
 
@@ -248,7 +247,7 @@ void commodity_t::parse_symbol(char *& p, string& symbol)
   if (*p == '"') {
     char * q = std::strchr(p + 1, '"');
     if (! q)
-      throw_(parse_error, "Quoted commodity symbol lacks closing quote");
+      throw_(amount_error, "Quoted commodity symbol lacks closing quote");
     symbol = string(p + 1, 0, q - p - 1);
     p = q + 2;
   } else {
@@ -260,7 +259,7 @@ void commodity_t::parse_symbol(char *& p, string& symbol)
       p += symbol.length();
   }
   if (symbol.empty())
-    throw_(parse_error, "Failed to parse commodity");
+    throw_(amount_error, "Failed to parse commodity");
 }
 
 bool commodity_t::valid() const

@@ -42,7 +42,6 @@
  */
 
 #include "amount.h"
-#include "parser.h"
 #include "binary.h"
 
 namespace ledger {
@@ -1245,7 +1244,7 @@ void amount_t::print(std::ostream& _out, bool omit_commodity,
 
 
 #if 0
-// jww (2008-05-08): Should these be global?
+// jww (2008-07-29): Should these be static?
 namespace {
 #endif
   char *	bigints;

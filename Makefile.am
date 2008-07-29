@@ -38,23 +38,28 @@ endif
 
 libledger_la_CPPFLAGS = $(libamounts_la_CPPFLAGS)
 libledger_la_SOURCES = \
-	binary.cc      \
-	csv.cc         \
-	derive.cc      \
-	emacs.cc       \
-	format.cc      \
-	journal.cc     \
 	mask.cc        \
-	option.cc      \
-	parsexp.cc     \
-	qif.cc	       \
-	reconcile.cc   \
+	token.cc       \
+	parser.cc      \
+	op.cc          \
+	expr.cc        \
+	scope.cc       \
+	format.cc      \
+		       \
+	journal.cc     \
 	report.cc      \
 	session.cc     \
-	textual.cc     \
-	valexpr.cc     \
 	walk.cc        \
-	xml.cc
+		       \
+	textual.cc     \
+	binary.cc      \
+	csv.cc         \
+	emacs.cc       \
+	qif.cc	       \
+	xml.cc	       \
+	derive.cc      \
+	reconcile.cc   \
+	option.cc
 #	quotes.cc      this is currently not being included
 if HAVE_EXPAT
 libledger_la_SOURCES += gnucash.cc
@@ -78,28 +83,36 @@ pkginclude_HEADERS = \
 	value.h      \
 	times.h	     \
 	utils.h	     \
+	error.h      \
 		     \
+	expr.h       \
+	op.h         \
+	parser.h     \
+	token.h      \
+	scope.h      \
+	predicate.h  \
+	format.h     \
+	mask.h       \
+		     \
+	journal.h    \
+	report.h     \
+	session.h    \
+	walk.h       \
+		     \
+	textual.h    \
 	binary.h     \
 	csv.h        \
-	derive.h     \
 	emacs.h      \
-	error.h      \
-	format.h     \
 	gnucash.h    \
-	journal.h    \
-	ledger.h     \
-	mask.h       \
-	option.h     \
-	parser.h     \
-	parsexp.h    \
 	qif.h	     \
-	quotes.h     \
+	xml.h	     \
+		     \
+	derive.h     \
 	reconcile.h  \
-	report.h     \
-	textual.h    \
-	valexpr.h    \
-	walk.h       \
-	xml.h
+	quotes.h     \
+	option.h     \
+		     \
+	ledger.h
 
 if USE_PCH
 nodist_libledger_la_SOURCES = system.hh.gch
@@ -173,7 +186,7 @@ nodist_UnitTests_SOURCES = test/UnitTests.cc \
 	test/numerics/t_commodity.cc \
 	test/numerics/t_amount.cc    \
 	test/numerics/t_balance.cc   \
-	test/numerics/t_valexpr.cc
+	test/numerics/t_expr.cc
 
 UnitTests_CPPFLAGS = -I$(srcdir)/test $(libledger_la_CPPFLAGS)
 UnitTests_LDFLAGS  = $(LIBADD_DL)

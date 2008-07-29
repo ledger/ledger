@@ -25,7 +25,9 @@ void format_csv_transactions::operator()(transaction_t& xact)
     {
       format_t fmt("%D");
       std::ostringstream str;
+#if 0
       fmt.format(str, details_t(xact));
+#endif
       write_escaped_string(out, str.str());
     }
     out << ',';
@@ -33,7 +35,9 @@ void format_csv_transactions::operator()(transaction_t& xact)
     {
       format_t fmt("%P");
       std::ostringstream str;
+#if 0
       fmt.format(str, details_t(xact));
+#endif
       write_escaped_string(out, str.str());
     }
     out << ',';
@@ -41,7 +45,9 @@ void format_csv_transactions::operator()(transaction_t& xact)
     {
       format_t fmt("%A");
       std::ostringstream str;
+#if 0
       fmt.format(str, details_t(xact));
+#endif
       write_escaped_string(out, str.str());
     }
     out << ',';
@@ -49,7 +55,9 @@ void format_csv_transactions::operator()(transaction_t& xact)
     {
       format_t fmt("%t");
       std::ostringstream str;
+#if 0
       fmt.format(str, details_t(xact));
+#endif
       write_escaped_string(out, str.str());
     }
     out << ',';
@@ -57,7 +65,9 @@ void format_csv_transactions::operator()(transaction_t& xact)
     {
       format_t fmt("%T");
       std::ostringstream str;
+#if 0
       fmt.format(str, details_t(xact));
+#endif
       write_escaped_string(out, str.str());
     }
     out << ',';
@@ -94,7 +104,9 @@ void format_csv_transactions::operator()(transaction_t& xact)
     {
       format_t fmt("%N");
       std::ostringstream str;
+#if 0
       fmt.format(str, details_t(xact));
+#endif
       write_escaped_string(out, str.str());
     }
     out << '\n';

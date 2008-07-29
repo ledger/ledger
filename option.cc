@@ -34,9 +34,9 @@
 namespace ledger {
 
 namespace {
-  typedef tuple<expr::ptr_op_t, bool> op_bool_tuple;
+  typedef tuple<expr_t::ptr_op_t, bool> op_bool_tuple;
 
-  op_bool_tuple find_option(expr::scope_t& scope, const string& name)
+  op_bool_tuple find_option(scope_t& scope, const string& name)
   {
     char buf[128];
     std::strcpy(buf, "option_");
@@ -49,7 +49,7 @@ namespace {
     }
     *p = '\0';
 
-    expr::ptr_op_t op = scope.lookup(buf);
+    expr_t::ptr_op_t op = scope.lookup(buf);
     if (op)
       return op_bool_tuple(op, false);
 
@@ -59,14 +59,14 @@ namespace {
     return op_bool_tuple(scope.lookup(buf), true);
   }
 
-  op_bool_tuple find_option(expr::scope_t& scope, const char letter)
+  op_bool_tuple find_option(scope_t& scope, const char letter)
   {
     char buf[10];
     std::strcpy(buf, "option_");
     buf[7] = letter;
     buf[8] = '\0';
 
-    expr::ptr_op_t op = scope.lookup(buf);
+    expr_t::ptr_op_t op = scope.lookup(buf);
     if (op)
       return op_bool_tuple(op, false);
 
@@ -76,13 +76,13 @@ namespace {
     return op_bool_tuple(scope.lookup(buf), true);
   }
 
-  void process_option(const expr::function_t& opt,
-		      expr::scope_t& scope, const char * arg)
+  void process_option(const function_t& opt, scope_t& scope,
+		      const char * arg)
   {
 #if 0
     try {
 #endif
-      expr::call_scope_t args(scope);
+      call_scope_t args(scope);
       if (arg)
 	args.push_back(value_t(arg, true));
 
@@ -101,7 +101,7 @@ namespace {
   }
 }
 
-void process_option(const string& name, expr::scope_t& scope,
+void process_option(const string& name, scope_t& scope,
 		    const char * arg)
 {
   op_bool_tuple opt(find_option(scope, name));
@@ -110,7 +110,7 @@ void process_option(const string& name, expr::scope_t& scope,
 }
 
 void process_environment(const char ** envp, const string& tag,
-			 expr::scope_t& scope)
+			 scope_t& scope)
 {
   const char * tag_p   = tag.c_str();
   unsigned int tag_len = tag.length();
@@ -149,7 +149,7 @@ void process_environment(const char ** envp, const string& tag,
 }
 
 void process_arguments(int argc, char ** argv, const bool anywhere,
-		       expr::scope_t& scope, std::list<string>& args)
+		       scope_t& scope, std::list<string>& args)
 {
   for (char ** i = argv; *i; i++) {
     if ((*i)[0] != '-') {
@@ -190,7 +190,7 @@ void process_arguments(int argc, char ** argv, const bool anywhere,
       throw_(option_error, "illegal option -");
     }
     else {
-      typedef tuple<expr::ptr_op_t, bool, char> op_bool_char_tuple;
+      typedef tuple<expr_t::ptr_op_t, bool, char> op_bool_char_tuple;
 
       std::list<op_bool_char_tuple> option_queue;
 

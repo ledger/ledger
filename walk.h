@@ -36,7 +36,7 @@ typedef shared_ptr<item_handler<transaction_t> > xact_handler_ptr;
 template <typename T>
 class compare_items
 {
-  value_expr sort_order;
+  expr_t sort_order;
 
   compare_items();
   
@@ -44,7 +44,7 @@ public:
   compare_items(const compare_items& other) : sort_order(other.sort_order) {
     TRACE_CTOR(compare_items, "copy");
   }
-  compare_items(const value_expr& _sort_order) : sort_order(_sort_order) {
+  compare_items(const expr_t& _sort_order) : sort_order(_sort_order) {
     TRACE_CTOR(compare_items, "const value_expr&");
   }
   ~compare_items() throw() {
@@ -61,8 +61,10 @@ bool compare_items<T>::operator()(const T * left, const T * right)
 
   value_t left_result;
   value_t right_result;
+#if 0
   sort_order.compute(left_result, details_t(*left));
   sort_order.compute(right_result, details_t(*right));
+#endif
 
   return left_result < right_result;
 }
@@ -354,13 +356,13 @@ class sort_transactions : public item_handler<transaction_t>
   typedef std::deque<transaction_t *> transactions_deque;
 
   transactions_deque transactions;
-  const value_expr   sort_order;
+  const expr_t	     sort_order;
 
   sort_transactions();
 
 public:
   sort_transactions(xact_handler_ptr handler,
-		    const value_expr& _sort_order)
+		    const expr_t&    _sort_order)
     : item_handler<transaction_t>(handler),
       sort_order(_sort_order) {
     TRACE_CTOR(sort_transactions,
@@ -398,7 +400,7 @@ class sort_entries : public item_handler<transaction_t>
 
 public:
   sort_entries(xact_handler_ptr handler,
-	       const value_expr& _sort_order)
+	       const expr_t&    _sort_order)
     : sorter(handler, _sort_order) {
     TRACE_CTOR(sort_entries,
 	       "xact_handler_ptr, const value_expr&");
@@ -436,7 +438,7 @@ class filter_transactions : public item_handler<transaction_t>
 
 public:
   filter_transactions(xact_handler_ptr handler,
-		      const value_expr& predicate)
+		      const expr_t&    predicate)
     : item_handler<transaction_t>(handler), pred(predicate) {
     TRACE_CTOR(filter_transactions,
 	       "xact_handler_ptr, const value_expr&");
@@ -540,7 +542,7 @@ class component_transactions : public item_handler<transaction_t>
 
 public:
   component_transactions(xact_handler_ptr handler,
-			 const value_expr& predicate)
+			 const expr_t&    predicate)
     : item_handler<transaction_t>(handler), pred(predicate) {
     TRACE_CTOR(component_transactions,
 	       "xact_handler_ptr, const value_expr&");
@@ -883,9 +885,9 @@ class forecast_transactions : public generate_transactions
 
  public:
   forecast_transactions(xact_handler_ptr handler,
-			const value_expr& predicate)
+			const expr_t& predicate)
     : generate_transactions(handler), pred(predicate) {
-    TRACE_CTOR(forecast_transactions, "xact_handler_ptr, const value_expr&");
+    TRACE_CTOR(forecast_transactions, "xact_handler_ptr, const expr_t&");
   }
   forecast_transactions(xact_handler_ptr handler,
 			const string& predicate)
@@ -972,7 +974,7 @@ public:
 
 class sorted_accounts_iterator : public noncopyable
 {
-  value_expr sort_cmp;
+  expr_t sort_cmp;
 
   typedef std::deque<account_t *> accounts_deque_t;
 
@@ -983,11 +985,11 @@ class sorted_accounts_iterator : public noncopyable
 public:
   sorted_accounts_iterator(const string& sort_order) {
     TRACE_CTOR(sorted_accounts_iterator, "const string&");
-    sort_cmp = value_expr(sort_order);
+    sort_cmp = expr_t(sort_order);
   }
   sorted_accounts_iterator(account_t& account, const string& sort_order) {
     TRACE_CTOR(sorted_accounts_iterator, "account_t&, const string&");
-    sort_cmp = value_expr(sort_order);
+    sort_cmp = expr_t(sort_order);
     push_back(account);
   }
   virtual ~sorted_accounts_iterator() throw() {

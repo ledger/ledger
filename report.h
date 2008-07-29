@@ -81,7 +81,7 @@ namespace ledger {
 //    says that the formatter should be "flushed" after the entities are
 //    iterated.  This does not happen for the commodities iteration, however.
 
-class report_t : public expr::symbol_scope_t
+class report_t : public symbol_scope_t
 {
   report_t();
 
@@ -134,7 +134,7 @@ public:
   session_t&	 session;
 
   explicit report_t(session_t& _session)
-    : expr::symbol_scope_t(downcast<expr::scope_t>(_session)),
+    : symbol_scope_t(downcast<scope_t>(_session)),
 
       head_entries(0),
       tail_entries(0),
@@ -166,10 +166,10 @@ public:
 
 #if 0
     eval("t=total,TOT=0,T()=(TOT=TOT+t,TOT)");
-#endif
 
-    value_expr::amount_expr.reset(new value_expr("a"));
-    value_expr::total_expr.reset(new value_expr("O"));
+    value_expr_t::amount_expr.reset(new value_expr("a"));
+    value_expr_t::total_expr.reset(new value_expr("O"));
+#endif
   }
 
   virtual ~report_t() {
@@ -201,8 +201,8 @@ public:
   // Utility functions for value expressions
   //
 
-  value_t ftime(expr::call_scope_t& args);
-  value_t abbrev(expr::call_scope_t& args);
+  value_t ftime(call_scope_t& args);
+  value_t abbrev(call_scope_t& args);
 
   //
   // Config options
@@ -213,35 +213,35 @@ public:
     expr(expr).compile((xml::document_t *)NULL, this);
 #endif
   }
-  value_t option_eval(expr::call_scope_t& args) {
+  value_t option_eval(call_scope_t& args) {
     eval(args[0].as_string());
     return NULL_VALUE;
   }
 
-  value_t option_amount(expr::call_scope_t& args) {
+  value_t option_amount(call_scope_t& args) {
     eval(string("t=") + args[0].as_string());
     return NULL_VALUE;
   }
-  value_t option_total(expr::call_scope_t& args) {
+  value_t option_total(call_scope_t& args) {
     eval(string("T()=") + args[0].as_string());
     return NULL_VALUE;
   }
 
-  value_t option_format(expr::call_scope_t& args) {
+  value_t option_format(call_scope_t& args) {
     format_string = args[0].as_string();
     return NULL_VALUE;
   }
 
-  value_t option_raw(expr::call_scope_t& args) {
+  value_t option_raw(call_scope_t& args) {
     raw_mode = true;
     return NULL_VALUE;
   }
 
-  value_t option_foo(expr::call_scope_t& args) {
+  value_t option_foo(call_scope_t& args) {
     std::cout << "This is foo" << std::endl;
     return NULL_VALUE;
   }
-  value_t option_bar(expr::call_scope_t& args) {
+  value_t option_bar(call_scope_t& args) {
     std::cout << "This is bar: " << args[0] << std::endl;
     return NULL_VALUE;
   }
@@ -251,44 +251,44 @@ public:
   //
 
 #if 0
-  value_t option_select(expr::call_scope_t& args) {
+  value_t option_select(call_scope_t& args) {
     transforms.push_back(new select_transform(args[0].as_string()));
     return NULL_VALUE;
   }
-  value_t option_limit(expr::call_scope_t& args) {
+  value_t option_limit(call_scope_t& args) {
     string expr = (string("//xact[") +
 		   args[0].as_string() + "]");
     transforms.push_back(new select_transform(expr));
     return NULL_VALUE;
   }
 
-  value_t option_remove(expr::call_scope_t& args) {
+  value_t option_remove(call_scope_t& args) {
     transforms.push_back(new remove_transform(args[0].as_string()));
     return NULL_VALUE;
   }
 
-  value_t option_accounts(expr::call_scope_t& args) {
+  value_t option_accounts(call_scope_t& args) {
     transforms.push_back(new accounts_transform);
     return NULL_VALUE;
   }
-  value_t option_compact(expr::call_scope_t& args) {
+  value_t option_compact(call_scope_t& args) {
     transforms.push_back(new compact_transform);
     return NULL_VALUE;
   }
-  value_t option_clean(expr::call_scope_t& args) {
+  value_t option_clean(call_scope_t& args) {
     transforms.push_back(new clean_transform);
     return NULL_VALUE;
   }
-  value_t option_entries(expr::call_scope_t& args) {
+  value_t option_entries(call_scope_t& args) {
     transforms.push_back(new entries_transform);
     return NULL_VALUE;
   }
 
-  value_t option_split(expr::call_scope_t& args) {
+  value_t option_split(call_scope_t& args) {
     transforms.push_back(new split_transform);
     return NULL_VALUE;
   }
-  value_t option_merge(expr::call_scope_t& args) {
+  value_t option_merge(call_scope_t& args) {
     transforms.push_back(new merge_transform);
     return NULL_VALUE;
   }
@@ -298,7 +298,7 @@ public:
   // Scope members
   //
 
-  virtual expr::ptr_op_t lookup(const string& name);
+  virtual expr_t::ptr_op_t lookup(const string& name);
 };
 
 string abbrev(const string& str, unsigned int width,

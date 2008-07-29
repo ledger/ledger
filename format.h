@@ -2,7 +2,7 @@
 #define _FORMAT_H
 
 #include "journal.h"
-#include "valexpr.h"
+#include "expr.h"
 #include "walk.h"
 
 namespace ledger {
@@ -53,7 +53,7 @@ struct element_t : public noncopyable
   string	chars;
   unsigned char min_width;
   unsigned char max_width;
-  value_expr	val_expr;
+  expr_t	val_expr;
 
   struct element_t * next;
 
@@ -110,7 +110,7 @@ struct format_t : public noncopyable
   static string truncate(const string& str, unsigned int width,
 			      const bool is_account = false);
 
-  void format(std::ostream& out, const details_t& details) const;
+  void format(std::ostream& out, const scope_t& scope) const;
 };
 
 class format_transactions : public item_handler<transaction_t>

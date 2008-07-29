@@ -46,10 +46,10 @@
 #endif
 
 namespace ledger {
-  value_t register_command(expr::call_scope_t& args)
+  value_t register_command(call_scope_t& args)
   {
-    expr::var_t<report_t>     report(args, 0);
-    expr::var_t<std::ostream> ostream(args, 1);
+    var_t<report_t>     report(args, 0);
+    var_t<std::ostream> ostream(args, 1);
 
     report->transactions_report
       (xact_handler_ptr(new format_transactions
@@ -168,9 +168,8 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
   string verb = *arg++;
 
   if (verb == "parse") {
-    value_expr expr(*arg);
+    expr_t expr(*arg);
 
-#if 0
     IF_INFO() {
       std::cout << "Value expression tree:" << std::endl;
       expr.dump(std::cout);
@@ -194,7 +193,6 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
     }
 
     std::cout << expr.calc(report).strip_annotations() << std::endl;
-#endif
 
     return 0;
   }
@@ -227,28 +225,26 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
   // Are we handling the expr commands?  Do so now.
 
   if (verb == "expr") {
-    value_expr expr(*arg);
+    expr_t expr(*arg);
 
-#if 0
     IF_INFO() {
       *out << "Value expression tree:" << std::endl;
       expr.dump(*out);
       *out << std::endl;
       *out << "Value expression parsed was:" << std::endl;
-      expr.print(*out, doc_scope);
+      expr.print(*out, report);
       *out << std::endl << std::endl;
       *out << "Result of calculation: ";
     }
 
-    *out << expr.calc(doc_scope).strip_annotations() << std::endl;
-#endif
+    *out << expr.calc(report).strip_annotations() << std::endl;
 
     return 0;
   }
 
   // Read the command word and create a command object based on it
 
-  expr::function_t command;
+  function_t command;
 
   if (verb == "register" || verb == "reg" || verb == "r")
     command = register_command;
@@ -285,7 +281,7 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
     std::strcpy(buf, "command_");
     std::strcat(buf, verb.c_str());
 
-    if (expr::ptr_op_t def = report.lookup(buf))
+    if (expr_t::ptr_op_t def = report.lookup(buf))
       command = def->as_function();
 
     if (! command)
@@ -295,7 +291,7 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
   // Create an argument scope containing the report command's
   // arguments, and then invoke the command.
 
-  expr::call_scope_t command_args(report);
+  call_scope_t command_args(report);
 
   command_args.push_back(value_t(&report));
   command_args.push_back(value_t(out));
@@ -320,7 +316,7 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
     TRACE_START(binary_cache, 1, "Wrote binary journal file");
 
     ofstream stream(*session.cache_file);
-    binary::write_journal(stream, journal);
+    journal.write(stream);
 
     TRACE_FINISH(binary_cache, 1);
   }
@@ -400,7 +396,7 @@ int main(int argc, char * argv[], char * envp[])
 
     ledger::set_session_context(session.get());
 
-    session->register_parser(new ledger::binary_parser_t);
+    session->register_parser(new ledger::journal_t::binary_parser_t);
 #if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
     session->register_parser(new ledger::xml_parser_t);
     session->register_parser(new ledger::gnucash_parser_t);

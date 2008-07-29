@@ -86,12 +86,12 @@ struct python_run
   }
 };
 
-python_interpreter_t::python_interpreter_t(expr::scope_t& parent)
-  : expr::symbol_scope_t(parent),
+python_interpreter_t::python_interpreter_t(expr_t::scope_t& parent)
+  : expr_t::symbol_scope_t(parent),
     mmodule(borrowed(PyImport_AddModule("__main__"))),
     nspace(handle<>(borrowed(PyModule_GetDict(mmodule.get()))))
 {
-  TRACE_CTOR(python_interpreter_t, "expr::scope_t&");
+  TRACE_CTOR(python_interpreter_t, "expr_t::scope_t&");
 
   Py_Initialize();
   boost::python::detail::init_module("ledger", &initialize_for_python);
@@ -179,7 +179,7 @@ object python_interpreter_t::eval(const string& str, py_eval_mode_t mode)
 }
 
 value_t python_interpreter_t::functor_t::operator()
-  (expr::call_scope_t& args)
+  (expr_t::call_scope_t& args)
 {
   try {
     if (! PyCallable_Check(func.ptr())) {
@@ -202,7 +202,7 @@ value_t python_interpreter_t::functor_t::operator()
 	}
 	else if (PyObject * err = PyErr_Occurred()) {
 	  PyErr_Print();
-	  throw_(expr::calc_error,
+	  throw_(expr_t::calc_error,
 		 "While calling Python function '" /*<< name() <<*/ "': " << err);
 	} else {
 	  assert(false);
@@ -214,14 +214,14 @@ value_t python_interpreter_t::functor_t::operator()
   }
   catch (const error_already_set&) {
     PyErr_Print();
-    throw_(expr::calc_error,
+    throw_(expr_t::calc_error,
 	   "While calling Python function '" /*<< name() <<*/ "'");
   }
   return NULL_VALUE;
 }
 
 value_t python_interpreter_t::lambda_t::operator()
-  (expr::call_scope_t& args)
+  (expr_t::call_scope_t& args)
 {
   try {
     assert(args.size() == 1);
@@ -231,7 +231,7 @@ value_t python_interpreter_t::lambda_t::operator()
   }
   catch (const error_already_set&) {
     PyErr_Print();
-    throw_(expr::calc_error,
+    throw_(expr_t::calc_error,
 	   "While evaluating Python lambda expression");
   }
   return NULL_VALUE;

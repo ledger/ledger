@@ -1,11 +1,11 @@
 #ifndef _GNUCASH_H
 #define _GNUCASH_H
 
-#include "parser.h"
+#include "journal.h"
 
 namespace ledger {
 
-class gnucash_parser_t : public parser_t
+class gnucash_parser_t : public journal_t::parser_t
 {
  public:
   virtual bool test(std::istream& in) const;

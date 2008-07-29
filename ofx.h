@@ -1,11 +1,11 @@
 #ifndef _OFX_H
 #define _OFX_H
 
-#include "parser.h"
+#include "journal.h"
 
 namespace ledger {
 
-class ofx_parser_t : public parser_t
+class ofx_parser_t : public journal_t::parser_t
 {
 public:
   virtual bool test(std::istream& in) const;

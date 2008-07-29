@@ -1,14 +1,14 @@
 #ifndef _XML_H
 #define _XML_H
 
-#include "parser.h"
+#include "journal.h"
 #include "format.h"
 
 namespace ledger {
 
 #if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
 
-class xml_parser_t : public parser_t
+class xml_parser_t : public journal_t::parser_t
 {
  public:
   virtual bool test(std::istream& in) const;

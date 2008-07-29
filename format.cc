@@ -219,7 +219,7 @@ element_t * format_t::parse_elements(const string& fmt)
       current->type = element_t::VALUE_EXPR;
 
       assert(! current->val_expr);
-      current->val_expr = string(b, p);
+      current->val_expr.parse(string(b, p));
       break;
     }
 
@@ -320,7 +320,7 @@ namespace {
   }
 }
 
-void format_t::format(std::ostream& out_str, const details_t& details) const
+void format_t::format(std::ostream& out_str, const scope_t& scope) const
 {
   for (const element_t * elem = elements; elem; elem = elem->next) {
     std::ostringstream out;
@@ -340,10 +340,11 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
       out << elem->chars;
       break;
 
+#if 0
     case element_t::AMOUNT:
     case element_t::TOTAL:
     case element_t::VALUE_EXPR: {
-      value_expr * calc;
+      expr_t * calc;
       switch (elem->type) {
       case element_t::AMOUNT:
 	assert(value_expr::amount_expr.get());
@@ -747,6 +748,7 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 	  out << " ";
 	}
       break;
+#endif
 
     default:
       assert(false);
@@ -779,6 +781,7 @@ format_transactions::format_transactions(std::ostream& _output_stream,
 
 void format_transactions::operator()(transaction_t& xact)
 {
+#if 0
   if (! transaction_has_xdata(xact) ||
       ! (transaction_xdata_(xact).dflags & TRANSACTION_DISPLAYED)) {
     if (last_entry != xact.entry) {
@@ -795,10 +798,12 @@ void format_transactions::operator()(transaction_t& xact)
     transaction_xdata(xact).dflags |= TRANSACTION_DISPLAYED;
     last_xact = &xact;
   }
+#endif
 }
 
 void format_entries::format_last_entry()
 {
+#if 0
   bool first = true;
   for (transactions_list::const_iterator i = last_entry->transactions.begin();
        i != last_entry->transactions.end();
@@ -814,6 +819,7 @@ void format_entries::format_last_entry()
       transaction_xdata_(**i).dflags |= TRANSACTION_DISPLAYED;
     }
   }
+#endif
 }
 
 void format_entries::operator()(transaction_t& xact)
@@ -838,7 +844,7 @@ void print_entry(std::ostream& out, const entry_base_t& entry_base,
   }
   else if (const auto_entry_t * entry =
 	   dynamic_cast<const auto_entry_t *>(&entry_base)) {
-    out << "= " << entry->predicate.predicate.expr_str << '\n';
+    out << "= " << entry->predicate.predicate.text() << '\n';
     print_format = prefix + "    %-34A  %12o\n";
   }
   else if (const period_entry_t * entry =
@@ -867,14 +873,17 @@ bool disp_subaccounts_p(const account_t&			    account,
 			const account_t *&			    to_show)
 {
   bool	       display  = false;
+#if 0
   unsigned int counted  = 0;
   bool         matches  = disp_pred ? (*disp_pred)(account) : true;
-  value_t      acct_total;
   bool         computed = false;
+#endif
+  value_t      acct_total;
   value_t      result;
 
   to_show = NULL;
 
+#if 0
   for (accounts_map::const_iterator i = account.accounts.begin();
        i != account.accounts.end();
        i++) {
@@ -894,6 +903,7 @@ bool disp_subaccounts_p(const account_t&			    account,
     to_show = (*i).second;
     counted++;
   }
+#endif
 
   return display;
 }
@@ -922,6 +932,7 @@ bool display_account(const account_t& account,
 
 void format_accounts::operator()(account_t& account)
 {
+#if 0
   if (display_account(account, disp_pred)) {
     if (! account.parent) {
       account_xdata(account).dflags |= ACCOUNT_TO_DISPLAY;
@@ -930,6 +941,7 @@ void format_accounts::operator()(account_t& account)
       account_xdata(account).dflags |= ACCOUNT_DISPLAYED;
     }
   }
+#endif
 }
 
 format_equity::format_equity(std::ostream& _output_stream,
@@ -937,6 +949,7 @@ format_equity::format_equity(std::ostream& _output_stream,
 			     const string& display_predicate)
   : output_stream(_output_stream), disp_pred(display_predicate)
 {
+#if 0
   const char * f = _format.c_str();
   if (const char * p = std::strstr(f, "%/")) {
     first_line_format.reset(string(f, 0, p - f));
@@ -950,10 +963,12 @@ format_equity::format_equity(std::ostream& _output_stream,
   header_entry.payee = "Opening Balances";
   header_entry._date = current_moment;
   first_line_format.format(output_stream, details_t(header_entry));
+#endif
 }
 
 void format_equity::flush()
 {
+#if 0
   account_xdata_t xdata;
   xdata.value = total;
   xdata.value.negate();
@@ -980,10 +995,12 @@ void format_equity::flush()
     next_lines_format.format(output_stream, details_t(summary));
   }
   output_stream.flush();
+#endif
 }
 
 void format_equity::operator()(account_t& account)
 {
+#if 0
   if (display_account(account, disp_pred)) {
     if (account_has_xdata(account)) {
       value_t val = account_xdata_(account).value;
@@ -1011,6 +1028,7 @@ void format_equity::operator()(account_t& account)
     }
     account_xdata(account).dflags |= ACCOUNT_DISPLAYED;
   }
+#endif
 }
 
 } // namespace ledger

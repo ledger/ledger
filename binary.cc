@@ -31,6 +31,7 @@
 
 #include "binary.h"
 #include "journal.h"
+#include "session.h"
 
 namespace ledger {
 
@@ -58,7 +59,7 @@ extern char *		      bigints_next;
 extern unsigned int	      bigints_index;
 extern unsigned int	      bigints_count;
 
-bool binary_parser_t::test(std::istream& in) const
+bool journal_t::binary_parser_t::test(std::istream& in) const
 {
   if (binary::read_number_nocheck<unsigned long>(in) == binary_magic_number &&
       binary::read_number_nocheck<unsigned long>(in) == format_version)
@@ -76,14 +77,13 @@ namespace binary {
 			    account_t *	  master);
 }
 
-unsigned int binary_parser_t::parse(std::istream& in,
-				    session_t&     session,
-				    journal_t&	  journal,
-				    account_t *	  master,
-				    const path *  original_file)
+unsigned int journal_t::binary_parser_t::parse(std::istream& in,
+					       session_t&    session,
+					       journal_t&    journal,
+					       account_t *   master,
+					       const path *  original_file)
 {
-  return binary::read_journal(in, original_file ? *original_file : "",
-			      journal, master);
+  return journal.read(in, original_file ? *original_file : "", master);
 }
 
 namespace binary {
@@ -281,66 +281,16 @@ inline void read_value(const char *& data, value_t& val)
   }
 }
 
-inline void read_mask(const char *& data, mask_t *& mask)
+inline void read_mask(const char *& data, mask_t& mask)
 {
   bool exclude;
   read_number(data, exclude);
   string pattern;
   read_string(data, pattern);
 
-  mask = new mask_t(pattern);
-  mask->exclude = exclude;
+  mask = mask_t(pattern);
+  mask.exclude = exclude;
 }
-
-inline expr::ptr_op_t read_value_expr(const char *& data)
-{
-  if (! read_bool(data))
-    return expr::ptr_op_t();
-
-  expr::op_t::kind_t kind;
-  read_number(data, kind);
-
-  expr::ptr_op_t expr = new expr::op_t(kind);
-
-  if (kind > expr::op_t::TERMINALS)
-    expr->set_left(read_value_expr(data));
-
-  switch (expr->kind) {
-  case expr::op_t::O_ARG:
-  case expr::op_t::INDEX: {
-    long temp;
-    read_long(data, temp);
-    expr->set_long(temp);
-    break;
-  }
-  case expr::op_t::VALUE: {
-    value_t temp;
-    read_value(data, temp);
-    expr->set_value(temp);
-    break;
-  }
-
-  case expr::op_t::F_CODE_MASK:
-  case expr::op_t::F_PAYEE_MASK:
-  case expr::op_t::F_NOTE_MASK:
-  case expr::op_t::F_ACCOUNT_MASK:
-  case expr::op_t::F_SHORT_ACCOUNT_MASK:
-  case expr::op_t::F_COMMODITY_MASK:
-#if 0
-    if (read_bool(data))
-      read_mask(data, expr->mask);
-#endif
-    break;
-
-  default:
-    if (kind > expr::op_t::TERMINALS)
-      expr->set_right(read_value_expr(data));
-    break;
-  }
-
-  return expr;
-}
-
 
 inline void read_transaction(const char *& data, transaction_t * xact)
 {
@@ -354,24 +304,20 @@ inline void read_transaction(const char *& data, transaction_t * xact)
   }
   else if (flag == 1) {
     read_amount(data, xact->amount);
-    read_string(data, xact->amount_expr.expr_str);
+    string str;
+    read_string(data, str);
+    xact->amount_expr.set_text(str);
   }
   else {
-    expr::ptr_op_t ptr = read_value_expr(data);
-    assert(ptr.get());
-    xact->amount_expr.reset(ptr);
-    read_string(data, xact->amount_expr.expr_str);
+    xact->amount_expr.read(data);
   }
 
   if (read_bool(data)) {
     xact->cost = amount_t();
     read_amount(data, *xact->cost);
 
-    expr::ptr_op_t ptr = read_value_expr(data);
-    assert(ptr.get());
-    value_expr expr;
-    expr.reset(ptr);
-    xact->cost_expr = expr;
+    xact->cost_expr = expr_t();
+    xact->cost_expr->read(data);
   } else {
     xact->cost = none;
   }
@@ -388,8 +334,10 @@ inline void read_transaction(const char *& data, transaction_t * xact)
 
   xact->data = NULL;
 
+#if 0
   if (xact->amount_expr)
-    expr::compute_amount(xact->amount_expr.get(), xact->amount, xact);
+    expr_t::compute_amount(xact->amount_expr.get(), xact->amount, xact);
+#endif
 }
 
 inline void read_entry_base(const char *& data, entry_base_t * entry,
@@ -429,7 +377,10 @@ inline void read_auto_entry(const char *& data, auto_entry_t * entry,
 {
   bool ignore;
   read_entry_base(data, entry, xact_pool, ignore);
-  entry->predicate = item_predicate<transaction_t>(read_value_expr(data));
+
+  expr_t expr;
+  expr.read(data);
+  entry->predicate = item_predicate<transaction_t>(expr);
 }
 
 inline void read_period_entry(const char *& data, period_entry_t * entry,
@@ -597,218 +548,6 @@ account_t * read_account(const char *& data, journal_t& journal,
   return acct;
 }
 
-unsigned int read_journal(std::istream&	in,
-			  const path&	file,
-			  journal_t&	journal,
-			  account_t *	master)
-{
-  account_index	       = 
-  base_commodity_index = 
-  commodity_index      = 0;
-
-  // Read in the files that participated in this journal, so that they
-  // can be checked for changes on reading.
-
-  if (! file.empty()) {
-    for (unsigned short i = 0,
-	   count = read_number<unsigned short>(in);
-	 i < count;
-	 i++) {
-      path pathname = read_string(in);
-      std::time_t old_mtime;
-      read_number(in, old_mtime);
-      struct stat info;
-      // jww (2008-04-22): can this be done differently now?
-      stat(pathname.string().c_str(), &info);
-      if (std::difftime(info.st_mtime, old_mtime) > 0)
-	return 0;
-
-      journal.sources.push_back(pathname);
-    }
-
-    // Make sure that the cache uses the same price database,
-    // otherwise it means that LEDGER_PRICE_DB has been changed, and
-    // we should ignore this cache file.
-    if (read_bool(in)) {
-      string pathname;
-      read_string(in, pathname);
-      if (! journal.price_db ||
-	  journal.price_db->string() != std::string(pathname))
-	return 0;
-    }
-  }
-
-  // Read all of the data in at once, so that we're just dealing with
-  // a big data buffer.
-
-  unsigned long data_size = read_number<unsigned long>(in);
-
-  char * data_pool = new char[data_size];
-  in.read(data_pool, data_size);
-
-  // Read in the accounts
-
-  const char * data = data_pool;
-
-  account_t::ident_t a_count = read_long<account_t::ident_t>(data);
-  accounts = accounts_next = new account_t *[a_count];
-
-  assert(journal.master);
-  checked_delete(journal.master);
-  journal.master = read_account(data, journal, master);
-
-  if (read_bool(data))
-    journal.basket = accounts[read_long<account_t::ident_t>(data) - 1];
-
-  // Allocate the memory needed for the entries and transactions in
-  // one large block, which is then chopped up and custom constructed
-  // as necessary.
-
-  unsigned long count        = read_long<unsigned long>(data);
-  unsigned long auto_count   = read_long<unsigned long>(data);
-  unsigned long period_count = read_long<unsigned long>(data);
-  unsigned long xact_count   = read_number<unsigned long>(data);
-  unsigned long bigint_count = read_number<unsigned long>(data);
-
-  std::size_t pool_size = (sizeof(entry_t) * count +
-			   sizeof(transaction_t) * xact_count +
-			   amount_t::sizeof_bigint_t() * bigint_count);
-
-  char * item_pool = new char[pool_size];
-
-  journal.item_pool	 = item_pool;
-  journal.item_pool_end = item_pool + pool_size;
-
-  entry_t *	  entry_pool = (entry_t *) item_pool;
-  transaction_t * xact_pool  = (transaction_t *) (item_pool +
-						  sizeof(entry_t) * count);
-  bigints_index = 0;
-  bigints = bigints_next = (item_pool + sizeof(entry_t) * count +
-			    sizeof(transaction_t) * xact_count);
-
-  // Read in the base commodities and then derived commodities
-
-  commodity_t::ident_t bc_count = read_long<commodity_t::ident_t>(data);
-  base_commodities = base_commodities_next = new commodity_t::base_t *[bc_count];
-
-  for (commodity_t::ident_t i = 0; i < bc_count; i++) {
-#if 0
-    commodity_t::base_t * base = read_commodity_base(data);
-
-    // jww (2008-04-22): How does the pool get created here?
-    amount_t::current_pool->commodities.push_back(commodity);
-
-    // jww (2008-04-22): What about this logic here?
-    if (! result.second) {
-      base_commodities_map::iterator c =
-	commodity_t::base_t::commodities.find(commodity->symbol);
-
-      // It's possible the user might have used a commodity in a value
-      // expression passed to an option, we'll just override the
-      // flags, but keep the commodity pointer intact.
-      if (c == commodity_t::base_t::commodities.end())
-	throw new error(string("Failed to read base commodity from cache: ") +
-			commodity->symbol);
-
-      (*c).second->name	     = commodity->name;
-      (*c).second->note	     = commodity->note;
-      (*c).second->precision = commodity->precision;
-      (*c).second->flags     = commodity->flags;
-      if ((*c).second->smaller)
-	checked_delete((*c).second->smaller);
-      (*c).second->smaller   = commodity->smaller;
-      if ((*c).second->larger)
-	checked_delete((*c).second->larger);
-      (*c).second->larger    = commodity->larger;
-
-      *(base_commodities_next - 1) = (*c).second;
-      checked_delete(commodity);
-    }
-#endif
-  }
-
-  commodity_t::ident_t c_count  = read_long<commodity_t::ident_t>(data);
-  commodities = commodities_next = new commodity_t *[c_count];
-
-  for (commodity_t::ident_t i = 0; i < c_count; i++) {
-    commodity_t * commodity;
-    string	  mapping_key;
-
-    if (! read_bool(data)) {
-      commodity	  = read_commodity(data);
-      mapping_key = commodity->base->symbol;
-    } else {
-      read_string(data, mapping_key);
-      commodity = read_commodity_annotated(data);
-    }
-
-    // jww (2008-04-22): What do I do with mapping_key here?
-    amount_t::current_pool->commodities.push_back(commodity);
-#if 0
-    // jww (2008-04-22): What about the error case?
-    if (! result.second) {
-      commodities_map::iterator c =
-	commodity_t::commodities.find(mapping_key);
-      if (c == commodity_t::commodities.end())
-	throw new error(string("Failed to read commodity from cache: ") +
-			commodity->symbol());
-
-      *(commodities_next - 1) = (*c).second;
-      checked_delete(commodity);
-    }
-#endif
-  }
-
-  for (commodity_t::ident_t i = 0; i < bc_count; i++)
-    read_commodity_base_extra(data, i);
-
-  commodity_t::ident_t ident;
-  read_long(data, ident);
-  if (ident == 0xffffffff || ident == 0)
-    amount_t::current_pool->default_commodity = NULL;
-  else
-    amount_t::current_pool->default_commodity = commodities[ident - 1];
-
-  // Read in the entries and transactions
-
-  for (unsigned long i = 0; i < count; i++) {
-    new(entry_pool) entry_t;
-    bool finalize = false;
-    read_entry(data, entry_pool, xact_pool, finalize);
-    entry_pool->journal = &journal;
-    if (finalize && ! entry_pool->finalize())
-      continue;
-    journal.entries.push_back(entry_pool++);
-  }
-
-  for (unsigned long i = 0; i < auto_count; i++) {
-    auto_entry_t * auto_entry = new auto_entry_t;
-    read_auto_entry(data, auto_entry, xact_pool);
-    auto_entry->journal = &journal;
-    journal.auto_entries.push_back(auto_entry);
-  }
-
-  for (unsigned long i = 0; i < period_count; i++) {
-    period_entry_t * period_entry = new period_entry_t;
-    bool finalize = false;
-    read_period_entry(data, period_entry, xact_pool, finalize);
-    period_entry->journal = &journal;
-    if (finalize && ! period_entry->finalize())
-      continue;
-    journal.period_entries.push_back(period_entry);
-  }
-
-  // Clean up and return the number of entries read
-
-  checked_array_delete(accounts);
-  checked_array_delete(commodities);
-  checked_array_delete(data_pool);
-
-  VERIFY(journal.valid());
-
-  return count;
-}
-
 void write_amount(std::ostream& out, const amount_t& amt)
 {
   if (amt.commodity_)
@@ -844,60 +583,14 @@ void write_value(std::ostream& out, const value_t& val)
   }
 }
 
-void write_mask(std::ostream& out, mask_t * mask)
+void write_mask(std::ostream& out, mask_t& mask)
 {
-  write_number(out, mask->exclude);
-  write_string(out, mask->expr.str());
-}
-
-void write_value_expr(std::ostream& out, const expr::ptr_op_t expr)
-{
-  if (! expr) {
-    write_bool(out, false);
-    return;
-  }
-
-  write_bool(out, true);
-  write_number(out, expr->kind);
-
-  if (expr->kind > expr::op_t::TERMINALS)
-    write_value_expr(out, expr->left());
-
-  switch (expr->kind) {
-  case expr::op_t::O_ARG:
-  case expr::op_t::INDEX:
-    write_long(out, expr->as_long());
-    break;
-  case expr::op_t::VALUE:
-    write_value(out, expr->as_value());
-    break;
-
-  case expr::op_t::F_CODE_MASK:
-  case expr::op_t::F_PAYEE_MASK:
-  case expr::op_t::F_NOTE_MASK:
-  case expr::op_t::F_ACCOUNT_MASK:
-  case expr::op_t::F_SHORT_ACCOUNT_MASK:
-  case expr::op_t::F_COMMODITY_MASK:
-#if 0
-    if (expr->mask) {
-      write_bool(out, true);
-      write_mask(out, expr->mask);
-    } else {
-      write_bool(out, false);
-    }
-#endif
-    break;
-
-  default:
-    if (expr->kind > expr::op_t::TERMINALS)
-      write_value_expr(out, expr->right());
-    break;
-  }
-
+  write_number(out, mask.exclude);
+  write_string(out, mask.expr.str());
 }
 
 void write_transaction(std::ostream& out, transaction_t * xact,
-			      bool ignore_calculated)
+		       bool ignore_calculated)
 {
   write_number(out, xact->_date);
   write_number(out, xact->_date_eff);
@@ -909,13 +602,12 @@ void write_transaction(std::ostream& out, transaction_t * xact,
   }
   else if (xact->amount_expr) {
     write_number<unsigned char>(out, 2);
-    write_value_expr(out, xact->amount_expr.get());
-    write_string(out, xact->amount_expr.expr_str);
+    xact->amount_expr.write(out);
   }
-  else if (! xact->amount_expr.expr_str.empty()) {
+  else if (! xact->amount_expr.text().empty()) {
     write_number<unsigned char>(out, 1);
     write_amount(out, xact->amount);
-    write_string(out, xact->amount_expr.expr_str);
+    write_string(out, xact->amount_expr.text());
   }
   else {
     write_number<unsigned char>(out, 0);
@@ -926,7 +618,7 @@ void write_transaction(std::ostream& out, transaction_t * xact,
       (! (ignore_calculated && xact->has_flags(TRANSACTION_CALCULATED)))) {
     write_bool(out, true);
     write_amount(out, *xact->cost);
-    write_string(out, xact->cost_expr->expr_str);
+    xact->cost_expr->write(out);
   } else {
     write_bool(out, false);
   }
@@ -979,7 +671,7 @@ void write_entry(std::ostream& out, entry_t * entry)
 void write_auto_entry(std::ostream& out, auto_entry_t * entry)
 {
   write_entry_base(out, entry);
-  write_value_expr(out, entry->predicate.predicate.get());
+  entry->predicate.predicate.write(out);
 }
 
 void write_period_entry(std::ostream& out, period_entry_t * entry)
@@ -1102,8 +794,226 @@ void write_account(std::ostream& out, account_t * account)
     write_account(out, (*i).second);
 }
 
-void write_journal(std::ostream& out, journal_t& journal)
+} // namespace binary
+
+unsigned int journal_t::read(std::istream& in,
+			     const path&   file,
+			     account_t *   master)
 {
+  using namespace binary;
+
+  account_index	       = 
+  base_commodity_index = 
+  commodity_index      = 0;
+
+  // Read in the files that participated in this journal, so that they
+  // can be checked for changes on reading.
+
+  if (! file.empty()) {
+    for (unsigned short i = 0,
+	   count = read_number<unsigned short>(in);
+	 i < count;
+	 i++) {
+      path pathname = read_string(in);
+      std::time_t old_mtime;
+      read_number(in, old_mtime);
+      struct stat info;
+      // jww (2008-04-22): can this be done differently now?
+      stat(pathname.string().c_str(), &info);
+      if (std::difftime(info.st_mtime, old_mtime) > 0)
+	return 0;
+
+      sources.push_back(pathname);
+    }
+
+    // Make sure that the cache uses the same price database,
+    // otherwise it means that LEDGER_PRICE_DB has been changed, and
+    // we should ignore this cache file.
+    if (read_bool(in)) {
+      string pathname;
+      read_string(in, pathname);
+      if (! price_db ||
+	  price_db->string() != std::string(pathname))
+	return 0;
+    }
+  }
+
+  // Read all of the data in at once, so that we're just dealing with
+  // a big data buffer.
+
+  unsigned long data_size = read_number<unsigned long>(in);
+
+  char * data_pool = new char[data_size];
+  in.read(data_pool, data_size);
+
+  // Read in the accounts
+
+  const char * data = data_pool;
+
+  account_t::ident_t a_count = read_long<account_t::ident_t>(data);
+  accounts = accounts_next = new account_t *[a_count];
+
+  // jww (2008-07-29): Does this still apply?
+  assert(owner->master);
+  checked_delete(owner->master);
+  owner->master = read_account(data, *this, master);
+
+  if (read_bool(data))
+    basket = accounts[read_long<account_t::ident_t>(data) - 1];
+
+  // Allocate the memory needed for the entries and transactions in
+  // one large block, which is then chopped up and custom constructed
+  // as necessary.
+
+  unsigned long count        = read_long<unsigned long>(data);
+  unsigned long auto_count   = read_long<unsigned long>(data);
+  unsigned long period_count = read_long<unsigned long>(data);
+  unsigned long xact_count   = read_number<unsigned long>(data);
+  unsigned long bigint_count = read_number<unsigned long>(data);
+
+  std::size_t pool_size = (sizeof(entry_t) * count +
+			   sizeof(transaction_t) * xact_count +
+			   amount_t::sizeof_bigint_t() * bigint_count);
+
+  char * item_pool = new char[pool_size];
+
+  item_pool	 = item_pool;
+  item_pool_end = item_pool + pool_size;
+
+  entry_t *	  entry_pool = (entry_t *) item_pool;
+  transaction_t * xact_pool  = (transaction_t *) (item_pool +
+						  sizeof(entry_t) * count);
+  bigints_index = 0;
+  bigints = bigints_next = (item_pool + sizeof(entry_t) * count +
+			    sizeof(transaction_t) * xact_count);
+
+  // Read in the base commodities and then derived commodities
+
+  commodity_t::ident_t bc_count = read_long<commodity_t::ident_t>(data);
+  base_commodities = base_commodities_next = new commodity_t::base_t *[bc_count];
+
+  for (commodity_t::ident_t i = 0; i < bc_count; i++) {
+#if 0
+    commodity_t::base_t * base = read_commodity_base(data);
+
+    // jww (2008-04-22): How does the pool get created here?
+    amount_t::current_pool->commodities.push_back(commodity);
+
+    // jww (2008-04-22): What about this logic here?
+    if (! result.second) {
+      base_commodities_map::iterator c =
+	commodity_t::base_t::commodities.find(commodity->symbol);
+
+      // It's possible the user might have used a commodity in a value
+      // expression passed to an option, we'll just override the
+      // flags, but keep the commodity pointer intact.
+      if (c == commodity_t::base_t::commodities.end())
+	throw new error(string("Failed to read base commodity from cache: ") +
+			commodity->symbol);
+
+      (*c).second->name	     = commodity->name;
+      (*c).second->note	     = commodity->note;
+      (*c).second->precision = commodity->precision;
+      (*c).second->flags     = commodity->flags;
+      if ((*c).second->smaller)
+	checked_delete((*c).second->smaller);
+      (*c).second->smaller   = commodity->smaller;
+      if ((*c).second->larger)
+	checked_delete((*c).second->larger);
+      (*c).second->larger    = commodity->larger;
+
+      *(base_commodities_next - 1) = (*c).second;
+      checked_delete(commodity);
+    }
+#endif
+  }
+
+  commodity_t::ident_t c_count  = read_long<commodity_t::ident_t>(data);
+  commodities = commodities_next = new commodity_t *[c_count];
+
+  for (commodity_t::ident_t i = 0; i < c_count; i++) {
+    commodity_t * commodity;
+    string	  mapping_key;
+
+    if (! read_bool(data)) {
+      commodity	  = read_commodity(data);
+      mapping_key = commodity->base->symbol;
+    } else {
+      read_string(data, mapping_key);
+      commodity = read_commodity_annotated(data);
+    }
+
+    // jww (2008-04-22): What do I do with mapping_key here?
+    amount_t::current_pool->commodities.push_back(commodity);
+#if 0
+    // jww (2008-04-22): What about the error case?
+    if (! result.second) {
+      commodities_map::iterator c =
+	commodity_t::commodities.find(mapping_key);
+      if (c == commodity_t::commodities.end())
+	throw new error(string("Failed to read commodity from cache: ") +
+			commodity->symbol());
+
+      *(commodities_next - 1) = (*c).second;
+      checked_delete(commodity);
+    }
+#endif
+  }
+
+  for (commodity_t::ident_t i = 0; i < bc_count; i++)
+    read_commodity_base_extra(data, i);
+
+  commodity_t::ident_t ident;
+  read_long(data, ident);
+  if (ident == 0xffffffff || ident == 0)
+    amount_t::current_pool->default_commodity = NULL;
+  else
+    amount_t::current_pool->default_commodity = commodities[ident - 1];
+
+  // Read in the entries and transactions
+
+  for (unsigned long i = 0; i < count; i++) {
+    new(entry_pool) entry_t;
+    bool finalize = false;
+    read_entry(data, entry_pool, xact_pool, finalize);
+    entry_pool->journal = this;
+    if (finalize && ! entry_pool->finalize())
+      continue;
+    entries.push_back(entry_pool++);
+  }
+
+  for (unsigned long i = 0; i < auto_count; i++) {
+    auto_entry_t * auto_entry = new auto_entry_t;
+    read_auto_entry(data, auto_entry, xact_pool);
+    auto_entry->journal = this;
+    auto_entries.push_back(auto_entry);
+  }
+
+  for (unsigned long i = 0; i < period_count; i++) {
+    period_entry_t * period_entry = new period_entry_t;
+    bool finalize = false;
+    read_period_entry(data, period_entry, xact_pool, finalize);
+    period_entry->journal = this;
+    if (finalize && ! period_entry->finalize())
+      continue;
+    period_entries.push_back(period_entry);
+  }
+
+  // Clean up and return the number of entries read
+
+  checked_array_delete(accounts);
+  checked_array_delete(commodities);
+  checked_array_delete(data_pool);
+
+  VERIFY(valid());
+
+  return count;
+}
+
+void journal_t::write(std::ostream& out)
+{
+  using namespace binary;
+
   account_index	       = 
   base_commodity_index = 
   commodity_index      = 0;
@@ -1114,12 +1024,12 @@ void write_journal(std::ostream& out, journal_t& journal)
   // Write out the files that participated in this journal, so that
   // they can be checked for changes on reading.
 
-  if (journal.sources.empty()) {
+  if (sources.empty()) {
     write_number<unsigned short>(out, 0);
   } else {
-    write_number<unsigned short>(out, journal.sources.size());
-    for (paths_list::const_iterator i = journal.sources.begin();
-	 i != journal.sources.end();
+    write_number<unsigned short>(out, sources.size());
+    for (paths_list::const_iterator i = sources.begin();
+	 i != sources.end();
 	 i++) {
       write_string(out, (*i).string());
       struct stat info;
@@ -1129,9 +1039,9 @@ void write_journal(std::ostream& out, journal_t& journal)
 
     // Write out the price database that relates to this data file, so
     // that if it ever changes the cache can be invalidated.
-    if (journal.price_db) {
+    if (price_db) {
       write_bool(out, true);
-      write_string(out, journal.price_db->string());
+      write_string(out, price_db->string());
     } else {
       write_bool(out, false);
     }
@@ -1142,21 +1052,21 @@ void write_journal(std::ostream& out, journal_t& journal)
 
   // Write out the accounts
 
-  write_long<account_t::ident_t>(out, count_accounts(journal.master));
-  write_account(out, journal.master);
+  write_long<account_t::ident_t>(out, count_accounts(master));
+  write_account(out, master);
 
-  if (journal.basket) {
+  if (basket) {
     write_bool(out, true);
-    write_long(out, journal.basket->ident);
+    write_long(out, basket->ident);
   } else {
     write_bool(out, false);
   }
 
   // Write out the number of entries, transactions, and amounts
 
-  write_long<unsigned long>(out, journal.entries.size());
-  write_long<unsigned long>(out, journal.auto_entries.size());
-  write_long<unsigned long>(out, journal.period_entries.size());
+  write_long<unsigned long>(out, entries.size());
+  write_long<unsigned long>(out, auto_entries.size());
+  write_long<unsigned long>(out, period_entries.size());
 
   ostream_pos_type xacts_val = out.tellp();
   write_number<unsigned long>(out, 0);
@@ -1220,22 +1130,22 @@ void write_journal(std::ostream& out, journal_t& journal)
 
   unsigned long xact_count = 0;
 
-  for (entries_list::const_iterator i = journal.entries.begin();
-       i != journal.entries.end();
+  for (entries_list::const_iterator i = entries.begin();
+       i != entries.end();
        i++) {
     write_entry(out, *i);
     xact_count += (*i)->transactions.size();
   }
 
-  for (auto_entries_list::const_iterator i = journal.auto_entries.begin();
-       i != journal.auto_entries.end();
+  for (auto_entries_list::const_iterator i = auto_entries.begin();
+       i != auto_entries.end();
        i++) {
     write_auto_entry(out, *i);
     xact_count += (*i)->transactions.size();
   }
 
-  for (period_entries_list::const_iterator i = journal.period_entries.begin();
-       i != journal.period_entries.end();
+  for (period_entries_list::const_iterator i = period_entries.begin();
+       i != period_entries.end();
        i++) {
     write_period_entry(out, *i);
     xact_count += (*i)->transactions.size();
@@ -1254,5 +1164,4 @@ void write_journal(std::ostream& out, journal_t& journal)
   write_number<unsigned long>(out, bigints_count);
 }
 
-} // namespace binary
 } // namespace ledger

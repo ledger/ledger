@@ -2,11 +2,9 @@
 #define _XOPEN_SOURCE
 #endif
 
-#include "journal.h"
 #include "textual.h"
-#include "valexpr.h"
-#include "parsexp.h"
-#include "utils.h"
+#include "expr.h"
+#include "parser.h"
 #include "acconf.h"
 
 #define TIMELOG_SUPPORT 1
@@ -50,14 +48,12 @@ struct time_entry_t
 #endif
 
 namespace {
-  value_expr parse_amount_expr(std::istream&   in,
-			       amount_t&       amount,
-			       transaction_t * xact,
-			       unsigned short  flags = 0)
+  expr_t parse_amount_expr(std::istream&   in,
+			   amount_t&       amount,
+			   transaction_t * xact,
+			   unsigned short  flags = 0)
   {
-    value_expr expr =
-      value_expr::parser->parse(in, flags |
-				EXPR_PARSE_RELAXED | EXPR_PARSE_PARTIAL);
+    expr_t expr(in, flags | EXPR_PARSE_PARTIAL);
 
     DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 	  "Parsed an amount expression");
@@ -71,12 +67,13 @@ namespace {
     }
 #endif
 
+#if 0
     if (expr) {
-      if (! expr::compute_amount(expr, amount, xact))
+      if (! expr_t::compute_amount(expr, amount, xact))
 	throw new parse_error("Amount expression failed to compute");
 
 #if 0
-      if (expr->kind == expr::node_t::VALUE) {
+      if (expr->kind == expr_t::node_t::VALUE) {
 	expr = NULL;
       } else {
 	DEBUG_IF("ledger.textual.parse") {
@@ -88,6 +85,7 @@ namespace {
       expr = value_expr();
 #endif
     }
+#endif
 
     DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 	  "The transaction amount is " << xact->amount);
@@ -201,7 +199,7 @@ transaction_t * parse_transaction(char * line, account_t * account,
       // always NULL right now
       if (xact->amount_expr) {
 	unsigned long end = (long)in.tellg();
-	xact->amount_expr.expr_str = string(line, beg, end - beg);
+	xact->amount_expr.set_text(string(line, beg, end - beg));
       }
     }
     catch (error * err) {
@@ -247,11 +245,11 @@ transaction_t * parse_transaction(char * line, account_t * account,
 	  if (xact->cost_expr) {
 	    unsigned long end = (long)in.tellg();
 	    if (per_unit)
-	      xact->cost_expr->expr_str = (string("@") +
-					   string(line, beg, end - beg));
+	      xact->cost_expr->set_text(string("@") +
+					string(line, beg, end - beg));
 	    else
-	      xact->cost_expr->expr_str = (string("@@") +
-					   string(line, beg, end - beg));
+	      xact->cost_expr->set_text(string("@@") +
+					string(line, beg, end - beg));
 	  }
 	}
 	catch (error * err) {
@@ -951,7 +949,7 @@ unsigned int textual_parser_t::parse(std::istream& in,
 	}
 	else if (word == "def") {
 #if 0
-	  if (! expr::global_scope.get())
+	  if (! expr_t::global_scope.get())
 	    init_value_expr();
 	  parse_value_definition(p);
 #endif
@@ -1088,11 +1086,13 @@ void write_textual_journal(journal_t& journal, path pathname,
   while (! in.eof()) {
     entry_base_t * base = NULL;
     if (el != journal.entries.end() && pos == (*el)->beg_pos) {
+#if 0
       hdr_fmt.format(out, details_t(**el));
+#endif
       base = *el++;
     }
     else if (al != journal.auto_entries.end() && pos == (*al)->beg_pos) {
-      out << "= " << (*al)->predicate.predicate.expr_str << '\n';
+      out << "= " << (*al)->predicate.predicate.text() << '\n';
       base = *al++;
     }
     else if (pl != journal.period_entries.end() && pos == (*pl)->beg_pos) {
