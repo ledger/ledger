@@ -702,12 +702,12 @@ value_t expr_t::op_t::calc(scope_t& scope)
       ptr_op_t def = func->compile(scope);
       if (def == func)
 	throw_(calc_error,
-	       "Attempt to call unknown function '" << name << "'");
+	       "Calling unknown function '" << name << "'");
       func = def;
     }
 
     if (func->kind != FUNCTION)
-      throw_(calc_error, "Attempt to call non-function");
+      throw_(calc_error, "Calling non-function");
 
     return func->as_function()(call_args);
   }

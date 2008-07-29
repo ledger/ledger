@@ -14,12 +14,18 @@ lib_LTLIBRARIES = libamounts.la libledger.la
 
 libamounts_la_CPPFLAGS =
 libamounts_la_SOURCES = \
+	utils.cc       \
+	times.cc       \
+	mask.cc        \
 	amount.cc      \
 	commodity.cc   \
 	balance.cc     \
 	value.cc       \
-	times.cc       \
-	utils.cc
+	token.cc       \
+	parser.cc      \
+	op.cc          \
+	expr.cc        \
+	scope.cc
 if HAVE_EXPAT
 libamounts_la_CPPFLAGS += -DHAVE_EXPAT=1
 endif
@@ -38,12 +44,6 @@ endif
 
 libledger_la_CPPFLAGS = $(libamounts_la_CPPFLAGS)
 libledger_la_SOURCES = \
-	mask.cc        \
-	token.cc       \
-	parser.cc      \
-	op.cc          \
-	expr.cc        \
-	scope.cc       \
 	format.cc      \
 		       \
 	journal.cc     \
@@ -81,8 +81,9 @@ pkginclude_HEADERS = \
 	balance.h    \
 	balpair.h    \
 	value.h      \
-	times.h	     \
 	utils.h	     \
+	times.h	     \
+	mask.h       \
 	error.h      \
 		     \
 	expr.h       \
@@ -92,7 +93,6 @@ pkginclude_HEADERS = \
 	scope.h      \
 	predicate.h  \
 	format.h     \
-	mask.h       \
 		     \
 	journal.h    \
 	report.h     \
