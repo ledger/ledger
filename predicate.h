@@ -59,13 +59,8 @@ public:
     TRACE_DTOR(item_predicate);
   }
 
-  bool operator()(const T& item) const {
-#if 0
-    template context_t<T> context(item);
-    return ! predicate || predicate->calc(context).strip_annotations();
-#else
-    return false;
-#endif
+  bool operator()(T& item) const {
+    return ! predicate || predicate.calc(item).strip_annotations();
   }
 };
 

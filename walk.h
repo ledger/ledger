@@ -145,7 +145,7 @@ inline bool xact_has_xdata(const xact_t& xact) {
 }
 
 inline xact_xdata_t& xact_xdata_(const xact_t& xact) {
-  return *((xact_xdata_t *) xact.data);
+  return *static_cast<xact_xdata_t *>(xact.data);
 }
 
 xact_xdata_t& xact_xdata(const xact_t& xact);
@@ -264,7 +264,7 @@ public:
 class ignore_xacts : public item_handler<xact_t>
 {
 public:
-  virtual void operator()(xact_t& xact) {}
+  virtual void operator()(xact_t&) {}
 };
 
 class clear_xact_xdata : public item_handler<xact_t>
@@ -272,7 +272,7 @@ class clear_xact_xdata : public item_handler<xact_t>
 public:
   virtual void operator()(xact_t& xact) {
     if (xact.data) {
-      checked_delete((xact_xdata_t *) xact.data);
+      checked_delete(static_cast<xact_xdata_t *>(xact.data));
       xact.data = NULL;
     }
   }
@@ -939,7 +939,7 @@ inline bool account_has_xdata(const account_t& account) {
 }
 
 inline account_xdata_t& account_xdata_(const account_t& account) {
-  return *((account_xdata_t *) account.data);
+  return *static_cast<account_xdata_t *>(account.data);
 }
 
 account_xdata_t& account_xdata(const account_t& account);
@@ -1019,7 +1019,7 @@ class clear_account_xdata : public item_handler<account_t>
 public:
   virtual void operator()(account_t& acct) {
     if (acct.data) {
-      checked_delete((account_xdata_t *) acct.data);
+      checked_delete(static_cast<account_xdata_t *>(acct.data));
       acct.data = NULL;
     }
   }

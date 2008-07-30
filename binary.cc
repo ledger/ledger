@@ -560,7 +560,7 @@ void write_amount(std::ostream& out, const amount_t& amt)
 
 void write_value(std::ostream& out, const value_t& val)
 {
-  write_long(out, (int)val.type());
+  write_long(out, static_cast<int>(val.type()));
 
   switch (val.type()) {
   case value_t::BOOLEAN:
@@ -877,12 +877,12 @@ unsigned int journal_t::read(std::istream& in,
 
   char * item_pool = new char[pool_size];
 
-  item_pool	 = item_pool;
+  item_pool	= item_pool;
   item_pool_end = item_pool + pool_size;
 
-  entry_t *	  entry_pool = (entry_t *) item_pool;
-  xact_t * xact_pool  = (xact_t *) (item_pool +
-						  sizeof(entry_t) * count);
+  entry_t * entry_pool = reinterpret_cast<entry_t *>(item_pool);
+  xact_t * xact_pool   = reinterpret_cast<xact_t *>(item_pool +
+						    (sizeof(entry_t) * count));
   bigints_index = 0;
   bigints = bigints_next = (item_pool + sizeof(entry_t) * count +
 			    sizeof(xact_t) * xact_count);
@@ -1153,8 +1153,8 @@ void journal_t::write(std::ostream& out)
 
   // Back-patch the count for amounts
 
-  unsigned long data_size = (((unsigned long) out.tellp()) -
-			     ((unsigned long) data_val) -
+  unsigned long data_size = (static_cast<unsigned long>(out.tellp()) -
+			     static_cast<unsigned long>(data_val) -
 			     sizeof(unsigned long));
   out.seekp(data_val);
   write_number<unsigned long>(out, data_size);

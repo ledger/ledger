@@ -3,8 +3,8 @@
 
 namespace ledger {
 
-#define xact_next(x)     ((xact_t *)xact_xdata(*x).ptr)
-#define xact_next_ptr(x) ((xact_t **)&xact_xdata(*x).ptr)
+#define xact_next(x)     reinterpret_cast<xact_t *>(xact_xdata(*x).ptr)
+#define xact_next_ptr(x) reinterpret_cast<xact_t **>(&xact_xdata(*x).ptr)
 
 static bool search_for_balance(amount_t& amount,
 			       xact_t ** prev, xact_t * next)

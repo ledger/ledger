@@ -114,6 +114,15 @@ std::ostream& operator<<(std::ostream& out, const account_t& account)
   return out;
 }
 
+expr_t::ptr_op_t account_t::lookup(const string& name)
+{
+  switch (name[0]) {
+  case 'a':
+    break;
+  }
+  return expr_t::ptr_op_t();
+}
+
 bool account_t::valid() const
 {
   if (depth > 256) {

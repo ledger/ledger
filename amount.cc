@@ -1283,7 +1283,7 @@ void amount_t::read(std::istream& in)
     quantity = new bigint_t;
 
     unsigned short len;
-    in.read((char *)&len, sizeof(len));
+    in.read(reinterpret_cast<char *>(&len), sizeof(len));
     assert(len < 4096);
     in.read(buf, len);
     mpz_import(MPZ(quantity), len / sizeof(short), 1, sizeof(short),
@@ -1294,10 +1294,10 @@ void amount_t::read(std::istream& in)
     if (negative)
       mpz_neg(MPZ(quantity), MPZ(quantity));
 
-    in.read((char *)&quantity->prec, sizeof(quantity->prec));
+    in.read(reinterpret_cast<char *>(&quantity->prec), sizeof(quantity->prec));
 
     bigint_t::flags_t tflags;
-    in.read((char *)&tflags, sizeof(tflags));
+    in.read(reinterpret_cast<char *>(&tflags), sizeof(tflags));
     quantity->set_flags(tflags);
   }
   else {
@@ -1328,13 +1328,14 @@ void amount_t::read(const char *& data)
 
   if (byte < 3) {
     if (byte == 2) {
-      quantity = new((bigint_t *)bigints_next) bigint_t;
+      quantity = new(reinterpret_cast<bigint_t *>(bigints_next)) bigint_t;
       bigints_next += sizeof(bigint_t);
     } else {
       quantity = new bigint_t;
     }
 
-    unsigned short len = *((unsigned short *) data);
+    unsigned short len =
+      *reinterpret_cast<unsigned short *>(const_cast<char *>(data));
     data += sizeof(unsigned short);
     mpz_import(MPZ(quantity), len / sizeof(short), 1, sizeof(short),
 	       0, 0, data);
@@ -1344,18 +1345,18 @@ void amount_t::read(const char *& data)
     if (negative)
       mpz_neg(MPZ(quantity), MPZ(quantity));
 
-    quantity->prec = *((precision_t *) data);
+    quantity->prec = *reinterpret_cast<precision_t *>(const_cast<char *>(data));
     data += sizeof(precision_t);
-    quantity->set_flags(*((flags_t *) data));
+    quantity->set_flags(*reinterpret_cast<flags_t *>(const_cast<char *>(data)));
     data += sizeof(flags_t);
 
     if (byte == 2)
       quantity->add_flags(BIGINT_BULK_ALLOC);
   } else {
-    uint_fast32_t index = *((uint_fast32_t *) data);
+    uint_fast32_t index = *reinterpret_cast<uint_fast32_t *>(const_cast<char *>(data));
     data += sizeof(uint_fast32_t);
 
-    quantity = (bigint_t *) (bigints + (index - 1) * sizeof(bigint_t));
+    quantity = reinterpret_cast<bigint_t *>(bigints + (index - 1) * sizeof(bigint_t));
     DEBUG("amounts.refs",
 	   quantity << " ref++, now " << (quantity->ref + 1));
     quantity->ref++;
@@ -1393,7 +1394,7 @@ void amount_t::write(std::ostream& out, bool optimized) const
     std::size_t size;
     mpz_export(buf, &size, 1, sizeof(short), 0, 0, MPZ(quantity));
     unsigned short len = size * sizeof(short);
-    out.write((char *)&len, sizeof(len));
+    out.write(reinterpret_cast<char *>(&len), sizeof(len));
     if (len) {
       assert(len < 4096);
       out.write(buf, len);
@@ -1402,10 +1403,10 @@ void amount_t::write(std::ostream& out, bool optimized) const
     byte = mpz_sgn(MPZ(quantity)) < 0 ? 1 : 0;
     out.write(&byte, sizeof(byte));
 
-    out.write((char *)&quantity->prec, sizeof(quantity->prec));
+    out.write(reinterpret_cast<char *>(&quantity->prec), sizeof(quantity->prec));
     bigint_t::flags_t tflags = quantity->flags() & ~BIGINT_BULK_ALLOC;
     assert(sizeof(tflags) == sizeof(bigint_t::flags_t));
-    out.write((char *)&tflags, sizeof(tflags));
+    out.write(reinterpret_cast<char *>(&tflags), sizeof(tflags));
   } else {
     assert(quantity->ref > 1);
 
@@ -1413,7 +1414,7 @@ void amount_t::write(std::ostream& out, bool optimized) const
     // out a reference to which one it was.
     byte = 3;
     out.write(&byte, sizeof(byte));
-    out.write((char *)&quantity->index, sizeof(quantity->index));
+    out.write(reinterpret_cast<char *>(&quantity->index), sizeof(quantity->index));
   }
 }
 

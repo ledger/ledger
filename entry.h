@@ -143,7 +143,7 @@ public:
     TRACE_CTOR(auto_entry_t, "");
   }
   auto_entry_t(const auto_entry_t& other)
-  : predicate(other.predicate) {
+    : entry_base_t(), predicate(other.predicate) {
     TRACE_CTOR(auto_entry_t, "copy");
   }
   auto_entry_t(const string& _predicate)
@@ -170,7 +170,7 @@ struct auto_entry_finalizer_t : public entry_finalizer_t
     TRACE_CTOR(auto_entry_finalizer_t, "");
   }
   auto_entry_finalizer_t(const auto_entry_finalizer_t& other)
-    : journal(other.journal) {
+    : entry_finalizer_t(), journal(other.journal) {
     TRACE_CTOR(auto_entry_finalizer_t, "copy");
   }
   auto_entry_finalizer_t(journal_t * _journal) : journal(_journal) {

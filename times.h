@@ -103,7 +103,8 @@ struct interval_t
 
   interval_t(const string& desc)
     : years(0), months(0), days(0),
-      hours(0), minutes(0), seconds(0), advanced(false) {
+      hours(0), minutes(0), seconds(0),
+      begin(), end(), advanced(false) {
     TRACE_CTOR(interval_t, "const string&");
     std::istringstream stream(desc);
     parse(stream);

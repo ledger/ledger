@@ -474,11 +474,11 @@ public:
   bool& as_boolean_lval() {
     assert(is_boolean());
     _dup();
-    return *(bool *) storage->data;
+    return *reinterpret_cast<bool *>(storage->data);
   }
   const bool& as_boolean() const {
     assert(is_boolean());
-    return *(bool *) storage->data;
+    return *reinterpret_cast<bool *>(storage->data);
   }
   void set_boolean(const bool val) {
     set_type(BOOLEAN);
@@ -491,15 +491,15 @@ public:
   long& as_long_lval() {
     assert(is_long());
     _dup();
-    return *(long *) storage->data;
+    return *reinterpret_cast<long *>(storage->data);
   }
   const long& as_long() const {
     assert(is_long());
-    return *(long *) storage->data;
+    return *reinterpret_cast<long *>(storage->data);
   }
   void set_long(const long val) {
     set_type(INTEGER);
-    *(long *) storage->data = val;
+    *reinterpret_cast<long *>(storage->data) = val;
   }
 
   bool is_datetime() const {
@@ -508,15 +508,15 @@ public:
   datetime_t& as_datetime_lval() {
     assert(is_datetime());
     _dup();
-    return *(datetime_t *) storage->data;
+    return *reinterpret_cast<datetime_t *>(storage->data);
   }
   const datetime_t& as_datetime() const {
     assert(is_datetime());
-    return *(datetime_t *) storage->data;
+    return *reinterpret_cast<datetime_t *>(storage->data);
   }
   void set_datetime(const datetime_t& val) {
     set_type(DATETIME);
-    new((datetime_t *) storage->data) datetime_t(val);
+    new(reinterpret_cast<datetime_t *>(storage->data)) datetime_t(val);
   }
 
   bool is_amount() const {
@@ -525,20 +525,20 @@ public:
   amount_t& as_amount_lval() {
     assert(is_amount());
     _dup();
-    amount_t& amt(*(amount_t *) storage->data);
+    amount_t& amt(*reinterpret_cast<amount_t *>(storage->data));
     assert(amt.valid());
     return amt;
   }
   const amount_t& as_amount() const {
     assert(is_amount());
-    amount_t& amt(*(amount_t *) storage->data);
+    amount_t& amt(*reinterpret_cast<amount_t *>(storage->data));
     assert(amt.valid());
     return amt;
   }
   void set_amount(const amount_t& val) {
     assert(val.valid());
     set_type(AMOUNT);
-    new((amount_t *) storage->data) amount_t(val);
+    new(reinterpret_cast<amount_t *>(storage->data)) amount_t(val);
   }
 
   bool is_balance() const {
@@ -547,20 +547,20 @@ public:
   balance_t& as_balance_lval() {
     assert(is_balance());
     _dup();
-    balance_t& bal(**(balance_t **) storage->data);
+    balance_t& bal(**reinterpret_cast<balance_t **>(storage->data));
     assert(bal.valid());
     return bal;
   }
   const balance_t& as_balance() const {
     assert(is_balance());
-    balance_t& bal(**(balance_t **) storage->data);
+    balance_t& bal(**reinterpret_cast<balance_t **>(storage->data));
     assert(bal.valid());
     return bal;
   }
   void set_balance(const balance_t& val) {
     assert(val.valid());
     set_type(BALANCE);
-    *(balance_t **) storage->data = new balance_t(val);
+    *reinterpret_cast<balance_t **>(storage->data) = new balance_t(val);
   }
 
   bool is_balance_pair() const {
@@ -569,20 +569,20 @@ public:
   balance_pair_t& as_balance_pair_lval() {
     assert(is_balance_pair());
     _dup();
-    balance_pair_t& bal_pair(**(balance_pair_t **) storage->data);
+    balance_pair_t& bal_pair(**reinterpret_cast<balance_pair_t **>(storage->data));
     assert(bal_pair.valid());
     return bal_pair;
   }
   const balance_pair_t& as_balance_pair() const {
     assert(is_balance_pair());
-    balance_pair_t& bal_pair(**(balance_pair_t **) storage->data);
+    balance_pair_t& bal_pair(**reinterpret_cast<balance_pair_t **>(storage->data));
     assert(bal_pair.valid());
     return bal_pair;
   }
   void set_balance_pair(const balance_pair_t& val) {
     assert(val.valid());
     set_type(BALANCE_PAIR);
-    *(balance_pair_t **) storage->data = new balance_pair_t(val);
+    *reinterpret_cast<balance_pair_t **>(storage->data) = new balance_pair_t(val);
   }
 
   bool is_string() const {
@@ -591,19 +591,19 @@ public:
   string& as_string_lval() {
     assert(is_string());
     _dup();
-    return *(string *) storage->data;
+    return *reinterpret_cast<string *>(storage->data);
   }
   const string& as_string() const {
     assert(is_string());
-    return *(string *) storage->data;
+    return *reinterpret_cast<string *>(storage->data);
   }
   void set_string(const string& val = "") {
     set_type(STRING);
-    new((string *) storage->data) string(val);
+    new(reinterpret_cast<string *>(storage->data)) string(val);
   }
   void set_string(const char * val = "") {
     set_type(STRING);
-    new((string *) storage->data) string(val);
+    new(reinterpret_cast<string *>(storage->data)) string(val);
   }
 
   bool is_sequence() const {
@@ -612,15 +612,15 @@ public:
   sequence_t& as_sequence_lval() {
     assert(is_sequence());
     _dup();
-    return **(sequence_t **) storage->data;
+    return **reinterpret_cast<sequence_t **>(storage->data);
   }
   const sequence_t& as_sequence() const {
     assert(is_sequence());
-    return **(sequence_t **) storage->data;
+    return **reinterpret_cast<sequence_t **>(storage->data);
   }
   void set_sequence(const sequence_t& val) {
     set_type(SEQUENCE);
-    *(sequence_t **) storage->data = new sequence_t(val);
+    *reinterpret_cast<sequence_t **>(storage->data) = new sequence_t(val);
   }
 
   bool is_pointer() const {
@@ -629,42 +629,42 @@ public:
   boost::any& as_any_pointer_lval() {
     assert(is_pointer());
     _dup();
-    return *(boost::any *) storage->data;
+    return *reinterpret_cast<boost::any *>(storage->data);
   }
   template <typename T>
   T * as_pointer_lval() {
     assert(is_pointer());
     _dup();
-    return any_cast<T *>(*(boost::any *) storage->data);
+    return any_cast<T *>(*reinterpret_cast<boost::any *>(storage->data));
   }
   template <typename T>
   T& as_ref_lval() {
     assert(is_pointer());
     _dup();
-    return *any_cast<T *>(*(boost::any *) storage->data);
+    return *any_cast<T *>(*reinterpret_cast<boost::any *>(storage->data));
   }
   const boost::any& as_any_pointer() const {
     assert(is_pointer());
-    return *(boost::any *) storage->data;
+    return *reinterpret_cast<boost::any *>(storage->data);
   }
   template <typename T>
   T * as_pointer() const {
     assert(is_pointer());
-    return any_cast<T *>(*(boost::any *) storage->data);
+    return any_cast<T *>(*reinterpret_cast<boost::any *>(storage->data));
   }
   template <typename T>
   T& as_ref() const {
     assert(is_pointer());
-    return *any_cast<T *>(*(boost::any *) storage->data);
+    return *any_cast<T *>(*reinterpret_cast<boost::any *>(storage->data));
   }
   void set_any_pointer(const boost::any& val) {
     set_type(POINTER);
-    new((boost::any *) storage->data) boost::any(val);
+    new(reinterpret_cast<boost::any *>(storage->data)) boost::any(val);
   }
   template <typename T>
   void set_pointer(T * val) {
     set_type(POINTER);
-    new((boost::any *) storage->data) boost::any(val);
+    new(reinterpret_cast<boost::any *>(storage->data)) boost::any(val);
   }
 
   /**

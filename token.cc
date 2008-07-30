@@ -331,7 +331,7 @@ void expr_t::token_t::next(std::istream& in, const unsigned int pflags)
     // When in relaxed parsing mode, we want to migrate commodity
     // flags so that any precision specified by the user updates the
     // current maximum displayed precision.
-    pos = (long)in.tellg();
+    pos = static_cast<unsigned long>(in.tellg());
 
     amount_t::flags_t parse_flags = 0;
     if (pflags & EXPR_PARSE_NO_MIGRATE)
@@ -381,7 +381,7 @@ void expr_t::token_t::unexpected()
 
 void expr_t::token_t::unexpected(char c, char wanted)
 {
-  if ((unsigned char) c == 0xff) {
+  if (static_cast<unsigned char>(c) == 0xff) {
     if (wanted)
       throw_(parse_error, "Missing '" << wanted << "'");
     else

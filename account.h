@@ -33,6 +33,7 @@
 #define _ACCOUNT_H
 
 #include "utils.h"
+#include "scope.h"
 
 namespace ledger {
 
@@ -40,7 +41,7 @@ class account_t;
 
 typedef std::map<const string, account_t *> accounts_map;
 
-class account_t
+class account_t : public scope_t
 {
  public:
   typedef unsigned long ident_t;
@@ -58,12 +59,13 @@ class account_t
   account_t(account_t *   _parent = NULL,
 	    const string& _name   = "",
 	    const optional<string>& _note = none)
-    : parent(_parent), name(_name), note(_note),
+    : scope_t(), parent(_parent), name(_name), note(_note),
       depth(parent ? parent->depth + 1 : 0), data(NULL), ident(0) {
     TRACE_CTOR(account_t, "account_t *, const string&, const string&");
   }
   account_t(const account_t& other)
-    : parent(other.parent),
+    : scope_t(),
+      parent(other.parent),
       name(other.name),
       note(other.note),
       depth(other.depth),
@@ -90,6 +92,8 @@ class account_t
   }
 
   account_t * find_account(const string& name, bool auto_create = true);
+
+  virtual expr_t::ptr_op_t lookup(const string& name);
 
   bool valid() const;
 

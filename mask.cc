@@ -33,7 +33,7 @@
 
 namespace ledger {
 
-mask_t::mask_t(const string& pat) : exclude(false)
+mask_t::mask_t(const string& pat) : exclude(false), expr()
 {
   TRACE_CTOR(mask_t, "const string&");
 

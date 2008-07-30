@@ -928,7 +928,8 @@ bool display_account(const account_t& account,
   if (disp_subaccounts_p(account, disp_pred, account_to_show))
     return true;
 
-  return ! account_to_show && (! disp_pred || (*disp_pred)(account));
+  return (! account_to_show &&
+	  (! disp_pred || (*disp_pred)(const_cast<account_t&>(account))));
 }
 
 void format_accounts::operator()(account_t& account)

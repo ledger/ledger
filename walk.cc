@@ -44,7 +44,7 @@ xact_xdata_t& xact_xdata(const xact_t& xact)
 {
   if (! xact.data)
     xact.data = new xact_xdata_t();
-  return *((xact_xdata_t *) xact.data);
+  return *static_cast<xact_xdata_t *>(xact.data);
 }
 
 void add_xact_to(const xact_t& xact, value_t& value)
@@ -887,7 +887,7 @@ account_xdata_t& account_xdata(const account_t& account)
   if (! account.data)
     account.data = new account_xdata_t();
 
-  return *((account_xdata_t *) account.data);
+  return *static_cast<account_xdata_t *>(account.data);
 }
 
 void sum_accounts(account_t& account)

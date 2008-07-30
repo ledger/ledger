@@ -199,16 +199,16 @@ See LICENSE file included with the distribution for details and disclaimer.\n";
   // Debug options
   //
 
-  value_t option_trace_(scope_t& locals) {
+  value_t option_trace_(scope_t&) {
     return NULL_VALUE;
   }
-  value_t option_debug_(scope_t& locals) {
+  value_t option_debug_(scope_t&) {
     return NULL_VALUE;
   }
-
   value_t option_verify(scope_t&) {
     return NULL_VALUE;
   }
+
   value_t option_verbose(scope_t&) {
 #if defined(LOGGING_ON)
     if (_log_level < LOG_INFO)

@@ -152,7 +152,7 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
       // rightmost '/' character in the pager pathname.  See manpage
       // for strrchr.
       execlp(report.pager->native_file_string().c_str(),
-	     basename(*report.pager).c_str(), (char *)0);
+	     basename(*report.pager).c_str(), NULL);
       perror("execl");
       exit(1);
     }

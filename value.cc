@@ -42,28 +42,33 @@ value_t::storage_t& value_t::storage_t::operator=(const value_t::storage_t& rhs)
 
   switch (type) {
   case DATETIME:
-    new((datetime_t *) data) datetime_t(*(datetime_t *) rhs.data);
+    new(reinterpret_cast<datetime_t *>(data))
+      datetime_t(*reinterpret_cast<datetime_t *>(const_cast<char *>(rhs.data)));
     break;
 
   case AMOUNT:
-    new((amount_t *) data) amount_t(*(amount_t *) rhs.data);
+    new(reinterpret_cast<amount_t *>(data))
+      amount_t(*reinterpret_cast<amount_t *>(const_cast<char *>(rhs.data)));
     break;
 
   case BALANCE:
-    *(balance_t **) data = new balance_t(**(balance_t **) rhs.data);
+    *reinterpret_cast<balance_t **>(data) =
+      new balance_t(**reinterpret_cast<balance_t **>(const_cast<char *>(rhs.data)));
     break;
 
   case BALANCE_PAIR:
-    *(balance_pair_t **) data =
-      new balance_pair_t(**(balance_pair_t **) rhs.data);
+    *reinterpret_cast<balance_pair_t **>(data) =
+      new balance_pair_t(**reinterpret_cast<balance_pair_t **>(const_cast<char *>(rhs.data)));
     break;
 
   case STRING:
-    new((string *) data) string(*(string *) rhs.data);
+    new(reinterpret_cast<string *>(data))
+      string(*reinterpret_cast<string *>(const_cast<char *>(rhs.data)));
     break;
 
   case SEQUENCE:
-    *(sequence_t **) data = new sequence_t(**(sequence_t **) rhs.data);
+    *reinterpret_cast<sequence_t **>(data) =
+      new sequence_t(**reinterpret_cast<sequence_t **>(const_cast<char *>(rhs.data)));
     break;
 
   default:
@@ -105,9 +110,7 @@ void value_t::storage_t::destroy()
 
 void value_t::initialize()
 {
-#if 0
   LOGGER("value.initialize");
-#endif
 
   true_value = new storage_t;
   true_value->type = BOOLEAN;
@@ -117,6 +120,7 @@ void value_t::initialize()
   false_value->type = BOOLEAN;
   *reinterpret_cast<bool *>(false_value->data) = false;
 
+#if 0
   BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(bool));
   BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(datetime_t));
   BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(long));
@@ -126,8 +130,8 @@ void value_t::initialize()
   BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(string));
   BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(sequence_t *));
   BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(boost::any));
+#endif
 
-#if 0
   DEBUG_(std::setw(3) << std::right << sizeof(bool)
 	 << "  sizeof(bool)");
   DEBUG_(std::setw(3) << std::right << sizeof(datetime_t)
@@ -146,7 +150,6 @@ void value_t::initialize()
 	 << "  sizeof(sequence_t *)");
   DEBUG_(std::setw(3) << std::right << sizeof(boost::any)
 	 << "  sizeof(boost::any)");
-#endif
 }
 
 void value_t::shutdown()
@@ -285,7 +288,7 @@ void value_t::in_place_simplify()
   LOGGER("amounts.values.simplify");
 
   if (is_realzero()) {
-    DEBUG_("Zeroing type " << type());
+    DEBUG_("Zeroing type " << static_cast<int>(type()));
     set_long(0L);
     return;
   }

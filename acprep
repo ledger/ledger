@@ -28,7 +28,9 @@ autoreconf --force --install
 
 INCDIRS="-I/sw/include -I/opt/local/include"
 INCDIRS="$INCDIRS -I/usr/local/include"
-INCDIRS="$INCDIRS -I/usr/local/include/boost-1_35"
+INCDIRS="$INCDIRS -isystem /usr/local/include/boost-1_35"
+INCDIRS="$INCDIRS -isystem /usr/local/include/boost-1_35/boost"
+INCDIRS="$INCDIRS -isystem /usr/local/include/boost-1_35/boost/type_traits"
 
 LIBDIRS="-L/sw/lib -L/opt/local/lib"
 LIBDIRS="$LIBDIRS -L/usr/local/lib"
@@ -65,21 +67,21 @@ LOCAL=false
 
 # Warning flags
 CXXFLAGS="$CXXFLAGS -Wall -ansi -Winvalid-pch"
-#CXXFLAGS="$CXXFLAGS -Wextra"
+CXXFLAGS="$CXXFLAGS -Wextra"
 #CXXFLAGS="$CXXFLAGS -Weffc++"
-#CXXFLAGS="$CXXFLAGS -Wcast-align"
-#CXXFLAGS="$CXXFLAGS -Wcast-qual"
-#CXXFLAGS="$CXXFLAGS -Wconversion"
-#CXXFLAGS="$CXXFLAGS -Wfloat-equal"
-#CXXFLAGS="$CXXFLAGS -Wmissing-field-initializers"
-#CXXFLAGS="$CXXFLAGS -Wno-endif-labels"
-#CXXFLAGS="$CXXFLAGS -Wold-style-cast"
-#CXXFLAGS="$CXXFLAGS -Woverloaded-virtual"
-#CXXFLAGS="$CXXFLAGS -Wshorten-64-to-32"
-#CXXFLAGS="$CXXFLAGS -Wsign-compare"
-#CXXFLAGS="$CXXFLAGS -Wsign-promo"
-#CXXFLAGS="$CXXFLAGS -Wstrict-null-sentinel"
-#CXXFLAGS="$CXXFLAGS -Wwrite-strings"
+CXXFLAGS="$CXXFLAGS -Wcast-align"
+CXXFLAGS="$CXXFLAGS -Wcast-qual"
+CXXFLAGS="$CXXFLAGS -Wconversion"
+CXXFLAGS="$CXXFLAGS -Wfloat-equal"
+CXXFLAGS="$CXXFLAGS -Wmissing-field-initializers"
+CXXFLAGS="$CXXFLAGS -Wno-endif-labels"
+CXXFLAGS="$CXXFLAGS -Wold-style-cast"
+CXXFLAGS="$CXXFLAGS -Woverloaded-virtual"
+CXXFLAGS="$CXXFLAGS -Wshorten-64-to-32"
+CXXFLAGS="$CXXFLAGS -Wsign-compare"
+CXXFLAGS="$CXXFLAGS -Wsign-promo"
+CXXFLAGS="$CXXFLAGS -Wstrict-null-sentinel"
+CXXFLAGS="$CXXFLAGS -Wwrite-strings"
 
 
 while [ -n "$1" ]; do

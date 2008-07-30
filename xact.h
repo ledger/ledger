@@ -93,6 +93,7 @@ class xact_t : public supports_flags<>, public scope_t
   }
   xact_t(const xact_t& xact)
     : supports_flags<>(xact),
+      scope_t(),
       entry(xact.entry),
       state(xact.state),
       account(xact.account),

@@ -237,7 +237,7 @@ void commodity_t::parse_symbol(std::istream& in, string& symbol)
     else
       throw_(amount_error, "Quoted commodity symbol lacks closing quote");
   } else {
-    READ_INTO(in, buf, 255, c, ! invalid_chars[(unsigned char)c]);
+    READ_INTO(in, buf, 255, c, ! invalid_chars[static_cast<unsigned char>(c)]);
   }
   symbol = buf;
 }

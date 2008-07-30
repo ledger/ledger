@@ -74,7 +74,7 @@ public:
 
   str_exception(const string& why,
 		error_context * ctxt = NULL) throw()
-    : std::logic_error(why) {
+    : std::logic_error(why), context() {
     if (ctxt)
       context.push_back(ctxt);
   }

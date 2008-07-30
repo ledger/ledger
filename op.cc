@@ -717,7 +717,7 @@ value_t expr_t::op_t::calc(scope_t& scope)
   case INDEX: {
     call_scope_t args(scope);
 
-    if (as_index() >= 0 && as_index() < args.size())
+    if (as_index() < args.size())
       return args[as_index()];
     else
       throw_(calc_error, "Reference to non-existing argument " << as_index());
@@ -792,7 +792,7 @@ bool expr_t::op_t::print(std::ostream& out, print_context_t& context) const
   bool found = false;
 
   if (context.start_pos && this == context.op_to_find) {
-    *context.start_pos = (long)out.tellp() - 1;
+    *context.start_pos = static_cast<unsigned long>(out.tellp()) - 1;
     found = true;
   }
 
@@ -968,7 +968,7 @@ bool expr_t::op_t::print(std::ostream& out, print_context_t& context) const
   }
 
   if (context.end_pos && this == context.op_to_find)
-    *context.end_pos = (long)out.tellp() - 1;
+    *context.end_pos = static_cast<unsigned long>(out.tellp()) - 1;
 
   return found;
 }
