@@ -111,6 +111,23 @@ value_t expr_t::calc(scope_t& scope) const
   return NULL_VALUE;
 }
 
+bool expr_t::is_constant() const
+{
+  return ptr.get() && ptr->is_value();
+}
+
+value_t& expr_t::constant_value()
+{
+  assert(is_constant());
+  return ptr->as_value_lval();
+}
+
+const value_t& expr_t::constant_value() const
+{
+  assert(is_constant());
+  return ptr->as_value();
+}
+
 value_t expr_t::eval(const string& _expr, scope_t& scope)
 {
   return expr_t(_expr).calc(scope);

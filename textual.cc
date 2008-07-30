@@ -48,10 +48,10 @@ struct time_entry_t
 #endif
 
 namespace {
-  expr_t parse_amount_expr(std::istream&   in,
-			   amount_t&       amount,
-			   transaction_t * xact,
-			   unsigned short  flags = 0)
+  optional<expr_t> parse_amount_expr(std::istream&   in,
+				     amount_t&       amount,
+				     xact_t * xact,
+				     unsigned short  flags = 0)
   {
     expr_t expr(in, flags | EXPR_PARSE_PARTIAL);
 
@@ -67,33 +67,27 @@ namespace {
     }
 #endif
 
-#if 0
     if (expr) {
-      if (! expr_t::compute_amount(expr, amount, xact))
-	throw new parse_error("Amount expression failed to compute");
+      expr.compile(*xact);
 
-#if 0
-      if (expr->kind == expr_t::node_t::VALUE) {
-	expr = NULL;
+      if (expr.is_constant()) {
+	amount = expr.constant_value().as_amount();
+	DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
+	      "The transaction amount is " << amount);
+	return expr_t();	// we will fill this in with text
       } else {
-	DEBUG_IF("ledger.textual.parse") {
+	if (SHOW_DEBUG("ledger.textual.parse")) {
 	  std::cout << "Value expression tree:" << std::endl;
-	  ledger::dump_value_expr(std::cout, expr.get());
+	  expr.dump(std::cout);
 	}
+	return expr;
       }
-#else
-      expr = value_expr();
-#endif
     }
-#endif
-
-    DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
-	  "The transaction amount is " << xact->amount);
-    return expr;
+    return none;
   }
 }
 
-transaction_t * parse_transaction(char * line, account_t * account,
+xact_t * parse_xact(char * line, account_t * account,
 				  entry_t * entry = NULL)
 {
   std::istringstream in(line);
@@ -102,7 +96,7 @@ transaction_t * parse_transaction(char * line, account_t * account,
   try {
 
   // The account will be determined later...
-  std::auto_ptr<transaction_t> xact(new transaction_t(NULL));
+  std::auto_ptr<xact_t> xact(new xact_t(NULL));
   if (entry)
     xact->entry = entry;
 
@@ -111,14 +105,14 @@ transaction_t * parse_transaction(char * line, account_t * account,
   char p = peek_next_nonws(in);
   switch (p) {
   case '*':
-    xact->state = transaction_t::CLEARED;
+    xact->state = xact_t::CLEARED;
     in.get(p);
     p = peek_next_nonws(in);
     DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 		"Parsed the CLEARED flag");
     break;
   case '!':
-    xact->state = transaction_t::PENDING;
+    xact->state = xact_t::PENDING;
     in.get(p);
     p = peek_next_nonws(in);
     DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
@@ -146,11 +140,11 @@ transaction_t * parse_transaction(char * line, account_t * account,
   char * e = &line[account_end];
   if ((*b == '[' && *(e - 1) == ']') ||
       (*b == '(' && *(e - 1) == ')')) {
-    xact->add_flags(TRANSACTION_VIRTUAL);
+    xact->add_flags(XACT_VIRTUAL);
     DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 		"Parsed a virtual account name");
     if (*b == '[') {
-      xact->add_flags(TRANSACTION_BALANCE);
+      xact->add_flags(XACT_BALANCE);
       DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 		  "Parsed a balanced virtual account name");
     }
@@ -199,7 +193,7 @@ transaction_t * parse_transaction(char * line, account_t * account,
       // always NULL right now
       if (xact->amount_expr) {
 	unsigned long end = (long)in.tellg();
-	xact->amount_expr.set_text(string(line, beg, end - beg));
+	xact->amount_expr->set_text(string(line, beg, end - beg));
       }
     }
     catch (error * err) {
@@ -234,22 +228,28 @@ transaction_t * parse_transaction(char * line, account_t * account,
 	try {
 	  unsigned long beg = (long)in.tellg();
 
-	  if (parse_amount_expr(in, *xact->cost, xact.get(),
+	  if (optional<expr_t> cost_expr =
+	      parse_amount_expr(in, *xact->cost, xact.get(),
 				EXPR_PARSE_NO_MIGRATE |
-				EXPR_PARSE_NO_ASSIGN))
-	    throw new parse_error
-	      ("A transaction's cost must evaluate to a constant value");
-	  assert(xact->cost->valid());
+				EXPR_PARSE_NO_ASSIGN)) {
+	    try {
+	      *xact->cost = cost_expr->calc(*xact).as_amount();
+	      assert(xact->cost->valid());
 
-	  // jww (2008-07-24): I don't think this is right...
-	  if (xact->cost_expr) {
-	    unsigned long end = (long)in.tellg();
-	    if (per_unit)
-	      xact->cost_expr->set_text(string("@") +
-					string(line, beg, end - beg));
-	    else
-	      xact->cost_expr->set_text(string("@@") +
-					string(line, beg, end - beg));
+	      xact->cost_expr = cost_expr;
+
+	      unsigned long end = (long)in.tellg();
+	      if (per_unit)
+		xact->cost_expr->set_text(string("@") +
+					  string(line, beg, end - beg));
+	      else
+		xact->cost_expr->set_text(string("@@") +
+					  string(line, beg, end - beg));
+	    }
+	    catch (...) {
+	      throw new parse_error
+		("A transaction's cost must evaluate to a constant value");
+	    }
 	  }
 	}
 	catch (error * err) {
@@ -347,11 +347,11 @@ transaction_t * parse_transaction(char * line, account_t * account,
 
 	    if (! diff.is_realzero()) {
 	      if (xact->amount) {
-		transaction_t * temp =
-		  new transaction_t(xact->account, diff,
-				    TRANSACTION_GENERATED |
-				    TRANSACTION_CALCULATED);
-		entry->add_transaction(temp);
+		xact_t * temp =
+		  new xact_t(xact->account, diff,
+				    XACT_GENERATED |
+				    XACT_CALCULATED);
+		entry->add_xact(temp);
 
 		DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 		      "Created balancing transaction");
@@ -416,7 +416,7 @@ transaction_t * parse_transaction(char * line, account_t * account,
   }
 }
 
-bool parse_transactions(std::istream&	   in,
+bool parse_xacts(std::istream&	   in,
 			account_t *	   account,
 			entry_base_t&	   entry,
 			const string& kind,
@@ -444,8 +444,8 @@ bool parse_transactions(std::istream&	   in,
       if (! *p)
 	break;
     }
-    if (transaction_t * xact = parse_transaction(line, account)) {
-      entry.add_transaction(xact);
+    if (xact_t * xact = parse_xact(line, account)) {
+      entry.add_xact(xact);
       added = true;
     }
   }
@@ -474,15 +474,15 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
 
   // Parse the optional cleared flag: *
 
-  transaction_t::state_t state = transaction_t::UNCLEARED;
+  xact_t::state_t state = xact_t::UNCLEARED;
   if (next) {
     switch (*next) {
     case '*':
-      state = transaction_t::CLEARED;
+      state = xact_t::CLEARED;
       next = skip_ws(++next);
       break;
     case '!':
-      state = transaction_t::PENDING;
+      state = xact_t::PENDING;
       next = skip_ws(++next);
       break;
     }
@@ -504,7 +504,7 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
 
   TRACE_STOP(entry_text, 1);
 
-  // Parse all of the transactions associated with this entry
+  // Parse all of the xacts associated with this entry
 
   TRACE_START(entry_details, 1, "Time spent parsing entry details:");
 
@@ -532,9 +532,9 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
 	break;
     }
 
-    if (transaction_t * xact = parse_transaction(line, master, curr.get())) {
-      if (state != transaction_t::UNCLEARED &&
-	  xact->state == transaction_t::UNCLEARED)
+    if (xact_t * xact = parse_xact(line, master, curr.get())) {
+      if (state != xact_t::UNCLEARED &&
+	  xact->state == xact_t::UNCLEARED)
 	xact->state = state;
 
       xact->beg_pos  = beg_pos;
@@ -543,7 +543,7 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
       xact->end_line = linenum;
       pos = end_pos;
 
-      curr->add_transaction(xact);
+      curr->add_xact(xact);
     }
 
     if (in.eof())
@@ -651,10 +651,10 @@ static void clock_out_from_timelog(std::list<time_entry_t>& time_entries,
   amt.parse(buf);
   assert(amt.valid());
 
-  transaction_t * xact
-    = new transaction_t(event.account, amt, TRANSACTION_VIRTUAL);
-  xact->state = transaction_t::CLEARED;
-  curr->add_transaction(xact);
+  xact_t * xact
+    = new xact_t(event.account, amt, XACT_VIRTUAL);
+  xact->state = xact_t::CLEARED;
+  curr->add_xact(xact);
 
   if (! journal.add_entry(curr.get()))
     throw new parse_error("Failed to record 'out' timelog entry");
@@ -854,7 +854,7 @@ unsigned int textual_parser_t::parse(std::istream& in,
 	}
 
 	auto_entry_t * ae = new auto_entry_t(skip_ws(line + 1));
-	if (parse_transactions(in, account_stack.front(), *ae,
+	if (parse_xacts(in, account_stack.front(), *ae,
 			       "automated", end_pos)) {
 	  journal.auto_entries.push_back(ae);
 	  ae->src_idx  = src_idx;
@@ -871,7 +871,7 @@ unsigned int textual_parser_t::parse(std::istream& in,
 	if (! pe->period)
 	  throw new parse_error(string("Parsing time period '") + line + "'");
 
-	if (parse_transactions(in, account_stack.front(), *pe,
+	if (parse_xacts(in, account_stack.front(), *pe,
 			       "period", end_pos)) {
 	  if (pe->finalize()) {
 	    extend_entry_base(&journal, *pe, true);
@@ -939,7 +939,7 @@ unsigned int textual_parser_t::parse(std::istream& in,
 
 	    // Once we have an alias name (b) and the target account
 	    // name (e), add a reference to the account in the
-	    // `account_aliases' map, which is used by the transaction
+	    // `account_aliases' map, which is used by the xact
 	    // parser to resolve alias references.
 	    account_t * acct = account_stack.front()->find_account(e);
 	    std::pair<accounts_map::iterator, bool> result
@@ -1029,10 +1029,11 @@ unsigned int textual_parser_t::parse(std::istream& in,
   return count;
 }
 
-void write_textual_journal(journal_t& journal, path pathname,
-			   item_handler<transaction_t>& formatter,
-			   const string& write_hdr_format,
-			   std::ostream& out)
+void write_textual_journal(journal_t&	    journal,
+			   const path&	    pathname,
+			   xact_handler_ptr formatter,
+			   const string&    write_hdr_format,
+			   std::ostream&    out)
 {
   unsigned long index = 0;
   path		found;
@@ -1102,14 +1103,14 @@ void write_textual_journal(journal_t& journal, path pathname,
 
     char c;
     if (base) {
-      for (transactions_list::iterator x = base->transactions.begin();
-	   x != base->transactions.end();
+      for (xacts_list::iterator x = base->xacts.begin();
+	   x != base->xacts.end();
 	   x++)
-	if (! (*x)->has_flags(TRANSACTION_AUTO)) {
-	  transaction_xdata(**x).dflags |= TRANSACTION_TO_DISPLAY;
-	  formatter(**x);
+	if (! (*x)->has_flags(XACT_AUTO)) {
+	  xact_xdata(**x).dflags |= XACT_TO_DISPLAY;
+	  (*formatter)(**x);
 	}
-      formatter.flush();
+      formatter->flush();
 
       while (pos < base->end_pos) {
 	in.get(c);

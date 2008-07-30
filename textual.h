@@ -19,13 +19,14 @@ public:
 			     const path *  original_file = NULL);
 };
 
-transaction_t * parse_transaction_text(char * line, account_t * account);
-transaction_t * parse_transaction(std::istream& in, account_t * account);
+xact_t * parse_xact_text(char * line, account_t * account);
+xact_t * parse_xact(std::istream& in, account_t * account);
 
-void write_textual_journal(journal_t& journal, path pathname,
-			   item_handler<transaction_t>& formatter,
-			   const string& write_hdr_format,
-			   std::ostream& out);
+void write_textual_journal(journal_t&	     journal,
+			   const path&	     pathname,
+			   xact_handler_ptr& formatter,
+			   const string&     write_hdr_format,
+			   std::ostream&     out);
 
 class include_context : public file_context
 {

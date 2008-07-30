@@ -113,33 +113,33 @@ struct format_t : public noncopyable
   void format(std::ostream& out, const scope_t& scope) const;
 };
 
-class format_transactions : public item_handler<transaction_t>
+class format_xacts : public item_handler<xact_t>
 {
 protected:
   std::ostream&   output_stream;
   format_t	  first_line_format;
   format_t	  next_lines_format;
   entry_t *       last_entry;
-  transaction_t * last_xact;
+  xact_t * last_xact;
 
 public:
-  format_transactions(std::ostream& _output_stream,
+  format_xacts(std::ostream& _output_stream,
 		      const string& format);
-  ~format_transactions() throw() {
-    TRACE_DTOR(format_transactions);
+  ~format_xacts() throw() {
+    TRACE_DTOR(format_xacts);
   }
 
   virtual void flush() {
     output_stream.flush();
   }
-  virtual void operator()(transaction_t& xact);
+  virtual void operator()(xact_t& xact);
 };
 
-class format_entries : public format_transactions
+class format_entries : public format_xacts
 {
  public:
   format_entries(std::ostream& output_stream, const string& format)
-    : format_transactions(output_stream, format) {
+    : format_xacts(output_stream, format) {
     TRACE_CTOR(format_entries, "std::ostream&, const string&");
   }
   ~format_entries() throw() {
@@ -153,9 +153,9 @@ class format_entries : public format_transactions
       format_last_entry();
       last_entry = NULL;
     }
-    format_transactions::flush();
+    format_xacts::flush();
   }
-  virtual void operator()(transaction_t& xact);
+  virtual void operator()(xact_t& xact);
 };
 
 void print_entry(std::ostream& out, const entry_base_t& entry,

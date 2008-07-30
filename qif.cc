@@ -42,17 +42,17 @@ unsigned int qif_parser_t::parse(std::istream& in,
   std::auto_ptr<entry_t>  entry;
   std::auto_ptr<amount_t> amount;
 
-  transaction_t * xact;
+  xact_t * xact;
   unsigned int    count		= 0;
   account_t *     misc		= NULL;
   commodity_t *   def_commodity = NULL;
   bool            saw_splits    = false;
   bool            saw_category  = false;
-  transaction_t * total         = NULL;
+  xact_t * total         = NULL;
 
   entry.reset(new entry_t);
-  xact = new transaction_t(master);
-  entry->add_transaction(xact);
+  xact = new xact_t(master);
+  entry->add_xact(xact);
 
   pathname = journal.sources.back();
   src_idx  = journal.sources.size() - 1;
@@ -135,7 +135,7 @@ unsigned int qif_parser_t::parse(std::istream& in,
       c = in.peek();
       if (c == '*' || c == 'X') {
 	in.get(c);
-	xact->state = transaction_t::CLEARED;
+	xact->state = xact_t::CLEARED;
       }
       break;
 
@@ -159,8 +159,8 @@ unsigned int qif_parser_t::parse(std::istream& in,
 	break;
 
       case 'S':
-	xact = new transaction_t(NULL);
-	entry->add_transaction(xact);
+	xact = new xact_t(NULL);
+	entry->add_xact(xact);
 	// fall through...
       case 'L': {
 	int len = std::strlen(line);
@@ -205,10 +205,10 @@ unsigned int qif_parser_t::parse(std::istream& in,
       }
 
       if (! saw_splits) {
-	transaction_t * nxact = new transaction_t(other);
+	xact_t * nxact = new xact_t(other);
 	// The amount doesn't need to be set because the code below
-	// will balance this transaction against the other.
-	entry->add_transaction(nxact);
+	// will balance this xact against the other.
+	entry->add_xact(nxact);
       }
 
       if (journal.add_entry(entry.get())) {
@@ -223,8 +223,8 @@ unsigned int qif_parser_t::parse(std::istream& in,
 
       // reset things for the next entry
       entry.reset(new entry_t);
-      xact = new transaction_t(master);
-      entry->add_transaction(xact);
+      xact = new xact_t(master);
+      entry->add_xact(xact);
 
       saw_splits   = false;
       saw_category = false;

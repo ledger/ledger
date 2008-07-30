@@ -52,21 +52,8 @@ void symbol_scope_t::define(const string& name, expr_t::ptr_op_t def)
   }
 }
 
-value_t get_amount(scope_t& scope)
-{
-  assert("I can't get the amount!");
-  return NULL_VALUE;
-}
-
 expr_t::ptr_op_t symbol_scope_t::lookup(const string& name)
 {
-  switch (name[0]) {
-  case 'a':
-    if (name[1] == '\0' || name == "amount")
-      return WRAP_FUNCTOR(bind(get_amount, _1));
-    break;
-  }
-
   symbol_map::const_iterator i = symbols.find(name);
   if (i != symbols.end())
     return (*i).second;

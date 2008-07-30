@@ -49,8 +49,8 @@ int ofx_proc_account_cb(struct OfxAccountData data, void * account_data)
   return 0;
 }
 
-int ofx_proc_transaction_cb(struct OfxTransactionData data,
-			    void * transaction_data)
+int ofx_proc_xact_cb(struct OfxXactData data,
+			    void * xact_data)
 {
   if (! data.account_id_valid || ! data.units_valid)
     return -1;
@@ -61,8 +61,8 @@ int ofx_proc_transaction_cb(struct OfxTransactionData data,
 
   entry_t * entry = new entry_t;
 
-  entry->add_transaction(new transaction_t(account));
-  transaction_t * xact = entry->transactions.back();
+  entry->add_xact(new xact_t(account));
+  xact_t * xact = entry->xacts.back();
 
   // get the account's default currency
   commodities_map::iterator ac = ofx_account_currencies.find(data.account_id);
@@ -112,7 +112,7 @@ int ofx_proc_transaction_cb(struct OfxTransactionData data,
 
   // Balance all entries into <Unknown>, since it is not specified.
   account = curr_journal->find_account("<Unknown>");
-  entry->add_transaction(new transaction_t(account));
+  entry->add_xact(new xact_t(account));
 
   if (! curr_journal->add_entry(entry)) {
     print_entry(std::cerr, *entry);
@@ -208,11 +208,11 @@ unsigned int ofx_parser_t::parse(std::istream& in,
 
   LibofxContextPtr libofx_context = libofx_get_new_context();
 
-  ofx_set_statement_cb  (libofx_context, ofx_proc_statement_cb, 0);
-  ofx_set_account_cb    (libofx_context, ofx_proc_account_cb, 0);
-  ofx_set_transaction_cb(libofx_context, ofx_proc_transaction_cb, 0);
-  ofx_set_security_cb   (libofx_context, ofx_proc_security_cb, 0);
-  ofx_set_status_cb     (libofx_context, ofx_proc_status_cb, 0);
+  ofx_set_statement_cb (libofx_context, ofx_proc_statement_cb, 0);
+  ofx_set_account_cb   (libofx_context, ofx_proc_account_cb, 0);
+  ofx_set_xact_cb      (libofx_context, ofx_proc_xact_cb, 0);
+  ofx_set_security_cb  (libofx_context, ofx_proc_security_cb, 0);
+  ofx_set_status_cb    (libofx_context, ofx_proc_status_cb, 0);
 
   // The processing is done by way of callbacks, which are all defined
   // above.

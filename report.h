@@ -182,7 +182,7 @@ public:
   chain_xact_handlers(xact_handler_ptr handler,
 		      const bool handle_individual_transactions = true);
 
-  void transactions_report(xact_handler_ptr handler);
+  void xacts_report(xact_handler_ptr handler);
 
   void entry_report(xact_handler_ptr handler, entry_t& entry);
 

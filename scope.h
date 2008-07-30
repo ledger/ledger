@@ -60,9 +60,9 @@ public:
 
 class child_scope_t : public noncopyable, public scope_t
 {
+public:
   scope_t * parent;
 
-public:
   explicit child_scope_t() : parent(NULL) {
     TRACE_CTOR(child_scope_t, "");
   }

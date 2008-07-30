@@ -1,7 +1,23 @@
 BUILT_SOURCES =
 CLEANFILES    =
-EXTRA_DIST    = LICENSE doc test contrib scripts setup.py \
-		acprep valgrind.sh version
+EXTRA_DIST    = LICENSE test scripts setup.py acprep valgrind.sh \
+		version sample.dat ledger.vim
+
+# Files that are still only in the Ledger source tree (g200d919):
+# 
+#   amounts.cc
+#   py_amount.cc
+#   py_commodity.cc
+#   py_times.cc
+#   py_utils.cc
+#   pyinterp.cc
+#   pyledger.cc
+#
+#   pyfstream.h
+#   pyinterp.h
+#   pyledger.h
+#   pyutils.h
+#   tuples.hpp
 
 ESC_srcdir=`echo "$(srcdir)" | sed 's/\//\\\\\//g'`
 ESC_builddir=`echo "$(top_builddir)" | sed 's/\//\\\\\//g'`
@@ -47,6 +63,9 @@ libledger_la_SOURCES = \
 	format.cc      \
 		       \
 	journal.cc     \
+	entry.cc       \
+	xact.cc        \
+	account.cc     \
 	report.cc      \
 	session.cc     \
 	walk.cc        \
@@ -59,8 +78,8 @@ libledger_la_SOURCES = \
 	xml.cc	       \
 	derive.cc      \
 	reconcile.cc   \
-	option.cc
-#	quotes.cc      this is currently not being included
+	option.cc      \
+	quotes.cc
 if HAVE_EXPAT
 libledger_la_SOURCES += gnucash.cc
 endif
@@ -75,6 +94,7 @@ libledger_la_LDFLAGS = -release 2.7.0
 
 pkginclude_HEADERS = \
 	acconf.h     \
+	system.hh    \
 		     \
 	amount.h     \
 	commodity.h  \
@@ -82,8 +102,12 @@ pkginclude_HEADERS = \
 	balpair.h    \
 	value.h      \
 	utils.h	     \
+	fdstream.hpp \
 	times.h	     \
 	mask.h       \
+	flags.h      \
+	hooks.h      \
+	pushvar.h    \
 	error.h      \
 		     \
 	expr.h       \
@@ -95,6 +119,9 @@ pkginclude_HEADERS = \
 	format.h     \
 		     \
 	journal.h    \
+	entry.h      \
+	xact.h       \
+	account.h    \
 	report.h     \
 	session.h    \
 	walk.h       \
@@ -105,6 +132,7 @@ pkginclude_HEADERS = \
 	emacs.h      \
 	gnucash.h    \
 	qif.h	     \
+	ofx.h	     \
 	xml.h	     \
 		     \
 	derive.h     \
@@ -148,6 +176,7 @@ DISTCLEANFILES  = ledger.elc timeclock.elc
 if HAVE_BOOST_PYTHON
 
 noinst_PROGRAMS = amounts.so
+nodist_amounts_so_SOURCES = amounts.c
 
 CLEANFILES += amounts.so
 

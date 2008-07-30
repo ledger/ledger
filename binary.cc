@@ -292,7 +292,7 @@ inline void read_mask(const char *& data, mask_t& mask)
   mask.exclude = exclude;
 }
 
-inline void read_transaction(const char *& data, transaction_t * xact)
+inline void read_xact(const char *& data, xact_t * xact)
 {
   read_number(data, xact->_date);
   read_number(data, xact->_date_eff);
@@ -306,10 +306,10 @@ inline void read_transaction(const char *& data, transaction_t * xact)
     read_amount(data, xact->amount);
     string str;
     read_string(data, str);
-    xact->amount_expr.set_text(str);
+    xact->amount_expr->set_text(str);
   }
   else {
-    xact->amount_expr.read(data);
+    xact->amount_expr->read(data);
   }
 
   if (read_bool(data)) {
@@ -323,8 +323,8 @@ inline void read_transaction(const char *& data, transaction_t * xact)
   }
 
   read_number(data, xact->state);
-  xact->set_flags(read_number<transaction_t::flags_t>(data));
-  xact->add_flags(TRANSACTION_BULK_ALLOC);
+  xact->set_flags(read_number<xact_t::flags_t>(data));
+  xact->add_flags(XACT_BULK_ALLOC);
   read_string(data, xact->note);
 
   xact->beg_pos = read_long<unsigned long>(data);
@@ -341,7 +341,7 @@ inline void read_transaction(const char *& data, transaction_t * xact)
 }
 
 inline void read_entry_base(const char *& data, entry_base_t * entry,
-			    transaction_t *& xact_pool, bool& finalize)
+			    xact_t *& xact_pool, bool& finalize)
 {
   read_long(data, entry->src_idx);
   entry->beg_pos = read_long<unsigned long>(data);
@@ -354,16 +354,16 @@ inline void read_entry_base(const char *& data, entry_base_t * entry,
   for (unsigned long i = 0, count = read_long<unsigned long>(data);
        i < count;
        i++) {
-    new(xact_pool) transaction_t;
-    read_transaction(data, xact_pool);
-    if (ignore_calculated && xact_pool->has_flags(TRANSACTION_CALCULATED))
+    new(xact_pool) xact_t;
+    read_xact(data, xact_pool);
+    if (ignore_calculated && xact_pool->has_flags(XACT_CALCULATED))
       finalize = true;
-    entry->add_transaction(xact_pool++);
+    entry->add_xact(xact_pool++);
   }
 }
 
 inline void read_entry(const char *& data, entry_t * entry,
-		       transaction_t *& xact_pool, bool& finalize)
+		       xact_t *& xact_pool, bool& finalize)
 {
   read_entry_base(data, entry, xact_pool, finalize);
   read_number(data, entry->_date);
@@ -373,18 +373,18 @@ inline void read_entry(const char *& data, entry_t * entry,
 }
 
 inline void read_auto_entry(const char *& data, auto_entry_t * entry,
-			    transaction_t *& xact_pool)
+			    xact_t *& xact_pool)
 {
   bool ignore;
   read_entry_base(data, entry, xact_pool, ignore);
 
   expr_t expr;
   expr.read(data);
-  entry->predicate = item_predicate<transaction_t>(expr);
+  entry->predicate = item_predicate<xact_t>(expr);
 }
 
 inline void read_period_entry(const char *& data, period_entry_t * entry,
-			      transaction_t *& xact_pool, bool& finalize)
+			      xact_t *& xact_pool, bool& finalize)
 {
   read_entry_base(data, entry, xact_pool, finalize);
   read_string(data, &entry->period_string);
@@ -589,25 +589,25 @@ void write_mask(std::ostream& out, mask_t& mask)
   write_string(out, mask.expr.str());
 }
 
-void write_transaction(std::ostream& out, transaction_t * xact,
+void write_xact(std::ostream& out, xact_t * xact,
 		       bool ignore_calculated)
 {
   write_number(out, xact->_date);
   write_number(out, xact->_date_eff);
   write_long(out, xact->account->ident);
 
-  if (ignore_calculated && xact->has_flags(TRANSACTION_CALCULATED)) {
+  if (ignore_calculated && xact->has_flags(XACT_CALCULATED)) {
     write_number<unsigned char>(out, 0);
     write_amount(out, amount_t());
   }
   else if (xact->amount_expr) {
     write_number<unsigned char>(out, 2);
-    xact->amount_expr.write(out);
+    xact->amount_expr->write(out);
   }
-  else if (! xact->amount_expr.text().empty()) {
+  else if (! xact->amount_expr->text().empty()) {
     write_number<unsigned char>(out, 1);
     write_amount(out, xact->amount);
-    write_string(out, xact->amount_expr.text());
+    write_string(out, xact->amount_expr->text());
   }
   else {
     write_number<unsigned char>(out, 0);
@@ -615,7 +615,7 @@ void write_transaction(std::ostream& out, transaction_t * xact,
   }
 
   if (xact->cost &&
-      (! (ignore_calculated && xact->has_flags(TRANSACTION_CALCULATED)))) {
+      (! (ignore_calculated && xact->has_flags(XACT_CALCULATED)))) {
     write_bool(out, true);
     write_amount(out, *xact->cost);
     xact->cost_expr->write(out);
@@ -642,8 +642,8 @@ void write_entry_base(std::ostream& out, entry_base_t * entry)
   write_long(out, entry->end_line);
 
   bool ignore_calculated = false;
-  for (transactions_list::const_iterator i = entry->transactions.begin();
-       i != entry->transactions.end();
+  for (xacts_list::const_iterator i = entry->xacts.begin();
+       i != entry->xacts.end();
        i++)
     if ((*i)->amount_expr) {
       ignore_calculated = true;
@@ -652,11 +652,11 @@ void write_entry_base(std::ostream& out, entry_base_t * entry)
 
   write_bool(out, ignore_calculated);
 
-  write_long(out, entry->transactions.size());
-  for (transactions_list::const_iterator i = entry->transactions.begin();
-       i != entry->transactions.end();
+  write_long(out, entry->xacts.size());
+  for (xacts_list::const_iterator i = entry->xacts.begin();
+       i != entry->xacts.end();
        i++)
-    write_transaction(out, *i, ignore_calculated);
+    write_xact(out, *i, ignore_calculated);
 }
 
 void write_entry(std::ostream& out, entry_t * entry)
@@ -861,7 +861,7 @@ unsigned int journal_t::read(std::istream& in,
   if (read_bool(data))
     basket = accounts[read_long<account_t::ident_t>(data) - 1];
 
-  // Allocate the memory needed for the entries and transactions in
+  // Allocate the memory needed for the entries and xacts in
   // one large block, which is then chopped up and custom constructed
   // as necessary.
 
@@ -872,7 +872,7 @@ unsigned int journal_t::read(std::istream& in,
   unsigned long bigint_count = read_number<unsigned long>(data);
 
   std::size_t pool_size = (sizeof(entry_t) * count +
-			   sizeof(transaction_t) * xact_count +
+			   sizeof(xact_t) * xact_count +
 			   amount_t::sizeof_bigint_t() * bigint_count);
 
   char * item_pool = new char[pool_size];
@@ -881,11 +881,11 @@ unsigned int journal_t::read(std::istream& in,
   item_pool_end = item_pool + pool_size;
 
   entry_t *	  entry_pool = (entry_t *) item_pool;
-  transaction_t * xact_pool  = (transaction_t *) (item_pool +
+  xact_t * xact_pool  = (xact_t *) (item_pool +
 						  sizeof(entry_t) * count);
   bigints_index = 0;
   bigints = bigints_next = (item_pool + sizeof(entry_t) * count +
-			    sizeof(transaction_t) * xact_count);
+			    sizeof(xact_t) * xact_count);
 
   // Read in the base commodities and then derived commodities
 
@@ -970,7 +970,7 @@ unsigned int journal_t::read(std::istream& in,
   else
     amount_t::current_pool->default_commodity = commodities[ident - 1];
 
-  // Read in the entries and transactions
+  // Read in the entries and xacts
 
   for (unsigned long i = 0; i < count; i++) {
     new(entry_pool) entry_t;
@@ -1062,7 +1062,7 @@ void journal_t::write(std::ostream& out)
     write_bool(out, false);
   }
 
-  // Write out the number of entries, transactions, and amounts
+  // Write out the number of entries, xacts, and amounts
 
   write_long<unsigned long>(out, entries.size());
   write_long<unsigned long>(out, auto_entries.size());
@@ -1126,7 +1126,7 @@ void journal_t::write(std::ostream& out)
     write_long<commodity_t::ident_t>(out, 0xffffffff);
 #endif
 
-  // Write out the entries and transactions
+  // Write out the entries and xacts
 
   unsigned long xact_count = 0;
 
@@ -1134,21 +1134,21 @@ void journal_t::write(std::ostream& out)
        i != entries.end();
        i++) {
     write_entry(out, *i);
-    xact_count += (*i)->transactions.size();
+    xact_count += (*i)->xacts.size();
   }
 
   for (auto_entries_list::const_iterator i = auto_entries.begin();
        i != auto_entries.end();
        i++) {
     write_auto_entry(out, *i);
-    xact_count += (*i)->transactions.size();
+    xact_count += (*i)->xacts.size();
   }
 
   for (period_entries_list::const_iterator i = period_entries.begin();
        i != period_entries.end();
        i++) {
     write_period_entry(out, *i);
-    xact_count += (*i)->transactions.size();
+    xact_count += (*i)->xacts.size();
   }
 
   // Back-patch the count for amounts

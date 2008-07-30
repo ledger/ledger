@@ -237,17 +237,17 @@ account_t * session_t::find_account_re(const string& regexp)
   return find_account_re_(master, mask_t(regexp));
 }
 
-void session_t::clean_transactions()
+void session_t::clean_xacts()
 {
-  session_transactions_iterator walker(*this);
-  pass_down_transactions
-    (xact_handler_ptr(new clear_transaction_xdata), walker);
+  session_xacts_iterator walker(*this);
+  pass_down_xacts
+    (xact_handler_ptr(new clear_xact_xdata), walker);
 }
 
-void session_t::clean_transactions(entry_t& entry)
+void session_t::clean_xacts(entry_t& entry)
 {
-  entry_transactions_iterator walker(entry);
-  pass_down_transactions(xact_handler_ptr(new clear_transaction_xdata), walker);
+  entry_xacts_iterator walker(entry);
+  pass_down_xacts(xact_handler_ptr(new clear_xact_xdata), walker);
 }
 
 void session_t::clean_accounts()

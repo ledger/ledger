@@ -34,6 +34,7 @@
 
 #include "scope.h"
 #include "journal.h"
+#include "account.h"
 
 namespace ledger {
 
@@ -165,8 +166,8 @@ public:
 
   void clean_accounts();
 
-  void clean_transactions();
-  void clean_transactions(entry_t& entry);
+  void clean_xacts();
+  void clean_xacts(entry_t& entry);
 
   //
   // Scope members

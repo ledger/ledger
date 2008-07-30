@@ -49,7 +49,7 @@ static unsigned int     src_idx;
 static istream_pos_type beg_pos;
 static unsigned long    beg_line;
 
-static transaction_t::state_t curr_state;
+static xact_t::state_t curr_state;
 
 static enum action_t {
   NO_ACTION,
@@ -90,7 +90,7 @@ static void startElement(void *userData, const char *name, const char **atts)
     action = COMM_NAME;
   else if (std::strcmp(name, "cmdty:fraction") == 0)
     action = COMM_PREC;
-  else if (std::strcmp(name, "gnc:transaction") == 0) {
+  else if (std::strcmp(name, "gnc:xact") == 0) {
     assert(! curr_entry);
     curr_entry = new entry_t;
   }
@@ -104,7 +104,7 @@ static void startElement(void *userData, const char *name, const char **atts)
     action = ENTRY_DESC;
   else if (std::strcmp(name, "trn:split") == 0) {
     assert(curr_entry);
-    curr_entry->add_transaction(new transaction_t(curr_account));
+    curr_entry->add_xact(new xact_t(curr_account));
   }
   else if (std::strcmp(name, "split:reconciled-state") == 0)
     action = XACT_STATE;
@@ -132,10 +132,10 @@ static void endElement(void *userData, const char *name)
   else if (std::strcmp(name, "gnc:commodity") == 0) {
     curr_comm = NULL;
   }
-  else if (std::strcmp(name, "gnc:transaction") == 0) {
+  else if (std::strcmp(name, "gnc:xact") == 0) {
     assert(curr_entry);
 
-    // Add the new entry (what gnucash calls a 'transaction') to the
+    // Add the new entry (what gnucash calls a 'xact') to the
     // journal
     if (! curr_journal->add_entry(curr_entry)) {
       print_entry(std::cerr, *curr_entry);
@@ -155,11 +155,11 @@ static void endElement(void *userData, const char *name)
     entry_comm = NULL;
   }
   else if (std::strcmp(name, "trn:split") == 0) {
-    transaction_t * xact = curr_entry->transactions.back();
+    xact_t * xact = curr_entry->xacts.back();
 
     // Identify the commodity to use for the value of this
-    // transaction.  The quantity indicates how many times that value
-    // the transaction is worth.
+    // xact.  The quantity indicates how many times that value
+    // the xact is worth.
     amount_t value;
     commodity_t * default_commodity = NULL;
     account_comm_map::iterator ac = account_comms.find(xact->account);
@@ -187,7 +187,7 @@ static void endElement(void *userData, const char *name)
     xact->end_line = XML_GetCurrentLineNumber(parser) - offset;
 
     // Clear the relevant variables for the next run
-    curr_state = transaction_t::UNCLEARED;
+    curr_state = xact_t::UNCLEARED;
     curr_value = amount_t();
     curr_quant = amount_t();
   }
@@ -281,11 +281,11 @@ static void dataHandler(void *userData, const char *s, int len)
 
   case XACT_STATE:
     if (*s == 'y')
-      curr_state = transaction_t::CLEARED;
+      curr_state = xact_t::CLEARED;
     else if (*s == 'n')
-      curr_state = transaction_t::UNCLEARED;
+      curr_state = xact_t::UNCLEARED;
     else
-      curr_state = transaction_t::PENDING;
+      curr_state = xact_t::PENDING;
     break;
 
   case XACT_VALUE: {
@@ -304,7 +304,7 @@ static void dataHandler(void *userData, const char *s, int len)
     break;
 
   case XACT_ACCOUNT: {
-    transaction_t * xact = curr_entry->transactions.back();
+    xact_t * xact = curr_entry->xacts.back();
 
     accounts_map::iterator i = accounts_by_id.find(string(s, len));
     if (i != accounts_by_id.end()) {
@@ -319,7 +319,7 @@ static void dataHandler(void *userData, const char *s, int len)
   }
 
   case XACT_NOTE:
-    curr_entry->transactions.back()->note = string(s, len);
+    curr_entry->xacts.back()->note = string(s, len);
     break;
 
   case NO_ACTION:
@@ -366,7 +366,7 @@ unsigned int gnucash_parser_t::parse(std::istream& in,
   curr_entry	 = NULL;
   curr_comm	 = NULL;
   entry_comm	 = NULL;
-  curr_state	 = transaction_t::UNCLEARED;
+  curr_state	 = xact_t::UNCLEARED;
 
   instreamp = &in;
   pathname  = original_file ? *original_file : "<gnucash>";

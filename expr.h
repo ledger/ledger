@@ -93,18 +93,22 @@ public:
     str = txt;
   }
 
-  void    parse(const string& _str, const unsigned int flags = 0);
-  void    parse(std::istream& in, const unsigned int flags = 0);
+  void     parse(const string& _str, const unsigned int flags = 0);
+  void     parse(std::istream& in, const unsigned int flags = 0);
+	   
+  void     compile(scope_t& scope);
+  value_t  calc(scope_t& scope) const;
 
-  void    compile(scope_t& scope);
-  value_t calc(scope_t& scope) const;
+  bool	   is_constant() const;
+  value_t& constant_value();
+  const value_t& constant_value() const;
 
-  void    print(std::ostream& out, scope_t& scope) const;
-  void    dump(std::ostream& out) const;
-
-  void    read(std::ostream& in);
-  void    read(const char *& data);
-  void    write(std::ostream& out) const;
+  void     print(std::ostream& out, scope_t& scope) const;
+  void     dump(std::ostream& out) const;
+	   
+  void     read(std::ostream& in);
+  void     read(const char *& data);
+  void     write(std::ostream& out) const;
 
   static value_t eval(const string& _expr, scope_t& scope);
 };

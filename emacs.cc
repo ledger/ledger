@@ -2,7 +2,7 @@
 
 namespace ledger {
 
-void format_emacs_transactions::write_entry(entry_t& entry)
+void format_emacs_xacts::write_entry(entry_t& entry)
 {
   int idx = entry.src_idx;
   for (paths_list::const_iterator i = entry.journal->sources.begin();
@@ -33,10 +33,10 @@ void format_emacs_transactions::write_entry(entry_t& entry)
   out << "\n";
 }
 
-void format_emacs_transactions::operator()(transaction_t& xact)
+void format_emacs_xacts::operator()(xact_t& xact)
 {
-  if (! transaction_has_xdata(xact) ||
-      ! (transaction_xdata_(xact).dflags & TRANSACTION_DISPLAYED)) {
+  if (! xact_has_xdata(xact) ||
+      ! (xact_xdata_(xact).dflags & XACT_DISPLAYED)) {
     if (! last_entry) {
       out << "((";
       write_entry(*xact.entry);
@@ -54,10 +54,10 @@ void format_emacs_transactions::operator()(transaction_t& xact)
 	<< xact.amount << "\"";
 
     switch (xact.state) {
-    case transaction_t::CLEARED:
+    case xact_t::CLEARED:
       out << " t";
       break;
-    case transaction_t::PENDING:
+    case xact_t::PENDING:
       out << " pending";
       break;
     default:
@@ -73,7 +73,7 @@ void format_emacs_transactions::operator()(transaction_t& xact)
 
     last_entry = xact.entry;
 
-    transaction_xdata(xact).dflags |= TRANSACTION_DISPLAYED;
+    xact_xdata(xact).dflags |= XACT_DISPLAYED;
   }
 }
 

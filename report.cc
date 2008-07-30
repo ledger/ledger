@@ -36,34 +36,34 @@ namespace ledger {
 
 xact_handler_ptr
 report_t::chain_xact_handlers(xact_handler_ptr base_handler,
-			      const bool handle_individual_transactions)
+			      const bool handle_individual_xacts)
 {
   bool remember_components = false;
 
   xact_handler_ptr handler(base_handler);
 
-  // format_transactions write each transaction received to the
+  // format_xacts write each xact received to the
   // output stream.
-  if (handle_individual_transactions) {
+  if (handle_individual_xacts) {
     // truncate_entries cuts off a certain number of _entries_ from
     // being displayed.  It does not affect calculation.
     if (head_entries || tail_entries)
       handler.reset(new truncate_entries(handler, head_entries, tail_entries));
 
-    // filter_transactions will only pass through transactions
+    // filter_xacts will only pass through xacts
     // matching the `display_predicate'.
     if (! display_predicate.empty())
-      handler.reset(new filter_transactions(handler, display_predicate));
+      handler.reset(new filter_xacts(handler, display_predicate));
 
-    // calc_transactions computes the running total.  When this
+    // calc_xacts computes the running total.  When this
     // appears will determine, for example, whether filtered
-    // transactions are included or excluded from the running total.
-    handler.reset(new calc_transactions(handler));
+    // xacts are included or excluded from the running total.
+    handler.reset(new calc_xacts(handler));
 
-    // component_transactions looks for reported transaction that
+    // component_xacts looks for reported xact that
     // match the given `descend_expr', and then reports the
-    // transactions which made up the total for that reported
-    // transaction.
+    // xacts which made up the total for that reported
+    // xact.
     if (! descend_expr.empty()) {
       std::list<std::string> descend_exprs;
 
@@ -78,126 +78,126 @@ report_t::chain_xact_handlers(xact_handler_ptr base_handler,
 	     descend_exprs.rbegin();
 	   i != descend_exprs.rend();
 	   i++)
-	handler.reset(new component_transactions(handler, *i));
+	handler.reset(new component_xacts(handler, *i));
 
       remember_components = true;
     }
 
-    // reconcile_transactions will pass through only those
-    // transactions which can be reconciled to a given balance
-    // (calculated against the transactions which it receives).
+    // reconcile_xacts will pass through only those
+    // xacts which can be reconciled to a given balance
+    // (calculated against the xacts which it receives).
     if (! reconcile_balance.empty()) {
       datetime_t cutoff = current_moment;
       if (! reconcile_date.empty())
 	cutoff = parse_datetime(reconcile_date);
-      handler.reset(new reconcile_transactions
+      handler.reset(new reconcile_xacts
 		    (handler, value_t(reconcile_balance), cutoff));
     }
 
-    // filter_transactions will only pass through transactions
+    // filter_xacts will only pass through xacts
     // matching the `secondary_predicate'.
     if (! secondary_predicate.empty())
-      handler.reset(new filter_transactions(handler, secondary_predicate));
+      handler.reset(new filter_xacts(handler, secondary_predicate));
 
-    // sort_transactions will sort all the transactions it sees, based
+    // sort_xacts will sort all the xacts it sees, based
     // on the `sort_order' value expression.
     if (! sort_string.empty()) {
       if (entry_sort)
 	handler.reset(new sort_entries(handler, sort_string));
       else
-	handler.reset(new sort_transactions(handler, sort_string));
+	handler.reset(new sort_xacts(handler, sort_string));
     }
 
-    // changed_value_transactions adds virtual transactions to the
+    // changed_value_xacts adds virtual xacts to the
     // list to account for changes in market value of commodities,
     // which otherwise would affect the running total unpredictably.
     if (show_revalued)
-      handler.reset(new changed_value_transactions(handler, show_revalued_only));
+      handler.reset(new changed_value_xacts(handler, show_revalued_only));
 
-    // collapse_transactions causes entries with multiple transactions
-    // to appear as entries with a subtotaled transaction for each
+    // collapse_xacts causes entries with multiple xacts
+    // to appear as entries with a subtotaled xact for each
     // commodity used.
     if (show_collapsed)
-      handler.reset(new collapse_transactions(handler));
+      handler.reset(new collapse_xacts(handler));
 
-    // subtotal_transactions combines all the transactions it receives
-    // into one subtotal entry, which has one transaction for each
+    // subtotal_xacts combines all the xacts it receives
+    // into one subtotal entry, which has one xact for each
     // commodity in each account.
     //
-    // period_transactions is like subtotal_transactions, but it
+    // period_xacts is like subtotal_xacts, but it
     // subtotals according to time periods rather than totalling
     // everything.
     //
-    // dow_transactions is like period_transactions, except that it
-    // reports all the transactions that fall on each subsequent day
+    // dow_xacts is like period_xacts, except that it
+    // reports all the xacts that fall on each subsequent day
     // of the week.
     if (show_subtotal)
-      handler.reset(new subtotal_transactions(handler, remember_components));
+      handler.reset(new subtotal_xacts(handler, remember_components));
 
     if (days_of_the_week)
-      handler.reset(new dow_transactions(handler, remember_components));
+      handler.reset(new dow_xacts(handler, remember_components));
     else if (by_payee)
-      handler.reset(new by_payee_transactions(handler, remember_components));
+      handler.reset(new by_payee_xacts(handler, remember_components));
 
-    // interval_transactions groups transactions together based on a
+    // interval_xacts groups xacts together based on a
     // time period, such as weekly or monthly.
     if (! report_period.empty()) {
-      handler.reset(new interval_transactions(handler, report_period,
+      handler.reset(new interval_xacts(handler, report_period,
 					      remember_components));
-      handler.reset(new sort_transactions(handler, "d"));
+      handler.reset(new sort_xacts(handler, "d"));
     }
   }
 
-  // invert_transactions inverts the value of the transactions it
+  // invert_xacts inverts the value of the xacts it
   // receives.
   if (show_inverted)
-    handler.reset(new invert_transactions(handler));
+    handler.reset(new invert_xacts(handler));
 
-  // related_transactions will pass along all transactions related
-  // to the transaction received.  If `show_all_related' is true,
-  // then all the entry's transactions are passed; meaning that if
-  // one transaction of an entry is to be printed, all the
-  // transaction for that entry will be printed.
+  // related_xacts will pass along all xacts related
+  // to the xact received.  If `show_all_related' is true,
+  // then all the entry's xacts are passed; meaning that if
+  // one xact of an entry is to be printed, all the
+  // xact for that entry will be printed.
   if (show_related)
-    handler.reset(new related_transactions(handler, show_all_related));
+    handler.reset(new related_xacts(handler, show_all_related));
 
-  // This filter_transactions will only pass through transactions
+  // This filter_xacts will only pass through xacts
   // matching the `predicate'.
   if (! predicate.empty())
-    handler.reset(new filter_transactions(handler, predicate));
+    handler.reset(new filter_xacts(handler, predicate));
 
 #if 0
-  // budget_transactions takes a set of transactions from a data
-  // file and uses them to generate "budget transactions" which
-  // balance against the reported transactions.
+  // budget_xacts takes a set of xacts from a data
+  // file and uses them to generate "budget xacts" which
+  // balance against the reported xacts.
   //
-  // forecast_transactions is a lot like budget_transactions, except
+  // forecast_xacts is a lot like budget_xacts, except
   // that it adds entries only for the future, and does not balance
   // them against anything but the future balance.
 
   if (budget_flags) {
-    budget_transactions * budget_handler
-      = new budget_transactions(handler, budget_flags);
+    budget_xacts * budget_handler
+      = new budget_xacts(handler, budget_flags);
     budget_handler->add_period_entries(journal->period_entries);
     handler.reset(budget_handler;
 
     // Apply this before the budget handler, so that only matching
-    // transactions are calculated toward the budget.  The use of
-    // filter_transactions above will further clean the results so
-    // that no automated transactions that don't match the filter get
+    // xacts are calculated toward the budget.  The use of
+    // filter_xacts above will further clean the results so
+    // that no automated xacts that don't match the filter get
     // reported.
     if (! predicate.empty())
-      handler.reset(new filter_transactions(handler, predicate));
+      handler.reset(new filter_xacts(handler, predicate));
   }
   else if (! forecast_limit.empty()) {
-    forecast_transactions * forecast_handler
-      = new forecast_transactions(handler, forecast_limit);
+    forecast_xacts * forecast_handler
+      = new forecast_xacts(handler, forecast_limit);
     forecast_handler->add_period_entries(journal->period_entries);
     handler.reset(forecast_handler;
 
-    // See above, under budget_transactions.
+    // See above, under budget_xacts.
     if (! predicate.empty())
-      handler.reset(new filter_transactions(handler, predicate));
+      handler.reset(new filter_xacts(handler, predicate));
   }
 #endif
 
@@ -209,30 +209,30 @@ report_t::chain_xact_handlers(xact_handler_ptr base_handler,
   return handler;
 }
 
-void report_t::transactions_report(xact_handler_ptr handler)
+void report_t::xacts_report(xact_handler_ptr handler)
 {
-  session_transactions_iterator walker(session);
-  pass_down_transactions(chain_xact_handlers(handler), walker);
+  session_xacts_iterator walker(session);
+  pass_down_xacts(chain_xact_handlers(handler), walker);
   handler->flush();
 
   if (DO_VERIFY())
-    session.clean_transactions();
+    session.clean_xacts();
 }
 
 void report_t::entry_report(xact_handler_ptr handler, entry_t& entry)
 {
-  entry_transactions_iterator walker(entry);
-  pass_down_transactions(chain_xact_handlers(handler), walker);
+  entry_xacts_iterator walker(entry);
+  pass_down_xacts(chain_xact_handlers(handler), walker);
   handler->flush();
 
   if (DO_VERIFY())
-    session.clean_transactions(entry);
+    session.clean_xacts(entry);
 }
 
 void report_t::sum_all_accounts()
 {
-  session_transactions_iterator walker(session);
-  pass_down_transactions
+  session_xacts_iterator walker(session);
+  pass_down_xacts
     (chain_xact_handlers(xact_handler_ptr(new set_account_value), false),
      walker);
   // no flush() needed with set_account_value
@@ -265,7 +265,7 @@ void report_t::accounts_report(acct_handler_ptr handler,
   }
 
   if (DO_VERIFY()) {
-    session.clean_transactions();
+    session.clean_xacts();
     session.clean_accounts();
   }
 }

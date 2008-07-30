@@ -53,10 +53,10 @@ entry_t * derive_new_entry(report_t& report,
     }
 
     if (i == end) {
-      added->add_transaction(new transaction_t(acct));
+      added->add_xact(new xact_t(acct));
     } else {
-      transaction_t * xact = new transaction_t(acct, amount_t(*i++));
-      added->add_transaction(xact);
+      xact_t * xact = new xact_t(acct, amount_t(*i++));
+      added->add_xact(xact);
 
       if (! xact->amount.commodity()) {
 	// If the amount has no commodity, we can determine it given
@@ -89,39 +89,39 @@ entry_t * derive_new_entry(report_t& report,
 	acct = session.find_account("Equity");
     }   
 
-    added->add_transaction(new transaction_t(acct));
+    added->add_xact(new xact_t(acct));
   }
   else if (i == end) {
     // If no argument were given but the payee, assume the user wants
-    // to see the same transaction as last time.
+    // to see the same xact as last time.
     added->code = matching->code;
 
-    for (transactions_list::iterator k = matching->transactions.begin();
-	 k != matching->transactions.end();
+    for (xacts_list::iterator k = matching->xacts.begin();
+	 k != matching->xacts.end();
 	 k++)
-      added->add_transaction(new transaction_t(**k));
+      added->add_xact(new xact_t(**k));
   }
   else if ((*i)[0] == '-' || std::isdigit((*i)[0])) {
-    transaction_t * m_xact, * xact, * first;
-    m_xact = matching->transactions.front();
+    xact_t * m_xact, * xact, * first;
+    m_xact = matching->xacts.front();
 
-    first = xact = new transaction_t(m_xact->account, amount_t(*i++));
-    added->add_transaction(xact);
+    first = xact = new xact_t(m_xact->account, amount_t(*i++));
+    added->add_xact(xact);
 
     if (! xact->amount.commodity())
       xact->amount.set_commodity(m_xact->amount.commodity());
 
-    m_xact = matching->transactions.back();
+    m_xact = matching->xacts.back();
 
-    xact = new transaction_t(m_xact->account, - first->amount);
-    added->add_transaction(xact);
+    xact = new xact_t(m_xact->account, - first->amount);
+    added->add_xact(xact);
 
     if (i != end) {
       account_t * acct = session.find_account_re(*i);
       if (! acct)
 	acct = session.find_account(*i);
       assert(acct);
-      added->transactions.back()->account = acct;
+      added->xacts.back()->account = acct;
     }
   }
   else {
@@ -137,9 +137,9 @@ entry_t * derive_new_entry(report_t& report,
       for (; j != matching->journal->entries.rend(); j++)
 	if (regexp.match((*j)->payee)) {
 	  entry_t * entry = *j;
-	  for (transactions_list::const_iterator x =
-		 entry->transactions.begin();
-	       x != entry->transactions.end();
+	  for (xacts_list::const_iterator x =
+		 entry->xacts.begin();
+	       x != entry->xacts.end();
 	       x++)
 	    if (acct_regex.match((*x)->account->fullname())) {
 	      acct = (*x)->account;
@@ -150,12 +150,12 @@ entry_t * derive_new_entry(report_t& report,
 	}
 
     found:
-      transaction_t * xact;
+      xact_t * xact;
       if (i == end) {
 	if (amt)
-	  xact = new transaction_t(acct, *amt);
+	  xact = new xact_t(acct, *amt);
 	else
-	  xact = new transaction_t(acct);
+	  xact = new xact_t(acct);
       } else {
 	amount_t amount(*i++);
 
@@ -172,7 +172,7 @@ entry_t * derive_new_entry(report_t& report,
 	if (! acct)
 	  acct = session.find_account(re_pat);
 
-	xact = new transaction_t(acct, amount);
+	xact = new xact_t(acct, amount);
 	if (! xact->amount.commodity()) {
 	  if (amt)
 	    xact->amount.set_commodity(amt->commodity());
@@ -180,22 +180,22 @@ entry_t * derive_new_entry(report_t& report,
 	    xact->amount.set_commodity(*amount_t::current_pool->default_commodity);
 	}
       }
-      added->add_transaction(xact);
+      added->add_xact(xact);
     }
 
     if (! draw_acct) {
-      assert(matching->transactions.back()->account);
-      draw_acct = matching->transactions.back()->account;
+      assert(matching->xacts.back()->account);
+      draw_acct = matching->xacts.back()->account;
     }
     if (draw_acct)
-      added->add_transaction(new transaction_t(draw_acct));
+      added->add_xact(new xact_t(draw_acct));
   }
 
   if ((matching &&
-       ! run_hooks(matching->journal->entry_finalize_hooks, *added, false)) ||
+       ! matching->journal->entry_finalize_hooks.run_hooks(*added, false)) ||
       ! added->finalize() ||
       (matching &&
-       ! run_hooks(matching->journal->entry_finalize_hooks, *added, true)))
+       ! matching->journal->entry_finalize_hooks.run_hooks(*added, true)))
     throw new error("Failed to finalize derived entry (check commodities)");
 
   return added.release();

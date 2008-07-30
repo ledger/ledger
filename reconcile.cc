@@ -3,14 +3,14 @@
 
 namespace ledger {
 
-#define xact_next(x)     ((transaction_t *)transaction_xdata(*x).ptr)
-#define xact_next_ptr(x) ((transaction_t **)&transaction_xdata(*x).ptr)
+#define xact_next(x)     ((xact_t *)xact_xdata(*x).ptr)
+#define xact_next_ptr(x) ((xact_t **)&xact_xdata(*x).ptr)
 
 static bool search_for_balance(amount_t& amount,
-			       transaction_t ** prev, transaction_t * next)
+			       xact_t ** prev, xact_t * next)
 {
   for (; next; next = xact_next(next)) {
-    transaction_t * temp = *prev;
+    xact_t * temp = *prev;
     *prev = next;
 
     amount -= next->amount;
@@ -24,32 +24,32 @@ static bool search_for_balance(amount_t& amount,
   return false;
 }
 
-void reconcile_transactions::push_to_handler(transaction_t * first)
+void reconcile_xacts::push_to_handler(xact_t * first)
 {
   for (; first; first = xact_next(first))
-    item_handler<transaction_t>::operator()(*first);
+    item_handler<xact_t>::operator()(*first);
 
-  item_handler<transaction_t>::flush();
+  item_handler<xact_t>::flush();
 }
 
-void reconcile_transactions::flush()
+void reconcile_xacts::flush()
 {
   value_t cleared_balance;
   value_t pending_balance;
 
-  transaction_t *  first    = NULL;
-  transaction_t ** last_ptr = &first;
+  xact_t *  first    = NULL;
+  xact_t ** last_ptr = &first;
 
-  for (transactions_list::iterator x = xacts.begin();
+  for (xacts_list::iterator x = xacts.begin();
        x != xacts.end();
        x++) {
     if (! is_valid(cutoff) || (*x)->date() < cutoff) {
       switch ((*x)->state) {
-      case transaction_t::CLEARED:
+      case xact_t::CLEARED:
 	cleared_balance += (*x)->amount;
 	break;
-      case transaction_t::UNCLEARED:
-      case transaction_t::PENDING:
+      case xact_t::UNCLEARED:
+      case xact_t::PENDING:
 	pending_balance += (*x)->amount;
 	*last_ptr = *x;
 	last_ptr = xact_next_ptr(*x);

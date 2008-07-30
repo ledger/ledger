@@ -483,7 +483,7 @@ OPT_BEGIN(trace, "") {
 // Report filtering
 
 OPT_BEGIN(effective, "") {
-  transaction_t::use_effective_date = true;
+  xact_t::use_effective_date = true;
 } OPT_END(effective);
 
 OPT_BEGIN(begin, "b:") {

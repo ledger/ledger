@@ -14,7 +14,7 @@ static entry_t *     curr_entry;
 static commodity_t * curr_comm;
 static string	     comm_flags;
 
-static transaction_t::state_t curr_state;
+static xact_t::state_t curr_state;
 
 static string data;
 static bool   ignore;
@@ -28,13 +28,13 @@ static void startElement(void *userData, const char *name, const char **attrs)
   if (std::strcmp(name, "entry") == 0) {
     assert(! curr_entry);
     curr_entry = new entry_t;
-    curr_state = transaction_t::UNCLEARED;
+    curr_state = xact_t::UNCLEARED;
   }
-  else if (std::strcmp(name, "transaction") == 0) {
+  else if (std::strcmp(name, "xact") == 0) {
     assert(curr_entry);
-    curr_entry->add_transaction(new transaction_t);
-    if (curr_state != transaction_t::UNCLEARED)
-      curr_entry->transactions.back()->state = curr_state;
+    curr_entry->add_xact(new xact_t);
+    if (curr_state != xact_t::UNCLEARED)
+      curr_entry->xacts.back()->state = curr_state;
   }
   else if (std::strcmp(name, "commodity") == 0) {
     if (string(attrs[0]) == "flags")
@@ -59,7 +59,7 @@ static void endElement(void *userData, const char *name)
       count++;
     } else {
       account_t * acct = curr_journal->find_account("<Unknown>");
-      curr_entry->add_transaction(new transaction_t(acct));
+      curr_entry->add_xact(new xact_t(acct));
       if (curr_journal->add_entry(curr_entry)) {
 	count++;
       } else {
@@ -79,28 +79,28 @@ static void endElement(void *userData, const char *name)
     curr_entry->code = data;
   }
   else if (std::strcmp(name, "en:cleared") == 0) {
-    curr_state = transaction_t::CLEARED;
+    curr_state = xact_t::CLEARED;
   }
   else if (std::strcmp(name, "en:pending") == 0) {
-    curr_state = transaction_t::PENDING;
+    curr_state = xact_t::PENDING;
   }
   else if (std::strcmp(name, "en:payee") == 0) {
     curr_entry->payee = data;
   }
   else if (std::strcmp(name, "tr:account") == 0) {
-    curr_entry->transactions.back()->account = curr_journal->find_account(data);
+    curr_entry->xacts.back()->account = curr_journal->find_account(data);
   }
   else if (std::strcmp(name, "tr:cleared") == 0) {
-    curr_entry->transactions.back()->state = transaction_t::CLEARED;
+    curr_entry->xacts.back()->state = xact_t::CLEARED;
   }
   else if (std::strcmp(name, "tr:pending") == 0) {
-    curr_entry->transactions.back()->state = transaction_t::PENDING;
+    curr_entry->xacts.back()->state = xact_t::PENDING;
   }
   else if (std::strcmp(name, "tr:virtual") == 0) {
-    curr_entry->transactions.back()->add_flags(TRANSACTION_VIRTUAL);
+    curr_entry->xacts.back()->add_flags(XACT_VIRTUAL);
   }
   else if (std::strcmp(name, "tr:generated") == 0) {
-    curr_entry->transactions.back()->add_flags(TRANSACTION_AUTO);
+    curr_entry->xacts.back()->add_flags(XACT_AUTO);
   }
   else if (std::strcmp(name, "symbol") == 0) {
     assert(! curr_comm);
@@ -133,7 +133,7 @@ static void endElement(void *userData, const char *name)
   }
 #endif
   else if (std::strcmp(name, "quantity") == 0) {
-    curr_entry->transactions.back()->amount.parse(data);
+    curr_entry->xacts.back()->amount.parse(data);
     if (curr_comm) {
       string::size_type i = data.find('.');
       if (i != string::npos) {
@@ -141,7 +141,7 @@ static void endElement(void *userData, const char *name)
 	if (precision > curr_comm->precision())
 	  curr_comm->set_precision(precision);
       }
-      curr_entry->transactions.back()->amount.set_commodity(*curr_comm);
+      curr_entry->xacts.back()->amount.set_commodity(*curr_comm);
       curr_comm = NULL;
     }
   }
@@ -383,17 +383,17 @@ void format_xml_entries::format_last_entry()
   }
 
   bool first = true;
-  for (transactions_list::const_iterator i = last_entry->transactions.begin();
-       i != last_entry->transactions.end();
+  for (xacts_list::const_iterator i = last_entry->xacts.begin();
+       i != last_entry->xacts.end();
        i++) {
-    if (transaction_has_xdata(**i) &&
-	transaction_xdata_(**i).dflags & TRANSACTION_TO_DISPLAY) {
+    if (xact_has_xdata(**i) &&
+	xact_xdata_(**i).dflags & XACT_TO_DISPLAY) {
       if (first) {
-	output_stream << "    <en:transactions>\n";
+	output_stream << "    <en:xacts>\n";
 	first = false;
       }
 
-      output_stream << "      <transaction>\n";
+      output_stream << "      <xact>\n";
 
 #if 0
       // jww (2008-05-08): Need to format these
@@ -408,14 +408,14 @@ void format_xml_entries::format_last_entry()
 		      << "</tr:date_eff>\n";
 #endif
 
-      if ((*i)->state == transaction_t::CLEARED)
+      if ((*i)->state == xact_t::CLEARED)
 	output_stream << "        <tr:cleared/>\n";
-      else if ((*i)->state == transaction_t::PENDING)
+      else if ((*i)->state == xact_t::PENDING)
 	output_stream << "        <tr:pending/>\n";
 
-      if ((*i)->has_flags(TRANSACTION_VIRTUAL))
+      if ((*i)->has_flags(XACT_VIRTUAL))
 	output_stream << "        <tr:virtual/>\n";
-      if ((*i)->has_flags(TRANSACTION_AUTO))
+      if ((*i)->has_flags(XACT_AUTO))
 	output_stream << "        <tr:generated/>\n";
 
       if ((*i)->account) {
@@ -431,9 +431,9 @@ void format_xml_entries::format_last_entry()
       }
 
       output_stream << "        <tr:amount>\n";
-      if (transaction_xdata_(**i).dflags & TRANSACTION_COMPOUND)
+      if (xact_xdata_(**i).dflags & XACT_COMPOUND)
 	xml_write_value(output_stream,
-			transaction_xdata_(**i).value, 10);
+			xact_xdata_(**i).value, 10);
       else
 	xml_write_value(output_stream, value_t((*i)->amount), 10);
       output_stream << "        </tr:amount>\n";
@@ -452,18 +452,18 @@ void format_xml_entries::format_last_entry()
 
       if (show_totals) {
 	output_stream << "        <total>\n";
-	xml_write_value(output_stream, transaction_xdata_(**i).total, 10);
+	xml_write_value(output_stream, xact_xdata_(**i).total, 10);
 	output_stream << "        </total>\n";
       }
 
-      output_stream << "      </transaction>\n";
+      output_stream << "      </xact>\n";
 
-      transaction_xdata_(**i).dflags |= TRANSACTION_DISPLAYED;
+      xact_xdata_(**i).dflags |= XACT_DISPLAYED;
     }
   }
 
   if (! first)
-    output_stream << "    </en:transactions>\n";
+    output_stream << "    </en:xacts>\n";
 
   output_stream << "  </entry>\n";
 }

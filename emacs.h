@@ -6,21 +6,21 @@
 
 namespace ledger {
 
-class format_emacs_transactions : public item_handler<transaction_t>
+class format_emacs_xacts : public item_handler<xact_t>
 {
-  format_emacs_transactions();
+  format_emacs_xacts();
 
 protected:
   std::ostream& out;
   entry_t *     last_entry;
 
 public:
-  format_emacs_transactions(std::ostream& _out)
+  format_emacs_xacts(std::ostream& _out)
     : out(_out), last_entry(NULL) {
-    TRACE_CTOR(format_emacs_transactions, "std::ostream&");
+    TRACE_CTOR(format_emacs_xacts, "std::ostream&");
   }
-  ~format_emacs_transactions() {
-    TRACE_DTOR(format_emacs_transactions);
+  ~format_emacs_xacts() {
+    TRACE_DTOR(format_emacs_xacts);
   }
 
   virtual void write_entry(entry_t& entry);
@@ -29,7 +29,7 @@ public:
       out << "))\n";
     out.flush();
   }
-  virtual void operator()(transaction_t& xact);
+  virtual void operator()(xact_t& xact);
 };
 
 } // namespace ledger

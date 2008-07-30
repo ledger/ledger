@@ -17,10 +17,10 @@ namespace {
   }
 }
 
-void format_csv_transactions::operator()(transaction_t& xact)
+void format_csv_xacts::operator()(xact_t& xact)
 {
-  if (! transaction_has_xdata(xact) ||
-      ! (transaction_xdata_(xact).dflags & TRANSACTION_DISPLAYED)) {
+  if (! xact_has_xdata(xact) ||
+      ! (xact_xdata_(xact).dflags & XACT_DISPLAYED)) {
 
     {
       format_t fmt("%D");
@@ -73,20 +73,20 @@ void format_csv_transactions::operator()(transaction_t& xact)
     out << ',';
 
     switch (xact.state) {
-    case transaction_t::CLEARED:
+    case xact_t::CLEARED:
       write_escaped_string(out, "*");
       break;
-    case transaction_t::PENDING:
+    case xact_t::PENDING:
       write_escaped_string(out, "!");
       break;
     default: {
-      transaction_t::state_t state;
+      xact_t::state_t state;
       if (xact.entry->get_state(&state))
 	switch (state) {
-	case transaction_t::CLEARED:
+	case xact_t::CLEARED:
 	  write_escaped_string(out, "*");
 	  break;
-	case transaction_t::PENDING:
+	case xact_t::PENDING:
 	  write_escaped_string(out, "!");
 	  break;
 	default:
@@ -111,7 +111,7 @@ void format_csv_transactions::operator()(transaction_t& xact)
     }
     out << '\n';
 
-    transaction_xdata(xact).dflags |= TRANSACTION_DISPLAYED;
+    xact_xdata(xact).dflags |= XACT_DISPLAYED;
   }
 }
 

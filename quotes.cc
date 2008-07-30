@@ -1,14 +1,9 @@
 #include "quotes.h"
-#include "datetime.h"
-#include "error.h"
-#include "debug.h"
-
-#include <fstream>
-#include <cstdlib>
-#include <cstdio>
+#include "utils.h"
 
 namespace ledger {
 
+#if 0
 void quotes_by_script::operator()(commodity_base_t& commodity,
 				  const datetime_t& moment,
 				  const datetime_t& date,
@@ -78,5 +73,6 @@ void quotes_by_script::operator()(commodity_base_t& commodity,
 		    commodity.symbol + "\")");
   }
 }
+#endif
 
 } // namespace ledger

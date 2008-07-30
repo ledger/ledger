@@ -51,8 +51,8 @@ namespace ledger {
     var_t<report_t>     report(args, 0);
     var_t<std::ostream> ostream(args, 1);
 
-    report->transactions_report
-      (xact_handler_ptr(new format_transactions
+    report->xacts_report
+      (xact_handler_ptr(new format_xacts
 			(*ostream, report->session.register_format)));
     return true;
   }

@@ -55,9 +55,9 @@ void expr_t::op_t::compute(value_t&	    result,
 
   case AMOUNT:
     if (details.xact) {
-      if (transaction_has_xdata(*details.xact) &&
-	  transaction_xdata_(*details.xact).dflags & TRANSACTION_COMPOUND)
-	result = transaction_xdata_(*details.xact).value;
+      if (xact_has_xdata(*details.xact) &&
+	  xact_xdata_(*details.xact).dflags & XACT_COMPOUND)
+	result = xact_xdata_(*details.xact).value;
       else
 	result = details.xact->amount;
     }
@@ -72,9 +72,9 @@ void expr_t::op_t::compute(value_t&	    result,
   case PRICE:
     if (details.xact) {
       bool set = false;
-      if (transaction_has_xdata(*details.xact)) {
-	transaction_xdata_t& xdata(transaction_xdata_(*details.xact));
-	if (xdata.dflags & TRANSACTION_COMPOUND) {
+      if (xact_has_xdata(*details.xact)) {
+	xact_xdata_t& xdata(xact_xdata_(*details.xact));
+	if (xdata.dflags & XACT_COMPOUND) {
 	  result = xdata.value.value();
 	  set = true;
 	}
@@ -98,9 +98,9 @@ void expr_t::op_t::compute(value_t&	    result,
   case COST:
     if (details.xact) {
       bool set = false;
-      if (transaction_has_xdata(*details.xact)) {
-	transaction_xdata_t& xdata(transaction_xdata_(*details.xact));
-	if (xdata.dflags & TRANSACTION_COMPOUND) {
+      if (xact_has_xdata(*details.xact)) {
+	xact_xdata_t& xdata(xact_xdata_(*details.xact));
+	if (xdata.dflags & XACT_COMPOUND) {
 	  result = xdata.value.cost();
 	  set = true;
 	}
@@ -122,24 +122,24 @@ void expr_t::op_t::compute(value_t&	    result,
     break;
 
   case TOTAL:
-    if (details.xact && transaction_has_xdata(*details.xact))
-      result = transaction_xdata_(*details.xact).total;
+    if (details.xact && xact_has_xdata(*details.xact))
+      result = xact_xdata_(*details.xact).total;
     else if (details.account && account_has_xdata(*details.account))
       result = account_xdata(*details.account).total;
     else
       result = 0L;
     break;
   case PRICE_TOTAL:
-    if (details.xact && transaction_has_xdata(*details.xact))
-      result = transaction_xdata_(*details.xact).total.value();
+    if (details.xact && xact_has_xdata(*details.xact))
+      result = xact_xdata_(*details.xact).total.value();
     else if (details.account && account_has_xdata(*details.account))
       result = account_xdata(*details.account).total.value();
     else
       result = 0L;
     break;
   case COST_TOTAL:
-    if (details.xact && transaction_has_xdata(*details.xact))
-      result = transaction_xdata_(*details.xact).total.cost();
+    if (details.xact && xact_has_xdata(*details.xact))
+      result = xact_xdata_(*details.xact).total.cost();
     else if (details.account && account_has_xdata(*details.account))
       result = account_xdata(*details.account).total.cost();
     else
@@ -160,9 +160,9 @@ void expr_t::op_t::compute(value_t&	    result,
     break;
 
   case DATE:
-    if (details.xact && transaction_has_xdata(*details.xact) &&
-	is_valid(transaction_xdata_(*details.xact).date))
-      result = transaction_xdata_(*details.xact).date;
+    if (details.xact && xact_has_xdata(*details.xact) &&
+	is_valid(xact_xdata_(*details.xact).date))
+      result = xact_xdata_(*details.xact).date;
     else if (details.xact)
       result = details.xact->date();
     else if (details.entry)
@@ -172,9 +172,9 @@ void expr_t::op_t::compute(value_t&	    result,
     break;
 
   case ACT_DATE:
-    if (details.xact && transaction_has_xdata(*details.xact) &&
-	is_valid(transaction_xdata_(*details.xact).date))
-      result = transaction_xdata_(*details.xact).date;
+    if (details.xact && xact_has_xdata(*details.xact) &&
+	is_valid(xact_xdata_(*details.xact).date))
+      result = xact_xdata_(*details.xact).date;
     else if (details.xact)
       result = details.xact->actual_date();
     else if (details.entry)
@@ -184,9 +184,9 @@ void expr_t::op_t::compute(value_t&	    result,
     break;
 
   case EFF_DATE:
-    if (details.xact && transaction_has_xdata(*details.xact) &&
-	is_valid(transaction_xdata_(*details.xact).date))
-      result = transaction_xdata_(*details.xact).date;
+    if (details.xact && xact_has_xdata(*details.xact) &&
+	is_valid(xact_xdata_(*details.xact).date))
+      result = xact_xdata_(*details.xact).date;
     else if (details.xact)
       result = details.xact->effective_date();
     else if (details.entry)
@@ -197,34 +197,34 @@ void expr_t::op_t::compute(value_t&	    result,
 
   case CLEARED:
     if (details.xact)
-      result = details.xact->state == transaction_t::CLEARED;
+      result = details.xact->state == xact_t::CLEARED;
     else
       result = false;
     break;
   case PENDING:
     if (details.xact)
-      result = details.xact->state == transaction_t::PENDING;
+      result = details.xact->state == xact_t::PENDING;
     else
       result = false;
     break;
 
   case REAL:
     if (details.xact)
-      result = ! (details.xact->has_flags(TRANSACTION_VIRTUAL));
+      result = ! (details.xact->has_flags(XACT_VIRTUAL));
     else
       result = true;
     break;
 
   case ACTUAL:
     if (details.xact)
-      result = ! (details.xact->has_flags(TRANSACTION_AUTO));
+      result = ! (details.xact->has_flags(XACT_AUTO));
     else
       result = true;
     break;
 
   case INDEX:
-    if (details.xact && transaction_has_xdata(*details.xact))
-      result = long(transaction_xdata_(*details.xact).index + 1);
+    if (details.xact && xact_has_xdata(*details.xact))
+      result = long(xact_xdata_(*details.xact).index + 1);
     else if (details.account && account_has_xdata(*details.account))
       result = long(account_xdata(*details.account).count);
     else
@@ -232,8 +232,8 @@ void expr_t::op_t::compute(value_t&	    result,
     break;
 
   case COUNT:
-    if (details.xact && transaction_has_xdata(*details.xact))
-      result = long(transaction_xdata_(*details.xact).index + 1);
+    if (details.xact && xact_has_xdata(*details.xact))
+      result = long(xact_xdata_(*details.xact).index + 1);
     else if (details.account && account_has_xdata(*details.account))
       result = long(account_xdata(*details.account).total_count);
     else
@@ -317,9 +317,9 @@ void expr_t::op_t::compute(value_t&	    result,
   case F_ARITH_MEAN: {
     long arg_index = 0;
     ptr_op_t expr = find_leaf(context, 0, arg_index);
-    if (details.xact && transaction_has_xdata(*details.xact)) {
+    if (details.xact && xact_has_xdata(*details.xact)) {
       expr->compute(result, details, context);
-      result /= amount_t(long(transaction_xdata_(*details.xact).index + 1));
+      result /= amount_t(long(xact_xdata_(*details.xact).index + 1));
     }
     else if (details.account && account_has_xdata(*details.account) &&
 	     account_xdata(*details.account).total_count) {

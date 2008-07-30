@@ -487,15 +487,15 @@ void format_t::format(std::ostream& out_str, const scope_t& scope) const
 	}
 	else if (details.entry) {
 	  unsigned int    xacts_count = 0;
-	  transaction_t * first = NULL;
-	  transaction_t * last  = NULL;
+	  xact_t * first = NULL;
+	  xact_t * last  = NULL;
 
-	  for (transactions_list::const_iterator i
-		 = details.entry->transactions.begin();
-	       i != details.entry->transactions.end();
+	  for (xacts_list::const_iterator i
+		 = details.entry->xacts.begin();
+	       i != details.entry->xacts.end();
 	       i++)
-	    if (transaction_has_xdata(**i) &&
-		transaction_xdata_(**i).dflags & TRANSACTION_TO_DISPLAY) {
+	    if (xact_has_xdata(**i) &&
+		xact_xdata_(**i).dflags & XACT_TO_DISPLAY) {
 	      xacts_count++;
 	      if (! first)
 		first = *i;
@@ -631,13 +631,13 @@ void format_t::format(std::ostream& out_str, const scope_t& scope) const
     case element_t::CLEARED:
       if (details.xact) {
 	switch (details.xact->state) {
-	case transaction_t::CLEARED:
+	case xact_t::CLEARED:
 	  out << "* ";
 	  break;
-	case transaction_t::PENDING:
+	case xact_t::PENDING:
 	  out << "! ";
 	  break;
-	case transaction_t::UNCLEARED:
+	case xact_t::UNCLEARED:
 	  break;
 	}
       }
@@ -645,16 +645,16 @@ void format_t::format(std::ostream& out_str, const scope_t& scope) const
 
     case element_t::ENTRY_CLEARED:
       if (details.entry) {
-	transaction_t::state_t state;
+	xact_t::state_t state;
 	if (details.entry->get_state(&state))
 	  switch (state) {
-	  case transaction_t::CLEARED:
+	  case xact_t::CLEARED:
 	    out << "* ";
 	    break;
-	  case transaction_t::PENDING:
+	  case xact_t::PENDING:
 	    out << "! ";
 	    break;
-	  case transaction_t::UNCLEARED:
+	  case xact_t::UNCLEARED:
 	    break;
 	  }
       }
@@ -692,16 +692,16 @@ void format_t::format(std::ostream& out_str, const scope_t& scope) const
 
     case element_t::OPT_ACCOUNT:
       if (details.entry && details.xact) {
-	transaction_t::state_t state;
+	xact_t::state_t state;
 	if (! details.entry->get_state(&state))
 	  switch (details.xact->state) {
-	  case transaction_t::CLEARED:
+	  case xact_t::CLEARED:
 	    name = "* ";
 	    break;
-	  case transaction_t::PENDING:
+	  case xact_t::PENDING:
 	    name = "! ";
 	    break;
-	  case transaction_t::UNCLEARED:
+	  case xact_t::UNCLEARED:
 	    break;
 	  }
       }
@@ -714,11 +714,11 @@ void format_t::format(std::ostream& out_str, const scope_t& scope) const
 		 details.account->fullname() :
 		 partial_account_name(*details.account));
 
-	if (details.xact && details.xact->has_flags(TRANSACTION_VIRTUAL)) {
+	if (details.xact && details.xact->has_flags(XACT_VIRTUAL)) {
 	  if (elem->max_width > 2)
 	    name = truncate(name, elem->max_width - 2, true);
 
-	  if (details.xact->has_flags(TRANSACTION_BALANCE))
+	  if (details.xact->has_flags(XACT_BALANCE))
 	    name = string("[") + name + "]";
 	  else
 	    name = string("(") + name + ")";
@@ -763,11 +763,11 @@ void format_t::format(std::ostream& out_str, const scope_t& scope) const
   }
 }
 
-format_transactions::format_transactions(std::ostream& _output_stream,
+format_xacts::format_xacts(std::ostream& _output_stream,
 					 const string& format)
   : output_stream(_output_stream), last_entry(NULL), last_xact(NULL)
 {
-  TRACE_CTOR(format_transactions, "std::ostream&, const string&");
+  TRACE_CTOR(format_xacts, "std::ostream&, const string&");
 
   const char * f = format.c_str();
   if (const char * p = std::strstr(f, "%/")) {
@@ -779,11 +779,11 @@ format_transactions::format_transactions(std::ostream& _output_stream,
   }
 }
 
-void format_transactions::operator()(transaction_t& xact)
+void format_xacts::operator()(xact_t& xact)
 {
 #if 0
-  if (! transaction_has_xdata(xact) ||
-      ! (transaction_xdata_(xact).dflags & TRANSACTION_DISPLAYED)) {
+  if (! xact_has_xdata(xact) ||
+      ! (xact_xdata_(xact).dflags & XACT_DISPLAYED)) {
     if (last_entry != xact.entry) {
       first_line_format.format(output_stream, details_t(xact));
       last_entry = xact.entry;
@@ -795,7 +795,7 @@ void format_transactions::operator()(transaction_t& xact)
       next_lines_format.format(output_stream, details_t(xact));
     }
 
-    transaction_xdata(xact).dflags |= TRANSACTION_DISPLAYED;
+    xact_xdata(xact).dflags |= XACT_DISPLAYED;
     last_xact = &xact;
   }
 #endif
@@ -805,26 +805,26 @@ void format_entries::format_last_entry()
 {
 #if 0
   bool first = true;
-  for (transactions_list::const_iterator i = last_entry->transactions.begin();
-       i != last_entry->transactions.end();
+  for (xacts_list::const_iterator i = last_entry->xacts.begin();
+       i != last_entry->xacts.end();
        i++) {
-    if (transaction_has_xdata(**i) &&
-	transaction_xdata_(**i).dflags & TRANSACTION_TO_DISPLAY) {
+    if (xact_has_xdata(**i) &&
+	xact_xdata_(**i).dflags & XACT_TO_DISPLAY) {
       if (first) {
 	first_line_format.format(output_stream, details_t(**i));
 	first = false;
       } else {
 	next_lines_format.format(output_stream, details_t(**i));
       }
-      transaction_xdata_(**i).dflags |= TRANSACTION_DISPLAYED;
+      xact_xdata_(**i).dflags |= XACT_DISPLAYED;
     }
   }
 #endif
 }
 
-void format_entries::operator()(transaction_t& xact)
+void format_entries::operator()(xact_t& xact)
 {
-  transaction_xdata(xact).dflags |= TRANSACTION_TO_DISPLAY;
+  xact_xdata(xact).dflags |= XACT_TO_DISPLAY;
 
   if (last_entry && xact.entry != last_entry)
     format_last_entry();
@@ -858,13 +858,11 @@ void print_entry(std::ostream& out, const entry_base_t& entry_base,
 
 #if 0
   format_entries formatter(out, print_format);
-  walk_transactions(const_cast<transactions_list&>(entry_base.transactions),
-		    formatter);
+  walk_xacts(const_cast<xacts_list&>(entry_base.xacts), formatter);
   formatter.flush();
 
-  clear_transaction_xdata cleaner;
-  walk_transactions(const_cast<transactions_list&>(entry_base.transactions),
-		    cleaner);
+  clear_xact_xdata cleaner;
+  walk_xacts(const_cast<xacts_list&>(entry_base.xacts), cleaner);
 #endif
 }
 

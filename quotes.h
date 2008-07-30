@@ -5,8 +5,8 @@
 
 namespace ledger {
 
-class quotes_by_script
-  : public noncopyable, commodity_t::base_t::updater_t
+#if 0
+class quotes_by_script : public noncopyable, public commodity_t::base_t::updater_t
 {
   string	price_db;
   unsigned long pricing_leeway;
@@ -32,6 +32,7 @@ public:
 			  const datetime_t& last,
 			  amount_t&	    price);
 };
+#endif
 
 } // namespace ledger
 
