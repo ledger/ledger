@@ -263,9 +263,7 @@ doxygen-docs: $(top_builddir)/Doxyfile.gen
 ######################################################################
 
 clean-backupfiles:
-	rm -fr *~  \
-	       .*~ \
-	       .\#*
+	(cd $(srcdir); rm -fr *~ .*~ .\#*)
 
 clean-documentation:
 	rm -fr *.aux  \
@@ -303,16 +301,22 @@ clean-debugdata:
 	       out
 
 clean-autoconf:
-	rm -fr Makefile	     \
+	(cd $(srcdir);	     \
+	rm -fr AUTHORS	     \
+	       COPYING	     \
+	       ChangeLog     \
+	       INSTALL       \
+	       Makefile	     \
 	       Makefile.in   \
 	       acconf.h	     \
 	       acconf.h.in   \
 	       aclocal.m4    \
-	       autom4te.cache \
+	       autom4te      \
 	       compile	     \
 	       config.guess  \
 	       config.sub    \
 	       configure     \
+	       configure.in  \
 	       depcomp	     \
 	       elc-stamp     \
 	       elc-temp	     \
@@ -326,11 +330,11 @@ clean-autoconf:
 	       py-compile    \
 	       stamp	     \
 	       texinfo.tex   \
-	       ylwrap
+	       ylwrap)
 
-scour:  maintainer-clean    \
-	clean-buildproducts \
-	clean-backupfiles   \
-	clean-debugdata     \
-	clean-documentation \
-	clean-autoconf
+all-clean:  maintainer-clean    \
+	    clean-buildproducts \
+	    clean-backupfiles   \
+	    clean-debugdata     \
+	    clean-documentation \
+	    clean-autoconf
