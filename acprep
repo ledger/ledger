@@ -26,7 +26,8 @@ cat configure.tmpl | \
 
 autoreconf --force --install
 
-INCDIRS="-I/usr/local/include -I/opt/local/include"
+INCDIRS="-isystem /usr/local/include"
+INCDIRS="$INCDIRS -isystem /opt/local/include"
 INCDIRS="$INCDIRS -isystem /usr/local/include/boost-1_35"
 
 LIBDIRS="-L/usr/local/lib -L/opt/local/lib"

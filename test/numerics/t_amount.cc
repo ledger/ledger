@@ -1379,8 +1379,8 @@ void AmountTestCase::testCommodityForZero()
 {
   amount_t x1(internalAmount("$0.000000000000000000001"));
 
-  assertFalse(x1);
-  assertTrue(x1.is_zero());
+  assertTrue(x1);		// an internal amount never betrays its precision
+  assertFalse(x1.is_zero());
   assertFalse(x1.is_realzero());
 
   assertValid(x1);

@@ -53,6 +53,8 @@ class commodity_t
 public:
   class base_t : public noncopyable, public supports_flags<>
   {
+    base_t();
+
   public:
     typedef std::map<const datetime_t, amount_t>  history_map;
     typedef std::pair<const datetime_t, amount_t> history_pair;
