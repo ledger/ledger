@@ -110,7 +110,7 @@ struct format_t : public noncopyable
   static string truncate(const string& str, unsigned int width,
 			      const bool is_account = false);
 
-  void format(std::ostream& out, const scope_t& scope) const;
+  void format(std::ostream& out, scope_t& scope) const;
 };
 
 class format_xacts : public item_handler<xact_t>

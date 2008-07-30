@@ -682,11 +682,13 @@ value_t expr_t::op_t::calc(scope_t& scope)
     }
     throw_(calc_error, "Unknown identifier '" << as_ident() << "'");
 
-  case FUNCTION:
-    // This should never be evaluated directly; it only appears as the
-    // left node of an O_CALL operator.
-    assert(false);
-    break;
+  case FUNCTION: {
+    // Evaluating a FUNCTION is the same as calling it directly; this happens
+    // when certain functions-that-look-like-variables (such as "amount") are
+    // resolved.
+    call_scope_t call_args(scope);
+    return as_function()(call_args);
+  }
 
   case O_CALL: {
     call_scope_t call_args(scope);

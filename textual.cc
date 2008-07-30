@@ -291,7 +291,10 @@ xact_t * parse_xact(char * line, account_t * account,
     account_xdata_t& xdata(account_xdata(*xact->account));
 
     if (xact->amount) {
-      xdata.value += xact->amount;
+      if (xdata.value.is_null())
+	xdata.value = xact->amount;
+      else
+	xdata.value += xact->amount;
       DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 	    "XACT assign: account total = " << xdata.value);
     }

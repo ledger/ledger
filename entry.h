@@ -76,7 +76,7 @@ class entry_base_t
   virtual bool valid() const = 0;
 };
 
-class entry_t : public entry_base_t
+class entry_t : public entry_base_t, public scope_t
 {
 public:
   datetime_t	       _date;
@@ -108,11 +108,13 @@ public:
       return actual_date();
   }
 
+  bool get_state(xact_t::state_t * state) const;
+
   virtual void add_xact(xact_t * xact);
 
-  virtual bool valid() const;
+  virtual expr_t::ptr_op_t lookup(const string& name);
 
-  bool get_state(xact_t::state_t * state) const;
+  virtual bool valid() const;
 };
 
 struct entry_finalizer_t {

@@ -320,7 +320,7 @@ namespace {
   }
 }
 
-void format_t::format(std::ostream& out_str, const scope_t& scope) const
+void format_t::format(std::ostream& out_str, scope_t& scope) const
 {
   for (const element_t * elem = elements; elem; elem = elem->next) {
     std::ostringstream out;
@@ -340,9 +340,23 @@ void format_t::format(std::ostream& out_str, const scope_t& scope) const
       out << elem->chars;
       break;
 
-#if 0
     case element_t::AMOUNT:
+      out << scope.resolve("amount");
+      break;
+
+    case element_t::ACCOUNT_FULLNAME:
+      scope.resolve("account").dump(out, elem->min_width);
+      break;
+    case element_t::ACCOUNT_NAME:
+      scope.resolve("account_base").dump(out, elem->min_width);
+      break;
+
     case element_t::TOTAL:
+      out << "T";
+      //out << scope.resolve("total");
+      break;
+
+#if 0
     case element_t::VALUE_EXPR: {
       expr_t * calc;
       switch (elem->type) {
@@ -569,23 +583,13 @@ void format_t::format(std::ostream& out_str, const scope_t& scope) const
       if (details.xact)
 	out << details.xact->end_line;
       break;
+#endif
 
-    case element_t::DATE_STRING: {
-      datetime_t date;
-      if (details.xact)
-	date = details.xact->date();
-      else if (details.entry)
-	date = details.entry->date();
+    case element_t::DATE_STRING:
+      out << format_datetime(scope.resolve("date").as_datetime());
+      break;
 
 #if 0
-      // jww (2008-04-20): This needs to be rewritten
-      char buf[256];
-      std::strftime(buf, 255, elem->chars.c_str(), date.localtime());
-      out << (elem->max_width == 0 ? buf : truncate(buf, elem->max_width));
-#endif
-      break;
-    }
-
     case element_t::COMPLETE_DATE_STRING: {
       datetime_t actual_date;
       datetime_t effective_date;
@@ -670,14 +674,13 @@ void format_t::format(std::ostream& out_str, const scope_t& scope) const
       out << temp;
       break;
     }
+#endif
 
     case element_t::PAYEE:
-      if (details.entry)
-	out << (elem->max_width == 0 ?
-		details.entry->payee : truncate(details.entry->payee,
-						elem->max_width));
+      scope.resolve("payee").dump(out, elem->min_width);
       break;
 
+#if 0
     case element_t::OPT_NOTE:
       if (details.xact && details.xact->note)
 	out << "  ; ";
@@ -781,24 +784,22 @@ format_xacts::format_xacts(std::ostream& _output_stream,
 
 void format_xacts::operator()(xact_t& xact)
 {
-#if 0
   if (! xact_has_xdata(xact) ||
       ! (xact_xdata_(xact).dflags & XACT_DISPLAYED)) {
     if (last_entry != xact.entry) {
-      first_line_format.format(output_stream, details_t(xact));
+      first_line_format.format(output_stream, xact);
       last_entry = xact.entry;
     }
     else if (last_xact && last_xact->date() != xact.date()) {
-      first_line_format.format(output_stream, details_t(xact));
+      first_line_format.format(output_stream, xact);
     }
     else {
-      next_lines_format.format(output_stream, details_t(xact));
+      next_lines_format.format(output_stream, xact);
     }
 
     xact_xdata(xact).dflags |= XACT_DISPLAYED;
     last_xact = &xact;
   }
-#endif
 }
 
 void format_entries::format_last_entry()

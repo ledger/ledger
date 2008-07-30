@@ -448,7 +448,6 @@ value_t& value_t::operator+=(const value_t& val)
   }
 
   throw_(value_error, "Cannot add " << val.label() << " to " << label());
-
   return *this;
 }
 

@@ -363,6 +363,42 @@ void entry_t::add_xact(xact_t * xact)
   entry_base_t::add_xact(xact);
 }
 
+namespace {
+  value_t get_date(call_scope_t& scope)
+  {
+    entry_t& entry(downcast<entry_t>(*scope.parent));
+    return entry.date();
+  }
+
+  value_t get_payee(call_scope_t& scope)
+  {
+    entry_t& entry(downcast<entry_t>(*scope.parent));
+    return value_t(entry.payee, true);
+  }
+}
+
+expr_t::ptr_op_t entry_t::lookup(const string& name)
+{
+  switch (name[0]) {
+  case 'd':
+    if (name[1] == '\0' || name == "date")
+      return WRAP_FUNCTOR(bind(get_date, _1));
+    break;
+  case 'p':
+    if (name[1] == '\0' || name == "payee")
+      return WRAP_FUNCTOR(bind(get_payee, _1));
+    break;
+  }
+
+#if 0
+  // jww (2008-07-29): Should it go to the containing journal next, or to the
+  // session?
+  return entry->lookup(name);
+#else
+  return expr_t::ptr_op_t();
+#endif
+}
+
 bool entry_t::valid() const
 {
   if (! is_valid(_date) || ! journal) {

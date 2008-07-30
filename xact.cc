@@ -31,6 +31,7 @@
 
 #include "xact.h"
 #include "journal.h"
+#include "account.h"
 
 namespace ledger {
 
@@ -61,6 +62,39 @@ namespace {
     xact_t& xact(downcast<xact_t>(*scope.parent));
     return xact.amount;
   }
+
+  value_t get_date(call_scope_t& scope)
+  {
+    xact_t& xact(downcast<xact_t>(*scope.parent));
+    return xact.entry->date();
+  }
+
+  value_t get_payee(call_scope_t& scope)
+  {
+    xact_t& xact(downcast<xact_t>(*scope.parent));
+    return value_t(xact.entry->payee, true);
+  }
+
+  value_t get_account(call_scope_t& scope)
+  {
+    xact_t& xact(downcast<xact_t>(*scope.parent));
+
+    string name = xact.account->fullname();
+
+    if (xact.has_flags(XACT_VIRTUAL)) {
+      if (xact.must_balance())
+	name = string("[") + name + "]";
+      else
+	name = string("(") + name + ")";
+    }
+    return value_t(name, true);
+  }
+
+  value_t get_account_base(call_scope_t& scope)
+  {
+    assert(false);
+    return NULL_VALUE;
+  }
 }
 
 expr_t::ptr_op_t xact_t::lookup(const string& name)
@@ -69,14 +103,21 @@ expr_t::ptr_op_t xact_t::lookup(const string& name)
   case 'a':
     if (name[1] == '\0' || name == "amount")
       return WRAP_FUNCTOR(bind(get_amount, _1));
+    else if (name == "account")
+      return WRAP_FUNCTOR(bind(get_account, _1));
+    else if (name == "account_base")
+      return WRAP_FUNCTOR(bind(get_account_base, _1));
+    break;
+  case 'd':
+    if (name[1] == '\0' || name == "date")
+      return WRAP_FUNCTOR(bind(get_date, _1));
+    break;
+  case 'p':
+    if (name[1] == '\0' || name == "payee")
+      return WRAP_FUNCTOR(bind(get_payee, _1));
     break;
   }
-
-#if 0
   return entry->lookup(name);
-#else
-  return expr_t::ptr_op_t();
-#endif
 }
 
 bool xact_t::valid() const
