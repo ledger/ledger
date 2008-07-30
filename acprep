@@ -26,32 +26,30 @@ cat configure.tmpl | \
 
 autoreconf --force --install
 
-INCDIRS="-I/sw/include -I/opt/local/include"
-INCDIRS="$INCDIRS -I/usr/local/include"
+INCDIRS="-I/usr/local/include -I/opt/local/include"
 INCDIRS="$INCDIRS -isystem /usr/local/include/boost-1_35"
-INCDIRS="$INCDIRS -isystem /usr/local/include/boost-1_35/boost"
-INCDIRS="$INCDIRS -isystem /usr/local/include/boost-1_35/boost/type_traits"
 
-LIBDIRS="-L/sw/lib -L/opt/local/lib"
-LIBDIRS="$LIBDIRS -L/usr/local/lib"
+LIBDIRS="-L/usr/local/lib -L/opt/local/lib"
 
 PYTHON_HOME="/usr"
 
+# Use the latest g++, if it's been installed (with Xcode 3.1 on OS X)
 if [ -x /usr/bin/g++-4.2 ]; then
     CXX=g++-4.2
 fi
 
 
-SYSTEM=`uname -s`
+SYSTEM=$(uname -s)
 
 if [ $SYSTEM = Linux ]; then
     CXXFLAGS="-pthread"
 elif [ $SYSTEM = Solaris ]; then
     CXXFLAGS="-pthreads"
 elif [ $SYSTEM = Darwin ]; then
-    #CXXFLAGS="-arch i386 -arch ppc -isysroot /Developer/SDKs/MacOSX10.4u.sdk"
-    CXXFLAGS="$CXXFLAGS -Wno-long-double"
-    #LIBDIRS="$LIBDIRS -arch i386 -arch ppc -isysroot /Developer/SDKs/MacOSX10.4u.sdk"
+    #CXXFLAGS="-arch i386 -arch ppc -isysroot /Developer/SDKs/MacOSX10.5.sdk"
+    #CXXFLAGS="$CXXFLAGS -Wno-long-double"
+    #LIBDIRS="$LIBDIRS -arch i386 -arch ppc -isysroot /Developer/SDKs/MacOSX10.5.sdk"
+    CXXFLAGS=""
 else
     CXXFLAGS=""
 fi
@@ -61,7 +59,7 @@ fi
 # that is built again anyway by Xcode).
 SWITCHES=""
 CPPFLAGS="$INCDIRS"
-CXXFLAGS="-pipe"
+CXXFLAGS="$CXXFLAGS -pipe"
 LDFLAGS="$LIBDIRS"
 LOCAL=false
 
