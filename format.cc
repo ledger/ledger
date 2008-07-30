@@ -13,7 +13,7 @@ bool format_t::ansi_codes  = false;
 bool format_t::ansi_invert = false;
 
 string format_t::truncate(const string& str, unsigned int width,
-			       const bool is_account)
+			  const bool is_account)
 {
   const unsigned int len = str.length();
   if (len <= width)
@@ -735,10 +735,12 @@ void format_t::format(std::ostream& out_str, scope_t& scope) const
       }
       break;
 
+#endif
     case element_t::SPACER:
       out << " ";
       break;
 
+#if 0
     case element_t::DEPTH_SPACER:
       for (const account_t * acct = details.account;
 	   acct;
@@ -761,7 +763,7 @@ void format_t::format(std::ostream& out_str, scope_t& scope) const
     string temp = out.str();
     if (! ignore_max_width &&
 	elem->max_width > 0 && elem->max_width < temp.length())
-      temp.erase(elem->max_width);
+      truncate(temp, elem->max_width);
     out_str << temp;
   }
 }

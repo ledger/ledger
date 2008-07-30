@@ -152,8 +152,22 @@ inline datetime_t parse_datetime(const string& str) {
   return parse_datetime(str.c_str());
 }
 
+inline std::time_t to_time_t(const ptime& t) 
+{ 
+  if( t == posix_time::neg_infin ) 
+    return 0; 
+  else if( t == posix_time::pos_infin ) 
+    return LONG_MAX; 
+  ptime start(date(1970,1,1)); 
+  return (t-start).total_seconds(); 
+}
+
 inline string format_datetime(const datetime_t& when) {
-  return "";			// jww (2008-07-19): NYI
+  char buf[64];
+  time_t moment = to_time_t(when);
+  // jww (2008-07-29): Need to make the output format configurable
+  std::strftime(buf, 63, "%Y/%m/%d", std::localtime(&moment));
+  return buf;
 }
 
 extern const ptime time_now;

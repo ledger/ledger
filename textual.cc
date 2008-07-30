@@ -68,20 +68,10 @@ namespace {
 #endif
 
     if (expr) {
-      expr.compile(*xact);
-
-      if (expr.is_constant()) {
-	amount = expr.constant_value().as_amount();
-	DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
-	      "The transaction amount is " << amount);
-	return expr_t();	// we will fill this in with text
-      } else {
-	if (SHOW_DEBUG("ledger.textual.parse")) {
-	  std::cout << "Value expression tree:" << std::endl;
-	  expr.dump(std::cout);
-	}
-	return expr;
-      }
+      amount = expr.calc(*xact).as_amount();
+      DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
+	    "The transaction amount is " << amount);
+      return expr;
     }
     return none;
   }
@@ -189,9 +179,12 @@ xact_t * parse_xact(char * line, account_t * account,
 	      "Reduced amount is " << xact->amount);
       }
 
-      // jww (2008-07-24): I don't think this is right, since amount_expr is
-      // always NULL right now
+      // We don't need to store the actual expression that resulted in the
+      // amount if it's constant
       if (xact->amount_expr) {
+	if (xact->amount_expr->is_constant())
+	  xact->amount_expr = expr_t();
+
 	unsigned long end = (long)in.tellg();
 	xact->amount_expr->set_text(string(line, beg, end - beg));
       }
@@ -228,28 +221,19 @@ xact_t * parse_xact(char * line, account_t * account,
 	try {
 	  unsigned long beg = (long)in.tellg();
 
-	  if (optional<expr_t> cost_expr =
-	      parse_amount_expr(in, *xact->cost, xact.get(),
-				EXPR_PARSE_NO_MIGRATE |
-				EXPR_PARSE_NO_ASSIGN)) {
-	    try {
-	      *xact->cost = cost_expr->calc(*xact).as_amount();
-	      assert(xact->cost->valid());
+	  xact->cost_expr =
+	    parse_amount_expr(in, *xact->cost, xact.get(),
+			      EXPR_PARSE_NO_MIGRATE |
+			      EXPR_PARSE_NO_ASSIGN);
 
-	      xact->cost_expr = cost_expr;
-
-	      unsigned long end = (long)in.tellg();
-	      if (per_unit)
-		xact->cost_expr->set_text(string("@") +
-					  string(line, beg, end - beg));
-	      else
-		xact->cost_expr->set_text(string("@@") +
-					  string(line, beg, end - beg));
-	    }
-	    catch (...) {
-	      throw new parse_error
-		("A transaction's cost must evaluate to a constant value");
-	    }
+	  if (xact->cost_expr) {
+	    unsigned long end = (long)in.tellg();
+	    if (per_unit)
+	      xact->cost_expr->set_text(string("@") +
+					string(line, beg, end - beg));
+	    else
+	      xact->cost_expr->set_text(string("@@") +
+					string(line, beg, end - beg));
 	  }
 	}
 	catch (error * err) {
@@ -290,7 +274,7 @@ xact_t * parse_xact(char * line, account_t * account,
 
     account_xdata_t& xdata(account_xdata(*xact->account));
 
-    if (xact->amount) {
+    if (! xact->amount.is_null()) {
       if (xdata.value.is_null())
 	xdata.value = xact->amount;
       else

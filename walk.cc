@@ -54,8 +54,7 @@ void add_xact_to(const xact_t& xact, value_t& value)
     value += xact_xdata_(xact).value;
   }
   else if (xact.cost || (! value.is_null() && ! value.is_realzero())) {
-    // jww (2008-04-24): Is this costly?
-    value.add(xact.amount, xact.cost ? optional<amount_t>(*xact.cost) : none);
+    value.add(xact.amount, xact.cost);
   }
   else {
     value = xact.amount;
@@ -201,7 +200,10 @@ void calc_xacts::operator()(xact_t& xact)
   xact_xdata_t& xdata(xact_xdata(xact));
 
   if (last_xact && xact_has_xdata(*last_xact)) {
-    xdata.total += xact_xdata_(*last_xact).total;
+    if (xdata.total.is_null())
+      xdata.total = xact_xdata_(*last_xact).total;
+    else
+      xdata.total += xact_xdata_(*last_xact).total;
     xdata.index  = xact_xdata_(*last_xact).index + 1;
   } else {
     xdata.index = 0;

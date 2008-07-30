@@ -67,7 +67,7 @@ value_t::storage_t& value_t::storage_t::operator=(const value_t::storage_t& rhs)
     break;
 
   default:
-    // The rest are fundamental types, which can copy using std::memcpy
+    // The rest are fundamental types, which can be copied using std::memcpy
     std::memcpy(data, rhs.data, sizeof(data));
     break;
   }
@@ -1458,20 +1458,18 @@ value_t& value_t::add(const amount_t& amount, const optional<amount_t>& tcost)
     else if (! is_amount()) {
       in_place_cast(AMOUNT);
     }
-    *this += amount;
-    break;
+    return *this += amount;
 
   case BALANCE:
     if (tcost) {
       in_place_cast(BALANCE_PAIR);
       return add(amount, tcost);
     }
-    *this += amount;
-    break;
+    return *this += amount;
 
   case BALANCE_PAIR:
     as_balance_pair_lval().add(amount, tcost);
-    break;
+    return *this;
 
   default:
     break;

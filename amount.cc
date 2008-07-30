@@ -102,8 +102,8 @@ struct amount_t::bigint_t : public supports_flags<>
       DEBUG("ledger.validate", "amount_t::bigint_t: prec > 128");
       return false;
     }
-    if (ref > 128) {
-      DEBUG("ledger.validate", "amount_t::bigint_t: ref > 128");
+    if (ref > 16535) {
+      DEBUG("ledger.validate", "amount_t::bigint_t: ref > 16535");
       return false;
     }
 #if 0
