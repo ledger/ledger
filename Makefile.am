@@ -33,15 +33,21 @@ libamounts_la_SOURCES = \
 	utils.cc       \
 	times.cc       \
 	mask.cc        \
+	binary.cc      \
+		       \
 	amount.cc      \
 	commodity.cc   \
 	balance.cc     \
 	value.cc       \
+		       \
 	token.cc       \
 	parser.cc      \
 	op.cc          \
 	expr.cc        \
-	scope.cc
+	scope.cc       \
+	format.cc      \
+	option.cc
+
 if HAVE_EXPAT
 libamounts_la_CPPFLAGS += -DHAVE_EXPAT=1
 endif
@@ -60,26 +66,25 @@ endif
 
 libledger_la_CPPFLAGS = $(libamounts_la_CPPFLAGS)
 libledger_la_SOURCES = \
-	format.cc      \
-		       \
 	journal.cc     \
 	entry.cc       \
 	xact.cc        \
 	account.cc     \
-	report.cc      \
-	session.cc     \
-	walk.cc        \
 		       \
 	textual.cc     \
-	binary.cc      \
-	csv.cc         \
 	emacs.cc       \
 	qif.cc	       \
 	xml.cc	       \
+	csv.cc         \
+		       \
+	session.cc     \
+	report.cc      \
+	walk.cc        \
+		       \
 	derive.cc      \
 	reconcile.cc   \
-	option.cc      \
 	quotes.cc
+
 if HAVE_EXPAT
 libledger_la_SOURCES += gnucash.cc
 endif
@@ -95,50 +100,51 @@ libledger_la_LDFLAGS = -release 2.7.0
 pkginclude_HEADERS = \
 	acconf.h     \
 	system.hh    \
+	fdstream.hpp \
+	utils.h	     \
+	flags.h      \
+	hooks.h      \
+	pushvar.h    \
+	error.h      \
+	times.h	     \
+	mask.h       \
+	binary.h     \
 		     \
 	amount.h     \
 	commodity.h  \
 	balance.h    \
 	balpair.h    \
 	value.h      \
-	utils.h	     \
-	fdstream.hpp \
-	times.h	     \
-	mask.h       \
-	flags.h      \
-	hooks.h      \
-	pushvar.h    \
-	error.h      \
 		     \
-	expr.h       \
-	op.h         \
-	parser.h     \
 	token.h      \
+	parser.h     \
+	op.h         \
+	expr.h       \
 	scope.h      \
 	predicate.h  \
 	format.h     \
+	option.h     \
 		     \
 	journal.h    \
 	entry.h      \
 	xact.h       \
 	account.h    \
-	report.h     \
-	session.h    \
-	walk.h       \
 		     \
 	textual.h    \
-	binary.h     \
-	csv.h        \
 	emacs.h      \
-	gnucash.h    \
 	qif.h	     \
-	ofx.h	     \
 	xml.h	     \
+	csv.h        \
+	gnucash.h    \
+	ofx.h	     \
+		     \
+	session.h    \
+	report.h     \
+	walk.h       \
 		     \
 	derive.h     \
 	reconcile.h  \
 	quotes.h     \
-	option.h     \
 		     \
 	ledger.h
 
