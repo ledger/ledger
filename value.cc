@@ -44,22 +44,26 @@ value_t::storage_t& value_t::storage_t::operator=(const value_t::storage_t& rhs)
   switch (type) {
   case DATETIME:
     new(reinterpret_cast<datetime_t *>(data))
-      datetime_t(*reinterpret_cast<datetime_t *>(const_cast<char *>(rhs.data)));
+      datetime_t(*reinterpret_cast<datetime_t *>
+		 (const_cast<char *>(rhs.data)));
     break;
 
   case AMOUNT:
     new(reinterpret_cast<amount_t *>(data))
-      amount_t(*reinterpret_cast<amount_t *>(const_cast<char *>(rhs.data)));
+      amount_t(*reinterpret_cast<amount_t *>
+	       (const_cast<char *>(rhs.data)));
     break;
 
   case BALANCE:
     *reinterpret_cast<balance_t **>(data) =
-      new balance_t(**reinterpret_cast<balance_t **>(const_cast<char *>(rhs.data)));
+      new balance_t(**reinterpret_cast<balance_t **>
+		    (const_cast<char *>(rhs.data)));
     break;
 
   case BALANCE_PAIR:
     *reinterpret_cast<balance_pair_t **>(data) =
-      new balance_pair_t(**reinterpret_cast<balance_pair_t **>(const_cast<char *>(rhs.data)));
+      new balance_pair_t(**reinterpret_cast<balance_pair_t **>
+			 (const_cast<char *>(rhs.data)));
     break;
 
   case STRING:
@@ -69,11 +73,13 @@ value_t::storage_t& value_t::storage_t::operator=(const value_t::storage_t& rhs)
 
   case SEQUENCE:
     *reinterpret_cast<sequence_t **>(data) =
-      new sequence_t(**reinterpret_cast<sequence_t **>(const_cast<char *>(rhs.data)));
+      new sequence_t(**reinterpret_cast<sequence_t **>
+		     (const_cast<char *>(rhs.data)));
     break;
 
   default:
-    // The rest are fundamental types, which can be copied using std::memcpy
+    // The rest are fundamental types, which can be copied using
+    // std::memcpy
     std::memcpy(data, rhs.data, sizeof(data));
     break;
   }
@@ -171,10 +177,10 @@ value_t::operator bool() const
   switch (type()) {
   case BOOLEAN:
     return as_boolean();
-  case INTEGER:
-    return as_long();
   case DATETIME:
     return is_valid(as_datetime());
+  case INTEGER:
+    return as_long();
   case AMOUNT:
     return as_amount();
   case BALANCE:
@@ -206,17 +212,6 @@ bool value_t::to_boolean() const
   }
 }
 
-long value_t::to_long() const
-{
-  if (is_long()) {
-    return as_long();
-  } else {
-    value_t temp(*this);
-    temp.in_place_cast(INTEGER);
-    return temp.as_long();
-  }
-}
-
 datetime_t value_t::to_datetime() const
 {
   if (is_datetime()) {
@@ -225,6 +220,17 @@ datetime_t value_t::to_datetime() const
     value_t temp(*this);
     temp.in_place_cast(DATETIME);
     return temp.as_datetime();
+  }
+}
+
+long value_t::to_long() const
+{
+  if (is_long()) {
+    return as_long();
+  } else {
+    value_t temp(*this);
+    temp.in_place_cast(INTEGER);
+    return temp.as_long();
   }
 }
 
@@ -1325,6 +1331,7 @@ value_t value_t::unround() const
   return NULL_VALUE;
 }
 
+#if 0
 value_t value_t::annotated_price() const
 {
   switch (type()) {
@@ -1367,15 +1374,15 @@ value_t value_t::annotated_date() const
 value_t value_t::annotated_tag() const
 {
   switch (type()) {
-  case DATETIME:
-    return *this;
-
   case AMOUNT: {
     optional<string> temp = as_amount().annotation_details().tag;
     if (! temp)
       return false;
     return value_t(*temp, true);
   }
+
+  case STRING:
+    return *this;
 
   default:
     break;
@@ -1384,6 +1391,7 @@ value_t value_t::annotated_tag() const
   throw_(value_error, "Cannot find the annotated tag of " << label());
   return NULL_VALUE;
 }
+#endif
 
 value_t value_t::strip_annotations(const bool keep_price,
 				   const bool keep_date,
@@ -1612,8 +1620,10 @@ void value_t::read(const char *& data)
     set_long(binary::read_long<unsigned long>(data));
     break;
   case DATETIME:
+#if 0
     // jww (2008-04-22): I need to record and read a datetime_t directly
-    //set_datetime(read_long<unsigned long>(data));
+    set_datetime(read_long<unsigned long>(data));
+#endif
     break;
   case AMOUNT: {
     amount_t temp;
@@ -1621,13 +1631,11 @@ void value_t::read(const char *& data)
     set_amount(temp);
     break;
   }
-
-  //case BALANCE:
-  //case BALANCE_PAIR:
   default:
-    assert(false);
     break;
   }
+
+  throw_(value_error, "Cannot read " << label() << " from a stream");
 }
 
 void value_t::write(std::ostream& out) const
@@ -1649,12 +1657,11 @@ void value_t::write(std::ostream& out) const
   case AMOUNT:
     as_amount().write(out);
     break;
-
-  //case BALANCE:
-  //case BALANCE_PAIR:
   default:
-    throw new error("Cannot write a balance to the binary cache");
+    break;
   }
+
+  throw_(value_error, "Cannot read " << label() << " to a stream");
 }
 
 bool value_t::valid() const

@@ -778,7 +778,7 @@ bool amount_t::fits_in_long() const
 }
 
 
-void amount_t::annotate_commodity(const annotation_t& details)
+void amount_t::annotate(const annotation_t& details)
 {
   commodity_t *		  this_base;
   annotated_commodity_t * this_ann = NULL;
@@ -810,7 +810,7 @@ void amount_t::annotate_commodity(const annotation_t& details)
   DEBUG("amounts.commodities", "  Annotated amount is " << *this);
 }
 
-bool amount_t::commodity_annotated() const
+bool amount_t::annotated() const
 {
   if (! quantity)
     throw_(amount_error,
@@ -820,7 +820,7 @@ bool amount_t::commodity_annotated() const
   return commodity().annotated;
 }
 
-annotation_t& amount_t::annotation_details()
+annotation_t& amount_t::annotation()
 {
   if (! quantity)
     throw_(amount_error,

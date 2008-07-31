@@ -293,8 +293,8 @@ bool entry_base_t::finalize()
 			      (*x)->cost, none, (*x)->actual_date(),
 			      entry ? entry->code : optional<string>());
 
-      if ((*x)->amount.commodity_annotated()) {
-	if (ann_amount.annotation_details().price) {
+      if ((*x)->amount.annotated()) {
+	if (ann_amount.annotation().price) {
 	  if (balance.is_null())
 	    balance = basis_cost - final_cost;
 	  else

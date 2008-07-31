@@ -551,12 +551,12 @@ public:
    * amount_t::keep_price, amount_t::keep_date and amount_t::keep_tag
    * have been set to (which all default to false).
    */
-  void          annotate_commodity(const annotation_t& details);
-  bool          commodity_annotated() const;
+  void          annotate(const annotation_t& details);
+  bool          annotated() const;
 
-  annotation_t& annotation_details();
-  const annotation_t& annotation_details() const {
-    return const_cast<amount_t&>(*this).annotation_details();
+  annotation_t& annotation();
+  const annotation_t& annotation() const {
+    return const_cast<amount_t&>(*this).annotation();
   }
 
   amount_t      strip_annotations(const bool _keep_price = keep_price,

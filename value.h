@@ -207,14 +207,14 @@ private:
   intrusive_ptr<storage_t> storage;
 
   /**
-   * _dup() makes a private copy of the current value so that it can
-   * subsequently be modified.
+   * _dup() makes a private copy of the current value (if necessary)
+   * so it can subsequently be modified.
    *
    * _clear() removes our pointer to the current value and initializes
-   * a new value for things to be stored in.
+   * a new storage bin for things to be stored in.
    *
-   * _reset() makes the current object appear as if it had been
-   * default initialized.
+   * _reset() makes the current object appear as if it were
+   * uninitialized.
    */
   void _dup();
   void _clear() {
@@ -259,17 +259,24 @@ public:
   value_t() {
     TRACE_CTOR(value_t, "");
   }
+
   value_t(const bool val) {
     TRACE_CTOR(value_t, "const bool");
     set_boolean(val);
   }
+
+  value_t(const datetime_t val) {
+    TRACE_CTOR(value_t, "const datetime_t");
+    set_datetime(val);
+  }
+
   value_t(const long val) {
     TRACE_CTOR(value_t, "const long");
     set_long(val);
   }
-  value_t(const datetime_t val) {
-    TRACE_CTOR(value_t, "const datetime_t");
-    set_datetime(val);
+  value_t(const unsigned long val) {
+    TRACE_CTOR(value_t, "const unsigned long");
+    set_amount(val);
   }
 #ifdef HAVE_GDTOA
   value_t(const double val) {
@@ -277,10 +284,19 @@ public:
     set_amount(val);
   }
 #endif
-  value_t(const unsigned long val) {
-    TRACE_CTOR(value_t, "const unsigned long");
+  value_t(const amount_t& val) {
+    TRACE_CTOR(value_t, "const amount_t&");
     set_amount(val);
   }
+  value_t(const balance_t& val) {
+    TRACE_CTOR(value_t, "const balance_t&");
+    set_balance(val);
+  }
+  value_t(const balance_pair_t& val) {
+    TRACE_CTOR(value_t, "const balance_pair_t&");
+    set_balance_pair(val);
+  }
+
   explicit value_t(const string& val, bool literal = false) {
     TRACE_CTOR(value_t, "const string&, bool");
     if (literal)
@@ -295,22 +311,12 @@ public:
     else
       set_amount(amount_t(val));
   }
-  value_t(const amount_t& val) {
-    TRACE_CTOR(value_t, "const amount_t&");
-    set_amount(val);
-  }
-  value_t(const balance_t& val) {
-    TRACE_CTOR(value_t, "const balance_t&");
-    set_balance(val);
-  }
-  value_t(const balance_pair_t& val) {
-    TRACE_CTOR(value_t, "const balance_pair_t&");
-    set_balance_pair(val);
-  }
+
   value_t(const sequence_t& val) {
     TRACE_CTOR(value_t, "const sequence_t&");
     set_sequence(val);
   }
+
   template <typename T>
   explicit value_t(T * item) {
     TRACE_CTOR(value_t, "T *");
@@ -369,8 +375,8 @@ public:
   value_t& operator*=(const value_t& val);
   value_t& operator/=(const value_t& val);
 
-  // jww (2008-04-24): This could be expensive; perhaps it should be
-  // optional<amount_t&>&?
+  // This special form of add is use to produce a balance pair by
+  // simultaneously adding both an amount and its cost.
   value_t& add(const amount_t& amount,
 	       const optional<amount_t>& cost = none);
 
@@ -382,7 +388,7 @@ public:
     temp.in_place_negate();
     return temp;
   }
-  void in_place_negate();
+  void    in_place_negate();	// exists for efficiency's sake
 
   value_t operator-() const {
     return negate();
@@ -397,9 +403,12 @@ public:
     temp.in_place_reduce();
     return temp;
   }
-  void    in_place_reduce();
+  void    in_place_reduce();	// exists for efficiency's sake
 
+  // Return the "market value" of a given value at a specific time.
   value_t value(const optional<datetime_t>& moment = none) const;
+  value_t cost() const;
+
 
   /**
    * Truth tests.
@@ -410,6 +419,7 @@ public:
   bool is_zero() const;
   bool is_null() const {
     if (! storage) {
+      assert(is_type(VOID));
       return true;
     } else {
       assert(! is_type(VOID));
@@ -422,10 +432,10 @@ public:
     assert(result >= VOID && result <= POINTER);
     return result;
   }
-
   bool is_type(type_t _type) const {
     return type() == _type;
   }
+
 private:
   void set_type(type_t new_type) {
     assert(new_type >= VOID && new_type <= POINTER);
@@ -485,23 +495,6 @@ public:
     storage = val ? true_value : false_value;
   }
 
-  bool is_long() const {
-    return is_type(INTEGER);
-  }
-  long& as_long_lval() {
-    assert(is_long());
-    _dup();
-    return *reinterpret_cast<long *>(storage->data);
-  }
-  const long& as_long() const {
-    assert(is_long());
-    return *reinterpret_cast<long *>(storage->data);
-  }
-  void set_long(const long val) {
-    set_type(INTEGER);
-    *reinterpret_cast<long *>(storage->data) = val;
-  }
-
   bool is_datetime() const {
     return is_type(DATETIME);
   }
@@ -517,6 +510,23 @@ public:
   void set_datetime(const datetime_t& val) {
     set_type(DATETIME);
     new(reinterpret_cast<datetime_t *>(storage->data)) datetime_t(val);
+  }
+
+  bool is_long() const {
+    return is_type(INTEGER);
+  }
+  long& as_long_lval() {
+    assert(is_long());
+    _dup();
+    return *reinterpret_cast<long *>(storage->data);
+  }
+  const long& as_long() const {
+    assert(is_long());
+    return *reinterpret_cast<long *>(storage->data);
+  }
+  void set_long(const long val) {
+    set_type(INTEGER);
+    *reinterpret_cast<long *>(storage->data) = val;
   }
 
   bool is_amount() const {
@@ -623,6 +633,14 @@ public:
     *reinterpret_cast<sequence_t **>(storage->data) = new sequence_t(val);
   }
 
+  /**
+   * Dealing with pointers is bit involved because we actually deal
+   * with typed pointers.  For example, if you call as_pointer it
+   * returns a boost::any object, but if you use as_pointer<void>,
+   * then it returns a void *.  The latter form only succeeds if the
+   * stored pointers was assigned to the value as a void*, otherwise
+   * it throws an exception.
+   */
   bool is_pointer() const {
     return is_type(POINTER);
   }
@@ -709,21 +727,24 @@ public:
     temp.in_place_simplify();
     return temp;
   }
-  void in_place_simplify();
+  void    in_place_simplify();
 
   /**
    * Annotated commodity methods.
    */
+#if 0
+  // These helper methods only apply to AMOUNT values.
   value_t annotated_price() const;
   value_t annotated_date() const;
   value_t annotated_tag() const;
+#endif
 
   value_t strip_annotations(const bool keep_price = amount_t::keep_price,
 			    const bool keep_date  = amount_t::keep_date,
 			    const bool keep_tag   = amount_t::keep_tag) const;
 
   /**
-   * Collection-style access methods
+   * Collection-style access methods for SEQUENCE values.
    */
   value_t& operator[](const int index) {
     assert(! is_null());
@@ -803,10 +824,10 @@ public:
       return "an uninitialized value";
     case BOOLEAN:
       return "a boolean";
-    case INTEGER:
-      return "an integer";
     case DATETIME:
       return "a date/time";
+    case INTEGER:
+      return "an integer";
     case AMOUNT:
       return "an amount";
     case BALANCE:
@@ -827,8 +848,6 @@ public:
     return "<invalid>";
   }
 
-  value_t cost() const;
-
   /**
    * Printing methods.
    */
@@ -837,18 +856,16 @@ public:
   void print(std::ostream& out, const bool relaxed = true) const;
 
   /**
-   * Serialization methods.  An amount may be deserialized from an
-   * input stream or a character pointer, and it may be serialized to
-   * an output stream.  The methods used are:
+   * Serialization methods.  A value may be deserialized from an input
+   * stream or a character pointer, and it may be serialized to an
+   * output stream.  The methods used are:
    */
-
   void read(const char *& data);
   void write(std::ostream& out) const;
 
   /**
    * Debugging methods.
    */
-
   bool valid() const;
 };
 
