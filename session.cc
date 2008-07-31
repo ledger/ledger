@@ -234,7 +234,7 @@ namespace {
 
 account_t * session_t::find_account_re(const string& regexp)
 {
-  return find_account_re_(master, mask_t(regexp));
+  return find_account_re_(master.get(), mask_t(regexp));
 }
 
 void session_t::clean_xacts()

@@ -41,9 +41,11 @@ class journal_t;
 
 typedef std::list<xact_t *> xacts_list;
 
-class entry_base_t
+class entry_base_t : public supports_flags<>
 {
- public:
+public:
+#define ENTRY_IN_CACHE 0x1
+
   journal_t *      journal;
   string	   note;
   unsigned long    src_idx;

@@ -45,6 +45,7 @@ public:
   boost::regex expr;
 
   explicit mask_t(const string& pattern);
+
   mask_t(const mask_t& m) : exclude(m.exclude), expr(m.expr) {
     TRACE_CTOR(mask_t, "copy");
   }
@@ -52,9 +53,14 @@ public:
     TRACE_DTOR(mask_t);
   }
 
+  mask_t& operator=(const string& other);
+
   bool match(const string& str) const {
     return boost::regex_match(str, expr) && ! exclude;
   }
+
+  void read(const char *& data);
+  void write(std::ostream& out) const;
 };
 
 } // namespace ledger

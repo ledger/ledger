@@ -837,6 +837,15 @@ public:
   void print(std::ostream& out, const bool relaxed = true) const;
 
   /**
+   * Serialization methods.  An amount may be deserialized from an
+   * input stream or a character pointer, and it may be serialized to
+   * an output stream.  The methods used are:
+   */
+
+  void read(const char *& data);
+  void write(std::ostream& out) const;
+
+  /**
    * Debugging methods.
    */
 

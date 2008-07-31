@@ -38,13 +38,14 @@
 namespace ledger {
 
 // These flags persist with the object
-#define XACT_NORMAL     0x0000
-#define XACT_VIRTUAL    0x0001
-#define XACT_BALANCE    0x0002
-#define XACT_AUTO       0x0004
-#define XACT_BULK_ALLOC 0x0008
-#define XACT_CALCULATED 0x0010
-#define XACT_GENERATED  0x0020
+#define XACT_NORMAL     0x0000	// no flags at all, a basic transaction
+#define XACT_VIRTUAL    0x0001  // the account was specified with (parens)
+#define XACT_BALANCE    0x0002  // the account was specified with [brackets]
+#define XACT_AUTO       0x0004  // transaction created by automated entry
+#define XACT_IN_CACHE   0x0008  // transaction allocated by the binary cache
+#define XACT_CALCULATED 0x0010  // transaction's amount was auto-calculated
+#define XACT_GENERATED  0x0020  // transaction was not found in a journal
+#define XACT_TEMP       0x0040  // transaction is a temporary object
 
 class entry_t;
 class account_t;

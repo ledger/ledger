@@ -507,8 +507,8 @@ class collapse_xacts : public item_handler<xact_t>
   xact_t *     last_xact;
   account_t    totals_account;
 
-  std::list<entry_t>       entry_temps;
-  std::list<xact_t> xact_temps;
+  std::list<entry_t> entry_temps;
+  std::list<xact_t>  xact_temps;
 
   collapse_xacts();
 

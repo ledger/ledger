@@ -264,11 +264,6 @@ void write_long(std::ostream& out, T num)
 void write_string(std::ostream& out, const string& str);
 void write_string(std::ostream& out, const optional<string>& str);
 
-template <typename T>
-inline void write_object(std::ostream& out, const T& journal) {
-  assert(false);
-}
-
 } // namespace binary
 } // namespace ledger
 

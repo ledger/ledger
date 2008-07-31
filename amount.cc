@@ -1243,20 +1243,6 @@ void amount_t::print(std::ostream& _out, bool omit_commodity,
   _out << out.str();
 }
 
-
-#if 0
-// jww (2008-07-29): Should these be static?
-namespace {
-#endif
-  char *	bigints;
-  char *	bigints_next;
-  uint_fast32_t bigints_index;
-  uint_fast32_t bigints_count;
-  char		buf[4096];
-#if 0
-}
-#endif
-
 void amount_t::read(std::istream& in)
 {
   using namespace ledger::binary;
@@ -1285,6 +1271,7 @@ void amount_t::read(std::istream& in)
     unsigned short len;
     in.read(reinterpret_cast<char *>(&len), sizeof(len));
     assert(len < 4096);
+    static char buf[4096];
     in.read(buf, len);
     mpz_import(MPZ(quantity), len / sizeof(short), 1, sizeof(short),
 	       0, 0, buf);
@@ -1328,8 +1315,10 @@ void amount_t::read(const char *& data)
 
   if (byte < 3) {
     if (byte == 2) {
+#if 0
       quantity = new(reinterpret_cast<bigint_t *>(bigints_next)) bigint_t;
       bigints_next += sizeof(bigint_t);
+#endif
     } else {
       quantity = new bigint_t;
     }
@@ -1353,10 +1342,12 @@ void amount_t::read(const char *& data)
     if (byte == 2)
       quantity->add_flags(BIGINT_BULK_ALLOC);
   } else {
+#if 0
     uint_fast32_t index = *reinterpret_cast<uint_fast32_t *>(const_cast<char *>(data));
     data += sizeof(uint_fast32_t);
 
     quantity = reinterpret_cast<bigint_t *>(bigints + (index - 1) * sizeof(bigint_t));
+#endif
     DEBUG("amounts.refs",
 	   quantity << " ref++, now " << (quantity->ref + 1));
     quantity->ref++;
@@ -1383,15 +1374,18 @@ void amount_t::write(std::ostream& out, bool optimized) const
 
   if (! optimized || quantity->index == 0) {
     if (optimized) {
+#if 0
       quantity->index = ++bigints_index; // if !optimized, this is garbage
       bigints_count++;
       byte = 2;
+#endif
     } else {
       byte = 1;
     }
     out.write(&byte, sizeof(byte));
 
     std::size_t size;
+    static char buf[4096];
     mpz_export(buf, &size, 1, sizeof(short), 0, 0, MPZ(quantity));
     unsigned short len = size * sizeof(short);
     out.write(reinterpret_cast<char *>(&len), sizeof(len));
@@ -1417,7 +1411,6 @@ void amount_t::write(std::ostream& out, bool optimized) const
     out.write(reinterpret_cast<char *>(&quantity->index), sizeof(quantity->index));
   }
 }
-
 
 bool amount_t::valid() const
 {

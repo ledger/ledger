@@ -310,6 +310,7 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
   if (DO_VERIFY() && report.output_file)
     checked_delete(out);
 
+#if 0
   // Write out the binary cache, if need be
 
   if (session.use_cache && session.cache_dirty && session.cache_file) {
@@ -320,6 +321,7 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
 
     TRACE_FINISH(binary_cache, 1);
   }
+#endif
 
   // If the user specified a pager, wait for it to exit now
 
@@ -396,7 +398,9 @@ int main(int argc, char * argv[], char * envp[])
 
     ledger::set_session_context(session.get());
 
+#if 0
     session->register_parser(new ledger::journal_t::binary_parser_t);
+#endif
 #if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
     session->register_parser(new ledger::xml_parser_t);
     session->register_parser(new ledger::gnucash_parser_t);

@@ -240,19 +240,19 @@ void invert_xacts::operator()(xact_t& xact)
 
 
 static inline
-void handle_value(const value_t&	       value,
-		  account_t *		       account,
-		  entry_t *		       entry,
-		  unsigned int		       flags,
+void handle_value(const value_t&	value,
+		  account_t *		account,
+		  entry_t *		entry,
+		  unsigned int		flags,
 		  std::list<xact_t>&    temps,
 		  item_handler<xact_t>& handler,
-		  const datetime_t&            date = datetime_t(),
+		  const datetime_t&     date		= datetime_t(),
 		  xacts_list *          component_xacts = NULL)
 {
   temps.push_back(xact_t(account));
   xact_t& xact(temps.back());
   xact.entry = entry;
-  xact.add_flags(XACT_BULK_ALLOC);
+  xact.add_flags(XACT_TEMP);
   entry->add_xact(&xact);
 
   // If there are component xacts to associate with this
@@ -625,7 +625,7 @@ void set_comm_as_payee::operator()(xact_t& xact)
   xact_t& temp = xact_temps.back();
   temp.entry = &entry;
   temp.state = xact.state;
-  temp.add_flags(XACT_BULK_ALLOC);
+  temp.add_flags(XACT_TEMP);
 
   entry.add_xact(&temp);
 
@@ -647,7 +647,7 @@ void set_code_as_payee::operator()(xact_t& xact)
   xact_t& temp = xact_temps.back();
   temp.entry = &entry;
   temp.state = xact.state;
-  temp.add_flags(XACT_BULK_ALLOC);
+  temp.add_flags(XACT_TEMP);
 
   entry.add_xact(&temp);
 
@@ -727,7 +727,7 @@ void budget_xacts::report_budget_items(const datetime_t& moment)
 	xact_temps.push_back(xact);
 	xact_t& temp = xact_temps.back();
 	temp.entry = &entry;
-	temp.add_flags(XACT_AUTO | XACT_BULK_ALLOC);
+	temp.add_flags(XACT_AUTO | XACT_TEMP);
 	temp.amount.negate();
 	entry.add_xact(&temp);
 
@@ -817,7 +817,7 @@ void forecast_xacts::flush()
     xact_temps.push_back(xact);
     xact_t& temp = xact_temps.back();
     temp.entry = &entry;
-    temp.add_flags(XACT_AUTO | XACT_BULK_ALLOC);
+    temp.add_flags(XACT_AUTO | XACT_TEMP);
     entry.add_xact(&temp);
 
     datetime_t next = (*least).first.increment(begin);
@@ -995,7 +995,7 @@ void walk_commodities(commodity_pool_t::commodities_by_ident& commodities,
 	xact_t& temp = xact_temps.back();
 	temp.entry  = &entry_temps.back();
 	temp.amount = (*j).second;
-	temp.add_flags(XACT_BULK_ALLOC);
+	temp.add_flags(XACT_TEMP);
 	entry_temps.back().add_xact(&temp);
 
 	handler(xact_temps.back());

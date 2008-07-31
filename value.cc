@@ -30,6 +30,7 @@
  */
 
 #include "value.h"
+#include "binary.h"
 
 namespace ledger {
 
@@ -1598,6 +1599,61 @@ void value_t::print(std::ostream& out, const bool relaxed) const
     out << ')';
     break;
   }
+  }
+}
+
+void value_t::read(const char *& data)
+{
+  switch (static_cast<value_t::type_t>(binary::read_long<int>(data))) {
+  case BOOLEAN:
+    set_boolean(binary::read_bool(data));
+    break;
+  case INTEGER:
+    set_long(binary::read_long<unsigned long>(data));
+    break;
+  case DATETIME:
+    // jww (2008-04-22): I need to record and read a datetime_t directly
+    //set_datetime(read_long<unsigned long>(data));
+    break;
+  case AMOUNT: {
+    amount_t temp;
+    temp.read(data);
+    set_amount(temp);
+    break;
+  }
+
+  //case BALANCE:
+  //case BALANCE_PAIR:
+  default:
+    assert(false);
+    break;
+  }
+}
+
+void value_t::write(std::ostream& out) const
+{
+  binary::write_long(out, static_cast<int>(type()));
+
+  switch (type()) {
+  case BOOLEAN:
+    binary::write_bool(out, as_boolean());
+    break;
+  case INTEGER:
+    binary::write_long(out, as_long());
+    break;
+  case DATETIME:
+#if 0
+    binary::write_number(out, as_datetime());
+#endif
+    break;
+  case AMOUNT:
+    as_amount().write(out);
+    break;
+
+  //case BALANCE:
+  //case BALANCE_PAIR:
+  default:
+    throw new error("Cannot write a balance to the binary cache");
   }
 }
 

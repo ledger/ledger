@@ -52,8 +52,6 @@ public:
   entries_list	 entries;
   paths_list	 sources;
   optional<path> price_db;
-  char *	 item_pool;
-  char *	 item_pool_end;
 
   auto_entries_list    auto_entries;
   period_entries_list  period_entries;
@@ -80,17 +78,15 @@ public:
     entry_finalize_hooks.remove_hook(finalizer);
   }
 
-  bool valid() const;
-
-/**
- * @class journal_t::parser_t
- *
- * @brief Provides an abstract interface for writing journal parsers.
- *
- * Any data format for Ledger data is possible, as long as it can be parsed
- * into a journal_t data tree.  This class provides the basic interface which
- * must be implemented by every such journal parser.
- */
+  /**
+   * @class journal_t::parser_t
+   *
+   * @brief Provides an abstract interface for writing journal parsers.
+   *
+   * Any data format for Ledger data is possible, as long as it can be parsed
+   * into a journal_t data tree.  This class provides the basic interface which
+   * must be implemented by every such journal parser.
+   */
   class parser_t : public noncopyable
   {
   public:
@@ -122,9 +118,6 @@ public:
 			       const path *  original_file = NULL);
   };
 
-  unsigned int read(std::istream& in, const path& file, account_t * master);
-  void write(std::ostream& out);
-
   class parse_error : public error
   {
   public:
@@ -132,6 +125,8 @@ public:
       : error(reason, ctxt) {}
     virtual ~parse_error() throw() {}
   };
+
+  bool valid() const;
 };
 
 extern const string version;

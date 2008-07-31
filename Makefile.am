@@ -72,6 +72,7 @@ libledger_la_SOURCES = \
 	account.cc     \
 		       \
 	textual.cc     \
+	cache.cc       \
 	emacs.cc       \
 	qif.cc	       \
 	xml.cc	       \
@@ -131,6 +132,7 @@ pkginclude_HEADERS = \
 	account.h    \
 		     \
 	textual.h    \
+	cache.h      \
 	emacs.h      \
 	qif.h	     \
 	xml.h	     \

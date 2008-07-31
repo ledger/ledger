@@ -84,17 +84,14 @@ public:
 
   ptr_list<journal_t>		journals;
   ptr_list<journal_t::parser_t> parsers;
-
-  account_t *	       master;
-  mutable accounts_map accounts_cache;
+  scoped_ptr<commodity_pool_t>	commdity_pool;
+  scoped_ptr<account_t>		master;
+  mutable accounts_map		accounts_cache;
 
   session_t();
 
   virtual ~session_t() {
     TRACE_DTOR(session_t);
-
-    assert(master);
-    checked_delete(master);
   }
 
   journal_t * create_journal() {

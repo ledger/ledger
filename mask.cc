@@ -30,12 +30,19 @@
  */
 
 #include "mask.h"
+#include "binary.h"
 
 namespace ledger {
 
 mask_t::mask_t(const string& pat) : exclude(false), expr()
 {
   TRACE_CTOR(mask_t, "const string&");
+  *this = pat;
+}
+
+mask_t& mask_t::operator=(const string& pat)
+{
+  exclude = false;
 
   const char * p = pat.c_str();
 
@@ -52,6 +59,24 @@ mask_t::mask_t(const string& pat) : exclude(false), expr()
   }
 
   expr.assign(p);
+
+  return *this;
+}
+
+void mask_t::read(const char *& data)
+{
+  binary::read_number(data, exclude);
+
+  string pattern;
+  binary::read_string(data, pattern);
+
+  *this = pattern;
+}
+
+void mask_t::write(std::ostream& out) const
+{
+  binary::write_number(out, exclude);
+  binary::write_string(out, expr.str());
 }
 
 } // namespace ledger

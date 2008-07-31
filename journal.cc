@@ -36,11 +36,11 @@ namespace ledger {
 
 const string version = PACKAGE_VERSION;
 
-journal_t::journal_t(session_t * _owner) :
-  owner(_owner), basket(NULL), item_pool(NULL), item_pool_end(NULL)
+journal_t::journal_t(session_t * _owner)
+  : owner(_owner), basket(NULL)
 {
   TRACE_CTOR(journal_t, "");
-  master = owner->master;
+  master = owner->master.get();
 }
 
 journal_t::~journal_t()
@@ -52,22 +52,16 @@ journal_t::~journal_t()
   // be deleted.
   for (entries_list::iterator i = entries.begin();
        i != entries.end();
-       i++) {
-    if (! item_pool ||
-	reinterpret_cast<char *>(*i) <  item_pool ||
-	reinterpret_cast<char *>(*i) >= item_pool_end) {
+       i++)
+    if (! (*i)->has_flags(ENTRY_IN_CACHE))
       checked_delete(*i);
-    } else {
+    else
       (*i)->~entry_t();
-    }
-  }
 
   for (auto_entries_list::iterator i = auto_entries.begin();
        i != auto_entries.end();
        i++)
-    if (! item_pool ||
-	reinterpret_cast<char *>(*i) < item_pool ||
-	reinterpret_cast<char *>(*i) >= item_pool_end)
+    if (! (*i)->has_flags(ENTRY_IN_CACHE))
       checked_delete(*i);
     else
       (*i)->~auto_entry_t();
@@ -75,15 +69,10 @@ journal_t::~journal_t()
   for (period_entries_list::iterator i = period_entries.begin();
        i != period_entries.end();
        i++)
-    if (! item_pool ||
-	reinterpret_cast<char *>(*i) < item_pool ||
-	reinterpret_cast<char *>(*i) >= item_pool_end)
+    if (! (*i)->has_flags(ENTRY_IN_CACHE))
       checked_delete(*i);
     else
       (*i)->~period_entry_t();
-
-  if (item_pool)
-    checked_array_delete(item_pool);
 }
 
 void journal_t::add_account(account_t * acct)

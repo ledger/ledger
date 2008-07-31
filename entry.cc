@@ -36,7 +36,8 @@
 namespace ledger {
 
 entry_base_t::entry_base_t(const entry_base_t& e)
-  : journal(NULL), beg_pos(0), beg_line(0), end_pos(0), end_line(0)
+  : supports_flags<>(), journal(NULL),
+    beg_pos(0), beg_line(0), end_pos(0), end_line(0)
 {
   TRACE_CTOR(entry_base_t, "copy");
 
@@ -53,10 +54,15 @@ entry_base_t::~entry_base_t()
   for (xacts_list::iterator i = xacts.begin();
        i != xacts.end();
        i++)
-    if (! (*i)->has_flags(XACT_BULK_ALLOC))
-      checked_delete(*i);
-    else
-      (*i)->~xact_t();
+    // If the transaction is a temporary, it will be destructed when the
+    // temporary is.  If it's from a binary cache, we can safely destruct it
+    // but its memory will be deallocated with the cache.
+    if (! (*i)->has_flags(XACT_TEMP)) {
+      if (! (*i)->has_flags(XACT_IN_CACHE))
+	checked_delete(*i);
+      else
+	(*i)->~xact_t();
+    }
 }
 
 void entry_base_t::add_xact(xact_t * xact)
