@@ -169,11 +169,9 @@ xact_context::xact_context(const xact_t& _xact, const string& desc) throw()
 {
   const paths_list& sources(xact.entry->journal->sources);
   unsigned int x = 0;
-  for (paths_list::const_iterator i = sources.begin();
-       i != sources.end();
-       i++, x++)
+  foreach (const path& path, sources)
     if (x == xact.entry->src_idx) {
-      file = *i;
+      file = path;
       break;
     }
   line = xact.beg_line;

@@ -301,10 +301,8 @@ public:
     return temp;
   }
   virtual balance_t& in_place_negate() {
-    for (amounts_map::iterator i = amounts.begin();
-	 i != amounts.end();
-	 i++)
-      i->second.in_place_negate();
+    foreach (amounts_map::value_type& pair, amounts)
+      pair.second.in_place_negate();
     return *this;
   }
   balance_t operator-() const {
@@ -313,35 +311,27 @@ public:
 
   balance_t abs() const {
     balance_t temp;
-    for (amounts_map::const_iterator i = amounts.begin();
-	 i != amounts.end();
-	 i++)
-      temp += i->second.abs();
+    foreach (const amounts_map::value_type& pair, amounts)
+      temp += pair.second.abs();
     return temp;
   }
 
   balance_t round() const {
     balance_t temp;
-    for (amounts_map::const_iterator i = amounts.begin();
-	 i != amounts.end();
-	 i++)
-      temp += i->second.round();
+    foreach (const amounts_map::value_type& pair, amounts)
+      temp += pair.second.round();
     return temp;
   }
   balance_t round(amount_t::precision_t prec) const {
     balance_t temp;
-    for (amounts_map::const_iterator i = amounts.begin();
-	 i != amounts.end();
-	 i++)
-      temp += i->second.round(prec);
+    foreach (const amounts_map::value_type& pair, amounts)
+      temp += pair.second.round(prec);
     return temp;
   }
   balance_t unround() const {
     balance_t temp;
-    for (amounts_map::const_iterator i = amounts.begin();
-	 i != amounts.end();
-	 i++)
-      temp += i->second.unround();
+    foreach (const amounts_map::value_type& pair, amounts)
+      temp += pair.second.unround();
     return temp;
   }
 
@@ -354,10 +344,8 @@ public:
     // A temporary must be used here because reduction may cause
     // multiple component amounts to collapse to the same commodity.
     balance_t temp;
-    for (amounts_map::const_iterator i = amounts.begin();
-	 i != amounts.end();
-	 i++)
-      temp += i->second.reduce();
+    foreach (const amounts_map::value_type& pair, amounts)
+      temp += pair.second.reduce();
     return *this = temp;
   }
 
@@ -370,10 +358,8 @@ public:
     // A temporary must be used here because unreduction may cause
     // multiple component amounts to collapse to the same commodity.
     balance_t temp;
-    for (amounts_map::const_iterator i = amounts.begin();
-	 i != amounts.end();
-	 i++)
-      temp += i->second.unreduce();
+    foreach (const amounts_map::value_type& pair, amounts)
+      temp += pair.second.unreduce();
     return *this = temp;
   }
 
@@ -398,10 +384,8 @@ public:
    * it.
    */
   operator bool() const {
-    for (amounts_map::const_iterator i = amounts.begin();
-	 i != amounts.end();
-	 i++)
-      if (i->second.is_nonzero())
+    foreach (const amounts_map::value_type& pair, amounts)
+      if (pair.second.is_nonzero())
 	return true;
     return false;
   }
@@ -410,10 +394,8 @@ public:
     if (is_empty())
       return true;
 
-    for (amounts_map::const_iterator i = amounts.begin();
-	 i != amounts.end();
-	 i++)
-      if (! i->second.is_zero())
+    foreach (const amounts_map::value_type& pair, amounts)
+      if (! pair.second.is_zero())
 	return false;
     return true;
   }
@@ -422,10 +404,8 @@ public:
     if (is_empty())
       return true;
 
-    for (amounts_map::const_iterator i = amounts.begin();
-	 i != amounts.end();
-	 i++)
-      if (! i->second.is_realzero())
+    foreach (const amounts_map::value_type& pair, amounts)
+      if (! pair.second.is_realzero())
 	return false;
     return true;
   }
@@ -518,23 +498,19 @@ public:
   void dump(std::ostream& out) const {
     out << "BALANCE(";
     bool first = true;
-    for (amounts_map::const_iterator i = amounts.begin();
-	 i != amounts.end();
-	 i++) {
+    foreach (const amounts_map::value_type& pair, amounts) {
       if (first)
 	first = false;
       else
 	out << ", ";
-      i->second.print(out);
+      pair.second.print(out);
     }
     out << ")";
   }
 
   virtual bool valid() const {
-    for (amounts_map::const_iterator i = amounts.begin();
-	 i != amounts.end();
-	 i++)
-      if (! i->second.valid())
+    foreach (const amounts_map::value_type& pair, amounts)
+      if (! pair.second.valid())
 	return false;
     return true;
   }

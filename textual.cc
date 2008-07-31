@@ -718,12 +718,9 @@ unsigned int textual_parser_t::parse(std::istream& in,
 			   account_stack.front()->find_account(p), n ? n : "");
 
 	if (! time_entries.empty())
-	  for (std::list<time_entry_t>::iterator i = time_entries.begin();
-	       i != time_entries.end();
-	       i++)
-	    if (event.account == (*i).account)
-	      throw parse_error
-		("Cannot double check-in to the same account");
+	  foreach (time_entry_t& time_entry, time_entries)
+	    if (event.account == time_entry.account)
+	      throw parse_error("Cannot double check-in to the same account");
 
 	time_entries.push_back(event);
 	break;
@@ -992,15 +989,12 @@ unsigned int textual_parser_t::parse(std::istream& in,
   if (! time_entries.empty()) {
     std::list<account_t *> accounts;
 
-    for (std::list<time_entry_t>::iterator i = time_entries.begin();
-	 i != time_entries.end();
-	 i++)
-      accounts.push_back((*i).account);
+    foreach (time_entry_t& time_entry, time_entries)
+      accounts.push_back(time_entry.account);
 
-    for (std::list<account_t *>::iterator i = accounts.begin();
-	 i != accounts.end();
-	 i++)
-      clock_out_from_timelog(time_entries, current_moment, *i, NULL, journal);
+    foreach (account_t * account, accounts)
+      clock_out_from_timelog(time_entries, current_moment, account,
+			     NULL, journal);
 
     assert(time_entries.empty());
   }
@@ -1035,22 +1029,18 @@ void write_textual_journal(journal_t&	    journal,
 
     ::realpath(pathname.string().c_str(), buf1);
 
-    for (paths_list::iterator i = journal.sources.begin();
-	 i != journal.sources.end();
-	 i++) {
-      ::realpath((*i).string().c_str(), buf2);
+    foreach (const path& path, journal.sources) {
+      ::realpath(path.string().c_str(), buf2);
       if (std::strcmp(buf1, buf2) == 0) {
-	found = *i;
+	found = path;
 	break;
       }
       index++;
     }
 #else
-    for (paths_list::iterator i = journal.sources.begin();
-	 i != journal.sources.end();
-	 i++) {
-      if (pathname == *i) {
-	found = *i;
+    foreach (const path& path, journal.sources) {
+      if (pathname == path) {
+	found = path;
 	break;
       }
       index++;
@@ -1090,13 +1080,12 @@ void write_textual_journal(journal_t&	    journal,
 
     char c;
     if (base) {
-      for (xacts_list::iterator x = base->xacts.begin();
-	   x != base->xacts.end();
-	   x++)
-	if (! (*x)->has_flags(XACT_AUTO)) {
-	  xact_xdata(**x).dflags |= XACT_TO_DISPLAY;
-	  (*formatter)(**x);
+      foreach (xact_t * xact, base->xacts) {
+	if (! xact->has_flags(XACT_AUTO)) {
+	  xact_xdata(*xact).dflags |= XACT_TO_DISPLAY;
+	  (*formatter)(*xact);
 	}
+      }
       formatter->flush();
 
       while (pos < base->end_pos) {

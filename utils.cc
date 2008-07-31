@@ -143,10 +143,8 @@ std::size_t current_memory_size()
 {
   std::size_t memory_size = 0;
 
-  for (object_count_map::const_iterator i = live_memory_count->begin();
-       i != live_memory_count->end();
-       i++)
-    memory_size += (*i).second.second;
+  foreach (const object_count_map::value_type& pair, *live_memory_count)
+    memory_size += pair.second.second;
 
   return memory_size;
 }
@@ -249,12 +247,10 @@ namespace ledger {
 
 inline void report_count_map(std::ostream& out, object_count_map& the_map)
 {
-  for (object_count_map::iterator i = the_map.begin();
-       i != the_map.end();
-       i++)
-    out << "  " << std::right << std::setw(12) << (*i).second.first
-	<< "  " << std::right << std::setw(7) << (*i).second.second
-	<< "  " << std::left  << (*i).first
+  foreach (object_count_map::value_type& pair, the_map)
+    out << "  " << std::right << std::setw(12) << pair.second.first
+	<< "  " << std::right << std::setw(7) << pair.second.second
+	<< "  " << std::left  << pair.first
 	<< std::endl;
 }
 
@@ -262,10 +258,8 @@ std::size_t current_objects_size()
 {
   std::size_t objects_size = 0;
 
-  for (object_count_map::const_iterator i = live_object_count->begin();
-       i != live_object_count->end();
-       i++)
-    objects_size += (*i).second.second;
+  foreach (const object_count_map::value_type& pair, *live_object_count)
+    objects_size += pair.second.second;
 
   return objects_size;
 }
@@ -343,12 +337,10 @@ void report_memory(std::ostream& out, bool report_all)
   if (live_memory->size() > 0) {
     out << "Live memory:" << std::endl;
 
-    for (live_memory_map::const_iterator i = live_memory->begin();
-	 i != live_memory->end();
-	 i++)
-      out << "  " << std::right << std::setw(12) << (*i).first
-	  << "  " << std::right << std::setw(7) << (*i).second.second
-	  << "  " << std::left  << (*i).second.first
+    foreach (const live_memory_map::value_type& pair, *live_memory)
+      out << "  " << std::right << std::setw(12) << pair.first
+	  << "  " << std::right << std::setw(7) << pair.second.second
+	  << "  " << std::left  << pair.second.first
 	  << std::endl;
   }
 
@@ -365,12 +357,10 @@ void report_memory(std::ostream& out, bool report_all)
   if (live_objects->size() > 0) {
     out << "Live objects:" << std::endl;
 
-    for (live_objects_map::const_iterator i = live_objects->begin();
-	 i != live_objects->end();
-	 i++)
-      out << "  " << std::right << std::setw(12) << (*i).first
-	  << "  " << std::right << std::setw(7) << (*i).second.second
-	  << "  " << std::left  << (*i).second.first
+    foreach (const live_objects_map::value_type& pair, *live_objects)
+      out << "  " << std::right << std::setw(12) << pair.first
+	  << "  " << std::right << std::setw(7) << pair.second.second
+	  << "  " << std::left  << pair.second.first
 	  << std::endl;
   }
 

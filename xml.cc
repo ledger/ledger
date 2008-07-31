@@ -318,10 +318,8 @@ void xml_write_value(std::ostream& out, const value_t& value,
     for (int i = 0; i < depth + 2; i++) out << ' ';
     out << "<balance>\n";
 
-    for (balance_t::amounts_map::const_iterator i = bal->amounts.begin();
-	 i != bal->amounts.end();
-	 i++)
-      xml_write_amount(out, (*i).second, depth + 4);
+    foreach (const balance_t::amounts_map::value_type& pair, bal->amounts)
+      xml_write_amount(out, pair.second, depth + 4);
 
     for (int i = 0; i < depth + 2; i++) out << ' ';
     out << "</balance>\n";
@@ -383,11 +381,9 @@ void format_xml_entries::format_last_entry()
   }
 
   bool first = true;
-  for (xacts_list::const_iterator i = last_entry->xacts.begin();
-       i != last_entry->xacts.end();
-       i++) {
-    if (xact_has_xdata(**i) &&
-	xact_xdata_(**i).dflags & XACT_TO_DISPLAY) {
+  foreach (const xact_t * xact, last_entry->xacts) {
+    if (xact_has_xdata(*xact) &&
+	xact_xdata_(*xact).dflags & XACT_TO_DISPLAY) {
       if (first) {
 	output_stream << "    <en:xacts>\n";
 	first = false;
@@ -397,29 +393,29 @@ void format_xml_entries::format_last_entry()
 
 #if 0
       // jww (2008-05-08): Need to format these
-      if ((*i)->_date)
+      if (xact->_date)
 	output_stream << "        <tr:date>"
-		      << (*i)->_date.to_string("%Y/%m/%d")
+		      << xact->_date.to_string("%Y/%m/%d")
 		      << "</tr:date>\n";
 
-      if (is_valid((*i)->_date_eff))
+      if (is_valid(xact->_date_eff))
 	output_stream << "        <tr:date_eff>"
-		      << (*i)->_date_eff.to_string("%Y/%m/%d")
+		      << xact->_date_eff.to_string("%Y/%m/%d")
 		      << "</tr:date_eff>\n";
 #endif
 
-      if ((*i)->state == xact_t::CLEARED)
+      if (xact->state == xact_t::CLEARED)
 	output_stream << "        <tr:cleared/>\n";
-      else if ((*i)->state == xact_t::PENDING)
+      else if (xact->state == xact_t::PENDING)
 	output_stream << "        <tr:pending/>\n";
 
-      if ((*i)->has_flags(XACT_VIRTUAL))
+      if (xact->has_flags(XACT_VIRTUAL))
 	output_stream << "        <tr:virtual/>\n";
-      if ((*i)->has_flags(XACT_AUTO))
+      if (xact->has_flags(XACT_AUTO))
 	output_stream << "        <tr:generated/>\n";
 
-      if ((*i)->account) {
-	string name = (*i)->account->fullname();
+      if (xact->account) {
+	string name = xact->account->fullname();
 	if (name == "<Total>")
 	  name = "[TOTAL]";
 	else if (name == "<Unknown>")
@@ -431,34 +427,34 @@ void format_xml_entries::format_last_entry()
       }
 
       output_stream << "        <tr:amount>\n";
-      if (xact_xdata_(**i).dflags & XACT_COMPOUND)
+      if (xact_xdata_(*xact).dflags & XACT_COMPOUND)
 	xml_write_value(output_stream,
-			xact_xdata_(**i).value, 10);
+			xact_xdata_(*xact).value, 10);
       else
-	xml_write_value(output_stream, value_t((*i)->amount), 10);
+	xml_write_value(output_stream, value_t(xact->amount), 10);
       output_stream << "        </tr:amount>\n";
 
-      if ((*i)->cost) {
+      if (xact->cost) {
 	output_stream << "        <tr:cost>\n";
-	xml_write_value(output_stream, value_t(*(*i)->cost), 10);
+	xml_write_value(output_stream, value_t(*xact->cost), 10);
 	output_stream << "        </tr:cost>\n";
       }
 
-      if ((*i)->note) {
+      if (xact->note) {
 	output_stream << "        <tr:note>";
-	output_xml_string(output_stream, *(*i)->note);
+	output_xml_string(output_stream, *xact->note);
 	output_stream << "</tr:note>\n";
       }
 
       if (show_totals) {
 	output_stream << "        <total>\n";
-	xml_write_value(output_stream, xact_xdata_(**i).total, 10);
+	xml_write_value(output_stream, xact_xdata_(*xact).total, 10);
 	output_stream << "        </total>\n";
       }
 
       output_stream << "      </xact>\n";
 
-      xact_xdata_(**i).dflags |= XACT_DISPLAYED;
+      xact_xdata_(*xact).dflags |= XACT_DISPLAYED;
     }
   }
 

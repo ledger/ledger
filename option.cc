@@ -41,11 +41,11 @@ namespace {
     char buf[128];
     std::strcpy(buf, "option_");
     char * p = &buf[7];
-    for (const char * q = name.c_str(); *q; q++) {
-      if (*q == '-')
+    foreach (char ch, name) {
+      if (ch == '-')
 	*p++ = '_';
       else
-	*p++ = *q;
+	*p++ = ch;
     }
     *p = '\0';
 

@@ -246,17 +246,13 @@ public:
    */
   balance_pair_t abs() const {
     balance_t temp;
-    for (amounts_map::const_iterator i = amounts.begin();
-	 i != amounts.end();
-	 i++)
-      temp += i->second.abs();
+    foreach (const amounts_map::value_type& pair, amounts)
+      temp += pair.second.abs();
 
     if (cost) {
       balance_t cost_temp;
-      for (amounts_map::const_iterator i = cost->amounts.begin();
-	   i != cost->amounts.end();
-	   i++)
-	cost_temp += i->second.abs();
+      foreach (const amounts_map::value_type& pair, amounts)
+	cost_temp += pair.second.abs();
       return balance_pair_t(temp, cost_temp);
     }
     return temp;
@@ -273,17 +269,13 @@ public:
     // A temporary must be used here because reduction may cause
     // multiple component amounts to collapse to the same commodity.
     balance_t temp;
-    for (amounts_map::const_iterator i = amounts.begin();
-	 i != amounts.end();
-	 i++)
-      temp += i->second.reduce();
+    foreach (const amounts_map::value_type& pair, amounts)
+      temp += pair.second.reduce();
 
     if (cost) {
       balance_t cost_temp;
-      for (amounts_map::const_iterator i = cost->amounts.begin();
-	   i != cost->amounts.end();
-	   i++)
-	cost_temp += i->second.reduce();
+      foreach (const amounts_map::value_type& pair, amounts)
+	cost_temp += pair.second.reduce();
       return *this = balance_pair_t(temp, cost_temp);
     }
     return *this = temp;
@@ -293,17 +285,13 @@ public:
     // A temporary must be used here because unreduction may cause
     // multiple component amounts to collapse to the same commodity.
     balance_t temp;
-    for (amounts_map::const_iterator i = amounts.begin();
-	 i != amounts.end();
-	 i++)
-      temp += i->second.unreduce();
+    foreach (const amounts_map::value_type& pair, amounts)
+      temp += pair.second.unreduce();
 
     if (cost) {
       balance_t cost_temp;
-      for (amounts_map::const_iterator i = cost->amounts.begin();
-	   i != cost->amounts.end();
-	   i++)
-	cost_temp += i->second.unreduce();
+      foreach (const amounts_map::value_type& pair, amounts)
+	cost_temp += pair.second.unreduce();
       return *this = balance_pair_t(temp, cost_temp);
     }
     return *this = temp;

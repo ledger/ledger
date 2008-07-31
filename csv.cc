@@ -6,12 +6,12 @@ namespace {
   inline void write_escaped_string(std::ostream& out, const string& xact)
   {
     out << "\"";
-    for (string::const_iterator i = xact.begin(); i != xact.end(); i++)
-      if (*i == '"') {
+    foreach (char ch, xact)
+      if (ch == '"') {
 	out << "\\";
 	out << "\"";
       } else {
-	out << *i;
+	out << ch;
       }
     out << "\"";
   }

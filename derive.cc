@@ -96,10 +96,8 @@ entry_t * derive_new_entry(report_t& report,
     // to see the same xact as last time.
     added->code = matching->code;
 
-    for (xacts_list::iterator k = matching->xacts.begin();
-	 k != matching->xacts.end();
-	 k++)
-      added->add_xact(new xact_t(**k));
+    foreach (xact_t * xact, matching->xacts)
+      added->add_xact(new xact_t(*xact));
   }
   else if ((*i)[0] == '-' || std::isdigit((*i)[0])) {
     xact_t * m_xact, * xact, * first;
@@ -137,13 +135,10 @@ entry_t * derive_new_entry(report_t& report,
       for (; j != matching->journal->entries.rend(); j++)
 	if (regexp.match((*j)->payee)) {
 	  entry_t * entry = *j;
-	  for (xacts_list::const_iterator x =
-		 entry->xacts.begin();
-	       x != entry->xacts.end();
-	       x++)
-	    if (acct_regex.match((*x)->account->fullname())) {
-	      acct = (*x)->account;
-	      amt  = &(*x)->amount;
+	  foreach (xact_t * xact, entry->xacts)
+	    if (acct_regex.match(xact->account->fullname())) {
+	      acct = xact->account;
+	      amt  = &xact->amount;
 	      matching = entry;
 	      goto found;
 	    }

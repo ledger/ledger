@@ -133,6 +133,7 @@ void read_entry_base(const char *& data, entry_base_t * entry,
 		     xact_t *& xact_pool, bool& finalize)
 {
   read_long(data, entry->src_idx);
+  // jww (2008-07-31): Use istream_pos_type
   entry->beg_pos = read_long<unsigned long>(data);
   read_long(data, entry->beg_line);
   entry->end_pos = read_long<unsigned long>(data);
@@ -140,7 +141,7 @@ void read_entry_base(const char *& data, entry_base_t * entry,
 
   bool ignore_calculated = read_bool(data);
 
-  for (unsigned long i = 0, count = read_long<unsigned long>(data);
+  for (std::size_t i = 0, count = read_long<std::size_t>(data);
        i < count;
        i++) {
     new(xact_pool) xact_t;
@@ -160,10 +161,8 @@ void write_entry_base(std::ostream& out, entry_base_t * entry)
   write_long(out, entry->end_line);
 
   bool ignore_calculated = false;
-  for (xacts_list::const_iterator i = entry->xacts.begin();
-       i != entry->xacts.end();
-       i++)
-    if ((*i)->amount_expr) {
+  foreach (transaction_t * xact, entry->xacts)
+    if (xact->amount_expr) {
       ignore_calculated = true;
       break;
     }
@@ -171,10 +170,8 @@ void write_entry_base(std::ostream& out, entry_base_t * entry)
   write_bool(out, ignore_calculated);
 
   write_long(out, entry->xacts.size());
-  for (xacts_list::const_iterator i = entry->xacts.begin();
-       i != entry->xacts.end();
-       i++)
-    write_xact(out, *i, ignore_calculated);
+  foreach (transaction_t * xact, entry->xacts)
+    write_xact(out, xact, ignore_calculated);
 }
 
 void read_entry(const char *& data, entry_t * entry,
@@ -271,7 +268,10 @@ void read_commodity_base_extra(const char *& data,
   commodity_t::base_t * commodity = base_commodities[ident];
 
   bool read_history = false;
-  for (unsigned long i = 0, count = read_long<unsigned long>(data);
+  // jww (2008-07-31): create a function read_size which does
+  // read_long<std::size_t>.  Don't use read_number<std::size_t>, but it
+  // wastes too much space.
+  for (std::size_t i = 0, count = read_long<std::size_t>(data);
        i < count;
        i++) {
     datetime_t when;
@@ -316,12 +316,10 @@ void write_commodity_base_extra(std::ostream& out,
     write_long<unsigned long>(out, 0);
   } else {
     write_long<unsigned long>(out, commodity->history->prices.size());
-    for (commodity_t::history_map::const_iterator
-	   i = commodity->history->prices.begin();
-	 i != commodity->history->prices.end();
-	 i++) {
-      write_number(out, (*i).first);
-      (*i).second.write(out);
+    foreach (commodity_t::history_map::value_type& pair,
+	     commodity->history->prices) {
+      write_number(out, pair.first);
+      pair.second.write(out);
     }
     write_number(out, commodity->history->last_lookup);
   }
@@ -452,8 +450,7 @@ account_t * read_account(const char *& data, account_t * master = NULL)
     acct = master;
   }
 
-  for (account_t::ident_t i = 0,
-	 count = read_long<account_t::ident_t>(data);
+  for (std::size_t i = 0, count = read_long<std::size_t>(data);
        i < count;
        i++) {
     account_t * child = read_account(data);
@@ -470,10 +467,8 @@ namespace {
   {
     account_t::ident_t count = 1;
 
-    for (accounts_map::iterator i = account->accounts.begin();
-	 i != account->accounts.end();
-	 i++)
-      count += count_accounts((*i).second);
+    foreach (accounts_map::value_type& pair, account->accounts)
+      count += count_accounts(pair.second);
 
     return count;
   }
@@ -494,10 +489,8 @@ void write_account(std::ostream& out, account_t * account)
 
   write_number<std::size_t>(out, account->accounts.size());
 
-  for (accounts_map::iterator i = account->accounts.begin();
-       i != account->accounts.end();
-       i++)
-    write_account(out, (*i).second);
+  foreach (accounts_map::value_type& pair, account->accounts)
+    write_account(out, pair.second);
 }
 
 unsigned int read_journal(std::istream& in,
@@ -511,8 +504,7 @@ unsigned int read_journal(std::istream& in,
   // can be checked for changes on reading.
 
   if (! file.empty()) {
-    for (unsigned short i = 0,
-	   count = read_number<unsigned short>(in);
+    for (unsigned short i = 0, count = read_number<unsigned short>(in);
 	 i < count;
 	 i++) {
       path pathname = read_string(in);
@@ -590,12 +582,10 @@ write_journal(std::ostream& out, const journal_t& journal)
     write_number<unsigned short>(out, 0);
   } else {
     write_number<unsigned short>(out, sources.size());
-    for (paths_list::const_iterator i = sources.begin();
-	 i != sources.end();
-	 i++) {
-      write_string(out, (*i).string());
+    foreach (const path& path, sources) {
+      write_string(out, path.string());
       struct stat info;
-      stat((*i).string().c_str(), &info);
+      stat(path.string().c_str(), &info);
       write_number(out, std::time_t(info.st_mtime));
     }
 
@@ -623,31 +613,25 @@ write_journal(std::ostream& out, const journal_t& journal)
   std::size_t this_entry_count = 0;
   std::size_t this_xact_count  = 0;
 
-  for (entries_list::const_iterator i = entries.begin();
-       i != entries.end();
-       i++) {
-    write_entry(out, *i);
+  foreach (entry_t * entry, entries) {
+    write_entry(out, entry);
 
     this_entry_count++;
-    this_xact_count += (*i)->xacts.size();
+    this_xact_count += entry->xacts.size();
   }
 
-  for (auto_entries_list::const_iterator i = auto_entries.begin();
-       i != auto_entries.end();
-       i++) {
-    write_auto_entry(out, *i);
+  foreach (auto_entry_t * entry, auto_entries) {
+    write_auto_entry(out, entry);
 
     this_entry_count++;
-    this_xact_count += (*i)->xacts.size();
+    this_xact_count += entry->xacts.size();
   }
 
-  for (period_entries_list::const_iterator i = period_entries.begin();
-       i != period_entries.end();
-       i++) {
-    write_period_entry(out, *i);
+  foreach (period_entry_t * entry, period_entries) {
+    write_period_entry(out, entry);
 
     this_entry_count++;
-    this_xact_count += (*i)->xacts.size();
+    this_xact_count += entry->xacts.size();
   }
 
   return std::pair<std::size_t, std::size_t>(this_entry_count,
@@ -834,31 +818,24 @@ void write_session(std::ostream& out, session_t& session)
   write_number<std::size_t>(out, session.commodity_pool->commodities.size());
   write_number<std::size_t>(out, session.commodity_pool->commodities.size());
 
-  for (base_commodities_map::const_iterator i =
-	 commodity_t::base_t::commodities.begin();
-       i != commodity_t::base_t::commodities.end();
-       i++)
-    write_commodity_base(out, (*i).second);
+  for (base_commodities_map::value_type pair, commodity_t::base_t::commodities)
+    write_commodity_base(out, pair.second);
 
   write_number<commodity_t::ident_t>
     (out, commodity_t::commodities.size());
 
-  for (commodities_map::const_iterator i = commodity_t::commodities.begin();
-       i != commodity_t::commodities.end();
-       i++) {
-    if (! (*i).second->annotated) {
+  for (commodities_map::value_type pair, commodity_t::commodities) {
+    if (! pair.second->annotated) {
       write_bool(out, false);
-      write_commodity(out, (*i).second);
+      write_commodity(out, pair.second);
     }
   }
 
-  for (commodities_map::const_iterator i = commodity_t::commodities.begin();
-       i != commodity_t::commodities.end();
-       i++) {
-    if ((*i).second->annotated) {
+  for (commodities_map::value_type pair, commodity_t::commodities) {
+    if (pair.second->annotated) {
       write_bool(out, true);
-      write_string(out, (*i).first); // the mapping key
-      write_commodity_annotated(out, (*i).second);
+      write_string(out, pair.first); // the mapping key
+      write_commodity_annotated(out, pair.second);
     }
   }
 

@@ -35,10 +35,8 @@ namespace ledger {
 
 balance_t& balance_t::operator+=(const balance_t& bal)
 {
-  for (amounts_map::const_iterator i = bal.amounts.begin();
-       i != bal.amounts.end();
-       i++)
-    *this += i->second;
+  foreach (const amounts_map::value_type& pair, bal.amounts)
+    *this += pair.second;
   return *this;
 }
 
@@ -62,10 +60,8 @@ balance_t& balance_t::operator+=(const amount_t& amt)
 
 balance_t& balance_t::operator-=(const balance_t& bal)
 {
-  for (amounts_map::const_iterator i = bal.amounts.begin();
-       i != bal.amounts.end();
-       i++)
-    *this -= i->second;
+  foreach (const amounts_map::value_type& pair, bal.amounts)
+    *this -= pair.second;
   return *this;
 }
 
@@ -104,10 +100,8 @@ balance_t& balance_t::operator*=(const amount_t& amt)
   else if (! amt.commodity()) {
     // Multiplying by an amount with no commodity causes all the
     // component amounts to be increased by the same factor.
-    for (amounts_map::iterator i = amounts.begin();
-	 i != amounts.end();
-	 i++)
-      i->second *= amt;
+    foreach (amounts_map::value_type& pair, amounts)
+      pair.second *= amt;
   }
   else if (amounts.size() == 1) {
     // Multiplying by a commoditized amount is only valid if the sole
@@ -142,10 +136,8 @@ balance_t& balance_t::operator/=(const amount_t& amt)
   else if (! amt.commodity()) {
     // Dividing by an amount with no commodity causes all the
     // component amounts to be divided by the same factor.
-    for (amounts_map::iterator i = amounts.begin();
-	 i != amounts.end();
-	 i++)
-      i->second /= amt;
+    foreach (amounts_map::value_type& pair, amounts)
+      pair.second /= amt;
   }
   else if (amounts.size() == 1) {
     // Dividing by a commoditized amount is only valid if the sole
@@ -170,10 +162,8 @@ balance_t::value(const optional<datetime_t>& moment) const
 {
   optional<balance_t> temp;
 
-  for (amounts_map::const_iterator i = amounts.begin();
-       i != amounts.end();
-       i++)
-    if (optional<amount_t> val = i->second.value(moment)) {
+  foreach (const amounts_map::value_type& pair, amounts)
+    if (optional<amount_t> val = pair.second.value(moment)) {
       if (! temp)
 	temp = balance_t();
       *temp += *val;
@@ -215,10 +205,8 @@ balance_t balance_t::strip_annotations(const bool keep_price,
 {
   balance_t temp;
 
-  for (amounts_map::const_iterator i = amounts.begin();
-       i != amounts.end();
-       i++)
-    temp += i->second.strip_annotations(keep_price, keep_date, keep_tag);
+  foreach (const amounts_map::value_type& pair, amounts)
+    temp += pair.second.strip_annotations(keep_price, keep_date, keep_tag);
 
   return temp;
 }
@@ -236,17 +224,13 @@ void balance_t::print(std::ostream& out,
   typedef std::vector<const amount_t *> amounts_array;
   amounts_array sorted;
 
-  for (amounts_map::const_iterator i = amounts.begin();
-       i != amounts.end();
-       i++)
-    if (i->second)
-      sorted.push_back(&i->second);
+  foreach (const amounts_map::value_type& pair, amounts)
+    if (pair.second)
+      sorted.push_back(&pair.second);
 
   std::stable_sort(sorted.begin(), sorted.end(), compare_amount_commodities());
 
-  for (amounts_array::const_iterator i = sorted.begin();
-       i != sorted.end();
-       i++) {
+  foreach (const amount_t * amount, sorted) {
     int width;
     if (! first) {
       out << std::endl;
@@ -258,7 +242,7 @@ void balance_t::print(std::ostream& out,
 
     out.width(width);
     out.fill(' ');
-    out << std::right << **i;
+    out << std::right << *amount;
   }
 
   if (first) {

@@ -40,19 +40,17 @@ void reconcile_xacts::flush()
   xact_t *  first    = NULL;
   xact_t ** last_ptr = &first;
 
-  for (xacts_list::iterator x = xacts.begin();
-       x != xacts.end();
-       x++) {
-    if (! is_valid(cutoff) || (*x)->date() < cutoff) {
-      switch ((*x)->state) {
+  foreach (xact_t * xact, xacts) {
+    if (! is_valid(cutoff) || xact->date() < cutoff) {
+      switch (xact->state) {
       case xact_t::CLEARED:
-	cleared_balance += (*x)->amount;
+	cleared_balance += xact->amount;
 	break;
       case xact_t::UNCLEARED:
       case xact_t::PENDING:
-	pending_balance += (*x)->amount;
-	*last_ptr = *x;
-	last_ptr = xact_next_ptr(*x);
+	pending_balance += xact->amount;
+	*last_ptr = xact;
+	last_ptr = xact_next_ptr(xact);
 	break;
       }
     }

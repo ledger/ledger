@@ -5,11 +5,9 @@ namespace ledger {
 void format_emacs_xacts::write_entry(entry_t& entry)
 {
   int idx = entry.src_idx;
-  for (paths_list::const_iterator i = entry.journal->sources.begin();
-       i != entry.journal->sources.end();
-       i++)
+  foreach (const path& path, entry.journal->sources)
     if (! idx--) {
-      out << "\"" << *i << "\" ";
+      out << "\"" << path << "\" ";
       break;
     }
 

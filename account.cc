@@ -37,10 +37,8 @@ account_t::~account_t()
 {
   TRACE_DTOR(account_t);
 
-  for (accounts_map::iterator i = accounts.begin();
-       i != accounts.end();
-       i++)
-    checked_delete((*i).second);
+  foreach (accounts_map::value_type& pair, accounts)
+    checked_delete(pair.second);
 }
 
 account_t * account_t::find_account(const string& name,
@@ -130,15 +128,13 @@ bool account_t::valid() const
     return false;
   }
 
-  for (accounts_map::const_iterator i = accounts.begin();
-       i != accounts.end();
-       i++) {
-    if (this == (*i).second) {
+  foreach (const accounts_map::value_type& pair, accounts) {
+    if (this == pair.second) {
       DEBUG("ledger.validate", "account_t: parent refers to itself!");
       return false;
     }
 
-    if (! (*i).second->valid()) {
+    if (! pair.second->valid()) {
       DEBUG("ledger.validate", "account_t: child not valid");
       return false;
     }

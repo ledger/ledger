@@ -467,10 +467,8 @@ value_t& value_t::operator-=(const value_t& val)
     sequence_t& seq(as_sequence_lval());
 
     if (val.is_sequence()) {
-      for (sequence_t::const_iterator i = val.as_sequence().begin();
-	   i != val.as_sequence().end();
-	   i++) {
-	sequence_t::iterator j = std::find(seq.begin(), seq.end(), *i);
+      foreach (const value_t& v, val.as_sequence()) {
+	sequence_t::iterator j = std::find(seq.begin(), seq.end(), v);
 	if (j != seq.end())
 	  seq.erase(j);
       }

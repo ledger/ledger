@@ -40,29 +40,24 @@ entry_base_t::entry_base_t(const entry_base_t& e)
     beg_pos(0), beg_line(0), end_pos(0), end_line(0)
 {
   TRACE_CTOR(entry_base_t, "copy");
-
-  for (xacts_list::const_iterator i = e.xacts.begin();
-       i != e.xacts.end();
-       i++)
-    xacts.push_back(new xact_t(**i));
+  xacts.insert(xacts.end(), e.xacts.begin(), e.xacts.end());
 }
 
 entry_base_t::~entry_base_t()
 {
   TRACE_DTOR(entry_base_t);
 
-  for (xacts_list::iterator i = xacts.begin();
-       i != xacts.end();
-       i++)
+  foreach (xact_t * xact, xacts) {
     // If the transaction is a temporary, it will be destructed when the
     // temporary is.  If it's from a binary cache, we can safely destruct it
     // but its memory will be deallocated with the cache.
-    if (! (*i)->has_flags(XACT_TEMP)) {
-      if (! (*i)->has_flags(XACT_IN_CACHE))
-	checked_delete(*i);
+    if (! xact->has_flags(XACT_TEMP)) {
+      if (! xact->has_flags(XACT_IN_CACHE))
+	checked_delete(xact);
       else
-	(*i)->~xact_t();
+	xact->~xact_t();
     }
+  }
 }
 
 void entry_base_t::add_xact(xact_t * xact)
@@ -85,7 +80,7 @@ bool entry_base_t::finalize()
   // (let ((balance 0)
   //       null-xact)
 
-  value_t	  balance;
+  value_t  balance;
   xact_t * null_xact = NULL;
 
   //   (do-xacts (xact entry)
@@ -101,11 +96,9 @@ bool entry_base_t::finalize()
   //                 (setf null-xact xact))))))
   //
 
-  for (xacts_list::const_iterator x = xacts.begin();
-       x != xacts.end();
-       x++) {
-    if ((*x)->must_balance()) {
-      amount_t& p((*x)->cost ? *(*x)->cost : (*x)->amount);
+  foreach (xact_t * xact, xacts) {
+    if (xact->must_balance()) {
+      amount_t& p(xact->cost ? *xact->cost : xact->amount);
       if (! p.is_null()) {
 	if (balance.is_null())
 	  balance = p;
@@ -116,7 +109,7 @@ bool entry_base_t::finalize()
 	  throw_(std::logic_error,
 		 "Only one xact with null amount allowed per entry");
 	else
-	  null_xact = *x;
+	  null_xact = xact;
       }
     }
   }
@@ -172,16 +165,13 @@ bool entry_base_t::finalize()
     if (balance.is_balance()) {
       bool first = true;
       const balance_t& bal(balance.as_balance());
-      for (balance_t::amounts_map::const_iterator i = bal.amounts.begin();
-	   i != bal.amounts.end();
-	   i++) {
+      foreach (const balance_t::amounts_map::value_type& pair, bal.amounts) {
 	if (first) {
-	  null_xact->amount = (*i).second.negate();
+	  null_xact->amount = pair.second.negate();
 	  first = false;
 	} else {
-	  add_xact(new xact_t(null_xact->account,
-					    (*i).second.negate(),
-					    XACT_GENERATED));
+	  add_xact(new xact_t(null_xact->account, pair.second.negate(),
+			      XACT_GENERATED));
 	}
       }
     } else {
@@ -226,13 +216,11 @@ bool entry_base_t::finalize()
 
       commodity_t& comm(x.commodity());
 
-      for (xacts_list::const_iterator x = xacts.begin();
-	   x != xacts.end();
-	   x++) {
-	const amount_t& x_amt((*x)->amount);
+      foreach (xact_t * xact, xacts) {
+	const amount_t& x_amt(xact->amount);
 
-	if (! ((*x)->cost ||
-	       ! (*x)->must_balance() ||
+	if (! (xact->cost ||
+	       ! xact->must_balance() ||
 	       x_amt.commodity() == comm)) {
 	  DEBUG("ledger.journal.finalize", "before operation 1 = " << balance);
 	  balance -= x_amt;
@@ -240,10 +228,10 @@ bool entry_base_t::finalize()
 	  DEBUG("ledger.journal.finalize", "x_amt = " << x_amt);
 	  DEBUG("ledger.journal.finalize", "per_unit_cost = " << per_unit_cost);
 
-	  (*x)->cost = per_unit_cost * x_amt;
-	  DEBUG("ledger.journal.finalize", "*(*x)->cost = " << *(*x)->cost);
+	  xact->cost = per_unit_cost * x_amt;
+	  DEBUG("ledger.journal.finalize", "*xact->cost = " << *xact->cost);
 
-	  balance += *(*x)->cost;
+	  balance += *xact->cost;
 	  DEBUG("ledger.journal.finalize", "after operation 2 = " << balance);
 	}
 
@@ -274,13 +262,11 @@ bool entry_base_t::finalize()
   //                     (add balance (subtract basis-cost total-cost))))
   //             (setf (xact-amount* xact) annotated-amount))))))
 
-  for (xacts_list::const_iterator x = xacts.begin();
-       x != xacts.end();
-       x++) {
-    if ((*x)->cost) {
-      const amount_t& x_amt((*x)->amount);
+  foreach (xact_t * xact, xacts) {
+    if (xact->cost) {
+      const amount_t& x_amt(xact->amount);
 
-      assert(x_amt.commodity() != (*x)->cost->commodity());
+      assert(x_amt.commodity() != xact->cost->commodity());
 
       entry_t * entry = dynamic_cast<entry_t *>(this);
 
@@ -290,10 +276,10 @@ bool entry_base_t::finalize()
       amount_t basis_cost;
       amount_t ann_amount =
 	commodity_t::exchange(x_amt, final_cost, basis_cost,
-			      (*x)->cost, none, (*x)->actual_date(),
+			      xact->cost, none, xact->actual_date(),
 			      entry ? entry->code : optional<string>());
 
-      if ((*x)->amount.annotated()) {
+      if (xact->amount.annotated()) {
 	if (ann_amount.annotation().price) {
 	  if (balance.is_null())
 	    balance = basis_cost - final_cost;
@@ -301,7 +287,7 @@ bool entry_base_t::finalize()
 	    balance += basis_cost - final_cost;
 	}
       } else {
-	(*x)->amount = ann_amount;
+	xact->amount = ann_amount;
       }
     }
   }
@@ -340,10 +326,8 @@ entry_t::entry_t(const entry_t& e)
 {
   TRACE_CTOR(entry_t, "copy");
 
-  for (xacts_list::const_iterator i = xacts.begin();
-       i != xacts.end();
-       i++)
-    (*i)->entry = this;
+  foreach (xact_t * xact, xacts)
+    xact->entry = this;
 }
 
 bool entry_t::get_state(xact_t::state_t * state) const
@@ -351,14 +335,12 @@ bool entry_t::get_state(xact_t::state_t * state) const
   bool first  = true;
   bool hetero = false;
 
-  for (xacts_list::const_iterator i = xacts.begin();
-       i != xacts.end();
-       i++) {
+  foreach (xact_t * xact, xacts) {
     if (first) {
-      *state = (*i)->state;
+      *state = xact->state;
       first = false;
     }
-    else if (*state != (*i)->state) {
+    else if (*state != xact->state) {
       hetero = true;
       break;
     }
@@ -416,10 +398,8 @@ bool entry_t::valid() const
     return false;
   }
 
-  for (xacts_list::const_iterator i = xacts.begin();
-       i != xacts.end();
-       i++)
-    if ((*i)->entry != this || ! (*i)->valid()) {
+  foreach (xact_t * xact, xacts)
+    if (xact->entry != this || ! xact->valid()) {
       DEBUG("ledger.validate", "entry_t: xact not valid");
       return false;
     }
@@ -442,47 +422,43 @@ void auto_entry_t::extend_entry(entry_base_t& entry, bool post)
   xacts_list initial_xacts(entry.xacts.begin(),
 				  entry.xacts.end());
 
-  for (xacts_list::iterator i = initial_xacts.begin();
-       i != initial_xacts.end();
-       i++) {
-    if (predicate(**i)) {
-      for (xacts_list::iterator t = xacts.begin();
-	   t != xacts.end();
-	   t++) {
+  foreach (xact_t * initial_xact, initial_xacts) {
+    if (predicate(*initial_xact)) {
+      foreach (xact_t * xact, xacts) {
 	amount_t amt;
-	assert((*t)->amount);
-	if (! (*t)->amount.commodity()) {
+	assert(xact->amount);
+	if (! xact->amount.commodity()) {
 	  if (! post)
 	    continue;
-	  assert((*i)->amount);
-	  amt = (*i)->amount * (*t)->amount;
+	  assert(initial_xact->amount);
+	  amt = initial_xact->amount * xact->amount;
 	} else {
 	  if (post)
 	    continue;
-	  amt = (*t)->amount;
+	  amt = xact->amount;
 	}
 
-	account_t * account  = (*t)->account;
+	account_t * account  = xact->account;
 	string fullname = account->fullname();
 	assert(! fullname.empty());
 	if (fullname == "$account" || fullname == "@account")
-	  account = (*i)->account;
+	  account = initial_xact->account;
 
-	xact_t * xact
-	  = new xact_t(account, amt, (*t)->flags() | XACT_AUTO);
+	xact_t * new_xact
+	  = new xact_t(account, amt, xact->flags() | XACT_AUTO);
 
 	// Copy over details so that the resulting xact is a mirror of
 	// the automated entry's one.
-	xact->state	= (*t)->state;
-	xact->_date	= (*t)->_date;
-	xact->_date_eff = (*t)->_date_eff;
-	xact->note	= (*t)->note;
-	xact->beg_pos	= (*t)->beg_pos;
-	xact->beg_line	= (*t)->beg_line;
-	xact->end_pos	= (*t)->end_pos;
-	xact->end_line	= (*t)->end_line;
+	new_xact->state	    = xact->state;
+	new_xact->_date	    = xact->_date;
+	new_xact->_date_eff = xact->_date_eff;
+	new_xact->note	    = xact->note;
+	new_xact->beg_pos   = xact->beg_pos;
+	new_xact->beg_line  = xact->beg_line;
+	new_xact->end_pos   = xact->end_pos;
+	new_xact->end_line  = xact->end_line;
 
-	entry.add_xact(xact);
+	entry.add_xact(new_xact);
       }
     }
   }
@@ -490,10 +466,8 @@ void auto_entry_t::extend_entry(entry_base_t& entry, bool post)
 
 void extend_entry_base(journal_t * journal, entry_base_t& entry, bool post)
 {
-  for (auto_entries_list::iterator i = journal->auto_entries.begin();
-       i != journal->auto_entries.end();
-       i++)
-    (*i)->extend_entry(entry, post);
+  foreach (auto_entry_t * entry, journal->auto_entries)
+    entry->extend_entry(*entry, post);
 }
 
 } // namespace ledger

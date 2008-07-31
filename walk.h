@@ -101,8 +101,7 @@ struct xact_xdata_t : public noncopyable
   datetime_t     date;
   account_t *    account;
   void *         ptr;
-
-  xacts_list * component_xacts;
+  xacts_list *   component_xacts;
 
   xact_xdata_t()
     : index(0), dflags(0),
@@ -126,17 +125,13 @@ struct xact_xdata_t : public noncopyable
   }
 
   void copy_component_xacts(xacts_list& xacts) {
-    for (xacts_list::const_iterator i = xacts.begin();
-	 i != xacts.end();
-	 i++)
-      remember_xact(**i);
+    foreach (xact_t * xact, xacts)
+      remember_xact(*xact);
   }
 
   void walk_component_xacts(item_handler<xact_t>& handler) const {
-    for (xacts_list::const_iterator i = component_xacts->begin();
-	 i != component_xacts->end();
-	 i++)
-      handler(**i);
+    foreach (xact_t * xact, *component_xacts)
+      handler(*xact);
   }
 };
 
@@ -493,10 +488,8 @@ public:
 };
 
 inline void clear_entries_xacts(std::list<entry_t>& entries_list) {
-  for (std::list<entry_t>::iterator i = entries_list.begin();
-       i != entries_list.end();
-       i++)
-    (*i).xacts.clear();
+  foreach (entry_t& entry, entries_list)
+    entry.xacts.clear();
 }
 
 class collapse_xacts : public item_handler<xact_t>

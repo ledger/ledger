@@ -504,17 +504,15 @@ void format_t::format(std::ostream& out_str, scope_t& scope) const
 	  xact_t * first = NULL;
 	  xact_t * last  = NULL;
 
-	  for (xacts_list::const_iterator i
-		 = details.entry->xacts.begin();
-	       i != details.entry->xacts.end();
-	       i++)
-	    if (xact_has_xdata(**i) &&
-		xact_xdata_(**i).dflags & XACT_TO_DISPLAY) {
+	  foreach (const transaction_t * xact, details.entry->xacts) {
+	    if (xact_has_xdata(*xact) &&
+		xact_xdata_(*xact).dflags & XACT_TO_DISPLAY) {
 	      xacts_count++;
 	      if (! first)
-		first = *i;
-	      last = *i;
+		first = xact;
+	      last = xact;
 	    }
+	  }
 
 	  use_disp = (xacts_count == 2 && details.xact == last &&
 		      first->amount == - last->amount);
@@ -534,11 +532,9 @@ void format_t::format(std::ostream& out_str, scope_t& scope) const
     case element_t::SOURCE:
       if (details.entry && details.entry->journal) {
 	int idx = details.entry->src_idx;
-	for (paths_list::const_iterator i = details.entry->journal->sources.begin();
-	     i != details.entry->journal->sources.end();
-	     i++)
+	foreach (const path& path, details.entry->journal->sources)
 	  if (! idx--) {
-	    out << *i;
+	    out << path;
 	    break;
 	  }
       }
@@ -808,18 +804,16 @@ void format_entries::format_last_entry()
 {
 #if 0
   bool first = true;
-  for (xacts_list::const_iterator i = last_entry->xacts.begin();
-       i != last_entry->xacts.end();
-       i++) {
-    if (xact_has_xdata(**i) &&
-	xact_xdata_(**i).dflags & XACT_TO_DISPLAY) {
+  foreach (const transaction_t * xact, last_entry->xacts) {
+    if (xact_has_xdata(*xact) &&
+	xact_xdata_(*xact).dflags & XACT_TO_DISPLAY) {
       if (first) {
-	first_line_format.format(output_stream, details_t(**i));
+	first_line_format.format(output_stream, details_t(*xact));
 	first = false;
       } else {
-	next_lines_format.format(output_stream, details_t(**i));
+	next_lines_format.format(output_stream, details_t(*xact));
       }
-      xact_xdata_(**i).dflags |= XACT_DISPLAYED;
+      xact_xdata_(*xact).dflags |= XACT_DISPLAYED;
     }
   }
 #endif
@@ -885,13 +879,11 @@ bool disp_subaccounts_p(const account_t&			    account,
   to_show = NULL;
 
 #if 0
-  for (accounts_map::const_iterator i = account.accounts.begin();
-       i != account.accounts.end();
-       i++) {
-    if (disp_pred && ! (*disp_pred)(*(*i).second))
+  for (accounts_map::value_type pair, account.accounts) {
+    if (disp_pred && ! (*disp_pred)(*pair.second))
       continue;
 
-    compute_total(result, details_t(*(*i).second));
+    compute_total(result, details_t(*pair.second));
     if (! computed) {
       compute_total(acct_total, details_t(account));
       computed = true;
@@ -901,7 +893,7 @@ bool disp_subaccounts_p(const account_t&			    account,
       display = matches;
       break;
     }
-    to_show = (*i).second;
+    to_show = pair.second;
     counted++;
   }
 #endif
@@ -986,10 +978,8 @@ void format_equity::flush()
     else
       assert(false);
 
-    for (balance_t::amounts_map::const_iterator i = bal->amounts.begin();
-	 i != bal->amounts.end();
-	 i++) {
-      xdata.value = (*i).second;
+    for (balance_t::amounts_map::value_type pair, bal->amounts) {
+      xdata.value = pair.second;
       xdata.value.negate();
       next_lines_format.format(output_stream, details_t(summary));
     }
@@ -1016,10 +1006,8 @@ void format_equity::operator()(account_t& account)
 	else
 	  assert(false);
 
-	for (balance_t::amounts_map::const_iterator i = bal->amounts.begin();
-	     i != bal->amounts.end();
-	     i++) {
-	  account_xdata_(account).value = (*i).second;
+	for (balance_t::amounts_map::value_type pair, bal->amounts) {
+	  account_xdata_(account).value = pair.second;
 	  next_lines_format.format(output_stream, details_t(account));
 	}
 	account_xdata_(account).value = val;

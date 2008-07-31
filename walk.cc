@@ -120,23 +120,19 @@ void truncate_entries::flush()
   entry_t * last_entry = (*xacts.begin())->entry;
 
   int l = 0;
-  for (xacts_list::iterator x = xacts.begin();
-       x != xacts.end();
-       x++)
-    if (last_entry != (*x)->entry) {
+  foreach (xact_t * xact, xacts)
+    if (last_entry != xact->entry) {
       l++;
-      last_entry = (*x)->entry;
+      last_entry = xact->entry;
     }
   l++;
 
   last_entry = (*xacts.begin())->entry;
 
   int i = 0;
-  for (xacts_list::iterator x = xacts.begin();
-       x != xacts.end();
-       x++) {
-    if (last_entry != (*x)->entry) {
-      last_entry = (*x)->entry;
+  foreach (xact_t * xact, xacts) {
+    if (last_entry != xact->entry) {
+      last_entry = xact->entry;
       i++;
     }
 
@@ -156,7 +152,7 @@ void truncate_entries::flush()
     }
 
     if (print)
-      item_handler<xact_t>::operator()(**x);
+      item_handler<xact_t>::operator()(*xact);
   }
   xacts.clear();
 
@@ -183,11 +179,9 @@ void sort_xacts::post_accumulated_xacts()
   std::stable_sort(xacts.begin(), xacts.end(),
 		   compare_items<xact_t>(sort_order));
 
-  for (xacts_deque::iterator i = xacts.begin();
-       i != xacts.end();
-       i++) {
-    xact_xdata(**i).dflags &= ~XACT_SORT_CALC;
-    item_handler<xact_t>::operator()(**i);
+  foreach (xact_t * xact, xacts) {
+    xact_xdata(*xact).dflags &= ~XACT_SORT_CALC;
+    item_handler<xact_t>::operator()(*xact);
   }
 
   xacts.clear();
@@ -349,31 +343,27 @@ void collapse_xacts::operator()(xact_t& xact)
 void related_xacts::flush()
 {
   if (xacts.size() > 0) {
-    for (xacts_list::iterator i = xacts.begin();
-	 i != xacts.end();
-	 i++) {
-      if ((*i)->entry) {
-	for (xacts_list::iterator j = (*i)->entry->xacts.begin();
-	     j != (*i)->entry->xacts.end();
-	     j++) {
-	  xact_xdata_t& xdata = xact_xdata(**j);
+    foreach (xact_t * xact, xacts) {
+      if (xact->entry) {
+	foreach (xact_t * r_xact, xact->entry->xacts) {
+	  xact_xdata_t& xdata = xact_xdata(*r_xact);
 	  if (! (xdata.dflags & XACT_HANDLED) &&
 	      (! (xdata.dflags & XACT_RECEIVED) ?
-	       ! (*j)->has_flags(XACT_AUTO | XACT_VIRTUAL) :
+	       ! r_xact->has_flags(XACT_AUTO | XACT_VIRTUAL) :
 	       also_matching)) {
 	    xdata.dflags |= XACT_HANDLED;
-	    item_handler<xact_t>::operator()(**j);
+	    item_handler<xact_t>::operator()(*r_xact);
 	  }
 	}
       } else {
 	// This code should only be reachable from the "output"
 	// command, since that is the only command which attempts to
 	// output auto or period entries.
-	xact_xdata_t& xdata = xact_xdata(**i);
+	xact_xdata_t& xdata = xact_xdata(*xact);
 	if (! (xdata.dflags & XACT_HANDLED) &&
-	    ! (*i)->has_flags(XACT_AUTO)) {
+	    ! xact->has_flags(XACT_AUTO)) {
 	  xdata.dflags |= XACT_HANDLED;
-	  item_handler<xact_t>::operator()(**i);
+	  item_handler<xact_t>::operator()(*xact);
 	}
       }
     }
@@ -463,11 +453,9 @@ void subtotal_xacts::report_subtotal(const char * spec_fmt)
   entry.payee = out_date.str();
   entry._date = start;
 
-  for (values_map::iterator i = values.begin();
-       i != values.end();
-       i++)
-    handle_value((*i).second.value, (*i).second.account, &entry, 0,
-		 xact_temps, *handler, finish, &(*i).second.components);
+  foreach (values_map::value_type& pair, values)
+    handle_value(pair.second.value, pair.second.account, &entry, 0,
+		 xact_temps, *handler, finish, &pair.second.components);
 
   values.clear();
 }
@@ -571,18 +559,14 @@ by_payee_xacts::~by_payee_xacts()
 {
   TRACE_DTOR(by_payee_xacts);
 
-  for (payee_subtotals_map::iterator i = payee_subtotals.begin();
-       i != payee_subtotals.end();
-       i++)
-    checked_delete((*i).second);
+  foreach (payee_subtotals_map::value_type& pair, payee_subtotals)
+    checked_delete(pair.second);
 }
 
 void by_payee_xacts::flush()
 {
-  for (payee_subtotals_map::iterator i = payee_subtotals.begin();
-       i != payee_subtotals.end();
-       i++)
-    (*i).second->report_subtotal((*i).first.c_str());
+  foreach (payee_subtotals_map::value_type& pair, payee_subtotals)
+    pair.second->report_subtotal(pair.first.c_str());
 
   item_handler<xact_t>::flush();
 
@@ -663,10 +647,8 @@ void dow_xacts::flush()
 #if 0
     start = finish = 0;
 #endif
-    for (xacts_list::iterator d = days_of_the_week[i].begin();
-	 d != days_of_the_week[i].end();
-	 d++)
-      subtotal_xacts::operator()(**d);
+    foreach (xact_t * xact, days_of_the_week[i])
+      subtotal_xacts::operator()(*xact);
     subtotal_xacts::report_subtotal("%As");
     days_of_the_week[i].clear();
   }
@@ -677,13 +659,9 @@ void dow_xacts::flush()
 void generate_xacts::add_period_entries
   (period_entries_list& period_entries)
 {
-  for (period_entries_list::iterator i = period_entries.begin();
-       i != period_entries.end();
-       i++)
-    for (xacts_list::iterator j = (*i)->xacts.begin();
-	 j != (*i)->xacts.end();
-	 j++)
-      add_xact((*i)->period, **j);
+  foreach (period_entry_t * entry, period_entries)
+    foreach (xact_t * xact, entry->xacts)
+      add_xact(entry->period, *xact);
 }
 
 void generate_xacts::add_xact(const interval_t& period,
@@ -700,18 +678,16 @@ void budget_xacts::report_budget_items(const datetime_t& moment)
   bool reported;
   do {
     reported = false;
-    for (pending_xacts_list::iterator i = pending_xacts.begin();
-	 i != pending_xacts.end();
-	 i++) {
-      datetime_t& begin = (*i).first.begin;
+    foreach (pending_xacts_list::value_type& pair, pending_xacts) {
+      datetime_t& begin = pair.first.begin;
       if (! is_valid(begin)) {
-	(*i).first.start(moment);
-	begin = (*i).first.begin;
+	pair.first.start(moment);
+	begin = pair.first.begin;
       }
 
       if (begin < moment &&
-	  (! is_valid((*i).first.end) || begin < (*i).first.end)) {
-	xact_t& xact = *(*i).second;
+	  (! is_valid(pair.first.end) || begin < pair.first.end)) {
+	xact_t& xact = *pair.second;
 
 	DEBUG("ledger.walk.budget", "Reporting budget for "
 		    << xact_account(xact)->fullname());
@@ -733,7 +709,7 @@ void budget_xacts::report_budget_items(const datetime_t& moment)
 	temp.amount.negate();
 	entry.add_xact(&temp);
 
-	begin = (*i).first.increment(begin);
+	begin = pair.first.increment(begin);
 
 	item_handler<xact_t>::operator()(temp);
 
@@ -747,13 +723,11 @@ void budget_xacts::operator()(xact_t& xact)
 {
   bool xact_in_budget = false;
 
-  for (pending_xacts_list::iterator i = pending_xacts.begin();
-       i != pending_xacts.end();
-       i++)
+  foreach (pending_xacts_list::value_type& pair, pending_xacts)
     for (account_t * acct = xact_account(xact);
 	 acct;
 	 acct = acct->parent) {
-      if (acct == xact_account(*(*i).second)) {
+      if (acct == xact_account(*pair.second)) {
 	xact_in_budget = true;
 	// Report the xact as if it had occurred in the parent
 	// account.
@@ -773,8 +747,7 @@ void budget_xacts::operator()(xact_t& xact)
   }
 }
 
-void forecast_xacts::add_xact(const interval_t& period,
-					    xact_t&    xact)
+void forecast_xacts::add_xact(const interval_t& period, xact_t& xact)
 {
   generate_xacts::add_xact(period, xact);
 
@@ -839,10 +812,8 @@ void forecast_xacts::flush()
       passed.clear();
     } else {
       bool found = false;
-      for (xacts_list::iterator i = passed.begin();
-	   i != passed.end();
-	   i++)
-	if (*i == &xact) {
+      foreach (xact_t * x, passed)
+	if (x == &xact) {
 	  found = true;
 	  break;
 	}
@@ -896,14 +867,12 @@ void sum_accounts(account_t& account)
 {
   account_xdata_t& xdata(account_xdata(account));
 
-  for (accounts_map::iterator i = account.accounts.begin();
-       i != account.accounts.end();
-       i++) {
-    sum_accounts(*(*i).second);
+  foreach (accounts_map::value_type& pair, account.accounts) {
+    sum_accounts(*pair.second);
 
-    xdata.total += account_xdata_(*(*i).second).total;
-    xdata.total_count += (account_xdata_(*(*i).second).total_count +
-			  account_xdata_(*(*i).second).count);
+    xdata.total += account_xdata_(*pair.second).total;
+    xdata.total_count += (account_xdata_(*pair.second).total_count +
+			  account_xdata_(*pair.second).count);
   }
 
   value_t result;
@@ -938,10 +907,8 @@ account_t * accounts_iterator::operator()()
 void sorted_accounts_iterator::sort_accounts(account_t& account,
 					     accounts_deque_t& deque)
 {
-  for (accounts_map::iterator i = account.accounts.begin();
-       i != account.accounts.end();
-       i++)
-    deque.push_back((*i).second);
+  foreach (accounts_map::value_type& pair, account.accounts)
+    deque.push_back(pair.second);
 
   std::stable_sort(deque.begin(), deque.end(),
 		   compare_items<account_t>(sort_cmp));
@@ -988,15 +955,14 @@ void walk_commodities(commodity_pool_t::commodities_by_ident& commodities,
     acct_temps.push_back(account_t(NULL, (*i)->symbol()));
 
     if ((*i)->history())
-      for (commodity_t::history_map::iterator j = (*i)->history()->prices.begin();
-	   j != (*i)->history()->prices.end();
-	   j++) {
-	entry_temps.back()._date = (*j).first;
+      foreach (const commodity_t::history_map::value_type& pair,
+	       (*i)->history()->prices) {
+	entry_temps.back()._date = pair.first;
 
 	xact_temps.push_back(xact_t(&acct_temps.back()));
 	xact_t& temp = xact_temps.back();
 	temp.entry  = &entry_temps.back();
-	temp.amount = (*j).second;
+	temp.amount = pair.second;
 	temp.add_flags(XACT_TEMP);
 	entry_temps.back().add_xact(&temp);
 

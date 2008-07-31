@@ -50,29 +50,23 @@ journal_t::~journal_t()
   // Don't bother unhooking each entry's xacts from the
   // accounts they refer to, because all accounts are about to
   // be deleted.
-  for (entries_list::iterator i = entries.begin();
-       i != entries.end();
-       i++)
-    if (! (*i)->has_flags(ENTRY_IN_CACHE))
-      checked_delete(*i);
+  foreach (entry_t * entry, entries)
+    if (! entry->has_flags(ENTRY_IN_CACHE))
+      checked_delete(entry);
     else
-      (*i)->~entry_t();
+      entry->~entry_t();
 
-  for (auto_entries_list::iterator i = auto_entries.begin();
-       i != auto_entries.end();
-       i++)
-    if (! (*i)->has_flags(ENTRY_IN_CACHE))
-      checked_delete(*i);
+  foreach (auto_entry_t * entry, auto_entries)
+    if (! entry->has_flags(ENTRY_IN_CACHE))
+      checked_delete(entry);
     else
-      (*i)->~auto_entry_t();
+      entry->~auto_entry_t();
 
-  for (period_entries_list::iterator i = period_entries.begin();
-       i != period_entries.end();
-       i++)
-    if (! (*i)->has_flags(ENTRY_IN_CACHE))
-      checked_delete(*i);
+  foreach (period_entry_t * entry, period_entries)
+    if (! entry->has_flags(ENTRY_IN_CACHE))
+      checked_delete(entry);
     else
-      (*i)->~period_entry_t();
+      entry->~period_entry_t();
 }
 
 void journal_t::add_account(account_t * acct)
@@ -108,13 +102,11 @@ bool journal_t::add_entry(entry_t * entry)
 
   entries.push_back(entry);
 
-  for (xacts_list::const_iterator i = entry->xacts.begin();
-       i != entry->xacts.end();
-       i++)
-    if ((*i)->cost) {
-      assert((*i)->amount);
-      (*i)->amount.commodity().add_price(entry->date(),
-					 *(*i)->cost / (*i)->amount.number());
+  foreach (const xact_t * xact, entry->xacts)
+    if (xact->cost) {
+      assert(xact->amount);
+      xact->amount.commodity().add_price(entry->date(),
+					 *xact->cost / xact->amount.number());
     }
 
   return true;
@@ -145,10 +137,8 @@ bool journal_t::valid() const
     return false;
   }
 
-  for (entries_list::const_iterator i = entries.begin();
-       i != entries.end();
-       i++)
-    if (! (*i)->valid()) {
+  foreach (const entry_t * entry, entries)
+    if (! entry->valid()) {
       DEBUG("ledger.validate", "journal_t: entry not valid");
       return false;
     }

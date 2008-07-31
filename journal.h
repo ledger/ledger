@@ -43,6 +43,10 @@ typedef std::list<path>	paths_list;
 class session_t;
 class account_t;
 
+typedef std::list<entry_t *>	    entries_list;
+typedef std::list<auto_entry_t *>   auto_entries_list;
+typedef std::list<period_entry_t *> period_entries_list;
+
 class journal_t : public noncopyable
 {
 public:
@@ -56,7 +60,7 @@ public:
   auto_entries_list    auto_entries;
   period_entries_list  period_entries;
 
-  hooks_t<entry_finalizer_t *> entry_finalize_hooks;
+  hooks_t<entry_finalizer_t, entry_t> entry_finalize_hooks;
 
   journal_t(session_t * _owner);
   ~journal_t();

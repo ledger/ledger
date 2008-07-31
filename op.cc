@@ -408,10 +408,8 @@ void expr_t::op_t::compute(value_t&	    result,
 	result.cast(value_t::AMOUNT);
       } else {
 	value_t temp;
-	for (balance_t::amounts_map::const_iterator i = bal->amounts.begin();
-	     i != bal->amounts.end();
-	     i++) {
-	  amount_t x = (*i).second;
+	for (balance_t::amounts_map::value_type pair, bal->amounts) {
+	  amount_t x = pair.second;
 	  x.clear_commodity();
 	  temp += x;
 	}

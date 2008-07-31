@@ -32,10 +32,14 @@
 #ifndef _HOOKS_H
 #define _HOOKS_H
 
-template <typename T>
+template <typename T, typename Data>
 class hooks_t : public boost::noncopyable
 {
-  std::list<T> list;
+public:
+  typedef boost::function<bool (Data&, bool)> function_t;
+
+protected:
+  std::list<T *> list;
 
 public:
   hooks_t() {
@@ -45,23 +49,20 @@ public:
     TRACE_DTOR(hooks_t);
   }
 
-  void add_hook(T obj, const bool prepend = false) {
+  void add_hook(T * func, const bool prepend = false) {
     if (prepend)
-      list.push_front(obj);
+      list.push_front(func);
     else
-      list.push_back(obj);
+      list.push_back(func);
   }
 
-  void remove_hook(T obj) {
-    list.remove(obj);
+  void remove_hook(T * func) {
+    list.remove(func);
   }
 
-  template <typename Data>
   bool run_hooks(Data& item, bool post) {
-    for (typename std::list<T>::const_iterator i = list.begin();
-	 i != list.end();
-	 i++)
-      if (! (*(*i))(item, post))
+    foreach (T * func, list)
+      if (! (*func)(item, post))
 	return false;
     return true;
   }

@@ -222,10 +222,8 @@ namespace {
     if (regexp.match(account->fullname()))
       return account;
 
-    for (accounts_map::iterator i = account->accounts.begin();
-	 i != account->accounts.end();
-	 i++)
-      if (account_t * a = find_account_re_((*i).second, regexp))
+    foreach (accounts_map::value_type& pair, account->accounts)
+      if (account_t * a = find_account_re_(pair.second, regexp))
 	return a;
 
     return NULL;

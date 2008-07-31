@@ -193,8 +193,8 @@ commodity_t::operator bool() const
 
 bool commodity_t::symbol_needs_quotes(const string& symbol)
 {
-  for (const char * p = symbol.c_str(); *p; p++)
-    if (std::isspace(*p) || std::isdigit(*p) || *p == '-' || *p == '.')
+  foreach (char ch, symbol)
+    if (std::isspace(ch) || std::isdigit(ch) || ch == '-' || ch == '.')
       return true;
 
   return false;
