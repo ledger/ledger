@@ -510,14 +510,14 @@ dropped."
 	  (unless (looking-at "[0-9]")
 	    (error (buffer-string)))
 	  (while (not (eobp))
-	    (setq cleared
-		  (cons (save-excursion
-			  (goto-line (1+ (read (current-buffer))))
-			  (point-marker)) cleared))
+	    (push (read (current-buffer)) cleared)
 	    (forward-line)))))
     (goto-char (point-min))
     (with-current-buffer ledger-buf
-      (setq cleared (mapcar 'copy-marker (nreverse cleared))))
+      (setq cleared (mapcar (lambda (line)
+                              (goto-line line)
+                              (point-marker))
+                            (nreverse cleared))))
     (let ((inhibit-redisplay t))
       (dolist (pos cleared)
 	(while (and (not (eobp))
@@ -616,13 +616,9 @@ dropped."
 		 (with-current-buffer buf
 		   (cons
 		    (nth 0 item)
-		    (if ledger-clear-whole-entries
-			(save-excursion
-			  (goto-line (nth 1 item))
-			  (point-marker))
-		      (save-excursion
-			(goto-line (nth 0 xact))
-			(point-marker)))))))
+                    (save-excursion
+                      (goto-line (nth 0 xact))
+                      (point-marker))))))
 	    (insert (format "%s %-30s %-25s %15s\n"
 			    (format-time-string "%m/%d" (nth 2 item))
 			    (nth 4 item) (nth 1 xact) (nth 2 xact)))
