@@ -48,6 +48,8 @@
 
 namespace ledger {
 
+DECLARE_EXCEPTION(value_error, std::runtime_error);
+
 /**
  * @class value_t
  *
@@ -880,18 +882,14 @@ inline std::ostream& operator<<(std::ostream& out, const value_t& val) {
   return out;
 }
 
-class value_context : public error_context
-{
-  value_t bal;
- public:
-  value_context(const value_t& _bal, const string& desc = "") throw()
-    : error_context(desc), bal(_bal) {}
-  virtual ~value_context() throw() {}
-
-  virtual void describe(std::ostream& out) const throw();
-};
-
-DECLARE_EXCEPTION(error, value_error);
+inline string value_context(const value_t& val) {
+  std::ostringstream buf;
+  buf << std::right;
+  buf.width(20);
+  val.print(buf);
+  buf << std::endl;
+  return buf.str();
+}
 
 } // namespace ledger
 

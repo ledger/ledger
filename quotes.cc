@@ -68,9 +68,9 @@ void quotes_by_script::operator()(commodity_base_t& commodity,
 	       << " " << commodity.symbol << " " << price << endl;
     }
   } else {
-    throw new error(string("Failed to download price for '") +
-		    commodity.symbol + "' (command: \"getquote " +
-		    commodity.symbol + "\")");
+    throw_(std::runtime_error,
+	   "Failed to download price for '" << commodity.symbol
+	   << "' (command: \"getquote " << commodity.symbol << "\")");
   }
 }
 #endif

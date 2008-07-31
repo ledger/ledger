@@ -266,7 +266,7 @@ value_t session_t::resolve(const string& name, expr_t::scope_t& locals)
 #if 0
     if (name == "date_format") {
       // jww (2007-04-18): What to do here?
-      return value_t(moment_t::output_format, true);
+      return string_value(moment_t::output_format);
     }
 #endif
     break;
@@ -282,7 +282,7 @@ value_t session_t::resolve(const string& name, expr_t::scope_t& locals)
 
   case 'r':
     if (name == "register_format")
-      return value_t(register_format, true);
+      return string_value(register_format);
     break;
   }
   return expr_t::scope_t::resolve(name, locals);

@@ -214,7 +214,7 @@ element_t * format_t::parse_elements(const string& fmt)
 	p++;
       }
       if (*p != ')')
-	throw new format_error("Missing ')'");
+	throw format_error("Missing ')'");
 
       current->type = element_t::VALUE_EXPR;
 
@@ -235,7 +235,7 @@ element_t * format_t::parse_elements(const string& fmt)
 	p++;
       }
       if (*p != ']')
-	throw new format_error("Missing ']'");
+	throw format_error("Missing ']'");
 
       current->type  = element_t::DATE_STRING;
       current->chars = string(b, p);

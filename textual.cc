@@ -124,7 +124,7 @@ xact_t * parse_xact(char * line, account_t * account,
   }
 
   if (account_beg == account_end)
-    throw new parse_error("No account was specified");
+    throw parse_error("No account was specified");
 
   char * b = &line[account_beg];
   char * e = &line[account_end];
@@ -189,8 +189,8 @@ xact_t * parse_xact(char * line, account_t * account,
 	xact->amount_expr->set_text(string(line, beg, end - beg));
       }
     }
-    catch (error * err) {
-      err_desc = "While parsing transaction amount:";
+    catch (const std::exception& err) {
+      add_error_context("While parsing transaction amount:\n");
       throw err;
     }
   }
@@ -201,7 +201,7 @@ xact_t * parse_xact(char * line, account_t * account,
     p = peek_next_nonws(in);
     if (p == '@') {
       if (! saw_amount)
-	throw new parse_error
+	throw parse_error
 	  ("Transaction cannot have a cost expression with an amount");
 	
       DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
@@ -236,13 +236,13 @@ xact_t * parse_xact(char * line, account_t * account,
 					string(line, beg, end - beg));
 	  }
 	}
-	catch (error * err) {
-	  err_desc = "While parsing transaction cost:";
+	catch (const std::exception& err) {
+	  add_error_context("While parsing transaction cost:\n");
 	  throw err;
 	}
 
 	if (xact->cost->sign() < 0)
-	  throw new parse_error("A transaction's cost may not be negative");
+	  throw parse_error("A transaction's cost may not be negative");
 
 	amount_t per_unit_cost(*xact->cost);
 	if (per_unit)
@@ -303,7 +303,7 @@ xact_t * parse_xact(char * line, account_t * account,
 
 	    if (parse_amount_expr(in, amt, xact.get(),
 				  EXPR_PARSE_NO_MIGRATE))
-	      throw new parse_error
+	      throw parse_error
 		("An assigned balance must evaluate to a constant value");
 
 	    DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
@@ -352,8 +352,8 @@ xact_t * parse_xact(char * line, account_t * account,
 	      xdata.value = amt;
 	    }
 	  }
-	  catch (error * err) {
-	    err_desc = "While parsing assigned balance:";
+	  catch (const std::exception& err) {
+	    add_error_context("While parsing assigned balance:\n");
 	    throw err;
 	  }
 	}
@@ -396,11 +396,9 @@ xact_t * parse_xact(char * line, account_t * account,
   return xact.release();
 
   }
-  catch (error * err) {
-    err->context.push_back
-      (new line_context(line, static_cast<unsigned long>(in.tellg()) - 1,
-			! err_desc.empty() ?
-			err_desc : "While parsing transaction:"));
+  catch (const std::exception& err) {
+    add_error_context("While parsing transaction:\n");
+    add_error_context(line_context(line, static_cast<unsigned long>(in.tellg()) - 1));
     throw err;
   }
 }
@@ -549,7 +547,7 @@ static inline void parse_symbol(char *& p, string& symbol)
   if (*p == '"') {
     char * q = std::strchr(p + 1, '"');
     if (! q)
-      throw new parse_error("Quoted commodity symbol lacks closing quote");
+      throw parse_error("Quoted commodity symbol lacks closing quote");
     symbol = string(p + 1, 0, q - p - 1);
     p = q + 2;
   } else {
@@ -561,7 +559,7 @@ static inline void parse_symbol(char *& p, string& symbol)
       p += symbol.length();
   }
   if (symbol.empty())
-    throw new parse_error("Failed to parse commodity");
+    throw parse_error("Failed to parse commodity");
 }
 
 bool textual_parser_t::test(std::istream& in) const
@@ -571,9 +569,9 @@ bool textual_parser_t::test(std::istream& in) const
   in.read(buf, 5);
   if (std::strncmp(buf, "<?xml", 5) == 0) {
 #if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
-    throw new parse_error("Ledger file contains XML data, but format was not recognized");
+    throw parse_error("Ledger file contains XML data, but format was not recognized");
 #else
-    throw new parse_error("Ledger file contains XML data, but no XML support present");
+    throw parse_error("Ledger file contains XML data, but no XML support present");
 #endif
   }
 
@@ -596,10 +594,10 @@ static void clock_out_from_timelog(std::list<time_entry_t>& time_entries,
     time_entries.clear();
   }
   else if (time_entries.empty()) {
-    throw new parse_error("Timelog check-out event without a check-in");
+    throw parse_error("Timelog check-out event without a check-in");
   }
   else if (! account) {
-    throw new parse_error
+    throw parse_error
       ("When multiple check-ins are active, checking out requires an account");
   }
   else {
@@ -616,7 +614,7 @@ static void clock_out_from_timelog(std::list<time_entry_t>& time_entries,
       }
 
     if (! found)
-      throw new parse_error
+      throw parse_error
 	("Timelog check-out event does not match any current check-ins");
   }
 
@@ -631,7 +629,7 @@ static void clock_out_from_timelog(std::list<time_entry_t>& time_entries,
   curr->payee = event.desc;
 
   if (curr->_date < event.checkin)
-    throw new parse_error
+    throw parse_error
       ("Timelog check-out date less than corresponding check-in");
 
   char buf[32];
@@ -646,7 +644,7 @@ static void clock_out_from_timelog(std::list<time_entry_t>& time_entries,
   curr->add_xact(xact);
 
   if (! journal.add_entry(curr.get()))
-    throw new parse_error("Failed to record 'out' timelog entry");
+    throw parse_error("Failed to record 'out' timelog entry");
   else
     curr.release();
 }
@@ -704,7 +702,7 @@ unsigned int textual_parser_t::parse(std::istream& in,
       case '\t': {
 	char * p = skip_ws(line);
 	if (*p)
-	  throw new parse_error("Line begins with whitespace");
+	  throw parse_error("Line begins with whitespace");
 	break;
       }
 
@@ -724,7 +722,7 @@ unsigned int textual_parser_t::parse(std::istream& in,
 	       i != time_entries.end();
 	       i++)
 	    if (event.account == (*i).account)
-	      throw new parse_error
+	      throw parse_error
 		("Cannot double check-in to the same account");
 
 	time_entries.push_back(event);
@@ -734,7 +732,7 @@ unsigned int textual_parser_t::parse(std::istream& in,
       case 'o':
       case 'O':
 	if (time_entries.empty()) {
-	  throw new parse_error("Timelog check-out event without a check-in");
+	  throw parse_error("Timelog check-out event without a check-in");
 	} else {
 	  string date(line, 2, 19);
 
@@ -858,7 +856,7 @@ unsigned int textual_parser_t::parse(std::istream& in,
       case '~': {		// period entry
 	period_entry_t * pe = new period_entry_t(skip_ws(line + 1));
 	if (! pe->period)
-	  throw new parse_error(string("Parsing time period '") + line + "'");
+	  throw_(parse_error, "Parsing time period '" << line << "'");
 
 	if (parse_xacts(in, account_stack.front(), *pe,
 			       "period", end_pos)) {
@@ -960,10 +958,10 @@ unsigned int textual_parser_t::parse(std::istream& in,
 	    count++;
 	  } else {
 	    checked_delete(entry);
-	    throw new parse_error("Entry does not balance");
+	    throw parse_error("Entry does not balance");
 	  }
 	} else {
-	  throw new parse_error("Failed to parse entry");
+	  throw parse_error("Failed to parse entry");
 	}
 	end_pos = pos;
       TRACE_STOP(entries, 1);
@@ -971,21 +969,21 @@ unsigned int textual_parser_t::parse(std::istream& in,
       }
       }
     }
-    catch (error * err) {
+    catch (const std::exception& err) {
       for (std::list<std::pair<path, int> >::reverse_iterator i =
 	     include_stack.rbegin();
 	   i != include_stack.rend();
-	   i++)
-	err->context.push_back(new include_context((*i).first, (*i).second,
-						    "In file included from"));
-      err->context.push_front(new file_context(pathname, linenum - 1));
+	   i++) {
+	add_error_context("In file included from ");
+#if 0
+	add_error_context(include_context((*i).first, (*i).second));
+#endif
+      }
+      add_error_context(file_context(pathname, linenum - 1));
 
       std::cout.flush();
-      if (errors > 0 && err->context.size() > 1)
-	std::cerr << std::endl;
-      err->reveal_context(std::cerr, "Error");
-      std::cerr << err->what() << std::endl;
-      checked_delete(err);
+      std::cerr << "Error: " << error_context() << err.what()
+		<< std::endl;
       errors++;
     }
     beg_pos = end_pos;
@@ -1061,8 +1059,8 @@ void write_textual_journal(journal_t&	    journal,
   }
 
   if (found.empty())
-    throw new error(string("Journal does not refer to file '") +
-		    string(pathname.string()) + "'");
+    throw_(std::runtime_error,
+	   "Journal does not refer to file '" << pathname << "'");
 
   entries_list::iterator	el = journal.entries.begin();
   auto_entries_list::iterator	al = journal.auto_entries.begin();

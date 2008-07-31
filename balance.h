@@ -48,7 +48,7 @@
 
 namespace ledger {
 
-DECLARE_EXCEPTION(error, balance_error);
+DECLARE_EXCEPTION(balance_error, std::runtime_error);
 
 /**
  * @class balance_t

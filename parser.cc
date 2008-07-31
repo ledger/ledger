@@ -419,9 +419,7 @@ expr_t::parser_t::parse_value_expr(std::istream& in,
 expr_t::ptr_op_t
 expr_t::parser_t::parse(std::istream& in, const flags_t flags)
 {
-#if 0
   try {
-#endif
     ptr_op_t top_node = parse_value_expr(in, flags);
 
     if (use_lookahead) {
@@ -431,15 +429,14 @@ expr_t::parser_t::parse(std::istream& in, const flags_t flags)
     lookahead.clear();
 
     return top_node;
-#if 0
   }
-  catch (error * err) {
-    err->context.push_back
-      (new line_context(str, (long)in.tellg() - 1,
-			"While parsing value expression:"));
+  catch (const std::exception& err) {
+    add_error_context("While parsing value expression:\n");
+#if 0
+    add_error_context(line_context(str, (long)in.tellg() - 1));
+#endif
     throw err;
   }
-#endif
 }
 
 } // namespace ledger

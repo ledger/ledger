@@ -61,7 +61,7 @@ extern int    current_year;
 extern string input_time_format;
 extern string output_time_format;
 
-DECLARE_EXCEPTION(error, datetime_error);
+DECLARE_EXCEPTION(datetime_error, std::runtime_error);
 
 struct interval_t
 {

@@ -118,14 +118,6 @@ public:
 			       const path *  original_file = NULL);
   };
 
-  class parse_error : public error
-  {
-  public:
-    parse_error(const string& reason, error_context * ctxt = NULL) throw()
-      : error(reason, ctxt) {}
-    virtual ~parse_error() throw() {}
-  };
-
   bool valid() const;
 };
 

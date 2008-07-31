@@ -54,7 +54,7 @@ class commodity_t;
 class annotation_t;
 class commodity_pool_t;
 
-DECLARE_EXCEPTION(error, amount_error);
+DECLARE_EXCEPTION(amount_error, std::runtime_error);
 
 /**
  * @class amount_t

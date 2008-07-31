@@ -1378,7 +1378,7 @@ value_t value_t::annotated_tag() const
     optional<string> temp = as_amount().annotation_details().tag;
     if (! temp)
       return false;
-    return value_t(*temp, true);
+    return string_value(*temp);
   }
 
   case STRING:
@@ -1677,17 +1677,6 @@ bool value_t::valid() const
     break;
   }
   return true;
-}
-
-void value_context::describe(std::ostream& out) const throw()
-{
-  if (! desc.empty())
-    out << desc << std::endl;
-
-  out << std::right;
-  out.width(20);
-  bal.print(out);
-  out << std::endl;
 }
 
 } // namespace ledger

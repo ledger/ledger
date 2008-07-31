@@ -297,7 +297,7 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
   command_args.push_back(value_t(out));
 
   for (strings_list::iterator i = arg; i != args.end(); i++)
-    command_args.push_back(value_t(*i, true));
+    command_args.push_back(string_value(*i));
 
   INFO_START(command, "Did user command '" << verb << "'");
 
@@ -422,29 +422,10 @@ int main(int argc, char * argv[], char * envp[])
       session.release();
     }
   }
-  catch (ledger::error * err) {
-    std::cout.flush();
-    // Push a null here since there's no file context
-    if (err->context.empty() ||
-	! dynamic_cast<ledger::xact_context *>(err->context.front()))
-      err->context.push_front(new ledger::error_context(""));
-    err->reveal_context(std::cerr, "Error");
-    std::cerr << err->what() << std::endl;
-    ledger::checked_delete(err);
-  }
-  catch (ledger::fatal * err) {
-    std::cout.flush();
-    // Push a null here since there's no file context
-    if (err->context.empty() ||
-	! dynamic_cast<ledger::xact_context *>(err->context.front()))
-      err->context.push_front(new ledger::error_context(""));
-    err->reveal_context(std::cerr, "Fatal");
-    std::cerr << err->what() << std::endl;
-    ledger::checked_delete(err);
-  }
   catch (const std::exception& err) {
     std::cout.flush();
-    std::cerr << "Exception: " << err.what() << std::endl;
+    std::cerr << "Error: " << ledger::error_context() << err.what()
+	      << std::endl;
   }
   catch (int _status) {
     status = _status;

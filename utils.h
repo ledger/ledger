@@ -463,53 +463,13 @@ void finish_timer(const char * name);
 
 /**********************************************************************
  *
- * Exception handling
+ * - Exception handling helpers
+ * - Date/time support classes
+ * - General support for objects with "flags"
+ * - Support for scoped execution and variable restoration
  */
 
 #include "error.h"
-
-namespace ledger {
-
-extern std::ostringstream _exc_buffer;
-
-template <typename T>
-inline void throw_func(const std::string& message) {
-  _exc_buffer.str("");
-  throw T(message);
-}
-
-#define throw_(cls, msg) \
-  ((_exc_buffer << msg), throw_func<cls>(_exc_buffer.str()))
-
-#if 0
-inline void throw_unexpected_error(char c, char wanted) {
-  if (c == -1) {
-    if (wanted)
-      throw new error(string("Missing '") + wanted + "'");
-    else
-      throw new error("Unexpected end of input");
-  } else {
-    if (wanted)
-      throw new error(string("Invalid char '") + c +
-		      "' (wanted '" + wanted + "')");
-    else
-      throw new error(string("Invalid char '") + c + "'");
-  }
-}
-#else
-inline void throw_unexpected_error(char, char) {
-}
-#endif
-
-} // namespace ledger
-
-/**********************************************************************
- *
- * Date/time support classes
- * General support for objects with "flags"
- * Support for scoped execution and variable restoration
- */
-
 #include "times.h"
 #include "flags.h"
 #include "pushvar.h"

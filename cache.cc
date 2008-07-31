@@ -727,8 +727,8 @@ std::size_t read_session(std::istream& in,
       // expression passed to an option, we'll just override the flags, but
       // keep the commodity pointer intact.
       if (c == commodity_t::base_t::commodities.end())
-	throw new error(string("Failed to read base commodity from cache: ") +
-			commodity->symbol);
+	throw_(cache_error, "Failed to read base commodity from cache: "
+	       << commodity->symbol);
 
       (*c).second->name	     = commodity->name;
       (*c).second->note	     = commodity->note;
@@ -769,8 +769,8 @@ std::size_t read_session(std::istream& in,
       commodities_map::iterator c =
 	commodity_t::commodities.find(mapping_key);
       if (c == commodity_t::commodities.end())
-	throw new error(string("Failed to read commodity from cache: ") +
-			commodity->symbol());
+	throw_(cache_error, "Failed to read commodity from cache: "
+	       << commodity->symbol());
 
       *(commodities_next - 1) = (*c).second;
       checked_delete(commodity);

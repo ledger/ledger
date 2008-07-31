@@ -39,6 +39,8 @@
 
 namespace ledger {
 
+DECLARE_EXCEPTION(cache_error, std::runtime_error);
+
 class binary_cache_t
 {
   static const unsigned long binary_magic_number = 0xFFEED765;

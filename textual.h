@@ -28,6 +28,7 @@ void write_textual_journal(journal_t&	     journal,
 			   const string&     write_hdr_format,
 			   std::ostream&     out);
 
+#if 0
 class include_context : public file_context
 {
  public:
@@ -43,6 +44,7 @@ class include_context : public file_context
 	<< std::endl;
   }
 };
+#endif
 
 } // namespace ledger
 

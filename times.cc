@@ -192,7 +192,7 @@ namespace {
     struct std::tm when;
 
     if (! parse_date_mask(word.c_str(), &when))
-      throw new datetime_error(string("Could not parse date mask: ") + word);
+      throw_(datetime_error, "Could not parse date mask: " << word);
 
     when.tm_hour   = 0;
     when.tm_min	   = 0;

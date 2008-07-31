@@ -217,9 +217,11 @@ void calc_xacts::operator()(xact_t& xact)
   last_xact = &xact;
 
   }
-  catch (error * err) {
-    err->context.push_front
-      (new xact_context(xact, "Calculating transaction at"));
+  catch (const std::exception& err) {
+    add_error_context("Calculating transaction at");
+#if 0
+    add_error_context(xact_context(xact));
+#endif
     throw err;
   }
 }

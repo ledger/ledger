@@ -75,7 +75,7 @@ unsigned int qif_parser_t::parse(std::istream& in,
     case '\t':
       if (peek_next_nonws(in) != '\n') {
 	get_line(in);
-	throw new parse_error("Line begins with whitespace");
+	throw parse_error("Line begins with whitespace");
       }
       // fall through...
 
@@ -92,8 +92,7 @@ unsigned int qif_parser_t::parse(std::istream& in,
 	  std::strcmp(line, "Type:Cat") == 0 ||
 	  std::strcmp(line, "Type:Class") == 0 ||
 	  std::strcmp(line, "Type:Memorized") == 0)
-	throw new parse_error(string("QIF files of type ") + line +
-			      " are not supported.");
+	throw_(parse_error, "QIF files of type " << line << " are not supported.");
       break;
 
     case 'D':

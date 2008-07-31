@@ -320,12 +320,14 @@ bool entry_base_t::finalize()
   if (! balance.is_null()) {
     balance.round();
     if (! balance.is_zero()) {
+#if 0
       error * err =
 	new balance_error("Entry does not balance",
 			  new entry_context(*this, "While balancing entry:"));
       err->context.push_front
 	(new value_context(balance, "Unbalanced remainder is:"));
       throw err;
+#endif
     }
   }
 
@@ -381,7 +383,7 @@ namespace {
   value_t get_payee(call_scope_t& scope)
   {
     entry_t& entry(downcast<entry_t>(*scope.parent));
-    return value_t(entry.payee, true);
+    return string_value(entry.payee);
   }
 }
 
@@ -425,6 +427,7 @@ bool entry_t::valid() const
   return true;
 }
 
+#if 0
 void entry_context::describe(std::ostream& out) const throw()
 {
   if (! desc.empty())
@@ -432,6 +435,7 @@ void entry_context::describe(std::ostream& out) const throw()
 
   print_entry(out, entry, "  ");
 }
+#endif
 
 void auto_entry_t::extend_entry(entry_base_t& entry, bool post)
 {

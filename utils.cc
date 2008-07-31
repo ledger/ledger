@@ -40,7 +40,7 @@
 
 namespace ledger {
 
-DECLARE_EXCEPTION(fatal, assertion_failed);
+DECLARE_EXCEPTION(assertion_failed, std::logic_error);
 
 void debug_assert(const string& reason,
 		  const string& func,
@@ -649,8 +649,8 @@ void finish_timer(const char * name)
 
 namespace ledger {
 
-std::ostringstream _exc_buffer;
-/*ptr_list<context>  context_stack;*/
+std::ostringstream _desc_buffer;
+std::ostringstream _ctxt_buffer;
 
 } // namespace ledger
 
@@ -666,9 +666,7 @@ path expand_path(const path& pathname)
   if (pathname.empty())
     return pathname;
 
-#if 1
-  return pathname;
-#else
+#if 0
   // jww (2007-04-30): I need to port this code to use
   // boost::filesystem::path
   const char *	    pfx = NULL;
@@ -711,6 +709,8 @@ path expand_path(const path& pathname)
   result += pathname.substr(pos + 1);
 
   return result;
+#else
+  return pathname;
 #endif
 }
 

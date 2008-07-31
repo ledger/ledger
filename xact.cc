@@ -72,7 +72,7 @@ namespace {
   value_t get_payee(call_scope_t& scope)
   {
     xact_t& xact(downcast<xact_t>(*scope.parent));
-    return value_t(xact.entry->payee, true);
+    return string_value(xact.entry->payee);
   }
 
   value_t get_account(call_scope_t& scope)
@@ -87,7 +87,7 @@ namespace {
       else
 	name = string("(") + name + ")";
     }
-    return value_t(name, true);
+    return string_value(name);
   }
 
   value_t get_account_base(call_scope_t& scope)
@@ -163,6 +163,7 @@ bool xact_t::valid() const
   return true;
 }
 
+#if 0
 xact_context::xact_context(const xact_t& _xact, const string& desc) throw()
   : file_context("", 0, desc), xact(_xact)
 {
@@ -177,5 +178,6 @@ xact_context::xact_context(const xact_t& _xact, const string& desc) throw()
     }
   line = xact.beg_line;
 }
+#endif
 
 } // namespace ledger

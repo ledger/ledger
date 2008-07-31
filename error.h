@@ -1,132 +1,84 @@
+/*
+ * Copyright (c) 2003-2008, John Wiegley.  All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ * - Redistributions of source code must retain the above copyright
+ *   notice, this list of conditions and the following disclaimer.
+ *
+ * - Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in the
+ *   documentation and/or other materials provided with the distribution.
+ *
+ * - Neither the name of New Artisans LLC nor the names of its
+ *   contributors may be used to endorse or promote products derived from
+ *   this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 #ifndef _ERROR_H
 #define _ERROR_H
 
-#include <exception>
-#include <stdexcept>
-#include <string>
-#include <cstring>
-#include <sstream>
-#include <list>
-
 namespace ledger {
 
-class error_context
-{
-public:
-  string desc;
+extern std::ostringstream _desc_buffer;
 
-  error_context(const string& _desc) throw() : desc(_desc) {}
-  virtual ~error_context() throw() {}
-  virtual void describe(std::ostream& out) const throw() {
-    if (! desc.empty())
-      out << desc << std::endl;
+template <typename T>
+inline void throw_func(const std::string& message) {
+  _desc_buffer.str("");
+  throw T(message);
+}
+
+#define throw_(cls, msg)					\
+  ((_desc_buffer << msg), throw_func<cls>(_desc_buffer.str()))
+
+extern std::ostringstream _ctxt_buffer;
+
+#define add_error_context(msg)					\
+  ((static_cast<unsigned long>(_ctxt_buffer.tellp()) == 0) ?	\
+   (_ctxt_buffer << msg) : (_ctxt_buffer << std::endl << msg))
+
+inline string error_context() {
+  string context = _ctxt_buffer.str();
+  _ctxt_buffer.str("");
+  return context;
+}
+
+inline string file_context(const path& file, std::size_t line) {
+  std::ostringstream buf;
+  buf << "\"" << file << "\", line " << line << ": ";
+  return buf.str();
+}
+
+inline string line_context(const string& line, long pos) {
+  std::ostringstream buf;
+  buf << "  " << line << std::endl << "  ";
+  long idx = pos < 0 ? line.length() - 1 : pos;
+  for (int i = 0; i < idx; i++)
+    buf << " ";
+  buf << "^" << std::endl;
+  return buf.str();
+}
+
+#define DECLARE_EXCEPTION(name, kind)				\
+  class name : public kind {					\
+  public:							\
+  explicit name(const string& why) throw() : kind(why) {}	\
+  virtual ~name() throw() {}					\
   }
-};
-
-class file_context : public error_context
-{
- protected:
-  path		file;
-  unsigned long line;
- public:
-  file_context(const path& _file, unsigned long _line,
-	       const string& desc = "") throw()
-    : error_context(desc), file(_file), line(_line) {}
-  virtual ~file_context() throw() {}
-
-  virtual void describe(std::ostream& out) const throw() {
-    if (! desc.empty())
-      out << desc << " ";
-
-    out << "\"" << file << "\", line " << line << ": ";
-  }
-};
-
-class line_context : public error_context
-{
-public:
-  string line;
-  long	      pos;
-
-  line_context(const string& _line, long _pos,
-	       const string& desc = "") throw()
-    : error_context(desc), line(_line), pos(_pos) {}
-  virtual ~line_context() throw() {}
-
-  virtual void describe(std::ostream& out) const throw() {
-    if (! desc.empty())
-      out << desc << std::endl;
-
-    out << "  " << line << std::endl << "  ";
-    long idx = pos < 0 ? line.length() - 1 : pos;
-    for (int i = 0; i < idx; i++)
-      out << " ";
-    out << "^" << std::endl;
-  }
-};
-
-//////////////////////////////////////////////////////////////////////
-
-class str_exception : public std::logic_error
-{
-public:
-  std::list<error_context *> context;
-
-  str_exception(const string& why,
-		error_context * ctxt = NULL) throw()
-    : std::logic_error(why), context() {
-    if (ctxt)
-      context.push_back(ctxt);
-  }
-
-  virtual ~str_exception() throw() {
-    for (std::list<error_context *>::iterator i = context.begin();
-	 i != context.end();
-	 i++)
-      checked_delete(*i);
-  }
-
-  virtual void reveal_context(std::ostream& out,
-			      const string& kind) const throw() {
-    for (std::list<error_context *>::const_reverse_iterator i =
-	   context.rbegin();
-	 i != context.rend();
-	 i++) {
-      std::list<error_context *>::const_reverse_iterator x = i;
-      if (++x == context.rend())
-	out << kind << ": ";
-      (*i)->describe(out);
-    }
-  }
-};
-
-#define DECLARE_EXCEPTION(kind, name)					\
-  class name : public kind {						\
-  public:								\
-    name(const string& why, error_context * ctxt = NULL) throw()	\
-      : kind(why, ctxt) {}						\
-  }
-
-class error : public str_exception {
- public:
-  error(const string& why, error_context * ctxt = NULL) throw()
-    : str_exception(why, ctxt) {}
-  virtual ~error() throw() {}
-};
-
-class fatal : public str_exception {
- public:
-  fatal(const string& why, error_context * ctxt = NULL) throw()
-    : str_exception(why, ctxt) {}
-  virtual ~fatal() throw() {}
-};
-
-class fatal_assert : public fatal {
- public:
-  fatal_assert(const string& why, error_context * ctxt = NULL) throw()
-    : fatal(string("assertion failed '") + why + "'", ctxt) {}
-  virtual ~fatal_assert() throw() {}
-};
 
 } // namespace ledger
 

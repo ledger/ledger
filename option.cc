@@ -79,25 +79,22 @@ namespace {
   void process_option(const function_t& opt, scope_t& scope,
 		      const char * arg)
   {
-#if 0
     try {
-#endif
       call_scope_t args(scope);
       if (arg)
-	args.push_back(value_t(arg, true));
+	args.push_back(string_value(arg));
 
       opt(args);
-#if 0
     }
-    catch (error * err) {
-      err->context.push_back
-	(new error_context
-	 (string("While parsing option '--") + opt->long_opt +
-	  "'" + (opt->short_opt != '\0' ?
-		 (string(" (-") + opt->short_opt + "):") : ":")));
+    catch (const std::exception& err) {
+#if 0
+      add_error_context("While parsing option '--" << opt->long_opt
+			<< "'" << (opt->short_opt != '\0' ?
+				   (string(" (-") + opt->short_opt + "):") :
+				   ": "));
+#endif
       throw err;
     }
-#endif
   }
 }
 
@@ -130,20 +127,14 @@ void process_environment(const char ** envp, const string& tag,
       *r = '\0';
 
       if (*q == '=') {
-#if 0
 	try {
-#endif
 	  process_option(string(buf), scope, q + 1);
-#if 0
 	}
-	catch (error * err) {
-	  err->context.push_back
-	    (new error_context
-	     (string("While parsing environment variable option '") +
-	      *p + "':"));
+	catch (const std::exception& err) {
+	  add_error_context("While parsing environment variable option '"
+			    << *p << "':");
 	  throw err;
 	}
-#endif
       }
     }
 }
@@ -429,8 +420,8 @@ OPT_BEGIN(init_file, "i:") {
   if (access(path.c_str(), R_OK) != -1)
     config->init_file = path;
   else
-    throw new error(std::string("The init file '") + path +
-		    "' does not exist or is not readable");
+    throw_(std::invalid_argument,
+	   "The init file '" << path << "' does not exist or is not readable");
 } OPT_END(init_file);
 
 OPT_BEGIN(file, "f:") {
@@ -441,8 +432,8 @@ OPT_BEGIN(file, "f:") {
     if (access(path.c_str(), R_OK) != -1)
       config->data_file = path;
     else
-      throw new error(std::string("The ledger file '") + path +
-		      "' does not exist or is not readable");
+      throw_(std::invalid_argument,
+	     "The ledger file '" << path << "' does not exist or is not readable");
   }
 } OPT_END(file);
 
@@ -490,8 +481,8 @@ OPT_BEGIN(begin, "b:") {
   char buf[128];
   interval_t interval(optarg);
   if (! interval.begin)
-    throw new error(std::string("Could not determine beginning of period '") +
-		    optarg + "'");
+    throw_(std::invalid_argument,
+	   "Could not determine beginning of period '" << optarg << "'");
 
   if (! report->predicate.empty())
     report->predicate += "&";
@@ -504,8 +495,8 @@ OPT_BEGIN(end, "e:") {
   char buf[128];
   interval_t interval(optarg);
   if (! interval.begin)
-    throw new error(std::string("Could not determine end of period '") +
-		    optarg + "'");
+    throw_(std::invalid_argument,
+	   "Could not determine end of period '" << optarg << "'");
 
   if (! report->predicate.empty())
     report->predicate += "&";

@@ -693,14 +693,6 @@ public:
   virtual void operator()(xact_t& xact);
 };
 
-class interval_expr_error : public error {
- public:
-  interval_expr_error(const string& reason,
-		      error_context * ctxt = NULL) throw()
-    : error(reason, ctxt) {}
-  virtual ~interval_expr_error() throw() {}
-};
-
 class interval_xacts : public subtotal_xacts
 {
   interval_t      interval;

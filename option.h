@@ -45,7 +45,7 @@ void process_environment(const char ** envp, const string& tag,
 void process_arguments(int argc, char ** argv, const bool anywhere,
 		       scope_t& scope, std::list<string>& args);
 
-DECLARE_EXCEPTION(error, option_error);
+DECLARE_EXCEPTION(option_error, std::runtime_error);
 
 } // namespace ledger
 

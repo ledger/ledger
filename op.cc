@@ -43,7 +43,7 @@ void expr_t::op_t::compute(value_t&	    result,
   try {
   switch (kind) {
   case INDEX:
-    throw new compute_error("Cannot directly compute an argument index");
+    throw compute_error("Cannot directly compute an argument index");
 
   case VALUE:
     result = as_value();
@@ -280,8 +280,8 @@ void expr_t::op_t::compute(value_t&	    result,
       moment.cast(value_t::INTEGER);
       result -= moment;
     } else {
-      throw new compute_error("Invalid date passed to datecmp(value,date)",
-			      new valexpr_context(expr));
+      add_error_context(expr_context(expr));
+      throw compute_error("Invalid date passed to datecmp(value,date)");
     }
     break;
   }
@@ -293,9 +293,10 @@ void expr_t::op_t::compute(value_t&	    result,
     ptr_op_t expr = find_leaf(context, 0, arg_index);
     expr->compute(result, details, context);
 
-    if (! result.is_type(value_t::DATETIME))
-      throw new compute_error("Invalid date passed to year|month|day(date)",
-			      new valexpr_context(expr));
+    if (! result.is_type(value_t::DATETIME)) {
+      add_error_context(expr_context(expr));
+      throw compute_error("Invalid date passed to year|month|day(date)");
+    }
 
     const datetime_t& moment(result.as_datetime());
     switch (kind) {
@@ -357,9 +358,10 @@ void expr_t::op_t::compute(value_t&	    result,
     long arg_index = 0;
     ptr_op_t expr = find_leaf(context, 0, arg_index);
     expr->compute(result, details, context);
-    if (! result.is_type(value_t::AMOUNT))
-      throw new compute_error("Argument to commodity() must be a commoditized amount",
-			      new valexpr_context(expr));
+    if (! result.is_type(value_t::AMOUNT)) {
+      add_error_context(expr_context(expr));
+      throw compute_error("Argument to commodity() must be a commoditized amount");
+    }
     amount_t temp("1");
     temp.set_commodity(result.as_amount().commodity());
     result = temp;
@@ -375,10 +377,10 @@ void expr_t::op_t::compute(value_t&	    result,
     arg_index = 0;
     expr = find_leaf(context, 1, arg_index);
     expr->compute(result, details, context);
-    if (! result.is_type(value_t::AMOUNT))
-      throw new compute_error
-	("Second argument to set_commodity() must be a commoditized amount",
-	 new valexpr_context(expr));
+    if (! result.is_type(value_t::AMOUNT)) {
+      add_error_context(expr_context(expr));
+      throw compute_error("Second argument to set_commodity() must be a commoditized amount");
+    }
     amount_t one("1");
     one.set_commodity(result.as_amount().commodity());
     result = one;
@@ -482,13 +484,14 @@ void expr_t::op_t::compute(value_t&	    result,
   }
 
   case O_COMMA:
-    if (! left())
-      throw new compute_error("Comma operator missing left operand",
-			      new valexpr_context(const_cast<op_t *>(this)));
-    if (! right())
-      throw new compute_error("Comma operator missing right operand",
-			      new valexpr_context(const_cast<op_t *>(this)));
-    left()->compute(result, details, context);
+    if (! left()) {
+      add_error_context(expr_context(*this));
+      throw compute_error("Comma operator missing left operand");
+    }
+    if (! right()) {
+      add_error_context(expr_context(*this));
+      throw compute_error("Comma operator missing right operand");
+    }
     right()->compute(result, details, context);
     break;
 
@@ -516,10 +519,10 @@ void expr_t::op_t::compute(value_t&	    result,
     expr = find_leaf(context, 1, arg_index);
     value_t moment;
     expr->compute(moment, details, context);
-    if (! moment.is_type(value_t::DATETIME))
-      throw new compute_error("Invalid date passed to P(value,date)",
-			      new valexpr_context(expr));
-
+    if (! moment.is_type(value_t::DATETIME)) {
+      add_error_context(expr_context(expr));
+      throw compute_error("Invalid date passed to P(value,date)");
+    }     
     result = result.value(moment.as_datetime());
     break;
   }
@@ -624,10 +627,8 @@ void expr_t::op_t::compute(value_t&	    result,
     break;
   }
   }
-  catch (error * err) {
-    if (err->context.empty() ||
-	! dynamic_cast<valexpr_context *>(err->context.back()))
-      err->context.push_back(new valexpr_context(const_cast<op_t *>(this)));
+  catch (const std::exception& err) {
+    add_error_context(expr_context(*this));
     throw err;
   }
 }

@@ -124,18 +124,6 @@ struct entry_finalizer_t {
   virtual bool operator()(entry_t& entry, bool post) = 0;
 };
 
-class entry_context : public error_context {
- public:
-  const entry_base_t& entry;
-
-  entry_context(const entry_base_t& _entry,
-		const string& _desc = "") throw()
-    : error_context(_desc), entry(_entry) {}
-  virtual ~entry_context() throw() {}
-
-  virtual void describe(std::ostream& out) const throw();
-};
-
 class auto_entry_t : public entry_base_t
 {
 public:

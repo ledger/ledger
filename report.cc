@@ -319,7 +319,7 @@ value_t report_t::ftime(call_scope_t& args)
   else
     date_format = moment_t::output_format;
 
-  return value_t(date.as_string(date_format), true);
+  return string_value(date.as_string(date_format));
 #else
   return NULL_VALUE;
 #endif

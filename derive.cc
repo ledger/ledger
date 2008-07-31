@@ -18,7 +18,7 @@ entry_t * derive_new_entry(report_t& report,
   //added->_date = *i++;
   added->_date = boost::posix_time::time_from_string(*i++);
   if (i == end)
-    throw new error("Too few arguments to 'entry'");
+    throw std::runtime_error("Too few arguments to 'entry'");
 
   mask_t regexp(*i++);
 
@@ -196,7 +196,7 @@ entry_t * derive_new_entry(report_t& report,
       ! added->finalize() ||
       (matching &&
        ! matching->journal->entry_finalize_hooks.run_hooks(*added, true)))
-    throw new error("Failed to finalize derived entry (check commodities)");
+    throw std::runtime_error("Failed to finalize derived entry (check commodities)");
 
   return added.release();
 }

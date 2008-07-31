@@ -131,15 +131,6 @@ class xact_t : public supports_flags<>, public scope_t
   bool valid() const;
 };
 
-class xact_context : public file_context {
- public:
-  const xact_t& xact;
-
-  xact_context(const xact_t& _xact,
-	       const string& desc = "") throw();
-  virtual ~xact_context() throw() {}
-};
-
 } // namespace ledger
 
 #endif // _XACT_H
