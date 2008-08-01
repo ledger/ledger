@@ -164,7 +164,7 @@ void expr_t::token_t::next(std::istream& in, const unsigned int pflags)
     char buf[256];
     READ_INTO_(in, buf, 255, c, length, c != ']');
     if (c != ']')
-      unexpected(c, ']');
+      expected(']', c);
 
     in.get(c);
     length++;
@@ -182,7 +182,7 @@ void expr_t::token_t::next(std::istream& in, const unsigned int pflags)
     char buf[4096];
     READ_INTO_(in, buf, 4095, c, length, c != delim);
     if (c != delim)
-      unexpected(c, delim);
+      expected(delim, c);
     in.get(c);
     length++;
     kind = VALUE;
@@ -196,7 +196,7 @@ void expr_t::token_t::next(std::istream& in, const unsigned int pflags)
     temp.parse(in, AMOUNT_PARSE_NO_MIGRATE);
     in.get(c);
     if (c != '}')
-      unexpected(c, '}');
+      expected('}', c);
     length++;
     kind  = VALUE;
     value = temp;
@@ -229,6 +229,16 @@ void expr_t::token_t::next(std::istream& in, const unsigned int pflags)
   case '*':
     in.get(c);
     kind = STAR;
+    break;
+
+  case '?':
+    in.get(c);
+    kind = QUERY;
+    break;
+
+  case ':':
+    in.get(c);
+    kind = COLON;
     break;
 
   case 'c':
@@ -266,7 +276,7 @@ void expr_t::token_t::next(std::istream& in, const unsigned int pflags)
     char buf[256];
     READ_INTO_(in, buf, 255, c, length, c != '/');
     if (c != '/')
-      unexpected(c, '/');
+      expected('/', c);
     in.get(c);
     length++;
 
@@ -379,9 +389,9 @@ void expr_t::token_t::unexpected()
   }
 }
 
-void expr_t::token_t::unexpected(char c, char wanted)
+void expr_t::token_t::expected(char wanted, char c)
 {
-  if (static_cast<unsigned char>(c) == 0xff) {
+  if (c == '\0') {
     if (wanted)
       throw_(parse_error, "Missing '" << wanted << "'");
     else

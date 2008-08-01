@@ -134,7 +134,7 @@ expr_t::parser_t::parse_value_term(std::istream& in,
 
       tok = next_token(in, tflags);
       if (tok.kind != token_t::RPAREN)
-	tok.unexpected(0xff, ')');
+	tok.expected(')');
 
       node = call_node;
     } else {
@@ -158,7 +158,7 @@ expr_t::parser_t::parse_value_term(std::istream& in,
 
     tok = next_token(in, tflags);
     if (tok.kind != token_t::RPAREN)
-      tok.unexpected(0xff, ')');
+      tok.expected(')');
     break;
 
   default:
@@ -383,10 +383,46 @@ expr_t::parser_t::parse_or_expr(std::istream& in,
 }
 
 expr_t::ptr_op_t
+expr_t::parser_t::parse_querycolon_expr(std::istream& in,
+					const flags_t tflags) const
+{
+  ptr_op_t node(parse_or_expr(in, tflags));
+
+  if (node) {
+    token_t& tok = next_token(in, tflags);
+
+    if (tok.kind == token_t::QUERY) {
+      ptr_op_t prev(node);
+      node = new op_t(op_t::O_AND);
+      node->set_left(prev);
+      node->set_right(parse_or_expr(in, tflags));
+      if (! node->right())
+	throw_(parse_error,
+	       tok.symbol << " operator not followed by argument");
+
+      token_t& next_tok = next_token(in, tflags);
+      if (next_tok.kind != token_t::COLON)
+	next_tok.expected(':');
+
+      prev = node;
+      node = new op_t(op_t::O_OR);
+      node->set_left(prev);
+      node->set_right(parse_or_expr(in, tflags));
+      if (! node->right())
+	throw_(parse_error,
+	       tok.symbol << " operator not followed by argument");
+    } else {
+      push_token(tok);
+    }
+  }
+  return node;
+}
+
+expr_t::ptr_op_t
 expr_t::parser_t::parse_value_expr(std::istream& in,
 				   const flags_t tflags) const
 {
-  ptr_op_t node(parse_or_expr(in, tflags));
+  ptr_op_t node(parse_querycolon_expr(in, tflags));
 
   if (node) {
     token_t& tok = next_token(in, tflags);

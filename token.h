@@ -71,6 +71,9 @@ struct expr_t::token_t : public noncopyable, public supports_flags<>
     KW_OR,			// |
     KW_MOD,			// %
 
+    QUERY,			// ?
+    COLON,			// :
+
     COMMA,			// ,
 
     TOK_EOF,
@@ -111,7 +114,7 @@ struct expr_t::token_t : public noncopyable, public supports_flags<>
   void rewind(std::istream& in);
   void unexpected();
 
-  static void unexpected(char c, char wanted = '\0');
+  static void expected(char wanted, char c = '\0');
 };
 
 } // namespace ledger
