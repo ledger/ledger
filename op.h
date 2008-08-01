@@ -275,11 +275,12 @@ public:
     unsigned long * start_pos;
     unsigned long * end_pos;
 
-    print_context_t(scope_t& _scope,
-		    const bool      _relaxed	  = false,
+    // jww (2008-08-01): Is a scope needed here?
+    print_context_t(scope_t&	    _scope,
+		    const bool      _relaxed	= false,
 		    const ptr_op_t& _op_to_find = ptr_op_t(),
 		    unsigned long * _start_pos  = NULL,
-		    unsigned long * _end_pos	  = NULL)
+		    unsigned long * _end_pos	= NULL)
       : scope(_scope), relaxed(_relaxed), op_to_find(_op_to_find),
 	start_pos(_start_pos), end_pos(_end_pos) {}
   };

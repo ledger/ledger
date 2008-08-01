@@ -240,7 +240,7 @@ public:
   }
   value_t option_bar(call_scope_t& args) {
     std::cout << "This is bar: " << args[0] << std::endl;
-    return NULL_VALUE;
+    return args[0];
   }
 
   //

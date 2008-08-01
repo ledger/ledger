@@ -170,30 +170,51 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
   if (verb == "parse") {
     expr_t expr(*arg);
 
-    IF_INFO() {
-      std::cout << "Value expression tree:" << std::endl;
-      expr.dump(std::cout);
-      std::cout << std::endl;
+    *out << "Value expression as  input: " << *arg << std::endl;
 
-      std::cout << "Value expression parsed was:" << std::endl;
-      expr.print(std::cout, report);
-      std::cout << std::endl << std::endl;
+    *out << "Value expression as parsed: ";
+    expr.print(*out, report);
+    *out << std::endl;
 
-      expr.compile(report);
+    *out << std::endl;
+    *out << "--- Parsed tree ---" << std::endl;
+    expr.dump(*out);
 
-      std::cout << "Value expression after compiling:" << std::endl;
-      expr.dump(std::cout);
-      std::cout << std::endl;
+    *out << std::endl;
+    *out << "--- Calculated value ---" << std::endl;
+    expr.calc(report).print(*out);
+    *out << std::endl;
 
-      std::cout << "Value expression is now:" << std::endl;
-      expr.print(std::cout, report);
-      std::cout << std::endl << std::endl;
+    return 0;
+  }
+  else if (verb == "compile") {
+    expr_t expr(*arg);
 
-      std::cout << "Result of calculation: ";
-    }
+    *out << "Value expression as  input: " << *arg << std::endl;
+    *out << "Value expression as parsed: ";
+    expr.print(*out, report);
+    *out << std::endl;
 
-    std::cout << expr.calc(report).strip_annotations() << std::endl;
+    *out << std::endl;
+    *out << "--- Parsed tree ---" << std::endl;
+    expr.dump(*out);
 
+    expr.compile(report);
+
+    *out << std::endl;
+    *out << "--- Compiled tree ---" << std::endl;
+    expr.dump(*out);
+
+    *out << std::endl;
+    *out << "--- Calculated value ---" << std::endl;
+    expr.calc(report).print(*out);
+    *out << std::endl;
+
+    return 0;
+  }
+  else if (verb == "eval") {
+    expr_t expr(*arg);
+    *out << expr.calc(report).strip_annotations() << std::endl;
     return 0;
   }
 

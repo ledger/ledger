@@ -754,9 +754,12 @@ value_t expr_t::op_t::calc(scope_t& scope)
     return ! left()->calc(scope);
 
   case O_AND:
-    return left()->calc(scope) && right()->calc(scope);
+    return ! left()->calc(scope) ? value_t(false) : right()->calc(scope);
   case O_OR:
-    return left()->calc(scope) || right()->calc(scope);
+    if (value_t temp = left()->calc(scope))
+      return temp;
+    else
+      return right()->calc(scope);
 
   case O_COMMA: {
     value_t result(left()->calc(scope));
@@ -976,7 +979,7 @@ void expr_t::op_t::dump(std::ostream& out, const int depth) const
 {
   out.setf(std::ios::left);
   out.width(10);
-  out << this << " ";
+  out << this;
 
   for (int i = 0; i < depth; i++)
     out << " ";
