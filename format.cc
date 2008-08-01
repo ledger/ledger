@@ -13,6 +13,31 @@ int  format_t::abbrev_length = 2;
 bool format_t::ansi_codes    = false;
 bool format_t::ansi_invert   = false;
 
+void format_t::element_t::dump(std::ostream& out) const
+{
+  out << "Element: ";
+
+  switch (type) {
+  case STRING: out << " STRING"; break;
+  case EXPR:   out << "   EXPR"; break;
+  }
+
+  out << "  flags: " << int(flags);
+  out << "  min: ";
+  out << std::right;
+  out.width(2);
+  out << int(min_width);
+  out << "  max: ";
+  out << std::right;
+  out.width(2);
+  out << int(max_width);
+
+  switch (type) {
+  case STRING: out << "   str: '" << chars << "'" << std::endl; break;
+  case EXPR:   out << "  expr: "   << expr << std::endl; break;
+  }
+}
+
 namespace {
   string partial_account_name(const account_t& account)
   {
@@ -160,7 +185,7 @@ format_t::element_t * format_t::parse_elements(const string& fmt)
 
     default:
       current->type = element_t::EXPR;
-      current->expr.parse(string("format_") + *p);
+      current->expr.parse(string("fmt_") + *p);
       break;
     }
   }

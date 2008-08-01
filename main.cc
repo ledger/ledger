@@ -217,6 +217,11 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
     *out << expr.calc(report).strip_annotations() << std::endl;
     return 0;
   }
+  else if (verb == "format") {
+    format_t fmt(*arg);
+    fmt.dump(*out);
+    return 0;
+  }
 
   // Parse the initialization file, which can only be textual; then
   // parse the journal data.

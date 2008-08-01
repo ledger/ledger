@@ -352,8 +352,8 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
   const char * p = name.c_str();
   switch (*p) {
   case 'o':
-    if (std::strncmp(p, "option_", 7) == 0) {
-      p = p + 7;
+    if (std::strncmp(p, "opt_", 4) == 0) {
+      p = p + 4;
       switch (*p) {
       case 'a':
 #if 0

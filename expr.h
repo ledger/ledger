@@ -115,6 +115,8 @@ public:
   static value_t eval(const string& _expr, scope_t& scope);
 };
 
+std::ostream& operator<<(std::ostream& out, const expr_t& expr);
+
 } // namespace ledger
 
 #endif // _EXPR_H

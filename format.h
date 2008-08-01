@@ -34,11 +34,11 @@ class format_t : public noncopyable
 
     scoped_ptr<struct element_t> next;
 
-    element_t()
+    element_t() throw()
       : type(STRING), flags(false), min_width(0), max_width(0) {
       TRACE_CTOR(element_t, "");
     }
-    ~element_t() {
+    ~element_t() throw() {
       TRACE_DTOR(element_t);
     }
 
@@ -55,6 +55,8 @@ class format_t : public noncopyable
       if (elem->min_width > 0)
 	out.width(elem->min_width);
     }
+
+    void dump(std::ostream& out) const;
   };
 
   string		 format_string;
@@ -91,6 +93,13 @@ public:
   }
 
   void format(std::ostream& out, scope_t& scope) const;
+
+  void dump(std::ostream& out) const {
+    for (const element_t * elem = elements.get();
+	 elem;
+	 elem = elem->next.get())
+      elem->dump(out);
+  }
 
 private:
   static element_t * parse_elements(const string& fmt);

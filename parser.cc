@@ -151,10 +151,9 @@ expr_t::parser_t::parse_value_term(std::istream& in,
   }
 
   case token_t::LPAREN:
-    node = new op_t(op_t::O_COMMA);
-    node->set_left(parse_value_expr(in, tflags | EXPR_PARSE_PARTIAL));
-    if (! node->left())
-      throw_(parse_error, tok.symbol << " operator not followed by argument");
+    node = parse_value_expr(in, tflags | EXPR_PARSE_PARTIAL);
+    if (! node)
+      throw_(parse_error, tok.symbol << " operator not followed by expression");
 
     tok = next_token(in, tflags);
     if (tok.kind != token_t::RPAREN)

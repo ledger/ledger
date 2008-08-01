@@ -39,8 +39,8 @@ namespace {
   op_bool_tuple find_option(scope_t& scope, const string& name)
   {
     char buf[128];
-    std::strcpy(buf, "option_");
-    char * p = &buf[7];
+    std::strcpy(buf, "opt_");
+    char * p = &buf[4];
     foreach (char ch, name) {
       if (ch == '-')
 	*p++ = '_';
