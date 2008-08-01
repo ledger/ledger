@@ -2,7 +2,7 @@
 #define _XML_H
 
 #include "journal.h"
-#include "format.h"
+#include "report.h"
 
 namespace ledger {
 

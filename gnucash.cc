@@ -138,7 +138,9 @@ static void endElement(void *userData, const char *name)
     // Add the new entry (what gnucash calls a 'xact') to the
     // journal
     if (! curr_journal->add_entry(curr_entry)) {
+#if 0
       print_entry(std::cerr, *curr_entry);
+#endif
       have_error = "The above entry does not balance";
       checked_delete(curr_entry);
     } else {

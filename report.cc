@@ -456,4 +456,263 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
   return session.lookup(name);
 }
 
+// jww (2008-08-01): Find a home for this code
+
+format_xacts::format_xacts(std::ostream& _output_stream,
+					 const string& format)
+  : output_stream(_output_stream), last_entry(NULL), last_xact(NULL)
+{
+  TRACE_CTOR(format_xacts, "std::ostream&, const string&");
+
+  const char * f = format.c_str();
+  if (const char * p = std::strstr(f, "%/")) {
+    first_line_format.parse(string(f, 0, p - f));
+    next_lines_format.parse(string(p + 2));
+  } else {
+    first_line_format.parse(format);
+    next_lines_format.parse(format);
+  }
+}
+
+void format_xacts::operator()(xact_t& xact)
+{
+  if (! xact_has_xdata(xact) ||
+      ! (xact_xdata_(xact).dflags & XACT_DISPLAYED)) {
+    if (last_entry != xact.entry) {
+      first_line_format.format(output_stream, xact);
+      last_entry = xact.entry;
+    }
+    else if (last_xact && last_xact->date() != xact.date()) {
+      first_line_format.format(output_stream, xact);
+    }
+    else {
+      next_lines_format.format(output_stream, xact);
+    }
+
+    xact_xdata(xact).dflags |= XACT_DISPLAYED;
+    last_xact = &xact;
+  }
+}
+
+void format_entries::format_last_entry()
+{
+#if 0
+  bool first = true;
+  foreach (const transaction_t * xact, last_entry->xacts) {
+    if (xact_has_xdata(*xact) &&
+	xact_xdata_(*xact).dflags & XACT_TO_DISPLAY) {
+      if (first) {
+	first_line_format.format(output_stream, details_t(*xact));
+	first = false;
+      } else {
+	next_lines_format.format(output_stream, details_t(*xact));
+      }
+      xact_xdata_(*xact).dflags |= XACT_DISPLAYED;
+    }
+  }
+#endif
+}
+
+void format_entries::operator()(xact_t& xact)
+{
+  xact_xdata(xact).dflags |= XACT_TO_DISPLAY;
+
+  if (last_entry && xact.entry != last_entry)
+    format_last_entry();
+
+  last_entry = xact.entry;
+}
+
+void print_entry(std::ostream& out, const entry_base_t& entry_base,
+		 const string& prefix)
+{
+  string print_format;
+
+  if (dynamic_cast<const entry_t *>(&entry_base)) {
+    print_format = (prefix + "%D %X%C%P\n" +
+		    prefix + "    %-34A  %12o\n%/" +
+		    prefix + "    %-34A  %12o\n");
+  }
+  else if (const auto_entry_t * entry =
+	   dynamic_cast<const auto_entry_t *>(&entry_base)) {
+    out << "= " << entry->predicate.predicate.text() << '\n';
+    print_format = prefix + "    %-34A  %12o\n";
+  }
+  else if (const period_entry_t * entry =
+	   dynamic_cast<const period_entry_t *>(&entry_base)) {
+    out << "~ " << entry->period_string << '\n';
+    print_format = prefix + "    %-34A  %12o\n";
+  }
+  else {
+    assert(false);
+  }
+
+#if 0
+  format_entries formatter(out, print_format);
+  walk_xacts(const_cast<xacts_list&>(entry_base.xacts), formatter);
+  formatter.flush();
+
+  clear_xact_xdata cleaner;
+  walk_xacts(const_cast<xacts_list&>(entry_base.xacts), cleaner);
+#endif
+}
+
+bool disp_subaccounts_p(const account_t&			    account,
+			const optional<item_predicate<account_t> >& disp_pred,
+			const account_t *&			    to_show)
+{
+  bool	       display  = false;
+#if 0
+  unsigned int counted  = 0;
+  bool         matches  = disp_pred ? (*disp_pred)(account) : true;
+  bool         computed = false;
+#endif
+  value_t      acct_total;
+  value_t      result;
+
+  to_show = NULL;
+
+#if 0
+  for (accounts_map::value_type pair, account.accounts) {
+    if (disp_pred && ! (*disp_pred)(*pair.second))
+      continue;
+
+    compute_total(result, details_t(*pair.second));
+    if (! computed) {
+      compute_total(acct_total, details_t(account));
+      computed = true;
+    }
+
+    if ((result != acct_total) || counted > 0) {
+      display = matches;
+      break;
+    }
+    to_show = pair.second;
+    counted++;
+  }
+#endif
+
+  return display;
+}
+
+bool display_account(const account_t& account,
+		     const optional<item_predicate<account_t> >& disp_pred)
+{
+  // Never display an account that has already been displayed.
+  if (account_has_xdata(account) &&
+      account_xdata_(account).dflags & ACCOUNT_DISPLAYED)
+    return false;
+
+  // At this point, one of two possibilities exists: the account is a
+  // leaf which matches the predicate restrictions; or it is a parent
+  // and two or more children must be subtotaled; or it is a parent
+  // and its child has been hidden by the predicate.  So first,
+  // determine if it is a parent that must be displayed regardless of
+  // the predicate.
+
+  const account_t * account_to_show = NULL;
+  if (disp_subaccounts_p(account, disp_pred, account_to_show))
+    return true;
+
+  return (! account_to_show &&
+	  (! disp_pred || (*disp_pred)(const_cast<account_t&>(account))));
+}
+
+void format_accounts::operator()(account_t& account)
+{
+#if 0
+  if (display_account(account, disp_pred)) {
+    if (! account.parent) {
+      account_xdata(account).dflags |= ACCOUNT_TO_DISPLAY;
+    } else {
+      format.format(output_stream, details_t(account));
+      account_xdata(account).dflags |= ACCOUNT_DISPLAYED;
+    }
+  }
+#endif
+}
+
+format_equity::format_equity(std::ostream& _output_stream,
+			     const string& _format,
+			     const string& display_predicate)
+  : output_stream(_output_stream), disp_pred(display_predicate)
+{
+#if 0
+  const char * f = _format.c_str();
+  if (const char * p = std::strstr(f, "%/")) {
+    first_line_format.reset(string(f, 0, p - f));
+    next_lines_format.reset(string(p + 2));
+  } else {
+    first_line_format.reset(_format);
+    next_lines_format.reset(_format);
+  }
+
+  entry_t header_entry;
+  header_entry.payee = "Opening Balances";
+  header_entry._date = current_moment;
+  first_line_format.format(output_stream, details_t(header_entry));
+#endif
+}
+
+void format_equity::flush()
+{
+#if 0
+  account_xdata_t xdata;
+  xdata.value = total;
+  xdata.value.negate();
+  account_t summary(NULL, "Equity:Opening Balances");
+  summary.data = &xdata;
+
+  if (total.type() >= value_t::BALANCE) {
+    const balance_t * bal;
+    if (total.is_type(value_t::BALANCE))
+      bal = &(total.as_balance());
+    else if (total.is_type(value_t::BALANCE_PAIR))
+      bal = &(total.as_balance_pair().quantity());
+    else
+      assert(false);
+
+    for (balance_t::amounts_map::value_type pair, bal->amounts) {
+      xdata.value = pair.second;
+      xdata.value.negate();
+      next_lines_format.format(output_stream, details_t(summary));
+    }
+  } else {
+    next_lines_format.format(output_stream, details_t(summary));
+  }
+  output_stream.flush();
+#endif
+}
+
+void format_equity::operator()(account_t& account)
+{
+#if 0
+  if (display_account(account, disp_pred)) {
+    if (account_has_xdata(account)) {
+      value_t val = account_xdata_(account).value;
+
+      if (val.type() >= value_t::BALANCE) {
+	const balance_t * bal;
+	if (val.is_type(value_t::BALANCE))
+	  bal = &(val.as_balance());
+	else if (val.is_type(value_t::BALANCE_PAIR))
+	  bal = &(val.as_balance_pair().quantity());
+	else
+	  assert(false);
+
+	for (balance_t::amounts_map::value_type pair, bal->amounts) {
+	  account_xdata_(account).value = pair.second;
+	  next_lines_format.format(output_stream, details_t(account));
+	}
+	account_xdata_(account).value = val;
+      } else {
+	next_lines_format.format(output_stream, details_t(account));
+      }
+      total += val;
+    }
+    account_xdata(account).dflags |= ACCOUNT_DISPLAYED;
+  }
+#endif
+}
+
 } // namespace ledger

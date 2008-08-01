@@ -6,119 +6,36 @@
 
 namespace ledger {
 
-format_t::elision_style_t format_t::elision_style = ABBREVIATE;
-int format_t::abbrev_length = 2;
+format_t::elision_style_t
+     format_t::elision_style = ABBREVIATE;
+int  format_t::abbrev_length = 2;
 
-bool format_t::ansi_codes  = false;
-bool format_t::ansi_invert = false;
+bool format_t::ansi_codes    = false;
+bool format_t::ansi_invert   = false;
 
-string format_t::truncate(const string& str, unsigned int width,
-			  const bool is_account)
-{
-  const unsigned int len = str.length();
-  if (len <= width)
-    return str;
+namespace {
+  string partial_account_name(const account_t& account)
+  {
+    string name;
 
-  assert(width < 4095);
+    for (const account_t * acct = &account;
+	 acct && acct->parent;
+	 acct = acct->parent) {
+      if (account_has_xdata(*acct) &&
+	  account_xdata_(*acct).dflags & ACCOUNT_DISPLAYED)
+	break;
 
-  char buf[4096];
-
-  switch (elision_style) {
-  case TRUNCATE_LEADING:
-    // This method truncates at the beginning.
-    std::strncpy(buf, str.c_str() + (len - width), width);
-    buf[0] = '.';
-    buf[1] = '.';
-    break;
-
-  case TRUNCATE_MIDDLE:
-    // This method truncates in the middle.
-    std::strncpy(buf, str.c_str(), width / 2);
-    std::strncpy(buf + width / 2,
-		 str.c_str() + (len - (width / 2 + width % 2)),
-		 width / 2 + width % 2);
-    buf[width / 2 - 1] = '.';
-    buf[width / 2] = '.';
-    break;
-
-  case ABBREVIATE:
-    if (is_account) {
-      std::list<string> parts;
-      string::size_type beg = 0;
-      for (string::size_type pos = str.find(':');
-	   pos != string::npos;
-	   beg = pos + 1, pos = str.find(':', beg))
-	parts.push_back(string(str, beg, pos - beg));
-      parts.push_back(string(str, beg));
-
-      string result;
-      unsigned int newlen = len;
-      for (std::list<string>::iterator i = parts.begin();
-	   i != parts.end();
-	   i++) {
-	// Don't contract the last element
-	std::list<string>::iterator x = i;
-	if (++x == parts.end()) {
-	  result += *i;
-	  break;
-	}
-
-	if (newlen > width) {
-	  result += string(*i, 0, abbrev_length);
-	  result += ":";
-	  newlen -= (*i).length() - abbrev_length;
-	} else {
-	  result += *i;
-	  result += ":";
-	}
-      }
-
-      if (newlen > width) {
-	// Even abbreviated its too big to show the last account, so
-	// abbreviate all but the last and truncate at the beginning.
-	std::strncpy(buf, result.c_str() + (result.length() - width), width);
-	buf[0] = '.';
-	buf[1] = '.';
-      } else {
-	std::strcpy(buf, result.c_str());
-      }
-      break;
+      if (name.empty())
+	name = acct->name;
+      else
+	name = acct->name + ":" + name;
     }
-    // fall through...
 
-  case TRUNCATE_TRAILING:
-    // This method truncates at the end (the default).
-    std::strncpy(buf, str.c_str(), width - 2);
-    buf[width - 2] = '.';
-    buf[width - 1] = '.';
-    break;
+    return name;
   }
-  buf[width] = '\0';
-
-  return buf;
 }
 
-string partial_account_name(const account_t& account)
-{
-  string name;
-
-  for (const account_t * acct = &account;
-       acct && acct->parent;
-       acct = acct->parent) {
-    if (account_has_xdata(*acct) &&
-	account_xdata_(*acct).dflags & ACCOUNT_DISPLAYED)
-      break;
-
-    if (name.empty())
-      name = acct->name;
-    else
-      name = acct->name + ":" + name;
-  }
-
-  return name;
-}
-
-element_t * format_t::parse_elements(const string& fmt)
+format_t::element_t * format_t::parse_elements(const string& fmt)
 {
   std::auto_ptr<element_t> result;
 
@@ -137,8 +54,8 @@ element_t * format_t::parse_elements(const string& fmt)
       result.reset(new element_t);
       current = result.get();
     } else {
-      current->next = new element_t;
-      current = current->next;
+      current->next.reset(new element_t);
+      current = current->next.get();
     }
 
     if (q != buf) {
@@ -146,8 +63,8 @@ element_t * format_t::parse_elements(const string& fmt)
       current->chars = string(buf, q);
       q = buf;
 
-      current->next  = new element_t;
-      current = current->next;
+      current->next.reset(new element_t);
+      current = current->next.get();
     }
 
     if (*p == '\\') {
@@ -202,46 +119,17 @@ element_t * format_t::parse_elements(const string& fmt)
       current->chars = "%";
       break;
 
-    case '(': {
-      ++p;
-      const char * b = p;
-      int depth = 1;
-      while (*p) {
-	if (*p == ')' && --depth == 0)
-	  break;
-	else if (*p == '(')
-	  ++depth;
-	p++;
-      }
-      if (*p != ')')
-	throw format_error("Missing ')'");
-
-      current->type = element_t::VALUE_EXPR;
-
-      assert(! current->val_expr);
-      current->val_expr.parse(string(b, p));
-      break;
-    }
-
+    case '(':
     case '[': {
-      ++p;
-      const char * b = p;
-      int depth = 1;
-      while (*p) {
-	if (*p == ']' && --depth == 0)
-	  break;
-	else if (*p == '[')
-	  ++depth;
-	p++;
-      }
-      if (*p != ']')
-	throw format_error("Missing ']'");
-
-      current->type  = element_t::DATE_STRING;
-      current->chars = string(b, p);
+      std::istringstream str(p);
+      current->type = element_t::EXPR;
+      current->expr.parse(str);
+      current->expr.set_text(string(p, p + str.tellg()));
+      p += str.tellg();
       break;
     }
 
+#if 0
     case 'x':
       switch (*++p) {
       case 'B': current->type = element_t::XACT_BEG_POS; break;
@@ -281,17 +169,20 @@ element_t * format_t::parse_elements(const string& fmt)
     case 'n': current->type = element_t::OPT_NOTE; break;
     case '|': current->type = element_t::SPACER; break;
     case '_': current->type = element_t::DEPTH_SPACER; break;
+#endif
     }
   }
 
+#if 0
  END:
+#endif
   if (q != buf) {
     if (! result.get()) {
       result.reset(new element_t);
       current = result.get();
     } else {
-      current->next = new element_t;
-      current = current->next;
+      current->next.reset(new element_t);
+      current = current->next.get();
     }
     current->type  = element_t::STRING;
     current->chars = string(buf, q);
@@ -301,20 +192,6 @@ element_t * format_t::parse_elements(const string& fmt)
 }
 
 namespace {
-  inline void mark_red(std::ostream& out, const element_t * elem) {
-    out.setf(std::ios::left);
-    out.width(0);
-    out << "\e[31m";
-
-    if (elem->flags & ELEMENT_ALIGN_LEFT)
-      out << std::left;
-    else
-      out << std::right;
-
-    if (elem->min_width > 0)
-      out.width(elem->min_width);
-  }
-
   inline void mark_plain(std::ostream& out) {
     out << "\e[0m";
   }
@@ -322,7 +199,7 @@ namespace {
 
 void format_t::format(std::ostream& out_str, scope_t& scope) const
 {
-  for (const element_t * elem = elements; elem; elem = elem->next) {
+  for (const element_t * elem = elements.get(); elem; elem = elem->next.get()) {
     std::ostringstream out;
     string name;
     bool ignore_max_width = false;
@@ -340,10 +217,11 @@ void format_t::format(std::ostream& out_str, scope_t& scope) const
       out << elem->chars;
       break;
 
-    case element_t::AMOUNT:
-      out << scope.resolve("amount");
+    case element_t::EXPR:
+      out << elem->expr.calc(scope);
       break;
 
+#if 0
     case element_t::ACCOUNT_FULLNAME:
       scope.resolve("account").dump(out, elem->min_width);
       break;
@@ -351,12 +229,15 @@ void format_t::format(std::ostream& out_str, scope_t& scope) const
       scope.resolve("account_base").dump(out, elem->min_width);
       break;
 
+    case element_t::AMOUNT:
+      out << "a";
+      //out << scope.resolve("amount");
+      break;
     case element_t::TOTAL:
       out << "T";
       //out << scope.resolve("total");
       break;
 
-#if 0
     case element_t::VALUE_EXPR: {
       expr_t * calc;
       switch (elem->type) {
@@ -579,13 +460,11 @@ void format_t::format(std::ostream& out_str, scope_t& scope) const
       if (details.xact)
 	out << details.xact->end_line;
       break;
-#endif
 
     case element_t::DATE_STRING:
       out << format_datetime(scope.resolve("date").as_datetime());
       break;
 
-#if 0
     case element_t::COMPLETE_DATE_STRING: {
       datetime_t actual_date;
       datetime_t effective_date;
@@ -670,13 +549,11 @@ void format_t::format(std::ostream& out_str, scope_t& scope) const
       out << temp;
       break;
     }
-#endif
 
     case element_t::PAYEE:
       scope.resolve("payee").dump(out, elem->min_width);
       break;
 
-#if 0
     case element_t::OPT_NOTE:
       if (details.xact && details.xact->note)
 	out << "  ; ";
@@ -731,12 +608,10 @@ void format_t::format(std::ostream& out_str, scope_t& scope) const
       }
       break;
 
-#endif
     case element_t::SPACER:
       out << " ";
       break;
 
-#if 0
     case element_t::DEPTH_SPACER:
       for (const account_t * acct = details.account;
 	   acct;
@@ -764,261 +639,90 @@ void format_t::format(std::ostream& out_str, scope_t& scope) const
   }
 }
 
-format_xacts::format_xacts(std::ostream& _output_stream,
-					 const string& format)
-  : output_stream(_output_stream), last_entry(NULL), last_xact(NULL)
+string format_t::truncate(const string& str, unsigned int width,
+			  const bool is_account)
 {
-  TRACE_CTOR(format_xacts, "std::ostream&, const string&");
+  const unsigned int len = str.length();
+  if (len <= width)
+    return str;
 
-  const char * f = format.c_str();
-  if (const char * p = std::strstr(f, "%/")) {
-    first_line_format.reset(string(f, 0, p - f));
-    next_lines_format.reset(string(p + 2));
-  } else {
-    first_line_format.reset(format);
-    next_lines_format.reset(format);
-  }
-}
+  assert(width < 4095);
 
-void format_xacts::operator()(xact_t& xact)
-{
-  if (! xact_has_xdata(xact) ||
-      ! (xact_xdata_(xact).dflags & XACT_DISPLAYED)) {
-    if (last_entry != xact.entry) {
-      first_line_format.format(output_stream, xact);
-      last_entry = xact.entry;
-    }
-    else if (last_xact && last_xact->date() != xact.date()) {
-      first_line_format.format(output_stream, xact);
-    }
-    else {
-      next_lines_format.format(output_stream, xact);
-    }
+  char buf[4096];
 
-    xact_xdata(xact).dflags |= XACT_DISPLAYED;
-    last_xact = &xact;
-  }
-}
+  switch (elision_style) {
+  case TRUNCATE_LEADING:
+    // This method truncates at the beginning.
+    std::strncpy(buf, str.c_str() + (len - width), width);
+    buf[0] = '.';
+    buf[1] = '.';
+    break;
 
-void format_entries::format_last_entry()
-{
-#if 0
-  bool first = true;
-  foreach (const transaction_t * xact, last_entry->xacts) {
-    if (xact_has_xdata(*xact) &&
-	xact_xdata_(*xact).dflags & XACT_TO_DISPLAY) {
-      if (first) {
-	first_line_format.format(output_stream, details_t(*xact));
-	first = false;
-      } else {
-	next_lines_format.format(output_stream, details_t(*xact));
+  case TRUNCATE_MIDDLE:
+    // This method truncates in the middle.
+    std::strncpy(buf, str.c_str(), width / 2);
+    std::strncpy(buf + width / 2,
+		 str.c_str() + (len - (width / 2 + width % 2)),
+		 width / 2 + width % 2);
+    buf[width / 2 - 1] = '.';
+    buf[width / 2] = '.';
+    break;
+
+  case ABBREVIATE:
+    if (is_account) {
+      std::list<string> parts;
+      string::size_type beg = 0;
+      for (string::size_type pos = str.find(':');
+	   pos != string::npos;
+	   beg = pos + 1, pos = str.find(':', beg))
+	parts.push_back(string(str, beg, pos - beg));
+      parts.push_back(string(str, beg));
+
+      string result;
+      unsigned int newlen = len;
+      for (std::list<string>::iterator i = parts.begin();
+	   i != parts.end();
+	   i++) {
+	// Don't contract the last element
+	std::list<string>::iterator x = i;
+	if (++x == parts.end()) {
+	  result += *i;
+	  break;
+	}
+
+	if (newlen > width) {
+	  result += string(*i, 0, abbrev_length);
+	  result += ":";
+	  newlen -= (*i).length() - abbrev_length;
+	} else {
+	  result += *i;
+	  result += ":";
+	}
       }
-      xact_xdata_(*xact).dflags |= XACT_DISPLAYED;
-    }
-  }
-#endif
-}
 
-void format_entries::operator()(xact_t& xact)
-{
-  xact_xdata(xact).dflags |= XACT_TO_DISPLAY;
-
-  if (last_entry && xact.entry != last_entry)
-    format_last_entry();
-
-  last_entry = xact.entry;
-}
-
-void print_entry(std::ostream& out, const entry_base_t& entry_base,
-		 const string& prefix)
-{
-  string print_format;
-
-  if (dynamic_cast<const entry_t *>(&entry_base)) {
-    print_format = (prefix + "%D %X%C%P\n" +
-		    prefix + "    %-34A  %12o\n%/" +
-		    prefix + "    %-34A  %12o\n");
-  }
-  else if (const auto_entry_t * entry =
-	   dynamic_cast<const auto_entry_t *>(&entry_base)) {
-    out << "= " << entry->predicate.predicate.text() << '\n';
-    print_format = prefix + "    %-34A  %12o\n";
-  }
-  else if (const period_entry_t * entry =
-	   dynamic_cast<const period_entry_t *>(&entry_base)) {
-    out << "~ " << entry->period_string << '\n';
-    print_format = prefix + "    %-34A  %12o\n";
-  }
-  else {
-    assert(false);
-  }
-
-#if 0
-  format_entries formatter(out, print_format);
-  walk_xacts(const_cast<xacts_list&>(entry_base.xacts), formatter);
-  formatter.flush();
-
-  clear_xact_xdata cleaner;
-  walk_xacts(const_cast<xacts_list&>(entry_base.xacts), cleaner);
-#endif
-}
-
-bool disp_subaccounts_p(const account_t&			    account,
-			const optional<item_predicate<account_t> >& disp_pred,
-			const account_t *&			    to_show)
-{
-  bool	       display  = false;
-#if 0
-  unsigned int counted  = 0;
-  bool         matches  = disp_pred ? (*disp_pred)(account) : true;
-  bool         computed = false;
-#endif
-  value_t      acct_total;
-  value_t      result;
-
-  to_show = NULL;
-
-#if 0
-  for (accounts_map::value_type pair, account.accounts) {
-    if (disp_pred && ! (*disp_pred)(*pair.second))
-      continue;
-
-    compute_total(result, details_t(*pair.second));
-    if (! computed) {
-      compute_total(acct_total, details_t(account));
-      computed = true;
-    }
-
-    if ((result != acct_total) || counted > 0) {
-      display = matches;
+      if (newlen > width) {
+	// Even abbreviated its too big to show the last account, so
+	// abbreviate all but the last and truncate at the beginning.
+	std::strncpy(buf, result.c_str() + (result.length() - width), width);
+	buf[0] = '.';
+	buf[1] = '.';
+      } else {
+	std::strcpy(buf, result.c_str());
+      }
       break;
     }
-    to_show = pair.second;
-    counted++;
+    // fall through...
+
+  case TRUNCATE_TRAILING:
+    // This method truncates at the end (the default).
+    std::strncpy(buf, str.c_str(), width - 2);
+    buf[width - 2] = '.';
+    buf[width - 1] = '.';
+    break;
   }
-#endif
+  buf[width] = '\0';
 
-  return display;
-}
-
-bool display_account(const account_t& account,
-		     const optional<item_predicate<account_t> >& disp_pred)
-{
-  // Never display an account that has already been displayed.
-  if (account_has_xdata(account) &&
-      account_xdata_(account).dflags & ACCOUNT_DISPLAYED)
-    return false;
-
-  // At this point, one of two possibilities exists: the account is a
-  // leaf which matches the predicate restrictions; or it is a parent
-  // and two or more children must be subtotaled; or it is a parent
-  // and its child has been hidden by the predicate.  So first,
-  // determine if it is a parent that must be displayed regardless of
-  // the predicate.
-
-  const account_t * account_to_show = NULL;
-  if (disp_subaccounts_p(account, disp_pred, account_to_show))
-    return true;
-
-  return (! account_to_show &&
-	  (! disp_pred || (*disp_pred)(const_cast<account_t&>(account))));
-}
-
-void format_accounts::operator()(account_t& account)
-{
-#if 0
-  if (display_account(account, disp_pred)) {
-    if (! account.parent) {
-      account_xdata(account).dflags |= ACCOUNT_TO_DISPLAY;
-    } else {
-      format.format(output_stream, details_t(account));
-      account_xdata(account).dflags |= ACCOUNT_DISPLAYED;
-    }
-  }
-#endif
-}
-
-format_equity::format_equity(std::ostream& _output_stream,
-			     const string& _format,
-			     const string& display_predicate)
-  : output_stream(_output_stream), disp_pred(display_predicate)
-{
-#if 0
-  const char * f = _format.c_str();
-  if (const char * p = std::strstr(f, "%/")) {
-    first_line_format.reset(string(f, 0, p - f));
-    next_lines_format.reset(string(p + 2));
-  } else {
-    first_line_format.reset(_format);
-    next_lines_format.reset(_format);
-  }
-
-  entry_t header_entry;
-  header_entry.payee = "Opening Balances";
-  header_entry._date = current_moment;
-  first_line_format.format(output_stream, details_t(header_entry));
-#endif
-}
-
-void format_equity::flush()
-{
-#if 0
-  account_xdata_t xdata;
-  xdata.value = total;
-  xdata.value.negate();
-  account_t summary(NULL, "Equity:Opening Balances");
-  summary.data = &xdata;
-
-  if (total.type() >= value_t::BALANCE) {
-    const balance_t * bal;
-    if (total.is_type(value_t::BALANCE))
-      bal = &(total.as_balance());
-    else if (total.is_type(value_t::BALANCE_PAIR))
-      bal = &(total.as_balance_pair().quantity());
-    else
-      assert(false);
-
-    for (balance_t::amounts_map::value_type pair, bal->amounts) {
-      xdata.value = pair.second;
-      xdata.value.negate();
-      next_lines_format.format(output_stream, details_t(summary));
-    }
-  } else {
-    next_lines_format.format(output_stream, details_t(summary));
-  }
-  output_stream.flush();
-#endif
-}
-
-void format_equity::operator()(account_t& account)
-{
-#if 0
-  if (display_account(account, disp_pred)) {
-    if (account_has_xdata(account)) {
-      value_t val = account_xdata_(account).value;
-
-      if (val.type() >= value_t::BALANCE) {
-	const balance_t * bal;
-	if (val.is_type(value_t::BALANCE))
-	  bal = &(val.as_balance());
-	else if (val.is_type(value_t::BALANCE_PAIR))
-	  bal = &(val.as_balance_pair().quantity());
-	else
-	  assert(false);
-
-	for (balance_t::amounts_map::value_type pair, bal->amounts) {
-	  account_xdata_(account).value = pair.second;
-	  next_lines_format.format(output_stream, details_t(account));
-	}
-	account_xdata_(account).value = val;
-      } else {
-	next_lines_format.format(output_stream, details_t(account));
-      }
-      total += val;
-    }
-    account_xdata(account).dflags |= ACCOUNT_DISPLAYED;
-  }
-#endif
+  return buf;
 }
 
 } // namespace ledger
