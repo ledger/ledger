@@ -37,17 +37,19 @@ namespace ledger {
 
 std::auto_ptr<expr_t::parser_t> expr_t::parser;
 
-expr_t::expr_t()
+expr_t::expr_t() : compiled(false)
 {
   TRACE_CTOR(expr_t, "");
 }
 
-expr_t::expr_t(const expr_t& other) : ptr(other.ptr), str(other.str)
+expr_t::expr_t(const expr_t& other)
+  : ptr(other.ptr), str(other.str), compiled(false)
 {
   TRACE_CTOR(expr_t, "copy");
 }
 
-expr_t::expr_t(const string& _str, const unsigned int flags) : str(_str)
+expr_t::expr_t(const string& _str, const unsigned int flags)
+  : str(_str), compiled(false)
 {
   TRACE_CTOR(expr_t, "const string&");
 
@@ -55,7 +57,8 @@ expr_t::expr_t(const string& _str, const unsigned int flags) : str(_str)
     ptr = parser->parse(str, flags);
 }
 
-  expr_t::expr_t(std::istream& in, const unsigned int flags)
+expr_t::expr_t(std::istream& in, const unsigned int flags)
+  : compiled(false)
 {
   TRACE_CTOR(expr_t, "std::istream&");
 
@@ -63,7 +66,7 @@ expr_t::expr_t(const string& _str, const unsigned int flags) : str(_str)
 }
 
 expr_t::expr_t(const ptr_op_t& _ptr, const string& _str)
-  : ptr(_ptr), str(_str)
+  : ptr(_ptr), str(_str), compiled(false)
 {
   TRACE_CTOR(expr_t, "const ptr_op_t&, const string&");
 }
@@ -75,8 +78,11 @@ expr_t::~expr_t() throw()
 
 expr_t& expr_t::operator=(const expr_t& _expr)
 {
-  str = _expr.str;
-  ptr = _expr.ptr;
+  if (this != &_expr) {
+    str	     = _expr.str;
+    ptr	     = _expr.ptr;
+    compiled = _expr.compiled;
+  }
   return *this;
 }
 
@@ -85,8 +91,9 @@ void expr_t::parse(const string& _str, const unsigned int flags)
   if (! parser.get())
     throw_(parse_error, "Value expression parser not initialized");
 
-  str = _str;
-  ptr = parser->parse(str, flags);
+  str	   = _str;
+  ptr	   = parser->parse(str, flags);
+  compiled = false;
 }
 
 void expr_t::parse(std::istream& in, const unsigned int flags)
@@ -94,21 +101,32 @@ void expr_t::parse(std::istream& in, const unsigned int flags)
   if (! parser.get())
     throw_(parse_error, "Value expression parser not initialized");
 
-  str = "<stream>";
-  ptr = parser->parse(in, flags);
+  str	   = "<stream>";
+  ptr	   = parser->parse(in, flags);
+  compiled = false;
 }
 
 void expr_t::compile(scope_t& scope)
 {
-  if (ptr.get())
-    ptr = ptr->compile(scope);
+  if (ptr.get()) {
+    ptr	     = ptr->compile(scope);
+    compiled = true;
+  }
+}
+
+value_t expr_t::calc(scope_t& scope)
+{
+  if (ptr.get()) {
+    if (! compiled)
+      compile(scope);
+    return ptr->calc(scope);
+  }
+  return NULL_VALUE;
 }
 
 value_t expr_t::calc(scope_t& scope) const
 {
-  if (ptr.get())
-    return ptr->calc(scope);
-  return NULL_VALUE;
+  return ptr.get() ? ptr->calc(scope) : NULL_VALUE;
 }
 
 bool expr_t::is_constant() const
@@ -141,26 +159,22 @@ void expr_t::print(std::ostream& out, scope_t& scope) const
 
 void expr_t::dump(std::ostream& out) const
 {
-  if (ptr)
-    ptr->dump(out, 0);
+  if (ptr) ptr->dump(out, 0);
 }
 
 void expr_t::read(std::ostream& in)
 {
-  if (ptr)
-    ptr->read(in);
+  if (ptr) ptr->read(in);
 }
 
 void expr_t::read(const char *& data)
 {
-  if (ptr)
-    ptr->read(data);
+  if (ptr) ptr->read(data);
 }
 
 void expr_t::write(std::ostream& out) const
 {
-  if (ptr)
-    ptr->write(out);
+  if (ptr) ptr->write(out);
 }
 
 void expr_t::initialize()

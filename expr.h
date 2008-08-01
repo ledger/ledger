@@ -59,6 +59,7 @@ public:
 private:
   ptr_op_t ptr;
   string   str;
+  bool     compiled;
 
   static void initialize();
   static void shutdown();
@@ -97,6 +98,7 @@ public:
   void     parse(std::istream& in, const unsigned int flags = 0);
 	   
   void     compile(scope_t& scope);
+  value_t  calc(scope_t& scope);
   value_t  calc(scope_t& scope) const;
 
   bool	   is_constant() const;
