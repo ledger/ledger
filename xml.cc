@@ -70,10 +70,10 @@ static void endElement(void *userData, const char *name)
     curr_entry = NULL;
   }
   else if (std::strcmp(name, "en:date") == 0) {
-    curr_entry->_date = parse_datetime(data);
+    curr_entry->_date = parse_date(data);
   }
   else if (std::strcmp(name, "en:date_eff") == 0) {
-    curr_entry->_date_eff = parse_datetime(data);
+    curr_entry->_date_eff = parse_date(data);
   }
   else if (std::strcmp(name, "en:code") == 0) {
     curr_entry->code = data;

@@ -87,9 +87,9 @@ report_t::chain_xact_handlers(xact_handler_ptr base_handler,
     // xacts which can be reconciled to a given balance
     // (calculated against the xacts which it receives).
     if (! reconcile_balance.empty()) {
-      datetime_t cutoff = current_moment;
+      date_t cutoff = current_date;
       if (! reconcile_date.empty())
-	cutoff = parse_datetime(reconcile_date);
+	cutoff = parse_date(reconcile_date);
       handler.reset(new reconcile_xacts
 		    (handler, value_t(reconcile_balance), cutoff));
     }
@@ -309,7 +309,7 @@ value_t report_t::ftime(call_scope_t& args)
   if (args.size() < 1)
     throw_(std::logic_error, "usage: ftime(DATE [, DATE_FORMAT])");
 
-  datetime_t date = args[0].as_datetime();
+  date_t date = args[0].as_date();
 
   string date_format;
   if (args.size() == 2)

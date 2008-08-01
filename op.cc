@@ -298,16 +298,16 @@ void expr_t::op_t::compute(value_t&	    result,
       throw compute_error("Invalid date passed to year|month|day(date)");
     }
 
-    const datetime_t& moment(result.as_datetime());
+    const date_t& moment(result.as_date());
     switch (kind) {
     case F_YEAR:
-      result = (long)moment.date().year();
+      result = (long)moment.year();
       break;
     case F_MONTH:
-      result = (long)moment.date().month();
+      result = (long)moment.month();
       break;
     case F_DAY:
-      result = (long)moment.date().day();
+      result = (long)moment.day();
       break;
     default:
       break;

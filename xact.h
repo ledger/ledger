@@ -55,20 +55,20 @@ class xact_t : public supports_flags<>, public scope_t
  public:
   enum state_t { UNCLEARED, CLEARED, PENDING };
 
-  entry_t *	       entry;
-  state_t	       state;
-  account_t *	       account;
-  optional<datetime_t> _date;
-  optional<datetime_t> _date_eff;
-  amount_t	       amount;
-  optional<expr_t>     amount_expr;
-  optional<amount_t>   cost;
-  optional<expr_t>     cost_expr;
-  optional<string>     note;
-  istream_pos_type     beg_pos;
-  unsigned long	       beg_line;
-  istream_pos_type     end_pos;
-  unsigned long	       end_line;
+  entry_t *	     entry;
+  state_t	     state;
+  account_t *	     account;
+  optional<date_t>   _date;
+  optional<date_t>   _date_eff;
+  amount_t	     amount;
+  optional<expr_t>   amount_expr;
+  optional<amount_t> cost;
+  optional<expr_t>   cost_expr;
+  optional<string>   note;
+  istream_pos_type   beg_pos;
+  unsigned long	     beg_line;
+  istream_pos_type   end_pos;
+  unsigned long	     end_line;
 
   mutable void * data;
   static bool	 use_effective_date;
@@ -113,9 +113,9 @@ class xact_t : public supports_flags<>, public scope_t
   }
   ~xact_t();
 
-  datetime_t actual_date() const;
-  datetime_t effective_date() const;
-  datetime_t date() const {
+  date_t actual_date() const;
+  date_t effective_date() const;
+  date_t date() const {
     if (use_effective_date)
       return effective_date();
     else

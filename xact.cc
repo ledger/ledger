@@ -42,14 +42,14 @@ xact_t::~xact_t()
   TRACE_DTOR(xact_t);
 }
 
-datetime_t xact_t::actual_date() const
+date_t xact_t::actual_date() const
 {
   if (! _date && entry)
     return entry->actual_date();
   return *_date;
 }
 
-datetime_t xact_t::effective_date() const
+date_t xact_t::effective_date() const
 {
   if (! _date_eff && entry)
     return entry->effective_date();

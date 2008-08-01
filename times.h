@@ -34,65 +34,50 @@
 
 namespace ledger {
 
-#define SUPPORT_DATE_AND_TIME 1
-#ifdef SUPPORT_DATE_AND_TIME
+DECLARE_EXCEPTION(datetime_error, std::runtime_error);
+DECLARE_EXCEPTION(date_error, std::runtime_error);
 
 typedef boost::posix_time::ptime	datetime_t;
-typedef datetime_t::time_duration_type	duration_t;
+typedef datetime_t::time_duration_type	time_duration_t;
 
 inline bool is_valid(const datetime_t& moment) {
   return ! moment.is_not_a_date_time();
 }
 
-#else // SUPPORT_DATE_AND_TIME
+typedef boost::gregorian::date          date_t;
+typedef boost::gregorian::date_duration date_duration_t;
 
-typedef boost::gregorian::date          datetime_t;
-typedef boost::gregorian::date_duration duration_t;
-
-inline bool is_valid(const datetime_t& moment) {
+inline bool is_valid(const date_t& moment) {
   return ! moment.is_not_a_date();
 }
 
-#endif // SUPPORT_DATE_AND_TIME
-
-extern const datetime_t& current_moment;
-
-extern int    current_year;
-extern string input_time_format;
-extern string output_time_format;
-
-DECLARE_EXCEPTION(datetime_error, std::runtime_error);
+extern const datetime_t& current_time;
+extern const date_t&     current_date;
+extern int		 current_year;
+extern string		 input_time_format;
+extern string		 output_time_format;
 
 struct interval_t
 {
   unsigned short years;
   unsigned short months;
   unsigned short days;
-  unsigned short hours;
-  unsigned short minutes;
-  unsigned short seconds;
-
-  datetime_t	 begin;
-  datetime_t	 end;
-
+  date_t	 begin;
+  date_t	 end;
   mutable bool   advanced;
 
   interval_t(int _days = 0, int _months = 0, int _years = 0,
-	     const datetime_t& _begin = datetime_t(),
-	     const datetime_t& _end   = datetime_t())
+	     const date_t& _begin = date_t(),
+	     const date_t& _end   = date_t())
     : years(_years), months(_months), days(_days),
-      hours(0), minutes(0), seconds(0),
       begin(_begin), end(_end), advanced(false) {
     TRACE_CTOR(interval_t,
-	       "int, int, int, const datetime_t&, const datetime_t&");
+	       "int, int, int, const date_t&, const date_t&");
   }
   interval_t(const interval_t& other)
     : years(other.years),
       months(other.months),
       days(other.days),
-      hours(other.hours),
-      minutes(other.minutes),
-      seconds(other.seconds),
 
       begin(other.begin),
       end(other.end),
@@ -103,7 +88,6 @@ struct interval_t
 
   interval_t(const string& desc)
     : years(0), months(0), days(0),
-      hours(0), minutes(0), seconds(0),
       begin(), end(), advanced(false) {
     TRACE_CTOR(interval_t, "const string&");
     std::istringstream stream(desc);
@@ -115,18 +99,16 @@ struct interval_t
   }
 
   operator bool() const {
-    return (years > 0 || months > 0  || days > 0 ||
-	    hours > 0 || minutes > 0 || seconds > 0);
+    return years > 0 || months > 0  || days > 0;
   }
 
-  void start(const datetime_t& moment) {
+  void   start(const date_t& moment) {
     begin = first(moment);
   }
-  datetime_t first(const datetime_t& moment = datetime_t()) const;
+  date_t first(const date_t& moment = date_t()) const;
+  date_t increment(const date_t&) const;
 
-  datetime_t increment(const datetime_t&) const;
-
-  void parse(std::istream& in);
+  void   parse(std::istream& in);
 };
 
 #if 0
@@ -147,10 +129,13 @@ inline datetime_t ptime_from_local_time_string(const string& time_string) {
 }
 #endif
 
-datetime_t parse_datetime(const char * str);
-
 inline datetime_t parse_datetime(const string& str) {
   return parse_datetime(str.c_str());
+}
+datetime_t parse_datetime(const char * str);
+
+inline date_t parse_date(const string& str) {
+  return gregorian::from_string(str);
 }
 
 inline std::time_t to_time_t(const ptime& t) 
@@ -171,9 +156,9 @@ inline string format_datetime(const datetime_t& when) {
   return buf;
 }
 
-extern const ptime time_now;
-extern const date  date_now;
-extern bool        day_before_month;
+inline string format_date(const date_t& when) {
+  return to_iso_extended_string(when);
+}
 
 #if 0
 struct intorchar

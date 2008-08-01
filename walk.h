@@ -98,7 +98,7 @@ struct xact_xdata_t : public noncopyable
   value_t	 value;
   unsigned int   index;
   unsigned short dflags;
-  datetime_t     date;
+  date_t         date;
   account_t *    account;
   void *         ptr;
   xacts_list *   component_xacts;
@@ -609,13 +609,13 @@ public:
 
   virtual void flush() {
     if (last_xact) {
-      output_diff(current_moment);
+      output_diff(current_date);
       last_xact = NULL;
     }
     item_handler<xact_t>::flush();
   }
 
-  void output_diff(const datetime_t& current);
+  void output_diff(const date_t& current);
 
   virtual void operator()(xact_t& xact);
 };
@@ -661,8 +661,8 @@ protected:
   std::list<xact_t> xact_temps;
 
 public:
-  datetime_t start;
-  datetime_t finish;
+  date_t start;
+  date_t finish;
 
   subtotal_xacts(xact_handler_ptr handler,
 			bool _remember_components = false)
@@ -715,7 +715,7 @@ public:
     TRACE_DTOR(interval_xacts);
   }
 
-  void report_subtotal(const datetime_t& moment = datetime_t());
+  void report_subtotal(const date_t& moment = date_t());
 
   virtual void flush() {
     if (last_xact)
@@ -807,7 +807,7 @@ public:
 
   virtual void flush();
   virtual void operator()(xact_t& xact) {
-    days_of_the_week[xact.date().date().day_of_week()].push_back(&xact);
+    days_of_the_week[xact.date().day_of_week()].push_back(&xact);
   }
 };
 
@@ -860,7 +860,7 @@ public:
     TRACE_DTOR(budget_xacts);
   }
 
-  void report_budget_items(const datetime_t& moment);
+  void report_budget_items(const date_t& date);
 
   virtual void operator()(xact_t& xact);
 };

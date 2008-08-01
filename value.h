@@ -102,6 +102,7 @@ public:
     VOID,			// a null value (i.e., uninitialized)
     BOOLEAN,			// a boolean
     DATETIME,			// a date and time (Boost posix_time)
+    DATE,			// a date (Boost gregorian::date)
     INTEGER,			// a signed integer value
     AMOUNT,			// a ledger::amount_t
     BALANCE,			// a ledger::balance_t
@@ -267,9 +268,13 @@ public:
     set_boolean(val);
   }
 
-  value_t(const datetime_t val) {
-    TRACE_CTOR(value_t, "const datetime_t");
+  value_t(const datetime_t& val) {
+    TRACE_CTOR(value_t, "const datetime_t&");
     set_datetime(val);
+  }
+  value_t(const date_t& val) {
+    TRACE_CTOR(value_t, "const date_t&");
+    set_date(val);
   }
 
   value_t(const long val) {
@@ -459,6 +464,7 @@ public:
    * is_boolean()
    * is_long()
    * is_datetime()
+   * is_date()
    * is_amount()
    * is_balance()
    * is_balance_pair()
@@ -512,6 +518,23 @@ public:
   void set_datetime(const datetime_t& val) {
     set_type(DATETIME);
     new(reinterpret_cast<datetime_t *>(storage->data)) datetime_t(val);
+  }
+
+  bool is_date() const {
+    return is_type(DATE);
+  }
+  date_t& as_date_lval() {
+    assert(is_date());
+    _dup();
+    return *reinterpret_cast<date_t *>(storage->data);
+  }
+  const date_t& as_date() const {
+    assert(is_date());
+    return *reinterpret_cast<date_t *>(storage->data);
+  }
+  void set_date(const date_t& val) {
+    set_type(DATE);
+    new(reinterpret_cast<date_t *>(storage->data)) date_t(val);
   }
 
   bool is_long() const {
@@ -695,6 +718,7 @@ public:
   bool		 to_boolean() const;
   long		 to_long() const;
   datetime_t     to_datetime() const;
+  date_t         to_date() const;
   amount_t	 to_amount() const;
   balance_t	 to_balance() const;
   balance_pair_t to_balance_pair() const;
@@ -828,6 +852,8 @@ public:
       return "a boolean";
     case DATETIME:
       return "a date/time";
+    case DATE:
+      return "a date";
     case INTEGER:
       return "an integer";
     case AMOUNT:

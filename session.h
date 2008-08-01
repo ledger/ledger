@@ -73,6 +73,7 @@ public:
   bool cache_dirty;
 
   datetime_t now;
+  date_t today;
 
 #if 0
   elision_style_t elision_style;

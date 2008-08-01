@@ -98,7 +98,8 @@ unsigned int qif_parser_t::parse(std::istream& in,
     case 'D':
       SET_BEG_POS_AND_LINE();
       get_line(in);
-      entry->_date = parse_datetime(line);
+      // jww (2008-08-01): Is this just a date?
+      entry->_date = parse_date(line);
       break;
 
     case 'T':

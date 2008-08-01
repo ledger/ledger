@@ -384,10 +384,10 @@ xact_t * parse_xact(char * line, account_t * account,
 
 	  if (char * p = std::strchr(buf, '=')) {
 	    *p++ = '\0';
-	    xact->_date_eff = parse_datetime(p);
+	    xact->_date_eff = parse_date(p);
 	  }
 	  if (buf[0])
-	    xact->_date = parse_datetime(buf);
+	    xact->_date = parse_date(buf);
 	}
     }
   }
@@ -455,9 +455,9 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
 
   if (char * p = std::strchr(line, '=')) {
     *p++ = '\0';
-    curr->_date_eff = parse_datetime(p);
+    curr->_date_eff = parse_date(p);
   }
-  curr->_date = parse_datetime(line);
+  curr->_date = parse_date(line);
 
   // Parse the optional cleared flag: *
 
@@ -624,16 +624,16 @@ static void clock_out_from_timelog(std::list<time_entry_t>& time_entries,
   }
 
   std::auto_ptr<entry_t> curr(new entry_t);
-  curr->_date = when;
+  curr->_date = when.date();
   curr->code  = desc ? desc : "";
   curr->payee = event.desc;
 
-  if (curr->_date < event.checkin)
+  if (when < event.checkin)
     throw parse_error
       ("Timelog check-out date less than corresponding check-in");
 
   char buf[32];
-  std::sprintf(buf, "%lds", long((curr->_date - event.checkin).seconds()));
+  std::sprintf(buf, "%lds", long((when - event.checkin).seconds()));
   amount_t amt;
   amt.parse(buf);
   assert(amt.valid());
@@ -993,8 +993,8 @@ unsigned int textual_parser_t::parse(std::istream& in,
       accounts.push_back(time_entry.account);
 
     foreach (account_t * account, accounts)
-      clock_out_from_timelog(time_entries, current_moment, account,
-			     NULL, journal);
+      clock_out_from_timelog(time_entries, current_time, account, NULL,
+			     journal);
 
     assert(time_entries.empty());
   }

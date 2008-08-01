@@ -11,12 +11,12 @@ void CommodityTestCase::tearDown() {
 
 void CommodityTestCase::testPriceHistory()
 {
-  ptime jan17_07    = parse_datetime("2007/01/17 00:00:00");
-  ptime feb27_07    = parse_datetime("2007/02/27 18:00:00");
-  ptime feb28_07    = parse_datetime("2007/02/28 06:00:00");
-  ptime feb28_07sbm = parse_datetime("2007/02/28 11:59:59");
-  ptime mar01_07    = parse_datetime("2007/03/01 00:00:00");
-  ptime apr15_07    = parse_datetime("2007/04/15 13:00:00");
+  datetime_t jan17_07    = parse_datetime("2007/01/17 00:00:00");
+  datetime_t feb27_07    = parse_datetime("2007/02/27 18:00:00");
+  datetime_t feb28_07    = parse_datetime("2007/02/28 06:00:00");
+  datetime_t feb28_07sbm = parse_datetime("2007/02/28 11:59:59");
+  datetime_t mar01_07    = parse_datetime("2007/03/01 00:00:00");
+  datetime_t apr15_07    = parse_datetime("2007/04/15 13:00:00");
 
   // jww (2007-04-17): tbd
   amount_t x0;
@@ -40,7 +40,7 @@ void CommodityTestCase::testPriceHistory()
   assertTrue(amt1);
   assertEqual(amount_t("$1831.83"), *amt1);
 
-  optional<amount_t> amt2 = x1.value(current_moment);
+  optional<amount_t> amt2 = x1.value(current_time);
   assertTrue(amt2);
   assertEqual(amount_t("$2124.12"), *amt2);
 

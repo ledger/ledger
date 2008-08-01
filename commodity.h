@@ -225,16 +225,15 @@ inline std::ostream& operator<<(std::ostream& out, const commodity_t& comm) {
 
 struct annotation_t : public equality_comparable<annotation_t>
 {
-  optional<amount_t>   price;
-  optional<datetime_t> date;
-  optional<string>     tag;
+  optional<amount_t> price;
+  optional<date_t>   date;
+  optional<string>   tag;
 
-  explicit annotation_t
-    (const optional<amount_t>&	 _price = none,
-     const optional<datetime_t>& _date  = none,
-     const optional<string>&     _tag	= none)
+  explicit annotation_t(const optional<amount_t>& _price = none,
+			const optional<date_t>&   _date  = none,
+			const optional<string>&   _tag   = none)
     : price(_price), date(_date), tag(_tag) {
-    TRACE_CTOR(annotation_t, "const optional<amount_t>& + datetime_t + string");
+    TRACE_CTOR(annotation_t, "const optional<amount_t>& + date_t + string");
   }
   annotation_t(const annotation_t& other)
     : price(other.price), date(other.date), tag(other.tag) {
@@ -258,7 +257,7 @@ struct annotation_t : public equality_comparable<annotation_t>
   void parse(std::istream& in);
   void print(std::ostream& out) const {
     out << "price " << (price ? price->to_string() : "NONE") << " "
-	<< "date "  << (date  ? *date : datetime_t()) << " "
+	<< "date "  << (date  ? *date : date_t()) << " "
 	<< "tag "   << (tag   ? *tag  : "NONE");
   }
 

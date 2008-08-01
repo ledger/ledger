@@ -13,7 +13,7 @@ void format_emacs_xacts::write_entry(entry_t& entry)
 
   out << (static_cast<unsigned long>(entry.beg_line) + 1) << " ";
 
-  tm when = boost::posix_time::to_tm(entry.date());
+  tm when = gregorian::to_tm(entry.date());
   std::time_t date = std::mktime(&when); // jww (2008-04-20): Is this GMT or local?
 
   out << "(" << (date / 65536) << " " << (date % 65536) << " 0) ";

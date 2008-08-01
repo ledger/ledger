@@ -33,46 +33,40 @@
 
 namespace ledger {
 
+namespace {
 #ifdef BOOST_DATE_TIME_HAS_HIGH_PRECISION_CLOCK
-const ptime time_now = boost::posix_time::microsec_clock::universal_time();
+  const ptime time_now = boost::posix_time::microsec_clock::universal_time();
 #else
-const ptime time_now = boost::posix_time::second_clock::universal_time();
+  const ptime time_now = boost::posix_time::second_clock::universal_time();
 #endif
-const date  date_now = boost::gregorian::day_clock::universal_day();
+  const date  date_now = boost::gregorian::day_clock::universal_day();
+}
 
-#ifdef SUPPORT_DATE_AND_TIME
-const datetime_t& current_moment(time_now);
-#else
-const datetime_t& current_moment(date_now);
-#endif
+const datetime_t& current_time(time_now);
+const date_t&	  current_date(date_now);
+      int         current_year(current_date.year());
 
-int current_year(current_moment.date().year());
+namespace {
+  const char * formats[] = {
+    "%y/%m/%d",
+    "%Y/%m/%d",
+    "%m/%d",
+    "%y.%m.%d",
+    "%Y.%m.%d",
+    "%m.%d",
+    "%y-%m-%d",
+    "%Y-%m-%d",
+    "%m-%d",
+    "%a",
+    "%A",
+    "%b",
+    "%B",
+    "%Y",
+    NULL
+  };
+}
 
-string input_time_format;
 string output_time_format = "%Y/%m/%d";
-
-#if 0
-static const char * formats[] = {
-  "%y/%m/%d",
-  "%Y/%m/%d",
-  "%m/%d",
-  "%y.%m.%d",
-  "%Y.%m.%d",
-  "%m.%d",
-  "%y-%m-%d",
-  "%Y-%m-%d",
-  "%m-%d",
-  "%a",
-  "%A",
-  "%b",
-  "%B",
-  "%Y",
-  NULL
-};
-#endif
-
-bool	    day_before_month		 = false;
-static bool day_before_month_initialized = false;
 
 #if 0
 datetime_t datetime_t::now(std::time(NULL));
@@ -94,14 +88,6 @@ namespace {
 
 datetime_t parse_datetime(const char * str)
 {
-  if (! day_before_month_initialized) {
-#ifdef HAVE_NL_LANGINFO
-    const char * d_fmt = nl_langinfo(D_FMT);
-    if (d_fmt && std::strlen(d_fmt) > 1 && d_fmt[1] == 'd')
-      day_before_month = true;
-    day_before_month_initialized = true;
-#endif
-  }
 #if 0
   return parse_abs_datetime(in);
 #else
@@ -120,9 +106,9 @@ datetime_t parse_datetime(const char * str)
 #endif
 }
 
-datetime_t interval_t::first(const datetime_t& moment) const
+date_t interval_t::first(const date_t& moment) const
 {
-  datetime_t quant(begin);
+  date_t quant(begin);
 
   if (! advanced)
     advanced = true;
@@ -147,7 +133,7 @@ datetime_t interval_t::first(const datetime_t& moment) const
 
     quant = std::mktime(desc);
 
-    datetime_t temp;
+    date_t temp;
     while (moment >= (temp = increment(quant))) {
       if (quant == temp)
 	break;
@@ -159,40 +145,27 @@ datetime_t interval_t::first(const datetime_t& moment) const
   return quant;
 }
 
-datetime_t interval_t::increment(const datetime_t& moment) const
+date_t interval_t::increment(const date_t& moment) const
 {
-#if 0
-  struct std::tm * desc = std::localtime(&moment.when);
+  date_t future(moment);
 
-  if (years)
-    desc->tm_year += years;
-  if (months)
-    desc->tm_mon += months;
-  if (days)
-    desc->tm_mday += days;
+  if (years)  future += gregorian::years(years);
+  if (months) future += gregorian::years(months);
+  if (days)   future += gregorian::years(days);
 
-  desc->tm_hour += hours;
-  desc->tm_min  += minutes;
-  desc->tm_sec  += seconds;
-
-  desc->tm_isdst = -1;
-
-  return std::mktime(desc);
-#else
-  return datetime_t();
-#endif
+  return future;
 }
 
 namespace {
   void parse_inclusion_specifier(const string& word,
-				 datetime_t * begin, datetime_t * end)
+				 date_t * begin, date_t * end)
   {
 #if 0
     // jww (2008-05-08): Implement!
     struct std::tm when;
 
     if (! parse_date_mask(word.c_str(), &when))
-      throw_(datetime_error, "Could not parse date mask: " << word);
+      throw_(date_error, "Could not parse date mask: " << word);
 
     when.tm_hour   = 0;
     when.tm_min	   = 0;
@@ -244,7 +217,7 @@ namespace {
   }
 
   void parse_date_words(std::istream& in, string& word,
-			datetime_t * begin, datetime_t * end)
+			date_t * begin, date_t * end)
   {
     string type;
 
@@ -264,7 +237,7 @@ namespace {
     if (word == "month") {
 #if 0
       // jww (2008-05-08): 
-      std::strftime(buf, 31, "%B", datetime_t::now.localtime());
+      std::strftime(buf, 31, "%B", date_t::now.localtime());
 #endif
       word = buf;
       mon_spec = true;
@@ -272,7 +245,7 @@ namespace {
     else if (word == "year") {
 #if 0
       // jww (2008-05-08): 
-      std::strftime(buf, 31, "%Y", datetime_t::now.localtime());
+      std::strftime(buf, 31, "%Y", date_t::now.localtime());
 #endif
       word = buf;
     }
@@ -329,12 +302,6 @@ void interval_t::parse(std::istream& in)
 	  months = 3 * quantity;
 	else if (word == "years")
 	  years = quantity;
-	else if (word == "hours")
-	  hours = quantity;
-	else if (word == "minutes")
-	  minutes = quantity;
-	else if (word == "seconds")
-	  seconds = quantity;
       }
       else if (word == "day")
 	days = 1;
@@ -346,12 +313,6 @@ void interval_t::parse(std::istream& in)
 	months = 3;
       else if (word == "year")
 	years = 1;
-      else if (word == "hour")
-	hours = 1;
-      else if (word == "minute")
-	minutes = 1;
-      else if (word == "second")
-	seconds = 1;
     }
     else if (word == "daily")
       days = 1;
@@ -367,8 +328,6 @@ void interval_t::parse(std::istream& in)
       months = 3;
     else if (word == "yearly")
       years = 1;
-    else if (word == "hourly")
-      hours = 1;
     else if (word == "this" || word == "last" || word == "next") {
       parse_date_words(in, word, &begin, &end);
     }

@@ -274,7 +274,7 @@ static void dataHandler(void *userData, const char *s, int len)
     break;
 
   case ENTRY_DATE:
-    curr_entry->_date = parse_datetime(string(s, len));
+    curr_entry->_date = parse_date(string(s, len));
     break;
 
   case ENTRY_DESC:

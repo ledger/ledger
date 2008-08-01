@@ -476,12 +476,12 @@ void format_t::format(std::ostream& out_str, scope_t& scope) const
       break;
 
     case element_t::DATE_STRING:
-      out << format_datetime(scope.resolve("date").as_datetime());
+      out << format_date(scope.resolve("date").as_date());
       break;
 
     case element_t::COMPLETE_DATE_STRING: {
-      datetime_t actual_date;
-      datetime_t effective_date;
+      date_t actual_date;
+      date_t effective_date;
       if (details.xact) {
 	actual_date    = details.xact->actual_date();
 	effective_date = details.xact->effective_date();

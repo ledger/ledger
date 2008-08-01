@@ -48,6 +48,11 @@ value_t::storage_t& value_t::storage_t::operator=(const value_t::storage_t& rhs)
 		 (const_cast<char *>(rhs.data)));
     break;
 
+  case DATE:
+    new(reinterpret_cast<date_t *>(data))
+      date_t(*reinterpret_cast<date_t *>(const_cast<char *>(rhs.data)));
+    break;
+
   case AMOUNT:
     new(reinterpret_cast<amount_t *>(data))
       amount_t(*reinterpret_cast<amount_t *>
@@ -130,6 +135,7 @@ void value_t::initialize()
 #if 0
   BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(bool));
   BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(datetime_t));
+  BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(date_t));
   BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(long));
   BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(amount_t));
   BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(balance_t *));
@@ -143,6 +149,8 @@ void value_t::initialize()
 	 << "  sizeof(bool)");
   DEBUG_(std::setw(3) << std::right << sizeof(datetime_t)
 	 << "  sizeof(datetime_t)");
+  DEBUG_(std::setw(3) << std::right << sizeof(date_t)
+	 << "  sizeof(date_t)");
   DEBUG_(std::setw(3) << std::right << sizeof(long)
 	 << "  sizeof(long)");
   DEBUG_(std::setw(3) << std::right << sizeof(amount_t)
@@ -179,6 +187,8 @@ value_t::operator bool() const
     return as_boolean();
   case DATETIME:
     return is_valid(as_datetime());
+  case DATE:
+    return is_valid(as_date());
   case INTEGER:
     return as_long();
   case AMOUNT:
@@ -220,6 +230,17 @@ datetime_t value_t::to_datetime() const
     value_t temp(*this);
     temp.in_place_cast(DATETIME);
     return temp.as_datetime();
+  }
+}
+
+date_t value_t::to_date() const
+{
+  if (is_date()) {
+    return as_date();
+  } else {
+    value_t temp(*this);
+    temp.in_place_cast(DATE);
+    return temp.as_date();
   }
 }
 
@@ -350,6 +371,19 @@ value_t& value_t::operator+=(const value_t& val)
       return *this;
     case AMOUNT:
       as_datetime_lval() += date_duration(val.as_amount().to_long());
+      return *this;
+    default:
+      break;
+    }
+    break;
+
+  case DATE:
+    switch (val.type()) {
+    case INTEGER:
+      as_date_lval() += date_duration_t(val.as_long());
+      return *this;
+    case AMOUNT:
+      as_date_lval() += date_duration_t(val.as_amount().to_long());
       return *this;
     default:
       break;
@@ -488,6 +522,19 @@ value_t& value_t::operator-=(const value_t& val)
       return *this;
     case AMOUNT:
       as_datetime_lval() -= date_duration(val.as_amount().to_long());
+      return *this;
+    default:
+      break;
+    }
+    break;
+
+  case DATE:
+    switch (val.type()) {
+    case INTEGER:
+      as_date_lval() -= date_duration_t(val.as_long());
+      return *this;
+    case AMOUNT:
+      as_date_lval() -= date_duration_t(val.as_amount().to_long());
       return *this;
     default:
       break;
@@ -798,6 +845,11 @@ bool value_t::operator==(const value_t& val) const
       return as_datetime() == val.as_datetime();
     break;
 
+  case DATE:
+    if (val.is_date())
+      return as_date() == val.as_date();
+    break;
+
   case INTEGER:
     switch (val.type()) {
     case INTEGER:
@@ -885,6 +937,11 @@ bool value_t::operator<(const value_t& val) const
       return as_datetime() < val.as_datetime();
     break;
 
+  case DATE:
+    if (val.is_date())
+      return as_date() < val.as_date();
+    break;
+
   case INTEGER:
     switch (val.type()) {
     case INTEGER:
@@ -928,6 +985,11 @@ bool value_t::operator>(const value_t& val) const
   case DATETIME:
     if (val.is_datetime())
       return as_datetime() > val.as_datetime();
+    break;
+
+  case DATE:
+    if (val.is_date())
+      return as_date() > val.as_date();
     break;
 
   case INTEGER:
@@ -1142,6 +1204,9 @@ void value_t::in_place_negate()
   case DATETIME:
     set_long(- as_long());
     return;
+  case DATE:
+    set_long(- as_long());
+    return;
   case AMOUNT:
     as_amount_lval().in_place_negate();
     return;
@@ -1167,6 +1232,8 @@ bool value_t::is_realzero() const
     return as_long() == 0;
   case DATETIME:
     return ! is_valid(as_datetime());
+  case DATE:
+    return ! is_valid(as_date());
   case AMOUNT:
     return as_amount().is_realzero();
   case BALANCE:
@@ -1198,6 +1265,8 @@ bool value_t::is_zero() const
     return as_long() == 0;
   case DATETIME:
     return ! is_valid(as_datetime());
+  case DATE:
+    return ! is_valid(as_date());
   case AMOUNT:
     return as_amount().is_zero();
   case BALANCE:
@@ -1353,6 +1422,8 @@ value_t value_t::annotated_date() const
   switch (type()) {
   case DATETIME:
     return *this;
+  case DATE:
+    return *this;
 
   case AMOUNT: {
     optional<datetime_t> temp = as_amount().annotation_details().date;
@@ -1400,6 +1471,7 @@ value_t value_t::strip_annotations(const bool keep_price,
   case BOOLEAN:
   case INTEGER:
   case DATETIME:
+  case DATE:
   case STRING:
   case POINTER:
     return *this;
@@ -1505,6 +1577,10 @@ void value_t::dump(std::ostream& out, const int first_width,
     out << as_datetime();
     break;
 
+  case DATE:
+    out << as_date();
+    break;
+
   case INTEGER:
     out << as_long();
     break;
@@ -1580,7 +1656,10 @@ void value_t::print(std::ostream& out, const bool relaxed) const
     break;
 
   case DATETIME:
-    out << '[' << format_datetime(as_datetime()) << ']';
+    assert(false);
+    break;
+  case DATE:
+    out << '[' << format_date(as_date()) << ']';
     break;
 
   case STRING:
@@ -1623,6 +1702,12 @@ void value_t::read(const char *& data)
     set_datetime(read_long<unsigned long>(data));
 #endif
     break;
+  case DATE:
+#if 0
+    // jww (2008-04-22): I need to record and read a date_t directly
+    set_date(read_long<unsigned long>(data));
+#endif
+    break;
   case AMOUNT: {
     amount_t temp;
     temp.read(data);
@@ -1650,6 +1735,11 @@ void value_t::write(std::ostream& out) const
   case DATETIME:
 #if 0
     binary::write_number(out, as_datetime());
+#endif
+    break;
+  case DATE:
+#if 0
+    binary::write_number(out, as_date());
 #endif
     break;
   case AMOUNT:

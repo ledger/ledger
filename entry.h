@@ -81,10 +81,10 @@ public:
 class entry_t : public entry_base_t, public scope_t
 {
 public:
-  datetime_t	       _date;
-  optional<datetime_t> _date_eff;
-  optional<string>     code;
-  string	       payee;
+  date_t	   _date;
+  optional<date_t> _date_eff;
+  optional<string> code;
+  string	   payee;
 
   entry_t() {
     TRACE_CTOR(entry_t, "");
@@ -95,15 +95,15 @@ public:
     TRACE_DTOR(entry_t);
   }
 
-  datetime_t actual_date() const {
+  date_t actual_date() const {
     return _date;
   }
-  datetime_t effective_date() const {
+  date_t effective_date() const {
     if (! _date_eff)
       return _date;
     return *_date_eff;
   }
-  datetime_t date() const {
+  date_t date() const {
     if (xact_t::use_effective_date)
       return effective_date();
     else

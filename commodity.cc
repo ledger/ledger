@@ -182,7 +182,7 @@ amount_t commodity_t::exchange(const amount_t&		   amount,
     basis_cost = final_cost;
 
   amount_t ann_amount(amount);
-  ann_amount.annotate(annotation_t(per_unit_cost, moment, tag));
+  ann_amount.annotate(annotation_t(per_unit_cost, moment->date(), tag));
   return ann_amount;
 }
 
@@ -324,7 +324,7 @@ void annotation_t::parse(std::istream& in)
       else
 	throw_(amount_error, "Commodity date lacks closing bracket");
 
-      date = parse_datetime(buf);
+      date = parse_date(buf);
     }
     else if (c == '(') {
       if (tag)
@@ -458,7 +458,7 @@ bool compare_amount_commodities::operator()(const amount_t * left,
       return false;
 
     if (aleftcomm.details.date && arightcomm.details.date) {
-      duration_t diff = *aleftcomm.details.date - *arightcomm.details.date;
+      date_duration_t diff = *aleftcomm.details.date - *arightcomm.details.date;
       return diff.is_negative();
     }
 

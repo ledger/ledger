@@ -9,20 +9,19 @@ namespace ledger {
 class reconcile_xacts : public item_handler<xact_t>
 {
   value_t    balance;
-  datetime_t cutoff;
-
+  date_t     cutoff;
   xacts_list xacts;
 
   reconcile_xacts();
 
 public:
-  reconcile_xacts(xact_handler_ptr  handler,
-			 const value_t&    _balance,
-			 const datetime_t& _cutoff)
+  reconcile_xacts(xact_handler_ptr handler,
+		  const value_t&   _balance,
+		  const date_t&	   _cutoff)
     : item_handler<xact_t>(handler),
       balance(_balance), cutoff(_cutoff) {
     TRACE_CTOR(reconcile_xacts,
-	       "xact_handler_ptr, const value_t&, const datetime_t&");
+	       "xact_handler_ptr, const value_t&, const date_t&");
   }
   virtual ~reconcile_xacts() throw() {
     TRACE_DTOR(reconcile_xacts);

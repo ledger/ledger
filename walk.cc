@@ -242,7 +242,7 @@ void handle_value(const value_t&	value,
 		  unsigned int		flags,
 		  std::list<xact_t>&    temps,
 		  item_handler<xact_t>& handler,
-		  const datetime_t&     date		= datetime_t(),
+		  const date_t&         date = date_t(),
 		  xacts_list *          component_xacts = NULL)
 {
   temps.push_back(xact_t(account));
@@ -278,6 +278,7 @@ void handle_value(const value_t&	value,
   switch (value.type()) {
   case value_t::BOOLEAN:
   case value_t::DATETIME:
+  case value_t::DATE:
   case value_t::INTEGER:
     temp.cast(value_t::AMOUNT);
     // fall through...
@@ -372,11 +373,11 @@ void related_xacts::flush()
   item_handler<xact_t>::flush();
 }
 
-void changed_value_xacts::output_diff(const datetime_t& current)
+void changed_value_xacts::output_diff(const date_t& date)
 {
   value_t cur_bal;
 
-  xact_xdata(*last_xact).date = current;
+  xact_xdata(*last_xact).date = date;
 #if 0
   compute_total(cur_bal, details_t(*last_xact));
 #endif
@@ -390,7 +391,7 @@ void changed_value_xacts::output_diff(const datetime_t& current)
     entry_temps.push_back(entry_t());
     entry_t& entry = entry_temps.back();
     entry.payee = "Commodities revalued";
-    entry._date = current;
+    entry._date = date;
 
     handle_value(diff, NULL, &entry, XACT_NO_TOTAL, xact_temps,
 		 *handler);
@@ -400,12 +401,12 @@ void changed_value_xacts::output_diff(const datetime_t& current)
 void changed_value_xacts::operator()(xact_t& xact)
 {
   if (last_xact) {
-    datetime_t moment;
+    date_t date;
     if (xact_has_xdata(*last_xact))
-      moment = xact_xdata_(*last_xact).date;
+      date = xact_xdata_(*last_xact).date;
     else
-      moment = xact.date();
-    output_diff(moment);
+      date = xact.date();
+    output_diff(date);
   }
 
   if (changed_values_only)
@@ -497,18 +498,13 @@ void subtotal_xacts::operator()(xact_t& xact)
     account_xdata(*xact_account(xact)).dflags |= ACCOUNT_HAS_UNB_VIRTUALS;
 }
 
-void interval_xacts::report_subtotal(const datetime_t& moment)
+void interval_xacts::report_subtotal(const date_t& date)
 {
   assert(last_xact);
 
   start = interval.begin;
-  if (is_valid(moment))
-    // jww (2008-04-24): How to change this back into a datetime?
-#if 0
-    finish = moment - 86400L;
-#else
-  ;
-#endif
+  if (is_valid(date))
+    finish = date - gregorian::days(1);
   else
     finish = last_xact->date();
 
@@ -519,7 +515,7 @@ void interval_xacts::report_subtotal(const datetime_t& moment)
 
 void interval_xacts::operator()(xact_t& xact)
 {
-  const datetime_t date = xact.date();
+  const date_t& date(xact.date());
 
   if ((is_valid(interval.begin) && date < interval.begin) ||
       (is_valid(interval.end)   && date >= interval.end))
@@ -533,12 +529,12 @@ void interval_xacts::operator()(xact_t& xact)
       started = true;
     }
 
-    datetime_t quant = interval.increment(interval.begin);
+    date_t quant = interval.increment(interval.begin);
     if (date >= quant) {
       if (last_xact)
 	report_subtotal(quant);
 
-      datetime_t temp;
+      date_t temp;
       while (date >= (temp = interval.increment(quant))) {
 	if (quant == temp)
 	  break;
@@ -670,7 +666,7 @@ void generate_xacts::add_xact(const interval_t& period,
   pending_xacts.push_back(pending_xacts_pair(period, &xact));
 }
 
-void budget_xacts::report_budget_items(const datetime_t& moment)
+void budget_xacts::report_budget_items(const date_t& date)
 {
   if (pending_xacts.size() == 0)
     return;
@@ -679,13 +675,13 @@ void budget_xacts::report_budget_items(const datetime_t& moment)
   do {
     reported = false;
     foreach (pending_xacts_list::value_type& pair, pending_xacts) {
-      datetime_t& begin = pair.first.begin;
+      date_t& begin = pair.first.begin;
       if (! is_valid(begin)) {
-	pair.first.start(moment);
+	pair.first.start(date);
 	begin = pair.first.begin;
       }
 
-      if (begin < moment &&
+      if (begin < date &&
 	  (! is_valid(pair.first.end) || begin < pair.first.end)) {
 	xact_t& xact = *pair.second;
 
@@ -694,7 +690,7 @@ void budget_xacts::report_budget_items(const datetime_t& moment)
 #if 0
 	// jww (2008-04-24): Need a new debug macro here
 	DEBUG_TIME("ledger.walk.budget", begin);
-	DEBUG_TIME("ledger.walk.budget", moment);
+	DEBUG_TIME("ledger.walk.budget", date);
 #endif
 
 	entry_temps.push_back(entry_t());
@@ -753,10 +749,10 @@ void forecast_xacts::add_xact(const interval_t& period, xact_t& xact)
 
   interval_t& i = pending_xacts.back().first;
   if (! is_valid(i.begin)) {
-    i.start(current_moment);
+    i.start(current_date);
     i.begin = i.increment(i.begin);
   } else {
-    while (i.begin < current_moment)
+    while (i.begin < current_date)
       i.begin = i.increment(i.begin);
   }
 }
@@ -764,7 +760,7 @@ void forecast_xacts::add_xact(const interval_t& period, xact_t& xact)
 void forecast_xacts::flush()
 {
   xacts_list passed;
-  datetime_t last;
+  date_t last;
 
   while (pending_xacts.size() > 0) {
     pending_xacts_list::iterator least = pending_xacts.begin();
@@ -774,7 +770,7 @@ void forecast_xacts::flush()
       if ((*i).first.begin < (*least).first.begin)
 	least = i;
 
-    datetime_t& begin = (*least).first.begin;
+    date_t& begin = (*least).first.begin;
 
     if (is_valid((*least).first.end) && begin >= (*least).first.end) {
       pending_xacts.erase(least);
@@ -795,11 +791,13 @@ void forecast_xacts::flush()
     temp.add_flags(XACT_AUTO | XACT_TEMP);
     entry.add_xact(&temp);
 
-    datetime_t next = (*least).first.increment(begin);
+    date_t next = (*least).first.increment(begin);
+#if 0
     // jww (2008-04-24): Does seconds() here give the total seconds?
     if (next < begin || // wraparound
 	(is_valid(last) && (next - last).seconds() > 365 * 5 * 24 * 3600))
       break;
+#endif
     begin = next;
 
     item_handler<xact_t>::operator()(temp);
@@ -957,7 +955,7 @@ void walk_commodities(commodity_pool_t::commodities_by_ident& commodities,
     if ((*i)->history())
       foreach (const commodity_t::history_map::value_type& pair,
 	       (*i)->history()->prices) {
-	entry_temps.back()._date = pair.first;
+	entry_temps.back()._date = pair.first.date();
 
 	xact_temps.push_back(xact_t(&acct_temps.back()));
 	xact_t& temp = xact_temps.back();

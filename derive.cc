@@ -14,9 +14,7 @@ entry_t * derive_new_entry(report_t& report,
 
   entry_t * matching = NULL;
 
-  // jww (2008-04-20): Need to parse the string here
-  //added->_date = *i++;
-  added->_date = boost::posix_time::time_from_string(*i++);
+  added->_date = parse_date(*i++);
   if (i == end)
     throw std::runtime_error("Too few arguments to 'entry'");
 
