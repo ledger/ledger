@@ -44,6 +44,35 @@ format_t::element_t * format_t::parse_elements(const string& fmt)
   char   buf[1024];
   char * q = buf;
 
+  // The following format codes need to be implemented as functions:
+  //
+  //   d: COMPLETE_DATE_STRING
+  //   D: DATE_STRING
+  //   S: SOURCE; break
+  //   B: ENTRY_BEG_POS
+  //   b: ENTRY_BEG_LINE
+  //   E: ENTRY_END_POS
+  //   e: ENTRY_END_LINE
+  //   X: CLEARED
+  //   Y: ENTRY_CLEARED
+  //   C: CODE
+  //   P: PAYEE
+  //   W: OPT_ACCOUNT
+  //   a: ACCOUNT_NAME
+  //   A: ACCOUNT_FULLNAME
+  //   t: AMOUNT
+  //   o: OPT_AMOUNT
+  //   T: TOTAL
+  //   N: NOTE
+  //   n: OPT_NOTE
+  //   |: SPACER
+  //   _: DEPTH_SPACER
+  //   
+  //   xB: XACT_BEG_POS
+  //   xb: XACT_BEG_LINE
+  //   xE: XACT_END_POS
+  //   xe: XACT_END_LINE
+
   for (const char * p = fmt.c_str(); *p; p++) {
     if (*p != '%' && *p != '\\') {
       *q++ = *p;
@@ -129,53 +158,13 @@ format_t::element_t * format_t::parse_elements(const string& fmt)
       break;
     }
 
-#if 0
-    case 'x':
-      switch (*++p) {
-      case 'B': current->type = element_t::XACT_BEG_POS; break;
-      case 'b': current->type = element_t::XACT_BEG_LINE; break;
-      case 'E': current->type = element_t::XACT_END_POS; break;
-      case 'e': current->type = element_t::XACT_END_LINE; break;
-      case '\0':
-	goto END;
-      }
+    default:
+      current->type = element_t::EXPR;
+      current->expr.parse(string("format_") + *p);
       break;
-
-    case 'd':
-      current->type  = element_t::COMPLETE_DATE_STRING;
-      current->chars = output_time_format;
-      break;
-    case 'D':
-      current->type  = element_t::DATE_STRING;
-      current->chars = output_time_format;
-      break;
-
-    case 'S': current->type = element_t::SOURCE; break;
-    case 'B': current->type = element_t::ENTRY_BEG_POS; break;
-    case 'b': current->type = element_t::ENTRY_BEG_LINE; break;
-    case 'E': current->type = element_t::ENTRY_END_POS; break;
-    case 'e': current->type = element_t::ENTRY_END_LINE; break;
-    case 'X': current->type = element_t::CLEARED; break;
-    case 'Y': current->type = element_t::ENTRY_CLEARED; break;
-    case 'C': current->type = element_t::CODE; break;
-    case 'P': current->type = element_t::PAYEE; break;
-    case 'W': current->type = element_t::OPT_ACCOUNT; break;
-    case 'a': current->type = element_t::ACCOUNT_NAME; break;
-    case 'A': current->type = element_t::ACCOUNT_FULLNAME; break;
-    case 't': current->type = element_t::AMOUNT; break;
-    case 'o': current->type = element_t::OPT_AMOUNT; break;
-    case 'T': current->type = element_t::TOTAL; break;
-    case 'N': current->type = element_t::NOTE; break;
-    case 'n': current->type = element_t::OPT_NOTE; break;
-    case '|': current->type = element_t::SPACER; break;
-    case '_': current->type = element_t::DEPTH_SPACER; break;
-#endif
     }
   }
 
-#if 0
- END:
-#endif
   if (q != buf) {
     if (! result.get()) {
       result.reset(new element_t);
