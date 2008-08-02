@@ -56,7 +56,27 @@ public:
     else
       return NULL_VALUE;
   }
+
+  virtual optional<scope_t&> find_scope(const std::type_info&, bool = true) {
+    return none;
+  }
 };
+
+template <typename T>
+inline T& find_scope(scope_t& scope, bool skip_this = true) {
+  optional<scope_t&> found = scope.find_scope(typeid(T), skip_this);
+  assert(found);
+  return downcast<T>(*found);
+}
+
+template <typename T>
+inline optional<T&> maybe_find_scope(scope_t& scope, bool skip_this = true) {
+  optional<scope_t&> found = scope.find_scope(typeid(T), skip_this);
+  if (found)
+    return optional<T&>(downcast<T>(*found));
+  else
+    return none;
+}
 
 class child_scope_t : public noncopyable, public scope_t
 {
@@ -78,6 +98,17 @@ public:
     if (parent)
       return parent->lookup(name);
     return expr_t::ptr_op_t();
+  }
+
+  virtual optional<scope_t&> find_scope(const std::type_info& type,
+					bool skip_this = true) {
+    for (scope_t * ptr = (skip_this ? parent : this);
+	 ptr;
+	 ptr = polymorphic_downcast<child_scope_t *>(ptr)->parent)
+      if (typeid(ptr) == type)
+	return *ptr;
+
+    return none;
   }
 };
 
@@ -152,29 +183,54 @@ public:
 };
 
 template <typename T>
-class var_t : public noncopyable
+class ptr_t : public noncopyable
 {
   T * value;
+
+  ptr_t();
+
+public:
+  ptr_t(scope_t& scope, const string& name)
+    : value(scope.resolve(name).template as_pointer<T>()) {
+    TRACE_CTOR(ptr_t, "scope_t&, const string&");
+  }
+  ptr_t(call_scope_t& scope, const unsigned int idx)
+    : value(scope[idx].template as_pointer<T>()) {
+    TRACE_CTOR(ptr_t, "call_scope_t&, const unsigned int");
+  }
+  ~ptr_t() throw() {
+    TRACE_DTOR(ptr_t);
+  }
+
+  T& operator *() { return *value; }
+  T * operator->() { return value; }
+};
+
+template <typename T>
+class var_t : public noncopyable
+{
+  value_t value;
 
   var_t();
 
 public:
-  // jww (2008-07-21): Give a good exception here if we can't find "name"
-  var_t(scope_t& scope, const string& name)
-    : value(scope.resolve(name).template as_pointer<T>()) {
+  var_t(scope_t& scope, const string& name) : value(scope.resolve(name)) {
     TRACE_CTOR(var_t, "scope_t&, const string&");
   }
-  var_t(call_scope_t& scope, const unsigned int idx)
-    : value(scope[idx].template as_pointer<T>()) {
+  var_t(call_scope_t& scope, const unsigned int idx) : value(scope[idx]) {
     TRACE_CTOR(var_t, "call_scope_t&, const unsigned int");
   }
   ~var_t() throw() {
     TRACE_DTOR(var_t);
   }
 
-  T& operator *() { return *value; }
-  T * operator->() { return value; }
+  operator T() { assert(false); }
 };
+
+template <>
+inline var_t<long>::operator long() {
+  return value.to_long();
+}
 
 } // namespace ledger
 

@@ -357,16 +357,22 @@ void entry_t::add_xact(xact_t * xact)
 }
 
 namespace {
-  value_t get_date(call_scope_t& scope)
-  {
-    entry_t& entry(downcast<entry_t>(*scope.parent));
+  value_t get_date(entry_t& entry) {
     return entry.date();
   }
 
-  value_t get_payee(call_scope_t& scope)
+  value_t get_payee(entry_t& entry)
   {
-    entry_t& entry(downcast<entry_t>(*scope.parent));
     return string_value(entry.payee);
+  }
+
+  typedef value_t (*entry_func_t)(entry_t&);
+
+  template <entry_func_t Func>
+  value_t get_wrapper(call_scope_t& scope)
+  {
+    xact_t& xact(downcast<xact_t>(*scope.parent));
+    return (*Func)(*xact.entry);
   }
 }
 
@@ -375,21 +381,14 @@ expr_t::ptr_op_t entry_t::lookup(const string& name)
   switch (name[0]) {
   case 'd':
     if (name[1] == '\0' || name == "date")
-      return WRAP_FUNCTOR(bind(get_date, _1));
+      return WRAP_FUNCTOR(get_wrapper<&get_date>);
     break;
   case 'p':
     if (name[1] == '\0' || name == "payee")
-      return WRAP_FUNCTOR(bind(get_payee, _1));
+      return WRAP_FUNCTOR(get_wrapper<&get_payee>);
     break;
   }
-
-#if 0
-  // jww (2008-07-29): Should it go to the containing journal next, or to the
-  // session?
-  return entry->lookup(name);
-#else
   return expr_t::ptr_op_t();
-#endif
 }
 
 bool entry_t::valid() const
@@ -465,10 +464,10 @@ void auto_entry_t::extend_entry(entry_base_t& entry, bool post)
   }
 }
 
-void extend_entry_base(journal_t * journal, entry_base_t& entry, bool post)
+void extend_entry_base(journal_t * journal, entry_base_t& base, bool post)
 {
   foreach (auto_entry_t * entry, journal->auto_entries)
-    entry->extend_entry(*entry, post);
+    entry->extend_entry(base, post);
 }
 
 } // namespace ledger

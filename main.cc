@@ -48,8 +48,8 @@
 namespace ledger {
   value_t register_command(call_scope_t& args)
   {
-    var_t<report_t>     report(args, 0);
-    var_t<std::ostream> ostream(args, 1);
+    ptr_t<report_t>     report(args, 0);
+    ptr_t<std::ostream> ostream(args, 1);
 
     report->xacts_report
       (xact_handler_ptr(new format_xacts

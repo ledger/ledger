@@ -50,10 +50,10 @@ struct time_entry_t
 #endif
 
 namespace {
-  optional<expr_t> parse_amount_expr(std::istream&   in,
-				     amount_t&       amount,
-				     xact_t * xact,
-				     unsigned short  flags = 0)
+  optional<expr_t> parse_amount_expr(std::istream&  in,
+				     amount_t&      amount,
+				     xact_t *	    xact,
+				     unsigned short flags = 0)
   {
     expr_t expr(in, flags | EXPR_PARSE_PARTIAL);
 
@@ -79,8 +79,7 @@ namespace {
   }
 }
 
-xact_t * parse_xact(char * line, account_t * account,
-				  entry_t * entry = NULL)
+xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
 {
   std::istringstream in(line);
 
@@ -299,23 +298,25 @@ xact_t * parse_xact(char * line, account_t * account,
 	  amount_t amt;
 
 	  try {
-#if 0
-	    // jww (2008-08-02): This data must be saved so that it can be
-	    // restored on "print".
 	    unsigned long beg = static_cast<unsigned long>(in.tellg());
-#endif
 
-	    if (parse_amount_expr(in, amt, xact.get(),
-				  EXPR_PARSE_NO_MIGRATE))
+	    optional<expr_t> total_expr =
+	      parse_amount_expr(in, amt, xact.get(), EXPR_PARSE_NO_MIGRATE);
+
+	    if (amt.is_null())
 	      throw parse_error
 		("An assigned balance must evaluate to a constant value");
 
 	    DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 		  "XACT assign: parsed amt = " << amt);
 
-#if 0
-	    unsigned long end = static_cast<unsigned long>(in.tellg());
-#endif
+	    if (total_expr) {
+	      unsigned long end = static_cast<unsigned long>(in.tellg());
+	      total_expr->set_text(string("=") +
+				   string(line, beg, end - beg));
+	    }
+
+	    // jww (2008-08-02): Save total_expr somewhere!
 
 	    amount_t diff;
 	    if (xdata.value.is_amount()) {
@@ -339,11 +340,10 @@ xact_t * parse_xact(char * line, account_t * account,
 		  "XACT assign: diff = " << diff);
 
 	    if (! diff.is_realzero()) {
-	      if (xact->amount) {
+	      if (! xact->amount.is_null()) {
 		xact_t * temp =
 		  new xact_t(xact->account, diff,
-				    XACT_GENERATED |
-				    XACT_CALCULATED);
+			     XACT_GENERATED | XACT_CALCULATED);
 		entry->add_xact(temp);
 
 		DEBUG("ledger.textual.parse", "line " << linenum << ": " <<

@@ -37,7 +37,7 @@ namespace ledger {
 extern std::ostringstream _desc_buffer;
 
 template <typename T>
-inline void throw_func(const std::string& message) {
+inline void throw_func(const string& message) {
   _desc_buffer.str("");
   throw T(message);
 }

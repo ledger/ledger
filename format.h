@@ -74,6 +74,8 @@ class format_t : public noncopyable
   static bool		 ansi_codes;
   static bool		 ansi_invert;
 
+  static element_t * parse_elements(const string& fmt);
+
 public:
   format_t() {
     TRACE_CTOR(format_t, "");
@@ -100,11 +102,8 @@ public:
       elem->dump(out);
   }
 
-private:
-  static element_t * parse_elements(const string& fmt);
-
   static string truncate(const string& str, unsigned int width,
-			      const bool is_account = false);
+			 const bool is_account = false);
 };
 
 } // namespace ledger

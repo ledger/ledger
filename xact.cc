@@ -32,6 +32,7 @@
 #include "xact.h"
 #include "journal.h"
 #include "account.h"
+#include "format.h"
 
 namespace ledger {
 
@@ -57,31 +58,30 @@ date_t xact_t::effective_date() const
 }
 
 namespace {
-  value_t get_amount(call_scope_t& scope)
+  value_t get_amount(xact_t& xact)
   {
-    xact_t& xact(downcast<xact_t>(*scope.parent));
     return xact.amount;
   }
 
-  value_t get_date(call_scope_t& scope)
+  value_t get_date(xact_t& xact)
   {
-    xact_t& xact(downcast<xact_t>(*scope.parent));
-    return xact.entry->date();
-  }
-
-  value_t get_payee(call_scope_t& scope)
-  {
-    xact_t& xact(downcast<xact_t>(*scope.parent));
-    return string_value(xact.entry->payee);
+    return xact.date();
   }
 
   value_t get_account(call_scope_t& scope)
   {
     xact_t& xact(downcast<xact_t>(*scope.parent));
 
+    long width = 0;
+    if (scope.size() == 1)
+      width = var_t<long>(scope, 0);
+
     // jww (2008-08-02): Accept a width here so that we can abbreviate the
     // string.
     string name = xact.account->fullname();
+
+    if (width > 2)
+      name = format_t::truncate(name, width - 2, true);
 
     if (xact.has_flags(XACT_VIRTUAL)) {
       if (xact.must_balance())
@@ -92,10 +92,15 @@ namespace {
     return string_value(name);
   }
 
-  value_t get_account_base(call_scope_t& scope)
+  value_t get_account_base(xact_t& xact)
   {
     assert(false);
     return NULL_VALUE;
+  }
+
+  template <value_t (*Func)(xact_t&)>
+  value_t get_wrapper(call_scope_t& scope) {
+    return (*Func)(find_scope<xact_t>(scope));
   }
 }
 
@@ -104,25 +109,21 @@ expr_t::ptr_op_t xact_t::lookup(const string& name)
   switch (name[0]) {
   case 'a':
     if (name[1] == '\0' || name == "amount")
-      return WRAP_FUNCTOR(get_amount);
+      return WRAP_FUNCTOR(get_wrapper<&get_amount>);
     else if (name == "account")
       return WRAP_FUNCTOR(get_account);
     else if (name == "account_base")
-      return WRAP_FUNCTOR(get_account_base);
+      return WRAP_FUNCTOR(get_wrapper<&get_account_base>);
     break;
   case 'd':
     if (name[1] == '\0' || name == "date")
-      return WRAP_FUNCTOR(get_date);
+      return WRAP_FUNCTOR(get_wrapper<&get_date>);
     break;
   case 'f':
     if (name.find("fmt_") == 0) {
       if (name == "fmt_A")
 	return WRAP_FUNCTOR(get_account);
     }
-    break;
-  case 'p':
-    if (name[1] == '\0' || name == "payee")
-      return WRAP_FUNCTOR(get_payee);
     break;
   }
   return entry->lookup(name);

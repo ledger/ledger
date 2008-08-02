@@ -52,6 +52,7 @@
 
 #include <algorithm>
 #include <exception>
+#include <typeinfo>
 #include <stdexcept>
 #include <iostream>
 #include <streambuf>

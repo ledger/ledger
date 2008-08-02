@@ -102,8 +102,12 @@ public:
   value_t  calc(scope_t& scope) const;
 
   bool	   is_constant() const;
+  bool     is_function() const;
+
   value_t& constant_value();
   const value_t& constant_value() const;
+
+  function_t& get_function();
 
   void     print(std::ostream& out, scope_t& scope) const;
   void     dump(std::ostream& out) const;

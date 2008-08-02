@@ -44,7 +44,7 @@ expr_t::expr_t() : compiled(false)
 }
 
 expr_t::expr_t(const expr_t& other)
-  : ptr(other.ptr), str(other.str), compiled(false)
+  : ptr(other.ptr), str(other.str), compiled(other.compiled)
 {
   TRACE_CTOR(expr_t, "copy");
 }
@@ -109,7 +109,7 @@ void expr_t::parse(std::istream& in, const unsigned int flags)
 
 void expr_t::compile(scope_t& scope)
 {
-  if (ptr.get()) {
+  if (ptr.get() && ! compiled) {
     ptr	     = ptr->compile(scope);
     compiled = true;
   }
@@ -127,7 +127,14 @@ value_t expr_t::calc(scope_t& scope)
 
 bool expr_t::is_constant() const
 {
+  assert(compiled);
   return ptr.get() && ptr->is_value();
+}
+
+bool expr_t::is_function() const
+{
+  assert(compiled);
+  return ptr.get() && ptr->is_function();
 }
 
 value_t& expr_t::constant_value()
@@ -140,6 +147,12 @@ const value_t& expr_t::constant_value() const
 {
   assert(is_constant());
   return ptr->as_value();
+}
+
+function_t& expr_t::get_function()
+{
+  assert(is_function());
+  return ptr->as_function_lval();
 }
 
 value_t expr_t::eval(const string& _expr, scope_t& scope)

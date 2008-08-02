@@ -242,11 +242,24 @@ void format_t::format(std::ostream& out_str, scope_t& scope)
 
     case element_t::EXPR:
       try {
-	if (elem->max_width == 0)
-	  elem->expr.calc(scope).dump(out, elem->min_width);
-	else
-	  out << truncate(elem->expr.calc(scope).as_string(),
-			  elem->max_width);
+	elem->expr.compile(scope);
+
+	if (elem->expr.is_function()) {
+	  call_scope_t args(scope);
+	  args.push_back(long(elem->max_width));
+
+	  if (elem->max_width == 0)
+	    elem->expr.get_function()(args).dump(out, elem->min_width);
+	  else
+	    out << truncate(elem->expr.get_function()(args).as_string(),
+			    elem->max_width);
+	} else {
+	  if (elem->max_width == 0)
+	    elem->expr.calc(scope).dump(out, elem->min_width);
+	  else
+	    out << truncate(elem->expr.calc(scope).as_string(),
+			    elem->max_width);
+	}
       }
       catch (const calc_error&) {
 	out << (string("%") + elem->chars);
