@@ -647,6 +647,34 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope)
     }
     return this;
 
+  case MASK: {
+    ptr_op_t match = new op_t(op_t::O_MATCH);
+    match->set_right(this);
+
+    // jww (2008-08-02): Coupling!
+    ptr_op_t ident = new op_t(op_t::IDENT);
+    switch (as_mask().flags()) {
+    case MASK_SHORT_ACCOUNT:
+      ident->set_ident("account_base");
+      break;
+    case MASK_CODE:
+      ident->set_ident("code");
+      break;
+    case MASK_PAYEE:
+      ident->set_ident("payee");
+      break;
+    case MASK_NOTE:
+      ident->set_ident("note");
+      break;
+    case MASK_ACCOUNT:
+      ident->set_ident("account");
+      break;
+    }
+    match->set_left(ident->compile(scope));
+
+    return match;
+  }
+
   default:
     break;
   }
@@ -720,8 +748,8 @@ value_t expr_t::op_t::calc(scope_t& scope)
   }
 
   case O_MATCH:
-    assert(left()->is_mask());
-    return left()->as_mask().match(right()->calc(scope).to_string());
+    assert(right()->is_mask());
+    return right()->as_mask().match(left()->calc(scope).to_string());
 
   case INDEX: {
     const call_scope_t& args(downcast<const call_scope_t>(scope));

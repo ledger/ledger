@@ -38,13 +38,6 @@ namespace ledger {
 
 struct expr_t::token_t : public noncopyable, public supports_flags<>
 {
-#define TOKEN_SHORT_ACCOUNT_MASK  0x01
-#define TOKEN_CODE_MASK           0x02
-#define TOKEN_COMMODITY_MASK      0x04
-#define TOKEN_PAYEE_MASK          0x08
-#define TOKEN_NOTE_MASK           0x10
-#define TOKEN_ACCOUNT_MASK        0x20
-
   enum kind_t {
     VALUE,			// any kind of literal value
     IDENT,			// [A-Za-z_][-A-Za-z0-9_:]*

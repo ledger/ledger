@@ -285,17 +285,17 @@ void expr_t::token_t::next(std::istream& in, const unsigned int pflags)
     length++;
 
     if (short_account_mask)
-      set_flags(TOKEN_SHORT_ACCOUNT_MASK);
+      set_flags(MASK_SHORT_ACCOUNT);
     else if (code_mask)
-      set_flags(TOKEN_CODE_MASK);
+      set_flags(MASK_CODE);
     else if (commodity_mask)
-      set_flags(TOKEN_COMMODITY_MASK);
+      set_flags(MASK_COMMODITY);
     else if (payee_mask)
-      set_flags(TOKEN_PAYEE_MASK);
+      set_flags(MASK_PAYEE);
     else if (note_mask)
-      set_flags(TOKEN_NOTE_MASK);
+      set_flags(MASK_NOTE);
     else
-      set_flags(TOKEN_ACCOUNT_MASK);
+      set_flags(MASK_ACCOUNT);
 
     kind = MASK;
     value.set_string(buf);

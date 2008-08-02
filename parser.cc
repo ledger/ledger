@@ -47,42 +47,11 @@ expr_t::parser_t::parse_value_term(std::istream& in,
     node->set_value(tok.value);
     break;
 
-  case token_t::MASK: {
-    // A /mask/ is just a shorthand for calling match().
-    node = new op_t(op_t::O_MATCH);
-
-    ptr_op_t mask = new op_t(op_t::MASK);
-    mask->set_mask(tok.value.as_string());
-
-    ptr_op_t ident = new op_t(op_t::IDENT);
-
-    node->set_left(mask);
-    node->set_right(ident);
-
-    switch (tok.flags()) {
-    case TOKEN_SHORT_ACCOUNT_MASK:
-      ident->set_ident("account_base");
-      break;
-    case TOKEN_CODE_MASK:
-      ident->set_ident("code");
-      break;
-#if 0
-    case TOKEN_COMMODITY_MASK:
-      ident->set_ident("commodity");
-      break;
-#endif
-    case TOKEN_PAYEE_MASK:
-      ident->set_ident("payee");
-      break;
-    case TOKEN_NOTE_MASK:
-      ident->set_ident("note");
-      break;
-    case TOKEN_ACCOUNT_MASK:
-      ident->set_ident("account");
-      break;
-    }
+  case token_t::MASK:
+    node = new op_t(op_t::MASK);
+    node->set_mask(tok.value.as_string());
+    node->as_mask_lval().add_flags(tok.flags());
     break;
-  }
 
   case token_t::IDENT: {
 #if 0
@@ -296,9 +265,6 @@ expr_t::parser_t::parse_logic_expr(std::istream& in,
       break;
     case token_t::MATCH:
       kind = op_t::O_MATCH;
-      assert(node->kind == op_t::O_MATCH);
-      node = node->left();
-      assert(node->kind == op_t::MASK);
       break;
     case token_t::LESS:
       kind = op_t::O_LT;
