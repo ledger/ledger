@@ -59,15 +59,7 @@ bool compare_items<T>::operator()(const T * left, const T * right)
 {
   assert(left);
   assert(right);
-
-  value_t left_result;
-  value_t right_result;
-#if 0
-  sort_order.compute(left_result, details_t(*left));
-  sort_order.compute(right_result, details_t(*right));
-#endif
-
-  return left_result < right_result;
+  return sort_order.calc(*left) < sort_order.calc(*right);
 }
 
 template <>
@@ -434,14 +426,14 @@ class filter_xacts : public item_handler<xact_t>
 
 public:
   filter_xacts(xact_handler_ptr handler,
-		      const expr_t&    predicate)
+	       const expr_t&    predicate)
     : item_handler<xact_t>(handler), pred(predicate) {
     TRACE_CTOR(filter_xacts,
 	       "xact_handler_ptr, const value_expr&");
   }
 
   filter_xacts(xact_handler_ptr handler,
-		      const string& predicate)
+	       const string& predicate)
     : item_handler<xact_t>(handler), pred(predicate) {
     TRACE_CTOR(filter_xacts,
 	       "xact_handler_ptr, const string&");
@@ -1028,18 +1020,6 @@ public:
     TRACE_DTOR(pass_down_accounts);
   }
 };
-
-//////////////////////////////////////////////////////////////////////
-
-#if 0
-inline void clear_journal_xdata(journal_t& journal) {
-  clear_xact_xdata xact_cleaner;
-  walk_entries(journal.entries, xact_cleaner);
-
-  clear_account_xdata acct_cleaner;
-  walk_accounts(*journal.master, acct_cleaner);
-}
-#endif
 
 //////////////////////////////////////////////////////////////////////
 

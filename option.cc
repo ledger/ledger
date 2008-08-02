@@ -62,16 +62,16 @@ namespace {
   op_bool_tuple find_option(scope_t& scope, const char letter)
   {
     char buf[10];
-    std::strcpy(buf, "option_");
-    buf[7] = letter;
-    buf[8] = '\0';
+    std::strcpy(buf, "opt_");
+    buf[4] = letter;
+    buf[5] = '\0';
 
     expr_t::ptr_op_t op = scope.lookup(buf);
     if (op)
       return op_bool_tuple(op, false);
 
-    buf[8] = '_';
-    buf[9] = '\0';
+    buf[5] = '_';
+    buf[6] = '\0';
 
     return op_bool_tuple(scope.lookup(buf), true);
   }

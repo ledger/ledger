@@ -59,7 +59,7 @@ public:
     TRACE_DTOR(item_predicate);
   }
 
-  bool operator()(T& item) const {
+  bool operator()(T& item) {
     return ! predicate || predicate.calc(item).strip_annotations();
   }
 };

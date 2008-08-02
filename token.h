@@ -61,6 +61,7 @@ struct expr_t::token_t : public noncopyable, public supports_flags<>
     GREATEREQ,			// >=
 
     ASSIGN,			// =
+    MATCH,			// =~
     MINUS,			// -
     PLUS,			// +
     STAR,			// *

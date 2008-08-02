@@ -351,17 +351,12 @@ class format_entries : public format_xacts
 void print_entry(std::ostream& out, const entry_base_t& entry,
 		 const string& prefix = "");
 
-bool disp_subaccounts_p(const account_t& account,
-			const optional<item_predicate<account_t> >& disp_pred,
-			const account_t *& to_show);
+bool disp_subaccounts_p(const account_t&	   account,
+			item_predicate<account_t>& disp_pred,
+			const account_t *&	   to_show);
 
-inline bool disp_subaccounts_p(const account_t& account) {
-  const account_t * temp;
-  return disp_subaccounts_p(account, none, temp);
-}
-
-bool display_account(const account_t& account,
-		     const optional<item_predicate<account_t> >& disp_pred);
+bool display_account(const account_t&		account,
+		     item_predicate<account_t>& disp_pred);
 
 class format_accounts : public item_handler<account_t>
 {

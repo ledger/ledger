@@ -9,22 +9,21 @@ namespace ledger {
 
 template <>
 bool compare_items<xact_t>::operator()(const xact_t * left,
-					      const xact_t * right)
+				       const xact_t * right)
 {
   assert(left);
   assert(right);
 
-#if 0
   xact_xdata_t& lxdata(xact_xdata(*left));
   if (! (lxdata.dflags & XACT_SORT_CALC)) {
-    sort_order.compute(lxdata.sort_value, details_t(*left));
+    lxdata.sort_value = sort_order.calc(const_cast<xact_t&>(*left));
     lxdata.sort_value.reduce();
     lxdata.dflags |= XACT_SORT_CALC;
   }
 
   xact_xdata_t& rxdata(xact_xdata(*right));
   if (! (rxdata.dflags & XACT_SORT_CALC)) {
-    sort_order.compute(rxdata.sort_value, details_t(*right));
+    rxdata.sort_value = sort_order.calc(const_cast<xact_t&>(*right));
     rxdata.sort_value.reduce();
     rxdata.dflags |= XACT_SORT_CALC;
   }
@@ -35,9 +34,6 @@ bool compare_items<xact_t>::operator()(const xact_t * left,
 	"rxdata.sort_value = " << rxdata.sort_value);
 
   return lxdata.sort_value < rxdata.sort_value;
-#else
-  return false;
-#endif
 }
 
 xact_xdata_t& xact_xdata(const xact_t& xact)
@@ -382,8 +378,9 @@ void changed_value_xacts::output_diff(const date_t& date)
   compute_total(cur_bal, details_t(*last_xact));
 #endif
   cur_bal.round();
-  // jww (2008-04-24): What does this do?
+
 #if 0
+  // jww (2008-04-24): What does this do?
   xact_xdata(*last_xact).date = 0;
 #endif
 
@@ -634,10 +631,7 @@ void set_code_as_payee::operator()(xact_t& xact)
 void dow_xacts::flush()
 {
   for (int i = 0; i < 7; i++) {
-    // jww (2008-04-24): What to use here?
-#if 0
-    start = finish = 0;
-#endif
+    start = finish = date_t();
     foreach (xact_t * xact, days_of_the_week[i])
       subtotal_xacts::operator()(*xact);
     subtotal_xacts::report_subtotal("%As");
@@ -681,12 +675,7 @@ void budget_xacts::report_budget_items(const date_t& date)
 	xact_t& xact = *pair.second;
 
 	DEBUG("ledger.walk.budget", "Reporting budget for "
-		    << xact_account(xact)->fullname());
-#if 0
-	// jww (2008-04-24): Need a new debug macro here
-	DEBUG_TIME("ledger.walk.budget", begin);
-	DEBUG_TIME("ledger.walk.budget", date);
-#endif
+	      << xact_account(xact)->fullname());
 
 	entry_temps.push_back(entry_t());
 	entry_t& entry = entry_temps.back();
@@ -787,12 +776,8 @@ void forecast_xacts::flush()
     entry.add_xact(&temp);
 
     date_t next = (*least).first.increment(begin);
-#if 0
-    // jww (2008-04-24): Does seconds() here give the total seconds?
-    if (next < begin || // wraparound
-	(is_valid(last) && (next - last).seconds() > 365 * 5 * 24 * 3600))
+    if (next < begin || (is_valid(last) && (next - last).days() > 365 * 5))
       break;
-#endif
     begin = next;
 
     item_handler<xact_t>::operator()(temp);
@@ -829,23 +814,19 @@ bool compare_items<account_t>::operator()(const account_t * left,
   assert(left);
   assert(right);
 
-#if 0
   account_xdata_t& lxdata(account_xdata(*left));
   if (! (lxdata.dflags & ACCOUNT_SORT_CALC)) {
-    sort_order.compute(lxdata.sort_value, details_t(*left));
+    lxdata.sort_value = sort_order.calc(const_cast<account_t&>(*left));
     lxdata.dflags |= ACCOUNT_SORT_CALC;
   }
 
   account_xdata_t& rxdata(account_xdata(*right));
   if (! (rxdata.dflags & ACCOUNT_SORT_CALC)) {
-    sort_order.compute(rxdata.sort_value, details_t(*right));
+    rxdata.sort_value = sort_order.calc(const_cast<account_t&>(*right));
     rxdata.dflags |= ACCOUNT_SORT_CALC;
   }
 
   return lxdata.sort_value < rxdata.sort_value;
-#else
-  return false;
-#endif
 }
 
 account_xdata_t& account_xdata(const account_t& account)

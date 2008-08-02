@@ -90,7 +90,6 @@ format_t::element_t * format_t::parse_elements(const string& fmt)
   //   T: TOTAL
   //   N: NOTE
   //   n: OPT_NOTE
-  //   |: SPACER
   //   _: DEPTH_SPACER
   //   
   //   xB: XACT_BEG_POS
@@ -173,6 +172,11 @@ format_t::element_t * format_t::parse_elements(const string& fmt)
       current->chars = "%";
       break;
 
+    case '|':
+      current->type  = element_t::STRING;
+      current->chars = " ";
+      break;
+
     case '(':
     case '[': {
       std::istringstream str(p);
@@ -183,10 +187,15 @@ format_t::element_t * format_t::parse_elements(const string& fmt)
       break;
     }
 
-    default:
-      current->type = element_t::EXPR;
+    default: {
+      current->type  = element_t::EXPR;
+      char buf[2];
+      buf[0] = *p;
+      buf[1] = '\0';
+      current->chars = buf;
       current->expr.parse(string("fmt_") + *p);
       break;
+    }
     }
   }
 
@@ -211,9 +220,9 @@ namespace {
   }
 }
 
-void format_t::format(std::ostream& out_str, scope_t& scope) const
+void format_t::format(std::ostream& out_str, scope_t& scope)
 {
-  for (const element_t * elem = elements.get(); elem; elem = elem->next.get()) {
+  for (element_t * elem = elements.get(); elem; elem = elem->next.get()) {
     std::ostringstream out;
     string name;
     bool ignore_max_width = false;
@@ -232,7 +241,16 @@ void format_t::format(std::ostream& out_str, scope_t& scope) const
       break;
 
     case element_t::EXPR:
-      out << elem->expr.calc(scope);
+      try {
+	if (elem->max_width == 0)
+	  elem->expr.calc(scope).dump(out, elem->min_width);
+	else
+	  out << truncate(elem->expr.calc(scope).as_string(),
+			  elem->max_width);
+      }
+      catch (const calc_error&) {
+	out << (string("%") + elem->chars);
+      }
       break;
 
 #if 0
@@ -620,10 +638,6 @@ void format_t::format(std::ostream& out_str, scope_t& scope) const
       } else {
 	out << " ";
       }
-      break;
-
-    case element_t::SPACER:
-      out << " ";
       break;
 
     case element_t::DEPTH_SPACER:

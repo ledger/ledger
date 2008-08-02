@@ -640,8 +640,8 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope)
 #if 1
       return def;
 #else
-      // Aren't definitions compiled when they go in?  Would
-      // recompiling here really add any benefit?
+      // jww (2008-08-02): Aren't definitions compiled when they go in?
+      // Would recompiling here really add any benefit?
       return def->compile(scope);
 #endif
     }
@@ -655,7 +655,7 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope)
     return this;
 
   ptr_op_t lhs(left()->compile(scope));
-  ptr_op_t rhs(right() ? right()->compile(scope) : ptr_op_t());
+  ptr_op_t rhs(kind > UNARY_OPERATORS ? right()->compile(scope) : ptr_op_t());
 
   if (lhs == left() && (! rhs || rhs == right()))
     return this;
@@ -675,10 +675,12 @@ value_t expr_t::op_t::calc(scope_t& scope)
     return as_value();
 
   case IDENT:
+#if 0
     if (ptr_op_t reference = compile(scope)) {
       if (reference != this)
 	return reference->calc(scope);
     }
+#endif
     throw_(calc_error, "Unknown identifier '" << as_ident() << "'");
 
   case FUNCTION: {
@@ -698,6 +700,9 @@ value_t expr_t::op_t::calc(scope_t& scope)
     ptr_op_t func = left();
     string   name;
 
+#if 0
+    // The expression must be compiled beforehand in order to resolve this
+    // into a function.
     if (func->kind == IDENT) {
       name = func->as_ident();
       ptr_op_t def = func->compile(scope);
@@ -706,6 +711,7 @@ value_t expr_t::op_t::calc(scope_t& scope)
 	       "Calling unknown function '" << name << "'");
       func = def;
     }
+#endif
 
     if (func->kind != FUNCTION)
       throw_(calc_error, "Calling non-function");
@@ -713,8 +719,12 @@ value_t expr_t::op_t::calc(scope_t& scope)
     return func->as_function()(call_args);
   }
 
+  case O_MATCH:
+    assert(left()->is_mask());
+    return left()->as_mask().match(right()->calc(scope).to_string());
+
   case INDEX: {
-    call_scope_t args(scope);
+    const call_scope_t& args(downcast<const call_scope_t>(scope));
 
     if (as_index() < args.size())
       return args[as_index()];
@@ -755,6 +765,7 @@ value_t expr_t::op_t::calc(scope_t& scope)
 
   case O_AND:
     return ! left()->calc(scope) ? value_t(false) : right()->calc(scope);
+
   case O_OR:
     if (value_t temp = left()->calc(scope))
       return temp;
@@ -957,6 +968,15 @@ bool expr_t::op_t::print(std::ostream& out, print_context_t& context) const
     out << ")";
     break;
 
+  case O_MATCH:
+    out << '/';
+    if (left() && left()->print(out, context))
+      found = true;
+    out << "/ =~ ";
+    if (right() && right()->print(out, context))
+      found = true;
+    break;
+
   case LAST:
   default:
     assert(false);
@@ -1002,6 +1022,7 @@ void expr_t::op_t::dump(std::ostream& out, const int depth) const
     break;
 
   case O_CALL:	out << "O_CALL"; break;
+  case O_MATCH:	out << "O_MATCH"; break;
 
   case O_NOT:	out << "O_NOT"; break;
   case O_NEG:	out << "O_NEG"; break;
@@ -1040,10 +1061,6 @@ void expr_t::op_t::dump(std::ostream& out, const int depth) const
       assert(! right());
     }
   }
-}
-
-void expr_t::op_t::read(std::ostream& in)
-{
 }
 
 void expr_t::op_t::read(const char *& data)

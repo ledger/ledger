@@ -75,6 +75,10 @@ public:
 
     // Binary operators
     O_NOT,
+    O_NEG,
+
+    UNARY_OPERATORS,
+
     O_EQ,
     O_NEQ,
     O_LT,
@@ -85,7 +89,6 @@ public:
     O_AND,
     O_OR,
 
-    O_NEG,
     O_ADD,
     O_SUB,
     O_MUL,
@@ -97,6 +100,9 @@ public:
     O_COMMA,
 
     O_CALL,
+    O_MATCH,
+
+    BINARY_OPERATORS,
 
     OPERATORS,
 
@@ -288,7 +294,6 @@ public:
   bool print(std::ostream& out, print_context_t& context) const;
   void dump(std::ostream& out, const int depth) const;
 
-  void read(std::ostream& in);
   void read(const char *& data);
   void write(std::ostream& out) const;
 

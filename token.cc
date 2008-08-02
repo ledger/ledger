@@ -148,6 +148,10 @@ void expr_t::token_t::next(std::istream& in, const unsigned int pflags)
     in.get(c);
     kind = KW_AND;
     break;
+  case '|':
+    in.get(c);
+    kind = KW_OR;
+    break;
 
   case '(':
     in.get(c);
@@ -300,6 +304,15 @@ void expr_t::token_t::next(std::istream& in, const unsigned int pflags)
 
   case '=':
     in.get(c);
+    c = in.peek();
+    if (c == '~') {
+      in.get(c);
+      symbol[1] = c;
+      symbol[2] = '\0';
+      kind = MATCH;
+      length = 2;
+      break;
+    }
     kind = EQUAL;
     break;
 

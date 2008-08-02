@@ -125,11 +125,6 @@ value_t expr_t::calc(scope_t& scope)
   return NULL_VALUE;
 }
 
-value_t expr_t::calc(scope_t& scope) const
-{
-  return ptr.get() ? ptr->calc(scope) : NULL_VALUE;
-}
-
 bool expr_t::is_constant() const
 {
   return ptr.get() && ptr->is_value();
@@ -163,11 +158,6 @@ void expr_t::print(std::ostream& out, scope_t& scope) const
 void expr_t::dump(std::ostream& out) const
 {
   if (ptr) ptr->dump(out, 0);
-}
-
-void expr_t::read(std::ostream& in)
-{
-  if (ptr) ptr->read(in);
 }
 
 void expr_t::read(const char *& data)

@@ -68,10 +68,10 @@ void release_session_context()
 
 session_t::session_t()
   : register_format
-    ("%D %-.20P %-.22A %12.67t %!12.80T\n%/"
+    ("%-.10D %-.20P %-.22A %12.67t %!12.80T\n%/"
      "%32|%-.22A %12.67t %!12.80T\n"),
     wide_register_format
-    ("%D  %-.35P %-.38A %22.108t %!22.132T\n%/"
+    ("%-.10D  %-.35P %-.38A %22.108t %!22.132T\n%/"
      "%48|%-.38A %22.108t %!22.132T\n"),
     print_format
     ("\n%d %Y%C%P\n    %-34W  %12o%n\n%/    %-34W  %12o%n\n"),

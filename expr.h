@@ -107,8 +107,6 @@ public:
 
   void     print(std::ostream& out, scope_t& scope) const;
   void     dump(std::ostream& out) const;
-	   
-  void     read(std::ostream& in);
   void     read(const char *& data);
   void     write(std::ostream& out) const;
 

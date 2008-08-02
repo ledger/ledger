@@ -20,7 +20,6 @@ class format_t : public noncopyable
       STRING,
       EXPR,
 #if 0
-      SPACER,
       DEPTH_SPACER
 #endif
     };
@@ -92,7 +91,7 @@ public:
     format_string = _format;
   }
 
-  void format(std::ostream& out, scope_t& scope) const;
+  void format(std::ostream& out, scope_t& scope);
 
   void dump(std::ostream& out) const {
     for (const element_t * elem = elements.get();

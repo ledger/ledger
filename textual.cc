@@ -5,6 +5,8 @@
 #include "textual.h"
 #include "expr.h"
 #include "parser.h"
+#include "session.h"
+#include "option.h"
 #include "acconf.h"
 
 #define TIMELOG_SUPPORT 1
@@ -298,6 +300,8 @@ xact_t * parse_xact(char * line, account_t * account,
 
 	  try {
 #if 0
+	    // jww (2008-08-02): This data must be saved so that it can be
+	    // restored on "print".
 	    unsigned long beg = static_cast<unsigned long>(in.tellg());
 #endif
 
@@ -825,9 +829,7 @@ unsigned int textual_parser_t::parse(std::istream& in,
 	  if (p)
 	    *p++ = '\0';
 	}
-#if 0
-	process_option(config_options, line + 2, p);
-#endif
+	process_option(line + 2, session, p);
 	break;
       }
 
@@ -932,11 +934,8 @@ unsigned int textual_parser_t::parse(std::istream& in,
 	  }
 	}
 	else if (word == "def") {
-#if 0
-	  if (! expr_t::global_scope.get())
-	    init_value_expr();
-	  parse_value_definition(p);
-#endif
+	  expr_t def(p);
+	  def.compile(session);	// causes definitions to be established
 	}
 	break;
       }
@@ -1064,9 +1063,7 @@ void write_textual_journal(journal_t&	    journal,
   while (! in.eof()) {
     entry_base_t * base = NULL;
     if (el != journal.entries.end() && pos == (*el)->beg_pos) {
-#if 0
-      hdr_fmt.format(out, details_t(**el));
-#endif
+      hdr_fmt.format(out, **el);
       base = *el++;
     }
     else if (al != journal.auto_entries.end() && pos == (*al)->beg_pos) {

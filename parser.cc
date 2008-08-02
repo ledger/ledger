@@ -49,22 +49,15 @@ expr_t::parser_t::parse_value_term(std::istream& in,
 
   case token_t::MASK: {
     // A /mask/ is just a shorthand for calling match().
-    node = new op_t(op_t::O_CALL);
-
-    ptr_op_t ident = new op_t(op_t::IDENT);
-    ident->set_ident("match");
-    node->set_left(ident);
-
-    ptr_op_t args = new op_t(op_t::O_COMMA);
-    node->set_right(args);
+    node = new op_t(op_t::O_MATCH);
 
     ptr_op_t mask = new op_t(op_t::MASK);
     mask->set_mask(tok.value.as_string());
 
-    ident = new op_t(op_t::IDENT);
+    ptr_op_t ident = new op_t(op_t::IDENT);
 
-    args->set_left(mask);
-    args->set_right(ident);
+    node->set_left(mask);
+    node->set_right(ident);
 
     switch (tok.flags()) {
     case TOKEN_SHORT_ACCOUNT_MASK:
@@ -300,6 +293,12 @@ expr_t::parser_t::parse_logic_expr(std::istream& in,
       break;
     case token_t::NEQUAL:
       kind = op_t::O_NEQ;
+      break;
+    case token_t::MATCH:
+      kind = op_t::O_MATCH;
+      assert(node->kind == op_t::O_MATCH);
+      node = node->left();
+      assert(node->kind == op_t::MASK);
       break;
     case token_t::LESS:
       kind = op_t::O_LT;

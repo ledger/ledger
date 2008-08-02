@@ -79,6 +79,8 @@ namespace {
   {
     xact_t& xact(downcast<xact_t>(*scope.parent));
 
+    // jww (2008-08-02): Accept a width here so that we can abbreviate the
+    // string.
     string name = xact.account->fullname();
 
     if (xact.has_flags(XACT_VIRTUAL)) {
@@ -102,19 +104,25 @@ expr_t::ptr_op_t xact_t::lookup(const string& name)
   switch (name[0]) {
   case 'a':
     if (name[1] == '\0' || name == "amount")
-      return WRAP_FUNCTOR(bind(get_amount, _1));
+      return WRAP_FUNCTOR(get_amount);
     else if (name == "account")
-      return WRAP_FUNCTOR(bind(get_account, _1));
+      return WRAP_FUNCTOR(get_account);
     else if (name == "account_base")
-      return WRAP_FUNCTOR(bind(get_account_base, _1));
+      return WRAP_FUNCTOR(get_account_base);
     break;
   case 'd':
     if (name[1] == '\0' || name == "date")
-      return WRAP_FUNCTOR(bind(get_date, _1));
+      return WRAP_FUNCTOR(get_date);
+    break;
+  case 'f':
+    if (name.find("fmt_") == 0) {
+      if (name == "fmt_A")
+	return WRAP_FUNCTOR(get_account);
+    }
     break;
   case 'p':
     if (name[1] == '\0' || name == "payee")
-      return WRAP_FUNCTOR(bind(get_payee, _1));
+      return WRAP_FUNCTOR(get_payee);
     break;
   }
   return entry->lookup(name);

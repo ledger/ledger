@@ -557,9 +557,9 @@ void print_entry(std::ostream& out, const entry_base_t& entry_base,
 #endif
 }
 
-bool disp_subaccounts_p(const account_t&			    account,
-			const optional<item_predicate<account_t> >& disp_pred,
-			const account_t *&			    to_show)
+bool disp_subaccounts_p(const account_t&	   account,
+			item_predicate<account_t>& disp_pred,
+			const account_t *&	   to_show)
 {
   bool	       display  = false;
 #if 0
@@ -596,7 +596,7 @@ bool disp_subaccounts_p(const account_t&			    account,
 }
 
 bool display_account(const account_t& account,
-		     const optional<item_predicate<account_t> >& disp_pred)
+		     item_predicate<account_t>& disp_pred)
 {
   // Never display an account that has already been displayed.
   if (account_has_xdata(account) &&
@@ -615,7 +615,7 @@ bool display_account(const account_t& account,
     return true;
 
   return (! account_to_show &&
-	  (! disp_pred || (*disp_pred)(const_cast<account_t&>(account))));
+	  disp_pred(const_cast<account_t&>(account)));
 }
 
 void format_accounts::operator()(account_t& account)
