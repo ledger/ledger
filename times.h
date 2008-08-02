@@ -54,80 +54,8 @@ inline bool is_valid(const date_t& moment) {
 extern const datetime_t& current_time;
 extern const date_t&     current_date;
 extern int		 current_year;
-extern string		 input_time_format;
-extern string		 output_time_format;
-
-struct interval_t
-{
-  unsigned short years;
-  unsigned short months;
-  unsigned short days;
-  date_t	 begin;
-  date_t	 end;
-  mutable bool   advanced;
-
-  interval_t(int _days = 0, int _months = 0, int _years = 0,
-	     const date_t& _begin = date_t(),
-	     const date_t& _end   = date_t())
-    : years(_years), months(_months), days(_days),
-      begin(_begin), end(_end), advanced(false) {
-    TRACE_CTOR(interval_t,
-	       "int, int, int, const date_t&, const date_t&");
-  }
-  interval_t(const interval_t& other)
-    : years(other.years),
-      months(other.months),
-      days(other.days),
-
-      begin(other.begin),
-      end(other.end),
-
-      advanced(other.advanced) {
-    TRACE_CTOR(interval_t, "copy");
-  }
-
-  interval_t(const string& desc)
-    : years(0), months(0), days(0),
-      begin(), end(), advanced(false) {
-    TRACE_CTOR(interval_t, "const string&");
-    std::istringstream stream(desc);
-    parse(stream);
-  }
-
-  ~interval_t() throw() {
-    TRACE_DTOR(interval_t);
-  }
-
-  operator bool() const {
-    return years > 0 || months > 0  || days > 0;
-  }
-
-  void   start(const date_t& moment) {
-    begin = first(moment);
-  }
-  date_t first(const date_t& moment = date_t()) const;
-  date_t increment(const date_t&) const;
-
-  void   parse(std::istream& in);
-};
-
-#if 0
-inline datetime_t ptime_local_to_utc(const datetime_t& when) {
-  struct std::tm tm_gmt = to_tm(when);
-  return boost::posix_time::from_time_t(std::mktime(&tm_gmt));
-}
-
-// jww (2007-04-18): I need to make a general parsing function
-// instead, and then make these into private methods.
-inline datetime_t ptime_from_local_date_string(const string& date_string) {
-  return ptime_local_to_utc(datetime_t(boost::gregorian::from_string(date_string),
-				       time_duration()));
-}
-
-inline datetime_t ptime_from_local_time_string(const string& time_string) {
-  return ptime_local_to_utc(boost::posix_time::time_from_string(time_string));
-}
-#endif
+extern optional<string>  input_date_format;
+extern string		 output_date_format;
 
 inline datetime_t parse_datetime(const string& str) {
   return parse_datetime(str.c_str());
@@ -135,8 +63,9 @@ inline datetime_t parse_datetime(const string& str) {
 datetime_t parse_datetime(const char * str);
 
 inline date_t parse_date(const string& str) {
-  return gregorian::from_string(str);
+  return parse_date(str.c_str());
 }
+date_t parse_date(const char * str);
 
 inline std::time_t to_time_t(const ptime& t) 
 { 
@@ -148,32 +77,77 @@ inline std::time_t to_time_t(const ptime& t)
   return (t-start).total_seconds(); 
 }
 
-inline string format_datetime(const datetime_t& when) {
-  char buf[64];
+inline string format_datetime(const datetime_t& when)
+{
+  char buf[256];
   time_t moment = to_time_t(when);
-  // jww (2008-07-29): Need to make the output format configurable
-  std::strftime(buf, 63, "%Y/%m/%d", std::localtime(&moment));
+  std::strftime(buf, 255, (output_date_format + " %H:%M:%S").c_str(),
+		std::localtime(&moment));
   return buf;
 }
 
-inline string format_date(const date_t& when) {
-  return to_iso_extended_string(when);
+inline string format_date(const date_t& when,
+			  const optional<string>& format = none)
+{
+  if (format) {
+    char buf[256];
+    std::tm moment = gregorian::to_tm(when);
+    std::strftime(buf, 255, format->c_str(), &moment);
+    return buf;
+  } else {
+    return to_iso_extended_string(when);
+  }
 }
 
-#if 0
-struct intorchar
+struct interval_t
 {
-  int	 ival;
-  string sval;
+  int	 years;
+  int	 months;
+  int	 days;
+  date_t begin;
+  date_t end;
 
-  intorchar() : ival(-1) {}
-  intorchar(int val) : ival(val) {}
-  intorchar(const string& val) : ival(-1), sval(val) {}
-  intorchar(const intorchar& o) : ival(o.ival), sval(o.sval) {}
+  mutable bool advanced;
+
+  interval_t(int _days = 0, int _months = 0, int _years = 0,
+	     const date_t& _begin = date_t(),
+	     const date_t& _end   = date_t())
+    : years(_years), months(_months), days(_days),
+      begin(_begin), end(_end), advanced(false) {
+    TRACE_CTOR(interval_t, "int, int, int, const date_t&, const date_t&");
+  }
+  interval_t(const interval_t& other)
+    : years(other.years),
+      months(other.months),
+      days(other.days),
+      begin(other.begin),
+      end(other.end),
+      advanced(other.advanced) {
+    TRACE_CTOR(interval_t, "copy");
+  }
+  interval_t(const string& desc)
+    : years(0), months(0), days(0), begin(), end(), advanced(false) {
+    TRACE_CTOR(interval_t, "const string&");
+    std::istringstream stream(desc);
+    parse(stream);
+  }
+
+  ~interval_t() throw() {
+    TRACE_DTOR(interval_t);
+  }
+
+  operator bool() const {
+    return years != 0 || months != 0  || days != 0;
+  }
+
+  void   start(const date_t& moment) {
+    begin = first(moment);
+  }
+  date_t first(const optional<date_t>& moment = none) const;
+  date_t increment(const date_t&) const;
+
+  void   parse(std::istream& in);
 };
-
-ledger::datetime_t parse_abs_datetime(std::istream& input);
-#endif
 
 } // namespace ledger
 

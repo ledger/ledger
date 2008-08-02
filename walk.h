@@ -657,8 +657,8 @@ protected:
   values_map values;
   bool       remember_components;
 
-  std::list<entry_t>       entry_temps;
-  std::list<xact_t> xact_temps;
+  std::list<entry_t> entry_temps;
+  std::list<xact_t>  xact_temps;
 
 public:
   date_t start;

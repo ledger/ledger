@@ -438,15 +438,10 @@ void subtotal_xacts::report_subtotal(const char * spec_fmt)
   std::ostringstream out_date;
   if (! spec_fmt) {
     string fmt = "- ";
-    fmt += output_time_format;	// jww (2008-04-24): output_date_format?
-    // jww (2008-04-24): There is no date output function?
-#if 0
-    finish.write(out_date, fmt);
-#endif
+    fmt += output_date_format;
+    out_date << format_date(finish, string(fmt));
   } else {
-#if 0
-    finish.write(out_date, spec_fmt);
-#endif
+    out_date << format_date(finish, string(spec_fmt));
   }
 
   entry_temps.push_back(entry_t());

@@ -222,6 +222,31 @@ static int read_and_report(ledger::report_t& report, int argc, char * argv[],
     fmt.dump(*out);
     return 0;
   }
+  else if (verb == "period") {
+    interval_t interval(*arg);
+
+    if (! is_valid(interval.begin)) {
+      *out << "Time period has no beginning." << std::endl;
+    } else {
+      *out << "begin: " << format_date(interval.begin) << std::endl;
+      *out << "  end: " << format_date(interval.end) << std::endl;
+      *out << std::endl;
+
+      date_t date = interval.first();
+
+      for (int i = 0; i < 20; i++) {
+	*out << std::right;
+	out->width(2);
+
+	*out << i << ": " << format_date(date) << std::endl;
+
+	date = interval.increment(date);
+	if (is_valid(interval.end) && date >= interval.end)
+	  break;
+      }
+    }
+    return 0;
+  }
 
   // Parse the initialization file, which can only be textual; then
   // parse the journal data.
