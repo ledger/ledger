@@ -61,6 +61,7 @@ class format_t : public noncopyable
   string		 format_string;
   scoped_ptr<element_t>	 elements;
 
+public:
   enum elision_style_t {
     TRUNCATE_TRAILING,
     TRUNCATE_MIDDLE,
@@ -68,6 +69,8 @@ class format_t : public noncopyable
     ABBREVIATE
   };
 
+private:
+  // jww (2008-08-02): Should these four be here, or in session_t?
   static elision_style_t elision_style;
   static int		 abbrev_length;
 

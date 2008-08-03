@@ -39,6 +39,7 @@ namespace ledger {
 DECLARE_EXCEPTION(parse_error, std::runtime_error);
 DECLARE_EXCEPTION(compile_error, std::runtime_error);
 DECLARE_EXCEPTION(calc_error, std::runtime_error);
+DECLARE_EXCEPTION(usage_error, std::runtime_error);
 
 class scope_t;
 class call_scope_t;

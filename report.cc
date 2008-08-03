@@ -34,6 +34,185 @@
 
 namespace ledger {
 
+#if 0
+void
+report_t::regexps_to_predicate(const std::string& command,
+			       std::list<std::string>::const_iterator begin,
+			       std::list<std::string>::const_iterator end,
+			       const bool account_regexp,
+			       const bool add_account_short_masks,
+			       const bool logical_and)
+{
+  std::string regexps[2];
+
+  assert(begin != end);
+
+  // Treat the remaining command-line arguments as regular
+  // expressions, used for refining report results.
+
+  for (std::list<std::string>::const_iterator i = begin;
+       i != end;
+       i++)
+    if ((*i)[0] == '-') {
+      if (! regexps[1].empty())
+	regexps[1] += "|";
+      regexps[1] += (*i).substr(1);
+    }
+    else if ((*i)[0] == '+') {
+      if (! regexps[0].empty())
+	regexps[0] += "|";
+      regexps[0] += (*i).substr(1);
+    }
+    else {
+      if (! regexps[0].empty())
+	regexps[0] += "|";
+      regexps[0] += *i;
+    }
+
+  for (int i = 0; i < 2; i++) {
+    if (regexps[i].empty())
+      continue;
+
+    if (! predicate.empty())
+      predicate += logical_and ? "&" : "|";
+
+    int add_predicate = 0;	// 1 adds /.../, 2 adds ///.../
+    if (i == 1) {
+      predicate += "!";
+    }
+    else if (add_account_short_masks) {
+      if (regexps[i].find(':') != std::string::npos ||
+	  regexps[i].find('.') != std::string::npos ||
+	  regexps[i].find('*') != std::string::npos ||
+	  regexps[i].find('+') != std::string::npos ||
+	  regexps[i].find('[') != std::string::npos ||
+	  regexps[i].find('(') != std::string::npos) {
+	show_subtotal = true;
+	add_predicate = 1;
+      } else {
+	add_predicate = 2;
+      }
+    }
+    else {
+      add_predicate = 1;
+    }
+
+    if (i != 1 && command == "b" && account_regexp) {
+      if (! show_related && ! show_all_related) {
+	if (! display_predicate.empty())
+	  display_predicate += "&";
+	if (! show_empty)
+	  display_predicate += "T&";
+
+	if (add_predicate == 2)
+	  display_predicate += "//";
+	display_predicate += "/(?:";
+	display_predicate += regexps[i];
+	display_predicate += ")/";
+      }
+      else if (! show_empty) {
+	if (! display_predicate.empty())
+	  display_predicate += "&";
+	display_predicate += "T";
+      }
+    }
+
+    if (! account_regexp)
+      predicate += "/";
+    predicate += "/(?:";
+    predicate += regexps[i];
+    predicate += ")/";
+  }
+}
+
+void report_t::process_options(const std::string&     command,
+			       strings_list::iterator arg,
+			       strings_list::iterator args_end)
+{
+  // Configure some other options depending on report type
+
+  if (command == "p" || command == "e" || command == "w") {
+    show_related     =
+    show_all_related = true;
+  }
+  else if (command == "E") {
+    show_subtotal = true;
+  }
+  else if (show_related) {
+    if (command == "r") {
+      show_inverted = true;
+    } else {
+      show_subtotal    = true;
+      show_all_related = true;
+    }
+  }
+
+  if (command != "b" && command != "r")
+    amount_t::keep_base = true;
+
+  // Process remaining command-line arguments
+
+  if (command != "e") {
+    // Treat the remaining command-line arguments as regular
+    // expressions, used for refining report results.
+
+    std::list<std::string>::iterator i = arg;
+    for (; i != args_end; i++)
+      if (*i == "--")
+	break;
+
+    if (i != arg)
+      regexps_to_predicate(command, arg, i, true,
+			   (command == "b" && ! show_subtotal &&
+			    display_predicate.empty()));
+    if (i != args_end && ++i != args_end)
+      regexps_to_predicate(command, i, args_end);
+  }
+
+  // Setup the default value for the display predicate
+
+  if (display_predicate.empty()) {
+    if (command == "b") {
+      if (! show_empty)
+	display_predicate = "T";
+      if (! show_subtotal) {
+	if (! display_predicate.empty())
+	  display_predicate += "&";
+	display_predicate += "l<=1";
+      }
+    }
+    else if (command == "E") {
+      display_predicate = "t";
+    }
+    else if (command == "r" && ! show_empty) {
+      display_predicate = "a";
+    }
+  }
+
+  DEBUG_PRINT("ledger.config.predicates", "Predicate: " << predicate);
+  DEBUG_PRINT("ledger.config.predicates", "Display P: " << display_predicate);
+
+  // Setup the values of %t and %T, used in format strings
+
+  if (! amount_expr.empty())
+    ledger::amount_expr = amount_expr;
+  if (! total_expr.empty())
+    ledger::total_expr  = total_expr;
+
+  // Now setup the various formatting strings
+
+  if (! date_output_format.empty())
+    date_t::output_format = date_output_format;
+
+  amount_t::keep_price = keep_price;
+  amount_t::keep_date  = keep_date;
+  amount_t::keep_tag   = keep_tag;
+
+  if (! report_period.empty() && ! sort_all)
+    entry_sort = true;
+}
+#endif
+
 xact_handler_ptr
 report_t::chain_xact_handlers(xact_handler_ptr base_handler,
 			      const bool handle_individual_xacts)
@@ -179,7 +358,7 @@ report_t::chain_xact_handlers(xact_handler_ptr base_handler,
     budget_xacts * budget_handler
       = new budget_xacts(handler, budget_flags);
     budget_handler->add_period_entries(journal->period_entries);
-    handler.reset(budget_handler;
+    handler.reset(budget_handler);
 
     // Apply this before the budget handler, so that only matching
     // xacts are calculated toward the budget.  The use of
@@ -239,8 +418,9 @@ void report_t::sum_all_accounts()
   sum_accounts(*session.master);
 }
 
-void report_t::accounts_report(acct_handler_ptr handler,
-			       const bool print_final_total)
+void report_t::accounts_report(acct_handler_ptr	       handler,
+			       const bool	       print_final_total,
+			       optional<std::ostream&> ostream)
 {
   sum_all_accounts();
 
@@ -253,16 +433,21 @@ void report_t::accounts_report(acct_handler_ptr handler,
   }
   handler->flush();
     
-  if (print_final_total && account_has_xdata(*session.master)) {
-    account_xdata_t& xdata = account_xdata(*session.master);
-    if (! show_collapsed && xdata.total) {
 #if 0
-      *out << "--------------------\n";
+  // jww (2008-08-02): I need access to the output formatter before this is
+  // going to work.
+  if (print_final_total) {
+    assert(ostream);
+    assert(account_has_xdata(*session.master));
+
+    account_xdata_t& xdata(account_xdata(*session.master));
+    if (! show_collapsed && xdata.total) {
+      *ostream << "--------------------\n";
       xdata.value = xdata.total;
-      handler->format.format(*out, details_t(*journal->master));
-#endif
+      handler->format.format(*ostream, *session.master);
     }
   }
+#endif
 
   if (DO_VERIFY()) {
     session.clean_xacts();
@@ -278,30 +463,24 @@ void report_t::entry_report(const entry_t& entry, const string& format)
 {
 }
 
+#if 0
 value_t report_t::abbrev(call_scope_t& args)
 {
   if (args.size() < 2)
-    throw_(std::logic_error, "usage: abbrev(STRING, WIDTH [, STYLE, ABBREV_LEN])");
+    throw_(usage_error, "usage: abbrev(STRING, WIDTH [, STYLE, ABBREV_LEN])");
 
-  string str = args[0].as_string();
-#if 0
-  long	 wid = args[1];
+  const var_t<string> str(args, 0);
+  const var_t<long>   wid(args, 1);
+  const var_t<long>   style(args, 2);
+  const var_t<long>   abbrev_len(args, 3);
 
-  elision_style_t style = session.elision_style;
-  if (args.size() == 3)
-    style = static_cast<elision_style_t>(args[2].as_long());
-#endif
-
-  long abbrev_len = session.abbrev_length;
-  if (args.size() == 4)
-    abbrev_len = args[3].as_long();
-
-#if 0
-  return value_t(abbreviate(str, wid, style, true,
-			    static_cast<int>(abbrev_len)), true);
-#else
-  return NULL_VALUE;
-#endif
+  return value_t(abbreviate(*str, *wid,
+			    (style ?
+			     static_cast<format_t::elision_style_t>(*style) :
+			     session.elision_style),
+			    true,
+			    abbrev_len ? *abbrev_len : session.abbrev_len),
+		 true);
 }
 
 value_t report_t::ftime(call_scope_t& args)
@@ -314,36 +493,10 @@ value_t report_t::ftime(call_scope_t& args)
   string date_format;
   if (args.size() == 2)
     date_format = args[1].as_string();
-#if 0
-  // jww (2007-04-18): Need to setup an output facet here
   else
     date_format = moment_t::output_format;
 
   return string_value(date.as_string(date_format));
-#else
-  return NULL_VALUE;
-#endif
-}
-
-#if 0
-optional<value_t>
-report_t::resolve(const string& name, call_scope_t& args)
-{
-  const char * p = name.c_str();
-  switch (*p) {
-  case 'a':
-    if (name == "abbrev") {
-      return abbrev(args);
-    }
-    break;
-
-  case 'f':
-    if (name == "ftime") {
-      return ftime(args);
-    }
-    break;
-  }
-  return scope_t::resolve(name, args);
 }
 #endif
 
@@ -356,13 +509,8 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
       p = p + 4;
       switch (*p) {
       case 'a':
-#if 0
-	if (std::strcmp(p, "accounts") == 0)
-	  return MAKE_FUNCTOR(report_t::option_accounts);
-	else
-#endif
-	  if (std::strcmp(p, "amount") == 0)
-	    return MAKE_FUNCTOR(report_t::option_amount);
+	if (std::strcmp(p, "amount") == 0)
+	  return MAKE_FUNCTOR(report_t::option_amount);
 	break;
 
       case 'b':
@@ -370,72 +518,10 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	  return MAKE_FUNCTOR(report_t::option_bar);
 	break;
 
-#if 0
-      case 'c':
-	if (std::strcmp(p, "clean") == 0)
-	  return MAKE_FUNCTOR(report_t::option_clean);
-	else if (std::strcmp(p, "compact") == 0)
-	  return MAKE_FUNCTOR(report_t::option_compact);
-	break;
-#endif
-
-      case 'e':
-#if 0
-	if (std::strcmp(p, "entries") == 0)
-	  return MAKE_FUNCTOR(report_t::option_entries);
-	else if (std::strcmp(p, "eval") == 0)
-	  return MAKE_FUNCTOR(report_t::option_eval);
-	else if (std::strcmp(p, "exclude") == 0)
-	  return MAKE_FUNCTOR(report_t::option_remove);
-#endif
-	break;
-
       case 'f':
-#if 0
-	if (std::strcmp(p, "foo") == 0)
-	  return MAKE_FUNCTOR(report_t::option_foo);
-	else
-#endif
-	  if (std::strcmp(p, "format") == 0)
+	if (std::strcmp(p, "format") == 0)
 	  return MAKE_FUNCTOR(report_t::option_format);
 	break;
-
-      case 'i':
-#if 0
-	if (std::strcmp(p, "include") == 0)
-	  return MAKE_FUNCTOR(report_t::option_select);
-#endif
-	break;
-
-      case 'l':
-#if 0
-	if (! *(p + 1) || std::strcmp(p, "limit") == 0)
-	  return MAKE_FUNCTOR(report_t::option_limit);
-#endif
-	break;
-
-#if 0
-      case 'm':
-	if (std::strcmp(p, "merge") == 0)
-	  return MAKE_FUNCTOR(report_t::option_merge);
-	break;
-#endif
-
-      case 'r':
-#if 0
-	if (std::strcmp(p, "remove") == 0)
-	  return MAKE_FUNCTOR(report_t::option_remove);
-#endif
-	break;
-
-#if 0
-      case 's':
-	if (std::strcmp(p, "select") == 0)
-	  return MAKE_FUNCTOR(report_t::option_select);
-	else if (std::strcmp(p, "split") == 0)
-	  return MAKE_FUNCTOR(report_t::option_split);
-	break;
-#endif
 
       case 't':
 	if (! *(p + 1))
@@ -496,21 +582,20 @@ void format_xacts::operator()(xact_t& xact)
 
 void format_entries::format_last_entry()
 {
-#if 0
   bool first = true;
-  foreach (const transaction_t * xact, last_entry->xacts) {
-    if (xact_has_xdata(*xact) &&
-	xact_xdata_(*xact).dflags & XACT_TO_DISPLAY) {
+
+  foreach (xact_t * xact, last_entry->xacts) {
+    if (xact->has_xdata() &&
+	xact->xdata().has_flags(XACT_EXT_TO_DISPLAY)) {
       if (first) {
-	first_line_format.format(output_stream, details_t(*xact));
+	first_line_format.format(output_stream, *xact);
 	first = false;
       } else {
-	next_lines_format.format(output_stream, details_t(*xact));
+	next_lines_format.format(output_stream, *xact);
       }
-      xact_xdata_(*xact).dflags |= XACT_DISPLAYED;
+      xact->xdata().add_flags(XACT_EXT_DISPLAYED);
     }
   }
-#endif
 }
 
 void format_entries::operator()(xact_t& xact)
@@ -557,29 +642,30 @@ void print_entry(std::ostream& out, const entry_base_t& entry_base,
 #endif
 }
 
-bool disp_subaccounts_p(const account_t&	   account,
+bool disp_subaccounts_p(account_t&		   account,
 			item_predicate<account_t>& disp_pred,
-			const account_t *&	   to_show)
+			account_t *&		   to_show)
 {
   bool	       display  = false;
-#if 0
   unsigned int counted  = 0;
-  bool         matches  = disp_pred ? (*disp_pred)(account) : true;
+  bool         matches  = disp_pred(account);
   bool         computed = false;
-#endif
   value_t      acct_total;
   value_t      result;
 
   to_show = NULL;
 
-#if 0
-  for (accounts_map::value_type pair, account.accounts) {
-    if (disp_pred && ! (*disp_pred)(*pair.second))
+  foreach (accounts_map::value_type pair, account.accounts) {
+    if (! disp_pred(*pair.second))
       continue;
 
-    compute_total(result, details_t(*pair.second));
+#if 0
+    compute_total(result, *pair.second);
+#endif
     if (! computed) {
-      compute_total(acct_total, details_t(account));
+#if 0
+      compute_total(acct_total, account);
+#endif
       computed = true;
     }
 
@@ -590,13 +676,11 @@ bool disp_subaccounts_p(const account_t&	   account,
     to_show = pair.second;
     counted++;
   }
-#endif
 
   return display;
 }
 
-bool display_account(const account_t& account,
-		     item_predicate<account_t>& disp_pred)
+bool display_account(account_t& account, item_predicate<account_t>& disp_pred)
 {
   // Never display an account that has already been displayed.
   if (account_has_xdata(account) &&
@@ -610,26 +694,23 @@ bool display_account(const account_t& account,
   // determine if it is a parent that must be displayed regardless of
   // the predicate.
 
-  const account_t * account_to_show = NULL;
+  account_t * account_to_show = NULL;
   if (disp_subaccounts_p(account, disp_pred, account_to_show))
     return true;
 
-  return (! account_to_show &&
-	  disp_pred(const_cast<account_t&>(account)));
+  return ! account_to_show && disp_pred(account);
 }
 
 void format_accounts::operator()(account_t& account)
 {
-#if 0
   if (display_account(account, disp_pred)) {
     if (! account.parent) {
       account_xdata(account).dflags |= ACCOUNT_TO_DISPLAY;
     } else {
-      format.format(output_stream, details_t(account));
+      format.format(output_stream, account);
       account_xdata(account).dflags |= ACCOUNT_DISPLAYED;
     }
   }
-#endif
 }
 
 format_equity::format_equity(std::ostream& _output_stream,
@@ -637,26 +718,23 @@ format_equity::format_equity(std::ostream& _output_stream,
 			     const string& display_predicate)
   : output_stream(_output_stream), disp_pred(display_predicate)
 {
-#if 0
   const char * f = _format.c_str();
   if (const char * p = std::strstr(f, "%/")) {
-    first_line_format.reset(string(f, 0, p - f));
-    next_lines_format.reset(string(p + 2));
+    first_line_format.parse(string(f, 0, p - f));
+    next_lines_format.parse(string(p + 2));
   } else {
-    first_line_format.reset(_format);
-    next_lines_format.reset(_format);
+    first_line_format.parse(_format);
+    next_lines_format.parse(_format);
   }
 
   entry_t header_entry;
   header_entry.payee = "Opening Balances";
-  header_entry._date = current_moment;
-  first_line_format.format(output_stream, details_t(header_entry));
-#endif
+  header_entry._date = current_date;
+  first_line_format.format(output_stream, header_entry);
 }
 
 void format_equity::flush()
 {
-#if 0
   account_xdata_t xdata;
   xdata.value = total;
   xdata.value.negate();
@@ -672,21 +750,19 @@ void format_equity::flush()
     else
       assert(false);
 
-    for (balance_t::amounts_map::value_type pair, bal->amounts) {
+    foreach (balance_t::amounts_map::value_type pair, bal->amounts) {
       xdata.value = pair.second;
       xdata.value.negate();
-      next_lines_format.format(output_stream, details_t(summary));
+      next_lines_format.format(output_stream, summary);
     }
   } else {
-    next_lines_format.format(output_stream, details_t(summary));
+    next_lines_format.format(output_stream, summary);
   }
   output_stream.flush();
-#endif
 }
 
 void format_equity::operator()(account_t& account)
 {
-#if 0
   if (display_account(account, disp_pred)) {
     if (account_has_xdata(account)) {
       value_t val = account_xdata_(account).value;
@@ -700,19 +776,18 @@ void format_equity::operator()(account_t& account)
 	else
 	  assert(false);
 
-	for (balance_t::amounts_map::value_type pair, bal->amounts) {
+	foreach (balance_t::amounts_map::value_type pair, bal->amounts) {
 	  account_xdata_(account).value = pair.second;
-	  next_lines_format.format(output_stream, details_t(account));
+	  next_lines_format.format(output_stream, account);
 	}
 	account_xdata_(account).value = val;
       } else {
-	next_lines_format.format(output_stream, details_t(account));
+	next_lines_format.format(output_stream, account);
       }
       total += val;
     }
     account_xdata(account).dflags |= ACCOUNT_DISPLAYED;
   }
-#endif
 }
 
 } // namespace ledger

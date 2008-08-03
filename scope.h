@@ -209,27 +209,67 @@ public:
 template <typename T>
 class var_t : public noncopyable
 {
-  value_t value;
+  optional<value_t> value;
 
   var_t();
 
 public:
-  var_t(scope_t& scope, const string& name) : value(scope.resolve(name)) {
+  var_t(scope_t& scope, const string& name)
+  {
     TRACE_CTOR(var_t, "scope_t&, const string&");
+
+    try {
+      value = scope.resolve(name);
+    }
+    catch (...) {
+      DEBUG("scope.var_t", "Failed lookup var_t(\"" << name << "\")");
+      value = none;
+    }
   }
-  var_t(call_scope_t& scope, const unsigned int idx) : value(scope[idx]) {
+
+  var_t(call_scope_t& scope, const unsigned int idx)
+  {
     TRACE_CTOR(var_t, "call_scope_t&, const unsigned int");
+
+    if (idx < scope.size())
+      value = scope[idx];
+    else
+      value = none;
   }
+
   ~var_t() throw() {
     TRACE_DTOR(var_t);
   }
 
-  operator T() { assert(false); }
+  operator bool() { return value; }
+
+  T& operator *();
+  const T& operator *() const;
+
+  T * operator->() {
+    return &**this;
+  }
+  const T * operator->() const {
+    return &**this;
+  }
 };
 
 template <>
-inline var_t<long>::operator long() {
-  return value.to_long();
+inline long& var_t<long>::operator *() {
+  return value->as_long_lval();
+}
+template <>
+inline const long& var_t<long>::operator *() const {
+  return value->as_long();
+}
+
+template <>
+inline string& var_t<string>::operator *() {
+  return value->as_string_lval();
+}
+template <>
+inline const string& var_t<string>::operator *() const {
+  return value->as_string();
 }
 
 } // namespace ledger

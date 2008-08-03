@@ -88,9 +88,8 @@ class report_t : public noncopyable, public scope_t
 
 public:
   optional<path> output_file;
+
   string	 format_string;
-  string	 amount_expr;
-  string	 total_expr;
   string	 date_output_format;
   string	 predicate;
   string	 secondary_predicate;
@@ -102,6 +101,9 @@ public:
   string	 forecast_limit;
   string	 reconcile_balance;
   string	 reconcile_date;
+
+  expr_t	 amount_expr;
+  expr_t	 total_expr;
 
   unsigned long  budget_flags;
 
@@ -135,7 +137,10 @@ public:
   session_t&	 session;
 
   explicit report_t(session_t& _session)
-    : head_entries(0),
+    : amount_expr("amount"),
+      total_expr("total"),
+
+      head_entries(0),
       tail_entries(0),
 
       show_collapsed(false),
@@ -162,13 +167,6 @@ public:
       session(_session)
   {
     TRACE_CTOR(report_t, "session_t&");
-
-#if 0
-    eval("t=total,TOT=0,T()=(TOT=TOT+t,TOT)");
-
-    value_expr_t::amount_expr.reset(new value_expr("a"));
-    value_expr_t::total_expr.reset(new value_expr("O"));
-#endif
   }
 
   virtual ~report_t() {
@@ -189,8 +187,9 @@ public:
 
   void sum_all_accounts();
 
-  void accounts_report(acct_handler_ptr handler,
-		       const bool print_final_total = true);
+  void accounts_report(acct_handler_ptr	       handler,
+		       const bool	       print_final_total = true,
+		       optional<std::ostream&> ostream		 = none);
 
   void commodities_report(const string& format);
 
@@ -242,54 +241,6 @@ public:
     std::cout << "This is bar: " << args[0] << std::endl;
     return args[0];
   }
-
-  //
-  // Transform options
-  //
-
-#if 0
-  value_t option_select(call_scope_t& args) {
-    transforms.push_back(new select_transform(args[0].as_string()));
-    return NULL_VALUE;
-  }
-  value_t option_limit(call_scope_t& args) {
-    string expr = (string("//xact[") +
-		   args[0].as_string() + "]");
-    transforms.push_back(new select_transform(expr));
-    return NULL_VALUE;
-  }
-
-  value_t option_remove(call_scope_t& args) {
-    transforms.push_back(new remove_transform(args[0].as_string()));
-    return NULL_VALUE;
-  }
-
-  value_t option_accounts(call_scope_t& args) {
-    transforms.push_back(new accounts_transform);
-    return NULL_VALUE;
-  }
-  value_t option_compact(call_scope_t& args) {
-    transforms.push_back(new compact_transform);
-    return NULL_VALUE;
-  }
-  value_t option_clean(call_scope_t& args) {
-    transforms.push_back(new clean_transform);
-    return NULL_VALUE;
-  }
-  value_t option_entries(call_scope_t& args) {
-    transforms.push_back(new entries_transform);
-    return NULL_VALUE;
-  }
-
-  value_t option_split(call_scope_t& args) {
-    transforms.push_back(new split_transform);
-    return NULL_VALUE;
-  }
-  value_t option_merge(call_scope_t& args) {
-    transforms.push_back(new merge_transform);
-    return NULL_VALUE;
-  }
-#endif
 
   //
   // Scope members
@@ -348,15 +299,15 @@ class format_entries : public format_xacts
   virtual void operator()(xact_t& xact);
 };
 
-void print_entry(std::ostream& out, const entry_base_t& entry,
-		 const string& prefix = "");
+void print_entry(std::ostream&	     out,
+		 const entry_base_t& entry,
+		 const string&	     prefix = "");
 
-bool disp_subaccounts_p(const account_t&	   account,
+bool disp_subaccounts_p(account_t&		   account,
 			item_predicate<account_t>& disp_pred,
-			const account_t *&	   to_show);
+			account_t *&		   to_show);
 
-bool display_account(const account_t&		account,
-		     item_predicate<account_t>& disp_pred);
+bool display_account(account_t& account, item_predicate<account_t>& disp_pred);
 
 class format_accounts : public item_handler<account_t>
 {

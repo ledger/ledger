@@ -35,6 +35,7 @@
 #include "scope.h"
 #include "journal.h"
 #include "account.h"
+#include "format.h"
 
 namespace ledger {
 
@@ -75,9 +76,7 @@ public:
   datetime_t now;
   date_t today;
 
-#if 0
-  elision_style_t elision_style;
-#endif
+  format_t::elision_style_t elision_style;
   int abbrev_length;
 
   bool ansi_codes;
