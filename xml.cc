@@ -381,9 +381,9 @@ void format_xml_entries::format_last_entry()
   }
 
   bool first = true;
-  foreach (const xact_t * xact, last_entry->xacts) {
-    if (xact_has_xdata(*xact) &&
-	xact_xdata_(*xact).dflags & XACT_TO_DISPLAY) {
+  foreach (xact_t * xact, last_entry->xacts) {
+    if (xact->has_xdata() &&
+	xact->xdata().has_flags(XACT_EXT_TO_DISPLAY)) {
       if (first) {
 	output_stream << "    <en:xacts>\n";
 	first = false;
@@ -427,9 +427,8 @@ void format_xml_entries::format_last_entry()
       }
 
       output_stream << "        <tr:amount>\n";
-      if (xact_xdata_(*xact).dflags & XACT_COMPOUND)
-	xml_write_value(output_stream,
-			xact_xdata_(*xact).value, 10);
+      if (xact->xdata().has_flags(XACT_EXT_COMPOUND))
+	xml_write_value(output_stream, xact->xdata().value, 10);
       else
 	xml_write_value(output_stream, value_t(xact->amount), 10);
       output_stream << "        </tr:amount>\n";
@@ -448,13 +447,13 @@ void format_xml_entries::format_last_entry()
 
       if (show_totals) {
 	output_stream << "        <total>\n";
-	xml_write_value(output_stream, xact_xdata_(*xact).total, 10);
+	xml_write_value(output_stream, xact->xdata().total, 10);
 	output_stream << "        </total>\n";
       }
 
       output_stream << "      </xact>\n";
 
-      xact_xdata_(*xact).dflags |= XACT_DISPLAYED;
+      xact->xdata().add_flags(XACT_EXT_DISPLAYED);
     }
   }
 

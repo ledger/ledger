@@ -43,10 +43,6 @@ typedef std::list<path>	paths_list;
 class session_t;
 class account_t;
 
-typedef std::list<entry_t *>	    entries_list;
-typedef std::list<auto_entry_t *>   auto_entries_list;
-typedef std::list<period_entry_t *> period_entries_list;
-
 class journal_t : public noncopyable
 {
 public:

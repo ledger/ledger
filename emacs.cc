@@ -33,8 +33,8 @@ void format_emacs_xacts::write_entry(entry_t& entry)
 
 void format_emacs_xacts::operator()(xact_t& xact)
 {
-  if (! xact_has_xdata(xact) ||
-      ! (xact_xdata_(xact).dflags & XACT_DISPLAYED)) {
+  if (! xact.has_xdata() ||
+      ! xact.xdata().has_flags(XACT_EXT_DISPLAYED)) {
     if (! last_entry) {
       out << "((";
       write_entry(*xact.entry);
@@ -48,7 +48,7 @@ void format_emacs_xacts::operator()(xact_t& xact)
     }
 
     out << "  (" << (static_cast<unsigned long>(xact.beg_line) + 1) << " ";
-    out << "\"" << xact_account(xact)->fullname() << "\" \""
+    out << "\"" << xact.reported_account()->fullname() << "\" \""
 	<< xact.amount << "\"";
 
     switch (xact.state) {
@@ -71,7 +71,7 @@ void format_emacs_xacts::operator()(xact_t& xact)
 
     last_entry = xact.entry;
 
-    xact_xdata(xact).dflags |= XACT_DISPLAYED;
+    xact.xdata().add_flags(XACT_EXT_DISPLAYED);
   }
 }
 

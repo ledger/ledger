@@ -34,21 +34,21 @@ bool qif_parser_t::test(std::istream& in) const
 }
 
 unsigned int qif_parser_t::parse(std::istream& in,
-				 session_t&     session,
-				 journal_t&   journal,
+				 session_t&    session,
+				 journal_t&    journal,
 				 account_t *   master,
 				 const path *  original_file)
 {
   std::auto_ptr<entry_t>  entry;
   std::auto_ptr<amount_t> amount;
 
-  xact_t * xact;
-  unsigned int    count		= 0;
-  account_t *     misc		= NULL;
-  commodity_t *   def_commodity = NULL;
-  bool            saw_splits    = false;
-  bool            saw_category  = false;
-  xact_t * total         = NULL;
+  xact_t *	xact;
+  unsigned int  count	      = 0;
+  account_t *   misc	      = NULL;
+  commodity_t * def_commodity = NULL;
+  bool          saw_splits    = false;
+  bool          saw_category  = false;
+  xact_t *	total         = NULL;
 
   entry.reset(new entry_t);
   xact = new xact_t(master);

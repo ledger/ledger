@@ -53,8 +53,6 @@ void expr_t::token_t::parse_ident(std::istream& in)
   kind	 = IDENT;
   length = 0;
 
-  clear_flags();
-
   char buf[256];
   READ_INTO_(in, buf, 255, c, length,
 	     std::isalnum(c) || c == '_' || c == '.' || c == '-');
@@ -122,7 +120,7 @@ void expr_t::token_t::parse_ident(std::istream& in)
     value.set_string(buf);
 }
 
-void expr_t::token_t::next(std::istream& in, const unsigned int pflags)
+void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
 {
   if (in.eof()) {
     kind = TOK_EOF;
@@ -283,19 +281,6 @@ void expr_t::token_t::next(std::istream& in, const unsigned int pflags)
       expected('/', c);
     in.get(c);
     length++;
-
-    if (short_account_mask)
-      set_flags(MASK_SHORT_ACCOUNT);
-    else if (code_mask)
-      set_flags(MASK_CODE);
-    else if (commodity_mask)
-      set_flags(MASK_COMMODITY);
-    else if (payee_mask)
-      set_flags(MASK_PAYEE);
-    else if (note_mask)
-      set_flags(MASK_NOTE);
-    else
-      set_flags(MASK_ACCOUNT);
 
     kind = MASK;
     value.set_string(buf);

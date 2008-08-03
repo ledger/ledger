@@ -50,7 +50,6 @@ expr_t::parser_t::parse_value_term(std::istream& in,
   case token_t::MASK:
     node = new op_t(op_t::MASK);
     node->set_mask(tok.value.as_string());
-    node->as_mask_lval().add_flags(tok.flags());
     break;
 
   case token_t::IDENT: {

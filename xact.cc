@@ -58,18 +58,39 @@ date_t xact_t::effective_date() const
 }
 
 namespace {
-  value_t get_amount(xact_t& xact)
-  {
-    return xact.amount;
+  value_t get_state(xact_t& xact) {
+    return long(xact.state);
   }
 
-  value_t get_date(xact_t& xact)
-  {
+  value_t state_uncleared(call_scope_t&) {
+    return 0L;
+  }
+
+  value_t state_cleared(call_scope_t&) {
+    return 1L;
+  }
+
+  value_t state_pending(call_scope_t&) {
+    return 2L;
+  }
+
+  value_t get_date(xact_t& xact) {
     return xact.date();
   }
 
-  value_t get_account(call_scope_t& scope)
-  {
+  value_t get_amount(xact_t& xact) {
+    return xact.amount;
+  }
+
+  value_t get_cost(xact_t& xact) {
+    return xact.cost ? *xact.cost : xact.amount;
+  }
+
+  value_t get_note(xact_t& xact) {
+    return string_value(xact.note ? *xact.note : ":NOTELESS:");
+  }
+
+  value_t get_account(call_scope_t& scope) {
     xact_t& xact(downcast<xact_t>(*scope.parent));
 
     long width = 0;
@@ -78,7 +99,7 @@ namespace {
 
     // jww (2008-08-02): Accept a width here so that we can abbreviate the
     // string.
-    string name = xact.account->fullname();
+    string name = xact.reported_account()->fullname();
 
     if (width > 2)
       name = format_t::truncate(name, width - 2, true);
@@ -92,10 +113,33 @@ namespace {
     return string_value(name);
   }
 
-  value_t get_account_base(xact_t& xact)
-  {
-    assert(false);
-    return NULL_VALUE;
+  value_t get_account_base(xact_t& xact) {
+    return string_value(xact.reported_account()->name);
+  }
+
+  value_t get_beg_pos(xact_t& xact) {
+    return long(xact.beg_pos);
+  }
+
+  value_t get_beg_line(xact_t& xact) {
+    return long(xact.beg_line);
+  }
+
+  value_t get_end_pos(xact_t& xact) {
+    return long(xact.end_pos);
+  }
+
+  value_t get_end_line(xact_t& xact) {
+    return long(xact.end_line);
+  }
+
+  // xdata_t members...
+
+  value_t get_total(xact_t& xact) {
+    if (xact.xdata_)
+      return xact.xdata_->total;
+    else
+      return xact.amount;
   }
 
   template <value_t (*Func)(xact_t&)>
@@ -115,15 +159,32 @@ expr_t::ptr_op_t xact_t::lookup(const string& name)
     else if (name == "account_base")
       return WRAP_FUNCTOR(get_wrapper<&get_account_base>);
     break;
+
+  case 'c':
+    if (name == "cleared")
+      return expr_t::op_t::wrap_value(0L);
+    break;
+
   case 'd':
     if (name[1] == '\0' || name == "date")
       return WRAP_FUNCTOR(get_wrapper<&get_date>);
     break;
+
   case 'f':
     if (name.find("fmt_") == 0) {
       if (name == "fmt_A")
 	return WRAP_FUNCTOR(get_account);
     }
+    break;
+
+  case 'p':
+    if (name == "pending")
+      return expr_t::op_t::wrap_value(2L);
+    break;
+
+  case 'u':
+    if (name == "uncleared")
+      return expr_t::op_t::wrap_value(1L);
     break;
   }
   return entry->lookup(name);
@@ -186,5 +247,18 @@ xact_context::xact_context(const xact_t& _xact, const string& desc) throw()
   line = xact.beg_line;
 }
 #endif
+
+void xact_t::add_to_value(value_t& value)
+{
+  if (xdata_ && xdata_->has_flags(XACT_EXT_COMPOUND)) {
+    value += xdata_->value;
+  }
+  else if (cost || (! value.is_null() && ! value.is_realzero())) {
+    value.add(amount, cost);
+  }
+  else {
+    value = amount;
+  }
+}
 
 } // namespace ledger

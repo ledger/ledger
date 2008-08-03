@@ -36,7 +36,7 @@
 
 namespace ledger {
 
-struct expr_t::token_t : public noncopyable, public supports_flags<>
+struct expr_t::token_t : public noncopyable
 {
   enum kind_t {
     VALUE,			// any kind of literal value
@@ -79,7 +79,7 @@ struct expr_t::token_t : public noncopyable, public supports_flags<>
   value_t     value;
   std::size_t length;
 
-  explicit token_t() : supports_flags<>(), kind(UNKNOWN), length(0) {
+  explicit token_t() : kind(UNKNOWN), length(0) {
     TRACE_CTOR(token_t, "");
   }
   ~token_t() throw() {
@@ -104,7 +104,7 @@ struct expr_t::token_t : public noncopyable, public supports_flags<>
   }
 
   void parse_ident(std::istream& in);
-  void next(std::istream& in, unsigned int flags);
+  void next(std::istream& in, const uint_least8_t flags);
   void rewind(std::istream& in);
   void unexpected();
 

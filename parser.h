@@ -46,10 +46,14 @@ class expr_t::parser_t : public noncopyable
 #define EXPR_PARSE_NO_ASSIGN  0x08
 #define EXPR_PARSE_NO_DATES   0x10
 
+public:
+  typedef uint_least8_t flags_t;
+
+private:
   mutable token_t lookahead;
   mutable bool	  use_lookahead;
 
-  token_t& next_token(std::istream& in, token_t::flags_t tflags) const
+  token_t& next_token(std::istream& in, flags_t tflags) const
   {
     if (use_lookahead)
       use_lookahead = false;
@@ -69,10 +73,6 @@ class expr_t::parser_t : public noncopyable
     use_lookahead = true;
   }
 
-public:
-  typedef uint_least8_t flags_t;
-
-private:
   ptr_op_t parse_value_term(std::istream& in, const flags_t flags) const;
   ptr_op_t parse_unary_expr(std::istream& in, const flags_t flags) const;
   ptr_op_t parse_mul_expr(std::istream& in, const flags_t flags) const;

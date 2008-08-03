@@ -39,8 +39,6 @@ namespace ledger {
 
 class journal_t;
 
-typedef std::list<xact_t *> xacts_list;
-
 class entry_base_t : public supports_flags<>
 {
 public:
@@ -231,6 +229,10 @@ inline bool auto_entry_finalizer_t::operator()(entry_t& entry, bool post) {
   extend_entry_base(journal, entry, post);
   return true;
 }
+
+typedef std::list<entry_t *>	    entries_list;
+typedef std::list<auto_entry_t *>   auto_entries_list;
+typedef std::list<period_entry_t *> period_entries_list;
 
 } // namespace ledger
 

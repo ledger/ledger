@@ -1079,7 +1079,7 @@ void write_textual_journal(journal_t&	    journal,
     if (base) {
       foreach (xact_t * xact, base->xacts) {
 	if (! xact->has_flags(XACT_AUTO)) {
-	  xact_xdata(*xact).dflags |= XACT_TO_DISPLAY;
+	  xact->xdata().add_flags(XACT_EXT_TO_DISPLAY);
 	  (*formatter)(*xact);
 	}
       }

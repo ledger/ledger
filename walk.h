@@ -2,6 +2,7 @@
 #define _WALK_H
 
 #include "journal.h"
+#include "entry.h"
 #include "account.h"
 
 namespace ledger {
@@ -33,123 +34,6 @@ public:
 };
 
 typedef shared_ptr<item_handler<xact_t> > xact_handler_ptr;
-
-template <typename T>
-class compare_items
-{
-  expr_t sort_order;
-
-  compare_items();
-  
-public:
-  compare_items(const compare_items& other) : sort_order(other.sort_order) {
-    TRACE_CTOR(compare_items, "copy");
-  }
-  compare_items(const expr_t& _sort_order) : sort_order(_sort_order) {
-    TRACE_CTOR(compare_items, "const value_expr&");
-  }
-  ~compare_items() throw() {
-    TRACE_DTOR(compare_items);
-  }
-  bool operator()(const T * left, const T * right);
-};
-
-template <typename T>
-bool compare_items<T>::operator()(const T * left, const T * right)
-{
-  assert(left);
-  assert(right);
-  return sort_order.calc(*left) < sort_order.calc(*right);
-}
-
-template <>
-bool compare_items<xact_t>::operator()(const xact_t * left,
-					      const xact_t * right);
-template <>
-bool compare_items<account_t>::operator()(const account_t * left,
-					  const account_t * right);
-
-//////////////////////////////////////////////////////////////////////
-//
-// Xact handlers
-//
-
-#define XACT_RECEIVED   0x0001
-#define XACT_HANDLED    0x0002
-#define XACT_TO_DISPLAY 0x0004
-#define XACT_DISPLAYED  0x0008
-#define XACT_NO_TOTAL   0x0010
-#define XACT_SORT_CALC  0x0020
-#define XACT_COMPOUND   0x0040
-#define XACT_MATCHES    0x0080
-
-struct xact_xdata_t : public noncopyable
-{
-  value_t	 total;
-  value_t	 sort_value;
-  value_t	 value;
-  unsigned int   index;
-  unsigned short dflags;
-  date_t         date;
-  account_t *    account;
-  void *         ptr;
-  xacts_list *   component_xacts;
-
-  xact_xdata_t()
-    : index(0), dflags(0),
-      account(NULL), ptr(NULL), component_xacts(NULL) {
-    TRACE_CTOR(xact_xdata_t, "");
-  }
-  ~xact_xdata_t() {
-    TRACE_DTOR(xact_xdata_t);
-    if (component_xacts)
-      checked_delete(component_xacts);
-  }
-
-  void remember_xact(xact_t& xact) {
-    if (! component_xacts)
-      component_xacts = new xacts_list;
-    component_xacts->push_back(&xact);
-  }
-
-  bool have_component_xacts() const {
-    return component_xacts != NULL && ! component_xacts->empty();
-  }
-
-  void copy_component_xacts(xacts_list& xacts) {
-    foreach (xact_t * xact, xacts)
-      remember_xact(*xact);
-  }
-
-  void walk_component_xacts(item_handler<xact_t>& handler) const {
-    foreach (xact_t * xact, *component_xacts)
-      handler(*xact);
-  }
-};
-
-inline bool xact_has_xdata(const xact_t& xact) {
-  return xact.data != NULL;
-}
-
-inline xact_xdata_t& xact_xdata_(const xact_t& xact) {
-  return *static_cast<xact_xdata_t *>(xact.data);
-}
-
-xact_xdata_t& xact_xdata(const xact_t& xact);
-void add_xact_to(const xact_t& xact, value_t& value);
-
-inline account_t * xact_account(xact_t& xact) {
-  if (xact.data) {
-    account_t * account = xact_xdata(xact).account;
-    if (account)
-      return account;
-  }
-  return xact.account;
-}
-
-inline const account_t * xact_account(const xact_t& xact) {
-  return xact_account(const_cast<xact_t&>(xact));
-}
 
 //////////////////////////////////////////////////////////////////////
 
@@ -226,7 +110,7 @@ public:
 
 class session_xacts_iterator : public xacts_iterator
 {
-  entries_iterator	      entries;
+  entries_iterator     entries;
   entry_xacts_iterator xacts;
 
 public:
@@ -258,10 +142,7 @@ class clear_xact_xdata : public item_handler<xact_t>
 {
 public:
   virtual void operator()(xact_t& xact) {
-    if (xact.data) {
-      checked_delete(static_cast<xact_xdata_t *>(xact.data));
-      xact.data = NULL;
-    }
+    xact.clear_xdata();
   }
 };
 
@@ -270,17 +151,36 @@ class pass_down_xacts : public item_handler<xact_t>
   pass_down_xacts();
 
 public:
-  pass_down_xacts(xact_handler_ptr handler,
-			 xacts_iterator& iter)
-    : item_handler<xact_t>(handler) {
-    TRACE_CTOR(pass_down_xacts,
-	       "xact_handler_ptr, xacts_iterator");
+  pass_down_xacts(xact_handler_ptr handler, xacts_iterator& iter)
+    : item_handler<xact_t>(handler)
+  {
+    TRACE_CTOR(pass_down_xacts, "xact_handler_ptr, xacts_iterator");
+
     for (xact_t * xact = iter(); xact; xact = iter())
       item_handler<xact_t>::operator()(*xact);
   }
 
   virtual ~pass_down_xacts() {
     TRACE_DTOR(pass_down_xacts);
+  }
+};
+
+class push_to_xacts_list : public item_handler<xact_t>
+{
+  push_to_xacts_list();
+
+public:
+  xacts_list& xacts;
+
+  push_to_xacts_list(xacts_list& _xacts) : xacts(_xacts) {
+    TRACE_CTOR(push_to_xacts_list, "xacts_list&");
+  }
+  virtual ~push_to_xacts_list() {
+    TRACE_DTOR(push_to_xacts_list);
+  }
+
+  virtual void operator()(xact_t& xact) {
+    xacts.push_back(&xact);
   }
 };
 
@@ -306,6 +206,9 @@ public:
 
   virtual void flush();
   virtual void operator()(xact_t& xact) {
+    if (tail_count == 0 && head_count > 0 &&
+	xacts.size() >= static_cast<unsigned int>(head_count))
+      return;
     xacts.push_back(&xact);
   }
 };
@@ -317,26 +220,6 @@ public:
     : item_handler<xact_t>(handler) {}
 
   virtual void operator()(xact_t& xact);
-};
-
-class push_to_xacts_list : public item_handler<xact_t>
-{
-  push_to_xacts_list();
-
-public:
-  xacts_list& xact_list;
-
-  push_to_xacts_list(xacts_list& _xact_list)
-    : xact_list(_xact_list) {
-    TRACE_CTOR(push_to_xacts_list, "xacts_list&");
-  }
-  virtual ~push_to_xacts_list() {
-    TRACE_DTOR(push_to_xacts_list);
-  }
-
-  virtual void operator()(xact_t& xact) {
-    xact_list.push_back(&xact);
-  }
 };
 
 class sort_xacts : public item_handler<xact_t>
@@ -444,7 +327,7 @@ public:
 
   virtual void operator()(xact_t& xact) {
     if (pred(xact)) {
-      xact_xdata(xact).dflags |= XACT_MATCHES;
+      xact.xdata().add_flags(XACT_EXT_MATCHES);
       (*handler)(xact);
     }
   }
@@ -567,7 +450,7 @@ public:
 
   virtual void flush();
   virtual void operator()(xact_t& xact) {
-    xact_xdata(xact).dflags |= XACT_RECEIVED;
+    xact.xdata().add_flags(XACT_EXT_RECEIVED);
     xacts.push_back(&xact);
   }
 };
@@ -577,12 +460,12 @@ class changed_value_xacts : public item_handler<xact_t>
   // This filter requires that calc_xacts be used at some point
   // later in the chain.
 
-  bool		  changed_values_only;
+  bool	   changed_values_only;
   xact_t * last_xact;
-  value_t         last_balance;
+  value_t  last_balance;
 
-  std::list<entry_t>       entry_temps;
-  std::list<xact_t> xact_temps;
+  std::list<entry_t> entry_temps;
+  std::list<xact_t>  xact_temps;
 
   changed_value_xacts();
 
@@ -1044,6 +927,40 @@ public:
 
   virtual journal_t * operator()();
 };
+
+template <typename T>
+class compare_items
+{
+  expr_t sort_order;
+
+  compare_items();
+  
+public:
+  compare_items(const compare_items& other) : sort_order(other.sort_order) {
+    TRACE_CTOR(compare_items, "copy");
+  }
+  compare_items(const expr_t& _sort_order) : sort_order(_sort_order) {
+    TRACE_CTOR(compare_items, "const value_expr&");
+  }
+  ~compare_items() throw() {
+    TRACE_DTOR(compare_items);
+  }
+  bool operator()(T * left, T * right);
+};
+
+template <typename T>
+bool compare_items<T>::operator()(T * left, T * right)
+{
+  assert(left);
+  assert(right);
+  return sort_order.calc(*left) < sort_order.calc(*right);
+}
+
+template <>
+bool compare_items<xact_t>::operator()(xact_t * left, xact_t * right);
+template <>
+bool compare_items<account_t>::operator()(account_t * left,
+					  account_t * right);
 
 } // namespace ledger
 

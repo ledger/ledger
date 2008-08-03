@@ -476,8 +476,8 @@ format_xacts::format_xacts(std::ostream& _output_stream,
 
 void format_xacts::operator()(xact_t& xact)
 {
-  if (! xact_has_xdata(xact) ||
-      ! (xact_xdata_(xact).dflags & XACT_DISPLAYED)) {
+  if (! xact.has_xdata() ||
+      ! xact.xdata().has_flags(XACT_EXT_DISPLAYED)) {
     if (last_entry != xact.entry) {
       first_line_format.format(output_stream, xact);
       last_entry = xact.entry;
@@ -489,7 +489,7 @@ void format_xacts::operator()(xact_t& xact)
       next_lines_format.format(output_stream, xact);
     }
 
-    xact_xdata(xact).dflags |= XACT_DISPLAYED;
+    xact.xdata().add_flags(XACT_EXT_DISPLAYED);
     last_xact = &xact;
   }
 }
@@ -515,7 +515,7 @@ void format_entries::format_last_entry()
 
 void format_entries::operator()(xact_t& xact)
 {
-  xact_xdata(xact).dflags |= XACT_TO_DISPLAY;
+  xact.xdata().add_flags(XACT_EXT_TO_DISPLAY);
 
   if (last_entry && xact.entry != last_entry)
     format_last_entry();

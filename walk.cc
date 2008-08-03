@@ -8,24 +8,23 @@
 namespace ledger {
 
 template <>
-bool compare_items<xact_t>::operator()(const xact_t * left,
-				       const xact_t * right)
+bool compare_items<xact_t>::operator()(xact_t * left, xact_t * right)
 {
   assert(left);
   assert(right);
 
-  xact_xdata_t& lxdata(xact_xdata(*left));
-  if (! (lxdata.dflags & XACT_SORT_CALC)) {
-    lxdata.sort_value = sort_order.calc(const_cast<xact_t&>(*left));
+  xact_t::xdata_t& lxdata(left->xdata());
+  if (! lxdata.has_flags(XACT_EXT_SORT_CALC)) {
+    lxdata.sort_value = sort_order.calc(*left);
     lxdata.sort_value.reduce();
-    lxdata.dflags |= XACT_SORT_CALC;
+    lxdata.add_flags(XACT_EXT_SORT_CALC);
   }
 
-  xact_xdata_t& rxdata(xact_xdata(*right));
-  if (! (rxdata.dflags & XACT_SORT_CALC)) {
-    rxdata.sort_value = sort_order.calc(const_cast<xact_t&>(*right));
+  xact_t::xdata_t& rxdata(right->xdata());
+  if (! rxdata.has_flags(XACT_EXT_SORT_CALC)) {
+    rxdata.sort_value = sort_order.calc(*right);
     rxdata.sort_value.reduce();
-    rxdata.dflags |= XACT_SORT_CALC;
+    rxdata.add_flags(XACT_EXT_SORT_CALC);
   }
 
   DEBUG("ledger.walk.compare_items_xact",
@@ -34,27 +33,6 @@ bool compare_items<xact_t>::operator()(const xact_t * left,
 	"rxdata.sort_value = " << rxdata.sort_value);
 
   return lxdata.sort_value < rxdata.sort_value;
-}
-
-xact_xdata_t& xact_xdata(const xact_t& xact)
-{
-  if (! xact.data)
-    xact.data = new xact_xdata_t();
-  return *static_cast<xact_xdata_t *>(xact.data);
-}
-
-void add_xact_to(const xact_t& xact, value_t& value)
-{
-  if (xact_has_xdata(xact) &&
-      xact_xdata_(xact).dflags & XACT_COMPOUND) {
-    value += xact_xdata_(xact).value;
-  }
-  else if (xact.cost || (! value.is_null() && ! value.is_realzero())) {
-    value.add(xact.amount, xact.cost);
-  }
-  else {
-    value = xact.amount;
-  }
 }
 
 void entries_iterator::reset(session_t& session)
@@ -157,11 +135,11 @@ void truncate_entries::flush()
 
 void set_account_value::operator()(xact_t& xact)
 {
-  account_t * acct = xact_account(xact);
+  account_t * acct = xact.reported_account();
   assert(acct);
 
   account_xdata_t& xdata = account_xdata(*acct);
-  add_xact_to(xact, xdata.value);
+  xact.add_to_value(xdata.value);
 
   xdata.count++;
   if (xact.has_flags(XACT_VIRTUAL))
@@ -176,7 +154,7 @@ void sort_xacts::post_accumulated_xacts()
 		   compare_items<xact_t>(sort_order));
 
   foreach (xact_t * xact, xacts) {
-    xact_xdata(*xact).dflags &= ~XACT_SORT_CALC;
+    xact->xdata().drop_flags(XACT_EXT_SORT_CALC);
     item_handler<xact_t>::operator()(*xact);
   }
 
@@ -186,26 +164,24 @@ void sort_xacts::post_accumulated_xacts()
 void calc_xacts::operator()(xact_t& xact)
 {
   try {
+    xact_t::xdata_t& xdata(xact.xdata());
 
-  xact_xdata_t& xdata(xact_xdata(xact));
+    if (last_xact && last_xact->has_xdata()) {
+      if (xdata.total.is_null())
+	xdata.total = last_xact->xdata().total;
+      else
+	xdata.total += last_xact->xdata().total;
+      xdata.index = last_xact->xdata().index + 1;
+    } else {
+      xdata.index = 0;
+    }
 
-  if (last_xact && xact_has_xdata(*last_xact)) {
-    if (xdata.total.is_null())
-      xdata.total = xact_xdata_(*last_xact).total;
-    else
-      xdata.total += xact_xdata_(*last_xact).total;
-    xdata.index  = xact_xdata_(*last_xact).index + 1;
-  } else {
-    xdata.index = 0;
-  }
+    if (! xdata.has_flags(XACT_EXT_NO_TOTAL))
+      xact.add_to_value(xdata.total);
 
-  if (! (xdata.dflags & XACT_NO_TOTAL))
-    add_xact_to(xact, xdata.total);
+    item_handler<xact_t>::operator()(xact);
 
-  item_handler<xact_t>::operator()(xact);
-
-  last_xact = &xact;
-
+    last_xact = &xact;
   }
   catch (const std::exception& err) {
     add_error_context("Calculating transaction at");
@@ -218,9 +194,9 @@ void calc_xacts::operator()(xact_t& xact)
 
 void invert_xacts::operator()(xact_t& xact)
 {
-  if (xact_has_xdata(xact) &&
-      xact_xdata_(xact).dflags & XACT_COMPOUND) {
-    xact_xdata_(xact).value.negate();
+  if (xact.has_xdata() &&
+      xact.xdata().has_flags(XACT_EXT_COMPOUND)) {
+    xact.xdata().value.negate();
   } else {
     xact.amount.negate();
     if (xact.cost)
@@ -251,7 +227,7 @@ void handle_value(const value_t&	value,
   // temporary, do so now.
 
   if (component_xacts)
-    xact_xdata(xact).copy_component_xacts(*component_xacts);
+    xact.xdata().copy_component_xacts(*component_xacts);
 
   // If the account for this xact is all virtual, then report
   // the xact as such.  This allows subtotal reports to show
@@ -264,7 +240,7 @@ void handle_value(const value_t&	value,
 	xact.add_flags(XACT_BALANCE);
     }
 
-  xact_xdata_t& xdata(xact_xdata(xact));
+  xact_t::xdata_t& xdata(xact.xdata());
 
   if (is_valid(date))
     xdata.date = date;
@@ -286,7 +262,7 @@ void handle_value(const value_t&	value,
   case value_t::BALANCE:
   case value_t::BALANCE_PAIR:
     xdata.value = temp;
-    flags |= XACT_COMPOUND;
+    flags |= XACT_EXT_COMPOUND;
     break;
 
   default:
@@ -295,7 +271,7 @@ void handle_value(const value_t&	value,
   }
 
   if (flags)
-    xdata.dflags |= flags;
+    xdata.add_flags(flags);
 
   handler(xact);
 }
@@ -330,7 +306,7 @@ void collapse_xacts::operator()(xact_t& xact)
   if (last_entry && last_entry != xact.entry && count > 0)
     report_subtotal();
 
-  add_xact_to(xact, subtotal);
+  xact.add_to_value(subtotal);
   count++;
 
   last_entry = xact.entry;
@@ -343,12 +319,12 @@ void related_xacts::flush()
     foreach (xact_t * xact, xacts) {
       if (xact->entry) {
 	foreach (xact_t * r_xact, xact->entry->xacts) {
-	  xact_xdata_t& xdata = xact_xdata(*r_xact);
-	  if (! (xdata.dflags & XACT_HANDLED) &&
-	      (! (xdata.dflags & XACT_RECEIVED) ?
+	  xact_t::xdata_t& xdata(r_xact->xdata());
+	  if (! xdata.has_flags(XACT_EXT_HANDLED) &&
+	      (! xdata.has_flags(XACT_EXT_RECEIVED) ?
 	       ! r_xact->has_flags(XACT_AUTO | XACT_VIRTUAL) :
 	       also_matching)) {
-	    xdata.dflags |= XACT_HANDLED;
+	    xdata.add_flags(XACT_EXT_HANDLED);
 	    item_handler<xact_t>::operator()(*r_xact);
 	  }
 	}
@@ -356,10 +332,10 @@ void related_xacts::flush()
 	// This code should only be reachable from the "output"
 	// command, since that is the only command which attempts to
 	// output auto or period entries.
-	xact_xdata_t& xdata = xact_xdata(*xact);
-	if (! (xdata.dflags & XACT_HANDLED) &&
+	xact_t::xdata_t& xdata(xact->xdata());
+	if (! xdata.has_flags(XACT_EXT_HANDLED) &&
 	    ! xact->has_flags(XACT_AUTO)) {
-	  xdata.dflags |= XACT_HANDLED;
+	  xdata.add_flags(XACT_EXT_HANDLED);
 	  item_handler<xact_t>::operator()(*xact);
 	}
       }
@@ -373,7 +349,7 @@ void changed_value_xacts::output_diff(const date_t& date)
 {
   value_t cur_bal;
 
-  xact_xdata(*last_xact).date = date;
+  last_xact->xdata().date = date;
 #if 0
   compute_total(cur_bal, details_t(*last_xact));
 #endif
@@ -381,7 +357,7 @@ void changed_value_xacts::output_diff(const date_t& date)
 
 #if 0
   // jww (2008-04-24): What does this do?
-  xact_xdata(*last_xact).date = 0;
+  last_xact->xdata().date = 0;
 #endif
 
   if (value_t diff = cur_bal - last_balance) {
@@ -390,24 +366,18 @@ void changed_value_xacts::output_diff(const date_t& date)
     entry.payee = "Commodities revalued";
     entry._date = date;
 
-    handle_value(diff, NULL, &entry, XACT_NO_TOTAL, xact_temps,
+    handle_value(diff, NULL, &entry, XACT_EXT_NO_TOTAL, xact_temps,
 		 *handler);
   }
 }
 
 void changed_value_xacts::operator()(xact_t& xact)
 {
-  if (last_xact) {
-    date_t date;
-    if (xact_has_xdata(*last_xact))
-      date = xact_xdata_(*last_xact).date;
-    else
-      date = xact.date();
-    output_diff(date);
-  }
+  if (last_xact)
+    output_diff(last_xact->reported_date());
 
   if (changed_values_only)
-    xact_xdata(xact).dflags |= XACT_DISPLAYED;
+    xact.xdata().add_flags(XACT_EXT_DISPLAYED);
 
   item_handler<xact_t>::operator()(xact);
 
@@ -422,9 +392,13 @@ void changed_value_xacts::operator()(xact_t& xact)
 void component_xacts::operator()(xact_t& xact)
 {
   if (handler && pred(xact)) {
-    if (xact_has_xdata(xact) &&
-	xact_xdata_(xact).have_component_xacts())
-      xact_xdata_(xact).walk_component_xacts(*handler);
+    if (xact.has_xdata() &&
+	xact.xdata().has_component_xacts())
+#if 0
+      xact.xdata().walk_component_xacts(*handler);
+#else
+    ;
+#endif
     else
       (*handler)(xact);
   }
@@ -460,13 +434,13 @@ void subtotal_xacts::operator()(xact_t& xact)
   if (! is_valid(finish) || xact.date() > finish)
     finish = xact.date();
 
-  account_t * acct = xact_account(xact);
+  account_t * acct = xact.reported_account();
   assert(acct);
 
   values_map::iterator i = values.find(acct->fullname());
   if (i == values.end()) {
     value_t temp;
-    add_xact_to(xact, temp);
+    xact.add_to_value(temp);
     std::pair<values_map::iterator, bool> result
       = values.insert(values_pair(acct->fullname(), acct_value_t(acct, temp)));
     assert(result.second);
@@ -474,7 +448,7 @@ void subtotal_xacts::operator()(xact_t& xact)
     if (remember_components)
       (*result.first).second.components.push_back(&xact);
   } else {
-    add_xact_to(xact, (*i).second.value);
+    xact.add_to_value((*i).second.value);
 
     if (remember_components)
       (*i).second.components.push_back(&xact);
@@ -485,9 +459,9 @@ void subtotal_xacts::operator()(xact_t& xact)
   // that contain only virtual xacts.
 
   if (! xact.has_flags(XACT_VIRTUAL))
-    account_xdata(*xact_account(xact)).dflags |= ACCOUNT_HAS_NON_VIRTUALS;
+    account_xdata(*xact.reported_account()).dflags |= ACCOUNT_HAS_NON_VIRTUALS;
   else if (! xact.has_flags(XACT_BALANCE))
-    account_xdata(*xact_account(xact)).dflags |= ACCOUNT_HAS_UNB_VIRTUALS;
+    account_xdata(*xact.reported_account()).dflags |= ACCOUNT_HAS_UNB_VIRTUALS;
 }
 
 void interval_xacts::report_subtotal(const date_t& date)
@@ -675,7 +649,7 @@ void budget_xacts::report_budget_items(const date_t& date)
 	xact_t& xact = *pair.second;
 
 	DEBUG("ledger.walk.budget", "Reporting budget for "
-	      << xact_account(xact)->fullname());
+	      << xact.reported_account()->fullname());
 
 	entry_temps.push_back(entry_t());
 	entry_t& entry = entry_temps.back();
@@ -704,15 +678,15 @@ void budget_xacts::operator()(xact_t& xact)
   bool xact_in_budget = false;
 
   foreach (pending_xacts_list::value_type& pair, pending_xacts)
-    for (account_t * acct = xact_account(xact);
+    for (account_t * acct = xact.reported_account();
 	 acct;
 	 acct = acct->parent) {
-      if (acct == xact_account(*pair.second)) {
+      if (acct == (*pair.second).reported_account()) {
 	xact_in_budget = true;
 	// Report the xact as if it had occurred in the parent
 	// account.
-	if (xact_account(xact) != acct)
-	  xact_xdata(xact).account = acct;
+	if (xact.reported_account() != acct)
+	  xact.xdata().account = acct;
 	goto handle;
       }
     }
@@ -782,8 +756,8 @@ void forecast_xacts::flush()
 
     item_handler<xact_t>::operator()(temp);
 
-    if (xact_has_xdata(temp) &&
-	xact_xdata_(temp).dflags & XACT_MATCHES) {
+    if (temp.has_xdata() &&
+	temp.xdata().has_flags(XACT_EXT_MATCHES)) {
       if (! pred(temp))
 	break;
       last = temp.date();
@@ -808,21 +782,20 @@ void forecast_xacts::flush()
 }
 
 template <>
-bool compare_items<account_t>::operator()(const account_t * left,
-					  const account_t * right)
+bool compare_items<account_t>::operator()(account_t * left, account_t * right)
 {
   assert(left);
   assert(right);
 
   account_xdata_t& lxdata(account_xdata(*left));
   if (! (lxdata.dflags & ACCOUNT_SORT_CALC)) {
-    lxdata.sort_value = sort_order.calc(const_cast<account_t&>(*left));
+    lxdata.sort_value = sort_order.calc(*left);
     lxdata.dflags |= ACCOUNT_SORT_CALC;
   }
 
   account_xdata_t& rxdata(account_xdata(*right));
   if (! (rxdata.dflags & ACCOUNT_SORT_CALC)) {
-    rxdata.sort_value = sort_order.calc(const_cast<account_t&>(*right));
+    rxdata.sort_value = sort_order.calc(*right);
     rxdata.dflags |= ACCOUNT_SORT_CALC;
   }
 

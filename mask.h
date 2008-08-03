@@ -36,25 +36,17 @@
 
 namespace ledger {
 
-class mask_t : public supports_flags<>
+class mask_t
 {
   mask_t();
 
 public:
-#define MASK_SHORT_ACCOUNT  0x01
-#define MASK_CODE           0x02
-#define MASK_COMMODITY      0x04
-#define MASK_PAYEE          0x08
-#define MASK_NOTE           0x10
-#define MASK_ACCOUNT        0x20
-
   bool	       exclude;
   boost::regex expr;
 
   explicit mask_t(const string& pattern);
 
-  mask_t(const mask_t& m)
-    : supports_flags<>(), exclude(m.exclude), expr(m.expr) {
+  mask_t(const mask_t& m) : exclude(m.exclude), expr(m.expr) {
     TRACE_CTOR(mask_t, "copy");
   }
   ~mask_t() throw() {

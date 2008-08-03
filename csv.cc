@@ -19,9 +19,8 @@ namespace {
 
 void format_csv_xacts::operator()(xact_t& xact)
 {
-  if (! xact_has_xdata(xact) ||
-      ! (xact_xdata_(xact).dflags & XACT_DISPLAYED)) {
-
+  if (! xact.has_xdata() ||
+      ! xact.xdata().has_flags(XACT_EXT_DISPLAYED)) {
     {
       format_t fmt("%D");
       std::ostringstream str;
@@ -111,7 +110,7 @@ void format_csv_xacts::operator()(xact_t& xact)
     }
     out << '\n';
 
-    xact_xdata(xact).dflags |= XACT_DISPLAYED;
+    xact.xdata().add_flags(XACT_EXT_DISPLAYED);
   }
 }
 
