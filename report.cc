@@ -521,6 +521,16 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
       case 'f':
 	if (std::strcmp(p, "format") == 0)
 	  return MAKE_FUNCTOR(report_t::option_format);
+	else if (name.find("fmt_") == 0) {
+	  switch (name[4]) {
+	  case 't':
+	    return MAKE_FUNCTOR(report_t::get_amount_expr);
+#if 0
+	  case 'T':
+	    return MAKE_FUNCTOR(report_t::get_total_expr);
+#endif
+	  }
+	}
 	break;
 
       case 't':

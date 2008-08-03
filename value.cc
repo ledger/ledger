@@ -1574,11 +1574,11 @@ void value_t::dump(std::ostream& out, const int first_width,
     break;
 
   case DATETIME:
-    out << as_datetime();
+    out << format_datetime(as_datetime());
     break;
 
   case DATE:
-    out << as_date();
+    out << format_date(as_date());
     break;
 
   case INTEGER:

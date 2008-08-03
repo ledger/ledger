@@ -39,6 +39,8 @@
 
 namespace ledger {
 
+class report_t;
+
 class session_t : public noncopyable, public scope_t
 {
   static void initialize();
@@ -49,6 +51,8 @@ class session_t : public noncopyable, public scope_t
 
 public:
   static session_t * current;
+
+  scoped_ptr<report_t> current_report;
 
   path		 data_file;
   optional<path> init_file;
@@ -89,10 +93,7 @@ public:
   mutable accounts_map		accounts_cache;
 
   session_t();
-
-  virtual ~session_t() {
-    TRACE_DTOR(session_t);
-  }
+  virtual ~session_t();
 
   journal_t * create_journal() {
     journal_t * journal = new journal_t(this);

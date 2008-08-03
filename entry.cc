@@ -32,6 +32,8 @@
 #include "entry.h"
 #include "journal.h"
 #include "format.h"
+#include "session.h"
+#include "report.h"
 
 namespace ledger {
 
@@ -361,18 +363,13 @@ namespace {
     return entry.date();
   }
 
-  value_t get_payee(entry_t& entry)
-  {
+  value_t get_payee(entry_t& entry) {
     return string_value(entry.payee);
   }
 
-  typedef value_t (*entry_func_t)(entry_t&);
-
-  template <entry_func_t Func>
-  value_t get_wrapper(call_scope_t& scope)
-  {
-    xact_t& xact(downcast<xact_t>(*scope.parent));
-    return (*Func)(*xact.entry);
+  template <value_t (*Func)(entry_t&)>
+  value_t get_wrapper(call_scope_t& scope) {
+    return (*Func)(find_scope<entry_t>(scope));
   }
 }
 
@@ -383,12 +380,24 @@ expr_t::ptr_op_t entry_t::lookup(const string& name)
     if (name[1] == '\0' || name == "date")
       return WRAP_FUNCTOR(get_wrapper<&get_date>);
     break;
+
+  case 'f':
+    if (name.find("fmt_") == 0) {
+      switch (name[4]) {
+      case 'D':
+	return WRAP_FUNCTOR(get_wrapper<&get_date>);
+      case 'P':
+	return WRAP_FUNCTOR(get_wrapper<&get_payee>);
+      }
+    }
+    break;
+
   case 'p':
     if (name[1] == '\0' || name == "payee")
       return WRAP_FUNCTOR(get_wrapper<&get_payee>);
     break;
   }
-  return expr_t::ptr_op_t();
+  return journal->owner->current_report->lookup(name);
 }
 
 bool entry_t::valid() const

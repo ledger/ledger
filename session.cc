@@ -30,6 +30,7 @@
  */
 
 #include "session.h"
+#include "report.h"
 #include "walk.h"
 
 namespace ledger {
@@ -111,6 +112,11 @@ session_t::session_t()
     master(new account_t(NULL, ""))
 {
   TRACE_CTOR(session_t, "");
+}
+
+session_t::~session_t()
+{
+  TRACE_DTOR(session_t);
 }
 
 std::size_t session_t::read_journal(journal_t&	  journal,

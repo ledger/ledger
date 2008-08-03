@@ -462,16 +462,14 @@ int main(int argc, char * argv[], char * envp[])
     session->register_parser(new ledger::qif_parser_t);
     session->register_parser(new ledger::textual_parser_t);
 
-    std::auto_ptr<ledger::report_t> report(new ledger::report_t(*session.get()));
+    session->current_report.reset(new ledger::report_t(*session.get()));
 
-    status = read_and_report(*report.get(), argc, argv, envp);
+    status = read_and_report(*session->current_report.get(), argc, argv, envp);
 
-    if (DO_VERIFY()) {
+    if (DO_VERIFY())
       ledger::set_session_context();
-    } else {
-      report.release();
-      session.release();
-    }
+    else
+      session.release();	// don't free anything!
   }
   catch (const std::exception& err) {
     std::cout.flush();

@@ -243,6 +243,14 @@ public:
   }
 
   //
+  // Formatting functions
+  //
+
+  value_t get_amount_expr(call_scope_t&) {
+    return NULL_VALUE;
+  }
+
+  //
   // Scope members
   //
 

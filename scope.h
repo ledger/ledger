@@ -66,14 +66,14 @@ template <typename T>
 inline T& find_scope(scope_t& scope, bool skip_this = true) {
   optional<scope_t&> found = scope.find_scope(typeid(T), skip_this);
   assert(found);
-  return downcast<T>(*found);
+  return static_cast<T&>(*found);
 }
 
 template <typename T>
 inline optional<T&> maybe_find_scope(scope_t& scope, bool skip_this = true) {
   optional<scope_t&> found = scope.find_scope(typeid(T), skip_this);
   if (found)
-    return optional<T&>(downcast<T>(*found));
+    return optional<T&>(static_cast<T&>(*found));
   else
     return none;
 }
@@ -102,12 +102,14 @@ public:
 
   virtual optional<scope_t&> find_scope(const std::type_info& type,
 					bool skip_this = true) {
-    for (scope_t * ptr = (skip_this ? parent : this);
-	 ptr;
-	 ptr = polymorphic_downcast<child_scope_t *>(ptr)->parent)
-      if (typeid(ptr) == type)
+    for (scope_t * ptr = (skip_this ? parent : this); ptr; ) {
+      if (typeid(*ptr) == type)
 	return *ptr;
-
+      if (child_scope_t * scope = dynamic_cast<child_scope_t *>(ptr))
+        ptr = scope->parent;
+      else
+	ptr = NULL;
+    }
     return none;
   }
 };

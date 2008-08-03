@@ -78,6 +78,10 @@ namespace {
     return xact.date();
   }
 
+  value_t get_payee(xact_t& xact) {
+    return string_value(xact.entry->payee);
+  }
+
   value_t get_amount(xact_t& xact) {
     return xact.amount;
   }
@@ -90,19 +94,16 @@ namespace {
     return string_value(xact.note ? *xact.note : ":NOTELESS:");
   }
 
-  value_t get_account(call_scope_t& scope) {
+  value_t get_account(call_scope_t& scope)
+  {
     xact_t& xact(downcast<xact_t>(*scope.parent));
 
-    long width = 0;
-    if (scope.size() == 1)
-      width = var_t<long>(scope, 0);
+    var_t<long> width(scope, 0);
 
-    // jww (2008-08-02): Accept a width here so that we can abbreviate the
-    // string.
     string name = xact.reported_account()->fullname();
 
-    if (width > 2)
-      name = format_t::truncate(name, width - 2, true);
+    if (width && *width > 2)
+      name = format_t::truncate(name, *width - 2, true);
 
     if (xact.has_flags(XACT_VIRTUAL)) {
       if (xact.must_balance())
@@ -172,8 +173,14 @@ expr_t::ptr_op_t xact_t::lookup(const string& name)
 
   case 'f':
     if (name.find("fmt_") == 0) {
-      if (name == "fmt_A")
+      switch (name[4]) {
+      case 'A':
 	return WRAP_FUNCTOR(get_account);
+      case 'D':
+	return WRAP_FUNCTOR(get_wrapper<&get_date>);
+      case 'P':
+	return WRAP_FUNCTOR(get_wrapper<&get_payee>);
+      }
     }
     break;
 
