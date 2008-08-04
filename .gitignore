@@ -17,6 +17,7 @@
 /Makefile
 /Makefile.in
 /TAGS
+/UnitTests
 /acconf.h
 /acconf.h.in
 /acconf.h.in~
