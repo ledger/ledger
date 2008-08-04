@@ -33,8 +33,7 @@
 #define _REPORT_H
 
 #include "session.h"
-#include "format.h"
-#include "walk.h"
+#include "handler.h"
 
 namespace ledger {
 
@@ -196,13 +195,6 @@ public:
   void entry_report(const entry_t& entry, const string& format);
 
   //
-  // Utility functions for value expressions
-  //
-
-  value_t ftime(call_scope_t& args);
-  value_t abbrev(call_scope_t& args);
-
-  //
   // Config options
   //
 
@@ -255,112 +247,6 @@ public:
   //
 
   virtual expr_t::ptr_op_t lookup(const string& name);
-};
-
-string abbrev(const string& str, unsigned int width,
-		   const bool is_account);
-
-// jww (2008-08-01): Where does this code belong?
-
-class format_xacts : public item_handler<xact_t>
-{
-protected:
-  std::ostream& output_stream;
-  format_t	first_line_format;
-  format_t	next_lines_format;
-  entry_t *     last_entry;
-  xact_t *	last_xact;
-
-public:
-  format_xacts(std::ostream& _output_stream,
-		      const string& format);
-  ~format_xacts() throw() {
-    TRACE_DTOR(format_xacts);
-  }
-
-  virtual void flush() {
-    output_stream.flush();
-  }
-  virtual void operator()(xact_t& xact);
-};
-
-class format_entries : public format_xacts
-{
- public:
-  format_entries(std::ostream& output_stream, const string& format)
-    : format_xacts(output_stream, format) {
-    TRACE_CTOR(format_entries, "std::ostream&, const string&");
-  }
-  ~format_entries() throw() {
-    TRACE_DTOR(format_entries);
-  }
-
-  virtual void format_last_entry();
-
-  virtual void flush() {
-    if (last_entry) {
-      format_last_entry();
-      last_entry = NULL;
-    }
-    format_xacts::flush();
-  }
-  virtual void operator()(xact_t& xact);
-};
-
-void print_entry(std::ostream&	     out,
-		 const entry_base_t& entry,
-		 const string&	     prefix = "");
-
-bool disp_subaccounts_p(account_t&		   account,
-			item_predicate<account_t>& disp_pred,
-			account_t *&		   to_show);
-
-bool display_account(account_t& account, item_predicate<account_t>& disp_pred);
-
-class format_accounts : public item_handler<account_t>
-{
-  std::ostream& output_stream;
-
-  item_predicate<account_t> disp_pred;
-
- public:
-  format_t format;
-
-  format_accounts(std::ostream& _output_stream,
-		  const string& _format,
-		  const string& display_predicate = NULL)
-    : output_stream(_output_stream), disp_pred(display_predicate),
-      format(_format) {
-    TRACE_CTOR(format_accounts, "std::ostream&, const string&, const string&");
-  }
-  ~format_accounts() throw() {
-    TRACE_DTOR(format_accounts);
-  }
-
-  virtual void flush() {
-    output_stream.flush();
-  }
-
-  virtual void operator()(account_t& account);
-};
-
-class format_equity : public item_handler<account_t>
-{
-  std::ostream& output_stream;
-  format_t	first_line_format;
-  format_t	next_lines_format;
-
-  item_predicate<account_t> disp_pred;
-
-  mutable value_t total;
-
- public:
-  format_equity(std::ostream& _output_stream,
-		const string& _format,
-		const string& display_predicate);
-
-  virtual void flush();
-  virtual void operator()(account_t& account);
 };
 
 } // namespace ledger

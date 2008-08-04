@@ -32,7 +32,7 @@
 #ifndef _CSV_H
 #define _CSV_H
 
-#include "journal.h"
+#include "handler.h"
 #include "format.h"
 
 namespace ledger {

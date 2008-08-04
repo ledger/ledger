@@ -29,57 +29,57 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _XML_H
-#define _XML_H
-
-#include "journal.h"
-#include "report.h"
-#include "output.h"
+#include "compare.h"
 
 namespace ledger {
 
-#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
-
-class xml_parser_t : public journal_t::parser_t
+template <>
+bool compare_items<xact_t>::operator()(xact_t * left, xact_t * right)
 {
- public:
-  virtual bool test(std::istream& in) const;
+  assert(left);
+  assert(right);
 
-  virtual unsigned int parse(std::istream& in,
-			     session_t&     session,
-			     journal_t&   journal,
-			     account_t *   master        = NULL,
-			     const path *  original_file = NULL);
-};
+  xact_t::xdata_t& lxdata(left->xdata());
+  if (! lxdata.has_flags(XACT_EXT_SORT_CALC)) {
+    lxdata.sort_value = sort_order.calc(*left);
+    lxdata.sort_value.reduce();
+    lxdata.add_flags(XACT_EXT_SORT_CALC);
+  }
 
-#endif
+  xact_t::xdata_t& rxdata(right->xdata());
+  if (! rxdata.has_flags(XACT_EXT_SORT_CALC)) {
+    rxdata.sort_value = sort_order.calc(*right);
+    rxdata.sort_value.reduce();
+    rxdata.add_flags(XACT_EXT_SORT_CALC);
+  }
 
-class format_xml_entries : public format_entries
+  DEBUG("ledger.walk.compare_items_xact",
+	"lxdata.sort_value = " << lxdata.sort_value);
+  DEBUG("ledger.walk.compare_items_xact",
+	"rxdata.sort_value = " << rxdata.sort_value);
+
+  return lxdata.sort_value < rxdata.sort_value;
+}
+
+template <>
+bool compare_items<account_t>::operator()(account_t * left, account_t * right)
 {
-  bool show_totals;
+  assert(left);
+  assert(right);
 
-  format_xml_entries();
-
-public:
-  format_xml_entries(std::ostream& output_stream,
-		     const bool _show_totals = false)
-    : format_entries(output_stream, ""), show_totals(_show_totals) {
-    TRACE_CTOR(format_xml_entries, "std::ostream&, const bool");
-    output_stream << "<?xml version=\"1.0\"?>\n"
-		  << "<ledger version=\"2.5\">\n";
-  }
-  virtual ~format_xml_entries() throw() {
-    TRACE_DTOR(format_xml_entries);
+  account_t::xdata_t& lxdata(left->xdata());
+  if (! lxdata.has_flags(ACCOUNT_EXT_SORT_CALC)) {
+    lxdata.sort_value = sort_order.calc(*left);
+    lxdata.add_flags(ACCOUNT_EXT_SORT_CALC);
   }
 
-  virtual void flush() {
-    format_entries::flush();
-    output_stream << "</ledger>" << std::endl;
+  account_t::xdata_t& rxdata(right->xdata());
+  if (! rxdata.has_flags(ACCOUNT_EXT_SORT_CALC)) {
+    rxdata.sort_value = sort_order.calc(*right);
+    rxdata.add_flags(ACCOUNT_EXT_SORT_CALC);
   }
 
-  virtual void format_last_entry();
-};
+  return lxdata.sort_value < rxdata.sort_value;
+}
 
 } // namespace ledger
-
-#endif // _XML_H

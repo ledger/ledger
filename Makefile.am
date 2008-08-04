@@ -70,6 +70,8 @@ libledger_la_SOURCES = \
 	entry.cc       \
 	xact.cc        \
 	account.cc     \
+	iterators.cc   \
+	compare.cc     \
 		       \
 	textual.cc     \
 	cache.cc       \
@@ -80,7 +82,9 @@ libledger_la_SOURCES = \
 		       \
 	session.cc     \
 	report.cc      \
-	walk.cc        \
+	filters.cc     \
+	output.cc      \
+	help.cc        \
 		       \
 	derive.cc      \
 	reconcile.cc   \
@@ -130,6 +134,8 @@ pkginclude_HEADERS = \
 	entry.h      \
 	xact.h       \
 	account.h    \
+	iterators.h  \
+	compare.h    \
 		     \
 	textual.h    \
 	cache.h      \
@@ -142,7 +148,10 @@ pkginclude_HEADERS = \
 		     \
 	session.h    \
 	report.h     \
-	walk.h       \
+	handler.h    \
+	filters.h    \
+	output.h     \
+	help.h       \
 		     \
 	derive.h     \
 	reconcile.h  \

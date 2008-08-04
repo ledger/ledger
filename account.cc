@@ -143,4 +143,25 @@ bool account_t::valid() const
   return true;
 }
 
+void account_t::calculate_sums()
+{
+  xdata_t& xd(xdata());
+
+  foreach (accounts_map::value_type& pair, accounts) {
+    (*pair.second).calculate_sums();
+
+    xd.total        += (*pair.second).xdata().total;
+    xd.total_count += ((*pair.second).xdata().total_count +
+		       (*pair.second).xdata().count);
+  }
+
+  value_t result;
+#if 0
+  compute_amount(result, details_t(account));
+#endif
+  if (! result.is_realzero())
+    xd.total += result;
+  xd.total_count += xd.count;
+}
+
 } // namespace ledger

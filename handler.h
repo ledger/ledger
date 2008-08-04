@@ -29,57 +29,44 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _XML_H
-#define _XML_H
+#ifndef _HANDLER_H
+#define _HANDLER_H
 
-#include "journal.h"
-#include "report.h"
-#include "output.h"
+#include "utils.h"
+#include "xact.h"
+#include "account.h"
 
 namespace ledger {
 
-#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
-
-class xml_parser_t : public journal_t::parser_t
+template <typename T>
+struct item_handler : public noncopyable
 {
- public:
-  virtual bool test(std::istream& in) const;
-
-  virtual unsigned int parse(std::istream& in,
-			     session_t&     session,
-			     journal_t&   journal,
-			     account_t *   master        = NULL,
-			     const path *  original_file = NULL);
-};
-
-#endif
-
-class format_xml_entries : public format_entries
-{
-  bool show_totals;
-
-  format_xml_entries();
+  shared_ptr<item_handler> handler;
 
 public:
-  format_xml_entries(std::ostream& output_stream,
-		     const bool _show_totals = false)
-    : format_entries(output_stream, ""), show_totals(_show_totals) {
-    TRACE_CTOR(format_xml_entries, "std::ostream&, const bool");
-    output_stream << "<?xml version=\"1.0\"?>\n"
-		  << "<ledger version=\"2.5\">\n";
+  item_handler() {
+    TRACE_CTOR(item_handler, "");
   }
-  virtual ~format_xml_entries() throw() {
-    TRACE_DTOR(format_xml_entries);
+  item_handler(shared_ptr<item_handler> _handler) : handler(_handler) {
+    TRACE_CTOR(item_handler, "shared_ptr<item_handler>");
+  }
+  virtual ~item_handler() {
+    TRACE_DTOR(item_handler);
   }
 
   virtual void flush() {
-    format_entries::flush();
-    output_stream << "</ledger>" << std::endl;
+    if (handler.get())
+      handler->flush();
   }
-
-  virtual void format_last_entry();
+  virtual void operator()(T& item) {
+    if (handler.get())
+      (*handler.get())(item);
+  }
 };
+
+typedef shared_ptr<item_handler<xact_t> >    xact_handler_ptr;
+typedef shared_ptr<item_handler<account_t> > acct_handler_ptr;
 
 } // namespace ledger
 
-#endif // _XML_H
+#endif // _HANDLER_H

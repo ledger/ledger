@@ -33,7 +33,8 @@
 #define _RECONCILE_H
 
 #include "value.h"
-#include "walk.h"
+#include "iterators.h"
+#include "filters.h"
 
 namespace ledger {
 

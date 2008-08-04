@@ -184,10 +184,10 @@ public:
 #endif
   };
 
-  // This variable holds a pointer to "extended data" which is usually
-  // produced only during reporting, and only for the transaction set being
-  // reported.  It's a memory-saving measure to delay allocation until the
-  // last possible moment.
+  // This variable holds optional "extended data" which is usually produced
+  // only during reporting, and only for the transaction set being reported.
+  // It's a memory-saving measure to delay allocation until the last possible
+  // moment.
   mutable optional<xdata_t> xdata_;
 
   bool has_xdata() const {

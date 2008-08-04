@@ -306,7 +306,7 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
   if (entry != NULL) {
     // Add this amount to the related account now
 
-    account_xdata_t& xdata(account_xdata(*xact->account));
+    account_t::xdata_t& xdata(xact->account->xdata());
 
     if (! xact->amount.is_null()) {
       if (xdata.value.is_null())

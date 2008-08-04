@@ -30,7 +30,6 @@
  */
 
 #include "reconcile.h"
-#include "walk.h"
 
 namespace ledger {
 

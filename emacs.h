@@ -32,7 +32,7 @@
 #ifndef _EMACS_H
 #define _EMACS_H
 
-#include "journal.h"
+#include "handler.h"
 #include "format.h"
 
 namespace ledger {

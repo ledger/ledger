@@ -33,8 +33,7 @@
 #define _TEXTUAL_H
 
 #include "journal.h"
-#include "format.h"
-#include "walk.h"
+#include "handler.h"
 
 namespace ledger {
 

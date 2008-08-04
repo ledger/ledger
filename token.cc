@@ -243,36 +243,8 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
     kind = COLON;
     break;
 
-  case 'c':
-  case 'C':
-  case 'p':
-  case 'w':
-  case 'W':
-  case 'e':
   case '/': {
-    bool code_mask	    = c == 'c';
-    bool commodity_mask	    = c == 'C';
-    bool payee_mask	    = c == 'p';
-    bool note_mask	    = c == 'e';
-    bool short_account_mask = c == 'w';
-
     in.get(c);
-    if (c == '/') {
-      c = peek_next_nonws(in);
-      if (c == '/') {
-	in.get(c);
-	c = in.peek();
-	if (c == '/') {
-	  in.get(c);
-	  c = in.peek();
-	  short_account_mask = true;
-	} else {
-	  payee_mask = true;
-	}
-      }
-    } else {
-      in.get(c);
-    }
 
     // Read in the regexp
     char buf[256];

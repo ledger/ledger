@@ -1,136 +1,47 @@
-#ifndef _WALK_H
-#define _WALK_H
+/*
+ * Copyright (c) 2003-2008, John Wiegley.  All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ * - Redistributions of source code must retain the above copyright
+ *   notice, this list of conditions and the following disclaimer.
+ *
+ * - Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in the
+ *   documentation and/or other materials provided with the distribution.
+ *
+ * - Neither the name of New Artisans LLC nor the names of its
+ *   contributors may be used to endorse or promote products derived from
+ *   this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
-#include "journal.h"
+#ifndef _FILTERS_H
+#define _FILTERS_H
+
+#include "handler.h"
+#include "predicate.h"
 #include "entry.h"
-#include "account.h"
 
 namespace ledger {
 
-template <typename T>
-struct item_handler : public noncopyable
-{
-  shared_ptr<item_handler> handler;
-
-public:
-  item_handler() {
-    TRACE_CTOR(item_handler, "");
-  }
-  item_handler(shared_ptr<item_handler> _handler) : handler(_handler) {
-    TRACE_CTOR(item_handler, "shared_ptr<item_handler>");
-  }
-  virtual ~item_handler() {
-    TRACE_DTOR(item_handler);
-  }
-
-  virtual void flush() {
-    if (handler.get())
-      handler->flush();
-  }
-  virtual void operator()(T& item) {
-    if (handler.get())
-      (*handler.get())(item);
-  }
-};
-
-typedef shared_ptr<item_handler<xact_t> > xact_handler_ptr;
-
 //////////////////////////////////////////////////////////////////////
-
-class entries_iterator : public noncopyable
-{
-  ptr_list<journal_t>::iterator journals_i;
-  ptr_list<journal_t>::iterator journals_end;
-
-  bool journals_uninitialized;
-
-  entries_list::iterator	entries_i;
-  entries_list::iterator	entries_end;
-
-  bool entries_uninitialized;
-
-public:
-  entries_iterator()
-    : journals_uninitialized(true), entries_uninitialized(true) {
-    TRACE_CTOR(entries_iterator, "");
-  }
-  entries_iterator(session_t& session)
-    : journals_uninitialized(true), entries_uninitialized(true) {
-    TRACE_CTOR(entries_iterator, "session_t&");
-    reset(session);
-  }
-  ~entries_iterator() throw() {
-    TRACE_DTOR(entries_iterator);
-  }
-
-  void reset(session_t& session);
-
-  entry_t * operator()();
-};
-
-class xacts_iterator : public noncopyable
-{
-public:
-  virtual xact_t * operator()() = 0;
-};
-
-class entry_xacts_iterator : public xacts_iterator
-{
-  xacts_list::iterator xacts_i;
-  xacts_list::iterator xacts_end;
-
-  bool xacts_uninitialized;
-
-public:
-  entry_xacts_iterator() : xacts_uninitialized(true) {
-    TRACE_CTOR(entry_xacts_iterator, "");
-  }
-  entry_xacts_iterator(entry_t& entry)
-    : xacts_uninitialized(true) {
-    TRACE_CTOR(entry_xacts_iterator, "entry_t&");
-    reset(entry);
-  }
-  virtual ~entry_xacts_iterator() throw() {
-    TRACE_DTOR(entry_xacts_iterator);
-  }
-
-  void reset(entry_t& entry) {
-    xacts_i   = entry.xacts.begin();
-    xacts_end = entry.xacts.end();
-
-    xacts_uninitialized = false;
-  }
-
-  virtual xact_t * operator()() {
-    if (xacts_i == xacts_end || xacts_uninitialized)
-      return NULL;
-    return *xacts_i++;
-  }
-};
-
-class session_xacts_iterator : public xacts_iterator
-{
-  entries_iterator     entries;
-  entry_xacts_iterator xacts;
-
-public:
-  session_xacts_iterator() {
-    TRACE_CTOR(session_xacts_iterator, "");
-  }
-  session_xacts_iterator(session_t& session) {
-    TRACE_CTOR(session_xacts_iterator, "session_t&");
-    reset(session);
-  }
-  virtual ~session_xacts_iterator() throw() {
-    TRACE_DTOR(session_xacts_iterator);
-  }
-
-  void reset(session_t& session);
-
-  virtual xact_t * operator()();
-};
-
-//////////////////////////////////////////////////////////////////////
+//
+// Transaction filters
+//
 
 class ignore_xacts : public item_handler<xact_t>
 {
@@ -146,19 +57,14 @@ public:
   }
 };
 
+class xacts_iterator;
+
 class pass_down_xacts : public item_handler<xact_t>
 {
   pass_down_xacts();
 
 public:
-  pass_down_xacts(xact_handler_ptr handler, xacts_iterator& iter)
-    : item_handler<xact_t>(handler)
-  {
-    TRACE_CTOR(pass_down_xacts, "xact_handler_ptr, xacts_iterator");
-
-    for (xact_t * xact = iter(); xact; xact = iter())
-      item_handler<xact_t>::operator()(*xact);
-  }
+  pass_down_xacts(xact_handler_ptr handler, xacts_iterator& iter);
 
   virtual ~pass_down_xacts() {
     TRACE_DTOR(pass_down_xacts);
@@ -265,7 +171,7 @@ public:
 class sort_entries : public item_handler<xact_t>
 {
   sort_xacts sorter;
-  entry_t *	    last_entry;
+  entry_t *  last_entry;
 
   sort_entries();
 
@@ -432,7 +338,7 @@ public:
 class related_xacts : public item_handler<xact_t>
 {
   xacts_list xacts;
-  bool		    also_matching;
+  bool	     also_matching;
 
   related_xacts();
 
@@ -626,8 +532,8 @@ class by_payee_xacts : public item_handler<xact_t>
 
 class set_comm_as_payee : public item_handler<xact_t>
 {
-  std::list<entry_t>       entry_temps;
-  std::list<xact_t> xact_temps;
+  std::list<entry_t> entry_temps;
+  std::list<xact_t>  xact_temps;
 
   set_comm_as_payee();
 
@@ -646,8 +552,8 @@ public:
 
 class set_code_as_payee : public item_handler<xact_t>
 {
-  std::list<entry_t>       entry_temps;
-  std::list<xact_t> xact_temps;
+  std::list<entry_t> entry_temps;
+  std::list<xact_t>  xact_temps;
 
   set_code_as_payee();
 
@@ -694,9 +600,9 @@ protected:
   typedef std::pair<interval_t, xact_t *> pending_xacts_pair;
   typedef std::list<pending_xacts_pair>          pending_xacts_list;
 
-  pending_xacts_list	   pending_xacts;
-  std::list<entry_t>	   entry_temps;
-  std::list<xact_t> xact_temps;
+  pending_xacts_list pending_xacts;
+  std::list<entry_t> entry_temps;
+  std::list<xact_t>  xact_temps;
 
 public:
   generate_xacts(xact_handler_ptr handler)
@@ -714,12 +620,12 @@ public:
   virtual void add_xact(const interval_t& period, xact_t& xact);
 };
 
+class budget_xacts : public generate_xacts
+{
 #define BUDGET_NO_BUDGET  0x00
 #define BUDGET_BUDGETED   0x01
 #define BUDGET_UNBUDGETED 0x02
 
-class budget_xacts : public generate_xacts
-{
   unsigned short flags;
 
   budget_xacts();
@@ -764,204 +670,33 @@ class forecast_xacts : public generate_xacts
   virtual void flush();
 };
 
-
 //////////////////////////////////////////////////////////////////////
 //
-// Account walking functions
+// Account filters
 //
-
-#define ACCOUNT_TO_DISPLAY	 0x0001
-#define ACCOUNT_DISPLAYED	 0x0002
-#define ACCOUNT_SORT_CALC	 0x0004
-#define ACCOUNT_HAS_NON_VIRTUALS 0x0008
-#define ACCOUNT_HAS_UNB_VIRTUALS 0x0010
-
-struct account_xdata_t : public noncopyable
-{
-  value_t	 value;
-  value_t	 total;
-  value_t	 sort_value;
-  unsigned int   count;		// xacts counted toward amount
-  unsigned int   total_count;	// xacts counted toward total
-  unsigned int   virtuals;
-  unsigned short dflags;
-
-  account_xdata_t() : count(0), total_count(0), virtuals(0), dflags(0) {
-    TRACE_CTOR(account_xdata_t, "");
-  }
-  ~account_xdata_t() throw() {
-    TRACE_DTOR(account_xdata_t);
-  }
-};
-
-inline bool account_has_xdata(const account_t& account) {
-  return account.data != NULL;
-}
-
-inline account_xdata_t& account_xdata_(const account_t& account) {
-  return *static_cast<account_xdata_t *>(account.data);
-}
-
-account_xdata_t& account_xdata(const account_t& account);
-
-void sum_accounts(account_t& account);
-
-//////////////////////////////////////////////////////////////////////
-
-class accounts_iterator : public noncopyable
-{
-  std::list<accounts_map::const_iterator> accounts_i;
-  std::list<accounts_map::const_iterator> accounts_end;
-
-public:
-  accounts_iterator() {
-    TRACE_CTOR(accounts_iterator, "");
-  }
-  accounts_iterator(account_t& account) {
-    TRACE_CTOR(accounts_iterator, "account_t&");
-    push_back(account);
-  }
-  virtual ~accounts_iterator() throw() {
-    TRACE_DTOR(accounts_iterator);
-  }
-
-  void push_back(account_t& account) {
-    accounts_i.push_back(account.accounts.begin());
-    accounts_end.push_back(account.accounts.end());
-  }
-
-  virtual account_t * operator()();
-};
-
-class sorted_accounts_iterator : public noncopyable
-{
-  expr_t sort_cmp;
-
-  typedef std::deque<account_t *> accounts_deque_t;
-
-  std::list<accounts_deque_t>		      accounts_list;
-  std::list<accounts_deque_t::const_iterator> sorted_accounts_i;
-  std::list<accounts_deque_t::const_iterator> sorted_accounts_end;
-
-public:
-  sorted_accounts_iterator(const string& sort_order) {
-    TRACE_CTOR(sorted_accounts_iterator, "const string&");
-    sort_cmp = expr_t(sort_order);
-  }
-  sorted_accounts_iterator(account_t& account, const string& sort_order) {
-    TRACE_CTOR(sorted_accounts_iterator, "account_t&, const string&");
-    sort_cmp = expr_t(sort_order);
-    push_back(account);
-  }
-  virtual ~sorted_accounts_iterator() throw() {
-    TRACE_DTOR(sorted_accounts_iterator);
-  }
-
-  void sort_accounts(account_t& account, accounts_deque_t& deque);
-
-  void push_back(account_t& account) {
-    accounts_list.push_back(accounts_deque_t());
-    sort_accounts(account, accounts_list.back());
-
-    sorted_accounts_i.push_back(accounts_list.back().begin());
-    sorted_accounts_end.push_back(accounts_list.back().end());
-  }
-
-  virtual account_t * operator()();
-};
-
-//////////////////////////////////////////////////////////////////////
-
-typedef shared_ptr<item_handler<account_t> > acct_handler_ptr;
 
 class clear_account_xdata : public item_handler<account_t>
 {
 public:
   virtual void operator()(account_t& acct) {
-    if (acct.data) {
-      checked_delete(static_cast<account_xdata_t *>(acct.data));
-      acct.data = NULL;
-    }
+    acct.clear_xdata();
   }
 };
 
-template <typename Iterator>
+class accounts_iterator;
+
 class pass_down_accounts : public item_handler<account_t>
 {
   pass_down_accounts();
 
 public:
-  pass_down_accounts(acct_handler_ptr handler, Iterator& iter)
-    : item_handler<account_t>(handler) {
-    TRACE_CTOR(pass_down_accounts,
-	       "acct_handler_ptr, accounts_iterator");
-    for (account_t * account = iter(); account; account = iter())
-      item_handler<account_t>::operator()(*account);
-  }
+  pass_down_accounts(acct_handler_ptr handler, accounts_iterator& iter);
 
   virtual ~pass_down_accounts() {
     TRACE_DTOR(pass_down_accounts);
   }
 };
 
-//////////////////////////////////////////////////////////////////////
-
-class journals_iterator : public noncopyable
-{
-  ptr_list<journal_t>::iterator journals_i;
-  ptr_list<journal_t>::iterator journals_end;
-
-public:
-  journals_iterator() {
-    TRACE_CTOR(journals_iterator, "");
-  }
-  journals_iterator(session_t& session) {
-    TRACE_CTOR(journals_iterator, "session_t&");
-    reset(session);
-  }
-  virtual ~journals_iterator() throw() {
-    TRACE_DTOR(journals_iterator);
-  }
-
-  void reset(session_t& session);
-
-  virtual journal_t * operator()();
-};
-
-template <typename T>
-class compare_items
-{
-  expr_t sort_order;
-
-  compare_items();
-  
-public:
-  compare_items(const compare_items& other) : sort_order(other.sort_order) {
-    TRACE_CTOR(compare_items, "copy");
-  }
-  compare_items(const expr_t& _sort_order) : sort_order(_sort_order) {
-    TRACE_CTOR(compare_items, "const value_expr&");
-  }
-  ~compare_items() throw() {
-    TRACE_DTOR(compare_items);
-  }
-  bool operator()(T * left, T * right);
-};
-
-template <typename T>
-bool compare_items<T>::operator()(T * left, T * right)
-{
-  assert(left);
-  assert(right);
-  return sort_order.calc(*left) < sort_order.calc(*right);
-}
-
-template <>
-bool compare_items<xact_t>::operator()(xact_t * left, xact_t * right);
-template <>
-bool compare_items<account_t>::operator()(account_t * left,
-					  account_t * right);
-
 } // namespace ledger
 
-#endif // _WALK_H
+#endif // _FILTERS_H

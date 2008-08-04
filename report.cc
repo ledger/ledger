@@ -372,7 +372,7 @@ report_t::chain_xact_handlers(xact_handler_ptr base_handler,
     forecast_xacts * forecast_handler
       = new forecast_xacts(handler, forecast_limit);
     forecast_handler->add_period_entries(journal->period_entries);
-    handler.reset(forecast_handler;
+    handler.reset(forecast_handler);
 
     // See above, under budget_xacts.
     if (! predicate.empty())
@@ -415,7 +415,7 @@ void report_t::sum_all_accounts()
     (chain_xact_handlers(xact_handler_ptr(new set_account_value), false),
      walker);
   // no flush() needed with set_account_value
-  sum_accounts(*session.master);
+  session.master->calculate_sums();
 }
 
 void report_t::accounts_report(acct_handler_ptr	       handler,
@@ -425,11 +425,11 @@ void report_t::accounts_report(acct_handler_ptr	       handler,
   sum_all_accounts();
 
   if (sort_string.empty()) {
-    accounts_iterator walker(*session.master);
-    pass_down_accounts<accounts_iterator>(handler, walker);
+    basic_accounts_iterator walker(*session.master);
+    pass_down_accounts(handler, walker);
   } else {
     sorted_accounts_iterator walker(*session.master, sort_string);
-    pass_down_accounts<sorted_accounts_iterator>(handler, walker);
+    pass_down_accounts(handler, walker);
   }
   handler->flush();
     
@@ -462,43 +462,6 @@ void report_t::commodities_report(const string& format)
 void report_t::entry_report(const entry_t& entry, const string& format)
 {
 }
-
-#if 0
-value_t report_t::abbrev(call_scope_t& args)
-{
-  if (args.size() < 2)
-    throw_(usage_error, "usage: abbrev(STRING, WIDTH [, STYLE, ABBREV_LEN])");
-
-  const var_t<string> str(args, 0);
-  const var_t<long>   wid(args, 1);
-  const var_t<long>   style(args, 2);
-  const var_t<long>   abbrev_len(args, 3);
-
-  return value_t(abbreviate(*str, *wid,
-			    (style ?
-			     static_cast<format_t::elision_style_t>(*style) :
-			     session.elision_style),
-			    true,
-			    abbrev_len ? *abbrev_len : session.abbrev_len),
-		 true);
-}
-
-value_t report_t::ftime(call_scope_t& args)
-{
-  if (args.size() < 1)
-    throw_(std::logic_error, "usage: ftime(DATE [, DATE_FORMAT])");
-
-  date_t date = args[0].as_date();
-
-  string date_format;
-  if (args.size() == 2)
-    date_format = args[1].as_string();
-  else
-    date_format = moment_t::output_format;
-
-  return string_value(date.as_string(date_format));
-}
-#endif
 
 expr_t::ptr_op_t report_t::lookup(const string& name)
 {
@@ -550,254 +513,6 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
   }
 
   return session.lookup(name);
-}
-
-// jww (2008-08-01): Find a home for this code
-
-format_xacts::format_xacts(std::ostream& _output_stream,
-					 const string& format)
-  : output_stream(_output_stream), last_entry(NULL), last_xact(NULL)
-{
-  TRACE_CTOR(format_xacts, "std::ostream&, const string&");
-
-  const char * f = format.c_str();
-  if (const char * p = std::strstr(f, "%/")) {
-    first_line_format.parse(string(f, 0, p - f));
-    next_lines_format.parse(string(p + 2));
-  } else {
-    first_line_format.parse(format);
-    next_lines_format.parse(format);
-  }
-}
-
-void format_xacts::operator()(xact_t& xact)
-{
-  if (! xact.has_xdata() ||
-      ! xact.xdata().has_flags(XACT_EXT_DISPLAYED)) {
-    if (last_entry != xact.entry) {
-      first_line_format.format(output_stream, xact);
-      last_entry = xact.entry;
-    }
-    else if (last_xact && last_xact->date() != xact.date()) {
-      first_line_format.format(output_stream, xact);
-    }
-    else {
-      next_lines_format.format(output_stream, xact);
-    }
-
-    xact.xdata().add_flags(XACT_EXT_DISPLAYED);
-    last_xact = &xact;
-  }
-}
-
-void format_entries::format_last_entry()
-{
-  bool first = true;
-
-  foreach (xact_t * xact, last_entry->xacts) {
-    if (xact->has_xdata() &&
-	xact->xdata().has_flags(XACT_EXT_TO_DISPLAY)) {
-      if (first) {
-	first_line_format.format(output_stream, *xact);
-	first = false;
-      } else {
-	next_lines_format.format(output_stream, *xact);
-      }
-      xact->xdata().add_flags(XACT_EXT_DISPLAYED);
-    }
-  }
-}
-
-void format_entries::operator()(xact_t& xact)
-{
-  xact.xdata().add_flags(XACT_EXT_TO_DISPLAY);
-
-  if (last_entry && xact.entry != last_entry)
-    format_last_entry();
-
-  last_entry = xact.entry;
-}
-
-void print_entry(std::ostream& out, const entry_base_t& entry_base,
-		 const string& prefix)
-{
-  string print_format;
-
-  if (dynamic_cast<const entry_t *>(&entry_base)) {
-    print_format = (prefix + "%D %X%C%P\n" +
-		    prefix + "    %-34A  %12o\n%/" +
-		    prefix + "    %-34A  %12o\n");
-  }
-  else if (const auto_entry_t * entry =
-	   dynamic_cast<const auto_entry_t *>(&entry_base)) {
-    out << "= " << entry->predicate.predicate.text() << '\n';
-    print_format = prefix + "    %-34A  %12o\n";
-  }
-  else if (const period_entry_t * entry =
-	   dynamic_cast<const period_entry_t *>(&entry_base)) {
-    out << "~ " << entry->period_string << '\n';
-    print_format = prefix + "    %-34A  %12o\n";
-  }
-  else {
-    assert(false);
-  }
-
-#if 0
-  format_entries formatter(out, print_format);
-  walk_xacts(const_cast<xacts_list&>(entry_base.xacts), formatter);
-  formatter.flush();
-
-  clear_xact_xdata cleaner;
-  walk_xacts(const_cast<xacts_list&>(entry_base.xacts), cleaner);
-#endif
-}
-
-bool disp_subaccounts_p(account_t&		   account,
-			item_predicate<account_t>& disp_pred,
-			account_t *&		   to_show)
-{
-  bool	       display  = false;
-  unsigned int counted  = 0;
-  bool         matches  = disp_pred(account);
-  bool         computed = false;
-  value_t      acct_total;
-  value_t      result;
-
-  to_show = NULL;
-
-  foreach (accounts_map::value_type pair, account.accounts) {
-    if (! disp_pred(*pair.second))
-      continue;
-
-#if 0
-    compute_total(result, *pair.second);
-#endif
-    if (! computed) {
-#if 0
-      compute_total(acct_total, account);
-#endif
-      computed = true;
-    }
-
-    if ((result != acct_total) || counted > 0) {
-      display = matches;
-      break;
-    }
-    to_show = pair.second;
-    counted++;
-  }
-
-  return display;
-}
-
-bool display_account(account_t& account, item_predicate<account_t>& disp_pred)
-{
-  // Never display an account that has already been displayed.
-  if (account_has_xdata(account) &&
-      account_xdata_(account).dflags & ACCOUNT_DISPLAYED)
-    return false;
-
-  // At this point, one of two possibilities exists: the account is a
-  // leaf which matches the predicate restrictions; or it is a parent
-  // and two or more children must be subtotaled; or it is a parent
-  // and its child has been hidden by the predicate.  So first,
-  // determine if it is a parent that must be displayed regardless of
-  // the predicate.
-
-  account_t * account_to_show = NULL;
-  if (disp_subaccounts_p(account, disp_pred, account_to_show))
-    return true;
-
-  return ! account_to_show && disp_pred(account);
-}
-
-void format_accounts::operator()(account_t& account)
-{
-  if (display_account(account, disp_pred)) {
-    if (! account.parent) {
-      account_xdata(account).dflags |= ACCOUNT_TO_DISPLAY;
-    } else {
-      format.format(output_stream, account);
-      account_xdata(account).dflags |= ACCOUNT_DISPLAYED;
-    }
-  }
-}
-
-format_equity::format_equity(std::ostream& _output_stream,
-			     const string& _format,
-			     const string& display_predicate)
-  : output_stream(_output_stream), disp_pred(display_predicate)
-{
-  const char * f = _format.c_str();
-  if (const char * p = std::strstr(f, "%/")) {
-    first_line_format.parse(string(f, 0, p - f));
-    next_lines_format.parse(string(p + 2));
-  } else {
-    first_line_format.parse(_format);
-    next_lines_format.parse(_format);
-  }
-
-  entry_t header_entry;
-  header_entry.payee = "Opening Balances";
-  header_entry._date = current_date;
-  first_line_format.format(output_stream, header_entry);
-}
-
-void format_equity::flush()
-{
-  account_xdata_t xdata;
-  xdata.value = total;
-  xdata.value.negate();
-  account_t summary(NULL, "Equity:Opening Balances");
-  summary.data = &xdata;
-
-  if (total.type() >= value_t::BALANCE) {
-    const balance_t * bal;
-    if (total.is_type(value_t::BALANCE))
-      bal = &(total.as_balance());
-    else if (total.is_type(value_t::BALANCE_PAIR))
-      bal = &(total.as_balance_pair().quantity());
-    else
-      assert(false);
-
-    foreach (balance_t::amounts_map::value_type pair, bal->amounts) {
-      xdata.value = pair.second;
-      xdata.value.negate();
-      next_lines_format.format(output_stream, summary);
-    }
-  } else {
-    next_lines_format.format(output_stream, summary);
-  }
-  output_stream.flush();
-}
-
-void format_equity::operator()(account_t& account)
-{
-  if (display_account(account, disp_pred)) {
-    if (account_has_xdata(account)) {
-      value_t val = account_xdata_(account).value;
-
-      if (val.type() >= value_t::BALANCE) {
-	const balance_t * bal;
-	if (val.is_type(value_t::BALANCE))
-	  bal = &(val.as_balance());
-	else if (val.is_type(value_t::BALANCE_PAIR))
-	  bal = &(val.as_balance_pair().quantity());
-	else
-	  assert(false);
-
-	foreach (balance_t::amounts_map::value_type pair, bal->amounts) {
-	  account_xdata_(account).value = pair.second;
-	  next_lines_format.format(output_stream, account);
-	}
-	account_xdata_(account).value = val;
-      } else {
-	next_lines_format.format(output_stream, account);
-      }
-      total += val;
-    }
-    account_xdata(account).dflags |= ACCOUNT_DISPLAYED;
-  }
 }
 
 } // namespace ledger

@@ -31,7 +31,7 @@
 
 #include "derive.h"
 #include "session.h"
-#include "walk.h"
+#include "iterators.h"
 
 namespace ledger {
 
@@ -96,7 +96,7 @@ entry_t * derive_new_entry(report_t& report,
 
 	report.sum_all_accounts();
 
-	value_t total = account_xdata(*acct).total;
+	value_t total = acct->xdata().total;
 	if (total.is_type(value_t::AMOUNT))
 	  xact->amount.set_commodity(total.as_amount().commodity());
       }

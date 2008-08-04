@@ -29,57 +29,49 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _XML_H
-#define _XML_H
+#ifndef _COMPARE_H
+#define _COMPARE_H
 
-#include "journal.h"
-#include "report.h"
-#include "output.h"
+#include "expr.h"
+#include "xact.h"
+#include "account.h"
 
 namespace ledger {
 
-#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
-
-class xml_parser_t : public journal_t::parser_t
+template <typename T>
+class compare_items
 {
- public:
-  virtual bool test(std::istream& in) const;
+  expr_t sort_order;
 
-  virtual unsigned int parse(std::istream& in,
-			     session_t&     session,
-			     journal_t&   journal,
-			     account_t *   master        = NULL,
-			     const path *  original_file = NULL);
-};
-
-#endif
-
-class format_xml_entries : public format_entries
-{
-  bool show_totals;
-
-  format_xml_entries();
-
+  compare_items();
+  
 public:
-  format_xml_entries(std::ostream& output_stream,
-		     const bool _show_totals = false)
-    : format_entries(output_stream, ""), show_totals(_show_totals) {
-    TRACE_CTOR(format_xml_entries, "std::ostream&, const bool");
-    output_stream << "<?xml version=\"1.0\"?>\n"
-		  << "<ledger version=\"2.5\">\n";
+  compare_items(const compare_items& other) : sort_order(other.sort_order) {
+    TRACE_CTOR(compare_items, "copy");
   }
-  virtual ~format_xml_entries() throw() {
-    TRACE_DTOR(format_xml_entries);
+  compare_items(const expr_t& _sort_order) : sort_order(_sort_order) {
+    TRACE_CTOR(compare_items, "const value_expr&");
   }
-
-  virtual void flush() {
-    format_entries::flush();
-    output_stream << "</ledger>" << std::endl;
+  ~compare_items() throw() {
+    TRACE_DTOR(compare_items);
   }
-
-  virtual void format_last_entry();
+  bool operator()(T * left, T * right);
 };
+
+template <typename T>
+bool compare_items<T>::operator()(T * left, T * right)
+{
+  assert(left);
+  assert(right);
+  return sort_order.calc(*left) < sort_order.calc(*right);
+}
+
+template <>
+bool compare_items<xact_t>::operator()(xact_t * left, xact_t * right);
+template <>
+bool compare_items<account_t>::operator()(account_t * left,
+					  account_t * right);
 
 } // namespace ledger
 
-#endif // _XML_H
+#endif // _COMPARE_H

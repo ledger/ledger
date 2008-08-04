@@ -31,7 +31,9 @@
 
 #include "session.h"
 #include "report.h"
-#include "walk.h"
+#include "handler.h"
+#include "iterators.h"
+#include "filters.h"
 
 namespace ledger {
 
@@ -256,9 +258,9 @@ void session_t::clean_xacts(entry_t& entry)
 
 void session_t::clean_accounts()
 {
-  accounts_iterator acct_walker(*master);
-  pass_down_accounts<accounts_iterator>
-    (acct_handler_ptr(new clear_account_xdata), acct_walker);
+  basic_accounts_iterator acct_walker(*master);
+  pass_down_accounts(acct_handler_ptr(new clear_account_xdata),
+		     acct_walker);
 }
 
 #if 0
@@ -297,6 +299,43 @@ expr_t::ptr_op_t session_t::lookup(const string& name)
 {
   const char * p = name.c_str();
   switch (*p) {
+  case 'b':
+    if (std::strcmp(p, "balance_format") == 0)
+      return expr_t::op_t::wrap_value(string_value(balance_format));
+    break;
+
+  case 'e':
+    if (std::strcmp(p, "equity_format") == 0)
+      return expr_t::op_t::wrap_value(string_value(equity_format));
+    break;
+
+  case 'p':
+    if (std::strcmp(p, "plot_amount_format") == 0)
+      return expr_t::op_t::wrap_value(string_value(plot_amount_format));
+    else if (std::strcmp(p, "plot_total_format") == 0)
+      return expr_t::op_t::wrap_value(string_value(plot_total_format));
+    else if (std::strcmp(p, "prices_format") == 0)
+      return expr_t::op_t::wrap_value(string_value(prices_format));
+    else if (std::strcmp(p, "pricesdb_format") == 0)
+      return expr_t::op_t::wrap_value(string_value(pricesdb_format));
+    else if (std::strcmp(p, "print_format") == 0)
+      return expr_t::op_t::wrap_value(string_value(print_format));
+    break;
+
+  case 'r':
+    if (std::strcmp(p, "register_format") == 0)
+      return expr_t::op_t::wrap_value(string_value(register_format));
+    break;
+
+  case 'w':
+    if (std::strcmp(p, "wide_register_format") == 0)
+      return expr_t::op_t::wrap_value(string_value(wide_register_format));
+    else if (std::strcmp(p, "write_hdr_format") == 0)
+      return expr_t::op_t::wrap_value(string_value(write_hdr_format));
+    else if (std::strcmp(p, "write_xact_format") == 0)
+      return expr_t::op_t::wrap_value(string_value(write_xact_format));
+    break;
+
   case 'o':
     if (std::strncmp(p, "opt_", 4) == 0) {
       p = p + 4;

@@ -34,7 +34,6 @@
 
 #include "journal.h"
 #include "expr.h"
-#include "walk.h"
 
 namespace ledger {
 

@@ -30,10 +30,7 @@
  */
 
 #include "format.h"
-#include "error.h"
-#include "util.h"
-
-#include <cstdlib>
+#include "account.h"
 
 namespace ledger {
 
@@ -70,15 +67,15 @@ void format_t::element_t::dump(std::ostream& out) const
 }
 
 namespace {
-  string partial_account_name(const account_t& account)
+  string partial_account_name(account_t& account)
   {
     string name;
 
-    for (const account_t * acct = &account;
+    for (account_t * acct = &account;
 	 acct && acct->parent;
 	 acct = acct->parent) {
-      if (account_has_xdata(*acct) &&
-	  account_xdata_(*acct).dflags & ACCOUNT_DISPLAYED)
+      if (acct->has_xdata() &&
+	  acct->xdata().has_flags(ACCOUNT_EXT_DISPLAYED))
 	break;
 
       if (name.empty())

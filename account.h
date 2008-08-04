@@ -98,6 +98,54 @@ class account_t : public scope_t
   bool valid() const;
 
   friend class journal_t;
+
+  struct xdata_t : public supports_flags<>
+  {
+#define ACCOUNT_EXT_TO_DISPLAY	     0x01
+#define ACCOUNT_EXT_DISPLAYED	     0x02
+#define ACCOUNT_EXT_SORT_CALC	     0x04
+#define ACCOUNT_EXT_HAS_NON_VIRTUALS 0x08
+#define ACCOUNT_EXT_HAS_UNB_VIRTUALS 0x10
+
+    value_t	   value;
+    value_t	   total;
+    value_t	   sort_value;
+    unsigned int   count;	// xacts counted toward amount
+    unsigned int   total_count;	// xacts counted toward total
+    unsigned int   virtuals;
+    unsigned short dflags;
+
+    xdata_t()
+      : supports_flags<>(), count(0), total_count(0),
+	virtuals(0), dflags(0)
+    {
+      TRACE_CTOR(xdata_t, "");
+    }
+
+    ~xdata_t() throw() {
+      TRACE_DTOR(xdata_t);
+    }
+  };
+
+  // This variable holds optional "extended data" which is usually produced
+  // only during reporting, and only for the transaction set being reported.
+  // It's a memory-saving measure to delay allocation until the last possible
+  // moment.
+  mutable optional<xdata_t> xdata_;
+
+  bool has_xdata() const {
+    return xdata_;
+  }
+  void clear_xdata() {
+    xdata_ = none;
+  }
+  xdata_t& xdata() {
+    if (! xdata_)
+      xdata_ = xdata_t();
+    return *xdata_;
+  }
+
+  void calculate_sums();
 };
 
 std::ostream& operator<<(std::ostream& out, const account_t& account);
