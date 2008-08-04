@@ -1,5 +1,0 @@
-#!/bin/sh
-
-cat configure.in | \
-    grep "^AC_INIT" | \
-    sed 's/AC_INIT(\[ledger\],\[\([^]]*\)\],.*/\1/'
