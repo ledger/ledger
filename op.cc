@@ -428,48 +428,6 @@ void expr_t::op_t::compute(value_t&	    result,
     break;
   }
 
-  case F_CODE_MASK:
-    if (details.entry && details.entry->code)
-      result = as_mask().match(*details.entry->code);
-    else
-      result = false;
-    break;
-
-  case F_PAYEE_MASK:
-    if (details.entry)
-      result = as_mask().match(details.entry->payee);
-    else
-      result = false;
-    break;
-
-  case F_NOTE_MASK:
-    if (details.xact && details.xact->note)
-      result = as_mask().match(*details.xact->note);
-    else
-      result = false;
-    break;
-
-  case F_ACCOUNT_MASK:
-    if (details.account)
-      result = as_mask().match(details.account->fullname());
-    else
-      result = false;
-    break;
-
-  case F_SHORT_ACCOUNT_MASK:
-    if (details.account)
-      result = as_mask().match(details.account->name);
-    else
-      result = false;
-    break;
-
-  case F_COMMODITY_MASK:
-    if (details.xact)
-      result = as_mask().match(details.xact->amount.commodity().base_symbol());
-    else
-      result = false;
-    break;
-
   case O_ARG: {
     long arg_index = 0;
     assert(left()->kind == INDEX);

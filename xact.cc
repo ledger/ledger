@@ -105,12 +105,12 @@ namespace {
   {
     xact_t& xact(downcast<xact_t>(*scope.parent));
 
-    var_t<long> width(scope, 0);
+    var_t<long> max_width(scope, 0);
 
     string name = xact.reported_account()->fullname();
 
-    if (width && *width > 2)
-      name = format_t::truncate(name, *width - 2, true);
+    if (max_width && *max_width > 2)
+      name = format_t::truncate(name, *max_width - 2, true);
 
     if (xact.has_flags(XACT_VIRTUAL)) {
       if (xact.must_balance())

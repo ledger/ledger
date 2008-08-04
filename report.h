@@ -198,6 +198,7 @@ public:
   // Config options
   //
 
+#if 0
   void eval(const string& expr) {
     expr_t(expr).calc(*this);
   }
@@ -206,17 +207,12 @@ public:
     return NULL_VALUE;
   }
 
-  value_t option_amount(call_scope_t& args) {
+  value_t option_amount_(call_scope_t& args) {
     eval(string("t=") + args[0].as_string());
     return NULL_VALUE;
   }
-  value_t option_total(call_scope_t& args) {
+  value_t option_total_(call_scope_t& args) {
     eval(string("T()=") + args[0].as_string());
-    return NULL_VALUE;
-  }
-
-  value_t option_format(call_scope_t& args) {
-    format_string = args[0].as_string();
     return NULL_VALUE;
   }
 
@@ -224,14 +220,27 @@ public:
     raw_mode = true;
     return NULL_VALUE;
   }
+#endif
+
+  value_t option_format_(call_scope_t& args) {
+    format_string = args[0].as_string();
+    return NULL_VALUE;
+  }
 
   value_t option_foo(call_scope_t&) {
     std::cout << "This is foo" << std::endl;
     return NULL_VALUE;
   }
-  value_t option_bar(call_scope_t& args) {
+  value_t option_bar_(call_scope_t& args) {
     std::cout << "This is bar: " << args[0] << std::endl;
     return args[0];
+  }
+
+  value_t option_limit_(call_scope_t& args) {
+    if (! predicate.empty())
+      predicate += "&";
+    predicate += args[0].as_string();
+    return true;
   }
 
   //

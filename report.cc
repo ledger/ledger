@@ -35,96 +35,6 @@
 namespace ledger {
 
 #if 0
-void
-report_t::regexps_to_predicate(const std::string& command,
-			       std::list<std::string>::const_iterator begin,
-			       std::list<std::string>::const_iterator end,
-			       const bool account_regexp,
-			       const bool add_account_short_masks,
-			       const bool logical_and)
-{
-  std::string regexps[2];
-
-  assert(begin != end);
-
-  // Treat the remaining command-line arguments as regular
-  // expressions, used for refining report results.
-
-  for (std::list<std::string>::const_iterator i = begin;
-       i != end;
-       i++)
-    if ((*i)[0] == '-') {
-      if (! regexps[1].empty())
-	regexps[1] += "|";
-      regexps[1] += (*i).substr(1);
-    }
-    else if ((*i)[0] == '+') {
-      if (! regexps[0].empty())
-	regexps[0] += "|";
-      regexps[0] += (*i).substr(1);
-    }
-    else {
-      if (! regexps[0].empty())
-	regexps[0] += "|";
-      regexps[0] += *i;
-    }
-
-  for (int i = 0; i < 2; i++) {
-    if (regexps[i].empty())
-      continue;
-
-    if (! predicate.empty())
-      predicate += logical_and ? "&" : "|";
-
-    int add_predicate = 0;	// 1 adds /.../, 2 adds ///.../
-    if (i == 1) {
-      predicate += "!";
-    }
-    else if (add_account_short_masks) {
-      if (regexps[i].find(':') != std::string::npos ||
-	  regexps[i].find('.') != std::string::npos ||
-	  regexps[i].find('*') != std::string::npos ||
-	  regexps[i].find('+') != std::string::npos ||
-	  regexps[i].find('[') != std::string::npos ||
-	  regexps[i].find('(') != std::string::npos) {
-	show_subtotal = true;
-	add_predicate = 1;
-      } else {
-	add_predicate = 2;
-      }
-    }
-    else {
-      add_predicate = 1;
-    }
-
-    if (i != 1 && command == "b" && account_regexp) {
-      if (! show_related && ! show_all_related) {
-	if (! display_predicate.empty())
-	  display_predicate += "&";
-	if (! show_empty)
-	  display_predicate += "T&";
-
-	if (add_predicate == 2)
-	  display_predicate += "//";
-	display_predicate += "/(?:";
-	display_predicate += regexps[i];
-	display_predicate += ")/";
-      }
-      else if (! show_empty) {
-	if (! display_predicate.empty())
-	  display_predicate += "&";
-	display_predicate += "T";
-      }
-    }
-
-    if (! account_regexp)
-      predicate += "/";
-    predicate += "/(?:";
-    predicate += regexps[i];
-    predicate += ")/";
-  }
-}
-
 void report_t::process_options(const std::string&     command,
 			       strings_list::iterator arg,
 			       strings_list::iterator args_end)
@@ -342,8 +252,11 @@ report_t::chain_xact_handlers(xact_handler_ptr base_handler,
 
   // This filter_xacts will only pass through xacts
   // matching the `predicate'.
-  if (! predicate.empty())
+  if (! predicate.empty()) {
+    DEBUG("report.predicate",
+	  "Report predicate expression = " << predicate);
     handler.reset(new filter_xacts(handler, predicate));
+  }
 
 #if 0
   // budget_xacts takes a set of xacts from a data
@@ -493,31 +406,30 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
     if (std::strncmp(p, "opt_", 4) == 0) {
       p = p + 4;
       switch (*p) {
+#if 0
       case 'a':
 	if (std::strcmp(p, "amount") == 0)
 	  return MAKE_FUNCTOR(report_t::option_amount);
 	break;
+#endif
 
       case 'b':
-	if (std::strcmp(p, "bar") == 0)
-	  return MAKE_FUNCTOR(report_t::option_bar);
+	if (std::strcmp(p, "bar_") == 0)
+	  return MAKE_FUNCTOR(report_t::option_bar_);
 	break;
 
       case 'f':
-	if (std::strcmp(p, "format") == 0)
-	  return MAKE_FUNCTOR(report_t::option_format);
-	else if (name.find("fmt_") == 0) {
-	  switch (name[4]) {
-	  case 't':
-	    return MAKE_FUNCTOR(report_t::get_amount_expr);
-#if 0
-	  case 'T':
-	    return MAKE_FUNCTOR(report_t::get_total_expr);
-#endif
-	  }
-	}
+	if (std::strcmp(p, "F_") == 0 ||
+	    std::strcmp(p, "format_") == 0)
+	  return MAKE_FUNCTOR(report_t::option_format_);
 	break;
 
+      case 'l':
+	if (std::strcmp(p, "l_") || std::strcmp(p, "limit_"))
+	  return MAKE_FUNCTOR(report_t::option_limit_);
+	break;
+
+#if 0
       case 't':
 	if (! *(p + 1))
 	  return MAKE_FUNCTOR(report_t::option_amount);
@@ -529,6 +441,7 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	if (! *(p + 1))
 	  return MAKE_FUNCTOR(report_t::option_total);
 	break;
+#endif
       }
     }
     break;

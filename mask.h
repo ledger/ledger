@@ -41,12 +41,11 @@ class mask_t
   mask_t();
 
 public:
-  bool	       exclude;
   boost::regex expr;
 
   explicit mask_t(const string& pattern);
 
-  mask_t(const mask_t& m) : exclude(m.exclude), expr(m.expr) {
+  mask_t(const mask_t& m) : expr(m.expr) {
     TRACE_CTOR(mask_t, "copy");
   }
   ~mask_t() throw() {
@@ -56,7 +55,7 @@ public:
   mask_t& operator=(const string& other);
 
   bool match(const string& str) const {
-    return boost::regex_match(str, expr) && ! exclude;
+    return boost::regex_search(str, expr);
   }
 
   void read(const char *& data);

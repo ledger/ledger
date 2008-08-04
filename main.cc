@@ -52,6 +52,102 @@
 #endif
 
 namespace ledger {
+  string args_to_predicate(value_t::sequence_t::const_iterator begin,
+			   value_t::sequence_t::const_iterator end)
+  {
+    string acct_value_expr;
+    string payee_value_expr;
+    string note_value_expr;
+
+    string * value_expr;
+
+    enum regexp_kind_t {
+      ACCOUNT_REGEXP,
+      PAYEE_REGEXP,
+      NOTE_REGEXP
+    }
+    kind = ACCOUNT_REGEXP;
+
+    value_expr = &acct_value_expr;
+
+    for ( ; begin != end; begin++) {
+      const string& arg((*begin).as_string());
+
+      if (arg == "--") {
+	kind = PAYEE_REGEXP;
+	value_expr = &payee_value_expr;
+      }
+      else if (arg == "/") {
+	kind = NOTE_REGEXP;
+	value_expr = &note_value_expr;
+      }
+      else {
+	if (! value_expr->empty())
+	  *value_expr += "|";
+
+	switch (kind) {
+	case ACCOUNT_REGEXP:
+	  *value_expr += "account =~ ";
+	  break;
+	case PAYEE_REGEXP:
+	  *value_expr += "payee =~ ";
+	  break;
+	case NOTE_REGEXP:
+	  *value_expr += "note =~ ";
+	  break;
+	}
+
+	const char * p = arg.c_str();
+	if (*p == '-') {
+	  *value_expr += "!";
+	  p++;
+	}
+
+	*value_expr += "/";
+	while (*p) {
+	  if (*p == '/')
+	    *value_expr += "\\";
+	  *value_expr += *p;
+	  p++;
+	}
+	*value_expr += "/";
+      }
+    }
+
+    string final_value_expr;
+
+    if (! acct_value_expr.empty()) {
+      if (! payee_value_expr.empty() ||
+	  ! note_value_expr.empty())
+	final_value_expr = string("(") + acct_value_expr + ")";
+      else
+	final_value_expr = acct_value_expr;
+    }
+
+    if (! payee_value_expr.empty()) {
+      if (! acct_value_expr.empty())
+	final_value_expr += string("&(") + payee_value_expr + ")";
+      else if (! note_value_expr.empty())
+	final_value_expr = string("(") + payee_value_expr + ")";
+      else
+	final_value_expr = payee_value_expr;
+    }
+
+    if (! note_value_expr.empty()) {
+      if (! acct_value_expr.empty() ||
+	  ! payee_value_expr.empty())
+	final_value_expr += string("&(") + note_value_expr + ")";
+      else if (acct_value_expr.empty() &&
+	       payee_value_expr.empty())
+	final_value_expr = note_value_expr;
+    }
+
+    DEBUG("report.predicate",
+	  "Regexp predicate expression = " << final_value_expr);
+
+    return final_value_expr;
+  }
+
   template <class Formatter = format_xacts>
   class xacts_report
   {
@@ -65,9 +161,19 @@ namespace ledger {
     {
       ptr_t<std::ostream> ostream(args, 0);
       var_t<string>       format(args, format_name);
+      report_t&		  report(find_scope<report_t>(args));
 
-      find_scope<report_t>(args).xacts_report
-	(xact_handler_ptr(new Formatter(*ostream, *format)));
+      if (! report.format_string.empty())
+	*format = report.format_string;
+
+      if (! report.predicate.empty())
+	report.predicate = string("(") + report.predicate + ")&";
+      report.predicate +=
+	args_to_predicate(++args.value().as_sequence().begin(),
+			  args.value().as_sequence().end());
+
+      report.xacts_report(xact_handler_ptr(new Formatter(*ostream,
+							 *format)));
       return true;
     }
   };

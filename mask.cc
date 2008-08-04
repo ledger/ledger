@@ -34,7 +34,7 @@
 
 namespace ledger {
 
-mask_t::mask_t(const string& pat) : exclude(false), expr()
+mask_t::mask_t(const string& pat) : expr()
 {
   TRACE_CTOR(mask_t, "const string&");
   *this = pat;
@@ -42,40 +42,17 @@ mask_t::mask_t(const string& pat) : exclude(false), expr()
 
 mask_t& mask_t::operator=(const string& pat)
 {
-  exclude = false;
-
-  const char * p = pat.c_str();
-
-  if (*p == '-') {
-    exclude = true;
-    p++;
-    while (std::isspace(*p))
-      p++;
-  }
-  else if (*p == '+') {
-    p++;
-    while (std::isspace(*p))
-      p++;
-  }
-
-  expr.assign(p);
-
+  expr.assign(pat.c_str(), regex::perl | regex::icase);
   return *this;
 }
 
 void mask_t::read(const char *& data)
 {
-  binary::read_number(data, exclude);
-
-  string pattern;
-  binary::read_string(data, pattern);
-
-  *this = pattern;
+  *this = binary::read_string(data);
 }
 
 void mask_t::write(std::ostream& out) const
 {
-  binary::write_number(out, exclude);
   binary::write_string(out, expr.str());
 }
 
