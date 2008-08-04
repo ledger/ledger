@@ -104,12 +104,14 @@ namespace ledger {
 	}
 
 	*value_expr += "/";
+	if (kind == NOTE_REGEXP) *value_expr += ":";
 	while (*p) {
 	  if (*p == '/')
 	    *value_expr += "\\";
 	  *value_expr += *p;
 	  p++;
 	}
+	if (kind == NOTE_REGEXP) *value_expr += ":";
 	*value_expr += "/";
       }
     }
