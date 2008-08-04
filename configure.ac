@@ -3,12 +3,12 @@
 
 AC_PREREQ(2.61)
 
-AC_INIT([ledger],[%VERSION%],[johnw@newartisans.com])
-AC_CONFIG_SRCDIR(ledger)
-AM_INIT_AUTOMAKE([dist-bzip2])
+m4_include([version.m4])
 
+AC_INIT([ledger],VERSION_NUMBER,[johnw@newartisans.com])
 AC_CONFIG_SRCDIR([main.cc])
 AC_CONFIG_HEADER([acconf.h])
+AM_INIT_AUTOMAKE([dist-bzip2])
 
 # Checks for programs.
 AC_PROG_CXX

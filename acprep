@@ -21,8 +21,7 @@ fi
 
 COMMIT=$(git describe --all --long | sed 's/heads\///')
 
-cat configure.tmpl | \
-    sed "s/%VERSION%/$COMMIT/" > configure.in
+cat version.m4.in | sed "s/%VERSION%/$COMMIT/" > version.m4
 
 autoreconf --force --install
 
