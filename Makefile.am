@@ -256,7 +256,7 @@ fullcheck: check
 	DYLD_INSERT_LIBRARIES=/usr/lib/libgmalloc.dylib \
 	$(srcdir)/valgrind.sh $(top_builddir)/UnitTests$(EXEEXT) --verify
 
-###############################################################################
+######################################################################
 
 DISTCLEANFILES += Doxyfile.gen
 
@@ -270,81 +270,4 @@ $(top_builddir)/Doxyfile.gen: $(srcdir)/Doxyfile
 doxygen-docs: $(top_builddir)/Doxyfile.gen
 	doxygen $(top_builddir)/Doxyfile.gen
 
-######################################################################
-
-clean-backupfiles:
-	(cd $(srcdir); rm -fr *~ .*~ .\#*)
-
-clean-documentation:
-	rm -fr *.aux  \
-	       *.cp   \
-	       *.fn   \
-	       *.info \
-	       *.ky   \
-	       *.log  \
-	       *.pdf  \
-	       *.pg   \
-	       *.toc  \
-	       *.tp   \
-	       *.vr
-
-clean-buildproducts:
-	rm -fr *.Plo  \
-	       *.Po   \
-	       *.a    \
-	       *.elc  \
-	       *.gcno \
-	       *.gdca \
-	       *.la   \
-	       *.lo   \
-	       *.o    \
-	       *.so   \
-	       .deps  \
-	       .libs  \
-	       build
-
-clean-debugdata:
-	rm -fr .gdb_history \
-	       TAGS         \
-	       gmon.out	    \
-	       h	    \
-	       out
-
-clean-autoconf:
-	(cd $(srcdir);	     \
-	rm -fr AUTHORS	     \
-	       COPYING	     \
-	       ChangeLog     \
-	       INSTALL       \
-	       Makefile	     \
-	       Makefile.in   \
-	       acconf.h	     \
-	       acconf.h.in   \
-	       aclocal.m4    \
-	       autom4te      \
-	       compile	     \
-	       config.guess  \
-	       config.sub    \
-	       configure     \
-	       configure.in  \
-	       depcomp	     \
-	       elc-stamp     \
-	       elc-temp	     \
-	       elisp-comp    \
-	       install-sh    \
-	       libtool	     \
-	       ltconfig	     \
-	       ltmain.sh     \
-	       missing	     \
-	       mkinstalldirs \
-	       py-compile    \
-	       stamp	     \
-	       texinfo.tex   \
-	       ylwrap)
-
-all-clean:  maintainer-clean    \
-	    clean-buildproducts \
-	    clean-backupfiles   \
-	    clean-debugdata     \
-	    clean-documentation \
-	    clean-autoconf
+# Makefile.am ends here
