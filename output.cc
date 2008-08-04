@@ -33,13 +33,13 @@
 
 namespace ledger {
 
-format_xacts::format_xacts(std::ostream& _output_stream,
-			   const string& format)
-  : output_stream(_output_stream), last_entry(NULL), last_xact(NULL)
+format_xacts::format_xacts(report_t& _report, const string& format)
+  : report(_report), last_entry(NULL), last_xact(NULL)
 {
-  TRACE_CTOR(format_xacts, "std::ostream&, const string&");
+  TRACE_CTOR(format_xacts, "report&, const string&");
 
   const char * f = format.c_str();
+
   if (const char * p = std::strstr(f, "%/")) {
     first_line_format.parse(string(f, 0, p - f));
     next_lines_format.parse(string(p + 2));
@@ -51,17 +51,19 @@ format_xacts::format_xacts(std::ostream& _output_stream,
 
 void format_xacts::operator()(xact_t& xact)
 {
+  std::ostream& out(*report.output_stream);
+
   if (! xact.has_xdata() ||
       ! xact.xdata().has_flags(XACT_EXT_DISPLAYED)) {
     if (last_entry != xact.entry) {
-      first_line_format.format(output_stream, xact);
+      first_line_format.format(out, xact);
       last_entry = xact.entry;
     }
     else if (last_xact && last_xact->date() != xact.date()) {
-      first_line_format.format(output_stream, xact);
+      first_line_format.format(out, xact);
     }
     else {
-      next_lines_format.format(output_stream, xact);
+      next_lines_format.format(out, xact);
     }
 
     xact.xdata().add_flags(XACT_EXT_DISPLAYED);
@@ -71,16 +73,17 @@ void format_xacts::operator()(xact_t& xact)
 
 void format_entries::format_last_entry()
 {
-  bool first = true;
+  bool		first = true;
+  std::ostream& out(*report.output_stream);
 
   foreach (xact_t * xact, last_entry->xacts) {
     if (xact->has_xdata() &&
 	xact->xdata().has_flags(XACT_EXT_TO_DISPLAY)) {
       if (first) {
-	first_line_format.format(output_stream, *xact);
+	first_line_format.format(out, *xact);
 	first = false;
       } else {
-	next_lines_format.format(output_stream, *xact);
+	next_lines_format.format(out, *xact);
       }
       xact->xdata().add_flags(XACT_EXT_DISPLAYED);
     }
@@ -131,13 +134,37 @@ void print_entry(std::ostream& out, const entry_base_t& entry_base,
 #endif
 }
 
+void format_accounts::flush()
+{
+  std::ostream& out(*report.output_stream);
+
+#if 0
+  // jww (2008-08-02): I need access to the output formatter before this is
+  // going to work.
+  if (print_final_total) {
+    assert(out);
+    assert(account_has_xdata(*session.master));
+
+    account_xdata_t& xdata(account_xdata(*session.master));
+
+    if (! show_collapsed && xdata.total) {
+      out << "--------------------\n";
+      xdata.value = xdata.total;
+      handler->format.format(out, *session.master);
+    }
+  }
+#endif
+
+  out.flush();
+}
+
 void format_accounts::operator()(account_t& account)
 {
   if (display_account(account)) {
     if (! account.parent) {
       account.xdata().add_flags(ACCOUNT_EXT_TO_DISPLAY);
     } else {
-      format.format(output_stream, account);
+      format.format(*report.output_stream, account);
       account.xdata().add_flags(ACCOUNT_EXT_DISPLAYED);
     }
   }
@@ -159,13 +186,11 @@ bool format_accounts::disp_subaccounts_p(account_t&   account,
     if (! disp_pred(*pair.second))
       continue;
 
-#if 0
-    compute_total(result, *pair.second);
-#endif
+    call_scope_t args(*pair.second);
+    result = report.get_total_expr(args);
     if (! computed) {
-#if 0
-      compute_total(acct_total, account);
-#endif
+      call_scope_t args(account);
+      acct_total = report.get_total_expr(args);
       computed = true;
     }
 
@@ -201,10 +226,10 @@ bool format_accounts::display_account(account_t& account)
   return ! account_to_show && disp_pred(account);
 }
 
-format_equity::format_equity(std::ostream& _output_stream,
+format_equity::format_equity(report_t&	   _report,
 			     const string& _format,
 			     const string& display_predicate)
-  : format_accounts(_output_stream, "", display_predicate)
+  : format_accounts(_report, "", display_predicate)
 {
   const char * f = _format.c_str();
 
@@ -219,7 +244,7 @@ format_equity::format_equity(std::ostream& _output_stream,
   entry_t header_entry;
   header_entry.payee = "Opening Balances";
   header_entry._date = current_date;
-  first_line_format.format(output_stream, header_entry);
+  first_line_format.format(*report.output_stream, header_entry);
 }
 
 void format_equity::flush()
@@ -227,6 +252,7 @@ void format_equity::flush()
   account_t summary(NULL, "Equity:Opening Balances");
 
   account_t::xdata_t& xdata(summary.xdata());
+  std::ostream&	      out(*report.output_stream);
   
   xdata.value = total.negate();
 
@@ -242,16 +268,18 @@ void format_equity::flush()
     foreach (balance_t::amounts_map::value_type pair, bal->amounts) {
       xdata.value = pair.second;
       xdata.value.negate();
-      next_lines_format.format(output_stream, summary);
+      next_lines_format.format(out, summary);
     }
   } else {
-    next_lines_format.format(output_stream, summary);
+    next_lines_format.format(out, summary);
   }
-  output_stream.flush();
+  out.flush();
 }
 
 void format_equity::operator()(account_t& account)
 {
+  std::ostream& out(*report.output_stream);
+
   if (display_account(account)) {
     if (account.has_xdata()) {
       value_t val = account.xdata().value;
@@ -267,11 +295,11 @@ void format_equity::operator()(account_t& account)
 
 	foreach (balance_t::amounts_map::value_type pair, bal->amounts) {
 	  account.xdata().value = pair.second;
-	  next_lines_format.format(output_stream, account);
+	  next_lines_format.format(out, account);
 	}
 	account.xdata().value = val;
       } else {
-	next_lines_format.format(output_stream, account);
+	next_lines_format.format(out, account);
       }
       total += val;
     }

@@ -331,9 +331,7 @@ void report_t::sum_all_accounts()
   session.master->calculate_sums();
 }
 
-void report_t::accounts_report(acct_handler_ptr	       handler,
-			       const bool	       print_final_total,
-			       optional<std::ostream&> ostream)
+void report_t::accounts_report(acct_handler_ptr handler)
 {
   sum_all_accounts();
 
@@ -346,22 +344,6 @@ void report_t::accounts_report(acct_handler_ptr	       handler,
   }
   handler->flush();
     
-#if 0
-  // jww (2008-08-02): I need access to the output formatter before this is
-  // going to work.
-  if (print_final_total) {
-    assert(ostream);
-    assert(account_has_xdata(*session.master));
-
-    account_xdata_t& xdata(account_xdata(*session.master));
-    if (! show_collapsed && xdata.total) {
-      *ostream << "--------------------\n";
-      xdata.value = xdata.total;
-      handler->format.format(*ostream, *session.master);
-    }
-  }
-#endif
-
   if (DO_VERIFY()) {
     session.clean_xacts();
     session.clean_accounts();

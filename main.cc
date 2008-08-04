@@ -150,52 +150,37 @@ namespace ledger {
     return final_value_expr;
   }
 
-  template <class Formatter = format_xacts>
-  class xacts_report
+  template <class Formatter   = format_xacts,
+	    class handler_ptr = xact_handler_ptr,
+	    void (report_t::*report_method)(handler_ptr) =
+	      &report_t::xacts_report>
+  class reporter
   {
     string format_name;
 
   public:
-    xacts_report(const string& _format_name)
+    reporter(const string& _format_name)
       : format_name(_format_name) {}
 
     value_t operator()(call_scope_t& args)
     {
-      ptr_t<std::ostream> ostream(args, 0);
-      var_t<string>       format(args, format_name);
       report_t&		  report(find_scope<report_t>(args));
+      var_t<string>       format(args, format_name);
 
       if (! report.format_string.empty())
 	*format = report.format_string;
 
-      if (! report.predicate.empty())
-	report.predicate = string("(") + report.predicate + ")&";
-      report.predicate +=
-	args_to_predicate(++args.value().as_sequence().begin(),
-			  args.value().as_sequence().end());
+      if (args.value().is_sequence() &&
+	  args.value().size() > 1) {
+	if (! report.predicate.empty())
+	  report.predicate = string("(") + report.predicate + ")&";
+	report.predicate +=
+	  args_to_predicate(++args.value().as_sequence().begin(),
+			    args.value().as_sequence().end());
+      }
 
-      report.xacts_report(xact_handler_ptr(new Formatter(*ostream,
-							 *format)));
-      return true;
-    }
-  };
+      (report.*report_method)(handler_ptr(new Formatter(report, *format)));
 
-  template <class Formatter = format_accounts>
-  class accounts_report
-  {
-    string format_name;
-
-  public:
-    accounts_report(const string& _format_name)
-      : format_name(_format_name) {}
-
-    value_t operator()(call_scope_t& args)
-    {
-      ptr_t<std::ostream> ostream(args, 0);
-      var_t<string>       format(args, format_name);
-
-      find_scope<report_t>(args).accounts_report
-	(acct_handler_ptr(new Formatter(*ostream, *format)));
       return true;
     }
   };
@@ -261,10 +246,10 @@ namespace ledger {
 #ifdef HAVE_UNIX_PIPES
     int status, pfd[2];		// Pipe file descriptors
 #endif
-    std::ostream * out = &std::cout;
+    report.output_stream = &std::cout;
 
     if (report.output_file) {
-      out = new ofstream(*report.output_file);
+      report.output_stream = new ofstream(*report.output_file);
     }
 #ifdef HAVE_UNIX_PIPES
     else if (report.pager) {
@@ -298,7 +283,7 @@ namespace ledger {
       }
       else {			// parent
 	close(pfd[0]);
-	out = new boost::fdostream(pfd[1]);
+	report.output_stream = new boost::fdostream(pfd[1]);
       }
     }
 #endif
@@ -306,80 +291,82 @@ namespace ledger {
     // Read the command word and see if it's any of the debugging commands
     // that Ledger supports.
 
+    std::ostream& out(*report.output_stream);
+
     string verb = *arg++;
 
     if (verb == "parse") {
       expr_t expr(*arg);
 
-      *out << "Value expression as  input: " << *arg << std::endl;
+      out << "Value expression as  input: " << *arg << std::endl;
 
-      *out << "Value expression as parsed: ";
-      expr.print(*out, report);
-      *out << std::endl;
+      out << "Value expression as parsed: ";
+      expr.print(out, report);
+      out << std::endl;
 
-      *out << std::endl;
-      *out << "--- Parsed tree ---" << std::endl;
-      expr.dump(*out);
+      out << std::endl;
+      out << "--- Parsed tree ---" << std::endl;
+      expr.dump(out);
 
-      *out << std::endl;
-      *out << "--- Calculated value ---" << std::endl;
-      expr.calc(report).print(*out);
-      *out << std::endl;
+      out << std::endl;
+      out << "--- Calculated value ---" << std::endl;
+      expr.calc(report).print(out);
+      out << std::endl;
 
       return 0;
     }
     else if (verb == "compile") {
       expr_t expr(*arg);
 
-      *out << "Value expression as  input: " << *arg << std::endl;
-      *out << "Value expression as parsed: ";
-      expr.print(*out, report);
-      *out << std::endl;
+      out << "Value expression as  input: " << *arg << std::endl;
+      out << "Value expression as parsed: ";
+      expr.print(out, report);
+      out << std::endl;
 
-      *out << std::endl;
-      *out << "--- Parsed tree ---" << std::endl;
-      expr.dump(*out);
+      out << std::endl;
+      out << "--- Parsed tree ---" << std::endl;
+      expr.dump(out);
 
       expr.compile(report);
 
-      *out << std::endl;
-      *out << "--- Compiled tree ---" << std::endl;
-      expr.dump(*out);
+      out << std::endl;
+      out << "--- Compiled tree ---" << std::endl;
+      expr.dump(out);
 
-      *out << std::endl;
-      *out << "--- Calculated value ---" << std::endl;
-      expr.calc(report).print(*out);
-      *out << std::endl;
+      out << std::endl;
+      out << "--- Calculated value ---" << std::endl;
+      expr.calc(report).print(out);
+      out << std::endl;
 
       return 0;
     }
     else if (verb == "eval") {
       expr_t expr(*arg);
-      *out << expr.calc(report).strip_annotations() << std::endl;
+      out << expr.calc(report).strip_annotations() << std::endl;
       return 0;
     }
     else if (verb == "format") {
       format_t fmt(*arg);
-      fmt.dump(*out);
+      fmt.dump(out);
       return 0;
     }
     else if (verb == "period") {
       interval_t interval(*arg);
 
       if (! is_valid(interval.begin)) {
-	*out << "Time period has no beginning." << std::endl;
+	out << "Time period has no beginning." << std::endl;
       } else {
-	*out << "begin: " << format_date(interval.begin) << std::endl;
-	*out << "  end: " << format_date(interval.end) << std::endl;
-	*out << std::endl;
+	out << "begin: " << format_date(interval.begin) << std::endl;
+	out << "  end: " << format_date(interval.end) << std::endl;
+	out << std::endl;
 
 	date_t date = interval.first();
 
 	for (int i = 0; i < 20; i++) {
-	  *out << std::right;
-	  out->width(2);
+	  out << std::right;
+	  out.width(2);
 
-	  *out << i << ": " << format_date(date) << std::endl;
+	  out << i << ": " << format_date(date) << std::endl;
 
 	  date = interval.increment(date);
 	  if (is_valid(interval.end) && date >= interval.end)
@@ -420,13 +407,15 @@ namespace ledger {
     function_t command;
 
     if (verb == "register" || verb == "reg" || verb == "r")
-      command = xacts_report<>("register_format");
+      command = reporter<>("register_format");
     else if (verb == "print" || verb == "p")
-      command = xacts_report<>("print_format");
+      command = reporter<>("print_format");
     else if (verb == "balance" || verb == "bal" || verb == "b")
-      command = accounts_report<>("balance_format");
+      command = reporter<format_accounts, acct_handler_ptr,
+                         &report_t::accounts_report>("balance_format");
     else if (verb == "equity")
-      command = accounts_report<format_equity>("print_format");
+      command = reporter<format_equity, acct_handler_ptr,
+                         &report_t::accounts_report>("print_format");
 #if 0
     else if (verb == "entry")
       command = entry_command();
@@ -462,8 +451,6 @@ namespace ledger {
 
     call_scope_t command_args(report);
 
-    command_args.push_back(value_t(out));
-
     for (strings_list::iterator i = arg; i != args.end(); i++)
       command_args.push_back(string_value(*i));
 
@@ -490,7 +477,7 @@ namespace ledger {
 
 #ifdef HAVE_UNIX_PIPES
     if (! report.output_file && report.pager) {
-      checked_delete(out);
+      checked_delete(report.output_stream);
       close(pfd[1]);
 
       // Wait for child to finish
@@ -500,7 +487,7 @@ namespace ledger {
     }
 #endif
     else if (DO_VERIFY() && report.output_file) {
-      checked_delete(out);
+      checked_delete(report.output_stream);
     }
 
     return 0;

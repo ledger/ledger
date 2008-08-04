@@ -387,28 +387,30 @@ void output_xml_string(std::ostream& out, const string& str)
 
 void format_xml_entries::format_last_entry()
 {
+  std::ostream& out(*report.output_stream);
+
 #if 0
   // jww (2008-05-08): Need to format these dates
-  output_stream << "  <entry>\n"
-		<< "    <en:date>" << last_entry->_date.to_string("%Y/%m/%d")
-		<< "</en:date>\n";
+  out << "  <entry>\n"
+      << "    <en:date>" << last_entry->_date.to_string("%Y/%m/%d")
+      << "</en:date>\n";
 
   if (is_valid(last_entry->_date_eff))
-    output_stream << "    <en:date_eff>"
-		  << last_entry->_date_eff.to_string("%Y/%m/%d")
-		  << "</en:date_eff>\n";
+    out << "    <en:date_eff>"
+	<< last_entry->_date_eff.to_string("%Y/%m/%d")
+	<< "</en:date_eff>\n";
 #endif
 
   if (last_entry->code) {
-    output_stream << "    <en:code>";
-    output_xml_string(output_stream, *last_entry->code);
-    output_stream << "</en:code>\n";
+    out << "    <en:code>";
+    output_xml_string(out, *last_entry->code);
+    out << "</en:code>\n";
   }
 
   if (! last_entry->payee.empty()) {
-    output_stream << "    <en:payee>";
-    output_xml_string(output_stream, last_entry->payee);
-    output_stream << "</en:payee>\n";
+    out << "    <en:payee>";
+    output_xml_string(out, last_entry->payee);
+    out << "</en:payee>\n";
   }
 
   bool first = true;
@@ -416,34 +418,34 @@ void format_xml_entries::format_last_entry()
     if (xact->has_xdata() &&
 	xact->xdata().has_flags(XACT_EXT_TO_DISPLAY)) {
       if (first) {
-	output_stream << "    <en:xacts>\n";
+	out << "    <en:xacts>\n";
 	first = false;
       }
 
-      output_stream << "      <xact>\n";
+      out << "      <xact>\n";
 
 #if 0
       // jww (2008-05-08): Need to format these
       if (xact->_date)
-	output_stream << "        <tr:date>"
-		      << xact->_date.to_string("%Y/%m/%d")
-		      << "</tr:date>\n";
+	out << "        <tr:date>"
+	    << xact->_date.to_string("%Y/%m/%d")
+	    << "</tr:date>\n";
 
       if (is_valid(xact->_date_eff))
-	output_stream << "        <tr:date_eff>"
-		      << xact->_date_eff.to_string("%Y/%m/%d")
-		      << "</tr:date_eff>\n";
+	out << "        <tr:date_eff>"
+	    << xact->_date_eff.to_string("%Y/%m/%d")
+	    << "</tr:date_eff>\n";
 #endif
 
       if (xact->state == xact_t::CLEARED)
-	output_stream << "        <tr:cleared/>\n";
+	out << "        <tr:cleared/>\n";
       else if (xact->state == xact_t::PENDING)
-	output_stream << "        <tr:pending/>\n";
+	out << "        <tr:pending/>\n";
 
       if (xact->has_flags(XACT_VIRTUAL))
-	output_stream << "        <tr:virtual/>\n";
+	out << "        <tr:virtual/>\n";
       if (xact->has_flags(XACT_AUTO))
-	output_stream << "        <tr:generated/>\n";
+	out << "        <tr:generated/>\n";
 
       if (xact->account) {
 	string name = xact->account->fullname();
@@ -452,46 +454,46 @@ void format_xml_entries::format_last_entry()
 	else if (name == "<Unknown>")
 	  name = "[UNKNOWN]";
 
-	output_stream << "        <tr:account>";
-	output_xml_string(output_stream, name);
-	output_stream << "</tr:account>\n";
+	out << "        <tr:account>";
+	output_xml_string(out, name);
+	out << "</tr:account>\n";
       }
 
-      output_stream << "        <tr:amount>\n";
+      out << "        <tr:amount>\n";
       if (xact->xdata().has_flags(XACT_EXT_COMPOUND))
-	xml_write_value(output_stream, xact->xdata().value, 10);
+	xml_write_value(out, xact->xdata().value, 10);
       else
-	xml_write_value(output_stream, value_t(xact->amount), 10);
-      output_stream << "        </tr:amount>\n";
+	xml_write_value(out, value_t(xact->amount), 10);
+      out << "        </tr:amount>\n";
 
       if (xact->cost) {
-	output_stream << "        <tr:cost>\n";
-	xml_write_value(output_stream, value_t(*xact->cost), 10);
-	output_stream << "        </tr:cost>\n";
+	out << "        <tr:cost>\n";
+	xml_write_value(out, value_t(*xact->cost), 10);
+	out << "        </tr:cost>\n";
       }
 
       if (xact->note) {
-	output_stream << "        <tr:note>";
-	output_xml_string(output_stream, *xact->note);
-	output_stream << "</tr:note>\n";
+	out << "        <tr:note>";
+	output_xml_string(out, *xact->note);
+	out << "</tr:note>\n";
       }
 
       if (show_totals) {
-	output_stream << "        <total>\n";
-	xml_write_value(output_stream, xact->xdata().total, 10);
-	output_stream << "        </total>\n";
+	out << "        <total>\n";
+	xml_write_value(out, xact->xdata().total, 10);
+	out << "        </total>\n";
       }
 
-      output_stream << "      </xact>\n";
+      out << "      </xact>\n";
 
       xact->xdata().add_flags(XACT_EXT_DISPLAYED);
     }
   }
 
   if (! first)
-    output_stream << "    </en:xacts>\n";
+    out << "    </en:xacts>\n";
 
-  output_stream << "  </entry>\n";
+  out << "  </entry>\n";
 }
 
 } // namespace ledger

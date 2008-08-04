@@ -835,6 +835,9 @@ value_t& value_t::operator/=(const value_t& val)
 bool value_t::operator==(const value_t& val) const
 {
   switch (type()) {
+  case VOID:
+    return val.type() == VOID;
+    
   case BOOLEAN:
     if (val.is_boolean())
       return as_boolean() == val.as_boolean();

@@ -87,6 +87,7 @@ class report_t : public noncopyable, public scope_t
 
 public:
   optional<path> output_file;
+  std::ostream * output_stream;
 
   string	 format_string;
   string	 date_output_format;
@@ -186,9 +187,7 @@ public:
 
   void sum_all_accounts();
 
-  void accounts_report(acct_handler_ptr	       handler,
-		       const bool	       print_final_total = true,
-		       optional<std::ostream&> ostream		 = none);
+  void accounts_report(acct_handler_ptr handler);
 
   void commodities_report(const string& format);
 

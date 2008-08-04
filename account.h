@@ -52,9 +52,9 @@ class account_t : public scope_t
   unsigned short   depth;
   accounts_map	   accounts;
 
-  mutable void *  data;
-  mutable ident_t ident;
-  mutable string  _fullname;
+  mutable void *   data;
+  mutable ident_t  ident;
+  mutable string   _fullname;
 
   account_t(account_t *   _parent = NULL,
 	    const string& _name   = "",

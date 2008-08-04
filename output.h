@@ -32,7 +32,7 @@
 #ifndef _OUTPUT_H
 #define _OUTPUT_H
 
-#include "session.h"
+#include "report.h"
 #include "handler.h"
 #include "format.h"
 
@@ -41,21 +41,20 @@ namespace ledger {
 class format_xacts : public item_handler<xact_t>
 {
 protected:
-  std::ostream& output_stream;
-  format_t	first_line_format;
-  format_t	next_lines_format;
-  entry_t *     last_entry;
-  xact_t *	last_xact;
+  report_t& report;
+  format_t  first_line_format;
+  format_t  next_lines_format;
+  entry_t * last_entry;
+  xact_t *  last_xact;
 
 public:
-  format_xacts(std::ostream& _output_stream,
-		      const string& format);
+  format_xacts(report_t& _report, const string& format);
   virtual ~format_xacts() {
     TRACE_DTOR(format_xacts);
   }
 
   virtual void flush() {
-    output_stream.flush();
+    report.output_stream->flush();
   }
   virtual void operator()(xact_t& xact);
 };
@@ -63,9 +62,9 @@ public:
 class format_entries : public format_xacts
 {
  public:
-  format_entries(std::ostream& output_stream, const string& format)
-    : format_xacts(output_stream, format) {
-    TRACE_CTOR(format_entries, "std::ostream&, const string&");
+  format_entries(report_t& _report, const string& format)
+    : format_xacts(_report, format) {
+    TRACE_CTOR(format_entries, "report_t&, const string&");
   }
   virtual ~format_entries() {
     TRACE_DTOR(format_entries);
@@ -91,7 +90,7 @@ private:
 class format_accounts : public item_handler<account_t>
 {
 protected:
-  std::ostream& output_stream;
+  report_t& report;
 
   item_predicate<account_t> disp_pred;
 
@@ -101,20 +100,18 @@ protected:
 public:
   format_t format;
 
-  format_accounts(std::ostream& _output_stream,
+  format_accounts(report_t&	_report,
 		  const string& _format,
-		  const string& display_predicate = "")
-    : output_stream(_output_stream), disp_pred(display_predicate),
-      format(_format) {
-    TRACE_CTOR(format_accounts, "std::ostream&, const string&, const string&");
+		  const string& display_predicate = "" /*,
+		  const bool    print_final_total = true */)
+    : report(_report), disp_pred(display_predicate), format(_format) {
+    TRACE_CTOR(format_accounts, "report&, const string&, const string&");
   }
   virtual ~format_accounts() {
     TRACE_DTOR(format_accounts);
   }
 
-  virtual void flush() {
-    output_stream.flush();
-  }
+  virtual void flush();
 
   virtual void operator()(account_t& account);
 };
@@ -127,7 +124,7 @@ class format_equity : public format_accounts
   mutable value_t total;
 
  public:
-  format_equity(std::ostream& _output_stream,
+  format_equity(report_t&     _report,
 		const string& _format,
 		const string& display_predicate = "");
   virtual ~format_equity() {

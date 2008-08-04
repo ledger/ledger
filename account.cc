@@ -112,10 +112,33 @@ std::ostream& operator<<(std::ostream& out, const account_t& account)
   return out;
 }
 
+namespace {
+  value_t get_total(account_t& account) {
+    assert(account.xdata_);
+    return account.xdata_->total;
+  }
+
+  template <value_t (*Func)(account_t&)>
+  value_t get_wrapper(call_scope_t& scope) {
+    return (*Func)(find_scope<account_t>(scope));
+  }
+}
+
 expr_t::ptr_op_t account_t::lookup(const string& name)
 {
   switch (name[0]) {
-  case 'a':
+  case 'f':
+    if (name.find("fmt_") == 0) {
+      switch (name[4]) {
+      case 'T':
+	return WRAP_FUNCTOR(get_wrapper<&get_total>);
+      }
+    }
+    break;
+
+  case 't':
+    if (name == "total")
+      return WRAP_FUNCTOR(get_wrapper<&get_total>);
     break;
   }
   return expr_t::ptr_op_t();
@@ -150,7 +173,11 @@ void account_t::calculate_sums()
   foreach (accounts_map::value_type& pair, accounts) {
     (*pair.second).calculate_sums();
 
-    xd.total        += (*pair.second).xdata().total;
+    if (xd.total.is_null())
+      xd.total = (*pair.second).xdata().total;
+    else
+      xd.total += (*pair.second).xdata().total;
+
     xd.total_count += ((*pair.second).xdata().total_count +
 		       (*pair.second).xdata().count);
   }
@@ -159,8 +186,12 @@ void account_t::calculate_sums()
 #if 0
   compute_amount(result, details_t(account));
 #endif
-  if (! result.is_realzero())
+
+  if (xd.total.is_null())
+    xd.total = result;
+  else
     xd.total += result;
+
   xd.total_count += xd.count;
 }
 

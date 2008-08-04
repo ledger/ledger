@@ -266,6 +266,8 @@ void xact_t::add_to_value(value_t& value)
     value += xdata_->value;
   }
   else if (cost || (! value.is_null() && ! value.is_realzero())) {
+    if (value.is_null())
+      value = amount_t();
     value.add(amount, cost);
   }
   else {
