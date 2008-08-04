@@ -163,10 +163,9 @@ if USE_PCH
 nodist_libledger_la_SOURCES = system.hh.gch
 
 BUILT_SOURCES += system.hh.gch
-CLEANFILES += system.hh.gch system.hh
+CLEANFILES += system.hh.gch
 
 $(top_builddir)/system.hh.gch: $(srcdir)/system.hh $(top_builddir)/acconf.h
-	echo "#include \"$(srcdir)/system.hh\"" > $(top_builddir)/system.hh
 	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 		$(libledger_la_CPPFLAGS) \
 		$(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) \

@@ -463,10 +463,32 @@ void report_t::entry_report(const entry_t& entry, const string& format)
 {
 }
 
+value_t report_t::get_amount_expr(call_scope_t& scope)
+{
+  return amount_expr.calc(scope);
+}
+
+value_t report_t::get_total_expr(call_scope_t& scope)
+{
+  return total_expr.calc(scope);
+}
+
 expr_t::ptr_op_t report_t::lookup(const string& name)
 {
   const char * p = name.c_str();
   switch (*p) {
+  case 'f':
+    if (std::strncmp(p, "fmt_", 4) == 0) {
+      p = p + 4;
+      switch (*p) {
+      case 't':
+	return MAKE_FUNCTOR(report_t::get_amount_expr);
+      case 'T':
+	return MAKE_FUNCTOR(report_t::get_total_expr);
+      }
+    }
+    break;
+
   case 'o':
     if (std::strncmp(p, "opt_", 4) == 0) {
       p = p + 4;

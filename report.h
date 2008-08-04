@@ -238,9 +238,8 @@ public:
   // Formatting functions
   //
 
-  value_t get_amount_expr(call_scope_t&) {
-    return NULL_VALUE;
-  }
+  value_t get_amount_expr(call_scope_t& scope);
+  value_t get_total_expr(call_scope_t& scope);
 
   //
   // Scope members

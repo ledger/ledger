@@ -86,8 +86,7 @@ CXXFLAGS="$CXXFLAGS -Wwrite-strings"
 while [ -n "$1" ]; do
   case "$1" in
     --devel)
-	#SWITCHES="$SWITCHES --disable-shared --enable-pch"
-	SWITCHES="$SWITCHES --disable-shared"
+	SWITCHES="$SWITCHES --disable-shared --enable-pch"
 	CPPFLAGS="$CPPFLAGS -DBOOST_MULTI_INDEX_ENABLE_INVARIANT_CHECKING=1"
 	CPPFLAGS="$CPPFLAGS -DBOOST_MULTI_INDEX_ENABLE_SAFE_MODE=1"
 	shift 1 ;;
@@ -161,7 +160,7 @@ fi
 # errors and warnings much easier.
 
 if [ -f Makefile ]; then
-    perl -i -pe 's/^\t(\$\((LIBTOOL|CXX)\).*)/\t\@echo "   " CXX \$\@;$1 > \/dev\/null/;' Makefile
+    perl -i -pe 's/^\t(\$\((LIBTOOL|CXX)\).*?\.cc)$/\t\@echo "   " CXX \$\@;$1 > \/dev\/null/;' Makefile
     perl -i -pe 's/^\tmv -f/\t\@mv -f/;' Makefile
     perl -i -pe 's/^\t(\$\((.*?)LINK\).*)/\t\@echo "   " LD \$\@;$1 > \/dev\/null/;' Makefile
 fi

@@ -1,0 +1,5 @@
+#!/bin/sh
+
+# This is how I run acprep on my OS X Leopard machine.
+
+./acprep --local --devel --debug --boost mt-1_35

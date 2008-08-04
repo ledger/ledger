@@ -86,6 +86,13 @@ namespace {
     return xact.amount;
   }
 
+  value_t get_total(xact_t& xact) {
+    if (xact.xdata_)
+      return xact.xdata_->total;
+    else
+      return xact.amount;
+  }
+
   value_t get_cost(xact_t& xact) {
     return xact.cost ? *xact.cost : xact.amount;
   }
@@ -134,15 +141,6 @@ namespace {
     return long(xact.end_line);
   }
 
-  // xdata_t members...
-
-  value_t get_total(xact_t& xact) {
-    if (xact.xdata_)
-      return xact.xdata_->total;
-    else
-      return xact.amount;
-  }
-
   template <value_t (*Func)(xact_t&)>
   value_t get_wrapper(call_scope_t& scope) {
     return (*Func)(find_scope<xact_t>(scope));
@@ -187,6 +185,13 @@ expr_t::ptr_op_t xact_t::lookup(const string& name)
   case 'p':
     if (name == "pending")
       return expr_t::op_t::wrap_value(2L);
+    else if (name == "payee")
+      return WRAP_FUNCTOR(get_wrapper<&get_payee>);
+    break;
+
+  case 't':
+    if (name[1] == '\0' || name == "total")
+      return WRAP_FUNCTOR(get_wrapper<&get_total>);
     break;
 
   case 'u':
