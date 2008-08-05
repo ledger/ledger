@@ -148,6 +148,9 @@ CXXFLAGS="$CXXFLAGS -Wwrite-strings"
 #
 #   Of course, you'll need MacPorts to do this, with both the "bjam" and "stow"
 #   packages installed.
+#
+#   Lastly, you need to build cppunit by hand with GLIBCXX_DEBUG also, or else
+#   you'll see UniTests crash in flames and none of the unit tests will run.
 #  
 #   Now you're ready to run acprep like this:
 #  
