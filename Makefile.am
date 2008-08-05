@@ -1,7 +1,6 @@
 BUILT_SOURCES =
 CLEANFILES    =
-EXTRA_DIST    = LICENSE test scripts setup.py acprep valgrind.sh \
-		version sample.dat ledger.vim
+EXTRA_DIST    = LICENSE NEWS README test contrib doc python
 
 # Files that are still only in the Ledger source tree (g200d919):
 # 
@@ -23,30 +22,27 @@ ESC_srcdir=`echo "$(srcdir)" | sed 's/\//\\\\\//g'`
 ESC_builddir=`echo "$(top_builddir)" | sed 's/\//\\\\\//g'`
 ESC_distdir=`echo "$(distdir)" | sed 's/\//\\\\\//g'`
 
-dist-hook:
-	rm -fr .git
-
 lib_LTLIBRARIES = libamounts.la libledger.la
 
-libamounts_la_CPPFLAGS =
-libamounts_la_SOURCES = \
-	utils.cc       \
-	times.cc       \
-	mask.cc        \
-	binary.cc      \
-		       \
-	amount.cc      \
-	commodity.cc   \
-	balance.cc     \
-	value.cc       \
-		       \
-	token.cc       \
-	parser.cc      \
-	op.cc          \
-	expr.cc        \
-	scope.cc       \
-	format.cc      \
-	option.cc
+libamounts_la_CPPFLAGS = -I$(srcdir)/src
+libamounts_la_SOURCES  = \
+	src/utils.cc       \
+	src/times.cc       \
+	src/mask.cc        \
+	src/binary.cc      \
+			   \
+	src/amount.cc      \
+	src/commodity.cc   \
+	src/balance.cc     \
+	src/value.cc       \
+			   \
+	src/token.cc       \
+	src/parser.cc      \
+	src/op.cc          \
+	src/expr.cc        \
+	src/scope.cc       \
+	src/format.cc      \
+	src/option.cc
 
 if HAVE_EXPAT
 libamounts_la_CPPFLAGS += -DHAVE_EXPAT=1
@@ -65,111 +61,110 @@ libamounts_la_CPPFLAGS += -DDEBUG_MODE
 endif
 
 libledger_la_CPPFLAGS = $(libamounts_la_CPPFLAGS)
-libledger_la_SOURCES = \
-	journal.cc     \
-	entry.cc       \
-	xact.cc        \
-	account.cc     \
-	iterators.cc   \
-	compare.cc     \
-		       \
-	textual.cc     \
-	cache.cc       \
-	emacs.cc       \
-	qif.cc	       \
-	xml.cc	       \
-	csv.cc         \
-		       \
-	session.cc     \
-	report.cc      \
-	filters.cc     \
-	output.cc      \
-	help.cc        \
-		       \
-	derive.cc      \
-	reconcile.cc   \
-	quotes.cc
+libledger_la_LDFLAGS  = -release 3.0.0
+libledger_la_SOURCES  = \
+	src/journal.cc     \
+	src/entry.cc       \
+	src/xact.cc        \
+	src/account.cc     \
+	src/iterators.cc   \
+	src/compare.cc     \
+			   \
+	src/textual.cc     \
+	src/cache.cc       \
+	src/emacs.cc       \
+	src/qif.cc	   \
+	src/xml.cc	   \
+	src/csv.cc         \
+			   \
+	src/session.cc     \
+	src/report.cc      \
+	src/filters.cc     \
+	src/output.cc      \
+	src/help.cc        \
+			   \
+	src/derive.cc      \
+	src/reconcile.cc   \
+	src/quotes.cc
 
 if HAVE_EXPAT
-libledger_la_SOURCES += gnucash.cc
+libledger_la_SOURCES += src/gnucash.cc
 endif
 if HAVE_XMLPARSE
-libledger_la_SOURCES += gnucash.cc
+libledger_la_SOURCES += src/gnucash.cc
 endif
 if HAVE_LIBOFX
-libledger_la_SOURCES += ofx.cc
+libledger_la_SOURCES += src/ofx.cc
 endif
 
-libledger_la_LDFLAGS = -release 2.7.0
-
-pkginclude_HEADERS = \
-	acconf.h     \
-	system.hh    \
-	fdstream.hpp \
-	utils.h	     \
-	flags.h      \
-	hooks.h      \
-	pushvar.h    \
-	error.h      \
-	times.h	     \
-	mask.h       \
-	binary.h     \
-		     \
-	amount.h     \
-	commodity.h  \
-	balance.h    \
-	balpair.h    \
-	value.h      \
-		     \
-	token.h      \
-	parser.h     \
-	op.h         \
-	expr.h       \
-	scope.h      \
-	predicate.h  \
-	format.h     \
-	option.h     \
-		     \
-	journal.h    \
-	entry.h      \
-	xact.h       \
-	account.h    \
-	iterators.h  \
-	compare.h    \
-		     \
-	textual.h    \
-	cache.h      \
-	emacs.h      \
-	qif.h	     \
-	xml.h	     \
-	csv.h        \
-	gnucash.h    \
-	ofx.h	     \
-		     \
-	session.h    \
-	report.h     \
-	handler.h    \
-	filters.h    \
-	output.h     \
-	help.h       \
-		     \
-	derive.h     \
-	reconcile.h  \
-	quotes.h     \
-		     \
-	ledger.h
+pkginclude_HEADERS =     \
+	acconf.h         \
+	src/system.hh    \
+	src/fdstream.h   \
+	src/utils.h	 \
+	src/flags.h      \
+	src/hooks.h      \
+	src/pushvar.h    \
+	src/error.h      \
+	src/times.h	 \
+	src/mask.h       \
+	src/binary.h     \
+			 \
+	src/amount.h     \
+	src/commodity.h  \
+	src/balance.h    \
+	src/balpair.h    \
+	src/value.h      \
+			 \
+	src/token.h      \
+	src/parser.h     \
+	src/op.h         \
+	src/expr.h       \
+	src/scope.h      \
+	src/predicate.h  \
+	src/format.h     \
+	src/option.h     \
+			 \
+	src/journal.h    \
+	src/entry.h      \
+	src/xact.h       \
+	src/account.h    \
+	src/iterators.h  \
+	src/compare.h    \
+			 \
+	src/textual.h    \
+	src/cache.h      \
+	src/emacs.h      \
+	src/qif.h	 \
+	src/xml.h	 \
+	src/csv.h        \
+	src/gnucash.h    \
+	src/ofx.h	 \
+			 \
+	src/session.h    \
+	src/report.h     \
+	src/handler.h    \
+	src/filters.h    \
+	src/output.h     \
+	src/help.h       \
+			 \
+	src/derive.h     \
+	src/reconcile.h  \
+	src/quotes.h     \
+			 \
+	src/ledger.h
 
 if USE_PCH
-nodist_libledger_la_SOURCES = system.hh.gch
+nodist_libledger_la_SOURCES = src/system.hh.gch
 
-BUILT_SOURCES += system.hh.gch
-CLEANFILES += system.hh.gch
+BUILT_SOURCES += src/system.hh.gch
+CLEANFILES += src/system.hh.gch
 
-$(top_builddir)/system.hh.gch: $(srcdir)/system.hh $(top_builddir)/acconf.h
+$(srcdir)/src/system.hh.gch: $(srcdir)/src/system.hh $(top_builddir)/acconf.h
 	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 		$(libledger_la_CPPFLAGS) \
 		$(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) \
-		-g -o $@ $(srcdir)/system.hh
+		-g -o $@ $(srcdir)/src/system.hh
 endif
 
 ######################################################################
@@ -177,13 +172,13 @@ endif
 bin_PROGRAMS	= ledger
 
 ledger_CPPFLAGS = $(libledger_la_CPPFLAGS)
-ledger_SOURCES	= main.cc
+ledger_SOURCES	= src/main.cc
 ledger_LDADD	= $(LIBOBJS) libamounts.la libledger.la
-ledger_LDFLAGS	= -static	# for the sake of command-line speed
+ledger_LDFLAGS	= -static
 
-info_TEXINFOS   = ledger.texi
+info_TEXINFOS   = doc/ledger.texi
 
-dist_lisp_LISP  = ledger.el timeclock.el
+dist_lisp_LISP  = lisp/ledger.el lisp/timeclock.el
 
 DISTCLEANFILES  = ledger.elc timeclock.elc
 
@@ -201,17 +196,17 @@ clean-local:
 
 PYLIBS = amounts gmp
 
-amounts.so: amounts.cc libamounts.la
+amounts.so: python/amounts.cc libamounts.la
 	CFLAGS="$(CPPFLAGS) $(DEFAULT_INCLUDES) $(libamounts_la_CPPFLAGS)" \
 	LDFLAGS="$(LDFLAGS) -L. -L.libs" \
 	PYLIBS="$(PYLIBS)" SRCDIR="$(srcdir)" \
-	    python $(srcdir)/setup.py build --build-lib=.
+	    python $(srcdir)/python/setup.py build --build-lib=.
 
 install-exec-hook:
 	CFLAGS="$(CPPFLAGS) $(DEFAULT_INCLUDES) $(libamounts_la_CPPFLAGS)" \
 	LDFLAGS="$(LDFLAGS) -L. -L.libs" \
 	PYLIBS="$(PYLIBS)" SRCDIR="$(srcdir)" \
-	    python $(srcdir)/setup.py install --prefix=$(prefix)
+	    python $(srcdir)/python/setup.py install --prefix=$(prefix)
 
 endif
 
@@ -237,15 +232,17 @@ UnitTests_CPPFLAGS = -I$(srcdir)/test $(libledger_la_CPPFLAGS)
 UnitTests_LDFLAGS  = $(LIBADD_DL)
 UnitTests_LDADD    = $(lib_LTLIBRARIES) -lcppunit
 
-nodist_PyUnitTests_SOURCES = test/python/PyUnitTests.py
+nodist_PyUnitTests_SOURCES = python/test/PyUnitTests.py
 
 # jww (2007-05-10): This rule will not be triggered on systems that
 # define an EXEEXT.
-PyUnitTests: $(srcdir)/test/python/PyUnitTests.py
-	cat $(srcdir)/test/python/PyUnitTests.py \
+PyUnitTests: $(srcdir)/python/test/PyUnitTests.py
+	cat $(srcdir)/python/test/PyUnitTests.py \
 	    | sed "s/%srcdir%/$(ESC_srcdir)/g" \
 	    | sed "s/%builddir%/$(ESC_builddir)/g" > $@
 	chmod 755 $@
+
+RegressionTests_SOURCES = test/regress.py
 
 RegressionTests: $(srcdir)/test/regress.py
 	echo "python $(srcdir)/test/regress.py $(top_builddir)/ledger$(EXEEXT) $(srcdir)/test/regress" > $@
@@ -264,14 +261,14 @@ fullcheck: check
 
 DISTCLEANFILES += Doxyfile.gen
 
-alldocs: ledger.info ledger.pdf doxygen-docs
+alldocs: doc/ledger.info doc/ledger.pdf doxygen-docs
 
-$(top_builddir)/Doxyfile.gen: $(srcdir)/Doxyfile
-	cat $(srcdir)/Doxyfile \
+$(top_builddir)/doc/Doxyfile.gen: $(srcdir)/doc/Doxyfile
+	cat $(srcdir)/doc/Doxyfile \
 	    | sed "s/%srcdir%/$(ESC_srcdir)/g" \
 	    | sed "s/%builddir%/$(ESC_builddir)/g" > $@
 
-doxygen-docs: $(top_builddir)/Doxyfile.gen
-	doxygen $(top_builddir)/Doxyfile.gen
+doxygen-docs: $(top_builddir)/doc/Doxyfile.gen
+	doxygen $(top_builddir)/doc/Doxyfile.gen
 
 # Makefile.am ends here

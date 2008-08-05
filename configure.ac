@@ -6,7 +6,7 @@ AC_PREREQ(2.61)
 m4_include([version.m4])
 
 AC_INIT([ledger],VERSION_NUMBER,[johnw@newartisans.com])
-AC_CONFIG_SRCDIR([main.cc])
+AC_CONFIG_SRCDIR([src/main.cc])
 AC_CONFIG_HEADER([acconf.h])
 AM_INIT_AUTOMAKE([dist-bzip2])
 

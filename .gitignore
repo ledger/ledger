@@ -71,3 +71,5 @@ ltmain.sh
 missing
 stamp-h1
 texinfo.tex
+*.tar.gz
+*.tar.bz2

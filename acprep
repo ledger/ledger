@@ -2,15 +2,14 @@
 
 # acprep, version 3.0
 #
-# This script configures my ledger source tree on my Mac OS/X machine.
-# This is not necessary, however, since I keep all the files necessary
-# for building checked in to the source tree.  Users can just type
-# './configure && make'.  This script simply sets up the compiler and
-# linker flags for all the various build permutations I use for testing
-# and profiling.
+# This script configures my ledger source tree on my Mac OS/X machine.  This
+# is not necessary, however, since I keep all the files necessary for building
+# checked in to the source tree.  Users can just type './configure && make'.
+# This script simply sets up the compiler and linker flags for all the various
+# build permutations I use for testing and profiling.
 
-export AUTOCONF_VERSION=2.61
-export AUTOMAKE_VERSION=1.9
+export AUTOCONF_VERSION=2.62
+export AUTOMAKE_VERSION=1.10.1
 
 touch AUTHORS COPYING ChangeLog
 
@@ -34,10 +33,6 @@ LIBDIRS="-L/usr/local/lib -L/opt/local/lib"
 
 PYTHON_HOME="/usr"
 
-# Use the latest g++, if it's been installed (with Xcode 3.1 on OS X)
-if [ -x /usr/bin/g++-4.2 ]; then
-    CXX=g++-4.2
-fi
 
 SYSTEM=$(uname -s)
 
@@ -46,10 +41,9 @@ if [ $SYSTEM = Linux ]; then
 elif [ $SYSTEM = Solaris ]; then
     CXXFLAGS="-pthreads"
 elif [ $SYSTEM = Darwin ]; then
-    #CXXFLAGS="-arch i386 -arch ppc -isysroot /Developer/SDKs/MacOSX10.5.sdk"
-    #CXXFLAGS="$CXXFLAGS -Wno-long-double"
-    #LIBDIRS="$LIBDIRS -arch i386 -arch ppc -isysroot /Developer/SDKs/MacOSX10.5.sdk"
     CXXFLAGS=""
+    #CXXFLAGS="-arch i386 -arch ppc -isysroot /Developer/SDKs/MacOSX10.5.sdk"
+    #LIBDIRS="$LIBDIRS -arch i386 -arch ppc -isysroot /Developer/SDKs/MacOSX10.5.sdk"
 else
     CXXFLAGS=""
 fi
@@ -82,18 +76,114 @@ CXXFLAGS="$CXXFLAGS -Wstrict-null-sentinel"
 CXXFLAGS="$CXXFLAGS -Wwrite-strings"
 
 
+# The following are options to prepare a developer tree of Ledger for
+# building:
+#
+# --debug
+#
+#   Build with debugging information.  This doesn't slow things down by much,
+#   but gives you useful stack traces to mention in your bug reports.
+#   Recommended if you're not running a release version.
+#
+# --local
+#
+#   Prepare for building in the same directory as the sources.  This is
+#   required for using pre-compiled headers with the --devel option (see
+#   below).  Otherwise, if you have a directory named ~/Products, Ledger will
+#   build itself there.  There's no option for changing that directory yet, so
+#   just edit this script if you need to.
+#
+# --boost SUFFIX
+#
+#   Use the boost library with the given SUFFIX.  Check the Boost "Getting
+#   Started" documentation for what the different suffixes are and what they
+#   mean.  Usually you can see the available suffixes on your system using
+#   something like this command:
+#
+#    $ ls /usr/local/lib/libboost_date_time*
+#
+#   Here's everything that's available on my machine right now:
+#
+#    ""      - dynamic optimized Boost library
+#    d       - dynamic debug
+#    s       - static optimized
+#    sd      - static debug
+#    mt      - multi-threaded optimized
+#    mt-d    - multi-threaded debug
+#    mt-s    - multi-threaded static optimized
+#    mt-sd   - multi-threaded static debug
+#
+#   Since Ledger does not use threading, I recommend using the static
+#   optimized library unless you wish to build with debugging enabled.  If you
+#   want to do that, see the --devel switch below.
+#
+# --devel
+#
+#   This means you want to build like the developer does, which means:
+#
+#    * using pre-compiled headers
+#    * with glibc debugging enabled
+#    * static linking as much as possible
+#
+#   The glibc debugging is the only tricky part, since you must have Boost
+#   compiled with _GLIBCXX_DEBUG defined also -- which it won't be on your
+#   system by default.
+#  
+#   So, you have to roll your own set of Boost debug libraries in order to
+#   support this.  I like this because it gives me the most amount of safety
+#   and checking possible, which is great for testing.  Here's how I build a
+#   super-debugging Boost:
+#
+#      src $ git clone git://repo.or.cz/boost.git
+#      src $ git checkout -b v1.35.0 svn/Version_1_35_0
+#      src $ cd boost
+#    boost $ sudo bjam release --prefix=/usr/local/stow/boost_1_35_0 \
+#                --build-dir=$HOME/Products/boost_1_35_0 --toolset=darwin \
+#                architecture=combined install
+#    boost $ sudo bjam debug --prefix=/usr/local/stow/boost_1_35_0 \
+#                --build-dir=$HOME/Products/boost_1_35_0 --toolset=darwin \
+#                architecture=combined define=_GLIBCXX_DEBUG=1 install
+#    boost $ cd /usr/local/stow
+#     stow $ stow boost_1_35_0
+#
+#   Of course, you'll need MacPorts to do this, with both the "bjam" and "stow"
+#   packages installed.
+#  
+#   Now you're ready to run acprep like this:
+#  
+#    $ ./acprep --local --devel --debug --boost sd
+#
+#   Or, as I do it:
+#
+#    $ ./myacprep
+#
+
 while [ -n "$1" ]; do
   case "$1" in
     --devel)
-	SWITCHES="$SWITCHES --disable-shared --enable-pch"
-	CPPFLAGS="$CPPFLAGS -DBOOST_MULTI_INDEX_ENABLE_INVARIANT_CHECKING=1"
-	CPPFLAGS="$CPPFLAGS -DBOOST_MULTI_INDEX_ENABLE_SAFE_MODE=1"
+	#SWITCHES="$SWITCHES --disable-shared --enable-pch"
+	SWITCHES="$SWITCHES --disable-shared"
+	# The use of this flag requires that Boost be also build with
+	# _GLIBCXX_DEBUG.
+	CPPFLAGS="$CPPFLAGS -D_GLIBCXX_DEBUG=1"
+	LIBS=""
+	#if [ -f /opt/local/lib/libexpat.a ]; then
+	#    LIBS="$LIBS /opt/local/lib/libexpat.a"
+	#fi
+	#if [ -f /opt/local/lib/libgmp.a ]; then
+	#    LIBS="$LIBS /opt/local/lib/libgmp.a"
+	#fi
+	#if [ -f /usr/lib/gcc/i686-apple-darwin9/4.2.1/libgcc_static.a ]; then
+	#    LIBS="$LIBS /usr/lib/gcc/i686-apple-darwin9/4.2.1/libgcc_static.a"
+	#fi
 	shift 1 ;;
 
     --debug)
 	SWITCHES="$SWITCHES --enable-debug"
-	#CPPFLAGS="$CPPFLAGS -D_GLIBCXX_DEBUG=1"
+	CPPFLAGS="$CPPFLAGS -DBOOST_MULTI_INDEX_ENABLE_INVARIANT_CHECKING=1"
+	CPPFLAGS="$CPPFLAGS -DBOOST_MULTI_INDEX_ENABLE_SAFE_MODE=1"
 	CXXFLAGS="$CXXFLAGS -g"
+	LDFLAGS="$LDFLAGS -g"
 	shift 1 ;;
       
     --boost)
@@ -138,12 +228,6 @@ done
 HERE="$PWD"
 
 if [ "$LOCAL" = "false" -a -d "$HOME/Products" ]; then
-    version=""
-    if [ -x version ]; then
-	version="-$(./version)"
-    fi
-    #projdir="$HOME/Products/$(basename $HERE)"
-    #projdir="$projdir$version"
     projdir="$HOME/Products/ledger"
     if [ ! -d "$projdir" ]; then
 	mkdir -p "$projdir"
@@ -155,8 +239,8 @@ fi
     CPPFLAGS="$CPPFLAGS" CXXFLAGS="$CXXFLAGS $local_cxxflags" \
     LDFLAGS="$LDFLAGS" LIBS="$LIBS" $SWITCHES "$@"
 
-# Alter the Makefile so that it's not nearly so verbose.  This makes finding
-# errors and warnings much easier.
+# Alter the Makefile so that it's not nearly so verbose.  This makes errors
+# and warnings much easier to spot.
 
 if [ -f Makefile ]; then
     perl -i -pe 's/^\t(\$\((LIBTOOL|CXX)\).*?\.cc)$/\t\@echo "   " CXX \$\@;$1 > \/dev\/null/;' Makefile
