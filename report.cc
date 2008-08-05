@@ -354,10 +354,6 @@ void report_t::commodities_report(const string& format)
 {
 }
 
-void report_t::entry_report(const entry_t& entry, const string& format)
-{
-}
-
 value_t report_t::get_amount_expr(call_scope_t& scope)
 {
   return amount_expr.calc(scope);
