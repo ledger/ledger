@@ -106,28 +106,6 @@ else
   AC_MSG_FAILURE("Could not find gmp library (set CPPFLAGS and LDFLAGS?)")
 fi
 
-# check for pcre
-AC_CACHE_CHECK(
-  [if libpcre is available],
-  [libpcre_avail_cv_],
-  [libpcre_save_libs=$LIBS
-   LIBS="-lpcre $LIBS"
-   AC_LANG_PUSH(C++)
-   AC_TRY_LINK(
-     [#include <pcre.h>],
-     [pcre_free((pcre *)NULL);],
-     [libpcre_avail_cv_=true],
-     [libpcre_avail_cv_=false])
-   AC_LANG_POP
-   LIBS=$libpcre_save_libs])
-
-if [test x$libpcre_avail_cv_ = xtrue ]; then
-  AM_CONDITIONAL(HAVE_PCRE, true)
-  LIBS="-lpcre $LIBS"
-else
-  AC_MSG_FAILURE("Could not find pcre library (set CPPFLAGS and LDFLAGS?)")
-fi
-
 # check for expat or xmlparse
 AC_ARG_ENABLE(xml,
   [  --enable-xml            Turn on support for XML parsing],
