@@ -16,6 +16,7 @@
 /ChangeLog
 /Makefile
 /Makefile.in
+/RegressionTests
 /TAGS
 /UnitTests
 /acconf.h

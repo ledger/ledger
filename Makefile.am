@@ -217,7 +217,7 @@ endif
 
 ######################################################################
 
-TESTS = UnitTests
+TESTS = UnitTests RegressionTests
 if HAVE_BOOST_PYTHON
 TESTS += PyUnitTests
 endif
@@ -245,6 +245,10 @@ PyUnitTests: $(srcdir)/test/python/PyUnitTests.py
 	cat $(srcdir)/test/python/PyUnitTests.py \
 	    | sed "s/%srcdir%/$(ESC_srcdir)/g" \
 	    | sed "s/%builddir%/$(ESC_builddir)/g" > $@
+	chmod 755 $@
+
+RegressionTests: $(srcdir)/test/regress.py
+	echo "python $(srcdir)/test/regress.py $(top_builddir)/ledger$(EXEEXT) $(srcdir)/test/regress" > $@
 	chmod 755 $@
 
 fullcheck: check
