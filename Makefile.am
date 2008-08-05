@@ -263,12 +263,12 @@ DISTCLEANFILES += Doxyfile.gen
 
 alldocs: doc/ledger.info doc/ledger.pdf doxygen-docs
 
-$(top_builddir)/doc/Doxyfile.gen: $(srcdir)/doc/Doxyfile
+$(top_builddir)/Doxyfile.gen: $(srcdir)/doc/Doxyfile
 	cat $(srcdir)/doc/Doxyfile \
 	    | sed "s/%srcdir%/$(ESC_srcdir)/g" \
 	    | sed "s/%builddir%/$(ESC_builddir)/g" > $@
 
-doxygen-docs: $(top_builddir)/doc/Doxyfile.gen
-	doxygen $(top_builddir)/doc/Doxyfile.gen
+doxygen: $(top_builddir)/Doxyfile.gen
+	doxygen $(top_builddir)/Doxyfile.gen
 
 # Makefile.am ends here

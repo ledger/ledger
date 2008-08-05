@@ -4,6 +4,8 @@
 *.la
 *.lo
 *.o
+*.tar.bz2
+*.tar.gz
 *~
 .deps/
 .libs/
@@ -14,6 +16,7 @@
 /AUTHORS
 /COPYING
 /ChangeLog
+/Doxyfile.gen
 /Makefile
 /Makefile.in
 /RegressionTests
@@ -31,6 +34,10 @@
 /configure
 /configure.in
 /depcomp
+/doc/Doxyfile.bak
+/doc/Doxyfile.gen
+/doc/html
+/doc/latex
 /elc-stamp
 /elisp-comp
 /install-sh
@@ -71,5 +78,3 @@ ltmain.sh
 missing
 stamp-h1
 texinfo.tex
-*.tar.gz
-*.tar.bz2
