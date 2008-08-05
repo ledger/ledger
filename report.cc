@@ -384,16 +384,9 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
     if (std::strncmp(p, "opt_", 4) == 0) {
       p = p + 4;
       switch (*p) {
-#if 0
       case 'a':
-	if (std::strcmp(p, "amount") == 0)
-	  return MAKE_FUNCTOR(report_t::option_amount);
-	break;
-#endif
-
-      case 'b':
-	if (std::strcmp(p, "bar_") == 0)
-	  return MAKE_FUNCTOR(report_t::option_bar_);
+	if (std::strcmp(p, "amount_") == 0)
+	  return MAKE_FUNCTOR(report_t::option_amount_);
 	break;
 
       case 'f':
@@ -402,24 +395,32 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	  return MAKE_FUNCTOR(report_t::option_format_);
 	break;
 
+      case 'j':
+	if (! (*p + 1))
+	  return MAKE_FUNCTOR(report_t::option_amount_data);
+	break;
+
+      case 'J':
+	if (! (*p + 1))
+	  return MAKE_FUNCTOR(report_t::option_total_data);
+	break;
+
       case 'l':
 	if (std::strcmp(p, "l_") || std::strcmp(p, "limit_"))
 	  return MAKE_FUNCTOR(report_t::option_limit_);
 	break;
 
-#if 0
       case 't':
-	if (! *(p + 1))
-	  return MAKE_FUNCTOR(report_t::option_amount);
-	else if (std::strcmp(p, "total") == 0)
-	  return MAKE_FUNCTOR(report_t::option_total);
+	if (std::strcmp(p, "t_"))
+	  return MAKE_FUNCTOR(report_t::option_amount_);
+	else if (std::strcmp(p, "total_") == 0)
+	  return MAKE_FUNCTOR(report_t::option_total_);
 	break;
 
       case 'T':
-	if (! *(p + 1))
-	  return MAKE_FUNCTOR(report_t::option_total);
+	if (std::strcmp(p, "T_"))
+	  return MAKE_FUNCTOR(report_t::option_total_);
 	break;
-#endif
       }
     }
     break;

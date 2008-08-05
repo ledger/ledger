@@ -187,55 +187,6 @@ public:
   chain_xact_handlers(xact_handler_ptr handler,
 		      const bool handle_individual_transactions = true);
 
-  //
-  // Config options
-  //
-
-#if 0
-  void eval(const string& expr) {
-    expr_t(expr).calc(*this);
-  }
-  value_t option_eval(call_scope_t& args) {
-    eval(args[0].as_string());
-    return NULL_VALUE;
-  }
-
-  value_t option_amount_(call_scope_t& args) {
-    eval(string("t=") + args[0].as_string());
-    return NULL_VALUE;
-  }
-  value_t option_total_(call_scope_t& args) {
-    eval(string("T()=") + args[0].as_string());
-    return NULL_VALUE;
-  }
-
-  value_t option_raw(call_scope_t&) {
-    raw_mode = true;
-    return NULL_VALUE;
-  }
-#endif
-
-  value_t option_format_(call_scope_t& args) {
-    format_string = args[0].as_string();
-    return NULL_VALUE;
-  }
-
-  value_t option_foo(call_scope_t&) {
-    std::cout << "This is foo" << std::endl;
-    return NULL_VALUE;
-  }
-  value_t option_bar_(call_scope_t& args) {
-    std::cout << "This is bar: " << args[0] << std::endl;
-    return args[0];
-  }
-
-  value_t option_limit_(call_scope_t& args) {
-    if (! predicate.empty())
-      predicate += "&";
-    predicate += args[0].as_string();
-    return true;
-  }
-
 #if 0
   //////////////////////////////////////////////////////////////////////
   //
@@ -251,17 +202,17 @@ public:
     throw 0;
   }
 
-  value_t option_help_calc(call_scope_t& args) { // 
+  value_t option_help_calc(call_scope_t& args) {
     option_calc_help(std::cout);
     throw 0;
   }
 
-  value_t option_help_disp(call_scope_t& args) { // 
+  value_t option_help_disp(call_scope_t& args) {
     option_disp_help(std::cout);
     throw 0;
   }
 
-  value_t option_help_comm(call_scope_t& args) { // 
+  value_t option_help_comm(call_scope_t& args) {
     option_comm_help(std::cout);
     throw 0;
   }
@@ -297,7 +248,7 @@ public:
     config->cache_file = resolve_path(optarg);
   }
 
-  value_t option_no_cache(call_scope_t& args) { // 
+  value_t option_no_cache(call_scope_t& args) {
     config->cache_file = "<none>";
   }
 
@@ -317,11 +268,11 @@ public:
     ::setenv("DEBUG_CLASS", optarg, 1);
   }
 
-  value_t option_verbose(call_scope_t& args) { // 
+  value_t option_verbose(call_scope_t& args) {
     config->verbose_mode = true;
   }
 
-  value_t option_trace(call_scope_t& args) { // 
+  value_t option_trace(call_scope_t& args) {
     config->trace_mode = true;
   }
 
@@ -329,7 +280,7 @@ public:
   //
   // Report filtering
 
-  value_t option_effective(call_scope_t& args) { // 
+  value_t option_effective(call_scope_t& args) {
     xact_t::use_effective_date = true;
   }
 
@@ -393,32 +344,35 @@ public:
     report->predicate += "L";
   }
 
-  value_t option_lots(call_scope_t& args) { // 
+  value_t option_lots(call_scope_t& args) {
     report->keep_price =
       report->keep_date  =
       report->keep_tag   = true;
   }
 
-  value_t option_lot_prices(call_scope_t& args) { // 
+  value_t option_lot_prices(call_scope_t& args) {
     report->keep_price = true;
   }
 
-  value_t option_lot_dates(call_scope_t& args) { // 
+  value_t option_lot_dates(call_scope_t& args) {
     report->keep_date = true;
   }
 
-  value_t option_lot_tags(call_scope_t& args) { // 
+  value_t option_lot_tags(call_scope_t& args) {
     report->keep_tag = true;
   }
+#endif
 
   //////////////////////////////////////////////////////////////////////
   //
   // Output customization
 
-  value_t option_format(call_scope_t& args) { // F:
-    report->format_string = optarg;
+  value_t option_format_(call_scope_t& args) { // F:
+    format_string = args[0].as_string();
+    return true;
   }
 
+#if 0
   value_t option_date_format(call_scope_t& args) { // y:
     report->date_output_format = optarg;
   }
@@ -511,7 +465,7 @@ public:
     report->show_subtotal = true;
   }
 
-  value_t option_totals(call_scope_t& args) { // 
+  value_t option_totals(call_scope_t& args) {
     report->show_totals = true;
   }
 
@@ -519,12 +473,12 @@ public:
     report->sort_string = optarg;
   }
 
-  value_t option_sort_entries(call_scope_t& args) { // 
+  value_t option_sort_entries(call_scope_t& args) {
     report->sort_string = optarg;
     report->entry_sort = true;
   }
 
-  value_t option_sort_all(call_scope_t& args) { // 
+  value_t option_sort_all(call_scope_t& args) {
     report->sort_string = optarg;
     report->entry_sort = false;
     report->sort_all   = true;
@@ -539,7 +493,7 @@ public:
     report->show_related = true;
   }
 
-  value_t option_descend(call_scope_t& args) { // 
+  value_t option_descend(call_scope_t& args) {
     std::string arg(optarg);
     std::string::size_type beg = 0;
     report->descend_expr = "";
@@ -552,7 +506,7 @@ public:
 			     std::string(arg, beg) + "}");
   }
 
-  value_t option_descend_if(call_scope_t& args) { // 
+  value_t option_descend_if(call_scope_t& args) {
     report->descend_expr = optarg;
   }
 
@@ -589,7 +543,7 @@ public:
     }
   }
 
-  value_t option_daily(call_scope_t& args) { // 
+  value_t option_daily(call_scope_t& args) {
     if (report->report_period.empty())
       report->report_period = "daily";
     else
@@ -610,7 +564,7 @@ public:
       report->report_period = std::string("monthly ") + report->report_period;
   }
 
-  value_t option_quarterly(call_scope_t& args) { // 
+  value_t option_quarterly(call_scope_t& args) {
     if (report->report_period.empty())
       report->report_period = "quarterly";
     else
@@ -624,7 +578,7 @@ public:
       report->report_period = std::string("yearly ") + report->report_period;
   }
 
-  value_t option_dow(call_scope_t& args) { // 
+  value_t option_dow(call_scope_t& args) {
     report->days_of_the_week = true;
   }
 
@@ -636,19 +590,19 @@ public:
     report->comm_as_payee = true;
   }
 
-  value_t option_code_as_payee(call_scope_t& args) { // 
+  value_t option_code_as_payee(call_scope_t& args) {
     report->code_as_payee = true;
   }
 
-  value_t option_budget(call_scope_t& args) { // 
+  value_t option_budget(call_scope_t& args) {
     report->budget_flags = BUDGET_BUDGETED;
   }
 
-  value_t option_add_budget(call_scope_t& args) { // 
+  value_t option_add_budget(call_scope_t& args) {
     report->budget_flags = BUDGET_BUDGETED | BUDGET_UNBUDGETED;
   }
 
-  value_t option_unbudgeted(call_scope_t& args) { // 
+  value_t option_unbudgeted(call_scope_t& args) {
     report->budget_flags = BUDGET_UNBUDGETED;
   }
 
@@ -663,15 +617,16 @@ public:
   value_t option_reconcile_date(call_scope_t& args) { // :
     report->reconcile_date = optarg;
   }
+#endif
 
-  value_t option_limit(call_scope_t& args) { // l:
-    if (! report->predicate.empty())
-      report->predicate += "&";
-    report->predicate += "(";
-    report->predicate += optarg;
-    report->predicate += ")";
+  value_t option_limit_(call_scope_t& args) { // l:
+    if (! predicate.empty())
+      predicate += "&";
+    predicate += args[0].as_string();
+    return true;
   }
 
+#if 0
   value_t option_only(call_scope_t& args) { // :
     if (! report->secondary_predicate.empty())
       report->secondary_predicate += "&";
@@ -687,31 +642,40 @@ public:
     report->display_predicate += optarg;
     report->display_predicate += ")";
   }
+#endif
 
-  value_t option_amount(call_scope_t& args) { // t:
-    ledger::amount_expr = optarg;
+  value_t option_amount_(call_scope_t& args) { // t:
+    amount_expr = args[0].as_string();
+    return true;
   }
 
-  value_t option_total(call_scope_t& args) { // T:
-    ledger::total_expr = optarg;
+  value_t option_total_(call_scope_t& args) { // T:
+    total_expr = args[0].as_string();
+    return true;
   }
 
-  value_t option_amount_data(call_scope_t& args) { // j
-    report->format_string = config->plot_amount_format;
+  value_t get_amount_expr(call_scope_t& scope);
+  value_t get_total_expr(call_scope_t& scope);
+
+  value_t option_amount_data(call_scope_t&) { // j
+    format_string = session.plot_amount_format;
+    return true;
   }
 
-  value_t option_total_data(call_scope_t& args) { // J
-    report->format_string = config->plot_total_format;
+  value_t option_total_data(call_scope_t&) { // J
+    format_string = session.plot_total_format;
+    return true;
   }
 
-  value_t option_ansi(call_scope_t& args) { // 
+#if 0
+  value_t option_ansi(call_scope_t& args) {
     format_t::ansi_codes  = true;
     format_t::ansi_invert = false;
   }
 
-  value_t option_ansi_invert(call_scope_t& args) { // 
+  value_t option_ansi_invert(call_scope_t& args) {
     format_t::ansi_codes  =
-      format_t::ansi_invert = true;
+    format_t::ansi_invert = true;
   }
 
   //////////////////////////////////////////////////////////////////////
@@ -735,8 +699,8 @@ public:
   }
 
   value_t option_quantity(call_scope_t& args) { // O
-    ledger::amount_expr = "a";
-    ledger::total_expr  = "O";
+    ledger::amount_expr = "amount";
+    ledger::total_expr  = "total";
   }
 
   value_t option_basis(call_scope_t& args) { // B
@@ -780,13 +744,6 @@ public:
   }
 #endif
 #endif
-
-  //
-  // Formatting functions
-  //
-
-  value_t get_amount_expr(call_scope_t& scope);
-  value_t get_total_expr(call_scope_t& scope);
 
   //
   // Scope members
