@@ -25,6 +25,7 @@ cat version.m4.in | sed "s/%VERSION%/$COMMIT/" > version.m4
 
 autoreconf --force --install
 
+
 INCDIRS="-isystem /usr/local/include"
 INCDIRS="$INCDIRS -isystem /opt/local/include"
 INCDIRS="$INCDIRS -isystem /usr/local/include/boost-1_35"
@@ -37,7 +38,6 @@ PYTHON_HOME="/usr"
 if [ -x /usr/bin/g++-4.2 ]; then
     CXX=g++-4.2
 fi
-
 
 SYSTEM=$(uname -s)
 
