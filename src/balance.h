@@ -30,11 +30,17 @@
  */
 
 /**
+ * @defgroup numerics Core numerics
+ */
+
+/**
  * @file   balance.h
  * @author John Wiegley
  * @date   Sun May 20 15:28:44 2007
  *
  * @brief  Basic type for adding multiple commodities together.
+ *
+ * @ingroup numerics
  *
  * Unlike the amount_t class, which throws an exception if amounts of
  * differing commodities are added or subtracted, the balance_t class

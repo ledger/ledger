@@ -30,11 +30,17 @@
  */
 
 /**
+ * @defgroup numerics Core numerics
+ */
+
+/**
  * @file   balpair.h
  * @author John Wiegley
  * @date   Sun May 20 19:11:58 2007
  *
  * @brief  Provides an abstraction around balance_t for tracking costs.
+ *
+ * @ingroup numerics
  *
  * When a transaction's amount is added to a balance, only the "value"
  * of the amount is added -- not the associated cost of the

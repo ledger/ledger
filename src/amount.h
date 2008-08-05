@@ -30,11 +30,17 @@
  */
 
 /**
+ * @defgroup numerics Core numerics
+ */
+
+/**
  * @file   amount.h
  * @author John Wiegley
  * @date   Wed Apr 18 22:05:53 2007
  *
  * @brief  Basic type for handling commoditized math: amount_t.
+ *
+ * @ingroup numerics
  *
  * This file contains the most basic numerical type in Ledger:
  * amount_t, which relies upon commodity.h (commodity_t) for handling
