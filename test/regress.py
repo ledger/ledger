@@ -7,7 +7,7 @@ import string
 import difflib
 import tempfile
 
-from subprocess import *
+from subprocess import Popen, PIPE
 
 ledger = sys.argv[1]
 tests  = sys.argv[2]
@@ -20,19 +20,19 @@ if not os.path.isdir(tests):
 succeeded = 0
 failed    = 0
 
-def test_regression(file):
+def test_regression(test_file):
     global succeeded, failed
 
-    bug     = open(file)
+    bug     = open(test_file)
     command = bug.readline()
 
     line = bug.readline()
     assert "<<<\n" == line
     line = bug.readline()
 
-    input = []
+    data = []
     while line != ">>>1\n":
-        input.append(line)
+        data.append(line)
         line = bug.readline()
     line = bug.readline()
 
@@ -44,7 +44,7 @@ def test_regression(file):
     else:
         tempdata = tempfile.mkstemp()
 
-        os.write(tempdata[0], string.join(input))
+        os.write(tempdata[0], string.join(data))
         os.close(tempdata[0])
 
         command = ("%s -f \"%s\" " % (ledger, tempdata[1])) + command
@@ -70,7 +70,7 @@ def test_regression(file):
               close_fds=True)
 
     if use_stdin:
-        p.stdin.write(string.join(input))
+        p.stdin.write(string.join(data))
     p.stdin.close()
 
     success = True
@@ -83,7 +83,8 @@ def test_regression(file):
             continue
         if not printed:
             if success: print
-            print "Regression failure in output from %s:" % os.path.basename(file)
+            print "Regression failure in output from %s:" \
+                % os.path.basename(test_file)
             if success: failed += 1
             success = False
             printed = True
@@ -97,7 +98,8 @@ def test_regression(file):
             continue
         if not printed:
             if success: print
-            print "Regression failure in error output from %s:" % os.path.basename(file)
+            print "Regression failure in error output from %s:" \
+                % os.path.basename(test_file)
             if success: failed += 1
             success = False
             printed = True
@@ -108,7 +110,7 @@ def test_regression(file):
         if success: failed += 1
         success = False
         print "Regression failure in exitcode from %s: %d (expected) != %d" \
-            % (os.path.basename(file), exitcode, p.returncode)
+            % (os.path.basename(test_file), exitcode, p.returncode)
 
     if success:
         succeeded += 1
