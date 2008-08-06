@@ -159,9 +159,9 @@ CLEANFILES    += src/system.hh.gch
 
 $(srcdir)/src/system.hh.gch: $(srcdir)/src/system.hh $(top_builddir)/acconf.h
 	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-		$(libledger_la_CPPFLAGS) \
-		$(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) \
-		-g -o $@ $(srcdir)/src/system.hh
+	    $(libledger_la_CPPFLAGS) \
+	    $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) \
+	    -g -o $@ $(srcdir)/src/system.hh
 
 endif
 
@@ -265,7 +265,7 @@ fullcheck: check
 DISTCLEANFILES += doc/ledger.info doc/ledger.pdf \
 		  doc/Doxyfile.gen doc/refman.pdf
 
-EXTRA_DIST += doc/ledger.pdf doc/html doc/refman.pdf
+EXTRA_DIST += doc/Doxyfile doc/ledger.pdf doc/html doc/refman.pdf
 
 distclean-local:
 	rm -fr doc/html doc/latex
@@ -275,7 +275,7 @@ $(top_builddir)/Doxyfile.gen: $(srcdir)/doc/Doxyfile
 	    | sed "s/%srcdir%/$(ESC_srcdir)/g" \
 	    | sed "s/%builddir%/$(ESC_builddir)/g" > $@
 
-doxygen: $(top_builddir)/Doxyfile.gen
+doc/html: $(top_builddir)/Doxyfile.gen
 	doxygen $(top_builddir)/Doxyfile.gen
 
 # The intention with the following rules is that all of the Doxygen
@@ -283,24 +283,23 @@ doxygen: $(top_builddir)/Doxyfile.gen
 # run, since it's quite possible that the user will not have a complete
 # TeX + Doxygen + dot environment on their own system.
 
-$(top_builddir)/doc/refman.pdf: doxygen
-	(cd $(srcdir)/doc/latex && make)
-	cp $(srcdir)/doc/latex/refman.pdf $@
+$(top_builddir)/doc/refman.pdf: doc/html
+	(cd $(top_builddir)/doc/latex && make)
+	cp $(top_builddir)/doc/latex/refman.pdf $@
 
 install-data-local:
 	$(MKDIR_P) $(DESTDIR)$(datadir)/$(PACKAGE)/doc/html
-	$(INSTALL_DATA) $(srcdir)/doc/html/* \
-		$(DESTDIR)$(datadir)/$(PACKAGE)/doc/html
+	$(INSTALL_DATA) $(top_builddir)/doc/html/* \
+	    $(DESTDIR)$(datadir)/$(PACKAGE)/doc/html
 
 uninstall-local:
 	rm -fr $(DESTDIR)$(datadir)/$(PACKAGE)/doc/html/
 
 release:
 	(cd /usr/local/stow; sudo stow -D cppunit) # switch to /opt version
-	make distcheck \
-		CPPFLAGS="-I/usr/local/include -I/usr/local/include/boost-1_35 -I/opt/local/include " \
-		CXXFLAGS="-Wall -ansi -Wextra"  \
-		LDFLAGS="-L/usr/local/lib -L/opt/local/lib"
+	make -j3 distcheck \
+	    CPPFLAGS="-I/usr/local/include -I/usr/local/include/boost-1_35 -I/opt/local/include " \
+	    LDFLAGS="-L/usr/local/lib -L/opt/local/lib"
 	(cd /usr/local/stow; sudo stow cppunit) # switch back to debug version
 
 # Makefile.am ends here
