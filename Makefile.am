@@ -289,7 +289,7 @@ $(top_builddir)/doc/refman.pdf: doxygen
 
 install-data-local:
 	$(MKDIR_P) $(DESTDIR)$(datadir)/$(PACKAGE)/doc/html
-	$(INSTALL_DATA) $(top_builddir)/doc/html/* \
+	$(INSTALL_DATA) $(srcdir)/doc/html/* \
 		$(DESTDIR)$(datadir)/$(PACKAGE)/doc/html
 
 uninstall-local:
