@@ -1,4 +1,4 @@
-#include "t_valexpr.h"
+#include "t_expr.h"
 
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(ValueExprTestCase, "numerics");
 

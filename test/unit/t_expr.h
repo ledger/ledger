@@ -1,5 +1,5 @@
-#ifndef _T_VALEXPR_H
-#define _T_VALEXPR_H
+#ifndef _T_EXPR_H
+#define _T_EXPR_H
 
 #include "UnitTests.h"
 
@@ -27,4 +27,4 @@ private:
   void operator=(const ValueExprTestCase &copy);
 };
 
-#endif // _T_VALEXPR_H
+#endif // _T_EXPR_H
