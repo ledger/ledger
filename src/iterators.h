@@ -41,6 +41,7 @@ namespace ledger {
 class xacts_iterator : public noncopyable
 {
 public:
+  virtual ~xacts_iterator() throw() {}
   virtual xact_t * operator()() = 0;
 };
 
@@ -100,7 +101,7 @@ public:
     TRACE_CTOR(entries_iterator, "session_t&");
     reset(session);
   }
-  ~entries_iterator() throw() {
+  virtual ~entries_iterator() throw() {
     TRACE_DTOR(entries_iterator);
   }
 
@@ -134,6 +135,7 @@ public:
 class accounts_iterator : public noncopyable
 {
 public:
+  virtual ~accounts_iterator() throw() {}
   virtual account_t * operator()() = 0;
 };
 
