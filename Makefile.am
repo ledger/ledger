@@ -1,6 +1,6 @@
 BUILT_SOURCES =
 CLEANFILES    =
-EXTRA_DIST    = LICENSE NEWS README test contrib doc python
+EXTRA_DIST    = LICENSE NEWS README test contrib
 
 # Files that are still only in the Ledger source tree (g200d919):
 # 
@@ -17,10 +17,6 @@ EXTRA_DIST    = LICENSE NEWS README test contrib doc python
 #   pyledger.h
 #   pyutils.h
 #   tuples.hpp
-
-ESC_srcdir=`echo "$(srcdir)" | sed 's/\//\\\\\//g'`
-ESC_builddir=`echo "$(top_builddir)" | sed 's/\//\\\\\//g'`
-ESC_distdir=`echo "$(distdir)" | sed 's/\//\\\\\//g'`
 
 lib_LTLIBRARIES = libamounts.la libledger.la
 
@@ -155,16 +151,18 @@ pkginclude_HEADERS =     \
 	src/ledger.h
 
 if USE_PCH
+
 nodist_libledger_la_SOURCES = src/system.hh.gch
 
 BUILT_SOURCES += src/system.hh.gch
-CLEANFILES += src/system.hh.gch
+CLEANFILES    += src/system.hh.gch
 
 $(srcdir)/src/system.hh.gch: $(srcdir)/src/system.hh $(top_builddir)/acconf.h
 	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 		$(libledger_la_CPPFLAGS) \
 		$(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) \
 		-g -o $@ $(srcdir)/src/system.hh
+
 endif
 
 ######################################################################
@@ -184,15 +182,14 @@ DISTCLEANFILES  = ledger.elc timeclock.elc
 
 ######################################################################
 
+EXTRA_DIST += python
+
 if HAVE_BOOST_PYTHON
 
 noinst_PROGRAMS = amounts.so
 nodist_amounts_so_SOURCES = amounts.c
 
 CLEANFILES += amounts.so
-
-clean-local:
-	rm -fr build
 
 PYLIBS = amounts gmp
 
@@ -221,18 +218,22 @@ check_PROGRAMS = $(TESTS)
 
 nodist_UnitTests_SOURCES = test/UnitTests.cc \
 	\
-	test/utility/t_utils.cc      \
-	test/utility/t_times.cc      \
-	test/numerics/t_commodity.cc \
-	test/numerics/t_amount.cc    \
-	test/numerics/t_balance.cc   \
-	test/numerics/t_expr.cc
+	test/unit/t_utils.cc      \
+	test/unit/t_times.cc      \
+	test/unit/t_commodity.cc \
+	test/unit/t_amount.cc    \
+	test/unit/t_balance.cc   \
+	test/unit/t_expr.cc
 
 UnitTests_CPPFLAGS = -I$(srcdir)/test $(libledger_la_CPPFLAGS)
 UnitTests_LDFLAGS  = $(LIBADD_DL)
 UnitTests_LDADD    = $(lib_LTLIBRARIES) -lcppunit
 
 nodist_PyUnitTests_SOURCES = python/test/PyUnitTests.py
+
+ESC_srcdir=`echo "$(srcdir)" | sed 's/\//\\\\\//g'`
+ESC_builddir=`echo "$(top_builddir)" | sed 's/\//\\\\\//g'`
+ESC_distdir=`echo "$(distdir)" | sed 's/\//\\\\\//g'`
 
 # jww (2007-05-10): This rule will not be triggered on systems that
 # define an EXEEXT.
@@ -245,8 +246,10 @@ PyUnitTests: $(srcdir)/python/test/PyUnitTests.py
 RegressionTests_SOURCES = test/regress.py
 
 RegressionTests: $(srcdir)/test/regress.py
-	echo "python $(srcdir)/test/regress.py $(top_builddir)/ledger$(EXEEXT) $(srcdir)/test/regress" > $@
+	echo "exit 1" > $@
 	chmod 755 $@
+
+#	echo "python $(srcdir)/test/regress.py $(top_builddir)/ledger$(EXEEXT) $(srcdir)/test/regress" > $@
 
 fullcheck: check
 	MallocGuardEdges=1	 \
@@ -259,9 +262,13 @@ fullcheck: check
 
 ######################################################################
 
-DISTCLEANFILES += Doxyfile.gen
+DISTCLEANFILES += doc/ledger.info doc/ledger.pdf \
+		  doc/Doxyfile.gen doc/refman.pdf
 
-alldocs: doc/ledger.info doc/ledger.pdf doxygen-docs
+EXTRA_DIST += doc/ledger.pdf doc/html doc/refman.pdf
+
+distclean-local:
+	rm -fr doc/html doc/latex
 
 $(top_builddir)/Doxyfile.gen: $(srcdir)/doc/Doxyfile
 	cat $(srcdir)/doc/Doxyfile \
@@ -270,5 +277,30 @@ $(top_builddir)/Doxyfile.gen: $(srcdir)/doc/Doxyfile
 
 doxygen: $(top_builddir)/Doxyfile.gen
 	doxygen $(top_builddir)/Doxyfile.gen
+
+# The intention with the following rules is that all of the Doxygen
+# documentation (both HTML and PDF) is built locally before distcheck is
+# run, since it's quite possible that the user will not have a complete
+# TeX + Doxygen + dot environment on their own system.
+
+$(top_builddir)/doc/refman.pdf: doxygen
+	(cd $(srcdir)/doc/latex && make)
+	cp $(srcdir)/doc/latex/refman.pdf $@
+
+install-data-local:
+	$(MKDIR_P) $(DESTDIR)$(datadir)/$(PACKAGE)/doc/html
+	$(INSTALL_DATA) $(top_builddir)/doc/html/* \
+		$(DESTDIR)$(datadir)/$(PACKAGE)/doc/html
+
+uninstall-local:
+	rm -fr $(DESTDIR)$(datadir)/$(PACKAGE)/doc/html/
+
+release:
+	(cd /usr/local/stow; sudo stow -D cppunit) # switch to /opt version
+	make distcheck \
+		CPPFLAGS="-I/usr/local/include -I/usr/local/include/boost-1_35 -I/opt/local/include " \
+		CXXFLAGS="-Wall -ansi -Wextra"  \
+		LDFLAGS="-L/usr/local/lib -L/opt/local/lib"
+	(cd /usr/local/stow; sudo stow cppunit) # switch back to debug version
 
 # Makefile.am ends here
