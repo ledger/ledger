@@ -42,7 +42,7 @@ AM_CONDITIONAL(USE_PCH, test x$pch = xtrue)
 
 AC_ARG_WITH(boost-suffix,
   [  --with-boost-suffix=X   Append X to the Boost library names],
-  [BOOST_SUFFIX="-${withval}"],
+  [BOOST_SUFFIX="${withval}"],
   [BOOST_SUFFIX=""])
 
 AC_SUBST([BOOST_SUFFIX], $BOOST_SUFFIX)

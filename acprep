@@ -27,12 +27,17 @@ autoreconf --force --install
 
 SWITCHES=""
 
+BOOST_SUFFIX=""
+
 INCDIRS="-isystem /usr/local/include"
 INCDIRS="$INCDIRS -isystem /opt/local/include"
+INCDIRS="$INCDIRS -isystem /opt/local/include/libofx"
 INCDIRS="$INCDIRS -isystem /usr/local/include/boost-1_35"
 
-LIBDIRS="-L/usr/local/lib -L/opt/local/lib"
 LDFLAGS=""
+LIBDIRS="-L/usr/local/lib -L/opt/local/lib"
+
+ARCHFLAGS="-arch i386 -arch ppc -isysroot /Developer/SDKs/MacOSX10.5.sdk"
 
 PYTHON_HOME="/usr"
 
@@ -45,9 +50,6 @@ elif [ $SYSTEM = Solaris ]; then
     CXXFLAGS="-pthreads"
 elif [ $SYSTEM = Darwin ]; then
     CXXFLAGS=""
-    #CXXFLAGS="-arch i386 -arch ppc -isysroot /Developer/SDKs/MacOSX10.5.sdk"
-    #LDFLAGS="$LDFLAGS -arch i386 -arch ppc -Wl,-syslibroot,/Developer/SDKs/MacOSX10.5.sdk"
-    #SWITCHES="$SWITCHES --disable-dependency-tracking"
 else
     CXXFLAGS=""
 fi
@@ -163,15 +165,33 @@ CXXFLAGS="$CXXFLAGS -Wwrite-strings"
 #
 #    $ ./myacprep
 #
+# --release
+#
+#   This is the opposite of --devel: it means you wish to build in a release
+#   scenario, preparing a universal binary and building against the non-debug
+#   versions of Boost and CppUnit.
+#
+# NOTE: I do not expect anyone but me to use --devel or --release, so don't be
+# surprised if it doesn't work as advertised.  In that case, look for me in
+# the #ledger channel on the IRC server irc.freenode.net.
+
+DO_BUILD=false
 
 while [ -n "$1" ]; do
   case "$1" in
     --devel)
-	#SWITCHES="$SWITCHES --disable-shared --enable-pch"
+        # jww (2008-08-07): Sadly, PCH does not work with Boost+gcc4.0 on
+	# OS X.  It does work with gcc4.2, but then _GLIBCXX_DEBUG fails.
 	SWITCHES="$SWITCHES --disable-shared"
+	#SWITCHES="$SWITCHES --disable-shared --enable-pch"
+
 	# The use of this flag requires that Boost be also build with
 	# _GLIBCXX_DEBUG.
 	CPPFLAGS="$CPPFLAGS -D_GLIBCXX_DEBUG=1"
+	CPPFLAGS="-isystem /usr/local/stow/cppunit-debug/include $CPPFLAGS"
+
+	BOOST_SUFFIX="-d-1_35"	# I built mine with _GLIBCXX_DEBUG
+
 	#LDFLAGS="-Wl,-read_only_relocs,suppress"
 	#LIBS=""
 	#if [ -f /opt/local/lib/libexpat.a ]; then
@@ -183,6 +203,7 @@ while [ -n "$1" ]; do
 	#if [ -f /usr/lib/gcc/i686-apple-darwin9/4.2.1/libgcc_static.a ]; then
 	#    LIBS="$LIBS /usr/lib/gcc/i686-apple-darwin9/4.2.1/libgcc_static.a"
 	#fi
+
 	shift 1 ;;
 
     --debug)
@@ -195,7 +216,7 @@ while [ -n "$1" ]; do
       
     --boost)
 	shift 1
-	SWITCHES="$SWITCHES --with-boost-suffix=$1"
+	BOOST_SUFFIX="-$1"
 	shift 1 ;;
 
     --gcov)
@@ -226,6 +247,18 @@ while [ -n "$1" ]; do
 	LOCAL=true
 	shift 1 ;;
 
+    --build)
+	DO_BUILD=true
+	shift 1 ;;
+
+    --release)
+	SWITCHES="$SWITCHES --disable-dependency-tracking --disable-shared"
+	CPPFLAGS="-isystem /usr/local/stow/cppunit/include $CPPFLAGS"
+	CXXFLAGS="$CXXFLAGS $ARCHFLAGS"
+	LDFLAGS="$LDFLAGS $ARCHFLAGS -Wl,-syslibroot,/Developer/SDKs/MacOSX10.5.sdk"
+
+	shift 1 ;;
+
     *)
 	break ;;
   esac
@@ -244,7 +277,8 @@ fi
 
 "$HERE/configure" --srcdir="$HERE" CXX="$CXX" \
     CPPFLAGS="$CPPFLAGS" CXXFLAGS="$CXXFLAGS $local_cxxflags" \
-    LDFLAGS="$LDFLAGS" LIBS="$LIBS" $SWITCHES "$@"
+    LDFLAGS="$LDFLAGS" LIBS="$LIBS" $SWITCHES \
+        --with-boost-suffix="$BOOST_SUFFIX"
 
 # Alter the Makefile so that it's not nearly so verbose.  This makes errors
 # and warnings much easier to spot.
@@ -253,4 +287,12 @@ if [ -f Makefile ]; then
     perl -i -pe 's/^\t(\$\((LIBTOOL|CXX)\).*?\.cc)$/\t\@echo "   " CXX \$\@;$1 > \/dev\/null/;' Makefile
     perl -i -pe 's/^\tmv -f/\t\@mv -f/;' Makefile
     perl -i -pe 's/^\t(\$\((.*?)LINK\).*)/\t\@echo "   " LD \$\@;$1 > \/dev\/null/;' Makefile
+fi
+
+# If the --build flag was passed, start a build right away with the right
+# options.
+
+if [ $DO_BUILD = true ]; then
+    echo "make ARCHFLAGS=\"$ARCHFLAGS\" \"$@\"" > make.sh
+    sh -x make.sh
 fi
