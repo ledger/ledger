@@ -1,23 +1,3 @@
-BUILT_SOURCES =
-CLEANFILES    =
-EXTRA_DIST    = LICENSE NEWS README test contrib
-
-# Files that are still only in the Ledger source tree (g200d919):
-# 
-#   amounts.cc
-#   py_amount.cc
-#   py_commodity.cc
-#   py_times.cc
-#   py_utils.cc
-#   pyinterp.cc
-#   pyledger.cc
-#
-#   pyfstream.h
-#   pyinterp.h
-#   pyledger.h
-#   pyutils.h
-#   tuples.hpp
-
 lib_LTLIBRARIES = libamounts.la libledger.la
 
 libamounts_la_CPPFLAGS = -I$(srcdir)/src
@@ -42,9 +22,10 @@ libamounts_la_SOURCES  = \
 
 if HAVE_EXPAT
 libamounts_la_CPPFLAGS += -DHAVE_EXPAT=1
-endif
+else
 if HAVE_XMLPARSE
 libamounts_la_CPPFLAGS += -DHAVE_XMLPARSE=1
+endif
 endif
 if HAVE_LIBOFX
 libamounts_la_CPPFLAGS += -DHAVE_LIBOFX=1
@@ -85,9 +66,10 @@ libledger_la_SOURCES  = \
 
 if HAVE_EXPAT
 libledger_la_SOURCES += src/gnucash.cc
-endif
+else
 if HAVE_XMLPARSE
 libledger_la_SOURCES += src/gnucash.cc
+endif
 endif
 if HAVE_LIBOFX
 libledger_la_SOURCES += src/ofx.cc
@@ -150,11 +132,12 @@ pkginclude_HEADERS =     \
 			 \
 	src/ledger.h
 
-if USE_PCH
+CLEANFILES =
 
+if USE_PCH
 nodist_libledger_la_SOURCES = src/system.hh.gch
 
-BUILT_SOURCES += src/system.hh.gch
+BUILT_SOURCES = src/system.hh.gch
 CLEANFILES    += src/system.hh.gch
 
 $(srcdir)/src/system.hh.gch: $(srcdir)/src/system.hh $(top_builddir)/acconf.h
@@ -162,7 +145,6 @@ $(srcdir)/src/system.hh.gch: $(srcdir)/src/system.hh $(top_builddir)/acconf.h
 	    $(libledger_la_CPPFLAGS) \
 	    $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) \
 	    -g -o $@ $(srcdir)/src/system.hh
-
 endif
 
 ######################################################################
@@ -181,8 +163,6 @@ dist_lisp_LISP  = lisp/ledger.el lisp/timeclock.el
 DISTCLEANFILES  = ledger.elc timeclock.elc
 
 ######################################################################
-
-EXTRA_DIST += python
 
 if HAVE_BOOST_PYTHON
 
@@ -209,27 +189,39 @@ endif
 
 ######################################################################
 
-TESTS = UnitTests RegressionTests
+TESTS = UnitTests
+
 if HAVE_BOOST_PYTHON
 TESTS += PyUnitTests
 endif
 
-check_PROGRAMS = $(TESTS)
+XFAIL_TESTS = RegressionTests
 
-nodist_UnitTests_SOURCES = test/UnitTests.cc \
-	\
-	test/unit/t_utils.cc      \
-	test/unit/t_times.cc      \
+check_PROGRAMS = $(TESTS) $(XFAIL_TESTS)
+
+UnitTests_SOURCES =		 \
+	test/UnitTests.cc	 \
+	test/UnitTests.h	 \
+	test/unit/t_utils.cc	 \
+	test/unit/t_utils.h	 \
+	test/unit/t_times.cc	 \
+	test/unit/t_times.h	 \
 	test/unit/t_commodity.cc \
-	test/unit/t_amount.cc    \
-	test/unit/t_balance.cc   \
-	test/unit/t_expr.cc
+	test/unit/t_commodity.h	 \
+	test/unit/t_amount.cc	 \
+	test/unit/t_amount.h	 \
+	test/unit/t_balance.cc	 \
+	test/unit/t_balance.h	 \
+	test/unit/t_expr.cc	 \
+	test/unit/t_expr.h
 
 UnitTests_CPPFLAGS = -I$(srcdir)/test $(libledger_la_CPPFLAGS)
 UnitTests_LDFLAGS  = $(LIBADD_DL)
 UnitTests_LDADD    = $(lib_LTLIBRARIES) -lcppunit
 
-nodist_PyUnitTests_SOURCES = python/test/PyUnitTests.py
+EXTRA_DIST = test/python
+
+PyUnitTests_SOURCES = test/PyUnitTests.py
 
 ESC_srcdir=`echo "$(srcdir)" | sed 's/\//\\\\\//g'`
 ESC_builddir=`echo "$(top_builddir)" | sed 's/\//\\\\\//g'`
@@ -237,19 +229,19 @@ ESC_distdir=`echo "$(distdir)" | sed 's/\//\\\\\//g'`
 
 # jww (2007-05-10): This rule will not be triggered on systems that
 # define an EXEEXT.
-PyUnitTests: $(srcdir)/python/test/PyUnitTests.py
-	cat $(srcdir)/python/test/PyUnitTests.py \
+PyUnitTests: $(srcdir)/test/PyUnitTests.py
+	cat $(srcdir)/test/PyUnitTests.py \
 	    | sed "s/%srcdir%/$(ESC_srcdir)/g" \
 	    | sed "s/%builddir%/$(ESC_builddir)/g" > $@
 	chmod 755 $@
 
 RegressionTests_SOURCES = test/regress.py
 
-RegressionTests: $(srcdir)/test/regress.py
-	echo "exit 0" > $@
-	chmod 755 $@
+EXTRA_DIST += test/regress
 
-#	echo "python $(srcdir)/test/regress.py $(top_builddir)/ledger$(EXEEXT) $(srcdir)/test/regress" > $@
+RegressionTests: $(srcdir)/test/regress.py
+	echo "python $(srcdir)/test/regress.py $(top_builddir)/ledger$(EXEEXT) $(srcdir)/test/regress" > $@
+	chmod 755 $@
 
 fullcheck: check
 	MallocGuardEdges=1	 \
@@ -262,20 +254,30 @@ fullcheck: check
 
 ######################################################################
 
-DISTCLEANFILES += doc/ledger.info doc/ledger.pdf \
-		  doc/Doxyfile.gen doc/refman.pdf
+EXTRA_DIST += LICENSE NEWS README contrib
+EXTRA_DIST += doc/Doxyfile doc/ledger.pdf doc/refman.pdf
 
-EXTRA_DIST += doc/Doxyfile doc/ledger.pdf doc/html doc/refman.pdf
+DISTCLEANFILES += doc/ledger.info doc/ledger.pdf \
+		  Doxyfile.gen doc/Doxyfile.bak doc/refman.pdf
+
+dist-hook:
+	find $(distdir) -name .DS_Store -delete
+	find $(distdir) -name .localized -delete
+	find $(distdir)/doc -name .dirstamp -delete
+	rm -fr $(distdir)/doc/latex \
+	       $(distdir)/doc/Doxyfile.bak \
+	       $(distdir)/doc/Doxyfile.gen
+	cp -pR $(srcdir)/doc/html $(distdir)/doc
 
 distclean-local:
-	rm -fr doc/html doc/latex
+	rm -fr doc/html doc/latex doc/refman.pdf
 
 $(top_builddir)/Doxyfile.gen: $(srcdir)/doc/Doxyfile
 	cat $(srcdir)/doc/Doxyfile \
 	    | sed "s/%srcdir%/$(ESC_srcdir)/g" \
 	    | sed "s/%builddir%/$(ESC_builddir)/g" > $@
 
-doc/html: $(top_builddir)/Doxyfile.gen
+$(top_builddir)/doc/html/index.html: $(top_builddir)/Doxyfile.gen
 	doxygen $(top_builddir)/Doxyfile.gen
 
 # The intention with the following rules is that all of the Doxygen
@@ -283,23 +285,17 @@ doc/html: $(top_builddir)/Doxyfile.gen
 # run, since it's quite possible that the user will not have a complete
 # TeX + Doxygen + dot environment on their own system.
 
-$(top_builddir)/doc/refman.pdf: doc/html
+$(top_builddir)/doc/refman.pdf: $(top_builddir)/doc/html/index.html
 	(cd $(top_builddir)/doc/latex && make)
 	cp $(top_builddir)/doc/latex/refman.pdf $@
 
-install-data-local:
-	$(MKDIR_P) $(DESTDIR)$(datadir)/$(PACKAGE)/doc/html
-	$(INSTALL_DATA) $(top_builddir)/doc/html/* \
-	    $(DESTDIR)$(datadir)/$(PACKAGE)/doc/html
-
-uninstall-local:
-	rm -fr $(DESTDIR)$(datadir)/$(PACKAGE)/doc/html/
-
 release:
-	(cd /usr/local/stow; sudo stow -D cppunit) # switch to /opt version
+	test -d /usr/local/stow/cppunit && \
+	    (cd /usr/local/stow; sudo stow -D cppunit) # switch to /opt
 	make -j3 distcheck \
 	    CPPFLAGS="-I/usr/local/include -I/usr/local/include/boost-1_35 -I/opt/local/include " \
 	    LDFLAGS="-L/usr/local/lib -L/opt/local/lib"
-	(cd /usr/local/stow; sudo stow cppunit) # switch back to debug version
+	test -d /usr/local/stow/cppunit && \
+	    (cd /usr/local/stow; sudo stow cppunit) # switch to debug
 
 # Makefile.am ends here
