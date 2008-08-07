@@ -201,13 +201,13 @@ endif
 ledger.so: $(ledger_so_SOURCES) $(ledger_so_DEPENDENCIES)
 	CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libledger_la_CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)" \
 	LDFLAGS="$(LDFLAGS) -L$(top_builddir) -L$(top_builddir)/.libs" \
-	PYLIBS="$(PYLIBS)" SRCDIR="$(srcdir)" \
+	ARCHFLAGS="$(ARCHFLAGS)" PYLIBS="$(PYLIBS)" SRCDIR="$(srcdir)" \
 	    python $(srcdir)/python/setup.py build --build-lib=$(top_builddir)
 
 install-exec-hook:
 	CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libledger_la_CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)" \
 	LDFLAGS="$(LDFLAGS) -L$(top_builddir) -L$(top_builddir)/.libs" \
-	PYLIBS="$(PYLIBS)" SRCDIR="$(srcdir)" \
+	ARCHFLAGS="$(ARCHFLAGS)" PYLIBS="$(PYLIBS)" SRCDIR="$(srcdir)" \
 	    python $(srcdir)/python/setup.py install --prefix=$(prefix)
 
 endif
@@ -250,7 +250,7 @@ UnitTests_LDADD    = $(lib_LTLIBRARIES) -lcppunit
 
 EXTRA_DIST = test/python
 
-PyUnitTests_SOURCES = test/PyUnitTests.py
+PyUnitTests_SOURCES = test/__init__.py test/PyUnitTests.py
 
 ESC_srcdir=`echo "$(srcdir)" | sed 's/\//\\\\\//g'`
 ESC_builddir=`echo "$(top_builddir)" | sed 's/\//\\\\\//g'`
@@ -322,8 +322,9 @@ release:
 	test -d /usr/local/stow/cppunit && \
 	    (cd /usr/local/stow; sudo stow -D cppunit) # switch to /opt
 	make -j3 distcheck \
-	    CPPFLAGS="-I/usr/local/include -I/usr/local/include/boost-1_35 -I/opt/local/include " \
+	    CPPFLAGS="-I/usr/local/include -I/usr/local/include/boost-1_35 -I/opt/local/include" \
 	    LDFLAGS="-L/usr/local/lib -L/opt/local/lib" \
+	    ARCHFLAGS="-arch i386 -arch ppc -isysroot /Developer/SDKs/MacOSX10.5.sdk" \
 	    CXXFLAGS="-arch i386 -arch ppc -isysroot /Developer/SDKs/MacOSX10.5.sdk" \
 	    LDFLAGS="$LDFLAGS -arch i386 -arch ppc -Wl,-syslibroot,/Developer/SDKs/MacOSX10.5.sdk" \
 	    DISTCHECK_CONFIGURE_FLAGS="--disable-dependency-tracking"

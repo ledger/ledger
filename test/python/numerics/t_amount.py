@@ -16,8 +16,8 @@ class t_amountTestCase(unittest.TestCase):
         self.assertTrue(amt.valid())
 
     def setUp(self):
-        self.testSession = session()
-        set_session_context(self.testSession)
+        #self.testSession = session()
+        #set_session_context(self.testSession)
 
         # Cause the display precision for dollars to be initialized to 2.
         x1 = amount("$1.00")
@@ -28,15 +28,15 @@ class t_amountTestCase(unittest.TestCase):
     def tearDown(self):
         amount.stream_fullstrings = False
 
-        set_session_context()
-        self.testSession = None
+        #set_session_context()
+        #self.testSession = None
 
     def testParser(self):
         x0 = amount()
         x1 = amount()
         x2 = amount()
         x3 = amount()
-        x4 = amount(123.456)
+        x4 = amount("123.456")
         x5 = amount(x4)
         x6 = amount(x4)
         x7 = amount(x4)
@@ -133,7 +133,7 @@ class t_amountTestCase(unittest.TestCase):
         x0 = amount()
         x1 = amount(123456)
         x2 = amount(123456L)
-        x3 = amount(123.456)
+        x3 = amount("123.456")
         x5 = amount("123456")
         x6 = amount("123.456")
         x7 = amount("123456")
@@ -215,7 +215,7 @@ class t_amountTestCase(unittest.TestCase):
         x0 = amount()
         x1 = amount(123456)
         x2 = amount(123456L)
-        x3 = amount(123.456)
+        x3 = amount("123.456")
         x5 = amount("123456")
         x6 = amount("123.456")
         x7 = "123456"
@@ -233,7 +233,7 @@ class t_amountTestCase(unittest.TestCase):
 
         x1  = amount(123456)
         x2  = amount(123456L)
-        x3  = amount(123.456)
+        x3  = amount("123.456")
         x5  = amount("123456")
         x6  = amount("123.456")
         x7  = amount("123456")
@@ -314,9 +314,9 @@ class t_amountTestCase(unittest.TestCase):
         x1 = amount(123456)
         x2 = amount(456789)
         x3 = amount(333333)
-        x4 = amount(123456.0)
+        x4 = amount("123456.0")
         x5 = amount("123456.0")
-        x6 = amount(123456.0)
+        x6 = amount("123456.0")
 
         self.assertTrue(x1 == 123456)
         self.assertTrue(x1 != x2)
@@ -329,8 +329,8 @@ class t_amountTestCase(unittest.TestCase):
         self.assertTrue(123456 == x1)
         self.assertTrue(x1 == 123456L)
         self.assertTrue(123456L == x1)
-        self.assertTrue(x1 == 123456.0)
-        self.assertTrue(123456.0 == x1)
+        self.assertTrue(x1 == amount("123456.0"))
+        self.assertTrue(amount("123456.0") == x1)
 
         self.assertValid(x1)
         self.assertValid(x2)
@@ -386,8 +386,8 @@ class t_amountTestCase(unittest.TestCase):
         x0 = amount()
         x1 = amount(-123)
         x2 = amount(123)
-        x3 = amount(-123.45)
-        x4 = amount(123.45)
+        x3 = amount("-123.45")
+        x4 = amount("123.45")
         x5 = amount("-123.45")
         x6 = amount("123.45")
 
@@ -408,8 +408,8 @@ class t_amountTestCase(unittest.TestCase):
         self.assertTrue(100 > x1)
         self.assertTrue(x1 < 100L)
         self.assertTrue(100L > x1)
-        self.assertTrue(x1 < 100.0)
-        self.assertTrue(100.0 > x1)
+        self.assertTrue(x1 < amount("100.0"))
+        self.assertTrue(amount("100.0") > x1)
 
         self.assertValid(x0)
         self.assertValid(x1)
@@ -469,19 +469,19 @@ class t_amountTestCase(unittest.TestCase):
         self.assertValid(x4)
 
     def testFractionalAddition(self):
-        x1 = amount(123.123)
-        y1 = amount(456.456)
+        x1 = amount("123.123")
+        y1 = amount("456.456")
 
-        self.assertEqual(amount(579.579), x1 + y1)
-        self.assertEqual(amount(579.579), x1 + 456.456)
-        self.assertEqual(amount(579.579), 456.456 + x1)
+        self.assertEqual(amount("579.579"), x1 + y1)
+        self.assertEqual(amount("579.579"), x1 + amount("456.456"))
+        self.assertEqual(amount("579.579"), amount("456.456") + x1)
 
-        x1 += amount(456.456)
-        self.assertEqual(amount(579.579), x1)
-        x1 += 456.456
-        self.assertEqual(amount(1036.035), x1)
+        x1 += amount("456.456")
+        self.assertEqual(amount("579.579"), x1)
+        x1 += amount("456.456")
+        self.assertEqual(amount("1036.035"), x1)
         x1 += 456
-        self.assertEqual(amount(1492.035), x1)
+        self.assertEqual(amount("1492.035"), x1)
 
         x2 = amount("123456789123456789.123456789123456789")
 
@@ -515,7 +515,7 @@ class t_amountTestCase(unittest.TestCase):
         self.assertRaises(exceptions.ArithmeticError, lambda: x1 + x4)
         self.assertRaises(exceptions.ArithmeticError, lambda: x1 + x5)
         self.assertRaises(exceptions.ArithmeticError, lambda: x1 + x6)
-        self.assertRaises(exceptions.ArithmeticError, lambda: x1 + 123.45)
+        self.assertRaises(exceptions.ArithmeticError, lambda: x1 + amount("123.45"))
         self.assertRaises(exceptions.ArithmeticError, lambda: x1 + 123)
 
         self.assertEqual(amount("DM 246.90"), x3 + x3)
@@ -571,18 +571,18 @@ class t_amountTestCase(unittest.TestCase):
         self.assertValid(y4)
 
     def testFractionalSubtraction(self):
-        x1 = amount(123.123)
-        y1 = amount(456.456)
+        x1 = amount("123.123")
+        y1 = amount("456.456")
 
-        self.assertEqual(amount(-333.333), x1 - y1)
-        self.assertEqual(amount(333.333), y1 - x1)
+        self.assertEqual(amount("-333.333"), x1 - y1)
+        self.assertEqual(amount("333.333"), y1 - x1)
 
-        x1 -= amount(456.456)
-        self.assertEqual(amount(-333.333), x1)
-        x1 -= 456.456
-        self.assertEqual(amount(-789.789), x1)
+        x1 -= amount("456.456")
+        self.assertEqual(amount("-333.333"), x1)
+        x1 -= amount("456.456")
+        self.assertEqual(amount("-789.789"), x1)
         x1 -= 456
-        self.assertEqual(amount(-1245.789), x1)
+        self.assertEqual(amount("-1245.789"), x1)
 
         x2 = amount("123456789123456789.123456789123456789")
         y2 = amount("9872345982459.248974239578")
@@ -623,7 +623,7 @@ class t_amountTestCase(unittest.TestCase):
         self.assertRaises(exceptions.ArithmeticError, lambda: x1 - x4)
         self.assertRaises(exceptions.ArithmeticError, lambda: x1 - x5)
         self.assertRaises(exceptions.ArithmeticError, lambda: x1 - x6)
-        self.assertRaises(exceptions.ArithmeticError, lambda: x1 - 123.45)
+        self.assertRaises(exceptions.ArithmeticError, lambda: x1 - amount("123.45"))
         self.assertRaises(exceptions.ArithmeticError, lambda: x1 - 123)
 
         self.assertEqual(amount("DM 0.00"), x3 - x3)
@@ -708,8 +708,8 @@ class t_amountTestCase(unittest.TestCase):
         self.assertValid(x4)
 
     def testFractionalMultiplication(self):
-        x1 = amount(123.123)
-        y1 = amount(456.456)
+        x1 = amount("123.123")
+        y1 = amount("456.456")
 
         self.assertEqual(amount(0), x1 * 0)
         self.assertEqual(amount(0), amount(0) * x1)
@@ -722,13 +722,13 @@ class t_amountTestCase(unittest.TestCase):
         self.assertEqual(- x1, -1 * x1)
         self.assertEqual(amount("56200.232088"), x1 * y1)
         self.assertEqual(amount("56200.232088"), y1 * x1)
-        self.assertEqual(amount("56200.232088"), x1 * 456.456)
-        self.assertEqual(amount("56200.232088"), amount(456.456) * x1)
-        self.assertEqual(amount("56200.232088"), 456.456 * x1)
+        self.assertEqual(amount("56200.232088"), x1 * amount("456.456"))
+        self.assertEqual(amount("56200.232088"), amount("456.456") * x1)
+        self.assertEqual(amount("56200.232088"), amount("456.456") * x1)
 
-        x1 *= amount(123.123)
+        x1 *= amount("123.123")
         self.assertEqual(amount("15159.273129"), x1)
-        x1 *= 123.123
+        x1 *= amount("123.123")
         self.assertEqual(amount("1866455.185461867"), x1)
         x1 *= 123
         self.assertEqual(amount("229573987.811809641"), x1)
@@ -736,7 +736,7 @@ class t_amountTestCase(unittest.TestCase):
         x2 = amount("123456789123456789.123456789123456789")
 
         self.assertEqual(amount("15241578780673678546105778311537878.046486820281054720515622620750190521"),
-	      x2 * x2)
+                         x2 * x2)
 
         self.assertValid(x1)
         self.assertValid(y1)
@@ -772,14 +772,14 @@ class t_amountTestCase(unittest.TestCase):
         self.assertRaises(exceptions.ArithmeticError, lambda: x1 * x0)
         self.assertRaises(exceptions.ArithmeticError, lambda: x0 * x1)
         self.assertRaises(exceptions.ArithmeticError, lambda: x0 * x0)
-        self.assertRaises(exceptions.ArithmeticError, lambda: x1 * x3)
-        self.assertRaises(exceptions.ArithmeticError, lambda: x1 * x4)
-        self.assertRaises(exceptions.ArithmeticError, lambda: x1 * x5)
+        self.assertRaises(exceptions.ArithmeticError, lambda: x0 * x3)
+        self.assertRaises(exceptions.ArithmeticError, lambda: x0 * x4)
+        self.assertRaises(exceptions.ArithmeticError, lambda: x0 * x5)
 
         x1 *= amount("123.12")
         self.assertEqual(internalAmount("$15158.5344"), x1)
         self.assertEqual("$15158.53", x1.to_string())
-        x1 *= 123.12
+        x1 *= amount("123.12")
         self.assertEqual(internalAmount("$1866318.755328"), x1)
         self.assertEqual("$1866318.76", x1.to_string())
         x1 *= 123
@@ -834,27 +834,27 @@ class t_amountTestCase(unittest.TestCase):
         self.assertValid(y4)
 
     def testFractionalDivision(self):
-        x1 = amount(123.123)
-        y1 = amount(456.456)
+        x1 = amount("123.123")
+        y1 = amount("456.456")
 
         self.assertRaises(exceptions.ArithmeticError, lambda: x1 / 0)
-        self.assertEqual(amount("0.008121959"), amount(1.0) / x1)
-        self.assertEqual(amount("0.008121959"), 1.0 / x1)
-        self.assertEqual(x1, x1 / 1.0)
-        self.assertEqual(amount("0.008121959"), amount(1.0) / x1)
-        self.assertEqual(amount("0.008121959"), 1.0 / x1)
-        self.assertEqual(- x1, x1 / -1.0)
-        self.assertEqual(- amount("0.008121959"), amount(-1.0) / x1)
-        self.assertEqual(- amount("0.008121959"), -1.0 / x1)
+        self.assertEqual(amount("0.00812195934"), amount("1.0") / x1)
+        self.assertEqual(amount("0.00812195934"), amount("1.0") / x1)
+        self.assertEqual(x1, x1 / amount("1.0"))
+        self.assertEqual(amount("0.00812195934"), amount("1.0") / x1)
+        self.assertEqual(amount("0.00812195934"), amount("1.0") / x1)
+        self.assertEqual(- x1, x1 / amount("-1.0"))
+        self.assertEqual(- amount("0.00812195934"), amount("-1.0") / x1)
+        self.assertEqual(- amount("0.00812195934"), amount("-1.0") / x1)
         self.assertEqual(amount("0.269736842105263"), x1 / y1)
         self.assertEqual(amount("3.707317073170732"), y1 / x1)
-        self.assertEqual(amount("0.269736842105263"), x1 / 456.456)
-        self.assertEqual(amount("3.707317073170732"), amount(456.456) / x1)
-        self.assertEqual(amount("3.707317073170732"), 456.456 / x1)
+        self.assertEqual(amount("0.269736842105263"), x1 / amount("456.456"))
+        self.assertEqual(amount("3.707317073170732"), amount("456.456") / x1)
+        self.assertEqual(amount("3.707317073170732"), amount("456.456") / x1)
 
-        x1 /= amount(456.456)
+        x1 /= amount("456.456")
         self.assertEqual(amount("0.269736842105263"), x1)
-        x1 /= 456.456
+        x1 /= amount("456.456")
         self.assertEqual(amount("0.000590937225286255411255411255411255411"), x1)
         x1 /= 456
         self.assertEqual(amount("0.000001295914967733016252753094858358016252192982456140350877192982456140350877192982"), x1)
@@ -862,7 +862,7 @@ class t_amountTestCase(unittest.TestCase):
         x4 = amount("1234567891234567.89123456789")
         y4 = amount("56.789")
 
-        self.assertEqual(amount(1.0), x4 / x4)
+        self.assertEqual(amount("1.0"), x4 / x4)
         self.assertEqual(amount("21739560323910.7554497273748437197344556164046"), x4 / y4)
 
         self.assertValid(x1)
@@ -900,14 +900,14 @@ class t_amountTestCase(unittest.TestCase):
         self.assertRaises(exceptions.ArithmeticError, lambda: x1 / x0)
         self.assertRaises(exceptions.ArithmeticError, lambda: x0 / x1)
         self.assertRaises(exceptions.ArithmeticError, lambda: x0 / x0)
-        self.assertRaises(exceptions.ArithmeticError, lambda: x1 / x3)
-        self.assertRaises(exceptions.ArithmeticError, lambda: x1 / x4)
-        self.assertRaises(exceptions.ArithmeticError, lambda: x1 / x5)
+        self.assertRaises(exceptions.ArithmeticError, lambda: x0 / x3)
+        self.assertRaises(exceptions.ArithmeticError, lambda: x0 / x4)
+        self.assertRaises(exceptions.ArithmeticError, lambda: x0 / x5)
 
         x1 /= amount("123.12")
         self.assertEqual(internalAmount("$1.00"), x1)
         self.assertEqual("$1.00", x1.to_string())
-        x1 /= 123.12
+        x1 /= amount("123.12")
         self.assertEqual(internalAmount("$0.00812216"), x1)
         self.assertEqual("$0.01", x1.to_string())
         x1 /= 123
@@ -934,7 +934,7 @@ class t_amountTestCase(unittest.TestCase):
     def testNegation(self):
         x0 = amount()
         x1 = amount(-123456)
-        x3 = amount(-123.456)
+        x3 = amount("-123.456")
         x5 = amount("-123456")
         x6 = amount("-123.456")
         x7 = amount("-123456")
@@ -1164,7 +1164,7 @@ class t_amountTestCase(unittest.TestCase):
 
         x5 = amount("$123.45")
 
-        x5 *= 100.12
+        x5 *= amount("100.12")
 
         self.assertEqual(internalAmount("$12359.814"), x5)
         self.assertEqual("$12359.81", x5.to_string())
@@ -1181,7 +1181,7 @@ class t_amountTestCase(unittest.TestCase):
         x1 = amount("$0.85")
         x2 = amount("$0.1")
 
-        x1 *= 0.19
+        x1 *= amount("0.19")
 
         self.assertNotEqual(amount("$0.16"), x1)
         self.assertEqual(internalAmount("$0.1615"), x1)
@@ -1301,8 +1301,8 @@ class t_amountTestCase(unittest.TestCase):
     def testCommodityForZero(self):
         x1 = amount(internalAmount("$0.000000000000000000001"))
 
-        self.assertFalse(x1)
-        self.assertTrue(x1.is_zero())
+        self.assertTrue(x1)
+        self.assertFalse(x1.is_zero())
         self.assertFalse(x1.is_realzero())
 
         self.assertValid(x1)
@@ -1313,24 +1313,24 @@ class t_amountTestCase(unittest.TestCase):
         x2 = amount("12345682348723487324")
 
         self.assertRaises(exceptions.ArithmeticError, lambda: x0.to_long())
-        self.assertRaises(exceptions.ArithmeticError, lambda: x0.to_double())
+        #self.assertRaises(exceptions.ArithmeticError, lambda: x0.to_double())
         self.assertFalse(x2.fits_in_long())
         self.assertEqual(123456, x1.to_long())
-        self.assertEqual(123456.0, x1.to_double())
+        #self.assertEqual(123456.0, x1.to_double())
         self.assertEqual("123456", x1.to_string())
         self.assertEqual("123456", x1.quantity_string)
 
         self.assertValid(x1)
 
     def testFractionalConversion(self):
-        x1 = amount(1234.56)
+        x1 = amount("1234.56")
         x2 = amount("1234.5683787634678348734")
 
         self.assertRaises(exceptions.ArithmeticError, lambda: x1.to_long()) # loses precision
-        self.assertRaises(exceptions.ArithmeticError, lambda: x2.to_double()) # loses precision
-        self.assertFalse(x2.fits_in_double())
+        #self.assertRaises(exceptions.ArithmeticError, lambda: x2.to_double()) # loses precision
+        #self.assertFalse(x2.fits_in_double())
         self.assertEqual(1234, x1.to_long(True))
-        self.assertEqual(1234.56, x1.to_double())
+        #self.assertEqual(1234.56, x1.to_double())
         self.assertEqual("1234.56", x1.to_string())
         self.assertEqual("1234.56", x1.quantity_string)
 
@@ -1341,7 +1341,7 @@ class t_amountTestCase(unittest.TestCase):
 
         self.assertRaises(exceptions.ArithmeticError, lambda: x1.to_long()) # loses precision
         self.assertEqual(1234, x1.to_long(True))
-        self.assertEqual(1234.56, x1.to_double())
+        #self.assertEqual(1234.56, x1.to_double())
         self.assertEqual("$1234.56", x1.to_string())
         self.assertEqual("1234.56", x1.quantity_string)
 

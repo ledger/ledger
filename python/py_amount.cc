@@ -136,7 +136,9 @@ void export_amount()
     .add_static_property("keep_date", &amount_t::keep_date)
     .add_static_property("keep_tag", &amount_t::keep_tag)
 
-    .add_static_property("stream_fullstrings", &amount_t::stream_fullstrings)
+    .add_static_property("stream_fullstrings",
+			 make_getter(&amount_t::stream_fullstrings),
+			 make_setter(&amount_t::stream_fullstrings))
 
 #ifdef HAVE_GDTOA
     .def(init<double>())
