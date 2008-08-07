@@ -189,6 +189,7 @@ while [ -n "$1" ]; do
 	# _GLIBCXX_DEBUG.
 	CPPFLAGS="$CPPFLAGS -D_GLIBCXX_DEBUG=1"
 	CPPFLAGS="-isystem /usr/local/stow/cppunit-debug/include $CPPFLAGS"
+	LDFLAGS="-L/usr/local/stow/cppunit-debug/lib $LDFLAGS"
 
 	BOOST_SUFFIX="-d-1_35"	# I built mine with _GLIBCXX_DEBUG
 
@@ -256,6 +257,7 @@ while [ -n "$1" ]; do
 	CPPFLAGS="-isystem /usr/local/stow/cppunit/include $CPPFLAGS"
 	CXXFLAGS="$CXXFLAGS $ARCHFLAGS"
 	LDFLAGS="$LDFLAGS $ARCHFLAGS -Wl,-syslibroot,/Developer/SDKs/MacOSX10.5.sdk"
+	LDFLAGS="-L/usr/local/stow/cppunit/lib $LDFLAGS"
 
 	shift 1 ;;
 
