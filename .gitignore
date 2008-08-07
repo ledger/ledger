@@ -10,6 +10,7 @@
 *.log
 *.o
 *.pg
+*.pkg
 *.pyc
 *.tar.bz2
 *.tar.gz
