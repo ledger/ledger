@@ -558,7 +558,7 @@ public:
    * have been set to (which all default to false).
    */
   void          annotate(const annotation_t& details);
-  bool          annotated() const;
+  bool          is_annotated() const;
 
   annotation_t& annotation();
   const annotation_t& annotation() const {

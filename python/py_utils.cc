@@ -95,7 +95,8 @@ struct string_from_python
   {
     const char* value = PyString_AsString(obj_ptr);
     if (value == 0) throw_error_already_set();
-    void* storage = ((converter::rvalue_from_python_storage<string>*) data)->storage.bytes;
+    void* storage =
+      reinterpret_cast<converter::rvalue_from_python_storage<string> *>(data)->storage.bytes;
     new (storage) string(value);
     data->convertible = storage;
   }
@@ -107,7 +108,7 @@ typedef register_python_conversion<string, string_to_python, string_from_python>
 
 struct istream_to_python
 {
-  static PyObject* convert(const std::istream& str)
+  static PyObject* convert(const std::istream&)
   {
     return incref(boost::python::detail::none());
   }
@@ -123,7 +124,8 @@ struct istream_from_python
 
   static void construct(PyObject* obj_ptr, converter::rvalue_from_python_stage1_data* data)
   {
-    void* storage = ((converter::rvalue_from_python_storage<pyifstream>*) data)->storage.bytes;
+    void* storage =
+      reinterpret_cast<converter::rvalue_from_python_storage<pyifstream> *>(data)->storage.bytes;
     new (storage) pyifstream(reinterpret_cast<PyFileObject *>(obj_ptr));
     data->convertible = storage;
   }
@@ -135,7 +137,7 @@ typedef register_python_conversion<std::istream, istream_to_python, istream_from
 
 struct ostream_to_python
 {
-  static PyObject* convert(const std::ostream& str)
+  static PyObject* convert(const std::ostream&)
   {
     return incref(boost::python::detail::none());
   }
@@ -151,7 +153,7 @@ struct ostream_from_python
 
   static void construct(PyObject* obj_ptr, converter::rvalue_from_python_stage1_data* data)
   {
-    void* storage = ((converter::rvalue_from_python_storage<pyofstream>*) data)->storage.bytes;
+    void* storage = reinterpret_cast<converter::rvalue_from_python_storage<pyofstream> *>(data)->storage.bytes;
     new (storage) pyofstream(reinterpret_cast<PyFileObject *>(obj_ptr));
     data->convertible = storage;
   }

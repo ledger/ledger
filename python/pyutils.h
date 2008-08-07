@@ -90,12 +90,13 @@ struct register_optional_to_python : public boost::noncopyable
     {
       using namespace boost::python::converter;
 
-      void * const storage = ((rvalue_from_python_storage<T> *) data)->storage.bytes;
+      void * const storage =
+	reinterpret_cast<rvalue_from_python_storage<T> *>(data)->storage.bytes;
 
       if (data->convertible == source)	    // == None
 	new (storage) boost::optional<T>(); // A Boost uninitialized value
       else
-	new (storage) boost::optional<T>(*static_cast<T *>(data->convertible));
+	new (storage) boost::optional<T>(*reinterpret_cast<T *>(data->convertible));
 
       data->convertible = storage;
     }
@@ -103,7 +104,7 @@ struct register_optional_to_python : public boost::noncopyable
 
   explicit register_optional_to_python() {
     register_python_conversion<boost::optional<T>,
-      optional_to_python, optional_from_python>();
+                               optional_to_python, optional_from_python>();
   }
 };
 

@@ -282,7 +282,7 @@ bool entry_base_t::finalize()
 					 time_duration_t(0, 0, 0)),
 			      entry ? entry->code : optional<string>());
 
-      if (xact->amount.annotated()) {
+      if (xact->amount.is_annotated()) {
 	if (ann_amount.annotation().price) {
 	  if (balance.is_null())
 	    balance = basis_cost - final_cost;

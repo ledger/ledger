@@ -30,6 +30,7 @@
  */
 
 #include "gnucash.h"
+#include "session.h"
 #include "account.h"
 
 namespace ledger {
@@ -85,7 +86,7 @@ static enum action_t {
   XACT_NOTE
 } action;
 
-static void startElement(void *userData, const char *name, const char **atts)
+static void startElement(void *, const char *name, const char **)
 {
   if (std::strcmp(name, "gnc:account") == 0) {
     curr_account = new account_t(master_account);
@@ -134,7 +135,7 @@ static void startElement(void *userData, const char *name, const char **atts)
     action = XACT_NOTE;
 }
 
-static void endElement(void *userData, const char *name)
+static void endElement(void *, const char *name)
 {
   if (std::strcmp(name, "gnc:account") == 0) {
     assert(curr_account);
@@ -238,7 +239,7 @@ static amount_t convert_number(const string& number,
   }
 }
 
-static void dataHandler(void *userData, const char *s, int len)
+static void dataHandler(void *, const char *s, int len)
 {
   switch (action) {
   case ACCOUNT_NAME:
@@ -360,8 +361,8 @@ bool gnucash_parser_t::test(std::istream& in) const
 }
 
 unsigned int gnucash_parser_t::parse(std::istream& in,
-				     session_t&     session,
-				     journal_t&   journal,
+				     session_t&    session,
+				     journal_t&	   journal,
 				     account_t *   master,
 				     const path *  original_file)
 {
@@ -377,7 +378,7 @@ unsigned int gnucash_parser_t::parse(std::istream& in,
   count		 = 0;
   action	 = NO_ACTION;
   curr_journal	 = &journal;
-  master_account = master ? master : journal.master;
+  master_account = master ? master : session.master.get();
   curr_account	 = NULL;
   curr_entry	 = NULL;
   curr_comm	 = NULL;

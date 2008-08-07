@@ -48,7 +48,7 @@ class python_interpreter_t : public noncopyable, public scope_t
 public:
   boost::python::dict nspace;
 
-  python_interpreter_t(expr_t::scope_t& parent);
+  python_interpreter_t(scope_t& parent);
 
   virtual ~python_interpreter_t() {
     TRACE_DTOR(python_interpreter_t);
@@ -79,7 +79,7 @@ public:
   protected:
     boost::python::object func;
   public:
-    functor_t(const string& name, boost::python::object _func) : func(_func) {
+    functor_t(const string&, boost::python::object _func) : func(_func) {
       TRACE_CTOR(functor_t, "const string&, boost::python::object");
     }
     functor_t(const functor_t& other) : func(other.func) {
@@ -88,7 +88,7 @@ public:
     virtual ~functor_t() throw() {
       TRACE_DTOR(functor_t);
     }
-    virtual value_t operator()(expr_t::call_scope_t& args);
+    virtual value_t operator()(call_scope_t& args);
   };
 
   virtual expr_t::ptr_op_t lookup(const string& name) {
@@ -109,7 +109,7 @@ public:
     virtual ~lambda_t() throw() {
       TRACE_DTOR(lambda_t);
     }
-    virtual value_t operator()(expr_t::call_scope_t& args);
+    virtual value_t operator()(call_scope_t& args);
   };
 };
 

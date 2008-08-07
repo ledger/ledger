@@ -810,7 +810,7 @@ void amount_t::annotate(const annotation_t& details)
   DEBUG("amounts.commodities", "  Annotated amount is " << *this);
 }
 
-bool amount_t::annotated() const
+bool amount_t::is_annotated() const
 {
   if (! quantity)
     throw_(amount_error,

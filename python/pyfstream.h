@@ -37,7 +37,7 @@
 
 class pyoutbuf : public boost::noncopyable, public std::streambuf
 {
-  pyoutbf();
+  pyoutbuf();
 
 protected:
   PyFileObject * fo;    // Python file object
@@ -47,7 +47,7 @@ public:
   pyoutbuf(PyFileObject * _fo) : fo(_fo) {
     TRACE_CTOR(pyoutbuf, "PyFileObject *");
   }
-  ~pyoutbuf() : throw() {
+  ~pyoutbuf() throw() {
     TRACE_DTOR(pyoutbuf);
   }
 
@@ -58,7 +58,7 @@ protected:
       char z[2];
       z[0] = c;
       z[1] = '\0';
-      if (PyFile_WriteString(z, (PyObject *)fo) < 0) {
+      if (PyFile_WriteString(z, reinterpret_cast<PyObject *>(fo)) < 0) {
 	return EOF;
       }
     }
@@ -70,14 +70,14 @@ protected:
     char * buf = new char[num + 1];
     std::strncpy(buf, s, num);
     buf[num] = '\0';
-    if (PyFile_WriteString(buf, (PyObject *)fo) < 0)
+    if (PyFile_WriteString(buf, reinterpret_cast<PyObject *>(fo)) < 0)
       num = 0;
-    checked_array_delete(buf);
+    boost::checked_array_delete(buf);
     return num;
   }
 };
 
-class pyofstream : public noncopyable, public std::ostream
+class pyofstream : public boost::noncopyable, public std::ostream
 {
   pyofstream();
 
@@ -97,7 +97,7 @@ public:
 // pyifstream
 // - a stream that reads on a file descriptor
 
-class pyinbuf : public noncopyable, public std::streambuf
+class pyinbuf : public boost::noncopyable, public std::streambuf
 {
   pyinbuf();
 
@@ -161,7 +161,7 @@ protected:
 
     // read at most bufSize new characters
     int num;
-    PyObject *line = PyFile_GetLine((PyObject *)fo, bufSize);
+    PyObject *line = PyFile_GetLine(reinterpret_cast<PyObject *>(fo), bufSize);
     if (! line || ! PyString_Check(line)) {
       // ERROR or EOF
       return EOF;
@@ -183,7 +183,7 @@ protected:
   }
 };
 
-class pyifstream : public noncopyable, public std::istream
+class pyifstream : public boost::noncopyable, public std::istream
 {
   pyifstream();
 
