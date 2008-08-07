@@ -42,8 +42,8 @@ public:
   virtual bool test(std::istream& in) const;
 
   virtual unsigned int parse(std::istream& in,
-			     session_t&     session,
-			     journal_t&   journal,
+			     session_t&    session,
+			     journal_t&	   journal,
 			     account_t *   master        = NULL,
 			     const path *  original_file = NULL);
 };

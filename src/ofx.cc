@@ -29,13 +29,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "journal.h"
 #include "ofx.h"
-#include "format.h"
-#include "datetime.h"
-#include "error.h"
-#include "debug.h"
-#include "util.h"
+#include "amount.h"
+#include "account.h"
+#include "session.h"
 
 #include <libofx.h>
 
@@ -53,11 +50,12 @@ commodities_map ofx_account_currencies;
 commodities_map ofx_securities;
 account_t *	master_account;
 
-int ofx_proc_statement_cb(struct OfxStatementData data, void * statement_data)
+int ofx_proc_statement_cb(struct OfxStatementData, void *)
 {
+  return 0;
 }
 
-int ofx_proc_account_cb(struct OfxAccountData data, void * account_data)
+int ofx_proc_account_cb(struct OfxAccountData data, void *)
 {
   if (! data.account_id_valid)
     return -1;
@@ -68,7 +66,7 @@ int ofx_proc_account_cb(struct OfxAccountData data, void * account_data)
   ofx_accounts.insert(accounts_pair(data.account_id, account));
 
   if (data.currency_valid) {
-    commodity_t * commodity = commodity_t::find_or_create(data.currency);
+    commodity_t * commodity = amount_t::current_pool->find_or_create(data.currency);
     commodity->add_flags(COMMODITY_STYLE_SUFFIXED | COMMODITY_STYLE_SEPARATED);
 
     commodities_map::iterator i = ofx_account_currencies.find(data.account_id);
@@ -80,8 +78,7 @@ int ofx_proc_account_cb(struct OfxAccountData data, void * account_data)
   return 0;
 }
 
-int ofx_proc_xact_cb(struct OfxXactData data,
-			    void * xact_data)
+int ofx_proc_transaction_cb(struct OfxTransactionData data, void *)
 {
   if (! data.account_id_valid || ! data.units_valid)
     return -1;
@@ -108,24 +105,26 @@ int ofx_proc_xact_cb(struct OfxXactData data,
   if (data.unique_id_valid) {
     commodities_map::iterator s = ofx_securities.find(data.unique_id);
     assert(s != ofx_securities.end());
-    xact->amount = stream.str() + " " + (*s).second->base_symbol();
+    xact->amount = string(stream.str()) + " " + (*s).second->base_symbol();
   } else {
-    xact->amount = stream.str() + " " + default_commodity->base_symbol();
+    xact->amount = string(stream.str()) + " " + default_commodity->base_symbol();
   }
 
-  if (data.unitprice_valid && data.unitprice != 1.0) {
+  if (data.unitprice_valid && (data.unitprice < 1.0 || data.unitprice > 1.0)) {
     std::ostringstream cstream;
     stream << - data.unitprice;
-    xact->cost = new amount_t(stream.str() + " " + default_commodity->base_symbol());
+    xact->cost = amount_t(string(stream.str()) + " " + default_commodity->base_symbol());
   }
 
   DEBUG("ledger.ofx.parse", "xact " << xact->amount
 	      << " from " << *xact->account);
 
+#if 0
   if (data.date_initiated_valid)
-    entry->_date = data.date_initiated;
+    entry->_date = gregorian::from_time_t(data.date_initiated);
   else if (data.date_posted_valid)
-    entry->_date = data.date_posted;
+    entry->_date = from_time_t(data.date_posted);
+#endif
 
   if (data.check_number_valid)
     entry->code = data.check_number;
@@ -146,7 +145,9 @@ int ofx_proc_xact_cb(struct OfxXactData data,
   entry->add_xact(new xact_t(account));
 
   if (! curr_journal->add_entry(entry)) {
+#if 0
     print_entry(std::cerr, *entry);
+#endif
     // jww (2005-02-09): uncomment
     //have_error = "The above entry does not balance";
     checked_delete(entry);
@@ -155,7 +156,7 @@ int ofx_proc_xact_cb(struct OfxXactData data,
   return 0;
 }
 
-int ofx_proc_security_cb(struct OfxSecurityData data, void * security_data)
+int ofx_proc_security_cb(struct OfxSecurityData data, void *)
 {
   if (! data.unique_id_valid)
     return -1;
@@ -168,14 +169,14 @@ int ofx_proc_security_cb(struct OfxSecurityData data, void * security_data)
   else
     return -1;
 
-  commodity_t * commodity = commodity_t::find_or_create(symbol);
+  commodity_t * commodity = amount_t::current_pool->find_or_create(symbol);
   commodity->add_flags(COMMODITY_STYLE_SUFFIXED | COMMODITY_STYLE_SEPARATED);
 
   if (data.secname_valid)
-    commodity->set_name(data.secname);
+    commodity->set_name(string(data.secname));
 
   if (data.memo_valid)
-    commodity->set_note(data.memo);
+    commodity->set_note(string(data.memo));
 
   commodities_map::iterator i = ofx_securities.find(data.unique_id);
   if (i == ofx_securities.end()) {
@@ -186,14 +187,18 @@ int ofx_proc_security_cb(struct OfxSecurityData data, void * security_data)
   // jww (2005-02-09): What is the commodity for data.unitprice?
   if (data.date_unitprice_valid && data.unitprice_valid) {
     DEBUG("ledger.ofx.parse", "  price " << data.unitprice);
+#if 0
+    // jww (2008-08-07): Need to convert from double here
     commodity->add_price(data.date_unitprice, amount_t(data.unitprice));
+#endif
   }
 
   return 0;
 }
 
-int ofx_proc_status_cb(struct OfxStatusData data, void * status_data)
+int ofx_proc_status_cb(struct OfxStatusData, void *)
 {
+  return 0;
 }
 
 bool ofx_parser_t::test(std::istream& in) const
@@ -225,29 +230,30 @@ bool ofx_parser_t::test(std::istream& in) const
   return true;
 }
 
-unsigned int ofx_parser_t::parse(std::istream& in,
-				 session_t&     session,
-				 journal_t&   journal,
+unsigned int ofx_parser_t::parse(std::istream&,
+				 session_t&    session,
+				 journal_t&    journal,
 				 account_t *   master,
 				 const path *  original_file)
 {
   if (! original_file)
     return 0;
 
-  curr_journal   = journal;
-  master_account = master ? master : journal->master;
+  curr_journal   = &journal;
+  master_account = master ? master : session.master.get();
 
   LibofxContextPtr libofx_context = libofx_get_new_context();
 
-  ofx_set_statement_cb (libofx_context, ofx_proc_statement_cb, 0);
-  ofx_set_account_cb   (libofx_context, ofx_proc_account_cb, 0);
-  ofx_set_xact_cb      (libofx_context, ofx_proc_xact_cb, 0);
-  ofx_set_security_cb  (libofx_context, ofx_proc_security_cb, 0);
-  ofx_set_status_cb    (libofx_context, ofx_proc_status_cb, 0);
+  ofx_set_statement_cb	 (libofx_context, ofx_proc_statement_cb, 0);
+  ofx_set_account_cb	 (libofx_context, ofx_proc_account_cb, 0);
+  ofx_set_transaction_cb (libofx_context, ofx_proc_transaction_cb, 0);
+  ofx_set_security_cb	 (libofx_context, ofx_proc_security_cb, 0);
+  ofx_set_status_cb	 (libofx_context, ofx_proc_status_cb, 0);
 
   // The processing is done by way of callbacks, which are all defined
   // above.
-  libofx_proc_file(libofx_context, original_file->c_str(), AUTODETECT);
+  libofx_proc_file(libofx_context, original_file->string().c_str(),
+		   AUTODETECT);
 
   libofx_free_context(libofx_context);
 
