@@ -28,6 +28,7 @@
 /Doxyfile.gen
 /Makefile
 /Makefile.in
+/PyUnitTests
 /RegressionTests
 /TAGS
 /UnitTests
@@ -54,6 +55,7 @@
 /install-sh
 /ledger
 /ledger.info
+/ledger.so
 /libtool
 /ltmain.sh
 /make.deps
