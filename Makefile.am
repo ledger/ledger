@@ -319,4 +319,10 @@ $(top_builddir)/doc/refman.pdf: $(top_builddir)/doc/html/index.html
 
 docs: pdf $(top_builddir)/doc/refman.pdf
 
+fulltest:
+	rsync -av --delete $(srcdir)/ /tmp/ledger/
+	(cd /tmp/ledger; \
+	 git clean -x -d -f; \
+	 ./myacprep --release --build -j3 distcheck)
+
 # Makefile.am ends here
