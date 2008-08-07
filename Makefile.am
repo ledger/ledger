@@ -31,7 +31,6 @@ if HAVE_LIBOFX
 libamounts_la_CPPFLAGS += -DHAVE_LIBOFX=1
 endif
 if HAVE_BOOST_PYTHON
-libamounts_la_CPPFLAGS += -DUSE_BOOST_PYTHON=1
 endif
 if DEBUG
 libamounts_la_CPPFLAGS += -DDEBUG_MODE
@@ -63,6 +62,19 @@ libledger_la_SOURCES  = \
 	src/derive.cc      \
 	src/reconcile.cc   \
 	src/quotes.cc
+
+if HAVE_BOOST_PYTHON
+Python_ledger_SRC = \
+	python/pyledger.cc	   \
+	python/pyinterp.cc	   \
+	python/py_amount.cc	   \
+	python/py_commodity.cc \
+	python/py_times.cc	   \
+	python/py_utils.cc
+
+libledger_la_SOURCES += $(Python_ledger_SRC)
+libledger_la_CPPFLAGS += -DUSE_BOOST_PYTHON=1 -I$(srcdir)/python
+endif
 
 if HAVE_EXPAT
 libledger_la_SOURCES += src/gnucash.cc
@@ -166,22 +178,35 @@ DISTCLEANFILES  = ledger.elc timeclock.elc
 
 if HAVE_BOOST_PYTHON
 
-noinst_PROGRAMS = amounts.so
-nodist_amounts_so_SOURCES = amounts.c
+noinst_PROGRAMS = ledger.so
 
-CLEANFILES += amounts.so
+CLEANFILES += ledger.so
 
-PYLIBS = amounts gmp
+clean-local:
+	rm -fr build
 
-amounts.so: python/amounts.cc libamounts.la
-	CFLAGS="$(CPPFLAGS) $(DEFAULT_INCLUDES) $(libamounts_la_CPPFLAGS)" \
-	LDFLAGS="$(LDFLAGS) -L. -L.libs" \
+ledger_so_SOURCES      = $(Python_ledger_SRC)
+ledger_so_DEPENDENCIES = $(lib_LTLIBRARIES)
+
+PYLIBS  = amounts ledger gmp \
+	  boost_date_time$(BOOST_SUFFIX)  \
+          boost_filesystem$(BOOST_SUFFIX) \
+          boost_regex$(BOOST_SUFFIX)	  \
+          boost_python$(BOOST_SUFFIX)
+
+if HAVE_LIBOFX
+PYLIBS += ofx
+endif
+
+ledger.so: $(ledger_so_SOURCES) $(ledger_so_DEPENDENCIES)
+	CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libledger_la_CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)" \
+	LDFLAGS="$(LDFLAGS) -L$(top_builddir) -L$(top_builddir)/.libs" \
 	PYLIBS="$(PYLIBS)" SRCDIR="$(srcdir)" \
-	    python $(srcdir)/python/setup.py build --build-lib=.
+	    python $(srcdir)/python/setup.py build --build-lib=$(top_builddir)
 
 install-exec-hook:
-	CFLAGS="$(CPPFLAGS) $(DEFAULT_INCLUDES) $(libamounts_la_CPPFLAGS)" \
-	LDFLAGS="$(LDFLAGS) -L. -L.libs" \
+	CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libledger_la_CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)" \
+	LDFLAGS="$(LDFLAGS) -L$(top_builddir) -L$(top_builddir)/.libs" \
 	PYLIBS="$(PYLIBS)" SRCDIR="$(srcdir)" \
 	    python $(srcdir)/python/setup.py install --prefix=$(prefix)
 
@@ -190,6 +215,10 @@ endif
 ######################################################################
 
 TESTS = UnitTests
+
+if HAVE_CPPUNIT
+TESTS += UnitTests
+endif
 
 if HAVE_BOOST_PYTHON
 TESTS += PyUnitTests
@@ -294,7 +323,10 @@ release:
 	    (cd /usr/local/stow; sudo stow -D cppunit) # switch to /opt
 	make -j3 distcheck \
 	    CPPFLAGS="-I/usr/local/include -I/usr/local/include/boost-1_35 -I/opt/local/include " \
-	    LDFLAGS="-L/usr/local/lib -L/opt/local/lib"
+	    LDFLAGS="-L/usr/local/lib -L/opt/local/lib" \
+	    CXXFLAGS="-arch i386 -arch ppc -isysroot /Developer/SDKs/MacOSX10.5.sdk" \
+	    LDFLAGS="$LDFLAGS -arch i386 -arch ppc -Wl,-syslibroot,/Developer/SDKs/MacOSX10.5.sdk" \
+	    DISTCHECK_CONFIGURE_FLAGS="--disable-dependency-tracking"
 	test -d /usr/local/stow/cppunit && \
 	    (cd /usr/local/stow; sudo stow cppunit) # switch to debug
 
