@@ -295,6 +295,6 @@ fi
 # options.
 
 if [ $DO_BUILD = true ]; then
-    echo "make ARCHFLAGS=\"$ARCHFLAGS\" \"$@\"" > make.sh
+    echo "make ARCHFLAGS=\"$ARCHFLAGS\" CPPFLAGS=\"$CPPFLAGS\" LDFLAGS=\"$LDFLAGS\" CXXFLAGS=\"$CXXFLAGS\" DISTCHECK_CONFIGURE_FLAGS=\"--disable-dependency-tracking\" $@" > make.sh
     sh -x make.sh
 fi
