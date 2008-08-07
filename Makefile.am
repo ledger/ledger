@@ -214,7 +214,8 @@ endif
 
 ######################################################################
 
-TESTS = UnitTests
+TESTS = RegressionTests
+XFAIL_TESTS = RegressionTests	# jww (2008-08-07): for now
 
 if HAVE_CPPUNIT
 TESTS += UnitTests
@@ -224,9 +225,7 @@ if HAVE_BOOST_PYTHON
 TESTS += PyUnitTests
 endif
 
-XFAIL_TESTS = RegressionTests
-
-check_PROGRAMS = $(TESTS) $(XFAIL_TESTS)
+check_PROGRAMS = $(TESTS)
 
 UnitTests_SOURCES =		 \
 	test/UnitTests.cc	 \
