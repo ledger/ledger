@@ -318,16 +318,6 @@ $(top_builddir)/doc/refman.pdf: $(top_builddir)/doc/html/index.html
 	(cd $(top_builddir)/doc/latex && make)
 	cp $(top_builddir)/doc/latex/refman.pdf $@
 
-release:
-	test -d /usr/local/stow/cppunit && \
-	    (cd /usr/local/stow; sudo stow -D cppunit) # switch to /opt
-	make -j3 distcheck \
-	    CPPFLAGS="-I/usr/local/include -I/usr/local/include/boost-1_35 -I/opt/local/include" \
-	    LDFLAGS="-L/usr/local/lib -L/opt/local/lib -arch i386 -arch ppc -Wl,-syslibroot,/Developer/SDKs/MacOSX10.5.sdk" \
-	    ARCHFLAGS="-arch i386 -arch ppc -isysroot /Developer/SDKs/MacOSX10.5.sdk" \
-	    CXXFLAGS="-arch i386 -arch ppc -isysroot /Developer/SDKs/MacOSX10.5.sdk" \
-	    DISTCHECK_CONFIGURE_FLAGS="--disable-dependency-tracking"
-	test -d /usr/local/stow/cppunit && \
-	    (cd /usr/local/stow; sudo stow cppunit) # switch to debug
+docs: pdf $(top_builddir)/doc/refman.pdf
 
 # Makefile.am ends here
