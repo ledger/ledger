@@ -280,7 +280,7 @@ if [ ! "$BUILD_DIR" = "false" ]; then
     cd "$BUILD_DIR" || (echo "Cannot change to $BUILD_DIR"; exit 1)
 fi
 
-SWITCHES="$SWITCHES --with-boost-suffix='$BOOST_SUFFIX'"
+SWITCHES="$SWITCHES --with-boost-suffix=$BOOST_SUFFIX"
 
 "$HERE/configure" --srcdir="$HERE" CXX="$CXX" \
     CPPFLAGS="$CPPFLAGS" CXXFLAGS="$CXXFLAGS $local_cxxflags" \
