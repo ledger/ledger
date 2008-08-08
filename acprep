@@ -25,18 +25,24 @@ autoreconf --force --install
 
 SWITCHES="--enable-python"	# always build with Python support
 
-PYTHON_HOME="/usr"
+if [ -z "$PYTHON_HOME" ]; then
+    PYTHON_HOME="/usr"
+fi
+if [ -z "$PYTHON_VERSION" ]; then
+    PYTHON_VERSION="2.5"
+fi
+
 BOOST_SUFFIX=""
 
 INCDIRS="-isystem /usr/local/include"
 INCDIRS="$INCDIRS -isystem /opt/local/include"
 INCDIRS="$INCDIRS -isystem /opt/local/include/libofx"
 INCDIRS="$INCDIRS -isystem /usr/local/include/boost-1_35"
-INCDIRS="$INCDIRS -isystem $PYTHON_HOME/include/python2.5"
+INCDIRS="$INCDIRS -isystem $PYTHON_HOME/include/python$PYTHON_VERSION"
 
 LDFLAGS=""
 LIBDIRS="-L/usr/local/lib -L/opt/local/lib"
-LIBDIRS="$LIBDIRS -L$PYTHON_HOME/lib/python2.5/config"
+LIBDIRS="$LIBDIRS -L$PYTHON_HOME/lib/python$PYTHON_VERSION/config"
 
 ARCHFLAGS="-arch i386 -arch ppc -isysroot /Developer/SDKs/MacOSX10.5.sdk"
 
