@@ -1,0 +1,12 @@
+[submodule "lib/boost"]
+	path = lib/boost
+	url = git://repo.or.cz/boost.git
+[submodule "lib/gdtoa"]
+	path = lib/gdtoa
+	url = git://newartisans.com/gdtoa.git
+[submodule "lib/cppunit"]
+	path = lib/cppunit
+	url = git://newartisans.com/cppunit.git
+[submodule "lib/libofx"]
+	path = lib/libofx
+	url = git://newartisans.com/libofx.git
