@@ -122,7 +122,9 @@ void value_t::storage_t::destroy()
 
 void value_t::initialize()
 {
+#if defined(DEBUG_ON)
   LOGGER("value.initialize");
+#endif
 
   true_value = new storage_t;
   true_value->type = BOOLEAN;
@@ -313,7 +315,9 @@ value_t::sequence_t value_t::to_sequence() const
 
 void value_t::in_place_simplify()
 {
+#if defined(DEBUG_ON)
   LOGGER("amounts.values.simplify");
+#endif
 
   if (is_realzero()) {
     DEBUG_("Zeroing type " << static_cast<int>(type()));
