@@ -326,13 +326,14 @@ $(top_builddir)/doc/refman.pdf: $(top_builddir)/doc/html/index.html
 docs: pdf $(top_builddir)/doc/refman.pdf
 
 copy-sources:
-	rsync -av --delete $(srcdir)/ /tmp/ledger/
-	(cd /tmp/ledger; git clean -x -d -f)
+	-mkdir /tmp/ledger
+	rsync -av --delete $(srcdir)/.git/ /tmp/ledger/.git/
+	(cd /tmp/ledger; git reset --hard HEAD; git clean -x -d -f)
 
 release: copy-sources
-	(cd /tmp/ledger; ./myacprep --release --build -j3)
+	(cd /tmp/ledger; ./acprep --release --build -j3)
 
 release-distcheck: copy-sources
-	(cd /tmp/ledger; ./myacprep --release --build -j3 distcheck)
+	(cd /tmp/ledger; ./acprep --release --build -j3 distcheck)
 
 # Makefile.am ends here
