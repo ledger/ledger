@@ -1,7 +1,7 @@
 # -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ(2.62)
+AC_PREREQ(2.61)
 
 m4_include([version.m4])
 
@@ -126,11 +126,15 @@ if [test x$xml = xtrue ]; then
     [libexpat_save_libs=$LIBS
      LIBS="-lexpat $LIBS"
      AC_LANG_PUSH(C++)
-     AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <stdio.h>
+     AC_TRY_LINK(
+       [#include <stdio.h>
 	extern "C" {
 	#include <expat.h>           // expat XML parser
-	}]], [[XML_Parser parser = XML_ParserCreate(NULL);
-	return parser != NULL;]])],[libexpat_avail_cv_=true],[libexpat_avail_cv_=false])
+	}],
+       [XML_Parser parser = XML_ParserCreate(NULL);
+	return parser != NULL;],
+       [libexpat_avail_cv_=true],
+       [libexpat_avail_cv_=false])
      AC_LANG_POP
      LIBS=$libexpat_save_libs])
 
@@ -152,11 +156,15 @@ if [test x$xml = xtrue ]; then
       [libxmlparse_save_libs=$LIBS
        LIBS="-lxmlparse -lxmltok $LIBS"
        AC_LANG_PUSH(C++)
-       AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <stdio.h>
+       AC_TRY_LINK(
+	 [#include <stdio.h>
 	extern "C" {
 	#include <xmlparse.h>           // expat XML parser
-	}]], [[XML_Parser parser = XML_ParserCreate(NULL);
-	return parser != NULL;]])],[libxmlparse_avail_cv_=true],[libxmlparse_avail_cv_=false])
+	}],
+	 [XML_Parser parser = XML_ParserCreate(NULL);
+	return parser != NULL;],
+	 [libxmlparse_avail_cv_=true],
+	 [libxmlparse_avail_cv_=false])
        AC_LANG_POP
        LIBS=$libxmlparse_save_libs])
 
