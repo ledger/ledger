@@ -23,7 +23,7 @@ echo "m4_define([VERSION_NUMBER], [$COMMIT])" > version.m4
 autoreconf --force --install
 
 
-SWITCHES="--enable-python"	# always build with Python support
+SWITCHES="--enable-python --disable-shared"
 
 if [ -z "$PYTHON_HOME" ]; then
     PYTHON_HOME="/usr"
@@ -184,8 +184,7 @@ while [ -n "$1" ]; do
     --devel)
         # jww (2008-08-07): Sadly, PCH does not work with Boost+gcc4.0 on
 	# OS X.  It does work with gcc4.2, but then _GLIBCXX_DEBUG fails.
-	SWITCHES="$SWITCHES --disable-shared"
-	#SWITCHES="$SWITCHES --disable-shared --enable-pch"
+	#SWITCHES="$SWITCHES --enable-pch"
 
 	# The use of this flag requires that Boost be also build with
 	# _GLIBCXX_DEBUG.
@@ -258,7 +257,7 @@ while [ -n "$1" ]; do
 	shift 1 ;;
 
     --release)
-	SWITCHES="$SWITCHES --disable-dependency-tracking --disable-shared"
+	SWITCHES="$SWITCHES --disable-dependency-tracking"
 	CPPFLAGS="-isystem /usr/local/stow/cppunit/include $CPPFLAGS"
 	CXXFLAGS="$CXXFLAGS $ARCHFLAGS"
 	LDFLAGS="$LDFLAGS $ARCHFLAGS -Wl,-syslibroot,/Developer/SDKs/MacOSX10.5.sdk"
