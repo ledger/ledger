@@ -271,6 +271,12 @@ RegressionTests: $(srcdir)/test/regress.py
 	echo "python $(srcdir)/test/regress.py $(top_builddir)/ledger$(EXEEXT) $(srcdir)/test/regress" > $@
 	chmod 755 $@
 
+if HAVE_VALGRIND
+VALGRIND = valgrind
+else
+VALGRIND =
+endif
+
 fullcheck: check
 	MallocGuardEdges=1	 \
 	MallocScribble=1	 \
@@ -278,7 +284,7 @@ fullcheck: check
 	MallocCheckHeapStart=100 \
 	MallocCheckHeapEach=100	 \
 	DYLD_INSERT_LIBRARIES=/usr/lib/libgmalloc.dylib \
-	$(srcdir)/valgrind.sh $(top_builddir)/UnitTests$(EXEEXT) --verify
+	$(VALGRIND) $(top_builddir)/UnitTests$(EXEEXT) --verify
 
 ######################################################################
 
@@ -319,10 +325,14 @@ $(top_builddir)/doc/refman.pdf: $(top_builddir)/doc/html/index.html
 
 docs: pdf $(top_builddir)/doc/refman.pdf
 
-fulltest:
+copy-sources:
 	rsync -av --delete $(srcdir)/ /tmp/ledger/
-	(cd /tmp/ledger; \
-	 git clean -x -d -f; \
-	 ./myacprep --release --build -j3 distcheck)
+	(cd /tmp/ledger; git clean -x -d -f)
+
+release: copy-sources
+	(cd /tmp/ledger; ./myacprep --release --build -j3)
+
+release-distcheck: copy-sources
+	(cd /tmp/ledger; ./myacprep --release --build -j3 distcheck)
 
 # Makefile.am ends here

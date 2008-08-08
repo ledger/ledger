@@ -1,11 +1,11 @@
 # -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ(2.61)
+AC_PREREQ(2.62)
 
 m4_include([version.m4])
 
-AC_INIT([ledger],VERSION_NUMBER,[johnw@newartisans.com])
+AC_INIT([ledger],[VERSION_NUMBER],[johnw@newartisans.com])
 AC_CONFIG_SRCDIR([src/main.cc])
 AC_CONFIG_HEADER([acconf.h])
 AM_INIT_AUTOMAKE([dist-bzip2])
@@ -15,6 +15,9 @@ AC_PROG_CXX
 AC_PROG_MAKE_SET
 AC_PROG_LIBTOOL
 AM_PROG_LIBTOOL
+
+AC_CHECK_PROG([VALGRIND_TEST], [valgrind], [true], [false])
+AM_CONDITIONAL(HAVE_VALGRIND, test x$VALGRIND_TEST = xtrue)
 
 # Checks for emacs lisp path
 AM_PATH_LISPDIR
@@ -123,15 +126,11 @@ if [test x$xml = xtrue ]; then
     [libexpat_save_libs=$LIBS
      LIBS="-lexpat $LIBS"
      AC_LANG_PUSH(C++)
-     AC_TRY_LINK(
-       [#include <stdio.h>
+     AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <stdio.h>
 	extern "C" {
 	#include <expat.h>           // expat XML parser
-	}],
-       [XML_Parser parser = XML_ParserCreate(NULL);
-	return parser != NULL;],
-       [libexpat_avail_cv_=true],
-       [libexpat_avail_cv_=false])
+	}]], [[XML_Parser parser = XML_ParserCreate(NULL);
+	return parser != NULL;]])],[libexpat_avail_cv_=true],[libexpat_avail_cv_=false])
      AC_LANG_POP
      LIBS=$libexpat_save_libs])
 
@@ -153,15 +152,11 @@ if [test x$xml = xtrue ]; then
       [libxmlparse_save_libs=$LIBS
        LIBS="-lxmlparse -lxmltok $LIBS"
        AC_LANG_PUSH(C++)
-       AC_TRY_LINK(
-	 [#include <stdio.h>
+       AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <stdio.h>
 	extern "C" {
 	#include <xmlparse.h>           // expat XML parser
-	}],
-	 [XML_Parser parser = XML_ParserCreate(NULL);
-	return parser != NULL;],
-	 [libxmlparse_avail_cv_=true],
-	 [libxmlparse_avail_cv_=false])
+	}]], [[XML_Parser parser = XML_ParserCreate(NULL);
+	return parser != NULL;]])],[libxmlparse_avail_cv_=true],[libxmlparse_avail_cv_=false])
        AC_LANG_POP
        LIBS=$libxmlparse_save_libs])
 
