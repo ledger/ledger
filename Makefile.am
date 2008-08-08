@@ -327,6 +327,8 @@ $(top_builddir)/doc/refman.pdf: $(top_builddir)/doc/html/index.html
 
 docs: pdf $(top_builddir)/doc/refman.pdf
 
+######################################################################
+
 copy-sources:
 	-mkdir /tmp/ledger
 	rsync -av --delete $(srcdir)/.git/ /tmp/ledger/.git/
