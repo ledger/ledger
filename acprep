@@ -248,6 +248,9 @@ while [ -n "$1" ]; do
 	DO_BUILD=true
 	shift 1 ;;
 
+    --local)
+	shift 1 ;;
+
     --release)
 	SWITCHES="$SWITCHES --disable-dependency-tracking --disable-shared"
 	CPPFLAGS="-isystem /usr/local/stow/cppunit/include $CPPFLAGS"
