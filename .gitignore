@@ -3,6 +3,7 @@
 *.cp
 *.dSYM
 *.elc
+*.exe
 *.fn
 *.ky
 *.la
