@@ -224,19 +224,6 @@ See LICENSE file included with the distribution for details and disclaimer.\n";
     data_file = args[0].as_string();
     return NULL_VALUE;
   }
-
-#if 0
-#if defined(USE_BOOST_PYTHON)
-  value_t option_import_(call_scope_t& args) {
-    python_import(optarg);
-    return NULL_VALUE;
-  }
-  value_t option_import_stdin(call_scope_t& args) {
-    python_eval(std::cin, PY_EVAL_MULTI);
-    return NULL_VALUE;
-  }
-#endif
-#endif
 };
 
 /**

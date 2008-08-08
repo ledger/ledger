@@ -53,33 +53,6 @@ expr_t::parser_t::parse_value_term(std::istream& in,
     break;
 
   case token_t::IDENT: {
-#if 0
-#ifdef USE_BOOST_PYTHON
-    if (tok.value->as_string() == "lambda") // special
-      try {
-	char c, buf[4096];
-
-	std::strcpy(buf, "lambda ");
-	READ_INTO(in, &buf[7], 4000, c, true);
-
-	ptr_op_t eval = new op_t(op_t::O_EVAL);
-	ptr_op_t lambda = new op_t(op_t::FUNCTION);
-	lambda->functor = new python_functor_t(python_eval(buf));
-	eval->set_left(lambda);
-	ptr_op_t sym = new op_t(op_t::SYMBOL);
-	sym->name = new string("__ptr");
-	eval->set_right(sym);
-
-	node = eval;
-
-	goto done;
-      }
-      catch(const boost::python::error_already_set&) {
-	throw_(parse_error, "Error parsing lambda expression");
-      }
-#endif /* USE_BOOST_PYTHON */
-#endif
-
     string ident = tok.value.as_string();
 
     // An identifier followed by ( represents a function call
@@ -126,11 +99,6 @@ expr_t::parser_t::parse_value_term(std::istream& in,
     break;
   }
 
-#if 0
-#ifdef USE_BOOST_PYTHON
- done:
-#endif
-#endif
   return node;
 }
 
