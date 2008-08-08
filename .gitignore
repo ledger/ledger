@@ -3,6 +3,7 @@
 *.elc
 *.la
 *.lo
+*.loT
 *.o
 *~
 .deps/
@@ -20,6 +21,7 @@
 /acconf.h.in
 /acconf.h.in~
 /aclocal.m4
+/amounts.so
 /autom4te.cache
 /config.guess
 /config.log

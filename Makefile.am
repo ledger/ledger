@@ -125,11 +125,15 @@ noinst_PROGRAMS    = amounts.so
 amounts_so_SOURCES = amounts.cc fdstream.hpp
 
 amounts.so: amounts.cc libamounts.la
-	CFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS) -L. -L.libs" \
-	    python setup.py build --build-lib=.
+	CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libamounts_la_CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)" \
+	LDFLAGS="$(LDFLAGS) -L$(top_builddir) -L$(top_builddir)/.libs" \
+	ARCHFLAGS="$(ARCHFLAGS)" SRCDIR="$(srcdir)" \
+	    python setup.py build --build-lib=$(top_builddir)
 
 install-exec-hook:
-	CFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS) -L. -L.libs" \
+	CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libamounts_la_CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)" \
+	LDFLAGS="$(LDFLAGS) -L$(top_builddir) -L$(top_builddir)/.libs" \
+	ARCHFLAGS="$(ARCHFLAGS)" SRCDIR="$(srcdir)" \
 	    python setup.py install --prefix=$(prefix)
 
 endif
@@ -146,9 +150,29 @@ RegressionTests:
 
 ######################################################################
 
-release:
-	make -j3 distcheck \
-	    CPPFLAGS="-I/usr/local/include -I/opt/local/include " \
-	    LDFLAGS="-L/usr/local/lib -L/opt/local/lib"
+copy-sources:
+	-mkdir /tmp/ledger
+	rsync -av --delete $(srcdir)/.git/ /tmp/ledger/.git/
+	(cd /tmp/ledger; git reset --hard HEAD; git clean -x -d -f)
+
+release: copy-sources
+	(cd /tmp/ledger; ./acprep --local && \
+	 make -j3 \
+	    CPPFLAGS="-I/usr/local/include -I/opt/local/include" \
+	    LDFLAGS="-L/usr/local/lib -L/opt/local/lib" \
+	    ARCHFLAGS="-arch i386 -arch ppc -isysroot /Developer/SDKs/MacOSX10.5.sdk" \
+	    CXXFLAGS="-arch i386 -arch ppc -isysroot /Developer/SDKs/MacOSX10.5.sdk" \
+	    LDFLAGS="$LDFLAGS -arch i386 -arch ppc -Wl,-syslibroot,/Developer/SDKs/MacOSX10.5.sdk" \
+	    DISTCHECK_CONFIGURE_FLAGS="--disable-dependency-tracking")
+
+release-distcheck: copy-sources
+	(cd /tmp/ledger; ./acprep --local && \
+	 make -j3 distcheck \
+	    CPPFLAGS="-I/usr/local/include -I/opt/local/include" \
+	    LDFLAGS="-L/usr/local/lib -L/opt/local/lib" \
+	    ARCHFLAGS="-arch i386 -arch ppc -isysroot /Developer/SDKs/MacOSX10.5.sdk" \
+	    CXXFLAGS="-arch i386 -arch ppc -isysroot /Developer/SDKs/MacOSX10.5.sdk" \
+	    LDFLAGS="$LDFLAGS -arch i386 -arch ppc -Wl,-syslibroot,/Developer/SDKs/MacOSX10.5.sdk" \
+	    DISTCHECK_CONFIGURE_FLAGS="--disable-dependency-tracking")
 
 # Makefile.am ends here
