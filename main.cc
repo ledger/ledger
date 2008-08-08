@@ -447,6 +447,8 @@ int main(int argc, char * argv[], char * envp[])
   std::auto_ptr<journal_t> journal;
 
   try {
+    std::ios::sync_with_stdio(false);
+
 #if DEBUG_LEVEL < BETA
     ledger::do_cleanup = false;
 #endif
