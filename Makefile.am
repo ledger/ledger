@@ -1,3 +1,5 @@
+EXTRA_DIST = contrib
+
 lib_LTLIBRARIES = libamounts.la libledger.la
 
 libamounts_la_CPPFLAGS = -I$(srcdir)/src
@@ -247,7 +249,7 @@ UnitTests_CPPFLAGS = -I$(srcdir)/test $(libledger_la_CPPFLAGS)
 UnitTests_LDFLAGS  = $(LIBADD_DL)
 UnitTests_LDADD    = $(lib_LTLIBRARIES) -lcppunit
 
-EXTRA_DIST = test/python
+EXTRA_DIST += test/python
 
 PyUnitTests_SOURCES = test/__init__.py test/PyUnitTests.py
 
@@ -288,7 +290,7 @@ fullcheck: check
 
 ######################################################################
 
-EXTRA_DIST += LICENSE NEWS README contrib
+EXTRA_DIST += doc/LICENSE doc/NEWS doc/README
 EXTRA_DIST += doc/Doxyfile doc/ledger.pdf doc/refman.pdf
 
 DISTCLEANFILES += doc/ledger.info doc/ledger.pdf \
