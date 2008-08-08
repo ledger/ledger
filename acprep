@@ -11,8 +11,6 @@
 export AUTOCONF_VERSION=2.62
 export AUTOMAKE_VERSION=1.10.1
 
-touch AUTHORS COPYING ChangeLog
-
 cmd=$(which glibtoolize 2>&1)
 if [ -x "$cmd" ]; then
     export LIBTOOLIZE="$cmd"
@@ -25,21 +23,22 @@ echo "m4_define([VERSION_NUMBER], [$COMMIT])" > version.m4
 autoreconf --force --install
 
 
-SWITCHES=""
+SWITCHES="--enable-python"	# always build with Python support
 
+PYTHON_HOME="/usr"
 BOOST_SUFFIX=""
 
 INCDIRS="-isystem /usr/local/include"
 INCDIRS="$INCDIRS -isystem /opt/local/include"
 INCDIRS="$INCDIRS -isystem /opt/local/include/libofx"
 INCDIRS="$INCDIRS -isystem /usr/local/include/boost-1_35"
+INCDIRS="$INCDIRS -isystem $PYTHON_HOME/include/python2.5"
 
 LDFLAGS=""
 LIBDIRS="-L/usr/local/lib -L/opt/local/lib"
+LIBDIRS="$LIBDIRS -L$PYTHON_HOME/lib/python2.5/config"
 
 ARCHFLAGS="-arch i386 -arch ppc -isysroot /Developer/SDKs/MacOSX10.5.sdk"
-
-PYTHON_HOME="/usr"
 
 
 SYSTEM=$(uname -s)
@@ -60,7 +59,7 @@ fi
 CPPFLAGS="$INCDIRS"
 CXXFLAGS="$CXXFLAGS -pipe"
 LDFLAGS="$LDFLAGS $LIBDIRS"
-LOCAL=false
+BUILD_DIR=false
 
 # Warning flags
 CXXFLAGS="$CXXFLAGS -Wall -ansi -Winvalid-pch"
@@ -90,13 +89,10 @@ CXXFLAGS="$CXXFLAGS -Wwrite-strings"
 #   but gives you useful stack traces to mention in your bug reports.
 #   Recommended if you're not running a release version.
 #
-# --local
+# --dir PATH
 #
-#   Prepare for building in the same directory as the sources.  This is
-#   required for using pre-compiled headers with the --devel option (see
-#   below).  Otherwise, if you have a directory named ~/Products, Ledger will
-#   build itself there.  There's no option for changing that directory yet, so
-#   just edit this script if you need to.
+#   Building the sources in PATH instead of in the source directory.  This
+#   breaks pre-compiled headers, but keeps your source tree clean.
 #
 # --boost SUFFIX
 #
@@ -159,7 +155,7 @@ CXXFLAGS="$CXXFLAGS -Wwrite-strings"
 #  
 #   Now you're ready to run acprep like this:
 #  
-#    $ ./acprep --local --devel --debug --boost sd
+#    $ ./acprep --devel --debug --boost sd
 #
 #   Or, as I do it:
 #
@@ -192,6 +188,13 @@ while [ -n "$1" ]; do
 	LDFLAGS="-L/usr/local/stow/cppunit-debug/lib $LDFLAGS"
 
 	BOOST_SUFFIX="-d-1_35"	# I built mine with _GLIBCXX_DEBUG
+
+        # Do the same thing as --debug below
+	SWITCHES="$SWITCHES --enable-debug"
+	CPPFLAGS="$CPPFLAGS -DBOOST_MULTI_INDEX_ENABLE_INVARIANT_CHECKING=1"
+	CPPFLAGS="$CPPFLAGS -DBOOST_MULTI_INDEX_ENABLE_SAFE_MODE=1"
+	CXXFLAGS="$CXXFLAGS -g"
+	LDFLAGS="$LDFLAGS -g"
 
 	#LDFLAGS="-Wl,-read_only_relocs,suppress"
 	#LIBS=""
@@ -228,14 +231,6 @@ while [ -n "$1" ]; do
         CXXFLAGS="$CXXFLAGS -g -pg"
 	shift 1 ;;
 
-    --python)
-	if [ -d "$PYTHON_HOME" ]; then
-	    SWITCHES="$SWITCHES --enable-python"
-	    CPPFLAGS="$CPPFLAGS -I$PYTHON_HOME/include/python2.5"
-	    LDFLAGS="$LDFLAGS -L$PYTHON_HOME/lib/python2.5/config"
-	fi
-	shift 1;;
-
     --pic)
 	CXXFLAGS="$CXXFLAGS -fPIC"
 	shift 1 ;;
@@ -244,8 +239,9 @@ while [ -n "$1" ]; do
 	CXXFLAGS="$CXXFLAGS -fomit-frame-pointer -O3"
 	shift 1 ;;
 
-    --local)
-	LOCAL=true
+    --dir)
+	shift 1
+	BUILD_DIR="$1"
 	shift 1 ;;
 
     --build)
@@ -269,12 +265,11 @@ done
 
 HERE="$PWD"
 
-if [ "$LOCAL" = "false" -a -d "$HOME/Products" ]; then
-    projdir="$HOME/Products/ledger"
-    if [ ! -d "$projdir" ]; then
-	mkdir -p "$projdir"
+if [ ! "$BUILD_DIR" = "false" ]; then
+    if [ ! -d "$BUILD_DIR" ]; then
+	mkdir -p "$BUILD_DIR"
     fi
-    cd "$projdir" || (echo "Cannot change to $projdir"; exit 1)
+    cd "$BUILD_DIR" || (echo "Cannot change to $BUILD_DIR"; exit 1)
 fi
 
 "$HERE/configure" --srcdir="$HERE" CXX="$CXX" \

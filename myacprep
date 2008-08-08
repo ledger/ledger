@@ -1,9 +1,0 @@
-#!/bin/bash
-
-# This is how I run acprep on my OS X Leopard machine.
-
-if [[ "$1" = "--release" ]]; then
-    ./acprep --local --python "$@"
-else
-    ./acprep --local --devel --debug --python "$@"
-fi
