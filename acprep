@@ -26,6 +26,7 @@ else
 fi
 
 INCDIRS="-I/opt/local/include -I/usr/local/include -I/usr/include/httpd/xml"
+INCDIRS="$INCDIRS -I/opt/local/include/libofx"
 INCDIRS="$INCDIRS -I/usr/include/python2.5"
 LIBDIRS="-L/opt/local/lib -L/usr/local/lib"
 
