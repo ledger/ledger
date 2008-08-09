@@ -2,7 +2,7 @@ EXTRA_DIST = contrib
 
 lib_LTLIBRARIES = libamounts.la libledger.la
 
-libamounts_la_CPPFLAGS = -I$(srcdir)/src
+libamounts_la_CPPFLAGS = -I$(srcdir)/src -I$(srcdir)/lib
 libamounts_la_SOURCES  = \
 	src/utils.cc       \
 	src/times.cc       \
@@ -77,7 +77,6 @@ endif
 pkginclude_HEADERS =	  \
 	acconf.h	  \
 	src/system.hh	  \
-	src/fdstream.h	  \
 	src/utils.h	  \
 	src/flags.h	  \
 	src/hooks.h	  \
@@ -86,6 +85,8 @@ pkginclude_HEADERS =	  \
 	src/times.h	  \
 	src/mask.h	  \
 	src/binary.h	  \
+			  \
+	lib/fdstream.h	  \
 			  \
 	src/amount.h	  \
 	src/commodity.h	  \
@@ -178,8 +179,9 @@ libpyledger_la_SOURCES =       \
 	python/pyfstream.h     \
 	python/pyinterp.cc     \
 	python/pyutils.h       \
-	python/tuples.h        \
-	python/setup.py
+	python/setup.py        \
+	                       \
+	lib/tuples.h
 
 libpyledger_la_CPPFLAGS = $(libledger_la_CPPFLAGS) -I$(srcdir)/python
 
