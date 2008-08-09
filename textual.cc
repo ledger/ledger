@@ -293,16 +293,6 @@ transaction_t * parse_transaction(char * line, account_t * account,
 
 parse_assign:
   if (entry != NULL) {
-    // Add this amount to the related account now
-
-    account_xdata_t& xdata(account_xdata(*xact->account));
-
-    if (xact->amount) {
-      xdata.value += xact->amount;
-      DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
-		  "XACT assign: account total = " << xdata.value);
-    }
-
     // Parse the optional assigned (= AMOUNT)
 
     if (in.good() && ! in.eof()) {
@@ -327,6 +317,13 @@ parse_assign:
 
 	    unsigned long end = (long)in.tellg();
 
+	    account_xdata_t& xdata(account_xdata(*xact->account));
+
+	    DEBUG_PRINT("ledger.xact.assign",
+			"account balance = " << xdata.value);
+	    DEBUG_PRINT("ledger.xact.assign",
+			"xact amount = " << amt);
+
 	    amount_t diff;
 	    if (xdata.value.type == value_t::AMOUNT)
 	      diff = amt - *((amount_t *) xdata.value.data);
@@ -336,6 +333,9 @@ parse_assign:
 	      diff = amt - ((balance_pair_t *) xdata.value.data)->quantity.amount(amt.commodity());
 	    else
 	      diff = amt;
+
+	    DEBUG_PRINT("ledger.xact.assign",
+			"diff = " << diff);
 
 	    DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
 			"XACT assign: diff = " << diff);

@@ -272,6 +272,22 @@ bool entry_base_t::finalize()
     throw err;
   }
 
+  // Add the final calculated totals each to their related account
+
+  if (dynamic_cast<entry_t *>(this)) {
+    for (transactions_list::const_iterator x = transactions.begin();
+	 x != transactions.end();
+	 x++) {
+      account_xdata_t& xdata(account_xdata(*(*x)->account));
+      // jww (2008-08-09): For now, this feature only works for
+      // non-specific commodities.
+      xdata.value += (*x)->amount.strip_annotations();
+      if ((*x)->account->fullname() == "Assets:Cash")
+	DEBUG_PRINT("ledger.xact.assign",
+		    "account " << (*x)->account->fullname() << " balance = " << xdata.value);
+    }
+  }
+
   return true;
 }
 
