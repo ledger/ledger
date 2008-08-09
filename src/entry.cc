@@ -320,6 +320,21 @@ bool entry_base_t::finalize()
     }
   }
 
+  // Add the final calculated totals each to their related account
+
+  if (dynamic_cast<entry_t *>(this)) {
+    foreach (xact_t * xact, xacts) {
+      account_t::xdata_t& xdata(xact->account->xdata());
+
+      // jww (2008-08-09): For now, this feature only works for
+      // non-specific commodities.
+      if (xdata.value.is_null())
+	xdata.value = xact->amount.strip_annotations();
+      else
+	xdata.value += xact->amount.strip_annotations();
+    }
+  }
+
   return true;
 }
 
