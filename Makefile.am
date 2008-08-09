@@ -32,8 +32,6 @@ endif
 if HAVE_LIBOFX
 libamounts_la_CPPFLAGS += -DHAVE_LIBOFX=1
 endif
-if HAVE_BOOST_PYTHON
-endif
 if DEBUG
 libamounts_la_CPPFLAGS += -DDEBUG_MODE
 endif
@@ -65,19 +63,6 @@ libledger_la_SOURCES  = \
 	src/reconcile.cc   \
 	src/quotes.cc
 
-if HAVE_BOOST_PYTHON
-Python_ledger_SRC = \
-	python/pyledger.cc	   \
-	python/pyinterp.cc	   \
-	python/py_amount.cc	   \
-	python/py_commodity.cc \
-	python/py_times.cc	   \
-	python/py_utils.cc
-
-libledger_la_SOURCES += $(Python_ledger_SRC)
-libledger_la_CPPFLAGS += -DUSE_BOOST_PYTHON=1 -I$(srcdir)/python
-endif
-
 if HAVE_EXPAT
 libledger_la_SOURCES += src/gnucash.cc
 else
@@ -89,62 +74,65 @@ if HAVE_LIBOFX
 libledger_la_SOURCES += src/ofx.cc
 endif
 
-pkginclude_HEADERS =     \
-	acconf.h         \
-	src/system.hh    \
-	src/fdstream.h   \
-	src/utils.h	 \
-	src/flags.h      \
-	src/hooks.h      \
-	src/pushvar.h    \
-	src/error.h      \
-	src/times.h	 \
-	src/mask.h       \
-	src/binary.h     \
-			 \
-	src/amount.h     \
-	src/commodity.h  \
-	src/balance.h    \
-	src/balpair.h    \
-	src/value.h      \
-			 \
-	src/token.h      \
-	src/parser.h     \
-	src/op.h         \
-	src/expr.h       \
-	src/scope.h      \
-	src/predicate.h  \
-	src/format.h     \
-	src/option.h     \
-			 \
-	src/journal.h    \
-	src/entry.h      \
-	src/xact.h       \
-	src/account.h    \
-	src/iterators.h  \
-	src/compare.h    \
-			 \
-	src/textual.h    \
-	src/cache.h      \
-	src/emacs.h      \
-	src/qif.h	 \
-	src/xml.h	 \
-	src/csv.h        \
-	src/gnucash.h    \
-	src/ofx.h	 \
-			 \
-	src/session.h    \
-	src/report.h     \
-	src/handler.h    \
-	src/filters.h    \
-	src/output.h     \
-	src/help.h       \
-			 \
-	src/derive.h     \
-	src/reconcile.h  \
-	src/quotes.h     \
-			 \
-	src/ledger.h
+pkginclude_HEADERS =	  \
+	acconf.h	  \
+	src/system.hh	  \
+	src/fdstream.h	  \
+	src/utils.h	  \
+	src/flags.h	  \
+	src/hooks.h	  \
+	src/pushvar.h	  \
+	src/error.h	  \
+	src/times.h	  \
+	src/mask.h	  \
+	src/binary.h	  \
+			  \
+	src/amount.h	  \
+	src/commodity.h	  \
+	src/balance.h	  \
+	src/balpair.h	  \
+	src/value.h	  \
+			  \
+	src/token.h	  \
+	src/parser.h	  \
+	src/op.h	  \
+	src/expr.h	  \
+	src/scope.h	  \
+	src/predicate.h	  \
+	src/format.h	  \
+	src/option.h	  \
+			  \
+	src/journal.h	  \
+	src/entry.h	  \
+	src/xact.h	  \
+	src/account.h	  \
+	src/iterators.h	  \
+	src/compare.h	  \
+			  \
+	src/textual.h	  \
+	src/cache.h	  \
+	src/emacs.h	  \
+	src/qif.h	  \
+	src/xml.h	  \
+	src/csv.h	  \
+	src/gnucash.h	  \
+	src/ofx.h	  \
+			  \
+	src/session.h	  \
+	src/report.h	  \
+	src/handler.h	  \
+	src/filters.h	  \
+	src/output.h	  \
+	src/help.h	  \
+			  \
+	src/derive.h	  \
+	src/reconcile.h	  \
+	src/quotes.h	  \
+			  \
+	src/ledger.h	  \
+			  \
+	python/pyledger.h \
+	python/pyinterp.h
 
 CLEANFILES =
 
@@ -173,24 +161,39 @@ ledger_LDFLAGS	= -static
 info_TEXINFOS   = doc/ledger.texi
 
 dist_lisp_LISP  = lisp/ledger.el lisp/timeclock.el
-
+ELCFILES        =
 DISTCLEANFILES  = ledger.elc timeclock.elc
 
 ######################################################################
 
 if HAVE_BOOST_PYTHON
 
-noinst_PROGRAMS = ledger.so
+lib_LTLIBRARIES += libpyledger.la
 
-CLEANFILES += ledger.so
+libpyledger_la_SOURCES =       \
+	python/py_amount.cc    \
+	python/py_commodity.cc \
+	python/py_times.cc     \
+	python/py_utils.cc     \
+	python/pyfstream.h     \
+	python/pyinterp.cc     \
+	python/pyutils.h       \
+	python/tuples.h        \
+	python/setup.py
+
+libpyledger_la_CPPFLAGS = $(libledger_la_CPPFLAGS) -I$(srcdir)/python
+
+pyexec_PROGRAMS = ledger.so
 
 clean-local:
 	rm -fr build
 
-ledger_so_SOURCES      = $(Python_ledger_SRC)
+ledger_so_SOURCES      = $(libamounts_la_SOURCES) $(libledger_la_SOURCES) \
+			 $(libpyledger_la_SOURCES) python/pyledger.cc
 ledger_so_DEPENDENCIES = $(lib_LTLIBRARIES)
 
-PYLIBS  = amounts ledger gmp \
+PYLIBS  = amounts ledger pyledger gmp \
+	  boost_system$(BOOST_SUFFIX)  \
 	  boost_date_time$(BOOST_SUFFIX)  \
           boost_filesystem$(BOOST_SUFFIX) \
           boost_regex$(BOOST_SUFFIX)	  \
@@ -201,16 +204,13 @@ PYLIBS += ofx
 endif
 
 ledger.so: $(ledger_so_SOURCES) $(ledger_so_DEPENDENCIES)
-	CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libledger_la_CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)" \
-	LDFLAGS="$(LDFLAGS) -L$(top_builddir) -L$(top_builddir)/.libs" \
-	ARCHFLAGS="$(ARCHFLAGS)" PYLIBS="$(PYLIBS)" SRCDIR="$(srcdir)" \
-	    python $(srcdir)/python/setup.py build --build-lib=$(top_builddir)
-
-install-exec-hook:
-	CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libledger_la_CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)" \
-	LDFLAGS="$(LDFLAGS) -L$(top_builddir) -L$(top_builddir)/.libs" \
-	ARCHFLAGS="$(ARCHFLAGS)" PYLIBS="$(PYLIBS)" SRCDIR="$(srcdir)" \
-	    python $(srcdir)/python/setup.py install --prefix=$(prefix)
+	BUILD_DIR=`cd $(top_builddir); pwd`; \
+	(cd $(srcdir); \
+	 CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libpyledger_la_CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)" \
+	 LDFLAGS="$(LDFLAGS) -L$$BUILD_DIR -L$$BUILD_DIR/.libs" \
+	 ARCHFLAGS="$(ARCHFLAGS)" PYLIBS="$(PYLIBS)" \
+	     python python/setup.py build --build-lib=$$BUILD_DIR/ \
+					  --build-temp=$$BUILD_DIR/build)
 
 endif
 
@@ -251,7 +251,7 @@ UnitTests_LDADD    = $(lib_LTLIBRARIES) -lcppunit
 
 EXTRA_DIST += test/python
 
-PyUnitTests_SOURCES = test/__init__.py test/PyUnitTests.py
+PyUnitTests_SOURCES = test/__init__.py test/PyUnitTests.py test/UnitTests.py
 
 ESC_srcdir=`echo "$(srcdir)" | sed 's/\//\\\\\//g'`
 ESC_builddir=`echo "$(top_builddir)" | sed 's/\//\\\\\//g'`
@@ -331,8 +331,12 @@ docs: pdf $(top_builddir)/doc/refman.pdf
 
 copy-sources:
 	-mkdir /tmp/ledger
-	rsync -av --delete $(srcdir)/.git/ /tmp/ledger/.git/
-	(cd /tmp/ledger; git reset --hard HEAD; git clean -x -d -f)
+	sudo rsync -av --delete \
+	    --exclude=lib/ \
+	    --exclude=.libs/ \
+	    --exclude=.deps/ \
+	    ./ /tmp/ledger/
+	(cd /tmp/ledger; sudo git clean -x -d -f)
 
 release: copy-sources
 	(cd /tmp/ledger; ./acprep --release --build -j3)
