@@ -9,7 +9,7 @@
 # build permutations I use for testing and profiling.
 
 export AUTOCONF_VERSION=2.61
-export AUTOMAKE_VERSION=1.10
+#export AUTOMAKE_VERSION=1.10
 
 cmd=$(which glibtoolize 2>&1)
 if [ -x "$cmd" ]; then
