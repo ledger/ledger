@@ -17,7 +17,6 @@ if [ -x "$cmd" ]; then
 fi
 
 COMMIT=$(git describe --all | sed 's/heads\///')
-
 echo "m4_define([VERSION_NUMBER], [$COMMIT])" > version.m4
 
 autoreconf --force --install
