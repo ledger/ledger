@@ -281,9 +281,11 @@ fi
 
 SWITCHES="$SWITCHES --with-boost-suffix=$BOOST_SUFFIX"
 
-"$HERE/configure" --srcdir="$HERE" CXX="$CXX" \
-    CPPFLAGS="$CPPFLAGS" CXXFLAGS="$CXXFLAGS $local_cxxflags" \
-    LDFLAGS="$LDFLAGS" LIBS="$LIBS" $SWITCHES
+PATH="$PYTHON_HOME/bin:$PATH" \
+    "$HERE/configure" --srcdir="$HERE" \
+	CXX="$CXX" CPPFLAGS="$CPPFLAGS" CXXFLAGS="$CXXFLAGS" \
+	LDFLAGS="$LDFLAGS" LIBS="$LIBS" \
+	$SWITCHES
 
 # Alter the Makefile so that it's not nearly so verbose.  This makes errors
 # and warnings much easier to spot.
@@ -297,7 +299,15 @@ fi
 # If the --build flag was passed, start a build right away with the right
 # options.
 
+echo '#!/bin/bash' > make.sh
+MAKE_VARS="ARCHFLAGS=\"$ARCHFLAGS\""
+MAKE_VARS="$MAKE_VARS CPPFLAGS=\"$CPPFLAGS\""
+MAKE_VARS="$MAKE_VARS LDFLAGS=\"$LDFLAGS\""
+MAKE_VARS="$MAKE_VARS CXXFLAGS=\"$CXXFLAGS\""
+MAKE_VARS="$MAKE_VARS DISTCHECK_CONFIGURE_FLAGS=\"$SWITCHES\""
+echo "make $MAKE_VARS \"\$@\"" >> make.sh
+chmod u+x make.sh
+
 if [ $DO_BUILD = true ]; then
-    echo "make ARCHFLAGS=\"$ARCHFLAGS\" CPPFLAGS=\"$CPPFLAGS\" LDFLAGS=\"$LDFLAGS\" CXXFLAGS=\"$CXXFLAGS\" DISTCHECK_CONFIGURE_FLAGS=\"$SWITCHES\" $@" > make.sh
-    sh -x make.sh
+    sh -x make.sh "$@"
 fi

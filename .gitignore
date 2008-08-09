@@ -67,6 +67,7 @@
 /libtool
 /ltmain.sh
 /make.deps
+/make.sh
 /missing
 /pending
 /stamp-h1
