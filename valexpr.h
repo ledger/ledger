@@ -280,7 +280,6 @@ bool compute_amount(value_expr_t * expr, amount_t& amt,
 #define PARSE_VALEXPR_RELAXED	 0x02
 #define PARSE_VALEXPR_NO_MIGRATE 0x04
 #define PARSE_VALEXPR_NO_REDUCE  0x08
-#define PARSE_VALEXPR_NO_ASSIGN  0x10
 
 value_expr_t * parse_value_expr(std::istream& in,
 				scope_t * scope = NULL,
