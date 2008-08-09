@@ -39,12 +39,12 @@ INCDIRS="$INCDIRS -isystem /opt/local/include/libofx"
 INCDIRS="$INCDIRS -isystem /usr/local/include/boost-1_35"
 INCDIRS="$INCDIRS -isystem $PYTHON_HOME/include/python$PYTHON_VERSION"
 
+CXXFLAGS=""
+ARCHFLAGS=""
+LDARCHFLAGS=""
 LDFLAGS=""
 LIBDIRS="-L/usr/local/lib -L/opt/local/lib"
 LIBDIRS="$LIBDIRS -L$PYTHON_HOME/lib/python$PYTHON_VERSION/config"
-
-ARCHFLAGS="-arch i386 -arch ppc -isysroot /Developer/SDKs/MacOSX10.5.sdk"
-
 
 SYSTEM=$(uname -s)
 
@@ -53,9 +53,8 @@ if [ $SYSTEM = Linux ]; then
 elif [ $SYSTEM = Solaris ]; then
     CXXFLAGS="-pthreads"
 elif [ $SYSTEM = Darwin ]; then
-    CXXFLAGS=""
-else
-    CXXFLAGS=""
+    ARCHFLAGS="-arch i386 -arch ppc -isysroot /Developer/SDKs/MacOSX10.5.sdk"
+    LDARCHFLAGS="$ARCHFLAGS -Wl,-syslibroot,/Developer/SDKs/MacOSX10.5.sdk"
 fi
 
 # Building the command-line tool as a shared library is a luxury,
@@ -259,7 +258,7 @@ while [ -n "$1" ]; do
 	SWITCHES="$SWITCHES --disable-dependency-tracking"
 	CPPFLAGS="-isystem /usr/local/stow/cppunit/include $CPPFLAGS"
 	CXXFLAGS="$CXXFLAGS $ARCHFLAGS"
-	LDFLAGS="$LDFLAGS $ARCHFLAGS -Wl,-syslibroot,/Developer/SDKs/MacOSX10.5.sdk"
+	LDFLAGS="$LDFLAGS $LDARCHFLAGS"
 	LDFLAGS="-L/usr/local/stow/cppunit/lib $LDFLAGS"
 
 	shift 1 ;;
