@@ -210,7 +210,7 @@ ledger.so: $(ledger_so_SOURCES) $(ledger_so_DEPENDENCIES)
 	 LDFLAGS="$(LDFLAGS) -L$$BUILD_DIR -L$$BUILD_DIR/.libs" \
 	 ARCHFLAGS="$(ARCHFLAGS)" PYLIBS="$(PYLIBS)" \
 	     python python/setup.py build --build-lib=$$BUILD_DIR/ \
-					  --build-temp=$$BUILD_DIR/build)
+					  --build-temp=$$BUILD_DIR/build -f)
 
 endif
 
