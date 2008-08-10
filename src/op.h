@@ -278,15 +278,15 @@ public:
     scope_t&        scope;
     const bool      relaxed;
     const ptr_op_t& op_to_find;
-    unsigned long * start_pos;
-    unsigned long * end_pos;
+    ostream_pos_type * start_pos;
+    ostream_pos_type * end_pos;
 
     // jww (2008-08-01): Is a scope needed here?
-    print_context_t(scope_t&	    _scope,
-		    const bool      _relaxed	= false,
-		    const ptr_op_t& _op_to_find = ptr_op_t(),
-		    unsigned long * _start_pos  = NULL,
-		    unsigned long * _end_pos	= NULL)
+    print_context_t(scope_t&	       _scope,
+		    const bool	       _relaxed	   = false,
+		    const ptr_op_t&    _op_to_find = ptr_op_t(),
+		    ostream_pos_type * _start_pos  = NULL,
+		    ostream_pos_type * _end_pos	   = NULL)
       : scope(_scope), relaxed(_relaxed), op_to_find(_op_to_find),
 	start_pos(_start_pos), end_pos(_end_pos) {}
   };

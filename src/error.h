@@ -48,7 +48,7 @@ inline void throw_func(const string& message) {
 extern std::ostringstream _ctxt_buffer;
 
 #define add_error_context(msg)					\
-  ((static_cast<unsigned long>(_ctxt_buffer.tellp()) == 0) ?	\
+  ((long(_ctxt_buffer.tellp()) == 0) ?				\
    (_ctxt_buffer << msg) : (_ctxt_buffer << std::endl << msg))
 
 inline string error_context() {
@@ -63,11 +63,13 @@ inline string file_context(const path& file, std::size_t line) {
   return buf.str();
 }
 
-inline string line_context(const string& line, long pos) {
+inline string line_context(const string& line, istream_pos_type pos) {
   std::ostringstream buf;
   buf << "  " << line << std::endl << "  ";
-  long idx = pos < 0 ? line.length() - 1 : pos;
-  for (int i = 0; i < idx; i++)
+  istream_pos_type idx = (pos == istream_pos_type(0) ?
+			  istream_pos_type(line.length()) : pos);
+  idx -= 1;
+  for (istream_pos_type i = 0; i < idx; i += 1)
     buf << " ";
   buf << "^" << std::endl;
   return buf.str();

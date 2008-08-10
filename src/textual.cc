@@ -144,22 +144,22 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
 
   // Parse the account name
 
-  unsigned long account_beg = static_cast<unsigned long>(in.tellg());
-  unsigned long account_end = account_beg;
+  istream_pos_type account_beg = in.tellg();
+  istream_pos_type account_end = account_beg;
   while (! in.eof()) {
     in.get(p);
     if (in.eof() || (std::isspace(p) &&
 		     (p == '\t' || in.peek() == EOF ||
 		      std::isspace(in.peek()))))
       break;
-    account_end++;
+    account_end += 1;
   }
 
   if (account_beg == account_end)
     throw parse_error("No account was specified");
 
-  char * b = &line[account_beg];
-  char * e = &line[account_end];
+  char * b = &line[long(account_beg)];
+  char * e = &line[long(account_end)];
   if ((*b == '[' && *(e - 1) == ']') ||
       (*b == '(' && *(e - 1) == ')')) {
     xact->add_flags(XACT_VIRTUAL);
@@ -198,7 +198,7 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
       goto parse_assign;
 
     try {
-      unsigned long beg = static_cast<unsigned long>(in.tellg());
+      istream_pos_type beg = in.tellg();
 
       xact->amount_expr =
 	parse_amount_expr(in, xact->amount, xact.get(),
@@ -217,8 +217,8 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
 	if (xact->amount_expr->is_constant())
 	  xact->amount_expr = expr_t();
 
-	unsigned long end = static_cast<unsigned long>(in.tellg());
-	xact->amount_expr->set_text(string(line, beg, end - beg));
+	istream_pos_type end = in.tellg();
+	xact->amount_expr->set_text(string(line, long(beg), long(end - beg)));
       }
     }
     catch (const std::exception& err) {
@@ -251,7 +251,7 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
 	xact->cost = amount_t();
 
 	try {
-	  unsigned long beg = static_cast<unsigned long>(in.tellg());
+	  istream_pos_type beg = in.tellg();
 
 	  xact->cost_expr =
 	    parse_amount_expr(in, *xact->cost, xact.get(),
@@ -259,13 +259,13 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
 			      EXPR_PARSE_NO_ASSIGN);
 
 	  if (xact->cost_expr) {
-	    unsigned long end = static_cast<unsigned long>(in.tellg());
+	    istream_pos_type end = in.tellg();
 	    if (per_unit)
 	      xact->cost_expr->set_text(string("@") +
-					string(line, beg, end - beg));
+					string(line, long(beg), long(end - beg)));
 	    else
 	      xact->cost_expr->set_text(string("@@") +
-					string(line, beg, end - beg));
+					string(line, long(beg), long(end - beg)));
 	  }
 	}
 	catch (const std::exception& err) {
@@ -316,7 +316,7 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
 	  amount_t amt;
 
 	  try {
-	    unsigned long beg = static_cast<unsigned long>(in.tellg());
+	    istream_pos_type beg = in.tellg();
 
 	    optional<expr_t> total_expr =
 	      parse_amount_expr(in, amt, xact.get(), EXPR_PARSE_NO_MIGRATE);
@@ -329,9 +329,9 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
 		  "XACT assign: parsed amt = " << amt);
 
 	    if (total_expr) {
-	      unsigned long end = static_cast<unsigned long>(in.tellg());
+	      istream_pos_type end = in.tellg();
 	      total_expr->set_text(string("=") +
-				   string(line, beg, end - beg));
+				   string(line, long(beg), long(end - beg)));
 	    }
 
 	    // jww (2008-08-02): Save total_expr somewhere!
@@ -397,7 +397,7 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
     if (p == ';') {
       in.get(p);
       p = peek_next_nonws(in);
-      xact->note = &line[static_cast<unsigned long>(in.tellg())];
+      xact->note = &line[long(in.tellg())];
       DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 		  "Parsed a note '" << *xact->note << "'");
 
@@ -426,16 +426,16 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
   }
   catch (const std::exception& err) {
     add_error_context("While parsing transaction:\n");
-    add_error_context(line_context(line, static_cast<unsigned long>(in.tellg()) - 1));
+    add_error_context(line_context(line, in.tellg()));
     throw err;
   }
 }
 
-bool parse_xacts(std::istream& in,
-		 account_t *   account,
-		 entry_base_t& entry,
-		 const string& kind,
-		 unsigned long beg_pos)
+bool parse_xacts(std::istream&	  in,
+		 account_t *	  account,
+		 entry_base_t&	  entry,
+		 const string&	  kind,
+		 istream_pos_type beg_pos)
 {
   TRACE_START(entry_xacts, 1, "Time spent parsing transactions:");
 
@@ -471,7 +471,7 @@ bool parse_xacts(std::istream& in,
 }
 
 entry_t * parse_entry(std::istream& in, char * line, account_t * master,
-		      textual_parser_t& parser, unsigned long& pos)
+		      textual_parser_t& parser, istream_pos_type& pos)
 {
   TRACE_START(entry_text, 1, "Time spent preparing entry text:");
 
@@ -523,11 +523,11 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
 
   TRACE_START(entry_details, 1, "Time spent parsing entry details:");
 
-  unsigned long end_pos;
+  istream_pos_type end_pos;
   unsigned long beg_line = linenum;
 
   while (! in.eof() && (in.peek() == ' ' || in.peek() == '\t')) {
-    unsigned long beg_pos = static_cast<unsigned long>(in.tellg());
+    istream_pos_type beg_pos = in.tellg();
 
     line[0] = '\0';
     in.getline(line, MAX_LINE);
@@ -538,7 +538,8 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
     if (line[len - 1] == '\r')
       line[--len] = '\0';
 
-    end_pos = beg_pos + len + 1;
+    end_pos = beg_pos;
+    end_pos += len + 1;
     linenum++;
 
     if (line[0] == ' ' || line[0] == '\t') {
@@ -705,9 +706,9 @@ unsigned int textual_parser_t::parse(std::istream& in,
 
   INFO("Parsing file '" << pathname.string() << "'");
 
-  unsigned long beg_pos = static_cast<unsigned long>(in.tellg());
-  unsigned long end_pos;
-  unsigned long beg_line = linenum;
+  istream_pos_type beg_pos  = in.tellg();
+  istream_pos_type end_pos;
+  unsigned long	   beg_line = linenum;
 
   while (in.good() && ! in.eof()) {
     try {
@@ -719,7 +720,8 @@ unsigned int textual_parser_t::parse(std::istream& in,
       if (line[len - 1] == '\r')
 	line[--len] = '\0';
 
-      end_pos = beg_pos + len + 1;
+      end_pos = beg_pos;
+      end_pos += len + 1;
       linenum++;
 
       switch (line[0]) {
@@ -864,8 +866,8 @@ unsigned int textual_parser_t::parse(std::istream& in,
 	}
 
 	auto_entry_t * ae = new auto_entry_t(skip_ws(line + 1));
-	if (parse_xacts(in, account_stack.front(), *ae,
-			       "automated", end_pos)) {
+	if (parse_xacts(in, account_stack.front(), *ae, "automated",
+			end_pos)) {
 	  journal.auto_entries.push_back(ae);
 	  ae->src_idx  = src_idx;
 	  ae->beg_pos  = beg_pos;
@@ -903,11 +905,11 @@ unsigned int textual_parser_t::parse(std::istream& in,
 	char * p = next_element(line);
 	string word(line + 1);
 	if (word == "include") {
-	  push_variable<path>	       save_pathname(pathname);
-	  push_variable<unsigned int>  save_src_idx(src_idx);
-	  push_variable<unsigned long> save_beg_pos(beg_pos);
-	  push_variable<unsigned long> save_end_pos(end_pos);
-	  push_variable<unsigned int>  save_linenum(linenum);
+	  push_variable<path>		  save_pathname(pathname);
+	  push_variable<unsigned int>	  save_src_idx(src_idx);
+	  push_variable<istream_pos_type> save_beg_pos(beg_pos);
+	  push_variable<istream_pos_type> save_end_pos(end_pos);
+	  push_variable<unsigned int>	  save_linenum(linenum);
 
 	  pathname = p;
 #if 0
@@ -965,7 +967,7 @@ unsigned int textual_parser_t::parse(std::istream& in,
       }
 
       default: {
-	unsigned long pos = beg_pos;
+	istream_pos_type pos = beg_pos;
 	TRACE_START(entries, 1, "Time spent handling entries:");
 	if (entry_t * entry =
 	    parse_entry(in, line, account_stack.front(), *this, pos)) {
@@ -1079,7 +1081,7 @@ void write_textual_journal(journal_t&	    journal,
   auto_entries_list::iterator	al = journal.auto_entries.begin();
   period_entries_list::iterator pl = journal.period_entries.begin();
 
-  unsigned long pos = 0;
+  istream_pos_type pos = 0;
 
   format_t hdr_fmt(write_hdr_format);
   boost::filesystem::ifstream in(found);
@@ -1111,11 +1113,11 @@ void write_textual_journal(journal_t&	    journal,
 
       while (pos < base->end_pos) {
 	in.get(c);
-	pos = static_cast<unsigned long>(in.tellg()); // pos++;
+	pos = in.tellg(); // pos++;
       }
     } else {
       in.get(c);
-      pos = static_cast<unsigned long>(in.tellg()); // pos++;
+      pos = in.tellg(); // pos++;
       out.put(c);
     }
   }

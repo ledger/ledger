@@ -210,8 +210,8 @@ format_t::element_t * format_t::parse_elements(const string& fmt)
       std::istringstream str(p);
       current->type = element_t::EXPR;
       current->expr.parse(str);
-      current->expr.set_text(string(p, p + str.tellg()));
-      p += str.tellg();
+      current->expr.set_text(string(p, p + long(str.tellg())));
+      p += long(str.tellg());
       break;
     }
 

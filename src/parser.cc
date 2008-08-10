@@ -400,7 +400,7 @@ expr_t::parser_t::parse(std::istream& in, const flags_t flags)
   catch (const std::exception& err) {
     add_error_context("While parsing value expression:\n");
 #if 0
-    add_error_context(line_context(str, (long)in.tellg() - 1));
+    add_error_context(line_context(str, in.tellg() - 1));
 #endif
     throw err;
   }

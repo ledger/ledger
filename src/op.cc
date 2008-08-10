@@ -763,7 +763,8 @@ bool expr_t::op_t::print(std::ostream& out, print_context_t& context) const
   bool found = false;
 
   if (context.start_pos && this == context.op_to_find) {
-    *context.start_pos = static_cast<unsigned long>(out.tellp()) - 1;
+    *context.start_pos = out.tellp();
+    *context.start_pos--;
     found = true;
   }
 

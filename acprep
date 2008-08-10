@@ -68,7 +68,6 @@ BUILD_DIR=false
 # Warning flags
 CXXFLAGS="$CXXFLAGS -Wall -ansi -Winvalid-pch"
 CXXFLAGS="$CXXFLAGS -Wextra"
-#CXXFLAGS="$CXXFLAGS -Weffc++"
 CXXFLAGS="$CXXFLAGS -Wcast-align"
 CXXFLAGS="$CXXFLAGS -Wcast-qual"
 CXXFLAGS="$CXXFLAGS -Wconversion"
@@ -83,6 +82,11 @@ CXXFLAGS="$CXXFLAGS -Wsign-promo"
 CXXFLAGS="$CXXFLAGS -Wstrict-null-sentinel"
 CXXFLAGS="$CXXFLAGS -Wwrite-strings"
 
+#CXXFLAGS="$CXXFLAGS -Weffc++"
+CXXFLAGS="$CXXFLAGS -Wno-unused"
+CXXFLAGS="$CXXFLAGS -Wno-shorten-64-to-32"
+CXXFLAGS="$CXXFLAGS -Wno-old-style-cast"
+CXXFLAGS="$CXXFLAGS -Wno-deprecated"
 
 # The following are options to prepare a developer tree of Ledger for
 # building:

@@ -306,12 +306,12 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
 
   default: {
     amount_t temp;
-    unsigned long pos = 0;
+    istream_pos_type pos = 0;
 
     // When in relaxed parsing mode, we want to migrate commodity
     // flags so that any precision specified by the user updates the
     // current maximum displayed precision.
-    pos = static_cast<unsigned long>(in.tellg());
+    pos = in.tellg();
 
     amount_t::flags_t parse_flags = 0;
     if (pflags & EXPR_PARSE_NO_MIGRATE)
