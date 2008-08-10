@@ -165,6 +165,11 @@ dist_lisp_LISP  = lisp/ledger.el lisp/timeclock.el
 ELCFILES        =
 DISTCLEANFILES  = ledger.elc timeclock.elc
 
+TAGS:   $(libamounts_la_SOURCES) $(libledger_la_SOURCES) \
+	$(libpyledger_la_SOURCES) python/pyledger.cc
+	etags $(libamounts_la_SOURCES) $(libledger_la_SOURCES) \
+	      $(libpyledger_la_SOURCES) python/pyledger.cc
+
 ######################################################################
 
 if HAVE_BOOST_PYTHON
