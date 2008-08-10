@@ -363,6 +363,21 @@ value_t report_t::get_total_expr(call_scope_t& scope)
   return total_expr.calc(scope);
 }
 
+namespace {
+  value_t print_balance(call_scope_t& args)
+  {
+    var_t<long>	first_width(args, 1);
+    var_t<long>	latter_width(args, 2);
+#if 0
+    var_t<bool>	bold_negative(args, 3);
+#endif
+
+    std::ostringstream out;
+    args[0].dump(out, *first_width, *latter_width);
+    return string_value(out.str());
+  }
+}
+
 expr_t::ptr_op_t report_t::lookup(const string& name)
 {
   const char * p = name.c_str();
@@ -422,6 +437,11 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	break;
       }
     }
+    break;
+
+  case 'p':
+    if (name == "print_balance")
+      return WRAP_FUNCTOR(print_balance);
     break;
   }
 

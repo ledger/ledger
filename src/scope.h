@@ -247,8 +247,8 @@ public:
 
   operator bool() { return value; }
 
-  T& operator *();
-  const T& operator *() const;
+  T operator *();
+  const T operator *() const;
 
   T * operator->() {
     return &**this;
@@ -259,21 +259,21 @@ public:
 };
 
 template <>
-inline long& var_t<long>::operator *() {
-  return value->as_long_lval();
+inline long var_t<long>::operator *() {
+  return value->to_long();
 }
 template <>
-inline const long& var_t<long>::operator *() const {
-  return value->as_long();
+inline const long var_t<long>::operator *() const {
+  return value->to_long();
 }
 
 template <>
-inline string& var_t<string>::operator *() {
-  return value->as_string_lval();
+inline string var_t<string>::operator *() {
+  return value->to_string();
 }
 template <>
-inline const string& var_t<string>::operator *() const {
-  return value->as_string();
+inline const string var_t<string>::operator *() const {
+  return value->to_string();
 }
 
 } // namespace ledger

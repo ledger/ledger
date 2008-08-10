@@ -41,21 +41,17 @@ DECLARE_EXCEPTION(format_error, std::runtime_error);
 
 class format_t : public noncopyable
 {
-  struct element_t : public noncopyable
+  struct element_t : public supports_flags<>, public noncopyable
   {
 #define ELEMENT_ALIGN_LEFT 0x01
-#define ELEMENT_HIGHLIGHT  0x02
+#define ELEMENT_FORMATTED  0x02
 
     enum kind_t {
       STRING,
       EXPR,
-#if 0
-      DEPTH_SPACER
-#endif
     };
 
     kind_t	  type;
-    unsigned char flags;
     unsigned char min_width;
     unsigned char max_width;
     string	  chars;
@@ -64,7 +60,7 @@ class format_t : public noncopyable
     scoped_ptr<struct element_t> next;
 
     element_t() throw()
-      : type(STRING), flags(false), min_width(0), max_width(0) {
+      : supports_flags<>(), type(STRING), min_width(0), max_width(0) {
       TRACE_CTOR(element_t, "");
     }
     ~element_t() throw() {
@@ -76,7 +72,7 @@ class format_t : public noncopyable
       out.width(0);
       out << "\e[31m";
 
-      if (elem->flags & ELEMENT_ALIGN_LEFT)
+      if (elem->has_flags(ELEMENT_ALIGN_LEFT))
 	out << std::left;
       else
 	out << std::right;

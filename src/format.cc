@@ -31,6 +31,7 @@
 
 #include "format.h"
 #include "account.h"
+#include "parser.h"
 
 namespace ledger {
 
@@ -50,7 +51,7 @@ void format_t::element_t::dump(std::ostream& out) const
   case EXPR:   out << "   EXPR"; break;
   }
 
-  out << "  flags: " << int(flags);
+  out << "  flags: " << flags();
   out << "  min: ";
   out << std::right;
   out.width(2);
@@ -166,10 +167,10 @@ format_t::element_t * format_t::parse_elements(const string& fmt)
     while (*p == '!' || *p == '-') {
       switch (*p) {
       case '-':
-	current->flags |= ELEMENT_ALIGN_LEFT;
+	current->add_flags(ELEMENT_ALIGN_LEFT);
 	break;
       case '!':
-	current->flags |= ELEMENT_HIGHLIGHT;
+	current->add_flags(ELEMENT_FORMATTED);
 	break;
       }
       ++p;
@@ -209,9 +210,14 @@ format_t::element_t * format_t::parse_elements(const string& fmt)
     case '[': {
       std::istringstream str(p);
       current->type = element_t::EXPR;
-      current->expr.parse(str);
-      current->expr.set_text(string(p, p + long(str.tellg())));
-      p += long(str.tellg());
+      current->expr.parse(str, EXPR_PARSE_PARTIAL);
+      istream_pos_type pos = str.tellg();
+      current->expr.set_text(string(p, p + long(pos)));
+      p += long(pos) - 1;
+      // Don't gobble up any whitespace
+      const char * base = p;
+      while (p >= base && std::isspace(*p))
+	p--;
       break;
     }
 
@@ -253,9 +259,8 @@ void format_t::format(std::ostream& out_str, scope_t& scope)
   for (element_t * elem = elements.get(); elem; elem = elem->next.get()) {
     std::ostringstream out;
     string name;
-    bool ignore_max_width = false;
 
-    if (elem->flags & ELEMENT_ALIGN_LEFT)
+    if (elem->has_flags(ELEMENT_ALIGN_LEFT))
       out << std::left;
     else
       out << std::right;
@@ -280,6 +285,7 @@ void format_t::format(std::ostream& out_str, scope_t& scope)
 	} else {
 	  value = elem->expr.calc(scope);
 	}
+	DEBUG("format.expr", "value = (" << value << ")");
 	value.strip_annotations().dump(out, elem->min_width);
       }
       catch (const calc_error&) {
@@ -294,7 +300,9 @@ void format_t::format(std::ostream& out_str, scope_t& scope)
 
     string temp = out.str();
 
-    if (! ignore_max_width &&
+    DEBUG("format.expr", "output = \"" << temp << "\"");
+
+    if (! elem->has_flags(ELEMENT_FORMATTED) &&
 	elem->max_width > 0 && elem->max_width < temp.length())
       out_str << truncate(temp, elem->max_width);
     else
