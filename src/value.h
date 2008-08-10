@@ -803,20 +803,17 @@ public:
 
   void push_back(const value_t& val) {
     if (! val.is_null()) {
-      if (is_null()) {
-	*this = val;
-      } else {
-	if (! is_sequence())
-	  in_place_cast(SEQUENCE);
+      if (is_null())
+	*this = sequence_t();
+      if (! is_sequence())
+	in_place_cast(SEQUENCE);
 
-	if (! val.is_sequence()) {
-	  if (! val.is_null())
-	    as_sequence_lval().push_back(val);
-	} else {
-	  const value_t::sequence_t& val_seq(val.as_sequence());
-	  std::copy(val_seq.begin(), val_seq.end(),
-		    back_inserter(as_sequence_lval()));
-	}
+      if (! val.is_sequence()) {
+	as_sequence_lval().push_back(val);
+      } else {
+	const sequence_t& val_seq(val.as_sequence());
+	std::copy(val_seq.begin(), val_seq.end(),
+		  back_inserter(as_sequence_lval()));
       }
     }
   }
@@ -829,7 +826,7 @@ public:
     } else {
       as_sequence_lval().pop_back();
 
-      const value_t::sequence_t& seq(as_sequence());
+      const sequence_t& seq(as_sequence());
       std::size_t new_size = seq.size();
       if (new_size == 0)
 	_reset();

@@ -619,10 +619,14 @@ public:
   }
 #endif
 
-  value_t option_limit_(call_scope_t& args) { // l:
+  void append_predicate(const string& str) {
     if (! predicate.empty())
-      predicate += "&";
-    predicate += args[0].as_string();
+      predicate = string("(") + predicate + ")&";
+    predicate += str;
+  }
+
+  value_t option_limit_(call_scope_t& args) { // l:
+    append_predicate(args[0].as_string());
     return true;
   }
 

@@ -164,20 +164,16 @@ namespace ledger {
 
     value_t operator()(call_scope_t& args)
     {
-      report_t&		  report(find_scope<report_t>(args));
-      var_t<string>       format(args, format_name);
+      report_t&	    report(find_scope<report_t>(args));
+      var_t<string> format(args, format_name);
 
       if (! report.format_string.empty())
 	*format = report.format_string;
 
-      if (args.value().is_sequence() &&
-	  args.value().size() > 1) {
-	if (! report.predicate.empty())
-	  report.predicate = string("(") + report.predicate + ")&";
-	report.predicate +=
-	  args_to_predicate(++args.value().as_sequence().begin(),
-			    args.value().as_sequence().end());
-      }
+      if (args.value().size() > 0)
+	report.append_predicate
+	  (args_to_predicate(args.value().as_sequence().begin(),
+			     args.value().as_sequence().end()));
 
       (report.*report_method)(handler_ptr(new Formatter(report, *format)));
 
