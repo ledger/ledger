@@ -1,31 +1,58 @@
-Hello, and welcome to the Ledger source code.
 
-If you're reading this README file (rather than the version in
-doc/README), it means that you've pulled the sources using Git and are
-prepared to embark on the heady adventure that is compiling and running
-the Ledger Bleeding Edge.
+	     Hello, and welcome to the Ledger source code!
 
-Well, at least we warned you.
+If you're reading this file, you have in your hands the Bleeding Edge.
+This may very well *NOT* be what you want, since it's not guaranteed to
+be in a functionally complete state.  It's under active development, and
+may change in any way at any time.
+
+What you may prefer is the current stable release, or the current beta
+branch.  At this moment, you can get there by one of two commands:
+
+  BETA:     git checkout -b v2.6.1b origin/v2.6.1b
+
+The BETA is what I prefer people use, since I still have a change to fix
+major bugs that you find.  Just log them in the track against 2.6.1 and
+they'll become a part of my work list.
+
+  RELEASE:  git checkout v2.6.0.90
+
+This is the same release code that you can download via tarball from the
+home page.  It has some serious issues dealing with date/time handling,
+although at least its major flaws are mostly known by now.
+
+You can jump over to the current active development at any time by using
+this command:
+
+  DEVEL:    git checkout master
+
+There are also several topic branches which contain experimental
+features, although none of these are guaranteed even to compile.  Best
+to chat with me on IRC or via the mailing list before going too much
+further with those.
 
 ------------------------------------------------------------------------
 
-If you wish to proceed in this venture, you'll need a few dependencies:
+Now, if you wish to proceed in this venture, you'll need a few
+dependencies:
 
-  - Boost 1.35
-  - CppUnit 1.12.1
+  - PCRE 7.7          -- if you're building BETA or RELEASE
+
+  - Boost 1.35        -- if you're building DEVEL
+  - CppUnit 1.12.1    -- if you're building DEVEL
 
   - Optionally, Python 2.4 or higher
   - Optionally, libexpat or libxml2
   - Optionally, libofx
 
-For the convenience of my fellow developers, you may download some of
-these dependencies quite easily, right here and now.  Just run this
-command:
+For the convenience of my fellow developers on the master (DEVEL)
+branch, you may download some of these dependencies quite easily right
+here and now.  Just run this command:
 
   git submodule update --init
 
 You'll now have a few extra source trees in lib/.  There's even a
-Makefile there, which will build and install Boost and CppUnit into
+Makefile there, which will build and install Boost and CppUnit into the
 appropriate places in /usr/local/stow.
 
 ------------------------------------------------------------------------
@@ -76,4 +103,3 @@ your repository.  I'm only too happy to do so for anyone who takes time
 out of their schedule to help the Ledger project.
 
 John
-
