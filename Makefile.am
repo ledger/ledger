@@ -218,7 +218,7 @@ ledger.so: $(ledger_so_SOURCES) $(ledger_so_DEPENDENCIES)
 	 ARCHFLAGS="$(ARCHFLAGS)" PYLIBS="$(PYLIBS)" \
 	     $(PYTHON) python/setup.py build \
 		--build-lib=$$BUILD_DIR/ --build-temp=$$BUILD_DIR/build -f); \
-	test -x $(HOME)/bin/growlnotify && \
+	@test ! -x $(HOME)/bin/growlnotify || \
 	    growlnotify -n make -a /Applications/Utilities/Terminal.app \
 		-m "Build in $$BUILD_DIR completed" Ledger
 
