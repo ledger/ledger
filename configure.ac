@@ -110,53 +110,39 @@ else
 fi
 
 # check for expat or xmlparse
-AC_ARG_ENABLE(xml,
-  [  --enable-xml            Turn on support for XML parsing],
-  [case "${enableval}" in
-    yes) xml=true ;;
-    no)  xml=false ;;
-    *) AC_MSG_ERROR(bad value ${enableval} for --enable-xml) ;;
-  esac],[xml=true])
-AM_CONDITIONAL(USE_XML, test x$xml = xtrue)
-
-if [test x$xml = xtrue ]; then
-  AC_CACHE_CHECK(
-    [if libexpat is available],
-    [libexpat_avail_cv_],
-    [libexpat_save_libs=$LIBS
-     LIBS="-lexpat $LIBS"
-     AC_LANG_PUSH(C++)
-     AC_TRY_LINK(
-       [#include <stdio.h>
+AC_CACHE_CHECK(
+  [if libexpat is available],
+  [libexpat_avail_cv_],
+  [libexpat_save_libs=$LIBS
+   LIBS="-lexpat $LIBS"
+   AC_LANG_PUSH(C++)
+   AC_TRY_LINK(
+     [#include <stdio.h>
 	extern "C" {
 	#include <expat.h>           // expat XML parser
 	}],
-       [XML_Parser parser = XML_ParserCreate(NULL);
+     [XML_Parser parser = XML_ParserCreate(NULL);
 	return parser != NULL;],
-       [libexpat_avail_cv_=true],
-       [libexpat_avail_cv_=false])
-     AC_LANG_POP
-     LIBS=$libexpat_save_libs])
+     [libexpat_avail_cv_=true],
+     [libexpat_avail_cv_=false])
+   AC_LANG_POP
+   LIBS=$libexpat_save_libs])
 
-  if [test x$libexpat_avail_cv_ = xtrue ]; then
-    AM_CONDITIONAL(HAVE_EXPAT, true)
-    LIBS="-lexpat $LIBS"
-  else
-    AM_CONDITIONAL(HAVE_EXPAT, false)
-  fi
+if [test x$libexpat_avail_cv_ = xtrue ]; then
+  AM_CONDITIONAL(HAVE_EXPAT, true)
+  LIBS="-lexpat $LIBS"
 else
   AM_CONDITIONAL(HAVE_EXPAT, false)
 fi
 
-if [test x$xml = xtrue ]; then
-  if [test x$libexpat_avail_cv_ = xfalse ]; then
-    AC_CACHE_CHECK(
-      [if libxmlparse is available],
-      [libxmlparse_avail_cv_],
-      [libxmlparse_save_libs=$LIBS
-       LIBS="-lxmlparse -lxmltok $LIBS"
-       AC_LANG_PUSH(C++)
-       AC_TRY_LINK(
+if [test x$libexpat_avail_cv_ = xfalse ]; then
+  AC_CACHE_CHECK(
+    [if libxmlparse is available],
+    [libxmlparse_avail_cv_],
+    [libxmlparse_save_libs=$LIBS
+     LIBS="-lxmlparse -lxmltok $LIBS"
+     AC_LANG_PUSH(C++)
+     AC_TRY_LINK(
 	 [#include <stdio.h>
 	extern "C" {
 	#include <xmlparse.h>           // expat XML parser
@@ -165,15 +151,12 @@ if [test x$xml = xtrue ]; then
 	return parser != NULL;],
 	 [libxmlparse_avail_cv_=true],
 	 [libxmlparse_avail_cv_=false])
-       AC_LANG_POP
-       LIBS=$libxmlparse_save_libs])
+     AC_LANG_POP
+     LIBS=$libxmlparse_save_libs])
 
-    if [test x$libxmlparse_avail_cv_ = xtrue ]; then
-      AM_CONDITIONAL(HAVE_XMLPARSE, true)
-      LIBS="-lxmlparse -lxmltok $LIBS"
-    else
-      AM_CONDITIONAL(HAVE_XMLPARSE, false)
-    fi
+  if [test x$libxmlparse_avail_cv_ = xtrue ]; then
+    AM_CONDITIONAL(HAVE_XMLPARSE, true)
+    LIBS="-lxmlparse -lxmltok $LIBS"
   else
     AM_CONDITIONAL(HAVE_XMLPARSE, false)
   fi
@@ -265,86 +248,40 @@ else
   AC_MSG_FAILURE("Could not find boost_filesystem library (set CPPFLAGS and LDFLAGS?)")
 fi
 
-## check for boost_signals
-#AC_CACHE_CHECK(
-#  [if boost_signals is available],
-#  [boost_signals_cpplib_avail_cv_],
-#  [boost_signals_save_libs=$LIBS
-#   LIBS="-lboost_signals$BOOST_SUFFIX $LIBS"
-#   AC_LANG_PUSH(C++)
-#   AC_LINK_IFELSE(
-#     [AC_LANG_PROGRAM(
-#        [[#include <boost/signal.hpp>]],
-#        [[boost::signal<void (void)> this_signal;]])],
-#     [boost_signals_cpplib_avail_cv_=true],
-#     [boost_signals_cpplib_avail_cv_=false])
-#   AC_LANG_POP
-#   LIBS=$boost_signals_save_libs])
-#
-#if [test x$boost_signals_cpplib_avail_cv_ = xtrue ]; then
-#  LIBS="-lboost_signals$BOOST_SUFFIX $LIBS"
-#else
-#  AC_MSG_FAILURE("Could not find boost_signals library (set CPPFLAGS and LDFLAGS?)")
-#fi
-
 # check for libofx
-AC_ARG_ENABLE(ofx,
-  [  --enable-ofx            Turn on support for OFX/OCF parsing],
-  [case "${enableval}" in
-    yes) ofx=true ;;
-    no)  ofx=false ;;
-    *) AC_MSG_ERROR(bad value ${enableval} for --enable-ofx) ;;
-  esac],[ofx=true])
-
-AM_CONDITIONAL(USE_OFX, test x$ofx = xtrue)
-
-if [test x$ofx = xtrue ]; then
-  AC_CACHE_CHECK(
-    [if libofx is available],
-    [libofx_avail_cv_],
-    [libofx_save_libs=$LIBS
-     LIBS="-lofx $LIBS"
-     AC_LANG_PUSH(C++)
-     AC_LINK_IFELSE(
-       [AC_LANG_PROGRAM(
+AC_CACHE_CHECK(
+  [if libofx is available],
+  [libofx_avail_cv_],
+  [libofx_save_libs=$LIBS
+   LIBS="-lofx $LIBS"
+   AC_LANG_PUSH(C++)
+   AC_LINK_IFELSE(
+     [AC_LANG_PROGRAM(
 	  [[#include <libofx.h>]],
 	  [[LibofxContextPtr libofx_context = libofx_get_new_context();]])],
-       [libofx_avail_cv_=true],
-       [libofx_avail_cv_=false])
-     AC_LANG_POP
-     LIBS=$libofx_save_libs])
+     [libofx_avail_cv_=true],
+     [libofx_avail_cv_=false])
+   AC_LANG_POP
+   LIBS=$libofx_save_libs])
 
-  if [test x$libofx_avail_cv_ = xtrue ]; then
-    AM_CONDITIONAL(HAVE_LIBOFX, true)
-    LIBS="-lofx $LIBS"
-  else
-    AM_CONDITIONAL(HAVE_LIBOFX, false)
-  fi
+if [test x$libofx_avail_cv_ = xtrue ]; then
+  AM_CONDITIONAL(HAVE_LIBOFX, true)
+  LIBS="-lofx $LIBS"
 else
   AM_CONDITIONAL(HAVE_LIBOFX, false)
 fi
 
 # check for Python
-AC_ARG_ENABLE(python,
-  [  --enable-python         Build the amounts library as a Python module],
-  [case "${enableval}" in
-    yes) python=true ;;
-    no)  python=false ;;
-    *) AC_MSG_ERROR(bad value ${enableval} for --enable-python) ;;
-  esac],[python=false])
-
-AM_CONDITIONAL(USE_PYTHON, test x$python = xtrue)
-
-if [test x$python = xtrue ]; then
-  AM_PATH_PYTHON(2.2,, :)
-  if [test "$PYTHON" != :]; then
-    AC_CACHE_CHECK(
-      [if boost_python is available],
-      [boost_python_cpplib_avail_cv_],
-      [boost_python_save_libs=$LIBS
-       LIBS="-lboost_python$BOOST_SUFFIX -lpython$PYTHON_VERSION $LIBS"
-       AC_LANG_PUSH(C++)
-       AC_LINK_IFELSE(
+AM_PATH_PYTHON(2.4,, :)
+if [test "$PYTHON" != :]; then
+  AM_CONDITIONAL(HAVE_PYTHON, true)
+  AC_CACHE_CHECK(
+    [if boost_python is available],
+    [boost_python_cpplib_avail_cv_],
+    [boost_python_save_libs=$LIBS
+     LIBS="-lboost_python$BOOST_SUFFIX -lpython$PYTHON_VERSION $LIBS"
+     AC_LANG_PUSH(C++)
+     AC_LINK_IFELSE(
 	 [AC_LANG_PROGRAM(
 	    [[#include <boost/python.hpp>
 	      using namespace boost::python;
@@ -355,19 +292,17 @@ if [test x$python = xtrue ]; then
 	    [[return 0]])],
 	 [boost_python_cpplib_avail_cv_=true],
 	 [boost_python_cpplib_avail_cv_=false])
-       AC_LANG_POP
-       LIBS=$boost_python_save_libs])
+     AC_LANG_POP
+     LIBS=$boost_python_save_libs])
 
-    if [test x$boost_python_cpplib_avail_cv_ = xtrue ]; then
-      AM_CONDITIONAL(HAVE_BOOST_PYTHON, true)
-      LIBS="-lboost_python$BOOST_SUFFIX -lpython$PYTHON_VERSION $LIBS"
-    else
-      AM_CONDITIONAL(HAVE_BOOST_PYTHON, false)
-    fi
+  if [test x$boost_python_cpplib_avail_cv_ = xtrue ]; then
+    AM_CONDITIONAL(HAVE_BOOST_PYTHON, true)
+    LIBS="-lboost_python$BOOST_SUFFIX -lpython$PYTHON_VERSION $LIBS"
   else
     AM_CONDITIONAL(HAVE_BOOST_PYTHON, false)
   fi
 else
+  AM_CONDITIONAL(HAVE_PYTHON, false)
   AM_CONDITIONAL(HAVE_BOOST_PYTHON, false)
 fi
 
@@ -403,16 +338,19 @@ fi
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([sys/stat.h langinfo.h])
+AC_HEADER_STAT
+AC_CHECK_HEADERS([langinfo.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
-AC_HEADER_STDBOOL
 AC_TYPE_SIZE_T
 AC_STRUCT_TM
 
 # Checks for library functions.
-AC_HEADER_STDC
-AC_CHECK_FUNCS([access mktime realpath getpwuid getpwnam nl_langinfo])
+#AC_FUNC_MKTIME
+#AC_FUNC_STAT
+#AC_FUNC_STRFTIME
+AC_CHECK_FUNCS([access realpath getpwuid getpwnam nl_langinfo])
 
+# Pepare the Makefiles
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

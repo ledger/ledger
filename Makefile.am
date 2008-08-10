@@ -141,7 +141,7 @@ if USE_PCH
 nodist_libledger_la_SOURCES = src/system.hh.gch
 
 BUILT_SOURCES = src/system.hh.gch
-CLEANFILES    += src/system.hh.gch
+CLEANFILES   += src/system.hh.gch
 
 $(srcdir)/src/system.hh.gch: $(srcdir)/src/system.hh $(top_builddir)/acconf.h
 	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
@@ -154,21 +154,27 @@ endif
 
 bin_PROGRAMS	= ledger
 
-ledger_CPPFLAGS = $(libledger_la_CPPFLAGS)
+ledger_CPPFLAGS	= $(libledger_la_CPPFLAGS)
 ledger_SOURCES	= src/main.cc
 ledger_LDADD	= $(LIBOBJS) libamounts.la libledger.la
 ledger_LDFLAGS	= -static
 
-info_TEXINFOS   = doc/ledger.texi
+info_TEXINFOS	= doc/ledger.texi
 
-dist_lisp_LISP  = lisp/ledger.el lisp/timeclock.el
-ELCFILES        =
-DISTCLEANFILES  = ledger.elc timeclock.elc
+dist_lisp_LISP	= lisp/ledger.el lisp/timeclock.el
+ELCFILES	=
+DISTCLEANFILES	= ledger.elc timeclock.elc
+CLEANFILES     += TAGS
 
-TAGS:   $(libamounts_la_SOURCES) $(libledger_la_SOURCES) \
-	$(libpyledger_la_SOURCES) python/pyledger.cc
-	etags $(libamounts_la_SOURCES) $(libledger_la_SOURCES) \
-	      $(libpyledger_la_SOURCES) python/pyledger.cc
+all_sources     = $(libamounts_la_SOURCES) \
+		  $(libledger_la_SOURCES) \
+		  $(libpyledger_la_SOURCES) \
+		  python/pyledger.cc \
+		  $(pkginclude_HEADERS)
+
+TAGS: $(all_sources)
+	@etags $(all_sources)
+	@echo TAGS rebuilt.
 
 ######################################################################
 
@@ -226,8 +232,12 @@ endif
 
 ######################################################################
 
-TESTS = RegressionTests
+TESTS =
+
+if HAVE_PYTHON
+TESTS += RegressionTests
 XFAIL_TESTS = RegressionTests	# jww (2008-08-07): for now
+endif
 
 if HAVE_CPPUNIT
 TESTS += UnitTests

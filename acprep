@@ -22,7 +22,7 @@ echo "m4_define([VERSION_NUMBER], [$COMMIT])" > version.m4
 autoreconf --force --install
 
 
-SWITCHES="--enable-python --disable-shared"
+SWITCHES="--disable-shared"
 
 if [ -z "$PYTHON_HOME" ]; then
     PYTHON_HOME="/usr"
