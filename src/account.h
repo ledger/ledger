@@ -122,11 +122,23 @@ class account_t : public scope_t
       : supports_flags<>(), count(0), total_count(0),
 	virtuals(0), dflags(0)
     {
-      TRACE_CTOR(xdata_t, "");
+      TRACE_CTOR(account_t::xdata_t, "");
+    }
+    xdata_t(const xdata_t& other)
+      : supports_flags<>(other.flags()),
+	value(other.value),
+	total(other.total),
+	sort_value(other.sort_value),
+	count(other.count),
+	total_count(other.total_count),
+	virtuals(other.virtuals),
+	dflags(other.dflags)
+    {
+      TRACE_CTOR(account_t::xdata_t, "copy");
     }
 
     ~xdata_t() throw() {
-      TRACE_DTOR(xdata_t);
+      TRACE_DTOR(account_t::xdata_t);
     }
   };
 

@@ -155,10 +155,22 @@ public:
     optional<xacts_list> component_xacts;
 
     xdata_t() : supports_flags<>(), index(0), account(NULL), ptr(NULL) {
-      TRACE_CTOR(xdata_t, "");
+      TRACE_CTOR(xact_t::xdata_t, "");
+    }
+    xdata_t(const xdata_t& other)
+      : supports_flags<>(other.flags()),
+	total(other.total),
+	sort_value(other.sort_value),
+	value(other.value),
+	index(other.index),
+	date(other.date),
+	account(other.account),
+	ptr(NULL)
+    {
+      TRACE_CTOR(xact_t::xdata_t, "copy");
     }
     ~xdata_t() throw() {
-      TRACE_DTOR(xdata_t);
+      TRACE_DTOR(xact_t::xdata_t);
     }
 
     void remember_xact(xact_t& xact) {

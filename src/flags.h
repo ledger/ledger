@@ -45,8 +45,11 @@ public:
   supports_flags() : flags_(0) {
     TRACE_CTOR(supports_flags, "");
   }
-  supports_flags(const flags_t& arg) : flags_(arg) {
+  supports_flags(const supports_flags& arg) : flags_(arg.flags_) {
     TRACE_CTOR(supports_flags, "copy");
+  }
+  supports_flags(const flags_t& arg) : flags_(arg) {
+    TRACE_CTOR(supports_flags, "const flags_t&");
   }
   ~supports_flags() throw() {
     TRACE_DTOR(supports_flags);

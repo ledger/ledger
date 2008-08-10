@@ -566,9 +566,7 @@ int main(int argc, char * argv[], char * envp[])
 
     status = read_and_report(*session->current_report.get(), argc, argv, envp);
 
-    if (DO_VERIFY())
-      ledger::set_session_context();
-    else
+    if (! DO_VERIFY())
       session.release();	// don't free anything! just let it leak
   }
   catch (const std::exception& err) {
@@ -582,6 +580,7 @@ int main(int argc, char * argv[], char * envp[])
 
   IF_VERIFY() {
     INFO("Ledger ended (Boost/libstdc++ may still hold memory)");
+    ledger::set_session_context();
     ledger::shutdown_memory_tracing();
   } else {
     INFO("Ledger ended");
