@@ -923,6 +923,15 @@ inline string value_context(const value_t& val) {
   return buf.str();
 }
 
+template <typename T>
+inline value_t& add_or_set_value(value_t& lhs, const T& rhs) {
+  if (lhs.is_null())
+    lhs = rhs;
+  else
+    lhs += rhs;
+  return lhs;
+}
+
 } // namespace ledger
 
 #endif // _VALUE_H

@@ -46,6 +46,7 @@ class account_t : public scope_t
  public:
   typedef unsigned long ident_t;
 
+  session_t *	   owner;
   account_t *	   parent;
   string	   name;
   optional<string> note;
@@ -56,15 +57,17 @@ class account_t : public scope_t
   mutable ident_t  ident;
   mutable string   _fullname;
 
-  account_t(account_t *   _parent = NULL,
+  account_t(session_t *   _owner,
+	    account_t *   _parent = NULL,
 	    const string& _name   = "",
 	    const optional<string>& _note = none)
-    : scope_t(), parent(_parent), name(_name), note(_note),
+    : scope_t(), owner(_owner), parent(_parent), name(_name), note(_note),
       depth(parent ? parent->depth + 1 : 0), data(NULL), ident(0) {
     TRACE_CTOR(account_t, "account_t *, const string&, const string&");
   }
   account_t(const account_t& other)
     : scope_t(),
+      owner(other.owner),
       parent(other.parent),
       name(other.name),
       note(other.note),

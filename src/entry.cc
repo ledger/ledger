@@ -102,10 +102,7 @@ bool entry_base_t::finalize()
     if (xact->must_balance()) {
       amount_t& p(xact->cost ? *xact->cost : xact->amount);
       if (! p.is_null()) {
-	if (balance.is_null())
-	  balance = p;
-	else
-	  balance += p;
+	add_or_set_value(balance, p);
       } else {
 	if (null_xact)
 	  throw_(std::logic_error,
@@ -283,12 +280,8 @@ bool entry_base_t::finalize()
 			      entry ? entry->code : optional<string>());
 
       if (xact->amount.is_annotated()) {
-	if (ann_amount.annotation().price) {
-	  if (balance.is_null())
-	    balance = basis_cost - final_cost;
-	  else
-	    balance += basis_cost - final_cost;
-	}
+	if (ann_amount.annotation().price)
+	  add_or_set_value(balance, basis_cost - final_cost);
       } else {
 	xact->amount = ann_amount;
       }
@@ -324,14 +317,10 @@ bool entry_base_t::finalize()
 
   if (dynamic_cast<entry_t *>(this)) {
     foreach (xact_t * xact, xacts) {
-      account_t::xdata_t& xdata(xact->account->xdata());
-
       // jww (2008-08-09): For now, this feature only works for
       // non-specific commodities.
-      if (xdata.value.is_null())
-	xdata.value = xact->amount.strip_annotations();
-      else
-	xdata.value += xact->amount.strip_annotations();
+      add_or_set_value(xact->account->xdata().value,
+		       xact->amount.strip_annotations());
     }
   }
 

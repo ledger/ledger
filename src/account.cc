@@ -30,6 +30,7 @@
  */
 
 #include "account.h"
+#include "report.h"
 
 namespace ledger {
 
@@ -42,7 +43,7 @@ account_t::~account_t()
 }
 
 account_t * account_t::find_account(const string& name,
-				    const bool	       auto_create)
+				    const bool	  auto_create)
 {
   accounts_map::const_iterator i = accounts.find(name);
   if (i != accounts.end())
@@ -72,7 +73,7 @@ account_t * account_t::find_account(const string& name,
     if (! auto_create)
       return NULL;
 
-    account = new account_t(this, first);
+    account = new account_t(owner, this, first);
     std::pair<accounts_map::iterator, bool> result
       = accounts.insert(accounts_map::value_type(first, account));
     assert(result.second);
@@ -113,9 +114,44 @@ std::ostream& operator<<(std::ostream& out, const account_t& account)
 }
 
 namespace {
+  value_t get_partial_name(account_t& account) {
+    string name;
+
+    for (account_t * acct = &account;
+	 acct && acct->parent;
+	 acct = acct->parent) {
+      if (acct->has_xdata() &&
+	  acct->xdata().has_flags(ACCOUNT_EXT_DISPLAYED))
+	break;
+
+      if (name.empty())
+	name = acct->name;
+      else
+	name = acct->name + ":" + name;
+    }
+
+    return string_value(name);
+  }
+
   value_t get_total(account_t& account) {
     assert(account.xdata_);
     return account.xdata_->total;
+  }
+
+  value_t get_amount(account_t& account) {
+    assert(account.xdata_);
+    return account.xdata_->value;
+  }
+
+  value_t get_depth_spacer(account_t& account) {
+    std::ostringstream out;
+    for (account_t * acct = &account;
+	 acct;
+	 acct = acct->parent)
+      if (acct->has_xdata() &&
+	  acct->xdata().has_flags(ACCOUNT_EXT_DISPLAYED))
+	out << "  ";
+    return string_value(out.str());
   }
 
   template <value_t (*Func)(account_t&)>
@@ -127,11 +163,20 @@ namespace {
 expr_t::ptr_op_t account_t::lookup(const string& name)
 {
   switch (name[0]) {
+  case 'a':
+    if (name == "amount")
+      return WRAP_FUNCTOR(get_wrapper<&get_amount>);
+    break;
+
   case 'f':
     if (name.find("fmt_") == 0) {
       switch (name[4]) {
+      case '_':
+	return WRAP_FUNCTOR(get_wrapper<&get_depth_spacer>);
       case 'T':
 	return WRAP_FUNCTOR(get_wrapper<&get_total>);
+      case 'a':
+	return WRAP_FUNCTOR(get_wrapper<&get_partial_name>);
       }
     }
     break;
@@ -173,26 +218,19 @@ void account_t::calculate_sums()
   foreach (accounts_map::value_type& pair, accounts) {
     (*pair.second).calculate_sums();
 
-    if (xd.total.is_null())
-      xd.total = (*pair.second).xdata().total;
-    else
-      xd.total += (*pair.second).xdata().total;
-
-    xd.total_count += ((*pair.second).xdata().total_count +
-		       (*pair.second).xdata().count);
+    xdata_t& child_xd((*pair.second).xdata());
+    add_or_set_value(xd.total, child_xd.total);
+    xd.total_count += child_xd.total_count + child_xd.count;
   }
 
-  value_t result;
-#if 0
-  compute_amount(result, details_t(account));
-#endif
-
-  if (xd.total.is_null())
-    xd.total = result;
-  else
-    xd.total += result;
-
-  xd.total_count += xd.count;
+  call_scope_t args(*this);
+  value_t amount(owner->current_report->get_amount_expr(args));
+  if (! amount.is_null()) {
+    add_or_set_value(xd.total, amount);
+    xd.total_count += xd.count;
+  } else {
+    assert(xd.count == 0);
+  }
 }
 
 } // namespace ledger

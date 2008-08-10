@@ -413,17 +413,18 @@ bool compare_amount_commodities::operator()(const amount_t * left,
   commodity_t& leftcomm(left->commodity());
   commodity_t& rightcomm(right->commodity());
 
+  DEBUG("commodity.compare", " left symbol (" << leftcomm << ")");
+  DEBUG("commodity.compare", "right symbol (" << rightcomm << ")");
+
   int cmp = leftcomm.base_symbol().compare(rightcomm.base_symbol());
   if (cmp != 0)
     return cmp < 0;
 
   if (! leftcomm.annotated) {
-    assert(rightcomm.annotated);
-    return true;
+    return rightcomm.annotated;
   }
   else if (! rightcomm.annotated) {
-    assert(leftcomm.annotated);
-    return false;
+    return ! leftcomm.annotated;
   }
   else {
     annotated_commodity_t& aleftcomm(static_cast<annotated_commodity_t&>(leftcomm));

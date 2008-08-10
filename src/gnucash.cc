@@ -89,7 +89,7 @@ static enum action_t {
 static void startElement(void *, const char *name, const char **)
 {
   if (std::strcmp(name, "gnc:account") == 0) {
-    curr_account = new account_t(master_account);
+    curr_account = new account_t(master_account->owner, master_account);
   }
   else if (std::strcmp(name, "act:name") == 0)
     action = ACCOUNT_NAME;

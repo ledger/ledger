@@ -287,10 +287,10 @@ class collapse_xacts : public item_handler<xact_t>
   collapse_xacts();
 
 public:
-  collapse_xacts(xact_handler_ptr handler)
+  collapse_xacts(xact_handler_ptr handler, session_t& session)
     : item_handler<xact_t>(handler), count(0),
       last_entry(NULL), last_xact(NULL),
-      totals_account(NULL, "<Total>") {
+      totals_account(&session, NULL, "<Total>") {
     TRACE_CTOR(collapse_xacts, "xact_handler_ptr");
   }
   virtual ~collapse_xacts() {

@@ -79,7 +79,7 @@ session_t::session_t()
     print_format
     ("\n%d %Y%C%P\n    %-34W  %12o%n\n%/    %-34W  %12o%n\n"),
     balance_format
-    ("%20T  %2_%-a\n"),
+    ("%20T  %_%-a\n"),
     equity_format
     ("\n%D %Y%C%P\n%/    %-34W  %12t\n"),
     plot_amount_format
@@ -111,7 +111,7 @@ session_t::session_t()
     ansi_codes(false),
     ansi_invert(false),
 
-    master(new account_t(NULL, ""))
+    master(new account_t(this, NULL, ""))
 {
   TRACE_CTOR(session_t, "");
 }

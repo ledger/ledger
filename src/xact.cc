@@ -263,7 +263,7 @@ xact_context::xact_context(const xact_t& _xact, const string& desc) throw()
 void xact_t::add_to_value(value_t& value)
 {
   if (xdata_ && xdata_->has_flags(XACT_EXT_COMPOUND)) {
-    value += xdata_->value;
+    add_or_set_value(value, xdata_->value);
   }
   else if (cost || (! value.is_null() && ! value.is_realzero())) {
     if (value.is_null())

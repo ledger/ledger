@@ -207,7 +207,7 @@ report_t::chain_xact_handlers(xact_handler_ptr base_handler,
     // to appear as entries with a subtotaled xact for each
     // commodity used.
     if (show_collapsed)
-      handler.reset(new collapse_xacts(handler));
+      handler.reset(new collapse_xacts(handler, session));
 
     // subtotal_xacts combines all the xacts it receives
     // into one subtotal entry, which has one xact for each
@@ -327,7 +327,6 @@ void report_t::sum_all_accounts()
   pass_down_xacts
     (chain_xact_handlers(xact_handler_ptr(new set_account_value), false),
      walker);
-  // no flush() needed with set_account_value
   session.master->calculate_sums();
 }
 

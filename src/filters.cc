@@ -128,10 +128,7 @@ void calc_xacts::operator()(xact_t& xact)
     xact_t::xdata_t& xdata(xact.xdata());
 
     if (last_xact && last_xact->has_xdata()) {
-      if (xdata.total.is_null())
-	xdata.total = last_xact->xdata().total;
-      else
-	xdata.total += last_xact->xdata().total;
+      add_or_set_value(xdata.total, last_xact->xdata().total);
       xdata.index = last_xact->xdata().index + 1;
     } else {
       xdata.index = 0;

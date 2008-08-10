@@ -61,7 +61,8 @@ int ofx_proc_account_cb(struct OfxAccountData data, void *)
     return -1;
 
   DEBUG("ledger.ofx.parse", "account " << data.account_name);
-  account_t * account = new account_t(master_account, data.account_name);
+  account_t * account = new account_t(master_account->owner, master_account,
+				      data.account_name);
   curr_journal->add_account(account);
   ofx_accounts.insert(accounts_pair(data.account_id, account));
 
