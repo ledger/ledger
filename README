@@ -1,0 +1,79 @@
+Hello, and welcome to the Ledger source code.
+
+If you're reading this README file (rather than the version in
+doc/README), it means that you've pulled the sources using Git and are
+prepared to embark on the heady adventure that is compiling and running
+the Ledger Bleeding Edge.
+
+Well, at least we warned you.
+
+------------------------------------------------------------------------
+
+If you wish to proceed in this venture, you'll need a few dependencies:
+
+  - Boost 1.35
+  - CppUnit 1.12.1
+
+  - Optionally, Python 2.4 or higher
+  - Optionally, libexpat or libxml2
+  - Optionally, libofx
+
+For the convenience of my fellow developers, you may download some of
+these dependencies quite easily, right here and now.  Just run this
+command:
+
+  git submodule update --init
+
+You'll now have a few extra source trees in lib/.  There's even a
+Makefile there, which will build and install Boost and CppUnit into
+appropriate places in /usr/local/stow.
+
+------------------------------------------------------------------------
+
+The next step is preparing your environment for building.  While you can
+just use 'autoreconf -fi', I've prepared a script that does a lot of the
+footwork for you:
+
+  ./acprep
+
+If you want to run with complete debugging on, as I do, use this:
+
+  ./acprep --devel
+
+Please read the contents of 'acprep' in this case, especially the
+section which documents the --devel option.
+
+------------------------------------------------------------------------
+
+Once you have the dependencies installed and the source prepared for
+building, just run 'make'.  If you have CppUnit installed, I prefer that
+you always run 'make fullcheck', as this will verify Ledger against the
+unit tests, the Python unit tests (if applicable), and the regression
+tests, for your platform.
+
+If you have extra CPU cycles to burn, try even 'make distcheck', which
+provides the most thorough shakedown of a healthy source tree.
+
+------------------------------------------------------------------------
+
+Now that you're up and running, here are a few resources to keep in
+mind:
+
+  Home page              http://www.newartisans.com/software/ledger.html
+
+  IRC channel		 #ledger on irc.freenode.net
+  Mailing List / Forum   http://groups.google.com/group/ledger-cli
+  Issue Tracker          http://trac.newartisans.com/ledger
+  GitHub project page    http://github.com/jwiegley/ledger/tree/master
+  Buildbot display	 http://www.newartisans.com:9090
+  Ohloh code analysis	 http://www.ohloh.net/projects/ledger
+
+If you have coding ideas you want to share, the best way is either to
+e-mail me a patch (I prefer ttachments over pasted text), or to get an
+account on GitHub.  Once you do, fork the Ledger project, hack as much
+as you like, then send me a message via GitHub asking me to check out
+your repository.  I'm only too happy to do so for anyone who takes time
+out of their schedule to help the Ledger project.
+
+John
+
