@@ -651,13 +651,11 @@ class forecast_xacts : public generate_xacts
   item_predicate<xact_t> pred;
 
  public:
-  forecast_xacts(xact_handler_ptr handler,
-			const expr_t& predicate)
+  forecast_xacts(xact_handler_ptr handler, const expr_t& predicate)
     : generate_xacts(handler), pred(predicate) {
     TRACE_CTOR(forecast_xacts, "xact_handler_ptr, const expr_t&");
   }
-  forecast_xacts(xact_handler_ptr handler,
-			const string& predicate)
+  forecast_xacts(xact_handler_ptr handler, const string& predicate)
     : generate_xacts(handler), pred(predicate) {
     TRACE_CTOR(forecast_xacts, "xact_handler_ptr, const string&");
   }
@@ -689,8 +687,12 @@ class pass_down_accounts : public item_handler<account_t>
 {
   pass_down_accounts();
 
+  item_predicate<account_t> pred;
+
 public:
-  pass_down_accounts(acct_handler_ptr handler, accounts_iterator& iter);
+  pass_down_accounts(acct_handler_ptr	handler,
+		     accounts_iterator& iter,
+		     const expr_t&	predicate = expr_t());
 
   virtual ~pass_down_accounts() {
     TRACE_DTOR(pass_down_accounts);

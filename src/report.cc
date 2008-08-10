@@ -336,10 +336,10 @@ void report_t::accounts_report(acct_handler_ptr handler)
 
   if (sort_string.empty()) {
     basic_accounts_iterator walker(*session.master);
-    pass_down_accounts(handler, walker);
+    pass_down_accounts(handler, walker, expr_t("total"));
   } else {
     sorted_accounts_iterator walker(*session.master, sort_string);
-    pass_down_accounts(handler, walker);
+    pass_down_accounts(handler, walker, expr_t("total"));
   }
   handler->flush();
     

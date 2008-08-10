@@ -739,14 +739,16 @@ void forecast_xacts::flush()
   item_handler<xact_t>::flush();
 }
 
-pass_down_accounts::pass_down_accounts(acct_handler_ptr handler,
-				       accounts_iterator& iter)
-  : item_handler<account_t>(handler)
+pass_down_accounts::pass_down_accounts(acct_handler_ptr	  handler,
+				       accounts_iterator& iter,
+				       const expr_t&	  predicate)
+  : item_handler<account_t>(handler), pred(predicate)
 {
   TRACE_CTOR(pass_down_accounts,
 	     "acct_handler_ptr, accounts_iterator");
   for (account_t * account = iter(); account; account = iter())
-    item_handler<account_t>::operator()(*account);
+    if (pred(*account))
+      item_handler<account_t>::operator()(*account);
 }
 
 } // namespace ledger

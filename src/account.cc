@@ -219,8 +219,13 @@ void account_t::calculate_sums()
     (*pair.second).calculate_sums();
 
     xdata_t& child_xd((*pair.second).xdata());
-    add_or_set_value(xd.total, child_xd.total);
-    xd.total_count += child_xd.total_count + child_xd.count;
+    if (! child_xd.total.is_null()) {
+      add_or_set_value(xd.total, child_xd.total);
+      xd.total_count += child_xd.total_count + child_xd.count;
+    } else {
+      assert(child_xd.total_count == 0);
+      assert(child_xd.count == 0);
+    }
   }
 
   call_scope_t args(*this);

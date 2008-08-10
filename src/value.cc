@@ -185,6 +185,8 @@ void value_t::_dup()
 value_t::operator bool() const
 {
   switch (type()) {
+  case VOID:
+    return false;
   case BOOLEAN:
     return as_boolean();
   case DATETIME:
