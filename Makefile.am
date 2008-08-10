@@ -216,8 +216,8 @@ ledger.so: $(ledger_so_SOURCES) $(ledger_so_DEPENDENCIES)
 	 CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libpyledger_la_CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)" \
 	 LDFLAGS="$(LDFLAGS) -L$$BUILD_DIR -L$$BUILD_DIR/.libs" \
 	 ARCHFLAGS="$(ARCHFLAGS)" PYLIBS="$(PYLIBS)" \
-	     python python/setup.py build --build-lib=$$BUILD_DIR/ \
-					  --build-temp=$$BUILD_DIR/build -f)
+	     $(PYTHON) python/setup.py build \
+		--build-lib=$$BUILD_DIR/ --build-temp=$$BUILD_DIR/build -f)
 
 endif
 
@@ -260,6 +260,7 @@ EXTRA_DIST += test/python
 
 PyUnitTests_SOURCES = test/__init__.py test/PyUnitTests.py test/UnitTests.py
 
+ESC_python=`echo "$(PYTHON)" | sed 's/\//\\\\\//g'`
 ESC_srcdir=`echo "$(srcdir)" | sed 's/\//\\\\\//g'`
 ESC_builddir=`echo "$(top_builddir)" | sed 's/\//\\\\\//g'`
 ESC_distdir=`echo "$(distdir)" | sed 's/\//\\\\\//g'`
@@ -268,6 +269,7 @@ ESC_distdir=`echo "$(distdir)" | sed 's/\//\\\\\//g'`
 # define an EXEEXT.
 PyUnitTests: $(srcdir)/test/PyUnitTests.py
 	cat $(srcdir)/test/PyUnitTests.py \
+	    | sed "s/%python%/$(ESC_python)/" \
 	    | sed "s/%srcdir%/$(ESC_srcdir)/g" \
 	    | sed "s/%builddir%/$(ESC_builddir)/g" > $@
 	chmod 755 $@
