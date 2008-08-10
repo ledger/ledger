@@ -316,9 +316,11 @@ dist-hook:
 	       $(distdir)/doc/Doxyfile.bak \
 	       $(distdir)/doc/Doxyfile.gen
 	cp -pR $(srcdir)/doc/html $(distdir)/doc
+	cp -p $(srcdir)/doc/README $(distdir)/README
 
 distclean-local:
-	rm -fr doc/html doc/latex doc/refman.pdf
+	rm -fr doc/html doc/latex
+	rm -f doc/refman.pdf
 
 $(top_builddir)/Doxyfile.gen: $(srcdir)/doc/Doxyfile
 	cat $(srcdir)/doc/Doxyfile \
