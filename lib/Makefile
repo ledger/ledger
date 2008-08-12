@@ -7,36 +7,51 @@
 
 STOW_ROOT = /usr/local/stow
 
-all: boost cppunit # gdtoa
+HERE = $(shell pwd)
 
-boost:
-	(cd boost; \
-	bjam release --prefix=$(STOW_ROOT)/boost \
-	    --build-dir=/tmp/boost --toolset=darwin \
-	    architecture=combined install && \
-	bjam debug --prefix=$(STOW_ROOT)/boost \
-	    --build-dir=/tmp/boost --toolset=darwin \
+all: boost-build cppunit-build # gdtoa
+
+boost-release:
+	(cd boost && \
+	bjam release -j3 --prefix=$(STOW_ROOT)/boost \
+	    --build-dir=$(HERE)/boost/build --toolset=darwin \
+	    architecture=combined install)
+
+boost-debug:
+	(cd boost && \
+	bjam debug -j3 --prefix=$(STOW_ROOT)/boost \
+	    --build-dir=$(HERE)/boost/build --toolset=darwin \
 	    architecture=combined define=_GLIBCXX_DEBUG=1 install)
 
-cppunit:
+boost-build: boost-release boost-debug
+
+cppunit-release:
+	-(cd cppunit; make distclean)
 	(cd cppunit; \
-	 configure CFLAGS="$(ARCH_CFLAGS)" \
+	 ./configure CFLAGS="$(ARCH_CFLAGS)" \
 		   LDFLAGS="$(ARCH_LDFLAGS)" \
 		--prefix=$(STOW_ROOT)/cppunit \
 		--disable-dependency-tracking && \
 	 make install)
+
+cppunit-debug:
+	-(cd cppunit; make distclean)
 	(cd cppunit; \
-	 configure CPPFLAGS="-D_GLIBCXX_DEBUG=1" \
+	 ./configure CPPFLAGS="-D_GLIBCXX_DEBUG=1" \
 		   CFLAGS="-g $(ARCH_CFLAGS)" \
 		   LDFLAGS="-g $(ARCH_LDFLAGS)" \
 		--prefix=$(STOW_ROOT)/cppunit-debug \
 		--disable-dependency-tracking && \
 	 make install)
 
-gdtoa:
+cppunit-build: cppunit-release cppunit-debug
+
+gdtoa-debug:
 	(cd gdtoa; \
-	 configure CFLAGS="$(ARCH_CFLAGS)" \
-		   LDFLAGS="$(ARCH_LDFLAGS)" \
+	 ./configure CFLAGS="-g $(ARCH_CFLAGS)" \
+		   LDFLAGS="-g $(ARCH_LDFLAGS)" \
 		--prefix=$(STOW_ROOT)/gdtoa \
 		--disable-dependency-tracking && \
 	 make install)
+
+gdtoa-build: gdtoa-debug
