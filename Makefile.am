@@ -86,8 +86,6 @@ pkginclude_HEADERS =	  \
 	src/mask.h	  \
 	src/binary.h	  \
 			  \
-	lib/fdstream.h	  \
-			  \
 	src/amount.h	  \
 	src/commodity.h	  \
 	src/balance.h	  \
@@ -155,7 +153,7 @@ endif
 bin_PROGRAMS	= ledger
 
 ledger_CPPFLAGS	= $(libledger_la_CPPFLAGS)
-ledger_SOURCES	= src/main.cc
+ledger_SOURCES	= src/main.cc lib/fdstream.h
 ledger_LDADD	= $(LIBOBJS) libamounts.la libledger.la
 ledger_LDFLAGS	= -static
 
@@ -190,9 +188,7 @@ libpyledger_la_SOURCES =       \
 	python/pyfstream.h     \
 	python/pyinterp.cc     \
 	python/pyutils.h       \
-	python/setup.py        \
-	                       \
-	lib/tuples.h
+	python/setup.py
 
 libpyledger_la_CPPFLAGS = $(libledger_la_CPPFLAGS) -I$(srcdir)/python
 
