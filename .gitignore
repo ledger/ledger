@@ -43,6 +43,7 @@
 /acconf.h.in~
 /aclocal.m4
 /autom4te.cache/
+/build
 /config.guess
 /config.log
 /config.status
