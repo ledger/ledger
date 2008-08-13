@@ -5,6 +5,9 @@
 *.elc
 *.exe
 *.fn
+*.gcda
+*.gcno
+*.gcov
 *.ky
 *.la
 *.lo
