@@ -401,7 +401,7 @@ void annotated_commodity_t::write_annotations(std::ostream&       out,
     out << " {" << *info.price << '}';
 
   if (info.date)
-    out << " [" << *info.date << ']';
+    out << " [" << format_date(*info.date) << ']';
 
   if (info.tag)
     out << " (" << *info.tag << ')';
