@@ -1348,13 +1348,9 @@ void AmountTestCase::testCommodityTruth()
 
   if (x1)
     assertTrue(true);
-  else
-    assertTrue(false);
 
   if (x2)
     assertTrue(true);
-  else
-    assertTrue(false);
 
   assertValid(x1);
   assertValid(x2);

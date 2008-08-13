@@ -15,6 +15,7 @@
 CPPUNIT_REGISTRY_ADD_TO_DEFAULT("Framework");
 
 CPPUNIT_REGISTRY_ADD_TO_DEFAULT("numerics");
+CPPUNIT_REGISTRY_ADD_TO_DEFAULT("utility");
 
 // Create a sample test, which acts both as a template, and a
 // verification that the basic framework is functioning.
