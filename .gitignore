@@ -59,8 +59,9 @@
 /doc/.dirstamp
 /doc/Doxyfile.bak
 /doc/Doxyfile.gen
-/doc/html
-/doc/latex
+/doc/html/
+/doc/latex/
+/doc/report/
 /elc-stamp
 /elisp-comp
 /install-sh
