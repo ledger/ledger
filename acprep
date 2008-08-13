@@ -25,7 +25,11 @@ autoreconf --force --install
 SWITCHES="--disable-shared"
 
 if [ -z "$PYTHON_HOME" ]; then
-    PYTHON_HOME="/usr"
+    if [ "$(which python)" = /opt/local/bin/python ]; then
+	PYTHON_HOME="/opt/local"
+    else
+	PYTHON_HOME="/usr"
+    fi
 fi
 if [ -z "$PYTHON_VERSION" ]; then
     PYTHON_VERSION="2.5"
@@ -284,11 +288,10 @@ fi
 
 SWITCHES="$SWITCHES --with-boost-suffix=$BOOST_SUFFIX"
 
-PATH="$PYTHON_HOME/bin:$PATH" \
-    "$HERE/configure" --srcdir="$HERE" \
-	CXX="$CXX" CPPFLAGS="$CPPFLAGS" CXXFLAGS="$CXXFLAGS" \
-	LDFLAGS="$LDFLAGS" LIBS="$LIBS" \
-	$SWITCHES
+"$HERE/configure" --srcdir="$HERE" \
+    CXX="$CXX" CPPFLAGS="$CPPFLAGS" CXXFLAGS="$CXXFLAGS" \
+    LDFLAGS="$LDFLAGS" LIBS="$LIBS" \
+    $SWITCHES
 
 # Alter the Makefile so that it's not nearly so verbose.  This makes errors
 # and warnings much easier to spot.
