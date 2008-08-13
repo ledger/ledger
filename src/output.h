@@ -90,22 +90,24 @@ private:
 class format_accounts : public item_handler<account_t>
 {
 protected:
-  report_t& report;
-
+  report_t&		    report;
+  format_t		    format;
   item_predicate<account_t> disp_pred;
+  bool			    print_final_total;
 
   bool disp_subaccounts_p(account_t& account, account_t *& to_show);
   bool display_account(account_t& account);
 
 public:
-  format_t format;
-
   format_accounts(report_t&	_report,
 		  const string& _format,
-		  const string& display_predicate = "" /*,
-		  const bool    print_final_total = true */)
-    : report(_report), disp_pred(display_predicate), format(_format) {
-    TRACE_CTOR(format_accounts, "report&, const string&, const string&");
+		  const string& display_predicate = "",
+		  const bool    _print_final_total = true)
+    : report(_report), format(_format), disp_pred(display_predicate),
+      print_final_total(_print_final_total)
+  {
+    TRACE_CTOR(format_accounts,
+	       "report&, const string&, const string&, const bool");
   }
   virtual ~format_accounts() {
     TRACE_DTOR(format_accounts);

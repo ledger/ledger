@@ -150,32 +150,28 @@ namespace ledger {
     return final_value_expr;
   }
 
-  template <class Formatter   = format_xacts,
+  template <class Type        = xact_t,
 	    class handler_ptr = xact_handler_ptr,
 	    void (report_t::*report_method)(handler_ptr) =
 	      &report_t::xacts_report>
   class reporter
   {
-    string format_name;
+    shared_ptr<item_handler<Type> > handler;
 
   public:
-    reporter(const string& _format_name)
-      : format_name(_format_name) {}
+    reporter(item_handler<Type> * _handler)
+      : handler(_handler) {}
 
     value_t operator()(call_scope_t& args)
     {
-      report_t&	    report(find_scope<report_t>(args));
-      var_t<string> format(args, format_name);
-
-      if (! report.format_string.empty())
-	*format = report.format_string;
+      report_t& report(find_scope<report_t>(args));
 
       if (args.value().size() > 0)
 	report.append_predicate
 	  (args_to_predicate(args.value().as_sequence().begin(),
 			     args.value().as_sequence().end()));
 
-      (report.*report_method)(handler_ptr(new Formatter(report, *format)));
+      (report.*report_method)(handler_ptr(handler));
 
       return true;
     }
@@ -403,15 +399,17 @@ namespace ledger {
     function_t command;
 
     if (verb == "register" || verb == "reg" || verb == "r")
-      command = reporter<>("register_format");
+      command = reporter<>(new format_xacts(report, session.register_format));
     else if (verb == "print" || verb == "p")
-      command = reporter<>("print_format");
+      command = reporter<>(new format_xacts(report, session.print_format));
     else if (verb == "balance" || verb == "bal" || verb == "b")
-      command = reporter<format_accounts, acct_handler_ptr,
-                         &report_t::accounts_report>("balance_format");
+      command = reporter<account_t, acct_handler_ptr,
+	                 &report_t::accounts_report>
+	(new format_accounts(report, session.balance_format));
     else if (verb == "equity")
-      command = reporter<format_equity, acct_handler_ptr,
-                         &report_t::accounts_report>("print_format");
+      command = reporter<account_t, acct_handler_ptr,
+                         &report_t::accounts_report>
+	(new format_equity(report, session.print_format));
 #if 0
     else if (verb == "entry")
       command = entry_command();

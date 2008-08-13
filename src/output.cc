@@ -138,22 +138,18 @@ void format_accounts::flush()
 {
   std::ostream& out(*report.output_stream);
 
-#if 0
-  // jww (2008-08-02): I need access to the output formatter before this is
-  // going to work.
   if (print_final_total) {
     assert(out);
-    assert(account_has_xdata(*session.master));
+    assert(report.session.master->has_xdata());
 
-    account_xdata_t& xdata(account_xdata(*session.master));
+    account_t::xdata_t& xdata(report.session.master->xdata());
 
-    if (! show_collapsed && xdata.total) {
+    if (! report.show_collapsed && xdata.total) {
       out << "--------------------\n";
       xdata.value = xdata.total;
-      handler->format.format(out, *session.master);
+      format.format(out, *report.session.master);
     }
   }
-#endif
 
   out.flush();
 }

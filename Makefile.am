@@ -155,7 +155,7 @@ bin_PROGRAMS	= ledger
 ledger_CPPFLAGS	= $(libledger_la_CPPFLAGS)
 ledger_SOURCES	= src/main.cc lib/fdstream.h
 ledger_LDADD	= $(LIBOBJS) libamounts.la libledger.la
-ledger_LDFLAGS	= -static
+ledger_LDFLAGS	= 
 
 info_TEXINFOS	= doc/ledger.texi
 
@@ -229,7 +229,6 @@ TESTS =
 
 if HAVE_PYTHON
 TESTS += RegressionTests
-XFAIL_TESTS = RegressionTests	# jww (2008-08-07): for now
 endif
 
 if HAVE_CPPUNIT
