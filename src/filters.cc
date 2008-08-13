@@ -46,6 +46,8 @@ pass_down_xacts::pass_down_xacts(xact_handler_ptr handler,
 
   for (xact_t * xact = iter(); xact; xact = iter())
     item_handler<xact_t>::operator()(*xact);
+
+  item_handler<xact_t>::flush();
 }
 
 void truncate_entries::flush()
@@ -749,6 +751,8 @@ pass_down_accounts::pass_down_accounts(acct_handler_ptr	  handler,
   for (account_t * account = iter(); account; account = iter())
     if (pred(*account))
       item_handler<account_t>::operator()(*account);
+
+  item_handler<account_t>::flush();
 }
 
 } // namespace ledger

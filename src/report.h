@@ -107,8 +107,8 @@ public:
 
   unsigned long  budget_flags;
 
-  int		 head_entries;
-  int		 tail_entries;
+  long		 head_entries;
+  long		 tail_entries;
 
   bool		 show_collapsed;
   bool		 show_subtotal;
@@ -424,15 +424,19 @@ public:
   value_t option_wide(call_scope_t& args) { // w
     config->register_format = config->wide_register_format;
   }
+#endif
 
-  value_t option_head(call_scope_t& args) { // :
-    report->head_entries = std::atoi(optarg);
+  value_t option_head_(call_scope_t& args) { // :
+    head_entries = *var_t<long>(args, 0);
+    return true;
   }
 
-  value_t option_tail(call_scope_t& args) { // :
-    report->tail_entries = std::atoi(optarg);
+  value_t option_tail_(call_scope_t& args) { // :
+    tail_entries = *var_t<long>(args, 0);
+    return true;
   }
 
+#if 0
   value_t option_pager(call_scope_t& args) { // :
     config->pager = optarg;
   }

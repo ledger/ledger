@@ -305,7 +305,6 @@ void report_t::xacts_report(xact_handler_ptr handler)
 {
   session_xacts_iterator walker(session);
   pass_down_xacts(chain_xact_handlers(handler), walker);
-  handler->flush();
 
   if (DO_VERIFY())
     session.clean_xacts();
@@ -315,7 +314,6 @@ void report_t::entry_report(xact_handler_ptr handler, entry_t& entry)
 {
   entry_xacts_iterator walker(entry);
   pass_down_xacts(chain_xact_handlers(handler), walker);
-  handler->flush();
 
   if (DO_VERIFY())
     session.clean_xacts(entry);
@@ -341,7 +339,6 @@ void report_t::accounts_report(acct_handler_ptr handler)
     sorted_accounts_iterator walker(*session.master, sort_string);
     pass_down_accounts(handler, walker, expr_t("total"));
   }
-  handler->flush();
     
   if (DO_VERIFY()) {
     session.clean_xacts();
@@ -373,7 +370,7 @@ namespace {
 #endif
 
     std::ostringstream out;
-    args[0].dump(out, *first_width, *latter_width);
+    args[0].strip_annotations().dump(out, *first_width, *latter_width);
     return string_value(out.str());
   }
 }
@@ -409,6 +406,11 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	  return MAKE_FUNCTOR(report_t::option_format_);
 	break;
 
+      case 'h':
+	if (std::strcmp(p, "head_") == 0)
+	  return MAKE_FUNCTOR(report_t::option_head_);
+	break;
+
       case 'j':
 	if (! (*p + 1))
 	  return MAKE_FUNCTOR(report_t::option_amount_data);
@@ -420,19 +422,22 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	break;
 
       case 'l':
-	if (std::strcmp(p, "l_") || std::strcmp(p, "limit_"))
+	if (std::strcmp(p, "l_") == 0
+	    || std::strcmp(p, "limit_") == 0)
 	  return MAKE_FUNCTOR(report_t::option_limit_);
 	break;
 
       case 't':
-	if (std::strcmp(p, "t_"))
+	if (std::strcmp(p, "t_") == 0)
 	  return MAKE_FUNCTOR(report_t::option_amount_);
 	else if (std::strcmp(p, "total_") == 0)
 	  return MAKE_FUNCTOR(report_t::option_total_);
+	else if (std::strcmp(p, "tail_") == 0)
+	  return MAKE_FUNCTOR(report_t::option_tail_);
 	break;
 
       case 'T':
-	if (std::strcmp(p, "T_"))
+	if (std::strcmp(p, "T_") == 0)
 	  return MAKE_FUNCTOR(report_t::option_total_);
 	break;
       }

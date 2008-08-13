@@ -111,11 +111,11 @@ public:
   }
 
   virtual void flush();
+
   virtual void operator()(xact_t& xact) {
-    if (tail_count == 0 && head_count > 0 &&
-	xacts.size() >= static_cast<unsigned int>(head_count))
-      return;
-    xacts.push_back(&xact);
+    if (! (tail_count == 0 && head_count > 0 &&
+	   static_cast<int>(xacts.size()) >= head_count))
+      xacts.push_back(&xact);
   }
 };
 
