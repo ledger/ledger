@@ -347,6 +347,9 @@ $(top_builddir)/doc/refman.pdf: $(top_builddir)/doc/html/index.html
 
 docs: pdf $(top_builddir)/doc/refman.pdf
 
+libs:
+	(cd lib; make)
+
 ######################################################################
 
 copy-sources:
