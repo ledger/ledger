@@ -201,7 +201,7 @@ namespace ledger {
 
     if (! session.cache_file)
       session.use_cache = false;
-    else
+    else if (session.use_cache)
       session.use_cache = ! session.data_file.empty() && session.price_db;
 
     DEBUG("ledger.session.cache", "1. use_cache = " << session.use_cache);

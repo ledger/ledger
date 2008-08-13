@@ -100,7 +100,7 @@ session_t::session_t()
     pricing_leeway(24 * 3600),
 
     download_quotes(false),
-    use_cache(false),
+    use_cache(true),
     cache_dirty(false),
 
     now(now),

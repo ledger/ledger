@@ -221,8 +221,13 @@ See LICENSE file included with the distribution for details and disclaimer.\n";
 
   value_t option_file_(call_scope_t& args) {
     assert(args.size() == 1);
-    data_file = args[0].as_string();
-    return NULL_VALUE;
+    // jww (2008-08-13): Add support for multiple files, but not between
+    // -f and LEDGER_FILE
+    if (data_file.empty()) {
+      data_file = args[0].as_string();
+      use_cache = false;
+    }
+    return true;
   }
 };
 
