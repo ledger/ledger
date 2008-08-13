@@ -71,12 +71,12 @@ void release_session_context()
 
 session_t::session_t()
   : register_format
-    ("%-.10D %-.20P %-.22A %!12(print_balance(fmt_t, 12, 67)) "
+    ("%-.9D %-.20P %-.23A %!12(print_balance(fmt_t, 12, 67)) "
      "%!12(print_balance(fmt_T, 12, 80, true))\n%/"
      "%32|%-.22A %!12(print_balance(fmt_t, 12, 67)) "
      "%!12(print_balance(fmt_T, 12, 80, true))\n"),
     wide_register_format
-    ("%-.10D  %-.35P %-.38A %22.108t %!22.132T\n%/"
+    ("%-.9D  %-.35P %-.39A %22.108t %!22.132T\n%/"
      "%48|%-.38A %22.108t %!22.132T\n"),
     print_format
     ("\n%d %Y%C%P\n    %-34W  %12o%n\n%/    %-34W  %12o%n\n"),
@@ -161,7 +161,12 @@ void session_t::read_init()
 
   ifstream init(*init_file);
 
-  // jww (2006-09-15): Read initialization options here!
+  journal_t temp(this);
+  if (read_journal(temp, *init_file) > 0 ||
+      temp.auto_entries.size() > 0 ||
+      temp.period_entries.size() > 0)
+    throw_(parse_error, "Entries found in initialization file '" <<
+	   init_file << "'");
 }
 
 std::size_t session_t::read_data(journal_t&    journal,
@@ -173,6 +178,8 @@ std::size_t session_t::read_data(journal_t&    journal,
   TRACE_START(parser, 1, "Parsing journal file");
 
   std::size_t entry_count = 0;
+
+  read_init();
 
   DEBUG("ledger.cache", "3. use_cache = " << use_cache);
 

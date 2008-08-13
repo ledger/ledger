@@ -95,7 +95,7 @@ inline string format_date(const date_t& when,
     std::strftime(buf, 255, format->c_str(), &moment);
     return buf;
   } else {
-    return to_iso_extended_string(when);
+    return to_simple_string(when).substr(2);
   }
 }
 
