@@ -11,17 +11,18 @@ HERE = $(shell pwd)
 
 all: boost-build cppunit-build # gdtoa
 
+# architecture=combined
 boost-release:
 	(cd boost && \
 	bjam release -j3 --prefix=$(STOW_ROOT)/boost \
 	    --build-dir=$(HERE)/boost/build --toolset=darwin \
-	    --build-type=complete architecture=combined install)
+	    --build-type=complete install)
 
 boost-debug:
 	(cd boost && \
 	bjam debug -j3 --prefix=$(STOW_ROOT)/boost \
 	    --build-dir=$(HERE)/boost/build --toolset=darwin \
-	    --build-type=complete architecture=combined \
+	    --build-type=complete \
 	    define=_GLIBCXX_DEBUG=1 install)
 
 boost-build: boost-release boost-debug
