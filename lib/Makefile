@@ -15,13 +15,14 @@ boost-release:
 	(cd boost && \
 	bjam release -j3 --prefix=$(STOW_ROOT)/boost \
 	    --build-dir=$(HERE)/boost/build --toolset=darwin \
-	    architecture=combined install)
+	    --build-type=complete architecture=combined install)
 
 boost-debug:
 	(cd boost && \
 	bjam debug -j3 --prefix=$(STOW_ROOT)/boost \
 	    --build-dir=$(HERE)/boost/build --toolset=darwin \
-	    architecture=combined define=_GLIBCXX_DEBUG=1 install)
+	    --build-type=complete architecture=combined \
+	    define=_GLIBCXX_DEBUG=1 install)
 
 boost-build: boost-release boost-debug
 
