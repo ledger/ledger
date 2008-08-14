@@ -1,4 +1,4 @@
-EXTRA_DIST = contrib
+EXTRA_DIST = autogen.sh contrib
 
 lib_LTLIBRARIES = libamounts.la libledger.la
 
