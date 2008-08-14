@@ -67,7 +67,7 @@ namespace {
 }
 
 optional<string> input_date_format;
-string		 output_date_format = "%Y/%m/%d";
+string		 output_date_format = "%y-%b-%d";
 
 namespace {
   bool parse_date_mask(const char * date_str, std::tm& result)
