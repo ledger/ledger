@@ -437,47 +437,58 @@ public:
   value_t option_abbrev_len(call_scope_t& args) { // :
     format_t::abbrev_length = std::atoi(optarg);
   }
+#endif
 
   value_t option_empty(call_scope_t& args) { // E
-    report->show_empty = true;
+    show_empty = true;
+    return true;
   }
 
   value_t option_collapse(call_scope_t& args) { // n
-    report->show_collapsed = true;
+    show_collapsed = true;
+    return true;
   }
 
   value_t option_subtotal(call_scope_t& args) { // s
-    report->show_subtotal = true;
+    show_subtotal = true;
+    return true;
   }
 
   value_t option_totals(call_scope_t& args) {
-    report->show_totals = true;
+    show_totals = true;
+    return true;
   }
 
-  value_t option_sort(call_scope_t& args) { // S:
-    report->sort_string = optarg;
+  value_t option_sort_(call_scope_t& args) { // S:
+    sort_string = args[0].to_string();
+    return true;
   }
 
-  value_t option_sort_entries(call_scope_t& args) {
-    report->sort_string = optarg;
-    report->entry_sort = true;
+  value_t option_sort_entries_(call_scope_t& args) {
+    sort_string = args[0].to_string();
+    entry_sort = true;
+    return true;
   }
 
-  value_t option_sort_all(call_scope_t& args) {
-    report->sort_string = optarg;
-    report->entry_sort = false;
-    report->sort_all   = true;
+  value_t option_sort_all_(call_scope_t& args) {
+    sort_string = args[0].to_string();
+    entry_sort = false;
+    sort_all   = true;
+    return true;
   }
 
-  value_t option_period_sort(call_scope_t& args) { // :
-    report->sort_string = optarg;
-    report->entry_sort = true;
+  value_t option_period_sort_(call_scope_t& args) { // :
+    sort_string = args[0].to_string();
+    entry_sort = true;
+    return true;
   }
 
   value_t option_related(call_scope_t& args) { // r
-    report->show_related = true;
+    show_related = true;
+    return true;
   }
 
+#if 0
   value_t option_descend(call_scope_t& args) {
     std::string arg(optarg);
     std::string::size_type beg = 0;

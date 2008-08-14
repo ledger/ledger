@@ -409,7 +409,9 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	break;
 
       case 'c':
-	if (std::strcmp(p, "comm_as_payee") == 0)
+	if (std::strcmp(p, "collapse") == 0)
+	  return MAKE_FUNCTOR(report_t::option_collapse);
+	else if (std::strcmp(p, "comm_as_payee") == 0)
 	  return MAKE_FUNCTOR(report_t::option_comm_as_payee);
 	else if (std::strcmp(p, "code_as_payee") == 0)
 	  return MAKE_FUNCTOR(report_t::option_code_as_payee);
@@ -426,6 +428,8 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	if (std::strcmp(p, "e_") == 0 ||
 	    std::strcmp(p, "end_") == 0)
 	  return MAKE_FUNCTOR(report_t::option_end_);
+	else if (std::strcmp(p, "empty") == 0)
+	  return MAKE_FUNCTOR(report_t::option_empty);
 	break;
 
       case 'f':
@@ -455,10 +459,17 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	  return MAKE_FUNCTOR(report_t::option_monthly);
 	break;
 
+      case 'n':
+	if (std::strcmp(p, "n") == 0)
+	  return MAKE_FUNCTOR(report_t::option_collapse);
+	break;
+
       case 'p':
 	if (std::strcmp(p, "p_") == 0 ||
 	    std::strcmp(p, "period_") == 0)
 	  return MAKE_FUNCTOR(report_t::option_period_);
+	else if (std::strcmp(p, "period_sort_") == 0)
+	  return MAKE_FUNCTOR(report_t::option_period_sort_);
 	break;
 
       case 'q':
@@ -466,11 +477,31 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	  return MAKE_FUNCTOR(report_t::option_quarterly);
 	break;
 
+      case 'r':
+	if (std::strcmp(p, "r") == 0 ||
+	    std::strcmp(p, "related") == 0)
+	  return MAKE_FUNCTOR(report_t::option_related);
+	break;
+
+      case 's':
+	if (std::strcmp(p, "s") == 0 ||
+	    std::strcmp(p, "subtotal") == 0)
+	  return MAKE_FUNCTOR(report_t::option_subtotal);
+	else if (std::strcmp(p, "sort_") == 0)
+	  return MAKE_FUNCTOR(report_t::option_sort_);
+	else if (std::strcmp(p, "sort_entries_") == 0)
+	  return MAKE_FUNCTOR(report_t::option_sort_entries_);
+	else if (std::strcmp(p, "sort_all_") == 0)
+	  return MAKE_FUNCTOR(report_t::option_sort_all_);
+	break;
+
       case 't':
 	if (std::strcmp(p, "t_") == 0)
 	  return MAKE_FUNCTOR(report_t::option_amount_);
 	else if (std::strcmp(p, "total_") == 0)
 	  return MAKE_FUNCTOR(report_t::option_total_);
+	else if (std::strcmp(p, "totals") == 0)
+	  return MAKE_FUNCTOR(report_t::option_totals);
 	else if (std::strcmp(p, "tail_") == 0)
 	  return MAKE_FUNCTOR(report_t::option_tail_);
 	break;
@@ -490,6 +521,11 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	  return MAKE_FUNCTOR(report_t::option_yearly);
 	break;
 
+      case 'E':
+	if (std::strcmp(p, "E") == 0)
+	  return MAKE_FUNCTOR(report_t::option_empty);
+	break;
+
       case 'J':
 	if (! (*p + 1))
 	  return MAKE_FUNCTOR(report_t::option_total_data);
@@ -503,6 +539,11 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
       case 'P':
 	if (std::strcmp(p, "P") == 0)
 	  return MAKE_FUNCTOR(report_t::option_by_payee);
+	break;
+
+      case 'S':
+	if (std::strcmp(p, "S_") == 0)
+	  return MAKE_FUNCTOR(report_t::option_sort_);
 	break;
 
       case 'T':
