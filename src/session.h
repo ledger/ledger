@@ -226,7 +226,21 @@ See LICENSE file included with the distribution for details and disclaimer.\n";
     if (data_file.empty()) {
       data_file = args[0].as_string();
       use_cache = false;
+
+#if 0
+      // jww (2008-08-14): Should we check whether the file exists
+      // before we accept it, or is this done later on?
+      if (! data_file.string() == "-") {
+	std::string path = resolve_path(optarg);
+	if (access(path.c_str(), R_OK) != -1)
+	  config->data_file = path;
+	else
+	  throw_(std::invalid_argument,
+		 "The ledger file '" << path << "' does not exist or is not readable");
+      }
+#endif
     }
+
     return true;
   }
 };

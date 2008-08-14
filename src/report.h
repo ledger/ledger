@@ -231,19 +231,6 @@ public:
 	     "The init file '" << path << "' does not exist or is not readable");
   }
 
-  value_t option_file(call_scope_t& args) { // f:
-    if (std::string(optarg) == "-") {
-      config->data_file = optarg;
-    } else {
-      std::string path = resolve_path(optarg);
-      if (access(path.c_str(), R_OK) != -1)
-	config->data_file = path;
-      else
-	throw_(std::invalid_argument,
-	       "The ledger file '" << path << "' does not exist or is not readable");
-    }
-  }
-
   value_t option_cache(call_scope_t& args) { // :
     config->cache_file = resolve_path(optarg);
   }
