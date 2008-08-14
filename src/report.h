@@ -250,19 +250,6 @@ public:
     config->account = optarg;
   }
 
-  value_t option_debug(call_scope_t& args) { // :
-    config->debug_mode = true;
-    ::setenv("DEBUG_CLASS", optarg, 1);
-  }
-
-  value_t option_verbose(call_scope_t& args) {
-    config->verbose_mode = true;
-  }
-
-  value_t option_trace(call_scope_t& args) {
-    config->trace_mode = true;
-  }
-
   //////////////////////////////////////////////////////////////////////
   //
   // Report filtering
@@ -270,37 +257,44 @@ public:
   value_t option_effective(call_scope_t& args) {
     xact_t::use_effective_date = true;
   }
+#endif
 
-  value_t option_begin(call_scope_t& args) { // b:
-    char buf[128];
-    interval_t interval(optarg);
-    if (! interval.begin)
+  value_t option_begin_(call_scope_t& args) { // b:
+    interval_t interval(args[0].to_string());
+    if (! is_valid(interval.begin))
       throw_(std::invalid_argument,
-	     "Could not determine beginning of period '" << optarg << "'");
+	     "Could not determine beginning of period '"
+	     << args[0].to_string() << "'");
 
-    if (! report->predicate.empty())
-      report->predicate += "&";
-    report->predicate += "d>=[";
-    report->predicate += interval.begin.to_string();
-    report->predicate += "]";
+    if (! predicate.empty())
+      predicate += "&";
+    predicate += "date>=[";
+    predicate += to_iso_extended_string(interval.begin);
+    predicate += "]";
+
+    return true;
   }
 
-  value_t option_end(call_scope_t& args) { // e:
-    char buf[128];
-    interval_t interval(optarg);
-    if (! interval.begin)
+  value_t option_end_(call_scope_t& args) { // e:
+    interval_t interval(args[0].to_string());
+    if (! is_valid(interval.begin))
       throw_(std::invalid_argument,
-	     "Could not determine end of period '" << optarg << "'");
+	     "Could not determine end of period '"
+	     << args[0].to_string() << "'");
 
-    if (! report->predicate.empty())
-      report->predicate += "&";
-    report->predicate += "d<[";
-    report->predicate += interval.begin.to_string();
-    report->predicate += "]";
+    if (! predicate.empty())
+      predicate += "&";
+    predicate += "date<[";
+    predicate += to_iso_extended_string(interval.begin);
+    predicate += "]";
 
+#if 0
     terminus = interval.begin;
+#endif
+    return true;
   }
 
+#if 0
   value_t option_current(call_scope_t& args) { // c
     if (! report->predicate.empty())
       report->predicate += "&";
@@ -500,91 +494,105 @@ public:
   value_t option_descend_if(call_scope_t& args) {
     report->descend_expr = optarg;
   }
+#endif
 
-  value_t option_period(call_scope_t& args) { // p:
-    if (report->report_period.empty()) {
-      report->report_period = optarg;
+  value_t option_period_(call_scope_t& args) { // p:
+    if (report_period.empty()) {
+      report_period = args[0].to_string();
     } else {
-      report->report_period += " ";
-      report->report_period += optarg;
+      report_period += " ";
+      report_period += args[0].to_string();
     }
 
     // If the period gives a beginning and/or ending date, make sure to
     // modify the calculation predicate (via the --begin and --end
     // options) to take this into account.
 
-    interval_t interval(report->report_period);
+    interval_t interval(report_period);
 
-    if (interval.begin) {
-      if (! report->predicate.empty())
-	report->predicate += "&";
-      report->predicate += "d>=[";
-      report->predicate += interval.begin.to_string();
-      report->predicate += "]";
+    if (is_valid(interval.begin)) {
+      if (! predicate.empty())
+	predicate += "&";
+      predicate += "date>=[";
+      predicate += to_iso_extended_string(interval.begin);
+      predicate += "]";
     }
 
-    if (interval.end) {
-      if (! report->predicate.empty())
-	report->predicate += "&";
-      report->predicate += "d<[";
-      report->predicate += interval.end.to_string();
-      report->predicate += "]";
+    if (is_valid(interval.end)) {
+      if (! predicate.empty())
+	predicate += "&";
+      predicate += "date<[";
+      predicate += to_iso_extended_string(interval.end);
+      predicate += "]";
 
+#if 0
       terminus = interval.end;
+#endif
     }
+    return true;
   }
 
   value_t option_daily(call_scope_t& args) {
-    if (report->report_period.empty())
-      report->report_period = "daily";
+    if (report_period.empty())
+      report_period = "daily";
     else
-      report->report_period = std::string("daily ") + report->report_period;
+      report_period = string("daily ") + report_period;
+    return true;
   }
 
   value_t option_weekly(call_scope_t& args) { // W
-    if (report->report_period.empty())
-      report->report_period = "weekly";
+    if (report_period.empty())
+      report_period = "weekly";
     else
-      report->report_period = std::string("weekly ") + report->report_period;
+      report_period = string("weekly ") + report_period;
+    return true;
   }
 
   value_t option_monthly(call_scope_t& args) { // M
-    if (report->report_period.empty())
-      report->report_period = "monthly";
+    if (report_period.empty())
+      report_period = "monthly";
     else
-      report->report_period = std::string("monthly ") + report->report_period;
+      report_period = string("monthly ") + report_period;
+    return true;
   }
 
   value_t option_quarterly(call_scope_t& args) {
-    if (report->report_period.empty())
-      report->report_period = "quarterly";
+    if (report_period.empty())
+      report_period = "quarterly";
     else
-      report->report_period = std::string("quarterly ") + report->report_period;
+      report_period = string("quarterly ") + report_period;
+    return true;
   }
 
   value_t option_yearly(call_scope_t& args) { // Y
-    if (report->report_period.empty())
-      report->report_period = "yearly";
+    if (report_period.empty())
+      report_period = "yearly";
     else
-      report->report_period = std::string("yearly ") + report->report_period;
+      report_period = string("yearly ") + report_period;
+    return true;
   }
 
   value_t option_dow(call_scope_t& args) {
-    report->days_of_the_week = true;
+    days_of_the_week = true;
+    return true;
   }
 
   value_t option_by_payee(call_scope_t& args) { // P
-    report->by_payee = true;
+    by_payee = true;
+    return true;
   }
 
   value_t option_comm_as_payee(call_scope_t& args) { // x
-    report->comm_as_payee = true;
+    comm_as_payee = true;
+    return true;
   }
 
   value_t option_code_as_payee(call_scope_t& args) {
-    report->code_as_payee = true;
+    code_as_payee = true;
+    return true;
   }
 
+#if 0
   value_t option_budget(call_scope_t& args) {
     report->budget_flags = BUDGET_BUDGETED;
   }
