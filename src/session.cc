@@ -73,7 +73,7 @@ session_t::session_t()
   : register_format
     ("%-.9D %-.20P %-.23A %!12(print_balance(fmt_t, 12, 67)) "
      "%!12(print_balance(fmt_T, 12, 80, true))\n%/"
-     "%32|%-.22A %!12(print_balance(fmt_t, 12, 67)) "
+     "%31|%-.23A %!12(print_balance(fmt_t, 12, 67)) "
      "%!12(print_balance(fmt_T, 12, 80, true))\n"),
     wide_register_format
     ("%-.9D  %-.35P %-.39A %22.108t %!22.132T\n%/"
