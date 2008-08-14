@@ -401,7 +401,13 @@ expr_t::ptr_op_t entry_t::lookup(const string& name)
       return WRAP_FUNCTOR(get_wrapper<&get_payee>);
     break;
   }
-  return journal->owner->current_report->lookup(name);
+
+  if (journal) {
+    assert(journal->owner == session_t::current);
+    return journal->owner->current_report->lookup(name);
+  } else {
+    return session_t::current->current_report->lookup(name);
+  }
 }
 
 bool entry_t::valid() const
