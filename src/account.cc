@@ -143,6 +143,10 @@ namespace {
     return account.xdata_->value;
   }
 
+  value_t get_depth(account_t& account) {
+    return long(account.depth);
+  }
+
   value_t get_depth_spacer(account_t& account) {
     std::ostringstream out;
     for (account_t * acct = &account;
@@ -166,6 +170,11 @@ expr_t::ptr_op_t account_t::lookup(const string& name)
   case 'a':
     if (name == "amount")
       return WRAP_FUNCTOR(get_wrapper<&get_amount>);
+    break;
+
+  case 'd':
+    if (name == "depth")
+      return WRAP_FUNCTOR(get_wrapper<&get_depth>);
     break;
 
   case 'f':
