@@ -967,7 +967,12 @@ bool value_t::operator<(const value_t& val) const
     case INTEGER:
       return as_amount() < val.as_long();
     case AMOUNT:
-      return as_amount() < val.as_amount();
+      try {
+	return as_amount() < val.as_amount();
+      }
+      catch (const amount_error&) {
+	return compare_amount_commodities()(&as_amount(), &val.as_amount());
+      }
     default:
       break;
     }
