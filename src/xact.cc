@@ -83,7 +83,12 @@ namespace {
   }
 
   value_t get_amount(xact_t& xact) {
-    return xact.amount;
+    if (xact.has_xdata() &&
+	xact.xdata().has_flags(XACT_EXT_COMPOUND)) {
+      return xact.xdata().value;
+    } else {
+      return xact.amount;
+    }
   }
 
   value_t get_total(xact_t& xact) {
