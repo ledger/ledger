@@ -65,29 +65,6 @@ CXXFLAGS="$CXXFLAGS -pipe"
 LDFLAGS="$LDFLAGS $LIBDIRS"
 BUILD_DIR=false
 
-# Warning flags
-CXXFLAGS="$CXXFLAGS -Wall -ansi -Winvalid-pch"
-CXXFLAGS="$CXXFLAGS -Wextra"
-CXXFLAGS="$CXXFLAGS -Wcast-align"
-CXXFLAGS="$CXXFLAGS -Wcast-qual"
-#CXXFLAGS="$CXXFLAGS -Wconversion"
-CXXFLAGS="$CXXFLAGS -Wfloat-equal"
-CXXFLAGS="$CXXFLAGS -Wmissing-field-initializers"
-CXXFLAGS="$CXXFLAGS -Wno-endif-labels"
-#CXXFLAGS="$CXXFLAGS -Wold-style-cast"
-CXXFLAGS="$CXXFLAGS -Woverloaded-virtual"
-#CXXFLAGS="$CXXFLAGS -Wshorten-64-to-32"
-CXXFLAGS="$CXXFLAGS -Wsign-compare"
-CXXFLAGS="$CXXFLAGS -Wsign-promo"
-CXXFLAGS="$CXXFLAGS -Wstrict-null-sentinel"
-CXXFLAGS="$CXXFLAGS -Wwrite-strings"
-
-#CXXFLAGS="$CXXFLAGS -Weffc++"
-CXXFLAGS="$CXXFLAGS -Wno-unused"
-CXXFLAGS="$CXXFLAGS -Wno-shorten-64-to-32"
-CXXFLAGS="$CXXFLAGS -Wno-old-style-cast"
-CXXFLAGS="$CXXFLAGS -Wno-deprecated"
-
 # The following are options to prepare a developer tree of Ledger for
 # building:
 #
@@ -203,6 +180,29 @@ while [ -n "$1" ]; do
 	CXXFLAGS="$CXXFLAGS -g"
 	LDFLAGS="$LDFLAGS -g"
 
+	# Warning flags
+	CXXFLAGS="$CXXFLAGS -Wall -ansi -Winvalid-pch"
+	CXXFLAGS="$CXXFLAGS -Wextra"
+	CXXFLAGS="$CXXFLAGS -Wcast-align"
+	CXXFLAGS="$CXXFLAGS -Wcast-qual"
+	#CXXFLAGS="$CXXFLAGS -Wconversion"
+	CXXFLAGS="$CXXFLAGS -Wfloat-equal"
+	CXXFLAGS="$CXXFLAGS -Wmissing-field-initializers"
+	CXXFLAGS="$CXXFLAGS -Wno-endif-labels"
+	#CXXFLAGS="$CXXFLAGS -Wold-style-cast"
+	CXXFLAGS="$CXXFLAGS -Woverloaded-virtual"
+	#CXXFLAGS="$CXXFLAGS -Wshorten-64-to-32"
+	CXXFLAGS="$CXXFLAGS -Wsign-compare"
+	CXXFLAGS="$CXXFLAGS -Wsign-promo"
+	CXXFLAGS="$CXXFLAGS -Wstrict-null-sentinel"
+	CXXFLAGS="$CXXFLAGS -Wwrite-strings"
+
+	#CXXFLAGS="$CXXFLAGS -Weffc++"
+	CXXFLAGS="$CXXFLAGS -Wno-unused"
+	CXXFLAGS="$CXXFLAGS -Wno-shorten-64-to-32"
+	CXXFLAGS="$CXXFLAGS -Wno-old-style-cast"
+	CXXFLAGS="$CXXFLAGS -Wno-deprecated"
+
 	#LDFLAGS="-Wl,-read_only_relocs,suppress"
 	#LIBS=""
 	#if [ -f /opt/local/lib/libexpat.a ]; then
@@ -261,8 +261,8 @@ while [ -n "$1" ]; do
     --release)
 	SWITCHES="$SWITCHES --disable-dependency-tracking"
 	CPPFLAGS="-isystem /usr/local/stow/cppunit/include $CPPFLAGS"
-	CXXFLAGS="$CXXFLAGS $ARCHFLAGS"
-	LDFLAGS="$LDFLAGS $LDARCHFLAGS"
+	#CXXFLAGS="$CXXFLAGS $ARCHFLAGS"
+	#LDFLAGS="$LDFLAGS $LDARCHFLAGS"
 	LDFLAGS="-L/usr/local/stow/cppunit/lib $LDFLAGS"
 
 	shift 1 ;;
