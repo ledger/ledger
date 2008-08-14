@@ -34,95 +34,6 @@
 
 namespace ledger {
 
-#if 0
-void report_t::process_options(const std::string&     command,
-			       strings_list::iterator arg,
-			       strings_list::iterator args_end)
-{
-  // Configure some other options depending on report type
-
-  if (command == "p" || command == "e" || command == "w") {
-    show_related     =
-    show_all_related = true;
-  }
-  else if (command == "E") {
-    show_subtotal = true;
-  }
-  else if (show_related) {
-    if (command == "r") {
-      show_inverted = true;
-    } else {
-      show_subtotal    = true;
-      show_all_related = true;
-    }
-  }
-
-  if (command != "b" && command != "r")
-    amount_t::keep_base = true;
-
-  // Process remaining command-line arguments
-
-  if (command != "e") {
-    // Treat the remaining command-line arguments as regular
-    // expressions, used for refining report results.
-
-    std::list<std::string>::iterator i = arg;
-    for (; i != args_end; i++)
-      if (*i == "--")
-	break;
-
-    if (i != arg)
-      regexps_to_predicate(command, arg, i, true,
-			   (command == "b" && ! show_subtotal &&
-			    display_predicate.empty()));
-    if (i != args_end && ++i != args_end)
-      regexps_to_predicate(command, i, args_end);
-  }
-
-  // Setup the default value for the display predicate
-
-  if (display_predicate.empty()) {
-    if (command == "b") {
-      if (! show_empty)
-	display_predicate = "T";
-      if (! show_subtotal) {
-	if (! display_predicate.empty())
-	  display_predicate += "&";
-	display_predicate += "l<=1";
-      }
-    }
-    else if (command == "E") {
-      display_predicate = "t";
-    }
-    else if (command == "r" && ! show_empty) {
-      display_predicate = "a";
-    }
-  }
-
-  DEBUG_PRINT("ledger.config.predicates", "Predicate: " << predicate);
-  DEBUG_PRINT("ledger.config.predicates", "Display P: " << display_predicate);
-
-  // Setup the values of %t and %T, used in format strings
-
-  if (! amount_expr.empty())
-    ledger::amount_expr = amount_expr;
-  if (! total_expr.empty())
-    ledger::total_expr  = total_expr;
-
-  // Now setup the various formatting strings
-
-  if (! date_output_format.empty())
-    date_t::output_format = date_output_format;
-
-  amount_t::keep_price = keep_price;
-  amount_t::keep_date  = keep_date;
-  amount_t::keep_tag   = keep_tag;
-
-  if (! report_period.empty() && ! sort_all)
-    entry_sort = true;
-}
-#endif
-
 xact_handler_ptr
 report_t::chain_xact_handlers(xact_handler_ptr base_handler,
 			      const bool handle_individual_xacts)
@@ -139,8 +50,8 @@ report_t::chain_xact_handlers(xact_handler_ptr base_handler,
     if (head_entries || tail_entries)
       handler.reset(new truncate_entries(handler, head_entries, tail_entries));
 
-    // filter_xacts will only pass through xacts
-    // matching the `display_predicate'.
+    // filter_xacts will only pass through xacts matching the
+    // `display_predicate'.
     if (! display_predicate.empty())
       handler.reset(new filter_xacts(handler, display_predicate));
 

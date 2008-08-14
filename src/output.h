@@ -100,21 +100,24 @@ protected:
 
 public:
   format_accounts(report_t&	_report,
-		  const string& _format,
-		  const string& display_predicate = "",
+		  const string& _format = "",
 		  const bool    _print_final_total = true)
-    : report(_report), format(_format), disp_pred(display_predicate),
+    : report(_report), format(_format), disp_pred(),
       print_final_total(_print_final_total)
   {
-    TRACE_CTOR(format_accounts,
-	       "report&, const string&, const string&, const bool");
+    TRACE_CTOR(format_accounts, "report&, const string&, const bool");
   }
   virtual ~format_accounts() {
     TRACE_DTOR(format_accounts);
   }
 
-  virtual void flush();
+  bool should_display(account_t& account) {
+    if (! disp_pred.predicate)
+      disp_pred.predicate.parse(report.display_predicate);
+    return disp_pred(account);
+  }
 
+  virtual void flush();
   virtual void operator()(account_t& account);
 };
 
@@ -127,8 +130,7 @@ class format_equity : public format_accounts
 
  public:
   format_equity(report_t&     _report,
-		const string& _format,
-		const string& display_predicate = "");
+		const string& _format);
   virtual ~format_equity() {
     TRACE_DTOR(format_equity);
   }

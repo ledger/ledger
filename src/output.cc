@@ -171,7 +171,7 @@ bool format_accounts::disp_subaccounts_p(account_t&   account,
 {
   bool	       display  = false;
   unsigned int counted  = 0;
-  bool         matches  = disp_pred(account);
+  bool         matches  = should_display(account);
   bool         computed = false;
   value_t      acct_total;
   value_t      result;
@@ -179,7 +179,7 @@ bool format_accounts::disp_subaccounts_p(account_t&   account,
   to_show = NULL;
 
   foreach (accounts_map::value_type pair, account.accounts) {
-    if (! disp_pred(*pair.second))
+    if (! should_display(*pair.second))
       continue;
 
     call_scope_t args(*pair.second);
@@ -219,13 +219,11 @@ bool format_accounts::display_account(account_t& account)
   if (disp_subaccounts_p(account, account_to_show))
     return true;
 
-  return ! account_to_show && disp_pred(account);
+  return ! account_to_show && should_display(account);
 }
 
-format_equity::format_equity(report_t&	   _report,
-			     const string& _format,
-			     const string& display_predicate)
-  : format_accounts(_report, "", display_predicate)
+format_equity::format_equity(report_t& _report, const string& _format)
+  : format_accounts(_report)
 {
   const char * f = _format.c_str();
 

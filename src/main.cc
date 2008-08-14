@@ -398,18 +398,26 @@ namespace ledger {
 
     function_t command;
 
-    if (verb == "register" || verb == "reg" || verb == "r")
+    if (verb == "register" || verb == "reg" || verb == "r") {
+      verb = "register";
       command = reporter<>(new format_xacts(report, session.register_format));
-    else if (verb == "print" || verb == "p")
+    }
+    else if (verb == "print" || verb == "p") {
+      verb = "print";
       command = reporter<>(new format_xacts(report, session.print_format));
-    else if (verb == "balance" || verb == "bal" || verb == "b")
+    }
+    else if (verb == "balance" || verb == "bal" || verb == "b") {
+      verb = "balance";
       command = reporter<account_t, acct_handler_ptr,
 	                 &report_t::accounts_report>
 	(new format_accounts(report, session.balance_format));
-    else if (verb == "equity")
+    }
+    else if (verb == "equity") {
+      verb = "equity";
       command = reporter<account_t, acct_handler_ptr,
                          &report_t::accounts_report>
 	(new format_equity(report, session.print_format));
+    }
 #if 0
     else if (verb == "entry")
       command = entry_command();
@@ -439,6 +447,67 @@ namespace ledger {
       if (! command)
 	throw_(std::logic_error, string("Unrecognized command '") + verb + "'");
     }
+
+    // Patch up some of the reporting options based on what kind of
+    // command it was.
+
+    // jww (2008-08-14): This code really needs to be rationalized away
+    // for 3.0.
+
+    if (verb == "print" || verb == "entry" || verb == "dump") {
+      report.show_related     = true;
+      report.show_all_related = true;
+    }
+    else if (verb == "equity") {
+      report.show_subtotal = true;
+    }
+    else if (report.show_related) {
+      if (verb == "register") {
+	report.show_inverted = true;
+      } else {
+	report.show_subtotal    = true;
+	report.show_all_related = true;
+      }
+    }
+
+    if (verb != "balance" && verb != "register")
+      amount_t::keep_base = true;
+
+    // Setup the default value for the display predicate
+
+    if (report.display_predicate.empty()) {
+      if (verb == "balance") {
+	if (! report.show_empty)
+	  report.display_predicate = "total";
+	if (! report.show_subtotal) {
+	  if (! report.display_predicate.empty())
+	    report.display_predicate += "&";
+	  report.display_predicate += "depth<=1";
+	}
+      }
+      else if (verb == "equity") {
+	report.display_predicate = "fmt_t"; // jww (2008-08-14): ???
+      }
+      else if (verb == "register" && ! report.show_empty) {
+	report.display_predicate = "amount";
+      }
+    }
+
+    // Now setup the various formatting strings
+
+    // jww (2008-08-14): I hear a song, and it's sound is "HaAaaCcK"
+
+#if 0
+    if (! date_output_format.empty())
+      date_t::output_format = date_output_format;
+#endif
+
+    amount_t::keep_price = report.keep_price;
+    amount_t::keep_date  = report.keep_date;
+    amount_t::keep_tag   = report.keep_tag;
+
+    if (! report.report_period.empty() && ! report.sort_all)
+      report.entry_sort = true;
 
     // Create an argument scope containing the report command's
     // arguments, and then invoke the command.
