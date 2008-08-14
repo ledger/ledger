@@ -450,7 +450,7 @@ void interval_xacts::operator()(xact_t& xact)
   if (interval) {
     if (! started) {
       if (! is_valid(interval.begin))
-	interval.start(date);
+	interval.set_start(date);
       start   = interval.begin;
       started = true;
     }
@@ -600,7 +600,7 @@ void budget_xacts::report_budget_items(const date_t& date)
     foreach (pending_xacts_list::value_type& pair, pending_xacts) {
       date_t& begin = pair.first.begin;
       if (! is_valid(begin)) {
-	pair.first.start(date);
+	pair.first.set_start(date);
 	begin = pair.first.begin;
       }
 
@@ -667,7 +667,7 @@ void forecast_xacts::add_xact(const interval_t& period, xact_t& xact)
 
   interval_t& i = pending_xacts.back().first;
   if (! is_valid(i.begin)) {
-    i.start(current_date);
+    i.set_start(current_date);
     i.begin = i.increment(i.begin);
   } else {
     while (i.begin < current_date)

@@ -140,9 +140,10 @@ struct interval_t
     return years != 0 || months != 0  || days != 0;
   }
 
-  void   start(const date_t& moment) {
-    begin = first(moment);
+  void   set_start(const date_t& moment) {
+    begin = moment;
   }
+
   date_t first(const optional<date_t>& moment = none) const;
   date_t increment(const date_t&) const;
 
