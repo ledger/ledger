@@ -1332,8 +1332,6 @@ value_t value_t::value(const optional<datetime_t>& moment) const
 void value_t::in_place_reduce()
 {
   switch (type()) {
-  case INTEGER:
-    return;
   case AMOUNT:
     as_amount_lval().in_place_reduce();
     return;
@@ -1344,10 +1342,10 @@ void value_t::in_place_reduce()
     as_balance_pair_lval().in_place_reduce();
     return;
   default:
-    break;
+    return;
   }
 
-  throw_(value_error, "Cannot reduce " << label());
+  //throw_(value_error, "Cannot reduce " << label());
 }
 
 value_t value_t::abs() const
