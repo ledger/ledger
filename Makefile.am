@@ -129,6 +129,7 @@ pkginclude_HEADERS =	  \
 	src/quotes.h	  \
 			  \
 	src/ledger.h	  \
+	lib/fdstream.h    \
 			  \
 	python/pyledger.h \
 	python/pyinterp.h
@@ -153,7 +154,7 @@ endif
 bin_PROGRAMS	= ledger
 
 ledger_CPPFLAGS	= $(libledger_la_CPPFLAGS)
-ledger_SOURCES	= src/main.cc lib/fdstream.h
+ledger_SOURCES	= src/main.cc
 ledger_LDADD	= $(LIBOBJS) libamounts.la libledger.la
 ledger_LDFLAGS	= 
 
@@ -318,6 +319,7 @@ dist-hook:
 	       $(distdir)/doc/Doxyfile.bak \
 	       $(distdir)/doc/Doxyfile.gen
 	cp -pR $(srcdir)/doc/html $(distdir)/doc
+	chmod u+w $(distdir)/README
 	cp -p $(srcdir)/doc/README $(distdir)/README
 
 distclean-local:
@@ -365,9 +367,9 @@ report: all
 copy-sources:
 	-mkdir /tmp/ledger
 	sudo rsync -av --delete \
-	    --exclude=lib/ \
-	    --exclude=.libs/ \
-	    --exclude=.deps/ \
+	    --exclude='/lib/*/' \
+	    --exclude=/.libs/ \
+	    --exclude=/.deps/ \
 	    ./ /tmp/ledger/
 	(cd /tmp/ledger; sudo git clean -x -d -f)
 
