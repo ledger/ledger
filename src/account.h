@@ -38,6 +38,7 @@
 namespace ledger {
 
 class account_t;
+class session_t;
 
 typedef std::map<const string, account_t *> accounts_map;
 
