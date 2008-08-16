@@ -10,3 +10,6 @@
 [submodule "lib/libofx"]
 	path = lib/libofx
 	url = git://newartisans.com/libofx.git
+[submodule "data"]
+	path = data
+	url = git://newartisans.com/ledger.git
