@@ -167,6 +167,11 @@ public:
   void clean_xacts();
   void clean_xacts(entry_t& entry);
 
+  void clean_all() {
+    clear_xacts();
+    clear_accounts();
+  }
+
   //
   // Scope members
   //
