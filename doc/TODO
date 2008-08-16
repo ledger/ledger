@@ -1,0 +1,200 @@
+LEDGER  -*- mode: org; fill-column: 78 -*-
+
+#+STARTUP: overview
+#+SEQ_TODO: TODO STARTED WAITING DELEGATED | DONE DEFERRED CANCELLED NOTE
+#+CATEGORY: Ledger
+
+* TODO [#B] Find out why a simple 'bal' command on sparc/x86 is crashing
+  SCHEDULED: <2008-08-16 Sat>
+  :PROPERTIES:
+  :UUID: 2A8D6EC1-FE9A-453C-B58F-50C1EB1F4EF4
+  :END:
+  [2008-08-16 Sat]
+
+* TODO Switch from using the Trac to using an org-mode file named BUGS and BUGS-OLD in the source tree
+  :PROPERTIES:
+  :UUID: 2C13EF9F-249A-4045-B8BC-BC9859FEFF77
+  :END:
+  [2008-08-14 Thu]
+* TODO --debug isn't taking a regular expression
+  :PROPERTIES:
+  :UUID: 5936E070-F86A-4E52-B165-B70CE24C8109
+  :END:
+  [2008-07-24 Thu]
+* TODO Add support for "entry notes"
+  :PROPERTIES:
+  :UUID: 334E9E08-0943-42DB-BB7A-A4D147508706
+  :END:
+  [2008-08-05 Tue]
+* TODO Add the concept of "date aliases" to Ledger, so I could say: -b Term1
+  :PROPERTIES:
+  :UUID: C9660BB8-BBFC-4667-9783-E43E676ED216
+  :END:
+  [2008-04-17 Thu]
+* TODO Allow Payee | Description for an entry payee
+  :PROPERTIES:
+  :UUID: 02B9DD62-F134-4898-A4FC-4B8158E9A192
+  :END:
+  [2008-04-17 Thu]
+* TODO Allow pre-declaration of account and commodity names, and account commodities
+  :PROPERTIES:
+  :UUID: 0B84B620-FFB4-4BE1-B54F-BDA45DDAFEAD
+  :END:
+  [2008-04-17 Thu]
+* TODO Allow reports, such as completed tasks last week, etc.
+  :PROPERTIES:
+  :UUID: D9B4D001-21E4-4247-ADF6-56C00B2C8F3A
+  :END:
+  [2008-05-12 Mon]
+* TODO Answer Martin's question about Capital gains
+  [[message://20080423221130.4D77D1144C3@banane.furius.ca]["capital gains" from Martin Blais <blais@furius.ca>]]
+  [[message://1209097067.1413.1249786835@webmail.messagingengine.com]["Here is one valid way to book capital gains" from Martin Blais <blais@furius.ca>]]
+  :PROPERTIES:
+  :UUID: 1B5B2517-360E-4F33-9A1E-C88F884ACAD2
+  :END:
+  [2008-04-24 Thu]
+* TODO Change the binary cache reader to use Boost.Interprocess to read it in as a memory mapped file
+  :PROPERTIES:
+  :UUID: A978C1E9-86EA-4074-B8E8-2A3DF1A12ED2
+  :END:
+  [2008-08-05 Tue]
+* TODO Comb through the warnings generated when fully all warnings are enabled
+  :PROPERTIES:
+  :UUID: B129BF67-ACC2-4800-870C-93F9ADA151F6
+  :END:
+  [2008-08-14 Thu]
+* TODO Complete the internal documentation, exported using Doxygen
+  :PROPERTIES:
+  :UUID: 986054C6-CD18-4EA1-8F8C-FF02C9842EB0
+  :END:
+  [2008-08-14 Thu]
+* TODO Complete the new manual
+  :PROPERTIES:
+  :UUID: D2F43032-A889-4ED3-AEE8-8A93D6594EDD
+  :END:
+  [2008-08-14 Thu]
+* TODO Confirm the completeness of the Python bridge, in both directions
+  :PROPERTIES:
+  :UUID: 51B7E884-F0F8-4231-9C71-9D5EB653AAF9
+  :END:
+  [2008-08-14 Thu]
+* TODO Create a Debian build of Ledger
+  :PROPERTIES:
+  :UUID: 6CE0A190-0368-446F-9EF5-84DD4F5EB0E4
+  :END:
+  [2008-08-08 Fri]
+* TODO Create a pre-built ledger.exe for Windows users
+  :PROPERTIES:
+  :UUID: E0620AEA-12B6-4AD7-A45E-B00CA9FB23AD
+  :END:
+  [2008-08-08 Fri]
+* TODO Create an MacPorts build of Ledger
+  :PROPERTIES:
+  :UUID: 7F75AEF6-BBB8-4BBA-BCCA-FE328037EBC4
+  :END:
+  [2008-08-08 Fri]
+* TODO Create an RPM build of Ledger
+  :PROPERTIES:
+  :UUID: 57F84E90-8993-45C8-8639-243B041EE786
+  :END:
+  [2008-08-08 Fri]
+* TODO Don't use -s for bal the way it's used now
+  :PROPERTIES:
+  :UUID: C27BABD9-CEAF-41E9-84D9-F1B97C785F50
+  :END:
+  [2008-08-14 Thu]
+* TODO Every destructor which contains only TRACE_DTOR should specify throw()
+  :PROPERTIES:
+  :UUID: 44497B2D-292F-4C82-8D4F-B928FE6143EC
+  :END:
+  [2008-07-25 Fri]
+* TODO Find out why master is failing to build on Thomas Delaet's OpenBSD box
+  ssh obsd86
+  :PROPERTIES:
+  :UUID: 5467AFFB-0E79-431E-8890-C1603D6D9DED
+  :END:
+  [2008-08-14 Thu]
+* TODO In ledger-mode, color directive lines firebrick red
+  :PROPERTIES:
+  :UUID: C80A8AE1-97D7-45C1-8AD3-F47DB36946FC
+  :END:
+  [2008-04-16 Wed]
+* TODO [#B] Convert all the Trac bugs back over this org-mode file
+  SCHEDULED: <2008-08-17 Sun>
+* TODO Restore option processing
+* TODO Instead of converting in.tellg() to unsigned long, I should use std::istream::pos_type
+* TODO Change the binary cache reader to use Boost.Interprocess to read it in as a memory mapped file
+* TODO Add support for "entry notes"
+* TODO --debug isn't taking a regular expression
+* TODO Make sure Ledger's #include's are as minimal as possible
+* TODO Every destructor which contains only TRACE_DTOR should specify throw()
+* TODO Output error messages in a way that compilation-mode can parse
+  message:%3C20080421160053.C6CE61144C3@banane.furius.ca%3E
+* TODO Mention Martin's beancount project from the Ledger home page
+  "Beancount on PyPi" from Martin Blais <blais@furius.ca>
+* TODO Respond to billk's question about options /email
+  New Artisans LLC :: View topic - stock options
+* TODO Answer Martin's question about Capital gains /email
+  "capital gains" from Martin Blais <blais@furius.ca>
+  "Here is one valid way to book capital gains" from Martin Blais <blais@furius.ca>
+* TODO In ledger-mode, color directive lines firebrick red
+* TODO Post the Ledger manual in HTML format on newartisans.com
+* TODO Create an RPM build of Ledger
+* TODO Create a pre-built ledger.exe for Windows users
+* TODO Make !rex reverse a regexp
+  This is instead of -rex, allowing options to appear anywhere on the line.
+  It also means that something has to be done about the meaning of "--".
+* TODO Complete the new manual
+* TODO Complete the internal documentation, exported using Doxygen
+* TODO Comb through the warnings generated when fully all warnings are enabled
+* TODO Write unit tests for all core sections of Ledger and all reporting options
+* TODO Use code coverage analysis to determine if all of Ledger is being tested
+* TODO Confirm the completeness of the Python bridge, in both directions
+* TODO [#B] Find out why master fails to build on tdelaet's OpenBSD box
+  SCHEDULED: <2008-08-17 Sun>
+  ssh obsd86
+* TODO Don't use -s for bal the way it's used now
+* DONE If an exception occurs while --verify --verbose is on, it shows lots and lots of leaked memory
+* DONE Get 'make distcheck' working again with Ledger 2.7
+* DONE Using my PowerPC, build a universal Ledger binary for OS X Leopard
+* DONE Add a way for building in any directory (other than ~/Products) in acprep
+* DONE Verify: make fullcheck
+* DONE Verify: make dist
+* DONE Verify: make distcheck
+* DONE Create regression tests for all the closed 2.6.1 bugs
+* DONE This is a test that 'make check' would run after running the UnitTests.
+* CANCELLED Delete all the "help" pages from the Ledger Trac
+* DONE Formalize tagging
+  - Search with "account / tags", similar to "account -- payee".
+  - Tagging is any note with :tag: in it.
+  - Entries now need notes.
+* DONE Post to the Ledger forums about Ledger's new direction
+* DONE Revise the way that error contexts are passed up
+* DONE Special care needs to be taken that legitimate uses of exceptions are not too expensive.
+* DONE Split binary.cc into journal-specific and generic, and put the generic one in libamounts
+* DONE 2.x value expression syntax must be restored
+  The only way this is going to really be possible is with a battery of unit tests.
+* DONE Get the register report to work again
+* DONE Restore reporting filters
+* DONE Restore command-line regexps
+* CANCELLED Get 'make distcheck' working again with Ledger 2.6.1
+* DONE Add a pre-commit hook for Git that runs the unit tests before allowing a commit
+* DONE Consider Martin's @openbal directive
+  "AutoOpenBalance" from Martin Blais <blais@furius.ca>
+* DONE Get 'make check' working again for Ledger 2.7
+  This means getting the unit tests running again.
+* DONE Make sure that every delete is a checked_delete
+* DONE Restore deleted directories from src/ledger/lib
+* TODO There are a few thorny issues remaining with the binary cache
+  1. What happens to value expressions that have been compiled?  The FUNCTION
+     operand must remember the name of the function it was compiled to; but
+     even then, how can I recompile and maintain the same environment as the
+     original point of definition?
+
+  2. Base commodities no longer exist in their own data structure, but use
+     shared_ptr to track multiple accesses.  How to write out this unwritten
+     structure?
+  :PROPERTIES:
+  :UUID: 69B51A07-5E5F-42F9-AB97-CEECAF4BB085
+  :END:
+  [2008-08-15 Fri]
