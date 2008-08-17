@@ -58,56 +58,12 @@ void expr_t::token_t::parse_ident(std::istream& in)
 	     std::isalnum(c) || c == '_' || c == '.' || c == '-');
 
   switch (buf[0]) {
-#if 0
-  case 'a':
-    if (std::strcmp(buf, "and") == 0)
-      kind = KW_AND;
-    break;
-  case 'd':
-    if (std::strcmp(buf, "div") == 0)
-      kind = KW_DIV;
-    break;
-  case 'e':
-    if (std::strcmp(buf, "eq") == 0)
-      kind = EQUAL;
-    break;
-#endif
   case 'f':
     if (std::strcmp(buf, "false") == 0) {
       kind = VALUE;
       value = false;
     }
     break;
-#if 0
-  case 'g':
-    if (std::strcmp(buf, "gt") == 0)
-      kind = GREATER;
-    else if (std::strcmp(buf, "ge") == 0)
-      kind = GREATEREQ;
-    break;
-  case 'i':
-    if (std::strcmp(buf, "is") == 0)
-      kind = EQUAL;
-    break;
-  case 'l':
-    if (std::strcmp(buf, "lt") == 0)
-      kind = LESS;
-    else if (std::strcmp(buf, "le") == 0)
-      kind = LESSEQ;
-    break;
-  case 'm':
-    if (std::strcmp(buf, "mod") == 0)
-      kind = KW_MOD;
-    break;
-  case 'n':
-    if (std::strcmp(buf, "ne") == 0)
-      kind = NEQUAL;
-    break;
-  case 'o':
-    if (std::strcmp(buf, "or") == 0)
-      kind = KW_OR;
-    break;
-#endif
   case 't':
     if (std::strcmp(buf, "true") == 0) {
       kind = VALUE;
