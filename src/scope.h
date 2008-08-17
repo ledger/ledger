@@ -166,11 +166,9 @@ public:
   }
 
   value_t& operator[](const unsigned int index) {
-    // jww (2008-07-21): exception here if it's out of bounds
     return args[index];
   }
   const value_t& operator[](const unsigned int index) const {
-    // jww (2008-07-21): exception here if it's out of bounds
     return args[index];
   }
 
