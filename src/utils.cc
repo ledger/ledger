@@ -656,13 +656,11 @@ path expand_path(const path& pathname)
   if (pathname.empty())
     return pathname;
 
-#if 0
-  // jww (2007-04-30): I need to port this code to use
-  // boost::filesystem::path
+  std::string       path_string = pathname.string();
   const char *	    pfx = NULL;
-  string::size_type pos = pathname.find_first_of('/');
+  string::size_type pos = path_string.find_first_of('/');
 
-  if (pathname.length() == 1 || pos == 1) {
+  if (path_string.length() == 1 || pos == 1) {
     pfx = std::getenv("HOME");
 #ifdef HAVE_GETPWUID
     if (! pfx) {
@@ -675,8 +673,8 @@ path expand_path(const path& pathname)
   }
 #ifdef HAVE_GETPWNAM
   else {
-    string user(pathname, 1, pos == string::npos ?
-		     string::npos : pos - 1);
+    string user(path_string, 1, pos == string::npos ?
+		string::npos : pos - 1);
     struct passwd * pw = getpwnam(user.c_str());
     if (pw)
       pfx = pw->pw_dir;
@@ -696,12 +694,9 @@ path expand_path(const path& pathname)
   if (result.length() == 0 || result[result.length() - 1] != '/')
     result += '/';
 
-  result += pathname.substr(pos + 1);
+  result += path_string.substr(pos + 1);
 
   return result;
-#else
-  return pathname;
-#endif
 }
 
 path resolve_path(const path& pathname)
