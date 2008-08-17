@@ -42,7 +42,7 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope)
     if (ptr_op_t def = scope.lookup(as_ident())) {
       // Definitions are compiled at the point of definition, not the
       // point of use.
-      return def;
+      return copy(def);
     }
     return this;
 
@@ -74,7 +74,9 @@ value_t expr_t::op_t::calc(scope_t& scope)
     return as_value();
 
   case IDENT:
-    throw_(calc_error, "Unknown identifier '" << as_ident() << "'");
+    if (! left())
+      throw_(calc_error, "Unknown identifier '" << as_ident() << "'");
+    return left()->calc(scope);
 
   case FUNCTION: {
     // Evaluating a FUNCTION is the same as calling it directly; this happens
@@ -92,6 +94,9 @@ value_t expr_t::op_t::calc(scope_t& scope)
 
     ptr_op_t func = left();
     string   name;
+
+    assert(func->kind == IDENT);
+    func = func->left();
 
     if (func->kind != FUNCTION)
       throw_(calc_error, "Calling non-function");
@@ -433,7 +438,9 @@ void expr_t::op_t::dump(std::ostream& out, const int depth) const
 
   out << " (" << refc << ')' << std::endl;
 
-  if (kind > TERMINALS) {
+  // An identifier is a special non-terminal, in that its left() can
+  // hold the compiled definition of the identifier.
+  if (kind > TERMINALS || kind == IDENT) {
     if (left()) {
       left()->dump(out, depth + 1);
       if (right())
@@ -517,7 +524,7 @@ void expr_t::op_t::write(std::ostream& out) const
       binary::write_long(out, as_index());
       break;
 
-    case FUNCTION:		// jww (2008-08-15): uh oh...
+    case FUNCTION:
     default:
       assert(false);
       break;

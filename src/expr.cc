@@ -32,7 +32,6 @@
 #include "expr.h"
 #include "parser.h"
 #include "op.h"
-#include "scope.h"		// jww (2008-08-01): not necessary
 
 namespace ledger {
 
@@ -160,10 +159,10 @@ value_t expr_t::eval(const string& _expr, scope_t& scope)
   return expr_t(_expr).calc(scope);
 }
 
-void expr_t::print(std::ostream& out, scope_t& scope) const
+void expr_t::print(std::ostream& out) const
 {
   if (ptr) {
-    op_t::print_context_t context(scope);
+    op_t::print_context_t context;
     ptr->print(out, context);
   }
 }
@@ -194,9 +193,7 @@ void expr_t::shutdown()
 }
 
 std::ostream& operator<<(std::ostream& out, const expr_t& expr) {
-  // jww (2008-08-01): shouldn't be necessary
-  symbol_scope_t scope;
-  expr.print(out, scope);
+  expr.print(out);
   return out;
 }
 

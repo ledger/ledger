@@ -293,7 +293,7 @@ namespace ledger {
       out << "Value expression as  input: " << *arg << std::endl;
 
       out << "Value expression as parsed: ";
-      expr.print(out, report);
+      expr.print(out);
       out << std::endl;
 
       out << std::endl;
@@ -312,7 +312,7 @@ namespace ledger {
 
       out << "Value expression as  input: " << *arg << std::endl;
       out << "Value expression as parsed: ";
-      expr.print(out, report);
+      expr.print(out);
       out << std::endl;
 
       out << std::endl;

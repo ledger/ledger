@@ -110,7 +110,7 @@ public:
 
   function_t& get_function();
 
-  void     print(std::ostream& out, scope_t& scope) const;
+  void     print(std::ostream& out) const;
   void     dump(std::ostream& out) const;
   void     read(const char *& data);
   void     write(std::ostream& out) const;
