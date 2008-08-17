@@ -214,16 +214,16 @@ public:
     return left_;
   }
   const ptr_op_t& left() const {
-    assert(kind > TERMINALS);
+    assert(kind > TERMINALS || kind == IDENT);
     return left_;
   }
   void set_left(const ptr_op_t& expr) {
-    assert(kind > TERMINALS);
+    assert(kind > TERMINALS || kind == IDENT);
     left_ = expr;
   }
 
   ptr_op_t& as_op_lval() {
-    assert(kind > TERMINALS);
+    assert(kind > TERMINALS || kind == IDENT);
     return boost::get<ptr_op_t>(data);
   }
   const ptr_op_t& as_op() const {
@@ -305,8 +305,8 @@ inline expr_t::ptr_op_t
 expr_t::op_t::new_node(kind_t _kind, ptr_op_t _left, ptr_op_t _right)
 {
   ptr_op_t node(new op_t(_kind));
-  node->set_left(_left);
-  node->set_right(_right);
+  if (_left)  node->set_left(_left);
+  if (_right) node->set_right(_right);
   return node;
 }
 
