@@ -148,26 +148,30 @@ void read_long(const char *& data, T& num)
 {
   read_guard(data, 0x2001);
 
-  unsigned char len;
+  uint_least8_t len;
   read_number_nocheck(data, len);
 
-  num = 0;
-  unsigned char temp;
+  num = static_cast<T>(0);
+  uint_least8_t temp;
   if (len > 3) {
     read_number_nocheck(data, temp);
-    num |= static_cast<unsigned long>(temp) << 24;
+    num = static_cast<T>(static_cast<uint_least32_t>(num) |
+			 (static_cast<uint_least32_t>(temp) << 24));
   }
   if (len > 2) {
     read_number_nocheck(data, temp);
-    num |= static_cast<unsigned long>(temp) << 16;
+    num = static_cast<T>(static_cast<uint_least32_t>(num) |
+			 (static_cast<uint_least32_t>(temp) << 16));
   }
   if (len > 1) {
     read_number_nocheck(data, temp);
-    num |= static_cast<unsigned long>(temp) << 8;
+    num = static_cast<T>(static_cast<uint_least32_t>(num) |
+			 (static_cast<uint_least32_t>(temp) << 8));
   }
 
   read_number_nocheck(data, temp);
-  num |= static_cast<unsigned long>(temp);
+  num = static_cast<T>(static_cast<uint_least32_t>(num) |
+		       static_cast<uint_least32_t>(temp));
 
   read_guard(data, 0x2002);
 }

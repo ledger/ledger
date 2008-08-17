@@ -42,8 +42,6 @@ class expr_t::op_t : public noncopyable
   friend class expr_t;
   friend class expr_t::parser_t;
 
-  op_t();
-
 public:
   typedef expr_t::ptr_op_t ptr_op_t;
 
@@ -106,11 +104,16 @@ public:
 
     OPERATORS,
 
+    UNKNOWN,
+
     LAST
   };
 
   kind_t kind;
 
+  explicit op_t() : refc(0), kind(UNKNOWN) {
+    TRACE_CTOR(op_t, "");
+  }
   explicit op_t(const kind_t _kind) : refc(0), kind(_kind) {
     TRACE_CTOR(op_t, "const kind_t");
   }

@@ -1706,19 +1706,13 @@ void value_t::read(const char *& data)
     set_boolean(binary::read_bool(data));
     break;
   case INTEGER:
-    set_long(binary::read_long<unsigned long>(data));
+    set_long(binary::read_long<long>(data));
     break;
   case DATETIME:
-#if 0
-    // jww (2008-04-22): I need to record and read a datetime_t directly
-    set_datetime(read_long<unsigned long>(data));
-#endif
+    set_datetime(parse_datetime(binary::read_string(data)));
     break;
   case DATE:
-#if 0
-    // jww (2008-04-22): I need to record and read a date_t directly
-    set_date(read_long<unsigned long>(data));
-#endif
+    set_date(parse_date(binary::read_string(data)));
     break;
   case AMOUNT: {
     amount_t temp;
@@ -1745,14 +1739,10 @@ void value_t::write(std::ostream& out) const
     binary::write_long(out, as_long());
     break;
   case DATETIME:
-#if 0
-    binary::write_number(out, as_datetime());
-#endif
+    binary::write_string(out, format_datetime(as_datetime()));
     break;
   case DATE:
-#if 0
-    binary::write_number(out, as_date());
-#endif
+    binary::write_string(out, format_date(as_date()));
     break;
   case AMOUNT:
     as_amount().write(out);

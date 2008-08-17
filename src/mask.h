@@ -38,13 +38,14 @@ namespace ledger {
 
 class mask_t
 {
-  mask_t();
-
 public:
   boost::regex expr;
 
   explicit mask_t(const string& pattern);
 
+  mask_t() : expr() {
+    TRACE_CTOR(mask_t, "");
+  }
   mask_t(const mask_t& m) : expr(m.expr) {
     TRACE_CTOR(mask_t, "copy");
   }

@@ -168,8 +168,8 @@ public:
   void clean_xacts(entry_t& entry);
 
   void clean_all() {
-    clear_xacts();
-    clear_accounts();
+    clean_xacts();
+    clean_accounts();
   }
 
   //
