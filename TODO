@@ -1,0 +1,477 @@
+LEDGER  -*- mode: org; fill-column: 78 -*-
+
+#+STARTUP: overview
+#+ARCHIVE: TODO-OLD::
+#+SEQ_TODO: TODO(@) STARTED(@) WAITING(@) DELEGATED(@) | DONE(@) DEFERRED(@) CANCELLED(@) NOTE
+#+TAGS: FEATURE(f) DOC(d) WEBSITE(w)
+#+CATEGORY: Ledger
+
+* TODO [#B] Unbalanced transactions due to rounding problems
+  - State "STARTED"    [2008-08-01 Fri 13:34] \\
+    Comment from Levin <zslevin@gmail.com>:
+      This is the result of ledger in git master branch:
+      :OUTPUT:
+./ledger -f test.ledger -V reg HLIT
+2008/06/01 BUY HLIT             Assets:HLIT     $750         $750
+2008/07/02 SELL HLIT          Assets:HLIT      $-658            0
+                                 Assets:HLIT    $658         $658
+                            Assets:HLIT        $-658            0
+      :END:
+      I wonder why .xxx is vanished :)
+  I found some more rounding problems now that I've upgraded to 2.6.1. These
+  transactions balanced in version 2.5.
+  :DATA:
+2008/06/01 BUY HLIT
+    Assets:HLIT   15 HLIT @ $50.00
+    Assets
+
+2008/07/02 SELL HLIT
+    Assets:HLIT   -15 HLIT @ $50.00
+    Assets:HLIT    15 HLIT @ $43.875
+    Assets:HLIT   -15 HLIT @ $43.875
+    Assets
+  :END:
+  :OUTPUT:
+[20:30:53 vinod]:~/data $ ledger -V reg HLIT
+2008/06/01 BUY HLIT             Assets:HLIT  $750.00      $750.00
+2008/07/02 SELL HLIT            Assets:HLIT $-658.12        $0.01
+                                Assets:HLIT  $658.13      $658.14
+                                Assets:HLIT $-658.12        $0.01
+  :END:
+  So, I end up with an extra penny. I think it's because 658.125 rounds down
+  on one entry and rounds up on the other.
+  :PROPERTIES:
+  :Submitter: Vinod Kurup <vvkurup@gmail.com>
+  :Version: 2.6.1b
+  :Ticket: 207
+  :UUID: E87DD3A5-B061-46A0-95E9-9844A6CB0443
+  :END:
+  [2008-08-01 Fri]
+* TODO [#B] Do not adjust display precision when parsing a pricing entry
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6.0.90
+  :Ticket: 206
+  :UUID: 7E5D2A6C-A15F-4BC8-A851-04A48E3E30F4
+  :END:
+  [2008-07-28 Mon]
+* TODO [#C] Binary cache is invalidated if LEDGER_FILE is changed
+  The following sequence of operations seemed to trigger it:
+  :OUTPUT:
+export LEDGER_FILE=/home/albino/temp/ledger/ledger.dat
+./ledger bal rent food movies -- freddie
+export LEDGER_FILE=/home/albino/temp/ledger/sample.dat
+./ledger bal
+  :END:
+  :PROPERTIES:
+  :Submitter: albino <#ledger>
+  :Version: 2.6.1b
+  :Ticket: 211
+  :UUID: C65875E1-CF5D-4923-8546-9784EB08AC9D
+  :END:
+  [2008-08-05 Tue]
+* DONE [#A] -p "this month" doesn't work at all anymore
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 38
+  :Attachments: 289.patch
+  :UUID: 0CF00621-31C4-4E5A-B260-78B4DA8C3616
+  :END:
+  [2008-08-05 Tue]
+* DONE [#A] Dates (used with -b -e and -p parameters) are broken
+  :PROPERTIES:
+  :Submitter: kmt <kmt@ftml.net>
+  :Version: 2.6
+  :Ticket: 49
+  :Attachments: 290.patch
+  :UUID: A95B2E0F-095D-4314-BC4D-3CEC42203FB1
+  :END:
+  [2008-08-05 Tue]
+* DONE [#A] Reconciling is broken again; I need a way to verify Emacs output
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 64
+  :UUID: 7A8C49FB-F9B8-4ECF-8720-9E29559F3CA6
+  :END:
+  [2008-08-05 Tue]
+* DONE [#A] Ledger fails to balance a simple entry
+  :PROPERTIES:
+  :Submitter: Vinod Kurup <vvkurup@gmail.com>
+  :Version: 2.6.0.90
+  :Ticket: 205
+  :UUID: 0CA014F9-E309-4840-9085-71EC1F46DEC1
+  :END:
+  [2008-08-05 Tue]
+* DONE [#A] trailing whitespace is significant in 2.6
+  :PROPERTIES:
+  :Submitter: Simon Michael <simon@joyful.com>
+  :Version: 2.6
+  :Ticket: 3
+  :Attachments: 288.patch
+  :UUID: FB2330E1-AD78-4559-A885-A488DFDF3DC1
+  :END:
+  [2008-08-05 Tue]
+* DONE [#A] Entry command produces two liability transactions
+  :PROPERTIES:
+  :Submitter: Will Glozer <will@glozer.net>
+  :Version: 2.6
+  :Ticket: 8
+  :UUID: D7DD54D7-8870-4D6D-92A0-90717692F8F2
+  :END:
+  [2008-08-05 Tue]
+* DONE [#A] Bug with date ranges
+  :PROPERTIES:
+  :Submitter: Eric Davis <edavis@insanum.com>
+  :Version: 2.6
+  :Ticket: 17
+  :UUID: FE3E08C0-802A-4FAA-B8BA-93D81C061148
+  :END:
+  [2008-08-05 Tue]
+* DONE [#A] Weekly register report is completely broken in 2.6
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 26
+  :UUID: 30383931-3060-4999-8FD3-9002E02366A0
+  :END:
+  [2008-08-05 Tue]
+* DONE [#A] Monthly register command displays nothing
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 30
+  :UUID: 841041A2-925D-4797-BE44-11BFC7333054
+  :END:
+  [2008-08-05 Tue]
+* DONE [#A] Make -e use an inclusive end date, and -E an exclusive one
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 37
+  :UUID: A440BB5E-072B-4C75-A235-C551EA090F81
+  :END:
+  [2008-08-05 Tue]
+* DONE [#A] Strip \r from lines when parsing on Windows
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 43
+  :UUID: 458B2B74-AF2D-4D9D-89E4-D8AC26CFD531
+  :END:
+  [2008-08-05 Tue]
+* DONE [#A] Crash on input.
+  :PROPERTIES:
+  :Submitter: Martin Blais <blais@furius.ca>
+  :Version: 2.6
+  :Ticket: 46
+  :UUID: 703505C9-B702-4139-B64A-FD3CF592E720
+  :END:
+  [2008-08-05 Tue]
+* DONE [#A] Crash on input.
+  :PROPERTIES:
+  :Submitter: Martin Blais <blais@furius.ca>
+  :Version: 2.6
+  :Ticket: 47
+  :UUID: B2B79746-5E3B-40D3-B6ED-CCF27364DD5F
+  :END:
+  [2008-08-05 Tue]
+* DONE [#A] Core dump on simple input.
+  :PROPERTIES:
+  :Submitter: Martin Blais <blais@furius.ca>
+  :Version: 2.6
+  :Ticket: 56
+  :UUID: 843B6A53-C3C2-45BB-A92C-558AF6F02014
+  :END:
+  [2008-08-05 Tue]
+* DONE [#A] ledger 2.6 shows no timelog entries
+  :PROPERTIES:
+  :Submitter: Simon Michael <simon@joyful.com>
+  :Version: 2.6
+  :Ticket: 57
+  :UUID: C13F0BDF-4E15-442E-BBB7-265B0A37457C
+  :END:
+  [2008-08-05 Tue]
+* DONE [#A] Marking a transaction cleared may delete text in ledger-mode
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 70
+  :UUID: 0EB5602F-66BE-46C0-8A74-5EB5DBAF2E07
+  :END:
+  [2008-08-05 Tue]
+* DONE [#A] DOS format line endings are fooling the parser
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 129
+  :UUID: 6DF2250F-C54D-4F67-AFB6-F8656020D394
+  :END:
+  [2008-08-05 Tue]
+* DONE [#A] crash
+  :PROPERTIES:
+  :Submitter: Martin Blais <blais@furius.ca>
+  :Version: 2.6
+  :Ticket: 177
+  :UUID: 45605775-F9E3-4C83-8BF2-616905178E82
+  :END:
+  [2008-08-05 Tue]
+* DONE [#A] Cannot sort by reverse time
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6.0.90
+  :Ticket: 202
+  :UUID: CB97253A-581E-49D0-98D4-3BC5B0616A42
+  :END:
+  [2008-08-05 Tue]
+* DONE [#B] No commodity when amount contains simple math operation
+  :PROPERTIES:
+  :Submitter: Levin <zslevin@gmail.com>
+  :Version: 2.6
+  :Ticket: 7
+  :UUID: 4290A2E5-8CFB-4529-87DE-F088719AF13A
+  :END:
+  [2008-08-05 Tue]
+* DONE [#B] Reconciling doesn't work in ledger.el
+  :PROPERTIES:
+  :Submitter: Karen Cooke <karen.cooke@gmail.com>
+  :Version: 2.6
+  :Ticket: 14
+  :UUID: 2B02E2FD-DCF8-4CD8-A7FA-F83F5DAE3F55
+  :END:
+  [2008-08-05 Tue]
+* DONE [#B] Command results in assertion failure
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 23
+  :UUID: AB684BBE-F093-4F77-BCFB-2F4E0D60AA9C
+  :END:
+  [2008-08-05 Tue]
+* DONE [#B] Some at-signs are not properly escaped in documentation	   :DOC:
+  :PROPERTIES:
+  :Submitter: thedward <thedward@barsoom.net>
+  :Version: 2.6
+  :Ticket: 31
+  :Attachments: ledger-texi.patch
+  :UUID: A7CA0F5B-1F08-417A-9071-A223601100CA
+  :END:
+  [2008-08-05 Tue]
+* DONE [#B] ledger SVN doesn't compile on freebsd-8
+  :PROPERTIES:
+  :Submitter: finetouch
+  :Version: 2.6
+  :Ticket: 34
+  :UUID: C1BE11BD-958D-4E67-8B85-5DA14CD375B4
+  :END:
+  [2008-08-05 Tue]
+* DONE [#B] -e doesn't seem to work for providing an end date
+  :PROPERTIES:
+  :Submitter: drewr <#ledger>
+  :Version: 2.6
+  :Ticket: 36
+  :UUID: 1DE6FB08-93D2-47C8-A5A3-3379BA76360D
+  :END:
+  [2008-08-05 Tue]
+* DONE [#B] Problems with the prices.db file
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 40
+  :UUID: B8173D32-D7EB-4619-8488-B2C641431FDE
+  :END:
+  [2008-08-05 Tue]
+* DONE [#B] Problem with pricing specification in prices.db file
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 42
+  :UUID: 43CFF7FF-DA09-478C-AED1-2D2756BACA09
+  :END:
+  [2008-08-05 Tue]
+* DONE [#B] Crash on input.
+  :PROPERTIES:
+  :Submitter: Martin Blais <blais@furius.ca>
+  :Version: 2.6
+  :Ticket: 45
+  :UUID: 93CFAFEB-46EA-4E47-8F0A-069309D6EE3A
+  :END:
+  [2008-08-05 Tue]
+* DONE [#B] Crash on input -- spurious comman.
+  :PROPERTIES:
+  :Submitter: Martin Blais <blais@furius.ca>
+  :Version: 2.6
+  :Ticket: 48
+  :UUID: 517CB118-49A5-42B2-ACFD-1A63DCF163AA
+  :END:
+  [2008-08-05 Tue]
+* DONE [#B] Coredump.
+  :PROPERTIES:
+  :Submitter: Martin Blais <blais@furius.ca>
+  :Version: 2.6
+  :Ticket: 50
+  :UUID: A18B37A4-68DB-4F3A-92D5-3962D010CA0B
+  :END:
+  [2008-08-05 Tue]
+* DONE [#B] Getting an abort with a self-referential pricing statement
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 51
+  :UUID: A21E4DCC-6112-441F-B76D-95CF47BA658D
+  :END:
+  [2008-08-05 Tue]
+* DONE [#B] Install patches for Ledger 2.6 from Simon Michael
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 60
+  :UUID: 0C311A59-701A-4D30-BBDB-924F12878724
+  :END:
+  [2008-08-05 Tue]
+* DONE [#B] ledger -MA doesn't give a monthly report if some months have no transactions
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 61
+  :UUID: FD118D79-3B8F-48CE-89D0-F0FFD46F6C49
+  :END:
+  [2008-08-05 Tue]
+* DONE [#B] Remove bogus reference to Emacs in project documentation (2.6)
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 72
+  :UUID: 7455E4A7-16FD-4F41-8A33-CF44F6E690B2
+  :END:
+  [2008-08-05 Tue]
+* DONE [#B] Crash reading .timelog file
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 128
+  :UUID: C7A32276-11A7-44F1-99CD-6F0CA7330340
+  :END:
+  [2008-08-05 Tue]
+* DONE [#B] Problems parsing an entry
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 133
+  :UUID: AD876FB0-E7B8-4C89-9E23-2D25AF8D5F0A
+  :END:
+  [2008-08-05 Tue]
+* DONE [#B] Need to strip \r from \r\n line endings
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 139
+  :UUID: C7A61E89-08D1-4151-AF2E-92F666148F19
+  :END:
+  [2008-08-05 Tue]
+* DONE [#B] Expressions don't work.
+  :PROPERTIES:
+  :Submitter: Martin Blais <blais@furius.ca>
+  :Version: 2.6
+  :Ticket: 178
+  :UUID: DA9F2346-CD90-4E22-B2F0-2670532456BA
+  :END:
+  [2008-08-05 Tue]
+* DONE [#B] Segmentation fault on import from GnuCash
+  :PROPERTIES:
+  :Submitter: Luben Manolov <lubo@manolov.org>
+  :Version: 2.6
+  :Ticket: 198
+  :UUID: 266D96D2-DEB5-4BD9-A51B-B2F652E2F550
+  :END:
+  [2008-08-05 Tue]
+* DONE [#B] ledger.el requires an absolute pathname for the ledger-binary-path
+  :PROPERTIES:
+  :Submitter: Simon Michael <simon@joyful.com>
+  :Version: 2.6
+  :Ticket: 199
+  :UUID: 7D40038A-DEED-47FA-8D02-0951E94CA175
+  :END:
+  [2008-08-05 Tue]
+* DONE [#C] Entry command produces duplicate source transactions
+  :PROPERTIES:
+  :Submitter: drewr <#ledger>
+  :Version: 2.6
+  :Ticket: 32
+  :UUID: EA246228-3EC7-4834-B55A-455DBA58116C
+  :END:
+  [2008-08-05 Tue]
+* DONE [#C] Multiple commodities in gnucash crash ledger
+  :PROPERTIES:
+  :Submitter: slanack
+  :Version: 2.6
+  :Ticket: 35
+  :Attachments: gnucash-minimal.xml gnucash.cc.patch
+  :UUID: DAAF3481-1B7A-4F4A-9EC6-575104655B1B
+  :END:
+  [2008-08-05 Tue]
+* DONE [#C] My "bal" command is broken again
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 66
+  :UUID: 8159EF00-B95D-4E83-9927-7DB461CD2CC9
+  :END:
+  [2008-08-05 Tue]
+* DONE [#C] When reporting the unbalanced remainder, round it	       :FEATURE:
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 125
+  :UUID: 4BF95CDC-972F-4F39-9F54-7BEFD404F9AA
+  :END:
+  [2008-08-05 Tue]
+* DONE [#C] ledger -Mn
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 126
+  :UUID: 2C3B5DCE-AB7F-41A2-BF93-56CC1222AE64
+  :END:
+  [2008-08-05 Tue]
+* DONE [#C] Segfault with commodity price in budget.
+  :PROPERTIES:
+  :Submitter: Nathan Jones <nathanj@insightbb.com>
+  :Version: 2.6.0.90
+  :Ticket: 191
+  :UUID: A4F87484-1B1D-4C76-B0AB-70E20FBA9D1B
+  :END:
+  [2008-08-05 Tue]
+* DONE [#C] Entry command doesn't match debit account when description is unmatched
+  :PROPERTIES:
+  :Submitter: drewr <#ledger>
+  :Version: 2.6.0.90
+  :Ticket: 203
+  :UUID: FF8CE4C5-03B3-4FCA-85BD-52A9DB191B4B
+  :END:
+  [2008-08-05 Tue]
+* DONE [#C] Balance calculations using the '=' operator are off
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6.1b
+  :Ticket: 209
+  :UUID: F32E914F-D485-427B-89E9-33C762CC1A47
+  :END:
+  [2008-08-05 Tue]
+* DONE [#C] Remove bogus reference to Emacs in project documentation	   :DOC:
+  :PROPERTIES:
+  :Submitter: bpt <#ledger>
+  :Version: 2.4.1
+  :Ticket: 10
+  :UUID: B81ADF25-F176-4ABC-9C2B-1090E4F2FA7D
+  :END:
+  [2008-08-05 Tue]
+* DONE [#C] Non-balanced virtual transaction should fail.
+  :PROPERTIES:
+  :Submitter: Martin Blais <blais@furius.ca>
+  :Version: 2.6
+  :Ticket: 190
+  :UUID: 75E83651-B130-4978-89C7-DFED4E874E8F
+  :END:
+  [2008-08-05 Tue]
