@@ -502,15 +502,6 @@ commodity_t * commodity_pool_t::create(const string& symbol)
   DEBUG("amounts.commodities",
 	"Creating commodity '" << commodity->symbol() << "'");
 
-  // Start out the new commodity with the default commodity's flags
-  // and precision, if one has been defined.
-#if 0
-  // jww (2007-05-02): This doesn't do anything currently!
-  if (default_commodity)
-    commodity->drop_flags(COMMODITY_STYLE_THOUSANDS |
-			  COMMODITY_STYLE_NOMARKET);
-#endif
-
   commodity->ident = commodities.size();
 
   commodities.push_back(commodity.get());
