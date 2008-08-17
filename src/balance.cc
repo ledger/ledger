@@ -175,11 +175,9 @@ balance_t::value(const optional<datetime_t>& moment) const
 optional<amount_t>
 balance_t::commodity_amount(const optional<const commodity_t&>& commodity) const
 {
-  // jww (2007-05-20): Needs work
   if (! commodity) {
     if (amounts.size() == 1) {
-      amounts_map::const_iterator i = amounts.begin();
-      return i->second;
+      return amounts.begin()->second;
     }
     else if (amounts.size() > 1) {
       // Try stripping annotations before giving an error.

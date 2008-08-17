@@ -85,10 +85,6 @@ public:
 
   amounts_map amounts;
 
-  // jww (2007-05-20): Remove these two by adding access methods
-  friend class value_t;
-  friend class entry_base_t;
-
   /**
    * Constructors.  balance_t supports similar forms of construction
    * to amount_t.

@@ -59,7 +59,6 @@ namespace ledger {
 class commodity_t;
 class annotation_t;
 class commodity_pool_t;
-class session_t;
 
 DECLARE_EXCEPTION(amount_error, std::runtime_error);
 
@@ -87,6 +86,7 @@ class amount_t
 				   >
 #endif
 {
+public:
   /**
    * The initialize and shutdown methods ready the amount subsystem
    * for use.  Normally they are called by `ledger::initialize' and
@@ -95,9 +95,9 @@ class amount_t
   static void initialize();
   static void shutdown();
 
-  friend class session_t;
-
-public:
+  /**
+   * The amount's decimal precision.
+   */
   typedef uint_least16_t precision_t;
 
   /**

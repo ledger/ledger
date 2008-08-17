@@ -246,8 +246,6 @@ private:
   static intrusive_ptr<storage_t> false_value;
 
 public:
-  // jww (2007-05-03): Make these private, and make ledger::initialize
-  // a member function of session_t.
   static void initialize();
   static void shutdown();
 
