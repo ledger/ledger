@@ -59,6 +59,7 @@ namespace ledger {
 class commodity_t;
 class annotation_t;
 class commodity_pool_t;
+class session_t;
 
 DECLARE_EXCEPTION(amount_error, std::runtime_error);
 
@@ -86,9 +87,6 @@ class amount_t
 				   >
 #endif
 {
-  // jww (2007-05-03): Make this private, and then make
-  // ledger::initialize into a member function of session_t.
-public:
   /**
    * The initialize and shutdown methods ready the amount subsystem
    * for use.  Normally they are called by `ledger::initialize' and
@@ -96,6 +94,8 @@ public:
    */
   static void initialize();
   static void shutdown();
+
+  friend class session_t;
 
 public:
   typedef uint_least16_t precision_t;
@@ -671,8 +671,10 @@ public:
    * knows about.
    */
   void read(std::istream& in);
-  void read(const char *& data);
-  void write(std::ostream& out, bool optimize = false) const;
+  void read(const char *& data,
+	    char **	  pool	    = NULL,
+	    char **	  pool_next = NULL);
+  void write(std::ostream& out, unsigned int index = 0) const;
 
   /**
    * Debugging methods.  There are two methods defined to help with

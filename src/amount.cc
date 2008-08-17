@@ -106,13 +106,6 @@ struct amount_t::bigint_t : public supports_flags<>
       DEBUG("ledger.validate", "amount_t::bigint_t: ref > 16535");
       return false;
     }
-#if 0
-    // jww (2008-07-24): How does one check the validity of an mpz_t?
-    if (val[0]._mp_size < 0 || val[0]._mp_size > 100) {
-      DEBUG("ledger.validate", "amount_t::bigint_t: val._mp_size is bad");
-      return false;
-    }
-#endif
     return true;
   }
 };
@@ -127,7 +120,6 @@ void amount_t::initialize()
   mpz_init(temp);
   mpz_init(divisor);
 
-  // jww (2007-05-02): Be very careful here!
   if (! current_pool)
     current_pool = new commodity_pool_t;
 
@@ -148,7 +140,6 @@ void amount_t::shutdown()
   mpz_clear(temp);
   mpz_clear(divisor);
 
-  // jww (2007-05-02): Be very careful here!
   if (current_pool) {
     checked_delete(current_pool);
     current_pool = NULL;
@@ -493,16 +484,6 @@ amount_t& amount_t::operator*=(const amount_t& amt)
       throw_(amount_error, "Cannot multiply two uninitialized amounts");
   }
 
-#if 0
-  if (has_commodity() && amt.has_commodity() &&
-      commodity() != amt.commodity())
-    throw_(amount_error,
-	   "Multiplying amounts with different commodities: " <<
-	   (has_commodity() ? commodity().symbol() : "NONE") <<
-	   " != " <<
-	   (amt.has_commodity() ? amt.commodity().symbol() : "NONE"));
-#endif
-
   _dup();
 
   mpz_mul(MPZ(quantity), MPZ(quantity), MPZ(amt.quantity));
@@ -534,16 +515,6 @@ amount_t& amount_t::operator/=(const amount_t& amt)
     else
       throw_(amount_error, "Cannot divide two uninitialized amounts");
   }
-
-#if 0
-  if (has_commodity() && amt.has_commodity() &&
-      commodity() != amt.commodity())
-    throw_(amount_error,
-	   "Dividing amounts with different commodities: " <<
-	   (has_commodity() ? commodity().symbol() : "NONE") <<
-	   " != " <<
-	   (amt.has_commodity() ? amt.commodity().symbol() : "NONE"));
-#endif
 
   if (! amt)
     throw_(amount_error, "Divide by zero");
@@ -1292,7 +1263,9 @@ void amount_t::read(std::istream& in)
   }
 }
 
-void amount_t::read(const char *& data)
+void amount_t::read(const char *& data,
+		    char **	  pool,
+		    char **       pool_next)
 {
   using namespace ledger::binary;
 
@@ -1315,10 +1288,8 @@ void amount_t::read(const char *& data)
 
   if (byte < 3) {
     if (byte == 2) {
-#if 0
-      quantity = new(reinterpret_cast<bigint_t *>(bigints_next)) bigint_t;
-      bigints_next += sizeof(bigint_t);
-#endif
+      quantity = new(reinterpret_cast<bigint_t *>(*pool_next)) bigint_t;
+      *pool_next += sizeof(bigint_t);
     } else {
       quantity = new bigint_t;
     }
@@ -1342,19 +1313,18 @@ void amount_t::read(const char *& data)
     if (byte == 2)
       quantity->add_flags(BIGINT_BULK_ALLOC);
   } else {
-#if 0
     uint_fast32_t index = *reinterpret_cast<uint_fast32_t *>(const_cast<char *>(data));
     data += sizeof(uint_fast32_t);
 
-    quantity = reinterpret_cast<bigint_t *>(bigints + (index - 1) * sizeof(bigint_t));
-#endif
+    quantity = reinterpret_cast<bigint_t *>(*pool + (index - 1) * sizeof(bigint_t));
+
     DEBUG("amounts.refs",
 	   quantity << " ref++, now " << (quantity->ref + 1));
     quantity->ref++;
   }
 }
 
-void amount_t::write(std::ostream& out, bool optimized) const
+void amount_t::write(std::ostream& out, unsigned int index) const
 {
   using namespace ledger::binary;
 
@@ -1372,13 +1342,10 @@ void amount_t::write(std::ostream& out, bool optimized) const
 
   char byte;
 
-  if (! optimized || quantity->index == 0) {
-    if (optimized) {
-#if 0
-      quantity->index = ++bigints_index; // if !optimized, this is garbage
-      bigints_count++;
+  if (index == 0 || quantity->index == 0) {
+    if (index != 0) {
+      quantity->index = index;	// if !optimized, this is garbage
       byte = 2;
-#endif
     } else {
       byte = 1;
     }

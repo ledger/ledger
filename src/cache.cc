@@ -83,6 +83,12 @@ void read_xact(const char *& data, xact_t * xact)
     expr_t::compute_amount(xact->amount_expr.get(), xact->amount, xact);
 }
 
+void write_amount(std::ostream& out, amount_t& amt)
+{
+  amt.write(out, ++bigints_index);
+  bigints_count++;
+}
+
 void write_xact(std::ostream& out, xact_t * xact,
 		bool ignore_calculated)
 {
@@ -92,7 +98,8 @@ void write_xact(std::ostream& out, xact_t * xact,
 
   if (ignore_calculated && xact->has_flags(XACT_CALCULATED)) {
     write_number<unsigned char>(out, 0);
-    amount_t().write(out);
+    amount_t temp;
+    write_amount(out, temp);
   }
   else if (xact->amount_expr) {
     write_number<unsigned char>(out, 2);
@@ -101,18 +108,18 @@ void write_xact(std::ostream& out, xact_t * xact,
   }
   else if (! xact->amount_expr->text().empty()) {
     write_number<unsigned char>(out, 1);
-    xact->amount.write(out);
+    write_amount(out, xact->amount);
     write_string(out, xact->amount_expr->text());
   }
   else {
     write_number<unsigned char>(out, 0);
-    xact->amount.write(out);
+    write_amount(out, xact->amount);
   }
 
   if (xact->cost &&
       (! (ignore_calculated && xact->has_flags(XACT_CALCULATED)))) {
     write_bool(out, true);
-    xact->cost->write(out);
+    write_amount(out, *xact->cost);
     // jww (2008-07-30): What if there is no cost expression?
     xact->cost_expr->write(out);
   } else {
@@ -319,21 +326,21 @@ void write_commodity_base_extra(std::ostream& out,
     foreach (commodity_t::history_map::value_type& pair,
 	     commodity->history->prices) {
       write_number(out, pair.first);
-      pair.second.write(out);
+      write_amount(out, pair.second);
     }
     write_number(out, commodity->history->last_lookup);
   }
 
   if (commodity->smaller) {
     write_bool(out, true);
-    commodity->smaller->write(out);
+    write_amount(out, *commodity->smaller);
   } else {
     write_bool(out, false);
   }
 
   if (commodity->larger) {
     write_bool(out, true);
-    commodity->larger->write(out);
+    write_amount(out, *commodity->larger);
   } else {
     write_bool(out, false);
   }
@@ -418,9 +425,26 @@ void write_commodity_annotated(std::ostream& out,
   // jww (2008-04-22): No longer needed?
   //write_long(out, ann_comm->base->ident);
   // jww (2008-04-22): Make a write_annotation_details function; and optional!
-  ann_comm->details.price->write(out);
-  ann_comm->details.date->write(out);
-  ann_comm->details.tag->write(out);
+  if (ann_comm->details.price) {
+    write_bool(out, true);
+    write_amount(out, *ann_comm->details.price);
+  } else {
+    write_bool(out, false);
+  }
+
+  if (ann_comm->details.date) {
+    write_bool(out, true);
+    ann_comm->details.date->write(out);
+  } else {
+    write_bool(out, false);
+  }
+
+  if (ann_comm->details.tag) {
+    write_bool(out, true);
+    ann_comm->details.tag->write(out);
+  } else {
+    write_bool(out, false);
+  }
 }
 
 inline
