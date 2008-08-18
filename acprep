@@ -8,7 +8,7 @@
 # This script simply sets up the compiler and linker flags for all the various
 # build permutations I use for testing and profiling.
 
-COMMIT=$(git describe --all | sed 's/heads\///')
+COMMIT=$(git describe --all --long | sed 's/heads\///')
 echo "m4_define([VERSION_NUMBER], [$COMMIT])" > version.m4
 
 sh autogen.sh

@@ -6,565 +6,17 @@ LEDGER  -*- mode: org; fill-column: 78 -*-
 #+TAGS: EMACS(e) FEATURE(f) DOCS(d) WEBSITE(w) BUILD(b)
 #+CATEGORY: Ledger
 
-* DONE [#C] Get the PowerBook's buildbot working again
-  SCHEDULED: <2008-08-16 Sat>
-  - State "DONE"       [2008-08-17 Sun 02:52]
+* TODO [#A] Problem with piping input to ledger
   :PROPERTIES:
-  :UUID: 6B92EE7F-9F6A-452A-B242-347FB9206832
+  :Version: 2.6
+  :Ticket: 27
+  :UUID: D3820740-8BFB-4234-8125-DE813A713032
   :END:
-  [2008-08-16 Sat]
-* DONE [#B] The Buildbot is failing to build master
-  SCHEDULED: <2008-08-17 Sun>
-  - State "DONE"       [2008-08-17 Sun 06:32] \\
-    Fixed now.
-  :OUTPUT:
-src/session.h: In member function 'void ledger::session_t::clean_all()':
-src/session.h:171: error: 'clear_xacts' was not declared in this scope
-src/session.h:172: error: 'clear_accounts' was not declared in this scope
-make[1]: *** [libledger_la-journal.lo] Error 1
-  :END:
-  :PROPERTIES:
-  :UUID: FFE100BB-3383-4E27-ADD9-08AFF0518846
-  :END:
-  [2008-08-16 Sat]
-* DEFERRED [#A] Thomas is experiencing a crash when running the balance command
-  SCHEDULED: <2008-08-16 Sat>
-  - State "DEFERRED"   [2008-08-17 Sun 06:32] \\
-    Thomas can't reproduce this anymore, after I logged into his machine to try
-    and debug it directly.
-  [[message://a8a10a0808160351v3f407203tf6fc1b87b3b4eef7@mail.gmail.com][Stack trace]]
-  :PROPERTIES:
-  :UUID: D0D130E3-EDC0-4D9F-A77A-0B62E115D25A
-  :END:
-  [2008-08-16 Sat]
-* TODO --debug isn't taking a regular expression
-  :PROPERTIES:
-  :UUID: 5936E070-F86A-4E52-B165-B70CE24C8109
-  :END:
-  [2008-07-24 Thu]
-* STARTED [#B] Convert all the Trac bugs back over to the new org-mode file
-  SCHEDULED: <2008-08-17 Sun>
-  - State "STARTED"    [2008-08-17 Sun 23:05]
-  :PROPERTIES:
-  :UUID: 77CFFC16-5C1A-41B8-A22C-078FE3C7FAD9
-  :END:
-  [2008-08-14 Thu]
-* DONE [#B] Find out why master fails to build on tdelaet's OpenBSD box
-  SCHEDULED: <2008-08-17 Sun>
-  - State "DONE"       [2008-08-17 Sun 06:33] \\
-    It's because his Boost isn't up to date.  I'll have to wait until he has Boost
-    1.35 working OpenBSD 4.4 before we can build anything other than v2.6.1b on
-    his machines.
-  ssh obsd86
-  :PROPERTIES:
-  :UUID: 30186BD0-CD2E-4B22-AD4C-84D7F6552D4B
-  :END:
-  [2008-08-14 Thu]
-* TODO Add support for "entry notes"
-  :PROPERTIES:
-  :UUID: 334E9E08-0943-42DB-BB7A-A4D147508706
-  :END:
-  [2008-08-05 Tue]
-* TODO Add the concept of "date aliases" to Ledger, so I could say: -b Term1
-  :PROPERTIES:
-  :UUID: C9660BB8-BBFC-4667-9783-E43E676ED216
-  :END:
-  [2008-04-17 Thu]
-* TODO Allow Payee | Description for an entry payee
-  :PROPERTIES:
-  :UUID: 02B9DD62-F134-4898-A4FC-4B8158E9A192
-  :END:
-  [2008-04-17 Thu]
-* TODO Allow pre-declaration of account and commodity names, and account commodities
-  :PROPERTIES:
-  :UUID: 0B84B620-FFB4-4BE1-B54F-BDA45DDAFEAD
-  :END:
-  [2008-04-17 Thu]
-* TODO Allow reports, such as completed tasks last week, etc.
-  :PROPERTIES:
-  :UUID: D9B4D001-21E4-4247-ADF6-56C00B2C8F3A
-  :END:
-  [2008-05-12 Mon]
-* TODO Answer Martin's question about Capital gains
-  [[message://20080423221130.4D77D1144C3@banane.furius.ca]["capital gains" from Martin Blais <blais@furius.ca>]]
-  [[message://1209097067.1413.1249786835@webmail.messagingengine.com]["Here is one valid way to book capital gains" from Martin Blais <blais@furius.ca>]]
-  :PROPERTIES:
-  :UUID: 1B5B2517-360E-4F33-9A1E-C88F884ACAD2
-  :END:
-  [2008-04-24 Thu]
-* TODO Change the binary cache reader to use Boost.Interprocess to read it in as a memory mapped file
-  :PROPERTIES:
-  :UUID: A978C1E9-86EA-4074-B8E8-2A3DF1A12ED2
-  :END:
-  [2008-08-05 Tue]
-* TODO Comb through the warnings generated when fully all warnings are enabled
-  :PROPERTIES:
-  :UUID: B129BF67-ACC2-4800-870C-93F9ADA151F6
-  :END:
-  [2008-08-14 Thu]
-* TODO Complete the internal documentation, exported using Doxygen
-  :PROPERTIES:
-  :UUID: 986054C6-CD18-4EA1-8F8C-FF02C9842EB0
-  :END:
-  [2008-08-14 Thu]
-* TODO Complete the new manual
-  :PROPERTIES:
-  :UUID: D2F43032-A889-4ED3-AEE8-8A93D6594EDD
-  :END:
-  [2008-08-14 Thu]
-* TODO Confirm the completeness of the Python bridge, in both directions
-  :PROPERTIES:
-  :UUID: 51B7E884-F0F8-4231-9C71-9D5EB653AAF9
-  :END:
-  [2008-08-14 Thu]
-* TODO Create a Debian build of Ledger
-  :PROPERTIES:
-  :UUID: 6CE0A190-0368-446F-9EF5-84DD4F5EB0E4
-  :END:
-  [2008-08-08 Fri]
-* TODO Create a pre-built ledger.exe for Windows users
-  :PROPERTIES:
-  :UUID: E0620AEA-12B6-4AD7-A45E-B00CA9FB23AD
-  :END:
-  [2008-08-08 Fri]
-* TODO Create an MacPorts build of Ledger
-  :PROPERTIES:
-  :UUID: 7F75AEF6-BBB8-4BBA-BCCA-FE328037EBC4
-  :END:
-  [2008-08-08 Fri]
-* TODO Create an RPM build of Ledger
-  :PROPERTIES:
-  :UUID: 57F84E90-8993-45C8-8639-243B041EE786
-  :END:
-  [2008-08-08 Fri]
-* TODO Create regression tests for all the closed 2.6.1 bugs
-  :PROPERTIES:
-  :UUID: 946925F9-9F43-4CD9-810C-B3C8AC978F8D
-  :END:
-  [2008-08-14 Thu]
-* TODO Don't use -s for bal the way it's used now
-  :PROPERTIES:
-  :UUID: C27BABD9-CEAF-41E9-84D9-F1B97C785F50
-  :END:
-  [2008-08-14 Thu]
-* TODO Every destructor which contains only TRACE_DTOR should specify throw()
-  :PROPERTIES:
-  :UUID: 44497B2D-292F-4C82-8D4F-B928FE6143EC
-  :END:
-  [2008-07-25 Fri]
-* TODO Find out why master is failing to build on Thomas Delaet's OpenBSD box
-  ssh obsd86
-  :PROPERTIES:
-  :UUID: 5467AFFB-0E79-431E-8890-C1603D6D9DED
-  :END:
-  [2008-08-14 Thu]
-* TODO In ledger-mode, color directive lines firebrick red
-  :PROPERTIES:
-  :UUID: C80A8AE1-97D7-45C1-8AD3-F47DB36946FC
-  :END:
-  [2008-04-16 Wed]
-* TODO Instead of converting in.tellg() to unsigned long, I should use std::istream::pos_type
-  :PROPERTIES:
-  :UUID: 87A45B70-4DCD-40D8-AE3C-B2F71463F27A
-  :END:
-  [2008-08-14 Thu]
-* TODO Make !rex reverse a regexp
-  This is instead of -rex, allowing options to appear anywhere on the line.
-  It also means that something has to be done about the meaning of "--".
-  :PROPERTIES:
-  :UUID: 72B2202C-EC63-4A2E-A5C9-0C9A4991FB06
-  :END:
-  [2008-08-14 Thu]
-* TODO Make sure Ledger's #include's are as minimal as possible
-  :PROPERTIES:
-  :UUID: 857E3E86-674C-40CA-BDBD-70DFD477AAE7
-  :END:
-  [2008-08-14 Thu]
-* TODO Mention Martin's beancount project from the Ledger home page
-  "Beancount on PyPi" from Martin Blais <blais@furius.ca>
-  :PROPERTIES:
-  :UUID: 81540394-3662-4CBA-8747-3F6CEAEE61D5
-  :END:
-  [2008-08-14 Thu]
-* TODO Output error messages in a way that compilation-mode can parse
-  message://20080421160053.C6CE61144C3@banane.furius.ca
-  :PROPERTIES:
-  :UUID: EB8AAF67-40A1-479F-BF96-7CB17D9492C1
-  :END:
-  [2008-08-14 Thu]
-* TODO Post the Ledger manual in HTML format on newartisans.com
-  :PROPERTIES:
-  :UUID: 693042E5-CADB-43F3-B226-08BAD58A0BB9
-  :END:
-  [2008-08-14 Thu]
-* TODO Respond to billk's question about options /email
-  New Artisans LLC :: View topic - stock options
-  :PROPERTIES:
-  :UUID: 2F635B10-27B8-4FF4-8584-F84A3AF7D42C
-  :END:
-  [2008-08-14 Thu]
-* TODO Restore option processing
-  :PROPERTIES:
-  :UUID: E7FCD772-5FA5-42AC-B84C-165F8C9707A8
-  :END:
-  [2008-08-14 Thu]
-* TODO Switch from using the Trac to using an org-mode file named BUGS and BUGS-OLD in the source tree
-  :PROPERTIES:
-  :UUID: 2C13EF9F-249A-4045-B8BC-BC9859FEFF77
-  :END:
-  [2008-08-14 Thu]
-* TODO There are a few thorny issues remaining with the binary cache
-  1. What happens to value expressions that have been compiled?  The FUNCTION
-     operand must remember the name of the function it was compiled to; but
-     even then, how can I recompile and maintain the same environment as the
-     original point of definition?
-
-  2. Base commodities no longer exist in their own data structure, but use
-     shared_ptr to track multiple accesses.  How to write out this unwritten
-     structure?
-  :PROPERTIES:
-  :UUID: 69B51A07-5E5F-42F9-AB97-CEECAF4BB085
-  :END:
-  [2008-08-15 Fri]
-* TODO Use code coverage analysis to determine if all of Ledger is being tested
-  :PROPERTIES:
-  :UUID: 13E43A50-FC0C-4C3D-A175-7C6CB147A37C
-  :END:
-  [2008-08-14 Thu]
-* TODO Using my PowerPC, build a universal Ledger binary for OS X Leopard
-  :PROPERTIES:
-  :UUID: C5A9D8D3-D363-4DDE-B3E7-FE3F5A67145E
-  :END:
-  [2008-08-14 Thu]
-* TODO Write unit tests for all core sections of Ledger and all reporting options
-  :PROPERTIES:
-  :UUID: A8DE6DCB-917B-433F-8D07-3ACE45A05F45
-  :END:
-  [2008-08-14 Thu]
-* DONE 2.x value expression syntax must be restored
-  - State "DONE"       [2008-08-04 Mon]
-  The only way this is going to really be possible is with a battery of unit tests.
-  :PROPERTIES:
-  :UUID: AEB2D4B6-6968-44A6-A3F5-63A42CEDF254
-  :END:
-  [2008-07-27 Sun]
-* DONE 'ledger -b 2007/08/16 -s reg food' is completely broken
-  SCHEDULED: <2007-08-23 Thu> ARCHIVED: <2007-08-23 Thu>
-  - State "DONE"       [2007-08-23 Thu 21:22] \\
-    Fixed by the following change:
-    
-       * walk.cc (handle_value): The transaction xdata.dflags were being
-       set too late; the TRANSACTION_COMPOUND setting was being thrown
-       away as a result.
-  :PROPERTIES:
-  :UUID: 6CAF45D7-9098-41B4-A25A-12F8A8166006
-  :END:
-  Although reg without shows a ton of Expenses:Food expenses, searching for
-  food expenses shows none.
-  [2007-08-22 Wed]
-* DONE Add a link to the Fink package for Ledger on the Ledger page
-  SCHEDULED: <2007-10-28 Sun>
-  - State "DONE"       [2007-10-28 Sun 22:33]
-  :PROPERTIES:
-  :ARCHIVE_TIME: 2007-11-04 Sun 23:42
-  :ARCHIVE_CATEGORY: Computer
-  :UUID: BEAF3CBA-298C-4711-95EC-E437915D2D3E
-  :END:
-  [2007-10-27 Sat] [[message://m2ve8rnc8c.fsf@dnab423967.stanford.edu][fink package for ledger]]
-* DONE Fix the link on my Ledger project page to sourceforge.net
-  SCHEDULED: <2007-11-06 Tue>
-  - State "DONE"       [2007-11-07 Wed 03:56]
-  :PROPERTIES:
-  :ARCHIVE_TIME: 2007-11-14 Wed 17:14
-  :ARCHIVE_CATEGORY: Ledger-2
-  :UUID: 753361B3-7BE0-45CE-A8E5-B8A277F259C9
-  :END:
-  [2007-11-06 Tue]
-* DONE Format ledger.texi in the same manner as the SBCL manual
-  SCHEDULED: <2007-12-04 Tue>
-  - State "DONE"       [2007-12-04 Tue 18:14]
-  :PROPERTIES:
-  :ARCHIVE_TIME: 2007-12-11 Tue 18:33
-  :ARCHIVE_CATEGORY: Computer
-  :UUID: 7D3DE56C-34E2-4992-87CA-B129E19B6FD1
-  :END:
-  [2007-11-28 Wed]
-* DONE Make it so that nil is considered a valid commodity
-  - State "DONE"       [2007-10-22 Mon 03:23]
-  :PROPERTIES:
-  :ARCHIVE_TIME: 2007-10-29 Mon 04:29
-  :ARCHIVE_CATEGORY: CL-Ledger
-  :UUID: F026F02F-6695-4310-82DA-E8869E56BF3E
-  :END:
-  This is rather than testing for nil everywhere; just have the generic
-  functions relating to commodities able to act on null.
-  [2007-10-20 Sat]
-* DONE Organize my ledger todo file and integrate it into the main agenda
-  SCHEDULED: <2007-09-30 Sun>
-  - State "DONE"       [2007-10-01 Mon 03:40] \\
-    Done, although I still need to pull all of my old data from Trac and Merlin.
-  :PROPERTIES:
-  :ARCHIVE_TIME: 2007-10-03 Wed 14:01
-  :ARCHIVE_CATEGORY: Computer
-  :UUID: B89FA87D-CAE6-4F78-9442-E25EE572E8FD
-  :END:
-  [2007-09-27 Thu]
-* DONE Upgrade to use local-time-0.9.2
-  SCHEDULED: <2007-11-25 Sun>
-  - State "DONE"       [2007-11-25 Sun 21:02]
-  :PROPERTIES:
-  :ARCHIVE_TIME: 2007-12-03 Mon 17:50
-  :ARCHIVE_CATEGORY: Computer
-  :UUID: D7354D27-EFEA-4747-8185-B2A48E2F5FF3
-  :END:
-  [2007-11-24 Sat]
-* DONE Get ECL to build SERIES, then Ledger
-  SCHEDULED: <2008-02-17 Sun>
-  - State "DONE"       [2008-02-15 Fri 11:33]
-  :PROPERTIES:
-  :ARCHIVE_TIME: 2008-02-28 Thu 11:06
-  :ARCHIVE_CATEGORY: Computer
-  :UUID: 72FAAA38-6E58-4E2C-BE87-C9C63FB63718
-  :END:
-  [2007-11-28 Wed]
-* DONE Add a way for building in any directory (other than ~/Products) in acprep
-  - State "DONE"       [2008-08-08 Fri]
-  :PROPERTIES:
-  :UUID: FFA63988-237E-4B2A-AC12-6CA362AEC7B1
-  :END:
-  [2008-07-24 Thu]
-* DONE Add all known bugs to the Ledger Trac
-  - State "DONE"       [2008-04-11 Fri]
-  :PROPERTIES:
-  :UUID: DA5017C9-91DE-452D-BC7B-6BCDC5716BBF
-  :END:
-  [2008-03-27 Thu]
-* DONE Create regression tests for all the closed 2.6.1 bugs
-  - State "DONE"       [2008-08-05 Tue]
-  This is a test that 'make check' would run after running the UnitTests.
-  :PROPERTIES:
-  :UUID: 577AE0E8-A8D4-48F4-AF03-6B904CA3192B
-  :END:
-  [2008-08-04 Mon]
-* DONE Delete all the "help" pages from the Ledger Trac
-  - State "DONE"       [2008-08-05 Tue]
-  :PROPERTIES:
-  :UUID: CE15B1E5-3EC6-44EB-87A0-9D8C77E8F9D0
-  :END:
-  [2008-05-09 Fri]
-* DONE Enable "buildbot try" on the VPS
-  - State "DONE"       [2008-05-03 Sat]
-  :PROPERTIES:
-  :UUID: 6A9A8E1B-29E9-4B06-9AE3-BBB2D5BB6D9E
-  :END:
-  [2008-04-24 Thu]
-* DONE Find out how to submit a build against a specific branch on Buildbot
-  - State "DONE"       [2008-07-26 Sat]
-  This may simply be a matter of telling the scheduler and Git() object to
-  watch other branches.
-  :PROPERTIES:
-  :UUID: 4B291AFD-00BF-479B-A067-0B01139BA475
-  :END:
-  [2008-04-24 Thu]
-* DONE Find out why Thomas can't fetch my git repo over HTTP
-  - State "DONE"       [2008-04-26 Sat]
-    error: pick-rref: refs/heads/master not found No such ref
-    refs/heads/master at http://newartisans.com/git/ledger.git
-  - State "TODO"       [2008-04-26 Sat 00:16]
-    It turns out this is a bug in git itself, which someone in #git said they
-    are going to work on.
-  :PROPERTIES:
-  :UUID: 5B36755A-03D7-47FF-BE7F-4AFFC570C5FB
-  :END:
-  [2008-04-25 Fri]
-* DONE Fix the Ledger v2.6.1 branch
-  - State "DONE"       [2008-05-08 Thu]
-  - Every commit must relate to an issue, and name that issue in the commit message.
-  - The comment for every fixed issue must reference the commit that fixed it.
-  - There must be a ChangeLog set for every change, which also names the issue.
-  - Every jww comment must name a Trac issue.
-  :PROPERTIES:
-  :UUID: 1F5B58EB-F5ED-4467-8362-1E5094C19F80
-  :END:
-  [2008-04-21 Mon]
-* DONE Formalize tagging
-  - State "DONE"       [2008-08-05 Tue]
-  Search with "account / tags", similar to "account -- payee".
-  Tagging is any note with :tag: in it.
-  Entries now need notes.
-  :PROPERTIES:
-  :UUID: 7D8F14BE-4E84-4B40-8C3E-D563B291D4CA
-  :END:
-  [2008-07-31 Thu]
-* DONE Get 'make check' working again for Ledger 2.7
-  - State "DONE"       [2008-07-27 Sun]
-  This means getting the unit tests running again.
-  :PROPERTIES:
-  :UUID: 987FB7D3-B04E-44E4-9CC4-F0694F96051E
-  :END:
-  [2008-07-26 Sat]
-* DONE Get 'make distcheck' working again with Ledger 2.6.1
-  - State "DONE"       [2008-07-28 Mon]
-  :PROPERTIES:
-  :UUID: F5850319-0C51-429B-90BE-DDA4400F7F02
-  :END:
-  [2008-04-23 Wed]
-* DONE Get 'make distcheck' working again with Ledger 2.7
-  - State "DONE"       [2008-08-08 Fri]
-  :PROPERTIES:
-  :UUID: A6AA8D89-51B0-434B-8259-A557FB15BC47
-  :END:
-  [2008-07-27 Sun]
-* DONE Get Buildbot builds to work on my MacBook Pro
-  - State "DONE"       [2008-04-26 Sat]
-  make[1]: *** No rule to make target `all'.  Stop.
-  :PROPERTIES:
-  :UUID: 1D0FD629-FD7B-4E7F-8E8F-3D73FD725F32
-  :END:
-  [2008-04-24 Thu]
-* DONE Get the register report to work again
-  - State "DONE"       [2008-08-04 Mon]
-  :PROPERTIES:
-  :UUID: 7D031D7C-A50D-479E-8C31-168D5F3E8CAB
-  :END:
-  [2008-07-26 Sat]
-* DONE Have the version in Ledger's configure.in based off of git-describe
-  - State "DONE"       [2008-05-18 Sun]
-  :PROPERTIES:
-  :UUID: 08E58F60-5437-46BE-A81B-1839FA4921FB
-  :END:
-  [2008-05-08 Thu]
-* DONE If an exception occurs while --verify --verbose is on, it shows lots and lots of leaked memory
-  - State "DONE"       [2008-08-10 Sun]
-  :PROPERTIES:
-  :UUID: AAB6A9CC-4122-45F0-A69B-5DC7C59901F5
-  :END:
-  [2008-07-27 Sun]
-* DONE Make sure that every delete is a checked_delete
-  - State "DONE"       [2008-07-27 Sun]
-  :PROPERTIES:
-  :UUID: 5768AB32-D4BB-480E-AD7D-35AF842E2D32
-  :END:
-  [2008-07-25 Fri]
-* DONE Merge in the cl-ledger sources into the Git repository
-  - State "DONE"       [2008-04-16 Wed]
-  :PROPERTIES:
-  :UUID: 9EF5E6AB-E57E-483F-95B5-4EBD9A3A98CF
-  :END:
-  [2008-04-13 Sun]
-* DONE Post to the Ledger forums about Ledger's new direction
-  - State "DONE"       [2008-08-04 Mon]
-  :PROPERTIES:
-  :UUID: A11857E2-776B-4A0D-8BE1-D6D75843FBA2
-  :END:
-  [2008-04-24 Thu]
-* DONE Restore command-line regexps
-  - State "DONE"       [2008-08-04 Mon]
-  :PROPERTIES:
-  :UUID: 0356C673-4300-4CB8-B4A4-869EF0773AF9
-  :END:
-  [2008-08-03 Sun]
-* DONE Restore deleted directories from src/ledger/lib
-  - State "DONE"       [2008-08-13 Wed]
-  :PROPERTIES:
-  :UUID: E40F6364-3155-49C1-B5B2-A2308C1F401A
-  :END:
-  [2008-08-13 Wed]
-* DONE Restore reporting filters
-  - State "DONE"       [2008-08-04 Mon]
-  :PROPERTIES:
-  :UUID: 05D95071-2F29-4056-9146-708A13EED837
-  :END:
-  [2008-08-03 Sun]
-* DONE Restore the VCS history for Ledger from April to September 2004 from backups
-  - State "DONE"       [2008-07-15 Tue]
-  :PROPERTIES:
-  :UUID: 844BCBC7-7DAB-479B-A448-9062F6F5480C
-  :END:
-  [2008-05-28 Wed]
-* DONE Review the changes I've made to ledger::master since 2.6.0.90
-  - State "DONE"       [2008-05-07 Wed]
-    The only questionable change is the abortive fix to -e.  This should be
-    reverted until a proper fix is found.
-:PATCH:
---- a/option.cc
-+++ b/option.cc
-@@ -482,17 +482,17 @@ OPT_BEGIN(begin, "b:") {
- OPT_BEGIN(end, "e:") {
- char buf[128];
- interval_t interval(optarg);
--  if (! interval.end)
-+  if (! interval.begin)
-   throw new error(std::string("Could not determine end of period '") +
- 		    optarg + "'");
- 
- if (! report->predicate.empty())
-   report->predicate += "&";
- report->predicate += "d<[";
--  report->predicate += interval.end.to_string();
-+  report->predicate += interval.begin.to_string();
- report->predicate += "]";
- 
--  terminus = interval.end;
-+  terminus = interval.begin;
- } OPT_END(end);
- 
- OPT_BEGIN(current, "c") {
-:END:
-  :PROPERTIES:
-  :UUID: CD409D8E-9926-4130-BB83-1179CF5AE84F
-  :END:
-  [2008-04-24 Thu]
-* DONE Revise the way that error contexts are passed up
-  - State "DONE"       [2008-08-04 Mon]
-  Special care needs to be taken that legitimate uses of exceptions are not too expensive.
-  :PROPERTIES:
-  :UUID: C86755E1-199A-4587-93A8-C18C04FC4996
-  :END:
-  [2008-07-25 Fri]
-* DONE Special care needs to be taken that legitimate uses of exceptions are not too expensive.
-  :PROPERTIES:
-  :UUID: 525657CE-DA76-4B4B-B88C-595F799A12A7
-  :END:
-  [2008-08-14 Thu]
-* DONE Split binary.cc into journal-specific and generic, and put the generic one in libamounts
-  - State "DONE"       [2008-08-04 Mon]
-  :PROPERTIES:
-  :UUID: 12C3D67F-0E7C-46D4-AE7B-7E1E22456997
-  :END:
-  [2008-07-29 Tue]
-* DONE The Ledger project page is not formatted correctly
-  - State "DONE"       [2008-06-26 Thu]
-  It appears that the MultiMarkdown codes are being ignored.
-  :PROPERTIES:
-  :UUID: 5C4EA977-7231-42E4-BAB5-77F9963D846F
-  :END:
-  [2008-05-29 Thu]
-* DONE There is an issue with unescaped @ signs in the Ledger docs
-  - State "DONE"       [2008-03-27 Thu]
-  :PROPERTIES:
-  :UUID: 30ED70CB-0679-4651-A1C3-1247764B250D
-  :END:
-  [2008-03-26 Wed]
-* DONE Using my PowerPC, build a universal Ledger binary for OS X Leopard
-  - State "DONE"       [2008-08-08 Fri]
-  :PROPERTIES:
-  :UUID: DF73E41F-A867-4A29-BA88-BC9F69A139CD
-  :END:
-  [2008-08-04 Mon]
-* CANCELLED Consider Martin's @openbal directive
-  "AutoOpenBalance" from Martin Blais <blais@furius.ca>
-  :PROPERTIES:
-  :UUID: 60AC4948-4B40-46D4-A346-26C394C8F1F9
-  :END:
-  [2008-08-14 Thu]
-
-
-* TODO [#C] C-c C-c on a cleared entry doesn't unclear it		 :EMACS:
+* TODO [#A] Problems with CVS version under Debian
   :PROPERTIES:
-  :Version: 2.6.0.90
-  :Ticket: 212
-  :UUID: 863C0EE8-C193-46EE-9BAA-3A37DE73E4DB
+  :Version: 2.5
+  :Ticket: 9
+  :UUID: 0DD9D927-7C79-41A4-8D9A-67C00550B67D
   :END:
 * TODO [#A] Reading Ledger data from stdin does not work at all
   :PROPERTIES:
@@ -572,166 +24,40 @@ make[1]: *** [libledger_la-journal.lo] Error 1
   :Ticket: 210
   :UUID: B6A502D1-D8A8-4986-9D96-301C2E13E020
   :END:
-* TODO [#B] Promote tagging to a first-class concept 		       :FEATURE:
-  :PROPERTIES:
-  :Ticket: 208
-  :UUID: E7595DA3-4634-4275-A793-701A6D9438A4
-  :END:
-* TODO [#C] Enhanced comments					       :FEATURE:
+* TODO [#B] 'derive_new_entry' shouldn't add accounts to the journal
   :PROPERTIES:
   :Version: 2.6
-  :Ticket: 204
-  :UUID: AC4FCEC6-7F38-4229-88AD-B0032C49AE93
+  :Ticket: 119
+  :UUID: F229CDEA-1AED-4DBB-8DB6-24BEF30FC1E6
   :END:
-* TODO [#B] The following, with -B or -V, does not output correctly
-  :PROPERTIES:
-  :Version: 2.6.0.90
-  :Ticket: 201
-  :UUID: F5ABB1B6-B2C1-45B2-A9AE-174736521687
-  :END:
-* TODO [#B] Highlight transaction lines in based on their status	 :EMACS:
+* TODO [#B] --begin and --end not working correctly
   :PROPERTIES:
   :Version: 2.6
-  :Ticket: 200
-  :UUID: 1C870658-6460-423C-9199-E46C48074688
+  :Ticket: 136
+  :UUID: C0F9D986-4A39-49D3-9799-E6CFCF76E49A
   :END:
-* TODO [#C] Change value_t to use a union instead of a char array
+* TODO [#B] --debug isn't taking a regular expression
   :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 196
-  :UUID: CAAC7BA1-882E-4BC1-A0BD-F65546EABDBF
+  :UUID: 5936E070-F86A-4E52-B165-B70CE24C8109
   :END:
-* TODO [#B] The entry command drops price specifications
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 192
-  :UUID: 03C6208E-E48F-45BB-BFBF-2C38B129458A
-  :END:
-* TODO [#B] Added a section in the manual specifically about stocks
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 189
-  :UUID: 7AD3B6F2-765B-41A5-A481-BFAB39A55824
-  :END:
-* TODO [#C] Added a {{total}} syntax for lot price specification       :FEATURE:
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 188
-  :UUID: C9E09993-CC01-41C6-BADC-0A9AA1221419
-  :END:
-* TODO [#B] Post the Ledger manual in HTML format on newartisans.com	  :DOCS:
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 187
-  :UUID: C6E7C61C-13A3-4812-AA28-CD3E247D6F8C
-  :END:
-* TODO [#B] In ledger-mode, color directive lines firebrick red	       :FEATURE:
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 186
-  :UUID: B34222A3-DD25-4717-B60B-865DB7F1DFD6
-  :END:
-* TODO [#B] Allow Payee | Description for an entry payee
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 185
-  :UUID: 383C04EE-94AF-4D01-BDEF-E644A12E97BF
-  :END:
-* TODO [#B] Allow pre-declaration of account and commodity names, and account commodities
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 184
-  :UUID: 9FF8CF75-8F7C-4C54-BBD7-46177EA2768F
-  :END:
-* TODO [#B] Add the concept of "date aliases" to Ledger, so I could say: -b Term1
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 183
-  :UUID: 1EDFFE53-3C7A-4A64-9849-F71CD91C67DC
-  :END:
-* TODO [#B] Create a "date" report for balances
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 182
-  :UUID: 4D175527-AE30-4030-B1B7-DD6A92B6F067
-  :END:
-* TODO [#B] Implied rates.
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 181
-  :UUID: 3E56A012-FE58-49B5-8CF0-7E80CD2B2F8A
-  :END:
-* TODO [#B] Revise the concept of commodities
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 180
-  :UUID: 29E1CF5D-FEA9-4A23-90F0-4E14C374D908
-  :END:
-* TODO [#B] Balances with non-matching exchange rates is ambiguous.
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 179
-  :UUID: 2E3496BD-143C-4D3E-8815-A01FFD31D132
-  :END:
-* TODO [#B] FR: Add the concept of spatially delimited "pages"
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 176
-  :UUID: BCE275E5-37EA-4231-8F05-55ED96B5BB3F
-  :END:
-* TODO [#B] Use of ledger.el with various invalid "ledger" binaries (and none) :EMACS:
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 175
-  :UUID: 8735E6AB-DB0A-4F66-BD81-BBFFEE66A68E
-  :END:
-* TODO [#B] Using Ledger to track inventory
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 174
-  :UUID: F7A6A833-5AC6-4ED0-A5EA-93CD6B97EEBF
-  :END:
-* TODO [#B] Using Ledger as a scientific analysis tool
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 173
-  :UUID: C653003E-52A8-4D06-9DEB-634B1156B04C
-  :END:
+  [2008-07-24 Thu]
 * TODO [#B] --price option in lot_sales branch
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 172
   :UUID: F6120E58-8985-4D76-908B-93A319E6D1D1
   :END:
-* TODO [#B] Another value expression change
+* TODO [#B] -j is not working with -E
   :PROPERTIES:
   :Version: 2.6
-  :Ticket: 171
-  :UUID: 356DB3E1-3613-4DE2-8245-A8F8E4937FBD
+  :Ticket: 137
+  :UUID: 03FF4D6D-2B7A-4466-8A29-99E6CBCF8A32
   :END:
-* TODO [#B] Handling funds
+* TODO [#B] A few changes for the textual parser
   :PROPERTIES:
   :Version: 2.6
-  :Ticket: 170
-  :UUID: B5C1EE3D-8F66-4116-A88B-D1D568CF46B7
-  :END:
-* TODO [#B] Ledger example: building a better "du"
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 169
-  :UUID: 85DAE1AB-F6D3-4AAC-A4F7-99D146B355E7
-  :END:
-* TODO [#B] New reporting options: --descend and --descend-if
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 168
-  :UUID: 06F4D252-4049-42D5-BBD4-F52130ED3F82
-  :END:
-* TODO [#B] Extended lot indentification support
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 167
-  :UUID: 9CC55CD0-30C3-4C4F-BCB6-E980FD1F44DA
+  :Ticket: 121
+  :UUID: 8C5FD48A-F498-4B97-9C6E-DD8B5A50B773
   :END:
 * TODO [#B] A need for some extensive examples with commentary
   :PROPERTIES:
@@ -739,119 +65,11 @@ make[1]: *** [libledger_la-journal.lo] Error 1
   :Ticket: 166
   :UUID: 8C9A4F0A-75B6-4F7D-913C-B8D8D84A882E
   :END:
-* TODO [#B] Allow for data file assertions
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 165
-  :UUID: 434EA2BD-BB4D-4F97-BB2A-BB983797F1AE
-  :END:
-* TODO [#B] Enable the parsing of XML on standard input
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 164
-  :UUID: E97BCC81-4E9E-49AA-A905-051C9524B769
-  :END:
-* TODO [#B] Have ledger.el warn if the ledger version is too old	 :EMACS:
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 163
-  :UUID: 5F20A546-046B-4CC6-B1EF-89C5962B55BE
-  :END:
 * TODO [#B] Add a "scramble" command
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 162
   :UUID: 5B6D773A-E90F-4F36-8C97-79613427CA01
-  :END:
-* TODO [#B] Allow column width to be specified
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 161
-  :UUID: 1F0FD61B-1734-4A30-9EB5-D7AC4A6C7D7B
-  :END:
-* TODO [#B] Make --cost a synonym for --basis
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 160
-  :UUID: 2CAD6455-2695-4BAC-BD79-FB61E0D8E092
-  :END:
-* TODO [#B] Make --last and --first be synonyms for --tail and --head
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 159
-  :UUID: CD7B03D4-E0B2-4E7F-81B2-D98816B68B84
-  :END:
-* TODO [#B] Make commodity_t::qualified_symbol a virtual function
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 158
-  :UUID: B20E725A-B218-4A13-B08B-D74659B35F32
-  :END:
-* TODO [#B] Request for unique payee list
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 157
-  :UUID: A75FE2B8-86B0-42B9-AB7F-C37C8FF576EC
-  :END:
-* TODO [#B] Make ^ be a power operator
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 156
-  :UUID: CE06A271-419D-4F27-87C6-74412BE546E1
-  :END:
-* TODO [#B] Support multiple -f options
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 155
-  :UUID: 146B0BE4-C5EB-4A5B-A332-FE512B40D375
-  :END:
-* TODO [#B] Option --bold-if
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 154
-  :UUID: 3D04C70F-422D-4CEC-BC4A-B177C76D834A
-  :END:
-* TODO [#B] Option --args-only
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 153
-  :UUID: AB622F55-C2EF-43B9-B943-CABDBAF144F5
-  :END:
-* TODO [#B] Option --transform VALEXPR
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 152
-  :UUID: C112D47E-7814-47D1-AE8C-B777AEFB7C56
-  :END:
-* TODO [#B] read_xml and write_xml methods for values
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 151
-  :UUID: 415F72A7-A744-41EE-A849-D9E80237E00C
-  :END:
-* TODO [#B] Command output-xml
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 150
-  :UUID: 5D17A372-FB03-4E1D-9917-113E10211880
-  :END:
-* TODO [#B] Annotations should allow for HH:MM:SS
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 149
-  :UUID: F7DDD7D6-D219-4645-BB02-33AF74BED44B
-  :END:
-* TODO [#B] Value expressions for getting at the lot date
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 148
-  :UUID: A1230B8C-EF48-40BB-A200-18E7E94620BE
-  :END:
-* TODO [#B] Support for exceptions to interval_t
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 147
-  :UUID: A8AC5063-AB2F-4031-8821-2084B7B6497C
   :END:
 * TODO [#B] Add complete calculation history in Ledger
   :PROPERTIES:
@@ -865,161 +83,35 @@ make[1]: *** [libledger_la-journal.lo] Error 1
   :Ticket: 145
   :UUID: 2BA660CC-E09A-4358-944F-4527BF11F19C
   :END:
-* TODO [#B] Give an error if --input-date-format contains a space (or should it?)
+* TODO [#B] Add license headers to every file
   :PROPERTIES:
   :Version: 2.6
-  :Ticket: 144
-  :UUID: 60B631E4-9819-4460-ABC0-6B789865646D
+  :Ticket: 99
+  :UUID: E99806BC-8781-4469-9FEF-B77C23BB3413
   :END:
-* TODO [#B] Use &lt; when writing out XML, instead of <
+* TODO [#B] Add support for "entry notes"
   :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 143
-  :UUID: BD664021-204A-4F16-B4F7-3ECEBA808530
+  :UUID: 334E9E08-0943-42DB-BB7A-A4D147508706
   :END:
-* TODO [#B] Preserve XML comments
+  [2008-08-05 Tue]
+* TODO [#B] Add the ability to map OFX numbers to specific accounts
   :PROPERTIES:
   :Version: 2.6
-  :Ticket: 142
-  :UUID: D964682A-2B95-482F-B7FE-BAEE3E2E2AA8
+  :Ticket: 52
+  :UUID: 4FE37F8F-99F4-4548-88F3-D64CF7A76856
   :END:
-* TODO [#B] Add UTF-8 support for input files, commands and reports
+* TODO [#B] Add the concept of "date aliases" to Ledger, so I could say: -b Term1
   :PROPERTIES:
   :Version: 2.6
-  :Ticket: 140
-  :UUID: BDBB79F0-9FC4-4B91-B922-D128E18982BA
+  :Ticket: 183
+  :UUID: 1EDFFE53-3C7A-4A64-9849-F71CD91C67DC
   :END:
-* TODO [#B] Need to internationalize error messages
+  [2008-04-17 Thu]
+* TODO [#B] Add to documentation
   :PROPERTIES:
   :Version: 2.6
-  :Ticket: 138
-  :UUID: 6838FEA5-9283-462D-8651-351B0B6A6A0E
-  :END:
-* TODO [#B] -j is not working with -E
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 137
-  :UUID: 03FF4D6D-2B7A-4466-8A29-99E6CBCF8A32
-  :END:
-* TODO [#B] --begin and --end not working correctly
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 136
-  :UUID: C0F9D986-4A39-49D3-9799-E6CFCF76E49A
-  :END:
-* TODO [#B] More issues with price file parsing
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 134
-  :UUID: 3850F5F3-8D73-435C-A734-1C39683430ED
-  :END:
-* TODO [#B] Problem reading Russian prices file
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 131
-  :UUID: 22D053B7-616B-4B64-83DF-80A46BA1EC2B
-  :END:
-* TODO [#B] In ledger.el, fix toggle-current-transaction		 :EMACS:
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 130
-  :UUID: 465231DF-6EF2-4C4F-BF0D-9FED19AB99A3
-  :END:
-* TODO [#B] Another problem with XML output
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 127
-  :UUID: 0AC36F03-A438-4547-8764-E2B90F6E2A1C
-  :END:
-* TODO [#B] Make the balance report separator bar a format code
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 124
-  :UUID: 373A0146-BE4B-4C7E-9DA2-38D1EB275216
-  :END:
-* TODO [#B] Value expression descriptions
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 123
-  :UUID: 81340878-2C17-485B-BBA7-62A271925401
-  :END:
-* TODO [#B] Odditing in name of XML namespaces in Ledger
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 122
-  :UUID: 9F69B516-9F57-4204-9EF2-BA0AB42B1401
-  :END:
-* TODO [#B] A few changes for the textual parser
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 121
-  :UUID: 8C5FD48A-F498-4B97-9C6E-DD8B5A50B773
-  :END:
-* TODO [#B] Support --read-format and --write-format
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 120
-  :UUID: 2BDB9BCA-6C3F-4766-9AFC-F363237C9049
-  :END:
-* TODO [#B] 'derive_new_entry' shouldn't add accounts to the journal
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 119
-  :UUID: F229CDEA-1AED-4DBB-8DB6-24BEF30FC1E6
-  :END:
-* TODO [#B] Tie-in with beancounter and quantlib
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 118
-  :UUID: 7A8607F3-87C8-4A85-A4EF-BA090BB81EDE
-  :END:
-* TODO [#B] Allow for quicker reporting commands in ledger.el		 :EMACS:
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 117
-  :UUID: 932324E2-4A3F-4319-9586-1F33DFE29527
-  :END:
-* TODO [#B] Normalize automated transactions, so that there is no functional
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 116
-  :UUID: F6E6FDE5-15FA-4AFB-B451-493F0C77F37C
-  :END:
-* TODO [#B] Performance in forecasting would be weak with a lot of period xacts
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 115
-  :UUID: 68E4C919-14BA-4AB1-A60B-FC176E966B45
-  :END:
-* TODO [#B] Get rid of --print-format, and have print use hdr-format
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 114
-  :UUID: 9D95A1BB-AC3C-41C5-9AE3-C6324F13458A
-  :END:
-* TODO [#B] Finish implementing QIF parser, and document its use
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 113
-  :UUID: F7FFB324-9AC2-42A6-A6DD-38C02F30BEF7
-  :END:
-* TODO [#B] Have -T and -t set the expression template
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 112
-  :UUID: A81F98B1-38AE-4550-8056-C3D7D35691B3
-  :END:
-* TODO [#B] In the equity report, if the "collapse" option is used ...
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 111
-  :UUID: 29D7E913-1A5C-4ED2-8AB8-53D895021615
-  :END:
-* TODO [#B] In the "pricesdb" report, output commodity conversions
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 110
-  :UUID: 1BE0C80D-AC4D-4372-B830-14193554EF6B
+  :Ticket: 105
+  :UUID: F7944F93-11E3-426F-AC53-9F7BB242BD83
   :END:
 * TODO [#B] Add to the commodity flags in the XML data
   :PROPERTIES:
@@ -1027,83 +119,35 @@ make[1]: *** [libledger_la-journal.lo] Error 1
   :Ticket: 109
   :UUID: FEAD4FEA-64FC-4DCA-8653-1C29DC6BC66E
   :END:
-* TODO [#B] If a file !include's other files, it cannot be reconciled
+* TODO [#B] Add UTF-8 support for input files, commands and reports
   :PROPERTIES:
   :Version: 2.6
-  :Ticket: 107
-  :UUID: B75AB1CF-1D91-4CD9-8EF2-92D794D94C88
+  :Ticket: 140
+  :UUID: BDBB79F0-9FC4-4B91-B922-D128E18982BA
   :END:
-* TODO [#B] Create a report to show AAPY, indicating the performance
+* TODO [#B] Added a section in the manual specifically about stocks
   :PROPERTIES:
   :Version: 2.6
-  :Ticket: 106
-  :UUID: 4246B208-D486-4FC1-B117-DAD142D77CDE
+  :Ticket: 189
+  :UUID: 7AD3B6F2-765B-41A5-A481-BFAB39A55824
   :END:
-* TODO [#B] Add to documentation
+* TODO [#B] Allow column width to be specified
   :PROPERTIES:
   :Version: 2.6
-  :Ticket: 105
-  :UUID: F7944F93-11E3-426F-AC53-9F7BB242BD83
+  :Ticket: 161
+  :UUID: 1F0FD61B-1734-4A30-9EB5-D7AC4A6C7D7B
   :END:
-* TODO [#B] Change ledger.el to intelligently handle inserting		 :EMACS:
+* TODO [#B] Allow for data file assertions
   :PROPERTIES:
   :Version: 2.6
-  :Ticket: 104
-  :UUID: 902D50A8-B54C-4254-9BD6-B3F40FEC2515
+  :Ticket: 165
+  :UUID: 434EA2BD-BB4D-4F97-BB2A-BB983797F1AE
   :END:
-* TODO [#B] Set the beginning and ending line/position for entries
+* TODO [#B] Allow for quicker reporting commands in ledger.el		 :EMACS:
   :PROPERTIES:
   :Version: 2.6
-  :Ticket: 103
-  :UUID: 50357AC3-2CF8-4BBE-A679-7B3540139C44
-  :END:
-* TODO [#B] Document inline math in the .texi file.
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 102
-  :UUID: 5CDAC007-A2B6-42A6-8E8C-09A1078404C8
-  :END:
-* TODO [#B] Remove dependency on the following globals:
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 101
-  :UUID: 0C030979-3BF9-404D-9B39-5BDEAD77A749
-  :END:
-* TODO [#B] BUG: The operators in valexpr.cc shouldn't just assert
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 100
-  :UUID: AA448F9B-4200-4042-A4D6-57F6466D878C
-  :END:
-* TODO [#B] Add license headers to every file
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 99
-  :UUID: E99806BC-8781-4469-9FEF-B77C23BB3413
-  :END:
-* TODO [#B] Optimize parsing of transaction amounts
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 98
-  :UUID: 5EBDDE91-BF8A-4925-B53D-2533361583A5
-  :END:
-* TODO [#B] Clear out all #if 0 and jww commented sections
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 97
-  :UUID: 7C87DEC8-1FB6-47FC-ADAC-01980020924B
-  :END:
-* TODO [#B] Remove global commodities map
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 96
-  :UUID: E41E5A1F-BD14-419D-BF0D-6CCF990A59B1
-  :END:
-* TODO [#B] Rewrite the concept of error contexts
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 95
-  :UUID: 6FE3032D-5862-4213-B40F-80D5BDFB68E2
+  :Ticket: 117
+  :UUID: 932324E2-4A3F-4319-9586-1F33DFE29527
   :END:
 * TODO [#B] Allow forecasting from a specific date
   :PROPERTIES:
@@ -1111,89 +155,42 @@ make[1]: *** [libledger_la-journal.lo] Error 1
   :Ticket: 94
   :UUID: BBD4F6F0-1250-4216-BB0E-3E86785D5E44
   :END:
-* TODO [#B] Create a Wiki page titled "Who's using Ledger?"
+* TODO [#B] Allow Payee | Description for an entry payee
   :PROPERTIES:
   :Version: 2.6
-  :Ticket: 93
-  :UUID: F50ADD18-F246-4FDC-85A2-65C435ADE1A4
+  :Ticket: 185
+  :UUID: 383C04EE-94AF-4D01-BDEF-E644A12E97BF
   :END:
-* TODO [#B] Need a flag for sorting the amounts in a -M report in ledger
+* TODO [#B] Annotations should allow for HH:MM:SS
   :PROPERTIES:
   :Version: 2.6
-  :Ticket: 69
-  :UUID: D97CB3FC-C80F-428C-B2D6-D2B204E3D4D9
+  :Ticket: 149
+  :UUID: F7DDD7D6-D219-4645-BB02-33AF74BED44B
   :END:
+* TODO [#B] Another problem with XML output
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 127
+  :UUID: 0AC36F03-A438-4547-8764-E2B90F6E2A1C
+  :END:
+* TODO [#B] Another value expression change
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 171
+  :UUID: 356DB3E1-3613-4DE2-8245-A8F8E4937FBD
+  :END:
+* TODO [#B] Answer Martin's question about Capital gains
+  [[message://20080423221130.4D77D1144C3@banane.furius.ca]["capital gains" from Martin Blais <blais@furius.ca>]]
+  [[message://1209097067.1413.1249786835@webmail.messagingengine.com]["Here is one valid way to book capital gains" from Martin Blais <blais@furius.ca>]]
+  :PROPERTIES:
+  :UUID: 1B5B2517-360E-4F33-9A1E-C88F884ACAD2
+  :END:
+  [2008-04-24 Thu]
 * TODO [#B] Attempting to make a negative cost transaction fails
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 68
   :UUID: 0C13AABF-F0CC-40ED-BC20-D322AF1DD784
-  :END:
-* TODO [#B] Ledger formats UTF-8 strings incorrectly
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 67
-  :UUID: 2FE8B7B7-15A3-4F02-9B53-3A629212561A
-  :END:
-* TODO [#B] In daily budget report, there's no budgeting entry for "today"
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 65
-  :UUID: 5D1B0408-90D0-4019-AE0F-A914329C73CB
-  :END:
-* TODO [#C] Add support for comments (notes) on entire entries
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 63
-  :UUID: DCB44369-82CE-44CB-AD05-42B25BA6A492
-  :END:
-* TODO [#B] There is no icon on the Ledger trac page
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 62
-  :UUID: CF5FD987-CF36-4F15-A724-F716FFBC5C51
-  :END:
-* TODO [#B] Completing currency fails
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 55
-  :UUID: E4C9A8EA-296B-443F-937A-80182B21AA20
-  :END:
-* TODO [#B] Multiple -f options fail silently.
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 54
-  :UUID: B1E49EA5-18B9-413A-ACD6-9F9795F25722
-  :END:
-* TODO [#B] The -V flag is not working
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 53
-  :UUID: D943AE0F-44EA-47EE-BA85-AFC513E039EB
-  :END:
-* TODO [#B] Add the ability to map OFX numbers to specific accounts
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 52
-  :UUID: 4FE37F8F-99F4-4548-88F3-D64CF7A76856
-  :END:
-* TODO [#C] Ledger should output empty values with -E -j
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 44
-  :UUID: 86C0F968-F05B-4881-96B8-1C8CA8BB1315
-  :END:
-* TODO [#C] Preserve file comments in the XML output
-  :PROPERTIES:
-  :Version: 2.5
-  :Ticket: 41
-  :UUID: D27098A4-647A-4EEA-B0B8-3088E069214D
-  :END:
-* TODO [#C] Add an entry type for specifying value constraints
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 39
-  :UUID: 31E75D27-157E-452B-B817-7AD570AFE357
   :END:
 * TODO [#B] Balance command gets the sorting wrong
   :PROPERTIES:
@@ -1201,53 +198,11 @@ make[1]: *** [libledger_la-journal.lo] Error 1
   :Ticket: 29
   :UUID: D913FCEE-88FF-41D1-98AB-2561382C7933
   :END:
-* TODO [#B] Forecasting command doesn't do any forecasting
+* TODO [#B] Balances with non-matching exchange rates is ambiguous.
   :PROPERTIES:
   :Version: 2.6
-  :Ticket: 28
-  :UUID: E2DF7C6C-BA02-4F3D-8C3C-B73F8BC30CD6
-  :END:
-* TODO [#A] Problem with piping input to ledger
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 27
-  :UUID: D3820740-8BFB-4234-8125-DE813A713032
-  :END:
-* TODO [#C] Error when running my 'bal' script
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 25
-  :UUID: 88468528-A332-47E7-AA34-5E4F8126E3E7
-  :END:
-* TODO [#B] Command does not sort correctly
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 24
-  :UUID: 72DA9574-0B30-4140-96EC-D721F73B7888
-  :END:
-* TODO [#B] Command fails to report monthly averages
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 22
-  :UUID: 5EDCE9E9-8610-4D31-950E-3659D1CD9218
-  :END:
-* TODO [#C] Periodic budgeting problem when Yxxxx is used
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 21
-  :UUID: F2FC7C2B-0CB1-47E7-AE2E-C9E744A47927
-  :END:
-* TODO [#C] Bug in showing budget balance
-  :PROPERTIES:
-  :Version: 2.4.1
-  :Ticket: 20
-  :UUID: 41716CDE-670C-4F41-825F-FE64B624AF97
-  :END:
-* TODO [#C] There is a need for some extensive examples with commentary	  :DOCS:
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 19
-  :UUID: C7C7EC3C-D05E-4C8A-BDCC-ED04ADD28CC5
+  :Ticket: 179
+  :UUID: 2E3496BD-143C-4D3E-8815-A01FFD31D132
   :END:
 * TODO [#B] Budgeting oddness
   :PROPERTIES:
@@ -1261,11 +216,400 @@ make[1]: *** [libledger_la-journal.lo] Error 1
   :Ticket: 16
   :UUID: 1CF1EEC2-74F2-4538-8508-F0B424BA5D19
   :END:
-* TODO [#C] Forecasting goes too far
+* TODO [#B] BUG: The operators in valexpr.cc shouldn't just assert
   :PROPERTIES:
   :Version: 2.6
-  :Ticket: 15
-  :UUID: E627C594-A019-4D87-A6B4-C8E75F6D8FC0
+  :Ticket: 100
+  :UUID: AA448F9B-4200-4042-A4D6-57F6466D878C
+  :END:
+* TODO [#B] Change ledger.el to intelligently handle inserting		 :EMACS:
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 104
+  :UUID: 902D50A8-B54C-4254-9BD6-B3F40FEC2515
+  :END:
+* TODO [#B] Clear out all #if 0 and jww commented sections
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 97
+  :UUID: 7C87DEC8-1FB6-47FC-ADAC-01980020924B
+  :END:
+* TODO [#B] Comb through the warnings generated when fully all warnings are enabled
+  :PROPERTIES:
+  :UUID: B129BF67-ACC2-4800-870C-93F9ADA151F6
+  :END:
+  [2008-08-14 Thu]
+* TODO [#B] Command does not sort correctly
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 24
+  :UUID: 72DA9574-0B30-4140-96EC-D721F73B7888
+  :END:
+* TODO [#B] Command fails to report monthly averages
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 22
+  :UUID: 5EDCE9E9-8610-4D31-950E-3659D1CD9218
+  :END:
+* TODO [#B] Command output-xml
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 150
+  :UUID: 5D17A372-FB03-4E1D-9917-113E10211880
+  :END:
+* TODO [#B] Complete the internal documentation, exported using Doxygen
+  :PROPERTIES:
+  :UUID: 986054C6-CD18-4EA1-8F8C-FF02C9842EB0
+  :END:
+  [2008-08-14 Thu]
+* TODO [#B] Complete the new manual
+  :PROPERTIES:
+  :UUID: D2F43032-A889-4ED3-AEE8-8A93D6594EDD
+  :END:
+  [2008-08-14 Thu]
+* TODO [#B] Completing currency fails
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 55
+  :UUID: E4C9A8EA-296B-443F-937A-80182B21AA20
+  :END:
+* TODO [#B] Confirm the completeness of the Python bridge, in both directions
+  :PROPERTIES:
+  :UUID: 51B7E884-F0F8-4231-9C71-9D5EB653AAF9
+  :END:
+  [2008-08-14 Thu]
+* TODO [#B] Create a "date" report for balances
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 182
+  :UUID: 4D175527-AE30-4030-B1B7-DD6A92B6F067
+  :END:
+* TODO [#B] Create a Debian build of Ledger
+  :PROPERTIES:
+  :UUID: 6CE0A190-0368-446F-9EF5-84DD4F5EB0E4
+  :END:
+  [2008-08-08 Fri]
+* TODO [#B] Create a pre-built ledger.exe for Windows users
+  :PROPERTIES:
+  :UUID: E0620AEA-12B6-4AD7-A45E-B00CA9FB23AD
+  :END:
+  [2008-08-08 Fri]
+* TODO [#B] Create a report to show AAPY, indicating the performance
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 106
+  :UUID: 4246B208-D486-4FC1-B117-DAD142D77CDE
+  :END:
+* TODO [#B] Create a Wiki page titled "Who's using Ledger?"
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 93
+  :UUID: F50ADD18-F246-4FDC-85A2-65C435ADE1A4
+  :END:
+* TODO [#B] Create an MacPorts build of Ledger
+  :PROPERTIES:
+  :UUID: 7F75AEF6-BBB8-4BBA-BCCA-FE328037EBC4
+  :END:
+  [2008-08-08 Fri]
+* TODO [#B] Create an RPM build of Ledger
+  :PROPERTIES:
+  :UUID: 57F84E90-8993-45C8-8639-243B041EE786
+  :END:
+  [2008-08-08 Fri]
+* TODO [#B] Create regression tests for all the closed 2.6.1 bugs
+  :PROPERTIES:
+  :UUID: 946925F9-9F43-4CD9-810C-B3C8AC978F8D
+  :END:
+  [2008-08-14 Thu]
+* TODO [#B] Document inline math in the .texi file.
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 102
+  :UUID: 5CDAC007-A2B6-42A6-8E8C-09A1078404C8
+  :END:
+* TODO [#B] Don't use -s for bal the way it's used now
+  :PROPERTIES:
+  :UUID: C27BABD9-CEAF-41E9-84D9-F1B97C785F50
+  :END:
+  [2008-08-14 Thu]
+* TODO [#B] Enable the parsing of XML on standard input
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 164
+  :UUID: E97BCC81-4E9E-49AA-A905-051C9524B769
+  :END:
+* TODO [#B] Extended lot indentification support
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 167
+  :UUID: 9CC55CD0-30C3-4C4F-BCB6-E980FD1F44DA
+  :END:
+* TODO [#B] Find out why master is failing to build on Thomas Delaet's OpenBSD box
+  ssh obsd86
+  :PROPERTIES:
+  :UUID: 5467AFFB-0E79-431E-8890-C1603D6D9DED
+  :END:
+  [2008-08-14 Thu]
+* TODO [#B] Finish implementing QIF parser, and document its use
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 113
+  :UUID: F7FFB324-9AC2-42A6-A6DD-38C02F30BEF7
+  :END:
+* TODO [#B] Forecasting command doesn't do any forecasting
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 28
+  :UUID: E2DF7C6C-BA02-4F3D-8C3C-B73F8BC30CD6
+  :END:
+* TODO [#B] FR: Add the concept of spatially delimited "pages"
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 176
+  :UUID: BCE275E5-37EA-4231-8F05-55ED96B5BB3F
+  :END:
+* TODO [#B] Get rid of --print-format, and have print use hdr-format
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 114
+  :UUID: 9D95A1BB-AC3C-41C5-9AE3-C6324F13458A
+  :END:
+* TODO [#B] Give an error if --input-date-format contains a space (or should it?)
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 144
+  :UUID: 60B631E4-9819-4460-ABC0-6B789865646D
+  :END:
+* TODO [#B] Handling funds
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 170
+  :UUID: B5C1EE3D-8F66-4116-A88B-D1D568CF46B7
+  :END:
+* TODO [#B] Have -T and -t set the expression template
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 112
+  :UUID: A81F98B1-38AE-4550-8056-C3D7D35691B3
+  :END:
+* TODO [#B] Have ledger.el warn if the ledger version is too old	 :EMACS:
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 163
+  :UUID: 5F20A546-046B-4CC6-B1EF-89C5962B55BE
+  :END:
+* TODO [#B] Highlight transaction lines in based on their status	 :EMACS:
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 200
+  :UUID: 1C870658-6460-423C-9199-E46C48074688
+  :END:
+* TODO [#B] If a file !include's other files, it cannot be reconciled
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 107
+  :UUID: B75AB1CF-1D91-4CD9-8EF2-92D794D94C88
+  :END:
+* TODO [#B] Implied rates.
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 181
+  :UUID: 3E56A012-FE58-49B5-8CF0-7E80CD2B2F8A
+  :END:
+* TODO [#B] In daily budget report, there's no budgeting entry for "today"
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 65
+  :UUID: 5D1B0408-90D0-4019-AE0F-A914329C73CB
+  :END:
+* TODO [#B] In ledger-mode, color directive lines firebrick red	       :FEATURE:
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 186
+  :UUID: B34222A3-DD25-4717-B60B-865DB7F1DFD6
+  :END:
+  [2008-04-16 Wed]
+* TODO [#B] In ledger.el, fix toggle-current-transaction		 :EMACS:
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 130
+  :UUID: 465231DF-6EF2-4C4F-BF0D-9FED19AB99A3
+  :END:
+* TODO [#B] In the "pricesdb" report, output commodity conversions
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 110
+  :UUID: 1BE0C80D-AC4D-4372-B830-14193554EF6B
+  :END:
+* TODO [#B] In the equity report, if the "collapse" option is used ...
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 111
+  :UUID: 29D7E913-1A5C-4ED2-8AB8-53D895021615
+  :END:
+* TODO [#B] Ledger example: building a better "du"
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 169
+  :UUID: 85DAE1AB-F6D3-4AAC-A4F7-99D146B355E7
+  :END:
+* TODO [#B] Ledger formats UTF-8 strings incorrectly
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 67
+  :UUID: 2FE8B7B7-15A3-4F02-9B53-3A629212561A
+  :END:
+* TODO [#B] ledger.el: ledger-context-at-point fails to parse acct-transaction :EMACS:
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 6
+  :UUID: 2558642F-EE17-4DCB-B6DB-50490FB0CF83
+  :END:
+* TODO [#B] Make !rex reverse a regexp
+  This is instead of -rex, allowing options to appear anywhere on the line.
+  It also means that something has to be done about the meaning of "--".
+  :PROPERTIES:
+  :UUID: 72B2202C-EC63-4A2E-A5C9-0C9A4991FB06
+  :END:
+  [2008-08-14 Thu]
+* TODO [#B] Make --cost a synonym for --basis
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 160
+  :UUID: 2CAD6455-2695-4BAC-BD79-FB61E0D8E092
+  :END:
+* TODO [#B] Make --last and --first be synonyms for --tail and --head
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 159
+  :UUID: CD7B03D4-E0B2-4E7F-81B2-D98816B68B84
+  :END:
+* TODO [#B] Make ^ be a power operator
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 156
+  :UUID: CE06A271-419D-4F27-87C6-74412BE546E1
+  :END:
+* TODO [#B] Make commodity_t::qualified_symbol a virtual function
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 158
+  :UUID: B20E725A-B218-4A13-B08B-D74659B35F32
+  :END:
+* TODO [#B] Make the balance report separator bar a format code
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 124
+  :UUID: 373A0146-BE4B-4C7E-9DA2-38D1EB275216
+  :END:
+* TODO [#B] Mention Martin's beancount project from the Ledger home page
+  "Beancount on PyPi" from Martin Blais <blais@furius.ca>
+  :PROPERTIES:
+  :UUID: 81540394-3662-4CBA-8747-3F6CEAEE61D5
+  :END:
+  [2008-08-14 Thu]
+* TODO [#B] More issues with price file parsing
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 134
+  :UUID: 3850F5F3-8D73-435C-A734-1C39683430ED
+  :END:
+* TODO [#B] Multi-byte characters (like UTF-8) throws off the "emacs" report
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 5
+  :UUID: 6B7E468B-CB1E-41C3-A6BF-DCB64DA91C15
+  :END:
+* TODO [#B] Multiple -f options fail silently.
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 54
+  :UUID: B1E49EA5-18B9-413A-ACD6-9F9795F25722
+  :END:
+* TODO [#B] Need a flag for sorting the amounts in a -M report in ledger
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 69
+  :UUID: D97CB3FC-C80F-428C-B2D6-D2B204E3D4D9
+  :END:
+* TODO [#B] Need to internationalize error messages
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 138
+  :UUID: 6838FEA5-9283-462D-8651-351B0B6A6A0E
+  :END:
+* TODO [#B] New reporting options: --descend and --descend-if
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 168
+  :UUID: 06F4D252-4049-42D5-BBD4-F52130ED3F82
+  :END:
+* TODO [#B] Normalize automated transactions, so that there is no functional
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 116
+  :UUID: F6E6FDE5-15FA-4AFB-B451-493F0C77F37C
+  :END:
+* TODO [#B] Odditing in name of XML namespaces in Ledger
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 122
+  :UUID: 9F69B516-9F57-4204-9EF2-BA0AB42B1401
+  :END:
+* TODO [#B] Optimize parsing of transaction amounts
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 98
+  :UUID: 5EBDDE91-BF8A-4925-B53D-2533361583A5
+  :END:
+* TODO [#B] Option --args-only
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 153
+  :UUID: AB622F55-C2EF-43B9-B943-CABDBAF144F5
+  :END:
+* TODO [#B] Option --bold-if
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 154
+  :UUID: 3D04C70F-422D-4CEC-BC4A-B177C76D834A
+  :END:
+* TODO [#B] Option --transform VALEXPR
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 152
+  :UUID: C112D47E-7814-47D1-AE8C-B777AEFB7C56
+  :END:
+* TODO [#B] Output error messages in a way that compilation-mode can parse
+  message://20080421160053.C6CE61144C3@banane.furius.ca
+  :PROPERTIES:
+  :UUID: EB8AAF67-40A1-479F-BF96-7CB17D9492C1
+  :END:
+  [2008-08-14 Thu]
+* TODO [#B] Performance in forecasting would be weak with a lot of period xacts
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 115
+  :UUID: 68E4C919-14BA-4AB1-A60B-FC176E966B45
+  :END:
+* TODO [#B] Post the Ledger manual in HTML format on newartisans.com	  :DOCS:
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 187
+  :UUID: C6E7C61C-13A3-4812-AA28-CD3E247D6F8C
+  :END:
+  [2008-08-14 Thu]
+* TODO [#B] Preserve XML comments
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 142
+  :UUID: D964682A-2B95-482F-B7FE-BAEE3E2E2AA8
+  :END:
+* TODO [#B] Problem reading Russian prices file
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 131
+  :UUID: 22D053B7-616B-4B64-83DF-80A46BA1EC2B
   :END:
 * TODO [#B] Problem with basis report
   :PROPERTIES:
@@ -1279,35 +623,124 @@ make[1]: *** [libledger_la-journal.lo] Error 1
   :Ticket: 12
   :UUID: 51DD2F71-F5D0-4C89-AEBD-9BFCF56C1FDB
   :END:
-* TODO [#C] Trouble reading an ofx file
+* TODO [#B] Promote tagging to a first-class concept 		       :FEATURE:
   :PROPERTIES:
-  :Version: 2.4.1
-  :Ticket: 11
-  :UUID: D9CAC376-E751-4DC6-841B-70217748AA20
+  :Ticket: 208
+  :UUID: E7595DA3-4634-4275-A793-701A6D9438A4
   :END:
-* TODO [#A] Problems with CVS version under Debian
-  :PROPERTIES:
-  :Version: 2.5
-  :Ticket: 9
-  :UUID: 0DD9D927-7C79-41A4-8D9A-67C00550B67D
-  :END:
-* TODO [#B] ledger.el: ledger-context-at-point fails to parse acct-transaction :EMACS:
+* TODO [#B] read_xml and write_xml methods for values
   :PROPERTIES:
   :Version: 2.6
-  :Ticket: 6
-  :UUID: 2558642F-EE17-4DCB-B6DB-50490FB0CF83
+  :Ticket: 151
+  :UUID: 415F72A7-A744-41EE-A849-D9E80237E00C
   :END:
-* TODO [#B] Multi-byte characters (like UTF-8) throws off the "emacs" report
+* TODO [#B] Remove dependency on the following globals:
   :PROPERTIES:
   :Version: 2.6
-  :Ticket: 5
-  :UUID: 6B7E468B-CB1E-41C3-A6BF-DCB64DA91C15
+  :Ticket: 101
+  :UUID: 0C030979-3BF9-404D-9B39-5BDEAD77A749
   :END:
-* TODO [#C] Using --reconcile with -20 causes a segmentation fault
+* TODO [#B] Remove global commodities map
   :PROPERTIES:
   :Version: 2.6
-  :Ticket: 4
-  :UUID: 567B5118-7A77-42B9-A1CD-C5DA688AC406
+  :Ticket: 96
+  :UUID: E41E5A1F-BD14-419D-BF0D-6CCF990A59B1
+  :END:
+* TODO [#B] Request for unique payee list
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 157
+  :UUID: A75FE2B8-86B0-42B9-AB7F-C37C8FF576EC
+  :END:
+* TODO [#B] Respond to billk's question about options /email
+  New Artisans LLC :: View topic - stock options
+  :PROPERTIES:
+  :UUID: 2F635B10-27B8-4FF4-8584-F84A3AF7D42C
+  :END:
+  [2008-08-14 Thu]
+* TODO [#B] Restore option processing
+  :PROPERTIES:
+  :UUID: E7FCD772-5FA5-42AC-B84C-165F8C9707A8
+  :END:
+  [2008-08-14 Thu]
+* TODO [#B] Revise the concept of commodities
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 180
+  :UUID: 29E1CF5D-FEA9-4A23-90F0-4E14C374D908
+  :END:
+* TODO [#B] Rewrite the concept of error contexts
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 95
+  :UUID: 6FE3032D-5862-4213-B40F-80D5BDFB68E2
+  :END:
+* TODO [#B] Set the beginning and ending line/position for entries
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 103
+  :UUID: 50357AC3-2CF8-4BBE-A679-7B3540139C44
+  :END:
+* TODO [#B] Support --read-format and --write-format
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 120
+  :UUID: 2BDB9BCA-6C3F-4766-9AFC-F363237C9049
+  :END:
+* TODO [#B] Support for exceptions to interval_t
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 147
+  :UUID: A8AC5063-AB2F-4031-8821-2084B7B6497C
+  :END:
+* TODO [#B] Support multiple -f options
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 155
+  :UUID: 146B0BE4-C5EB-4A5B-A332-FE512B40D375
+  :END:
+* TODO [#B] The -V flag is not working
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 53
+  :UUID: D943AE0F-44EA-47EE-BA85-AFC513E039EB
+  :END:
+* TODO [#B] The entry command drops price specifications
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 192
+  :UUID: 03C6208E-E48F-45BB-BFBF-2C38B129458A
+  :END:
+* TODO [#B] The following, with -B or -V, does not output correctly
+  :PROPERTIES:
+  :Version: 2.6.0.90
+  :Ticket: 201
+  :UUID: F5ABB1B6-B2C1-45B2-A9AE-174736521687
+  :END:
+* TODO [#B] There are a few thorny issues remaining with the binary cache
+  1. What happens to value expressions that have been compiled?  The FUNCTION
+     operand must remember the name of the function it was compiled to; but
+     even then, how can I recompile and maintain the same environment as the
+     original point of definition?
+
+  2. Base commodities no longer exist in their own data structure, but use
+     shared_ptr to track multiple accesses.  How to write out this unwritten
+     structure?
+  :PROPERTIES:
+  :UUID: 69B51A07-5E5F-42F9-AB97-CEECAF4BB085
+  :END:
+  [2008-08-15 Fri]
+* TODO [#B] There is no icon on the Ledger trac page
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 62
+  :UUID: CF5FD987-CF36-4F15-A724-F716FFBC5C51
+  :END:
+* TODO [#B] Tie-in with beancounter and quantlib
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 118
+  :UUID: 7A8607F3-87C8-4A85-A4EF-BA090BB81EDE
   :END:
 * TODO [#B] trac and opera don't seem to to work together
   :PROPERTIES:
@@ -1315,186 +748,205 @@ make[1]: *** [libledger_la-journal.lo] Error 1
   :Ticket: 2
   :UUID: A3924AA9-5F89-4982-ACC0-37581BEBDA0C
   :END:
-* DUPLICATE [#B] Allow Payee | Description for an entry payee
+* TODO [#B] Use &lt; when writing out XML, instead of <
   :PROPERTIES:
   :Version: 2.6
-  :Ticket: 195
-  :UUID: F70584F8-5BC6-41D2-8954-CD4515332B8C
+  :Ticket: 143
+  :UUID: BD664021-204A-4F16-B4F7-3ECEBA808530
   :END:
-* DUPLICATE [#B] Allow pre-declaration of account and commodity names, and account commodities
+* TODO [#B] Use code coverage analysis to determine if all of Ledger is being tested
+  :PROPERTIES:
+  :UUID: 13E43A50-FC0C-4C3D-A175-7C6CB147A37C
+  :END:
+  [2008-08-14 Thu]
+* TODO [#B] Use of ledger.el with various invalid "ledger" binaries (and none) :EMACS:
   :PROPERTIES:
   :Version: 2.6
-  :Ticket: 194
-  :UUID: E9D9F8E4-A985-4570-8692-F5F90185FAAB
+  :Ticket: 175
+  :UUID: 8735E6AB-DB0A-4F66-BD81-BBFFEE66A68E
   :END:
-* DUPLICATE [#B] Add the concept of "date aliases" to Ledger, so I could say: -b Term1
+* TODO [#B] Using Ledger as a scientific analysis tool
   :PROPERTIES:
   :Version: 2.6
-  :Ticket: 193
-  :UUID: 5B968F37-E0D3-48B0-8C4D-AE1CA5C0D43E
+  :Ticket: 173
+  :UUID: C653003E-52A8-4D06-9DEB-634B1156B04C
   :END:
-* DUPLICATE [#B] Emacs reconciling is currently broken
+* TODO [#B] Using Ledger to track inventory
   :PROPERTIES:
   :Version: 2.6
-  :Ticket: 132
-  :UUID: 0E6099E5-A9CC-4BF2-8AF3-D3606379FC91
+  :Ticket: 174
+  :UUID: F7A6A833-5AC6-4ED0-A5EA-93CD6B97EEBF
   :END:
-* WONTFIX [#B] Change all the source code to utf-8
+* TODO [#B] Value expression descriptions
   :PROPERTIES:
   :Version: 2.6
-  :Ticket: 141
-  :UUID: D00D1F5A-8BD5-43B5-B8E0-1FEBB98F610A
+  :Ticket: 123
+  :UUID: 81340878-2C17-485B-BBA7-62A271925401
   :END:
-* DONE [#B] Compile errors with gcc 4.3
-  gcc 4.3 moved some header files around, leading to compile errors. Attached
-  is the patch for git.
-  :PROPERTIES:
-  :Submitter: Nathan Jones <nathanj@insightbb.com>
-  :Version: 2.6
-  :Ticket: 197
-  :UUID: E9AD679E-6A13-456E-820C-51C682957B55
-  :Attachments: 0001-Fix-compile-errors-with-gcc-4.3.patch 0002-Fix-compile-errors-with-gcc-4.3.patch
-  :END:
-* DONE [#B] How do I solve the fact that individual transactions ...
+* TODO [#B] Value expressions for getting at the lot date
   :PROPERTIES:
   :Version: 2.6
-  :Ticket: 108
-  :UUID: 116B0437-6BA9-4211-B5DE-3BBFA69F1D33
+  :Ticket: 148
+  :UUID: A1230B8C-EF48-40BB-A200-18E7E94620BE
   :END:
-
-
-* TODO [#C] Binary cache is invalidated if LEDGER_FILE is changed
-  The following sequence of operations seemed to trigger it:
-  :OUTPUT:
-export LEDGER_FILE=/home/albino/temp/ledger/ledger.dat
-./ledger bal rent food movies -- freddie
-export LEDGER_FILE=/home/albino/temp/ledger/sample.dat
-./ledger bal
-  :END:
+* TODO [#B] Write unit tests for all core sections of Ledger and all reporting options
   :PROPERTIES:
-  :Submitter: albino <#ledger>
-  :Version: 2.6.1b
-  :Ticket: 211
-  :UUID: C65875E1-CF5D-4923-8546-9784EB08AC9D
+  :UUID: A8DE6DCB-917B-433F-8D07-3ACE45A05F45
+  :END:
+  [2008-08-14 Thu]
+* TODO [#C] Add an entry type for specifying value constraints
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 39
+  :UUID: 31E75D27-157E-452B-B817-7AD570AFE357
+  :END:
+* TODO [#C] Add support for comments (notes) on entire entries
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 63
+  :UUID: DCB44369-82CE-44CB-AD05-42B25BA6A492
+  :END:
+* TODO [#C] Added a {{total}} syntax for lot price specification       :FEATURE:
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 188
+  :UUID: C9E09993-CC01-41C6-BADC-0A9AA1221419
+  :END:
+* TODO [#C] Allow pre-declaration of account and commodity names, and account commodities
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 184
+  :UUID: 9FF8CF75-8F7C-4C54-BBD7-46177EA2768F
+  :END:
+  [2008-04-17 Thu]
+* TODO [#C] Allow reports, such as completed tasks last week, etc.	 :EMACS:
+  :PROPERTIES:
+  :UUID: D9B4D001-21E4-4247-ADF6-56C00B2C8F3A
+  :END:
+  [2008-05-12 Mon]
+* TODO [#C] Bug in showing budget balance
+  :PROPERTIES:
+  :Version: 2.4.1
+  :Ticket: 20
+  :UUID: 41716CDE-670C-4F41-825F-FE64B624AF97
+  :END:
+* TODO [#C] C-c C-c on a cleared entry doesn't unclear it		 :EMACS:
+  :PROPERTIES:
+  :Version: 2.6.0.90
+  :Ticket: 212
+  :UUID: 863C0EE8-C193-46EE-9BAA-3A37DE73E4DB
+  :END:
+* TODO [#C] Change the binary cache reader to use Boost.Interprocess to read it in as a memory mapped file
+  :PROPERTIES:
+  :UUID: A978C1E9-86EA-4074-B8E8-2A3DF1A12ED2
   :END:
   [2008-08-05 Tue]
-* TODO [#B] Unbalanced transactions due to rounding problems
-  - State "TODO"       [2008-08-01 Fri 13:34] \\
-    Levin <zslevin@gmail.com> writes:
-    > This is the result of ledger in git master branch:
-    :OUTPUT:
-./ledger -f test.ledger -V reg HLIT
-2008/06/01 BUY HLIT             Assets:HLIT     $750         $750
-2008/07/02 SELL HLIT          Assets:HLIT      $-658            0
-                                 Assets:HLIT    $658         $658
-                            Assets:HLIT        $-658            0
-    :END:
-    > I wonder why .xxx is vanished :)
-  I found some more rounding problems now that I've upgraded to 2.6.1. These
-  transactions balanced in version 2.5.
-  :DATA:
-2008/06/01 BUY HLIT
-    Assets:HLIT   15 HLIT @ $50.00
-    Assets
-
-2008/07/02 SELL HLIT
-    Assets:HLIT   -15 HLIT @ $50.00
-    Assets:HLIT    15 HLIT @ $43.875
-    Assets:HLIT   -15 HLIT @ $43.875
-    Assets
-  :END:
-  :OUTPUT:
-[20:30:53 vinod]:~/data $ ledger -V reg HLIT
-2008/06/01 BUY HLIT             Assets:HLIT  $750.00      $750.00
-2008/07/02 SELL HLIT            Assets:HLIT $-658.12        $0.01
-                                Assets:HLIT  $658.13      $658.14
-                                Assets:HLIT $-658.12        $0.01
-  :END:
-  So, I end up with an extra penny. I think it's because 658.125 rounds down
-  on one entry and rounds up on the other.
+* TODO [#C] Change value_t to use a union instead of a char array
   :PROPERTIES:
-  :Submitter: Vinod Kurup <vvkurup@gmail.com>
-  :Version: 2.6.1b
-  :Ticket: 207
-  :UUID: E87DD3A5-B061-46A0-95E9-9844A6CB0443
+  :Version: 2.6
+  :Ticket: 196
+  :UUID: CAAC7BA1-882E-4BC1-A0BD-F65546EABDBF
   :END:
-  [2008-08-01 Fri]
-* TODO [#B] Do not adjust display precision when parsing a pricing entry
+* TODO [#C] Enhanced comments					       :FEATURE:
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 204
+  :UUID: AC4FCEC6-7F38-4229-88AD-B0032C49AE93
+  :END:
+* TODO [#C] Error when running my 'bal' script
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 25
+  :UUID: 88468528-A332-47E7-AA34-5E4F8126E3E7
+  :END:
+* TODO [#C] Every destructor which contains only TRACE_DTOR should specify throw()
+  :PROPERTIES:
+  :UUID: 44497B2D-292F-4C82-8D4F-B928FE6143EC
+  :END:
+  [2008-07-25 Fri]
+* TODO [#C] Forecasting goes too far
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 15
+  :UUID: E627C594-A019-4D87-A6B4-C8E75F6D8FC0
+  :END:
+* TODO [#C] Ledger should output empty values with -E -j
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 44
+  :UUID: 86C0F968-F05B-4881-96B8-1C8CA8BB1315
+  :END:
+* TODO [#C] Make sure Ledger's #include's are as minimal as possible
+  :PROPERTIES:
+  :UUID: 857E3E86-674C-40CA-BDBD-70DFD477AAE7
+  :END:
+  [2008-08-14 Thu]
+* TODO [#C] Periodic budgeting problem when Yxxxx is used
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 21
+  :UUID: F2FC7C2B-0CB1-47E7-AE2E-C9E744A47927
+  :END:
+* TODO [#C] Preserve file comments in the XML output
+  :PROPERTIES:
+  :Version: 2.5
+  :Ticket: 41
+  :UUID: D27098A4-647A-4EEA-B0B8-3088E069214D
+  :END:
+* TODO [#C] There is a need for some extensive examples with commentary	  :DOCS:
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 19
+  :UUID: C7C7EC3C-D05E-4C8A-BDCC-ED04ADD28CC5
+  :END:
+* TODO [#C] Trouble reading an ofx file
+  :PROPERTIES:
+  :Version: 2.4.1
+  :Ticket: 11
+  :UUID: D9CAC376-E751-4DC6-841B-70217748AA20
+  :END:
+* TODO [#C] Using --reconcile with -20 causes a segmentation fault
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 4
+  :UUID: 567B5118-7A77-42B9-A1CD-C5DA688AC406
+  :END:
+* DONE [#A] 'ledger -b 2007/08/16 -s reg food' is completely broken
+  SCHEDULED: <2007-08-23 Thu> ARCHIVED: <2007-08-23 Thu>
+  - State "DONE"       [2007-08-23 Thu 21:22] \\
+    Fixed by the following change:
+       * walk.cc (handle_value): The transaction xdata.dflags were being
+       set too late; the TRANSACTION_COMPOUND setting was being thrown
+       away as a result.
+  Although reg without shows a ton of Expenses:Food expenses, searching for
+  food expenses shows none.
+  :PROPERTIES:
+  :UUID: 6CAF45D7-9098-41B4-A25A-12F8A8166006
+  :END:
+  [2007-08-22 Wed]
+* DONE [#A] -p "this month" doesn't work at all anymore
+  - State "DONE"       [2008-07-17 Thu 18:14] \\
+    This has been fixed, and represents a very major set of fixes to date
+    handling in general.  Thanks to Nathan for hitting the nail on the head.
+  - State "TODO"       [2008-04-05 Sat 18:57] \\
+    Nathan Jones <nathanj@insightbb.com> writes:
+    > The patch fixes a command that I have aliased to show my last two months
+    > of transactions: `ledger -d 'd>=[last month]' reg checking`
+    > 
+    > The problem is that the 'last month' would get parsed as 1970/1/1, so it
+    > would show every transaction.
+  :OUTPUT:
+~ $ DEBUG_CLASS=ledger.config.predicates *ledger -p "this month" reg cash
+Predicate: d>=[1969/12/31]&d<[1970/01/31]&/(?:cash)/
+  :END:
   :PROPERTIES:
   :Submitter: John Wiegley <johnw@newartisans.com>
-  :Version: 2.6.0.90
-  :Ticket: 206
-  :UUID: 7E5D2A6C-A15F-4BC8-A851-04A48E3E30F4
+  :Version: 2.6
+  :Ticket: 38
+  :Attachments: 289.patch
+  :UUID: 0CF00621-31C4-4E5A-B260-78B4DA8C3616
   :END:
-  [2008-07-28 Mon]
-* WONTFIX [#C] Balance calculations using the '=' operator are off
-  - State "WONTFIX"    [2008-08-15 Fri 04:14] \\
-    This feature is not ready for 2.6.1, and is being pushed to 3.0 where this
-    issue has been fixed.
-  When I run 'ledger --tail 20 reg assets:cash' with my current ledger data,
-  the final balance is way, way off.  Something is being miscalculated.
-  :PROPERTIES:
-  :Submitter: John Wiegley <johnw@newartisans.com>
-  :Version: 2.6.1b
-  :Ticket: 209
-  :UUID: F32E914F-D485-427B-89E9-33C762CC1A47
-  :END:
-  [2008-08-02 Sat]
-* DONE [#A] Ledger fails to balance a simple entry
-  - State "DONE"       [2008-07-28 Mon 02:05] \\
-    This was quite the nasty little bug.
-  I just installed v2.6.1 and ledger reports errors with some transactions
-  that were fine with v2.5:
-  :OUTPUT:
-[21:51:49 vinod]:~/src/ledger $ ledger --version
-Ledger 2.6.1, the command-line accounting tool
-
-[21:51:55 vinod]:~/src/ledger $ ledger bal
-While balancing entry:
- 2007/02/02 RD VMMXX
-     Assets:Investments:Vanguard:VMMXX  0.350 VMMXX @ $1.00
-     Income:Dividends:Vanguard:VMMXX        $-0.35
-Unbalanced remainder is:
-             $-0.35
-Error: "/home/vinod/data/ledger.dat", line 52379: Entry does not balance
-  :END:
-  :PROPERTIES:
-  :Submitter: Vinod Kurup <vvkurup@gmail.com>
-  :Version: 2.6.1b
-  :Ticket: 205
-  :UUID: 0CA014F9-E309-4840-9085-71EC1F46DEC1
-  :END:
-  [2008-07-28 Mon]
-* DONE [#C] Entry command doesn't match debit account when description is unmatched
-  - State "DONE"       [2008-07-20 Sun 20:32]
-  I think I've isolated a bug with the entry command where I get "Equity"
-  instead of a valid debit account:
-  :OUTPUT:
-$ ledger entry 2008/07/18 "Pei Wei" food 20 checking
-
-2008/07/18 Pei Wei
-    Expenses:Food:Out                        $ 20.00
-    Assets:Checking
-
-$ ledger entry 2008/07/18 "Foo Bar" food 20 checking
-
-2008/07/18 Foo Bar
-    Expenses:Food                            $ 20.00
-    Equity
-  :END:
-
-  The first command proves that ledger understands I have an `Assets:Checking`
-  account.  That's because I already have entries for `Pei Wei`.
-
-  If I enter a description that doesn't match a previous entry, it doesn't
-  match `checking` to `Assets:Checking`.
-  :PROPERTIES:
-  :Submitter: drewr <#ledger>
-  :Version: 5fbec3582319ca6423a43c9125842be5f969e8ee
-  :Ticket: 203
-  :UUID: FF8CE4C5-03B3-4FCA-85BD-52A9DB191B4B
-  :END:
-  [2008-07-18 Fri]
+  [2008-04-04 Fri]
 * DONE [#A] Cannot sort by reverse time
   - State "DONE"       [2008-07-19 Sat 16:52]
   When I specify `--sort -d`, I get:
@@ -1512,289 +964,6 @@ Error: Cannot negate a date/time
   :UUID: CB97253A-581E-49D0-98D4-3BC5B0616A42
   :END:
   [2008-07-17 Thu]
-* DONE [#B] ledger.el requires an absolute pathname for the ledger-binary-path :EMACS:
-  - State "DONE"       [2008-07-17 Thu 22:09]
-  This caused me pain after a ledger upgrade. "ledger" should be sufficient if
-  it's in the path.
-  :PROPERTIES:
-  :Submitter: Simon Michael <simon@joyful.com>
-  :Version: 2.6
-  :Ticket: 199
-  :UUID: 7D40038A-DEED-47FA-8D02-0951E94CA175
-  :END:
-  [2008-07-12 Sat]
-* DONE [#B] Segmentation fault on import from GnuCash
-  - State "DONE"       [2008-07-17 Thu 20:04]
-  - State "TODO"       [2008-06-16 Mon 16:05] \\
-    Luben Manolov <lubo@manolov.org> writes:
-    > Import of this GnuCash file causes Segmentation fault
-  I am trying to import a simple GnuCash file and I am getting "Segmentation
-  fault" error. Please find attached the sample file.
-  :OUTPUT:
-./ledger -f sample.gnucash balance
-While balancing entry:
-  2008/06/16 
-      Segmentation fault
-  :END:
-  :PROPERTIES:
-  :Submitter: Luben Manolov <lubo@manolov.org>
-  :Version: 2.6
-  :Ticket: 198
-  :UUID: 266D96D2-DEB5-4BD9-A51B-B2F652E2F550
-  :Attachments: sample.gnucash
-  :END:
-  [2008-06-16 Mon]
-* DONE [#C] Segfault with commodity price in budget.
-  - State "DONE"       [2008-07-17 Thu 20:09]
-  :DATA:
-~ Monthly
-  Assets:Invest    2 AAPL @ $30.00
-  Assets:Bank     -2 AAPL
-  :END:
-  It works if the '@ $30.00' is removed. The problem is that entry is null
-  when called through parse_transactions. Backtrace:
-  :OUTPUT:
-#0  0x080632ab in datetime_t (this=0xbfb4af88, _when=@0x40) at datetime.h:173
-#1  0x080973ac in ledger::entry_t::actual_date (this=0x0) at journal.h:180
-#2  0x080b7fc7 in ledger::parse_transaction (
-    line=0x8119e20 "  Assets:Invest    2 AAPL @ $30.00", account=0x813be00,
-    entry=0x0) at textual.cc:258
-#3  0x080b9480 in ledger::parse_transactions (in=@0xbfb4b4bc,
-    account=0x813be00, entry=@0x813e2f8, kind=@0xbfb4b2f8, beg_pos=63)
-    at textual.cc:340
-...
-  :END:
-  :PROPERTIES:
-  :Submitter: Nathan Jones <nathanj@insightbb.com>
-  :Version: 2.6.0.90
-  :Ticket: 191
-  :UUID: A4F87484-1B1D-4C76-B0AB-70E20FBA9D1B
-  :END:
-  [2008-04-23 Wed]
-* WONTFIX [#C] Non-balanced virtual transaction should fail.
-  - State "WONTFIX"    [2008-07-17 Thu 20:44] \\
-    This is not an error because:
-    
-    1. specifying no amount is the same as specifying an uncommoditized zero.
-    2. the second line will "auto-balance" with the first line.
-    3. the third line simply is a no-op, which I allow for the sake of script
-       writers.
-    
-    There could be a warning for something like this, but then that's the
-    danger of using () around an account name: you are explicitly stating you
-    do not wish the transaction to be balanced.
-  - State "TODO"       [2008-04-23 Wed 13:35] \\
-    Martin Blais <blais@furius.ca> writes:
-    > Well... should "probably" fail. I mean, it does nothing, so it's
-    > probably an error. I'd make it fail.
-  Shouldn't this fail? 
-  :DATA:
-2004/03/25 Donations
-    Assets:Checking                   $100.00
-    Assets:Savings
-    (Income:Donations)       
-  :END:
-  :PROPERTIES:
-  :Submitter: Martin Blais <blais@furius.ca>
-  :Version: 2.6
-  :Ticket: 190
-  :UUID: 75E83651-B130-4978-89C7-DFED4E874E8F
-  :END:
-  [2008-04-23 Wed]
-* DONE [#A] crash
-  - State "DONE"       [2008-07-17 Thu 17:39]
-  :DATA:
-2007-12-31 * Start of year / Opening balances.
-  Assets:Investments:HSBC-Broker             1000 USD @ 101.00 JPY
-  Equity:Opening-Balances:Cost              -1000 USD
-  :END:
-  :PROPERTIES:
-  :Submitter: Martin Blais <blais@furius.ca>
-  :Version: 2.6
-  :Ticket: 177
-  :UUID: 45605775-F9E3-4C83-8BF2-616905178E82
-  :END:
-  [2008-04-12 Sat]
-* DONE [#B] Expressions don't work.
-  - State "DONE"       [2008-07-17 Thu 21:37]
-  - State "TODO"       [2008-04-12 Sat 14:58] \\
-    Martin Blais <blais@furius.ca> writes:
-    > Note the typo in the error too: "evalute" -> "evaluate".
-  :DATA:
-2007-12-31 * Start of year / Opening balances.
-  Assets:Investments:HSBC-Broker             1000 USD
-  Equity:Opening-Balances:Cost            -101000 JPY @ 1/101.00 USD
-  :END:
-  :PROPERTIES:
-  :Submitter: Martin Blais <blais@furius.ca>
-  :Version: 2.6
-  :Ticket: 178
-  :UUID: DA9F2346-CD90-4E22-B2F0-2670532456BA
-  :END:
-  [2008-04-12 Sat]
-* DONE [#A] Reconciling is broken again; I need a way to verify Emacs output :EMACS:
-  - State "DONE"       [2008-07-17 Thu 23:40] \\
-    Reconciling is now line-based in 2.6.1, not character based (which has serious
-    issues with UTF-8 at the moment).
-  :PROPERTIES:
-  :Submitter: John Wiegley <johnw@newartisans.com>
-  :Version: 2.6
-  :Ticket: 64
-  :UUID: 7A8C49FB-F9B8-4ECF-8720-9E29559F3CA6
-  :END:
-  [2008-04-11 Fri]
-* DONE [#A] Marking a transaction cleared may delete text in ledger-mode :EMACS:
-  - State "DONE"       [2008-07-18 Fri 02:28]
-  I started the groundwork for this, now I just have to add code to insert
-  whitespace if needed to keep each transaction valid.
-  :PROPERTIES:
-  :Submitter: John Wiegley <johnw@newartisans.com>
-  :Version: 2.6
-  :Ticket: 70
-  :UUID: 0EB5602F-66BE-46C0-8A74-5EB5DBAF2E07
-  :END:
-  [2008-04-11 Fri]
-* DUPLICATE [#A] DOS format line endings are fooling the parser
-  - State "DUPLICATE"  [2008-08-16 Sat 03:56] \\
-    Duplicated by #43.
-  The \r\n ending is having only the \n stripped, making the \r appear as part
-  of the filename when doing a !include.
-  :PROPERTIES:
-  :Submitter: John Wiegley <johnw@newartisans.com>
-  :Version: 2.6
-  :Ticket: 129
-  :UUID: 6DF2250F-C54D-4F67-AFB6-F8656020D394
-  :END:
-  [2008-04-11 Fri]
-* DONE [#B] Install patches for Ledger 2.6 from Simon Michael
-  - State "DONE"       [2008-07-17 Thu 21:41] \\
-    I'm only taking the first patch for 2.6.  The other two need a bit more
-    polish before I would put them in the standard distro, instead of just
-    posting them to the Wiki or some such.
-  :PROPERTIES:
-  :Submitter: John Wiegley <johnw@newartisans.com>
-  :Version: 2.6
-  :Ticket: 60
-  :UUID: 0C311A59-701A-4D30-BBDB-924F12878724
-  :Attachments: sm001.patch sm002.patch sm004.patch 
-  :END:
-  [2008-04-11 Fri]
-* WORKSFORME [#B] ledger -MA doesn't give a monthly report if some months have no transactions
-  - State "WORKSFORME" [2008-07-17 Thu 20:14] \\
-    This works for me.
-  :PROPERTIES:
-  :Submitter: John Wiegley <johnw@newartisans.com>
-  :Version: 2.6
-  :Ticket: 61
-  :UUID: FD118D79-3B8F-48CE-89D0-F0FFD46F6C49
-  :END:
-  [2008-04-11 Fri]
-* INVALID [#B] Remove bogus reference to Emacs in project documentation (2.6)
-  - State "INVALID"    [2008-07-13 Sun 22:16]
-  :PROPERTIES:
-  :Submitter: John Wiegley <johnw@newartisans.com>
-  :Version: 2.6
-  :Ticket: 72
-  :UUID: 7455E4A7-16FD-4F41-8A33-CF44F6E690B2
-  :END:
-  [2008-04-11 Fri]
-* DONE [#B] Crash reading .timelog file
-  - State "DONE"       [2008-07-17 Thu 18:08]
-  2.6b aborts if the last entry is the timelog is an "in" event.
-  :PROPERTIES:
-  :Submitter: John Wiegley <johnw@newartisans.com>
-  :Version: 2.6
-  :Ticket: 128
-  :UUID: C7A32276-11A7-44F1-99CD-6F0CA7330340
-  :END:
-  [2008-04-11 Fri]
-* DUPLICATE [#B] Problems parsing an entry
-  - State "DUPLICATE"  [2008-07-18 Fri 02:12]
-  :OUTPUT:
-djw@hector:~$ ledger bal 
-
-2007/03/07 Irena 
-Liabilities:Cash:Irena 18.00 USD 
-Liabilities:Order1:Irena -4 halfg 
-Liabilities:Order1:Irena -1 gouda 
-Error: /home/djw/milk.ledger, line 106: Entry above does not balance; remainder is: 18.00 USD 
--1 gouda 
--4 halfg 
-  :END:
-  Here is what is in the prices.db file:
-  :DATA:
-C 1.00 USD = $1.21 
-P 2007/03/04 00:00:00 halfg 2.75 USD 
-P 2007/03/04 00:00:00 gouda 7 USD 
-  :END:
-  So you multiply 4*2.75 and add 7, you get 18.  Since the units are USD, what
-  is the beef?  Why isn't ledger seeing 1 gouda and 4 halfg as 18 USD?
-  :PROPERTIES:
-  :Submitter: John Wiegley <johnw@newartisans.com>
-  :Version: 2.6
-  :Ticket: 133
-  :UUID: AD876FB0-E7B8-4C89-9E23-2D25AF8D5F0A
-  :END:
-  [2008-04-11 Fri]
-* DUPLICATE [#B] Need to strip \r from \r\n line endings
-  - State "DUPLICATE"  [2008-07-13 Sun 22:38]
-  :PROPERTIES:
-  :Submitter: John Wiegley <johnw@newartisans.com>
-  :Version: 2.6
-  :Ticket: 139
-  :UUID: C7A61E89-08D1-4151-AF2E-92F666148F19
-  :END:
-  [2008-04-11 Fri]
-* DONE [#C] My "bal" command is broken again
-  - State "DONE"       [2008-07-17 Thu 21:22]
-  :OUTPUT:
-~/Reference/Computing/Systems/Linux $ bal
-        3,848.34
-         EC 450.05  Assets
-Error: Cannot compare amounts with different commodities: EC and $
-  :END:
-  :PROPERTIES:
-  :Submitter: John Wiegley <johnw@newartisans.com>
-  :Version: 2.6
-  :Ticket: 66
-  :UUID: 8159EF00-B95D-4E83-9927-7DB461CD2CC9
-  :END:
-  [2008-04-11 Fri]
-* DONE [#C] When reporting the unbalanced remainder, round it	       :FEATURE:
-  - State "DONE"       [2008-07-17 Thu 20:52]
-  This is so that it shows what ledger is really thinking.
-  :PROPERTIES:
-  :Submitter: John Wiegley <johnw@newartisans.com>
-  :Version: 2.6
-  :Ticket: 125
-  :UUID: 4BF95CDC-972F-4F39-9F54-7BEFD404F9AA
-  :END:
-  [2008-04-11 Fri]
-* WORKSFORME [#C] ledger -Mn
-  - State "WORKSFORME" [2008-08-17 Sun 20:13]
-  Is not the same as: ledger -M -n
-  :PROPERTIES:
-  :Submitter: John Wiegley <johnw@newartisans.com>
-  :Version: 2.6
-  :Ticket: 126
-  :UUID: 2C3B5DCE-AB7F-41A2-BF93-56CC1222AE64
-  :END:
-  [2008-04-11 Fri]
-* DONE [#A] ledger 2.6 shows no timelog entries
-  - State "DONE"       [2008-07-17 Thu 19:08]
-  - State "TODO"       [2008-08-18 Mon 02:15] \\
-    Simon Michael <simon@joyful.com> writes:
-    > And if ends with a "i" record, ledger gives a bus error. This is on
-    > leopard.
-  Ledger 2.5 shows entries in my timelog file, but 2.6.1-pre shows none. There
-  is no parse error.
-  :PROPERTIES:
-  :Submitter: Simon Michael <simon@joyful.com>
-  :Version: 2.6.1b
-  :Ticket: 57
-  :UUID: C13F0BDF-4E15-442E-BBB7-265B0A37457C
-  :END:
-  [2008-04-09 Wed]
 * DONE [#A] Core dump on simple input.
   - State "DONE"       [2008-07-17 Thu 17:38]
   :DATA:
@@ -1810,32 +979,20 @@ Error: Cannot compare amounts with different commodities: EC and $
   :UUID: 843B6A53-C3C2-45BB-A92C-558AF6F02014
   :END:
   [2008-04-07 Mon]
-* DONE [#A] Dates (used with -b -e and -p parameters) are broken
-  - State "DONE"       [2008-07-17 Thu 06:20] \\
-    Patch checked in.  Thanks, Nathan!
-  - State "TODO"       [2008-04-06 Sun 21:59] \\
-    Nathan Jones <nathanj@insightbb.com> writes:
-    > The attached patch plus the one in #38 should fix this.
-  The release (2.6.0.90) doesn't seem to properly parse dates.  The svn
-  version (rev. 1048) works fine for full dates (yyyy/mm/dd) with the -b -e
-  params but nothing else works.  For example in the following only the last
-  one works:
-  :SCRIPT:
-ledger -f my.ledger -b mar -e apr print
-ledger -f my.ledger -b 03/01 -e -04/01 apr print
-ledger -f my.ledger -b 03/01 -e 04/01 print
-ledger -f my.ledger -b 08/03/01 -e 08/04/01 print
-ledger -f my.ledger -b 2008/03/01 -e 2008/04/01 print
+* DONE [#A] crash
+  - State "DONE"       [2008-07-17 Thu 17:39]
+  :DATA:
+2007-12-31 * Start of year / Opening balances.
+  Assets:Investments:HSBC-Broker             1000 USD @ 101.00 JPY
+  Equity:Opening-Balances:Cost              -1000 USD
   :END:
-  The -p param doesn't seem to work at all.
   :PROPERTIES:
-  :Submitter: kmt <kmt@ftml.net>
-  :Version: 2.6.0.90
-  :Ticket: 49
-  :Attachments: 290.patch
-  :UUID: A95B2E0F-095D-4314-BC4D-3CEC42203FB1
+  :Submitter: Martin Blais <blais@furius.ca>
+  :Version: 2.6
+  :Ticket: 177
+  :UUID: 45605775-F9E3-4C83-8BF2-616905178E82
   :END:
-  [2008-04-06 Sun]
+  [2008-04-12 Sat]
 * DONE [#A] Crash on input.
   - State "DONE"       [2008-07-17 Thu 17:38]
   - State "TODO"       [2008-04-06 Sun 10:23] \\
@@ -1890,192 +1047,92 @@ banane:~/__accounting/.../rbcinv/invest$
   :UUID: B2B79746-5E3B-40D3-B6ED-CCF27364DD5F
   :END:
   [2008-04-06 Sun]
-* DONE [#B] Crash on input.
-  - State "DONE"       [2008-07-17 Thu 17:45]
-  :DATA:
-2008/01/02 ! Sell -- on 2007/12/27 -- CRA  --  APPLERA CORP COM CELERA GROUP CA EXCHANGE RATE     .96760
-  Assets:Investments:RBC-Broker:Account-CAD    -8.00 CRA  @ 16.93 USD
-  Assets:Investments:RBC-Broker:Account-CAD    21.41 CAD
-  Expenses:Financial:Commissions               -9.95 USD
-  Expenses:Financial:Fees                      -0.01 USD
-  :END:
-  :PROPERTIES:
-  :Submitter: Martin Blais <blais@furius.ca>
-  :Version: 2.6
-  :Ticket: 45
-  :UUID: 93CFAFEB-46EA-4E47-8F0A-069309D6EE3A
-  :END:
-  [2008-04-06 Sun]
-* DONE [#B] Crash on input -- spurious comma
-  - State "DONE"       [2008-07-17 Thu 17:49]
-  :DATA:
-2008/02/25 * bla bla bnla
-  Assets:Fixed:Home                             235000.00 CAD
-  Expenses:Home:Acquisition:Escrow              -82250.00 CAD
-  Liabilities:RBC:Mortgage:Loan                     -1.00 CAD,  ; opening of account
-  Liabilities:RBC:Mortgage:Loan                -152749.00 CAD
-  :END:
-  :PROPERTIES:
-  :Submitter: Martin Blais <blais@furius.ca>
-  :Version: 2.6
-  :Ticket: 48
-  :UUID: 517CB118-49A5-42B2-ACFD-1A63DCF163AA
-  :END:
-  [2008-04-06 Sun]
-* DONE [#B] Coredump.
-  - State "DONE"       [2008-07-17 Thu 17:50]
-  :DATA:
-2008/01/02 * Sell -- on 2007/12/27 -- CRA  --  APPLERA CORP COM CELERA GROUP CA EXCHANGE RATE     .96760
-  Assets:Investments:RBC-Broker:Account-CAD        -8.00 CRA @ 16.93 USD      ; lot:ba8c951719fd
-  Expenses:Financial:Commissions                    9.95 USD
-  Expenses:Financial:Fees                           0.01 USD
-  Assets:Investments:RBC-Broker:Account-CAD       125.48 USD
-  Assets:Investments:RBC-Broker:Account-CAD      -125.48 USD ; @ 0.96760 USD
-  Assets:Investments:RBC-Broker:Account-CAD       121.41 CAD
-  :END:
-  :PROPERTIES:
-  :Submitter: Martin Blais <blais@furius.ca>
-  :Version: 2.6
-  :Ticket: 50
-  :UUID: A18B37A4-68DB-4F3A-92D5-3962D010CA0B
-  :END:
-  [2008-04-06 Sun]
-* DONE [#B] Getting an abort with a self-referential pricing statement
-  - State "DONE"       [2008-07-17 Thu 17:51] \\
-    Getting this to work correctly is going to need more work (which has already
-    been logged as another bug).
-  :DATA:
-2008/01/02 sell
-  Assets:Investments      130.41 CAD @ 1.03352277 CAD
-  Assets:Investments       -8.00 CRA @ 16.93 USD
-  :END:
-  Passing this through the reg command produces a SIGABRT.
-  :PROPERTIES:
-  :Submitter: Martin Blais <blais@furius.ca>
-  :Version: 2.6
-  :Ticket: 51
-  :UUID: A21E4DCC-6112-441F-B76D-95CF47BA658D
-  :END:
-  [2008-04-06 Sun]
-* DONE [#A] Strip \r from lines when parsing on Windows
-  - State "DONE"       [2008-07-17 Thu 18:31]
-  It sounds like I'm not stripping the \r from the \r\n sequence, and thus
-  it's interpreting the \r as part of the file name. I'll add this to the
-  buglist for 3.0.
-  :PROPERTIES:
-  :Submitter: John Wiegley <johnw@newartisans.com>
-  :Version: 2.6
-  :Ticket: 43
-  :UUID: 458B2B74-AF2D-4D9D-89E4-D8AC26CFD531
-  :END:
-  [2008-04-05 Sat]
-* WORKSFORME [#B] Problems with the prices.db file
-  - State "WORKSFORME" [2008-07-17 Thu 21:45] \\
-    Pricing entries must start with a capital P, not a lowercase p.
-
-    This bug also mentions other issues, which are now contained in another
-    bug.
-  - State "TODO"       [2008-04-05 Sat 20:06] \\
-    However, even though I do not receive parse errors any longer, the
-    price-db command does not work the way I expect it to. When I issue a
-    'bal' option, ledger still outputs the values in their commodity rather
-    than the dollar amount, so even though I am not receiving an error, it
-    still does not seem to work for me.
-  My prices.db file looks like: 
-  :DATA:
-p 2007/01/14 02:18:01 WMCVX $5.04 
-p 2007/01/14 02:18:02 WMICX $6.65
-  :END:
-  Notice there is no carriage return after the second line and that the file
-  begins on line 1.
-  
-  When I run 'ledger --price-db prices.db bal' I get the following: 
-  :OUTPUT:
-Error: prices.db, line 2: Failed to parse dateP 
-Error: Errors parsing file 'life/finances/ledger/prices.db' 
-  :END:
-
-  If I have a carriage return on the second line, I get errors for both line 2
-  and line 3. If i have one entry on a single line, I get an error for line 2.
-  
-  Any ideas? 
-  
-  Also, I would like to get the prices.db perl script working to automatically
-  grab the values from Fidelity, but I have not been able to do anything
-  beyond installing the appropriate perl modules. If there are any
-  instructions for this usage, I would appreciate it.
-  :PROPERTIES:
-  :Submitter: John Wiegley <johnw@newartisans.com>
-  :Version: 2.6
-  :Ticket: 40
-  :UUID: B8173D32-D7EB-4619-8488-B2C641431FDE
-  :END:
-  [2008-04-05 Sat]
-* WONTFIX [#B] Problem with pricing specification in prices.db file
-  - State "WONTFIX"    [2008-07-17 Thu 21:42] \\
-    Pricing info is not used for balancing entries.  For that, you'd need to use
-    "@ ... USD" for the halfg and gouda amounts, so that Ledger could be certain
-    your entries balances to zero.
-  - State "TODO"       [2008-04-05 Sat 20:09] \\
-    I changed it to this below, and ledger stopped complaining: 
-    :DATA:
-2007/03/07 Irena 
-    Liabilities:Cash:Irena 7.00 USD 
-    Liabilities:Order1:Irena -1 gouda 
-
-2007/03/07 Irena 
-    Liabilities:Cash:Irena 11.00 USD 
-    Liabilities:Order1:Irena -4 halfg 
-    :END:
-  :OUTPUT:
-djw@hector:~$ ledger bal 
-
-2007/03/07 Irena 
-    Liabilities:Cash:Irena 18.00 USD 
-    Liabilities:Order1:Irena -4 halfg 
-    Liabilities:Order1:Irena -1 gouda 
-Error: /home/djw/milk.ledger, line 106: Entry above does not balance; remainder is: 18.00 USD 
--1 gouda 
--4 halfg
-  :END:
-  Here is what is in the prices.db file: 
-  :DATA:
-C 1.00 USD = $1.21 
-P 2007/03/04 00:00:00 halfg 2.75 USD 
-P 2007/03/04 00:00:00 gouda 7 USD 
-  :END:
-  So you multiply 4*2.75 and add 7, you get 18. Since the units are USD, what
-  is the beef? Why isn't ledger seeing 1 gouda and 4 halfg as 18 USD?
-  :PROPERTIES:
-  :Submitter: John Wiegley <johnw@newartisans.com>
-  :Version: 2.6
-  :Ticket: 42
-  :UUID: 43CFF7FF-DA09-478C-AED1-2D2756BACA09
-  :END:
-  [2008-04-05 Sat]
-* DONE [#A] -p "this month" doesn't work at all anymore
-  - State "DONE"       [2008-07-17 Thu 18:14] \\
-    This has been fixed, and represents a very major set of fixes to date
-    handling in general.  Thanks to Nathan for hitting the nail on the head.
-  - State "TODO"       [2008-04-05 Sat 18:57] \\
+* DONE [#A] Dates (used with -b -e and -p parameters) are broken
+  - State "DONE"       [2008-07-17 Thu 06:20] \\
+    Patch checked in.  Thanks, Nathan!
+  - State "TODO"       [2008-04-06 Sun 21:59] \\
     Nathan Jones <nathanj@insightbb.com> writes:
-    > The patch fixes a command that I have aliased to show my last two months
-    > of transactions: `ledger -d 'd>=[last month]' reg checking`
-    > 
-    > The problem is that the 'last month' would get parsed as 1970/1/1, so it
-    > would show every transaction.
+    > The attached patch plus the one in #38 should fix this.
+  The release (2.6.0.90) doesn't seem to properly parse dates.  The svn
+  version (rev. 1048) works fine for full dates (yyyy/mm/dd) with the -b -e
+  params but nothing else works.  For example in the following only the last
+  one works:
+  :SCRIPT:
+ledger -f my.ledger -b mar -e apr print
+ledger -f my.ledger -b 03/01 -e -04/01 apr print
+ledger -f my.ledger -b 03/01 -e 04/01 print
+ledger -f my.ledger -b 08/03/01 -e 08/04/01 print
+ledger -f my.ledger -b 2008/03/01 -e 2008/04/01 print
+  :END:
+  The -p param doesn't seem to work at all.
+  :PROPERTIES:
+  :Submitter: kmt <kmt@ftml.net>
+  :Version: 2.6.0.90
+  :Ticket: 49
+  :Attachments: 290.patch
+  :UUID: A95B2E0F-095D-4314-BC4D-3CEC42203FB1
+  :END:
+  [2008-04-06 Sun]
+* DONE [#A] Entry command produces two liability transactions
+  - State "DONE"       [2008-07-17 Thu 22:01]
+  - State "TODO"       [2008-05-03 Sat 22:27] \\
+    This is being a real problem for drewr, arete and pll!  This one gets fixed
+    for 2.6.1.
   :OUTPUT:
-~ $ DEBUG_CLASS=ledger.config.predicates *ledger -p "this month" reg cash
-Predicate: d>=[1969/12/31]&d<[1970/01/31]&/(?:cash)/
+arete$ ledger entry 2007/11/11 safeway groceries \$10.00 american
+
+2007/11/11   Safeway
+        Expenses:Groceries                                $10.00
+        Liabilities:American Express                     $-30.17
+        Liabilities:American Express                      $20.17
   :END:
   :PROPERTIES:
-  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Submitter: Will Glozer <will@glozer.net>
   :Version: 2.6
-  :Ticket: 38
-  :Attachments: 289.patch
-  :UUID: 0CF00621-31C4-4E5A-B260-78B4DA8C3616
+  :Ticket: 8
+  :UUID: D7DD54D7-8870-4D6D-92A0-90717692F8F2
   :END:
-  [2008-04-04 Fri]
+  [2007-11-12 Mon]
+* DONE [#A] ledger 2.6 shows no timelog entries
+  - State "DONE"       [2008-07-17 Thu 19:08]
+  - State "TODO"       [2008-08-18 Mon 02:15] \\
+    Simon Michael <simon@joyful.com> writes:
+    > And if ends with a "i" record, ledger gives a bus error. This is on
+    > leopard.
+  Ledger 2.5 shows entries in my timelog file, but 2.6.1-pre shows none. There
+  is no parse error.
+  :PROPERTIES:
+  :Submitter: Simon Michael <simon@joyful.com>
+  :Version: 2.6.1b
+  :Ticket: 57
+  :UUID: C13F0BDF-4E15-442E-BBB7-265B0A37457C
+  :END:
+  [2008-04-09 Wed]
+* DONE [#A] Ledger fails to balance a simple entry
+  - State "DONE"       [2008-07-28 Mon 02:05] \\
+    This was quite the nasty little bug.
+  I just installed v2.6.1 and ledger reports errors with some transactions
+  that were fine with v2.5:
+  :OUTPUT:
+[21:51:49 vinod]:~/src/ledger $ ledger --version
+Ledger 2.6.1, the command-line accounting tool
+
+[21:51:55 vinod]:~/src/ledger $ ledger bal
+While balancing entry:
+ 2007/02/02 RD VMMXX
+     Assets:Investments:Vanguard:VMMXX  0.350 VMMXX @ $1.00
+     Income:Dividends:Vanguard:VMMXX        $-0.35
+Unbalanced remainder is:
+             $-0.35
+Error: "/home/vinod/data/ledger.dat", line 52379: Entry does not balance
+  :END:
+  :PROPERTIES:
+  :Submitter: Vinod Kurup <vvkurup@gmail.com>
+  :Version: 2.6.1b
+  :Ticket: 205
+  :UUID: 0CA014F9-E309-4840-9085-71EC1F46DEC1
+  :END:
+  [2008-07-28 Mon]
 * DONE [#A] Make -e use an inclusive end date, and -E an exclusive one
   - State "DONE"       [2008-07-17 Thu 06:22] \\
     -e has been reverted back to its old behavior, to avoid confusing people.
@@ -2088,6 +1145,59 @@ Predicate: d>=[1969/12/31]&d<[1970/01/31]&/(?:cash)/
   :UUID: A440BB5E-072B-4C75-A235-C551EA090F81
   :END:
   [2008-04-04 Fri]
+* DONE [#A] Marking a transaction cleared may delete text in ledger-mode :EMACS:
+  - State "DONE"       [2008-07-18 Fri 02:28]
+  I started the groundwork for this, now I just have to add code to insert
+  whitespace if needed to keep each transaction valid.
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 70
+  :UUID: 0EB5602F-66BE-46C0-8A74-5EB5DBAF2E07
+  :END:
+  [2008-04-11 Fri]
+* DONE [#A] Reconciling is broken again; I need a way to verify Emacs output :EMACS:
+  - State "DONE"       [2008-07-17 Thu 23:40] \\
+    Reconciling is now line-based in 2.6.1, not character based (which has serious
+    issues with UTF-8 at the moment).
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 64
+  :UUID: 7A8C49FB-F9B8-4ECF-8720-9E29559F3CA6
+  :END:
+  [2008-04-11 Fri]
+* DONE [#A] Strip \r from lines when parsing on Windows
+  - State "DONE"       [2008-07-17 Thu 18:31]
+  It sounds like I'm not stripping the \r from the \r\n sequence, and thus
+  it's interpreting the \r as part of the file name. I'll add this to the
+  buglist for 3.0.
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 43
+  :UUID: 458B2B74-AF2D-4D9D-89E4-D8AC26CFD531
+  :END:
+  [2008-04-05 Sat]
+* DONE [#A] trailing whitespace is significant in 2.6
+  - State "DONE"       [2008-04-05 Sat 18:56] \\
+    The first patch fixes parsing account names when a single space follows.
+    This might close ticket #3.
+  - State "TODO"       [2008-04-05 Sat 18:55] \\
+    The following patch, submitted by Nathan Jones, proposes to fix this problem.
+  - State "TODO"       [2007-09-22 Sat 04:26] \\
+    Simon, have you tried this with 2.6.1-svn?  I believe this is something I
+    fixed.
+  Unlike 2.5, 2.6 considers an account name followed by whitespace to be
+  different from one without (when no amount is specified).
+  :PROPERTIES:
+  :Submitter: Simon Michael <simon@joyful.com>
+  :Version: 2.6
+  :Ticket: 3
+  :Attachments: 288.patch
+  :UUID: FB2330E1-AD78-4559-A885-A488DFDF3DC1
+  :END:
+  [2007-09-22 Sat]
 * DONE [#B] -e doesn't seem to work for providing an end date
   - State "DONE"       [2008-04-04 Fri 14:34] \\
     There was a problem with the -e date parsing.  I now interpret "-e june"
@@ -2135,28 +1245,305 @@ $
   :UUID: 1DE6FB08-93D2-47C8-A5A3-3379BA76360D
   :END:
   [2008-04-04 Fri]
-* DONE [#C] Multiple commodities in gnucash crash ledger
-  - State "DONE"       [2008-07-17 Thu 21:26]
-  - State "TODO"       [2008-03-27 Thu 19:54] \\
-    I still have to review the patch and make the changes, before this gets
-    closed.
-  - State "TODO"       [2008-03-27 Thu 15:20] \\
-    slanack writes:
-    > The proposed Fix works for me.  The problem was that <split:quantity>
-    > received the `transaction commodity' instead of the correct `account
-    > commodity'.  There should really be a check if the account commodity has
-    > been defined.
-  I am using transactions between accounts with different base commodities in
-  gnucash.  Ledger reports a segfault when reading the gnucash file and using
-  the command `print`.
+* DONE [#B] 2.x value expression syntax must be restored
+  - State "DONE"       [2008-08-04 Mon]
+  The only way this is going to really be possible is with a battery of unit tests.
   :PROPERTIES:
-  :Submitter: slanack
-  :Version: 2.6.0.90
-  :Ticket: 35
-  :UUID: DAAF3481-1B7A-4F4A-9EC6-575104655B1B
-  :Attachments: gnucash.cc.patch gnucash-minimal.xml
+  :UUID: AEB2D4B6-6968-44A6-A3F5-63A42CEDF254
   :END:
-  [2008-03-23 Sun]
+  [2008-07-27 Sun]
+* DONE [#B] Add a link to the Fink package for Ledger on the Ledger page
+  SCHEDULED: <2007-10-28 Sun>
+  - State "DONE"       [2007-10-28 Sun 22:33]
+  :PROPERTIES:
+  :ARCHIVE_TIME: 2007-11-04 Sun 23:42
+  :ARCHIVE_CATEGORY: Computer
+  :UUID: BEAF3CBA-298C-4711-95EC-E437915D2D3E
+  :END:
+  [2007-10-27 Sat] [[message://m2ve8rnc8c.fsf@dnab423967.stanford.edu][fink package for ledger]]
+* DONE [#B] Add a way for building in any directory (other than ~/Products) in acprep
+  - State "DONE"       [2008-08-08 Fri]
+  :PROPERTIES:
+  :UUID: FFA63988-237E-4B2A-AC12-6CA362AEC7B1
+  :END:
+  [2008-07-24 Thu]
+* DONE [#B] Command results in assertion failure
+  - State "DONE"       [2008-07-17 Thu 17:44]
+  The command is:
+  :SCRIPT:
+ledger -s bal --sort O wedding
+  :END:
+  This is against my own ledger file.
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 23
+  :UUID: AB684BBE-F093-4F77-BCFB-2F4E0D60AA9C
+  :END:
+  [2007-12-10 Mon]
+* DONE [#B] Compile errors with gcc 4.3
+  - State "DONE"       [2008-05-23 Fri 03:59] \\
+    Thanks for that update; the earlier one failed to build on openbsd-x86-normal.
+  - State "TODO"       [2008-05-22 Thu 20:50] \\
+    Nathan Jones <nathanj@insightbb.com> writes:
+    > I had debug on, so I didn't notice a few spots that needed <stdlib>
+    > included.
+  - State "TODO"       [2008-05-22 Thu 20:49] \\
+    Nathan Jones <nathanj@insightbb.com> writes:
+    > Another fix.
+  - State "TODO"       [2008-05-20 Tue 19:14] \\
+    Patch has been applied.
+  gcc 4.3 moved some header files around, leading to compile errors. Attached
+  is the patch for git.
+  :PROPERTIES:
+  :Submitter: Nathan Jones <nathanj@insightbb.com>
+  :Version: 2.6
+  :Ticket: 197
+  :UUID: E9AD679E-6A13-456E-820C-51C682957B55
+  :Attachments: 0001-Fix-compile-errors-with-gcc-4.3.patch 0002-Fix-compile-errors-with-gcc-4.3.patch
+  :END:
+  [2008-05-20 Tue]
+* DONE [#B] Coredump.
+  - State "DONE"       [2008-07-17 Thu 17:50]
+  :DATA:
+2008/01/02 * Sell -- on 2007/12/27 -- CRA  --  APPLERA CORP COM CELERA GROUP CA EXCHANGE RATE     .96760
+  Assets:Investments:RBC-Broker:Account-CAD        -8.00 CRA @ 16.93 USD      ; lot:ba8c951719fd
+  Expenses:Financial:Commissions                    9.95 USD
+  Expenses:Financial:Fees                           0.01 USD
+  Assets:Investments:RBC-Broker:Account-CAD       125.48 USD
+  Assets:Investments:RBC-Broker:Account-CAD      -125.48 USD ; @ 0.96760 USD
+  Assets:Investments:RBC-Broker:Account-CAD       121.41 CAD
+  :END:
+  :PROPERTIES:
+  :Submitter: Martin Blais <blais@furius.ca>
+  :Version: 2.6
+  :Ticket: 50
+  :UUID: A18B37A4-68DB-4F3A-92D5-3962D010CA0B
+  :END:
+  [2008-04-06 Sun]
+* DONE [#B] Crash on input -- spurious comma
+  - State "DONE"       [2008-07-17 Thu 17:49]
+  :DATA:
+2008/02/25 * bla bla bnla
+  Assets:Fixed:Home                             235000.00 CAD
+  Expenses:Home:Acquisition:Escrow              -82250.00 CAD
+  Liabilities:RBC:Mortgage:Loan                     -1.00 CAD,  ; opening of account
+  Liabilities:RBC:Mortgage:Loan                -152749.00 CAD
+  :END:
+  :PROPERTIES:
+  :Submitter: Martin Blais <blais@furius.ca>
+  :Version: 2.6
+  :Ticket: 48
+  :UUID: 517CB118-49A5-42B2-ACFD-1A63DCF163AA
+  :END:
+  [2008-04-06 Sun]
+* DONE [#B] Crash on input.
+  - State "DONE"       [2008-07-17 Thu 17:45]
+  :DATA:
+2008/01/02 ! Sell -- on 2007/12/27 -- CRA  --  APPLERA CORP COM CELERA GROUP CA EXCHANGE RATE     .96760
+  Assets:Investments:RBC-Broker:Account-CAD    -8.00 CRA  @ 16.93 USD
+  Assets:Investments:RBC-Broker:Account-CAD    21.41 CAD
+  Expenses:Financial:Commissions               -9.95 USD
+  Expenses:Financial:Fees                      -0.01 USD
+  :END:
+  :PROPERTIES:
+  :Submitter: Martin Blais <blais@furius.ca>
+  :Version: 2.6
+  :Ticket: 45
+  :UUID: 93CFAFEB-46EA-4E47-8F0A-069309D6EE3A
+  :END:
+  [2008-04-06 Sun]
+* DONE [#B] Crash reading .timelog file
+  - State "DONE"       [2008-07-17 Thu 18:08]
+  2.6b aborts if the last entry is the timelog is an "in" event.
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 128
+  :UUID: C7A32276-11A7-44F1-99CD-6F0CA7330340
+  :END:
+  [2008-04-11 Fri]
+* DONE [#B] Create regression tests for all the closed 2.6.1 bugs
+  - State "DONE"       [2008-08-05 Tue]
+  This is a test that 'make check' would run after running the UnitTests.
+  :PROPERTIES:
+  :UUID: 577AE0E8-A8D4-48F4-AF03-6B904CA3192B
+  :END:
+  [2008-08-04 Mon]
+* DONE [#B] Enable "buildbot try" on the VPS
+  - State "DONE"       [2008-05-03 Sat]
+  :PROPERTIES:
+  :UUID: 6A9A8E1B-29E9-4B06-9AE3-BBB2D5BB6D9E
+  :END:
+  [2008-04-24 Thu]
+* DONE [#B] Expressions don't work.
+  - State "DONE"       [2008-07-17 Thu 21:37]
+  - State "TODO"       [2008-04-12 Sat 14:58] \\
+    Martin Blais <blais@furius.ca> writes:
+    > Note the typo in the error too: "evalute" -> "evaluate".
+  :DATA:
+2007-12-31 * Start of year / Opening balances.
+  Assets:Investments:HSBC-Broker             1000 USD
+  Equity:Opening-Balances:Cost            -101000 JPY @ 1/101.00 USD
+  :END:
+  :PROPERTIES:
+  :Submitter: Martin Blais <blais@furius.ca>
+  :Version: 2.6
+  :Ticket: 178
+  :UUID: DA9F2346-CD90-4E22-B2F0-2670532456BA
+  :END:
+  [2008-04-12 Sat]
+* DONE [#B] Find out how to submit a build against a specific branch on Buildbot
+  - State "DONE"       [2008-07-26 Sat]
+  This may simply be a matter of telling the scheduler and Git() object to
+  watch other branches.
+  :PROPERTIES:
+  :UUID: 4B291AFD-00BF-479B-A067-0B01139BA475
+  :END:
+  [2008-04-24 Thu]
+* DONE [#B] Find out why master fails to build on tdelaet's OpenBSD box
+  SCHEDULED: <2008-08-17 Sun>
+  - State "DONE"       [2008-08-17 Sun 06:33] \\
+    It's because his Boost isn't up to date.  I'll have to wait until he has Boost
+    1.35 working OpenBSD 4.4 before we can build anything other than v2.6.1b on
+    his machines.
+  ssh obsd86
+  :PROPERTIES:
+  :UUID: 30186BD0-CD2E-4B22-AD4C-84D7F6552D4B
+  :END:
+  [2008-08-14 Thu]
+* DONE [#B] Find out why Thomas can't fetch my git repo over HTTP
+  - State "DONE"       [2008-04-26 Sat]
+    error: pick-rref: refs/heads/master not found No such ref
+    refs/heads/master at http://newartisans.com/git/ledger.git
+  - State "TODO"       [2008-04-26 Sat 00:16]
+    It turns out this is a bug in git itself, which someone in #git said they
+    are going to work on.
+  :PROPERTIES:
+  :UUID: 5B36755A-03D7-47FF-BE7F-4AFFC570C5FB
+  :END:
+  [2008-04-25 Fri]
+* DONE [#B] Fix the Ledger v2.6.1 branch
+  - State "DONE"       [2008-05-08 Thu]
+  - Every commit must relate to an issue, and name that issue in the commit message.
+  - The comment for every fixed issue must reference the commit that fixed it.
+  - There must be a ChangeLog set for every change, which also names the issue.
+  - Every jww comment must name a Trac issue.
+  :PROPERTIES:
+  :UUID: 1F5B58EB-F5ED-4467-8362-1E5094C19F80
+  :END:
+  [2008-04-21 Mon]
+* DONE [#B] Fix the link on my Ledger project page to sourceforge.net
+  SCHEDULED: <2007-11-06 Tue>
+  - State "DONE"       [2007-11-07 Wed 03:56]
+  :PROPERTIES:
+  :ARCHIVE_TIME: 2007-11-14 Wed 17:14
+  :ARCHIVE_CATEGORY: Ledger-2
+  :UUID: 753361B3-7BE0-45CE-A8E5-B8A277F259C9
+  :END:
+  [2007-11-06 Tue]
+* DONE [#B] Formalize tagging
+  - State "DONE"       [2008-08-05 Tue]
+  Search with "account / tags", similar to "account -- payee".
+  Tagging is any note with :tag: in it.
+  Entries now need notes.
+  :PROPERTIES:
+  :UUID: 7D8F14BE-4E84-4B40-8C3E-D563B291D4CA
+  :END:
+  [2008-07-31 Thu]
+* DONE [#B] Format ledger.texi in the same manner as the SBCL manual
+  SCHEDULED: <2007-12-04 Tue>
+  - State "DONE"       [2007-12-04 Tue 18:14]
+  :PROPERTIES:
+  :ARCHIVE_TIME: 2007-12-11 Tue 18:33
+  :ARCHIVE_CATEGORY: Computer
+  :UUID: 7D3DE56C-34E2-4992-87CA-B129E19B6FD1
+  :END:
+  [2007-11-28 Wed]
+* DONE [#B] Get 'make check' working again for Ledger 2.7
+  - State "DONE"       [2008-07-27 Sun]
+  This means getting the unit tests running again.
+  :PROPERTIES:
+  :UUID: 987FB7D3-B04E-44E4-9CC4-F0694F96051E
+  :END:
+  [2008-07-26 Sat]
+* DONE [#B] Get 'make distcheck' working again with Ledger 2.6.1
+  - State "DONE"       [2008-07-28 Mon]
+  :PROPERTIES:
+  :UUID: F5850319-0C51-429B-90BE-DDA4400F7F02
+  :END:
+  [2008-04-23 Wed]
+* DONE [#B] Get 'make distcheck' working again with Ledger 2.7
+  - State "DONE"       [2008-08-08 Fri]
+  :PROPERTIES:
+  :UUID: A6AA8D89-51B0-434B-8259-A557FB15BC47
+  :END:
+  [2008-07-27 Sun]
+* DONE [#B] Get Buildbot builds to work on my MacBook Pro
+  - State "DONE"       [2008-04-26 Sat]
+  make[1]: *** No rule to make target `all'.  Stop.
+  :PROPERTIES:
+  :UUID: 1D0FD629-FD7B-4E7F-8E8F-3D73FD725F32
+  :END:
+  [2008-04-24 Thu]
+* DONE [#B] Get the register report to work again
+  - State "DONE"       [2008-08-04 Mon]
+  :PROPERTIES:
+  :UUID: 7D031D7C-A50D-479E-8C31-168D5F3E8CAB
+  :END:
+  [2008-07-26 Sat]
+* DONE [#B] Getting an abort with a self-referential pricing statement
+  - State "DONE"       [2008-07-17 Thu 17:51] \\
+    Getting this to work correctly is going to need more work (which has already
+    been logged as another bug).
+  :DATA:
+2008/01/02 sell
+  Assets:Investments      130.41 CAD @ 1.03352277 CAD
+  Assets:Investments       -8.00 CRA @ 16.93 USD
+  :END:
+  Passing this through the reg command produces a SIGABRT.
+  :PROPERTIES:
+  :Submitter: Martin Blais <blais@furius.ca>
+  :Version: 2.6
+  :Ticket: 51
+  :UUID: A21E4DCC-6112-441F-B76D-95CF47BA658D
+  :END:
+  [2008-04-06 Sun]
+* DONE [#B] Have the version in Ledger's configure.in based off of git-describe
+  - State "DONE"       [2008-05-18 Sun]
+  :PROPERTIES:
+  :UUID: 08E58F60-5437-46BE-A81B-1839FA4921FB
+  :END:
+  [2008-05-08 Thu]
+* DONE [#B] How do I solve the fact that individual transactions ...
+  - State "DONE"       [2008-07-13 Sun 21:43]
+  ... cannot be marked "cleared"?  This causes troubles when multiple accounts
+  are reconciled that involve common transactions.
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 108
+  :UUID: 116B0437-6BA9-4211-B5DE-3BBFA69F1D33
+  :END:
+  [2008-04-11 Fri]
+* DONE [#B] If an exception occurs while --verify --verbose is on, it shows lots and lots of leaked memory
+  - State "DONE"       [2008-08-10 Sun]
+  :PROPERTIES:
+  :UUID: AAB6A9CC-4122-45F0-A69B-5DC7C59901F5
+  :END:
+  [2008-07-27 Sun]
+* DONE [#B] Install patches for Ledger 2.6 from Simon Michael
+  - State "DONE"       [2008-07-17 Thu 21:41] \\
+    I'm only taking the first patch for 2.6.  The other two need a bit more
+    polish before I would put them in the standard distro, instead of just
+    posting them to the Wiki or some such.
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 60
+  :UUID: 0C311A59-701A-4D30-BBDB-924F12878724
+  :Attachments: sm001.patch sm002.patch sm004.patch 
+  :END:
+  [2008-04-11 Fri]
 * DONE [#B] ledger SVN doesn't compile on freebsd-8
   - State "DONE"       [2008-03-17 Mon 16:22] \\
     Clemens writes:
@@ -2221,32 +1608,134 @@ gmake: *** [all] Error 2
   :UUID: C1BE11BD-958D-4E67-8B85-5DA14CD375B4
   :END:
   [2008-03-14 Fri]
-* DUPLICATE [#C] Entry command produces duplicate source transactions
-  - State "DUPLICATE"  [2008-01-31 Thu 14:57] \\
-    drewr writes:
-    > This is a duplicate of ticket #8.
-  - State "TODO"       [2008-01-30 Wed 17:36] \\
-    drewr writes:
-    > This happens with 2.6.1 as well.
-  If I have a ledger file like so:
-  :DATA:
-2008/01/24 Foo
-  Expenses:Foo                              $ 136.56
-  Assets:Checking
-  :END:
-  and then run `ledger entry 2008/01/26 foo expen 45 check`, I get:
-  :OUTPUT:
-2008/01/26 Foo
-    Expenses:Foo                             $ 45.00
-    Assets:Checking                        $ -136.56
-    Assets:Checking                          $ 91.56
-  :END:
-  :Submitter: drewr <#ledger>
+* DONE [#B] ledger.el requires an absolute pathname for the ledger-binary-path :EMACS:
+  - State "DONE"       [2008-07-17 Thu 22:09]
+  This caused me pain after a ledger upgrade. "ledger" should be sufficient if
+  it's in the path.
+  :PROPERTIES:
+  :Submitter: Simon Michael <simon@joyful.com>
   :Version: 2.6
-  :Ticket: 32
-  :UUID: EA246228-3EC7-4834-B55A-455DBA58116C
+  :Ticket: 199
+  :UUID: 7D40038A-DEED-47FA-8D02-0951E94CA175
   :END:
-  [2008-01-30 Wed]
+  [2008-07-12 Sat]
+* DONE [#B] Make it so that nil is considered a valid commodity
+  - State "DONE"       [2007-10-22 Mon 03:23]
+  :PROPERTIES:
+  :ARCHIVE_TIME: 2007-10-29 Mon 04:29
+  :ARCHIVE_CATEGORY: CL-Ledger
+  :UUID: F026F02F-6695-4310-82DA-E8869E56BF3E
+  :END:
+  This is rather than testing for nil everywhere; just have the generic
+  functions relating to commodities able to act on null.
+  [2007-10-20 Sat]
+* DONE [#B] Make sure that every delete is a checked_delete
+  - State "DONE"       [2008-07-27 Sun]
+  :PROPERTIES:
+  :UUID: 5768AB32-D4BB-480E-AD7D-35AF842E2D32
+  :END:
+  [2008-07-25 Fri]
+* DONE [#B] Organize my ledger todo file and integrate it into the main agenda
+  SCHEDULED: <2007-09-30 Sun>
+  - State "DONE"       [2007-10-01 Mon 03:40] \\
+    Done, although I still need to pull all of my old data from Trac and Merlin.
+  :PROPERTIES:
+  :ARCHIVE_TIME: 2007-10-03 Wed 14:01
+  :ARCHIVE_CATEGORY: Computer
+  :UUID: B89FA87D-CAE6-4F78-9442-E25EE572E8FD
+  :END:
+  [2007-09-27 Thu]
+* DONE [#B] Post to the Ledger forums about Ledger's new direction
+  - State "DONE"       [2008-08-04 Mon]
+  :PROPERTIES:
+  :UUID: A11857E2-776B-4A0D-8BE1-D6D75843FBA2
+  :END:
+  [2008-04-24 Thu]
+* DONE [#B] Restore command-line regexps
+  - State "DONE"       [2008-08-04 Mon]
+  :PROPERTIES:
+  :UUID: 0356C673-4300-4CB8-B4A4-869EF0773AF9
+  :END:
+  [2008-08-03 Sun]
+* DONE [#B] Restore deleted directories from src/ledger/lib
+  - State "DONE"       [2008-08-13 Wed]
+  :PROPERTIES:
+  :UUID: E40F6364-3155-49C1-B5B2-A2308C1F401A
+  :END:
+  [2008-08-13 Wed]
+* DONE [#B] Restore reporting filters
+  - State "DONE"       [2008-08-04 Mon]
+  :PROPERTIES:
+  :UUID: 05D95071-2F29-4056-9146-708A13EED837
+  :END:
+  [2008-08-03 Sun]
+* DONE [#B] Restore the VCS history for Ledger from April to September 2004 from backups
+  - State "DONE"       [2008-07-15 Tue]
+  :PROPERTIES:
+  :UUID: 844BCBC7-7DAB-479B-A448-9062F6F5480C
+  :END:
+  [2008-05-28 Wed]
+* DONE [#B] Review the changes I've made to ledger::master since 2.6.0.90
+  - State "DONE"       [2008-05-07 Wed]
+    The only questionable change is the abortive fix to -e.  This should be
+    reverted until a proper fix is found.
+:PATCH:
+--- a/option.cc
++++ b/option.cc
+@@ -482,17 +482,17 @@ OPT_BEGIN(begin, "b:") {
+ OPT_BEGIN(end, "e:") {
+ char buf[128];
+ interval_t interval(optarg);
+-  if (! interval.end)
++  if (! interval.begin)
+   throw new error(std::string("Could not determine end of period '") +
+ 		    optarg + "'");
+ 
+ if (! report->predicate.empty())
+   report->predicate += "&";
+ report->predicate += "d<[";
+-  report->predicate += interval.end.to_string();
++  report->predicate += interval.begin.to_string();
+ report->predicate += "]";
+ 
+-  terminus = interval.end;
++  terminus = interval.begin;
+ } OPT_END(end);
+ 
+ OPT_BEGIN(current, "c") {
+:END:
+  :PROPERTIES:
+  :UUID: CD409D8E-9926-4130-BB83-1179CF5AE84F
+  :END:
+  [2008-04-24 Thu]
+* DONE [#B] Revise the way that error contexts are passed up
+  - State "DONE"       [2008-08-04 Mon]
+  Special care needs to be taken that legitimate uses of exceptions are not too expensive.
+  :PROPERTIES:
+  :UUID: C86755E1-199A-4587-93A8-C18C04FC4996
+  :END:
+  [2008-07-25 Fri]
+* DONE [#B] Segmentation fault on import from GnuCash
+  - State "DONE"       [2008-07-17 Thu 20:04]
+  - State "TODO"       [2008-06-16 Mon 16:05] \\
+    Luben Manolov <lubo@manolov.org> writes:
+    > Import of this GnuCash file causes Segmentation fault
+  I am trying to import a simple GnuCash file and I am getting "Segmentation
+  fault" error. Please find attached the sample file.
+  :OUTPUT:
+./ledger -f sample.gnucash balance
+While balancing entry:
+  2008/06/16 
+      Segmentation fault
+  :END:
+  :PROPERTIES:
+  :Submitter: Luben Manolov <lubo@manolov.org>
+  :Version: 2.6
+  :Ticket: 198
+  :UUID: 266D96D2-DEB5-4BD9-A51B-B2F652E2F550
+  :Attachments: sample.gnucash
+  :END:
+  [2008-06-16 Mon]
 * DONE [#B] Some at-signs are not properly escaped in documentation	   :DOC:
   - State "DONE"       [2008-03-27 Thu 19:42]
   Some of the at signs are not properly escaped in the texi
@@ -2260,95 +1749,133 @@ gmake: *** [all] Error 2
   :UUID: A7CA0F5B-1F08-417A-9071-A223601100CA
   :END:
   [2008-01-28 Mon]
-* DUPLICATE [#A] Bug with date ranges
-  - State "DUPLICATE"  [2008-04-04 Fri 14:35] \\
-    This has been fixed, see the comments in #36.
-  I'm using the latest source from CVS and it appears the `-e` option is
-  broken.  For example this works as expected:
-  :OUTPUT:
-% ledger -b 2006/05/01 bal
+* DONE [#B] Special care needs to be taken that legitimate uses of exceptions are not too expensive.
+  :PROPERTIES:
+  :UUID: 525657CE-DA76-4B4B-B88C-595F799A12A7
   :END:
-
-But this does not.  No output whatsoever:
-  :OUTPUT:
-% ledger -b 2006/05/01 -e 2006/05/31 bal
+  [2008-08-14 Thu]
+* DONE [#B] Split binary.cc into journal-specific and generic, and put the generic one in libamounts
+  - State "DONE"       [2008-08-04 Mon]
+  :PROPERTIES:
+  :UUID: 12C3D67F-0E7C-46D4-AE7B-7E1E22456997
   :END:
-
-This also doesn't work.  It just shows `Opening Balances: 0`:
+  [2008-07-29 Tue]
+* DONE [#B] The Buildbot is failing to build master
+  SCHEDULED: <2008-08-17 Sun>
+  - State "DONE"       [2008-08-17 Sun 06:32] \\
+    Fixed now.
   :OUTPUT:
-% ledger -p "last month" bal
+src/session.h: In member function 'void ledger::session_t::clean_all()':
+src/session.h:171: error: 'clear_xacts' was not declared in this scope
+src/session.h:172: error: 'clear_accounts' was not declared in this scope
+make[1]: *** [libledger_la-journal.lo] Error 1
   :END:
   :PROPERTIES:
-  :Submitter: Eric Davis <edavis@insanum.com>
-  :Version: 2.6
-  :Ticket: 17
-  :UUID: FE3E08C0-802A-4FAA-B8BA-93D81C061148
+  :UUID: FFE100BB-3383-4E27-ADD9-08AFF0518846
   :END:
-  [2007-12-10 Mon]
-* WORKSFORME [#A] Weekly register report is completely broken in 2.6
-  - State "WORKSFORME" [2008-07-17 Thu 20:11] \\
-    This has apparently been fixed by all the other date/time fixes done today.
-  The command is:
-  :SCRIPT:
-ledger --weekly reg food
+  [2008-08-16 Sat]
+* DONE [#B] The Ledger project page is not formatted correctly
+  - State "DONE"       [2008-06-26 Thu]
+  It appears that the MultiMarkdown codes are being ignored.
+  :PROPERTIES:
+  :UUID: 5C4EA977-7231-42E4-BAB5-77F9963D846F
   :END:
-  This works fine in 2.5.
+  [2008-05-29 Thu]
+* DONE [#B] There is an issue with unescaped @ signs in the Ledger docs
+  - State "DONE"       [2008-03-27 Thu]
+  :PROPERTIES:
+  :UUID: 30ED70CB-0679-4651-A1C3-1247764B250D
+  :END:
+  [2008-03-26 Wed]
+* DONE [#B] Upgrade to use local-time-0.9.2
+  SCHEDULED: <2007-11-25 Sun>
+  - State "DONE"       [2007-11-25 Sun 21:02]
+  :PROPERTIES:
+  :ARCHIVE_TIME: 2007-12-03 Mon 17:50
+  :ARCHIVE_CATEGORY: Computer
+  :UUID: D7354D27-EFEA-4747-8185-B2A48E2F5FF3
+  :END:
+  [2007-11-24 Sat]
+* DONE [#B] Using my PowerPC, build a universal Ledger binary for OS X Leopard
+  - State "DONE"       [2008-08-08 Fri]
+  :PROPERTIES:
+  :UUID: DF73E41F-A867-4A29-BA88-BC9F69A139CD
+  :END:
+  [2008-08-04 Mon]
+* DONE [#C] Entry command doesn't match debit account when description is unmatched
+  - State "DONE"       [2008-07-20 Sun 20:32]
+  I think I've isolated a bug with the entry command where I get "Equity"
+  instead of a valid debit account:
+  :OUTPUT:
+$ ledger entry 2008/07/18 "Pei Wei" food 20 checking
+
+2008/07/18 Pei Wei
+    Expenses:Food:Out                        $ 20.00
+    Assets:Checking
+
+$ ledger entry 2008/07/18 "Foo Bar" food 20 checking
+
+2008/07/18 Foo Bar
+    Expenses:Food                            $ 20.00
+    Equity
+  :END:
+
+  The first command proves that ledger understands I have an `Assets:Checking`
+  account.  That's because I already have entries for `Pei Wei`.
+
+  If I enter a description that doesn't match a previous entry, it doesn't
+  match `checking` to `Assets:Checking`.
+  :PROPERTIES:
+  :Submitter: drewr <#ledger>
+  :Version: 5fbec3582319ca6423a43c9125842be5f969e8ee
+  :Ticket: 203
+  :UUID: FF8CE4C5-03B3-4FCA-85BD-52A9DB191B4B
+  :END:
+  [2008-07-18 Fri]
+* DONE [#C] Get the PowerBook's buildbot working again
+  SCHEDULED: <2008-08-16 Sat>
+  - State "DONE"       [2008-08-17 Sun 02:52]
+  :PROPERTIES:
+  :UUID: 6B92EE7F-9F6A-452A-B242-347FB9206832
+  :END:
+  [2008-08-16 Sat]
+* DONE [#C] Multiple commodities in gnucash crash ledger
+  - State "DONE"       [2008-07-17 Thu 21:26]
+  - State "TODO"       [2008-03-27 Thu 19:54] \\
+    I still have to review the patch and make the changes, before this gets
+    closed.
+  - State "TODO"       [2008-03-27 Thu 15:20] \\
+    slanack writes:
+    > The proposed Fix works for me.  The problem was that <split:quantity>
+    > received the `transaction commodity' instead of the correct `account
+    > commodity'.  There should really be a check if the account commodity has
+    > been defined.
+  I am using transactions between accounts with different base commodities in
+  gnucash.  Ledger reports a segfault when reading the gnucash file and using
+  the command `print`.
+  :PROPERTIES:
+  :Submitter: slanack
+  :Version: 2.6.0.90
+  :Ticket: 35
+  :UUID: DAAF3481-1B7A-4F4A-9EC6-575104655B1B
+  :Attachments: gnucash.cc.patch gnucash-minimal.xml
+  :END:
+  [2008-03-23 Sun]
+* DONE [#C] My "bal" command is broken again
+  - State "DONE"       [2008-07-17 Thu 21:22]
+  :OUTPUT:
+~/Reference/Computing/Systems/Linux $ bal
+        3,848.34
+         EC 450.05  Assets
+Error: Cannot compare amounts with different commodities: EC and $
+  :END:
   :PROPERTIES:
   :Submitter: John Wiegley <johnw@newartisans.com>
   :Version: 2.6
-  :Ticket: 26
-  :UUID: 30383931-3060-4999-8FD3-9002E02366A0
+  :Ticket: 66
+  :UUID: 8159EF00-B95D-4E83-9927-7DB461CD2CC9
   :END:
-  [2007-12-10 Mon]
-* WORKSFORME [#A] Monthly register command displays nothing
-  - State "WORKSFORME" [2008-07-17 Thu 20:12] \\
-    This has apparently been fixed by the recent date/time bug fixes.
-  The command is:
-  :SCRIPT:
-ledger -p 2005 -e 2005/08/17 --monthly reg
-  :END:
-  This is against my own ledger file.
-  :PROPERTIES:
-  :Submitter: John Wiegley <johnw@newartisans.com>
-  :Version: 2.6
-  :Ticket: 30
-  :UUID: 841041A2-925D-4797-BE44-11BFC7333054
-  :END:
-  [2007-12-10 Mon]
-* DUPLICATE [#B] Reconciling doesn't work in ledger.el			 :EMACS:
-  - State "DUPLICATE"  [2008-07-16 Wed 03:56] \\
-    Duplicated by #64.
-  I've tried version 2.5 but have had some problems.
-
-  I use Carbon Emacs on Mac OS X to edit my Ledger files.  Unfortunately the
-  reconcile functionality doesn't work any more.  Pressing the space bar
-  doesn't always toggle an entry, sometimes it needs to be pressed twice,
-  sometimes it never goes.  Additionally, even if some entries are toggled,
-  nothing is changed in the main file and pressing C-c C-c just re-sets the
-  reconcile window back to it's original state.
-
-  I've tried with and without the new ledger-clear-whole-entries variable set.
-  :PROPERTIES:
-  :Submitter: Karen Cooke <karen.cooke@gmail.com>
-  :Version: 2.6
-  :Ticket: 14
-  :UUID: 2B02E2FD-DCF8-4CD8-A7FA-F83F5DAE3F55
-  :END:
-  [2007-12-10 Mon]
-* DONE [#B] Command results in assertion failure
-  - State "DONE"       [2008-07-17 Thu 17:44]
-  The command is:
-  :SCRIPT:
-ledger -s bal --sort O wedding
-  :END:
-  This is against my own ledger file.
-  :PROPERTIES:
-  :Submitter: John Wiegley <johnw@newartisans.com>
-  :Version: 2.6
-  :Ticket: 23
-  :UUID: AB684BBE-F093-4F77-BCFB-2F4E0D60AA9C
-  :END:
-  [2007-12-10 Mon]
+  [2008-04-11 Fri]
 * DONE [#C] Remove bogus reference to Emacs in project documentation	   :DOC:
   - State "DONE"       [2008-07-16 Wed 03:59]
   The gnucash docs talk about there someday being an Emacs mode. There is
@@ -2360,26 +1887,68 @@ ledger -s bal --sort O wedding
   :UUID: B81ADF25-F176-4ABC-9C2B-1090E4F2FA7D
   :END:
   [2007-12-10 Mon]
-* DONE [#A] Entry command produces two liability transactions
-  - State "DONE"       [2008-07-17 Thu 22:01]
-  - State "TODO"       [2008-05-03 Sat 22:27] \\
-    This is being a real problem for drewr, arete and pll!  This one gets fixed
-    for 2.6.1.
+* DONE [#C] Segfault with commodity price in budget.
+  - State "DONE"       [2008-07-17 Thu 20:09]
+  :DATA:
+~ Monthly
+  Assets:Invest    2 AAPL @ $30.00
+  Assets:Bank     -2 AAPL
+  :END:
+  It works if the '@ $30.00' is removed. The problem is that entry is null
+  when called through parse_transactions. Backtrace:
   :OUTPUT:
-arete$ ledger entry 2007/11/11 safeway groceries \$10.00 american
-
-2007/11/11   Safeway
-        Expenses:Groceries                                $10.00
-        Liabilities:American Express                     $-30.17
-        Liabilities:American Express                      $20.17
+#0  0x080632ab in datetime_t (this=0xbfb4af88, _when=@0x40) at datetime.h:173
+#1  0x080973ac in ledger::entry_t::actual_date (this=0x0) at journal.h:180
+#2  0x080b7fc7 in ledger::parse_transaction (
+    line=0x8119e20 "  Assets:Invest    2 AAPL @ $30.00", account=0x813be00,
+    entry=0x0) at textual.cc:258
+#3  0x080b9480 in ledger::parse_transactions (in=@0xbfb4b4bc,
+    account=0x813be00, entry=@0x813e2f8, kind=@0xbfb4b2f8, beg_pos=63)
+    at textual.cc:340
+...
   :END:
   :PROPERTIES:
-  :Submitter: Will Glozer <will@glozer.net>
-  :Version: 2.6
-  :Ticket: 8
-  :UUID: D7DD54D7-8870-4D6D-92A0-90717692F8F2
+  :Submitter: Nathan Jones <nathanj@insightbb.com>
+  :Version: 2.6.0.90
+  :Ticket: 191
+  :UUID: A4F87484-1B1D-4C76-B0AB-70E20FBA9D1B
   :END:
-  [2007-11-12 Mon]
+  [2008-04-23 Wed]
+* DONE [#C] When reporting the unbalanced remainder, round it	       :FEATURE:
+  - State "DONE"       [2008-07-17 Thu 20:52]
+  This is so that it shows what ledger is really thinking.
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 125
+  :UUID: 4BF95CDC-972F-4F39-9F54-7BEFD404F9AA
+  :END:
+  [2008-04-11 Fri]
+* DEFERRED [#A] Thomas is experiencing a crash when running the balance command
+  SCHEDULED: <2008-08-16 Sat>
+  - State "DEFERRED"   [2008-08-17 Sun 06:32] \\
+    Thomas can't reproduce this anymore, after I logged into his machine to try
+    and debug it directly.
+  [[message://a8a10a0808160351v3f407203tf6fc1b87b3b4eef7@mail.gmail.com][Stack trace]]
+  :PROPERTIES:
+  :UUID: D0D130E3-EDC0-4D9F-A77A-0B62E115D25A
+  :END:
+  [2008-08-16 Sat]
+* CANCELLED [#C] Consider Martin's @openbal directive
+  "AutoOpenBalance" from Martin Blais <blais@furius.ca>
+  :PROPERTIES:
+  :UUID: 60AC4948-4B40-46D4-A346-26C394C8F1F9
+  :END:
+  [2008-08-14 Thu]
+* WONTFIX [#B] Change all the source code to utf-8
+  - State "WONTFIX"    [2008-07-13 Sun 21:45] \\
+    The source code itself doesn't use international characters!
+  :PROPERTIES:
+  :Version: 2.6
+  :Ticket: 141
+  :UUID: D00D1F5A-8BD5-43B5-B8E0-1FEBB98F610A
+  :END:
+  [2008-04-11 Fri]
 * WONTFIX [#B] No commodity when amount contains simple math operation
   - State "WONTFIX"    [2007-11-09 Fri 23:34] \\
     This expected behavior.  If you multiply or divide two commoditized
@@ -2410,22 +1979,309 @@ $ ledger -f sample2.dat bal
   :UUID: 4290A2E5-8CFB-4529-87DE-F088719AF13A
   :END:
   [2007-11-09 Fri]
-* DONE [#A] trailing whitespace is significant in 2.6
-  - State "DONE"       [2008-04-05 Sat 18:56] \\
-    The first patch fixes parsing account names when a single space follows.
-    This might close ticket #3.
-  - State "TODO"       [2008-04-05 Sat 18:55] \\
-    The following patch, submitted by Nathan Jones, proposes to fix this problem.
-  - State "TODO"       [2007-09-22 Sat 04:26] \\
-    Simon, have you tried this with 2.6.1-svn?  I believe this is something I
-    fixed.
-  Unlike 2.5, 2.6 considers an account name followed by whitespace to be
-  different from one without (when no amount is specified).
-  :PROPERTIES:
-  :Submitter: Simon Michael <simon@joyful.com>
-  :Version: 2.6
-  :Ticket: 3
-  :Attachments: 288.patch
-  :UUID: FB2330E1-AD78-4559-A885-A488DFDF3DC1
+* WONTFIX [#B] Problem with pricing specification in prices.db file
+  - State "WONTFIX"    [2008-07-17 Thu 21:42] \\
+    Pricing info is not used for balancing entries.  For that, you'd need to use
+    "@ ... USD" for the halfg and gouda amounts, so that Ledger could be certain
+    your entries balances to zero.
+  - State "TODO"       [2008-04-05 Sat 20:09] \\
+    I changed it to this below, and ledger stopped complaining: 
+    :DATA:
+2007/03/07 Irena 
+    Liabilities:Cash:Irena 7.00 USD 
+    Liabilities:Order1:Irena -1 gouda 
+
+2007/03/07 Irena 
+    Liabilities:Cash:Irena 11.00 USD 
+    Liabilities:Order1:Irena -4 halfg 
+    :END:
+  :OUTPUT:
+djw@hector:~$ ledger bal 
+
+2007/03/07 Irena 
+    Liabilities:Cash:Irena 18.00 USD 
+    Liabilities:Order1:Irena -4 halfg 
+    Liabilities:Order1:Irena -1 gouda 
+Error: /home/djw/milk.ledger, line 106: Entry above does not balance; remainder is: 18.00 USD 
+-1 gouda 
+-4 halfg
   :END:
-  [2007-09-22 Sat]
+  Here is what is in the prices.db file: 
+  :DATA:
+C 1.00 USD = $1.21 
+P 2007/03/04 00:00:00 halfg 2.75 USD 
+P 2007/03/04 00:00:00 gouda 7 USD 
+  :END:
+  So you multiply 4*2.75 and add 7, you get 18. Since the units are USD, what
+  is the beef? Why isn't ledger seeing 1 gouda and 4 halfg as 18 USD?
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 42
+  :UUID: 43CFF7FF-DA09-478C-AED1-2D2756BACA09
+  :END:
+  [2008-04-05 Sat]
+* WONTFIX [#C] Balance calculations using the '=' operator are off
+  - State "WONTFIX"    [2008-08-15 Fri 04:14] \\
+    This feature is not ready for 2.6.1, and is being pushed to 3.0 where this
+    issue has been fixed.
+  When I run 'ledger --tail 20 reg assets:cash' with my current ledger data,
+  the final balance is way, way off.  Something is being miscalculated.
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6.1b
+  :Ticket: 209
+  :UUID: F32E914F-D485-427B-89E9-33C762CC1A47
+  :END:
+  [2008-08-02 Sat]
+* WONTFIX [#C] Non-balanced virtual transaction should fail.
+  - State "WONTFIX"    [2008-07-17 Thu 20:44] \\
+    This is not an error because:
+    
+    1. specifying no amount is the same as specifying an uncommoditized zero.
+    2. the second line will "auto-balance" with the first line.
+    3. the third line simply is a no-op, which I allow for the sake of script
+       writers.
+    
+    There could be a warning for something like this, but then that's the
+    danger of using () around an account name: you are explicitly stating you
+    do not wish the transaction to be balanced.
+  - State "TODO"       [2008-04-23 Wed 13:35] \\
+    Martin Blais <blais@furius.ca> writes:
+    > Well... should "probably" fail. I mean, it does nothing, so it's
+    > probably an error. I'd make it fail.
+  Shouldn't this fail? 
+  :DATA:
+2004/03/25 Donations
+    Assets:Checking                   $100.00
+    Assets:Savings
+    (Income:Donations)       
+  :END:
+  :PROPERTIES:
+  :Submitter: Martin Blais <blais@furius.ca>
+  :Version: 2.6
+  :Ticket: 190
+  :UUID: 75E83651-B130-4978-89C7-DFED4E874E8F
+  :END:
+  [2008-04-23 Wed]
+* WORKSFORME [#A] Monthly register command displays nothing
+  - State "WORKSFORME" [2008-07-17 Thu 20:12] \\
+    This has apparently been fixed by the recent date/time bug fixes.
+  The command is:
+  :SCRIPT:
+ledger -p 2005 -e 2005/08/17 --monthly reg
+  :END:
+  This is against my own ledger file.
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 30
+  :UUID: 841041A2-925D-4797-BE44-11BFC7333054
+  :END:
+  [2007-12-10 Mon]
+* WORKSFORME [#A] Weekly register report is completely broken in 2.6
+  - State "WORKSFORME" [2008-07-17 Thu 20:11] \\
+    This has apparently been fixed by all the other date/time fixes done today.
+  The command is:
+  :SCRIPT:
+ledger --weekly reg food
+  :END:
+  This works fine in 2.5.
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 26
+  :UUID: 30383931-3060-4999-8FD3-9002E02366A0
+  :END:
+  [2007-12-10 Mon]
+* WORKSFORME [#B] ledger -MA doesn't give a monthly report if some months have no transactions
+  - State "WORKSFORME" [2008-07-17 Thu 20:14] \\
+    This works for me.
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 61
+  :UUID: FD118D79-3B8F-48CE-89D0-F0FFD46F6C49
+  :END:
+  [2008-04-11 Fri]
+* WORKSFORME [#B] Problems with the prices.db file
+  - State "WORKSFORME" [2008-07-17 Thu 21:45] \\
+    Pricing entries must start with a capital P, not a lowercase p.
+
+    This bug also mentions other issues, which are now contained in another
+    bug.
+  - State "TODO"       [2008-04-05 Sat 20:06] \\
+    However, even though I do not receive parse errors any longer, the
+    price-db command does not work the way I expect it to. When I issue a
+    'bal' option, ledger still outputs the values in their commodity rather
+    than the dollar amount, so even though I am not receiving an error, it
+    still does not seem to work for me.
+  My prices.db file looks like: 
+  :DATA:
+p 2007/01/14 02:18:01 WMCVX $5.04 
+p 2007/01/14 02:18:02 WMICX $6.65
+  :END:
+  Notice there is no carriage return after the second line and that the file
+  begins on line 1.
+  
+  When I run 'ledger --price-db prices.db bal' I get the following: 
+  :OUTPUT:
+Error: prices.db, line 2: Failed to parse dateP 
+Error: Errors parsing file 'life/finances/ledger/prices.db' 
+  :END:
+
+  If I have a carriage return on the second line, I get errors for both line 2
+  and line 3. If i have one entry on a single line, I get an error for line 2.
+  
+  Any ideas? 
+  
+  Also, I would like to get the prices.db perl script working to automatically
+  grab the values from Fidelity, but I have not been able to do anything
+  beyond installing the appropriate perl modules. If there are any
+  instructions for this usage, I would appreciate it.
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 40
+  :UUID: B8173D32-D7EB-4619-8488-B2C641431FDE
+  :END:
+  [2008-04-05 Sat]
+* WORKSFORME [#C] ledger -Mn
+  - State "WORKSFORME" [2008-08-17 Sun 20:13]
+  Is not the same as: ledger -M -n
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 126
+  :UUID: 2C3B5DCE-AB7F-41A2-BF93-56CC1222AE64
+  :END:
+  [2008-04-11 Fri]
+* INVALID [#B] Remove bogus reference to Emacs in project documentation (2.6)
+  - State "INVALID"    [2008-07-13 Sun 22:16]
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 72
+  :UUID: 7455E4A7-16FD-4F41-8A33-CF44F6E690B2
+  :END:
+  [2008-04-11 Fri]
+* DUPLICATE [#A] Bug with date ranges
+  - State "DUPLICATE"  [2008-04-04 Fri 14:35] \\
+    This has been fixed, see the comments in #36.
+  I'm using the latest source from CVS and it appears the `-e` option is
+  broken.  For example this works as expected:
+  :OUTPUT:
+% ledger -b 2006/05/01 bal
+  :END:
+
+But this does not.  No output whatsoever:
+  :OUTPUT:
+% ledger -b 2006/05/01 -e 2006/05/31 bal
+  :END:
+
+This also doesn't work.  It just shows `Opening Balances: 0`:
+  :OUTPUT:
+% ledger -p "last month" bal
+  :END:
+  :PROPERTIES:
+  :Submitter: Eric Davis <edavis@insanum.com>
+  :Version: 2.6
+  :Ticket: 17
+  :UUID: FE3E08C0-802A-4FAA-B8BA-93D81C061148
+  :END:
+  [2007-12-10 Mon]
+* DUPLICATE [#A] DOS format line endings are fooling the parser
+  - State "DUPLICATE"  [2008-08-16 Sat 03:56] \\
+    Duplicated by #43.
+  The \r\n ending is having only the \n stripped, making the \r appear as part
+  of the filename when doing a !include.
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 129
+  :UUID: 6DF2250F-C54D-4F67-AFB6-F8656020D394
+  :END:
+  [2008-04-11 Fri]
+* DUPLICATE [#B] Need to strip \r from \r\n line endings
+  - State "DUPLICATE"  [2008-07-13 Sun 22:38]
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 139
+  :UUID: C7A61E89-08D1-4151-AF2E-92F666148F19
+  :END:
+  [2008-04-11 Fri]
+* DUPLICATE [#B] Problems parsing an entry
+  - State "DUPLICATE"  [2008-07-18 Fri 02:12]
+  :OUTPUT:
+djw@hector:~$ ledger bal 
+
+2007/03/07 Irena 
+Liabilities:Cash:Irena 18.00 USD 
+Liabilities:Order1:Irena -4 halfg 
+Liabilities:Order1:Irena -1 gouda 
+Error: /home/djw/milk.ledger, line 106: Entry above does not balance; remainder is: 18.00 USD 
+-1 gouda 
+-4 halfg 
+  :END:
+  Here is what is in the prices.db file:
+  :DATA:
+C 1.00 USD = $1.21 
+P 2007/03/04 00:00:00 halfg 2.75 USD 
+P 2007/03/04 00:00:00 gouda 7 USD 
+  :END:
+  So you multiply 4*2.75 and add 7, you get 18.  Since the units are USD, what
+  is the beef?  Why isn't ledger seeing 1 gouda and 4 halfg as 18 USD?
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6
+  :Ticket: 133
+  :UUID: AD876FB0-E7B8-4C89-9E23-2D25AF8D5F0A
+  :END:
+  [2008-04-11 Fri]
+* DUPLICATE [#B] Reconciling doesn't work in ledger.el			 :EMACS:
+  - State "DUPLICATE"  [2008-07-16 Wed 03:56] \\
+    Duplicated by #64.
+  I've tried version 2.5 but have had some problems.
+
+  I use Carbon Emacs on Mac OS X to edit my Ledger files.  Unfortunately the
+  reconcile functionality doesn't work any more.  Pressing the space bar
+  doesn't always toggle an entry, sometimes it needs to be pressed twice,
+  sometimes it never goes.  Additionally, even if some entries are toggled,
+  nothing is changed in the main file and pressing C-c C-c just re-sets the
+  reconcile window back to it's original state.
+
+  I've tried with and without the new ledger-clear-whole-entries variable set.
+  :PROPERTIES:
+  :Submitter: Karen Cooke <karen.cooke@gmail.com>
+  :Version: 2.6
+  :Ticket: 14
+  :UUID: 2B02E2FD-DCF8-4CD8-A7FA-F83F5DAE3F55
+  :END:
+  [2007-12-10 Mon]
+* DUPLICATE [#C] Entry command produces duplicate source transactions
+  - State "DUPLICATE"  [2008-01-31 Thu 14:57] \\
+    drewr writes:
+    > This is a duplicate of ticket #8.
+  - State "TODO"       [2008-01-30 Wed 17:36] \\
+    drewr writes:
+    > This happens with 2.6.1 as well.
+  If I have a ledger file like so:
+  :DATA:
+2008/01/24 Foo
+  Expenses:Foo                              $ 136.56
+  Assets:Checking
+  :END:
+  and then run `ledger entry 2008/01/26 foo expen 45 check`, I get:
+  :OUTPUT:
+2008/01/26 Foo
+    Expenses:Foo                             $ 45.00
+    Assets:Checking                        $ -136.56
+    Assets:Checking                          $ 91.56
+  :END:
+  :Submitter: drewr <#ledger>
+  :Version: 2.6
+  :Ticket: 32
+  :UUID: EA246228-3EC7-4834-B55A-455DBA58116C
+  :END:
+  [2008-01-30 Wed]

@@ -12,4 +12,4 @@
 	url = git://newartisans.com/libofx.git
 [submodule "doc/data"]
 	path = doc/data
-	url = git://newartisans.com/ledger.git
+	url = .
