@@ -6,25 +6,54 @@ LEDGER  -*- mode: org; fill-column: 78 -*-
 #+TAGS: FEATURE(f) DOC(d) WEBSITE(w)
 #+CATEGORY: Ledger
 
+* DONE [#C] Get the PowerBook's buildbot working again
+  SCHEDULED: <2008-08-16 Sat>
+  - State "DONE"       [2008-08-17 Sun 02:52]
+  :PROPERTIES:
+  :UUID: 6B92EE7F-9F6A-452A-B242-347FB9206832
+  :END:
+  [2008-08-16 Sat]
+* DONE [#B] The Buildbot is failing to build master
+  SCHEDULED: <2008-08-17 Sun>
+  - State "DONE"       [2008-08-17 Sun 06:32] \\
+    Fixed now.
+  :OUTPUT:
+src/session.h: In member function 'void ledger::session_t::clean_all()':
+src/session.h:171: error: 'clear_xacts' was not declared in this scope
+src/session.h:172: error: 'clear_accounts' was not declared in this scope
+make[1]: *** [libledger_la-journal.lo] Error 1
+  :END:
+  :PROPERTIES:
+  :UUID: FFE100BB-3383-4E27-ADD9-08AFF0518846
+  :END:
+  [2008-08-16 Sat]
+* DEFERRED [#A] Thomas is experiencing a crash when running the balance command
+  SCHEDULED: <2008-08-16 Sat>
+  - State "DEFERRED"   [2008-08-17 Sun 06:32] \\
+    Thomas can't reproduce this anymore, after I logged into his machine to try
+    and debug it directly.
+  [[message://a8a10a0808160351v3f407203tf6fc1b87b3b4eef7@mail.gmail.com][Stack trace]]
+  :PROPERTIES:
+  :UUID: D0D130E3-EDC0-4D9F-A77A-0B62E115D25A
+  :END:
+  [2008-08-16 Sat]
 * TODO --debug isn't taking a regular expression
   :PROPERTIES:
   :UUID: 5936E070-F86A-4E52-B165-B70CE24C8109
   :END:
   [2008-07-24 Thu]
 * TODO [#B] Convert all the Trac bugs back over to the new org-mode file
-  SCHEDULED: <2008-08-16 Sat>
+  SCHEDULED: <2008-08-17 Sun>
   :PROPERTIES:
   :UUID: 77CFFC16-5C1A-41B8-A22C-078FE3C7FAD9
   :END:
   [2008-08-14 Thu]
-* TODO [#B] Find out why a simple 'bal' command on sparc/x86 is crashing
+* DONE [#B] Find out why master fails to build on tdelaet's OpenBSD box
   SCHEDULED: <2008-08-17 Sun>
-  :PROPERTIES:
-  :UUID: 2A8D6EC1-FE9A-453C-B58F-50C1EB1F4EF4
-  :END:
-  [2008-08-16 Sat]
-* TODO [#B] Find out why master fails to build on tdelaet's OpenBSD box
-  SCHEDULED: <2008-08-17 Sun>
+  - State "DONE"       [2008-08-17 Sun 06:33] \\
+    It's because his Boost isn't up to date.  I'll have to wait until he has Boost
+    1.35 working OpenBSD 4.4 before we can build anything other than v2.6.1b on
+    his machines.
   ssh obsd86
   :PROPERTIES:
   :UUID: 30186BD0-CD2E-4B22-AD4C-84D7F6552D4B
