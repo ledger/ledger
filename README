@@ -45,7 +45,12 @@ dependencies:
   - Optionally, libexpat or libxml2
   - Optionally, libofx
 
-For the convenience of my fellow developers on the master (DEVEL)
+If you build stuff using MacPorts, as I do, here is what you would run:
+
+  port install boost +complete+python25
+  port install cppunit expat libofx
+
+Or, for the convenience of fellow developers on the master (DEVEL)
 branch, you may download some of these dependencies quite easily right
 here and now.  Just run this command:
 
