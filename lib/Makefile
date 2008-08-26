@@ -29,7 +29,7 @@ boost-build: boost-release boost-debug
 
 cppunit-release:
 	-(cd cppunit; make distclean)
-	(cd cppunit; \
+	(cd cppunit; sh autogen.sh; \
 	 ./configure CFLAGS="$(ARCH_CFLAGS)" \
 		   LDFLAGS="$(ARCH_LDFLAGS)" \
 		--prefix=$(STOW_ROOT)/cppunit \
@@ -38,7 +38,7 @@ cppunit-release:
 
 cppunit-debug:
 	-(cd cppunit; make distclean)
-	(cd cppunit; \
+	(cd cppunit; sh autogen.sh; \
 	 ./configure CPPFLAGS="-D_GLIBCXX_DEBUG=1" \
 		   CFLAGS="-g $(ARCH_CFLAGS)" \
 		   LDFLAGS="-g $(ARCH_LDFLAGS)" \
@@ -49,7 +49,7 @@ cppunit-debug:
 cppunit-build: cppunit-release cppunit-debug
 
 gdtoa-debug:
-	(cd gdtoa; \
+	(cd gdtoa; autoreconf; \
 	 ./configure CFLAGS="-g $(ARCH_CFLAGS)" \
 		   LDFLAGS="-g $(ARCH_LDFLAGS)" \
 		--prefix=$(STOW_ROOT)/gdtoa \
