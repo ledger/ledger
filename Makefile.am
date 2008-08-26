@@ -134,7 +134,7 @@ install-exec-hook:
 	CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libamounts_la_CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)" \
 	LDFLAGS="$(LDFLAGS) -L$(top_builddir) -L$(top_builddir)/.libs" \
 	ARCHFLAGS="$(ARCHFLAGS)" SRCDIR="$(srcdir)" \
-	    python setup.py install --prefix=$(prefix)
+	    python setup.py install --prefix=$(prefix) --root=$(DESTDIR)/
 
 endif
 
