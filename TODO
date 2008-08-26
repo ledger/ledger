@@ -6,6 +6,12 @@ LEDGER  -*- mode: org; fill-column: 78 -*-
 #+TAGS: EMACS(e) FEATURE(f) DOCS(d) WEBSITE(w) BUILD(b)
 #+CATEGORY: Ledger
 
+* TODO [#C] Merge Levin's changes into v2.6.1b
+  These are from http://github.com/levindu/ledger
+  :PROPERTIES:
+  :UUID: C9167249-98C3-4C7E-8076-35B81A580B38
+  :END:
+  [2008-08-21 Thu]
 * TODO [#B] Do not adjust display precision when parsing a pricing entry
   :PROPERTIES:
   :Submitter: John Wiegley <johnw@newartisans.com>
