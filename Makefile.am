@@ -346,6 +346,8 @@ $(top_builddir)/doc/refman.pdf: $(top_builddir)/doc/html/index.html
 docs: pdf $(top_builddir)/doc/refman.pdf
 
 libs:
+	@echo Building dependency libs and installing in /usr/local/stow ...
+	git submodule update --init
 	(cd lib; make)
 
 report: all
