@@ -6,18 +6,191 @@ LEDGER  -*- mode: org; fill-column: 78 -*-
 #+TAGS: EMACS(e) FEATURE(f) DOCS(d) WEBSITE(w) BUILD(b)
 #+CATEGORY: Ledger
 
-* TODO [#A] Problem with piping input to ledger
+* TODO [#B] Get transactional assignments working again
+  SCHEDULED: <2008-08-25 Mon>
+  Another thing that needs to happen is that these assignments are stored
+  internally in the transaction, in assign_amount and assign_expr, and then
+  get double-checked against the running total when a regular register report
+  is performed.
   :PROPERTIES:
+  :UUID: E6B6E93B-655B-4895-B72F-7B82E1E5D741
+  :END:
+  [2008-08-24 Sun]
+* TODO [#C] Add more color to the register report
+  :PROPERTIES:
+  :UUID: BD2F22FC-CB2C-45A8-8C07-3366A96B6034
+  :END:
+  [2008-08-23 Sat]
+* TODO [#B] Problem with piping input to ledger
+  I decided to just go ahead and push my whole ledger file through "print".
+  At first I had been a little nervous about the possibility that I might goof
+  up somehow and lose some data.  But it seems to have worked okay: I did a
+  spot check of the result by verifying that my checking account and credit
+  card accounts still end up with the same final balance as they did before.
+  Also, I typically save any edits to my ledger file in a Subversion
+  repository, so I can always get back to a previous version if I need to.
+  
+  So now I do have a nice, clean file.
+  
+  After I got your message, I did try the "output" command.  I guess I didn't
+  understand exactly what it's supposed to be doing, because it didn't quite
+  seem to work as I expected.
+  
+  If I type:
+  :SCRIPT:
+ledger -f foo output foo
+  :END:
+  is it supposed to rewrite foo?  It didn't seem to do that.  Instead, it
+  seems to write its output onto stdout.  And not only that, it seems to
+  duplicate the last entry in the file.
+
+  For example, if this is my sample file foo:
+  :DATA:
+2006/01/01 * Xyzzy Mortgage Co.
+    Assets:Bank:Checking                  $-1,000.00
+    Expenses:Interest:Mortage              $950.00
+    Liabilities:Mortgage                     $50.00
+
+Y2005
+
+01/01 * (1830) TPC
+    Expenses:Phone                  $100.00
+    Assets:Bank:Checking                            
+
+2/3 (1832) ABC Dept Store
+    Expenses:Clothing           $100.00
+    Assets:Bank:Checking
+  :END:
+
+  Then when I run `ledger -f foo output foo` the output I get is this:
+  :OUTPUT:
+2006/01/01 * Xyzzy Mortgage Co.
+    Assets:Bank:Checking                  $-1,000.00
+    Expenses:Interest:Mortage                $950.00
+    Liabilities:Mortgage                      $50.00
+
+Y2005
+
+2005/01/01 * (1830) TPC
+    Expenses:Phone                           $100.00
+    Assets:Bank:Checking                            
+
+2005/02/03 (1832) ABC Dept Store
+    Expenses:Clothing                        $100.00
+    Assets:Bank:Checking                            
+2/3 (1832) ABC Dept Store
+    Expenses:Clothing           $100.00
+    Assets:Bank:Checking
+  :END:
+
+  If instead I run `ledger -f foo output foo2`, then I get this:
+  :OUTPUT:
+Error: Journal does not refer to file ''
+  :END:
+  So I guess that wan't what I was supposed to do.
+
+  Anyway, this is all just academic, 'cuz as I say I now have a nice, cleaned
+  up file, thanks to the "print" command.
+  :PROPERTIES:
+  :Submitter: <arb46@cornell.edu>
   :Version: 2.6
   :Ticket: 27
   :UUID: D3820740-8BFB-4234-8125-DE813A713032
   :END:
+  [2007-12-10 Mon]
 * TODO [#A] Problems with CVS version under Debian
+  - State "TODO"       [2008-07-17 Thu 21:46] \\
+    Until I get some info on this, I'll just have to postpone for 2.7.
+  - State "TODO"       [2008-07-16 Wed 03:52] \\
+    I don't have a Debian system to try this out with.  Can you give me a login to
+    your, rpw, or let me know where I can find an ISO of the exact version you're
+    using?
+  Downloaded and (eventually) compiled the latest version from anonymous CVS.
+  
+  Had to update my 'automake' to 1.9 and add "#include <cassert>" to
+  datetime.h to get it to make.
+  
+  Runs the help screen OK but SEGV's out when attempting to do any useful
+  work.
+  
+  System is debian stable ('sarge'), gcc 3.3.5 fully upgraded.
+  
+  Any clues?
+  :OUTPUT:
+$gdb ledger
+(gdb) run -f sample.dat print
+Starting program: /home/rpw/ledger-cvs/ledger/ledger
+-f sample.dat print
+
+Program received signal SIGSEGV, Segmentation fault.
+0x400a9e5a in std::ostream::sentry::sentry () from
+/usr/lib/libstdc++.so.5
+(gdb) bt
+#0  0x400a9e5a in std::ostream::sentry::sentry () from
+/usr/lib/libstdc++.so.5
+#1  0x400a9fbf in std::operator<<
+<std::char_traits<char> > () from
+/usr/lib/libstdc++.so.5
+#2  0x0805ef16 in
+ledger::annotated_commodity_t::write_annotations
+(out=@0xbfffdef0, price=@0xbfffde60,
+    date=@0xbfffde40, tag=@0x815fd20) at
+datetime.h:249
+#3  0x0805f3b8 in ledger::(anonymous
+namespace)::make_qualified_name (comm=@0x815fdc8,
+price=@0xbfffe4f0,
+    date=@0xbfffddf0, tag=@0xbfffddf0) at
+amount.cc:1732
+#4  0x0805f70f in
+ledger::annotated_commodity_t::find_or_create
+(comm=@0x815fdc8, price=@0xbfffe4f0,
+    date=@0xbfffe410, tag=@0x815fd20) at
+amount.cc:1752
+#5  0x0805dfde in ledger::amount_t::annotate_commodity
+(this=0x815fd48, price=@0xbfffe4f0, date=@0xbfffe410,
+    tag=@0xbfffde00) at datetime.h:97
+#6  0x080b9965 in ledger::parse_transaction (
+    line=0x8144040 "  Assets:Brokerage", ' ' <repeats
+14 times>, "50 AAPL @ $30.00", account=0xbfffddf0,
+    entry=0xbfffe530) at memory:271
+#7  0x080bb2b8 in ledger::parse_entry (in=@0xbfffed40,
+    line=0x8144040 "  Assets:Brokerage", ' ' <repeats
+14 times>, "50 AAPL @ $30.00", master=0x815cb90,
+    parser=@0x8143bd4, beg_pos=95) at memory:284
+#8  0x080be0aa in ledger::textual_parser_t::parse
+(this=0x8143bd4, in=@0xbfffed40, config=@0xbffff930,
+    journal=0x815cb58, master=0x815cb90,
+original_file=0xbffff934) at stl_list.h:671
+#9  0x080af07c in ledger::parse_journal
+(in=@0xbfffed40, config=@0xbfffddf0,
+journal=0x815cb58,
+    master=0x815cb90, original_file=0xbfffddf0) at
+stl_list.h:585
+#10 0x080af1ee in ledger::parse_journal_file
+(path=@0x815c1f4, config=@0xbfffddf0,
+journal=0x815cb58,
+    master=0xbfffddf0, original_file=0xbffff934) at
+parser.cc:92
+#11 0x080afa5b in ledger::parse_ledger_data
+(config=@0xbffff930, journal=0x815cb58,
+cache_parser=0x815cb68,
+    xml_parser=0x0, stdin_parser=0x8143bd4) at
+parser.cc:181
+#12 0x0804c977 in parse_and_report
+(config=@0xbffff930, report=@0xbffff8d0, argc=4,
+argv=0xbffffa04,
+    envp=0xbfffddf0) at memory:284
+#13 0x080535b6 in main (argc=-1073750544,
+argv=0xbfffddf0, envp=0xbfffddf0) at main.cc:452
+(gdb)
+  :END:
   :PROPERTIES:
+  :Submitter: rpw101ml@yahoo.com.au
   :Version: 2.5
   :Ticket: 9
   :UUID: 0DD9D927-7C79-41A4-8D9A-67C00550B67D
   :END:
+  [2007-12-10 Mon]
 * TODO [#A] Reading Ledger data from stdin does not work at all
   :PROPERTIES:
   :Version: 2.6.0.90
@@ -205,17 +378,103 @@ LEDGER  -*- mode: org; fill-column: 78 -*-
   :UUID: 2E3496BD-143C-4D3E-8815-A01FFD31D132
   :END:
 * TODO [#B] Budgeting oddness
+  I am trying to understand the budgeting information in the ledger
+  documentation, as well as to understand some basic syntax in my ledger file
+  and why it does not appear to be working correctly.  If I have a ledger file
+  with:
+  :DATA:
+~Monthly
+   Exp:....   $1000.00
+   Exp:....   $500.00
+   Exp:....   $250.00
+   Exp:....   $1000.00
+   Assets
+  :END:
+  [with real categories blanked out, of course], and Assets at the end, what
+  does this imply?  That expenses will be withdrawn/balanced against assets?
+  What happens if I have no expenses recorded in my ledger, e.g., what is the
+  intended behavior of the budgeting functionality?
+
+  In addition, the following three entries seem to be causing somewhat odd
+  behavior:
+  :DATA:
+2006/05/23
+     Assets:Checking:xxxx             $1259.44
+     Equity:Opening Balance
+
+2006/05/23
+     Assets:Savings:xxxx               $711.31
+     Equity:Opening Balance
+
+2006/05/23
+     Expenses:Loans:xxxx               $750.00
+     Assets:Checking:xxxx
+  :END:
+
+  When I perform:
+  :OUTPUT:
+% ledger -f ~/ledger.txt -MAs bal ^expenses
+              $375.00  Expenses:Loans
+              $750.00    xxxx
+--------------------
+              $375.00
+  :END:
+  and these are the only three entries in the ledger file, did I miss
+  something as far as the intended behavior?  Is there a bug somewhere in my
+  libgmp, etc?
+
+  I'm on Mac OS X 10.4 on an Intel machine.
   :PROPERTIES:
+  :Submitter: Tim <tim@scarybright.org>
   :Version: 2.6
   :Ticket: 18
   :UUID: D112A53E-1D18-44F4-8B9E-6224A4EC8F72
   :END:
+  [2007-12-10 Mon]
 * TODO [#B] Bug in ledger equity output
+  Seeing as how I've reached the end of my financial year my thoughts turned
+  to how to 'close the books'.
+
+  I have the following as part of my account tree:
+  :DATA:
+Assets:Super:ARF
+Assets:Super:CSS
+Assets:Super:CSS:Contributions
+  :END:
+
+  The ledger 'balance' report correctly shows `Contributions` to be a child of
+  `Assets:Super:CSS`:
+  :OUTPUT:
+$ ledger -l 'd<=[30/06/2006]' -w -s bal ^Assets:Super
+         $171,819.90  Assets:Super
+          $12,777.87    ARF
+         $159,042.03    CSS
+           $3,861.00      Contributions
+--------------------
+         $171,819.90
+  :END:
+
+  However the ledger `equity` report formats `Contributions` as a new
+  top-level account:
+  :OUTPUT:
+$ ledger -l 'd<=[30/06/2006]' -w equity ^Assets:Super
+
+14/07/2006 Opening Balances
+    Assets:Super:ARF                      $12,777.87
+    Assets:Super:CSS                     $155,181.03
+    Contributions                          $3,861.00
+                                        $-171,819.90
+  :END:
+
+  Whilst its no great issue to manually edit the report (have to change the
+  date anyway) its slightly annoying.
   :PROPERTIES:
+  :Submitter: <rpw101ml@yahoo.com.au>
   :Version: 2.6
   :Ticket: 16
   :UUID: 1CF1EEC2-74F2-4538-8508-F0B424BA5D19
   :END:
+  [2007-12-10 Mon]
 * TODO [#B] BUG: The operators in valexpr.cc shouldn't just assert
   :PROPERTIES:
   :Version: 2.6
@@ -246,11 +505,22 @@ LEDGER  -*- mode: org; fill-column: 78 -*-
   :UUID: 72DA9574-0B30-4140-96EC-D721F73B7888
   :END:
 * TODO [#B] Command fails to report monthly averages
+  - State "TODO"       [2008-07-17 Thu 20:43] \\
+    The output from this command is not what people would think it is, because it
+    divides by total transactions, not months.  This is an issue to be addressed
+    again in 2.7.
+  The command is:
+  :SCRIPT:
+ledger -p "this year" -MAs bal ^Expenses
+  :END:
+  This does not appear to report monthly averages; since it's now april,
+  averages should be a third of the unaveraged total.
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 22
   :UUID: 5EDCE9E9-8610-4D31-950E-3659D1CD9218
   :END:
+  [2007-12-10 Mon]
 * TODO [#B] Command output-xml
   :PROPERTIES:
   :Version: 2.6
@@ -459,12 +729,56 @@ LEDGER  -*- mode: org; fill-column: 78 -*-
   :Ticket: 67
   :UUID: 2FE8B7B7-15A3-4F02-9B53-3A629212561A
   :END:
-* TODO [#B] ledger.el: ledger-context-at-point fails to parse acct-transaction :EMACS:
+* TODO [#B] ledger.el: ledger-context-at-point fails to parse acct-transaction  :EMACS:
+  - State "TODO"       [2007-11-07 Wed 04:06] \\
+    levin writes:
+    > The following patch fixes problem of the amount with no ',':
+    :PATCH:
+@@ -648,10 +648,12 @@
+        (indent account amount nil commodity comment)) 
+       ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\(-?[0-9]+\\(\\.[0-9]*\\)?\\)[ \t]+\\(.*?\\)[ \t]*$" 
+        (indent account amount nil commodity)) 
+-      ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\(-?\\(\\.[0-9]*\\)\\)[ \t]+\\(.*?\\)[ \t]*;[ \t]*\\(.*?\\)[ \t]*$" 
++      ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\(-?[0-9]+\\(\\.[0-9]*\\)?\\)[ \t]+\\(.*?\\)[ \t]*;[ \t]*\\(.*?\\)[ \t]*$" 
+        (indent account amount nil commodity comment)) 
+-      ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\(-?\\(\\.[0-9]*\\)\\)[ \t]+\\(.*?\\)[ \t]*$" 
++      ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\(-?[0-9]+\\(\\.[0-9]*\\)?\\)[ \t]+\\(.*?\\)[ \t]*$" 
+        (indent account amount nil commodity)) 
++      ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\(-?[0-9]+\\(\\.[0-9]*\\)?\\)[ \t]*$" 
++       (indent account amount nil)) 
+       ("\\(^[ \t]+\\)\\(.*?\\)[ \t]*;[ \t]*\\(.*?\\)[ \t]*$" 
+        (indent account comment)) 
+       ("\\(^[ \t]+\\)\\(.*?\\)[ \t]*$" 
+    :END:
+    > BTW, the amount regexp is a bit complex here. Do we need the fraction
+    > part of the amount? And it should recognize the ',' in amount.
+  Use the following ledger data
+  :DATA:
+2004/05/01 * Checking balance
+  Assets:Bank:Checking        1000.00
+  Equity:Opening Balances
+  :END:
+
+  With cursor on the beginning of the second line, eval
+  `(ledger-context-at-point)`, which returns:
+  :OUTPUT:
+(acct-transaction account ((indent "  " 31) (account "Assets:Bank:Checking        1000.00" 33)))
+  :END:
+  It is not correct, since 1000.00 ought to be amount.
+
+  ledger-context-at-point also fails to parse amount with ',' in it, such as:
+  :DATA:
+2004/05/01 * Checking balance
+  Assets:Bank:Checking        $1,000.00
+  Equity:Opening Balances
+  :END:
   :PROPERTIES:
+  :Submitter: levin
   :Version: 2.6
   :Ticket: 6
   :UUID: 2558642F-EE17-4DCB-B6DB-50490FB0CF83
   :END:
+  [2007-11-07 Wed]
 * TODO [#B] Make !rex reverse a regexp
   This is instead of -rex, allowing options to appear anywhere on the line.
   It also means that something has to be done about the meaning of "--".
@@ -514,12 +828,22 @@ LEDGER  -*- mode: org; fill-column: 78 -*-
   :Ticket: 134
   :UUID: 3850F5F3-8D73-435C-A734-1C39683430ED
   :END:
-* TODO [#B] Multi-byte characters (like UTF-8) throws off the "emacs" report
+* DONE [#B] Multi-byte characters (like UTF-8) throws off the "emacs" report
+  - State "DONE"       [2008-08-25 Mon 23:54] \\
+    This has been implemented.
+  The emacs report uses byte-positioning to indicate the beginning of entries
+  and transactions.  This breaks with multi-byte files.
+
+  The solution is either to support multi-byte correctly, or to use line
+  numbering instead.  levin has offered a patch for this (attached).
   :PROPERTIES:
+  :Submitter: levin
   :Version: 2.6
   :Ticket: 5
   :UUID: 6B7E468B-CB1E-41C3-A6BF-DCB64DA91C15
+  :Attachments: line-positioning.patch
   :END:
+  [2007-10-29 Mon]
 * TODO [#B] Multiple -f options fail silently.
   :PROPERTIES:
   :Version: 2.6
@@ -612,17 +936,34 @@ LEDGER  -*- mode: org; fill-column: 78 -*-
   :UUID: 22D053B7-616B-4B64-83DF-80A46BA1EC2B
   :END:
 * TODO [#B] Problem with basis report
+  The command is:
+  :SCRIPT:
+ledger -f utils/standard.dat -e 2004/4 -B reg 401
+  :END:
+  Far too many decimal places are being displayed in the register output from
+  this command.
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 13
   :UUID: 41B5FF94-DF20-4530-81A5-20E78EEEDED2
   :END:
+  [2007-12-10 Mon]
 * TODO [#B] Problem with capital gains report
+  The command is:
+  :SCRIPT:
+ledger -f utils/standard.dat -e 2004/4 -G reg 401
+  :END:
+  The results of this command are not at all what I would expect—even though
+  they make sense!
+
+  The difference is that in 2.4.1, all of the relevant revaluation lines were
+  printed, such that the total made sense.
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 12
   :UUID: 51DD2F71-F5D0-4C89-AEBD-9BFCF56C1FDB
   :END:
+  [2007-12-10 Mon]
 * TODO [#B] Promote tagging to a first-class concept 		       :FEATURE:
   :PROPERTIES:
   :Ticket: 208
@@ -730,23 +1071,11 @@ LEDGER  -*- mode: org; fill-column: 78 -*-
   :UUID: 69B51A07-5E5F-42F9-AB97-CEECAF4BB085
   :END:
   [2008-08-15 Fri]
-* TODO [#B] There is no icon on the Ledger trac page
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 62
-  :UUID: CF5FD987-CF36-4F15-A724-F716FFBC5C51
-  :END:
 * TODO [#B] Tie-in with beancounter and quantlib
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 118
   :UUID: 7A8607F3-87C8-4A85-A4EF-BA090BB81EDE
-  :END:
-* TODO [#B] trac and opera don't seem to to work together
-  :PROPERTIES:
-  :Version: 2.6
-  :Ticket: 2
-  :UUID: A3924AA9-5F89-4982-ACC0-37581BEBDA0C
   :END:
 * TODO [#B] Use &lt; when writing out XML, instead of <
   :PROPERTIES:
