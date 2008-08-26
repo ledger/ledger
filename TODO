@@ -6,12 +6,6 @@ LEDGER  -*- mode: org; fill-column: 78 -*-
 #+TAGS: EMACS(e) FEATURE(f) DOCS(d) WEBSITE(w) BUILD(b)
 #+CATEGORY: Ledger
 
-* TODO [#C] Merge Levin's changes into v2.6.1b
-  These are from http://github.com/levindu/ledger
-  :PROPERTIES:
-  :UUID: C9167249-98C3-4C7E-8076-35B81A580B38
-  :END:
-  [2008-08-21 Thu]
 * TODO [#B] Do not adjust display precision when parsing a pricing entry
   :PROPERTIES:
   :Submitter: John Wiegley <johnw@newartisans.com>
@@ -627,6 +621,13 @@ While balancing entry:
   :UUID: A7CA0F5B-1F08-417A-9071-A223601100CA
   :END:
   [2008-01-28 Mon]
+* DONE [#C] Merge Levin's changes into v2.6.1b
+  - State "DONE"       [2008-08-26 Tue 10:11]
+  These are from http://github.com/levindu/ledger
+  :PROPERTIES:
+  :UUID: C9167249-98C3-4C7E-8076-35B81A580B38
+  :END:
+  [2008-08-21 Thu]
 * DONE [#C] Entry command doesn't match debit account when description is unmatched
   - State "DONE"       [2008-07-20 Sun 20:32]
   I think I've isolated a bug with the entry command where I get "Equity"
