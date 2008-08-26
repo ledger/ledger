@@ -45,20 +45,31 @@ dependencies:
   - Optionally, libexpat or libxml2
   - Optionally, libofx
 
+* MacPorts
+
 If you build stuff using MacPorts, as I do, here is what you would run:
 
-  port install boost +complete+python25
-  port install cppunit expat libofx
+  sudo port install boost +complete+python25
+  sudo port install cppunit expat libofx
 
-Or, for the convenience of fellow developers on the master (DEVEL)
-branch, you may download some of these dependencies quite easily right
-here and now.  Just run this command:
+* Ubuntu
 
-  git submodule update --init
+If you're going to be building with Ubuntu, the command is:
 
-You'll now have a few extra source trees in lib/.  There's even a
-Makefile there, which will build and install Boost and CppUnit into the
-appropriate places in /usr/local/stow.
+  sudo apt-get install build-essential libtool autoconf automake
+  sudo apt-get install texinfo python-dev zlib1g-dev libbz2-dev stow
+  sudo apt-get install libgmp3-dev
+
+* Using my Git mirrors
+
+Finally, for the convenience of fellow developers on the master (DEVEL)
+branch, you may download and build some of these dependencies quite
+easily.  Just run this command:
+
+  sudo make libs
+
+You'll now have a few extra source installations in /usr/local/stow/,
+most importantly Boost and CppUnit.
 
 ------------------------------------------------------------------------
 

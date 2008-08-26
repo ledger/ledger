@@ -191,9 +191,12 @@ while [ -n "$1" ]; do
 
 	#CXXFLAGS="$CXXFLAGS -Weffc++"
 	CXXFLAGS="$CXXFLAGS -Wno-unused"
-	CXXFLAGS="$CXXFLAGS -Wno-shorten-64-to-32"
 	CXXFLAGS="$CXXFLAGS -Wno-old-style-cast"
 	CXXFLAGS="$CXXFLAGS -Wno-deprecated"
+
+	if [ $SYSTEM = Darwin ]; then
+	    CXXFLAGS="$CXXFLAGS -Wno-shorten-64-to-32"
+	fi
 
 	#LDFLAGS="-Wl,-read_only_relocs,suppress"
 	#LIBS=""
