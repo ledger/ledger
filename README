@@ -58,7 +58,7 @@ If you're going to be building with Ubuntu, the command is:
 
   sudo apt-get install build-essential libtool autoconf automake
   sudo apt-get install texinfo python-dev zlib1g-dev libbz2-dev stow
-  sudo apt-get install libgmp3-dev
+  sudo apt-get install libgmp3-dev bjam
 
 * Using my Git mirrors
 
@@ -66,7 +66,10 @@ Finally, for the convenience of fellow developers on the master (DEVEL)
 branch, you may download and build some of these dependencies quite
 easily.  Just run this command:
 
-  sudo make libs
+  git submodule init
+  git submodule update
+  cd lib
+  make                   # it installs stuff into /usr/local/stow
 
 You'll now have a few extra source installations in /usr/local/stow/,
 most importantly Boost and CppUnit.
