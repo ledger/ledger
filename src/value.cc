@@ -1664,7 +1664,7 @@ void value_t::print(std::ostream& out, const bool relaxed) const
 
   case BALANCE:
   case BALANCE_PAIR:
-    assert(false);
+    out << as_balance();
     break;
 
   case DATETIME:
