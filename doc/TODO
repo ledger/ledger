@@ -6,8 +6,26 @@ LEDGER  -*- mode: org; fill-column: 78 -*-
 #+TAGS: EMACS(e) FEATURE(f) DOCS(d) WEBSITE(w) BUILD(b)
 #+CATEGORY: Ledger
 
-* TODO [#B] Get transactional assignments working again
-  SCHEDULED: <2008-08-25 Mon>
+* TODO [#B] A mask by itself should generate a helpful error message
+  Especially since people from 2.6 will want to use "/foo/" intead of "account
+  =~ /foo".
+  :PROPERTIES:
+  :UUID: F21E8B63-C6C9-4B09-90B2-2441FBD1F517
+  :END:
+  [2008-08-26 Tue]
+* STARTED [#C] Build Ledger master on Ubuntu so I can figure out Nafai's problem
+  SCHEDULED: <2008-08-30 Sat>
+  - State "STARTED"    [2008-08-28 Thu 23:57] \\
+    I've gotten things to the point now where I can see what Nafai is seeing.  The
+    next step is to fix it.
+  - State "STARTED"    [2008-08-28 Thu 02:35] \\
+    I'm still building the dependencies.
+  :PROPERTIES:
+  :UUID: EC1EABBA-A613-4E57-AB8A-687DC5036BE8
+  :END:
+  [2008-08-27 Wed]
+* TODO [#A] Get transactional assignments working again
+  SCHEDULED: <2008-08-30 Sat>
   Another thing that needs to happen is that these assignments are stored
   internally in the transaction, in assign_amount and assign_expr, and then
   get double-checked against the running total when a regular register report
@@ -268,11 +286,19 @@ argv=0xbfffddf0, envp=0xbfffddf0) at main.cc:452
   :END:
   [2008-08-05 Tue]
 * TODO [#B] Add the ability to map OFX numbers to specific accounts
+  By allowing a directive like this:
+  :DATA:
+@mapaccount 0004637467862632    Assets:Current:RBC:Checking
+  :END:
+
+  It could facilitate the parsing of OFX data into Ledger date.
   :PROPERTIES:
+  :Submitter: Martin Blais <blais@furius.ca>
   :Version: 2.6
   :Ticket: 52
   :UUID: 4FE37F8F-99F4-4548-88F3-D64CF7A76856
   :END:
+  [2008-04-07 Mon]
 * TODO [#B] Add the concept of "date aliases" to Ledger, so I could say: -b Term1
   :PROPERTIES:
   :Version: 2.6
@@ -366,11 +392,16 @@ argv=0xbfffddf0, envp=0xbfffddf0) at main.cc:452
   :UUID: 0C13AABF-F0CC-40ED-BC20-D322AF1DD784
   :END:
 * TODO [#B] Balance command gets the sorting wrong
+  The command is:
+  :SCRIPT:
+ledger -S -t -s bal wedding
+  :END:
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 29
   :UUID: D913FCEE-88FF-41D1-98AB-2561382C7933
   :END:
+  [2007-12-10 Mon]
 * TODO [#B] Balances with non-matching exchange rates is ambiguous.
   :PROPERTIES:
   :Version: 2.6
@@ -499,11 +530,16 @@ $ ledger -l 'd<=[30/06/2006]' -w equity ^Assets:Super
   :END:
   [2008-08-14 Thu]
 * TODO [#B] Command does not sort correctly
+  The command is:
+  :SCRIPT:
+ledger -f utils/cases/1032.dat -S t bal
+  :END:
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 24
   :UUID: 72DA9574-0B30-4140-96EC-D721F73B7888
   :END:
+  [2007-12-10 Mon]
 * TODO [#B] Command fails to report monthly averages
   - State "TODO"       [2008-07-17 Thu 20:43] \\
     The output from this command is not what people would think it is, because it
@@ -538,11 +574,55 @@ ledger -p "this year" -MAs bal ^Expenses
   :END:
   [2008-08-14 Thu]
 * TODO [#B] Completing currency fails
+  Strange bug with inference of currency:
+  :DATA:
+2007/12/31 * Cost basis for: RED HAT INC RHT
+  Assets:Investments:RBC-Broker:Account-RSP                                    4 RHT
+  Equity:Opening-Balances:Cost                                            689.87 CAD
+
+2008/01/03=2007/12/28 * Sell -- RHT -- RED HAT INC CA TAUX DE CHANGE    .96590
+  Assets:Investments:RBC-Broker:Account-RSP                              -4.00 RHT @      21.14 CAD
+  Expenses:Financial:Commissions                                          9.95 USD @     .96590 CAD
+  Assets:Investments:RBC-Broker:Account-RSP                              72.06 CAD
+  Expenses:Financial:Fees
+  :END:
+
+  The fees are inserted without a commodity as -9.610705:
+  :OUTPUT:
+ledger -w -f bug.txt  reg 
+2007/12/31  Cost basis for: RED HAT INC RHT     As:Investments:RBC-Broker:Account-RSP                4.00 RHT               4.00 RHT
+                                                Equity:Opening-Balances:Cost                       689.87 CAD             689.87 CAD
+                                                                                                                            4.00 RHT
+2008/01/03  Sell -- RHT -- RED HAT INC CA TAU.. As:Investments:RBC-Broker:Account-RSP               -4.00 RHT             689.87 CAD
+                                                Expenses:Financial:Commissions                       9.95 USD             689.87 CAD
+                                                                                                                            9.95 USD
+                                                As:Investments:RBC-Broker:Account-RSP               72.06 CAD             761.93 CAD
+                                                                                                                            9.95 USD
+                                                Expenses:Financial:Fees                             -9.610705              -9.610705
+                                                                                                                          761.93 CAD
+                                                                                                                            9.95 USD
+                                                Expenses:Financial:Fees                             12.50 CAD              -9.610705
+                                                                                                                          774.43 CAD
+                                                                                                                            9.95 USD
+  :END:
+  This is a bug.
+
+  I wish I could just say:
+  :DATA:
+2008/01/03=2007/12/28 * Sell -- RHT -- RED HAT INC CA TAUX DE CHANGE    .96590
+  Assets:Investments:RBC-Broker:Account-RSP                              -4.00 RHT @      21.14 CAD
+  Expenses:Financial:Commissions                                          9.95 USD @     .96590 CAD
+  Assets:Investments:RBC-Broker:Account-RSP                              72.06 CAD
+  Expenses:Financial:Fees                                                      CAD
+  :END:
+  ... to tell Ledger which currency to use to complete the entry.
   :PROPERTIES:
+  :Submitter: Martin Blais <blais@furius.ca>
   :Version: 2.6
   :Ticket: 55
   :UUID: E4C9A8EA-296B-443F-937A-80182B21AA20
   :END:
+  [2008-04-07 Mon]
 * TODO [#B] Confirm the completeness of the Python bridge, in both directions
   :PROPERTIES:
   :UUID: 51B7E884-F0F8-4231-9C71-9D5EB653AAF9
@@ -627,11 +707,18 @@ ledger -p "this year" -MAs bal ^Expenses
   :UUID: F7FFB324-9AC2-42A6-A6DD-38C02F30BEF7
   :END:
 * TODO [#B] Forecasting command doesn't do any forecasting
+  The command is:
+  :SCRIPT:
+ledger -Y --forecast 'T>0' reg food
+  :END:
+
+  Doesn't do any forecasting!  If the -Y is dropped it does.
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 28
   :UUID: E2DF7C6C-BA02-4F3D-8C3C-B73F8BC30CD6
   :END:
+  [2007-12-10 Mon]
 * TODO [#B] FR: Add the concept of spatially delimited "pages"
   :PROPERTIES:
   :Version: 2.6
@@ -692,6 +779,7 @@ ledger -p "this year" -MAs bal ^Expenses
   :Ticket: 65
   :UUID: 5D1B0408-90D0-4019-AE0F-A914329C73CB
   :END:
+  [2009-04-11 Sat]
 * TODO [#B] In ledger-mode, color directive lines firebrick red	       :FEATURE:
   :PROPERTIES:
   :Version: 2.6
@@ -724,11 +812,14 @@ ledger -p "this year" -MAs bal ^Expenses
   :UUID: 85DAE1AB-F6D3-4AAC-A4F7-99D146B355E7
   :END:
 * TODO [#B] Ledger formats UTF-8 strings incorrectly
+  The report `ledger --tail 20 reg nrl:checking` has errors in the tabulation
+  because of the width of UTF-8 characters that are larger than 8-bit.
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 67
   :UUID: 2FE8B7B7-15A3-4F02-9B53-3A629212561A
   :END:
+  [2008-04-11 Fri]
 * TODO [#B] ledger.el: ledger-context-at-point fails to parse acct-transaction  :EMACS:
   - State "TODO"       [2007-11-07 Wed 04:06] \\
     levin writes:
@@ -845,11 +936,38 @@ ledger -p "this year" -MAs bal ^Expenses
   :END:
   [2007-10-29 Mon]
 * TODO [#B] Multiple -f options fail silently.
+  Ledger does not seem to be able to accept multiple -f options (further -f's
+  get ignored silently). It should simply concatenate all the specified files
+  in a single data set.
+
+  :OUTPUT:
+Predicate: 
+Display P: a
+2007/12/31 Start of year / Op.. As:In:HSBC-Broker           100 IVV      100 IVV
+                                Eq:Op:Cost             -15333.7200 USD      100 IVV
+                                                                 -15333.7200 USD
+banane:~$ ledger -f /tmp/b.txt reg
+Predicate: 
+Display P: a
+2007/12/31 Start of year / Op.. As:In:HSBC-Broker           100 IAA      100 IAA
+                                Eq:Op:Cost             -15333.7200 USD      100 IAA
+                                                                 -15333.7200 USD
+banane:~$ ledger -f /tmp/a.txt /tmp/b.txt reg
+Error: Unrecognized command '/tmp/b.txt'
+banane:~$ ledger -f /tmp/a.txt -f /tmp/b.txt reg
+Predicate: 
+Display P: a
+2007/12/31 Start of year / Op.. As:In:HSBC-Broker           100 IVV      100 IVV
+                                Eq:Op:Cost             -15333.7200 USD      100 IVV
+                                                                 -15333.7200 USD
+  :END:
   :PROPERTIES:
+  :Submitter: Martin Blais <blais@furius.ca>
   :Version: 2.6
   :Ticket: 54
   :UUID: B1E49EA5-18B9-413A-ACD6-9F9795F25722
   :END:
+  [2008-04-07 Mon]
 * TODO [#B] Need a flag for sorting the amounts in a -M report in ledger
   :PROPERTIES:
   :Version: 2.6
@@ -1041,11 +1159,33 @@ ledger -f utils/standard.dat -e 2004/4 -G reg 401
   :UUID: 146B0BE4-C5EB-4A5B-A332-FE512B40D375
   :END:
 * TODO [#B] The -V flag is not working
+  Here's the data input
+  :DATA:
+2008/04/15 * Paid expenses back from cie.
+   Expenses:Cie-Reimbursements    2000 CAD @ 1.10 EUR
+   Assets:Checking                
+
+P 2008/04/20 00:00:00 CAD 1.20 EUR
+  :END:
+
+  When I run the following command this does not work:
+  :OUTPUT:
+Hermes:/Users/johnw $ ledger -f /tmp/test.dat -V reg
+2008/04/15 Paid expenses back.. Ex:Cie-Reimbursements   2200.00 EUR  2200.00 EUR
+                                Assets:Checking        -2200.00 EUR            0
+2008/04/07 Commodities revalued                            2000 CAD
+                                                       -2200.00 EUR     2000 CAD
+                                                                    -2200.00 EUR
+  :END:
+
+  It should have reported in terms of Euros only.
   :PROPERTIES:
+  :Submitter: Martin Blais <blais@furius.ca>
   :Version: 2.6
   :Ticket: 53
   :UUID: D943AE0F-44EA-47EE-BA85-AFC513E039EB
   :END:
+  [2008-04-07 Mon]
 * TODO [#B] The entry command drops price specifications
   :PROPERTIES:
   :Version: 2.6
