@@ -202,7 +202,7 @@ ledger_so_SOURCES      = $(libamounts_la_SOURCES) $(libledger_la_SOURCES) \
 			 $(libpyledger_la_SOURCES) python/pyledger.cc
 ledger_so_DEPENDENCIES = $(lib_LTLIBRARIES)
 
-PYLIBS  = amounts ledger pyledger gmp \
+PYLIBS  = ledger amounts pyledger gmp \
 	  boost_system$(BOOST_SUFFIX)  \
 	  boost_date_time$(BOOST_SUFFIX)  \
           boost_filesystem$(BOOST_SUFFIX) \
