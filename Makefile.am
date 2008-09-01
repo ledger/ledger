@@ -1,6 +1,6 @@
 EXTRA_DIST = autogen.sh contrib
 
-lib_LTLIBRARIES = libamounts.la libledger.la
+lib_LTLIBRARIES = libledger.la libamounts.la
 
 libamounts_la_CPPFLAGS = -I$(srcdir)/src -I$(srcdir)/lib
 libamounts_la_SOURCES  = \
