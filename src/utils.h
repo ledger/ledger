@@ -181,7 +181,7 @@ public:
   string();
   string(const string& str);
   string(const std::string& str);
-  string(const int len, char x);
+  string(size_type len, char x);
   string(const char * str);
   string(const char * str, const char * end);
   string(const string& str, int x);

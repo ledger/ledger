@@ -387,8 +387,8 @@ string::string(const string& str) : std::string(str) {
 string::string(const std::string& str) : std::string(str) {
   TRACE_CTOR(string, "const std::string&");
 }
-string::string(const int len, char x) : std::string(len, x) {
-  TRACE_CTOR(string, "const int, char");
+string::string(size_type len, char x) : std::string(len, x) {
+  TRACE_CTOR(string, "size_type, char");
 }
 string::string(const char * str) : std::string(str) {
   TRACE_CTOR(string, "const char *");
