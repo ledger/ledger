@@ -1395,6 +1395,26 @@ value_t value_t::round() const
   return NULL_VALUE;
 }
 
+void value_t::in_place_round()
+{
+  switch (type()) {
+  case INTEGER:
+    break;
+  case AMOUNT:
+    as_amount_lval().in_place_round();
+    break;
+  case BALANCE:
+    as_balance_lval().in_place_round();
+    break;
+  case BALANCE_PAIR:
+    as_balance_pair_lval().in_place_round();
+    break;
+  default:
+    throw_(value_error, "Cannot round " << label());
+    break;
+  }
+}
+
 value_t value_t::unround() const
 {
   switch (type()) {

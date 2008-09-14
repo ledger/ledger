@@ -377,8 +377,20 @@ public:
     return *this;
   }
 
-  amount_t round() const;
-  amount_t round(precision_t prec) const;
+  amount_t round() const {
+    amount_t temp(*this);
+    temp.in_place_round();
+    return temp;
+  }
+  amount_t& in_place_round();
+
+  amount_t round(precision_t prec) const {
+    amount_t temp(*this);
+    temp.in_place_round(prec);
+    return temp;
+  }
+  amount_t& in_place_round(precision_t prec);
+
   amount_t unround() const;
 
   amount_t reduce() const {

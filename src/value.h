@@ -407,6 +407,7 @@ public:
 
   value_t abs() const;
   value_t round() const;
+  void    in_place_round();
   value_t unround() const;
 
   value_t reduce() const {
