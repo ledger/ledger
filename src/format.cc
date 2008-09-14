@@ -159,6 +159,8 @@ format_t::element_t * format_t::parse_elements(const string& fmt)
       case 'r': current->chars = "\r"; break;
       case 't': current->chars = "\t"; break;
       case 'v': current->chars = "\v"; break;
+      case '\\': current->chars = "\\"; break;
+      default: current->chars = string(1, *p); break;
       }
       continue;
     }
