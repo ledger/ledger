@@ -130,7 +130,7 @@ bool entry_base_t::finalize()
   //                               :generatedp t))
   //       (add-xact entry null-xact)))
 
-  if (journal && journal->basket && xacts.size() == 1) {
+  if (journal && journal->basket && xacts.size() == 1 && ! balance.is_null()) {
     // jww (2008-07-24): Need to make the rest of the code aware of what to do
     // when it sees a generated xact.
     null_xact = new xact_t(journal->basket, XACT_GENERATED);
@@ -173,9 +173,13 @@ bool entry_base_t::finalize()
 			      XACT_GENERATED));
 	}
       }
-    } else {
+    }
+    else if (balance.is_amount()) {
       null_xact->amount = balance.as_amount().negate();
       null_xact->add_flags(XACT_CALCULATED);
+    }
+    else if (! balance.is_null() && ! balance.is_realzero()) {
+      throw_(balance_error, "Entry does not balance");
     }
     balance = NULL_VALUE;
 
@@ -300,28 +304,37 @@ bool entry_base_t::finalize()
   //            (format-value balance :width 20)))
 
   if (! balance.is_null()) {
-    balance.round();
+    balance.in_place_round();
     if (! balance.is_zero()) {
 #if 0
-      error * err =
-	new balance_error("Entry does not balance",
-			  new entry_context(*this, "While balancing entry:"));
-      err->context.push_front
-	(new value_context(balance, "Unbalanced remainder is:"));
-      throw err;
+      new entry_context(*this, "While balancing entry:");
 #endif
+      add_error_context("Unbalanced remainder is: ");
+      add_error_context(value_context(balance));
+      throw_(balance_error, "Entry does not balance");
     }
   }
 
   // Add the final calculated totals each to their related account
 
   if (dynamic_cast<entry_t *>(this)) {
+    bool all_null = true;
     foreach (xact_t * xact, xacts) {
-      // jww (2008-08-09): For now, this feature only works for
-      // non-specific commodities.
-      add_or_set_value(xact->account->xdata().value,
-		       xact->amount.strip_annotations());
+      if (! xact->amount.is_null()) {
+	all_null = false;
+
+	// jww (2008-08-09): For now, this feature only works for
+	// non-specific commodities.
+	add_or_set_value(xact->account->xdata().value, xact->amount);
+
+	DEBUG("entry.finalize.totals",
+	      "Total for " << xact->account->fullname() << " + "
+	      << xact->amount.strip_annotations() << ": "
+	      << xact->account->xdata().value.strip_annotations());
+      }
     }
+    if (all_null)
+      return false;		// ignore this entry completely
   }
 
   return true;

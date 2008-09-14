@@ -1263,11 +1263,8 @@ bool value_t::is_realzero() const
     return as_any_pointer().empty();
 
   default:
-    assert(false);
-    break;
+    throw_(value_error, "Cannot determine if " << label() << " is really zero");
   }
-  assert(false);
-  return true;
 }
 
 bool value_t::is_zero() const
@@ -1296,11 +1293,8 @@ bool value_t::is_zero() const
     return as_any_pointer().empty();
 
   default:
-    assert(false);
-    break;
+    throw_(value_error, "Cannot determine if " << label() << " is zero");
   }
-  assert(false);
-  return true;
 }
 
 value_t value_t::value(const optional<datetime_t>& moment) const

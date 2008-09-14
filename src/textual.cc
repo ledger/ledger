@@ -313,71 +313,78 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
 	DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 	      "Found a balance assignment indicator");
 	if (in.good() && ! in.eof()) {
-	  amount_t amt;
+	  xact->assigned_amount = amount_t();
 
 	  try {
 	    istream_pos_type beg = in.tellg();
 
-	    optional<expr_t> total_expr =
-	      parse_amount_expr(in, amt, xact.get(), EXPR_PARSE_NO_MIGRATE);
+	    xact->assigned_amount_expr =
+	      parse_amount_expr(in, *xact->assigned_amount, xact.get(),
+				EXPR_PARSE_NO_MIGRATE);
 
-	    if (amt.is_null())
+	    if (xact->assigned_amount->is_null())
 	      throw parse_error
 		("An assigned balance must evaluate to a constant value");
 
 	    DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
-		  "XACT assign: parsed amt = " << amt);
+		  "XACT assign: parsed amt = " << *xact->assigned_amount);
 
-	    if (total_expr) {
+	    if (xact->assigned_amount_expr) {
 	      istream_pos_type end = in.tellg();
-	      total_expr->set_text(string("=") +
-				   string(line, long(beg), long(end - beg)));
+	      xact->assigned_amount_expr->set_text
+		(string("=") + string(line, long(beg), long(end - beg)));
 	    }
 
-	    // jww (2008-08-02): Save total_expr somewhere!
-
 	    account_t::xdata_t& xdata(xact->account->xdata());
+	    amount_t& amt(*xact->assigned_amount);
 
-	    DEBUG("ledger.xact.assign", "account balance = " << xdata.value);
-	    DEBUG("ledger.xact.assign", "xact amount = " << amt);
+	    DEBUG("xact.assign",
+		  "account balance = " << xdata.value.strip_annotations());
+	    DEBUG("xact.assign",
+		  "xact amount = " << amt.strip_annotations());
 
 	    amount_t diff;
 	    if (xdata.value.is_amount()) {
 	      diff = amt - xdata.value.as_amount();
 	    }
 	    else if (xdata.value.is_balance()) {
-	      optional<amount_t> comm_bal =
-		xdata.value.as_balance().commodity_amount(amt.commodity());
-	      diff = amt - (comm_bal ? *comm_bal : amount_t(0L));
+	      if (optional<amount_t> comm_bal =
+		  xdata.value.as_balance().commodity_amount(amt.commodity()))
+		diff = amt - *comm_bal;
+	      else
+		diff = amt;
 	    }
 	    else if (xdata.value.is_balance_pair()) {
-	      optional<amount_t> comm_bal =
-		xdata.value.as_balance_pair().commodity_amount(amt.commodity());
-	      diff = amt - (comm_bal ? *comm_bal : amount_t(0L));
+	      if (optional<amount_t> comm_bal =
+		  xdata.value.as_balance_pair().commodity_amount(amt.commodity()))
+		diff = amt - *comm_bal;
+	      else
+		diff = amt;
 	    }
 	    else {
 	      diff = amt;
 	    }
 
-	    DEBUG("ledger.xact.assign", "diff = " << diff);
+	    DEBUG("xact.assign", "diff = " << diff.strip_annotations());
 	    DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
-		  "XACT assign: diff = " << diff);
+		  "XACT assign: diff = " << diff.strip_annotations());
 
-	    if (! diff.is_realzero()) {
+	    if (! diff.is_zero()) {
 	      if (! xact->amount.is_null()) {
-		xact_t * temp =
-		  new xact_t(xact->account, diff,
-			     XACT_GENERATED | XACT_CALCULATED);
-		entry->add_xact(temp);
+		diff -= xact->amount;
+		if (! diff.is_zero()) {
+		  xact_t * temp = new xact_t(xact->account, diff,
+					     XACT_GENERATED | XACT_CALCULATED);
+		  entry->add_xact(temp);
 
-		DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
-		      "Created balancing transaction");
+		  DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
+			"Created balancing transaction");
+		}
 	      } else {
 		xact->amount = diff;
 		DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 		      "Overwrite null transaction");
 	      }
-	      xdata.value = amt;
 	    }
 	  }
 	  catch (const std::exception& err) {

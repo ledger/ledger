@@ -69,6 +69,8 @@ public:
   optional<expr_t>   amount_expr;
   optional<amount_t> cost;
   optional<expr_t>   cost_expr;
+  optional<amount_t> assigned_amount;
+  optional<expr_t>   assigned_amount_expr;
 
   istream_pos_type   beg_pos;
   unsigned long	     beg_line;
@@ -84,7 +86,7 @@ public:
   {
     TRACE_CTOR(xact_t, "account_t *, flags_t");
   }
-  xact_t(account_t *	_account,
+  xact_t(account_t *	 _account,
 	 const amount_t& _amount,
 	 flags_t         _flags = XACT_NORMAL,
 	 const optional<string>& _note = none)
