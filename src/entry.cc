@@ -380,6 +380,13 @@ namespace {
     return entry.date();
   }
 
+  value_t get_code(entry_t& entry) {
+    if (entry.code)
+      return string_value(*entry.code);
+    else
+      return string_value(empty_string);
+  }
+
   value_t get_payee(entry_t& entry) {
     return string_value(entry.payee);
   }
@@ -393,6 +400,11 @@ namespace {
 expr_t::ptr_op_t entry_t::lookup(const string& name)
 {
   switch (name[0]) {
+  case 'c':
+    if (name == "code")
+      return WRAP_FUNCTOR(get_wrapper<&get_code>);
+    break;
+
   case 'd':
     if (name[1] == '\0' || name == "date")
       return WRAP_FUNCTOR(get_wrapper<&get_date>);

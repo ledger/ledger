@@ -78,6 +78,13 @@ namespace {
     return xact.date();
   }
 
+  value_t get_code(xact_t& xact) {
+    if (xact.entry->code)
+      return string_value(*xact.entry->code);
+    else
+      return string_value(empty_string);
+  }
+
   value_t get_payee(xact_t& xact) {
     return string_value(xact.entry->payee);
   }
@@ -167,6 +174,8 @@ expr_t::ptr_op_t xact_t::lookup(const string& name)
   case 'c':
     if (name == "cleared")
       return expr_t::op_t::wrap_value(0L);
+    else if (name == "code")
+      return WRAP_FUNCTOR(get_wrapper<&get_code>);
     break;
 
   case 'd':
