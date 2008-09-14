@@ -64,7 +64,7 @@ expr_t::parser_t::parse_value_term(std::istream& in,
 
       ptr_op_t call_node(new op_t(op_t::O_CALL));
       call_node->set_left(node);
-      call_node->set_right(parse_value_expr(in, tflags | EXPR_PARSE_PARTIAL));
+      call_node->set_right(parse_value_expr(in, tflags | EXPR_PARSE_SINGLE));
 
       tok = next_token(in, tflags);
       if (tok.kind != token_t::RPAREN)
@@ -85,7 +85,7 @@ expr_t::parser_t::parse_value_term(std::istream& in,
   }
 
   case token_t::LPAREN:
-    node = parse_value_expr(in, tflags | EXPR_PARSE_PARTIAL);
+    node = parse_value_expr(in, tflags | EXPR_PARSE_SINGLE);
     if (! node)
       throw_(parse_error, tok.symbol << " operator not followed by expression");
 
@@ -355,7 +355,7 @@ expr_t::parser_t::parse_value_expr(std::istream& in,
 {
   ptr_op_t node(parse_querycolon_expr(in, tflags));
 
-  if (node) {
+  if (node && ! (tflags & EXPR_PARSE_SINGLE)) {
     token_t& tok = next_token(in, tflags);
 
     if (tok.kind == token_t::COMMA) {
@@ -376,7 +376,8 @@ expr_t::parser_t::parse_value_expr(std::istream& in,
 	tok.unexpected();
     }
   }
-  else if (! (tflags & EXPR_PARSE_PARTIAL)) {
+  else if (! (tflags & (EXPR_PARSE_PARTIAL |
+			EXPR_PARSE_SINGLE))) {
     throw_(parse_error, "Failed to parse value expression");
   }
 

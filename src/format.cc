@@ -212,7 +212,7 @@ format_t::element_t * format_t::parse_elements(const string& fmt)
     case '[': {
       std::istringstream str(p);
       current->type = element_t::EXPR;
-      current->expr.parse(str, EXPR_PARSE_PARTIAL);
+      current->expr.parse(str, EXPR_PARSE_SINGLE);
       istream_pos_type pos = str.tellg();
       current->expr.set_text(string(p, p + long(pos)));
       p += long(pos) - 1;
