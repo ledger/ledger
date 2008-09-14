@@ -353,15 +353,17 @@ public:
     return true;
   }
 
+  value_t option_date_format_(call_scope_t& args) { // y:
+    ledger::output_date_format = args[0].as_string();
+    return true;
+  }
+
+  value_t option_input_date_format_(call_scope_t& args) { // :
+    ledger::input_date_format = args[0].as_string();
+    return true;
+  }
+
 #if 0
-  value_t option_date_format(call_scope_t& args) { // y:
-    report->date_output_format = optarg;
-  }
-
-  value_t option_input_date_format(call_scope_t& args) { // :
-    config->date_input_format = optarg;
-  }
-
   value_t option_balance_format(call_scope_t& args) { // :
     config->balance_format = optarg;
   }

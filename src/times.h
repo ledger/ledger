@@ -89,10 +89,11 @@ inline string format_datetime(const datetime_t& when)
 inline string format_date(const date_t& when,
 			  const optional<string>& format = none)
 {
-  if (format) {
+  if (format || ! output_date_format.empty()) {
     char buf[256];
     std::tm moment = gregorian::to_tm(when);
-    std::strftime(buf, 255, format->c_str(), &moment);
+    std::strftime(buf, 255, format ?
+		  format->c_str() : output_date_format.c_str(), &moment);
     return buf;
   } else {
     return to_simple_string(when).substr(2);

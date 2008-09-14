@@ -400,7 +400,10 @@ namespace ledger {
 
     if (verb == "register" || verb == "reg" || verb == "r") {
       verb = "register";
-      command = reporter<>(new format_xacts(report, session.register_format));
+      command = reporter<>(new format_xacts(report,
+					    report.format_string.empty() ?
+					    session.register_format :
+					    report.format_string));
     }
     else if (verb == "print" || verb == "p") {
       verb = "print";

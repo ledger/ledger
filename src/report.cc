@@ -322,9 +322,9 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
       case 'c':
 	if (std::strcmp(p, "collapse") == 0)
 	  return MAKE_FUNCTOR(report_t::option_collapse);
-	else if (std::strcmp(p, "comm_as_payee") == 0)
+	else if (std::strcmp(p, "comm-as-payee") == 0)
 	  return MAKE_FUNCTOR(report_t::option_comm_as_payee);
-	else if (std::strcmp(p, "code_as_payee") == 0)
+	else if (std::strcmp(p, "code-as-payee") == 0)
 	  return MAKE_FUNCTOR(report_t::option_code_as_payee);
 	break;
 
@@ -333,6 +333,8 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	  return MAKE_FUNCTOR(report_t::option_daily);
 	else if (std::strcmp(p, "dow") == 0)
 	  return MAKE_FUNCTOR(report_t::option_dow);
+	else if (std::strcmp(p, "date-format_") == 0)
+	  return MAKE_FUNCTOR(report_t::option_date_format_);
 	break;
 
       case 'e':
@@ -344,14 +346,18 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	break;
 
       case 'f':
-	if (std::strcmp(p, "F_") == 0 ||
-	    std::strcmp(p, "format_") == 0)
+	if (std::strcmp(p, "format_") == 0)
 	  return MAKE_FUNCTOR(report_t::option_format_);
 	break;
 
       case 'h':
 	if (std::strcmp(p, "head_") == 0)
 	  return MAKE_FUNCTOR(report_t::option_head_);
+	break;
+
+      case 'i':
+	if (std::strcmp(p, "input-date-format_") == 0)
+	  return MAKE_FUNCTOR(report_t::option_input_date_format_);
 	break;
 
       case 'j':
@@ -430,11 +436,18 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
       case 'y':
 	if (std::strcmp(p, "yearly") == 0)
 	  return MAKE_FUNCTOR(report_t::option_yearly);
+	else if (std::strcmp(p, "y_") == 0)
+	  return MAKE_FUNCTOR(report_t::option_date_format_);
 	break;
 
       case 'E':
 	if (std::strcmp(p, "E") == 0)
 	  return MAKE_FUNCTOR(report_t::option_empty);
+	break;
+
+      case 'F':
+	if (std::strcmp(p, "F_") == 0)
+	  return MAKE_FUNCTOR(report_t::option_format_);
 	break;
 
       case 'J':
