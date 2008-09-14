@@ -6,33 +6,6 @@ LEDGER  -*- mode: org; fill-column: 78 -*-
 #+TAGS: EMACS(e) FEATURE(f) DOCS(d) WEBSITE(w) BUILD(b)
 #+CATEGORY: Ledger
 
-* TODO [#B] Apply fix to the Ledger documentation
-  I found a tiny bug in the info documentation for ledger, version
-  2.6.0.90, regarding per-unit and complete transaction cost.  There
-  seems to be @'s missing (maybe texinfo gobbles up at least on @)
-  
-  It says:
-  
-  > The `ACCOUNT' may be surrounded by parentheses if it is a virtual
-  > transactions, or square brackets if it is a virtual transactions
-  > that must balance.  The `AMOUNT' can be followed by a per-unit
-  > transaction cost, by specifying ` AMOUNT', or a complete
-  > transaction cost with `@ AMOUNT'.  Lastly
-  
-  whereas I believe (from reading the source of textual.cc) it should
-  be: 
-  
-  > The `ACCOUNT' may be surrounded by parentheses if it is a virtual
-  > transactions, or square brackets if it is a virtual transactions
-  > that must balance.  The `AMOUNT' can be followed by a per-unit
-  > transaction cost, by specifying `@ AMOUNT', or a complete
-  > transaction cost with `@@ AMOUNT'.  Lastly
-  SCHEDULED: <2008-09-10 Wed>
-  :PROPERTIES:
-  :Submitter: Par Kurlberg <kurlberg@math.kth.se>
-  :ID: ED900734-1655-4229-A88F-9BCB96634E00
-  :END:
-  [2008-09-02 Tue 06:26]
 * TODO [#C] Create a Puppet script for setting up a Ledger build slave
   This should work for any platform, so that I can fire up a virtual
   buildslave on Solaris, Ubuntu, CentOS, OS X, etc.
@@ -67,8 +40,9 @@ LEDGER  -*- mode: org; fill-column: 78 -*-
   :ID: EC1EABBA-A613-4E57-AB8A-687DC5036BE8
   :END:
   [2008-08-27 Wed]
-* STARTED [#A] Get transactional assignments working again
-  SCHEDULED: <2008-09-10 Wed>
+* DONE [#B] Get transactional assignments working again
+  SCHEDULED: <2008-09-13 Sat>
+  - State "DONE"       [2008-09-14 Sun 06:26]
   - State "STARTED"    [2008-09-06 Sat 08:11]
   Another thing that needs to happen is that these assignments are stored
   internally in the transaction, in assign_amount and assign_expr, and then
@@ -2290,6 +2264,35 @@ While balancing entry:
   :Attachments: sample.gnucash
   :END:
   [2008-06-16 Mon]
+* DUPLICATE [#B] Apply fix to the Ledger documentation
+  - State "DUPLICATE"  [2008-09-11 Thu 03:08] \\
+    This has already been fixed by A7CA0F5B-1F08-417A-9071-A223601100CA.
+  I found a tiny bug in the info documentation for ledger, version
+  2.6.0.90, regarding per-unit and complete transaction cost.  There
+  seems to be @'s missing (maybe texinfo gobbles up at least on @)
+  
+  It says:
+  
+  > The `ACCOUNT' may be surrounded by parentheses if it is a virtual
+  > transactions, or square brackets if it is a virtual transactions
+  > that must balance.  The `AMOUNT' can be followed by a per-unit
+  > transaction cost, by specifying ` AMOUNT', or a complete
+  > transaction cost with `@ AMOUNT'.  Lastly
+  
+  whereas I believe (from reading the source of textual.cc) it should
+  be: 
+  
+  > The `ACCOUNT' may be surrounded by parentheses if it is a virtual
+  > transactions, or square brackets if it is a virtual transactions
+  > that must balance.  The `AMOUNT' can be followed by a per-unit
+  > transaction cost, by specifying `@ AMOUNT', or a complete
+  > transaction cost with `@@ AMOUNT'.  Lastly
+  SCHEDULED: <2008-09-10 Wed>
+  :PROPERTIES:
+  :Submitter: Par Kurlberg <kurlberg@math.kth.se>
+  :ID: ED900734-1655-4229-A88F-9BCB96634E00
+  :END:
+  [2008-09-02 Tue 06:26]
 * DONE [#B] Some at-signs are not properly escaped in documentation	   :DOC:
   - State "DONE"       [2008-03-27 Thu 19:42]
   Some of the at signs are not properly escaped in the texi
