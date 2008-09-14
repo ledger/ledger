@@ -901,7 +901,7 @@ unsigned int textual_parser_t::parse(std::istream& in,
 	    pe->end_pos	 = end_pos;
 	    pe->end_line = linenum;
 	  } else {
-	    throw new parse_error("Period entry failed to balance");
+	    throw parse_error("Period entry failed to balance");
 	  }
 	}
 	break;
@@ -978,17 +978,23 @@ unsigned int textual_parser_t::parse(std::istream& in,
 	TRACE_START(entries, 1, "Time spent handling entries:");
 	if (entry_t * entry =
 	    parse_entry(in, line, account_stack.front(), *this, pos)) {
+	  // The entry pointer is unowned at the minute, and there is a
+	  // possibility that add_entry ma throw an exception, which
+	  // would cause us to leak without this guard.
+	  std::auto_ptr<entry_t> entry_ptr(entry);
 	  if (journal.add_entry(entry)) {
+	    entry_ptr.release(); // it's owned by the journal now
 	    entry->src_idx  = src_idx;
 	    entry->beg_pos  = beg_pos;
 	    entry->beg_line = beg_line;
 	    entry->end_pos  = pos;
 	    entry->end_line = linenum;
 	    count++;
-	  } else {
-	    checked_delete(entry);
-	    throw parse_error("Entry does not balance");
 	  }
+	  // It's perfectly valid for the journal to reject the entry,
+	  // which it will do if the entry has no substantive effect
+	  // (for example, a checking entry, all of whose transactions
+	  // have null amounts).
 	} else {
 	  throw parse_error("Failed to parse entry");
 	}
