@@ -96,13 +96,14 @@ void expr_t::parse(const string& _str, const unsigned int flags)
   compiled = false;
 }
 
-void expr_t::parse(std::istream& in, const unsigned int flags)
+void expr_t::parse(std::istream& in, const unsigned int flags,
+		   const string * original_string)
 {
   if (! parser.get())
     throw_(parse_error, "Value expression parser not initialized");
 
   str	   = "<stream>";
-  ptr	   = parser->parse(in, flags);
+  ptr	   = parser->parse(in, flags, original_string);
   compiled = false;
 }
 

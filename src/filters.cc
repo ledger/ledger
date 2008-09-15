@@ -148,7 +148,7 @@ void calc_xacts::operator()(xact_t& xact)
 #if 0
     add_error_context(xact_context(xact));
 #endif
-    throw err;
+    throw;
   }
 }
 

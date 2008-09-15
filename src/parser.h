@@ -92,10 +92,11 @@ public:
     TRACE_DTOR(parser_t);
   }
 
-  ptr_op_t parse(std::istream& in, const flags_t flags = EXPR_PARSE_NORMAL);
+  ptr_op_t parse(std::istream& in, const flags_t flags = EXPR_PARSE_NORMAL,
+		 const string * original_string = NULL);
   ptr_op_t parse(string& str, const flags_t flags = EXPR_PARSE_NORMAL) {
     std::istringstream stream(str);
-    return parse(stream, flags);
+    return parse(stream, flags, &str);
   }
 };
 

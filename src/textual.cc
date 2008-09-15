@@ -223,7 +223,7 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
     }
     catch (const std::exception& err) {
       add_error_context("While parsing transaction amount:\n");
-      throw err;
+      throw;
     }
   }
 
@@ -270,7 +270,7 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
 	}
 	catch (const std::exception& err) {
 	  add_error_context("While parsing transaction cost:\n");
-	  throw err;
+	  throw;
 	}
 
 	if (xact->cost->sign() < 0)
@@ -389,7 +389,7 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
 	  }
 	  catch (const std::exception& err) {
 	    add_error_context("While parsing assigned balance:\n");
-	    throw err;
+	    throw;
 	  }
 	}
       }
@@ -434,7 +434,7 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
   catch (const std::exception& err) {
     add_error_context("While parsing transaction:\n");
     add_error_context(line_context(line, in.tellg()));
-    throw err;
+    throw;
   }
 }
 

@@ -93,7 +93,7 @@ namespace {
 				   (string(" (-") + opt->short_opt + "):") :
 				   ": "));
 #endif
-      throw err;
+      throw;
     }
   }
 }
@@ -133,7 +133,7 @@ void process_environment(const char ** envp, const string& tag,
 	catch (const std::exception& err) {
 	  add_error_context("While parsing environment variable option '"
 			    << *p << "':");
-	  throw err;
+	  throw;
 	}
       }
     }

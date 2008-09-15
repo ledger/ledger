@@ -385,7 +385,8 @@ expr_t::parser_t::parse_value_expr(std::istream& in,
 }
 
 expr_t::ptr_op_t
-expr_t::parser_t::parse(std::istream& in, const flags_t flags)
+expr_t::parser_t::parse(std::istream& in, const flags_t flags,
+			const string * original_string)
 {
   try {
     ptr_op_t top_node = parse_value_expr(in, flags);
@@ -399,11 +400,13 @@ expr_t::parser_t::parse(std::istream& in, const flags_t flags)
     return top_node;
   }
   catch (const std::exception& err) {
-    add_error_context("While parsing value expression:\n");
-#if 0
-    add_error_context(line_context(str, in.tellg() - 1));
-#endif
-    throw err;
+    add_error_context("While parsing value expression:");
+    if (original_string) {
+      istream_pos_type pos = in.tellg();
+      pos -= 1;
+      add_error_context(line_context(*original_string, pos));
+    }
+    throw;
   }
 }
 

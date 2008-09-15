@@ -96,7 +96,8 @@ public:
   }
 
   void     parse(const string& _str, const unsigned int flags = 0);
-  void     parse(std::istream& in, const unsigned int flags = 0);
+  void     parse(std::istream& in, const unsigned int flags = 0,
+		 const string * original_string = NULL);
 	   
   void     compile(scope_t& scope);
   value_t  calc(scope_t& scope);

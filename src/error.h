@@ -65,7 +65,7 @@ inline string file_context(const path& file, std::size_t line) {
 
 inline string line_context(const string& line, istream_pos_type pos) {
   std::ostringstream buf;
-  buf << "  " << line << std::endl << "  ";
+  buf << "  " << line << "  ";
   istream_pos_type idx = (pos == istream_pos_type(0) ?
 			  istream_pos_type(line.length()) : pos);
   idx -= 1;
