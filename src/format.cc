@@ -212,14 +212,22 @@ format_t::element_t * format_t::parse_elements(const string& fmt)
     case '[': {
       std::istringstream str(p);
       current->type = element_t::EXPR;
-      current->expr.parse(str, EXPR_PARSE_SINGLE);
-      istream_pos_type pos = str.tellg();
-      current->expr.set_text(string(p, p + long(pos)));
-      p += long(pos) - 1;
-      // Don't gobble up any whitespace
-      const char * base = p;
-      while (p >= base && std::isspace(*p))
-	p--;
+      string temp(p);
+      current->expr.parse(str, EXPR_PARSE_SINGLE, &temp);
+      if (str.eof()) {
+	current->expr.set_text(p);
+	p += std::strlen(p);
+      } else {
+	assert(str.good());
+	istream_pos_type pos = str.tellg();
+	current->expr.set_text(string(p, p + long(pos)));
+	p += long(pos) - 1;
+
+	// Don't gobble up any whitespace
+	const char * base = p;
+	while (p >= base && std::isspace(*p))
+	  p--;
+      }
       break;
     }
 

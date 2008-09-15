@@ -64,13 +64,10 @@ expr_t::parser_t::parse_value_term(std::istream& in,
 
       ptr_op_t call_node(new op_t(op_t::O_CALL));
       call_node->set_left(node);
-      call_node->set_right(parse_value_expr(in, tflags | EXPR_PARSE_SINGLE));
-
-      tok = next_token(in, tflags);
-      if (tok.kind != token_t::RPAREN)
-	tok.expected(')');
-
       node = call_node;
+
+      push_token(tok);		// let the parser see it again
+      node->set_right(parse_value_expr(in, tflags | EXPR_PARSE_SINGLE));
     } else {
       if (std::isdigit(ident[0])) {
 	node = new op_t(op_t::INDEX);
@@ -85,9 +82,10 @@ expr_t::parser_t::parse_value_term(std::istream& in,
   }
 
   case token_t::LPAREN:
-    node = parse_value_expr(in, tflags | EXPR_PARSE_SINGLE);
+    node = parse_value_expr(in, (tflags | EXPR_PARSE_PARTIAL) &
+			    ~EXPR_PARSE_SINGLE);
     if (! node)
-      throw_(parse_error, tok.symbol << " operator not followed by expression");
+      throw_(parse_error, "Left parenthesis not followed by an expression");
 
     tok = next_token(in, tflags);
     if (tok.kind != token_t::RPAREN)
@@ -160,7 +158,7 @@ expr_t::parser_t::parse_mul_expr(std::istream& in,
 {
   ptr_op_t node(parse_unary_expr(in, tflags));
 
-  if (node) {
+  if (node && ! (tflags & EXPR_PARSE_SINGLE)) {
     token_t& tok = next_token(in, tflags);
 
     if (tok.kind == token_t::STAR || tok.kind == token_t::KW_DIV) {
@@ -187,7 +185,7 @@ expr_t::parser_t::parse_add_expr(std::istream& in,
 {
   ptr_op_t node(parse_mul_expr(in, tflags));
 
-  if (node) {
+  if (node && ! (tflags & EXPR_PARSE_SINGLE)) {
     token_t& tok = next_token(in, tflags);
 
     if (tok.kind == token_t::PLUS ||
@@ -215,7 +213,7 @@ expr_t::parser_t::parse_logic_expr(std::istream& in,
 {
   ptr_op_t node(parse_add_expr(in, tflags));
 
-  if (node) {
+  if (node && ! (tflags & EXPR_PARSE_SINGLE)) {
     op_t::kind_t kind	= op_t::LAST;
     flags_t	 _flags = tflags;
     token_t&	 tok	= next_token(in, tflags);
@@ -271,7 +269,7 @@ expr_t::parser_t::parse_and_expr(std::istream& in,
 {
   ptr_op_t node(parse_logic_expr(in, tflags));
 
-  if (node) {
+  if (node && ! (tflags & EXPR_PARSE_SINGLE)) {
     token_t& tok = next_token(in, tflags);
 
     if (tok.kind == token_t::KW_AND) {
@@ -295,7 +293,7 @@ expr_t::parser_t::parse_or_expr(std::istream& in,
 {
   ptr_op_t node(parse_and_expr(in, tflags));
 
-  if (node) {
+  if (node && ! (tflags & EXPR_PARSE_SINGLE)) {
     token_t& tok = next_token(in, tflags);
 
     if (tok.kind == token_t::KW_OR) {
@@ -319,7 +317,7 @@ expr_t::parser_t::parse_querycolon_expr(std::istream& in,
 {
   ptr_op_t node(parse_or_expr(in, tflags));
 
-  if (node) {
+  if (node && ! (tflags & EXPR_PARSE_SINGLE)) {
     token_t& tok = next_token(in, tflags);
 
     if (tok.kind == token_t::QUERY) {
