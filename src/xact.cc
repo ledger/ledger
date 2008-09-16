@@ -85,6 +85,22 @@ namespace {
       return string_value(empty_string);
   }
 
+  value_t get_status(xact_t& xact) {
+    xact_t::state_t status;
+    xact.entry->get_state(&status);
+    return long(status);
+  }
+  value_t get_cleared(xact_t& xact) {
+    xact_t::state_t status;
+    xact.entry->get_state(&status);
+    return status == xact_t::CLEARED;
+  }
+  value_t get_pending(xact_t& xact) {
+    xact_t::state_t status;
+    xact.entry->get_state(&status);
+    return status == xact_t::PENDING;
+  }
+
   value_t get_payee(xact_t& xact) {
     return string_value(xact.entry->payee);
   }
@@ -173,7 +189,7 @@ expr_t::ptr_op_t xact_t::lookup(const string& name)
 
   case 'c':
     if (name == "cleared")
-      return expr_t::op_t::wrap_value(0L);
+      return WRAP_FUNCTOR(get_wrapper<&get_cleared>);
     else if (name == "code")
       return WRAP_FUNCTOR(get_wrapper<&get_code>);
     break;
@@ -198,9 +214,14 @@ expr_t::ptr_op_t xact_t::lookup(const string& name)
 
   case 'p':
     if (name == "pending")
-      return expr_t::op_t::wrap_value(2L);
+      return WRAP_FUNCTOR(get_wrapper<&get_pending>);
     else if (name == "payee")
       return WRAP_FUNCTOR(get_wrapper<&get_payee>);
+    break;
+
+  case 's':
+    if (name == "status")
+      return WRAP_FUNCTOR(get_wrapper<&get_status>);
     break;
 
   case 't':
@@ -211,6 +232,16 @@ expr_t::ptr_op_t xact_t::lookup(const string& name)
   case 'u':
     if (name == "uncleared")
       return expr_t::op_t::wrap_value(1L);
+    break;
+
+  case 'X':
+    if (name[1] == '\0')
+      return WRAP_FUNCTOR(get_wrapper<&get_cleared>);
+    break;
+
+  case 'Y':
+    if (name[1] == '\0')
+      return WRAP_FUNCTOR(get_wrapper<&get_pending>);
     break;
   }
   return entry->lookup(name);

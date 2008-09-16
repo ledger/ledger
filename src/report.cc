@@ -320,8 +320,12 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	break;
 
       case 'c':
-	if (std::strcmp(p, "collapse") == 0)
+	if (! *(p + 1) || std::strcmp(p, "current") == 0)
+	  return MAKE_FUNCTOR(report_t::option_current);
+	else if (std::strcmp(p, "collapse") == 0)
 	  return MAKE_FUNCTOR(report_t::option_collapse);
+	else if (std::strcmp(p, "cleared") == 0)
+	  return MAKE_FUNCTOR(report_t::option_cleared);
 	else if (std::strcmp(p, "comm-as-payee") == 0)
 	  return MAKE_FUNCTOR(report_t::option_comm_as_payee);
 	else if (std::strcmp(p, "code-as-payee") == 0)
@@ -361,7 +365,7 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	break;
 
       case 'j':
-	if (! (*p + 1))
+	if (! *(p + 1))
 	  return MAKE_FUNCTOR(report_t::option_amount_data);
 	break;
 
@@ -423,6 +427,11 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	  return MAKE_FUNCTOR(report_t::option_tail_);
 	break;
 
+      case 'u':
+	if (std::strcmp(p, "uncleared") == 0)
+	  return MAKE_FUNCTOR(report_t::option_uncleared);
+	break;
+
       case 'w':
 	if (std::strcmp(p, "weekly") == 0)
 	  return MAKE_FUNCTOR(report_t::option_weekly);
@@ -440,8 +449,13 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	  return MAKE_FUNCTOR(report_t::option_date_format_);
 	break;
 
+      case 'C':
+	if (! *(p + 1))
+	  return MAKE_FUNCTOR(report_t::option_cleared);
+	break;
+
       case 'E':
-	if (std::strcmp(p, "E") == 0)
+	if (! *(p + 1))
 	  return MAKE_FUNCTOR(report_t::option_empty);
 	break;
 
@@ -451,17 +465,17 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	break;
 
       case 'J':
-	if (! (*p + 1))
+	if (! *(p + 1))
 	  return MAKE_FUNCTOR(report_t::option_total_data);
 	break;
 
       case 'M':
-	if (std::strcmp(p, "M") == 0)
+	if (! *(p + 1))
 	  return MAKE_FUNCTOR(report_t::option_monthly);
 	break;
 
       case 'P':
-	if (std::strcmp(p, "P") == 0)
+	if (! *(p + 1))
 	  return MAKE_FUNCTOR(report_t::option_by_payee);
 	break;
 
@@ -475,13 +489,18 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	  return MAKE_FUNCTOR(report_t::option_total_);
 	break;
 
+      case 'U':
+	if (! *(p + 1))
+	  return MAKE_FUNCTOR(report_t::option_uncleared);
+	break;
+
       case 'W':
-	if (std::strcmp(p, "W") == 0)
+	if (! *(p + 1))
 	  return MAKE_FUNCTOR(report_t::option_weekly);
 	break;
 
       case 'Y':
-	if (std::strcmp(p, "Y") == 0)
+	if (! *(p + 1))
 	  return MAKE_FUNCTOR(report_t::option_yearly);
 	break;
       }

@@ -294,25 +294,28 @@ public:
     return true;
   }
 
-#if 0
   value_t option_current(call_scope_t& args) { // c
-    if (! report->predicate.empty())
-      report->predicate += "&";
-    report->predicate += "d<=m";
+    if (! predicate.empty())
+      predicate += "&";
+    predicate += "date<=now";
+    return true;
   }
 
   value_t option_cleared(call_scope_t& args) { // C
-    if (! report->predicate.empty())
-      report->predicate += "&";
-    report->predicate += "X";
+    if (! predicate.empty())
+      predicate += "&";
+    predicate += "cleared";
+    return true;
   }
 
   value_t option_uncleared(call_scope_t& args) { // U
-    if (! report->predicate.empty())
-      report->predicate += "&";
-    report->predicate += "!X";
+    if (! predicate.empty())
+      predicate += "&";
+    predicate += "!cleared";
+    return true;
   }
 
+#if 0
   value_t option_real(call_scope_t& args) { // R
     if (! report->predicate.empty())
       report->predicate += "&";

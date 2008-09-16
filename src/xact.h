@@ -55,7 +55,7 @@ public:
 #define XACT_GENERATED  0x0020  // transaction was not found in a journal
 #define XACT_TEMP       0x0040  // transaction is a temporary object
 
-  enum state_t { UNCLEARED, CLEARED, PENDING };
+  enum state_t { UNCLEARED = 0, CLEARED, PENDING };
 
   entry_t *	     entry;
   account_t *	     account;

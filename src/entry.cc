@@ -356,7 +356,9 @@ bool entry_t::get_state(xact_t::state_t * state) const
   bool hetero = false;
 
   foreach (xact_t * xact, xacts) {
-    if (first) {
+    if (first ||
+	xact->state == xact_t::CLEARED ||
+	(xact->state == xact_t::PENDING && *state == xact_t::UNCLEARED)) {
       *state = xact->state;
       first = false;
     }
@@ -378,6 +380,22 @@ void entry_t::add_xact(xact_t * xact)
 namespace {
   value_t get_date(entry_t& entry) {
     return entry.date();
+  }
+
+  value_t get_status(entry_t& entry) {
+    xact_t::state_t status;
+    entry.get_state(&status);
+    return long(status);
+  }
+  value_t get_cleared(entry_t& entry) {
+    xact_t::state_t status;
+    entry.get_state(&status);
+    return status == xact_t::CLEARED;
+  }
+  value_t get_pending(entry_t& entry) {
+    xact_t::state_t status;
+    entry.get_state(&status);
+    return status == xact_t::PENDING;
   }
 
   value_t get_code(entry_t& entry) {
@@ -403,6 +421,8 @@ expr_t::ptr_op_t entry_t::lookup(const string& name)
   case 'c':
     if (name == "code")
       return WRAP_FUNCTOR(get_wrapper<&get_code>);
+    else if (name == "cleared")
+      return WRAP_FUNCTOR(get_wrapper<&get_cleared>);
     break;
 
   case 'd':
@@ -424,6 +444,23 @@ expr_t::ptr_op_t entry_t::lookup(const string& name)
   case 'p':
     if (name[1] == '\0' || name == "payee")
       return WRAP_FUNCTOR(get_wrapper<&get_payee>);
+    else if (name == "pending")
+      return WRAP_FUNCTOR(get_wrapper<&get_pending>);
+    break;
+
+  case 'u':
+    if (name == "uncleared")
+      return expr_t::op_t::wrap_value(1L);
+    break;
+
+  case 'X':
+    if (name[1] == '\0')
+      return WRAP_FUNCTOR(get_wrapper<&get_cleared>);
+    break;
+
+  case 'Y':
+    if (name[1] == '\0')
+      return WRAP_FUNCTOR(get_wrapper<&get_pending>);
     break;
   }
 
