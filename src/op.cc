@@ -141,11 +141,9 @@ value_t expr_t::op_t::calc(scope_t& scope)
     return left()->calc(scope) / right()->calc(scope);
 
   case O_NEG:
-    assert(! right());
     return left()->calc(scope).negate();
 
   case O_NOT:
-    assert(! right());
     return ! left()->calc(scope);
 
   case O_AND:
@@ -443,9 +441,10 @@ void expr_t::op_t::dump(std::ostream& out, const int depth) const
   if (kind > TERMINALS || kind == IDENT) {
     if (left()) {
       left()->dump(out, depth + 1);
-      if (right())
+      if (kind > UNARY_OPERATORS && right())
 	right()->dump(out, depth + 1);
-    } else {
+    }
+    else if (kind > UNARY_OPERATORS) {
       assert(! right());
     }
   }
@@ -459,7 +458,7 @@ void expr_t::op_t::read(const char *& data)
     set_left(new expr_t::op_t());
     left()->read(data);
 
-    if (binary::read_bool(data)) {
+    if (kind > UNARY_OPERATORS && binary::read_bool(data)) {
       set_right(new expr_t::op_t());
       right()->read(data);
     }
@@ -503,11 +502,14 @@ void expr_t::op_t::write(std::ostream& out) const
 
   if (kind > TERMINALS) {
     left()->write(out);
-    if (right()) {
-      binary::write_bool(out, true);
-      right()->write(out);
-    } else {
-      binary::write_bool(out, false);
+
+    if (kind > UNARY_OPERATORS) {
+      if (right()) {
+	binary::write_bool(out, true);
+	right()->write(out);
+      } else {
+	binary::write_bool(out, false);
+      }
     }
   } else {
     switch (kind) {
