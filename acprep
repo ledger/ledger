@@ -3,25 +3,11 @@
 export AUTOCONF_VERSION=2.61
 export AUTOMAKE_VERSION=1.9
 
-touch AUTHORS COPYING ChangeLog
-
-cmd=$(which glibtoolize 2>&1)
-if [ -x "$cmd" ]; then
-    export LIBTOOLIZE="$cmd"
-fi
-autoreconf --force --install
+sh ./autogen.sh
 
 HERE="$PWD"
 
-if [ ! "$1" = "--local" ]; then
-    if [ -d "$HOME/Products" ]; then
-	projdir="$HOME/Products/$(basename $HERE)"
-	if [ ! -d "$projdir" ]; then
-	    mkdir -p "$projdir"
-	fi
-	cd "$projdir" || (echo "Cannot change to $projdir"; exit 1)
-    fi
-else
+if [ "$1" = "--local" ]; then
     shift 1
 fi
 
@@ -72,5 +58,3 @@ else
     $HERE/configure CPPFLAGS="$INCDIRS" LDFLAGS="$LIBDIRS" \
 	CXXFLAGS="$CXXFLAGS -g" "$@"
 fi
-
-rm -f AUTHORS COPYING

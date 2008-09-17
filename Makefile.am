@@ -156,23 +156,17 @@ copy-sources:
 	(cd /tmp/ledger; git reset --hard HEAD; git clean -x -d -f)
 
 release: copy-sources
-	(cd /tmp/ledger; ./acprep --local && \
+	(cd /tmp/ledger; ./acprep && \
 	 make -j3 \
 	    CPPFLAGS="-I/usr/local/include -I/opt/local/include" \
 	    LDFLAGS="-L/usr/local/lib -L/opt/local/lib" \
-	    ARCHFLAGS="-arch i386 -arch ppc -isysroot /Developer/SDKs/MacOSX10.5.sdk" \
-	    CXXFLAGS="-arch i386 -arch ppc -isysroot /Developer/SDKs/MacOSX10.5.sdk" \
-	    LDFLAGS="$LDFLAGS -arch i386 -arch ppc -Wl,-syslibroot,/Developer/SDKs/MacOSX10.5.sdk" \
 	    DISTCHECK_CONFIGURE_FLAGS="--disable-dependency-tracking")
 
 release-distcheck: copy-sources
-	(cd /tmp/ledger; ./acprep --local && \
+	(cd /tmp/ledger; ./acprep && \
 	 make -j3 distcheck \
 	    CPPFLAGS="-I/usr/local/include -I/opt/local/include" \
 	    LDFLAGS="-L/usr/local/lib -L/opt/local/lib" \
-	    ARCHFLAGS="-arch i386 -arch ppc -isysroot /Developer/SDKs/MacOSX10.5.sdk" \
-	    CXXFLAGS="-arch i386 -arch ppc -isysroot /Developer/SDKs/MacOSX10.5.sdk" \
-	    LDFLAGS="$LDFLAGS -arch i386 -arch ppc -Wl,-syslibroot,/Developer/SDKs/MacOSX10.5.sdk" \
 	    DISTCHECK_CONFIGURE_FLAGS="--disable-dependency-tracking")
 
 # Makefile.am ends here

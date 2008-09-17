@@ -33,6 +33,7 @@
 /elisp-comp
 /install-sh
 /ledger
+/ledger-*
 /ledger.info
 /libtool
 /ltmain.sh
