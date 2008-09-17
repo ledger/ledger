@@ -6,15 +6,33 @@ LEDGER  -*- mode: org; fill-column: 78 -*-
 #+TAGS: EMACS(e) FEATURE(f) DOCS(d) WEBSITE(w) BUILD(b)
 #+CATEGORY: Ledger
 
+* TODO [#B] Ignore [TEXT] in a transaction which does not specify a date
+  The following data contains a link, not an effective date.
+  :DATA:
+2008/08/11 (08/13/2008) DD/BR #337756      Q35 TONAWANDA, NY                    
+    Liabilities:Visa                          -3.63                          
+    Assets:Company:AGIL1892     ; /PersMealsBreakf/ [[file:///home/rladams/doc/Album/Receipts/20080815131347.jpg]]
+  :END:
+  :PROPERTIES:
+  :ID: 96DDA4B9-E216-4C7A-8D0E-02B0F39CA256
+  :END:
+  [2008-08-27 Wed]
 * TODO [#B] Do not adjust display precision when parsing a pricing entry
   :PROPERTIES:
   :Submitter: John Wiegley <johnw@newartisans.com>
   :Version: 2.6.0.90
   :Ticket: 206
-  :UUID: 7E5D2A6C-A15F-4BC8-A851-04A48E3E30F4
+  :ID: 7E5D2A6C-A15F-4BC8-A851-04A48E3E30F4
   :END:
   [2008-07-28 Mon]
-* TODO [#B] Unbalanced transactions due to rounding problems
+* DONE [#B] Unbalanced transactions due to rounding problems
+  - State "DONE"       [2008-09-17 Wed 05:03] \\
+    The cents disappeared because 'D $1,000.00' must be specified at the beginning
+    of the file, since you never use dollar figures outside of the pricing.
+    
+    The extra penny crept in because of the way that commodity have "lot" details
+    automatically associated with them.  I've now reduced this to the price only,
+    since that's what most people are likely to use, just as this example does.
   - State "TODO"       [2008-08-01 Fri 13:34] \\
     Levin <zslevin@gmail.com> writes:
     > This is the result of ledger in git master branch:
@@ -52,7 +70,7 @@ LEDGER  -*- mode: org; fill-column: 78 -*-
   :Submitter: Vinod Kurup <vvkurup@gmail.com>
   :Version: 2.6.1b
   :Ticket: 207
-  :UUID: E87DD3A5-B061-46A0-95E9-9844A6CB0443
+  :ID: E87DD3A5-B061-46A0-95E9-9844A6CB0443
   :END:
   [2008-08-01 Fri]
 * TODO [#C] Binary cache is invalidated if LEDGER_FILE is changed
@@ -67,7 +85,7 @@ export LEDGER_FILE=/home/albino/temp/ledger/sample.dat
   :Submitter: albino <#ledger>
   :Version: 2.6.1b
   :Ticket: 211
-  :UUID: C65875E1-CF5D-4923-8546-9784EB08AC9D
+  :ID: C65875E1-CF5D-4923-8546-9784EB08AC9D
   :END:
   [2008-08-05 Tue]
 * DONE [#A] -p "this month" doesn't work at all anymore
@@ -90,7 +108,7 @@ Predicate: d>=[1969/12/31]&d<[1970/01/31]&/(?:cash)/
   :Version: 2.6
   :Ticket: 38
   :Attachments: 289.patch
-  :UUID: 0CF00621-31C4-4E5A-B260-78B4DA8C3616
+  :ID: 0CF00621-31C4-4E5A-B260-78B4DA8C3616
   :END:
   [2008-04-04 Fri]
 * DONE [#A] Cannot sort by reverse time
@@ -107,7 +125,7 @@ Error: Cannot negate a date/time
   :Submitter: John Wiegley <johnw@newartisans.com>
   :Version: 2.6.0.90
   :Ticket: 202
-  :UUID: CB97253A-581E-49D0-98D4-3BC5B0616A42
+  :ID: CB97253A-581E-49D0-98D4-3BC5B0616A42
   :END:
   [2008-07-17 Thu]
 * DONE [#A] Core dump on simple input.
@@ -122,7 +140,7 @@ Error: Cannot negate a date/time
   :Submitter: Martin Blais <blais@furius.ca>
   :Version: 2.6
   :Ticket: 56
-  :UUID: 843B6A53-C3C2-45BB-A92C-558AF6F02014
+  :ID: 843B6A53-C3C2-45BB-A92C-558AF6F02014
   :END:
   [2008-04-07 Mon]
 * DONE [#A] crash
@@ -136,7 +154,7 @@ Error: Cannot negate a date/time
   :Submitter: Martin Blais <blais@furius.ca>
   :Version: 2.6
   :Ticket: 177
-  :UUID: 45605775-F9E3-4C83-8BF2-616905178E82
+  :ID: 45605775-F9E3-4C83-8BF2-616905178E82
   :END:
   [2008-04-12 Sat]
 * DONE [#A] Crash on input.
@@ -174,7 +192,7 @@ banane:~/__accounting/.../rbcinv/invest$
   :Submitter: Martin Blais <blais@furius.ca>
   :Version: 2.6
   :Ticket: 46
-  :UUID: 703505C9-B702-4139-B64A-FD3CF592E720
+  :ID: 703505C9-B702-4139-B64A-FD3CF592E720
   :END:
   [2008-04-06 Sun]
 * DONE [#A] Crash on input.
@@ -190,7 +208,7 @@ banane:~/__accounting/.../rbcinv/invest$
   :Submitter: Martin Blais <blais@furius.ca>
   :Version: 2.6
   :Ticket: 47
-  :UUID: B2B79746-5E3B-40D3-B6ED-CCF27364DD5F
+  :ID: B2B79746-5E3B-40D3-B6ED-CCF27364DD5F
   :END:
   [2008-04-06 Sun]
 * DONE [#A] Dates (used with -b -e and -p parameters) are broken
@@ -216,7 +234,7 @@ ledger -f my.ledger -b 2008/03/01 -e 2008/04/01 print
   :Version: 2.6.0.90
   :Ticket: 49
   :Attachments: 290.patch
-  :UUID: A95B2E0F-095D-4314-BC4D-3CEC42203FB1
+  :ID: A95B2E0F-095D-4314-BC4D-3CEC42203FB1
   :END:
   [2008-04-06 Sun]
 * DONE [#A] Entry command produces two liability transactions
@@ -236,7 +254,7 @@ arete$ ledger entry 2007/11/11 safeway groceries \$10.00 american
   :Submitter: Will Glozer <will@glozer.net>
   :Version: 2.6
   :Ticket: 8
-  :UUID: D7DD54D7-8870-4D6D-92A0-90717692F8F2
+  :ID: D7DD54D7-8870-4D6D-92A0-90717692F8F2
   :END:
   [2007-11-12 Mon]
 * DONE [#A] ledger 2.6 shows no timelog entries
@@ -251,7 +269,7 @@ arete$ ledger entry 2007/11/11 safeway groceries \$10.00 american
   :Submitter: Simon Michael <simon@joyful.com>
   :Version: 2.6.1b
   :Ticket: 57
-  :UUID: C13F0BDF-4E15-442E-BBB7-265B0A37457C
+  :ID: C13F0BDF-4E15-442E-BBB7-265B0A37457C
   :END:
   [2008-04-09 Wed]
 * DONE [#A] Ledger fails to balance a simple entry
@@ -276,7 +294,7 @@ Error: "/home/vinod/data/ledger.dat", line 52379: Entry does not balance
   :Submitter: Vinod Kurup <vvkurup@gmail.com>
   :Version: 2.6.1b
   :Ticket: 205
-  :UUID: 0CA014F9-E309-4840-9085-71EC1F46DEC1
+  :ID: 0CA014F9-E309-4840-9085-71EC1F46DEC1
   :END:
   [2008-07-28 Mon]
 * DONE [#A] Make -e use an inclusive end date, and -E an exclusive one
@@ -288,7 +306,7 @@ Error: "/home/vinod/data/ledger.dat", line 52379: Entry does not balance
   :Submitter: John Wiegley <johnw@newartisans.com>
   :Version: 2.6
   :Ticket: 37
-  :UUID: A440BB5E-072B-4C75-A235-C551EA090F81
+  :ID: A440BB5E-072B-4C75-A235-C551EA090F81
   :END:
   [2008-04-04 Fri]
 * DONE [#A] Marking a transaction cleared may delete text in ledger-mode :EMACS:
@@ -299,7 +317,7 @@ Error: "/home/vinod/data/ledger.dat", line 52379: Entry does not balance
   :Submitter: John Wiegley <johnw@newartisans.com>
   :Version: 2.6
   :Ticket: 70
-  :UUID: 0EB5602F-66BE-46C0-8A74-5EB5DBAF2E07
+  :ID: 0EB5602F-66BE-46C0-8A74-5EB5DBAF2E07
   :END:
   [2008-04-11 Fri]
 * DONE [#A] Reconciling is broken again; I need a way to verify Emacs output :EMACS:
@@ -310,7 +328,7 @@ Error: "/home/vinod/data/ledger.dat", line 52379: Entry does not balance
   :Submitter: John Wiegley <johnw@newartisans.com>
   :Version: 2.6
   :Ticket: 64
-  :UUID: 7A8C49FB-F9B8-4ECF-8720-9E29559F3CA6
+  :ID: 7A8C49FB-F9B8-4ECF-8720-9E29559F3CA6
   :END:
   [2008-04-11 Fri]
 * DONE [#A] Strip \r from lines when parsing on Windows
@@ -322,7 +340,7 @@ Error: "/home/vinod/data/ledger.dat", line 52379: Entry does not balance
   :Submitter: John Wiegley <johnw@newartisans.com>
   :Version: 2.6
   :Ticket: 43
-  :UUID: 458B2B74-AF2D-4D9D-89E4-D8AC26CFD531
+  :ID: 458B2B74-AF2D-4D9D-89E4-D8AC26CFD531
   :END:
   [2008-04-05 Sat]
 * DONE [#A] trailing whitespace is significant in 2.6
@@ -341,7 +359,7 @@ Error: "/home/vinod/data/ledger.dat", line 52379: Entry does not balance
   :Version: 2.6
   :Ticket: 3
   :Attachments: 288.patch
-  :UUID: FB2330E1-AD78-4559-A885-A488DFDF3DC1
+  :ID: FB2330E1-AD78-4559-A885-A488DFDF3DC1
   :END:
   [2007-09-22 Sat]
 * DONE [#B] -e doesn't seem to work for providing an end date
@@ -388,7 +406,7 @@ $
   :Submitter: drewr <#ledger>
   :Version: 2.6
   :Ticket: 36
-  :UUID: 1DE6FB08-93D2-47C8-A5A3-3379BA76360D
+  :ID: 1DE6FB08-93D2-47C8-A5A3-3379BA76360D
   :END:
   [2008-04-04 Fri]
 * DONE [#B] Command results in assertion failure
@@ -402,7 +420,7 @@ ledger -s bal --sort O wedding
   :Submitter: John Wiegley <johnw@newartisans.com>
   :Version: 2.6
   :Ticket: 23
-  :UUID: AB684BBE-F093-4F77-BCFB-2F4E0D60AA9C
+  :ID: AB684BBE-F093-4F77-BCFB-2F4E0D60AA9C
   :END:
   [2007-12-10 Mon]
 * DONE [#B] Coredump.
@@ -420,7 +438,7 @@ ledger -s bal --sort O wedding
   :Submitter: Martin Blais <blais@furius.ca>
   :Version: 2.6
   :Ticket: 50
-  :UUID: A18B37A4-68DB-4F3A-92D5-3962D010CA0B
+  :ID: A18B37A4-68DB-4F3A-92D5-3962D010CA0B
   :END:
   [2008-04-06 Sun]
 * DONE [#B] Crash on input -- spurious comma
@@ -436,7 +454,7 @@ ledger -s bal --sort O wedding
   :Submitter: Martin Blais <blais@furius.ca>
   :Version: 2.6
   :Ticket: 48
-  :UUID: 517CB118-49A5-42B2-ACFD-1A63DCF163AA
+  :ID: 517CB118-49A5-42B2-ACFD-1A63DCF163AA
   :END:
   [2008-04-06 Sun]
 * DONE [#B] Crash on input.
@@ -452,7 +470,7 @@ ledger -s bal --sort O wedding
   :Submitter: Martin Blais <blais@furius.ca>
   :Version: 2.6
   :Ticket: 45
-  :UUID: 93CFAFEB-46EA-4E47-8F0A-069309D6EE3A
+  :ID: 93CFAFEB-46EA-4E47-8F0A-069309D6EE3A
   :END:
   [2008-04-06 Sun]
 * DONE [#B] Crash reading .timelog file
@@ -462,7 +480,7 @@ ledger -s bal --sort O wedding
   :Submitter: John Wiegley <johnw@newartisans.com>
   :Version: 2.6
   :Ticket: 128
-  :UUID: C7A32276-11A7-44F1-99CD-6F0CA7330340
+  :ID: C7A32276-11A7-44F1-99CD-6F0CA7330340
   :END:
   [2008-04-11 Fri]
 * DONE [#B] Expressions don't work.
@@ -479,7 +497,7 @@ ledger -s bal --sort O wedding
   :Submitter: Martin Blais <blais@furius.ca>
   :Version: 2.6
   :Ticket: 178
-  :UUID: DA9F2346-CD90-4E22-B2F0-2670532456BA
+  :ID: DA9F2346-CD90-4E22-B2F0-2670532456BA
   :END:
   [2008-04-12 Sat]
 * DONE [#B] Getting an abort with a self-referential pricing statement
@@ -496,7 +514,7 @@ ledger -s bal --sort O wedding
   :Submitter: Martin Blais <blais@furius.ca>
   :Version: 2.6
   :Ticket: 51
-  :UUID: A21E4DCC-6112-441F-B76D-95CF47BA658D
+  :ID: A21E4DCC-6112-441F-B76D-95CF47BA658D
   :END:
   [2008-04-06 Sun]
 * DONE [#B] Install patches for Ledger 2.6 from Simon Michael
@@ -508,7 +526,7 @@ ledger -s bal --sort O wedding
   :Submitter: John Wiegley <johnw@newartisans.com>
   :Version: 2.6
   :Ticket: 60
-  :UUID: 0C311A59-701A-4D30-BBDB-924F12878724
+  :ID: 0C311A59-701A-4D30-BBDB-924F12878724
   :Attachments: sm001.patch sm002.patch sm004.patch 
   :END:
   [2008-04-11 Fri]
@@ -573,7 +591,7 @@ gmake: *** [all] Error 2
   :Submitter: Clemens <finetouch>
   :Version: 2.4.1
   :Ticket: 34
-  :UUID: C1BE11BD-958D-4E67-8B85-5DA14CD375B4
+  :ID: C1BE11BD-958D-4E67-8B85-5DA14CD375B4
   :END:
   [2008-03-14 Fri]
 * DONE [#B] ledger.el requires an absolute pathname for the ledger-binary-path :EMACS:
@@ -584,7 +602,7 @@ gmake: *** [all] Error 2
   :Submitter: Simon Michael <simon@joyful.com>
   :Version: 2.6
   :Ticket: 199
-  :UUID: 7D40038A-DEED-47FA-8D02-0951E94CA175
+  :ID: 7D40038A-DEED-47FA-8D02-0951E94CA175
   :END:
   [2008-07-12 Sat]
 * DONE [#B] Segmentation fault on import from GnuCash
@@ -604,7 +622,7 @@ While balancing entry:
   :Submitter: Luben Manolov <lubo@manolov.org>
   :Version: 2.6
   :Ticket: 198
-  :UUID: 266D96D2-DEB5-4BD9-A51B-B2F652E2F550
+  :ID: 266D96D2-DEB5-4BD9-A51B-B2F652E2F550
   :Attachments: sample.gnucash
   :END:
   [2008-06-16 Mon]
@@ -618,14 +636,14 @@ While balancing entry:
   :Version: 2.6
   :Ticket: 31
   :Attachments: ledger-texi.patch
-  :UUID: A7CA0F5B-1F08-417A-9071-A223601100CA
+  :ID: A7CA0F5B-1F08-417A-9071-A223601100CA
   :END:
   [2008-01-28 Mon]
 * DONE [#C] Merge Levin's changes into v2.6.1b
   - State "DONE"       [2008-08-26 Tue 10:11]
   These are from http://github.com/levindu/ledger
   :PROPERTIES:
-  :UUID: C9167249-98C3-4C7E-8076-35B81A580B38
+  :ID: C9167249-98C3-4C7E-8076-35B81A580B38
   :END:
   [2008-08-21 Thu]
 * DONE [#C] Entry command doesn't match debit account when description is unmatched
@@ -655,7 +673,7 @@ $ ledger entry 2008/07/18 "Foo Bar" food 20 checking
   :Submitter: drewr <#ledger>
   :Version: 5fbec3582319ca6423a43c9125842be5f969e8ee
   :Ticket: 203
-  :UUID: FF8CE4C5-03B3-4FCA-85BD-52A9DB191B4B
+  :ID: FF8CE4C5-03B3-4FCA-85BD-52A9DB191B4B
   :END:
   [2008-07-18 Fri]
 * DONE [#C] Multiple commodities in gnucash crash ledger
@@ -676,7 +694,7 @@ $ ledger entry 2008/07/18 "Foo Bar" food 20 checking
   :Submitter: slanack
   :Version: 2.6.0.90
   :Ticket: 35
-  :UUID: DAAF3481-1B7A-4F4A-9EC6-575104655B1B
+  :ID: DAAF3481-1B7A-4F4A-9EC6-575104655B1B
   :Attachments: gnucash.cc.patch gnucash-minimal.xml
   :END:
   [2008-03-23 Sun]
@@ -692,7 +710,7 @@ Error: Cannot compare amounts with different commodities: EC and $
   :Submitter: John Wiegley <johnw@newartisans.com>
   :Version: 2.6
   :Ticket: 66
-  :UUID: 8159EF00-B95D-4E83-9927-7DB461CD2CC9
+  :ID: 8159EF00-B95D-4E83-9927-7DB461CD2CC9
   :END:
   [2008-04-11 Fri]
 * DONE [#C] Remove bogus reference to Emacs in project documentation	   :DOC:
@@ -703,7 +721,7 @@ Error: Cannot compare amounts with different commodities: EC and $
   :Submitter: bpt <#ledger>
   :Version: 2.4.1
   :Ticket: 10
-  :UUID: B81ADF25-F176-4ABC-9C2B-1090E4F2FA7D
+  :ID: B81ADF25-F176-4ABC-9C2B-1090E4F2FA7D
   :END:
   [2007-12-10 Mon]
 * DONE [#C] Segfault with commodity price in budget.
@@ -730,7 +748,7 @@ Error: Cannot compare amounts with different commodities: EC and $
   :Submitter: Nathan Jones <nathanj@insightbb.com>
   :Version: 2.6.0.90
   :Ticket: 191
-  :UUID: A4F87484-1B1D-4C76-B0AB-70E20FBA9D1B
+  :ID: A4F87484-1B1D-4C76-B0AB-70E20FBA9D1B
   :END:
   [2008-04-23 Wed]
 * DONE [#C] When reporting the unbalanced remainder, round it	       :FEATURE:
@@ -740,7 +758,7 @@ Error: Cannot compare amounts with different commodities: EC and $
   :Submitter: John Wiegley <johnw@newartisans.com>
   :Version: 2.6
   :Ticket: 125
-  :UUID: 4BF95CDC-972F-4F39-9F54-7BEFD404F9AA
+  :ID: 4BF95CDC-972F-4F39-9F54-7BEFD404F9AA
   :END:
   [2008-04-11 Fri]
 * WONTFIX [#B] No commodity when amount contains simple math operation
@@ -770,7 +788,7 @@ $ ledger -f sample2.dat bal
   :Submitter: Levin <zslevin@gmail.com>
   :Version: 2.6
   :Ticket: 7
-  :UUID: 4290A2E5-8CFB-4529-87DE-F088719AF13A
+  :ID: 4290A2E5-8CFB-4529-87DE-F088719AF13A
   :END:
   [2007-11-09 Fri]
 * WONTFIX [#B] Problem with pricing specification in prices.db file
@@ -812,7 +830,7 @@ P 2007/03/04 00:00:00 gouda 7 USD
   :Submitter: John Wiegley <johnw@newartisans.com>
   :Version: 2.6
   :Ticket: 42
-  :UUID: 43CFF7FF-DA09-478C-AED1-2D2756BACA09
+  :ID: 43CFF7FF-DA09-478C-AED1-2D2756BACA09
   :END:
   [2008-04-05 Sat]
 * WONTFIX [#C] Balance calculations using the '=' operator are off
@@ -825,7 +843,7 @@ P 2007/03/04 00:00:00 gouda 7 USD
   :Submitter: John Wiegley <johnw@newartisans.com>
   :Version: 2.6.1b
   :Ticket: 209
-  :UUID: F32E914F-D485-427B-89E9-33C762CC1A47
+  :ID: F32E914F-D485-427B-89E9-33C762CC1A47
   :END:
   [2008-08-02 Sat]
 * WONTFIX [#C] Non-balanced virtual transaction should fail.
@@ -855,7 +873,7 @@ P 2007/03/04 00:00:00 gouda 7 USD
   :Submitter: Martin Blais <blais@furius.ca>
   :Version: 2.6
   :Ticket: 190
-  :UUID: 75E83651-B130-4978-89C7-DFED4E874E8F
+  :ID: 75E83651-B130-4978-89C7-DFED4E874E8F
   :END:
   [2008-04-23 Wed]
 * WORKSFORME [#A] Monthly register command displays nothing
@@ -870,7 +888,7 @@ ledger -p 2005 -e 2005/08/17 --monthly reg
   :Submitter: John Wiegley <johnw@newartisans.com>
   :Version: 2.6
   :Ticket: 30
-  :UUID: 841041A2-925D-4797-BE44-11BFC7333054
+  :ID: 841041A2-925D-4797-BE44-11BFC7333054
   :END:
   [2007-12-10 Mon]
 * WORKSFORME [#A] Weekly register report is completely broken in 2.6
@@ -885,7 +903,7 @@ ledger --weekly reg food
   :Submitter: John Wiegley <johnw@newartisans.com>
   :Version: 2.6
   :Ticket: 26
-  :UUID: 30383931-3060-4999-8FD3-9002E02366A0
+  :ID: 30383931-3060-4999-8FD3-9002E02366A0
   :END:
   [2007-12-10 Mon]
 * WORKSFORME [#B] ledger -MA doesn't give a monthly report if some months have no transactions
@@ -895,7 +913,7 @@ ledger --weekly reg food
   :Submitter: John Wiegley <johnw@newartisans.com>
   :Version: 2.6
   :Ticket: 61
-  :UUID: FD118D79-3B8F-48CE-89D0-F0FFD46F6C49
+  :ID: FD118D79-3B8F-48CE-89D0-F0FFD46F6C49
   :END:
   [2008-04-11 Fri]
 * WORKSFORME [#B] Problems with the prices.db file
@@ -937,7 +955,7 @@ Error: Errors parsing file 'life/finances/ledger/prices.db'
   :Submitter: John Wiegley <johnw@newartisans.com>
   :Version: 2.6
   :Ticket: 40
-  :UUID: B8173D32-D7EB-4619-8488-B2C641431FDE
+  :ID: B8173D32-D7EB-4619-8488-B2C641431FDE
   :END:
   [2008-04-05 Sat]
 * WORKSFORME [#C] ledger -Mn
@@ -947,7 +965,7 @@ Error: Errors parsing file 'life/finances/ledger/prices.db'
   :Submitter: John Wiegley <johnw@newartisans.com>
   :Version: 2.6
   :Ticket: 126
-  :UUID: 2C3B5DCE-AB7F-41A2-BF93-56CC1222AE64
+  :ID: 2C3B5DCE-AB7F-41A2-BF93-56CC1222AE64
   :END:
   [2008-04-11 Fri]
 * INVALID [#B] Remove bogus reference to Emacs in project documentation (2.6)
@@ -956,7 +974,7 @@ Error: Errors parsing file 'life/finances/ledger/prices.db'
   :Submitter: John Wiegley <johnw@newartisans.com>
   :Version: 2.6
   :Ticket: 72
-  :UUID: 7455E4A7-16FD-4F41-8A33-CF44F6E690B2
+  :ID: 7455E4A7-16FD-4F41-8A33-CF44F6E690B2
   :END:
   [2008-04-11 Fri]
 * DUPLICATE [#A] Bug with date ranges
@@ -981,7 +999,7 @@ This also doesn't work.  It just shows `Opening Balances: 0`:
   :Submitter: Eric Davis <edavis@insanum.com>
   :Version: 2.6
   :Ticket: 17
-  :UUID: FE3E08C0-802A-4FAA-B8BA-93D81C061148
+  :ID: FE3E08C0-802A-4FAA-B8BA-93D81C061148
   :END:
   [2007-12-10 Mon]
 * DUPLICATE [#A] DOS format line endings are fooling the parser
@@ -993,7 +1011,7 @@ This also doesn't work.  It just shows `Opening Balances: 0`:
   :Submitter: John Wiegley <johnw@newartisans.com>
   :Version: 2.6
   :Ticket: 129
-  :UUID: 6DF2250F-C54D-4F67-AFB6-F8656020D394
+  :ID: 6DF2250F-C54D-4F67-AFB6-F8656020D394
   :END:
   [2008-04-11 Fri]
 * DUPLICATE [#B] Need to strip \r from \r\n line endings
@@ -1002,7 +1020,7 @@ This also doesn't work.  It just shows `Opening Balances: 0`:
   :Submitter: John Wiegley <johnw@newartisans.com>
   :Version: 2.6
   :Ticket: 139
-  :UUID: C7A61E89-08D1-4151-AF2E-92F666148F19
+  :ID: C7A61E89-08D1-4151-AF2E-92F666148F19
   :END:
   [2008-04-11 Fri]
 * DUPLICATE [#B] Problems parsing an entry
@@ -1030,7 +1048,7 @@ P 2007/03/04 00:00:00 gouda 7 USD
   :Submitter: John Wiegley <johnw@newartisans.com>
   :Version: 2.6
   :Ticket: 133
-  :UUID: AD876FB0-E7B8-4C89-9E23-2D25AF8D5F0A
+  :ID: AD876FB0-E7B8-4C89-9E23-2D25AF8D5F0A
   :END:
   [2008-04-11 Fri]
 * DUPLICATE [#B] Reconciling doesn't work in ledger.el			 :EMACS:
@@ -1050,7 +1068,7 @@ P 2007/03/04 00:00:00 gouda 7 USD
   :Submitter: Karen Cooke <karen.cooke@gmail.com>
   :Version: 2.6
   :Ticket: 14
-  :UUID: 2B02E2FD-DCF8-4CD8-A7FA-F83F5DAE3F55
+  :ID: 2B02E2FD-DCF8-4CD8-A7FA-F83F5DAE3F55
   :END:
   [2007-12-10 Mon]
 * DUPLICATE [#C] Entry command produces duplicate source transactions
@@ -1076,6 +1094,6 @@ P 2007/03/04 00:00:00 gouda 7 USD
   :Submitter: drewr <#ledger>
   :Version: 2.6
   :Ticket: 32
-  :UUID: EA246228-3EC7-4834-B55A-455DBA58116C
+  :ID: EA246228-3EC7-4834-B55A-455DBA58116C
   :END:
   [2008-01-30 Wed]

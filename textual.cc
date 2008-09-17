@@ -270,9 +270,7 @@ transaction_t * parse_transaction(char * line, account_t * account,
 
 	if (xact->amount.commodity() &&
 	    ! xact->amount.commodity().annotated)
-	  xact->amount.annotate_commodity(per_unit_cost,
-					  xact->entry ? xact->entry->actual_date() : datetime_t(),
-					  xact->entry ? xact->entry->code : "");
+	  xact->amount.annotate_commodity(per_unit_cost);
 
 	DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
 		    "Total cost is " << *xact->cost);

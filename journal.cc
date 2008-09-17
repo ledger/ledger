@@ -177,10 +177,7 @@ bool entry_base_t::finalize()
 
 	if ((*x)->amount.commodity() &&
 	    ! (*x)->amount.commodity().annotated)
-	  (*x)->amount.annotate_commodity
-	    (abs(per_unit_cost),
-	     entry ? entry->actual_date() : datetime_t(),
-	     entry ? entry->code : "");
+	  (*x)->amount.annotate_commodity(abs(per_unit_cost));
 
 	(*x)->cost = new amount_t(- (per_unit_cost * (*x)->amount));
 	balance += *(*x)->cost;
