@@ -1677,7 +1677,7 @@ annotated_commodity_t::write_annotations(std::ostream&      out,
     out << " {" << price << '}';
 
   if (date)
-    out << " [" << date << ']';
+    out << " [" << date_t(date) << ']';
 
   if (! tag.empty())
     out << " (" << tag << ')';
