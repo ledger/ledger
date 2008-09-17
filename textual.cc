@@ -307,12 +307,17 @@ transaction_t * parse_transaction(char * line, account_t * account,
 	  DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
 		      "Parsed a transaction date " << buf);
 
-	  if (char * p = std::strchr(buf, '=')) {
-	    *p++ = '\0';
-	    xact->_date_eff = p;
+	  try {
+	    if (char * p = std::strchr(buf, '=')) {
+	      *p++ = '\0';
+	      xact->_date_eff = p;
+	    }
+	    if (buf[0])
+	      xact->_date = buf;
 	  }
-	  if (buf[0])
-	    xact->_date = buf;
+	  catch (...) {
+	    // If it fails to parse, just ignore it...
+	  }
 	}
     }
   }
