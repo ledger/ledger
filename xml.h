@@ -30,7 +30,9 @@ class format_xml_entries : public format_entries
 		     const bool _show_totals = false)
     : format_entries(output_stream, ""), show_totals(_show_totals) {
     output_stream << "<?xml version=\"1.0\"?>\n"
-		  << "<ledger version=\"2.5\">\n";
+		  << "<ledger version=\"2.6\" \
+xmlns:en=\"http://newartisans.com/xml/ledger-en\" \
+xmlns:tr=\"http://newartisans.com/xml/ledger-tr\">\n";
   }
 
   virtual void flush() {
